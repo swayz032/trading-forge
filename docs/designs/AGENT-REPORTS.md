@@ -4,6 +4,56 @@
 
 ---
 
+## AR-540 · 2026-07-31 · ⚠️★★★★★ **R-515 §5 DELIVERED — THE §15.6 STEPS 1–4 MAP, READ-ONLY. AND IT OVERTURNS THE BLUEPRINT'S OWN EVIDENCE CUT ON THE ROW THAT MATTERS: `P0` IS **DELIVERED AND ALREADY GRADED**. THE GRADE EXISTS ON DISK, IT IS INDEPENDENT, AND ITS VERDICT IS `NOT-SOUND`.** ★★★★★ **SO §15.6 STEP 2 IS **DONE**, NOT PENDING — AND THE CRITICAL PATH IS BLOCKED AT STEP 1 BY THREE NAMED FINDINGS, NOT BY AN UNRUN GRADE.** ⚠️★★★ **I ALSO SURFACE A RULE COLLISION I DO NOT HAVE THE AUTHORITY TO RESOLVE: `c304b098` IS THE **FOURTH** DELIVERY ATTEMPT AND THE **THIRD** REJECTION, AGAINST §15.7's RETIREMENT THRESHOLD OF **TWO**.**
+
+**RULING ID:** R-515 §5 · **TASK ID:** AR-540 · **PRIOR:** AR-539 (START-RECEIPT) · **SEAT:** the seat that filed AR-533→539.
+**NO CODE CHANGED. Read-only outside this file `[MEASURED: `git status --porcelain` shows only `AGENT-REPORTS.md`]`.**
+
+### ⚠️★★★ §0 — A MID-TASK ERROR OF MY OWN, CORRECTED BEFORE IT REACHED THE TABLE
+**I enumerated the delivery branches by typing three names I had already seen, concluded *"no post-R-497 delivery exists"*, and was about to write that.** ⚠️★★★★★ **A pattern listing found **FIVE** `ledger-e` branches, including `hardening/ledger-e-delivery-r497-20260730` created at `14:33:20` — AFTER R-497.** ★★★ **`A HAND-TYPED ENUMERATION IS A HYPOTHESIS ABOUT WHAT EXISTS.` The row it would have produced — "P0 delivery stale, never re-delivered" — was FALSE, and it is the row the whole map turns on.**
+
+### ★★★★★ §1 — THE FOUR ROWS
+| step | state | evidence |
+|---|---|---|
+| **1 · `P0` finish atomic Ledger-E parity** | ⚠️ **DELIVERED, NOT FINISHED** | Delivery `c304b098` on branch `hardening/ledger-e-delivery-r497-20260730`, base `9af37b8f`; **atomic — `git rev-list --count 9af37b8f..c304b098` = `1`** `[MEASURED]`. Its content **equals** the WIP fixes: `git diff` vs `hardening/ledger-e-parity-20260730` over `check-spec-binding-plan-parity.ts` + `ORACLE.json` is **EMPTY** `[MEASURED]`. Packet `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` carries §8 DELIVERY ADDENDUM and §9 CORRECTION ADDENDUM; now `64,526` bytes vs the cut's `29,238`. |
+| **2 · grade `P0` once** | ✅ **DONE — VERDICT `NOT-SOUND`** | `docs/designs/GRADE-C304B098-2026-07-31.md`, `33,385` bytes, `01:58`. Grader **`accuracy-validator`**, declaring independence from the object and its three rejected predecessors. Parent re-derived by the grader. **Sub-claims 1, 2, 5 SOUND · 3, 4 PARTIALLY SOUND · 6 NOT-SOUND.** |
+| **3 · freeze `P1` + `P2`** | **`P1` NOT STARTED · `P2` DEFINED, NOT FROZEN** | `P1`: no re-authored-producer equivalence-control artifact found; §15.5 requires the producer reproduce the frozen classified artifact *before* its output is admitted — no such reproduction exists. `P2`: the five labels appear **only** in `ADVISOR-RULINGS.md` and `ADVISOR-STATE.md` — **prose, never a data artifact**; `exact_slice_sha256` → **`0` files**, against **POSITIVE CONTROL** `condition_id` → **`91` files**, so the zero is a measured absence and not a broken query. |
+| **4 · rule `P3`** | **NOT STARTED** | No transfer receipt exists anywhere (`*transfer-receipt*` → none). A `runtime-production` worktree DOES exist — but pinned to `hardening/slumhouse-shared-office-parity-20260723` @ `9af37b8f`, **another lane's worktree, not a P3 integration lane** `[MEASURED, `git worktree list`]`. The graph→spec handoff is unenumerated. |
+
+### ⚠️★★★★★ §2 — WHAT THE GRADE ACTUALLY SAYS, BECAUSE "NOT-SOUND" IS NOT ACTIONABLE ON ITS OWN
+**It CONFIRMS the two defects `8187b730` was rejected for are CLOSED, by execution against a clean control.** **It rejects on three named things:**
+1. **Sub-claim 6 — `NOT-SOUND`:** the DECLARED `invalidations` exclusion is *"stated in code, stated nowhere in the packet"*.
+2. **F-3:** the row census asserts membership both directions for `conditions` but **not** for `reasons_must_differ_from`.
+3. **F-2:** the runtime contract validator's own caption says *"the WHOLE contract"* and that is falsified — **the ninth `caption falsifies its own line`, in the new code, at the very line whose comment documents the eighth.**
+★★★ **These are three specific, bounded repairs. `NOT-SOUND` here means "close these three", not "start again".**
+
+### ⚠️★★★★★ §3 — THE RULE COLLISION. **THE DESK'S TO RESOLVE, NOT MINE.**
+```
+delivery attempts on this object: 2011e8de -> 39948d3c -> 8187b730 -> c304b098      = FOUR
+rejections:                       R-496 NOT-SOUND · R-497 NOT-SOUND · GRADE NOT-SOUND = THREE
+§15.7 threshold:                  "Two failed patch rounds on the same instrument trigger
+                                   replacement or retirement, not a third regex-shaped patch."
+```
+★★★★★ **R-515 §3 applied that exact rule to the `I7` lane — against this desk, on a count of five. `THE RULE IS A COUNT AND NOT A JUDGEMENT` was the desk's own reason for it.** ⚠️ **On its face the same count now bites `P0`. I am NOT ruling that it does: `P0` is a money-path DELIVERABLE, not an instrument built to describe one, and §15.6 step 1 names finishing it as the critical path. `A RULE THAT RETIRES THE THING THE PATH REQUIRES NEEDS ITS AUTHOR, NOT ITS READER.` **Surfacing it because a fourth patch round that nobody has weighed against §15.7 is precisely what the rule exists to prevent.**
+
+### §4 — OWNERS, AND THE SINGLE NEXT ACTIONABLE STEP
+- **`P0` repair (the three named findings) — THE ONE MONEY-PATH IMPLEMENTATION SLOT.** Everything else parks behind it under §15.7. **Owner: unassigned in the ledger — ten consecutive position blocks carry `P0-v5 → THIS DESK / UNAUTHORIZED`, and no seat has been given it.**
+- **`P1`, `P2`, `P3` — PARKED, correctly.** Each is blocked on step 1–2 completing; none has a doer and none should have one yet.
+- ★★★★★ **THE SINGLE NEXT ACTIONABLE STEP: repair the three named grade findings on `c304b098` and re-deliver atomically on a fresh base — SUBJECT TO §3's collision being ruled first.** ★★ **The grade slot is NOT free: §15.6 step 2 says grade *once*, and it has been spent. Whether the repair earns a second grade is a desk decision, and `accuracy-validator` is one authorization away when it is wanted.**
+
+### §5 — WHAT I DID NOT MEASURE
+- ⚠️ **I did not verify the grade's own findings by re-execution.** I read its verdict and its sub-claim table. **`A GRADE IS A CLAIM TOO`** — but re-deriving it is a grading act, I am the doer on the object it grades, and R-515 §5.4 forbade running anything. `[UNMEASURED, deliberately.]`
+- ⚠️ **`P1`/`P3` are `NOT STARTED` on the strength of NAME-BASED searches plus one positive control.** A deliverable existing under an unguessed name would read as absent. **I judged `NOT STARTED` rather than `UNKNOWN` because §15.5 names concrete required artifacts (an equivalence control; a transfer receipt) and neither exists under any spelling I searched — but the distinction is real and I am flagging it rather than hiding it in a confident row.**
+- ⚠️ **`953c9781…` and `3494d4bb…` from §15.8 do not resolve as git objects** `[MEASURED, `git cat-file -t`]`. **I believe they are CONTENT hashes, not commits — the packet's current sha256 is `4e09b51ffb602c97`, also not a git object.** `[HYPOTHESIS — I did not locate the algorithm that produced them.]` **They are NOT fabrications on that reading, and I will not call them one without the algorithm.**
+- **No campaign measurement was run or altered. `I7`'s frozen reference untouched.**
+
+### §6 — POSITION
+**FAN-IN `1 / 1` on R-515 §5** (four rows, evidence, owners, next step). `I7` ✅ **CLOSED** · `I8` **NOT STARTED — OPERATOR'S AUTHORIZATION** · `I21` **PARTIAL** · **CI-WIRING → DESK, not to begin before the next step is named** · `P0` → **awaiting the §3 ruling** · `P1`/`P2`/`P3` **PARKED** · **MERGE / DEPLOY / RELEASE = HOLD.**
+**NO code change · nothing outside `AGENT-REPORTS.md` written · no forbidden surface touched.**
+★★ **NOT A HANDOFF.**
+
+---
+
 ## AR-539 · 2026-07-31 · **START-RECEIPT — R-515 §5 ACCEPTED. READ-ONLY SCOPING OF BLUEPRINT v4 §15.6 STEPS 1–4 (`P0`–`P3`).**
 
 **RULING ID:** R-515 §5 · **TASK ID:** AR-539 · **PRIOR:** AR-538 · **SEAT:** the seat that filed AR-533→538.
