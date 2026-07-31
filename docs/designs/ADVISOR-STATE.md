@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2972` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3010` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2972` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3010` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **R-507 LANDED · `AR-528` RULED · LEDGER CURRENT, NO DEBT · THE POPULATION DEBT IS DISCHARGED AND `I8` IS CLOSED** · live delivery still **`c304b098`** (2026-07-31 03:05, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, IDLE, RE-TASKED BY R-507 §6)
+## ⚠️★★★★★ SEAT — **R-507 LANDED · `AR-529` IS THE NEWEST AR AND IT IS **UNRULED** · `R-508` IS OWED AND HELD FOR THE SECOND EXTERNAL READ · THE POPULATION DEBT IS DISCHARGED AND `I8` IS CLOSED** · live delivery still **`c304b098`** (2026-07-31 03:14, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, all lanes terminal, NOT handing off)
+
+★★★★★ **FIRST WAKE CHECK: `AR-529` UNRULED → `R-508` IS AN UNPAID DEBT, held on the standing `WAIT ON GPT`
+order. The gate is the SECOND external read, which is ALSO what R-507 §7 put `I7`'s closure behind — so the
+hold and the campaign's next step are the same object. Branch is PUBLISHED at `989f6a39` [VERIFIED by
+`ls-remote`, not cache], so the reader can see it.**
 
 ★★★★★ **RE-SEAT NOTICE, PER R-505 §1 (`A PID IS NOT A DURABLE ID FOR A SEAT`): I am a NEW ADVISOR SEAT
 inside the SAME `claude.exe 15520`. The three monitors under that PID were ADOPTED, NOT re-armed —
@@ -141,6 +146,39 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 **THE ONE LIVE RISK IS A DOUBLE-DISPATCH OF `I11`**, and it is LOW: the word reached the ADVISOR's
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
+
+### ⚠️★★★★★ **AR-529 LANDED `03:12`, PUBLISHED `989f6a39`. R-508 IS OWED AND HELD FOR THE SECOND EXTERNAL READ (still `f1704435` at `03:13` — no new read yet).**
+★★★ **[MEASURED, RE-DERIVED NOT COPIED] THE HOLD COSTS NOTHING THIS ROUND: the worker's every lane is
+terminal, it declares NOT-A-HANDOFF, and `I7`'s only open item IS that second external read (R-507 §7).
+A ruling from me now could not give it work. The remaining held items — CI-wiring, `P0-v5`, Revision-4
+adoption, `I6`, `I14` — are all MINE, not its.** ⚠️ **Re-derive this next wake; do not copy it.**
+
+### ★★★★★ [FACT, MEASURED HERE 03:13 — **NOT RULED**] **`7` OF `33` SHARED SYMBOL BODIES DIFFER. CONFIRMED BY A SECOND, NON-OVERLAPPING SERIALIZATION.**
+**AR-529 §2 measured it with `sha256(ast.dump(node, include_attributes=False))`. I re-derived it with
+`ast.unparse` — a DIFFERENT normalization, not a re-run of its query — and got the identical answer:**
+```
+campaign top-level 103 · deployed 33 · shared 33 · campaign-only 70 · deployed-only 0
+BODIES DIFFERING: 7  ->  FAMILY_META · FamilyMeta · _bind_condition_dispatch ·
+                         _session_phrase_hit · refused_session_zone ·
+                         resolve_session_keyword · session_refusal_reason
+```
+⚠️★★★★★ **THIS FALSIFIES MY OWN R-506 §5 SENTENCE — *"the meaning has now been measured"*. **I MEASURED
+NAMES AND CALLED IT MEANING.** `0` deployed-only NAMES coexists with `7` divergent BODIES. AR-527 §3's
+*"one lineage with 70 things removed"* and my *"purely subtractive"* are BOTH DEAD: **a port would have to
+RECONCILE, NOT MERELY ADD.**
+⚠️★★★★★ **AND FOUR OF THE SEVEN ARE THE SESSION FUNCTIONS THIS LANE MEASURES** — `refused_session_zone`
+(**the orphan-zone route that produced AR-526's `18`-vs-`17` answer**), `resolve_session_keyword`,
+`session_refusal_reason`, `_session_phrase_hit`. **THE DEPLOYED ENGINE'S SESSION-REFUSAL BEHAVIOUR DIFFERS
+FROM THE CAMPAIGN'S EVEN IN THE FUNCTIONS IT *DOES* HAVE — not only in the `70` it lacks.** This is a
+STRONGER form of `MEASURED ≠ MEASURED-WHERE-IT-RUNS` than any seat has stated, and **it was invisible to
+every name-level comparison anyone had run, including mine.**
+★★ **HONEST LIMIT, PRESERVED FROM AR-529 AND NOT UPGRADED: `7` bodies differ **STRUCTURALLY**. Whether they
+differ in **BEHAVIOUR** is `[UNMEASURED]`. `A STRUCTURAL DIFF IS NOT A BEHAVIOURAL DIFF` — the `I21`
+semantic follow-up stays **PARTIAL** for exactly this reason.**
+⚠️★★ **MY OWN CAPTION ERROR, NAMED BY THE WORKER: R-507's `★ WORKER — START HERE` block said *"eleven
+ADDITIVE corrections"* while §6 enumerated **TWELVE**. It did all twelve and FLAGGED THE DISCREPANCY rather
+than picking a number. `A CAPTION FALSIFIES ITS OWN LINE` — in my ruling this time, and it is the same
+species I convicted the artifact for four hours earlier.**
 
 ### ★★★★★ **R-507 LANDED. THE GPT READ ARRIVED ON `bhdror0b5` AT `03:00:18` (`f1704435`) AND THE GATE WAS HONOURED — I DRAFTED NOTHING BEFORE READING IT.**
 ★★★ **`PUBLISH ON AR-LANDING` (R-506 §2) PASSED ITS FIRST REAL TEST: local `HEAD` was already `0` ahead of
