@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3260` at THIS commit, 2026-07-31 15:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3268` at THIS commit, 2026-07-31 15:48 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3260` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3268` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## 🛑★★★★★ SEAT — **THE SECOND AND FINAL PACKET GRADE RETURNED `FAIL` (`d4378be2`, `15:24`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-REGRADE-2026-07-31.md`, `236` lines). **THE PRE-COMMITTED STOP FIRES: `NO SOUND REDESIGN AVAILABLE`. NO THIRD PACKET ROUND. `R-520` IS OWED AND HELD FOR THE NEXT EXTERNAL READ.**
+## ✅🛑★★★★★ SEAT — **`R-520` LANDED (2026-07-31 15:47). THE PRE-COMMITTED STOP FIRED CLEAN: `P0` REDESIGN LANE **CLOSED**, NO SEVENTH ATTEMPT. ★★★★★ **THE CRITICAL PATH IS **INVERTED** — `P1`→`P2`→`P0-vNext`. THE QUEUE BELOW IS REWRITTEN AND IS THE OPERATIVE ORDER; `§15.6`'s ORDER IS RETIRED.** **WORKER AUTHORIZED (R-520 §6): ONE bounded `P1`+`P2` TRUTH-FREEZE task → `P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md` + `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`. NO code of any kind.**
+★★★★★ **THE CAUSE, IN ONE LINE, AND IT EXPLAINS ALL SIX ATTEMPTS RATHER THAN THE LAST ONE: `P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS.` An omission in a sparse optional object means one of three incompatible things — not-applicable · unadjudicated · deleted — and no parser, closed-key rule, type check or mutation suite recovers which, after the fact.**
+✅ **ALL DECISIVE NUMBERS RE-DERIVED AT THIS DESK FROM `c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`: `12` fixtures · `30` rows · `8` with `unadjudicated` · axes `29/29/26/26/22/4/4` · `140` live expectations · `{bindable}` protects `29` · **`111` silently deletable**. Root cause verified at the row: `50-family-axis-invalidations.spec.json`→`inv_in_entry` is the ONLY row missing `bindable` and declares its gap at FIXTURE level while the rule reads `row.unadjudicated`.**
+⚠★★★★★ **A PATTERN ABOUT THIS DESK, THREE-FOR-THREE IN ONE WAKE (R-520 §4): every remedy I issued was CORRECT AND ONE LEVEL SHORT, and each time someone else supplied the missing level. **STANDING DEFENCE: before issuing a remedy, ask *“what does this remedy ASSUME EXISTS?”* — all three failures were an assumed authority that did not exist.**
+⚠ **`R-521` will be owed on the `P1`/`P2` delivery and HELD for the next external read. Grade receipts `48e50d80` + `d4378be2` and `c304b098` are PRESERVED evidence — never patched or tidied.**
 ✅★★★★★ **`R-1` (CRITICAL) IS CONFIRMED AT THIS DESK BY RE-DERIVATION FROM THE LIVE ORACLE BLOB — NOT RELAYED.** `[MEASURED HERE, `git show c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`]` **`30` rows · `8` carry `unadjudicated` · per-key live presence `bindable 29` · `reason_null 29` · `primitive_null 26` · `session_zone 26` · `approximation 22` · `reason_names 4` · `reason_excludes 4` — MATCHING THE GRADER ROW FOR ROW.** ★★★ **AND MY OWN ADDITION: NO KEY IS PRESENT ON ALL `30` ROWS — not even `bindable` (`29/30`), which survives only via the one `unadjudicated` row. So requiring any other key makes clean rows FATAL and breaks the packet's own clean control. ARITHMETIC CLOSES: `140` live expectations − `29` protected = **`111` SILENTLY DELETABLE**.**
 ⚠★★★★★ **THE DIAGNOSIS, AND IT IS WHY A THIRD ROUND WOULD FAIL TOO: `§4.2b` IS A RULE *ABOUT DATA*, AND ALL SIX ATTEMPTS WERE WRITTEN AND VALIDATED AGAINST *SOURCE*. The prior grade DECLARED `ORACLE.json` `UNENUMERATED` in its own coverage section; the moment anyone opened it, the design collapsed in ONE ARITHMETIC STEP (`128` candidate required-sets → exactly `1` viable). **THE JOIN BETWEEN THE RULE AND THE DATA IT GOVERNS WAS NEVER EXECUTED** — the same unexecuted-join family that has run through this entire lane, now at the DESIGN level. `A RULE ABOUT DATA CANNOT BE VALIDATED AGAINST SOURCE.`**
 ⚠ **`R-2` (HIGH) UNVERIFIED HERE, RELAYED: `reason_names: ""` is present and well-typed and `includes("")` is unconditionally true, so it asserts nothing — falsifying the packet's `§7a` *“IMPOSSIBLE TO DISARM SILENTLY.”* **It is the EMPTY-COLLECTION operator class this desk explicitly ordered the grader to enumerate.** `R-3` MEDIUM, namespace join, `3` false-FATALs.**
@@ -2817,14 +2821,17 @@ within one user: ALLOWED". **v4 §8 STANDS. A CONFIDENT SOURCE CITING A DOCUMENT
 THAT DOES NOT EXIST IS THE MOST DANGEROUS INPUT A DESK RECEIVES — OPEN THE ARTIFACT
 IT CITES.**
 
-## QUEUE — **BLUEPRINT REVISION 4 §15.6, THE REVISED PHASE-1 CRITICAL PATH** (adopted R-515)
+## QUEUE — **INVERTED CRITICAL PATH (adopted R-520, 2026-07-31)**
 
-⚠️★★★★★ **THIS REPLACES THE OLD `v4 §3-1A` QUEUE, WHICH IS SUPERSEDED, NOT DEFERRED. [MEASURED] old item `3` (the `C2` yield) is DONE; old item `1` is superseded. I dispatched against the stale list for ten rulings — `AN UNADOPTED PLAN REVISION IS A PLAN NOBODY IS FOLLOWING, INCLUDING ITS AUTHOR.`**
+⚠🛑★★★★★ **`§15.6`'s ORDER IS **RETIRED**, NOT DEFERRED. IT READ `1. finish P0 · 2. grade P0 · 3. freeze P1+P2 …` AND THAT ORDER IS WHY SIX ATTEMPTS FAILED.** `P0` asked *"did an expected truth disappear?"* of a SPARSE OPTIONAL object where an omission means one of three incompatible things — **intentionally not applicable · honestly unadjudicated · accidentally deleted** — and nothing downstream can recover which.
+> ★★★★★ **`P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS.`**
+> ★★★★★ **`A SPARSE OBJECT CANNOT PROVE THAT AN OMITTED TRUTH WAS DELETED.`**
+> ★★★ **`OBSERVED BASELINE AND INTENDED TRUTH ARE DIFFERENT OBJECTS.`**
 
-1. **Finish `P0`** — atomic Ledger-E parity correction.
-2. **Grade `P0` once** — independent adversarial grade; repair only a real finding, never add green ceremony.
-3. **Freeze `P1` + `P2`** — additive baseline + complete source-keyed truth membership.
-4. **Rule `P3`** — producer-proof lane, runtime integration lane, transfer receipt.
+1. **`P1` — FREEZE THE OBSERVED BASELINE.** *"What exists now?"* — commit + blob identities, `12` fixtures, `30` rows, `140` present expectations, per-axis `29/29/26/26/22/4/4`, deterministic digest, duplicate/unresolved census. ⚠ **MUST NOT convert present-presence into intended truth.**
+2. **`P2` — FREEZE THE TOTAL TYPED TRUTH MEMBERSHIP.** The complete Cartesian set: **`30` rows × `7` axes = `210` CELLS**, each `ASSERTED` / `NOT-APPLICABLE` / `UNADJUDICATED`. `140` present ⇒ **`70` absent cells each need an EXPLICIT classification.** ⚠★★★★★ **IF THE SOURCE AUTHORITY CANNOT DETERMINE A CELL, RECORD `UNADJUDICATED` — DO NOT GUESS TO COMPLETE THE MATRIX. A guessed cell converts an honest absence into a false assertion and is STRICTLY WORSE than the sparse object.**
+3. **`P0-vNext` — DERIVED MECHANICALLY from `P1`/`P2` as a THIN CONSUMER**, checking two DISTINCT claims: **agreement** (TS ↔ Python projections agree) and **correctness** (both satisfy the frozen `P2` ledger). ⚠ **MUST NOT infer requiredness from the sparse legacy `ORACLE.json`.**
+4. **`P3`** — producer-proof lane, runtime integration lane, transfer receipt.
 5. **Deterministic Gate B** — immutable source record, typed projections, exact-slice provenance, protected sentinel.
 6. **Source-keyed control/treatment sweep** — every consumer transition and incidence; reject proxy improvements.
 7. **Re-rank Tier-A spearheads on CURRENT output** — never inherit the historical "C8 unlocks six" ranking.
@@ -2832,8 +2839,9 @@ IT CITES.**
 9. **Complete the target's SMC/load-bearing binding lane** — every condition concrete or honestly refused; no count-only claim.
 10. **Re-affirm compile-fidelity calibration in the authoritative runtime lane**, then declare Phase-1 exit only if BOTH legs pass.
 
-✅★★★★★ **STEPS 1–4 ARE NOW MEASURED (`AR-540`, ruled `R-516`): step `1` `P0` **DELIVERED `c304b098`** · step `2` grade **SPENT, `NOT-SOUND`, band `6/10`** — so **`P0`'s CURRENT DESIGN IS RETIRED UNDER §15.7 AND NO FIFTH PATCH ROUND IS AUTHORIZED**; step `3` `P1`/`P2` **NOT STARTED / NOT FROZEN**; step `4` `P3` **NOT STARTED** (no transfer receipt exists). ⚠★★★ **THE REPAIR SET IS `5` NUMBERED FINDINGS (`F-1`…`F-5`) + SUB-CLAIM `6` `NOT-SOUND` — NOT the `3` that BOTH `AR-540` AND the tenth external read stated. THE UNBLOCKING ITEM IS THE BOUNDED `P0` REDESIGN PACKET, AUTHORIZED TO THE EXISTING SEAT IN `R-516` §8.**
-★★ **§15.7: Gate B removes the largest known extraction blocker; it does NOT guarantee step 9. If the target keeps a non-Gate-B blocker, the next fix comes from THAT SPEC'S measured residual, never a library-wide housekeeping list.**
+⚠ **`P0` IS A DEPENDENCY CORRECTION, NOT A BYPASS: it remains REQUIRED before compiler promotion — it simply no longer BLOCKS starting `P1`/`P2`.**
+🛑★★★★★ **A SEVENTH `P0` ATTEMPT IS NOT AUTHORIZED AND IS NOT AUTHORIZABLE WITHOUT A NEW RULING THAT NAMES THIS COUNT: `4` code attempts (`2011e8de`→`39948d3c`→`8187b730`→`c304b098`) + `2` document attempts (`7134bb34`→`02557efd`) = **`6`**, threshold `2`. `c304b098` and BOTH grade receipts are PRESERVED as `NOT-SOUND` evidence — do not patch, squash, relabel or "finish" them into a green history.**
+★★ **§15.7 still governs: ONE money-path implementation + ONE independent grade in flight; an instrument must REMOVE a named blocker, not describe one more safely.**
 
 ## PARKED — MAY NOT PRE-EMPT THE MONEY PATH UNLESS IT INVALIDATES C8 EVIDENCE
 
