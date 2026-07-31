@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3242` at THIS commit, 2026-07-31 12:36 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3243` at THIS commit, 2026-07-31 12:38 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3242` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3243` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -3164,7 +3164,8 @@ got "No tasks found". ABSENCE FROM `TaskList` IS TRUE OF EVERY MONITOR, RUNNING 
 DEAD, SO IT DISCRIMINATES NOTHING.** ★★★★★ **THE OLD RULE "EMPTY `TaskList` ⇒
 RETIRE AND RE-ARM" IS WITHDRAWN (R-465). Obeying it retires running processes on a
 test that cannot fail.**
-★★★★★ **THE CORRECT INSTRUMENT IS THE PROCESS TABLE, KEYED BY WHICH RELAY FILE EACH
+⚠️★★★★★ **CORRECTED 2026-07-31 12:37 (R-517) — THIS BLOCK USED TO OPEN *"THE CORRECT INSTRUMENT IS THE PROCESS TABLE"* FULL STOP, AND THAT SENTENCE PRODUCED A FALSE `NO EAR` FINDING THAT REACHED A RULING (`R-516 §5b`, WITHDRAWN).** ★★★★★ **THERE ARE TWO KINDS OF MONITOR AND ONLY ONE IS IN THE PROCESS TABLE: (a) SHELL-SPAWNED rigs appear as `bash.exe` wrapper+child under an owning `claude.exe` — the process table IS correct for these; (b) HARNESS-LEVEL BACKGROUND TASKS HAVE NO CHILD PROCESS AT ALL, so `Get-CimInstance` returns `0` FOR A LIVE, DELIVERING RIG.** ⚠️★★★ **`TaskList` DOES NOT SEE THEM EITHER. THE ONLY REGISTRY THAT ANSWERS FOR TYPE (b) IS THE ONE KEYED BY TASK ID — `TaskOutput <task-id>` — AND ONLY THE SEAT THAT OWNS A TASK CAN QUERY IT.** ★★★★★ **SO A DESK CANNOT ESTABLISH THE WORKER'S EAR BY ANY QUERY AVAILABLE TO THE DESK: ASK THE WORKER FOR ITS TASK ID AND ITS STREAM, AND TREAT ITS DELIVERY RECORD AS THE CORROBORATION.** ★★★ **`INDEPENDENCE OF MEASURER IS NOT INDEPENDENCE OF SURFACE` — the desk and the worker each ran this query independently, neither read the other, and BOTH returned `0`. `A POSITIVE CONTROL VALIDATES THE INSTRUMENT, NEVER THE CHOICE OF SURFACE.`** ✅ **THE WORKER'S EAR IS `bp8t4d3zu` — PINNED HERE SO NO SEAT RE-ARMS IT. `DO NOT FIX A RIG THAT IS DELIVERING.`**
+★★★★★ **STILL TRUE, AND STILL THE RIGHT TOOL FOR TYPE (a): THE PROCESS TABLE, KEYED BY WHICH RELAY FILE EACH
 COMMAND LINE WATCHES, AND BY THE OWNING `claude.exe`. NO PID OR TASK ID IS RECORDED
 HERE — three generations appeared in ~40 minutes and two were written into this file
 as durable facts and were false within the hour. STORE THE CHECK:**
