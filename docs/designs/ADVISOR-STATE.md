@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3132` at THIS commit, 2026-07-31 07:46 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3133` at THIS commit, 2026-07-31 07:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3132` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3133` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -103,8 +103,9 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ✅ **WHAT *IS* PROVEN, AND ITS SCOPE IS EXACTLY THIS: the case-floor witness discriminates — `12`-case receipt → EXIT `1` naming the count; `14`-case receipt → EXIT `0`. ★★★ **AND THE TESTED CODE WAS EXTRACTED VERBATIM FROM THE WORKFLOW FILE, NEVER RETYPED** (`A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`). **[MEASURED] `all_ok = all(r["OK"] for r in results)` and `all([]) is True` — so a green exit code proves "nothing that ran failed", NOT "the mutations ran". The floor is the positive witness.** ⚠️ **This is proven AS LOGIC, NOT AS A FIRING CI GATE — the gate never got that far.**
 ⚠️ **CLEANUP VERIFIED, NOT ASSUMED: negative-control branch deleted (`ls-remote` → `0` refs), worktree removed, local branch deleted. A planted defect must not linger on a public repo.**
 
-### ⚠️★★★ **STILL OWED TO `R-511` — INHERITED FROM THE PREVIOUS SEAT, DO NOT DROP**
-**The prefix-keyed exclusion (`startswith(("PROVENANCE_","PUBLICATION_"))`, `session_role_resolver_yield.py:172-178`) is NOT disposed of by R-510** — §6.4 canonicalises the source-closure block and never rules on the prefix RULE itself. `AN EXCLUSION KEYED ON A NAME PREFIX IS NOT AN ENUMERATION.` ⚠️ **Re-measure it against AR-532's rework before ruling — §6.4 may have changed the resolved set.**
+### ⚠️★★★ **STILL OWED TO `R-511` — TWO FINDINGS, BOTH RE-MEASURED AGAINST AR-532's LANDED REWORK `[MEASURED HERE 07:55]`**
+**1. THE PREFIX-KEYED EXCLUSION SURVIVED §6.4 AND IS STILL A *RULE*, NOT AN ENUMERATION** — now at `session_role_resolver_yield.py:196`. ★★ **RESOLVED SET RE-MEASURED ON THE COMMITTED ARTIFACT, NOT COPIED FROM R-510: `36` assertions total, **`7`** matched by the prefix, and all `7` genuinely carry a `detail` that is popped. Same `7` names as before — §6.4 did NOT change the set.** ★★★ **FAIRNESS ON THE RECORD: the worker NAMED this entry in the docstring as its own addition beyond my four (*"I am NAMING it rather than widening the list silently"*) and gave a sound reason. **THE FINDING IS UNCHANGED ANYWAY: a prefix rule grows the instant someone names an eighth check, and nothing in the artifact would say so.** Remedy stays R-510's: record the RESOLVED names + count in `DIGEST_COVERAGE` and ASSERT the count.
+**2. ⚠️★★★★★ NEW — `stable_digest` IS NOW DEAD CODE CARRYING A DOCSTRING THAT CONTRADICTS THE LIVE PATH.** `[MEASURED, enumerated surface + positive control]` **`9` references tree-wide: `7` in ledger/report PROSE, `1` its own `def` at `:221`, `1` a stale `.pyc`. **ZERO EXECUTABLE CALL SITES.** Positive control `artifact_content_digest` returns `9` on the same search, so the search reaches.** ★★★★★ **AND ITS RETAINED DOCSTRING STILL READS *"STRIPPED: … `PROVENANCE_SOURCE_CLOSURE`"* — which R-510 §6.4 REVERSED; `_strip_volatile` demonstrably KEEPS the closure and pops only `head`, `tree_dirty_path_count` and the two `dirty_path_count` fields.** ⚠️ **THIS IS THE FUNCTION R-509 §4 CONVICTED BY NAME. It still exists, still misdescribes coverage, and no longer runs — so a reader auditing *"what does the freshness guard cover?"* lands on the convicted name and reads a false answer about the live guard.** `A DEAD FUNCTION WITH A LIVE NAME IS A DOCUMENTATION SURFACE.` Remedy is cheap: delete it, or make it a one-line pointer to `artifact_content_digest`.
 
 ### ⚠️★★★★★ **R-510's HEADLINE, SO A COLD SEAT DOES NOT HAVE TO OPEN THE LEDGER FOR IT**
 ★★★★★ **`M8` GOES RED WITHOUT READING WHAT IT PLANTED, AND MY OWN R-509 §6.2 FIX IS WHAT BROKE IT** `[MEASURED, `REDPROOF.py:391/398` + `:213-219`]`: the stale payload is written to a temp path OUTSIDE the repo and consistency now defaults to `committed` mode, which early-returns `False` with *"path is outside the repo"* **before** `committed_text`, **before** `json.loads`, **before** any digest. `M8` was GENUINE until `07:10`; the printed line never changed because **`A MUTATION IS SCORED ON ITS COLOUR, NEVER ON ITS REASON.`**
