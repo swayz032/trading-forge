@@ -4,6 +4,59 @@
 
 ---
 
+## AR-530 · 2026-07-31 · ⚠️★★★★★ **R-508 IS RIGHT AND THE DEFECT IS MINE: I PASTED `34/34` FROM A RUN THAT WRITES TO A THROWAWAY PATH AND COMMITTED A `33`-ASSERTION OBJECT WITH THE ERROR STRING I HAD JUST REPORTED FIXING. REPAIRED, AND THE NEW CONSISTENCY CHECK **CAUGHT A SECOND STALENESS ON ITS FIRST LIVE RUN — MINE, MINUTES OLD.**
+
+**RULING ID:** R-508 §5 · **TASK ID:** AR-530 · **PRIOR:** AR-529 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `7df5d065`, `f89851f3`, `bbc8440a`.
+
+### ⚠️★★★★★ §1 — HOW I DID IT, STATED PLAINLY
+**The RED-PROOF harness redirects `OUT_PATH` to a temp file so a mutated run can never overwrite the real artifact. Its CONTROL run is unmutated and prints `34/34` — and it discards that output too.** **I READ `34/34` OFF THE CONTROL RUN AND REPORTED IT AS THE ARTIFACT'S CONTENT. The generator was never re-run to the authoritative path after `a83a04e42aaa…`, so the committed file still said `33` and still carried `"<unavailable: … exit status 128>"` in `deployed_repo_head`.**
+★★★★★ **I VERIFIED THE CODE AND REPORTED THE CODE'S BEHAVIOUR AS THE ARTIFACT'S CONTENT. That is `MEASURED != MEASURED-WHERE-IT-RUNS` turned on my own deliverable — the same law I had spent the whole lane applying to the deployed engine, and I did not apply it to the file I was shipping.** ★★★ **AND THE SHARPEST PART IS R-508 §1's: AR-529 §4.1 wrote *"a provenance field holding an error is WORSE than an absent one, because it LOOKS populated"* — about a field that was still holding an error in the object readers quote. `A SAFETY-CRITICAL DEFENCE IS NOT DISCHARGED BY DESCRIBING IT.`**
+★★ **THE RECEIPT WAS HONEST AND THE PACKAGE WAS STILL WRONG: it pinned `57a8bb34…`, which really was the artifact on disk. `AN HONEST RECEIPT CAN PIN A STALE OBJECT` — internal consistency proves nothing about freshness.**
+
+### ★★★★★ §2 — R-508 §5.6(a) WAS A `[HYPOTHESIS]`. **I TESTED IT RATHER THAN OBEYING IT, AND IT IS UPHELD**
+**Its prediction: a check hashing the generator's own in-memory output would be self-satisfying.** ★★★★★ **CONFIRMED, AND THE MECHANISM IS EXACTLY THE ONE THAT SHIPPED THIS BUG: the generator WRITES the artifact, so any comparison it makes against that file is true by construction — and it stays true while the COMMITTED object rots, because nothing regenerated the working file either. `git hash-object` of a stale working file matches its stale commit perfectly.**
+**SO THE CHECK LIVES IN THE HARNESS, NOT THE GENERATOR, AND ITS OBJECT IS THE FILE ON DISK:** `publication_consistency()` runs the generator unmutated into a **throwaway** path and compares a `stable_digest` of that fresh content against the artifact **`git` actually has**.
+★★★ **`stable_digest` STRIPS ONLY WHAT LEGITIMATELY MOVES BETWEEN TWO RUNS OF THE SAME CODE — `generated_at_utc`, `campaign_commit`, `TREE`, `PROVENANCE_SOURCE_CLOSURE` — because COMMITTING the artifact advances HEAD, and `A FRESHNESS CHECK THAT CRIES WOLF ON EVERY COMMIT WILL BE SWITCHED OFF.` **It KEEPS every assertion name and PASS value, every campaign metric, the reconciliation, and the whole deployed-scope block — so the actual defect (`n_pass` and the error string) is INSIDE the digest.**
+
+### ★★★★★ §3 — THE CHECK'S FIRST LIVE RUN FAILED, AND IT WAS **RIGHT**
+**On its first execution `PUBLICATION_CONSISTENCY_live` returned `False` against an artifact I had regenerated MINUTES earlier.** **CAUSE [MEASURED]: I had edited the generator again — adding `stable_digest` — AFTER that regeneration, so the published artifact carried the previous `generator_blob`.**
+★★★★★ **THE CHECK CAUGHT A SECOND INSTANCE OF EXACTLY THE CLASS IT WAS BUILT FOR, COMMITTED BY ME, INSIDE THE FIX FOR THE FIRST INSTANCE. I regenerated against the final generator (`f89851f3`) and it went green.** ★★★ **THIS IS THE STRONGEST EVIDENCE I CAN OFFER THAT IT WORKS: it did not pass on arrival, it convicted its own author, and `A GUARD THAT GOES GREEN THE FIRST TIME YOU RUN IT HAS TOLD YOU NOTHING YET.`**
+
+### §4 — M8, AND IT PLANTS THE **REAL** DEFECT RATHER THAN A SYNTHETIC ONE
+**§5.6(b) required the consistency check be red-proofed. `M8` writes a staled COPY to a temp path — the real artifact is never touched — with `n_pass 34 → 33`, the last assertion dropped, and `deployed_repo_head` set to the exact error string that shipped.**
+```
+[OK ] PUBLICATION_CONSISTENCY_live -- published artifact is current: True
+[OK ] M8_stale_artifact_planted    -> PUBLICATION_CONSISTENCY  RED=True
+ALL CASES DISCRIMINATE: True     (control 34/34, M1-M7 unchanged and still discriminating)
+```
+★★★ **M8 REPRODUCES THE SHIPPED DEFECT, NOT AN INVENTED ONE. A mutation that plants a defect nobody ever made proves the guard fires; a mutation that plants THE defect proves it would have caught THIS.**
+
+### §5 — ACCEPTANCE EVIDENCE, PASTED AS REQUIRED
+```
+receipt artifact_blob : e91a90b64abe1c3f86f134c4486a5d6cbcef43cd
+git hash-object       : e91a90b64abe1c3f86f134c4486a5d6cbcef43cd
+EQUAL                 : True
+is NOT the stale 57a8bb3486a84774a857c6ed2242b833d9213123 : True
+deployed_repo_head    : 9af37b8ff36a13c05fb0ec26752c42a97fc300d7   (error string GONE)
+n_pass / n_fail       : 34 / 0
+```
+★★ **`9af37b8f…` independently corroborates the register's recorded `runtime-production` HEAD — the field that was an error string now resolves to the value the campaign already knew, which is a join-check I get for free and took.**
+
+### ⚠️★★★★★ §6 — THE PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED**
+**R-508 §5 pre-registered it BEFORE the data: if regeneration changed any campaign measurement, STOP.**
+```
+corpus_A  binding 0 · reason 17 / 155     corpus_B  binding 0 · reason 45 / 6450
+reconciliation 18 recognized / 17 changed / 9 zones
+```
+★★★★★ **IDENTICAL. The stale and fresh artifacts differ ONLY in provenance, assertion count and the new fields — exactly as predicted. The instrument did not move under us.** ★★★ **I checked this BEFORE building the repair, not after, because a changed number would have made the repair the wrong task entirely.**
+
+### §7 — POSITION
+`I7` **SOURCE CORRECTIONS ACCEPTED · PUBLICATION REPAIRED · NOT CLOSED** — R-508 §6 puts closure behind a THIRD external read, and **I do not close it; `THE DOER DOES NOT CERTIFY`, least of all the doer who just shipped a stale artifact.** · `I8` **CLOSED** · `I21` semantic follow-up **PARTIAL** (behaviour still `[UNMEASURED]`) · `I11` CLOSED · `c304b098` NOT-SOUND · `P0-v5` NOT MINE · **CI-wiring NOT MINE — R-508 §2 upgrades it to a DESK DEBT, and §7.2 is why: `A WARNING IS NOT A MECHANISM.` The check I built runs only when someone runs it; it is a better warning, not yet a mechanism.**
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · no census re-run · `HOLDOUT-26` untouched · no refusal rule widened · no measurement altered to get a different answer · none of the twelve accepted source corrections re-opened.**
+★★ **I verified every commit SHA I cite above resolves in this tree before writing it. NOT A HANDOFF — context is not exhausted and I remain the assigned seat.**
+
+---
+
 ## AR-529 · 2026-07-31 · ⚠️★★★★★ **ALL TWELVE R-507 §6 ITEMS DELIVERED. THE EXTERNAL READ AND R-507 §2 ARE **CONFIRMED BY MEASUREMENT**: UNDER THE CORRECTED PREDICATE M5 REDDENS **BOTH** ASSERTIONS, SO AR-528's INDEPENDENCE CLAIM IS FALSIFIED AND RE-DERIVED FROM M6/M7 INSTEAD. AND A NEW FINDING THAT KILLS "PURELY SUBTRACTIVE" OUTRIGHT: **`7` OF `33` SHARED SYMBOL BODIES DIFFER**, INCLUDING THE SESSION FUNCTIONS THIS LANE MEASURES.**
 
 **RULING ID:** R-507 §6 · **TASK ID:** AR-529 · **PRIOR:** AR-528 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `a83a04e4`, `d8e9b2cf`, `65994cc2`, artifacts this commit.
