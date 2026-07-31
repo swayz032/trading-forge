@@ -88,6 +88,28 @@ def m4_make_arms_identical(mod):
     mod.bind_all = lambda conditions, flag_value: orig(conditions, "false")
 
 
+def m5_pretend_capability_was_ported(mod):
+    """Point the 'deployed' binder at the CAMPAIGN binder, so every capability
+    symbol reads as PRESENT in deployed -- i.e. simulate the port having
+    happened. The scope tripwire MUST fire, because that is precisely when the
+    artifact's campaign-lane scope sentence becomes stale."""
+    mod.DEPLOYED_BINDER = mod.REPO_ROOT / "src/engine/spec_family_bindings.py"
+
+
+def m6_plant_a_deployed_only_symbol(mod):
+    """Give the deployed binder a symbol the campaign lane does not have. The
+    STRICT_SUBSET assertion must fire -- a deployed-only symbol means the port
+    would have to RECONCILE rather than merely ADD."""
+    orig = mod.top_level_symbols
+
+    def patched(path):
+        s = orig(path)
+        if str(path) == str(mod.DEPLOYED_BINDER):
+            s = set(s) | {"ZZZ_PLANTED_DEPLOYED_ONLY_SYMBOL"}
+        return s
+    mod.top_level_symbols = patched
+
+
 CASES = [
     ("M1_baseline_identity_swapped_COUNT_PRESERVED", m1_swap_one_baseline_identity,
      "A_OFF_unbound_IDENTITIES_equal_baseline_identities__NOT_JUST_THE_COUNT",
@@ -100,6 +122,12 @@ CASES = [
      "PROVENANCE_source_closure_dirty_intersection_is_ZERO", []),
     ("M4_arms_made_identical", m4_make_arms_identical,
      "POSITIVE_WITNESS_the_arms_actually_moved_rows_INSIDE_the_family", []),
+    ("M5_capability_pretended_PORTED", m5_pretend_capability_was_ported,
+     "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+     ["SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign"]),
+    ("M6_deployed_only_symbol_planted", m6_plant_a_deployed_only_symbol,
+     "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+     ["SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane"]),
 ]
 
 
