@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3237` at THIS commit, 2026-07-31 11:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3242` at THIS commit, 2026-07-31 11:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3237` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3242` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -2948,6 +2948,11 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 - ★★★ **THE CAMPAIGN TREE IS NOT A VALID LANE FOR A REFUSAL TRACE: it has `spec_family_bindings.py` at `160,049` B vs `40,583` in `runtime-production`, and NO `spec_execution_preflight.py` AT ALL.**
 
 ## KNOWN-BENIGN (do not investigate)
+
+### ✅★★★ THE IDLE WATCHDOG'S BAR IS **DELIBERATELY WIDENED TO `60 min`** DURING THE `R-516` HOLD — NOT A COVERAGE HOLE (2026-07-31 11:28)
+
+**The worker is idle BECAUSE IT DELIVERED.** `AR-540` landed `10:40`; `R-516` is held for the tenth external read; the worker's own §6 says `P0` → *"awaiting the §3 ruling"*. ★★★ **`A WORKER THAT HAS GONE QUIET IS USUALLY A DESK THAT CLOSED ONE TASK AND OPENED NONE` — `advisor-onboarding` §4a, and it is exactly the case here. The silence is DIAGNOSED, so the `15 min` bar was costing a turn per firing to re-report a known state.**
+✅ **SWAP DONE CORRECTLY, ONE RIG PER CHANNEL PRESERVED:** I captured the running definition BEFORE stopping it (`TaskStop bcnsis18y`) — which is the only reason the replacement kept the THIRD channel, `STRANDED-CAPABILITY-REGISTER.md`, that I would otherwise have guessed away — **verified the gap EMPTY (`AR-540` still newest, external read still `f59576a8`), and armed EXACTLY ONE replacement (`bgrjr6yww`) within the minute.** ★★★★★ **IT SELF-RESTORES: `q < 5` resets `BAR` to `15` and emits `WORKER RESUMED`, so normal sensitivity returns THE MOMENT THE WORKER MOVES and no seat has to remember to undo this.** `A WIDENED BAR THAT CANNOT NARROW ITSELF IS A DISABLED MONITOR.`
 
 ### ★★★★★ THE IDLE WATCHDOG IS FIRING ON A **DECLARED STOP** — EXPECTED, NOT AN INCIDENT (2026-07-30 02:35)
 
