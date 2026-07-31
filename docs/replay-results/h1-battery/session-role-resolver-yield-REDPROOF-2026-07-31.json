@@ -24,7 +24,7 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "e5a0e695b853e62f14cb2872d18f6c3fd2206a9c",
+    "head": "f5350c09fbf0696ced5ecf0bdb6678c479c0940b",
     "branch": "h1-wave4-sealed12-driver",
     "harness_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
     "generator_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
@@ -62,7 +62,7 @@
         "definition": "The commit that last published the artifact. Knowable here because the artifact is already committed."
       },
       "receipt_measurement_commit": {
-        "value": "e5a0e695b853e62f14cb2872d18f6c3fd2206a9c",
+        "value": "f5350c09fbf0696ced5ecf0bdb6678c479c0940b",
         "definition": "HEAD when THIS receipt was produced."
       },
       "\u26a0\ufe0f_NOT_SELF_CERTIFIABLE": "This receipt cannot name its OWN publication commit -- that commit does not exist until the receipt is committed. R-510 \u00a76.5 leaves it to the external read or CI, and it is deliberately absent rather than guessed."
@@ -70,7 +70,7 @@
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
-  "ALL_CASES_DISCRIMINATE": false,
+  "ALL_CASES_DISCRIMINATE": true,
   "cases": [
     {
       "case": "CONTROL_unmutated",
@@ -242,7 +242,7 @@
     },
     {
       "case": "M9_committed_artifact_STALE_worktree_FRESH",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_6iubn1fl",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_kjkmg3ia",
       "PRE_R509_worktree_read": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
         "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
@@ -305,7 +305,7 @@
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_n_dt066q\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_nvgmwuad\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
         "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
         "published_digest": "369cd34939176804fcba1f9b54f16415687ffa4d0f5576c2baddbd65a582d8af",
         "published_n_pass": 33,
@@ -348,7 +348,7 @@
     },
     {
       "case": "M12_artifact_worktree_DIRTY_commit_CURRENT",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_98iy0jmx",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_d6329xkw",
       "WHAT_WAS_MUTATED": "ONE key added to the artifact's WORKING FILE only. Nothing was committed after the fixture's initial commit, so HEAD still holds the real, current artifact.",
       "BEFORE_the_edit__all_pairs_identical": true,
       "artifact_pair_went_RED": true,
@@ -365,12 +365,12 @@
     },
     {
       "case": "M13_receipt_uncovered",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_byjfr96q",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_d2l_qwfh",
       "\u26a0\ufe0f_WHAT_OK_MEANS_HERE": "OK=True means THE EXPERIMENT WAS VALID AND READABLE -- not that the receipt is covered. This case is DIAGNOSTIC: its finding is RECEIPT_IS_COVERED_BY below, and an empty list there is a real defect being reported, not a passing test.",
       "PRE_REGISTERED_IN": "AR-534 \u00a72, written before this code existed.",
       "PREDICTION_ON_RECORD": "NOTHING will redden -- the receipt has zero executable consumers (filename census: generator 0, harness 1 = its own write).",
       "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was committed, so the receipt now describes a harness that no longer exists, while every path is clean.",
-      "receipt_records_harness_blob": "5d7aa757149f75cedb0f5f47437f8b01d5c964e1",
+      "receipt_records_harness_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
       "harness_blob_at_HEAD_now": "d0f6298b9f952a261c5b2fbc815b428436c09dcd",
       "RECEIPT_IS_STALE_IN_FACT": true,
       "VOID_GUARD__harness_pair_green_at_verdict": true,
@@ -427,23 +427,23 @@
       "\u26a0\ufe0f_WHY_THE_RECEIPT_IS_NOT_IN_PUBLICATION_PATH_SET": "MEASURED, not argued: the receipt records PROVENANCE.head and receipt_measurement_commit, both = HEAD at run time. Committing it advances HEAD, so the next run necessarily writes a different file and a worktree==HEAD gate on it could never go green. `A GATE THAT CAN NEVER BE GREEN TRAINS EVERY READER TO IGNORE IT` -- R-511 \u00a74's own reason for refusing the hosted CI design.",
       "detail": {
         "harness": {
-          "recorded_in_committed_receipt": "693968f3a3647122011f293c62b2bc04ef837c43",
+          "recorded_in_committed_receipt": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
           "at_HEAD_now": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
-          "MATCHES": false
+          "MATCHES": true
         },
         "generator": {
-          "recorded_in_committed_receipt": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+          "recorded_in_committed_receipt": "85acccb4486c9f955e8690f446dc3e750f67bb40",
           "at_HEAD_now": "85acccb4486c9f955e8690f446dc3e750f67bb40",
-          "MATCHES": false
+          "MATCHES": true
         },
         "artifact": {
-          "recorded_in_committed_receipt": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+          "recorded_in_committed_receipt": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
           "at_HEAD_now": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
-          "MATCHES": false
+          "MATCHES": true
         }
       },
-      "VERDICT": "STALE -- the committed receipt describes older code",
-      "OK": false
+      "VERDICT": "CURRENT",
+      "OK": true
     }
   ]
 }
