@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3061` at THIS commit, 2026-07-31 03:37 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3069` at THIS commit, 2026-07-31 03:49 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3061` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3069` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,17 +83,25 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-508 LANDED (`3f356405`) · `AR-530` IS NEWEST AND **UNRULED** → `R-509` IS OWED, HELD FOR THE THIRD EXTERNAL READ** · branch PUBLISHED at **`f278ff14`** [MEASURED 03:36 BY `ls-remote`, NOT CACHE — the prior header's `50560083` was one commit stale before the ink dried] · live delivery still **`c304b098`** (2026-07-31 03:36, ADVISOR SEAT = **FRESH, RE-SEATED AGAIN** in `claude.exe 15520`, context NEW; WORKER SEAT = `claude.exe 26204`, ALIVE, NOT handing off)
+## ✅★★★★★ SEAT — **R-509 LANDED (`93200a6f`) · `AR-530` IS RULED · **NO RULING DEBT** · THE THIRD EXTERNAL READ ARRIVED (`6f1b5c7d`, `03:37:52`) AND THE GATE WAS HONOURED** · live delivery still **`c304b098`** (2026-07-31 03:48, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, **ALIVE AND AUTHORIZED** on R-509 §6, its ear `python 16820` alive)
+
+### ⚠️★★★★★ **THE ONE THING R-509 FOUND THAT MUST NOT BE LOST — AND IT MAKES THE FIX SMALL**
+★★★★★ **`git rev-parse HEAD:<path>` IS ALREADY IN THE GENERATOR** (`session_role_resolver_yield.py:178-183`, `blob_pair()`) **AND ALREADY ASSERTED** on the binder (`:990`), the executed source closure (`:987`), the generator, the pinned baseline and corpus_B — **`5` call sites, and NOT ONE of them is the artifact the lane publishes.** ★★★ **THE EXTERNAL READ SAID THE MECHANISM WAS ABSENT; IT IS PRESENT AND MIS-AIMED.** `[MEASURED HERE, executable lines + positive control: committed-tree pattern `0` in the harness / `1` in the generator, control pattern `7` and `8`.]`
+★★★★★ **`A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE` — that is why three readers including me missed it, and why the remedy is an existing helper aimed at one more path rather than a new mechanism.**
+⚠️★★★★★ **AND THE SECOND FINDING, SHARPER THAN THE EXTERNAL READ'S: `stable_digest` (`:119-149`) IS AN **ALLOW-LIST** BUILT FROM SIX KEYS WHILE ITS DOCSTRING IS WRITTEN AS A STRIP-LIST. `[MEASURED HERE, top-level key enumeration]` **`11` of `16` TOP-LEVEL BLOCKS AND `30` of `34` ASSERTION DETAILS ARE INVISIBLE TO THE FRESHNESS GUARD** — including `IDENTITY_REFUSAL_MAP` (the `17` per-condition identities R-502 §4 demanded), `READ_THIS_ONE__HEADLINE`, `POSITIVE_CONTROLS` and `WHAT_THIS_DOES_NOT_MEASURE`. **A regeneration that changed any of them would still be certified CURRENT.**
+★★★ **THE SHIPPED PACKAGE IS NEVERTHELESS CORRECTLY COMMITTED `[MEASURED HERE — all three paths: worktree `hash-object` == `rev-parse HEAD:<path>`, porcelain empty]`. `THE PACKAGE IS CLEAN AND THE GUARD STILL DOES NOT PROVE IT.`**
+✅ **THIS READ'S CITATIONS WERE `7 / 7` CLEAN** `[MEASURED, `git cat-file -t` + both lineage counts exact]` — the precondition minted after the second read's `2 of 4` fabrications ran and the source PASSED it. **KEEP THE CHECK; UPGRADE THIS DELIVERY.** `A SOURCE'S GRADE IS PER-DELIVERY, IN BOTH DIRECTIONS.`
+★★★ **`I8` RE-LABELLED, NOT RE-OPENED: `CLOSED-AS-UNREACHABLE`, reopening condition NAMED = an extraction authorization (OPERATOR'S). The external read judged AR-530's RELAY instead of R-507 §5's MEASUREMENT — correct finding, wrong document — and its three constraints (no population named · no fifth regex round · `HOLDOUT-26` protected) are adopted VERBATIM and remain binding.**
 
 ### ★★★★★ **FRESH-SEAT FIRST-WAKE MEASUREMENTS — 2026-07-31 03:36, ALL `[MEASURED HERE]`, NONE COPIED**
 | question | answer | instrument |
 |---|---|---|
 | newest AR | **`AR-530`**, **UNRULED** → **`R-509` OWED** | `grep -n "^## AR-"`, file mtime `03:32:19` |
 | newest ruling | `R-508` (`3f356405`) — disposed AR-529 | `grep -n "^## R-"` |
-| has the THIRD external read landed? | ⚠️ **NO.** `origin/external-advisor/gpt-rulings` = **`54413130`** = the SECOND read (`03:21:37`), already disposed by R-508 | `git ls-remote origin refs/heads/external-advisor/gpt-rulings` |
+| has the THIRD external read landed? | ⚠️ **NO** at `03:36` → ✅ **YES at `03:38:38`** (`6f1b5c7d`, `238` lines), **ruled by R-509 two minutes later** | `git ls-remote`, then watcher `bhdror0b5` fired |
 | campaign branch published? | ✅ **YES** — origin `= f278ff14 =` local `HEAD`, `0/0` | `ls-remote` **and** `rev-list --left-right --count` |
 | worker alive? | ✅ `claude.exe 26204`, its `worker_ear.py` (`python 16820`) alive under it | `Win32_Process` walk |
-⚠️★★★★★ **AND THE HOLD'S COST IS **NOT** WHAT THE LAST TWO WAKES RECORDED — RE-DERIVED, NOT COPIED: R-506/R-507 could both write "the hold costs nothing" because the worker had terminal lanes. **IT NOW COSTS A WORKER.** AR-530 landed `03:32`, its §7 assigns every remaining item (CI-wiring · `P0-v5` · Revision-4 · `I6` · `I14`) to THIS DESK, and an authorization can only travel by ruling — the exact thing that is held. **THE SEAT IS IDLE AND IT IS THE HOLD DOING IT.** ★★★ **THAT IS NOT AN ARGUMENT TO BREAK THE ORDER** (`A CHANNEL IS NOT AN AUTHOR`; R-499/R-500 were ruled without a paste and that violation still stands on the record) — **it is the number the operator is owed when he is told what the hold buys.**
+⚠️★★★★★ **AND THE HOLD'S COST IS **NOT** WHAT THE LAST TWO WAKES RECORDED — RE-DERIVED, NOT COPIED: R-506/R-507 could both write "the hold costs nothing" because the worker had terminal lanes. **IT NOW COSTS A WORKER.** AR-530 landed `03:32`, its §7 assigns every remaining item (CI-wiring · `P0-v5` · Revision-4 · `I6` · `I14`) to THIS DESK, and an authorization can only travel by ruling — the exact thing that is held. **THE SEAT IS IDLE AND IT IS THE HOLD DOING IT.** ✅ **DISCHARGED AT `03:47` — measured duration of the idle: `~15 min` (AR-530 `03:32` → R-509 `03:47`). RECORDED RATHER THAN DELETED, because the NEXT wake must re-derive this and a struck-through number is the only honest baseline.** ★★★ **IT WAS NOT AN ARGUMENT TO BREAK THE ORDER** (`A CHANNEL IS NOT AN AUTHOR`; R-499/R-500 were ruled without a paste and that violation still stands on the record) — **it is the number the operator is owed when he is told what the hold buys.**
 
 ### ★★★ **MONITOR RIG — ADOPTED, NOT RE-ARMED. `0` ARMED, `0` KILLED, `0` DUPLICATES** `[MEASURED HERE 03:35, by ownership not by age]`
 **I am a NEW seat inside `claude.exe 15520` — the SAME process as my predecessor, so its monitors are still delivering to me and are NOT orphans (§4a; `A PID IS NOT A DURABLE ID FOR A SEAT`, R-505 §1).** Exactly **`3`** desk monitors, each identified by reading its FULL command line, not its age:
