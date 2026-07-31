@@ -737,6 +737,16 @@ def main():
         reddened_by.append("PUBLICATION_PATHS_worktree_equal_committed")
     if m13_pc["PUBLISHED_ARTIFACT_IS_CURRENT"] is not True:
         reddened_by.append("PUBLICATION_CONSISTENCY")
+    # ★★★★★ THE REMEDY, EVALUATED AGAINST THIS FIXTURE -- which makes M13 its
+    #   own red-proof: the case that PROVED the receipt uncovered is the case
+    #   that now proves the reader catches it. Same fixture, same mutation.
+    m13_rec_prov = json.loads(committed_text(m13fix, RECEIPT_REL) or "{}").get("PROVENANCE", {})
+    m13_reader_red = any(
+        m13_rec_prov.get("%s_blob" % label) != m13_pairs["pairs"][rel]["head_blob"]
+        for label, rel in (("harness", HARNESS_REL), ("generator", GENERATOR_REL),
+                           ("artifact", ARTIFACT_REL)))
+    if m13_reader_red:
+        reddened_by.append("RECEIPT_records_the_CURRENT_publication_blobs")
 
     # ⚠️★★★★★ THE SECOND VOID CONDITION, AND IT ALREADY FIRED ONCE.
     #   On M13's first run PUBLICATION_CONSISTENCY reddened and the case reported
@@ -788,6 +798,12 @@ def main():
         "CONFOUND_WATCH__published_n_pass": m13_pc.get("published_n_pass"),
         "POSITIVE_CONTROL__dirty_harness_does_redden": control_fired,
         "RECEIPT_IS_COVERED_BY": reddened_by,
+        "⚠️_FINDING_BEFORE_THE_REMEDY__PRESERVED": (
+            "At commit 8e0cbbf4, run from a clean tree with both void guards clear and the "
+            "positive control firing, this list was EMPTY: the receipt was stale in fact and "
+            "NOTHING reddened. That is the defect R-511 §6.8 authorized the remedy for. It is "
+            "recorded here because the remedy now makes this case go green, and a defect that "
+            "leaves no trace once fixed is a defect the next reader will re-introduce."),
         "FINDING": (
             "⚠️ VOID -- run from a dirty or confounded tree; this case says NOTHING about "
             "the receipt. Re-run from a clean tree." if m13_void else
@@ -833,6 +849,65 @@ def main():
           % ("OK " if pub_ok else "BAD", pub_ok,
              "" if pub_ok else "  DIRTY: %s" % [r for r, p in PUB["pairs"].items()
                                                 if not p["IDENTICAL"]]))
+
+    # ── ⚠️★★★★★ R-511 §6.8 REMEDY -- THE RECEIPT'S FIRST EXECUTABLE READER ──
+    #    M13 answered: the receipt was UNCOVERED. `A RECEIPT NOBODY READS IS A
+    #    DECORATION.` This is the reader whose absence M13 proved, and it must
+    #    stay ABOVE `all_ok` for the same reason the pair case does.
+    #
+    #    ⚠️ R-511 §6.8 proposed TWO remedies and I am implementing ONE, with the
+    #    reason MEASURED rather than argued. Adding RECEIPT_REL to
+    #    PUBLICATION_PATH_SET (worktree == HEAD) CANNOT WORK: the receipt records
+    #    `PROVENANCE.head` and `receipt_measurement_commit`, both = HEAD at run
+    #    time, so COMMITTING the receipt advances HEAD and the next run writes a
+    #    different file. That gate would be RED forever for a structural reason
+    #    -- the permanently-red failure R-511 §4 rejected for CI, rebuilt here.
+    #    THIS reader converges instead: committing the receipt does not change
+    #    the harness, generator or artifact blobs it records, so it goes GREEN on
+    #    the next run and stays there until one of them actually changes.
+    receipt_raw = committed_text(REPO, RECEIPT_REL)
+    if receipt_raw is None:
+        rec_ok, rec_detail = False, {"reason": "the receipt is not present in HEAD at all"}
+    else:
+        rec_prov = json.loads(receipt_raw).get("PROVENANCE", {})
+        rec_detail = {}
+        for label, rel in (("harness", HARNESS_REL), ("generator", GENERATOR_REL),
+                           ("artifact", ARTIFACT_REL)):
+            recorded = rec_prov.get("%s_blob" % label)
+            current = PUB["pairs"][rel]["head_blob"]
+            rec_detail[label] = {"recorded_in_committed_receipt": recorded,
+                                 "at_HEAD_now": current, "MATCHES": recorded == current}
+        rec_ok = all(v["MATCHES"] for v in rec_detail.values())
+    results.append({
+        "case": "RECEIPT_records_the_CURRENT_publication_blobs",
+        "WHAT_IT_ASSERTS": (
+            "The COMMITTED receipt describes the harness, generator and artifact that are at "
+            "HEAD right now -- so it is a proof about what is published, not a souvenir of a "
+            "tree that no longer exists."),
+        "WHY_IT_EXISTS": (
+            "R-511 §6.8 + M13. The receipt had ZERO executable consumers: its filename "
+            "appeared 0 times in the generator and once in the harness, and that once was its "
+            "own write. M13 committed a harness change on top of a committed receipt, left "
+            "every assertion green, and NOTHING reddened. This is the reader that closes it."),
+        "⚠️_MEANING_OF_RED": (
+            "The committed receipt was produced by code that has since changed. Re-run the "
+            "harness and commit the regenerated receipt -- do NOT reason from the old one. "
+            "This is EXPECTED and self-clearing in the window between committing code and "
+            "committing the receipt that describes it."),
+        "⚠️_WHY_THE_RECEIPT_IS_NOT_IN_PUBLICATION_PATH_SET": (
+            "MEASURED, not argued: the receipt records PROVENANCE.head and "
+            "receipt_measurement_commit, both = HEAD at run time. Committing it advances HEAD, "
+            "so the next run necessarily writes a different file and a worktree==HEAD gate on "
+            "it could never go green. `A GATE THAT CAN NEVER BE GREEN TRAINS EVERY READER TO "
+            "IGNORE IT` -- R-511 §4's own reason for refusing the hosted CI design."),
+        "detail": rec_detail,
+        "VERDICT": "CURRENT" if rec_ok else "STALE -- the committed receipt describes older code",
+        "OK": rec_ok,
+    })
+    print("[%s] RECEIPT_records_the_CURRENT_publication_blobs -> %s"
+          % ("OK " if rec_ok else "BAD",
+             "CURRENT" if rec_ok else "STALE: %s"
+             % [k for k, v in rec_detail.items() if not v.get("MATCHES")]))
 
     all_ok = all(r["OK"] for r in results)
     def git(*a):
