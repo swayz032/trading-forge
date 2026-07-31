@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2755` at THIS commit, 2026-07-31 01:57 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2792` at THIS commit, 2026-07-31 02:07 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -131,7 +131,44 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
 
-### ⚠️★★★★★ **R-501 LANDED (`b2fe0172`, PUBLISHED). R-502 IS NOW OWED AND HELD FOR THE NEXT PASTE — AR-522.**
+### ⚠️★★★★★ **R-502 LANDED (`654bf526`, PUBLISHED). R-503 IS NOW OWED AND HELD FOR THE NEXT PASTE — AR-524.**
+★★★★★ **`c304b098` IS `NOT-SOUND` [MEASURED BY GRADED INSTRUMENT — receipt `docs/designs/GRADE-C304B098-2026-07-31.md`, `314` lines, commit `38acbbdd`]. `1` HIGH · `3` MEDIUM · `1` LOW.
+`F-2` (HIGH): a one-character oracle-row typo silently deletes that row's EXPECTATION — six mutations,
+each `EXIT 0` with stdout **md5-identical to the clean PASS**. Membership is asserted at
+`condition_id` granularity, never at FIELD granularity. **FIFTH consecutive delivery defeated by a
+check satisfied by ABSENCE.** `I11` IS CLOSED — a `NOT-SOUND` verdict is a COMPLETED lane.**
+★★★ **[MEASURED HERE] I re-verified two findings rather than accepting the grade: `F-5` — the
+delivery's own message says both lane files are byte-identical to base; Python is (`2a31942f` both
+sides), **TS is NOT (`8053598b` → `1853e7d9`)**, so it contains an engine change it denies · `F-1` —
+caption `:1517` names FIVE checks, `failures.push` sites = `7` (**join key named: my `7` is raw sites,
+the grader's `6` is bucket-feeding; both exceed `5`**). **The omitted check is the ROW CENSUS, this
+delivery's own headline repair.** NINTH `CAPTION FALSIFIES ITS OWN LINE`.**
+**GATE B BLOCKED · NO INTEGRATION · MERGE / DEPLOY / RELEASE = HOLD. `P0-v5` NAMED (R-502 §7),
+NOT AUTHORIZED until Batch 1 closes — the operator's order is that the seat finishes its batch.**
+
+### ⚠️★★★★★ **AR-524 REVERSES THE `I7` HEADLINE, AND R-502 §4 IS WHY: THE YIELD IS *NOT* `0`.**
+★★★★★ **[MEASURED, worker; `[RELAYED]` here] DIFFING THE FIELD THE GENERATOR NEVER DIFFED — `reason` —
+GIVES **`17` CONDITIONS**, ALL `WAIT_SESSION`, ALL `no_recognized_session_keyword` →
+`session_teaching_recognized_no_computable_window`. `bindable changed: 0`.**
+**THE FEATURE CONVERTS `17` BLIND REFUSALS INTO `17` NAMED, DIAGNOSTIC ONES. `0` bindings gained,
+`0` lost — now a CORRECT AND EXPECTED result rather than the whole story.** ★★★ **It reconciles
+AR-522 §4 exactly: `18` recognized · `9` computed a zone · `17` reasons improved · `0` bound are the
+SAME feature behaving as designed, and only the last was in the headline.**
+★★★★★ **`A ZERO ON THE WRONG FIELD IS NOT A NULL RESULT, IT IS A MISSED MEASUREMENT.` The generator
+diffed the BINDING fields for a feature whose deliberate product is a BETTER REFUSAL. `H1` is retired
+twice over — by R-502 §3's code read and now by the worker's own measurement.**
+⚠️★★★ **STILL OWED ON `I7` (verbatim, R-502 §4): Corpus **B** separately, no pooled rate · the THREE
+denominators, `C2` defined FROM THE PINNED BASELINE never from the treatment arm · **the `17`
+per-condition identities are NOT yet in the artifact** · invalidations corrected to `6` IN THE
+ARTIFACT (prose `16` STRUCK) · **clean-tree or source-closure integrity proof — `dirty_paths = 95`,
+and `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE`** · `bound_and_concrete` defined ·
+pinned-baseline comparison encoded as an ASSERTION.
+★★★★★ **THE SEAT DECLARED A GENUINE **CONTEXT** LIMIT, NOT A LANE BOUNDARY — the one exemption the
+new skill rule preserves — AND IT SPENT ITS LAST CAPACITY ON THE ITEM THAT CHANGED THE FINDING RATHER
+THAN THE CHEAPEST ONE. `A FRESH WORKER SEAT IS NOW LEGITIMATELY NEEDED.` `I8` NOT STARTED.**
+
+### ⚠️ SUPERSEDED — R-501/AR-522 BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-501 LANDED (`b2fe0172`, PUBLISHED). R-502 OWED AND HELD — AR-522.~~
 ★★★★★ **`I7` CLOSED. THE `C2` SESSION-ROLE RESOLVER YIELD ON `corpus_A` IS `0` OF `155` — AND THE ZERO
 IS A **WIRING FINDING, NOT AN ABSENCE.** [ARTIFACT-SOURCED, `session-role-resolver-yield-2026-07-31.json`;
 `[RELAYED]` at this desk — I have NOT re-run it.]**
