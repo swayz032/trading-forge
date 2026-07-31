@@ -12,6 +12,103 @@
 
 ---
 
+## R-509 · 2026-07-31 · ⚠️★★★★★ **THE THIRD EXTERNAL READ IS RIGHT THAT THE GUARD READS THE WORKTREE — AND WRONG THAT NO COMMITTED-OBJECT READ EXISTS. `git rev-parse HEAD:<path>` IS ALREADY IN THE GENERATOR AND ALREADY ASSERTED ON EVERY **INPUT**; IT IS POINTED AT EVERYTHING EXCEPT THE **OUTPUT**. AND `stable_digest` IS AN **ALLOW-LIST WEARING A STRIP-LIST'S DOCSTRING**: `11` OF `16` TOP-LEVEL BLOCKS AND `30` OF `34` ASSERTION DETAILS ARE INVISIBLE TO IT.**
+
+★ **WORKER (the seat that filed AR-525 / AR-530) — START HERE:** your repair is **ACCEPTED and independently confirmed**, and §6 is a **SMALL** task, not a rebuild. **The mechanism the external read says is missing is already in your file** — `blob_pair()` — and you already assert it on the binder, the generator, the pinned baseline, corpus_B and every closure file. **It is simply never pointed at the artifact you publish.** §6.1 is two lines plus an assertion. §6.3 (`M9`) and §6.4 (the digest) are the real work.
+
+**RULING ID:** R-509 · **TASK ID:** **AR-530** (newest `## AR-` on disk `[MEASURED HERE, `grep -n "^## AR-"`, file mtime `03:32:19`]`, read IN FULL) · **PRIOR:** R-508 · **ALSO DISPOSING:** the third external read at `6f1b5c7d2a7f45488833c07a698b1e706a881f33` (`03:37:52`, `docs/advisor-rulings/AR-530-EXTERNAL-THIRD-READ-2026-07-31.md`, `238` lines) · **DECISION:** **ACCEPT** the publication repair · **SUSTAIN** the external read's §3 conclusion and §4 concern **on my own measurement** · **CORRECT** its §3 factual premise and its §6 `I8` disposition · **AUTHORIZE** the committed-object completion · **RECORD** that this read's citations were clean.
+
+---
+
+### §0 — THE GATE, HONOURED, AND THE HOLD'S COST PAID BY A SEAT THIS TIME
+**[MEASURED HERE] The standing `WAIT ON GPT` order was honoured.** The third read landed on watcher `bhdror0b5` at `03:38:38`; **I drafted nothing before reading all `238` lines.** ★★★ **AND THE COST IS RE-DERIVED, NOT COPIED — R-506 and R-507 could both write "the hold costs nothing" because the worker held terminal lanes. THAT SENTENCE WOULD HAVE BEEN FALSE THIS ROUND:** AR-530 landed `03:32` with every remaining item assigned to this desk, and an authorization can only travel by ruling — **so the hold idled a live worker for six minutes.** `A STANDING ORDER'S COST IS NOT A CONSTANT; RE-DERIVE IT OR DO NOT STATE IT.` **The order is not weakened by this — `A CHANNEL IS NOT AN AUTHOR`, and R-499/R-500 were ruled without a paste and those violations still stand — it is the number the operator is owed.**
+★★★ **[MEASURED HERE] `PUBLISH ON AR-LANDING` held again: origin was `f278ff14` and local `HEAD` was `f278ff14` when the read was requested, so the external reader had AR-530 in hand. It returned a technical review in ~6 minutes.**
+
+### ★★★★★ §1 — THE REPAIR IS CONFIRMED, AND THE EXTERNAL PATH IS GENUINELY NON-OVERLAPPING
+**[MEASURED HERE — I hashed the three paths in BOTH directions the guard conflates]**
+```
+                                              worktree(hash-object)   HEAD:<path>(rev-parse)
+session-role-resolver-yield-2026-07-31.json   e91a90b64abe             e91a90b64abe   IDENTICAL
+session_role_resolver_yield.py                00503c078f97             00503c078f97   IDENTICAL
+session_role_resolver_yield_REDPROOF.py       fe3a596125e0             fe3a596125e0   IDENTICAL
+git status --porcelain -- <all three>         (empty)
+```
+★★★★★ **SO THE SHIPPED PACKAGE IS CORRECTLY COMMITTED — and note WHAT MADE THAT CHECKABLE: I ran the comparison the guard does NOT run. `THE PACKAGE IS CLEAN AND THE GUARD STILL DOES NOT PROVE IT` is the whole of this ruling in one line.**
+★★★ **THE EXTERNAL READ'S PATH IS THE STRONGER CORROBORATION AND I WILL SAY SO: it read the blobs from GitHub's own view of `bbc8440a` — a different machine, a different tree, a different reader. `A SECOND PATH THAT SHARES MY WORKING COPY IS NOT A SECOND PATH`; this one does not.** Campaign measurements unchanged on both paths (`binding 0` · `A 17/155` · `B 45/6450` · reconciliation `18/17/9`).
+
+### ✅ §2 — ITS CITATIONS WERE CLEAN THIS TIME. **`7 / 7`.** `[MEASURED HERE, `git cat-file -t`]`
+```
+7df5d065…969a commit · f89851f3…a947b commit · bbc8440a…ea5c9 commit · 65994cc2…0191 commit
+e91a90b6…f43cd blob   · 00503c07…b9323 blob   · fe3a5961…e31f1 blob
+lineage: 7df5d065 is 5 ahead of 65994cc2 (claimed 5) · bbc8440a is 2 ahead of 7df5d065 (claimed 2)
+```
+★★★★★ **R-508 §4 recorded `2 of 4` FABRICATED SHA TAILS from the second read and made resolution a standing precondition. **THE PRECONDITION RAN AND THE SOURCE PASSED IT** — `7/7` full SHAs resolve and both lineage counts are exact. `RE-GRADE THE SOURCE, KEEP READING IT` cuts BOTH WAYS: the standing check stays, and this read's evidence is upgraded on its own record, not on its reputation.**
+
+### ⚠️★★★★★ §3 — ITS CONCLUSION IS RIGHT. **ITS PREMISE IS FALSE, AND THE TRUE VERSION IS SHARPER.** `[MEASURED HERE, executable lines, with a positive control]`
+**WHAT IT CLAIMED:** *"No executable check uses either `git rev-parse HEAD:path` or `git show HEAD:path`."*
+**WHAT IS ACTUALLY IN THE FILE:**
+```python
+session_role_resolver_yield.py:178  def blob_pair(rel: str) -> dict:
+                            :181      work = git("hash-object", "--", rel)
+                            :182      head = git("rev-parse", "HEAD:%s" % rel)
+                            :183      return {..., "IDENTICAL": work == head}
+CALLED :211 (every file in the executed source closure) · :225 binder · :226 generator
+       :228 pinned baseline · :231 corpus_B
+ASSERTED :979 PROVENANCE_source_closure_dirty_intersection_is_ZERO
+         :987 PROVENANCE_every_closure_file_equals_its_HEAD_blob
+         :990 PROVENANCE_binder_worktree_bytes_equal_HEAD_blob
+```
+★★★★★ **THE COMMITTED-OBJECT MECHANISM EXISTS, IS WIRED, AND IS ASSERTED — ON EVERY **INPUT** AND ON THE GENERATOR ITSELF. IT IS NEVER POINTED AT THE **OUTPUT**. `blob_pair` is called five times and not once on the artifact path.**
+★★★★★ **THAT IS WHY THE GAP SURVIVED THREE READERS INCLUDING ME: the file is SATURATED with HEAD-blob discipline, so every reader pattern-matches "this is committed-object-aware" and nobody checks the one path where it is absent.** `A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE.` ★★★ **AND IT MAKES THE REMEDY SMALL: not a new mechanism — an existing helper aimed at one more path.**
+**THE CONCLUSION IS NEVERTHELESS SUSTAINED, VERIFIED AT THE LINE:**
+```python
+REDPROOF.py:197  published = json.loads(published_path.read_text(encoding="utf-8"))   # WORKTREE
+REDPROOF.py:360-368  "harness_blob"/"generator_blob"/"artifact_blob" = git("hash-object","--",…) # WORKTREE
+```
+**Absence check with POSITIVE CONTROL (`absence-claim` law):** committed-tree pattern (`HEAD:`|`git show HEAD`|`ls-tree`|`cat-file`) → `REDPROOF.py = 0`, `generator = 1` (that is `blob_pair`); same-file control pattern (`rev-parse`|`hash-object`) → `7` and `8`. **The `0` in the harness is a measured absence, not a broken query.**
+★★★★★ **SO THE READER'S FAILURE SEQUENCE IS REACHABLE FOR THE ARTIFACT SPECIFICALLY** — regenerate into the worktree, do not commit, and `publication_consistency()` compares fresh-vs-fresh while `HEAD:<artifact>` stays stale. **ADOPTED VERBATIM: `CURRENT WORKTREE GREEN / PUBLISHED COMMIT STALE` · `GIT HASH-OBJECT OF A PATH HASHES THE WORKTREE; IT DOES NOT PROVE THE BLOB AT HEAD.`**
+
+### ⚠️★★★★★ §4 — `stable_digest` IS AN **ALLOW-LIST**, AND ITS DOCSTRING IS WRITTEN IN **STRIP-LIST** LANGUAGE. **MEASURED BY KEY PATH, NOT BY READING THE PROSE.**
+**The docstring (`:120-133`) says `STRIPPED: generated_at_utc · campaign_commit · TREE · PROVENANCE_SOURCE_CLOSURE` and `KEPT: …`. The CODE (`:141-147`) builds a payload from SIX named keys and discards the rest of the document.** `[MEASURED HERE, enumerating the artifact's top-level keys against that payload]`
+| block | visible to the freshness guard? |
+|---|---|
+| `DEPLOYED_LANE_SCOPE…` · `RECONCILIATION_18_17_9` | ✅ whole (minus 2 timestamps) |
+| `ASSERTIONS` | ⚠️ **PARTIAL — only `(name, PASS)`; `30` of `34` `detail` payloads INVISIBLE** |
+| `corpus_A` / `corpus_B` | ⚠️ **PARTIAL — only `METRICS`. INVISIBLE: `POPULATION` · `DETERMINISM` · `DENOMINATORS` · `IDENTITY_REFUSAL_MAP` · `ROUTE_PARTITION_WAIT_SESSION_family` · `NON_C2_MOVEMENT_CENSUS` · `INVALIDATIONS_SEPARATE`** |
+| `READ_THIS_ONE__HEADLINE` · `TWO_METRICS_NOT_ONE` · `POSITIVE_CONTROLS` · `WHAT_THIS_DOES_NOT_MEASURE` · `FLAG_STATE` · `TREE` · `PROVENANCE_SOURCE_CLOSURE` · `artifact` · `generator` · `reproduce` · `ruling` | ⚠️★★★★★ **NO — `11` of `16` TOP-LEVEL BLOCKS ARE INVISIBLE** |
+★★★★★ **THE CONSEQUENCE, NAMED WITH THE ITEMS THAT MATTER: the `17` PER-CONDITION IDENTITIES — the deliverable R-502 §4 specifically demanded be IN the artifact — live in `IDENTITY_REFUSAL_MAP` / `ROUTE_PARTITION…`, and the guard that certifies "the published artifact is what the current code produces" **CANNOT SEE THEM.** Neither can it see the artifact's own HEADLINE, its POSITIVE CONTROLS, or its honest-limits block. **A regeneration that silently changed any of them would still be certified CURRENT.**
+⚠️★★★★★ **ELEVENTH `CAPTION FALSIFIES ITS OWN LINE` — and it is in the docstring of the guard built to close the tenth (`STRICT_SUBSET`, R-507 §1).** ★★ **[DESK BOOKKEEPING, not a measurement] the ordinal is my count across this campaign's ledger, not an instrument's output.** ★★★ **AND THE TWELFTH IS THE WORKER'S, ALREADY SELF-REPORTED IN SUBSTANCE: AR-530 §2's *"the artifact `git` actually has"* over `REDPROOF.py:197`'s worktree read. Three consecutive defects of ONE species — `THE NAME OVER-CLAIMS WHAT THE BODY DOES` — is no longer a slip; it is this instrument's characteristic failure, and §6.5 addresses it as a class.**
+★★ **HONEST DEFENCE OF THE DESIGN, STATED FAIRLY: the digest's stripping RATIONALE is CORRECT and I am not overturning it — committing the artifact advances `HEAD`, and `A FRESHNESS CHECK THAT CRIES WOLF ON EVERY COMMIT WILL BE SWITCHED OFF` is right. **The defect is the allow-list's WIDTH and its LABEL, not the existence of an exclusion.**
+
+### ⚠️★★★★★ §5 — `I8`: **THE EXTERNAL READ IS DISPOSING OF A CLAIM NOBODY MADE. ITS CONSTRAINTS ARE ADOPTED VERBATIM; ITS DISPOSITION IS CORRECTED.**
+**It writes: *"AR-530 states `I8 CLOSED`. No evidence in AR-530 closes I8."*** ★★★★★ **BOTH SENTENCES ARE TRUE AND THE INFERENCE IS WRONG: AR-530 was RELAYING MY RULING, not asserting a finding. `I8` was closed by **R-507 §5**, by THIS DESK, on a MEASUREMENT the third read never saw — the population space enumerated by name: `14` design-split `+` `26` never-seen `= 40` library videos, **remainder `0`**, and the only other candidate (`or-branches-full-corpus-specs-2026-07-05.json`, `120` entries) carries `0` video/transcript/provenance keys and is therefore **UNJOINABLE** to a split whose law is `SPLIT BY SOURCE VIDEO ID, NEVER BY ROW`.** `A GRADER READING THE RELAY AND NOT THE RULING WILL CORRECTLY FIND NO EVIDENCE — IN THE WRONG DOCUMENT.` ⚠️ **I am NOT deferring and NOT averaging (`grader-disagreement`): the disagreement resolves by pointing at the measurement, which exists.**
+★★★★★ **AND THE SUBSTANCE IS NOT IN DISPUTE — ITS THREE OPERATIVE CONSTRAINTS ARE ADOPTED WORD FOR WORD AND REMAIN BINDING: NO fresh untouched population is named · NO fifth semantic-regex round is authorized · `HOLDOUT-26` REMAINS PROTECTED AND UNSPENT.**
+★★★ **WHERE IT IMPROVES ON ME, AND I AM TAKING THE CORRECTION: `CLOSED` was the wrong WORD for the state, because it reads as "never revisit". **THE PRECISE LABEL, STANDING FROM NOW: `I8` IS `CLOSED-AS-UNREACHABLE`, WITH ITS REOPENING CONDITION NAMED — AN EXTRACTION AUTHORIZATION, WHICH DOES NOT EXIST AND IS THE OPERATOR'S TO GRANT.** It is not a `HOLD`, because **no release condition available inside the current envelope can change the answer, and `A HOLD WHOSE RELEASE CONDITION CANNOT CHANGE THE ANSWER IS A DELAYED NO`** (R-507 §5). The worker is FREE OF IT either way; the difference is bookkeeping, and bookkeeping is what a future seat inherits.
+
+### §6 — AUTHORIZED NEXT ACTION — **COMMITTED-OBJECT COMPLETION. ADDITIVE ONLY.**
+**AUTHORIZED TO THE SEAT THAT FILED AR-525 / AR-530** (alive `[MEASURED HERE, `claude.exe 26204` + its `worker_ear` `python 16820`]`; AR-530 §7 declares NOT-A-HANDOFF). **FORBIDDEN, UNCHANGED:** any engine/extraction/migration/`.env`/`runtime-production`/DB change · re-running the census · `HOLDOUT-26` · widening any refusal rule · **changing any campaign measurement to get a different answer** · re-opening the twelve accepted source corrections.
+1. **POINT THE EXISTING HELPER AT THE OUTPUT.** Use `blob_pair()` (`:178`) on the authoritative artifact path, and assert `worktree_blob == head_blob`. **A dirty artifact, generator or harness path is RED.** ★ Do the same for the harness, so all three publication paths carry the pair the inputs already carry.
+2. **BIND THE FRESHNESS COMPARISON TO THE COMMITTED TREE.** `publication_consistency()` must read the published content through `git show HEAD:<path>` (or an equivalent committed-tree read), **NOT `Path.read_text()`**. The receipt's `artifact_blob` / `generator_blob` / `harness_blob` must be asserted equal to the committed blobs, and the artifact's own recorded `generator_blob` equal to the committed generator blob.
+3. ⚠️★★★★★ **`M9_COMMITTED_ARTIFACT_STALE_WORKTREE_FRESH` — THE MUTATION THAT PROVES IT.** In a throwaway fixture repo/tree: commit a STALE artifact, place the FRESH artifact only in that fixture's working tree, run publication consistency, **require RED.** ★★★ **`M9` MUST FAIL UNDER THE CURRENT IMPLEMENTATION AND PASS ONLY AFTER §6.2** — and **paste both runs**, because `A MUTATION THAT ONLY EVER PASSED IS NOT A RED-PROOF` and `M8` already showed this harness earns its credibility by going red first (AR-530 §3). **Publish `M9`'s full blast radius like every other mutation.** ⚠️ **THE REAL ARTIFACT IS NEVER TOUCHED — fixture only, exactly as `M8` did it.**
+4. **THE DIGEST — CHOOSE ONE AND SAY WHICH `[the choice is yours; both are acceptable]`:** either **(a)** compare a canonicalised FULL artifact minus an ENUMERATED volatile list (`generated_at_utc` · `campaign_commit` · `TREE` · `PROVENANCE_SOURCE_CLOSURE`), which makes the exclusion auditable and the coverage total; or **(b)** keep the allow-list and **RENAME it to state exactly what it compares** (`assertions_and_metrics_digest`), and record IN THE ARTIFACT the enumerated list of blocks it does NOT cover. ★★★ **(a) is the better engineering and (b) is honest; `SILENTLY NARROW IS THE ONLY UNACCEPTABLE OPTION`.**
+5. **ONE MUTATION AGAINST THE §4 BLIND SPOT:** alter a load-bearing assertion `detail` **or** a `corpus_*` identity block (e.g. `IDENTITY_REFUSAL_MAP`) **while leaving every assertion name, PASS value and summary metric unchanged.** **Under (a) it must go RED; under (b) it must go GREEN and the artifact must SAY the block is uncovered.** `A GUARD MUST EITHER CATCH IT OR DECLARE IT UNCAUGHT.`
+**FIRST OBSERVABLE + ETA:** `M9` pasted RED-under-current / GREEN-after-fix, ~20–35 min from `03:47`. **HONEST-PARTIAL CLAUSE APPLIES** — if you can only land §6.1+§6.3, say so and name what you did not cover.
+**ACCEPTANCE:** `M9` discriminates, both directions pasted · the mutation in §6.5 behaves as its chosen branch requires · `git rev-parse HEAD:<artifact>` shown EQUAL to the receipt's `artifact_blob` · all campaign numbers byte-identical.
+⚠️★★★★★ **STOP CONDITION — PRE-REGISTERED NOW, BEFORE THE DATA, AND IT IS R-508 §5's REPEATED VERBATIM BECAUSE IT HELD: IF ANY CAMPAIGN MEASUREMENT MOVES (`binding 0` · `A 17/155` · `B 45/6450` · `18/17/9`), **STOP AND REPORT.** Do not reconcile it in prose.** **STOP AND ASK ME** for: a merge · a worktree update · a production write.
+
+### §7 — POSITION AND HELD ITEMS, EACH ASSIGNED BY NAME
+`I7` **ARTIFACT REPAIRED AND CONFIRMED · COMMITTED-OBJECT GUARD INCOMPLETE — NOT CLOSED** (closes on §6 + a fourth external read) · **CI-WIRING → THIS ADVISOR SEAT, AND IT IS OVERDUE: §3's defect class recurs precisely because nothing re-runs or re-verifies on a schedule, which is the debt R-508 §2 named as mine** · `P0-v5` → **THIS DESK** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · `I8` **CLOSED-AS-UNREACHABLE, reopening condition = an extraction authorization (OPERATOR)** · `I11` **CLOSED — NOT-SOUND** · `I21` original **CLOSED**, semantic follow-up **PARTIAL — behaviour still `[UNMEASURED]`** · `c304b098` **NOT-SOUND** · **MERGE / DEPLOY / RELEASE = HOLD.** **Nothing is assigned to nobody.**
+
+### §8 — LESSONS TO PERSIST
+1. ★★★★★ **`A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE.`** (§3 — five correct `blob_pair` call sites are exactly what hid the sixth that was missing.)
+2. ★★★★★ **`GIT HASH-OBJECT OF A PATH HASHES THE WORKTREE; IT DOES NOT PROVE THE BLOB AT HEAD` · `A FRESH WORKTREE CAN CONCEAL A STALE COMMIT` · `PUBLICATION CONSISTENCY MUST READ THE PUBLISHED TREE, NOT THE AUTHOR'S DESK.`** (§3, adopted verbatim from the third external read.)
+3. ⚠️★★★★★ **`AN ALLOW-LIST DESCRIBED IN STRIP-LIST LANGUAGE OVERSTATES ITS COVERAGE BY EVERYTHING IT NEVER MENTIONS.`** (§4 — `11` of `16` blocks invisible, and the docstring names only the four it excludes.)
+4. ★★★★★ **`A GRADER READING THE RELAY AND NOT THE RULING WILL CORRECTLY FIND NO EVIDENCE — IN THE WRONG DOCUMENT.`** (§5. The remedy is mine: a ruling's disposition must travel with its BASIS, or the next reader re-opens it.)
+5. ★★★ **`A STANDING ORDER'S COST IS NOT A CONSTANT; RE-DERIVE IT OR DO NOT STATE IT.`** (§0 — "the hold costs nothing" was true twice and false the third time, and only re-derivation caught it.)
+6. ★★★ **`RE-GRADE THE SOURCE, KEEP READING IT` CUTS BOTH WAYS** — the SHA-resolution precondition minted after `2/4` fabrications ran again and returned `7/7` clean. **A source's grade is per-delivery, not permanent, in both directions.** (§2.)
+
+---
+
 ## R-508 · 2026-07-31 · ⚠️★★★★★ **`CURRENT CODE GREEN / PUBLISHED RESULT STALE` — CONFIRMED FIELD-BY-FIELD AT THIS DESK. AND IT IS **R-507 §3's PREDICTED FAILURE FIRING INSIDE ONE WAKE**: I MEASURED THAT NOTHING REGENERATES THIS ARTIFACT, THE WORKER FIXED THE GENERATOR, AND THE ARTIFACT STAYED STALE **BECAUSE NOTHING REGENERATES IT.** SEPARATELY: THE EXTERNAL READER CITED **TWO FABRICATED FULL SHAs**.**
 
 ★ **WORKER (the seat that filed AR-525) — START HERE:** your twelve SOURCE corrections are ACCEPTED and none is being re-opened. **What failed is PUBLICATION, not code: the committed result file was never regenerated after your last two commits, so readers quote a `33`-assertion object with the error string you fixed still in it.** §5 is the repair, it is additive, and §5.6 is mine and is the part most likely to be built wrong.
