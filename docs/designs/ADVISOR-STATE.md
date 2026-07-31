@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2703` at THIS commit, 2026-07-31 01:49 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2734` at THIS commit, 2026-07-31 01:54 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -130,6 +130,37 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 **THE ONE LIVE RISK IS A DOUBLE-DISPATCH OF `I11`**, and it is LOW: the word reached the ADVISOR's
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
+
+### ⚠️★★★★★ **R-501 LANDED (`b2fe0172`, PUBLISHED). R-502 IS NOW OWED AND HELD FOR THE NEXT PASTE — AR-522.**
+★★★★★ **`I7` CLOSED. THE `C2` SESSION-ROLE RESOLVER YIELD ON `corpus_A` IS `0` OF `155` — AND THE ZERO
+IS A **WIRING FINDING, NOT AN ABSENCE.** [ARTIFACT-SOURCED, `session-role-resolver-yield-2026-07-31.json`;
+`[RELAYED]` at this desk — I have NOT re-run it.]**
+| stage, flag ON, all `27` `WAIT_SESSION` rows | fired |
+|---|---|
+| `resolve_session_keyword` · name-route | `0` · `0` |
+| ★ `classify_session_role` **recognized** | **`18`** |
+| ★★★ classifier **computed a real `ny_am` zone** | **`9`** |
+| ⚠️★★★★★ **FINAL bindable** | **`0`** |
+★★★★★ **`A ZERO YIELD FROM A CAPABILITY THAT PRODUCED NINE ANSWERS IS A WIRING FINDING, NOT AN
+ABSENCE.` The register's row-3 prerequisite — *"does it bind a single `C2` condition"* — is now
+MEASURED, and the answer is NO. `C2` was carried in the QUEUE as a "post-C8 multiplier"; on this
+population it multiplies by ZERO.**
+★★★ **THE ZERO IS ADMISSIBLE BECAUSE THE CONTROL DISCRIMINATES: `session_role_resolver_enabled()` →
+`False` at `false`, `True` at `true`, so the gate provably read THIS process's env. `A BARE ZERO IS
+UNREADABLE — "inert", "empty population" and "my flag never arrived" ALL PRINT AS 0.` Both arms run
+twice, byte-identical. `invalidations` (`16`) reported SEPARATELY, never merged.**
+★★★ **AND IT PUBLISHED A SELF-CORRECTION: it first read `9`/`3` off a printout TRUNCATED TO 14 OF 27
+ROWS, said so mid-run, and the full-population figures are `18`/`9`. `A PARTIAL VIEW REPORTED AS A
+FULL ONE IS THE SAME DEFECT WHETHER THE CAUSE IS A GREP, A FILTER OR A head.`**
+⚠️★★★★★ **TWO HYPOTHESES, AND IT REFUSED TO PICK: `H1` computed-but-not-consumed (binding path never
+converts the zone) · `H2` upstream EXTRACTION (several `object` values are long narration sentences,
+not canonical session objects). **NO TEST IN THAT RUN DISTINGUISHES THEM.** `IF A TEST CANNOT
+DISTINGUISH TWO EXPLANATIONS, SAY SO AND ESCALATE RATHER THAN CHOOSING THE CONVENIENT ONE.`
+**LOCATING THE FAILING LAYER IS A SEPARATE AUTHORIZATION AND IS PART OF THE HELD R-502** — `I7`'s
+forbidden list bars any binding/extraction change, correctly.**
+★★ **FAN-IN `2 / 4`. AR-521's handoff is WITHDRAWN on the operator's own word (*"you are already a
+fresh worker"*), PRESERVED-AND-STRUCK, not deleted. The seat is on `I8` under R-501 §7 and is NOT
+blocked by this hold.**
 
 ### ★★★ [MEASURED HERE, 01:49] RELAY BRANCH RE-PUBLISHED — **FAST-FORWARD ONLY, UNDER THE STANDING WITNESSED ORDER**
 **AR-521 §4 flagged that `aeeeb8a6` and `1dc09bac` were LOCAL-ONLY, so the public branch was stale
