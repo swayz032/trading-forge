@@ -4,6 +4,25 @@
 
 ---
 
+## AR-544 · 2026-07-31 · ✅ **HOLD-RECEIPT — R-518 READ IN FULL. PACKET ACCEPTED `6/6` AND PUBLISHED. I AM STANDING BY BEHIND ONE NAMED GATE AND STARTING NOTHING.** ★★★ **THE ASK IS WITH THE OPERATOR IN ONE SENTENCE, WHICH IS THE ONLY CORRECT MOVE WHEN A GRADE IS OWED AND I CANNOT DISPATCH IT.**
+
+**RULING ID:** R-518 §6 · **TASK ID:** AR-544 · **PRIOR:** AR-543 · **SEAT:** `claude.exe 26204`, context not exhausted.
+
+### §1 — POSITION, AND WHY THIS RECEIPT EXISTS
+**`AR-543` closed its lane; R-518 §6 states I am owed nothing further and orders `STAND BY`.** ★★★ **A worker doing correctly-nothing is indistinguishable from a dead session without a receipt** — this is that receipt, not a task.
+**BLOCKER, NAMED AND ASSIGNED (R-518 §5/§6):** ONE `accuracy-validator` run against **`7134bb34`** under the ten-question contract, with the desk's three amendments, writing a **durable receipt** to `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`. **Dispatch needs the operator's word. I have asked for it in one sentence and will run it the moment it comes.**
+⚠️ **I am NOT reporting the grade as blocked.** `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST` — the grader is local, it is one authorization away, and the ask is the move.
+
+### §2 — WHAT I AM NOT DOING WHILE HELD
+**NO implementation · NO fifth patch to `c304b098` · NO `P1`/`P2`/`P3`/Gate-B work · NO widening of the fixture battery · NO touching the retired `I7` harness · NO new instrument.** ★★ **And I am not inventing a lane to look busy: R-518 §6 calls this a genuine wait on a named gate, and it is.**
+✅ **`bp8t4d3zu` untouched and still delivering — it is how R-518 reached me.**
+
+### §3 — ONE THING I WILL CARRY INTO THE DISPATCH WHEN AUTHORIZED
+**R-518 §5's amendment 1 is the load-bearing one and I will state it VERBATIM in the brief:** the grader must be told that **`F-3` and the `reason_null` type slip are NOT reachable by any `OracleRow`-scoped rule** `[MEASURED, AR-543 §3]`. ★★★ **A grader that assumes otherwise passes a design that cannot close two of the five findings — `A MISSING PREMISE IN THE BRIEF IS A HOLE IN THE RESULT`, and it is my own measurement that supplies it.**
+★★ **I do not interpret the grade I asked for. It comes back as it comes back, including if it convicts the packet I wrote.**
+
+---
+
 ## AR-543 · 2026-07-31 · ✅★★★★★ **R-516 §8 DELIVERED — THE `P0` REDESIGN PACKET EXISTS, ALL SIX SECTIONS, `FIVE` FINDINGS + SUB-CLAIM `6`. NO IMPLEMENTATION CODE.** ★★★★★ **AND THE PACKET'S CENTRAL RESULT IS A **PARTIAL REFUTATION OF THE DESK'S OWN `§7` HYPOTHESIS**: NO RULE SCOPED TO `OracleRow` CAN CLOSE `F-3`, BECAUSE `reasons_must_differ_from` LIVES AT **FIXTURE** LEVEL AND `F-3` DELETES A **KNOWN** KEY WHILE CLOSED-KEY REJECTS **UNKNOWN** ONES.** ⚠️★★★ **I ALSO RED-PROOFED MY OWN `ABORT` CONDITION BY RUNNING IT AND FOUND IT ALREADY RED — FIXED BEFORE PUBLICATION.**
 
 **RULING ID:** R-516 §8 (as amended by R-517 §5) · **TASK ID:** AR-543 · **PRIOR:** AR-542 · **SEAT:** `claude.exe 26204`.
