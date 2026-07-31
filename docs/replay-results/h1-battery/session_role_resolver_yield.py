@@ -206,6 +206,80 @@ def source_closure_manifest(head: str, dirty: list[str], dirty_pre: list[str]) -
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# R-506 §5 -- THE DEPLOYED-LANE SCOPE SENTENCE, MEASURED RATHER THAN TYPED
+# ─────────────────────────────────────────────────────────────────────────────
+DEPLOYED_BINDER = Path(
+    r"C:/Users/tonio/Projects/trading-forge/runtime-production/src/engine/spec_family_bindings.py")
+
+# The symbols that MAKE the capability this artifact measures. If any of these
+# ever appears in the deployed binder, the capability has been PORTED and every
+# scope sentence in this artifact is stale -- so the assertion below is a
+# TRIPWIRE that self-destructs when the state it describes stops being true.
+CAPABILITY_SYMBOLS = [
+    "session_role_resolver_enabled", "classify_session_role",
+    "SESSION_TEACHING_UNBOUND_REASON", "resolve_session_name_to_window",
+    "SESSION_WRAPPING_WINDOW_UNBOUND_REASON", "SessionRoleResult",
+]
+
+
+def top_level_symbols(path: Path) -> set:
+    import ast
+    src = path.read_text(encoding="utf-8")
+    out = set()
+    for n in ast.parse(src).body:
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.add(n.name)
+        elif isinstance(n, ast.Assign):
+            out.update(t.id for t in n.targets if isinstance(t, ast.Name))
+        elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name):
+            out.add(n.target.id)
+    return out
+
+
+def deployed_lane_scope() -> dict:
+    """★★★★★ R-506 §5: `MEASURED != MEASURED-WHERE-IT-RUNS`. No number in this
+    artifact may be stated about production without this block beside it. It is
+    COMPUTED so it cannot drift out of agreement with the tree it describes --
+    a hand-typed scope sentence is the first thing to go stale after a port."""
+    if not DEPLOYED_BINDER.exists():
+        return {"STATUS": "DEPLOYED_TREE_UNREACHABLE_FROM_THIS_MACHINE",
+                "PATH": str(DEPLOYED_BINDER),
+                "SCOPE_SENTENCE": "The deployed lane could not be read, so NOTHING here may "
+                                  "be stated about production AT ALL. Fail-closed.",
+                "capability_absent_from_deployed": None}
+    camp = top_level_symbols(REPO_ROOT / "src/engine/spec_family_bindings.py")
+    dep = top_level_symbols(DEPLOYED_BINDER)
+    present = sorted(s for s in CAPABILITY_SYMBOLS if s in dep)
+    return {
+        "STATUS": "MEASURED",
+        "deployed_path": str(DEPLOYED_BINDER),
+        "campaign_bytes": (REPO_ROOT / "src/engine/spec_family_bindings.py").stat().st_size,
+        "deployed_bytes": DEPLOYED_BINDER.stat().st_size,
+        "campaign_top_level_symbols": len(camp),
+        "deployed_top_level_symbols": len(dep),
+        "in_campaign_ABSENT_from_deployed": len(camp - dep),
+        "in_deployed_ABSENT_from_campaign": len(dep - camp),
+        "STRICT_SUBSET": len(dep - camp) == 0,
+        "capability_symbols_checked": CAPABILITY_SYMBOLS,
+        "capability_symbols_PRESENT_in_deployed": present,
+        "capability_absent_from_deployed": present == [],
+        "★_SCOPE_SENTENCE": (
+            "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. The session-role "
+            "capability it measures DOES NOT EXIST AS CODE in the deployed engine -- the "
+            "symbols that constitute it are absent, so the flag has nothing to gate there. "
+            "This is a PORT, not a configuration change. `MEASURED != MEASURED-WHERE-IT-RUNS`: "
+            "no figure here may be stated about production without this sentence beside it."
+        ),
+        "WHY_COMPUTED_NOT_TYPED": (
+            "R-506 §3: `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT "
+            "READER; A RULE OBEYED IN PROSE CAN.` The assertion below is a TRIPWIRE -- it "
+            "goes RED the moment any capability symbol appears in the deployed binder, "
+            "which is exactly when every scope sentence here becomes stale."
+        ),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Population loading -- CORPORA ARE SEPARATE
 # ─────────────────────────────────────────────────────────────────────────────
 def load_corpus_a():
@@ -798,6 +872,24 @@ def main():
     check("PROVENANCE_pre_and_post_run_status_agree", prov["PRE_AND_POST_AGREE"],
           {"pre": prov["PRE_RUN_STATUS"], "post": prov["POST_RUN_STATUS"]})
 
+    # ★★★★★ R-506 §5 TRIPWIRE. RED means the capability was PORTED and every
+    #   scope sentence in this artifact is stale. It is SUPPOSED to fail then.
+    scope = deployed_lane_scope()
+    check("SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+          scope.get("capability_absent_from_deployed") is True,
+          {"status": scope.get("STATUS"),
+           "capability_symbols_present_in_deployed":
+               scope.get("capability_symbols_PRESENT_in_deployed"),
+           "MEANING_OF_RED": "The capability now EXISTS in the deployed engine. This artifact's "
+                             "campaign-lane scope sentence is STALE and must be re-stated "
+                             "before any figure here is quoted."})
+    check("SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+          scope.get("STRICT_SUBSET") is True,
+          {"in_deployed_absent_from_campaign": scope.get("in_deployed_ABSENT_from_campaign"),
+           "WHY": "0 deployed-only symbols means the divergence is purely SUBTRACTIVE -- one "
+                  "lineage with things removed, not two divergent forks. A non-zero value "
+                  "means the port would have to RECONCILE, not just ADD."})
+
     all_pass = all(a["PASS"] for a in ASSERTIONS)
 
     art = {
@@ -851,6 +943,7 @@ def main():
                        "EXIT_CODE_CONTRACT":
                            "This generator exits NON-ZERO if any assertion fails. A green "
                            "artifact that cannot go red is not an instrument."},
+        "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": scope,
         "RECONCILIATION_18_17_9": recon,
         "corpus_A": A,
         "corpus_B": B,
@@ -860,8 +953,9 @@ def main():
             "Whether a refusal is the CORRECT disposition for a condition -- that is GROUND "
             "TRUTH and belongs to an independent grader. This script is the doer.",
             "Any population other than corpus_A and corpus_B, each reported separately.",
-            "The DEPLOYED tree. This runs in the campaign checkout; the deployed "
-            "spec_family_bindings.py is a 3.94x smaller variant (R-501 §3).",
+            "The DEPLOYED tree -- and the reason is now MEASURED, not estimated: see "
+            "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE. The capability does "
+            "not exist as code there, so the flag has nothing to gate. R-506 §5.",
             "Whether the C2 refusal CLASS shrinks downstream -- this measures binding and "
             "reason movement, necessary but not sufficient for that.",
             "A baseline-sourced C2 denominator for corpus B -- the pinned baseline carries "
