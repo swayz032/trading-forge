@@ -125,7 +125,7 @@ VOLATILE_EXCLUSIONS = [
     "PROVENANCE_SOURCE_CLOSURE",
     "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.generated_at_utc",
     "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.campaign_commit",
-    "ASSERTIONS.checks[name starts with 'PROVENANCE_'].detail",
+    "ASSERTIONS.checks[name starts with 'PROVENANCE_' or 'PUBLICATION_'].detail",
     "PUBLICATION_PATHS",
     "DIGEST_COVERAGE.value",
 ]
@@ -170,7 +170,11 @@ def _strip_volatile(art: dict) -> dict:
         snap.pop("generated_at_utc", None)
         snap.pop("campaign_commit", None)
     for c in doc.get("ASSERTIONS", {}).get("checks", []):
-        if str(c.get("assertion", "")).startswith("PROVENANCE_"):
+        if str(c.get("assertion", "")).startswith(("PROVENANCE_", "PUBLICATION_")):
+            # Their details are worktree-vs-HEAD BLOB PAIRS -- provenance of the
+            # run, not measured content. Leaving them in couples the artifact's
+            # freshness to every edit of the HARNESS, which would report a
+            # correct artifact as stale whenever the test rig changed.
             c.pop("detail", None)
     # PUBLICATION_PATHS holds worktree-vs-HEAD blob pairs, which necessarily
     # differ between a pre-commit and a post-commit run of identical content.
