@@ -116,6 +116,20 @@ def git(*args) -> str:
         return "<unavailable: %s>" % exc
 
 
+def git_at(repo: Path, *args) -> str:
+    """git in ANOTHER tree -- the deployed lane is a separate checkout."""
+    try:
+        return subprocess.check_output(
+            ["git", *args], cwd=str(repo), stderr=subprocess.DEVNULL).decode().strip()
+    except Exception as exc:
+        return "<unavailable: %s>" % exc
+
+
+def _now_utc() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def dirty_paths() -> list[str]:
     out = []
     for line in git("status", "--porcelain").splitlines():
@@ -222,18 +236,36 @@ CAPABILITY_SYMBOLS = [
 ]
 
 
-def top_level_symbols(path: Path) -> set:
+def top_level_nodes(path: Path) -> dict:
+    """name -> AST node for every top-level definition/binding."""
     import ast
-    src = path.read_text(encoding="utf-8")
-    out = set()
-    for n in ast.parse(src).body:
+    out = {}
+    for n in ast.parse(path.read_text(encoding="utf-8")).body:
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            out.add(n.name)
+            out[n.name] = n
         elif isinstance(n, ast.Assign):
-            out.update(t.id for t in n.targets if isinstance(t, ast.Name))
+            for t in n.targets:
+                if isinstance(t, ast.Name):
+                    out[t.id] = n
         elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name):
-            out.add(n.target.id)
+            out[n.target.id] = n
     return out
+
+
+def top_level_symbols(path: Path) -> set:
+    return set(top_level_nodes(path))
+
+
+def body_hash(node) -> str:
+    """★ R-507 §6.7 -- structural hash of a symbol's BODY. `ast.dump` with
+    default `include_attributes=False` ignores formatting, comments and line
+    numbers, so this compares STRUCTURE AND LITERALS, not whitespace.
+    ⚠️ IT IS STILL NOT A SEMANTIC PROOF: two structurally different bodies can
+    behave identically, and identical structure with a different imported
+    callee behind the same name can behave differently. It is strictly stronger
+    than comparing NAMES, which is all the previous version did."""
+    import ast
+    return hashlib.sha256(ast.dump(node).encode("utf-8")).hexdigest()
 
 
 def deployed_lane_scope() -> dict:
@@ -247,34 +279,87 @@ def deployed_lane_scope() -> dict:
                 "SCOPE_SENTENCE": "The deployed lane could not be read, so NOTHING here may "
                                   "be stated about production AT ALL. Fail-closed.",
                 "capability_absent_from_deployed": None}
-    camp = top_level_symbols(REPO_ROOT / "src/engine/spec_family_bindings.py")
-    dep = top_level_symbols(DEPLOYED_BINDER)
+    camp_path = REPO_ROOT / "src/engine/spec_family_bindings.py"
+    camp_nodes, dep_nodes = top_level_nodes(camp_path), top_level_nodes(DEPLOYED_BINDER)
+    camp, dep = set(camp_nodes), set(dep_nodes)
     present = sorted(s for s in CAPABILITY_SYMBOLS if s in dep)
+
+    # ★ R-507 §6.7 -- compare the SHARED symbols' BODIES, not just their names.
+    shared = sorted(camp & dep)
+    differing = [s for s in shared if body_hash(camp_nodes[s]) != body_hash(dep_nodes[s])]
+
+    dep_head = git_at(DEPLOYED_BINDER.parents[3], "rev-parse", "HEAD")
     return {
         "STATUS": "MEASURED",
-        "deployed_path": str(DEPLOYED_BINDER),
-        "campaign_bytes": (REPO_ROOT / "src/engine/spec_family_bindings.py").stat().st_size,
+        # ── R-507 §6.4/§6.5 -- the snapshot record every scope claim binds to ──
+        "SNAPSHOT_RECORD": {
+            "generated_at_utc": _now_utc(),
+            "campaign_commit": git("rev-parse", "HEAD"),
+            "campaign_binder_blob": git("hash-object", "--", "src/engine/spec_family_bindings.py"),
+            "generator_blob": git(
+                "hash-object", "--", "docs/replay-results/h1-battery/session_role_resolver_yield.py"),
+            "deployed_path": str(DEPLOYED_BINDER),
+            "deployed_repo_head": dep_head,
+            "deployed_binder_sha256": hashlib.sha256(DEPLOYED_BINDER.read_bytes()).hexdigest(),
+            "WHY": "R-507 §6.4/§6.5 -- the deployed binder lives in a DIFFERENT git tree, so it "
+                   "cannot join this run's source closure by HEAD-blob comparison. It is hashed "
+                   "SEPARATELY here and that hash is what every deployed-scope claim binds to.",
+        },
+        "campaign_bytes": camp_path.stat().st_size,
         "deployed_bytes": DEPLOYED_BINDER.stat().st_size,
         "campaign_top_level_symbols": len(camp),
         "deployed_top_level_symbols": len(dep),
         "in_campaign_ABSENT_from_deployed": len(camp - dep),
         "in_deployed_ABSENT_from_campaign": len(dep - camp),
-        "STRICT_SUBSET": len(dep - camp) == 0,
+        # ── R-507 §6.1 -- TWO explicit predicates. The old single key was named
+        #    STRICT_SUBSET and tested `dep <= camp`, which PASSES ON EQUALITY.
+        #    `A SUBSET TEST THAT PASSES EQUALITY IS NOT A STRICT-SUBSET TEST.`
+        "DEPLOYED_IS_SUBSET_OR_EQUAL": dep <= camp,
+        "DEPLOYED_IS_STRICT_SUBSET": dep < camp,
+        "STRICT_SUBSET_REQUIRES_BOTH": {
+            "zero_deployed_only": len(dep - camp) == 0,
+            "at_least_one_campaign_only": len(camp - dep) >= 1,
+            "NOTE": "The retired `STRICT_SUBSET` key tested only the first of these.",
+        },
+        # ── R-507 §6.7 -- shared-symbol body comparison ───────────────────────
+        "SHARED_SYMBOL_BODY_COMPARISON": {
+            "shared_symbol_count": len(shared),
+            "bodies_DIFFERING": differing,
+            "n_bodies_differing": len(differing),
+            "METHOD": "sha256 over ast.dump(node) with include_attributes=False -- structure "
+                      "and literals, independent of formatting, comments and line numbers.",
+            "⚠️_WHAT_THIS_STILL_DOES_NOT_PROVE": (
+                "Structural equality is NOT behavioural equality: a shared name whose body "
+                "calls a DIFFERENT underlying implementation hashes identically. This is "
+                "strictly stronger than the name-only comparison it replaces and is NOT a "
+                "semantic parity proof. `ZERO DEPLOYED-ONLY SYMBOL NAMES DOES NOT PROVE ZERO "
+                "DEPLOYED-SIDE SEMANTIC DIVERGENCE` (R-507 §4)."
+            ),
+        },
         "capability_symbols_checked": CAPABILITY_SYMBOLS,
         "capability_symbols_PRESENT_in_deployed": present,
         "capability_absent_from_deployed": present == [],
+        # ── R-507 §6.6 + §6.12 -- the narrow claim, and the cadence truth ─────
         "★_SCOPE_SENTENCE": (
-            "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. The session-role "
-            "capability it measures DOES NOT EXIST AS CODE in the deployed engine -- the "
-            "symbols that constitute it are absent, so the flag has nothing to gate there. "
-            "This is a PORT, not a configuration change. `MEASURED != MEASURED-WHERE-IT-RUNS`: "
-            "no figure here may be stated about production without this sentence beside it."
+            "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. NARROW, MEASURED CLAIM: "
+            "the SIX named top-level symbols in `capability_symbols_checked` are ABSENT from "
+            "the deployed binder's TOP-LEVEL symbol table. THIS IS NOT AN ENGINE-WIDE "
+            "CAPABILITY-ABSENCE PROOF -- imported aliases, renamed or nested implementations, "
+            "tuple-bound names and shared bodies are NOT covered, and no repo-wide "
+            "import/alias/call-path audit has been run. `MEASURED != MEASURED-WHERE-IT-RUNS`: "
+            "no figure here may be stated about production without this block beside it."
         ),
-        "WHY_COMPUTED_NOT_TYPED": (
-            "R-506 §3: `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT "
-            "READER; A RULE OBEYED IN PROSE CAN.` The assertion below is a TRIPWIRE -- it "
-            "goes RED the moment any capability symbol appears in the deployed binder, "
-            "which is exactly when every scope sentence here becomes stale."
+        "★_STATIC_SNAPSHOT_NOTICE": (
+            "This artifact is a static snapshot and does not auto-update; rerun is required "
+            "after any deployed-binder change. NO CI JOB OR SCHEDULER REGENERATES THIS FILE "
+            "[MEASURED, R-507 §3]."
+        ),
+        "★_THE_TRIPWIRE_IS_RERUN_TIME_ONLY": (
+            "The scope assertion fires only when a human reruns this generator. "
+            "`A RERUN-TIME GUARD IS NOT A LIVE INVALIDATION MECHANISM.` An earlier version of "
+            "this file claimed the tripwire 'self-destructs' when the capability is ported; "
+            "THAT CLAIM IS WITHDRAWN -- nothing reruns it automatically, so the artifact can "
+            "go stale silently and the guard will not say so."
         ),
     }
 
@@ -777,6 +862,15 @@ def main():
            "only_in_baseline": sorted(set(base_keys) - set(a_off_derived_c2)),
            "WHY": "corpus B has no baseline list; this is the evidence its surrogate is sound."})
 
+    # ★★★ R-507 §6.8 -- EQUAL COUNTS ARE NOT IDENTITY. Both are 27 on corpus A;
+    #   that is exactly the coincidence R-425 warns about. Assert the SETS.
+    a_family_set = set(k for k, v in a_off.items() if v.get("type") == FAMILY_TYPE)
+    check("A_C2_eligible_set_IDENTICAL_to_WAIT_SESSION_family_set__NOT_JUST_EQUAL_COUNTS",
+          set(base_keys) == a_family_set,
+          {"in_C2_not_in_family": sorted(set(base_keys) - a_family_set),
+           "in_family_not_in_C2": sorted(a_family_set - set(base_keys)),
+           "WHY": "THE JOIN KEY IS THE CLAIM. Both populations are 27 on corpus A and equal "
+                  "counts prove nothing about membership."})
     check("gate_control_DISCRIMINATES", controls["GATE_READS_THIS_PROCESS_ENV"]["DISCRIMINATES"],
           controls["GATE_READS_THIS_PROCESS_ENV"])
     check("held_levelzone_flags_equal_baseline_BEFORE_arm",
@@ -883,12 +977,28 @@ def main():
            "MEANING_OF_RED": "The capability now EXISTS in the deployed engine. This artifact's "
                              "campaign-lane scope sentence is STALE and must be re-stated "
                              "before any figure here is quoted."})
-    check("SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
-          scope.get("STRICT_SUBSET") is True,
+    # ★★★★★ R-507 §6.1 -- TWO predicates, because the retired single one was
+    #   named STRICT_SUBSET and tested subset-OR-EQUAL. The artifact's numbers
+    #   were right and the guard was still wrong: `A GUARD THAT HAPPENS TO BE
+    #   TRUE TODAY IS NOT A GUARD; IT IS A COINCIDENCE WITH AN ASSERTION AROUND IT.`
+    check("SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign",
+          scope.get("DEPLOYED_IS_SUBSET_OR_EQUAL") is True,
           {"in_deployed_absent_from_campaign": scope.get("in_deployed_ABSENT_from_campaign"),
-           "WHY": "0 deployed-only symbols means the divergence is purely SUBTRACTIVE -- one "
-                  "lineage with things removed, not two divergent forks. A non-zero value "
-                  "means the port would have to RECONCILE, not just ADD."})
+           "MEANS": "no deployed-only top-level symbol; a non-zero value means a port would "
+                    "have to RECONCILE, not merely ADD."})
+    check("SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign",
+          scope.get("DEPLOYED_IS_STRICT_SUBSET") is True,
+          {"requires_both": scope.get("STRICT_SUBSET_REQUIRES_BOTH"),
+           "WHY_SEPARATE": "dep < camp requires BOTH zero deployed-only AND at least one "
+                           "campaign-only. Equality satisfies subset-or-equal and must NOT "
+                           "satisfy this one -- mutation M7 proves it does not."})
+    check("SCOPE_shared_symbol_bodies_compared_not_just_names",
+          scope.get("SHARED_SYMBOL_BODY_COMPARISON", {}).get("shared_symbol_count", 0) > 0,
+          {"comparison": scope.get("SHARED_SYMBOL_BODY_COMPARISON"),
+           "WHY": "R-507 §6.7 -- 'purely additive / nothing to reconcile' phrasing may not be "
+                  "used until shared BODIES are compared, not just shared NAMES. This is the "
+                  "positive witness that the comparison actually ran; the DIFFERING list is "
+                  "the result and is reported whatever its size."})
 
     all_pass = all(a["PASS"] for a in ASSERTIONS)
 
