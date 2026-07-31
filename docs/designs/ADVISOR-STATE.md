@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3069` at THIS commit, 2026-07-31 03:49 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3079` at THIS commit, 2026-07-31 07:08 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3069` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3079` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -2914,6 +2914,16 @@ all 40 — the transcript TEXT was backfilled 25 days AFTER the specs were onboa
 so grading fidelity against that archive grades a NEIGHBOURING OBJECT.**
 
 ## ★★★ THE SEAT'S OWN CONVICTED ERROR — READ BEFORE MEASURING ANYTHING
+
+### ⚠️★★★★★ **A SECOND SHAPE, CONVICTED 2026-07-31 07:05 — COUNT IT SEPARATELY, IT IS NOT ONE OF THE NINE BELOW**
+**`I MADE THE DIAGNOSIS MY OWN INSTRUMENT FORBADE, FOR THE SECOND TIME IN ONE NIGHT, AND THE OPERATOR CORRECTED ME AGAIN.`**
+**WHAT HAPPENED:** the worker went quiet for `210` minutes against R-509's `20–35` min ETA. I measured that the ear process (`python 16820`) writes into scratchpad session `fe99964a`, whose transcript died at `02:18` — **before** the worker's own `03:12` and `03:32` commits — and concluded **"R-509 was delivered into a dead channel; the worker never heard it."** ⚠️ **IT WAS A RATE LIMIT. The operator said so in his own words: *"the rate limit had hit thats all it rest now."***
+★★★★★ **TWO OF MY OWN WRITTEN GUARDS SAID SO BEFORE HE DID, AND I READ NEITHER:**
+1. **The watchdog's own event text names all three possibilities — *"idle, silent work and AN EXTERNAL LIMIT are indistinguishable at this bar"* — and I picked one.** `A CAVEAT YOU WROTE INTO YOUR OWN INSTRUMENT IS A SENSOR YOU MUST ALSO READ` was already on the record from `02:xx` **for this identical mistake**, and I repeated it five hours later.
+2. **`advisor-onboarding` §4a says in writing: *"A monitor armed by a previous CONVERSATION of the SAME CLI process is still live and still delivering to your seat — it is NOT an orphan, and calling it one on inference is how you kill your own coverage."* I APPLIED THAT RULE CORRECTLY TO MY OWN THREE MONITORS AT `03:35` (adopted, none re-armed) AND THEN VIOLATED IT FOR THE WORKER'S EAR AT `06:04`.** `A RULE I OBEYED FOR MY OWN INSTRUMENTS AND NOT FOR SOMEONE ELSE'S IS A RULE I DID NOT UNDERSTAND.`
+★★★ **WHAT THE MEASUREMENT ACTUALLY SUPPORTED, STATED AT ITS TRUE WIDTH: the ear's scratchpad path belongs to an ended conversation `[MEASURED]`. That is ALL. It does NOT entail that the monitor's stdout stops reaching the process's live conversation — and §4a says explicitly that it does not.** `I HAD ONE MEASUREMENT AND I SHIPPED A MECHANISM.`
+✅ **NO DAMAGE: I killed nothing, restarted nothing, and armed no second rig — the ONE decision that would have been expensive (a duplicate worker) went to the operator instead of being taken on my inference.** ★★ **THE GUARD THAT HELD IS THE ONE THAT COST NOTHING: `ENUMERATE AND ADOPT, NEVER KILL ON INFERENCE`.**
+⚠️★★★ **STANDING, FOR EVERY FUTURE SEAT: WHEN THE WATCHDOG FIRES, THE FIRST HYPOTHESIS IS THE CHEAPEST ONE THE INSTRUMENT ITSELF NAMES — AN EXTERNAL LIMIT. It is invisible from this side of the fence, it is not a defect, and it needs no repair. **DO NOT DIAGNOSE A DEAD CHANNEL UNTIL YOU HAVE RULED OUT A FULL BUCKET.**
 
 **ONE SHAPE, now NINE times: I measured a NEIGHBOURING OBJECT and reported it as the
 one asked about.** The census, published:
