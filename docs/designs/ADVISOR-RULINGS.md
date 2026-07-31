@@ -12,6 +12,82 @@
 
 ---
 
+## R-502 · 2026-07-31 · ⚠️★★★★★ **`c304b098` IS `NOT-SOUND` — THE GRADE LANDED AND IT IS A REAL ONE: THE SAME DEFECT CLASS IS LIVE ONE GRANULARITY LEVEL DOWN. AND THE EXTERNAL READ FALSIFIED THE `I7` "WIRING FINDING" — I CONFIRMED IT AT THE EXECUTABLE LINE AND I HAD ALREADY TOLD THE OPERATOR THE WRONG THING.**
+
+★ **WORKER — START HERE:** `I11` is **CLOSED** (§1) — do not touch it. §6 is your order: finish `I7` under §4's expanded list, then `I8`. **`P0-v5` is named in §7 and is NOT yours yet.**
+
+**RULING ID:** R-502 · **TASK ID:** **AR-523** (newest AR on disk, read IN FULL), also ruling **AR-522** and the `I11` grade · **PRIOR:** R-501 · **DECISION:** **`c304b098` = `NOT-SOUND`** · **ACCEPT** AR-523's self-rescore · **ADOPT** the external read after verifying it myself · **WITHDRAW** `H1` · **LAND** the operator's handoff order into both worker skills.
+
+---
+
+### ⚠️★★★★★ §1 — THE GRADE: **`NOT-SOUND`, BAND 6/10.** `I11` IS CLOSED AND ITS RECEIPT IS AN ARTIFACT, NOT A RUMOUR
+**[MEASURED HERE] `docs/designs/GRADE-C304B098-2026-07-31.md`, `314` lines, committed `38acbbdd`.** ★★★ **A1's durable-receipt clause WORKED ON ITS FIRST USE — the grade of `8187b730` existed only in a transcript and was `[RELAYED]` forever. This one is `[ARTIFACT-SOURCED]` and any seat can re-read it.**
+**`1` HIGH · `3` MEDIUM · `1` LOW. Sub-claims: `1` SOUND · `2` SOUND · `3` PARTIAL · `4` PARTIAL · `5` SOUND · `6` **NOT-SOUND**.**
+★★★★★ **THE HEADLINE, AND IT IS THE RIGHT SHAPE OF FINDING: the delivery GENUINELY closes what `8187b730` was rejected for — the grader reproduced both closures by execution — but `F-2` (HIGH) shows THE SAME DEFECT CLASS LIVE ONE GRANULARITY LEVEL DOWN. Six mutations (`reason_names`→`reason_name`, `bindable`→`bindible`, `reason_null: true`→`"true"`, …) each `EXIT 0` with stdout **md5-identical to the clean PASS**. `validateOracleContractOrExit` never rejects unknown ROW KEYS; the census asserts membership at `condition_id` granularity, never at FIELD granularity.**
+★★★★★ **AND THE DAMNING PART IS THE COMMIT MESSAGE'S OWN ARGUMENT: it says membership *"operates at FIXTURE-FILE granularity and never at `condition_id` granularity"* — and then does not apply that reasoning ONE LEVEL FURTHER DOWN. `A LESSON APPLIED AT ONE GRANULARITY AND NOT THE NEXT IS THE SAME BUG WITH A SMALLER RADIUS.` FIFTH consecutive delivery defeated by a check satisfied by ABSENCE.**
+
+### §2 — **I VERIFIED TWO OF THE GRADE'S FINDINGS MYSELF. BOTH HOLD.** `A GRADE IS A CLAIM UNTIL THE DESK OPENS THE FILE`
+| finding | my independent check | result |
+|---|---|---|
+| **F-5 (MEDIUM)** — *"no engine change: both lane files byte-identical to the base"* | `git rev-parse 9af37b8f:<f>` vs `c304b098:<f>` | ⚠️★★★★★ **CONFIRMED FALSE.** Python `2a31942f` → `2a31942f` **IDENTICAL**; TS `spec-family-bindings.ts` **`8053598b` → `1853e7d9` — DIFFERS.** **THE DELIVERY CONTAINS A TS ENGINE CHANGE WHILE ITS OWN MESSAGE SAYS IT CONTAINS NONE.** |
+| **F-1 (MEDIUM)** — the caption names five feeding checks, there are more | read `:1517` + `grep -c "failures.push"` | ★★★ **CONFIRMED SHORT.** Caption: `GATE CHECKS (membership · tripwire · axis-4 · TS-schema · reason-distinctness)` = **FIVE**. `failures.push` sites = **`7`**. ⚠️ **JOIN KEY, NAMED: my `7` is a RAW SITE COUNT; the grader's `6` is BUCKET-FEEDING. I do not adopt its `6` as my measurement — but BOTH exceed `5`, so the caption is falsified either way.** |
+★★★★★ **`F-1` IS THE NINTH `CAPTION FALSIFIES ITS OWN LINE`, AND THE OMITTED CHECK IS THE ROW CENSUS — THIS DELIVERY'S OWN HEADLINE REPAIR. The repair is not named in the caption that reports it.**
+★★★ **`F-5` MATTERS BEYOND THE FALSE CAPTION: the grader reports the TS delta moves TWO SESSION ZONES TO A NEW REFUSAL PATH, and that at `9af37b8f` Python already had the refusal while TS had none — `A LIVE PARITY BREAK`. `[RELAYED]` as to the delta's CONTENT; `[MEASURED HERE]` as to the blobs differing. **AND IT TOUCHES THE SAME CODE `I7` MEASURED** (§3) — the two lanes have collided and nobody planned it.**
+★★ **THE GRADER DECLARED ITS OWN LARGEST GAP UNPROMPTED: it verified every oracle row CITES an authority and that the authority hash matches its pin, but did NOT re-derive the 15 adjudicated values from the authority prose — *"a correctly-cited but mis-transcribed value would survive this grade"* — and the materiality-receipt leg is UNDETERMINED, not executed. `THE BUILDER OR GRADER NAMING WHAT IT DID NOT COVER IS THE MOST USEFUL LINE IN ANY BUNDLE.` Both are named follow-ups, not silent holes.**
+**DISPOSITION: `c304b098` = `NOT-SOUND`. R-497 closure = IMPLEMENTED, NOT CERTIFIED. GATE B BLOCKED. NO INTEGRATION. MERGE / DEPLOY / RELEASE = HOLD. `I11` IS CLOSED — the lane delivered a verdict, and a NOT-SOUND verdict is a completed lane, not a failed one.**
+
+### ⚠️★★★★★ §3 — THE EXTERNAL READ FALSIFIED `H1`, I CONFIRMED IT AT THE EXECUTABLE LINE, AND **I HAD ALREADY TOLD THE OPERATOR THE WRONG THING**
+**[MEASURED HERE — `src/engine/spec_family_bindings.py:2570-2597`, executable lines, not comments]:**
+```
+if session_role_resolver_enabled():
+    role_result = classify_session_role(obj)
+    if role_result.zone is not None:                 # :2572
+        return ConditionBinding(..., bindable=False, primitive=None,
+            approximation=False, reason=SESSION_TEACHING_UNBOUND_REASON,
+            session_zone=None)                       # :2586-2597
+```
+★★★★★ **THE NINE COMPUTED ZONES ARE CONSUMED. THEY ARE CONSUMED AS EVIDENCE FOR A NAMED REFUSAL.** `:2573-2585` states why: a clock/anchor min-max overlap is an `approximation=True` PROXY, **not** the exact window `is_in_killzone` evaluates; **the OLD lane bound it, that bind rode the family-level honest read straight through, and THE REDESIGN DELIBERATELY REMOVED IT.**
+★★★★★ **SO `H1 — COMPUTED BUT NOT CONSUMED` IS FALSIFIED BY CODE INSPECTION AND IS WITHDRAWN — PRESERVED-AND-STRUCK, never deleted.** **AND THE INVERSION IS THE WHOLE POINT: THE REFUSAL IS NOT THE BUG, IT IS THE FIX. Binding those nine would claim an exact window the engine does not possess — it would manufacture trades on a window the teacher never sanctioned. That is the DANGEROUS direction, and the code runs conservative.**
+⚠️★★★★★ **MY OWN ERROR, AND IT REACHED THE OPERATOR: I told him *"it produces a good answer that nothing picks up… not a dead feature, an unplugged one."* **THAT IS FALSE.** I took the worker's `[HYPOTHESIS]` and spent it in an operator summary as a diagnosis. `advisor-ruling` §9 is explicit — *"verify a factual claim BEFORE it enters an operator summary, not before it is corrected"* — and **a hypothesis loses its label the moment it is spoken in plain English.** `A REASSURANCE BROADER THAN ITS EVIDENCE IS THE ONE LIE HE CANNOT CATCH`, and this was a DIAGNOSIS broader than its evidence, which is the same species. **Corrected to him in the same turn as this ruling.**
+★★★ **`H2 — UPSTREAM EXTRACTION` SURVIVES as a hypothesis for the narration-shaped rows only. It does NOT explain the deliberate refusals and it was never tested. It stays `[HYPOTHESIS — UNTESTED]`.**
+★★★ **THE REPLACEMENT SENTENCE, ADOPTED VERBATIM FROM THE EXTERNAL READ:** *"The classifier path is reached and produces coarse candidate zones, but the current executable contract deliberately converts those candidates into named refusals. Corpus A contains no exact name-route bind under the treatment arm. Whether that refusal policy should change is a design question outside `I7`."*
+
+### §4 — `I7` STAYS **PARTIAL**, AND ITS COMPLETION LIST IS **EXPANDED**
+**AR-523's self-rescore to `6 / 9` is ACCEPTED** — it re-scored its own delivered lane against a contract that landed AFTER it shipped, and filed PARTIAL rather than arguing it met the old bar. ★★★ **Its join-key catch is the model: `bindable = 128` vs `bindable AND NOT approximation (= bound_and_concrete) = 0` — ALL 128 "bindable" rows are approximations, and AR-522 put the looser field in a headline beside a baseline counted on the stricter one. `THE JOIN KEY IS THE CLAIM.` Both hard stops TESTED, neither fires.**
+⚠️★★★★★ **TWO ARTIFACT DEFECTS I CONFIRMED MYSELF [MEASURED HERE, `session-role-resolver-yield-2026-07-31.json`]:**
+- **`invalidations_REPORTED_SEPARATELY = 6`, and `RESULT_invalidations_SEPARATE` has `6` members. AR-522 §2 says `16`. THE PROSE IS WRONG; THE ARTIFACT IS RIGHT.** **CORRECT IT TO `6` — do not leave both standing.**
+- ⚠️ **`TREE.dirty_paths = 95`.** The generator imports `src.engine.spec_family_bindings` from that working tree. **DETERMINISTIC REPEATED EXECUTION PROVES REPEATABILITY INSIDE THE CHECKOUT; IT DOES NOT PROVE THE MEASURED BINDER EQUALS THE NAMED COMMIT.** `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.`
+**`I7` COMPLETION LIST — ADOPTED SUBSTANTIALLY FROM THE EXTERNAL READ §8, SUPERSEDING R-501 §6:** Corpus A and B reported **SEPARATELY, no pooled rate** · explicit numerator/denominator **definitions** · **THREE denominators** — global · `WAIT_SESSION`-family · **independently-defined `C2`-eligible**, and ★★★★★ **the `C2` denominator is defined from the PINNED BASELINE, never from the treatment arm's own classifier output — `A TEST THAT SELECTS ITS OWN DENOMINATOR CANNOT FAIL`** · **OFF-vs-ON REFUSAL-REASON identities** (`no_recognized_session_keyword` → `session_teaching_recognized_no_computable_window`, generic → wrapping-window, name-route miss → bind, unchanged, unexpected) · exact-name-route binds separated from classifier-derived deliberate refusals · recognized-without-zone separated from computed-zone refusals · non-`C2` movement census · **invalidations corrected to `6`** · **clean-tree OR source-closure integrity proof** (clean detached rerun, or assert binder + every transitively imported source + every population file equals its blob at the pinned SHA; **any dirty-path intersection with the source or population closure is a STOP**) · `bound_and_concrete` defined explicitly as `bindable AND NOT approximation` · **the pinned-baseline comparison encoded as an ASSERTION in the artifact, not described in prose.**
+★★★★★ **AND THE REASON THIS LIST IS NOT BUREAUCRACY: `I7` MEASURED THE WRONG OUTPUT FIELD. This feature does not produce BINDINGS — the code at `:2586` proves it deliberately produces REFUSALS. The generator diffs `bindable`/`primitive`/`session_zone`/`errors` and **never diffs `reason`, though it records it in both arms.** So the feature's entire product was invisible to the instrument, and "zero yield" measured the one thing it was redesigned NOT to do. `A ZERO ON THE WRONG FIELD IS NOT A NULL RESULT, IT IS A MISSED MEASUREMENT.`**
+**NO ENGINE OR EXTRACTION CHANGE IS AUTHORIZED. All of it is additive to the generator.**
+
+### §5 — THE OPERATOR'S HANDOFF ORDER IS **LANDED IN BOTH SKILLS, IN BOTH DIRECTORIES**
+**His words: *"each new worker needs to finish all their lanes before a new handoff — that should be in worker skills and their onboarding."*** **[MEASURED HERE] Landed in `worker-execution` §10 and `worker-onboarding` §5, and MIRRORED to `.agents/skills/` — `diff -q` returns IDENTICAL for both pairs.** ★★★ **`SKILLS LIVE IN TWO REAL DIRECTORIES — EDIT BOTH OR A SEAT READS THE STALE COPY`, and I verified rather than assuming.**
+**THE RULE AS WRITTEN:** when a ruling authorizes a BATCH, the unit of work is **the whole batch**; **a lane boundary is a clean seam, not a context limit**; handoff is reserved for **genuine exhaustion and nothing else**; before writing one, state fan-in as `N / M` and ask whether the remainder is **BLOCKED or merely UNSTARTED** — **unstarted is the reason to stay.** ★★ **The AR-521 conviction is recorded in both files by name so the rule carries its reason.**
+
+### §6 — ORDER FOR THE SEAT
+1. **`I11` — CLOSED. DO NOT TOUCH.** Verdict `NOT-SOUND`, receipt `38acbbdd`.
+2. **`I7`** — finish under §4's expanded list. **This is your next act.**
+3. **`I8`** — only after `I7` CLOSES, under A2's unchanged clause list.
+4. **`I21` follow-up** (R-501 §3): rows 1–3 → `PRESENT-BUT-SIZE-DIVERGENT`, semantic diff `[NOT MEASURED]`.
+**FAN-IN: `I21` CLOSED · `I11` CLOSED · `I7` PARTIAL · `I8` NOT STARTED.** ★★★ **DO NOT EXPRESS THIS AS `2 / 4` — adopted from the external read §1. Two closed lanes and one partial is not a fraction; a fraction hides which half is missing.**
+★★ **AND PER §5 YOU DO NOT HAND OFF AT A LANE BOUNDARY. Finish the batch.**
+
+### §7 — `P0-v5` IS NAMED NOW SO IT IS NOT LOST — **NOT AUTHORIZED YET**
+**The grade's five findings require a FIFTH delivery.** ★★★ **DELIBERATELY NOT STARTED: the operator's order is that this seat finishes its batch, and `F-2` is not an emergency — nothing is deployed, Gate B is already blocked, and `LANDED ≠ RUNNING`.** **The throughput law's grade slot is now FREE (the grade returned), so `P0-v5` becomes the one money-path implementation the moment Batch 1 closes.** **Its scope will be: field-granularity oracle-row validation (`F-2`) · the caption (`F-1`) · `reasons_must_differ_from` red-proofing (`F-3`) · **the TS/Python parity break `F-5` names** · the packet's missing invalidations-exclusion statement (sub-claim 6) · plus the grader's two declared gaps — re-deriving the 15 adjudicated values from the authority prose, and the UNDETERMINED materiality leg.**
+
+### §8 — LESSONS TO PERSIST
+1. ★★★★★ **`A HYPOTHESIS LOSES ITS LABEL THE MOMENT IT IS SPOKEN IN PLAIN ENGLISH.` The worker labelled `H1` correctly; I relayed it to the operator as a diagnosis. The evidence-grade discipline must survive TRANSLATION, not just transcription.** (§3 — mine.)
+2. ★★★★★ **`A ZERO ON THE WRONG FIELD IS NOT A NULL RESULT, IT IS A MISSED MEASUREMENT.`** (§4.)
+3. ★★★★★ **`A LESSON APPLIED AT ONE GRANULARITY AND NOT THE NEXT IS THE SAME BUG WITH A SMALLER RADIUS.`** (§1 — the commit message argued membership granularity and stopped one level short.)
+4. ★★★ **`A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.`** (§4.)
+5. ★★★ **`A TEST THAT SELECTS ITS OWN DENOMINATOR CANNOT FAIL.`** (§4.)
+
+### §9 — AUTHORIZED NEXT ACTION
+**`I7`'s completion is AUTHORIZED NOW, to the existing seat, under §4.** Then `I8`, then the `I21` follow-up. **HELD, assigned by name:** `P0-v5` → **THIS DESK, authorized the moment Batch 1 closes** (§7) · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT.** **Nothing is assigned to nobody.**
+
+---
+
 ## R-501 · 2026-07-31 · ★★★★★ **AR-520 + AR-521 RULED. EXTERNAL READ AUDITED, ADOPTED ON MERIT, AND ONE CLAUSE REFUSED ON THE OPERATOR'S DIRECT ORDER: THE SEAT IS STILL ALIVE AND FINISHES ALL FOUR LANES — NO FRESH SESSION.** ⚠️★★★★★ **AND I CONVICT MYSELF FIRST: I RULED R-499 AND R-500 WITHOUT THE PASTE, AGAINST A STANDING ORDER.**
 
 ★ **WORKER — START HERE:** **YOU ARE NOT HANDED OFF.** §5 leaves all four lanes with YOU. **`I11` IS TAKEN — THE DESK DISPATCHED IT; DO NOT DISPATCH IT.** §6 is your rewritten `I7` contract and it is much stricter than mine was. Go.
