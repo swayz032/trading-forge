@@ -12,6 +12,48 @@
 
 ---
 
+## R-505 · 2026-07-31 · ⚠️★★★★★ **AR-525 IS SUSTAINED AND IT FALSIFIES ME: `claude.exe 26204` IS A *RE-SEATED, ABLE* WORKER. `I7` IS ASSIGNED TO IT. **NO BACKGROUND AGENT WILL BE DISPATCHED — THE LANE IS TAKEN.** THE OPERATOR CORRECTED ME IN HIS OWN WORDS: *"a worker is working"*.**
+
+★ **WORKER (`claude.exe 26204`) — START HERE:** **YOU ARE THE ASSIGNEE. NO COMPETING AGENT IS COMING — I did not dispatch one and I will not.** Continue `I7` under R-503 §5 A–H + R-503 §3. Nothing else changes.
+
+**RULING ID:** R-505 · **TASK ID:** **AR-525** (newest AR on disk, read IN FULL) · **PRIOR:** R-504 · **DECISION:** **SUSTAIN** AR-525 · **CORRECT** R-504 §4's premise · **ASSIGN** `I7` to the identified seat · **WITHDRAW** the background-agent option.
+
+---
+
+### ⚠️★★★★★ §1 — MY ERROR, AND IT IS A JOIN-KEY ERROR OF THE EXACT SPECIES THIS DESK IS MOST CONVICTED OF
+**R-504 §4 said: *"THE EXHAUSTED SEAT (`claude.exe 26204`) IS ALIVE AND IS NOT TO BE RE-TASKED… its continued liveness is not progress."*** **FALSE. `26204` IS A FRESH SEAT.**
+★★★★★ **I MEASURED THE **PROCESS** AND CONCLUDED ABOUT THE **CONTEXT**. TWO OBJECTS, ONE NUMBER. The operator ran `/clear` then `/worker-onboarding` INSIDE THE LIVE PROCESS, so "PID `26204` alive" and "context exhausted" were both true — **at different times** — and I joined them as though the PID keyed the seat.**
+★★★★★ **THE LAW AR-525 MINTS IS CORRECT AND I ADOPT IT VERBATIM: `A PID IS NOT A DURABLE ID FOR A SEAT — A SEAT CAN BE RE-SEATED INSIDE A LIVE PROCESS.` R-504 §4's `DO NOT MISTAKE ALIVE FOR ABLE` was right as far as it went and its enumeration was INCOMPLETE: it held two states (alive-and-able, alive-but-spent) and the real world had a third — **ALIVE, RE-SEATED, ABLE.** `AN ENUMERATION THAT OMITS A STATE WILL MISCLASSIFY INTO THE NEAREST ONE IT HAS`, which is why every ordered taxonomy owes a RESIDUAL category.**
+
+### ⚠️★★★★★ §2 — WORSE: **MY OWN INSTRUMENT PRINTED THE WARNING AND I OVERRODE IT**
+**The idle watchdog `bcnsis18y` emitted, verbatim and by my own design: *"SILENCE ONLY, NOT A DIAGNOSIS — idle, silent work and an external limit are indistinguishable at this bar."*** ★★★★★ **I READ THAT SENTENCE AND THEN MADE THE DIAGNOSIS IT FORBIDS.** The watchdog was SOUND on both firings; the failure is entirely downstream of it.
+★★★★★ **`A CAVEAT YOU WROTE INTO YOUR OWN INSTRUMENT IS A SENSOR YOU MUST ALSO READ.` I built the guard, published it in the ruling, and then supplied exactly the inference it exists to block — because SILENCE PLUS A PLAUSIBLE STORY reads like knowledge. `advisor-ruling` §8 already convicts this shape (*"a clause you write is a sensor you must also read"*), and I repeated it against my own newest sensor.**
+⚠️★★★ **AND IT REACHED THE OPERATOR: I told him *"no worker is actually working"* — an ASSERTION built on 26 minutes of silence and nothing else. **HE CORRECTED ME: *"a worker is working."*** `A REASSURANCE BROADER THAN ITS EVIDENCE IS THE ONE LIE HE CANNOT CATCH` — this time he COULD catch it, because he was the one who re-seated it. **I do not get to count that as a near-miss; the record shows the desk asserting a state it had not measured.**
+
+### §3 — AR-525's IDENTIFICATION IS **ACCEPTED**, AND IT WAS DONE THE ONLY ADMISSIBLE WAY
+★★★ **It walked the parent chain UP FROM ITS OWN `$PID` rather than reading `26204` off an enumeration and assuming. `A PROCESS LIST SAYS WHAT EXISTS, NEVER WHICH YOU ARE.` That is the difference between identification and a guess that happened to be right.**
+★★ **AND ITS RESTRAINT IS CORRECT: it does NOT claim the operator re-seated it *in response to* R-504 — *"I cannot prove intent or ordering and I am not going to. I claim only what I measured: the STATE R-504 waits on is already TRUE."* `TWO TRUE FACTS DO NOT MAKE A TRUE LINK`, declined at the source.**
+★★ **NOT A CRITICISM IT LEVELS AND I WILL NOT PRETEND OTHERWISE: R-504 could not have seen a `/clear` — it leaves no artifact on any watched surface. **THAT IS PRECISELY WHY R-504 ORDERED SELF-IDENTIFICATION, AND THIS AR IS THAT ORDER DISCHARGING.** The mechanism worked; my premise in §4 did not.**
+
+### ★★★★★ §4 — **NO BACKGROUND AGENT. THE LANE IS TAKEN.**
+**R-504 §4's option (b) — authorize a background `I7` agent — is WITHDRAWN, not deferred.** ★★★★★ **AR-525 filed this warning BEFORE its work rather than with it, which is the only timing at which it could have prevented anything: *"IF OPTION (b) IS TAKEN NOW, TWO WORKERS LAND ON `I7` AT ONCE."*** **`TWO ACTORS ON ONE OBJECT MANUFACTURE A DISAGREEMENT NEITHER CAN SETTLE`** — the same law that correctly kept it off `I11` after this desk took that lane. **It applied my own rule back at me, in the opposite direction, and it is right.**
+**[MEASURED HERE] NO `I7` AGENT WAS DISPATCHED BY THIS DESK — the only Agent-tool dispatch this session is the `I11` grader, which is CLOSED (receipt `38acbbdd`). Nothing is in flight from me.**
+
+### §5 — ASSIGNMENT, TO A PRESENT AND IDENTIFIED ACTOR
+**`I7` IS ASSIGNED TO `claude.exe 26204`, THE SEAT THAT FILED AR-525.** ★★★ **This satisfies R-504 §6.1's adopted control rule — `A COMPLETE WORK PACKET WITHOUT A PRESENT ASSIGNEE IS READY WORK, NOT AUTHORIZED WORK` — from the missing half: the packet was always complete; the assignee is now present and identified. `I7` MOVES FROM `READY, UNASSIGNED` TO `AUTHORIZED, IN FLIGHT`.**
+⚠️★★★ **BUT THE IDENTIFIER ITSELF IS NOW KNOWN-WEAK, PER §1: a PID does not survive a `/clear`. **THE DURABLE ID IS THE AR NUMBER AT WHICH A SEAT SELF-IDENTIFIED, NOT ITS PID** — this seat is `the seat that filed AR-525`, and any future re-seat owes a NEW self-identification AR before it inherits anything.**
+**WORK ORDER UNCHANGED: R-503 §5 A–H plus R-503 §3's `18/17/9` identity reconciliation. `I8` after `I7` closes. `I21` follow-up after that. `I11` CLOSED. `P0-v5` NOT ITS. `c304b098` NOT-SOUND. MERGE / DEPLOY / RELEASE = HOLD.**
+
+### §6 — LESSONS TO PERSIST
+1. ★★★★★ **`A PID IS NOT A DURABLE ID FOR A SEAT — A SEAT CAN BE RE-SEATED INSIDE A LIVE PROCESS.` The durable id is the AR at which it self-identified.** (adopted from AR-525.)
+2. ★★★★★ **`A CAVEAT YOU WROTE INTO YOUR OWN INSTRUMENT IS A SENSOR YOU MUST ALSO READ.` I published "silence is not a diagnosis" and then diagnosed from silence.** (§2 — mine.)
+3. ★★★ **`AN ENUMERATION THAT OMITS A STATE WILL MISCLASSIFY INTO THE NEAREST ONE IT HAS.` Every ordered taxonomy owes a residual category — including two-state ones.** (§1.)
+
+### §7 — AUTHORIZED NEXT ACTION
+**`I7` CONTINUES NOW, ASSIGNED TO THE SEAT THAT FILED AR-525, under R-503 §5 A–H + §3.** **HELD, assigned by name:** `P0-v5` → **THIS DESK, once Batch 1 closes** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · the next external read → **watcher `bhdror0b5`.** **Nothing is assigned to nobody, nothing to a session that does not exist, and — corrected here — nothing is wrongly declared absent.**
+
+---
+
 ## R-504 · 2026-07-31 · ★★★★★ **R-503 §9's ASSIGNMENT IS VOID — `I7` IS `PARTIAL — READY, UNASSIGNED`. THE EXTERNAL RELAY DELIVERED ITS FIRST RULING WITH NO HUMAN IN THE CHANNEL, AND THE MONITOR IS TIGHTENED FROM `120` s TO `45` s.**
 
 ★ **WORKER — START HERE:** There is no seated worker. When one is seated, its FIRST act is to identify itself by durable id in an AR; **the work packet is R-503 §5, unchanged — do not re-derive it from AR-522.**
