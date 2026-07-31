@@ -4,6 +4,58 @@
 
 ---
 
+## AR-527 · 2026-07-31 · ⚠️★★★★★ **`I8` IS **DECLINED, NOT DEFERRED** — ADVANCING IT REQUIRES AN ACT TWO STANDING PROHIBITIONS FORBID, AND ITS PREREQUISITE IS THE **ADVISOR'S** TO PERFORM, NOT NOBODY'S. AND THE `I21` FOLLOW-UP IS **MEASURED**: THE DEPLOYED BINDER IS A STRICT SUBSET — `70` SYMBOLS MISSING, `0` EXTRA — SO ROWS 1–3 ARE A **PORT**, NOT A FLAG FLIP.**
+
+**RULING ID:** R-505 §5 (`I8` after `I7`, then the `I21` follow-up) · **TASK ID:** AR-527 · **PRIOR:** AR-526 · **SEAT:** the seat that filed AR-525.
+
+### §1 — `I8` START/DECLINE-RECEIPT, CARRYING THE REGISTER sha256 **AS MEASURED, NOT AS PINNED**
+**A2/A3 require `I8`'s receipt to carry `STRANDED-CAPABILITY-REGISTER.md`'s sha256.** **[MEASURED HERE] LIVE: `efbd570d3977946182cb338ddddeba2be30153a6004b8aa95efb7d3e91aa55d4` (`11,382` B). THE A3 PIN `7b440add…` DOES **NOT** MATCH.**
+★★★ **WHY, AND IT IS A REAL SEQUENCING FINDING: A3's edge said *"`I21` may not write until that receipt is posted."* `I21` WROTE FIRST — `1dc09bac` (AR-520) rewrote the register, and no `I8` receipt ever existed. **THE EDGE WAS ORDERED AND NOT ENFORCED.** No harm followed (`I21` is CLOSED and its finding sustained), but `AN EDGE THAT NOTHING ENFORCES IS A COMMENT.`**
+★★★★★ **AND I DID NOT COPY THE PINNED VALUE INTO MY RECEIPT. `NO LOAD-BEARING VALUE ENTERS FROM MEMORY OR FROM AN OLDER DOCUMENT` — the receipt carries what the file hashes to NOW, and names the pin it falsifies.**
+
+### ⚠️★★★★★ §2 — WHY `I8` IS DECLINED: **THE ONLY REMAINING MOVE IS ONE THAT IS NOT AUTHORIZED**
+**[MEASURED, `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md`] the shadow run ALREADY EXECUTED and is **VOID BY ITS OWN PRE-REGISTERED CRITERION**: on `HOLDOUT-26` the deterministic rules decide **`4.1%`** (`72` of `2351`) and fall back to the topology heuristic on **`95.9%`** (`1704`). ARM B fires on `0`.**
+**SO "ADVANCE THE MIGRATION" REDUCES TO ONE THING: MAKE THE RULES DECIDE MORE THAN `4.1%`. THAT IS RULE EXPANSION.** **AND IT IS FORBIDDEN TWICE OVER, BOTH [MEASURED HERE IN `ADVISOR-STATE.md`]:**
+1. `## POPULATIONS — PERMANENT`: ★★★ ***"Rule expansion FORBIDDEN until a fresh untouched population is named FIRST."*** **[MEASURED] NO FRESH UNTOUCHED POPULATION IS NAMED ANYWHERE IN THAT BLOCK — it lists only `DEV-14` (contaminated, group leakage) and `HOLDOUT-26` (the valid holdout, spent the moment it tunes).**
+2. `## NOT AUTHORIZED`: **"a fifth semantic-regex patch round"** — named explicitly, alongside `tuning the labeller on HOLDOUT-26`, `flipping TF_SEMANTIC_ROLE_CLASSIFIER`, `promoting trigger`, `writing classifications to the DB`.
+★★★★★ **THIS IS THE `worker-execution` §6 CASE, AND I AM TAKING IT: `SOMETIMES THE CORRECT RESULT IS A REFUSAL.` Expanding the regex families to lift `4.1%` would be a fifth patch round on a population that has already been inspected — which converts `HOLDOUT-26` into development evidence and destroys the only valid internal holdout the campaign has. **A BETTER DECIDED-RATE BOUGHT THAT WAY IS NOT PROGRESS; IT IS THE HOLDOUT SPENT.**
+⚠️★★★★★ **AND I AM **NOT** FILING THIS AS AN UNOWNED PREREQUISITE — I ENUMERATED THE ACTORS FIRST, WHICH IS THE THING THIS CAMPAIGN WAS CONVICTED FOR SKIPPING.** **THE PREREQUISITE IS: *name a fresh untouched population.* **THAT IS AN ADVISOR ACT** — populations are governed by `ADVISOR-STATE.md`'s `## POPULATIONS — PERMANENT`, a file I may never write under single-writer. It is not blocked on an absent capability, an unreachable environment, or the operator. **IT IS ONE RULING AWAY, AND IT IS OWNED BY NAME.**
+★★ **SECOND, INDEPENDENT REASON, WHICH ALONE WOULD NOT HAVE STOPPED ME: [MEASURED] the producer files (`graph-to-engine.ts`, `gate-strength.ts`, `clause-segmenter.ts`) are **ABSENT FROM MY CHECKOUT** and live in the `extraction-100` worktree on branch `extraction/100pct-evidence`, which has `8` dirty paths and is not mine. **A worktree update is a stop-and-ask item.** ★★★ **AND THE PACKET'S CITED PATH IS WRONG BY ONE SEGMENT** — it says `trading-forge/.claude/worktrees/extraction-100`; the real path is `trading-forge/trading-forge/.claude/worktrees/extraction-100`. My first `ls` on the packet's path returned "No such file"; **had I stopped there I would have reported the lane ABSENT. `AN EMPTY RESULT OVER A WRONG PATH IS NOT AN ABSENCE`, and I control-probed rather than publishing it.**
+★★★ **PROVENANCE OF THE FROZEN RUN IS INTACT, VERIFIED RATHER THAN ASSUMED: `shadow.ts` (`3,610` B) hashes to `16654d173baf…fa77635`, **EXACTLY the freeze document's pin.** The harness is reproducible; the lane is not blocked on a lost instrument.**
+**`I8` STATE: `NOT STARTED — DECLINED PENDING AN ADVISOR ACT (name a fresh untouched population).` NOTHING IN THE MIGRATION LANE WAS TOUCHED. NO FILE IN ANY OTHER WORKTREE WAS WRITTEN.**
+
+### ★★★★★ §3 — THE `I21` FOLLOW-UP (R-501 §3) — **THE SEMANTIC DIFF IS NO LONGER `[NOT MEASURED]`**
+**R-501 §3 left rows 1–3 as `PRESENT-BUT-SIZE-DIVERGENT` with the semantic diff explicitly unmeasured. Measured now, by AST at the top-level definition level — NOT a byte diff, NOT a grep:**
+| | campaign `wt-h1-wave4` | deployed `runtime-production` @ `9af37b8f` |
+|---|---|---|
+| bytes (binary) | **`160,049`** | **`40,583`** — ratio **`3.94x`** |
+| top-level symbols | **`103`** | **`33`** |
+| in campaign, **ABSENT** from deployed | — | **`70`** |
+| in deployed, **absent** from campaign | — | ★★★★★ **`0`** |
+★★★★★ **THE DEPLOYED BINDER IS A STRICT SUBSET AT THE SYMBOL LEVEL. `0` DEPLOYED-ONLY SYMBOLS MEANS THE DIVERGENCE IS PURELY SUBTRACTIVE — there is no deployed-side code the campaign lane would have to reconcile with. `A 3.94x SIZE GAP COULD HAVE BEEN TWO DIVERGENT FORKS; IT IS NOT. IT IS ONE LINEAGE WITH 70 THINGS REMOVED.` That is a materially easier port than the size ratio alone implies, and it was worth measuring rather than inferring.**
+**AND THE CAPABILITY-LEVEL ANSWER ROWS 1–3 ACTUALLY OWED:**
+| symbol | campaign | deployed |
+|---|---|---|
+| `session_role_resolver_enabled` | `1` | **`0`** |
+| `classify_session_role` | `1` | **`0`** |
+| `SESSION_TEACHING_UNBOUND_REASON` | `1` | **`0`** |
+| `resolve_session_name_to_window` | `1` | **`0`** |
+| `levelzone*` | `5` | **`0`** |
+| `refused_session_zone` | `1` | **`1`** ← present in BOTH |
+⚠️★★★★★ **SO THE ENTIRE `C2` SESSION-ROLE RESOLVER I MEASURED IN `I7` **DOES NOT EXIST AS CODE IN THE DEPLOYED ENGINE.** Rows 1–3 read as *"config ABSENT / 0 refs"*, which invites *"set the flag"*. **THE FLAG HAS NOTHING TO GATE THERE.** `ABSENT CONFIG AND ABSENT CODE PRINT THE SAME IN A FLAG SWEEP, AND THEY ARE DIFFERENT JOBS.` **This is a PORT, and R-415's contract governs it.**
+★★★ **AND IT SHARPENS `I7`'s OWN SCOPE HONESTLY: AR-526 said "nothing here describes what runs." This is the stronger, measured form — the deployed engine cannot produce the `17` improved refusals at all, because the functions that produce them are not there.**
+★★ **TWO-PATH CONFIRMATION OF AR-520: my independent binary read reproduces the register's `160,049` / `40,583` / `3.94x` EXACTLY. AR-520's numbers hold.**
+
+### ⚠️ §4 — MY OWN ERROR, CORRECTED BEFORE IT TRAVELLED
+**My first diff printed `campaign=158,335 / deployed=40,048` and I labelled those BYTES. THEY ARE CHARACTERS** — Python text mode returns a `str`, and `len()` counts code points, so every `★`/`⚠️`/em-dash under-counted. **[MEASURED] CRLF pairs are `0` in both files, so line endings were NOT the cause and my first instinct was also wrong.** **The binary figures in §3 are authoritative.** ★★★ **`A CAPTION IS A CLAIM` — a character count labelled "bytes" would have quietly falsified AR-520's `160,049` and I would have published a contradiction of a sound prior finding.**
+
+### §5 — POSITION
+**`I7` DELIVERED (AR-526), ungraded — `I DO NOT GRADE MY OWN WORK`; `accuracy-validator` is one dispatch away and I am not filing that as blocked.** · **`I8` DECLINED, prerequisite owned BY NAME by the advisor** · **`I21` follow-up DELIVERED — semantic diff measured, rows 1–3 reclassified `PRESENT-BUT-SUBTRACTIVELY-DIVERGENT`; the register itself is the desk's file and I did not edit it** · `I11` CLOSED · `c304b098` NOT-SOUND, untouched · `P0-v5` NOT MINE · **MERGE / DEPLOY / RELEASE = HOLD.**
+**NO ENGINE, EXTRACTION OR MIGRATION FILE MODIFIED IN ANY TREE. No sub-agent dispatched or owed by me. Nothing in flight.**
+★★★★★ **EVERY LANE THIS SEAT WAS GIVEN IS NOW AT A TERMINAL STATE — DELIVERED, DECLINED-WITH-AN-OWNED-PREREQUISITE, OR CLOSED. I am NOT declaring a handoff: my context is not exhausted, and `UNSTARTED IS THE REASON TO STAY` — but nothing remaining is mine to start. If the desk names a fresh untouched population, `I8` becomes workable and I will take it.**
+
+---
+
 ## AR-526 · 2026-07-31 · ★★★★★ **`I7` DELIVERED COMPLETE UNDER R-503 §5 A–H + §3. TWO METRICS, EACH WITH THREE DENOMINATORS, ON TWO CORPORA REPORTED SEPARATELY. THE `18`-vs-`17` ROW IS NAMED AND ITS MECHANISM IS AT THE EXECUTABLE LINE. `28` EXECUTABLE ASSERTIONS, ALL FOUR ASSERTION CLASSES RED-PROOFED, PROVENANCE CLOSED ON A FULLY COMMITTED CLOSURE.**
 
 **RULING ID:** R-505 §5 / R-503 §5 A–H + §3 · **TASK ID:** AR-526 · **PRIOR:** AR-525 · **SEAT:** the seat that filed AR-525 (`claude.exe 26204`) · **COMMIT:** instrument `463f588d`, artifacts this commit.
