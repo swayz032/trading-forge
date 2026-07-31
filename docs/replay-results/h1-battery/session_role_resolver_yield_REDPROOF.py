@@ -98,16 +98,25 @@ def m5_pretend_capability_was_ported(mod):
 
 def m6_plant_a_deployed_only_symbol(mod):
     """Give the deployed binder a symbol the campaign lane does not have. The
-    STRICT_SUBSET assertion must fire -- a deployed-only symbol means the port
-    would have to RECONCILE rather than merely ADD."""
-    orig = mod.top_level_symbols
+    subset-or-equal assertion must fire -- a deployed-only symbol means a port
+    would have to RECONCILE rather than merely ADD.
+
+    ⚠️ THIS MUTATION SILENTLY STOPPED BITING ONCE. It patched `top_level_symbols`
+    while the scope code was refactored to call `top_level_nodes`, so it became
+    a no-op and the case reported exit=0 / reddened=0. It is fixed to patch the
+    function the code ACTUALLY calls. `A MUTATION THAT NO LONGER BITES IS A
+    PROOF THAT EVAPORATED WITHOUT ANYONE EDITING IT` -- and the only reason it
+    was caught is that this harness FAILS LOUD when its target stays green.
+    """
+    orig = mod.top_level_nodes
 
     def patched(path):
-        s = orig(path)
+        n = dict(orig(path))
         if str(path) == str(mod.DEPLOYED_BINDER):
-            s = set(s) | {"ZZZ_PLANTED_DEPLOYED_ONLY_SYMBOL"}
-        return s
-    mod.top_level_symbols = patched
+            n["ZZZ_PLANTED_DEPLOYED_ONLY_SYMBOL"] = next(iter(n.values()))
+        return n
+    mod.top_level_nodes = patched
+    mod.top_level_symbols = lambda p: set(patched(p))
 
 
 def m7_make_symbol_sets_equal(mod):
