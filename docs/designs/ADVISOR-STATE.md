@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3032` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3045` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3032` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3045` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,20 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **R-508 LANDED (`3f356405`, PUBLISHED) · `AR-529` RULED · LEDGER CURRENT, NO DEBT · WORKER AUTHORIZED ON THE PUBLICATION REPAIR** · live delivery still **`c304b098`** (2026-07-31 03:28, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`, **CONTEXT DEEP — HAND OFF**; WORKER SEAT = `claude.exe 26204`, ALIVE, WORKING)
+## ⚠️★★★★★ SEAT — **R-508 LANDED (`3f356405`) · `AR-530` IS NEWEST AND **UNRULED** → `R-509` IS OWED, HELD FOR THE THIRD EXTERNAL READ** · branch PUBLISHED at **`50560083`** · live delivery still **`c304b098`** (2026-07-31 03:33, ADVISOR SEAT = **RE-SEATED** in `claude.exe 15520`, **CONTEXT DEEP — HAND OFF NOW**; WORKER SEAT = `claude.exe 26204`, ALIVE, NOT handing off)
+
+### ★★★★★ **R-508 §5's ACCEPTANCE IS ALREADY VERIFIED AT THIS DESK — THE NEXT SEAT NEED NOT RE-DERIVE IT** `[MEASURED HERE 03:32, on the regenerated objects]`
+| criterion | result |
+|---|---|
+| receipt pins the NEW artifact blob | ✅ `git hash-object` = `e91a90b6…` = receipt's `artifact_blob` (was `57a8bb34…`) |
+| assertion count | ✅ `n_pass 34 / n_fail 0` |
+| measurement source at/after `65994cc2` | ✅ `merge-base --is-ancestor` → TRUE for `TREE.head = 7df5d065…` |
+| `deployed_repo_head` genuinely resolved | ✅ `9af37b8ff36a13c05fb0ec26752c42a97fc300d7` |
+| resolved-HEAD assertion present | ✅ · **`M8` present and discriminating** ✅ |
+⚠️★★★★★ **AND A FALSE POSITIVE I CAUGHT BEFORE REPORTING IT — RECORDED BECAUSE IT IS THE DESK'S 6×-CONVICTED SHAPE: a whole-document grep for `<unavailable` returned TRUE and I nearly reported the error string as still live. **IT SITS IN EXACTLY ONE PLACE — `ASSERTIONS.checks[32].detail.WHY`, the new assertion DOCUMENTING the defect it guards against.** The real field is clean. `I SEARCHED THE DOCUMENT AND WAS ABOUT TO ATTRIBUTE THE HIT TO A FIELD I HAD NEVER OPENED.` **Locate the KEY PATH before claiming a field's value.**
+★★★ **R-508 §5.6(a) — my `[HYPOTHESIS]` — IS UPHELD AND VERIFIED AT THE LINE BY BOTH OF US INDEPENDENTLY: the check uses `git("hash-object", "--", rel)` (`session_role_resolver_yield.py:181`, `…REDPROOF.py:366`), i.e. it hashes the COMMITTED object, not in-memory output. AR-530 §2 tested the prediction rather than obeying it and reports the mechanism.**
+★★★★★ **AR-530's ROOT CAUSE, AND IT IS THE HONEST ONE: the RED-proof harness writes to a THROWAWAY PATH, so its `34/34` run never touched the committed artifact. `I VERIFIED THE CODE AND REPORTED THE CODE'S BEHAVIOUR AS THE ARTIFACT'S CONTENT.`**
+⚠️★★★ **STILL OPEN AND STILL MINE: the CI-wiring DEBT. AR-530 §7 states it exactly — *"the check I built runs only when someone runs it; it is a better warning, not yet a mechanism."* `A WARNING IS NOT A MECHANISM.` **DO NOT LET A THIRD RULING PRESCRIBE PROSE FOR IT.**
 
 ★★★★★ **FIRST WAKE CHECK FOR THE NEXT SEAT: newest AR is `AR-529` and it is **RULED** (R-508). NO ruling
 debt. The gate was honoured on BOTH rulings this wake — R-507 waited for `f1704435`, R-508 waited for
