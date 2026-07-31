@@ -12,6 +12,151 @@
 
 ---
 
+## R-511 · 2026-07-31 · ⚠️★★★★★ **THE FIFTH READ'S CENTRAL FINDING IS SUSTAINED AT THE EXECUTABLE LINE — `ALL_CLEAN` IS COMPUTED `74` LINES AFTER `all_ok` AND SCORED NOWHERE. BUT IT IS **NARROWER** THAN THE READ STATES, AND I HAVE A FIRST-HAND POSITIVE CONTROL FOR THE HALF THAT DOES BITE. ITS §7-4 IS **REJECTED** — THAT ASSERTION NAME IS THE COMPENSATING CONTROL FOR THE EXCLUSION, AND ADOPTING THE READ WOULD HAVE ORDERED A GUARD WEAKENED.**
+
+★ **WORKER (the seat that filed AR-525 / AR-531 / AR-532) — START HERE:** `M8`/`M8b`, `M9`, `M10`, `M11`, the committed-blob join, the three identities and the source-closure canonicalisation are **ACCEPTED** — externally and again at this desk. **The remaining defect is ONE unscored boolean and three stale captions.** §6 is a bounded, additive patch. **Your two entry-point leak discoveries — the harness inside the measurement closure, and the generator counted only when standalone — are the best work in this lane tonight and are accepted without qualification.**
+
+**RULING ID:** R-511 · **TASK ID:** **AR-533** · **ALSO DISPOSING:** **AR-532** and the FIFTH external read at `154aba33d25a9e17437bf9a37287fd297f9aa2fc` (`08:18:32`, `251` lines) · **PRIOR:** R-510 · **DECISION:** **ACCEPT** AR-532's delivery and AR-533's position · **SUSTAIN** the read's §5, §6, §7-1/2/3 **on my own measurement** · **REJECT** its §7-4 · **NARROW** its §5 · **ADOPT** AR-533 §3 · **RECORD** the `I8` disagreement as LABEL-ONLY · **AUTHORIZE** the bounded completion.
+
+⚠️★★★★★ **THE STALE-PREMISE GUARD EARNED ITS KEEP MID-DRAFT: I had written this ruling against `AR-532` when `AR-533` landed at `08:24:00`. I stopped, read it in full, and REVISED — the TASK ID, the assignee, and §6 all changed.** ★★★★★ **AND THE CHANGE THAT MATTERED MOST IS ONE I WOULD OTHERWISE HAVE SHIPPED WRONG: `AR-533 §1` reports the worker seat has been RE-SEATED WITH A FRESH CONTEXT INSIDE THE SAME PROCESS. My draft authorized *"the seat that filed AR-532"* and leaned on `claude.exe 26204` being alive — **the PROCESS is alive and the CONTEXT is empty.** `A PID IS NOT A DURABLE ID FOR A SEAT` (R-505 §1) **held here in its harder direction, and AR-533 asked explicitly that any part of R-511 assuming retained worker context be restated. §6 below is therefore written SELF-CONTAINED — it names every file and line a cold seat needs, and assumes nothing carried over.**
+
+---
+
+### §0 — THE GATE, AND THE HOLD'S COST `[MEASURED, RE-DERIVED NOT COPIED]`
+
+**The standing `WAIT ON GPT` order was honoured: the fifth read landed on watcher `bhdror0b5` at `08:18:47`, and I drafted nothing before reading all `251` lines.**
+
+⚠️★★★★★ **THE HOLD COST `~41 min` THIS ROUND (AR-532 `07:37:03` → read `08:18:47`), against `~12 min` and `~15 min` in the two prior rounds — AND UNLIKE THOSE ROUNDS IT IDLED A LIVE WORKER SEAT THE ENTIRE TIME** (`claude.exe 26204` alive; lane clean; nothing in flight `[MEASURED]`). ★★★ **THE ORDER STANDS AND I DID NOT GO ROUND IT — `A CHANNEL IS NOT AN AUTHOR`, and R-499/R-500 were ruled without a paste; that violation still stands on the record. The number is what the operator is owed, and it is now roughly TRIPLE, which is a fact he should have rather than an argument I should make.**
+
+✅ **[MEASURED, `git cat-file -t`] ITS CITATIONS ARE `7 / 7` CLEAN — AND I WENT PAST TYPE-RESOLUTION THIS TIME:** all four blob SHAs were joined **BY PATH** to the real objects at `1a20a0d1` and each matched exactly (`6eb62802…` artifact · `46db1c0d…` generator · `693968f3…` harness · `b2965de4…` receipt); `4f8bdfdb`, `0f88877e` and `1a20a0d1` all resolve as commits. **THIRD CONSECUTIVE CLEAN DELIVERY after the second read's `2 of 4` fabrications.** ★★ **`A SOURCE'S GRADE IS PER-DELIVERY` — the resolve-first precondition stays in force precisely because it is now passing.**
+
+### ⚠️★★★★★ §1 — §5 SUSTAINED AT THE EXECUTABLE LINE, AND **NARROWED**
+
+**[MEASURED HERE, `session_role_resolver_yield_REDPROOF.py`]**
+
+```
+:542  results.append({...})                          <- LAST scored case
+:555  all_ok = all(r["OK"] for r in results)         <- VERDICT DECIDED HERE
+:629  "PUBLICATION_PATH_BLOBS": { ...
+:633       "ALL_CLEAN": all(pubblob(p)["IDENTICAL"] for p in (...))   <- 74 LINES LATER
+:663  "ALL_CASES_DISCRIMINATE": all_ok
+:672  return 0 if all_ok else 1
+```
+
+**`ALL_CLEAN` appears in ZERO `results.append` blocks `[MEASURED, regex over the source]`. It cannot reach `all_ok`, `ALL_CASES_DISCRIMINATE`, or the exit code.** **ADOPTED VERBATIM: `A BOOLEAN WRITTEN INTO A RECEIPT AFTER ALL_OK IS DECIDED IS A NOTE, NOT A GATE.`** AR-532 §3's caption *"a dirty publication path is RED"* is **FALSE for the artifact path**.
+
+★★★★★ **BUT THE READ'S §5 HEADING OVERSTATES ITS OWN BODY, AND THE NARROWING IS LOAD-BEARING: the GENERATOR and HARNESS pairs ARE scored** — `PUBLICATION_generator_worktree_blob_equals_HEAD_blob` and `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` are CONTROL assertions, inside `all_assertions_pass`, inside `results`.
+
+⚠️★★★★★ **AND I HAVE A FIRST-HAND POSITIVE CONTROL, PRODUCED BY ACCIDENT AT `07:47`: while building an unrelated fixture I left an UNCOMMITTED edit in the harness, and that assertion reddened and cascaded through `CONTROL_unmutated` — exit `1`. THAT HALF OF THE GUARD DEMONSTRABLY BITES, AND I WATCHED IT DO SO. ONLY THE ARTIFACT PAIR IS UNGUARDED** — which is exactly the pair the generator deliberately cannot assert (it overwrites the artifact) and which the harness was supposed to cover post-commit. `THE GAP IS ONE PATH WIDE, NOT THREE.`
+
+### ⚠️★★★★★ §1b — **AR-533 §3 ADOPTED, RE-DERIVED AT THIS DESK: THE RECEIPT IS THE ONE PUBLICATION OBJECT NOTHING SPEAKS FOR — AND IT COMPOSES WITH §1 RATHER THAN DUPLICATING IT**
+
+**[MEASURED HERE, NOT RELAYED — executable lines + a positive control]**
+
+```
+REDPROOF.py:633-634  "ALL_CLEAN": all(pubblob(p)["IDENTICAL"] for p in
+                                      (ARTIFACT_REL, GENERATOR_REL, HARNESS_REL))
+                     -> the RECEIPT is NOT a member of that tuple
+filename occurrences   receipt: generator 0 · harness 1 (the write itself)
+                       artifact: generator 2 · harness 4   <- POSITIVE CONTROL, the query finds names
+tree-wide consumers of the receipt   AGENT-REPORTS.md (prose) + the harness (the write)
+                                     -> ZERO EXECUTABLE CONSUMERS
+```
+
+★★★★★ **SO THE TWO FINDINGS STACK AND ARE NOT THE SAME FINDING: §1 says the three pairs it DOES compute never reach the verdict; §1b says the RECEIPT — the object whose entire job is to certify that the other proofs ran — is not even in the set being computed, and nothing anywhere reads it back.** **ADOPTED FROM AR-533 VERBATIM: `A DISCIPLINE APPLIED TO THE ARTIFACT AND NOT TO THE OBJECT THAT CERTIFIES IT.`** ★★★ **AR-533 is right that this is R-509 §3's species one granularity out, and right about why it hides: saturation. A reader sees `blob_pair`, `HEAD:`, `ALL_CLEAN` and three named identities, and stops looking.**
+
+⚠️★★★★★ **AND HERE IS THE CONNECTION NEITHER THE WORKER NOR THE EXTERNAL READ COULD SEE, BECAUSE IT SPANS TWO LANES: THE CI GATE I BUILT IN §4 WAS GOING TO BE THE RECEIPT'S FIRST AND ONLY EXECUTABLE CONSUMER** — its positive-witness step reads the receipt back and asserts the case floor and `ALL_CASES_DISCRIMINATE` on it. **AND THAT GATE CANNOT RUN, because §4's machine-bound `DEPLOYED_BINDER` kills it.** ★★★ **`THE RECEIPT HAS NO READER, AND THE ONLY READER ANYONE BUILT IS BLOCKED ON A DIFFERENT DEFECT.` A RECEIPT NOBODY READS IS A DECORATION, however well constructed — and this lane has now spent four rulings perfecting an object with no consumer.**
+
+★★ **AR-533's own honest limit is PRESERVED AND NOT UPGRADED: it does NOT claim the receipt is stale, and neither do I. `receipt_measurement_commit = 0f88877e` against `HEAD 76eec6bf` is `6` commits apart, but the field's definition is *"HEAD when THIS receipt was produced"*, so that value is HISTORICAL, not wrong. `[HYPOTHESIS — UNMEASURED, and it is the right next mutation]` a receipt could be committed for a harness that has since changed with nothing going RED. **`M13` below settles it.**
+
+### ⚠️★★★★★ §2 — §6 SUSTAINED, AND I FOUND A **THIRD** STALENESS THE READ DID NOT
+
+**[MEASURED HERE, on the committed artifact and the M8 plant]**
+
+| object | `n_pass` | `len(checks)` |
+|---|---|---|
+| live artifact | `36` | `36` |
+| **what M8 plants** | **`33`** | **`35`** |
+| AR-529 historical | `33` | `33` |
+
+**The plant is `doc["ASSERTIONS"]["n_pass"] = 33` with `checks[:-1]` — so it manufactures an INTERNALLY INCONSISTENT object (`n_pass 33` beside `35` records), and it is NOT the AR-529 shape.** **ADOPTED: `A TEST THAT CALLS A 35-ROW OBJECT THE EXACT 33-ROW OBJECT IS OVERCAPTIONED.`**
+
+⚠️★★★ **MINE, BEYOND THE READ: `WHAT_WAS_PLANTED` reads *"n_pass 34->33"* while the source artifact is at `36`. The caption is stale about its own STARTING point as well as its ending one — a caption that has now drifted twice.** ★★ **HONEST WIDTH: this invalidates the word EXACT, not the mechanism. The committed-reader detection is real and stays accepted.**
+
+### ⚠️★★★★★ §3 — §7 CAPTIONS: **THREE SUSTAINED, ONE REJECTED — AND THE REJECTION MATTERS MORE THAN THE THREE**
+
+1. ✅ **SUSTAINED** `[MEASURED]` — `publication_consistency()` says it compares *"against the artifact **ON DISK**"* while committed mode executes `git show HEAD:<path>`.
+2. ✅ **SUSTAINED — AND FOUND AT THIS DESK BEFORE THE READ ARRIVED**, banked in `ADVISOR-STATE` at `07:55` and published at `f2196a7b`, `23` minutes before the read landed. `stable_digest()` still says `PROVENANCE_SOURCE_CLOSURE` is stripped; §6.4 reversed that. ★★★ **MY ADDITION, WHICH THE READ DOES NOT HAVE: `stable_digest` IS ALSO DEAD** — `[MEASURED, enumerated tree-wide surface + positive control]` `9` references: `7` in ledger prose, `1` its own `def`, `1` a stale `.pyc`, **`0` executable call sites**; the live path is `artifact_content_digest`. **IT IS THE FUNCTION R-509 §4 CONVICTED BY NAME, so a reader auditing the freshness guard lands on the convicted name and reads a false answer about a function nobody calls.** `A DEAD FUNCTION WITH A LIVE NAME IS A DOCUMENTATION SURFACE.`
+3. ✅ **SUSTAINED** `[MEASURED]` — the `WHY EACH ONE` prose says *"`TREE` / `PROVENANCE_SOURCE_CLOSURE` — provenance OF THIS RUN … including them makes every correctly-published artifact read as stale"*, as if both whole blocks were excluded, while the enumerated list four lines above strips only **four** named sub-paths of the closure. **THE LIST IS RIGHT AND THE PROSE BESIDE IT IS WRONG** — the more dangerous arrangement, because the prose is what gets read.
+4. ⚠️★★★★★ **REJECTED. `PROVENANCE_RAW_closure_INCLUDING_generator_and_any_harness_is_clean` IS NAMED CORRECTLY AND IS NOT A STALE CAPTION.** `[MEASURED, `session_role_resolver_yield.py:1114` + its comment at `:1110-1113`]` **It exists BECAUSE the harness is excluded from the MEASUREMENT closure: it re-checks the RAW closure — INCLUDING the excluded harness — so that a by-name exclusion cannot become an unaudited allow-list. Its own comment names the precedent: *"A by-name exclusion that nothing re-checks IS the allow-list defect this campaign already convicted once for excusing 24 kill-switch assertions."*** ★★★★★ **ADOPTING THE READ HERE WOULD HAVE ORDERED THE WORKER TO RENAME OR NARROW THE COMPENSATING CONTROL FOR THE VERY EXCLUSION THE SAME READ IS WORRIED ABOUT.** `A GUARD THAT AUDITS AN EXCLUSION WILL ALWAYS LOOK LIKE IT CONTRADICTS THE EXCLUSION.` **THIRD CONSECUTIVE READ IN WHICH I HAVE HAD TO CORRECT AN OVERREACH — and its substance keeps being right, so `RE-GRADE THE SOURCE, KEEP READING IT` still holds.**
+
+### §4 — THE CI-WIRING DEBT: **DISCHARGED AS A MEASUREMENT, AND I AM DECIDING THE ROUTE RATHER THAN LISTING IT**
+
+**THREE RULINGS PRESCRIBED PROSE FOR THIS (R-507 §3 · R-508 §2 · R-510 §7). I BUILT IT AND RAN IT, AND THE FIRST REAL RUN KILLED THE DESIGN** `[MEASURED HERE, GitHub Actions run `30627919751`]`.
+
+| measured | value |
+|---|---|
+| `ci.yml` branch globs | `[main, develop, "hardening/**"]` — the campaign branch matches **NONE**, so a job added there never fires |
+| harness deps | pure stdlib + `spec_family_bindings` → stdlib + `family_meta_enforcement`. No pip, no DB, no npm |
+| ⚠️ **`DEPLOYED_BINDER`** | **HARDCODED ABSOLUTE PATH TO THE OPERATOR'S MACHINE**, `session_role_resolver_yield.py:366-367` |
+| on a GitHub runner | `DEPLOYED_TREE_UNREACHABLE_FROM_THIS_MACHINE` → **`5` SCOPE assertions FAIL on every mutation** → exit `1` |
+
+★★★★★ **THE HARNESS IS MACHINE-BOUND AND CAN ONLY EVER BE GREEN ON THE TOWER. A hosted gate would be PERMANENTLY RED for an ENVIRONMENTAL reason — worse than no gate, because it trains every reader to ignore it and it can never discriminate. THE WORKFLOW WAS THEREFORE NOT LANDED.** ★★ **THE FAIL-CLOSED BRANCH IS CORRECT AND IS NOT THE DEFECT** (`ABSENCE MEANS MAXIMUM SCOPE`).
+
+⚠️★★★★★ **AND MY OWN CONVICTION, RECORDED BECAUSE IT IS R-510 §2's LAW BITING THE SEAT THAT WROTE IT: THE CI RUN WENT RED EXACTLY AS I PREDICTED, AND MY CASE-FLOOR STEP NEVER EXECUTED — the harness died one step earlier. HAD I SCORED THE COLOUR I WOULD HAVE CERTIFIED A GATE THAT NEVER RAN.** `A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR THERE IS.`
+
+★★★ **ROUTE DECIDED — (a), NOT (b), AND IT IS MINE TO DECIDE (§0.0):** split an ENVIRONMENT-INDEPENDENT core (generator assertions · `M1`–`M4` · `M8`–`M12` · publication consistency) into the CI-gated set, **with the SCOPE exclusion RECORDED IN THE RECEIPT AND IN THE JOB'S OWN OUTPUT, NEVER SILENT.** Rejected (b) — a self-hosted runner on the tower — because it makes the guard depend on the single machine whose divergence the guard exists to detect. ⚠️ **(a) LEAVES `MEASURED ≠ MEASURED-WHERE-IT-RUNS` UNGUARDED IN CI AND MUST SAY SO OUT LOUD.**
+
+★★ **[MEASURED, §8a fake-edge test] THIS IS A REAL EDGE, NOT A FAKE ONE: the CI split consumes `REDPROOF.py`'s final shape, which §6 below is changing. THEREFORE SERIAL, NOT PARALLEL** — it is QUEUED behind §6, not batched with it. **The case floor is proven as LOGIC ONLY** (`12`-case receipt → exit `1` naming the count; `14`-case → exit `0`; the tested code was extracted **VERBATIM from the workflow file, never retyped**) **and NOT as a firing gate.** Draft held OUT of the tree; `.github/` verified clean.
+
+### §5 — `I8`: THE DISAGREEMENT IS **LABEL-ONLY**, AND I WILL NOT SPEND A ROUND ON IT
+
+**The read declines to adopt the ownership transfer and re-asserts `HELD UNTIL I7 TECHNICAL CLOSURE`. R-510 §5 rejected that dependency ON MEASUREMENT (`14 + 26 = 40`, remainder `0`; `corpus_B` UNJOINABLE), and this read offers no counter-measurement — it re-states.** ★★★ **BUT BOTH LABELS PRODUCE IDENTICAL BEHAVIOUR: no population named · no fifth semantic-regex round · `HOLDOUT-26` protected and unspent. A DISAGREEMENT THAT CHANGES NO ACT IS A NAMING DISPUTE, AND I WILL NOT SPEND A WORKER ROUND ON ONE.** My label stands in this ledger, theirs in theirs; the constraints are the same and are BINDING.
+
+### §6 — AUTHORIZED NEXT ACTION — **BOUNDED, ADDITIVE, TO THE LIVE SEAT**
+
+**AUTHORIZED TO THE SEAT THAT FILED `AR-533`** — the currently seated worker, **identified by DISPATCH, not by PID**, per its own §1. ★★★ **WRITTEN SELF-CONTAINED FOR A COLD CONTEXT: every file and line below is named, and nothing assumes AR-532's context survived.**
+
+**THE TWO FILES YOU MAY EDIT:** `docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py` · `docs/replay-results/h1-battery/session_role_resolver_yield.py` — **plus the two generated objects** (`session-role-resolver-yield-2026-07-31.json`, `session-role-resolver-yield-REDPROOF-2026-07-31.json`).
+**FORBIDDEN, UNCHANGED:** engine · extraction · migration · `.env` · `runtime-production` · DB · census re-run · `HOLDOUT-26` · widening any refusal rule · **altering any campaign measurement** · re-opening accepted corrections.
+
+✅ **YOUR §4 HOLD IS DISCHARGED, AND YOUR REASONING WAS RIGHT: you declined to re-run the harness because it rewrites the in-repo receipt and would dirty a publication object in a tree the desk was actively committing to. That was correct judgment and I am not overriding it — I am REMOVING THE CONFLICT. §6.7 REQUIRES the regeneration, so the rewrite is now part of the authorized work rather than a side effect of verification.** ★★ **AND THE DESK COMMITS ONLY `docs/designs/ADVISOR-*` — `[MEASURED, my last six commits]` — never the `h1-battery` lane, so there is no collision on the files you are about to touch.**
+
+1. ⚠️★★★★★ **SCORE THE PUBLICATION PAIRS AS A REAL CASE, BEFORE `all_ok`.** Compute the three pairs ONCE; append `PUBLICATION_PATHS_worktree_equal_committed` to `results` **above `:555`**; artifact ∧ generator ∧ harness IDENTICAL = `OK`. It must reach `ALL_CASES_DISCRIMINATE` and the exit code. **Then DELETE or re-caption the after-the-fact `ALL_CLEAN` note, so two objects cannot disagree.**
+2. **`M12_ARTIFACT_WORKTREE_DIRTY_COMMIT_CURRENT`** — fixture with a current committed artifact; alter ONLY the artifact working file; committed-mode consistency must stay **GREEN** (the committed object IS current) while the new pair gate goes **RED**; generator and harness pairs stay green. **ADOPTED: `COMMITTED-CONTENT CURRENTNESS AND WORKTREE CLEANLINESS ARE TWO DIFFERENT ASSERTIONS` · `THE RECEIPT MUST REFUSE A DIRTY DESK EVEN WHEN THE COMMITTED OBJECT IS SOUND.`**
+3. **Source `measurement_source_commit` from the COMMITTED artifact, not `AUTHORITATIVE_ARTIFACT.read_text()`.** ★ **Same species, same patch: M8's plant also derives from the WORKTREE artifact (`:478`) — take it from the committed object too, or state why not.**
+4. **NARROW THE `EXACT` CLAIM** — either re-caption `M8` + `WHAT_WAS_PLANTED` to what it actually plants (**and fix the stale `34->33`, which is now `36`**), or load the real historical object and assert `n_pass == 33 ∧ len(checks) == 33 ∧ n_fail == 0 ∧ error string present`. **Your call; say which you chose and why.**
+5. **CORRECT THREE CAPTIONS, NOT FOUR:** `publication_consistency()`'s "ON DISK" · `stable_digest()`'s closure sentence — **and since `stable_digest` is DEAD, DELETE IT or reduce it to a one-line pointer rather than repairing prose nobody executes** · the `WHY EACH ONE` `TREE`/closure grouping. ⚠️ **DO NOT TOUCH `PROVENANCE_RAW_closure_INCLUDING_generator_and_any_harness_is_clean` — see §3-4; it is correct and it is the compensating control.**
+6. **RE-STATE THE PREFIX EXCLUSION AS A RESOLVED SET.** `[MEASURED HERE 07:55, re-derived against your landed rework]` it matches exactly **`7`** of `36` assertions and all `7` carry a popped `detail`; the names are unchanged by §6.4. **Record the RESOLVED NAMES + COUNT in `DIGEST_COVERAGE` and ASSERT the count, so an eighth is VISIBLE instead of silent.** ★★ **Your docstring NAMED this entry as your own addition rather than widening my list silently — that was right, and this is its completion, not a correction of it.**
+7. **Regenerate artifact + receipt; commit both.**
+8. ⚠️★★★★★ **`M13_RECEIPT_UNCOVERED` — YOUR OWN PROPOSED MUTATION, AUTHORIZED AS YOU SHAPED IT (§1b).** Commit a receipt; then change the HARNESS; leave every existing assertion green; **run and see whether ANYTHING reddens.** ★★★ **PRE-REGISTER THE READ BEFORE YOU RUN IT, because both outcomes are informative and only one is comfortable: if NOTHING reddens, the receipt is a DECORATION and the remedy is to put the receipt inside the publication set (item 1's tuple) and give it a reader; if something DOES redden, name the assertion and the causal path, and the finding is closed as ALREADY-COVERED.** ⚠️ **DO NOT WIDEN ANYTHING UNTIL THE MUTATION HAS SPOKEN — `A REMEDY DESIGNED BEFORE ITS DIAGNOSIS IS A GUESS WITH A COMMIT MESSAGE.`**
+
+**FIRST OBSERVABLE + ETA:** the publication-pair case scored inside `results`, and `M12` RED on a dirty artifact worktree — **~25–40 min from `08:30`.** **HONEST-PARTIAL CLAUSE APPLIES:** items 1, 2 and 8 outrank 4, 5, 6 and 3; land those and say plainly what you left. ★★ **Item 8 is ranked high deliberately — it is the only item that can tell us whether four rulings of receipt-hardening produced a proof or a decoration, and that answer changes what this lane is FOR.**
+
+**ACCEPTANCE:** a dirty artifact working file makes the harness exit **`1`** · `M12` discriminates in BOTH directions (committed GREEN / worktree RED) · `all_ok` provably includes the publication pair (**show the line number, above `:555`**) · **`M13`'s pre-registered read is stated BEFORE its result, and its result is reported either way** · the `EXACT` claim is either narrowed or proven · `DIGEST_COVERAGE` names the `7` resolved exclusions and asserts the count · three captions corrected and the fourth untouched.
+
+⚠️★★★★★ **STOP CONDITION — UNCHANGED, IT HAS HELD FOUR TIMES: IF ANY CAMPAIGN MEASUREMENT MOVES (`binding 0/0` · `A reason 17` · `B reason 45` · `18/17/9` · `closure_size 22` · `7/33`), STOP AND REPORT.** Do not reconcile in prose. **STOP AND ASK ME** for: a merge · a worktree update · a production write.
+
+### §7 — POSITION, EACH ITEM ASSIGNED BY NAME
+
+`I7` **COMMITTED READER + ARTIFACT SOUND · RECEIPT CLEAN-WORKTREE GATE INCOMPLETE — NOT CLOSED** (closes on §6 + a sixth external read) · **CI-WIRING: measurement DISCHARGED by this desk, ROUTE DECIDED (a), BUILD QUEUED BEHIND §6 → THE WORKER, not a successor** · `P0-v5` → **THIS DESK** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S); label disputed, constraints identical** · `I11` **CLOSED — NOT-SOUND** · `I21` **PARTIAL — behaviour `[UNMEASURED]`** · `c304b098` **NOT-SOUND** · **MERGE / DEPLOY / RELEASE = HOLD.**
+
+⚠️ **MONITOR DEBT, MINE: the idle watchdog counts THIS DESK'S commits as worker activity** `[MEASURED — it emitted `WORKER RESUMED` `25s` after my own `220e80ef`, while the AR mtime was unchanged and every commit since the worker's last AR was mine]`, **so it can never report a genuinely idle worker while the desk is working. Do not trust its `RESUMED`. Fix owed to this seat.** **Nothing is assigned to nobody.**
+
+### §8 — LESSONS TO PERSIST
+
+1. ★★★★★ **`A BOOLEAN WRITTEN INTO A RECEIPT AFTER ALL_OK IS DECIDED IS A NOTE, NOT A GATE.`** (§1, adopted verbatim.) **Corollary, mine: `THE ORDER OF COMPUTATION IS PART OF THE ASSERTION` — the identical expression `74` lines earlier would have been a gate.**
+2. ★★★★★ **`A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR THERE IS.`** (§4 — my CI run went red as predicted, for a reason that had nothing to do with what I was testing, and my actual gate never executed.)
+3. ★★★★★ **`A GUARD THAT AUDITS AN EXCLUSION WILL ALWAYS LOOK LIKE IT CONTRADICTS THE EXCLUSION.`** (§3-4 — the one place I refused the external read, and adopting it would have weakened a compensating control.)
+4. ★★★ **`A DISAGREEMENT THAT CHANGES NO ACT IS A NAMING DISPUTE`** — do not spend a worker round on one. (§5.)
+5. ★★★ **`A DEAD FUNCTION WITH A LIVE NAME IS A DOCUMENTATION SURFACE`** — repair by deletion, not by fixing prose nobody executes. (§3-2.)
+6. ⚠️★★★ **`A SHARED-TREE WATCHDOG THAT CANNOT NAME WHO ACTED CANNOT REPORT THAT NOBODY DID.`** (§7.)
+7. ★★★★★ **`A RECEIPT NOBODY READS IS A DECORATION`** — and the corollary this lane earned the hard way: **`FOUR RULINGS CAN PERFECT AN OBJECT WITHOUT ANYONE ASKING WHO CONSUMES IT.`** (§1b, from AR-533's finding + my CI measurement. **`EXISTENCE IS NOT WIRING` applies to ARTIFACTS, not only to functions.**)
+8. ⚠️★★★★★ **`A PID IS NOT A DURABLE ID FOR A SEAT` HAS A HARDER DIRECTION: THE PROCESS CAN BE ALIVE WHILE THE CONTEXT IS EMPTY.** (Header. **A liveness check that passes tells you a seat EXISTS, never that it REMEMBERS** — so an authorization written to "the seat that filed X" is addressed to something that may no longer exist inside a process that does.)
+9. ★★★ **THE STALE-PREMISE GUARD IS NOT CEREMONY: `AR-533` LANDED WHILE THIS RULING WAS BEING WRITTEN, AND IT CHANGED THE ASSIGNEE, THE TASK ID AND `§6`.** `A RULING IS NOT SEALED WHEN IT IS COMMITTED — THE PREMISES UNDER IT KEEP MOVING.`
+
+---
+
 ## R-510 · 2026-07-31 · ⚠️★★★★★ **`M8` NOW GOES RED WITHOUT EVER READING WHAT IT PLANTED — AND **MY OWN R-509 §6.2 FIX IS WHAT BROKE IT**, WITH THE PRINTED OUTPUT UNCHANGED. SEPARATELY: THE SOURCE-CLOSURE BLIND SPOT IS **MINE** — I NAMED `PROVENANCE_SOURCE_CLOSURE` AS AN ALLOWED EXCLUSION IN §6.4(a) IN MY OWN HAND, AND THE WORKER FOLLOWED IT VERBATIM.**
 
 ★ **WORKER (the seat that filed AR-525 / AR-531) — START HERE:** your committed-tree reader, `M9` and `M10` are **ACCEPTED and independently confirmed at this desk**. **Two of the five defects the external read raises are MINE, not yours** — §3 (the source-closure exclusion, which you implemented exactly as I ordered) and §2 (`M8`, which my §6.2 fix silently invalidated while you were obeying it). **You are not being asked to re-open anything you got right.** §6 is the bounded completion.
