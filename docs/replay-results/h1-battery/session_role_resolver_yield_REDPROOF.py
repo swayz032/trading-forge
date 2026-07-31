@@ -26,6 +26,8 @@ throwaway path so a mutated run can never overwrite the real artifact.
 
 import importlib.util
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -171,7 +173,20 @@ CASES = [
 AUTHORITATIVE_ARTIFACT = HERE / "session-role-resolver-yield-2026-07-31.json"
 
 
-def publication_consistency(published_path: Path) -> dict:
+def committed_text(repo_root: Path, rel: str):
+    """★★★★★ R-509 §6.2 -- read the PUBLISHED TREE, not the author's desk.
+    `GIT HASH-OBJECT OF A PATH HASHES THE WORKTREE; IT DOES NOT PROVE THE BLOB
+    AT HEAD.` Returns None when the path is not in HEAD at all."""
+    try:
+        return subprocess.check_output(
+            ["git", "show", "HEAD:%s" % rel], cwd=str(repo_root),
+            stderr=subprocess.DEVNULL).decode("utf-8")
+    except Exception:
+        return None
+
+
+def publication_consistency(published_path: Path, repo_root: Path = None,
+                            read_mode: str = "committed") -> dict:
     """★★★★★ R-508 §5.5 -- IS THE PUBLISHED ARTIFACT WHAT THE CURRENT CODE
     PRODUCES? Runs the generator unmutated into a THROWAWAY path and compares
     its load-bearing digest against the artifact ON DISK.
@@ -191,13 +206,28 @@ def publication_consistency(published_path: Path) -> dict:
     mod.ASSERTIONS.clear()
     mod.main()
     fresh = json.loads(Path(mod.OUT_PATH).read_text(encoding="utf-8"))
-    if not published_path.exists():
-        return {"PUBLISHED_ARTIFACT_IS_CURRENT": False,
-                "reason": "published artifact does not exist", "path": str(published_path)}
-    published = json.loads(published_path.read_text(encoding="utf-8"))
-    fd, pd = mod.stable_digest(fresh), mod.stable_digest(published)
+    repo_root = repo_root or HERE.parents[2]
+    rel = str(published_path.resolve().relative_to(repo_root.resolve())).replace("\\", "/")
+
+    if read_mode == "committed":
+        raw = committed_text(repo_root, rel)
+        if raw is None:
+            return {"PUBLISHED_ARTIFACT_IS_CURRENT": False, "read_mode": read_mode,
+                    "reason": "path is not present in HEAD", "path": rel}
+    else:  # "worktree" -- the PRE-R-509 behaviour, retained ONLY so M9 can
+           # demonstrate that it fails to detect a stale commit.
+        if not published_path.exists():
+            return {"PUBLISHED_ARTIFACT_IS_CURRENT": False, "read_mode": read_mode,
+                    "reason": "published artifact does not exist", "path": str(published_path)}
+        raw = published_path.read_text(encoding="utf-8")
+
+    published = json.loads(raw)
+    fd, pd = mod.artifact_content_digest(fresh), mod.artifact_content_digest(published)
     return {
         "PUBLISHED_ARTIFACT_IS_CURRENT": fd == pd,
+        "read_mode": read_mode,
+        "READ_THROUGH": ("git show HEAD:%s" % rel) if read_mode == "committed"
+                        else ("worktree read of %s" % rel),
         "published_path": str(published_path),
         "fresh_digest": fd,
         "published_digest": pd,
@@ -255,6 +285,87 @@ def main():
         print("[%s] %-42s -> %-62s RED=%s exit=%d reddened=%d collateral=%s"
               % ("OK " if ok else "BAD", name, must_redden, reddened, rc,
                  len(all_red), collateral))
+
+    # ── R-509 §6.3 -- M9: COMMITTED ARTIFACT STALE / WORKTREE FRESH ──────────
+    #    Proves the failure the third external read predicted, in BOTH
+    #    directions: the OLD worktree read cannot see it; the NEW committed
+    #    read can. `A MUTATION THAT ONLY EVER PASSED IS NOT A RED-PROOF.`
+    #    ⚠️ Fixture repo only -- the real artifact is never touched.
+    m9 = {}
+    fix = Path(tempfile.mkdtemp(prefix="_m9_fixture_"))
+    try:
+        rel = "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json"
+        (fix / rel).parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "-q"], cwd=fix, check=True)
+        subprocess.run(["git", "config", "user.email", "m9@fixture"], cwd=fix, check=True)
+        subprocess.run(["git", "config", "user.name", "m9"], cwd=fix, check=True)
+
+        # 1. COMMIT a deliberately STALE artifact.
+        stale = json.loads(AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+        stale["ASSERTIONS"]["n_pass"] = 1
+        stale["ASSERTIONS"]["checks"] = stale["ASSERTIONS"]["checks"][:1]
+        (fix / rel).write_text(json.dumps(stale, indent=2), encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=fix, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "stale artifact"], cwd=fix, check=True)
+
+        # 2. Put the FRESH artifact in the WORKING TREE only -- never committed.
+        shutil.copyfile(AUTHORITATIVE_ARTIFACT, fix / rel)
+
+        old = publication_consistency(fix / rel, repo_root=fix, read_mode="worktree")
+        new = publication_consistency(fix / rel, repo_root=fix, read_mode="committed")
+        old_blind = old["PUBLISHED_ARTIFACT_IS_CURRENT"] is True     # fails to detect
+        new_catches = new["PUBLISHED_ARTIFACT_IS_CURRENT"] is False  # detects
+        m9_ok = old_blind and new_catches
+        m9 = {
+            "case": "M9_committed_artifact_STALE_worktree_FRESH",
+            "fixture": str(fix),
+            "PRE_R509_worktree_read": {
+                "PUBLISHED_ARTIFACT_IS_CURRENT": old["PUBLISHED_ARTIFACT_IS_CURRENT"],
+                "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
+                "READ_THROUGH": old.get("READ_THROUGH")},
+            "POST_R509_committed_read": {
+                "PUBLISHED_ARTIFACT_IS_CURRENT": new["PUBLISHED_ARTIFACT_IS_CURRENT"],
+                "VERDICT": "RED -- catches it", "READ_THROUGH": new.get("READ_THROUGH"),
+                "committed_n_pass": new.get("published_n_pass"),
+                "fresh_n_pass": new.get("fresh_n_pass")},
+            "ALL_assertions_this_mutation_reddened": ["PUBLICATION_CONSISTENCY"] if new_catches
+                                                     else [],
+            "WHY_BOTH_DIRECTIONS": (
+                "R-509 §6.3 requires M9 fail under the current implementation and pass only "
+                "after the committed-tree fix. Both runs are executed here in one pass, so "
+                "the fix's necessity is demonstrated rather than asserted."),
+            "VERDICT": "DISCRIMINATES" if m9_ok else "DOES-NOT-DISCRIMINATE", "OK": m9_ok}
+        results.append(m9)
+        print("[%s] M9_committed_stale/worktree_fresh -> worktree-read GREEN(blind)=%s | "
+              "committed-read RED(catches)=%s" % ("OK " if m9_ok else "BAD",
+                                                  old_blind, new_catches))
+    finally:
+        shutil.rmtree(fix, ignore_errors=True)
+
+    # ── R-509 §6.5 -- M10: the §4 BLIND SPOT. Alter a load-bearing identity
+    #    block while leaving every assertion name, PASS value and summary
+    #    metric untouched. Under option (a) this MUST go RED.
+    m10_path = Path(tempfile.gettempdir()) / "_redproof_blindspot_artifact.json"
+    doc = json.loads(AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+    rows = doc["corpus_A"]["IDENTITY_REFUSAL_MAP"]["changed_rows"]
+    rows[0]["object"] = "ZZZ SILENTLY ALTERED IDENTITY -- no count or assertion changed"
+    m10_path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    m10 = publication_consistency(m10_path, repo_root=None, read_mode="worktree")
+    m10_ok = m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False
+    results.append({
+        "case": "M10_identity_block_silently_altered",
+        "WHAT_WAS_PLANTED": "one IDENTITY_REFUSAL_MAP row's `object` text changed; every "
+                            "assertion name, every PASS value, every count and every summary "
+                            "metric left IDENTICAL -- the exact class the old allow-list digest "
+                            "could not see.",
+        "it_went_RED": m10_ok,
+        "WHY_IT_MATTERS": "These are the 17 per-condition identities R-502 §4 required be IN "
+                          "the artifact. A freshness guard that cannot see them would certify "
+                          "a silently-changed deliverable as CURRENT.",
+        "ALL_assertions_this_mutation_reddened": ["PUBLICATION_CONSISTENCY"] if m10_ok else [],
+        "VERDICT": "DISCRIMINATES" if m10_ok else "DOES-NOT-DISCRIMINATE", "OK": m10_ok})
+    print("[%s] M10_identity_block_silently_altered -> PUBLICATION_CONSISTENCY RED=%s"
+          % ("OK " if m10_ok else "BAD", m10_ok))
 
     # ── R-508 §5.5 -- PUBLICATION CONSISTENCY, and §5.6(b) -- RED-PROOF IT ────
     live = publication_consistency(AUTHORITATIVE_ARTIFACT)

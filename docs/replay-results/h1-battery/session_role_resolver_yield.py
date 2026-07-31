@@ -116,7 +116,75 @@ def git(*args) -> str:
         return "<unavailable: %s>" % exc
 
 
-def stable_digest(art: dict) -> str:
+VOLATILE_EXCLUSIONS = [
+    "TREE",
+    "PROVENANCE_SOURCE_CLOSURE",
+    "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.generated_at_utc",
+    "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.campaign_commit",
+    "ASSERTIONS.checks[name starts with 'PROVENANCE_'].detail",
+    "PUBLICATION_PATHS",
+    "DIGEST_COVERAGE.value",
+]
+"""★★★★★ R-509 §6.4, OPTION (a) — THE COMPLETE, ENUMERATED, AUDITABLE EXCLUSION
+LIST. Everything NOT on this list is inside `artifact_content_digest`.
+
+WHY EACH ONE, because `AN EXCLUSION WITHOUT A REASON IS AN ALLOW-LIST`:
+  * `TREE` / `PROVENANCE_SOURCE_CLOSURE` — provenance OF THIS RUN. Committing
+    the artifact advances HEAD and changes the dirty-path count, so including
+    them makes every correctly-published artifact read as stale. `A FRESHNESS
+    CHECK THAT CRIES WOLF ON EVERY COMMIT WILL BE SWITCHED OFF.`
+  * the two SNAPSHOT_RECORD fields — a timestamp and the same HEAD.
+  * `detail` of `PROVENANCE_*` assertions — these are DERIVED from
+    `PROVENANCE_SOURCE_CLOSURE` (they carry dirty-path counts), so excluding
+    the block while keeping its derivatives would be incoherent. ★ Their
+    assertion NAME and PASS value are still covered; only the detail payload
+    is not. ⚠️ THIS ENTRY IS MINE, added beyond R-509 §6.4's four named items
+    because those four alone leave the dirty-count derivatives inside the
+    digest — and I am NAMING it rather than widening the list silently.
+
+★ EVERYTHING ELSE IS NOW COVERED, including the `11` top-level blocks and the
+`30` assertion `detail` payloads that the previous allow-list could not see:
+`IDENTITY_REFUSAL_MAP` (the 17 per-condition identities R-502 §4 demanded),
+`ROUTE_PARTITION_*`, `NON_C2_MOVEMENT_CENSUS`, `DENOMINATORS`, `POPULATION`,
+`DETERMINISM`, `INVALIDATIONS_SEPARATE`, `POSITIVE_CONTROLS`, the HEADLINE and
+the honest-limits block.
+"""
+
+
+def _strip_volatile(art: dict) -> dict:
+    """Deep copy minus exactly VOLATILE_EXCLUSIONS. Implemented as a STRIP so
+    the function matches its own name -- the previous version was an ALLOW-LIST
+    wearing a strip-list's docstring, which is R-509 §8.3's whole point:
+    `AN ALLOW-LIST DESCRIBED IN STRIP-LIST LANGUAGE OVERSTATES ITS COVERAGE BY
+    EVERYTHING IT NEVER MENTIONS.`"""
+    doc = json.loads(json.dumps(art, default=str))
+    doc.pop("TREE", None)
+    doc.pop("PROVENANCE_SOURCE_CLOSURE", None)
+    snap = doc.get("DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE", {}) \
+              .get("SNAPSHOT_RECORD")
+    if isinstance(snap, dict):
+        snap.pop("generated_at_utc", None)
+        snap.pop("campaign_commit", None)
+    for c in doc.get("ASSERTIONS", {}).get("checks", []):
+        if str(c.get("assertion", "")).startswith("PROVENANCE_"):
+            c.pop("detail", None)
+    # PUBLICATION_PATHS holds worktree-vs-HEAD blob pairs, which necessarily
+    # differ between a pre-commit and a post-commit run of identical content.
+    doc.pop("PUBLICATION_PATHS", None)
+    # A digest cannot contain itself.
+    if isinstance(doc.get("DIGEST_COVERAGE"), dict):
+        doc["DIGEST_COVERAGE"].pop("value", None)
+    return doc
+
+
+def artifact_content_digest(art: dict) -> str:
+    """★ R-509 §6.4(a). Canonicalised FULL artifact minus VOLATILE_EXCLUSIONS.
+    The name states what it compares; the exclusions are enumerated above."""
+    return hashlib.sha256(
+        json.dumps(_strip_volatile(art), sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
+def stable_digest(art: dict) -> str:  # retained name -> now delegates to (a)
     """★★★★★ R-508 §5.5 -- the LOAD-BEARING content of an artifact, with the
     fields that legitimately move between two runs of the SAME code stripped
     out. Used to answer one question: `IS THE PUBLISHED ARTIFACT WHAT THE
@@ -132,21 +200,7 @@ def stable_digest(art: dict) -> str:
     -- which is where the `deployed_repo_head` error string lived, so the actual
     defect this exists to catch is inside the digest.
     """
-    a = art.get("ASSERTIONS", {})
-    scope = dict(art.get("DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE", {}))
-    snap = dict(scope.get("SNAPSHOT_RECORD", {}))
-    snap.pop("generated_at_utc", None)
-    snap.pop("campaign_commit", None)
-    scope["SNAPSHOT_RECORD"] = snap
-    payload = {
-        "assertions": sorted((c["assertion"], bool(c["PASS"])) for c in a.get("checks", [])),
-        "n_pass": a.get("n_pass"), "n_fail": a.get("n_fail"),
-        "scope": scope,
-        "reconciliation": art.get("RECONCILIATION_18_17_9"),
-        "corpora": {k: art.get(k, {}).get("METRICS") for k in ("corpus_A", "corpus_B")},
-    }
-    return hashlib.sha256(
-        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    return artifact_content_digest(art)
 
 
 def git_at(repo: Path, *args) -> str:
@@ -989,6 +1043,15 @@ def main():
           measurement_closure_divergent)
     check("PROVENANCE_binder_worktree_bytes_equal_HEAD_blob", prov["binder_blob"]["IDENTICAL"],
           prov["binder_blob"])
+    # ★ R-509 §6.1 -- generator and harness are INPUTS to this run, so their
+    #   committed-vs-worktree pair CAN be asserted here without self-reference.
+    _gen_pair = blob_pair("docs/replay-results/h1-battery/session_role_resolver_yield.py")
+    _harness_pair = blob_pair(
+        "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py")
+    check("PUBLICATION_generator_worktree_blob_equals_HEAD_blob",
+          _gen_pair["IDENTICAL"], _gen_pair)
+    check("PUBLICATION_harness_worktree_blob_equals_HEAD_blob",
+          _harness_pair["IDENTICAL"], _harness_pair)
     # ★★★★★ THE RAW CHECK -- NO BY-NAME EXCLUSION. Without this, an edited-but-
     #   uncommitted generator (or an uncommitted TEST HARNESS that pulls itself
     #   into the executed closure) would ride through on the excluded list. A
@@ -1099,6 +1162,33 @@ def main():
                        "EXIT_CODE_CONTRACT":
                            "This generator exits NON-ZERO if any assertion fails. A green "
                            "artifact that cannot go red is not an instrument."},
+        # ── R-509 §6.1 -- the OUTPUT paths finally carry the pair every INPUT
+        #    already carried. `A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO
+        #    THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE.`
+        "PUBLICATION_PATHS": {
+            "artifact": blob_pair(str(OUT_PATH.relative_to(REPO_ROOT)).replace("\\", "/")),
+            "generator": blob_pair(
+                "docs/replay-results/h1-battery/session_role_resolver_yield.py"),
+            "harness": blob_pair(
+                "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py"),
+            "⚠️_THE_ARTIFACT_PAIR_DESCRIBES_THE_PRE_RUN_STATE": (
+                "It is computed BEFORE this run overwrites the artifact, so it reports on the "
+                "PREVIOUS published object and this run is about to make the path dirty. "
+                "IT IS THEREFORE RECORDED AS DATA AND **NOT** ASSERTED HERE -- asserting it "
+                "would claim 'the artifact is committed' in the same breath as replacing it, "
+                "which is the caption-falsifies-its-own-line defect this lane keeps producing. "
+                "THE REAL PUBLICATION ASSERTION LIVES IN THE HARNESS (R-509 §6.2), which runs "
+                "AFTER the commit and reads the COMMITTED blob. The generator and harness "
+                "pairs ARE asserted below -- they are inputs to this run, not its output."
+            ),
+        },
+        "DIGEST_COVERAGE": {
+            "digest_name": "artifact_content_digest",
+            "method": "R-509 §6.4 OPTION (a) -- canonicalised FULL artifact minus an "
+                      "ENUMERATED volatile list. Everything not listed is covered.",
+            "VOLATILE_EXCLUSIONS": VOLATILE_EXCLUSIONS,
+            "value": None,  # filled after the dict is complete -- it hashes itself out
+        },
         "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": scope,
         "RECONCILIATION_18_17_9": recon,
         "corpus_A": A,
@@ -1118,6 +1208,8 @@ def main():
             "no per-condition unbound list for it. Stated, not substituted.",
         ],
     }
+
+    art["DIGEST_COVERAGE"]["value"] = artifact_content_digest(art)
 
     with open(OUT_PATH, "w", encoding="utf-8") as fh:
         json.dump(art, fh, indent=2)
