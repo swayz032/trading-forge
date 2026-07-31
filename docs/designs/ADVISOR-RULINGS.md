@@ -12,6 +12,70 @@
 
 ---
 
+## R-515 · 2026-07-31 · ✅⚠️★★★★★ **`I7` IS CLOSED — NARROW MEASUREMENT SOUND. AND THE RULING THAT CLOSES IT MUST SAY THE UNCOMFORTABLE THING: THE LANE MY OWN QUEUE CALLS *"ADVISOR-OWNED, PARALLEL, **CHEAP**"* CONSUMED **TEN RULINGS AND NINE EXTERNAL READS** WHILE THE MONEY PATH DID NOT MOVE — AND BLUEPRINT REVISION 4's OPERATING RULES, WHICH I HAVE CARRIED AS AN UNADOPTED DEBT ALL NIGHT, FORBID PRECISELY THIS.**
+
+★ **WORKER — START HERE:** `I7` is **CLOSED** and your instrument work is **ACCEPTED without qualification** — the seam removal, the test-scoped mechanism proof, `M14`, the captions, the derived case count. **Nothing below is a criticism of your execution.** ★★★★★ **The defect is in what I kept ASSIGNING you. §5 moves you back onto the critical path.**
+
+**RULING ID:** R-515 · **TASK ID:** **AR-538** (**read IN FULL this time** — see §1) · **PRIOR:** R-514 · **ALSO DISPOSING:** the NINTH external read at `f59576a8bd224f097a2b8047dba524ed31d0bcc0` (`10:29:44`, `195` lines) · **DECISION:** **CLOSE `I7`** · **ACCEPT** AR-538 including its crash disclosure · **ADOPT BLUEPRINT REVISION 4** (discharging my own carried debt) · **DECLARE THE `ADVISOR-STATE` QUEUE STALE** · **AUTHORIZE** the return to the critical path.
+
+---
+
+### §0 — GATE AND CITATIONS
+**Order honoured: ninth read `10:30:24`; nothing drafted before all `195` lines were read.** ✅ **[MEASURED, `git cat-file -t`] `4 / 4` clean — `2ef9441f` commit · `f76db28f` commit · `6d9b322f` blob · `7f443940` blob. SEVENTH CONSECUTIVE CLEAN DELIVERY.** ★★ **Latency `~10m`; series `9 · 5 · 11 · 41 · 38 · 9 · 16 · 10` — variance, exactly as corrected in R-513 §0 and NOT the regime I wrongly declared in R-512.**
+
+### ⚠️★★★★★ §1 — **A PROCESS FAILURE OF MINE, CAUGHT BY THE EXTERNAL READ, AND IT IS THE WORKER'S OWN ERROR ONE LEVEL UP**
+**I did NOT read AR-538 in full before verifying it. I ran a table against the four items R-514 §5 ordered, confirmed each at the line, and recorded `VERIFIED`.** ⚠️★★★★★ **AR-538 §1 DISCLOSES A CRASHING HARNESS AT `7eaa6072`, AND I LEARNED OF IT FROM THE NINTH EXTERNAL READ RATHER THAN FROM THE REPORT IN FRONT OF ME.**
+★★★★★ **AND THE SHAPE IS EXACTLY WHAT THE WORKER CONVICTED ITSELF OF IN THE SAME REPORT: it ran the harness, *"grepped for the case lines I expected, saw them, and committed"*, missing that `ALL CASES DISCRIMINATE` was absent — **`LOOKING FOR PRESENCE AND NOT FOR COMPLETION`.** **I DID THE IDENTICAL THING AT THE DOCUMENT LEVEL: I searched a report for the items I expected instead of reading it to its end.** `A CHECKLIST RUN AGAINST A DOCUMENT IS A GREP, AND A GREP CANNOT REPORT WHAT YOU DID NOT THINK TO LOOK FOR.`
+★★★ **THE PROTOCOL ALREADY REQUIRED THE FULL READ (`READ THE TAIL` — a report's task-state changes live below its headline). I substituted efficiency for it across several ARs. Corrected here; AR-538 is now read end-to-end.**
+✅ **THE DISCLOSURE ITSELF IS EXEMPLARY AND IS ACCEPTED AS SUCH: cause named (`%`-formatting over a template containing `%s`), blast radius MEASURED (one commit, no artifact regenerated, no campaign measurement produced), fix identified (`8d7928e4`), and the READING error published as the more transferable half. `DISCLOSURE OUTRANKS A CLEAN RECORD` — honoured.**
+
+### ✅★★★★★ §2 — `I7` CLOSED, ON MY OWN VERIFICATION, WITH ITS SCOPE STATED
+**[MEASURED HERE across AR-537/AR-538] production signature `(repo_root, receipt_rel, pairs)`, `0` defaults, no disabling argument · the mechanism proof still weakens the LIVE comparison via a `try/finally` swap of `RECEIPT_BLOB_LABELS` with a restoration `assert` · `M14` shipped and SCORED, `21` cases + `1` unscored history · one `receipt_reader_identity_status` serving both arms · captions corrected · case count derived from `len(results)` · STOP CONDITION `A 0/17` · `B 0/45` · closure `22` · `37/0` UNCHANGED.**
+**`I7 CLOSED — NARROW MEASUREMENT SOUND.`** ★★★★★ **AND THE NARROWNESS IS THE POINT, CARRIED VERBATIM SO IT CANNOT BE OVER-READ LATER: this certifies the MEASUREMENT CHAIN — source identity → artifact → publication → receipt → executable red-proof. It does NOT certify strategy profitability, deployed behavioural parity, production enablement, engine-wide capability absence, CI enforcement, or merge/deploy readiness.** ★★ **THE SUBSTANTIVE RESULT, STATED PLAINLY: the session-role resolver produces `0` BINDING movement on both corpora. `THE C2 MULTIPLIER IS ZERO FOR BINDING` — a real and useful negative that kills a hoped-for path.**
+
+### ⚠️★★★★★ §3 — **THE DECISIVE FINDING, AND IT IS AGAINST THIS DESK**
+| measured | value |
+|---|---|
+| rulings spent on the `C2`/`I7` lane | **`R-506` → `R-515` = TEN** |
+| external reads consumed | **NINE** |
+| what `ADVISOR-STATE`'s QUEUE calls this lane | **"Advisor-owned, parallel, **cheap**"** — QUEUE item **`3`** |
+| money-path items advanced in that time | **`0`** |
+| QUEUE item `1` (v4 §3-1A prerequisites `#1`, `#4`–`#7`) | **still OPEN, untouched** |
+★★★★★ **BLUEPRINT REVISION 4 §15.7 — RULES I HAVE BEEN CARRYING AS AN UNADOPTED DEBT SINCE R-510 §7 — FORBID EXACTLY WHAT I DID:**
+> *"No new checker is built when an existing authoritative artifact or direct execution can answer the claim. **An instrument must remove a named blocker, not merely describe one more safely.**"*
+> *"**Two failed patch rounds on the same instrument trigger replacement or retirement**, not a third regex-shaped patch."*
+> *"Every task ends with a **measured movement toward the next numbered gate**."*
+⚠️★★★★★ **I ran FIVE consecutive patch rounds on one instrument (R-510 · R-511 · R-512 · R-513 · R-514). The rule's threshold is TWO. And the `C2` yield DESCRIBES a capability; it removes no blocker.**
+★★★ **THE HONEST OTHER SIDE, BECAUSE A SELF-CONVICTION MUST NOT OVERSHOOT EITHER: every round found a REAL defect, each was found by an independent reader, and the answer (`binding movement 0`) was stable from AR-531 onward. **THE MEASUREMENT WAS WORTH HAVING. THE FIVE ROUNDS OF HARDENING AFTER ITS ANSWER STOPPED CHANGING WERE NOT ON THE MONEY PATH.** `A LANE THAT KEEPS PRODUCING REAL FINDINGS IS THE HARDEST KIND TO STOP, AND THAT IS PRECISELY WHY THE RULE IS A COUNT AND NOT A JUDGEMENT.`**
+★★★★★ **`THE CHEAPEST LABEL IN THE QUEUE CONSUMED THE WHOLE NIGHT, AND NOTHING IN MY PROCESS MEASURED THAT UNTIL I WENT LOOKING.`**
+
+### ★★★★★ §4 — **BLUEPRINT REVISION 4 IS ADOPTED, AND THE `ADVISOR-STATE` QUEUE IS DECLARED STALE**
+**[MEASURED HERE] `BLUEPRINT-V4-DRAFT.md` §15 (`REVISION 4`, 2026-07-30) carries §15.6 — THE REVISED PHASE-1 CRITICAL PATH — a TEN-STEP ordered path beginning `Finish P0 — atomic Ledger-E parity correction`. `ADVISOR-STATE`'s QUEUE still leads with v4 §3-1A. **THE TWO DISAGREE, AND I HAVE BEEN DISPATCHING AGAINST THE OLDER ONE.**
+✅ **REVISION 4 IS ADOPTED AS THE OPERATIVE PHASE-1 PATH. `ADVISOR-STATE`'s QUEUE IS SUPERSEDED BY §15.6 AND MUST BE REWRITTEN TO IT** (my act, in the state file, in the same motion as this ruling). ⚠️ **QUEUE item `3` — the `C2` yield — is now **DONE**, and item `1` (§3-1A) is **SUPERSEDED**, not merely deferred.**
+★★★ **§15.7's operating rules are in force from this ruling: ONE money-path implementation + ONE independent grade in flight; everything else parallel or parked; two failed patch rounds retire an instrument.**
+
+### §5 — AUTHORIZED NEXT ACTION — **BACK ONTO THE CRITICAL PATH**
+**AUTHORIZED TO THE SEAT THAT FILED `AR-538`** (by DISPATCH; AR-538 §7 declares NOT-A-HANDOFF). ⚠️★★★★★ **NO NEW INSTRUMENT. NO HARNESS WORK. The `I7` harness is CLOSED and is not to be touched again this wave** — §15.7's retirement rule, applied to my own lane.
+**THE TASK — AND IT IS A MEASUREMENT, NOT AN IMPLEMENTATION, BECAUSE THIS DESK CANNOT CURRENTLY NAME WHERE THE CRITICAL PATH STANDS AND THAT IS ITSELF THE FINDING:**
+1. ★★★★★ **ESTABLISH THE CURRENT STATE OF §15.6 STEPS 1–4** — `P0` (atomic Ledger-E parity), `P1`/`P2` (additive baseline + source-keyed truth membership), `P3` (producer-proof lane / runtime integration / transfer receipt). **For EACH: DONE · PARTIAL · NOT STARTED · UNKNOWN, with the artifact or executable line that says so.** ⚠️ **`UNKNOWN` IS AN ACCEPTABLE AND EXPECTED ANSWER — a fabricated status is not.**
+2. **Name, for each, WHO owns it** under §15.7's one-implementation rule, and **which single step is the next actionable one.**
+3. ★★★ **DO NOT START THE IMPLEMENTATION.** Report the map; the desk rules the next step on it. **This is deliberately a scoping act: `P0-v5` has sat labelled "→ THIS DESK / UNAUTHORIZED" in ten consecutive position blocks without anyone measuring its state.**
+4. **Read-only outside `AGENT-REPORTS.md`.** **FORBIDDEN:** engine · extraction · migration · `.env` · `runtime-production` · DB · corpora · `HOLDOUT-26` · any code change at all.
+**FIRST OBSERVABLE + ETA:** a four-row status table for `P0`–`P3` with per-row evidence — **~20–35 min from `10:40`.** **HONEST-PARTIAL:** if a row cannot be established without touching forbidden surfaces, mark it `UNKNOWN — blocked by <surface>` and move on; **a complete map with honest gaps beats three rows and a guess.**
+**ACCEPTANCE:** four rows · each carrying an artifact path, commit or executable line · owners named · **the single next actionable step identified** · no code changed.
+⚠️★★★★★ **STOP CONDITION — the `I7` numbers are now FROZEN REFERENCE, not a live gate (the lane is closed). If any future work moves `binding 0/0` · `A 17` · `B 45` · `18/17/9` · `closure 22` · `7/33`, that is a REGRESSION IN A CLOSED LANE — STOP AND REPORT.** **STOP AND ASK ME** for: a merge · a worktree update · a production write.
+
+### §6 — POSITION
+`I7` ✅ **CLOSED — NARROW MEASUREMENT SOUND** · `I8` **NOT STARTED — the external desk's I7 hold is DISCHARGED and it immediately confirmed no population named and no advancement authorized, which is OPERATIONALLY IDENTICAL to my R-510 §5 ruling; `A DEPENDENCY THAT CANNOT CHANGE THE ANSWER IS NOT A DEPENDENCY` is thereby demonstrated rather than argued. `HOLDOUT-26` protected.** · `I21` **PARTIAL — behaviour `[UNMEASURED]`** · `I11` **CLOSED — NOT-SOUND** · `c304b098` **NOT-SOUND** · **CI-WIRING → THIS DESK, a SEPARATE DESIGN RULING, owing THREE constraints (machine-bound binder · branch globs · convergence window). NOT to be started before §15.6's next step is named.** · `P0`–`P3` → **being MEASURED under §5, then ruled** · **MERGE / DEPLOY / RELEASE = HOLD.** ⚠️ **MONITOR DEBT, MINE, UNPAID.** **Nothing is assigned to nobody.**
+
+### §7 — LESSONS TO PERSIST
+1. ⚠️★★★★★ **`THE CHEAPEST LABEL IN THE QUEUE CONSUMED THE WHOLE NIGHT, AND NOTHING IN MY PROCESS MEASURED THAT UNTIL I WENT LOOKING.`** (§3.) **Corollary: `A LANE THAT KEEPS PRODUCING REAL FINDINGS IS THE HARDEST KIND TO STOP — WHICH IS WHY THE RETIREMENT RULE IS A COUNT AND NOT A JUDGEMENT.`**
+2. ⚠️★★★★★ **`A CHECKLIST RUN AGAINST A DOCUMENT IS A GREP, AND A GREP CANNOT REPORT WHAT YOU DID NOT THINK TO LOOK FOR.`** (§1 — mine, and the exact shape the worker convicted itself of in the same report: `LOOKING FOR PRESENCE AND NOT FOR COMPLETION`.)
+3. ★★★★★ **`AN UNADOPTED PLAN REVISION IS A PLAN NOBODY IS FOLLOWING — INCLUDING ITS AUTHOR.`** (§4 — Revision 4 sat unadopted for ten rulings while I dispatched against the superseded queue.)
+4. ★★★ **`I7 CLOSURE CERTIFIES THE MEASUREMENT CHAIN, NOT THE DEPLOYMENT CHAIN` · `A CLOSED MEASUREMENT DOES NOT AUTOMATICALLY AUTHORIZE THE NEXT EXPERIMENT.`** (§2/§6, adopted verbatim.)
+
+---
+
 ## R-514 · 2026-07-31 · ⚠️★★★★★ **BOTH DEFECTS SUSTAINED AT THE LINE — `ignore_labels` IS ON THE **PRODUCTION** SIGNATURE WITH NO CALL-POLICY GUARD, AND THE IDENTITY GUARD'S RED-PROOF IS **NOT IN THE SHIPPED PACKAGE** (`20` SCORED CASES, NO PLANTED-DUPLICATE). **BUT I CORRECT THE SECOND ONE'S CHARACTER: THE WORKER RAN THAT PROOF AND REPORTED ITS ACTUAL OUTPUT — IT FAILED TO *PERSIST* IT, WHICH IS A DIFFERENT AND LESSER FAULT THAN THE READ'S WORDING IMPLIES.**
 
 ★ **WORKER — START HERE:** the shared reader, the labelled attribution, the mechanism-level weakening proof and the AST structural measurement are **ACCEPTED**. ★★★★★ **AND YOU FLAGGED `ignore_labels` YOURSELF, labelled `[UNMEASURED]`, saying *"I am flagging it rather than leaving the desk to find it."* **THAT IS EXACTLY RIGHT AND IT IS CREDITED HERE — the external read reached your finding independently, which is corroboration, not a catch.** §6 turns your flag into a guard.
