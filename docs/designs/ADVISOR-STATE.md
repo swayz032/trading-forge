@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2580` at THIS commit, 2026-07-30 14:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2634` at THIS commit, 2026-07-31 01:38 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,15 +82,69 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-497 LANDED (`27ebaddb`) · `AR-515` UNRULED · R-498 OWED AND HELD FOR THE PASTE** · live delivery is now **`c304b098`** (2026-07-30 14:40, ADVISOR SEAT = `claude.exe 23988`)
+## ★★★★★ SEAT — **R-499 LANDED (`3933f849`) · `AR-518` RULED · LEDGER CURRENT, NO DEBT** · live delivery still **`c304b098`** (2026-07-31 01:35, ADVISOR SEAT = `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE)
 
-★★★★★ **FIRST WAKE CHECK: `AR-515` IS THE NEWEST AR AND IT IS UNRULED. R-498 is a DEBT held on the
-operator's standing `WAIT ON GPT` order — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`.**
-★★★ **[MEASURED] THE HOLD COSTS NOTHING EXTRA THIS ROUND, CHECKED NOT ASSUMED: AR-515 §5 declares
-`nothing in flight, no sub-agent owed`, and R-497 §7's next step is the DESK-DISPATCHED grade, which
-this harness cannot launch without the operator's word anyway. **THE OPERATOR IS THE BLOCKER ON BOTH
-CHANNELS, SO THE PASTE-HOLD ADDS NO DELAY.** Do NOT copy this forward — re-derive it; it was
-half-wrong once already today.**
+★★★★★ **FIRST WAKE CHECK — AND FOR THE FIRST TIME IN THREE SEATS THE ANSWER IS "NOTHING": AR-516,
+AR-517 AND AR-518 ARE ALL RULED IN R-499. THE `WAIT ON GPT` PASTE-HOLD IS DISCHARGED — the operator
+spoke in his own voice (AR-518 §1) and the disclosure question is CLOSED, not held.**
+
+### ★★★★★ WHAT R-499 DID (ledger `3933f849`, 249 insertions, 2 files)
+**RATIFIED the graph-lanes fake-edge map WITH FIVE AMENDMENTS and committed it VERBATIM**
+(`docs/designs/GRAPH-LANES-FAKE-EDGE-MAP-2026-07-30.md`, now tracked). **AUTHORIZED BATCH 1 — FOUR
+PARALLEL LANES (`I11` grade · `I7` C2 yield · `I21` register · `I8` semantic-role shadow) TO THE SEAT
+THAT EXISTS.** Amendments: **A1** grader dispatch contract (opus AT THE CALL SITE · novel false-green
+hunt · **durable committed receipt**) · **A2** `I8` gains the `HOLDOUT-26`-is-spent-by-tuning rule,
+add-only refusals, source-video split · **A3** the register shared-resource edge the map named and
+then violated — `I8` pins sha256 `7b440add…` in its start-receipt, `I21` waits for it · **A4** `I10`
+struck · **A5** ★★★★★ **REVISION 4 IS *NOT* ADOPTED — `I CANNOT ADOPT WHAT I HAVE NOT READ`, and
+R-495..R-498 executed §15 pre-adoption. Recorded as a DEFECT, adoption read assigned to THIS SEAT.**
+
+### ⚠️★★★★★ [MEASURED HERE, THREE NON-OVERLAPPING PATHS] **THE ENTIRE CAMPAIGN RECORD IS ON A PUBLIC GITHUB REPO, AND HAS BEEN SINCE 2026-07-28**
+`swayz032/trading-forge` = **PUBLIC**. `origin/h1-wave4-sealed12-driver` @ `fe1cf17e`, reflog
+`update by push` **`2026-07-30 14:50:31`** — carrying `ADVISOR-RULINGS.md` `2,465,851` B ·
+`AGENT-REPORTS.md` `2,596,496` B · `ADVISOR-STATE.md` `204,029` B. All five ledger-E branches pushed
+`14:50:33–14:50:39`, **the three REJECTED deliveries included.** ★★★ **AND THE RELAY BRANCH WAS ALSO
+PUSHED `2026-07-28 23:30:59` AND `23:47:28` — neither AR names this; it widens the window by two days.**
+★★★★★ **PATHS: my ref-level `reflog` ("a push left THIS repo") · AR-517's `git ls-remote` ("the ref is
+there NOW") · AR-518's `merge-base --is-ancestor` ("and it was 3 commits stale"). THREE INSTRUMENTS,
+THREE QUESTIONS — that is why this is CORROBORATED and not one seat's claim.**
+★★★★★ **THE OPERATOR CLOSED IT IN HIS OWN WITNESSED WORDS: `"its public for gpt to see it"`. STAYS
+PUBLIC — no deletion, no visibility flip, no rewrite. DO NOT PUT THIS BACK IN FRONT OF HIM.**
+⚠️★★★ **BUT HE RATIFIED AN OUTCOME, NOT A PROCESS. `AN OUTCOME RATIFIED IS NOT A PROCESS VINDICATED`
+— R-498 authorized an irreversible public act and executed it **27 seconds later**, so AR-516's
+correct objection landed **151 seconds too late**. THE DESK'S DEFECT STANDS.**
+⚠️★★★ **CREDENTIAL SCANS ARE SOUND AND NARROW: `0` hits with real positive controls, but over THREE
+FILES ONLY. The rest of the repo is `[UNENUMERATED]`. The exposure is DISCLOSURE OF THE RECORD, not a
+leaked secret — do not let that erode into "the repo was checked."**
+
+### ★★★★★ TWO LAWS MINTED IN R-499 §8
+1. **`AN IRREVERSIBLE ACT EXECUTED IN THE SAME MOTION AS ITS OWN AUTHORIZATION CANNOT BE HELD.`** The
+   ruling authorizes; a **SEPARATE motion** executes. For outward-facing disclosure the operator's
+   word must be **WITNESSED, never relayed.** AR-518 is the positive control that this is achievable.
+2. **ADOPTED FROM AR-517 §4: `BEFORE HOLDING AN IRREVERSIBLE ACT, MEASURE WHETHER IT HAS ALREADY
+   HAPPENED.`** Corollary: **`gh repo view` answers *"would a push be public?"*; only `git ls-remote`
+   answers *"has it already been pushed?"*** — AR-516 measured the first and reported the second.
+
+### ★★★ EMITTER DEFECT FIXED, NOT WORKED AROUND (AR-517 §1)
+**R-498 carried no `★ WORKER — START HERE` block and addressed *"the seat that filed AR-515"* — a seat
+AR-516 §3 had already closed. `A RULING ADDRESSED TO A DEAD SEAT AUTHORIZES NOTHING.` R-499 carries
+the block and addresses the seat that exists.** `AUTHORIZE THE SEAT, NEVER A FUTURE OR FORMER SESSION.`
+
+### ★★★ MONITOR RIG — ARMED THIS WAKE, ONE RIG, ENUMERATED BEFORE ARMING
+**[MEASURED HERE] BEFORE: `bash.exe` watcher enumeration on the relay files = EMPTY. Nothing retired,
+nothing orphaned, gap verified empty (newest AR was AR-518 and it is ruled).** **AFTER: exactly `4`
+PIDs = 2 monitors × (wrapper + loop), ALL parented to `claude.exe 15520` (this seat), `0` foreign.**
+- `bfy0daew6` — **AR change detector**, 2 s poll, **mtime-based**, emits the newest `## AR-` header;
+  alarms after **3 consecutive unreadable-file polls** (a monitor that cannot see its file must say so).
+- `bcnsis18y` — **worker-idle watchdog**, 60 s, **THREE worker-owned channels**: AR mtime + newest
+  commit **excluding `ADVISOR-RULINGS.md`/`ADVISOR-STATE.md`** + register mtime. ★★★ **The exclusion is
+  the point — those two files are MINE, and `THE ADVISOR'S COMMITS MANUFACTURE WORKER-ACTIVITY
+  SIGNALS`.** It reports **SILENCE, NOT A DIAGNOSIS**, and says so in the event text.
+⚠️ **The worker's EAR does not exist as a process — the worker seat reads the ledger directly. Not
+mine to arm; do not "fix" it by arming one under my `claude.exe`.**
+
+### ⚠️ SUPERSEDED — R-497/AR-515 SEAT LINE (kept one generation)
+## ⚠️★★★★★ ~~SEAT — R-497 LANDED (`27ebaddb`) · `AR-515` UNRULED · R-498 OWED AND HELD FOR THE PASTE~~ · live delivery is now **`c304b098`** (2026-07-30 14:40, ADVISOR SEAT = `claude.exe 23988`)
 
 ### ★★★★★ OBJECT LINEAGE — **FOUR DELIVERIES; ONLY THE LAST IS LIVE. DO NOT CITE THE OLD SHAs.**
 `2011e8de` **NOT-SOUND** (R-496) → `39948d3c` **NOT-SOUND** (graded; 2 findings AR-513, 2 more from
