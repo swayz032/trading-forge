@@ -8,8 +8,10 @@
     "positive_witness_for_empty_censuses": "M4",
     "deployed_scope_capability_tripwire": "M5",
     "deployed_scope_subset_or_equal": "M6",
-    "deployed_scope_STRICT_subset": "M7"
+    "deployed_scope_STRICT_subset": "M7",
+    "publication_consistency_published_vs_current_code": "M8"
   },
+  "\u26a0\ufe0f_R508_5_6a_HYPOTHESIS_TESTED_AND_UPHELD": "R-508 \u00a75.6(a) predicted that hashing the generator's own in-memory output would be self-satisfying. TESTED: it is. The generator writes the artifact and would hash what it just wrote, so the check is true by construction while the COMMITTED object rots -- which is precisely how the stale artifact shipped, with an HONEST receipt pinning it. The check therefore lives HERE, compares the file ON DISK against freshly-generated content written elsewhere, and M8 proves it can fail.",
   "ASSERTION_CLASSES_WITHOUT_ONE": [
     "corpus/population size vs pinned baseline",
     "determinism",
@@ -22,11 +24,11 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "65994cc2cca20c8931f6f1edbfd3bd5435370191",
+    "head": "f89851f35b8f6f76122f245d9ef479bea9aa947b",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "d44e51b1c9c0c7da545423ca4335885221220d9b",
-    "generator_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
-    "artifact_blob": "57a8bb3486a84774a857c6ed2242b833d9213123",
+    "harness_blob": "fe3a596125e090a001fe2ce76c83280a867e31f1",
+    "generator_blob": "00503c078f9714ad95e41c61972ed29f966b9323",
+    "artifact_blob": "e91a90b64abe1c3f86f134c4486a5d6cbcef43cd",
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
@@ -155,6 +157,43 @@
         "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign"
       ],
       "n_reddened": 2,
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "PUBLICATION_CONSISTENCY_live",
+      "PUBLISHED_ARTIFACT_IS_CURRENT": true,
+      "detail": {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": true,
+        "published_path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "fresh_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
+        "published_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
+        "published_n_pass": 34,
+        "fresh_n_pass": 34,
+        "published_deployed_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
+        "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
+      },
+      "VERDICT": "CURRENT",
+      "OK": true
+    },
+    {
+      "case": "M8_stale_artifact_planted",
+      "assertion_that_must_go_RED": "PUBLICATION_CONSISTENCY",
+      "it_went_RED": true,
+      "detail": {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": false,
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_redproof_stale_artifact.json",
+        "fresh_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
+        "published_digest": "31a1d7ba5573de77d44471bfcff12c8acd184b51899e994ce70a713ed25636e7",
+        "published_n_pass": 33,
+        "fresh_n_pass": 34,
+        "published_deployed_head": "<unavailable: Command 'git rev-parse HEAD' exit 128>",
+        "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
+      },
+      "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head replaced with the exact error string that shipped -- i.e. the REAL defect reproduced, not a synthetic one.",
+      "ALL_assertions_this_mutation_reddened": [
+        "PUBLICATION_CONSISTENCY"
+      ],
       "VERDICT": "DISCRIMINATES",
       "OK": true
     }
