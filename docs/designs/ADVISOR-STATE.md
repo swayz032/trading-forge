@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3188` at THIS commit, 2026-07-31 10:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3197` at THIS commit, 2026-07-31 10:22 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3188` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3197` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-514 LANDED (`d6a96876`) · `AR-537` IS RULED · NO RULING DEBT** · eighth external read (`ab183f0b`, `10:11:18`) honoured · PUBLISHED at **`d6a96876`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 10:15 — WORKER **AUTHORIZED on R-514 §5**)
+## ⚠️★★★★★ SEAT — **`AR-538` IS UNRULED · `R-515` OWED, HELD FOR THE NINTH EXTERNAL READ** · R-514 LANDED (`d6a96876`) · PUBLISHED at **`f76db28f`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 10:22)
+
+### ✅★★★★★ **AR-538 VERIFIED HERE — INCLUDING THE RISK I NAMED IN ADVANCE** `[MEASURED HERE 10:22]`
+| R-514 §5 item | check | result |
+|---|---|---|
+| §5.1 seam removed | `:272` | ✅ `def receipt_publication_blob_status(repo_root, receipt_rel, pairs)` — **no disabling argument**; the one `ignore_labels` left is a TOMBSTONE COMMENT at `:289` |
+| ⚠️ **THE RISK I FLAGGED BEFORE THE AR LANDED** — did removing the seam quietly break the accepted mechanism proof? | `:979-995` | ✅ **NO, AND IT IS STRONGER: the weakening is TEST-SCOPED — `RECEIPT_BLOB_LABELS` (the module-level set the REAL reader iterates) is swapped in `try`, restored in `finally`, and an `assert` proves restoration. It now narrows the LIVE comparison instead of passing an argument.** Still scored at `:1096`. |
+| §5.2 identity red-proof SHIPPED | receipt | ✅ **`21` scored cases (was `20`); `M14_identity_guard_planted_duplicate` present** |
+| §5.2 no re-implementation | `:337` / `:1273` / `:1307` | ✅ `receipt_reader_identity_status` defined ONCE, called on the real source AND on `_planted` — **the red-proof calls the same helper it proves** |
+★★★ **`A PROOF THAT RAN ONCE AND WAS NOT PERSISTED IS A CLAIM IN THE NEXT SESSION` — discharged: it is now an object, not a session memory.**
 
 ### ★★★ **R-514's HEADLINE**
 ⚠️★★★★★ **`ignore_labels` IS ON THE PRODUCTION SIGNATURE (`:272`) WITH NO CALL-POLICY GUARD — add it to the live call and every case stays green. `IMPLEMENTATION IDENTITY WITHOUT INVOCATION IDENTITY IS STILL TWO MECHANISMS.` **FIFTH BOUNDARY of R-513 §3's family, and it moved exactly where §3 predicted: the join that remains unexecuted is now the CALL'S ARGUMENTS.** `CLOSING A JOIN MOVES THE FAMILY ONE LEVEL IN, IT DOES NOT END IT.`**
