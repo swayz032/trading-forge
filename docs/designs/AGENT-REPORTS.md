@@ -4,6 +4,47 @@
 
 ---
 
+## AR-523 · 2026-07-31 · ⚠️★★★★★ **`I7` IS *NOT* COMPLETE — AR-522 WAS DELIVERED UNDER THE CONTRACT R-501 §6 SUPERSEDED, AND I AM RE-SCORING IT AGAINST THE NEW ONE FIELD BY FIELD RATHER THAN LETTING IT STAND.** ★★★★★ **HARD STOP #1 TESTED AND IT DOES *NOT* FIRE: THE FLAGS-OFF ARM REPRODUCES THE PINNED BASELINE **EXACTLY — `0` OF `155` `bound_and_concrete`.** AND PROVING IT EXPOSED A JOIN-KEY ERROR IN MY OWN HEADLINE.**
+
+**RULING ID:** R-501 §6 · **TASK ID:** AR-523 · **PRIOR:** AR-522. **FAN-IN: `I21` closed · `I7` **PARTIAL** · `I8` not started · `I11` **TAKEN BY THE DESK.**
+
+### §1 — R-501 ADOPTED: `I11` IS NOT MINE, AND I WILL NOT DOUBLE-DISPATCH
+**§5: the word arrived in the ADVISOR's channel and the desk dispatched `accuracy-validator` itself, `opus` pinned at the call site, durable receipt at `docs/designs/GRADE-C304B098-2026-07-31.md`.** ★★★ **`I11` IS TAKEN, NOT OPEN — I MUST NOT DISPATCH A SECOND GRADER. Two graders on one object manufactures a disagreement neither can settle.** Verdict `[PENDING]`; I anticipate nothing from it.
+
+### ⚠️★★★★★ §2 — THE JOIN-KEY ERROR IN AR-522, FOUND BY TESTING THE STOP CONDITION
+**AR-522 §2 headlines *"bindable `128` OFF and `128` ON"* against a campaign baseline that reads *"`0` of `155` bound_and_concrete, flags-off"*. [MEASURED HERE] **BOTH ARE TRUE AND THEY ARE DIFFERENT FIELDS:**
+```
+flags-off, corpus_A, 155 entry_conditions:
+  bindable                = 128
+  bindable AND NOT approximation ( = bound_and_concrete ) = 0
+```
+★★★★★ **ALL `128` "BINDABLE" ROWS ARE APPROXIMATIONS. `bindable` IS NOT `bound_and_concrete`, AND MY REPORT PUT THE LOOSER FIELD IN THE HEADLINE BESIDE A BASELINE COUNTED ON THE STRICTER ONE.** **`THE JOIN KEY IS THE CLAIM`** — a reader comparing `128` to the pinned `0` would have seen a contradiction that does not exist, or worse, read `128` as progress. **The yield conclusion is UNCHANGED (`0` newly bound either way); the framing was wrong and is corrected here.**
+★★★ **AND THE STOP CONDITION PASSES ON THE STRICT FIELD: `0 = 0`. THE MEASUREMENT IS NOT CONTAMINATED.** I tested it rather than reconciling it in prose, which §6 forbids.
+
+### §3 — HONEST RE-SCORE OF `I7` AGAINST R-501 §6 — **`6` OF `9` REQUIRED FIELDS**
+| §6 required field | AR-522 |
+|---|---|
+| pinned tree **SHA** | ★ **MET** — `c9560949…`, not a tree name |
+| population NAME + SIZE | ★ **MET** — `corpus_A`, `16` files / `155` conditions |
+| off control + on treatment, identical corpus/config | ★ **MET** |
+| exact changed condition **identities** | ★ **MET** (lists are empty because `0` changed — vacuous but present) |
+| **NO POOLED RATE** | ★ **MET** — nothing pooled |
+| **DIRECT REACH PROBE** the flagged path executed | ★ **MET** — gate `DISCRIMINATES: true` |
+| **numerator / denominator DEFINITIONS** | ⚠️ **NOT MET** — counts given, definitions never stated. §2 now supplies the missing distinction |
+| **Corpus A and Corpus B reported SEPARATELY** | ⚠️★★★★★ **NOT MET — CORPUS B WAS NEVER MEASURED.** I measured `corpus_A` only. `CORPUS_B_PATH` (`or-branches-full-corpus-specs-2026-07-05.json`) exists and is untouched |
+| **changed to a DIFFERENT REFUSAL CLASS** | ⚠️ **NOT MET** — I diffed `bindable`/`primitive`/`session_zone`, never the refusal **reason** across arms |
+★★★★★ **SO `I7` IS `PARTIAL`, AND I AM FILING IT AS PARTIAL RATHER THAN LETTING AR-522 READ AS A CLOSED LANE. `A PARTIAL THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE`, and a lane delivered under a superseded contract is exactly how one gets created without anybody lying.**
+★★ **NOT A DEFECT IN THE RULING: R-501 §6 landed AFTER AR-522 was written. The desk rewrote the contract for good reason and the external read was right that a single figure is insufficient. My duty is to re-score, not to argue that I met the old bar.**
+
+### §4 — WHAT SURVIVES THE REWRITE, UNCHANGED
+**The substantive finding stands and none of the three gaps touches it:** on `corpus_A`, flag OFF→ON moves **`0`** conditions — and the capability is **NOT dormant**: of `27` `WAIT_SESSION` rows the classifier **recognizes `18`** and **computes a real `ny_am` zone for `9`**, with **`0`** reaching a binding, **`0`** regressions bound→unbound, and **`0`** non-`C2` movement (so **hard stop #2 also does not fire**). ★★★ **`A ZERO YIELD FROM A CAPABILITY THAT PRODUCED NINE ANSWERS IS A WIRING FINDING, NOT AN ABSENCE.`** H1/H2 remain two undecided hypotheses; no test here separates them.
+
+### §5 — NEXT, AND I AM NOT CHOOSING IT SILENTLY
+**`I7` needs three things to close: Corpus B measured SEPARATELY (no pooling) · numerator/denominator definitions written into the artifact · refusal-**reason** diffed across arms.** **All three are additive to the existing generator; no engine change, no re-run of what already holds.**
+⚠️★★★ **CONTEXT DECLARATION: this seat is deep. I am naming the exact remaining work so it is not re-derived, and I will take it as far as I can rather than opening `I8` on top of a half-closed `I7`** (`DO NOT START WHAT YOU CANNOT FINISH`). **`c304b098` untouched · MERGE / DEPLOY / RELEASE = HOLD · no sub-agent dispatched or owed by me — `I11` is the DESK's.**
+
+---
+
 ## AR-522 · 2026-07-31 · ★★★★★ **`I7` CLOSED — THE `C2` SESSION-ROLE RESOLVER YIELD ON `corpus_A` IS **`0` OF `155`**, WITH A DISCRIMINATING FLAG CONTROL PROVING THE ZERO IS REAL AND NOT AN UNSET ENV VAR.** ⚠️★★★★★ **AND THE ZERO IS NOT "INERT": OF `27` `WAIT_SESSION` ROWS THE CLASSIFIER RECOGNIZES `18` AND COMPUTES A REAL `ny_am` ZONE FOR `9` — AND **NOTHING BINDS.** THE CAPABILITY PRODUCES A USABLE ANSWER NOTHING CONSUMES.**
 
 **RULING ID:** R-499 §6 `I7` (order per R-500 §3) · **TASK ID:** AR-522 · **PRIOR:** AR-521. **FAN-IN: `2 / 4`.**
