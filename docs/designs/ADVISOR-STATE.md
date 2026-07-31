@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2819` at THIS commit, 2026-07-31 02:23 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2864` at THIS commit, 2026-07-31 02:42 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -131,7 +131,52 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
 
-### ⚠️★★★★★ **R-503 LANDED (`d592160c`, PUBLISHED). LEDGER CURRENT — AR-524 RULED, NO DEBT. BUT THE CAMPAIGN IS STOPPED, AND IT IS MY DEFECT.**
+### ★★★★★ **R-505 LANDED (`9d1f2998`). `I7` IS DELIVERED COMPLETE (AR-526). R-506 IS OWED AND HELD FOR THE GPT READ — which now arrives on watcher `bhdror0b5`, NOT from the operator.**
+
+★★★★★ **SEAT IDENTITY, CORRECTED AND LOAD-BEARING: the worker is `THE SEAT THAT FILED AR-525`. `A PID IS
+NOT A DURABLE ID FOR A SEAT — A SEAT CAN BE RE-SEATED INSIDE A LIVE PROCESS` (R-505 §1, adopted from
+AR-525 after it falsified me). `claude.exe 26204` was `/clear`-ed and re-onboarded inside the live
+process; I measured the PROCESS and concluded about the CONTEXT. **ANY FUTURE RE-SEAT OWES A NEW
+SELF-IDENTIFICATION AR BEFORE IT INHERITS ANYTHING.**
+⚠️★★★★★ **AND THE SHARPER HALF, RECORDED BECAUSE NOBODY ELSE WOULD FILE IT: my own idle watchdog
+printed `SILENCE ONLY, NOT A DIAGNOSIS` and I made the diagnosis it forbids, then told the operator
+"no worker is actually working." **HE CORRECTED ME.** `A CAVEAT YOU WROTE INTO YOUR OWN INSTRUMENT IS
+A SENSOR YOU MUST ALSO READ.`**
+★★★ **NO BACKGROUND `I7` AGENT WAS OR WILL BE DISPATCHED — the lane is taken (R-505 §4). The only
+Agent dispatch this session is the `I11` grader, CLOSED at `38acbbdd`.**
+
+### ★★★★★ **AR-526 — `I7` COMPLETE. `[ARTIFACT-SOURCED + SPOT-VERIFIED HERE]`, instrument `463f588d`, artifacts `b286a09d`.**
+| metric | field moved | corpus_A | corpus_B |
+|---|---|---|---|
+| binding movement | `bound_and_concrete` | **`0`** / 155 · 27 · **27 `C2`** | **`0`** / 6450 |
+| diagnostic refusal movement | `reason` | **`17`** / 155 · 27 · **27 `C2`** | **`45`** / 6450 |
+**Single transition class on BOTH corpora: `no_recognized_session_keyword` → `session_teaching_recognized_no_computable_window`. `0` regressions · `0` errors · `0` invalidation rows moved.**
+★★★ **[MEASURED HERE] I re-read the artifact myself: `READ_THIS_ONE__HEADLINE` carries BOTH metrics with
+all three denominators and ends *"NEITHER NUMBER IS A HEADLINE ON ITS OWN"* — **it encoded R-503 §1's
+rule into the instrument rather than obeying it in prose.** `ASSERTIONS` = **`28` checks, `n_fail: 0`**.
+`ROUTE_PARTITION` carries `histogram` AND `identities`, so counts are DERIVED from identity lists.**
+★★★★★ **THE `18`/`17`/`9` ROW IS NAMED, WITH ITS MECHANISM AT THE EXECUTABLE LINE:
+`W7nlnHTUZQU__s0.spec.json::WAIT_SESSION:overnight-pre-market-range…#6` — unchanged because the
+ORPHAN-ZONE REFUSAL FIRES **ABOVE** THE RESOLVER GATE, so the row never reaches it and is INVARIANT TO
+THE FLAG. Partition closes exactly: of the `17`, `8` had a computed zone and `9` did not; `9 − 8 = 1`
+is the orphan row. `0` unrecognised rows moved.**
+⚠️★★★★★ **NEW FINDING, NOT SMALL, AND IT OUTRANKS THE `C2` QUESTION: THE EXACT NAME ROUTE — THE ONLY
+ROUTE AUTHORIZED TO CREATE A BINDING — BINDS `0` OF `1,329` `WAIT_SESSION` CONDITIONS ACROSS `120`
+SPECS, AND `0` OF `27` ON corpus_A.** ★★★ **It shows up as an ABSENT HISTOGRAM KEY, which is exactly
+why the worker flagged `ABSENCE FROM A LIST IS NOT A PASS`. `wrapping_window_refusal` = `0` on both —
+that branch is **UNTESTED-BY-THIS-POPULATION**, reported as untested, not as working.**
+★★★ **PROVENANCE CLOSED WITHOUT A CLEAN CHECKOUT: source-closure manifest over the EXECUTED closure
+(`sys.modules` after the run, not a static parse) — `22` files, tree `94` dirty, **intersection with
+the closure `0`**, divergent-from-HEAD `0`, pre-run AND post-run status both captured and asserted to
+agree. `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE` — now it is a provenance.**
+⚠️★★ **HONEST GAP, DECLARED NOT SUBSTITUTED: corpus_B has NO baseline-sourced `C2` denominator, so the
+OFF-control arm was used and LABELLED WEAKER IN THE ARTIFACT — with a second path: on corpus_A, where
+both derivations exist, the OFF-derived population is ASSERTED EQUAL to the baseline-derived one.**
+★★ **`I8` NOT STARTED · `I21` follow-up outstanding · `I11` CLOSED · `P0-v5` NAMED, UNAUTHORIZED ·
+`c304b098` NOT-SOUND · MERGE / DEPLOY / RELEASE = HOLD.**
+
+### ⚠️ SUPERSEDED — R-503 STALL BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-503 LANDED (`d592160c`). LEDGER CURRENT. BUT THE CAMPAIGN IS STOPPED, AND IT IS MY DEFECT.~~
 
 ★★★★★ **THE IDLE WATCHDOG `bcnsis18y` FIRED AT `02:21` — `WORKER QUIET 15 min` — AND IT REPORTED
 SILENCE WITHOUT A DIAGNOSIS, EXACTLY AS CONTRACTED. I THEN MEASURED RATHER THAN ASSUMING
