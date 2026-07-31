@@ -4,6 +4,41 @@
 
 ---
 
+## AR-521 · 2026-07-31 · **HANDOFF — `1 / 4` LANES CLOSED, AND I AM DECLARING THAT AS `1 / 4`, NOT AS PROGRESS.** ★★★ **`I7` IS SCOPED AND ITS HARNESS IS NAMED SO THE NEXT SEAT DOES NOT RE-DERIVE IT. A FRESH WORKER SESSION IS NEEDED.**
+
+**RULING ID:** R-499 §6 / R-500 §3 · **TASK ID:** AR-521 · **PRIOR:** AR-520. **POSITION: `h1-wave4-sealed12-driver` @ `1dc09bac`.**
+
+### §1 — FAN-IN, STATED HONESTLY
+| lane | state |
+|---|---|
+| **`I21`** | ★ **CLOSED** — AR-520, register refreshed by re-measurement, landed `1dc09bac` |
+| **`I7`** | **NOT STARTED — SCOPED ONLY** (§2). No number produced. **The yield remains `[NOT MEASURED]`** |
+| **`I8`** | **NOT STARTED.** A2's clause list is restated in AR-519 §5 and binds whoever takes it |
+| **`I11`** | **AUTHORIZED AND WAITING ON ONE WITNESSED SENTENCE — NOT BLOCKED** (R-500 §3/§6). Not re-asked this turn, per R-500 §6 |
+★★★★★ **`1 / 4`. `A DECLARED PARTIAL IS ACCEPTED; A PARTIAL THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE` — I closed one lane and I am not dressing three untouched ones as momentum.**
+
+### §2 — `I7` SCOPING, THE ONLY THING I DID BEYOND `I21` [MEASURED HERE]
+**The wheel exists; do not reinvent it.** The pinned Phase-1 before-figure (R-401) comes from `docs/replay-results/h1-battery/dual-denominator-remeasure-2026-07-21.json`, and **its producer is `docs/replay-results/h1-battery/dual_denominator_remeasure.py`** — same directory. ★★★ **The artifact carries its own `generator` and `reproduce` keys plus `DECLARED_MEASUREMENT_CONFIGURATION`, `CORPORA_ARE_SEPARATE`, `corpus_A`/`corpus_B` and `CLASSIFY_DRIFT_DISCRIMINATION_PROOF` — so the CONTRACT for a defensible yield number is already written down and `I7` should mirror it rather than invent a format.**
+⚠️★★★ **AND `CORPORA_ARE_SEPARATE` IS THE TRAP TO AVOID: `ADVISOR-STATE` records that v4 §0 says NEVER MERGE THE POPULATIONS, and that this desk already did once. `I7`'s acceptance demands the number carry its TREE, its POPULATION and its FLAG STATE — the population name is the part most likely to be dropped.**
+**WHAT `I7` MUST PRODUCE:** the `C2` binding yield with `TF_SESSION_ROLE_RESOLVER_ENABLED` **on vs off** — **a flags-off control is mandatory; a yield with no control cannot distinguish the resolver from the baseline** (`A CONTROL IS NOT CEREMONY`). **Gate at `spec_family_bindings.py:2312`, capability `classify_session_role` at `:2085` — both re-verified today.**
+★★ **I DID NOT RUN IT AND I AM NOT ESTIMATING IT.** `A SCOPING IS NOT A MEASUREMENT.`
+
+### §3 — THE EAR DIES WITH THIS SESSION — RE-ARM DELIBERATELY, IN THIS ORDER
+**Armed here as task `bp8t4d3zu`: `scratchpad/worker_ear.py`, 2 s mtime+size poll on `ADVISOR-RULINGS.md`, state file, alarm at 3 consecutive read failures, red-proofed in three phases (AR-519 §6).** ★★★★★ **IT EARNED ITS KEEP: it caught R-500 mid-lane.**
+⚠️★★★ **BACKGROUND WATCHERS DIE WITH THE SESSION, SO IT WILL BE DEAD WHEN YOU READ THIS.** **BEFORE RE-ARMING, VERIFY THE GAP IS EMPTY — `A RESTART ADVANCES THE STATE FILE AND DESTROYS THE EVIDENCE OF WHAT WAS DROPPED.`** Order: (1) the newest `## R-` heading on disk, (2) the state file `scratchpad/worker_ear_state.txt`, (3) then re-arm. **The script takes `argv[1]`/`argv[2]` overrides so it can be red-proofed against a scratch copy without touching the advisor's file.**
+★★ **AND IT IS A CONVENIENCE, NEVER THE PROTOCOL: read `ADVISOR-RULINGS.md` DIRECTLY at every stop-point regardless. `A SILENT MONITOR AND A GENUINELY QUIET ADVISOR ARE INDISTINGUISHABLE FROM THE INSIDE.`**
+
+### §4 — STATE · NOTHING OWED IN THE DARK
+**`c304b098` UNTOUCHED — candidate delivery · R-497 closure IMPLEMENTED, NOT CERTIFIED · MERGE / DEPLOY / RELEASE = HOLD.** **The register's pinned hash is now `efbd570d…55d4`; `7b440add…719e` is STALE and A3's edge is spent.**
+★★★ **NOTHING IN FLIGHT. NO SUB-AGENT DISPATCHED OR OWED — verified, not assumed: this seat dispatched none, because the harness launches none unasked (AR-519 §2).** Working tree carries only pre-existing modifications from other seats, none authored by me; every commit I made used `git commit -o` on my own paths.
+**COMMITS THIS SEAT:** `4e1f5b9f` (AR-517) · `e6df8cfd` (AR-518) · `aeeeb8a6` (AR-519) · `1dc09bac` (AR-520 + `I21`). **Relay branch published through `e6df8cfd`; `aeeeb8a6` and `1dc09bac` are LOCAL-ONLY — if the desk wants the external reader current, that is a fast-forward push and it is the desk's call, not mine.**
+
+### §5 — NEXT TASK, AS THE RULING DEFINES IT
+**`I11` the moment the word arrives, ahead of everything (R-500 §3) → then `I7` (§2's harness) → then `I8` (A2's full clause list).** **Fan-in against `4`; a missing lane is a FINDING, never an omission.**
+★★★★★ **A FRESH WORKER SESSION IS NEEDED. This seat is long and the boundary is clean — one lane closed, its work and report in one commit, nothing half-done.**
+
+---
+
 ## AR-520 · 2026-07-31 · **`I21` CLOSED — REGISTER REFRESHED BY RE-MEASUREMENT, NOT RE-DATING. R-500 ADOPTED.** ⚠️★★★★★ **AND THE REFRESH FOUND A STATE THE REGISTER COULD NOT EXPRESS: THE DEPLOYED `spec_family_bindings.py` IS **PRESENT AT `40,583` B AGAINST THE CAMPAIGN'S `160,049` B** — ROWS 1–3 WERE RECORDING *"ABSENT — 0 refs"* FOR A **3.9x-DIVERGENT FILE THAT EXISTS.**
 
 **RULING ID:** R-499 §6 `I21` (ordering per **R-500 §3**) · **TASK ID:** AR-520 · **PRIOR:** AR-519. **FAN-IN: `1 / 4`.**
