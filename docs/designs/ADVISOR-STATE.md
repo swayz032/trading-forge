@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2864` at THIS commit, 2026-07-31 02:42 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2908` at THIS commit, 2026-07-31 02:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -131,7 +131,51 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
 
-### ★★★★★ **R-505 LANDED (`9d1f2998`). `I7` IS DELIVERED COMPLETE (AR-526). R-506 IS OWED AND HELD FOR THE GPT READ — which now arrives on watcher `bhdror0b5`, NOT from the operator.**
+### ★★★★★ **R-506 LANDED (`468fd5c2`, PUBLISHED). BATCH 1 IS AT A TERMINAL STATE. R-507 IS OWED AND HELD FOR THE GPT READ (arrives on watcher `bhdror0b5`, no human relay).**
+
+**`I21` CLOSED + follow-up CLOSED · `I11` CLOSED (`NOT-SOUND`) · `I7` DELIVERED · PUBLISHED · **EXTERNALLY UNVERIFIED, NOT CLOSED** · `I8` **DECLINED — the prerequisite is THIS DESK'S** (below).**
+
+### ⚠️★★★★★ **THE ONE THING THIS DESK OWES, AND IT IS NOT DELEGABLE**
+**NAME A FRESH UNTOUCHED POPULATION IN `## POPULATIONS — PERMANENT`, OR RULE `I8` CLOSED.**
+★★★★★ **WHY `I8` IS BLOCKED [MEASURED BY THE WORKER, AR-527 §2, CONFIRMED AGAINST THIS FILE]: advancing it
+reduces to making the deterministic rules decide more than `4.1%` — **RULE EXPANSION** — which THIS FILE
+forbids twice: `## POPULATIONS` (*"FORBIDDEN until a fresh untouched population is named FIRST"*) and
+`## NOT AUTHORIZED` (*"a fifth semantic-regex patch round"*). **I DRAFTED AN `I8` AUTHORIZATION AND THE
+STALE-PREMISE GUARD PLUS AR-527 STOPPED IT. `THE BLOCKER YOU CHECK IS NOT NECESSARILY THE BLOCKER THAT
+BINDS` — I audited the external constraint and never re-read my own, in a file only I may write.**
+⚠️★★★ **DO NOT NAME A POPULATION IN HASTE. Naming one wrongly SPENDS it, and `HOLDOUT-26` is the campaign's
+only valid internal holdout. This was deliberately NOT done in the last minutes of a long seat.**
+
+### ★★★★★ **AR-528 — R-506 §5 DISCHARGED BY A TRIPWIRE, NOT A SENTENCE** `[ARTIFACT-SOURCED; RELAYED here]`
+**`DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE` is now a top-level artifact key, COMPUTED
+from the deployed tree at run time, never typed.** ★★★★★ **`SCOPE_TRIPWIRE` asserts six session-role
+symbols are ABSENT from the deployed binder and **GOES RED ON GOOD NEWS** — the day someone ports the
+capability it fails, which is exactly the day every scope sentence in the artifact becomes a lie. A
+second assertion guards the other direction (`0` deployed-only symbols; non-zero ⇒ the port must
+RECONCILE, not merely ADD). **Fail-closed if the deployed tree is unreachable.**
+★★★ **`30 / 30` assertions, `6 / 6` mutations discriminate. M5 and M6 are CROSS-CONSTRAINED — each must
+redden its OWN assertion while the other stays GREEN. `A GUARD THAT CANNOT BE DISTINGUISHED FROM ITS
+NEIGHBOUR IS NOT A SECOND GUARD.`**
+
+### ⚠️★★★★★ **THE `I7` FINDING THAT OUTRANKS ITS OWN LANE — CARRY THIS FORWARD**
+**THE EXACT NAME ROUTE — the ONLY route authorized to create a binding — FIRES `0` TIMES ACROSS `1,329`
+`WAIT_SESSION` CONDITIONS ON `120` SPECS.** It surfaces as an ABSENT HISTOGRAM KEY (`ABSENCE FROM A LIST
+IS NOT A PASS`). ★★★ **AND THE WHOLE `C2` CAPABILITY IS `0` IN THE DEPLOYED LANE** — `MEASURED ≠
+MEASURED-WHERE-IT-RUNS`; no `I7` number may be stated about production without that sentence.
+★★★ **The deployed binder is a STRICT SUBSET at symbol level: `103` vs `33`, `70` missing, **`0` extra** —
+one lineage with removals, not two forks. `A 3.94x SIZE GAP COULD HAVE BEEN EITHER, AND ONLY A
+MEASUREMENT COULD SAY WHICH.`**
+
+### ★★★ **DESK DISCIPLINE CORRECTED THIS WAKE — NOW IN FORCE**
+**`PUBLISH ON AR-LANDING, NOT ON RULING-LANDING.`** The worker commits; only the desk pushes; so every AR
+had a window — bounded by MY cadence — in which true evidence was invisible to the external reviewer,
+and it produced one false hold. **The push now follows the AR-detector event, BEFORE any ruling is
+drafted.** `PUBLICATION IS A PRECONDITION FOR BEING RULED ON BY ANYONE ELSE, NOT A CONSEQUENCE OF RULING.`
+
+### ★★★ **THE WORKER IS NOT HANDING OFF AND IS NOT IDLE THROUGH ANY FAULT — DO NOT GIVE IT BUSYWORK**
+**AR-528 §4: its context is not exhausted, it remains the assigned seat, every lane it was given is
+terminal, and it takes work back if either open item returns any.** ★★ **Seat id = `THE SEAT THAT FILED
+AR-525` — never its PID.**
 
 ★★★★★ **SEAT IDENTITY, CORRECTED AND LOAD-BEARING: the worker is `THE SEAT THAT FILED AR-525`. `A PID IS
 NOT A DURABLE ID FOR A SEAT — A SEAT CAN BE RE-SEATED INSIDE A LIVE PROCESS` (R-505 §1, adopted from
