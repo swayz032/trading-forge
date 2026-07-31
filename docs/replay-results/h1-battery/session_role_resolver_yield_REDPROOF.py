@@ -264,8 +264,72 @@ def digest_attributed(res: dict) -> bool:
             and res["fresh_digest"] != res["published_digest"])
 
 
+RECEIPT_BLOB_LABELS = (("harness", "HARNESS_REL"), ("generator", "GENERATOR_REL"),
+                       ("artifact", "ARTIFACT_REL"))
+
+
+def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels=()):
+    """*** R-513 6.1 -- THE ONE READER. `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER.`
+
+    Until R-513 this comparison existed TWICE: once in the live scored case and
+    once inside M13's fixture. Same logic, separate code paths -- so weakening
+    the shipped reader would NOT have failed its own red-proof.
+    `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.`
+
+    !!! IT RETURNS `mismatched_labels`, NOT A BOOLEAN, AND THAT IS LOAD-BEARING.
+    R-513 2: the old private comparator used `.get()`, and `None != <head_blob>`
+    evaluates True -- so an ABSENT or MALFORMED receipt produced "reader red"
+    indistinguishable from a genuine stale-blob detection. That is the
+    M8/M10/M11 species inside the case built to prove the repair.
+    `A BOOLEAN CANNOT CARRY AN ATTRIBUTION.` Absent fields are therefore a
+    SEPARATE category from mismatched ones and never silently count as a catch.
+
+    `ignore_labels` exists solely so R-513 6.4 can WEAKEN this mechanism on
+    purpose and prove M13 fails -- red-proofing the MECHANISM, not a boolean
+    somebody handed to the verdict.
+    """
+    raw = committed_text(repo_root, receipt_rel)
+    if raw is None:
+        return {"CURRENT": False, "STATUS": "RECEIPT_ABSENT_FROM_HEAD",
+                "mismatched_labels": [], "absent_fields": [], "detail": {},
+                "reason": "the receipt is not present in HEAD at all"}
+    try:
+        prov = json.loads(raw).get("PROVENANCE", {})
+    except Exception as exc:
+        return {"CURRENT": False, "STATUS": "RECEIPT_UNPARSEABLE",
+                "mismatched_labels": [], "absent_fields": [], "detail": {},
+                "reason": "committed receipt did not parse: %s" % exc}
+
+    rels = {"HARNESS_REL": HARNESS_REL, "GENERATOR_REL": GENERATOR_REL,
+            "ARTIFACT_REL": ARTIFACT_REL}
+    detail, mismatched, absent = {}, [], []
+    for label, relname in RECEIPT_BLOB_LABELS:
+        current = pairs[rels[relname]]["head_blob"]
+        if label in ignore_labels:
+            detail[label] = {"STATUS": "IGNORED -- deliberately weakened, R-513 6.4",
+                             "at_HEAD_now": current}
+            continue
+        recorded = prov.get("%s_blob" % label)
+        if recorded is None:
+            absent.append(label)
+            detail[label] = {"recorded_in_committed_receipt": None, "at_HEAD_now": current,
+                             "STATUS": "FIELD_ABSENT -- NOT counted as a mismatch"}
+        else:
+            match = recorded == current
+            detail[label] = {"recorded_in_committed_receipt": recorded,
+                             "at_HEAD_now": current, "MATCHES": match,
+                             "STATUS": "MATCH" if match else "MISMATCH"}
+            if not match:
+                mismatched.append(label)
+    return {"CURRENT": (not mismatched and not absent),
+            "STATUS": ("FIELDS_ABSENT" if absent else
+                       ("CURRENT" if not mismatched else "STALE")),
+            "mismatched_labels": sorted(mismatched), "absent_fields": sorted(absent),
+            "detail": detail}
+
+
 def m13_acceptance(void: bool, control_fired: bool, stale_in_fact: bool,
-                   reader_red: bool, reddened_by: list) -> bool:
+                   reader_status: dict, reddened_by: list) -> bool:
     """★★★★★ R-512 §6.1 -- M13's VERDICT, AS A PURE PREDICATE SO IT CAN BE
     FALSIFIED ON DEMAND.
 
@@ -278,7 +342,14 @@ def m13_acceptance(void: bool, control_fired: bool, stale_in_fact: bool,
     Extracted as a function precisely so item 5 can re-evaluate it with the
     reader suppressed and PROVE it goes False, rather than asserting it does.
     """
-    return (not void and control_fired and stale_in_fact and reader_red is True
+    # *** R-513 6.3 -- takes the SHARED READER'S RESULT, not a boolean computed
+    #   alongside it, and requires the EXACT mismatch: the reader must have
+    #   opened the receipt, checked the intended field, and attributed the red
+    #   to the intended target. `A BOOLEAN CANNOT CARRY AN ATTRIBUTION.`
+    return (not void and control_fired and stale_in_fact
+            and reader_status.get("CURRENT") is False
+            and reader_status.get("mismatched_labels") == ["harness"]
+            and reader_status.get("absent_fields") == []
             and reddened_by == ["RECEIPT_records_the_CURRENT_publication_blobs"])
 
 
@@ -804,11 +875,11 @@ def main():
     # ★★★★★ THE REMEDY, EVALUATED AGAINST THIS FIXTURE -- which makes M13 its
     #   own red-proof: the case that PROVED the receipt uncovered is the case
     #   that now proves the reader catches it. Same fixture, same mutation.
-    m13_rec_prov = json.loads(committed_text(m13fix, RECEIPT_REL) or "{}").get("PROVENANCE", {})
-    m13_reader_red = any(
-        m13_rec_prov.get("%s_blob" % label) != m13_pairs["pairs"][rel]["head_blob"]
-        for label, rel in (("harness", HARNESS_REL), ("generator", GENERATOR_REL),
-                           ("artifact", ARTIFACT_REL)))
+    # ***** R-513 6.2 -- CALLS THE SHIPPED READER. The inline comparator that
+    #   lived here is DELETED: it was a second implementation of one claim, so
+    #   weakening the live reader could not fail this red-proof.
+    m13_reader = receipt_publication_blob_status(m13fix, RECEIPT_REL, m13_pairs["pairs"])
+    m13_reader_red = m13_reader["CURRENT"] is False
     if m13_reader_red:
         reddened_by.append("RECEIPT_records_the_CURRENT_publication_blobs")
 
@@ -851,7 +922,24 @@ def main():
     #    finding is EVIDENCE and is NOT scored in all_ok; the red-proof of the
     #    reader IS scored and requires its target to fire.
     m13_ok = m13_acceptance(m13_void, control_fired, receipt_is_stale_in_fact,
-                            m13_reader_red, reddened_by)
+                            m13_reader, reddened_by)
+
+    # ── ***** R-513 6.4 -- RED-PROOF THE MECHANISM ITSELF ──────────────────
+    #    R-512 6.5 proved the PREDICATE was load-bearing by suppressing a
+    #    boolean. R-513 1 showed that is not enough: `SUPPRESSING A BOOLEAN
+    #    PROVES THE VERDICT DEPENDS ON THE BOOLEAN; IT DOES NOT PROVE THE
+    #    BOOLEAN CAME FROM THE LIVE MECHANISM.` So the SHARED READER is now
+    #    invoked a second time against the same fixture, deliberately weakened
+    #    to ignore the harness -- the exact rot this red-proof must catch.
+    m13_reader_weakened = receipt_publication_blob_status(
+        m13fix, RECEIPT_REL, m13_pairs["pairs"], ignore_labels=("harness",))
+    weakened_went_incorrectly_green = m13_reader_weakened["CURRENT"] is True
+    m13_ok_if_mechanism_weakened = m13_acceptance(
+        m13_void, control_fired, receipt_is_stale_in_fact, m13_reader_weakened,
+        [r for r in reddened_by
+         if r != "RECEIPT_records_the_CURRENT_publication_blobs"])
+    m13_mechanism_is_load_bearing = (weakened_went_incorrectly_green
+                                     and m13_ok_if_mechanism_weakened is False)
 
     # ★★★★★ ITEM 5 -- PROVE THE VERDICT IS LOAD-BEARING, IN THE ARTIFACT, EVERY
     #   RUN. Re-evaluate the SAME predicate with the reader result SUPPRESSED and
@@ -861,8 +949,9 @@ def main():
     #   the exact shape R-512 §1 convicted.
     m13_ok_if_reader_suppressed = m13_acceptance(
         m13_void, control_fired, receipt_is_stale_in_fact,
-        False, [r for r in reddened_by
-                if r != "RECEIPT_records_the_CURRENT_publication_blobs"])
+        {"CURRENT": True, "mismatched_labels": [], "absent_fields": []},
+        [r for r in reddened_by
+         if r != "RECEIPT_records_the_CURRENT_publication_blobs"])
     m13_verdict_is_load_bearing = (m13_ok is True and m13_ok_if_reader_suppressed is False)
 
     HISTORY.append({
@@ -902,6 +991,18 @@ def main():
         "harness_blob_at_HEAD_now": harness_head_now,
         "RECEIPT_IS_STALE_IN_FACT": receipt_is_stale_in_fact,
         "READER_REDDENED": m13_reader_red,
+        "SHARED_READER_RESULT": {
+            "CURRENT": m13_reader["CURRENT"],
+            "STATUS": m13_reader["STATUS"],
+            "mismatched_labels": m13_reader["mismatched_labels"],
+            "absent_fields": m13_reader["absent_fields"],
+            "!!_WHY_LABELS_NOT_A_BOOLEAN": (
+                "R-513 2. The comparator this replaced used .get(), and None != <blob> is "
+                "True -- so an ABSENT or malformed receipt produced a 'red' indistinguishable "
+                "from a real stale-blob catch. Requiring mismatched_labels == ['harness'] and "
+                "absent_fields == [] proves the reader OPENED the receipt, found the intended "
+                "field, and attributed the red to the intended target."),
+        },
         "RECEIPT_IS_COVERED_BY": reddened_by,
         "VOID_GUARD__harness_pair_green_at_verdict":
             m13_pairs["pairs"][HARNESS_REL]["IDENTICAL"] is True,
@@ -915,6 +1016,17 @@ def main():
                 m13_pc.get("PUBLISHED_ARTIFACT_IS_CURRENT"),
         },
         "POSITIVE_CONTROL__dirty_harness_does_redden": control_fired,
+        "★_MECHANISM_FALSIFIABILITY": {
+            "!!_THIS_IS_THE_R513_ADDITION": (
+                "The shared reader is re-invoked against the SAME fixture with the harness "
+                "comparison deliberately ignored. `A TEST THAT REIMPLEMENTS ITS TARGET CAN "
+                "PASS WHILE THE TARGET ROTS` -- so the red-proof must break when the MECHANISM "
+                "is weakened, not merely when a boolean is withheld."),
+            "weakened_reader_went_incorrectly_GREEN": weakened_went_incorrectly_green,
+            "weakened_reader_STATUS": m13_reader_weakened["STATUS"],
+            "OK_if_the_MECHANISM_were_weakened": m13_ok_if_mechanism_weakened,
+            "MECHANISM_IS_LOAD_BEARING": m13_mechanism_is_load_bearing,
+        },
         "★_VERDICT_FALSIFIABILITY": {
             "OK_as_evaluated": m13_ok,
             "OK_if_the_reader_result_were_SUPPRESSED": m13_ok_if_reader_suppressed,
@@ -929,12 +1041,14 @@ def main():
                                           "UNSCORED_HISTORY -- see R-512 §6.3.",
         "VERDICT": ("VOID -- dirty or confounded tree" if m13_void else
                     ("DISCRIMINATES" if m13_ok else "DOES-NOT-DISCRIMINATE")),
-        "OK": m13_ok and m13_verdict_is_load_bearing,
+        "OK": m13_ok and m13_verdict_is_load_bearing and m13_mechanism_is_load_bearing,
     })
-    print("[%s] M13_READER_catches_committed_stale_receipt -> reader_red=%s | covered_by=%s "
-          "| suppressed_gives=%s | void=%s"
-          % ("OK " if (m13_ok and m13_verdict_is_load_bearing) else "BAD", m13_reader_red,
-             reddened_by or "NOTHING", m13_ok_if_reader_suppressed, m13_void))
+    print("[%s] M13_READER_catches_committed_stale_receipt -> mismatched=%s | "
+          "suppressed=%s | weakened_mechanism=%s (green=%s) | void=%s"
+          % ("OK " if (m13_ok and m13_verdict_is_load_bearing
+                       and m13_mechanism_is_load_bearing) else "BAD",
+             m13_reader["mismatched_labels"], m13_ok_if_reader_suppressed,
+             m13_ok_if_mechanism_weakened, weakened_went_incorrectly_green, m13_void))
 
     # ── ★★★★★ R-511 §6.1 -- THE PUBLICATION PAIRS, SCORED AS A REAL CASE ────
     #    THIS BLOCK MUST STAY ABOVE `all_ok`. Its whole defect was position:
@@ -983,19 +1097,10 @@ def main():
     #    THIS reader converges instead: committing the receipt does not change
     #    the harness, generator or artifact blobs it records, so it goes GREEN on
     #    the next run and stays there until one of them actually changes.
-    receipt_raw = committed_text(REPO, RECEIPT_REL)
-    if receipt_raw is None:
-        rec_ok, rec_detail = False, {"reason": "the receipt is not present in HEAD at all"}
-    else:
-        rec_prov = json.loads(receipt_raw).get("PROVENANCE", {})
-        rec_detail = {}
-        for label, rel in (("harness", HARNESS_REL), ("generator", GENERATOR_REL),
-                           ("artifact", ARTIFACT_REL)):
-            recorded = rec_prov.get("%s_blob" % label)
-            current = PUB["pairs"][rel]["head_blob"]
-            rec_detail[label] = {"recorded_in_committed_receipt": recorded,
-                                 "at_HEAD_now": current, "MATCHES": recorded == current}
-        rec_ok = all(v["MATCHES"] for v in rec_detail.values())
+    # ***** R-513 6.2 -- THE SAME SHARED READER M13 CALLS. One claim, one
+    #   implementation; the inline loop that lived here is DELETED.
+    rec_status = receipt_publication_blob_status(REPO, RECEIPT_REL, PUB["pairs"])
+    rec_ok, rec_detail = rec_status["CURRENT"], rec_status["detail"]
     results.append({
         "case": "RECEIPT_records_the_CURRENT_publication_blobs",
         "WHAT_IT_ASSERTS": (
@@ -1037,49 +1142,93 @@ def main():
     #    the scored case below fails if the census and the actual case list ever
     #    disagree, which is the only way a hand-authored table stays honest.
     census = {
-        "CONTROL_unmutated": ("colour+target",
-                              "requires exit 0 AND every assertion green -- no cause to "
-                              "attribute, because nothing was mutated."),
+        "CONTROL_unmutated": (
+            "colour+target", "INLINE -- runs the generator via run() and reads its ASSERTIONS",
+            "requires exit 0 AND every assertion green; nothing was mutated, so there is no "
+            "cause to attribute."),
         "M9_committed_artifact_STALE_worktree_FRESH": (
-            "target, BOTH DIRECTIONS",
-            "requires the OLD reader to be BLIND and the NEW one to CATCH. A one-direction "
-            "pass is not accepted."),
+            "target, BOTH DIRECTIONS", "publication_consistency() x2 (worktree + committed)",
+            "requires the OLD reader BLIND and the NEW one CATCHING. One direction is not a "
+            "pass."),
         "M10_identity_block_silently_altered": (
-            "colour+cause", "R-512 §6.4 SWEEP -- now requires digest attribution, not the "
-                            "bare NOT-CURRENT colour."),
+            "colour+cause", "publication_consistency() -> digest_attributed()",
+            "R-512 6.4 SWEEP -- requires digest attribution, not the bare NOT-CURRENT colour."),
         "M11_source_closure_identity_altered": (
-            "colour+cause", "R-512 §6.4 SWEEP -- same conjunct, added in the same wave."),
+            "colour+cause", "publication_consistency() -> digest_attributed()",
+            "R-512 6.4 SWEEP -- same conjunct, added in the same wave."),
         "M8_stale_artifact_COMMITTED_in_fixture": (
-            "colour+cause+target",
-            "the original attributed case (R-510 §6.1): RED, attributable to a digest "
-            "mismatch, AND it read the planted n_pass back."),
+            "colour+cause+target", "publication_consistency() -> digest_attributed()",
+            "the original attributed case (R-510 6.1): RED, digest-attributable, AND it read "
+            "the planted n_pass back."),
         "M8b_unpublishable_path": (
-            "colour", "DELIBERATE. This case exists to prove the fail-closed PATH behaviour; "
-                      "it is explicitly NOT a stale-content proof and says so in its record."),
+            "colour", "publication_consistency() early return",
+            "DELIBERATE -- proves the fail-closed PATH behaviour and is explicitly NOT a "
+            "stale-content proof. It is also the NEGATIVE CONTROL for digest_attributed()."),
         "PUBLICATION_CONSISTENCY_live": (
-            "colour", "a live status observation, not a mutation."),
+            "colour", "publication_consistency()",
+            "a live status observation, not a mutation."),
         "M12_artifact_worktree_DIRTY_commit_CURRENT": (
-            "colour+cause+target",
+            "colour+cause+target", "publication_pairs() + publication_consistency()",
             "requires the artifact pair RED, the other two pairs GREEN, consistency GREEN and "
             "a clean starting fixture -- it discriminates in both directions."),
         "M13_READER_catches_committed_stale_receipt": (
-            "colour+cause+target+FALSIFIABILITY",
-            "R-512 §6.1 -- requires the reader itself to redden, the coverage list to be "
-            "EXACTLY the reader, and the same predicate to come out FALSE when the reader "
-            "result is suppressed."),
+            "colour+cause+target+PREDICATE+MECHANISM",
+            "receipt_publication_blob_status() -- THE SAME function the live case calls",
+            "R-513 6.2/6.4. Requires mismatched_labels == ['harness'], absent_fields == [], "
+            "the coverage list to be exactly the reader, the predicate to flip when the "
+            "reader result is suppressed, AND the shared reader to go incorrectly GREEN when "
+            "weakened -- proving the join to the live MECHANISM, not to a copy of it."),
         "PUBLICATION_PATHS_worktree_equal_committed": (
-            "colour+target", "every publication path's worktree blob must equal its HEAD blob; "
-                             "red-proofed by M12 and by live dirty-tree runs."),
+            "colour+target", "publication_pairs() -> pubblob()",
+            "every publication path's worktree blob must equal its HEAD blob; red-proofed by "
+            "M12 and by live dirty-tree runs."),
         "RECEIPT_records_the_CURRENT_publication_blobs": (
-            "colour+target", "the committed receipt's three recorded blobs must equal HEAD; "
-                             "red-proofed live at e5a0e695 and green at f5350c09."),
+            "colour+target",
+            "receipt_publication_blob_status() -- THE SAME function M13 calls",
+            "the committed receipt's recorded blobs must equal HEAD; red-proofed live at "
+            "e5a0e695 and green at f5350c09."),
+        "RECEIPT_reader_has_ONE_implementation": (
+            "target", "INLINE -- a source-text count over this file",
+            "R-513 6.5. Structural guard: one definition, two or more call sites, no second "
+            "inline comparator. Declared INLINE because it inspects source, not behaviour."),
         "ATTRIBUTION_CENSUS_covers_every_scored_case": (
-            "target", "self-referential by necessity: it asserts its own coverage."),
+            "target", "INLINE -- set comparison against `results`",
+            "self-referential by necessity: it asserts its own coverage."),
     }
     for name, _m, _r, _g in CASES:
-        census[name] = ("colour+target",
+        census[name] = ("colour+target", "INLINE -- run(mutate) then read ASSERTIONS",
                         "generator mutation: requires the NAMED assertion to redden, a "
                         "non-zero exit, and no collateral contract breach.")
+    # ── ***** R-513 6.5 -- IMPLEMENTATION IDENTITY, GUARDED STRUCTURALLY ────
+    #    Narrow and deliberate: NOT an AST framework. It counts, in this file's
+    #    own source, that the receipt comparison has exactly ONE definition, at
+    #    least TWO call sites, and NO second inline loop reading the recorded
+    #    blob fields. `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER` is only true
+    #    while nobody adds a second reader, and that is what this notices.
+    _src = Path(__file__).resolve().read_text(encoding="utf-8")
+    _defs = _src.count("def receipt_publication_blob_status(")
+    _calls = _src.count("receipt_publication_blob_status(") - _defs
+    _inline = _src.count('.get("%s_blob" % label)')
+    identity_ok = (_defs == 1 and _calls >= 2 and _inline == 1)
+    results.append({
+        "case": "RECEIPT_reader_has_ONE_implementation",
+        "WHAT_IT_ASSERTS": "exactly one definition of the receipt blob comparison, at least "
+                           "two call sites, and exactly one inline read of the recorded blob "
+                           "fields -- the one INSIDE that definition.",
+        "definitions": _defs, "call_sites": _calls, "inline_blob_reads": _inline,
+        "WHY": ("R-513 1/6.5. M13 and the live case were TWO implementations of one claim, so "
+                "weakening the shipped reader would not have failed its own red-proof. "
+                "`A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.` A "
+                "second inline comparator would silently restore that, so it is made RED."),
+        "!!_SCOPE": "a source-text count, not a semantic analysis. It catches a re-introduced "
+                    "inline comparator of the SAME shape; it cannot catch an arbitrarily "
+                    "rewritten one. Stated so nobody reads it as stronger than it is.",
+        "VERDICT": "ONE-IMPLEMENTATION" if identity_ok else "DUPLICATED-OR-MISSING",
+        "OK": identity_ok,
+    })
+    print("[%s] RECEIPT_reader_has_ONE_implementation -> defs=%d calls=%d inline=%d"
+          % ("OK " if identity_ok else "BAD", _defs, _calls, _inline))
+
     scored = {r["case"] for r in results} | {"ATTRIBUTION_CENSUS_covers_every_scored_case"}
     missing, extra = sorted(scored - set(census)), sorted(set(census) - scored)
     census_ok = not missing and not extra
@@ -1136,7 +1285,7 @@ def main():
             "be self-satisfying. TESTED: it is. The generator writes the artifact and would "
             "hash what it just wrote, so the check is true by construction while the COMMITTED "
             "object rots -- which is precisely how the stale artifact shipped, with an HONEST "
-            "receipt pinning it. The check therefore lives HERE, compares the file ON DISK "
+            "receipt pinning it. The check therefore lives HERE, and compares the COMMITTED "
             "against freshly-generated content written elsewhere, and M8 proves it can fail."
         ),
         "ASSERTION_CLASSES_WITHOUT_ONE": [
@@ -1228,13 +1377,23 @@ def main():
         "ALL_CASES_DISCRIMINATE": all_ok,
         # ★★★★★ R-512 §6.4 -- the attribution census, IN the receipt.
         "ATTRIBUTION_CENSUS": {
-            "⚠️_HOW_TO_READ": ("per case: what its OK predicate REQUIRES. `colour` = a red/green "
-                              "flag only · `cause` = the red must be attributable (a digest "
-                              "mismatch, not a digest-free early return) · `target` = the "
-                              "specific thing under test must be what reddened."),
+            "⚠️_HOW_TO_READ": ("per case: what its OK predicate REQUIRES, and WHICH CALL joins the "
+                              "proof to its target. `colour` = a red/green flag only · `cause` "
+                              "= the red must be attributable (a digest mismatch, not a "
+                              "digest-free early return) · `target` = the specific thing under "
+                              "test must be what reddened · `MECHANISM` = the proof breaks when "
+                              "the live implementation is weakened, not merely when a boolean "
+                              "is withheld. The JOIN column answers R-513 3: a guard is a join "
+                              "between a claim and an execution, and `INLINE` is not forbidden "
+                              "-- it is REQUIRED TO BE VISIBLE."),
             "LAW": ("`A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE "
-                    "AUDITED FOR THIS DEFECT AGAIN.` R-512 §6.4."),
-            "cases": {k: {"OK_requires": v[0], "note": v[1]} for k, v in sorted(census.items())},
+                    "AUDITED FOR THIS DEFECT AGAIN.` R-512 §6.4. And R-513 §3: `A GUARD IS A "
+                    "JOIN BETWEEN A CLAIM AND AN EXECUTION, AND EVERY UNEXECUTED JOIN IS A "
+                    "FALSE GREEN WAITING FOR ITS OCCASION.` Four defects in this lane were one "
+                    "family -- an unexecuted join -- and the join column exists so the fifth is "
+                    "visible before an external reader finds it."),
+            "cases": {k: {"OK_requires": v[0], "WHAT_CALL_JOINS_PROOF_TO_TARGET": v[1],
+                          "note": v[2]} for k, v in sorted(census.items())},
         },
         "UNSCORED_HISTORY": HISTORY,
         "cases": results,
