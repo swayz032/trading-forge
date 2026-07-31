@@ -38,34 +38,92 @@ Next required work:
 
 ### Findings
 
-1. The worker-idle watchdog behaved correctly: it reported silence without inventing a diagnosis. The advisor then established that the existing worker process and its ear were alive but had stopped at the accepted AR-524 context limit.
-2. The existing seat is **alive but no longer capable of receiving work**. It must not be re-tasked merely because its process remains present.
-3. A “fresh worker seat” that has not been created is not an assignee. R-503 §9 therefore issued a non-executable authorization and produced a real stall.
-4. This is **not an external blocker** and must not be recorded as one. It is a `READY — NO ACTIVE ASSIGNEE` state awaiting one explicit operator action.
-5. No background agent may be dispatched without explicit operator authorization. No interactive worker may be presumed to exist.
-
-### Required recovery protocol
-
-1. Keep `I7` in `PARTIAL — READY, UNASSIGNED` state.
-2. Preserve the full R-503 §5 completion contract as the authoritative work packet. Do not re-derive it from AR-522.
-3. The operator must perform exactly one of these actions:
-   - create/open a new interactive worker seat; or
-   - explicitly authorize the advisor harness to dispatch the remaining `I7` measurement work as a background agent.
-4. After that action exists, the advisor must identify the actual seat or dispatched agent by durable identifier and issue a new assignment to that existing actor.
-5. The new actor continues `I7`; it does not open `I8`, touch `P0-v5`, alter `c304b098`, or restart the completed reasoning.
-6. The exhausted worker process may be closed after its durable receipts and monitor state are confirmed preserved. Its continued liveness is not progress.
+1. The worker-idle watchdog behaved correctly: it reported silence without inventing a diagnosis.
+2. A future worker seat is not an assignee.
+3. This was `READY — NO ACTIVE ASSIGNEE`, not an external blocker.
+4. No background agent could be presumed or dispatched without authorization.
 
 ### Position
 
-- Watchdog: **SOUND**
-- AR-524 context-limit handoff: **SUSTAINED**
-- R-503 substantive ruling: **SUSTAINED**
 - R-503 §9 future-seat assignment: **VOID / SUPERSEDED**
-- `I7`: **PARTIAL — READY, UNASSIGNED**
+- `I7`: **PARTIAL — READY, UNASSIGNED** at that ruling
 - `I8`: **NOT STARTED**
+- `c304b098`: **NOT-SOUND**
+- Merge / deploy / release: **HOLD**
+
+**Control rule:** `A COMPLETE WORK PACKET WITHOUT A PRESENT ASSIGNEE IS READY WORK, NOT AUTHORIZED WORK.`
+
+---
+
+## External Ruling — 2026-07-31 — AR-526 Publication Gate
+
+**Evidence reviewed remotely:** R-505 at `9d1f29984d85141428f99e7ade8b4cd60944ea47`. AR-526 claims instrument commit `463f588d`, but that commit does not resolve remotely, and public branch `h1-wave4-sealed12-driver` remains exactly at R-505. The claimed generator, completed artifacts, identity maps, source-closure manifest, and RED-proof receipt are therefore unavailable for independent inspection.
+
+### Decision
+
+**AR-526 IS RECEIVED BUT NOT ACCEPTED AS `I7` CLOSURE.** Its reported structure is substantially aligned with R-503 §5 A–H and §3, but a committed-delivery claim cannot be certified from prose when its named commit and artifacts are absent from the public evidence channel.
+
+### What is provisionally credible but unverified
+
+- Two named metrics rather than one naked “yield.”
+- Corpus A binding movement `0` and diagnostic-reason movement `17`.
+- Corpus B binding movement `0` and diagnostic-reason movement `45`.
+- Separate global, `WAIT_SESSION`, and C2-denominator reporting.
+- Identity reconciliation naming the eighteenth recognized row.
+- Separate route partitions and no pooled Corpus A/B rate.
+- Source-closure provenance with zero relevant dirty-path intersection.
+- Twenty-eight executable assertions and four discriminating mutation cases.
+
+These are **worker claims**, not externally verified facts, until the exact evidence resolves remotely.
+
+### Required publication gate
+
+Before `I7` may close, publish through a reachable branch:
+
+1. Full commit SHA for `463f588d` or its superseding commit.
+2. Updated `session_role_resolver_yield.py`.
+3. Final Corpus A and Corpus B result artifact.
+4. Full identity-level reason-transition map.
+5. Source-closure manifest containing every compared path and hash.
+6. Pre-run and post-run status receipts.
+7. `session_role_resolver_yield_REDPROOF.py`.
+8. `session-role-resolver-yield-REDPROOF-2026-07-31.json`.
+9. The assertion ledger naming all 28 checks and their pass/fail state.
+10. Exact reproduction commands.
+
+The public branch must contain those bytes. A report saying “committed” is not a substitute for a remotely resolvable commit.
+
+### Technical review held for the published artifact
+
+The external review will specifically verify:
+
+- whether Corpus B's `C2` denominator is clearly labelled as OFF-control-derived rather than baseline-artifact-derived;
+- whether Corpus A proves identity equality between the baseline-derived and OFF-control-derived C2 populations;
+- whether `C2 = WAIT_SESSION` is actually asserted from identities rather than inferred from equal counts;
+- whether the `18 / 17 / 9` partition lists the named orphan row and all 17 changed identities;
+- whether route buckets are exhaustive and mutually exclusive;
+- whether `sys.modules` plus explicit data inputs truly covers the executed repository closure;
+- whether the generator and RED-proof harness are themselves inside the raw provenance check;
+- whether the four mutations fail only their intended assertion classes without collateral failure;
+- whether the unexercised `wrapping_window_refusal` branch is labelled untested rather than passed;
+- and whether the `ny_am` classification of the overnight-range row is preserved as an ungraded ground-truth concern.
+
+### Authorized next action
+
+- Publish AR-526's evidence.
+- Do **not** begin `I8` before the publication gate and external verification clear `I7`.
+- Do not change engine or extraction code to satisfy this gate.
+- Do not touch `P0-v5` or `c304b098`.
+
+### Position
+
+- AR-526 report: **RECEIVED**
+- AR-526 evidence: **NOT REMOTELY AVAILABLE**
+- `I7`: **DELIVERED BY WORKER, EXTERNALLY UNVERIFIED — NOT CLOSED**
+- `I8`: **DO NOT START**
 - `I11`: **CLOSED — NOT-SOUND**
 - `c304b098`: **NOT-SOUND**
 - `P0-v5`: **NAMED, UNAUTHORIZED**
 - Merge / deploy / release: **HOLD**
 
-**Control rule:** `A COMPLETE WORK PACKET WITHOUT A PRESENT ASSIGNEE IS READY WORK, NOT AUTHORIZED WORK.`
+**Control rule:** `A COMMIT THAT DOES NOT RESOLVE IS A CLAIM ABOUT EVIDENCE, NOT EVIDENCE.`
