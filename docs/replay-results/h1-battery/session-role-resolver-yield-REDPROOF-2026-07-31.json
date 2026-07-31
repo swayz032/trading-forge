@@ -1,5 +1,5 @@
 {
-  "WHAT_THIS_PROVES": "The 36 assertions in session_role_resolver_yield.py were run unmutated and all passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH below has at least one mutation that reddens it. A guard that has never gone red is not an instrument.",
+  "WHAT_THIS_PROVES": "The 37 assertions in session_role_resolver_yield.py were run unmutated and all passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH below has at least one mutation that reddens it. A guard that has never gone red is not an instrument.",
   "\u26a0\ufe0f_WHAT_THIS_DOES_NOT_PROVE": "This is NOT universal coverage. Assertions outside the listed classes have NO demonstrated red path here and must not be read as red-proofed. An earlier version of this receipt claimed 'every assertion class' over a 26-assertion run and that claim was BOTH stale in its count AND wider than its evidence.",
   "ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH": {
     "baseline_identity_join": "M1",
@@ -24,44 +24,45 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "0f88877ec716b788c4c81751322bfbabcdd9feed",
+    "head": "e5a0e695b853e62f14cb2872d18f6c3fd2206a9c",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
-    "generator_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
-    "artifact_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+    "harness_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
+    "generator_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
+    "artifact_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
     "PUBLICATION_PATH_BLOBS": {
       "artifact": {
         "path": "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-        "worktree_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
-        "head_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+        "worktree_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
+        "head_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
         "IDENTICAL": true
       },
       "generator": {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
-        "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+        "worktree_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
+        "head_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
         "IDENTICAL": true
       },
       "harness": {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-        "worktree_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
-        "head_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
+        "worktree_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
+        "head_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
         "IDENTICAL": true
       },
-      "ALL_CLEAN": true,
-      "MEANING_OF_FALSE": "a publication path is DIRTY -- the receipt would be describing something other than what is committed."
+      "\u26a0\ufe0f_NOT_A_GATE_HERE__SCORED_AS_A_CASE": "This block is a RECORD. The GATE is the case named `PUBLICATION_PATHS_worktree_equal_committed`, computed BEFORE `all_ok` and carried into ALL_CASES_DISCRIMINATE and the exit code. Both read the same computed dict, so the record and the gate cannot disagree -- which is why the old `ALL_CLEAN` key is gone rather than merely re-worded.",
+      "MEANING_OF_A_FALSE_PAIR": "a publication path is DIRTY -- the receipt would be describing something other than what is committed, and the run now exits non-zero."
     },
     "PUBLICATION_IDENTITIES": {
       "measurement_source_commit": {
-        "value": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
-        "definition": "HEAD of the campaign tree when the MEASUREMENT ran; taken from the artifact itself, not re-derived here."
+        "value": "8793274424016ea2ff100c672f4d897de437cfe2",
+        "definition": "HEAD of the campaign tree when the MEASUREMENT ran; taken from the COMMITTED artifact (`git show HEAD:<path>`), not from the working file and not re-derived here.",
+        "read_through": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json"
       },
       "artifact_publication_commit": {
-        "value": "0f88877ec716b788c4c81751322bfbabcdd9feed",
+        "value": "8e0cbbf4c312a35edb7aacbc8fd82d2d9c00bb41",
         "definition": "The commit that last published the artifact. Knowable here because the artifact is already committed."
       },
       "receipt_measurement_commit": {
-        "value": "0f88877ec716b788c4c81751322bfbabcdd9feed",
+        "value": "e5a0e695b853e62f14cb2872d18f6c3fd2206a9c",
         "definition": "HEAD when THIS receipt was produced."
       },
       "\u26a0\ufe0f_NOT_SELF_CERTIFIABLE": "This receipt cannot name its OWN publication commit -- that commit does not exist until the receipt is committed. R-510 \u00a76.5 leaves it to the external read or CI, and it is deliberately absent rather than guessed."
@@ -69,7 +70,7 @@
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
-  "ALL_CASES_DISCRIMINATE": true,
+  "ALL_CASES_DISCRIMINATE": false,
   "cases": [
     {
       "case": "CONTROL_unmutated",
@@ -241,7 +242,7 @@
     },
     {
       "case": "M9_committed_artifact_STALE_worktree_FRESH",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_ulxdimte",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_6iubn1fl",
       "PRE_R509_worktree_read": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
         "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
@@ -252,7 +253,7 @@
         "VERDICT": "RED -- catches it",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
         "committed_n_pass": 1,
-        "fresh_n_pass": 36
+        "fresh_n_pass": 37
       },
       "ALL_assertions_this_mutation_reddened": [
         "PUBLICATION_CONSISTENCY"
@@ -280,10 +281,10 @@
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
         "published_path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
-        "fresh_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
-        "published_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
-        "published_n_pass": 36,
-        "fresh_n_pass": 36,
+        "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
+        "published_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
+        "published_n_pass": 37,
+        "fresh_n_pass": 37,
         "published_deployed_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
         "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
       },
@@ -304,15 +305,16 @@
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_ilkhf1l1\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
-        "fresh_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
-        "published_digest": "ea5b4e3facb0f42133a86f2f4c5b0f2d357501e16fcecc965ed990f593305cbb",
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_n_dt066q\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
+        "published_digest": "369cd34939176804fcba1f9b54f16415687ffa4d0f5576c2baddbd65a582d8af",
         "published_n_pass": 33,
-        "fresh_n_pass": 36,
+        "fresh_n_pass": 37,
         "published_deployed_head": "<unavailable: Command 'git rev-parse HEAD' exit 128>",
         "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
       },
-      "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head replaced with the exact error string that shipped -- the REAL AR-529 defect, committed inside the fixture repo.",
+      "WHAT_WAS_PLANTED": "A stale shape MODELLED ON AR-529 and committed inside the fixture repo: the live artifact's 37 assertions truncated to 33 with n_pass=33 and n_fail=0, plus the exact deployed_repo_head error string that shipped.",
+      "\u26a0\ufe0f_IT_IS_NOT_THE_AR_529_OBJECT_ITSELF": "R-511 \u00a72 and \u00a76.4. The previous caption said `n_pass 34->33 ... the REAL AR-529 defect` and was stale at BOTH ends: the source artifact was at 36, not 34, and dropping one check left 35 records beside a count of 33 -- an internally inconsistent object no run could produce. The word EXACT is withdrawn. `A TEST THAT CALLS A 35-ROW OBJECT THE EXACT 33-ROW OBJECT IS OVERCAPTIONED.` The count is now derived from the committed artifact at runtime rather than typed, so it cannot go stale again. WHAT IS UNAFFECTED: the committed-reader detection this case exists to prove -- the mismatch is real, is attributable to the digest, and reads the planted content back.",
       "ALL_assertions_this_mutation_reddened": [
         "PUBLICATION_CONSISTENCY"
       ],
@@ -343,6 +345,105 @@
       ],
       "VERDICT": "DISCRIMINATES",
       "OK": true
+    },
+    {
+      "case": "M12_artifact_worktree_DIRTY_commit_CURRENT",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_98iy0jmx",
+      "WHAT_WAS_MUTATED": "ONE key added to the artifact's WORKING FILE only. Nothing was committed after the fixture's initial commit, so HEAD still holds the real, current artifact.",
+      "BEFORE_the_edit__all_pairs_identical": true,
+      "artifact_pair_went_RED": true,
+      "generator_and_harness_pairs_STAYED_GREEN": true,
+      "publication_consistency_STAYED_GREEN": true,
+      "committed_read_through": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+      "CONFOUND_WATCH__fresh_n_pass": 37,
+      "CONFOUND_WATCH__published_n_pass": 37,
+      "CONFOUND_WATCH__IF_THESE_DIFFER": "the real tree was DIRTY when this ran, this sub-assertion is UNREADABLE, and the case's DOES-NOT-DISCRIMINATE verdict is about the tree, not the mutation. The scored publication-pair case above exits 1 in that state by design.",
+      "WHY_IT_REDDENED": "`git hash-object` of the working file no longer equals `git rev-parse HEAD:<path>`. It reddened for DIRTINESS, and publication_consistency stayed green for CURRENTNESS -- the two assertions discriminated in opposite directions on the same mutation, which is the whole point of the case.",
+      "WHY_IT_MATTERS": "R-511 \u00a76.2 -- `THE RECEIPT MUST REFUSE A DIRTY DESK EVEN WHEN THE COMMITTED OBJECT IS SOUND.` Before this ruling the pair booleans were computed after the verdict, so this exact state exited 0.",
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M13_receipt_uncovered",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_byjfr96q",
+      "\u26a0\ufe0f_WHAT_OK_MEANS_HERE": "OK=True means THE EXPERIMENT WAS VALID AND READABLE -- not that the receipt is covered. This case is DIAGNOSTIC: its finding is RECEIPT_IS_COVERED_BY below, and an empty list there is a real defect being reported, not a passing test.",
+      "PRE_REGISTERED_IN": "AR-534 \u00a72, written before this code existed.",
+      "PREDICTION_ON_RECORD": "NOTHING will redden -- the receipt has zero executable consumers (filename census: generator 0, harness 1 = its own write).",
+      "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was committed, so the receipt now describes a harness that no longer exists, while every path is clean.",
+      "receipt_records_harness_blob": "5d7aa757149f75cedb0f5f47437f8b01d5c964e1",
+      "harness_blob_at_HEAD_now": "d0f6298b9f952a261c5b2fbc815b428436c09dcd",
+      "RECEIPT_IS_STALE_IN_FACT": true,
+      "VOID_GUARD__harness_pair_green_at_verdict": true,
+      "VOID_GUARD__generation_not_confounded": true,
+      "CONFOUND_WATCH__fresh_n_pass": 37,
+      "CONFOUND_WATCH__published_n_pass": 37,
+      "POSITIVE_CONTROL__dirty_harness_does_redden": true,
+      "RECEIPT_IS_COVERED_BY": [
+        "RECEIPT_records_the_CURRENT_publication_blobs"
+      ],
+      "\u26a0\ufe0f_FINDING_BEFORE_THE_REMEDY__PRESERVED": "At commit 8e0cbbf4, run from a clean tree with both void guards clear and the positive control firing, this list was EMPTY: the receipt was stale in fact and NOTHING reddened. That is the defect R-511 \u00a76.8 authorized the remedy for. It is recorded here because the remedy now makes this case go green, and a defect that leaves no trace once fixed is a defect the next reader will re-introduce.",
+      "FINDING": "ALREADY-COVERED -- reddened by: ['RECEIPT_records_the_CURRENT_publication_blobs']",
+      "VERDICT": "EXPERIMENT-VALID",
+      "OK": true
+    },
+    {
+      "case": "PUBLICATION_PATHS_worktree_equal_committed",
+      "MEMBERSHIP_SET": [
+        "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+        "docs/replay-results/h1-battery/session_role_resolver_yield.py",
+        "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py"
+      ],
+      "pairs": {
+        "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json": {
+          "path": "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+          "worktree_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
+          "head_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
+          "IDENTICAL": true
+        },
+        "docs/replay-results/h1-battery/session_role_resolver_yield.py": {
+          "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
+          "worktree_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
+          "head_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
+          "IDENTICAL": true
+        },
+        "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py": {
+          "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
+          "worktree_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
+          "head_blob": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
+          "IDENTICAL": true
+        }
+      },
+      "WHAT_IT_ASSERTS": "Every publication path's WORKING FILE is byte-identical to its committed blob at HEAD, so this receipt describes what is actually published rather than an uncommitted desk state.",
+      "WHY_IT_IS_A_CASE_AND_NOT_A_NOTE": "R-511 \u00a71. This was computed AFTER `all_ok` and scored nowhere -- it could not reach the verdict or the exit code. `A BOOLEAN WRITTEN INTO A RECEIPT AFTER ALL_OK IS DECIDED IS A NOTE, NOT A GATE.`",
+      "\u26a0\ufe0f_WHAT_IT_DOES_NOT_ASSERT": "That the COMMITTED artifact is CURRENT -- that is publication_consistency's job, and M12 proves the two are different questions: a committed object can be sound while the desk is dirty. `COMMITTED-CONTENT CURRENTNESS AND WORKTREE CLEANLINESS ARE TWO DIFFERENT ASSERTIONS.`",
+      "VERDICT": "CLEAN",
+      "OK": true
+    },
+    {
+      "case": "RECEIPT_records_the_CURRENT_publication_blobs",
+      "WHAT_IT_ASSERTS": "The COMMITTED receipt describes the harness, generator and artifact that are at HEAD right now -- so it is a proof about what is published, not a souvenir of a tree that no longer exists.",
+      "WHY_IT_EXISTS": "R-511 \u00a76.8 + M13. The receipt had ZERO executable consumers: its filename appeared 0 times in the generator and once in the harness, and that once was its own write. M13 committed a harness change on top of a committed receipt, left every assertion green, and NOTHING reddened. This is the reader that closes it.",
+      "\u26a0\ufe0f_MEANING_OF_RED": "The committed receipt was produced by code that has since changed. Re-run the harness and commit the regenerated receipt -- do NOT reason from the old one. This is EXPECTED and self-clearing in the window between committing code and committing the receipt that describes it.",
+      "\u26a0\ufe0f_WHY_THE_RECEIPT_IS_NOT_IN_PUBLICATION_PATH_SET": "MEASURED, not argued: the receipt records PROVENANCE.head and receipt_measurement_commit, both = HEAD at run time. Committing it advances HEAD, so the next run necessarily writes a different file and a worktree==HEAD gate on it could never go green. `A GATE THAT CAN NEVER BE GREEN TRAINS EVERY READER TO IGNORE IT` -- R-511 \u00a74's own reason for refusing the hosted CI design.",
+      "detail": {
+        "harness": {
+          "recorded_in_committed_receipt": "693968f3a3647122011f293c62b2bc04ef837c43",
+          "at_HEAD_now": "a821126df4d37854e0cc2ef1506cf14bbec9697d",
+          "MATCHES": false
+        },
+        "generator": {
+          "recorded_in_committed_receipt": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+          "at_HEAD_now": "85acccb4486c9f955e8690f446dc3e750f67bb40",
+          "MATCHES": false
+        },
+        "artifact": {
+          "recorded_in_committed_receipt": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+          "at_HEAD_now": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
+          "MATCHES": false
+        }
+      },
+      "VERDICT": "STALE -- the committed receipt describes older code",
+      "OK": false
     }
   ]
 }
