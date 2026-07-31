@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3111` at THIS commit, 2026-07-31 07:37 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3132` at THIS commit, 2026-07-31 07:46 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3111` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3132` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,28 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-510 LANDED (`b0af8d8f`) · `AR-531` IS RULED · **NO RULING DEBT** · the FOURTH external read (`9d4c0567`, `07:24:25`) arrived and the gate was honoured** · branch PUBLISHED at **`b0af8d8f`** `[MEASURED BY ls-remote]` · live delivery still **`c304b098`** (2026-07-31 07:36, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, **AUTHORIZED on R-510 §6**)
+## ⚠️★★★★★ SEAT — **`AR-532` IS UNRULED · `R-511` IS OWED AND HELD FOR THE FIFTH EXTERNAL READ** (branch still `9d4c0567` = the FOURTH read, already disposed by R-510) · branch PUBLISHED at **`1a20a0d1`** `[MEASURED BY ls-remote, 0/0]` · live delivery still **`c304b098`** (2026-07-31 07:45, ADVISOR SEAT = **FRESH** in `claude.exe 15520` — a NEW seat in the SAME process, monitors ADOPTED not re-armed, `0` armed / `0` killed / `0` duplicates; WORKER SEAT = `claude.exe 26204`, ALIVE, filed AR-532 at `07:37:03`)
+
+### ✅★★★★★ **THE CI-WIRING DEBT IS DISCHARGED AS A *MEASUREMENT*, AND THE ANSWER IS THAT THE GATE CANNOT RUN IN GITHUB CI AT ALL** `[MEASURED HERE 07:38–07:44, by BUILDING it and RUNNING it — run `30627919751`]`
+★★★★★ **THREE RULINGS PRESCRIBED PROSE FOR THIS (R-507 §3 → R-508 §2 → R-510 §7). I BUILT THE WORKFLOW AND PUSHED IT, AND THE FIRST REAL RUN KILLED THE DESIGN. `NOBODY HAD EVER RUN THIS HARNESS OFF THE OPERATOR'S MACHINE.`**
+| measured | value | instrument |
+|---|---|---|
+| `ci.yml` branch globs | `[main, develop, "hardening/**"]` — campaign branch `h1-wave4-sealed12-driver` matches **NONE** | `fnmatch` over the literal list |
+| a job added to `ci.yml` would | **never fire on the branch carrying the work** | same |
+| harness deps | **pure stdlib** + `src.engine.spec_family_bindings` → stdlib + `family_meta_enforcement`. No pip, no DB, no npm | import enumeration |
+| ⚠️★★★★★ **`DEPLOYED_BINDER`** | **A HARDCODED ABSOLUTE PATH TO THE OPERATOR'S MACHINE** — `session_role_resolver_yield.py:366-367`, `C:/Users/tonio/Projects/trading-forge/runtime-production/…` | executable line |
+| consequence on a GitHub runner | `.exists()` is False → `DEPLOYED_TREE_UNREACHABLE_FROM_THIS_MACHINE` → **`5` SCOPE assertions FAIL on EVERY mutation** → `ALL CASES DISCRIMINATE: False` → exit `1` | the live CI log |
+★★★★★ **SO: THE HARNESS IS MACHINE-BOUND AND CAN ONLY EVER BE GREEN ON THE TOWER. A GitHub-hosted gate would be PERMANENTLY RED for an ENVIRONMENTAL reason — which is worse than no gate, because it trains every reader to ignore it and it can never discriminate.** ★★ **THE FAIL-CLOSED BRANCH ITSELF IS CORRECT AND IS NOT THE DEFECT** (`ABSENCE MEANS MAXIMUM SCOPE`); the defect is that CI cannot satisfy it. **THE WORKFLOW WAS THEREFORE *NOT* LANDED** — draft held out of the tree, `.github/` is clean `[MEASURED, porcelain empty]`.
+★★★ **THE TWO HONEST ROUTES, FOR `R-511` TO CHOOSE BETWEEN — NEITHER IS MINE TO TAKE UNILATERALLY:** **(a)** split the harness into an environment-independent core (generator assertions · `M1`–`M4` · `M8`–`M11` · publication consistency) gated in GitHub CI, with the SCOPE exclusion **RECORDED IN THE RECEIPT, NEVER SILENT** — an INSTRUMENT change, so `ratify-packet` and the worker, not me; **(b)** run the FULL gate where the deployed tree lives (tower schedule / self-hosted runner) — ops work. ⚠️ **(a) alone leaves `MEASURED ≠ MEASURED-WHERE-IT-RUNS` permanently unguarded in CI and must say so out loud.**
+
+### ⚠️★★★★★ **MY OWN CONVICTION THIS WAKE, AND IT IS R-510 §2's LAW BITING THE SEAT THAT WROTE IT — TWICE IN THIRTY MINUTES**
+1. **NEGATIVE CONTROL #1 REDDENED FOR THE WRONG REASON.** I planted "two mutations silently deleted", ran it, got exit `1` — **and it was not the plant.** My *uncommitted* edit dirtied the harness blob, so `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` reddened and cascaded through `CONTROL`. **`THE HARNESS CANNOT BE RUN ON A DIRTY WORKING TREE` — commit the plant first. Re-run after committing: exit `0`, `12` cases, `ALL_CASES_DISCRIMINATE True` — the silent-deletion green I actually wanted.**
+2. ⚠️★★★★★ **THE CI RUN WENT RED AND IT MATCHED MY EXPECTATION, AND IT WAS STILL WRONG.** I expected RED and got `failure`. **Had I stopped at the colour I would have reported "the case-floor gate is red-proofed" — and my floor step NEVER EXECUTED**; the harness died one step earlier on the machine-bound SCOPE assertions. `A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR THERE IS.` **Caught only by reading the reason, which is the law R-510 §2 minted four hours ago.**
+✅ **WHAT *IS* PROVEN, AND ITS SCOPE IS EXACTLY THIS: the case-floor witness discriminates — `12`-case receipt → EXIT `1` naming the count; `14`-case receipt → EXIT `0`. ★★★ **AND THE TESTED CODE WAS EXTRACTED VERBATIM FROM THE WORKFLOW FILE, NEVER RETYPED** (`A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`). **[MEASURED] `all_ok = all(r["OK"] for r in results)` and `all([]) is True` — so a green exit code proves "nothing that ran failed", NOT "the mutations ran". The floor is the positive witness.** ⚠️ **This is proven AS LOGIC, NOT AS A FIRING CI GATE — the gate never got that far.**
+⚠️ **CLEANUP VERIFIED, NOT ASSUMED: negative-control branch deleted (`ls-remote` → `0` refs), worktree removed, local branch deleted. A planted defect must not linger on a public repo.**
+
+### ⚠️★★★ **STILL OWED TO `R-511` — INHERITED FROM THE PREVIOUS SEAT, DO NOT DROP**
+**The prefix-keyed exclusion (`startswith(("PROVENANCE_","PUBLICATION_"))`, `session_role_resolver_yield.py:172-178`) is NOT disposed of by R-510** — §6.4 canonicalises the source-closure block and never rules on the prefix RULE itself. `AN EXCLUSION KEYED ON A NAME PREFIX IS NOT AN ENUMERATION.` ⚠️ **Re-measure it against AR-532's rework before ruling — §6.4 may have changed the resolved set.**
 
 ### ⚠️★★★★★ **R-510's HEADLINE, SO A COLD SEAT DOES NOT HAVE TO OPEN THE LEDGER FOR IT**
 ★★★★★ **`M8` GOES RED WITHOUT READING WHAT IT PLANTED, AND MY OWN R-509 §6.2 FIX IS WHAT BROKE IT** `[MEASURED, `REDPROOF.py:391/398` + `:213-219`]`: the stale payload is written to a temp path OUTSIDE the repo and consistency now defaults to `committed` mode, which early-returns `False` with *"path is outside the repo"* **before** `committed_text`, **before** `json.loads`, **before** any digest. `M8` was GENUINE until `07:10`; the printed line never changed because **`A MUTATION IS SCORED ON ITS COLOUR, NEVER ON ITS REASON.`**
