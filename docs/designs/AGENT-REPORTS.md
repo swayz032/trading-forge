@@ -4,6 +4,31 @@
 
 ---
 
+## AR-547 · 2026-07-31 · **START-RECEIPT — R-520 §6 ACCEPTED. `P1` OBSERVED BASELINE + `P2` TOTAL TRUTH MEMBERSHIP (`210` CELLS). TWO ARTIFACTS, NO CODE IN THE REPO.**
+
+**RULING ID:** R-520 §6 · **TASK ID:** AR-547 · **PRIOR:** AR-546 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** the `P1` half frozen — `12` fixture · `30` row identities · `140` present expectations · digest — **~30–45 min from `15:5x`.**
+
+### ★★★ §1 — RECORDED BASELINE FOR THE TREE-DELTA CHECK (R-518 §3: delta, never absolute-clean)
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY WRITE]
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+```
+**Anything beyond this set at delivery is MINE and must be exactly: the two named artifacts + `AGENT-REPORTS.md`.**
+
+### ⚠️★★★★★ §2 — ONE CONTRACT QUESTION I AM ANSWERING BEFORE I START, NOT AT DELIVERY
+**R-520 §6 forbids implementation code and requires EXACTLY TWO ARTIFACTS. A `210`-cell ledger must NOT be hand-typed** — `A HAND-TYPED ENUMERATION IS A HYPOTHESIS ABOUT WHAT EXISTS` (my own conviction, AR-540 §0), and `A REPORT TABLE IS AN INSTRUMENT'S OUTPUT — FIX THE EMITTER, NEVER THE TABLE`.
+✅ **RESOLUTION: the ledger is GENERATED MECHANICALLY by a script that runs from my SCRATCHPAD, outside the repo, and whose FULL SOURCE is embedded in the packet.** So: no third repo artifact · no hand-typed cells · reproducible by anyone from the packet alone. **If the desk wanted the generator committed instead, that is a one-line correction and I will take it.**
+
+### ★★★★★ §3 — THE DISCIPLINE I EXPECT TO BE THE HARD PART, STATED BEFORE I MEET IT
+**`70` cells are absent and each must be classified. The STOP CONDITION says: if classifying requires INFERRING intent from the sparse `ORACLE.json`, record `UNADJUDICATED`.**
+⚠️★★★★★ **I EXPECT `NOT-APPLICABLE` TO BE RARE OR EMPTY, AND I AM SAYING SO NOW SO A LOW COUNT LATER CANNOT LOOK LIKE LAZINESS — AND SO A HIGH COUNT CANNOT LOOK LIKE DILIGENCE.** `NOT-APPLICABLE` is a POSITIVE claim about intent and needs the AUTHORITY to say so; **absence in the oracle is exactly what cannot supply it.** ★★★ **`A 210-CELL MATRIX WITH GUESSED CELLS IS STRICTLY WORSE THAN THE SPARSE OBJECT`, because it converts an honest absence into a false assertion — and everything downstream will trust this ledger.**
+⚠️ **I will also record, per cell, the BASIS of its classification (declared / undeclared / authority-cited) WITHOUT widening the three-value enum the ruling fixed. If that is unwelcome, it is one field to drop.**
+**I re-derive `12 / 30 / 140` and the per-axis `29/29/26/26/22/4/4` from the data myself. R-520 §2 measured them; `A NUMBER I DID NOT MEASURE IS A NUMBER I AM RELAYING`.**
+
+---
+
 ## AR-546 · 2026-07-31 · ✅★★★★★ **R-519 §5 DELIVERED — THREE EDITS, FAN-IN `3 / 3`, DOCUMENT ONLY. `D-1` IS CLOSED AT THE ROW SURFACE BY §4.2b, AND THE NON-CIRCULARITY CLAUSE IS IN IT — REQUIREDNESS COMES FROM THE FROZEN SCHEMA, NEVER FROM THE ORACLE UNDER TEST.** ⚠️★★★ **AND I DECLINED A FOURTH EDIT I WOULD HAVE LIKED TO MAKE: THE GRADE RESOLVED MY §1 `[HYPOTHESIS]` AND CORRECTING IT IS OUTSIDE "EXACTLY THREE". REPORTED, NOT TAKEN.**
 
 **RULING ID:** R-519 §5 · **TASK ID:** AR-546 · **PRIOR:** AR-545 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
