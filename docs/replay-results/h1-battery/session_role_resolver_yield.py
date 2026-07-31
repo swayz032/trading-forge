@@ -122,7 +122,15 @@ def git(*args) -> str:
 
 VOLATILE_EXCLUSIONS = [
     "TREE",
-    "PROVENANCE_SOURCE_CLOSURE",
+    # ⚠️ R-510 §6.4 REPLACES R-509 §6.4(a)'s blanket exclusion of the whole
+    #    source-closure block. `A FULL-ARTIFACT DIGEST CANNOT EXCLUDE THE ENTIRE
+    #    PROOF OF WHICH SOURCES RAN.` Only these individually-justified
+    #    run-volatile VALUES are stripped; every path identity, blob pair,
+    #    divergence list and intersection identity stays INSIDE the digest.
+    "PROVENANCE_SOURCE_CLOSURE.head",
+    "PROVENANCE_SOURCE_CLOSURE.tree_dirty_path_count",
+    "PROVENANCE_SOURCE_CLOSURE.PRE_RUN_STATUS.dirty_path_count",
+    "PROVENANCE_SOURCE_CLOSURE.POST_RUN_STATUS.dirty_path_count",
     "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.generated_at_utc",
     "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.campaign_commit",
     "ASSERTIONS.checks[name starts with 'PROVENANCE_' or 'PUBLICATION_'].detail",
@@ -163,7 +171,18 @@ def _strip_volatile(art: dict) -> dict:
     EVERYTHING IT NEVER MENTIONS.`"""
     doc = json.loads(json.dumps(art, default=str))
     doc.pop("TREE", None)
-    doc.pop("PROVENANCE_SOURCE_CLOSURE", None)
+    # ★ R-510 §6.4 -- CANONICALISE the closure, never delete it. The path
+    #   identities, blob pairs, divergence lists and intersection identities
+    #   are the PROOF OF WHICH SOURCES RAN and stay inside the digest; only
+    #   the measurement HEAD (which necessarily advances) and the unrelated
+    #   whole-tree dirty totals come out.
+    prov = doc.get("PROVENANCE_SOURCE_CLOSURE")
+    if isinstance(prov, dict):
+        prov.pop("head", None)
+        prov.pop("tree_dirty_path_count", None)
+        for k in ("PRE_RUN_STATUS", "POST_RUN_STATUS"):
+            if isinstance(prov.get(k), dict):
+                prov[k].pop("dirty_path_count", None)
     snap = doc.get("DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE", {}) \
               .get("SNAPSHOT_RECORD")
     if isinstance(snap, dict):
@@ -1198,6 +1217,29 @@ def main():
                 "AFTER the commit and reads the COMMITTED blob. The generator and harness "
                 "pairs ARE asserted below -- they are inputs to this run, not its output."
             ),
+        },
+        # ── R-510 §6.5 -- the three publication identities, BY NAME ──────────
+        "PUBLICATION_IDENTITIES": {
+            "measurement_source_commit": {
+                "value": head,
+                "definition": "HEAD of the campaign tree at the moment this measurement RAN. "
+                              "The sources that produced these numbers are this commit's."},
+            "artifact_publication_commit": {
+                "value": None,
+                "definition": "The commit in which THIS artifact is published. It cannot be "
+                              "known while the artifact is being written -- the commit does "
+                              "not exist yet.",
+                "STATUS": "[NOT SELF-CERTIFIABLE FROM INSIDE THE ARTIFACT] -- R-510 §6.5. "
+                          "The harness reports it post-commit via `git log -1 -- <artifact>`; "
+                          "an external read or CI certifies it."},
+            "receipt_measurement_commit": {
+                "value": None,
+                "definition": "HEAD when the RED-PROOF receipt was produced. Recorded in the "
+                              "receipt, not here -- this object cannot observe a later run."},
+            "WHY_THREE": (
+                "They are three DIFFERENT commits and conflating any two is how a stale "
+                "publication hides: the sources can be current while the published object "
+                "is old, and the receipt can be newer than both."),
         },
         "DIGEST_COVERAGE": {
             "digest_name": "artifact_content_digest",
