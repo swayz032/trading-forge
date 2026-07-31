@@ -4,6 +4,43 @@
 
 ---
 
+## AR-520 · 2026-07-31 · **`I21` CLOSED — REGISTER REFRESHED BY RE-MEASUREMENT, NOT RE-DATING. R-500 ADOPTED.** ⚠️★★★★★ **AND THE REFRESH FOUND A STATE THE REGISTER COULD NOT EXPRESS: THE DEPLOYED `spec_family_bindings.py` IS **PRESENT AT `40,583` B AGAINST THE CAMPAIGN'S `160,049` B** — ROWS 1–3 WERE RECORDING *"ABSENT — 0 refs"* FOR A **3.9x-DIVERGENT FILE THAT EXISTS.**
+
+**RULING ID:** R-499 §6 `I21` (ordering per **R-500 §3**) · **TASK ID:** AR-520 · **PRIOR:** AR-519. **FAN-IN: `1 / 4`.**
+
+### §1 — R-500 ADOPTED BEFORE ANYTHING ELSE
+**`I11` is a DISPATCH, not a lane; it fires the moment the word arrives, whatever is mid-flight, and is NOT queued fourth.** ADOPTED — my AR-519 §2 ordering was wrong for exactly the reason given: **I sequenced a zero-cost dispatch by cost among things that share a resource, and it shares none.** ★★★ **The ear caught R-500 mid-lane and I stopped to read it rather than finishing `I21` first — `RE-ASSERT AGAINST THE LANDED ARTIFACT`. Per R-500 §6 I am not re-asking for `I11`'s word this turn.**
+
+### ⚠️★★★★★ §2 — THE FINDING: `PRESENT-BUT-DIVERGENT` IS NOT `ABSENT`
+**[MEASURED HERE, deployed tree `runtime-production` @ `9af37b8f`]:**
+| file | deployed | campaign | state |
+|---|---|---|---|
+| `src/engine/spec_family_bindings.py` | **`40,583` B** | **`160,049` B** | ⚠️ **PRESENT, 3.9x DIVERGENT** |
+| `src/engine/backtester.py` | **`457,501` B** | `438,809` B | ⚠️ **PRESENT, diverges the OTHER WAY** |
+| `src/server/lib/graph-to-engine.ts` | — | (extraction-100) | ★ **GENUINELY ABSENT** |
+★★★★★ **ROWS 1–3 SAID *"Production config: ABSENT — 0 non-test refs in the deployed engine"*. TRUE AND MISLEADING: the zero is an absence INSIDE A FILE THAT EXISTS AS A MUCH SMALLER VARIANT. `A PORT INTO A 40KB TARGET FROM A 160KB SOURCE IS NOT A FLAG FLIP`, and the register read as though the only gap were configuration.** ★★★ **Only row 5 is a true file-level absence — so the register's five rows were never one class.**
+
+### §3 — WHAT I RE-MEASURED, AND THE CONTROL THAT MAKES THE ZEROS ADMISSIBLE
+**All five code locations re-verified AT THE EXECUTABLE LINE, none by comment match:** `:145` · `:280` (+`:245` confirming rows 1–2 are gated behind BOTH flags, so they ship together) · `:2312` gate and `:2085` `def classify_session_role` · `backtester.py:6702` · `graph-to-engine.ts:75`, consumed `:93`/`:100`. **Every cited line number was still exact — [MEASURED], not assumed.**
+★★★ **POSITIVE CONTROL FOR EVERY ABSENCE, identical pipeline, deployed tree: `backtester` → `364` files, `import` → `4,140`.** `AN ABSENCE CLAIM OWES A POSITIVE CONTROL` — the grep provably reads that tree.
+⚠️★★★ **ONE COMMENT-ONLY HIT, RECORDED SO A FUTURE SWEEP CANNOT MISREAD IT: `TF_SEMANTIC_ROLE_CLASSIFIER` now returns `1` file in the deployed tree — `scripts/corpus-v3-shadow-gate3.py:11,14`, BOTH INSIDE A DOCSTRING.** Deployed `src/` still `0`, runtime `.env` still `0`. **The capability remains unshipped; the row now says so explicitly rather than leaving a future `1` to be read as deployment.**
+
+### ⚠️★★★ §4 — AN INSTRUMENT AUDIT I OWE, BECAUSE I NEARLY PUBLISHED THE NEIGHBOURING OBJECT
+**One measurement call ran with NO `cd`, and this shell's working directory PERSISTS between calls. I could not tell from the output which tree had answered.** ★★★★★ **I STOPPED AND RESOLVED IT BEFORE RECORDING ANYTHING: `pwd` = the `extraction-100` worktree (correct for row 5), and the primary checkout has NO `src/server/lib/graph-to-engine.ts` at all.** **The reading was right; my confidence in it was not, until I checked.** `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — and an unlabelled tree is the campaign's most-convicted shape wearing a shell prompt.
+
+### §5 — ROW-LEVEL CHANGES · WHAT I DID *NOT* DO
+- **Row 3 — ASSIGNEE CORRECTED.** It read *"assignee: ADVISOR SEAT, open"*; **R-499 §6 assigns the yield measurement to the WORKER as lane `I7`.** The row's own prerequisite (*"RUN IT FIRST"*) **IS** `I7`. Yield stays **[NOT MEASURED]** until it closes.
+- **Row 5 — TEST COVERAGE ENUMERATED**, was `[UNENUMERATED]`: `2` files, `gate-strength.test.ts` and `gate-strength-iteration.test.ts`. ⚠️ **I did NOT convert that file list into a coverage claim — whether they exercise the FLAG-OFF path at `:93` is [NOT MEASURED]. `ENUMERATING FILES IS NOT READING THEIR ASSERTIONS.`**
+- **THREE STANDING RULES ADDED (5–7) so the CLASS is harder to reintroduce, not just this instance:** three-state production absence · every `0` carries its positive control · **`RE-MEASURE, DO NOT RE-DATE`** — a refresh carrying an old value under a new date launders `[MEASURED]` onto a fact nobody checked.
+- ★★★ **NOT DONE, DELIBERATELY: no new stranded-capability sweep.** The `[UNENUMERATED]` non-flag-gated class is untouched and still open — **that is a different job and claiming it would make this partial read as complete.** No row RETIRED: row 4's WIRE-1 disposition is still `[RELAYED]` and retiring it on relayed evidence is exactly what rule 3 forbids.
+
+### §6 — ARTIFACT · POSITION · NEXT
+**`STRANDED-CAPABILITY-REGISTER.md`: `5,985` → `11,382` B · `42` insertions, `6` deletions (each deletion is a line REPLACED by a longer one — no row, grade or caveat was dropped).**
+**sha256 `7b440add…719e` → `efbd570d3977946182cb338ddddeba2be30153a6004b8aa95efb7d3e91aa55d4`.** ★★ **A3's edge is spent: `I21` has now written, so the pinned hash is superseded by this one. Any later seat citing `7b440add…` is citing a stale register.**
+**NEXT: `I7`** (measure `C2` session-role resolver yield — a number with its tree, population and flag state). Then `I8`. **`I11` on the word, ahead of both, per R-500 §3.** **`c304b098` untouched · MERGE / DEPLOY / RELEASE = HOLD · nothing in flight · no sub-agent owed.**
+
+---
+
 ## AR-519 · 2026-07-31 · **BATCH 1 START-RECEIPT — R-499 §6 ACCEPTED, FOUR LANES ADOPTED TO THIS SEAT. A3's REGISTER HASH RECOMPUTED HERE AND IT MATCHES, SO `I21` IS UNBLOCKED.** ⚠️★★★ **ONE EXECUTION-SHAPE DEVIATION DECLARED BEFORE STARTING, NOT AT DELIVERY: THIS HARNESS WILL NOT LAUNCH SUBAGENTS UNASKED, SO §5c's PARALLEL LANES RUN SERIALLY IN THIS SEAT.**
 
 **RULING ID:** R-499 §6 · **TASK ID:** Batch 1 (`I11` · `I7` · `I21` · `I8`) · **PRIOR:** AR-518. **`worker-execution` RE-INVOKED THIS TURN**, per its §0.-1 — not remembered from earlier in this session. **R-499 READ IN FULL, both halves, not grepped.**
