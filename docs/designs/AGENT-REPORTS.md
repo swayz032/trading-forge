@@ -4,6 +4,61 @@
 
 ---
 
+## AR-543 · 2026-07-31 · ✅★★★★★ **R-516 §8 DELIVERED — THE `P0` REDESIGN PACKET EXISTS, ALL SIX SECTIONS, `FIVE` FINDINGS + SUB-CLAIM `6`. NO IMPLEMENTATION CODE.** ★★★★★ **AND THE PACKET'S CENTRAL RESULT IS A **PARTIAL REFUTATION OF THE DESK'S OWN `§7` HYPOTHESIS**: NO RULE SCOPED TO `OracleRow` CAN CLOSE `F-3`, BECAUSE `reasons_must_differ_from` LIVES AT **FIXTURE** LEVEL AND `F-3` DELETES A **KNOWN** KEY WHILE CLOSED-KEY REJECTS **UNKNOWN** ONES.** ⚠️★★★ **I ALSO RED-PROOFED MY OWN `ABORT` CONDITION BY RUNNING IT AND FOUND IT ALREADY RED — FIXED BEFORE PUBLICATION.**
+
+**RULING ID:** R-516 §8 (as amended by R-517 §5) · **TASK ID:** AR-543 · **PRIOR:** AR-542 · **SEAT:** `claude.exe 26204`.
+**ARTIFACT:** `docs/designs/P0-REDESIGN-PACKET-2026-07-31.md` · **FAN-IN `6 / 6`** on the packet's mandatory contents.
+**R-517 read in full before this delivery** — `TASK 0` **CLOSED, no action owed**; §5's amendment (`state the prediction · NAME the executable test · mark UNPROVEN`) is what the packet already does, at §2 and §6.
+
+### ✅ §1 — ACCEPTANCE COMMANDS, RUN VERBATIM, OUTPUT PASTED
+```
+$ grep -c "^### F-" docs/designs/P0-REDESIGN-PACKET-2026-07-31.md
+5                                                    # expect >= 5   ✅
+$ grep -n "F-1\|F-2\|F-3\|F-4\|F-5\|sub-claim 6" … | wc -l
+20                                                                   ✅
+$ grep -n "ABORT" …
+129 · 131 · 132 · 133 · 134 · 135                    # six lines      ✅
+$ git status --porcelain -- docs/designs scripts ci src
+ M src/engine/tests/test_synthetic_market_simulator.py     <- PRE-EXISTING, NOT MINE
+?? docs/designs/P0-REDESIGN-PACKET-2026-07-31.md           <- the deliverable
+?? …24 other pre-existing untracked docs/designs files (dated 07-19 → 07-22)
+```
+⚠️★★★★★ **THE FOURTH ACCEPTANCE COMMAND CANNOT PASS AS WRITTEN AND I AM NOT SUBSTITUTING A KINDER ONE SILENTLY.** `R-516 §8` expects *"ONLY the packet + `AGENT-REPORTS.md`"*. **[MEASURED HERE] this shared tree carries `8` modified tracked files and ~`60` untracked paths from OTHER lanes, all pre-dating this seat** — `AR-541 §4a` measured the same set and their mtimes. ✅ **THE SUBSTANTIVE CONDITION IS MET: the only path in that output attributable to me is the packet.** ★★★ **AND I STATE THE PATHSPEC, PER THE LAW I MINTED ONE REPORT AGO — `AN ATTESTATION OF READ-ONLYNESS IS A MEASUREMENT, AND A MEASUREMENT WITHOUT ITS SCOPE PROVES NOTHING.`**
+
+### ⚠️★★★★★ §2 — I RAN MY OWN `ABORT` CONDITION AND IT WAS ALREADY RED. FIXED BEFORE PUBLICATION.
+**I first wrote `ABORT` item 4 as *"any change outside the two named files"*. Running it returned the pre-existing ` M src/engine/tests/test_synthetic_market_simulator.py`** — so **the guard fires before the implementation begins.**
+★★★★★ **`A GUARD THAT IS ALREADY RED CANNOT DISCRIMINATE` — it would have read as a stop order on its first run, and the implementing seat would have had to decide whether to ignore its own ABORT, which is how a guard becomes a formality.** ✅ **Rewritten as a DELTA against a baseline the implementing seat records in its start-receipt, with the measured pre-existing entry named inline so nobody re-derives it.** ★★ **Caught only because I executed the condition I authored instead of reading it back.**
+
+### ★★★★★ §3 — THE PACKET'S SUBSTANTIVE RESULT, AND IT PARTLY REFUTES `R-516 §7`
+**`R-516 §7` labelled `[HYPOTHESIS]`: *"closed-key + type-check on `OracleRow` closes `F-2` AND `F-3` together."*** **[MEASURED HERE, both sites read in the shipped blob `c304b098`]:**
+```
+F-2 typo   reason_names -> reason_name        UNKNOWN key on a ROW        :404-409   closed-key reaches it
+F-2 type   reason_null: true -> "true"        KNOWN key, wrong TYPE       :729/:732  closed-key does NOT reach it
+F-3        delete reasons_must_differ_from    KNOWN key, FIXTURE level    :1408      neither reaches it
+```
+⚠️★★★★★ **`reasons_must_differ_from` IS `expect.…` AT FIXTURE LEVEL, NOT A ROW KEY — SO NO RULE SCOPED TO `OracleRow` CAN CLOSE `F-3` AT ALL. And a closed-key rule rejects UNKNOWN keys; `F-3` deletes a KNOWN one.** ✅ **The principle that does cover both is one level up and the packet states it as such: `PARSE THE ORACLE UNDER A TOTAL SCHEMA — every key known-or-rejected, every value typed, every absence either declared or fatal.`**
+★★★ **`UNPROVEN AND LABELLED UNPROVEN`, per R-517 §5: this is reasoning over executable lines, not a test result. The settling test is NAMED in packet §6 and is NOT run — running it is an implementation act and no slot is open.**
+
+### ★★★★★ §4 — THE FINDING I MOST WANT ON THE RECORD
+**The four attempts retire ONE assumption between them** `[MEASURED, packet §3]`: `2011e8de` trusted the fixture battery · `39948d3c` trusted FIXTURE-FILE granularity · `8187b730` trusted the TYPE (*"it read as enforced because the TYPE said `authority: string`"* — the file's own comment at `:397-399`) · `c304b098` trusted `condition_id` granularity.
+★★★★★ **EVERY ONE CLOSED THE JOIN AT THE GRANULARITY WHERE THE LAST DEFECT APPEARED. `A CHECK ADDED AT THE GRANULARITY WHERE THE LAST DEFECT APPEARED WILL CATCH THE NEXT DEFECT` HAS NOW FAILED FOUR TIMES.** ⚠️ **So the packet makes it an `ABORT`: a design that closes FIELD granularity and stops is attempt five with a new label. It must say what it does at the NEXT level down, even if that answer is a declared scope limit.**
+✅ **AND THE ANSWER TO §8.4's QUESTION IS IN THE FILE, NOT INFERRED:** `validateOracleContractOrExit()`'s own comment shows it was built to answer *"is this expectation SOURCED?"* and never *"is this expectation WELL-FORMED?"*. **The oracle-side exemption is the function's ORIGINAL scope, inherited unchanged through all four attempts — not an oversight in the last one.** `A FUNCTION KEEPS THE SCOPE ITS FIRST COMMENT GAVE IT UNTIL SOMEONE RE-READS THE COMMENT.`
+
+### §5 — WHAT I DID **NOT** DO
+- ⚠️ **I did not re-execute any of the grade's mutations.** Every mutation result in the packet is tagged `[MEASURED BY GRADED INSTRUMENT]`; my independent path was the **shipped blob**, and it covers the line citations only.
+- ⚠️ **I did NOT author the closed key list.** Deriving it by hand from memory is how a closed list becomes an allow-list — `THE BASELINE ALLOW-LIST EXCUSED 24 KILL-SWITCH ASSERTIONS`. It is the implementation's first act, from `ORACLE.json`'s actual key space.
+- ⚠️ **Whether `F-1`/`F-4`/`F-5` exhaust the caption family is `[UNENUMERATED]`** — no caption census was run by anyone, and `F-1` is the NINTH instance of that class on this codebase.
+- ⚠️ **`NO COMMON MECHANISM` was used where it is true.** `F-1`/`F-4`/`F-5` share a FAMILY (`CAPTION IS A CLAIM`) and **not** a mechanism; the packet says so rather than manufacturing a root, and warns that shipping §4.1–4.3 alone leaves four of six findings open.
+- **No implementation code · no `P1`/`P2`/`P3` · no engine, extraction, migration, `.env`, `runtime-production`, DB, corpus or `HOLDOUT-26` surface · no `checkout`/`reset`/index op · the retired `I7` harness untouched · `bp8t4d3zu` untouched, still running.**
+
+### §6 — POSITION
+**FAN-IN `6 / 6`** on `R-516 §8`'s mandatory contents (all five findings + sub-claim 6 · common mechanism, honestly bounded · retired assumptions · replacement architecture cited to in-file precedent · the one-attempt-one-grade bound · `ABORT`).
+`P0` design **RETIRED** · packet **DELIVERED, UNGRADED** · fifth patch round **NOT AUTHORIZED** · implementation **NOT STARTED, NOT AUTHORIZED — the money-path slot is the desk's to open** · `P1`/`P2` **NOT STARTED / NOT FROZEN** · `P3` **NOT STARTED** · Gate B **BLOCKED** · merge/deploy/release **HOLD** · `TASK 0` **CLOSED per R-517 §3.**
+★★ **I DO NOT GRADE MY OWN WORK.** ★★★ **If the desk wants this packet graded before an implementation slot opens, `accuracy-validator` is a local agent and one authorization away — say the word and I will dispatch it with the pinned commit, a working access recipe, an explicit novel false-green hunt, and a durable receipt path.**
+★★ **NOT A HANDOFF — context is not exhausted and no lane assigned to me is unstarted.**
+
+---
+
 ## AR-542 · 2026-07-31 · ⚠️★★★★★ **START-RECEIPT — R-516 §8 ACCEPTED. AND IT OPENS WITH A REFUTATION OF MY OWN `AR-541 §4`: THE EAR **EXISTS**, IT IS **RUNNING**, AND IT HAS DELIVERED **EVERY RULING FROM `R-500` TO `R-516`.** ★★★★★ **`TASK 0` IS THEREFORE ALREADY SATISFIED, AND ARMING THE RIG R-516 ORDERS WOULD CREATE THE EXACT DUPLICATE `ONE RIG PER CHANNEL` FORBIDS. I AM NOT ARMING IT.** ⚠️★★★ **`R-516 §5b` IS BUILT ON MY WRONG FINDING — THE DESK MUST NOT CARRY IT.**
 
 **RULING ID:** R-516 §8 · **TASK ID:** AR-542 · **PRIOR:** AR-541 · **SEAT:** the seat that filed AR-533→541 (`claude.exe 26204`).
