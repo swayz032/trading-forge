@@ -246,6 +246,42 @@ def pubblob(rel: str, repo_root: Path = None) -> dict:
     return {"path": rel, "worktree_blob": work, "head_blob": head, "IDENTICAL": work == head}
 
 
+def digest_attributed(res: dict) -> bool:
+    """★★★★★ R-512 §6.4 -- IS THIS RED ATTRIBUTABLE TO A DIGEST COMPARISON?
+
+    `publication_consistency` has THREE early returns that yield
+    `PUBLISHED_ARTIFACT_IS_CURRENT: False` WITHOUT COMPUTING ANY DIGEST --
+    "path is outside the repo", "path is not present in HEAD", and "published
+    artifact does not exist" (which fires in ANY read_mode). A case that scores
+    the bare colour cannot tell those apart from a real mismatch.
+
+    THIS IS THE R-510 §2 FIX SWEPT ACROSS THE CLASS. It was applied to M8 alone
+    and never propagated; R-512 §3 found M10 and M11 still scoring a bare colour
+    two rulings later. `WHEN THE SAME SHAPE CONVICTS THREE TIMES, THE DEFECT IS
+    NO LONGER THE INSTANCE -- IT IS THAT NOBODY SWEPT.`
+    """
+    return ("fresh_digest" in res and "published_digest" in res
+            and res["fresh_digest"] != res["published_digest"])
+
+
+def m13_acceptance(void: bool, control_fired: bool, stale_in_fact: bool,
+                   reader_red: bool, reddened_by: list) -> bool:
+    """★★★★★ R-512 §6.1 -- M13's VERDICT, AS A PURE PREDICATE SO IT CAN BE
+    FALSIFIED ON DEMAND.
+
+    The previous verdict omitted `reader_red` entirely: deleting the receipt
+    reader outright left m13_ok True, because fixture validity, the stale-receipt
+    fact and the positive control were all still satisfied. AR-535 then captioned
+    the case "its own red-proof" -- a claim its own verdict did not enforce.
+    `A RED RESULT RECORDED BESIDE OK IS NOT LOAD-BEARING UNLESS OK REQUIRES IT.`
+
+    Extracted as a function precisely so item 5 can re-evaluate it with the
+    reader suppressed and PROVE it goes False, rather than asserting it does.
+    """
+    return (not void and control_fired and stale_in_fact and reader_red is True
+            and reddened_by == ["RECEIPT_records_the_CURRENT_publication_blobs"])
+
+
 def publication_pairs(repo_root: Path = None) -> dict:
     """★★★★★ R-511 §6.1 -- compute the publication pairs ONCE.
 
@@ -348,6 +384,7 @@ def publication_consistency(published_path: Path, repo_root: Path = None,
 
 def main():
     results = []
+    HISTORY = []   # R-512 §6.3 -- recorded evidence, NEVER scored in all_ok
 
     # ── THE CONTROL. Without it, "the mutation went red" is unreadable. ──────
     rc, control = run()
@@ -469,14 +506,23 @@ def main():
     rows[0]["object"] = "ZZZ SILENTLY ALTERED IDENTITY -- no count or assertion changed"
     m10_path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
     m10 = publication_consistency(m10_path, repo_root=None, read_mode="worktree")
-    m10_ok = m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False
+    # ★★★★★ R-512 §6.4 SWEEP -- colour ALONE is not a verdict. This is the
+    #   M8 attribution conjunct, applied to the class rather than the instance.
+    m10_attributed = digest_attributed(m10)
+    m10_ok = m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False and m10_attributed
     results.append({
         "case": "M10_identity_block_silently_altered",
         "WHAT_WAS_PLANTED": "one IDENTITY_REFUSAL_MAP row's `object` text changed; every "
                             "assertion name, every PASS value, every count and every summary "
                             "metric left IDENTICAL -- the exact class the old allow-list digest "
                             "could not see.",
-        "it_went_RED": m10_ok,
+        "it_went_RED": m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False,
+        "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": m10_attributed,
+        "⚠️_WHY_ATTRIBUTION_IS_REQUIRED": (
+            "R-512 §6.4. publication_consistency can return NOT-CURRENT from three digest-free "
+            "early returns (path outside the repo / absent from HEAD / file does not exist). "
+            "Scoring the bare colour cannot distinguish those from a real mismatch -- which is "
+            "M8's convicted defect, and it was live here for two rulings after M8 was fixed."),
         "WHY_IT_MATTERS": "These are the 17 per-condition identities R-502 §4 required be IN "
                           "the artifact. A freshness guard that cannot see them would certify "
                           "a silently-changed deliverable as CURRENT.",
@@ -600,12 +646,18 @@ def main():
     doc["PROVENANCE_SOURCE_CLOSURE"]["manifest"][0]["path"] = "ZZZ/altered/closure/path.py"
     m11_path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
     m11 = publication_consistency(m11_path, repo_root=None, read_mode="worktree")
-    m11_ok = m11["PUBLISHED_ARTIFACT_IS_CURRENT"] is False
+    # ★★★★★ R-512 §6.4 SWEEP -- same conjunct, same reason.
+    m11_attributed = digest_attributed(m11)
+    m11_ok = m11["PUBLISHED_ARTIFACT_IS_CURRENT"] is False and m11_attributed
     results.append({
         "case": "M11_source_closure_identity_altered",
         "WHAT_WAS_PLANTED": "one closure manifest PATH changed; assertion names, PASS values, "
                             "campaign metrics and identity maps all left IDENTICAL.",
-        "it_went_RED": m11_ok,
+        "it_went_RED": m11["PUBLISHED_ARTIFACT_IS_CURRENT"] is False,
+        "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": m11_attributed,
+        "⚠️_WHY_ATTRIBUTION_IS_REQUIRED": (
+            "R-512 §6.4 -- same conjunct, same reason as M10. `A TEST THAT TURNS RED BEFORE "
+            "READING THE MUTATION HAS NOT TESTED THE MUTATION.`"),
         "WHY_IT_MATTERS": "R-510 §6.4 -- `A FULL-ARTIFACT DIGEST CANNOT EXCLUDE THE ENTIRE "
                           "PROOF OF WHICH SOURCES RAN.` The previous digest dropped the whole "
                           "closure block, so this alteration would have been certified CURRENT.",
@@ -758,7 +810,16 @@ def main():
     #   and the finding would have been closed wrongly.
     #   `A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR
     #   THERE IS` -- here the mismatch is the only thing that forced the check.
-    m13_generation_confounded = (m13_pc.get("fresh_n_pass") != m13_pc.get("published_n_pass"))
+    # ★★★★★ R-512 §6.2 -- THE GUARD IS NO LONGER COUNT-ONLY.
+    #   `EQUAL ASSERTION COUNTS DO NOT PROVE AN UNCONFOUNDED ARTIFACT`: an
+    #   identity, a route partition, a closure blob or a deployed-scope value can
+    #   move with n_pass unchanged. M13 varies ONLY receipt staleness, so ANY
+    #   non-green control state is a confound -- not merely a count mismatch.
+    #   The counts are retained BELOW as diagnostics; they are no longer the
+    #   validity predicate.
+    m13_generation_confounded = (
+        m13_pc.get("PUBLISHED_ARTIFACT_IS_CURRENT") is not True
+        or m13_pc.get("fresh_digest") != m13_pc.get("published_digest"))
 
     # THE VOID GUARD -- the pre-registered invalidation condition.
     m13_void = (m13_pairs["pairs"][HARNESS_REL]["IDENTICAL"] is not True
@@ -773,50 +834,95 @@ def main():
     control_fired = control_pairs["ALL_IDENTICAL"] is False
     subprocess.run(["git", "checkout", "--", "."], cwd=m13fix, check=False)
 
-    m13_ok = (not m13_void) and control_fired and receipt_is_stale_in_fact
-    results.append({
-        "case": "M13_receipt_uncovered",
-        "fixture": str(m13fix),
-        "⚠️_WHAT_OK_MEANS_HERE": (
-            "OK=True means THE EXPERIMENT WAS VALID AND READABLE -- not that the receipt is "
-            "covered. This case is DIAGNOSTIC: its finding is RECEIPT_IS_COVERED_BY below, "
-            "and an empty list there is a real defect being reported, not a passing test."),
-        "PRE_REGISTERED_IN": "AR-534 §2, written before this code existed.",
-        "PREDICTION_ON_RECORD": "NOTHING will redden -- the receipt has zero executable "
+    # ── ★★★★★ R-512 §6.1/§6.3/§6.5 -- VERDICT CONTRACT, REPAIRED ───────────
+    #    Item 3: HISTORY is split from CURRENT ACCEPTANCE. The pre-remedy
+    #    finding is EVIDENCE and is NOT scored in all_ok; the red-proof of the
+    #    reader IS scored and requires its target to fire.
+    m13_ok = m13_acceptance(m13_void, control_fired, receipt_is_stale_in_fact,
+                            m13_reader_red, reddened_by)
+
+    # ★★★★★ ITEM 5 -- PROVE THE VERDICT IS LOAD-BEARING, IN THE ARTIFACT, EVERY
+    #   RUN. Re-evaluate the SAME predicate with the reader result SUPPRESSED and
+    #   everything else held: fixture validity, the stale-receipt fact and the
+    #   positive control all unchanged. It MUST come out False. This is not a
+    #   one-off probe -- a verdict whose falsifiability is asserted in prose is
+    #   the exact shape R-512 §1 convicted.
+    m13_ok_if_reader_suppressed = m13_acceptance(
+        m13_void, control_fired, receipt_is_stale_in_fact,
+        False, [r for r in reddened_by
+                if r != "RECEIPT_records_the_CURRENT_publication_blobs"])
+    m13_verdict_is_load_bearing = (m13_ok is True and m13_ok_if_reader_suppressed is False)
+
+    HISTORY.append({
+        "case": "M13_HISTORY_receipt_was_uncovered",
+        "⚠️_NOT_SCORED": (
+            "R-512 §6.3 -- this is RECORDED EVIDENCE, deliberately absent from all_ok and the "
+            "exit code. It is history, and history must not be able to pass or fail a run."),
+        "WHAT_WAS_FOUND": (
+            "At commit 8e0cbbf4, from a clean tree, with both void guards clear and the "
+            "positive control firing, RECEIPT_IS_COVERED_BY was EMPTY: the committed receipt "
+            "was stale in fact and NOTHING anywhere reddened."),
+        "PRE_REGISTERED_IN": "AR-534 §2, written and independently witnessed by the desk at "
+                             "08:30:45 (commit 50209273) BEFORE the code existed.",
+        "PREDICTION_ON_RECORD": "NOTHING will redden -- the receipt had zero executable "
                                 "consumers (filename census: generator 0, harness 1 = its "
-                                "own write).",
+                                "own write). The prediction HELD.",
+        "WHY_IT_IS_KEPT": (
+            "`A DEFECT THAT LEAVES NO TRACE ONCE FIXED IS A DEFECT THE NEXT READER WILL "
+            "RE-INTRODUCE.` The remedy makes the live case green; without this record the "
+            "reason the reader exists disappears from the artifact."),
+        "LAW": "`A RECEIPT NOBODY READS IS A DECORATION.`",
+    })
+
+    results.append({
+        "case": "M13_READER_catches_committed_stale_receipt",
+        "fixture": str(m13fix),
         "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was "
-                            "committed, so the receipt now describes a harness that no "
-                            "longer exists, while every path is clean.",
+                            "committed, so the receipt describes a harness that no longer "
+                            "exists, while every publication path is clean.",
+        "⚠️_WHAT_OK_REQUIRES_NOW": (
+            "R-512 §6.1. ALL of: fixture not void · positive control fired · receipt stale in "
+            "fact · THE READER ACTUALLY REDDENED · and RECEIPT_IS_COVERED_BY is EXACTLY the "
+            "reader. An empty coverage list is a FAILURE, and an extra unrelated red is a "
+            "failure too, never supporting evidence. The previous verdict omitted the reader "
+            "entirely: deleting the reader outright left OK=True."),
         "receipt_records_harness_blob": receipt_harness_blob,
         "harness_blob_at_HEAD_now": harness_head_now,
         "RECEIPT_IS_STALE_IN_FACT": receipt_is_stale_in_fact,
+        "READER_REDDENED": m13_reader_red,
+        "RECEIPT_IS_COVERED_BY": reddened_by,
         "VOID_GUARD__harness_pair_green_at_verdict":
             m13_pairs["pairs"][HARNESS_REL]["IDENTICAL"] is True,
         "VOID_GUARD__generation_not_confounded": not m13_generation_confounded,
-        "CONFOUND_WATCH__fresh_n_pass": m13_pc.get("fresh_n_pass"),
-        "CONFOUND_WATCH__published_n_pass": m13_pc.get("published_n_pass"),
+        "CONFOUND_DIAGNOSTICS": {
+            "⚠️_NOT_THE_VALIDITY_PREDICATE": "R-512 §6.2 -- counts are diagnostics only; the "
+                                             "guard above tests the full control state.",
+            "fresh_n_pass": m13_pc.get("fresh_n_pass"),
+            "published_n_pass": m13_pc.get("published_n_pass"),
+            "control_publication_consistency_is_CURRENT":
+                m13_pc.get("PUBLISHED_ARTIFACT_IS_CURRENT"),
+        },
         "POSITIVE_CONTROL__dirty_harness_does_redden": control_fired,
-        "RECEIPT_IS_COVERED_BY": reddened_by,
-        "⚠️_FINDING_BEFORE_THE_REMEDY__PRESERVED": (
-            "At commit 8e0cbbf4, run from a clean tree with both void guards clear and the "
-            "positive control firing, this list was EMPTY: the receipt was stale in fact and "
-            "NOTHING reddened. That is the defect R-511 §6.8 authorized the remedy for. It is "
-            "recorded here because the remedy now makes this case go green, and a defect that "
-            "leaves no trace once fixed is a defect the next reader will re-introduce."),
-        "FINDING": (
-            "⚠️ VOID -- run from a dirty or confounded tree; this case says NOTHING about "
-            "the receipt. Re-run from a clean tree." if m13_void else
-            ("UNCOVERED -- the receipt is stale in fact and NOTHING reddened. "
-             "`A RECEIPT NOBODY READS IS A DECORATION.`" if not reddened_by else
-             "ALREADY-COVERED -- reddened by: %s" % reddened_by)),
-        "VERDICT": "EXPERIMENT-VALID" if m13_ok else "EXPERIMENT-VOID",
-        "OK": m13_ok,
+        "★_VERDICT_FALSIFIABILITY": {
+            "OK_as_evaluated": m13_ok,
+            "OK_if_the_reader_result_were_SUPPRESSED": m13_ok_if_reader_suppressed,
+            "VERDICT_IS_LOAD_BEARING": m13_verdict_is_load_bearing,
+            "WHAT_THIS_PROVES": (
+                "The same acceptance predicate, re-run with only the reader result removed "
+                "and every other input held, comes out FALSE. `A RED RESULT RECORDED BESIDE "
+                "OK IS NOT LOAD-BEARING UNLESS OK REQUIRES IT` -- this is that requirement, "
+                "demonstrated rather than claimed, on every run."),
+        },
+        "HISTORY_IS_RECORDED_SEPARATELY": "M13_HISTORY_receipt_was_uncovered, in "
+                                          "UNSCORED_HISTORY -- see R-512 §6.3.",
+        "VERDICT": ("VOID -- dirty or confounded tree" if m13_void else
+                    ("DISCRIMINATES" if m13_ok else "DOES-NOT-DISCRIMINATE")),
+        "OK": m13_ok and m13_verdict_is_load_bearing,
     })
-    print("[%s] M13_receipt_uncovered -> stale_in_fact=%s | reddened_by=%s | "
-          "positive_control=%s | void=%s"
-          % ("OK " if m13_ok else "BAD", receipt_is_stale_in_fact, reddened_by or "NOTHING",
-             control_fired, m13_void))
+    print("[%s] M13_READER_catches_committed_stale_receipt -> reader_red=%s | covered_by=%s "
+          "| suppressed_gives=%s | void=%s"
+          % ("OK " if (m13_ok and m13_verdict_is_load_bearing) else "BAD", m13_reader_red,
+             reddened_by or "NOTHING", m13_ok_if_reader_suppressed, m13_void))
 
     # ── ★★★★★ R-511 §6.1 -- THE PUBLICATION PAIRS, SCORED AS A REAL CASE ────
     #    THIS BLOCK MUST STAY ABOVE `all_ok`. Its whole defect was position:
@@ -908,6 +1014,77 @@ def main():
           % ("OK " if rec_ok else "BAD",
              "CURRENT" if rec_ok else "STALE: %s"
              % [k for k, v in rec_detail.items() if not v.get("MATCHES")]))
+
+    # ── ★★★★★ R-512 §6.4 -- THE PER-CASE ATTRIBUTION CENSUS ────────────────
+    #    `A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT
+    #    BE AUDITED FOR THIS DEFECT AGAIN.` For every case: does its OK predicate
+    #    require (i) a colour, (ii) an attributable CAUSE, (iii) its specific
+    #    target?
+    #    ⚠️ This table is hand-authored -- it describes predicates, which no
+    #    machine can read off a result dict. So it is made NON-DRIFTING instead:
+    #    the scored case below fails if the census and the actual case list ever
+    #    disagree, which is the only way a hand-authored table stays honest.
+    census = {
+        "CONTROL_unmutated": ("colour+target",
+                              "requires exit 0 AND every assertion green -- no cause to "
+                              "attribute, because nothing was mutated."),
+        "M9_committed_artifact_STALE_worktree_FRESH": (
+            "target, BOTH DIRECTIONS",
+            "requires the OLD reader to be BLIND and the NEW one to CATCH. A one-direction "
+            "pass is not accepted."),
+        "M10_identity_block_silently_altered": (
+            "colour+cause", "R-512 §6.4 SWEEP -- now requires digest attribution, not the "
+                            "bare NOT-CURRENT colour."),
+        "M11_source_closure_identity_altered": (
+            "colour+cause", "R-512 §6.4 SWEEP -- same conjunct, added in the same wave."),
+        "M8_stale_artifact_COMMITTED_in_fixture": (
+            "colour+cause+target",
+            "the original attributed case (R-510 §6.1): RED, attributable to a digest "
+            "mismatch, AND it read the planted n_pass back."),
+        "M8b_unpublishable_path": (
+            "colour", "DELIBERATE. This case exists to prove the fail-closed PATH behaviour; "
+                      "it is explicitly NOT a stale-content proof and says so in its record."),
+        "PUBLICATION_CONSISTENCY_live": (
+            "colour", "a live status observation, not a mutation."),
+        "M12_artifact_worktree_DIRTY_commit_CURRENT": (
+            "colour+cause+target",
+            "requires the artifact pair RED, the other two pairs GREEN, consistency GREEN and "
+            "a clean starting fixture -- it discriminates in both directions."),
+        "M13_READER_catches_committed_stale_receipt": (
+            "colour+cause+target+FALSIFIABILITY",
+            "R-512 §6.1 -- requires the reader itself to redden, the coverage list to be "
+            "EXACTLY the reader, and the same predicate to come out FALSE when the reader "
+            "result is suppressed."),
+        "PUBLICATION_PATHS_worktree_equal_committed": (
+            "colour+target", "every publication path's worktree blob must equal its HEAD blob; "
+                             "red-proofed by M12 and by live dirty-tree runs."),
+        "RECEIPT_records_the_CURRENT_publication_blobs": (
+            "colour+target", "the committed receipt's three recorded blobs must equal HEAD; "
+                             "red-proofed live at e5a0e695 and green at f5350c09."),
+        "ATTRIBUTION_CENSUS_covers_every_scored_case": (
+            "target", "self-referential by necessity: it asserts its own coverage."),
+    }
+    for name, _m, _r, _g in CASES:
+        census[name] = ("colour+target",
+                        "generator mutation: requires the NAMED assertion to redden, a "
+                        "non-zero exit, and no collateral contract breach.")
+    scored = {r["case"] for r in results} | {"ATTRIBUTION_CENSUS_covers_every_scored_case"}
+    missing, extra = sorted(scored - set(census)), sorted(set(census) - scored)
+    census_ok = not missing and not extra
+    results.append({
+        "case": "ATTRIBUTION_CENSUS_covers_every_scored_case",
+        "WHAT_IT_ASSERTS": "every scored case has a census entry and the census names no case "
+                           "that does not exist.",
+        "WHY": ("R-512 §6.4. The census is hand-authored because it describes PREDICATES, "
+                "which cannot be read off a result dict. A hand-authored table drifts -- so "
+                "drift is made a RED here rather than left to a future reader to notice."),
+        "cases_missing_from_census": missing,
+        "census_entries_with_no_case": extra,
+        "VERDICT": "COVERED" if census_ok else "DRIFTED",
+        "OK": census_ok,
+    })
+    print("[%s] ATTRIBUTION_CENSUS_covers_every_scored_case -> missing=%s extra=%s"
+          % ("OK " if census_ok else "BAD", missing, extra))
 
     all_ok = all(r["OK"] for r in results)
     def git(*a):
@@ -1037,6 +1214,17 @@ def main():
                     "mutation can overwrite the real artifact.",
         },
         "ALL_CASES_DISCRIMINATE": all_ok,
+        # ★★★★★ R-512 §6.4 -- the attribution census, IN the receipt.
+        "ATTRIBUTION_CENSUS": {
+            "⚠️_HOW_TO_READ": ("per case: what its OK predicate REQUIRES. `colour` = a red/green "
+                              "flag only · `cause` = the red must be attributable (a digest "
+                              "mismatch, not a digest-free early return) · `target` = the "
+                              "specific thing under test must be what reddened."),
+            "LAW": ("`A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE "
+                    "AUDITED FOR THIS DEFECT AGAIN.` R-512 §6.4."),
+            "cases": {k: {"OK_requires": v[0], "note": v[1]} for k, v in sorted(census.items())},
+        },
+        "UNSCORED_HISTORY": HISTORY,
         "cases": results,
     }
     path = HERE / "session-role-resolver-yield-REDPROOF-2026-07-31.json"
