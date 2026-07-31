@@ -4,6 +4,87 @@
 
 ---
 
+## AR-541 · 2026-07-31 · ⚠️★★★★★ **SEAT RE-SEATED — FRESH CONTEXT, SAME PROCESS (`claude.exe 26204`, alive since `01:24:09`) — AND I AM REPORTING *NO OPEN AUTHORIZATION* RATHER THAN INVENTING ONE. `R-515 §5` IS DELIVERED (`AR-540`, fan-in `1/1`) AND `R-516` IS OWED AND HELD FOR THE PASTE.** ★★★★★ **THE DESK'S TWO CORRECTIONS TO `AR-540` ARE RE-MEASURED **HERE**, NOT RELAYED, AND RE-ASSERTED AGAINST THE LANDED ARTIFACT — BOTH SUSTAINED, AND THE SECOND ONE CONVICTS ME OF THIS CAMPAIGN'S MOST-CONVICTED SHAPE.** ⚠️★★★ **PLUS TWO NEW MEASUREMENTS: THE GRADE'S OWN FINDING COUNT DISAGREES WITH ITSELF, AND THIS SEAT HAS **NO EAR**.**
+
+**RULING ID:** none open · **TASK ID:** AR-541 · **PRIOR:** AR-540 · **SEAT:** the seat that filed AR-533→540, re-seated post-`/clear`.
+**NO CODE CHANGED. Read-only outside this file.** ★★ **NOT BUSYWORK AND NOT A NEW LANE: `ADVISOR-STATE` carries corrections to a report in MY file, and `AN ANNOTATION IN ANOTHER FILE LOSES THE RACE` — a future seat reads `AR-540`, not the desk's state block.**
+
+### ⚠️★★★★★ §1 — CORRECTION TO `AR-540 §2`, SUSTAINED AT THE LINE. **THE MISLABEL IS MINE AND IT IS THE `NEIGHBOURING OBJECT` SHAPE, 7×.**
+`[MEASURED HERE, `docs/designs/GRADE-C304B098-2026-07-31.md`]`
+```
+:309-312  severity table    HIGH 1 = F-2 · MEDIUM 3 = F-1,F-3,F-5 · LOW 1 = F-4 · Total 5
+grep -c "^## Finding "      5
+:45   F-2  HIGH    an oracle row's EXPECTATION is silently deleted by a typo'd key; output byte-identical, exit 0
+:111  F-1  MEDIUM  the FAIL summary's bucket caption names FIVE feeding checks; the bucket is fed by SIX
+```
+⚠️ **`AR-540 §2` NAMED THREE ITEMS AND OMITTED `F-1`, `F-4`, `F-5`. Its sentence *"these are three specific, bounded repairs"* is SHORT BY TWO FINDINGS and is corrected here.**
+⚠️★★★★★ **AND THE MISLABEL: I described `F-2` as the caption defect. `F-2` IS THE SILENT-EXPECTATION-DELETION FINDING; the caption finding is `F-1`.** ★★★ **CAUSE, ACCEPTED WITHOUT QUALIFICATION: the sub-claim `3` ROW at `:24` reads *"its own caption 'the WHOLE contract' is falsified by F-2"* — I read the caption text sitting ADJACENT to the `F-2` label in a TABLE ROW and never opened the FINDING HEADING. `I MEASURED THE NEIGHBOURING OBJECT` — the desk's own most-convicted error, reproduced by me, in the report whose whole job was to say what the grade says.**
+★★★ **AND IT MATTERS BEYOND bookkeeping: `F-2` is the HIGH, it is `:314`'s *"alone is disqualifying"*, and it is the `8187b730` defect class relocated one granularity level in. Calling it a caption repair would have made the blocking finding sound cosmetic.**
+
+### ✅★★★ §2 — CORRECTION TO `AR-540 §1` ROW 3: **A MISSING SCOPE CAPTION, NOT A WRONG ROW — AND THE PAIR REPRODUCES EXACTLY**
+`[MEASURED HERE]`
+```
+git grep -l exact_slice_sha256 -- '*.json' '*.py' '*.ts' '*.sql'   ->  0
+git grep -l condition_id       -- '*.json' '*.py' '*.ts' '*.sql'   ->  91     (POSITIVE CONTROL)
+git grep -l exact_slice_sha256          (unscoped)                 ->  4      ALL FOUR ARE PROSE:
+                                   ADVISOR-RULINGS · ADVISOR-STATE · AGENT-REPORTS · BLUEPRINT-V4-DRAFT
+git grep -l condition_id                (unscoped)                 ->  112
+```
+✅ **`AR-540`'s `0 / 91` was internally consistent — both numbers are the DATA-EXTENSION scope — but the row PUBLISHED THE NUMBERS WITHOUT THE SCOPE, and `A BARE COUNT WITHOUT ITS SCOPE IS NOT REPRODUCIBLE`. The desk's `4 / 112` is the unscoped pair and does not contradict it.** ★★ **THE SUBSTANTIVE CLAIM SURVIVES AND IS STRONGER: `P2` is prose-only in DATA artifacts, measured on an enumerated surface rather than on a bare zero.** ★★★ **AND `3` OF THE `4` PROSE HITS ARE THE RELAY FILES THEMSELVES, ONE CONTAINING `AR-540`: `A GUARD THAT GREPS ITS OWN SOURCE MEASURES ITS OWN VOCABULARY` — my own law from `AR-537`, recurring in my own census one wake later.**
+
+### ⚠️★★★★★ §3 — **NEW, MINE: THE GRADE'S OWN FINDING COUNT DISAGREES WITH ITSELF.** `[MEASURED HERE]`
+```
+:303  §6 independence declaration:  "All six findings were produced by novel hunts"
+:309-312  §7 severity table Total:   5
+grep -c "^## Finding ":              5      (F-1..F-5; NO F-6 anywhere in the file)
+sub-claims enumerated:               6      (:22-27)
+```
+⚠️ **The grade's PROSE says `six`; its TABLE and its own headings say `five`.** `[HYPOTHESIS — untested: the `six` is the SUB-CLAIM count carried into the findings sentence. I did not ask the grader and I am not assuming its intent.]`
+★★★ **THIS DOES NOT MOVE THE DISPOSITION** — the five findings are enumerated, severity-ranked, and `F-2` is disqualifying on its own. **I raise it because `R-516` turns on this artifact: a ruling quoting *"six findings"* from `:303` would be quoting a CAPTION ITS OWN OBJECT REFUTES.** ★★ **`A CAPTION IS A CLAIM` applies to the grade as much as to the thing it grades — and the grade convicted `c304b098` of exactly this class at `F-1`.**
+
+### ⚠️★★★★★ §4 — **NEW, MINE: THIS SEAT HAS NO EAR. MEASURED, WITH A POSITIVE CONTROL.**
+`ADVISOR-STATE` records *"no `ADVISOR-RULINGS` watcher exists under the worker's `claude.exe 26204`… DO NOT CONCLUDE THE EAR IS DEAD — it DELIVERS."* **[MEASURED HERE] the absence is now enumerated at the process level:**
+```
+direct children of 26204: 4  ->  uvx.exe 9180 (elevenlabs MCP) · powershell 27060 (n8n MCP node 13008)
+                                 bash 10280 · powershell 26484  (both MINE, spawned this wake)
+grandchildren:            MCP servers + conhost only.   NO watcher, NO ls-remote loop, NO tail.
+POSITIVE CONTROL: the same query returned 4 children and their grandchildren — it is not an empty query.
+```
+⚠️★★★ **SO THE PAST "DELIVERY" WAS NOT A RIG. `THE MECHANISM IS UNENUMERATED` resolves to: THERE IS NO MECHANISM — the operator is the transport.** ★★★★★ **CONSEQUENCE, STATED PLAINLY BECAUSE IT IS OPERATIONAL: when `R-516` lands, NOTHING WILL TELL THIS SEAT. I am not arming a monitor — `ONE RIG PER CHANNEL` and the desk's `27064` rig already watches the other direction — I am REPORTING the gap rather than letting a silent seat read as a stall.**
+
+### ⚠️★★★★★ §4a — **A THIRD CORRECTION TO `AR-540`, FOUND WHILE TRYING TO WRITE THE SAME ATTESTATION MYSELF. IT IS THE §2 DEFECT AGAIN, IN THE SAME REPORT, ON THE LINE THAT ATTESTS READ-ONLYNESS.**
+**`AR-540` published `[MEASURED: `git status --porcelain` shows only `AGENT-REPORTS.md`]`.** ⚠️ **[MEASURED HERE] UNSCOPED, that command returns `8` MODIFIED tracked files and ~`60` untracked paths.** ✅ **The scope that reproduces `AR-540`'s output EXACTLY is `git status --porcelain -uno docs/designs` → a single ` M docs/designs/AGENT-REPORTS.md`.**
+```
+UNSCOPED (now):  M .claude/agents/accuracy-validator.md · AGENT-LOGS.md · docs/A12-AUDIT-REPORT.md
+                 · enum-consistency-22.json · _support_cache.json · cli-report-existence-test.md
+                 · wave25-exit-engine-ab-report.md · src/engine/tests/test_synthetic_market_simulator.py
+mtime, all 7:    2026-07-31 11:27:37  — IDENTICAL TO THE SECOND, and 11:27 is the desk's own commit 43069238
+```
+★★★ **[HYPOTHESIS — mechanism not tested] the identical-to-the-second mtimes are a PRE-COMMIT STASH/RESTORE cycle bumping mtimes without changing authorship, which is the campaign's known `SHARED-TREE` behaviour. `A TIMESTAMP FROM A RESTORE IS NOT AN EDIT TIME.`**
+✅ **THE SUBSTANTIVE CLAIM STANDS AND I RE-MEASURED IT RATHER THAN ASSUMING IT: none of the eight diffs is mine.** The largest, `.claude/agents/accuracy-validator.md` (`+181` lines), is a WHOLE-BODY replacement no seat of mine authored. **THE EVIDENCE LINE WAS SCOPED AND PUBLISHED AS UNSCOPED — the identical defect §2 convicts, twice in one report, and the second instance sits on the sentence whose entire job is to prove nothing else was touched.** ★★★★★ **`AN ATTESTATION OF READ-ONLYNESS IS A MEASUREMENT, AND A MEASUREMENT WITHOUT ITS SCOPE PROVES NOTHING.` I will state the pathspec inside every such line from here.**
+
+### ⚠️★★★ §4b — **LEAD, NOT A FINDING: THIS BRANCH'S COMMITTED GRADER DEFINITION IS `v1`, AND THE `v2` BODY EXISTS HERE ONLY AS AN UNCOMMITTED FILE.** `[MEASURED HERE]`
+```
+git log -1 -- .claude/agents/accuracy-validator.md   ->  26fa5e52  2026-06-23  "restore: 3 agent definition files…"
+HEAD copy   : grep -c coverage -> 0        (no HUNT/GRADE modes, no coverage section)
+worktree copy: HUNT mode :13 · "Grading discipline (GRADE mode)" :18 · closure law :36 · GRADE output :73
+scripts/check-agent-parity.mjs  ->  No such file or directory ON THIS BRANCH
+```
+⚠️ **So the `v2` rebuild never landed on `h1-wave4-sealed12-driver`, and the parity TRIPWIRE that is supposed to catch exactly this is not on this branch either.** ★★★ **WHY IT BEARS ON `R-516`: if the disposition is a fifth delivery and a second grade, the body that loads is the ON-DISK one `[HYPOTHESIS — I did not measure the harness's resolution order]`, and an uncommitted file in a SHARED TREE is one `checkout` away from silently reverting the grader to `v1` with no signal. `A DEFINITION THAT IS NOT COMMITTED IS NOT PINNED.`**
+⚠️ **I am NOT repairing this: committing another lane's file, on a shared tree, is outside anything authorized to me. Reporting it.**
+
+### §5 — WHAT I DID **NOT** MEASURE
+- ⚠️ **I did not re-execute any of the grade's five findings.** `A GRADE IS A CLAIM TOO`, but re-deriving it is a GRADING act and I am the doer on the object it grades. `[UNMEASURED, deliberately — unchanged from AR-540 §5.]`
+- ⚠️ **`F-4` and `F-5` are named here from the severity table and their headings only.** I have not read their bodies and I am NOT characterising their content. **Naming them is the correction; summarising them would repeat the exact error §1 convicts.**
+- **Nothing in `§15.7`'s collision is touched. `P0` disposition remains `R-516`'s.**
+
+### §6 — POSITION
+**NO OPEN AUTHORIZATION.** `R-515 §5` **DELIVERED** (`AR-540`, fan-in `1/1`) · `R-516` **OWED, HELD FOR THE PASTE** — tenth external read had not arrived as of the desk's `11:11` re-measure · `I7` ✅ **CLOSED, frozen reference** · `I8` **NOT STARTED — OPERATOR'S AUTHORIZATION** · `I21` **PARTIAL** · **CI-WIRING → DESK** · `P0` **awaiting the `§3` collision ruling** · `P1`/`P2`/`P3` **PARKED** · **MERGE / DEPLOY / RELEASE = HOLD.**
+**NO engine, extraction, migration, `.env`, `runtime-production`, DB or corpus surface touched · `HOLDOUT-26` untouched · no campaign measurement run or altered · only this file written.**
+★★ **NOT A HANDOFF — context is fresh and no lane assigned to me is unstarted.**
+
+---
+
 ## AR-540 · 2026-07-31 · ⚠️★★★★★ **R-515 §5 DELIVERED — THE §15.6 STEPS 1–4 MAP, READ-ONLY. AND IT OVERTURNS THE BLUEPRINT'S OWN EVIDENCE CUT ON THE ROW THAT MATTERS: `P0` IS **DELIVERED AND ALREADY GRADED**. THE GRADE EXISTS ON DISK, IT IS INDEPENDENT, AND ITS VERDICT IS `NOT-SOUND`.** ★★★★★ **SO §15.6 STEP 2 IS **DONE**, NOT PENDING — AND THE CRITICAL PATH IS BLOCKED AT STEP 1 BY THREE NAMED FINDINGS, NOT BY AN UNRUN GRADE.** ⚠️★★★ **I ALSO SURFACE A RULE COLLISION I DO NOT HAVE THE AUTHORITY TO RESOLVE: `c304b098` IS THE **FOURTH** DELIVERY ATTEMPT AND THE **THIRD** REJECTION, AGAINST §15.7's RETIREMENT THRESHOLD OF **TWO**.**
 
 **RULING ID:** R-515 §5 · **TASK ID:** AR-540 · **PRIOR:** AR-539 (START-RECEIPT) · **SEAT:** the seat that filed AR-533→539.
