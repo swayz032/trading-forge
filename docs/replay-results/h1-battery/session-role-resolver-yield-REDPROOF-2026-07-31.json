@@ -1,5 +1,5 @@
 {
-  "WHAT_THIS_PROVES": "The 34 assertions in session_role_resolver_yield.py were run unmutated and all passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH below has at least one mutation that reddens it. A guard that has never gone red is not an instrument.",
+  "WHAT_THIS_PROVES": "The 36 assertions in session_role_resolver_yield.py were run unmutated and all passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH below has at least one mutation that reddens it. A guard that has never gone red is not an instrument.",
   "\u26a0\ufe0f_WHAT_THIS_DOES_NOT_PROVE": "This is NOT universal coverage. Assertions outside the listed classes have NO demonstrated red path here and must not be read as red-proofed. An earlier version of this receipt claimed 'every assertion class' over a 26-assertion run and that claim was BOTH stale in its count AND wider than its evidence.",
   "ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH": {
     "baseline_identity_join": "M1",
@@ -24,11 +24,11 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "f89851f35b8f6f76122f245d9ef479bea9aa947b",
+    "head": "69f6e813d2e75e375def8a88e40c29b79fc3e667",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "fe3a596125e090a001fe2ce76c83280a867e31f1",
-    "generator_blob": "00503c078f9714ad95e41c61972ed29f966b9323",
-    "artifact_blob": "e91a90b64abe1c3f86f134c4486a5d6cbcef43cd",
+    "harness_blob": "201f22289352d4d2c6de6ac5890094e67fc3b358",
+    "generator_blob": "2ea0b8ac1d816f58eb4d1646814e61296f3ecef1",
+    "artifact_blob": "ab432bb3b8acd4777a1725e959c67e07c7e14bf7",
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
@@ -161,15 +161,50 @@
       "OK": true
     },
     {
+      "case": "M9_committed_artifact_STALE_worktree_FRESH",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_432wx8jw",
+      "PRE_R509_worktree_read": {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": true,
+        "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
+        "READ_THROUGH": "worktree read of docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json"
+      },
+      "POST_R509_committed_read": {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": false,
+        "VERDICT": "RED -- catches it",
+        "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+        "committed_n_pass": 1,
+        "fresh_n_pass": 36
+      },
+      "ALL_assertions_this_mutation_reddened": [
+        "PUBLICATION_CONSISTENCY"
+      ],
+      "WHY_BOTH_DIRECTIONS": "R-509 \u00a76.3 requires M9 fail under the current implementation and pass only after the committed-tree fix. Both runs are executed here in one pass, so the fix's necessity is demonstrated rather than asserted.",
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M10_identity_block_silently_altered",
+      "WHAT_WAS_PLANTED": "one IDENTITY_REFUSAL_MAP row's `object` text changed; every assertion name, every PASS value, every count and every summary metric left IDENTICAL -- the exact class the old allow-list digest could not see.",
+      "it_went_RED": true,
+      "WHY_IT_MATTERS": "These are the 17 per-condition identities R-502 \u00a74 required be IN the artifact. A freshness guard that cannot see them would certify a silently-changed deliverable as CURRENT.",
+      "ALL_assertions_this_mutation_reddened": [
+        "PUBLICATION_CONSISTENCY"
+      ],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
       "case": "PUBLICATION_CONSISTENCY_live",
       "PUBLISHED_ARTIFACT_IS_CURRENT": true,
       "detail": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
+        "read_mode": "committed",
+        "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
         "published_path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
-        "fresh_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
-        "published_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
-        "published_n_pass": 34,
-        "fresh_n_pass": 34,
+        "fresh_digest": "1ae807d2133a2c2191a7fa8ede93c01f7b82d0227294bc470e2e43ac38268a8f",
+        "published_digest": "1ae807d2133a2c2191a7fa8ede93c01f7b82d0227294bc470e2e43ac38268a8f",
+        "published_n_pass": 36,
+        "fresh_n_pass": 36,
         "published_deployed_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
         "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
       },
@@ -182,13 +217,9 @@
       "it_went_RED": true,
       "detail": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
-        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_redproof_stale_artifact.json",
-        "fresh_digest": "fbdb5d3364dc23593a56ae2e0bbe06f91eb216de09557bab720ac6ae47f0ac7d",
-        "published_digest": "31a1d7ba5573de77d44471bfcff12c8acd184b51899e994ce70a713ed25636e7",
-        "published_n_pass": 33,
-        "fresh_n_pass": 34,
-        "published_deployed_head": "<unavailable: Command 'git rev-parse HEAD' exit 128>",
-        "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
+        "read_mode": "committed",
+        "reason": "path is outside the repo, so it has no committed blob",
+        "path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_redproof_stale_artifact.json"
       },
       "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head replaced with the exact error string that shipped -- i.e. the REAL defect reproduced, not a synthetic one.",
       "ALL_assertions_this_mutation_reddened": [
