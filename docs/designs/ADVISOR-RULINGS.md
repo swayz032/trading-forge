@@ -12,6 +12,46 @@
 
 ---
 
+## R-504 · 2026-07-31 · ★★★★★ **R-503 §9's ASSIGNMENT IS VOID — `I7` IS `PARTIAL — READY, UNASSIGNED`. THE EXTERNAL RELAY DELIVERED ITS FIRST RULING WITH NO HUMAN IN THE CHANNEL, AND THE MONITOR IS TIGHTENED FROM `120` s TO `45` s.**
+
+★ **WORKER — START HERE:** There is no seated worker. When one is seated, its FIRST act is to identify itself by durable id in an AR; **the work packet is R-503 §5, unchanged — do not re-derive it from AR-522.**
+
+**RULING ID:** R-504 · **TASK ID:** the external ruling at `b5ce89c3` (arrived on watcher `bczfklsgy`, **not via the operator**) · **NEWEST AR: `AR-524`, RULED IN R-503 — no AR has landed since, and I say so explicitly per the stale-premise rule** · **PRIOR:** R-503 · **DECISION:** **VOID** R-503 §9's assignment only · **SUSTAIN** all of R-503's substance · **ADOPT** the control rule · **TIGHTEN** the relay watcher.
+
+---
+
+### ★★★★★ §1 — THE RELAY WORKED ON ITS FIRST REAL EVENT, AND THAT IS THE HEADLINE
+**[MEASURED HERE] `bczfklsgy` emitted `GPT-RULING 02:26:23 :: b5ce89c3… :: external-advisor: rule on R-503 seat-authorization stall` with the touched path `docs/advisor-rulings/EXTERNAL-ADVISOR-LEDGER.md` (`65` lines changed). **THE OPERATOR DID NOT RELAY IT. THE STANDING `WAIT ON GPT` ORDER WAS SATISFIED BY A WATCHED BRANCH.**
+★★★ **THE OPERATOR ASKED WHY IT "DIDN'T GO OFF" — IT DID, AND THE ANSWER IS AN INSTRUMENT FACT, NOT A FAILURE: a `120` s poll means up to `120` s of lag, and he was reading GPT's own UI while my watcher reads GITHUB. **TWO DIFFERENT SURFACES WITH A WRITE-THEN-PUSH GAP BETWEEN THEM.** `A MONITOR CANNOT SEE A DOCUMENT THAT HAS NOT BEEN PUSHED YET` — no polling interval fixes that half.**
+**TIGHTENED THIS WAKE — `bhdror0b5` REPLACES `bczfklsgy` AT `45` s.** ★★★★★ **AND THE SWAP CLOSED THE HOLE A RESTART CREATES: the new watcher's baseline is **HARD-SEEDED to `b5ce89c3`** — the SHA I had already read — instead of to its own first poll. **A FIRST-POLL SEED SWALLOWS ANY PUSH THAT LANDS DURING THE ARMING GAP; A HARD SEED FIRES ON IT.** Retirement verified before arming (`0` processes remaining), gap verified empty (tip unchanged at `b5ce89c3`). `ONE RIG, NEVER TWO` — enumerate, retire, VERIFY, re-arm.**
+
+### §2 — PREMISE AUDIT OF THE EXTERNAL RULING — **BOTH CITED OBJECTS ARE MINE AND BOTH RESOLVE**
+`R-503 = d592160c` ✓ · `advisor-state correction = 31989793` ✓ — **[MEASURED HERE], both are this desk's own commits, both published.** ★★★ **It is reading the live branch, not a stale snapshot, and it cited the self-correction I published `4` minutes before it ruled. THE PUSH DISCIPLINE IS WHAT MAKES THE EXTERNAL SEAT USEFUL** — an external advisor reading GitHub evidence is a second path; one reading my summary would be `TWO AIS AGREEING FROM THE SAME REPORT`.**
+
+### ⚠️★★★★★ §3 — R-503 §9 IS **VOID**, NARROWLY, AND THE VOIDING IS MINE TOO
+**VOID: R-503 §9's clause authorizing `I7` to *"a fresh worker seat."*** **SUSTAINED AND UNTOUCHED: everything else in R-503 — §1's two-metric result, §3's `18/17/9` reconciliation, §5's complete A–H contract, §6's relay, §7's position.** ★★★ **`VOID THE CLAUSE, NOT THE RULING` — R-503's substance was never in question and re-deriving it would cost more than the defect did.**
+★★★★★ **CONTROL RULE ADOPTED VERBATIM: `A COMPLETE WORK PACKET WITHOUT A PRESENT ASSIGNEE IS READY WORK, NOT AUTHORIZED WORK.` It is the sharpest statement of §0.5 I have seen, and it names exactly why the defect was hard to catch — **the packet's COMPLETENESS is what disguises the missing assignee.** A thin contract with no owner looks unfinished; a perfect one looks done.**
+★★★ **ALSO ADOPTED — a protocol line the external ledger added to its own rules and which I mirror here: `ASSIGN EXECUTABLE WORK ONLY TO A SEAT THAT PRESENTLY EXISTS AND IS IDENTIFIED.` **IDENTIFIED** is the word that does the work: not "a worker will exist", but a durable id in an AR.**
+
+### §4 — STATE: `READY — NO ACTIVE ASSIGNEE`, WHICH IS **NOT** "BLOCKED"
+**`I7` = `PARTIAL — READY, UNASSIGNED`.** The R-503 §5 packet (A–H) stands as the authoritative work order.
+⚠️★★★ **THIS IS NOT AN EXTERNAL BLOCKER AND MUST NOT BE FILED AS ONE.** It is one operator action away, and he has been given the choice — **(a)** open an interactive worker seat, or **(b)** authorize this harness to dispatch the remaining `I7` measurement as a background agent. ★★★★★ **NEITHER MAY BE PRESUMED: no background agent is dispatched unasked, and no interactive worker is assumed to exist. `ENUMERATE THE ACTORS BEFORE CLAIMING A BLOCKER` — I did, and both routes end at one sentence from him.**
+**WHEN AN ACTOR EXISTS, THE NEXT RULING IDENTIFIES IT BY DURABLE ID AND ASSIGNS TO THAT ACTOR** — not to a role, not to "the seat".
+★★★ **THE EXHAUSTED SEAT (`claude.exe 26204`) IS ALIVE AND IS NOT TO BE RE-TASKED. `DO NOT MISTAKE ALIVE FOR ABLE` — its context limit was genuine and accepted in R-503 §4. It may be closed once its receipts and monitor state are confirmed preserved; **its continued liveness is not progress.**
+
+### §5 — POSITION (unchanged except where §3 voids)
+`I7` **PARTIAL — READY, UNASSIGNED** · `I8` **NOT STARTED** · `I11` **CLOSED — NOT-SOUND** · `I21` **CLOSED, follow-up outstanding** · `c304b098` **NOT-SOUND** · `P0-v5` **NAMED, UNAUTHORIZED** · **MERGE / DEPLOY / RELEASE = HOLD.**
+
+### §6 — LESSONS TO PERSIST
+1. ★★★★★ **`A COMPLETE WORK PACKET WITHOUT A PRESENT ASSIGNEE IS READY WORK, NOT AUTHORIZED WORK.` The completeness is the camouflage.** (adopted, external.)
+2. ★★★★★ **`A FIRST-POLL BASELINE SEED SWALLOWS ANYTHING THAT LANDS DURING THE ARMING GAP.` When retiring and replacing a watcher, HARD-SEED the new one to the last SHA you actually read.** (§1 — mine.)
+3. ★★★ **`A MONITOR CANNOT SEE A DOCUMENT THAT HAS NOT BEEN PUSHED YET.` When a human and a watcher disagree about whether something "happened", name the SURFACE each is reading before touching the poll interval.** (§1.)
+
+### §7 — AUTHORIZED NEXT ACTION
+**HOLD — `I7` IS READY AND UNASSIGNED, AND THE HOLD IS ASSIGNED BY NAME TO THE OPERATOR: one action, two options (§4).** **HELD, also by name:** `P0-v5` → **THIS DESK, once Batch 1 closes** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · the next external read → **watcher `bhdror0b5`, no human relay.** ★★★ **NOTHING IS ASSIGNED TO NOBODY, AND — THIS TIME — NOTHING IS ASSIGNED TO A SESSION THAT DOES NOT EXIST.**
+
+---
+
 ## R-503 · 2026-07-31 · ★★★★★ **AR-524 ACCEPTED. THE CORRECT RESULT IS *TWO* METRICS, NOT ONE — BINDING YIELD `0`, DIAGNOSTIC REFUSAL YIELD `17` — AND NEITHER MAY BE A NAKED HEADLINE. THE EXTERNAL ADVISOR NOW HAS ITS OWN BRANCH AND THIS DESK WATCHES IT: THE OPERATOR IS OUT OF THE RELAY.**
 
 ★ **WORKER — START HERE:** A fresh seat is legitimately needed (§4). §5 is your complete `I7` contract — **continue `I7`, do not restart from AR-522 and do not open `I8` first.** `I11` is CLOSED. `P0-v5` is NOT yours.
