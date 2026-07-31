@@ -1,6 +1,35 @@
 {
-  "WHAT_THIS_PROVES": "Every assertion class in session_role_resolver_yield.py has a demonstrated path to RED, and the unmutated control stays GREEN. A guard that has never gone red is not an instrument.",
-  "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught. If the count checks had also reddened, this suite would not have shown that the IDENTITY check is what does the work.",
+  "WHAT_THIS_PROVES": "The 34 assertions in session_role_resolver_yield.py were run unmutated and all passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH below has at least one mutation that reddens it. A guard that has never gone red is not an instrument.",
+  "\u26a0\ufe0f_WHAT_THIS_DOES_NOT_PROVE": "This is NOT universal coverage. Assertions outside the listed classes have NO demonstrated red path here and must not be read as red-proofed. An earlier version of this receipt claimed 'every assertion class' over a 26-assertion run and that claim was BOTH stale in its count AND wider than its evidence.",
+  "ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH": {
+    "baseline_identity_join": "M1",
+    "non_family_movement_hard_stop": "M2",
+    "provenance_source_closure": "M3",
+    "positive_witness_for_empty_censuses": "M4",
+    "deployed_scope_capability_tripwire": "M5",
+    "deployed_scope_subset_or_equal": "M6",
+    "deployed_scope_STRICT_subset": "M7"
+  },
+  "ASSERTION_CLASSES_WITHOUT_ONE": [
+    "corpus/population size vs pinned baseline",
+    "determinism",
+    "invalidation counts",
+    "count-equals-identity-list-length",
+    "gate/held-flag controls",
+    "shared-symbol body comparison",
+    "deployed HEAD resolution"
+  ],
+  "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
+  "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
+  "PROVENANCE": {
+    "head": "65994cc2cca20c8931f6f1edbfd3bd5435370191",
+    "branch": "h1-wave4-sealed12-driver",
+    "harness_blob": "d44e51b1c9c0c7da545423ca4335885221220d9b",
+    "generator_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
+    "artifact_blob": "57a8bb3486a84774a857c6ed2242b833d9213123",
+    "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
+    "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
+  },
   "ALL_CASES_DISCRIMINATE": true,
   "cases": [
     {
@@ -22,6 +51,13 @@
         "A_OFF_reproduces_pinned_baseline__bound_and_concrete"
       ],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "A_C2_eligible_set_IDENTICAL_to_WAIT_SESSION_family_set__NOT_JUST_EQUAL_COUNTS",
+        "A_OFF_unbound_IDENTITIES_equal_baseline_identities__NOT_JUST_THE_COUNT",
+        "A_baseline_join_key_resolved_every_declared_row",
+        "C2_population_TWO_PATH__off_arm_derivation_equals_baseline_derivation_on_corpus_A"
+      ],
+      "n_reddened": 4,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -33,6 +69,11 @@
       "exit_code_is_nonzero": true,
       "assertions_that_must_STAY_GREEN": [],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "A_no_unexpected_movement_outside_the_WAIT_SESSION_family",
+        "B_no_unexpected_movement_outside_the_WAIT_SESSION_family"
+      ],
+      "n_reddened": 2,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -44,6 +85,11 @@
       "exit_code_is_nonzero": true,
       "assertions_that_must_STAY_GREEN": [],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "PROVENANCE_RAW_closure_INCLUDING_generator_and_any_harness_is_clean",
+        "PROVENANCE_source_closure_dirty_intersection_is_ZERO"
+      ],
+      "n_reddened": 2,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -55,6 +101,10 @@
       "exit_code_is_nonzero": true,
       "assertions_that_must_STAY_GREEN": [],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "POSITIVE_WITNESS_the_arms_actually_moved_rows_INSIDE_the_family"
+      ],
+      "n_reddened": 1,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -64,23 +114,47 @@
       "it_went_RED": true,
       "exit_code": 1,
       "exit_code_is_nonzero": true,
-      "assertions_that_must_STAY_GREEN": [
-        "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign"
-      ],
+      "assertions_that_must_STAY_GREEN": [],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+        "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign"
+      ],
+      "n_reddened": 2,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
     {
       "case": "M6_deployed_only_symbol_planted",
-      "assertion_that_must_go_RED": "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+      "assertion_that_must_go_RED": "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [],
+      "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign",
+        "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign"
+      ],
+      "n_reddened": 2,
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M7_sets_made_EQUAL",
+      "assertion_that_must_go_RED": "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign",
       "it_went_RED": true,
       "exit_code": 1,
       "exit_code_is_nonzero": true,
       "assertions_that_must_STAY_GREEN": [
-        "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane"
+        "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign"
       ],
       "collateral_failures": [],
+      "ALL_assertions_this_mutation_reddened": [
+        "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+        "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign"
+      ],
+      "n_reddened": 2,
       "VERDICT": "DISCRIMINATES",
       "OK": true
     }

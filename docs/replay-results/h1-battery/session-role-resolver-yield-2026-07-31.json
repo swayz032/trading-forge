@@ -7,7 +7,7 @@
   "ruling": "R-503 \u00a75 items A-H + \u00a73 reconciliation (supersedes R-502 \u00a74, R-501 \u00a76)",
   "TREE": {
     "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
-    "head": "f7586b108428ef348a9c77297b63c2eeccc7acfa",
+    "head": "a83a04e42aaa16672359158b51bdff42bf5c9519",
     "branch": "h1-wave4-sealed12-driver",
     "dirty_paths": 93
   },
@@ -24,7 +24,7 @@
   },
   "ASSERTIONS": {
     "ALL_PASS": true,
-    "n_pass": 30,
+    "n_pass": 33,
     "n_fail": 0,
     "checks": [
       {
@@ -97,6 +97,15 @@
           "only_in_off_arm": [],
           "only_in_baseline": [],
           "WHY": "corpus B has no baseline list; this is the evidence its surrogate is sound."
+        }
+      },
+      {
+        "assertion": "A_C2_eligible_set_IDENTICAL_to_WAIT_SESSION_family_set__NOT_JUST_EQUAL_COUNTS",
+        "PASS": true,
+        "detail": {
+          "in_C2_not_in_family": [],
+          "in_family_not_in_C2": [],
+          "WHY": "THE JOIN KEY IS THE CLAIM. Both populations are 27 on corpus A and equal counts prove nothing about membership."
         }
       },
       {
@@ -260,11 +269,45 @@
         }
       },
       {
-        "assertion": "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+        "assertion": "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign",
         "PASS": true,
         "detail": {
           "in_deployed_absent_from_campaign": 0,
-          "WHY": "0 deployed-only symbols means the divergence is purely SUBTRACTIVE -- one lineage with things removed, not two divergent forks. A non-zero value means the port would have to RECONCILE, not just ADD."
+          "MEANS": "no deployed-only top-level symbol; a non-zero value means a port would have to RECONCILE, not merely ADD."
+        }
+      },
+      {
+        "assertion": "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign",
+        "PASS": true,
+        "detail": {
+          "requires_both": {
+            "zero_deployed_only": true,
+            "at_least_one_campaign_only": true,
+            "NOTE": "The retired `STRICT_SUBSET` key tested only the first of these."
+          },
+          "WHY_SEPARATE": "dep < camp requires BOTH zero deployed-only AND at least one campaign-only. Equality satisfies subset-or-equal and must NOT satisfy this one -- mutation M7 proves it does not."
+        }
+      },
+      {
+        "assertion": "SCOPE_shared_symbol_bodies_compared_not_just_names",
+        "PASS": true,
+        "detail": {
+          "comparison": {
+            "shared_symbol_count": 33,
+            "bodies_DIFFERING": [
+              "FAMILY_META",
+              "FamilyMeta",
+              "_bind_condition_dispatch",
+              "_session_phrase_hit",
+              "refused_session_zone",
+              "resolve_session_keyword",
+              "session_refusal_reason"
+            ],
+            "n_bodies_differing": 7,
+            "METHOD": "sha256 over ast.dump(node) with include_attributes=False -- structure and literals, independent of formatting, comments and line numbers.",
+            "\u26a0\ufe0f_WHAT_THIS_STILL_DOES_NOT_PROVE": "Structural equality is NOT behavioural equality: a shared name whose body calls a DIFFERENT underlying implementation hashes identically. This is strictly stronger than the name-only comparison it replaces and is NOT a semantic parity proof. `ZERO DEPLOYED-ONLY SYMBOL NAMES DOES NOT PROVE ZERO DEPLOYED-SIDE SEMANTIC DIVERGENCE` (R-507 \u00a74)."
+          },
+          "WHY": "R-507 \u00a76.7 -- 'purely additive / nothing to reconcile' phrasing may not be used until shared BODIES are compared, not just shared NAMES. This is the positive witness that the comparison actually ran; the DIFFERING list is the result and is reported whatever its size."
         }
       }
     ],
@@ -272,14 +315,44 @@
   },
   "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": {
     "STATUS": "MEASURED",
-    "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
+    "SNAPSHOT_RECORD": {
+      "generated_at_utc": "2026-07-31T07:08:06Z",
+      "campaign_commit": "a83a04e42aaa16672359158b51bdff42bf5c9519",
+      "campaign_binder_blob": "7c9e69a15b03b4bf566d37abbf04fa592848e925",
+      "generator_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+      "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
+      "deployed_repo_head": "<unavailable: Command '['git', 'rev-parse', 'HEAD']' returned non-zero exit status 128.>",
+      "deployed_binder_sha256": "b849a3718c1c8c81a178658aa46ece5607731f9d10274fab3f8c9bc4a2947dfc",
+      "WHY": "R-507 \u00a76.4/\u00a76.5 -- the deployed binder lives in a DIFFERENT git tree, so it cannot join this run's source closure by HEAD-blob comparison. It is hashed SEPARATELY here and that hash is what every deployed-scope claim binds to."
+    },
     "campaign_bytes": 160049,
     "deployed_bytes": 40583,
     "campaign_top_level_symbols": 103,
     "deployed_top_level_symbols": 33,
     "in_campaign_ABSENT_from_deployed": 70,
     "in_deployed_ABSENT_from_campaign": 0,
-    "STRICT_SUBSET": true,
+    "DEPLOYED_IS_SUBSET_OR_EQUAL": true,
+    "DEPLOYED_IS_STRICT_SUBSET": true,
+    "STRICT_SUBSET_REQUIRES_BOTH": {
+      "zero_deployed_only": true,
+      "at_least_one_campaign_only": true,
+      "NOTE": "The retired `STRICT_SUBSET` key tested only the first of these."
+    },
+    "SHARED_SYMBOL_BODY_COMPARISON": {
+      "shared_symbol_count": 33,
+      "bodies_DIFFERING": [
+        "FAMILY_META",
+        "FamilyMeta",
+        "_bind_condition_dispatch",
+        "_session_phrase_hit",
+        "refused_session_zone",
+        "resolve_session_keyword",
+        "session_refusal_reason"
+      ],
+      "n_bodies_differing": 7,
+      "METHOD": "sha256 over ast.dump(node) with include_attributes=False -- structure and literals, independent of formatting, comments and line numbers.",
+      "\u26a0\ufe0f_WHAT_THIS_STILL_DOES_NOT_PROVE": "Structural equality is NOT behavioural equality: a shared name whose body calls a DIFFERENT underlying implementation hashes identically. This is strictly stronger than the name-only comparison it replaces and is NOT a semantic parity proof. `ZERO DEPLOYED-ONLY SYMBOL NAMES DOES NOT PROVE ZERO DEPLOYED-SIDE SEMANTIC DIVERGENCE` (R-507 \u00a74)."
+    },
     "capability_symbols_checked": [
       "session_role_resolver_enabled",
       "classify_session_role",
@@ -290,8 +363,9 @@
     ],
     "capability_symbols_PRESENT_in_deployed": [],
     "capability_absent_from_deployed": true,
-    "\u2605_SCOPE_SENTENCE": "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. The session-role capability it measures DOES NOT EXIST AS CODE in the deployed engine -- the symbols that constitute it are absent, so the flag has nothing to gate there. This is a PORT, not a configuration change. `MEASURED != MEASURED-WHERE-IT-RUNS`: no figure here may be stated about production without this sentence beside it.",
-    "WHY_COMPUTED_NOT_TYPED": "R-506 \u00a73: `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT READER; A RULE OBEYED IN PROSE CAN.` The assertion below is a TRIPWIRE -- it goes RED the moment any capability symbol appears in the deployed binder, which is exactly when every scope sentence here becomes stale."
+    "\u2605_SCOPE_SENTENCE": "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. NARROW, MEASURED CLAIM: the SIX named top-level symbols in `capability_symbols_checked` are ABSENT from the deployed binder's TOP-LEVEL symbol table. THIS IS NOT AN ENGINE-WIDE CAPABILITY-ABSENCE PROOF -- imported aliases, renamed or nested implementations, tuple-bound names and shared bodies are NOT covered, and no repo-wide import/alias/call-path audit has been run. `MEASURED != MEASURED-WHERE-IT-RUNS`: no figure here may be stated about production without this block beside it.",
+    "\u2605_STATIC_SNAPSHOT_NOTICE": "This artifact is a static snapshot and does not auto-update; rerun is required after any deployed-binder change. NO CI JOB OR SCHEDULER REGENERATES THIS FILE [MEASURED, R-507 \u00a73].",
+    "\u2605_THE_TRIPWIRE_IS_RERUN_TIME_ONLY": "The scope assertion fires only when a human reruns this generator. `A RERUN-TIME GUARD IS NOT A LIVE INVALIDATION MECHANISM.` An earlier version of this file claimed the tripwire 'self-destructs' when the capability is ported; THAT CLAIM IS WITHDRAWN -- nothing reruns it automatically, so the artifact can go stale silently and the guard will not say so."
   },
   "RECONCILIATION_18_17_9": {
     "THE_QUESTION": "AR-524 reported 18 recognized / 17 reason transitions / 9 computed zones / 0 bindings. R-503 \u00a73 requires the partition proven by IDENTITY, not arithmetic.",
@@ -8398,7 +8472,7 @@
   },
   "PROVENANCE_SOURCE_CLOSURE": {
     "WHY_THIS_EXISTS": "R-502 \u00a74: `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Deterministic repeated execution proves repeatability INSIDE the checkout; it does NOT prove the binder that ran equals the named commit. This manifest does, by comparing worktree bytes to the HEAD blob for every file in the EXECUTED source+population closure.",
-    "head": "f7586b108428ef348a9c77297b63c2eeccc7acfa",
+    "head": "a83a04e42aaa16672359158b51bdff42bf5c9519",
     "closure_size": 22,
     "binder_blob": {
       "path": "src/engine/spec_family_bindings.py",
@@ -8408,8 +8482,8 @@
     },
     "generator_blob": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
-      "head_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
+      "worktree_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+      "head_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
       "IDENTICAL": true
     },
     "pinned_baseline_blob": {
@@ -8447,8 +8521,8 @@
       },
       {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
-        "head_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
+        "worktree_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+        "head_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
         "IDENTICAL": true
       },
       {

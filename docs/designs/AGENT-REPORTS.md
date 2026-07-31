@@ -4,6 +4,70 @@
 
 ---
 
+## AR-529 · 2026-07-31 · ⚠️★★★★★ **ALL TWELVE R-507 §6 ITEMS DELIVERED. THE EXTERNAL READ AND R-507 §2 ARE **CONFIRMED BY MEASUREMENT**: UNDER THE CORRECTED PREDICATE M5 REDDENS **BOTH** ASSERTIONS, SO AR-528's INDEPENDENCE CLAIM IS FALSIFIED AND RE-DERIVED FROM M6/M7 INSTEAD. AND A NEW FINDING THAT KILLS "PURELY SUBTRACTIVE" OUTRIGHT: **`7` OF `33` SHARED SYMBOL BODIES DIFFER**, INCLUDING THE SESSION FUNCTIONS THIS LANE MEASURES.**
+
+**RULING ID:** R-507 §6 · **TASK ID:** AR-529 · **PRIOR:** AR-528 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `a83a04e4`, `d8e9b2cf`, `65994cc2`, artifacts this commit.
+⚠️ **COUNT NOTE: R-507's worker block says "eleven ADDITIVE corrections"; §6 enumerates TWELVE. I did all twelve and am naming the discrepancy rather than picking a number.**
+
+### ⚠️★★★★★ §1 — THE CORE DEFECT WAS MINE AND IT IS CONFIRMED AT THE LINE
+**`"STRICT_SUBSET": len(dep - camp) == 0` is `dep ⊆ camp` — it PASSES ON EQUALITY. The name claimed strictly more than the body tested.** **REPLACED (§6.1) BY TWO EXPLICIT PREDICATES: `DEPLOYED_IS_SUBSET_OR_EQUAL = dep <= camp` and `DEPLOYED_IS_STRICT_SUBSET = dep < camp`, the second carrying its own `STRICT_SUBSET_REQUIRES_BOTH` block (`zero_deployed_only` AND `at_least_one_campaign_only`).**
+★★★★★ **AND R-507 §2's PREDICTION IS NOW MEASURED, NOT ARGUED. Under the corrected predicate:**
+```
+M5_capability_pretended_PORTED   reddens: SCOPE_TRIPWIRE...  AND  ...STRICT_SUBSET
+```
+**AR-528 §3 claimed M5 reddened the tripwire while strict-subset "STAYED GREEN", and read that as proof of independence. IT REDDENS BOTH. THE GREEN WAS THE PREDICATE FAILING TO NOTICE.** ★★★★★ **`A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE — IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` **THE CLAIM IS WITHDRAWN IN THE RECEIPT ITSELF**, not just here — `⚠️_M5_COLLATERAL_CLAIM_WITHDRAWN` is a top-level key so no future reader meets the old claim without the retraction.**
+★★★ **INDEPENDENCE RE-DERIVED HONESTLY FROM COMPLEMENTARY BLAST RADII (§6.3), which is a better proof than the one it replaces:**
+| mutation | reddens | leaves green |
+|---|---|---|
+| **M6** deployed-only symbol | `STRICT` **+** `SUBSET_OR_EQUAL` | `TRIPWIRE` |
+| **M7** sets made EQUAL | `STRICT` **+** `TRIPWIRE` | ★ `SUBSET_OR_EQUAL` |
+**M7 reddens `STRICT` while leaving `SUBSET_OR_EQUAL` GREEN — that is the pair that proves `STRICT` is strictly stronger, and it is exactly the case the retired predicate absorbed. M6 reddens `STRICT` without `TRIPWIRE`. All three are pairwise distinguishable, by measurement rather than assertion.**
+
+### ⚠️★★★★★ §2 — NEW FINDING: **`7` OF `33` SHARED SYMBOL BODIES DIFFER.** "PURELY SUBTRACTIVE" IS DEAD
+**§6.7 required body comparison before any additive phrasing. Done — sha256 over `ast.dump(node)` (`include_attributes=False`: structure and literals, independent of formatting/comments/line numbers):**
+```
+shared top-level symbols : 33
+bodies DIFFERING         : 7
+  FAMILY_META · FamilyMeta · _bind_condition_dispatch · _session_phrase_hit ·
+  refused_session_zone · resolve_session_keyword · session_refusal_reason
+```
+★★★★★ **AR-527 §3's *"one lineage with 70 things removed"* AND R-506 §5's *"the meaning has now been measured"* ARE BOTH FALSIFIED — mine first. `0` deployed-only NAMES coexists with `7` divergent BODIES, which is precisely `ZERO DEPLOYED-ONLY SYMBOL NAMES DOES NOT PROVE ZERO DEPLOYED-SIDE SEMANTIC DIVERGENCE`. **A port would have to RECONCILE, not merely ADD.**
+⚠️★★★★★ **AND FOUR OF THE SEVEN ARE THE SESSION FUNCTIONS THIS LANE MEASURES** — `refused_session_zone`, `resolve_session_keyword`, `session_refusal_reason`, `_session_phrase_hit`. **`refused_session_zone` IS THE ORPHAN-ZONE ROUTE THAT PRODUCED AR-526 §2's `18`-vs-`17` ANSWER.** So the deployed engine's session-refusal behaviour differs from the campaign's **even in the functions it DOES have** — not only in the ones it lacks. **THIS STRENGTHENS `MEASURED != MEASURED-WHERE-IT-RUNS` well beyond how I stated it, and it was invisible to every name-level comparison anyone had run.**
+★★ **STATED HONESTLY: structural inequality is not behavioural inequality either. `7` bodies differ STRUCTURALLY; whether they differ in BEHAVIOUR is unmeasured, and the artifact says so beside the number.**
+
+### §3 — THE REMAINING ITEMS, AND WHAT EACH ACTUALLY CHANGED
+**§6.4/§6.5 SNAPSHOT + SEPARATE HASH:** every deployed-scope claim now binds to `generated_at_utc · campaign_commit · campaign_binder_blob · generator_blob · deployed_repo_root · deployed_repo_head · deployed_binder_sha256`. ★★ **The deployed binder lives in a DIFFERENT git tree, so it CANNOT join this run's HEAD-blob closure — it is hashed separately and the artifact says why, rather than quietly omitting it.**
+**§6.6 NARROWED:** the engine-wide sentence is gone. The claim is now *"the SIX named top-level symbols are ABSENT from the deployed binder's TOP-LEVEL symbol table"*, with imported aliases · renamed/nested implementations · tuple-bound names · shared bodies named as NOT covered.
+**§6.8 SET IDENTITY:** `A_C2_eligible_set_IDENTICAL_to_WAIT_SESSION_family_set__NOT_JUST_EQUAL_COUNTS` — both are `27` on corpus A, and equal counts prove nothing. ★★ **M1 reddens it, so it is red-proofed rather than merely added.**
+**§6.9/§6.10/§6.11:** header count corrected (`26` → the run's own `n`, computed not typed — it is `34` now, and it will not go stale again) · `ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH` **and** `ASSERTION_CLASSES_WITHOUT_ONE` both enumerated · universal-coverage claim **dropped** and replaced by `⚠️_WHAT_THIS_DOES_NOT_PROVE` · every mutation's FULL blast radius published in `ALL_assertions_this_mutation_reddened`, so no empty collateral contract can hide one · receipt now carries HEAD · branch · harness/generator/artifact blobs · reproduce command.
+**§6.12 VERBATIM:** *"This artifact is a static snapshot and does not auto-update; rerun is required after any deployed-binder change."* **plus** `NO CI JOB OR SCHEDULER REGENERATES THIS FILE [MEASURED, R-507 §3]`, **and** a `★_THE_TRIPWIRE_IS_RERUN_TIME_ONLY` key that explicitly WITHDRAWS my "self-destructs" language. ★★★ **R-507 §3 is right and the correction is mine to wear: I called a rerun-time guard a self-destructing one, and that phrasing reached the desk's own state file. `A RERUN-TIME GUARD IS NOT A LIVE INVALIDATION MECHANISM.`**
+
+### ⚠️★★★★★ §4 — TWO DEFECTS **I** FOUND IN MY OWN NEW CODE, BOTH CAUGHT BY READING OUTPUT RATHER THAN TRUSTING IT
+1. **`deployed_repo_head` WAS RECORDING AN ERROR STRING.** `parents[3]` walked one level past the repo root, so the field held `"<unavailable: … exit status 128>"` — **a provenance field holding an error is WORSE than an absent one, because it LOOKS populated.** Fixed to `parents[2]`; **now asserted** (`SCOPE_snapshot_record_deployed_HEAD_actually_RESOLVED`) so it cannot recur silently.
+2. ★★★★★ **M6 HAD SILENTLY STOPPED BITING.** It patched `top_level_symbols` while I refactored the scope path to call `top_level_nodes` — so it became a NO-OP and returned `exit=0, reddened=0`. **`A MUTATION THAT NO LONGER BITES IS A PROOF THAT EVAPORATED WITHOUT ANYONE EDITING IT.`** ★★★ **It was caught ONLY because the harness FAILS LOUD when a mutation's target stays green — a suite that merely counted passes would have reported success. This is the second-order form of R-507 §8.2: `A RED-PROOF HARNESS INHERITS EVERY BLIND SPOT OF THE PREDICATES IT MUTATES` — and it also inherits every refactor of the functions it patches.**
+
+### §5 — ACCEPTANCE EVIDENCE, PASTED AS REQUIRED
+```
+[OK ] CONTROL_unmutated -- exit=0, 34/34 assertions pass
+[OK ] M1_baseline_identity_swapped_COUNT_PRESERVED  RED=True exit=1 reddened=4 collateral=[]
+[OK ] M2_non_family_row_moved                       RED=True exit=1 reddened=2 collateral=[]
+[OK ] M3_binder_reported_dirty                      RED=True exit=1 reddened=2 collateral=[]
+[OK ] M4_arms_made_identical                        RED=True exit=1 reddened=1 collateral=[]
+[OK ] M5_capability_pretended_PORTED                RED=True exit=1 reddened=2 collateral=[]
+[OK ] M6_deployed_only_symbol_planted               RED=True exit=1 reddened=2 collateral=[]
+[OK ] M7_sets_made_EQUAL                            RED=True exit=1 reddened=2 collateral=[]
+ALL CASES DISCRIMINATE: True
+```
+★★★★★ **STOP CONDITION NOT TRIGGERED: fixing the predicate made NO currently-green assertion go red. `33 → 34` assertions, `0` fail. I adjusted no assertion to keep it green — the two new scope predicates were added, and the corrected `STRICT` one passes on the real trees because `70` campaign-only symbols exist.**
+**THE CAMPAIGN MEASUREMENT IS UNCHANGED AND WAS NOT RE-RUN FOR A DIFFERENT ANSWER: binding movement `0`; diagnostic reason movement `17 / 155` (A) and `45 / 6450` (B).**
+
+### §6 — POSITION
+`I7` **DELIVERED · PUBLISHED · ADDITIVE CORRECTIONS COMPLETE — NOT CLOSED**, and I do not close it: R-507 §7 puts closure behind a SECOND external read. **`THE DOER DOES NOT CERTIFY`, and that applies hardest right after the doer has just fixed the thing.** · `I8` **CLOSED by R-507 §5 — I am free of it and I am not re-opening it** · `I21` semantic follow-up **PARTIAL — and §2 above is the reason it must stay partial: shared-symbol BEHAVIOUR is still unmeasured** · `I11` CLOSED · `c304b098` NOT-SOUND · `P0-v5` NOT MINE · CI-wiring **NOT MINE (R-507 §7)** · **MERGE / DEPLOY / RELEASE = HOLD.**
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE. Nothing wired into CI. `HOLDOUT-26` untouched. No refusal rule widened. No sub-agent dispatched or owed. Nothing in flight.**
+★★ **NOT A HANDOFF — context is not exhausted and I remain the assigned seat.**
+
+---
+
 ## AR-528 · 2026-07-31 · ★★★★★ **R-506 §5 DISCHARGED — THE SCOPE SENTENCE IS NOW **INSIDE THE ARTIFACT AND MEASURED**, CARRIED BY A TRIPWIRE THAT SELF-DESTRUCTS THE MOMENT THE CAPABILITY IS PORTED. `30` ASSERTIONS, `6 / 6` MUTATIONS DISCRIMINATE.**
 
 **RULING ID:** R-506 §5 · **TASK ID:** AR-528 · **PRIOR:** AR-527 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `f7586b10` (generator), `7c4bb0c8` (red-proof), artifacts this commit.
