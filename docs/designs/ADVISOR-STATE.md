@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2634` at THIS commit, 2026-07-31 01:38 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2650` at THIS commit, 2026-07-31 01:42 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,11 +82,27 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **R-499 LANDED (`3933f849`) · `AR-518` RULED · LEDGER CURRENT, NO DEBT** · live delivery still **`c304b098`** (2026-07-31 01:35, ADVISOR SEAT = `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE)
+## ★★★★★ SEAT — **R-500 LANDED (`6a789090`) · `AR-519` RULED · LEDGER CURRENT, NO DEBT · BATCH 1 IS RUNNING** · live delivery still **`c304b098`** (2026-07-31 01:41, ADVISOR SEAT = `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE AND WORKING)
 
 ★★★★★ **FIRST WAKE CHECK — AND FOR THE FIRST TIME IN THREE SEATS THE ANSWER IS "NOTHING": AR-516,
-AR-517 AND AR-518 ARE ALL RULED IN R-499. THE `WAIT ON GPT` PASTE-HOLD IS DISCHARGED — the operator
-spoke in his own voice (AR-518 §1) and the disclosure question is CLOSED, not held.**
+AR-517, AR-518 AND AR-519 ARE ALL RULED (R-499, R-500). THE `WAIT ON GPT` PASTE-HOLD IS DISCHARGED —
+the operator spoke in his own voice (AR-518 §1) and the disclosure question is CLOSED, not held.**
+
+### ★★★★★ WORK IN FLIGHT — **BATCH 1, FAN-IN COUNT `0 / 4` AT LAST READ (AR-519)**
+**Lanes: `I11` grade · `I7` C2 yield · `I21` register · `I8` semantic-role shadow. Adopted by the
+worker at AR-519 (`aeeeb8a6`).** ⚠️★★★ **DECLARED DEVIATION, RATIFIED IN R-500 §2: the harness will
+not launch subagents unasked, so the four lanes run **SERIALLY IN ONE SEAT**. Wall-clock only — same
+contracts, same A1–A3, **same fan-in count against `4`**, one signature. If the seat closes two, it
+reports `2 / 4` and hands off; `A DECLARED PARTIAL IS ACCEPTED`.**
+★★★★★ **R-500 §3 CORRECTED THE ORDER AND THE ERROR WAS MINE: `I11` IS A **DISPATCH, NOT A LANE** —
+it consumes no serial capacity, so it must not sit behind `I8`. **IT FIRES THE MOMENT THE OPERATOR'S
+WORD ARRIVES, whatever lane is mid-flight.** `SEQUENCING BY COST IS CORRECT ONLY AMONG THINGS THAT
+SHARE A RESOURCE`, and I put it in a table of lanes so both seats treated it as one.**
+★★ **IF THE WORD NEVER ARRIVES: fan-in reports `3 / 4` with `I11` **awaiting one witnessed sentence**
+— NEVER "blocked". Do not re-ask the operator every turn; both seats have asked once.**
+★★★ **`I8`'s OUTPUT IS NOT AN ACCURACY CLAIM (R-500 §4).** The worker refused to score its own ground
+truth and emits a frozen, blind-scoreable INPUT — no confidence column, no ordering by agreement. Any
+score is a SECOND `accuracy-validator` dispatch and this desk's call.
 
 ### ★★★★★ WHAT R-499 DID (ledger `3933f849`, 249 insertions, 2 files)
 **RATIFIED the graph-lanes fake-edge map WITH FIVE AMENDMENTS and committed it VERBATIM**
