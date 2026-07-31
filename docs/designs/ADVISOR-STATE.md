@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3142` at THIS commit, 2026-07-31 08:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3153` at THIS commit, 2026-07-31 09:16 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3142` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3153` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,6 +85,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ⚠️★★★★★ SEAT — **AR-535 UNRULED · R-512 OWED, HELD for the SIXTH external read · R-511 LANDED (`474f52ee`) · `AR-533` IS RULED · NO RULING DEBT** · the FIFTH external read (`154aba33`, `08:18:47`) arrived and the gate was honoured · branch PUBLISHED at **`474f52ee`** `[MEASURED BY ls-remote, 0/0]` · live delivery still **`c304b098`** (2026-07-31 08:30 — ADVISOR SEAT fresh in `claude.exe 15520`, monitors ADOPTED not re-armed, `0` armed / `0` killed; WORKER **RE-SEATED WITH A FRESH CONTEXT in the same process**, **AUTHORIZED on R-511 §6**)
+
+### ⚠️★★★★★ **THE EXTERNAL-READ GATE IS NOW THE CAMPAIGN'S RATE LIMITER — MEASURED SERIES, NOT AN IMPRESSION** `[MEASURED HERE 09:16, arrival times from the `external-advisor/gpt-rulings` branch vs the commit that landed each AR]`
+| AR | landed | read arrived | latency |
+|---|---|---|---|
+| AR-529 | `03:12:26` | `03:21:37` | **`9m`** |
+| AR-530 | `03:32:30` | `03:37:52` | **`5m`** |
+| AR-531 | `07:13:11` | `07:24:25` | **`11m`** |
+| AR-532 | `07:37:12` | `08:18:32` | ⚠️ **`41m`** |
+| AR-535 | `08:44:48` | — | ⚠️ **`>30m`, RUNNING** |
+★★★★★ **THAT IS A STEP CHANGE, NOT DRIFT: `5–11m` for three consecutive rounds, then `41m` and counting. `~4x`, arriving between the fourth and fifth reads.** ⚠️★★★ **HONEST LIMIT, AND IT IS A REAL ONE: I measure ARRIVAL, which conflates *how long the external reader took* with *when anyone relayed it*. I have NO visibility into that process, so I can name the COST and not the CAUSE.** `A LATENCY I CAN SEE THE END OF BUT NOT THE START OF IS A COST, NOT A DIAGNOSIS.`
+★★★★★ **AND THE OTHER HALF OF THE LEDGER, WHICH MUST TRAVEL WITH THE COST OR THIS BECOMES AN ARGUMENT WEARING A MEASUREMENT'S CLOTHES: THE HOLD KEEPS PAYING. R-510 §0 recorded that it bought the single best finding of that wake (`M8` reddening without reading its plant — neither I nor the worker caught it). The FIFTH read bought `ALL_CLEAN`-is-not-a-gate, also real, also missed by both of us.** ⚠️ **SO: cost UP `4x`, value STILL POSITIVE. That trade is the OPERATOR'S to price — it is his standing order — and this table exists so he prices it on numbers instead of on my summary of them.** ★★ **DO NOT USE THIS TABLE TO ARGUE FOR BREAKING THE ORDER. `A CHANNEL IS NOT AN AUTHOR`, and this desk has already violated it twice (R-499/R-500).**
 
 ### ⚠️★★★★★ **`AR-535` IS UNRULED — `R-512` IS OWED AND HELD FOR THE SIXTH EXTERNAL READ.** VERIFIED AT THIS DESK ALREADY, SO THE NEXT SEAT NEED NOT RE-DERIVE IT `[MEASURED HERE 08:46]`
 | AR-535 claim | my independent check | result |
