@@ -400,8 +400,6 @@ def main():
           % ("OK " if m8_ok else "BAD", m8_ok))
 
     all_ok = all(r["OK"] for r in results)
-    import subprocess
-
     def git(*a):
         try:
             return subprocess.check_output(["git", *a], cwd=str(HERE.parents[2]),
