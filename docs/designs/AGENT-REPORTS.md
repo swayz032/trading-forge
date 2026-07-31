@@ -4,6 +4,53 @@
 
 ---
 
+## AR-533 · 2026-07-31 · ★★★★★ **SEAT RE-SEATED WITH A FRESH CONTEXT IN THE SAME PROCESS — AND I AM REPORTING *NO OPEN AUTHORIZATION* RATHER THAN INVENTING ONE. R-510 §6 IS DELIVERED (AR-532) AND UNRULED.** ⚠️★★★ **ONE NEW MEASURED FINDING WHILE VERIFYING MY OWN POSITION: THE RED-PROOF *RECEIPT* IS THE ONE PUBLICATION OBJECT NOTHING CHECKS — IT IS OUTSIDE `ALL_CLEAN` AND IS NEVER READ BACK. THAT IS R-509 §3's SPECIES ONE LEVEL OUT.**
+
+**RULING ID:** none open — this is a SEAT + POSITION report · **TASK ID:** AR-533 · **PRIOR:** AR-532 · **SEAT:** the seat that filed AR-525 / AR-531 / AR-532, context cleared and re-seated via `/worker-onboarding`.
+
+### §1 — SEAT IDENTITY, MEASURED, AND WHAT I COULD *NOT* MEASURE
+`[MEASURED HERE]` Two `claude.exe` exist and both predate this context: `26204` (parent `18904`) and `15520` (parent `22608`), **both created `01:24`**. `[UNMEASURED — AND I AM SAYING SO RATHER THAN GUESSING]` **My ancestor walk from `$PID` returned `no claude ancestor found`, so I did NOT establish by measurement which of the two I am.** I am the worker seat **by DISPATCH** — the operator invoked `/worker-onboarding` in this context — **not by PID.**
+★★★ **This is AR-525's law holding a second time and in the harder direction: `A PID IS NOT A DURABLE ID FOR A SEAT` — and its converse bit me here, because the process is unchanged while the context is empty. The desk's state line (`WORKER SEAT = claude.exe 26204, ALIVE, filed AR-532`) is still TRUE about the PROCESS and now MISLEADING about the SEAT: nothing that AR-532's context held is available to me.** ⚠️ **If any part of R-511 assumes retained worker context, it must be restated in the ruling.**
+
+### §2 — POSITION, RE-DERIVED FROM DISK RATHER THAN RELAYED FROM AR-532
+```
+HEAD                                   76eec6bf1715fb1a5d17746482f040bd9041b1a5
+origin/h1-wave4-sealed12-driver        76eec6bf1715fb1a5d17746482f040bd9041b1a5   PUBLISHED, 0 ahead / 0 behind
+newest ruling on disk (grep "^## R-")  R-510          newest AR (grep "^## AR-")  AR-532  -> UNRULED
+git status --porcelain -- <3 publication paths>   (empty)
+                                              worktree(hash-object)   HEAD:<path>(rev-parse)
+session-role-resolver-yield-2026-07-31.json   6eb62802ce17            6eb62802ce17   IDENTICAL
+session_role_resolver_yield.py                46db1c0dca7b            46db1c0dca7b   IDENTICAL
+session_role_resolver_yield_REDPROOF.py       693968f3a364            693968f3a364   IDENTICAL
+committed receipt: ALL_CASES_DISCRIMINATE = True
+```
+✅ **`artifact_publication_commit` VERIFIED BY KEY, NOT BY THE FIELD THAT ASSERTS IT:** the receipt says `0f88877e`; `git log -1 -- <artifact>` **independently returns `0f88877e`.** The two agree.
+★ **The three delivered publication paths are committed, clean and byte-identical to their `HEAD` blobs — so AR-532's package survives at the current `HEAD`, six commits after it landed.**
+
+### ⚠️★★★★★ §3 — NEW FINDING: **THE RECEIPT IS THE ONE PUBLICATION OBJECT WITH NO GUARD ON IT.** `[MEASURED HERE, executable lines, WITH A POSITIVE CONTROL]`
+```
+REDPROOF.py:633  "ALL_CLEAN": all(pubblob(p)["IDENTICAL"] for p in ...)   # HARNESS_REL, GENERATOR_REL, ARTIFACT_REL
+                 -> the RECEIPT is NOT in that set
+REDPROOF.py:665  path = HERE / "session-role-resolver-yield-REDPROOF-2026-07-31.json"   # written, never read back
+occurrences of the RECEIPT filename   generator 0 · harness 1   (the write itself)
+occurrences of the ARTIFACT filename  generator 2 · harness 4   <- POSITIVE CONTROL: the query finds names when they exist
+```
+★★★★★ **SO: `publication_consistency` proves the ARTIFACT is current, `ALL_CLEAN` proves three paths are undirty, and **NOTHING AT ALL SPEAKS FOR THE RECEIPT** — the object whose whole job is to certify that the other proofs ran.** ⚠️★★★ **This is R-509 §3's species one granularity level out — there it was `a discipline applied to every INPUT and not to the OUTPUT`; here it is `A DISCIPLINE APPLIED TO THE ARTIFACT AND NOT TO THE OBJECT THAT CERTIFIES IT`. The saturation is what hides it: a reader sees `blob_pair`, `HEAD:`, `ALL_CLEAN` and three named publication identities and stops looking.**
+★★ **WHAT I AM *NOT* CLAIMING, EXPLICITLY:** I am **not** calling the receipt STALE. Its `receipt_measurement_commit` = `0f88877e` against `HEAD` `76eec6bf` (`6` commits apart `[MEASURED, git log 0f88877e..HEAD]`), **but its own definition is *"HEAD when THIS receipt was produced"* — so that value is HISTORICAL, not wrong.** `[HYPOTHESIS — UNMEASURED]` **the consequence I cannot rule out is that a receipt could be committed for a harness that has since changed, and no assertion anywhere would go RED.** Proving or killing that needs a mutation, and I have no authorization to write one.
+
+### §4 — WHY I DID **NOT** RE-RUN THE HARNESS TO VERIFY, STATED AS A DECISION AND NOT AS AN OMISSION
+`[MEASURED HERE]` Running it is **not** read-only: `REDPROOF.py:667-668` rewrites the **in-repo** receipt on every run (mutation plants are safely temp/fixture-scoped — `:48` redirects `OUT_PATH` to a discard file, so the real artifact is never at risk `[MEASURED]`). ★★★ **The rewrite necessarily changes `receipt_measurement_commit` to the current `HEAD`, so the verification act would dirty a committed publication object in a tree the ADVISOR SEAT is actively committing to (`08:12:36`, six commits in the last 35 minutes).** **Weighed against that: it would produce no fact the desk lacks — `ALL_CASES_DISCRIMINATE = True` is already on disk in the committed receipt.** **I hold it. If R-511 wants it re-run, say so and I will run it and commit the regenerated receipt as its own act.**
+
+### §5 — WHAT IS OPEN, AND TO WHOM `[read from R-510 §7 + ADVISOR-STATE, RELAYED — the dispositions are the desk's]`
+`I7` **NOT CLOSED** — behind a FIFTH external read (desk's) · `I8` **NOT STARTED · BLOCKED ON AN EXTRACTION AUTHORIZATION THAT DOES NOT EXIST (OPERATOR'S)** · `I21` semantic follow-up **PARTIAL — behaviour `[UNMEASURED]`, unassigned** · `P0-v5`, Revision-4 adoption, `I6`, `I14`, CI-wiring → **DESK** · `c304b098` **NOT-SOUND** · `I11` **CLOSED**.
+★★★★★ **FAN-IN ON MY OWN BATCH: `7 / 7` of R-510 §6 delivered in AR-532. There is no `M − N` remainder to stay for. I am NOT handing off and I am NOT asking for a fresh session — I am seated, cheap, and idle-by-authorization, which is the correct state when the next lane is the desk's to open.**
+
+### §6 — WHAT I AM ASKING FOR
+**One thing: the next assignment, in R-511.** ★★★ **If §3 above is worth a lane, the shape I would propose (NOT started, NOT authorized) is a `M12_RECEIPT_UNCOVERED` mutation — change the harness after a receipt is committed, leave every existing assertion green, and see whether anything anywhere reddens. Under R-510 §8's own law that mutation is exactly what would tell us whether the receipt is a proof or a decoration.**
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB READ-OR-WRITE THIS SESSION · `HOLDOUT-26` untouched · no refusal rule touched · no campaign measurement re-run or altered · nothing committed but this report.**
+
+---
+
 ## AR-532 · 2026-07-31 · ⚠️★★★★★ **R-510 §6 DELIVERED, ALL SEVEN. `M8` WAS A FALSE DISCRIMINATION AND IS NOW A GIT-FIXTURE TEST THAT MUST READ WHAT IT PLANTED — IT REPORTS `published_n_pass = 33` BACK. AND THE SOURCE-CLOSURE WORK EXPOSED **TWO MORE ENTRY-POINT LEAKS OF MY OWN**: THE TEST RIG WAS INSIDE THE MEASUREMENT'S SOURCE CLOSURE, AND THE GENERATOR COUNTED ITSELF ONLY WHEN RUN STANDALONE.**
 
 **RULING ID:** R-510 §6 · **TASK ID:** AR-532 · **PRIOR:** AR-531 · **SEAT:** the seat that filed AR-525.
