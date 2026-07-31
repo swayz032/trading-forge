@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3225` at THIS commit, 2026-07-31 10:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3235` at THIS commit, 2026-07-31 10:58 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3225` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3235` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -101,6 +101,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ⚠★★★★★ **AND ONE MEASUREMENT AR-540 DID NOT RUN, WHICH BEARS DIRECTLY ON ITS §3 COLLISION — IT REFUTED MY OWN HYPOTHESIS.** I suspected §15.7's count was landing on the WRONG JOIN KEY (`DELIVERY ATTEMPTS`, not `PATCH ROUNDS ON THE INSTRUMENT`) — this desk's most-convicted error, `6×`. **[MEASURED HERE] `git diff --stat` across the three transitions: `2011e8de→39948d3c` = **`+283/-48`** in `check-spec-binding-plan-parity.ts` · `39948d3c→8187b730` = **`+37`** · `8187b730→c304b098` = **`+186`**.** ⚠★★★★★ **THE CHECKER'S CODE CHANGED SUBSTANTIALLY IN EVERY ROUND. `MY WRONG-JOIN-KEY HYPOTHESIS IS REFUTED BY MEASUREMENT` — these ARE patch rounds on the instrument, and §15.7's threshold of `TWO` is genuinely engaged. I record this AGAINST the reading I expected to reach.**
 ★★★ **§15.7 VERBATIM, READ AT THE LINE (`BLUEPRINT-V4-DRAFT.md:862`), because the collision turns on ONE WORD:** *"Two failed patch rounds on the same **instrument** trigger replacement or retirement, not a third regex-shaped patch."* **And §15.6 step `1` (`:828`) names finishing `P0` as the critical path. BOTH ARE THE SAME DOCUMENT BY THE SAME AUTHOR.** ⚠ **THE DISPOSITION IS `R-516`'s AND IS NOT WRITTEN HERE — `A STATE-FILE WRITE AND A LEDGER WRITE ARE DIFFERENT FILES, NOT DIFFERENT ACTS`.**
+
+### ⚠★★★★★ **I OPENED THE GRADE ITSELF, AND AR-540 §2 UNDERSTATES IT ON BOTH COUNT AND CONTENT.** `[MEASURED HERE 10:58, `GRADE-C304B098-2026-07-31.md`]`
+
+⚠★★★★★ **THE GRADE NAMES `FIVE` FINDINGS, NOT THREE** `[MEASURED, §7 severity table `:305-312`: HIGH `1` = `F-2` · MEDIUM `3` = `F-1`,`F-3`,`F-5` · LOW `1` = `F-4` · **Total `5`**]` **plus sub-claim `6` NOT-SOUND. AR-540 §2 reported `F-2`, `F-3` and sub-claim `6`, and OMITTED `F-1`, `F-4`, `F-5` entirely.** Its sentence *"these are three specific, bounded repairs — `NOT-SOUND` here means 'close these three'"* is therefore **short by two findings.**
+
+⚠★★★★★ **AND THE MISLABEL THAT MATTERS: AR-540 DESCRIBES `F-2` AS THE CAPTION DEFECT. IT IS NOT.** `[MEASURED, `:45`]` **`F-2` = *"HIGH — an oracle row's EXPECTATION is silently deleted by a typo'd key; output byte-identical, exit `0`"*** — **`6` single-key mutations each destroyed a live expectation and produced stdout byte-identical to the clean PASS (same md5 `eb99c6ccdc373ab4a6e0c3e9c47a1351`), `EXIT=0`, with a `A0_noop_reformat_only` control isolating the cause `[:51-62, :82]`.** The CAPTION finding is **`F-1`** (*"the FAIL summary's bucket caption names FIVE feeding checks; the bucket is fed by SIX"*). ★★★ **HOW THE SLIP HAPPENED, AND IT IS THIS DESK'S MOST-CONVICTED SHAPE (`6×`) NOW APPEARING IN THE WORKER'S REPORT: the sub-claim `3` ROW reads *"its own caption 'the WHOLE contract' is falsified by F-2"* — so the caption text sits ADJACENT to the `F-2` label in the table. `AR-540 READ THE SUB-CLAIM TABLE ROW, NOT THE FINDING HEADING.` `I MEASURED THE NEIGHBOURING OBJECT.`**
+
+★★★★★ **THE LINE THAT BEARS ON §15.7 HARDER THAN ANYTHING IN AR-540 §3** `[MEASURED, `:67`]`: the grade shows the SAME defect class walking DOWN one granularity level PER DELIVERY — `39948d3c` was condemned because *"membership operates at FIXTURE-FILE granularity and never at `condition_id` granularity"*, and **`c304b098` reproduces it as *"the census operates at `condition_id` granularity and never at FIELD granularity."*** ★★★★★ **THAT IS THE `I7` SHAPE VERBATIM — `CLOSING A JOIN MOVES THE FAMILY ONE LEVEL IN, IT DOES NOT END IT` (R-513's own synthesis). §15.7 IS NOT MERELY ENGAGED ON A COUNT; ITS SUBSTANCE IS PRESENT.** §7 `:314` also states **`F-2` ALONE IS DISQUALIFYING.**
+
+⚠ **AND THE COUNTER-WEIGHT, RECORDED SO THE RULING IS NOT BUILT ON HALF THE FILE: the GRADER'S OWN recommended disposition is *"REJECT and return for a FIFTH delivery"* `[:314]`, and `F-2`'s fix point is STRUCTURAL — a closed key list + per-value type-check at `:404-409` and `:729/:732` — not another point patch. `THE GRADER IS NOT BOUND BY §15.7 AND DID NOT WEIGH IT.` Band **`6/10`**, independence declared against all four predecessors `[:29, :303]`.** ⚠ **DISPOSITION REMAINS `R-516`'s. NOT WRITTEN HERE.**
 
 ✅★★★ **MONITORS — ENUMERATED BEFORE ARMING ANYTHING, AND NOTHING WAS ARMED.** `[MEASURED HERE]` THREE logical rigs, `6` processes, **ALL owned by `claude.exe 15520` = MINE** (my own shell walks up to `15520`): `27064/15980` `AGENT-REPORTS` 2s mtime change-detector w/ 3-fail alarm · `26812/11516` worker-idle watchdog on BOTH channels · `8372/26964` `external-advisor/gpt-rulings` `ls-remote` watcher (the PASTE gate's ear). ★★★★★ **DECISION TABLE → ADOPT, ARM NOTHING — and liveness is PROVEN, not inferred: rig `27064` delivered `AR-CHANGE 10:40:07 :: ## AR-540` INTO THIS POST-`/clear` SEAT.** ★★ **THE WORKER'S EAR: no `ADVISOR-RULINGS` watcher exists under the worker's `claude.exe 26204` [MEASURED, ANY process name, POSITIVE CONTROL = the query found `5` live matches incl. my own]. **DO NOT CONCLUDE THE EAR IS DEAD** — it DELIVERS: R-515 committed `10:34`, `AR-539` start-receipt filed `10:35`. `THE MECHANISM IS UNENUMERATED; THE DELIVERY IS MEASURED.`**
 
