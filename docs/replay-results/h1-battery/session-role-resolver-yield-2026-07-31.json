@@ -7,7 +7,7 @@
   "ruling": "R-503 \u00a75 items A-H + \u00a73 reconciliation (supersedes R-502 \u00a74, R-501 \u00a76)",
   "TREE": {
     "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
-    "head": "c346166e93666e5e02c52dce1b108248c6bce627",
+    "head": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
     "branch": "h1-wave4-sealed12-driver",
     "dirty_paths": 94
   },
@@ -241,8 +241,8 @@
         "PASS": true,
         "detail": {
           "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-          "worktree_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
-          "head_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
+          "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+          "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
           "IDENTICAL": true
         }
       },
@@ -345,14 +345,14 @@
   "PUBLICATION_PATHS": {
     "artifact": {
       "path": "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-      "worktree_blob": "fb6cab31b4a1b0493ba25fd98f5a8768a91c53e6",
-      "head_blob": "fb6cab31b4a1b0493ba25fd98f5a8768a91c53e6",
+      "worktree_blob": "3ad843adf3b80fcf5cfbf36c5f1bfac67279b13d",
+      "head_blob": "3ad843adf3b80fcf5cfbf36c5f1bfac67279b13d",
       "IDENTICAL": true
     },
     "generator": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
-      "head_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
+      "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+      "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
       "IDENTICAL": true
     },
     "harness": {
@@ -365,7 +365,7 @@
   },
   "PUBLICATION_IDENTITIES": {
     "measurement_source_commit": {
-      "value": "c346166e93666e5e02c52dce1b108248c6bce627",
+      "value": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
       "definition": "HEAD of the campaign tree at the moment this measurement RAN. The sources that produced these numbers are this commit's."
     },
     "artifact_publication_commit": {
@@ -395,15 +395,15 @@
       "DIGEST_COVERAGE.value",
       "PUBLICATION_IDENTITIES.measurement_source_commit.value"
     ],
-    "value": "9b51fd55174092f26560b07bafae8b94128cf0c8df82cd78dc914b95fdf0beb6"
+    "value": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b"
   },
   "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": {
     "STATUS": "MEASURED",
     "SNAPSHOT_RECORD": {
-      "generated_at_utc": "2026-07-31T11:34:11Z",
-      "campaign_commit": "c346166e93666e5e02c52dce1b108248c6bce627",
+      "generated_at_utc": "2026-07-31T11:35:32Z",
+      "campaign_commit": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
       "campaign_binder_blob": "7c9e69a15b03b4bf566d37abbf04fa592848e925",
-      "generator_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
+      "generator_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
       "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
       "deployed_repo_root": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production",
       "deployed_repo_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
@@ -8558,7 +8558,7 @@
   },
   "PROVENANCE_SOURCE_CLOSURE": {
     "WHY_THIS_EXISTS": "R-502 \u00a74: `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Deterministic repeated execution proves repeatability INSIDE the checkout; it does NOT prove the binder that ran equals the named commit. This manifest does, by comparing worktree bytes to the HEAD blob for every file in the EXECUTED source+population closure.",
-    "head": "c346166e93666e5e02c52dce1b108248c6bce627",
+    "head": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
     "closure_size": 22,
     "binder_blob": {
       "path": "src/engine/spec_family_bindings.py",
@@ -8568,8 +8568,8 @@
     },
     "generator_blob": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
-      "head_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
+      "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+      "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
       "IDENTICAL": true
     },
     "pinned_baseline_blob": {
@@ -8607,8 +8607,8 @@
       },
       {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
-        "head_blob": "4511ff323081e3230f80f70e7f76b27bf65620a3",
+        "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+        "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
         "IDENTICAL": true
       },
       {
