@@ -24,11 +24,48 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "69f6e813d2e75e375def8a88e40c29b79fc3e667",
+    "head": "0f88877ec716b788c4c81751322bfbabcdd9feed",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "201f22289352d4d2c6de6ac5890094e67fc3b358",
-    "generator_blob": "2ea0b8ac1d816f58eb4d1646814e61296f3ecef1",
-    "artifact_blob": "ab432bb3b8acd4777a1725e959c67e07c7e14bf7",
+    "harness_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
+    "generator_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+    "artifact_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+    "PUBLICATION_PATH_BLOBS": {
+      "artifact": {
+        "path": "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+        "worktree_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+        "head_blob": "6eb62802ce17405ff2bc4aaa591735aa62ef24bd",
+        "IDENTICAL": true
+      },
+      "generator": {
+        "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
+        "worktree_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+        "head_blob": "46db1c0dca7bd782804f5a0d2ad6eddc6e9cbad6",
+        "IDENTICAL": true
+      },
+      "harness": {
+        "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
+        "worktree_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
+        "head_blob": "693968f3a3647122011f293c62b2bc04ef837c43",
+        "IDENTICAL": true
+      },
+      "ALL_CLEAN": true,
+      "MEANING_OF_FALSE": "a publication path is DIRTY -- the receipt would be describing something other than what is committed."
+    },
+    "PUBLICATION_IDENTITIES": {
+      "measurement_source_commit": {
+        "value": "4f8bdfdbeb3a830ec0a5b3c341580e9ff77d1676",
+        "definition": "HEAD of the campaign tree when the MEASUREMENT ran; taken from the artifact itself, not re-derived here."
+      },
+      "artifact_publication_commit": {
+        "value": "0f88877ec716b788c4c81751322bfbabcdd9feed",
+        "definition": "The commit that last published the artifact. Knowable here because the artifact is already committed."
+      },
+      "receipt_measurement_commit": {
+        "value": "0f88877ec716b788c4c81751322bfbabcdd9feed",
+        "definition": "HEAD when THIS receipt was produced."
+      },
+      "\u26a0\ufe0f_NOT_SELF_CERTIFIABLE": "This receipt cannot name its OWN publication commit -- that commit does not exist until the receipt is committed. R-510 \u00a76.5 leaves it to the external read or CI, and it is deliberately absent rather than guessed."
+    },
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
@@ -60,6 +97,12 @@
         "C2_population_TWO_PATH__off_arm_derivation_equals_baseline_derivation_on_corpus_A"
       ],
       "n_reddened": 4,
+      "WHY_IT_REDDENED": "One baseline key is replaced by a fake while the COUNT is preserved, so the three count assertions stay green and only set-membership comparisons fail: the baseline identity join, the C2/WAIT_SESSION set identity, the two-path derivation, and the join-key resolution. RED comes from set difference, not from any count.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -76,6 +119,12 @@
         "B_no_unexpected_movement_outside_the_WAIT_SESSION_family"
       ],
       "n_reddened": 2,
+      "WHY_IT_REDDENED": "A non-WAIT_SESSION row's `reason` is forced to differ between arms, so it appears in the changed-rows map while sitting outside the family key set. RED comes from the non-family movement census being non-empty on BOTH corpora.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -92,6 +141,12 @@
         "PROVENANCE_source_closure_dirty_intersection_is_ZERO"
       ],
       "n_reddened": 2,
+      "WHY_IT_REDDENED": "`dirty_paths()` is patched to include the binder, so the binder path intersects the executed source closure. RED comes from a non-empty dirty/closure intersection, and the RAW closure check reddens with it because the same path is in both.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -107,6 +162,12 @@
         "POSITIVE_WITNESS_the_arms_actually_moved_rows_INSIDE_the_family"
       ],
       "n_reddened": 1,
+      "WHY_IT_REDDENED": "Both arms are bound with the flag OFF, so no row moves anywhere. RED comes from the POSITIVE WITNESS -- it exists precisely so the two empty-census assertions cannot pass vacuously, and here it proves they would have.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -123,6 +184,12 @@
         "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign"
       ],
       "n_reddened": 2,
+      "WHY_IT_REDDENED": "DEPLOYED_BINDER is pointed at the campaign binder, so every capability symbol reads as present in the deployed lane AND the two symbol sets become equal. RED comes from the scope tripwire (capability present) and from strict-subset (equality is not strict). It reddens BOTH, which is what falsified AR-528's independence claim.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -139,6 +206,12 @@
         "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign"
       ],
       "n_reddened": 2,
+      "WHY_IT_REDDENED": "A symbol the campaign lane lacks is added to the deployed node table. RED comes from subset-or-equal (a deployed-only symbol exists) and from strict-subset, which requires zero deployed-only. The scope tripwire stays GREEN -- no capability symbol was added -- which is what separates the tripwire from the subset checks.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
@@ -157,12 +230,18 @@
         "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign"
       ],
       "n_reddened": 2,
+      "WHY_IT_REDDENED": "The deployed node table is replaced by the campaign one, making the sets EQUAL. RED comes from strict-subset ONLY (equality fails `dep < camp`) while subset-or-equal stays GREEN. This is the case the retired `STRICT_SUBSET` predicate silently absorbed.",
+      "RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER": {
+        "acts_on": "the GENERATOR (binder / arms / rows / symbol tables)",
+        "touches_publication_path": false,
+        "CONCLUSION": "unaffected by the R-509 \u00a76.2 reader change -- it never reads `published_path`"
+      },
       "VERDICT": "DISCRIMINATES",
       "OK": true
     },
     {
       "case": "M9_committed_artifact_STALE_worktree_FRESH",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_432wx8jw",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_ulxdimte",
       "PRE_R509_worktree_read": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
         "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
@@ -201,8 +280,8 @@
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
         "published_path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
-        "fresh_digest": "1ae807d2133a2c2191a7fa8ede93c01f7b82d0227294bc470e2e43ac38268a8f",
-        "published_digest": "1ae807d2133a2c2191a7fa8ede93c01f7b82d0227294bc470e2e43ac38268a8f",
+        "fresh_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
+        "published_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
         "published_n_pass": 36,
         "fresh_n_pass": 36,
         "published_deployed_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
@@ -212,16 +291,53 @@
       "OK": true
     },
     {
-      "case": "M8_stale_artifact_planted",
+      "case": "M8_stale_artifact_COMMITTED_in_fixture",
       "assertion_that_must_go_RED": "PUBLICATION_CONSISTENCY",
       "it_went_RED": true,
+      "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": true,
+      "IT_ACTUALLY_READ_THE_PLANTED_CONTENT": true,
+      "planted_values_read_back": {
+        "published_n_pass": 33,
+        "published_deployed_head": "<unavailable: Command 'git rev-parse HEAD' exit 128>"
+      },
+      "detail": {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": false,
+        "read_mode": "committed",
+        "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_ilkhf1l1\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "fresh_digest": "3fb1fe7e424fe894d13d2dc7d8a0ab8860136d44a58f52f42d454e995942617b",
+        "published_digest": "ea5b4e3facb0f42133a86f2f4c5b0f2d357501e16fcecc965ed990f593305cbb",
+        "published_n_pass": 33,
+        "fresh_n_pass": 36,
+        "published_deployed_head": "<unavailable: Command 'git rev-parse HEAD' exit 128>",
+        "WHAT_RED_MEANS": "The committed artifact is NOT what the current code produces. `CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit before quoting any number from it."
+      },
+      "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head replaced with the exact error string that shipped -- the REAL AR-529 defect, committed inside the fixture repo.",
+      "ALL_assertions_this_mutation_reddened": [
+        "PUBLICATION_CONSISTENCY"
+      ],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M8b_unpublishable_path",
+      "WHAT_IT_TESTS": "a path with NO committed blob must FAIL CLOSED, not silently pass.",
+      "\u26a0\ufe0f_WHAT_IT_IS_NOT": "This is NOT evidence that stale CONTENT is detected. It reddens before reading anything, which is exactly why the old M8 was a false discrimination. M8 (fixture) is the content proof.",
+      "it_failed_closed": true,
       "detail": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
         "read_mode": "committed",
         "reason": "path is outside the repo, so it has no committed blob",
-        "path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_redproof_stale_artifact.json"
+        "path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_redproof_unpublishable.json"
       },
-      "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head replaced with the exact error string that shipped -- i.e. the REAL defect reproduced, not a synthetic one.",
+      "VERDICT": "FAILS-CLOSED",
+      "OK": true
+    },
+    {
+      "case": "M11_source_closure_identity_altered",
+      "WHAT_WAS_PLANTED": "one closure manifest PATH changed; assertion names, PASS values, campaign metrics and identity maps all left IDENTICAL.",
+      "it_went_RED": true,
+      "WHY_IT_MATTERS": "R-510 \u00a76.4 -- `A FULL-ARTIFACT DIGEST CANNOT EXCLUDE THE ENTIRE PROOF OF WHICH SOURCES RAN.` The previous digest dropped the whole closure block, so this alteration would have been certified CURRENT.",
       "ALL_assertions_this_mutation_reddened": [
         "PUBLICATION_CONSISTENCY"
       ],
