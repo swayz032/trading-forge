@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3256` at THIS commit, 2026-07-31 15:14 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3260` at THIS commit, 2026-07-31 15:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3256` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3260` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **THE *SECOND AND FINAL* PACKET GRADE IS DISPATCHED AND IN FLIGHT (2026-07-31 15:14).** `accuracy-validator`, opus, adversarial, **FRESH instance** (not a continuation — the prior grade is handed to it as an ARTIFACT to doubt, not a memory to trust), pinned to **`02557efd`**, receipt owed at **`docs/designs/GRADE-P0-REDESIGN-PACKET-REGRADE-2026-07-31.md`** (a NEW file — the prior receipt `48e50d80` MUST NOT be overwritten). Operator gave the word in his own voice: *“EXECUTE”*.
+## 🛑★★★★★ SEAT — **THE SECOND AND FINAL PACKET GRADE RETURNED `FAIL` (`d4378be2`, `15:24`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-REGRADE-2026-07-31.md`, `236` lines). **THE PRE-COMMITTED STOP FIRES: `NO SOUND REDESIGN AVAILABLE`. NO THIRD PACKET ROUND. `R-520` IS OWED AND HELD FOR THE NEXT EXTERNAL READ.**
+✅★★★★★ **`R-1` (CRITICAL) IS CONFIRMED AT THIS DESK BY RE-DERIVATION FROM THE LIVE ORACLE BLOB — NOT RELAYED.** `[MEASURED HERE, `git show c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`]` **`30` rows · `8` carry `unadjudicated` · per-key live presence `bindable 29` · `reason_null 29` · `primitive_null 26` · `session_zone 26` · `approximation 22` · `reason_names 4` · `reason_excludes 4` — MATCHING THE GRADER ROW FOR ROW.** ★★★ **AND MY OWN ADDITION: NO KEY IS PRESENT ON ALL `30` ROWS — not even `bindable` (`29/30`), which survives only via the one `unadjudicated` row. So requiring any other key makes clean rows FATAL and breaks the packet's own clean control. ARITHMETIC CLOSES: `140` live expectations − `29` protected = **`111` SILENTLY DELETABLE**.**
+⚠★★★★★ **THE DIAGNOSIS, AND IT IS WHY A THIRD ROUND WOULD FAIL TOO: `§4.2b` IS A RULE *ABOUT DATA*, AND ALL SIX ATTEMPTS WERE WRITTEN AND VALIDATED AGAINST *SOURCE*. The prior grade DECLARED `ORACLE.json` `UNENUMERATED` in its own coverage section; the moment anyone opened it, the design collapsed in ONE ARITHMETIC STEP (`128` candidate required-sets → exactly `1` viable). **THE JOIN BETWEEN THE RULE AND THE DATA IT GOVERNS WAS NEVER EXECUTED** — the same unexecuted-join family that has run through this entire lane, now at the DESIGN level. `A RULE ABOUT DATA CANNOT BE VALIDATED AGAINST SOURCE.`**
+⚠ **`R-2` (HIGH) UNVERIFIED HERE, RELAYED: `reason_names: ""` is present and well-typed and `includes("")` is unconditionally true, so it asserts nothing — falsifying the packet's `§7a` *“IMPOSSIBLE TO DISARM SILENTLY.”* **It is the EMPTY-COLLECTION operator class this desk explicitly ordered the grader to enumerate.** `R-3` MEDIUM, namespace join, `3` false-FATALs.**
+✅ **INTEGRITY CHECKED: receipt is `1` file; prior-grade blob `34f142d8` and packet blob `7106d91f` both UNCHANGED, matching the grader's claims exactly; nothing outside `docs/designs` moved.**
 ⚠★★★★★ **DO NOT DISPATCH ANOTHER. If that receipt file is absent, the grade is STILL RUNNING, not missing. `A DUPLICATE GRADE IS NOT A SECOND OPINION, IT IS TWO GRADERS SPLITTING ONE MANDATE.`**
 ⚠★★★★★ **THE STOP IS PRE-COMMITTED AND WAS WRITTEN BEFORE THE RESULT WAS KNOWN (R-519 §6): A `FAIL` HERE MEANS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — **NOT A THIRD PACKET ROUND.** Do not re-open that on seeing the verdict; that is precisely the decision the pre-commitment exists to protect.**
 ✅ **R-519 §5 DELIVERED AND VERIFIED AT THIS DESK (`AR-546`, packet amended `02557efd`, published, `unpushed=0`): non-circularity clause present `:119-120` + `ABORT 2b` `:152` · deletion red path is a SCORED row `(c′)` `:66` · GREEN-control completion clause `D-3b` `:151` asserts FINAL SUMMARY **and** exit `0` · tree delta EXACTLY the worker's recorded baseline, nothing outside `docs/designs` moved.**
