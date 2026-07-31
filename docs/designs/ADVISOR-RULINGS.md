@@ -12,6 +12,100 @@
 
 ---
 
+## R-520 · 2026-07-31 · 🛑✅★★★★★ **THE PRE-COMMITTED STOP FIRES: `NO SOUND STANDALONE P0 REDESIGN`. NO SEVENTH ATTEMPT.** ★★★★★ **AND THE CRITICAL PATH INVERTS — `§15.6`'s ORDER IS RETIRED. `P1`+`P2` GO FIRST, AND `P0-vNext` BECOMES A THIN CONSUMER OF THEM.** ⚠️★★★★★ **THE DIAGNOSIS IS THE EXTERNAL READ'S AND IT IS BETTER THAN MINE: I HAD *"THE RULE READS SCOPE AT THE WRONG LEVEL"* — THAT IS THE SYMPTOM. THE CAUSE IS `P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS`, AND IT EXPLAINS ALL SIX ATTEMPTS AT ONCE.**
+
+**RULING ID:** R-520 · **TASK ID:** the regrade `d4378be2` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-546` (`15:11`, R-519 §5 delivered, verified at this desk before dispatch; the worker has been standing by since).
+**DECISION:** **FIRE** — the pre-committed stop · **ACCEPT** — the regrade `FAIL` · **ADOPT ON MERIT** — the critical-path inversion · **AUTHORIZE** — one bounded `P1`+`P2` truth-freeze task · **BLOCK** — `P0-vNext` on `P1`/`P2`.
+**EXTERNAL READ:** `4fb44fb0` (`15:43`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `615d2d75` (my own state commit) · `c304b098` · `fdc92a16` all resolve. `0` FABRICATED — SEVENTH CONSECUTIVE CLEAN AUDIT.** Self-labels *"Ruling: R-520"*; it is `[EXTERNAL OPINION]`. **R-520 IS THIS DESK'S.**
+
+### 🛑★★★★★ §1 — THE STOP FIRES, AND IT FIRES CLEAN
+
+`R-519 §6` pre-committed, **before the result was known**: *"IF THE REGRADE ALSO RETURNS `FAIL`, THE OUTCOME IS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — NOT A THIRD PACKET ROUND."* **The regrade returned `FAIL`. THE STOP IS HONOURED.**
+★★★★★ **AND I RECORD THE TEMPTATION, BECAUSE A PRE-COMMITMENT THAT IS NEVER TESTED PROVES NOTHING: the regrade hands over a `4`-edit correction list and says *"no re-architecture"*. I had also, independently, traced the collapse to a SINGLE named row and could have written *"the fix is small and now data-grounded, so this is not really a third round."* ⚠️ **THAT IS EXACTLY THE SENTENCE THE PRE-COMMITMENT EXISTS TO REFUSE.** `R-515` already convicted this desk on it: *"every additional issue can be legitimate while the lane still consumes the money path indefinitely — THE RULE IS A COUNT AND NOT A JUDGEMENT."`**
+**THE COUNT, ON THE RECORD: `4` code attempts (`2011e8de` → `39948d3c` → `8187b730` → `c304b098`) + `2` document attempts (`7134bb34` → `02557efd`) = `6`, against a threshold of `2`.**
+
+### ✅★★★★★ §2 — EVERY DECISIVE NUMBER RE-DERIVED **AT THIS DESK**, FROM THE DATA
+
+`[MEASURED HERE — `git show c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`, parsed directly]`
+
+| quantity | read / grade says | **I measured** |
+|---|---|---|
+| fixtures · rows | `12` · `30` | ✅ **`12` · `30`** |
+| rows carrying `unadjudicated` | `8` | ✅ **`8`** |
+| per-axis presence | `29`·`29`·`26`·`26`·`22`·`4`·`4` | ✅ **identical, axis for axis** |
+| live expectations | `140` | ✅ **`140`** |
+| `{bindable}` protects | `29` | ✅ **`29`** |
+| **silently deletable** | **`111`** | ✅ **`111`** |
+
+★★★ **AND THE ROOT CAUSE VERIFIED AT THE ROW: `50-family-axis-invalidations.spec.json` is the ONLY fixture with a row missing `bindable` (`inv_in_entry`), and it declares that gap at **FIXTURE** level (`conditions_unadjudicated`) while `§4.2b` reads **`row.unadjudicated`** only. ONE ROW COLLAPSES THE REQUIRED SET FOR THE WHOLE ORACLE.** ⚠️ **`R-2` (vacuous `reason_names: ""`) and `R-3` (namespace join, `3` false-FATALs) are `[RELAYED — NOT VERIFIED HERE]`; the disposition does not rest on them.**
+★★ **`R-2` IS ALSO A RECEIPT FOR THIS DESK'S OWN DISPATCH: it is the EMPTY-COLLECTION operator class R-519's brief explicitly ordered enumerated. `THE INSTRUCTION FOUND THE DEFECT THE INSTRUCTION WAS WRITTEN FOR.`**
+
+### ✅⚠️★★★★★ §3 — THE DIAGNOSIS: **ADOPTED, AND IT IS BETTER THAN MINE**
+
+**The read's cause:** `P0` asked *"did an expected truth disappear?"* while its authority is a **SPARSE OPTIONAL OBJECT** in which an omission means one of three incompatible things — **intentionally not applicable · honestly unadjudicated · accidentally deleted** — and **no parser, closed-key rule, type check or mutation suite can recover which meaning an omission had after the fact.**
+> ★★★★★ **`P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS.`**
+> ★★★★★ **`A SPARSE OBJECT CANNOT PROVE THAT AN OMITTED TRUTH WAS DELETED.`**
+★★★★★ **WHY I ADOPT IT OVER MY OWN READING: mine — *"§4.2b reads scope at the wrong level"* — is TRUE, VERIFIED, AND IS THE SYMPTOM. It explains why THIS attempt failed. **The read's explains why ALL SIX did, and predicts that a seventh would too**, which is the property a diagnosis has to have to be worth stopping on. `A DIAGNOSIS THAT EXPLAINS ONE ATTEMPT IS A FINDING; ONE THAT EXPLAINS EVERY ATTEMPT IS A CAUSE.`**
+✅ **AND IT IS NOT DEFEATISM, WHICH MATTERS: *"this is not evidence that parity is impossible — it is evidence that the DEPENDENCY ORDER was wrong."*** The missing component was never a better validator. **It was the authority `P0` was being asked to assume.**
+
+### ⚠️★★★★★ §4 — A PATTERN IN **THIS DESK'S OWN REMEDIES**, NOW THREE-FOR-THREE IN ONE WAKE
+
+| ruling | my remedy | how far short |
+|---|---|---|
+| `R-516 §7` | closed-key + type-check on `OracleRow` | could not reach `F-3` **at all** — fixture-level, not row-level |
+| `R-519` draft | require presence at the row surface | **self-authorizing** — requiredness read off the artifact under test |
+| `R-520` pre-read | *"it reads scope at the wrong level"* | the **symptom**; the cause is the sparse authority itself |
+
+★★★★★ **EVERY ONE WAS CORRECT AND EVERY ONE STOPPED ONE LEVEL SHORT — AND EACH TIME SOMEONE ELSE SUPPLIED THE MISSING LEVEL (the worker, then the external read, then the external read again).** ⚠️★★★★★ **`R-513` minted `CLOSING A JOIN MOVES THE FAMILY ONE LEVEL IN, IT DOES NOT END IT` about the CODE. It is now measured, three times in one wake, about **THIS DESK'S OWN THINKING.** `MY REMEDIES HAVE THE SAME DEFECT SHAPE AS THE CODE I RULE ON.`** ★★★ **THE PRACTICAL DEFENCE, ADOPTED AS STANDING: before issuing a remedy, ask *"what does this remedy ASSUME EXISTS?"* — all three failures were an assumed authority that did not exist.**
+
+### ★★★★★ §5 — **THE CRITICAL PATH INVERTS. `§15.6`'s ORDER IS RETIRED.**
+
+**RETIRED:** `1. finish P0 · 2. grade P0 · 3. freeze P1+P2 · 4. rule P3 · 5. Gate B …`
+**OPERATIVE FROM NOW:**
+1. **`P1` — freeze the additive OBSERVED baseline** ("what exists now?").
+2. **`P2` — freeze the complete typed TRUTH membership** ("what is intended to exist?").
+3. **`P0-vNext` — derived MECHANICALLY from `P1`/`P2` as a thin consumer.**
+4. **`P3` — producer proof, runtime integration, transfer receipt.**
+5. **Gate B + the source-keyed treatment sweep.**
+★★★ **`OBSERVED BASELINE AND INTENDED TRUTH ARE DIFFERENT OBJECTS.`** ⚠️ **This is a DEPENDENCY CORRECTION, NOT A BYPASS: `P0` remains REQUIRED before compiler promotion — it simply no longer BLOCKS starting `P1`/`P2`.** ★★★★★ **CARRIER DUTY, AND `R-515` CONVICTED THIS DESK FOR EXACTLY ITS OPPOSITE: the `ADVISOR-STATE` QUEUE is being rewritten in the SAME MOTION as this ruling. `AN UNADOPTED PLAN REVISION IS A PLAN NOBODY IS FOLLOWING, INCLUDING ITS AUTHOR.`**
+
+### ★★★★★ §6 — **WORKER — START HERE** (cold-start-complete; DISPATCH beats RECORD)
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** ONE bounded task producing **EXACTLY TWO ARTIFACTS** + your report:
+- `docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md`
+- `docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`
+⚠️ **NO implementation code · NO engine/runtime code · NO migrations · NO DB writes · NO extraction or corpus changes · NO `HOLDOUT-26` · NO `P0` work of any kind · NO `git checkout`/`reset`/index ops in this shared tree.**
+
+**`P1` — OBSERVED BASELINE. It answers ONLY *"what exists now?"* and MUST NOT convert present-presence into intended truth.** Freeze: exact source commit + blob identities · all `12` fixture identities · all `30` row identities · all `140` present expectations · per-axis counts `29/29/26/26/22/4/4` · a deterministic content digest · a duplicate-and-unresolved-identity census.
+**`P2` — TOTAL TRUTH MEMBERSHIP.** Represent the **COMPLETE CARTESIAN SET: `30` rows × `7` axes = `210` CELLS.** ★★★★★ **`140` are present, so **`70` CELLS ARE CURRENTLY ABSENT AND EACH MUST BE EXPLICITLY CLASSIFIED** — `ASSERTED` · `NOT-APPLICABLE` · `UNADJUDICATED`. `COMPLETENESS MUST BE AN ENUMERATED MEMBERSHIP SET, NOT AN INFERENCE FROM PRESENCE.`**
+⚠️★★★★★ **THE RULE THAT PROTECTS THIS FROM BECOMING THE THING IT REPLACES: IF THE SOURCE AUTHORITY CANNOT DETERMINE A CELL, RECORD `UNADJUDICATED`. **DO NOT GUESS TO MAKE THE MATRIX LOOK COMPLETE.** A `210`-cell matrix with guessed cells is strictly worse than the sparse object, because it converts an honest absence into a false assertion.**
+**ALSO REQUIRED:** adding an unknown cell or duplicating a cell must be **mechanically detectable** · the ledger must be **deterministic across repeated generation and serialization** · the acceptance must check the **final summary and exit status**, never grepped intermediate lines.
+
+**HONEST-PARTIAL CLAUSE:** if the source authority is insufficient to classify some region, **say so and name the region** — a declared gap is a complete answer; a filled cell you could not justify is not.
+**START-RECEIPT REQUIRED:** one line within ~2 min — task · first observable · ETA · **and your RECORDED BASELINE for the tree-delta check** (delta, never absolute-clean, `R-518 §3`).
+**FIRST OBSERVABLE THIS DESK EXPECTS:** the `P1` half frozen with the `12`/`30`/`140` identities and the digest, **~30–45 min from start.**
+**ACCEPTANCE (run them, paste output):**
+```
+python -c "import json;d=json.load(open('docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json',encoding='utf-8'));print(len(d.get('cells',[])))"   # expect 210
+grep -c "UNADJUDICATED\|NOT-APPLICABLE\|ASSERTED" docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json
+grep -n "digest\|sha256" docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md | head -5
+git status --porcelain -- docs/designs scripts ci src      # DELTA vs YOUR recorded baseline
+```
+**STOP CONDITION:** ★★★ **if classifying a cell requires INFERRING intent from the sparse `ORACLE.json` itself, STOP and record `UNADJUDICATED` — that inference is the exact defect that killed six `P0` attempts, and reproducing it inside `P2` would poison the authority everything downstream will trust.**
+
+### §7 — `P0-vNext` BOUNDARY (no work authorized here)
+**BLOCKED on `P1`/`P2` freeze + one independent membership census.** When designed, it is a **THIN CONSUMER** checking two DISTINCT claims — **agreement** (TS and Python projections agree) and **correctness** (both satisfy the independently frozen `P2` ledger). ⚠️★★★★★ **IT MUST NOT INFER REQUIREDNESS FROM THE SPARSE LEGACY `ORACLE.json`. It consumes the TOTAL ledger.** ✅ **`c304b098` and both grade receipts are PRESERVED as `NOT-SOUND` evidence and are NOT to be patched, squashed, relabelled or "finished" into a green history.**
+
+### §8 — POSITION
+`P0` legacy design **RETIRED / NOT-SOUND** · `P0` redesign lane **CLOSED — NO SOUND STANDALONE REDESIGN** · `P1` **AUTHORIZED TO FREEZE** · `P2` **AUTHORIZED TO FREEZE** · `P0-vNext` **BLOCKED ON `P1`/`P2`** · `P3` **NOT STARTED** · Gate B **BLOCKED** · `HOLDOUT-26` **UNTOUCHED** · merge/deploy/release **HOLD** · seventh `P0` attempt **NOT AUTHORIZED, AND NOT AUTHORIZABLE WITHOUT A NEW RULING THAT NAMES THIS COUNT.**
+
+### ★★★★★ §9 — LESSON TO PERSIST
+> **`THE RIGHT RESPONSE TO SIX FAILED ATTEMPTS IS NOT A SEVENTH VALIDATOR; IT IS TO BUILD THE AUTHORITY THE VALIDATOR WAS MISSING.`** Six attempts each asked a sparse object to prove something only a total object can prove. Every attempt was competent, every grade found something real, and every one was doomed by the question's shape rather than by its execution.
+> ★★★ **AND THE HALF THAT IS ABOUT PROCESS, NOT CODE: THE PRE-COMMITMENT WORKED — BUT ONLY BECAUSE IT WAS WRITTEN BEFORE THE RESULT AND BECAUSE THE CORRECTION LIST THAT ARRIVED WITH THE `FAIL` WAS SMALL AND PLAUSIBLE.** `A STOP RULE IS ONLY EVER TESTED BY AN ATTRACTIVE REASON TO BREAK IT`, and this one arrived with four tidy edits and a root cause I had found myself. **Pre-commit stop rules while the outcome is still unknown; they are worthless written afterwards.**
+
+---
+
 ## R-519 · 2026-07-31 · ✅⚠️★★★★★ **GRADE FAILURE ACCEPTED. THREE DOCUMENT EDITS AUTHORIZED — ALL THREE FINDINGS CONFIRMED AT THIS DESK IN THE SHIPPED BLOB, NOT RELAYED. IMPLEMENTATION STAYS HELD.** ★★★★★ **AND I REVERSE MYSELF ON THE REGRADE: `R-518 §5` BOUND THE PACKET TO *ONE* GRADE AND I HAD DRAFTED "THE SLOT IS SPENT". THE THIRTEENTH READ IS RIGHT AND I ADOPT IT — BUT BOUNDED, AT EXACTLY ONE MORE, WITH THE STOP PRE-COMMITTED.** ⚠️★★★ **ITS THIRD EDIT IS A HOLE IN MY OWN DISPATCH: A REQUIREDNESS RULE READ OFF THE ORACLE IT VALIDATES IS SELF-AUTHORIZING, AND I HAD NOT SEEN IT.**
 
 **RULING ID:** R-519 · **TASK ID:** the grade `48e50d80` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-544` (`12:48`, HOLD-RECEIPT — worker standing by, starting nothing, correct). It bears on this ruling by confirming the seat is free to receive the dispatch in §5.
