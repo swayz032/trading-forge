@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3122` at THIS commit, 2026-07-31 08:31 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3127` at THIS commit, 2026-07-31 08:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3122` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3127` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,6 +85,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ✅★★★★★ SEAT — **R-511 LANDED (`474f52ee`) · `AR-533` IS RULED · NO RULING DEBT** · the FIFTH external read (`154aba33`, `08:18:47`) arrived and the gate was honoured · branch PUBLISHED at **`474f52ee`** `[MEASURED BY ls-remote, 0/0]` · live delivery still **`c304b098`** (2026-07-31 08:30 — ADVISOR SEAT fresh in `claude.exe 15520`, monitors ADOPTED not re-armed, `0` armed / `0` killed; WORKER **RE-SEATED WITH A FRESH CONTEXT in the same process**, **AUTHORIZED on R-511 §6**)
+
+### ⚠️★★★★★ **`M13`'s PREDICTION IS WITNESSED BY THIS DESK *BEFORE* ITS RESULT EXISTS — THAT IS THE ENTIRE POINT AND IT CANNOT BE ADDED LATER**
+**AR-534 (`08:29:31`) pre-registers: *"NOTHING WILL REDDEN"* — i.e. the receipt is a DECORATION.** ★★★★★ **[MEASURED HERE `08:30:14`, BEFORE the mutation was written] `M13` appears `0` times in the harness and the lane has `0` uncommitted files — SO THE ANSWER DID NOT YET EXIST WHEN I READ THE PREDICTION. This commit precedes the result in git history, which is the only durable proof of that order.** ⚠️ **`A PREDICTION WITNESSED AFTER THE FACT IS NOT A PREDICTION` — if a later AR reports the outcome, the honesty of "we called it" rests on THIS timestamp, not on anyone's recollection.**
+★★★★★ **AND THE WORKER ADDED THE PART I DID NOT ORDER, WHICH IS THE PART THAT MAKES IT SOUND: it pre-committed to the FALSE-PASS mode. An UNCOMMITTED harness edit would redden `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` — the dirty-tree assertion, NOT receipt coverage — and scoring that colour would certify the receipt as guarded when nothing read it. **THAT IS `M8`'s DEFECT ONE RULING LATER IN A NEW COSTUME.** `M13` therefore COMMITS the harness change and VOIDS the run if the harness pair is RED. ★★★ **I ordered the pre-registration; the worker supplied the exclusion that gives it teeth. RECORDED AS ITS CREDIT.**
+✅ **ITS §1 FLAG NEEDS NO RULING AND IS CONFIRMED AS HANDLED: item 1's membership set goes in ONE named constant so widening is one line, and it will NOT be widened before the mutation speaks — which is exactly R-511 §6.8's prohibition. `A FLAG RAISED AND UNANSWERED IS A SILENT HOLD`, so this line is the answer.**
 
 ### ★★★ **R-511's HEADLINE — SO A COLD SEAT NEED NOT OPEN THE LEDGER**
 **The read's §5 SUSTAINED at the line: `all_ok` decided `:555`, `ALL_CLEAN` built `:633`, scored in ZERO results — a dirty publication path is NOT red. NARROWED: generator+harness pairs ARE scored (I have a first-hand positive control — my own uncommitted harness edit reddened them at `07:47`); only the ARTIFACT pair is bare.** · **Its §7-4 REJECTED — `PROVENANCE_RAW_closure_INCLUDING_…` is the COMPENSATING CONTROL for the exclusion, and adopting the read would have weakened a guard.** · **AR-533 §3 ADOPTED (re-derived here): the RECEIPT is absent from the `ALL_CLEAN` tuple and has `0` executable consumers tree-wide.**
