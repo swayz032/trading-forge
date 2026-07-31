@@ -73,6 +73,7 @@ HELD_FLAGS = {"TF_LEVELZONE_ROUTING_ENABLED": "false", "TF_LEVELZONE_RESOLVER_EN
 
 OUT_PATH = H1 / "session-role-resolver-yield-2026-07-31.json"
 ARTIFACT_REL = "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json"
+GENERATOR_REL = "docs/replay-results/h1-battery/session_role_resolver_yield.py"
 """The AUTHORITATIVE published path. Kept separate from OUT_PATH because the
 red-proof harness redirects OUT_PATH to a throwaway file; publication claims
 must always be about the real artifact, never about wherever a run wrote."""
@@ -299,6 +300,15 @@ def source_closure_manifest(head: str, dirty: list[str], dirty_pre: list[str]) -
         if relstr.endswith("session_role_resolver_yield_REDPROOF.py"):
             continue
         src_files.add(relstr)
+
+    # ★★★★★ THE GENERATOR ALWAYS COUNTS ITSELF, however it was loaded. Run
+    #   standalone it appears in sys.modules as `__main__`; imported by the
+    #   RED-PROOF via importlib.util.module_from_spec it is NOT registered in
+    #   sys.modules at all, so the closure came to 22 one way and 21 the other
+    #   and a correctly-published artifact read as stale. The generator is
+    #   unquestionably a measurement source; asserting that directly removes
+    #   the dependence on the entry point entirely.
+    src_files.add(GENERATOR_REL)
 
     population_files = {str(Path(p).relative_to(REPO_ROOT)).replace("\\", "/")
                         for p in sorted(CORPUS_A_DIR.glob("*.spec.json"))}
