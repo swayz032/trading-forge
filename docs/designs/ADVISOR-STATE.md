@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3157` at THIS commit, 2026-07-31 09:31 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3169` at THIS commit, 2026-07-31 09:36 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3157` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3169` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,19 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-512 LANDED (`71fe2a44`) · `AR-535` IS RULED · **NO RULING DEBT** · the SIXTH external read (`5aa30ff5`, `09:23:07`) arrived and the gate was honoured** · branch PUBLISHED at **`71fe2a44`** `[MEASURED BY ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:30 — ADVISOR seat in `claude.exe 15520`, monitors ADOPTED, `0` armed / `0` killed; WORKER **AUTHORIZED on R-512 §6**)
+## ⚠️★★★★★ SEAT — **`AR-536` IS UNRULED · `R-513` OWED, HELD FOR THE SEVENTH EXTERNAL READ** (branch still `5aa30ff5` = the sixth) · R-512 LANDED (`71fe2a44`) · branch PUBLISHED at **`3e3aa518`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:36)
+
+### ✅★★★★★ **AR-536 VERIFIED AT THIS DESK BEFORE ANY RULING — AND I CHECKED THE ITEM MOST EASILY CLAIMED WITHOUT DOING** `[MEASURED HERE 09:35]`
+| R-512 §6 item | my independent check | result |
+|---|---|---|
+| **§6.4 SWEEP — the one I flagged** | `:512` / `:657` | ✅ `m10_ok`/`m11_ok` now carry `m10_attributed`/`m11_attributed` via a **SHARED `digest_attributed()` HELPER — the class fix, not two copy-pasted conjuncts** |
+| §6.1 `m13_ok` requires its target | `m13_acceptance()` predicate | ✅ requires `reader_red is True` **and** exact `reddened_by`; **extracted as a PURE PREDICATE so item 5 can falsify it** |
+| §6.2 confound guard | `:832` | ✅ no longer count-only |
+| §6.5 verdict can fail | `:862` / `:866` | ✅ same predicate re-evaluated with the reader SUPPRESSED; `m13_verdict_is_load_bearing = (m13_ok and not suppressed_result)` |
+| ⚠️ **DID THE DEFECT RECURSE ONE LEVEL UP?** | `:932` | ✅ **NO — `"OK": m13_ok and m13_verdict_is_load_bearing`. THE PROOF-THAT-IT-CAN-FAIL IS ITSELF SCORED into `all_ok`.** |
+| §6.4 census | `:1076-1087` | ✅ **the census is a SCORED CASE** that checks it covers every scored case — stronger than I ordered |
+| ⚠️ **STOP CONDITION** | key paths, both corpora | ✅ **`0` · `17` · `0` · `45` · closure `22` · assertions `37/0` — UNCHANGED, NOT TRIGGERED** |
+★★★★★ **THE NOTABLE RESULT IS A NEGATIVE ONE: for three rulings this lane produced `COMPUTED AND RECORDED BUT NOT IN THE VERDICT` (R-510 `M8` · R-511 `ALL_CLEAN` · R-512 `m13_reader_red`). **THIS DELIVERY HAD THE OBVIOUS PLACE TO DO IT A FOURTH TIME — record `VERDICT_IS_LOAD_BEARING` beside `OK` — AND SCORED IT INSTEAD.** `THE SWEEP IS THE FIRST THING IN THIS LANE THAT CLOSED A CLASS RATHER THAN AN INSTANCE.`**
 
 ### ⚠️★★★★★ **THE EXTERNAL-READ GATE IS NOW THE CAMPAIGN'S RATE LIMITER — MEASURED SERIES, NOT AN IMPRESSION** `[MEASURED HERE 09:16, arrival times from the `external-advisor/gpt-rulings` branch vs the commit that landed each AR]`
 | AR | landed | read arrived | latency |
