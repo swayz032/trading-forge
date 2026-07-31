@@ -4,6 +4,61 @@
 
 ---
 
+## AR-538 · 2026-07-31 · ⚠️★★★★★ **R-514 §5 DELIVERED, ALL FOUR. `ignore_labels` IS **GONE FROM THE PRODUCTION SIGNATURE** — `(repo_root, receipt_rel, pairs)`, `0` DEFAULTS, MEASURED BY AST — SO MISUSE IS IMPOSSIBLE RATHER THAN DETECTABLE, AND THE MECHANISM PROOF STILL WEAKENS THE **REAL** COMPARISON.** ★★★★★ **AND THE IDENTITY GUARD'S RED PATH IS NOW A **SCORED CASE** (`M14`): clean `OK=True`, planted-duplicate `OK=False`, the planted function NAMED.** ⚠️★★★★★ **I ALSO SHIPPED A CRASHING HARNESS AT `7eaa6072` AND CAUGHT IT ONE COMMIT LATER — THE CAUSE IS MINE AND SO IS THE READING ERROR THAT LET IT THROUGH.**
+
+**RULING ID:** R-514 §5 · **TASK ID:** AR-538 · **PRIOR:** AR-537 · **SEAT:** the seat that filed AR-533→537.
+**POSITION:** `2ef9441f` · lane `git status --porcelain` **EMPTY** · **`21` scored cases + `1` unscored history · `ALL CASES DISCRIMINATE: True` · exit `0`.**
+
+### ⚠️★★★★★ §1 — **MY OWN BREAKAGE, REPORTED BEFORE ANYTHING ELSE**
+**`7eaa6072` CRASHED.** `M14`'s planted source was built with `%` formatting over a template that **itself contains** `%s` — so Python tried to interpolate the very placeholder being planted. `TypeError: not enough arguments for format string`. **The run died AFTER the identity case and BEFORE the summary line.**
+⚠️★★★★★ **AND THE READING ERROR IS THE PART WORTH KEEPING: I ran it, grepped for the case lines I expected, saw them, and committed. `ALL CASES DISCRIMINATE` WAS ABSENT FROM THAT OUTPUT AND I DID NOT NOTICE, BECAUSE I WAS LOOKING FOR PRESENCE AND NOT FOR COMPLETION.** ★★★ **`A GREP FOR THE LINES YOU EXPECT CANNOT TELL YOU THE RUN REACHED ITS END` — the campaign already knows this as `A COMPLETION SIGNAL IS NOT A RESULT`; this is its inverse, and I supplied the instance.** **Fixed at `8d7928e4` by building the literal via concatenation; the needle stays unwritten for the same reason it is unwritten in the identity helper.**
+★★ **BLAST RADIUS, MEASURED AND SMALL: `7eaa6072` was live for one commit, never regenerated an artifact, and no campaign measurement was produced from it. Reported per the standing rule that disclosure outranks a clean record.**
+
+### ★★★★★ §2 — ITEM 1: THE SEAM IS GONE BY CONSTRUCTION
+```
+AST of the production helper:  args = ['repo_root', 'receipt_rel', 'pairs']   defaults = 0
+call sites (all three, exactly three arguments):  :922 M13 · :983 weakened · :1154 LIVE
+```
+✅ **THERE IS NO ARGUMENT THAT CAN DISABLE A REQUIRED COMPARISON.** `SAFETY BY CONSTRUCTION OUTRANKS SAFETY BY DETECTION` — adopted and implemented as ordered, not policed.
+✅ **AND R-513 §6.4's MECHANISM PROOF SURVIVES INTACT, STILL WEAKENING THE LIVE COMPARISON** — it now temporarily narrows the module-level `RECEIPT_BLOB_LABELS` that the **real** reader iterates, inside `try/finally`, with an `assert` that the set was restored:
+```
+weakened_reader_went_incorrectly_GREEN  True      OK_if_the_MECHANISM_were_weakened  False
+weakened_reader_STATUS                  CURRENT   MECHANISM_IS_LOAD_BEARING          True
+```
+★★★ **The weakening is TEST-SCOPED while the code under test is unchanged — which is what §5.1 asked for and is strictly stronger than the parameter it replaces: a caller cannot reach it at all.**
+
+### ★★★★★ §3 — ITEM 2: THE IDENTITY GUARD'S RED PATH IS SHIPPED, NOT REPORTED
+```
+[OK ] M14_identity_guard_planted_duplicate -> clean_OK=True mutated_OK=False caught=True
+      mutated measurement found: ['_M14_planted_second_comparator', 'receipt_publication_blob_status']
+```
+✅ **ONE helper — `receipt_reader_identity_status(source_text)` — answers BOTH arms.** The identity logic is **not** re-implemented inside its own red-proof, which is the trap R-514 §5.2 explicitly named and which this lane already closed one level down.
+★★★★★ **THE LAW THE DESK MINTED IS THE RIGHT ONE AND I ACCEPT THE CHARGE WITHOUT QUALIFICATION: `A PROOF THAT RAN ONCE AND WAS NOT PERSISTED IS A CLAIM IN THE NEXT SESSION.` I ran that proof and quoted its real output in AR-537 §3; quoting it is not shipping it. The mutation exists only as a STRING — nothing on disk is touched.**
+
+### §4 — ITEM 3: CAPTIONS
+- ✅ `publication_consistency()` no longer says the object under test is *"THE FILE ON DISK"* `[MEASURED: string absent from source]` — in the default committed mode it is the git blob at `HEAD`.
+- ✅ The census no longer calls the identity guard *"a source-text count"* — it now reads *"receipt_reader_identity_status() — the SAME helper M14 calls"*. ★★ **That entry had been documenting the very defect that was fixed.**
+- ✅ **THE CASE COUNT IS NOW DERIVED IN THE OBJECT** — `n_scored_cases: 21` beside `len(cases) == 21` `[MEASURED, they agree]`. My `fdbdd25f` message said *"21 cases"* against an object holding `20`. **`A COMMIT MESSAGE IS A CAPTION`, and I will state counts from the object or not at all.**
+
+### ⚠️★★★★★ §5 — PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED**
+```
+binding A/B 0 / 0    reason A/B 17 / 45    reconciliation 18 / 17 / 9    closure_size 22
+```
+★★★ Re-read by key path from the committed artifact after the final commit. `7/33` untouched.
+
+### §6 — WHAT I DID NOT MEASURE
+- ⚠️ **`M14` proves the identity guard reddens on a duplicate built from the SAME blob template.** It still cannot catch an arbitrarily rewritten comparator that avoids that template — stated in the receipt as well as here.
+- ⚠️ **The label-set weakening mutates module state.** It is `try/finally`-restored and asserted, and the harness is single-threaded, **but I did not test the restore under an exception thrown INSIDE the weakened call** `[UNMEASURED]`. **Flagging it rather than leaving it to be found.**
+- ⚠️ **I did not re-verify the earlier waves' cases by hand this round** — they are carried by the suite's own green, which is exactly the reliance R-514 §2 warns about when a proof is not persisted. **Their proofs ARE persisted as scored cases; this is a scope statement, not a doubt.**
+- ★★★ **I do not grade my own work.** `I7` closes on §5 + a ninth external read.
+
+### §7 — POSITION
+**FAN-IN `4 / 4` on R-514 §5.** `I7` **NOT CLOSED** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S)** · `I21` **PARTIAL** · **CI-WIRING → DESK DEBT, owes three constraints** · `P0-v5`, Revision-4, `I6`, `I14` → DESK · `c304b098` **NOT-SOUND** · `I11` **CLOSED**.
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · `HOLDOUT-26` untouched · no refusal rule widened · no campaign measurement altered · only the harness and the receipt touched.**
+★★ **NOT A HANDOFF — context is not exhausted and no lane assigned to me is unstarted.**
+
+---
+
 ## AR-537 · 2026-07-31 · ⚠️★★★★★ **R-513 §6 DELIVERED, ALL EIGHT. ONE READER, ONE IMPLEMENTATION — `receipt_publication_blob_status()` DEFINED ONCE AT `:271`, CALLED AT `:881`, `:889` AND `:1059`; BOTH INLINE COMPARATORS DELETED.** ★★★★★ **AND THE MECHANISM IS NOW RED-PROOFED, NOT JUST THE PREDICATE: THE SHARED READER IS RE-INVOKED WEAKENED, GOES **INCORRECTLY GREEN**, AND `M13`'s `OK` GOES **FALSE**.** ⚠️★★★★★ **THE ITEM I MOST WANT ON THE RECORD IS A DEFECT OF MY OWN, CAUGHT TWICE IN ONE GUARD: THE IMPLEMENTATION-IDENTITY CHECK **FOUND ITSELF** — FIRST IN TEXT, THEN IN THE AST.**
 
 **RULING ID:** R-513 §6 · **TASK ID:** AR-537 · **PRIOR:** AR-536 · **SEAT:** the seat that filed AR-533/534/535/536.
