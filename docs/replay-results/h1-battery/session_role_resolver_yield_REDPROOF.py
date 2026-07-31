@@ -168,6 +168,52 @@ CASES = [
 ]
 
 
+AUTHORITATIVE_ARTIFACT = HERE / "session-role-resolver-yield-2026-07-31.json"
+
+
+def publication_consistency(published_path: Path) -> dict:
+    """★★★★★ R-508 §5.5 -- IS THE PUBLISHED ARTIFACT WHAT THE CURRENT CODE
+    PRODUCES? Runs the generator unmutated into a THROWAWAY path and compares
+    its load-bearing digest against the artifact ON DISK.
+
+    ⚠️★★★★★ R-508 §5.6(a) WAS OFFERED AS A `[HYPOTHESIS]` TO TEST, AND THE TEST
+    CONFIRMS IT. A check placed INSIDE the generator cannot do this job: the
+    generator WRITES the artifact and would then hash what it had just written,
+    so the comparison is true by construction and stays true while the COMMITTED
+    object rots. That is exactly how the stale artifact shipped -- the working
+    file was never regenerated, so `git hash-object` of it matched the commit
+    perfectly and the receipt pinned a stale object HONESTLY.
+    ★★★ THE OBJECT UNDER TEST MUST THEREFORE BE THE FILE ON DISK, COMPARED
+    AGAINST FRESHLY-GENERATED CONTENT THAT WAS WRITTEN SOMEWHERE ELSE. The
+    desk's prediction is upheld; it is recorded here as TESTED, not obeyed.
+    """
+    mod = load_instrument()          # OUT_PATH already redirected to a temp file
+    mod.ASSERTIONS.clear()
+    mod.main()
+    fresh = json.loads(Path(mod.OUT_PATH).read_text(encoding="utf-8"))
+    if not published_path.exists():
+        return {"PUBLISHED_ARTIFACT_IS_CURRENT": False,
+                "reason": "published artifact does not exist", "path": str(published_path)}
+    published = json.loads(published_path.read_text(encoding="utf-8"))
+    fd, pd = mod.stable_digest(fresh), mod.stable_digest(published)
+    return {
+        "PUBLISHED_ARTIFACT_IS_CURRENT": fd == pd,
+        "published_path": str(published_path),
+        "fresh_digest": fd,
+        "published_digest": pd,
+        "published_n_pass": published.get("ASSERTIONS", {}).get("n_pass"),
+        "fresh_n_pass": fresh.get("ASSERTIONS", {}).get("n_pass"),
+        "published_deployed_head": published.get(
+            "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE", {})
+            .get("SNAPSHOT_RECORD", {}).get("deployed_repo_head"),
+        "WHAT_RED_MEANS": (
+            "The committed artifact is NOT what the current code produces. "
+            "`CURRENT CODE GREEN / PUBLISHED RESULT STALE` -- regenerate and re-commit "
+            "before quoting any number from it."
+        ),
+    }
+
+
 def main():
     results = []
 
@@ -210,6 +256,38 @@ def main():
               % ("OK " if ok else "BAD", name, must_redden, reddened, rc,
                  len(all_red), collateral))
 
+    # ── R-508 §5.5 -- PUBLICATION CONSISTENCY, and §5.6(b) -- RED-PROOF IT ────
+    live = publication_consistency(AUTHORITATIVE_ARTIFACT)
+    live_ok = live["PUBLISHED_ARTIFACT_IS_CURRENT"] is True
+    results.append({"case": "PUBLICATION_CONSISTENCY_live",
+                    "PUBLISHED_ARTIFACT_IS_CURRENT": live_ok, "detail": live,
+                    "VERDICT": "CURRENT" if live_ok else "STALE", "OK": live_ok})
+    print("[%s] PUBLICATION_CONSISTENCY_live -- published artifact is current: %s"
+          % ("OK " if live_ok else "BAD", live_ok))
+
+    # M8: plant a STALE artifact and require the check to notice. The real
+    # artifact is never touched -- the staled copy is written to a temp path.
+    stale_path = Path(tempfile.gettempdir()) / "_redproof_stale_artifact.json"
+    doc = json.loads(AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+    doc["ASSERTIONS"]["n_pass"] = 33
+    doc["ASSERTIONS"]["checks"] = doc["ASSERTIONS"]["checks"][:-1]
+    doc["DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE"]["SNAPSHOT_RECORD"][
+        "deployed_repo_head"] = "<unavailable: Command 'git rev-parse HEAD' exit 128>"
+    stale_path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    m8 = publication_consistency(stale_path)
+    m8_ok = m8["PUBLISHED_ARTIFACT_IS_CURRENT"] is False
+    results.append({
+        "case": "M8_stale_artifact_planted",
+        "assertion_that_must_go_RED": "PUBLICATION_CONSISTENCY",
+        "it_went_RED": m8_ok, "detail": m8,
+        "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head "
+                            "replaced with the exact error string that shipped -- i.e. the "
+                            "REAL defect reproduced, not a synthetic one.",
+        "ALL_assertions_this_mutation_reddened": ["PUBLICATION_CONSISTENCY"] if m8_ok else [],
+        "VERDICT": "DISCRIMINATES" if m8_ok else "DOES-NOT-DISCRIMINATE", "OK": m8_ok})
+    print("[%s] M8_stale_artifact_planted    -> PUBLICATION_CONSISTENCY  RED=%s"
+          % ("OK " if m8_ok else "BAD", m8_ok))
+
     all_ok = all(r["OK"] for r in results)
     import subprocess
 
@@ -243,7 +321,16 @@ def main():
             "deployed_scope_capability_tripwire": "M5",
             "deployed_scope_subset_or_equal": "M6",
             "deployed_scope_STRICT_subset": "M7",
+            "publication_consistency_published_vs_current_code": "M8",
         },
+        "⚠️_R508_5_6a_HYPOTHESIS_TESTED_AND_UPHELD": (
+            "R-508 §5.6(a) predicted that hashing the generator's own in-memory output would "
+            "be self-satisfying. TESTED: it is. The generator writes the artifact and would "
+            "hash what it just wrote, so the check is true by construction while the COMMITTED "
+            "object rots -- which is precisely how the stale artifact shipped, with an HONEST "
+            "receipt pinning it. The check therefore lives HERE, compares the file ON DISK "
+            "against freshly-generated content written elsewhere, and M8 proves it can fail."
+        ),
         "ASSERTION_CLASSES_WITHOUT_ONE": [
             "corpus/population size vs pinned baseline", "determinism", "invalidation counts",
             "count-equals-identity-list-length", "gate/held-flag controls",

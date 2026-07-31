@@ -7,7 +7,7 @@
   "ruling": "R-503 \u00a75 items A-H + \u00a73 reconciliation (supersedes R-502 \u00a74, R-501 \u00a76)",
   "TREE": {
     "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
-    "head": "a83a04e42aaa16672359158b51bdff42bf5c9519",
+    "head": "3f356405e583398fae3e54223e76779b7143c526",
     "branch": "h1-wave4-sealed12-driver",
     "dirty_paths": 93
   },
@@ -24,7 +24,7 @@
   },
   "ASSERTIONS": {
     "ALL_PASS": true,
-    "n_pass": 33,
+    "n_pass": 34,
     "n_fail": 0,
     "checks": [
       {
@@ -289,6 +289,15 @@
         }
       },
       {
+        "assertion": "SCOPE_snapshot_record_deployed_HEAD_actually_RESOLVED",
+        "PASS": true,
+        "detail": {
+          "head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
+          "root": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production",
+          "WHY": "The first version silently recorded '<unavailable: exit 128>' as the deployed HEAD. A provenance field holding an ERROR STRING is worse than an absent one -- it LOOKS populated. Asserted so it cannot recur."
+        }
+      },
+      {
         "assertion": "SCOPE_shared_symbol_bodies_compared_not_just_names",
         "PASS": true,
         "detail": {
@@ -316,12 +325,14 @@
   "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": {
     "STATUS": "MEASURED",
     "SNAPSHOT_RECORD": {
-      "generated_at_utc": "2026-07-31T07:08:06Z",
-      "campaign_commit": "a83a04e42aaa16672359158b51bdff42bf5c9519",
+      "generated_at_utc": "2026-07-31T07:27:56Z",
+      "campaign_commit": "3f356405e583398fae3e54223e76779b7143c526",
       "campaign_binder_blob": "7c9e69a15b03b4bf566d37abbf04fa592848e925",
-      "generator_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+      "generator_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
       "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
-      "deployed_repo_head": "<unavailable: Command '['git', 'rev-parse', 'HEAD']' returned non-zero exit status 128.>",
+      "deployed_repo_root": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production",
+      "deployed_repo_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
+      "deployed_repo_head_RESOLVED": true,
       "deployed_binder_sha256": "b849a3718c1c8c81a178658aa46ece5607731f9d10274fab3f8c9bc4a2947dfc",
       "WHY": "R-507 \u00a76.4/\u00a76.5 -- the deployed binder lives in a DIFFERENT git tree, so it cannot join this run's source closure by HEAD-blob comparison. It is hashed SEPARATELY here and that hash is what every deployed-scope claim binds to."
     },
@@ -8472,7 +8483,7 @@
   },
   "PROVENANCE_SOURCE_CLOSURE": {
     "WHY_THIS_EXISTS": "R-502 \u00a74: `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Deterministic repeated execution proves repeatability INSIDE the checkout; it does NOT prove the binder that ran equals the named commit. This manifest does, by comparing worktree bytes to the HEAD blob for every file in the EXECUTED source+population closure.",
-    "head": "a83a04e42aaa16672359158b51bdff42bf5c9519",
+    "head": "3f356405e583398fae3e54223e76779b7143c526",
     "closure_size": 22,
     "binder_blob": {
       "path": "src/engine/spec_family_bindings.py",
@@ -8482,8 +8493,8 @@
     },
     "generator_blob": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
-      "head_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+      "worktree_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
+      "head_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
       "IDENTICAL": true
     },
     "pinned_baseline_blob": {
@@ -8521,8 +8532,8 @@
       },
       {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
-        "head_blob": "59b5491a983987c9ce5b6c09f4c8d0e4f28fa758",
+        "worktree_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
+        "head_blob": "f6e35b17a38c4bec8b120e24be5ea104e318f204",
         "IDENTICAL": true
       },
       {

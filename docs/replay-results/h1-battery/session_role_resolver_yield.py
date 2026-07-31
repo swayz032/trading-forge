@@ -116,6 +116,39 @@ def git(*args) -> str:
         return "<unavailable: %s>" % exc
 
 
+def stable_digest(art: dict) -> str:
+    """★★★★★ R-508 §5.5 -- the LOAD-BEARING content of an artifact, with the
+    fields that legitimately move between two runs of the SAME code stripped
+    out. Used to answer one question: `IS THE PUBLISHED ARTIFACT WHAT THE
+    CURRENT CODE PRODUCES?`
+
+    STRIPPED (they move for reasons that are not staleness): `generated_at_utc`
+    · `campaign_commit` · `TREE` · `PROVENANCE_SOURCE_CLOSURE` -- because
+    COMMITTING the artifact advances HEAD, so a byte comparison would report
+    every correctly-published artifact as stale. `A FRESHNESS CHECK THAT CRIES
+    WOLF ON EVERY COMMIT WILL BE SWITCHED OFF.`
+    KEPT: every assertion NAME and PASS value · every campaign metric · the
+    reconciliation counts · the whole deployed-scope block EXCEPT its timestamp
+    -- which is where the `deployed_repo_head` error string lived, so the actual
+    defect this exists to catch is inside the digest.
+    """
+    a = art.get("ASSERTIONS", {})
+    scope = dict(art.get("DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE", {}))
+    snap = dict(scope.get("SNAPSHOT_RECORD", {}))
+    snap.pop("generated_at_utc", None)
+    snap.pop("campaign_commit", None)
+    scope["SNAPSHOT_RECORD"] = snap
+    payload = {
+        "assertions": sorted((c["assertion"], bool(c["PASS"])) for c in a.get("checks", [])),
+        "n_pass": a.get("n_pass"), "n_fail": a.get("n_fail"),
+        "scope": scope,
+        "reconciliation": art.get("RECONCILIATION_18_17_9"),
+        "corpora": {k: art.get(k, {}).get("METRICS") for k in ("corpus_A", "corpus_B")},
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
 def git_at(repo: Path, *args) -> str:
     """git in ANOTHER tree -- the deployed lane is a separate checkout."""
     try:
