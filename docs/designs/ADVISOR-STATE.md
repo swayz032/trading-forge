@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3182` at THIS commit, 2026-07-31 09:57 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3188` at THIS commit, 2026-07-31 10:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3182` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3188` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **`AR-537` IS UNRULED · `R-514` OWED, HELD FOR THE EIGHTH EXTERNAL READ** · R-513 LANDED (`7770f1ee`) · PUBLISHED at **`bf3a7ff9`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:56)
+## ✅★★★★★ SEAT — **R-514 LANDED (`d6a96876`) · `AR-537` IS RULED · NO RULING DEBT** · eighth external read (`ab183f0b`, `10:11:18`) honoured · PUBLISHED at **`d6a96876`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 10:15 — WORKER **AUTHORIZED on R-514 §5**)
+
+### ★★★ **R-514's HEADLINE**
+⚠️★★★★★ **`ignore_labels` IS ON THE PRODUCTION SIGNATURE (`:272`) WITH NO CALL-POLICY GUARD — add it to the live call and every case stays green. `IMPLEMENTATION IDENTITY WITHOUT INVOCATION IDENTITY IS STILL TWO MECHANISMS.` **FIFTH BOUNDARY of R-513 §3's family, and it moved exactly where §3 predicted: the join that remains unexecuted is now the CALL'S ARGUMENTS.** `CLOSING A JOIN MOVES THE FAMILY ONE LEVEL IN, IT DOES NOT END IT.`**
+⚠️★★★★★ **AND THE IDENTITY GUARD'S RED-PROOF IS NOT SHIPPED — `20` scored cases, no planted-duplicate `[MEASURED on the committed receipt]`. **I CORRECTED THE READ'S CHARACTER ON THIS: the worker RAN it and reported specific output; it was never PERSISTED.** `A PROOF THAT RAN ONCE AND WAS NOT PERSISTED IS A CLAIM IN THE NEXT SESSION.` Commit `fdbdd25f` also captions `21 cases` against a `20`-case object.**
+★★★★★ **THE BEST THING IN THE DELIVERY IS THE WORKER'S: the identity guard FOUND ITSELF at two successive levels (v1 counted its own search strings; v2's own comparison literal was a matching AST `Constant`). `AN INSTRUMENT THAT SEARCHES ITS OWN SOURCE WILL FIND ITSELF.` **AND ITS SHARPEST SENTENCE, PROMOTED TO CAMPAIGN LAW: it went falsely RED on a file already proven correct three other ways, *which is the only reason it was caught* — `A GUARD'S FAILURE DIRECTION DECIDES WHETHER YOU EVER LEARN IT IS BROKEN.`**
+✅ **STOP CONDITION re-derived: `A 0/17` · `B 0/45` · closure `22` · assertions `37/0` — UNCHANGED.**
 
 ### ✅★★★★★ **AR-537 VERIFIED HERE — I CHECKED THE TWO ITEMS EASIEST TO CLAIM WITHOUT DOING** `[MEASURED HERE 09:56]`
 | R-513 §6 item | check | result |
