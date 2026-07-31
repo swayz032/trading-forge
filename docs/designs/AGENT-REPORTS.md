@@ -4,6 +4,68 @@
 
 ---
 
+## AR-537 · 2026-07-31 · ⚠️★★★★★ **R-513 §6 DELIVERED, ALL EIGHT. ONE READER, ONE IMPLEMENTATION — `receipt_publication_blob_status()` DEFINED ONCE AT `:271`, CALLED AT `:881`, `:889` AND `:1059`; BOTH INLINE COMPARATORS DELETED.** ★★★★★ **AND THE MECHANISM IS NOW RED-PROOFED, NOT JUST THE PREDICATE: THE SHARED READER IS RE-INVOKED WEAKENED, GOES **INCORRECTLY GREEN**, AND `M13`'s `OK` GOES **FALSE**.** ⚠️★★★★★ **THE ITEM I MOST WANT ON THE RECORD IS A DEFECT OF MY OWN, CAUGHT TWICE IN ONE GUARD: THE IMPLEMENTATION-IDENTITY CHECK **FOUND ITSELF** — FIRST IN TEXT, THEN IN THE AST.**
+
+**RULING ID:** R-513 §6 · **TASK ID:** AR-537 · **PRIOR:** AR-536 · **SEAT:** the seat that filed AR-533/534/535/536.
+**POSITION:** `fdbdd25f` · lane `git status --porcelain` **EMPTY** · **`20` scored cases + `1` unscored history · `ALL CASES DISCRIMINATE: True` · exit `0`.**
+
+### ★★★★★ §1 — ITEMS 1–3: THE JOIN IS NOW A CALL, NOT A CLAIM
+```
+:271  def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels=())
+:881  m13_reader           = receipt_publication_blob_status(m13fix, RECEIPT_REL, ...)   <- M13
+:889  m13_reader_weakened  = receipt_publication_blob_status(..., ignore_labels=("harness",))
+:1059 rec_status           = receipt_publication_blob_status(REPO, RECEIPT_REL, ...)     <- LIVE CASE
+AST census: defs=1 · calls=3 · functions containing the blob template = ['receipt_publication_blob_status']
+```
+**Both inline loops are DELETED.** ★★★ **`M13` and the live case are now the SAME executable path — the join R-513 §3 named is a CALL.**
+✅ **THE HELPER RETURNS LABELS, NOT A BOOLEAN, AND §2's REASON IS WHY IT MATTERS `[MEASURED]`:** the comparator I deleted used `.get()`, and `None != <head_blob>` is `True` — **an absent or malformed receipt was indistinguishable from a genuine catch.** The helper now separates `mismatched_labels` from `absent_fields` and from `RECEIPT_ABSENT_FROM_HEAD` / `RECEIPT_UNPARSEABLE`. **`M13` requires `mismatched_labels == ["harness"]` AND `absent_fields == []`** — shipped result: exactly that, `STATUS: STALE`.
+
+### ⚠️★★★★★ §2 — ITEM 4: THE MECHANISM RED-PROOF, AND WHY IT IS DIFFERENT FROM R-512's
+```
+★_MECHANISM_FALSIFIABILITY   (recomputed every run, shipped in the receipt)
+   weakened_reader_went_incorrectly_GREEN   True     <- the rot is real when induced
+   weakened_reader_STATUS                   CURRENT
+   OK_if_the_MECHANISM_were_weakened        False    <- and M13 refuses it
+   MECHANISM_IS_LOAD_BEARING                True
+★_VERDICT_FALSIFIABILITY (R-512's, RETAINED)  OK_if_the_reader_result_were_SUPPRESSED  False
+```
+★★★★★ **THE DISTINCTION IS THE WHOLE POINT AND I HAD IT WRONG LAST ROUND: `SUPPRESSING A BOOLEAN PROVES THE VERDICT DEPENDS ON THE BOOLEAN; IT DOES NOT PROVE THE BOOLEAN CAME FROM THE LIVE MECHANISM.` Both proofs now run — one holds the predicate honest, the other holds the implementation honest — and `OK` requires both.**
+
+### ⚠️★★★★★ §3 — **MY OWN DEFECT, CAUGHT TWICE IN THE SAME GUARD. THIS IS THE MOST TRANSFERABLE THING HERE.**
+**Item 5 asked for a structural guard on implementation identity. I built it three times.**
+| version | how it measured | what it reported **against a CORRECT file** |
+|---|---|---|
+| v1 | `_src.count("def receipt_publication_blob_status(")` over its own source | ⚠️ `defs=2 calls=6 inline=2` — **FALSE RED** |
+| v2 | `ast.walk`, comparing `Constant.value == "%s_blob"` | ⚠️ `blob_fns=['main', 'receipt_...']` — **FALSE RED** |
+| v3 | `ast.walk`, needle **BUILT** (`"%s" + "_blob"`) not written | ✅ `defs=1 calls=3 blob_fns=['receipt_publication_blob_status']` |
+★★★★★ **v1 counted its own SEARCH STRINGS — the literal it greps for is in the file it greps. v2 fixed the text/code confusion but its own COMPARISON LITERAL was itself a matching AST `Constant`, so the guard named its own enclosing function as a second comparator.** **`AN INSTRUMENT THAT SEARCHES ITS OWN SOURCE WILL FIND ITSELF` — and it does so at whatever level you move the search to, until the needle stops being written down.**
+★★★ **WHAT SAVED IT: the guard went RED on a file I had just proven correct by three other means. `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — I checked the instrument instead of "fixing" the code it was accusing.** ⚠️★★★ **HAD IT GONE GREEN WRONGLY INSTEAD, NOTHING WOULD HAVE CAUGHT IT.** That asymmetry is why item 5's guard is itself red-proofed below rather than trusted.
+✅ **RED-PROOFED, NOT ASSUMED `[MEASURED]`:** with a second comparator PLANTED, the guard reports `['_planted_second_comparator', 'receipt_publication_blob_status']` and **FAILS**. Without it, it passes. ★★ **Its SCOPE is stated in the receipt rather than implied: an AST structural count, not a semantic analysis — it cannot catch a duplicate that avoids the template.**
+
+### §4 — ITEMS 6, 7, 8
+- ✅ **CENSUS CARRIES THE JOIN COLUMN.** Every scored case now records `WHAT_CALL_JOINS_PROOF_TO_TARGET` — the shared function it invokes, or `INLINE` explicitly (R-513 §6.6: *`INLINE` is not forbidden, it is REQUIRED TO BE VISIBLE*). `M13`'s entry reads *"receipt_publication_blob_status() — THE SAME function the live case calls"*. **The census's LAW field now carries §3's family law**, so the next reader meets it in the artifact rather than in a ruling.
+- ✅ **`ON DISK` CAPTION GONE** from the harness **and** from the regenerated receipt `[MEASURED: the string is absent from the committed receipt]`.
+- ✅ **REGENERATED AND COMMITTED.** Generator and artifact untouched, as §6 scoped.
+
+### ⚠️★★★★★ §5 — PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED**
+```
+binding A/B 0 / 0    reason A/B 17 / 45    reconciliation 18 / 17 / 9    closure_size 22
+```
+★★★ **Re-read by key path from the committed artifact after the final commit.** `7/33` untouched — nothing in this wave reads or writes it.
+
+### §6 — WHAT I DID NOT MEASURE
+- ⚠️ **The identity guard is a structural count.** It catches a second definition, a lost call site, or a duplicate built on the same template. **It cannot catch an arbitrarily rewritten comparator** — stated in the receipt, not only here.
+- ⚠️ **`ignore_labels` is a test seam in production code.** It is used only by `M13`'s weakened invocation, but **it is a parameter that can make the reader lie if ever passed in earnest** `[UNMEASURED — no caller outside the red-proof; I did not build a guard preventing one]`. **I am flagging it rather than leaving the desk to find it.**
+- **CI wiring: DESK DEBT, not mine, not begun** — unchanged from R-513 §7, now owing three constraints.
+- ★★★ **I do not grade my own work.** `I7` closes on §6 + an eighth external read.
+
+### §7 — POSITION
+**FAN-IN `8 / 8` on R-513 §6.** `I7` **NOT CLOSED** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S)** · `I21` **PARTIAL** · **CI-WIRING → DESK** · `P0-v5`, Revision-4, `I6`, `I14` → DESK · `c304b098` **NOT-SOUND** · `I11` **CLOSED**.
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · `HOLDOUT-26` untouched · no refusal rule widened · no campaign measurement altered · only the harness and the receipt touched.**
+★★ **NOT A HANDOFF — context is not exhausted and no lane assigned to me is unstarted.**
+
+---
+
 ## AR-536 · 2026-07-31 · ⚠️★★★★★ **R-512 §6 DELIVERED, ALL SIX. THE FINDING IS RIGHT AND IT IS MINE: `m13_ok` NEVER REQUIRED ITS OWN READER, AND AR-535 CALLED IT "ITS OWN RED-PROOF" ANYWAY.** ★★★★★ **THE REPAIR DOES NOT ASSERT FALSIFIABILITY — IT **RE-EVALUATES THE ACCEPTANCE PREDICATE WITH THE READER SUPPRESSED ON EVERY RUN** AND SHIPS BOTH ANSWERS IN THE RECEIPT: `True` / `False`.** ⚠️★★★ **AND THE SWEEP FOUND THE CONJUNCT WAS NOT VACUOUS — `M8b`'s DIGEST-FREE EARLY RETURN IS THE NEGATIVE CONTROL AND IT SCORES `attributed = False`.**
 
 **RULING ID:** R-512 §6 · **TASK ID:** AR-536 · **PRIOR:** AR-535 · **SEAT:** the seat that filed AR-533/534/535.
