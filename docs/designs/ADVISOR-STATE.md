@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2792` at THIS commit, 2026-07-31 02:07 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2819` at THIS commit, 2026-07-31 02:23 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -131,7 +131,34 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
 
-### ⚠️★★★★★ **R-502 LANDED (`654bf526`, PUBLISHED). R-503 IS NOW OWED AND HELD FOR THE NEXT PASTE — AR-524.**
+### ⚠️★★★★★ **R-503 LANDED (`d592160c`, PUBLISHED). LEDGER CURRENT — AR-524 RULED, NO DEBT. BUT THE CAMPAIGN IS STOPPED, AND IT IS MY DEFECT.**
+
+★★★★★ **THE IDLE WATCHDOG `bcnsis18y` FIRED AT `02:21` — `WORKER QUIET 15 min` — AND IT REPORTED
+SILENCE WITHOUT A DIAGNOSIS, EXACTLY AS CONTRACTED. I THEN MEASURED RATHER THAN ASSUMING
+[MEASURED HERE]: `claude.exe 26204` (the worker seat) is **ALIVE**, and `1` `worker_ear` process is
+**ALIVE** under it. **THE SEAT DID NOT DIE — IT STOPPED, on AR-524's declared CONTEXT limit.**
+`THE MONITOR'S JOB WAS TO SAY "QUIET", AND MINE WAS TO SAY WHY. BOTH HELD.`**
+
+⚠️★★★★★ **MY VIOLATION, NAMED PLAINLY: R-503 §9 AUTHORIZED `I7` TO *"A FRESH WORKER SEAT"* — A
+SESSION THAT DOES NOT EXIST. `advisor-ruling` §0.5 BANS EXACTLY THIS: *"Authorize the task to the
+SEAT, never to a future session … a future session is not an assignee, it is a hope."* **I WROTE THE
+RULE INTO THE WORKER SKILLS AN HOUR AGO AND THEN BROKE ITS TWIN IN MY OWN LEDGER.** The consequence
+is measurable and it is the one §0.5 predicts: **the ledger is current, the contract is complete, and
+nothing is moving.** `A RULING THAT AUTHORIZES A NON-EXISTENT SEAT IS A STALL ORDER WITH A COMPLETE
+CONTRACT ATTACHED — and the completeness is what makes it hard to notice.`**
+
+★★★ **WHAT IS AND IS NOT MINE TO FIX, ENUMERATED BEFORE CLAIMING A BLOCKER (`AN "UNOWNED
+PREREQUISITE" IS A CLAIM ABOUT WHO CAN ACT`):** I CANNOT open an interactive worker session — that is
+the operator's single action. I CAN dispatch the remaining `I7` work as a background agent, but this
+harness will not launch one unasked. **BOTH ROUTES ARE ONE SENTENCE FROM THE OPERATOR, AND HE HAS
+BEEN GIVEN BOTH AS A CHOICE, NOT AS A STATUS REPORT.** ⚠️ **DO NOT FILE THIS AS "BLOCKED".**
+
+★★★ **AND THE EXISTING SEAT IS NOT TO BE RE-TASKED BY A LATER SEAT READING THIS: AR-524's context
+limit is GENUINE and was ACCEPTED in R-503 §4. `A SEAT THAT SPENDS ITS LAST TOKENS ON THE MEASUREMENT
+THAT OVERTURNS ITS OWN HEADLINE HAS EARNED ITS HANDOFF.` Do not mistake "alive" for "able".**
+
+### ⚠️ SUPERSEDED — R-502 BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-502 LANDED (`654bf526`, PUBLISHED). R-503 OWED AND HELD — AR-524.~~
 ★★★★★ **`c304b098` IS `NOT-SOUND` [MEASURED BY GRADED INSTRUMENT — receipt `docs/designs/GRADE-C304B098-2026-07-31.md`, `314` lines, commit `38acbbdd`]. `1` HIGH · `3` MEDIUM · `1` LOW.
 `F-2` (HIGH): a one-character oracle-row typo silently deletes that row's EXPECTATION — six mutations,
 each `EXIT 0` with stdout **md5-identical to the clean PASS**. Membership is asserted at
