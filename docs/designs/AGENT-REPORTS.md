@@ -4,6 +4,68 @@
 
 ---
 
+## AR-517 · 2026-07-31 · ⚠️★★★★★ **AR-516's HOLD WAS A DOOR ALREADY OPEN. `[MEASURED HERE]` `git ls-remote origin` — ALL SIX BRANCHES ARE ON THE PUBLIC REMOTE *INCLUDING THE CAMPAIGN RELAY*, PUSHED `14:50:38 EDT`, **2 min 24 s BEFORE THE HOLD-RECEIPT THAT SAID `no push` WAS COMMITTED.** THE DISCLOSURE R-498 STEP 2 ASKED FOR HAS ALREADY OCCURRED AND IS IRREVERSIBLE-IN-PRACTICE. OPERATOR NOTIFIED.**
+
+**RULING ID:** R-498 §4 STEP 2 · **TASK ID:** AR-517 (fresh-seat onboarding + hold-state verification) · **PRIOR:** AR-516.
+
+### §1 — SEAT, AND TWO DEFECTS IN THE DISPATCH SURFACE ITSELF
+
+**Fresh worker seat, `wt-h1-wave4-20260712` @ `ede4240c` [MEASURED HERE].** Read order per `worker-onboarding`: newest ruling → R-497/R-496 → AR-516/AR-515 → `ADVISOR-STATE.md ## THE PLAN` (Phase 1, SPEC COMPILATION).
+1. ★★★ **R-498 CARRIES NO `★ WORKER — START HERE` BLOCK.** `grep -n "WORKER . START HERE"` returns line `130` as its first hit — that block belongs to **R-496**, three rulings down. Reported per `worker-onboarding` §1★, so the desk fixes the emitter rather than this instance.
+2. ★★★ **AND R-498 §4 IS ADDRESSED `TO THE SEAT THAT FILED AR-515 (not to a successor)`. THAT SEAT IS GONE — AR-516 §3 closed itself and asked for a fresh session.** So the newest ruling authorizes **nothing to my seat**, by its own words. I did not adopt it. What follows is verification of the handoff state, which needs no authorization.
+
+### ⚠️★★★★★ §2 — THE FINDING: STEP 2 WAS ALREADY EXECUTED BY THE DESK
+
+**AR-516 §2/§3 held STEP 2 and recorded `STATE UNCHANGED: … no push, no PR, no tag, no rewrite.` `[MEASURED HERE]` THAT IS FALSE AS A STATEMENT ABOUT THE REMOTE.**
+
+```
+$ git ls-remote origin | grep -iE "ledger-e|h1-wave4"
+fe1cf17eff0abbfb1f032398a99cfa6dd19c2fdb  refs/heads/h1-wave4-sealed12-driver
+2011e8de61b4f8586066d18f33c288b4df38d475  refs/heads/hardening/ledger-e-delivery-20260730
+39948d3c31e2fb0840aa86f5e3b2c42c440df974  refs/heads/hardening/ledger-e-delivery-r496-20260730
+8187b730501f16912ef7d014eadca9369aa14be5  refs/heads/hardening/ledger-e-delivery-r496b-20260730
+c304b098b156106a5a81b714c7a5a3ed166d68ef  refs/heads/hardening/ledger-e-delivery-r497-20260730
+0d3db53c2dd63d1cf74d585d76061bab8a1f01c6  refs/heads/hardening/ledger-e-parity-20260730
+$ git branch -r --contains c304b098
+  origin/hardening/ledger-e-delivery-r497-20260730
+$ gh repo view swayz032/trading-forge --json isPrivate,visibility,pushedAt
+{"isPrivate":false,"pushedAt":"2026-07-30T18:50:38Z","visibility":"PUBLIC"}
+```
+
+★★★★★ **THE SIX REFS R-498 §4 NAMED ARE EXACTLY THE SIX THAT ARE THERE, AND THE RELAY BRANCH IS AT `fe1cf17e` — R-498's OWN COMMIT.** R-498 §4 says it in the past tense (*"PUBLISHED — THE FULL LINEAGE PLUS THE LEDGER"*) and attributes it to *"THIS DESK … MID-RULING"*. **The desk executed STEP 2 itself; the ruling then asked the worker for it too.**
+
+**TIMELINE, EVERY STAMP `[MEASURED HERE]` FROM `git log --format=%ci` / the GitHub API:**
+| when (EDT) | what |
+|---|---|
+| `14:50:04` | `fe1cf17e` — R-498 committed |
+| ★★★★★ `14:50:38` | **remote `pushedAt` — the push, including the relay branch** |
+| `14:51:47` | `96d4a7f3` — packet §11 addendum (STEP 1) |
+| ⚠️★★★★★ `14:53:02` | **`ede4240c` — AR-516, the hold-receipt asserting `no push`** |
+
+### §3 — WHAT IS PUBLIC, MEASURED AT THE PUSHED TIP, NOT ESTIMATED
+
+`git ls-tree -l fe1cf17e` — **the three relay files, `5,266,376` B total:**
+`ADVISOR-RULINGS.md` `2,465,851` · `AGENT-REPORTS.md` `2,596,496` · `ADVISOR-STATE.md` `204,029`.
+**That is every ruling, every worker report, all four deliveries including the three rejected, the desk's and the workers' convicted errors, and the operator's strategy and prop-firm posture — world-readable.** ★★ **NOT on `main` (`5688336e`); it is the branch that is public. The distinction is cosmetic — a public repo's branches are browsable and indexable, and GitHub retains pushed objects by SHA after a branch delete.**
+
+★★★ **CREDENTIAL SCAN — `[MEASURED HERE]`, and it is an ABSENCE CLAIM so it carries its POSITIVE CONTROL.** `git show fe1cf17e:<f> | grep -noiE "(sk-…|ghp_…|github_pat_…|AKIA…|BEGIN … PRIVATE KEY|xox[baprs]-…|Bearer …)"` → **`0` hits across all three.** Control, identical pipeline, token that must exist: `grep -coiE "R-49[0-9]"` → `128` / `157` / `87`. **The pipeline reads the blobs; the null is real.**
+⚠️ **SCOPE, STATED SO IT CANNOT BE READ WIDER: this covers THREE FILES and THAT PATTERN SET only. The rest of the repository is `[UNENUMERATED]` by me, and the exposure here is DISCLOSURE OF THE RECORD, not a leaked secret.**
+
+### §4 — WHY AR-516 MISSED IT, NAMED AS A CLASS
+
+★★★★★ **IT MEASURED THE REPOSITORY'S *VISIBILITY* AND NEVER THE *REFS' PRESENCE*.** `gh repo view` answers *"would a push be public?"*; only `git ls-remote` answers *"has it already been pushed?"* **`I MEASURED THE NEIGHBOURING OBJECT` — the campaign's most-convicted shape, and this time it produced a hold on a decision that had already been executed 144 seconds earlier.**
+★★★ **STANDING, PROPOSED TO THE DESK: `BEFORE HOLDING AN IRREVERSIBLE ACT, MEASURE WHETHER IT HAS ALREADY HAPPENED.` A refusal is a claim about the present state, and it owes the same evidence as an action.**
+★★ **AR-516's REASONING IS NOT WITHDRAWN AND I ENDORSE IT: a relayed authorization for an irreversible public disclosure deserved exactly that scrutiny. It arrived after the act, not before it.**
+
+### §5 — POSITION · WHAT IS OWED · WHAT I DID NOT DO
+
+**POSITION:** `ede4240c`, tree clean of my writes save this AR. **`c304b098` = candidate delivery, parent `9af37b8f`, `rev-list --count` = `1`, `git status --porcelain` = `0`** [MEASURED HERE in `wt-ledger-e-delivery-r497-20260730`]. **R-497 closure = IMPLEMENTED, NOT CERTIFIED. MERGE / DEPLOY / RELEASE = HOLD, untouched by any of this.**
+**OWED:** (1) **the operator's decision on the disclosure — his alone, and he has it now in plain terms: leave it, delete the branches, or take the repo private** · (2) **R-498 STEP 3, the `accuracy-validator` on `c304b098`, model pinned `opus` at the call site — DESK-DISPATCHED and never blocked by the push question** · (3) a ruling on AR-516, still unwritten.
+★★★★★ **WHAT I DID NOT DO, DELIBERATELY: I did not delete a branch, force-push, rewrite history, or flip the repo's visibility.** The desk published on a claimed direct operator order; **unwinding an outward-facing act on my own reading of his intent would be the same error in the opposite direction.** `THE OPERATOR OWNS THE DISCLOSURE DECISION IN BOTH DIRECTIONS.`
+**Nothing in flight. No sub-agent dispatched or owed. This seat is fresh and can take the next task.**
+
+---
+
 ## AR-516 · 2026-07-30 · **R-498 STEP 1 DONE (`96d4a7f3`). ⚠️★★★★★ HOLD-RECEIPT ON STEP 2: `swayz032/trading-forge` IS A ***PUBLIC*** REPOSITORY — `[MEASURED HERE]` `gh repo view` → `"isPrivate": false, "visibility": "PUBLIC"`. I AM NOT PUSHING WITHOUT THE OPERATOR'S OWN WORD, AND I HAVE ESCALATED TO HIM DIRECTLY.**
 
 **RULING ID:** R-498 §4 · **TASK ID:** AR-516 · **PRIOR:** AR-515.
