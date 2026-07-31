@@ -1295,9 +1295,15 @@ def main():
              identity["call_sites"], identity["functions_containing_blob_template"]))
 
     # M14 -- the identity guard's OWN red path, as a SCORED case.
+    # !!! BUILT BY CONCATENATION, NEVER BY `%` FORMATTING. The planted source
+    #   CONTAINS the blob template, so running `%` over it makes Python try to
+    #   interpolate the very placeholder being planted -- TypeError, which is
+    #   how the first version of this line died. The needle stays unwritten here
+    #   for the same reason it is unwritten in the identity helper.
+    _blob_literal = '"' + "%s" + "_blob" + '"'
     _planted = _own_source + (
         "\n\ndef _M14_planted_second_comparator(prov, label):\n"
-        "    return prov.get(\"%s\" % label)\n" % ("%s" + "_blob"))
+        "    return prov.get(" + _blob_literal + " % label)\n")
     identity_mutated = receipt_reader_identity_status(_planted)
     m14_ok = (identity_mutated["OK"] is False
               and "_M14_planted_second_comparator"
