@@ -269,7 +269,7 @@ RECEIPT_BLOB_LABELS = (("harness", "HARNESS_REL"), ("generator", "GENERATOR_REL"
                        ("artifact", "ARTIFACT_REL"))
 
 
-def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels=()):
+def receipt_publication_blob_status(repo_root, receipt_rel, pairs):
     """*** R-513 6.1 -- THE ONE READER. `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER.`
 
     Until R-513 this comparison existed TWICE: once in the live scored case and
@@ -285,9 +285,18 @@ def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels
     `A BOOLEAN CANNOT CARRY AN ATTRIBUTION.` Absent fields are therefore a
     SEPARATE category from mismatched ones and never silently count as a catch.
 
-    `ignore_labels` exists solely so R-513 6.4 can WEAKEN this mechanism on
-    purpose and prove M13 fails -- red-proofing the MECHANISM, not a boolean
-    somebody handed to the verdict.
+    !!! R-514 5.1 -- THERE IS NO ARGUMENT THAT CAN DISABLE A COMPARISON.
+    R-513 6.4 gave this an `ignore_labels` parameter so the mechanism could be
+    weakened for its own red-proof. That put a disabling seam on the PRODUCTION
+    signature: the live call passed three arguments and was correct, but nothing
+    structural stopped a fourth. `IMPLEMENTATION IDENTITY WITHOUT INVOCATION
+    IDENTITY IS STILL TWO MECHANISMS` and `A TEST SEAM IS ACCEPTABLE ONLY WHEN
+    MISUSE OF THE SEAM IS ITSELF EXECUTABLE FAILURE.`
+    The mechanism red-proof survives and still weakens the REAL comparison --
+    it temporarily narrows the module-level RECEIPT_BLOB_LABELS inside a
+    try/finally, so the weakening is TEST-SCOPED while the code under test is
+    unchanged. `SAFETY BY CONSTRUCTION OUTRANKS SAFETY BY DETECTION` when the
+    cost is one test-scoped indirection.
     """
     raw = committed_text(repo_root, receipt_rel)
     if raw is None:
@@ -306,10 +315,6 @@ def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels
     detail, mismatched, absent = {}, [], []
     for label, relname in RECEIPT_BLOB_LABELS:
         current = pairs[rels[relname]]["head_blob"]
-        if label in ignore_labels:
-            detail[label] = {"STATUS": "IGNORED -- deliberately weakened, R-513 6.4",
-                             "at_HEAD_now": current}
-            continue
         recorded = prov.get("%s_blob" % label)
         if recorded is None:
             absent.append(label)
@@ -327,6 +332,39 @@ def receipt_publication_blob_status(repo_root, receipt_rel, pairs, ignore_labels
                        ("CURRENT" if not mismatched else "STALE")),
             "mismatched_labels": sorted(mismatched), "absent_fields": sorted(absent),
             "detail": detail}
+
+
+def receipt_reader_identity_status(source_text: str) -> dict:
+    """***** R-514 5.2 -- THE STRUCTURAL IDENTITY MEASUREMENT, AS ONE PURE
+    FUNCTION OVER SOURCE TEXT, so the same code answers for the real harness AND
+    for a mutated copy with a duplicate planted. `DO NOT RE-IMPLEMENT THE
+    IDENTITY LOGIC INSIDE ITS OWN RED-PROOF` -- that is the defect R-513 closed
+    one level down, and a second copy here would rebuild it.
+
+    !!! THE NEEDLE IS BUILT, NOT WRITTEN. Spelling the blob template as a
+    literal would make THIS function contain it, and the measurement would name
+    itself a second comparator -- which is exactly what happened twice while
+    this guard was being built: v1 counted its own search strings in the source
+    text, v2 parsed the AST but its own comparison literal was a matching
+    Constant. `AN INSTRUMENT THAT SEARCHES ITS OWN SOURCE WILL FIND ITSELF -- AT
+    WHATEVER LEVEL YOU MOVE THE SEARCH TO, UNTIL THE NEEDLE STOPS BEING WRITTEN
+    DOWN.`
+    """
+    name = "receipt_publication_blob_status"
+    needle = "%s" + "_blob"
+    tree = ast.parse(source_text)
+    defs = sum(1 for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name == name)
+    calls = sum(1 for n in ast.walk(tree)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                and n.func.id == name)
+    blob_fns = sorted({fn.name for fn in ast.walk(tree)
+                       if isinstance(fn, ast.FunctionDef)
+                       for c in ast.walk(fn)
+                       if isinstance(c, ast.Constant) and c.value == needle})
+    return {"definitions": defs, "call_sites": calls,
+            "functions_containing_blob_template": blob_fns,
+            "OK": (defs == 1 and calls >= 2 and blob_fns == [name])}
 
 
 def m13_acceptance(void: bool, control_fired: bool, stale_in_fact: bool,
@@ -398,7 +436,9 @@ def publication_consistency(published_path: Path, repo_root: Path = None,
     object rots. That is exactly how the stale artifact shipped -- the working
     file was never regenerated, so `git hash-object` of it matched the commit
     perfectly and the receipt pinned a stale object HONESTLY.
-    ★★★ THE OBJECT UNDER TEST MUST THEREFORE BE THE FILE ON DISK, COMPARED
+    ★★★ R-514 §4-1 -- THE OBJECT UNDER TEST IS THE **PUBLISHED** OBJECT: in the
+    default `committed` mode that is the git blob at HEAD, NOT the file on disk.
+    This sentence described the retired worktree default. It must be COMPARED
     AGAINST FRESHLY-GENERATED CONTENT THAT WAS WRITTEN SOMEWHERE ELSE. The
     desk's prediction is upheld; it is recorded here as TESTED, not obeyed.
     """
@@ -932,8 +972,19 @@ def main():
     #    BOOLEAN CAME FROM THE LIVE MECHANISM.` So the SHARED READER is now
     #    invoked a second time against the same fixture, deliberately weakened
     #    to ignore the harness -- the exact rot this red-proof must catch.
-    m13_reader_weakened = receipt_publication_blob_status(
-        m13fix, RECEIPT_REL, m13_pairs["pairs"], ignore_labels=("harness",))
+    #    R-514 5.1 -- the weakening is TEST-SCOPED: the production signature has
+    #    no disabling argument, so the mechanism is narrowed by temporarily
+    #    replacing the module-level label set the REAL reader iterates, and
+    #    restored in `finally`. The comparison being weakened is the live one.
+    _saved_labels = RECEIPT_BLOB_LABELS
+    try:
+        globals()["RECEIPT_BLOB_LABELS"] = tuple(
+            e for e in _saved_labels if e[0] != "harness")
+        m13_reader_weakened = receipt_publication_blob_status(
+            m13fix, RECEIPT_REL, m13_pairs["pairs"])
+    finally:
+        globals()["RECEIPT_BLOB_LABELS"] = _saved_labels
+    assert RECEIPT_BLOB_LABELS == _saved_labels, "label set not restored"
     weakened_went_incorrectly_green = m13_reader_weakened["CURRENT"] is True
     m13_ok_if_mechanism_weakened = m13_acceptance(
         m13_void, control_fired, receipt_is_stale_in_fact, m13_reader_weakened,
@@ -1189,9 +1240,15 @@ def main():
             "the committed receipt's recorded blobs must equal HEAD; red-proofed live at "
             "e5a0e695 and green at f5350c09."),
         "RECEIPT_reader_has_ONE_implementation": (
-            "target", "INLINE -- a source-text count over this file",
-            "R-513 6.5. Structural guard: one definition, two or more call sites, no second "
-            "inline comparator. Declared INLINE because it inspects source, not behaviour."),
+            "target", "receipt_reader_identity_status() -- the SAME helper M14 calls",
+            "R-513 6.5 / R-514 5.2. Structural guard: one definition, two or more call sites, "
+            "blob template confined to that function. Measured by ast.walk, NOT by a "
+            "source-text count -- the census previously said source-text, which described the "
+            "very defect that was fixed."),
+        "M14_identity_guard_planted_duplicate": (
+            "target", "receipt_reader_identity_status() -- the SAME helper the live case calls",
+            "R-514 5.2. The identity guard's own red path: a duplicate comparator planted in a "
+            "COPY of this source must make the identity measurement fail."),
         "ATTRIBUTION_CENSUS_covers_every_scored_case": (
             "target", "INLINE -- set comparison against `results`",
             "self-referential by necessity: it asserts its own coverage."),
@@ -1206,59 +1263,65 @@ def main():
     #    least TWO call sites, and NO second inline loop reading the recorded
     #    blob fields. `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER` is only true
     #    while nobody adds a second reader, and that is what this notices.
-    # !!!!! THIS GUARD'S FIRST VERSION COUNTED ITS OWN SEARCH STRINGS.
-    #   It used _src.count("def receipt_publication_blob_status(") over this
-    #   file's text -- and that literal, plus the census entries naming the
-    #   function, are THEMSELVES in the text. It reported defs=2 calls=6
-    #   inline=2 against a correct file. `AUDIT THE INSTRUMENT BEFORE BELIEVING
-    #   IT` -- a guard that greps its own source measures its own vocabulary.
-    #   It now parses the AST, where a string literal is a Constant and a call
-    #   is a Call, and the two can never be confused.
-    _tree = ast.parse(Path(__file__).resolve().read_text(encoding="utf-8"))
-    _name = "receipt_publication_blob_status"
-    _defs = sum(1 for n in ast.walk(_tree)
-                if isinstance(n, ast.FunctionDef) and n.name == _name)
-    _calls = sum(1 for n in ast.walk(_tree)
-                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
-                 and n.func.id == _name)
-    # A second inline comparator would need the blob-field template. Find every
-    # function that contains it; only the shared reader may.
-    # !!! THE NEEDLE IS BUILT, NOT WRITTEN. Spelling it as a literal here would
-    #   make THIS function contain it too, and the guard would report itself as
-    #   a second comparator -- which is exactly what its AST version did on its
-    #   first run (`blob_fns = ['main', 'receipt_publication_blob_status']`).
-    #   Two self-reference bugs in one guard, one text-level and one AST-level:
-    #   `AN INSTRUMENT THAT SEARCHES ITS OWN SOURCE WILL FIND ITSELF.`
-    _needle = "%s" + "_blob"
-    _blob_fns = sorted({fn.name for fn in ast.walk(_tree)
-                        if isinstance(fn, ast.FunctionDef)
-                        for c in ast.walk(fn)
-                        if isinstance(c, ast.Constant) and c.value == _needle})
-    identity_ok = (_defs == 1 and _calls >= 2 and _blob_fns == [_name])
+    # ── ***** R-514 5.2 -- IDENTITY MEASURED, AND ITS RED PATH SHIPPED ─────
+    #    R-514 2: the previous package scored only the CLEAN result, so the
+    #    guard that proves "one implementation" had never been shown to go RED
+    #    in the shipped artifact. The proof was run and reported in AR-537 and
+    #    never persisted: `A PROOF THAT RAN ONCE AND WAS NOT PERSISTED IS A
+    #    CLAIM IN THE NEXT SESSION.` Both arms are now scored cases.
+    _own_source = Path(__file__).resolve().read_text(encoding="utf-8")
+    identity = receipt_reader_identity_status(_own_source)
     results.append({
         "case": "RECEIPT_reader_has_ONE_implementation",
-        "WHAT_IT_ASSERTS": "exactly one definition of the receipt blob comparison, at least "
-                           "two call sites, and exactly one inline read of the recorded blob "
-                           "fields -- the one INSIDE that definition.",
-        "definitions": _defs, "call_sites": _calls,
-        "functions_containing_the_blob_template": _blob_fns,
-        "MEASURED_BY": "ast.walk over this file's parsed tree -- NOT a source-text count. "
-                       "The first version of this guard counted its own search strings and "
-                       "reported defs=2 calls=6 against a correct file.",
+        "WHAT_IT_ASSERTS": "exactly one definition of the receipt blob comparison, two or "
+                           "more call sites, and the blob template confined to that one "
+                           "function.",
+        "measured": identity,
+        "MEASURED_BY": "receipt_reader_identity_status() over ast.walk -- NOT a source-text "
+                       "count. An earlier version counted its own search strings and reported "
+                       "defs=2 calls=6 against a correct file.",
         "WHY": ("R-513 1/6.5. M13 and the live case were TWO implementations of one claim, so "
                 "weakening the shipped reader would not have failed its own red-proof. "
-                "`A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.` A "
-                "second inline comparator would silently restore that, so it is made RED."),
+                "`A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.`"),
         "!!_SCOPE": "an AST structural count, not a semantic analysis. It catches a second "
-                    "definition, a lost call site, or a re-introduced comparator built on the "
-                    "same \"%s_blob\" template; it cannot catch an arbitrarily rewritten one "
-                    "that avoids that template. Stated so nobody reads it as stronger than "
-                    "it is.",
-        "VERDICT": "ONE-IMPLEMENTATION" if identity_ok else "DUPLICATED-OR-MISSING",
-        "OK": identity_ok,
+                    "definition, a lost call site, or a duplicate built on the same blob "
+                    "template; it cannot catch an arbitrarily rewritten one that avoids the "
+                    "template. Stated so nobody reads it as stronger than it is.",
+        "VERDICT": "ONE-IMPLEMENTATION" if identity["OK"] else "DUPLICATED-OR-MISSING",
+        "OK": identity["OK"],
     })
     print("[%s] RECEIPT_reader_has_ONE_implementation -> defs=%d calls=%d blob_fns=%s"
-          % ("OK " if identity_ok else "BAD", _defs, _calls, _blob_fns))
+          % ("OK " if identity["OK"] else "BAD", identity["definitions"],
+             identity["call_sites"], identity["functions_containing_blob_template"]))
+
+    # M14 -- the identity guard's OWN red path, as a SCORED case.
+    _planted = _own_source + (
+        "\n\ndef _M14_planted_second_comparator(prov, label):\n"
+        "    return prov.get(\"%s\" % label)\n" % ("%s" + "_blob"))
+    identity_mutated = receipt_reader_identity_status(_planted)
+    m14_ok = (identity_mutated["OK"] is False
+              and "_M14_planted_second_comparator"
+              in identity_mutated["functions_containing_blob_template"])
+    results.append({
+        "case": "M14_identity_guard_planted_duplicate",
+        "WHAT_WAS_MUTATED": "a second comparator function using the same blob template is "
+                            "appended to a COPY of this file's source. Nothing on disk is "
+                            "touched -- the mutation exists only as a string.",
+        "assertion_that_must_go_RED": "RECEIPT_reader_has_ONE_implementation",
+        "clean_source_OK": identity["OK"],
+        "mutated_source_OK": identity_mutated["OK"],
+        "mutated_measurement": identity_mutated,
+        "WHY_IT_MATTERS": ("R-514 5.2. Without this arm the identity guard was `A GREEN CHECK "
+                           "WITH NO PATH TO RED` -- this campaign's own convicted shape, "
+                           "sitting inside the fix for it. The same helper answers for both "
+                           "arms, so the red path cannot drift from the green one."),
+        "VERDICT": "DISCRIMINATES" if m14_ok else "DOES-NOT-DISCRIMINATE",
+        "OK": m14_ok,
+    })
+    print("[%s] M14_identity_guard_planted_duplicate -> clean_OK=%s mutated_OK=%s caught=%s"
+          % ("OK " if m14_ok else "BAD", identity["OK"], identity_mutated["OK"],
+             "_M14_planted_second_comparator"
+             in identity_mutated["functions_containing_blob_template"]))
 
     scored = {r["case"] for r in results} | {"ATTRIBUTION_CENSUS_covers_every_scored_case"}
     missing, extra = sorted(scored - set(census)), sorted(set(census) - scored)
@@ -1406,6 +1469,10 @@ def main():
                     "mutation can overwrite the real artifact.",
         },
         "ALL_CASES_DISCRIMINATE": all_ok,
+        # R-514 §5.3 -- DERIVED, never typed. A commit message said "21 cases"
+        # against an object holding 20. `A COMMIT MESSAGE IS A CAPTION.`
+        "n_scored_cases": len(results),
+        "n_unscored_history": len(HISTORY),
         # ★★★★★ R-512 §6.4 -- the attribution census, IN the receipt.
         "ATTRIBUTION_CENSUS": {
             "⚠️_HOW_TO_READ": ("per case: what its OK predicate REQUIRES, and WHICH CALL joins the "
