@@ -4,6 +4,87 @@
 
 ---
 
+## AR-526 · 2026-07-31 · ★★★★★ **`I7` DELIVERED COMPLETE UNDER R-503 §5 A–H + §3. TWO METRICS, EACH WITH THREE DENOMINATORS, ON TWO CORPORA REPORTED SEPARATELY. THE `18`-vs-`17` ROW IS NAMED AND ITS MECHANISM IS AT THE EXECUTABLE LINE. `28` EXECUTABLE ASSERTIONS, ALL FOUR ASSERTION CLASSES RED-PROOFED, PROVENANCE CLOSED ON A FULLY COMMITTED CLOSURE.**
+
+**RULING ID:** R-505 §5 / R-503 §5 A–H + §3 · **TASK ID:** AR-526 · **PRIOR:** AR-525 · **SEAT:** the seat that filed AR-525 (`claude.exe 26204`) · **COMMIT:** instrument `463f588d`, artifacts this commit.
+
+### §1 — THE TWO METRICS. **NEITHER IS A HEADLINE ON ITS OWN, AND THE NAKED WORD IS NOT USED ANYWHERE IN THE ARTIFACT**
+**`bound_and_concrete` is defined ONCE, in code, as `bindable AND NOT approximation`, and never re-derived in prose.**
+| metric | field that moved | corpus_A | corpus_B |
+|---|---|---|---|
+| `binding_yield_numerator` | `bound_and_concrete` | **`0`** | **`0`** |
+| `diagnostic_reason_yield_numerator` | `reason` | **`17`** | **`45`** |
+| denominator — global entry_condition | — | `155` | `6450` |
+| denominator — `WAIT_SESSION` family | — | `27` | `1329` |
+| denominator — **`C2`-eligible** | — | **`27`** | `1329` |
+| reason movement restricted to `C2`-eligible | — | **`17 / 27`** | **`45 / 1329`** |
+★★★★★ **THE `C2` DENOMINATOR FOR corpus_A IS TAKEN FROM THE PINNED BASELINE** (`dual-denominator-remeasure-2026-07-21.json` → `corpus_A.THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE.conditions`), **NEVER FROM THE TREATMENT ARM'S OWN CLASSIFIER.** `A TEST THAT SELECTS ITS OWN DENOMINATOR CANNOT FAIL.` The join is `<file>.spec.json::<condition_id>`, built explicitly, and **asserted to resolve all `27`** — `THE JOIN KEY IS THE CLAIM`.
+⚠️★★★ **HONEST GAP, DECLARED NOT SUBSTITUTED: the pinned baseline carries NO per-condition unbound list for corpus_B, so a baseline-sourced `C2` denominator DOES NOT EXIST for it.** I used **this run's OFF CONTROL arm** (never the ON arm) and **labelled it weaker provenance in the artifact.** ★★ **AND I GAVE IT A SECOND PATH: on corpus_A, where BOTH derivations are available, the OFF-arm-derived population is asserted EQUAL to the baseline-derived one — that is the evidence the corpus_B surrogate is sound, rather than my say-so.**
+**A single transition class on BOTH corpora: `no_recognized_session_keyword` → `session_teaching_recognized_no_computable_window`. `0` regressions, `0` errors, `0` invalidation rows moved on either corpus.**
+
+### ★★★★★ §2 — THE `18` / `17` / `9` RECONCILIATION — **THE ROW IS NAMED, AND THE MECHANISM IS AT THE EXECUTABLE LINE**
+**R-503 §3: `DO NOT EXPLAIN A COUNT DISCREPANCY FROM AGGREGATE COUNTS. NAME THE ROW.` Named:**
+```
+W7nlnHTUZQU__s0.spec.json::WAIT_SESSION:overnight-pre-market-range-we-are-going#6
+  OFF reason : session_zone_refused_uncomputable_window:overnight
+  ON  reason : session_zone_refused_uncomputable_window:overnight   (UNCHANGED)
+  OFF route  : orphan_zone_refusal      ON route : orphan_zone_refusal
+  classifier : recognized = True, candidate zone = ny_am
+```
+★★★★★ **IT WAS ALREADY UNDER A MORE SPECIFIC REFUSAL IN BOTH ARMS — which is exactly the possibility R-503 §3 told me to test.** **MECHANISM [MEASURED HERE, `spec_family_bindings.py` — `refused_session_zone` returns before `if session_role_resolver_enabled():`]: the orphan-zone refusal fires ABOVE the resolver gate, so a row it catches is INVARIANT TO THE FLAG no matter what the classifier would have said. That is why a recognized row with a computed zone can still show no transition — it never reaches the gate.**
+**EVERY §3 ANSWER, MEASURED:** `18` recognized · `17` changed · **`1` unchanged (named above)** · of the `17`, **`8` had a computed zone and `9` were recognized-without-zone** · `9` rows compute a zone in total, and `9 − 8 = 1` is the orphan row — **the partition closes exactly** · ★★★ **`0` UNRECOGNISED ROWS CHANGED REASON UNEXPECTEDLY.**
+⚠️★★ **ONE OBSERVATION I AM EXPLICITLY NOT SCORING: the classifier's candidate zone for that row is `ny_am`, while the taught text names `4:00 p.m. EST … until 9:30 a.m. EST` — the overnight range. Whether `ny_am` is the CORRECT label is GROUND TRUTH and belongs to the `accuracy-validator`, not to me. It changes NOTHING here (both routes refuse), but it is a classifier-quality signal and I am recording it rather than letting it pass unremarked.**
+
+### §3 — ROUTE PARTITION (R-503 §5.D) — **MECHANICAL, FROM THE BINDER'S OWN OUTPUTS**
+| route | A OFF | A ON | B OFF | B ON |
+|---|---|---|---|---|
+| `exact_name_route_bind` | `0` | `0` | `0` | `0` |
+| `orphan_zone_refusal` | `1` | `1` | `24` | `24` |
+| `computed_zone_deliberate_refusal` | `0` | **`8`** | `0` | **`33`** |
+| `recognized_without_zone_refusal` | `0` | **`9`** | `0` | **`12`** |
+| `fully_unrecognized` | `26` | `9` | `1305` | `1260` |
+| `wrapping_window_refusal` | `0` | `0` | `0` | `0` |
+★★★ **THE PARTITION IS SELF-CHECKING: `8 + 9 = 17` and `26 − 9 = 17` on A; `33 + 12 = 45` and `1305 − 1260 = 45` on B. The route buckets and the reason-transition count are derived independently and agree.**
+⚠️★★★★★ **A FINDING THAT IS NEW AND IS NOT SMALL: the EXACT NAME-ROUTE BINDS `0` OF `1,329` `WAIT_SESSION` CONDITIONS ACROSS 120 SPECS, and `0` of `27` on corpus_A. `wrapping_window_refusal` is `0` on both — that branch is UNEXERCISED BY EITHER CORPUS**, so nothing here tests it. **`ABSENCE FROM A LIST IS NOT A PASS`: I am reporting that branch as UNTESTED-BY-THIS-POPULATION, not as working.**
+
+### §4 — CORPUS B, MEASURED FOR THE FIRST TIME — **SEPARATELY, NOTHING POOLED**
+**`120` specs · `6450` entry_conditions · `603` invalidations · both counts ASSERTED equal to the pinned baseline's declared `n_specs` / `n_taught_conditions`.** ★★★ **AR-523 filed "Corpus B was never measured" as a NOT-MET field; it is now measured under identical OFF/ON controls with its own tree, population, flag state and denominators. No field in the artifact sums or averages across the two corpora, and an assertion enforces that.**
+
+### §5 — PROVENANCE: **`dirty_paths` IS CLOSED, AND NOT BY A CLEAN CHECKOUT**
+**Built a SOURCE-CLOSURE MANIFEST over the *executed* closure (`sys.modules` after the run, not a static parse): `22` files — `3` `src/` modules (`spec_family_bindings.py`, `family_meta_enforcement.py`, `engine/__init__.py`), `16` corpus_A specs, corpus_B, the pinned baseline, the generator. Each file's WORKTREE BLOB compared to its HEAD BLOB.**
+**RESULT: tree carries `94` dirty paths; intersection with the closure = `0`; divergent-from-HEAD = `0`.** ★★★ **`A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE` — the label is now a provenance. The binder's worktree bytes equal its HEAD blob (`7c9e69a1…`), asserted.**
+★★★ **PRE-RUN *AND* POST-RUN status are both captured and asserted to agree — R-503 §5.G asks for both, and a single post-run snapshot cannot detect a run that mutated a source it was measuring.** ★★ **I had to commit the instrument BEFORE the shipped run to reach this state; that is the point, not an inconvenience.**
+
+### ★★★★★ §6 — RED-PROOF: **`28` GREEN CHECKS ARE WORTH NOTHING UNTIL THEY CAN GO RED**
+**`session_role_resolver_yield_REDPROOF.py`, receipt `session-role-resolver-yield-REDPROOF-2026-07-31.json`:**
+```
+[OK] CONTROL_unmutated                       exit=0, 28/28 pass
+[OK] M1 baseline identity swapped, COUNT PRESERVED -> identity assertion RED, exit=1, collateral=[]
+[OK] M2 non-family row moved                 -> non-C2 hard stop  RED, exit=1
+[OK] M3 binder reported dirty                -> provenance        RED, exit=1
+[OK] M4 arms made identical                  -> POSITIVE WITNESS  RED, exit=1
+ALL CASES DISCRIMINATE: True
+```
+★★★★★ **M1 IS THE ONE THAT MATTERS: it swaps ONE baseline identity while HOLDING THE COUNT CONSTANT — R-425's defect exactly ("a count is satisfied by losing one row and gaining another"). The three COUNT assertions stay GREEN and only the IDENTITY assertion reddens. A mutation that reddened everything would prove nothing about which check did the work.**
+★★★ **M4 EXISTS BECAUSE TWO OF MY ASSERTIONS ARE NEGATIVE ("nothing moved outside the family"), AND A NEGATIVE ASSERTION IS SATISFIED BY AN EXPERIMENT THAT NEVER RAN. The positive witness asserts the arms DID move rows inside the family, and M4 proves that witness can fail.**
+⚠️★★★★★ **AND THE RED-PROOF CONVICTED MY OWN INSTRUMENT BEFORE IT CONVICTED ANYTHING ELSE: the first control run came back RED. Cause — the harness file itself was untracked and entered the executed closure, so the provenance check correctly flagged it. `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST`, and here the tooling was right and the RIG was contaminating it. Two real gaps fell out and are fixed: (1) pre-run status was not captured at all, and (2) the generator was excluded from the provenance check BY NAME with nothing re-checking the raw list — `A BY-NAME EXCLUSION THAT NOTHING RE-CHECKS IS THE ALLOW-LIST DEFECT THAT ONCE EXCUSED 24 KILL-SWITCH ASSERTIONS`. There is now a RAW assertion covering the generator and any harness, and it is what forced me to commit before the shipped run.**
+
+### §7 — WHAT I DID **NOT** MEASURE, AND WHAT IS NOT MINE TO SAY
+- **Whether any refusal is the CORRECT disposition.** GROUND TRUTH → `accuracy-validator`. I am the doer; I produced the frozen input and no score.
+- **The `wrapping_window_refusal` branch** — `0` rows on both corpora. UNEXERCISED, therefore UNTESTED here.
+- **The DEPLOYED tree.** This is the campaign checkout; the deployed `spec_family_bindings.py` is the `3.94x` smaller variant (R-501 §3). **NOTHING HERE DESCRIBES WHAT RUNS.**
+- **Any population beyond corpus_A and corpus_B.** Not POP-120-LIVE, not tier-A/spearhead.
+- **Whether the `C2` refusal CLASS shrinks downstream** — binding and reason movement are necessary, not sufficient, for that.
+- ⚠️ **`H2 — upstream extraction` remains `[HYPOTHESIS — UNTESTED]`.** The route partition shows `9` of `27` corpus_A rows still `fully_unrecognized` under the flag, and several `object` values are long narration sentences — consistent with H2, **and consistency is not a test.** No test in this run distinguishes it.
+
+### §8 — POSITION AND NEXT
+**`I7` — I believe the R-503 §5 A–H contract and §3 are fully discharged, but `I DO NOT GRADE MY OWN WORK`: this is a CLAIM, and the band is the desk's to set or the `accuracy-validator`'s to derive. ★★★ IF AN INDEPENDENT GRADE IS WANTED ON IT, SAY THE WORD AND IT IS ONE DISPATCH AWAY — I am not filing that as blocked.**
+**FAN-IN, NOT AS A FRACTION (R-502 §6): `I21` CLOSED with follow-up outstanding · `I11` CLOSED (`NOT-SOUND`, not mine) · `I7` DELIVERED, ungraded · `I8` NOT STARTED — and it is my NEXT ACT, not a handoff point.**
+★★ **PER THE OPERATOR'S 2026-07-31 ORDER I FINISH ALL LANES BEFORE ANY HANDOFF. My remaining lanes are UNSTARTED, not BLOCKED, and `UNSTARTED IS THE REASON TO STAY`. Continuing to `I8`, then the `I21` follow-up.**
+**`c304b098` NOT-SOUND, untouched · `P0-v5` NOT MINE · MERGE / DEPLOY / RELEASE = HOLD · no sub-agent dispatched or owed by me · no engine or extraction file modified — the entire delivery is additive to the generator, and the binder's blob is asserted identical to HEAD.**
+
+---
+
 ## AR-525 · 2026-07-31 · ⚠️★★★★★ **IDENTIFICATION, PER R-504's OWN FIRST ORDER — AND IT CONVICTS THE PREMISE R-504 §4 RESTS ON: I AM `claude.exe 26204`, THE PID R-504 CALLS "THE EXHAUSTED SEAT". THE PROCESS IS THE SAME; THE CONTEXT IS NOT. `A PID IS NOT A DURABLE ID FOR A SEAT.`**
 
 **RULING ID:** R-504 (`WORKER — START HERE`: *"its FIRST act is to identify itself by durable id in an AR"*) · **TASK ID:** AR-525 · **PRIOR:** AR-524.

@@ -1,0 +1,62 @@
+{
+  "WHAT_THIS_PROVES": "Every assertion class in session_role_resolver_yield.py has a demonstrated path to RED, and the unmutated control stays GREEN. A guard that has never gone red is not an instrument.",
+  "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught. If the count checks had also reddened, this suite would not have shown that the IDENTITY check is what does the work.",
+  "ALL_CASES_DISCRIMINATE": true,
+  "cases": [
+    {
+      "case": "CONTROL_unmutated",
+      "exit_code": 0,
+      "all_assertions_pass": true,
+      "VERDICT": "GREEN",
+      "OK": true
+    },
+    {
+      "case": "M1_baseline_identity_swapped_COUNT_PRESERVED",
+      "assertion_that_must_go_RED": "A_OFF_unbound_IDENTITIES_equal_baseline_identities__NOT_JUST_THE_COUNT",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [
+        "A_OFF_reproduces_pinned_baseline__n_unbound",
+        "A_OFF_reproduces_pinned_baseline__n_bindable",
+        "A_OFF_reproduces_pinned_baseline__bound_and_concrete"
+      ],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M2_non_family_row_moved",
+      "assertion_that_must_go_RED": "A_no_unexpected_movement_outside_the_WAIT_SESSION_family",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M3_binder_reported_dirty",
+      "assertion_that_must_go_RED": "PROVENANCE_source_closure_dirty_intersection_is_ZERO",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M4_arms_made_identical",
+      "assertion_that_must_go_RED": "POSITIVE_WITNESS_the_arms_actually_moved_rows_INSIDE_the_family",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    }
+  ]
+}
