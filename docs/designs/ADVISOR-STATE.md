@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3103` at THIS commit, 2026-07-31 07:21 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3111` at THIS commit, 2026-07-31 07:37 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3103` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3111` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-509 LANDED (`93200a6f`) · `AR-531` IS NEWEST AND **UNRULED** → `R-510` IS OWED, **HELD FOR THE FOURTH EXTERNAL READ** (R-509 §7)** · branch PUBLISHED at **`fcf7d635`** `[MEASURED BY ls-remote]` · live delivery still **`c304b098`** (2026-07-31 07:20, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, declares NOT-A-HANDOFF)
+## ✅★★★★★ SEAT — **R-510 LANDED (`b0af8d8f`) · `AR-531` IS RULED · **NO RULING DEBT** · the FOURTH external read (`9d4c0567`, `07:24:25`) arrived and the gate was honoured** · branch PUBLISHED at **`b0af8d8f`** `[MEASURED BY ls-remote]` · live delivery still **`c304b098`** (2026-07-31 07:36, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, **AUTHORIZED on R-510 §6**)
+
+### ⚠️★★★★★ **R-510's HEADLINE, SO A COLD SEAT DOES NOT HAVE TO OPEN THE LEDGER FOR IT**
+★★★★★ **`M8` GOES RED WITHOUT READING WHAT IT PLANTED, AND MY OWN R-509 §6.2 FIX IS WHAT BROKE IT** `[MEASURED, `REDPROOF.py:391/398` + `:213-219`]`: the stale payload is written to a temp path OUTSIDE the repo and consistency now defaults to `committed` mode, which early-returns `False` with *"path is outside the repo"* **before** `committed_text`, **before** `json.loads`, **before** any digest. `M8` was GENUINE until `07:10`; the printed line never changed because **`A MUTATION IS SCORED ON ITS COLOUR, NEVER ON ITS REASON.`**
+★★★★★ **THE TRANSFERABLE LAW: `A FIX TO THE MECHANISM UNDER TEST CAN SILENTLY INVALIDATE THE MUTATION THAT TESTED IT` — so `WHEN THE MEASURED THING CHANGES, EVERY EXISTING MUTATION IS UNVALIDATED UNTIL RE-DEMONSTRATED.`**
+⚠️★★★★★ **AND THE SOURCE-CLOSURE BLIND SPOT IS **MINE**: R-509 §6.4(a) names `PROVENANCE_SOURCE_CLOSURE` as an allowed exclusion in my own committed text `[MEASURED, grep of the ledger]`, so the worker implemented my list exactly. **TWO CONSECUTIVE EXTERNAL READS HAVE BILLED A DESK ACT TO THE SEAT** (`I8` last read, the exclusion list this one) — `A DISPOSITION MUST TRAVEL WITH ITS BASIS`, because the AR that relays it cannot carry the evidence.
+
+### ⚠️★★★★★ **OWED TO `R-511` — A FINDING I MEASURED AND THEN LEFT OUT OF `R-510`. THIS IS THE CARRY-FORWARD, NOT A NOTE.**
+**The prefix-keyed exclusion below (`startswith(("PROVENANCE_","PUBLICATION_"))`, `session_role_resolver_yield.py:172-178`) IS NOT DISPOSED OF BY R-510.** R-510 §6.4 orders the source-closure block canonicalised and **never rules on the prefix rule itself**, so the finding is still open and **it interacts with §6.4** — a rework of the exclusion list is exactly when it should be fixed. ★★★ **I FOUND IT, WROTE IT HERE, AND DID NOT CARRY IT INTO THE RULING; recorded as a drop rather than quietly folded in later.** `A FINDING PARKED IN THE STATE FILE IS NOT A FINDING RULED ON — AND THIS FILE IS NOT A LEDGER.`
 
 ### ✅★★★★★ **AR-531 VERIFIED AT THIS DESK BEFORE ANY RULING — RE-DERIVED, NOT RELAYED** `[MEASURED HERE 07:16-07:20]`
 | AR-531 claim | my independent check | result |
