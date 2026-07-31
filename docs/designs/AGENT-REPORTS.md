@@ -4,6 +4,45 @@
 
 ---
 
+## AR-546 · 2026-07-31 · ✅★★★★★ **R-519 §5 DELIVERED — THREE EDITS, FAN-IN `3 / 3`, DOCUMENT ONLY. `D-1` IS CLOSED AT THE ROW SURFACE BY §4.2b, AND THE NON-CIRCULARITY CLAUSE IS IN IT — REQUIREDNESS COMES FROM THE FROZEN SCHEMA, NEVER FROM THE ORACLE UNDER TEST.** ⚠️★★★ **AND I DECLINED A FOURTH EDIT I WOULD HAVE LIKED TO MAKE: THE GRADE RESOLVED MY §1 `[HYPOTHESIS]` AND CORRECTING IT IS OUTSIDE "EXACTLY THREE". REPORTED, NOT TAKEN.**
+
+**RULING ID:** R-519 §5 · **TASK ID:** AR-546 · **PRIOR:** AR-545 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**I READ THE GRADE OBJECT `48e50d80` (`28,045` B) IN FULL BEFORE EDITING — not R-519's summary of it.** ★★ **Its `D-1` is stronger than a summary conveys: its Path B shows the grade's OWN six mutations already ENTAILED the deletion hole — a typo is `known key removed` + `unknown key added`, and the unknown sibling is provably ignored, so the byte-identical output entails the removal was silent too. `NOBODY READ THE CONSEQUENCE OUT OF A MEASUREMENT THEY ALREADY HAD.`**
+
+### ✅ §1 — ACCEPTANCE, RUN VERBATIM
+```
+$ grep -niE "frozen schema|self-authoriz" …           119 · 120 · 152           ✅
+$ grep -nE  "delete|DELETE|deletion" …                19·24·25·65·66·69·72·120  ✅ incl. the (c′) row + the ABORT case
+$ grep -niE "exit code|final summary" …               31 · 149 · 151 · 159      ✅
+$ git status --porcelain -- docs/designs scripts ci src        [DELTA vs THE AR-545 BASELINE]
+ M docs/designs/P0-REDESIGN-PACKET-2026-07-31.md          <- MINE, the deliverable
+ M src/engine/tests/test_synthetic_market_simulator.py    <- IN THE RECORDED BASELINE, not mine
+```
+✅ **THE DELTA IS EXACTLY THE PACKET.** The 24 untracked `docs/designs` files are the recorded baseline, unchanged.
+
+### ★★★★★ §2 — THE THREE EDITS
+**EDIT 1 — §4.2b, THE ROW'S EXPECTATION SET IS TOTAL** *(closes `D-1`)*. Omitted row fields are COMPUTED; each must be **asserted** or **named in `row.unadjudicated`**; otherwise FATAL, naming `fixture · condition_id · field`. **Precedent B (`:667-675`) now goes TWO surfaces across, not one.** `[MEASURED HERE]` the machinery is already read at `:694-708` but only in the CONTRADICTION direction — §4.2b adds the **SILENT-VOID** direction.
+⚠️★★★★★ **AND THE CLAUSE THAT MAKES IT A CHECK RATHER THAN A MIRROR, WHICH IS THE WHOLE POINT OF THE EDIT: requiredness comes from the FROZEN SCHEMA CONTRACT in the gate's own source, versioned with it — NEVER inferred from whichever keys happen to exist in `ORACLE.json`. A rule that reads its expectations off the artifact under test is SELF-AUTHORIZING: deleting a key deletes its own requiredness and `D-1` reappears INSIDE its own fix, grading GREEN.** ★★★ **I also recorded WHY the TypeScript interface cannot serve as that contract `[MEASURED, :576-605]`: `OracleRow` makes every expectation optional, which is exactly what lets `{"authority":"…"}` be type-valid and assert nothing. `AN OracleRow CANNOT BE ITS OWN SPECIFICATION.`** ★★ Consequence stated in the packet rather than discovered later: changing requiredness becomes a reviewable CODE change, not an oracle edit.
+**EDIT 2 — THE DELETION RED PATH** *(closes the blind spot that hid `D-1`)*. A SCORED case: remove `bindable` outright from `ORACLE.fixtures["20-nyam-evaluable.spec.json"].conditions.sess` → **RED, non-zero exit, ROW and FIELD named**, plus the GREEN completion clause. ★★★ **Two properties are required of it, not one: the deletion is a SMALLER edit than the typo beside it, and it must fail BEFORE any TS/Python comparison — a defect that surfaces only after the lanes are compared can be masked by the lanes agreeing.**
+⚠️ **I ALSO REPAIRED THE SETTLING TEST, WHICH R-519 DID NOT NAME BUT WHICH CARRIED THE SAME DISEASE:** it re-ran the grade's six mutations plus `N7`/`N8` — **the set that already lacked a deletion.** `A SETTLING TEST DRAWN FROM THE POPULATION THAT MISSED THE DEFECT SETTLES NOTHING.` ★★★ **And I added the case that keeps §4.2b honest: a deletion that IS declared in `row.unadjudicated` must stay GREEN — without it, "total" degrades into "every field mandatory" and the rule stops discriminating a SILENT void from a DECLARED one.**
+**EDIT 3 — ACCEPTANCE / `ABORT` CONTRACT** *(closes `D-2` + `D-3`)*. New **`ABORT 2b`: requiredness inferred from the oracle under test = SELF-AUTHORIZING = must not be implemented.** `OracleFixture` closed to unknown keys (`D-3a`; `:607-637` measured open). GREEN control asserts the **final summary line AND exit code** (`D-3b`). **And §7a discharges my own `ABORT 3`** with a three-rung ladder: **SOURCED ✅ closed at `c304b098` · WELL-FORMED ✅ this attempt · CORRECT ⚠️ NOT CLOSED, EXPLICITLY DECLARED OUT OF SCOPE** — the rung where *"a correctly-cited but mis-transcribed value would survive"*, which `GRADE-C304B098 :286` calls its own **largest single gap**. **What would close it is named — a per-expectation quote-or-locator into the authority document — and explicitly NOT proposed for this attempt, so the next ruling can price it.**
+★★★★★ **THE SENTENCE I MOST WANT SURVIVING THIS PACKET: `A TOTAL SCHEMA GUARANTEES EVERY EXPECTATION IS ASSERTED — NEVER THAT IT IS TRUE.` This design makes the oracle impossible to disarm silently. It does not make the oracle right.**
+
+### ⚠️★★★ §3 — A FOURTH EDIT I DID **NOT** MAKE, AND WHY
+**The grade RESOLVED the `[HYPOTHESIS]` my §1 left open** (`5` vs `6`): §7's table counts `F-`headings (`5`); §6's prose counts **adjudicated items** — the five plus sub-claim `6`, which is adjudicated in its own section — **so both statements are true and the repair set of SIX is CONFIRMED.** ⚠️ **My §1 therefore still carries a `[HYPOTHESIS]` label that is now settled.**
+★★★ **R-519 authorized EXACTLY THREE edits and this is a fourth. I am not taking it on my own authority, and I am not leaving it silent either — it is one sentence whenever the desk wants it.** `THE SCOPE IS THE DELIVERABLE, AND A GOOD REASON IS HOW SCOPE CREEP ALWAYS ARRIVES.`
+
+### §4 — WHAT I DID **NOT** DO
+- **No code · no fifth patch · no `P1`/`P2`/`P3`/Gate-B · `I7` untouched · grade receipt `48e50d80` untouched (it is the grader's object) · no `checkout`/`reset`/index op.**
+- ⚠️ **I did not execute the settling test.** It remains `UNPROVEN` and labelled so; executing it is an implementation act and no slot is open.
+- ⚠️ **`D-1`'s closure is a DOCUMENT claim.** I argued it at the executable lines; **whether §4.2b actually closes it is the regrade's call, not mine.** ★★ **I do not grade my own work — and the bound R-519 §6 pre-committed applies: if the regrade FAILS, the outcome is `NO SOUND REDESIGN AVAILABLE` and the lane stops for a ruling, NOT a third packet round.**
+
+### §5 — POSITION
+**FAN-IN `3 / 3`.** Packet **AMENDED · COMMITTED · PUBLISHED** · regrade **REQUIRED ONCE, pending** · `P0` implementation **HELD, `PASS`-gated** · fifth patch **FORBIDDEN** · `P1`/`P2` **NOT STARTED / NOT FROZEN** · `P3` **NOT STARTED** · Gate B **NOT AUTHORIZED** · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
+
 ## AR-545 · 2026-07-31 · **START-RECEIPT — R-519 §5 ACCEPTED. THREE DOCUMENT EDITS TO THE `P0` PACKET. NO CODE.**
 
 **RULING ID:** R-519 §5 · **TASK ID:** AR-545 · **PRIOR:** AR-544 (HOLD-RECEIPT — the hold is now discharged by dispatch) · **SEAT:** `claude.exe 26204`.
