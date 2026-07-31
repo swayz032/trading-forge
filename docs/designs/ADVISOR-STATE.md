@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3079` at THIS commit, 2026-07-31 07:08 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3103` at THIS commit, 2026-07-31 07:21 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3079` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3103` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,31 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-509 LANDED (`93200a6f`) · `AR-530` IS RULED · **NO RULING DEBT** · THE THIRD EXTERNAL READ ARRIVED (`6f1b5c7d`, `03:37:52`) AND THE GATE WAS HONOURED** · live delivery still **`c304b098`** (2026-07-31 03:48, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, **ALIVE AND AUTHORIZED** on R-509 §6, its ear `python 16820` alive)
+## ⚠️★★★★★ SEAT — **R-509 LANDED (`93200a6f`) · `AR-531` IS NEWEST AND **UNRULED** → `R-510` IS OWED, **HELD FOR THE FOURTH EXTERNAL READ** (R-509 §7)** · branch PUBLISHED at **`fcf7d635`** `[MEASURED BY ls-remote]` · live delivery still **`c304b098`** (2026-07-31 07:20, ADVISOR SEAT = **FRESH** in `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, declares NOT-A-HANDOFF)
+
+### ✅★★★★★ **AR-531 VERIFIED AT THIS DESK BEFORE ANY RULING — RE-DERIVED, NOT RELAYED** `[MEASURED HERE 07:16-07:20]`
+| AR-531 claim | my independent check | result |
+|---|---|---|
+| receipt blobs == COMMITTED blobs | `git rev-parse HEAD:<path>` on all three, myself | ✅ `ab432bb3b8ac` · `2ea0b8ac1d81` · `201f22289352`, and worktree `hash-object` EQUALS each |
+| lane tree clean | `git status --porcelain -- …h1-battery/` | ✅ empty |
+| guard now reads the PUBLISHED tree | `REDPROOF.py:182` `["git","show","HEAD:%s" % rel]`, `read_mode` defaults to `committed` | ✅ **the §6.2 fix is at the executable line** |
+| digest is option (a), a real STRIP | `session_role_resolver_yield.py:158-185` — deep copy then `doc.pop(...)`, not an allow-list build | ✅ **the function now matches its own name** |
+| `DIGEST_COVERAGE` in the artifact | read by key path | ✅ names the method and all `7` exclusions |
+| assertions | read by key path | ✅ **`36` / `36` pass, `0` fail** (was `34`) |
+| ⚠️ **STOP CONDITION** | `METRICS.binding_movement.binding_yield_numerator` and `METRICS.diagnostic_reason_movement.diagnostic_reason_yield_numerator`, **by key path on both corpora** | ✅ **`0` · `0` · `17` · `45` — UNCHANGED. NOT TRIGGERED.** |
+⚠️★★★ **AND I MISSED THE KEY PATH ON MY FIRST ATTEMPT — I GUESSED `diagnostic_refusal_movement` / `reason_movement`, GOT AN EMPTY LIST, AND THE TRUE KEY IS `diagnostic_reason_movement`. **AN EMPTY RESULT FROM A GUESSED KEY LOOKS EXACTLY LIKE A ZERO.** I enumerated the keys instead of reporting the empty. `VERIFY A VALUE BY ITS KEY, NOT BY THE QUERY THAT SELECTED IT` — recorded because the near-miss was a hair from a false "the numbers vanished".**
+
+### ⚠️★★★★★ **MY OWN FINDING ON AR-531, FOR `R-510` — SMALL, ADDITIVE, AND THE SAME SPECIES THIS LANE KEEPS CONVICTING**
+**[MEASURED HERE, `session_role_resolver_yield.py:172-178`]** the fifth exclusion is **not an enumeration, it is a PATTERN**:
+```python
+if str(c.get("assertion","")).startswith(("PROVENANCE_", "PUBLICATION_")):
+    c.pop("detail", None)
+```
+★★★★★ **`AN EXCLUSION KEYED ON A NAME PREFIX IS NOT AN ENUMERATION — IT GROWS SILENTLY WHENEVER SOMEONE NAMES A CHECK.` R-509 §6.4(a) required an ENUMERATED volatile list; `DIGEST_COVERAGE` records the RULE and never the RESOLVED SET. **[MEASURED] it swallows exactly `7` assertion details today** — `PROVENANCE_source_closure_dirty_intersection_is_ZERO` · `PROVENANCE_every_closure_file_equals_its_HEAD_blob` · `PROVENANCE_binder_worktree_bytes_equal_HEAD_blob` · `PUBLICATION_generator_worktree_blob_equals_HEAD_blob` · `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` · `PROVENANCE_RAW_closure_INCLUDING_generator_and_any_harness_is_clean` · `PROVENANCE_pre_and_post_run_status_agree` — **and an eighth would join them with nothing in the artifact changing to say so.**
+★★ **HONEST WIDTH, NOT INFLATED: this is NOT today's defect. Those seven details really are run-provenance, and their assertion NAME and PASS value remain inside the digest, so a FAILING one still moves it. The defect is that the coverage claim is a rule rather than a list.** ★★★ **REMEDY IS CHEAP AND IS `R-510`'s: record the RESOLVED names + their count in `DIGEST_COVERAGE` and ASSERT the count, so growth is VISIBLE instead of silent.** ★★★ **`THE DESCRIPTION IS WIDER THAN WHAT IT NAMES` is the exact species of `STRICT_SUBSET` (#10), the strip-list docstring (#11) and "the artifact `git` actually has" (#12) — the instrument is converging, and this is the fourth in the same family, now caught BEFORE it shipped a false claim.**
+
+### ⚠️★★★ **THE HOLD'S COST, RE-DERIVED AGAIN AND NOW AGAINST A MEASURED BASELINE**
+**AR-531 landed `07:12:59`; the worker is terminal on every lane it holds and R-509 §7 assigns the rest to this desk — so the hold idles a live seat, exactly as it did before.** ★★ **LAST ROUND'S MEASURED IDLE WAS `~15 min` (AR-530 `03:32` → R-509 `03:47`).** ★★★ **THE ORDER STANDS REGARDLESS — `A CHANNEL IS NOT AN AUTHOR` — and the number is what the operator is owed, not an argument.** ⚠️ **Re-derive next wake; do not copy.**
 
 ### ⚠️★★★★★ **THE ONE THING R-509 FOUND THAT MUST NOT BE LOST — AND IT MAKES THE FIX SMALL**
 ★★★★★ **`git rev-parse HEAD:<path>` IS ALREADY IN THE GENERATOR** (`session_role_resolver_yield.py:178-183`, `blob_pair()`) **AND ALREADY ASSERTED** on the binder (`:990`), the executed source closure (`:987`), the generator, the pinned baseline and corpus_B — **`5` call sites, and NOT ONE of them is the artifact the lane publishes.** ★★★ **THE EXTERNAL READ SAID THE MECHANISM WAS ABSENT; IT IS PRESENT AND MIS-AIMED.** `[MEASURED HERE, executable lines + positive control: committed-tree pattern `0` in the harness / `1` in the generator, control pattern `7` and `8`.]`
