@@ -136,6 +136,9 @@ VOLATILE_EXCLUSIONS = [
     "ASSERTIONS.checks[name starts with 'PROVENANCE_' or 'PUBLICATION_'].detail",
     "PUBLICATION_PATHS",
     "DIGEST_COVERAGE.value",
+    # The measurement HEAD again, under its named identity. Same value as
+    # `campaign_commit`, same reason: committing the artifact advances it.
+    "PUBLICATION_IDENTITIES.measurement_source_commit.value",
 ]
 """★★★★★ R-509 §6.4, OPTION (a) — THE COMPLETE, ENUMERATED, AUDITABLE EXCLUSION
 LIST. Everything NOT on this list is inside `artifact_content_digest`.
@@ -201,6 +204,9 @@ def _strip_volatile(art: dict) -> dict:
     # A digest cannot contain itself.
     if isinstance(doc.get("DIGEST_COVERAGE"), dict):
         doc["DIGEST_COVERAGE"].pop("value", None)
+    ident = doc.get("PUBLICATION_IDENTITIES")
+    if isinstance(ident, dict) and isinstance(ident.get("measurement_source_commit"), dict):
+        ident["measurement_source_commit"].pop("value", None)
     return doc
 
 
@@ -281,7 +287,18 @@ def source_closure_manifest(head: str, dirty: list[str], dirty_pre: list[str]) -
             rel = p.relative_to(REPO_ROOT)
         except ValueError:
             continue  # stdlib / site-packages -- outside the tree, not ours to pin
-        src_files.add(str(rel).replace("\\", "/"))
+        relstr = str(rel).replace("\\", "/")
+        # ★★★★★ THE TEST HARNESS IS NOT A MEASUREMENT SOURCE. When the RED-PROOF
+        #   imports this generator, the harness sits in sys.modules and would
+        #   join the closure -- making `closure_size` and `manifest` depend on
+        #   WHICH ENTRY POINT invoked the run (21 standalone, 22 under the
+        #   harness). That is an invocation artifact, not a source fact, and it
+        #   made a correctly-published artifact read as stale once the closure
+        #   entered the content digest. `A TEST RIG MUST NOT ENTER THE SOURCE
+        #   CLOSURE OF THE THING IT TESTS.`
+        if relstr.endswith("session_role_resolver_yield_REDPROOF.py"):
+            continue
+        src_files.add(relstr)
 
     population_files = {str(Path(p).relative_to(REPO_ROOT)).replace("\\", "/")
                         for p in sorted(CORPUS_A_DIR.glob("*.spec.json"))}
