@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3252` at THIS commit, 2026-07-31 15:08 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3256` at THIS commit, 2026-07-31 15:14 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3252` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3256` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-519` LANDED `705ab22e`, PUBLISHED (2026-07-31 15:07). Ledger R-515→R-519 this wake, `unpushed=0`.** **GRADE FAILURE ACCEPTED; THREE DOCUMENT EDITS AUTHORIZED to the standing-by seat (R-519 §5). `P0` IMPLEMENTATION HELD, `PASS`-GATED.**
+## ⚠★★★★★ SEAT — **THE *SECOND AND FINAL* PACKET GRADE IS DISPATCHED AND IN FLIGHT (2026-07-31 15:14).** `accuracy-validator`, opus, adversarial, **FRESH instance** (not a continuation — the prior grade is handed to it as an ARTIFACT to doubt, not a memory to trust), pinned to **`02557efd`**, receipt owed at **`docs/designs/GRADE-P0-REDESIGN-PACKET-REGRADE-2026-07-31.md`** (a NEW file — the prior receipt `48e50d80` MUST NOT be overwritten). Operator gave the word in his own voice: *“EXECUTE”*.
+⚠★★★★★ **DO NOT DISPATCH ANOTHER. If that receipt file is absent, the grade is STILL RUNNING, not missing. `A DUPLICATE GRADE IS NOT A SECOND OPINION, IT IS TWO GRADERS SPLITTING ONE MANDATE.`**
+⚠★★★★★ **THE STOP IS PRE-COMMITTED AND WAS WRITTEN BEFORE THE RESULT WAS KNOWN (R-519 §6): A `FAIL` HERE MEANS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — **NOT A THIRD PACKET ROUND.** Do not re-open that on seeing the verdict; that is precisely the decision the pre-commitment exists to protect.**
+✅ **R-519 §5 DELIVERED AND VERIFIED AT THIS DESK (`AR-546`, packet amended `02557efd`, published, `unpushed=0`): non-circularity clause present `:119-120` + `ABORT 2b` `:152` · deletion red path is a SCORED row `(c′)` `:66` · GREEN-control completion clause `D-3b` `:151` asserts FINAL SUMMARY **and** exit `0` · tree delta EXACTLY the worker's recorded baseline, nothing outside `docs/designs` moved.**
+★★★ **`R-520` will be OWED on the regrade and HELD for the next external read.** Ledger R-515→R-519 this wake.
 ⚠★★★★★ **SEQUENCE IS FIXED AND MUST NOT BE RE-ORDERED: three edits → commit **AND PUBLISH** → **ONE** regrade (same grader, NEW commit, and it MUST specifically test DELETION OF A KNOWN REQUIRED KEY) → implementation ONLY on `PASS` → then ONE implementation attempt + ONE post-implementation grade.**
 ⚠★★★★★ **STOP PRE-COMMITTED BEFORE THE RESULT IS KNOWN (R-519 §6): IF THE REGRADE ALSO FAILS, THE OUTCOME IS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — **NOT A THIRD PACKET ROUND.** This reverses `R-518 §5`'s one-grade bound, deliberately and with the new bound named.**
 ★★★★★ **THE CLAUSE A LATER SEAT MUST NOT LOSE — it is the deepest thing in this wave and it came from the external read, not from me: REQUIRED-VS-OPTIONAL MEMBERSHIP COMES FROM THE **FROZEN SCHEMA CONTRACT**, NEVER FROM WHICHEVER KEYS HAPPEN TO EXIST IN `ORACLE.json`. **A requiredness rule read off the artifact under test is SELF-AUTHORIZING: deleting a key deletes its own requirement and the check passes, so `D-1` reappears INSIDE its own fix.** `A REMEDY THAT READS ITS EXPECTATIONS FROM THE ARTIFACT UNDER TEST IS NOT A CHECK, IT IS A MIRROR.`**
