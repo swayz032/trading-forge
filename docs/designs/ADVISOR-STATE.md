@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3243` at THIS commit, 2026-07-31 13:17 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3248` at THIS commit, 2026-07-31 14:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3243` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3248` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **THE DESIGN GRADE LANDED `FAIL — NAMED DESIGN DEFECT` (`48e50d80`, `13:00`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`, `238` lines). `1 CRITICAL · 1 MEDIUM · 1 LOW`. **THE FIX IS THREE DOCUMENT EDITS, NOT A RE-ARCHITECTURE.** `R-519` is **OWED AND HELD FOR THE TWELFTH EXTERNAL READ** (`THE PASTE IS THE GATE`). Worker STANDING BY. ✅★★★★★ **`D-1` CONFIRMED AT THIS DESK, BOTH HALVES, IN THE SHIPPED BLOB `c304b098`: `OracleRow` (`:576`) has `authority: string` REQUIRED and **EVERY expectation field OPTIONAL** (`bindable?` … `reason_excludes?`), and the file's **SOLE** `omitted` block (`:667-672`) is scoped to the three PLAN SCALARS with no row-level equivalent. **SO DELETING `bindable` OUTRIGHT IS TYPE-VALID, RAISES NO UNKNOWN KEY, AND ASSERTS NOTHING.** ⚠★★★★★ **THE DESIGN IS CLOSED UNDER *TYPO* AND OPEN UNDER *DELETE* AT THE SAME GRANULARITY — `F-2`'s OWN SYMPTOM VIA A SMALLER EDIT.** ★★★ **AND IT LANDS EXACTLY WHERE `R-516 §5` NAMED THE EXEMPTION: I identified BOTH in-file precedents; the packet cites both (`:92`, `:94`) and applied `Precedent B`'s *declared-or-fatal* clause at the FIXTURE/pair surface (`:1408`) and NOT at the ROW surface.** ⚠ **THE GRADER DECLARED, UNPROMPTED, THAT `D-1` IS A GAP IN ITS OWN PRIOR GRADE'S MUTATION COVERAGE — `5` typos + `1` type slip, `0` DELETIONS — which the packet faithfully inherited. `A REPAIR SET INHERITS ITS GRADE'S BLIND SPOTS.`** ⚠ **IT DID NOT EXECUTE THE GATE: this tree's script blob is `d9f014d3`, not `c304b098`'s `48d5cc95`, and the fixtures dir is absent here — declared, not hidden.**
+## ⚠★★★★★ SEAT — **DESIGN GRADE = `FAIL — NAMED DESIGN DEFECT` (`48e50d80`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`, `238` lines, `1 CRITICAL · 1 MEDIUM · 1 LOW`). **FIX = THREE DOCUMENT EDITS, NOT A RE-ARCHITECTURE.** `R-519` **OWED, HELD FOR THE TWELFTH READ** (grade landed `13:00`; pending `91m` at `14:31`). Worker STANDING BY (`AR-544`). Everything committed AND PUSHED, `unpushed=0`.
+★★★★★ **ALL THREE GRADE FINDINGS ARE CONFIRMED *AT THIS DESK*, INDEPENDENTLY, IN THE SHIPPED BLOB `c304b098` — `R-519` MAY BE WRITTEN AS `[MEASURED HERE]`, NOT `[RELAYED]`, BY ANY SEAT:**
+- **`D-1` CRITICAL — CONFIRMED, BOTH HALVES.** `OracleRow` (`:576`) declares `authority: string` REQUIRED and **EVERY** expectation field OPTIONAL (`bindable?` `primitive_null?` `session_zone?` `approximation?` `reason_null?` `reason_names?` `reason_excludes?`), AND the file's **SOLE** `omitted` block (`:667-672`) is scoped to the three PLAN SCALARS with **no row-level equivalent**. ⚠ **So deleting `bindable` outright is type-valid, raises no unknown key, and asserts nothing — the design is CLOSED UNDER *TYPO*, OPEN UNDER *DELETE*, at the same granularity. `F-2`'s own symptom by a SMALLER edit.**
+- **`D-2` MEDIUM — CONFIRMED ON THE PACKET'S OWN TEXT.** Packet `ABORT 3` (`:133`) requires the design to *“state what it does at”* the rung below FIELD; **the packet imposes that on the implementer and does not discharge it itself.**
+- **`D-3` LOW — CONFIRMED, AND SHARPER THAN STATED.** `OracleFixture` (`:607-620`) carries the very discipline the row surface lacks — `scalars_unadjudicated?`, commented *“omitting them requires \`scalars_unadjudicated\` to say WHY, so a gap is always DECLARED and printed rather than read as coverage”*. ★★★★★ **THE FILE ALREADY KNOWS THE CORRECT RULE AND APPLIES IT AT PLAN-SCALAR AND FIXTURE LEVEL; NOBODY CARRIED IT TO ROWS. THIRD INSTANCE OF THE `R-516 §5` ASYMMETRY.**
+⚠ **GRADER'S OWN DECLARED LIMITS, CARRIED SO THEY ARE NOT LOST: it did NOT execute the gate (this tree's script blob is `d9f014d3`, not `c304b098`'s `48d5cc95`; fixtures dir absent here), and it declared `D-1` a gap in ITS OWN prior grade's mutation coverage — `5` typos + `1` type slip, `0` DELETIONS — which the packet faithfully inherited. `A REPAIR SET INHERITS ITS GRADE'S BLIND SPOTS.`**
 
 ### ✅⚠️★★★★★ **AR-540 VERIFIED AT THIS DESK — MEASUREMENTS ONLY. NO DISPOSITION: `R-516` IS HELD FOR THE PASTE.** `[MEASURED HERE 10:44]`
 
