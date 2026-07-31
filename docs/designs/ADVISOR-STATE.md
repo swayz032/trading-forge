@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3133` at THIS commit, 2026-07-31 07:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3134` at THIS commit, 2026-07-31 08:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3133` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3134` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -77,6 +77,7 @@ MAY BE THEIR ONLY CARRIER** (e.g. the `classify.py` byte-exact reproduction, the
 `pop120_census.py` UNRECOVERABLE finding, the C8 `233 → 159` counterfactual table).
 **`AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE` — deleting it would be exactly the
 `CUT NARRATIVE, NEVER CONTRACTS` violation this file has already suffered twice.**
+✅★★★ **THE CLASSIFICATION HALF IS NOW DONE AND LIVES OUTSIDE THIS FILE (so discharging the debt does not grow it): `docs/designs/ADVISOR-STATE-COMPACTION-TRIAGE-2026-07-31.md` — `19` blocks / `625` lines / `20%` of the file, tiered by SOLE-CARRIER RISK, with the instrument's weakness named. ⚠️ IT AUTHORIZES NO CUTS — a token in the ledger is not the finding in the ledger.**
 **THE REMAINING WORK, SPECIFIED SO IT NEEDS NO RE-DERIVATION: for each `NOT RULED` block,
 grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block is cuttable;
 if not, PROMOTE it into a contract section first, THEN cut.**
