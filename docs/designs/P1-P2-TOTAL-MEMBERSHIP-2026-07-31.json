@@ -1,0 +1,2154 @@
+{
+ "P1_observed_baseline": {
+  "authority_path": "docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md",
+  "authority_sha256_declared": "3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2",
+  "authority_sha256_match": true,
+  "authority_sha256_measured": "3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2",
+  "fixture_count": 12,
+  "fixture_ids": [
+   "00-control-shipped.spec.json",
+   "10-lunch-orphan.spec.json",
+   "11-premarket-orphan.spec.json",
+   "20-nyam-evaluable.spec.json",
+   "21-fivemin-chart.spec.json",
+   "22-nypm-evaluable.spec.json",
+   "23-silverbullet-evaluable.spec.json",
+   "24-macrowindow-evaluable.spec.json",
+   "30-compiled-flip.spec.json",
+   "31-flip-neg-control.spec.json",
+   "40-overrefusal-boundary.spec.json",
+   "50-family-axis-invalidations.spec.json"
+  ],
+  "oracle_blob_sha1": "f57a9d005fb8e43b4772dac9f32cc94894c40fe1",
+  "oracle_bytes": 25095,
+  "oracle_path": "ci/fixtures/spec-binding-parity-expanded/ORACLE.json",
+  "per_axis_present_counts": {
+   "approximation": 22,
+   "bindable": 29,
+   "primitive_null": 26,
+   "reason_excludes": 4,
+   "reason_names": 4,
+   "reason_null": 29,
+   "session_zone": 26
+  },
+  "present_expectation_count": 140,
+  "row_count": 30,
+  "row_ids": [
+   "00-control-shipped.spec.json::london",
+   "00-control-shipped.spec.json::unknown-session",
+   "10-lunch-orphan.spec.json::enter",
+   "10-lunch-orphan.spec.json::sess",
+   "11-premarket-orphan.spec.json::enter",
+   "11-premarket-orphan.spec.json::sess",
+   "20-nyam-evaluable.spec.json::enter",
+   "20-nyam-evaluable.spec.json::sess",
+   "21-fivemin-chart.spec.json::enter",
+   "21-fivemin-chart.spec.json::sess",
+   "22-nypm-evaluable.spec.json::enter",
+   "22-nypm-evaluable.spec.json::sess",
+   "23-silverbullet-evaluable.spec.json::enter",
+   "23-silverbullet-evaluable.spec.json::sess",
+   "24-macrowindow-evaluable.spec.json::enter",
+   "24-macrowindow-evaluable.spec.json::sess",
+   "30-compiled-flip.spec.json::enter",
+   "30-compiled-flip.spec.json::sess",
+   "30-compiled-flip.spec.json::third",
+   "31-flip-neg-control.spec.json::enter",
+   "31-flip-neg-control.spec.json::sess",
+   "31-flip-neg-control.spec.json::third",
+   "40-overrefusal-boundary.spec.json::bias_overnight",
+   "40-overrefusal-boundary.spec.json::enter",
+   "40-overrefusal-boundary.spec.json::filter_lunch",
+   "40-overrefusal-boundary.spec.json::retest_midday",
+   "40-overrefusal-boundary.spec.json::sess",
+   "50-family-axis-invalidations.spec.json::enter",
+   "50-family-axis-invalidations.spec.json::inv_in_entry",
+   "50-family-axis-invalidations.spec.json::sess"
+  ],
+  "source_commit": "c304b098b156106a5a81b714c7a5a3ed166d68ef"
+ },
+ "P2_total_membership": {
+  "actual_cell_count": 210,
+  "axes": [
+   "approximation",
+   "bindable",
+   "primitive_null",
+   "reason_excludes",
+   "reason_names",
+   "reason_null",
+   "session_zone"
+  ],
+  "axis_list_origin": "FROZEN IN THE GENERATOR \u2014 never derived from ORACLE.json",
+  "counts_by_basis": {
+   "UNDECLARED": 43,
+   "fixture-declared-prose": 13,
+   "present-in-oracle": 140,
+   "row-declared-alias (declared as 'primitive')": 3,
+   "row-declared-exact": 11
+  },
+  "counts_by_classification": {
+   "ASSERTED": 140,
+   "NOT-APPLICABLE": 9,
+   "UNADJUDICATED": 61
+  },
+  "expected_cell_count": 210
+ },
+ "_classification_enum": [
+  "ASSERTED",
+  "NOT-APPLICABLE",
+  "UNADJUDICATED"
+ ],
+ "_generated_by": "gen_p1p2.py (source embedded verbatim in docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md)",
+ "_schema": "P1-P2-TOTAL-MEMBERSHIP/1",
+ "cells": [
+  {
+   "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::london::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "london",
+   "fixture": "00-control-shipped.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::london::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "london",
+   "fixture": "00-control-shipped.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::london::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "london",
+   "fixture": "00-control-shipped.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-prose",
+   "cell_id": "00-control-shipped.spec.json::london::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "london",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "fixture-declared-prose",
+   "cell_id": "00-control-shipped.spec.json::london::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "london",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::london::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "london",
+   "fixture": "00-control-shipped.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::london::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "london",
+   "fixture": "00-control-shipped.spec.json",
+   "value": "london"
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown-session",
+   "declared_reason": "R-484 \u00a736 \u2014 NO EXPECTATION. See row 21: the `true` cited P-6, which derives no approximation value. Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority \u00a76).",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "unknown-session",
+   "fixture": "00-control-shipped.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "unknown-session",
+   "fixture": "00-control-shipped.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "reason_excludes",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::reason_excludes",
+   "classification": "ASSERTED",
+   "condition_id": "unknown-session",
+   "fixture": "00-control-shipped.spec.json",
+   "value": "session_zone_refused_uncomputable_window"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "fixture-declared-prose",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown-session",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "unknown-session",
+   "fixture": "00-control-shipped.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "00-control-shipped.spec.json::unknown-session::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "unknown-session",
+   "fixture": "00-control-shipped.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "10-lunch-orphan.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "10-lunch-orphan.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "10-lunch-orphan.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "10-lunch-orphan.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": true
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "10-lunch-orphan.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "10-lunch-orphan.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_names",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::reason_names",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": "lunch_blackout"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "10-lunch-orphan.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "10-lunch-orphan.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "11-premarket-orphan.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "11-premarket-orphan.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "11-premarket-orphan.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "11-premarket-orphan.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": true
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "11-premarket-orphan.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "11-premarket-orphan.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_names",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::reason_names",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": "overnight"
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "11-premarket-orphan.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "11-premarket-orphan.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "20-nyam-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "20-nyam-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) \u2014 binds, exactly",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) \u2014 binds, exactly",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) \u2014 binds, exactly",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "20-nyam-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "20-nyam-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) \u2014 binds, exactly",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) \u2014 binds, exactly",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "20-nyam-evaluable.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "20-nyam-evaluable.spec.json",
+   "value": "ny_am"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "21-fivemin-chart.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "21-fivemin-chart.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "21-fivemin-chart.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "21-fivemin-chart.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": null
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "21-fivemin-chart.spec.json::sess::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": "R-484 \u00a736 \u2014 NO EXPECTATION. The authority's earlier `true` had NO derivation: it cited P-6, and P-6 speaks only to bindability and reason-distinctness. P-3 does not reach unrecognised vocabulary because P-4 defines 'refused' as the DELIBERATE act (P-3 scope note, R-484). Asserting `false` instead would copy the value both lanes emit \u2014 asserting the implementation's value and asserting nothing are different acts. Whether `false` is honest here is OPEN and DESK-OWNED (authority \u00a76).",
+   "fixture": "21-fivemin-chart.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
+   "axis": "reason_excludes",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::sess::reason_excludes",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": "session_zone_refused_uncomputable_window"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "21-fivemin-chart.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "21-fivemin-chart.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "21-fivemin-chart.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "21-fivemin-chart.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "22-nypm-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "22-nypm-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "22-nypm-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "22-nypm-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "22-nypm-evaluable.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "22-nypm-evaluable.spec.json",
+   "value": "ny_pm"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "23-silverbullet-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "23-silverbullet-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "23-silverbullet-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "23-silverbullet-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "23-silverbullet-evaluable.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "23-silverbullet-evaluable.spec.json",
+   "value": "silver_bullet"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "24-macrowindow-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "24-macrowindow-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "24-macrowindow-evaluable.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "24-macrowindow-evaluable.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "24-macrowindow-evaluable.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "24-macrowindow-evaluable.spec.json",
+   "value": "macro_window"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "30-compiled-flip.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "30-compiled-flip.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "30-compiled-flip.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "30-compiled-flip.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": true
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "30-compiled-flip.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "30-compiled-flip.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_names",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::reason_names",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": "lunch_blackout"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": null
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "30-compiled-flip.spec.json::third::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "third",
+   "declared_reason": "R-484 \u00a736 \u2014 NO EXPECTATION. Same defect as row 21: the `true` cited P-6, which derives no approximation value. P-3 does not reach unrecognised vocabulary (P-4 defines 'refused' as deliberate). Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority \u00a76).",
+   "fixture": "30-compiled-flip.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6 \u2014 names no identifiable session",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::third::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6 \u2014 names no identifiable session",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::third::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6 \u2014 names no identifiable session",
+   "axis": "reason_excludes",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::third::reason_excludes",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": "session_zone_refused_uncomputable_window"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "30-compiled-flip.spec.json::third::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "third",
+   "declared_reason": null,
+   "fixture": "30-compiled-flip.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6 \u2014 names no identifiable session",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::third::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6 \u2014 names no identifiable session",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "30-compiled-flip.spec.json::third::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "30-compiled-flip.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "31-flip-neg-control.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "31-flip-neg-control.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable)",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable)",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable)",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "31-flip-neg-control.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "31-flip-neg-control.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable)",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable)",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": "ny_am"
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "31-flip-neg-control.spec.json::third::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "third",
+   "declared_reason": "R-484 \u00a736 \u2014 NO EXPECTATION. See row 21: the `true` cited P-6, which derives no approximation value. Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority \u00a76).",
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::third::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::third::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "reason_excludes",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::third::reason_excludes",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": "session_zone_refused_uncomputable_window"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "31-flip-neg-control.spec.json::third::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "third",
+   "declared_reason": null,
+   "fixture": "31-flip-neg-control.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::third::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 4a row 'regional window' + P-6",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "31-flip-neg-control.spec.json::third::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "third",
+   "fixture": "31-flip-neg-control.spec.json",
+   "value": null
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::approximation",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "bias_overnight",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. WAIT_BIAS carrying the `overnight` refused-zone phrase; probes the SECOND refused zone rather than repeating the first.",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "bias_overnight",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "primitive_null",
+   "basis": "row-declared-alias (declared as 'primitive')",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::primitive_null",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "bias_overnight",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d. FAMILY_META-sourced; see filter_lunch.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias_overnight",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias_overnight",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. WAIT_BIAS carrying the `overnight` refused-zone phrase; probes the SECOND refused zone rather than repeating the first.",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "bias_overnight",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "session_zone",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::session_zone",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "bias_overnight",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": null
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::approximation",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "filter_lunch",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause. P-7 speaks to whether the refusal may REACH this row, not to how the plan later summarises it.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. FILTER does not require a session keyword, so it never consults the zone tables and its bindability is INDEPENDENT of which zones are evaluable \u2014 even though its object text contains `lunch`. Section 4d adjudicates `bindable` and `reason` ONLY.",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "filter_lunch",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "primitive_null",
+   "basis": "row-declared-alias (declared as 'primitive')",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::primitive_null",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "filter_lunch",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d, explicitly. The `primitive` string of a non-session family is a FAMILY_META value, i.e. implementation on the parity surface, so adjudicating it would read the expectation out of the code under test. `ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.`",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter_lunch",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter_lunch",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. FILTER does not require a session keyword, so it never consults the zone tables and its bindability is INDEPENDENT of which zones are evaluable \u2014 even though its object text contains `lunch`. Section 4d adjudicates `bindable` and `reason` ONLY.",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "filter_lunch",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "session_zone",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::session_zone",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "filter_lunch",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause. P-7 derives bindability and reason from what a session predicate MEANS; it derives no session_zone value for a family that never consults one.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "approximation",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::approximation",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "retest_midday",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. WAIT_RETEST carrying `midday`, a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword.",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "retest_midday",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "primitive_null",
+   "basis": "row-declared-alias (declared as 'primitive')",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::primitive_null",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "retest_midday",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d. FAMILY_META-sourced; see filter_lunch.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest_midday",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest_midday",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 4d + P-7 (added R-491) \u2014 OVER-REFUSAL BOUNDARY. WAIT_RETEST carrying `midday`, a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword.",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "retest_midday",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "session_zone",
+   "basis": "row-declared-exact",
+   "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::session_zone",
+   "classification": "NOT-APPLICABLE",
+   "condition_id": "retest_midday",
+   "declared_reason": "NO EXPECTATION \u2014 section 4d's `everything else` clause.",
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": true
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "UNDECLARED",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": null,
+   "fixture": "40-overrefusal-boundary.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "reason_names",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::reason_names",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": "lunch_blackout"
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 \u2014 the refusal that MUST happen",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "40-overrefusal-boundary.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "40-overrefusal-boundary.spec.json",
+   "value": null
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority P-5",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::enter::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "enter",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": null
+  },
+  {
+   "axis": "approximation",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "bindable",
+   "basis": "row-declared-exact",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "NO EXPECTATION. INVALIDATE placed in entry_conditions \u2014 the one family the corpus had never exercised in that position. Non-session family, so authority \u00a76 leaves it unadjudicated. AGREEMENT is enforced.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "primitive_null",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "reason_null",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "session_zone",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "inv_in_entry",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "approximation",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::approximation",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": false
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "bindable",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::bindable",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "primitive_null",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::primitive_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": false
+  },
+  {
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "axis": "reason_names",
+   "basis": "fixture-declared-prose",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "sess",
+   "declared_reason": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority \u00a76 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+   "fixture": "50-family-axis-invalidations.spec.json"
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "reason_null",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::reason_null",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": true
+  },
+  {
+   "authority_citation": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 \u2014 binds, exactly",
+   "axis": "session_zone",
+   "basis": "present-in-oracle",
+   "cell_id": "50-family-axis-invalidations.spec.json::sess::session_zone",
+   "classification": "ASSERTED",
+   "condition_id": "sess",
+   "fixture": "50-family-axis-invalidations.spec.json",
+   "value": "ny_am"
+  }
+ ],
+ "digests": {
+  "canonical_document_sha256": "dbb871dd73da83e4e7b690efecde3e7a3230fc4076187da11bc4c2b38681d087",
+  "cell_id_set_sha256": "de761836ba64f00fb2982e4bf7c3b23fecd799a50f3b8eab64681b22914ee8de",
+  "digest_definition": "canonical_document_sha256 = sha256 of json.dumps(doc without 'digests', sort_keys=True, ensure_ascii=True, separators=(',',':'))"
+ },
+ "integrity_census": {
+  "alias_joined_cells": [
+   "40-overrefusal-boundary.spec.json::bias_overnight::primitive_null",
+   "40-overrefusal-boundary.spec.json::filter_lunch::primitive_null",
+   "40-overrefusal-boundary.spec.json::retest_midday::primitive_null"
+  ],
+  "detection_rule": "The cell-id set is the CARTESIAN PRODUCT of P1's frozen row_ids and the frozen axes. Any added, duplicated or missing cell is mechanically detectable by re-deriving that product and diffing it against cell_id_set_sha256 below.",
+  "duplicate_cell_ids": [],
+  "duplicate_json_keys_in_source": [],
+  "missing_cell_ids": [],
+  "unknown_cell_ids": [],
+  "unknown_row_keys": [],
+  "unresolved_declared_gap_keys": []
+ }
+}

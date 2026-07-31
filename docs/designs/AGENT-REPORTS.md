@@ -4,6 +4,78 @@
 
 ---
 
+## AR-548 · 2026-07-31 · ✅★★★★★ **R-520 §6 DELIVERED — `P1` FROZEN AND `P2` ENUMERATED AT `210` CELLS, TWO ARTIFACTS, NO CODE IN THE REPO.** ⚠️★★★★★ **AND THE NUMBER THE WHOLE INVERSION WAS ORDERED TO PRODUCE: `43` OF `210` CELLS ARE ABSENT **AND DECLARED NOWHERE** — `46` UNDER A STRICT NAME JOIN. THAT IS THE SILENT-VOID POPULATION, MEASURED FOR THE FIRST TIME, AND IT IS WHY SIX `P0` ATTEMPTS COULD NOT SUCCEED.** ★★★ **`NOT-APPLICABLE` CAME OUT AT `9` — RARE, EXACTLY AS I PRE-REGISTERED IN AR-547 §3 BEFORE I LOOKED.**
+
+**RULING ID:** R-520 §6 · **TASK ID:** AR-548 · **PRIOR:** AR-547 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**ARTIFACTS:** `docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md` · `docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`.
+
+### ✅ §1 — ACCEPTANCE, RUN VERBATIM
+```
+$ python -c "…len(d.get('cells',[]))"                        210          ✅ expect 210
+$ grep -c "UNADJUDICATED\|NOT-APPLICABLE\|ASSERTED" …json     216          ✅ (210 cells + 6 enum//schema lines)
+$ grep -n "digest\|sha256" …packet.md | head -5               21·22·27·28·30 ✅
+$ git status --porcelain -- docs/designs scripts ci src        [DELTA vs THE AR-547 BASELINE]
+?? docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json    <- MINE
+?? docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md   <- MINE
+ M src/engine/tests/test_synthetic_market_simulator.py    <- IN THE RECORDED BASELINE, not mine
+```
+✅ **THE DELTA IS EXACTLY THE TWO AUTHORIZED ARTIFACTS.**
+
+### ✅★★★ §2 — `P1`, AND EVERY NUMBER RE-DERIVED HERE RATHER THAN RELAYED
+`[MEASURED HERE, parsed from `git show c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`]`
+**`12` fixtures · `30` rows · `140` present expectations · per-axis `bindable 29 · reason_null 29 · primitive_null 26 · session_zone 26 · approximation 22 · reason_names 4 · reason_excludes 4`.** ✅ **AGREES WITH R-520 §2 AXIS FOR AXIS — and it is now a second, independent derivation rather than a relay.**
+★★★★★ **AND IT CLOSES AN OPEN CAMPAIGN ITEM I LEFT IN `AR-540 §5`: `3494d4bb…` — one of the two hashes that *"do not resolve as git objects"* — **IS THE sha256 OF THE AUTHORITY DOCUMENT, AND IT MATCHES BYTE-FOR-BYTE.** `[MEASURED HERE]` **My `[HYPOTHESIS]` that they were CONTENT hashes rather than fabrications is CONFIRMED, and the refusal to call them fabricated without the algorithm was the right call.** `AN UNRESOLVED IDENTIFIER IS A QUESTION ABOUT THE ALGORITHM, NOT EVIDENCE OF A LIE.`
+
+### ⚠️★★★★★ §3 — `P2`, AND THE FINDING
+| classification | cells | | basis | cells |
+|---|---|---|---|---|
+| `ASSERTED` | **140** | | `present-in-oracle` | 140 |
+| `NOT-APPLICABLE` | **9** | | `row-declared-exact` | 11 |
+| `UNADJUDICATED` | **61** | | `fixture-declared-prose` | 13 |
+| | | | `row-declared-alias` | 3 |
+| | | | ⚠️ **`UNDECLARED`** | ⚠️ **43** |
+
+⚠️★★★★★ **`43` CELLS ARE ABSENT WITH NO DECLARATION ANYWHERE — not a row `unadjudicated` entry, not any fixture-level gap statement.** **An omission there is `intentionally-not-applicable` · `honestly-unadjudicated` · `accidentally-deleted`, and the sparse object cannot say which. THAT IS THE ENTIRE `P0` IMPOSSIBILITY, EXPRESSED AS A COUNT.**
+★★★ **AND THE PART THAT IS FAIR TO THE ORACLE'S AUTHORS: this is NOT a defect they introduced. Authority §6 says in its own words that only session-family rows are adjudicated and that the membership manifest *"is wider than this oracle"*. **THE ORACLE NEVER CLAIMED THIS COVERAGE — `P0` ASSUMED IT.**
+✅ **`NOT-APPLICABLE = 9`, ALL FROM AUTHORITY §4d** (*"`primitive` · everything else — NO EXPECTATION — DECLARED GAP; `FAMILY_META`-sourced; implementation on the parity surface"*) — a MUST-NOT, not a not-yet. **Everything grounded in §6 went `UNADJUDICATED`, because §6's own title is `[UNENUMERATED — OPEN]`.** ★★ **Where both readings could be argued, `UNADJUDICATED` won — the stop condition used as a tie-break, not a slogan.**
+⚠️ **THOSE `9` CELLS ARE THE ONLY ONES IN THE LEDGER WHOSE CLASS RESTS ON INTERPRETING PROSE. I name them rather than bury them, and the rule is REVERSIBLE: one line in the generator plus a regeneration flips them, with no re-derivation and no re-reading of the authority.**
+
+### ⚠️★★★ §4 — SECOND FINDING: THE `primitive` / `primitive_null` NAME MISMATCH IS REAL
+**[MEASURED HERE] `3` declared gaps in `40-overrefusal-boundary.spec.json` name the key `primitive`; the axis is `primitive_null`.** R-520 §2 relayed this as `R-3` and correctly marked it `[RELAYED — NOT VERIFIED HERE]`. **It is now verified.**
+✅ **The ledger joins them EXPLICITLY and records the join** (`basis: row-declared-alias (declared as 'primitive')`) instead of joining silently. ⚠️ **Under a STRICT join those 3 cells are `UNDECLARED` and the undeclared count is `46`, not `43`. BOTH NUMBERS ARE PUBLISHED** — `A SILENT JOIN IS AN UNTESTED HYPOTHESIS ABOUT TWO NAMES MEANING ONE THING`, and this desk's most-convicted error is the join key.
+
+### ✅★★★★★ §5 — THE TWO CLAIMS I REFUSED TO MERELY ASSERT
+**DETERMINISM — regenerated and byte-compared, not argued:**
+```
+sha256 run1 25fbd1cc765c0e4a66d1788b…   sha256 run2 25fbd1cc765c0e4a66d1788b…   cmp -> byte-identical: YES
+```
+**DETECTION — red-proofed with a clean control, three mutants, and a FINAL SUMMARY LINE plus EXIT STATUS as the completion signal:**
+```
+LEDGER INTEGRITY [clean control]:            PASS (210 cells, 0 checks failed)
+LEDGER INTEGRITY [MUTANT: duplicated cell]:  FAIL (211 cells, 3 checks failed)
+LEDGER INTEGRITY [MUTANT: unknown cell]:     FAIL (211 cells, 3 checks failed)
+LEDGER INTEGRITY [MUTANT: deleted cell]:     FAIL (209 cells, 3 checks failed)
+ALL CASES DISCRIMINATE: True   exit 0
+```
+★★★ **The verifier RE-DERIVES the cartesian product independently rather than trusting the ledger's own `expected_cell_count` — otherwise it would be asking the artifact to confirm itself.** ★★ **And the duplicate-key census uses an `object_pairs_hook`, because `json.load` SILENTLY KEEPS THE LAST of duplicate keys and a plain parse cannot see them at all.**
+
+### ★★★ §6 — HOW THE ARTIFACTS WERE PRODUCED (the AR-547 §2 contract, honoured)
+**Generator and verifier ran from my SCRATCHPAD, outside the repo; their FULL SOURCE is embedded verbatim in packet §8/§9.** No third repo artifact, no hand-typed cells. ★★★★★ **AND THE PACKET'S OWN PROSE TABLES ARE GENERATED FROM THE LEDGER — not one number in it is hand-copied.** `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM` applies to a packet's tables exactly as it applies to a fixture, and I have been convicted twice this wake for hand-typed enumerations.
+⚠️ **THE AXIS LIST IS FROZEN IN THE GENERATOR AND IS NOT DERIVED FROM `ORACLE.json`** — deriving it from the artifact under test is the self-authorizing defect R-519 named and R-520 traced to the root.
+
+### §7 — WHAT I DID **NOT** DO
+- ⚠️ **I did not re-derive the `140` asserted VALUES against the authority document.** They are frozen AS OBSERVED. **A correctly-cited but mis-transcribed value survives this freeze** — the declared rung-3 limit, unchanged from the `P0` packet.
+- ⚠️ **I did not classify the `43` undeclared cells beyond `UNADJUDICATED`.** The authority does not reach them. ★★ **Closing them is a DESK act — an authority amendment — not a worker act, and guessing would poison the ledger everything downstream will trust.**
+- ⚠️ **No `P0` work of any kind · no `P0-vNext` · no `P3` · no Gate B · no engine/runtime/migration/DB/extraction/corpus/`HOLDOUT-26` · no `checkout`/`reset`/index op.** `c304b098` and both grade receipts untouched.
+- ★★ **I do not grade my own work.** Whether this ledger is a sound authority for `P0-vNext` is an independent call — and `accuracy-validator` is one authorization away when the desk wants it.
+
+### §8 — POSITION
+**`P1` FROZEN · `P2` ENUMERATED (`210` cells, `0` guessed) · both artifacts COMMITTED AND PUBLISHED.** `P0-vNext` **BLOCKED on an independent membership census** · `P3` **NOT STARTED** · Gate B **BLOCKED** · seventh `P0` attempt **NOT AUTHORIZED** · merge/deploy/release **HOLD**.
+⚠️★★★ **THE DECISION THE DESK NOW OWNS, STATED PLAINLY: `43` UNDECLARED CELLS CANNOT BE CLOSED BY MEASUREMENT — only by an authority amendment. `P0-vNext` can be built to consume the ledger as it stands, but it will inherit `43` cells about which the truth set says "unknown".**
+★★ **NOT A HANDOFF.**
+
+---
+
 ## AR-547 · 2026-07-31 · **START-RECEIPT — R-520 §6 ACCEPTED. `P1` OBSERVED BASELINE + `P2` TOTAL TRUTH MEMBERSHIP (`210` CELLS). TWO ARTIFACTS, NO CODE IN THE REPO.**
 
 **RULING ID:** R-520 §6 · **TASK ID:** AR-547 · **PRIOR:** AR-546 · **SEAT:** `claude.exe 26204`.
