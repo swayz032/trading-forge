@@ -4,6 +4,73 @@
 
 ---
 
+## AR-532 · 2026-07-31 · ⚠️★★★★★ **R-510 §6 DELIVERED, ALL SEVEN. `M8` WAS A FALSE DISCRIMINATION AND IS NOW A GIT-FIXTURE TEST THAT MUST READ WHAT IT PLANTED — IT REPORTS `published_n_pass = 33` BACK. AND THE SOURCE-CLOSURE WORK EXPOSED **TWO MORE ENTRY-POINT LEAKS OF MY OWN**: THE TEST RIG WAS INSIDE THE MEASUREMENT'S SOURCE CLOSURE, AND THE GENERATOR COUNTED ITSELF ONLY WHEN RUN STANDALONE.**
+
+**RULING ID:** R-510 §6 · **TASK ID:** AR-532 · **PRIOR:** AR-531 · **SEAT:** the seat that filed AR-525.
+
+### ⚠️★★★★★ §1 — §6.1 `M8` REBUILT. **IT WAS PASSING WITHOUT READING THE MUTATION, AND I PUBLISHED THE PROOF OF THAT AND DID NOT READ IT**
+**[MEASURED HERE, from the receipt I myself shipped] the old `M8` returned:**
+```
+{"PUBLISHED_ARTIFACT_IS_CURRENT": false, "read_mode": "committed",
+ "reason": "path is outside the repo, so it has no committed blob"}
+```
+★★★★★ **IT NEVER OPENED THE PLANTED FILE. It reddened on a PATH ERROR introduced by the very §6.2 fix I was implementing, and the printed line said `RED=True` exactly as before. `A TEST THAT TURNS RED BEFORE READING THE MUTATION HAS NOT TESTED THE MUTATION.`**
+⚠️★★★ **AND THE EVIDENCE WAS IN MY OWN PUBLISHED RECEIPT'S `detail` FIELD THE WHOLE TIME. I added `ALL_assertions_this_mutation_reddened` to publish blast radius and then scored the suite off the COLOUR column. `PUBLISHING A FIELD IS NOT READING IT.`**
+**REBUILT: `M8_stale_artifact_COMMITTED_in_fixture` — `git init` fixture, the exact AR-529 stale shape COMMITTED inside it, committed-mode read against that committed path. It now asserts three things, not one: RED · `RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH` · `IT_ACTUALLY_READ_THE_PLANTED_CONTENT` (`published_n_pass == 33`).**
+★★★ **`M8b_unpublishable_path` SPLIT OUT AND LABELLED SO IT CAN NEVER BE MISTAKEN FOR THE CONTENT PROOF AGAIN — its own record says *"This is NOT evidence that stale CONTENT is detected."* The out-of-repo fail-closed behaviour is legitimate and is now tested as itself.**
+
+### ★★★★★ §2 — §6.2 EVERY MUTATION RE-VALIDATED **WITH ITS REASON**, WHICH IS THE ITEM THAT WOULD HAVE CAUGHT §1
+**Each case now carries `WHY_IT_REDDENED` — the causal path, not the colour — plus `RE_VALIDATED_AGAINST_THE_COMMITTED_TREE_READER` recording whether it touches the publication path at all.**
+★★★ **THE DESK'S §2 CLAIM IS CONFIRMED MECHANICALLY, NOT ACCEPTED: `M1`–`M7` redden only GENERATOR assertions and none of them reddens `PUBLICATION_CONSISTENCY`, so the R-509 §6.2 reader change provably cannot reach them. `M8` alone rode the replaced reader.** **`WHEN THE MEASURED THING CHANGES, EVERY EXISTING MUTATION IS UNVALIDATED UNTIL RE-DEMONSTRATED` — done, and the reasons are in the receipt so the next reader need not re-derive them.**
+
+### §3 — §6.3/§6.5 THE COMMITTED-BLOB JOIN AND THE THREE IDENTITIES
+**Receipt blobs are now taken from `git rev-parse HEAD:<path>`, with the worktree value kept beside each and `ALL_CLEAN` asserting the pair equal — a dirty publication path is RED.**
+```
+receipt artifact_blob  : 6eb62802ce1740
+git rev-parse HEAD:art : 6eb62802ce1740   EQUAL = True
+publication paths clean: True
+  measurement_source_commit    4f8bdfdbeb3a83
+  artifact_publication_commit  0f88877ec716b7
+  receipt_measurement_commit   0f88877ec716b7
+```
+★★★ **THE THREE ARE DELIBERATELY DISTINCT and `measurement_source_commit` DIFFERS from the other two — which is the point: the sources that produced the numbers are older than the commit that published them.** ★★ **The receipt does NOT name its own publication commit; that field is marked `[NOT SELF-CERTIFIABLE]` rather than guessed, per §6.5.**
+
+### ⚠️★★★★★ §4 — §6.4 CANONICALISED — AND IT EXPOSED **TWO MORE ENTRY-POINT LEAKS, BOTH MINE**
+**The closure block is no longer deleted. Only four individually-justified values are stripped (`head`, whole-tree dirty totals, pre/post dirty counts); every path identity, blob pair, divergence list and intersection identity is now INSIDE the digest. `M11` proves it: altering ONE closure manifest path — with assertion names, PASS values, metrics and identity maps untouched — goes RED.**
+⚠️★★★★★ **PUTTING THE CLOSURE INSIDE THE DIGEST IMMEDIATELY FAILED, TWICE, AND BOTH CAUSES WERE REAL DEFECTS I HAD SHIPPED:**
+1. **THE TEST RIG WAS IN THE MEASUREMENT'S SOURCE CLOSURE.** When the harness imports the generator, the harness sits in `sys.modules` and joined the executed closure — so `closure_size` depended on WHICH ENTRY POINT ran the measurement. **`A TEST RIG MUST NOT ENTER THE SOURCE CLOSURE OF THE THING IT TESTS.`**
+2. **THE GENERATOR COUNTED ITSELF ONLY WHEN RUN STANDALONE.** Run directly it appears as `__main__`; loaded by the harness through `importlib.util.module_from_spec` it is **never registered in `sys.modules` at all** — so the closure was `22` one way and `21` the other. The generator is unquestionably a measurement source and now asserts itself into the closure unconditionally.
+★★★★★ **BOTH WERE INVISIBLE WHILE THE CLOSURE WAS EXCLUDED FROM THE DIGEST. The desk's §6.4 correction did not just close a blind spot in the guard — it surfaced two latent defects in the PROVENANCE ITSELF. `AN EXCLUSION DOES NOT ONLY HIDE CHANGES; IT HIDES THE DEFECTS IN WHAT IT EXCLUDED.`**
+★★★ **AND I FOUND BOTH BY DIFFING THE TWO STRIPPED DOCUMENTS KEY-BY-KEY RATHER THAN WIDENING EXCLUSIONS UNTIL IT WENT GREEN — which was the available shortcut and would have re-created exactly the defect R-510 §3 convicts the desk for.**
+
+### §5 — ACCEPTANCE EVIDENCE, PASTED
+```
+[OK ] CONTROL_unmutated -- exit=0, 36/36 assertions pass
+[OK ] M1 .. M7                              RED=True exit=1  (reasons recorded per case)
+[OK ] M9_committed_stale/worktree_fresh      worktree GREEN(blind)=True | committed RED(catches)=True
+[OK ] M10_identity_block_silently_altered -> PUBLICATION_CONSISTENCY RED=True
+[OK ] PUBLICATION_CONSISTENCY_live -- published artifact is current: True
+[OK ] M8_stale_COMMITTED_in_fixture -> RED=True from_digest_mismatch=True read_planted_n_pass=33
+[OK ] M8b_unpublishable_path       -> fails closed=True (NOT a stale-content proof)
+[OK ] M11_source_closure_identity_altered -> PUBLICATION_CONSISTENCY RED=True
+ALL CASES DISCRIMINATE: True
+```
+**§6.6: the `26` caption is DELETED, not updated — the count is computed and printed at runtime, so it cannot go stale again.**
+
+### ⚠️★★★★★ §6 — PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED**
+```
+corpus_A binding 0 · reason 17 / 155     corpus_B binding 0 · reason 45 / 6450
+reconciliation 18 recognized / 17 changed / 9 zones      closure_size 22
+```
+★★★ **BYTE-IDENTICAL through every regeneration in this lane, checked at each rebuild.**
+
+### §7 — POSITION
+`I7` **NOT CLOSED** — R-510 §7 puts closure behind a FIFTH external read, and I do not close my own work. · `I8` **NOT STARTED · BLOCKED ON AN EXTRACTION AUTHORIZATION THAT DOES NOT EXIST (OPERATOR'S TO GRANT) · NOT CLOSED, NOT QUEUED** — I adopt the corrected label; `CLOSED-AS-UNREACHABLE` with a named reopening condition was self-contradictory. · `I21` semantic follow-up **PARTIAL — behaviour `[UNMEASURED]`** · `I11` CLOSED · `c304b098` NOT-SOUND · `P0-v5` NOT MINE · **CI-wiring NOT MINE, and §1 is the fourth consecutive argument for it: `A HARNESS NOBODY SCHEDULES IS A HARNESS WHOSE MUTATIONS ROT SILENTLY BETWEEN RUNS`, and mine rotted inside two hours.**
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · `HOLDOUT-26` untouched · no refusal rule widened · no campaign measurement altered.**
+★★ **NOT A HANDOFF — context is not exhausted and I remain the assigned seat.**
+
+---
+
 ## AR-531 · 2026-07-31 · ★★★★★ **R-509 §6 DELIVERED — ALL FIVE ITEMS. `M9` DISCRIMINATES IN **BOTH DIRECTIONS**: THE OLD WORKTREE READ IS **BLIND** TO A STALE COMMIT AND THE NEW COMMITTED READ **CATCHES** IT. THE DIGEST IS NOW OPTION **(a)** — FULL ARTIFACT MINUS AN ENUMERATED LIST — AND `M10` PROVES IT SEES THE `17` IDENTITIES THE OLD ALLOW-LIST COULD NOT.**
 
 **RULING ID:** R-509 §6 · **TASK ID:** AR-531 · **PRIOR:** AR-530 · **SEAT:** the seat that filed AR-525.
