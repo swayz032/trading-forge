@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2734` at THIS commit, 2026-07-31 01:54 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2755` at THIS commit, 2026-07-31 01:57 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -158,9 +158,30 @@ not canonical session objects). **NO TEST IN THAT RUN DISTINGUISHES THEM.** `IF 
 DISTINGUISH TWO EXPLANATIONS, SAY SO AND ESCALATE RATHER THAN CHOOSING THE CONVENIENT ONE.`
 **LOCATING THE FAILING LAYER IS A SEPARATE AUTHORIZATION AND IS PART OF THE HELD R-502** — `I7`'s
 forbidden list bars any binding/extraction change, correctly.**
-★★ **FAN-IN `2 / 4`. AR-521's handoff is WITHDRAWN on the operator's own word (*"you are already a
-fresh worker"*), PRESERVED-AND-STRUCK, not deleted. The seat is on `I8` under R-501 §7 and is NOT
-blocked by this hold.**
+★★ **AR-521's handoff is WITHDRAWN on the operator's own word (*"you are already a fresh worker"*),
+PRESERVED-AND-STRUCK, not deleted.**
+
+### ⚠️★★★★★ **AR-523 SUPERSEDES THE LINE ABOVE: `I7` IS `PARTIAL`, NOT CLOSED. FAN-IN IS `I21` CLOSED · `I7` PARTIAL · `I8` NOT STARTED · `I11` DESK-TAKEN.**
+★★★★★ **THE WORKER RE-SCORED ITS OWN DELIVERED LANE AGAINST R-501 §6's REWRITTEN CONTRACT AND FILED
+IT AS `6 / 9` REQUIRED FIELDS RATHER THAN LETTING IT STAND. `A LANE DELIVERED UNDER A SUPERSEDED
+CONTRACT IS HOW A PARTIAL-THAT-READS-AS-COMPLETE GETS CREATED WITHOUT ANYBODY LYING` — and R-501 §6
+landed AFTER AR-522 was written, so this is timing, not a defect in either.**
+**THE THREE MISSING FIELDS, NAMED SO NOBODY RE-DERIVES THEM:** ⚠️ **CORPUS B WAS NEVER MEASURED**
+(`or-branches-full-corpus-specs-2026-07-05.json`, untouched — and it must be reported SEPARATELY, **a
+pooled rate is a REJECTED deliverable**) · numerator/denominator **definitions** never written into
+the artifact · refusal **REASON** never diffed across arms. **All three additive; no engine change.**
+⚠️★★★★★ **AND IT FOUND A JOIN-KEY ERROR IN ITS OWN HEADLINE BY TESTING HARD STOP #1 [MEASURED, worker]:
+`bindable = 128` · `bindable AND NOT approximation (= bound_and_concrete) = 0`. **ALL 128 "BINDABLE"
+ROWS ARE APPROXIMATIONS.** AR-522 put the LOOSER field in its headline beside a baseline counted on
+the STRICTER one. `THE JOIN KEY IS THE CLAIM` — a reader would have seen a contradiction that does not
+exist, or read `128` as progress.**
+★★★★★ **BOTH HARD STOPS TESTED, NEITHER FIRES: flags-OFF reproduces the pinned baseline EXACTLY on the
+strict field (`0 = 0`, NOT contaminated), and non-`C2` movement is `0`. It TESTED the stop rather than
+reconciling it in prose, which §6 forbids.**
+★★★ **THE SUBSTANTIVE FINDING SURVIVES THE REWRITE UNCHANGED — none of the three gaps touches it:
+`0` newly bound, `18` recognized, `9` real zones, `0` regressions. H1/H2 still undecided.**
+★★ **The seat declared its context DEEP and is finishing `I7` rather than opening `I8` on top of a
+half-closed lane (`DO NOT START WHAT YOU CANNOT FINISH`). It is NOT blocked by this hold.**
 
 ### ★★★ [MEASURED HERE, 01:49] RELAY BRANCH RE-PUBLISHED — **FAST-FORWARD ONLY, UNDER THE STANDING WITNESSED ORDER**
 **AR-521 §4 flagged that `aeeeb8a6` and `1dc09bac` were LOCAL-ONLY, so the public branch was stale
