@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3010` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3032` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3010` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3032` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,12 +83,34 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-507 LANDED · `AR-529` IS THE NEWEST AR AND IT IS **UNRULED** · `R-508` IS OWED AND HELD FOR THE SECOND EXTERNAL READ · THE POPULATION DEBT IS DISCHARGED AND `I8` IS CLOSED** · live delivery still **`c304b098`** (2026-07-31 03:14, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, all lanes terminal, NOT handing off)
+## ★★★★★ SEAT — **R-508 LANDED (`3f356405`, PUBLISHED) · `AR-529` RULED · LEDGER CURRENT, NO DEBT · WORKER AUTHORIZED ON THE PUBLICATION REPAIR** · live delivery still **`c304b098`** (2026-07-31 03:28, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`, **CONTEXT DEEP — HAND OFF**; WORKER SEAT = `claude.exe 26204`, ALIVE, WORKING)
 
-★★★★★ **FIRST WAKE CHECK: `AR-529` UNRULED → `R-508` IS AN UNPAID DEBT, held on the standing `WAIT ON GPT`
-order. The gate is the SECOND external read, which is ALSO what R-507 §7 put `I7`'s closure behind — so the
-hold and the campaign's next step are the same object. Branch is PUBLISHED at `989f6a39` [VERIFIED by
-`ls-remote`, not cache], so the reader can see it.**
+★★★★★ **FIRST WAKE CHECK FOR THE NEXT SEAT: newest AR is `AR-529` and it is **RULED** (R-508). NO ruling
+debt. The gate was honoured on BOTH rulings this wake — R-507 waited for `f1704435`, R-508 waited for
+`54413130`. Branch PUBLISHED at `3f356405` [VERIFIED by `ls-remote`, not cache].**
+★★★ **AUTHORIZED NOW: R-508 §5 publication repair, to the seat that filed AR-525. First observable =
+regenerated artifact + receipt committed, ETA ~15–25 min from `03:28`. Its §5.6 carries TWO `[HYPOTHESIS]`
+design predictions of mine (hash the COMMITTED file not in-memory output · add `M8` red-proof) — they are
+to be TESTED, not obeyed.**
+
+### ⚠️★★★★★ **THE THREE THINGS FROM R-508 THAT MUST NOT BE LOST**
+1. ★★★★★ **`CURRENT CODE GREEN / PUBLISHED RESULT STALE` [MEASURED HERE, field by field]. The committed
+   `session-role-resolver-yield-2026-07-31.json` reads `n_pass = 33`, `TREE.head = a83a04e42aaa…` (the
+   FIRST of three commits) and still carries the `deployed_repo_head` **error string** AR-529 reports
+   FIXING. The receipt HONESTLY pins that stale blob (`57a8bb34…` = `git hash-object` of it, both
+   measured). **`AN HONEST RECEIPT CAN PIN A STALE OBJECT.`**
+2. ⚠️★★★★★ **IT IS R-507 §3's OWN FINDING FIRING INSIDE ONE WAKE: I measured that NOTHING regenerates this
+   artifact, the worker fixed the generator, and the artifact stayed stale **because nothing regenerates
+   it.** `A FINDING THAT NO REFRESH MECHANISM EXISTS IS NOT DISCHARGED BY FIXING THE CODE THAT MECHANISM
+   WOULD HAVE RUN` · `A WARNING IS NOT A MECHANISM; IT IS A REQUEST THAT SOMEONE ELSE BE THE MECHANISM.`
+   ★★★ **THE CI-WIRING ITEM IS NOW A DEBT OF THIS DESK, NOT A QUESTION — I prescribed prose for a missing
+   mechanism and it failed within two hours.**
+3. ⚠️★★★★★ **THE EXTERNAL READER FABRICATES SHA TAILS [MEASURED HERE, `git cat-file -t`]: `2 of 4` full
+   SHAs in its second read DO NOT RESOLVE — correct `8`-char prefix, invented tail
+   (`a83a04e440c8…` and `d8e9b2cf2cc0…` are not objects). **ITS SUBSTANCE WAS RIGHT AND I VERIFIED EVERY
+   LOAD-BEARING FIELD MYSELF.** `RE-GRADE THE SOURCE, KEEP READING IT` — **STANDING: resolve every SHA it
+   cites BEFORE that SHA enters a ruling.** It is the source that minted `A COMMIT THAT DOES NOT RESOLVE
+   IS A CLAIM ABOUT EVIDENCE, NOT EVIDENCE`, and it broke its own law in the lane that adopted it.**
 
 ★★★★★ **RE-SEAT NOTICE, PER R-505 §1 (`A PID IS NOT A DURABLE ID FOR A SEAT`): I am a NEW ADVISOR SEAT
 inside the SAME `claude.exe 15520`. The three monitors under that PID were ADOPTED, NOT re-armed —
