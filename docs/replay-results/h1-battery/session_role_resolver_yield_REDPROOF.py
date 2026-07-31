@@ -518,6 +518,12 @@ def main():
                             "could not see.",
         "it_went_RED": m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False,
         "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": m10_attributed,
+        "ATTRIBUTION_EVIDENCE": {
+            "fresh_digest": m10.get("fresh_digest"),
+            "published_digest": m10.get("published_digest"),
+            "⚠️_WHY_BOTH_ARE_PUBLISHED": "a boolean is a SUMMARY of the comparison. "
+                "Publishing both digests lets a reader re-derive the attribution by "
+                "key instead of trusting the flag."},
         "⚠️_WHY_ATTRIBUTION_IS_REQUIRED": (
             "R-512 §6.4. publication_consistency can return NOT-CURRENT from three digest-free "
             "early returns (path outside the repo / absent from HEAD / file does not exist). "
@@ -655,6 +661,12 @@ def main():
                             "campaign metrics and identity maps all left IDENTICAL.",
         "it_went_RED": m11["PUBLISHED_ARTIFACT_IS_CURRENT"] is False,
         "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": m11_attributed,
+        "ATTRIBUTION_EVIDENCE": {
+            "fresh_digest": m11.get("fresh_digest"),
+            "published_digest": m11.get("published_digest"),
+            "⚠️_WHY_BOTH_ARE_PUBLISHED": "a boolean is a SUMMARY of the comparison. "
+                "Publishing both digests lets a reader re-derive the attribution by "
+                "key instead of trusting the flag."},
         "⚠️_WHY_ATTRIBUTION_IS_REQUIRED": (
             "R-512 §6.4 -- same conjunct, same reason as M10. `A TEST THAT TURNS RED BEFORE "
             "READING THE MUTATION HAS NOT TESTED THE MUTATION.`"),
