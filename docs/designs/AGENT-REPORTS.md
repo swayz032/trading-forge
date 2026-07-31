@@ -4,6 +4,64 @@
 
 ---
 
+## AR-536 · 2026-07-31 · ⚠️★★★★★ **R-512 §6 DELIVERED, ALL SIX. THE FINDING IS RIGHT AND IT IS MINE: `m13_ok` NEVER REQUIRED ITS OWN READER, AND AR-535 CALLED IT "ITS OWN RED-PROOF" ANYWAY.** ★★★★★ **THE REPAIR DOES NOT ASSERT FALSIFIABILITY — IT **RE-EVALUATES THE ACCEPTANCE PREDICATE WITH THE READER SUPPRESSED ON EVERY RUN** AND SHIPS BOTH ANSWERS IN THE RECEIPT: `True` / `False`.** ⚠️★★★ **AND THE SWEEP FOUND THE CONJUNCT WAS NOT VACUOUS — `M8b`'s DIGEST-FREE EARLY RETURN IS THE NEGATIVE CONTROL AND IT SCORES `attributed = False`.**
+
+**RULING ID:** R-512 §6 · **TASK ID:** AR-536 · **PRIOR:** AR-535 · **SEAT:** the seat that filed AR-533/534/535.
+**POSITION:** `a88d9844` · lane `git status --porcelain` **EMPTY** · **`19` scored cases + `1` unscored history · `ALL CASES DISCRIMINATE: True` · exit `0`.**
+
+### §1 — MY ERROR, NAMED ONCE
+**AR-535 §2 wrote *"`M13` IS NOW ITS OWN RED-PROOF"*. Its verdict did not enforce that: `m13_ok` omitted `m13_reader_red`, so deleting the reader outright would have left the case GREEN.** ★★★ **The mechanism I built was right and the VERDICT THAT SCORED IT WAS NOT — and the caption asserted the verdict, not the mechanism. `A RED RESULT RECORDED BESIDE OK IS NOT LOAD-BEARING UNLESS OK REQUIRES IT.` Corrected below; no further defence.**
+
+### ★★★★★ §2 — ITEM 1 + ITEM 5: THE VERDICT NOW REQUIRES ITS TARGET, **AND PROVES IT ON EVERY RUN**
+**The acceptance predicate is extracted as a pure function (`m13_acceptance`) precisely so it can be run twice:**
+```
+★_VERDICT_FALSIFIABILITY  (shipped in the receipt, recomputed every run)
+   OK_as_evaluated                          True
+   OK_if_the_reader_result_were_SUPPRESSED  False
+   VERDICT_IS_LOAD_BEARING                  True
+```
+★★★★★ **THIS IS THE ITEM I THINK MATTERS MOST AND I DELIBERATELY DID NOT BUILD IT AS A ONE-OFF PROBE. R-512 §6.5 permitted a local evaluator mutation reported as before/after. **A before/after I run once is a claim about a run that will never happen again** — and the defect being repaired was exactly a proof that had stopped being enforced. So the suppression is re-evaluated INSIDE the harness on every run, with fixture validity, the stale-receipt fact and the positive control all held constant, and the case FAILS unless suppressing the reader flips it to `False`.**
+**`OK` now requires ALL of:** not void · control fired · receipt stale in fact · **the reader actually reddened** · **`RECEIPT_IS_COVERED_BY == ["RECEIPT_records_the_CURRENT_publication_blobs"]` exactly** — an empty list is a FAILURE and an extra unrelated red is a FAILURE, never supporting evidence.
+
+### §3 — ITEM 4: THE SWEEP, AND THE NEGATIVE CONTROL THAT PROVES IT IS NOT VACUOUS
+**`M10` and `M11` now carry `M8`'s attribution conjunct via a shared `digest_attributed()`. `[MEASURED, from the committed receipt]`**
+```
+M10  attributed=True | fresh eb5726ffc44e != published 4264f0b38915
+M11  attributed=True | fresh eb5726ffc44e != published 89709e2e2e8b
+NEGATIVE CONTROL -- M8b takes the digest-free early return:
+     "fresh_digest" key ABSENT · reason "path is outside the repo..."  -> digest_attributed() = False
+```
+★★★ **The negative control is the part I would not have believed without: `attributed = True` on both is only evidence if the same predicate can return `False`, and `M8b` shows it does — on the exact early-return path R-512 §3 named.** ✅ **AND THE DIGESTS THEMSELVES ARE NOW PUBLISHED, not just the boolean: `A BOOLEAN IS A SUMMARY OF THE COMPARISON`, and a reader must be able to re-derive the attribution by key rather than trust my flag.**
+✅ **THE PER-CASE ATTRIBUTION CENSUS IS IN THE RECEIPT** (`ATTRIBUTION_CENSUS`), naming for each case whether `OK` requires a colour, an attributable cause, or its specific target. ★★★★★ **AND IT IS DRIFT-PROOFED, WHICH IS THE ONLY WAY A HAND-AUTHORED TABLE STAYS HONEST: `ATTRIBUTION_CENSUS_covers_every_scored_case` is itself scored and goes RED if the census and the real case list ever disagree — `missing=[] extra=[]` this run. A census that could silently fall out of date would be the same defect class one level up.**
+
+### §4 — ITEMS 2, 3, 6
+- ✅ **CONFOUND GUARD NO LONGER COUNT-ONLY.** Void when `PUBLISHED_ARTIFACT_IS_CURRENT is not True` **or** `fresh_digest != published_digest`. **`EQUAL ASSERTION COUNTS DO NOT PROVE AN UNCONFOUNDED ARTIFACT`** — the counts survive as diagnostics under `CONFOUND_DIAGNOSTICS`, explicitly labelled as not the validity predicate.
+- ✅ **HISTORY SPLIT FROM ACCEPTANCE.** `M13_HISTORY_receipt_was_uncovered` lives in a new `UNSCORED_HISTORY` block, absent from `all_ok` and the exit code — **history must not be able to pass or fail a run.** The pre-remedy `RECEIPT_IS_COVERED_BY = []` is preserved there with its pre-registration and the desk's `08:30:45` witness (`50209273`).
+- ✅ **REGENERATED AND COMMITTED.** Receipt at `a88d9844`; the artifact and generator were **not** touched — R-512 §6 said they needed no change for items 1–3, and nothing in items 4–5 reaches them `[MEASURED: `PUBLICATION_CONSISTENCY_live` = current True, artifact worktree blob == HEAD blob]`.
+
+### ⚠️★★★ §5 — AN OPERATIONAL PROPERTY THE DESK AND ANY FUTURE CI MUST KNOW
+**The receipt reader is RED in the window between committing CODE and committing the RECEIPT that describes it. That is BY DESIGN and self-clearing — it is what makes the gate converge instead of being permanently red — but it means `A SINGLE RUN'S EXIT CODE IS NOT A VERDICT ON THE LANE UNLESS THE RECEIPT HAS BEEN RE-COMMITTED SINCE THE LAST CODE COMMIT.`** ★★ **Observed three times this session (`e5a0e695`, `381be670`, `6b66efae`), cleared three times by publishing. A CI job that runs once per push would see RED on every code commit and GREEN only on the follow-up receipt commit — that is a real design input for route (a), not a defect.**
+
+### ⚠️★★★★★ §6 — PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED.** RE-DERIVED BY KEY PATH, NOT CARRIED
+```
+binding A/B 0 / 0     reason A/B 17 / 45     reconciliation 18 / 17 / 9
+closure_size 22       prefix-excluded 7
+```
+★★★ **All re-read from the committed artifact after the final commit, by key path.** The `7/33` shared-body figure is untouched — nothing in this wave reads or writes it.
+
+### §7 — WHAT I DID NOT MEASURE
+- ⚠️ **The `M10`/`M11` defect was LATENT and I did not make it ACTIVE to prove the conjunct bites there specifically.** The negative control (`M8b`) proves `digest_attributed` discriminates on the early-return path; **it does not prove `M10`'s own write can fail.** `[UNMEASURED — and the desk graded it latent for the same reason.]`
+- ⚠️ **The census is hand-authored.** Drift is now RED, but **the accuracy of each entry's DESCRIPTION is my judgment, not a measurement.** A reader who disagrees with a row should say so.
+- **I have not started the CI lane.** R-512 §7 puts it as **DESK DEBT, NOT AUTHORIZED TO BEGIN** — that is a change from R-511 §7, where it was mine. **I am not adopting it.**
+- ★★★ **I do not grade my own work.** `I7` closes on §6 + a seventh external read, per §7.
+
+### §8 — POSITION
+**FAN-IN `6 / 6` on R-512 §6.** `I7` **NOT CLOSED** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S)** · `I21` **PARTIAL — `[UNMEASURED]`** · **CI-WIRING → DESK DEBT, not mine, not begun** · `P0-v5`, Revision-4, `I6`, `I14` → DESK · `c304b098` **NOT-SOUND** · `I11` **CLOSED**.
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · `HOLDOUT-26` untouched · no refusal rule widened · no campaign measurement altered · only the harness and the receipt touched, exactly as §6 scoped.**
+★★ **NOT A HANDOFF — context is not exhausted and there is no unstarted lane assigned to me.**
+
+---
+
 ## AR-535 · 2026-07-31 · ⚠️★★★★★ **R-511 §6 DELIVERED, ALL EIGHT — AND `M13`'s PRE-REGISTERED PREDICTION HELD: THE RECEIPT WAS A DECORATION. `RECEIPT_IS_COVERED_BY = []` ON A CLEAN TREE WITH BOTH VOID GUARDS CLEAR AND THE POSITIVE CONTROL FIRING.** ★★★★★ **AND THE PRE-REGISTRATION EARNED ITS KEEP IN THE OPPOSITE DIRECTION FROM THE ONE R-511 §8.2 WARNS ABOUT: `M13`'s FIRST RUN *REFUTED* ME, AND ONLY BECAUSE IT DISAGREED DID I GO LOOKING AND FIND THE CONFOUND.** ⚠️★★★ **I IMPLEMENTED ONE HALF OF §6.8's REMEDY AND **REFUSED THE OTHER HALF ON MEASUREMENT** — PUTTING THE RECEIPT IN THE PAIR TUPLE BUILDS A PERMANENTLY-RED GATE, WHICH IS THE DESIGN §4 REJECTED FOR CI.**
 
 **RULING ID:** R-511 §6 · **TASK ID:** AR-535 · **PRIOR:** AR-534 (START-RECEIPT + pre-registration) · **SEAT:** the seat that filed AR-533/AR-534.
