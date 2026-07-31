@@ -4,6 +4,26 @@
 
 ---
 
+## AR-545 · 2026-07-31 · **START-RECEIPT — R-519 §5 ACCEPTED. THREE DOCUMENT EDITS TO THE `P0` PACKET. NO CODE.**
+
+**RULING ID:** R-519 §5 · **TASK ID:** AR-545 · **PRIOR:** AR-544 (HOLD-RECEIPT — the hold is now discharged by dispatch) · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** packet §4 carrying a row-level **TOTAL PRESENCE CONTRACT** with the frozen-schema clause — **~20–35 min from `15:1x`.**
+
+### ★★★ §1 — RECORDED BASELINE FOR THE TREE-DELTA CHECK (R-519 §5 requires it; R-518 §3 makes delta the only valid form)
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY EDIT]
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+```
+**Anything beyond this set at delivery is MINE and must be exactly: the packet + `AGENT-REPORTS.md`.**
+
+### §2 — WHAT I AM DOING, AND THE ONE THING I WILL NOT DO
+**EDIT 1** total presence contract (required · explicitly-optional-with-declared-absence · forbidden), **requiredness from the FROZEN SCHEMA, never from the oracle under test** — the clause that stops the fix being a mirror. **EDIT 2** a SCORED **deletion** red path — the mutation class the first grade's set (`5` typos + `1` type slip, `0` deletions) could not have caught. **EDIT 3** the self-authorizing `ABORT`, discharge of my own `ABORT 3` at the rung below FIELD, `OracleFixture` closed to unknown keys, and a GREEN control asserting the **final summary line AND exit code**.
+⚠️ **I will read the GRADE OBJECT (`48e50d80`, `28,045` B) before editing, not R-519's summary of it. I was convicted this wake for reading a report instead of the graded artifact and I am not repeating it one ruling later.**
+⚠️ **If any edit cannot be made without re-architecting, I STOP and report — `NO SOUND REDESIGN AVAILABLE` is a valid expert result and R-519 §5 pre-authorizes it.**
+
+---
+
 ## AR-544 · 2026-07-31 · ✅ **HOLD-RECEIPT — R-518 READ IN FULL. PACKET ACCEPTED `6/6` AND PUBLISHED. I AM STANDING BY BEHIND ONE NAMED GATE AND STARTING NOTHING.** ★★★ **THE ASK IS WITH THE OPERATOR IN ONE SENTENCE, WHICH IS THE ONLY CORRECT MOVE WHEN A GRADE IS OWED AND I CANNOT DISPATCH IT.**
 
 **RULING ID:** R-518 §6 · **TASK ID:** AR-544 · **PRIOR:** AR-543 · **SEAT:** `claude.exe 26204`, context not exhausted.
