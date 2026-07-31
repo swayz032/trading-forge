@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3248` at THIS commit, 2026-07-31 14:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3252` at THIS commit, 2026-07-31 15:08 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3248` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3252` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **DESIGN GRADE = `FAIL — NAMED DESIGN DEFECT` (`48e50d80`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`, `238` lines, `1 CRITICAL · 1 MEDIUM · 1 LOW`). **FIX = THREE DOCUMENT EDITS, NOT A RE-ARCHITECTURE.** `R-519` **OWED, HELD FOR THE TWELFTH READ** (grade landed `13:00`; pending `91m` at `14:31`). Worker STANDING BY (`AR-544`). Everything committed AND PUSHED, `unpushed=0`.
+## ✅★★★★★ SEAT — **`R-519` LANDED `705ab22e`, PUBLISHED (2026-07-31 15:07). Ledger R-515→R-519 this wake, `unpushed=0`.** **GRADE FAILURE ACCEPTED; THREE DOCUMENT EDITS AUTHORIZED to the standing-by seat (R-519 §5). `P0` IMPLEMENTATION HELD, `PASS`-GATED.**
+⚠★★★★★ **SEQUENCE IS FIXED AND MUST NOT BE RE-ORDERED: three edits → commit **AND PUBLISH** → **ONE** regrade (same grader, NEW commit, and it MUST specifically test DELETION OF A KNOWN REQUIRED KEY) → implementation ONLY on `PASS` → then ONE implementation attempt + ONE post-implementation grade.**
+⚠★★★★★ **STOP PRE-COMMITTED BEFORE THE RESULT IS KNOWN (R-519 §6): IF THE REGRADE ALSO FAILS, THE OUTCOME IS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — **NOT A THIRD PACKET ROUND.** This reverses `R-518 §5`'s one-grade bound, deliberately and with the new bound named.**
+★★★★★ **THE CLAUSE A LATER SEAT MUST NOT LOSE — it is the deepest thing in this wave and it came from the external read, not from me: REQUIRED-VS-OPTIONAL MEMBERSHIP COMES FROM THE **FROZEN SCHEMA CONTRACT**, NEVER FROM WHICHEVER KEYS HAPPEN TO EXIST IN `ORACLE.json`. **A requiredness rule read off the artifact under test is SELF-AUTHORIZING: deleting a key deletes its own requirement and the check passes, so `D-1` reappears INSIDE its own fix.** `A REMEDY THAT READS ITS EXPECTATIONS FROM THE ARTIFACT UNDER TEST IS NOT A CHECK, IT IS A MIRROR.`**
+✅ All three grade findings remain **CONFIRMED AT THIS DESK** in blob `c304b098` — see `R-519 §3` (`OracleRow` `:576` all-optional · sole `omitted` block `:667-672` plan-scalar-scoped · `OracleFixture` `:607-620` carries the missing discipline). Grade receipt `48e50d80`, published.
 ★★★★★ **ALL THREE GRADE FINDINGS ARE CONFIRMED *AT THIS DESK*, INDEPENDENTLY, IN THE SHIPPED BLOB `c304b098` — `R-519` MAY BE WRITTEN AS `[MEASURED HERE]`, NOT `[RELAYED]`, BY ANY SEAT:**
 - **`D-1` CRITICAL — CONFIRMED, BOTH HALVES.** `OracleRow` (`:576`) declares `authority: string` REQUIRED and **EVERY** expectation field OPTIONAL (`bindable?` `primitive_null?` `session_zone?` `approximation?` `reason_null?` `reason_names?` `reason_excludes?`), AND the file's **SOLE** `omitted` block (`:667-672`) is scoped to the three PLAN SCALARS with **no row-level equivalent**. ⚠ **So deleting `bindable` outright is type-valid, raises no unknown key, and asserts nothing — the design is CLOSED UNDER *TYPO*, OPEN UNDER *DELETE*, at the same granularity. `F-2`'s own symptom by a SMALLER edit.**
 - **`D-2` MEDIUM — CONFIRMED ON THE PACKET'S OWN TEXT.** Packet `ABORT 3` (`:133`) requires the design to *“state what it does at”* the rung below FIELD; **the packet imposes that on the implementer and does not discharge it itself.**
