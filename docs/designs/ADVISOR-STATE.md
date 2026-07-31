@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2908` at THIS commit, 2026-07-31 02:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2972` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,8 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2297` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2972` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +83,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **R-500 LANDED (`6a789090`) · `AR-519` RULED · LEDGER CURRENT, NO DEBT · BATCH 1 IS RUNNING** · live delivery still **`c304b098`** (2026-07-31 01:41, ADVISOR SEAT = `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE AND WORKING)
+## ★★★★★ SEAT — **R-507 LANDED · `AR-528` RULED · LEDGER CURRENT, NO DEBT · THE POPULATION DEBT IS DISCHARGED AND `I8` IS CLOSED** · live delivery still **`c304b098`** (2026-07-31 03:05, ADVISOR SEAT = **RE-SEATED** inside `claude.exe 15520`; WORKER SEAT = `claude.exe 26204`, ALIVE, IDLE, RE-TASKED BY R-507 §6)
+
+★★★★★ **RE-SEAT NOTICE, PER R-505 §1 (`A PID IS NOT A DURABLE ID FOR A SEAT`): I am a NEW ADVISOR SEAT
+inside the SAME `claude.exe 15520`. The three monitors under that PID were ADOPTED, NOT re-armed —
+[MEASURED HERE 02:56] exactly `3` logical desk monitors (AR change-detector · idle watchdog · GPT branch
+watcher) + the worker's `worker_ear.py` under `claude.exe 26204`. `0` foreign, `0` duplicates, nothing killed.**
+⚠️★★★ **R-506 §6 assigned the population act to *"THIS ADVISOR SEAT, NOT TO A SUCCESSOR"* — and that seat
+ended. I am the successor and I DISCHARGED IT ANYWAY rather than bouncing it back, because the guard §6
+intended was against HASTE at the end of a long seat, and a fresh seat with the measurement in hand is the
+condition it wanted, not the one it feared.** `AN ASSIGNMENT TO A SEAT THAT ENDS MUST BE INHERITED OR
+RE-ASSIGNED — NEVER SILENTLY DROPPED.`
 
 ★★★★★ **FIRST WAKE CHECK — AND FOR THE FIRST TIME IN THREE SEATS THE ANSWER IS "NOTHING": AR-516,
 AR-517, AR-518 AND AR-519 ARE ALL RULED (R-499, R-500). THE `WAIT ON GPT` PASTE-HOLD IS DISCHARGED —
@@ -131,12 +142,21 @@ NO WORKER IS SEATED — AR-521 handed off. The grader runs regardless (it is dis
 channel only, and the next worker reads this file's item 1 before acting. It becomes REAL the moment
 the operator says it to a worker instead. Re-derive this next wake; do not copy it.**
 
-### ★★★★★ **R-506 LANDED (`468fd5c2`, PUBLISHED). BATCH 1 IS AT A TERMINAL STATE. R-507 IS OWED AND HELD FOR THE GPT READ (arrives on watcher `bhdror0b5`, no human relay).**
+### ★★★★★ **R-507 LANDED. THE GPT READ ARRIVED ON `bhdror0b5` AT `03:00:18` (`f1704435`) AND THE GATE WAS HONOURED — I DRAFTED NOTHING BEFORE READING IT.**
+★★★ **`PUBLISH ON AR-LANDING` (R-506 §2) PASSED ITS FIRST REAL TEST: local `HEAD` was already `0` ahead of
+`origin` when I measured, so the external reader HAD AR-527/AR-528 and returned a substantive 137-line
+TECHNICAL review in ~13 minutes instead of a second procedural hold. That is the positive control for the
+correction.** ⚠️ **R-506 was ruled WITHOUT a paste; that violation stands on the record and is not retracted.**
 
 **`I21` CLOSED + follow-up CLOSED · `I11` CLOSED (`NOT-SOUND`) · `I7` DELIVERED · PUBLISHED · **EXTERNALLY UNVERIFIED, NOT CLOSED** · `I8` **DECLINED — the prerequisite is THIS DESK'S** (below).**
 
-### ⚠️★★★★★ **THE ONE THING THIS DESK OWES, AND IT IS NOT DELEGABLE**
-**NAME A FRESH UNTOUCHED POPULATION IN `## POPULATIONS — PERMANENT`, OR RULE `I8` CLOSED.**
+### ✅★★★★★ **DISCHARGED BY R-507 §5 — THE DESK'S NON-DELEGABLE DEBT IS PAID, AND THE ANSWER WAS A MEASUREMENT**
+~~**NAME A FRESH UNTOUCHED POPULATION IN `## POPULATIONS — PERMANENT`, OR RULE `I8` CLOSED.**~~
+★★★★★ **RULED: `I8` IS CLOSED — `PREREQUISITE NOT REACHABLE UNDER THE CURRENT AUTHORIZATION ENVELOPE.`
+NO fresh untouched population exists on disk (the `40`-video library is FULLY partitioned `14 + 26`, and
+`corpus_B` is UNJOINABLE — no video key at all). Manufacturing one requires new extraction, which
+`## NOT AUTHORIZED` bars. **NOT "held": a hold whose release condition cannot change the answer is a
+delayed no.** `HOLDOUT-26` IS NOT SPENT.** *(Full measurement in the FACT block below and in R-507 §5.)*
 ★★★★★ **WHY `I8` IS BLOCKED [MEASURED BY THE WORKER, AR-527 §2, CONFIRMED AGAINST THIS FILE]: advancing it
 reduces to making the deterministic rules decide more than `4.1%` — **RULE EXPANSION** — which THIS FILE
 forbids twice: `## POPULATIONS` (*"FORBIDDEN until a fresh untouched population is named FIRST"*) and
@@ -146,16 +166,51 @@ BINDS` — I audited the external constraint and never re-read my own, in a file
 ⚠️★★★ **DO NOT NAME A POPULATION IN HASTE. Naming one wrongly SPENDS it, and `HOLDOUT-26` is the campaign's
 only valid internal holdout. This was deliberately NOT done in the last minutes of a long seat.**
 
-### ★★★★★ **AR-528 — R-506 §5 DISCHARGED BY A TRIPWIRE, NOT A SENTENCE** `[ARTIFACT-SOURCED; RELAYED here]`
-**`DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE` is now a top-level artifact key, COMPUTED
-from the deployed tree at run time, never typed.** ★★★★★ **`SCOPE_TRIPWIRE` asserts six session-role
-symbols are ABSENT from the deployed binder and **GOES RED ON GOOD NEWS** — the day someone ports the
-capability it fails, which is exactly the day every scope sentence in the artifact becomes a lie. A
-second assertion guards the other direction (`0` deployed-only symbols; non-zero ⇒ the port must
-RECONCILE, not merely ADD). **Fail-closed if the deployed tree is unreachable.**
-★★★ **`30 / 30` assertions, `6 / 6` mutations discriminate. M5 and M6 are CROSS-CONSTRAINED — each must
-redden its OWN assertion while the other stays GREEN. `A GUARD THAT CANNOT BE DISTINGUISHED FROM ITS
-NEIGHBOUR IS NOT A SECOND GUARD.`**
+### ★★★★★ [FACT, MEASURED HERE 03:00 BY THE RE-SEATED DESK — **NOT RULED**] THE POPULATION SPACE IS ENUMERATED. **NO FRESH UNTOUCHED POPULATION EXISTS ON DISK.**
+★★★★★ **THIS IS THE MEASUREMENT R-506 §6's DEBT NEEDS, AND THE JUDGMENT IT IMPLIES IS DELIBERATELY *NOT*
+WRITTEN HERE. R-507 IS HELD FOR THE EXTERNAL READ — `MEASURE AND RELAY FREELY; JUDGE NOTHING.`**
+| measured | value | instrument |
+|---|---|---|
+| spec corpus, enumerated BY NAME | **`40`** videos | `tf-deep-scan/corpus/specs/*.spec.json` — **MEASURED HERE** |
+| design-split videos, all live | `14` | packet §(A) table — `[ARTIFACT-SOURCED]` |
+| live videos NEVER seen by the design split | `26` | same table |
+| ★★★★★ **remainder** | **`0` — `14 + 26 = 40`, THE LIBRARY IS FULLY PARTITIONED** | arithmetic on the two rows above |
+⚠️★★★★★ **AND THE `corpus_B` CANDIDATE IS NOT A CANDIDATE — IT IS **UNJOINABLE** [MEASURED HERE,
+`runtime-production/docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json`]: `120` entries, and
+EVERY entry carries exactly FIVE fields — `name · symbol · timeframe · lifecycle_state · spec`. **`0`
+occurrences of `video`, `youtube`, `transcript`, `source_url`, `provenance`, `spec_id` OR the `__sN` suffix;
+`0` of the `40` corpus video IDs appear ANYWHERE in its text.**
+★★★★★ **SO IT CANNOT BE CERTIFIED UNTOUCHED, AND THE REASON IS STRUCTURAL RATHER THAN A GAP IN MY SEARCH:
+the campaign's population law is `SPLIT BY SOURCE VIDEO ID, NEVER BY ROW`, and this file HAS NO VIDEO ID.
+`A POPULATION WITH NO JOIN KEY TO THE SPLIT CANNOT BE SHOWN CLEAN — IT CAN ONLY BE ASSUMED CLEAN.`**
+⚠️★★★★★ **AND IT FALSIFIES A CONVENIENT ASSUMPTION I WAS ONE STEP FROM MAKING: THIS `120` IS **NOT**
+`POP-120-LIVE`'s `40 × 3`. `117` DISTINCT `name` VALUES WITH THREE APPEARING TWICE — not `40` names at
+multiplicity `3`. **TWO DIFFERENT 120-SIZED OBJECTS**, and I nearly joined them ON THEIR SIZE.
+`I MEASURED THE NEIGHBOURING OBJECT` is this desk's 6×-convicted error; the near-miss is RECORDED, NOT HIDDEN.**
+★★ **HONEST LIMIT, STATED SO IT IS NOT OVER-READ: `0` provenance occurrences proves THIS ARTIFACT carries no
+video key. It does **NOT** prove these specs came from different videos — provenance may live in the DB and is
+`[UNENUMERATED]`. The claim is `UNJOINABLE FROM THIS ARTIFACT`, which is all the population question needs and
+all I measured.**
+
+### ⚠️★★★★★ **STRUCK BY R-507 §2/§3 — THIS BLOCK WAS FALSE AND IT WAS IN MY OWN FILE** `[PRESERVED-AND-STRUCK, ledger rule 4]`
+~~**`SCOPE_TRIPWIRE` … **GOES RED ON GOOD NEWS** — the day someone ports the capability it fails … M5 and
+M6 are CROSS-CONSTRAINED — each must redden its OWN assertion while the other stays GREEN. `A GUARD THAT
+CANNOT BE DISTINGUISHED FROM ITS NEIGHBOUR IS NOT A SECOND GUARD.`**~~
+★★★★★ **WHAT IS ACTUALLY TRUE [MEASURED HERE, R-507 §1–§3, executable lines + a positive control]:**
+1. ⚠️ **`session_role_resolver_yield.py:262` — `"STRICT_SUBSET": len(dep - camp) == 0` IS SUBSET-**OR-EQUAL**,
+   not strict subset. The assertion's NAME claims more than its BODY tests. TENTH `CAPTION FALSIFIES ITS
+   OWN LINE`.** The snapshot's numbers (`70` campaign-only, `0` deployed-only) ARE right; the GUARD is wrong.
+2. ⚠️★★★★★ **M5's "stayed GREEN" IS VACUOUS: it points `DEPLOYED_BINDER` at the CAMPAIGN binder, so both
+   sets are read from ONE FILE and are EQUAL — and equality PASSES the weak predicate. Under a correct
+   strict predicate M5 would redden BOTH.** `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO
+   WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE.` **M6 IS SOUND; M5's half is not.**
+3. ⚠️ **IT DOES NOT SELF-DESTRUCT. [MEASURED, positive control `5` files found] the generator is wired into
+   NO CI job, NO gate, NO scheduler — `.github/` returns `0`. The JSON is a STATIC SNAPSHOT and NOTHING
+   WILL EVER REGENERATE IT.** `A RERUN-TIME GUARD IS NOT A LIVE INVALIDATION MECHANISM.`
+★★ **WHAT SURVIVES, FAIRLY: the scope key is real, COMPUTED not typed, and its `DEPLOYED_TREE_UNREACHABLE`
+fail-closed branch is good engineering. The DEFECT IS THE CADENCE CLAIM AND THE PREDICATE, NOT THE IDEA.**
+⚠️★★★ **HOW THIS GOT IN: I relayed AR-528's own headline into the file only I may write, without
+re-deriving it. `A RELAYED CLAIM I DID NOT RE-DERIVE BECAME A FACT IN MY OWN STATE FILE INSIDE ONE WAKE.`**
 
 ### ⚠️★★★★★ **THE `I7` FINDING THAT OUTRANKS ITS OWN LANE — CARRY THIS FORWARD**
 **THE EXACT NAME ROUTE — the ONLY route authorized to create a binding — FIRES `0` TIMES ACROSS `1,329`
@@ -2557,6 +2612,15 @@ semantic fidelity, **NEVER pass-count**. ★★ Fail-closed: no evidence →
 `CLASSIFICATION_UNAVAILABLE`; labeller error → `CLASSIFICATION_ERROR`. **Legacy
 fallback may be MEASURED, never presented as a semantic decision.** ★★★ **Rule
 expansion FORBIDDEN until a fresh untouched population is named FIRST.**
+⚠️★★★★★ **AND THE SPACE IS NOW ENUMERATED — R-507 §5 [MEASURED HERE]: `14` design-split + `26` never-seen
+= **ALL `40`** library videos. **REMAINDER `0`. THERE IS NO THIRD POPULATION TO NAME.** The only other
+candidate, `or-branches-full-corpus-specs-2026-07-05.json`, is **UNJOINABLE** — `120` entries carrying
+exactly `name · symbol · timeframe · lifecycle_state · spec` and `0` video/transcript/provenance keys, so
+it cannot be split by SOURCE VIDEO ID and cannot be shown clean, only ASSUMED clean. ★★ It is also **NOT**
+`POP-120-LIVE`: `117` distinct names, not `40 × 3` — TWO DIFFERENT 120-SIZED OBJECTS.**
+★★★★★ **CONSEQUENCE, STANDING: `I8` IS CLOSED, AND ANY FUTURE LANE NEEDING A FRESH POPULATION IS BLOCKED
+ON AN EXTRACTION AUTHORIZATION THAT DOES NOT EXIST — name that dependency explicitly rather than
+re-discovering it. `HOLDOUT-26` REMAINS UNSPENT AND IS THE CAMPAIGN'S ONLY VALID INTERNAL HOLDOUT.**
 
 ## NOT AUTHORIZED
 
