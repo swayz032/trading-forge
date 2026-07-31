@@ -24,9 +24,9 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "d7742fa4dfc036b70d3e488908701066fca129c8",
+    "head": "6b66efae02ae59961b6a938735c3b8e8bec72454",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
+    "harness_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
     "generator_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
     "artifact_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
     "PUBLICATION_PATH_BLOBS": {
@@ -44,8 +44,8 @@
       },
       "harness": {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-        "worktree_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
-        "head_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
+        "worktree_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+        "head_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
         "IDENTICAL": true
       },
       "\u26a0\ufe0f_NOT_A_GATE_HERE__SCORED_AS_A_CASE": "This block is a RECORD. The GATE is the case named `PUBLICATION_PATHS_worktree_equal_committed`, computed BEFORE `all_ok` and carried into ALL_CASES_DISCRIMINATE and the exit code. Both read the same computed dict, so the record and the gate cannot disagree -- which is why the old `ALL_CLEAN` key is gone rather than merely re-worded.",
@@ -62,7 +62,7 @@
         "definition": "The commit that last published the artifact. Knowable here because the artifact is already committed."
       },
       "receipt_measurement_commit": {
-        "value": "d7742fa4dfc036b70d3e488908701066fca129c8",
+        "value": "6b66efae02ae59961b6a938735c3b8e8bec72454",
         "definition": "HEAD when THIS receipt was produced."
       },
       "\u26a0\ufe0f_NOT_SELF_CERTIFIABLE": "This receipt cannot name its OWN publication commit -- that commit does not exist until the receipt is committed. R-510 \u00a76.5 leaves it to the external read or CI, and it is deliberately absent rather than guessed."
@@ -70,7 +70,7 @@
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
-  "ALL_CASES_DISCRIMINATE": true,
+  "ALL_CASES_DISCRIMINATE": false,
   "ATTRIBUTION_CENSUS": {
     "\u26a0\ufe0f_HOW_TO_READ": "per case: what its OK predicate REQUIRES. `colour` = a red/green flag only \u00b7 `cause` = the red must be attributable (a digest mismatch, not a digest-free early return) \u00b7 `target` = the specific thing under test must be what reddened.",
     "LAW": "`A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE AUDITED FOR THIS DEFECT AGAIN.` R-512 \u00a76.4.",
@@ -335,7 +335,7 @@
     },
     {
       "case": "M9_committed_artifact_STALE_worktree_FRESH",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_2of956mw",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_ms_cwrlb",
       "PRE_R509_worktree_read": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
         "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
@@ -360,6 +360,11 @@
       "WHAT_WAS_PLANTED": "one IDENTITY_REFUSAL_MAP row's `object` text changed; every assertion name, every PASS value, every count and every summary metric left IDENTICAL -- the exact class the old allow-list digest could not see.",
       "it_went_RED": true,
       "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": true,
+      "ATTRIBUTION_EVIDENCE": {
+        "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
+        "published_digest": "4264f0b389154067f82906b0e8622c53c6a3673410f827262ba0a7e1deac1ad8",
+        "\u26a0\ufe0f_WHY_BOTH_ARE_PUBLISHED": "a boolean is a SUMMARY of the comparison. Publishing both digests lets a reader re-derive the attribution by key instead of trusting the flag."
+      },
       "\u26a0\ufe0f_WHY_ATTRIBUTION_IS_REQUIRED": "R-512 \u00a76.4. publication_consistency can return NOT-CURRENT from three digest-free early returns (path outside the repo / absent from HEAD / file does not exist). Scoring the bare colour cannot distinguish those from a real mismatch -- which is M8's convicted defect, and it was live here for two rulings after M8 was fixed.",
       "WHY_IT_MATTERS": "These are the 17 per-condition identities R-502 \u00a74 required be IN the artifact. A freshness guard that cannot see them would certify a silently-changed deliverable as CURRENT.",
       "ALL_assertions_this_mutation_reddened": [
@@ -400,7 +405,7 @@
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_c9_f19vz\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_pwb77o7j\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
         "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
         "published_digest": "369cd34939176804fcba1f9b54f16415687ffa4d0f5576c2baddbd65a582d8af",
         "published_n_pass": 33,
@@ -435,6 +440,11 @@
       "WHAT_WAS_PLANTED": "one closure manifest PATH changed; assertion names, PASS values, campaign metrics and identity maps all left IDENTICAL.",
       "it_went_RED": true,
       "RED_ATTRIBUTABLE_TO_DIGEST_MISMATCH": true,
+      "ATTRIBUTION_EVIDENCE": {
+        "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
+        "published_digest": "89709e2e2e8b9695cdbae71a83a3327917604b232f5ef20d35876d8145f7a981",
+        "\u26a0\ufe0f_WHY_BOTH_ARE_PUBLISHED": "a boolean is a SUMMARY of the comparison. Publishing both digests lets a reader re-derive the attribution by key instead of trusting the flag."
+      },
       "\u26a0\ufe0f_WHY_ATTRIBUTION_IS_REQUIRED": "R-512 \u00a76.4 -- same conjunct, same reason as M10. `A TEST THAT TURNS RED BEFORE READING THE MUTATION HAS NOT TESTED THE MUTATION.`",
       "WHY_IT_MATTERS": "R-510 \u00a76.4 -- `A FULL-ARTIFACT DIGEST CANNOT EXCLUDE THE ENTIRE PROOF OF WHICH SOURCES RAN.` The previous digest dropped the whole closure block, so this alteration would have been certified CURRENT.",
       "ALL_assertions_this_mutation_reddened": [
@@ -445,7 +455,7 @@
     },
     {
       "case": "M12_artifact_worktree_DIRTY_commit_CURRENT",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_5e0jmzmq",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_6207_wiq",
       "WHAT_WAS_MUTATED": "ONE key added to the artifact's WORKING FILE only. Nothing was committed after the fixture's initial commit, so HEAD still holds the real, current artifact.",
       "BEFORE_the_edit__all_pairs_identical": true,
       "artifact_pair_went_RED": true,
@@ -462,11 +472,11 @@
     },
     {
       "case": "M13_READER_catches_committed_stale_receipt",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_oc5hbckh",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_x88bwf0a",
       "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was committed, so the receipt describes a harness that no longer exists, while every publication path is clean.",
       "\u26a0\ufe0f_WHAT_OK_REQUIRES_NOW": "R-512 \u00a76.1. ALL of: fixture not void \u00b7 positive control fired \u00b7 receipt stale in fact \u00b7 THE READER ACTUALLY REDDENED \u00b7 and RECEIPT_IS_COVERED_BY is EXACTLY the reader. An empty coverage list is a FAILURE, and an extra unrelated red is a failure too, never supporting evidence. The previous verdict omitted the reader entirely: deleting the reader outright left OK=True.",
       "receipt_records_harness_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
-      "harness_blob_at_HEAD_now": "ae101de6d0e6319791e782e9f13d0a54ab242438",
+      "harness_blob_at_HEAD_now": "61bb9d77403df05f6cddec785ecefc1d73ab88b4",
       "RECEIPT_IS_STALE_IN_FACT": true,
       "READER_REDDENED": true,
       "RECEIPT_IS_COVERED_BY": [
@@ -513,8 +523,8 @@
         },
         "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py": {
           "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-          "worktree_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
-          "head_blob": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
+          "worktree_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+          "head_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
           "IDENTICAL": true
         }
       },
@@ -533,8 +543,8 @@
       "detail": {
         "harness": {
           "recorded_in_committed_receipt": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
-          "at_HEAD_now": "c5892e0ac2786622b1fbfffb0d3d1f73560e82a8",
-          "MATCHES": true
+          "at_HEAD_now": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+          "MATCHES": false
         },
         "generator": {
           "recorded_in_committed_receipt": "85acccb4486c9f955e8690f446dc3e750f67bb40",
@@ -547,8 +557,8 @@
           "MATCHES": true
         }
       },
-      "VERDICT": "CURRENT",
-      "OK": true
+      "VERDICT": "STALE -- the committed receipt describes older code",
+      "OK": false
     },
     {
       "case": "ATTRIBUTION_CENSUS_covers_every_scored_case",
