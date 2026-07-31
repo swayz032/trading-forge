@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3235` at THIS commit, 2026-07-31 10:58 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3237` at THIS commit, 2026-07-31 11:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3235` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3237` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -111,6 +111,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ★★★★★ **THE LINE THAT BEARS ON §15.7 HARDER THAN ANYTHING IN AR-540 §3** `[MEASURED, `:67`]`: the grade shows the SAME defect class walking DOWN one granularity level PER DELIVERY — `39948d3c` was condemned because *"membership operates at FIXTURE-FILE granularity and never at `condition_id` granularity"*, and **`c304b098` reproduces it as *"the census operates at `condition_id` granularity and never at FIELD granularity."*** ★★★★★ **THAT IS THE `I7` SHAPE VERBATIM — `CLOSING A JOIN MOVES THE FAMILY ONE LEVEL IN, IT DOES NOT END IT` (R-513's own synthesis). §15.7 IS NOT MERELY ENGAGED ON A COUNT; ITS SUBSTANCE IS PRESENT.** §7 `:314` also states **`F-2` ALONE IS DISQUALIFYING.**
 
 ⚠ **AND THE COUNTER-WEIGHT, RECORDED SO THE RULING IS NOT BUILT ON HALF THE FILE: the GRADER'S OWN recommended disposition is *"REJECT and return for a FIFTH delivery"* `[:314]`, and `F-2`'s fix point is STRUCTURAL — a closed key list + per-value type-check at `:404-409` and `:729/:732` — not another point patch. `THE GRADER IS NOT BOUND BY §15.7 AND DID NOT WEIGH IT.` Band **`6/10`**, independence declared against all four predecessors `[:29, :303]`.** ⚠ **DISPOSITION REMAINS `R-516`'s. NOT WRITTEN HERE.**
+✅★★★★★ **AND I TESTED THE GRADE'S OWN LOAD-BEARING MECHANISM CLAIM ON A SECOND, NON-OVERLAPPING PATH — NOT BY RE-RUNNING ITS HARNESS (`A GRADE REPRODUCING ITS INSTRUMENT ROW-FOR-ROW IS NOT A 2ND PATH`), BUT BY READING THE SHIPPED BLOB.** `[MEASURED HERE 11:12, `git show c304b098:scripts/check-spec-binding-plan-parity.ts`, `1536` lines]` **The grade `:71` asserts *"the mechanism to close this already exists in the file, TWICE, and was not applied here."* ✅ **CONFIRMED, and both forms are at executable lines:** (1) **closed-key discipline on the PLAN side** — `:297` `UNMAPPED TS FIELD` · `:306` `MISSING SOURCE FIELD` · `:319` `DUPLICATE DESTINATION` · `:335` `UNCONSUMED MAPPING ENTRY`; (2) **omission-demands-a-declared-reason on the SCALAR side** — `:668-672`, `if (omitted.length > 0 && !expect.scalars_unadjudicated)` errors and NAMES the omitted fields. ★★★ **SO THE ASYMMETRY IS REAL AND MEASURED AT THIS DESK: the gate applies both disciplines to the PLAN IT JUDGES and NEITHER to the ORACLE THAT JUDGES THE PLAN, at row-FIELD granularity.** ⚠★★★★★ **THIS IS THE FACT `R-516` TURNS ON AND I RECORD IT WITHOUT ITS CONCLUSION: whether "apply an in-file pattern to the surface it was never applied to" is §15.7 `REPLACEMENT` or a fifth `regex-shaped patch` IS THE RULING, AND THE RULING IS HELD.**
+⚠ **PASTE GATE RE-MEASURED `11:11`: newest external read is still `f59576a8` (`10:29`, NINTH, on AR-538) and it is SPENT on R-515. `AR-540` landed `10:40`. **THE TENTH HAS NOT ARRIVED; THE WORKER HAS BEEN IDLE `30 min` AND THAT COST IS REAL AND CORRECTLY BORNE** — `THE PASTE IS THE GATE` is operator text in the operator's own voice, answered `2026-07-29 ~23:16`, marked **DO NOT RE-ASK**.**
 
 ✅★★★ **MONITORS — ENUMERATED BEFORE ARMING ANYTHING, AND NOTHING WAS ARMED.** `[MEASURED HERE]` THREE logical rigs, `6` processes, **ALL owned by `claude.exe 15520` = MINE** (my own shell walks up to `15520`): `27064/15980` `AGENT-REPORTS` 2s mtime change-detector w/ 3-fail alarm · `26812/11516` worker-idle watchdog on BOTH channels · `8372/26964` `external-advisor/gpt-rulings` `ls-remote` watcher (the PASTE gate's ear). ★★★★★ **DECISION TABLE → ADOPT, ARM NOTHING — and liveness is PROVEN, not inferred: rig `27064` delivered `AR-CHANGE 10:40:07 :: ## AR-540` INTO THIS POST-`/clear` SEAT.** ★★ **THE WORKER'S EAR: no `ADVISOR-RULINGS` watcher exists under the worker's `claude.exe 26204` [MEASURED, ANY process name, POSITIVE CONTROL = the query found `5` live matches incl. my own]. **DO NOT CONCLUDE THE EAR IS DEAD** — it DELIVERS: R-515 committed `10:34`, `AR-539` start-receipt filed `10:35`. `THE MECHANISM IS UNENUMERATED; THE DELIVERY IS MEASURED.`**
 
