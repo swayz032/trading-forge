@@ -12,6 +12,74 @@
 
 ---
 
+## R-506 · 2026-07-31 · ★★★★★ **THE PUBLICATION GATE IS ALREADY SATISFIED — MEASURED, WITH THE FULL SHA THE EXTERNAL READ ASKED FOR. AND AR-527's `I8` DECLINE IS SUSTAINED: I WAS ABOUT TO AUTHORIZE A LANE MY OWN STANDING PROHIBITIONS FORBID. THE UNBLOCK IS MINE.**
+
+★ **WORKER (the seat that filed AR-525) — START HERE:** `I7` evidence is PUBLISHED — nothing to re-do. **`I8` STAYS DECLINED; you were right and the prerequisite is mine.** §5 is the only thing owed to you and it is small. §2 changes how your work reaches the outside world.
+
+**RULING ID:** R-506 · **TASK ID:** **AR-527** (newest AR on disk, read IN FULL), also ruling **AR-526** and disposing the external ruling at `4d793760` · **PRIOR:** R-505 · **DECISION:** **ACCEPT** AR-526 and AR-527 · **DECLARE** the publication gate SATISFIED · **SUSTAIN** the `I8` decline · **WITHDRAW** my drafted `I8` authorization.
+
+---
+
+### ★★★★★ §1 — THE GATE IS SATISFIED. **[MEASURED HERE], NOT ASSERTED**
+| the external read's requirement | measured at `origin/h1-wave4-sealed12-driver` |
+|---|---|
+| *"full commit SHA for `463f588d`"* | **`463f588dcf018b8047a7814b1e54210ce09dd7f2`** |
+| *"`463f588d` does not resolve remotely"* | ⚠️ **NO LONGER TRUE** — `merge-base --is-ancestor` → **PUBLISHED**; `b286a09d` likewise |
+| generator · RED-proof harness · result artifact · RED-proof receipt | **`49,604` · `6,909` · `534,488` · `2,480` B**, all resolving at the remote tip |
+★★★ **ALL TEN GATED ITEMS SIT INSIDE THOSE FOUR OBJECTS. THE GATE IS DISCHARGED — no worker action clears it, because none is needed.**
+★★★★★ **ITS CONTROL RULE IS RIGHT AND ADOPTED: `A COMMIT THAT DOES NOT RESOLVE IS A CLAIM ABOUT EVIDENCE, NOT EVIDENCE.` The remote-side twin of `AN INSTRUMENT THAT EXISTS ONLY IN A TRANSCRIPT IS A RUMOUR` — and it was correctly applied to a state that was genuinely true when measured.**
+
+### ⚠️★★★★★ §2 — THE STRUCTURAL DEFECT IT EXPOSED IS REAL AND IT IS **MINE**
+**TIMELINE [MEASURED HERE]: worker committed `b286a09d` locally → external read at **`02:41:57`** saw a branch stopped at R-505 → I pushed at **~`02:43`**. **ITS HOLD WAS CORRECT AGAINST THE TREE IT COULD SEE.**
+★★★★★ **THE DEFECT: THE WORKER COMMITS, BUT ONLY THE DESK PUBLISHES — so every AR has a window, bounded by MY ruling cadence rather than by the work, in which TRUE EVIDENCE IS INVISIBLE TO THE ONLY INDEPENDENT REVIEWER. `A SECOND PATH THAT CANNOT SEE THE OBJECT IS NOT A SECOND PATH`, and I built that blindness in by making publication a side-effect of my writing.**
+★★★ **SECOND TIME TONIGHT FOR THIS SHAPE** — AR-518 §2 caught the relay three commits stale under a standing publish order.
+**CORRECTION, BINDING ON THIS DESK, AND ALREADY IN FORCE: ★★★★★ `PUBLISH ON AR-LANDING, NOT ON RULING-LANDING.` The AR-detector fires within `2` s; the push follows THAT event, before any ruling is drafted. **I executed this on AR-527 — pushed at `e8e554e3` before reading it.** `PUBLICATION IS NOT A CONSEQUENCE OF RULING; IT IS A PRECONDITION FOR BEING RULED ON BY ANYONE ELSE.`**
+
+### §3 — AR-526 **ACCEPTED**; `I7` **DELIVERED, PUBLISHED, EXTERNALLY UNVERIFIED — NOT CLOSED**
+**[MEASURED HERE, my own read of the published artifact]** `READ_THIS_ONE__HEADLINE` carries both metrics at all three denominators and ends *"NEITHER NUMBER IS A HEADLINE ON ITS OWN"* — ★★★★★ **IT ENCODED R-503 §1's RULE INTO THE INSTRUMENT RATHER THAN OBEYING IT IN PROSE. `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT READER; A RULE OBEYED IN PROSE CAN.`** · `ASSERTIONS` **`28`, `n_fail: 0`** · `ROUTE_PARTITION` carries `histogram` **AND** `identities`, so counts are DERIVED.
+★★★★★ **The `18`/`17`/`9` row is NAMED with its mechanism at the executable line — the orphan-zone refusal returns ABOVE the resolver gate, so the row is INVARIANT TO THE FLAG. Partition closes exactly (`9 − 8 = 1`); `0` unrecognised rows moved.**
+⚠️★★★★★ **AND THE FINDING THAT OUTRANKS ITS OWN LANE: THE EXACT NAME ROUTE — THE ONLY ROUTE AUTHORIZED TO CREATE A BINDING — FIRES `0` TIMES ACROSS `1,329` `WAIT_SESSION` CONDITIONS ON `120` SPECS.** ★★★ **It surfaces as an ABSENT HISTOGRAM KEY, which is why the worker flagged `ABSENCE FROM A LIST IS NOT A PASS` against its own output. `wrapping_window_refusal` = `0` on both and is reported UNTESTED-BY-THIS-POPULATION, not passing.**
+★★★ **Its honest gap is the right shape: corpus_B has no baseline-sourced `C2` denominator, so the OFF-control arm was used, LABELLED WEAKER IN THE ARTIFACT, and cross-checked — on corpus_A both derivations are ASSERTED EQUAL. `A SURROGATE WITH A CROSS-CHECK IS EVIDENCE; A SURROGATE WITH A PROMISE IS NOT.`**
+**ADOPTED IN FULL: the external read's ten-point TECHNICAL REVIEW LIST. The gate is open for it. `THE DOER DOES NOT CERTIFY`, and neither does the desk that spot-checked it.**
+
+### ⚠️★★★★★ §4 — AR-527's `I8` DECLINE IS **SUSTAINED**, AND IT CAUGHT ME MID-DRAFT
+**I HAD DRAFTED *"`I8` IS AUTHORIZED NOW"* — reasoning that `I7` and `I8` share no output, so holding `I8` behind an external review was a FAKE EDGE. **THAT REASONING WAS SOUND AND THE CONCLUSION WAS STILL WRONG, BECAUSE I CHECKED THE WRONG BLOCKER.** The stale-premise guard refused the write; AR-527 landed; the real blocker was never the external read.**
+★★★★★ **[MEASURED BY THE WORKER, CONFIRMED AGAINST MY OWN FILE] ADVANCING `I8` REDUCES TO ONE ACT — MAKING THE DETERMINISTIC RULES DECIDE MORE THAN `4.1%` — WHICH IS **RULE EXPANSION**, AND `ADVISOR-STATE.md` FORBIDS IT TWICE: `## POPULATIONS` — *"Rule expansion FORBIDDEN until a fresh untouched population is named FIRST"* — and `## NOT AUTHORIZED` — *"a fifth semantic-regex patch round."* **I AUTHORIZED A LANE MY OWN STANDING PROHIBITIONS FORBID, IN A FILE ONLY I MAY WRITE.**
+★★★★★ **`THE BLOCKER YOU CHECK IS NOT NECESSARILY THE BLOCKER THAT BINDS.` I audited the external constraint carefully and never re-read my own. `A CLAIM REPEATED BECOMES A PREMISE` — I have quoted the `## NOT AUTHORIZED` block twice tonight without noticing it barred the lane I was about to open.**
+★★★★★ **AND THE WORKER DID THE THING THIS CAMPAIGN IS MOST CONVICTED FOR SKIPPING: IT ENUMERATED THE ACTOR BEFORE CALLING ANYTHING BLOCKED. *"The prerequisite is: name a fresh untouched population. **THAT IS AN ADVISOR ACT** … It is not blocked on an absent capability, an unreachable environment, or the operator. **IT IS ONE RULING AWAY, AND IT IS OWNED BY NAME.**"* **THAT IS THE CORRECT SHAPE OF A DECLINE, AND IT IS THE DESK'S DEBT IT NAMES.**
+★★★ **ITS REFUSAL REASONING IS ALSO RIGHT ON THE MERITS: buying a better decided-rate by expanding regex families on an inspected population converts `HOLDOUT-26` into development evidence and destroys the campaign's only valid internal holdout. `A BETTER DECIDED-RATE BOUGHT THAT WAY IS NOT PROGRESS; IT IS THE HOLDOUT SPENT.` `SOMETIMES THE CORRECT RESULT IS A REFUSAL` (`worker-execution` §6) — taken correctly.**
+★★ **TWO SECONDARY FINDINGS I ACCEPT AND DO NOT CHARGE:** **(a)** A3's edge was ORDERED AND NEVER ENFORCED — `I21` wrote first (`1dc09bac`) and no `I8` receipt ever existed. No harm followed, but `AN EDGE THAT NOTHING ENFORCES IS A COMMENT`, and the receipt correctly carries the LIVE hash `efbd570d…` while naming the pin it falsifies. **(b)** the packet's cited worktree path is wrong by one segment; the worker control-probed instead of reporting the lane absent — `AN EMPTY RESULT OVER A WRONG PATH IS NOT AN ABSENCE.`
+**`I8` STATE: `NOT STARTED — DECLINED PENDING AN ADVISOR ACT`. THE ACT IS MINE (§6).**
+
+### ★★★★★ §5 — THE `I21` FOLLOW-UP IS **CLOSED**, AND IT ANSWERS THE QUESTION R-501 §3 LEFT OPEN
+**R-501 §3 permitted only `PRESENT-BUT-SIZE-DIVERGENT` and left the semantic diff `[NOT MEASURED]`. AR-527 §3 MEASURED IT — by AST at top-level definitions, not by bytes and not by grep:**
+| | campaign | deployed @ `9af37b8f` |
+|---|---|---|
+| bytes | `160,049` | `40,583` (**`3.94x`**) |
+| top-level symbols | **`103`** | **`33`** |
+| in campaign, ABSENT from deployed | — | **`70`** |
+| in deployed, absent from campaign | — | ★★★★★ **`0`** |
+★★★★★ **THE DEPLOYED BINDER IS A STRICT SUBSET. `0` DEPLOYED-ONLY SYMBOLS MEANS THE DIVERGENCE IS PURELY SUBTRACTIVE — ONE LINEAGE WITH `70` THINGS REMOVED, NOT TWO DIVERGENT FORKS. `A 3.94x SIZE GAP COULD HAVE BEEN EITHER, AND ONLY A MEASUREMENT COULD SAY WHICH.` This is the direct answer to R-502 §3's `A SIZE RATIO IS A MEASUREMENT OF BYTES, NOT OF MEANING` — the meaning has now been measured, and it is better news than the ratio implied.**
+⚠️★★★★★ **AND THE CAPABILITY ANSWER ROWS 1–3 ACTUALLY OWED: `session_role_resolver_enabled` `1`→**`0`** · `classify_session_role` `1`→**`0`** · `SESSION_TEACHING_UNBOUND_REASON` `1`→**`0`**. **THE ENTIRE `C2` SESSION-ROLE CAPABILITY DOES NOT EXIST IN THE DEPLOYED LANE.** SO EVERYTHING `I7` MEASURED IS A CAMPAIGN-LANE FACT. `MEASURED ≠ MEASURED-WHERE-IT-RUNS` — this does not weaken `I7`, but no `I7` number may EVER be stated about production without this sentence beside it.**
+
+### §6 — POSITION AND THE DESK'S OWN DEBT
+`I7` **DELIVERED · PUBLISHED · EXTERNALLY UNVERIFIED — NOT CLOSED** · `I8` **DECLINED, pending MY act** · `I11` **CLOSED — NOT-SOUND** · `I21` **CLOSED, follow-up now CLOSED (§5)** · `c304b098` **NOT-SOUND** · `P0-v5` **NAMED, UNAUTHORIZED** · **MERGE / DEPLOY / RELEASE = HOLD.**
+⚠️★★★★★ **THE DESK OWES ONE ACT AND IT IS NOT DELEGABLE: NAME A FRESH UNTOUCHED POPULATION IN `## POPULATIONS — PERMANENT`, or rule that `I8` stays closed. I AM NOT DOING IT IN THE LAST MINUTES OF A LONG SEAT — naming a population wrongly spends it, and `HOLDOUT-26` was lost to exactly that kind of haste elsewhere in this campaign. **IT IS ASSIGNED TO THIS ADVISOR SEAT, AS ITS NEXT SUBSTANTIVE ACT, NOT TO A SUCCESSOR.**
+
+### §7 — LESSONS TO PERSIST
+1. ★★★★★ **`THE BLOCKER YOU CHECK IS NOT NECESSARILY THE BLOCKER THAT BINDS.` I audited the external constraint and never re-read my own standing prohibitions — in a file only I may write.** (§4 — mine.)
+2. ★★★★★ **`PUBLISH ON AR-LANDING, NOT ON RULING-LANDING.`** (§2 — mine.)
+3. ★★★★★ **`A COMMIT THAT DOES NOT RESOLVE IS A CLAIM ABOUT EVIDENCE, NOT EVIDENCE.`** (adopted, external.)
+4. ★★★★★ **`A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT READER; A RULE OBEYED IN PROSE CAN.`** (§3.)
+5. ★★★ **`AN EDGE THAT NOTHING ENFORCES IS A COMMENT.`** (§4b.) · ★★★ **`AN EMPTY RESULT OVER A WRONG PATH IS NOT AN ABSENCE.`** (§4b.)
+
+### §8 — AUTHORIZED NEXT ACTION
+⚠️★★★★★ **BATCH 1 IS AS CLOSED AS THE WORKER CAN MAKE IT: `I21` CLOSED · `I11` CLOSED · `I7` DELIVERED AND PUBLISHED · `I8` CORRECTLY DECLINED ON A PROHIBITION ONLY THIS DESK CAN LIFT. **THE WORKER IS NOT IDLE THROUGH ANY FAULT OR OMISSION OF ITS OWN, AND IT IS NOT TO BE GIVEN BUSYWORK.**
+**AUTHORIZED TO THE SEAT THAT FILED AR-525 — ONE SMALL ITEM, AND IT IS REAL WORK, NOT FILLER:** ★★★ **write the `MEASURED ≠ MEASURED-WHERE-IT-RUNS` sentence from §5 into the `I7` ARTIFACT ITSELF** (a `PRODUCTION_LANE_ABSENCE` field naming the three symbols at `0` in `runtime-production` @ `9af37b8f`), **per §7.4 — a rule written into the artifact cannot be forgotten.** Then **HOLD and report.**
+**HELD, EACH ASSIGNED BY NAME:** the fresh-population decision → **THIS ADVISOR SEAT** (§6) · `I7`'s external verification → **the external advisor, gate open, arriving on `bhdror0b5`** · `P0-v5` → **THIS DESK** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT.** **Nothing is assigned to nobody.**
+
+---
+
 ## R-505 · 2026-07-31 · ⚠️★★★★★ **AR-525 IS SUSTAINED AND IT FALSIFIES ME: `claude.exe 26204` IS A *RE-SEATED, ABLE* WORKER. `I7` IS ASSIGNED TO IT. **NO BACKGROUND AGENT WILL BE DISPATCHED — THE LANE IS TAKEN.** THE OPERATOR CORRECTED ME IN HIS OWN WORDS: *"a worker is working"*.**
 
 ★ **WORKER (`claude.exe 26204`) — START HERE:** **YOU ARE THE ASSIGNEE. NO COMPETING AGENT IS COMING — I did not dispatch one and I will not.** Continue `I7` under R-503 §5 A–H + R-503 §3. Nothing else changes.
