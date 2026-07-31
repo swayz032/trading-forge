@@ -11,7 +11,7 @@
     "deployed_scope_STRICT_subset": "M7",
     "publication_consistency_published_vs_current_code": "M8"
   },
-  "\u26a0\ufe0f_R508_5_6a_HYPOTHESIS_TESTED_AND_UPHELD": "R-508 \u00a75.6(a) predicted that hashing the generator's own in-memory output would be self-satisfying. TESTED: it is. The generator writes the artifact and would hash what it just wrote, so the check is true by construction while the COMMITTED object rots -- which is precisely how the stale artifact shipped, with an HONEST receipt pinning it. The check therefore lives HERE, compares the file ON DISK against freshly-generated content written elsewhere, and M8 proves it can fail.",
+  "\u26a0\ufe0f_R508_5_6a_HYPOTHESIS_TESTED_AND_UPHELD": "R-508 \u00a75.6(a) predicted that hashing the generator's own in-memory output would be self-satisfying. TESTED: it is. The generator writes the artifact and would hash what it just wrote, so the check is true by construction while the COMMITTED object rots -- which is precisely how the stale artifact shipped, with an HONEST receipt pinning it. The check therefore lives HERE, and compares the COMMITTED against freshly-generated content written elsewhere, and M8 proves it can fail.",
   "ASSERTION_CLASSES_WITHOUT_ONE": [
     "corpus/population size vs pinned baseline",
     "determinism",
@@ -24,9 +24,9 @@
   "M1_IS_THE_SHARP_ONE": "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count assertions stay GREEN and only the identity assertion goes RED -- which is R-425's defect ('a count is satisfied by losing one row and gaining another') reproduced and caught.",
   "\u26a0\ufe0f_M5_COLLATERAL_CLAIM_WITHDRAWN": "R-507 \u00a72. A previous receipt claimed M5 reddened the scope tripwire while the strict-subset assertion STAYED GREEN, and read that as proof the two checks were independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and the then-current predicate tested subset-OR-EQUAL, which equality satisfies. `A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` M5's collateral contract is now EMPTY and its full blast radius is reported in ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones.",
   "PROVENANCE": {
-    "head": "5de7b9052cf0b32055c74b95a95de703f919c1ad",
+    "head": "70551725c43a97195fc7a8bc4ca32472f0d12f28",
     "branch": "h1-wave4-sealed12-driver",
-    "harness_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+    "harness_blob": "58068f6849fb69a06676b373eaea516251736b35",
     "generator_blob": "85acccb4486c9f955e8690f446dc3e750f67bb40",
     "artifact_blob": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
     "PUBLICATION_PATH_BLOBS": {
@@ -44,8 +44,8 @@
       },
       "harness": {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-        "worktree_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
-        "head_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+        "worktree_blob": "58068f6849fb69a06676b373eaea516251736b35",
+        "head_blob": "58068f6849fb69a06676b373eaea516251736b35",
         "IDENTICAL": true
       },
       "\u26a0\ufe0f_NOT_A_GATE_HERE__SCORED_AS_A_CASE": "This block is a RECORD. The GATE is the case named `PUBLICATION_PATHS_worktree_equal_committed`, computed BEFORE `all_ok` and carried into ALL_CASES_DISCRIMINATE and the exit code. Both read the same computed dict, so the record and the gate cannot disagree -- which is why the old `ALL_CLEAN` key is gone rather than merely re-worded.",
@@ -62,7 +62,7 @@
         "definition": "The commit that last published the artifact. Knowable here because the artifact is already committed."
       },
       "receipt_measurement_commit": {
-        "value": "5de7b9052cf0b32055c74b95a95de703f919c1ad",
+        "value": "70551725c43a97195fc7a8bc4ca32472f0d12f28",
         "definition": "HEAD when THIS receipt was produced."
       },
       "\u26a0\ufe0f_NOT_SELF_CERTIFIABLE": "This receipt cannot name its OWN publication commit -- that commit does not exist until the receipt is committed. R-510 \u00a76.5 leaves it to the external read or CI, and it is deliberately absent rather than guessed."
@@ -70,86 +70,110 @@
     "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
     "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no mutation can overwrite the real artifact."
   },
-  "ALL_CASES_DISCRIMINATE": true,
+  "ALL_CASES_DISCRIMINATE": false,
   "ATTRIBUTION_CENSUS": {
-    "\u26a0\ufe0f_HOW_TO_READ": "per case: what its OK predicate REQUIRES. `colour` = a red/green flag only \u00b7 `cause` = the red must be attributable (a digest mismatch, not a digest-free early return) \u00b7 `target` = the specific thing under test must be what reddened.",
-    "LAW": "`A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE AUDITED FOR THIS DEFECT AGAIN.` R-512 \u00a76.4.",
+    "\u26a0\ufe0f_HOW_TO_READ": "per case: what its OK predicate REQUIRES, and WHICH CALL joins the proof to its target. `colour` = a red/green flag only \u00b7 `cause` = the red must be attributable (a digest mismatch, not a digest-free early return) \u00b7 `target` = the specific thing under test must be what reddened \u00b7 `MECHANISM` = the proof breaks when the live implementation is weakened, not merely when a boolean is withheld. The JOIN column answers R-513 3: a guard is a join between a claim and an execution, and `INLINE` is not forbidden -- it is REQUIRED TO BE VISIBLE.",
+    "LAW": "`A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE AUDITED FOR THIS DEFECT AGAIN.` R-512 \u00a76.4. And R-513 \u00a73: `A GUARD IS A JOIN BETWEEN A CLAIM AND AN EXECUTION, AND EVERY UNEXECUTED JOIN IS A FALSE GREEN WAITING FOR ITS OCCASION.` Four defects in this lane were one family -- an unexecuted join -- and the join column exists so the fifth is visible before an external reader finds it.",
     "cases": {
       "ATTRIBUTION_CENSUS_covers_every_scored_case": {
         "OK_requires": "target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- set comparison against `results`",
         "note": "self-referential by necessity: it asserts its own coverage."
       },
       "CONTROL_unmutated": {
         "OK_requires": "colour+target",
-        "note": "requires exit 0 AND every assertion green -- no cause to attribute, because nothing was mutated."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- runs the generator via run() and reads its ASSERTIONS",
+        "note": "requires exit 0 AND every assertion green; nothing was mutated, so there is no cause to attribute."
       },
       "M10_identity_block_silently_altered": {
         "OK_requires": "colour+cause",
-        "note": "R-512 \u00a76.4 SWEEP -- now requires digest attribution, not the bare NOT-CURRENT colour."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency() -> digest_attributed()",
+        "note": "R-512 6.4 SWEEP -- requires digest attribution, not the bare NOT-CURRENT colour."
       },
       "M11_source_closure_identity_altered": {
         "OK_requires": "colour+cause",
-        "note": "R-512 \u00a76.4 SWEEP -- same conjunct, added in the same wave."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency() -> digest_attributed()",
+        "note": "R-512 6.4 SWEEP -- same conjunct, added in the same wave."
       },
       "M12_artifact_worktree_DIRTY_commit_CURRENT": {
         "OK_requires": "colour+cause+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_pairs() + publication_consistency()",
         "note": "requires the artifact pair RED, the other two pairs GREEN, consistency GREEN and a clean starting fixture -- it discriminates in both directions."
       },
       "M13_READER_catches_committed_stale_receipt": {
-        "OK_requires": "colour+cause+target+FALSIFIABILITY",
-        "note": "R-512 \u00a76.1 -- requires the reader itself to redden, the coverage list to be EXACTLY the reader, and the same predicate to come out FALSE when the reader result is suppressed."
+        "OK_requires": "colour+cause+target+PREDICATE+MECHANISM",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "receipt_publication_blob_status() -- THE SAME function the live case calls",
+        "note": "R-513 6.2/6.4. Requires mismatched_labels == ['harness'], absent_fields == [], the coverage list to be exactly the reader, the predicate to flip when the reader result is suppressed, AND the shared reader to go incorrectly GREEN when weakened -- proving the join to the live MECHANISM, not to a copy of it."
       },
       "M1_baseline_identity_swapped_COUNT_PRESERVED": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M2_non_family_row_moved": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M3_binder_reported_dirty": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M4_arms_made_identical": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M5_capability_pretended_PORTED": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M6_deployed_only_symbol_planted": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M7_sets_made_EQUAL": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- run(mutate) then read ASSERTIONS",
         "note": "generator mutation: requires the NAMED assertion to redden, a non-zero exit, and no collateral contract breach."
       },
       "M8_stale_artifact_COMMITTED_in_fixture": {
         "OK_requires": "colour+cause+target",
-        "note": "the original attributed case (R-510 \u00a76.1): RED, attributable to a digest mismatch, AND it read the planted n_pass back."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency() -> digest_attributed()",
+        "note": "the original attributed case (R-510 6.1): RED, digest-attributable, AND it read the planted n_pass back."
       },
       "M8b_unpublishable_path": {
         "OK_requires": "colour",
-        "note": "DELIBERATE. This case exists to prove the fail-closed PATH behaviour; it is explicitly NOT a stale-content proof and says so in its record."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency() early return",
+        "note": "DELIBERATE -- proves the fail-closed PATH behaviour and is explicitly NOT a stale-content proof. It is also the NEGATIVE CONTROL for digest_attributed()."
       },
       "M9_committed_artifact_STALE_worktree_FRESH": {
         "OK_requires": "target, BOTH DIRECTIONS",
-        "note": "requires the OLD reader to be BLIND and the NEW one to CATCH. A one-direction pass is not accepted."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency() x2 (worktree + committed)",
+        "note": "requires the OLD reader BLIND and the NEW one CATCHING. One direction is not a pass."
       },
       "PUBLICATION_CONSISTENCY_live": {
         "OK_requires": "colour",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_consistency()",
         "note": "a live status observation, not a mutation."
       },
       "PUBLICATION_PATHS_worktree_equal_committed": {
         "OK_requires": "colour+target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "publication_pairs() -> pubblob()",
         "note": "every publication path's worktree blob must equal its HEAD blob; red-proofed by M12 and by live dirty-tree runs."
+      },
+      "RECEIPT_reader_has_ONE_implementation": {
+        "OK_requires": "target",
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "INLINE -- a source-text count over this file",
+        "note": "R-513 6.5. Structural guard: one definition, two or more call sites, no second inline comparator. Declared INLINE because it inspects source, not behaviour."
       },
       "RECEIPT_records_the_CURRENT_publication_blobs": {
         "OK_requires": "colour+target",
-        "note": "the committed receipt's three recorded blobs must equal HEAD; red-proofed live at e5a0e695 and green at f5350c09."
+        "WHAT_CALL_JOINS_PROOF_TO_TARGET": "receipt_publication_blob_status() -- THE SAME function M13 calls",
+        "note": "the committed receipt's recorded blobs must equal HEAD; red-proofed live at e5a0e695 and green at f5350c09."
       }
     }
   },
@@ -335,7 +359,7 @@
     },
     {
       "case": "M9_committed_artifact_STALE_worktree_FRESH",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_begw6o7y",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m9_fixture_4l9xgeiq",
       "PRE_R509_worktree_read": {
         "PUBLISHED_ARTIFACT_IS_CURRENT": true,
         "VERDICT": "GREEN -- BLIND to the stale commit (the defect)",
@@ -405,7 +429,7 @@
         "PUBLISHED_ARTIFACT_IS_CURRENT": false,
         "read_mode": "committed",
         "READ_THROUGH": "git show HEAD:docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_i9_opo5a\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
+        "published_path": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m8_fixture_owo_cu0n\\docs\\replay-results\\h1-battery\\session-role-resolver-yield-2026-07-31.json",
         "fresh_digest": "eb5726ffc44e373b5d603cee8debd7d127e0379bc02e14332c8c0de38bdfc33c",
         "published_digest": "369cd34939176804fcba1f9b54f16415687ffa4d0f5576c2baddbd65a582d8af",
         "published_n_pass": 33,
@@ -455,7 +479,7 @@
     },
     {
       "case": "M12_artifact_worktree_DIRTY_commit_CURRENT",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_g9dj2h5b",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m12_fixture_0kijsmc1",
       "WHAT_WAS_MUTATED": "ONE key added to the artifact's WORKING FILE only. Nothing was committed after the fixture's initial commit, so HEAD still holds the real, current artifact.",
       "BEFORE_the_edit__all_pairs_identical": true,
       "artifact_pair_went_RED": true,
@@ -472,13 +496,22 @@
     },
     {
       "case": "M13_READER_catches_committed_stale_receipt",
-      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_5ww7cyxw",
+      "fixture": "C:\\Users\\tonio\\AppData\\Local\\Temp\\_m13_fixture_v1ljt7hp",
       "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was committed, so the receipt describes a harness that no longer exists, while every publication path is clean.",
       "\u26a0\ufe0f_WHAT_OK_REQUIRES_NOW": "R-512 \u00a76.1. ALL of: fixture not void \u00b7 positive control fired \u00b7 receipt stale in fact \u00b7 THE READER ACTUALLY REDDENED \u00b7 and RECEIPT_IS_COVERED_BY is EXACTLY the reader. An empty coverage list is a FAILURE, and an extra unrelated red is a failure too, never supporting evidence. The previous verdict omitted the reader entirely: deleting the reader outright left OK=True.",
-      "receipt_records_harness_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
-      "harness_blob_at_HEAD_now": "61bb9d77403df05f6cddec785ecefc1d73ab88b4",
+      "receipt_records_harness_blob": "adb51f33bccc8500fe508219c46f2ada86c6f77f",
+      "harness_blob_at_HEAD_now": "ad79035d4951e1476ab842e20a262b651288450a",
       "RECEIPT_IS_STALE_IN_FACT": true,
       "READER_REDDENED": true,
+      "SHARED_READER_RESULT": {
+        "CURRENT": false,
+        "STATUS": "STALE",
+        "mismatched_labels": [
+          "harness"
+        ],
+        "absent_fields": [],
+        "!!_WHY_LABELS_NOT_A_BOOLEAN": "R-513 2. The comparator this replaced used .get(), and None != <blob> is True -- so an ABSENT or malformed receipt produced a 'red' indistinguishable from a real stale-blob catch. Requiring mismatched_labels == ['harness'] and absent_fields == [] proves the reader OPENED the receipt, found the intended field, and attributed the red to the intended target."
+      },
       "RECEIPT_IS_COVERED_BY": [
         "RECEIPT_records_the_CURRENT_publication_blobs"
       ],
@@ -491,6 +524,13 @@
         "control_publication_consistency_is_CURRENT": true
       },
       "POSITIVE_CONTROL__dirty_harness_does_redden": true,
+      "\u2605_MECHANISM_FALSIFIABILITY": {
+        "!!_THIS_IS_THE_R513_ADDITION": "The shared reader is re-invoked against the SAME fixture with the harness comparison deliberately ignored. `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS` -- so the red-proof must break when the MECHANISM is weakened, not merely when a boolean is withheld.",
+        "weakened_reader_went_incorrectly_GREEN": true,
+        "weakened_reader_STATUS": "CURRENT",
+        "OK_if_the_MECHANISM_were_weakened": false,
+        "MECHANISM_IS_LOAD_BEARING": true
+      },
       "\u2605_VERDICT_FALSIFIABILITY": {
         "OK_as_evaluated": true,
         "OK_if_the_reader_result_were_SUPPRESSED": false,
@@ -523,8 +563,8 @@
         },
         "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py": {
           "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-          "worktree_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
-          "head_blob": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
+          "worktree_blob": "58068f6849fb69a06676b373eaea516251736b35",
+          "head_blob": "58068f6849fb69a06676b373eaea516251736b35",
           "IDENTICAL": true
         }
       },
@@ -543,21 +583,38 @@
       "detail": {
         "harness": {
           "recorded_in_committed_receipt": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
-          "at_HEAD_now": "0c3d63f8f644a484e51008ff56e1cdd820af2d7b",
-          "MATCHES": true
+          "at_HEAD_now": "58068f6849fb69a06676b373eaea516251736b35",
+          "MATCHES": false,
+          "STATUS": "MISMATCH"
         },
         "generator": {
           "recorded_in_committed_receipt": "85acccb4486c9f955e8690f446dc3e750f67bb40",
           "at_HEAD_now": "85acccb4486c9f955e8690f446dc3e750f67bb40",
-          "MATCHES": true
+          "MATCHES": true,
+          "STATUS": "MATCH"
         },
         "artifact": {
           "recorded_in_committed_receipt": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
           "at_HEAD_now": "f45bc97486854d0ae65a676a0f51b84a6300c1e2",
-          "MATCHES": true
+          "MATCHES": true,
+          "STATUS": "MATCH"
         }
       },
-      "VERDICT": "CURRENT",
+      "VERDICT": "STALE -- the committed receipt describes older code",
+      "OK": false
+    },
+    {
+      "case": "RECEIPT_reader_has_ONE_implementation",
+      "WHAT_IT_ASSERTS": "exactly one definition of the receipt blob comparison, at least two call sites, and exactly one inline read of the recorded blob fields -- the one INSIDE that definition.",
+      "definitions": 1,
+      "call_sites": 3,
+      "functions_containing_the_blob_template": [
+        "receipt_publication_blob_status"
+      ],
+      "MEASURED_BY": "ast.walk over this file's parsed tree -- NOT a source-text count. The first version of this guard counted its own search strings and reported defs=2 calls=6 against a correct file.",
+      "WHY": "R-513 1/6.5. M13 and the live case were TWO implementations of one claim, so weakening the shipped reader would not have failed its own red-proof. `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.` A second inline comparator would silently restore that, so it is made RED.",
+      "!!_SCOPE": "an AST structural count, not a semantic analysis. It catches a second definition, a lost call site, or a re-introduced comparator built on the same \"%s_blob\" template; it cannot catch an arbitrarily rewritten one that avoids that template. Stated so nobody reads it as stronger than it is.",
+      "VERDICT": "ONE-IMPLEMENTATION",
       "OK": true
     },
     {
