@@ -58,13 +58,29 @@ ledger, so the specific fact around it may exist nowhere else.
 | `2154` | `pop120_census.py` is UNRECOVERABLE | `wt-h1-wave4-20260712/docs` |
 | `830` | BLUEPRINT `67d650a8` audited and clean | `bde1d9ad` |
 
-⚠️★★★★★ **`AR-512` SCORING `0` IN THE RULINGS LEDGER IS THE SINGLE MOST INTERESTING
-ROW HERE AND IT IS NOT A COMPACTION FINDING AT ALL — it is a candidate
-**NEVER-RULED AGENT REPORT**. `[HYPOTHESIS — the token count is real, the
-conclusion is not measured]`: a `0` could equally mean the ledger disposed of it
-without naming the number. **VERIFY BEFORE REPEATING IT**: read `AR-512` in
-`AGENT-REPORTS.md` and search the ledger for its SUBSTANCE, not its label.
-`AN ABSENCE FROM A LIST IS NOT A PASS.`**
+### ~~⚠️ `AR-512` may be a NEVER-RULED agent report~~ — **REFUTED BY MEASUREMENT, SAME SESSION `[MEASURED HERE 08:11]`**
+
+~~*`AR-512` scoring `0` in the rulings ledger is a candidate NEVER-RULED AGENT REPORT.*~~
+**IT IS DISPOSED, NOT DROPPED. THE POSITIVE CONTROL KILLED MY OWN HYPOTHESIS:**
+
+| AR | ledger citations | what it is |
+|---|---|---|
+| `AR-511` | **`0`** | START-RECEIPT |
+| `AR-512` | **`0`** | completion (`R-496-P0-REPAIR`, delivery `39948d3c`) |
+| `AR-513` | `9` | independent grade |
+| `AR-514` | **`0`** | START-RECEIPT |
+| `AR-515` | `8` | completion |
+
+★★★★★ **`AR-511` AND `AR-514` ALSO SCORE `0`, SO A `0` IS NOT ANOMALOUS — THE LEDGER
+SIMPLY DOES NOT CITE EVERY AR BY NUMBER.** And `AR-512`'s substance IS carried: its
+delivery SHA `39948d3c` scores **`5`** in the ledger, and `R-497`'s own header reads
+*"NEWEST AR AT COMMIT TIME: `AR-513`, READ IN FULL BEFORE WRITING THIS"* — the
+`R-496`→`R-497` lane disposes of that delivery.
+⚠️★★★ **RECORDED RATHER THAN QUIETLY DELETED, BECAUSE THE NEAR-MISS IS THE LESSON:
+I flagged a `0` as a candidate governance failure and it was an artifact of CITATION
+STYLE. `A ZERO FROM A LABEL SEARCH IS NOT AN ABSENCE OF THE THING` — it took a
+POSITIVE CONTROL over neighbouring AR numbers to see it, which is the only reason
+this correction exists instead of an alarming sentence in a published document.**
 
 ## TIER 2 — every sampled token appears in the ledger (still verify at finding level)
 

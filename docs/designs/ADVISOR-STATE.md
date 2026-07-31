@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3134` at THIS commit, 2026-07-31 08:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3139` at THIS commit, 2026-07-31 08:14 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3134` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3139` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -103,6 +103,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 2. ⚠️★★★★★ **THE CI RUN WENT RED AND IT MATCHED MY EXPECTATION, AND IT WAS STILL WRONG.** I expected RED and got `failure`. **Had I stopped at the colour I would have reported "the case-floor gate is red-proofed" — and my floor step NEVER EXECUTED**; the harness died one step earlier on the machine-bound SCOPE assertions. `A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR THERE IS.` **Caught only by reading the reason, which is the law R-510 §2 minted four hours ago.**
 ✅ **WHAT *IS* PROVEN, AND ITS SCOPE IS EXACTLY THIS: the case-floor witness discriminates — `12`-case receipt → EXIT `1` naming the count; `14`-case receipt → EXIT `0`. ★★★ **AND THE TESTED CODE WAS EXTRACTED VERBATIM FROM THE WORKFLOW FILE, NEVER RETYPED** (`A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`). **[MEASURED] `all_ok = all(r["OK"] for r in results)` and `all([]) is True` — so a green exit code proves "nothing that ran failed", NOT "the mutations ran". The floor is the positive witness.** ⚠️ **This is proven AS LOGIC, NOT AS A FIRING CI GATE — the gate never got that far.**
 ⚠️ **CLEANUP VERIFIED, NOT ASSUMED: negative-control branch deleted (`ls-remote` → `0` refs), worktree removed, local branch deleted. A planted defect must not linger on a public repo.**
+
+### ⚠️★★★★★ **MONITOR DEFECT IN *MY OWN* RIG — THE IDLE WATCHDOG COUNTS THE DESK'S COMMITS AS WORKER ACTIVITY** `[MEASURED HERE 08:11]`
+**At `08:10:56` the watchdog emitted `WORKER RESUMED :: quiet cleared, bar reset to 15 min`. `25` SECONDS EARLIER I HAD COMMITTED `220e80ef` MYSELF.** ★★★★★ **[MEASURED] every commit since the worker's last AR (`1a20a0d1`, `07:37:12`) is MINE — `d0d5d897` · `f2196a7b` · `220e80ef` — and `AGENT-REPORTS.md` mtime is UNCHANGED at `07:37:03`. **THE WORKER HAS PRODUCED NOTHING AND THE WATCHDOG SAID IT RESUMED.**
+★★★★★ **THE DEFECT IS STRUCTURAL, NOT A GLITCH: its `worker-path commits` channel reads the git log without an AUTHOR/PATH filter, and the desk and the worker SHARE THIS TREE AND THIS COMMITTER IDENTITY (`Tonio`). So the bar resets on desk activity, and it will NEVER report a genuinely idle worker while the desk is working — a false NEGATIVE in exactly the condition the monitor exists to detect.** ⚠️ **`A SHARED-TREE WATCHDOG THAT CANNOT NAME WHO ACTED CANNOT REPORT THAT NOBODY DID.`**
+★★★ **AND IT VIOLATES §4a's OWN CONTRACT — that monitor is required to REPORT SILENCE, NOT A DIAGNOSIS. `RESUMED` IS A DIAGNOSIS, AND IT WAS WRONG.** ⚠️ **DO NOT TRUST `RESUMED` FROM THIS RIG UNTIL FIXED; confirm against `AGENT-REPORTS.md` mtime + `git log --author`-filtered worker-path commits. NOT re-armed this wake (`ONE RIG, NEVER TWO`) — the fix is owed, and the defect is now known rather than silently trusted.**
 
 ### ⚠️★★★ **STILL OWED TO `R-511` — TWO FINDINGS, BOTH RE-MEASURED AGAINST AR-532's LANDED REWORK `[MEASURED HERE 07:55]`**
 **1. THE PREFIX-KEYED EXCLUSION SURVIVED §6.4 AND IS STILL A *RULE*, NOT AN ENUMERATION** — now at `session_role_resolver_yield.py:196`. ★★ **RESOLVED SET RE-MEASURED ON THE COMMITTED ARTIFACT, NOT COPIED FROM R-510: `36` assertions total, **`7`** matched by the prefix, and all `7` genuinely carry a `detail` that is popped. Same `7` names as before — §6.4 did NOT change the set.** ★★★ **FAIRNESS ON THE RECORD: the worker NAMED this entry in the docstring as its own addition beyond my four (*"I am NAMING it rather than widening the list silently"*) and gave a sound reason. **THE FINDING IS UNCHANGED ANYWAY: a prefix rule grows the instant someone names an eighth check, and nothing in the artifact would say so.** Remedy stays R-510's: record the RESOLVED names + count in `DIGEST_COVERAGE` and ASSERT the count.
