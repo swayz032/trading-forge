@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3243` at THIS commit, 2026-07-31 13:02 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3243` at THIS commit, 2026-07-31 13:17 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -2949,10 +2949,10 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 
 ## KNOWN-BENIGN (do not investigate)
 
-### ✅★★★ THE IDLE WATCHDOG'S BAR IS **DELIBERATELY WIDENED TO `60 min`** DURING THE `R-516` HOLD — NOT A COVERAGE HOLE (2026-07-31 11:28)
+### ✅⚠★★★★★ THE IDLE WATCHDOG IS `b05ke2lgi`, BAR `30 min`, AND IT DELIBERATELY CARRIES **NO DIAGNOSIS** (rev 3, 2026-07-31 13:17)
 
 **The worker is idle BECAUSE IT DELIVERED.** `AR-540` landed `10:40`; `R-516` is held for the tenth external read; the worker's own §6 says `P0` → *"awaiting the §3 ruling"*. ★★★ **`A WORKER THAT HAS GONE QUIET IS USUALLY A DESK THAT CLOSED ONE TASK AND OPENED NONE` — `advisor-onboarding` §4a, and it is exactly the case here. The silence is DIAGNOSED, so the `15 min` bar was costing a turn per firing to re-report a known state.**
-✅ **SWAP DONE CORRECTLY, ONE RIG PER CHANNEL PRESERVED:** I captured the running definition BEFORE stopping it (`TaskStop bcnsis18y`) — which is the only reason the replacement kept the THIRD channel, `STRANDED-CAPABILITY-REGISTER.md`, that I would otherwise have guessed away — **verified the gap EMPTY (`AR-540` still newest, external read still `f59576a8`), and armed EXACTLY ONE replacement (`bgrjr6yww`) within the minute.** ★★★★★ **IT SELF-RESTORES: `q < 5` resets `BAR` to `15` and emits `WORKER RESUMED`, so normal sensitivity returns THE MOMENT THE WORKER MOVES and no seat has to remember to undo this.** `A WIDENED BAR THAT CANNOT NARROW ITSELF IS A DISABLED MONITOR.`
+⚠★★★★★ **REV 2 (`bgrjr6yww`) WAS RETIRED AT `13:16` FOR A DEFECT I INTRODUCED: I HARDCODED THE REASON FOR THE SILENCE INTO ITS EVENT TEXT — *“blocked on `R-516`, which is held for the TENTH external read”* — AND BY `13:16` `R-516`, `R-517` AND `R-518` HAD ALL LANDED, SO **THE MONITOR WAS ASSERTING A FALSE PREMISE ON A LOOP, EVERY 15 MINUTES, IN THE VOICE OF A MEASUREMENT.** ★★★★★ **`CAPTION IS A CLAIM` APPLIES TO A MONITOR'S OWN MESSAGE, AND A HARDCODED DIAGNOSIS IS THE ONE PART OF A MONITOR GUARANTEED TO GO STALE — THE MEASUREMENT IT REPORTS IS RE-TAKEN EVERY POLL; THE EXPLANATION NEVER IS.** ✅ **REV 3 REPORTS THE SILENCE, THE NEWEST `AR-` HEADING, AND ITS CHANNELS — AND POINTS AT THIS FILE'S `SEAT` BLOCK FOR THE LIVE REASON. `A MONITOR MAY REPORT WHAT IT MEASURED AND MUST NOT REPORT WHY.` `FIX THE EMITTER, NOT THE INSTANCE.`** ✅ **SWAP DONE CORRECTLY BOTH TIMES, ONE RIG PER CHANNEL PRESERVED:**
 
 ### ★★★★★ THE IDLE WATCHDOG IS FIRING ON A **DECLARED STOP** — EXPECTED, NOT AN INCIDENT (2026-07-30 02:35)
 
