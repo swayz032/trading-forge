@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3207` at THIS commit, 2026-07-31 10:38 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3225` at THIS commit, 2026-07-31 10:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3207` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3225` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,25 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅⚠️★★★★★ SEAT — **`I7` CLOSED (R-515, `cab9197b`) · `AR-539` is a START-RECEIPT, no ruling owed · PUBLISHED `3e63bc50`** (2026-07-31 10:38 — WORKER **AUTHORIZED on R-515 §5: READ-ONLY map of `P0`–`P3`. NO new instrument, NO harness work.**)
+## ✅⚠️★★★★★ SEAT — **FRESH ADVISOR SEAT (`claude.exe 15520`, post-`/clear`, seated 2026-07-31 10:39). `AR-540` LANDED `10:40` AND IS **UNRULED**: `R-516` IS **OWED AND HELD FOR THE EXTERNAL READ** (`THE PASTE IS THE GATE`). Ledger current at R-515 (`cab9197b`). Worker: **ACTIVE, delivered, awaiting the §3 ruling.**
+
+### ✅⚠️★★★★★ **AR-540 VERIFIED AT THIS DESK — MEASUREMENTS ONLY. NO DISPOSITION: `R-516` IS HELD FOR THE PASTE.** `[MEASURED HERE 10:44]`
+
+| AR-540 claim | my independent check | result |
+|---|---|---|
+| `c304b098` is ATOMIC on base `9af37b8f` | `git rev-list --count 9af37b8f..c304b098` | ✅ **`1`**; both resolve as `commit` |
+| delivery content EQUALS the WIP fixes | `git diff hardening/ledger-e-parity-20260730 c304b098 -- '*check-spec-binding-plan-parity.ts' '*ORACLE.json' --stat` | ✅ **EMPTY** |
+| the grade exists, is independent, `NOT-SOUND` | `docs/designs/GRADE-C304B098-2026-07-31.md` | ✅ **`33,385` B, `01:58`** — matches AR-540 byte-for-byte |
+| §15.6 step 2 grade slot IS SPENT | file present + AR-540 §1 row 2 | ✅ **§15.8's `P0` rows are at evidence cut R-495/AR-508 and ARE stale; AR-540 overturns them correctly** |
+| `P3` transfer receipt absent | `git ls-files \| grep -i transfer-receipt` | ✅ **none** |
+| §15.8's `953c9781…` / `3494d4bb…` unresolvable | `git cat-file -t` | ✅ **both `fatal: Not a valid object name`** — AR-540 §5 correct, and correct AGAIN to decline calling them fabrications without the algorithm |
+
+⚠★★★ **ONE CORRECTION TO AR-540, AND IT IS A CAPTION-SCOPE DEFECT, NOT A WRONG ROW.** AR-540 §1 row 3 states `exact_slice_sha256` → **`0` files**, control `condition_id` → **`91`**. **[MEASURED HERE] the unscoped counts in this tree are `4` and `112`.** ✅ **THE SUBSTANTIVE CLAIM SURVIVES AND IS STRONGER THAN STATED: all `4` hits are PROSE** (`ADVISOR-RULINGS` · `ADVISOR-STATE` · `AGENT-REPORTS` · `BLUEPRINT-V4-DRAFT`) **and `git grep -l exact_slice_sha256 -- '*.json' '*.py' '*.ts' '*.sql'` returns ZERO — so `P2` is prose-only in DATA artifacts, measured on the extension surface rather than on a bare count.** ★★★★★ **AND NOTE WHICH FILE IS HIT `3` OF `4`: THE RELAY FILES THEMSELVES, ONE OF THEM CONTAINING AR-540. `A GUARD THAT GREPS ITS OWN SOURCE MEASURES ITS OWN VOCABULARY` — the worker's OWN law from AR-537, recurring in its own census one wake later.** `A BARE COUNT WITHOUT ITS SCOPE IS NOT REPRODUCIBLE.`
+
+⚠★★★★★ **AND ONE MEASUREMENT AR-540 DID NOT RUN, WHICH BEARS DIRECTLY ON ITS §3 COLLISION — IT REFUTED MY OWN HYPOTHESIS.** I suspected §15.7's count was landing on the WRONG JOIN KEY (`DELIVERY ATTEMPTS`, not `PATCH ROUNDS ON THE INSTRUMENT`) — this desk's most-convicted error, `6×`. **[MEASURED HERE] `git diff --stat` across the three transitions: `2011e8de→39948d3c` = **`+283/-48`** in `check-spec-binding-plan-parity.ts` · `39948d3c→8187b730` = **`+37`** · `8187b730→c304b098` = **`+186`**.** ⚠★★★★★ **THE CHECKER'S CODE CHANGED SUBSTANTIALLY IN EVERY ROUND. `MY WRONG-JOIN-KEY HYPOTHESIS IS REFUTED BY MEASUREMENT` — these ARE patch rounds on the instrument, and §15.7's threshold of `TWO` is genuinely engaged. I record this AGAINST the reading I expected to reach.**
+★★★ **§15.7 VERBATIM, READ AT THE LINE (`BLUEPRINT-V4-DRAFT.md:862`), because the collision turns on ONE WORD:** *"Two failed patch rounds on the same **instrument** trigger replacement or retirement, not a third regex-shaped patch."* **And §15.6 step `1` (`:828`) names finishing `P0` as the critical path. BOTH ARE THE SAME DOCUMENT BY THE SAME AUTHOR.** ⚠ **THE DISPOSITION IS `R-516`'s AND IS NOT WRITTEN HERE — `A STATE-FILE WRITE AND A LEDGER WRITE ARE DIFFERENT FILES, NOT DIFFERENT ACTS`.**
+
+✅★★★ **MONITORS — ENUMERATED BEFORE ARMING ANYTHING, AND NOTHING WAS ARMED.** `[MEASURED HERE]` THREE logical rigs, `6` processes, **ALL owned by `claude.exe 15520` = MINE** (my own shell walks up to `15520`): `27064/15980` `AGENT-REPORTS` 2s mtime change-detector w/ 3-fail alarm · `26812/11516` worker-idle watchdog on BOTH channels · `8372/26964` `external-advisor/gpt-rulings` `ls-remote` watcher (the PASTE gate's ear). ★★★★★ **DECISION TABLE → ADOPT, ARM NOTHING — and liveness is PROVEN, not inferred: rig `27064` delivered `AR-CHANGE 10:40:07 :: ## AR-540` INTO THIS POST-`/clear` SEAT.** ★★ **THE WORKER'S EAR: no `ADVISOR-RULINGS` watcher exists under the worker's `claude.exe 26204` [MEASURED, ANY process name, POSITIVE CONTROL = the query found `5` live matches incl. my own]. **DO NOT CONCLUDE THE EAR IS DEAD** — it DELIVERS: R-515 committed `10:34`, `AR-539` start-receipt filed `10:35`. `THE MECHANISM IS UNENUMERATED; THE DELIVERY IS MEASURED.`**
 
 ### ⚠️★★★★★ **R-515's HEADLINE — READ BEFORE PLANNING ANYTHING**
 ✅ **`I7 CLOSED — NARROW MEASUREMENT SOUND.` Substantive result: **the `C2` session-role resolver produces `0` BINDING movement on both corpora** — a real negative that kills a hoped-for multiplier. Certifies the MEASUREMENT chain, never the DEPLOYMENT chain.**
