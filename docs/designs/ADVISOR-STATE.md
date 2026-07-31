@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3243` at THIS commit, 2026-07-31 12:48 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3243` at THIS commit, 2026-07-31 12:52 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -84,7 +84,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-518` LANDED `1541ee8a` AND IS **PUBLISHED** (2026-07-31 12:48). Ledger R-515→R-518 this wake. ✅ **PACKET `docs/designs/P0-REDESIGN-PACKET-2026-07-31.md` ACCEPTED `6/6` AT `7134bb34`, REMOTELY RESOLVABLE.** ⚠★★★★★ **WORKER: STANDING BY — `P0` IMPLEMENTATION IS HELD ON ONE NAMED GATE: the PRE-IMPLEMENTATION DESIGN GRADE (`accuracy-validator` vs `7134bb34`, contract in R-518 §5, verdict to a COMMITTED file). THE ONLY THING BLOCKING IT IS THE OPERATOR'S WORD TO DISPATCH THE AGENT — ASKED THIS WAKE.** ⚠★★★★★ **PUBLISH-AFTER-EVERY-RULING IS NOW STANDING (R-518 §8): `13` COMMITS INCLUDING `R-516`+`R-517` SAT UNPUSHED FOR ~2h WHILE EVERY LOCAL CHECK READ GREEN. `A LOCAL COMMIT IS NOT AN EXTERNAL-READ OBJECT UNTIL THE REMOTE CAN NAME IT.` **CHECK `git rev-list --count origin/h1-wave4-sealed12-driver..HEAD` AT EVERY WAKE; IT MUST BE `0`.**
+## ✅★★★★★ SEAT — **`R-518` LANDED `1541ee8a`, PUBLISHED. ⚠★★★★★ **THE PRE-IMPLEMENTATION DESIGN GRADE IS **DISPATCHED AND IN FLIGHT** (2026-07-31 12:52) — `accuracy-validator`, opus, adversarial, pinned to `7134bb34`, ten-question contract per R-518 §5 with all three desk amendments carried, durable receipt owed at `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`. **OPERATOR GAVE THE WORD IN HIS OWN VOICE: *“RUN IT”*.** ⚠★★★★★ **DO NOT DISPATCH A SECOND ONE — IF THAT RECEIPT FILE IS ABSENT THE FIRST IS STILL RUNNING, NOT MISSING. `A DUPLICATE GRADE IS NOT A SECOND OPINION, IT IS TWO GRADERS SPLITTING ONE MANDATE.`** Worker: **STANDING BY** (`AR-544` hold-receipt, starting nothing, correct). Packet **ACCEPTED `6/6` @ `7134bb34`**. ⚠ **PUBLISH-AFTER-EVERY-RULING STANDING: check `git rev-list --count origin/h1-wave4-sealed12-driver..HEAD` == `0` at every wake — note a non-zero count may be the WORKER's commit in this SHARED tree, not a failed push of yours.**
 
 ### ✅⚠️★★★★★ **AR-540 VERIFIED AT THIS DESK — MEASUREMENTS ONLY. NO DISPOSITION: `R-516` IS HELD FOR THE PASTE.** `[MEASURED HERE 10:44]`
 
