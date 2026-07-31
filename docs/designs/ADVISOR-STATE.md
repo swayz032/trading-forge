@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3045` at THIS commit, 2026-07-31 03:01 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3061` at THIS commit, 2026-07-31 03:37 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3045` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3061` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -83,7 +83,23 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-508 LANDED (`3f356405`) · `AR-530` IS NEWEST AND **UNRULED** → `R-509` IS OWED, HELD FOR THE THIRD EXTERNAL READ** · branch PUBLISHED at **`50560083`** · live delivery still **`c304b098`** (2026-07-31 03:33, ADVISOR SEAT = **RE-SEATED** in `claude.exe 15520`, **CONTEXT DEEP — HAND OFF NOW**; WORKER SEAT = `claude.exe 26204`, ALIVE, NOT handing off)
+## ⚠️★★★★★ SEAT — **R-508 LANDED (`3f356405`) · `AR-530` IS NEWEST AND **UNRULED** → `R-509` IS OWED, HELD FOR THE THIRD EXTERNAL READ** · branch PUBLISHED at **`f278ff14`** [MEASURED 03:36 BY `ls-remote`, NOT CACHE — the prior header's `50560083` was one commit stale before the ink dried] · live delivery still **`c304b098`** (2026-07-31 03:36, ADVISOR SEAT = **FRESH, RE-SEATED AGAIN** in `claude.exe 15520`, context NEW; WORKER SEAT = `claude.exe 26204`, ALIVE, NOT handing off)
+
+### ★★★★★ **FRESH-SEAT FIRST-WAKE MEASUREMENTS — 2026-07-31 03:36, ALL `[MEASURED HERE]`, NONE COPIED**
+| question | answer | instrument |
+|---|---|---|
+| newest AR | **`AR-530`**, **UNRULED** → **`R-509` OWED** | `grep -n "^## AR-"`, file mtime `03:32:19` |
+| newest ruling | `R-508` (`3f356405`) — disposed AR-529 | `grep -n "^## R-"` |
+| has the THIRD external read landed? | ⚠️ **NO.** `origin/external-advisor/gpt-rulings` = **`54413130`** = the SECOND read (`03:21:37`), already disposed by R-508 | `git ls-remote origin refs/heads/external-advisor/gpt-rulings` |
+| campaign branch published? | ✅ **YES** — origin `= f278ff14 =` local `HEAD`, `0/0` | `ls-remote` **and** `rev-list --left-right --count` |
+| worker alive? | ✅ `claude.exe 26204`, its `worker_ear.py` (`python 16820`) alive under it | `Win32_Process` walk |
+⚠️★★★★★ **AND THE HOLD'S COST IS **NOT** WHAT THE LAST TWO WAKES RECORDED — RE-DERIVED, NOT COPIED: R-506/R-507 could both write "the hold costs nothing" because the worker had terminal lanes. **IT NOW COSTS A WORKER.** AR-530 landed `03:32`, its §7 assigns every remaining item (CI-wiring · `P0-v5` · Revision-4 · `I6` · `I14`) to THIS DESK, and an authorization can only travel by ruling — the exact thing that is held. **THE SEAT IS IDLE AND IT IS THE HOLD DOING IT.** ★★★ **THAT IS NOT AN ARGUMENT TO BREAK THE ORDER** (`A CHANNEL IS NOT AN AUTHOR`; R-499/R-500 were ruled without a paste and that violation still stands on the record) — **it is the number the operator is owed when he is told what the hold buys.**
+
+### ★★★ **MONITOR RIG — ADOPTED, NOT RE-ARMED. `0` ARMED, `0` KILLED, `0` DUPLICATES** `[MEASURED HERE 03:35, by ownership not by age]`
+**I am a NEW seat inside `claude.exe 15520` — the SAME process as my predecessor, so its monitors are still delivering to me and are NOT orphans (§4a; `A PID IS NOT A DURABLE ID FOR A SEAT`, R-505 §1).** Exactly **`3`** desk monitors, each identified by reading its FULL command line, not its age:
+`15980` AR change-detector on `AGENT-REPORTS.md` (mtime poll, 3-fail alarm) · `11516` idle watchdog (`BAR=15`, report-mtime **and** git-commit channels) · `26964` GPT branch watcher (`ls-remote` on `refs/heads/external-advisor/gpt-rulings`).
+★★★ **`TaskList` RETURNS `No tasks found` — THE MONITORS ARE ALIVE AS PROCESSES BUT THEIR TASK IDS DIED WITH THE PREDECESSOR CONVERSATION. CONSEQUENCE, AND IT IS LOAD-BEARING: `TaskStop` CANNOT RETIRE THEM; only the PID route can (child loop first, then wrapper). `AN INSTRUMENT I CANNOT ADDRESS BY ITS OWN HANDLE IS STILL MY INSTRUMENT.`**
+⚠️ **NOT MINE, NEVER TOUCH: `python 16820` under `claude.exe 26204` is the WORKER'S EAR.**
 
 ### ★★★★★ **R-508 §5's ACCEPTANCE IS ALREADY VERIFIED AT THIS DESK — THE NEXT SEAT NEED NOT RE-DERIVE IT** `[MEASURED HERE 03:32, on the regenerated objects]`
 | criterion | result |
