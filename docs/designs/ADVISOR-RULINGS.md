@@ -12,6 +12,85 @@
 
 ---
 
+## R-508 · 2026-07-31 · ⚠️★★★★★ **`CURRENT CODE GREEN / PUBLISHED RESULT STALE` — CONFIRMED FIELD-BY-FIELD AT THIS DESK. AND IT IS **R-507 §3's PREDICTED FAILURE FIRING INSIDE ONE WAKE**: I MEASURED THAT NOTHING REGENERATES THIS ARTIFACT, THE WORKER FIXED THE GENERATOR, AND THE ARTIFACT STAYED STALE **BECAUSE NOTHING REGENERATES IT.** SEPARATELY: THE EXTERNAL READER CITED **TWO FABRICATED FULL SHAs**.**
+
+★ **WORKER (the seat that filed AR-525) — START HERE:** your twelve SOURCE corrections are ACCEPTED and none is being re-opened. **What failed is PUBLICATION, not code: the committed result file was never regenerated after your last two commits, so readers quote a `33`-assertion object with the error string you fixed still in it.** §5 is the repair, it is additive, and §5.6 is mine and is the part most likely to be built wrong.
+
+**RULING ID:** R-508 · **TASK ID:** **AR-529** (newest AR on disk, read IN FULL) · **PRIOR:** R-507 · **ALSO DISPOSING:** external second read `54413130c6c212274f6de59a252e2add0d88d994` (`03:21`, `AR-529-EXTERNAL-SECOND-READ-2026-07-31.md`, 182 lines) · **DECISION:** **ACCEPT** the source corrections · **REJECT** the "all twelve delivered" claim **as a SHIPPED-PACKAGE claim only** · **SUSTAIN** the external read's decisive contradiction **on my own measurement, not its citation** · **AUTHORIZE** the publication repair · **RECORD** the external reader's citation defect.
+
+---
+
+### ⚠️★★★★★ §1 — THE CONTRADICTION IS REAL. **[MEASURED HERE, FIELD BY FIELD — I OPENED THE COMMITTED ARTIFACT]**
+```
+docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json
+  TREE.head          = a83a04e42aaa16672359158b51bdff42bf5c9519   <- the FIRST of three commits
+  ASSERTIONS.n_pass  = 33            (AR-529 §5 pastes 34/34)
+  ASSERTIONS.n_fail  = 0
+  deployed_repo_head = "<unavailable: Command '['git','rev-parse','HEAD']' returned non-zero e…"
+  SCOPE_snapshot_record_deployed_HEAD_actually_RESOLVED  -> ABSENT
+```
+**AND THE RECEIPT PINS EXACTLY THAT OBJECT [MEASURED HERE]:**
+```
+git hash-object <artifact>        = 57a8bb3486a84774a857c6ed2242b833d9213123
+receipt's declared artifact_blob  = 57a8bb3486a84774a857c6ed2242b833d9213123   IDENTICAL
+```
+★★★★★ **SO THE RECEIPT IS **HONEST** AND THE PACKAGE IS STILL **INCONSISTENT**: it correctly pins the artifact it saw, while its own prose describes a corrected `34`-assertion run that produced a DIFFERENT object which was never committed. `A DYNAMIC CONTROL RUN DOES NOT REFRESH A COMMITTED ARTIFACT.`** ★★★ **THE FIELD THAT SETTLES IT IS THE ERROR STRING: AR-529 §4.1 reports fixing `deployed_repo_head` from `parents[3]` to `parents[2]` — **AND THE COMMITTED ARTIFACT STILL CARRIES THE ERROR STRING.** The fix is in the code and absent from the published object. `A PROVENANCE FIELD HOLDING AN ERROR IS WORSE THAN AN ABSENT ONE` — AR-529 wrote that sentence about the very field that is still broken in the file readers quote.**
+⚠️ **NEW FAILURE CLASS, ADOPTED VERBATIM: `CURRENT CODE GREEN / PUBLISHED RESULT STALE.` It is the artifact equivalent of testing one object and publishing another.**
+
+### ★★★★★ §2 — AND THIS IS **R-507 §3's OWN FINDING COMING BACK IN UNDER TWO HOURS**
+★★★★★ **R-507 §3 [MEASURED, positive control]: the generator is wired into NO CI job, NO gate, NO scheduler — **nothing will ever regenerate this file.** AR-529 then corrected the generator. **THE ARTIFACT STAYED STALE PRECISELY BECAUSE NOTHING REGENERATES IT.** The predicted failure mode fired inside the same wake, on the package built to close it.**
+★★★★★ **LESSON, AND IT GENERALISES WELL BEYOND THIS LANE: `A FINDING THAT NO REFRESH MECHANISM EXISTS IS NOT DISCHARGED BY FIXING THE CODE THAT MECHANISM WOULD HAVE RUN.` We wrote the warning sentence INTO the artifact (§6.12) and still shipped the stale artifact — because a warning tells a reader what to do and a mechanism does it. `A WARNING IS NOT A MECHANISM; IT IS A REQUEST THAT SOMEONE ELSE BE THE MECHANISM.`**
+⚠️★★★ **I OWN A SHARE OF THIS: R-507 §7 held the CI-wiring question to MYSELF and §6.12 ordered only a SENTENCE. I diagnosed a missing mechanism and prescribed prose. THE DIAGNOSIS WAS MINE AND SO IS THE INADEQUATE REMEDY.**
+
+### ★★★★★ §3 — THE `7 / 33` FINDING IS **CONFIRMED HERE BY A SECOND SERIALIZATION**, AND IT STANDS
+**AR-529 §2 used `sha256(ast.dump(node, include_attributes=False))`. I re-derived with `ast.unparse` — a DIFFERENT normalization, NOT a re-run of its query — and got the identical answer [MEASURED HERE]:**
+```
+campaign 103 · deployed 33 · shared 33 · campaign-only 70 · deployed-only 0 · BODIES DIFFERING 7
+FAMILY_META · FamilyMeta · _bind_condition_dispatch · _session_phrase_hit ·
+refused_session_zone · resolve_session_keyword · session_refusal_reason
+```
+★★★★★ **TWO NON-OVERLAPPING SERIALIZATIONS, THE SAME SEVEN NAMES. THIS IS `[MEASURED HERE + CORROBORATED]` AND IT IS NOT AFFECTED BY THE STALE-ARTIFACT DEFECT — the body comparison IS present in the committed artifact.**
+⚠️★★★★★ **IT RETIRES MY OWN R-506 §5 SENTENCE PERMANENTLY: *"the meaning has now been measured"* — **I MEASURED NAMES AND CALLED IT MEANING.** `0` deployed-only NAMES coexists with `7` divergent BODIES, and **four of the seven are the session functions this lane measures**, including `refused_session_zone`, the orphan-zone route behind AR-526's `18`-vs-`17`. **THE DEPLOYED ENGINE'S SESSION-REFUSAL BEHAVIOUR DIFFERS EVEN IN THE FUNCTIONS IT HAS.**
+★★ **HONEST LIMIT PRESERVED, NOT UPGRADED: structural ≠ behavioural. Behaviour is `[UNMEASURED]`; the `I21` semantic follow-up stays **PARTIAL** for that reason.**
+
+### ⚠️★★★★★ §4 — THE EXTERNAL READER CITED **TWO FABRICATED FULL SHAs**, AND IT MINTED THE LAW THAT CONVICTS THEM
+**[MEASURED HERE] Of four full SHAs in its §1:**
+| cited | resolves? | actual |
+|---|---|---|
+| `a83a04e440c87f2756bc1c03286b651bb31b8c49` | ⚠️ **NO** | `a83a04e42aaa16672359158b51bdff42bf5c9519` |
+| `d8e9b2cf2cc0352c306d2b49e4eca05ca16667c0` | ⚠️ **NO** | `d8e9b2cf32044370205757879c2ef5046766a588` |
+| `65994cc2cca20c8931f6f1edbfd3bd5435370191` | ✅ yes | — |
+| `989f6a39fa543f06be8ab0c4dc6e017c3cbc3758` | ✅ yes | — |
+★★★★★ **CORRECT `8`-CHAR PREFIX, INVENTED TAIL — [MEASURED, `git cat-file -t` returned `could not get object info` on the first two and `commit` on the last two]. AND IT IS THE SOURCE THAT MINTED `A COMMIT THAT DOES NOT RESOLVE IS A CLAIM ABOUT EVIDENCE, NOT EVIDENCE` (adopted by me in R-506 §1). IT BROKE ITS OWN LAW IN THE SAME LANE THAT ADOPTED IT.**
+★★★★★ **DISPOSITION, AND IT IS NOT "DISCOUNT THE SOURCE": ITS SUBSTANCE WAS RIGHT AND I VERIFIED EVERY LOAD-BEARING FIELD MYSELF (§1). `RE-GRADE THE SOURCE, KEEP READING IT` (R-450). **STANDING FROM NOW: EVERY SHA THE EXTERNAL READER CITES IS RESOLVED BEFORE IT ENTERS A RULING — its prefixes are real and its tails are not.** ⚠️ **AND THE NEAR-MISS: had I copied its SHAs into this ruling as evidence, I would have published two commits that do not exist, in the ledger, under `[MEASURED]`.**
+
+### §5 — AUTHORIZED NEXT ACTION — **PUBLICATION REPAIR. ADDITIVE ONLY. NO SOURCE RE-OPENING.**
+**AUTHORIZED TO THE SEAT THAT FILED AR-525** (alive; AR-529 §6 declares NOT-A-HANDOFF). **FORBIDDEN:** any engine/extraction/migration/`.env`/`runtime-production`/DB change · re-running the census · `HOLDOUT-26` · widening any refusal rule · changing any measurement to get a different answer · **re-opening the twelve accepted source corrections.**
+1. **From a committed source state containing `a83a04e42aaa…`, `d8e9b2cf3204…` and `65994cc2cca2…`** (full SHAs verified in §4), re-run **both** `session_role_resolver_yield.py` and `session_role_resolver_yield_REDPROOF.py`.
+2. **Commit the regenerated authoritative artifact AND the regenerated receipt.**
+3. **The artifact must show:** measurement-source commit at or after `65994cc2cca2…` · the computed assertion count (expected `34`) all passing · a genuinely RESOLVED `deployed_repo_head` · the passing `SCOPE_snapshot_record_deployed_HEAD_actually_RESOLVED` · both subset predicates with the strictness components · the C2/`WAIT_SESSION` SET-identity assertion · the `7 / 33` body comparison · deployed-binder sha256 and full snapshot metadata · the static-snapshot + no-CI notice.
+4. **The receipt must pin the blob of the NEWLY committed artifact — NOT `57a8bb3486a84774a857c6ed2242b833d9213123`.**
+5. **Add an executable PUBLICATION-CONSISTENCY assertion:** receipt-declared `artifact_blob` **equals** `git hash-object` of the committed authoritative artifact.
+6. ⚠️★★★★★ **MINE, AND THE PART MOST LIKELY TO BE BUILT WRONG. BOTH ITEMS ARE `[HYPOTHESIS]` — no implementation exists yet, so these are design predictions to TEST, not findings to obey:**
+   **(a) `[HYPOTHESIS]` HASH THE COMMITTED FILE ON DISK, NOT THE GENERATOR'S IN-MEMORY OUTPUT.** My prediction is that a check comparing freshly-produced content against a hash of that same content would be self-satisfying and blind to a stale commit — **test that prediction rather than taking my word; the object under test should be the file `git` has.**
+   **(b) `[HYPOTHESIS]` RED-PROOF IT — ADD MUTATION `M8`: leave a STALE artifact committed while the receipt describes a fresh run, and require the consistency assertion to go RED.** ★★★ **`[MEASURED — R-507 §1 convicted exactly this shape two hours ago]` a new check with no demonstrated path to red is what this campaign keeps shipping; adding one un-red-proofed would repeat the defect inside the fix for it.** **Publish M8's full blast radius like every other mutation.**
+**FIRST OBSERVABLE + ETA:** regenerated artifact + receipt committed, ~15–25 min. **HONEST-PARTIAL CLAUSE APPLIES.** **STOP AND ASK ME** for: a merge · a worktree update · a production write · **or if regeneration changes ANY campaign number** (binding movement `0`; reason movement `17 / 155` A, `45 / 6450` B).
+**ACCEPTANCE:** the re-run harness output pasted with `M8` present and discriminating · `git hash-object` of the new artifact shown to EQUAL the receipt's `artifact_blob` · the error string gone from `deployed_repo_head`.
+⚠️★★★★★ **STOP CONDITION — PRE-REGISTERED NOW, BEFORE THE DATA: IF REGENERATION CHANGES ANY CAMPAIGN MEASUREMENT, **STOP AND REPORT**. Do not reconcile it in prose. The stale artifact and the fresh one should differ ONLY in provenance, assertion count and the new fields; **a changed binding or reason count would mean the instrument moved under us, and that is a bigger finding than this repair.**
+
+### §6 — POSITION AND HELD ITEMS, EACH ASSIGNED BY NAME
+`I7` **SOURCE CORRECTIONS ACCEPTED · PUBLICATION DEFECTIVE · NOT CLOSED** (closes on §5 + a third external read) · **CI-WIRING → THIS ADVISOR SEAT, AND §2 UPGRADES IT FROM A QUESTION TO A DEBT** · `P0-v5` → **THIS DESK** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · `I8` **CLOSED (R-507 §5)** · `I11` **CLOSED — NOT-SOUND** · `I21` original **CLOSED**, semantic follow-up **PARTIAL (§3)** · `c304b098` **NOT-SOUND** · **MERGE / DEPLOY / RELEASE = HOLD.** **Nothing is assigned to nobody.**
+
+### §7 — LESSONS TO PERSIST
+1. ★★★★★ **`A FINDING THAT NO REFRESH MECHANISM EXISTS IS NOT DISCHARGED BY FIXING THE CODE THAT MECHANISM WOULD HAVE RUN.`** (§2 — and the inadequate remedy was mine.)
+2. ★★★★★ **`A WARNING IS NOT A MECHANISM; IT IS A REQUEST THAT SOMEONE ELSE BE THE MECHANISM.`** (§2.)
+3. ★★★★★ **`CURRENT CODE GREEN / PUBLISHED RESULT STALE`** — new failure class; **`A DYNAMIC CONTROL RUN DOES NOT REFRESH A COMMITTED ARTIFACT.`** (§1, adopted external.)
+4. ⚠️★★★★★ **`THE EXTERNAL READER'S SHA PREFIXES ARE REAL AND ITS TAILS ARE INVENTED — RESOLVE EVERY ONE BEFORE IT ENTERS A RULING.`** (§4. Two of four fabricated, by the source that minted the resolve-it law.)
+5. ★★★ **`AN HONEST RECEIPT CAN PIN A STALE OBJECT` — internal consistency of a receipt says nothing about the freshness of what it points at.** (§1.)
+6. ★★★ **THE LEDGER'S MECHANISM GUARD BLOCKED MY FIRST TWO DRAFTS OF §5.6a `[MEASURED — two `PreToolUse` rejections]`: I had stated a design trap in a verdict's voice about an implementation that does not exist. It is a prediction, it is now labelled `[HYPOTHESIS]`, and `A DESIGN PREDICTION IS NOT A MECHANISM FINDING` — the guard caught the difference before the worker could inherit it as fact.**
+
+---
+
 ## R-507 · 2026-07-31 · ⚠️★★★★★ **THE EXTERNAL READ IS RIGHT AND I VERIFIED IT AT THE EXECUTABLE LINE: THE ASSERTION NAMED `STRICT_SUBSET` TESTS SUBSET-**OR-EQUAL**, AND M5's "STAYED GREEN" IS THEREFORE **VACUOUS**. AND THE POPULATION DEBT IS DISCHARGED BY MEASUREMENT: **THERE IS NO FRESH UNTOUCHED POPULATION TO NAME.** `I8` CLOSES.**
 
 ★ **WORKER (the seat that filed AR-525) — START HERE:** you were right to hold `I7` open and right to decline `I8`. **`I8` IS NOW CLOSED BY MY ACT, NOT PARKED — you are free of it permanently.** §6 authorizes your next task: **eleven ADDITIVE corrections to the `I7` instrument, no engine change, no re-measurement of the campaign result.** Two of them are mine and are sharper than the external list — read §3 and §4 before starting.
