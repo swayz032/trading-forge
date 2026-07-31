@@ -27,6 +27,7 @@ The instrument writes its artifact to OUT_PATH; this harness REDIRECTS that to a
 throwaway path so a mutated run can never overwrite the real artifact.
 """
 
+import ast
 import importlib.util
 import json
 import shutil
@@ -1205,29 +1206,59 @@ def main():
     #    least TWO call sites, and NO second inline loop reading the recorded
     #    blob fields. `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER` is only true
     #    while nobody adds a second reader, and that is what this notices.
-    _src = Path(__file__).resolve().read_text(encoding="utf-8")
-    _defs = _src.count("def receipt_publication_blob_status(")
-    _calls = _src.count("receipt_publication_blob_status(") - _defs
-    _inline = _src.count('.get("%s_blob" % label)')
-    identity_ok = (_defs == 1 and _calls >= 2 and _inline == 1)
+    # !!!!! THIS GUARD'S FIRST VERSION COUNTED ITS OWN SEARCH STRINGS.
+    #   It used _src.count("def receipt_publication_blob_status(") over this
+    #   file's text -- and that literal, plus the census entries naming the
+    #   function, are THEMSELVES in the text. It reported defs=2 calls=6
+    #   inline=2 against a correct file. `AUDIT THE INSTRUMENT BEFORE BELIEVING
+    #   IT` -- a guard that greps its own source measures its own vocabulary.
+    #   It now parses the AST, where a string literal is a Constant and a call
+    #   is a Call, and the two can never be confused.
+    _tree = ast.parse(Path(__file__).resolve().read_text(encoding="utf-8"))
+    _name = "receipt_publication_blob_status"
+    _defs = sum(1 for n in ast.walk(_tree)
+                if isinstance(n, ast.FunctionDef) and n.name == _name)
+    _calls = sum(1 for n in ast.walk(_tree)
+                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                 and n.func.id == _name)
+    # A second inline comparator would need the blob-field template. Find every
+    # function that contains it; only the shared reader may.
+    # !!! THE NEEDLE IS BUILT, NOT WRITTEN. Spelling it as a literal here would
+    #   make THIS function contain it too, and the guard would report itself as
+    #   a second comparator -- which is exactly what its AST version did on its
+    #   first run (`blob_fns = ['main', 'receipt_publication_blob_status']`).
+    #   Two self-reference bugs in one guard, one text-level and one AST-level:
+    #   `AN INSTRUMENT THAT SEARCHES ITS OWN SOURCE WILL FIND ITSELF.`
+    _needle = "%s" + "_blob"
+    _blob_fns = sorted({fn.name for fn in ast.walk(_tree)
+                        if isinstance(fn, ast.FunctionDef)
+                        for c in ast.walk(fn)
+                        if isinstance(c, ast.Constant) and c.value == _needle})
+    identity_ok = (_defs == 1 and _calls >= 2 and _blob_fns == [_name])
     results.append({
         "case": "RECEIPT_reader_has_ONE_implementation",
         "WHAT_IT_ASSERTS": "exactly one definition of the receipt blob comparison, at least "
                            "two call sites, and exactly one inline read of the recorded blob "
                            "fields -- the one INSIDE that definition.",
-        "definitions": _defs, "call_sites": _calls, "inline_blob_reads": _inline,
+        "definitions": _defs, "call_sites": _calls,
+        "functions_containing_the_blob_template": _blob_fns,
+        "MEASURED_BY": "ast.walk over this file's parsed tree -- NOT a source-text count. "
+                       "The first version of this guard counted its own search strings and "
+                       "reported defs=2 calls=6 against a correct file.",
         "WHY": ("R-513 1/6.5. M13 and the live case were TWO implementations of one claim, so "
                 "weakening the shipped reader would not have failed its own red-proof. "
                 "`A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.` A "
                 "second inline comparator would silently restore that, so it is made RED."),
-        "!!_SCOPE": "a source-text count, not a semantic analysis. It catches a re-introduced "
-                    "inline comparator of the SAME shape; it cannot catch an arbitrarily "
-                    "rewritten one. Stated so nobody reads it as stronger than it is.",
+        "!!_SCOPE": "an AST structural count, not a semantic analysis. It catches a second "
+                    "definition, a lost call site, or a re-introduced comparator built on the "
+                    "same \"%s_blob\" template; it cannot catch an arbitrarily rewritten one "
+                    "that avoids that template. Stated so nobody reads it as stronger than "
+                    "it is.",
         "VERDICT": "ONE-IMPLEMENTATION" if identity_ok else "DUPLICATED-OR-MISSING",
         "OK": identity_ok,
     })
-    print("[%s] RECEIPT_reader_has_ONE_implementation -> defs=%d calls=%d inline=%d"
-          % ("OK " if identity_ok else "BAD", _defs, _calls, _inline))
+    print("[%s] RECEIPT_reader_has_ONE_implementation -> defs=%d calls=%d blob_fns=%s"
+          % ("OK " if identity_ok else "BAD", _defs, _calls, _blob_fns))
 
     scored = {r["case"] for r in results} | {"ATTRIBUTION_CENSUS_covers_every_scored_case"}
     missing, extra = sorted(scored - set(census)), sorted(set(census) - scored)
