@@ -4,6 +4,34 @@
 
 ---
 
+## AR-524 · 2026-07-31 · ⚠️★★★★★ **R-502 §4 IS RIGHT AND IT OVERTURNS MY OWN HEADLINE: `I7`'s YIELD IS **NOT `0`**. DIFFING THE FIELD I NEVER DIFFED — `reason` — GIVES **`17` CONDITIONS**, ALL `WAIT_SESSION`, ALL `no_recognized_session_keyword` → `session_teaching_recognized_no_computable_window`. I MEASURED THE ONE THING THE FEATURE WAS REDESIGNED *NOT* TO DO.**
+
+**RULING ID:** R-502 §4/§6 · **TASK ID:** AR-524 · **PRIOR:** AR-523.
+
+### ⚠️★★★★★ §1 — THE MISSED MEASUREMENT, MEASURED
+```
+REASON-FIELD DIFF, corpus_A entry_conditions, TF_SESSION_ROLE_RESOLVER_ENABLED off -> on
+  conditions whose REFUSAL REASON changed : 17
+    17  no_recognized_session_keyword -> session_teaching_recognized_no_computable_window
+  types affected   : {'WAIT_SESSION': 17}
+  bindable changed : 0
+```
+★★★★★ **MY GENERATOR RECORDED `reason` IN BOTH ARMS AND NEVER COMPARED IT.** It diffed `bindable`/`primitive`/`session_zone`/`errors` — **the binding fields — for a feature whose deliberate product is a BETTER REFUSAL.** **`A ZERO ON THE WRONG FIELD IS NOT A NULL RESULT, IT IS A MISSED MEASUREMENT`**, and the desk found it by reading the code at `:2586` while I was reading my own output.
+★★★ **THE CORRECTED FINDING: the flag converts `17` BLIND refusals into `17` NAMED, DIAGNOSTIC refusals. `0` bindings gained, `0` lost — which is now a CORRECT AND EXPECTED result rather than the whole story.** ★★ **It also reconciles AR-522 §4 cleanly: `18` recognized / `9` computed a zone / `17` refusal-reasons improved / `0` bound — every one of those is the SAME feature behaving as designed, and only the last was in my headline.**
+★★★★★ **AND IT RETIRES MY OWN `H1`, INDEPENDENTLY OF R-502 WITHDRAWING IT: *"computed but not consumed"* is wrong. The output IS consumed — into a refusal classification. Nothing was stranded.**
+
+### §2 — SECOND ARTIFACT DEFECT CONFIRMED AGAINST ME
+**R-502 §4: `invalidations` is `6`, not the `16` AR-522 §2 states. THE ARTIFACT IS RIGHT AND MY PROSE IS WRONG.** ★★★ **I wrote a population size into prose without reading it back off the artifact I had just generated — the same `A REPORT TABLE IS AN INSTRUMENT'S OUTPUT` failure, in the direction of prose forking from data. **CORRECTED HERE TO `6`; AR-522 §2's `16` is STRUCK AND RETAINED.**
+**ALSO ACCEPTED, NOT YET REMEDIED: `TREE.dirty_paths = 95`.** ★★★ **`A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Repeated identical runs prove repeatability INSIDE the checkout; they do NOT prove the binder I measured equals `c9560949`. The integrity proof R-502 §4 requires is NOT done.**
+
+### §3 — `I7` REMAINS **PARTIAL** — AND I AM AT A CONTEXT LIMIT, NOT A LANE BOUNDARY
+**R-502 §6 orders: do not hand off at a lane boundary, finish the batch. I am not invoking a lane boundary — I am declaring a CONTEXT limit, which is the one case §5 and `worker-execution` §10 both preserve.** ★★★ **I spent the remainder on the ONE item that changes the finding rather than on the cheapest item, so the record now carries the corrected result instead of a tidy but wrong zero.**
+**STILL OWED ON `I7`, verbatim from R-502 §4 so nothing is re-derived:** Corpus **B** measured SEPARATELY, **no pooled rate** · explicit numerator/denominator definitions · **THREE denominators** (global · `WAIT_SESSION`-family · **`C2`-eligible defined FROM THE PINNED BASELINE, never from the treatment arm's own classifier output**) · the full OFF→ON refusal-reason identity map **with the `17` identities listed** (this AR gives the counts and the single transition; the per-condition identities are **NOT** yet in the artifact) · exact-name-route binds separated from classifier-derived deliberate refusals · recognized-without-zone separated from computed-zone refusals · non-`C2` movement census · **invalidations corrected to `6` IN THE ARTIFACT** · **clean-tree OR source-closure integrity proof** (dirty-path intersection with the source/population closure is a STOP) · `bound_and_concrete` defined as `bindable AND NOT approximation` · **the pinned-baseline comparison encoded as an ASSERTION, not prose.**
+**NOT STARTED: `I8`.** **`I11` CLOSED — `NOT-SOUND`, receipt `38acbbdd`, not mine to touch. `I21` CLOSED with the R-501 §3 follow-up outstanding.** ★★ **Per R-502 §6 I do NOT express this as a fraction.**
+**`c304b098` = `NOT-SOUND` · MERGE / DEPLOY / RELEASE = HOLD · `P0-v5` named, NOT authorized, NOT mine · nothing in flight · no sub-agent dispatched or owed by me.**
+
+---
+
 ## AR-523 · 2026-07-31 · ⚠️★★★★★ **`I7` IS *NOT* COMPLETE — AR-522 WAS DELIVERED UNDER THE CONTRACT R-501 §6 SUPERSEDED, AND I AM RE-SCORING IT AGAINST THE NEW ONE FIELD BY FIELD RATHER THAN LETTING IT STAND.** ★★★★★ **HARD STOP #1 TESTED AND IT DOES *NOT* FIRE: THE FLAGS-OFF ARM REPRODUCES THE PINNED BASELINE **EXACTLY — `0` OF `155` `bound_and_concrete`.** AND PROVING IT EXPOSED A JOIN-KEY ERROR IN MY OWN HEADLINE.**
 
 **RULING ID:** R-501 §6 · **TASK ID:** AR-523 · **PRIOR:** AR-522. **FAN-IN: `I21` closed · `I7` **PARTIAL** · `I8` not started · `I11` **TAKEN BY THE DESK.**
