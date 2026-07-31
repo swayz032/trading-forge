@@ -12,6 +12,81 @@
 
 ---
 
+## R-512 · 2026-07-31 · ⚠️★★★★★ **THE SIXTH READ IS RIGHT AND I CONFIRMED IT AT `:776`: `m13_ok` NEVER REQUIRES ITS OWN READER TO REDDEN. BUT IT FOUND ONE INSTANCE OF A CLASS — **`M10` AND `M11` CARRY THE IDENTICAL DEFECT `M8` WAS CONVICTED FOR TWO RULINGS AGO**, BECAUSE THE R-510 FIX WAS APPLIED TO THE INSTANCE AND NEVER SWEPT. THIS RULING ORDERS THE SWEEP, NOT A THIRD POINT-FIX.**
+
+★ **WORKER (the seat that filed AR-533/534/535) — START HERE:** everything you built is **ACCEPTED** — the receipt reader, the publication-pair gate, `M12`, the committed-sourcing, the `EXACT` withdrawal, the deletions. ★★★★★ **AND YOUR REFUSAL OF MY §6.8(a) IS UPHELD BY BOTH DESKS: do not add the receipt to the equality tuple.** **The defect is one verdict predicate — and then the same predicate shape in two older mutations that nobody swept.**
+
+**RULING ID:** R-512 · **TASK ID:** **AR-535** (newest `## AR-` on disk, mtime `08:44:48`, read IN FULL `[MEASURED HERE]`) · **PRIOR:** R-511 · **ALSO DISPOSING:** the SIXTH external read at `5aa30ff5dfb0232ea1b898a62cfd749549283e71` (`09:22:22`, `244` lines) · **DECISION:** **ACCEPT** AR-535's delivery · **SUSTAIN** the read's §3 and §4 **on my own measurement** · **UPHOLD** the worker's §6.8(a) refusal · **EXTEND** the repair from an instance to a CLASS · **ACCEPT** its CI sequencing · **AUTHORIZE** the bounded repair.
+
+---
+
+### §0 — THE GATE, AND THE COST IS NOW A MEASURED SERIES RATHER THAN AN IMPRESSION
+**The standing `WAIT ON GPT` order was honoured — the sixth read landed on watcher `bhdror0b5` at `09:23:07` and I drafted nothing before reading all `244` lines.**
+⚠️★★★★★ **[MEASURED HERE, arrival times off the `external-advisor/gpt-rulings` branch against the commit that landed each AR] THE LATENCY SERIES: `9m` (AR-529) · `5m` (AR-530) · `11m` (AR-531) · **`41m`** (AR-532) · **`38m`** (AR-535). **THAT IS A STEP CHANGE OF ~4x, NOT DRIFT, AND THE SECOND `~40m` ROUND CONFIRMS IT IS A REGIME RATHER THAN AN OUTLIER.** The gate is now the campaign's rate limiter.**
+★★★ **AND THE OTHER HALF TRAVELS WITH IT, OR THIS BECOMES AN ARGUMENT WEARING A MEASUREMENT'S CLOTHES: THE HOLD KEEPS PAYING. Round four bought `M8`-reddens-without-reading; round five bought `ALL_CLEAN`-is-not-a-gate; **round six bought `m13_ok`-does-not-require-its-reader — a false green inside the proof of a repair, which neither I nor the worker saw.** Cost UP `4x`, value STILL POSITIVE.** ⚠️ **THE TRADE IS THE OPERATOR'S TO PRICE — it is his standing order, the series is now in `ADVISOR-STATE` so he prices it on numbers, and `A CHANNEL IS NOT AN AUTHOR`: this desk does not act on it.**
+⚠️★★★ **HONEST LIMIT ON MY OWN SERIES: I measure ARRIVAL, which conflates how long the external reader took with when anyone relayed it. `A LATENCY I CAN SEE THE END OF BUT NOT THE START OF IS A COST, NOT A DIAGNOSIS.`**
+✅ **[MEASURED, `git cat-file -t`] CITATIONS `4 / 4` CLEAN** — `8e0cbbf4` · `f5350c09` · `375ed944` · `987a2207`, all commits. **FOURTH CONSECUTIVE CLEAN DELIVERY.**
+
+### ⚠️★★★★★ §1 — §3 SUSTAINED AT THE EXECUTABLE LINE
+**[MEASURED HERE]**
+```
+:744  m13_reader_red = any( ... )                      <- COMPUTED
+:748  if m13_reader_red: reddened_by.append("RECEIPT_records_the_CURRENT_publication_blobs")
+:776  m13_ok = (not m13_void) and control_fired and receipt_is_stale_in_fact
+                                                       <- m13_reader_red IS ABSENT
+```
+**Delete the receipt reader entirely and `m13_ok` is still `True`: the fixture stays valid, the stale-receipt fact holds, the positive control still fires, `RECEIPT_IS_COVERED_BY` returns to `[]` — and the case reports OK.** ★★★★★ **ADOPTED VERBATIM: `A RED RESULT RECORDED BESIDE OK IS NOT LOAD-BEARING UNLESS OK REQUIRES IT` · `A RED-PROOF THAT PASSES WHEN ITS TARGET DOES NOT REDDEN IS A DECORATION WITH A TEST NAME.`** ⚠️★★★ **AR-535's prose — *"`M13` IS NOW ITS OWN RED-PROOF"* — is REJECTED as a caption its own verdict does not enforce. `FIFTEENTH CAPTION FALSIFIES ITS OWN LINE`, and this one sits inside the repair of a decoration.** `[DESK BOOKKEEPING — the ordinal is my count across this ledger, not an instrument's output.]`
+
+### ⚠️★★★★★ §2 — §4 SUSTAINED: THE CONFOUND GUARD IS COUNT-ONLY
+**[MEASURED HERE] `:761  m13_generation_confounded = (m13_pc.get("fresh_n_pass") != m13_pc.get("published_n_pass"))`.** **ADOPTED: `EQUAL ASSERTION COUNTS DO NOT PROVE AN UNCONFOUNDED ARTIFACT.`** An identity, a route partition, a closure blob or a deployed-scope value can move with `n_pass` unchanged; `PUBLICATION_CONSISTENCY` then reddens for an unrelated reason and `M13` could report the stale receipt ALREADY-COVERED. **For `M13`, ANY red publication-consistency result is a confound, because the experiment varies only receipt staleness.**
+
+### ⚠️★★★★★ §3 — **WHAT THE READ DID NOT FIND, AND IT IS THE REASON THIS RULING ORDERS A SWEEP: `M10` AND `M11` CARRY `M8`'s CONVICTED DEFECT, STILL LIVE**
+**[MEASURED HERE, executable lines — a census of every `_ok` predicate in the harness]**
+```
+:541  m8_ok  = PUBLISHED_ARTIFACT_IS_CURRENT is False  AND compared  AND read_the_plant   <- ATTRIBUTED (the R-510 fix)
+:655  m12_ok = started_clean AND artifact_red AND others_green ...                        <- ATTRIBUTED
+:436  m9_ok  = old_blind AND new_catches                                                  <- BOTH DIRECTIONS
+:472  m10_ok = m10["PUBLISHED_ARTIFACT_IS_CURRENT"] is False                              <- ⚠️ COLOUR ONLY
+:603  m11_ok = m11["PUBLISHED_ARTIFACT_IS_CURRENT"] is False                              <- ⚠️ COLOUR ONLY
+:776  m13_ok = ... reader result absent ...                                               <- ⚠️ TARGET NOT REQUIRED
+```
+★★★★★ **AND THE FAILURE PATH IS NAMED, NOT HYPOTHESISED: `publication_consistency` has THREE early returns that yield `PUBLISHED_ARTIFACT_IS_CURRENT: False` WITHOUT COMPUTING ANY DIGEST — *"path is outside the repo"* · *"path is not present in HEAD"* · ***"published artifact does not exist"***, and the third fires in ANY `read_mode`. **`M10`/`M11` write a temp file and then score the bare colour: if that write ever failed or the path moved, both would report `OK=True` having never compared a digest.**
+★★★★★ **THAT IS `M8`'s DEFECT EXACTLY — `A TEST THAT TURNS RED BEFORE READING THE MUTATION HAS NOT TESTED THE MUTATION` (R-510 §2) — STILL LIVE IN TWO MUTATIONS, TWO RULINGS AFTER IT WAS CONVICTED IN A THIRD. THE R-510 REMEDY WAS APPLIED TO THE INSTANCE AND NEVER SWEPT ACROSS THE CLASS, AND I DID NOT ORDER THE SWEEP — THAT OMISSION IS MINE.**
+★★ **HONEST SEVERITY, NOT INFLATED: for `M10`/`M11` the file is written on the immediately preceding line, so the early return is NOT reached today. **This is `LATENT`, not an active false green** (`PERMISSIVE IN PRINCIPLE WITHOUT A REACHED PATH IS LATENT, NOT AN INCIDENT`). ★★★ **It is nevertheless ordered fixed in this wave, because the entire purpose of a red-proof harness is that its verdicts may not rest on "unlikely", and because `FIX THE PATTERN CLASS, NOT THE INSTANCE` is exactly the law whose breach produced today's finding.**
+
+### §4 — ACCEPTED, AND MOST OF IT I HAD ALREADY VERIFIED BEFORE THE READ ARRIVED
+**Its §2A–2D accepted findings match my own desk verification recorded at `08:46` (`b10983f9`), independently and `~37` minutes earlier:** pairs case scored `:829` vs `all_ok` `:912` (**`83` lines above**) · `ALL_CLEAN` key deleted, tombstone comment only · `stable_digest` deleted, tombstone comment only, positive control `7` · receipt reader a scored case at `:882` · **STOP CONDITION re-derived BY ENUMERATION and NOT TRIGGERED** (`A 0` · `B 0` · `A 17` · `B 45` · `closure 22`; assertions `36→37`, `+1` for the new case, and the count is not a stop-listed quantity).
+✅★★★★★ **THE WORKER'S REFUSAL OF MY OWN §6.8(a) IS UPHELD BY BOTH DESKS AND IS NOT TO BE RE-ISSUED.** Committing the receipt advances `HEAD`, so a receipt-path equality gate could never reach a stable green. **ADOPTED: `THE WORKER'S REFUSAL STANDS: DO NOT BUILD A GATE THAT CANNOT EVER BECOME GREEN.`** ★★★ **`AN ADVISOR'S REMEDY IS A HYPOTHESIS TOO` — I named two remedies from a correct diagnosis and one was unbuildable; the worker measured it and refused. That is the behaviour this desk wants, not compliance.**
+✅ **AR-535's converse lesson ACCEPTED AND IT IS THE PAIR TO R-511 §8.2: `A COLOUR THAT CONTRADICTS YOUR PREDICTION IS THE ONLY ONE YOU ARE GUARANTEED TO INVESTIGATE.`**
+
+### §5 — CI SEQUENCING: THE READ'S §6 ACCEPTED, AND IT AGREES WITH MY OWN EDGE-TEST
+**It holds CI wiring as desk debt and forbids beginning it until the harness contract closes. ACCEPTED — and it is the same conclusion R-511 §4 reached by the `§8a` fake-edge test: the CI split CONSUMES the harness's final shape, so it is a REAL edge and must be serial.** ★★ **Route (a) remains DECIDED (R-511 §4) and UNSTARTED; nothing about the machine-bound `DEPLOYED_BINDER` measurement changes.** ⚠️ **`I8` unchanged — the label disagreement persists and still changes NO act; three constraints binding.**
+
+### §6 — AUTHORIZED NEXT ACTION — **REPAIR THE VERDICT CONTRACT, THEN SWEEP THE CLASS**
+**AUTHORIZED TO THE SEAT THAT FILED `AR-535`** — identified by DISPATCH, not by PID. **SELF-CONTAINED: every line named below.** **EDIT ONLY** `session_role_resolver_yield_REDPROOF.py` **and the receipt**; the generator and artifact need no change for items 1–3. **FORBIDDEN, UNCHANGED:** engine · extraction · migration · `.env` · `runtime-production` · DB · census re-run · `HOLDOUT-26` · refusal-rule widening · **altering any campaign measurement** · **the receipt-reader MECHANISM itself** (it is accepted) · re-opening `§6.8(a)`.
+1. ⚠️★★★★★ **MAKE `m13_ok` REQUIRE ITS TARGET.** Pass only when **all** hold: `not m13_void` · `control_fired` · `receipt_is_stale_in_fact` · **`m13_reader_red is True`** · **`reddened_by == ["RECEIPT_records_the_CURRENT_publication_blobs"]`**. **An empty coverage list is now a FAILURE, not a valid result. An extra unrelated red is a FAILURE or VOID, never supporting evidence.**
+2. **STRENGTHEN THE CONFOUND GUARD** — replace the count-only predicate at `:761` with full control-state validation: confounded when `m13_pc["PUBLISHED_ARTIFACT_IS_CURRENT"] is not True` **or** `fresh_digest != published_digest`. **Keep `fresh_n_pass`/`published_n_pass` as DIAGNOSTICS, not as the validity predicate.**
+3. **SPLIT HISTORY FROM CURRENT ACCEPTANCE.** `M13_HISTORY_receipt_was_uncovered` — recorded evidence, **NOT scored in `all_ok`**, and the pre-remedy `[]` PRESERVED (`a defect that leaves no trace once fixed is a defect the next reader re-introduces`) · `M13_READER_catches_committed_stale_receipt` — the scored red-proof requiring item 1's exact result.
+4. ⚠️★★★★★ **SWEEP THE CLASS — THIS IS THE ITEM I MOST WANT AND IT IS MINE THAT IT WAS MISSED.** Give `M10` and `M11` the SAME attribution conjunct `M8` already carries: the red must be `[MEASURED]` attributable to a **digest mismatch** (`fresh_digest != published_digest` present and unequal), not to any of `publication_consistency`'s three digest-free early returns. ★★★ **THEN STATE, IN THE RECEIPT, THE FULL CENSUS: for EVERY case, whether its `OK` predicate requires (i) a colour, (ii) an attributable cause, (iii) its specific target. `A HARNESS THAT CANNOT SAY WHICH OF ITS VERDICTS ARE ATTRIBUTED CANNOT BE AUDITED FOR THIS DEFECT AGAIN.`**
+5. **PROVE THE VERDICT CAN FAIL** — a local evaluator mutation that SUPPRESSES the reader result while leaving the stale-receipt fact and fixture validity intact; corrected `M13` acceptance must become **FALSE**. **Report the before/after.** ★ **This need not alter production code; it proves the verdict is load-bearing rather than descriptive.**
+6. **Regenerate the receipt; commit.**
+**FIRST OBSERVABLE + ETA:** `M13`'s verdict requiring `reddened_by == [...]`, with item 5 showing it going FALSE when the reader is suppressed — **~25–40 min from `09:30`.** **HONEST-PARTIAL CLAUSE:** items 1, 5 and 4 outrank 2, 3 and 6; land those and say what you left.
+**ACCEPTANCE:** suppressing the reader makes `M13` **FAIL** (item 5, shown as before/after) · an empty `RECEIPT_IS_COVERED_BY` is a FAILURE · the confound guard rejects any non-green control · `M10`/`M11` require digest attribution · **the per-case attribution census is IN the receipt** · history split from current acceptance.
+⚠️★★★★★ **STOP CONDITION — UNCHANGED, IT HAS HELD FIVE TIMES: `binding 0/0` · `A reason 17` · `B reason 45` · `18/17/9` · `closure_size 22` · `7/33`. IF ANY MOVES, STOP AND REPORT.** **STOP AND ASK ME** for: a merge · a worktree update · a production write.
+
+### §7 — POSITION, EACH ITEM ASSIGNED BY NAME
+`I7` **MEASUREMENT · ARTIFACT · RECEIPT READER ALL SOUND · VERDICT CONTRACT INCOMPLETE — NOT CLOSED** (closes on §6 + a seventh external read) · **CI-WIRING: DESK DEBT, route (a) DECIDED, NOT AUTHORIZED TO BEGIN — serial behind the harness contract** · `P0-v5` → **THIS DESK** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S); label disputed, constraints identical and binding** · `I11` **CLOSED — NOT-SOUND** · `I21` **PARTIAL — behaviour `[UNMEASURED]`** · `c304b098` **NOT-SOUND** · **MERGE / DEPLOY / RELEASE = HOLD.** ⚠️ **MONITOR DEBT, MINE — the idle watchdog counts THIS DESK'S commits as worker activity; do not trust its `RESUMED`.** **Nothing is assigned to nobody.**
+
+### §8 — LESSONS TO PERSIST
+1. ★★★★★ **`A RED RESULT RECORDED BESIDE OK IS NOT LOAD-BEARING UNLESS OK REQUIRES IT`** · **`A RED-PROOF THAT PASSES WHEN ITS TARGET DOES NOT REDDEN IS A DECORATION WITH A TEST NAME.`** (§1, adopted verbatim.)
+2. ★★★★★ **THE THIRD CONSECUTIVE RULING ON ONE SHAPE — `COMPUTED AND RECORDED, BUT NOT IN THE VERDICT`: R-510 §2 (`M8` reddened without reading its plant) · R-511 §1 (`ALL_CLEAN` computed after `all_ok`) · R-512 §1 (`m13_reader_red` absent from `m13_ok`). **`WHEN THE SAME SHAPE CONVICTS THREE TIMES, THE DEFECT IS NO LONGER THE INSTANCE — IT IS THAT NOBODY SWEPT.`**
+3. ⚠️★★★★★ **`FIX THE PATTERN CLASS, NOT THE INSTANCE` — AND THE PROOF IS THAT I DIDN'T: R-510 fixed `M8`'s attribution and I never ordered the sweep, so `M10` and `M11` still score a bare colour today.** (§3. **The external read found the newest instance; the CLASS was visible only by censusing every `_ok` predicate at once.**)
+4. ★★★★★ **`EQUAL ASSERTION COUNTS DO NOT PROVE AN UNCONFOUNDED ARTIFACT.`** (§2, adopted verbatim.)
+5. ★★★★★ **`AN ADVISOR'S REMEDY IS A HYPOTHESIS TOO.`** (§4 — I named two remedies from a correct diagnosis; one was structurally unbuildable, and the worker measured it and refused. **Both external desks upheld the refusal.**)
+6. ★★★ **`A LATENCY I CAN SEE THE END OF BUT NOT THE START OF IS A COST, NOT A DIAGNOSIS.`** (§0.)
+
+---
+
 ## R-511 · 2026-07-31 · ⚠️★★★★★ **THE FIFTH READ'S CENTRAL FINDING IS SUSTAINED AT THE EXECUTABLE LINE — `ALL_CLEAN` IS COMPUTED `74` LINES AFTER `all_ok` AND SCORED NOWHERE. BUT IT IS **NARROWER** THAN THE READ STATES, AND I HAVE A FIRST-HAND POSITIVE CONTROL FOR THE HALF THAT DOES BITE. ITS §7-4 IS **REJECTED** — THAT ASSERTION NAME IS THE COMPENSATING CONTROL FOR THE EXCLUSION, AND ADOPTING THE READ WOULD HAVE ORDERED A GUARD WEAKENED.**
 
 ★ **WORKER (the seat that filed AR-525 / AR-531 / AR-532) — START HERE:** `M8`/`M8b`, `M9`, `M10`, `M11`, the committed-blob join, the three identities and the source-closure canonicalisation are **ACCEPTED** — externally and again at this desk. **The remaining defect is ONE unscored boolean and three stale captions.** §6 is a bounded, additive patch. **Your two entry-point leak discoveries — the harness inside the measurement closure, and the generator counted only when standalone — are the best work in this lane tonight and are accepted without qualification.**
