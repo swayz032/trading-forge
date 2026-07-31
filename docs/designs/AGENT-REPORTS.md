@@ -4,6 +4,54 @@
 
 ---
 
+## AR-522 · 2026-07-31 · ★★★★★ **`I7` CLOSED — THE `C2` SESSION-ROLE RESOLVER YIELD ON `corpus_A` IS **`0` OF `155`**, WITH A DISCRIMINATING FLAG CONTROL PROVING THE ZERO IS REAL AND NOT AN UNSET ENV VAR.** ⚠️★★★★★ **AND THE ZERO IS NOT "INERT": OF `27` `WAIT_SESSION` ROWS THE CLASSIFIER RECOGNIZES `18` AND COMPUTES A REAL `ny_am` ZONE FOR `9` — AND **NOTHING BINDS.** THE CAPABILITY PRODUCES A USABLE ANSWER NOTHING CONSUMES.**
+
+**RULING ID:** R-499 §6 `I7` (order per R-500 §3) · **TASK ID:** AR-522 · **PRIOR:** AR-521. **FAN-IN: `2 / 4`.**
+
+### §1 — AR-521's HANDOFF IS WITHDRAWN ON THE OPERATOR'S OWN WORD — **STRUCK, NOT DELETED**
+**He said, directly and witnessed here: *"you are already a fresh worker."* He is right — this seat SEATED this session; AR-521 §5's *"a fresh worker session is needed"* was a premature self-assessment.** ★★★ **RETAINED UNDER PRESERVE-AND-STRIKE: AR-521 stays on the record exactly as written, including its handoff paragraph, because `NEVER RESOLVE A SUPERSEDED RECEIPT BY DELETING IT` — the record must show what was promised and when.** Its `I7` scoping (§2) was correct and is what made this lane cheap.
+
+### §2 — THE MEASUREMENT · **`0 / 155`** · ARTIFACT `session-role-resolver-yield-2026-07-31.json`
+**TREE `wt-h1-wave4-20260712` @ `c9560949`, branch `h1-wave4-sealed12-driver` · POPULATION `corpus_A` = `16` spec files, `155` entry_conditions · FLAG `TF_SESSION_ROLE_RESOLVER_ENABLED`, control `false` → treatment `true`.** **All three named beside the number, per `I7`'s acceptance.**
+| measure | OFF (control) | ON |
+|---|---|---|
+| bindable entry_conditions | **`128`** | **`128`** |
+| newly bound · lost · primitive changed · zone gained | — | **`0` · `0` · `0` · `0`** |
+| errors | — | **`0`** |
+**DETERMINISM: each arm run TWICE, byte-identical both times.** ★★ **`invalidations` (`16` rows) measured and reported SEPARATELY, never merged into the headline — the same declared exclusion the ledger-E packet makes.**
+
+### ★★★★★ §3 — THE POSITIVE CONTROL, WITHOUT WHICH THIS ZERO WOULD BE WORTHLESS
+**`A BARE ZERO IS UNREADABLE: "the resolver is inert", "the population is empty" and "my flag never arrived" ALL PRINT AS 0.`**
+**[MEASURED HERE] `session_role_resolver_enabled()` → `False` at `false`, `True` at `true` — `DISCRIMINATES: true`.** **The gate provably reads THIS process's environment**, so the zero is a fact about the resolver and not about an unset variable. ★★★ **This is the R-497 §4 lesson applied before publishing rather than after: a control is the only thing separating my finding from my bug.**
+**AND THE POPULATION IS NOT EMPTY:** `corpus_A` carries **`27` `WAIT_SESSION`** conditions (of `155`; types: `WAIT_STRUCTURE` `78`, `WAIT_SESSION` `27`, `WAIT_CONFIRMATION` `23`, `WAIT_RETEST` `20`, `WAIT_BIAS` `4`, `FILTER` `3`).
+
+### ⚠️★★★★★ §4 — THE REAL FINDING, AND IT IS SHARPER THAN THE HEADLINE
+**Per-condition, flag ON, all `27` `WAIT_SESSION` rows:**
+| stage | fired |
+|---|---|
+| `resolve_session_keyword` | **`0`** |
+| name-route (`resolve_session_name_to_window`) | **`0`** |
+| ★ `classify_session_role` **recognized** | **`18`** |
+| ★★★ classifier **computed a real zone** (all `ny_am`) | **`9`** |
+| ⚠️★★★★★ **FINAL bindable** | **`0`** |
+★★★★★ **THE CAPABILITY IS NOT DORMANT AND IT IS NOT WRONG — IT RECOGNIZES REAL SESSION WORK IN `18` ROWS AND COMPUTES A COMPUTABLE WINDOW IN `9`, AND NOT ONE OF THEM REACHES A BINDING.** **`A ZERO YIELD FROM A CAPABILITY THAT PRODUCED NINE ANSWERS IS A WIRING FINDING, NOT AN ABSENCE.`** ★★ **The register's row-3 prerequisite — *"whether it binds a single `C2` condition"* — is now MEASURED, and the answer is NO.**
+
+### ⚠️★★★ §5 — MY OWN NUMBER, CORRECTED BEFORE IT TRAVELLED
+**I first read `9` recognized / `3` zones off a printout TRUNCATED TO 14 OF 27 ROWS and said so mid-run. The measured full-population figures are `18` and `9`.** ★★★ **The instrument was fine; my READ of it was partial. `A PARTIAL VIEW REPORTED AS A FULL ONE IS THE SAME DEFECT WHETHER THE CAUSE IS A GREP, A FILTER OR A `head`.` Corrected here, and the artifact — not any prose — is authoritative.**
+
+### §6 — WHAT I DID **NOT** DECIDE, DELIBERATELY
+**TWO CANDIDATE EXPLANATIONS, BOTH `[HYPOTHESIS — NOT MEASURED]`, recorded in the artifact as two:**
+- **H1 — computed but not consumed:** the binding path does not convert the classifier's zone into a binding for these condition shapes.
+- **H2 — upstream extraction:** several `object` values are **long narration sentences** rather than canonical session objects (e.g. *"So the gap from the closing point of t…"*, *"this is an example of a bearish imbala…"*), so the failing layer may be EXTRACTION. The sibling harness's `narration-reclassification-FINAL.json` is consistent with this.
+★★★★★ **NO TEST IN THIS RUN DISTINGUISHES THEM, SO I PICKED NEITHER.** `IF A TEST CANNOT DISTINGUISH TWO EXPLANATIONS, SAY SO AND ESCALATE RATHER THAN CHOOSING THE CONVENIENT ONE.` **Locating the failing layer is a SEPARATE authorization — `I7` is a measurement lane and its forbidden list includes any binding/extraction code change.**
+
+### §7 — FILES · SCOPE · NEXT
+**NEW ONLY, no engine change:** `docs/replay-results/h1-battery/session_role_resolver_yield.py` (generator) + `session-role-resolver-yield-2026-07-31.json` (artifact, carrying `reproduce`, `TREE`, `POPULATION`, `FLAG_STATE`, `DETERMINISM`, `POSITIVE_CONTROLS`, per-row forensics and the two hypotheses). ★★ **The 7,013-line `dual_denominator_remeasure.py` was MIRRORED, never edited — it carries append-only guards and its own assert census, and editing an instrument to measure with it is how you lose both.**
+⚠️ **SCOPE STATED NARROWLY: `corpus_A` ONLY. Not POP-120-LIVE, not tier-A/spearhead. Campaign tree only — the DEPLOYED `spec_family_bindings.py` is a 3.9x smaller variant (AR-520), so none of this describes what runs.** **Whether any binding would be CORRECT is ground truth and not mine to score.**
+**NEXT: `I8`** (semantic-role migration, shadow only, A2's full clause list). **`I11` ahead of it the moment the word arrives.** **`c304b098` untouched · MERGE / DEPLOY / RELEASE = HOLD · nothing in flight · no sub-agent owed.**
+
+---
+
 ## AR-521 · 2026-07-31 · **HANDOFF — `1 / 4` LANES CLOSED, AND I AM DECLARING THAT AS `1 / 4`, NOT AS PROGRESS.** ★★★ **`I7` IS SCOPED AND ITS HARNESS IS NAMED SO THE NEXT SEAT DOES NOT RE-DERIVE IT. A FRESH WORKER SESSION IS NEEDED.**
 
 **RULING ID:** R-499 §6 / R-500 §3 · **TASK ID:** AR-521 · **PRIOR:** AR-520. **POSITION: `h1-wave4-sealed12-driver` @ `1dc09bac`.**

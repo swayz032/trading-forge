@@ -1,0 +1,432 @@
+{
+  "READ_THIS_ONE__HEADLINE": "C2 session-role resolver yield on corpus_A entry_conditions: 0 of 155 conditions change from NOT-bindable to bindable when TF_SESSION_ROLE_RESOLVER_ENABLED flips false->true. Flags-off control included. Identities listed.",
+  "artifact": "session-role-resolver-yield-2026-07-31.json",
+  "generator": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
+  "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield.py",
+  "ruling": "R-499 lane I7 (ordering per R-500 s3)",
+  "TREE": {
+    "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
+    "head": "c95609499360a5c1a4b74391da7282b1bcda7dcd",
+    "branch": "h1-wave4-sealed12-driver",
+    "dirty_paths": 95
+  },
+  "POPULATION": {
+    "name": "corpus_A (claude-rung-v32/shakedown_specs/*.spec.json)",
+    "spec_files": 16,
+    "entry_conditions": 155,
+    "invalidations_REPORTED_SEPARATELY": 6,
+    "CORPORA_ARE_SEPARATE": "corpus_A ONLY. Not POP-120-LIVE, not tier-A/spearhead. Any sentence joining this number to a POP-120 figure is a claim about an overlap nobody has measured."
+  },
+  "FLAG_STATE": {
+    "flag": "TF_SESSION_ROLE_RESOLVER_ENABLED",
+    "control_arm": "false",
+    "treatment_arm": "true",
+    "PRODUCTION_DEFAULT": "OFF -- the flag defaults to 'false' when unset.",
+    "honest_reading": "The treatment arm is a flag-ON HYPOTHETICAL. Production output today, with default env, is the CONTROL arm."
+  },
+  "DETERMINISM": {
+    "each_arm_run_twice": true,
+    "identical_across_runs": true,
+    "note": "A yield from a non-deterministic binder is not a measurement."
+  },
+  "RESULT_entry_conditions": {
+    "bindable_count_OFF": 128,
+    "bindable_count_ON": 128,
+    "NEWLY_BOUND_identities": [],
+    "LOST_BINDING_identities": [],
+    "PRIMITIVE_CHANGED_identities": [],
+    "SESSION_ZONE_GAINED_identities": [],
+    "ERRORS": [],
+    "IDENTITIES_NOT_COUNTS": "Every count above is len() of the list beside it. A count that can disagree with its own identity list is the defect R-425 named."
+  },
+  "RESULT_invalidations_SEPARATE": {
+    "population": 6,
+    "NEWLY_BOUND_identities": [],
+    "LOST_BINDING_identities": [],
+    "PRIMITIVE_CHANGED_identities": [],
+    "SESSION_ZONE_GAINED_identities": [],
+    "ERRORS": []
+  },
+  "POSITIVE_CONTROLS": {
+    "GATE_READS_THIS_PROCESS_ENV": {
+      "flag_false": false,
+      "flag_true": true,
+      "DISCRIMINATES": true
+    },
+    "capability_on_synthetic_phrases": {
+      "london session": {
+        "recognized": true,
+        "zone": null
+      },
+      "the london killzone": {
+        "recognized": false,
+        "zone": null
+      },
+      "new york session": {
+        "recognized": true,
+        "zone": null
+      },
+      "9:30 to 10:00": {
+        "recognized": false,
+        "zone": null
+      },
+      "asian session": {
+        "recognized": true,
+        "zone": null
+      }
+    },
+    "why_this_is_here": "If the gate did not discriminate, every number in this artifact would be a measurement of an unset environment variable, not of the resolver."
+  },
+  "WAIT_SESSION_FORENSICS": {
+    "summary": {
+      "wait_session_rows": 27,
+      "bindable": 0,
+      "keyword_resolved": 0,
+      "name_route_would_fire": 0,
+      "classifier_recognized": 18,
+      "classifier_COMPUTED_A_ZONE": 9,
+      "zones_computed": [
+        "ny_am"
+      ]
+    },
+    "rows": [
+      {
+        "file": "-igpOZs8LsM__s0.spec.json",
+        "video": "-igpOZs8LsM__s0",
+        "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+        "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "-igpOZs8LsM__s0.spec.json",
+        "video": "-igpOZs8LsM__s0",
+        "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+        "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "0xygpCMwxbQ__s0.spec.json",
+        "video": "0xygpCMwxbQ__s0",
+        "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+        "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "0xygpCMwxbQ__s0.spec.json",
+        "video": "0xygpCMwxbQ__s0",
+        "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+        "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "0xygpCMwxbQ__s0.spec.json",
+        "video": "0xygpCMwxbQ__s0",
+        "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+        "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "4cT8WTyxhYY__s0.spec.json",
+        "video": "4cT8WTyxhYY__s0",
+        "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+        "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "_LS6qcSlDCs__s0.spec.json",
+        "video": "_LS6qcSlDCs__s0",
+        "condition_id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+        "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "_LS6qcSlDCs__s0.spec.json",
+        "video": "_LS6qcSlDCs__s0",
+        "condition_id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+        "object": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "CLDEIsNpVRc__s0.spec.json",
+        "video": "CLDEIsNpVRc__s0",
+        "condition_id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+        "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "CLDEIsNpVRc__s0.spec.json",
+        "video": "CLDEIsNpVRc__s0",
+        "condition_id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+        "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "DLwVqcLRcfw__s0.spec.json",
+        "video": "DLwVqcLRcfw__s0",
+        "condition_id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+        "object": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "dV7chra4u4Q__s0.spec.json",
+        "video": "dV7chra4u4Q__s0",
+        "condition_id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+        "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones.",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "E9MzEC_yNoM__s1.spec.json",
+        "video": "E9MzEC_yNoM__s1",
+        "condition_id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+        "object": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "E9MzEC_yNoM__s1.spec.json",
+        "video": "E9MzEC_yNoM__s1",
+        "condition_id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+        "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps.",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "E9MzEC_yNoM__s1.spec.json",
+        "video": "E9MzEC_yNoM__s1",
+        "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+        "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "E9MzEC_yNoM__s1.spec.json",
+        "video": "E9MzEC_yNoM__s1",
+        "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+        "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+        "object": "a simple 1-hour candle pattern I follow before my trading session every day",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+        "object": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+        "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+        "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+        "object": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+        "object": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "kFyD3H6I1I8__s0.spec.json",
+        "video": "kFyD3H6I1I8__s0",
+        "condition_id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+        "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "R5L890juvRw__s0.spec.json",
+        "video": "R5L890juvRw__s0",
+        "condition_id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+        "object": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "R5L890juvRw__s0.spec.json",
+        "video": "R5L890juvRw__s0",
+        "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+        "object": "you might have a long idea for your session",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": false,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "R5L890juvRw__s0.spec.json",
+        "video": "R5L890juvRw__s0",
+        "condition_id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+        "object": "as the New York session opens we are still right on Fair Value we start running up",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": null,
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      },
+      {
+        "file": "W7nlnHTUZQU__s0.spec.json",
+        "video": "W7nlnHTUZQU__s0",
+        "condition_id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+        "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
+        "keyword_resolved": false,
+        "name_route_would_fire": false,
+        "classifier_recognized": true,
+        "classifier_zone": "ny_am",
+        "FINAL_bindable": false,
+        "FINAL_primitive": null
+      }
+    ],
+    "READING": "The resolver is NOT inert and the population is NOT empty. It recognizes real session work and computes a real zone for some rows, yet NOTHING binds. A bare 0 would have hidden both halves."
+  },
+  "CANDIDATE_EXPLANATIONS_UNRESOLVED": {
+    "STATUS": "HYPOTHESES -- NOT MEASURED. I7 is a measurement lane; locating the failing layer is a separate authorization.",
+    "H1_output_computed_but_not_consumed": "The classifier computes a zone the binding path does not convert into a binding for these condition shapes.",
+    "H2_upstream_extraction": "Several `object` values are long narration sentences rather than canonical session objects, so the failing layer may be extraction, not the resolver. The sibling harness carries a narration-reclassification artifact, which is consistent with this.",
+    "WHY_NOT_DECIDED_HERE": "No test in this run distinguishes H1 from H2, and picking the convenient one is the shape this campaign convicts. Reported as two."
+  },
+  "WHAT_THIS_DOES_NOT_MEASURE": [
+    "Whether any newly-bound condition is bound CORRECTLY -- that is GROUND TRUTH and belongs to an independent grader. This script is the doer.",
+    "Any population other than corpus_A.",
+    "The DEPLOYED tree. This runs in the campaign checkout; the deployed spec_family_bindings.py is a 3.9x smaller variant (AR-520).",
+    "Whether the C2 refusal CLASS shrinks -- this measures binding outcome change, which is a necessary but not sufficient condition for that."
+  ]
+}
