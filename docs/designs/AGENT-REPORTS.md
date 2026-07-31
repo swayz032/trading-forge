@@ -4,6 +4,40 @@
 
 ---
 
+## AR-528 · 2026-07-31 · ★★★★★ **R-506 §5 DISCHARGED — THE SCOPE SENTENCE IS NOW **INSIDE THE ARTIFACT AND MEASURED**, CARRIED BY A TRIPWIRE THAT SELF-DESTRUCTS THE MOMENT THE CAPABILITY IS PORTED. `30` ASSERTIONS, `6 / 6` MUTATIONS DISCRIMINATE.**
+
+**RULING ID:** R-506 §5 · **TASK ID:** AR-528 · **PRIOR:** AR-527 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `f7586b10` (generator), `7c4bb0c8` (red-proof), artifacts this commit.
+
+### §1 — WHAT R-506 §5 ASKED FOR, AND WHY I DID NOT DO IT IN PROSE
+**R-506 §5: *"no `I7` number may EVER be stated about production without this sentence beside it."*** ★★★★★ **A SENTENCE THAT MUST ACCOMPANY EVERY QUOTATION CANNOT LIVE IN AN AR — IT HAS TO TRAVEL WITH THE OBJECT BEING QUOTED. So it is now a top-level artifact key, deliberately named `DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE`, and it is COMPUTED from the deployed tree at run time rather than typed.** ★★★ **This is R-506 §3's own lesson applied to R-506 §5's own instruction: `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT READER; A RULE OBEYED IN PROSE CAN.` A hand-typed scope sentence is the first thing to go stale after a port — and it would go stale SILENTLY, which is the whole failure mode.**
+
+### ★★★★★ §2 — IT IS A **TRIPWIRE**, NOT A NOTE — IT IS BUILT TO FAIL
+**`SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane` asserts that `session_role_resolver_enabled` · `classify_session_role` · `SESSION_TEACHING_UNBOUND_REASON` · `resolve_session_name_to_window` · `SESSION_WRAPPING_WINDOW_UNBOUND_REASON` · `SessionRoleResult` are ALL absent from the deployed binder.**
+★★★★★ **IT GOES RED ON GOOD NEWS. The day someone ports the capability, this assertion fails — and that is CORRECT, because that is exactly the day every scope sentence in the artifact becomes a lie. `A KNOWN-BROKEN-STATE TRIPWIRE ASSERTS BOTH HALVES AND SELF-DESTRUCTS WHEN THE STATE IS FIXED`, and its red message says so in words rather than leaving the next reader to infer it.**
+**Second assertion, `SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign`, guards the OTHER direction: `0` deployed-only symbols today. If that ever becomes non-zero the port must RECONCILE, not merely ADD — a materially different job, and one nobody would notice from a size ratio.**
+★★ **FAIL-CLOSED: if the deployed tree is unreachable the block returns `DEPLOYED_TREE_UNREACHABLE_FROM_THIS_MACHINE` and says NOTHING may be stated about production at all — it does not silently omit the scope sentence.**
+
+### §3 — RED-PROOF EXTENDED, AND THE TWO NEW CHECKS ARE PROVEN **INDEPENDENT**
+```
+[OK] CONTROL_unmutated                    exit=0, 30/30 pass
+[OK] M1 baseline identity swapped, COUNT PRESERVED -> identity assertion RED
+[OK] M2 non-family row moved              -> non-C2 hard stop   RED
+[OK] M3 binder reported dirty             -> provenance         RED
+[OK] M4 arms made identical               -> positive witness   RED
+[OK] M5 capability pretended PORTED       -> SCOPE TRIPWIRE     RED, strict-subset stayed GREEN
+[OK] M6 deployed-only symbol planted      -> STRICT SUBSET      RED, tripwire stayed GREEN
+ALL CASES DISCRIMINATE: True
+```
+★★★★★ **M5 AND M6 ARE DELIBERATELY CROSS-CONSTRAINED: each must redden its OWN assertion while the OTHER stays green. Had one mutation reddened both, the two "assertions" would have been ONE CHECK WEARING TWO NAMES — which reads as extra coverage and is not. `A GUARD THAT CANNOT BE DISTINGUISHED FROM ITS NEIGHBOUR IS NOT A SECOND GUARD.`**
+★★ **`30 / 30` green with `0` fail, and every assertion class in the file now has a demonstrated path to red. I did NOT add the two assertions and call them coverage — untested guards were what R-503-era deliveries kept shipping.**
+
+### §4 — POSITION
+**`I7` DELIVERED · PUBLISHED · EXTERNALLY UNVERIFIED — NOT CLOSED, and I do not close it: `THE DOER DOES NOT CERTIFY`. The external ten-point technical review is the open item and it is not mine.** · **`I8` DECLINED, prerequisite owned by THIS ADVISOR SEAT (R-506 §6)** · **`I21` follow-up CLOSED** · `I11` CLOSED · `c304b098` NOT-SOUND · `P0-v5` NOT MINE · **MERGE / DEPLOY / RELEASE = HOLD.**
+**NO ENGINE, EXTRACTION OR MIGRATION FILE MODIFIED IN ANY TREE — the binder's blob is ASSERTED identical to HEAD by the artifact itself. No sub-agent dispatched or owed. Nothing in flight.**
+★★★ **NOT A HANDOFF: my context is not exhausted and I remain the assigned seat. Every lane I was given is at a terminal state and the two open items are both owned by name elsewhere — the external review, and the desk's population-naming act. IF EITHER RETURNS WORK TO ME, I TAKE IT.**
+
+---
+
 ## AR-527 · 2026-07-31 · ⚠️★★★★★ **`I8` IS **DECLINED, NOT DEFERRED** — ADVANCING IT REQUIRES AN ACT TWO STANDING PROHIBITIONS FORBID, AND ITS PREREQUISITE IS THE **ADVISOR'S** TO PERFORM, NOT NOBODY'S. AND THE `I21` FOLLOW-UP IS **MEASURED**: THE DEPLOYED BINDER IS A STRICT SUBSET — `70` SYMBOLS MISSING, `0` EXTRA — SO ROWS 1–3 ARE A **PORT**, NOT A FLAG FLIP.**
 
 **RULING ID:** R-505 §5 (`I8` after `I7`, then the `I21` follow-up) · **TASK ID:** AR-527 · **PRIOR:** AR-526 · **SEAT:** the seat that filed AR-525.

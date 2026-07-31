@@ -57,6 +57,32 @@
       "collateral_failures": [],
       "VERDICT": "DISCRIMINATES",
       "OK": true
+    },
+    {
+      "case": "M5_capability_pretended_PORTED",
+      "assertion_that_must_go_RED": "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [
+        "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign"
+      ],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
+    },
+    {
+      "case": "M6_deployed_only_symbol_planted",
+      "assertion_that_must_go_RED": "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+      "it_went_RED": true,
+      "exit_code": 1,
+      "exit_code_is_nonzero": true,
+      "assertions_that_must_STAY_GREEN": [
+        "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane"
+      ],
+      "collateral_failures": [],
+      "VERDICT": "DISCRIMINATES",
+      "OK": true
     }
   ]
 }

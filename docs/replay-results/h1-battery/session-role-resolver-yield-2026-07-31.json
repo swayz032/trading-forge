@@ -7,9 +7,9 @@
   "ruling": "R-503 \u00a75 items A-H + \u00a73 reconciliation (supersedes R-502 \u00a74, R-501 \u00a76)",
   "TREE": {
     "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
-    "head": "463f588dcf018b8047a7814b1e54210ce09dd7f2",
+    "head": "f7586b108428ef348a9c77297b63c2eeccc7acfa",
     "branch": "h1-wave4-sealed12-driver",
-    "dirty_paths": 95
+    "dirty_paths": 93
   },
   "FLAG_STATE": {
     "flag": "TF_SESSION_ROLE_RESOLVER_ENABLED",
@@ -24,7 +24,7 @@
   },
   "ASSERTIONS": {
     "ALL_PASS": true,
-    "n_pass": 28,
+    "n_pass": 30,
     "n_fail": 0,
     "checks": [
       {
@@ -207,7 +207,7 @@
         "PASS": true,
         "detail": {
           "intersection": [],
-          "tree_dirty_paths_total": 95,
+          "tree_dirty_paths_total": 93,
           "closure_size": 22,
           "WHY": "R-503 \u00a75.G -- a relevant intersection is a STOP. The tree carries unrelated dirty paths; what matters is whether ANY of them is in the executed source+population closure."
         }
@@ -241,17 +241,57 @@
         "PASS": true,
         "detail": {
           "pre": {
-            "dirty_path_count": 95,
+            "dirty_path_count": 93,
             "intersection_with_closure": []
           },
           "post": {
-            "dirty_path_count": 95,
+            "dirty_path_count": 93,
             "intersection_with_closure": []
           }
+        }
+      },
+      {
+        "assertion": "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
+        "PASS": true,
+        "detail": {
+          "status": "MEASURED",
+          "capability_symbols_present_in_deployed": [],
+          "MEANING_OF_RED": "The capability now EXISTS in the deployed engine. This artifact's campaign-lane scope sentence is STALE and must be re-stated before any figure here is quoted."
+        }
+      },
+      {
+        "assertion": "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
+        "PASS": true,
+        "detail": {
+          "in_deployed_absent_from_campaign": 0,
+          "WHY": "0 deployed-only symbols means the divergence is purely SUBTRACTIVE -- one lineage with things removed, not two divergent forks. A non-zero value means the port would have to RECONCILE, not just ADD."
         }
       }
     ],
     "EXIT_CODE_CONTRACT": "This generator exits NON-ZERO if any assertion fails. A green artifact that cannot go red is not an instrument."
+  },
+  "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": {
+    "STATUS": "MEASURED",
+    "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
+    "campaign_bytes": 160049,
+    "deployed_bytes": 40583,
+    "campaign_top_level_symbols": 103,
+    "deployed_top_level_symbols": 33,
+    "in_campaign_ABSENT_from_deployed": 70,
+    "in_deployed_ABSENT_from_campaign": 0,
+    "STRICT_SUBSET": true,
+    "capability_symbols_checked": [
+      "session_role_resolver_enabled",
+      "classify_session_role",
+      "SESSION_TEACHING_UNBOUND_REASON",
+      "resolve_session_name_to_window",
+      "SESSION_WRAPPING_WINDOW_UNBOUND_REASON",
+      "SessionRoleResult"
+    ],
+    "capability_symbols_PRESENT_in_deployed": [],
+    "capability_absent_from_deployed": true,
+    "\u2605_SCOPE_SENTENCE": "EVERY NUMBER IN THIS ARTIFACT IS A CAMPAIGN-LANE FACT. The session-role capability it measures DOES NOT EXIST AS CODE in the deployed engine -- the symbols that constitute it are absent, so the flag has nothing to gate there. This is a PORT, not a configuration change. `MEASURED != MEASURED-WHERE-IT-RUNS`: no figure here may be stated about production without this sentence beside it.",
+    "WHY_COMPUTED_NOT_TYPED": "R-506 \u00a73: `A RULE WRITTEN INTO THE ARTIFACT CANNOT BE FORGOTTEN BY THE NEXT READER; A RULE OBEYED IN PROSE CAN.` The assertion below is a TRIPWIRE -- it goes RED the moment any capability symbol appears in the deployed binder, which is exactly when every scope sentence here becomes stale."
   },
   "RECONCILIATION_18_17_9": {
     "THE_QUESTION": "AR-524 reported 18 recognized / 17 reason transitions / 9 computed zones / 0 bindings. R-503 \u00a73 requires the partition proven by IDENTITY, not arithmetic.",
@@ -8358,7 +8398,7 @@
   },
   "PROVENANCE_SOURCE_CLOSURE": {
     "WHY_THIS_EXISTS": "R-502 \u00a74: `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Deterministic repeated execution proves repeatability INSIDE the checkout; it does NOT prove the binder that ran equals the named commit. This manifest does, by comparing worktree bytes to the HEAD blob for every file in the EXECUTED source+population closure.",
-    "head": "463f588dcf018b8047a7814b1e54210ce09dd7f2",
+    "head": "f7586b108428ef348a9c77297b63c2eeccc7acfa",
     "closure_size": 22,
     "binder_blob": {
       "path": "src/engine/spec_family_bindings.py",
@@ -8368,8 +8408,8 @@
     },
     "generator_blob": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "941888089073d5d5e67c4f57a54abe2215ad45eb",
-      "head_blob": "941888089073d5d5e67c4f57a54abe2215ad45eb",
+      "worktree_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
+      "head_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
       "IDENTICAL": true
     },
     "pinned_baseline_blob": {
@@ -8385,13 +8425,13 @@
       "head_blob": "c99951098c209afc546fb218fbce97c8096d2a0c",
       "IDENTICAL": true
     },
-    "tree_dirty_path_count": 95,
+    "tree_dirty_path_count": 93,
     "PRE_RUN_STATUS": {
-      "dirty_path_count": 95,
+      "dirty_path_count": 93,
       "intersection_with_closure": []
     },
     "POST_RUN_STATUS": {
-      "dirty_path_count": 95,
+      "dirty_path_count": 93,
       "intersection_with_closure": []
     },
     "PRE_AND_POST_AGREE": true,
@@ -8407,8 +8447,8 @@
       },
       {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "941888089073d5d5e67c4f57a54abe2215ad45eb",
-        "head_blob": "941888089073d5d5e67c4f57a54abe2215ad45eb",
+        "worktree_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
+        "head_blob": "d99764c0e5fb0e87fd70ed984c3cac357539f546",
         "IDENTICAL": true
       },
       {
@@ -8539,7 +8579,7 @@
   "WHAT_THIS_DOES_NOT_MEASURE": [
     "Whether a refusal is the CORRECT disposition for a condition -- that is GROUND TRUTH and belongs to an independent grader. This script is the doer.",
     "Any population other than corpus_A and corpus_B, each reported separately.",
-    "The DEPLOYED tree. This runs in the campaign checkout; the deployed spec_family_bindings.py is a 3.94x smaller variant (R-501 \u00a73).",
+    "The DEPLOYED tree -- and the reason is now MEASURED, not estimated: see DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE. The capability does not exist as code there, so the flag has nothing to gate. R-506 \u00a75.",
     "Whether the C2 refusal CLASS shrinks downstream -- this measures binding and reason movement, necessary but not sufficient for that.",
     "A baseline-sourced C2 denominator for corpus B -- the pinned baseline carries no per-condition unbound list for it. Stated, not substituted."
   ]
