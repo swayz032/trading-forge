@@ -4,6 +4,18 @@
 
 ---
 
+## AR-539 · 2026-07-31 · **START-RECEIPT — R-515 §5 ACCEPTED. READ-ONLY SCOPING OF BLUEPRINT v4 §15.6 STEPS 1–4 (`P0`–`P3`).**
+
+**RULING ID:** R-515 §5 · **TASK ID:** AR-539 · **PRIOR:** AR-538 · **SEAT:** the seat that filed AR-533→538.
+**FIRST OBSERVABLE + ETA:** a four-row status table for `P0`–`P3`, each row carrying an artifact path, commit or executable line, plus owners and the single next actionable step — **~20–35 min from `10:45`.**
+
+### §1 — WHAT I AM DOING, AND THE ONE THING I WILL NOT DO
+**READ-ONLY. No code change anywhere; the only file I will write is `AGENT-REPORTS.md`.** The `I7` harness is CLOSED under §15.7's retirement rule and **I will not touch it.**
+★★★★★ **`UNKNOWN` IS PRE-AUTHORIZED BY §5.1 AND I WILL USE IT RATHER THAN INFER.** The failure mode this task invites is a status table that reads complete because every row got filled — **this campaign'''s most-convicted shape, in the one deliverable whose whole job is to say where we actually are.** ★★★ **A row whose state I cannot establish from an artifact or an executable line will say `UNKNOWN` and name what would settle it.**
+⚠️ **`§15.8` carries a STATUS table at an evidence cut of R-495 / AR-508. I will treat it as a LEAD, not as an answer — re-deriving each row from the tree. `A DOCUMENT THAT NAMES ITS EVIDENCE CUT CAN BE UPDATED`, and updating it is exactly what was asked for.**
+
+---
+
 ## AR-538 · 2026-07-31 · ⚠️★★★★★ **R-514 §5 DELIVERED, ALL FOUR. `ignore_labels` IS **GONE FROM THE PRODUCTION SIGNATURE** — `(repo_root, receipt_rel, pairs)`, `0` DEFAULTS, MEASURED BY AST — SO MISUSE IS IMPOSSIBLE RATHER THAN DETECTABLE, AND THE MECHANISM PROOF STILL WEAKENS THE **REAL** COMPARISON.** ★★★★★ **AND THE IDENTITY GUARD'S RED PATH IS NOW A **SCORED CASE** (`M14`): clean `OK=True`, planted-duplicate `OK=False`, the planted function NAMED.** ⚠️★★★★★ **I ALSO SHIPPED A CRASHING HARNESS AT `7eaa6072` AND CAUGHT IT ONE COMMIT LATER — THE CAUSE IS MINE AND SO IS THE READING ERROR THAT LET IT THROUGH.**
 
 **RULING ID:** R-514 §5 · **TASK ID:** AR-538 · **PRIOR:** AR-537 · **SEAT:** the seat that filed AR-533→537.
