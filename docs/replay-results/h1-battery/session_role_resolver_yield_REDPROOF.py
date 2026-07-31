@@ -110,6 +110,21 @@ def m6_plant_a_deployed_only_symbol(mod):
     mod.top_level_symbols = patched
 
 
+def m7_make_symbol_sets_equal(mod):
+    """Make the deployed symbol set EQUAL the campaign set. `dep <= camp` is
+    satisfied by equality; `dep < camp` is NOT. This is the case the retired
+    `STRICT_SUBSET` predicate silently absorbed."""
+    orig = mod.top_level_nodes
+
+    def patched(path):
+        n = orig(path)
+        if str(path) == str(mod.DEPLOYED_BINDER):
+            return dict(orig(mod.REPO_ROOT / "src/engine/spec_family_bindings.py"))
+        return n
+    mod.top_level_nodes = patched
+    mod.top_level_symbols = lambda p: set(patched(p))
+
+
 CASES = [
     ("M1_baseline_identity_swapped_COUNT_PRESERVED", m1_swap_one_baseline_identity,
      "A_OFF_unbound_IDENTITIES_equal_baseline_identities__NOT_JUST_THE_COUNT",
@@ -122,12 +137,25 @@ CASES = [
      "PROVENANCE_source_closure_dirty_intersection_is_ZERO", []),
     ("M4_arms_made_identical", m4_make_arms_identical,
      "POSITIVE_WITNESS_the_arms_actually_moved_rows_INSIDE_the_family", []),
+    # ⚠️ R-507 §6.3 -- M5's COLLATERAL-GREEN CLAIM IS WITHDRAWN. It previously
+    #   asserted the strict-subset check STAYED GREEN under this mutation. It
+    #   did -- but only because the old predicate passed on EQUALITY, and this
+    #   mutation makes the two sets equal by pointing both at one file. The
+    #   green was the DEFECT WEARING THE PROOF'S UNIFORM, not independence.
+    #   Collateral contract is now EMPTY; whatever it reddens is REPORTED.
     ("M5_capability_pretended_PORTED", m5_pretend_capability_was_ported,
      "SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane",
-     ["SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign"]),
+     []),
     ("M6_deployed_only_symbol_planted", m6_plant_a_deployed_only_symbol,
-     "SCOPE_deployed_binder_is_a_STRICT_SUBSET_of_campaign",
-     ["SCOPE_TRIPWIRE_capability_still_ABSENT_from_the_deployed_lane"]),
+     "SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign",
+     []),
+    # ★★★★★ R-507 §6.2 -- THE MUTATION THE OLD PREDICATE COULD NOT SEE.
+    #   Equality satisfies subset-OR-equal and must NOT satisfy strict subset.
+    #   The retired `STRICT_SUBSET` key passed here, which is precisely why
+    #   M5's collateral-green was vacuous.
+    ("M7_sets_made_EQUAL", m7_make_symbol_sets_equal,
+     "SCOPE_deployed_symbols_are_a_STRICT_SUBSET_of_campaign",
+     ["SCOPE_deployed_symbols_are_a_SUBSET_OR_EQUAL_of_campaign"]),
 ]
 
 
@@ -151,6 +179,7 @@ def main():
         collateral = [k for k in must_stay_green if got.get(k) is not True]
         exited_nonzero = rc != 0
         ok = reddened and exited_nonzero and not collateral
+        all_red = sorted(k for k, v in got.items() if v is False)
         results.append({
             "case": name,
             "assertion_that_must_go_RED": must_redden,
@@ -159,26 +188,93 @@ def main():
             "exit_code_is_nonzero": exited_nonzero,
             "assertions_that_must_STAY_GREEN": must_stay_green,
             "collateral_failures": collateral,
+            # ★ R-507 §6.3/§6.10 -- report EVERY assertion this mutation
+            #   reddened, whether or not a contract was declared for it. A
+            #   mutation's blast radius is evidence and must not be hidden by
+            #   an empty collateral contract.
+            "ALL_assertions_this_mutation_reddened": all_red,
+            "n_reddened": len(all_red),
             "VERDICT": "DISCRIMINATES" if ok else "DOES-NOT-DISCRIMINATE",
             "OK": ok,
         })
-        print("[%s] %-42s -> %-70s RED=%s exit=%d collateral=%s"
-              % ("OK " if ok else "BAD", name, must_redden, reddened, rc, collateral))
+        print("[%s] %-42s -> %-62s RED=%s exit=%d reddened=%d collateral=%s"
+              % ("OK " if ok else "BAD", name, must_redden, reddened, rc,
+                 len(all_red), collateral))
 
     all_ok = all(r["OK"] for r in results)
+    import subprocess
+
+    def git(*a):
+        try:
+            return subprocess.check_output(["git", *a], cwd=str(HERE.parents[2]),
+                                           stderr=subprocess.DEVNULL).decode().strip()
+        except Exception as exc:
+            return "<unavailable: %s>" % exc
+
+    n_control = len(control)
     out = {
+        # ── R-507 §6.9 -- the header claim, corrected and NARROWED ───────────
         "WHAT_THIS_PROVES": (
-            "Every assertion class in session_role_resolver_yield.py has a demonstrated "
-            "path to RED, and the unmutated control stays GREEN. A guard that has never "
-            "gone red is not an instrument."
+            "The %d assertions in session_role_resolver_yield.py were run unmutated and all "
+            "passed, and each assertion CLASS listed in ASSERTION_CLASSES_WITH_A_DEMONSTRATED_"
+            "RED_PATH below has at least one mutation that reddens it. A guard that has never "
+            "gone red is not an instrument." % n_control
         ),
+        "⚠️_WHAT_THIS_DOES_NOT_PROVE": (
+            "This is NOT universal coverage. Assertions outside the listed classes have NO "
+            "demonstrated red path here and must not be read as red-proofed. An earlier "
+            "version of this receipt claimed 'every assertion class' over a 26-assertion run "
+            "and that claim was BOTH stale in its count AND wider than its evidence."
+        ),
+        "ASSERTION_CLASSES_WITH_A_DEMONSTRATED_RED_PATH": {
+            "baseline_identity_join": "M1",
+            "non_family_movement_hard_stop": "M2",
+            "provenance_source_closure": "M3",
+            "positive_witness_for_empty_censuses": "M4",
+            "deployed_scope_capability_tripwire": "M5",
+            "deployed_scope_subset_or_equal": "M6",
+            "deployed_scope_STRICT_subset": "M7",
+        },
+        "ASSERTION_CLASSES_WITHOUT_ONE": [
+            "corpus/population size vs pinned baseline", "determinism", "invalidation counts",
+            "count-equals-identity-list-length", "gate/held-flag controls",
+            "shared-symbol body comparison", "deployed HEAD resolution",
+        ],
         "M1_IS_THE_SHARP_ONE": (
             "M1 swaps one baseline identity while PRESERVING THE COUNT. The three count "
             "assertions stay GREEN and only the identity assertion goes RED -- which is "
             "R-425's defect ('a count is satisfied by losing one row and gaining another') "
-            "reproduced and caught. If the count checks had also reddened, this suite would "
-            "not have shown that the IDENTITY check is what does the work."
+            "reproduced and caught."
         ),
+        "⚠️_M5_COLLATERAL_CLAIM_WITHDRAWN": (
+            "R-507 §2. A previous receipt claimed M5 reddened the scope tripwire while the "
+            "strict-subset assertion STAYED GREEN, and read that as proof the two checks were "
+            "independent. That green was VACUOUS: M5 points both symbol sets at ONE file, and "
+            "the then-current predicate tested subset-OR-EQUAL, which equality satisfies. "
+            "`A COLLATERAL-GREEN THAT PASSES BECAUSE THE PREDICATE IS TOO WEAK TO NOTICE IS "
+            "NOT EVIDENCE OF INDEPENDENCE -- IT IS THE DEFECT WEARING THE PROOF'S UNIFORM.` "
+            "M5's collateral contract is now EMPTY and its full blast radius is reported in "
+            "ALL_assertions_this_mutation_reddened. Independence of the subset-or-equal and "
+            "STRICT-subset checks is re-derived from M6 and M7, which redden DIFFERENT ones."
+        ),
+        # ── R-507 §6.11 -- this receipt's own provenance ─────────────────────
+        "PROVENANCE": {
+            "head": git("rev-parse", "HEAD"),
+            "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
+            "harness_blob": git("hash-object", "--",
+                                "docs/replay-results/h1-battery/"
+                                "session_role_resolver_yield_REDPROOF.py"),
+            "generator_blob": git("hash-object", "--",
+                                  "docs/replay-results/h1-battery/"
+                                  "session_role_resolver_yield.py"),
+            "artifact_blob": git("hash-object", "--",
+                                 "docs/replay-results/h1-battery/"
+                                 "session-role-resolver-yield-2026-07-31.json"),
+            "reproduce": ("python docs/replay-results/h1-battery/"
+                          "session_role_resolver_yield_REDPROOF.py"),
+            "NOTE": "Mutated runs write their artifact to a throwaway temp path, so no "
+                    "mutation can overwrite the real artifact.",
+        },
         "ALL_CASES_DISCRIMINATE": all_ok,
         "cases": results,
     }

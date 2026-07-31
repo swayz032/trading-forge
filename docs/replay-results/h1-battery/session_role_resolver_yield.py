@@ -288,7 +288,11 @@ def deployed_lane_scope() -> dict:
     shared = sorted(camp & dep)
     differing = [s for s in shared if body_hash(camp_nodes[s]) != body_hash(dep_nodes[s])]
 
-    dep_head = git_at(DEPLOYED_BINDER.parents[3], "rev-parse", "HEAD")
+    # parents[0]=engine, [1]=src, [2]=<repo root>. An earlier [3] walked one
+    # level too far and returned exit 128 -- caught only because the value was
+    # PRINTED rather than trusted. `AN UNREAD FIELD IS AN UNTESTED FIELD.`
+    dep_repo = DEPLOYED_BINDER.parents[2]
+    dep_head = git_at(dep_repo, "rev-parse", "HEAD")
     return {
         "STATUS": "MEASURED",
         # ── R-507 §6.4/§6.5 -- the snapshot record every scope claim binds to ──
@@ -299,7 +303,9 @@ def deployed_lane_scope() -> dict:
             "generator_blob": git(
                 "hash-object", "--", "docs/replay-results/h1-battery/session_role_resolver_yield.py"),
             "deployed_path": str(DEPLOYED_BINDER),
+            "deployed_repo_root": str(dep_repo),
             "deployed_repo_head": dep_head,
+            "deployed_repo_head_RESOLVED": not dep_head.startswith("<unavailable"),
             "deployed_binder_sha256": hashlib.sha256(DEPLOYED_BINDER.read_bytes()).hexdigest(),
             "WHY": "R-507 §6.4/§6.5 -- the deployed binder lives in a DIFFERENT git tree, so it "
                    "cannot join this run's source closure by HEAD-blob comparison. It is hashed "
@@ -992,6 +998,13 @@ def main():
            "WHY_SEPARATE": "dep < camp requires BOTH zero deployed-only AND at least one "
                            "campaign-only. Equality satisfies subset-or-equal and must NOT "
                            "satisfy this one -- mutation M7 proves it does not."})
+    check("SCOPE_snapshot_record_deployed_HEAD_actually_RESOLVED",
+          scope.get("SNAPSHOT_RECORD", {}).get("deployed_repo_head_RESOLVED") is True,
+          {"head": scope.get("SNAPSHOT_RECORD", {}).get("deployed_repo_head"),
+           "root": scope.get("SNAPSHOT_RECORD", {}).get("deployed_repo_root"),
+           "WHY": "The first version silently recorded '<unavailable: exit 128>' as the "
+                  "deployed HEAD. A provenance field holding an ERROR STRING is worse than "
+                  "an absent one -- it LOOKS populated. Asserted so it cannot recur."})
     check("SCOPE_shared_symbol_bodies_compared_not_just_names",
           scope.get("SHARED_SYMBOL_BODY_COMPARISON", {}).get("shared_symbol_count", 0) > 0,
           {"comparison": scope.get("SHARED_SYMBOL_BODY_COMPARISON"),
