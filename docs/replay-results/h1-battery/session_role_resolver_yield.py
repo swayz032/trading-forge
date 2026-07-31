@@ -72,6 +72,10 @@ FLAG = "TF_SESSION_ROLE_RESOLVER_ENABLED"
 HELD_FLAGS = {"TF_LEVELZONE_ROUTING_ENABLED": "false", "TF_LEVELZONE_RESOLVER_ENABLED": "false"}
 
 OUT_PATH = H1 / "session-role-resolver-yield-2026-07-31.json"
+ARTIFACT_REL = "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json"
+"""The AUTHORITATIVE published path. Kept separate from OUT_PATH because the
+red-proof harness redirects OUT_PATH to a throwaway file; publication claims
+must always be about the real artifact, never about wherever a run wrote."""
 
 FAMILY_TYPE = "WAIT_SESSION"
 
@@ -1166,7 +1170,11 @@ def main():
         #    already carried. `A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO
         #    THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE.`
         "PUBLICATION_PATHS": {
-            "artifact": blob_pair(str(OUT_PATH.relative_to(REPO_ROOT)).replace("\\", "/")),
+            # ★ ARTIFACT_REL, not OUT_PATH: the red-proof harness redirects
+            #   OUT_PATH to a throwaway temp file, and the PUBLICATION path is
+            #   the authoritative artifact regardless of where a test run
+            #   writes. Deriving it from OUT_PATH crashed under the harness.
+            "artifact": blob_pair(ARTIFACT_REL),
             "generator": blob_pair(
                 "docs/replay-results/h1-battery/session_role_resolver_yield.py"),
             "harness": blob_pair(
