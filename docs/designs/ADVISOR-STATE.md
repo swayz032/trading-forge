@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3172` at THIS commit, 2026-07-31 09:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3182` at THIS commit, 2026-07-31 09:57 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3172` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3182` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-513 LANDED (`7770f1ee`) · `AR-536` IS RULED · **NO RULING DEBT** · the SEVENTH external read (`33d9968b`, `09:43:01`) arrived and the gate was honoured** · branch PUBLISHED at **`7770f1ee`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:47 — WORKER **AUTHORIZED on R-513 §6**)
+## ⚠️★★★★★ SEAT — **`AR-537` IS UNRULED · `R-514` OWED, HELD FOR THE EIGHTH EXTERNAL READ** · R-513 LANDED (`7770f1ee`) · PUBLISHED at **`bf3a7ff9`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:56)
+
+### ✅★★★★★ **AR-537 VERIFIED HERE — I CHECKED THE TWO ITEMS EASIEST TO CLAIM WITHOUT DOING** `[MEASURED HERE 09:56]`
+| R-513 §6 item | check | result |
+|---|---|---|
+| §6.1/6.2 ONE reader | `ast`-level | ✅ **ONE** def `:272`; calls `:882` (M13) · `:935` (weakened) · `:1103` (live). **The only inline blob loop left is INSIDE the helper (`:313`).** |
+| **§6.4 mechanism red-proof** | `:935-943` | ✅ invokes the **SHARED** helper with `ignore_labels=("harness",)`, asserts it goes **incorrectly GREEN**, and requires `m13_acceptance` to become **False** |
+| ⚠️ **did the family recur?** | `:1045` / `:1258` | ✅ **NO — `"OK": m13_ok and m13_verdict_is_load_bearing and m13_mechanism_is_load_bearing`, and the identity guard is its OWN scored case (`"OK": identity_ok`).** Both new proofs SCORED, not parked beside the verdict. |
+| ⚠️ **STOP CONDITION** | key paths | ✅ **`0`/`17` · `0`/`45` · closure `22` · assertions `37/0` — UNCHANGED** |
+★★★★★ **THE BEST THING IN THIS DELIVERY IS A DEFECT THE WORKER CAUGHT IN ITS OWN NEW GUARD BEFORE SHIPPING IT `[MEASURED, `:1209-1215`]`: the implementation-identity guard's FIRST version used `_src.count("def receipt_publication_blob_status(")` over THIS FILE'S OWN TEXT — and that literal, plus the census entries naming the function, are themselves in the text. **It reported `defs=2 calls=6 inline=2` AGAINST A CORRECT FILE.** It now parses the AST, where a string literal is a `Constant` and a call is a `Call` and the two cannot be confused.**
+★★★★★ **`A GUARD THAT GREPS ITS OWN SOURCE MEASURES ITS OWN VOCABULARY.` `AUDIT THE INSTRUMENT BEFORE BELIEVING IT` — applied by the worker, to its own instrument, unprompted, BEFORE it shipped. THIRD SELF-CAUGHT DEFECT FROM THIS SEAT IN TWO HOURS** (entry-point closure leaks · the `M13` confound · this).
 
 ### ★★★ **R-513's HEADLINE**
 ⚠️★★★★★ **`M13` AND THE LIVE CASE ARE TWO IMPLEMENTATIONS OF ONE CLAIM (`:808` vs `:991-998`) — weaken the shipped reader and its own red-proof still passes. `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.`** ★★★★★ **AND THE SYNTHESIS: FOUR BOUNDARIES, ONE FAMILY — R-510 red-before-plant · R-511 `ALL_CLEAN` outside the verdict · R-512 reader-bool outside `m13_ok` + `M10`/`M11` colour-only · R-513 proof joined to target by a CLAIM, not a CALL. **EVERY ONE IS AN UNEXECUTED JOIN** — the desk's own `NAME THE JOIN KEY` law, appearing in CODE.**
