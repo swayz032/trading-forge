@@ -4,6 +4,37 @@
 
 ---
 
+## AR-518 · 2026-07-31 · ★★★★★ **THE DISCLOSURE QUESTION IS CLOSED BY THE OPERATOR IN HIS OWN VOICE, WITNESSED DIRECTLY BY THIS SEAT: *"its public for gpt to see it"*. R-498 §4's PREMISE UPGRADES `[RELAYED]` → `[WITNESSED]`. RELAY BRANCH FAST-FORWARDED SO THE ORDER IS ACTUALLY SATISFIED — GPT COULD NOT SEE THE STEP-1 ADDENDUM IT WAS BUILT FOR.**
+
+**RULING ID:** R-498 §4 STEP 2 · **TASK ID:** AR-518 · **PRIOR:** AR-517.
+
+### ★★★★★ §1 — PROVENANCE, AND IT IS THE WHOLE POINT
+
+**AR-516 refused on the ground that R-498 §4's authorization was `[RELAYED]` — *"I have seen a FILE written by another agent say that he said it."* That was correct practice.** ★★★★★ **IT IS NO LONGER RELAYED. I ASKED THE OPERATOR DIRECTLY AND HE ANSWERED IN HIS OWN WORDS IN THIS SESSION'S CHANNEL — `[WITNESSED HERE]`. `A CHANNEL IS NOT AN AUTHOR` (R-450) is satisfied the only way it can be: the author spoke.**
+**RECORDED VERBATIM, so no later seat has to re-derive intent: `"its public for gpt to see it"`.**
+★★★ **DECISION, HIS: the repository STAYS PUBLIC. No branch deletion, no visibility flip, no history rewrite. AR-517 §5's owed item (1) is CLOSED — and closed by the operator, not by a desk reading of his intent.**
+
+### §2 — AND THE ORDER WAS NOT ACTUALLY SATISFIED YET
+
+★★★★★ **`[MEASURED HERE]` the public remote's relay branch sat at `fe1cf17e`, THREE COMMITS BEHIND. WHAT THE EXTERNAL READER COULD *NOT* SEE INCLUDED `96d4a7f3` — THE R-498 STEP 1 PACKET ADDENDUM, THE DOCUMENT BUILT FOR THAT READER.** Also invisible: AR-516's hold and AR-517's finding that the hold was moot.
+★★★ **`AN AUTHORIZATION TO PUBLISH IS NOT DISCHARGED BY A PUSH THAT HAS SINCE GONE STALE.` A relay branch that stops advancing presents a four-round hunt as finished at round three.**
+
+**ACTED — the narrowest thing that satisfies the order [MEASURED HERE BEFORE PUSHING]:**
+| check | result |
+|---|---|
+| `git merge-base --is-ancestor fe1cf17e 4e1f5b9f` | **fast-forward — NO rewrite, NO force** |
+| range contents | `96d4a7f3` · `ede4240c` · `4e1f5b9f` — **2 files, `198` insertions, `0` DELETIONS** |
+| credential scan of the newly-disclosed diff | **`0` hits** · **POSITIVE CONTROL same pipeline `R-49[0-9]` = `21`** |
+**ONE branch advanced. NO new refs · NO force · NO PR · NO merge · NO tag · NO deploy.** ★★ **`LANDED ≠ RUNNING` still holds: the tower executes from `runtime-production` and nothing here touches it.**
+
+### §3 — STATE · WHAT REMAINS OWED
+
+**`c304b098` = candidate delivery, UNCHANGED and untouched by this AR. R-497 closure = IMPLEMENTED, NOT CERTIFIED. MERGE / DEPLOY / RELEASE = HOLD.**
+**STILL OWED, and neither is mine to take unilaterally:** ★★★★★ **(1) R-498 STEP 3 — ONE `accuracy-validator` on `c304b098`, model pinned `opus` AT THE CALL SITE, briefed per R-498 §4 (A)–(G) plus a fresh novel hunt. IT IS LOCAL AND ONE WORD AWAY; I HAVE ASKED THE OPERATOR FOR THAT WORD. `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST.`** · (2) a desk ruling on AR-516/AR-517, including the two dispatch-surface defects AR-517 §1 named.
+**Nothing in flight. No sub-agent dispatched or owed.**
+
+---
+
 ## AR-517 · 2026-07-31 · ⚠️★★★★★ **AR-516's HOLD WAS A DOOR ALREADY OPEN. `[MEASURED HERE]` `git ls-remote origin` — ALL SIX BRANCHES ARE ON THE PUBLIC REMOTE *INCLUDING THE CAMPAIGN RELAY*, PUSHED `14:50:38 EDT`, **2 min 24 s BEFORE THE HOLD-RECEIPT THAT SAID `no push` WAS COMMITTED.** THE DISCLOSURE R-498 STEP 2 ASKED FOR HAS ALREADY OCCURRED AND IS IRREVERSIBLE-IN-PRACTICE. OPERATOR NOTIFIED.**
 
 **RULING ID:** R-498 §4 STEP 2 · **TASK ID:** AR-517 (fresh-seat onboarding + hold-state verification) · **PRIOR:** AR-516.
