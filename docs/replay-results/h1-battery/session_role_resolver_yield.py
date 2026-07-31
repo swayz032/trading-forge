@@ -145,10 +145,23 @@ VOLATILE_EXCLUSIONS = [
 LIST. Everything NOT on this list is inside `artifact_content_digest`.
 
 WHY EACH ONE, because `AN EXCLUSION WITHOUT A REASON IS AN ALLOW-LIST`:
-  * `TREE` / `PROVENANCE_SOURCE_CLOSURE` — provenance OF THIS RUN. Committing
-    the artifact advances HEAD and changes the dirty-path count, so including
-    them makes every correctly-published artifact read as stale. `A FRESHNESS
-    CHECK THAT CRIES WOLF ON EVERY COMMIT WILL BE SWITCHED OFF.`
+  * `TREE` — excluded WHOLE. It is provenance of this run and nothing else.
+  * `PROVENANCE_SOURCE_CLOSURE` — ⚠️ **NOT excluded whole. FOUR named
+    sub-paths only**: `.head`, `.tree_dirty_path_count`, and the two
+    `*_RUN_STATUS.dirty_path_count` values. Every closure PATH IDENTITY, blob
+    pair, divergence list and dirty-intersection identity stays INSIDE the
+    digest — that is exactly what R-510 §6.4 changed, and M11 proves it by
+    altering one closure path and going RED.
+    ★ R-511 §3-3 — this bullet previously grouped the two blocks together and
+    read as if the whole closure were dropped, while the enumerated list four
+    lines above stripped only the four sub-paths. THE LIST WAS RIGHT AND THIS
+    PROSE WAS WRONG, which is the more dangerous arrangement: the prose is what
+    gets read. The shared reason below applies to the four VALUES, not to the
+    blocks that contain them.
+  * why those four values move at all: committing the artifact advances HEAD
+    and changes the dirty-path count, so including them makes every correctly
+    published artifact read as stale. `A FRESHNESS CHECK THAT CRIES WOLF ON
+    EVERY COMMIT WILL BE SWITCHED OFF.`
   * the two SNAPSHOT_RECORD fields — a timestamp and the same HEAD.
   * `detail` of `PROVENANCE_*` assertions — these are DERIVED from
     `PROVENANCE_SOURCE_CLOSURE` (they carry dirty-path counts), so excluding
@@ -218,23 +231,17 @@ def artifact_content_digest(art: dict) -> str:
         json.dumps(_strip_volatile(art), sort_keys=True, default=str).encode("utf-8")).hexdigest()
 
 
-def stable_digest(art: dict) -> str:  # retained name -> now delegates to (a)
-    """★★★★★ R-508 §5.5 -- the LOAD-BEARING content of an artifact, with the
-    fields that legitimately move between two runs of the SAME code stripped
-    out. Used to answer one question: `IS THE PUBLISHED ARTIFACT WHAT THE
-    CURRENT CODE PRODUCES?`
-
-    STRIPPED (they move for reasons that are not staleness): `generated_at_utc`
-    · `campaign_commit` · `TREE` · `PROVENANCE_SOURCE_CLOSURE` -- because
-    COMMITTING the artifact advances HEAD, so a byte comparison would report
-    every correctly-published artifact as stale. `A FRESHNESS CHECK THAT CRIES
-    WOLF ON EVERY COMMIT WILL BE SWITCHED OFF.`
-    KEPT: every assertion NAME and PASS value · every campaign metric · the
-    reconciliation counts · the whole deployed-scope block EXCEPT its timestamp
-    -- which is where the `deployed_repo_head` error string lived, so the actual
-    defect this exists to catch is inside the digest.
-    """
-    return artifact_content_digest(art)
+# ★★★★★ R-511 §3-2/§6.5 -- `stable_digest` IS DELETED, NOT REPAIRED.
+#   It was DEAD: zero executable call sites tree-wide (measured, with
+#   `artifact_content_digest` as the positive control -- the same query finds
+#   that one's real callers). Its docstring still described the R-509 §6.4(a)
+#   behaviour that R-510 §6.4 REVERSED, claiming PROVENANCE_SOURCE_CLOSURE was
+#   stripped when the closure is now INSIDE the digest.
+#   It is also the function R-509 §4 convicted by name, so a reader auditing the
+#   freshness guard landed on the convicted name and read a false answer about
+#   code nobody ran. `A DEAD FUNCTION WITH A LIVE NAME IS A DOCUMENTATION
+#   SURFACE` -- and the repair for a documentation surface that lies is deletion,
+#   not better prose. THE LIVE DIGEST IS `artifact_content_digest` ABOVE.
 
 
 def git_at(repo: Path, *args) -> str:
@@ -1163,6 +1170,26 @@ def main():
                   "positive witness that the comparison actually ran; the DIFFERING list is "
                   "the result and is reported whatever its size."})
 
+    # ── ★★★★★ R-511 §6.6 -- RESOLVE THE PREFIX-KEYED EXCLUSION AND ASSERT IT ─
+    #    Computed from the ASSERTIONS actually produced by this run, never typed.
+    #    ⚠️ The assertion added just below is named `DIGEST_...` deliberately: a
+    #    `PROVENANCE_`/`PUBLICATION_` name would join the very set it counts and
+    #    make the tripwire fire on itself.
+    PREFIX_EXCLUDED_NAMES = sorted(
+        a["assertion"] for a in ASSERTIONS
+        if a["assertion"].startswith("PROVENANCE_") or a["assertion"].startswith("PUBLICATION_"))
+    EXPECTED_PREFIX_EXCLUDED = 7   # R-511 §6.6, re-measured at the desk 07:55
+    check("DIGEST_prefix_exclusion_resolves_to_the_EXPECTED_set",
+          len(PREFIX_EXCLUDED_NAMES) == EXPECTED_PREFIX_EXCLUDED,
+          {"resolved_count": len(PREFIX_EXCLUDED_NAMES),
+           "expected": EXPECTED_PREFIX_EXCLUDED,
+           "resolved_names": PREFIX_EXCLUDED_NAMES,
+           "WHY": "R-511 §6.6 -- the digest excludes these assertions' `detail` payloads by a "
+                  "PREFIX RULE, and a rule grows silently the instant someone names an eighth "
+                  "check. This turns that growth into a RED. If it fires, do not widen the "
+                  "number: decide whether the new check's detail BELONGS outside the digest.",
+           "WHAT_IS_STILL_COVERED": "the NAME and PASS value of every one of them."})
+
     all_pass = all(a["PASS"] for a in ASSERTIONS)
 
     art = {
@@ -1273,6 +1300,24 @@ def main():
             "method": "R-509 §6.4 OPTION (a) -- canonicalised FULL artifact minus an "
                       "ENUMERATED volatile list. Everything not listed is covered.",
             "VOLATILE_EXCLUSIONS": VOLATILE_EXCLUSIONS,
+            # ★★★★★ R-511 §6.6 -- THE ONE PREFIX-KEYED EXCLUSION, RESOLVED.
+            #   `ASSERTIONS.checks[name starts with 'PROVENANCE_' or
+            #   'PUBLICATION_'].detail` is a RULE, not an enumeration, and a rule
+            #   grows silently the instant someone names an eighth check. The
+            #   resolved membership is recorded here BY NAME and its count is
+            #   ASSERTED below, so an eighth member is VISIBLE instead of silent.
+            "PREFIX_EXCLUSION_RESOLVED": {
+                "rule": "ASSERTIONS.checks[name starts with 'PROVENANCE_' or "
+                        "'PUBLICATION_'].detail",
+                "resolved_names": PREFIX_EXCLUDED_NAMES,
+                "resolved_count": len(PREFIX_EXCLUDED_NAMES),
+                "total_assertions": len(ASSERTIONS),
+                "WHAT_IS_STILL_COVERED": "each of these assertions' NAME and PASS value. "
+                                         "Only the `detail` payload is outside the digest.",
+                "WHY_IT_IS_ASSERTED": "R-511 §6.6 -- `A PREFIX RULE GROWS SILENTLY THE "
+                                      "INSTANT SOMEONE NAMES AN EIGHTH CHECK.` The count "
+                                      "assertion turns that growth into a RED.",
+            },
             "value": None,  # filled after the dict is complete -- it hashes itself out
         },
         "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": scope,

@@ -213,20 +213,49 @@ _B = "docs/replay-results/h1-battery/"
 ARTIFACT_REL = _B + "session-role-resolver-yield-2026-07-31.json"
 GENERATOR_REL = _B + "session_role_resolver_yield.py"
 HARNESS_REL = _B + "session_role_resolver_yield_REDPROOF.py"
+RECEIPT_REL = _B + "session-role-resolver-yield-REDPROOF-2026-07-31.json"
+
+# ★★★★★ R-511 §6.1 -- THE MEMBERSHIP SET IS ONE NAMED CONSTANT, ON PURPOSE.
+#   Everything that scores publication cleanliness reads THIS tuple, so the set
+#   cannot drift between the scored case and the receipt block, and widening it
+#   is a one-line change rather than an edit in three places.
+#   ⚠️ RECEIPT_REL is DELIBERATELY NOT A MEMBER YET. Whether it belongs here is
+#   exactly what M13 was built to answer, and R-511 §6.8 forbids widening
+#   anything before that mutation has spoken:
+#   `A REMEDY DESIGNED BEFORE ITS DIAGNOSIS IS A GUESS WITH A COMMIT MESSAGE.`
+PUBLICATION_PATH_SET = (ARTIFACT_REL, GENERATOR_REL, HARNESS_REL)
 
 
-def pubblob(rel: str) -> dict:
+def pubblob(rel: str, repo_root: Path = None) -> dict:
     """★ R-510 §6.3 -- worktree blob AND committed blob for a publication path.
     `GIT HASH-OBJECT OF A PATH HASHES THE WORKTREE; IT DOES NOT PROVE THE BLOB
-    AT HEAD` -- so both are taken and their equality is the claim."""
+    AT HEAD` -- so both are taken and their equality is the claim.
+
+    ★ R-511 §6.2 -- `repo_root` exists so M12/M13 can ask this question of a
+    FIXTURE repo. It defaults to the real tree, so every existing caller is
+    unchanged."""
+    root = REPO if repo_root is None else repo_root
+
     def g(*a):
         try:
-            return subprocess.check_output(["git", *a], cwd=str(REPO),
+            return subprocess.check_output(["git", *a], cwd=str(root),
                                            stderr=subprocess.DEVNULL).decode().strip()
         except Exception as exc:
             return "<unavailable: %s>" % exc
     work, head = g("hash-object", "--", rel), g("rev-parse", "HEAD:%s" % rel)
     return {"path": rel, "worktree_blob": work, "head_blob": head, "IDENTICAL": work == head}
+
+
+def publication_pairs(repo_root: Path = None) -> dict:
+    """★★★★★ R-511 §6.1 -- compute the publication pairs ONCE.
+
+    `A BOOLEAN WRITTEN INTO A RECEIPT AFTER ALL_OK IS DECIDED IS A NOTE, NOT A
+    GATE.` The previous receipt computed these 74 lines AFTER the verdict, so a
+    dirty artifact could never change the exit code. The values are now produced
+    here, SCORED as a case, and the same dict is what the receipt reports --
+    so the gate and the record cannot disagree."""
+    pairs = {rel: pubblob(rel, repo_root) for rel in PUBLICATION_PATH_SET}
+    return {"pairs": pairs, "ALL_IDENTICAL": all(p["IDENTICAL"] for p in pairs.values())}
 
 
 def committed_text(repo_root: Path, rel: str):
@@ -245,7 +274,14 @@ def publication_consistency(published_path: Path, repo_root: Path = None,
                             read_mode: str = "committed") -> dict:
     """★★★★★ R-508 §5.5 -- IS THE PUBLISHED ARTIFACT WHAT THE CURRENT CODE
     PRODUCES? Runs the generator unmutated into a THROWAWAY path and compares
-    its load-bearing digest against the artifact ON DISK.
+    its load-bearing digest against the PUBLISHED artifact.
+
+    ★ R-511 §3-1 -- this docstring used to say "the artifact ON DISK", which was
+    the PRE-R-509 behaviour and is now false in the default mode: `committed`
+    reads `git show HEAD:<path>` and never touches the working file. "ON DISK"
+    is exactly the thing this function was changed to STOP doing. Only the
+    retained `worktree` mode -- kept solely so M9 can demonstrate the old
+    blindness -- reads the file on disk.
 
     ⚠️★★★★★ R-508 §5.6(a) WAS OFFERED AS A `[HYPOTHESIS]` TO TEST, AND THE TEST
     CONFIRMS IT. A check placed INSIDE the generator cannot do this job: the
@@ -475,9 +511,21 @@ def main():
         subprocess.run(["git", "config", "user.email", "m8@fixture"], cwd=m8_fix, check=True)
         subprocess.run(["git", "config", "user.name", "m8"], cwd=m8_fix, check=True)
 
-        doc = json.loads(AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+        # ★ R-511 §6.3 -- the plant derives from the COMMITTED artifact, not the
+        #   worktree file. Same species as the receipt's measurement_source_commit:
+        #   a stale-detection test seeded from an uncommitted desk state is
+        #   describing the desk, not the publication.
+        doc = json.loads(committed_text(REPO, ARTIFACT_REL)
+                         or AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+        # ★★★★★ R-511 §6.4 -- THE PLANT IS NOW INTERNALLY CONSISTENT.
+        #   It previously set n_pass=33 while dropping only ONE check, leaving 35
+        #   records beside a count of 33 -- an object no real run could produce,
+        #   captioned as "the REAL AR-529 defect". Both halves are fixed: the
+        #   count and the records now agree, and the caption below no longer
+        #   claims to BE the AR-529 object.
+        doc["ASSERTIONS"]["checks"] = doc["ASSERTIONS"]["checks"][:33]
         doc["ASSERTIONS"]["n_pass"] = 33
-        doc["ASSERTIONS"]["checks"] = doc["ASSERTIONS"]["checks"][:-1]
+        doc["ASSERTIONS"]["n_fail"] = 0
         doc["DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE"]["SNAPSHOT_RECORD"][
             "deployed_repo_head"] = "<unavailable: Command 'git rev-parse HEAD' exit 128>"
         (m8_fix / rel).write_text(json.dumps(doc, indent=2), encoding="utf-8")
@@ -501,9 +549,23 @@ def main():
                 "published_n_pass": m8.get("published_n_pass"),
                 "published_deployed_head": m8.get("published_deployed_head")},
             "detail": m8,
-            "WHAT_WAS_PLANTED": "n_pass 34->33, last assertion dropped, deployed_repo_head "
-                                "replaced with the exact error string that shipped -- the "
-                                "REAL AR-529 defect, committed inside the fixture repo.",
+            "WHAT_WAS_PLANTED": (
+                "A stale shape MODELLED ON AR-529 and committed inside the fixture repo: the "
+                "live artifact's %d assertions truncated to 33 with n_pass=33 and n_fail=0, "
+                "plus the exact deployed_repo_head error string that shipped."
+                % len(json.loads(committed_text(REPO, ARTIFACT_REL)
+                                 or AUTHORITATIVE_ARTIFACT.read_text(encoding='utf-8'))
+                      ["ASSERTIONS"]["checks"])),
+            "⚠️_IT_IS_NOT_THE_AR_529_OBJECT_ITSELF": (
+                "R-511 §2 and §6.4. The previous caption said `n_pass 34->33 ... the REAL "
+                "AR-529 defect` and was stale at BOTH ends: the source artifact was at 36, "
+                "not 34, and dropping one check left 35 records beside a count of 33 -- an "
+                "internally inconsistent object no run could produce. The word EXACT is "
+                "withdrawn. `A TEST THAT CALLS A 35-ROW OBJECT THE EXACT 33-ROW OBJECT IS "
+                "OVERCAPTIONED.` The count is now derived from the committed artifact at "
+                "runtime rather than typed, so it cannot go stale again. WHAT IS UNAFFECTED: "
+                "the committed-reader detection this case exists to prove -- the mismatch is "
+                "real, is attributable to the digest, and reads the planted content back."),
             "ALL_assertions_this_mutation_reddened": ["PUBLICATION_CONSISTENCY"] if m8_ok else [],
             "VERDICT": "DISCRIMINATES" if m8_ok else "DOES-NOT-DISCRIMINATE", "OK": m8_ok})
         print("[%s] M8_stale_COMMITTED_in_fixture -> RED=%s from_digest_mismatch=%s "
@@ -551,6 +613,226 @@ def main():
         "VERDICT": "DISCRIMINATES" if m11_ok else "DOES-NOT-DISCRIMINATE", "OK": m11_ok})
     print("[%s] M11_source_closure_identity_altered -> PUBLICATION_CONSISTENCY RED=%s"
           % ("OK " if m11_ok else "BAD", m11_ok))
+
+    # ── ★★★★★ R-511 §6.2 -- M12: DIRTY WORKTREE / CURRENT COMMIT ────────────
+    #    The two questions this lane kept conflating, separated and proved
+    #    separate: `COMMITTED-CONTENT CURRENTNESS AND WORKTREE CLEANLINESS ARE
+    #    TWO DIFFERENT ASSERTIONS.` The committed object stays sound (so
+    #    publication_consistency must stay GREEN) while the desk is dirty (so
+    #    the new pair gate must go RED). A mutation that reddened both would
+    #    prove nothing about which check did the work.
+    def _fixture(paths, prefix):
+        fix = Path(tempfile.mkdtemp(prefix=prefix))
+        for rel, src in paths:
+            (fix / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, fix / rel)
+        subprocess.run(["git", "init", "-q"], cwd=fix, check=True)
+        subprocess.run(["git", "config", "user.email", "fixture@local"], cwd=fix, check=True)
+        subprocess.run(["git", "config", "user.name", "fixture"], cwd=fix, check=True)
+        subprocess.run(["git", "add", "-A"], cwd=fix, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "fixture"], cwd=fix, check=True)
+        return fix
+
+    SELF = Path(__file__).resolve()
+    RECEIPT_PATH = HERE / "session-role-resolver-yield-REDPROOF-2026-07-31.json"
+    m12fix = _fixture(((ARTIFACT_REL, AUTHORITATIVE_ARTIFACT),
+                       (GENERATOR_REL, TARGET),
+                       (HARNESS_REL, SELF)), "_m12_fixture_")
+
+    before = publication_pairs(m12fix)
+    doc = json.loads((m12fix / ARTIFACT_REL).read_text(encoding="utf-8"))
+    doc["__M12_WORKTREE_ONLY_EDIT__"] = "present in the working file, absent from HEAD"
+    (m12fix / ARTIFACT_REL).write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    after = publication_pairs(m12fix)
+    pc12 = publication_consistency(m12fix / ARTIFACT_REL, repo_root=m12fix,
+                                   read_mode="committed")
+
+    m12_started_clean = before["ALL_IDENTICAL"] is True
+    m12_artifact_red = after["pairs"][ARTIFACT_REL]["IDENTICAL"] is False
+    m12_others_green = (after["pairs"][GENERATOR_REL]["IDENTICAL"] is True
+                        and after["pairs"][HARNESS_REL]["IDENTICAL"] is True)
+    m12_commit_still_current = pc12["PUBLISHED_ARTIFACT_IS_CURRENT"] is True
+    m12_ok = (m12_started_clean and m12_artifact_red and m12_others_green
+              and m12_commit_still_current)
+    results.append({
+        "case": "M12_artifact_worktree_DIRTY_commit_CURRENT",
+        "fixture": str(m12fix),
+        "WHAT_WAS_MUTATED": "ONE key added to the artifact's WORKING FILE only. Nothing was "
+                            "committed after the fixture's initial commit, so HEAD still "
+                            "holds the real, current artifact.",
+        "BEFORE_the_edit__all_pairs_identical": m12_started_clean,
+        "artifact_pair_went_RED": m12_artifact_red,
+        "generator_and_harness_pairs_STAYED_GREEN": m12_others_green,
+        "publication_consistency_STAYED_GREEN": m12_commit_still_current,
+        "committed_read_through": pc12.get("READ_THROUGH"),
+        # ⚠️★★★★★ THE CONFOUND THAT BIT ON THIS CASE'S FIRST RUN, MADE VISIBLE
+        #   INSTEAD OF LEFT TO BE RE-DERIVED. The fixture isolates the PUBLISHED
+        #   path but NOT generation: publication_consistency regenerates from the
+        #   REAL generator against the REAL tree. With an uncommitted edit
+        #   anywhere in the publication set, the fresh artifact carries a FAILED
+        #   assertion (n_pass 35/1) while the committed object carries 36/36, so
+        #   this sub-assertion reddens for a reason that has nothing to do with
+        #   M12's mutation. `A FIXTURE THAT ISOLATES THE OBJECT BUT NOT ITS
+        #   PRODUCER IS NOT HERMETIC.` These two numbers name the cause on sight.
+        "CONFOUND_WATCH__fresh_n_pass": pc12.get("fresh_n_pass"),
+        "CONFOUND_WATCH__published_n_pass": pc12.get("published_n_pass"),
+        "CONFOUND_WATCH__IF_THESE_DIFFER": (
+            "the real tree was DIRTY when this ran, this sub-assertion is UNREADABLE, and "
+            "the case's DOES-NOT-DISCRIMINATE verdict is about the tree, not the mutation. "
+            "The scored publication-pair case above exits 1 in that state by design."),
+        "WHY_IT_REDDENED": (
+            "`git hash-object` of the working file no longer equals `git rev-parse HEAD:<path>`. "
+            "It reddened for DIRTINESS, and publication_consistency stayed green for "
+            "CURRENTNESS -- the two assertions discriminated in opposite directions on the "
+            "same mutation, which is the whole point of the case."),
+        "WHY_IT_MATTERS": (
+            "R-511 §6.2 -- `THE RECEIPT MUST REFUSE A DIRTY DESK EVEN WHEN THE COMMITTED "
+            "OBJECT IS SOUND.` Before this ruling the pair booleans were computed after the "
+            "verdict, so this exact state exited 0."),
+        "VERDICT": "DISCRIMINATES" if m12_ok else "DOES-NOT-DISCRIMINATE",
+        "OK": m12_ok,
+    })
+    print("[%s] M12_artifact_worktree_DIRTY_commit_CURRENT -> pair RED=%s | "
+          "consistency GREEN=%s | others green=%s"
+          % ("OK " if m12_ok else "BAD", m12_artifact_red, m12_commit_still_current,
+             m12_others_green))
+
+    # ── ⚠️★★★★★ R-511 §6.8 -- M13: IS THE RECEIPT COVERED BY ANYTHING? ──────
+    #    PRE-REGISTERED IN AR-534 §2 BEFORE THIS CODE EXISTED. The prediction on
+    #    record is that NOTHING reddens, because the receipt has zero executable
+    #    consumers. Both outcomes were bound in advance.
+    #
+    #    ⚠️ THE FALSE PASS THIS CASE IS BUILT TO EXCLUDE: an UNCOMMITTED harness
+    #    edit reddens the harness pair -- that is the DIRTY-TREE assertion
+    #    firing, NOT the receipt being read. Scoring that colour would repeat
+    #    M8's defect one ruling later: `A TEST THAT TURNS RED BEFORE READING THE
+    #    MUTATION HAS NOT TESTED THE MUTATION.` So M13 COMMITS its harness
+    #    change, and the run is VOID if the harness pair is not GREEN when the
+    #    verdict is taken.
+    m13fix = _fixture(((ARTIFACT_REL, AUTHORITATIVE_ARTIFACT),
+                       (GENERATOR_REL, TARGET),
+                       (HARNESS_REL, SELF),
+                       (RECEIPT_REL, RECEIPT_PATH)), "_m13_fixture_")
+
+    committed_receipt = json.loads(committed_text(m13fix, RECEIPT_REL) or "{}")
+    receipt_harness_blob = committed_receipt.get("PROVENANCE", {}).get("harness_blob")
+
+    hp = m13fix / HARNESS_REL
+    hp.write_text(hp.read_text(encoding="utf-8")
+                  + "\n# M13: the harness changed AFTER the receipt was committed.\n",
+                  encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=m13fix, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "harness changed after receipt"],
+                   cwd=m13fix, check=True)
+
+    m13_pairs = publication_pairs(m13fix)
+    m13_pc = publication_consistency(m13fix / ARTIFACT_REL, repo_root=m13fix,
+                                     read_mode="committed")
+    harness_head_now = m13_pairs["pairs"][HARNESS_REL]["head_blob"]
+    receipt_is_stale_in_fact = (receipt_harness_blob is not None
+                                and receipt_harness_blob != harness_head_now)
+
+    reddened_by = []
+    if m13_pairs["ALL_IDENTICAL"] is not True:
+        reddened_by.append("PUBLICATION_PATHS_worktree_equal_committed")
+    if m13_pc["PUBLISHED_ARTIFACT_IS_CURRENT"] is not True:
+        reddened_by.append("PUBLICATION_CONSISTENCY")
+
+    # ⚠️★★★★★ THE SECOND VOID CONDITION, AND IT ALREADY FIRED ONCE.
+    #   On M13's first run PUBLICATION_CONSISTENCY reddened and the case reported
+    #   ALREADY-COVERED -- refuting the pre-registered prediction. It was a
+    #   CONFOUND: the real tree was dirty, so the regenerated artifact carried a
+    #   failed assertion the committed fixture object did not, and the digests
+    #   differed for a reason with nothing to do with the receipt. Had the
+    #   prediction been "something reddens", that colour would have CONFIRMED it
+    #   and the finding would have been closed wrongly.
+    #   `A COLOUR THAT MATCHES YOUR PREDICTION IS THE MOST DANGEROUS COLOUR
+    #   THERE IS` -- here the mismatch is the only thing that forced the check.
+    m13_generation_confounded = (m13_pc.get("fresh_n_pass") != m13_pc.get("published_n_pass"))
+
+    # THE VOID GUARD -- the pre-registered invalidation condition.
+    m13_void = (m13_pairs["pairs"][HARNESS_REL]["IDENTICAL"] is not True
+                or m13_generation_confounded)
+
+    # POSITIVE CONTROL: the SAME enumeration, over a deliberately DIRTY harness
+    # worktree, MUST redden -- otherwise "nothing reddened" is an unreadable
+    # null from a query that can never return anything.
+    hp.write_text(hp.read_text(encoding="utf-8") + "\n# uncommitted control edit\n",
+                  encoding="utf-8")
+    control_pairs = publication_pairs(m13fix)
+    control_fired = control_pairs["ALL_IDENTICAL"] is False
+    subprocess.run(["git", "checkout", "--", "."], cwd=m13fix, check=False)
+
+    m13_ok = (not m13_void) and control_fired and receipt_is_stale_in_fact
+    results.append({
+        "case": "M13_receipt_uncovered",
+        "fixture": str(m13fix),
+        "⚠️_WHAT_OK_MEANS_HERE": (
+            "OK=True means THE EXPERIMENT WAS VALID AND READABLE -- not that the receipt is "
+            "covered. This case is DIAGNOSTIC: its finding is RECEIPT_IS_COVERED_BY below, "
+            "and an empty list there is a real defect being reported, not a passing test."),
+        "PRE_REGISTERED_IN": "AR-534 §2, written before this code existed.",
+        "PREDICTION_ON_RECORD": "NOTHING will redden -- the receipt has zero executable "
+                                "consumers (filename census: generator 0, harness 1 = its "
+                                "own write).",
+        "WHAT_WAS_MUTATED": "The HARNESS was changed AND COMMITTED after the receipt was "
+                            "committed, so the receipt now describes a harness that no "
+                            "longer exists, while every path is clean.",
+        "receipt_records_harness_blob": receipt_harness_blob,
+        "harness_blob_at_HEAD_now": harness_head_now,
+        "RECEIPT_IS_STALE_IN_FACT": receipt_is_stale_in_fact,
+        "VOID_GUARD__harness_pair_green_at_verdict":
+            m13_pairs["pairs"][HARNESS_REL]["IDENTICAL"] is True,
+        "VOID_GUARD__generation_not_confounded": not m13_generation_confounded,
+        "CONFOUND_WATCH__fresh_n_pass": m13_pc.get("fresh_n_pass"),
+        "CONFOUND_WATCH__published_n_pass": m13_pc.get("published_n_pass"),
+        "POSITIVE_CONTROL__dirty_harness_does_redden": control_fired,
+        "RECEIPT_IS_COVERED_BY": reddened_by,
+        "FINDING": (
+            "⚠️ VOID -- run from a dirty or confounded tree; this case says NOTHING about "
+            "the receipt. Re-run from a clean tree." if m13_void else
+            ("UNCOVERED -- the receipt is stale in fact and NOTHING reddened. "
+             "`A RECEIPT NOBODY READS IS A DECORATION.`" if not reddened_by else
+             "ALREADY-COVERED -- reddened by: %s" % reddened_by)),
+        "VERDICT": "EXPERIMENT-VALID" if m13_ok else "EXPERIMENT-VOID",
+        "OK": m13_ok,
+    })
+    print("[%s] M13_receipt_uncovered -> stale_in_fact=%s | reddened_by=%s | "
+          "positive_control=%s | void=%s"
+          % ("OK " if m13_ok else "BAD", receipt_is_stale_in_fact, reddened_by or "NOTHING",
+             control_fired, m13_void))
+
+    # ── ★★★★★ R-511 §6.1 -- THE PUBLICATION PAIRS, SCORED AS A REAL CASE ────
+    #    THIS BLOCK MUST STAY ABOVE `all_ok`. Its whole defect was position:
+    #    the identical expression 74 lines lower was a NOTE, because the verdict
+    #    had already been taken. `THE ORDER OF COMPUTATION IS PART OF THE
+    #    ASSERTION.` Computed once here and reused verbatim by the receipt.
+    PUB = publication_pairs()
+    pub_ok = PUB["ALL_IDENTICAL"]
+    results.append({
+        "case": "PUBLICATION_PATHS_worktree_equal_committed",
+        "MEMBERSHIP_SET": list(PUBLICATION_PATH_SET),
+        "pairs": PUB["pairs"],
+        "WHAT_IT_ASSERTS": (
+            "Every publication path's WORKING FILE is byte-identical to its committed blob "
+            "at HEAD, so this receipt describes what is actually published rather than an "
+            "uncommitted desk state."),
+        "WHY_IT_IS_A_CASE_AND_NOT_A_NOTE": (
+            "R-511 §1. This was computed AFTER `all_ok` and scored nowhere -- it could not "
+            "reach the verdict or the exit code. `A BOOLEAN WRITTEN INTO A RECEIPT AFTER "
+            "ALL_OK IS DECIDED IS A NOTE, NOT A GATE.`"),
+        "⚠️_WHAT_IT_DOES_NOT_ASSERT": (
+            "That the COMMITTED artifact is CURRENT -- that is publication_consistency's "
+            "job, and M12 proves the two are different questions: a committed object can be "
+            "sound while the desk is dirty. `COMMITTED-CONTENT CURRENTNESS AND WORKTREE "
+            "CLEANLINESS ARE TWO DIFFERENT ASSERTIONS.`"),
+        "VERDICT": "CLEAN" if pub_ok else "DIRTY -- a publication path differs from HEAD",
+        "OK": pub_ok,
+    })
+    print("[%s] PUBLICATION_PATHS_worktree_equal_committed -> ALL_IDENTICAL=%s%s"
+          % ("OK " if pub_ok else "BAD", pub_ok,
+             "" if pub_ok else "  DIRTY: %s" % [r for r, p in PUB["pairs"].items()
+                                                if not p["IDENTICAL"]]))
 
     all_ok = all(r["OK"] for r in results)
     def git(*a):
@@ -620,29 +902,48 @@ def main():
             "head": git("rev-parse", "HEAD"),
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
             # ★ R-510 §6.3 -- blobs come from HEAD:<path>, with the worktree
-            #   value kept beside them and the pair ASSERTED equal. A dirty
-            #   publication path is RED. `A PASTED HEAD-BLOB COMPARISON IS NOT
-            #   AN EXECUTABLE HEAD-BLOB ASSERTION.`
-            "harness_blob": pubblob(HARNESS_REL)["head_blob"],
-            "generator_blob": pubblob(GENERATOR_REL)["head_blob"],
-            "artifact_blob": pubblob(ARTIFACT_REL)["head_blob"],
+            #   value kept beside them and the pair ASSERTED equal.
+            #   ★★★★★ R-511 §6.1 -- AND THAT ASSERTION IS NOW REAL. Until this
+            #   ruling the comment below said "a dirty publication path is RED"
+            #   while the boolean was computed after the verdict and scored
+            #   nowhere; AR-532 §3 published that caption and R-511 §1 convicted
+            #   it. The gate is the SCORED CASE
+            #   `PUBLICATION_PATHS_worktree_equal_committed` in `cases`, and
+            #   these fields are the SAME dict it was scored from -- reported
+            #   here, decided there. `A PASTED HEAD-BLOB COMPARISON IS NOT AN
+            #   EXECUTABLE HEAD-BLOB ASSERTION.`
+            "harness_blob": PUB["pairs"][HARNESS_REL]["head_blob"],
+            "generator_blob": PUB["pairs"][GENERATOR_REL]["head_blob"],
+            "artifact_blob": PUB["pairs"][ARTIFACT_REL]["head_blob"],
             "PUBLICATION_PATH_BLOBS": {
-                "artifact": pubblob(ARTIFACT_REL),
-                "generator": pubblob(GENERATOR_REL),
-                "harness": pubblob(HARNESS_REL),
-                "ALL_CLEAN": all(pubblob(p)["IDENTICAL"] for p in
-                                 (ARTIFACT_REL, GENERATOR_REL, HARNESS_REL)),
-                "MEANING_OF_FALSE": "a publication path is DIRTY -- the receipt would be "
-                                    "describing something other than what is committed.",
+                "artifact": PUB["pairs"][ARTIFACT_REL],
+                "generator": PUB["pairs"][GENERATOR_REL],
+                "harness": PUB["pairs"][HARNESS_REL],
+                "⚠️_NOT_A_GATE_HERE__SCORED_AS_A_CASE": (
+                    "This block is a RECORD. The GATE is the case named "
+                    "`PUBLICATION_PATHS_worktree_equal_committed`, computed BEFORE `all_ok` "
+                    "and carried into ALL_CASES_DISCRIMINATE and the exit code. Both read the "
+                    "same computed dict, so the record and the gate cannot disagree -- which "
+                    "is why the old `ALL_CLEAN` key is gone rather than merely re-worded."),
+                "MEANING_OF_A_FALSE_PAIR": "a publication path is DIRTY -- the receipt would "
+                                           "be describing something other than what is "
+                                           "committed, and the run now exits non-zero.",
             },
             # ── R-510 §6.5 -- the three identities, by name ──────────────────
             "PUBLICATION_IDENTITIES": {
                 "measurement_source_commit": {
-                    "value": (json.loads(AUTHORITATIVE_ARTIFACT.read_text(encoding="utf-8"))
+                    # ★★★ R-511 §6.3 -- read from the COMMITTED artifact via
+                    #   `git show HEAD:<path>`, not from the working file. The
+                    #   receipt describes what is PUBLISHED; sourcing this from
+                    #   the worktree let an uncommitted desk edit put a value in
+                    #   the receipt that no published object ever carried.
+                    "value": (json.loads(committed_text(REPO, ARTIFACT_REL) or "{}")
                               .get("PUBLICATION_IDENTITIES", {})
                               .get("measurement_source_commit", {}).get("value")),
                     "definition": "HEAD of the campaign tree when the MEASUREMENT ran; taken "
-                                  "from the artifact itself, not re-derived here."},
+                                  "from the COMMITTED artifact (`git show HEAD:<path>`), not "
+                                  "from the working file and not re-derived here.",
+                    "read_through": "git show HEAD:%s" % ARTIFACT_REL},
                 "artifact_publication_commit": {
                     "value": git("log", "-1", "--format=%H", "--", ARTIFACT_REL),
                     "definition": "The commit that last published the artifact. Knowable here "
