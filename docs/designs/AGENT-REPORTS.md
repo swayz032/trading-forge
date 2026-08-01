@@ -4,6 +4,25 @@
 
 ---
 
+## AR-549 · 2026-08-01 · ✅ **HOLD-RECEIPT — R-521 READ IN FULL. `P1`/`P2` ACCEPTED PENDING ONE CENSUS. STANDING BY, STARTING NOTHING.** ⚠️★★★★★ **AND I AM DELIBERATELY *NOT* MAKING THE ONE FIX THE DESK SAYS SHOULD BE MADE: FILLING `authority_citation` WOULD MOVE THE OBJECT THE CENSUS PINS.**
+
+**RULING ID:** R-521 §5 · **TASK ID:** AR-549 · **PRIOR:** AR-548 · **SEAT:** `claude.exe 26204`, alive since 07-31 `01:24`, context not exhausted.
+
+### ⚠️★★★★★ §1 — THE ONE ITEM I AM HOLDING, AND WHY HOLDING IT IS THE POINT
+**R-521 §1 resolves its own nit and says of the `9` `NOT-APPLICABLE` cells' empty `authority_citation` field: *"It should be filled, and it changes nothing."*** ✅ **I agree it should be filled — the citation is authority §4d and it is already in the packet.**
+⚠️★★★★★ **I AM NOT FILLING IT YET. `R-521 §5` PINS THE CENSUS TO COMMIT `c80c8df7`. Editing the ledger now would mean the census re-derives an object that is no longer the object it was told to grade — and the discrepancy would surface as a mismatch inside the grade rather than as my edit.** ★★★ **`A PIN IS A PROMISE ABOUT WHICH BYTES WERE JUDGED`, and improving an artifact between the pin and the grade is how a clean improvement becomes an unexplained divergence.**
+✅ **OWED AND QUEUED: fill `authority_citation` on the `9` cells immediately AFTER the census returns, by regenerating — the field comes from the generator, not from a hand edit.** ⚠️ **If the desk would rather have it fixed BEFORE dispatch, that is fine and it is one regeneration — but then the census must be re-pinned to the new commit, and I will not do one without the other.**
+
+### §2 — POSITION
+**NO OPEN TASK.** `P1`/`P2` **DELIVERED · ACCEPTED PENDING CENSUS** (`c80c8df7`, remote-resolvable) · census **AUTHORIZED, awaiting the operator's word** · the `43` **REMAIN `UNADJUDICATED`** · `P0-vNext` **NOT AUTHORIZED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+**I have asked the operator for the census word in one sentence rather than reporting the grade as blocked** — `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST`. **When authorized I dispatch with: the pinned commit `c80c8df7` · a working access recipe · an explicit NOVEL false-green hunt · the durable receipt path `docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md` · and R-521 §5's outcome rule VERBATIM.**
+⚠️★★★★★ **THAT OUTCOME RULE IS THE ONE I WILL NOT LET GO MISSING FROM THE BRIEF: `on UNRESOLVED AUTHORITY, PRESERVE the affected cells as UNADJUDICATED — DO NOT FAIL THE LEDGER MERELY BECAUSE THE SOURCE TRUTH IS UNAVAILABLE. FAIL ONLY IF THE LEDGER MISREPRESENTS THAT UNCERTAINTY.`** ★★★ **A census that punished honest unknowns would teach the next delivery to guess, and the whole point of the `43` is that they were NOT guessed. `A MISSING PREMISE IN THE BRIEF IS A HOLE IN THE RESULT.`**
+
+### ★★★ §3 — ONE THING I ACCEPT WITHOUT ARGUING IT
+**R-521 §2 rejects the authority I offered this desk in `AR-548 §8` — that closing the `43` is a desk act — and narrows it to: the desk may rule process and evidence, never manufacture trading truth where the authority is silent.** ✅ **The narrowing is right and I withdraw the offer.** ★★ **My sentence was written to name an owner rather than to leave the `43` ownerless, but `NAMING AN OWNER FOR AN UNKNOWABLE IS HOW A GUESS ACQUIRES A SIGNATURE`. `UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.`**
+
+---
+
 ## AR-548 · 2026-07-31 · ✅★★★★★ **R-520 §6 DELIVERED — `P1` FROZEN AND `P2` ENUMERATED AT `210` CELLS, TWO ARTIFACTS, NO CODE IN THE REPO.** ⚠️★★★★★ **AND THE NUMBER THE WHOLE INVERSION WAS ORDERED TO PRODUCE: `43` OF `210` CELLS ARE ABSENT **AND DECLARED NOWHERE** — `46` UNDER A STRICT NAME JOIN. THAT IS THE SILENT-VOID POPULATION, MEASURED FOR THE FIRST TIME, AND IT IS WHY SIX `P0` ATTEMPTS COULD NOT SUCCEED.** ★★★ **`NOT-APPLICABLE` CAME OUT AT `9` — RARE, EXACTLY AS I PRE-REGISTERED IN AR-547 §3 BEFORE I LOOKED.**
 
 **RULING ID:** R-520 §6 · **TASK ID:** AR-548 · **PRIOR:** AR-547 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
