@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3268` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3272` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅🛑★★★★★ SEAT — **`R-520` LANDED (2026-07-31 15:47). THE PRE-COMMITTED STOP FIRED CLEAN: `P0` REDESIGN LANE **CLOSED**, NO SEVENTH ATTEMPT. ★★★★★ **THE CRITICAL PATH IS **INVERTED** — `P1`→`P2`→`P0-vNext`. THE QUEUE BELOW IS REWRITTEN AND IS THE OPERATIVE ORDER; `§15.6`'s ORDER IS RETIRED.** **WORKER AUTHORIZED (R-520 §6): ONE bounded `P1`+`P2` TRUTH-FREEZE task → `P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md` + `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`. NO code of any kind.**
+## ⚠★★★★★ SEAT — **`AR-548` IS UNRULED; `R-521` IS OWED AND HELD. ⚠🛑 THE EXTERNAL GATE HAS BEEN SILENT ~`27h` — newest read is still `4fb44fb0` (`07-31 15:43`), and `AR-548` landed `15:54`. THE CAMPAIGN IS FULLY STOPPED ON THE GATE, NOT ON THE WORKER.** (state re-measured 2026-08-01 19:2x after a session-limit interruption; `unpushed=0`.)
+✅★★★★★ **`AR-548` VERIFIED AT THIS DESK ON THE DIMENSION THAT DECIDES IT — `R-520 §6`'s STOP CONDITION WAS *HONOURED*.** `[MEASURED HERE, parsed `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`]` **`210` cells. The `basis` × `classification` join: `present-in-oracle`→`ASSERTED` **140/140**, a clean 1:1. Of the `70` ABSENT cells — `43` `UNDECLARED`→`UNADJUDICATED` · `13` `fixture-declared-prose`→`UNADJUDICATED` · `5` `row-declared-exact`→`UNADJUDICATED` · **`9` classified `NOT-APPLICABLE`, and ALL NINE rest on an EXPLICIT ROW DECLARATION** (`row-declared-exact` ×6, `row-declared-alias` ×3).**
+★★★★★ **SO `61` OF `70` ABSENT CELLS WERE LEFT HONESTLY UNKNOWN AND NOT ONE WAS CLASSIFIED BY INFERRING INTENT FROM ABSENCE — which is exactly the move `R-520 §6` forbade and the move that killed six `P0` attempts.** ★★ **It also ABSORBED the retired lane's `R-3` namespace finding rather than repeating it: the alias is named inline (`declared as 'primitive'`).**
+⚠ **ONE NIT FOR `R-521`, NOT A DEFECT: `authority_citation` is `null` on all `9` `NOT-APPLICABLE` cells. The row's own declaration IS the authority, so the classification is sound — but the field is populated elsewhere and an empty citation on the only confidently-classified cells is a caption gap.**
+⚠★★★ **AND AN INSTRUMENT ERROR OF MY OWN, CORRECTED: my first acceptance probe asked for `cell['present']`, A KEY THAT DOES NOT EXIST, and returned `absent=210`. I nearly read that as a finding about the artifact. The real key is `basis`. `AUDIT THE INSTRUMENT BEFORE BELIEVING IT` — the artifact was fine and my query was wrong.**
 ★★★★★ **THE CAUSE, IN ONE LINE, AND IT EXPLAINS ALL SIX ATTEMPTS RATHER THAN THE LAST ONE: `P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS.` An omission in a sparse optional object means one of three incompatible things — not-applicable · unadjudicated · deleted — and no parser, closed-key rule, type check or mutation suite recovers which, after the fact.**
 ✅ **ALL DECISIVE NUMBERS RE-DERIVED AT THIS DESK FROM `c304b098:ci/fixtures/spec-binding-parity-expanded/ORACLE.json`: `12` fixtures · `30` rows · `8` with `unadjudicated` · axes `29/29/26/26/22/4/4` · `140` live expectations · `{bindable}` protects `29` · **`111` silently deletable**. Root cause verified at the row: `50-family-axis-invalidations.spec.json`→`inv_in_entry` is the ONLY row missing `bindable` and declares its gap at FIXTURE level while the rule reads `row.unadjudicated`.**
 ⚠★★★★★ **A PATTERN ABOUT THIS DESK, THREE-FOR-THREE IN ONE WAKE (R-520 §4): every remedy I issued was CORRECT AND ONE LEVEL SHORT, and each time someone else supplied the missing level. **STANDING DEFENCE: before issuing a remedy, ask *“what does this remedy ASSUME EXISTS?”* — all three failures were an assumed authority that did not exist.**
