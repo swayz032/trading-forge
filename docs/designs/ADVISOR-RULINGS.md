@@ -12,6 +12,65 @@
 
 ---
 
+## R-521 · 2026-08-01 · ✅★★★★★ **`P1`/`P2` ACCEPTED — THE INVERSION PAID. THE NUMBER IT WAS ORDERED TO PRODUCE IS `43` CELLS ABSENT AND DECLARED NOWHERE (`46` UNDER A STRICT JOIN): THE SILENT-VOID POPULATION, MEASURED FOR THE FIRST TIME, AND THE ENTIRE `P0` IMPOSSIBILITY EXPRESSED AS A COUNT.** ⚠️★★★★★ **THE WORKER OFFERED THIS DESK THE AUTHORITY TO CLOSE THE `43`. THE EXTERNAL READ NARROWED THAT AND IT IS RIGHT — I ADOPT THE NARROWING AGAINST MYSELF: `UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.`** ✅ **ONE INDEPENDENT CENSUS AUTHORIZED; `P0-vNext` DESIGN IS THE NEXT STEP AFTER IT PASSES.**
+
+**RULING ID:** R-521 · **TASK ID:** AR-548 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-548` (`c80c8df7`, 07-31 `15:54`) — **read in FULL, including §4 and §5.**
+**DECISION:** **ACCEPT** — the `P1`/`P2` delivery, pending census · **ADOPT** — the `43` remain `UNADJUDICATED`, no blanket authority amendment · **AUTHORIZE** — exactly ONE independent census · **HOLD** — `P0-vNext` implementation.
+**EXTERNAL READ:** `de18cbd0` (2026-08-01 `19:29`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `c80c8df7` (short + full) → `commit`, `2e6fb1e2` → `blob`. `0` FABRICATED — EIGHTH CONSECUTIVE CLEAN AUDIT.** Self-labels *"Ruling: R-521"*; it is `[EXTERNAL OPINION]`. **R-521 IS THIS DESK'S.**
+⚠️ **GATE LATENCY, RECORDED WITHOUT A SHAPE DRAWN ON IT: `AR-548` landed 07-31 `15:54`; this read arrived 08-01 `19:29` — **`~27.5h`**, by far the longest of the campaign. The worker was idle that entire time and correctly so. I flagged it to the operator at `19:24` and the read arrived at `19:29`; **I claim no causal link between those two facts** — `TWO POINTS ARE A LINE ONLY IF YOU HAVE ALREADY DECIDED WHAT SHAPE YOU ARE DRAWING.`**
+
+### ✅★★★★★ §1 — WHAT I VERIFIED **AT THIS DESK**, AND WHAT I DID NOT
+
+**`[MEASURED HERE — parsed `docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` directly]`**
+
+| check | result |
+|---|---|
+| cell count | ✅ **`210`** = `30` rows × `7` axes |
+| `basis` × `classification` join | ✅ `present-in-oracle`→`ASSERTED` **`140/140`**, a clean 1:1 |
+| the `70` absent cells | ✅ `43` `UNDECLARED`→`UNADJUDICATED` · `13` `fixture-declared-prose`→`UNADJUDICATED` · `5` `row-declared-exact`→`UNADJUDICATED` · `6` `row-declared-exact`→`NOT-APPLICABLE` · `3` `row-declared-alias`→`NOT-APPLICABLE` |
+| ⚠️ **`R-520 §6`'s STOP CONDITION** | ✅ **HONOURED. `61` of `70` absent cells left honestly unknown, and ALL `9` classified cells rest on an EXPLICIT ROW DECLARATION — NOT ONE was classified by inferring intent from absence.** That inference is what killed six `P0` attempts. |
+
+⚠️ **`[RELAYED — NOT VERIFIED HERE]`, and I mark them because the ruling does not rest on them:** the determinism byte-compare (`sha256` run1 == run2), the three mutant red-proofs with the clean control, the strict-join count of `46`, and the `3494d4bb…` sha256 match. **The census in §4 is what confirms these.**
+★★★ **MY OWN EARLIER NIT IS RESOLVED, NOT UPHELD: I flagged `authority_citation: null` on the `9` `NOT-APPLICABLE` cells. `AR-548 §3` cites **authority §4d** for all nine. The citation exists in the packet and is missing only from the JSON field — a CAPTION GAP, not an unsourced classification. It should be filled, and it changes nothing.**
+
+### ⚠️★★★★★ §2 — **THE WORKER OFFERED ME AN AUTHORITY I MAY NOT TAKE, AND THE READ WAS RIGHT TO NARROW IT**
+
+`AR-548` states that closing the `43` is a desk authority act. **The read answers: *"That is too broad. The desk may rule process and evidence requirements. It may NOT manufacture trading truth where the authority is silent."*** ✅ **ADOPTED, AND I ADOPT IT AGAINST MYSELF — this is a power being handed to this desk and the correct move is to decline it.**
+- the **`43` REMAIN `UNADJUDICATED`**;
+- **NO blanket authority amendment** is authorized;
+- **no cell may be promoted to `ASSERTED` or `NOT-APPLICABLE` without a NAMED SOURCE AUTHORITY**;
+- **unresolved cells are an HONEST RESULT, not a defect to hide.**
+> ★★★★★ **`UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.`**
+★★★ **This is the campaign's `YOU DECIDE` mandate meeting its boundary: the operator delegated ENGINEERING decisions to this desk. He did not delegate — and could not — the authority to invent what a source teaches. `A DESK MAY RULE HOW WE FIND OUT; IT MAY NOT RULE WHAT IS TRUE.`**
+
+### ✅★★★★★ §3 — WHAT THE `43` ACTUALLY MEAN, AND THE EXONERATION THAT COMES WITH THEM
+
+⚠️ **`43` cells are absent with NO declaration anywhere** — no row `unadjudicated` entry, no fixture-level gap statement. An omission there is `intentionally-not-applicable` **or** `honestly-unadjudicated` **or** `accidentally-deleted`, and the sparse object cannot say which. **THAT IS THE `P0` IMPOSSIBILITY, EXPRESSED AS A COUNT — and until this delivery nobody had one.**
+★★★★★ **AND THE PART THAT IS FAIR TO THE ORACLE'S AUTHORS, WHICH THE WORKER RAISED UNPROMPTED AND I ENDORSE: THIS IS NOT A DEFECT THEY INTRODUCED. Authority §6 says in its own words that only session-family rows are adjudicated and that the membership manifest *"is wider than this oracle"*. **THE ORACLE NEVER CLAIMED THIS COVERAGE — `P0` ASSUMED IT.** Six attempts were spent asking an honest, correctly-scoped artifact a question it had explicitly declined to answer.**
+✅★★★ **AND THE BREAKTHROUGH, WHICH IS WHY THIS IS NOT A DEAD END: `P0-vNext` DOES NOT NEED THE `43` ANSWERED. It needs them PRESERVED HONESTLY and it must refuse any completeness claim that depends on them.** Per the read §5: agreement checked on every projected cell · correctness checked ONLY on `ASSERTED` · `NOT-APPLICABLE` must produce no assertion and no accidental predicate · **`UNADJUDICATED` forces a named `INCOMPLETE_AUTHORITY` / fail-closed status, NEVER a correctness green** · deleting any ledger, projection or assertion cell turns the gate red by **exact set equality**.
+> ★★★★★ **`THE LEDGER DOES NOT NEED TO KNOW EVERYTHING. IT MUST KNOW EXACTLY WHAT IT DOES NOT KNOW.`**
+
+### ✅★★★ §4 — CREDIT, WHERE IT IS MEASURED AND NOT POLITE
+1. ★★★★★ **IT PRE-REGISTERED THE ANSWER BEFORE LOOKING.** `AR-547 §3` predicted `NOT-APPLICABLE` would be RARE; it came out at `9`. **A prediction made before the measurement is worth more than the measurement.**
+2. ★★★★★ **IT CLOSED AN OPEN ITEM OF MINE FROM `AR-540 §5`:** `3494d4bb…` — one of the two identifiers that *"do not resolve as git objects"* — **is the `sha256` OF THE AUTHORITY DOCUMENT and matches byte-for-byte.** ★★★ **So its refusal to call them fabrications without the algorithm was CORRECT, and so was `R-516`'s endorsement of that refusal. `AN UNRESOLVED IDENTIFIER IS A QUESTION ABOUT THE ALGORITHM, NOT EVIDENCE OF A LIE` — and this campaign has a standing memory that external SHA tails ARE sometimes invented, which made the restraint harder and more valuable.**
+3. ★★★ **IT PUBLISHED BOTH `43` AND `46`** rather than choosing the flattering one, because the `primitive`→`primitive_null` alias is a JOIN and *"a silent join is an untested hypothesis about two names meaning one thing."* **It also VERIFIED `R-520 §2`'s `R-3`, which I had correctly marked `[RELAYED]`.**
+4. ★★ **Its verifier RE-DERIVES the Cartesian product instead of trusting the ledger's own `expected_cell_count`** — *"otherwise it would be asking the artifact to confirm itself"* — and its duplicate census uses an `object_pairs_hook` because **`json.load` silently keeps the LAST of duplicate keys**, so a plain parse cannot see them at all.
+
+### ★★★★★ §5 — **NEXT ACTION: ONE INDEPENDENT CENSUS** (dispatch pending the operator's word)
+**Exactly ONE `accuracy-validator` census against commit `c80c8df7`**, durable receipt at **`docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md`**. ★★★ **IT MUST INDEPENDENTLY RE-DERIVE RATHER THAN TRUST PACKET CAPTIONS.**
+**Required checks:** recompute the `30 × 7 = 210` membership from the frozen row identities and frozen axes · verify exactly ONE cell per identity and ONE state per cell · recompute `140` / `9` / `61` and the `43` undeclared subset · recompute the strict-join alternative `46` and verify the exact three alias-dependent cells · re-run determinism and the three mutant red-proofs · confirm the `9` `NOT-APPLICABLE` each trace to authority §4d.
+⚠️★★★★★ **AND THE OUTCOME RULE THAT MATTERS MOST, CARRIED VERBATIM: on UNRESOLVED AUTHORITY, PRESERVE the affected cells as `UNADJUDICATED` — **DO NOT FAIL THE LEDGER MERELY BECAUSE THE SOURCE TRUTH IS UNAVAILABLE. FAIL ONLY IF THE LEDGER MISREPRESENTS THAT UNCERTAINTY.** A census that punishes honest unknowns would teach the next delivery to guess.**
+⚠️ **DISPATCH REQUIRES THE OPERATOR'S WORD (`the grader is one ask away`); it is asked in this wake's operator summary. The worker STANDS BY — no implementation, no `P0-vNext`, no authority amendment, no `P3`/Gate-B.**
+
+### §6 — POSITION
+`P1`/`P2` **DELIVERED, ACCEPTED, PENDING ONE CENSUS** · census **AUTHORIZED, pending the operator's word** · the `43` **REMAIN `UNADJUDICATED`** · blanket authority amendment **NOT AUTHORIZED** · `P0-vNext` design **NEXT STEP AFTER CENSUS `PASS`** · `P0-vNext` implementation **NOT AUTHORIZED** · seventh `P0` attempt **STILL FORBIDDEN** · `P3` · Gate B · merge/deploy/release **HOLD**.
+
+### ★★★★★ §7 — LESSON TO PERSIST
+> **`A DESK MAY RULE HOW WE FIND OUT; IT MAY NOT RULE WHAT IS TRUE.`** The worker offered this desk the authority to close `43` unknown cells, and the offer was made in good faith by a seat that had just done excellent work. **The temptation was not to guess — it was to accept a power that would have made guessing look procedural.** An advisor with a broad `YOU DECIDE` mandate is exactly the seat most likely to mistake *"I am authorized to decide"* for *"I am able to know."*
+> ★★★ **The tell is available in advance: when a remedy would convert an UNKNOWN into a VALUE without naming a new source, the remedy is manufacturing truth no matter how much authority its author holds.**
+
+---
+
 ## R-520 · 2026-07-31 · 🛑✅★★★★★ **THE PRE-COMMITTED STOP FIRES: `NO SOUND STANDALONE P0 REDESIGN`. NO SEVENTH ATTEMPT.** ★★★★★ **AND THE CRITICAL PATH INVERTS — `§15.6`'s ORDER IS RETIRED. `P1`+`P2` GO FIRST, AND `P0-vNext` BECOMES A THIN CONSUMER OF THEM.** ⚠️★★★★★ **THE DIAGNOSIS IS THE EXTERNAL READ'S AND IT IS BETTER THAN MINE: I HAD *"THE RULE READS SCOPE AT THE WRONG LEVEL"* — THAT IS THE SYMPTOM. THE CAUSE IS `P0 CANNOT PROVE COMPLETENESS BEFORE P2 DEFINES COMPLETENESS`, AND IT EXPLAINS ALL SIX ATTEMPTS AT ONCE.**
 
 **RULING ID:** R-520 · **TASK ID:** the regrade `d4378be2` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-546` (`15:11`, R-519 §5 delivered, verified at this desk before dispatch; the worker has been standing by since).
