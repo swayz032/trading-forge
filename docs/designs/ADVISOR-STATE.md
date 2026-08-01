@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3273` at THIS commit, 2026-08-01 19:25 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3278` at THIS commit, 2026-08-01 19:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3273` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3278` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **`AR-548` IS UNRULED; `R-521` IS OWED AND HELD. ⚠🛑 THE EXTERNAL GATE HAS BEEN SILENT ~`27h` — newest read is still `4fb44fb0` (`07-31 15:43`), and `AR-548` landed `15:54`. THE CAMPAIGN IS FULLY STOPPED ON THE GATE, NOT ON THE WORKER.** (state re-measured 2026-08-01 19:2x after a session-limit interruption; `unpushed=0`.)
+## ✅★★★★★ SEAT — **`R-521` LANDED `a84e739f`, PUBLISHED (2026-08-01 19:32). `P1`/`P2` ACCEPTED. Gate discharged after a `~27.5h` wait (read `de18cbd0`).**
+⚠★★★★★ **THE NUMBER THE INVERSION WAS ORDERED TO PRODUCE: `43` CELLS ABSENT AND DECLARED NOWHERE (`46` under a STRICT name join). That is the SILENT-VOID population and it is the whole `P0` impossibility as a count.**
+🛑★★★★★ **THE `43` REMAIN `UNADJUDICATED`. NO blanket authority amendment. NO promotion to `ASSERTED`/`NOT-APPLICABLE` without a NAMED SOURCE AUTHORITY. The worker OFFERED this desk the power to close them and the desk DECLINED it (R-521 §2). `UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.` `A DESK MAY RULE HOW WE FIND OUT; IT MAY NOT RULE WHAT IS TRUE.`**
+✅ **NOT A DEAD END — `P0-vNext` does NOT need the `43` answered, only preserved honestly: agreement on every projected cell · correctness ONLY on `ASSERTED` · `NOT-APPLICABLE` produces no predicate · **`UNADJUDICATED` forces a named `INCOMPLETE_AUTHORITY` fail-closed, NEVER a correctness green** · deleting any cell reddens by EXACT SET EQUALITY.**
+★★★ **AND THE EXONERATION: authority §6 says in its own words that only session-family rows are adjudicated and the manifest is *“wider than this oracle.”* **THE ORACLE NEVER CLAIMED THIS COVERAGE — `P0` ASSUMED IT.** Six attempts asked a correctly-scoped artifact a question it had declined to answer.**
+⚠ **NEXT: ONE independent census vs `c80c8df7`, receipt `docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md`, must RE-DERIVE not trust captions. **DISPATCH PENDING THE OPERATOR'S WORD — asked 19:32.** Census outcome rule: on UNRESOLVED AUTHORITY preserve `UNADJUDICATED`; **fail ONLY if the ledger MISREPRESENTS its uncertainty** — a census that punishes honest unknowns teaches the next delivery to guess.** Worker STANDS BY.
 ✅★★★★★ **`AR-548` VERIFIED AT THIS DESK ON THE DIMENSION THAT DECIDES IT — `R-520 §6`'s STOP CONDITION WAS *HONOURED*.** `[MEASURED HERE, parsed `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json`]` **`210` cells. The `basis` × `classification` join: `present-in-oracle`→`ASSERTED` **140/140**, a clean 1:1. Of the `70` ABSENT cells — `43` `UNDECLARED`→`UNADJUDICATED` · `13` `fixture-declared-prose`→`UNADJUDICATED` · `5` `row-declared-exact`→`UNADJUDICATED` · **`9` classified `NOT-APPLICABLE`, and ALL NINE rest on an EXPLICIT ROW DECLARATION** (`row-declared-exact` ×6, `row-declared-alias` ×3).**
 ★★★★★ **SO `61` OF `70` ABSENT CELLS WERE LEFT HONESTLY UNKNOWN AND NOT ONE WAS CLASSIFIED BY INFERRING INTENT FROM ABSENCE — which is exactly the move `R-520 §6` forbade and the move that killed six `P0` attempts.** ★★ **It also ABSORBED the retired lane's `R-3` namespace finding rather than repeating it: the alias is named inline (`declared as 'primitive'`).**
 ⚠ **ONE NIT FOR `R-521`, NOT A DEFECT: `authority_citation` is `null` on all `9` `NOT-APPLICABLE` cells. The row's own declaration IS the authority, so the classification is sound — but the field is populated elsewhere and an empty citation on the only confidently-classified cells is a caption gap.**
