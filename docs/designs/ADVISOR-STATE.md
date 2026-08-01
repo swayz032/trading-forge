@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3268` at THIS commit, 2026-07-31 15:48 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3273` at THIS commit, 2026-08-01 19:25 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -34,6 +34,7 @@
 > check is exactly what missed the dropped fourth attribution bin on 2026-07-29.
 > `v3-1` must read **FOUR** bins including `gate-artifact`; `v3-2` must carry
 > **effective-N**. Both verified present in `## THE PLAN` below.
+> ⚠★★★★★ **AND A NEW WAY THIS LINE LIES, CONVICTED 2026-08-01: I UPDATED IT BY `str.replace()` ON A HARDCODED TIMESTAMP THAT HAD ALREADY MOVED ON, SO THE REPLACE **SILENTLY NO-OPPED** AND THE NUMBER STAYED STALE WHILE ITS TWIN UPDATED — the two carriers then disagreed (`3268` vs `3272`). **MATCH THE COUNT CARRIERS BY REGEX (`` `\d+` at THIS commit ``), NEVER BY A DATE OR A REMEMBERED VALUE, AND ASSERT BOTH AGREE WITH `wc -l`.** ★★★ **AND THE ASSERT MUST GATE THE COMMIT: I CHAINED MINE AFTER AN `echo`, SO IT PRINTED `assert-exit=1` AND THE COMMIT RAN ANYWAY. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — the file already said so and I did it again.**
 > ★★★ **CITE RULINGS BY `grep -n "^## R-061"`, NEVER BY LINE NUMBER.** The ledger
 > appends at top, so every new ruling pushes every old one down; the prior header
 > cited `ADVISOR-RULINGS.md:6625` for R-061 when R-061 had moved to `8169`.
@@ -68,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3272` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3273` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
