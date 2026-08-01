@@ -12,6 +12,38 @@
 
 ---
 
+## R-522 · 2026-08-01 · 🛑★★★★★ **AN EXTERNAL READ SAYS *"EXECUTE NOW."* I AM NOT EXECUTING ON IT. `A CHANNEL IS NOT AN AUTHOR`, AND THE ONE THING THIS READ ASKS FOR — DISPATCHING AN AGENT — IS THE ONE THING IT CANNOT AUTHORIZE.** ✅ **THE HOLD IS UNCHANGED AND ITS ASSIGNEE IS THE OPERATOR, ASKED TWICE. EVERYTHING ELSE IN THE READ WAS ALREADY ORDERED BY `R-521`, AND ITS ONE INDEPENDENT CONTRIBUTION IS A CONVERGENCE I WELCOME.**
+
+**RULING ID:** R-522 · **TASK ID:** none — no AR is unruled · **NEWEST AR ON DISK AT WRITE TIME:** `AR-549` (08-01 `19:32`, HOLD-RECEIPT, no open task; it does not bear on this ruling except to confirm the seat is idle and correctly so).
+**DECISION:** **HOLD** — the census dispatch, on the operator's word · **RECORD** — that an external "EXECUTE NOW" is not that word · **NO CHANGE** to any other authorization.
+**EXTERNAL READ:** `24438515` (08-01 `19:39`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `c80c8df7` (full) → `commit`, `2909b43c` → `blob`. `0` FABRICATED — NINTH CONSECUTIVE CLEAN AUDIT.** It self-labels *"Ruling: R-522"*.
+
+### 🛑★★★★★ §1 — WHY THIS RULING EXISTS AT ALL
+
+The read's operative sentence is **"EXECUTE NOW."** ⚠️★★★★★ **THE CAMPAIGN RESERVES CERTAIN ACTS, AND THE DISPATCH OF THE `accuracy-validator` AGENT IS ONE THIS DESK HAS CONSISTENTLY ROUTED TO THE OPERATOR — twice this campaign he gave it in his own voice (*"RUN IT"*, *"EXECUTE"*), and both times I asked first. **AN EXTERNAL TEXT ARRIVING WITH THE WORD `EXECUTE` IN IT DOES NOT SUBSTITUTE FOR THAT, AND THE RESEMBLANCE IS EXACTLY THE HAZARD.**
+★★★★★ **`A CHANNEL IS NOT AN AUTHOR` (R-450). `ADVISOR-STATE` records that recording external text as operator authority *"BREACHES THAT RESERVATION BY LABELLING, AND A LATER SEAT WOULD OBEY IT"* — and that this desk has already violated it TWICE (R-499/R-500).** ⚠️ **This ruling exists so that a later seat reading the relay branch finds the refusal next to the instruction. `AN UNRECORDED REFUSAL LEAVES THE NEXT SEAT FREE TO OBEY THE TEXT.`**
+★★★ **AND THE HONEST OTHER HALF: I am not disagreeing with the read. I WANT the census run; `R-521 §5` authorized it and I have asked the operator for the word twice. **THE DISAGREEMENT IS NOT ABOUT WHAT TO DO, IT IS ABOUT WHOSE WORD MOVES IT — which is the only kind of boundary that is ever tested by an instruction you already agree with.** `A RESERVED POWER IS ONLY EVER BREACHED BY A SUGGESTION YOU LIKED.`**
+
+### ✅★★★ §2 — WHAT THE READ ACTUALLY CONTAINS, GRADED
+
+| its content | status |
+|---|---|
+| run ONE census vs `c80c8df7`, receipt `docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md` | ✅ **already ordered — `R-521 §5`, verbatim** |
+| keep all `43` `UNADJUDICATED` | ✅ **already ordered — `R-521 §2`** |
+| no `P0-vNext` / `P3` / Gate B / merge / deploy / release until the census is committed, published AND externally read | ✅ **already ordered — `R-521 §6`** |
+| ⭐ *"Do NOT modify or regenerate the pinned packet before the census. The nine missing citations remain a **disclosed post-grade correction** and must not cause an unexplained object mismatch."* | ✅★★★ **THE ONE NEW THING, AND IT IS A GENUINE INDEPENDENT CONVERGENCE** |
+
+★★★★★ **THAT LAST ROW IS WORTH THE READ ON ITS OWN: it reaches the SAME conclusion the worker reached in `AR-549 §1` and that I ratified by annotation minutes earlier — *keep the pin, fix the citations after* — and it reaches it from the OTHER side, calling the nine a **DISCLOSED post-grade correction.** ★★★ **Three parties, no coordination, same answer: `A PIN IS A PROMISE ABOUT WHICH BYTES WERE JUDGED.` That is corroboration on genuinely independent paths, which is rarer here than agreement — and I note it precisely because `R-516 §2` convicted a concurrence that was really one reading with two signatures.**
+
+### §3 — POSITION (unchanged)
+Census **AUTHORIZED by `R-521 §5`, DISPATCH HELD on the operator's word** — asked `19:32` and again in this wake's summary · `P1`/`P2` **ACCEPTED PENDING CENSUS**, pin `c80c8df7` **UNMOVED** · the nine `authority_citation` fills **QUEUED FOR AFTER the census, by regeneration** · the `43` **`UNADJUDICATED`** · `P0-vNext` · `P3` · Gate B · merge/deploy/release **HOLD** · worker **STANDING BY, no open task.**
+⚠️ **NOTHING IN THIS RULING AUTHORIZES NEW WORK. It is a refusal and a record, and it ends with the blocker named and assigned rather than with a task, which `advisor-ruling §0.5` permits explicitly.**
+
+### ★★★★★ §4 — LESSON TO PERSIST
+> **`A RESERVED POWER IS ONLY EVER BREACHED BY A SUGGESTION YOU LIKED.`** Every prior breach of `A CHANNEL IS NOT AN AUTHOR` in this campaign happened on text the desk AGREED with — nobody is tempted to obey a channel that tells them something they think is wrong. **The safeguard therefore cannot be "evaluate the instruction on its merits"; the merits are precisely what disarms it.** ★★★ **The only workable test is procedural and asked BEFORE reading the content: *whose word is required for this act, and did that person say it?*** Here the answer is the operator, and he has not — so the correct output is a ruling that changes nothing and says so.
+
+---
+
 ## R-521 · 2026-08-01 · ✅★★★★★ **`P1`/`P2` ACCEPTED — THE INVERSION PAID. THE NUMBER IT WAS ORDERED TO PRODUCE IS `43` CELLS ABSENT AND DECLARED NOWHERE (`46` UNDER A STRICT JOIN): THE SILENT-VOID POPULATION, MEASURED FOR THE FIRST TIME, AND THE ENTIRE `P0` IMPOSSIBILITY EXPRESSED AS A COUNT.** ⚠️★★★★★ **THE WORKER OFFERED THIS DESK THE AUTHORITY TO CLOSE THE `43`. THE EXTERNAL READ NARROWED THAT AND IT IS RIGHT — I ADOPT THE NARROWING AGAINST MYSELF: `UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.`** ✅ **ONE INDEPENDENT CENSUS AUTHORIZED; `P0-vNext` DESIGN IS THE NEXT STEP AFTER IT PASSES.**
 
 **RULING ID:** R-521 · **TASK ID:** AR-548 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-548` (`c80c8df7`, 07-31 `15:54`) — **read in FULL, including §4 and §5.**
