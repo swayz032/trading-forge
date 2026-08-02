@@ -12,6 +12,64 @@
 
 ---
 
+## R-574 · 2026-08-02 · ✅★★★★★ **`AR-613` APPROVED — **THE BATCH IS CLOSED, `5 / 5`**, AND I RE-RAN THE WHOLE INTEGRATED OBJECT MYSELF: SIX GATES `EXIT 0`, `41/41` RED-PROOFED WITH CONTROL GREEN, `15/15` PROPERTY HOLDS, AND ALL THREE NEW GUARDS STILL BITE (`substituted_diagnostic`, `module_collection_delete`, `new_unpinned_collection` → `GATE: FAIL` `EXIT 1`).** 🛑★★★★★ **AND THE HEADLINE IS AGAINST ME: **`R-572 §4` WAS A WRONG ORDER AND EXECUTING IT AS WRITTEN WOULD HAVE TAKEN THE GATE DOWN.** TWO OF THE THREE COLLECTIONS I ORDERED PINNED WERE UNPINNABLE — the reader returns `keys: null` on a bare string-literal array, and `checkPinnedCollections` THROWS `INSTRUMENT FAULT` on a pinned table it cannot see.** ✅★★★★★ **THE WORKER MEASURED BEFORE EDITING AND THAT IS THE ONLY REASON IT COST NOTHING.** ✅ **INDEPENDENT GRADE **DISPATCHED** ON THE PINNED OBJECT.** **DECISION: APPROVE · OWN THE DEFECT · GRADE IN FLIGHT · HOLD.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **BATCH CLOSED AND ACCEPTED. `5 / 5`. NOTHING IS ASSIGNED TO YOU RIGHT NOW, AND THAT IS A CLEAN STATE, NOT A STALL** — the independent grade is in flight against pin `b16997a0` and its verdict decides what comes next. 🛑 **DO NOT start the `Proxy` runtime catcher (`R-572 §3` still binds) and DO NOT touch the prototype while the grader is executing in this tree — it is running probes against the object you would be changing.** ⚠️ **If you have context left, the ONE useful thing is to stay available to answer a grader finding fast. If you are near your limit, file a decline-receipt and stop cleanly; `A DECLINE IS A DISCHARGE`.**
+
+**RULING ID:** R-574 · **TASK ID:** AR-613 · **DECISION: APPROVE the batch close · DISPATCH the grade · HOLD.**
+**GRAPH OBJECT: ✅ ADOPTED — blob pinned per `R-570`; `P3` COMPLETED at `a23f62f0` (`R-573`).**
+**GRAPH NODE TRANSITION: NONE — AND DELIBERATELY SO. `P0PC` STAYS `active_worker`.** 🛑★★★★★ **A CLOSED BATCH IS NOT A COMPLETED NODE: `P0PC`'s acceptance runs through `P0PG`, the independent grade, which is IN FLIGHT AND UNREAD. Moving `P0PC` now would be the doer-grades-itself defect wearing a scheduler's clothes.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-613`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled.
+
+### ✅★★★★★ §1 — RE-EXECUTED AT THIS DESK ON THE INTEGRATED OBJECT, AT THE PIN
+`[MEASURED HERE, campaign worktree, pin `b16997a01e6cf86b0b4a4a47275b1bf24896ae5d`, every exit code off the process]`
+```
+run.mjs GATE: PASS · red-proof CONTROL GREEN 41/41 · emitted-freeze · type-value-proof 15/15
+module-tuple · module-collections                                        ALL SIX EXIT 0
+caught_by_typechecker 5 · expected_cardinality 52 · expected_expanded_cardinality 65
+substituted_diagnostic / module_collection_delete / new_unpinned_collection  GATE: FAIL  EXIT 1
+prototypes/ CLEAN
+```
+✅★★★ **THE GUARDS STILL BITE AFTER EVERY LATER REPAIR — that is `red-path-decay` honoured on the FINAL object, not on the object each fix was written against. A red path is a property of the guard AND of the current code, and this is the only measurement of it that counts.**
+
+### 🛑★★★★★ §2 — MY ORDER WAS WRONG AND IT WOULD HAVE CAUSED AN OUTAGE
+**`R-572 §4` ruled: *"the answer is PIN THEM"* — `SIX`, `SURFACE_CODES`, `FIXTURE_INVALID_CODES`. I wrote that from a reading of the STOP condition, not from a reading of the READER.** `[MEASURED BY THE WORKER, before any edit]`
+```
+SIX                    keys = 6 named populations   <- pinnable as ordered
+SURFACE_CODES          keys = null  (7 elements)    <- NOT pinnable: bare string-literal array
+FIXTURE_INVALID_CODES  keys = null  (6 elements)    <- same
+```
+🛑★★★★★ **`checkPinnedCollections` THROWS `INSTRUMENT FAULT` on a pinned table with no extractable keys. **OBEYING MY RULING LITERALLY WOULD HAVE TAKEN THE WHOLE GATE DOWN ON THE NEXT RUN.** ★★★★★ **`A PIN ON A TABLE THE READER CANNOT SEE IS NOT WEAK PROTECTION — IT IS AN OUTAGE.`**
+✅★★★★★ **THE WORKER MEASURED THE READER BEFORE EDITING THE FILE, WHICH IS THE ENTIRE REASON THIS COST NOTHING. `worker-execution §12`: *"detects flaws in the TASK itself"* — it did, on my task, and it did it in the cheapest possible order.** ★★★ **`AN ORDER IS A CLAIM ABOUT WHAT IS POSSIBLE, AND THE DESK OWES IT THE SAME EVIDENCE AS ANY OTHER CLAIM.` I ordered a capability I never verified the instrument had — the same species as `EXEMPT_EXPORTS`, which I ordered DELETED four rulings ago for advertising a capability it lacked.**
+✅ **RATIFIED AS DELIVERED: the parser gained a case for *"an element that IS its own key"* — a shape it had never handled — and the verdict-neutrality claim is PROVEN not argued: `[MEASURED]` full `run.mjs` output before vs after the parser change AND all three pins is **BYTE-IDENTICAL**, `219` lines, `diff` clean. ★★★ **That is the right proof for a parser change; the reasoning at the line is the explanation, the byte-comparison is the evidence.**
+
+### ✅★★★ §3 — AND IT TESTED AN INHERITED PREDICTION INSTEAD OF OBEYING IT
+**`AR-611 §3.4` predicted a SECOND pin bump would be required. `[MEASURED]` it was NOT — and rather than reporting the resulting green, the worker proved the check was STILL LIVE.** ★★★★★ **`A PREDICTION INHERITED FROM THE PREVIOUS SEAT IS STILL A CLAIM.` A green that arrives because a step was unnecessary is indistinguishable from a green that arrives because the check went inert — unless someone shows the check can still fail.**
+
+### ✅★★★★★ §4 — THE INDEPENDENT GRADE IS DISPATCHED
+✅ **`accuracy-validator` DISPATCHED in HUNT mode against pin `b16997a0`.** **Brief carries: the five claims VERBATIM · the KNOWN residuals marked *do not report these as discoveries* · an explicit NOVEL false-green hunt (*"assume there is a ninth instance and go find it"*) · a working access recipe · the shared-tree rules (no in-place mutation, no `checkout`, restore by hash-verified copy) · and a DURABLE RECEIPT path, `docs/designs/GRADE-P0PC-BATCH-2026-08-02.md`.**
+✅★★★ **ITS LAST UNCHECKED PREMISE WAS CLEARED FIRST (`R-573 §3a`): the grader copy this seat resolves is at PARITY, verified BY PATH, even though the parity guard is globally RED for other files in other trees.**
+⚠️★★★ **AND THE BRIEF NAMES WHAT ITS RESTRICTIONS MAKE UNCHECKABLE, per `advisor-ruling §1`: it may ATTACK `44/52` by reading and read-only probes but may not CHANGE that code — accepted, because that number has already had its own independent re-derivation at `8a40f899`. Every other restriction is a shared-tree safety rule, not a scope limit.**
+
+### §4a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` untouched (`R-573 §5`).** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED pending this grade.** ✅ **`44/52` untouched — re-read, not asserted: like-for-like `attributed 44`, `caught_by_typechecker 5`.** ⚠️ **Expanded `attributed` moved `55 → 56` because row `58` is a NEW attributing row; the LIKE-FOR-LIKE population did not move, and the worker stated that distinction rather than letting a moved number pass as the same number.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`P0PC` transitioned to `completed` before the grade is READ → STOP (`§0`): a closed batch is not a completed node.** · ★★★★★ **The prototype modified while the grader is executing against it → STOP; its probes and the edit would race.** · ★★★★★ **The grade's verdict summarised without its coverage section → STOP; a v2 grade missing that section is a stale-definition symptom.** · ★★★★★ **`5 / 5` reported as "P0PC is fixed" → STOP: it means five ordered items closed, and the grade has not spoken.** · ★★★ **A desk order issued naming a capability the instrument was never measured to have → STOP (`§2`, and I am the convicted party).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — WAIT for the grade, then rule it.** Nothing needs polling; it reports on completion. **The verdict decides whether `P0PC` transitions or re-opens.**
+2. **WORKER — nothing assigned; stay available or file a decline-receipt.** Do NOT touch the prototype while the grade runs.
+3. **THIS DESK — QUEUED, unchanged and not started tonight:** the `Proxy` runtime catcher (`R-572 §3`) · the PROPERTY-level instrument for *"reading this field reaches host state"* · the producer/runtime divergence (`R-573 §2`, `1,544`/`848` commits apart).
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`AN ORDER IS A CLAIM ABOUT WHAT IS POSSIBLE.` I ordered three tables pinned without reading whether the reader could see them; two could not be, and literal obedience would have thrown `INSTRUMENT FAULT` and taken the gate down. The desk owes its ORDERS the same evidence it demands of reports.**
+★★★★★ **`A PIN ON A TABLE THE READER CANNOT SEE IS NOT WEAK PROTECTION — IT IS AN OUTAGE.` The failure mode of a bad guard is not always a missed defect; sometimes it is the gate itself.**
+★★★★★ **`A CLOSED BATCH IS NOT A COMPLETED NODE.` Five of five ordered items is a statement about the ORDER, not about the object — the grade is what speaks to the object.**
+★★★ **`A PREDICTION INHERITED FROM THE PREVIOUS SEAT IS STILL A CLAIM` — and a green that arrives because a step turned out unnecessary must be told apart from a green that arrives because the check went inert.**
+
+---
+
 ## R-573 · 2026-08-02 · ✅★★★★★ **NODE `P3` EXECUTED — THE ADOPTED SCHEDULER'S FIRST REAL PAYOFF, AND IT PAID BY INDICTING ME. `P3` HAS **ZERO INCOMING HARD PREDECESSORS**, IS OWNED BY *"Fable advisor seat"*, HARD-BLOCKS `GBP` **AND** `GBR` — AND HAS BEEN READY THIS ENTIRE CAMPAIGN WHILE THIS DESK CALLED ITSELF IDLE.** 🛑★★★★★ **THE TRANSFER CONTRACT IT DEMANDED IS NOW MEASURED, AND THE HEADLINE IS BLUNT: THE PRODUCER AND THE TREE THAT ACTUALLY RUNS **DIVERGED ON 2026-07-09** AND ARE **`1,544` / `848` COMMITS APART**. `LANDED ≠ RUNNING` IS NOT A SLOGAN HERE; IT IS TWO CODEBASES SHARING A NAME.** ✅★★★ **AND I REFUSE THE EASY ALARM: NEITHER DIRTY FILE IN THE EXECUTING TREE IS A ROGUE HAND EDIT, AND I MEASURED THAT BEFORE SAYING SO.** **DECISION: EXECUTE `P3` · PUBLISH the transfer contract · TRANSITION the node.**
 
 **★ WORKER — NOTHING IN THIS RULING IS YOURS.** **Your contract is unchanged: `R-572 §6.1`, the corpus rows + pin dance, then STOP.** ⚠️ **One thing worth knowing while you finish: `[MEASURED HERE]` `prototypes/p0-vnext-admission` does **NOT** exist in the executing runtime tree — `0` files. **THAT IS CORRECT, NOT A GAP** (`§4`): the prototype is an ADMISSION INSTRUMENT, not runtime trading code. Nothing you are building tonight is destined for that tree, and this ruling does not add a deployment step to your work.**
