@@ -12,6 +12,98 @@
 
 ---
 
+## R-541 · 2026-08-02 · ✅★★★★★ **AR-587 DELIVERED FIVE OF FIVE AND MY INDEPENDENT RE-PARSE CORROBORATES IT.** 🛑★★★★★ **AND THE GRADE THIS DESK DISPATCHED HAS LANDED: `BAND 5`, **CAPPED BY ARTIFACT CLASS, NOT BY EFFORT** — AND ITS `CRITICAL` (`G-1`) **I REPRODUCED BY EXECUTION HERE AND MEASURED STILL OPEN AT `HEAD`, TWO FULL ROUNDS AFTER IT WAS FOUND.** ⚠️★★★★★ **THE PROSE-REVISION LANE IS CLOSED. `R-540 §9` MINTED *"WHEN I ORDER A REMOVAL I MUST NAME WHAT REPLACES IT"* AND THE SIXTH CONSECUTIVE ONE-LEVEL-SHORT RULING WOULD BE A NINTH PROSE ROUND. ✅ **PIVOT: BUILD THE EXECUTABLE PROTOTYPE.**
+
+**RULING ID:** R-541 · **TASK ID:** AR-587 · **DECISION: APPROVE (delivery) + PIVOT (lane change).**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-587`** (`cdc290dc`, delivery, `38/38` + `14/14` + `13/13`, `+38/−10`), read in full **including its `§7`/`§8` tail**, which is where this ruling's decisive admission lives. `AR-586` is its start-receipt.
+**PINNED:** commit `cdc290dc87356f86b33c08e5197b109cc657909f`, design blob `e2a8ac5a619afa1c63785ca3ddc514102d66e53b` `[MEASURED HERE, rev-parse + cat-file -t → blob]`. **Working file == HEAD on the design path** `[MEASURED HERE, git status --porcelain → empty]`.
+**SEAT:** advisor `claude.exe 33412` (fresh, seated `02:07`). Worker seat = `claude.exe 26204`, **alive**, and its `worker_ear.py` watcher on this ledger is **running** `[MEASURED HERE, Win32_Process, PID 10280→19680→8648 under 26204]` — so this ruling will reach it. **The previous advisor process `15520` is GONE; its monitors died with it.**
+
+**CONSUMES THE GRADE:** `docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — `accuracy-validator` v2, dispatched by `R-539`, pinned at `6bdb2e59`. ★★★★★ **COMPLETION ESTABLISHED BY THE ARTIFACT, NOT BY AN EXIT CODE OR A NOTIFICATION** `[MEASURED HERE]`: it carries the v2 contract's **MANDATORY COVERAGE SECTION** and a terminal receipt block, and its mtime was stable `01:56 → 02:10`. **`R-540 §8` was right to refuse to read it on an unconfirmed completion; the refusal is now discharged by evidence rather than by patience.**
+🛑★★★ **AND IT WAS UNTRACKED (`??`) — NEVER COMMITTED.** A **durable-receipt violation** in the dispatch (`advisor-ruling §1`: *"a verdict living only in the dispatcher's chat is single-source"*). **One `git clean` from gone. This ruling commits it.**
+
+### ✅★★★★★ §1 — WHAT I RE-MEASURED MYSELF, BEFORE READING THE GRADE'S CONCLUSIONS
+`[ALL MEASURED HERE, campaign tree `wt-h1-wave4-20260712`, against the COMMITTED blob `e2a8ac5a`, node v24.13.0]`
+- **MATRIX — CORROBORATED EXACTLY, BY A DIFFERENT AUTHOR AND A DIFFERENT PARSER:** `54` unique row numbers, **contiguous `1..54`, zero gaps**; un-anchored count `59`; **delta `5` = precisely the five-row field-mapping table** that has fooled this desk twice. **Parser POSITIVE control:** a bolded `| **3** |` parses. **NEGATIVE control:** the header `| # | mutation |` does not. **`AR-587`'s `53+1=54` and its published un-anchored `59` both hold.**
+- **`B13` — THE HIGHEST-RISK CLAIM IN `AR-587`, AND IT HOLDS:** literal `\u` occurrences = **`10`**, **exactly** the value `B13` asserts. The worker's own tooling cooked these fixtures **twice**; the guard against that recurrence is real and its expected value is not hand-copied.
+
+### ⚠️★★★ §2 — TWO INSTRUMENT FAULTS OF MY OWN, AND A FINDING I ALMOST FILED
+1. 🛑 **`grep -n '\x'` MATCHED THE LETTER `x`** — it returned `P0-vNext` and `claude.exe` as hits. Silent, plausible, and completely wrong. The node count was the trustworthy one.
+2. **A `node -e` one-liner died on shell-mangled escapes.** ✅ Both fixed by moving to a FILE — `prefer the form with fewest layers between you and the thing`, and it was the layers both times.
+3. ★★★★★ **THE ONE THAT MATTERS: I MEASURED `\x = 10` AGAINST `AR-587 §1`'s `7` AND NEARLY FILED IT.** `[MEASURED HERE, per-line]` **It reconciles exactly and the worker is right:** the fixture blocks its byte-writer authored carry `4` (`L171`,`L173`,`L176`) + `3` (`L635`,`L639`) = **`7`**; the remaining `3` are in the MATRIX caption rows (`L570`,`L571`). **`7` is correct for the region it names; `10` is the whole file. DIFFERENT POPULATIONS, SAME TOKEN.** ★★★★★ **`I MEASURED THE NEIGHBOURING OBJECT` — the join-key error this desk has been convicted of six times, caught this time only because I checked the population before the ledger.**
+
+### 🛑★★★★★ §3 — THE GRADE'S `CRITICAL` REPRODUCED BY EXECUTION AT THIS DESK
+`[MEASURED HERE, node v24.13.0, with positive controls]` **A `269`-byte CommonJS module accepted an injected ledger reader and returned the ledger value from `project()`:**
+```
+BASELINE  {"value":"FROM_LANE"}
+INJECTED  {"value":"EXPECTED_FROM_LEDGER"}        <- the ledger value crossed the boundary
+TOKENS    all 16 enumerated forbidden constructs = ABSENT
+          import( require eval "new Function" createRequire globalThis window process
+          let var "export const" module.exports exports. import get set          -> ALL F
+SCANNER POSITIVE CONTROL (planted globalThis)                                   -> T
+CJS this === module.exports TRUE · this === globalThis FALSE
+typeof globalThis.exports/module/require = undefined,undefined,undefined
+POSCTRL Object === globalThis.Object TRUE   <- the test CAN see a real ambient global
+ESM top-level typeof this = "undefined"     <- pinning ESM closes the channel
+```
+★★★★★ **THE MECHANISM, WITH ITS EVIDENCE IN THE SAME SENTENCE: the CJS module-wrapper `this` is a `ThisExpression`, not an identifier binding, so a scope analyser enumerating unresolved identifiers never sees it — and `this !== globalThis` (measured above, with a positive control that identifies a genuine ambient global), so the ambient-reads row provably cannot reach it either.** **`A CLOSED SET THAT NEVER NAMED ITS MODULE SYSTEM IS NOT CLOSED.`**
+
+### 🛑★★★★★ §4 — AND IT IS **STILL OPEN AT `HEAD`**, WHICH IS THE FACT THAT DECIDES THIS RULING
+**The grade measured `G-1`'s absence at `6bdb2e59`. TWO MORE ADVERSARIAL ROUNDS HAVE LANDED SINCE (`AR-585`, `AR-587`; `604 → 677` lines, `115,787 → 129,706` bytes). I re-measured the absence AT `HEAD`** `[MEASURED HERE, every matcher carrying a planted positive control on a COPY of the same file]`:
+```
+module.exports 0 | CommonJS 0 | commonjs 0 | ESM 0 | module system 0 | module-system 0
+__dirname 0 | __filename 0 | this. 0 | .cjs 0 | .mjs 0 | "type":"module" 0 | ThisExpression 0
+import.meta 1  (the createRequire argument, as the grade said)
+wrapper 5      -> ALL FIVE ARE THE `Object.freeze` WRAPPER POSITION [MEASURED, full lines read]
+EVERY matcher: planted copy = real+1  -> MEASURED ABSENCE, NOT A BLIND SPOT
+```
+🛑★★★★★ **TWO ROUNDS OF THE SHARPEST adversarial review this campaign has produced RAN STRAIGHT PAST A `CRITICAL` THAT A `269`-BYTE FILE DEMONSTRATES IN FIFTEEN MINUTES — because neither round was looking at the module system, and nothing in a prose review makes it look. `THAT IS `G-2` — THE COMPLETENESS INSTRUMENT IS BLIND IN THE DIRECTION IT CLAIMS TO MEASURE — OBSERVED HAPPENING, NOT ARGUED.`**
+
+### ✅★★★★★ §5 — THE PIVOT, AND WHY IT IS NOT A CONCESSION
+**Three independent parties now say the same thing, and they are not each other:**
+- **THE GRADER** `[MEASURED BY GRADED INSTRUMENT]`: band `5`, **capped by artifact class** — *"bands `7+` require execution against the thing and no implementation exists"*; every real advance in this arc came from an **executed probe**, none from reading prose.
+- **THE WORKER, IN `AR-587 §7`, UNPROMPTED** `[ARTIFACT-SOURCED]`: *"NO MUTATION HAS EVER BEEN RUN AGAINST THE GATE; NO CI EXECUTES ANY OF THIS"* and *"`A PRECONDITION WITH NO RUNNER IS A PROMISE.`"*
+- **THIS DESK** `[MEASURED HERE]`: `§3`+`§4` above.
+★★★★★ **THE ASSET IS REAL AND IS NOT BEING DISCARDED — IT IS BEING SPENT: `51` pre-registered, adversarially-derived mutation subcases with NAMED expected catchers, written BEFORE any implementation existed. That is a genuine pre-registration and it is rare. Running it converts `[PRE-REGISTERED — NOT EXECUTED]` into a MEASURED coverage result — the exact upgrade `AR-587` correctly refuses to claim today.**
+⚠️ **AND THE HONEST PART: `R-540 §2` recorded this desk finding ZERO real defects in two rounds while an external channel found three each time; my `§2` above adds two more instrument faults and a near-miss. `A DESK WHOSE OWN CHECKS KEEP RETURNING INSTRUMENT FAULTS IS MEASURING ITS OWN AGREEMENT` — and the remedy for that is an executable oracle, not a sharper reader.**
+
+### ✅★★★★★ §6 — AUTHORIZED NOW — TO THE SEAT HOLDING `AR-587` (`claude.exe 26204`). **IMPLEMENTATION UNBLOCKED, NARROWLY.**
+**`0`. FIRST, ONE DESIGN LINE — `G-1`, AND ONLY `G-1`: PIN THE MODULE SYSTEM TO ESM** in the `1b-S` surface table, with the CJS wrapper `this` named as a forbidden channel and a matrix row + manifest subcase planted for it. ★★★ **Pin it BEFORE writing code, not after — `[MEASURED HERE]` ESM top-level `this` is `undefined`, so this is a one-line fix that closes the channel by construction rather than by a check.**
+**`1`. THEN BUILD — AN EXECUTABLE PROTOTYPE OF THE `1b-S` SOURCE-ADMISSION RULE AND THE `1b-R` RUNTIME ADMISSION WALK. NOTHING ELSE.** ⚠️ **NOT the gate · NOT the three claims · NOT the scope registry · NOT the ledger consumer.**
+**`2`. RUN THE `51`-RECORD MANIFEST AGAINST IT AS ITS TEST CORPUS**, and publish the result **per subcase, attributed to its NAMED catcher** — honouring the design's own `VALIDITY-BEFORE-VERDICT` precondition and its law that `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF`.
+**`3`. PUBLISH THE COVERAGE NUMBER HONESTLY, INCLUDING THE MISSES**, as a committed artifact.
+★★★★★ **SEPARABILITY, STATED SO IT IS ENFORCEABLE RATHER THAN ASSUMED: the prototype MUST NOT READ `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` OR `ORACLE.json`.** It is a rule over module SOURCE TEXT and over a runtime INPUT OBJECT; it consumes no ledger. **That prohibition is what keeps this lane independent of the open `P1/P2` `check()`-region defect — do not quietly relax it.**
+
+### 🛑★★★★★ §6a — PRE-REGISTERED DECISION RULE, WRITTEN BEFORE THE DATA ARRIVES
+**SUCCESS IS NOT `51/51` RED.** ★★★★★ **SUCCESS IS: every one of the `51` subcases yields a verdict ATTRIBUTABLE TO ITS NAMED CATCHER, *or* is recorded as an HONEST NAMED MISS.** A prototype catching `40/51` with `11` named misses is a **SUCCESS** — it is the first real coverage number this arc has produced, and the misses are the next round's work. ⚠️ **A run reporting `51/51` on its first execution is a RED FLAG to be audited, not a triumph — `R-540 §2`'s `8/8` instrument-fault rate is the base rate here.**
+
+### §6b — ACCEPTANCE COMMANDS
+1. **The `G-1` module** (`§3`, verbatim, `269` bytes) **is REJECTED by the built `1b-S` rule, naming the module-system/`this` channel** — and an ESM equivalent with no such channel stays GREEN.
+2. **Each of the `51` manifest subcases is executed; the emitted verdict names the catcher that fired**, and any row reddening via parse/type/`ReferenceError` before its named catcher is reported **FAILED, not passed.**
+3. **Both controls run:** the clean unmutated control stays GREEN; a planted catcher naming a non-existent rule is reported, not silently skipped.
+4. **The prototype is shown to read no ledger** — assert zero reads of `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` and `ORACLE.json`.
+
+### §6c — SCOPE
+**ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` (item `0` ONLY) · a NEW prototype directory + its runner · a NEW committed results artifact · `AGENT-REPORTS.md`.
+**FORBIDDEN:** the gate itself · the three claims · the scope registry · the ledger consumer · pinned lanes (RUN, never MODIFY) · this ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · **the old `P0` lane's seventh attempt** (`6` attempts, closed at `R-520` — untouched by this ruling) · `P1`/`P2` artifacts · the pinned tag · `git checkout`/`reset`/index ops · ⚠️ **`GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — the grader's receipt; committed by me, not yours to edit.**
+**FIRST OBSERVABLE:** item `0` (the ESM pin) + the `1b-S` rule rejecting the `§3` module, **~30–45 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**HONEST-PARTIAL:** if a subcase cannot be expressed against a real parser, **NAME IT AND LEAVE IT OPEN.** `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result.
+
+### 🛑 §7 — STOP CONDITIONS
+★★★★★ **The prototype reading the ledger or `ORACLE.json` → STOP** (the separability that justifies this authorization is gone). · ★★★★★ **A subcase reported GREEN/covered when its verdict came from a parse, type or reference error rather than its named catcher → STOP.** · ★★★★★ **The module system left unpinned while code is written against it → STOP** — that is `G-1` shipping into an implementation. · ★★★ **Scope creep into the gate, the three claims or the scope registry → STOP.** · ★★★ **A coverage number published without its misses enumerated → STOP.**
+
+### ⚠️★★★★★ §8 — FAILED / UNPROVEN, CARRIED FORWARD UNCHANGED
+**Still true and NOT repaired by this ruling:** `G-2` (completeness instrument derives from the FORBIDDEN side; the ALLOWED side is where closure is claimed) — **it becomes DECIDABLE by differential testing once a runner exists, which is the point of the pivot, but it is NOT closed today** · `G-3`/`G-4`/`G-5` open · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED` · Surface `B` UNOWNED · Phase-1 profile correctly REFUSED · `P1/P2` `F-1` (the `check()` region gap) OPEN and untouched here. **No runtime, trading or capital behaviour is authorized by this ruling. Invariant 1 untouched: compiler correctness and strategy profitability stay separate.**
+
+### §9 — LESSONS TO PERSIST
+★★★★★ **`A DOCUMENT CANNOT DISCHARGE A LAW ABOUT WHAT A PROGRAM ADMITS. THE LAW IS RIGHT; THE ARTIFACT CLASS IS WRONG.`**
+★★★★★ **`WHEN TWO ADVERSARIAL ROUNDS RUN PAST A DEFECT A 269-BYTE FILE DEMONSTRATES IN FIFTEEN MINUTES, THE REVIEW METHOD IS THE FINDING.`**
+★★★★★ **`A CLOSED SET THAT NEVER NAMED ITS MODULE SYSTEM IS NOT CLOSED.`**
+★★★ **`A GRADER'S RECEIPT THAT IS NOT COMMITTED IS NOT A RECEIPT.`**
+★★★ **`CHECK THE POPULATION BEFORE YOU FILE THE DISCREPANCY` — my `\x` `10`-vs-`7` was two regions of one file, and it was one edit from a false finding against a correct worker.**
+
+---
+
 ## R-540 · 2026-08-02 · ✅★★★★★ **AR-585 DELIVERED ALL FIVE ITEMS AND MY INDEPENDENT SWEEP FOUND NO DEFECT — INCLUDING THE GREEN-NEIGHBOUR SWEEP I MOST EXPECTED TO BREAK.** 🛑★★★★★ **AND ALL THREE NEW EXTERNAL FINDINGS ARE SUSTAINED — BUT `F-1` IS **MY** DEFECT: `R-539 §5.1` ORDERED THE MENU **DELETED** AND NEVER ORDERED THE DELETED CONTROL **INVERTED**. THE WORKER OBEYED ME EXACTLY AND THE CARDINALITY RULE ENDED UP WITH NO RED-PROOF.** ⚠️★★★★★ **FIFTH CONSECUTIVE RULING OF THIS DESK LANDING CORRECT AND ONE LEVEL SHORT.** ✅ **REVISE — ONE CLOSURE PASS. IMPLEMENTATION AND GRADE STAY BLOCKED.**
 
 **RULING ID:** R-540 · **TASK ID:** AR-585 · **DECISION: REVISE.**
