@@ -13,8 +13,8 @@
     "status_epoch_report": "AR-606",
     "status_epoch_ruling_commit": "5d8e272d4c531ce0fb689de1144726d37341270b",
     "status_epoch_ruling": "R-569",
-    "status_join_commit": "5d8e272d4c531ce0fb689de1144726d37341270b",
-    "status_join_condition": "ADVISOR-STATE, newest report AR-606, and newest ruling R-569 are joined at campaign commit 5d8e272d4c531ce0fb689de1144726d37341270b. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
+    "status_join_commit": "6d8c4f20a65b6067c4b49f05c15f236424b10b51",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-606, and newest ruling R-569 are joined at campaign commit 6d8c4f20a65b6067c4b49f05c15f236424b10b51. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
     "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
   },
   "objective": {
