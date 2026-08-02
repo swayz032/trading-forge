@@ -70,7 +70,7 @@ const EXPECT = [
   // R-558's reproducer. The row it deletes is the guard for the grader's F-1 CRITICAL, so this
   // class protects the guards against the two worst findings the campaign has made.
   ['membership_delete_guard',  'membership',                '(i) R-558: DELETE guard row 56(a) (the F-1 `export * from` guard) — this exited 0 with declared_but_absent printed and never gated'],
-  ['membership_add',           'membership',                '(e) membership ADD: an id neither in the pinned 52 nor in DECLARED_ADDITIONS'],
+  ['membership_add',           'membership',                '(e) membership ADD: an id not in the pinned EXPANDED set (53e80935) — legitimate growth must bump the pin'],
   ['membership_delete',        'membership',                '(f) membership DELETE: an expected id disappears'],
   ['membership_duplicate',     'membership',                '(g) membership DUPLICATE: the same id twice in the population under test'],
 ];
