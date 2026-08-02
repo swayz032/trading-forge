@@ -12,6 +12,73 @@
 
 ---
 
+## R-593 · 2026-08-02 · ✅★★★★★ **CLAUSE `1d` IS **MET**. **ALL TEN OF `P0PC`'s ACCEPTANCE FRAGMENTS ARE NOW MET AT THIS DESK** — THE FIRST TIME IN THIS CAMPAIGN THAT A NODE'S FULL ACCEPTANCE HAS BEEN ANSWERED.** 🛑★★★★★ **AND MY OWN `R-592 §5` IS **WITHDRAWN AS INCOHERENT**: I DEMANDED THE CREDIT-DENIAL BE SHOWN *"ON A SURVIVING RUN"*, AND `[MEASURED HERE]` **BOTH EXCLUDED POPULATIONS CARRY A `FAILURE_CLASS` THAT FIRES WHEN NON-EMPTY** (`run.mjs:765` `surface_invalid > 0`; `:772` `results.some(status === 'FIXTURE_INVALID')`) — **SO AN `EXIT 0` RUN WITH A POPULATED EXCLUDED POPULATION IS IMPOSSIBLE BY DESIGN. I ASKED FOR SOMETHING THE ACCEPTANCE TEXT ITSELF FORBIDS.**** ✅★★★★★ **THE WORKER WROTE **ZERO LINES OF CODE** AGAINST A NARROW RE-OPENING IT WAS HANDED — THE INSTRUMENT ALREADY EXISTED AND NOBODY HAD RUN IT.** **DECISION: `1d` MET · ALL TEN MET · TRANSITION PACKET BUILT · ONE INDEPENDENT GRADE DISPATCHED · **STILL NO TRANSITION** UNTIL IT RETURNS.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`§3` is the rarest thing in this campaign: you were GIVEN permission to edit and you used none of it, because the measurement turned out to be runnable against the object as committed. `AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE` — five cycles of evidence say a permission to edit gets spent, and you declined to spend it.** ✅★★★ **You also corrected your OWN `AR-635 §4` before I could: you had inferred a limit of the instrument from the gate's exit code instead of reading its output. **Second self-correction in two reports.** `A GATE VERDICT IS NOT A SUMMARY OF THE RUN.`** 🛑 **The "surviving run" term you refused to interpret was MY error, not an ambiguity you should have resolved — `§0` withdraws it. You were right to hand it up.**
+
+**RULING ID:** R-593 · **TASK ID:** `AR-636` (`R-592 §5`) · **DECISION: APPROVE · `1d` MET · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-636`** — the subject, read in full including its `§5` three-item honest-partial tail.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>` at `c9f5ab51`]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds an ELEVENTH time.** 🛑★★★★★ **AND THIS IS THE HARDEST ONE TO HOLD, WHICH IS EXACTLY WHY IT IS BEING HELD: all ten fragments are MET at this desk, the temptation to transition is maximal, and `THE DOER DOES NOT MOVE THE NODE AND NEITHER DOES THE DESK THAT RULED THE FRAGMENTS`. `P0PC` is the head of the `11`-hop hard chain — a wrong transition here propagates down every one of them.**
+
+---
+
+### 🛑★★★★★ §0 — WITHDRAWING MY OWN `R-592 §5` TERM, BEFORE ANYTHING ELSE
+
+**`R-592 §5` required the credit-denial *"on a SURVIVING run"* and said *"the gate's exit code is NOT the evidence here."*** ✅ **The SECOND half stands and was the right instinct.** 🛑 **The FIRST half is incoherent `[MEASURED HERE, both predicates read]`: `run.mjs:765` makes `surface_invalid > 0` a `FAILURE_CLASS`, and `:772` does the same for any row at `FIXTURE_INVALID`. **Populating either excluded population IS a gate failure — that is clause `1b`. So a run that exercises `1d` cannot exit `0` without `1b` being broken.****
+★★★★★ **`I BUILT A REQUIREMENT OUT OF A PREMISE THE NEXT MEASUREMENT KILLED.` `R-592 §4` inherited `AR-635 §4`'s claim that the injections *"fail the gate rather than printing a credit-denial"*; the worker then corrected its own report — **they do BOTH** — and my requirement had already hardened that dead premise into a contract term. ★★★ **`A CONTRACT TERM INHERITS THE EVIDENCE GRADE OF THE PREMISE THAT PRODUCED IT, AND MINE WAS RELAYED.`**
+✅ **AND THE RESOLUTION IS CLEANER THAN THE REQUIREMENT WAS: `exit=1` here is clause `1b` FIRING CORRECTLY, and the `members` block is clause `1d` OBSERVED CORRECTLY — **two clauses, one run, no conflict, neither borrowing the other's evidence.**
+
+### ✅★★★★★ §1 — CLAUSE `1d`: MET, AND THE WITNESS IS STRONGER THAN THE CONTRACT ASKED FOR
+
+`[MEASURED BY DOER at `c9f5ab51`, NOOP control first, `sha256` before == after, `git status -- prototypes/` EMPTY; NOT re-run at this desk — `R-576 §5`]`
+
+| | `48` ∈ attributed | `48` ∈ fixture_invalid | `35(b)` ∈ attributed | `35(b)` ∈ surface_invalid | sums |
+|---|---|---|---|---|---|
+| **CONTROL** | true | false | true | false | `52/52` |
+| **INJ `fixture_invalid`** | **FALSE** | **TRUE** | true *(unmoved)* | false | `52/52` |
+| **INJ `surface_invalid_rows`** | true *(unmoved)* | false | **FALSE** | **TRUE** | `52/52` |
+
+✅ **Every `R-592 §5` term met: the offending id is printed · it is ABSENT from `attributed` **and PRESENT in the control**, which is what makes it a reading rather than a coincidence · the partition still sums to `52` · `rows_in_two_populations: []` and `rows_in_no_population: []` in ALL THREE runs · the clean control restores byte-identical.**
+✅★★★★★ **AND THE WITNESS I DID NOT ORDER, WHICH IS THE ONE THAT MAKES IT CONCLUSIVE: EACH INJECTION MOVES EXACTLY ITS OWN ROW.** `35(b)` unmoved under the fixture injection; `48` unmoved under the surface injection. ★★★★★ **`A ROW LEAVING attributed PROVES NOTHING IF EVERY ROW LEFT` — without the cross-row control a global collapse and a targeted exclusion are the same picture. The worker built the discriminator its own contract omitted.**
+
+### ✅★★★★★ §2 — ALL TEN FRAGMENTS MET, AND WHAT THAT DOES AND DOES NOT MEAN
+
+✅ **`1a` `1b` `1c` `1d` `2` `3` `4a` `4b` `4c` `4d` — TEN of TEN, ruled MET at this desk** (`R-592 §4` for nine, `§1` above for `1d`).
+🛑★★★★★ **WHAT IT DOES NOT MEAN, STATED IN THE SAME BREATH BECAUSE THIS IS EXACTLY WHERE THIS CAMPAIGN INFLATES: it is a DESK RULING ON A DOER'S READINGS. It is not an independent verification, it is not a node transition, and it is not Phase-1 progress (`P0PC` is Surface `A`; `§15.6a`). ★★★ `grading-integrity`: `A SELF-REPORTED BAND IS A CLAIM; ONLY AN INDEPENDENT RE-DERIVATION ISSUES VERIFIED` — and I am the desk that ruled the fragments, so I cannot be that reader either.**
+
+### ✅★★★★★ §3 — THE DESK'S OWN GAP-CLOSURE, AND IT FOUND TWO LIVE FINDINGS THE GRADE MUST HAVE
+
+**`AR-635 §6` declared `[UNENUMERATED]` that it had not diffed `613a7c15`→`b203cba4` on `red-proof.mjs`. I closed that myself while the worker ran `1d` `[MEASURED HERE]`:**
+- **`+206 / −3`.** The additions ARE the item-`2` effect-digest machinery; `allOk` gained a **seventh conjunct** `effectOk = effectPresenceOk && effectDeterministicOk && effectDistinctOk && effectPinOk` (`:560`, `:603`). **So grade `5`'s findings were measured on an object that has since changed by `206` lines in the file two of them live in.**
+- 🛑★★★★★ **AND BOTH ARE **STILL LIVE AT HEAD** `[MEASURED HERE, executable lines]`. **`F-2`:** `:496` `derivationsAgree = DECLARED_ROW_KEYS.length === EXPECTED_ROW_COUNT` — `:452` builds one from `CLASSES+SHARED+EXPECT+FREEZE_EXPECT+STANDALONE`, `:481` spreads **the same four tables** plus two literals. **Still reduces to `2 === STANDALONE_ROWS`** — and it now feeds `identityOk` (`:507`) which feeds `allOk` (`:603`), **so a vacuous conjunct sits inside the top-level gate.** **`F-3`:** `:601` still prints *"all N of run.mjs's declared FAILURE_CLASSES have a **demonstrated** red path"* over the **declared** list.
+⚠️ **MY READING, AND THE GRADE SHOULD ATTACK IT: `F-2` is a DEAD conjunct, not a FALSE one — it contributes no discriminating power but it does not make `allOk` wrong, because the other six conjuncts do the work. **That reasoning is exactly the kind that has been refuted four times this session, so it goes to the grader as a claim, not as a finding.**
+
+### §3a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — desk read source and git diffs only.** ✅ **`prototypes/` byte-unchanged: the narrow `R-592 §5` re-opening expired UNUSED and the retirement is intact.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ Graph untouched.
+
+### 🛑 §4 — STOP CONDITIONS
+
+★★★★★ **`P0PC` transitioned before the grade returns → STOP. Ten-of-ten at this desk is a CLAIM.** · ★★★★★ **Any `prototypes/` edit — the `R-592 §5` re-opening is CLOSED, unused (`§3a`).** · ★★★★★ **`F-2`/`F-3` "fixed" as a reflex → STOP: they are live, documented, and OUT of `P0PC`'s acceptance; touching them re-opens the retired lane.** · ★★★ **`43/43` cited for a declared-class property → STOP; clause `4d` only.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. **THIS DESK — ONE INDEPENDENT `accuracy-validator` DISPATCHED** against *"`P0PC`'s acceptance is met on all ten fragments at `c9f5ab51`"*, briefed to REFUTE. **Opening targets, all named rather than left to it: `AR-635 §6`'s four gaps (one closed by `§3`) · `AR-636 §5`'s three non-dos — no `EXIT 0` variant (now moot per `§0`), two injections not the space of them, no injection of the doer's own design · `F-2`'s dead-vs-false conjunct question (`§3`) · and whether `1d`'s two observed routes generalize.** **Durable receipt: `docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md`.** ⚠️ **NOT YET DISPATCHED as this line is committed — dispatched immediately after, and `R-586 §0`'s conviction is why that is in the future tense.**
+2. **WORKER — HOLD.** Nothing assigned; the object must not move while it is graded. ✅ **`AR-636` already reports none held.**
+3. **THEN — the transition decision**, on the grade, not on this ruling.
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE — AND A NARROW RE-OPENING IS THE MOMENT TO CHECK WHETHER THE THING NEEDS BUILDING AT ALL.` The worker was handed edit rights and returned them unused because the measurement already existed.**
+★★★★★ **`A CONTRACT TERM INHERITS THE EVIDENCE GRADE OF THE PREMISE THAT PRODUCED IT.` My *"surviving run"* requirement hardened a RELAYED premise into a contract term, and the next measurement killed the premise while the term stood.**
+★★★★★ **`A ROW LEAVING A POPULATION PROVES NOTHING IF EVERY ROW LEFT` — an exclusion witness owes a cross-row control, and the contract that ordered it did not ask for one.**
+★★★ **`A GATE VERDICT IS NOT A SUMMARY OF THE RUN.` The exit code was the loudest thing in the output and both the worker and I let it stand for what the run had printed.**
+
+---
+
 ## R-592 · 2026-08-02 · ✅★★★★★ **`AR-635` APPROVED ON SUBSTANCE — AND THE CAMPAIGN NOW KNOWS, FOR THE FIRST TIME, EXACTLY WHAT STANDS BETWEEN `P0PC` AND A TRANSITION: **ONE FRAGMENT, `1d`, AND ONE NAMED EXPERIMENT.**** ✅★★★★★ **NINE OF TEN ACCEPTANCE FRAGMENTS HAVE THEIR INSTRUMENT PRESENT AND PRINTING ON THE CURRENT OBJECT; ALL SIX SCRIPTS `EXIT 0` WITH `stderr` `0` BYTES AND THE `sha256`s BYTE-IDENTICAL BEFORE AND AFTER — **MEASURED WITHOUT A SINGLE EDIT UNDER `prototypes/`.**** 🛑★★★ **CAPTION DEFECT, CONFIRMED ON THREE PATHS: THE REPORT HEADER SAYS *"ELEVEN … TEN `READING_PRESENT`"*; THE ARTIFACT'S OWN TABLE IS **TEN FRAGMENTS, NINE PRESENT**. THE ARTIFACT IS RIGHT.** ✅ **AND THE CLAUSE SPLIT THE WORKER FLAGGED AS ITS OWN ASSUMPTION IS **CONFIRMED CORRECT AND COMPLETE** AT THIS DESK.** **DECISION: APPROVE THE READINGS · RULE `9` MET / `1` NOT-YET-OBSERVED · NARROWLY RE-OPEN `prototypes/` FOR **ACCEPTANCE-COMPLETION ONLY** · NO TRANSITION.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`§4` is the best refusal this campaign has produced. You had a clean `0`,`0` and a structural argument that would have let you call `1d` satisfied — and you declined, citing `run.mjs:175`'s own record that a zero in that exact slot was once DEFINITIONAL rather than measured. `A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION.` **You then named the experiment that resolves it, which is why this ruling can order it instead of re-deriving it.**** ✅★★★ **`§5` again: your brace-scanner said `46`/`18`, you accused your parser before the object, and switching to the campaign's own extractor reproduced `43`/`25` exactly. **Twice in two reports you have caught your own instrument before it reached me.**** 🛑 **ONE CORRECTION, `§2`: your header's fragment count is off by one against your own artifact.**
