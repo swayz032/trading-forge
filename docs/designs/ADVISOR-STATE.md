@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3562` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3572` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3562` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3572` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,10 +94,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `19:25`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-592` (`2f6d77c4`). Newest AR: `AR-635` — RULED by `R-592`. NOTHING UNRULED. Worker: ACTIVE on the `R-592 §5` lane.**
+**Ruling ledger at `R-593` (`d278e261`). Newest AR: `AR-636` — RULED by `R-593`. NOTHING UNRULED. Worker: ✅ HOLDING, nothing assigned, object frozen for the grade.**
+⏳★★★★★ **ONE INDEPENDENT GRADE IN FLIGHT ON THE TRANSITION QUESTION — briefed to REFUTE *"`P0PC`'s acceptance is met on all ten fragments at `c9f5ab51`"*. Receipt `docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md`. **EXECUTION RIGHTS GRANTED THIS TIME** (worker holding, `prototypes/` clean) — the previous grade was holed by a no-commit restriction that made `F-4`'s post-pin-bump exploit unmeasurable. **ITS VERDICT DECIDES THE TRANSITION; this desk's ten-of-ten does not.**
 
 ✅★★★★★ **THE CLOSEST THE CAMPAIGN HAS BEEN TO A NODE TRANSITION: `P0PC`'s acceptance is TEN fragments over four sentences (split confirmed at `R-592 §1`), and **NINE ARE MET** `[MEASURED BY DOER at `b203cba4`; all six scripts `EXIT 0`, `stderr` `0` bytes, `sha256` byte-identical before and after, ZERO edits under `prototypes/`]`.**
-🛑★★★★★ **ONE FRAGMENT STANDS: `1d` — *"only surface-valid fixture-valid rows may credit 1b-S"* — **NOT MET, and specifically NOT YET OBSERVED.** The exclusion is real in STRUCTURE (`run.mjs:604-605` separate partition slots) but that is an argument from reading code; in the clean run both invalid populations are EMPTY, so **no row is ever seen being denied credit.** ★★★★★ **`A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION` — `run.mjs:175` records that `fixture_invalid: 0` was once DEFINITIONAL because the value was unreachable. That defect is fixed and today's zero has a reachability witness, but the worker refused to call it satisfied and it was right.**
+✅★★★★★ **UPDATE `R-593`: `1d` IS NOW **MET** — OBSERVED ON A LIVE MEMBER IN BOTH EXCLUDED POPULATIONS, WITH THE CONTROL AS DISCRIMINATOR AND A CROSS-ROW ISOLATION WITNESS (each injection moves EXACTLY its own row; without that, a global collapse and a targeted exclusion are the same picture). **ALL TEN FRAGMENTS MET AT THIS DESK — a first for this campaign.** The worker wrote **ZERO lines of code**: the instrument already existed and nobody had run it. `AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE` — the `R-592 §5` re-opening expired UNUSED, retirement intact, `prototypes/` byte-unchanged.**
+🛑★★★★★ **AND `R-593 §0` WITHDRAWS MY OWN `R-592 §5` TERM AS INCOHERENT: I demanded the credit-denial *"on a SURVIVING run"*, but `[MEASURED HERE]` `run.mjs:765` and `:772` BOTH make a populated excluded population a `FAILURE_CLASS` — **an `EXIT 0` run there is impossible by design; I asked for what the acceptance text forbids.** `A CONTRACT TERM INHERITS THE EVIDENCE GRADE OF THE PREMISE THAT PRODUCED IT`, and mine was RELAYED from `AR-635 §4`, which the worker then corrected itself.**
+🛑★★★★★ **TEN-OF-TEN IS A DESK RULING ON A DOER'S READINGS. NOT an independent verification, NOT a transition, NOT Phase-1 progress (`P0PC` is Surface `A`). `R-574 §0` holds an ELEVENTH time and this was the hardest one to hold.**
+🛑★★★ **CARRIED INTO THE GRADE — `F-2` AND `F-3` ARE STILL LIVE AT HEAD `[MEASURED HERE]`: `red-proof.mjs:496` `derivationsAgree` still reduces to `2 === STANDALONE_ROWS` (`:452` and `:481` built from the SAME four tables) and now feeds `identityOk` → `allOk`, so **a vacuous conjunct sits inside the top-level gate**; `:601` still prints *"demonstrated"* over the DECLARED list. **The desk's reading that `F-2` is a DEAD conjunct rather than a FALSE one went to the grader as a CLAIM, not a finding.** Both are OUT of `P0PC`'s acceptance — do NOT reflex-fix them; that re-opens the retired lane.**
+~~🛑 **ONE FRAGMENT STANDS: `1d`~~ **[MET at `R-593`; struck, not deleted]** — *"only surface-valid fixture-valid rows may credit 1b-S"* — **NOT MET, and specifically NOT YET OBSERVED.** The exclusion is real in STRUCTURE (`run.mjs:604-605` separate partition slots) but that is an argument from reading code; in the clean run both invalid populations are EMPTY, so **no row is ever seen being denied credit.** ★★★★★ **`A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION` — `run.mjs:175` records that `fixture_invalid: 0` was once DEFINITIONAL because the value was unreachable. That defect is fixed and today's zero has a reachability witness, but the worker refused to call it satisfied and it was right.**
 ✅ **`43/43` BEARS ON CLAUSE `4d` ONLY — and there it is the RIGHT population. The declared-class print is the separate CONDITIONAL `COMPLETENESS (F-4): all 25 …` line (`red-proof.mjs:596-601` prints a `*** STOP CONDITION (F-4)` instead when uncovered), so its mere appearance is the signal. `run.mjs`'s `FAILURE_CLASSES` = `25`; `EXPECTED_ROW_COUNT` = `16+2+21+2+2 = 43`; `SAME POPULATION? false`.**
 
 🛑★★★★★ **READ THIS BEFORE ANYTHING ELSE — `R-588` WAS PARTLY WRONG AND `R-591` CORRECTS IT. A GRADE AIMED AT THIS DESK'S OWN RULING RETURNED **BAND `4 / 10`**.**
@@ -108,12 +113,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ✅★★★★★ **WHAT SURVIVED THE GRADE, AND IT IS THE HALF THAT MATTERS OPERATIONALLY: THE `P0PC` TAMPER-HARDENING RETIREMENT STANDS.** `C-A` (tamper-evidence is OUTSIDE `P0PC`'s acceptance) held against four attacks · `C-C` (`§15.7` retires at TWO patch rounds; we ran FIVE) re-proved under `R-516`'s own diff-per-round method. **The retirement never needed the Surface-`B` argument and does not rest on it.**
 🛑★★★★★ **THE LESSON THIS SEAT PAID FOR: `A RIGHT DECISION DEFENDED BY A FALSE REASON IS MORE DANGEROUS THAN A WRONG ONE` — it survives review and then misdirects the next step. All three of my errors independently favoured the conclusion I had already reached.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-592 §5`** (2026-08-02, `2f6d77c4`)
+## ★★★★★ AUTHORIZED NOW — **`R-593 §5`** (2026-08-02, `d278e261`)
+**WORKER — HOLD. Nothing assigned; the object must not move while it is graded (`AR-636` reports none held).** **THIS DESK — the transition decision, ON THE GRADE, not on `R-593`.** ⏸️ `R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`.
+🛑 **`prototypes/` IS CLOSED AGAIN — the `R-592 §5` re-opening expired UNUSED.**
+
+<details><summary>~~discharged: R-592 §5 (observe clause 1d) — DONE at AR-636~~</summary>
 **WORKER, ONE SEAT: OBSERVE CLAUSE `1d`.** One injection making exactly one row `SURFACE_INVALID`/`FIXTURE_INVALID`, printing **that id ABSENT from the `attributed` member list while the partition still sums to `52`** — the exclusion observed on a LIVE member instead of inferred from an empty set. **NOOP control FIRST; clean control must restore byte-identical (`sha256` before/after).**
 🛑★★★★★ **THE GATE'S EXIT CODE IS NOT THE EVIDENCE. An `exit=1` is a gate firing — a different and stronger statement than `1d` makes. `1d` needs a CREDIT-DENIAL ON A SURVIVING RUN.**
 ✅ **`prototypes/` IS RE-OPENED **EXACTLY THIS WIDE AND NO WIDER** (`R-592 §5`): one injection + its print, plus the `AR-635` header count fix. **Any hardening, any additional guard, any new pinned collection → STOP.** ★★★ **This does NOT breach the retirement: `R-591 §6` stopped re-opening for TAMPER work, and clause `1d` is ACCEPTANCE, not tamper. `THE RETIREMENT WAS OF A LANE THAT HARDENED THE INSTRUMENT BEYOND ITS CONTRACT — NEVER OF THE CONTRACT ITSELF.`**
 **HONEST-PARTIAL:** if `1d` cannot be observed without restructuring the partition, **say so and stop** — *"this clause has no observable form"* is a finding about the acceptance TEXT, not a failure.
 ⏸️ **`R-590` (Surface-`B` corpus-identity delta) REMAINS DEFERRED to `RERANK`, nine hard hops away; measurements banked in `AR-634`.**
+</details>
 **NEXT AFTER `1d`:** the desk's transition packet (`R-592 §7.2`), then **ONE independent grade briefed to REFUTE *"`P0PC`'s acceptance is met"*** — opening targets are `AR-635 §6`'s four named gaps, with the `613a7c15`→`b203cba4` `red-proof.mjs` diff a required deliverable. **Only then does a transition become answerable.**
 ⏸️ **`R-590` (Surface-`B` corpus-identity delta) is DEFERRED, NOT CANCELLED** — genuinely needed, but at `RERANK`, nine hard hops away. `AR-633`'s start-receipt is honoured; the desk stopped it, the worker did not abandon it.
 
