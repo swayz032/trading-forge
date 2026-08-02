@@ -4,6 +4,52 @@
 
 ---
 
+## AR-578 · 2026-08-02 · **START-RECEIPT — R-534 §5 ACCEPTED. SIX ITEMS, DESIGN ONLY.** 🛑★★★★★ **AND I RE-RAN THE DESK'S GETTER MEASUREMENT RATHER THAN RELAYING IT — `5/7` REPRODUCED EXACTLY, PLUS TWO RESULTS NEITHER PARTY HAS: `Object.keys` IS SAFE BUT **CANNOT DETECT**, AND `Object.freeze` IS **SHALLOW**. THE RULING'S OWN ITEM `5` NAMES AN IDIOM THAT CANNOT SERVE AS THE REJECTION MECHANISM.**
+
+**RULING ID:** R-534 §5 · **TASK ID:** AR-578 · **PRIOR:** AR-577 (delivery, `33/33`) · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §0 — SEAT IDENTITY, MEASURED, BECAUSE THE RULING ADDRESSES A PID
+**R-534 §5 is addressed *"TO THE SEAT THAT HOLDS `AR-577` (`claude.exe 26204`)"*.** `[MEASURED HERE — process ancestry `powershell 29572 → claude.exe 26204`]` **I AM that process.** ⚠️ **But my CONTEXT WAS CLEARED between `AR-577` and this receipt: I hold the ADDRESS, not the MEMORY.** ★★★ **Stated because `AN IDENTITY AND AN ADDRESS DECAY DIFFERENTLY` — everything below was re-read from disk this session, and nothing is carried from the seat's own prior context.**
+
+### ★★★ §1 — BASELINE, AS A DELTA
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+**Unchanged from `AR-576`'s baseline. NOT absolute-clean, and not claimed as such.**
+
+### 🛑★★★★★ §2 — I RE-MEASURED THE DESK'S RESULT INSTEAD OF RELAYING IT
+**`R-534 §2` supplies `5 of 7` by execution. A relayed measurement is a CLAIM, and item `5` makes it load-bearing for a catcher I am about to WRITE — so I ran my own.** `[MEASURED HERE, node v24.13.0, scratch harness outside the repo, invocation counter per idiom]`
+```
+INVOKE count=1  spread {...lane} · JSON.stringify · Object.values · structuredClone · Object.entries
+SAFE   count=0  Object.getOwnPropertyDescriptors · Object.keys
+descriptor walk on getter-bearing lane -> ["accessor:bindings"]  | getter invocations: 0
+descriptor walk on GREEN plain neighbour -> []
+```
+✅ **THE DESK'S `5/7` REPRODUCES EXACTLY, INCLUDING WHICH FIVE.** `[TWO NON-OVERLAPPING PATHS — the desk's harness and mine, independently authored.]` ★★ **And the walk DISCRIMINATES: it names `accessor:bindings` at invocation count `0` while a genuine plain neighbour returns `[]`.**
+
+### 🛑★★★★★ §3 — TWO RESULTS NEITHER PARTY HAS, AND ONE IS A DEFECT IN THE RULING
+**(a) `Object.keys` IS SAFE BUT CANNOT DETECT `[MEASURED HERE]`.** It returns `["bindable","bindings"]` at invocation count `0` — **but keys carry no descriptor information, so it cannot decide accessor-ness at all.** 🛑★★★★★ **`R-534 §5.5` orders me to name `Object.getOwnPropertyDescriptors` **(or `Object.keys`)** as *the admitted mechanism*. THE PARENTHETICAL IS WRONG FOR REJECTION: `Object.keys` admits safe ENUMERATION and cannot serve as the CATCHER.** ✅ **I am writing the descriptor walk as the sole admitted DETECTION mechanism and recording `Object.keys` as enumeration-safe-but-blind, rather than obeying the disjunction into a catcher that cannot catch.** ★★★ **`AN IDIOM THAT DOES NOT RUN THE CAPABILITY IS NOT THEREBY AN IDIOM THAT SEES IT.` Raising it now per `worker-execution §5`; a ruling defect costs nothing before the work and the whole run after it.**
+**(b) `Object.freeze` IS SHALLOW `[MEASURED HERE]`** — `Object.isFrozen(Object.freeze({nested:{}}))` is `true`, and `SHALLOW.nested.injected = 'LEAK'` **SUCCEEDS.**
+🛑★★★★★ **SO `R-534 §5.3`'s REMEDY — *"the source rule must decide FROZEN-NESS AND PLAIN-DATA-NESS, never the declaration keyword"* — IS CORRECT AND **ONE LEVEL SHORT**: a top-level `Object.isFrozen` check passes an object whose nested holder is still writable, which is the `const HOLDER = {}` leak wearing a frozen wrapper.** ★★★★★ **The rule must decide **DEEP** frozen-ness over the whole reachable plain-data graph.** ⚠️ **This is the campaign's own `MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT` law, and it applies to the desk's remedy here — recorded before I write the clause, not after.**
+
+### ⚠️ §4 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE TEST:** ✅ **NO fake edge to report.** Items `2`–`6` each consume the prior item's output (`2` names a parser FOR the contract `1` splits; `5` refines the row `4` adds; `6` re-parses what `1`–`5` wrote) and all six write ONE file. **Genuinely serial in this seat; running them wide would be a data race, not parallelism.**
+**(b) NO METRIC MIX:** the six criteria are structural/documentary. **None needs ground truth.** ⚠️★★★ **ONE HONEST QUALIFIER: item `6`'s promise/catcher map is a MECHANICAL CENSUS UNDER A JUDGMENT LAYER — a token scan NOMINATES candidate promises, and deciding whether a sentence IS a promise is MY classification. I will publish the nominations and my classification separately so the desk can overrule the second without re-running the first.** `A MECHANICAL LAYER NOMINATES; JUDGMENT CLASSIFIES.`
+**(c) MATRIX PARSE, ANCHORED:** ★★★ **`R-534 §3` caught the desk's own probe returning `40` rows by conflating the 5-row field-mapping table at `L148–152` with the matrix at `L355`. I will parse ANCHORED TO THE `## 10` SECTION, never by row shape, and carry a positive control.** `A CENSUS IS BOUNDED BY ITS SURFACE AS WELL AS ITS PATTERN.`
+**(d) GRADE:** **NOT ASKING.** `R-532 §4`'s bar requires a read with ZERO structural corrections; this one carried three. **Deferred BY RULE.**
+
+### §5 — FIRST OBSERVABLE + ETA
+**Items `1`+`2` — requirement `1b` split into a BUILD-TIME SOURCE CONTRACT and a RUNTIME INPUT-ADMISSION CONTRACT with a named mechanism each, and a real parser (TS compiler API) named for the source side — ~30–45 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes RUN not MODIFIED · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · **THE BLUEPRINT IS OUT THIS ROUND.**
+⚠️ **My scratch harness lives in the session temp dir, NOT the repo. It is an INSTRUMENT, not implementation, and it ships no repo file.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-577 · 2026-08-02 · ✅★★★★★ **R-533 §5 DELIVERED — FOUR ITEMS, `33/33`. THE `captured reference` PROMISE NOW HAS A CATCHER THAT CAN ACTUALLY CATCH IT, AND THE PROMISE WAS **NOT** NARROWED TO MEET THE WEAK ONE.** 🛑★★★★★ **AND THE RE-PARSE EARNED ITS KEEP: MY NEW ROW WAS FIRST NUMBERED `35` WHILE THE OLD CONTROL *WAS* `34`, LEAVING THE SEQUENCE GAPPED. THE CONTIGUITY CHECK CAUGHT A NUMBER I HAD CONSUMED.**
 
 **RULING ID:** R-533 §5 · **TASK ID:** AR-577 · **PRIOR:** AR-576 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
