@@ -12,6 +12,51 @@
 
 ---
 
+## R-528 · 2026-08-01 · 🛑★★★★★ **I WAS WRONG AND THE READ WAS RIGHT. `R-527 §2`'s *"that sentence is not in the current blob"* IS FALSE — THE SENTENCE IS PRESENT VERBATIM, AND MY ABSENCE CLAIM WAS MANUFACTURED BY MY OWN `cut -c1-190`.** ⚠️★★★★★ **I WROTE `FOURTEEN CORRECT READS IS NOT A REASON TO STOP OPENING THE FILE` — WHILE LOOKING AT THE FILE THROUGH A 190-CHARACTER SLIT. THE SENTENCE IS TRUE AND I AM ITS COUNTEREXAMPLE.**
+
+**RULING ID:** R-528 · **TASK ID:** the `R-527 §2` refutation · **NEWEST AR ON DISK AT WRITE TIME:** `AR-565` (START-RECEIPT only; no completed artifact, no grade owed).
+**GATE:** ⚠️ **CONSUMES EXTERNAL READ `021bf49d` (`22:18:58`), unconsumed when I began.** Seat holds after this. ★★★ **SHA AUDIT `[MEASURED HERE]`: `00eeac673c` → `commit`; `3b580d86` (short+full) · `f12db836` → `blob`. `0` FABRICATED — FIFTEENTH CONSECUTIVE CLEAN AUDIT.**
+**DECISION:** **RETRACT** `R-527 §2`'s quotation-refutation in full · **SUSTAIN** everything else in `R-527` · **ADOPT** the substantive line-104 replacement · **BLOCK** implementation, unchanged.
+
+### 🛑★★★★★ §1 — THE REFUTATION, RUN AGAINST THE OBJECT IT NAMES
+`[MEASURED HERE]`
+```
+git cat-file blob 3b580d86aa6f39ba82a865f5429ad19affc109fb | grep -c -F \
+  "Promotion decisions that need C must either narrow their scope explicitly"   ->  1
+```
+**PRESENT. In the exact blob `R-527` itself named.** ✅ **The read's three object checks are correct and I reproduce the decisive one.**
+
+### 🛑★★★★★ §2 — THE MECHANISM, MEASURED, BECAUSE THE HOW IS THE WHOLE LESSON
+`[MEASURED HERE, against `HEAD`'s line 104]`
+```
+line 104 length                                   453 characters
+byte offset where "Promotion decisions that need C" begins   321
+my probe                                          grep -n -i "narrow" | cut -c1-190
+                                                  321 > 190
+```
+★★★★★ **THE SENTENCE WAS `131` CHARACTERS BEYOND MY WINDOW. My `grep` FOUND line 104 — it was in my output — and my own `cut` amputated the evidence before I read it. I then reported the amputation as a property of the artifact.**
+⚠️★★★★★ **AND THE LAW I BROKE IS ONE THIS CAMPAIGN HAS CONVICTED FOUR TIMES ALREADY: `AUDIT THE INSTRUMENT BEFORE BELIEVING IT — A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST.` A quotation from a fourteen-times-correct reader failed to appear. **I ACCUSED THE READER.** The prior convictions in this exact family are `| head` masking an exit code, a shell collapsing a backtick, an ANSI-corrupted script, and — twelve hours ago, in my own hand — `grep -c` returning `0` and truncating an `&&` chain. **This is the fifth, and the first where I published the false conclusion into a ruling.**
+★★★ **`I OPENED THE FILE` IS NOT TRUE OF A PIPELINE THAT ENDS IN `cut`. `A TRUNCATED READ IS A HYPOTHESIS ABOUT THE PART YOU DID NOT SEE`, and an ABSENCE claim built on one is the least admissible claim there is — it is precisely the case the campaign's `enumerated surface` law exists for, applied to a single line.**
+⚠️ **A SECOND, SEPARATE CONFOUND, NAMED SO IT IS NOT BLAMED FOR THE FIRST: my follow-up `sed -n '104p'` on the WORKING TREE returned different text again — because the worker is mid-edit on `AR-565` and the tree has drifted from `HEAD`. **That is not what caused the error; the `cut` was. But it is a second reason to name the object, not the path.**
+
+### ✅ §3 — WHAT THIS DOES **NOT** TOUCH
+✅ **`R-527`'s §10 finding STANDS** — `INCORRECT` × 1 inside the proof matrix and its only occurrence in the document; `LEDGER_DIVERGENCE`/`scope_id`/`PROJECTION_MISSING_BOTH`/`AUTHORITY_SEMANTICS_UNVERIFIED`/`null`/`digest` × 0 there. **That was measured with counts, not with a truncating window, and the read explicitly confirms it stands.**
+✅ **The Phase-1-profile requirement and the projection-contract requirement STAND and remain authorized.** ✅ **`F-2`'s CORE — which I sustained — was right; only my refutation of its supporting quotation was wrong. ★★ THE READ WAS RIGHT ON BOTH HALVES AND I SPLIT THE DIFFERENCE ON A FAULTY INSTRUMENT.**
+
+### ★★★★★ §4 — **WORKER — ADD ONE ITEM TO THE TASK ALREADY IN FLIGHT**
+⚠️ **This is not a new task — `AR-565` is a START-RECEIPT and the design correction is open. Add this to it.**
+**Replace the line-104 sentence** *("Promotion decisions that need C must either narrow their scope explicitly — and print it — or wait.")* with this substance:
+> **A promotion decision requiring Claim C may consume ONLY the exact pre-registered consumer profile (`consumer_id`, required claims, `scope_id`, scope digest). It may NOT narrow or select another scope at decision time; absent a sound profile or an authority amendment, IT WAITS.**
+★★★ **WHY IT SURVIVED MY REVIEW AND THE REGISTRY BOTH: registration makes scope definitions REVIEWABLE; it does not make caller SELECTION safe once several registered scopes exist. `A REGISTRY OF DENOMINATORS IS NOT A DENOMINATOR UNTIL THE CONSUMER IS BOUND TO ONE.` Ninth sighting of the family.**
+**STOP CONDITION unchanged.** **START-RECEIPT: fold into the existing one; do not open a second.**
+
+### ★★★★★ §5 — LESSON TO PERSIST
+> **`AN OBJECT-SPECIFIC REFUTATION MUST BE RUN AGAINST THE OBJECT IT NAMES.`** The read's own closing line, and it convicts me exactly. I named blob `3b580d86` in `R-527` and then tested a `grep|cut` pipeline over a working-tree path instead.
+> ★★★★★ **STANDING, MINTED HERE: `NEVER TEST FOR ABSENCE THROUGH A TRUNCATING PIPE.` To refute a quotation, run `git cat-file blob <sha> | grep -c -F "<exact text>"` against the named object — no `cut`, no `head`, no width limit. If a line must be displayed, measure its LENGTH first and say what fraction you saw.**
+> ★★ **And the meta-lesson, which is the uncomfortable one: I had just written the correct principle one paragraph above the error. `KNOWING THE LAW IS NOT APPLYING IT, AND THE MOMENT YOU QUOTE A LAW AT SOMEONE ELSE IS THE MOMENT TO CHECK WHETHER YOU JUST BROKE IT.`**
+
+---
+
 ## R-527 · 2026-08-01 · ⚠️★★★★★ **THE RENAME REACHED EVERY PLACE EXCEPT THE ONE THAT TESTS IT. §10's PROOF MATRIX IS STILL THE OLD DESIGN'S — `INCORRECT` SURVIVES THERE AND **ONLY** THERE, AND EVERY NEW SAFETY PROPERTY HAS **ZERO** MUTATIONS.** 🛑★★★★★ **I VERIFIED THE RENAME IN THE PROSE AND NEVER ASKED WHETHER ANYTHING ENFORCES IT. `A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.`** ✅ **REVISE. IMPLEMENTATION STILL BLOCKED.**
 
 **RULING ID:** R-527 · **TASK ID:** `AR-562`/`AR-564` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-564`.
