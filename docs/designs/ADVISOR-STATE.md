@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3446` at THIS commit, 2026-08-02 01:02 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3453` at THIS commit, 2026-08-02 01:11 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3446` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3453` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -208,7 +208,14 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **LEDGER AT `R-536`, EXTERNAL READ `7efca245` SPENT. NEWEST AR: **`AR-580`** (`01:01:20`, START-RECEIPT on `R-536 §4`) — **NO RULING OWED** (`R-528` precedent); it raises NO defect in my order and accepts `F-3` without qualification. `AR-579` RULED BY `R-536`. WORKER MID-TASK.**
+## 🛑★★★★★ SEAT — **LEDGER AT `R-536`. NEWEST AR: **`AR-581`** (`01:10:17`, DELIVERY, `37/37`, matrix `47+1=48`) — **UNRULED.** `R-537` **OWED AND HELD**: `[MEASURED HERE, 01:11]` the external ref still reads `7efca245`, which `R-536` SPENT — **no unconsumed read.** `AR-580` was a start-receipt, no ruling owed. **WORKER IS NOT BLOCKED — it has DELIVERED.**
+
+### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — held for `R-537`] `AR-581`'s LOAD-BEARING CLAIMS VERIFIED — AND BOTH OF MY OWN "FINDINGS" WERE INSTRUMENT ARTIFACTS
+✅★★★★★ **THE HEADLINE VINDICATES `R-536 §3` AND IT IS THE STRONGEST RESULT OF THE ARC: deriving the promise atoms MECHANICALLY moved the denominator **`10 → 34`** and immediately exposed **FOUR forbidden channels with NO catcher** (non-enumerable user fields · unsupported value classes · sparse holes · extra named array properties). `[VERIFIED HERE]` rows `45`/`46`/`47` exist and name exactly those; the grammar was NOT trimmed to make the difference empty. **THE PROOF THAT MY TEN WAS A MIRROR IS THAT THE HONEST DENOMINATOR FOUND FOUR GAPS IN A DOCUMENT CERTIFIED `EMPTY` ONE ROUND EARLIER.**
+✅ **MATRIX CONFIRMED WITH ITS CONTROL `[MEASURED HERE]`: anchored `48` rows, unique `48`, contiguous `1..48`, control LAST → `47+1`. Un-anchored `53`; delta exactly `5` = the field-mapping table. **The anchor EXCLUDES them; the parser is not blind to them.**
+🛑★★★★★ **MY CARRIER CENSUS RETURNED `5` WHERE `R-536` MEASURED `3`, AND I CLASSIFIED EACH BEFORE PUBLISHING RATHER THAN FILING IT — **ALL FIVE ARE FALSE POSITIVES.** `L202` is the CORRECTLY-SCOPED wording (*"for OWN-DESCRIPTOR INSPECTION"*), which is precisely what `R-536 §4.1` ordered · `L203` is the CORRECTION NOTE explaining the fix · `L481`/`L482`/`L486` are MATRIX ROWS each discussing ONE channel, not mechanism summaries. ✅ **THE FIX IS PRESENT AND EXPLICIT AT `L188`: *"`4b` IS NEVER A DESCRIPTOR WALK ALONE."* `F-1` IS CLOSED.**
+🛑★★★★★ **AND MY DISCLAIMER PROBE FAILED THE SAME WAY: it reported two *"surviving disclaimers"* and BOTH are past-tense records of the STRIKE (`L209`: *"prototype-chain injection **WAS LISTED AS** NOT CAUGHT WHILE ROW `42` CATCHES EXACTLY IT"*). **THE DISCLAIMER IS GONE.** ⚠️ **`AR-579 §6` BUILT A LIVE-vs-HISTORICAL CLASSIFIER INTO ITS PROBES FOR EXACTLY THIS AND I DID NOT BUILD ONE INTO MINE — third time this session my probe lacked a distinction the worker's carried.**
+★★★★★ **THE GENERALISATION, AND IT IS NEW: `A SELF-CORRECTING DOCUMENT BECOMES PROGRESSIVELY UNREADABLE TO A NAIVE PROBE, BECAUSE ITS CORRECTIONS QUOTE THE DEFECTS THEY FIXED.` Every round adds past-tense text naming the exact wording that was wrong, so grep precision DEGRADES AS THE DOCUMENT IMPROVES. **ANY PROBE ON THESE DOCUMENTS NOW OWES A LIVE-vs-HISTORICAL CLASSIFIER, NOT A TIGHTER PATTERN** — eleventh instrument fault of this family, second of mine tonight, both caught before publication.**
 
 ### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — `7/7`, supports an order ALREADY GIVEN; dispatches nothing] THE TRANSPORT CAN MANUFACTURE TWO-LANE AGREEMENT
 `[MEASURED HERE, node v24.13.0]` **`AR-580 §3` found it on the JSON round-trip and it is load-bearing, because `P0-vNext`'s CENTRAL claim is TS↔Python agreement on every projected cell:**
