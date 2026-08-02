@@ -63,7 +63,7 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // its CHECKED surface is unchanged across the bump: HISTORICAL_RENAMES keys ["54"] -> ["54"] and
 // the module-level collection set {HISTORICAL_RENAMES, BASELINE_META, EXPANDED_META} identical.
 // So no enforcement table is silently re-baselined by this bump. Verified before bumping, not after.
-export const MODULE_PIN_COMMIT = '7c7b9ab0';
+export const MODULE_PIN_COMMIT = '3978c1c5';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -118,8 +118,8 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
-  'run.mjs': '183bbdc82c923085021e1bc6622f72686fe8ecbe',
-  'red-proof.mjs': '7e0ebf83beafb6e7397b60c69dd6e724c3e14aa0',
+  'run.mjs': 'af540a0259c8c5d6c7d989fe6c160819f170fa6b',
+  'red-proof.mjs': '6410d61938a9648641f02c545c7a27760a1d4716',
   'type-value-proof.mjs': '468ac763164e152a476ec88139cc76c76286ce99',
   'source-admission.mjs': 'a36d2c500deaf0ddcf3b699f56301c6f8fd65ccf',
   'runtime-admission.mjs': '6e7a3f5148181a8e02efaf28e3fa5797ab79dc53',
