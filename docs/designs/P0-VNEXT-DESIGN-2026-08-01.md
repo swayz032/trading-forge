@@ -18,8 +18,8 @@
 | claim | population | verdict on failure | depends on `UNADJUDICATED`? |
 |---|---|---|---|
 | **A · AGREEMENT** — TS and Python project the same value | **ALL `301` cells** | `DISAGREEMENT`, naming cell + both values | **NO.** Agreement needs no oracle; two lanes can be compared where no truth is known. |
-| **B · CORRECTNESS** — the projected value matches the frozen expectation | **`ASSERTED` only (`140`)** | `INCORRECT`, naming cell, expected, observed, authority citation | **NO, by construction.** Correctness is claimed *only* where an expectation exists. |
-| **C · COMPLETENESS** — every cell in a scope is adjudicated | **any scope a caller asks about** | ★★★★★ **`INCOMPLETE_AUTHORITY`, NAMING every unadjudicated cell — FAIL CLOSED, NEVER a correctness green** | **YES. This is the claim that carries the `43`.** |
+| **B · FROZEN-LEDGER CONFORMANCE** — the projected value matches the frozen ledger entry | **`ASSERTED` only (`140`)** | **`LEDGER_DIVERGENCE`**, naming cell, frozen value, observed, citation | **NO, by construction.** |
+| **C · COMPLETENESS** — every cell in a scope is adjudicated | **any REGISTERED `scope_id` — the caller SELECTS, never AUTHORS** | ★★★★★ **`INCOMPLETE_AUTHORITY`, NAMING every unadjudicated cell — FAIL CLOSED, NEVER a conformance green** | **YES. This is the claim that carries the `43`.** |
 
 ★★★ **`AGREEMENT IS NOT CORRECTNESS AND NEITHER IS COMPLETENESS.` The parity gate's historic failure mode — `AR-499 §2`: both lanes over-refusing identically while the gate printed `EXIT 0 · PASS` — is exactly claim A passing while claim B is unasked. Keeping them separate is not bookkeeping; it is the defect.**
 
@@ -41,21 +41,40 @@
 
 ## 2 — CONTRACT 2: AGREEMENT OVER EVERY PROJECTED CELL
 
-For every one of the `301` cells the gate obtains the TS projection and the Python projection and requires them equal — **including cells with no expectation.** A cell where a lane emits nothing is `ABSENT` and `ABSENT ≠ ABSENT` is **not** silently true: **a lane that emits nothing where the other emits a value is a `DISAGREEMENT`**, named.
+For every one of the `301` cells the gate obtains the TS projection and the Python projection and requires them equal — **including cells with no expectation.**
 ⚠️ **`AGREEMENT IS CHECKED WHERE TRUTH IS UNKNOWN` — that is the point of running it over all `301` rather than over the `140`.**
+
+> ### ★★★★★ THE FOUR-CASE PRESENCE MATRIX — **PUBLISHED BEFORE ANY CODE EXISTS**
+> | TS | Python | verdict |
+> |---|---|---|
+> | present | present | compare **typed canonical** values; unequal ⇒ `DISAGREEMENT`, path + both values named |
+> | present | absent | ⚠️ **`DISAGREEMENT`**, path + value named — **never silently equal** |
+> | absent | present | ⚠️ **`DISAGREEMENT`**, path + value named |
+> | **absent** | **absent** | ★★★★★ **`PROJECTION_MISSING_BOTH` — a FAILURE — UNLESS that exact cell is authority-classified `NOT-APPLICABLE`** |
+>
+> ⚠️★★★★★ **THE LAST ROW IS THE WHOLE REASON THIS MATRIX IS A DESIGN CONTRACT AND NOT AN IMPLEMENTATION DETAIL: `PARITY OVER TWO DEAD LANES IS VACUOUS`. Two lanes that both emit nothing agree perfectly and prove nothing, and this campaign has already paid for that law once.** ★★★ **The previous version left projection mechanics "unspecified" as a declared gap — but claim `A` depends ENTIRELY on them, so the gap was in the one interface most capable of manufacturing a false green.**
+> **PER-PROJECTION RECORD, required fields:** raw lane path · **raw presence, with `MISSING` DISTINCT FROM JSON `null`** · raw value · canonical type · normalized value · **the pure transformation used for any derived axis** (`primitive_null` · `reason_names` · `reason_excludes`).
+> ★★ **`MISSING` and `null` collapsing into one another is how an absent projection becomes a legitimate-looking value; they are recorded as different states, always.**
 
 ---
 
-## 3 — CONTRACT 3: CORRECTNESS ONLY FOR `ASSERTED`
+## 3 — CONTRACT 3: **FROZEN-LEDGER CONFORMANCE** ONLY FOR `ASSERTED` — **AND IT IS NOT CORRECTNESS**
 
-Correctness is evaluated **only** on the `140` `ASSERTED` cells, against `cell.value`, and every failure carries `cell.authority_citation` so the reader can reach the source.
-⚠️ **NO CORRECTNESS VERDICT IS EMITTED FOR ANY OTHER CLASS — not `pass`, not `skip`, not `n/a`.** ★★ **A `PASS` printed over a cell with no expectation is the false green this entire arc exists to kill; the absence of a verdict is the honest output.**
+Claim `B` is evaluated **only** on the `140` `ASSERTED` cells, against `cell.value`, and every failure — **`LEDGER_DIVERGENCE`** — carries `cell.authority_citation` so the reader can reach the source.
+⚠️ **NO VERDICT OF ANY KIND IS EMITTED FOR ANY OTHER CLASS — not `pass`, not `skip`, not `n/a`.** ★★ **A `PASS` printed over a cell with no expectation is the false green this entire arc exists to kill; the absence of a verdict is the honest output.**
+
+> ### ⚠️★★★★★ WHY THIS CLAIM IS **NOT** CALLED `CORRECTNESS`, AND WHY THE NAME IS THE POINT
+> **[MEASURED, `gen_p1p2.build()`] the `140` `ASSERTED` values were COPIED from `ORACLE.json` — `cell.value = row[axis]` — and have NEVER been checked against the authority document.** ★★★★★ **`FREEZING A TRANSCRIPTION DOES NOT VERIFY IT.` Matching the frozen ledger proves CONFORMANCE TO A TRANSCRIPTION; it proves nothing about whether the transcription is faithful to what the authority actually says.**
+> ⚠️★★★★★ **THIS DESIGN PREVIOUSLY CALLED CLAIM `B` `CORRECTNESS` WHILE §11 — sixty lines later, in the same document — ALREADY STATED THAT *"a correctly-cited but mis-transcribed value survives every check here."* BOTH CANNOT HOLD. The honest limit and the dishonest label shipped together.**
+> ★★★★★ **AND THE CONSEQUENCE IS ON THE MONEY PATH, WHICH IS WHY THE RENAME IS NOT COSMETIC: Blueprint Phase 1's exit criterion is compile-FIDELITY. A green labelled `CORRECTNESS` would satisfy a reader that fidelity had been measured when only SELF-CONSISTENCY had.** `BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.` **`A CLAIM'S NAME IS THE PART A DOWNSTREAM GATE ACTUALLY CONSUMES.`**
+> ✅ **THEREFORE: every GREEN aggregate this gate emits — for any claim — is printed with `AUTHORITY_SEMANTICS_UNVERIFIED` beside it, and that marker is removed ONLY when the `140` have been independently re-derived from their citations in the authority document.**
+> ✅ **AND THE WORD `correctness` IS RESERVED, EXPLICITLY AND IN THIS DOCUMENT, FOR THAT LATER AUTHORITY CHECK. No claim in `P0-vNext` may use it. A gate that has not read the authority may not spend the authority's word.**
 
 ---
 
 ## 4 — CONTRACT 4: `NOT-APPLICABLE` PRODUCES NO ASSERTION AND NO ACCIDENTAL PREDICATE
 
-The `9` `NOT-APPLICABLE` cells must contribute **no comparison, no predicate, and no counter** to any correctness verdict.
+The `9` `NOT-APPLICABLE` cells must contribute **no comparison, no predicate, and no counter** to any claim-`B` (frozen-ledger conformance) verdict.
 ⚠️★★★★★ **AND THE ABSENCE MUST BE WITNESSED, NOT ASSUMED.** `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN.` The gate therefore **emits an explicit `NOT_APPLICABLE_SKIPPED` record naming each of the `9`**, so "no predicate ran" is a printed fact rather than an unobservable silence.
 **Red-proof (pre-registered):** graft an expectation onto a `NOT-APPLICABLE` cell → the run must **FAIL**, naming it. If it passes, the class is being evaluated somewhere.
 
@@ -67,10 +86,21 @@ The `9` `NOT-APPLICABLE` cells must contribute **no comparison, no predicate, an
 
 Operationally, and this is the whole definition:
 - **Claim A (agreement)** never depends on an `UNADJUDICATED` cell — the two lanes are compared to each other.
-- **Claim B (correctness)** never depends on one — it is scoped to `ASSERTED` by construction.
+- **Claim B (frozen-ledger conformance)** never depends on one — it is scoped to `ASSERTED` by construction.
 - **Claim C (completeness)** depends on **every** cell in the scope asked about. **Any `UNADJUDICATED` cell in that scope ⇒ `INCOMPLETE_AUTHORITY`, naming every such cell, and the scope's completeness verdict is NOT GREEN.**
 
-⚠️★★★★★ **THE RULE THAT PREVENTS THE COMFORTABLE READING: NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY.** A scope is declared before the run and printed with its verdict, so *"complete over `X`"* always carries `X`. **`A COMPLETENESS CLAIM WITHOUT ITS SCOPE IS THE CAPTION DEFECT WEARING A VERDICT'S CLOTHES.`**
+> ### ⚠️★★★★★ SCOPES ARE **REGISTERED**, NOT SUPPLIED — THE CALLER SELECTS, IT NEVER AUTHORS
+> **A caller requests a `scope_id`. IT MAY NOT SUPPLY CELL MEMBERSHIP.** Each `scope_id` resolves to a **COMMITTED EXACT MEMBER SET plus its digest**, living in the gate's frozen source alongside the axis list.
+> **FAIL CLOSED on every one of:** unknown `scope_id` · a scope whose registered member set is EMPTY · a member added at runtime · a member removed at runtime · digest mismatch between the registry and the resolved set.
+> **Every consumer names the exact `scope_id` AND digest it requires, and REJECTS a result carrying any other** — so a result cannot be re-pointed at a friendlier scope after the fact.
+> ⚠️ **The Phase-1 admission scope is PRE-REGISTERED BEFORE ANY IMPLEMENTATION RESULT EXISTS.** `A SCOPE CHOSEN AFTER SEEING THE RESULT IS THE RESULT CHOOSING ITS OWN EXAM.`
+>
+> ★★★★★ **WHY THE PREVIOUS VERSION WAS INSUFFICIENT, IN ITS OWN WORDS:** it said no caller may narrow its scope *silently*, and enforced that by PRINTING the requested scope. **`PRINTING IT IS DISCLOSURE, NOT ENFORCEMENT.`** A caller passing `scope = []`, or any subset containing no `UNADJUDICATED` cells, obtained a completeness GREEN exactly as designed, and a downstream consumer reading status still saw a false ready-signal.
+> ★★★★★ **THIS IS THE SEVENTH SIGHTING OF ONE FAMILY, NOW AT THE CALLER BOUNDARY: axis → row → `digests` namespace → CALLER SCOPE. `THE DENOMINATOR MUST BE INDEPENDENT OF THE CALLER FOR THE SAME REASON LEDGER MEMBERSHIP HAD TO BE INDEPENDENT OF THE LEDGER.`** **The general test: `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY BEING MEASURED — OR THE PARTY ASKING — IT IS NOT A DENOMINATOR.`**
+>
+> ⚠️★★★ **THE RESIDUAL, STATED AS A LIMIT RATHER THAN CLAIMED AWAY: a registry cannot make scope selection immune to WHOEVER WRITES THE REGISTRY.** What it does is make every scope **VISIBLE, DIFFABLE, and PRE-REGISTERED** — a scope change becomes a reviewed commit rather than a runtime argument, and the pre-registration rule stops it being written after the answer is known. ★★ **That is a real reduction in a real attack and it is NOT airtight, and I would rather the desk judge a stated limit than inherit an implied guarantee.**
+
+⚠️★★★★★ **AND THE OLDER RULE STANDS ON TOP OF IT: NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY** — the resolved scope and its digest are printed with the verdict, so *"complete over `X`"* always carries `X`. **`A COMPLETENESS CLAIM WITHOUT ITS SCOPE IS THE CAPTION DEFECT WEARING A VERDICT'S CLOTHES.`**
 ★★★ **CONSEQUENCE, STATED PLAINLY SO NOBODY IS SURPRISED BY IT LATER: on today's authority, a completeness claim over the full frame CANNOT go green, because `152` cells are unadjudicated and `43` of them are not even declared. THAT IS THE CORRECT ANSWER, NOT A BUG.** ✅ **Claims A and B can both go green today. Promotion decisions that need C must either narrow their scope explicitly — and print it — or wait for an authority amendment.**
 
 ---
@@ -166,5 +196,9 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 
 **The dispatch's stop condition: if the design finds itself reading membership, requiredness or completeness from the artifact it will judge, STOP.**
 ✅ **It does not.** Membership comes from the pinned specs; requiredness (the axis set and every closed key set) is frozen in the gate's own source; completeness is computed from the reconstruction and the ledger's per-cell classifications, both of which are compared against the independent frame rather than trusted. **The ledger is an INPUT THAT MUST PROVE ITSELF, never an authority about itself.**
-⚠️★★★★★ **AND `ORACLE.json`, NOW THAT §7 NAMES IT, IS EXPLICITLY IN THE SAME POSITION AND WEAKER: it is PARSED and SCHEMA-CHECKED, and it is AUTHORITATIVE FOR NOTHING.** It contributes to **no** membership, requiredness or completeness decision — a forged oracle produces a **NAMED MISMATCH against the reconstruction**, which is a loud failure, never a silent pass.
+⚠️★★★★★ **AND `ORACLE.json`'s ROLE, STATED IN THREE CLAUSES BECAUSE THE EARLIER ONE-LINER WAS TOO BROAD AND LAUNDERED ITS HISTORY:**
+1. **It is authoritative for NO membership, requiredness, or completeness decision** — a forged oracle produces a **NAMED MISMATCH against the reconstruction**, a loud failure, never a silent pass.
+2. ⚠️ **It IS the HISTORICAL SOURCE of the frozen observed values the ledger now carries** — the `140` `ASSERTED` values were transcribed FROM it.
+3. ⚠️★★★★★ **The AUTHORITY DOCUMENT is the intended semantic authority, and the `140` oracle→authority transcriptions REMAIN UNVERIFIED.**
+★★★★★ **THE EARLIER PHRASING — *"authoritative for nothing"* — WAS MINE TO WRITE AND IT MADE CLAIM `B`'s CAPTION EASIER TO OVERREAD: if the oracle is authoritative for nothing, a reader naturally assumes the values came from somewhere better. They did not. `THE MIS-NAMED CLAIM AND THE OVER-BROAD DISCLAIMER REINFORCED EACH OTHER`, which is why they are one defect wearing two numbers.
 ★★★ **THE TRIPWIRE ON THIS CLAIM, STATED SO A LATER SEAT CAN JUDGE IT RATHER THAN TRUST IT: if `ORACLE.json` EVER becomes authoritative for anything in `P0-vNext`, §1 IS INVERTED AND THIS DESIGN MUST BE RE-REVIEWED, NOT PATCHED.** `THE DEFECT SIX ATTEMPTS DIED ON WAS AN ARTIFACT BEING ASKED TO DEFINE ITS OWN COMPLETENESS, AND THE ONLY DURABLE DEFENCE IS THAT IT DEFINES NOTHING.`

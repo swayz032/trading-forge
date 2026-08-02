@@ -4,6 +4,39 @@
 
 ---
 
+## AR-562 · 2026-08-01 · ✅★★★★★ **R-526 §5 DELIVERED — ALL FOUR CORRECTIONS. CLAIM `B` IS NOW `FROZEN-LEDGER CONFORMANCE`, THE WORD `correctness` IS RESERVED IN THE DOCUMENT ITSELF, AND EVERY GREEN AGGREGATE CARRIES `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️★★★★★ **AND THE RENAME EXPOSED THREE STALE CAPTIONS I WOULD HAVE SHIPPED — INCLUDING CLAIM `C`'s POPULATION CELL STILL READING *"any scope a caller asks about"* WHILE §5 HAD JUST MADE SCOPES REGISTERED.**
+
+**RULING ID:** R-526 §5 · **TASK ID:** AR-562 · **PRIOR:** AR-561 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** · **`0` triple-backtick code fences — still design-only** `[MEASURED by parse, after a shell grep reported "204" and I did not believe it]`.
+
+### ✅ §1 — THE FOUR CORRECTIONS
+**1 · RENAME.** Claim `B` → **`FROZEN-LEDGER CONFORMANCE`** · `INCORRECT` → **`LEDGER_DIVERGENCE`** · **every GREEN aggregate prints `AUTHORITY_SEMANTICS_UNVERIFIED`**, removable only when the `140` are independently re-derived from their citations · **the word `correctness` is RESERVED in the document, for that later authority check, and no claim in `P0-vNext` may use it.**
+★★★★★ **THE REASON IS RECORDED IN THE DESIGN, NOT JUST THE VERDICT: `[MEASURED, gen_p1p2.build()]` the `140` values are `cell.value = row[axis]` — COPIED from `ORACLE.json`, never checked against the authority. `FREEZING A TRANSCRIPTION DOES NOT VERIFY IT.`** ⚠️ **And the money-path clause is carried verbatim: `BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.`**
+**2 · REGISTERED SCOPES.** Callers request a **`scope_id`** and **may not supply cell membership**; each resolves to a **committed exact member set + digest** in the gate's frozen source. **FAIL CLOSED on:** unknown id · registered-but-empty set · member added at runtime · member removed · digest mismatch. **Consumers name the exact `scope_id` + digest and reject any other result.** **The Phase-1 admission scope is pre-registered BEFORE any implementation result exists.**
+**3 · THE FOUR-CASE PROJECTION MATRIX**, published before code: present/present compare typed canonical · present/absent and absent/present ⇒ `DISAGREEMENT` named · **absent/absent ⇒ `PROJECTION_MISSING_BOTH`, a FAILURE, unless that cell is authority-classified `NOT-APPLICABLE`.** **Per-projection record: raw lane path · presence with `MISSING` DISTINCT FROM JSON `null` · raw value · canonical type · normalized value · the pure transformation for derived axes.** ★★ **`PARITY OVER TWO DEAD LANES IS VACUOUS` — accepted; leaving this "unspecified" put the gap in the one interface claim `A` depends on entirely.**
+**4 · THE ORACLE'S ROLE, THREE CLAUSES:** authoritative for **no** membership/requiredness/completeness decision · **IS the historical source of the frozen values** · **the authority document is the intended semantic authority and the `140` transcriptions REMAIN UNVERIFIED.** ⚠️ **I wrote *"authoritative for nothing"* faithfully from the desk's wording and it laundered the oracle's history — if it is authoritative for nothing, a reader assumes the values came from somewhere better. They did not.**
+
+### ⚠️★★★★★ §2 — THREE STALE CAPTIONS THE RENAME EXPOSED, AND ONE OF THEM CONTRADICTED THE FIX I HAD JUST MADE
+`[MEASURED — I audited every occurrence of the reserved word rather than assuming the rename was complete]`
+```
+:22  claim C population  "any scope a caller asks about"   -> "any REGISTERED scope_id — the caller SELECTS, never AUTHORS"
+:22  claim C verdict     "NEVER a correctness green"       -> "NEVER a conformance green"
+:77  §4                  "any correctness verdict"         -> "any claim-B (frozen-ledger conformance) verdict"
+:89  §5                  "Claim B (correctness)"           -> "Claim B (frozen-ledger conformance)"
+```
+★★★★★ **`:22` IS THE ONE THAT MATTERS: THE SUMMARY TABLE STILL DESCRIBED THE EXACT ESCAPE `F-2` CONVICTED, IN THE SAME DOCUMENT WHERE §5 HAD JUST CLOSED IT.** `A RENAME THAT STOPS AT THE SECTION IT RENAMES LEAVES THE CAPTION SAYING THE OLD THING` — and the caption is what a reader meets first. **This is the `caption falsifies its own line` family, and I found it only because I re-grepped for the reserved word instead of trusting my own edits.**
+
+### §3 — WHAT I DID NOT DO
+- ⚠️★★★ **I did NOT claim the scope registry is airtight.** It makes scope selection **VISIBLE, DIFFABLE and PRE-REGISTERED**; it **cannot** make it immune to whoever writes the registry. **Stated in the design as a residual limit** — I would rather the desk judge a stated limit than inherit an implied guarantee, and if that is insufficient the honest result is `NO SOUND DESIGN AVAILABLE` on point `2`.
+- ⚠️ **The `140` are still not re-derived against the authority** — that is the reserved `correctness` check and it is named, not done. **`AUTHORITY_SEMANTICS_UNVERIFIED` exists precisely so no green can be misread while it is outstanding.**
+- **No implementation · no ledger touch · no `P3`/Gate-B · receipts, `P1`/`P2` artifacts and the tag untouched · no `checkout`/`reset`/index op.**
+- ★★ **I do not grade my own work.**
+
+### §4 — POSITION
+**Design REVISED, committed and published.** `P0-vNext` implementation **BLOCKED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-561 · 2026-08-01 · **START-RECEIPT — R-526 §5 ACCEPTED. FOUR CORRECTIONS, DESIGN ONLY. AND `F-1` IS RIGHT IN THE WAY THAT STINGS: MY OWN §11 ALREADY SAID THE CLAIM I NAMED `CORRECTNESS` CANNOT CHECK CORRECTNESS.**
 
 **RULING ID:** R-526 §5 · **TASK ID:** AR-561 · **PRIOR:** AR-560 · **SEAT:** `claude.exe 26204`.
