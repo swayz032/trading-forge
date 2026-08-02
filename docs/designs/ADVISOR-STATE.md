@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3549` at THIS commit, 2026-08-02 05:02 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3553` at THIS commit, 2026-08-02 05:15 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3549` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3553` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,8 +90,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `05:02`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-552` (commit `f42ec3cb`). Newest AR: `AR-594` (`00289f07`) — ✅ RULED by `R-551`. NOTHING UNRULED.**
+## ★★★★★ SEAT (2026-08-02 `05:15`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-554` (commit `b79534ea`). Newest AR: `AR-595` (`d25813ca`) — ✅ RULED by `R-553`. NOTHING UNRULED.**
+🛑★★★★★ **THE OPERATIONAL FACT THAT MATTERS MOST RIGHT NOW (`R-553 §3`): **THE WORKER HAD NO EAR ON `ADVISOR-RULINGS.md` UNTIL `05:09`, SO IT HAS NOT READ `R-551` OR `R-552` (landed `04:52`/`05:01`).** A poll-for-new monitor CANNOT announce a ruling that already landed. **`R-553` is a NEW ruling, so its own ear WILL deliver it, and its START-HERE block carries the backfill order.** ★★★★★ **MINTED: `AN EAR ARMED AFTER THE SIGNAL NEVER HEARS IT — EVERY NEWLY ARMED MONITOR OWES A BACKFILL READ OF THE WINDOW IT WAS BLIND FOR.` Twin of `visibility is not timing`.**
+✅★★★ **EAR VERIFIED IN THE PROCESS TABLE, NOT FROM THE REPORT** `[MEASURED HERE]`: PIDs `35656`/`28348` under worker seat `21508`, ONE rig covering `ADVISOR-RULINGS.md` + `GRADE-*.md`. ⚠️ **PRESENCE measured, FIRING not yet — `R-553` is its first positive control.** **Advisor's three unchanged under `13916`.**
+🛑★★★ **THE DESK OWNS HALF OF `AR-595` (`R-553 §2`): `R-542 §1` minted *"a standing input with no sensor"* for the ADVISOR's channel and never swept it backward to the worker's — `mint-law`, unswept, and `AR-591`'s stale `9/9` fan-in was the price.** ✅ **FULL SENSOR SWEEP TABLE now in `R-553 §2`; no unsensored standing input remains that this desk can name `[enumeration, NOT closure]`.**
+⚠️★★★★★ **V4 GRAPH `9844355c` — RECEIVED, **NOT ADOPTED** (`R-554`).** ✅ **The engineering is REAL and the founding defect is FIXED: a `396`-line validator + `225`-line mutation suite; hand-authored ready fields GONE at schema `1.2`; it COMPUTES `ready_worker_nodes ["P0PC"]` with `P1`/`P2` in `completed_evidence_nodes`; `9` of `12` pins are immutable evidence and ALL NINE VERIFY, incl. `1551c7e5` which `R-547 §4.1` named by hash.** 🛑 **HOLD because the validator DENIES ITS OWN GRAPH (`exit 1`) and I could NOT reach a green baseline even after refreshing the epoch fields — so criterion `3` (P1/P2 re-entry goes RED) is `[UNWITNESSED]`. `A TEST SUITE I CANNOT RUN TO GREEN HAS TOLD ME NOTHING ABOUT ITS RED PATHS.`** ★★★ **STRUCTURAL: it pins the 3 MUTABLE relay files, so its PASS lasts EXACTLY ONE relay write, and a valid epoch can only be pinned from the campaign tree its author cannot write — `ADOPTABLE ONLY BY COPY`. Mechanical path (a)–(d) in `R-554 §3`; deferred until the money path is IDLE per `R-515`.**
 🛑★★★★★ **`R-551` IS THE LIVE RULING. `F-1` RECEIVED AND CLOSED — I attacked it with NINE constructed module-edge forms (`import` · `export * from` · `export * as ns from` · `export {} from` · `import x = require()` · dynamic `import()` · side-effect · type-only · named re-export) and `ZERO` were admitted `[MEASURED HERE, campaign tree @ `00289f07`, my own probe, zero substitutions]`. It was ordered as a PROPERTY and delivered as one.**
 🛑★★★★★ **`F-2` IS CONVICTED — `R-550 §5(3)` TRIPPED VERBATIM `[MEASURED HERE, controls alive in the same run]`: `class Impl implements Widget` → **REJECTED** `1b-S:free-captured-reference`; `interface Ext extends Widget` → **REJECTED** same. Controls: anonymous `class extends window.Base` REJECTED (fix bites), `export * from` REJECTED (F-1 alive), plain frozen module ADMITTED. `2` over-corrections, `0` dead probes.** ✅ **AND THE ERASURE CLAIM IS MEASURED, NOT REMEMBERED — `ts.transpileModule` emits `class Impl { w = 1; }` (Widget GONE), `export const k = 1;` (interface GONE), and `class Sub extends window.Base {}` (SURVIVES).**
 ⚠️★★★★★ **ROOT CAUSE `[source-admission.mjs:190-198]`: the repair returns `'value'` for ANY identifier in `ExpressionWithTypeArguments.expression`, but that node kind carries THREE heritage meanings and only `class extends` executes. `THE FIX DISCRIMINATED THE SLOT BUT NOT THE CLAUSE.`**
