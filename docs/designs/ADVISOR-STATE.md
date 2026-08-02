@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3453` at THIS commit, 2026-08-02 01:11 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3458` at THIS commit, 2026-08-02 01:24 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3453` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3458` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,16 +90,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-536 §4`: CLOSE THE RUNTIME VALIDATOR. SIX ITEMS. DESIGN ONLY.** (2026-08-02 `00:59`, `[MEASURED, date]`)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-537 §5`: CARRIER + ATOM-MANIFEST + STATIC-GRAMMAR CLOSURE. FIVE ITEMS. DESIGN ONLY.** (2026-08-02 `01:23`, `[MEASURED, date]`)
 
-**TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-579` (`claude.exe 26204`).
-**GOAL — `R-536 §4`, six items:** ★★★★★ **(1) carry the COMPOSITE mechanism (own-descriptors **+** recursive prototype-identity) into EVERY live carrier — `4b`, the chosen-contract summary, the `4b` red-proof list, and the *"SOLE ADMITTED"* wording at `L169`; (2) define ONE CLOSED runtime grammar; (3) safe traversal — descriptor-first, `Reflect.ownKeys`-based, **ACTIVE-PATH not permanent-visited**; (4) red-proofs for a CYCLE and a SYMBOL-KEYED function; (5) derive the promise atoms FROM THE GRAMMAR, never from prose labels.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-536 §4` — `grep -n "^## R-536" ADVISOR-RULINGS.md`.**
-⚠️🛑★★★★★ **ITEM `1` STRIKES **MY OWN** WORDING: *"SOLE ADMITTED"* came from `R-535 §1` and you carried it faithfully. **WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT** — this is not held against `AR-579`.**
-✅★★★★★ **THE DESK'S EXECUTED EVIDENCE IS YOURS TO CITE, `[ALL MEASURED HERE, node v24.13.0, 11/11]`:** `Object.keys(getOwnPropertyDescriptors(v))` MISSES a planted symbol capability that `Reflect.ownKeys` SEES · a naive recursive walk over a plain-object self-cycle throws **`RangeError`** — it returns no verdict at all · an active-path walk terminates naming `cycle:$.self` · ★★★★★ **a permanent `WeakSet` visited-set FALSE-REJECTS a legitimate DAG (`{p:shared,q:shared}`) that the active-path form passes.**
+**TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-581` (`claude.exe 26204`).
+**GOAL — `R-537 §5`, five items:** ★★★★★ **(1) every live `4b`/`EVERY-CHANNEL` carrier must name unsupported value classes, array-shape violations and non-enumerable fields; (2) REPLACE the prose `34 → row` map with a STRUCTURED ATOM MANIFEST — atom → CONCRETE MUTATION SUBCASE → NAMED CATCHER; (3) expand the `1b-S` subcases (incl. `global`, all dynamic-load forms, the three distinct export/state forms) or narrow the promise EXPLICITLY; (4) define the CLOSED AST GRAMMAR for admitted module-scope constants; (5) recompute from ATOM→MUTATION records, not atom→row labels.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-537 §5` — `grep -n "^## R-537" ADVISOR-RULINGS.md`.**
+🛑★★★★★ **DO NOT "FIX" THE SYMBOL CITATION — `R-537 §4` **REFUTES** that sub-finding. `[MEASURED HERE]` row `45` is the SYMBOL-**VALUE** class, row `44` is the SYMBOL-**KEY** capability; the design separates them CORRECTLY and the conflation is the reader's. **If you disagree, answer with a measurement, not a compliance edit.**
+⚠️🛑★★★★★ **ITEM `2` IS MY DEFECT, NOT YOURS: `R-536 §4.5` ordered the derived population and then said only *"re-run the comparison"* — **I FIXED THE DENOMINATOR AND LEFT THE JOIN.** `A ROW NUMBER IS NOT A CATCHER UNTIL THE EXACT ATOM HAS BEEN PLANTED.`**
+✅★★★★★ **DESK EVIDENCE YOURS TO CITE `[MEASURED HERE, node v24.13.0]`: `typeof global === "object"` and **`global === globalThis` → `true`** on this host — so `global` is a live unallowlisted alias no subcase plants.**
 **ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — blueprint OUT.**
 **FORBIDDEN:** implementation · pinned lanes · the ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
-**FIRST OBSERVABLE:** items `1`+`2`, **~30–45 min.** **START-RECEIPT REQUIRED** (delta baseline).
-**STOP CONDITIONS (`R-536 §5`):** ★★★★★ **any live summary permitting descriptor-only runtime admission → STOP** · ★★★★★ **recursive validation with no explicit cycle policy → STOP** · ★★★ **string-key enumeration used to certify a symbol-free object → STOP** · ★★★★★ **the promise population selected from the catcher table itself → STOP.**
+**FIRST OBSERVABLE:** corrected `4b` carrier + the structured atom manifest, **~20–30 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**STOP CONDITIONS (`R-537 §6`):** ★★★★★ **an `EVERY` carrier omitting any grammar-derived atom → STOP** · ★★★★★ **an atom treated as caught because it SHARES A ROW with an exercised neighbour → STOP** · ★★★★★ **the parser asked to infer deep frozen-ness from an unspecified semantic notion → STOP** · ★★★★★ **the grammar narrowed to make the map empty → STOP.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-577` (`claude.exe 26204`).
 **GOAL:** per **`R-534 §5`, six items** — ★★★★★ **(1) SPLIT requirement `1b` into a BUILD-TIME SOURCE contract and a RUNTIME INPUT-ADMISSION contract, each with a NAMED mechanism, because a build-time AST result may never certify a runtime property; (2) name a REAL PARSER (TS compiler API), NOT regex; (4) add the five missing red-proofs each with a GREEN neighbour; (5) the getter red-proof carries an INVOCATION COUNTER requiring `0`.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-534 §5` — `grep -n "^## R-534" ADVISOR-RULINGS.md`.**
@@ -208,7 +209,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## 🛑★★★★★ SEAT — **LEDGER AT `R-536`. NEWEST AR: **`AR-581`** (`01:10:17`, DELIVERY, `37/37`, matrix `47+1=48`) — **UNRULED.** `R-537` **OWED AND HELD**: `[MEASURED HERE, 01:11]` the external ref still reads `7efca245`, which `R-536` SPENT — **no unconsumed read.** `AR-580` was a start-receipt, no ruling owed. **WORKER IS NOT BLOCKED — it has DELIVERED.**
+## ✅★★★★★ SEAT — **LEDGER AT `R-537`, CONSUMING EXTERNAL READ `c8e9a4d6` (now SPENT). NEWEST AR: `AR-581` (`01:10:17`, DELIVERY, `37/37`) — **RULED BY `R-537`.** WORKER RE-AUTHORIZED (`R-537 §5`, five items, design only). SEAT = `claude.exe 15520`; three monitors ADOPTED, none armed, none killed, both channels delivering.**
+🛑★★★★★ **`R-537`: `F-1`/`F-2`/`F-3` SUSTAINED — AND FOR THE FIRST TIME THIS ARC I **REFUTED** A SUB-FINDING (`§4`): the read's row-`45`-vs-`44` "join error" is the READER'S conflation. `[MEASURED HERE, loose probe WITH a positive control]` row `45` = symbol **VALUE** class, row `44` = symbol **KEY** capability; the design separates them correctly. **PASSING IT THROUGH WOULD HAVE ORDERED THE WORKER TO BREAK A DISTINCTION IT GOT RIGHT.** `RE-GRADE THE SOURCE, KEEP READING IT` — the discipline cuts both ways.**
+🛑★★★★★ **`F-2` CONVICTS `R-536 §4.5`, MINE, AND IT IS THE **FOURTH CONSECUTIVE RULING OF ONE SHAPE**: `R-534 §5.5` named a catcher that cannot catch · `R-534 §5.6` ordered `EMPTY` with no denominator · `R-535 §1` ratified a prototype-blind sole mechanism · `R-536 §4.5` accepted row-membership as coverage. ★★★★★ **STANDING, MINTED AGAINST MYSELF: A COMPLETENESS ORDER MUST NAME **THREE** THINGS — THE POPULATION, THE JOIN, AND THE WITNESS. I HAVE NOW SHIPPED ONE WITH EACH MISSING IN TURN.**
+⚠★★★★★ **INSTRUMENT HONESTY ON `F-1`: MY AUTOMATED ROW-NUMBER COMPARATOR RETURNED EMPTY AND FOUND NOTHING — the carrier names channels in PROSE and cites no row numbers, so my extractor had nothing to extract. **I GOT THE FINDING BY READING THE LINE.** `A COMPARATOR KEYED ON A FORM THE TARGET DOES NOT USE RETURNS EMPTY AND LOOKS LIKE AGREEMENT.`**
+⚠★★★★★ **GRADE BAR: corrections per round `9 → 5 → 2 → 3 → 3 → 3` `[MEASURED]` — **FLAT AT THREE FOR THREE ROUNDS.** `A BAR THAT IS NEVER MET IS INDISTINGUISHABLE FROM A BAR THAT CANNOT BE MET.` **IF THE NEXT ROUND IS ALSO THREE, THE CALIBRATION QUESTION GOES TO THE OPERATOR ALONGSIDE THE `Agent`-DISPATCH ASK — I AUTHORED THE BAR AND MAY NOT ALSO BE THE ONE WHO QUIETLY RETIRES IT.**
 
 ### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — held for `R-537`] `AR-581`'s LOAD-BEARING CLAIMS VERIFIED — AND BOTH OF MY OWN "FINDINGS" WERE INSTRUMENT ARTIFACTS
 ✅★★★★★ **THE HEADLINE VINDICATES `R-536 §3` AND IT IS THE STRONGEST RESULT OF THE ARC: deriving the promise atoms MECHANICALLY moved the denominator **`10 → 34`** and immediately exposed **FOUR forbidden channels with NO catcher** (non-enumerable user fields · unsupported value classes · sparse holes · extra named array properties). `[VERIFIED HERE]` rows `45`/`46`/`47` exist and name exactly those; the grammar was NOT trimmed to make the difference empty. **THE PROOF THAT MY TEN WAS A MIRROR IS THAT THE HONEST DENOMINATOR FOUND FOUR GAPS IN A DOCUMENT CERTIFIED `EMPTY` ONE ROUND EARLIER.**
