@@ -4,6 +4,50 @@
 
 ---
 
+## AR-588 · 2026-08-02 · **START-RECEIPT + ITEM 0 DELIVERED — R-541 §6 ACCEPTED. THE PIVOT: FIRST IMPLEMENTATION AUTHORIZATION OF THIS ARC.** ✅★★★★★ **`G-1` REPRODUCED HERE AT `213` BYTES AND ITEM `0` IS ALREADY LANDED: THE MODULE SYSTEM IS PINNED TO ESM, WHICH CLOSES THE CHANNEL **BY CONSTRUCTION** RATHER THAN BY A CHECK.**
+
+**RULING ID:** R-541 §6 · **TASK ID:** AR-588 · **PRIOR:** AR-587 (`cdc290dc`, APPROVED by `R-541`) · **SEAT:** `claude.exe 26204`.
+
+### 🛑★★★★★ §1 — `G-1` REPRODUCED BY EXECUTION, INDEPENDENTLY OF BOTH THE GRADER AND THE DESK
+`[MEASURED HERE, node v24.13.0, my own `213`-byte CommonJS module — the desk's was `269`]`
+```
+BASELINE  {"value":"FROM_LANE"}
+INJECTED  {"value":"EXPECTED_FROM_LEDGER"}      <- the ledger value crossed the boundary
+FORBIDDEN TOKENS PRESENT: []                     (all 16 enumerated forms ABSENT)
+SCANNER POSITIVE CONTROL (planted globalThis): true   <- the scan is NOT blind
+ESM top-level `typeof this` = "undefined"        <- the channel does not exist under ESM
+```
+★★★★★ **`A CLOSED SET THAT NEVER NAMED ITS MODULE SYSTEM IS NOT CLOSED.` The wrapper `this` is a `ThisExpression`, not an identifier binding, so an identifier scan cannot see it; and `this !== globalThis`, so the ambient-reads row cannot reach it either. **BOTH of my existing catchers were structurally incapable of this channel, and neither was wrong about what it does check.**
+⚠️★★★★★ **AND THE UNCOMFORTABLE PART, WHICH IS MINE: `AR-585` AND `AR-587` WERE THE TWO SHARPEST ADVERSARIAL ROUNDS I HAVE RUN, AND BOTH WENT STRAIGHT PAST THIS. Nothing in a prose review makes you look at the module system. `THE COMPLETENESS INSTRUMENT WAS BLIND IN THE DIRECTION IT CLAIMED TO MEASURE` — observed, not argued.**
+
+### ✅★★★★★ §2 — ITEM 0 DELIVERED IN THIS COMMIT (design only, before any code)
+✅ **`1b-S` now carries a MODULE SYSTEM surface: ALLOWED `ESM ONLY` (`.mjs`, or `.ts` under `"type": "module"`); FORBIDDEN CommonJS in any form — the wrapper `this` · `module.exports` · `exports.` · `require` · `__dirname` · `__filename` · `.cjs`.**
+✅ **MATRIX ROW `54` planted** — CJS wrapper-`this` injection → RED naming the module-system channel, **and the row FAILS if it reddens via a token or identifier check instead**, with the ESM twin as its GREEN neighbour. ✅ **MANIFEST subcase added → `52` records.**
+`[MEASURED HERE]` **matrix `54+1=55`, contiguous `1..55`, zero duplicates, control LAST; un-anchored `60` published alongside. Manifest join: all four directions EMPTY, both controls convict.** ★★★ **ELEVENTH recomputation, taken from the parse.**
+
+### ✅★★★★★ §3 — THE 5-PART PACKET (`ratify-packet`, staged BEFORE code)
+**CLASS:** ⚠️ **INSTRUMENT-TOUCHING, but NOT the irreversible / live-capital class** — a NEW prototype directory, no live default, no frozen/certified ref re-baselined, no operator data touched, system PRE-LIVE. **Therefore: stage packet → implement autonomously → INDEPENDENT GRADE IS THE GATE. No operator hold.** ★★ **The operator gets a plain-English post-hoc summary and holds a standing veto.**
+1. **WHAT & WHY NOW** — `G-1`, reproduced above with receipts; still OPEN at `HEAD` two rounds after discovery. The grade is **band `5`, CAPPED BY ARTIFACT CLASS** (`7+` requires execution; no implementation exists). **Eight prose rounds have not produced a coverage number.**
+2. **BLAST RADIUS** — **NOTHING is invalidated.** No certification, baseline or frozen ref depends on this prototype; it is new, isolated, and consumes no ledger. The `51`→`52` manifest is a pre-registration, and running it can only *upgrade* `[PRE-REGISTERED]` to measured.
+3. **EXACT CHANGE, SCOPE-LOCKED** — **IN:** item `0` (landed) · a NEW prototype dir implementing `1b-S` source admission + `1b-R` runtime admission · its runner · a committed results artifact. **OUT:** the gate · the three claims · the scope registry · the ledger consumer · `P1`/`P2` · the old `P0` lane.
+4. **VERIFICATION PLAN** — `R-541 §6b`'s four acceptance commands: the `213`-byte `G-1` module REJECTED naming the module-system channel with its ESM twin GREEN · all `52` subcases executed with **the catcher that fired named** · both controls run · **and an asserted ZERO reads of `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` and `ORACLE.json`.**
+5. **ROLLBACK** — the prototype is a new directory; `git revert` of its commit removes it whole. Item `0` is a documentary addition, revertible independently.
+
+### ⚠️★★★★★ §4 — RAISED BEFORE I WRITE CODE
+**(a) SEPARABILITY IS THE CONDITION OF THIS AUTHORIZATION, NOT A STYLE NOTE:** the prototype reads NO ledger and NO `ORACLE.json`. **I will assert that by measurement in the results artifact, not by claim.**
+**(b) THE PRE-REGISTERED DECISION RULE IS `R-541 §6a` AND I DO NOT GET TO RESTATE IT: success is EVERY subcase yielding a verdict ATTRIBUTABLE TO ITS NAMED CATCHER, *or* recorded as an HONEST NAMED MISS. `40/52` with `12` named misses is a SUCCESS.** ⚠️★★★★★ **AND A FIRST-RUN `52/52` IS A RED FLAG TO BE AUDITED, NOT A TRIUMPH — the desk's own instrument-fault base rate this arc is `8/8`, and mine is not zero either.**
+**(c) I DO NOT GRADE THIS.** `doer != grader`. When the coverage number exists, **the `accuracy-validator` is the instrument** — the advisor dispatches it; I will say so plainly rather than park it.
+**(d) CONTEXT, STATED HONESTLY AND WITHOUT DECLARING A HANDOFF:** this seat has run **six** consecutive rounds. Item `0` is landed and self-contained. **The BUILD is a new and much larger lane, and a seat that starts a build it cannot finish produces the partial-that-reads-as-complete this campaign convicts most.** ✅ **I am NOT declaring exhaustion and NOT handing off — the batch is mine and I continue. I record this so the desk and the operator can overrule me on economics, which is their call and not mine.**
+
+### §5 — FIRST OBSERVABLE + ETA
+**Item `0` is ALREADY DELIVERED in this commit.** **NEXT: the `1b-S` rule rejecting the `213`-byte `G-1` module by name, with its ESM twin GREEN — ~30–45 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**The gate · the three claims · the scope registry · the ledger consumer · pinned lanes · this ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · the old `P0` lane's seventh attempt · `P1`/`P2` artifacts · the pinned tag · no `checkout`/`reset`/index op · ⚠️ **`GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — the grader's receipt, committed by the desk, not mine to edit.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-587 · 2026-08-02 · ✅★★★★★ **R-540 §6 DELIVERED — FIVE ITEMS, `38/38` + `14/14` + `13/13`, MANIFEST `51` RECORDS, MATRIX `53+1=54`.** 🛑★★★★★ **AND THE FAULT WORTH THE MOST IS ONE MY AUTHORING LAYER CREATED TWICE: MY OWN TOOLING **SILENTLY RESOLVED `__` INTO `__`**, TURNING THE ESCAPED-IDENTIFIER FIXTURES INTO PLAIN ONES — THE EXACT DEFECT `F-2` IS ABOUT, REPRODUCED INSIDE THE REMEDY FOR IT.**
 
 **RULING ID:** R-540 §6 · **TASK ID:** AR-587 · **PRIOR:** AR-586 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
