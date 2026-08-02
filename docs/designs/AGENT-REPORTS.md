@@ -4,6 +4,24 @@
 
 ---
 
+## AR-593 · 2026-08-02 · ⚠️★★★ **DISPATCH RECORD — THE `accuracy-validator` IS RUNNING AGAINST `9be6a52a` IN HUNT MODE, LAUNCHED ON THE OPERATOR'S DIRECT WORD ("execute"). RECORDED IMMEDIATELY SO THE DESK DOES NOT SPEND A SECOND GRADER ON THE SAME CLAIM.** 🛑★★★ **PLUS TWO OPS FINDINGS ABOUT THE GRADER ITSELF, FOUND BY AUDITING THE INSTRUMENT BEFORE TRUSTING IT.**
+
+**TASK ID:** AR-593 (dispatch record only; the verdict is NOT mine to interpret) · **PRIOR:** AR-592 (`9be6a52a`).
+⚠️★★★★★ **AUTHORITY, STATED PLAINLY: `R-543 §5` / `R-546 §8.2` assign the GRADE to THIS DESK, not to me. I did not self-authorize — I asked the operator in one line and he answered `execute`. The operator holds the keys and outranks the routing. Recording it so the ledger shows exactly who dispatched and on whose word.** ✅ **`doer != grader` is intact: I briefed it to DISPROVE me and I will not interpret the verdict.**
+
+**PIN:** `9be6a52a` `[MEASURED HERE]` — `git merge-base --is-ancestor 9be6a52a HEAD` passes, and `git diff 9be6a52a HEAD -- prototypes/p0-vnext-admission docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` is **EMPTY**, so the graded artifacts are untouched by the desk's later commits. **The grader was told to re-verify that rather than take my word.**
+**DURABLE RECEIPT ORDERED:** `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md`, committed with `git commit -o` (shared tree). **A verdict living only in a dispatcher's chat is single-source — `F-2`, 2026-07-30.**
+**BRIEFED TO ATTACK, in my own words, naming MY weak points:** whether `surface_invalid = 0` is REAL or merely DEFINITIONAL (I chose the diagnostic-code lists, and a doer who picks which codes mean "instrument fault" can produce any partition) · whether `caught_by_typechecker` LAUNDERS misses · whether `classifyPosition()` silently exonerates a real capture as type-space (**the dangerous direction — `POSITION_UNCLASSIFIED` fires loudly, a false `type` verdict does not**) · whether a SECOND ownership-suppression deletion exists · whether `emitted-freeze.mjs` really reads `8297ebbe` rather than a hand-copy, and whether `PREREGISTERED_EMIT_CHANGES` was BACK-FILLED · whether `partition_overlap`'s "structurally unreachable" declaration is true or convenient · ★★★★★ **and the NOVEL false-green hunt: construct and EXECUTE a module that reaches the ledger and is ADMITTED — the `G-1` species. A constructed counterexample outranks every number I published.**
+
+### 🛑★★★ §1 — TWO OPS FINDINGS ABOUT THE GRADER, FOUND BEFORE DISPATCH
+1. 🛑★★★★★ **THE `v2` GRADER EXISTS ONLY AS AN UNCOMMITTED WORKING-TREE MODIFICATION.** `[MEASURED HERE]` `.claude/agents/accuracy-validator.md` is `+93/−88` against `HEAD`, and the two versions differ in kind, not degree: `GRADE` mode `11` vs **`0`**, coverage mandate `2` vs **`0`**, `model: opus` `1` vs **`0`**. **The COMMITTED copy is `v1`.** ★★★★★ **So the operator-ordered 2026-07-30 rebuild is one `git checkout` or one fresh worktree away from vanishing, and any seat grading from the committed definition would silently get the OLD grader.** ⚠️ **NOT MINE TO COMMIT — it is not my file and not in my scope. Raising it, not fixing it.**
+2. ⚠️★★★ **`scripts/check-agent-parity.mjs` DOES NOT EXIST IN THIS TREE.** `[MEASURED HERE, `find` over the repo excluding `node_modules`, zero hits]` — yet `worker-execution §5b` states it guards every tree's copy of the agent definitions. **The tripwire the skill relies on to catch exactly the drift in finding `1` is absent.** ★★★ **`A REMEMBERED SKILL IS A STALE SKILL` cuts both ways: the skill was current and the ARTIFACT IT NAMES was not there.** ⚠️ **Reported, not built — a parity tripwire is instrument infrastructure and is the desk's call, not a thing I bolt on mid-batch.**
+
+### §2 — POSITION
+**`13 / 13` delivered and committed at `9be6a52a`; all five gates exit `0` from the committed tree.** **The grade is IN FLIGHT, not owed and not blocked.** ⚠️ **I will relay the verdict as it comes back, including if it convicts me, and I will not interpret it.**
+
+---
+
 ## AR-592 · 2026-08-02 · ✅★★★★★ **ITEMS `10`–`13` + THE `§5.0` RE-CLASSIFICATION DELIVERED. FAN-IN IS `13 / 13`.** 🛑★★★★★ **AND FIRST, A CORRECTION TO MY OWN `AR-591`: IT CLOSED SAYING **`FAN-IN 9 / 9`** — THAT WAS TRUE WHEN WRITTEN AND WAS **STALE BEFORE IT WAS READ**. `R-546` LANDED WHILE I WAS BUILDING AND MADE THE BATCH THIRTEEN.** ✅★★★★★ **THE SIX-POPULATION PARTITION HOLDS: `44 + 3 + 0 + 0 + 5 + 0 = 52`, NO ROW IN TWO, NO ROW IN NONE, AND `surface_invalid = 0` — WHICH IS WHAT MAKES THE NUMBER ADMISSIBLE AT ALL.**
 
 **RULING ID:** `R-546 §5.0` + items `10`–`13` (additive to the nine) · **TASK ID:** AR-592 · **PRIOR:** AR-591 (`1958ba5d`), AR-590 (`0df28dfd`).
