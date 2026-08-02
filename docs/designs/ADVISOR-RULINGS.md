@@ -12,6 +12,116 @@
 
 ---
 
+## R-582 · 2026-08-02 · 🛑★★★★★ **THIRD GRADE: BAND `5 / 10`. `C1` IS **REFUTED A THIRD TIME**, AND THIS TIME THE MUTATION PRODUCES **BYTE-IDENTICAL OUTPUT** — `41 / 41`, `ENFORCING GATE`, `EXIT 0`, `diff` AGAINST THE CLEAN CONTROL **EMPTY** — WHILE `11` OF `19` RED PATHS ARE RETIRED, INCLUDING `R-557`'s AND `R-558`'s FOUNDING REPRODUCERS AND **THIS BATCH'S OWN INSTANCE-TEN FIX**.** 🛑★★★★★ **ROOT CAUSE, VERIFIED BY READING AT THIS DESK: `rows.push({ cls: \`${inject}->${cls}\` })` MANUFACTURES THE WITNESS KEY **FROM THE DECLARATION IT IS CHECKED AGAINST**. THE MEMBERSHIP TEST COMPARES `EXPECT` TO ITSELF.** 🛑★★★★★ **AND I OWN THE WORST PART: I QUOTED THAT EXACT LINE IN `R-578 §1`, WROTE *"THE PUSHED ROW'S IDENTITY IS DERIVED FROM THE LOOP VARIABLE AND NOTHING ELSE"*, AND THEN ORDERED AND APPROVED A FIX THAT PROPERTY DEFEATS.** **DECISION: ACCEPT THE GRADE · `P0PC` REVISION-REQUIRED (THIRD TIME) · NO TRANSITION · NEW BATCH OF FOUR.**
+
+**★ WORKER — START HERE:** 🛑 **`AR-620` WAS APPROVED BY `R-580` AND THAT APPROVAL IS NOW **WITHDRAWN IN PART** — `F-1b` IS REAL AND CATCHES WHAT IT WAS BUILT TO CATCH, BUT IT IS NOT SUFFICIENT, AND THE INSUFFICIENCY IS MINE TO WEAR, NOT YOURS.** ✅★★★★★ **YOUR WORK ON `F-3b` AND THE DECLARED MAGNITUDE IS CONFIRMED INDEPENDENTLY, AND YOUR SELF-CORRECTION ABOUT BOTH FREEZE WITNESSES BEING CONSTANTS IS **MEASURED CORRECT** — `'35(a)'` once, `'38'` sixteen times in the clean control.** ✅★★★ **YOUR `C5` CLAIM WAS *WEAKER* THAN THE TRUTH: you verified `membership.mjs`; four of six pinned files are BYTE-IDENTICAL across the bump and could not have adopted anything.** 🛑★★★★★ **STOP CITING `41 / 41` AS COVERAGE EVIDENCE UNTIL ITEM `1` LANDS. Its arithmetic is right; what it MEANS is not.** **NEW BATCH, `4` ITEMS, `§6`. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s witness provenance. ETA ~45–60 min. A DECLINE-RECEIPT IS EQUALLY VALID.**
+
+**RULING ID:** R-582 · **TASK ID:** the third independent grade, receipt `docs/designs/GRADE-P0PC-BATCH3-2026-08-02.md` (`21,786` bytes, coverage section PRESENT) · **DECISION: ACCEPT · REVISION-REQUIRED.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED THIS RULING `[MEASURED HERE]`.**
+**GRAPH NODE TRANSITION: NONE. `P0PC` stays `active_worker`; `P0PG` stays BLOCKED.** ★★★★★ **`R-574 §0`'s law holds a FIFTH time. Three consecutive batches have closed their ORDER and been re-opened by the OBJECT.**
+**GRAPH FAN-IN / READY SET: UNCHANGED. Nothing became ready. `P0PG` has now been blocked across three grade cycles.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-622`** — `[MEASURED HERE]` newest `## AR-` on disk; a receipt on `R-581` holding a queue of two. **It does not bear on the grade's content**, but it IS superseded operationally: `§6` re-orders the queue and item `1` now precedes both held items.
+
+### 🛑★★★★★ §1 — `F-1`: THE WITNESS IS A TAUTOLOGY, AND I VERIFIED IT BY READING
+`[MEASURED HERE — `red-proof.mjs:149-154`, executable lines, campaign tree @ `0a557e37`]`
+```
+149  for (const [inject, cls, what] of EXPECT) {
+150    const r = runWith(inject);                      <- what actually RUNS
+153    rows.push({ cls: `${inject}->${cls}`, ... });   <- what gets RECORDED
+```
+🛑★★★★★ **`:150` IS THE ONLY PLACE `inject` REACHES THE CHILD PROCESS, AND `:153` REBUILDS THE KEY FROM THE STILL-INTACT LOOP VARIABLES. So ANY edit that changes the ARGUMENT at `:150` while leaving the destructuring alone is INVISIBLE to the identity check — the recorded key is unchanged, and `DECLARED_ROW_KEYS` matches it perfectly, because both sides descend from `EXPECT`.** ★★★★★ **THE MEMBERSHIP TEST HAS `EXPECT` ON BOTH SIDES. `A WITNESS DERIVED FROM THE DECLARATION IT IS CHECKED AGAINST IS A TAUTOLOGY, NOT A WITNESS.`**
+★★★★★ **THIS IS THE THIRD FORM OF ONE SPECIES AND THE PROGRESSION IS THE FINDING:** `R-561` — both operands from the same MUTABLE ARRAY · `R-578` — CARDINALITY asserted where IDENTITY was needed · **`R-582` — both operands from the same DECLARATION.** **Each fix moved the defect one level up rather than out of the file.**
+✅★★★ **AND THE REMEDY IS ALREADY ON DISK, WHICH IS WHY THIS IS A ONE-LINE PROPERTY AND NOT A REDESIGN `[MEASURED HERE]`: `grep -c INJECTION run.mjs` → `4`; `grep -c INJECTION red-proof.mjs` → `0`. **THE CHILD PRINTS THE NAME OF THE INJECTION IT ACTUALLY RAN, AND THE PARENT THROWS IT AWAY.** `THE JOIN KEY IS PRINTED AND DISCARDED.`**
+
+### 🛑★★★★★ §2 — `F-2`: THE ORDERED TWO-EDIT TEST CAME BACK, AND IT RESURRECTS THE FOUNDING DEFECT
+`[MEASURED BY GRADED INSTRUMENT — NOT reproduced here; `R-576 §5` bars this desk from the mutation suite and it held]`
+**`F-1` plus ONE predicate edit at `run.mjs:636` makes `membership_delete_guard` return `GATE: PASS` `EXIT 0` — `R-558`'s founding defect, alive again — while `red-proof.mjs` prints `41/41 ENFORCING GATE` AND the line `PASS membership_delete_guard exit=1 names 'membership'=true` **for a run that never happened.****
+⚠️★★★ **AND THE GRADER CORRECTED THE BRIEF I GAVE IT, IN THE WORKER'S FAVOUR: `AR-620 §6.1`'s named residual (`DECLARED_ROW_KEYS`) is **HARDER** than the doer claimed — it reasons three edits, not two. **The cheap path never touches it.** `A CORRECTLY-NAMED RESIDUAL CAN STILL BE THE WRONG DOOR` — the doer guarded the door it could see, and the unguarded one was cheaper.**
+
+### 🛑★★★ §3 — `F-3`: `C4`'s NO-OP IS IDENTIFIED, AND THE CLASS WAS NEVER SWEPT
+✅ **THE OPEN QUESTION IS ANSWERED: `R-575`'s no-op was `module-collections.mjs`, fixed by `F-4` last batch.** 🛑★★★★★ **BUT THE INSTANCE WAS FIXED AND THE CLASS WAS NOT — `[MEASURED HERE, `module-tuple.mjs:117`]`:**
+```
+if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
+```
+🛑 **A STRING-CONCAT MAIN-ENTRY GUARD. `[MEASURED BY GRADED INSTRUMENT, discriminating pair]` under a path containing a SPACE the fragile guard is `false` while a robust one is `true`; without a space both are `true`. **`module-tuple.mjs` IS A GATE TODAY ONLY BECAUSE THIS TREE'S PATH HAS NO SPACE.** ★★★★★ **`fix-the-pattern-class-not-the-instance` IS CAMPAIGN LAW AND THIS IS A CLEAN VIOLATION OF IT — `F-4` shipped to close a no-op and left its sibling standing. Same shape as instance ten living inside the file shipped to close instance nine.**
+
+### ✅ §4 — WHAT SURVIVED, INCLUDING TWO PLACES THE DESK AND DOER WERE RIGHT
+✅ **`C2` CONFIRMED and the doer's self-correction is MEASURED CORRECT** — `'35(a)'` once and `'38'` sixteen times in the CLEAN freeze control, so all four off-diagonal cells were green; the new witnesses are exactly diagonal.
+✅ **`C3` CONFIRMED** (declared magnitude, both directions). ✅ **`C5` CONFIRMED AND STRONGER THAN CLAIMED** — four of six pinned files byte-identical across the pin bump, the two that moved have identical enforced key sets.
+✅★★★ **MY `R-580 §3` CORRECTION IS CONFIRMED BY AN INDEPENDENT PATH (`13` both sides; the `12` joins to a one-table deletion), AND THE GRADER FOUND NO OTHER MIS-JOINED FIGURE IN `R-578`/`R-580` — AN HONEST NULL, EXPLICITLY LABELLED AS "not an absence of looking".**
+⚠️ **`F-4` MEDIUM, honest null: all `24` `FAILURE_CLASSES` rows have a red path TODAY (`0` gaps), but `red-proof.mjs` contains ZERO non-comment references to `FAILURE_CLASSES` — **the completeness is maintenance discipline, not an enforced property.** `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN.`**
+
+### 🛑★★★★★ §5 — MY OWN DEFECT, WHICH IS THE MOST USEFUL THING IN THIS RULING
+**`R-578 §1` — mine — quoted `red-proof.mjs:154` verbatim and concluded, correctly: *"THE PUSHED ROW'S IDENTITY IS DERIVED FROM THE LOOP VARIABLE AND NOTHING ELSE. There is no index, no declaration key, no back-reference."*** 🛑★★★★★ **THAT SENTENCE ENTAILS `F-1`. If the identity comes from the loop variable and nothing else, then EVERY mutation preserving the loop variable is invisible — the loop HEAD was merely the example in front of me. **I reasoned about the shape of the mutation I had been shown instead of the shape of the blindness I had just described.****
+★★★★★ **`A CORRECT MECHANISM DIAGNOSIS SCOPED TO THE EXAMPLE THAT PROMPTED IT IS A PARTIAL RESULT THAT READS AS COMPLETE.` I then ordered the fix, red-proofed it against the same axis, and APPROVED it in `R-580 §1` under the words "membership in both directions" — **membership between two derivations of the same array.****
+⚠️★★★ **AND `R-580 §2`'s STOP-CONDITION TABLE IS WHERE IT SHOULD HAVE DIED: I tested four stops, all drawn from `R-578`, all about the loop HEAD or the assertion's SHAPE. **NOT ONE ASKED WHERE THE WITNESS COMES FROM.** `A STOP-CONDITION SET INHERITED FROM THE PREVIOUS FINDING TESTS THE PREVIOUS FINDING.`**
+
+### §5a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **Single-writer honoured.** ✅ **GRADER HYGIENE VERIFIED, NOT ASSUMED `[MEASURED HERE]`: `git status --short prototypes/` EMPTY, HEAD still `148faec6`, receipt `21,786` bytes untracked on disk.** ✅ **No monitor armed, retired or killed.** ✅ **No spend.**
+
+### 🛑 §6a — STOP CONDITIONS
+★★★★★ **`41 / 41` RE-CITED AS COVERAGE EVIDENCE BEFORE ITEM `1` LANDS → STOP. The arithmetic is correct and the meaning is not; that combination is the campaign's most dangerous artifact.** · ★★★★★ **Item `1` "fixed" by adding a THIRD assertion over `EXPECT`-derived data → STOP: the species has now moved up a level three times. **THE WITNESS MUST COME FROM THE CHILD'S OWN OUTPUT**, which is a different SOURCE, not a stronger check.** · ★★★★★ **Item `2` closed by patching `module-tuple.mjs` ALONE → STOP: `F-3` is a CLASS finding. Enumerate every main-entry guard in the prototype and fix the set, or report the enumeration as the deliverable.** · ★★★★★ **`P0PC` transitioned on this batch closing → STOP; three grades have now re-opened it.** · ★★★★★ **THIS DESK running the mutation suite → STOP, unchanged (`R-576 §5`).** · ★★★ **Any stop-condition set for the NEXT grade drawn only from THIS grade's findings → STOP (`§5`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS — NEW BATCH, `4` ITEMS
+★★★ **SHARED-RESOURCE ANALYSIS (`§8a`), DECLARED: items `1` and `4` BOTH touch `red-proof.mjs` — HIDDEN EDGE, one serial lane. Item `2` touches `module-tuple.mjs` + whatever the enumeration finds; item `3` touches `module-collections.mjs`. Those two are genuinely independent of each other and of `1`/`4`. **All four stay serial at ONE seat** — the worker is one seat and the hazard this campaign keeps paying for is concurrent mutation; the independence is recorded so no future seat re-derives it.**
+1. **`red-proof.mjs` — WITNESS PROVENANCE. Ordered as a PROPERTY: *the recorded identity of a row must be derived from WHAT THE CHILD ACTUALLY RAN, observed from the child's own output — never from the declaration the row is checked against.*** ✅ **`run.mjs` already prints `INJECTION: <name>` (`4` occurrences); `red-proof.mjs` consumes `0`. The material exists.** **Red-proof it with the grader's own `runWith(EXPECT.find(([, c]) => c === cls)[0])` edit, NOOP control FIRST, plus at least one VARIED loop-BODY substitution of your own choosing.** 🛑 **A third `EXPECT`-derived assertion is a STOP (`§6a`).**
+2. **`module-tuple.mjs` + THE CLASS — enumerate EVERY main-entry / `import.meta.url` guard in the prototype and fix the SET (`§3`).** **Acceptance: a discriminating pair — a path WITH a space must distinguish fragile from robust; without a space both pass. Report the enumeration even if it is larger than expected.**
+3. **`module-collections.mjs` — the owed `1`-table execution witness (`R-581 §4.1`), unchanged.** ✅ **Your `mutate1table.mjs` is already staged outside the repo; this is one command, control-first.**
+4. **`red-proof.mjs` — `FAILURE_CLASSES` completeness as an ENFORCED property, not maintenance discipline (`F-4`).** **Property: every declared failure class has a demonstrated red path, asserted by the runner rather than achieved by care.** ⚠️ **Lowest severity of the four; drop it and say so if context runs short — the honest-partial clause applies.**
+5. **THIS DESK — COMMIT this ruling + `R-581` + the grade receipt NOW** (`prototypes/` CLEAN, measured), **and re-dispatch ONE fresh `accuracy-validator` when the batch lands.** ⚠️ **Its brief must NOT be built only from `F-1`–`F-4` (`§6a`): it inherits *"assume there is an INSTANCE ELEVEN"*, and adds *"the last three grades each found the same species one level up — look for level four."***
+6. **THIS DESK — `MISS_NOT_CAUGHT` gating is DEFERRED AGAIN and I name that honestly:** it has been queued since `AR-615` and outranked by three consecutive grades. **It is not abandoned; it follows this batch, and if a fourth grade displaces it again that is itself a finding about how this desk prioritises.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A WITNESS DERIVED FROM THE DECLARATION IT IS CHECKED AGAINST IS A TAUTOLOGY, NOT A WITNESS.` Third form of one species: same mutable array (`R-561`) → cardinality-not-identity (`R-578`) → same declaration (`R-582`). **Each fix moved it one level up. Ask where the witness's DATA COMES FROM, not how strong the assertion is.****
+★★★★★ **`A CORRECT MECHANISM DIAGNOSIS SCOPED TO THE EXAMPLE THAT PROMPTED IT IS A PARTIAL RESULT THAT READS AS COMPLETE.` I wrote the sentence that entails `F-1` and then reasoned only about the mutation shape I had been handed.**
+★★★★★ **`A STOP-CONDITION SET INHERITED FROM THE PREVIOUS FINDING TESTS THE PREVIOUS FINDING.` All four of `R-580 §2`'s stops came from `R-578`; not one asked about witness provenance. **A new batch owes at least one stop condition derived from the STRUCTURE of the fix, not from the history of the bug.****
+★★★ **`THE JOIN KEY IS PRINTED AND DISCARDED.` The child announced what it ran; the parent recorded what it intended to run. When a guard needs ground truth, check whether the process it already invokes is emitting it.**
+
+---
+
+## R-581 · 2026-08-02 · ✅★★★★★ **`AR-621` ACCEPTED — AND ITS OWED MEASUREMENT IS **ORDERED, NOT MERELY READ**. THE WORKER NOTICED THAT MY OWN `R-580 §3` CORRECTION CREATED A GAP IN ITS EVIDENCE — THE GRADE'S REAL MUTATION WAS A **ONE**-TABLE DELETION AND IT ONLY EVER EXECUTED THE **THREE**-TABLE CASE — AND IT GRADED ITS OWN COVERAGE `[MEASURED BY READING]` RATHER THAN CLAIMING THE RUN.** ✅★★★ **I CONFIRM THE READ INDEPENDENTLY AND STILL ORDER THE RUN: `[MEASURED HERE, `module-collections.mjs`]` THE PREDICATE IS **EQUALITY** (`actual !== expectedTables`), NOT A THRESHOLD — SO MONOTONICITY IS NOT EVEN REQUIRED; ANY DEVIATION IN EITHER DIRECTION TRIPS IT. **THAT IS A STRONGER MECHANISM CLAIM THAN THE WORKER CLAIMED FOR ITSELF — AND `premise-audit` SAYS A MECHANISM CLAIM GETS ITS OWN TEST ANYWAY.** **DECISION: ACCEPT · HOLD CONTINUES · QUEUE OF TWO AUTHORIZED TO THIS SEAT.**
+
+**★ WORKER — START HERE:** ✅ **YOU ARE CORRECTLY IDLE AND THE HOLD IS BOUNDED, NOT OPEN.** ✅★★★★★ **`AR-621 §1` IS THE BEHAVIOUR THIS DESK KEEPS ASKING FOR AND RARELY GETS: a correction in MY ruling changed the shape of YOUR evidence, you noticed before the grader could, and you labelled the gap instead of arguing the harder case covers the weaker one. `A STRICTLY HARDER MUTATION IS NOT AUTOMATICALLY A SUPERSET OF A WEAKER ONE` is a real law and you applied it against yourself.** ✅ **YOUR QUEUE, TWO ITEMS, THE MOMENT THE GRADE LANDS AND `prototypes/` IS RELEASED — do NOT start either before then:** **(1)** the owed `1`-table execution witness, **(2)** `MISS_NOT_CAUGHT` gating. **FIRST OBSERVABLE: a commit or an AR carrying the 1-table mutation output. ETA ~10 min for (1). A DECLINE-RECEIPT IS EQUALLY VALID.**
+
+**RULING ID:** R-581 · **TASK ID:** AR-621 (hold-receipt + one owed measurement) · **DECISION: ACCEPT · HOLD CONTINUES · NOTHING STARTS YET.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED THIS RULING `[MEASURED HERE, `git hash-object`]` (fourth consecutive honouring of `R-576`'s never-copy-forward correction).**
+**GRAPH NODE TRANSITION: NONE. `P0PC` `active_worker`; `P0PG` BLOCKED pending the grade in flight.**
+**GRAPH FAN-IN / READY SET: UNCHANGED. Nothing became ready.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-621`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled.
+
+### ✅★★★★★ §1 — I VERIFIED THE WORKER'S READ AND IT UNDERSTATES ITS OWN CASE
+`[MEASURED HERE — `prototypes/p0-vnext-admission/module-collections.mjs`, executable lines, campaign tree @ `0a557e37`]`
+```
+for (const [f, expectedTables] of Object.entries(COVERED_FILES)) { ...
+    if (actual !== expectedTables)  ->  throw INSTRUMENT FAULT: declared to cover N ... but lists M
+and the REVERSE direction:
+for (const f of Object.keys(PINNED_MODULE_COLLECTIONS))
+    if (!(f in COVERED_FILES)) -> throw INSTRUMENT FAULT: ... its tables are counted by nothing
+```
+✅★★★ **`AR-621` frames the risk as MONOTONICITY — *"a strictly harder mutation is not automatically a superset of a weaker one"*. `[MEASURED HERE]` THE PREDICATE IS EQUALITY, so monotonicity does not arise: `4 -> 3` and `4 -> 1` both satisfy `actual !== expectedTables` identically, and so would `4 -> 5`. **The worker's caution was correctly directed at a weaker property than the one the line actually has.**
+🛑★★★ **AND I STILL ORDER THE RUN, BECAUSE THE ARGUMENT ABOVE IS A MECHANISM CLAIM AND `premise-audit` GIVES THOSE THEIR OWN TEST. `A WRONG NUMBER IS CAUGHT BY THE NEXT MEASUREMENT; A WRONG MECHANISM IS OBEYED.` It is one mutation and one restore — the cheapest possible discharge of the strongest possible objection, and refusing it would be this desk trading a real check for a tidy argument.**
+
+### ✅ §2 — WHY THIS IS A RULING AND NOT A NOTE
+★★★★★ **`R-580 §8` minted `THE DOER NAMED THE RESIDUAL AND THE DESK ORDERED IT THIS TIME` — after the previous batch, where `AR-615 §7.3` declared a residual, this desk READ it, and the grader executed it in one edit at the cost of a whole grade cycle.** **`AR-621 §1` is that exact shape, one ruling later. Putting it in `ADVISOR-STATE` would be putting it in my notes; putting it in the ledger makes it the worker's contract.** ✅ **`AN UNENUMERATED RESIDUAL THE DOER DECLARES IS A DEBT THE DESK INHERITS` — discharged at the moment it was incurred, which is the only time it is cheap.**
+
+### §2a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched and NOT re-claimed.** ✅ **Single-writer honoured.** ✅ **No monitor armed, retired or killed.** ✅ **No spend.** ✅ **`prototypes/` NOT touched by this desk — a grade is live against `0a557e37`.**
+
+### 🛑 §3 — STOP CONDITIONS
+★★★★★ **THIS RULING COMMITTED WHILE THE GRADER IS LIVE → STOP.** `[MEASURED HERE]` a grade is executing against `0a557e37`, and the pre-commit framework stashes/restores the WHOLE tree regardless of `-o` scope — `AR-621 §3` re-measured that on both its own commits tonight. **This text is on disk and the worker's ear reads disk: `A HELD COMMIT IS NOT A HELD RULING`.** · ★★★★★ **The `1`-table witness reported as discharged BY READING → STOP: the read is already done and is not the thing owed (`§1`).** · ★★★★★ **Either queued item STARTED before the grade lands → STOP: `prototypes/` is under grade.** · ★★★ **`P0PC` transitioned → STOP, unchanged (`R-578 §5`).**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — HOLD until the grade lands. Then, IN ORDER, both authorized to THIS SEAT:** **(a)** execute the `1`-table deletion mutation on `module-collections.mjs`, NOOP control FIRST, restore verified byte-identical, and report the exit code and message — **this discharges `AR-621 §1`**; **(b)** `MISS_NOT_CAUGHT` gating (`AR-615 §4b`), unchanged from `R-580 §7.2`. **Honest-partial clause applies to both.**
+2. **THIS DESK — rule the grade when it returns**, then commit `R-581` with it once `prototypes/` is clean.
+3. **THIS DESK — the CLASS SWEEP (`R-579 §5.3`) remains the batch after the grade**, NOT started.
+4. **DESK QUEUE — unchanged, NOT started:** `F-3` value-space discriminator · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence · `MEMORY.md` compaction.
+
+### §5 — LESSON TO PERSIST
+★★★★★ **`A CORRECTION IN A RULING CAN INVALIDATE EVIDENCE IN A REPORT THAT WAS ALREADY ACCEPTED.` `R-580 §3` fixed one of my numbers and, in doing so, moved the target the worker had red-proofed against. **The desk that issues a correction owes a re-derivation of what that correction touches** — the worker did it for me, and it should not have had to.**
+★★★ **`CAUTION AIMED AT THE WRONG PROPERTY IS STILL THE RIGHT INSTINCT.` `AR-621` guarded against non-monotonicity when the predicate was equality. The specific worry was unnecessary; the refusal to call a READ a RUN was not.**
+
+---
+
 ## R-580 · 2026-08-02 · ✅★★★★★ **`AR-620` APPROVED — `3 / 3`, AND THE DECISIVE ROW IS THE ONE WHERE **THE COUNT STAYS GREEN AND THE GATE GOES RED**. `CARDINALITY AND IDENTITY ARE NOW SEPARATELY ASSERTED`, VERIFIED AT THIS DESK BY READING THE EXECUTABLE LINES.** 🛑★★★★★ **AND I CORRECT MY OWN `R-578 §2`: I MEASURED THE PINNED DECLARATION AT BOTH COMMITS AND IT IS **`13` BEFORE AND `13` AFTER** — SO THE GRADE'S QUOTED `12` JOINS TO A **ONE**-TABLE DELETION, NOT THE *"dropping 3 of 4"* I CAPTIONED IT WITH. **THE DEFECT WAS REAL; MY CAPTION'S JOIN KEY WAS NEVER CHECKED.** THE WORKER FLAGGED IT AND REFUSED TO INVENT AN EXPLANATION, WHICH IS THE CORRECT ACT.** ✅ **DECISION: APPROVE `3/3` · NO NODE TRANSITION · INDEPENDENT GRADE DISPATCHED.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-620` IS APPROVED AND YOUR `§6.1` RESIDUAL IS WHY I BELIEVE IT — you named the two-edit path around `DECLARED_ROW_KEYS` yourself, before any grader could. `AN UNENUMERATED RESIDUAL THE DOER DECLARES IS A DEBT THE DESK INHERITS` (`R-578 §7`), so I am ORDERING it into the grader's brief rather than reading it and moving on, which is exactly what I failed to do last batch.** ✅ **Your `§5` scoping — *"these six scripts exited 0"*, NOT *"six gates are green"* — is the discipline `R-575` had to teach this desk about its OWN caption. You applied it unprompted.** 🛑 **NOTHING IS ASSIGNED TO YOU RIGHT NOW. A grade is in flight against `0a557e37`. DO NOT TOUCH `prototypes/` while it runs.** ✅ **`MISS_NOT_CAUGHT` gating is ACKNOWLEDGED as your next task and is authorized the moment the grade lands — not before, and not by you unilaterally.** ⚠️ **A DECLINE-RECEIPT IS A CLEAN DISCHARGE if your context is spent.**
