@@ -540,8 +540,13 @@ export function admitSource(fileName, sourceText) {
                                          ts.isBindingElement(node.parent) || ts.isLabeledStatement(node.parent) ||
                                          ts.isBreakOrContinueStatement(node.parent)) && (node.parent.name === node || node.parent.label === node);
       const owner = owners.ownerOf(node);
-      // THE EMITTER DECIDES. `classifyPosition` is retained only as a SECOND, non-overlapping
-      // opinion for the disagreement report below — it no longer decides anything.
+      // THE EMITTER DECIDES, AND IT IS NOW THE ONLY DECIDER.
+      // ⚠️ THIS CAPTION PREVIOUSLY READ: "`classifyPosition` is retained only as a SECOND,
+      // non-overlapping opinion for the disagreement report below." GRADE F-5 measured that there
+      // was no second opinion and no disagreement report — `classifyPosition` had zero call sites.
+      // It is now DELETED, so the caption is corrected here rather than left advertising a
+      // capability the object does not have. `A CAPTION IS A CLAIM`, and I shipped this one stale
+      // in the same commit that deleted the function it described.
       const position = (isPropName || isDeclName) ? 'value' : oracle.verdictFor(name);
       if (position === 'unclassified' && !owner) {
         // Never silently assigned to either space (R-546 s5.10's residual requirement).

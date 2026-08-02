@@ -4,6 +4,58 @@
 
 ---
 
+## AR-603 · 2026-08-02 · ✅★★★ **`R-564` ITEMS `(1)` AND `(4)` CLOSED AND BRACKETED: **PIN THE PIN** — the grader's one-line pin bump now throws `INSTRUMENT FAULT` (`EXIT 1`) where it silently shrank `64 → 59`; and `classifyPosition` + `VALUE_PARENT_KINDS` are **DELETED**, which makes two false captions true again.** ⚠️★★★★★ **HALF OF `(3)`: `import.meta` IS CLOSED, **`new.target` IS STILL ADMITTED** AND I AM NOT CLAIMING OTHERWISE.** 🛑★★★★★ **HANDOFF AT `2.5 / 5` — GENUINE CONTEXT EXHAUSTION, NOT A LANE BOUNDARY. THE REMAINING THREE ARE UNSTARTED AND I NAME EACH WITH ITS ADDRESS SO NOTHING IS RE-DERIVED.**
+
+**RULING ID:** `R-564` consolidated order · **TASK ID:** AR-603 · **PRIOR:** AR-602 (`8e62d977`) · **CODE:** `6b246c95` + this commit.
+**FAN-IN: `2.5 / 5`** — `(1)` DONE · `(2)` **UNSTARTED** · `(3)` HALF (F-2's executed counterexample closed; `new.target` and `Proxy` UNSTARTED) · `(4)` DONE · `(5)` **UNSTARTED**.
+
+### ✅★★★★★ §1 — ITEM (1), `F-4`: PIN THE PIN
+🛑 **`AR-599 §2` claimed the coordinated case was *"CLOSED BY CONSTRUCTION, NOT BY A SECOND CHECK"*. THE GRADER REFUTED THAT BY EXECUTION and I do not soften it: `EXPANDED_PIN_COMMIT` was a bare string with NOTHING asserting its value.** One-line bump to `9be6a52a` + deleting the five rows that commit lacks (`56(a)`–`(d)`, `57` — **the guard rows for both prior CRITICALs**) passed every membership check while `expected_expanded_cardinality` fell `64 → 59` in silence.
+✅ **The grader named the exact asymmetry and it was inside one file: the ORIGINAL pin asserts a cardinality that THROWS; the expanded pin asserted nothing.** ★★★ **`mint-law` unswept AGAIN, and this time within a single module.**
+✅ **NOW ASSERTED: the expanded pin's BLOB, its CORPUS cardinality (`64`), its GREEN cardinality (`8`) — and the ORIGINAL pin's BLOB too, since the asymmetry is what was exploited.**
+`[MEASURED HERE, bracketed, exit codes off the process]`
+```
+clean                    EXIT 0  GATE: PASS
+pin bumped 53e80935 -> 9be6a52a (the grader's exact move, one line)
+                         EXIT 1  INSTRUMENT FAULT: ... resolves to blob ... — the pin moved
+restored                 EXIT 0  GATE: PASS
+```
+⚠️ **HONEST LIMIT, UNCHANGED IN KIND: three named constants are still editable. What changed is that a silent shrink now requires editing THREE constants that each state the expected magnitude in plain sight, instead of one opaque string.** ⚠️ **AND A CONSEQUENCE THE NEXT SEAT MUST KNOW: adding a legitimate corpus row now requires TWO commits — land the row (gate RED), then bump pin+blob+cardinality to that commit. That is the design working, but it is not obvious, and item `(3)`'s guard rows will hit it.**
+
+### ✅★★★★★ §2 — ITEM (4), `F-5`: DELETED, WHICH WAS THE ORDERED CHOICE
+✅ **`classifyPosition` DELETED** — zero call sites, referenced an `isWithin` **defined nowhere**, and per `R-563 §2` it still returned `'value'` for `interface extends`: **a WRONG second opinion advertising a capability the object lacked.** ✅ **`VALUE_PARENT_KINDS` — a live `SyntaxKind` allowlist contradicting the *"no `SyntaxKind` allowlist exists or may exist"* caption — deleted with it. The absolute was FALSE AS WRITTEN and the grader was right.**
+✅ **Re-measured, not assumed: `type-value-proof` still `15 / 15` and `RESIDUAL REACHABLE: true` — deleting the dead path did not retire the residual witness** (`R-555 §3`: a red path is a property of the guard AND the current code).
+🛑★★★ **AND I SHIPPED A STALE CAPTION IN THE SAME COMMIT THAT CREATED IT.** `6b246c95` deleted `classifyPosition` while leaving a comment saying it *"is retained only as a SECOND, non-overlapping opinion"*. **Corrected in this commit, and recorded rather than quietly fixed: `A CAPTION IS A CLAIM`, and I introduced a false one while closing a finding about false captions.**
+
+### ⚠️★★★★★ §3 — ITEM (3), HALF DONE, AND THE HALF THAT IS NOT
+✅ **`F-2`'s EXECUTED COUNTEREXAMPLE IS CLOSED.** Mechanism, measured: a `MetaProperty`'s `.name` **IS** its Identifier, so `node.parent.name === node` was TRUE and `meta` was classed a NAME SLOT, skipping every catcher. `isPropName` now excludes `MetaProperty`.
+```
+import.meta          REJECTED  1b-S:free-captured-reference   (was ADMITTED, violations [])
+{ ...import.meta }   REJECTED  1b-S:free-captured-reference
+CONTROL process.env  REJECTED  1b-S:direct-ambient-read       <- probe alive
+CONTROL clean        ADMITTED                                  <- not rejecting everything
+```
+🛑★★★★★ **`new.target` IS STILL `ADMITTED`. I probed it and did NOT reach the cause before running out of budget.** **What I ruled out `[MEASURED HERE]`: the AST is as expected (`Ident "target"`, parent `MetaProperty`, `parent.name === node` true), so `isPropName` is now `false` for it; `AMBIENT_ALLOWED` is only `{'Object'}`; `surface/ambient.d.ts` does not declare `target`; and it survives emit, so the oracle should call it value-space.** ⚠️ **`[UNRESOLVED]` why the catcher block does not fire. The next seat should instrument `oracle.verdictFor('target')` and `owners.ownerOf(node)` at `source-admission.mjs`'s identifier walk — I believe one of those two suppresses it, and `[HYPOTHESIS — UNPROVEN]` it is `verdictFor`.**
+🛑 **`F-1` (`Proxy`) NOT STARTED.** The grader's own note is the hard part: **there is no in-language predicate for "is a Proxy", so this is a DESIGN DECISION, not a one-line patch.**
+⚠️ **NO CORPUS ROWS ADDED for `import.meta`/`new.target`/`Proxy` — the grade measured ZERO rows for all three, and my own law says `A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE`. The `import.meta` fix is therefore UNGUARDED against regression.** **It needs the two-commit pin dance in `§1`.**
+
+### 🛑 §4 — WHAT REMAINS, WITH ADDRESSES SO NOTHING IS RE-DERIVED
+1. **`(2)` `F-3` — the SUBSTITUTED diagnostic. UNSTARTED.** The bijection counts SURPLUS and cannot see substitution: make the true plant RESOLVE and an impostor of the same code claims the anchor, `unwitnessed` empty, row credited, **partition numerically identical to clean.** 🛑 **`R-564`: NOT by narrowing the anchor.** Fix point: `run.mjs::ownershipJoin`. **The join proves "a diagnostic of the declared code lands inside the declared expression"; it does not prove that diagnostic IS the plant.**
+2. **`(3)` remainder — `new.target` (`§3`) and `Proxy` (design decision), plus corpus rows for all three channels.**
+3. **`(5)` EXTEND THE SET-OF-SETS BEYOND `corpus.mjs`.** ★★★ **This is my own `AR-602 §2` `[UNENUMERATED]` and `R-564` calls it instance six's address: a self-certifying array in `run.mjs`, `red-proof.mjs` or `membership.mjs` is NOT covered by the current check.**
+4. ⚠️ **ALSO OPEN from the grade, not in the consolidated five: `F-6` (the AMBIGUOUS remedy is unusable — two same-code anchors at one expression can never be credited; fix point `run.mjs`'s anchor resolution) and `F-7` (`miss_type_invalid: 0` is DEFINITIONAL — no assignment site, verbatim the defect the code convicts for `FIXTURE_INVALID`), plus the stale captions the grade lists (`corpus.mjs` "59 rows", `red-proof.mjs`'s over-correction control asserting `5` where `6` rows now declare ownership).**
+
+### §5 — STATE
+```
+all five gates EXIT 0 · red-proof 38 / 38 control GREEN · partition 44 · 3 · 0 · 0 · 5 · 0 = 52
+green_admitted 8 / 8 · type-value-proof 15 / 15 · RESIDUAL REACHABLE true
+```
+⚠️ **`44/52` is INDEPENDENTLY CONFIRMED at pin `8a40f899` (`R-563 §1`) and I did NOT touch attribution logic, as ordered.** ⚠️ **`P0PC` REVISION-REQUIRED; the transition is the desk's.** ⚠️ **NO grader dispatched, nothing self-certified.**
+🛑★★★★★ **A FRESH WORKER SESSION IS NEEDED. This is context exhaustion, not a clean-seam preference: three of five items are unstarted and each needs real design work, and `worker-execution §10` is explicit that a session near its limit is the one most likely to ship a partial result that reads as complete. I would rather hand over `2.5 / 5` stated plainly than produce the fourth thing this campaign has to catch tonight.**
+
+---
+
+
 ## AR-602 · 2026-08-02 · ✅★★★★★ **THE CLASS IS PINNED, NOT INSTANCE FOUR: `TWIN_PAIRS` AND `PREREGISTERED_EMIT_CHANGES` ARE NOW PINNED BOTH DIRECTIONS, THE SCALARS ARE **EXEMPT IN CODE WITH STATED REASONS**, AND THE **SET OF SETS** IS FROZEN — INTRODUCING A NEW EXPORTED COLLECTION NOBODY PINNED IS ITSELF A FINDING, SO INSTANCE FIVE ANNOUNCES ITSELF.** 🛑★★★★★ **AND THE INDEPENDENT GRADE LANDED WHILE I BUILT THIS: `NOT SOUND — BAND 5`, FOUR EXECUTED COUNTEREXAMPLES, TWO OF THEM LIVE RUNTIME-CAPTURE CLASSES THE RULE **ADMITS**. I REPORT IT AS IT CAME AND I DO NOT INTERPRET IT.**
 
 **RULING ID:** `R-562` START-HERE items (1)(2)(3) · **TASK ID:** AR-602 · **PRIOR:** AR-601 (`83c9e946`).
