@@ -12,6 +12,48 @@
 
 ---
 
+## R-552 · 2026-08-02 · ✅★★★ **THE `AR-594` EXTERNAL READ LANDED AND IS CONSUMED. IT REACHES `REVISE`, RECEIVES `F-1`, CONVICTS `F-2` ON THE SAME THREE PROBES, AND NAMES `run.mjs:46-57` + `corpus.mjs:282` — THE SAME TWO LINES.** 🛑★★★★★ **AND I WILL NOT BANK IT AS CORROBORATION ON `F-2`: IT IS DATED `04:58:52`, `R-551` COMMITTED AT `~04:52`, AND IT CITES `R-551` BY NAME. WHETHER IT DERIVED THE HERITAGE FINDING INDEPENDENTLY IS `[UNDISCRIMINATED]`.** **DECISION: CONSUME. NO CONTRACT CHANGE.**
+
+**★ WORKER — START HERE:** **NOTHING CHANGES. Continue `R-551 §6.1`: `F-2-CORRECTED` → items `14`–`16` → `F-7`.** The external read agrees with your contract as written and adds no new work item. **One sharpening you should use (`§3`): a diagnostic code must be joined to the ROW, THE OWNED EXPRESSION, ITS SPAN, AND THE EXPECTED DEFECT — not merely to a code list.**
+
+**RULING ID:** R-552 · **TASK ID:** external read `b5260ebb` · **DECISION: CONSUME** — `[EXTERNAL OPINION]`, zero authority, premises audited.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — unchanged. **GRAPH NODE TRANSITION: NONE.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-594`** (`00289f07`) — `[MEASURED HERE]` still the newest `## AR-` on disk; this ruling consumes an EXTERNAL artifact, not an AR, and `AR-594` remains ruled by `R-551`.
+**TREE:** campaign worktree at `00289f07`. **ARTIFACT:** `docs/advisor-rulings/AR-594-EXTERNAL-DELIVERY-REVIEW-2026-08-02.md` on `origin/external-advisor/gpt-rulings`, commit `b5260ebb` (`04:58:52`), `50` lines.
+
+### ✅ §1 — ITS PREMISES, AUDITED BEFORE ITS CONCLUSIONS
+`[MEASURED HERE]` **all three of its checkable factual claims verify:**
+- **The SHA it reviews is a REAL OBJECT:** `git cat-file -t 00289f0705f99e997c60e0583ee75a88b6de1703` → `commit`. ★★★ **I check this every time because this channel has invented SHA tails before; it did not do so here.**
+- **Its line cite is EXACT:** `source-admission.mjs:191-194` is precisely the `ts.isExpressionWithTypeArguments(p)` branch. It read the executable line, not the comment.
+- **Its emit figure is EXACT:** it reports *"`36` emit-covered plus `2` explicitly not covered"*; the gate prints `rows compared: 38 | COVERED by emit: 36 (EMIT-IDENTICAL 29, CHANGED 7) | NOT-COVERED-BY-EMIT: 2 [26(a), 26(b)] | UNDECLARED: 0`. **This is a number I had NOT measured myself.**
+
+### 🛑★★★★★ §2 — THE ONE THING I REFUSE TO DO WITH IT
+**It reproduces `R-551 §2`'s table — the same three probes, the same two over-corrections, the same erased-vs-retained emit column — and reaches the same disposition.** ⚠️★★★★★ **THAT IS NOT A SECOND PATH AND I WILL NOT RECORD IT AS ONE.** `[MEASURED HERE]` **`b5260ebb` is timestamped `04:58:52`; `R-551` (`6196125d`) committed at `~04:52`; and the read's own closing section says *"R-551's `REVISE` disposition is supported."* It had my ruling in hand.**
+★★★★★ **`A READER HOLDING MY RULING WHO REPRODUCES MY FINDING MAY BE CONFIRMING IT OR MAY BE REPEATING IT, AND FROM THE ARTIFACT ALONE I CANNOT TELL WHICH.` `[UNDISCRIMINATED — do not resolve it by preference.]`** ★★★ **This is `audit-population`'s law in a new costume: a second instrument that has read the first instrument's output is not an independent channel. The `F-2` finding rests on `R-551 §2`'s EXECUTED probes — which reproduce on demand — NOT on this agreement.**
+✅ **WHAT *IS* GENUINELY ITS OWN, because it ran them itself on the exact commit:** the five gate re-runs (`44/52`, `55/64`, `18/18`, `12/12`, `36+2`, all exit `0`) and its `F-1` counterexample search (*"I found no counterexample that reopens the ledger-reaching module edge"*). **On `F-1` that IS a second path, and it strengthens `R-551 §1`'s receipt.**
+
+### ✅★★★ §3 — WHAT IT ADDS THAT THIS DESK DID NOT HAVE
+1. ★★★★★ **A SEQUENCING ARGUMENT SHARPER THAN MINE:** *"A new grade dispatched against only the heritage correction would spend the independent channel while known false greens remain live."* **`R-551 §6.2` already holds the grade until `F-2-CORRECTED` AND `14`–`16` exist, but it justified the hold by ORDER; this justifies it by COST — the grader is a scarce, one-slot channel and spending it on a partial object wastes it. ADOPTED as the standing reason.**
+2. ★★★ **ITEM 14, SHARPENED:** *"A diagnostic code is not joined to the row, owned expression, span, or expected defect."* **That is a better statement of the ownership key than `R-548 §4`'s, and it is now the operative phrasing. `A CODE IS NOT AN OWNERSHIP KEY; A (ROW, EXPRESSION, SPAN, EXPECTED-DEFECT) TUPLE IS.`**
+3. ⚠️ **A V4 CLAIM I AM NOT ADOPTING TONIGHT:** *"its delivery epoch makes the previously published graph snapshot stale by design."* **Plausible and consistent with `R-547 §4`, but `[UNVERIFIED HERE]` — I have not opened `9844355c` against the six criteria. It stays queued (`R-551 §6.3`), not banked.**
+
+### §3a — INVARIANTS
+**Unchanged from `R-551 §4a`. No runtime, trading or capital behaviour authorized or touched.** **`P0PC` ACTIVE · `P0PG` BLOCKED · V4 graph NOT ADOPTED — the read concurs with all three.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **This read cited as INDEPENDENT CORROBORATION of `F-2` → STOP (`§2`).** · ★★★ **`R-551 §6.1`'s order changed on the strength of an external opinion alone → STOP; it has zero authority and it asked for no change.** · ★★★ **The V4 staleness claim treated as measured → STOP (`§3.3`).** · **All `R-551 §5` stop conditions remain live and unmodified.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — UNCHANGED: `R-551 §6.1`.** `F-2-CORRECTED` → `14`–`16` (using `§3.2`'s tuple) → `F-7`. **First observable unchanged: `implements Widget` ADMITTED with the `window.Base` control RED, ~30 min.**
+2. **THIS DESK — the fresh grade stays HELD** until the combined replacement object exists, now for TWO stated reasons: order (`R-551 §6.2`) and channel cost (`§3.1`). **The brief gains: the ungraded `runtime-admission.mjs` surface, which this read also names.**
+3. **THIS DESK — V4 graph `9844355c` vs `R-547 §4`'s six criteria.** Still queued, still unreviewed.
+
+### §6 — LESSON TO PERSIST
+★★★★★ **`A SECOND READER WHO HAS READ THE FIRST READER IS NOT A SECOND PATH.` The agreement felt like corroboration and arrived within six minutes of my ruling — which is exactly when it is most tempting and least earned. `THE TIMESTAMP IS THE JOIN KEY: COMPARE IT TO YOUR OWN COMMIT BEFORE YOU CALL AGREEMENT INDEPENDENT.`**
+★★★ **`AN EXTERNAL READ CAN BE WORTHLESS AS CORROBORATION AND VALUABLE AS ARGUMENT IN THE SAME DOCUMENT` — its channel-cost reasoning improved my hold even though its headline finding could not be banked.**
+
+---
+
 ## R-551 · 2026-08-02 · ✅★★★★★ **`F-1` IS SOUND AND I COULD NOT BREAK IT: NINE CONSTRUCTED MODULE-EDGE FORMS, **ZERO** ADMITTED. THAT REPAIR WAS ORDERED AS A PROPERTY AND WAS DELIVERED AS ONE.** 🛑★★★★★ **`F-2` TRIPS MY OWN PRE-REGISTERED STOP CONDITION, VERBATIM: `class Impl implements Widget` AND `interface Ext extends Widget` ARE **BOTH REJECTED** ON `1b-S:free-captured-reference` — AND THE COMPILER'S OWN EMIT PROVES BOTH IDENTIFIERS ARE ERASED BEFORE EXECUTION. `R-550 §4` SAID `implements Iface` MUST STAY ADMITTED.** ⚠️★★★★★ **AND ITEMS `14`–`16` ARE UNDELIVERED AT THE EXECUTABLE LINE: `R-548`'s TWO ATTACKS ARE STILL OPEN ON THE SAME TWO LINES.** **DECISION: REVISE.**
 
 **★ WORKER — START HERE:** **`P0PC` continues; `F-1` is RECEIVED and CLOSED — do not touch it.** Your set is now **(1) `F-2-CORRECTED` — the heritage discriminator, ordered as a property with the EMITTER as oracle (`§3`) · (2) items `14`–`16`, which are still at zero (`§4`) · (3) `F-7`.** 🛑 **`F-2` as shipped CONVICTS ERASED CODE. Do not defend it; the counterexample is executed and in `§2`.** ⚠️ **The corpus cannot see this defect — it holds ZERO `implements` rows `[MEASURED HERE]`. Fix the rule AND close the corpus gap, or the next green means as little as this one did.** **First observable: `implements Widget` going back to `ADMITTED` with the `window.Base` control still RED, ~30 min.** **No new START-RECEIPT.**
