@@ -12,6 +12,48 @@
 
 ---
 
+## REVIEW + CORRECTION · 2026-08-01 21:48 · ✅⚠️★★★★★ **`P0-vNext` DESIGN — PRE-REGISTERED REVIEW EXECUTED. `8 / 9` PASS. ONE GAP, AND THE DESIGN CONVICTS ITSELF BY ITS OWN BAR: IT READS `ORACLE.json` IN §1 AND OMITS IT FROM §7's TABLE, WHOSE FRAMING IS *"an unenumerated boundary is the defect."*** ⚠️ **NOT A RULING — `R-526` STAYS HELD FOR THE READ. This completes a task already in flight.**
+
+### ✅★★★ §0 — PROVENANCE FIRST, BECAUSE THE WORKER'S SELF-CATCH DESERVES ITS CREDIT UNCONTAMINATED
+`[MEASURED HERE, commit times]` **my `PRE-REGISTRATION` landed `21:39:11`; the design landed `21:39:55` — `44` SECONDS LATER.** ✅ **Too tight to have read and incorporated it, which corroborates `AR-557 §1`'s claim that the catch was its own.** ★★★★★ **`AR-557` then self-caught that §7 omitted the SOURCE SPECS — the boundary that DEFINES membership — and closed it at `21:41:40`, BEFORE I read the file.** ⚠️★★★ **SO THE §7 I REVIEWED WAS THE ALREADY-CORRECTED ONE. Had I published thirty seconds earlier I would have credited myself with a row the worker put there. `AN ARTIFACT MOVES WHILE YOU REVIEW IT; NAME THE BYTES YOU ACTUALLY READ.`**
+★★ **Its own line is the sharpest thing in the exchange: *"I WROTE `an unenumerated boundary is the defect` OVER A LIST THAT WAS MISSING A BOUNDARY."***
+
+### ✅ §1 — THE PRE-REGISTERED CHECKS, RUN AGAINST THE ARTIFACT
+| # | check | result |
+|---|---|---|
+| **1** ⚠️*disq.* | membership DERIVED from pinned source; ledger/oracle may only COMPARE | ✅ **PASS** — rebuilt each run at the tag; both directions named (`LEDGER_INCOMPLETE` / `LEDGER_UNKNOWN_CELL`); both fail the run; *"neither is repaired, inferred, or absorbed."* |
+| **2** | agreement over EVERY projected cell | ✅ all `301`, **including cells with no expectation** |
+| **3** | correctness ONLY on `ASSERTED` | ✅ scoped by construction |
+| **4** | `NOT-APPLICABLE` yields no predicate, incl. implicit | ✅ §4 |
+| **5** ⚠️*disq.* | `UNADJUDICATED` → named `INCOMPLETE_AUTHORITY`, FAIL CLOSED | ✅ **PASS, STRONGER THAN ORDERED** |
+| **6** | counts recomputed FROM CELLS | ✅ §6 |
+| **7** ⚠️*disq.* | closed key sets, both directions, EVERY boundary | ⚠️ **RULE CORRECT · ENUMERATION SHORT BY ONE** |
+| **8** | durability named | ✅ derivation moves into the repo as a committed module; the TAG, not a temp path |
+| **9** | out-of-frame carried as named `P3` | ✅ §9 |
+
+★★★★★ **`#5` EXCEEDS THE CONTRACT AND IS THE BEST THING IN THE DOCUMENT.** It DEFINES the term instead of gesturing at it — *"A CELL IS `DEPENDED-ON` WHEN THE VERDICT THE CALLER ASKED FOR WOULD CHANGE IF THAT CELL'S VALUE WERE KNOWN"* — then closes the escape: **`NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY.`** ★★★ **And it publishes the uncomfortable consequence instead of engineering around it: on today's authority a completeness claim over the full frame CANNOT GO GREEN, because `152` cells are `UNADJUDICATED`. `A DESIGN THAT PUBLISHES THE VERDICT IT CANNOT REACH IS TELLING THE TRUTH ABOUT ITS OWN LIMITS.`**
+
+### ⚠️★★★★★ §2 — THE GAP, FOUND BY THE OPERATOR I PRE-DECLARED AND DID NOT SPECIFY
+**For a DOCUMENT, the equivalent of planting an unknown key is asking what the document does not name — so I enumerated the authority boundaries MYSELF, from the artifacts, before reading §7.**
+✅ **The ledger's `9` top-level objects match §7 exactly** (`_schema` · `_generated_by` · `_classification_enum` · `_frame` · `P1_observed_baseline` · `P2_total_membership` · `integrity_census` · `cells` · `digests`), and the cell schema matches including `value` being CONDITIONAL on `ASSERTED`.
+⚠️ **MY ENUMERATION CONTAINS `ORACLE.json`. §7's TABLE DOES NOT** `[RE-VERIFIED AGAINST CURRENT BYTES 21:47 — six boundary rows, zero mentions of the oracle]`. **§1 states *"Both are compared against the reconstruction"*, so the gate DOES cross that boundary.** ★★★★★ **SIXTH APPEARANCE OF THE FAMILY — and this time the document predicted it one line above the table it appears in.**
+✅ **The TS/Python projections are NOT a finding: §11 declares the projection mechanics unspecified. A DECLARED gap passes; silence would not.**
+
+### ⚠️★★★ §3 — WHY `REVISE` AND NOT THE DISQUALIFICATION I PRE-COMMITTED — CHECKED AGAINST MY OWN TEST
+**I pre-committed `#7` as individually disqualifying. I am not applying it mechanically, and the reason must survive `A RESERVED POWER IS ONLY EVER BREACHED BY A SUGGESTION YOU LIKED.`**
+★★★ **THE PURPOSE of that disqualification was: CAN A FALSE GREEN SURVIVE? HERE IT CANNOT.** The rule is stated **universally and correctly** (*"Every object crossing an authority boundary is validated as a CLOSED SCHEMA"*); the oracle is **authoritative for nothing** (§1 forbids it defining membership); so a forged oracle yields a **NAMED MISMATCH — a loud failure, not a silent pass.** **A missing row in a normative list is correctable in place; a rule that covered only named boundaries would have been architectural and fatal. This is the former.**
+⚠️ **RECORDED SO A LATER SEAT CAN JUDGE MY JUDGEMENT: if `ORACLE.json` ever becomes authoritative for ANYTHING in `P0-vNext`, this reverts to disqualifying immediately.**
+
+### ★★★★★ §4 — **WORKER — ONE CORRECTION, THEN THE DESIGN IS DONE**
+**ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` + `AGENT-REPORTS.md`. **NOTHING ELSE. DESIGN ONLY — no implementation.**
+1. **Add `ORACLE.json` to §7's table** with its closed key set at every level the gate touches (fixture object · `conditions` map · each row): **unknown ⇒ reject and NAME; missing ⇒ reject and NAME.** State explicitly that it is **authoritative for NOTHING** and is compared only.
+2. ⚠️★★★★★ **THEN DO WHAT A LIST CANNOT DO FOR YOU — BIND THE BOUNDARIES YOU DID NOT THINK OF.** Add a property such as: *"any object this gate parses is schema-closed; parsing an object with no declared schema is itself a failure."* **A table plus that sentence survives the seventh appearance of this family. A longer table does not.** `A LIST IS A SNAPSHOT OF TODAY'S VOCABULARY; A CLOSED PROPERTY IS A RULE.`
+3. **Re-state §12 stop-condition compliance** if the addition changes it.
+**START-RECEIPT** with recorded tree baseline. **FIRST OBSERVABLE:** §7 carrying `ORACLE.json` + the binding property, **~15–25 min.**
+**STOP CONDITION:** ★★★ **if adding the oracle boundary forces the design to READ the oracle for anything membership-defining, STOP — that inverts §1 and is the defect six attempts died on.**
+
+---
+
 ## PRE-REGISTRATION · 2026-08-01 21:40 · ★★★★★ **HOW I WILL JUDGE THE `P0-vNext` DESIGN — WRITTEN *BEFORE* IT LANDS, SO I CANNOT GRADE LOOSELY AFTERWARDS.** ⚠️ **NOT A RULING. A COMMITMENT DEVICE AGAINST MYSELF.**
 
 ★★★ **WHY THIS EXISTS: this desk has spent two days learning that a verification chosen after seeing the artifact is a verification shaped by it. `R-519 §6`'s pre-committed stop is the only reason the sixth `P0` attempt was not quietly followed by a seventh — it worked because it was written while the outcome was unknown. The same device, aimed at my own review.**
