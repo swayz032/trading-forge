@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3553` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3554` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3553` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3554` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -115,7 +115,8 @@ Merge · worktree update · production write · service restart · spend · any 
 
 ## STATE, WITH EVIDENCE GRADES
 - `[MEASURED HERE]` `P0PC` = `active_worker`, REVISION-REQUIRED a **FIFTH** time. `P0PG` BLOCKED. **Five consecutive grades have re-opened `P0PC`; not one has moved it.**
-- `[MEASURED HERE]` Graph **ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `f235065c…` at `27448ee2` (was `4b806d35…`; moved by the epoch refresh, NOT by tampering). `ready_worker_nodes: ["P0PC"]`, `phase_1_exit_verified: true`.
+- `[MEASURED HERE, re-derived per commit with `git rev-parse <c>:<path>`]` Graph **ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`. **Blob BY COMMIT: `d7ac56d8` → `4b806d35…` · `8151560c` → `f235065c…` · `27448ee2` → `876c3a23…` · `85500e93` (HEAD) → `876c3a23…`.** `ready_worker_nodes: ["P0PC"]`, `phase_1_exit_verified: true`.
+  🛑★★★★★ **CORRECTION AGAINST THIS SEAT, `R-588 §0`: this line previously read *"blob `f235065c…` at `27448ee2`"* and carried `[MEASURED HERE]`. **THAT WAS FALSE — `f235065c` is the blob at `8151560c`; the SECOND epoch refresh moved it to `876c3a23` and I never re-derived it.** I copied a hash forward across one commit **four lines after writing `RE-DERIVE THE GRAPH HASH EVERY RULING, NEVER COPY IT FORWARD` into this same file**, and I put a MEASURED grade on it. ★★★★★ **`A REFRESH THAT RUNS TWICE MOVES THE OBJECT TWICE.` The general form: `AN IDENTITY IS INVALIDATED BY MY OWN NEXT ACTION AS SURELY AS BY SOMEONE ELSE'S` — I re-derived after refresh #1, then acted again, then reported refresh #1's answer. **A HASH IS TRUE OF A COMMIT, NEVER OF A FILE — so state it as a per-commit table, which is why the line above is now one.****
 - `[MEASURED HERE]` `prototypes/` CLEAN at `8151560c`; survived two pre-commit stash/restore windows with the worker live.
 - `[UNENUMERATED — OPEN]` residuals: the `cls` half of each key is still declaration-sourced · `DECLARED_ROW_KEYS` unpinnable (`keys: null`, six of them) · `PINNED_BLOBS` `startsWith('PLACEHOLDER')` bypass · the pinned `52`'s membership never enumerated · `F-4`'s post-pin-bump exploit unmeasured by my own brief's restriction.
 - `[HYPOTHESIS — UNPROVEN]` that `F-1`'s repair also raises the `C1` defeat cost (three of the five edits are cheap only while that file cannot pin its own file axis). **Do not schedule on it.**

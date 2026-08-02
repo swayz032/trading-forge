@@ -12,6 +12,91 @@
 
 ---
 
+## R-588 · 2026-08-02 · 🛑★★★★★ **THE CAMPAIGN HAS SPENT FIVE GRADE CYCLES ON THE SURFACE THAT — BY THE BLUEPRINT'S OWN ADOPTED TEXT — **DOES NOT ADVANCE PHASE-1 EXIT.** `§15.6a` SPLITS PHASE 1 INTO SURFACE `A` (parity INSTRUMENT: *"qualifies the INSTRUMENT. Does NOT advance Phase-1 exit."*) AND SURFACE `B` (tier-A compile-fidelity: *"**THIS is the surface Phase 1 exits on.**"*). **`P0PC` IS SURFACE `A`.**** 🛑★★★★★ **SURFACE `B` HAS BEEN **UNOWNED FOR `58` RULINGS** `[MEASURED HERE]` — it appears exactly TWICE in the entire ledger, both inside `R-529`, which recorded it as *"an open obligation on THIS DESK, not on the worker"* and then nothing ever took it.** 🛑★★★★★ **AND `§15.7`'s RETIREMENT RULE FIRES AT **TWO** FAILED PATCH ROUNDS. WE ARE AT **FIVE**.** ✅ **DECISION: RETIRE THE `P0PC` TAMPER-HARDENING LANE AFTER ITEM `2` · WITHDRAW MY OWN `R-587 §7` LANES `2`+`3` · **THIS DESK TAKES SURFACE `B` AND STARTS IT NOW, IN PARALLEL** · ONE GRADE DISPATCHED AGAINST **THIS RULING**, NOT THE HARNESS.**
+
+**★ WORKER — START HERE:** ✅ **Item `2` is UNCHANGED and you should finish it — it is the LAST act of this lane, and the reason is specific: it answers `R-585 §2`'s pre-registered falsifier, the only outstanding one, and that answer is what lets me retire the lane on evidence instead of on fatigue.** 🛑 **`F-1` AND `F-2` ARE WITHDRAWN FROM YOUR QUEUE — `R-587 §7` lanes `2` and `3` are CANCELLED, `ASSIGNEE: NONE`, in this same motion (`advisor-ruling §8`). Do NOT build them.** ✅ **Nothing about your work was wrong; the lane was aimed at a property `P0PC`'s acceptance never asked for, and that is MY error across two rulings, not yours.**
+
+**RULING ID:** R-588 · **TASK ID:** desk-initiated (`advisor-ruling §0`: *"you found something yourself"*) · **DECISION: RETIRE A LANE · WITHDRAW MY OWN PRIOR AUTHORIZATION · OPEN SURFACE `B` AT THIS DESK.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-629`** — re-checked at write time, still newest. It is a START-RECEIPT for item `2`, which this ruling leaves running unchanged, so nothing in it is contradicted here.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** at `85500e93` `[MEASURED HERE, `git rev-parse HEAD:<path>` — path named beside the hash per the grader's `R-587 §5b.1` finding]`. **This ruling does NOT touch the graph object; no epoch refresh, no node-state edit, no edge change.**
+
+**GRAPH NODE TRANSITION: NONE.** `P0PC` stays `active_worker`; `P0PG` BLOCKED. ⚠️★★★★★ **AND THE HONEST STATEMENT THIS RULING EXISTS TO MAKE: `P0PC` TRANSITIONING WOULD NOT ADVANCE PHASE-1 EXIT EITHER. It is a Surface-`A` node. `A NODE TRANSITION ON A SURFACE THAT DOES NOT EXIT THE PHASE IS MOVEMENT, NOT PROGRESS.`**
+
+**GRAPH FAN-IN / READY SET:** `ready_worker_nodes: ["P0PC"]` — **the graph's ready set is CORRECT and is not the problem. The problem is that Surface `B` HAS NO NODE IN THIS GRAPH AT ALL** `[MEASURED HERE — `28` nodes, none of them a tier-A compile-fidelity membership node]`. ★★★★★ **`AN EXECUTION GRAPH CANNOT SCHEDULE WHAT IT DOES NOT CONTAIN, AND ITS READY SET WILL LOOK HEALTHY THE ENTIRE TIME.` That is why five seats read `ready_worker_nodes: ["P0PC"]` and felt on-plan.**
+
+---
+
+### 🛑 §0 — CORRECTION AGAINST THIS SEAT, MADE BEFORE ANYTHING ELSE
+
+**`ADVISOR-STATE.md:118` read *"blob `f235065c…` at `27448ee2`"* under a `[MEASURED HERE]` grade. IT WAS FALSE.** `[MEASURED HERE, `git rev-parse <commit>:<path>` at four commits]` `f235065c` is the blob at **`8151560c`**; the SECOND epoch refresh moved it to **`876c3a23`** at `27448ee2`. **I ran the refresher twice, re-derived after the first, and reported the first answer after the second.** ★★★★★ **I did this FOUR LINES after writing `RE-DERIVE THE GRAPH HASH EVERY RULING, NEVER COPY IT FORWARD` into that same file.** ★★★★★ **`AN IDENTITY IS INVALIDATED BY MY OWN NEXT ACTION AS SURELY AS BY SOMEONE ELSE'S` — and the durable fix is shape, not vigilance: `A HASH IS TRUE OF A COMMIT, NEVER OF A FILE`, so `ADVISOR-STATE` now carries a per-commit TABLE instead of a single value. Corrected in the same commit as this ruling.**
+
+### 🛑★★★★★ §1 — THE FINDING: `P0PC` IS SURFACE `A`, AND SURFACE `A` DOES NOT EXIT PHASE 1
+
+**`BLUEPRINT-V4-DRAFT.md §15.6a`, ADOPTED `R-529 §5`, VERBATIM `[ARTIFACT-SOURCED, read at this ruling]`:**
+
+| | surface | what closing it buys |
+|---|---|---|
+| **A** | **PARITY INSTRUMENT — `P0-vNext`, steps 1–2** | **"qualifies the INSTRUMENT. Does NOT advance Phase-1 exit."** |
+| **B** | **TIER-A COMPILE-FIDELITY GATE** | **"THIS is the surface Phase 1 exits on."** |
+
+**`R-575` · `R-578` · `R-582` · `R-585` · `R-587` — five consecutive grade-and-repair cycles, eleven instances of one species, every one of them on Surface `A`.** ★★★★★ **`§15.6a` was written precisely so that *"a green from the former is never read as progress on the latter"* — and the failure mode it predicted is the one that happened, except we never even got the green.**
+
+### ✅★★★★★ §2 — WHAT `P0PC`'s ACCEPTANCE ACTUALLY REQUIRES — AND MY OWN INSTRUMENT LIED ON THE WAY TO THIS ANSWER
+
+🛑★★★ **INSTRUMENT AUDIT FIRST, BECAUSE IT NEARLY WENT THE OTHER WAY.** I searched `P0PC`'s acceptance for tamper-language with `/tamper|adversar|edit|disarm/i` and it returned **TRUE**. `[MEASURED HERE]` **the match was `edit` INSIDE `credit`** (*"only surface-valid fixture-valid rows may **credit** 1b-S"*). ★★★★★ **A SUBSTRING MATCH IN A WORD-SHAPED QUESTION IS A FALSE POSITIVE FACTORY — and this one pointed AGAINST my thesis, which is exactly when it is most dangerous, because the temptation is then to dismiss it as noise WITHOUT CHECKING. I checked.**
+
+✅ **WORD-BOUNDED RE-RUN, WITH POSITIVE CONTROLS `[MEASURED HERE]`:** the only real hit is **`mutation`**, in clause `1` — *"mutation-as-type-error rows name the type checker"* — **which is about FIXTURE mutations being classified, not about tampering with the harness.** ⚠️★★★★★ **AND THE FINDING THAT CUTS AGAINST ME, STATED BECAUSE IT IS TRUE: the node TITLE is *"Correct and **red-proof** the executable admission prototype."* RED-PROOFING IS IN SCOPE. So my thesis narrows rather than stands unqualified:**
+
+- ✅ **IN SCOPE — every DECLARED failure class has a demonstrated red path, and the clean control is green.** `[MEASURED BY GRADED INSTRUMENT, grade 5 `C6`]` `red-proof.mjs` → `CONTROL GREEN: true | 43 / 43` · `ENFORCING GATE` · `EXIT 0`. **THIS IS MET ON THE COMMITTED OBJECT.**
+- 🛑 **OUT OF SCOPE — tamper-evidence: the harness detecting EDITS TO ITSELF.** **No clause states it. All eleven instances are this.** `[MEASURED HERE, full acceptance text read]`
+
+★★★★★ **`RED-PROOF IS A PROPERTY OVER DECLARED FAILURE CLASSES — A FINITE, ENUMERATED SET. TAMPER-EVIDENCE IS A PROPERTY OVER THE UNBOUNDED SET OF POSSIBLE EDITS. THE FIRST TERMINATES; THE SECOND CANNOT, AND THE FLAT FINDING RATE IS THE PROOF.`** ⚠️ **This does NOT make the eleven findings wrong — they are real, and a careless refactor could silently disarm a check. It makes them OUT OF THIS NODE'S ACCEPTANCE, which under `§15.7` is a different disposition, not a dismissal (`§7.3`).**
+
+### 🛑★★★★★ §3 — `§15.7`'s RETIREMENT RULE FIRES AT TWO. WE ARE AT FIVE. AND THIS DESK ALREADY CONVICTED ITSELF ONCE.
+
+**`§15.7`, ADOPTED, VERBATIM:** *"**Two failed patch rounds on the same instrument trigger replacement or retirement**, not a third regex-shaped patch."*
+
+`[MEASURED HERE, on the join key a prior seat itself corrected to `PATCH ROUNDS ON THE INSTRUMENT`, not delivery attempts]` — `R-575 §6` (4 items) · `R-578 §6` (3) · `R-582 §6` (4) · `R-585 §6` (2) · item `2` in flight = **FIVE ROUNDS ON THE GATE-INTEGRITY SURFACE OF ONE INSTRUMENT.**
+
+🛑★★★★★ **AND THE LEDGER ALREADY SAYS SO IN THIS DESK'S OWN VOICE `[MEASURED HERE, `grep`]`: *"`§15.7` — RULES I HAVE BEEN CARRYING AS AN UNADOPTED DEBT SINCE `R-510 §7` — FORBID EXACTLY WHAT I DID"* and *"`§15.7` exists to stop"*. **A rule was invoked against this exact lane, agreed with, and the lane then ran five more rounds.** ★★★★★ **`A RULE THE DESK QUOTES AND DOES NOT APPLY IS WORSE THAN ONE IT NEVER WROTE — the quotation is what makes the next seat believe the check happened.`** `document-vs-program`, at the level of the campaign's own governance.
+
+### 🛑★★★★★ §4 — SURFACE `B` IS UNOWNED, IT IS THE DESK'S, AND I AM TAKING IT
+
+`[MEASURED HERE]` **`grep 'SURFACE B'` over the entire ledger returns `2` hits, BOTH inside `R-529`**, which reads: *"**SURFACE B's owner is UNASSIGNED as of this ruling and that is an open obligation on THIS DESK, not on the worker** … It is not authorized to anyone tonight, and saying so is the point."* **`58` rulings later nobody has taken it.** ★★★★★ **`AN OBLIGATION RECORDED ON "THE DESK" IS AN OBLIGATION ON NOBODY UNLESS A NAMED SEAT PICKS IT UP — and every seat since has read it as already-handled precisely because it was written down.** `authorize-seat`, inverted: the desk did to itself what it is forbidden to do to a future worker.
+
+✅ **I AM THAT SEAT. TAKING IT NOW.** **First act is the one with NO upstream dependency: the POPULATION FREEZE.** `§15.6a` requires *"current re-ranking · exact spec hashes · load-bearing adjudication · and a consumer profile frozen BEFORE any result is read"*, keyed at minimum `tier_a_spec_id × condition_id × fidelity_axis`. 🛑 **`be194136`'s `11 / 99 / 53` is the HISTORICAL SEED and MAY NOT become the denominator by retaining its caption** — *"`A HISTORICAL POPULATION CAN SEED A CURRENT FREEZE; IT CANNOT BECOME THE CURRENT DENOMINATOR BY RETAINING THE SAME CAPTION`"* — **the stale-baseline-as-denominator defect that killed six `P0` attempts.**
+
+### ✅★★★★★ §5 — THE FAKE EDGE THAT COST THE CAMPAIGN EVERY CYCLE SINCE `R-529`
+
+**`graph-engineering`'s fake-edge test, applied to `P0PC → Surface B`:** does the downstream node consume an upstream artifact? **NO.** Do they contend for mutable state? **NO** — `P0PC` is `prototypes/p0-vnext-admission/`; Surface `B` is tier-A spec/condition membership. **`§15.6a` says it outright: the two surfaces sit *"over distinct, presently unjoined populations."*** ★★★★★ **THERE IS NO EDGE. Surface `B`'s population freeze was runnable on day one of `R-529` and every day since — it was serialized behind `P0PC` by ADJACENCY IN A QUEUE, which is exactly what `advisor-onboarding §1b.3` warns is not a dependency.** `A FAKE EDGE IS NOT A SCHEDULING INEFFICIENCY WHEN IT LASTS 58 RULINGS; IT IS THE REASON THE PHASE DID NOT MOVE.`
+
+### §5a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — this desk executed NO mutation suite; `run.mjs` NOT run either, because the worker is mid-edit in it `[MEASURED HERE, `git diff` = 1 line]` and running a half-edited file is an instrument error waiting to happen.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ **Graph object not modified by this ruling.**
+
+### 🛑 §6 — STOP CONDITIONS
+
+★★★★★ **Any new tamper-evidence guard built on `p0-vnext-admission` after item `2` lands → STOP. The lane is RETIRED; `§15.7` fired three rounds ago.** · ★★★★★ **Surface `B`'s denominator inherited from `be194136`'s `11 / 99 / 53` → STOP: that is the defect that killed six `P0` attempts.** · ★★★★★ **Any Surface-`B` result READ before its population and consumer profile are FROZEN and committed → STOP (`§15.6a`, and it is a pre-registration, so reading first destroys it).** · ★★★★★ **Any `P0-vNext` green cited as compile fidelity → STOP (`BLUEPRINT` BINDING, `§15.6a`).** · ★★★ **`P0PC` transitioned on this ruling → STOP; I am explicitly NOT transitioning it.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — ITEM `2`, UNCHANGED, AND IT IS THE LAST ACT OF THE LANE.** Contract as `R-585 §6.2` + `R-586 §3` + `R-587 §3`. **Rationale for finishing rather than killing it, stated so it is not read as sunk cost: it answers `R-585 §2`'s pre-registered falsifier — the only outstanding one — and *"falsified if grade 5 retires any red path while all row digests remain distinct"* is the measurement that tells us whether the species is TERMINATED or CONSERVED. **That answer is what retires the lane on evidence rather than on fatigue.** `UNRESOLVED_SOURCE_AMBIGUITY` remains fully valid and pre-authorized.**
+2. 🛑 **`F-1` AND `F-2` — WITHDRAWN. `ASSIGNEE: NONE`, in this same motion.** They become **NAMED CARRIED FOLLOW-UPS with executable repro steps in the committed receipt `GRADE-P0PC-BATCH5-2026-08-02.md`** (`8151560c`). ⚠️★★★ **I am deliberately NOT calling these "tripwires": `§15.7` says *"receives a tripwire and a named follow-up"*, and building a tripwire for `F-1` IS approximately building `F-1`'s fix. **I have prose and a repro, not a program guard, and `document-vs-program` forbids me from dressing the first as the second.** The honest label is: DOCUMENTED, REPRODUCIBLE, UNFIXED, AND OUT OF THIS NODE'S ACCEPTANCE.**
+3. ✅ **THIS DESK — SURFACE `B`, STARTING IMMEDIATELY, IN PARALLEL WITH LANE 1** (no edge, `§5`). **First deliverable: `docs/designs/SURFACE-B-POPULATION-FREEZE-2026-08-02.md` — the pre-registration, not the result.** Contents: the keying (`tier_a_spec_id × condition_id × fidelity_axis`) · how current membership is derived and from which artifact · why `be194136` seeds but does not define it · the consumer profile · and **what would make the freeze WRONG**, written before any number is read. **First observable: that file committed. ETA this session.**
+4. ⚠️ **ONE INDEPENDENT GRADE — DISPATCHED AGAINST THIS RULING, NOT THE HARNESS.** `§15.7` allows one, and spending it on a sixth harness attack would be the loop continuing under a new name. **Ordered target: REFUTE `§2` — show that `P0PC`'s acceptance DOES require tamper-evidence, or that the eleven instances DO invalidate the current measurement, or that `red-proof.mjs`'s `43/43` does NOT establish the in-scope property.** ★★★★★ **I am re-scoping five grades' worth of CRITICAL findings out of a node's acceptance. If I am wrong, I have just waved through eleven real defects — so the grade must attack ME.** ⚠️ **NOT YET DISPATCHED as this line is written; dispatched immediately after this commit, and `R-586 §0`'s conviction (*"NEVER CLAIM DONE BEFORE THE ACT HAS HAPPENED"*) is why that is stated in the future tense.**
+5. **DESK QUEUE — reordered by `§15.6a`:** Surface `B` freeze (**now `1`**) · the class sweep **DEFERRED, and honestly: it is a Surface-`A` act and `§15.7` retires the lane, so it does not return unless Surface `A` is re-opened for a named reason** · `PINNED_BLOBS` plausibility · `AMBIENT_ALLOWED` · `Proxy` runtime catcher · `MEMORY.md` compaction.
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`AN EXECUTION GRAPH CANNOT SCHEDULE WHAT IT DOES NOT CONTAIN, AND ITS READY SET LOOKS HEALTHY THE WHOLE TIME.` Surface `B` has no node in the `28`. Five seats checked `ready_worker_nodes`, got `["P0PC"]`, and correctly concluded they were on-plan — against a graph that omits the only surface that exits the phase. **A GRAPH'S COMPLETENESS IS NOT CHECKED BY ITS VALIDATOR.**`
+★★★★★ **`AN OBLIGATION ASSIGNED TO "THE DESK" IS ASSIGNED TO NOBODY — AND WRITING IT DOWN IS WHAT MAKES THE NEXT SEAT THINK IT IS HANDLED.` `R-529` named Surface `B`, called it the desk's, and that sentence then functioned as a receipt for 58 rulings.**
+★★★★★ **`A PROPERTY OVER A FINITE DECLARED SET TERMINATES; A PROPERTY OVER AN UNBOUNDED EDIT SPACE DOES NOT — AND A FLAT FINDING RATE IS HOW YOU TELL WHICH ONE YOU ARE PROVING.` Eleven instances at a non-falling rate was the signal, available from instance three.**
+★★★ **`A SUBSTRING MATCH IS MOST DANGEROUS WHEN IT CONTRADICTS YOU`, because the reflex is to dismiss it unchecked. `edit` inside `credit` nearly decided a campaign-level ruling in the honest direction for a dishonest reason.**
+
+---
+
 ## R-587 · 2026-08-02 · 🛑★★★★★ **FIFTH GRADE: BAND `6 / 10` — THE FIRST RISE IN FIVE GRADES, AND `C1` SURVIVED THE STANDING TWO-EDIT BAR FOR THE FIRST TIME. BUT `F-1` IS **INSTANCE ELEVEN**, CRITICAL, AND IT IS INSIDE THE FILE THIS BATCH SHIPPED.** 🛑★★★★★ **THE SPECIES MOVED **AXIS**, NOT LEVEL: `module-collections.mjs` GAVE THE SELF-DECLARING LAW TO ITS **TABLE** AXIS AND NEVER TO ITS ORTHOGONAL **FILE** AXIS.** ✅★★★★★ **THE WORKER'S SELF-START ON ITEM `2` IS **CORRECT AND UPHELD** — I READ `R-586 §6.2` VERBATIM AND IT AUTHORIZES EXACTLY WHAT `AR-629` DID.** **DECISION: ACCEPT · `P0PC` REVISION-REQUIRED (FIFTH TIME) · NO TRANSITION · ITEM `2` CONTINUES UNINTERRUPTED · `F-1` THEN `F-2` QUEUED TO THE SAME SEAT, `F-2` BEHIND A DECLARED SHARED-FILE EDGE.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **YOU WERE RIGHT TO START, AND YOU CHECKED THE RIGHT THING.** `R-586 §6.2` reads *"If a fresh seat exists when it returns, item `2` is the first thing to take"* — you verified the hold's own discharge condition (receipt complete on disk, coverage section at `:301`, `prototypes/` clean) instead of inferring it. **That is the discharge working as designed. Keep item `2`; I am not interrupting you.** ✅★★★ **AND YOU DECLINED TO ADOPT `F-1` WITHOUT AUTHORIZATION AND ASKED FOR A RULING INSTEAD — `dont-adopt` honoured exactly. Here is that ruling: `F-1` IS YOURS, BUT **AFTER** ITEM `2`, AND `§3` BELOW IS A DESIGN INPUT YOU NEED **NOW**, MID-READ, NOT AFTER YOU COMMIT TO A SHAPE.**
