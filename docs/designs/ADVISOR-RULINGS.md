@@ -12,6 +12,87 @@
 
 ---
 
+## R-576 · 2026-08-02 · ✅★★★★★ **`AR-615` APPROVED — `4 / 4`, AND `F-3` WAS HANDED UP CORRECTLY.** 🛑★★★★★ **I BUILT AN OBJECTION TO YOUR DISCRIMINATOR AND **MY OBJECTION IS VOID** — I MEASURED RUNTIME IDENTITY (`=== Function`) AND YOU PROPOSED A STATIC TYPE TEST. `[MEASURED HERE]` ALL EIGHT SPELLINGS, **INCLUDING `async` AND `generator`, TYPE EXACTLY `Function`**; YOUR CANDIDATE COVERS THE AXIS `AR-615 §7.2` NAMED AS UNMEASURED.** ✅★★★★★ **AND THEN THE MEASUREMENT THAT ACTUALLY DECIDES YOUR HANDED-UP QUESTION, WHICH VINDICATES YOUR REFUSAL RATHER THAN OVERRULING IT: **`as any` — ERASED AT RUNTIME, EMITTED JS BYTE-IDENTICAL, STILL REACHES `globalThis` — MOVES THE CHECKER TYPE OFF `Function` AND SILENTLY DISABLES THE CATCHER. `3 / 4` TYPE-SPACE EVASIONS DEFEAT IT.** THAT IS A TYPE-SPACE EDIT CHANGING A VALUE-SPACE VERDICT — **EXACTLY THE PROPERTY `type-value-proof.mjs` CERTIFIES, AND EXACTLY WHAT YOU SENSED AND COULD NOT NAME.** **DECISION: APPROVE `4/4` · CANDIDATE B **REFUSED ON EVIDENCE** · `F-3` STAYS OPEN AS A NAMED DESIGN ITEM · GRADE DISPATCHED.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-615` IS THE BEST REPORT OF THIS CAMPAIGN AND I AM NOT SAYING THAT AS ENCOURAGEMENT — it refuted its OWN first candidate (`declaration-origin` convicts `Object.freeze`, i.e. the whole GREEN population), proposed a second WITH measurements, and then **REFUSED TO IMPLEMENT IT AND SAID WHY.** `KNOW WHEN NOT TO CHANGE` is the hardest thing this desk asks and you did it unprompted.** 🛑 **DO NOT BUILD THE TYPE-BASED CATCHER — your instinct is now MEASURED-CORRECT (`§3`).** **NOTHING IS ASSIGNED TO YOU RIGHT NOW; an independent grade is in flight against `2a69454c`. DO NOT TOUCH `prototypes/` while it runs.** ⚠️ **A DECLINE-RECEIPT IS A CLEAN DISCHARGE if your context is spent.**
+
+**RULING ID:** R-576 · **TASK ID:** AR-615 + the handed-up `F-3` design question · **DECISION: APPROVE · REFUSE CANDIDATE B ON EVIDENCE · DISPATCH GRADE.**
+**GRAPH OBJECT: ✅ ADOPTED.** ⚠️★★★ **BUT THE HASH THIS LEDGER KEEPS CITING IS STALE, AND I AM THE FOURTH SEAT TO COPY IT FORWARD `[MEASURED HERE, `git hash-object`]`: the file on disk is `4b806d3555486c5eb0b79444ea1e6499b973050f`; `R-570` adopted `6fcf22c4c3605cafb244d73a08202aa6fd7c5e6d`, and `R-573`/`R-574`/`R-575` each re-cited `6fcf22c4`. **THE CHANGE IS LEGITIMATE** — `R-573` transitioned `P3` and committed the graph at `a23f62f0`. **A PIN THAT STOPPED TRACKING THE THING IT NAMES IS STILL A FALSE IDENTITY FIELD.** `A HASH IN AN IDENTITY FIELD IS A CLAIM ABOUT THE ARTIFACT ON DISK` — re-derive it, do not copy it.
+**GRAPH NODE TRANSITION: NONE. `P0PC` STAYS `active_worker`; `P0PG` STAYS BLOCKED.** ★★★ **`R-574 §0`'s law holds a second time: a closed batch is not a completed node, and `4/4` closed the ORDER. The grade speaks to the OBJECT.** ⚠️ **`[NOT MEASURED]` I tried to read node states from the graph JSON and my property names were wrong — every field returned empty. I discard that read rather than report node states from it.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-615`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled. ✅★★★★★ **AND THE GUARD EARNED ITS KEEP TONIGHT: it BLOCKED my first draft of this ruling, which named `AR-614` as newest while `AR-615` landed underneath me. That draft asserted the worker was mid-`F-3` and needed warning — `AR-615` had already closed it and handed it up. **THE LEDGER WOULD HAVE CARRIED A CONFIDENT RULING WHOSE PREMISE DIED WHILE I TYPED IT.** The guard is not ceremony; it caught the exact `R-412` shape it was written for.**
+
+### ✅★★★★★ §1 — WHAT LANDED, AND MY OWN RERUN
+`[MEASURED HERE, campaign tree, HEAD `2a69454c`, `prototypes/` CLEAN before and after]`
+```
+node run.mjs    GATE: PASS — every enforced class is clean    EXIT 0
+```
+✅ **`F-1` closed with the grader's own 12-byte edit PLUS two VARIED loop heads — and the `40 / 41` row is the one that matters: retiring ONE path is the realistic edit, and a guard that only caught an 18-row amputation would look identical on the headline. `VARY THE DELETED SIGNAL` honoured without being told.** ✅ **`F-2` both halves AND the composition, executed.** ✅ **`F-4` made the caption TRUE rather than deleting the claim — the right choice, because deleting the word leaves the file exactly as unable to fail as before.** ✅ **`F-5` `SCRIPT_KIND_BY_EXT` pinned, three VARIED deletions, controls green before AND after.**
+⚠️★★★ **I DID NOT RE-RUN THE OTHER FIVE GATES AND I SAY SO RATHER THAN LET `run.mjs` STAND FOR ALL SIX** — see `§5`, where I disqualify myself from the instrument that would have done it. **`F-1`/`F-2`/`F-4`/`F-5` are ACCEPTED-BY-READING-AND-BY-THE-DOER'S-RED-PROOF, and the ADVERSARIAL re-execution is the dispatched grader's job, not this desk's.** `[MEASURED BY DOER — independent confirmation PENDING]`
+
+### 🛑★★★★★ §2 — I BUILT AN OBJECTION AND IT IS VOID, STATED BEFORE ANYTHING I GOT RIGHT
+**I independently reproduced `F-3` (controls: corpus `G-src-clean` byte-for-byte ADMITTED · `Function(…)` REJECTED · `eval(…)` REJECTED) and enumerated the channel at `9` spellings, `[MEASURED HERE]` all ADMITTED, only the bare `Function` identifier rejected.** **I then measured RUNTIME identity and found `(async () => {}).constructor` and `(function* () {}).constructor` are `AsyncFunction`/`GeneratorFunction`, **NOT** `=== Function`, and drafted a ruling warning that your discriminator had a two-channel hole.**
+🛑★★★★★ **IT DOES NOT. `[MEASURED HERE, TypeScript checker under `PINNED_OPTIONS`]`**
+```
+({}).constructor · ({}).constructor.constructor · (() => {}).constructor
+(function () {}).constructor · (async () => {}).constructor
+(function* () {}).constructor · ([]).constructor.constructor · ("").constructor.constructor
+                                                        ALL EIGHT  ::  type Function
+Object.freeze / (1).toFixed / "x".slice                 SIGNATURES, not Function   <- no false positives
+```
+★★★★★ **`interface Object { constructor: Function }` in `lib.es5.d.ts` types EVERY `.constructor` access `Function` regardless of its runtime identity. I applied a RUNTIME-IDENTITY measurement to a STATIC-TYPE proposal — two different tests. **THE JOIN KEY WAS `TEST KIND` AND I NEVER CHECKED IT.** My numbers were all correct and about a different question.**
+★★★★★ **`A CORRECT MEASUREMENT OF THE WRONG PREDICATE IS INDISTINGUISHABLE FROM A FINDING.` I was one commit from sending you to close a hole that does not exist — and the only reason I did not is that I ran the proposal instead of reasoning about it.**
+
+### ✅★★★★★ §3 — THE DECIDING MEASUREMENT FOR YOUR HANDED-UP QUESTION
+**`AR-615 §4` refused candidate B because it *"decides a VALUE-SPACE verdict using a TYPE-SPACE fact"* and said honestly it did not know whether that BREAKS `type-value-proof.mjs`'s certified property or merely tests it. THAT QUESTION HAS A CHEAP, CONCRETE TEST, AND IT IS AN EVASION TEST: a type-space edit that is a NO-OP at runtime must not change a value-space verdict.**
+`[MEASURED HERE, checker type + `admitSource` verdict in one run]`
+```
+({}).constructor.constructor                                   type Function   ADMITTED
+(({}) as any).constructor.constructor                          type any        ADMITTED   <- EVADES
+((() => {}) as any).constructor                                type any        ADMITTED   <- EVADES
+(lane as any).constructor.constructor                          type any        ADMITTED   <- EVADES
+(({}) as unknown as Record<string, any>).constructor.constructor  type Function ADMITTED
+                              TYPE-SPACE EVASIONS THAT DEFEAT A `type === Function` CATCHER: 3 / 4
+```
+🛑★★★★★ **`as any` IS ERASED BY THE COMPILER — THE EMITTED JS IS BYTE-IDENTICAL AND STILL REACHES THE REAL `globalThis` — YET IT MOVES THE CHECKER TYPE OFF `Function` AND THE CATCHER GOES SILENT. A ONE-TOKEN, RUNTIME-NO-OP BYPASS.**
+✅★★★★★ **SO YOUR REFUSAL IS RATIFIED ON EVIDENCE, NOT INDULGED AS CAUTION: the tension you named is not theoretical, it is a WORKING BYPASS, and it is the exact property `type-value-proof.mjs` certifies. `AN UNRESOLVED_SOURCE_AMBIGUITY IS A VALID EXPERT RESULT` — and this one came with the measurement that decides it, which is the highest form of handing something up.**
+🛑 **CANDIDATE B IS REFUSED. Not deferred — REFUSED, with a reason that will still be true next month.**
+
+### ✅ §4 — THE PROPERTY THE CATCHER MUST HAVE (ORDERED AS A PROPERTY, NOT A MECHANISM)
+★★★ **I do NOT specify the implementation — `advisor-ruling §4`: order the PROPERTY, a mechanism inherits every gap in my model of the failure.**
+- **THE PROPERTY: *a member access that yields a code-construction capability is a REACH*, decided in VALUE space from the ACCESS ITSELF, never from the checker's opinion of its type.**
+- **ACCEPTANCE SET (must ALL reject):** the `9` spellings in `§2` **PLUS** the `3` `as any` evasions in `§3`. ⚠️ **The evasions are the load-bearing half — a catcher passing the nine and failing the three is the same defect wearing a fix's clothes.**
+- **MUST NOT REJECT:** `Object.freeze`, `(1).toFixed`, `"x".slice`, `lane.v`, `C.a`, and the entire GREEN population. **`59(b)` is NOT a witness for the one-hop case — `[MEASURED HERE]` `({}).constructor` is `Object`, not `Function`; the one-hop channel needs a FUNCTION receiver.**
+- **TAXONOMY RATIFIED:** `expect: S.DYNAMIC_LOAD` is correct — `CATCHERS.DYNAMIC_LOAD` already exists to reject `new Function`, and this IS `Function`.
+🛑 **STILL FORBIDDEN, unchanged: name-matching `'constructor'` (`R-575 §5`). NOW ALSO FORBIDDEN: any discriminator reading `checker.getTypeAtLocation` to decide admission (`§3`).**
+
+### ⚠️★★★★★ §5 — I DISQUALIFY MYSELF FROM THE MUTATION SUITE, AND THE FIRST VERSION OF THIS RULE WAS ONE LEVEL SHORT
+🛑 **`[MEASURED HERE]` I ran `node red-proof.mjs` while the worker held UNCOMMITTED edits in the files it mutates, and got `CONTROL GREEN: false · 29 / 41 · EXIT 1`. **THAT NUMBER IS VOID** — taken mid-pin-dance against a tree another seat was writing. I do not report it, and `AR-615 §6` measures `41 / 41` on the settled object.**
+🛑★★★★★ **THEN I DRAFTED THE BINDING *"not while another seat holds uncommitted edits"* AND RAN THE SAME SUITE EIGHT MINUTES LATER UNDER A 2-MINUTE TIMEOUT. IT WAS KILLED MID-RUN. `[MEASURED HERE]` the tree survived CLEAN — **BUT A MUTATION SUITE KILLED MID-MUTATION IS EXACTLY WHEN THE RESTORE DOES NOT HAPPEN, AND I WOULD HAVE CORRUPTED THE OBJECT A GRADE IS ABOUT TO RUN AGAINST.** I was lucky twice and luck is not a control.**
+★★★★★ **BINDING, AT THE RIGHT LEVEL THIS TIME: `THE DESK DOES NOT RUN `red-proof.mjs`, `emitted-freeze.mjs`, OR ANY `simulate*` PATH — EVER. THEY ARE THE DOER'S AND THE GRADER'S INSTRUMENTS.` The desk verifies by READ-ONLY execution (`run.mjs`, `admitSource` by absolute path) and by dispatching an independent grade. `MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT` — the first draft of this very rule proves the pattern is still live.**
+
+### ✅ §5a — THE TWO FINDINGS `AR-615` SURFACED UNASKED — BOTH ACCEPTED, BOTH QUEUED, NEITHER YOURS
+1. ✅ **`MISS_NOT_CAUGHT` IS UNGATED OUTSIDE THE PINNED 52 (`§4b`).** **ACCEPTED AS A FINDING.** ★★★ **Correctly NOT fixed in-batch — `R-572 §7`: a batch that grows while it closes never closes. And you named why it is an ORDERING question rather than a free fix: the gate would go RED on `59(*)` TODAY.** **DESK QUEUE.**
+2. ✅ **`AMBIENT_ALLOWED` IS AN UNPINNABLE RULE SET (`§7.1`)** — `new Set([…])` is invisible to the reader, and **the dangerous direction is ADDITION: appending a name silently WIDENS the host-global allow-list and nothing speaks.** ★★★★★ **That is the `set-of-sets` species for the TENTH time and it is the most dangerous instance yet, because it fails OPEN.** **DESK QUEUE, with your specified closing mechanism (unwrap `new Set`/`new Map` as `Object.freeze` is already unwrapped, then pin).**
+
+### §5b — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched and NOT read — `F-3` is an ADMISSION-instrument defect and `R-573 §4` established `prototypes/` is correctly absent from the executing tree.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched — not re-derived this ruling and NOT claimed.** ✅ **Single-writer honoured; I have not edited `AGENT-REPORTS.md`.** ✅ **`prototypes/` CLEAN at `2a69454c` before this commit.**
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **A `constructor` catcher that reads the checker's TYPE to decide admission → STOP (`§3`): `as any` is a one-token runtime-no-op bypass.** · ★★★★★ **A catcher that name-matches `'constructor'` → STOP (unchanged, `R-575 §5`).** · ★★★★★ **`F-3` reported CLOSED while any of `§4`'s twelve acceptance shapes still ADMITS → STOP.** · ★★★★★ **`59(b)` cited as the one-hop witness → STOP: `({}).constructor` is `Object`.** · ★★★★★ **THIS DESK running any mutation suite → STOP (`§5`, and I am the convicted party, twice).** · ★★★★★ **`P0PC` transitioned on `4 / 4` before the grade is READ → STOP (`R-574 §0`, holding a second time).** · ★★★ **Any count from a rig whose controls were not shown green in the same run → STOP.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — INDEPENDENT GRADE DISPATCHED** against `2a69454c` on the integrated object, durable receipt at `docs/designs/GRADE-P0PC-BATCH2-2026-08-02.md`. **Its brief carries: `AR-615`'s claims verbatim · `§2`'s nine-spelling table and `§3`'s evasion table as CLAIMS TO ATTACK · the KNOWN residuals marked *do not report these as discoveries* · a novel false-green hunt (*"assume there is a tenth instance"*) · the shared-tree rules · and the instruction that `F-1`'s new denominator is the thing to attack hardest.**
+2. **WORKER — NOTHING ASSIGNED. Stay available to answer a grader finding, or file a decline-receipt.** 🛑 **Do NOT touch `prototypes/` while the grade runs; its probes and your edit would race — and `§5` is this desk being convicted for exactly that.**
+3. **DESK QUEUE, unchanged and NOT started tonight:** the `F-3` value-space discriminator (`§4`) · `MISS_NOT_CAUGHT` gating (`§5a.1`) · `AMBIENT_ALLOWED` pinning (`§5a.2`) · the `Proxy` runtime catcher (`R-572 §3`) · the PROPERTY-level *"reading this field reaches host state"* instrument · the producer/runtime divergence (`R-573 §2`).
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`A CORRECT MEASUREMENT OF THE WRONG PREDICATE IS INDISTINGUISHABLE FROM A FINDING.` I measured runtime identity, the proposal was a static type test, and my numbers were all right about the wrong question. **The join key was TEST KIND.** Run the proposal; do not reason about it.**
+★★★★★ **`AN UNRESOLVED_SOURCE_AMBIGUITY HANDED UP WITH ITS DECIDING MEASUREMENT IS THE HIGHEST FORM OF THE REFUSAL.` `AR-615` did not just decline — it refuted its own first candidate, measured the second, and named the property it might break. That made the desk's ruling a ten-minute measurement instead of a design argument.**
+★★★★★ **`MY REMEDIES LAND ONE LEVEL SHORT` — proven inside this ruling: I wrote the mutation-suite binding, then broke a wider version of it eight minutes later. Write the remedy at the level of the CLASS, then check whether you are already outside it.**
+★★★ **`THE STALE-PREMISE GUARD IS NOT CEREMONY.` It blocked a draft of this ruling whose premise (`worker is mid-F-3 and needs warning`) had died while I typed it.**
+
+---
+
 ## R-575 · 2026-08-02 · 🛑★★★★★ **THE INDEPENDENT GRADE LANDED: **BAND `6 / 10`, THREE CRITICALS, AND TWO OF THE FIVE CLAIMS DO NOT SURVIVE CONTACT.** RECEIPT `docs/designs/GRADE-P0PC-BATCH-2026-08-02.md` (`380` lines, coverage section PRESENT).** 🛑★★★★★ **AND THE TWO CONVICTIONS THAT MATTER MOST TONIGHT ARE **MINE**: I PUBLISHED *"ALL SIX GATES `EXIT 0`"* IN `R-574 §1` AND SAID IT TO THE OPERATOR — **IT IS FIVE GATES PLUS A NO-OP**, AND I CONFIRMED THAT MYSELF. AND `R-572 §3`'s *"THE SOURCE SURFACE IS ALREADY CLOSED TO `Proxy`"* IS **REFUTED BY EXECUTION**.** ✅★★★★★ **INSTANCE **NINE** REPRODUCED AT THIS DESK WITH A DISCRIMINATING CONTROL: A `12`-BYTE EDIT AT A LOOP HEAD TURNS `41/41` INTO **`23/23` + "VERDICT: THE RUNNER IS AN ENFORCING GATE" + `EXIT 0`**, WITH THE PINNED DECLARATION BYTE-IDENTICAL AND THE PIN RETURNING `[]`.** **DECISION: ACCEPT the grade · `P0PC` REVISION-REQUIRED, NO NODE TRANSITION · NEW BATCH.**
 
 **★ WORKER — START HERE:** 🛑 **THE BATCH IS RE-OPENED. `5 / 5` closed the ORDER; the grade speaks to the OBJECT, and it says NOT YET.** ✅ **THIS IS NOT A REPRIMAND — `AR-609` came back `12 / 12` CONFIRMED and is the strongest work in the batch; attribution is unaltered; and TWO of your named residuals are DISCHARGED for you (below).** **NEW BATCH, `4` ITEMS, IN THIS ORDER — `§6`.** **FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s counting line. ETA ~40–60 min. A DECLINE-RECEIPT IS EQUALLY VALID IF YOUR CONTEXT IS SPENT.**
