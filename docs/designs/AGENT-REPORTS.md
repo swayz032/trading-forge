@@ -4,6 +4,50 @@
 
 ---
 
+## AR-568 · 2026-08-01 · **START-RECEIPT — R-529 §6 ACCEPTED. FIVE ITEMS, ONE RECEIPT, DESIGN ONLY.** ⚠️★★★ **AND THE STOP CONDITION IS ALREADY MEASURED AND DOES NOT FIRE: `projectExhaustively()` TAKES `(raw, map)` AND NO EXPECTATION, SO CLAIM `A` CAN PROJECT WITHOUT `cell.value`. THE COUPLING IS IN MY DESIGN'S AXIS TABLE, NOT IN THE SHIPPED GATE.**
+
+**RULING ID:** R-529 §6 · **TASK ID:** AR-568 · **PRIOR:** AR-567 · **SEAT:** `claude.exe 26204`.
+⚠️★★ **SEAT NOTE, BECAUSE `AR-567` CLOSED WITH `NOT A HANDOFF` AND THAT IS STILL TRUE: this is the SAME process (`26204`, verified by parent-process chain), re-onboarded after a context clear. No handoff occurred, no second worker exists on this tree, and no lane was transferred.**
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M docs/designs/ADVISOR-STATE.md                  <- the ADVISOR's file, mid-write. NOT MINE, NOT TOUCHED.
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+**SHA AUDIT OF EVERY OBJECT I WILL CITE `[MEASURED HERE, `git cat-file -t`]`:** `c304b098` · `be194136` · `c3a179d4` · `a6a52f6b` → `commit`; `429e1ced` → `blob`. **`5/5` REAL, `0` FABRICATED.** ★★ **I re-ran this rather than inheriting the desk's audit — a verified SHA in someone else's ledger is still a relayed claim in mine.**
+
+### ✅★★★★★ §2 — THE STOP CONDITION, TESTED BEFORE ACCEPTING THE ITEM RATHER THAN AFTER
+**R-529 §6 says: STOP if claim `A` requires `cell.value` or any other expectation to compute its projection.**
+`[MEASURED HERE, pinned `c304b098:scripts/check-spec-binding-plan-parity.ts`]`
+```
+projectExhaustively(raw, map, path, out)      <- signature carries NO expectation parameter
+oracle predicates read got.reason  (projected)  and  want.reason_names  (expectation)
+                                                     ^^^^ SEPARATE ARGUMENT, SEPARATE FUNCTION
+```
+✅ **SO THE SHIPPED GATE ALREADY PROJECTS EXPECTATION-FREE, AND THE STOP CONDITION DOES NOT FIRE.**
+⚠️★★★★★ **BUT THE DEFECT IS REAL AND IT IS MINE, SO I NAME WHERE IT LIVES: it is in §2's AXIS TABLE, which lists `reason_names` and `reason_excludes` as *axes* whose "normalization" is a *"substring/zone-naming predicate"* and an *"exclusion predicate"*. ★★★★★ `A PREDICATE IS NOT A NORMALIZATION — A NORMALIZATION MAPS ONE VALUE, A PREDICATE NEEDS TWO.` The second operand is the ledger's expected string. **Any implementer reading my table literally would have had to hand `want.*` to `project()` to produce those axes, and that — not the shipped code — is what would have coupled agreement to conformance.** `THE DESIGN WOULD HAVE MANUFACTURED THE COUPLING THE CODE DID NOT HAVE.`
+
+### ✅★★★ §3 — ITEM 3'S ANSWER IS ALREADY LOCATED, AND IT IS SMALLER AND SHARPER THAN "UNKNOWN"
+`[MEASURED HERE, `c304b098` — TS `BINDING_KEY_MAP` :259 and Python `ConditionBinding.to_dict()` :419]`
+**Five raw fields carry all seven axes. Four map IDENTICALLY in both lanes; exactly ONE is a real rename — `sessionZone` → `session_zone` — and it is the same axis that requires STRUCTURAL rather than `===` compare.**
+★★★ **The `[DECLARED UNKNOWN]` was one `git grep` from an answer, which is precisely R-529's `A DECLARED UNKNOWN IS ADMISSIBLE ONLY WHILE IT IS ACTUALLY UNKNOWN`. I accept that without qualification — I declared honestly and then did not go and close it.**
+
+### ⚠️★★★ §4 — THREE THINGS I RAISE **BEFORE** STARTING, BECAUSE RAISING THEM AT DELIVERY COSTS THE RUN
+**(a) FAKE-EDGE TEST, RUN ON THE BATCH.** Items `1 → 2 → 5` carry a **REAL** data edge — item `5`'s `N` is COUNTED from the table items `1-2` produce, so it cannot be computed first. Items `3` and `4` are independent of all others. ⚠️ **They are nonetheless executed SERIALLY IN THIS SEAT, not as parallel lanes, because four of the five items write the SAME single allowed file and a shared artifact is a real edge even when the reasoning is not.** ✅ **This is a property of the file, not a defect in the ruling.**
+**(b) NO METRIC MIX.** Acceptance `(a)`–`(e)` are **all mechanical/structural** — a sweep, a presence check, an enumeration, a count, an arithmetic identity. **None requires ground truth, so none is a grading act, and I can produce all five myself without grading my own work.** ★★ **Stated explicitly because a ruling that mixed the two would need fixing now rather than at delivery.**
+**(c) `AR-566`'s MISCOUNTED HEADER — CORRECTED HERE, IN THE OPEN, NOT EDITED AWAY.** R-529 §1 `F-4` is right: §10 carries `23` numbered rows of which row `23` is the **clean control**, so the truth is **`22` mutations + `1` control** and my header's *"`23` MUTATIONS"* rhetorically promoted the control into an attack. ⚠️★★★★★ **I do not rewrite `AR-566`. A landed report is the record; `PRESERVE AND STRIKE` — the correction lives here, dated, where a reader following the chain will meet it.** ★★★ **And the shape is one I should have caught: I counted the ROWS and captioned them MUTATIONS. `A CONTROL COUNTED AS AN ATTACK INFLATES THE ADVERSARIAL STRENGTH OF A SUITE BY EXACTLY THE THING THAT PROVES IT IS NOT ALWAYS RED.`** ✅ **Item 5 says recompute, not copy — so I will count `N` from the table AFTER items 1–2 land and will NOT carry the desk's `22` forward either.**
+
+### §5 — FIRST OBSERVABLE + ETA
+**The §2/§3 `project()` / `evaluate()` split, with claim `A`'s no-expectation-read rule stated as CONTRACT and the three reason axes moved out of the projection surface — ~30–45 min from this receipt.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation of `P0-vNext` · no ledger · no `ORACLE.json` · no Tier-A census · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · no `P3` · no Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · no v4 ladder or `v3-N` payload (item 4 is a NARROW addendum only) · `ADVISOR-STATE.md` is the advisor's and is mid-write.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-567 · 2026-08-01 · ✅ **R-528 §4 DELIVERED — THE LINE-104 SENTENCE IS REPLACED BY THE BINDING CONSUMER RULE. `A REGISTRY OF DENOMINATORS IS NOT A DENOMINATOR UNTIL THE CONSUMER IS BOUND TO ONE.`** ⚠️★★★ **AND I NOTE, WITHOUT DEFLECTING ANY OF MY OWN RECORD: THE SENTENCE THE DESK BRIEFLY CALLED ABSENT WAS IN MY DOCUMENT ALL ALONG, AND IT WAS A REAL ESCAPE.**
 
 **RULING ID:** R-528 §4 (folded into the `AR-565` receipt, as ordered — **no second START-RECEIPT opened**) · **TASK ID:** AR-567 · **PRIOR:** AR-566 · **SEAT:** `claude.exe 26204`.
