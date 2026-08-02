@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3462` at THIS commit, 2026-08-02 01:47 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3517` at THIS commit, 2026-08-02 03:32 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3462` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3517` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,10 +90,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `02:2x`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-542` (commit `e21b8bf1`). Newest AR: `AR-588` (`06842e21`) — RULED by `R-542`.**
-**Advisor seat:** seated `02:07`. **Worker seat: WORKING** `[operator-confirmed 02:4x]`.
-⚠️★★★★★ **DO NOT INFER A SEAT'S DEATH FROM AN EMPTY PROCESS LIST — this seat did exactly that at `02:45` and was WRONG; the operator corrected it. `Win32_Process` returning nothing is NOT evidence a seat is gone.**
+## ★★★★★ SEAT (2026-08-02 `03:27`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-545` (commit `24fb2d64`, `03:18:07`). Newest AR: `AR-589` (`8297ebbe`, `02:47:56`) — RULED TWICE, by `R-543` AND `R-544`.**
+**Advisor seat:** FRESH via `/clear`, seated `03:2x` inside `claude.exe 13916`. **Worker seat: FRESH, ALIVE, WORKING — `AR-590` START-RECEIPT landed `03:29`.**
+✅★★★★★ **AND THE 41-MINUTE SILENCE RESOLVED CORRECTLY BECAUSE IT WAS REPORTED RATHER THAN DIAGNOSED.** `[MEASURED HERE, 03:27:38]` `AGENT-REPORTS.md` mtime `02:47:33` · prototype dir newest `02:46:50` · no worker commit after `8297ebbe` — against `R-543 §4` (`02:51`) and `R-544 §3` (`03:06`), both `START-RECEIPT REQUIRED`, first observable `~25–45 min`. **THE SILENCE WAS REAL AND ITS CAUSE WAS A SEAT ROLL — `AR-590 §SEAT` states it in the worker's own words: the seat holding `AR-587`–`AR-589` (`claude.exe 26204`) is GONE and its context with it.** ★★★★★ **A DESK THAT HAD DECLARED IT DEAD WOULD HAVE BEEN RIGHT BY ACCIDENT AND WRONG BY METHOD — `:96` and `:253` both convict that inference. `MEASURE THE SILENCE, NAME ITS DURATION, LET THE SEAT ITSELF RESOLVE IT.`** ⚠️ **The tree-wide `03:18:39` mtimes are PRE-COMMIT HOOK stamping — read the report file and the git log ONLY.**
+🛑★★★★★ **RULING OWED ON `AR-590` — FOUR PRE-CODE FLAGS, THREE NEEDING AN ANSWER, AND THE DESK IS **WAITING FOR THE GPT READ** PER `R-544 §4` (worker NOT blocked; it stated defensible defaults, first observable `~03:54`).** **(a)** item `1`'s semantic gate re-classifies row `34(d)` — an UNDECLARED identifier is `TS2304` BY CONSTRUCTION, so the corpus's best find can be type-valid or unresolved, never both; worker plans to SPLIT the row and keep the unresolved form an honest named `miss_type_invalid`. **(b)** `strict: true` ⇒ `noImplicitAny` may make EVERY `(lane) => …` fixture `TS7006` and drive the number to `~0` — **that would be the SURFACE being wrong, not the corpus**; the remedy CHANGES FIXTURE BYTES against `AR-589 §2.1`'s byte-identical claim. **(c)** item `7`'s true twin makes the DESIGN's row-`54` caption known-wrong while design edits are scoped to item `5` — worker defers it as an OWED DESK EDIT. **(d)** ✅ fake-edge test answered: real data dependencies, ONE serial seat, no lanes.
+⚠️★★★ **`R-545` SHIPPED WITHOUT A `★ WORKER — START HERE` BLOCK** (`AR-590 §1`). Recovered from its `§5.1` pointer at low cost, no re-issue asked. **KEEP THE BLOCK ALIVE IN EVERY RULING.**
+⚠️★★★★★ **DO NOT INFER A SEAT'S DEATH FROM AN EMPTY PROCESS LIST — this seat did exactly that at `02:45` and was WRONG; the operator corrected it. `Win32_Process` returning nothing is NOT evidence a seat is gone.** ★★★ **AND `:253` RECORDS THE SAME TRAP FROM THE OTHER SIDE — the process table is NOT an exhaustive monitor census. `SILENCE IS REPORTED, NEVER DIAGNOSED.` A FRESH WORKER SEAT IS THE OPERATOR'S ACT (`:2080`).**
 
 ### 🛑★★★★★ MONITOR RIG — **THREE**, NOT TWO (amended `R-542 §1`)
 1. `AGENT-REPORTS.md` change detector (mtime, 2s) · 2. worker-silence watchdog (report mtime AND newest commit) ·
@@ -115,7 +118,19 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`R-541 §6`: PIVOT. THE ESM PIN, THEN AN EXECUTABLE PROTOTYPE. IMPLEMENTATION UNBLOCKED, NARROWLY.** (2026-08-02, `32d8d416`)
+## ★★★★★ AUTHORIZED NOW — **`R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`), ADDITIVE, ONE BATCH OF NINE. CARRIED FORWARD UNCHANGED BY `R-545 §5.1`. ACCEPTED BY `AR-590`.** (2026-08-02, `11c6ddfc` + `eaca5324`)
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the FRESH seat holding `AR-590`. **FAN-IN `0/9` at receipt — nothing was partially done by the dead seat** `[MEASURED, AR-590, prototype dir byte-unchanged since 8297ebbe]`.
+**`R-543 §4`:** **(1)** compute `getSemanticDiagnostics` in the validity gate — type-invalid ⇒ `miss_type_invalid`, NEVER coverage · **(2)** PIN AND COMMIT the compiler surface incl. **`types: []`** + a committed ambient-declaration file, hashed into the results artifact · **(3)** SINGLE DIAGNOSTIC OWNERSHIP — `attributed` requires the named catcher fired **AND every competing catcher measured SILENT** · **(4)** resolve `createRequire` or declare it `UNCONSTRUCTIBLE` · **(5)** publish + hash the EFFECTIVE-MODULE TUPLE and **EXECUTE the emitted ESM twin**, asserting top-level `this` is unavailable there.
+**`R-544 §3`:** **(6)** `admitSource` must accept `.ts`/`.mjs`/`.cjs` **WITHOUT THROWING** and DISCRIMINATE the module system — `.cjs` REJECTED on that axis, `.mjs` admitted · **(7)** rebuild row `54` as a TRUE twin — ONE source text, two module systems, token/ambient catchers SILENT in both · **(8)** ASSERT THE REQUIRED EXPORT — a module with no callable `project` is REJECTED, plus the four measured complements as rows · **(9)** CAPTION the runner `MEASUREMENT-ONLY` **or** give it a demonstrated non-zero path per forbidden outcome with `0` on the clean control.
+🛑★★★★★ **PRE-REGISTERED BEFORE THE RE-RUN: the corrected number MUST FALL below `49/52`. A re-run still reporting `49` IS ITSELF A FINDING.** Misses enumerated by class (`not_implemented` · `type_invalid` · `ownership_ambiguous`).
+★★★★★ **SEPARABILITY, ENFORCEABLE NOT ASSUMED: the prototype MUST NOT READ `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` OR `ORACLE.json`.**
+**SCOPE:** the prototype dir + its results artifact + `AGENT-REPORTS.md`; design edits ONLY for item `5`'s tuple. **FORBIDDEN:** the gate · the three claims · the scope registry · the ledger consumer · `ORACLE.json` · `P1`/`P2` artifacts · the pinned tag · the old `P0` lane's seventh attempt · `HOLDOUT-26` · `P3` · Gate B · engine/runtime/extraction/DB/migrations · the grader's receipts · `ADVISOR-RULINGS.md` · `git checkout`/`reset`/index ops · **`docs/advisor-rulings/` (EXTERNAL territory)**. **FIRST OBSERVABLE:** pinned surface + semantic gate + first corrected number, **~25 min; full batch ~75–110 min.**
+**STOP CONDITIONS (`R-543 §6` + `R-544 §5`):** any row credited while type-invalid → STOP · `attributed` asserted without the competing catcher's measured silence → STOP · a module-system verdict from a rule that cannot load the extension it judges → STOP · a "twin" differing by anything but the variable under test → STOP · a purity verdict on a module that does not contain the object certified → STOP · a runner described as a gate while exiting `0` on every forbidden outcome → STOP · an expected result edited after observing the prototype → STOP.
+
+---
+
+## ~~AUTHORIZED — `R-541 §6`~~ **[DISCHARGED BY `AR-589`; content retained, NOT the live task]** (2026-08-02, `32d8d416`)
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-587` (`claude.exe 26204`).
 🛑★★★★★ **THE PROSE-REVISION LANE IS CLOSED.** The `accuracy-validator` grade (`GRADE-P0-VNEXT-DESIGN-2026-08-02.md`, now COMMITTED at `32d8d416` — it had been UNTRACKED) returned **band `5`, CAPPED BY ARTIFACT CLASS**: bands `7+` require execution and no implementation exists. **Its `CRITICAL` `G-1` — a `269`-byte CommonJS module injecting a ledger reader through the module-wrapper `this`, with all `16` forbidden tokens absent — I REPRODUCED BY EXECUTION `[MEASURED HERE, node v24.13.0, with positive controls]`, and MEASURED STILL OPEN AT `HEAD` two rounds after it was found** `[MEASURED HERE, every matcher carrying a planted positive control: `module.exports` `0` · `CommonJS` `0` · `ESM` `0` · `.cjs`/`.mjs` `0` · `this.` `0`]`.
