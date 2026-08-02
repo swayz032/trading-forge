@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3340` at THIS commit, 2026-08-01 23:29 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3343` at THIS commit, 2026-08-01 23:30 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3340` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3343` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -164,7 +164,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE. LEDGER AT `R-530` (`e71bac47`), CONSUMING EXTERNAL READ `e5096bef`. NEWEST AR: **`AR-570` (`23:16`) — a START-RECEIPT for `R-530 §6`. NO RULING IS OWED ON IT** (a receipt is not a deliverable; `R-528` set this precedent). Last RULED report: `AR-569`. **WORKER AUTHORIZED AND MID-TASK (`R-530 §6`, NINE design-only observables), first observable ETA ~`23:50`.** ★★ **SHA audit `0` fabricated — seventeenth consecutive clean.**
+## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-530` (`e71bac47`). NEWEST AR: `AR-571` (`23:24:55`) — `R-530 §6` **DELIVERED**, `9/9`, NOT a handoff. Last RULED report: `AR-569`.** 🛑★★★★★ **`R-531` IS OWED AND **HELD**: `R-530` CONSUMED `e5096bef`, `ONE READ, ONE RULING`, SO I HOLD NO UNCONSUMED READ. `THE PASTE IS THE GATE` (operator's own standing order). **THE WORKER IS IDLE BY THE GATE, NOT BY MY OMISSION — and it knows: `AR-571 §8` names the same deferred trigger.** ⚠ **DO NOT MISTAKE THIS FOR "a desk that closed one task and opened none" — the ledger is deliberately silent and this line is the receipt for that.**
+✅★★★ **MY VERIFICATION OF `AR-571` IS DONE AND IS `4`-OF-`9`, PRE-REGISTERED BEFORE MEASURING (`bf03ec0a` → facts at `c807616e`). ALL FOUR PASS. The remaining five observables are `RELAYED`, NOT verified — and `AR-571 §3`'s item-`4` self-conviction is the first thing the next read should open.**
+⚠★★★★★ **CARRIER DEFECT FOUND AND FIXED ON ARRIVAL (`6eaef0f0`): `## AUTHORIZED NOW` was still publishing `R-529 §6` while the ledger ran `R-530 §6`. `9d7a41a7` advanced THIS block and not that one. **STANDING: `SEAT` AND `AUTHORIZED NOW` MOVE IN THE SAME COMMIT, OR NEITHER MOVES.** This block was updated under that rule.**
+★★ **MONITORS: all three ADOPTED, not replaced — enumerated BY PROCESS under `claude.exe 15520` (`23524`/`7188` AR-change · `19920`/`25880` GPT ref · `18708`/`7828` idle watchdog). They survived the session roll and DELIVERED here (`AR-571` arrived on task `b7slnowdk`, registered by the PRIOR conversation). ★★★★★ **`TaskList` STILL CANNOT SEE THEM — it is not a liveness instrument. The predecessor killed three healthy monitors on its zero; I did not re-run that mistake.**
 ✅★★★ **`AR-570` ACCEPTS ALL NINE AND SHARPENS THE RECORD IN TWO WAYS A LATER SEAT SHOULD KEEP: (1) it AUTHORED the false slogan rather than merely carrying it — *"the desk's error was believing me; mine was manufacturing it"* — and names why it was credible: **`A TRUE MEASUREMENT NEXT TO A FALSE INFERENCE LENDS IT CREDIT`** (`projectExhaustively()` genuinely takes no expectation argument, one sentence away) · (2) on the path claim it **AMPLIFIED** rather than relayed: this desk inferred `DEAD`, the design asserted *"no longer exists and cannot be re-read"* — **strictly stronger, and neither of us ran the one-line test.** ★★ **It reproduced `215` / `{1:172, 3:43}` INDEPENDENTLY with its own stated join key and positive control, and adds the sharpest line of the exchange: *"I NAMED THE SHARING AND NOT ITS ARITHMETIC."***
 🛑★★★★★ **`R-530` SUSTAINED ALL SIX EXTERNAL FINDINGS AND **THREE CONVICT THIS DESK, NOT THE WORKER** — a false mechanism I endorsed, an untested absence I published into two carriers, and an over-broad population claim. **ALL THREE ARE CORRECTED IN PLACE ABOVE, VISIBLY, NEVER SILENTLY.**
 ⚠★★★★★ **THE MEASUREMENT FINDING, REPRODUCED EXACTLY HERE `[MEASURED HERE, row identity = the frozen join key `(fixture, condition_id)`]`: CLAIM `A`'s DENOMINATOR IS `215` UNIQUE PROJECTED FIELDS, **NOT** `301`. The single projected `reason` feeds `reason_null` + `reason_names` + `reason_excludes`, so `43` values are counted THREE TIMES — multiplicity `{1:172, 3:43}`, `172+43 = 215`, expanding to `301`. **POSITIVE CONTROL: the axis set equals the projection-map keys exactly, so no axis went silently unmapped.** ★★★★★ **REPORTING `301` WOULD PRINT ONE `reason` MISMATCH AS THREE INDEPENDENT AGREEMENT FAILURES — AND ONE AGREEMENT AS THREE CORROBORATIONS.**
