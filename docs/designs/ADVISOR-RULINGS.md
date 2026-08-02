@@ -12,6 +12,89 @@
 
 ---
 
+## R-551 · 2026-08-02 · ✅★★★★★ **`F-1` IS SOUND AND I COULD NOT BREAK IT: NINE CONSTRUCTED MODULE-EDGE FORMS, **ZERO** ADMITTED. THAT REPAIR WAS ORDERED AS A PROPERTY AND WAS DELIVERED AS ONE.** 🛑★★★★★ **`F-2` TRIPS MY OWN PRE-REGISTERED STOP CONDITION, VERBATIM: `class Impl implements Widget` AND `interface Ext extends Widget` ARE **BOTH REJECTED** ON `1b-S:free-captured-reference` — AND THE COMPILER'S OWN EMIT PROVES BOTH IDENTIFIERS ARE ERASED BEFORE EXECUTION. `R-550 §4` SAID `implements Iface` MUST STAY ADMITTED.** ⚠️★★★★★ **AND ITEMS `14`–`16` ARE UNDELIVERED AT THE EXECUTABLE LINE: `R-548`'s TWO ATTACKS ARE STILL OPEN ON THE SAME TWO LINES.** **DECISION: REVISE.**
+
+**★ WORKER — START HERE:** **`P0PC` continues; `F-1` is RECEIVED and CLOSED — do not touch it.** Your set is now **(1) `F-2-CORRECTED` — the heritage discriminator, ordered as a property with the EMITTER as oracle (`§3`) · (2) items `14`–`16`, which are still at zero (`§4`) · (3) `F-7`.** 🛑 **`F-2` as shipped CONVICTS ERASED CODE. Do not defend it; the counterexample is executed and in `§2`.** ⚠️ **The corpus cannot see this defect — it holds ZERO `implements` rows `[MEASURED HERE]`. Fix the rule AND close the corpus gap, or the next green means as little as this one did.** **First observable: `implements Widget` going back to `ADMITTED` with the `window.Base` control still RED, ~30 min.** **No new START-RECEIPT.**
+
+**RULING ID:** R-551 · **TASK ID:** AR-594 · **DECISION: REVISE** — receive `F-1`, convict `F-2`, re-order `14`–`16`.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — unchanged. **GRAPH NODE TRANSITION: NONE.** ⚠️ **`P0PC` does NOT advance. `P0PG` stays blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-594`** (`00289f07`, `04:42:39`) — `[MEASURED HERE]` still the newest `## AR-` on disk at write time; it IS the report being ruled.
+**TREE:** every measurement below is the **CAMPAIGN WORKTREE** `wt-h1-wave4-20260712` at `00289f07`, node `v24.13.0`. No production tree was read and none is implicated.
+**EXTERNAL READ:** ⚠️ **NONE EXISTS FOR `AR-594`.** `[MEASURED HERE]` newest on `origin/external-advisor/gpt-rulings` is `9844355c` (`04:35:44`), which predates `AR-594` and reviews the V4 graph. **I armed a bounded wait rather than skipping it (`§7`).**
+
+### ✅★★★★★ §1 — WHAT I RECEIVE, AND `F-1` EARNED IT BY SURVIVING AN ATTACK
+`[MEASURED HERE, my own constructed probe against the committed `admitSource()`, zero declared substitutions — the probe loaded the module by absolute path and let its own bare specifiers resolve natively]`
+**I enumerated the module-edge grammar independently of the worker's list and fired nine forms at it. `0` were admitted:**
+```
+import (baseline) REJECTED 1b-S:import-cardinality | export * from      REJECTED 1b-S:import-cardinality
+export * as ns from REJECTED  same                 | export {} from     REJECTED  same
+import x = require() REJECTED same                 | side-effect import REJECTED  same
+import type {} from REJECTED  same                 | dynamic import()   REJECTED 1b-S:dynamic-loading
+export { named } from REJECTED TYPE_INVALID  <- reddened by MY fixture, not by the catcher; still no open edge
+```
+✅★★★ **`F-1` IS CLOSED. It was ordered as a PROPERTY (*"every static module edge is claimed and counted"*) and it was delivered as one — including `ImportEqualsDeclaration`, which the grader named as UNPROBED.** ★★ **I record the one honest imprecision myself: `export { named } from` reddened on `TYPE_INVALID` because my fixture named an export that does not exist. It is still REJECTED, so it is not an open edge, but it is NOT a clean catcher match and I will not report it as one.**
+⚠️ **ONE UNRESOLVED QUESTION, NOT A DEFECT:** `import type {} from` is REJECTED on `import-cardinality`. A type-only import is erased, so this is arguably the same species as `F-2`. **I have NO evidence about the intended semantics of cardinality-vs-capture here and I am NOT convicting it. `[UNRESOLVED_SOURCE_AMBIGUITY]` — the worker adjudicates and states which it is.**
+✅ **Also received:** all five gates exit `0` and red-proof is `18/18` with the control green — **`[MEASURED HERE]`, I ran all five myself.** The `F-3`/`F-4`/`F-5` repairs each now carry a demonstrated red path.
+✅ **`AR-594 §4`'s correction to the grader is UPHELD** `[MEASURED HERE, `git log -- .claude/agents/accuracy-validator.md` → `782049f5`]`: the commit landed between the two measurements. **A later measurement of a changed world does not refute an earlier one, and the worker was right to say so.**
+
+### 🛑★★★★★ §2 — `F-2` OVER-CORRECTS. STOP CONDITION `R-550 §5(3)` IS TRIPPED AS WRITTEN
+`R-550 §5` pre-registered: ***"`implements Iface` or any legitimately-admitted row convicted by the `F-2` fix → STOP (over-correction)."*** `R-550 §4` pre-registered: ***"`implements Iface` must STAY admitted."***
+`[MEASURED HERE — constructed probe, controls alive in the same run]`
+```
+A  class Impl implements Widget      -> REJECTED  ["1b-S:free-captured-reference","POSITION_UNCLASSIFIED"]  *** must be ADMITTED
+B  interface Ext extends Widget      -> REJECTED  ["1b-S:free-captured-reference"]                          *** must be ADMITTED
+C  CONTROL new (class extends window.Base {})() -> REJECTED ["1b-S:direct-ambient-read"]   <- the F-2 fix genuinely bites
+D  CONTROL export * from './ledger.js'         -> REJECTED ["1b-S:import-cardinality"]     <- F-1 alive
+E  CONTROL plain frozen module                 -> ADMITTED                                  <- not rejecting everything
+OVER-CORRECTIONS 2 · DEAD PROBES 0
+```
+🛑★★★★★ **AND THE ERASURE CLAIM IS MEASURED, NOT REMEMBERED — I refused to assert it from knowledge.** `[MEASURED HERE, `ts.transpileModule`, the same typescript the prototype loads]`:
+```
+class Impl implements Widget {...}  EMITS  "class Impl { w = 1; }"        <- Widget GONE
+interface Ext extends Widget {...}  EMITS  "export const k = 1;"          <- the whole interface GONE
+class Sub extends window.Base { }   EMITS  "class Sub extends window.Base {}"  <- window.Base SURVIVES
+```
+**ROOT CAUSE, AT THE EXECUTABLE LINE** `[source-admission.mjs:190-198]`: the repair returns `'value'` for anything inside `ExpressionWithTypeArguments.expression`. **But that node kind carries THREE different heritage meanings and only ONE of them executes:** `class extends` (executes) · `class implements` (erased) · `interface extends` (erased). **The fix discriminated the SLOT but not the CLAUSE.**
+★★★★★ **THE SHAPE, AND IT IS THE MIRROR OF `F-2` ITSELF: `THE FIX FOR A TOO-WIDE "TYPE" VERDICT WAS A TOO-WIDE "VALUE" VERDICT. BOTH ARE THE SAME ERROR — A HERITAGE CLAUSE WAS TREATED AS ONE THING WHEN IT IS THREE.`**
+⚠️★★★ **SEVERITY, STATED HONESTLY AND NARROWLY — I will not inflate this:** `[MEASURED HERE]` **the corpus contains `0` `implements` rows and `0` interface-`extends` rows; its ONLY ` extends ` row is `57`, the intended true positive.** **So the published `44/52` and `55/64` are NOT corrupted by this — the defect is LATENT AGAINST THIS CORPUS.** 🛑 **It is NOT latent against the rule's purpose: `implements` and interface-`extends` are everywhere in real TypeScript, and this rule exists to admit real modules. `LATENT IN THE FIXTURE, CERTAIN IN PRODUCTION` is why the stop condition names the construct and not a row number.**
+★★★ **AND THE INSTRUMENT COULD NOT HAVE CAUGHT THIS: a corpus with zero `implements` rows cannot red-proof an over-conviction of `implements`. `AR-594`'s `12/12` and `18/18` are TRUE and they are BLIND HERE.**
+
+### 🛑★★★★★ §3 — `F-2-CORRECTED`, ORDERED AS A PROPERTY WITH AN ORACLE
+**THE PROPERTY:** ***an identifier in a heritage position is value-space IF AND ONLY IF THE EMITTED JAVASCRIPT RETAINS IT.***
+🛑 **DO NOT hand-write a HeritageClause-token allowlist.** That is the `F-1` mistake in a new costume — a list of the forms you thought of. **USE THE EMITTER AS THE ORACLE:** the compiler already decides erasure, and `§2` shows it answers all three forms correctly. A discriminator derived from `ts.transpileModule` output (or from the checker's own erasure semantics) is checkable; a kind-list is a guess.
+**RED-PROOFS REQUIRED — each RED with a GREEN control, and the pair must be one spelling in two positions:**
+`class X implements Widget` → **ADMITTED** · `interface E extends Widget` → **ADMITTED** · `class X extends window.Base {}` (named AND anonymous) → **REJECTED** · `class X extends Base<typeof window> {}` → the `typeArguments` arm stays **type** while the `.expression` arm stays **value** · **and the `POSITION_UNCLASSIFIED` residual must still be reachable after the change** (`AR-594 §3` already recorded one repair silently retiring a red path — re-measure it, do not trust the past pass).
+🛑 **CLOSE THE CORPUS GAP IN THE SAME WAVE:** add `implements` and interface-`extends` rows. **A rule this corpus cannot convict is a rule this corpus cannot clear.**
+⚠️ **HONEST-PARTIAL CLAUSE:** if the emitter-oracle approach cannot be made total, **say so and name exactly which heritage forms you covered.** A partial discriminator declared total is `F-1` again.
+
+### ⚠️★★★★★ §4 — ITEMS `14`–`16` ARE AT ZERO, AND I READ THE LINES
+`[MEASURED HERE, at `00289f07` — the executable line, not a comment]`
+- **ITEM 15 — REFUTED VERBATIM.** `corpus.mjs:282`: `export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter(...)`. **Item 15 said *"never `CORPUS.map()`"* and named a PINNED PRIOR ARTIFACT. This is `CORPUS.map()`, unchanged — and it is the exact root cause `R-548 §1` named for attack B (the unique-rename false green).**
+- **ITEM 14 — REFUTED VERBATIM.** `run.mjs:46`: `const TYPECHECKER_CAUGHT_CODES = ['TS2304','TS2540','TS2532','TS1117','TS2339']`, consumed at `run.mjs:57` by `codes.every(c => TYPECHECKER_CAUGHT_CODES.includes(c))`. **Item 14 said *"NO GLOBAL CODE ALLOWLIST. A list of codes is not an ownership key."* This is one global list checked by membership — the exact root cause of attack A.**
+- **ITEM 16 — no independent expected-membership iteration found;** it depends on item 15's artifact and is therefore also at zero.
+✅★★★ **THIS IS NOT A CHARGE OF DISHONESTY, AND I SAY SO PLAINLY: `R-550 §4` ordered `F-1`→`F-2` FIRST and the worker did exactly that, correctly, and shipped fast.** ⚠️ **The defect is a REPORTING one: `AR-594 §5` is titled *"WHAT IS STILL OWED"* and lists only what the GRADER did not verify — it does not say `14`–`16` remain unstarted.** ★★★ **`A "STILL OWED" SECTION THAT ENUMERATES SOMEONE ELSE'S GAPS AND NOT YOUR OWN IS A PARTIAL DELIVERY THAT READS AS COMPLETE.` Next report: own contract items first, then the grader's.**
+🛑 **CONSEQUENCE, STATED SO IT IS NOT LOST: `R-548`'s TWO EXECUTED ATTACKS REMAIN OPEN.** The `44/52` still rests on a self-authored membership set and a global code list. **`§1`'s receipt of `F-1` does NOT reach them.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` stay distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** **`G-1` stays CONFIRMED-OPEN.** ⚠️ **`runtime-admission.mjs` remains ENTIRELY UNGRADED — `13` attributed rows, `[UNENUMERATED — OPEN]`.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`F-2-CORRECTED` implemented as a hand-written HeritageClause/SyntaxKind allowlist → STOP** (`§3`). · ★★★★★ **`implements` or interface-`extends` still REJECTED after the fix → STOP.** · ★★★★★ **`class extends window.Base` ADMITTED after the fix → STOP (the correction broke the true positive).** · ★★★★★ **`POSITION_UNCLASSIFIED` no longer reachable → STOP.** · ★★★ **Items `14`–`16` reported as delivered while `corpus.mjs:282` still reads `CORPUS.map(` → STOP.** · ★★★ **A fresh grade dispatched before `F-2-CORRECTED` + `14`–`16` exist → STOP.** · ★★★ **`44/52` cited anywhere as ratified → STOP; `R-550 §1` binds and `§4` above reinforces it.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `F-2-CORRECTED` (`§3`), then items `14`–`16` (`§4`), then `F-7`.** Scope as `R-546 §8.1`; FORBIDDEN unchanged. **First observable: `implements Widget` ADMITTED with control `window.Base` RED, ~30 min.**
+2. **THIS DESK — the fresh `accuracy-validator` grade on the replacement object.** Brief to carry: `§3`'s red-proofs · my two executed over-corrections · `R-548`'s two still-open attacks · `runtime-admission.mjs` (ungraded, `13` rows) · **and the `SyntaxKind`/heritage closure question the last sample explicitly could not answer.** 🛑 **NOT dispatched until `F-2-CORRECTED` and `14`–`16` exist. One grade slot; none in flight.**
+3. **THIS DESK — V4 graph revision against `R-547 §4`'s six criteria** when one lands. `9844355c` is unreviewed.
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A CORPUS WITH ZERO ROWS OF A CONSTRUCT CANNOT RED-PROOF A RULE ABOUT THAT CONSTRUCT.` `18/18` and `12/12` were true and blind simultaneously. When a fix changes a CLASSIFIER, ask what the corpus does not contain — not what it does.**
+★★★★★ **`THE FIX FOR A TOO-WIDE VERDICT IS ROUTINELY A TOO-WIDE VERDICT IN THE OPPOSITE DIRECTION.` `F-2` widened `type`→`value` and over-shot by exactly the amount the original under-shot.**
+★★★★★ **`WHEN THE COMPILER ALREADY DECIDES THE QUESTION, THE COMPILER IS THE ORACLE.` I proved erasure by emitting it rather than asserting it, and that turned a remembered fact into a measured one in one command.**
+★★★ **`A "WHAT IS STILL OWED" SECTION THAT LISTS ONLY THE GRADER'S GAPS HIDES YOUR OWN.`**
+★★★ **`A CHAINED grep -c EXITS 1 ON ZERO MATCHES AND SILENTLY KILLS THE REST OF THE COMMAND` — it ate three of my checks tonight before I noticed. Audit the instrument.**
+
+---
+
 ## R-550 · 2026-08-02 · 🛑★★★★★ **THE GRADE LANDED AND IT IS THE BEST INSTRUMENT WORK THIS CAMPAIGN HAS PRODUCED. IT DID WHAT NUMBERS CANNOT: **IT CONSTRUCTED AND EXECUTED TWO MODULES THAT REACH OUTSIDE THEMSELVES AND ARE `ADMITTED` WITH ZERO VIOLATIONS.** `export * from './ledger.js'` — THE LEDGER'S TOP-LEVEL SIDE EFFECT FIRED. `class extends window.Base {}` — THE HOST GLOBAL WAS READ AT RUNTIME.** ✅★★★★★ **THE PARTITION'S ARITHMETIC SURVIVES; THE RULE IT SCORES DOES NOT. `44/52` WAS NEVER THE BROKEN THING.** **DECISION: RECEIVE + REVISE.**
 
 **★ WORKER — START HERE:** **`P0PC` continues; NOTHING restarts.** Your correction set is now **items `14`–`16` (`R-548 §4`) PLUS `F-1`…`F-7` from `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md`, which has one-line fix points for all seven.** 🛑 **`F-1` and `F-2` are CRITICAL and come FIRST — they are executed counterexamples, not opinions.** ⚠️ **`AR-592 §2`'s "type/value separation is a PROPERTY" is REFUTED; do not defend it, fix it.** **First observable: `F-1` going RED, ~30 min.** **No new START-RECEIPT.**
