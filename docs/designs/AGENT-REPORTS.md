@@ -4,6 +4,25 @@
 
 ---
 
+## AR-565 · 2026-08-01 · **START-RECEIPT — R-527 §5 ACCEPTED. THREE ITEMS: THE §10 PROOF MATRIX, THE PHASE-1 PROFILE, AND PROJECTION MEANING OUT OF §11.**
+
+**RULING ID:** R-527 §5 · **TASK ID:** AR-565 · **PRIOR:** AR-564 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** §10 rewritten with the SAME-WRONG-VALUE-BOTH-LANES mutation and `INCORRECT` retired — **~30–45 min.**
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+
+### ⚠️★★★★★ §2 — `F-1` ACCEPTED, AND MY OWN VERIFICATION IS PART OF THE DEFECT
+**`INCORRECT` survives in exactly ONE place in the document — the proof matrix — and every new safety property has ZERO mutations.** `A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.`
+⚠️★★★★★ **AND I REPORTED THE OPPOSITE. `AR-562` published *"INCORRECT-as-verdict: 0"* — that came from a shell grep whose backticks I escaped wrong inside single quotes, so the pattern never matched anything and returned `0` for "absent" when the truth was "present once".** ★★★★★ **THAT IS THE THIRD ENCODING/ESCAPING INSTRUMENT FAULT IN TWO TASKS, AND THE FIRST ONE TO ACTUALLY PUBLISH A FALSE CLEAN.** `A GREP THAT MATCHES NOTHING AND A GREP THAT FINDS NOTHING PRINT THE SAME ZERO.` ★★ **Standing correction adopted: any absence claim over document text is measured by PARSE (python, explicit UTF-8), never by a shell pattern containing backticks — and it carries a POSITIVE CONTROL token that must be found.**
+
+### ★★★★★ §3 — THE ATTACK I OWE, AND THE ONE I MAY HAVE TO REFUSE
+**(a) SAME WRONG VALUE IN BOTH LANES on one `ASSERTED` cell → claim `A` GREEN, claim `B` ALONE `LEDGER_DIVERGENCE`.** ★★★ **Without it, an implementation can make conformance a mere ALIAS of agreement and still satisfy the whole matrix — two lanes agreeing with each other reported as conformance to the ledger.** **This is the mutation the design most needs and it is the one nobody had.**
+⚠️★★★★★ **ITEM `2` I EXPECT TO REFUSE, AND I SAY SO BEFORE MEASURING SO THE ANSWER CANNOT BE SHAPED AFTERWARDS: the ledger's population is TWELVE PARITY FIXTURES, and Phase 1 exits on a TIER-A STRATEGY SPEC. If no independent artifact defines which specs are tier-A and which conditions are load-bearing, then authoring an admission scope here is exactly `THE IMPLEMENTER AUTHORING THE EXAM IT WILL IMMEDIATELY PASS`, and `NO SOUND PHASE-1 PROFILE AVAILABLE` is the honest result.** ★★ **I will MEASURE for such an artifact before concluding, and report the search surface either way.**
 ## AR-564 · 2026-08-01 · ✅ **CORRECTION (`23722d1a`) DELIVERED — §7's `ORACLE.json` CAPTION REPLACED, KEY SETS PROVEN UNMOVED ON TWO PATHS, STALE PHRASE COUNT `0`.** ⚠️★★★ **AND A NEAR-FALSE-ALARM AGAINST MY OWN EDIT: MY VERIFICATION SAID THE KEY-SET CELL HAD CHANGED. IT HAD NOT — MY CHECKER WAS READING UTF-8 THROUGH A `cp1252` PIPE.**
 
 **RULING ID:** CORRECTION `23722d1a` · **TASK ID:** AR-564 · **PRIOR:** AR-563 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
