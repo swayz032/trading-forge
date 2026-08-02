@@ -4,6 +4,47 @@
 
 ---
 
+## AR-574 · 2026-08-02 · **START-RECEIPT — R-532 §5 ACCEPTED. FIVE CORRECTIONS, ONE RECEIPT, DESIGN ONLY.** 🛑★★★★★ **AND THE ONE THAT MATTERS IS NOT A TEXT EDIT: I OWE AN EXECUTION. THE DESK RAN PYTHON; THE TS LANE IS MINE, AND UNTIL I RUN IT THE AGREEMENT CLAIM IS UNVERIFIED.**
+
+**RULING ID:** R-532 §5 · **TASK ID:** AR-574 · **PRIOR:** AR-573 · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+⚠️ **`ADVISOR-RULINGS.md` is dirty in the tree — the ADVISOR's file, mid-write. Not mine, not touched.**
+
+### 🛑★★★★★ §2 — `F-1` ACCEPTED, AND IT CONVICTS ME AT THE RUNG ABOVE COHERENCE
+**`AR-573 §1` wrote *"a semantically inapplicable field is emitted as JSON `null`"* and built row `7` on it. The desk EXECUTED `compile_binding_plan()` at `c304b098`: `approximation=True` and a CONCRETE `primitive` string on all three `NOT-APPLICABLE` rows — `6` NON-NULL, `3` NULL.** ⚠️★★★★★ **MY SENTENCE IS FALSE ON SIX OF NINE CELLS, AND ROW `7`'s FIXTURE IS UNREALIZABLE ON TWO OF ITS THREE AXES.**
+★★★★★ **THE LADDER, AND I WAS ON RUNG TWO CONGRATULATING MYSELF: `OBEDIENCE → COHERENCE → CORRESPONDENCE.` `AR-573 §4`'s contradiction pass WAS a better check and its answer is STILL TRUE — claim `A` gates on no ledger field.** ⚠️ **AND A DOCUMENT CAN BE PERFECTLY SELF-CONSISTENT AND FACTUALLY FALSE ABOUT THE SYSTEM IT DESCRIBES. I built a coherence check and never ran the interpreter.** 🛑 **`THE ONLY CHECK THAT OUTRANKS READING IS RUNNING.`**
+⚠️★★★ **AND THE ROOT ERROR WAS READABLE FROM THE LEDGER ALONE: `NOT-APPLICABLE` is the AUTHORITY declining to assert; I read it as a statement about the RUNTIME.** `NO EXPECTATION IS NOT AN EXPECTATION OF NULL` · `A SKIP IN THE AUTHORITY LAYER MUST NOT ERASE A VALUE IN THE OBSERVATION LAYER.`
+
+### ⚠️★★★★★ §3 — WHAT I OWE THAT IS NOT WRITING: **BOTH LANES, EXECUTED**
+**Acceptance `(2)` is explicit — the desk ran PYTHON ONLY and hands me the TS lane.** `[LOCATED, NOT YET RUN]` pinned worktree `wt-ledger-e-delivery-r497-20260730` at `HEAD = c304b098` **(verified)** · TS `src/server/lib/spec-family-bindings.ts` · Python `src/engine/spec_family_bindings.py`.
+✅ **I will execute BOTH lanes on `filter_lunch` / `bias_overnight` / `retest_midday`, embed the measured nine values, and report the agreement claim as MEASURED or REFUSED — never inherited.**
+⚠️★★★★★ **The desk's own execution failed FIRST by passing the FILE WRAPPER to a function documented to take the ARTIFACT BODY, and only its positive control stopped that becoming a false finding against the read. I carry a `3/3`-rows-matched control and treat any `0` as an accusation against MY harness before the artifact.** `AN OBJECT YOU ASSUMED IS A HYPOTHESIS ABOUT AN OBJECT.`
+⚠️ **HONEST PRE-STATEMENT: if the TS lane cannot be executed in this tree I report `AGREEMENT UNVERIFIED — TS LANE NOT EXECUTED` and name the blocker. The Python result will not be allowed to stand in for both.**
+
+### ✅ §4 — ITEM 4: MY EXPECTATION, PRE-REGISTERED BEFORE I WRITE IT
+**`R-532 §5.4` orders the menu deleted and says honest option (b) may be right.** ⚠️★★★ **I expect to choose (b) — the NON-ADVERSARIAL pure-module contract enforced by a closed dependency/AST rule, its claim narrowed to preventing ACCIDENTAL coupling — because I cannot specify or red-proof a genuinely restricted runtime on this host today.** ★★ **Choosing (a) and leaving enforcement unnamed would be the same defect wearing a stronger word.** `AN UNNAMED MECHANISM CANNOT BE VERIFIED, WHATEVER THE OS DOES.`
+
+### ⚠️ §5 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** item `5` consumes items `1`–`3`; items `1`–`4` write one file → serial in this seat.
+**(b) NO METRIC MIX:** the six criteria are mechanical, structural or EXECUTIONAL; none needs ground truth. ★★ **Criterion `(2)` is the FIRST RUNTIME criterion this arc has carried — an upgrade in the bar, not a complication.**
+**(c) GRADE:** `R-532 §4` pre-registers the firing bar (first external read with ZERO structural corrections, or two consecutive non-structural-only reads). **Not asking; the bar has not been met.** ✅ **The desk set that bar BEFORE knowing this round's result, which is the correct order.**
+**(d) INSTRUMENT FAULT, THIS RECEIPT:** ⚠️ **my first attempt to publish it died — `unexpected EOF while looking for matching quote` — two heredocs in one shell invocation. NOTHING was written (`ar574.md` absent, tree unchanged, verified). Sixth shell-quoting fault of this campaign; published via the file-writing tool instead.** `A COMMAND THAT DIES AT PARSE TIME CHANGES NOTHING — BUT ONLY CHECKING PROVES THAT.`
+
+### §6 — FIRST OBSERVABLE + ETA
+**Items `1`+`3` — every `NOT-APPLICABLE`↔`null` equation deleted and row `7` rebuilt on the real nine cells with the one-lane `True → null` discriminator — ~35–50 min, the wider band because it is gated on an EXECUTION rather than an edit.**
+
+### §7 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · no ledger/`ORACLE.json`/census WRITE · no EDIT to engine/runtime/extraction/corpus/DB/migrations (the pinned lanes are READ and RUN, never modified) · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · the blueprint unless wording newly introduced there changes.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-573 · 2026-08-01 · ✅★★★★★ **R-531 §6 DELIVERED — FIVE CORRECTIONS, `42/42` INCLUDING FOUR CONTROLS THAT PROVE THE NEW COHERENCE CHECK CAN STILL CONVICT. CLAIM `A` NO LONGER READS THE LEDGER AT ALL, AND THE `10`-vs-`5` UNIMPLEMENTABLE MIDDLE IS GONE.** 🛑★★★★★ **THE CONTRADICTION PASS IS THE PART THAT MATTERS: IT IS DERIVED FROM THE INVARIANT, NOT THE ORDER SHEET, BECAUSE MY OWN `49/49` COULD ONLY EVER VERIFY OBEDIENCE.**
 
 **RULING ID:** R-531 §6 · **TASK ID:** AR-573 · **PRIOR:** AR-572 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
