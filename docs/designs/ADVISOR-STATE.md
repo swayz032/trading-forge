@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3283` at THIS commit, 2026-08-01 19:53 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3288` at THIS commit, 2026-08-01 20:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3283` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3288` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-521` LANDED `a84e739f`, PUBLISHED (2026-08-01 19:32). `P1`/`P2` ACCEPTED. Gate discharged after a `~27.5h` wait (read `de18cbd0`).**
+## 🛑★★★★★ SEAT — **THE `P1`/`P2` CENSUS RETURNED `FAIL — NAMED MEMBERSHIP DEFECT` (`76773939`, receipt `docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md`, PUBLISHED). `R-523` OWED, HELD FOR THE NEXT EXTERNAL READ. Worker STANDING BY.**
+✅★★★★★ **THE DEFECT IS THE DENOMINATOR, NOT THE CELLS. The grader attacked all `210` published cells and COULD NOT MOVE ONE — arithmetic flawless, `zero guessed cells` confirmed by a basis-vs-source audit, determinism STRONGER than claimed.** ⚠ **But the universe is wrong.**
+✅★★★★★ **`F-1` CONFIRMED AT THIS DESK ON TWO INDEPENDENT PATHS `[MEASURED HERE, parsed from `c304b098`]`:** (1) `spec.entry_conditions` across the 12 real fixtures = **`43` ROWS**; `P2` enumerated **`30`** → **`13` DECLARED ROWS NEVER ENUMERATED = `91` CELLS**; TRUE membership **`43 × 7 = 301`**, not `210`. (2) **THE ORACLE'S OWN SELF-WITNESS: `conditions_unadjudicated_ids` joins `13/13` TO THE SPEC IDS AND `0/13` TO THE ORACLE KEYS.** ★★★ **THE ORACLE NAMED THOSE 13 ROWS ITSELF. `P2` DREW ITS ROW SET FROM `oracle.fixtures[].conditions` KEYS — THE PRESENCE SET — WHICH EXCLUDES THEM.** ⚠ **ALL 13 ARE IN `00-control-shipped.spec.json` — the CONTROL fixture is the one whose rows went missing.**
+⚠★★★★★ **THE DIAGNOSIS, AND IT IS THE SELF-AUTHORIZING DEFECT ONE *DIMENSION* OVER: `R-519` froze the AXIS list so requiredness could not be read off the artifact under test. **NOBODY FROZE THE ROW LIST.** It is still drawn from the artifact under test, so DELETING A ROW DELETES IT FROM THE UNIVERSE — the denominator authorizes itself. ★★★★★ **AND THE CLAUSE THAT MISSED IT IS MINE: `R-519` said membership comes from the frozen contract *“never from whichever **KEYS** happen to exist in `ORACLE.json`”* — I said KEYS, meaning AXES. **ROWS ARE MEMBERSHIP TOO AND I DID NOT SAY SO.** FOURTH `ONE LEVEL SHORT` THIS CAMPAIGN, and this time the level was a DIMENSION, not a nesting depth.**
+✅ **NOT A SETBACK ON THE HONEST PART, MEASURED BY THE GRADER: under the correction the `43` UNDECLARED **STAY EXACTLY `43`**, all `210` existing cells are **BYTE-UNCHANGED**, `0` lost, and the fix is **`3` LINES AND PURELY ADDITIVE** — the generator ALREADY HAS the `fixture-declared-id` branch and it fires ZERO times, gated on a `cid` drawn from the presence set.** ⚠ **`F-2` HIGH (35 authority-adjudicated fixture-level truths outside the membership) · `F-3` HIGH (the verifier reads `row_ids` AND `axes` from the artifact under test — same self-authorization at the VERIFIER) · `F-4` MED (9 of 13 mutation operators invisible; `canonical_document_sha256` published but never verified) — all `[RELAYED, NOT VERIFIED HERE]`.**
+⚠★★★ **AND A THIRD INSTRUMENT SLIP OF MINE THIS SESSION, CAUGHT BY ITS OWN ABSURDITY: I probed top-level `entry_conditions` and got `0` rows; the real path is `spec.entry_conditions`. `A RESULT THAT CANNOT BE TRUE IS THE CHEAPEST BUG REPORT YOU WILL EVER GET` — the two before it were `cell['present']` and a `F-[0-9]` regex matching `UTF-8`.**
 ⚠★★★★★ **THE NUMBER THE INVERSION WAS ORDERED TO PRODUCE: `43` CELLS ABSENT AND DECLARED NOWHERE (`46` under a STRICT name join). That is the SILENT-VOID population and it is the whole `P0` impossibility as a count.**
 🛑★★★★★ **THE `43` REMAIN `UNADJUDICATED`. NO blanket authority amendment. NO promotion to `ASSERTED`/`NOT-APPLICABLE` without a NAMED SOURCE AUTHORITY. The worker OFFERED this desk the power to close them and the desk DECLINED it (R-521 §2). `UNKNOWN IS A VALID TRUTH STATE. INVENTED CERTAINTY IS NOT.` `A DESK MAY RULE HOW WE FIND OUT; IT MAY NOT RULE WHAT IS TRUE.`**
 ✅ **NOT A DEAD END — `P0-vNext` does NOT need the `43` answered, only preserved honestly: agreement on every projected cell · correctness ONLY on `ASSERTED` · `NOT-APPLICABLE` produces no predicate · **`UNADJUDICATED` forces a named `INCOMPLETE_AUTHORITY` fail-closed, NEVER a correctness green** · deleting any cell reddens by EXACT SET EQUALITY.**
