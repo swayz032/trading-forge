@@ -45,6 +45,14 @@ declare function deepFreeze<T>(x: T): T;
 // "free/captured reference" shape the FREE_REF catcher owns.
 declare function injectedReader(lane: Lane): unknown;
 
+// ---- the D/E RED-PROOF PAIR (R-546 s5.10) ---------------------------------------------
+// ONE spelling declared in BOTH spaces, so the same identifier can be placed in a type-only
+// position and a value-only position and the two verdicts compared directly. Without a
+// declaration in both spaces the pair dies at TS2304 before any catcher runs and proves
+// nothing -- which is exactly what my first attempt at this probe did.
+declare type Widget = { readonly w: number };
+declare const Widget: (lane: Lane) => unknown;
+
 // ---- module declarations for non-relative fixture imports -----------------------------
 declare module 'node:fs' {
   const fs: { readonly readFileSync: (p: string) => unknown };

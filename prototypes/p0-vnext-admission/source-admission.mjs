@@ -135,18 +135,55 @@ function isIntrinsicFreezeCallee(node, checker, srcFile) {
   return decls.every((d) => d.getSourceFile() !== srcFile && /lib\..*\.d\.ts$/.test(d.getSourceFile().fileName));
 }
 
-// A TYPE-POSITION identifier is not a value capture: annotations are erased at emit and
-// cannot reach anything at runtime. Found by measurement, not by review -- the first build
-// of the pinned surface flagged the `Lane` in `(lane: Lane)` as a free/captured reference,
-// which would have made every annotated fixture red for the wrong reason.
-function inTypePosition(node) {
-  let p = node.parent;
-  while (p) {
-    if (ts.isTypeNode(p) || ts.isTypeAliasDeclaration(p) || ts.isInterfaceDeclaration(p) ||
-        ts.isTypeParameterDeclaration(p) || ts.isJSDocTypeExpression?.(p)) return true;
-    p = p.parent;
+// ---------------------------------------------------------------------------------------
+// ITEM 10 (R-546 s5.10) -- TYPE-SPACE / VALUE-SPACE SEPARATION, AS A PROPERTY.
+//
+// THE PROPERTY: an identifier ERASED BEFORE EXECUTION cannot be runtime-capture evidence.
+// It is not "ignore the name `Lane`" -- a spelling allowlist is explicitly REFUSED. The same
+// spelling must be SILENT in type-only position and EXCLUSIVELY FREE_REF in value-only
+// position, which is what `type-value-proof.mjs` asserts with a `Widget` declared in BOTH
+// spaces.
+//
+// THE RESIDUAL IS THE POINT: any position this function cannot classify returns
+// 'unclassified', which FAILS CLOSED into its own reported population. It is never silently
+// assigned to type (which would hide a real capture) or to value (which would fabricate one).
+// ---------------------------------------------------------------------------------------
+export const POSITION_UNCLASSIFIED = 'POSITION_UNCLASSIFIED';
+
+const VALUE_PARENT_KINDS = new Set([
+  ts.SyntaxKind.CallExpression, ts.SyntaxKind.NewExpression, ts.SyntaxKind.PropertyAccessExpression,
+  ts.SyntaxKind.ElementAccessExpression, ts.SyntaxKind.BinaryExpression, ts.SyntaxKind.PrefixUnaryExpression,
+  ts.SyntaxKind.PostfixUnaryExpression, ts.SyntaxKind.ConditionalExpression, ts.SyntaxKind.ArrayLiteralExpression,
+  ts.SyntaxKind.PropertyAssignment, ts.SyntaxKind.ShorthandPropertyAssignment, ts.SyntaxKind.SpreadElement,
+  ts.SyntaxKind.SpreadAssignment, ts.SyntaxKind.TemplateSpan, ts.SyntaxKind.ParenthesizedExpression,
+  ts.SyntaxKind.ArrowFunction, ts.SyntaxKind.FunctionExpression, ts.SyntaxKind.ReturnStatement,
+  ts.SyntaxKind.VariableDeclaration, ts.SyntaxKind.ExpressionStatement, ts.SyntaxKind.AwaitExpression,
+  ts.SyntaxKind.TypeOfExpression, ts.SyntaxKind.NonNullExpression, ts.SyntaxKind.AsExpression,
+  ts.SyntaxKind.SatisfiesExpression, ts.SyntaxKind.ExportAssignment, ts.SyntaxKind.TaggedTemplateExpression,
+  ts.SyntaxKind.Decorator, ts.SyntaxKind.ComputedPropertyName, ts.SyntaxKind.DeleteExpression,
+  ts.SyntaxKind.VoidExpression, ts.SyntaxKind.YieldExpression, ts.SyntaxKind.ThrowStatement,
+  ts.SyntaxKind.IfStatement, ts.SyntaxKind.WhileStatement, ts.SyntaxKind.ForStatement,
+  ts.SyntaxKind.ForOfStatement, ts.SyntaxKind.ForInStatement, ts.SyntaxKind.SwitchStatement,
+  ts.SyntaxKind.CaseClause, ts.SyntaxKind.TemplateExpression, ts.SyntaxKind.ObjectLiteralExpression,
+]);
+
+export function classifyPosition(node) {
+  // (1) TYPE-ONLY import/export -- erased wholesale by the emitter.
+  for (let p = node.parent; p; p = p.parent) {
+    if ((ts.isImportSpecifier(p) || ts.isExportSpecifier(p)) && p.isTypeOnly) return 'type';
+    if (ts.isImportClause(p) && p.isTypeOnly) return 'type';
+    if (ts.isImportDeclaration(p) && p.importClause?.isTypeOnly) return 'type';
   }
-  return false;
+  // (2) ANY type-space ancestor. `as`/`satisfies` operands reach here because their `.type`
+  //     slot IS a TypeNode; their EXPRESSION slot is not, and stays value-space.
+  for (let p = node.parent; p; p = p.parent) {
+    if (ts.isTypeNode(p) || ts.isTypeAliasDeclaration(p) || ts.isInterfaceDeclaration(p) ||
+        ts.isTypeParameterDeclaration(p)) return 'type';
+  }
+  // (3) A known value-carrying parent.
+  if (node.parent && VALUE_PARENT_KINDS.has(node.parent.kind)) return 'value';
+  // (4) FAIL CLOSED. Not type, not a recognised value slot -> say so out loud.
+  return 'unclassified';
 }
 
 // ---------------------------------------------------------------------------------------
@@ -419,7 +456,12 @@ export function admitSource(fileName, sourceText) {
       const isDeclName = node.parent && (ts.isVariableDeclaration(node.parent) || ts.isFunctionDeclaration(node.parent) ||
                                          ts.isParameter(node.parent) || ts.isPropertyAssignment(node.parent)) && node.parent.name === node;
       const owner = owners.ownerOf(node);
-      if (!isPropName && !isDeclName && !owner && !inTypePosition(node)) {
+      const position = (isPropName || isDeclName) ? 'value' : classifyPosition(node);
+      if (position === 'unclassified' && !owner) {
+        // Never silently assigned to either space (R-546 s5.10's residual requirement).
+        push(POSITION_UNCLASSIFIED, `identifier '${name}' in a position this rule cannot classify as type or value (parent ${ts.SyntaxKind[node.parent?.kind]}) -- FAILING CLOSED`);
+      }
+      if (!isPropName && !isDeclName && !owner && position === 'value') {
         if (name === 'module' || name === 'exports' || name === '__dirname' || name === '__filename') {
           push(CATCHERS.MODULE_SYSTEM, `CommonJS identifier '${name}'`);
         } else if (name === 'require' || name === 'createRequire') {

@@ -27,6 +27,32 @@ globalThis.__GETTER_HITS__ = 0;
 // This gates a TEST INJECTION, never a repair -- no correctness fix hides behind a flag.
 const INJECT = process.env.PROTO_INJECT || '';
 
+// ---------------------------------------------------------------------------------------
+// R-546 §5.0 — `miss_type_invalid` CONFLATED THREE POPULATIONS AND IS RETIRED. Each now has
+// its own denominator, and the PRECEDENCE below is stated because it decides the answer:
+//
+//  (i)   SURFACE-INVALID       the INSTRUMENT is unconfigured. Not a miss. FIX THE SURFACE.
+//                              Enters NO numerator or denominator. A non-empty set after
+//                              item 2 makes the whole number INADMISSIBLE.
+//  (ii)  FIXTURE-INVALID       an AUTHORING defect. Not a miss. FIX THE FIXTURE.
+//  (iii) CAUGHT_BY_TYPECHECKER the planted illegality IS ITSELF a type error. NOT a failed
+//                              proof — a real catch by a DIFFERENT layer, and the desk's own
+//                              order would have permanently deleted this legitimate class.
+//
+// Surface is checked FIRST because an unconfigured instrument can manufacture any of the
+// others; a row carrying BOTH a surface code and a real catch is reported as surface-invalid
+// and its verdict is withheld rather than guessed.
+const SURFACE_CODES = ['TS7006', 'TS2792', 'TS7017', 'TS1192', 'TS2591', 'TS2835', 'TS2724'];
+const TYPECHECKER_CAUGHT_CODES = ['TS2304', 'TS2540', 'TS2532', 'TS1117', 'TS2339'];
+function classifyTypeInvalid(diagnostics) {
+  const codes = diagnostics.map((d) => d.split(':')[0]);
+  if (codes.some((c) => SURFACE_CODES.includes(c))) return 'SURFACE_INVALID';
+  if (codes.every((c) => TYPECHECKER_CAUGHT_CODES.includes(c))) return 'CAUGHT_BY_TYPECHECKER';
+  // Neither recognised: FAIL CLOSED into its own reported bucket rather than being folded
+  // into whichever population happens to be convenient.
+  return 'TYPE_INVALID_UNCLASSIFIED';
+}
+
 const results = [];
 for (const c of CORPUS) {
   let outcome = 'REJECTED', fired = [], detail = '', tuple = null, diagnostics = [], submittedBody = null;
@@ -37,6 +63,11 @@ for (const c of CORPUS) {
     if (INJECT === 'wrong_catcher' && c.id === '35(a)') body = `let leak = 1;\nexport const project = (lane: Lane) => ({ v: leak });\n`;
     if (INJECT === 'ownership' && c.id === '34(b)') body = `let leak = 1;\nexport const getLedger = () => 1;\nexport const project = (lane: Lane) => ({ v: leak });\n`;
     if (INJECT === 'parse' && c.id === '35(a)') body = `export const project = (lane: Lane) => ({ v: ;\n`;
+    // R-546 §7's stop conditions get red paths too — a class I enforce without a
+    // demonstrated red is the same "green check with no path to red" I am here to close.
+    if (INJECT === 'surface_invalid_rows' && c.id === '35(b)') body = `export const project = (lane) => ({ v: window.__ledger });\n`;
+    if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `outer: for (const x of [1]) { break outer; }\nexport const project = (lane: Lane) => ({ v: window.__ledger });\n`;
+    if (INJECT === 'type_invalid_unclassified' && c.id === '48') body = `const C = deepFreeze({ a: 1 }, 2);\nexport const project = (lane: Lane) => ({ v: C.a });\n`;
     submittedBody = body;
     const r = admitSource(c.file, body);
     outcome = r.outcome; tuple = r.tuple; diagnostics = r.diagnostics || [];
@@ -53,7 +84,8 @@ for (const c of CORPUS) {
   const competing = uniqFired.filter((f) => f !== c.expect);
   let status;
   if (outcome === 'PARSE_ERROR') status = 'FAILED_PARSE';
-  else if (outcome === 'TYPE_INVALID') status = 'MISS_TYPE_INVALID';
+  else if (outcome === 'TYPE_INVALID') status = classifyTypeInvalid(diagnostics);
+  else if (uniqFired.includes('POSITION_UNCLASSIFIED')) status = 'POSITION_UNCLASSIFIED';
   else if (c.expect === NOT_IMPLEMENTED) status = 'MISS_NOT_IMPLEMENTED';
   else if (uniqFired.includes(c.expect) && competing.length === 0) status = 'ATTRIBUTED';
   else if (uniqFired.includes(c.expect)) status = 'FAILED_OWNERSHIP';   // named fired, but not alone
@@ -149,16 +181,34 @@ const summary = {
 // population and not against a corpus that grew underneath the number.
 const orig = ORIGINAL_52_IDS.map((id) => results.find((r) => r.id === id));
 const origTally = (s) => orig.filter((r) => r.status === s).length;
+// ---- R-546 §6: THE SIX-POPULATION PARTITION. THE CLAIM UNDER TEST IS THE PARTITION, NOT
+// ---- THE RATIO. `attributed` may go up or down; neither direction is success on its own.
+const SIX = {
+  attributed: 'ATTRIBUTED',
+  honest_named_miss: 'MISS_NOT_IMPLEMENTED',
+  surface_invalid: 'SURFACE_INVALID',
+  fixture_invalid: 'FIXTURE_INVALID',
+  caught_by_typechecker: 'CAUGHT_BY_TYPECHECKER',
+  position_unclassified: 'POSITION_UNCLASSIFIED',
+};
+const partition = Object.fromEntries(Object.entries(SIX).map(([k, s]) => [k, orig.filter((r) => r.status === s).map((r) => r.id)]));
+const partitionSum = Object.values(partition).reduce((a, ids) => a + ids.length, 0);
+// Any row landing in NONE of the six is itself the finding — it is not quietly absorbed.
+const unpartitioned = orig.filter((r) => !Object.values(SIX).includes(r.status)).map((r) => `${r.id}:${r.status}`);
+const inTwo = Object.entries(partition).flatMap(([k, ids]) => ids.map((id) => ({ id, k })))
+  .reduce((acc, { id }) => { acc[id] = (acc[id] || 0) + 1; return acc; }, {});
+const duplicated = Object.entries(inTwo).filter(([, n]) => n > 1).map(([id]) => id);
+
 const likeForLike = {
   population: 'AR-589 original 52 subcases, by id',
   total: orig.length,
-  attributed: origTally('ATTRIBUTED'),
-  miss_not_implemented: origTally('MISS_NOT_IMPLEMENTED'),
-  miss_type_invalid: origTally('MISS_TYPE_INVALID'),
-  miss_not_caught: origTally('MISS_NOT_CAUGHT'),
-  failed_wrong_catcher: origTally('FAILED_WRONG_CATCHER'),
-  failed_ownership: origTally('FAILED_OWNERSHIP'),
-  ar589_claim: '49 / 52',
+  six_population_partition: Object.fromEntries(Object.entries(partition).map(([k, ids]) => [k, ids.length])),
+  partition_sums_to: partitionSum,
+  partition_must_sum_to: 52,
+  rows_in_two_populations: duplicated,
+  rows_in_no_population: unpartitioned,
+  members: partition,
+  ar589_claim: '49 / 52 (retired as the test — R-546 §6 replaced "the number must fall")',
   missing_ids: ORIGINAL_52_IDS.filter((id) => !results.some((r) => r.id === id)),
 };
 
@@ -215,6 +265,13 @@ const FAILURE_CLASSES = [
   ['twin', twinChecks.some((t) => !t.ok), () => `twin assertion failed: ${twinChecks.filter((t) => !t.ok).map((t) => t.pair).join(', ')}`],
   ['tuple_disagreement', tupleDisagreements.length > 0, () => `module-format derivations disagree: ${tupleDisagreements.join('; ')}`],
   ['emitted_module', !emitted.ok, () => `emitted-artifact execution failed: ESM this=${JSON.stringify(emitted.arms[0].observedTopLevelThis)} (need "undefined"), CJS control this=${JSON.stringify(emitted.arms[1].observedTopLevelThis)} (need "object")`],
+  // R-546 §7's new stop conditions, enforced rather than merely reported.
+  ['surface_invalid_rows', likeForLike.six_population_partition.surface_invalid > 0, () => `${likeForLike.six_population_partition.surface_invalid} row(s) SURFACE-INVALID after item 2 — the number is INADMISSIBLE: ${partition.surface_invalid.join(', ')}`],
+  ['partition_sum', partitionSum !== 52, () => `the six populations sum to ${partitionSum}, not 52`],
+  ['partition_overlap', duplicated.length > 0, () => `row(s) in two populations: ${duplicated.join(', ')}`],
+  ['partition_orphan', unpartitioned.length > 0, () => `row(s) in no population: ${unpartitioned.join(', ')}`],
+  ['position_unclassified', results.some((r) => r.status === 'POSITION_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'POSITION_UNCLASSIFIED').length} row(s) with an identifier position the rule cannot classify (fails closed)`],
+  ['type_invalid_unclassified', results.some((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED').map((r) => `${r.id} [${r.diagnostics.join(';')}]`).join(' | ')}`],
 ];
 const failures = FAILURE_CLASSES.filter(([, hit]) => hit).map(([name, , msg]) => `${name}: ${msg()}`);
 

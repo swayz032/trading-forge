@@ -4,6 +4,56 @@
 
 ---
 
+## AR-592 · 2026-08-02 · ✅★★★★★ **ITEMS `10`–`13` + THE `§5.0` RE-CLASSIFICATION DELIVERED. FAN-IN IS `13 / 13`.** 🛑★★★★★ **AND FIRST, A CORRECTION TO MY OWN `AR-591`: IT CLOSED SAYING **`FAN-IN 9 / 9`** — THAT WAS TRUE WHEN WRITTEN AND WAS **STALE BEFORE IT WAS READ**. `R-546` LANDED WHILE I WAS BUILDING AND MADE THE BATCH THIRTEEN.** ✅★★★★★ **THE SIX-POPULATION PARTITION HOLDS: `44 + 3 + 0 + 0 + 5 + 0 = 52`, NO ROW IN TWO, NO ROW IN NONE, AND `surface_invalid = 0` — WHICH IS WHAT MAKES THE NUMBER ADMISSIBLE AT ALL.**
+
+**RULING ID:** `R-546 §5.0` + items `10`–`13` (additive to the nine) · **TASK ID:** AR-592 · **PRIOR:** AR-591 (`1958ba5d`), AR-590 (`0df28dfd`).
+**FAN-IN: `13 / 13`. NOT A HANDOFF.** **No new START-RECEIPT — `R-546`'s START-HERE block says `AR-590` covers this batch.**
+
+### 🛑★★★★★ §1 — THE CORRECTION, FIRST, BECAUSE IT IS MINE
+**`AR-591 §8` reads `FAN-IN 9 / 9. NOT A HANDOFF.`** `R-546` committed at `6441b9ed` **while I was mid-build**; I discovered it only when my own commit landed next to it. ⚠️ **`9 / 9` was never false — it was SUPERSEDED, and a superseded completion claim reads exactly like a complete one.** ✅ **Corrected here: the batch was `13`, and it is now `13 / 13`. `AR-591` stands on everything else; nothing in it is withdrawn.**
+★★★ **AND THE DESK'S `§1` PREDICTION WAS RIGHT ABOUT MY BUILD:** `R-546` measured that its own `R-543 §4.1` would report `0 / 52`. ✅ **`AR-590 §2(b)` flagged the same collapse before I coded, and my delivered surface fixes it — `surface_invalid = 0` is the measured proof, not the claim.**
+
+### ✅★★★★★ §2 — ITEM 10: TYPE/VALUE IS NOW A **PROPERTY**, AND I RE-MEASURED THE DESK'S OWN MATRIX AGAINST **MY** BUILD RATHER THAN ASSUMING MY FIX COVERED IT
+`[MEASURED HERE, `type-value-proof.mjs`, `Widget` declared in BOTH spaces so the arms differ in NOTHING but position]`
+```
+D  Widget TYPE-ONLY  -> ADMITTED, FREE_REF on Widget = 0
+E  Widget VALUE-ONLY -> REJECTED, FREE_REF on Widget = 1  (its ONLY catcher)
+R2 ambient type + intended witness -> FREE_REF on injectedReader ONLY
+12/12 cases · property HOLDS · controls B/F/H admit, C still convicts
+RESIDUAL REACHABLE (POSITION_UNCLASSIFIED can actually fire): true
+```
+★★★★★ **`R-546 §2`'s sharpest finding — that the intended witness was NOT ISOLABLE WITHIN ITS OWN CATCHER, which would have made `§4.3`'s exclusive ownership unsatisfiable on every typed row — is CLOSED and measured.** ⚠️ **NO SPELLING ALLOWLIST EXISTS; classification is by POSITION.** ✅ **The residual `POSITION_UNCLASSIFIED` fails closed into its own population AND its own enforced class, and it is WITNESSED FIRING — `a fail-closed branch nothing can reach is a branch nobody has tested`.**
+⚠️ **MY FIRST D/E PROBE WAS INVALID AND I SAY SO: it used an UNDECLARED `Widget`, which dies at `TS2304` before any catcher runs. The pair proves nothing without a spelling declared in both spaces.**
+
+### 🛑★★★★★ §3 — ITEM 11 CAUGHT FOUR OF MY OWN EDITS, AND I REVERTED THEM RATHER THAN EXCUSING THEM
+```
+BASELINE 8297ebbe:...corpus.mjs read via `git show` — NOT hand-copied
+DECLARED SUBSTITUTION: 2 import specifiers -> absolute URLs; no fixture byte touched
+rows 38 | EMIT-IDENTICAL 31 | CHANGED 7 | UNDECLARED 0
+COMPARATOR CONTROLS: annotation-only reads IDENTICAL true | behaviour edit reads DIFFERENT true
+```
+🛑★★★★★ **UNDECLARED WAS `3` ON THE FIRST RUN, PLUS ONE UNDER-DECLARED:** `26(b)` and `26(a)` had gained a use of the imported binding, `37(c)` carried a gratuitous rename `S`→`Sg`, and `49(c)`'s use site had changed. **None was required. All four REVERTED.** ★★★★★ **`AN EDIT I CANNOT JUSTIFY BY EMITTED BEHAVIOUR IS AN EDIT I SHOULD NOT HAVE MADE` — and a byte-count claim would never have found them.** ✅ **The `7` that remain are pre-registered per row with reasons recorded BEFORE the check ran: `51(a)`–`(d)` and `26(c)`/`41(a)`/`53`.**
+
+### ✅ §4 — ITEMS 12+13 AND THE TWO ADJUDICATIONS `R-546 §4` LEFT TO ME
+✅ **ITEM 12 — MY CALL: the unresolved `34(d-u)` specimen IS `caught_by_typechecker`.** `TS2304` is a **real catch by a different layer**, not a failed proof; the rule's unresolved branch stays implemented and the specimen stays as the historical rule-bug witness. **The two specimens never share a numerator.**
+✅ **ITEM 13 — row `54` corrected, with the prior text PRESERVED VERBATIM in a dated correction note (preserve-and-strike). BOTH ARMS EXECUTE.** ⚠️ **The read's conditional-wrapper variant is `[RELAYED]` and NOT adopted; nothing rests on it.**
+✅ **`TS1117` on `52(a)`–`(d)` — ADJUDICATED DELIBERATE, therefore `caught_by_typechecker` (§5.0 iii), NOT `fixture_invalid` (§5.0 ii).** The planted channel *is* duplicate cooked keys in four forms; the fixture is exactly what it should be and the compiler catches it first. **Same for `54(c)`'s `TS2532`+`TS2540`.**
+
+### ✅★★★★★ §5 — THE GATE GREW WITH THE RULING, AND SO DID ITS RED PATHS
+```
+CONTROL exit=0 GREEN | 16 / 16 enforced classes have a DEMONSTRATED RED PATH
+new since AR-591: surface_invalid_rows · partition_sum · partition_orphan
+                  · position_unclassified · type_invalid_unclassified
+```
+⚠️★★★ **AND ONE CLASS IS **NOT** COUNTED, DECLARED INSTEAD: `partition_overlap` is STRUCTURALLY UNREACHABLE — a row has exactly one status, so it cannot be in two populations. It is kept as a guard against a future construction change and is NOT claimed as red-proofed.** ★★★★★ **`A GUARD NOTHING CAN TRIP IS NOT PROVEN, AND COUNTING IT WOULD BE THE INFLATION THE RED-PROOF EXISTS TO PREVENT.`**
+⚠️ **A defect in my own harness, found and fixed: `surface_invalid_rows` reported a red path it did not have — the injection key and the class name differed by a suffix, so the harness passed a value the runner never listened for. `15/16` until that was corrected. `A RED-PROOF THAT MIS-SPELLS ITS OWN INJECTION REPORTS THE GUARD AS ABSENT.`**
+
+### ⚠️ §6 — UNCHANGED LIMITS
+⚠️ **The partition is a CLAIM until an independent instrument re-derives it. `doer != grader`, and I built the rule, the corpus, the gate, the red-proof AND the freeze check. `R-543 §5`/`R-546 §8.2` assign this to the `accuracy-validator` — the corrected partition is now DELIVERED, so the grade is dispatchable. I do not dispatch it and will not interpret it.** · ⚠️ **`59` is the population the DESIGN enumerates; `G-2` is NOT closed — item `8` closes it for the REQUIRED EXPORT only.** · ⚠️ **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · the `140` still `AUTHORITY_SEMANTICS_UNVERIFIED` · old `P0` lane untouched · no runtime, trading or capital behaviour authorised or touched · separability re-measured `80 / 0`.**
+**REPRODUCE:** `node run.mjs && node red-proof.mjs && node type-value-proof.mjs && node emitted-freeze.mjs && node module-tuple.mjs` — **all five exit `0`.**
+
+---
+
 ## AR-591 · 2026-08-02 · ✅★★★★★ **ALL NINE DELIVERED — `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`). THE NUMBER FELL AS PRE-REGISTERED: `49 / 52` → **`44 / 52`** LIKE-FOR-LIKE, SCORED OVER THE SAME 52 IDS WITH `missing_ids: []`.** ✅★★★★★ **THE TRUE TWIN EXISTS: ONE BYTE-IDENTICAL SOURCE TEXT, `ADMITTED` AS `.mts` AND `REJECTED` AS `.cts` BY THE MODULE-SYSTEM CATCHER **ALONE**, EVERY TEXT-LEVEL CATCHER SILENT IN BOTH ARMS.** ✅★★★★★ **AND THE RUNNER IS NOW A GATE, NOT A REPORT: `11 / 11` FORBIDDEN CLASSES HAVE A DEMONSTRATED RED PATH WITH THE CONTROL GREEN.** 🛑★★★★★ **TWO DEFECTS I INTRODUCED AND MEASURED MYSELF ARE REPORTED IN FULL BELOW — ONE OF THEM WAS CAUGHT BY MY OWN RED-PROOF, NOT BY REVIEW.**
 
 **RULING ID:** `R-543 §4` items `1`–`5` + `R-544 §3` items `6`–`9` · **TASK ID:** AR-591 · **PRIOR:** AR-590 (START-RECEIPT, `0df28dfd`).

@@ -31,6 +31,18 @@ const CLASSES = [
   ['twin', 'the twin arms are no longer byte-identical'],
   ['tuple_disagreement', 'my module-format derivation disagrees with ts.impliedNodeFormat'],
   ['emitted_module', 'the emitted ESM artifact is not actually ESM'],
+  // R-546 §5.0 / §6 / §7 — the partition's own stop conditions.
+  ['surface_invalid_rows', 'a row is SURFACE-INVALID after item 2, making the number inadmissible'],
+  ['position_unclassified', 'an identifier position cannot be classified as type or value'],
+  ['type_invalid_unclassified', 'a semantic diagnostic falls in none of the declared classes'],
+];
+
+// These classes share ONE injection with a class above, because the planted defect genuinely
+// trips both — an orphaned row necessarily makes the six populations sum to less than 52.
+// Listed separately so neither is claimed as red-proofed without a witness.
+const SHARED = [
+  ['partition_orphan', 'wrong_catcher', 'a row lands in none of the six populations'],
+  ['partition_sum', 'wrong_catcher', 'the six populations do not sum to 52'],
 ];
 
 function runWith(inject) {
@@ -65,6 +77,26 @@ for (const [cls, what] of CLASSES) {
   const firedNames = (r.stdout.match(/^ {2}\*\*\* (\w+):/gm) || []).map((s) => s.replace(/^ {2}\*\*\* /, '').replace(':', ''));
   console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} named=[${firedNames.join(',')}]  (${what})`);
 }
+
+for (const [cls, viaInject, what] of SHARED) {
+  const r = runWith(viaInject);
+  const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
+  const ok = r.code !== 0 && namedOurClass;
+  rows.push({ cls, ok, code: r.code, namedOurClass });
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} via inject '${viaInject}'  (${what})`);
+}
+
+// ---- DECLARED HONESTLY RATHER THAN COUNTED AS PROVEN --------------------------------
+// `partition_overlap` is enforced by run.mjs but CANNOT be reached by any injection: the six
+// populations are built by filtering on `status`, and a row has exactly one status, so
+// membership in two is structurally impossible under the present construction. It is a guard
+// against a FUTURE construction change, not a live discriminator.
+//   A guard nothing can trip is not red-proofed, and saying "16/16" while quietly counting it
+//   would be exactly the inflation this file exists to prevent.
+console.log('-'.repeat(104));
+console.log("N/A  partition_overlap    STRUCTURALLY UNREACHABLE — one row has exactly one status, so it cannot");
+console.log("                          be in two populations. Enforced as a guard against a construction change,");
+console.log("                          and DECLARED HERE rather than counted as a demonstrated red path.");
 
 console.log('='.repeat(104));
 const allOk = controlOk && rows.every((r) => r.ok);

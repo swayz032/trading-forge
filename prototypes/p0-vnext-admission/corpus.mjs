@@ -52,9 +52,9 @@ export const CORPUS = [
   // 26(*): relative specifiers carry an explicit `.js` extension because the pinned surface
   // resolves under NodeNext. Without it these were TS2792 and could not be credited.
   { id: '26(a)', atom: 'unallowlisted import', expect: NOT_IMPLEMENTED,
-    ...src(`import { read } from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v, r: read('k') });\n`) },
+    ...src(`import { read } from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
   { id: '26(b)', atom: 'filesystem / network module', expect: NOT_IMPLEMENTED,
-    ...src(`import fs from 'node:fs';\nexport const project = (lane: Lane) => ({ v: lane.v, f: fs });\n`) },
+    ...src(`import fs from 'node:fs';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
   { id: '26(c)', atom: 'transitive edge to either', expect: NOT_IMPLEMENTED,
     ...src(`import './helper.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
 
@@ -97,7 +97,7 @@ export const CORPUS = [
   { id: '37(b)', atom: 'cache populated on first call', expect: S.MODULE_STATE,
     ...src(`var c = 0;\nexport const project = (lane: Lane) => ({ v: c });\n`) },
   { id: '37(c)', atom: 'singleton', expect: S.MODULE_STATE,
-    ...src(`let Sg = { n: 1 };\nexport const project = (lane: Lane) => ({ v: Sg.n });\n`) },
+    ...src(`let S = { n: 1 };\nexport const project = (lane: Lane) => ({ v: S.n });\n`) },
   { id: '37(d)', atom: 'lazily-initialised holder', expect: S.MODULE_STATE,
     ...src(`let H: unknown;\nexport const project = (lane: Lane) => ({ v: H });\n`) },
   { id: '38',    atom: 'SHALLOW-frozen nested holder', expect: S.GRAMMAR,
@@ -119,7 +119,7 @@ export const CORPUS = [
   { id: '49(b)', atom: 'bare alias', expect: S.GRAMMAR,
     ...src(`const base = Object.freeze({ a: 1 });\nconst C = base;\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '49(c)', atom: 'computed key', expect: S.GRAMMAR,
-    ...src(`const k = 'a';\nconst C = Object.freeze({ [k]: 1 });\nexport const project = (lane: Lane) => ({ v: C });\n`) },
+    ...src(`const k = 'a';\nconst C = Object.freeze({ [k]: 1 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   // 50(a)/(b): the local freeze impostor is now generic so its return type is not `any`/
   // `unknown`. The impostor IS the defect and it is untouched -- only its signature is typed.
   { id: '50(a)', atom: 'shadowed / local freeze callee', expect: S.GRAMMAR,
@@ -228,5 +228,25 @@ export const TWIN_PAIRS = [
 // So the ORIGINAL 52 subcases are named here BY ID and the runner scores them separately.
 // The mapping that needs stating: AR-589's row `54` was the module-scope `this` STATEMENT,
 // which now lives at `54(c)`. The new `54` is the container twin and is NOT in this set.
+// ---- ITEM 11 (R-546 §5.11): EMIT CHANGES DECLARED, WITH THEIR REASON ------------------
+// A fixture edit that changes emitted JS WITHOUT a separately pre-registered mutation is a
+// STOP CONDITION (R-546 §7). These are the ONLY rows whose emitted JavaScript this round is
+// permitted to differ from AR-589's, and each reason was published in RESULTS §2 BEFORE
+// `emitted-freeze.mjs` was run against them. Everything else must come back EMIT-IDENTICAL;
+// anything that does not is reported UNDECLARED and fails the check rather than being
+// retro-fitted with an excuse here.
+export const PREREGISTERED_EMIT_CHANGES = {
+  '51(a)': 'use site reads `C` instead of `C.x`. TS types the literal WITHOUT the inherited member (its type view does not model `__proto__`\'s runtime prototype-setting), so `C.x` was TS2339 — incidental, not the channel. The `__proto__` KEY is untouched.',
+  '51(b)': 'as 51(a) — raw StringLiteral key form.',
+  '51(c)': 'as 51(a) — escaped identifier key form.',
+  '51(d)': 'as 51(a) — escaped string key form.',
+  // NOTE: 26(a) and 26(b) also carry a `.js`/type-validity edit but come back EMIT-IDENTICAL,
+  // because an UNUSED import is elided by the emitter. They are therefore not listed here —
+  // the list is exactly the set whose emitted JavaScript actually differs.
+  '26(c)': 'relative specifier carries the explicit `.js` extension required by NodeNext resolution; without it the fixture is TS2792 and yields no verdict at all. This one survives emit because a bare side-effect import is not elided. The import — and therefore its cardinality, the planted mutation — is unchanged.',
+  '41(a)': 'as 26(c) — dynamic `import(\'./ledger\')` -> `import(\'./ledger.js\')`. The dynamic-load channel is unchanged.',
+  '53': 'as 26(c) — `./pure-math` -> `./pure-math.js`. The import-cardinality mutation is unchanged.',
+};
+
 const ADDED_SINCE_AR589 = new Set(['34(d-u)', '54', '54(b)', '55(a)', '55(b)', '55(c)', '55(d)']);
 export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter((id) => !ADDED_SINCE_AR589.has(id));
