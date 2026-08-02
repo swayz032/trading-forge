@@ -243,6 +243,24 @@ export const CORPUS = [
   // the NAMED form reddened only incidentally, on its class name tripping the residual.
   { id: '57', atom: 'runtime capture in an `extends` heritage slot', expect: S.AMBIENT,
     ...src(`export const project = (lane: Lane) => ({ v: new (class extends window.Base {})() });\n`) },
+  // ---- ROW 58: THE `import.meta` GUARD ROW (AR-603 §3, ordered by R-570 §0 / R-572 §6.1) --
+  // F-2 was a CRITICAL: a `MetaProperty`'s `.name` IS its Identifier, so the `isPropName`
+  // name-slot rule classed `meta` as a name and skipped every catcher. `import.meta` was
+  // ADMITTED with `violations: []`, and the grader EXECUTED the emitted module: `.url`,
+  // `.dirname` and a live `.resolve` escaped to the caller.
+  // 🛑 THE FIX SHIPPED WITH **ZERO** CORPUS ROWS FOR THIS CHANNEL — the grade measured it and
+  // AR-603 §3 recorded the repair as UNGUARDED AGAINST REGRESSION.
+  //   A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE.
+  // The fixture is the exact type-clean one AR-604 §4 handed the desk and R-566 §3 re-ran at
+  // its own hand, so this row is the SAME OBJECT both paths already measured, not a new one:
+  // `[MEASURED]` `REJECTED 1b-S:free-captured-reference`, with `process.env` REJECTED and a
+  // clean module ADMITTED in the same run.
+  // ⚠️ WHY `FREE_REF` AND NOT `AMBIENT`, since both are "the module reached outside": the
+  // checker resolves NOTHING for `meta`, so it falls to the unresolved-free-reference branch.
+  // The EXPECTED catcher is transcribed from the MEASURED mechanism, and a row reddening via
+  // the other rule is reported FAILED — `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF`.
+  { id: '58', atom: 'import.meta — host state REACHED FOR through a MetaProperty', expect: S.FREE_REF,
+    ...src(`export const project = (lane: Lane) => ({ v: import.meta });\n`) },
 
   // ---------- 1b-R : runtime ----------
   { id: '39', atom: 'function-valued field', expect: R.FUNCTION_VALUE,
@@ -283,6 +301,22 @@ export const GREEN = [
     body: `export const project = (lane: Lane) => { class Impl implements Widget { w = 1; } return { v: new Impl() }; };\n` },
   { id: 'G-src-interface-extends-erased', kind: 'source', file: 'green.ts',
     body: `interface Ext extends Widget { z: number }\nexport const project = (lane: Lane) => ({ v: 1 } as unknown as Ext);\n` },
+  // ---- THE `new.target` ADJUDICATION, MADE ENFORCEABLE (R-566 §0, §5 last bullet) ---------
+  // R-566 RULED `new.target` ADMITTED is CORRECT, not a hole: the `1b-S` family catches a module
+  // REACHING FOR the outside, and `new.target` yields only what the CALLER's invocation
+  // determined — the same relationship `lane` has, and `lane` is admitted by design in every
+  // fixture here. Two independent paths agreed: the semantics, and TypeScript's own checker
+  // binding `target` to the ENCLOSING function (AR-604 §2, instrumented walk).
+  // 🛑 IT SITS IN THE **GREEN** SET DELIBERATELY. This row's job is to fail if someone ever
+  // "hardens" the rule by convicting `MetaProperty` as a class — the one-line over-correction
+  // R-566 §5 names as a STOP, which would convict `lane` with it.
+  //   A RULING THAT LIVES ONLY IN THE LEDGER IS ONE REFACTOR FROM BEING UNDONE.
+  // ⚠️ SHAPE, AND WHY IT IS A FUNCTION EXPRESSION RATHER THAN AN ARROW: `new.target` is a syntax
+  // error inside an arrow function, so this row CANNOT use the `export const project = (lane) =>`
+  // form every other fixture uses. The export shape is the only difference from `G-src-clean`,
+  // and it is forced by the grammar of the thing under test, not chosen.
+  { id: 'G-src-new-target-supplied', kind: 'source', file: 'green.ts',
+    body: `export const project = function (lane: Lane) { return { v: lane.v, n: new.target }; };\n` },
   { id: 'G-run-plain', kind: 'runtime', factory: () => ({ id: 'L1', bindable: true, note: 'x' }) },
   { id: 'G-run-dag', kind: 'runtime', factory: () => { const s = { v: 1 }; return { id: 'L1', p: s, q: s }; } },
   { id: 'G-run-array', kind: 'runtime', factory: () => ({ id: 'L1', a: [1, 2, 3], nested: { b: null } }) },
