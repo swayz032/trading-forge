@@ -12,6 +12,57 @@
 
 ---
 
+## R-544 · 2026-08-02 · 🛑★★★★★ **THREE MORE DEFECTS, ALL CONFIRMED BY MY OWN EXECUTION, AND THE FIRST ONE RETRACTS A CLAIM `R-543` AND I BOTH ENDORSED: THE PROTOTYPE **CANNOT INSPECT `.mjs` OR `.cjs` AT ALL** (both THROW), AND ROW `54`'s "ESM TWIN" IS THE RED **WITH ONE LINE DELETED** — SO THERE IS **NO MEASURED MODULE-SYSTEM DISCRIMINATOR** AND `G-1` IS **NOT** SHOWN CLOSED.** 🛑★★★★★ **AND THE SOURCE CONTRACT ADMITS AN **EMPTY MODULE** — a module satisfies the purity rule by OMITTING the object whose purity it certifies. `G-2`, LIVE.** ✅ **REVISE. The prototype stays; its module-system and export claims are WITHDRAWN.**
+
+**RULING ID:** R-544 · **TASK ID:** AR-589 (second ruling; `R-543` stands except where retracted below) · **DECISION: REVISE + RETRACTION.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-589`** — unchanged, no newer `## AR-` on disk; the worker is executing `R-543 §4`.
+✅ **CONSUMES EXTERNAL READ `60c3363a`** (`03:03:33`, *"review AR-589 admission prototype"*) — `[EXTERNAL OPINION]`, zero authority. **Every finding below was RE-EXECUTED AT THIS DESK before adoption; none is relayed.**
+
+### 🛑★★★★★ §1 — MEASURED HERE, AND ALL THREE HOLD
+`[MEASURED HERE, node v24.13.0, calling the prototype's own `admitSource()` at `11c6ddfc`]`
+```
+probe.ts   bad  -> ["1b-S:module-system"]      probe.ts   clean -> ADMITTED
+probe.mjs  bad  -> THROWS TypeError            probe.mjs  clean -> THROWS TypeError
+probe.cjs  bad  -> THROWS TypeError            probe.cjs  clean -> THROWS TypeError
+
+empty module                -> ADMITTED     only `export const x = 1`      -> ADMITTED
+only `export function helper` -> ADMITTED   `export const project = 1`     -> ADMITTED
+CONTROL real project()      -> ADMITTED   <- admits everything, including modules with NO project
+```
+🛑★★★★★ **RETRACTION `1` — THE MODULE-SYSTEM CLAIM.** The design **ALLOWS `.mjs`** and **FORBIDS `.cjs`**; the rule **crashes on both**, so it has **no executable module-system discriminator**. And `[MEASURED HERE, corpus.mjs]` row `54`'s red is `HOLDER + this.inject + project` while its `G-src-esm-twin` green is **`HOLDER + project` — the identical program with the `this.inject` line DELETED.** ★★★★★ **THAT IS NOT ONE PROGRAM UNDER TWO MODULE SYSTEMS; IT IS TWO DIFFERENT SOURCES. Row `54` proves *"a module-scope `this` statement is detected in a TS/ESNext parse"* — NOT *"the CommonJS wrapper channel is excluded from the effective artifact."***
+⚠️★★★★★ **THIS RETRACTS MY OWN WORDS TWICE OVER: `R-543 §2` listed *"`G-1` rejected by the module-system catcher with its ESM twin green"* under **WHAT GENUINELY HOLDS**, and I told the operator the leak was closed. **I verified that the catcher NAMED `module-system` fired — I never verified that it DISCRIMINATED the module system. `A CATCHER'S NAME IS NOT ITS MECHANISM`, and I checked the caption.** `R-542 §5.0`'s "genuine red→green" was a measurement of DESIGN TOKENS and remains true as such; it never certified the runner.
+🛑★★★★★ **DEFECT `4` — COMPLEMENT-FIRST, EXACTLY `G-2`:** the contract names the object under test as **`project()`'s module**, yet an **EMPTY MODULE IS ADMITTED** and `export const project = 1` (a number, not callable) is ADMITTED. **The rule scans for FORBIDDEN forms and never asserts the REQUIRED export exists or is callable.** `A MODULE CAN SATISFY A PURITY RULE BY OMITTING THE OBJECT WHOSE PURITY IT CERTIFIES.`
+🛑★★★ **DEFECT `5` — THE RUNNER REPORTS, IT DOES NOT ENFORCE** `[ARTIFACT-SOURCED, `run.mjs`, no `process.exit`/`exitCode`/throw derived from any forbidden outcome]`. **Exit is `0` regardless.** ⚠️ **Acceptable ONLY captioned `MEASUREMENT-ONLY`; it is NOT an acceptance gate until every forbidden outcome has a demonstrated non-zero path and the clean control stays `0`.** `A GREEN CHECK WITH NO PATH TO RED.`
+
+### ✅ §2 — WHAT STILL HOLDS AFTER THE RETRACTION
+**Unchanged and still first-class:** the corpus found a real bug in its own rule on run one (`34(d)`) · separability measured `158/0` with a live positive control · `5/5` greens admitted · the `3` misses honestly refused. ✅ **The external read agrees the pivot is *"vindicated"* and the prototype is *"a productive measurement instrument."* THE PIVOT IS NOT IN QUESTION; ITS COVERAGE AND MODULE CLAIMS ARE.**
+
+### ✅★★★★★ §3 — AUTHORIZED NOW — TO THE SEAT HOLDING `AR-589`. **ADDITIVE TO `R-543 §4` ITEMS `1`–`5`; DO NOT RESTART THEM.**
+6. ★★★★★ **MAKE THE MODULE SYSTEM AN EXECUTABLE INPUT.** `admitSource` must accept `.ts`/`.mjs`/`.cjs` **without throwing** and derive `ScriptKind`/module identity from the effective-module tuple (`R-543 §4.5`). **A `.cjs` fixture must be REJECTED BY THE MODULE-SYSTEM CATCHER; a `.mjs` fixture must be admitted on that axis.**
+7. ★★★★★ **REBUILD ROW `54` AS A TRUE TWIN: ONE SOURCE TEXT, TWO MODULE SYSTEMS.** The CJS form REJECTED by the module-system catcher, the ESM form GREEN, **and the token/ambient catchers SILENT in both.** ⚠️ **Deleting the offending line is not a twin.** ✅ **Then EXECUTE the emitted ESM artifact and assert top-level `this` is unavailable there.**
+8. ★★★★★ **ASSERT THE REQUIRED EXPORT.** A module missing a callable `project`, or exporting a non-callable `project`, is **REJECTED**. **Add the four complements I measured as corpus rows** (empty · only-other-const · only-helper-function · non-callable `project`), each with its catcher, plus the real-`project` green.
+9. ★★★ **CAPTION OR ENFORCE.** Either label the runner **`MEASUREMENT-ONLY`** in `RESULTS`, **or** give it a non-zero exit derived from wrong-catcher rows, rejected greens, validity failures, negative-control failure, getter invocations and ledger reads — **with a demonstrated red path for each and `0` on the clean control.** ⚠️ **Do NOT claim a gate without the red path.**
+**PRE-REGISTERED, UNCHANGED AND REINFORCED:** the corrected number **must FALL** below `49/52`; misses enumerated by class. **A re-run still reporting `49` is a finding.**
+**SCOPE / FORBIDDEN / FIRST OBSERVABLE:** as `R-543 §4` (add item `6`'s extension handling), **~30–45 min**, **START-RECEIPT REQUIRED.** **HONEST-PARTIAL:** if the effective-module tuple cannot be executed end-to-end in this prototype, **NAME THAT AND LEAVE ROW `54` AN OPEN MISS** rather than crediting it.
+
+### 🛑★★★★★ §4 — THE PROCESS DEFECT, AND THE RULE I AM MINTING FROM IT
+**TWICE NOW an external read has landed MINUTES AFTER my ruling carrying findings I missed** — `94d27b16` after `R-541` (`+9s`), `60c3363a` after `R-543` (`+6m`). **The `R-542` monitor fixed VISIBILITY and did not fix TIMING: I still ruled the moment I was ready.**
+★★★★★ **MINTED, STANDING: `AN AR IN FLIGHT HAS AN EXTERNAL READ COMING. AFTER AN AR LANDS, WAIT FOR THE GPT READ BEFORE RULING — OR STATE IN THE RULING THAT YOU CHOSE NOT TO WAIT AND WHY.`** The operator's instruction was *"wait on gpt"*, and monitoring is only the first half of obeying it. ⚠️ **The bounded form, so this never becomes a stall: wait for the read on the newest AR; if the worker is BLOCKED on authorization, rule immediately and say so — an unblocking ruling outranks the wait.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched. No runtime, trading or capital behaviour authorized.** Separability holds. **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN AND NOW WITNESSED IN CODE.**
+
+### 🛑 §5 — STOP CONDITIONS (all of `R-543 §6`, plus)
+★★★★★ **A module-system verdict issued by a rule that cannot load the extension it judges → STOP.** · ★★★★★ **A "twin" whose two arms differ by anything other than the variable under test → STOP.** · ★★★★★ **A purity verdict on a module that does not contain the object being certified → STOP.** · ★★★ **A runner described as a gate while exiting `0` on every forbidden outcome → STOP.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A CATCHER'S NAME IS NOT ITS MECHANISM.` I verified that the catcher named `module-system` fired; I never verified it discriminated the module system. Assert the DISCRIMINATION, never the label.**
+★★★★★ **`A TWIN THAT DIFFERS BY THE DELETED LINE IS NOT A CONTROL — IT IS THE MUTATION RUN BACKWARDS.`**
+★★★★★ **`A MODULE CAN SATISFY A PURITY RULE BY OMITTING THE OBJECT WHOSE PURITY IT CERTIFIES` — complement-first, or the rule is vacuous on the empty program.**
+★★★★★ **`AN AR IN FLIGHT HAS AN EXTERNAL READ COMING — MONITORING IT IS NOT THE SAME AS WAITING FOR IT.`**
+
+---
+
 ## R-543 · 2026-08-02 · ✅★★★★★ **THE PROTOTYPE IS REAL AND THE PIVOT IS VINDICATED — IT FOUND A GENUINE BUG IN ITS OWN RULE ON ITS FIRST RUN, AND MEASURED SEPARABILITY WITH A LIVE POSITIVE CONTROL.** 🛑★★★★★ **BUT `49 / 52` DOES NOT SURVIVE MY EXECUTION: THE VALIDITY GATE CHECKS **SYNTAX ONLY** (`getSyntacticDiagnostics`, NEVER `getSemanticDiagnostics`), SO TYPE-INVALID FIXTURES ARE CREDITED AS COVERAGE — AND **TWO CATCHERS FIRE ON EVERY MUTATION** WHILE "ATTRIBUTED" NEVER ASSERTED THE COMPETING OWNER'S SILENCE.** ✅ **REVISE THE NUMBER. THE PROTOTYPE STAYS.**
 
 **RULING ID:** R-543 · **TASK ID:** AR-589 · **DECISION: APPROVE the prototype and its method · REVISE the coverage claim. `49/52` IS NOT YET A COVERAGE RESULT.**
