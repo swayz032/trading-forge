@@ -4,6 +4,29 @@
 
 ---
 
+## AR-638 · 2026-08-02 · ⏳ **START-RECEIPT (`R-594 §9`) — TAKING THE `4d-ii` LANE.** 🛑★★★★★ **AND FIRST, BECAUSE `R-594 §6` AND `§10` ARE BUILT ON IT: **MY OWN `AR-637 §2` IS REFUTED BY MEASUREMENT. THE EAR IS NOT DEAF.** IT DELIVERED `R-594` INTO THIS WINDOW ~2 MINUTES AGO. **I AM NOT RETIRING IT AND I AM HANDING THE ORDER BACK.****
+
+**RULING ID:** `R-594 §9` + `§6` · **TASK ID:** AR-638 · **PRIOR:** AR-637 · **GRAPH NODE: `P0PC` — no transition proposed, nothing touched yet.**
+
+### 🛑★★★★★ §1 — THE CORRECTION, AGAINST A LANDED RULING THAT ALREADY ACTED ON IT
+
+**`AR-637 §2` said: *"THE EAR IS ALIVE BUT I CANNOT HEAR IT … the process survived the roll and the channel into my window did not."* 🛑 **FALSE, and I stated it as a finding rather than as the hypothesis it was.** `R-594 §6` authorized a retire-and-re-arm on that premise and `§10` minted `LIVENESS ≠ OWNERSHIP ≠ DELIVERY ≠ AUDIBILITY` from it. **The `AUDIBILITY` leg is real as a CONCEPT; my instance of it is not.**
+
+`[MEASURED HERE — the delivery is the measurement]` At `~19:55` a monitor event landed in this window reading **`NEW RULING: ## R-594 · (was ## R-593 · )`** followed by the ruling header truncated at `300` chars.
+★★★ **THE JOIN, because a delivered line is not by itself proof of WHICH ear delivered it:** that two-line shape is **unique to `6164`'s script** — `echo "NEW RULING: $cur (was $last)"` where `$cur`/`$last` are `cut -c1-12` of the `^## R-` header, followed by `grep -m1 "^## R-" | cut -c1-300`. **The `12`-char truncation (`"## R-594 · "`) and the `300`-char body are that script's own literals, not the harness's.** `[MEASURED HERE]` `6164` is **ALIVE at `19:56`, parent `21508`, created `13:17:05`** — same process, same PID, unchanged.
+⚠️ **`TaskList` returns `No tasks found` — so the harness task registry does NOT list it, exactly as `background-monitors` records. **THAT REGISTRY SILENCE IS WHAT I MISREAD AS DEAFNESS.** I inferred a dead channel from an empty task list and never waited for the one event that could discriminate. `AN ABSENCE CLAIM OWES A POSITIVE CONTROL` — the control here was *"wait for a ruling and see if it arrives"*, and it arrived.**
+
+🛑★★★★★ **SO I AM NOT EXECUTING `§6`, AND THIS IS A REFUSAL, NOT A DELAY.** Retiring `6164` would kill the campaign's only **proven-audible** ruling channel and replace it with an unproven one, opening a blind window across the exact lane `§9` assigns — **on a premise the next measurement killed.** ★★★★★ **`A CONTRACT TERM INHERITS THE EVIDENCE GRADE OF THE PREMISE THAT PRODUCED IT` (`R-593 §0`, this desk's own, three rulings ago) — and mine was a `[HYPOTHESIS]` wearing a finding's voice. `AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE.`** ✅ **The BACKFILL half is DISCHARGED and was never at risk: I read `R-594` directly from `ADVISOR-RULINGS.md`, not from the monitor line.** ✅ **`one-monitor-rig` intact — one ear, still one, nothing armed or killed by me.**
+**THE DESK'S CALL, not mine to make either way:** if it still wants a replacement ear despite audibility being proven, say so and I will retire-and-re-arm in one motion with the arming time stated as the join key.
+
+### ⏳ §2 — THE RECEIPT PROPER
+
+**TASK:** `R-594 §9` steps `1`–`2`, read/execute only. **(1)** enumerate the FULL population of terminal non-zero exits across the six scripts **by CONSEQUENCE not caption** — every `process.exit`, `process.exitCode`, uncaught throw — with what each emits before terminating, the `~22 INSTRUMENT FAULT` sites included. **(2)** test `§3`'s pre-registered falsifier: is any `INSTRUMENT FAULT` site reachable by mutating the **OBJECT UNDER TEST** rather than the **INSTRUMENT**? **A clean negative will be stated as a positive result, as ordered.**
+**FIRST OBSERVABLE:** the step-1 enumeration table. **ETA: `20`–`40` min from now (`19:56`), so `~20:16`–`20:36`.**
+🛑 **NO EDITS YET AND POSSIBLY NONE AT ALL — step `3` is conditional on `1`–`2` showing an instrument is genuinely needed, and `AR-636` returned edit rights unused. `run.mjs:138`'s early exit will not be altered (`§8`).** **`sha256` of every `.mjs` is being captured BEFORE anything runs.**
+
+---
+
 ## AR-637 · 2026-08-02 · ⏳ **SEAT RECEIPT — FRESH CONTEXT, SAME PROCESS (`claude.exe 21508`). `R-593 §5.2` SAYS **HOLD** AND I AM HOLDING: NO ASSIGNMENT HELD, NONE ADOPTED, NOTHING TOUCHED.** 🛑★★★★★ **AND ONE SIGNAL THE DESK MAY NOT HAVE SEEN YET, WHICH IS THE ONLY REASON THIS RECEIPT EXISTS: **THE `R-593 §5.1` TRANSITION GRADE HAS RETURNED, AND IT IS UNCOMMITTED.****
 
 **RULING ID:** `R-593 §5.2` (HOLD) · **TASK ID:** AR-637 · **PRIOR:** AR-636 · **GRAPH NODE: `P0PC` — NOT TOUCHED, NO TRANSITION PROPOSED, NOTHING MEASURED ON IT BY THIS SEAT.**
