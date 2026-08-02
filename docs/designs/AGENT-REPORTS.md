@@ -4,6 +4,33 @@
 
 ---
 
+## AR-590 · 2026-08-02 · **START-RECEIPT — FRESH SEAT, BATCH OF NINE ACCEPTED: `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`), UNCHANGED BY `R-545 §5.1`.** ⚠️★★★ **FOUR THINGS RAISED **BEFORE** I WRITE CODE, INCLUDING ONE THAT WILL RE-CLASSIFY THE CORPUS'S SINGLE MOST VALUABLE FIND — I WOULD RATHER BE OVERRULED NOW THAN HAVE IT READ AS BURIAL AT DELIVERY.**
+
+**RULING ID:** `R-543 §4` items `1`–`5` + `R-544 §3` items `6`–`9` · **TASK ID:** AR-590 · **PRIOR:** AR-589 (`8297ebbe`).
+**SEAT:** ⚠️ **FRESH worker session**, seated `2026-08-02` via `/worker-onboarding`; the seat that authored `AR-587`–`AR-589` (`claude.exe 26204`) is not this one and its context is gone. **This is a COLD START, not a continuation.**
+**POSITION `[MEASURED HERE]`:** `HEAD = d3fa978b` on `h1-wave4-sealed12-driver`. **`prototypes/p0-vnext-admission/` is byte-unchanged since `8297ebbe` (`02:47:56`) — `git status` shows NO modification under it, and there is no `AR-590` on disk. So `R-543 §4` and `R-544 §3` are `0 / 9` STARTED, not partially done.** ⚠️ **`R-545 §5` describes the worker as *"mid-execution"*; that was true of the previous seat and is not true of any live process now. Recording it so the desk does not credit work that does not exist.**
+**FAN-IN: `0 / 9`. NOT A HANDOFF.** ★★ **The batch is the unit of work and I intend to close all nine.**
+**GRAPH:** ⚠️ **NOT GRAPH-SCHEDULED.** `R-545` RECEIVED the external V4 execution graph and **did not adopt it**; I hold it `CANDIDATE — NOT AUTHORITY` and schedule nothing from it. **My authority is `R-543`/`R-544` as carried forward by `R-545 §5.1`.**
+
+### ⚠️★★★ §1 — THE COLD-START BLOCK WAS MISSING FROM THE NEWEST RULING (reported, per `worker-onboarding` §1)
+**`R-545` carries no `★ WORKER — START HERE` block.** I recovered the contract from its `§5.1` pointer into `R-543 §4` + `R-544 §3`, which was unambiguous, so **this cost me little and I am not asking for a re-issue.** ★★ **Reporting it only so the desk keeps the block alive — `R-430` exists because a cold seat once could not tell which items were its own.**
+
+### ⚠️★★★★★ §2 — FOUR FLAGS RAISED BEFORE THE FIRST LINE OF CODE
+**(a) 🛑★★★★★ ITEM `1` AND THE `FREE_REF` CHANNEL ARE IN DIRECT TENSION, AND IT LANDS ON THE BEST FIND THIS CORPUS HAS MADE.** `34(d)`'s value is that a reference to an **UNDECLARED** identifier had no symbol and went uncaught — the purest form of the channel. ★★★★★ **BUT AN UNDECLARED IDENTIFIER IS `TS2304` BY CONSTRUCTION: THAT FIXTURE CAN BE TYPE-VALID OR IT CAN BE UNRESOLVED, NEVER BOTH.** Under item `1` it becomes `miss_type_invalid`. **PLAN: split the row — an ambient-DECLARED free reference (type-valid, still `FREE_REF` via the resolved-elsewhere path) counted, AND the unresolved form retained as an HONEST NAMED `miss_type_invalid` with the rule-bug it found stated in full.** ⚠️ **I am not deleting the row and I am not quietly re-crediting it. If the desk wants a different disposition, say so — this is the one item where a re-classification could look like erasing an inconvenient result.**
+**(b) ⚠️★★★ THE PINNED SURFACE MAY INVALIDATE EVERY SOURCE FIXTURE AT ONCE.** `strict: true` implies `noImplicitAny`, and **every** source fixture is `(lane) => ...` with no annotation. **If that is `TS7006`, item `1` drives the number to ~`0` — which would be the SURFACE being wrong, not the corpus.** **PLAN: measure it first; if confirmed, the committed surface supplies a `Lane` type and the fixtures carry `(lane: Lane)`.** ⚠️ **That CHANGES FIXTURE BYTES, and `AR-589 §2.1` made a point of byte-identical fixtures — so I flag it rather than doing it silently, and every changed byte will be published.**
+**(c) ⚠️★★★ ITEM `7` COLLIDES WITH MY SCOPE, AND I AM TAKING THE CONSERVATIVE READ.** Rebuilding row `54` as a true container twin makes the DESIGN matrix's row-`54` caption **KNOWN-WRONG** (`R-544` retracted it). **`R-543 §4` scopes design edits to item `5`'s tuple ONLY.** **PLAN: rebuild the twin in the CORPUS, publish the tuple in the design per item `5`, and LEAVE the design's row-`54` caption UNEDITED AND FLAGGED as an owed desk edit.** ★★ **Naming the deferral rather than absorbing it.**
+**(d) ✅ FAKE-EDGE TEST, ANSWERED: THERE IS NO PARALLEL LANE HERE.** All nine items mutate the same three modules (`source-admission.mjs`, `corpus.mjs`, `run.mjs`) and the same results artifact; item `3`'s ownership pass consumes item `2`'s pinned surface, and items `7`/`8` consume item `6`'s extension handling. **Real data dependencies, not a fake serial order — ONE seat, serial, no subagent lanes.**
+✅ **NO METRIC-MIX DEFECT IN THIS RULING:** everything asked of me is a MECHANICAL count of what the run did; **`R-543 §5` already assigns the GRADED judgment to the desk's `accuracy-validator` against the corrected number. `doer != grader` is intact and I am not asked to score myself.**
+
+### §3 — FIRST OBSERVABLE + ETA
+**FIRST OBSERVABLE: the pinned+committed compiler surface (item `2`) with `getSemanticDiagnostics` live in the validity gate (item `1`), and the FIRST corrected coverage number — ~`25` min.** **FULL BATCH of nine: ~`75`–`110` min.**
+**PRE-REGISTERED, RESTATED BEFORE ANY DATA (`R-543 §4` / `R-544 §3`): the corrected number MUST FALL below `49/52`; a re-run still reporting `49` is a FINDING, not a success. Misses enumerated by class (`not_implemented` · `type_invalid` · `ownership_ambiguous`).**
+
+### §4 — WHAT I WILL NOT TOUCH
+**The gate · the three claims · the scope registry · the ledger consumer · `ORACLE.json` · `P1`/`P2` artifacts · the pinned tag · the old `P0` lane · `HOLDOUT-26` · `P3` · Gate B · engine/runtime/extraction/DB/migrations · the grader's receipts · `ADVISOR-RULINGS.md` · no `checkout`/`reset`/index op.** ★★ **I do not grade my own work.**
+
+---
+
 ## AR-589 · 2026-08-02 · ✅★★★★★ **R-541 §6 DELIVERED — THE PROTOTYPE IS BUILT, RUN, AND THE COVERAGE NUMBER IS REAL: `49 / 52` ATTRIBUTED, `3` HONEST NAMED MISSES, `0` WRONG-CATCHER PASSES, `5/5` GREENS ADMITTED, GETTER COUNTER `0`.** 🛑★★★★★ **AND THE CORPUS EARNED ITS KEEP ON ITS FIRST RUN BY FINDING A REAL BUG IN MY OWN RULE — `34(d)` WENT **UNCAUGHT** BECAUSE MY FREE-REFERENCE CHECK REQUIRED A TYPE-CHECKER SYMBOL, AND AN UNDECLARED IDENTIFIER HAS NONE.**
 
 **RULING ID:** R-541 §6 (items `1`–`3`; item `0` landed in `AR-588`) · **TASK ID:** AR-589 · **SEAT:** `claude.exe 26204`.
