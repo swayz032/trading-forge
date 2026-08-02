@@ -12,6 +12,79 @@
 
 ---
 
+## R-555 · 2026-08-02 · ✅★★★★★ **`F-2-CORRECTED` IS RECEIVED AND CLOSED — AND THE PROOF IS THAT **MY OWN PROBE, RE-RUN UNCHANGED, NOW CLEARS THE BUILD IT CONVICTED**: `implements` and `interface extends` ADMITTED, `window.Base` and `export * from` STILL RED, `0` OVER-CORRECTIONS, `0` DEAD PROBES.** ✅★★★★★ **THE FIX IS THE ORDERED PROPERTY, NOT A PATCH: NO `SyntaxKind` AND NO SPELLING ALLOWLIST EXISTS — THE EMITTER IS THE ORACLE, AND `e===0 ⟹ ABSENT FROM EMIT ⟹ CANNOT EXECUTE` MAKES THE SOUND DIRECTION SOUND BY CONSTRUCTION.** ✅★★★ **I ATTACKED THE NEW ORACLE ON ITS OWN WEAK POINT AND FOUND NOTHING — HONEST NULL, COVERAGE NAMED.** **DECISION: APPROVE `1/3` · RATIFY the worker's minted law · CONTINUE.**
+
+**★ WORKER — START HERE:** ✅ **`F-2-CORRECTED` CLOSED — do not revisit it.** **Continue `R-551 §6.1`: (2) items `14`–`16` with their seven red-proofs `(a)`–`(g)`, then (3) `F-7`.** ✅ **Your `1/3` fan-in and *"NOT A HANDOFF"* are ACCURATE — I verified both attack lines are untouched (`§4`), so nothing was quietly claimed.** ★★★★★ **YOUR `§3` LAW IS RATIFIED AS CAMPAIGN LAW (`§3` below) — apply it to items `14`–`16`: their red-proofs must be RE-MEASURED in the same run that reports them, never inherited.** **First observable: item `15`'s frozen membership loaded from a PINNED ARTIFACT with `CORPUS.map(` gone, ~30–45 min.**
+
+**RULING ID:** R-555 · **TASK ID:** AR-596 · **DECISION: APPROVE** item (1) of `R-551 §6.1` · **RATIFY** `AR-596 §3` · **CONTINUE** `P0PC`.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** (`R-554`). **GRAPH NODE TRANSITION: NONE** — `P0PC` does NOT advance; `1` of `3` contract items is closed and the two founding attacks are still open. **`P0PG` stays blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-596`** (`97870c07`, `05:19:54`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** campaign worktree at `97870c07`, node `v24.13.0`.
+
+### ✅★★★★★ §1 — VERIFIED BY THE INSTRUMENT THAT CONVICTED IT
+`[MEASURED HERE — `probe-heritage.mjs`, byte-identical to the run behind `R-551 §2`, re-executed against the new build. I changed NOTHING in the probe; that is the point.]`
+```
+A class Impl implements Widget   ADMITTED   (was REJECTED free-captured-reference + residual)
+B interface Ext extends Widget   ADMITTED   (was REJECTED free-captured-reference)
+C CONTROL class extends window.Base  REJECTED 1b-S:direct-ambient-read   <- true positive PRESERVED
+D CONTROL export * from './ledger.js' REJECTED 1b-S:import-cardinality   <- F-1 still closed
+E BASELINE frozen module             ADMITTED
+OVER-CORRECTIONS 0 · DEAD PROBES 0
+```
+★★★★★ **`A FIX IS PROVEN BY THE UNCHANGED INSTRUMENT THAT FOUND THE DEFECT, NOT BY A NEW ONE THE FIXER WROTE.` Both controls still bite, so this is a discriminating clear and not "admit everything" — which is the failure mode an over-correction fix invites.**
+✅ **ALL FIVE GATES EXIT `0` `[MEASURED HERE, exit codes read from the process, NOT through a pipe — `R-554 §6` was minted on that trap two rulings ago]`:** `run` GATE PASS · `red-proof` control GREEN + `18/18` · `type-value-proof` `15/15` with **`RESIDUAL REACHABLE: true`** · `emitted-freeze` both comparator controls true · `module-tuple` surface hash unchanged.
+
+### ✅★★★★★ §2 — THE STOP CONDITIONS, TESTED RATHER THAN ASSUMED
+`R-551 §5` pre-registered five. `[MEASURED HERE]` **all five clear:**
+- **"a hand-written HeritageClause/`SyntaxKind` allowlist → STOP"** → ✅ **CLEARED AT THE EXECUTABLE LINE.** `grep` for `HeritageClause|ImplementsKeyword|ExtendsKeyword` returns **nothing**; `source-admission.mjs:192-224` is a general `erasureOracle` comparing AST identifier counts source-vs-emit. ★★★ **AND IT IS AST-KEYED, NOT TEXT-KEYED — so a spelling planted in a string literal cannot inflate the emitted count. I checked that specifically because a text-based counter would have been a real hole.**
+- **"`implements`/interface-`extends` still REJECTED → STOP"** → ✅ cleared (`§1` A/B).
+- **"`class extends window.Base` ADMITTED → STOP"** → ✅ cleared (`§1` C).
+- **"`POSITION_UNCLASSIFIED` no longer reachable → STOP"** → ✅ cleared: `RESIDUAL REACHABLE: true`, fired twice.
+- **"items `14`–`16` reported delivered while the membership is still `CORPUS.map(` → STOP"** → ✅ **NOT TRIGGERED — the worker reported them OPEN, and `§4` confirms that is true.**
+✅★★★ **THE SOUND DIRECTION IS SOUND BY CONSTRUCTION, AND I state the mechanism with its evidence:** `verdictFor` returns `'type'` only when the identifier's emitted count is `0` `[source-admission.mjs:219]` — i.e. it is **absent from the emitted JavaScript**, which is the artifact that executes. **An identifier absent from what runs cannot be a runtime capture.** Partial erasure (`0 < e < s`) returns `'unclassified'` and fails closed rather than guessing.
+
+### ✅★★★ §2a — MY OWN ATTACK ON THE NEW ORACLE: HONEST NULL
+⚠️ **`AR-596` does not address one thing, so I probed it: `erasureOracle` pins `module: ESNext` for EVERY fixture, while the corpus carries `.cts`/`.mts` twins whose real emit differs.** **Hypothesis: a capture erased under `ESNext` but retained under the fixture's actual module system would be silently exonerated.**
+`[MEASURED HERE, six constructed cases]`
+```
+twin .mts capture      REJECTED direct-ambient-read      twin .cts capture   REJECTED module-system + direct-ambient-read
+export= .cts capture   REJECTED (5 catchers)             namespace type-only ADMITTED  <- correct, genuinely erased
+namespace VALUE member reading window.Base  REJECTED direct-ambient-read  <- the dangerous one, CAUGHT
+CONTROL plain ambient  REJECTED
+```
+✅★★★★★ **NO HOLE FOUND. I report the null with its coverage rather than as a clearance: I covered module-format twins, `export =`, and the type-only/value namespace split. I did NOT enumerate the `SyntaxKind` space, and `R-550 §5`'s *"sample, not closure"* discipline applies to MY probe exactly as it applied to the grader's.**
+
+### ✅★★★★★ §3 — RATIFIED AS CAMPAIGN LAW (`AR-596 §3` asked; the answer is yes)
+> ★★★★★ **`A RED PATH IS NOT A PROPERTY OF THE GUARD. IT IS A PROPERTY OF THE GUARD **AND** THE CURRENT CODE — SO IT MUST BE RE-MEASURED IN THE RUN THAT REPORTS IT, AND MAY NEVER BE INHERITED FROM A PAST PASS.`**
+**EVIDENCE IT IS EARNED, not a slogan** `[RELAYED — the worker's own count, and it matches what I watched happen across `AR-594`/`AR-596`]`: the `position_unclassified` red path has been **silently retired by an unrelated repair THREE times** (labeled statement → enum member → partial erasure), and **each time the suite still read GREEN until `red-proof.mjs` re-ran it.**
+★★★ **THIS IS `R-547 §4.3` ONE LEVEL FURTHER OUT.** That said *a guard whose founding defect is not in its mutation set is untested*; this says **a mutation set that WAS adequate can be silently invalidated by a fix somewhere else.** **Together: the mutation set is not a fixture, it is a measurement, and it decays.**
+✅ **BINDING ON THIS DESK TOO — and it convicts `R-554` in passing:** I declined to credit the V4 suite's red paths because I could not run them. **That was this law, applied before it was minted. It is now the stated reason, not an instinct.**
+
+### ⚠️ §4 — WHAT IS STILL OPEN, VERIFIED NOT RELAYED
+`[MEASURED HERE, at `97870c07`]` **both founding attacks are untouched, exactly as `AR-596 §4` states:**
+- `corpus.mjs:291` — `export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter(...)`. **Item 15's forbidden construction, unchanged.**
+- `run.mjs:46` — `const TYPECHECKER_CAUGHT_CODES = [...]`, one global list. **Item 14's forbidden construction, unchanged.**
+⚠️★★★ **CORRECTION TO MY OWN `R-551 §4`, made plainly: I cited `corpus.mjs:282`; it is now `:291` because the corpus grew. Same construction, moved line.** ★★★★★ **`CITE CODE BY ITS CONSTRUCTION, NOT ITS LINE NUMBER` — this desk already learned that for rulings (`grep -n "^## R-"`, never a line) and I did not sweep it to code cites. `mint-law`, unswept, again.**
+✅ **The `1/3` fan-in and *"NOT A HANDOFF"* are therefore ACCURATE.** ★★★ **After `AR-591` shipped a stale `9/9`, this report states its own incompleteness in its header. That is the corrected behaviour, and I record it as such.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️ **`G-1`: the two CONSTRUCTED admissions are now CLOSED, but `G-1` stays OPEN — `R-550 §5` binds: *"sample, not closure"*, never "exactly two blind channels".** ⚠️ **`runtime-admission.mjs` still ENTIRELY UNGRADED (`13` attributed rows).**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **Item `15` satisfied by re-deriving membership from `CORPUS` under any new name → STOP: the defect is SELF-AUTHORSHIP, not the identifier.** · ★★★★★ **Item `14` satisfied by a per-row code list → STOP: the key is `(row, owned expression, span, expected defect)` (`R-552 §3.2`), not a smaller allowlist.** · ★★★★★ **Any red path in the `14`–`16` delivery reported from a PAST pass rather than re-measured in that run → STOP (`§3`, now law).** · ★★★ **`F-2-CORRECTED` reopened, or `implements` reconvicted → STOP.** · ★★★ **A fresh grade dispatched before `14`–`16` land → STOP (`R-552 §3.1`, channel cost).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `R-551 §6.1` items (2) then (3): `14`–`16` with red-proofs `(a)`–`(g)`, then `F-7`.** Scope as `R-546 §8.1`; FORBIDDEN unchanged. **FIRST OBSERVABLE: item `15`'s pinned-artifact membership with `CORPUS.map(` gone, ~30–45 min. HONEST-PARTIAL:** if the pinned artifact for the original `52` cannot be reconstructed from a prior commit, **say so and name what you could recover** — a membership set silently re-derived is item 15 again.
+2. **THIS DESK — the fresh grade stays HELD** until `14`–`16` land. **Brief now also carries: `§2a`'s module-target null (so the grader extends rather than repeats it), the `SyntaxKind`-space closure question, and `runtime-admission.mjs`.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`) when the money path is idle.** Not now; `P0PC` is mid-contract.
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A FIX IS PROVEN BY THE UNCHANGED INSTRUMENT THAT CONVICTED IT.` Re-running my own probe byte-identical cost one command and is worth more than any number the fixer could have reported.**
+★★★★★ **`ASK THE ARTIFACT THAT EXECUTES.` The whole over-correction dissolved once the discriminator became "is it in the emitted JavaScript" instead of "which syntax node is it under". `WHEN THE COMPILER ALREADY DECIDES THE QUESTION, A HAND-WRITTEN LIST IS A GUESS WITH EXTRA STEPS.`**
+★★★ **`CITE CODE BY CONSTRUCTION, NOT BY LINE NUMBER` — `:282` became `:291` in one wave.**
+
+---
+
 ## R-554 · 2026-08-02 · ✅★★★★★ **THE V4 REVISION IS REAL ENGINEERING AND IT FIXED ITS FOUNDING DEFECT: THE VALIDATOR COMPUTES `ready_worker_nodes = ["P0PC"]` AND PUTS `P1`/`P2` IN `completed_evidence_nodes` — **NOT** THE READY SET — AND THE HAND-AUTHORED CAPTION FIELDS ARE GONE FROM THE SCHEMA.** 🛑★★★★★ **STILL NOT ADOPTED, AND FOR A REASON I MEASURED RATHER THAN ASSUMED: **THE VALIDATOR DENIES ITS OWN GRAPH** (`exit 1`), AND I COULD NOT REACH A GREEN BASELINE EVEN AFTER REFRESHING THE EPOCH FIELDS — SO `R-547 §4`'s CRITERION `3` IS **UNWITNESSED**.** **DECISION: RECEIVE + HOLD, WITH A MECHANICAL ADOPTION PATH.**
 
 **★ WORKER — NOTHING FOR YOU IN THIS RULING.** **Your contract is unchanged: `R-553`'s START-HERE block → backfill-read `R-551`/`R-552` → `R-551 §6.1`.** **No node is scheduled from this graph and none may be (`R-547 §6`).**
