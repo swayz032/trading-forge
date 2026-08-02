@@ -262,6 +262,44 @@ export const CORPUS = [
   { id: '58', atom: 'import.meta — host state REACHED FOR through a MetaProperty', expect: S.FREE_REF,
     ...src(`export const project = (lane: Lane) => ({ v: import.meta });\n`) },
 
+  // ---- ROW 59: THE `constructor` REACH — F-3, ORDERED BY R-575 §6.3 ---------------------
+  // 🛑 THESE ROWS ARE **HONEST MISSES TODAY** AND I SAY SO AT THE ROW RATHER THAN IN A REPORT
+  // NOBODY READS BESIDE THE CODE. `[MEASURED HERE, rig controls holding: clean ADMITTED ·
+  // process.env REJECTED · import.meta REJECTED, all in one run]` all three shapes below are
+  // ADMITTED with ZERO catchers, and the grade executed the transpiled form: it evaluates to the
+  // real `globalThis`, reaches `process.env`, and can hand back a live Proxy with no `Proxy`
+  // token in the source.
+  //
+  // THE MECHANISM, LOCATED AT THE EXECUTABLE LINE (`source-admission.mjs:530`): `isPropName`
+  // skips any Identifier sitting in its parent's `.name` slot, and `.constructor` sits exactly
+  // there. **IT IS THE SAME NAME-SLOT BLIND SPOT `AR-603` CLOSED FOR `MetaProperty` ALONE** —
+  // that fix added `!isMetaProperty` and stopped, so the class was closed for one member and
+  // left open for the rest.
+  //   A FIX WRITTEN FOR THE INSTANCE THAT WAS FOUND CLOSES EXACTLY THAT INSTANCE.
+  //
+  // ⚠️ WHY THE ROWS LAND **BEFORE** THE CATCHER, WHICH IS THE OPPOSITE OF THE `Proxy` DECISION:
+  // `R-572 §3` kept Proxy rows out because a guard row for a missing catcher "could only fail".
+  // `[MEASURED HERE]` THAT IS NOT TRUE OF THIS ROW: with nothing fired the runner scores it
+  // `MISS_NOT_CAUGHT` (`run.mjs:357`), which no `FAILURE_CLASS` gates for an EXPANDED row — so
+  // the channel becomes VISIBLE AND COUNTED without the gate going red on an unbuilt catcher.
+  // `A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE`, and these make it seeable.
+  // 🛑 THAT SAME MEASUREMENT IS ITSELF A FINDING AND IT IS REPORTED, NOT SPENT: `MISS_NOT_CAUGHT`
+  // IS UNGATED OUTSIDE THE PINNED 52 (inside it, `partition_orphan` catches it).
+  //
+  // `expect` IS `DYNAMIC_LOAD` BY THE DESIGN'S OWN TAXONOMY, NOT BY MY CHOICE: `CATCHERS.DYNAMIC_LOAD`
+  // is the catcher that rejects `new Function`, and `({}).constructor.constructor` **IS** `Function`
+  // — `[MEASURED HERE]` the checker types it exactly `Function`. When the catcher is built these
+  // rows flip to ATTRIBUTED with no edit; if the desk rules a different catcher owns the channel,
+  // the `expect` moves and the fixtures do not.
+  { id: '59(a)', atom: 'constructor reach: ({}).constructor.constructor -> Function', expect: S.DYNAMIC_LOAD,
+    ...src(`export const project = (lane: Lane) => ({ v: ({}).constructor.constructor('return globalThis')() });\n`) },
+  { id: '59(b)', atom: 'constructor reach: one hop, ({}).constructor', expect: S.DYNAMIC_LOAD,
+    ...src(`export const project = (lane: Lane) => ({ v: ({}).constructor });\n`) },
+  // 59(c) matters on its own: the reach starts from the CALLER-SUPPLIED `lane`, so it cannot be
+  // dismissed as "the module constructed the object it reached through".
+  { id: '59(c)', atom: 'constructor reach from the SUPPLIED lane parameter', expect: S.DYNAMIC_LOAD,
+    ...src(`export const project = (lane: Lane) => ({ v: lane.constructor.constructor('return globalThis')() });\n`) },
+
   // ---------- 1b-R : runtime ----------
   { id: '39', atom: 'function-valued field', expect: R.FUNCTION_VALUE,
     ...val(() => ({ id: 'L1', read: () => 'LEDGER' })) },
