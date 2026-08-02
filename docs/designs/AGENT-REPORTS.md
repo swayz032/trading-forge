@@ -4,6 +4,78 @@
 
 ---
 
+## AR-608 · 2026-08-02 · ✅★★★★★ **ITEM `(2)` CLOSED — `GRADE F-3` IS SHUT. I REPRODUCED `R-548`'S ATTACK A IN ITS **SUBSTITUTED** FORM FIRST: THE TRUE PLANT MADE TO **RESOLVE**, AN IMPOSTOR OF THE SAME CODE CLAIMING THE BYTE-UNCHANGED ANCHOR — **ONE DIAGNOSTIC, ONE ANCHOR, BIJECTION SATISFIED**, `GATE: PASS`, `EXIT 0`, PARTITION **NUMERICALLY IDENTICAL TO CLEAN**.** 🛑★★★★★ **AND THE RUN WAS PRINTING THE SMOKING GUN THE WHOLE TIME — `TS2304@L2:61 "lane"`. THE DISCRIMINATOR WAS IN THE RECORD AND THE JOIN NEVER USED IT.** ✅★★★ **FIXED WITHOUT NARROWING THE ANCHOR, RED-PROOFED AT BIRTH, AND THE OVER-CORRECTION CONTROL HOLDS: ALL SIX OWNED ROWS KEEP THEIR CREDIT.**
+
+**RULING ID:** `R-570 §7.1` (item `(2)`) · **TASK ID:** AR-608 · **PRIOR:** AR-607 · **CODE:** `dfbad040` + the pin-bump commit carrying this report.
+**FAN-IN: `2 / 5`. NOT A HANDOFF — continuing to `(3)` `Proxy`.** ⚠️ **`5` not `4`: `R-570 §0` added the `§6.3` enumeration as a fifth item, and I count it rather than let the denominator quietly stay `4`.**
+**GRAPH: `V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` ADOPTED (`R-570`), blob `6fcf22c4…`. NODE: `P0PC`, `active_worker`. NO TRANSITION CLAIMED — node completion is the desk's, not mine, and `(3)`+`(4)` are still open.**
+
+### 🛑★★★★★ §1 — THE DEFECT, REPRODUCED BEFORE ANY FIX WAS WRITTEN
+**`ADVISOR-STATE`: *"the bijection counts SURPLUS and cannot see SUBSTITUTION."* I built the substituted case rather than reasoning about it.** `[MEASURED HERE — plant asserted to have landed AND the anchor asserted byte-unchanged before any verdict was read]`
+```
+34(d-u)  body: export const project = (lane: Lane) => ({ v: undeclaredReader(lane) });
+         anchor declared: 'undeclaredReader(lane)'   plant: undeclaredReader is UNDECLARED -> TS2304
+
+ATTACK   declare `undeclaredReader`      -> the TRUE plant RESOLVES, its TS2304 is GONE
+         rename (lane: Lane) -> (ln: Lane) -> an IMPOSTOR TS2304 lands on `lane`,
+                                              INSIDE the byte-unchanged anchor
+
+RESULT   34(d-u)  CAUGHT_BY_TYPECHECKER ... TS2304@L2:61 "lane"
+         "caught_by_typechecker": 5        <- IDENTICAL to clean
+         GATE: PASS                          EXIT 0
+```
+★★★★★ **ONE DIAGNOSTIC FOR ONE ANCHOR, SO `surplus` AND `unwitnessed` ARE BOTH EMPTY AND THE BIJECTION IS SATISFIED. The row's declared defect is *"the planted illegality IS the unresolved free reference"* — that reference now RESOLVES, and the gate says PASS.**
+🛑★★★★★ **THE PART THAT INDICTS THE INSTRUMENT, NOT JUST THE RULE: the output ALREADY PRINTED `"lane"`. `anchorText` was in the diagnostic record, displayed on every line, and the join filtered on `code` + containment ONLY. `THE DISCRIMINATOR WAS NEVER MISSING — IT WAS NEVER JOINED ON.`** ⚠️ **This is why `own_extra_inside_anchor` passes and this did not: that injection LEAVES the true plant in place and adds a second diagnostic, so the count catches it. `A COUNT CATCHES ADDITION AND IS BLIND TO REPLACEMENT.`**
+
+### ✅★★★★★ §2 — THE FIX, AND WHY IT IS NOT THE FORBIDDEN ONE
+🛑 **`R-557 §4` and `R-570 §5` both STOP on *"fixed by narrowing the anchor"*, and they are right — an anchor equal to its own diagnostic restates the observation and can never be wrong.** ✅ **CONTAINMENT IS UNCHANGED AND THE ANCHOR STAYS EXACTLY AS WIDE AS THE OWNED EXPRESSION.**
+✅★★★ **WHAT IS ADDED IS A SEPARATE, PRE-REGISTERED AXIS: each `typecheckerOwned` entry now declares IN THE CORPUS which text its diagnostic must point at (`witness`), and the run falsifies that claim.** ★★★★★ **THE ROW CAN BE WRONG — THAT IS WHAT MAKES IT A CHECK RATHER THAN A RESTATEMENT. And because `corpus.mjs` is pinned to a frozen blob, the claim cannot be edited to fit the observation after the fact; that is the difference between a pre-registration and a rationalisation.**
+✅ **FAIL-CLOSED ON ABSENCE (`absence-means-maximum-scope`): an anchor with no `witness` throws `INSTRUMENT FAULT` rather than silently reverting to the old substitutable join. Without that, a future row opts out of this check by omitting a field — the exact shape that let `EXPANDED_PIN_COMMIT` go unasserted.**
+✅ **A dedicated `SUBSTITUTED` bucket, not a silent fold into `unjoined`, so the failure NAMES the mechanism:**
+```
+JOIN: SUBSTITUTED diagnostic(s): TS2304@104:"lane" carries the declared code and lies INSIDE
+"undeclaredReader(lane)", but points at "lane" where this row declared witness "undeclaredReader"
+```
+
+### ✅★★★★★ §3 — THE SEVEN WITNESSES WERE DERIVED **TWO WAYS**, AND THE DISAGREEMENT IS THE VALUABLE PART
+⚠️★★★★★ **A WITNESS COPIED OUT OF A RUN WOULD BE ITEM 15'S DEFECT IN A NEW COSTUME — an expectation computed from the thing it constrains, blessing whatever is currently happening including a bug.** ✅ **So I wrote all seven predictions from each row's STATED DEFECT **before measuring**, then measured. `[MEASURED HERE]`**
+```
+34(d-u) TS2304  predicted undeclaredReader   observed undeclaredReader   AGREE
+52(a)   TS1117  predicted a                  observed a                  AGREE
+52(b)   TS1117  predicted "\x61"             observed "\x61"             AGREE
+52(c)   TS1117  predicted == observed == the escaped-IDENTIFIER form (u0061 w/ leading backslash)  AGREE
+52(d)   TS1117  predicted "a"                observed "a"                AGREE
+54(c)   TS2532  predicted this               observed this               AGREE
+54(c)   TS2540  predicted HOLDER.slot        observed slot               ***DISAGREE***
+```
+✅★★★★★ **SIX OF SEVEN AGREED AND THE SEVENTH TAUGHT ME SOMETHING: `TS2540` (*"cannot assign to X, it is a read-only property"*) points at the **PROPERTY NAME**, not the member expression. The observation won because it is EXPLICABLE, not because it was observed.** ★★★ **Had I hand-copied all seven I would have learned nothing and could not have told a correct value from a wrong one. `TWO-PATH DERIVATION IS NOT CEREMONY — IT IS THE ONLY WAY A PRE-REGISTRATION CAN BE WRONG IN A USEFUL DIRECTION.`** ✅ **The reason is written into `corpus.mjs` beside that witness so nobody "corrects" it back.**
+
+### ✅★★★★★ §4 — RED-PROOFED AT BIRTH, WITH THE OVER-CORRECTION CONTROL
+`[MEASURED HERE, exit codes off the process]`
+```
+                 BEFORE THIS FIX          AFTER THIS FIX
+substitution     GATE: PASS   EXIT 0      GATE: FAIL   EXIT 1   34(d-u) -> TYPE_INVALID_UNCLASSIFIED
+clean control    GATE: PASS   EXIT 0      GATE: PASS   EXIT 0
+```
+✅★★★★★ **THE OVER-CORRECTION CONTROL IS THE HALF THAT COULD HAVE GONE WRONG AND DID NOT (`R-548 §4`): ALL SIX OWNED ROWS ARE STILL `CAUGHT_BY_TYPECHECKER` AND `caught_by_typechecker` IS STILL `5`, unchanged from clean. A witness check with one wrong value would have silently convicted a legitimate row — the `F-2` over-correction shape — and the count is the witness that it did not.**
+```
+run.mjs GATE: PASS EXIT 0 · red-proof CONTROL GREEN 41 / 41 EXIT 0 (was 40/40; +s)
+emitted-freeze EXIT 0 · type-value-proof 15 / 15 EXIT 0 · module-tuple EXIT 0 · module-collections EXIT 0
+```
+✅ **`44/52` and attribution logic UNTOUCHED.** ✅ **The module pin fired on the new `EXPECT` row and was bumped in the second commit — the two-commit dance, paid knowingly, as `AR-607 §7` said it would be.**
+
+### ⚠️ §5 — LIMITS
+1. ⚠️★★★ **`witness` IS EXACT-MATCH ON `anchorText`.** An impostor that lands on the SAME text as the true plant is still admitted. **I judge that residual small and NOT closable by this axis** — at that point the impostor is textually indistinguishable from the plant at the same span, and separating them needs an ablation (remove the plant, the diagnostic must vanish), which is a bigger design. **`[UNRESOLVED — NAMED, NOT SILENT]`**
+2. ⚠️ **Only the `34(d-u)` substitution is executed.** The other six anchors' witnesses are verified GREEN in the clean control but have **no per-row substitution injection**; I did not construct five more attacks. **Stated so `41/41` is not read as "every anchor was attacked".**
+3. ⚠️ **`witness` is a property of the DIAGNOSTIC's span text, not of causation.** It proves the diagnostic points where the row said it would; it does not prove the row's plant CAUSED it. Ablation would; this does not.
+
+### 🛑 §6 — STATE AND NEXT
+**FAN-IN `2 / 5`.** ✅ **`(5)` set-of-sets · `(2)` `F-3`.** 🛑 **OPEN: `(3)` `Proxy` design decision · the FINAL pin dance (corpus rows + `new.target` GREEN row + `EXEMPT_EXPORTS` DELETE + `HISTORICAL_RENAMES` PIN, all `R-570 §0`/`§4`) · the `§6.3` module enumeration.**
+✅ **NO sub-agent dispatched, nothing owed from my side. NOTHING SELF-GRADED — the `accuracy-validator` stays the desk's to dispatch and I have not asked.**
+**NEXT: `(3)` `Proxy`. FIRST OBSERVABLE: a report section or commit naming the Proxy disposition. ETA ~40–60 min.** ⚠️ **`(3)` is a DESIGN DECISION, not a patch — the grade's own note is that there is no in-language predicate for *"is a Proxy"*, so `UNRESOLVED_SOURCE_AMBIGUITY` handed up may be the correct output rather than code.**
+
+---
+
 ## AR-607 · 2026-08-02 · ✅★★★★★ **ITEM `(5)` CLOSED — AND THE SET-OF-SETS WAS NOT MERELY *NARROW*, IT WAS **DISARMABLE**. TWO EXECUTED COUNTEREXAMPLES, BOTH MEASURED BEFORE A LINE OF FIX WAS WRITTEN: DELETING ONE `EXPECT` ROW GAVE **`37 / 37`, "VERDICT: ENFORCING GATE", `EXIT 0`**; DELETING `collection_shape` FROM `FAILURE_CLASSES` MADE THE VERY INJECTION THAT REDDENS THE GATE REPORT **`GATE: PASS`, `EXIT 0`**.** 🛑★★★★★ **THEY **COMPOSE**: A COORDINATED TWO-EDIT DELETION REMOVES THE `R-562` CLASS FIX **AND ITS PROOF**, BOTH GATES GREEN — VERBATIM THE SHAPE `R-558` CLOSED FOR CORPUS ROWS AND LEFT OPEN ON THE FILES THAT DO THE ENFORCING.** ⚠️★★★ **I ALSO REPORT A DORMANT TABLE I DID **NOT** PATCH, AND THREE NAMED LIMITS.**
 
 **RULING ID:** `R-569 §7.1` (item `(5)`, my order ratified) · **TASK ID:** AR-607 · **PRIOR:** AR-606 · **CODE:** `7740292f` + the pin-bump commit carrying this report.

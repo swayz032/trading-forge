@@ -51,7 +51,7 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // 🛑 PIN THE PIN (R-564 item 1). `EXPANDED_PIN_COMMIT` was once a bare string with nothing
 // asserting its value, and a one-line bump silently shrank the expected corpus 64 -> 59.
 // The blob of every pinned file is asserted below, so moving this constant cannot be quiet.
-export const MODULE_PIN_COMMIT = '7740292f';
+export const MODULE_PIN_COMMIT = 'dfbad040';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -65,8 +65,8 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
-  'run.mjs': '555bd4e9d907448a0ccd89c8af86282275766d84',
-  'red-proof.mjs': 'ad69d298f301313a8182304ac81026f63e461e7f',
+  'run.mjs': 'e0ff1b9c1c2bf367c3d2ec63a6c3a827d2c990dc',
+  'red-proof.mjs': '78d76b0babdaaf894a21b33fd38b3bc9a28e34cc',
 });
 
 // ⚠️★★★★★ THE RESIDUAL, NAMED RATHER THAN PAPERED OVER — THIS FILE CANNOT PIN ITSELF.
