@@ -14,7 +14,9 @@
 // from "always red".
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import path from 'node:path';
+import { extractModuleCollections } from './module-collections.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RUNNER = path.join(HERE, 'run.mjs');
@@ -117,6 +119,45 @@ function runWith(inject, script = RUNNER) {
   }
 }
 
+// 🛑★★★★★ F-1c (THIRD INDEPENDENT GRADE, 2026-08-02) — WITNESS PROVENANCE.
+//
+// THE DEFECT, AND IT WAS MINE: `rows.push({ cls: `${inject}->${cls}` })` MANUFACTURED THE WITNESS
+// KEY FROM THE VERY DECLARATION IT WAS CHECKED AGAINST. `DECLARED_ROW_KEYS` is built from EXPECT;
+// the recorded key was rebuilt from EXPECT; so the membership test had EXPECT ON BOTH SIDES and
+// could only ever prove that EXPECT equals itself. The grader changed WHICH injection runs —
+// `runWith(EXPECT.find(([, c]) => c === cls)[0])` — leaving the loop variables intact, and the
+// output was BYTE-IDENTICAL to the clean control: 41/41, ENFORCING GATE, EXIT 0, empty `diff`,
+// while ELEVEN OF NINETEEN red paths were retired.
+//
+//     A WITNESS DERIVED FROM THE DECLARATION IT IS CHECKED AGAINST IS A TAUTOLOGY, NOT A WITNESS.
+//
+// ⚠️ THIS IS THE THIRD FORM OF ONE SPECIES, AND THE PROGRESSION IS THE REAL FINDING:
+//     R-561  both operands from the same MUTABLE ARRAY
+//     R-578  CARDINALITY asserted where IDENTITY was needed
+//     R-582  both operands from the same DECLARATION
+// Each fix moved the defect one level up instead of out of the file. THIS one moves the SOURCE of
+// the key outside `red-proof.mjs` entirely: the child process names the injection it ran, and only
+// the child can produce that string. The parent stops inventing it.
+const CONTROL_PREFIX = '<none';
+const observedInjection = (stdout) => {
+  const m = stdout.match(/^INJECTION: (.*)$/m);
+  return m ? m[1].trim() : null;   // null = the child never declared what it ran
+};
+// The recorded key is built from `obs` — NEVER from the loop variable. `provenanceOk === false`
+// is a LOUD failure in its own right: a missing witness must not degrade into a merely mismatching
+// key, because "declared but never ran" would then misdescribe WHICH layer actually broke.
+const NO_WITNESS = '«NO INJECTION WITNESS»';
+const witnessed = (r) => {
+  const obs = observedInjection(r.stdout);
+  return { obs, provenanceOk: obs !== null, token: obs === null ? NO_WITNESS : obs };
+};
+// ⚠️ Provenance is carried ON EACH ROW rather than in a module-level list, and that is a
+// deliberate design choice with a measured reason: a new module-level collection would be a NEW
+// UNPINNED table (the set-of-sets guard flags it, correctly) and would cost another pin dance.
+// Keeping the witness with the row it describes is also simply better — the datum and its subject
+// do not drift apart. NOTE this is NOT evading the guard: nothing existing is being hidden from
+// it, and the alternative was creating a table with no independent reason to exist.
+
 console.log('RED-PROOF — every enforced class must have a demonstrated red path');
 console.log('='.repeat(104));
 
@@ -132,8 +173,10 @@ for (const [cls, what] of CLASSES) {
   const wentRed = r.code !== 0;
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
   const gateFail = /GATE: FAIL/.test(r.stdout);
-  const ok = wentRed && namedOurClass && gateFail;
-  rows.push({ cls, ok, code: r.code, namedOurClass });
+  const w = witnessed(r);
+  const ok = wentRed && namedOurClass && gateFail && w.provenanceOk;
+  // KEY FROM THE CHILD (`w.token`), never from the loop variable `cls`.
+  rows.push({ cls: w.token, ok, code: r.code, namedOurClass, declaredKey: cls, provOk: w.provenanceOk });
   const firedNames = (r.stdout.match(/^ {2}\*\*\* (\w+):/gm) || []).map((s) => s.replace(/^ {2}\*\*\* /, '').replace(':', ''));
   console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} named=[${firedNames.join(',')}]  (${what})`);
 }
@@ -141,18 +184,24 @@ for (const [cls, what] of CLASSES) {
 for (const [cls, viaInject, what] of SHARED) {
   const r = runWith(viaInject);
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
-  const ok = r.code !== 0 && namedOurClass;
-  rows.push({ cls, ok, code: r.code, namedOurClass });
-  console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} via inject '${viaInject}'  (${what})`);
+  const w = witnessed(r);
+  const ok = r.code !== 0 && namedOurClass && w.provenanceOk;
+  // The SHARED rows ride another class's injection, so the identity is the PAIR
+  // (what the child actually ran, which class it named). Only the first half is child-sourced.
+  rows.push({ cls: `${w.token}=>${cls}`, ok, code: r.code, namedOurClass, declaredKey: `${viaInject}=>${cls}`, provOk: w.provenanceOk });
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} ran '${w.token}' (declared via '${viaInject}')  (${what})`);
 }
 
 // ---- ITEMS 14-16: the seven named red-proofs, each naming the class it must trip ------
 for (const [inject, cls, what] of EXPECT) {
   const r = runWith(inject);
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
-  const ok = r.code !== 0 && namedOurClass && /GATE: FAIL/.test(r.stdout);
-  rows.push({ cls: `${inject}->${cls}`, ok, code: r.code, namedOurClass });
-  console.log(`${ok ? 'PASS' : '*** FAIL'} ${inject.padEnd(26)} exit=${String(r.code).padEnd(3)} names '${cls}'=${namedOurClass}  ${what}`);
+  const w = witnessed(r);
+  const ok = r.code !== 0 && namedOurClass && /GATE: FAIL/.test(r.stdout) && w.provenanceOk;
+  // 🛑 THE LINE F-1c IS ABOUT. `w.token` comes from the CHILD's own output; `inject` is the
+  // declaration and must never reach this key, or the membership test compares EXPECT to itself.
+  rows.push({ cls: `${w.token}->${cls}`, ok, code: r.code, namedOurClass, declaredKey: `${inject}->${cls}`, provOk: w.provenanceOk });
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${inject.padEnd(26)} exit=${String(r.code).padEnd(3)} ran '${w.token}' names '${cls}'=${namedOurClass}  ${what}`);
 }
 
 // ---- (b)/(f) SECOND GATE: the freeze comparator must go red on the same mutation ------
@@ -161,8 +210,12 @@ for (const [inject, cls, what] of EXPECT) {
 // "detects breakage".
 const freezeControl = runWith('', FREEZE);
 const freezeControlOk = freezeControl.code === 0;
-console.log(`${freezeControlOk ? 'PASS' : '*** FAIL'} ${'emitted-freeze CONTROL'.padEnd(26)} exit=${String(freezeControl.code).padEnd(3)} (unmutated freeze gate must be GREEN)`);
-rows.push({ cls: 'freeze_control', ok: freezeControlOk, code: freezeControl.code });
+// A CONTROL MUST ALSO PROVE IT IS A CONTROL. Without this, "the control" is just the row we
+// chose to call one — an injected run could occupy the control slot and the key would not notice.
+const fcW = witnessed(freezeControl);
+const fcIsControl = fcW.provenanceOk && fcW.token.startsWith(CONTROL_PREFIX);
+console.log(`${freezeControlOk && fcIsControl ? 'PASS' : '*** FAIL'} ${'emitted-freeze CONTROL'.padEnd(26)} exit=${String(freezeControl.code).padEnd(3)} ran '${fcW.token}' (unmutated freeze gate must be GREEN and must witness NO injection)`);
+rows.push({ cls: fcIsControl ? 'freeze_control' : `freeze_control(RAN '${fcW.token}')`, ok: freezeControlOk && fcIsControl, code: freezeControl.code, declaredKey: 'freeze_control', provOk: fcW.provenanceOk });
 // 🛑★★★★★ F-3b (SECOND INDEPENDENT GRADE, 2026-08-02) — A WITNESS THAT MATCHES THE CLEAN
 // CONTROL IS NOT A WITNESS, IT IS A CONSTANT.
 //
@@ -191,8 +244,9 @@ for (let i = 0; i < FREEZE_EXPECT.length; i++) {
   const selfNamed = w.test(r.stdout);
   const offDiagonal = freezeRuns.filter((run, j) => j !== i && w.test(run.r.stdout)).map((run) => run.inject);
   const named = absentFromControl && selfNamed && offDiagonal.length === 0;
-  const ok = r.code !== 0 && named;
-  rows.push({ cls: `freeze:${inject}`, ok, code: r.code, namedOurClass: named });
+  const fw = witnessed(r);
+  const ok = r.code !== 0 && named && fw.provenanceOk;
+  rows.push({ cls: `freeze:${fw.token}`, ok, code: r.code, namedOurClass: named, declaredKey: `freeze:${inject}`, provOk: fw.provenanceOk });
   console.log(`${ok ? 'PASS' : '*** FAIL'} ${`freeze:${inject}`.padEnd(26)} exit=${String(r.code).padEnd(3)}`
     + ` witness '${mustName}': absent-from-control=${absentFromControl} present-under-own=${selfNamed}`
     + ` leaked-to=[${offDiagonal.join(',')}]  ${what}`);
@@ -208,9 +262,13 @@ for (let i = 0; i < FREEZE_EXPECT.length; i++) {
 // law — a red path is a property of the guard AND the current code, and so is a green one.
 const ownedStillGreen = /"caught_by_typechecker": 5/.test(control.stdout);
 const ownedRowsNamed = ['52(a)', '52(b)', '52(c)', '52(d)', '54(c)'].every((id) => control.stdout.includes(`${id}     CAUGHT_BY_TYPECHECKER`) || new RegExp(`${id.replace(/[()]/g, '\\$&')}\\s+CAUGHT_BY_TYPECHECKER`).test(control.stdout));
-const overCorrectionOk = controlOk && ownedStillGreen && ownedRowsNamed;
-console.log(`${overCorrectionOk ? 'PASS' : '*** FAIL'} ${'over_correction_control'.padEnd(26)} the 5 legitimately compiler-owned rows STAY credited under the row-bound join (count=${ownedStillGreen}, rows=${ownedRowsNamed})`);
-rows.push({ cls: 'over_correction_control', ok: overCorrectionOk, code: control.code });
+// Same provenance discipline as the freeze control: this row reads the run.mjs CONTROL, so the
+// control must witness that it ran NO injection before its greenness means anything.
+const occW = witnessed(control);
+const occIsControl = occW.provenanceOk && occW.token.startsWith(CONTROL_PREFIX);
+const overCorrectionOk = controlOk && ownedStillGreen && ownedRowsNamed && occIsControl;
+console.log(`${overCorrectionOk ? 'PASS' : '*** FAIL'} ${'over_correction_control'.padEnd(26)} the 5 legitimately compiler-owned rows STAY credited under the row-bound join (count=${ownedStillGreen}, rows=${ownedRowsNamed}, control ran '${occW.token}')`);
+rows.push({ cls: occIsControl ? 'over_correction_control' : `over_correction_control(RAN '${occW.token}')`, ok: overCorrectionOk, code: control.code, declaredKey: 'over_correction_control', provOk: occW.provenanceOk });
 
 // ⚠️ WITHDRAWN, 2026-08-02: this file previously declared `partition_overlap` STRUCTURALLY
 // UNREACHABLE and excluded it from the count. The accuracy-validator refuted that — the
@@ -274,7 +332,7 @@ if (!countOk) {
 // (1 key witnessed 2x); retirement fails it (1 key witnessed 0x). None of the three can pass.
 const DECLARED_ROW_KEYS = [
   ...CLASSES.map(([cls]) => cls),
-  ...SHARED.map(([cls]) => cls),
+  ...SHARED.map(([cls, viaInject]) => `${viaInject}=>${cls}`),
   ...EXPECT.map(([inject, cls]) => `${inject}->${cls}`),
   ...FREEZE_EXPECT.map(([inject]) => `freeze:${inject}`),
   'freeze_control',
@@ -294,8 +352,19 @@ const neverWitnessed = [...declaredCount.keys()].filter((k) => (witnessedCount.g
 const witnessedRepeatedly = [...declaredCount.keys()].filter((k) => (witnessedCount.get(k) ?? 0) > 1)
   .map((k) => `${k} (witnessed ${witnessedCount.get(k)}x)`);
 const witnessedUndeclared = [...witnessedCount.keys()].filter((k) => !declaredCount.has(k));
+// ★★★ PROVENANCE IS A SEPARATE, PRIOR CONDITION — not folded into identity. If a child never
+// declared what it ran, the identity comparison is not "failing", it is UNINTERPRETABLE, and the
+// two must not print the same way (`R-582`'s whole lesson is about a verdict that misdescribes
+// which layer broke).
 const identityOk = derivationsAgree && declaredNotUnique.length === 0 && neverWitnessed.length === 0
   && witnessedRepeatedly.length === 0 && witnessedUndeclared.length === 0;
+const provenanceFailureRows = rows.filter((r) => r.provOk === false);
+const provenanceOk = provenanceFailureRows.length === 0;
+if (!provenanceOk) {
+  console.log('*** STOP CONDITION (F-1c): a row was recorded WITHOUT a child-printed witness. Its identity'
+    + ' would have come from this file\'s own declaration, which is the tautology F-1c closes.');
+  for (const r of provenanceFailureRows) console.log(`***   ${r.declaredKey}: the child printed no 'INJECTION:' line — nothing witnesses what it ran`);
+}
 if (!identityOk) {
   console.log('*** STOP CONDITION (F-1b): the built rows do not MATCH the declared rows one-for-one.'
     + ' A red path can be SUBSTITUTED or DUPLICATED without changing the count, so the count alone'
@@ -306,7 +375,29 @@ if (!identityOk) {
   if (witnessedRepeatedly.length) console.log(`***   RAN MORE THAN ONCE: ${witnessedRepeatedly.join(', ')}`);
   if (witnessedUndeclared.length) console.log(`***   RAN BUT UNDECLARED: ${witnessedUndeclared.join(', ')}`);
 }
-const allOk = controlOk && countOk && identityOk && rows.every((r) => r.ok);
+// ✅ F-4 (THIRD GRADE) — COMPLETENESS AS AN ENFORCED PROPERTY, NOT MAINTENANCE DISCIPLINE.
+// The grade's finding: all of run.mjs's declared FAILURE_CLASSES had a red path, but this file
+// contained ZERO non-comment references to FAILURE_CLASSES — so the completeness was TRUE BY CARE,
+// and the next class added to run.mjs would silently have no red path here.
+//     SAFETY BY STARVATION IS NOT SAFETY BY DESIGN.
+// The classes are read from run.mjs's SOURCE (via the same extractor the pin uses) rather than by
+// importing it — importing run.mjs would EXECUTE the gate. `keys === null` is a LOUD failure: an
+// unreadable declaration must never read as "nothing to cover".
+const declaredFailureClasses = extractModuleCollections(fs.readFileSync(RUNNER, 'utf8'), 'run.mjs').get('FAILURE_CLASSES')?.keys ?? null;
+const uncoveredFailureClasses = declaredFailureClasses === null
+  ? null
+  : declaredFailureClasses.filter((k) => !CLASSES.some(([c]) => c === k)
+      && !SHARED.some(([c]) => c === k)
+      && !EXPECT.some(([, c]) => c === k));
+const completenessOk = declaredFailureClasses !== null && uncoveredFailureClasses.length === 0;
+if (declaredFailureClasses === null) {
+  console.log("*** STOP CONDITION (F-4): run.mjs's FAILURE_CLASSES could not be read — completeness is UNKNOWN, which is not the same as satisfied.");
+} else if (uncoveredFailureClasses.length) {
+  console.log(`*** STOP CONDITION (F-4): ${uncoveredFailureClasses.length} declared failure class(es) in run.mjs have NO red path here: ${uncoveredFailureClasses.join(', ')}`);
+} else {
+  console.log(`COMPLETENESS (F-4): all ${declaredFailureClasses.length} of run.mjs's declared FAILURE_CLASSES have a demonstrated red path — ASSERTED, not assumed.`);
+}
+const allOk = controlOk && countOk && identityOk && provenanceOk && completenessOk && rows.every((r) => r.ok);
 // ⚠️ THE DENOMINATOR PRINTED IS THE EXPECTED ONE, NOT `rows.length`. Reporting the accumulator
 // beside a check on the accumulator is how "23 / 23" read as complete coverage.
 console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${EXPECTED_ROW_COUNT}`);
@@ -318,8 +409,10 @@ console.log(allOk
   ? 'VERDICT: the runner is an ENFORCING GATE — control green, every declared class ran exactly once and red-proofed.'
   : 'VERDICT: NOT a gate. ' + [
     controlOk ? null : 'the CONTROL failed, so no result here is interpretable',
+    provenanceOk ? null : `row PROVENANCE missing on ${provenanceFailureRows.length} row(s) — their identity is uninterpretable, not merely wrong`,
     countOk ? null : `row COUNT ${rows.length} != declared ${EXPECTED_ROW_COUNT}`,
     identityOk ? null : `row IDENTITY broken (${neverWitnessed.length} declared class(es) never ran, ${witnessedRepeatedly.length} ran more than once, ${witnessedUndeclared.length} undeclared)`,
+    completenessOk ? null : (declaredFailureClasses === null ? 'FAILURE_CLASSES unreadable — completeness UNKNOWN' : `${uncoveredFailureClasses.length} declared failure class(es) have no red path: ${uncoveredFailureClasses.join(', ')}`),
     failedRows.length ? `classes without a demonstrated red path: ${failedRows.join(', ')}` : null,
   ].filter(Boolean).join(' | '));
 process.exitCode = allOk ? 0 : 1;

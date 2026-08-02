@@ -60,6 +60,11 @@ const corpusNow = INJECT === 'membership_rename'
 const nowById = new Map([...corpusNow, ...GREEN].map((c) => [c.id, c]));
 
 console.log('EMITTED-BEHAVIOUR FREEZE (item 11)');
+// R-582 §6.1 — WITNESS PROVENANCE. The parent (`red-proof.mjs`) must be able to record WHICH
+// injection actually ran from THIS process's own output, never from the table it is checked
+// against. `run.mjs` already printed this; `[MEASURED]` this file printed it ZERO times, so the
+// three freeze rows had no provenance to consume. Same line, same format, so one parser reads both.
+console.log(`INJECTION: ${INJECT || '<none — this is the clean control>'}`);
 console.log(`BASELINE: ${BASELINE_COMMIT}:${REPO_PATH} (${rawBytes}B, read via git show — NOT hand-copied)`);
 console.log(`DECLARED SUBSTITUTION: ${substitutions} import specifier(s) rewritten to absolute URLs; no fixture byte touched.`);
 console.log('='.repeat(126));

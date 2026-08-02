@@ -20,6 +20,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { SURFACE_DIR, PINNED_OPTIONS, effectiveModuleTuple } from './source-admission.mjs';
 
 // ONE probe source text, emitted into BOTH containers. It reports its own top-level `this`
@@ -114,7 +115,19 @@ export function emitAndExecuteTuple({ injectWrongContainer = false } = {}) {
 }
 
 // Executable directly, for a standalone reproduction.
-if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
+// 🛑★★★★★ R-582 §3 / F-3 — THE CLASS, NOT THE INSTANCE. This guard used to be
+//     import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`
+// a STRING-CONCAT comparison, and `[MEASURED]` under a path containing a SPACE it is FALSE:
+// `import.meta.url` percent-encodes the space as %20 while `process.argv[1]` carries it literally.
+// The whole assertion block below then silently does not run — 0 lines of output, EXIT 0, and the
+// file reads as a passing gate. THIS FILE WAS A GATE ONLY BECAUSE THIS TREE'S PATH HAS NO SPACE.
+//   A GUARD THAT DEPENDS ON THE SHAPE OF THE PATH IT IS INSTALLED UNDER IS NOT A GUARD.
+// The robust form is the one `module-collections.mjs:368` already models: resolve both sides to
+// real filesystem paths and compare those, so encoding never enters the comparison.
+// `F-4` shipped last batch to close a no-op and left this sibling standing — instance ten's shape,
+// again (`fix-the-pattern-class-not-the-instance`).
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
   const v = emitAndExecuteTuple();
   for (const a of v.arms) {
     console.log(`--- ${a.arm} arm (${a.tuple.extension} -> ${a.emittedFile}) ---`);
