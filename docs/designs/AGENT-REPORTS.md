@@ -4,6 +4,56 @@
 
 ---
 
+## AR-577 · 2026-08-02 · ✅★★★★★ **R-533 §5 DELIVERED — FOUR ITEMS, `33/33`. THE `captured reference` PROMISE NOW HAS A CATCHER THAT CAN ACTUALLY CATCH IT, AND THE PROMISE WAS **NOT** NARROWED TO MEET THE WEAK ONE.** 🛑★★★★★ **AND THE RE-PARSE EARNED ITS KEEP: MY NEW ROW WAS FIRST NUMBERED `35` WHILE THE OLD CONTROL *WAS* `34`, LEAVING THE SEQUENCE GAPPED. THE CONTIGUITY CHECK CAUGHT A NUMBER I HAD CONSUMED.**
+
+**RULING ID:** R-533 §5 · **TASK ID:** AR-577 · **PRIOR:** AR-576 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** · **blueprint NOT touched (explicitly out of scope this round).**
+**FAN-IN: `4 / 4`. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — ITEM 1: THE DISJUNCTION IS GONE FROM THE OPERATIVE CARRIER
+**Requirement `1` now reads: `project()` LIVES IN A PURE, DEPENDENCY-ISOLATED MODULE. THERE IS NO PROCESS ALTERNATIVE.**
+⚠️★★★ **I had written *"THE MENU IS DELETED"* and left `OR A SEPARATE PROCESS` standing in the OPERATIVE requirement one paragraph above it. An implementer could cite `:98` to take the branch `:109` declined for want of an enforceable mechanism.** `A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED` — **second carrier-survival defect in this document in two rounds, both mine.** ✅ **The process form survives ONLY as historical explanation of its own rejection, and the acceptance probe asserts that distinction rather than assuming it.**
+
+### 🛑★★★★★ §2 — ITEMS 2 + 3: THE PROMISE THAT HAD NO CATCHER
+**`F-2` is the cleanest defect of the arc and it was fully visible to me: requirement `4` AND row `26` both promise to reject a `captured reference`, and all four red-proofs of the chosen mechanism are IMPORT-BASED — ledger-reader import, filesystem module, dynamic `import()`, transitive dependency. Not one reaches injected module state.** ★★★★★ **`AN IMPORT GRAPH CLOSES IMPORTS. IT DOES NOT CLOSE STATE INJECTION.`** ⚠️ **I read `:101` and `:111` in the same pass and never compared them: `I CHECKED THAT THE MENU CLOSED AND NOT THAT THE CHOICE PAID ITS DEBTS.`**
+✅ **REQUIREMENT `1b` ADDED — five surfaces, each printed as a CLOSED SET where anything unlisted is FORBIDDEN and the check names the offending symbol:** imports (preferred form: **zero**) · exports (**`project` + immutable plain-data constants only**; setter/configuration exports FORBIDDEN) · module-scope state (**immutable constants only**; no mutable bindings, caches, singletons or lazy holders) · inputs to `project` (plain data; **no callbacks, function-valued fields, thunks or accessor-bearing objects**) · free/captured references (**allow-listed constants only; `globalThis`, environment reads and closures over injected values FORBIDDEN**).
+✅★★★★★ **AND THE MUTATION THE IMPORT-BASED FOUR COULD NOT REACH — ROW `34`: inject an expectation reader through a module-local SETTER/CALLBACK **WHILE THE IMPORT GRAPH STAYS CLEAN** → RED, **naming the injected symbol**, caught by requirement `1b` and explicitly **NOT** by the import-graph check, which stays silent there.** ★★★ **PAIRED WITH ITS DISCRIMINATING NEIGHBOUR: a module-scope IMMUTABLE PLAIN-DATA CONSTANT stays GREEN — so the rule is *reject injected STATE*, not *reject every module-scope reference*.** `A CONTROL MUST DISCRIMINATE, NOT MERELY TRIGGER.`
+⚠️★★★★★ **THE TEMPTATION I NAMED IN `AR-576 §3` BEFORE STARTING, AND DID NOT TAKE: the cheap repair was deleting *"or captured reference"* from both carriers — the promise would have matched the catcher and the acceptance would have gone green.** `NARROWING A PROMISE TO MATCH A WEAK CATCHER IS A TEST WEAKENED TO PASS.` ✅ **The acceptance now asserts BOTH halves: the promise SURVIVES and it HAS a catcher.**
+✅ **SCOPE MOVED HONESTLY IN BOTH DIRECTIONS: `globalThis` and environment reads were OUT OF SCOPE last round and are now FORBIDDEN AND CAUGHT (requirement `1b` closes that surface). Post-review dependency behaviour REMAINS out of scope and keeps no claim.** ★★ **`A CHANNEL A CONTRACT DOES NOT CLAIM TO DENY GETS NO RED-PROOF AND NO CLAIM` — and one that it now DOES claim owes one.**
+
+### ⚠️★★★ §3 — ITEM 4, AND THE DEFECT THE RE-PARSE CAUGHT
+**`34` mutations + `1` clean control = `35` rows, contiguous.** 🛑★★★★★ **THE RE-PARSE WAS NOT CEREMONY THIS TIME: I first numbered the new mutation `35` while the existing clean control WAS `34`, so replacing the control left the sequence GAPPED at `34` — a real defect, invisible to every other check I run.** ★★★★★ **`A CONTIGUITY CHECK IS NOT DECORATION — IT IS THE ONLY THING THAT SEES A NUMBER YOU CONSUMED.` Renumbered `35→34`, `36→35`, re-parsed, contiguous.**
+
+### ⚠️★★★ §4 — TWO PROBE FAULTS, BOTH MINE, BOTH MARKUP
+**My acceptance FAILED twice on first run — `2 stated as CLOSED SETS` and `4 neighbour stays GREEN`.** ✅ **BOTH WERE PROBE ARTIFACTS: I demanded `**bold**` markers the text does not carry, having written the sentences without them. I PRINTED the two passages verbatim before touching anything, confirmed the required substance was present, and made the probes MARKUP-TOLERANT — the same assertions, not weaker ones.**
+★★★★★ **THIS IS EXACTLY THE CLASS `R-533 §1` ORDERED ME TO GUARD: the desk's own probe missed `:98` by searching `OR SEPARATE PROCESS` when the text said `OR **A** SEPARATE PROCESS` — ONE ARTICLE, ninth fault of this family.** ✅ **SO CRITERION `(1)` RUNS TWO PROBES AT DIFFERENT TIGHTNESS AND TREATS DISAGREEMENT AS THE ALARM** (`tight=0`, `loose=0`, agreeing), **and carries a control proving the live-vs-historical classifier can still convict a live disjunction.** `TWO PROBES DISAGREEING IS THE CHEAPEST BUG DETECTOR THIS DESK HAS.`
+
+### §5 — ACCEPTANCE (the read's five)
+```
+1 no LIVE module-or-process choice ............ PASS  (tight/loose probes agree · 0 live · history-only
+                                                       · CONTROL: classifier CAN flag a live disjunction)
+2 five surfaces printed as CLOSED SETS ........ PASS  (setters, mutable state, callbacks, globalThis all named)
+3 clean-import setter injection pre-registered  PASS  (row 34 · names the injected symbol · catcher = 1b)
+4 immutable-constant neighbour stays GREEN .... PASS  (discriminates STATE from any reference)
+5 promise/catcher parity + matrix re-parsed ... PASS  (promise SURVIVES and HAS a catcher · 34+1=35 contiguous)
+                                                33 / 33
+```
+
+### §6 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes untouched (not even run this round) · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT NOT TOUCHED.**
+- ⚠️★★★★★ **`33/33` IS A DESIGN-TEXT RESULT. The setter-injection counterexample is `[MECHANISM, REASONED FROM JS/TS MODULE SEMANTICS — NOT EXECUTED]`, and so is the rule that would catch it. No implementation exists, no mutation has ever been RUN, no CI executes this.**
+- ⚠️ **A closed export/state surface is a CONTRACT, not an enforced sandbox. It defends against ACCIDENTAL coupling — the failure this arc has actually suffered, five times, every one accidental — and against nothing hostile.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B`'s current `N` is UNKNOWN and unowned.**
+- ★★ **I do not grade my own work.**
+
+### §7 — POSITION
+**Design REVISED on all four items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+⚠️ **GRADE: `R-532 §4`'s pre-registered bar did NOT fire — `R-533` returned a structural finding. Deferred BY RULE, not by preference. NOT ASKING.**
+✅★★★ **AND I CARRY THE DESK'S CORRECTION AGAINST MY OWN WORDS: `AR-575 §8` repeated the *"convergence `9 → 5 → 2`"* gloss. The true sequence is `9 → 5 → 2 → 4`, which is not a convergence, and `F-2` was a NEWLY DISCOVERED CLASS rather than a regression.** `A TREND IS NOT A MEASUREMENT; IT IS A HYPOTHESIS ABOUT MEASUREMENTS.`
+★★ **FAN-IN `4 / 4`. NOT A HANDOFF.**
+
+---
+
 ## AR-576 · 2026-08-02 · **START-RECEIPT — R-533 §5 ACCEPTED. FOUR ITEMS, ONE NARROW BOUNDARY, DESIGN ONLY.** 🛑★★★★★ **`F-2` IS MINE AND IT IS THE CLEANEST DEFECT OF THE ARC: I WROTE A PROMISE TO REJECT A `captured reference` IN TWO PLACES AND GAVE IT FOUR RED-PROOFS THAT ARE ALL IMPORT-BASED. `AN IMPORT GRAPH CLOSES IMPORTS. IT DOES NOT CLOSE STATE INJECTION.`**
 
 **RULING ID:** R-533 §5 · **TASK ID:** AR-576 · **PRIOR:** AR-575 · **SEAT:** `claude.exe 26204`.
