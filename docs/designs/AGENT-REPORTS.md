@@ -4,7 +4,30 @@
 
 ---
 
-## AR-633 · 2026-08-02 · ⏳ **START-RECEIPT — `R-590` GRANTED THE LANE AND I HAVE TAKEN IT. SURFACE `B`, SUB-TASK `1`: IS TODAY'S CERTIFIED-CLEAN TIER-A CORPUS THE SAME POPULATION THE JULY CENSUS CONSUMED — **BY IDENTITY AND CONTENT HASH, NOT BY COUNT**?**
+## AR-634 · 2026-08-02 · ⏳ **START-RECEIPT — `R-591` STOPPED THE `R-590` LANE MID-BUILD AND I STOPPED. TAKING THE NEW LANE: **`P0PC`'s ACTUAL ACCEPTANCE STATUS ON THE CURRENT OBJECT, CLAUSE BY CLAUSE.****
+
+**RULING ID:** `R-591 §6` · **TASK ID:** AR-634 · **PRIOR:** AR-633 (**SUPERSEDED — struck, not deleted**) · **ONE SEAT.**
+
+🛑 **`AR-633` IS PRESERVED AND STRUCK, NOT RESOLVED BY DELETION.** Its lane (`R-590 §1`, corpus-identity delta) is **DEFERRED BY THE DESK, NOT ABANDONED BY ME** — `R-591 §6` re-times it to `RERANK`, `9` hard hops out. ✅ **The ear earned its keep: `R-591`'s header arrived mid-build and I read it BEFORE writing the enumerator. `~5` minutes spent, `~40` saved, and the desk said so first.**
+✅ **WHAT `AR-633`'s LANE HAD ALREADY MEASURED, BANKED HERE SO IT IS NOT RE-DERIVED WHEN `RERANK` ARRIVES `[MEASURED HERE]`:** the seed join is **INTACT** — all `13` provenance blobs at `HEAD` hash to the `_MANIFEST` values, `11` of them to the census's `specs[].extraction_sha256` recorded three weeks earlier, `2` are the declared `dropped_not_clean` pair · the member key is **`stub`**, NOT `spec_id` (which is EMPTY on every row) · a **SECOND, INDEPENDENT in-repo preservation exists** at `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/phase_b/` (committed `2026-07-22`, `13` files) whose committed blobs hash **identically** to both the census values and the `R-588` copy · both trees carry `* -text`, so the CRLF defect that broke the first preservation is closed on both. ⚠️ **AND THE SCOPE LIMIT I WOULD HAVE REPORTED, RECORDED NOW RATHER THAN LOST:** both "current" surfaces are PRESERVATIONS of one dead July source (`d96dba1d`), so a comparison between them measures **preservation fidelity**, not corpus drift. **Whether any live corpus surface exists at all was still open when the lane stopped `[UNENUMERATED]`.**
+
+🛑 **CORRECTION I OWE ON MY OWN RECEIPT: `AR-633`'s graph block recorded `GRAPH NODE: NONE — Surface B is absent from the graph's 28`. THAT IS FALSE.** `R-591` re-derived it: **`BFREEZE` is node `18`**, reachable by an `11`-hop all-`hard` path headed by `P0PC`. ⚠️ **I took that from `R-590`/`R-588` and labelled it `[RELAYED]` in my receipt — the label was right and it still propagated. `A RELAYED FALSEHOOD IS STILL A FALSEHOOD IN MY REPORT`, and the fix is that I re-derive graph facts I restate, not merely tag them.** ✅ **The error and its correction are both the desk's finding, not mine; I am recording it because it is in MY artifact.**
+
+**NEW LANE — GRAPH RECEIPT, RE-DERIVED THIS TIME, NOT RELAYED:**
+```
+GRAPH NODE:   P0PC (the object under measurement; NO transition proposed or implied)
+GRAPH OBJECT: V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json  [I re-derive the blob at delivery]
+OUTPUT:       a committed report artifact — one row per acceptance clause
+SHARED RES.:  prototypes/p0-vnext-admission/ READ + EXECUTE ONLY, ZERO EDITS (R-591 §6)
+```
+**TASK:** the four `P0PC` acceptance clauses **quoted verbatim from the JSON**, each with `bearing_prints` · `observed_values` at HEAD · `status ∈ {READING_PRESENT, READING_ABSENT, READING_AMBIGUOUS}`. **Including the `FAILURE_CLASSES` (`25`) vs `EXPECTED_ROW_COUNT` (`43`) distinction and which clause each actually speaks to.**
+🛑 **NOT MINE AND I WILL NOT WRITE IT: whether any clause is MET. `REPORT THE READINGS, NEVER THE VERDICT.`** ✅ **`READING_AMBIGUOUS` fails closed and I will use it rather than guessing a mapping.**
+⚠️ **INSTRUMENT DISCIPLINE CARRIED FROM `AR-630 §4`, where all three bit me:** no pipe when capturing an exit code (`$?` read `tail`'s status) · no `/tmp` redirect (MSYS→`C:\` returns `1` for a failed redirect, indistinguishable from a guard firing) · captures go to the scratchpad.
+**FIRST OBSERVABLE:** a commit adding the report artifact. **ETA ~`30–45` min.**
+
+---
+
+## ~~AR-633~~ · 2026-08-02 · 🛑 **SUPERSEDED BY `AR-634` — LANE DEFERRED BY `R-591 §6`. PRESERVED AND STRUCK (never deleted); its measurements are banked in `AR-634`.** ⏳ **START-RECEIPT — `R-590` GRANTED THE LANE AND I HAVE TAKEN IT. SURFACE `B`, SUB-TASK `1`: IS TODAY'S CERTIFIED-CLEAN TIER-A CORPUS THE SAME POPULATION THE JULY CENSUS CONSUMED — **BY IDENTITY AND CONTENT HASH, NOT BY COUNT**?**
 
 **RULING ID:** `R-590 §1` (contract `§2`–`§6`) · **TASK ID:** AR-633 · **PRIOR:** AR-632 · **ONE LANE, ONE SEAT, NO SUBAGENTS (`§7.1`).**
 
