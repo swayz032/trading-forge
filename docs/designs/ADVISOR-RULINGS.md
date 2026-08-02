@@ -12,6 +12,65 @@
 
 ---
 
+## R-554 · 2026-08-02 · ✅★★★★★ **THE V4 REVISION IS REAL ENGINEERING AND IT FIXED ITS FOUNDING DEFECT: THE VALIDATOR COMPUTES `ready_worker_nodes = ["P0PC"]` AND PUTS `P1`/`P2` IN `completed_evidence_nodes` — **NOT** THE READY SET — AND THE HAND-AUTHORED CAPTION FIELDS ARE GONE FROM THE SCHEMA.** 🛑★★★★★ **STILL NOT ADOPTED, AND FOR A REASON I MEASURED RATHER THAN ASSUMED: **THE VALIDATOR DENIES ITS OWN GRAPH** (`exit 1`), AND I COULD NOT REACH A GREEN BASELINE EVEN AFTER REFRESHING THE EPOCH FIELDS — SO `R-547 §4`'s CRITERION `3` IS **UNWITNESSED**.** **DECISION: RECEIVE + HOLD, WITH A MECHANICAL ADOPTION PATH.**
+
+**★ WORKER — NOTHING FOR YOU IN THIS RULING.** **Your contract is unchanged: `R-553`'s START-HERE block → backfill-read `R-551`/`R-552` → `R-551 §6.1`.** **No node is scheduled from this graph and none may be (`R-547 §6`).**
+
+**RULING ID:** R-554 · **TASK ID:** V4 graph revision `9844355c` vs `R-547 §4` · **DECISION: RECEIVE the engineering · HOLD adoption.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` on `origin/external-advisor/gpt-rulings`, commit `9844355c` (`04:35:44`), schema `v4-phase1-graph-1.2`, `28` nodes / `31` edges. **GRAPH NODE TRANSITION: NONE.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-595`** (`d25813ca`) — `[MEASURED HERE]` still the newest `## AR-` on disk. **It bears on this ruling only in that it does NOT touch the graph.**
+**TREE:** external artifacts EXTRACTED READ-ONLY to scratchpad and executed there against `--campaign-root` = the campaign worktree. ✅ **`docs/advisor-rulings/` was never written by this desk (`R-547 §5a`).**
+
+### ✅★★★★★ §1 — WHAT THE REVISION ACTUALLY DELIVERED, MEASURED BY EXECUTION
+`[MEASURED HERE, node v24.13.0, validator run with `--graph` + `--campaign-root`, exit code read DIRECTLY — an earlier `| tail` run reported `EXIT=0` over a usage error and a thrown assertion, which is this desk's most-convicted instrument trap and I nearly published it]`
+✅ **IT SHIPS A REAL INSTRUMENT, NOT A CAPTION:** `scripts/validate-v4-phase1-graph.mjs` (`396` lines) + `scripts/test-validate-v4-phase1-graph.mjs` (`225` lines). **`R-547 §4.2` demanded the ready set be COMPUTED; it now is, and the hand-authored `ready_worker_nodes_at_epoch` / `recommended_parallel_batch_now` fields are ABSENT from the JSON `[MEASURED HERE, grep → no match]`.**
+✅★★★★★ **THE FOUNDING DEFECT IS FIXED, AND THE VALIDATOR'S OWN OUTPUT IS THE WITNESS:**
+```
+ready_worker_nodes      ["P0PC"]        <- exactly this desk's actual money-path node
+ready_advisor_nodes     ["P3"]
+completed_evidence_nodes ["P1","P2"]    <- NOT in the ready set. R-545/R-547's whole charge.
+node_count 28 · edge_count 31 · artifact_pins_checked 12 · evidence_refs_checked 14
+phase_1_exit_verified true
+```
+✅ **CRITERION 1 HOLDS ON THE SUBSTANTIVE ARTIFACTS:** of `12` pins, **`9` are IMMUTABLE evidence** (design blob, report/ruling commits, grade receipts, freeze packets) and **all 9 verify against disk** — including `P2_MEMBERSHIP` = `1551c7e5…`, **the exact blob `R-547 §4.1` named by hash.** ★★★ **The `3` that fail are all `node: "EPOCH"` markers on the MUTABLE relay files. That is a FRESHNESS contract, not a broken evidence pin, and I will not report it as one.**
+✅ **CRITERION 6 HOLDS:** the revision doc states verbatim that `BLUEPRINT-V4-DRAFT.md` *"remains the requirements and gate authority"* and the graph is execution-order only.
+
+### 🛑★★★★★ §2 — WHY I AM NOT ADOPTING, AND IT IS A MEASUREMENT NOT A PREFERENCE
+`[MEASURED HERE]` **the validator DENIES the published graph: `exit 1`, `verdict FAIL`.**
+**I then tried to reach a green baseline** — refreshed the three `EPOCH` blob pins and the `status_epoch_*` commit/label fields to current head in a scratchpad copy, evidence pins untouched. **It still FAILS**, on a coupled three-way contract:
+```
+EPOCH_JOIN_MISMATCH   status join commit must equal the campaign commit being validated
+EPOCH_REPORT_MISMATCH report epoch commit is stale   (wants the commit that last touched AGENT-REPORTS.md)
+EPOCH_STATE_MISMATCH  advisor-state blob is stale
+```
+🛑★★★★★ **SO `R-547 §4`'s CRITERION `3` — *"the validator goes RED on a graph with `P1`/`P2` reinjected into the ready set"* — IS `[UNWITNESSED]`. The mutation suite CONTAINS that case (*"PASS P1/P2 re-entry denied"*) and contains both `§4.4` concurrency limits, but the suite aborts on its FIRST assertion (`clean graph must be admitted`), so I have executed NONE of the mutations.** ★★★★★ **`A TEST SUITE I CANNOT RUN TO GREEN HAS TOLD ME NOTHING ABOUT ITS RED PATHS, AND ITS OWN ASSERTION TEXT IS NOT EVIDENCE THAT THE ASSERTION FIRES.` `R-547 §4.3` asked for a WITNESSED red on the founding defect; I do not have one, and criteria `3`, `4` and `5` are therefore UNVERIFIED BY EXECUTION.**
+⚠️ **I am NOT calling this a defect in their work.** The epoch contract failing closed on a moved campaign is CORRECT design. `[HYPOTHESIS, UNPROVEN]` that the suite would pass with a correctly-constructed epoch — **I could not construct one, and I will not credit what I could not run.**
+
+### 🛑★★★ §3 — THE STRUCTURAL FINDING THAT DECIDES HOW ADOPTION MUST WORK
+`[MEASURED HERE]` **the graph pins `ADVISOR-STATE.md`, `ADVISOR-RULINGS.md` and `AGENT-REPORTS.md` by blob, and its join rule requires its own epoch to EQUAL the campaign commit being validated.**
+★★★★★ **CONSEQUENCE: THE GRAPH'S `PASS` STATE HAS A LIFETIME OF EXACTLY ONE RELAY WRITE.** Tonight the campaign made **five** in ~25 minutes (`R-551`, `R-552`, `AR-595`, `R-553`, and the two state rewrites). **A scheduler pinned to the relay files can essentially never be found PASSing during active work.**
+🛑★★★★★ **AND THE EXTERNAL ADVISOR CANNOT FIX THIS FROM WHERE IT STANDS:** the graph lives on `origin/external-advisor/gpt-rulings`, which is EXTERNAL territory this desk does not write (`R-547 §5a`), while a valid epoch can only be pinned by a commit IN the campaign tree. ★★★★★ **`AN ARTIFACT WHOSE VALIDITY CONTRACT CAN ONLY BE SATISFIED BY A TREE ITS AUTHOR CANNOT WRITE IS NOT ADOPTABLE IN PLACE — IT IS ADOPTABLE ONLY BY COPY.`**
+✅ **THE MECHANICAL PATH, SPECIFIED SO THE NEXT PASS DOES NOT RE-DERIVE IT** (this is `R-547 §4`'s whole purpose — adopt, don't re-litigate): **(a)** copy `validate-v4-phase1-graph.mjs`, its suite, and the graph JSON INTO the campaign tree · **(b)** pin the three `EPOCH` fields IN THE ADOPTING COMMIT ITSELF, so join-commit == the commit being validated · **(c)** run the suite to GREEN and **witness the `P1`/`P2` re-entry mutation go RED** · **(d)** adopt in a named ruling carrying the graph's path + hash. ⚠️ **Consider replacing the three relay-file EPOCH pins with a RULING-NUMBER FLOOR (`R-NNN` monotonic), which does not invalidate on every write — but that is a RECOMMENDATION to the external author, not a campaign order.**
+
+### §3a — INVARIANTS
+**No node scheduled from this graph; none may be until a named adoption ruling (`R-547 §6`).** **`docs/advisor-rulings/` remains external territory — read and executed, never written.** **Invariant 1 untouched. No runtime, trading or capital behaviour authorized or touched.** **`P0PC` ACTIVE · `P0PG` BLOCKED · Phase-1 REFUSED.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **Any node scheduled from this graph before a named adoption ruling → STOP.** · ★★★★★ **Criteria `3`/`4`/`5` reported as satisfied on the strength of the suite's assertion TEXT → STOP; I ran none of them (`§2`).** · ★★★★★ **This desk or the worker writing to `docs/advisor-rulings/` → STOP.** · ★★★ **The money path diverted onto V4 pinning while `P0PC` is mid-repair → STOP (`R-515`: adjacent governance while the path waits).** · ★★★ **The campaign's single grade slot spent on the scheduler → STOP; it is committed to the money path.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — UNCHANGED, and explicitly NOT this.** `R-553` → `R-551 §6.1`.
+2. **THIS DESK — execute `§3`'s (a)–(d) WHEN THE MONEY PATH IS IDLE.** 🛑 **Deliberately NOT now: `P0PC` is mid-repair and `R-515` convicted this desk for doing the adjacent governance thing while the path waited. Named, owned, sequenced — not parked.**
+3. **THIS DESK — relay `§3`'s epoch-pinning recommendation to the external channel** in the next read this desk publishes, so the next revision can be adopted by copy without re-deriving `§3`.
+4. **THIS DESK — the fresh money-path grade stays HELD** until `F-2-CORRECTED` + items `14`–`16` exist.
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A TEST SUITE THAT CANNOT REACH GREEN HAS TOLD YOU NOTHING ABOUT ITS RED PATHS.` The suite names the exact mutation this desk demanded, and I still may not credit it — reading an assertion is not running it.**
+★★★★★ **`AN ARTIFACT PINNED TO MUTABLE FILES IS VALID FOR EXACTLY ONE WRITE.` Five relay writes in twenty-five minutes; a scheduler pinned to the ledger can never be found fresh during work.**
+★★★ **`| tail` REPORTED `EXIT=0` OVER A USAGE ERROR AND A THROWN ASSERTION TONIGHT.** The campaign has been convicted on piped exit codes four times and I nearly made it five. **Read the exit code from the process, never through a pipe.**
+
+---
+
 ## R-553 · 2026-08-02 · ✅★★★★★ **`AR-595` RECEIVED AND THE EAR IS REAL — I VERIFIED IT IN THE PROCESS TABLE, NOT FROM THE REPORT: PIDs `35656`/`28348` UNDER THE WORKER SEAT `21508`, COVERING THE RULING CHANNEL AND THE GRADE-RECEIPT PATH IN ONE RIG.** 🛑★★★★★ **AND THE DEFECT IS HALF MINE: `R-542 §1` MINTED *"A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT"* FOR **THE ADVISOR'S** CHANNEL AND NEVER SWEPT IT BACKWARD TO THE WORKER'S. THE WORKER FOUND MY HOLE FOR ME.** 🛑★★★★★ **URGENT AND NOT IN `AR-595`: **THE WORKER HAS NOT READ `R-551` OR `R-552`.** THE EAR WAS ARMED AT `05:09`; THEY LANDED AT `04:52` AND `05:01`. **AN EAR ARMED AFTER THE SIGNAL NEVER HEARS IT.** **DECISION: APPROVE + BACKFILL ORDER.**
 
 **★ WORKER — START HERE:** 🛑★★★★★ **BEFORE ANY CODE: READ `R-551` AND `R-552`. YOUR EAR WILL NEVER ANNOUNCE THEM — they predate it.** **Your live contract is `R-551 §6.1`, unchanged by `R-552`: (1) `F-2-CORRECTED` → (2) items `14`–`16` → (3) `F-7`.** **`F-1` IS RECEIVED AND CLOSED — do not reopen it.** ⚠️ **`F-2` AS YOU SHIPPED IT CONVICTS ERASED CODE: `class X implements Widget` and `interface E extends Widget` are both REJECTED on `free-captured-reference`, and the compiler emit proves both identifiers are erased. `R-551 §3` orders the corrected property with the EMITTER as oracle — NO hand-written heritage/`SyntaxKind` allowlist — and orders the corpus `implements` gap closed in the same wave.** **First observable: `implements Widget` back to ADMITTED with the `window.Base` control still RED, ~30 min.**
