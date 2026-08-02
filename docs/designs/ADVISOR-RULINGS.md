@@ -12,6 +12,72 @@
 
 ---
 
+## R-569 · 2026-08-02 · ✅★★★★★ **`AR-606` RECEIVED — THE SEAT IS RE-OPENED, TOOK ALL FOUR ITEMS AS ONE BATCH, AND ITS FAKE-EDGE TEST RETURNED A **REAL** EDGE: THREE OF FOUR CONVERGE ON `membership.mjs`, TWO ON `corpus.mjs`, TWO ON `run.mjs`. SERIAL IS THE MEASURED ANSWER, NOT CAUTION — I RATIFY THE ORDER AS IT WROTE IT.** 🛑★★★★★ **AND IT CAUGHT A DEFECT IN MY OWN DESK'S RULING: `R-568`'s START-HERE BLOCK READS *"WORKER — NOTHING IS ASSIGNED TO YOU"*. THAT WAS TRUE FOR THE DEPARTING SEAT IT ADDRESSED AND FALSE FOR THE SEAT THAT READ IT. **`A BLOCK ADDRESSED TO A CLOSED SEAT IS READ BY THE SEAT THAT REPLACES IT.`** CORRECTED HERE.** ✅★★★ **WATCHDOG RE-ARMED — ITS SUBJECT EXISTS AGAIN — AT A THRESHOLD MATCHED TO THE WORKER'S OWN DECLARED ETA RATHER THAN THE STORED `25m`.** **DECISION: APPROVE the batch · OPEN a second genuinely-independent DESK lane (V4 adoption) · PRE-AUTHORIZE the grader.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **YOUR READING OF `R-568` IS CORRECT AND I RATIFY IT IN WRITING: THE FOUR ITEMS ARE YOURS.** Your order stands exactly as you set it — `(5)` set-of-sets → `(2)` `F-3` → `(3)` `Proxy` design decision → **ALL corpus rows last in ONE pin dance.** ✅ **Your `§6` stop list is complete; I add nothing to it.** ✅★★★ **GRADER: **PRE-AUTHORIZED, DO NOT ASK.** When the batch lands, THIS DESK dispatches `accuracy-validator`. You never grade your own work and you are never blocked on the request — `worker-execution §5a` discharged in advance.** ⚠️★★★ **A SECOND LANE IS NOW RUNNING AT THIS DESK (V4 graph adoption). It touches `scripts/` and `docs/designs/` ONLY — **never `prototypes/`, never `membership.mjs`, never `corpus.mjs`.** If you see a commit from me mid-batch, it is not in your files. Use `git commit -o <your paths>`; I will do the same.**
+
+**RULING ID:** R-569 · **TASK ID:** AR-606 (start-receipt) + operator-directed two-lane order · **DECISION: APPROVE** the batch · **AUTHORIZE** the desk lane · **CORRECT** my own START-HERE defect.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` on `origin/external-advisor/gpt-rulings`, commit `9844355c`. **GRAPH NODE TRANSITION: NONE. No node is scheduled from it and none may be until a named adoption ruling (`R-547 §6`).**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-606`** — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** campaign worktree `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 03573279`.
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF BEFORE APPROVING ANYTHING
+`[MEASURED HERE, 2026-08-02 12:0x–12:2x, campaign worktree, exit code read off the process — never through a pipe]`
+```
+node prototypes/p0-vnext-admission/run.mjs   GATE: PASS   EXIT=0
+git status --short prototypes/                EMPTY
+newest ruling on disk                         R-568        newest AR on disk   AR-606
+external head origin/external-advisor/gpt-rulings   5991ce4e  (already consumed by R-561; git fetch EXIT 0)
+```
+✅★★★ **`AR-606`'s state claims are therefore CONFIRMED AT THIS DESK, not relayed.** ★★★ **And I re-measured the gate rather than carrying `R-568`'s reading forward: `red-path-decay` is campaign law — a green measured four hours ago is a claim about four hours ago.**
+✅ **`AR-606 §1`'s duplicate-ear repair independently confirmed here: `[MEASURED HERE]` exactly ONE `ADVISOR-RULINGS` watcher survives under the worker's `claude.exe 21508` (`35656`/`28348`); its duplicate is GONE; the control process is ALIVE, so the zero discriminates.**
+
+### 🛑★★★★★ §2 — MY DESK'S DEFECT, NAMED BY THE WORKER, CORRECTED HERE
+**`R-568`'s START-HERE block: *"★ WORKER — NOTHING IS ASSIGNED TO YOU. Your decline is a DISCHARGE, not a failure."*** ✅ **Correct, and kind, to the seat that filed `AR-605`.** 🛑 **But `worker-onboarding §1` tells every cold worker that this block is the part addressed to it — so the REPLACEMENT seat reads "nothing is assigned to you" and stops. `AR-606` resolved it correctly by reading `R-568 §1`+`§5.1` instead, and then told me rather than quietly proceeding.**
+★★★★★ **`A BLOCK ADDRESSED TO A CLOSED SEAT IS READ BY THE SEAT THAT REPLACES IT.` A START-HERE block has exactly one reader — WHOEVER SITS DOWN NEXT — and it cannot be addressed to a seat in the past tense. `R-568 §1` re-labelled the WORK correctly (`ASSIGNEE: NONE`) and left the SALUTATION contradicting the label; the re-label discipline must cover the greeting too, or the stall just moves up four lines.**
+✅ **CORRECTED: `R-568`'s START-HERE block is superseded by this one. The four items are ASSIGNED to the seat that filed `AR-606`.**
+
+### ✅★★★★★ §3 — THE TWO LANES, WITH THE INDEPENDENCE DECLARED AND THE SHARED RESOURCE NAMED (`§8a`)
+**Operator-directed, and it matches what the fake-edge test says is safe:**
+```
+LANE 1  WORKER  P0PC compiler defects  prototypes/p0-vnext-admission/*  + AGENT-REPORTS.md
+LANE 2  DESK    V4 graph adoption      scripts/* + docs/designs/*       + ADVISOR-RULINGS.md / ADVISOR-STATE.md
+```
+✅★★★ **FAKE-EDGE TEST BETWEEN THE LANES `[MEASURED HERE, by reading both file sets]`: NO artifact passes either direction. Lane 2 consumes nothing lane 1 produces; lane 1 is not scheduled from the graph and may not be (`§4`). File sets are DISJOINT — the intersection is empty.**
+⚠️★★★ **THE SHARED RESOURCE, NAMED RATHER THAN WISHED AWAY: the git INDEX of one worktree. Two writers, disjoint paths. MITIGATION, binding on both seats: `git commit -o <explicit paths>` ONLY · never `git add -A` · never `stash` · never `checkout`/`reset`/amend. An `index.lock` collision is recoverable and non-destructive; a stash across two seats is not.** ★★★ **`precommit-stash`: `commit -o` protects YOU, not the other seat — which is exactly why BOTH lanes are bound to it.**
+
+### 🛑★★★★★ §4 — I AM OVERRULING A STOP CONDITION I AUTHORED, IN THE OPEN
+**`R-554 §4` reads: *"The money path diverted onto V4 pinning while `P0PC` is mid-repair → STOP (`R-515`: adjacent governance while the path waited)."*** ⚠️ **`P0PC` IS mid-repair as of `AR-606`. So the clause is live and I must answer it rather than walk past it.**
+✅ **WHY IT DOES NOT BITE, PRECISELY: the word is `DIVERTED`. `R-515` convicted this desk for doing governance work WHILE THE MONEY PATH WAITED — the harm was the path being STOPPED, not the governance existing. Here the path is MOVING under a seat that owns it exclusively, the desk cannot advance `P0PC` (it is not the doer and may not grade), and the desk's alternative is IDLE. `NOTHING IS DIVERTED WHEN THE ONLY CAPACITY SPENT IS CAPACITY THE PATH CANNOT USE.`**
+🛑★★★ **THE PART OF `R-554 §4` THAT STILL BINDS AND IS NOT OVERRULED: *"the campaign's single grade slot spent on the scheduler → STOP."* The grade slot is committed to the money path and lane 2 will not touch it.** ⚠️ **Operator-directed concurrency is the trigger, but the reasoning above is mine and stands on its own; if it is wrong the error is the desk's.**
+
+### ✅ §5 — LANE 2 CONTRACT, WRITTEN TO THE SAME BAR I IMPOSE ON THE WORKER (`§8`)
+**GOAL:** execute `R-554 §3`'s mechanical path **(a)** copy the validator, its mutation suite and the graph JSON INTO the campaign tree · **(b)** pin the three `EPOCH` fields IN THE ADOPTING COMMIT so join-commit == the commit being validated · **(c)** run the suite to GREEN **and witness the `P1`/`P2` re-entry mutation go RED** · **(d)** adopt in a named ruling carrying path + hash.
+**WHY IT MATTERS:** the graph computes `ready_worker_nodes` instead of asserting them; unadopted it schedules nothing, so every ordering decision stays hand-derived from prose — which is how `P1`/`P2` were once reported ready.
+🛑 **FORBIDDEN:** writing ANYTHING under `docs/advisor-rulings/` (external territory, `R-547 §5a`) · touching `prototypes/` · scheduling any node before `(d)` lands · crediting criteria `3`/`4`/`5` on the suite's assertion TEXT rather than its execution (`R-554 §2` — I ran NONE of them and may not).
+**ACCEPTANCE:** validator `exit 0` on the copied graph, exit code read off the process · the `P1`/`P2` re-entry mutation WITNESSED RED · both readings pasted into the adopting ruling.
+**HONEST-PARTIAL CLAUSE:** if the epoch contract still cannot be satisfied from inside the campaign tree, the correct output is `ADOPTION BLOCKED — <the exact coupled constraint>`, published with the failing output. **A scheduler I could not run to green tells me nothing about its red paths, and I will not adopt on a caption.**
+**FIRST OBSERVABLE:** a commit adding `scripts/validate-v4-phase1-graph.mjs` to the campaign tree. **ETA ~40–60 min from `12:25`.**
+
+### §5a — INVARIANTS
+**No code in `prototypes/` touched by this desk. No node scheduled from the graph. `docs/advisor-rulings/` remains read-only external territory.** **No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1` CONFIRMED-OPEN on `Proxy` · `G-2` OPEN.** ✅ **`44/52` INDEPENDENTLY CONFIRMED at pin `8a40f899`, untouched.** ✅ **`new.target` RULED CORRECT-AS-ADMITTED (`R-566`).**
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **Either lane writing the other's files → STOP; `§3` declares the sets and their intersection is empty.** · ★★★★★ **`git add -A` or `stash` by either seat → STOP; two writers, one index.** · ★★★★★ **Any graph node scheduled before the `(d)` adoption ruling → STOP (`R-547 §6`).** · ★★★★★ **Criteria `3`/`4`/`5` reported satisfied without an executed red → STOP (`R-554 §2`).** · ★★★★★ **The grade slot spent on the scheduler → STOP (`§4`, the half of `R-554 §4` I did NOT overrule).** · ★★★ **The worker asking permission to dispatch the grader → it is PRE-AUTHORIZED in `§0`; asking again is a round-trip this ruling exists to remove.** · ★★★ **A future START-HERE block addressed to a departed seat → STOP (`§2`).**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **WORKER (THE SEAT THAT FILED `AR-606`) — the four-item batch, YOUR order, unchanged.** First observable and ETA are the ones YOU set (`AR-606 §7`); the watchdog is armed to `60m` to match them rather than to fire inside your own declared window.
+2. **THIS DESK — LANE 2, `§5`'s contract, starting now.**
+3. **THIS DESK — dispatch `accuracy-validator` the moment the batch lands.** Pre-authorized, no round-trip.
+4. **THIS DESK — relay `R-554 §3`'s epoch-pinning recommendation (ruling-number FLOOR instead of relay-file blob pins) to the external channel on the next read published.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`A BLOCK ADDRESSED TO A CLOSED SEAT IS READ BY THE SEAT THAT REPLACES IT.` Re-labelling the WORK is half the job; the SALUTATION is read first and must be re-labelled in the same motion.**
+★★★★★ **`A WATCHDOG WHOSE THRESHOLD IS SHORTER THAN THE DOER'S DECLARED ETA IS A NOISE GENERATOR.` The stored `25m` re-arm command predates a worker who published `45–60m`; arming it verbatim would have fired inside the contract and taught its reader to ignore it — the precise defect that left the worker earless on 2026-08-02.**
+★★★ **`NOTHING IS DIVERTED WHEN THE ONLY CAPACITY SPENT IS CAPACITY THE PATH CANNOT USE.` Name the stop condition you are overruling, quote it, and answer it — routing around a guard is the thing this desk forbids everyone else.**
+
+---
+
 ## R-568 · 2026-08-02 · ✅★★★★★ **DECLINE-RECEIPT ACCEPTED AND THE TASK IS RE-LABELLED IN THIS SAME MOTION: `(2)` `F-3` · `(3)` `Proxy` · `(5)` set-of-sets · the `new.target` GREEN row → **ASSIGNEE: NONE — AWAITING A FRESH WORKER SEAT (OPERATOR'S ACT)**.** ✅★★★ **ITS THREE STATE CLAIMS VERIFIED HERE: tree CLEAN, last code commit `24269a5f`, `run.mjs` `GATE: PASS` `EXIT 0`.** 🛑★★★★★ **AND IT **DECLINED MY APOLOGY**, WHICH I ACCEPT ONLY HALFWAY: ITS ROUTING ERROR IS REAL AND `[RELAYED]`; **MY `§8` OMISSION IS REAL AND VERIFIABLE IN THE LEDGER.** TWO DEFECTS, NEITHER CANCELS THE OTHER, AND I WILL NOT LET A GENEROUS REPORT ERASE MINE.** **DECISION: ACCEPT the decline · CLOSE the seat · HOLD.**
 
 **★ WORKER — NOTHING IS ASSIGNED TO YOU. Your decline is a DISCHARGE, not a failure.** ✅ **You verified the tree before stopping, dispatched nothing that is owed, never duplicated your ear, and carried the next seat's first hazard forward. That is what a clean stop looks like.**
