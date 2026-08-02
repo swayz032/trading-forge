@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3260` at THIS commit, 2026-08-01 21:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3265` at THIS commit, 2026-08-01 22:02 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3260` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3265` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -117,7 +117,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`P0-vNext` DESIGN COMPLETE AND ACCEPTED AT THIS DESK: `9 / 9` ON MY PRE-REGISTERED REVIEW** (`AR-556` → `557` self-catch → `559` correction). ⚠ **`R-526` OWED AND HELD — the loop now waits on GPT for TWO things: the read on the `AR-554` CLOSEOUT and the read on the DESIGN. `P0-vNext` IMPLEMENTATION stays blocked until the design is externally read — that is the read's own condition, not my stall. Worker correctly STANDING BY with no open task.**
+## ⚠★★★★★ SEAT — **`R-526` LANDED `a3fd2888`, PUBLISHED. **REVISE: FOUR CORRECTIONS TO THE `P0-vNext` DESIGN, IMPLEMENTATION STILL BLOCKED.** Worker working (`AR-561`). 🛑 **I PASSED THIS DESIGN `9/9`; THE READ FOUND FOUR THINGS AND TWO ARE MINE.**
+🛑★★★★★ **`F-1`, AND IT IS THE ONE WITH MONEY-PATH CONSEQUENCES: CLAIM `B` IS NAMED `CORRECTNESS` AND IS NOT. The generator copies `row[axis]` straight out of `ORACLE.json` into cells classified `ASSERTED`, so the `140` values were NEVER checked against the authority document — and the design itself says at `:157` that *“a correctly-cited but MIS-TRANSCRIBED value survives every check here.”* **FREEZING A TRANSCRIPTION DOES NOT VERIFY IT.** ⚠★★★★★ **`BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.` Phase-1's exit criterion IS compile-fidelity; a green from claim `B` as named would read as fidelity when only self-consistency was measured. Renamed to `FROZEN-LEDGER CONFORMANCE` / `LEDGER_DIVERGENCE`, with `AUTHORITY_SEMANTICS_UNVERIFIED` beside every green aggregate.**
+🛑★★★ **MY MISS, EXACTLY: my pre-registered point 3 was *“correctness ONLY on `ASSERTED`”* — I VERIFIED THE SCOPE THE CLAIM RANGES OVER AND NEVER ASKED WHETHER WHAT IT MEASURES DESERVES THE NAME. `I CHECKED WHERE IT APPLIES, NOT WHAT IT MEANS.` Same shape as the digests miss: members, not surface.** ⚠ **`F-4` is also mine — I ordered the oracle declared *“authoritative for NOTHING”*; too broad, it launders the oracle's role as the historical SOURCE of the frozen values, and it makes `F-1`'s caption easier to overread.**
+⚠★★★★★ **`F-2` IS THE FAMILY'S **SEVENTH** SIGHTING AND IT IS NOW A SHAPE, NOT A COINCIDENCE — AXIS → ROW → DIGESTS NAMESPACE → **CALLER SCOPE**. A caller may request `scope = []` and receive a green completeness; printing the scope is DISCLOSURE, NOT ENFORCEMENT. Fix: REGISTERED `scope_id` with a committed member set + digest, independent of the caller. ★★★★★ **THE GENERALISATION, WORTH MORE THAN ANY SINGLE FIX: `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY BEING MEASURED — OR THE PARTY ASKING — IT IS NOT A DENOMINATOR.` `EVERY REMEDY IN THIS FAMILY WAS CORRECT AT ITS OWN LEVEL AND SILENT ABOUT THE NEXT ONE OUT.`**
+⚠ **`F-3`: projection totality is a DESIGN contract, not an implementation detail — I accepted `:160`'s deferral and it cannot be one. The four-case presence matrix must publish BEFORE code, with `absent/absent` → `PROJECTION_MISSING_BOTH` unless authority-classified `NOT-APPLICABLE`. `PARITY OVER TWO DEAD LANES IS VACUOUS.`**
+✅ **WHAT SURVIVES (named so the revision is not a rewrite): membership from pinned source specs · the three-claim split · every parsed object schema-closed · `NOT-APPLICABLE` emitting a positive skip witness · depended-on `UNADJUDICATED` denying completeness · counts from cells · the generator becoming a committed durable module · out-of-frame as named `P3` debt.** ⚠ **`AR-554`'s digests closeout stays VERIFIED-BY-EXECUTION here; its own external read is still outstanding and is NOT claimed.**
 ✅★★★ **THE CORRECTION LANDED AND I VERIFIED IT WITH AN OPERATOR NOBODY ASKED FOR — my pre-registered novel hunt, adapted to a document `[MEASURED HERE against `c304b098`]`: is the design's DECLARED closed schema for `ORACLE.json` the TRUE UNION, or just what one sample fixture happens to carry? **ROOT: `6/6` exact. FIXTURE KEYS: the declared set IS the union across all `12` — `0` actual-but-undeclared, `0` declared-but-absent. ROW KEYS union `9`.** A declared schema that did not match reality would have made the gate FALSE-FAIL on day one; it matches exactly.**
 ✅ **`ORACLE.json` is now in §7, declared **AUTHORITATIVE FOR NOTHING, COMPARED ONLY**.** ★★★★★ **AND THE BINDING PROPERTY IS OPERATIONAL RATHER THAN A SLOGAN, which is what I actually asked for: *“a new input cannot be read by adding a parse call — it must arrive WITH a declared schema, or the gate fails.”* **That binds the boundary nobody has thought of yet, which a longer table never could.**
 ★★★ **The worker kept its own omission on the record rather than quietly fixing it, and its line is the sharpest of the exchange: *“I WROTE `an unenumerated boundary is the defect` OVER A LIST THAT WAS MISSING A BOUNDARY.”***
