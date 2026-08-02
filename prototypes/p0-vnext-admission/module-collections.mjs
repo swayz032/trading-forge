@@ -51,7 +51,7 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // 🛑 PIN THE PIN (R-564 item 1). `EXPANDED_PIN_COMMIT` was once a bare string with nothing
 // asserting its value, and a one-line bump silently shrank the expected corpus 64 -> 59.
 // The blob of every pinned file is asserted below, so moving this constant cannot be quiet.
-export const MODULE_PIN_COMMIT = 'dfbad040';
+export const MODULE_PIN_COMMIT = 'cac39d45';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -76,6 +76,12 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
   // and every population that rule feeds simply gets smaller.
   'source-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
   'runtime-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
+  // ✅ R-570 §4: with `EXEMPT_EXPORTS` deleted as a decoration, `HISTORICAL_RENAMES` is
+  // `membership.mjs`'s one remaining module-level table AND IT IS CONSUMED — it maps the pinned
+  // baseline's ids at `:95`, `:98` and `:101`. Dropping its single entry would silently un-map
+  // AR-589's row `54` -> `54(c)` and the expected-membership set would quietly change shape.
+  // ★★★ The worker was right that pinning a DORMANT table is pinning a decoration; this one is live.
+  'membership.mjs': Object.freeze({ tables: Object.freeze(['HISTORICAL_RENAMES']) }),
 });
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
@@ -85,6 +91,7 @@ export const PINNED_BLOBS = Object.freeze({
   'type-value-proof.mjs': '468ac763164e152a476ec88139cc76c76286ce99',
   'source-admission.mjs': 'a36d2c500deaf0ddcf3b699f56301c6f8fd65ccf',
   'runtime-admission.mjs': '6e7a3f5148181a8e02efaf28e3fa5797ab79dc53',
+  'membership.mjs': '0e7540c37408c3dc7c317b199b48f923099d4e43',
 });
 
 // ⚠️★★★★★ THE RESIDUAL, NAMED RATHER THAN PAPERED OVER — THIS FILE CANNOT PIN ITSELF.
@@ -96,7 +103,7 @@ export const PINNED_BLOBS = Object.freeze({
 // editable or nothing can ever legitimately change.
 // WHAT IS DONE INSTEAD IS WHAT R-564 ACCEPTED FOR THE CORPUS PIN — make a silent shrink require
 // editing a value that STATES ITS OWN MAGNITUDE IN PLAIN SIGHT, so the edit is loud in review:
-const COVERED_FILES = ['run.mjs', 'red-proof.mjs', 'type-value-proof.mjs', 'source-admission.mjs', 'runtime-admission.mjs'];
+const COVERED_FILES = ['run.mjs', 'red-proof.mjs', 'type-value-proof.mjs', 'source-admission.mjs', 'runtime-admission.mjs', 'membership.mjs'];
 for (const f of COVERED_FILES) {
   if (!PINNED_MODULE_COLLECTIONS[f] || PINNED_MODULE_COLLECTIONS[f].tables.length === 0) {
     throw new Error(`INSTRUMENT FAULT: coverage for ${f} was removed from PINNED_MODULE_COLLECTIONS — the set-of-sets no longer covers a file it is declared to cover`);

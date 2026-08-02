@@ -4,6 +4,48 @@
 
 ---
 
+## AR-611 · 2026-08-02 · ✅★★★ **`R-570 §4` DISCHARGED: `EXEMPT_EXPORTS` **DELETED**, `HISTORICAL_RENAMES` **PINNED**, AND ITS DELETION WITNESSED CAUGHT.** 🛑★★★★★ **AND I STATE THE FAN-IN PRECISELY BECAUSE THIS IS WHERE A PARTIAL WOULD READ AS COMPLETE: **`4.5 / 5`.** THE LAST ITEM — THE **CORPUS ROWS** AND THEIR PIN DANCE — IS **NOT STARTED**, AND I NAME IT WITH ITS ADDRESS RATHER THAN LET "the final pin dance" SOUND LIKE ONE THING WHEN IT IS TWO.**
+
+**RULING ID:** `R-570 §4` + `§7.1` remainder · **TASK ID:** AR-611 · **PRIOR:** AR-610 · **CODE:** `cac39d45` + this commit.
+**GRAPH: `P0PC` `active_worker`. NO TRANSITION CLAIMED — the node is not complete and I do not move it.**
+
+### ✅ §1 — WHAT LANDED
+✅ **`EXEMPT_EXPORTS` DELETED** (`cac39d45`). `[MEASURED HERE]` **no executable reference remains — the only surviving mention is the tombstone comment this campaign keeps so a deletion stays legible.** ✅ **`GATE: PASS`, `EXIT 0` after.**
+✅ **`HISTORICAL_RENAMES` PINNED** — `membership.mjs` joins the covered set (now SIX files), `MODULE_PIN_COMMIT` bumped to `cac39d45`. ★★★ **It is the RIGHT table to pin and the deleted one was not: `HISTORICAL_RENAMES` is CONSUMED at `membership.mjs:95`, `:98`, `:101`, where it maps AR-589's row `54` → `54(c)`. Dropping its entry would silently un-map the pinned baseline and change the expected-membership set's shape.**
+✅ **WITNESSED CAUGHT** `[MEASURED HERE, restored hash-identical]`
+```
+empty HISTORICAL_RENAMES  ->  GATE: FAIL  EXIT 1
+   *** module_collections: membership.mjs: table HISTORICAL_RENAMES rows are no longer
+       key-extractable — the check cannot see its members
+clean                     ->  GATE: PASS  EXIT 0
+```
+⚠️ **HONEST NOTE ON THAT MESSAGE: emptying a ONE-ENTRY table trips the *key-extractable* branch rather than the *MISSING row* branch, because a zero-length key list is indistinguishable from "no keys could be read". **It fails CLOSED and says so accurately**, which is the behaviour I want — but a reader should not expect the `MISSING row(s): 54` wording for this particular table until it has two entries.**
+
+### 🛑★★★★★ §2 — THE FAN-IN, STATED SO IT CANNOT BE MISREAD
+**`4.5 / 5`.** ✅ **DONE: `(5)` set-of-sets · `(2)` `F-3` · `§6.3` enumeration (+ instance eight + the two rule sets) · `(3)` `Proxy` as the ruled-acceptable design question · `R-570 §4`'s delete+pin.**
+🛑 **NOT STARTED — the fifth item's OTHER half, and it is the larger one: THE CORPUS ROWS.**
+⚠️★★★★★ **I SPLIT THE COUNT AT `.5` DELIBERATELY. `R-570 §0` phrased the remainder as *"ALL corpus rows in ONE pin dance"* PLUS the delete/pin, and it is easy to read that as a single closing act. IT IS TWO: one half is adjudicated housekeeping on `membership.mjs`, which is done; the other half ADDS GUARD ROWS TO `corpus.mjs`, which is real corpus work against a DIFFERENT pin. `A DENOMINATOR THAT DOES NOT MOVE WHEN THE WORK GROWS IS A PROGRESS BAR, NOT A FAN-IN` (`R-571 §0`) — and neither is one that hides two acts inside one label.**
+
+### 🛑 §3 — THE REMAINING ITEM, WITH ITS FULL ADDRESS SO NOTHING IS RE-DERIVED
+1. **`new.target` GREEN row** — `R-566 §0` ordered a GREEN corpus row so that adjudication is ENFORCED rather than remembered (*"a ruling that lives only in the ledger is one refactor from being undone"*).
+2. **`import.meta` guard row** — `AR-603 §3` recorded the `F-2` fix as **UNGUARDED against regression**: the grade measured ZERO corpus rows for that channel. **`A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE.`**
+3. **`Proxy` rows** — ⚠️ **BLOCKED ON THE DESK, correctly: `AR-610 §4` hands up whether the runtime layer may take a `util.types.isProxy` host dependency. A guard row for a catcher that does not exist yet would be a row that can only fail.** **Do NOT add Proxy rows before that ruling.**
+4. **THEN the pin dance, which is TWO commits and touches TWO pin systems:** land the rows → the CORPUS pin (`EXPANDED_PIN_COMMIT` + `EXPANDED_PIN_BLOB` + `EXPECTED_EXPANDED_CARDINALITY` + `EXPECTED_GREEN_CARDINALITY` in `membership.mjs`) goes RED → bump those, AND bump `MODULE_PIN_COMMIT` + `PINNED_BLOBS['membership.mjs']` because that same edit changes `membership.mjs`. ⚠️ **BOTH pins move in the second commit; missing the second is how this goes green while under-counting.**
+
+### ✅ §4 — STATE, RE-MEASURED AFTER THE LAST REPAIR
+```
+run.mjs GATE: PASS EXIT 0 · red-proof CONTROL GREEN 41 / 41 EXIT 0 (status off the process)
+emitted-freeze · type-value-proof 15/15 · module-tuple · module-collections   all EXIT 0
+prototypes/ tree CLEAN
+```
+✅ **`44/52` and attribution logic UNTOUCHED throughout this seat.** ✅ **NO sub-agent dispatched, nothing owed from my side. NOTHING SELF-GRADED — `accuracy-validator` remains the desk's to dispatch (`R-569 §0`) and I never asked again.** ✅ **ONE ear, never duplicated after `AR-606 §1`'s repair; every commit `git commit -o <explicit paths>`, no `add -A`, no `stash`, no `checkout`/`reset`.**
+
+### ⚠️ §5 — SEAT STATUS
+⚠️★★★ **THIS SEAT IS DEEP INTO ITS CONTEXT AND I SAY SO PLAINLY RATHER THAN DISCOVERING IT MID-COMMIT.** **The remaining item is corpus work against a pin whose failure mode is a RED gate across two commits — the single worst thing to be truncated inside.** ✅ **I am NOT declaring a handoff on my own word (`worker-execution §10`: a lane boundary is not a context limit, and `R-567 §3`/`advisor-ruling §0.5` make a handoff declaration self-assessment, not a transfer). I am reporting the position and continuing to hold the seat.**
+🛑 **IF THIS SEAT DOES END: everything is committed, `prototypes/` is CLEAN, all gates GREEN, and `§3` above is a complete address list. Item 3 of `§3` is BLOCKED ON A DESK RULING, so a fresh seat starting there without `AR-610 §4`'s disposition would be building a guard for a catcher that does not exist.**
+
+---
+
 ## AR-610 · 2026-08-02 · ✅★★★★★ **ITEM `(3)` — `F-1` **REPRODUCED AND RELOCATED**. THE GRADE'S ONE-LINE NOTE (*"no in-language predicate for is-a-Proxy"*) IS TRUE AND SENT THE QUESTION TO THE WRONG LAYER: `[MEASURED HERE]` **THE SOURCE SURFACE IS ALREADY CLOSED — NAMING `Proxy` IN ADMITTED SOURCE IS `REJECTED 1b-S:direct-ambient-read`, BECAUSE `Proxy` IS A HOST GLOBAL AND `AMBIENT_ALLOWED` IS ONLY `{'Object'}`.** `F-1` LIVES ENTIRELY IN THE **RUNTIME** LAYER.** ✅★★★ **AND A WORKING PREDICATE **DOES** EXIST THERE: `util.types.isProxy` — `true` ON THE PROXY, `false` ON A PLAIN OBJECT.** 🛑★★★★★ **I AM NOT IMPLEMENTING IT: ADDING A HOST-API DEPENDENCY TO AN INSTRUMENT IS AN ARCHITECTURE DECISION, AND `ratify-packet` MAKES IT THE DESK'S. DESIGN QUESTION HANDED UP WITH ITS EVIDENCE AND A RECOMMENDATION.**
 
 **RULING ID:** `R-570 §7.1` / `R-571 §0` (item `(3)`) · **TASK ID:** AR-610 · **PRIOR:** AR-609 · **NO CODE DELTA.**
