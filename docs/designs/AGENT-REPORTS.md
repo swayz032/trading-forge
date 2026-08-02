@@ -4,6 +4,72 @@
 
 ---
 
+## AR-585 · 2026-08-02 · ✅★★★★★ **R-539 §5 DELIVERED — FIVE ITEMS, `38/38` + `14/14`, MANIFEST `45` RECORDS, MATRIX `52+1=53`.** 🛑★★★★★ **AND THE ITEM THAT MATTERED WAS NOT ON THE LIST: CHOOSING THE ZERO-IMPORT POLICY **INVALIDATED TWO GREEN NEIGHBOURS ELSEWHERE IN THE DOCUMENT** — *"an allow-listed pure helper import stays GREEN"* BECAME UNCONSTRUCTIBLE THE MOMENT NO IMPORT WAS ADMITTED. THAT IS THE STOP CONDITION ABOUT A GREEN NEIGHBOUR ITS OWN RULE REJECTS, AND MY OWN DECISION CREATED IT.**
+
+**RULING ID:** R-539 §5 · **TASK ID:** AR-585 · **PRIOR:** AR-584 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** (`+55/−11`) · **grader's receipt NOT touched.**
+**FAN-IN: `5 / 5`. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — ITEMS 1+2: ONE IMPORT POLICY, AND THE ALLOWED SET FINALLY NAMED
+✅ **IMPORT POLICY = ZERO-IMPORT LEAF. The admitted import count is `0` and there is NO allow-listed-import alternative.** ⚠️★★★ **This deleted the FOURTH menu in this document — `preferred X; otherwise Y` is a MENU WEARING A RECOMMENDATION'S CLOTHES, and I swept for the PHRASE PATTERN rather than the one line.** ✅ **Chosen because it is DECIDABLE: zero imports needs no transitive resolution, no digest and no membership list to be checkable — and the allow-list it replaced had `10` load-bearing references with membership enumerated NOWHERE.**
+🛑★★★★★ **ITEM 2 CLOSED A CONTRADICTION, NOT A GAP `[MEASURED, `AR-584 §4`]`: `Object === globalThis.Object` is `true`, so `Object` IS an ambient host global — and the ambient cell said `ALLOWED: nothing` while the constant grammar's only composite form is `Object.freeze(...)`. **TAKEN LITERALLY, `nothing` REJECTED EVERY VALID FROZEN CONSTANT.** ✅ **THE ALLOWED SET IS NOW PUBLISHED WITH MEMBERSHIP `1`: the INTRINSIC `Object.freeze` binding, admitted ONLY in the wrapper position, resolved by TypeScript SYMBOL IDENTITY and NEVER by the source text.** ★★★★★ **`A FORBIDDEN SET IS NOT CLOSED UNTIL THE ALLOWED SET IS NAMED.`**
+
+### 🛑★★★★★ §2 — THE DEFECT MY OWN DECISION CREATED, AND IT WAS A LIVE STOP CONDITION
+**Choosing zero-import made two GREEN neighbours UNCONSTRUCTIBLE:** rows `35`/`41` promised *"an allow-listed pure helper import stays GREEN"* and row `26`'s aggregate carrier said the same. **Under a zero-import policy NO import is admitted, so the neighbour meant to prove the rule is not `reject everything` IS ITSELF REJECTED BY THAT RULE.**
+✅ **REPAIRED: the neighbours are now a ZERO-IMPORT module reading only its own deeply-frozen constants, plus the intrinsic-`Object.freeze` GREEN neighbour for rows `38`/`48`/`50` and ordinary/distinct keys for `51`/`52`.**
+★★★★★ **THE TRANSFERABLE PART: `A DECISION THAT NARROWS A RULE CAN INVALIDATE A CONTROL THAT LIVES FOUR HUNDRED LINES AWAY.` The stop condition named this exact shape and it fired on my OWN choice, not on an inherited one — which is why the sweep after a policy decision has to cover CONTROLS, not just the rule's own carriers.**
+
+### ✅★★★★★ §3 — ITEMS 3+4: THE TWO EXECUTABLE FALSE GREENS, CLOSED
+**Both re-measured here before I wrote against them (`AR-584 §2`), and both are now grammar-level prohibitions with red-proofs:**
+✅ **ROW `50` — NON-INTRINSIC `freeze` CALLEE**, three planted subcases (shadowed / locally-declared / aliased), rejection citing **SYMBOL IDENTITY, never source text**. ⚠️ **An IMPORTED `freeze` is unreachable under zero-import and is recorded `N/A` rather than silently dropped.** ★★★ **GREEN NEIGHBOUR: intrinsic freeze, every nested literal wrapped.** `A NAME IS NOT A BINDING; ONLY THE RESOLVED SYMBOL IS.`
+✅ **ROW `51` — `__proto__` IN BOTH LITERAL SPELLINGS**, each its own subcase, **witnesses = OWN KEYS *and* PROTOTYPE IDENTITY.** 🛑 **The own-key witness alone reports a CLEAN object — `[MEASURED]` both spellings give own keys `[]`, prototype `=== supplied`, inherited REACHABLE, `isFrozen TRUE` — so the row FAILS if prototype identity is not among its witnesses.**
+⚠️★★★★★ **AND I KEPT THE DESK'S DISCRIMINATOR RATHER THAN OVER-FORBIDDING: the COMPUTED `{["__proto__"]: p}` is **NOT** a prototype setter `[MEASURED HERE — own keys `["__proto__"]`, prototype unchanged]`. It is forbidden as a COMPUTED KEY, explicitly NOT as a proto channel.** `FORBIDDING THE RIGHT THING FOR THE WRONG REASON IS A REMEDY BUILT ON A FALSE PREMISE` — and it would have mis-taught every later reader.
+✅ **ROW `52` — DUPLICATE ORDINARY KEYS, answering item `4`'s open question with a measurement: `{a:1, a:2}` yields own keys `["a"]`, last value wins, NO ERROR. The first value is SILENTLY DISCARDED and is invisible to every own-key check afterwards. FORBIDDEN.**
+
+### ✅★★★ §4 — ITEM 5: STALE CARRIER, MANIFEST, BOTH COUNTS
+✅ **`L225`'s *"(vs both `4b` rows)"* repaired — the `4b` rows are now **EIGHT** (`39,40,42,43,44,45,46,47`), named explicitly.** ⚠️ **Third recurrence of `AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT` in this document.**
+`[MEASURED HERE]` **MANIFEST `45` records — all four join directions EMPTY, both controls convict. MATRIX anchored `53` rows, contiguous `1..53`, control LAST → `52` mutations + `1`. UN-ANCHORED `58` published alongside, never just the flattering count.** ⚠️ **Caption re-taken from the parse; the `52+1` figure was never hand-copied.**
+
+### ⚠️★★★ §5 — THREE INSTRUMENT FAULTS, ALL MINE, ALL CAUGHT BEFORE DELIVERY
+1. 🛑★★★★★ **A `cp1252` STDOUT CRASH KILLED A REWRITE SCRIPT MID-RUN.** ★★★★★ **THE PART THAT MATTERS IS WHAT I DID NEXT: I VERIFIED **NO PARTIAL WRITE** HAD OCCURRED (`grep -c` on the target token returned the pre-run value) BEFORE RE-RUNNING.** ⚠️ **The exception fired on a `print`, before the write — but `A CRASHED WRITER IS A HALF-WRITTEN FILE UNTIL YOU PROVE OTHERWISE`, and re-running blind could have double-applied every substitution.**
+2. **My acceptance flattener stripped `_` as a markdown-emphasis character, mangling `__proto__` into `proto`** — so the `__proto__` check failed against text that plainly carries it at `:170`. ✅ **Underscore removed from the strip class.**
+3. **The menu check had no LIVE-vs-HISTORICAL classifier**, so it flagged the deletion note's own quotation of the wording it deletes. ✅ **Classifier added WITH A CONTROL proving it still flags a live menu.** ★★★ **Both verified verbatim BEFORE either probe was touched. `A PROBE DELETED BECAUSE IT WENT RED IS A TEST WEAKENED TO PASS.`**
+
+### §6 — ACCEPTANCE
+```
+R-536 carry-forward battery (composite carriers, grammar, traversal, stops, regressions) 38 / 38
+R-539 items 1-5 + stop conditions:
+  A1  zero-import policy, no alternative .................. PASS
+  A2  no surviving LIVE preferred/otherwise menu .......... PASS (live=0 historical=1)
+  A2c CONTROL: menu classifier can still convict .......... PASS
+  A3  ambient ALLOWED set published, membership 1 ......... PASS
+  A4  resolved by SYMBOL IDENTITY, never source text ...... PASS
+  A5  the `nothing` contradiction reconciled explicitly ... PASS
+  A6  shadowed/local/aliased freeze red-proofed ........... PASS
+  A7  intrinsic-freeze GREEN neighbour present ............ PASS
+  A8  __proto__ forbidden in BOTH literal spellings ....... PASS
+  A9  witnesses = own keys AND prototype identity ......... PASS
+  A10 computed __proto__ explicitly NOT a proto setter .... PASS
+  A11 duplicate ordinary keys forbidden and red-proofed ... PASS
+  A12 stale `both 4b rows` carrier repaired to eight ...... PASS
+  A13 STOP: no green neighbour rejected by its own rule ... PASS
+                                                            14 / 14
+manifest join: 45 records, all four directions EMPTY, both controls convict
+```
+
+### §7 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts · `P1`/`P2` artifacts · the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT OUT.**
+- ⚠️★★★★★ **I DID NOT TOUCH, READ AS AUTHORITY, OR PRE-EMPT `docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md`. The `accuracy-validator` is the instrument on the bar-calibration question; I am the doer and I do not interpret a grade I did not ask for.**
+- ⚠️★★★★★ **EVERY RESULT HERE IS DESIGN-TEXT OVER A `[PRE-REGISTERED, NOT EXECUTED]` MANIFEST. My executions prove MECHANISMS in a scratch harness outside the repo. NO MUTATION HAS EVER BEEN RUN AGAINST THE GATE; NO CI EXECUTES ANY OF THIS.**
+- ⚠️★★★ **HONEST-PARTIAL: the zero-import policy is decidable, but `1b-S` still asks a parser to decide DEEP frozen-ness — now bounded by the closed AST grammar plus a `1`-entry intrinsic allow-list. That bound is a DESIGN RULE with no implementation behind it. The grammar is deliberately narrower than "all safe constants" and rejects sound helper-built ones.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED.** ★★ **I do not grade my own work. GRADE: NOT ASKING.**
+
+### §8 — POSITION
+**Design REVISED on all five items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **FAN-IN `5 / 5`. NOT A HANDOFF.**
+
+---
+
 ## AR-584 · 2026-08-02 · **START-RECEIPT — R-539 §5 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** ✅★★★★★ **BOTH NEW FINDINGS RE-MEASURED HERE AND SUSTAINED.** 🛑★★★★★ **AND I NEARLY FILED A FALSE DISCREPANCY AGAINST THE DESK'S OWN TABLE: MY FIRST `__proto__` PROBE TESTED AN **UNWRAPPED** LITERAL AND GOT `isFrozen=false` AGAINST THE DESK'S `true`. THE DESK IS RIGHT — THE GRAMMAR-CONFORMING FORM IS THE **FROZEN** ONE, AND I HAD TESTED AN OBJECT THE GRAMMAR DOES NOT ADMIT.**
 
 **RULING ID:** R-539 §5 · **TASK ID:** AR-584 · **PRIOR:** AR-583 (delivery, `38/38`, corroborated by `R-539 §1` with no defect found) · **SEAT:** `claude.exe 26204`.
