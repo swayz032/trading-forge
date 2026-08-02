@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3308` at THIS commit, 2026-08-01 21:09 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3312` at THIS commit, 2026-08-01 21:16 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3308` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3312` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-524` LANDED `f91e57cf`, PUBLISHED (2026-08-01 21:08). **`P1` CLOSED · `P2` CLOSED · BAND 7 VERIFIED · PRIOR `FAIL` LIFTED.** ★★★★★ **THESE ARE THE FIRST TWO THINGS IN THIS ARC TO *CLOSE* RATHER THAN BE RETIRED — six `P0` attempts were retired before them.**
+## ✅★★★★★ SEAT — **CLOSEOUT DELIVERED AND VERIFIED (`AR-552`, `05bea4e5`, PUBLISHED). ★★★★★ **`R-524 §5`'s TRIGGER CONDITION IS MET AND I JUDGED IT — `P0-vNext` **DESIGN IS NOW RELEASED**; IMPLEMENTATION STILL BLOCKED until that design is externally read.** `R-525` OWED, HELD for the next read.
+⚠★★★ **I JUDGED THE TRIGGER, NOT THE BENEFICIARY — `A CONDITIONAL AUTHORIZATION IS EVALUATED BY WHOEVER BENEFITS` is the trap, and the desk is the correct side of it. `[MEASURED HERE]`: closeout passes · committed `05bea4e5` · `unpushed=0` · packet fetchable on the remote.**
+✅★★★★★ **CLOSEOUT VERIFIED AT THIS DESK, ALL OF `R-524 §3`:** the BINDING constraint holds absolutely — `301 → 301` cells, `0` added, `0` removed, **`0` PRE-EXISTING CELLS WITH ANY CHANGED FIELD** (`140/9/152` intact, `UNDECLARED` still `43`). **A guard change that edits what it guards is the defect it prevents; this one edited nothing.**
+✅ **`UNDECLARED 43 → 0` GOES `FAIL` (`:216`) — the specific mutant `R-524` named.** ✅ **Comparison 1 is NON-SELF-REFERENTIAL at the line (`:658` reads the published digest, `:661` compares it to `exp["digests"]["canonical_document_sha256"]`, the INDEPENDENTLY regenerated value) — that closes `F-2`.** ✅ **Both canonicalization-EXCLUDED fields (`row_universe_sha256`, `cell_id_set_sha256`) are exercised and RED — closes `F-3`.** ✅ **`31/31` mutants caught, exit status `0`, and the NOOP controls stay GREEN — including a sharp one, `cells reversed (order is not content)`, which proves the guard is not merely order-sensitive.** ✅ **Tag named in the packet.**
+★★★ **`P0-vNext` DESIGN CONTRACT (R-524 §5) — CONSUME CELLS, NOT CAPTIONS: reconstruct membership independently · TS↔Python agreement on EVERY projected cell · correctness ONLY on `ASSERTED` · no assertion or predicate for `NOT-APPLICABLE` · **any depended-on `UNADJUDICATED` emits a named `INCOMPLETE_AUTHORITY` and FAILS CLOSED, never a correctness green** · recompute summary counts FROM CELLS and verify against the now-protected manifest · out-of-frame surfaces stay a named `P3` obligation.**
 ★★★★★ **`THE DENOMINATOR IS NOW INDEPENDENT OF THE ARTIFACT IT JUDGES.` An adversary freely editing BOTH `ORACLE.json` and the ledger cannot shrink the universe — proved by intercepting all `17` reads (`16` pinned objects, `1` mutable input, tamper-tested inert on membership).**
 ⚠★★★ **WORKER AUTHORIZED (R-524 §3): a FOCUSED TWO-LINE VERIFIER CLOSEOUT — compare the published `canonical_document_sha256` against the INDEPENDENTLY regenerated `exp` digest (never a re-canonicalisation of the possibly-forged ledger), plus the canonicalization-excluded fields `row_universe_sha256` / `cell_id_set_sha256`. **NOT a redesign, NOT another census. No cell, count or frame meaning may move.**
 ⚠★★★★★ **WHY IT STILL MATTERS AT BAND 7: the guard protects `cells[]` and NOT the human-facing summary — `UNDECLARED 43 → 0` and `row_count 43 → 30` currently forge clean. **THE `43` IS THE ARTIFACT'S ENTIRE CLAIM TO HONESTY AND IT WAS THE ONE NUMBER OUTSIDE THE GUARD.** `A GUARD THAT PROTECTS THE DATA AND NOT THE SUMMARY PROTECTS THE PART NOBODY READS.`**
@@ -2869,7 +2873,7 @@ IT CITES.**
 
 1. ✅ **`P1` — CLOSED (R-524).** Observed baseline + the independently frozen **`43`-row universe**, derived from the twelve pinned source fixture specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`).
 2. ✅ **`P2` — CLOSED (R-524), BAND 7 VERIFIED.** The **`301`-cell** condition × seven-axis truth ledger: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152`, of which **`UNDECLARED 43`** — declared unknowns, never guessed. ⚠ **SCOPED: complete over the pinned ENTRY-CONDITION × SEVEN-AXIS frame ONLY. `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` are OUT OF FRAME, PRESERVED, and are a named `P3`/downstream obligation.**
-2a. ⚠ **IN FLIGHT — the two-line verifier closeout (R-524 §3)**, protecting the manifest/summary region. `P0-vNext` design unlocks when it passes and is published.
+2a. ✅ **CLOSED (verified at the desk, `05bea4e5`) — the two-line verifier closeout. The manifest/summary region is now guarded: `31/31` mutants RED incl. `UNDECLARED 43 → 0`, NOOP controls GREEN, ledger semantically unchanged.**
 3. **`P0-vNext` — DESIGN authorized after 2a; IMPLEMENTATION blocked until the design is externally read.** A THIN CONSUMER: reconstruct membership independently · TS↔Python agreement on every projected cell · correctness ONLY on `ASSERTED` · no predicate for `NOT-APPLICABLE` · **`UNADJUDICATED` → named `INCOMPLETE_AUTHORITY`, FAIL CLOSED, never a correctness green** · recompute summary counts FROM CELLS and check them against the protected manifest.
 4. **`P3`** — producer-proof lane, runtime integration lane, transfer receipt.
 5. **Deterministic Gate B** — immutable source record, typed projections, exact-slice provenance, protected sentinel.
