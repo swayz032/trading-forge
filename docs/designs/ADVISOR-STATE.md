@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3288` at THIS commit, 2026-08-01 20:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3293` at THIS commit, 2026-08-01 20:17 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3288` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3293` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## 🛑★★★★★ SEAT — **THE `P1`/`P2` CENSUS RETURNED `FAIL — NAMED MEMBERSHIP DEFECT` (`76773939`, receipt `docs/designs/GRADE-P1-P2-TRUTH-FREEZE-2026-08-01.md`, PUBLISHED). `R-523` OWED, HELD FOR THE NEXT EXTERNAL READ. Worker STANDING BY.**
+## ✅★★★★★ SEAT — **`R-523` LANDED `032b22c5`, PUBLISHED (2026-08-01 20:16). CENSUS `FAIL` ACCEPTED. **WORKER AUTHORIZED: ONE BOUNDED `P1`/`P2` REPAIR — obligations A–E, three allowed files, no code.** `P0-vNext` STILL BLOCKED.**
+✅ **WHAT SURVIVED AND BINDS THE REPAIR: the census could not move ONE of the `210` cells. `140/9/61` reconciles · the `43` are real and honestly represented · zero guessed cells · determinism stronger than claimed. **ALL `210` PRESERVED BYTE-FOR-BYTE, THE `43` STAY `43`.** A repair that “improves” a verified cell is a regression with good intentions.**
+⚠★★★★★ **THE DEFECT IS THE DENOMINATOR — CONFIRMED HERE TWO WAYS: `43` declared rows vs `30` enumerated → `13` rows / `91` cells omitted, true universe **`301`**; and the oracle's own `conditions_unadjudicated_ids` joins `13/13` to SPEC ids, `0/13` to ORACLE keys. All thirteen are in the CONTROL fixture. Post-repair expectation: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152` · `301` total — **a disagreement with those numbers is a FINDING, not something to reconcile toward.**
+⚠★★★★★ **THE CORRECTION A LATER SEAT MUST NOT LOSE — THE OBVIOUS FIX IS INSUFFICIENT: the census proposed unioning `conditions.keys()` with `conditions_unadjudicated_ids`. **BOTH LIVE INSIDE THE ORACLE BEING CHECKED**, so a self-consistent deletion from both shrinks the universe again. **THE ROW UNIVERSE MUST BE FROZEN FROM THE PINNED SOURCE FIXTURE SPECS (`fixture filename × spec.entry_conditions[].id`); the oracle's fields may be COMPARED against it and may NEVER DEFINE it.**
+★★★★★ **CLASS-LEVEL, AND IT IS NOT A PERSONAL FAILING — TWO INDEPENDENT PARTIES REACHED THE SAME INSUFFICIENT SHAPE: `A REMEDY FOR SELF-AUTHORIZATION THAT ADDS A SECOND SOURCE INSIDE THE SAME ARTIFACT HAS NOT LEFT THE SYSTEM — IT HAS RAISED THE PRICE OF THE FORGERY BY ONE EDIT.` **THE CHEAP TEST THAT CATCHES IT: *if an adversary may edit this artifact freely, can they still make the universe agree with them?* If yes it is not frozen, merely inconvenient to move.**
+✅ **RE-CENSUS AFTER THE REPAIR — I DISPATCH IT WITHOUT ASKING (operator delegation, 08-01, scoped to grader dispatch only).**
 ✅★★★★★ **THE DEFECT IS THE DENOMINATOR, NOT THE CELLS. The grader attacked all `210` published cells and COULD NOT MOVE ONE — arithmetic flawless, `zero guessed cells` confirmed by a basis-vs-source audit, determinism STRONGER than claimed.** ⚠ **But the universe is wrong.**
 ✅★★★★★ **`F-1` CONFIRMED AT THIS DESK ON TWO INDEPENDENT PATHS `[MEASURED HERE, parsed from `c304b098`]`:** (1) `spec.entry_conditions` across the 12 real fixtures = **`43` ROWS**; `P2` enumerated **`30`** → **`13` DECLARED ROWS NEVER ENUMERATED = `91` CELLS**; TRUE membership **`43 × 7 = 301`**, not `210`. (2) **THE ORACLE'S OWN SELF-WITNESS: `conditions_unadjudicated_ids` joins `13/13` TO THE SPEC IDS AND `0/13` TO THE ORACLE KEYS.** ★★★ **THE ORACLE NAMED THOSE 13 ROWS ITSELF. `P2` DREW ITS ROW SET FROM `oracle.fixtures[].conditions` KEYS — THE PRESENCE SET — WHICH EXCLUDES THEM.** ⚠ **ALL 13 ARE IN `00-control-shipped.spec.json` — the CONTROL fixture is the one whose rows went missing.**
 ⚠★★★★★ **THE DIAGNOSIS, AND IT IS THE SELF-AUTHORIZING DEFECT ONE *DIMENSION* OVER: `R-519` froze the AXIS list so requiredness could not be read off the artifact under test. **NOBODY FROZE THE ROW LIST.** It is still drawn from the artifact under test, so DELETING A ROW DELETES IT FROM THE UNIVERSE — the denominator authorizes itself. ★★★★★ **AND THE CLAUSE THAT MISSED IT IS MINE: `R-519` said membership comes from the frozen contract *“never from whichever **KEYS** happen to exist in `ORACLE.json`”* — I said KEYS, meaning AXES. **ROWS ARE MEMBERSHIP TOO AND I DID NOT SAY SO.** FOURTH `ONE LEVEL SHORT` THIS CAMPAIGN, and this time the level was a DIMENSION, not a nesting depth.**
