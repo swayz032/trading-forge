@@ -4,6 +4,67 @@
 
 ---
 
+## AR-581 · 2026-08-02 · ✅★★★★★ **R-536 §4 DELIVERED — SIX ITEMS, `37/37`, MATRIX `47+1=48`.** 🛑★★★★★ **AND THE DERIVED POPULATION IS THE WHOLE POINT: DERIVING THE PROMISE ATOMS FROM THE GRAMMAR MOVED THE DENOMINATOR `10 → 34` AND **IMMEDIATELY EXPOSED FOUR FORBIDDEN CHANNELS WITH NO CATCHER AT ALL.** MY HAND-PICKED TEN COULD NOT HAVE SURFACED ONE OF THEM.** ✅ **ROWS `45`–`47` WERE ADDED FOR THEM; THE GRAMMAR WAS NOT TRIMMED TO MATCH THE MATRIX.**
+
+**RULING ID:** R-536 §4 · **TASK ID:** AR-581 · **PRIOR:** AR-580 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** (`+67/−26`) · **blueprint NOT touched** · **advisor's files NOT touched.**
+**FAN-IN: `6 / 6`. NOT A HANDOFF.**
+
+### 🛑★★★★★ §1 — ITEM 5 IS THE LOAD-BEARING ONE, AND IT CONVICTED MY PREVIOUS ROUND EXACTLY AS THE DESK SAID
+**`R-536 §3` is right and I do not soften it: my `AR-579` forward population was TEN PROSE LABELS I CHOSE while being the party measured. `EMPTY` proved CONSISTENCY over my ten, never COMPLETENESS.**
+✅ **NOW MECHANICAL `[MEASURED HERE]`: atoms extracted from the GRAMMAR's `FORBIDDEN` list, its explicit `→ FORBIDDEN` decisions, the `1b-S` FORBIDDEN column **SPLIT PER CHANNEL**, and the DEEP-frozen clause. **`34` ATOMS, DERIVED FROM THE CONTRACT TEXT, NEVER FROM THE CATCHER TABLE.**
+🛑★★★★★ **AND IT PAID OFF ON FIRST RUN — FOUR CHANNELS THE GRAMMAR FORBADE WITH NOTHING TO CATCH THEM:** non-enumerable user fields · the unsupported value classes (`undefined`/`bigint`/symbol value/`NaN`/`±Infinity`) · sparse holes · extra named array properties. ✅ **ROWS `45`, `46`, `47` ADDED.** ⚠️ **The cheap alternative was deleting those clauses from the grammar so the difference went empty. `NARROWING A PROMISE TO MATCH A WEAK CATCHER IS A TEST WEAKENED TO PASS.`**
+★★★★★ **`AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT` — and the proof that it was a mirror is that the honest denominator found four gaps in the same document I had certified `EMPTY` one round earlier.**
+
+### 🛑★★★ §2 — THREE INSTRUMENT FAULTS IN MY OWN DERIVATION, ALL CAUGHT BY THE REVERSE DIRECTION
+**`[MEASURED HERE]` the reverse check — capability rows derived FROM THE MATRIX — went RED three times before it went empty, and every time the instrument was wrong rather than the design:**
+1. **One atom per `1b-S` SURFACE ROW was too coarse**, so `process.env` hid behind `globalThis` in a single cell and row `36` reported as an orphan. ✅ **Cells are now split per channel, same granularity as the grammar list.**
+2. **The DEEP-frozen clause probe was CASE-SENSITIVE** against a carrier written in caps → row `38` orphaned. ✅ **Case-insensitive.** ⚠️★★★ **That is the same one-character family that has now bitten this campaign repeatedly — an article, a determiner, a case.**
+3. **(carried from `AR-579`, stated again because it is the reason the reverse check exists at all)** an earlier draft computed `set(MAP.values()) − set(MAP.values())`, **EMPTY BY CONSTRUCTION.**
+★★★★★ **BOTH DIRECTIONS CARRY NEGATIVE CONTROLS: an unrecognised atom returns no catcher and is REPORTED; dropping row `44` makes REVERSE report `[44]`.** `AN EMPTY DIFFERENCE IS ONLY EVIDENCE IF THE CHECK COULD HAVE BEEN NON-EMPTY.`
+
+### ✅★★★★★ §3 — ITEMS 1–4
+**ITEM 1 — the composite mechanism now names itself in EVERY live carrier `[MEASURED HERE, anchored carrier census]`:** requirement `4b`, the chosen-contract summary, the `4b` red-proof list, and the `SOLE ADMITTED` wording — **which is now SCOPED: it describes OWN-DESCRIPTOR INSPECTION ONLY and may never describe the whole `1b-R` mechanism.** ✅ **`4b` carries an explicit `IS NEVER A DESCRIPTOR WALK ALONE`.**
+🛑★★★★★ **AND THE CENSUS FOUND A CONTRADICTION NO READ HAD RAISED, IN MY OWN PRIOR DELIVERY: `:173` DISCLAIMED `prototype-chain injection` AS *NOT CLAIMED TO BE CAUGHT* WHILE ROW `42` CATCHES EXACTLY IT.** ✅ **STRUCK — it is IN scope and CAUGHT.** ⚠️ **`Reflect.*` was likewise disclaimed while the traversal now MANDATES `Reflect.ownKeys`; the two senses were conflated and are now disambiguated (our INSTRUMENT vs adversarial obfuscation).** ★★★★★ **`A DISCLAIMER THAT OUTLIVES ITS CATCHER IS A FALSE ADVERTISEMENT IN THE OTHER DIRECTION` — it invites an implementer to skip a check the matrix requires.**
+**ITEM 2 — ONE CLOSED GRAMMAR**, total over the five projected fields' value space, **failing closed on any unlisted class.** ✅ **The three ordered decisions are decided BY MEASUREMENT: sparse holes FORBIDDEN (index genuinely ABSENT, a third state next to present/null) · `length` admitted-but-not-traversed (own yet NON-enumerable, excluded structurally) · extra named array properties FORBIDDEN (enumerable, so a naive object rule WOULD admit them).**
+🛑★★★★★ **AND THE VALUE-CLASS BANS ARE A CROSS-LANE CORRECTNESS MATTER, NOT TIDINESS `[MEASURED HERE]`: `JSON.stringify({a:NaN,b:Infinity,c:undefined})` → `{"a":null,"b":null}`. A lane emitting `NaN` and a lane emitting `null` COMPARE EQUAL AFTER TRANSPORT, and a dropped `undefined` silently becomes `MISSING`** — collapsing the three-state distinction §SURFACE 1 exists to protect. `AGREEMENT MANUFACTURED BY THE TRANSPORT IS NOT AGREEMENT BETWEEN THE LANES.`
+**ITEM 3 — traversal specified:** descriptor-first (`project` reads NO field before its descriptor is admitted, which is what holds the counter at `0`) · `Reflect.ownKeys` NEVER `Object.keys` · prototype-identity at every node · **ACTIVE-PATH cycle set, permanent visited-set FORBIDDEN.**
+**ITEM 4 — rows `43` (cycle) and `44` (symbol).** ✅ **Row `43` requires BOUNDED completion and states that a `RangeError` is a FAILED PROOF, not a red result** — it is the ABSENCE of a verdict. ✅ **Its green neighbours are an acyclic object AND a legitimate DAG, so the row rejects CYCLES and never REPEATED IDENTITY.** ✅ **Row `44` names the symbol path BEFORE invocation with `Reflect.ownKeys` as positive witness and `Object.keys` as a NEGATIVE CONTROL REQUIRED TO MISS IT.**
+
+### ⚠️★★★ §4 — ITEM 6, AND TWO MORE PROBE ARTIFACTS VERIFIED BEFORE ANY PROBE WAS TOUCHED
+`[MEASURED HERE]` **matrix anchored to `## 10`: `48` rows, contiguous `1..48`, zero duplicates, control LAST → `47` mutations + `1` control. POSITIVE CONTROL: the same pattern un-anchored returns `53`, the `5` extra being the field-mapping table at `:234–238`.**
+⚠️ **The caption was stale TWICE inside this single revision and was re-taken both times.** `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM.`
+**Acceptance failed `2/37` on first run; I PRINTED BOTH PASSAGES VERBATIM FIRST and both were instrument faults:** the grammar production at `:154` failed because my flattener strips `|` (needed for table rows) and thereby destroyed `leaf := null | boolean | ...`; the enumeration mandate at `:171` failed because backtick-stripping left a space before a comma. ✅ **Matcher made punctuation-tolerant on BOTH sides — same assertions, not weaker ones.**
+
+### §5 — ACCEPTANCE
+```
+item 1 composite in every live carrier (5 checks) ......................... PASS
+item 2 closed grammar + 3 explicit decisions (8 checks) .................. PASS
+item 3 safe traversal: descriptor-first · ownKeys · proto · active-path .. PASS
+item 4 cycle + symbol rows, witnesses and controls (6 checks) ............ PASS
+item 5 derived population · not from catcher table · gaps CLOSED ......... PASS
+item 6 anchored re-parse 47+1=48 · un-anchored 53 as control ............. PASS
+STOP   S1 no descriptor-only summary · S2 cycle policy · S3 no string-key
+       certification · S4 population not from catcher table ............. PASS
+REGR   R1/R2 no live disjunction (probes agree) · R3 control convicts
+       · R4 prototype-chain disclaimer struck ........................... PASS
+                                                                    37 / 37
+```
+
+### §6 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes untouched and NOT RUN · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT OUT · advisor's files untouched.**
+- ⚠️★★★★★ **`37/37` IS A DESIGN-TEXT RESULT.** My executions prove the MECHANISMS in a scratch harness outside the repo and carry **NO claim about repo code.** **No `P0-vNext` implementation exists, no mutation has ever been RUN against the gate, no CI executes any of this.**
+- ⚠️★★★ **HONEST-PARTIAL ON THE GRAMMAR, STATED RATHER THAN IMPLIED: it is TOTAL over the five projected fields' value space AS MEASURED AT `c304b098`. It is NOT claimed total over arbitrary JS.** An unlisted class FAILS CLOSED and is named — but *"fails closed"* is a design rule with no implementation behind it yet.
+- ⚠️ **`1b-S`+`1b-R` remain a CONTRACT, not a sandbox** — accidental coupling only; obfuscation and `Proxy` traps named OUT and keeping no claim.
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED (desk debt, `R-529 §5`).**
+- ★★ **I do not grade my own work.** **GRADE: NOT ASKING — bar unmet, three structural corrections this round.**
+
+### §7 — POSITION
+**Design REVISED on all six items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **FAN-IN `6 / 6`. NOT A HANDOFF.**
+
+---
+
 ## AR-580 · 2026-08-02 · **START-RECEIPT — R-536 §4 ACCEPTED. SIX ITEMS, DESIGN ONLY.** 🛑★★★★★ **`F-3` IS THE ONE I ACCEPT WITHOUT QUALIFICATION: I CHOSE THE FORWARD POPULATION MYSELF, SO MY `EMPTY` PROVED CONSISTENCY OVER TEN LABELS I PICKED — NEVER COMPLETENESS. `AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT.`** ✅ **AND ALL THREE OF THE DESK'S EXECUTION CLAIMS RE-MEASURED HERE, `3/3`, PLUS FIVE GRAMMAR EDGE CASES IT ORDERED DECIDED.**
 
 **RULING ID:** R-536 §4 · **TASK ID:** AR-580 · **PRIOR:** AR-579 (delivery, `30/30`) · **SEAT:** `claude.exe 26204` (address measured `AR-578 §0`; context continuous since).
