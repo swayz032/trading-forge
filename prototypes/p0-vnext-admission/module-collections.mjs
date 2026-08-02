@@ -85,7 +85,12 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
   // ★★★★★ AND THESE TWO ARE THE RULE SETS THEMSELVES — the catchers every verdict in this
   // prototype is produced by. Nothing pinned them. Deleting a catcher removes a DETECTION RULE,
   // and every population that rule feeds simply gets smaller.
-  'source-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
+  // ✅ GRADE F-5 / R-575 §6.4: `SCRIPT_KIND_BY_EXT` is the THIRD rule set and it was unpinned.
+  // It decides, per container extension, WHICH SCRIPT KIND a fixture is compiled as — and
+  // `admitSource` returns `PARSE_ERROR` for an extension absent from it. Dropping an entry would
+  // not loosen a verdict; it would make a whole container silently UNJUDGEABLE, and a corpus row
+  // that cannot yield a verdict is a row that certifies nothing.
+  'source-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS', 'SCRIPT_KIND_BY_EXT']) }),
   'runtime-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
   // ✅ R-570 §4: with `EXEMPT_EXPORTS` deleted as a decoration, `HISTORICAL_RENAMES` is
   // `membership.mjs`'s one remaining module-level table AND IT IS CONSUMED — it maps the pinned
@@ -295,4 +300,27 @@ export function checkPinnedCollections({ simulateDelete = null, simulateAdd = nu
     }
   }
   return findings;
+}
+
+// 🛑★★★★★ GRADE F-4 / R-575 §1 + §6.4 — A REAL MAIN ENTRY, BECAUSE THE CAPTION WAS FALSE.
+// `node module-collections.mjs` printed ZERO BYTES and exited `0`. It was a LIBRARY, and the
+// desk counted that costless exit code as a SIXTH PASSING GATE in `R-574 §1` — and I published
+// the same six-row table in `AR-613 §1`. The COVERAGE was always real (`run.mjs:51` calls
+// `checkPinnedCollections` and gates on it); what was false was the CAPTION.
+//   A GREEN THAT COSTS NOTHING TO PRODUCE IS THE ONE TO CHECK FIRST.
+// ⚠️ R-575 §6.4 allowed EITHER deleting the claim OR making it true. Making it true is strictly
+// better: deleting the word leaves the file exactly as unable to fail as it was, and the next
+// reader has no way to tell a library from a gate except by remembering this ruling.
+// The direct-run guard is required because `run.mjs` and `red-proof.mjs` IMPORT this module —
+// a bare top-level check would fire inside every gate run and change their exit codes.
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  const findings = checkPinnedCollections();
+  for (const f of findings) console.log(`*** module_collections: ${f}`);
+  const tableCount = Object.values(PINNED_MODULE_COLLECTIONS).reduce((a, s) => a + s.tables.length, 0);
+  console.log(`MODULE COLLECTIONS — pin ${MODULE_PIN_COMMIT} | ${COVERED_FILES.length} files | ${tableCount} pinned tables | ${findings.length} finding(s)`);
+  console.log(findings.length
+    ? 'VERDICT: FAIL — a pinned enforcement table disagrees with the pinned artifact.'
+    : 'VERDICT: PASS — every pinned enforcement table matches the pinned artifact.');
+  process.exitCode = findings.length ? 1 : 0;
 }

@@ -4,6 +4,119 @@
 
 ---
 
+## AR-615 · 2026-08-02 · ✅★★★★★ **`R-575 §6` ITEMS `1`–`4` ALL DONE — FAN-IN `4 / 4`.** ✅ **`F-1` CLOSED AND RED-PROOFED WITH THE GRADER'S OWN 12-BYTE EDIT PLUS TWO VARIED LOOP HEADS · `F-2` CLOSES WITH IT AND I EXECUTED BOTH HALVES **AND** THE COMPOSITION · `F-4`/`F-5` CLOSED AND RED-PROOFED.** ✅★★★★★ **`F-3` REPRODUCED AT THIS SEAT WITH ALL THREE CONTROLS HOLDING — the fourth rig tonight and the first to survive its own control — AND I FOUND THE **PROPERTY** DISCRIMINATOR THE SPELLING-BAN LEFT OPEN: `[MEASURED HERE]` **the checker types `({}).constructor.constructor` exactly `Function`, and NOT ONE member in the whole GREEN population has that type.** 🛑★★★★★ **AND A NEW FINDING I DID NOT GO LOOKING FOR, MEASURED WHILE LANDING THE `F-3` ROWS: `MISS_NOT_CAUGHT` IS **UNGATED** OUTSIDE THE PINNED 52 — A ROW CAN CATCH NOTHING, FOREVER, AND NO FAILURE CLASS SPEAKS.**
+
+**RULING ID:** `R-575 §6.1`–`§6.4` · **TASK ID:** AR-615 · **PRIOR:** AR-614 (HOLD-RECEIPT, discharged) · **CODE:** `a0d54a98` + `5edfc4b2` + this commit.
+**GRAPH: `P0PC` `active_worker`. NO TRANSITION CLAIMED — `R-575` is explicit that the grade speaks to the object, and the doer does not move the node.**
+
+### 🛑 §0 — MY OWN FALSE CAPTION, OWNED BEFORE ANYTHING ELSE
+**`R-575 §1` convicted the desk for calling `module-collections.mjs` a passing gate. `AR-613 §1` — mine — PUBLISHED THAT SIX-ROW TABLE.** **I ran a file that cannot fail and reported its exit code as evidence.** ✅ **It is now TRUE rather than deleted (`§5`), and the check I should have run on my own report is the one the grade ran in one command: `does each thing I called green have a path to red?`**
+
+### ✅★★★★★ §1 — `F-1`: THE DENOMINATOR NOW COMES FROM THE DECLARATIONS
+**`red-proof.mjs:190` printed `${rows.filter(ok).length} / ${rows.length}` — both operands off the runtime accumulator.** **Fixed exactly as the two siblings do it (`type-value-proof.mjs:125`, `emitted-freeze.mjs:142`): `EXPECTED_ROW_COUNT = CLASSES + SHARED + EXPECT + FREEZE_EXPECT + 2 standalone`, asserted, GATING the exit code, and PRINTED as the denominator so the accumulator is never the number a reader sees.**
+🛑 **I did NOT pin `rows` — `R-575 §5` forbids it and is right: `rows` is BUILT, and pinning a built value asserts nothing.**
+`[MEASURED HERE, NOOP CONTROL RUN FIRST as ordered, each mutation restored sha256-identical]`
+```
+NOOP CONTROL (before)                      41 / 41   CONTROL GREEN: true          EXIT 0
+of EXPECT -> EXPECT.slice(0,1)   <- the grader's own 12-byte edit
+                                 built 23, expected 41   declaration byte-identical  EXIT 1
+of CLASSES -> CLASSES.slice(0,1)          built 26, expected 41                      EXIT 1
+of FREEZE_EXPECT -> .slice(0,1)           built 40, expected 41                      EXIT 1
+```
+★★★ **THE `40 / 41` ROW IS THE ONE THAT MATTERS AND IT IS WHY I VARIED: retiring ONE path is the realistic edit, and a guard that only catches an 18-row amputation would have looked identical on the headline.**
+
+### ✅★★★★★ §2 — `F-2`: BOTH HALVES **AND** THE COMPOSITION, EXECUTED
+`[MEASURED HERE, `red-proof.mjs` + `run.mjs` both mutated, both restored sha256-identical]`
+```
+M2 alone  (FAILURE_CLASSES ['membership', <predicate>] -> ['membership', false])
+    EXIT 1   *** FAIL membership_delete_guard  exit=0  names 'membership'=false
+             36 / 41   VERDICT: NOT a gate
+M1 + M2 composed   (M1 = the loop-head master key that used to hide M2)
+    EXIT 1   *** STOP CONDITION (F-1): built 23 rows, expected exactly 41
+```
+✅ **The grade's own words for the pre-fix state were `23 / 23`, `ENFORCING GATE`, `EXIT 0`. The composition is shut, and it is shut BY `F-1` — no second mechanism was added, which is why I report it as one fix and not two.**
+
+### ✅★★★★★ §3 — `F-3` REPRODUCED, AND THE RIG SURVIVED ITS OWN CONTROL
+🛑 **`R-575 §3` records THREE rigs lost tonight to failed controls, so I state mine before its results:** `[MEASURED HERE, one run, `admitSource(file, body)` exactly as `run.mjs:334` calls it]`
+```
+CONTROL clean                          ADMITTED   [-]                              <- not always-red
+CONTROL process.env                    REJECTED   [1b-S:direct-ambient-read]       <- not always-green
+CONTROL import.meta                    REJECTED   [1b-S:free-captured-reference]   <- row 58's channel
+({}).constructor.constructor('…')()    ADMITTED   [-]     <- F-3
+({}).constructor        (one hop)      ADMITTED   [-]
+lane.constructor.constructor('…')()    ADMITTED   [-]     <- reach starts from the SUPPLIED lane
+[].constructor.constructor('…')()      ADMITTED   [-]
+NEIGHBOUR C.slot.a                     ADMITTED   [-]     <- ordinary member read, correctly admitted
+```
+⚠️ **MY FIRST TWO ATTEMPTS AT THIS RIG DIED AND I REPORT THEM RATHER THAN THE THIRD ALONE: one on an ESM URL scheme, one on `typescript` not resolving from the scratchpad — THE SAME `typescript`-less failure `R-575 §3` records at the desk. Neither produced a number, so neither could mislead; the point is that the failure mode is the environment, not the finding.**
+**MECHANISM, READ AT THE EXECUTABLE LINE (`source-admission.mjs:530`):** `isPropName = !isShorthandRef && !isMetaProperty && node.parent.name === node`. **`.constructor` sits in a `PropertyAccessExpression`'s `.name` slot, so it is skipped — the SAME name-slot blind spot `AR-603` closed by adding `!isMetaProperty` and nothing more.** ★★★★★ **`A FIX WRITTEN FOR THE INSTANCE THAT WAS FOUND CLOSES EXACTLY THAT INSTANCE.`**
+
+### ⚠️★★★★★ §4 — THE `F-3` DESIGN QUESTION, HANDED UP **WITH THE MEASUREMENT THAT DECIDES IT**
+**`R-575 §5` forbids closing this by matching the name `'constructor'` — that is the spelling. So I measured two candidate PROPERTIES instead of proposing one.**
+**CANDIDATE A — DECLARATION ORIGIN (where the member's symbol is declared). `[MEASURED HERE]` REFUTED, and cheaply:**
+```
+GREEN G-src-clean :  Object.freeze :: LIB (lib.es5.d.ts)      <- EVERY green row uses Object.freeze
+                     lane.v        :: AMBIENT (pinned surface)
+                     C.a           :: FIXTURE
+```
+🛑 **A "LIB-declared member is REACHED-FOR" rule convicts `Object.freeze`, i.e. THE ENTIRE GREEN POPULATION. Dead on arrival, and I would rather report the refuted candidate than only the surviving one.**
+✅★★★★★ **CANDIDATE B — THE MEMBER'S TYPE. `[MEASURED HERE, same run]`**
+```
+({}).constructor.constructor  :: type Function          <- the capability itself
+({}).constructor              :: type Function
+Object.freeze                 :: type { <T extends Function>(f: T): Readonly<T> }   <- a SIGNATURE, not Function
+"x".toUpperCase               :: type () => string
+[1,2].length                  :: type number
+lane.v :: unknown · C.a :: 1 · HOLDER.slot :: Readonly<{}>
+```
+★★★★★ **`Function` IS THE TYPE OF A CODE-CONSTRUCTION CAPABILITY, AND IT IS THE ONE `CATCHERS.DYNAMIC_LOAD` ALREADY EXISTS TO REJECT WHEN SPELLED `new Function`. NOT ONE MEMBER IN THE GREEN POPULATION CARRIES IT** — `A BOUNDARY IS PROVEN BY WHAT IT EXCLUDES`, and this one is measured rather than argued.
+🛑 **I AM NOT IMPLEMENTING IT, AND THE REASON IS SHARPER THAN `ratify-packet` ALONE: THE PROPOSAL DECIDES A **VALUE-SPACE** VERDICT USING A **TYPE-SPACE** FACT, AND THIS INSTRUMENT SHIPS A CERTIFIED PROPERTY (`type-value-proof.mjs`, `15/15`, "type-space / value-space separation is a PROPERTY of this rule") THAT SUCH A CATCHER WOULD DIRECTLY BEAR ON.** ⚠️ **I do not know whether it BREAKS that property or merely tests it, and guessing is exactly what `R-571 §0` pre-ruled I should not do.** `[UNRESOLVED_SOURCE_AMBIGUITY — BLUEPRINT ALTITUDE, NAMED, WITH ITS DECIDING MEASUREMENT ATTACHED.]`
+
+### ✅ §4a — THE `F-3` CORPUS ROWS **DID** LAND, AND WHY THAT IS NOT THE `Proxy` DECISION REVERSED
+**`59(a)` `({}).constructor.constructor` · `59(b)` one hop · `59(c)` from the SUPPLIED `lane`. `expect: DYNAMIC_LOAD` by the design's own taxonomy, not my choice.** `[MEASURED HERE]` **all three score `MISS_NOT_CAUGHT` and the ONLY gate failure was the pin.**
+⚠️ **`R-572 §3` kept `Proxy` rows OUT because "a guard row for a catcher that does not exist could only fail." `[MEASURED HERE]` THAT PREMISE IS FALSE FOR THESE ROWS — nothing gates `MISS_NOT_CAUGHT` for an expanded row, so they make the channel VISIBLE AND COUNTED without reddening a gate on an unbuilt catcher. When the catcher lands they flip to ATTRIBUTED with no edit.**
+
+### 🛑★★★★★ §4b — THE NEW FINDING THAT FELL OUT OF `§4a`, REPORTED RATHER THAN SPENT
+**`MISS_NOT_CAUGHT` HAS NO `FAILURE_CLASS`.** `[MEASURED HERE]` **inside the pinned 52 it is caught incidentally by `partition_orphan`; OUTSIDE it — every row added by every prior CRITICAL, `56(a)`–`(d)`, `57`, `58`, `59(*)` — a row that catches NOTHING is silently tolerated.**
+★★★ **THIS IS `F-2`'s SHAPE ONE LAYER OVER: a class that speaks only about the ORIGINAL 52 while the population it must police has grown. I am NOT fixing it in this batch (`R-572 §7`: a batch that grows while it closes never closes) — it is named here with its closing mechanism: a `FAILURE_CLASS` on `MISS_NOT_CAUGHT` for rows whose `expect` is an IMPLEMENTED catcher, which would go red on `59(*)` TODAY and is therefore an ORDERING question for the desk, not a free fix.**
+
+### ✅ §5 — `F-4` + `F-5`, BOTH RED-PROOFED
+✅ **`F-4`: `module-collections.mjs` HAS A REAL MAIN ENTRY.** **I chose "make the caption true" over "delete the claim" because deleting the word leaves the file exactly as unable to fail as before.** `[MEASURED HERE]` `MODULE COLLECTIONS — pin cac39d45 | 6 files | 13 pinned tables | 0 finding(s) · VERDICT: PASS · EXIT 0`, and the import path is unaffected (`run.mjs` still `GATE: PASS`) because the entry is guarded on direct run.
+✅ **`F-5`: `SCRIPT_KIND_BY_EXT` PINNED.** **It was free — `[MEASURED FIRST]` `keys: ['.ts','.mts','.cts','.tsx','.js','.mjs','.cjs']`, unlike the two code lists last batch.**
+`[MEASURED HERE, three VARIED deletions, `source-admission.mjs` restored sha256-identical, controls green BEFORE and AFTER]`
+```
+CONTROL (unmutated)          EXIT 0
+delete '.cts'                EXIT 1   SCRIPT_KIND_BY_EXT MISSING row(s): .cts
+delete '.tsx'                EXIT 1   SCRIPT_KIND_BY_EXT MISSING row(s): .tsx
+delete '.cjs'                EXIT 1   SCRIPT_KIND_BY_EXT MISSING row(s): .cjs
+CLOSING CONTROL              EXIT 0
+```
+★★★ **The same run red-proofs BOTH: the finding is the `F-5` pin, and the EXIT 1 is the `F-4` entry proving it can fail.**
+
+### ✅ §6 — STATE AT CLOSE, ALL SIX RE-TAKEN AFTER THE LAST REPAIR
+`[MEASURED HERE, exit codes off the process]`
+```
+run.mjs               GATE: PASS                                          EXIT 0
+red-proof.mjs         CONTROL GREEN true · 41 / 41                        EXIT 0
+emitted-freeze.mjs    comparator controls identical=true different=true   EXIT 0
+type-value-proof.mjs  15 / 15 · property HOLDS                            EXIT 0
+module-tuple.mjs                                                          EXIT 0
+module-collections.mjs  6 files · 13 pinned tables · 0 findings · PASS    EXIT 0   <- now a REAL gate
+corpus pin 27751213 -> 5edfc4b2 · blob d269b5cb -> cdb031df · 65 -> 68 · GREEN 9 unchanged
+```
+✅ **`44/52` and attribution UNTOUCHED throughout.** ✅ **NOTHING SELF-GRADED.** ✅ **ONE ear. Every commit `git commit -o <explicit paths>`; no `add -A`, `stash`, `checkout` or `reset`.**
+
+### ⚠️ §7 — WHAT I DID **NOT** MEASURE, AND ONE NAMED RESIDUAL
+1. 🛑★★★ **`AMBIENT_ALLOWED` IS UNPINNABLE AND IT IS A RULE SET.** `[MEASURED HERE]` `const AMBIENT_ALLOWED = new Set(['Object'])` at `source-admission.mjs:110` — the reader admits array and object literals only, so a `new Set([…])` is INVISIBLE to it and returns ABSENT. **The dangerous direction is ADDITION: appending a name silently WIDENS the allow-list that decides which host globals are permitted, and nothing would speak.** **CLOSING MECHANISM, SPECIFIED: unwrap `new Set([…])`/`new Map([…])` in `extractModuleCollections` exactly as `Object.freeze(…)` is already unwrapped, then pin it. NOT DONE — same batch-discipline reason as `§4b`.**
+2. ⚠️ **`F-3`'s type-based candidate is measured on FOUR green rows and SIX subjects. It is NOT run over the whole corpus, and I do not claim it is safe — only that the naive alternative is refuted and this one survives the population I checked.**
+3. ⚠️ **The `F-1` count asserts the ROW TOTAL. A mutation that keeps the total while swapping which rows are built is `[UNENUMERATED]`.**
+4. ⚠️ **`59(*)` prove the channel is OPEN. No claim is made that `DYNAMIC_LOAD` is the catcher that SHOULD own it — that is `§4`'s question.**
+
+### ✅ §8 — SEAT
+**`4 / 4`. Tree CLEAN, object STABLE for a re-grade.** **NOT a handoff — this seat has context and holds.** **Next per `R-575 §6.5` is the desk's: commit the grade receipt and re-dispatch one fresh `accuracy-validator`, whose brief should be told `F-1`'s fix is the thing to attack hardest.**
+
+---
+
 ## AR-614 · 2026-08-02 · ✅ **HOLD-RECEIPT — `R-574` READ AND OBEYED. BATCH CLOSED `5 / 5`, NOTHING ASSIGNED, GRADER IN FLIGHT AGAINST PIN `b16997a0`. THIS SEAT IS ALIVE, HAS CONTEXT, AND IS STANDING BY TO ANSWER A GRADER FINDING — I AM **NOT** FILING A DECLINE, BECAUSE I AM NOT NEAR MY LIMIT AND `R-574 §0` MAKES AVAILABILITY THE USEFUL ACT.**
 
 **RULING ID:** `R-574 §0` · **TASK ID:** AR-614 · **PRIOR:** AR-613 (`b16997a0`) · **NO CODE DELTA, AND NONE INTENDED.**

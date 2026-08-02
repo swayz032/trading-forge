@@ -56,7 +56,9 @@ export const BASELINE_REPO_PATH = 'prototypes/p0-vnext-admission/corpus.mjs';
 //   `G-src-new-target-supplied` R-566's adjudication, made enforceable instead of remembered.
 // ✅ THREE MAGNITUDES MOVE WITH IT AND EACH STATES ITSELF IN PLAIN SIGHT (`64 -> 65`, `8 -> 9`,
 // and the blob), which is exactly what `F-4` proved a bare string cannot do.
-export const EXPANDED_PIN_COMMIT = '27751213';
+// ⚠️ BUMPED AGAIN `27751213` -> `5edfc4b2` (R-575 §6.3): rows `59(a)`–`(c)`, the `constructor`
+// reach channel the independent grade proved OPEN. `65 -> 68`; GREEN unchanged at `9`.
+export const EXPANDED_PIN_COMMIT = '5edfc4b2';
 
 export function loadPinnedCorpus(commit) {
   const raw = execFileSync('git', ['show', `${commit}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' });
@@ -138,8 +140,8 @@ export const EXPANDED_META = Object.freeze({ commit: EXPANDED_PIN_COMMIT, blob: 
 //   A PIN NOBODY ASSERTS IS A VARIABLE, NOT A PIN.
 // Both magnitudes are now asserted, and so is the BLOB — so moving the pin requires editing three
 // named constants that each state the expected size in plain sight, and a shrink cannot be silent.
-export const EXPANDED_PIN_BLOB = 'd269b5cbce2cc9d03905abac5c816e039a1f9cfd';
-export const EXPECTED_EXPANDED_CARDINALITY = 65;
+export const EXPANDED_PIN_BLOB = 'cdb031df2cbb0597d21493d48447e5005880778f';
+export const EXPECTED_EXPANDED_CARDINALITY = 68;
 export const EXPECTED_GREEN_CARDINALITY = 9;
 if (expandedPin.blob !== EXPANDED_PIN_BLOB) {
   throw new Error(`INSTRUMENT FAULT: expanded pin ${EXPANDED_PIN_COMMIT} resolves to blob ${expandedPin.blob}, expected ${EXPANDED_PIN_BLOB} — the pin moved`);
