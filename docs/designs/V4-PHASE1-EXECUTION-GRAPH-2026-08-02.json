@@ -1,0 +1,834 @@
+{
+  "schema_version": "v4-phase1-graph-1.2",
+  "title": "Trading Forge V4 execution graph — Phase 1 expanded",
+  "authority": {
+    "status": "external-advisor candidate for Fable adoption",
+    "requirements_source": "docs/designs/BLUEPRINT-V4-DRAFT.md",
+    "requirements_source_git_blob_oid": "fa1ce96007967dc82638fd9e885f1fd84c50e303",
+    "dependency_source": "docs/designs/GRAPH-LANES-FAKE-EDGE-MAP-2026-07-30.md",
+    "dependency_source_git_blob_oid": "1e58d0948708a417f9b1178c49bb3ad25f944725",
+    "status_source": "docs/designs/ADVISOR-STATE.md and newest AGENT-REPORTS.md",
+    "advisor_state_git_blob_oid": "0d38286f897ffc77abb78e748f82a167bcc54676",
+    "status_epoch_report_commit": "cae7a2ba44e345dfbfb4a2786d587de8a0c2466a",
+    "status_epoch_report": "AR-606",
+    "status_epoch_ruling_commit": "5d8e272d4c531ce0fb689de1144726d37341270b",
+    "status_epoch_ruling": "R-569",
+    "status_join_commit": "5d8e272d4c531ce0fb689de1144726d37341270b",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-606, and newest ruling R-569 are joined at campaign commit 5d8e272d4c531ce0fb689de1144726d37341270b. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
+    "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
+  },
+  "objective": {
+    "phase_1_exit": "≥1 tier-A spec compiles with ALL load-bearing conditions concretely bound AND the compile-fidelity forensics gate passes calibration.",
+    "trading_ready_boundary": "Phase 1 is compiler completion, not trading readiness. Trading readiness additionally requires the Phase-2 battery and Phase-3 paper/shadow evidence."
+  },
+  "scheduler": {
+    "max_worker_lanes": 4,
+    "max_money_path_implementations": 1,
+    "max_independent_grades": 1,
+    "judgment_is_never_a_worker_lane": true,
+    "ready_rule": "A node is ready only when every incoming hard edge has a present, pinned artifact and every acceptance predicate on that artifact is true.",
+    "edge_rule": "Every hard edge names the exact output artifact consumed. An ordering claim without a consumed artifact is a fake edge and is removed.",
+    "fan_in_rule": "A fan-in reports expected and received predecessor IDs. Missing predecessors are RED, never omitted.",
+    "compiler_environment_rule": "A TypeScript mutation is valid only against a named and content-pinned compiler surface: TypeScript version, compiler options, standard libraries, ambient declarations, and fixture files.",
+    "diagnostic_ownership_rule": "Each mutation has one primary catcher. Syntax already owned by a specific catcher is excluded from generic catchers, and the fixture asserts that the primary catcher fired while competing catchers stayed silent.",
+    "current_money_path_node": "P0PC",
+    "priority_rule": "Prioritize ready nodes on the Phase-1 money path, then nodes that unlock the largest downstream fan-in; park off-path work when it competes for the same lane."
+  },
+  "node_states_at_epoch": {
+    "completed": [
+      "P0D",
+      "P0P",
+      "P1",
+      "P2"
+    ],
+    "active_worker": [
+      "P0PC"
+    ],
+    "ready_advisor": [
+      "P3"
+    ],
+    "blocked": [
+      "P0PG",
+      "P0VC",
+      "P0DG",
+      "P0I",
+      "P0IG",
+      "GBP",
+      "GBR",
+      "GBS",
+      "RERANK",
+      "RESPIN",
+      "BFREEZE",
+      "BIND",
+      "FIDELITY",
+      "PH1_EXIT",
+      "PH2",
+      "PH3"
+    ],
+    "conditional": [
+      "REG",
+      "I21"
+    ],
+    "parked": [
+      "I7",
+      "I8"
+    ],
+    "operator_reserved": [
+      "PH35",
+      "PH4"
+    ]
+  },
+  "artifact_pins": [
+    {
+      "id": "P0D_DESIGN_BLOB",
+      "node": "P0D",
+      "kind": "git_object",
+      "object_oid": "a5ca03237eb5f9fd5977315c9ed3617e08ab021c",
+      "object_type": "blob"
+    },
+    {
+      "id": "P0P_REPORT_COMMIT",
+      "node": "P0P",
+      "kind": "git_commit",
+      "commit_oid": "8297ebbe062f97f07d9000a2aa22712420a70c42"
+    },
+    {
+      "id": "R543_COMMIT",
+      "node": "P0P",
+      "kind": "git_commit",
+      "commit_oid": "11c6ddfc5cfffff221d950d9b79180465bc37be3"
+    },
+    {
+      "id": "R544_COMMIT",
+      "node": "P0P",
+      "kind": "git_commit",
+      "commit_oid": "eaca532462453993aafd37f4ba7091bca07ca0ed"
+    },
+    {
+      "id": "EXTERNAL_AR589_REVIEW_COMMIT",
+      "node": "P0P",
+      "kind": "git_commit",
+      "commit_oid": "60c3363ada1ab07a5d528396780cbf514ba64088"
+    },
+    {
+      "id": "P0PC_UNSOUND_GRADE",
+      "node": "P0PC",
+      "kind": "git_blob",
+      "path": "docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md",
+      "git_blob_oid": "b74bd655958a8297a4b57b93648dd491f8bb61ce"
+    },
+    {
+      "id": "P1_FREEZE",
+      "node": "P1",
+      "kind": "git_blob",
+      "path": "docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md",
+      "git_blob_oid": "1737e74381b47eac8a7abfa67add5240ff2b9301"
+    },
+    {
+      "id": "P2_MEMBERSHIP",
+      "node": "P2",
+      "kind": "git_blob",
+      "path": "docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json",
+      "git_blob_oid": "1551c7e56480caff7d70a580e1f7a2c7ef644203"
+    },
+    {
+      "id": "P1_P2_GRADE",
+      "node": "P1+P2",
+      "kind": "git_blob",
+      "path": "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md",
+      "git_blob_oid": "05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"
+    },
+    {
+      "id": "EPOCH_STATE",
+      "node": "EPOCH",
+      "kind": "git_blob",
+      "path": "docs/designs/ADVISOR-STATE.md",
+      "git_blob_oid": "0d38286f897ffc77abb78e748f82a167bcc54676"
+    },
+    {
+      "id": "EPOCH_RULINGS",
+      "node": "EPOCH",
+      "kind": "git_blob",
+      "path": "docs/designs/ADVISOR-RULINGS.md",
+      "git_blob_oid": "1f3782d39a56c8dd5aa3a2e34363b0a2c59eaa16"
+    },
+    {
+      "id": "EPOCH_REPORTS",
+      "node": "EPOCH",
+      "kind": "git_blob",
+      "path": "docs/designs/AGENT-REPORTS.md",
+      "git_blob_oid": "c3ecc83f645c297286fbc027071d8f712ce53fa0"
+    }
+  ],
+  "fan_in_contracts": {
+    "GBP": [
+      "P0IG",
+      "P1",
+      "P2",
+      "P3",
+      "REG"
+    ],
+    "GBR": [
+      "GBP",
+      "P3"
+    ],
+    "GBS": [
+      "GBR",
+      "P1",
+      "P2"
+    ],
+    "FIDELITY": [
+      "BIND",
+      "P0IG"
+    ],
+    "PH1_EXIT": [
+      "BIND",
+      "FIDELITY",
+      "P0IG"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "P0D",
+      "title": "Close P0-vNext design contract",
+      "kind": "design",
+      "phase": "1A-instrument",
+      "state_at_epoch": "delivered_AR588_design",
+      "owner": "current worker seat",
+      "wip_class": "money_path_design",
+      "outputs": [
+        "P0-VNEXT-DESIGN-2026-08-01.md",
+        "52-record plantable mutation manifest"
+      ],
+      "acceptance": "AR-588 design records the ESM-only direction and CJS wrapper-this mutation; hands the exact design blob and manifest to the isolated executable prototype."
+    },
+    {
+      "id": "P0P",
+      "title": "Execute isolated source/runtime admission prototype",
+      "kind": "prototype",
+      "phase": "1A-instrument",
+      "state_at_epoch": "delivered_AR589_coverage_revised_by_R543",
+      "owner": "current worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "AR-589 isolated 1b-S and 1b-R prototype",
+        "AR-589 49-of-52 provisional receipt",
+        "three named misses",
+        "separability receipt"
+      ],
+      "acceptance": "Prototype exists and executes all 52 registered records. Its 49-of-52 figure is provisional and cannot cross a hard edge because R-543 and the external AR-589 review found invalid coverage, non-exclusive ownership, module-identity, required-project membership, and print-only enforcement defects."
+    },
+    {
+      "id": "P0PC",
+      "title": "Correct and red-proof the executable admission prototype",
+      "kind": "prototype_correction",
+      "phase": "1A-instrument",
+      "state_at_epoch": "active_repair_after_R548_reproduced_false_greens_and_unsound_grade",
+      "owner": "current worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "corrected 1b-S and 1b-R prototype commit",
+        "six-population corrected coverage partition",
+        "type-space versus value-space discriminator receipt",
+        "emitted-behaviour fixture freeze",
+        "effective-module tuple and same-source CJS-ESM differential",
+        "required-project membership receipt",
+        "runner mutation red-proof",
+        "execution-proven row-54 design correction"
+      ],
+      "acceptance": "The six populations are disjoint and sum to the frozen 52; surface-invalid rows are inadmissible, mutation-as-type-error rows name the type checker, and only surface-valid fixture-valid rows may credit 1b-S. Type-only identifiers stay silent while the same spelling in value position is exclusively FREE_REF, with POSITION_UNCLASSIFIED fail-closed. Fixture scaffolding preserves emitted behavior. The effective compiler-emitter-loader tuple is an input; one source is executed as CJS and ESM; exactly one callable project export is required; every terminal acceptance failure exits non-zero after evidence collection while the restored control exits zero."
+    },
+    {
+      "id": "P0PG",
+      "title": "Independent grade of corrected admission prototype",
+      "kind": "grade",
+      "phase": "1A-instrument",
+      "state_at_epoch": "blocked_by_P0PC",
+      "owner": "accuracy-validator",
+      "wip_class": "independent_grade",
+      "outputs": [
+        "durable corrected-prototype grade receipt",
+        "novel false-green hunt receipt"
+      ],
+      "acceptance": "The grader independently re-plants R-543 and external AR-589 defects, runs a novel complement-first hunt, and reports SOUND or honest null with exact coverage and limitations against the corrected prototype commit."
+    },
+    {
+      "id": "P0VC",
+      "title": "Close mutation validity and diagnostic ownership",
+      "kind": "design_closure",
+      "phase": "1A-instrument",
+      "state_at_epoch": "blocked_by_P0PG_evidence",
+      "owner": "current worker seat",
+      "wip_class": "money_path_design",
+      "outputs": [
+        "revised P0-vNext design blob",
+        "content-pinned TypeScript fixture compiler surface",
+        "single-catcher ownership manifest"
+      ],
+      "acceptance": "Consumes the corrected prototype and its independent grade, including honest misses and novel findings; closes only the design promises demonstrated by those artifacts, with unresolved coverage retained as explicit residuals."
+    },
+    {
+      "id": "P0DG",
+      "title": "Independent design grade",
+      "kind": "grade",
+      "phase": "1A-instrument",
+      "state_at_epoch": "blocked_by_P0VC",
+      "owner": "accuracy-validator",
+      "wip_class": "independent_grade",
+      "outputs": [
+        "durable P0-vNext design-grade receipt"
+      ],
+      "acceptance": "SOUND or honest-null coverage receipt against the exact design blob; novel false-green hunt included."
+    },
+    {
+      "id": "P0I",
+      "title": "Implement P0-vNext instrument",
+      "kind": "implementation",
+      "phase": "1A-instrument",
+      "state_at_epoch": "blocked_by_P0DG",
+      "owner": "worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "atomic P0-vNext implementation commit",
+        "executed mutation receipts"
+      ],
+      "acceptance": "Every pre-registered mutation bites through its named catcher; clean controls remain green; CI wiring exists."
+    },
+    {
+      "id": "P0IG",
+      "title": "Independent implementation grade",
+      "kind": "grade",
+      "phase": "1A-instrument",
+      "state_at_epoch": "blocked_by_P0I",
+      "owner": "accuracy-validator",
+      "wip_class": "independent_grade",
+      "outputs": [
+        "durable P0-vNext implementation-grade receipt"
+      ],
+      "acceptance": "Fresh re-plants plus novel attacks against the exact implementation commit; pipeline limitations named."
+    },
+    {
+      "id": "P1",
+      "title": "Freeze current additive baseline",
+      "kind": "evidence_freeze",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "completed_f362a80b_verified_a9c0d557_guarded_43a9596e",
+      "owner": "worker lane",
+      "wip_class": "read_only_evidence",
+      "outputs": [
+        "docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md@1737e74381b47eac8a7abfa67add5240ff2b9301",
+        "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md@05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"
+      ],
+      "acceptance": "Delivered and independently re-censused over the exact 43-row by 7-axis frame. The freeze is complete over that frame and nothing else; its verifier closeout is durable evidence, not standing CI enforcement."
+    },
+    {
+      "id": "P2",
+      "title": "Freeze source-keyed truth membership",
+      "kind": "evidence_freeze",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "completed_f362a80b_verified_a9c0d557_guarded_43a9596e",
+      "owner": "worker lane",
+      "wip_class": "read_only_evidence",
+      "outputs": [
+        "docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json@1551c7e56480caff7d70a580e1f7a2c7ef644203",
+        "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md@05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"
+      ],
+      "acceptance": "Delivered and independently re-censused: 43 source-keyed rows crossed with seven axes produce 301 cells, with asserted, not-applicable, and unadjudicated states preserved and the frame limitation explicit."
+    },
+    {
+      "id": "P3",
+      "title": "Rule producer-proof and runtime-integration lane authority",
+      "kind": "judgment",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "topology_ready_advisor_owned",
+      "owner": "Fable advisor seat",
+      "wip_class": "judgment",
+      "outputs": [
+        "P3 lane-authority ruling",
+        "producer/runtime transfer contract"
+      ],
+      "acceptance": "Producer SHA, executing runtime SHA, graph-to-spec handoff, transfer receipt, and forbidden direct-tree edits named."
+    },
+    {
+      "id": "REG",
+      "title": "Pin stranded-capability register before authorization",
+      "kind": "shared_resource_pin",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "refresh_if_stale",
+      "owner": "advisor/worker integration",
+      "wip_class": "shared_resource",
+      "outputs": [
+        "STRANDED-CAPABILITY-REGISTER content hash"
+      ],
+      "acceptance": "Register is read and hashed before any new detector/binder/classifier authorization; no concurrent writer changes it under the reader."
+    },
+    {
+      "id": "GBP",
+      "title": "Deterministic Gate-B producer proof",
+      "kind": "implementation",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "blocked_by_P0IG_P1_P2_P3_REG",
+      "owner": "worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "graded producer proof",
+        "typed source-record/projection contract",
+        "protected empty-spine sentinel receipt"
+      ],
+      "acceptance": "Context is retained as typed metadata, executable market-session predicates survive, empty-spine stays fail-closed, provenance quote derives from exact source slice."
+    },
+    {
+      "id": "GBR",
+      "title": "Port Gate B into authoritative runtime",
+      "kind": "integration",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "blocked_by_GBP_P3",
+      "owner": "worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "runtime integration commit",
+        "producer/runtime transfer receipt",
+        "consumer transition ledger schema"
+      ],
+      "acceptance": "All actual consumers are enumerated; structured metadata is preferred; conflicts fail closed; TypeScript/Python parity and CI pass in the executing lineage."
+    },
+    {
+      "id": "GBS",
+      "title": "Run source-keyed control/treatment sweep",
+      "kind": "measurement",
+      "phase": "1B-gate-b",
+      "state_at_epoch": "blocked_by_GBR_P1_P2",
+      "owner": "worker seat",
+      "wip_class": "money_path_measurement",
+      "outputs": [
+        "record-for-record Gate-B transition ledger",
+        "population-incidence receipt"
+      ],
+      "acceptance": "Every consumer input/output and control-flow transition is recorded; proxy-only improvements and denominator artifacts are excluded from efficacy."
+    },
+    {
+      "id": "RERANK",
+      "title": "Re-rank current Tier-A spearheads",
+      "kind": "decision_evidence",
+      "phase": "1C-tier-a",
+      "state_at_epoch": "blocked_by_GBS",
+      "owner": "worker/advisor",
+      "wip_class": "money_path_measurement",
+      "outputs": [
+        "current Tier-A ranking",
+        "selected smallest target set",
+        "residual blocker map"
+      ],
+      "acceptance": "Ranking uses current output and exact current identities; historical C8 unlock claims are not inherited as current targets."
+    },
+    {
+      "id": "RESPIN",
+      "title": "Targeted corpus-B respin",
+      "kind": "extraction",
+      "phase": "1C-tier-a",
+      "state_at_epoch": "blocked_by_RERANK",
+      "owner": "worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "targeted current spec set",
+        "per-video transcript-audit receipts"
+      ],
+      "acceptance": "Only the smallest named target set is re-extracted; transcript-audit passes per video; spec hashes are pinned."
+    },
+    {
+      "id": "BFREEZE",
+      "title": "Freeze current Surface-B membership and consumer profile",
+      "kind": "evidence_freeze",
+      "phase": "1C-tier-a",
+      "state_at_epoch": "blocked_by_RESPIN",
+      "owner": "advisor/worker",
+      "wip_class": "money_path_evidence",
+      "outputs": [
+        "current Tier-A compile-fidelity membership",
+        "load-bearing adjudication",
+        "frozen consumer profile"
+      ],
+      "acceptance": "Current N, exact spec hashes, load-bearing membership, authority citations, and consumer profile are frozen before any result is read."
+    },
+    {
+      "id": "BIND",
+      "title": "Complete target SMC/load-bearing binding",
+      "kind": "implementation",
+      "phase": "1C-tier-a",
+      "state_at_epoch": "blocked_by_BFREEZE",
+      "owner": "worker seat",
+      "wip_class": "money_path_implementation",
+      "outputs": [
+        "fully bound target spec or attribution-complete refusal"
+      ],
+      "acceptance": "Every load-bearing condition is concrete or honestly refused; ordered concepts compile as state machines; no count-only completion claim."
+    },
+    {
+      "id": "FIDELITY",
+      "title": "Calibrate compile fidelity in authoritative runtime",
+      "kind": "calibration",
+      "phase": "1C-tier-a",
+      "state_at_epoch": "blocked_by_BIND_P0IG",
+      "owner": "independent verifier",
+      "wip_class": "independent_grade",
+      "outputs": [
+        "current Surface-B compile-fidelity calibration receipt"
+      ],
+      "acceptance": "Calibration runs on the frozen current Surface-B population in the executing runtime lineage; P0 synthetic green is not cited as fidelity."
+    },
+    {
+      "id": "PH1_EXIT",
+      "title": "Phase-1 exit",
+      "kind": "milestone",
+      "phase": "1",
+      "state_at_epoch": "blocked",
+      "owner": "gates; operator retains capital authority",
+      "wip_class": "milestone",
+      "outputs": [
+        "Phase-1 exit receipt"
+      ],
+      "acceptance": "P0 instrument qualified AND at least one frozen current Tier-A spec fully bound AND compile-fidelity calibration passes."
+    },
+    {
+      "id": "PH2",
+      "title": "Phase-2 battery / walk-forward / Monte Carlo",
+      "kind": "phase_milestone",
+      "phase": "2",
+      "state_at_epoch": "blocked_by_PH1_EXIT",
+      "owner": "validation conveyor",
+      "wip_class": "post_phase1",
+      "outputs": [
+        "survivor packet or attribution-complete no-survivor verdict"
+      ],
+      "acceptance": "Null calibration predates the wave; every failure has four-bin attribution; at least one survivor passes pre-registered gates or the no-survivor cause routes work explicitly."
+    },
+    {
+      "id": "PH3",
+      "title": "Phase-3 paper and shadow conveyor",
+      "kind": "phase_milestone",
+      "phase": "3",
+      "state_at_epoch": "blocked_by_PH2",
+      "owner": "paper/shadow conveyor",
+      "wip_class": "post_phase1",
+      "outputs": [
+        "paper/shadow parity receipt",
+        "eval-odds briefing",
+        "in-season determination"
+      ],
+      "acceptance": "At least one survivor completes paper and shadow floor inside pre-registered parity bands; operator purchase briefing is on record."
+    },
+    {
+      "id": "PH35",
+      "title": "Phase-3.5 first thirty funded days",
+      "kind": "capital_reserved_milestone",
+      "phase": "3.5",
+      "state_at_epoch": "operator_reserved_after_PH3",
+      "owner": "operator and live gates",
+      "wip_class": "live_capital_reserved",
+      "outputs": [
+        "thirty-day funded receipt"
+      ],
+      "acceptance": "Thirty funded days, zero firm-rule breaches, guards observed or affirmatively exercised, payout path proven, no repeated unattributed stop-gate."
+    },
+    {
+      "id": "PH4",
+      "title": "Phase-4 horizontal scale",
+      "kind": "capital_reserved_milestone",
+      "phase": "4",
+      "state_at_epoch": "blocked_by_PH35",
+      "owner": "operator",
+      "wip_class": "live_capital_reserved",
+      "outputs": [
+        "scale authorization"
+      ],
+      "acceptance": "Phase-3.5 exit and cold-recovery drill receipt exist; scaling remains horizontal within firm limits."
+    },
+    {
+      "id": "I7",
+      "title": "C2 session-role resolver yield",
+      "kind": "side_lane",
+      "phase": "parallel",
+      "state_at_epoch": "parked_when_capacity_competes",
+      "owner": "measurement lane",
+      "wip_class": "off_critical_path",
+      "outputs": [
+        "C2 yield receipt"
+      ],
+      "acceptance": "Measurement only; no binding/extraction change."
+    },
+    {
+      "id": "I8",
+      "title": "Semantic-role classifier shadow migration",
+      "kind": "side_lane",
+      "phase": "parallel",
+      "state_at_epoch": "operator_authorization_constrained",
+      "owner": "shadow lane",
+      "wip_class": "off_critical_path",
+      "outputs": [
+        "blind-scoreable shadow input"
+      ],
+      "acceptance": "HOLDOUT-26 remains untuned; no classifier flag flip or DB write."
+    },
+    {
+      "id": "I21",
+      "title": "Stranded-capability register refresh",
+      "kind": "side_lane",
+      "phase": "parallel",
+      "state_at_epoch": "parked_except_when_REG_stale",
+      "owner": "register lane",
+      "wip_class": "shared_resource",
+      "outputs": [
+        "refreshed register hash"
+      ],
+      "acceptance": "Register identities and current stranded state reconcile; readers pin before writer moves it."
+    }
+  ],
+  "edges": [
+    {
+      "from": "P0D",
+      "to": "P0P",
+      "type": "data",
+      "hard": true,
+      "artifact": "AR-588 design blob a5ca03237eb5f9fd5977315c9ed3617e08ab021c plus 52-record plantable manifest",
+      "evidence_ref_ids": [
+        "P0D_DESIGN_BLOB"
+      ]
+    },
+    {
+      "from": "P0P",
+      "to": "P0PC",
+      "type": "defect_evidence",
+      "hard": true,
+      "artifact": "AR-589 report commit 8297ebbe062f97f07d9000a2aa22712420a70c42 plus R-543, R-544, external AR-589 review, and the durable NOT-SOUND grade consumed by R-548",
+      "evidence_ref_ids": [
+        "P0P_REPORT_COMMIT",
+        "R543_COMMIT",
+        "R544_COMMIT",
+        "EXTERNAL_AR589_REVIEW_COMMIT",
+        "P0PC_UNSOUND_GRADE"
+      ]
+    },
+    {
+      "from": "P0PC",
+      "to": "P0PG",
+      "type": "data",
+      "hard": true,
+      "mutation_bearing": true,
+      "artifact": "corrected prototype commit, corrected coverage receipt, effective-module differential, membership controls, and runner red-proof"
+    },
+    {
+      "from": "P0PG",
+      "to": "P0VC",
+      "type": "authority",
+      "hard": true,
+      "artifact": "durable corrected-prototype grade and novel false-green hunt receipt"
+    },
+    {
+      "from": "P0VC",
+      "to": "P0DG",
+      "type": "data",
+      "hard": true,
+      "mutation_bearing": true,
+      "artifact": "revised design blob plus graded prototype evidence, residual ledger, pinned compiler surface, and single-catcher ownership manifest"
+    },
+    {
+      "from": "P0DG",
+      "to": "P0I",
+      "type": "authority",
+      "hard": true,
+      "artifact": "SOUND design-grade receipt keyed to the exact design blob"
+    },
+    {
+      "from": "P0I",
+      "to": "P0IG",
+      "type": "data",
+      "hard": true,
+      "mutation_bearing": true,
+      "artifact": "atomic implementation commit plus executed mutation receipts"
+    },
+    {
+      "from": "P0IG",
+      "to": "GBP",
+      "type": "authority",
+      "hard": true,
+      "artifact": "SOUND implementation-grade receipt"
+    },
+    {
+      "from": "P1",
+      "to": "GBP",
+      "type": "admission",
+      "hard": true,
+      "artifact": "pinned current-code baseline and producer-equivalence receipt",
+      "evidence_ref_ids": [
+        "P1_FREEZE",
+        "P1_P2_GRADE"
+      ]
+    },
+    {
+      "from": "P2",
+      "to": "GBP",
+      "type": "admission",
+      "hard": true,
+      "artifact": "pinned complete source-keyed truth set",
+      "evidence_ref_ids": [
+        "P2_MEMBERSHIP",
+        "P1_P2_GRADE"
+      ]
+    },
+    {
+      "from": "P3",
+      "to": "GBP",
+      "type": "authority",
+      "hard": true,
+      "artifact": "producer-proof lane ruling and transfer contract"
+    },
+    {
+      "from": "REG",
+      "to": "GBP",
+      "type": "shared_resource_pin",
+      "hard": true,
+      "artifact": "register content hash recorded in the authorizing ruling"
+    },
+    {
+      "from": "GBP",
+      "to": "GBR",
+      "type": "data",
+      "hard": true,
+      "artifact": "graded producer contract, schema, and fixtures"
+    },
+    {
+      "from": "P3",
+      "to": "GBR",
+      "type": "authority",
+      "hard": true,
+      "artifact": "executing runtime SHA and graph-to-spec transfer contract"
+    },
+    {
+      "from": "GBR",
+      "to": "GBS",
+      "type": "data",
+      "hard": true,
+      "artifact": "runtime integration commit and consumer-transition ledger schema"
+    },
+    {
+      "from": "P1",
+      "to": "GBS",
+      "type": "control",
+      "hard": true,
+      "artifact": "frozen current-code control baseline",
+      "evidence_ref_ids": [
+        "P1_FREEZE",
+        "P1_P2_GRADE"
+      ]
+    },
+    {
+      "from": "P2",
+      "to": "GBS",
+      "type": "oracle",
+      "hard": true,
+      "artifact": "frozen source-keyed truth membership",
+      "evidence_ref_ids": [
+        "P2_MEMBERSHIP",
+        "P1_P2_GRADE"
+      ]
+    },
+    {
+      "from": "GBS",
+      "to": "RERANK",
+      "type": "data",
+      "hard": true,
+      "artifact": "record-for-record transition ledger and population incidence"
+    },
+    {
+      "from": "RERANK",
+      "to": "RESPIN",
+      "type": "decision",
+      "hard": true,
+      "artifact": "current target identities and residual blocker map"
+    },
+    {
+      "from": "RESPIN",
+      "to": "BFREEZE",
+      "type": "data",
+      "hard": true,
+      "artifact": "targeted current spec set with transcript-audit receipts"
+    },
+    {
+      "from": "BFREEZE",
+      "to": "BIND",
+      "type": "admission",
+      "hard": true,
+      "artifact": "frozen current Surface-B membership and consumer profile"
+    },
+    {
+      "from": "BIND",
+      "to": "FIDELITY",
+      "type": "data",
+      "hard": true,
+      "artifact": "fully bound target spec or attribution-complete refusal"
+    },
+    {
+      "from": "P0IG",
+      "to": "FIDELITY",
+      "type": "instrument_authority",
+      "hard": true,
+      "artifact": "qualified P0-vNext instrument receipt"
+    },
+    {
+      "from": "P0IG",
+      "to": "PH1_EXIT",
+      "type": "gate",
+      "hard": true,
+      "artifact": "qualified P0-vNext instrument receipt for Surface A"
+    },
+    {
+      "from": "FIDELITY",
+      "to": "PH1_EXIT",
+      "type": "gate",
+      "hard": true,
+      "artifact": "current Surface-B compile-fidelity calibration receipt"
+    },
+    {
+      "from": "BIND",
+      "to": "PH1_EXIT",
+      "type": "gate",
+      "hard": true,
+      "artifact": "fully bound current Tier-A target receipt"
+    },
+    {
+      "from": "PH1_EXIT",
+      "to": "PH2",
+      "type": "phase_gate",
+      "hard": true,
+      "artifact": "Phase-1 exit receipt"
+    },
+    {
+      "from": "PH2",
+      "to": "PH3",
+      "type": "phase_gate",
+      "hard": true,
+      "artifact": "survivor packet passing pre-registered gates"
+    },
+    {
+      "from": "PH3",
+      "to": "PH35",
+      "type": "operator_reserved",
+      "hard": true,
+      "artifact": "paper/shadow parity receipt, in-season determination, and purchase briefing"
+    },
+    {
+      "from": "PH35",
+      "to": "PH4",
+      "type": "operator_reserved",
+      "hard": true,
+      "artifact": "thirty-day funded receipt plus cold-recovery drill"
+    },
+    {
+      "from": "I21",
+      "to": "REG",
+      "type": "conditional_refresh",
+      "hard": false,
+      "artifact": "refreshed register hash when the existing pin is stale"
+    }
+  ]
+}
