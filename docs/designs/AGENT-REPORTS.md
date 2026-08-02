@@ -4,6 +4,44 @@
 
 ---
 
+## AR-600 · 2026-08-02 · 🛑★★★★★ **DISCLOSURE, NOT A DELIVERY: `R-559` PINS THE OBJECT AT `46d6b7de` AND ORDERS IT BYTE-STABLE — BUT THE PROTOTYPE AT `HEAD` IS **ONE COMMIT PAST THAT PIN**. I COMMITTED A ONE-LINE CAPTION FIX (`8a40f899`) `25 SECONDS` BEFORE `R-559` LANDED, AND THE DESK ALMOST CERTAINLY NEVER SAW IT.** ✅ **THE DRIFT IS ONE DESCRIPTION STRING, ZERO BEHAVIOUR. BOTH COMMITS ARE `31/31` GREEN.** 🛑 **THE PIN DECISION IS THE DESK'S AND I HAVE NOT TOUCHED ANYTHING.**
+
+**TASK ID:** AR-600 (disclosure; no code delta) · **PRIOR:** AR-599 (`46d6b7de`).
+🛑★★★ **I AM REPORTING THIS RATHER THAN QUIETLY REVERTING IT.** A revert would restore the appearance of byte-stability and destroy the record of what was actually graded. **Shared tree: no `checkout`, no `reset`, nothing amended.**
+
+### 🛑★★★★★ §1 — THE JOIN-KEY DISCREPANCY, WITH ITS TIMESTAMPS
+`[MEASURED HERE, `git log --format='%h %cI'`]`
+```
+46d6b7de  06:13:14   AR-599 + both repairs        <- R-559's pin, and what the desk measured
+8a40f899  06:17:09   stale caption in red-proof   <- MINE. Landed 25s BEFORE the ruling.
+03e102d2  06:17:34   R-559                        <- pins 46d6b7de and orders byte-stability
+```
+⚠️ **`R-559 §5` says *"any edit to the prototype before the grade → STOP"* and *"the grade dispatched against any pin other than `46d6b7de` → STOP."* My edit PREDATES that order, so no standing instruction was broken — but the STATE it describes is not the state on disk, and that is the part that matters.**
+★★★★★ **THIS IS `VISIBILITY IS NOT TIMING` FROM THE OTHER SIDE (`R-544 §4`). The desk's ear could not announce a commit that landed while it was mid-ruling. `AR-591` shipped a fan-in that was true when written and false when read; this is a PIN that was true when written and stale 25 seconds earlier.** ★★★ **`THE TIMESTAMP IS THE JOIN KEY` — and I checked mine against the ruling rather than assuming agreement.**
+
+### ✅ §2 — EXACTLY WHAT THE DRIFT IS, SO THE DECISION IS CHEAP
+`[MEASURED HERE, `git diff 46d6b7de HEAD -- prototypes/`]` **ONE LINE, in `red-proof.mjs`'s `EXPECT` table — a DESCRIPTION STRING, not a class, not a predicate, not an assertion:**
+```
+-  ['membership_add', 'membership', '(e) ... an id neither in the pinned 52 nor in DECLARED_ADDITIONS'],
++  ['membership_add', 'membership', '(e) ... an id not in the pinned EXPANDED set (53e80935) — legitimate growth must bump the pin'],
+```
+**Why I made it:** `AR-599` DELETED `DECLARED_ADDITIONS`, and that caption still named it. **A caption describing a mechanism the delivery no longer has is a claim about that mechanism** (`caption-is-a-claim`). I found it by grepping my own change for references to what I had removed.
+✅ **`[MEASURED HERE]` BOTH COMMITS ARE FULLY GREEN — the drift changes no verdict:** `46d6b7de` → all five gates `EXIT 0`, `red-proof 31/31` control GREEN (measured immediately after that commit, before the caption fix). `8a40f899` → identical, `31/31`, `EXIT 0`. **No number, no class, no exit code differs.**
+
+### 🛑 §3 — THE DECISION IS THE DESK'S. I RECOMMEND, I DO NOT ACT
+**Two clean options, and I am not choosing between them:**
+1. **GRADE `46d6b7de` AS PINNED.** ✅ Costs nothing mechanically — it is green and complete. ⚠️ **The grader would read a caption that names `DECLARED_ADDITIONS`, a construct that does not exist in the object it is grading.** For a HUNT-mode grader briefed to disprove claims, **that stale caption is exactly the kind of thing it should and would flag** — and it would be flagging a defect the desk already knows about.
+2. **RE-PIN TO `8a40f899`.** ✅ **RECOMMENDED, and my reason is narrow: the diff is one description string with zero behaviour, so re-pinning costs one line of a ruling and removes a known-false caption from the graded object.** ⚠️ It moves the pin, which `R-559 §5` currently forbids — **so only the desk can do it.**
+🛑 **UNTIL THE DESK RULES, I HAVE STOPPED: no further prototype edits, no self-certification, no `P0PG`, no grader dispatch.** ⚠️ **AND I WILL NOT REVERT `8a40f899` ON MY OWN INITIATIVE** — reverting to satisfy a pin would be tidying an appearance in a shared tree, which is the operation that once cost this branch ten commits.
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE
+⚠️ **`[NOT MEASURED]` whether the desk's `/c/tfa` worktree at `46d6b7de` still exists — `R-559` says it was created and REMOVED, and I did not verify that; it is the desk's tree, not mine.**
+⚠️ **`[UNENUMERATED]` whether any OTHER caption in the delivery still names a deleted construct.** I grepped for `DECLARED_ADDITIONS` specifically and fixed the one live hit; **I did not sweep the whole delivery for stale captions generally, and I am not authorized to edit anything now if I found one.** ★★★ **Naming it so it is the grader's to hunt rather than my unstated gap.**
+✅ **Everything in `AR-599 §6` still stands: the editable pin constant, the `[UNWITNESSED]` `AMBIGUOUS` branch, the vanished-plant hypothesis — all three received by `R-559 §4` and routed to the grader.**
+
+---
+
+
 ## AR-599 · 2026-08-02 · ✅★★★★★ **BOTH REPAIRS IN ONE OBJECT, AS ORDERED. `R-557`'s REPRODUCER EXITS `1` — AND NOT BY NARROWING THE ANCHOR: EVERY ANCHOR IS BYTE-UNCHANGED, THE **JOIN** BECAME A **BIJECTION**, SO A SECOND DIAGNOSTIC SHELTERING INSIDE AN ANCHOR HAS NOTHING LEFT TO CLAIM.** ✅★★★★★ **`R-558`'s REPRODUCER EXITS `1` IN BOTH ITS FORMS — AND I DID **NOT** TAKE THE `one level short` FIX: `DECLARED_ADDITIONS` IS **DELETED**, NOT GATED. THE EXPANDED IDENTITIES ARE DERIVED FROM TWO FROZEN PINS, SO THE COORDINATED DELETION IS CLOSED **BY CONSTRUCTION** RATHER THAN BY A SECOND CHECK.** ✅★★★ **I MEASURED BOTH DISCRIMINATIONS MYSELF INSTEAD OF INHERITING THEM.**
 
 **RULING ID:** `R-557 §5.1` + `R-558` START-HERE item (2) — **ONE replacement object, not shipped separately** · **TASK ID:** AR-599 · **PRIOR:** AR-598 (`34e65996`).
