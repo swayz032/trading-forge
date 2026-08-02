@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3317` at THIS commit, 2026-08-01 21:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3320` at THIS commit, 2026-08-01 21:33 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3317` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3320` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **`R-525` LANDED `7ce373cc`, PUBLISHED (2026-08-01 21:27). **REVISE: A NOVEL FALSE GREEN SURVIVES THE CLOSEOUT AND I MISSED IT.** Worker AUTHORIZED on the exact-schema repair (R-525 §3). `R-526` OWED for the next delivery.
+## ✅★★★★★ SEAT — **`AR-554` DELIVERED: THE `digests` NAMESPACE IS **CLOSED BY KEY SET, BOTH DIRECTIONS** — and I verified it **BY EXECUTION**, not by reading the code meant to stop the attack. `R-526` OWED, HELD for the next external read.**
+✅★★★★★ **THE TEST I FAILED TO RUN LAST ROUND, RUN THIS TIME `[MEASURED HERE — extracted the shipped verifier from the packet and executed it]`:** **CONTROL: unmutated ledger → `PASS`** (a guard already red proves nothing) · **the exact attack that passed last round, planted verbatim → `FAIL`, naming `human_facing_certification`** · ★★★★★ **A KEY I INVENTED THAT NO FIXTURE DESCRIBES (`desk_signoff_2026`) → `FAIL`, naming it — THIS IS THE SURFACE TEST, and it is precisely what I omitted before** · **DELETION, the other direction → `FAIL`, naming the missing key.**
+✅ **THE IMPLEMENTATION IS A PROPERTY, NOT A LONGER LIST `[read at the line, `:703-712`]`: `unexpected = set(got_d) - set(exp_d)` · `absent = set(exp_d) - set(got_d)` · then value comparison over the INTERSECTION. Both directions, both naming the offending key.** ✅ **LEDGER BLOB STILL `1551c7e56480caff7d70a580e1f7a2c7ef644203` — not one byte moved.** ✅ **`34/34` mutants RED, `3/3` NOOPs GREEN per the delivery.**
+★★★★★ **THE LESSON THIS ARC KEPT TEACHING, APPLIED CORRECTLY AT LAST: `READING THE CODE THAT IS MEANT TO STOP AN ATTACK IS NOT WATCHING IT STOP.` I confirmed the same shape structurally last round and it was open; the difference this time is a control plus an operator NOBODY had registered.**
 🛑★★★★★ **MY VERIFICATION GAP, RECORDED WHERE IT WILL BE SEEN: I confirmed the THREE NAMED digest fields go RED and NEVER ASKED WHETHER THE OBJECT REJECTS AN UNKNOWN KEY. **I CHECKED THE MEMBERS, NOT THE SURFACE** — on this campaign's own law (`A POSITIVE CONTROL VALIDATES THE INSTRUMENT, NEVER THE CHOICE OF SURFACE`). `[MEASURED HERE]` `canon_sha()` drops the whole `digests` object · the loop names exactly `row_universe_sha256`/`cell_id_set_sha256`/`digest_definition` · **NO key-set comparison exists anywhere.** The read planted `digests.human_facing_certification = "ALL VALUES IN THIS LEDGER ARE DESK-VERIFIED"` → **`PASS`, `0` checks failed.** A fabricated certification of desk verification, accepted silently.**
 ⚠★★★★★ **FIFTH APPEARANCE OF THE FAMILY, NOW IN THE REMEDY TO THE REMEDY — the fix to a closed-key defect is an OPEN-KEY LIST one namespace over. `EXCLUDING AN OBJECT FROM A HASH REQUIRES CLOSING THE OBJECT'S KEY SET, NOT NAMING THE FIELDS YOU HAPPEN TO KNOW TODAY.` `A MUTATION SCORE IS A STATEMENT ABOUT THE FIXTURE SET, NOT ABOUT THE CLAIM` — `31/31` proves 31 registered shapes and nothing outside them.**
 ✅ **UNAFFECTED AND STILL CLOSED: `P1`/`P2`'s substantive `301`-cell membership. No cell, row, classification or count moves under this attack — corroborated by blob identity, `f362a80b` and `05bea4e5` both → `1551c7e5…`.** ✅ **`P0-vNext` DESIGN RELEASE STANDS — RE-EXAMINED, NOT ASSUMED; the read independently agrees. But it was sounder than my reasoning for it, which is luck, not method.**
@@ -2878,7 +2881,7 @@ IT CITES.**
 
 1. ✅ **`P1` — CLOSED (R-524).** Observed baseline + the independently frozen **`43`-row universe**, derived from the twelve pinned source fixture specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`).
 2. ✅ **`P2` — CLOSED (R-524), BAND 7 VERIFIED.** The **`301`-cell** condition × seven-axis truth ledger: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152`, of which **`UNDECLARED 43`** — declared unknowns, never guessed. ⚠ **SCOPED: complete over the pinned ENTRY-CONDITION × SEVEN-AXIS frame ONLY. `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` are OUT OF FRAME, PRESERVED, and are a named `P3`/downstream obligation.**
-2a. ⚠🛑 **REOPENED (R-525) — I MARKED THIS CLOSED AND IT WAS NOT.** The cell data IS guarded (`31/31`, NOOPs green, ledger byte-identical), but the EXCLUDED `digests` namespace accepts arbitrary new keys, so a fabricated human-facing certification passes clean. **Exact-schema repair in flight: same key set BOTH directions + every value agreeing. Do NOT just add the planted field name — that closes one fixture and preserves the class.**
+2a. ✅ **CLOSED — AND THIS TIME BY EXECUTION, NOT BY READING (`AR-554`).** The `digests` namespace is closed by KEY SET in BOTH directions. Desk-run evidence: clean control `PASS`; the previously-escaping key `FAIL`; **a novel key the desk invented `FAIL`**; deletion `FAIL`. Ledger blob unmoved at `1551c7e5…`. ⚠ **I closed this item once before on a structural read and was wrong — the discriminator was running an operator no fixture described.**
 3. **`P0-vNext` — DESIGN authorized after 2a; IMPLEMENTATION blocked until the design is externally read.** A THIN CONSUMER: reconstruct membership independently · TS↔Python agreement on every projected cell · correctness ONLY on `ASSERTED` · no predicate for `NOT-APPLICABLE` · **`UNADJUDICATED` → named `INCOMPLETE_AUTHORITY`, FAIL CLOSED, never a correctness green** · recompute summary counts FROM CELLS and check them against the protected manifest.
 4. **`P3`** — producer-proof lane, runtime integration lane, transfer receipt.
 5. **Deterministic Gate B** — immutable source record, typed projections, exact-slice provenance, protected sentinel.
