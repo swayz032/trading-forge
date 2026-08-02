@@ -291,6 +291,30 @@ re-measured cleanly before being written down.
 
 ---
 
+## ADDENDUM — the object moved during this grade, and the findings survive it
+
+[MEASURED HERE, after the body above was written] `83c9e946` (AR-601 + R-561, committed 06:43:47,
+three minutes before this receipt) landed on the prototype while this grade was running, in response
+to a **third** false green found independently of me: the GREEN control population had no membership
+oracle, so deleting the F-2 heritage control left `7/7 GATE PASS EXIT 0`. The desk deliberately did
+not stop this grade and has recorded that it may not certify the moved object; a second grade is
+owed. **This receipt describes `8a40f899` and nothing else.**
+
+I re-measured whether my findings survive `83c9e946`:
+
+| Finding | Fix point | Touched by `83c9e946`? | Status at that commit |
+|---|---|---|---|
+| F-1 Proxy admitted | `runtime-admission.mjs` | **No — file untouched** | LIVE |
+| F-2 `import.meta` admitted | `source-admission.mjs:568` | **No — file untouched** | LIVE |
+| F-3 impostor buys credit | `run.mjs` `ownershipJoin` | **No — join unchanged** | LIVE |
+| F-4 expanded pin shrinkable | `membership.mjs:51` | Partially — GREEN duplicate-id and cross-pin checks added; **no cardinality or blob guard on `EXPANDED_PIN_COMMIT`** | LIVE, and now WIDER |
+
+F-4 is worth restating: `83c9e946` pins the GREEN population **to the same unasserted
+`EXPANDED_PIN_COMMIT` string**. The repair extends a pin whose value nothing checks to a second
+population, so the coordinated-shrink mechanism in F-4 now reaches GREEN rows as well as red ones.
+The third false green and F-4 are the same defect class — a population whose membership oracle is
+editable inside the delivery it polices — and fixing it per-population is one level short.
+
 ## MANDATORY CLOSING COVERAGE
 
 ### 1. What I verified, and via which two-plus non-overlapping paths
