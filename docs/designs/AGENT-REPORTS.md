@@ -4,6 +4,37 @@
 
 ---
 
+## AR-633 · 2026-08-02 · ⏳ **START-RECEIPT — `R-590` GRANTED THE LANE AND I HAVE TAKEN IT. SURFACE `B`, SUB-TASK `1`: IS TODAY'S CERTIFIED-CLEAN TIER-A CORPUS THE SAME POPULATION THE JULY CENSUS CONSUMED — **BY IDENTITY AND CONTENT HASH, NOT BY COUNT**?**
+
+**RULING ID:** `R-590 §1` (contract `§2`–`§6`) · **TASK ID:** AR-633 · **PRIOR:** AR-632 · **ONE LANE, ONE SEAT, NO SUBAGENTS (`§7.1`).**
+
+**GRAPH RECEIPT — AND IT IS AN HONEST NEGATIVE, WHICH IS THE POINT `R-590` MADE:**
+```
+GRAPH NODE:          NONE. This work has NO node — Surface B is absent from the graph's 28.
+                     Scheduled from BLUEPRINT §15.6a + R-529 + R-590, NOT from the ready set.
+GRAPH OBJECT:        V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json, blob 876c3a23… @ 29999f8d
+                     [RELAYED from R-590; I re-derive it before any claim that depends on it]
+HARD PREDECESSORS:   NONE declared — no upstream node produces this lane's inputs.
+OUTPUT:              an enumerator + its committed output artifact, docs/replay-results/h1-battery/
+SHARED RESOURCES:    the campaign tree. The desk is writing SURFACE-B-POPULATION-FREEZE and the
+                     graph amendment (R-590 §7.2) — NEITHER is mine and I touch NEITHER.
+```
+★★★ **`A GRAPH CANNOT SCHEDULE WHAT IT DOES NOT CONTAIN` (`R-588 §8`), so I record `NO NODE` rather than borrowing `P0PC`'s identity to make the receipt look complete. The ready set will keep saying `["P0PC"]` throughout this lane and that is expected, not a fault.**
+
+**RULING-DEFECT CHECK, run before starting (`worker-execution §5`/`§5c`):** ✅ **NO METRIC-MIX — and this is the first contract in the series that arrives already split: `R-590 §3` assigns me the MECHANICAL half (ids, hashes, a closed-enum verdict, counts that sum) and reserves every GRADED judgment to the desk. `AR-632 §3` asked for exactly this and it was granted, so there is nothing to raise.** ✅ **NO FAKE EDGE — one lane.** ✅ **NO AMBIGUOUS STOP — `§4` draws the count line for me (strategies and hashes YES; conditions, bindings, load-bearing members, anything keyed by `fidelity_axis` NO).** **NO DEFECT TO RAISE.**
+
+**FIRST MEASUREMENT, ALREADY TAKEN `[MEASURED HERE]` — the seed exists and is TRACKED, which was not guaranteed given `R-589 §6` found eight cited authorities untracked:**
+```
+git ls-files ->  docs/replay-results/h1-battery/tier-a-compile-census.json          111,683 B
+                 docs/replay-results/h1-battery/tier-a-extraction-provenance/       13 rows + _MANIFEST.json + .gitattributes
+```
+**PLAN, IN ORDER:** (1) re-verify the seed's `sha256` join **first** — `11` matched + `2` dropped = `13`; **if it is broken I STOP and report, because `§5.4` makes everything downstream void** · (2) locate a DURABLE "current certified-clean tier-A corpus" — `tier-a-clean-strategy-receipt.json` is the first candidate and I will not settle for a transcript figure (`census-prompt`) · (3) write the enumerator as committed code with a throwing sum assertion in the `DECLARED_TABLE_TOTAL` shape, never `Object.keys().length` · (4) NOOP control, then red-proof by planting a change and showing detection, then restore byte-identical.
+
+⚠️ **`UNRESOLVED_SOURCE_AMBIGUITY` IS PRE-AUTHORIZED HERE AND I MAY WELL RETURN IT (`§6`): if no durable current corpus exists, that is a COMPLETE answer and I will name the surfaces I searched rather than synthesizing a population to have something to compare (`fabricated-mock`).**
+**FIRST OBSERVABLE:** a commit adding the enumerator under `docs/replay-results/h1-battery/`. **ETA ~`30–45` min, and I will revise it UP with a reason if step (2) is the hard part — `R-590 §6` predicts it may be.**
+
+---
+
 ## AR-632 · 2026-08-02 · ✅ **`R-589` READ. APPROVAL AND LANE RETIREMENT ACKNOWLEDGED — NO REPLY OWED ON EITHER. ANSWERING `§8.1`'s STANDING QUESTION: **THIS SEAT HAS CAPACITY AND IS ASKING FOR THE SURFACE-`B` SUB-TASK.** ✅ AND THE ONE CAVEAT `AR-631` DECLARED IS NOW **DISCHARGED BY MEASUREMENT**, NOT BY ASSUMPTION.**
 
 **RULING ID:** `R-589 §8.1` · **TASK ID:** AR-632 · **PRIOR:** AR-631 · **NO CODE DELTA. NO GRAPH TRANSITION. `prototypes/` NOT TOUCHED — IT IS RETIRED (`§3`).**
