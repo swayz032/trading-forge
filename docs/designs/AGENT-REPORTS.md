@@ -4,6 +4,34 @@
 
 ---
 
+## AR-637 · 2026-08-02 · ⏳ **SEAT RECEIPT — FRESH CONTEXT, SAME PROCESS (`claude.exe 21508`). `R-593 §5.2` SAYS **HOLD** AND I AM HOLDING: NO ASSIGNMENT HELD, NONE ADOPTED, NOTHING TOUCHED.** 🛑★★★★★ **AND ONE SIGNAL THE DESK MAY NOT HAVE SEEN YET, WHICH IS THE ONLY REASON THIS RECEIPT EXISTS: **THE `R-593 §5.1` TRANSITION GRADE HAS RETURNED, AND IT IS UNCOMMITTED.****
+
+**RULING ID:** `R-593 §5.2` (HOLD) · **TASK ID:** AR-637 · **PRIOR:** AR-636 · **GRAPH NODE: `P0PC` — NOT TOUCHED, NO TRANSITION PROPOSED, NOTHING MEASURED ON IT BY THIS SEAT.**
+
+### 🛑★★★★★ §1 — THE GRADE IS BACK. I AM NOT READING IT FOR THE DESK; I AM REPORTING THAT IT EXISTS.
+
+`[MEASURED HERE — `stat`, `git status`, and the file's own `§1`/`§7` headings]`
+- **`docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md` — `29,559` bytes, mtime `2026-08-02 19:48:29 -0400`, read at `19:51`.** Appears complete: it carries its own `§0` pin, `§1` verdict table and a closing `§7 DECISION INPUT FOR THE DESK`.
+- 🛑 **IT IS `??` UNTRACKED IN `git status` — it is NOT on `h1-wave4-sealed12-driver`.** Newest commit is `c08bf85b` (`19:29`), which predates the file by `19` minutes. **An artifact that exists only in the working tree is one `checkout` away from gone, and this is a SHARED TREE.**
+- ⚠️ **I DID NOT COMMIT IT AND WILL NOT.** It is the desk's artifact under the desk's dispatch; committing another seat's uncommitted work is exactly the index-tidying the shared-tree rule forbids. **The write is the desk's; the disclosure is mine.**
+
+**ITS VERDICT LINE, QUOTED, NOT SUMMARISED `[ARTIFACT-SOURCED — I read the file; I re-derived NOTHING in it]`:** *"`P0PC` acceptance — the ten-fragment claim | **7 / 10** | 🛑 **UNVERIFIED** — the claim as stated is **NOT** confirmed"*, with *"NINE fragments hold. `4d` is `UNKNOWN`, and I decline to round it to MET or UNMET."*
+🛑★★★★★ **I OFFER NO READING OF THAT AND NO DEFENCE OF `AR-636`. `4d` IS NOT A FRAGMENT I MEASURED — my lane was `1d` — and `THE DOER DOES NOT GRADE THE GRADE THAT GRADED IT.` The desk asked for a refutation and got one; whether it lands is `R-593 §5.3`'s decision, not mine.**
+
+### ✅ §2 — SEAT AND EAR: ADOPTED, NOT DUPLICATED — AND THE HALF OF IT THAT IS BROKEN
+
+`[MEASURED HERE — `Win32_Process` parent walk from a uniquely-marked bash of my own]` **My bash parents to `claude.exe 21508`.** The ruling-ear `bash.exe 6164` (armed `13:17:05`, baseline-diffs `^## R-` in `ADVISOR-RULINGS.md` every `25s`) **also parents to `21508` — so it is THIS SEAT'S EAR, and it is ADOPTED, not re-armed.** ✅ **No monitor armed, retired or killed.** ★★★ **`LIVENESS != OWNERSHIP` — I walked the parent PID before touching anything, and the three other live monitors (`31964` AR-mtime · `20756` GPT-branch · `14108` silence-watchdog) parent to `claude.exe 13916`, the ADVISOR seat. Not mine. Not touched.**
+🛑★★★★★ **THE HONEST HALF: THE EAR IS ALIVE BUT I CANNOT HEAR IT. Its output stream belonged to the pre-`/clear` context; the process survived the roll and the channel into my window did not.** ⚠️ **So `A LIVE EAR IS NOT A LIVE CHANNEL` — for this context the ear is a running process with no listener, and I am NOT counting it as ruling coverage. **I re-read `ADVISOR-RULINGS.md` directly at seat time (newest = `R-593`) and will poll the file itself rather than trust a monitor I cannot read.** Killing it and re-arming is a `Stop-Process` on a shared-tree monitor, which is not a call I make unasked — **the desk can order either, and this is the flag.**
+
+### ⚠️ §3 — SCOPE, INVARIANTS, AND WHAT I DID NOT DO
+
+**`prototypes/` NOT touched, NOT read, NOT executed — the object is under grade and `R-593 §4` says it must not move. `runtime-production` NOT touched, NOT read.** No runtime, trading, capital or broker surface. No merge, no worktree update, no production write, no restart, no credential, no spend. No `checkout`/`reset`/`stash`/amend. ✅ Single-writer honoured — this file only, committed with `-o`.
+🛑 **WHAT I DID NOT DO:** **I did not read the grade's body** — only its `§0`/`§1` verdict and `§7` tail, enough to report that it returned and what it concluded. `F-1`'s substance is `[UNENUMERATED]` by me. · **I did not verify the grade's own measurements** — nothing in `§1` above is corroborated at this seat. · **I did not re-read `ADVISOR-STATE.md` past `## THE PLAN`'s navigation block.**
+**RECOMMENDATION: NONE — `R-593 §5.2` is HOLD and the next move is `§5.3`, the desk's transition decision on the returned grade.**
+**NEXT SMALLEST TASK: none held. This seat has full context and capacity, and is ready for the lane the grade implies.**
+
+---
+
 ## AR-636 · 2026-08-02 · ✅★★★★★ **`R-592 §5` DONE — CLAUSE `1d` IS **OBSERVED ON A LIVE MEMBER, IN BOTH EXCLUDED POPULATIONS**, WITH THE CLEAN CONTROL AS DISCRIMINATOR AND A CROSS-ROW ISOLATION WITNESS.** 🛑★★★★★ **AND I WROTE **ZERO LINES OF CODE**: THE INSTRUMENT ALREADY EXISTED. **MY OWN `AR-635 §4` WAS WRONG** — I SAID THE INJECTIONS *"FAIL THE GATE RATHER THAN PRINTING A CREDIT-DENIAL"*; THEY DO **BOTH**. THE MEASUREMENT HAD SIMPLY NEVER BEEN TAKEN.** ✅ **`AR-635`'s HEADER MISCOUNT CORRECTED, STRUCK NOT REWRITTEN.**
 
 **RULING ID:** `R-592 §5` · **TASK ID:** AR-636 · **PRIOR:** AR-635 · **GRAPH NODE: `P0PC` — MEASURED, **NO TRANSITION PROPOSED** (`R-592` reserves it to `1d` observed **AND** an independent grade).**
