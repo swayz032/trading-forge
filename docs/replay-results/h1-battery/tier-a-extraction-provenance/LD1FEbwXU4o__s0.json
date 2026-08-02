@@ -1,0 +1,106 @@
+{
+  "coaching_notes": [
+    "Your job, find where the obvious trades are sitting, and do the opposite",
+    "The key is to look for clean price action that's just a little too clean. equal highs, trend lines, or zones that look perfect. That's the bait"
+  ],
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "instrument_classification": {
+    "asset_class": "forex",
+    "example_symbol": "Australian dollar",
+    "reasoning": "The walk-through trade was taken on Australian dollar during the London session (entry quoted at 61408); the method is taught on forex pairs on the 5-minute / 1-minute chart."
+  },
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "rejected_strategies": [],
+  "strategies": [
+    {
+      "confluences": [
+        {
+          "description": "avoid entering before the price taps the liquidity zone. Wait for confirmation"
+        },
+        {
+          "description": "you're looking for that rejection wick"
+        },
+        {
+          "description": "Look for exhaustion candles, long wicks, bearish or bullish engulfing or a volume divergence"
+        },
+        {
+          "description": "You want to see volume spike, a quick tap, and a rejection"
+        },
+        {
+          "description": "Price will often wick above resistance, pause, then dump or wick below support and reverse. That is your confirmation"
+        },
+        {
+          "description": "use session times like the London or New York open. That's when the most stop hunts happen"
+        },
+        {
+          "description": "do not chase the breakouts. Wait for price to trap traders and fade the move"
+        }
+      ],
+      "coverage_notes": [
+        "All 14 element_inventory items are present in the extraction: PRECONDITION mark HTF zones + PRECONDITION untapped levels = entry_sequence steps 1-2; ENTRY GATE tap-first = confluence 'avoid entering before the price taps'; rejection wick / engulfing / exhaustion / volume triggers = confluences; TRAP CONFIRMATION = confluence 'wick above resistance... That is your confirmation'; double-bottom sub-mechanic = variant 2; STOP below London low = stop; TARGET 1:2 = targets; 5m/1m timeframe variant = entry step 3 + variant timeframes; SESSION FILTER = confluence; FADE/no-chase FILTER = confluence.",
+        "Entry price '61408 on Australian dollar' is a live-example number, not extracted as a rule."
+      ],
+      "entry_sequence": [
+        {
+          "action": "mark the higher time frame liquidity zones first. Start with the daily or the 4hour chart. Mark the most recent swing highs and lows and clean levels that haven't been tapped yet"
+        },
+        {
+          "action": "you can identify areas that have not been tapped yet where the liquidity should be living"
+        },
+        {
+          "action": "Drop to the 5minut or the 1 minute chart if you're feeling a little bit risky"
+        },
+        {
+          "action": "Look for price rapidly approaching a zone. You want to see volume spike, a quick tap, and a rejection"
+        },
+        {
+          "action": "you are simply waiting for one of these levels to be hit and then you're looking for that rejection wick... you can get into your scalping trade and get a 1 to2 risk-to-reward setup"
+        }
+      ],
+      "name": "ltf_liquidity_zone_rejection_scalp",
+      "stop": {
+        "description": "I kept my stop loss below the current London low"
+      },
+      "targets": [
+        {
+          "description": "shoot for a 1:2 risk-to-reward ratio"
+        }
+      ],
+      "variants": [
+        {
+          "description": "you are simply waiting for one of these levels to be hit and then you're looking for that rejection wick... you can get into your scalping trade and get a 1 to2 risk-to-reward setup",
+          "timeframe": "5-minute chart (drop to 1-minute if feeling risky)",
+          "variant_label": "5m single rejection scalp"
+        },
+        {
+          "description": "if price rejects the same area twice, it could be a full reversal double bottom with the bar not closing below the area of support and resistance that you marked up and getting another trade 1:2 risk-to-reward ratio",
+          "timeframe": "5-minute chart",
+          "variant_label": "double-bottom second-rejection reversal"
+        }
+      ]
+    }
+  ]
+}

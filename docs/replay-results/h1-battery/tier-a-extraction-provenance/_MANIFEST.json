@@ -1,0 +1,106 @@
+{
+  "artifact": "tier-a-extraction-provenance",
+  "why": "The tier-a-compile-census names its only extraction_source as a scratchpad path inside a DEAD session temp dir (d96dba1d, last touched 2026-07-12). BLUEPRINT 15.6a flags it SESSION-TEMPORARY and NON-DURABLE. Preserved at R-588 because Surface B population freeze consumes it.",
+  "preserved_at_ruling": "R-588",
+  "preserved_from": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_b",
+  "census": "docs/replay-results/h1-battery/tier-a-compile-census.json",
+  "join": "recomputed sha256 of each file vs the census specs[].extraction_sha256",
+  "counts": {
+    "files": 13,
+    "matched_to_census_specs": 11,
+    "dropped_not_clean": 2
+  },
+  "files": [
+    {
+      "file": "0RBexa9JpIg__s0.json",
+      "bytes": 4201,
+      "sha256": "27833d61f88fa06008ecedd6460ceb20cad7b47eafa0b77bdbf3c48e5bd13e6c",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "ExB66jcyKxg__s0.json",
+      "bytes": 4097,
+      "sha256": "78fea28380895792b1946e5c23bc27460a5f74eeeb32b46a9fb5036068246aca",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "LD1FEbwXU4o__s0.json",
+      "bytes": 5345,
+      "sha256": "55a36849b19917c7290a8b3548e547733a9761a95ec883bb7ada58d4c0733800",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "SeqVUNanFeY__s0.json",
+      "bytes": 6212,
+      "sha256": "2135be304e01ecbe68d8eb31e88476a17ca62d586d669755a5e730fa23519d9c",
+      "in_census_by_sha": false,
+      "dropped": true
+    },
+    {
+      "file": "XbRI0sfcXU4__s0.json",
+      "bytes": 3830,
+      "sha256": "9f9b7cfd18bdd43e10a451b427fe88fa5479a9a2be4157c5bb870c9e2502d2b6",
+      "in_census_by_sha": false,
+      "dropped": true
+    },
+    {
+      "file": "YGdFksLavKE__s0.json",
+      "bytes": 6479,
+      "sha256": "d676cfa3b78abd87737acdde9e6ff4c2ada357f9bac7da7f3fdebbe15b262a86",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "YqY0OkL5LMI__s0.json",
+      "bytes": 4168,
+      "sha256": "7f339794b7b131c351888f81e4ed65ee7a6c06c980b7ec035b6b091e00753444",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "YqY0OkL5LMI__s1.json",
+      "bytes": 6071,
+      "sha256": "2c20c1f65a927ed95769f0b461bc9ec92c01f6072efa2b95b98b01919dd2b03d",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "dENM6gt8ZRg__s0.json",
+      "bytes": 3217,
+      "sha256": "b16473600863d0de020dff5e2810bfbdba2aacc10521335b634447dc14e7ac24",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "hcHuDfxdywI__s0.json",
+      "bytes": 8029,
+      "sha256": "7ca7952d263c07d804c9a89e55382626b0799359f2473e0a2c81d152948aa57b",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "pKzXxB9Blts__s0.json",
+      "bytes": 4624,
+      "sha256": "80124cc3a690dcda12adced3cfe71a04cc9b41a3f71ab127e32b85a7dae6d520",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "st5e-YJRfKc__s0.json",
+      "bytes": 5814,
+      "sha256": "7868524ba4401755edb26a4db4aa1699e0c4b5ad0cc422e58a5bbf759d62ab99",
+      "in_census_by_sha": true,
+      "dropped": false
+    },
+    {
+      "file": "st5e-YJRfKc__s1.json",
+      "bytes": 3413,
+      "sha256": "a74ca7bb72beb11cd054d43c7e7511cd62805750d1d5e0efa8d1cd6446cd13db",
+      "in_census_by_sha": true,
+      "dropped": false
+    }
+  ]
+}
