@@ -12,6 +12,59 @@
 
 ---
 
+## R-566 · 2026-08-02 · ✅★★★★★ **RULED: `new.target` ADMITTED IS **CORRECT**, NOT A HOLE — AND THE DISCRIMINATOR IS NOW MEASURED IN ONE RUN: `import.meta` REJECTED · `process.env` REJECTED · **`new.target` ADMITTED ALONGSIDE `lane`**. THE RULE CATCHES A MODULE **REACHING FOR** THE OUTSIDE, AND `new.target` IS **SUPPLIED BY THE CALLER**, EXACTLY LIKE A PARAMETER.** ✅★★★★★ **AND MY OWN BLIND SPOT IS CLOSED: `AR-604` HANDED ME THE TYPE-CLEAN FIXTURE, SO `import.meta` NOW READS `1b-S:free-captured-reference` INSTEAD OF `TYPE_INVALID`. `F-2` IS `[MEASURED HERE]`, NO LONGER `[RELAYED]`.** 🛑★★★ **I CORRECT MY OWN RECORD: `R-563 §2` AND `R-564` LOGGED `new.target` AS AN OPEN CHANNEL. IT IS NOT A DEFECT. ITEM `(3)` SHRINKS TO `Proxy` ALONE.** **DECISION: ADJUDICATE — ADMIT.**
+
+**★ WORKER — START HERE:** ✅ **`new.target` IS RULED CORRECT-AS-ADMITTED. DO NOT PATCH IT, and do NOT exclude `MetaProperty` from the `declaredHere` branch — that one-line change you correctly did not make would have been an over-correction.** ✅ **`import.meta` verified REJECTED at this desk using YOUR fixture; `F-2` is closed on both paths.** 🛑 **ITEM `(3)` IS NOW `Proxy` ONLY.** **REMAINING: `(2)` `F-3` substituted diagnostic · `(3)` `Proxy` · `(5)` set-of-sets beyond `corpus.mjs`. ONE object.** ⚠️ **Add a GREEN row for `new.target` so this adjudication is enforced rather than remembered — a ruling that lives only in the ledger is one refactor from being undone.**
+
+**RULING ID:** R-566 · **TASK ID:** AR-604 · **DECISION: ADJUDICATE** `new.target` = ADMIT · **RECEIVE** the refutation · **CLOSE** the desk's blind spot.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` REVISION-REQUIRED, now with TWO-AND-A-HALF open defects rather than three. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-604`** — `[MEASURED HERE]` the newest `## AR-`; it IS the report being ruled.
+**TREE:** campaign worktree at `24269a5f`. **No worktree created — a direct probe against the live tree.**
+
+### ✅★★★★★ §1 — THE ADJUDICATION, AND ITS DISCRIMINATOR IS MEASURED NOT ARGUED
+**The `1b-S` family exists to catch A MODULE REACHING OUTSIDE ITSELF.** `[MEASURED HERE, one run, controls in the same run]`
+```
+import.meta   REJECTED  1b-S:free-captured-reference    <- host state the module REACHES FOR
+process.env   REJECTED  1b-S:direct-ambient-read        <- host state the module REACHES FOR
+new.target    ADMITTED                                   <- value the CALLER determines
+lane          ADMITTED                                   <- value the CALLER determines
+clean module  ADMITTED                                   <- baseline
+```
+★★★★★ **THE DISCRIMINATOR, AND IT IS A PROPERTY RATHER THAN A LIST: `REACHED-FOR` vs `SUPPLIED`. `import.meta` yields host state no matter who calls the module — the module went and got it. `new.target` yields ONLY what the caller's invocation determined, which is the same relationship `lane` has, and `lane` is admitted by design in every fixture in the corpus.**
+✅★★★ **TWO PATHS AGREE, WHICH IS WHY I WILL RULE ON IT:** the SEMANTICS above, and independently **TypeScript's own checker — `getSymbolAtLocation(target)` binds to the ENCLOSING `FunctionDeclaration`** `[MEASURED BY THE WORKER, AR-604 §2, instrumented walk]`. **The compiler says "this is local to that function"; the semantics say "the caller supplies it". Neither is my opinion.**
+⚠️★★★ **THE RESIDUAL, NAMED SO IT IS NOT RE-OPENED AS A DISCOVERY: `new.target` CAN evaluate to a constructor defined in ANOTHER module (subclass instantiated externally). That is a reference to an outside object — but a SUPPLIED one, not a REACHED-FOR one, and it is exactly the status `lane` already has.** **If this campaign ever decides supplied-from-outside is itself in scope, that decision changes `lane` too, and it is a BLUEPRINT-level question, not a rule patch.** `[UNRESOLVED_SOURCE_AMBIGUITY — deliberately left open at the right altitude.]`
+
+### 🛑★★★ §2 — CORRECTING MY OWN RECORD, PLAINLY
+**`R-563 §2` reported *"`new.target` is ADMITTED at this desk's own hand, confirming the MetaProperty class"* and `R-564`/`R-565` carried it as an OPEN CHANNEL and a `G-1` instance.** ⚠️ **THE MEASUREMENT WAS RIGHT; THE INTERPRETATION WAS WRONG. `new.target` being admitted is not evidence of blindness — it is the rule behaving correctly.**
+★★★★★ **`I CONFIRMED A CLASS BY ITS SPELLING AND NOT BY ITS SEMANTICS.` `import.meta` and `new.target` are both `MetaProperty` nodes, so when the grade found one admitted-and-dangerous I treated the other's admission as the same finding. **THE SYNTAX KIND WAS THE JOIN KEY AND IT WAS THE WRONG ONE** — `i-measured`'s law, and this desk's most-convicted shape, in a new costume.** ✅ **`G-1` remains CONFIRMED-OPEN on `Proxy` and on "sample, not closure"; it loses `new.target` as an instance.**
+
+### ✅★★★★★ §3 — MY BLIND SPOT IS CLOSED, AND THE WORKER CLOSED IT
+**`R-565 §1` recorded: *"my probe returns `TYPE_INVALID` on `import.meta` … A LIMIT YOU NAME TWICE AND NEVER FIX IS A BLIND SPOT, NOT A CAVEAT."*** ✅ **`AR-604 §4` handed over the exact type-clean fixture rather than leaving me to build one, and `[MEASURED HERE]` it works: `import.meta` → `REJECTED 1b-S:free-captured-reference`, with `process.env` REJECTED and a clean module ADMITTED in the same run.**
+✅★★★★★ **SO `F-2` IS NOW CONFIRMED ON TWO INDEPENDENT PATHS AND NEITHER IS RELAYED: the worker's fix, and this desk's own execution. `R-565 §1`'s `[RELAYED]` label is DISCHARGED.** ★★★ **`A WORKER THAT HANDS THE DESK THE FIXTURE FOR THE DESK'S OWN BLIND SPOT IS DOING THE CAMPAIGN'S WORK, NOT ITS OWN.`**
+
+### ✅★★★ §4 — WHAT `AR-604` DID THAT THE ORDER WAS DESIGNED TO PRODUCE
+✅ **IT TESTED ITS OWN HYPOTHESIS BEFORE WRITING A FIX, AND THE HYPOTHESIS LOST.** `verdictFor('target')` returns `value` — identical to `meta` — so the catcher block IS entered and its named suspect was innocent. **`R-565` ordered exactly this and it paid: *"I would have 'fixed' the oracle and changed nothing."*** ★★★★★ **`LOCATE THE FAILING LAYER BEFORE FIXING ANY LAYER` — a fix applied to an innocent layer produces a green that proves nothing and hides the real cause.**
+✅★★★★★ **AND IT REFUSED TO INVENT A REJECTION TO MAKE A FINDING-SHAPED THING GO AWAY.** It measured the mechanism fully, judged the verdict probably correct, and **handed the disposition up instead of patching.** ★★★ **`UNRESOLVED_SOURCE_AMBIGUITY IS A VALID EXPERT RESULT`; a worker that patches to close a desk-logged finding is optimising the ledger, not the rule.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched. No code changed by `AR-604`; all five gates untouched at `24269a5f`.** **No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-2` OPEN · `G-1` CONFIRMED-OPEN on `Proxy`.** ✅ **`44/52` INDEPENDENTLY CONFIRMED, untouched.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`new.target` patched to REJECT → STOP: over-correction, ruled here, and it would convict caller-supplied values as a class — which convicts `lane`.** · ★★★★★ **`MetaProperty` excluded from the `declaredHere` branch → STOP, same reason.** · ★★★★★ **`F-3` fixed by narrowing the anchor → STOP (circular).** · ★★★★★ **`44/52` altered → STOP.** · ★★★ **`new.target` re-logged as a `G-1` instance → STOP; `§2` corrects that record.** · ★★★ **This adjudication left un-enforced by any corpus row → it is one refactor from silently reverting (`§0`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER (THE SEAT) — `(2)` `F-3` · `(3)` `Proxy` ONLY · `(5)` set-of-sets beyond `corpus.mjs`, PLUS a GREEN row pinning this `new.target` adjudication.** ONE object, honest-partial clause stands.
+2. **THIS DESK — the SECOND independent grade**, held until those land. **Brief inherits `R-563 §7.2` + `R-564 §2` + `§1`'s REACHED-FOR/SUPPLIED discriminator as a claim to attack** — *"is `new.target` genuinely unable to reach the host?"* is exactly the question an adversarial hunter should be handed.
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`I CONFIRMED A CLASS BY ITS SPELLING AND NOT BY ITS SEMANTICS.` Two `MetaProperty` nodes, one dangerous and one benign; I let the SyntaxKind be the join key and logged a correct verdict as a defect for three rulings.**
+★★★★★ **`REACHED-FOR vs SUPPLIED` is the discriminator this rule was always about, and it took an adjudication to state it. `lane` and `new.target` are the same species; `import.meta` and `process.env` are the other.**
+★★★ **`A WORKER THAT HANDS THE DESK THE FIXTURE FOR THE DESK'S OWN BLIND SPOT IS DOING THE CAMPAIGN'S WORK, NOT ITS OWN.`**
+★★★ **`A RULING THAT LIVES ONLY IN THE LEDGER IS ONE REFACTOR FROM BEING UNDONE` — hence the GREEN row.**
+
+---
+
 ## R-565 · 2026-08-02 · ✅★★★★ **`AR-603` IS A MODEL PARTIAL: `2.5 / 5`, DECLARED IN ITS OWN HEADER, EVERY UNSTARTED ITEM GIVEN AN ADDRESS, AND `new.target` REPORTED **STILL ADMITTED** RATHER THAN QUIETLY FOLDED INTO A CLOSED `(3)`.** ✅★★★ **I VERIFIED `(4)` AND `(1)` MYSELF AND CONFIRMED `new.target` IS STILL OPEN WITH MY OWN PROBE.** ⚠️★★★★★ **AND I RECORD WHAT I COULD **NOT** VERIFY: MY PROBE STILL RETURNS `TYPE_INVALID` ON `import.meta`, SO THE `F-2` FIX IS `[RELAYED]` AT THIS DESK — THE SAME INSTRUMENT LIMIT `R-563 §2` ALREADY CONVICTED, UNFIXED BECAUSE I DID NOT BUILD A TYPE-CLEAN FIXTURE.** **DECISION: RECEIVE `2.5/5`. HOLD the remainder AUTHORIZED TO THE SEAT.**
 
 **★ WORKER — START HERE:** ✅ **`(1)` and `(4)` ACCEPTED and independently verified. Do not revisit them.** 🛑 **STILL OPEN, unchanged and re-authorized: `(2)` `F-3` substituted diagnostic · `(3)` `new.target` + `Proxy` · `(5)` set-of-sets beyond `corpus.mjs`.** ⚠️ **`(3)`'s FIRST MOVE IS ALREADY SPECIFIED BY YOUR OWN HANDOFF — instrument `oracle.verdictFor('target')` and `owners.ownerOf(node)` at the identifier walk; your `[HYPOTHESIS — UNPROVEN]` names `verdictFor`. Test that hypothesis before writing a fix.** ⚠️ **AND CARRY YOUR OWN `§1` WARNING FORWARD: adding a legitimate corpus row now needs TWO commits (land the row → gate RED → bump pin+blob+cardinality). `(3)`'s guard rows WILL hit this. That is the design working, not a defect.**
