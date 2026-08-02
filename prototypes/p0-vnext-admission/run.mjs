@@ -123,6 +123,13 @@ function ownershipJoin(records, row, body) {
   }
   const anchors = [];
   for (const o of owned) {
+    // 🛑★★★★★ GRADE F-3 / R-568 item (2) — FAIL CLOSED ON A MISSING WITNESS.
+    // An anchor with no declared witness would silently get the OLD, SUBSTITUTABLE behaviour, and
+    // a future row could opt out of this check just by omitting a field. `ABSENT CONSTRAINT WIDENS
+    // SCOPE` — so a malformed declaration is an INSTRUMENT FAULT, not a quietly weaker join.
+    if (typeof o.witness !== 'string' || o.witness.length === 0) {
+      throw new Error(`INSTRUMENT FAULT: row ${row.id} declares owned expression ${JSON.stringify(o.expression)} with NO \`witness\` — the substitution check cannot run and no verdict from this row means anything`);
+    }
     const first = body.indexOf(o.expression);
     if (first < 0) return { ok: false, why: `declared owned expression ${JSON.stringify(o.expression)} is ABSENT from the submitted body` };
     if (body.indexOf(o.expression, first + 1) !== -1) {
@@ -147,13 +154,34 @@ function ownershipJoin(records, row, body) {
   // the count is then a CLAIM the row makes and the run can falsify.
   const unjoined = [], ambiguous = [];
   const claimedBy = new Map();          // anchor index -> the diagnostic that claimed it
-  const surplus = [];
+  const surplus = [], substituted = [];
   for (const d of records) {
     if (d.start === null) { unjoined.push(`${d.code}@<no span>`); continue; }
-    const cands = anchors
+    // 🛑★★★★★ GRADE F-3 — THE BIJECTION COUNTS *SURPLUS* AND CANNOT SEE *SUBSTITUTION*.
+    // MEASURED BEFORE THE FIX (AR-608 §2): declaring `undeclaredReader` so 34(d-u)'s TRUE plant
+    // RESOLVES, while renaming its parameter so an unrelated TS2304 lands on `lane` INSIDE the
+    // byte-unchanged anchor, gave ONE diagnostic for ONE anchor — bijection satisfied, `surplus`
+    // and `unwitnessed` both empty, row credited CAUGHT_BY_TYPECHECKER, partition NUMERICALLY
+    // IDENTICAL to clean, GATE: PASS, EXIT 0. The run even printed the smoking gun — `TS2304@L2:61
+    // "lane"` — because the discriminator was in the record all along and the join never used it.
+    //
+    // 🛑 THE REPAIR IS *NOT* TO NARROW THE ANCHOR (R-557 §4 / R-570 §5 make that a STOP, and they
+    // are right: an anchor equal to its own diagnostic restates the observation). CONTAINMENT IS
+    // UNCHANGED and the anchor stays exactly as wide as the owned expression. What is added is a
+    // SEPARATE, PRE-REGISTERED axis: the row declares IN THE CORPUS which text its diagnostic must
+    // point at, and the run falsifies that claim. The row can be WRONG, which is what makes it a
+    // check rather than a restatement — and because the corpus is pinned, the claim cannot be
+    // edited to fit the observation after the fact.
+    const contained = anchors
       .map((a, i) => ({ a, i }))
       .filter(({ a }) => a.code === d.code && d.start >= a.start && d.start + d.length <= a.end);
+    const cands = contained.filter(({ a }) => d.anchorText === a.witness);
     const shown = `${d.code}@${d.start}${d.anchorText === null ? '' : `:${JSON.stringify(d.anchorText)}`}`;
+    if (contained.length > 0 && cands.length === 0) {
+      const c = contained[0].a;
+      substituted.push(`${shown} carries the declared code and lies INSIDE ${JSON.stringify(c.expression)}, but points at ${JSON.stringify(d.anchorText)} where this row declared witness ${JSON.stringify(c.witness)} — a SUBSTITUTED diagnostic, NOT this row's planted illegality`);
+      continue;
+    }
     if (cands.length === 0) { unjoined.push(shown); continue; }
     // Overlapping/nested declared expressions make ownership undecidable — fail closed rather
     // than pick one, which is the same discipline as the ambiguous-anchor check above.
@@ -169,12 +197,14 @@ function ownershipJoin(records, row, body) {
     .map((a, i) => ({ a, i }))
     .filter(({ i }) => !claimedBy.has(i))
     .map(({ a }) => `${a.code}@${JSON.stringify(a.expression)}`);
-  if (unjoined.length === 0 && ambiguous.length === 0 && surplus.length === 0 && unwitnessed.length === 0) {
-    return { ok: true, why: anchors.map((a) => `${a.code}@${JSON.stringify(a.expression)}`).join(' + ') };
+  if (unjoined.length === 0 && ambiguous.length === 0 && surplus.length === 0
+      && substituted.length === 0 && unwitnessed.length === 0) {
+    return { ok: true, why: anchors.map((a) => `${a.code}@${JSON.stringify(a.expression)}:${JSON.stringify(a.witness)}`).join(' + ') };
   }
   return {
     ok: false,
     why: [
+      substituted.length ? `SUBSTITUTED diagnostic(s): ${substituted.join(', ')}` : '',
       unjoined.length ? `diagnostic(s) NOT owned by this row: ${unjoined.join(', ')}` : '',
       surplus.length ? `EXTRA diagnostic(s) on an owned row: ${surplus.join(', ')}` : '',
       ambiguous.length ? `AMBIGUOUS ownership (overlapping declared anchors): ${ambiguous.join(', ')}` : '',
@@ -284,6 +314,21 @@ for (const c of CORPUS_UNDER_TEST) {
       body = c.body.replace('(lane: Lane)', '(ln: Lane)');
       if (body === c.body) throw new Error("INSTRUMENT FAULT: own_extra_inside_anchor planted NOTHING — '(lane: Lane)' did not match 34(d-u)'s body; any verdict from this run is void");
       PLANT_WITNESS.push(`34(d-u): '(lane: Lane)' -> '(ln: Lane)' (${c.body.length}B -> ${body.length}B), anchor 'undeclaredReader(lane)' left byte-unchanged`);
+    }
+    // 🛑★★★★★ GRADE F-3 — R-548's ATTACK A, THE *SUBSTITUTED* FORM. `own_extra_inside_anchor`
+    // above leaves the true plant in place and adds a SECOND diagnostic, so the bijection sees a
+    // SURPLUS and reddens. THIS injection instead makes the TRUE PLANT RESOLVE — `undeclaredReader`
+    // is DECLARED — while the parameter rename lands an IMPOSTOR TS2304 on `lane` inside the
+    // byte-unchanged anchor. ONE diagnostic, ONE anchor: the bijection is SATISFIED and, before the
+    // witness check, this exited 0 with the partition numerically identical to clean.
+    // ⚠️ The anchor text is asserted PRESENT AND UNCHANGED, because an injection that did not land
+    // produces a green indistinguishable from a guard that did not fire (R-556 §3).
+    if (INJECT === 'substituted_diagnostic' && c.id === '34(d-u)') {
+      const renamed = c.body.replace('(lane: Lane)', '(ln: Lane)');
+      if (renamed === c.body) throw new Error("INSTRUMENT FAULT: substituted_diagnostic planted NOTHING — '(lane: Lane)' did not match 34(d-u)'s body; any verdict from this run is void");
+      body = `const undeclaredReader = (x: unknown) => x;\n${renamed}`;
+      if (!body.includes('undeclaredReader(lane)')) throw new Error('INSTRUMENT FAULT: substituted_diagnostic did not preserve the declared anchor byte-for-byte; the attack would be testing the wrong thing');
+      PLANT_WITNESS.push(`34(d-u) SUBSTITUTION: 'undeclaredReader' DECLARED so the TRUE plant resolves, '(lane: Lane)' -> '(ln: Lane)' so an IMPOSTOR TS2304 lands on 'lane' INSIDE the byte-unchanged anchor 'undeclaredReader(lane)'`);
     }
     submittedBody = body;
     const r = admitSource(c.file, body);

@@ -94,7 +94,7 @@ export const CORPUS = [
   // ⚠️ This row is a DECLARED ADDITION, not one of AR-589's 52, so this changes no published
   // like-for-like figure — re-measured below rather than asserted.
   { id: '34(d-u)', atom: 'free reference to an UNDECLARED name', expect: S.FREE_REF,
-    typecheckerOwned: [{ code: 'TS2304', expression: 'undeclaredReader(lane)', defect: 'the planted illegality IS the unresolved free reference; an undeclared name is TS2304 by construction' }],
+    typecheckerOwned: [{ code: 'TS2304', expression: 'undeclaredReader(lane)', witness: 'undeclaredReader', defect: 'the planted illegality IS the unresolved free reference; an undeclared name is TS2304 by construction' }],
     ...src(`export const project = (lane: Lane) => ({ v: undeclaredReader(lane) });\n`) },
 
   { id: '35(a)', atom: 'globalThis', expect: S.AMBIENT,
@@ -172,16 +172,16 @@ export const CORPUS = [
   // plant. The MACHINE-CHECKED key is (row, expression, span, code) — I do not pretend prose is
   // enforced. Every anchor below was MEASURED from the compiler's own span, never guessed.
   { id: '52(a)', atom: 'duplicate cooked keys (raw)', expect: S.GRAMMAR,
-    typecheckerOwned: [{ code: 'TS1117', expression: 'a: 2', defect: 'the planted illegality IS the duplicate cooked key `a`' }],
+    typecheckerOwned: [{ code: 'TS1117', expression: 'a: 2', witness: 'a', defect: 'the planted illegality IS the duplicate cooked key `a`' }],
     ...src(`const C = Object.freeze({ a: 1, a: 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(b)', atom: 'duplicate cooked keys (esc string)', expect: S.GRAMMAR,
-    typecheckerOwned: [{ code: 'TS1117', expression: `"${B}x61": 2`, defect: 'duplicate cooked key via escaped STRING form — the compiler cooks `\\x61` to `a`' }],
+    typecheckerOwned: [{ code: 'TS1117', expression: `"${B}x61": 2`, witness: `"${B}x61"`, defect: 'duplicate cooked key via escaped STRING form — the compiler cooks `\\x61` to `a`' }],
     ...src(`const C = Object.freeze({ a: 1, "${B}x61": 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(c)', atom: 'duplicate cooked keys (esc ident)', expect: S.GRAMMAR,
-    typecheckerOwned: [{ code: 'TS1117', expression: `${B}u0061: 2`, defect: 'duplicate cooked key via escaped IDENTIFIER form — `\\u0061` cooks to `a`' }],
+    typecheckerOwned: [{ code: 'TS1117', expression: `${B}u0061: 2`, witness: `${B}u0061`, defect: 'duplicate cooked key via escaped IDENTIFIER form — `\\u0061` cooks to `a`' }],
     ...src(`const C = Object.freeze({ a: 1, ${B}u0061: 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(d)', atom: 'duplicate cooked keys (mixed)', expect: S.GRAMMAR,
-    typecheckerOwned: [{ code: 'TS1117', expression: '"a": 2', defect: 'duplicate cooked key across identifier and string spellings' }],
+    typecheckerOwned: [{ code: 'TS1117', expression: '"a": 2', witness: '"a"', defect: 'duplicate cooked key across identifier and string spellings' }],
     ...src(`const C = Object.freeze({ a: 1, "a": 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '53',    atom: 'harmless inert static import', expect: S.IMPORT_CARDINALITY,
     ...src(`import { add } from './pure-math.js';\nexport const project = (lane: Lane) => ({ v: add(1, 2) });\n`) },
@@ -205,8 +205,12 @@ export const CORPUS = [
   // dropped out of `caught_by_typechecker` — which is the guard working, not a nuisance.
   { id: '54(c)', atom: 'module-scope `this` STATEMENT (text-level)', expect: S.MODULE_SYSTEM,
     typecheckerOwned: [
-      { code: 'TS2532', expression: 'this.inject', defect: 'module-scope `this` is `undefined` under ESM — the planted text-level channel' },
-      { code: 'TS2540', expression: 'HOLDER.slot = f', defect: 'the same statement writes through a frozen container — read-only property' },
+      { code: 'TS2532', expression: 'this.inject', witness: 'this', defect: 'module-scope `this` is `undefined` under ESM — the planted text-level channel' },
+      // ⚠️ `witness` here is `slot`, NOT `HOLDER.slot`. TS2540 ("cannot assign to X, it is read-only")
+      // points at the PROPERTY NAME, not the member expression. This is the ONE anchor of seven where
+      // the intent-derived prediction and the observed diagnostic DISAGREED (AR-608 §3), and the
+      // observation won because it is explicable. Recorded so nobody "corrects" it back.
+      { code: 'TS2540', expression: 'HOLDER.slot = f', witness: 'slot', defect: 'the same statement writes through a frozen container — read-only property' },
     ],
     ...src(`const HOLDER = Object.freeze({ slot: Object.freeze({}) });\nthis.inject = (f: unknown) => { HOLDER.slot = f; };\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
 

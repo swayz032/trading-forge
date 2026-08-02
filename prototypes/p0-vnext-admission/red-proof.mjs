@@ -93,6 +93,7 @@ const EXPECT = [
   // TOGETHER THEY COMPOSE INTO A COORDINATED TWO-EDIT DELETION that removes the R-562 class fix
   // AND its proof with both gates green — the shape R-558 closed for corpus rows and left open
   // here. `A COUNT OF SURVIVING MEMBERS CANNOT SPEAK ABOUT MEMBERS THAT WERE REMOVED.`
+  ['substituted_diagnostic',    'type_invalid_unclassified', '(s) GRADE F-3: R-548 attack A in its SUBSTITUTED form — the TRUE plant RESOLVES and an impostor of the same code claims the byte-unchanged anchor. ONE diagnostic, ONE anchor, bijection satisfied; measured to give GATE: PASS EXIT 0 with a partition identical to clean'],
   ['module_collection_delete',  'module_collections',       '(q) R-568(5): delete a row from an ENFORCEMENT TABLE (this EXPECT array) — measured to give 37/37 ENFORCING GATE, EXIT 0'],
   ['module_collection_add',     'module_collections',       '(r) R-568(5): a NEW module-level collection in run.mjs nobody pinned — the set of sets, beyond corpus.mjs'],
 ];
