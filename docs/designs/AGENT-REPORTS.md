@@ -4,6 +4,74 @@
 
 ---
 
+## AR-620 · 2026-08-02 · ✅★★★★★ **`R-578 §6` BATCH CLOSED — FAN-IN `3 / 3`, ALL THREE RED-PROOFED WITH A GREEN CONTROL AND A CLEAN RESTORE.** ✅★★★★★ **THE DECISIVE ONE: UNDER THE GRADER'S OWN SUBSTITUTION THE COUNT STILL READS **`41 / 41`** AND THE GATE NOW GOES **RED ANYWAY** — `18` DECLARED CLASSES NEVER RAN, `1` RAN `19x`. **CARDINALITY AND IDENTITY ARE NOW SEPARATELY ASSERTED, AND ONLY THE SECOND CATCHES THIS.**** 🛑★★★ **AND I STRENGTHEN `R-578 §3` AGAINST ITSELF: BOTH FREEZE WITNESSES WERE CONSTANTS, NOT JUST `'38'` — `'35(a)'` ALSO MATCHES THE CLEAN CONTROL, SO THE `2×2` WAS GREEN IN **ALL FOUR** CELLS, NOT MERELY OFF-DIAGONAL.**
+
+**RULING ID:** `R-578 §6` · **TASK ID:** AR-620 · **PRIOR:** AR-619 (start-receipt) · **COMMITS: `1a1abb46` (delivery) + this one (pin bump).** **GRAPH: `P0PC` `active_worker` — NO TRANSITION CLAIMED (`R-578 §5` makes that a STOP, and `R-574 §0`'s law has now held three times).**
+
+### ✅ §1 — ITEM 1: ROW IDENTITY, ASSERTED AS MEMBERSHIP IN BOTH DIRECTIONS
+**Property implemented:** *every DECLARED key is witnessed EXACTLY ONCE, and no witnessed key is UNDECLARED.* `DECLARED_ROW_KEYS` is built from the four pinned tables plus the two standalone rows; `rows` is compared against it by multiset, not by size. **The cardinality assertion is KEPT** (`R-578 §6.1`), so retirement, substitution and duplication each have their own convicting path.
+🛑 **I did NOT implement the near-miss `R-578 §5` forbids** — no `new Set(rows.map(r => r.cls)).size === 41`. That is still a count.
+
+`[MEASURED HERE — full suite, NOOP CONTROL FIRST, restore verified byte-identical]`
+
+| run | exit | count assertion | identity assertion | verdict |
+|---|---|---|---|---|
+| **NOOP control** | `0` | `41 / 41` OK | OK | `ENFORCING GATE` |
+| **substitution** `of EXPECT.map(() => EXPECT[1])` | `1` | **`41 / 41` — STILL PASSES, no `F-1` line** | **`F-1b` FIRES: 18 never ran, `membership_rename->membership` witnessed `19x`** | `NOT a gate` |
+| **duplication** `of [...EXPECT, EXPECT[0]]` | `1` | `F-1` fires (`42 != 41`) | `F-1b` fires (`1` witnessed `2x`) | `NOT a gate` |
+
+★★★★★ **THE MIDDLE ROW IS THE WHOLE POINT: the count is GREEN and the gate is RED. That is the property `F-1` could not express, stated as a measurement rather than as a claim.**
+
+### ✅ §2 — ITEM 2: THE FREEZE WITNESSES NOW DISCRIMINATE — AND THE OLD ONES WERE WORSE THAN GRADED
+**Witness changed from a bare substring (`stdout.includes('38')`) to the id IN ITS STOP-CONDITION SENTENCE** — `*** STOP CONDITION (item 16): <id>: ABSENT` — which a hex-digest substring cannot produce. **Three conditions, all required and all asserted in-band:** ABSENT-from-control · PRESENT-under-own-injection · ABSENT-under-every-other.
+
+`[MEASURED HERE]` **WITH the fix (control run):** both rows `absent-from-control=true present-under-own=true leaked-to=[]` — **the 2×2 is diagonal.**
+`[MEASURED HERE]` **WITHOUT it (old bare-substring witness reinstated as the mutation):** both rows `*** FAIL`, and the new check names the mechanism itself:
+```
+witness '35(a)': absent-from-control=false  leaked-to=[membership_delete]
+witness '38':    absent-from-control=false  leaked-to=[membership_rename]
+***   STOP CONDITION (F-3b): witness for '<id>' ALSO MATCHES THE CLEAN CONTROL — it is a constant, not a witness
+```
+🛑★★★ **CORRECTION TO THE GRADE, IN ITS FAVOUR: `R-578 §3` attributes the defect to `'38'`'s sixteen digest occurrences and describes the OFF-DIAGONAL cells as passing. `[MEASURED HERE]` `'35(a)'` IS ALSO PRESENT IN THE CLEAN CONTROL, so BOTH witnesses were constants and ALL FOUR cells were green — the diagonal cells were passing for the same empty reason as the off-diagonal ones. The finding was real and UNDER-stated.**
+
+### ✅ §3 — ITEM 3: DECLARED MAGNITUDE, AND MEMBERSHIP INSTEAD OF A FLOOR
+`COVERED_FILES` is now a per-file **declared table count** (`'run.mjs': 4, …`), `DECLARED_TABLE_TOTAL = 13` is a literal cross-checked against the sum of those literals, and the printed line reports the **DECLARED** magnitude. The old `tables.length === 0` floor — which admitted every partial deletion above zero — is replaced by `actual !== expected`. The reverse direction is covered too: a pinned file with no declared magnitude now throws.
+
+`[MEASURED HERE — control GREEN, mutation, restore GREEN]`
+```
+1. NOOP control                        exit 0   | 6 files | 13 pinned tables (DECLARED) | 0 finding(s) | PASS
+2. drop 3 of run.mjs's 4 tables        exit 1   INSTRUMENT FAULT: run.mjs is declared to cover 4
+                                                enforcement table(s) but PINNED_MODULE_COLLECTIONS lists 1
+3. restored                            exit 0   PASS      <- the red came from the mutation, not from decay
+```
+⚠️ **ONE FIGURE IN THE RULING I CANNOT RECONCILE, REPORTED RATHER THAN SMOOTHED:** `R-578 §2` quotes the mutated run as printing **`12 pinned tables`**. `[MEASURED HERE]` the true baseline is **`13`**, so dropping `3` should print `10`. The fix does not depend on the figure and the defect reproduced exactly as described — but the quoted number does not join to my measurement, and I am not going to invent an explanation for it.
+
+### ✅★★★ §4 — THE PIN DANCE, AND THE TRAP I MEASURED BEFORE STEPPING IN IT
+**Two commits, exactly as `AR-613` did it, and the gate is RED in between BY DESIGN.** My `DECLARED_ROW_KEYS` is a new module-level collection, and the set-of-sets guard **correctly convicted my own edit** — instance-five protection firing on the author.
+🛑★★★★★ **I DID NOT PIN IT, BECAUSE I MEASURED FIRST: `[MEASURED HERE]` `extractModuleCollections` returns `keys: NULL` for `DECLARED_ROW_KEYS`, and `checkPinnedCollections` THROWS `INSTRUMENT FAULT` on a pinned table it cannot see — `AR-613`'s exact trap, which would have taken the gate down.** So the guard's OTHER sanctioned remedy was taken: bump the pin. ✅ **AND I DID NOT ROUTE AROUND THE GUARD** — hiding the binding inside a function would have silenced the announcement, which is the one thing a blocked author may never do.
+⚠️★★★ **A CONSEQUENCE I DECLARE RATHER THAN SLIP IN: `MODULE_PIN_COMMIT` is GLOBAL, so bumping `cac39d45 -> 1a1abb46` also re-baselines `membership.mjs`, which this batch never edited (its blob moved in commits between). `[MEASURED BEFORE BUMPING]` its CHECKED surface is unchanged — `HISTORICAL_RENAMES` keys `["54"] -> ["54"]`, collection set `{HISTORICAL_RENAMES, BASELINE_META, EXPANDED_META}` identical. So no enforcement table is silently adopted. Both moved blobs were re-derived with `git rev-parse` and confirmed with `git cat-file -t` (`external-sha-fabrication`).**
+
+### ✅ §5 — GATES AT THE SHIPPED STATE
+`[MEASURED HERE, working tree == this commit's content]` **six scripts, every one `exit 0`:** `run.mjs` `GATE: PASS` · `red-proof.mjs` `ENFORCING GATE`, `41/41` · `emitted-freeze.mjs` (comparator controls both true) · `type-value-proof.mjs` `property HOLDS` · `module-collections.mjs` `PASS`, `0 findings` · `module-tuple.mjs` `PASS`.
+⚠️★★★ **I SCOPE THIS THE WAY `R-575 §1` TAUGHT AND DO NOT REPEAT THE DESK'S ERROR: I am claiming *"these six scripts exited 0"*, NOT *"six gates are green"*. `R-575` established that one of them is a no-op; `[NOT MEASURED HERE]` I did not re-derive WHICH, and all six do carry a conditional exit expression, so I cannot identify it from that alone. The distinction is the desk's to keep.**
+
+### ⚠️ §6 — RESIDUALS, NAMED BEFORE A GRADER FINDS THEM (`AR-615 §7.3` IS WHY THIS SECTION EXISTS)
+1. ★★★ **`DECLARED_ROW_KEYS` IS LOAD-BEARING AND NOT KEY-PINNABLE.** Editing it on disk is invisible to `module-collections` (name unchanged, not in `spec.tables`, keys unextractable). **What defends it:** `derivationsAgree` — `EXPECTED_ROW_COUNT` is derived INDEPENDENTLY from the four pinned tables' lengths, so shrinking the key list alone reds the gate. **Defeating it therefore takes TWO coordinated edits** — the same bar `R-578 §2` explicitly accepted for instances six and seven, not a lowered one. **I am naming it as the residual rather than claiming closure.**
+2. ⚠️ **`rows` was ALREADY an unpinnable module-level collection** (`keys: NULL`) before this batch; I did not change that and do not claim it.
+3. ⚠️ **`MISS_NOT_CAUGHT` ungated outside the pinned 52 (`AR-615`) remains OPEN and untouched** — it is on the desk queue, not in this batch.
+
+### ⚠️ §7 — MY OWN INSTRUMENT FAILURES THIS RUN, DISCLOSED
+1. **A `grep` over a doubled hook path returned empty and I read `head`'s exit code as `grep`'s** — I nearly recorded an absence from it. Caught, re-measured with the real path (`absence-claim`).
+2. **My first red-proof harness passed an MSYS path to `node`**, which resolved it as `C:\c\Users\...`; the mutation silently never applied. **The suite would have reported a clean control and no bite — a false GREEN produced entirely by my harness.** Fixed by passing a Windows path AND adding a positive control that asserts the file on disk actually differs from the backup before believing any run.
+3. **My first `mutate` attempt nested bash → `node -e` → a JS regex** and the escaping was unreadable; I moved the mutation into a standalone `.mjs` file so no shell layer could mangle it (`ps-heredoc-in-bash` neighbours this).
+✅ **No `git checkout`/`reset`/`stash` was used at any point — every restore is a file copy, verified byte-identical afterwards.**
+
+### ✅ §8 — RECOMMENDATION
+**`APPROVAL_REQUESTED`, and the independent grade is owed — `accuracy-validator`, per `R-578 §6.4`.** ★★★ **Its brief should inherit what `R-578` already named (attack the identity fix hardest · witness-discrimination as a campaign-wide class · assume there is an INSTANCE ELEVEN) and, from this report, `§6.1` — the two-edit path around `DECLARED_ROW_KEYS` is the sharpest thing I know about my own delivery. `§3`'s unreconciled `12` vs `13` is worth a second pair of eyes too.**
+**Next smallest task (ONE, not a roadmap):** `MISS_NOT_CAUGHT` gating — it is the oldest open item on the desk queue and it is mine to take the moment a ruling names it.
+
+---
+
 ## AR-619 · 2026-08-02 · ⏳ **START-RECEIPT — `R-578 §6` BATCH ACCEPTED, `3` ITEMS, SERIAL, ONE SEAT. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s row-identity assertion. ETA ~45–60 min.**
 
 **RULING ID:** `R-578 §6` · **TASK ID:** AR-619 · **PRIOR:** AR-618 · **GRAPH: `P0PC` `active_worker` — I make NO transition; `R-578 §5` makes transitioning-on-batch-close a STOP.**

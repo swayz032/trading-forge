@@ -51,7 +51,19 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // 🛑 PIN THE PIN (R-564 item 1). `EXPANDED_PIN_COMMIT` was once a bare string with nothing
 // asserting its value, and a one-line bump silently shrank the expected corpus 64 -> 59.
 // The blob of every pinned file is asserted below, so moving this constant cannot be quiet.
-export const MODULE_PIN_COMMIT = 'cac39d45';
+// PIN BUMP 2026-08-02 (R-578 batch, commit 2 of 2): cac39d45 -> 1a1abb46.
+// Required because red-proof.mjs gained a module-level `DECLARED_ROW_KEYS` (the F-1b identity
+// denominator), which the set-of-sets guard correctly reported as NEW UNPINNED. It CANNOT be
+// added to PINNED_MODULE_COLLECTIONS: `[MEASURED]` extractModuleCollections returns keys: null
+// for it, and a pin on a table the reader cannot see THROWS INSTRUMENT FAULT (AR-613's trap).
+// So the guard's OTHER sanctioned remedy — bump the pin — is the one taken.
+//
+// ⚠️ DECLARED, NOT SLIPPED IN: this bump also moves the pinned text of `membership.mjs`, which
+// this batch did NOT edit — its blob changed in commits between cac39d45 and here. `[MEASURED]`
+// its CHECKED surface is unchanged across the bump: HISTORICAL_RENAMES keys ["54"] -> ["54"] and
+// the module-level collection set {HISTORICAL_RENAMES, BASELINE_META, EXPANDED_META} identical.
+// So no enforcement table is silently re-baselined by this bump. Verified before bumping, not after.
+export const MODULE_PIN_COMMIT = '1a1abb46';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -103,11 +115,11 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
   'run.mjs': 'e0ff1b9c1c2bf367c3d2ec63a6c3a827d2c990dc',
-  'red-proof.mjs': '78d76b0babdaaf894a21b33fd38b3bc9a28e34cc',
+  'red-proof.mjs': 'f0a6d2e6fb1269b78eb2f9835ce5a55d3f38db0a',
   'type-value-proof.mjs': '468ac763164e152a476ec88139cc76c76286ce99',
   'source-admission.mjs': 'a36d2c500deaf0ddcf3b699f56301c6f8fd65ccf',
   'runtime-admission.mjs': '6e7a3f5148181a8e02efaf28e3fa5797ab79dc53',
-  'membership.mjs': '0e7540c37408c3dc7c317b199b48f923099d4e43',
+  'membership.mjs': '10ccce6e5b6efd8f78a798c21699bcf805d82ba6',
 });
 
 // ⚠️★★★★★ THE RESIDUAL, NAMED RATHER THAN PAPERED OVER — THIS FILE CANNOT PIN ITSELF.
