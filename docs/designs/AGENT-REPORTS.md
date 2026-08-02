@@ -4,6 +4,60 @@
 
 ---
 
+## AR-583 · 2026-08-02 · ✅★★★★★ **R-537 §5 + R-538 §4 DELIVERED — SIX ITEMS, `38/38`, MUTATION-JOIN CLOSED, MATRIX `49+1=50`.** 🛑★★★★★ **AND THE CORRECTION I OWE IS MINE, NOT THE DESK'S ABSOLUTION: `AR-582` CONCURRED WITH A REFUTATION BY MEASURING THE **ROW DEFINITIONS** WHEN THE FINDING WAS ABOUT A **CITATION**. I ANSWERED THE QUESTION I WAS POSED INSTEAD OF THE CLAIM THAT WAS MADE — AND A CORRECT MEASUREMENT OF THE WRONG PROPOSITION IS HOW A FALSE REFUTATION GETS A SECOND SIGNATURE.**
+
+**RULING ID:** R-537 §5 (items `1`–`5`) + R-538 §4 (item `6`) · **TASK ID:** AR-583 · **PRIOR:** AR-582 · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** (`+85/−22`) · **advisor's files untouched.**
+**FAN-IN: `6 / 6`. NOT A HANDOFF.**
+
+### 🛑★★★★★ §1 — MY CONCURRENCE WAS HOLLOW, AND THE MECHANISM IS REUSABLE
+**`R-538` withdraws `R-537 §4` and says `AR-582` is not at fault. I record it differently, because the absolution hides the transferable lesson.**
+⚠️★★★★★ **THE DESK ASKED *"do rows `44` and `45` mean different things?"* I MEASURED THAT, GOT `TRUE`, AND SIGNED. **THE READ HAD CLAIMED SOMETHING ELSE ENTIRELY — that LINE `210` MISCITES the catcher.** `[MEASURED HERE NOW, `git show ef1c85d6:…`, FULL LINE, NO TRUNCATION: length `518`, row citations in order `['45','44']`]` — **the read was right, and my "verification" never touched the proposition in dispute.**
+★★★★★ **`A CORRECT MEASUREMENT OF THE WRONG PROPOSITION IS INDISTINGUISHABLE FROM VERIFICATION AND IT IS WORTH NOTHING.` `A REFUTATION MUST ANSWER THE FINDING ACTUALLY MADE` binds the CONCURRING party too — when I co-sign a refutation, the finding I must re-derive is the READ'S, not the desk's restatement of it.**
+
+### 🛑★★★★★ §2 — ITEM 6, AND THE DEFECT WAS MINE TO BEGIN WITH
+✅ **Line `210` now cites **ROW `44` ONLY** for symbol KEYS `[MEASURED HERE, full line, `grep -o` over row citations → exactly one hit, `ROW 44`]`. Rows `44` (symbol KEY) and `45` (symbol VALUE) are **UNCHANGED** — labels asserted intact.**
+🛑★★★★★ **AND THE MECHANISM IS WORTH MORE THAN THE TYPO: I created it LAST ROUND by noticing the missing citation and **APPENDING A CORRECT ONE INSTEAD OF CORRECTING THE WRONG ONE.** Both survived in one sentence, so a reader following the first citation lands on the value-class row, which does not catch symbol KEYS at all.** ★★★★★ **`A CITATION REPAIRED BY ADDITION LEAVES THE DEFECT IN PLACE AND GIVES IT A WITNESS` — the same additive-repair shape that once left `OR A SEPARATE PROCESS` standing one paragraph above the section that deleted it. Third instance of additive repair in this document.**
+
+### ✅★★★★★ §3 — ITEM 2: THE ATOM MANIFEST, AND WHAT IT HONESTLY IS
+✅ **The prose `atom → row` map is REPLACED by a structured manifest: `39` records, each **ATOM → CONCRETE PLANTABLE SUBCASE → NAMED CATCHER**.** `[MEASURED HERE]` `atoms with no plantable subcase = EMPTY · subcases with no named catcher = EMPTY · catchers naming a non-existent row = EMPTY · capability rows with no atom = EMPTY`, **and BOTH directions convict under control** (drop row `44`'s atom → orphan `[44]`; cite row `999` → non-existent `[999]`).
+⚠️🛑★★★★★ **LABELLED `[PRE-REGISTERED — NOT EXECUTED]` IN THE DOCUMENT ITSELF, AND I FLAGGED THIS IN `AR-582 §4c` BEFORE STARTING: NO IMPLEMENTATION EXISTS, SO NO SUBCASE HAS BEEN RUN. IT IS A PLANTABLE-MUTATION CONTRACT, NOT A MUTATION-COVERAGE RESULT.** ★★★★★ **Calling it coverage would be `F-2`'s exact substitution one level further out — a map of intentions certifying itself as evidence.**
+✅ **EIGHT MANY-TO-ONE ROWS NOW ENUMERATE THEIR SUBCASES IN THE ROW ITSELF and must run and report each independently — `26`(3) `34`(4) `35`(4) `37`(4) `41`(5) `45`(5) `46`(2) `49`(3). Verified in-row, not assumed.**
+
+### ✅★★★★★ §4 — ITEMS 1, 3, 4
+**ITEM 1** — the `4b`/`EVERY-CHANNEL` carrier now names unsupported value classes, array-shape violations and non-enumerable fields. ⚠️ **They were absent for one revision because I swept the prototype requirement as ordered, then ADDED rows `45`–`47` IN THE SAME EDIT AND DID NOT RE-SWEEP.** `THE SWEEP IS NOT AN ACT; IT IS AN OBLIGATION THAT RE-ARMS ON EVERY ADDITION.`
+**ITEM 3** — `1b-S` subcases expanded to the full promised classes. ★★★★★ **The one that mattered: `[MEASURED HERE, node v24.13.0]` `global === globalThis` is `true` on this host, so row `35` planting `globalThis` alone left the contract's `ANY host-global` quantifier undischarged. Row `35` now plants `globalThis` · `window` · `global` · an ARBITRARY unallowlisted host identifier — the fourth exists to exercise the QUANTIFIER rather than the enumerated three.** `A QUANTIFIER OF "any" IS NOT DISCHARGED BY ONE REPRESENTATIVE.`
+**ITEM 4** — **the admitted AST grammar for module-scope constants is CLOSED**, because `1b-S` runs nothing yet was being asked to decide DEEP frozen-ness, a runtime property. ✅ **`Frozen := Object.freeze(ObjLit|ArrLit) | Primitive`, every nested literal individually wrapped; calls, aliases, spread, computed keys and accessors forbidden BY NAME.** ✅ **Red-proofed by rows `38` (shallow nested freeze), `48` (helper-returned constant) and `49` (spread / alias / computed-key), each with a recursively-frozen GREEN neighbour.**
+⚠️★★★ **HONEST COST, STATED IN THE DOCUMENT: this grammar is deliberately NARROWER than "all safe constants" — a sound helper-built constant is REJECTED. `A RULE THAT ADMITS WHAT IT CANNOT DECIDE IS NOT A RULE`, and the alternative is a parser inferring a property it cannot observe.**
+
+### ⚠️★★★ §5 — THREE INSTRUMENT/ARTIFACT FAULTS, ALL MINE, ALL CAUGHT BEFORE DELIVERY
+1. 🛑★★★★★ **A CONTIGUITY GAP I CREATED: appending rows by REPLACING the clean control consumed `48`, leaving the sequence gapped. Renumbered `49→48`, `50→49`, control `→50`.** ★★★ **Second conviction on the identical manoeuvre — `A CONTIGUITY CHECK IS NOT DECORATION; IT IS THE ONLY THING THAT SEES A NUMBER YOU CONSUMED.`**
+2. **Two manifest rows had SINGLE-SPACE column separators**, making the atom/subcase/catcher boundary genuinely ambiguous — the verifier could not parse them and row `42` reported as a false orphan. ✅ **Fixed in the ARTIFACT (alignment), not by loosening the parser.**
+3. ⚠️★★★★★ **MY OWN ACCEPTANCE SCRIPT CARRIED A HAND-COPIED EXPECTED VALUE** (`caption 47+1=48`) and went stale the moment two rows landed. ✅ **Both caption assertions now DERIVE the expected numbers from the parse.** ★★★★★ **`A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM` — including inside the test that polices hand-copied expected values.**
+
+### §6 — ACCEPTANCE
+```
+R-537 items 1-5 + R-538 item 6 ............................................ PASS
+  manifest join: atoms/subcases/catchers/orphans/enumeration ... ALL EMPTY, both controls convict
+  item 6: line 210 cites ROW 44 only; rows 44/45 labels asserted UNCHANGED
+matrix anchored 49+1=50, contiguous 1..50 · un-anchored 55 published as control
+prior-round regressions (composite carriers, grammar, traversal, stop conditions) . PASS
+                                                                            38 / 38
+```
+
+### §7 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT OUT · advisor's files untouched.**
+- ⚠️★★★★★ **`38/38` AND THE CLOSED JOIN ARE DESIGN-TEXT RESULTS OVER A `[PRE-REGISTERED, NOT EXECUTED]` MANIFEST. NO MUTATION HAS EVER BEEN RUN AGAINST THE GATE; NO CI EXECUTES ANY OF THIS.**
+- ⚠️ **`1b-S`+`1b-R` remain a CONTRACT, not a sandbox.** The grammar is total over the five projected fields' value space at `c304b098` only; unlisted classes FAIL CLOSED **as a design rule with no implementation behind it.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED.**
+- ★★ **I do not grade my own work.** **GRADE: NOT ASKING.** ⚠️ **`R-537 §7` routes the BAR-CALIBRATION question to the operator; that is not mine to pre-empt or to answer.**
+
+### §8 — POSITION
+**Design REVISED on all six items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **FAN-IN `6 / 6`. NOT A HANDOFF.**
+
+---
+
 ## AR-582 · 2026-08-02 · **START-RECEIPT — R-537 §5 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** 🛑★★★★★ **`F-2` IS THE SHARPEST FINDING TAKEN AGAINST MY WORK IN THIS ARC AND I ACCEPT IT WHOLE: I BUILT AN `atom → ROW` MAP AND CALLED IT COVERAGE. **A ROW NUMBER IS NOT A CATCHER UNTIL THE EXACT ATOM HAS BEEN PLANTED.** ✅ **AND I CONCUR WITH THE DESK'S REFUTATION BY MY OWN MEASUREMENT — ROWS `44`/`45` ARE SYMBOL-KEY vs SYMBOL-VALUE AND ARE ALREADY CORRECT. I WILL NOT "FIX" THEM.**
 
 **RULING ID:** R-537 §5 · **TASK ID:** AR-582 · **PRIOR:** AR-581 (delivery, `37/37`) · **SEAT:** `claude.exe 26204`.
