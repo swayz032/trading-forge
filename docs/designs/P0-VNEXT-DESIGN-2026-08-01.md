@@ -56,21 +56,57 @@ For every one of the `301` cells the gate obtains the TS projection and the Pyth
 > **PER-PROJECTION RECORD, required fields:** raw lane path · **raw presence, with `MISSING` DISTINCT FROM JSON `null`** · raw value · canonical type · normalized value · **the pure transformation used for any derived axis** (`primitive_null` · `reason_names` · `reason_excludes`).
 > ★★ **`MISSING` and `null` collapsing into one another is how an absent projection becomes a legitimate-looking value; they are recorded as different states, always.**
 
-> ### ★★★★★ WHAT EACH AXIS *MEANS* — RAW PATH AND NORMALIZATION. **CONTRACT, NOT MECHANICS.**
-> ⚠️ **Claim `A`'s meaning is fixed by WHICH RAW FIELD represents each axis and HOW it is normalized. A presence matrix over an unspecified extraction still lets two lanes agree about the WRONG FIELD.** `[paths MEASURED in the shipped gate at `c304b098`; row identity is `condition_id`]`
+> ### 🛑★★★★★ `project()` AND `evaluate()` ARE DIFFERENT FUNCTIONS WITH DIFFERENT INPUTS — **THIS IS THE LOAD-BEARING RULE OF THE WHOLE DESIGN**
+> **`project(lane) → projection`** reads **ONLY** the lane's own output plus the frozen, **LEDGER-INDEPENDENT** normalization contract below. **`evaluate(cell, projection) → claim-`B` verdict`** is the ONLY function that may see a ledger expectation.
+> 🛑★★★★★ **CLAIM `A` MAY NOT READ `cell.value`, `cell.authority_citation`, OR ANY ORACLE EXPECTATION — NOT TO CHOOSE WHAT TO PROJECT, NOT TO NORMALIZE IT, NOT TO DECIDE WHETHER A CELL PARTICIPATES.** `project()` does not receive the ledger as an argument, and that is the enforceable form of the rule: **an input it cannot reach is a coupling it cannot form.**
+> ★★★★★ **WHY THIS IS THE LOAD-BEARING ITEM AND NOT HOUSEKEEPING: `A PREDICATE'S OPERAND IS PART OF ITS AUTHORITY. IF "PROJECTION" NEEDS THE EXPECTED ANSWER TO DECIDE WHAT TO PROJECT, AGREEMENT HAS ALREADY CONSUMED THE ORACLE`** — and claim `A` would no longer be independent of claim `B`, which is the single property the three-claim split exists to guarantee.
+> ⚠️★★★★★ **AND THE DEFECT WAS IN THIS DOCUMENT, NOT IN THE SHIPPED GATE — SAID PLAINLY SO NOBODY REPAIRS THE WRONG OBJECT.** `[MEASURED, `c304b098:scripts/check-spec-binding-plan-parity.ts`]` the gate's `projectExhaustively(raw, map, path, out)` **takes no expectation argument**, and the oracle predicates read the projected `got.reason` against the separate `want.*` in a separate function. **The previous version of the table below listed `reason_names` and `reason_excludes` as *axes* whose *"normalization"* was a *"substring/zone-naming predicate"* and an *"exclusion predicate"*.** ★★★★★ **`A PREDICATE IS NOT A NORMALIZATION: A NORMALIZATION MAPS ONE VALUE, A PREDICATE NEEDS TWO` — and the second operand was the ledger string. An implementer following that table literally would have had to hand the expectation to `project()` to produce those columns. `THE DESIGN WOULD HAVE MANUFACTURED A COUPLING THE CODE DID NOT HAVE.`**
+
+> ### ★★★★★ SURFACE 1 — **THE PROJECTION.** FIVE RAW FIELDS. **NO PREDICATES LIVE HERE.**
+> **This is the entire input to claim `A`.** `[MEASURED at `c304b098`; row identity is `condition_id`]`
 >
-> | axis | raw path (both lanes, in the projected plan) | normalization |
+> | projected field | raw path (both lanes) | normalization | recorded states |
+> |---|---|---|---|
+> | `bindable` | `bindings[condition_id].bindable` | direct boolean | `MISSING` · `null` · `true`/`false` |
+> | `session_zone` | `bindings[condition_id].session_zone` | ⚠️ **STRUCTURAL** compare, **not `===`** | `MISSING` · `null` · value |
+> | `approximation` | `bindings[condition_id].approximation` | direct boolean | `MISSING` · `null` · `true`/`false` |
+> | `primitive` | `bindings[condition_id].primitive` | identity — **the VALUE, not a nullness flag** | `MISSING` · `null` · string |
+> | `reason` | `bindings[condition_id].reason` | identity — **the CANONICAL STRING, not a predicate result** | `MISSING` · `null` · string |
+>
+> ⚠️★★★★★ **`MISSING`, JSON `null`, AND A VALUE ARE THREE STATES, NEVER TWO.** Claim `A` compares the full three-state projection field-by-field; collapsing `MISSING` into `null` is how an absent projection acquires a legitimate-looking value.
+> ★★★ **`primitive` AND `reason` ARE PROJECTED AS THEMSELVES.** The old table projected `primitive_null` — a derived boolean — which would have discarded the value and let two lanes emitting **different non-null primitives** agree perfectly on `false`. **A DERIVED BOOLEAN IS A LOSSY PROJECTION, AND A LOSSY PROJECTION MAKES AGREEMENT EASIER TO OBTAIN THAN IT SHOULD BE.**
+
+> ### ★★★★★ SURFACE 2 — **THE TS-SOURCE ↔ WIRE MAPPING.** `[NO LONGER A DECLARED UNKNOWN — ENUMERATED AND FROZEN HERE]`
+> `[MEASURED at `c304b098`: TS `BINDING_KEY_MAP` (`scripts/check-spec-binding-plan-parity.ts:259`, `satisfies Record<keyof ConditionBinding, string>`) · Python `ConditionBinding.to_dict()` (`src/engine/spec_family_bindings.py:419`)]`
+>
+| # | TS source field | TS wire name | Python dataclass field | Python wire name | identical? |
+|---|---|---|---|---|---|
+| 1 | `bindable` | `bindable` | `bindable` | `bindable` | ✅ identity |
+| 2 | `sessionZone` | `session_zone` | `session_zone` | `session_zone` | ⚠️ **TS RENAMES** (camel → snake) |
+| 3 | `approximation` | `approximation` | `approximation` | `approximation` | ✅ identity |
+| 4 | `primitive` | `primitive` | `primitive` | `primitive` | ✅ identity |
+| 5 | `reason` | `reason` | `reason` | `reason` | ✅ identity |
+>
+> ★★★★★ **FOUR OF FIVE ARE IDENTITY IN BOTH LANES; EXACTLY ONE IS A REAL RENAME — AND IT IS `session_zone`, THE SAME FIELD THAT REQUIRES STRUCTURAL RATHER THAN `===` COMPARE.** The one field whose NAME is transformed is the one field whose VALUE is compared non-trivially, so it is the highest-risk cell in this table and is named as such.
+> ⚠️ **Python's dataclass field names are already the wire names — `to_dict()` is identity for all five — so ALL rename risk in this system is on the TS side, concentrated in `BINDING_KEY_MAP`.**
+> ✅★★★ **THE `[DECLARED UNKNOWN]` THAT USED TO STAND HERE IS RETIRED, AND THE REASON IT COULD BE RETIRED CONVICTS ITS AUTHOR: the answer was one `git grep BINDING_KEY_MAP` away the entire time.** `A DECLARED UNKNOWN IS ADMISSIBLE ONLY WHILE IT IS ACTUALLY UNKNOWN` — declaring it is honest; **leaving it declared once it is cheap to close is not, and the campaign rewards the declaration precisely so that somebody goes and closes it.**
+> **RED-PROOF RETARGETED AT THIS TABLE, NOT AT AN INVENTED SURROGATE:** change any one mapping's wire name, or delete an entry, and the run must go RED naming the exact key — **the `EXTRA RAW KEY` / `MISSING MAPPED KEY` / `DUPLICATE DESTINATION` / `UNCONSUMED KEY` rejections already exist in `projectExhaustively()` and this is the table they are obliged to defend.** ★★ **The proof now points at a real, enumerated object; before this revision it pointed at a layer the document said it had not named.**
+
+> ### ★★★★★ SURFACE 3 — **THE LEDGER AXES.** SEVEN AXES, **CONSUMED ONLY BY `evaluate()`**, NEVER BY `project()`
+> **The ledger keys its `301` cells by SEVEN axes. That is claim `B`'s key space, and it is NOT the projection surface** — three of the seven evaluate against ONE projected field.
+>
+> | ledger axis | projected field it consumes | `evaluate()` predicate — **claim `B` ONLY** |
 > |---|---|---|
-> | `bindable` | `bindings[condition_id].bindable` | direct boolean compare |
-> | `session_zone` | `bindings[condition_id].session_zone` | STRUCTURAL compare (`JSON.stringify`), not `===` |
-> | `approximation` | `bindings[condition_id].approximation` | direct boolean compare |
-> | `primitive_null` | ⚠️ **DERIVED** from `bindings[condition_id].primitive` | `primitive === null` → boolean |
-> | `reason_null` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | `reason === null` → boolean |
-> | `reason_names` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | substring/zone-naming predicate over the reason string |
-> | `reason_excludes` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | exclusion predicate over the reason string |
+> | `bindable` | `bindable` | equality against `cell.value` |
+> | `session_zone` | `session_zone` | STRUCTURAL equality against `cell.value` |
+> | `approximation` | `approximation` | equality against `cell.value` |
+> | `primitive_null` | `primitive` | **derived**: `projection.primitive === null` vs `cell.value` |
+> | `reason_null` | `reason` | **derived**: `projection.reason === null` vs `cell.value` |
+> | `reason_names` | `reason` | ⚠️ **`cell.value` is a REQUIRED SUBSTRING** of the projected reason — not an equality |
+> | `reason_excludes` | `reason` | ⚠️ **`cell.value` is a FORBIDDEN SUBSTRING** of the projected reason — not an equality |
 >
-> ★★★ **FOUR OF SEVEN AXES ARE DERIVED, AND THREE OF THOSE READ ONE RAW FIELD — `reason`.** A change to how `reason` is emitted moves three axes at once; that coupling is a property of the design and is stated rather than discovered.
-> ⚠️ **`[DECLARED UNKNOWN, not deferred]` The per-lane EMITTER paths — which TypeScript source field becomes each wire name — are fixed by the normalization mapping in the gate, and I have NOT enumerated that mapping here. The axis, its projected path and its normalization are named above; the TS-source-field ↔ wire-name mapping is the one layer still unnamed, and it is named AS unnamed.** `A DECLARED UNKNOWN IS ADMISSIBLE; CALLING IT IMPLEMENTATION IS NOT.`
+> ★★★★★ **THREE LEDGER AXES READ ONE PROJECTED FIELD (`reason`), AND TWO OF THEM ARE SUBSTRING PREDICATES RATHER THAN COMPARISONS.** A change to how `reason` is emitted moves three axes at once; that coupling is a property of the design and is stated rather than discovered.
+> ⚠️★★★ **AND THE ASYMMETRY IS DELIBERATE AND MUST SURVIVE IMPLEMENTATION: `reason_names` and `reason_excludes` are NOT equality checks, so a `LEDGER_DIVERGENCE` on either means *"the reason string failed a containment test"*, never *"the reason string differed from the ledger"*. `A SUBSTRING PREDICATE REPORTED AS AN EQUALITY FAILURE MISDESCRIBES ITS OWN EVIDENCE.`**
 
 ---
 
@@ -122,9 +158,34 @@ Operationally, and this is the whole definition:
 > POSITIVE CONTROL: the ledger names its own fixtures                   12 / 12   (the join works)
 > `phase_1_scope` anywhere in the repo                                   0
 > ```
-> ⚠️★★★★★ **THE VOCABULARY EXISTS AND IT SPEAKS ABOUT A DIFFERENT POPULATION.** Phase 1 exits on a **TIER-A STRATEGY SPEC** with every load-bearing condition bound; this ledger's `43` rows are **TWELVE PARITY FIXTURES** under `ci/fixtures/`. **No artifact in this repo joins the two.**
-> ★★★★★ **SO ANY ADMISSION SCOPE I WROTE TODAY WOULD BE AUTHORED BY THE PARTY THAT WILL BE MEASURED AGAINST IT — the eighth sighting of the denominator family, aimed at the consumer, and the one place I can still refuse it rather than close it one level in.** `DO NOT LET THE IMPLEMENTER AUTHOR THE EXAM IT WILL IMMEDIATELY PASS.`
-> ✅ **WHAT WOULD MAKE IT AVAILABLE, NAMED SO THE REFUSAL IS ACTIONABLE:** an independent, committed artifact that (i) enumerates the tier-A spec set by identity and (ii) marks which of each spec's conditions are load-bearing — authored by whoever owns Phase 1's exit criterion, **not by this gate and not by its implementer.** ⚠️ **Until then the Phase-1 consumer has NO registered profile, and a consumer with no profile FAILS CLOSED rather than defaulting to the full frame.**
+> ⚠️★★★★★ **THE VOCABULARY EXISTS AND IT SPEAKS ABOUT A DIFFERENT POPULATION.** Phase 1 exits on a **TIER-A STRATEGY SPEC** with every load-bearing condition bound; this ledger's `43` rows are **TWELVE PARITY FIXTURES** under `ci/fixtures/`. **The exact filename ↔ stub intersection is EMPTY.**
+> 🛑★★★★★ **AND THE READING OF THAT EMPTY JOIN IS THE WHOLE FINDING, BECAUSE I GOT IT WRONG THE FIRST TIME: `ZERO OVERLAP BETWEEN TWO POPULATIONS IS EVIDENCE THEY ARE DIFFERENT — IT IS NEVER EVIDENCE THAT ONE OF THEM IS MISSING.`** ⚠️ **I read the empty join as *"no artifact enumerates the tier-A specs"* and prescribed building one. That inversion pointed a correct refusal at the wrong object.**
+> ★★★★★ **THE ENUMERATOR ALREADY EXISTS `[MEASURED HERE, from MEMBER RECORDS at `be194136`, not from summary captions]`:**
+> ```
+> docs/replay-results/h1-battery/tier-a-compile-census.json   @ be194136
+>   specs (NAMED container)                  11    · unique identities 11 / 11
+>   condition rows                           99    · CROSS-CHECK n_conditions = 99   (second path)
+>   load_bearing_spine = true                53    · specs carrying >=1:  11 / 11
+>   spine_bind_status_counts   {UNBOUND 28, APPROXIMATED 25}  = 53          (reconciles)
+> ```
+> ⚠️★★★ **AND ITS TWO PROVENANCE DEFECTS ARE CARRIED, NOT LAUNDERED, BECAUSE A CITED ARTIFACT INHERITS ITS AUTHOR'S LIMITS:**
+> 1. ⚠️ **`extraction_source` IS A DEAD SESSION-TEMP SCRATCHPAD** — `…/Temp/claude/…/d96dba1d-…/scratchpad/SEALED-READ/phase_b`. **That path no longer exists and cannot be re-read.** ★★ **The same non-durable-provenance defect `R-524` flagged in the `P0` verifier.**
+> 2. ⚠️ **IT CARRIES A TOP-LEVEL `SUPERSESSION_MARKER` READING *"SUPERSEDED AND REPLACED"*** — **and the marker's SCOPE must be read before it is quoted.** `[MEASURED HERE]` its own `what_is_dead` names **the PREFIX-classifier RANKING** (the dead `31`-sorted `WAIT_STRUCTURE` order), **not the enumeration**; its live recomputed block republishes `spine_bind_status {UNBOUND 28, APPROXIMATED 25}`, which sums to the `53` I counted independently. ★★★★★ **`A SUPERSESSION MARKER IS SCOPED — QUOTE ITS SCOPE OR YOU WILL KILL A GOOD ARTIFACT.` Quoting the status line alone would have retired a sound structural enumerator over a dead sort key.**
+> ✅★★★★★ **SO ITS STANDING IS: A HISTORICAL STRUCTURAL ENUMERATOR. Sound for what it counts, NOT promotable to a Phase-1 denominator — and NOT the thing to re-commission either.**
+
+> ### 🛑★★★★★ WHAT THE MISSING OBJECT ACTUALLY IS (`R-529 §4`) — **NOT AN ENUMERATOR**
+> **A CURRENT, AUTHORITY-RATIFIED TIER-A COMPILE-FIDELITY MEMBERSHIP / CONFORMANCE SURFACE**, keyed at minimum **`tier_a_spec_id × condition_id × fidelity_axis`**, carrying **current spec hashes · load-bearing membership · authority citations · and a consumer profile frozen BEFORE any result is read.**
+> ⚠️★★★★★ **`P0-vNext`'s LEDGER CANNOT SUPPLY IT AND MUST NOT BE STRETCHED TO.** ✅ **THE REFUSAL STANDS AND IS SHARPER: `NO SOUND PHASE-1 PROFILE AVAILABLE`** — and until that surface exists the Phase-1 consumer has **NO registered profile and FAILS CLOSED**, rather than defaulting to the full frame.
+> ★★★★★ **THE LESSON THIS COST, RECORDED AGAINST MYSELF: `A REFUSAL IS ONLY ACTIONABLE IF THE THING IT NAMES AS MISSING IS ACTUALLY THE MISSING THING.` A correct `NO` carrying a wrong `WHAT WOULD FIX IT` commissions the wrong work at full confidence — here, a DUPLICATE ENUMERATOR that would have been just as inadmissible as the one already on disk.**
+
+> ### ★★★★★ PHASE 1 HAS **TWO SURFACES**, AND ONLY THE SECOND ONE EXITS IT (`R-529 §5`)
+> ⚠️ **BLUEPRINT v4's LADDER IS UNCHANGED AND ITS PHASE-1 EXIT CRITERION IS UNTOUCHED** — *"≥1 tier-A spec compiles with ALL load-bearing conditions concretely bound AND the compile-fidelity forensics gate passes calibration."* What is recorded is that two distinct surfaces sit under it:
+> | | surface | population | status |
+> |---|---|---|---|
+> | **A** | **PARITY INSTRUMENT** — this design | `12` fixtures · `43` rows · `301` cells | **in flight** — qualifies the INSTRUMENT |
+> | **B** | **TIER-A COMPILE-FIDELITY GATE** | `11` real specs · `99` conditions · `53` load-bearing | ⚠️ **UNSTARTED · UNOWNED · now NAMED** |
+> 🛑★★★★★ **CLOSING SURFACE `A` DOES NOT ADVANCE PHASE 1'S EXIT. `BLUEPRINT PHASE 1 MAY NOT CITE ANY `P0-vNext` GREEN AS COMPILE FIDELITY`** — stronger than `R-526`'s earlier form, which forbade citing frozen-ledger conformance as fidelity: **here the POPULATION is wrong, not merely the claim's name.** ★★★ **`A PROFILE IS VALID ONLY FOR THE POPULATION WHOSE IDENTITIES IT ACTUALLY CONTAINS`, and `A TEST CORPUS CAN CERTIFY AN INSTRUMENT; IT CANNOT BECOME THE PRODUCTION ADMISSION POPULATION BY ACQUIRING A PROFILE NAME.`**
+> ⚠️ **Surface `B`'s owner is UNASSIGNED as of `R-529`, which records it as an obligation on the DESK. This design does not claim it, does not scope it, and must not be read as covering it.**
 
 > ⚠️★★★ **THE RESIDUAL, STATED AS A LIMIT RATHER THAN CLAIMED AWAY: a registry cannot make scope selection immune to WHOEVER WRITES THE REGISTRY.** What it does is make every scope **VISIBLE, DIFFABLE, and PRE-REGISTERED** — a scope change becomes a reviewed commit rather than a runtime argument, and the pre-registration rule stops it being written after the answer is known. ★★ **That is a real reduction in a real attack and it is NOT airtight, and I would rather the desk judge a stated limit than inherit an implied guarantee.**
 
@@ -192,6 +253,10 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 
 **Every rule above owes a mutation that turns it RED, plus a clean control that stays GREEN.** A mutation suite without the unmutated control cannot tell *catches breakage* from *always red*.
 
+⚠️★★★★★ **THIS MATRIX IS `24` MUTATIONS **PLUS** `1` CLEAN CONTROL — `25` NUMBERED ROWS.** `[COUNTED FROM THE TABLE BELOW BY PARSE, after the rows landed; NOT copied from any prior statement of the figure.]`
+★★★★★ **THE CAPTION IS STATED IN THAT FORM BECAUSE THE PREVIOUS ONE WAS WRONG IN EXACTLY THE WAY THAT FLATTERS A SUITE: `AR-566`'s header said *"`23` MUTATIONS"* when the truth was `22` mutations and `1` control.** ⚠️ **`A CONTROL COUNTED AS AN ATTACK INFLATES A SUITE'S ADVERSARIAL STRENGTH BY EXACTLY THE ROW THAT PROVES IT IS NOT ALWAYS RED.` The control is the row that makes the other twenty-four mean something; it is not one of them.**
+⚠️★★★ **AND THE COUNT IS RE-DERIVED WHENEVER A ROW IS ADDED — never carried across an edit.** `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`, and a row count copied from the version before last is exactly that.
+
 | # | mutation | required result | **THE CATCHER** |
 |---|---|---|---|
 | 1 | delete a row from the ledger | RED — `LEDGER_INCOMPLETE`, named | §1 reconstruction diff |
@@ -216,9 +281,16 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 | 20 | delete a known key at ANY boundary | RED, key named | §7 |
 | 21 | parse an object with **no declared schema** | RED, object + parse site named | §7 binding property |
 | 22 | retarget or delete the pinned tag | RED | §8 |
-| **23** | **clean control — unmutated** | **GREEN**, with the frame, resolved scope and digest printed | all |
+| **23** | ★★★★★ **LEDGER MOVES, LANES FIXED** — change one `ASSERTED` `reason_names` (or `reason_excludes`) `cell.value`, both lane outputs untouched | ★★★★★ **claim `A`'s PROJECTION AND VERDICT BYTE-IDENTICAL to the unmutated run · claim `B` ALONE changes, naming the cell** | §2 `project()` cannot receive the ledger |
+| **24** | ★★★★★ **LANES MOVE TOGETHER, LEDGER FIXED** — emit the SAME WRONG `reason` string in BOTH lanes on an `ASSERTED` `reason_names` cell | ★★★★★ **claim `A` GREEN (the lanes agree) · claim `B` RED — `LEDGER_DIVERGENCE`, reported as a FAILED CONTAINMENT, citation printed** | §3 `evaluate()` substring predicate |
+| **25** | **clean control — unmutated** | **GREEN**, with the frame, resolved scope and digest printed | all |
 
-⚠️★★★★★ **`3` IS THE MUTATION THIS MATRIX EXISTS FOR, AND NOTHING BEFORE THIS REVISION TESTED IT.** **Without it an implementation may make claim `B` A MERE ALIAS OF CLAIM `A` and still satisfy every other row** — the two lanes agreeing *with each other* would be reported as conformance *to the ledger*, and the gate would print a green that means far less than it says. ★★★ **It is the only row that forces claim `B` to have a source of truth INDEPENDENT of claim `A`.**
+⚠️★★★★★ **`3` IS THE MUTATION THIS MATRIX EXISTS FOR, AND NOTHING BEFORE THIS REVISION TESTED IT.** **Without it an implementation may make claim `B` A MERE ALIAS OF CLAIM `A` and still satisfy every other row** — the two lanes agreeing *with each other* would be reported as conformance *to the ledger*, and the gate would print a green that means far less than it says. ★★★ **It forces claim `B` to have a source of truth INDEPENDENT of claim `A`.**
+⚠️★★★ **THAT SENTENCE USED TO READ *"the ONLY row that forces…"* AND IT IS NO LONGER TRUE — rows `23` and `24` now force the same property at the boundary where the operand actually lives. Corrected rather than left standing:** `A SUPERLATIVE IN A PROOF MATRIX EXPIRES THE MOMENT A ROW IS ADDED, AND AN EXPIRED SUPERLATIVE READS AS A GUARANTEE.`
+
+⚠️★★★★★ **`23` AND `24` ARE ONE PROOF IN TWO DIRECTIONS, AND NEITHER HALF IS SUFFICIENT ALONE.** Row `23` moves the **LEDGER** while the lanes stand still and requires claim `A` to be **BYTE-IDENTICAL** — that is what proves claim `A` never READ the expectation. Row `24` moves **BOTH LANES TOGETHER** while the ledger stands still and requires claim `A` GREEN with claim `B` RED — that is what proves claim `B` is not an alias of agreement.
+★★★★★ **RUN ONLY ONE AND AN IMPLEMENTATION CAN STILL PASS WHILE COUPLED: a gate that reads `cell.value` inside `project()` can be built to keep row `24` red, and a gate whose claim `B` merely re-checks agreement can be built to keep row `23` green. `A ONE-DIRECTION INDEPENDENCE PROOF IS A HALF-PROOF, AND THE HALF IT OMITS IS THE HALF AN IMPLEMENTER WILL SATISFY BY ACCIDENT.`**
+⚠️ **Row `23`'s required result is BYTE-IDENTITY, not "still green".** *Still green* is satisfied by a claim `A` that read the expectation and happened to survive the change; **only byte-identity witnesses that the expectation was never an input.** `A VERDICT THAT SURVIVES A MUTATION IS WEAKER EVIDENCE THAN AN OUTPUT THAT DID NOT MOVE AT ALL.`
 ★★★ **`10` IS THE ONE THAT PROVES THE `43` WERE PRESERVED FOR A REASON**, and `21` is the one that survives the next unenumerated boundary.
 ⚠️★★★★★ **EVERY ROW NAMES ITS CATCHER, AND THAT COLUMN IS NOT DECORATION: `A MUTATION CAUGHT BY THE WRONG CHECK IS A COINCIDENCE, NOT A PROOF.` A row that reddens via a different mechanism than the one named is a FAILED proof even though the run was red.**
 ⚠️ **THE OLD FAILURE NAME IS RETIRED: it no longer labels any verdict, and its ONLY remaining occurrence in this document is the retirement note you are reading.** ★★ **Stated that way on purpose — the first draft of this line said it *"appears nowhere in this design"* while being the one place it appeared. `A SENTENCE THAT DISPROVES ITSELF BY EXISTING IS THIS FAMILY'S PUREST FORM`, and it was caught by counting the token instead of trusting the claim.** ★★★★★ **It survived here — and ONLY here — through the rename, which is why the rule now stands: `A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.` After any rename, grep the PROOF section for BOTH the new token and the old one; the old name's last refuge is the place that proves it.**
@@ -230,7 +302,8 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 - ⚠️ **It does not make the `140` asserted values CORRECT against the authority document.** They are frozen **as observed**; a correctly-cited but mis-transcribed value survives every check here. **This is the standing rung-3 limit** — *"is this expectation SOURCED"* and *"is it WELL-FORMED"* are closed; *"does the cited authority actually SAY this"* is not. **Named, not closed.**
 - ⚠️ **It does not close the `43` undeclared cells.** `R-521 §2` settled that: no cell may be promoted without a named source authority, and neither the desk nor this seat may invent one. **The gate's job is to REFUSE to claim completeness over them, and it does.**
 - ⚠️ **CI enforcement is `[UNPROVEN]`** — §8.4. Naming it as future work is what the contract permits; claiming it works would be the thing this campaign convicts.
-- ✅ **PROJECTION MEANING IS NO LONGER DEFERRED — §2 now names, per axis, the RAW PATH and the NORMALIZATION**, because claim `A`'s meaning depends on them entirely and *"a presence matrix over an unspecified extraction still lets two lanes agree about the wrong field."* ⚠️ **What remains genuinely unnamed is ONE layer: the TS-source-field ↔ wire-name mapping. It is DECLARED as unknown in §2, not called implementation.** ★★★ **The earlier version of this bullet called the whole thing "implementation" — that was the gap sitting in the one interface most able to manufacture a false green.**
+- ✅★★★★★ **PROJECTION MEANING IS SETTLED, AND SO IS THE LAYER THAT USED TO BE DECLARED UNKNOWN.** §2 now publishes THREE surfaces: the five-field **projection** (claim `A`'s entire input), the **TS-source ↔ wire mapping** enumerated from `BINDING_KEY_MAP` and `ConditionBinding.to_dict()` at `c304b098`, and the seven **ledger axes** consumed only by `evaluate()`. ⚠️ **The `[DECLARED UNKNOWN]` label is REMOVED from this document because the thing it labelled is now enumerated — not because it was reclassified.** ★★★ **It was one `git grep` away the whole time, which is the honest and unflattering reason it could be closed in a single edit.** `A DECLARED UNKNOWN IS ADMISSIBLE ONLY WHILE IT IS ACTUALLY UNKNOWN.`
+- ⚠️★★★ **WHAT IS STILL NOT SETTLED HERE, STATED SO THE CLOSURE IS NOT OVERREAD: the mapping is enumerated AT `c304b098`. It is a MEASUREMENT OF ONE PINNED COMMIT, not a guarantee about the next one** — which is exactly why the red-proof is retargeted at that table rather than at prose, so a future rename goes RED instead of going unnoticed.
 - ★★ **I do not grade my own work.** Whether this design is sound is an independent call.
 
 ---

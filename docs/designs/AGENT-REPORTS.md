@@ -4,6 +4,97 @@
 
 ---
 
+## AR-569 · 2026-08-01 · ✅★★★★★ **R-529 §6 DELIVERED — ALL FIVE ITEMS, `36/36` ACCEPTANCE CHECKS PASS. `project()` NOW CANNOT REACH THE LEDGER, AND THE INDEPENDENCE PROOF RUNS IN BOTH DIRECTIONS BECAUSE ONE DIRECTION IS A HALF-PROOF.** ⚠️★★★★★ **AND THE FIFTH INSTRUMENT FAULT OF THE SAME SPECIES BIT ME AGAIN THIS TASK — MY OWN CENSUS SCRIPT MEASURED THE NEIGHBOURING CONTAINER. IT WAS CAUGHT ONLY BECAUSE THE SCRIPT PRINTED EVERY CANDIDATE INSTEAD OF SILENTLY USING ONE.**
+
+**RULING ID:** R-529 §6 · **TASK ID:** AR-569 · **PRIOR:** AR-568 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` + `docs/designs/BLUEPRINT-V4-DRAFT.md`** · **no implementation code.**
+**FAN-IN: `5 / 5`. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — ITEM 1: THE SPLIT, AND THE DEFECT WAS IN MY DESIGN, NOT IN THE GATE
+**`project(lane) → projection` reads ONLY the lane plus a frozen ledger-independent normalization contract. `evaluate(cell, projection)` is the ONLY function that may see an expectation.** ★★★★★ **The prohibition is stated in its ENFORCEABLE form rather than as an instruction: `project()` does not receive the ledger as an argument — `AN INPUT IT CANNOT REACH IS A COUPLING IT CANNOT FORM.`**
+✅ **THE STOP CONDITION DID NOT FIRE, AND I TESTED IT BEFORE ACCEPTING THE ITEM `[MEASURED, `c304b098`]`:** `projectExhaustively(raw, map, path, out)` carries **no expectation parameter**, and the oracle predicates read the projected `got.reason` against the separate `want.*` in a separate function. **The shipped gate already projects expectation-free.**
+⚠️★★★★★ **SO I NAME WHERE THE DEFECT ACTUALLY LIVED, BECAUSE REPAIRING THE WRONG OBJECT IS THE FAILURE MODE HERE: my §2 axis table listed `reason_names` and `reason_excludes` as *axes* whose *"normalization"* was a *"substring/zone-naming predicate"* and an *"exclusion predicate"*.** ★★★★★ **`A PREDICATE IS NOT A NORMALIZATION: A NORMALIZATION MAPS ONE VALUE, A PREDICATE NEEDS TWO` — and the second operand was the ledger string. An implementer following that table literally would have had to hand `want.*` to `project()`. `THE DESIGN WOULD HAVE MANUFACTURED A COUPLING THE CODE DID NOT HAVE.`**
+✅★★★ **A SECOND DEFECT I FOUND WHILE SPLITTING, NOT ORDERED BY THE RULING: the old table projected `primitive_null` — a DERIVED BOOLEAN. That discards the value, so two lanes emitting DIFFERENT non-null primitives would have agreed perfectly on `false`.** **`A LOSSY PROJECTION MAKES AGREEMENT EASIER TO OBTAIN THAN IT SHOULD BE.`** `primitive` and `reason` are now projected as THEMSELVES, three-state (`MISSING` · `null` · value), and nullness is derived inside `evaluate()` where it belongs.
+
+### ✅★★★★★ §2 — ITEM 2: BOTH DIRECTIONS, BECAUSE EITHER ONE ALONE IS SATISFIABLE BY A COUPLED GATE
+**Row `23` — LEDGER MOVES, LANES FIXED:** change one `ASSERTED` `reason_names`/`reason_excludes` `cell.value` → **claim `A`'s projection and verdict BYTE-IDENTICAL; claim `B` alone changes and names the cell.** *Catcher: `project()` cannot receive the ledger.*
+**Row `24` — LANES MOVE TOGETHER, LEDGER FIXED:** same wrong `reason` in both lanes on an `ASSERTED` `reason_names` cell → **claim `A` GREEN, claim `B` RED as a FAILED CONTAINMENT with citation.** *Catcher: `evaluate()` substring predicate.*
+★★★★★ **WHY BOTH: a gate that reads `cell.value` inside `project()` CAN BE BUILT TO KEEP ROW `24` RED, and a gate whose claim `B` merely re-checks agreement CAN BE BUILT TO KEEP ROW `23` GREEN. `A ONE-DIRECTION INDEPENDENCE PROOF IS A HALF-PROOF, AND THE HALF IT OMITS IS THE HALF AN IMPLEMENTER WILL SATISFY BY ACCIDENT.`**
+⚠️★★★ **AND ROW `23`'s REQUIRED RESULT IS BYTE-IDENTITY, NOT "STILL GREEN" — deliberately.** *Still green* is satisfied by a claim `A` that read the expectation and happened to survive; **only byte-identity witnesses that the expectation was never an input.** `A VERDICT THAT SURVIVES A MUTATION IS WEAKER EVIDENCE THAN AN OUTPUT THAT DID NOT MOVE AT ALL.`
+✅ **CAUGHT BY THE POST-CORRECTION SWEEP (the `AR-563` habit, applied per correction): §10 still called row `3` *"the ONLY row that forces claim `B` to have an independent source of truth."* No longer true once `23`/`24` exist — CORRECTED, not left standing.** `A SUPERLATIVE IN A PROOF MATRIX EXPIRES THE MOMENT A ROW IS ADDED, AND AN EXPIRED SUPERLATIVE READS AS A GUARANTEE.`
+
+### ✅★★★ §3 — ITEM 3: THE DECLARED UNKNOWN IS CLOSED, AND CLOSING IT CONVICTS ITS AUTHOR
+`[MEASURED at `c304b098`: TS `BINDING_KEY_MAP` `:259` · Python `ConditionBinding.to_dict()` `:419`]`
+```
+#  TS source     TS wire        Python field    Python wire     identical?
+1  bindable      bindable       bindable        bindable        yes
+2  sessionZone   session_zone   session_zone    session_zone    NO  - TS renames
+3  approximation approximation  approximation   approximation   yes
+4  primitive     primitive      primitive       primitive       yes
+5  reason        reason         reason          reason          yes
+```
+★★★★★ **FOUR OF FIVE ARE IDENTITY; EXACTLY ONE IS A REAL RENAME — AND IT IS `session_zone`, THE SAME FIELD THAT REQUIRES STRUCTURAL RATHER THAN `===` COMPARE. The one field whose NAME is transformed is the one whose VALUE is compared non-trivially, so it is the highest-risk cell in the table and is labelled as such.**
+✅ **Python's `to_dict()` is identity for all five, so ALL rename risk in this system sits on the TS side, concentrated in one map.**
+⚠️★★★ **THE RED-PROOF IS RETARGETED AT THAT TABLE — not at an invented surrogate.** `projectExhaustively()`'s existing `EXTRA RAW KEY` / `MISSING MAPPED KEY` / `DUPLICATE DESTINATION` / `UNCONSUMED KEY` rejections are the checks obliged to defend it.
+🛑★★★★★ **AND I ACCEPT THE CONVICTION WITHOUT QUALIFICATION: the answer was one `git grep BINDING_KEY_MAP` away the entire time.** `A DECLARED UNKNOWN IS ADMISSIBLE ONLY WHILE IT IS ACTUALLY UNKNOWN.` **I declared honestly and then did not go and close it, and the campaign rewards the declaration precisely so that somebody does.**
+⚠️ **SCOPE STATED SO THE CLOSURE IS NOT OVERREAD: the mapping is enumerated AT ONE PINNED COMMIT. It is a measurement, not a guarantee about the next commit — which is why the proof points at the table rather than at prose.**
+
+### ✅★★★★★ §4 — ITEM 4: THE CENSUS RE-DERIVED HERE, NOT RELAYED — AND MY SCRIPT MEASURED THE WRONG CONTAINER FIRST
+`[MEASURED HERE from MEMBER RECORDS at `be194136`, container `specs` NAMED explicitly]`
+```
+spec records                11     unique identities 11 / 11
+condition rows              99     CROSS-CHECK doc.n_conditions = 99      (second, independent path)
+load_bearing_spine = true   53     specs carrying >=1:  11 / 11
+spine_bind_status_counts    {UNBOUND 28, APPROXIMATED 25} = 53            (reconciles)
+POSITIVE CONTROL            key that must exist: True · key that must not: False
+```
+🛑★★★★★ **AND THE FAULT, WHICH IS THE PART WORTH READING: v1 OF THAT SCRIPT AUTO-SELECTED THE FIRST LIST-OF-RECORDS IT FOUND AND LANDED ON `unlock_ranking_load_bearing` — `6` ROWS — INSTEAD OF `specs` — `11`. It then printed `unique spec identities: 1`, `condition rows: 0`.** ⚠️★★★★★ **THAT IS THIS CAMPAIGN'S `I MEASURED THE NEIGHBOURING OBJECT` DEFECT, IN MY OWN HAND, ON THE VERY RUN WHOSE PURPOSE WAS TO AVOID RELAYING SOMEONE ELSE'S NUMBERS.** ✅ **It was caught for ONE reason: the script PRINTED EVERY CANDIDATE CONTAINER instead of silently using the one it picked.** ★★★★★ **`AN AUTO-SELECTED CONTAINER IS AN UNSTATED JOIN KEY, AND AN UNSTATED JOIN KEY IS THE CLAIM.` v2 names the key.**
+✅ **BOTH PROVENANCE DEFECTS ARE CARRIED INTO THE DESIGN, NOT LAUNDERED:** `extraction_source` is a **DEAD session-temp scratchpad** (`…/d96dba1d-…/scratchpad/SEALED-READ/phase_b`, unreadable now) · and the top-level **`SUPERSESSION_MARKER`** reads *"SUPERSEDED AND REPLACED"*. ⚠️★★★★★ **ITS SCOPE IS DECISIVE AND I READ IT BEFORE QUOTING IT: its own `what_is_dead` names the PREFIX-classifier RANKING — the dead `31`-sorted `WAIT_STRUCTURE` order — NOT the enumeration, and its live recomputed block republishes the `{UNBOUND 28, APPROXIMATED 25}` that sums to the `53` I counted independently.** `A SUPERSESSION MARKER IS SCOPED — QUOTE ITS SCOPE OR YOU WILL KILL A GOOD ARTIFACT.` **Quoting the status line alone would have retired a sound structural enumerator over a dead sort key.**
+✅ **THE REFUSAL STANDS AND ITS REMEDY IS REPLACED.** `NO SOUND PHASE-1 PROFILE AVAILABLE` — but the missing object is **NOT** an enumerator, which is what `AR-566` wrongly prescribed. It is **a CURRENT, AUTHORITY-RATIFIED tier-A compile-fidelity membership/conformance surface keyed `tier_a_spec_id × condition_id × fidelity_axis`.** 🛑★★★★★ **I ACCEPT `R-529 §3`'s INVERSION AGAINST MYSELF: `ZERO OVERLAP BETWEEN TWO POPULATIONS IS EVIDENCE THEY ARE DIFFERENT — NEVER EVIDENCE THAT ONE OF THEM IS MISSING.` I read the empty join as absence and would have commissioned a duplicate enumerator, just as inadmissible as the one already on disk.** `A REFUSAL IS ONLY ACTIONABLE IF THE THING IT NAMES AS MISSING IS ACTUALLY THE MISSING THING.`
+✅ **TWO-SURFACE SPLIT recorded in the design AND as a narrow BLUEPRINT-v4 addendum `15.6a`, citing `R-529 §5`.** ⚠️★★★ **PROVEN NARROW BY CONSTRUCTION, not by assertion: `git diff --numstat` on the blueprint is `43` insertions and `0` DELETIONS — the ladder, the exit criterion and every `v3-N` payload are untouched because nothing was removed.** **Surface `B` is recorded as UNSTARTED, UNOWNED, and an obligation on the DESK — this design does not claim it.**
+
+### ✅ §5 — ITEM 5: THE CAPTION IS COUNTED, NOT COPIED
+```
+section 10 rows, BY PARSE   25   contiguous 1..25
+  mutations                 24
+  clean controls             1
+caption now reads           "24 MUTATIONS PLUS 1 CLEAN CONTROL - 25 NUMBERED ROWS"
+```
+⚠️ **I did NOT carry the desk's `22` forward either — the desk's figure was correct for the document BEFORE items 1–2 added two rows, and copying it would have been the same error one revision later.** `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM.`
+★★★ **The counter itself was written against the known trap: `R-529 §2` recorded a row regex that CANNOT MATCH the author-bolded `| **3** |` and `| **23** |`. Mine strips emphasis before testing and prints both bolded rows verbatim as a POSITIVE CONTROL that it can see them at all.**
+
+### ⚠️★★★★★ §6 — THREE MORE INSTRUMENT FAULTS IN MY OWN TOOLING THIS TASK, ALL ONE SPECIES
+**(a) THE NEIGHBOURING CONTAINER** — §4 above. **(b) `cp1252` STDOUT** — the row counter's verbatim echo died `UnicodeEncodeError` mid-print; the COUNT had already completed and was valid, and forcing `PYTHONIOENCODING=utf-8` recovered the control. **(c) A REGEX THAT COULD NOT MATCH BLOCKQUOTED TABLE ROWS** — my acceptance check for the five-field projection surface anchored on `^\|` while the rows are `> | …`, and returned `[]`. ⚠️ **An empty list from a table that HAS five rows is indistinguishable from a genuinely empty table.**
+✅★★★ **(c) IS THE ONE I AM LEAST UNHAPPY ABOUT, AND THE REASON MATTERS: IT FAILED LOUDLY. A check written to PASS on absence would have printed a green.** `A CHECK THAT CANNOT DISTINGUISH "NOT FOUND" FROM "CANNOT LOOK" MUST BE BUILT TO FAIL, NOT TO PASS.`
+🛑★★★★★ **THAT IS FIVE FAULTS OF ONE SPECIES ACROSS TWO SEATS IN TWO DAYS — escaping, encoding, truncation, tool-scope, markup, and now container selection. `A PROBE THAT CANNOT MATCH AND A PROBE THAT FINDS NOTHING PRINT THE SAME ZERO.` ✅ **THE STRUCTURAL ANSWER I SHIPPED RATHER THAN THE RESOLUTION I PROMISED: every script in this delivery carries a POSITIVE CONTROL, the block-replacer ABORTS unless each anchor occurs exactly once and PRINTS the region it removed, and the acceptance suite opens with three controls proving it can see the document at all.** `A LAW I MINT AGAIN IS WORTH LESS THAN A CHECK THAT ENFORCES IT.`
+
+### §7 — ACCEPTANCE, AS THE RULING DEFINED IT
+```
+(a) claim A reads no ledger/oracle expectation ....... PASS  (prohibition x1; project() takes no ledger;
+                                                              projection surface = exactly the 5 raw fields)
+(b) both F-1 mutations + named catchers + control .... PASS  (rows 23, 24, 25)
+(c) five mappings enumerated, unknown-label count 0 .. PASS  (ACTIVE label 0; 6 surviving mentions are all
+                                                              retirement notes, enumerated in the output)
+(d) census historical-structural, missing object ..... PASS  (be194136, d96dba1d, scoped marker, R-529 §5)
+(e) caption arithmetic == counted rows ............... PASS  (24 + 1 = 25)
+                                                       36 / 36 CHECKS
+```
+⚠️ **`(c)`'s six surviving mentions are named rather than hidden — the phrase survives ONLY in the retirement notes that explain its removal. `A RETIREMENT NOTE CONTAINS THE WORD IT RETIRES`, and `AR-566 §4(b)` already convicted me of writing "appears nowhere" while being the one place it appeared.**
+
+### §8 — WHAT I DID NOT DO
+- **No implementation of `P0-vNext` · no ledger · no `ORACLE.json` · no write to the Tier-A census (READ ONLY, to cite it) · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · no `P3` · no Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · `ADVISOR-STATE.md` untouched (the advisor's file, modified in-tree throughout).**
+- ⚠️ **The `140` are still not re-derived against the authority.** `AUTHORITY_SEMANTICS_UNVERIFIED` remains on every green.
+- ⚠️ **Surface `B` is NAMED, not built, not scoped, and not mine.**
+- ⚠️ **`c304b098` was read; it was not re-run. Every mapping claim is a measurement of that pinned blob, not of a live execution.**
+- ★★ **I do not grade my own work.**
+
+### §9 — POSITION
+**Design REVISED on all five items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED, with the CORRECTED missing object named** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★★★★ **AN INDEPENDENT GRADE IS OWED ON THIS DELIVERY AND THE GRADER IS LOCAL: `accuracy-validator`, one authorization away. It is not blocked and I am not reporting it as blocked — I am asking for the word.** **What it should receive: this AR verbatim, the pinned design blob, the acceptance script, and an explicit request to hunt a NOVEL false green — in particular whether `36/36` is measuring the document or measuring my own probes.**
+★★ **FAN-IN `5 / 5`. NOT A HANDOFF.**
+
+---
+
 ## AR-568 · 2026-08-01 · **START-RECEIPT — R-529 §6 ACCEPTED. FIVE ITEMS, ONE RECEIPT, DESIGN ONLY.** ⚠️★★★ **AND THE STOP CONDITION IS ALREADY MEASURED AND DOES NOT FIRE: `projectExhaustively()` TAKES `(raw, map)` AND NO EXPECTATION, SO CLAIM `A` CAN PROJECT WITHOUT `cell.value`. THE COUPLING IS IN MY DESIGN'S AXIS TABLE, NOT IN THE SHIPPED GATE.**
 
 **RULING ID:** R-529 §6 · **TASK ID:** AR-568 · **PRIOR:** AR-567 · **SEAT:** `claude.exe 26204`.

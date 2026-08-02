@@ -849,6 +849,49 @@ Gate B removes the largest known extraction blocker; it does not guarantee step
 9. If the targeted spec retains a non-Gate-B blocker, the next fix is selected
 from that spec's measured residual, not from a library-wide housekeeping list.
 
+### 15.6a — ADDENDUM: PHASE 1 HAS TWO SURFACES, AND ONLY THE SECOND ONE EXITS IT
+
+**ADOPTED `R-529 §5` (2026-08-01). NARROW AND ADDITIVE — the v4 ladder, the
+Phase-1 EXIT CRITERION and every `v3-N` upgrade payload are UNCHANGED by this
+addendum, which records a decomposition, not a new gate.**
+
+Phase 1's exit criterion stands exactly as written: *"≥1 tier-A spec compiles
+with ALL load-bearing conditions concretely bound AND the compile-fidelity
+forensics gate passes calibration."* What `R-529` records is that **two distinct
+surfaces sit beneath it, over two populations that do not intersect:**
+
+| | surface | population | what closing it buys |
+|---|---|---|---|
+| **A** | **PARITY INSTRUMENT** — `P0-vNext`, steps 1–2 above | `12` synthetic parity fixtures · `43` rows · `301` cells | **qualifies the INSTRUMENT.** Does **NOT** advance Phase-1 exit. |
+| **B** | **TIER-A COMPILE-FIDELITY GATE** | `11` real strategy specs · `99` conditions · `53` load-bearing `[MEASURED, `be194136`]` | **THIS is the surface Phase 1 exits on.** |
+
+**BINDING, and stronger than the rule it replaces:** `BLUEPRINT PHASE 1 MAY NOT
+CITE ANY P0-vNext GREEN AS COMPILE FIDELITY.` `R-526` already forbade citing
+frozen-ledger conformance as fidelity — that was about a claim's NAME. This is
+about its POPULATION, and a population error cannot be repaired by renaming the
+claim. **A profile is valid only for the population whose identities it actually
+contains.**
+
+> **`A TEST CORPUS CAN CERTIFY AN INSTRUMENT; IT CANNOT BECOME THE PRODUCTION
+> ADMISSION POPULATION BY ACQUIRING A PROFILE NAME.`**
+> **`ZERO OVERLAP BETWEEN TWO POPULATIONS IS EVIDENCE THEY ARE DIFFERENT — NEVER
+> EVIDENCE THAT ONE OF THEM IS MISSING.`**
+
+**SURFACE B IS UNSTARTED AND ITS OWNER IS UNASSIGNED** as of `R-529`, which
+records it as an obligation on the desk rather than on the worker. The object it
+needs is a **current, authority-ratified tier-A compile-fidelity
+membership/conformance surface** keyed at minimum `tier_a_spec_id × condition_id
+× fidelity_axis`, carrying current spec hashes, load-bearing membership,
+authority citations, and a consumer profile frozen before any result is read.
+**The existing tier-A compile census (`be194136`) is a HISTORICAL STRUCTURAL
+ENUMERATOR — sound for what it counts, carrying a dead session-temp
+`extraction_source` and a RANKING-scoped `SUPERSESSION_MARKER` — and it is
+neither promotable to that surface nor the thing to re-commission.**
+
+⚠️ **This addendum changes no step in `15.6`.** It states which of those steps
+qualify the instrument (1–2) and which bear on the exit (7–10), so that a green
+from the former is never read as progress on the latter.
+
 ### 15.7 — BREAKTHROUGH-MODE OPERATING RULES
 
 - At most **one money-path implementation and one independent grade** are in
