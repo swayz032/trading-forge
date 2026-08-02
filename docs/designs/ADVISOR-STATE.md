@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3352` at THIS commit, 2026-08-01 21:42 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3355` at THIS commit, 2026-08-01 21:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3352` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3355` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -117,7 +117,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`AR-554` DELIVERED: THE `digests` NAMESPACE IS **CLOSED BY KEY SET, BOTH DIRECTIONS** — and I verified it **BY EXECUTION**, not by reading the code meant to stop the attack. `R-526` OWED, HELD for the next external read.**
+## ⚠★★★★★ SEAT — **`P0-vNext` DESIGN DELIVERED (`AR-556`) AND AMENDED (`AR-557`). MY PRE-REGISTERED REVIEW IS EXECUTED: **`8 / 9` PASS, ONE CORRECTION DISPATCHED (`ORACLE.json` absent from §7's boundary table).** `R-526` OWED, HELD for the external read — TWO deliveries now unruled (`AR-554` closeout, `AR-556`/`557` design).
+★★★★★ **PRE-REGISTRATION WORKED AND ITS PROVENANCE IS CLEAN `[MEASURED, commit times]`: my criteria landed `21:39:11`, the design `21:39:55` — `44s`, too tight to have been written to the test. The worker then SELF-CAUGHT that its §7 omitted the SOURCE SPECS (*“I WROTE `an unenumerated boundary is the defect` OVER A LIST THAT WAS MISSING A BOUNDARY”*) and closed it BEFORE I read the file.** ⚠ **SO THE §7 I REVIEWED WAS ALREADY CORRECTED — thirty seconds earlier and I would have claimed a row the worker put there. `AN ARTIFACT MOVES WHILE YOU REVIEW IT; NAME THE BYTES YOU ACTUALLY READ.`**
+⚠★★★ **MY OPEN FINDING: §7 still omits `ORACLE.json`, which §1 says the gate COMPARES against — sixth appearance of the open-list family, predicted one line above the table it appears in. **REVISE not DISQUALIFY**, and the reason is on the record: the RULE is universal and correct, the oracle is authoritative for NOTHING, so a forgery there is a NAMED MISMATCH, not a silent pass. ⚠ **If the oracle ever becomes authoritative for anything, this reverts to disqualifying.**
+★★★★★ **THE DESIGN'S BEST POINT, WHICH EXCEEDS WHAT I ORDERED: it DEFINES `depended-on` (*“the verdict would change if that cell's value were known”*), forbids `NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY`, and publishes the consequence — **on today's authority a full-frame completeness claim CANNOT go green, because `152` cells are `UNADJUDICATED`.** `A DESIGN THAT PUBLISHES THE VERDICT IT CANNOT REACH IS TELLING THE TRUTH ABOUT ITS OWN LIMITS.`**
 ✅★★★★★ **THE TEST I FAILED TO RUN LAST ROUND, RUN THIS TIME `[MEASURED HERE — extracted the shipped verifier from the packet and executed it]`:** **CONTROL: unmutated ledger → `PASS`** (a guard already red proves nothing) · **the exact attack that passed last round, planted verbatim → `FAIL`, naming `human_facing_certification`** · ★★★★★ **A KEY I INVENTED THAT NO FIXTURE DESCRIBES (`desk_signoff_2026`) → `FAIL`, naming it — THIS IS THE SURFACE TEST, and it is precisely what I omitted before** · **DELETION, the other direction → `FAIL`, naming the missing key.**
 ✅ **THE IMPLEMENTATION IS A PROPERTY, NOT A LONGER LIST `[read at the line, `:703-712`]`: `unexpected = set(got_d) - set(exp_d)` · `absent = set(exp_d) - set(got_d)` · then value comparison over the INTERSECTION. Both directions, both naming the offending key.** ✅ **LEDGER BLOB STILL `1551c7e56480caff7d70a580e1f7a2c7ef644203` — not one byte moved.** ✅ **`34/34` mutants RED, `3/3` NOOPs GREEN per the delivery.**
 ★★★★★ **THE LESSON THIS ARC KEPT TEACHING, APPLIED CORRECTLY AT LAST: `READING THE CODE THAT IS MEANT TO STOP AN ATTACK IS NOT WATCHING IT STOP.` I confirmed the same shape structurally last round and it was open; the difference this time is a control plus an operator NOBODY had registered.**
