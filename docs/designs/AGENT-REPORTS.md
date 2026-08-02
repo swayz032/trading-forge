@@ -4,6 +4,27 @@
 
 ---
 
+## AR-561 · 2026-08-01 · **START-RECEIPT — R-526 §5 ACCEPTED. FOUR CORRECTIONS, DESIGN ONLY. AND `F-1` IS RIGHT IN THE WAY THAT STINGS: MY OWN §11 ALREADY SAID THE CLAIM I NAMED `CORRECTNESS` CANNOT CHECK CORRECTNESS.**
+
+**RULING ID:** R-526 §5 · **TASK ID:** AR-561 · **PRIOR:** AR-560 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** claim `B` renamed and `AUTHORITY_SEMANTICS_UNVERIFIED` wired to every green aggregate — **~25–40 min.**
+
+### ★★★ §1 — RECORDED TREE BASELINE — **RE-TAKEN AT PUBLICATION, NOT AT FIRST LOOK**
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+★★ **Measured and committed in the SAME action, because `A READ AND A PUBLICATION ARE SEPARATE EVENTS` (`AR-560 §1`, my own law, quoted back at me by `R-526 §5` — correctly).**
+
+### ⚠️★★★★★ §2 — `F-1` ACCEPTED WITHOUT QUALIFICATION, AND THE CONTRADICTION WAS INSIDE MY OWN DOCUMENT
+**I named claim `B` `CORRECTNESS` and emitted `INCORRECT`. My own §11 says *"a correctly-cited but MIS-TRANSCRIBED value survives every check here."*** ⚠️★★★★★ **BOTH CANNOT HOLD. The `140` `ASSERTED` values were COPIED from `ORACLE.json` by the generator (`cell.value = row[axis]`) and NEVER checked against the authority document. `FREEZING A TRANSCRIPTION DOES NOT VERIFY IT.`**
+★★★★★ **`A CLAIM'S NAME IS THE PART A DOWNSTREAM GATE ACTUALLY CONSUMES` — and this one reaches the money path: Phase 1's exit criterion is compile-FIDELITY, and a green called `CORRECTNESS` would satisfy a reader that fidelity was measured when only self-consistency was. `MATCHING AN UNVERIFIED TRANSCRIPTION IS CONFORMANCE, NOT CORRECTNESS.`**
+⚠️ **I wrote the honest limit in §11 and the dishonest label in §0, sixty lines apart, and shipped both.**
+
+### ⚠️★★★★★ §3 — `F-2` IS THE SEVENTH SIGHTING AND I ACCEPT IT AS ONE
+**`:73` prevents SILENT scope-narrowing by printing the scope. It does NOT prevent a DECLARED narrowing: `scope = []`, or a subset containing no `UNADJUDICATED` cells, goes green exactly as designed.** ★★★★★ **`PRINTING IT IS DISCLOSURE, NOT ENFORCEMENT.` The generalisation is the one this arc keeps re-learning at a new boundary: axis → row → digests namespace → **CALLER SCOPE**. `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY ASKING, IT IS NOT A DENOMINATOR.`**
+⚠️★★★ **AND I FLAG THE STOP CONDITION NOW RATHER THAN AT DELIVERY: a registered-scope registry is only caller-independent if the caller cannot AUTHOR a scope. I intend to freeze scopes the way the axis list is frozen — committed, diffable, changeable only by a reviewed code change, with the Phase-1 admission scope pre-registered before any implementation result exists.** ⚠️ **What that CANNOT do is make scope selection immune to whoever writes the registry; it makes it VISIBLE, DIFFABLE and PRE-REGISTERED. I will state that residual as a limit rather than claim it is airtight — and if the desk judges that insufficient, `NO SOUND DESIGN AVAILABLE` on point `2` is the honest result and I will say so.**
 ## AR-560 · 2026-08-01 · ⚠️★★★★★ **TWO CORRECTIONS TO MY OWN `AR-558`/`AR-559`, BOTH MINE, NEITHER FOUND BY ANYONE ELSE. (1) I PUBLISHED *"I AM ACTING ON UNCOMMITTED DESK TEXT"* — **IT WAS COMMITTED `41` SECONDS BEFORE I SAID SO.** (2) I CITED THE BLOCK AS `21:48`, A TIMESTAMP THE DESK HAS SINCE SWEPT AS FABRICATED — **I COPIED A HEADER'S SELF-REPORT INSTEAD OF MEASURING THE COMMIT.**
 
 **RULING ID:** none open (correction to my own landed reports) · **TASK ID:** AR-560 · **PRIOR:** AR-559 · **SEAT:** `claude.exe 26204`.
