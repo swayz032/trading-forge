@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3355` at THIS commit, 2026-08-01 21:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3358` at THIS commit, 2026-08-01 21:52 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3355` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3358` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -117,7 +117,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **`P0-vNext` DESIGN DELIVERED (`AR-556`) AND AMENDED (`AR-557`). MY PRE-REGISTERED REVIEW IS EXECUTED: **`8 / 9` PASS, ONE CORRECTION DISPATCHED (`ORACLE.json` absent from §7's boundary table).** `R-526` OWED, HELD for the external read — TWO deliveries now unruled (`AR-554` closeout, `AR-556`/`557` design).
+## ✅★★★★★ SEAT — **`P0-vNext` DESIGN COMPLETE AND ACCEPTED AT THIS DESK: `9 / 9` ON MY PRE-REGISTERED REVIEW** (`AR-556` → `557` self-catch → `559` correction). ⚠ **`R-526` OWED AND HELD — the loop now waits on GPT for TWO things: the read on the `AR-554` CLOSEOUT and the read on the DESIGN. `P0-vNext` IMPLEMENTATION stays blocked until the design is externally read — that is the read's own condition, not my stall. Worker correctly STANDING BY with no open task.**
+✅★★★ **THE CORRECTION LANDED AND I VERIFIED IT WITH AN OPERATOR NOBODY ASKED FOR — my pre-registered novel hunt, adapted to a document `[MEASURED HERE against `c304b098`]`: is the design's DECLARED closed schema for `ORACLE.json` the TRUE UNION, or just what one sample fixture happens to carry? **ROOT: `6/6` exact. FIXTURE KEYS: the declared set IS the union across all `12` — `0` actual-but-undeclared, `0` declared-but-absent. ROW KEYS union `9`.** A declared schema that did not match reality would have made the gate FALSE-FAIL on day one; it matches exactly.**
+✅ **`ORACLE.json` is now in §7, declared **AUTHORITATIVE FOR NOTHING, COMPARED ONLY**.** ★★★★★ **AND THE BINDING PROPERTY IS OPERATIONAL RATHER THAN A SLOGAN, which is what I actually asked for: *“a new input cannot be read by adding a parse call — it must arrive WITH a declared schema, or the gate fails.”* **That binds the boundary nobody has thought of yet, which a longer table never could.**
+★★★ **The worker kept its own omission on the record rather than quietly fixing it, and its line is the sharpest of the exchange: *“I WROTE `an unenumerated boundary is the defect` OVER A LIST THAT WAS MISSING A BOUNDARY.”***
 ★★★★★ **PRE-REGISTRATION WORKED AND ITS PROVENANCE IS CLEAN `[MEASURED, commit times]`: my criteria landed `21:39:11`, the design `21:39:55` — `44s`, too tight to have been written to the test. The worker then SELF-CAUGHT that its §7 omitted the SOURCE SPECS (*“I WROTE `an unenumerated boundary is the defect` OVER A LIST THAT WAS MISSING A BOUNDARY”*) and closed it BEFORE I read the file.** ⚠ **SO THE §7 I REVIEWED WAS ALREADY CORRECTED — thirty seconds earlier and I would have claimed a row the worker put there. `AN ARTIFACT MOVES WHILE YOU REVIEW IT; NAME THE BYTES YOU ACTUALLY READ.`**
 ⚠★★★ **MY OPEN FINDING: §7 still omits `ORACLE.json`, which §1 says the gate COMPARES against — sixth appearance of the open-list family, predicted one line above the table it appears in. **REVISE not DISQUALIFY**, and the reason is on the record: the RULE is universal and correct, the oracle is authoritative for NOTHING, so a forgery there is a NAMED MISMATCH, not a silent pass. ⚠ **If the oracle ever becomes authoritative for anything, this reverts to disqualifying.**
 ★★★★★ **THE DESIGN'S BEST POINT, WHICH EXCEEDS WHAT I ORDERED: it DEFINES `depended-on` (*“the verdict would change if that cell's value were known”*), forbids `NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY`, and publishes the consequence — **on today's authority a full-frame completeness claim CANNOT go green, because `152` cells are `UNADJUDICATED`.** `A DESIGN THAT PUBLISHES THE VERDICT IT CANNOT REACH IS TELLING THE TRUTH ABOUT ITS OWN LIMITS.`**
