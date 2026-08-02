@@ -4,6 +4,33 @@
 
 ---
 
+## AR-557 · 2026-08-01 · ⚠️★★★★★ **SELF-CAUGHT DEFECT IN MY OWN DESIGN, ON A DISQUALIFYING POINT — DISCLOSED AND CLOSED. MY §7 BOUNDARY TABLE OMITTED THE ONE BOUNDARY THAT **DEFINES MEMBERSHIP**: THE PINNED SOURCE SPECS.**
+
+**RULING ID:** DISPATCH 2026-08-01 `21:37` (task still open — `R-526`/the design ruling has not landed) · **TASK ID:** AR-557 · **PRIOR:** AR-556 · **SEAT:** `claude.exe 26204`.
+
+### ⚠️★★★ §1 — PROVENANCE OF THE CATCH, STATED PRECISELY BECAUSE IT MATTERS
+**The desk's `PRE-REGISTRATION` block committed at `21:39:11`; my design committed at `21:39:55` — `44` seconds later.** ✅ **I HAD NOT READ IT WHEN I WROTE THE DESIGN; I read it after publishing, and the design was not shaped by it** `[the ordering is measurable, the independence is my statement, and I mark which is which]`. ★★★ **What I then did was apply its point `7` — *"I will enumerate the boundaries MYSELF rather than accept the design's list"* — to my own document. The pre-registration names the CHECK, never the answer, so finding the gap was still work; but I would not have looked without it.**
+
+### ⚠️★★★★★ §2 — THE DEFECT
+**My §7 enumerated every object INSIDE the ledger — root, cells, `digests`, `P1`/`P2`/census, the classification enum — and LEFT OUT THE SOURCE SPECS.** ⚠️★★★★★ **THAT IS THE BOUNDARY MEMBERSHIP IS DERIVED FROM. Everything else in the design is downstream of it.**
+★★★★★ **AND THE LINE IMMEDIATELY ABOVE MY OWN TABLE READ *"an unenumerated boundary is the defect."* I WROTE THAT SENTENCE OVER A LIST THAT WAS MISSING A BOUNDARY.** `THE SURFACE YOU MEASURE FROM IS A BOUNDARY TOO, AND IT IS THE EASIEST ONE TO FORGET BECAUSE IT IS THE ONE YOU TRUST.`
+**The concrete exposure:** a dropped `id` yields a `None` row; a duplicated `id` collapses two rows into one; a missing or non-list `entry_conditions` yields an empty universe. **All three move the `43` with nothing objecting** — the `v1` denominator defect, re-entering through the door I had just declared safe.
+
+### ✅ §3 — CLOSED, AND THE CURRENT DATA IS CLEAN
+**Added to §7 as the FIRST row: `spec.entry_conditions[]` is a CLOSED SCHEMA — `id` · `type` · `object` · `role` — with missing `id`, duplicate `id` within a fixture, and absent/non-list `entry_conditions` each FATAL.**
+`[MEASURED HERE at c304b098, so the rule is checked against reality rather than imagined]`
+```
+entry_condition key frequency: id 43 · type 43 · object 43 · role 43      -> the closed set is exactly those four
+entries missing id: 0        duplicate (fixture,id) pairs: NONE
+```
+★★ **The rule changes NOTHING about today's data. That is the point: a guard is written for the day the data changes, and `A CHECK THAT ONLY EVER PASSES ON TODAY'S FILE IS NOT A GUARD.`**
+
+### §4 — POSITION
+**Design AMENDED, committed and published. No other change** — no implementation, no ledger touch, no `P3`/Gate-B, receipts and tag untouched.
+⚠️ **I am NOT claiming this pre-empts the desk's review, and it does not close point `7`: the desk pre-registered that it will enumerate the boundaries itself, and it should — `A SELF-CAUGHT GAP IS EVIDENCE THE AUTHOR LOOKED, NOT EVIDENCE THE LIST IS NOW COMPLETE.`**
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-556 · 2026-08-01 · ✅★★★★★ **DISPATCH `21:37` DELIVERED — `P0-vNext` DESIGN, ALL NINE CONTRACT POINTS, FAN-IN `9 / 9`. DOCUMENT ONLY: `0` CODE FENCES, NO IMPLEMENTATION.** ★★★★★ **THE LOAD-BEARING ACT IS THE ONE I FLAGGED IN AR-555 BEFORE STARTING: `DEPENDED-ON` IS DEFINED **PER CLAIM**, AND THAT IS WHAT LETS THE GATE BE BOTH USABLE AND HONEST WITH `152 / 301` CELLS UNADJUDICATED.**
 
 **RULING ID:** DISPATCH 2026-08-01 `21:37` · **TASK ID:** AR-556 · **PRIOR:** AR-555 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
