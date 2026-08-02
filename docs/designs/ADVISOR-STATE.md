@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3373` at THIS commit, 2026-08-02 00:06 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3373` at THIS commit, 2026-08-02 00:07 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -178,7 +178,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (`claude.exe 15520`, seated `2026-08-01 23:21`). LEDGER AT `R-532` (`840b1c99`) + correction annotation (`f3ea78f1`), CONSUMING EXTERNAL READ `bf5b073d`. NEWEST AR: `AR-573` — **RULED BY `R-532`.** WORKER AUTHORIZED (`R-532 §5`, five corrections, design only); START-RECEIPT AWAITED.**
+## ✅★★★★★ SEAT — **ACTIVE (`claude.exe 15520`, seated `2026-08-01 23:21`). LEDGER AT `R-532` (`840b1c99`) + correction annotation (`f3ea78f1`), CONSUMING EXTERNAL READ `bf5b073d`. NEWEST AR: `AR-573` — **RULED BY `R-532`.** WORKER MID-TASK (`R-532 §5`) — receipt `AR-574` (`00:06:38`), **NO RULING OWED** (`R-528` precedent).** ✅★★★ **`AR-574` ACCEPTS `F-1` AND OWES AN **EXECUTION, NOT A TEXT EDIT**: it takes the TS lane, will report agreement as MEASURED or REFUSED, and PRE-STATES its refusal wording (`AGREEMENT UNVERIFIED — TS LANE NOT EXECUTED`) rather than letting the Python result stand in for both. It also carries my instrument fault forward as a `3/3`-rows-matched control of its own.**
 🛑★★★★★ **`R-532`'s HEADLINE, AND IT IS MINE: `[MEASURED HERE BY EXECUTION, `compile_binding_plan()` in `wt-ledger-e-delivery-r497-20260730` @ `c304b098`]` the three `NOT-APPLICABLE` rows emit `approximation=True` and a CONCRETE `primitive` string — **`6` NON-NULL, `3` NULL**, reproducing the read's table value-for-value. **`R-531 §6` ITEM `1` — MY OWN ORDER — SAID *"JSON `null` carrying a semantically inapplicable value"*, AND OBEYING IT WOULD HAVE REWRITTEN SIX REAL RUNTIME VALUES.** ✅ **ANNOTATED ON THE ORIGINAL (`f3ea78f1`), struck, with the rest of the item left standing. `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT` — `AR-573` executed my instruction faithfully and the record must not read against it.**
 🛑★★★★★ **MY LADDER, THIRD RUNG IN THREE RULINGS: `OBEDIENCE` → `COHERENCE` → `CORRESPONDENCE`. `R-531` convicted me for checking obedience; I switched to an invariant-derived coherence check and **that check is still true** — and it still missed this, because **A DOCUMENT CAN BE PERFECTLY SELF-CONSISTENT AND FACTUALLY FALSE ABOUT THE SYSTEM IT DESCRIBES.** `THE ONLY CHECK THAT OUTRANKS READING IS RUNNING.`**
 ⚠★★★ **AND MY PROBE FAILED FIRST, CAUGHT BY MY OWN CONTROL: first execution returned `bindings=0`, `0/3` rows — I passed the file wrapper `{_why, spec, video}` to a function documented to take the artifact body. Eighth instrument fault of this family; the control is the only reason it did not become a false finding against a correct reader.**
