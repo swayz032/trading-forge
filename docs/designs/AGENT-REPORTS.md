@@ -4,6 +4,47 @@
 
 ---
 
+## AR-589 · 2026-08-02 · ✅★★★★★ **R-541 §6 DELIVERED — THE PROTOTYPE IS BUILT, RUN, AND THE COVERAGE NUMBER IS REAL: `49 / 52` ATTRIBUTED, `3` HONEST NAMED MISSES, `0` WRONG-CATCHER PASSES, `5/5` GREENS ADMITTED, GETTER COUNTER `0`.** 🛑★★★★★ **AND THE CORPUS EARNED ITS KEEP ON ITS FIRST RUN BY FINDING A REAL BUG IN MY OWN RULE — `34(d)` WENT **UNCAUGHT** BECAUSE MY FREE-REFERENCE CHECK REQUIRED A TYPE-CHECKER SYMBOL, AND AN UNDECLARED IDENTIFIER HAS NONE.**
+
+**RULING ID:** R-541 §6 (items `1`–`3`; item `0` landed in `AR-588`) · **TASK ID:** AR-589 · **SEAT:** `claude.exe 26204`.
+**DELTA:** NEW `prototypes/p0-vnext-admission/` (5 modules + runner) + `RESULTS-2026-08-02.md` + this AR. **No design edit this round.**
+**FAN-IN: `4 / 4` (items 0–3). NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — THE HEADLINE, AGAINST THE RULE THAT WAS PRE-REGISTERED BEFORE THE DATA
+```
+total 52 | attributed 49 | miss_not_implemented 3 | miss_not_caught 0
+         | failed_wrong_catcher 0 | failed_parse 0 | green 5/5 | getter_invocations 0
+```
+**`R-541 §6a` pre-registered that success is EVERY subcase attributable to its NAMED catcher OR an HONEST NAMED MISS — and that a high first run is a RED FLAG TO AUDIT.** ✅ **The `3` misses are `26(a)/(b)/(c)`: the design names a **dependency-boundary (capability)** catcher for them and the prototype implements none. **THEY DO GO RED — via `1b-S:import-cardinality` — AND I DO NOT COUNT THEM.** `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF`, so a red for the wrong reason is a MISS, not coverage.**
+
+### 🛑★★★★★ §2 — THE AUDIT `§6a` DEMANDED, AND WHAT IT FOUND
+1. 🛑★★★★★ **A REAL BUG IN MY RULE, FOUND BY THE CORPUS: `34(d)` — a free reference to an UNDECLARED identifier — was **NOT CAUGHT AT ALL** on the first run.** My check called `checker.getSymbolAtLocation()` and required a symbol; **an unresolved identifier returns none, so the check was blind to the purest form of the channel it exists to catch.** ✅ **FIXED IN THE RULE, NOT THE TEST** — the fixture is byte-identical.
+2. ✅ **ESCAPED FIXTURES VERIFIED GENUINELY ESCAPED AT RUNTIME** (`51(c)`, `51(d)`, `52(b)`, `52(c)`: literal backslash-escape present, raw `__proto__` ABSENT). ★★★ **This audit exists because my authoring layer silently cooked these same fixtures TWICE in earlier rounds — the guard is aimed at a defect I actually committed.**
+3. ✅ **THE RULE DISCRIMINATES:** a legitimate frozen-constant module is ADMITTED, and `5/5` GREEN neighbours (clean source, ESM twin, plain object, **legitimate DAG**, array+nested) are ADMITTED. **The reds are not `reject everything`.**
+
+### ✅★★★★★ §3 — ACCEPTANCE COMMANDS (`R-541 §6b`), ALL FOUR
+1. ✅ **`G-1` REJECTED AND NAMED:** the `213`-byte CJS module → `1b-S:module-system @ module-scope `this` (CommonJS wrapper object)`, and a **clean ESM twin is ADMITTED**. ★★★ **So the rule rejects the CHANNEL, not the shape.** ⚠️ **HONEST NOTE: the original `G-1` ALSO trips `1b-S:const-ast-grammar` — its nested literal is unwrapped. That is a SECOND REAL DEFECT in the same 213 bytes, and my first ESM twin failed acceptance until I froze the nested literal. I report that rather than quietly using a twin I had already cleaned.**
+2. ✅ **Every subcase executed with the catcher that fired NAMED.** `failed_parse: 0`, `failed_wrong_catcher: 0` — nothing reddening via parse/type/`ReferenceError` is reported as a pass, honouring the VALIDITY-BEFORE-VERDICT precondition `AR-587` added.
+3. ✅ **Both controls run:** clean control GREEN; a planted catcher naming a non-existent rule is correctly ABSENT rather than silently satisfied.
+4. ✅★★★★★ **SEPARABILITY MEASURED, NOT CLAIMED — and my FIRST attempt at it was broken:** it grepped this runner's own source for the forbidden filenames and matched **its own assertion list**, reporting `2`. ✅ **REPLACED with instrumented `fs` reads: `158` files opened during the run, `0` of them the ledger or `ORACLE.json`.** ★★★★★ **The `158` IS the positive control — the tracker was alive, so the `0` is a MEASURED ABSENCE, not a dead probe.** `A CHECK THAT READS ITS OWN ASSERTION LIST IS MEASURING ITSELF.`
+
+### ⚠️ §4 — WHAT THIS DOES NOT SHOW
+- ⚠️★★★★★ **THIS UPGRADES `[PRE-REGISTERED — NOT EXECUTED]` FOR THE `1b-S`/`1b-R` ADMISSION RULES **ONLY**.** No gate, no claim `A`/`B`/`C`, no scope registry, no ledger consumer exists — **and none was built, per the scope lock.**
+- ⚠️ **The three `26(*)` capability subcases are UNCOVERED.** Implementing a dependency-boundary check is the next lane's work, named rather than absorbed.
+- ⚠️ **`G-2` is NOT closed** — the completeness instrument still derives from the FORBIDDEN side.
+- ⚠️ **`52` subcases is the population the DESIGN enumerates; it is not proof the design enumerates every channel.** The `G-1` module system was invisible to two adversarial rounds, and nothing here proves a third blind spot does not exist.
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED; the old `P0` lane untouched.**
+
+### 🛑★★★★★ §5 — THE GRADE IS OWED AND I AM ASKING FOR IT, NOT PARKING IT
+★★★★★ **`doer != grader`, and I built both the rule AND the corpus that scores it — which is exactly the structural disqualification `ratify-packet` names. `49/52` is a CLAIM until an independent instrument re-derives it.**
+✅ **THE ASK, IN ONE LINE: the `accuracy-validator` should be dispatched against commit `<this commit>` in HUNT mode with a durable receipt, briefed to disprove `49/52` — specifically to hunt whether any ATTRIBUTED subcase passes for a reason other than its named catcher, and whether the corpus population itself is blind in a direction the design never enumerated (the `G-1` species).** ⚠️ **The advisor dispatches; I do not, and I will not interpret the verdict I asked for.**
+
+### §6 — POSITION
+**Prototype built, run, and published with its misses.** `P0-vNext` gate **STILL BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**. **No runtime, trading or capital behaviour was authorized or touched.**
+★★ **FAN-IN `4 / 4`. NOT A HANDOFF.**
+
+---
+
 ## AR-588 · 2026-08-02 · **START-RECEIPT + ITEM 0 DELIVERED — R-541 §6 ACCEPTED. THE PIVOT: FIRST IMPLEMENTATION AUTHORIZATION OF THIS ARC.** ✅★★★★★ **`G-1` REPRODUCED HERE AT `213` BYTES AND ITEM `0` IS ALREADY LANDED: THE MODULE SYSTEM IS PINNED TO ESM, WHICH CLOSES THE CHANNEL **BY CONSTRUCTION** RATHER THAN BY A CHECK.**
 
 **RULING ID:** R-541 §6 · **TASK ID:** AR-588 · **PRIOR:** AR-587 (`cdc290dc`, APPROVED by `R-541`) · **SEAT:** `claude.exe 26204`.
