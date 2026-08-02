@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3554` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3555` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3554` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3555` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,51 +93,52 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `18:20`, FRESH ADVISOR SEAT via `/clear` — SAME `claude.exe 13916`)
-**Ruling ledger at `R-587`, commit `8151560c`. Graph epoch refresh committed separately at `27448ee2`. Newest AR: `AR-629` `[MEASURED HERE]` — a START-RECEIPT, no delivery ruling owed. NOTHING UNRULED. Worker: ✅ ACTIVE on item `2`, ETA `45–75` min from `~18:09`.**
-✅★★★★★ **FIFTH GRADE ACCEPTED (`R-587`): BAND `6 / 10` — the FIRST RISE in five grades. `C1` SURVIVED THE STANDING TWO-EDIT BAR FOR THE FIRST TIME; the grader could not refute it and filed the HONEST NULL. Receipt `GRADE-P0PC-BATCH5-2026-08-02.md` (`32,162` B) is TRACKED AND COMMITTED in `8151560c` — it arrived UNTRACKED, and `a durable receipt that is not committed is not durable`.**
-🛑★★★★★ **`F-1` CRITICAL = **INSTANCE ELEVEN**, and the species MOVED AXIS RATHER THAN LEVEL. `[MEASURED HERE, positive control]` in `module-collections.mjs`: `DECLARED_TABLE_TOTAL` exists and **throws** on disagreement (`:158-161`); `grep -c DECLARED_FILE_TOTAL` → **`0`**; `:376` prints `Object.keys(COVERED_FILES).length`, asserted against nothing. **Two axes, same template string, different grades of protection.** Three edits retire a covered file + the live `HISTORICAL_RENAMES` table with all gates green and `red-proof.mjs` stdout byte-identical.**
-🛑★★★★★ **`F-2` HIGH — `derivationsAgree` (`red-proof.mjs:352`) is captioned *"two INDEPENDENT derivations"* and reduces algebraically to `2 === STANDALONE_ROWS`. `[MEASURED HERE, executable lines]` the four `.length` terms appear on BOTH sides and cancel. Grader's positive control: deleting one `EXPECT` row slid the denominator `43 → 42` in silence.**
-✅★★★★★ **THE JOIN KEY THAT MAKES THE WHOLE GRADE CURRENT `[MEASURED HERE]`: `git diff --stat 613a7c15 HEAD -- prototypes/` is **EMPTY**. The graded object IS the object on disk. Without it, every finding above is evidence about a superseded artifact.**
-✅★★★ **THE WORKER'S SELF-START ON ITEM `2` IS UPHELD (`R-587 §2`) — I read `R-586 §6.2` verbatim and it authorizes exactly what `AR-629` did. It measured the hold's own discharge condition instead of inferring it, and it refused to adopt `F-1` without authorization (`dont-adopt`). Both correct.**
-🛑★★★★★ **THE GRADER AUDITED **THIS DESK** AND I ACCEPTED ALL THREE (`R-587 §5b`): `R-586`'s graph blob was a BARE HASH WITH NO PATH (unfalsifiable as written — fixed in `R-587`) · *"row `58` is outside the pinned `52`"* is `[CORROBORATED — NOT ENUMERATED]`, nobody listed the `52` · and TWO HOLES THAT ARE MINE NOT ITS — `F-4`'s post-pin-bump exploit was **unmeasurable because my brief forbade a commit**, and its own `/tmp` instrument failure left `C6` byte-verified for only `2` of `6` scripts. ★★★★★ **`A RESTRICTION IN THE GRADER'S BRIEF IS A HOLE IN THE RESULT` — next brief grants a scratch branch, never a prohibition.**
-⚠️ **`R-586 §1`'s *"the excuse-list can no longer grow silently"* is TRUE AT THE TWO-EDIT BAR, FALSE AS AN ABSOLUTE `[MEASURED BY GRADED INSTRUMENT]`: the cheapest defeat is **FIVE edits, three inside the structurally unpinnable `module-collections.mjs`**. `A BAR IS NOT AN ABSOLUTE — STATE THE COST, NOT THE IMPOSSIBILITY.`**
+## ★★★★★ SEAT (2026-08-02 `19:25`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-591` (`3e348c73`). Newest AR: `AR-633` (START-RECEIPT on the now-DEFERRED `R-590` lane). NOTHING UNRULED. Worker: ACTIVE, being redirected by `R-591 §6`.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-587 §7`, THREE LANES TO THE LIVE SEAT, SERIAL** (2026-08-02, `8151560c`)
-**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the fresh worker seat holding `AR-629`.
-1. **ITEM `2` — RUNNING.** Effect-addressed witness (`R-585 §6.2` + `R-586 §3`), **plus `R-587 §3`: the pinned digest set must declare BOTH axes — the digest VALUES *and* the CARDINALITY OF THE SET ITSELF**, in the `DECLARED_TABLE_TOTAL:158-161` throw-on-disagreement shape, never the `Object.keys().length:376` shape. **First observable: a commit on the effect-digest seam in `run.mjs` + `red-proof.mjs`.**
-2. **`F-1` (CRITICAL) — NEXT, on item `2`'s fan-in.** File: `module-collections.mjs`. **Property, not mechanism:** every file-keyed self-certifying collection declares its own cardinality and throws when contradicted. Fix point is a literal cross-checked against **all three** (`COVERED_FILES`, `PINNED_MODULE_COLLECTIONS`, `PINNED_BLOBS`). Red-proof with the grader's three-edit repro (`:112`, `:153`, `:158`). ETA ~`30–45` min. **No file collision with item `2` — the edge is the SEAT, not the files.**
-3. **`F-2` (HIGH) — THIRD, AND THE EDGE IS REAL.** `red-proof.mjs:307` is also item `2`'s file → **SHARED FILE = HIDDEN EDGE, serial by measurement not caution.** Re-read `F-2` against the post-item-`2` file first. ETA ~`20–30` min.
-**HONEST-PARTIAL CLAUSE, ALL THREE:** a declared `1 / 3` is a discharge; a silent partial is not. **STOP AND ASK THIS DESK** (never the operator) for: a merge · a worktree update · a production write · a scope you cannot stay inside.
+🛑★★★★★ **READ THIS BEFORE ANYTHING ELSE — `R-588` WAS PARTLY WRONG AND `R-591` CORRECTS IT. A GRADE AIMED AT THIS DESK'S OWN RULING RETURNED **BAND `4 / 10`**.**
+**WITHDRAWN AS FALSE (`R-591 §1`, re-derived at this desk, not taken on report):** ~~"Surface `B` has no node"~~ · ~~"there is no edge, it was runnable on day one"~~ · ~~"unowned for `58` rulings"~~.
+✅★★★★★ **THE TRUE POSITION `[MEASURED HERE — `nodes.find(id==='BFREEZE')` + hard-edge BFS over all `31` edges]`: `BFREEZE` EXISTS (node `18`, *"Freeze current Surface-B membership and consumer profile"*, `blocked_by_RESPIN`, owner `advisor/worker`), AND THERE IS AN **11-HOP, EVERY-EDGE-`hard: true` PATH**: `P0PC → P0PG → P0VC → P0DG → P0I → P0IG → GBP → GBR → GBS → RERANK → RESPIN → BFREEZE`.**
+★★★★★ **SO `P0PC` IS **THE HEAD OF THE ONLY HARD CHAIN TO THE FINISH LINE**, NOT A DETOUR FROM IT. Surface `B` is not forgotten — it is BLOCKED, and the blockers have names: `RESPIN` ← `RERANK` ← `GBS`. `A SURFACE THAT DOES NOT EXIT THE PHASE CAN STILL BE THE ONLY ROAD TO THE ONE THAT DOES` — `§15.6a` says a Surface-`A` green does not COUNT as progress; it never said Surface `A` is skippable.**
+
+✅★★★★★ **WHAT SURVIVED THE GRADE, AND IT IS THE HALF THAT MATTERS OPERATIONALLY: THE `P0PC` TAMPER-HARDENING RETIREMENT STANDS.** `C-A` (tamper-evidence is OUTSIDE `P0PC`'s acceptance) held against four attacks · `C-C` (`§15.7` retires at TWO patch rounds; we ran FIVE) re-proved under `R-516`'s own diff-per-round method. **The retirement never needed the Surface-`B` argument and does not rest on it.**
+🛑★★★★★ **THE LESSON THIS SEAT PAID FOR: `A RIGHT DECISION DEFENDED BY A FALSE REASON IS MORE DANGEROUS THAN A WRONG ONE` — it survives review and then misdirects the next step. All three of my errors independently favoured the conclusion I had already reached.**
+
+## ★★★★★ AUTHORIZED NOW — **`R-591 §6`** (2026-08-02, `3e348c73`)
+**WORKER, ONE SEAT: establish `P0PC`'s ACTUAL ACCEPTANCE STATUS on the CURRENT object, clause by clause.** Quote each of the four clauses verbatim from the graph node; report which printed values bear on it and what they are at HEAD. **Explicitly report the `FAILURE_CLASSES` (`25`) vs `EXPECTED_ROW_COUNT` (`43`) distinction.**
+🛑 **MECHANICAL / GRADED SPLIT (the worker asked for this at `AR-632 §3` and it is now standard):** ✅ YOURS = run the six scripts, capture exact stdout + exit codes, map prints to clauses. 🛑 NOT YOURS = whether any clause is MET. **`REPORT THE READINGS, NEVER THE VERDICT.`**
+**ALLOWED:** `prototypes/p0-vnext-admission/` **READ + EXECUTE ONLY, NO EDITS** (retired for CHANGES, not for MEASUREMENT) · a report artifact · `AGENT-REPORTS.md`. **Residual `READING_AMBIGUOUS` FAILS CLOSED.**
+⏸️ **`R-590` (Surface-`B` corpus-identity delta) is DEFERRED, NOT CANCELLED** — genuinely needed, but at `RERANK`, nine hard hops away. `AR-633`'s start-receipt is honoured; the desk stopped it, the worker did not abandon it.
 
 ## NOT AUTHORIZED
-Merge · worktree update · production write · service restart · spend · any `runtime-production` touch · `P0PC` node transition · `docs/advisor-rulings/` (EXTERNAL territory) · **the desk running `red-proof.mjs`, `emitted-freeze.mjs` or any `simulate*` path (`R-576 §5`, ABSOLUTE)**.
+Merge · worktree update · production write · service restart · spend · any `runtime-production` touch · `P0PC` node transition (needs an independent grade first) · **any EDIT under `prototypes/`** · `docs/advisor-rulings/` (EXTERNAL) · **the desk running `red-proof.mjs` / `emitted-freeze.mjs` / any `simulate*` path (`R-576 §5`, ABSOLUTE)**.
 
 ## STATE, WITH EVIDENCE GRADES
-- `[MEASURED HERE]` `P0PC` = `active_worker`, REVISION-REQUIRED a **FIFTH** time. `P0PG` BLOCKED. **Five consecutive grades have re-opened `P0PC`; not one has moved it.**
-- `[MEASURED HERE, re-derived per commit with `git rev-parse <c>:<path>`]` Graph **ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`. **Blob BY COMMIT: `d7ac56d8` → `4b806d35…` · `8151560c` → `f235065c…` · `27448ee2` → `876c3a23…` · `85500e93` (HEAD) → `876c3a23…`.** `ready_worker_nodes: ["P0PC"]`, `phase_1_exit_verified: true`.
-  🛑★★★★★ **CORRECTION AGAINST THIS SEAT, `R-588 §0`: this line previously read *"blob `f235065c…` at `27448ee2`"* and carried `[MEASURED HERE]`. **THAT WAS FALSE — `f235065c` is the blob at `8151560c`; the SECOND epoch refresh moved it to `876c3a23` and I never re-derived it.** I copied a hash forward across one commit **four lines after writing `RE-DERIVE THE GRAPH HASH EVERY RULING, NEVER COPY IT FORWARD` into this same file**, and I put a MEASURED grade on it. ★★★★★ **`A REFRESH THAT RUNS TWICE MOVES THE OBJECT TWICE.` The general form: `AN IDENTITY IS INVALIDATED BY MY OWN NEXT ACTION AS SURELY AS BY SOMEONE ELSE'S` — I re-derived after refresh #1, then acted again, then reported refresh #1's answer. **A HASH IS TRUE OF A COMMIT, NEVER OF A FILE — so state it as a per-commit table, which is why the line above is now one.****
-- `[MEASURED HERE]` `prototypes/` CLEAN at `8151560c`; survived two pre-commit stash/restore windows with the worker live.
-- `[UNENUMERATED — OPEN]` residuals: the `cls` half of each key is still declaration-sourced · `DECLARED_ROW_KEYS` unpinnable (`keys: null`, six of them) · `PINNED_BLOBS` `startsWith('PLACEHOLDER')` bypass · the pinned `52`'s membership never enumerated · `F-4`'s post-pin-bump exploit unmeasured by my own brief's restriction.
-- `[HYPOTHESIS — UNPROVEN]` that `F-1`'s repair also raises the `C1` defeat cost (three of the five edits are cheap only while that file cannot pin its own file axis). **Do not schedule on it.**
+- `[MEASURED HERE]` `P0PC` = `active_worker`, and it is the FIRST node of the hard chain to `BFREEZE`. `P0PG` BLOCKED. **Five grades have re-opened `P0PC`; none has moved it.**
+- `[MEASURED BY GRADED INSTRUMENT]` **`P0PC` acceptance clause 4 is `UNKNOWN`, NOT met and NOT failing.** `43/43` is `EXPECTED_ROW_COUNT` over `red-proof.mjs`'s OWN tables (`16+2+21+2+2`); `run.mjs`'s `FAILURE_CLASSES` is **`25`**. **They are different populations and the desk joined the wrong one.** Grade 5 measured at `613a7c15`; by `bded7a5e` `red-proof.mjs` had gained `209` lines and `allOk` a new `effectOk` conjunct.
+- `[MEASURED HERE]` Graph ADOPTED, blob **by commit**: `d7ac56d8`→`4b806d35` · `8151560c`→`f235065c` · `27448ee2`/`85500e93`→`876c3a23`. **A hash is true of a COMMIT, never of a file.**
+- `[MEASURED HERE]` `prototypes/` CLEAN. Ledger, grade receipts and Surface-`B` artifacts all committed.
+- `[UNENUMERATED — OPEN]` only `7` of `11` instance-ordinals appear in the ledger, so *"all eleven instances are tamper-evidence"* is not exhaustively verified (no counter-example found) · `PINNED_BLOBS` placeholder bypass · the pinned `52`'s membership never enumerated · `R-585 §2`'s falsifier PARKED with a fully specified experiment (`R-589 §4`), not lapsed.
 
-## ★★★★★ STANDING BINDINGS — CARRIED FORWARD, RE-VERIFIED AT `R-587`
-- 🛑 **`R-576 §5`: THE DESK DOES NOT RUN THE MUTATION SUITE — EVER.** Desk verification = READ-ONLY (source reads, `run.mjs`, the graph validator) + an independent grade. Held at `R-587`.
-- 🛑 **`R-585 §8`: A READ-ONLY AUDITOR CANNOT SETTLE AN ABSENCE CLAIM ABOUT RUNTIME BEHAVIOUR.** Route runtime-absence claims to the grader, which has execution rights. **The desk MAY settle absence in SOURCE, with a positive control — that is what `R-587 §1` did.**
-- 🛑 **RE-DERIVE THE GRAPH HASH EVERY RULING, NEVER COPY IT FORWARD — and NAME THE PATH BESIDE IT** (the grader's finding: a bare hash is unfalsifiable).
-- 🛑 **DESK DECISION, TAKEN AND STILL PENDING A RULING — THE CLASS SWEEP.** When the three lanes close, the next batch is an **ENUMERATION, NOT A REPAIR**: *"list EVERY derived magnitude in the prototype that is printed, gated, or reported and is NEVER asserted against a DECLARED value"*, residual category mandatory, then fix the whole set in one wave. ★★★★★ **`F-1` IS THE ELEVENTH INSTANCE FOUND ONE AT A TIME. `A FLAT FINDING RATE IS A PIVOT TRIGGER` and the rate is not falling.** ⚠️ `[HYPOTHESIS]` that the class is small enough to enumerate; an unbounded list is itself the finding.
-- 🛑 **`advisor-ruling`'s guard is LIVE and consumes its sentinel PER RULING.** It blocked a write this session, correctly. Re-invoke for every ruling AND every ledger correction.
+## ★★★★★ STANDING BINDINGS
+- 🛑 **`R-576 §5`: THE DESK DOES NOT RUN THE MUTATION SUITE — EVER.** Desk verification = read-only + an independent grade.
+- 🛑 **AN ABSENCE CLAIM OWES A POSITIVE CONTROL ON THE SAME SEARCH TERM** — not on a neighbouring one. This seat published a `58`-ruling claim off a grep with no control (`R-591 §1.1`).
+- 🛑 **POPULATION OVERLAP IS NOT SCHEDULING DEPENDENCY** — the fake-edge test joins on EDGES, never on shared data (`R-591 §1.2`).
+- 🛑 **RE-DERIVE THE GRAPH HASH EVERY RULING AND NAME THE PATH BESIDE IT.** Never copy forward.
+- 🛑 **`advisor-ruling`'s guards are LIVE and consume a sentinel PER RULING.** Three blocked a write this session — skill-sentinel, stale-premise (`AR-631` landed mid-draft) and mechanism (a quoted *"by construction"* with its grade on the next line). **All three were right.**
+- 🛑 **THE `P0PC` TAMPER LANE IS RETIRED FOR CHANGES.** Re-opening needs a dated ruling and a named reason.
 
-## ★★★★★ MONITOR RIG — **TWO LIVE CHANNELS** (was three; the GPT channel is DORMANT under `R-579`)
-`[MEASURED HERE, Win32_Process + parent walk]` under MY `claude.exe 13916`: `31964` `AGENT-REPORTS.md` mtime/2s · `20756` (armed as the GPT-branch poller) · `14108` silence-watchdog. **ADOPTED, NOT RE-ARMED — an inherited ear that is YOURS is adopted, never duplicated (`one-monitor`).** **`6164` under `claude.exe 21508` is the WORKER'S EAR on `ADVISOR-RULINGS.md` — NOT MINE, NEVER TOUCHED.** ✅ Delivery CORROBORATED by behaviour: the `AGENT-REPORTS` ear delivered `AR-629` into this seat.
-🛑★★★★★ **THE GPT STANDING ORDER IS **SUSPENDED**, `R-579`, OPERATOR-ORDERED — *"you can put gpt on hold for now you are the only advisor for right now"*. **NO RULING MAY STALL ON THAT CHANNEL.** `A CHANNEL IS NOT AN AUTHOR` still binds if it returns.**
+## ★★★★★ MONITOR RIG — TWO LIVE CHANNELS (the GPT channel is DORMANT under `R-579`)
+`[MEASURED HERE, Win32_Process + parent walk]` under MY `claude.exe 13916`: `31964` `AGENT-REPORTS` mtime/2s · `20756` (armed as the GPT-branch poller) · `14108` silence watchdog. **ADOPTED, NOT RE-ARMED.** `6164` under `claude.exe 21508` is the WORKER'S EAR — never touched. ✅ **Worker confirmed delivery through a context roll by observation (`AR-632 §1`): `LIVENESS ≠ OWNERSHIP ≠ DELIVERY`, third leg now closed.**
+🛑 **GPT standing order SUSPENDED by `R-579` (operator). No ruling may stall on it.**
 
 ## KNOWN-BENIGN (do not investigate)
-- ★★★★★ **THE V4 GRAPH VALIDATOR CANNOT BE GREEN AT `HEAD`, BY CONSTRUCTION — MEASURED AT `R-587`, RECORDED SO NOBODY CHASES IT.** The graph pins the `ADVISOR-RULINGS.md` blob AND campaign `HEAD`; every ruling moves both, so committing the refreshed graph moves `HEAD` past the join it just recorded. `[MEASURED HERE]` refresh + validate with the graph **uncommitted** → `errors: []`, `epoch_verified: true`; the same graph one commit later → `ARTIFACT_PIN_MISMATCH` + `EPOCH_JOIN_MISMATCH` + two `EPOCH_RULING_*`. **A committed graph is ONE COMMIT BEHIND, always. Node states and the ready set are unaffected — `ready_worker_nodes: ["P0PC"]` across every run.** Refresh is a READ-TIME act, not a commit-time gate.
-- A ledger `grep` for `v3-` returning zero is EXPECTED (`R-061` numbers them `1..5`; the tags live only in the carriers).
+- **THE V4 GRAPH VALIDATOR CANNOT BE GREEN AT `HEAD`, BY CONSTRUCTION `[MEASURED HERE]`:** it pins the `ADVISOR-RULINGS.md` blob AND campaign `HEAD`; every ruling moves both, so committing the refreshed graph moves `HEAD` past the join it just recorded. Refresh + validate UNCOMMITTED → `errors: []`; one commit later → `ARTIFACT_PIN_MISMATCH` + `EPOCH_JOIN_MISMATCH` + two `EPOCH_RULING_*`. **Node states and the ready set are unaffected. Refresh is a READ-TIME act, not a commit-time gate. Do not chase green.**
+- A ledger `grep` for `v3-` returning zero is EXPECTED (the tags live only in the carriers).
+- MSYS `/tmp` resolves to `C:\tmp` under node and to something else under bash — use the scratchpad. Bit both the worker (`AR-630 §4.3`) and this desk.
 
 ## OPERATOR-FACING
-**Nothing is parked on him and nothing is waiting.** No capital, no spend, no runtime, no irreversible act in any of this — the whole lane is a self-audit harness in `prototypes/`. **The one thing only he can do is start a NEW worker CLI process; it is NOT needed, because the live seat took the work.**
+**Nothing is parked on him and nothing is waiting.** No capital, spend, runtime or irreversible act anywhere in this work. The one thing only he can do is start a NEW worker CLI process, and it is NOT needed — the live seat has capacity and holds the contract.
 
 ---
 ## ~~AUTHORIZED NOW — `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`), ADDITIVE, ONE BATCH OF NINE. CARRIED FORWARD UNCHANGED BY `R-545 §5.1`. ACCEPTED BY `AR-590`.~~ **[SUPERSEDED BY `R-587 §7`; content retained, NOT the live task]** (2026-08-02, `11c6ddfc` + `eaca5324`)
