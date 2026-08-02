@@ -1,5 +1,5 @@
 {
-  "schema_version": "v4-phase1-graph-1.0",
+  "schema_version": "v4-phase1-graph-1.2",
   "title": "Trading Forge V4 execution graph — Phase 1 expanded",
   "authority": {
     "status": "external-advisor candidate for Fable adoption",
@@ -8,12 +8,13 @@
     "dependency_source": "docs/designs/GRAPH-LANES-FAKE-EDGE-MAP-2026-07-30.md",
     "dependency_source_git_blob_oid": "1e58d0948708a417f9b1178c49bb3ad25f944725",
     "status_source": "docs/designs/ADVISOR-STATE.md and newest AGENT-REPORTS.md",
-    "advisor_state_git_blob_oid": "f7166fcbc98d7840bd13ce34033f71271d5884e6",
-    "status_epoch_report_commit": "8297ebbe062f97f07d9000a2aa22712420a70c42",
-    "status_epoch_report": "AR-589",
-    "status_epoch_ruling_commit": "eaca532462453993aafd37f4ba7091bca07ca0ed",
-    "status_epoch_ruling": "R-544",
-    "status_join_condition": "ADVISOR-STATE, newest report AR-589, and newest ruling R-544 are joined at campaign commit da48d0186767f9d1ee23ef7498fdc96c2da1cb3a. Any later AR or ruling invalidates node states until the graph is refreshed.",
+    "advisor_state_git_blob_oid": "dce2a9a7a252a158ea72d186540a2acce2e939d9",
+    "status_epoch_report_commit": "76cae7b198145fef2753cca20f30809ab060d212",
+    "status_epoch_report": "AR-593",
+    "status_epoch_ruling_commit": "81c46400183928ee1b10d2bb78556c2476de8147",
+    "status_epoch_ruling": "R-550",
+    "status_join_commit": "81c46400183928ee1b10d2bb78556c2476de8147",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-593, and newest ruling R-550 are joined at campaign commit 81c46400183928ee1b10d2bb78556c2476de8147. The grade against 9be6a52a preserves the partition arithmetic but refutes rule soundness, so P0PC remains the active repair and P0PG remains blocked on a replacement object. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed.",
     "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
   },
   "objective": {
@@ -31,26 +32,31 @@
     "compiler_environment_rule": "A TypeScript mutation is valid only against a named and content-pinned compiler surface: TypeScript version, compiler options, standard libraries, ambient declarations, and fixture files.",
     "diagnostic_ownership_rule": "Each mutation has one primary catcher. Syntax already owned by a specific catcher is excluded from generic catchers, and the fixture asserts that the primary catcher fired while competing catchers stayed silent.",
     "current_money_path_node": "P0PC",
-    "ready_worker_nodes_at_epoch": ["P0PC", "P1", "P2"],
-    "ready_advisor_nodes_at_epoch": ["P3"],
     "priority_rule": "Prioritize ready nodes on the Phase-1 money path, then nodes that unlock the largest downstream fan-in; park off-path work when it competes for the same lane."
   },
-  "recommended_parallel_batch_now": {
-    "worker_lanes": [
-      "P0PC",
-      "P1",
-      "P2"
-    ],
-    "advisor_clock": [
-      "P3"
-    ],
-    "parked_for_capacity": [
-      "I7",
-      "I8",
-      "I21"
-    ],
-    "why_independent": "P1 and P2 consume the frozen/current corpus and write distinct evidence artifacts; neither consumes P0PC output. P3 is a ruling, not a worker lane. P0PC repairs only the isolated prototype delivered by AR-589; its corrected receipt and independent grade become evidence for later P0VC design closure."
+  "node_states_at_epoch": {
+    "completed": ["P0D", "P0P", "P1", "P2"],
+    "active_worker": ["P0PC"],
+    "ready_advisor": ["P3"],
+    "blocked": ["P0PG", "P0VC", "P0DG", "P0I", "P0IG", "GBP", "GBR", "GBS", "RERANK", "RESPIN", "BFREEZE", "BIND", "FIDELITY", "PH1_EXIT", "PH2", "PH3"],
+    "conditional": ["REG", "I21"],
+    "parked": ["I7", "I8"],
+    "operator_reserved": ["PH35", "PH4"]
   },
+  "artifact_pins": [
+    {"id": "P0D_DESIGN_BLOB", "node": "P0D", "kind": "git_object", "object_oid": "a5ca03237eb5f9fd5977315c9ed3617e08ab021c", "object_type": "blob"},
+    {"id": "P0P_REPORT_COMMIT", "node": "P0P", "kind": "git_commit", "commit_oid": "8297ebbe062f97f07d9000a2aa22712420a70c42"},
+    {"id": "R543_COMMIT", "node": "P0P", "kind": "git_commit", "commit_oid": "11c6ddfc5cfffff221d950d9b79180465bc37be3"},
+    {"id": "R544_COMMIT", "node": "P0P", "kind": "git_commit", "commit_oid": "eaca532462453993aafd37f4ba7091bca07ca0ed"},
+    {"id": "EXTERNAL_AR589_REVIEW_COMMIT", "node": "P0P", "kind": "git_commit", "commit_oid": "60c3363ada1ab07a5d528396780cbf514ba64088"},
+    {"id": "P0PC_UNSOUND_GRADE", "node": "P0PC", "kind": "git_blob", "path": "docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md", "git_blob_oid": "b74bd655958a8297a4b57b93648dd491f8bb61ce"},
+    {"id": "P1_FREEZE", "node": "P1", "kind": "git_blob", "path": "docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md", "git_blob_oid": "1737e74381b47eac8a7abfa67add5240ff2b9301"},
+    {"id": "P2_MEMBERSHIP", "node": "P2", "kind": "git_blob", "path": "docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json", "git_blob_oid": "1551c7e56480caff7d70a580e1f7a2c7ef644203"},
+    {"id": "P1_P2_GRADE", "node": "P1+P2", "kind": "git_blob", "path": "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md", "git_blob_oid": "05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"},
+    {"id": "EPOCH_STATE", "node": "EPOCH", "kind": "git_blob", "path": "docs/designs/ADVISOR-STATE.md", "git_blob_oid": "dce2a9a7a252a158ea72d186540a2acce2e939d9"},
+    {"id": "EPOCH_RULINGS", "node": "EPOCH", "kind": "git_blob", "path": "docs/designs/ADVISOR-RULINGS.md", "git_blob_oid": "e3a6e51bd763df5549231187f48a5ed9d3d69a47"},
+    {"id": "EPOCH_REPORTS", "node": "EPOCH", "kind": "git_blob", "path": "docs/designs/AGENT-REPORTS.md", "git_blob_oid": "d1af975c6dee9fac4324668b9aef820fc85cbfd3"}
+  ],
   "fan_in_contracts": {
     "GBP": ["P0IG", "P1", "P2", "P3", "REG"],
     "GBR": ["GBP", "P3"],
@@ -86,11 +92,11 @@
       "title": "Correct and red-proof the executable admission prototype",
       "kind": "prototype_correction",
       "phase": "1A-instrument",
-      "state_at_epoch": "active_authorized_R544",
+      "state_at_epoch": "active_repair_after_R548_reproduced_false_greens_and_unsound_grade",
       "owner": "current worker seat",
       "wip_class": "money_path_implementation",
-      "outputs": ["corrected 1b-S and 1b-R prototype commit", "corrected coverage receipt", "effective-module tuple and same-source CJS-ESM differential", "required-project membership receipt", "runner mutation red-proof"],
-      "acceptance": "Semantic diagnostics run against content-pinned ambient types; each mutation has one exclusive owner; the effective compiler-emitter-loader tuple is an input; same source is exercised as CJS and ESM; exactly one callable project export is required; every terminal acceptance failure exits non-zero after evidence collection while the restored control exits zero."
+      "outputs": ["corrected 1b-S and 1b-R prototype commit", "six-population corrected coverage partition", "type-space versus value-space discriminator receipt", "emitted-behaviour fixture freeze", "effective-module tuple and same-source CJS-ESM differential", "required-project membership receipt", "runner mutation red-proof", "execution-proven row-54 design correction"],
+      "acceptance": "The six populations are disjoint and sum to the frozen 52; surface-invalid rows are inadmissible, mutation-as-type-error rows name the type checker, and only surface-valid fixture-valid rows may credit 1b-S. Type-only identifiers stay silent while the same spelling in value position is exclusively FREE_REF, with POSITION_UNCLASSIFIED fail-closed. Fixture scaffolding preserves emitted behavior. The effective compiler-emitter-loader tuple is an input; one source is executed as CJS and ESM; exactly one callable project export is required; every terminal acceptance failure exits non-zero after evidence collection while the restored control exits zero."
     },
     {
       "id": "P0PG",
@@ -152,22 +158,22 @@
       "title": "Freeze current additive baseline",
       "kind": "evidence_freeze",
       "phase": "1B-gate-b",
-      "state_at_epoch": "topology_ready_requires_authorization",
+      "state_at_epoch": "completed_f362a80b_verified_a9c0d557_guarded_43a9596e",
       "owner": "worker lane",
       "wip_class": "read_only_evidence",
-      "outputs": ["current-code baseline artifact", "re-authored-producer equivalence receipt"],
-      "acceptance": "Current producer and current code named; artifact and population hashes pinned; historical 233 baseline not reused."
+      "outputs": ["docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md@1737e74381b47eac8a7abfa67add5240ff2b9301", "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md@05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"],
+      "acceptance": "Delivered and independently re-censused over the exact 43-row by 7-axis frame. The freeze is complete over that frame and nothing else; its verifier closeout is durable evidence, not standing CI enforcement."
     },
     {
       "id": "P2",
       "title": "Freeze source-keyed truth membership",
       "kind": "evidence_freeze",
       "phase": "1B-gate-b",
-      "state_at_epoch": "topology_ready_requires_authorization",
+      "state_at_epoch": "completed_f362a80b_verified_a9c0d557_guarded_43a9596e",
       "owner": "worker lane",
       "wip_class": "read_only_evidence",
-      "outputs": ["complete source-keyed truth-set artifact", "truth-set hash"],
-      "acceptance": "Every member has exact source identity, transcript/spec hashes, canonical span/key discriminator, adjudication, and frozen membership before treatment."
+      "outputs": ["docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json@1551c7e56480caff7d70a580e1f7a2c7ef644203", "docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md@05f8409ce5e76fd7679aa8e5d4ae3c15ba75b754"],
+      "acceptance": "Delivered and independently re-censused: 43 source-keyed rows crossed with seven axes produce 301 cells, with asserted, not-applicable, and unadjudicated states preserved and the frame limitation explicit."
     },
     {
       "id": "P3",
@@ -369,23 +375,23 @@
     }
   ],
   "edges": [
-    {"from": "P0D", "to": "P0P", "type": "data", "hard": true, "artifact": "AR-588 design blob a5ca03237eb5f9fd5977315c9ed3617e08ab021c plus 52-record plantable manifest"},
-    {"from": "P0P", "to": "P0PC", "type": "defect_evidence", "hard": true, "artifact": "AR-589 report commit 8297ebbe062f97f07d9000a2aa22712420a70c42 plus R-543 commit 11c6ddfc5cfffff221d950d9b79180465bc37be3, R-544 commit eaca532462453993aafd37f4ba7091bca07ca0ed, and consumed external ruling commit 60c3363ada1ab07a5d528396780cbf514ba64088"},
-    {"from": "P0PC", "to": "P0PG", "type": "data", "hard": true, "artifact": "corrected prototype commit, corrected coverage receipt, effective-module differential, membership controls, and runner red-proof"},
+    {"from": "P0D", "to": "P0P", "type": "data", "hard": true, "artifact": "AR-588 design blob a5ca03237eb5f9fd5977315c9ed3617e08ab021c plus 52-record plantable manifest", "evidence_ref_ids": ["P0D_DESIGN_BLOB"]},
+    {"from": "P0P", "to": "P0PC", "type": "defect_evidence", "hard": true, "artifact": "AR-589 report commit 8297ebbe062f97f07d9000a2aa22712420a70c42 plus R-543, R-544, external AR-589 review, and the durable NOT-SOUND grade consumed by R-548", "evidence_ref_ids": ["P0P_REPORT_COMMIT", "R543_COMMIT", "R544_COMMIT", "EXTERNAL_AR589_REVIEW_COMMIT", "P0PC_UNSOUND_GRADE"]},
+    {"from": "P0PC", "to": "P0PG", "type": "data", "hard": true, "mutation_bearing": true, "artifact": "corrected prototype commit, corrected coverage receipt, effective-module differential, membership controls, and runner red-proof"},
     {"from": "P0PG", "to": "P0VC", "type": "authority", "hard": true, "artifact": "durable corrected-prototype grade and novel false-green hunt receipt"},
-    {"from": "P0VC", "to": "P0DG", "type": "data", "hard": true, "artifact": "revised design blob plus graded prototype evidence, residual ledger, pinned compiler surface, and single-catcher ownership manifest"},
+    {"from": "P0VC", "to": "P0DG", "type": "data", "hard": true, "mutation_bearing": true, "artifact": "revised design blob plus graded prototype evidence, residual ledger, pinned compiler surface, and single-catcher ownership manifest"},
     {"from": "P0DG", "to": "P0I", "type": "authority", "hard": true, "artifact": "SOUND design-grade receipt keyed to the exact design blob"},
-    {"from": "P0I", "to": "P0IG", "type": "data", "hard": true, "artifact": "atomic implementation commit plus executed mutation receipts"},
+    {"from": "P0I", "to": "P0IG", "type": "data", "hard": true, "mutation_bearing": true, "artifact": "atomic implementation commit plus executed mutation receipts"},
     {"from": "P0IG", "to": "GBP", "type": "authority", "hard": true, "artifact": "SOUND implementation-grade receipt"},
-    {"from": "P1", "to": "GBP", "type": "admission", "hard": true, "artifact": "pinned current-code baseline and producer-equivalence receipt"},
-    {"from": "P2", "to": "GBP", "type": "admission", "hard": true, "artifact": "pinned complete source-keyed truth set"},
+    {"from": "P1", "to": "GBP", "type": "admission", "hard": true, "artifact": "pinned current-code baseline and producer-equivalence receipt", "evidence_ref_ids": ["P1_FREEZE", "P1_P2_GRADE"]},
+    {"from": "P2", "to": "GBP", "type": "admission", "hard": true, "artifact": "pinned complete source-keyed truth set", "evidence_ref_ids": ["P2_MEMBERSHIP", "P1_P2_GRADE"]},
     {"from": "P3", "to": "GBP", "type": "authority", "hard": true, "artifact": "producer-proof lane ruling and transfer contract"},
     {"from": "REG", "to": "GBP", "type": "shared_resource_pin", "hard": true, "artifact": "register content hash recorded in the authorizing ruling"},
     {"from": "GBP", "to": "GBR", "type": "data", "hard": true, "artifact": "graded producer contract, schema, and fixtures"},
     {"from": "P3", "to": "GBR", "type": "authority", "hard": true, "artifact": "executing runtime SHA and graph-to-spec transfer contract"},
     {"from": "GBR", "to": "GBS", "type": "data", "hard": true, "artifact": "runtime integration commit and consumer-transition ledger schema"},
-    {"from": "P1", "to": "GBS", "type": "control", "hard": true, "artifact": "frozen current-code control baseline"},
-    {"from": "P2", "to": "GBS", "type": "oracle", "hard": true, "artifact": "frozen source-keyed truth membership"},
+    {"from": "P1", "to": "GBS", "type": "control", "hard": true, "artifact": "frozen current-code control baseline", "evidence_ref_ids": ["P1_FREEZE", "P1_P2_GRADE"]},
+    {"from": "P2", "to": "GBS", "type": "oracle", "hard": true, "artifact": "frozen source-keyed truth membership", "evidence_ref_ids": ["P2_MEMBERSHIP", "P1_P2_GRADE"]},
     {"from": "GBS", "to": "RERANK", "type": "data", "hard": true, "artifact": "record-for-record transition ledger and population incidence"},
     {"from": "RERANK", "to": "RESPIN", "type": "decision", "hard": true, "artifact": "current target identities and residual blocker map"},
     {"from": "RESPIN", "to": "BFREEZE", "type": "data", "hard": true, "artifact": "targeted current spec set with transcript-audit receipts"},

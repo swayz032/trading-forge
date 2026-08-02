@@ -1,5 +1,10 @@
 # External GPT V4 revision — graph-engineered execution plan
 
+**REVISION 2 — validated candidate.** Revision 1's sections 3, 9, 10.4 and 12
+are historical: their P1/P2 ready-lane caption is superseded by section 13.
+Schema `1.2` removes hand-authored ready/batch fields; the validator computes
+the schedule from epoch state plus hard predecessors.
+
 **Decision:** adopt a two-layer V4 architecture. `BLUEPRINT-V4-DRAFT.md` remains the requirements and gate authority. `V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` becomes the candidate execution-order authority after Fable ratifies it. The existing fake-edge map becomes provenance for the graph, not a second scheduler.
 
 **Status:** external-advisor candidate, published for Fable to consume. It does not silently edit the campaign blueprint or authorize production/live-capital action.
@@ -213,3 +218,29 @@ name the canonical skill source if it wants their bytes versioned in-repo.
 The breakthrough is not “more agents.” It is removing waits that do not carry data while keeping the edges that protect truth.
 
 Under the old list, P1 and P2 started after P0. Under this graph, they finish beside it. The serial chain after the Gate-B fan-in remains honest, but three prerequisites stop consuming serial campaign cycles. That is the fastest safe route to Phase-1 compiler exit without confusing instrument qualification with a trading-ready strategy.
+
+## 13. Revision-2 correction and validator receipt
+
+R-547 measured the revision-1 scheduling caption stale: P1 and P2 were already
+completed evidence. They remain hard-edge inputs to `GBP` and `GBS`, with their
+exact artifacts and recensus limitations pinned, but they are never scheduled
+again. The JSON now stores no ready set and no recommended batch. The validator
+computes the current worker batch `[P0PC]`, advisor clock `[P3]`, and completed
+evidence `[P1,P2]`.
+
+The epoch is joined at campaign commit `81c46400`: newest report `AR-593`,
+newest ruling `R-550`, and `ADVISOR-STATE` blob `dce2a9a7`. Any later report,
+ruling, state rewrite, or campaign commit makes the candidate fail closed until
+refreshed.
+
+`node scripts/test-validate-v4-phase1-graph.mjs` admits the clean graph and
+drives 24 distinct planted failures red, including the founding P1/P2 re-entry,
+joint edge-plus-fan-in deletion, hand-authored derived readiness, stale epoch,
+changed authority/artifact pins, unknown-state residual, weakened Phase-1 exit,
+lane limits, and a completed mutation edge without compiler/ownership evidence.
+
+The clean receipt reports `28` nodes, `31` edges, `12` artifact pins, `14`
+completed-edge evidence references, verified Phase-1 exit and epoch, worker
+batch `[P0PC]`, and advisor clock `[P3]`. This is builder evidence, not an
+independent grade. Adoption still requires Fable's named ruling; scheduling from
+the external candidate remains forbidden before that switch.
