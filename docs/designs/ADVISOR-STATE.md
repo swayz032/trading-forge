@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3412` at THIS commit, 2026-08-02 00:42 [MEASURED HERE, `wc -l` + `date`; the prior `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3421` at THIS commit, 2026-08-02 00:52 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3412` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3421` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -200,7 +200,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE, FRESH SEAT VIA `/clear` INSIDE THE SAME `claude.exe 15520`; SEATED SHORTLY BEFORE THE FIRST MONITOR DELIVERY AT **`00:27:42`** (anchored to a MEASURED event — an earlier draft of this line guessed `00:29`, see `R-535 §4`). LEDGER AT `R-535`. EXTERNAL READ `edf0df54` CONSUMED AND SPENT BY `R-534`; **`R-535` IS A SELF-CORRECTION AND CLAIMS NO READ.** NEWEST AR: **`AR-578`** (`00:38:58`, START-RECEIPT on `R-534 §5`) — **no ruling owed for the receipt, but its RULING-DEFECT REPORT is answered by `R-535`.** `AR-577` RULED BY `R-534`. WORKER MID-TASK.**
+## 🛑★★★★★ SEAT — **LEDGER AT `R-535`. NEWEST AR: `AR-579` (`00:51:12`, DELIVERY, `30/30`) — **UNRULED.** `R-536` IS **OWED AND HELD**: `[MEASURED HERE, 00:52]` the external ref still reads `edf0df54`, which `R-534` SPENT — **NO unconsumed read exists, and `THE PASTE IS THE GATE` is the operator's own standing order in his own voice.** WORKER IS NOT BLOCKED BY THIS — it has DELIVERED and its `§9` holds everything correctly.**
+
+### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — held for `R-536`] `AR-579 §1` IS CORRECT AND IT CONVICTS **MY** `R-535`, NOT ONLY ITS OWN CLAUSE
+`[MEASURED HERE, node v24.13.0, 16/16, invocation counters throughout]`
+🛑★★★★★ **`R-535 §1` RATIFIED THE DESCRIPTOR WALK AS *"THE **SOLE** ADMITTED DETECTION MECHANISM."* **THAT IS ONE LEVEL SHORT AND I PROVED IT AGAINST MYSELF:** `Object.getOwnPropertyDescriptors` IS **OWN-PROPERTIES ONLY** — on a class instance it returns `[]` while `inst.read()` yields `EXPECTED_FROM_LEDGER`, and on `Object.create({get bindings(){…}})` it returns `[]` while `child.bindings` yields `LEDGER_VIA_PROTO_GETTER`. **`1b-R` PROMISES TO REJECT PROTOTYPE-BEARING INSTANCES; THE CATCHER I NAMED CANNOT SEE THEM.**
+✅ **THE WORKER'S FIX IS SOUND AND I VERIFIED IT DISCRIMINATES, NOT MERELY TRIGGERS:** descriptor walk **+** recursive prototype-identity → plain literal PASS · `Object.create(null)` PASS · **legitimate array data PASS** · class instance FAIL · proto-getter child FAIL · own-accessor still caught · **total getter invocations across every check `0`.**
+✅ **ITS OVER-REJECTION WARNING REPRODUCES: a plain-root check omitting `Array.prototype` REJECTS `[1,2,3]` `[MEASURED HERE]`.** `A GUARD THAT REJECTS THE VALID CASE IS NOT A STRICTER GUARD, IT IS A BROKEN ONE.`
+⚠️★★★★★ **THE PATTERN THE WORKER NAMED, AND IT IS THE MOST IMPORTANT LINE OF THE ARC: `AR-577`'s catcher missed state injection · `R-534`'s catcher was accessor-blind · `R-535`'s catcher is prototype-blind · `AR-579`'s first draft was prototype-blind. **FOUR ROUNDS, THREE AUTHORS, ONE SHAPE — `IT IS SEAT-INDEPENDENT`, so no amount of care by any single seat fixes it.** ★★★★★ **THE ONLY REMEDY THAT HAS EVER WORKED HERE IS THE ONE APPLIED FOUR TIMES: **EXECUTE THE NAMED CATCHER AGAINST THE **WHOLE** PROMISE, NOT AGAINST THE CHANNEL THAT MOTIVATED IT.** Owed into `R-536` as campaign law.**
+
+## ✅★★★★★ PRIOR SEAT LINE (retained) — **FRESH SEAT VIA `/clear` INSIDE THE SAME `claude.exe 15520`; SEATED SHORTLY BEFORE THE FIRST MONITOR DELIVERY AT **`00:27:42`** (anchored to a MEASURED event — an earlier draft of this line guessed `00:29`, see `R-535 §4`). LEDGER AT `R-535`. EXTERNAL READ `edf0df54` CONSUMED AND SPENT BY `R-534`; **`R-535` IS A SELF-CORRECTION AND CLAIMS NO READ.** NEWEST AR: **`AR-578`** (`00:38:58`, START-RECEIPT on `R-534 §5`) — **no ruling owed for the receipt, but its RULING-DEFECT REPORT is answered by `R-535`.** `AR-577` RULED BY `R-534`. WORKER MID-TASK.**
 🛑★★★★★ **`R-535`: BOTH OF `AR-578`'s FINDINGS SUSTAINED BY MY OWN EXECUTION AND BOTH CONVICT ME. (1) I NAMED `Object.keys` AS AN ADMITTED CATCHER — it is invocation-safe and **accessor-BLIND** `[MEASURED HERE: keys carry NO descriptor information]`, so it cannot catch. **I MEASURED INVOCATION-SAFETY AND PUBLISHED IT AS DETECTION-CAPABILITY — a join without a key, one ruling after convicting `AR-577` for a promise whose catcher could not cover it.** (2) `Object.freeze` IS SHALLOW, and I extended the worker's finding: **a `HOLDER` that PASSES a top-level `isFrozen` check still delivered the ledger value into `project()`** — a GREEN over a live coupling, the `gate-artifact` bin one level deeper.**
 ✅★★★ **AR-578 RE-RAN MY `5/7` RATHER THAN RELAYING IT AND REPRODUCED IT EXACTLY, INCLUDING WHICH FIVE — two independently authored harnesses, the corroboration standard this campaign asks for and rarely gets.**
 ✅★★★★★ **MONITORS: ALL THREE **ADOPTED, NOTHING ARMED, NOTHING KILLED** — enumerated BY PROCESS and my own `claude.exe` walked up from `$PID` `[MEASURED HERE]`: mine is **`15520`**, the same process the previous seat named, so its rigs are MINE (`23524`/`7188` AR-change · `19920`/`25880` GPT-ref · `18708`/`7828` idle watchdog). ★★★★★ **BOTH DELIVERED INTO THIS CONVERSATION WITHIN 5 MINUTES OF SEATING — `AR-577` on `b7slnowdk` and the external read on `bj0268m9t` — which is the positive control the predecessor lacked when it killed three healthy monitors on a `TaskList` zero.** ⚠ **The worker's ear is under `claude.exe 26204` (`10280`/`19680`/`8648`) — NOT TOUCHED.**
