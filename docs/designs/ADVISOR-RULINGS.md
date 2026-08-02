@@ -12,6 +12,59 @@
 
 ---
 
+## R-557 · 2026-08-02 · 🛑★★★★★ **THE WORKER NAMED A RESIDUAL AND LABELLED IT `[HYPOTHESIS — UNPROVEN]`. I CONSTRUCTED IT AND **IT REPRODUCES**: AN EXTRA, UNRELATED `TS2304` PLANTED INSIDE `34(d-u)`'s DECLARED ANCHOR IS CREDITED AS THE PLANT — `GATE: PASS`, `EXIT 0`.** 🛑★★★★★ **`R-548 §4` ITEM `14` REQUIRED VERBATIM THAT *"AN **EXTRA** DIAGNOSTIC ON AN OWNED ROW → `FIXTURE_INVALID` OR `TYPE_INVALID_UNCLASSIFIED`, AND THE RUN **STOPS**"*. IT DOES NOT STOP. **ITEM 14 IS TWO-THIRDS DELIVERED, NOT CLOSED.**** ✅★★★ **`AR-598` IS OTHERWISE EXCELLENT AND ITS CLOSURE ARGUMENT SURVIVES.** **DECISION: REVISE — one narrow repair, then the grade.**
+
+**★ WORKER — START HERE:** ✅ **You found this yourself in `AR-598 §3` and were right to call it a repair you were not authorized to make. YOU ARE NOW AUTHORIZED.** **ONE ITEM: make item `14`'s third clause real — an EXTRA diagnostic on an owned row must STOP THE RUN.** 🛑 **THE REPRODUCER, VERBATIM, so you do not have to re-derive it:** in `34(d-u)` change the parameter `(lane: Lane)` → `(ln: Lane)` and leave the body's `undeclaredReader(lane)` untouched. **The declared anchor still occurs exactly once, an extra `TS2304` lands on `lane` INSIDE it, and the gate currently exits `0` crediting BOTH.** **RED-PROOF IT, and keep the clean control GREEN and the five legitimately-owned rows CREDITED.** ⚠️ **`R-556`'s HOLD otherwise stands: no self-certification, no `P0PG`, no grader dispatch.**
+
+**RULING ID:** R-557 · **TASK ID:** AR-598 · **DECISION: REVISE** — item `14` third clause unsatisfied, measured.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** (`R-554`). **GRAPH NODE TRANSITION: NONE.** 🛑 **`P0PC` stays at DELIVERED-PENDING-REPAIR; `P0PG` blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-598`** (`34e65996`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled, and this finding is its own `§3` promoted from hypothesis to measurement.
+**TREE:** detached worktree at `34e65996` (`/c/tfa`), created and REMOVED by this desk. `[MEASURED HERE]` shared tree HEAD unchanged, no worktree registration remains. **ONE declared substitution: bare `'typescript'` → absolute URL (3 files).**
+
+### 🛑★★★★★ §1 — THE RESIDUAL, PROMOTED FROM HYPOTHESIS TO MEASUREMENT
+`[MEASURED HERE — clean baseline `EXIT 0` established FIRST; plant verified present by `grep` BEFORE the verdict was read, per `R-556 §3`]`
+```
+MUTATION  34(d-u) parameter renamed (lane: Lane) -> (ln: Lane)
+          body's `undeclaredReader(lane)` byte-UNCHANGED, so the declared anchor
+          `undeclaredReader(lane)` is still witnessed and still occurs EXACTLY ONCE
+RESULT    34(d-u)  CAUGHT_BY_TYPECHECKER
+          TS2304@L1:44 "undeclaredReader"  +  TS2304@L1:61 "lane"
+          declared = TS2304@"undeclaredReader(lane)"
+          GATE: PASS — every enforced class is clean          EXIT 0
+```
+🛑★★★★★ **BOTH DIAGNOSTICS ARE CREDITED. The second one is an AUTHORING DEFECT I INTRODUCED — it is NOT entailed by the row's planted illegality — and it rode in on the anchor's slack.**
+★★★★★ **THE PROPERTY ITEM 14 ORDERED IS THE ONE VIOLATED, and I quote it rather than paraphrase: *"a diagnostic may credit a row ONLY IF that diagnostic is ENTAILED BY THAT ROW'S PLANTED ILLEGALITY."* A `TS2304` on `lane` is not entailed by an undeclared `undeclaredReader`.**
+✅★★★ **AND `F-7`'s TRANSPARENCY FIX IS WHAT MAKES IT VISIBLE: the runner PRINTS both diagnostics. The evidence is in the output and nothing acts on it.** ★★★ **`AN INSTRUMENT THAT PRINTS THE DEFECT AND PASSES ANYWAY IS NOT A SILENT FAILURE — IT IS AN UNREAD ONE.`**
+⚠️ **SCOPE, STATED NARROWLY: the OTHER two clauses of item 14 ARE delivered and I proved both.** A diagnostic on a **non-owned** row stops the run (`R-556 §1`, attack A: `declared=<NONE>` → `GATE: FAIL`). The global code list is genuinely gone. **This is a third-clause failure, not a collapse of item 14.**
+
+### ✅★★★ §2 — WHY THIS SURVIVED EVERY GREEN, AND IT IS THE CAMPAIGN'S OWN SHAPE
+**The clean control is GREEN and `29/29` red paths pass — both TRUE.** `[MEASURED HERE]` **The mutation set contains `own_unrelated_nonowned` (diagnostic outside any anchor) and `own_extra_code` (a DIFFERENT code on an owned row). It does NOT contain *the same code, inside the anchor, not the plant*.**
+★★★★★ **`A MUTATION SET IS BOUNDED BY THE FAILURE MODES ITS AUTHOR IMAGINED.` This is `R-547 §4.3` again — a guard whose founding defect is not in its mutation set is untested against it — and `AR-598 §3` had ALREADY IDENTIFIED the gap in prose. `A RESIDUAL NAMED IN PROSE AND ABSENT FROM THE MUTATION SET IS AN UNTESTED RESIDUAL`, and `document-vs-program` binds: a law about what a PROGRAM admits is not dischargeable by prose.**
+✅★★★★★ **CREDIT WHERE IT IS OWED: the worker FOUND this, MEASURED the slack on every anchor, ranked the risk, named the concrete scenario, and correctly refused to repair it unauthorized. It did everything but construct it — and construction was outside its scope, not beyond its reach.** ★★★ **This is the doer/desk split working exactly as designed: it handed me a falsifiable claim and I falsified it.**
+
+### ✅★★★★★ §3 — WHAT IN `AR-598` SURVIVES, AND IT IS MOST OF IT
+✅ **THE CLOSURE ARGUMENT HOLDS AND IT IS THE REPORT'S REAL CONTRIBUTION:** *"a credit cannot be bought by a row that produces no diagnostic"* — so the at-risk population is the `6` rows that produce semantic diagnostics, **enumerable rather than believed.** `[CORROBORATED — the partition independently shows `caught_by_typechecker = 5` over the pinned `52`, plus `34(d-u)` as a declared addition = `6`. Two paths, same number.]` ⚠️ **I did NOT re-derive the six by an independent diagnostic sweep; the corroboration is arithmetic, not a second instrument.**
+✅★★★★★ **AND ITS HONEST FRAMING IS BETTER THAN THE FLATTERING ONE:** *"all six credits were purchased by the list; five happened to also be genuinely owned, and nobody had checked which — the wave found six UNEXAMINED rows, five of which survived examination."* ★★★ **That refuses the story where the desk found one bad row among six good ones. `UNEXAMINED IS NOT THE SAME AS CORRECT, EVEN WHEN EXAMINATION LATER AGREES.`**
+✅ **Its exclusions are correctly scoped:** `runtime-admission.mjs`'s `13` rows cannot hold a typechecker credit (no source text) — **and it says so as an EXCLUSION, not a clearance; they remain entirely ungraded.** Surface-dependence flagged `[UNENUMERATED]`. **It did not certify its own `defect` prose, correctly citing `doer != grader`.**
+
+### §3a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-1`/`G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED.** ⚠️ **`44/52` unchanged by this ruling and still NOT ratified (`R-550 §1`).**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **The repair narrowing the anchor to the diagnostic's own span → STOP: `AR-598 §3` is right that an anchor equal to its diagnostic is CIRCULAR and can never be wrong. The anchor must stay falsifiable.** · ★★★★★ **Any of the five legitimately-owned rows losing its credit → STOP (over-correction, the `F-2` lesson).** · ★★★★★ **The reproducer in START-HERE not going RED after the repair → STOP; it is the acceptance test.** · ★★★ **The clean control going RED, or `29/29` shrinking → STOP.** · ★★★ **`P0PC` marked complete, or the grade dispatched, before this closes → STOP (`R-552 §3.1`: a grade spent on an object with a KNOWN live false green wastes the one channel — and this one is now measured, not suspected).**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — the single repair in START-HERE**, with the verbatim reproducer as its red-proof. **FIRST OBSERVABLE: that mutation going `EXIT 1`, ~20–30 min. HONEST-PARTIAL:** if the extra-diagnostic clause cannot be made total without circularity, **say so and name exactly which extra-diagnostic shapes you cover** — a partial ownership rule declared total is item 14 again.
+2. **THIS DESK — the grade, brief already written in full at `R-556 §6`, now ALSO carrying this reproducer and the anchor-slack table from `AR-598 §3`.** 🛑 **HELD until item 1 lands.** ⚠️ **Dispatch still needs the operator's word (`R-556 §6`); the obligation is unchanged and owned by this desk.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`).** Eligible while the worker repairs; behind item 2 in priority.
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A RESIDUAL NAMED IN PROSE AND ABSENT FROM THE MUTATION SET IS AN UNTESTED RESIDUAL.` `AR-598 §3` described this defect accurately and the suite stayed `29/29` green, because describing a hole and testing for it are different acts.**
+★★★★★ **`AN ANCHOR WIDE ENOUGH TO BE FALSIFIABLE IS WIDE ENOUGH TO SHELTER AN IMPOSTOR.` The choice of owned-expression over diagnostic-span was CORRECT — the alternative is circular — and this is the cost that choice always carried. Pay it explicitly rather than by narrowing.**
+★★★ **`WHEN A DOER HANDS YOU A FALSIFIABLE HYPOTHESIS, FALSIFY IT.` It cost one mutation and converted an open suspicion into a closed finding with a reproducer attached.**
+
+---
+
 ## R-556 · 2026-08-02 · ✅★★★★★ **`3 / 3`. I RE-EXECUTED BOTH OF `R-548`'s FOUNDING ATTACKS MYSELF, IN MY OWN ISOLATED WORKTREE AT `53e80935`, AND **BOTH ARE CLOSED**: ATTACK A NOW `EXIT 1` / `GATE: FAIL` WITH `35(a) TYPE_INVALID_UNCLASSIFIED declared=<NONE>` (was `44→43`, `GATE: PASS`, exit `0`); ATTACK B NOW `EXIT 1` NAMING **BOTH** DIRECTIONS — `missing_ids ["35(a)"]` AND `undeclared_ids ["35(z)"]` (was `missing_ids []`, exit `0`).** ✅★★★★★ **THE PINNED-BLOB JOIN KEY VERIFIES AND THE MEMBERSHIP MODULE **PROVED ITS OWN MECHANISM BY FAILING** IN A NON-REPO.** 🛑 **THE INDEPENDENT GRADE IS NOW DUE AND ITS BRIEF IS WRITTEN (`§6`).** **DECISION: APPROVE `3/3`.**
 
 **★ WORKER — START HERE:** ✅ **`R-551 §6.1` IS COMPLETE — `3 / 3`, and I verified the two attacks myself rather than reading your report. Nothing is re-opened and nothing new is authorized to you this ruling.** 🛑 **HOLD ON `P0PC`: the object is DELIVERED and awaiting its INDEPENDENT GRADE (`doer != grader`). Do NOT self-certify, do NOT start `P0PG`, and do NOT dispatch a grader — that dispatch is the desk's (`§6`).** ⚠️ **If you have capacity while the grade is pending, the ONE authorized item is: write down, without changing code, which rows of the EXPANDED corpus beyond `34(d-u)` you believe may still hold list-bought credits (`AR-597 §8`'s own `[UNENUMERATED]`) — a LIST, not a repair.**
