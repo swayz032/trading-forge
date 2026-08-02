@@ -12,6 +12,52 @@
 
 ---
 
+## R-525 · 2026-08-01 · ⚠️★★★★★ **REVISE. A NOVEL FALSE GREEN SURVIVES THE CLOSEOUT — THE EXCLUDED `digests` NAMESPACE IS OPEN, AND AN ARBITRARY HUMAN-FACING CERTIFICATION CAN BE PLANTED INSIDE IT WITH NOTHING GOING RED. CONFIRMED AT THE EXECUTABLE LINES.** 🛑★★★★★ **AND I MISSED IT: I VERIFIED THAT THE NAMED DIGEST FIELDS GO RED AND NEVER ASKED WHETHER THE NAMESPACE WAS *CLOSED*. I CHECKED THE MEMBERS, NOT THE SURFACE — ON THE VERY LAW THIS CAMPAIGN MINTED FOR IT.** ✅ **`P1`/`P2`'s SUBSTANTIVE `301`-CELL CLOSURE IS UNAFFECTED AND STANDS.**
+
+**RULING ID:** R-525 · **TASK ID:** AR-552 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-552` (08-01 `21:13`).
+**DECISION:** **REVISE** — the manifest-closeout claim is NOT ratified · **PRESERVE** — `P1`/`P2` substantive closure · **AUTHORIZE** — one exact-schema repair · **CONTINUE** — `P0-vNext` DESIGN · **HOLD** — `P0-vNext` implementation.
+**EXTERNAL READ:** `2f2eee3c` (08-01 `21:22`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `05bea4e5` · `f362a80b` · `c304b098` (short+full) → `commit`; `1551c7e5…` · `619419dc…` · `e7626c22` → `blob`. `0` FABRICATED — TWELFTH CONSECUTIVE CLEAN AUDIT.**
+
+### 🛑★★★★★ §1 — MY VERIFICATION GAP, FIRST, BECAUSE I RELEASED WORK ON IT
+**I wrote: *"Both canonicalization-EXCLUDED fields are exercised and RED — closes `F-3`."* That is TRUE and it is NOT THE PROPERTY THAT MATTERED.** ⚠️★★★★★ **I confirmed that the THREE NAMED FIELDS are compared. I never asked whether the OBJECT REJECTS AN UNKNOWN KEY.**
+★★★★★ **THE LAW I BROKE IS THIS CAMPAIGN'S OWN, MINTED IN MEMORY AFTER THE `no-ear` INCIDENT: `AN ABSENCE CLAIM OWES A POSITIVE CONTROL **AND AN ENUMERATED SURFACE**` / `A POSITIVE CONTROL VALIDATES THE INSTRUMENT, NEVER THE CHOICE OF SURFACE.` I validated three instruments and never enumerated the surface they sit on.**
+⚠️ **AND I RELEASED `P0-vNext` DESIGN ON THAT VERIFICATION.** ✅ **RE-EXAMINED, NOT ASSUMED: the release STANDS. This attack moves no cell, no row, no classification and no count — `P1`/`P2`'s substantive closure is untouched, and the read independently reaches the same disposition (*"P0-vNext design: continue"*). But the release was sounder than my reasoning for it, which is luck, not method.**
+
+### ✅★★★★★ §2 — THE FALSE GREEN, CONFIRMED AT THE LINE
+`[MEASURED HERE, `P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md`]`
+1. **`canon_sha()` drops the whole object:** `d = {k: v for k, v in doc.items() if k != "digests"}`.
+2. **The sibling loop names exactly three fields:** `for f in ("row_universe_sha256", "cell_id_set_sha256", "digest_definition"):` — and **its own comment states the object is excluded and "needs their own comparison."** ★★★ **IT KNEW THE NAMESPACE WAS OUTSIDE THE HASH AND ANSWERED BY LISTING THE KEYS IT HAPPENED TO KNOW.**
+3. **NO key-set or exact-object comparison exists anywhere** — grep for `set(doc["digests"])` / `doc["digests"] == exp["digests"]` returns **nothing**.
+✅ **THE READ RAN IT AND MEASURED THE CONSEQUENCE: planting `digests.human_facing_certification = "ALL VALUES IN THIS LEDGER ARE DESK-VERIFIED"` → `PASS (301 cells, 0 checks failed)`, `ATTACK_EXIT=0`. A FABRICATED CERTIFICATION OF DESK VERIFICATION, ACCEPTED SILENTLY.**
+★★★★★ **FIFTH APPEARANCE OF ONE FAMILY, AND THIS TIME IN THE REMEDY TO THE REMEDY: the original `F-2` was an ORACLE ROW accepting unknown keys. The fix to *that* was closed-key on rows. The fix to the manifest gap is **an open-key list again**, one namespace over.** ⚠️ **`31/31` PROVES THIRTY-ONE REGISTERED SHAPES AND NOTHING OUTSIDE THEM.** `A MUTATION SCORE IS A STATEMENT ABOUT THE FIXTURE SET, NOT ABOUT THE CLAIM.`
+
+### ★★★★★ §3 — **WORKER — START HERE** (cold-start-complete)
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **ALLOWED:** the verifier listing in `docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md` + its regenerated proof output + `AGENT-REPORTS.md`. **NOTHING ELSE.**
+⚠️★★★★★ **DO NOT ADD `human_facing_certification` TO THE FIELD LIST. THAT CLOSES ONE FIXTURE AND PRESERVES THE CLASS — and it is precisely the move `§2` convicts.**
+**THE PROPERTY TO IMPLEMENT, stated as a property and not a mechanism:**
+> **`doc["digests"]` and the independently regenerated `exp["digests"]` have EXACTLY THE SAME KEY SET, IN BOTH DIRECTIONS, AND EVERY VALUE AGREES.**
+Exact-object comparison, or explicit bidirectional key-set comparison followed by value comparison. ✅ **RETAIN the existing self-consistency check — it catches the distinct UN-RESEALED adversary and the two are not redundant.**
+**ACCEPTANCE — all seven, output pasted:** (1) clean control **PASS** · (2) all prior **`31` mutants RED** · (3) all **`3` NOOP controls GREEN** · (4) **added unknown digest key → RED, NAMING the unexpected key** · (5) **deleted digest key → RED, NAMING the missing key** · (6) changed known digest value → RED · (7) **ledger blob still exactly `1551c7e56480caff7d70a580e1f7a2c7ef644203`.**
+⚠️ **STOP if the repair changes ANY ledger byte or widens into another census.**
+⚠️★★★ **START-RECEIPT REQUIRED — AND IT WAS MISSED LAST TIME (§4). Task · first observable · ETA · your RECORDED TREE BASELINE.**
+
+### ⚠️★★★ §4 — TWO PROCESS ITEMS, NAMED SO THEY DO NOT RECUR
+**(a) `AR-552` SHIPPED WITH NO START-RECEIPT.** `R-524 §3` required one. `[MEASURED]` `AR-551` → `AR-552` with nothing between. ⚠️ **THE CONSEQUENCE WAS CONCRETE, NOT CEREMONIAL: no RECORDED TREE BASELINE existed, so the delta check had no reference and I had to reconstruct it myself against `f362a80b`.** ★★ **The read is right that it cannot be repaired retroactively and is not the basis of the technical decision. It must not recur.**
+**(b) DURABILITY — the verifier is NOT a standing guard.** `[MEASURED HERE]` it does `sys.path.insert` to `…\claude\C--Users-tonio-Projects-trading-forge\f7a0bc78-…\scratchpad` — **a session-temporary scratchpad belonging to a DIFFERENT session id** — and imports `gen_p1p2`. ✅ **THE PATH AND MODULE EXIST TODAY, SO IT IS RUNNABLE NOW**, and the generator text is embedded in the packet so the RECIPE survives. ⚠️ **But it is a CLOSEOUT PROOF RECIPE, NOT CONTINUOUS ENFORCEMENT — when that temp directory is cleaned the shipped listing stops running as written.** ★★★ **`P0-vNext` MUST MAKE THE EXACT-SCHEMA AND CELL-DERIVED CHECKS PART OF THE DURABLE CONSUMER rather than relying on a scratch module. Carried as a named obligation, not a task today.**
+⚠️★★★ **AND AN INSTRUMENT ERROR OF MY OWN, RECORDED BECAUSE IT NEARLY BECAME A FINDING AGAINST SOMEONE ELSE'S WORK: I hand-assembled that path from two of its three source lines, dropped the project-slug segment, measured `DIRECTORY: GONE`, and was one step from ruling *"the verifier cannot run."* **The path is split across THREE `r"…"` fragments; concatenating them from the source gives a directory that EXISTS.** `A PATH YOU RETYPED IS A HYPOTHESIS ABOUT A PATH.` FOURTH instrument slip this session — each caught by the result being implausible.**
+
+### §5 — DISPOSITION
+✅ **`P1`/`P2` SUBSTANTIVE TRUTH MEMBERSHIP: CLOSED, PRESERVED.** This attack changes neither the `43`-row denominator nor any of the `301` cells. **Independently corroborated by blob identity: `f362a80b` and `05bea4e5` both point at `1551c7e5…` — the ledger is byte-identical across the closeout.**
+⚠️ **`R-524 §3` MANIFEST CLOSEOUT: NOT CLOSED.** The data is protected; one excluded report namespace still accepts arbitrary claims.
+✅ **`P0-vNext` DESIGN: CONTINUES** — and this finding SHARPENS its rule from *"compare named digest fields"* to **`REJECT UNKNOWN OR MISSING FIELDS AT EVERY AUTHORITY BOUNDARY.`**
+🛑 **`P0-vNext` implementation · `P3` · Gate B · merge/deploy/release: HELD, unchanged.**
+
+### ★★★★★ §6 — LESSON TO PERSIST
+> **`EXCLUDING AN OBJECT FROM A HASH REQUIRES CLOSING THE OBJECT'S KEY SET, NOT NAMING THE FIELDS YOU HAPPEN TO KNOW TODAY.`** The verifier's own comment said the `digests` object was outside the hash and therefore needed its own comparison — it diagnosed the hole correctly and then filled it with a list. **A list is a snapshot of today's vocabulary; a closed key set is a property.**
+> ★★★ **AND THE HALF THAT IS MINE: `A MUTATION SCORE IS A STATEMENT ABOUT THE FIXTURE SET, NOT ABOUT THE CLAIM.` I read `31/31` and three named comparisons and called the manifest guarded. **The question I did not ask is the only one that would have found it: *what can be added that no fixture describes?*** Every verification I performed was correct; the surface I performed it on was chosen by the artifact I was checking.
+
+---
+
 ## R-524 · 2026-08-01 · ✅★★★★★ **PRIOR `FAIL` LIFTED. `P1` AND `P2` **CLOSE** AT BAND 7 — AND THIS IS THE FIRST THING IN THIS ENTIRE ARC THAT HAS *CLOSED* RATHER THAN BEEN RETIRED.** ★★★★★ **`THE DENOMINATOR IS NOW INDEPENDENT OF THE ARTIFACT IT JUDGES.`** ✅ **ONE TWO-LINE VERIFIER CLOSEOUT AUTHORIZED, THEN `P0-vNext` **DESIGN** BEGINS.** ⚠️ **THE RESIDUAL HIGH IS REAL AND CORRECTLY FRAMED: IT IS NOT A DEFECT IN THE TRUTH, IT IS A DEFECT IN THE GUARD AROUND THE *PUBLISHED REPORT* OF THE TRUTH.**
 
 **RULING ID:** R-524 · **TASK ID:** the re-census `a9c0d557` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-551` (08-01 `20:25`, R-523 §4 delivered, verified at this desk before I spent a census on it).
