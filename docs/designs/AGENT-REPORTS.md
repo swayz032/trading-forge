@@ -4,6 +4,63 @@
 
 ---
 
+## AR-573 · 2026-08-01 · ✅★★★★★ **R-531 §6 DELIVERED — FIVE CORRECTIONS, `42/42` INCLUDING FOUR CONTROLS THAT PROVE THE NEW COHERENCE CHECK CAN STILL CONVICT. CLAIM `A` NO LONGER READS THE LEDGER AT ALL, AND THE `10`-vs-`5` UNIMPLEMENTABLE MIDDLE IS GONE.** 🛑★★★★★ **THE CONTRADICTION PASS IS THE PART THAT MATTERS: IT IS DERIVED FROM THE INVARIANT, NOT THE ORDER SHEET, BECAUSE MY OWN `49/49` COULD ONLY EVER VERIFY OBEDIENCE.**
+
+**RULING ID:** R-531 §6 · **TASK ID:** AR-573 · **PRIOR:** AR-572 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `P0-VNEXT-DESIGN-2026-08-01.md` (`+46/-12`).** ⚠️ **The blueprint addendum was ALLOWED only if Surface-`A` wording had to change. It did not — the addendum already carries `215` unique projected fields and never asserted the five-key schema. NOT TOUCHED, and saying so is the point.**
+**FAN-IN: `5 / 5`. NOT A HANDOFF.**
+
+### 🛑★★★★★ §1 — ITEM 1: THE LAST PLACE CLAIM `A` READ THE LEDGER
+**The presence matrix's `absent`/`absent` row now reads `PROJECTION_MISSING_BOTH` — A FAILURE. ALWAYS. NO EXCEPTION.** The `NOT-APPLICABLE` escape is deleted.
+⚠️★★★★★ **I HAD WRITTEN BOTH HALVES OF A CONTRADICTION INTO ONE DOCUMENT IN ONE DELIVERY: `SEALED BEFORE THE LEDGER IS PARSED` and `GREEN ONLY IF THE LEDGER SAYS NOT-APPLICABLE`. The second silently repealed the first.** ★★★★★ **`MOVING DEPENDENCE FROM cell.value TO cell.classification DOES NOT MAKE A CLAIM INDEPENDENT — IT MOVES THE COUPLING ONE FIELD TO THE LEFT.` I severed the value and kept the class, and called it severed.**
+⚠️★★★ **It was not even well-defined: the escape named *"that exact cell"* while the same document establishes one projected `reason` feeds THREE ledger cells. There is no one-to-one cell for it to name on a `215`-field frame.**
+✅ **INAPPLICABILITY IS NOW CARRIED BY VALUE, NEVER BY OMISSION: all five projection keys are ALWAYS emitted; a semantically inapplicable field is JSON `null`; `MISSING` therefore means THE LANE FAILED TO EMIT and never *"this did not apply."*** ★★★★★ **`A SCHEMA IN WHICH ABSENCE IS SOMETIMES LEGITIMATE HAS NO WAY TO REPORT THE ABSENCE THAT IS NOT.`** **The `9` skip witnesses survive unchanged — as CLAIM-`B` output, running after the sealed claim-`A` projection.**
+
+### ✅★★★★★ §2 — ITEM 3: THE `10`-vs-`5` MIDDLE WAS MINE AND IT WAS UNIMPLEMENTABLE
+`[MEASURED HERE, `c304b098`, counted programmatically, positive controls both ways]` **`BINDING_KEY_MAP` `10` entries `satisfies Record<keyof ConditionBinding, string>` · python dataclass `10` fields · my frozen "closed destination schema" `5`.** **The five legitimate keys my schema would have REJECTED: `condition_id` · `executed` · `object` · `role` · `type`.**
+🛑★★★★★ **PASS TEN AND MY SCHEMA REJECTS FIVE · PASS FIVE AND THE EXHAUSTIVE CHECK FLAGS FIVE AS EXTRA · PRE-SELECT FIVE AND THE SELECTOR BECOMES A SILENT-DROP SURFACE THE "EXHAUSTIVE" CHECK NEVER SEES.** ★★★ **`A CLOSED SCHEMA IS A CLAIM ABOUT A KEY SET, AND A KEY-SET CLAIM IS ONLY TRUE RELATIVE TO THE SET IT WAS JOINED AGAINST` — I froze one without joining it against the map it was meant to close.**
+✅ **REPLACED BY TWO STAGES: validate the FULL ten-field object against a ten-entry source map AND a ten-key destination schema, both directions, at both ends — THEN select the five claim-`A` keys, validate the selection both directions, and SEAL.** ★★★★★ **`VALIDATE THE FULL OBJECT BEFORE SELECTING THE MEASURED SUBSET, OR THE SELECTOR BECOMES THE OMISSION MECHANISM.`** **`type`/`role`/`object`/`executed` are DECLARED out-of-frame rather than dropped — `DECLARING AN EXCLUSION IS NOT THE SAME ACT AS DELETING A KEY, AND ONLY THE FIRST IS REVIEWABLE.`**
+⚠️★★★ **AND A SECOND ERROR I FOUND WHILE MEASURING, UNORDERED: `AR-571` said *"exactly ONE is a real rename."* **THERE ARE TWO — `conditionId → condition_id` AND `sessionZone → session_zone`.** True over the five axis fields, written as though it characterised the map.** `A COUNT IS ONLY TRUE INSIDE THE POPULATION IT WAS TAKEN OVER.`
+
+### ✅★★★ §3 — ITEMS 2, 4, 5
+**2 — CLASSIFICATION-ONLY MUTATION (row `30`):** change ONLY a `classification`, every `cell.value` untouched → **claim `A`'s PROJECTION *AND VERDICT* BYTE-IDENTICAL.** ⚠️ **Distinct from row `23`, which mutates `cell.value` and therefore CANNOT detect classification coupling — row `23` must not be cited as if it could.** ✅ **Rows `31`/`32` added for the wrong-five-field selector (stage 2) and the sixth/unknown raw field (stage 1); row `27` REPOINTED from the retired five-key schema to stage 1's destination membership.**
+**4 — THE DIGEST ABSOLUTISM IS DELETED, THE MUTATION IS KEPT.** ⚠️★★★★★ **`A DIGEST THAT DID NOT MOVE CANNOT` was MINE, and it is false the same way the sentence it replaced was: an unchanged digest proves `INVARIANCE UNDER THIS MUTATION, OVER THE EXERCISED 43-ROW POPULATION` — not non-reachability. A forbidden read of classification counts, ledger length, schema version, citations or scope digest survives it untouched, as does any branch those rows never execute.** ★★★★★ **`RETIRING A FALSE ABSOLUTE BY MINTING ANOTHER ABSOLUTE IS THE SAME DEFECT ONE LEVEL OUT` — two rounds, two absolutes, both mine, and a third party caught the second.**
+✅ **THE CAPABILITY AUTHORITY IS NOW PROCESS/DEPENDENCY ISOLATION, preferring the separate-process form** (only serialized lane output + the closed plain-data contract; filesystem/network/env access to ledger and oracle paths DENIED) — **so *"did not read the ledger"* becomes a property of the sandbox rather than a claim about the code.** ⚠️ **If same-process is retained, the design owes dynamic `import()` · generic filesystem reads · `globalThis` · environment variables · TRANSITIVE dependencies, each denied or fail-closed. ★★★ THAT IS NOT YET SPECIFIED AND IS LABELLED `[UNRESOLVED — NAMED]`, which is why separate-process is PREFERRED rather than merely suggested.** `AN UNSPECIFIED DENIAL IS AN OPEN CAPABILITY.`
+**5 — CAPTION RE-PARSED: `32` mutations + `1` control = `33` rows, contiguous.** ⚠️ **Third recomputation; `23`→`22+1`, `24+1`, `29+1` were each true only until the next rows landed. Nothing carried.**
+
+### 🛑★★★★★ §4 — THE COHERENCE CHECK, WHICH I ADDED BECAUSE THE CONVICTION IS MINE TOO
+**`R-531 §1` convicts the desk's four pre-registered checks — all passed, all true, all the wrong question.** ⚠️★★★★★ **MY `49/49` HAD THE IDENTICAL BLINDNESS: every one of the forty-nine mapped to a numbered item on the order sheet, so not one could ask whether §2's *"sealed before the ledger is parsed"* contradicted §2's own `NOT-APPLICABLE` escape — a contradiction sitting in the document WHILE MY SUITE PRINTED GREEN.** `CRITERIA DERIVED FROM THE INSTRUCTIONS CAN ONLY VERIFY OBEDIENCE.`
+✅ **SO THIS ROUND CARRIES A CONTRADICTION PASS DERIVED FROM THE INVARIANT: enumerate EVERY line making a claim-`A` statement that also names a ledger field, and assert none GATES a claim-`A` outcome on it.** ★★★ **It does not pretend a regex settles semantics — it PRINTS all nine candidates with its classification of each, so a reader can overrule the machine.** `A CHECK WHOSE JUDGEMENT IS INVISIBLE IS A CHECK NOBODY CAN AUDIT.`
+⚠️★★★★★ **AND IT WAS TUNED TWICE, WHICH IS THE DANGEROUS PART, SO EACH LOOSENING BOUGHT A NEW CONTROL:** first it flagged co-occurrence (a mutation row saying *"claim `A` stays GREEN when the ledger moves"* names a ledger field precisely to assert INDEPENDENCE) → sharpened to test CONDITIONALITY · then it flagged a NEGATED conditional (*"no claim-`A` verdict **is a function of** them"*) → negation handled as exact phrases, never a bare *"no"*.
+✅★★★★★ **FOUR CONTROLS NOW PROVE IT CAN STILL CONVICT: (a) a plain planted dependency · (b) a dependency INSIDE a mutation row — so mutation rows are not blanket-excused · (c) a genuine independence row, not flagged · (d) A DEPENDENCY ON A LINE THAT ALSO CONTAINS A NEGATION — so the negation handling cannot launder a real gate. All four behave.** ★★★ **`EVERY TIME YOU LOOSEN A CHECK, THE LOOSENING OWES A CONTROL THAT THE CHECK CAN STILL FAIL` — otherwise tuning-until-green is indistinguishable from verifying.**
+
+### §5 — ACCEPTANCE (the read's seven, plus the pass I added)
+```
+CONTRADICTION PASS  9 candidates enumerated · 0 conditional dependencies · 4 controls behave
+1 no claim-A outcome gated on a ledger field ....... PASS
+2 both-missing ALWAYS fails claim A; skip = claim B  PASS   (all 5 keys always emitted; null not omission)
+3 ten validated then five selected ................. PASS   (10/10/5 · rejected keys named · selector law)
+4 three mutations, three named catchers, control ... PASS   (row 27 repointed to stage 1)
+5 classification-only AND whole-ledger byte-ident .. PASS   (row 30 distinct from row 23)
+6 ambient surface named or fail-closed ............. PASS   ([UNRESOLVED — NAMED], not hidden)
+7 matrix count RE-PARSED ........................... PASS   (32 + 1 = 33, contiguous)
+digest absolutism retired, measured scope stated ... PASS
+                                                     42 / 42
+```
+
+### §6 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · ledger READ-ONLY · no `ORACLE.json` · no census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · no `P3` · no Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT NOT TOUCHED (its Surface-`A` wording did not need to change).**
+- ⚠️ **`42/42` IS A DESIGN-TEXT RESULT. NO IMPLEMENTATION EXISTS, NO MUTATION HAS EVER BEEN RUN, NO CI EXECUTES THIS.**
+- ⚠️ **SAME-PROCESS AMBIENT DENIAL IS `[UNRESOLVED — NAMED]`, not solved.** ⚠️ **`c304b098` READ, NEVER RE-RUN.** ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B`'s current `N` is UNKNOWN and unowned.**
+- ★★ **I do not grade my own work — and the contradiction pass grades the DOCUMENT, never this delivery.**
+
+### §7 — POSITION
+**Design REVISED on all five corrections, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+⚠️ **Grade DEFERRED with the trigger re-armed to `R-531 §6` + external read (`R-531 §5`). Not asking; the trigger has not fired.**
+★★ **FAN-IN `5 / 5`. NOT A HANDOFF.**
+
+---
+
 ## AR-572 · 2026-08-01 · **START-RECEIPT — R-531 §6 ACCEPTED. FIVE CORRECTIONS, ONE RECEIPT, DESIGN ONLY.** 🛑★★★★★ **AND THE DESK'S CONVICTION OF ITS OWN PRE-REGISTRATION LANDS ON ME IDENTICALLY: MY `49/49` SUITE WAS ALSO DERIVED FROM THE ORDER SHEET. IT PROVED I DID WHAT I WAS TOLD AND NEVER ASKED WHETHER THE RESULT CONTRADICTS ITSELF.**
 
 **RULING ID:** R-531 §6 · **TASK ID:** AR-572 · **PRIOR:** AR-571 · **SEAT:** `claude.exe 26204`.
