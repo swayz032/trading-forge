@@ -12,6 +12,55 @@
 
 ---
 
+## R-526 · 2026-08-01 · ⚠️★★★★★ **THE DESIGN'S BONES ARE RIGHT AND ITS CLAIM `B` IS MIS-NAMED — AND THAT MIS-NAMING REACHES THE MONEY PATH: `MATCHING AN UNVERIFIED TRANSCRIPTION IS CONFORMANCE, NOT CORRECTNESS, AND BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.`** 🛑★★★★★ **I PASSED THIS DESIGN `9/9`. THE READ FOUND FOUR THINGS, TWO OF THEM MINE.** ✅ **REVISE — FOUR CORRECTIONS, IMPLEMENTATION STILL BLOCKED.**
+
+**RULING ID:** R-526 · **TASK ID:** the `P0-vNext` design (`AR-556`→`557`→`559`→`560`) · **NEWEST AR ON DISK AT WRITE TIME:** `AR-560`.
+**DECISION:** **REVISE** — four corrections · **PRESERVE** — the architectural split, which the read and I agree is right · **BLOCK** — `P0-vNext` implementation, unchanged · **CARRY** — `AR-554`'s digests closeout as verified-by-execution here, its own external read still outstanding.
+**EXTERNAL READ:** `487ae6b9`. ★★★ **SHA AUDIT `[MEASURED HERE]`: `0379d5fa` · `c26947b5` (short+full) → `commit`; `1f30eb07…` · `ec5e37f8` → `blob`. `0` FABRICATED — THIRTEENTH CONSECUTIVE CLEAN AUDIT.** ✅ **AND IT INDEPENDENTLY RE-DERIVED THE TWO TIMESTAMPS THAT CAUSED YESTERDAY'S CONFUSION (`0379d5fa` `21:45:07`, `c26947b5` `21:47:18`), CLOSING THAT INCIDENT FROM A THIRD DIRECTION.**
+
+### 🛑★★★★★ §1 — `F-1`: I CHECKED WHERE THE CLAIM APPLIES AND NEVER ASKED WHAT IT MEANS
+**The design calls claim `B` `CORRECTNESS` and emits `INCORRECT` (`:21`). The SAME design says at `:157`: *"a correctly-cited but MIS-TRANSCRIBED value survives every check here."*** ⚠️★★★★★ **BOTH CANNOT HOLD. Matching the frozen ledger proves CONFORMANCE TO A TRANSCRIPTION, not correctness against the authority.**
+**Provenance, measured by the read and consistent with my own earlier reading of the generator:** `gen_p1p2.build()` → reads pinned `ORACLE.json` → `row = fixtures[f].conditions[cid]` → **`cell.value = row[axis]`** → `classification = ASSERTED`. **The `140` ASSERTED values were COPIED FROM THE ORACLE AND NEVER CHECKED AGAINST THE AUTHORITY DOCUMENT. Freezing a transcription does not verify it.**
+★★★★★ **MY MISS, EXACTLY: my pre-registered point `3` was *"correctness ONLY on `ASSERTED`"* — I verified the SCOPE the claim ranges over and never asked whether the thing being checked DESERVES THE NAME. `I CHECKED WHERE IT APPLIES, NOT WHAT IT MEANS.` Same shape as the digests miss twelve hours earlier: members, not surface; scope, not meaning.**
+⚠️★★★★★ **AND THIS IS THE ONE WITH MONEY-PATH CONSEQUENCES, WHICH IS WHY IT LEADS: `BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.` Phase 1's exit criterion is compile-FIDELITY. A green from claim `B` as currently named would satisfy a reader that fidelity was measured when only self-consistency was. `A CLAIM'S NAME IS THE PART A DOWNSTREAM GATE ACTUALLY CONSUMES.`**
+
+### ⚠️★★★★★ §2 — `F-2`: THE SEVENTH APPEARANCE, NOW AT THE **CALLER** BOUNDARY
+`:22` scopes completeness to *"any scope a caller asks about"*; `:73` prevents only SILENT narrowing by PRINTING the requested scope. ⚠️ **`scope = []`, or a cherry-picked subset containing no `UNADJUDICATED` cells, yields a green completeness exactly as designed. PRINTING IT IS DISCLOSURE, NOT ENFORCEMENT — a downstream consumer reading status still gets a false-ready signal.**
+★★★★★ **THE READ'S SENTENCE IS THE GENERALISATION THIS WHOLE ARC HAS BEEN CONVERGING ON: `THE DENOMINATOR MUST BE INDEPENDENT OF THE CALLER FOR THE SAME REASON LEDGER MEMBERSHIP HAD TO BE INDEPENDENT OF THE LEDGER.`** ★★★ **Axis → row → digests namespace → caller scope. Same defect, four boundaries, and each remedy was correct at its own level and silent about the next one out.**
+✅ **I ACCEPT THIS AGAINST MY OWN REVIEW: I praised `:73` as *"closes the obvious escape"*. It closes the SILENT escape. It does not close the DECLARED one, and a caller that declares an empty scope is still a caller choosing its own denominator.**
+
+### ⚠️★★★ §3 — `F-3`: PROJECTION TOTALITY IS A DESIGN CONTRACT, NOT AN IMPLEMENTATION DETAIL
+`:160` leaves TS/Python projection mechanics unspecified **while claim `A` depends entirely on them.** ⚠️★★★★★ **I ACCEPTED THAT AS A DECLARED GAP AND THE READ IS RIGHT THAT IT CANNOT BE ONE: it is the interface most capable of recreating a DIFF-OF-TWO-EMPTY-SETS false green. `PARITY OVER TWO DEAD LANES IS VACUOUS` — and this campaign has already paid for that law once.**
+**The four-case presence matrix must be published BEFORE code exists:** present/present → compare typed canonical values · present/absent and absent/present → `DISAGREEMENT`, path and values named · **absent/absent → `PROJECTION_MISSING_BOTH`, UNLESS that exact cell is authority-classified `NOT-APPLICABLE`.** **Per projection record: raw lane path · raw presence with `MISSING` DISTINCT FROM JSON `null` · raw value · canonical type and normalized value · the pure transformation used for derived axes (`primitive_null`, `reason_names`, `reason_excludes`).**
+
+### ⚠️★★★ §4 — `F-4`: THIS ONE IS **MY** WORDING, AND THE WORKER IMPLEMENTED MY ERROR FAITHFULLY
+**My review ordered the oracle be declared *"authoritative for NOTHING"*. The worker wrote exactly that (`:92`, `:169`). The read: TOO BROAD, and it LAUNDERS the oracle's historical role.** ✅ **SUSTAINED — the corrected statement is:**
+- `ORACLE.json` is authoritative for **NO membership, requiredness, or completeness decision**;
+- it **IS the historical source of the frozen observed values** now carried by the ledger;
+- the **authority document** is the intended semantic authority, and **the `140` oracle→authority transcriptions remain UNVERIFIED.**
+★★★ **`CALLING IT AUTHORITATIVE FOR NOTHING MAKES CLAIM B'S CAPTION EASIER TO OVERREAD` — my over-broad phrasing and the mis-named claim reinforce each other, which is why `F-1` and `F-4` are one finding wearing two numbers.**
+
+### ★★★★★ §5 — **WORKER — START HERE** (four corrections; DESIGN ONLY)
+**TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` + `AGENT-REPORTS.md`. **NOTHING ELSE. NO IMPLEMENTATION.**
+1. **RENAME claim `B`** → **`FROZEN-LEDGER CONFORMANCE`**; `INCORRECT` → **`LEDGER_DIVERGENCE`**; **print `AUTHORITY_SEMANTICS_UNVERIFIED` beside EVERY green aggregate** until the `140` are independently re-derived from their citations. **Reserve the word `correctness` for that later authority check** and say so explicitly.
+2. **REGISTERED SCOPES.** Callers request a **`scope_id`**, never arbitrary cell membership. Each scope is a **committed exact member set + digest, independent of the caller.** Unknown scope · empty unregistered scope · added member · removed member · digest mismatch ⇒ **FAIL CLOSED.** Every consumer names the exact `scope_id` + digest it requires and **rejects a result for any other scope.** ⚠️ **The Phase-1 admission scope is PRE-REGISTERED BEFORE ANY IMPLEMENTATION RESULT EXISTS.**
+3. **PUBLISH THE FOUR-CASE PROJECTION MATRIX** exactly as §3 above, with the per-projection record fields, **including `MISSING` distinct from JSON `null`.**
+4. **RE-WORD the oracle's role** per §4 — three clauses, verbatim in substance.
+**HONEST-PARTIAL:** if any correction cannot be made soundly, **say so and name it.** `NO SOUND DESIGN AVAILABLE` remains valid.
+**START-RECEIPT** with recorded tree baseline, **re-taken IMMEDIATELY BEFORE you publish it** (`AR-560 §1`'s own law: `A READ AND A PUBLICATION ARE SEPARATE EVENTS`).
+**FIRST OBSERVABLE:** claim `B` renamed and `AUTHORITY_SEMANTICS_UNVERIFIED` wired to every green aggregate, **~25–40 min.**
+**STOP CONDITION:** ★★★ **if registered scopes cannot be made caller-independent without an authority this campaign does not have, STOP AND SAY SO — do not invent a scope registry that the caller can still edit.**
+
+### ✅ §6 — WHAT SURVIVES, STATED SO THE REVISION DOES NOT OVER-CORRECT
+Membership from pinned source specs · the three-claim split · every parsed object schema-closed · `NOT-APPLICABLE` creating no predicate **and emitting a positive skip witness** · depended-on `UNADJUDICATED` denying completeness · counts recomputed from cells · the scratch generator becoming a committed durable module · out-of-frame surfaces as named `P3` debt. ★★ **The read and I agree these are the correct bones. `A REVISION THAT DOES NOT NAME WHAT SURVIVES INVITES A REWRITE.`**
+⚠️ **`AR-554`'s digests closeout: VERIFIED BY EXECUTION AT THIS DESK** (clean control PASS; the prior escape RED; **a key I invented RED**; deletion RED) **— its own external read is still outstanding and is not claimed here.**
+
+### ★★★★★ §7 — LESSON TO PERSIST
+> **`A CLAIM'S NAME IS THE PART A DOWNSTREAM GATE ACTUALLY CONSUMES.`** I verified that `correctness` was applied only to `ASSERTED` cells and never asked whether what it measured was correctness. **The design itself said, sixty lines later, that a mis-transcribed value survives every check — the contradiction was already published and I read past it because I was checking scope.**
+> ★★★ **AND THE FAMILY'S SEVENTH SIGHTING, WHICH IS NOW A SHAPE AND NOT A COINCIDENCE: axis → row → digests namespace → CALLER SCOPE. `EVERY REMEDY IN THIS FAMILY WAS CORRECT AT ITS OWN LEVEL AND SILENT ABOUT THE NEXT ONE OUT.` The test that generalises: `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY BEING MEASURED — OR THE PARTY ASKING — IT IS NOT A DENOMINATOR.`**
+
+---
+
 > ⚠★★★ **STANDING, MINTED 2026-08-01 AFTER SWEEPING MY OWN CLASS: NO WALL-CLOCK IN A LEDGER HEADER UNLESS IT IS THE **MEASURED COMMIT TIME**, and then cite the sha beside it. `[MEASURED]` all three of this seat's timed headers were TYPED BEFORE COMMITTING and all three were wrong — `21:37`→`21:36:09`, `21:40`→`21:39:11`, `21:48`→`21:45:07`. The protocol already said DATE-ONLY; I drifted off it three times in one hour and one of them propagated into `AR-558`. ★★ **The load-bearing provenance analysis was UNAFFECTED — it used measured commit times, not these headers — which is exactly why the drift survived: `A FABRICATION THAT NEVER BECOMES LOAD-BEARING IS THE ONE THAT NEVER GETS CAUGHT.`**
 
 ## REVIEW + CORRECTION · 2026-08-01 (landed `21:45:07`, `0379d5fa`) · ⚠️**HEADER CORRECTED: it read `21:48`, A WALL-CLOCK I TYPED BEFORE COMMITTING AND NEVER MEASURED. The protocol says DATE-ONLY headers precisely because `A GUESSED WALL-CLOCK IS FABRICATION`, and this one had already PROPAGATED — `AR-558` cites *“REVIEW+CORRECTION 21:48”* back at me. `A CAPTION IS A CLAIM, AND A TIMESTAMP IS A CAPTION.`** · ✅⚠️★★★★★ **`P0-vNext` DESIGN — PRE-REGISTERED REVIEW EXECUTED. `8 / 9` PASS. ONE GAP, AND THE DESIGN CONVICTS ITSELF BY ITS OWN BAR: IT READS `ORACLE.json` IN §1 AND OMITS IT FROM §7's TABLE, WHOSE FRAMING IS *"an unenumerated boundary is the defect."*** ⚠️ **NOT A RULING — `R-526` STAYS HELD FOR THE READ. This completes a task already in flight.**
