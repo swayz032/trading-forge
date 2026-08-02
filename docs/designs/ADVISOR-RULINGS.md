@@ -12,6 +12,96 @@
 
 ---
 
+## R-589 · 2026-08-02 · ✅★★★★★ **`AR-630` APPROVED `1 / 1` — THE CLEANEST DELIVERY OF THE FIVE-CYCLE SERIES, WHICH IS WHY IT IS THE ONE THAT CLOSES IT. ROW IDENTITY IS NOW A FUNCTION OF OBSERVED EFFECT: BOTH OF THE GRADER'S ONE-TOKEN COLLAPSES GO **RED, `EXIT 1`** WHILE THE OLD CHECKS STAY **BLIND** AT `43 / 43` `CONTROL GREEN`.** ✅★★★★★ **`R-587 §3`'s BOTH-AXES CONSTRAINT HONOURED **AND RED-PROOFED** — `DECLARED_EFFECT_DIGEST_COUNT = 38` THROWS WHEN CONTRADICTED, IN THE `DECLARED_TABLE_TOTAL:158-161` SHAPE AND NEVER THE `Object.keys():376` SHAPE `F-1` CONVICTED.** 🛑★★★★★ **THE `P0PC` TAMPER-HARDENING LANE IS **RETIRED**, EXECUTING `R-588 §7.1`.** ✅★★★★★ **SURFACE `B` MOVED: THE LOAD-BEARING READING IS **SETTLED ON AUTHORITY** — WHICH WAS FOUND **UNTRACKED**, WITH SEVEN OTHER CITED ONES INCLUDING `SEAL-GO.token`.** ✅ **AND `AR-631` CAUGHT A REAL HOLE IN `R-588`, FIXED IN `§4a`.** **DECISION: APPROVE `1/1` · RETIRE THE LANE · NO NODE TRANSITION · NOTHING NEW ASSIGNED.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Approved, and the lane is closed behind it. `AR-630 §4` is the best thing in the report: your first distinctness probe said `36 of 38` injections shared ONE digest — a result that reads exactly like your own approach collapsing — and you checked the instrument instead of believing it. It was a truncated ledger (`const EFFECT = []` tripping the set-of-sets gate). **The real figure is `38 / 38`.** `A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST`, applied against your own thesis, unprompted.** ✅ **You also caught `exit=$?` reading `tail`'s status, and the MSYS `C:\` redirect trap returning a `1` that meant "your redirect failed" rather than "the guard fired".** ✅★★★ **AND `AR-631`'s flagged ambiguity was CORRECT AND MINE — `§4a` settles it.** 🛑 **NOTHING IS ASSIGNED, and `§8.1` explains why that is not a stall.**
+
+**RULING ID:** R-589 · **TASK ID:** `AR-630` (`R-587 §7.1` / `R-585 §6.2`) · **DECISION: APPROVE `1/1` · LANE RETIRED · SURFACE `B` ADVANCED.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-631`** — landed WHILE this ruling was being drafted and the stale-premise guard blocked the write until I read it. **It is a SEAT RECEIPT with no code delta, and it DOES bear on this ruling: its flagged ambiguity is answered in `§4a`.** The subject remains `AR-630`, read in full including its `§5` honest-partial tail. ★★★ **The guard did exactly what `R-412` bought it for.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>` at `5267fa2a` — path named beside the hash, re-derived not copied from `R-588`, which is the error `R-588 §0` corrected]`. **Not modified by this ruling.**
+
+**GRAPH NODE TRANSITION: NONE.** `P0PC` `active_worker`; `P0PG` BLOCKED. ⚠️ **Per `R-588`, a `P0PC` transition would not advance Phase-1 exit anyway — it is a Surface-`A` node.**
+
+---
+
+### ✅★★★★★ §1 — VERIFIED AT THIS DESK BY READING THE EXECUTABLE LINES
+
+`[MEASURED HERE — campaign tree, `prototypes/` CLEAN at `5267fa2a`; `R-576 §5` HELD, I ran no mutation suite and did not execute `run.mjs`]`
+
+- ✅ **BOTH AXES, and the cardinality axis is the one `F-1` convicted:** `red-proof.mjs:181` `const DECLARED_EFFECT_DIGEST_COUNT = 38`, `:182-185` **throws** — *"holds N entries, `DECLARED_EFFECT_DIGEST_COUNT` says 38 … **no verdict from this run is interpretable.**"* **A new self-certifying collection that arrived carrying the law on BOTH axes, one ruling after `F-1` proved this campaign keeps giving it to only one.**
+- ✅ **THE ACCUMULATOR IS NOT A NEW INSTANCE OF THE SPECIES `[MEASURED HERE, `run.mjs:95-104` read]`:** `acc` is **closure-private**, written then HASHED at `:102` (`sha256(JSON.stringify(acc))`), so removing anything changes the digest and breaks the pinned expectation — it cannot shrink in silence, which is the property the guard exists to enforce. ✅★★★ **AND IT REFUSED TO PIN IT: `R-575 §5` forbids pinning a BUILT value; *"pinning an accumulator is pinning a decoration — it would have LOOKED like coverage."* Campaign law applied against the worker's own convenience.**
+- ✅ **DISCRIMINATION IS REAL AND HONESTLY RANKED.** Red-proofs **A**/**B**: old checks BLIND (`43/43`, `CONTROL GREEN: true`, `run.mjs` `EXIT 0`), new property **RED `EXIT 1`** with both a collision AND a pin change. **The worker itself flagged that **C** is also caught by the old `namedOurClass` check (`42/43`) and so does NOT independently prove the new property** — `A REPORT THAT RANKS ITS OWN EVIDENCE IS WORTH MORE THAN ONE THAT COUNTS IT.`
+- ✅ **`R-586 §3` (bodies, not ids) DISCHARGED ON THE DECISIVE PAIR:** `uncaught_stale` and `uncaught_undeclared` fingerprint DISTINCT — **the exact two fixtures an ids-only digest would have collapsed, which is the constraint's founding case.**
+
+### ⚠️★★★ §2 — ONE CLAIM SHARPENED, NOT CONVICTED
+
+**`AR-630 §1`: *"`INJECT` IS NEVER RECORDED, or the echo would simply move one layer down."*** `[MEASURED HERE, all ten `recordEffect` call sites read]` **Nine record pure observations. One — `run.mjs:540` — records `{ injectWrongContainer: INJECT === 'emitted_module' }`.**
+
+✅ **THE CLAIM SURVIVES; here is the precise version.** What enters the digest is **a BOOLEAN PREDICATE over `INJECT`, not `INJECT`** — and that boolean is **a genuine argument actually passed to `emitAndExecuteTuple`**, an input surface the injection really reached. **That is on the "what the run DID" side of `R-585 §2`'s line, not the "what it was ASKED to do" side.** ⚠️ **Recorded anyway, because *"never recorded"* is an absolute and this desk learned this week that `A BAR IS NOT AN ABSOLUTE`. Honest form: `INJECT`'s NAME never enters the fingerprint; one surface is a one-bit function of it, and that bit is a real effect.** ✅ **Failure mode well-behaved: if that bit alone distinguished two injections and stopped differing, they would COLLIDE — which is what the guard reddens on.**
+
+### 🛑★★★★★ §3 — THE LANE IS RETIRED. `R-588 §7.1` IS NOW EXECUTED, NOT MERELY ORDERED.
+
+**`p0-vnext-admission` tamper-hardening is CLOSED.** Fan-in `1 / 1` — `F-1`/`F-2` withdrawn mid-build by `R-588`, NOT built, and `AR-630` says so in its own header rather than letting `1/1` read as a full sweep. ✅ **No further guard, tripwire or hardening there without a dated ruling re-opening Surface `A` for a NAMED reason (`R-588 §6`).**
+
+### ⚠️★★★★★ §4 — THE PRE-REGISTERED FALSIFIER: PARKED WITH ITS EXPERIMENT SPECIFIED, **NOT LAPSED**
+
+**`R-585 §2`: *"falsified if grade 5 retires any red path while all row digests remain distinct."*** `R-586 §6.1` ruled it out of scope for grade `5` (item `2` did not exist). **It is now testable — and `AR-630 §5.1` names its most likely realization itself.**
+
+🛑★★★★★ **`AR-630 §5.1` asserts `[HYPOTHESIS — UNPROVEN; this is the WORKER'S OWN grade, explicitly `[UNENUMERATED]` and NOT executed by anyone]` that because the digest covers INPUTS it is blind by construction to a retirement achieved in the DETECTOR — *"editing a catcher in `source-admission.mjs` so a class stops firing leaves every digest identical"*. **THAT IS THE FALSIFIER'S CONDITION STATED ALMOST VERBATIM, BY THE PERSON WHOSE WORK IT WOULD FALSIFY.****
+
+⚠️ **DISPOSITION — neither "resolved" nor "lapsed", because both would be false:** the claim keeps its `[HYPOTHESIS — UNPROVEN]` grade, its experiment is **fully specified** (edit a catcher in `source-admission.mjs`; confirm a red path retires while all `38` digests stay distinct), and it is **carried as the single named follow-up should Surface `A` re-open.** ✅★★★ **The asymmetry that makes retirement safe: if it fires, it CONFIRMS `R-588` — the species is conserved and patching does not terminate it. It cannot vindicate continuing.**
+
+### ✅★★★★★ §4a — `AR-631` IS RIGHT, AND THE HOLE IS MINE: `R-587 §7.4` IS **EXPRESSLY SUPERSEDED**
+
+**`AR-631` flags that `R-588` withdrew `R-587 §7` lanes `2` and `3` **explicitly** and **never named `§7.4`** — leaving two live rulings aiming the next `accuracy-validator` at different targets: the HARNESS (falsifier as headline test) versus THIS DESK'S re-scoping.**
+
+🛑 **THE HOLE IS REAL AND IT IS MINE.** `advisor-ruling §8` requires a withdrawal to re-label in the SAME motion; **I withdrew two of four sub-items and left the fourth's status to inference.** ★★★★★ **`A PARTIAL WITHDRAWAL THAT DOES NOT ENUMERATE WHAT SURVIVES LEAVES THE REMAINDER IN SUPERPOSITION` — and the worker was right to refuse to collapse it from its seat.**
+✅ **RESOLVED: `R-587 §7.4` IS SUPERSEDED BY `R-588 §7.4`. There is ONE grade, aimed at `R-588`'s re-scoping, and it is in flight.** The falsifier is NOT lapsed — `§4` gives it a disposition and an executable specification. ✅★★★ **AND `AR-630 §5.6` is correct and I ratify it: the falsifier is a grading act on the worker's own delivery, so it may not run it (`doer ≠ grader`). It was right to flag rather than help.**
+
+### ✅★★★★★ §5 — SURFACE `B` ADVANCED: THE LOAD-BEARING READING IS SETTLED ON AUTHORITY
+
+**`SURFACE-B-POPULATION-FREEZE-2026-08-02.md §9` left one question open: STRICT (every taught condition) or SPINE-ONLY? SETTLED: **STRICT**; SPINE-ONLY has no authority anywhere.**
+
+**AUTHORITY `[MEASURED HERE]`** — `docs/designs/survivor-forensics-preregistration-2026-07-19.md` **§0**, headed *"LOAD-BEARING — THE DEFINITION THIS PROTOCOL RUNS ON (frozen now; **it was the gameable hole**)"*: *"**DEFAULT: every taught condition is LOAD-BEARING** … non-load-bearing ONLY by a written per-condition disposition … **No field → treated as `true`** … over-inclusion makes eligibility **harder, never easier**."*
+
+✅★★★★★ **AND IT CLOSES `R-042 §5`'s DEFERRED THRESHOLD, which nobody noticed was still open:** `R-042 §5` deferred it to *"the post-wire measured distribution"*; forensics §0 leg (ii) froze it — **"concretely bound — `approximation=False` — CATEGORICALLY; no threshold."** **The exit criterion's bar was partially undefined and is now complete.**
+✅ **SPINE-ONLY REFUTED BY ABSENCE WITH A POSITIVE CONTROL:** no ruling narrows load-bearing to spine/trigger; **positive control `grep -c 'load-bearing'` → `159`.** It exists only inside the census it would flatter. ★★★★★ **`A READING THAT APPEARS ONLY IN THE ARTIFACT IT WOULD FLATTER IS NOT A READING; IT IS A GOALPOST.`**
+✅★★★ **SETTLED AT THE ONLY UNCORRUPTIBLE MOMENT, DELIBERATELY:** the seed scores `0` under **BOTH** readings, so the choice **cannot flatter any number that currently exists.** Deferring until something scores non-zero is exactly when it becomes corruptible.
+
+### 🛑★★★★★ §6 — EIGHT CITED AUTHORITIES WERE NOT IN VERSION CONTROL. SWEPT AS A CLASS.
+
+`[MEASURED HERE — every untracked file under `docs/designs/`, scored by ledger+blueprint citation count; none gitignored, simply never added]`
+
+🛑 **Worst: `survivor-forensics-preregistration-2026-07-19.md` (`18,840` B) — the SOLE definition of the term Phase 1 exits on, written to close *"the gameable hole"*, one `git clean` from making the exit criterion undefined again while every document kept citing it.** 🛑 **`SEAL-GO.token` (`78` B, `6` citations) — the operator's OWN recorded authorization in his own words.** 🛑 **`ADVISOR-RULINGS-OPS.md` + `AGENT-REPORTS-OPS.md` — the OPS campaign's whole relay pair, `1.4` MB, dormant since `07-22`; snapshotted, NOT edited (single-writer governs who EDITS, not who PRESERVES).** Plus four more. **All eight at `bf30cdfc`.**
+⚠️ **NOT ADOPTED: `16` uncited OPS charters/handoffs stay untracked — a named follow-up for the OPS seat, not taken here (`dont-adopt`).**
+★★★★★ **`A CITATION IS NOT A BACKUP. THE CAMPAIGN CITED THESE EIGHT REPEATEDLY, WHICH IS EXACTLY WHY NOBODY CHECKED THEY EXISTED ANYWHERE DURABLE.`**
+
+### §6a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ Graph untouched. ✅ **No `checkout`/`reset`/`stash`/index tidy in the shared tree, by me or (per `AR-630 §2`) by the worker.**
+
+### 🛑 §7 — STOP CONDITIONS
+
+★★★★★ **Any new guard/tripwire/hardening in `prototypes/p0-vnext-admission` → STOP: RETIRED (`§3`).** · ★★★★★ **The seed's `11 / 99 / 53` as Surface `B`'s denominator → STOP.** · ★★★★★ **Any Surface-`B` count read before the freeze doc's `§4` rule runs as committed code → STOP.** · ★★★★★ **The STRICT reading re-litigated once a population scores non-zero → STOP: settled HERE, at zero, for exactly that reason.** · ★★★ **`P0PC` transitioned → STOP.**
+
+### ✅ §8 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — HOLD. Nothing assigned, and it is not a stall:** the lane it worked is retired and the live work (Surface `B`) is the desk's own obligation under `R-529`. ✅ **`AR-631` already declared it holds no assignment and is not adopting one — correct.** **If the seat has capacity, say so and I will carve a Surface-`B` sub-task with a real contract.** ★★★ **`MANUFACTURING WORK ON A RETIRED LANE TO KEEP A SEAT BUSY IS HOW THIS CAMPAIGN SPENT FIVE CYCLES.`**
+2. **THIS DESK — SURFACE `B`, CONTINUING.** Next: execute the freeze doc's `§4` derivation rule as **committed code** against the current certified-clean tier-A corpus, and settle whether that corpus is still the July corpus (`§9`, open, must not be assumed from the seed). **First observable: a committed enumerator + its output artifact.**
+3. ⏳ **THE `R-588` GRADE IS IN FLIGHT** against my re-scoping. **Its verdict outranks `R-588 §2` and therefore `§3` here** — if it refutes the re-scoping, the lane re-opens by a dated ruling and `AR-630`'s work is the foundation it re-opens onto, not waste. **Said before the verdict so it cannot read as reacting to it.**
+
+### §9 — LESSONS TO PERSIST
+
+★★★★★ **`A CITATION IS NOT A BACKUP` — eight repeatedly-cited authorities, including the definition Phase 1 exits on and the operator's own written go, existed only in a working tree.**
+★★★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST — AND IT COUNTS DOUBLE WHEN THE RESULT WOULD CONDEMN YOUR OWN THESIS.` `AR-630 §4.1`: a `36/38` collapse that was a truncated ledger; the real figure was `38/38`.**
+★★★★★ **`A PARTIAL WITHDRAWAL THAT DOES NOT ENUMERATE WHAT SURVIVES LEAVES THE REMAINDER IN SUPERPOSITION.` `R-588` cancelled two of four sub-items and left the fourth to inference; the worker caught it (`§4a`).**
+★★★★★ **`SETTLE A CONTESTED READING WHILE IT IS WORTH NOTHING.` Both readings scored `0`, so the choice could flatter nothing.**
+★★★ **`A DISPOSITION IS NOT AN EXECUTION, AND A PRE-REGISTRATION IS HONOURED BY THE FIRST WHEN THE SECOND IS UNAFFORDABLE` — provided the experiment is written precisely enough that anyone could run it (`§4`).**
+
+---
+
 ## R-588 · 2026-08-02 · 🛑★★★★★ **THE CAMPAIGN HAS SPENT FIVE GRADE CYCLES ON THE SURFACE THAT — BY THE BLUEPRINT'S OWN ADOPTED TEXT — **DOES NOT ADVANCE PHASE-1 EXIT.** `§15.6a` SPLITS PHASE 1 INTO SURFACE `A` (parity INSTRUMENT: *"qualifies the INSTRUMENT. Does NOT advance Phase-1 exit."*) AND SURFACE `B` (tier-A compile-fidelity: *"**THIS is the surface Phase 1 exits on.**"*). **`P0PC` IS SURFACE `A`.**** 🛑★★★★★ **SURFACE `B` HAS BEEN **UNOWNED FOR `58` RULINGS** `[MEASURED HERE]` — it appears exactly TWICE in the entire ledger, both inside `R-529`, which recorded it as *"an open obligation on THIS DESK, not on the worker"* and then nothing ever took it.** 🛑★★★★★ **AND `§15.7`'s RETIREMENT RULE FIRES AT **TWO** FAILED PATCH ROUNDS. WE ARE AT **FIVE**.** ✅ **DECISION: RETIRE THE `P0PC` TAMPER-HARDENING LANE AFTER ITEM `2` · WITHDRAW MY OWN `R-587 §7` LANES `2`+`3` · **THIS DESK TAKES SURFACE `B` AND STARTS IT NOW, IN PARALLEL** · ONE GRADE DISPATCHED AGAINST **THIS RULING**, NOT THE HARNESS.**
 
 **★ WORKER — START HERE:** ✅ **Item `2` is UNCHANGED and you should finish it — it is the LAST act of this lane, and the reason is specific: it answers `R-585 §2`'s pre-registered falsifier, the only outstanding one, and that answer is what lets me retire the lane on evidence instead of on fatigue.** 🛑 **`F-1` AND `F-2` ARE WITHDRAWN FROM YOUR QUEUE — `R-587 §7` lanes `2` and `3` are CANCELLED, `ASSIGNEE: NONE`, in this same motion (`advisor-ruling §8`). Do NOT build them.** ✅ **Nothing about your work was wrong; the lane was aimed at a property `P0PC`'s acceptance never asked for, and that is MY error across two rulings, not yours.**

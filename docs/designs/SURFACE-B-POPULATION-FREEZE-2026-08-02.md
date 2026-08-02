@@ -230,10 +230,60 @@ freeze is re-opened by a dated ruling, never quietly amended.**
   profile freeze first. **Only the last of those is done by this file.**
 - **Whether the current certified-clean tier-A corpus is the July corpus.** Not
   measured. Must not be assumed from the seed.
-- **Load-bearing adjudication authority** — `§2`'s criterion has a STRICT and a
+- ~~**Load-bearing adjudication authority** — `§2`'s criterion has a STRICT and a
   SPINE-ONLY reading and the seed scored `0` under BOTH. Which one binds Phase-1
   exit is **an open desk question**, and it must be settled BEFORE members are
-  scored, not after.
+  scored, not after.~~ **→ SETTLED. See the correction block below.**
+
+### ✅ DATED CORRECTION — 2026-08-02, `R-589`: THE LOAD-BEARING READING IS SETTLED
+
+**Appended as a dated block, NOT a rewrite of §9, because `§0` of this file
+forbids editing a pre-registration to match a later state. The struck line above
+stays legible.**
+
+🛑 **RESOLUTION: the STRICT reading binds. SPINE-ONLY has NO AUTHORITY ANYWHERE.**
+
+**AUTHORITY, found and now preserved `[MEASURED HERE]`:**
+`docs/designs/survivor-forensics-preregistration-2026-07-19.md` **§0 — "LOAD-BEARING
+— THE DEFINITION THIS PROTOCOL RUNS ON (frozen now; it was the gameable hole)"**:
+
+> *"R-042 §5 makes survivor eligibility turn on 'load-bearing conditions
+> concretely bound' but **no artifact in the pipeline defines or carries the
+> term. Frozen here:** … **DEFAULT: every taught condition is LOAD-BEARING.** A
+> condition is non-load-bearing ONLY by a written per-condition disposition
+> produced at compile time … **No field → treated as `true`.** … This is the
+> conservative direction: **over-inclusion makes eligibility harder, never
+> easier.**"*
+
+✅ **AND IT RESOLVES `R-042 §5`'s DEFERRED THRESHOLD, which was the open half of
+`§2`'s anchor.** `R-042 §5` said the threshold would be *"set from the post-wire
+measured distribution, not guessed now"*; forensics §0 leg (ii) froze it:
+**"every load-bearing condition is concretely bound — `approximation=False` —
+CATEGORICALLY; no threshold."** **So the bar is categorical, and `§2`'s anchor is
+now complete rather than partially deferred.**
+
+✅ **SPINE-ONLY REFUTED BY ABSENCE, WITH A POSITIVE CONTROL `[MEASURED HERE]`:** no
+ruling in `ADVISOR-RULINGS.md` narrows the load-bearing set to spine/trigger —
+**positive control: `grep -c 'load-bearing'` over the same file returns `159`, so
+the instrument reads this file and this term fine.** The spine-only phrasing
+exists ONLY inside the census artifact, self-described as *"narrower reading"*,
+carrying no citation. ★★★★★ **`A READING THAT APPEARS ONLY IN THE ARTIFACT IT
+WOULD FLATTER IS NOT A READING; IT IS A GOALPOST.`**
+
+⚠️★★★★★ **THE AUTHORITY WAS UNTRACKED WHEN I FOUND IT.** That 18,840-byte file —
+the sole definition of the term Phase 1 exits on, written expressly to close *"the
+gameable hole"* — **was not in version control.** Preserved in the same wave, with
+seven other cited-but-untracked authorities including `SEAL-GO.token`. **`A
+DEFINITION THAT EXISTS ONLY IN A WORKING TREE IS ONE `git clean` FROM MAKING THE
+EXIT CRITERION UNDEFINED AGAIN — SILENTLY, AND WITH EVERY DOCUMENT STILL CITING
+IT.`**
+
+✅★★★ **WHY SETTLING IT NOW IS SAFE RATHER THAN CONVENIENT, STATED BECAUSE THE
+TIMING IS THE WHOLE QUESTION: the seed scores `0` under BOTH readings
+(`n_eligible_strict = 0`, `n_eligible_spine_only = 0`). **THE CHOICE CANNOT
+FLATTER ANY NUMBER THAT CURRENTLY EXISTS** — which makes this the cheapest and
+least corruptible moment the campaign will ever have to fix the reading. Deferring
+it until a population scores non-zero is exactly when it becomes corruptible.**
 - **Population overlap** among tier-A, `corpus_A` and `POP-120` — `§15.8` lists
   it as bounded-open and it is not closed here.
 
