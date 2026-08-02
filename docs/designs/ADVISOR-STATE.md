@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3367` at THIS commit, 2026-08-01 23:52 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3373` at THIS commit, 2026-08-02 00:06 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3367` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3373` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,14 +90,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-531 §6`, FIVE CORRECTIONS. DESIGN ONLY.** (2026-08-01 23:42, `771dd97d`)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-532 §5`, FIVE CORRECTIONS. DESIGN ONLY.** (2026-08-02 00:04, `840b1c99`)
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
-**GOAL:** revise the `P0-vNext` design per **`R-531 §6`, five corrections** — ★★★★★ **load-bearing: (1) SEVER Claim `A` FROM `NOT-APPLICABLE` entirely — all five wire keys always emitted, `null` for inapplicable, `absent/absent` ALWAYS `PROJECTION_MISSING_BOTH`; (2) a CLASSIFICATION-ONLY ledger mutation requiring Claim `A`'s projection AND VERDICT byte-identical; (3) the TWO-STAGE `10`-field normalization → `5`-key selection contract.** ⚠ **DESIGN ONLY. IMPLEMENTATION STAYS BLOCKED.** ★★★ **READ `R-531 §6`; IT IS NOT PARAPHRASED HERE — `grep -n "^## R-531" ADVISOR-RULINGS.md`.**
-**ALLOWED FILES:** the design doc · the `§15.6a` blueprint addendum **only if Surface-`A` wording must change** · `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**GOAL:** revise the `P0-vNext` design per **`R-532 §5`, five corrections** — ★★★★★ **load-bearing: (1) DELETE every equation of `NOT-APPLICABLE` with JSON `null` — design `:72` and proof row `7`; (3) REBUILD row `7` on the REAL nine cells and add the discriminator (one-lane `approximation True → null` → claim `A` RED while claim `B` still skips); (4) SELECT ONE capability-isolation contract and DELETE THE MENU.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE STAY BLOCKED.** ★★★ **READ `R-532 §5`; NOT PARAPHRASED HERE — `grep -n "^## R-532" ADVISOR-RULINGS.md`.**
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **The blueprint need NOT change unless wording newly introduced there changes.** **NOTHING ELSE.**
 **FORBIDDEN:** implementation · the ledger · `ORACLE.json` · Tier-A census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
-**FIRST OBSERVABLE:** items `1`+`2`, **~30–45 min** from start. **START-RECEIPT REQUIRED** (delta baseline, never absolute-clean).
-**STOP CONDITIONS (`R-531 §6`, verbatim):** ★★★★★ **Claim `A` parsing the ledger to decide a missing field is acceptable → STOP.** ★★★ **Five keys validated out of a ten-key raw binding without proving the full boundary first → STOP.** ★★★ **An unchanged digest offered as proof of universal non-reachability → STOP.**
+**FIRST OBSERVABLE:** items `1`+`3`, **~30–45 min** from start. **START-RECEIPT REQUIRED** (delta baseline, never absolute-clean).
+⚠★★★ **`R-532` ACCEPTANCE ITEM `2` IS EXPLICITLY THE WORKER'S: I RAN THE **PYTHON** LANE ONLY. THE **TS** LANE AND THE TWO-LANE AGREEMENT CLAIM ARE UNVERIFIED UNTIL YOU EXECUTE THEM.**
+**STOP CONDITIONS (`R-532 §5`, verbatim):** ★★★★★ **`NOT-APPLICABLE` changing or suppressing a claim-`A` projected value → STOP: authority silence has become a data rewrite.** ★★★ **"Separate process" cited as filesystem isolation without an enforced sandbox → STOP: a topology statement is being used as a capability proof.**
 
 ⚠ **THE `R-530 §6` MATERIAL BELOW IS **DISCHARGED** (`AR-571`, `9/9`) AND IS RETAINED AS FINDINGS AND STANDING CONTRACT — **NOT** AS THE LIVE TASK.**
 
@@ -177,7 +178,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-573` (`23:50:09`, `abf98956`) — `R-531 §6` **DELIVERED**, `5/5`, `42/42`. Last RULED: `AR-571`. 🛑★★★★★ **`R-532` IS OWED AND **HELD**: `R-531` CONSUMED `acde95c8`, `ONE READ, ONE RULING`. `THE PASTE IS THE GATE`. **THE WORKER IS AGAIN IDLE BY THE GATE, NOT BY MY OMISSION.**
+## ✅★★★★★ SEAT — **ACTIVE (`claude.exe 15520`, seated `2026-08-01 23:21`). LEDGER AT `R-532` (`840b1c99`) + correction annotation (`f3ea78f1`), CONSUMING EXTERNAL READ `bf5b073d`. NEWEST AR: `AR-573` — **RULED BY `R-532`.** WORKER AUTHORIZED (`R-532 §5`, five corrections, design only); START-RECEIPT AWAITED.**
+🛑★★★★★ **`R-532`'s HEADLINE, AND IT IS MINE: `[MEASURED HERE BY EXECUTION, `compile_binding_plan()` in `wt-ledger-e-delivery-r497-20260730` @ `c304b098`]` the three `NOT-APPLICABLE` rows emit `approximation=True` and a CONCRETE `primitive` string — **`6` NON-NULL, `3` NULL**, reproducing the read's table value-for-value. **`R-531 §6` ITEM `1` — MY OWN ORDER — SAID *"JSON `null` carrying a semantically inapplicable value"*, AND OBEYING IT WOULD HAVE REWRITTEN SIX REAL RUNTIME VALUES.** ✅ **ANNOTATED ON THE ORIGINAL (`f3ea78f1`), struck, with the rest of the item left standing. `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT` — `AR-573` executed my instruction faithfully and the record must not read against it.**
+🛑★★★★★ **MY LADDER, THIRD RUNG IN THREE RULINGS: `OBEDIENCE` → `COHERENCE` → `CORRESPONDENCE`. `R-531` convicted me for checking obedience; I switched to an invariant-derived coherence check and **that check is still true** — and it still missed this, because **A DOCUMENT CAN BE PERFECTLY SELF-CONSISTENT AND FACTUALLY FALSE ABOUT THE SYSTEM IT DESCRIBES.** `THE ONLY CHECK THAT OUTRANKS READING IS RUNNING.`**
+⚠★★★ **AND MY PROBE FAILED FIRST, CAUGHT BY MY OWN CONTROL: first execution returned `bindings=0`, `0/3` rows — I passed the file wrapper `{_why, spec, video}` to a function documented to take the artifact body. Eighth instrument fault of this family; the control is the only reason it did not become a false finding against a correct reader.**
+✅★★ **GRADE RE-DEFERRED A THIRD TIME — AND THE BAR IS NOW PRE-REGISTERED (`R-532 §4`) SO IT CANNOT REGRESS FOREVER: it FIRES on the first external read with **ZERO structural corrections**, or two consecutive reads with only non-structural items. Corrections per round are converging `9 → 5 → 2` `[MEASURED]`. ⚠ **Harness blocks `Agent` dispatch for this seat — WHEN THE BAR IS MET, ASK THE OPERATOR.**
+⚠ **`[RELAYED, NOT VERIFIED HERE]` the TS lane and the two-lane agreement claim — I ran PYTHON only, and `R-532` assigns that execution to the worker.**
 ✅★★★★★ **MY VERIFICATION OF `AR-573`, AND THIS TIME THE CRITERIA CAME FROM THE **INVARIANT**, NOT MY ORDER SHEET — the `R-531 §1` conviction, applied to myself one ruling later `[ALL MEASURED HERE, committed `abf98956`]`:**
 > ✅ **INVARIANT — *Claim `A`'s projection and verdict depend on NO ledger field*: I enumerated it MYSELF with my OWN pattern — `10` candidate lines naming claim `A` alongside a ledger concept — and read every one. **`0` GATE A CLAIM-`A` OUTCOME.** All ten are prohibitions, lessons, or required-outcome rows. ★★★★★ **ROW `7` IS THE ACTUAL FIX: claim `A` is now `UNAFFECTED` **because the key IS emitted as `null`** — decided on the PROJECTION, never on the classification. `INAPPLICABILITY IS CARRIED BY VALUE, NEVER BY OMISSION.`** **CONTROLS BEHAVED: a planted claim-`A` dependency FLAGGED; a genuine independence line NOT flagged.**
 > ⚠★★★ **I DID **NOT** AUDIT THE WORKER'S OWN CONTRADICTION PASS — DELIBERATELY. It was `TUNED TWICE` by its own admission, which is the `weakened to pass` shape, and `INDEPENDENCE IS NOT A SECOND LOOK AT THEIR QUESTION; IT IS SOMEONE ELSE'S QUESTION.` My enumeration found `10` candidates where theirs found `9` — **different patterns, same verdict of `0`. TWO PATHS.**
