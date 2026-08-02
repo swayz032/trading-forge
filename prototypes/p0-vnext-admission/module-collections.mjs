@@ -59,7 +59,18 @@ export const MODULE_PIN_COMMIT = 'cac39d45';
  * The `blob` is asserted so the pin cannot be moved without editing a value in plain sight.
  */
 export const PINNED_MODULE_COLLECTIONS = Object.freeze({
-  'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES']) }),
+  // 🛑★★★★★ R-572 §4 — THE THREE COLLECTIONS `AR-609 §4` CORRECTLY REFUSED TO PIN ALONE.
+  // It declined because `R-570 §5` STOPS on touching attribution logic and these three sit inside
+  // it. The desk ruled: `A PIN IS NOT AN ALTERATION — IT ASSERTS THAT IT DID NOT CHANGE`, and the
+  // STOP protecting `44/52` is an argument FOR pinning the collections `44/52` rests on.
+  //   SIX                    the six-population partition itself. Deleting a key does not make a
+  //                          population disappear — it makes it UNCOUNTED, and `partitionSum` and
+  //                          `unpartitioned` are both computed from `Object.values(SIX)`, so the
+  //                          check and its witness would shrink together.
+  //   SURFACE_CODES          removing a code silently promotes an UNCONFIGURED-instrument row into
+  //                          a real verdict — the failure direction `run.mjs:84` exists to prevent.
+  //   FIXTURE_INVALID_CODES  removing a code silently promotes an AUTHORING DEFECT into a verdict.
+  'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES', 'SIX', 'SURFACE_CODES', 'FIXTURE_INVALID_CODES']) }),
   'red-proof.mjs': Object.freeze({ tables: Object.freeze(['CLASSES', 'SHARED', 'EXPECT', 'FREEZE_EXPECT']) }),
   // 🛑★★★★★ ADDED BY THE R-570 §6.3 ENUMERATION, WHICH FOUND **INSTANCE EIGHT** BY MEASUREMENT.
   // `type-value-proof.mjs` reports `${pass} / ${CASES.length}` at :126 and gates on
@@ -168,6 +179,18 @@ export function extractModuleCollections(text, fileName = 'x.mjs') {
             return idProp && idProp.initializer && ts.isStringLiteral(idProp.initializer)
               ? idProp.initializer.text : null;
           }
+          // ⚠️★★★★★ BARE STRING ELEMENTS — ADDED FOR R-572 §4, AND THE ORDER OF DISCOVERY MATTERS.
+          // R-572 §4 ordered `SURFACE_CODES` and `FIXTURE_INVALID_CODES` PINNED. `[MEASURED FIRST,
+          // BEFORE THE PIN]` both came back `keys: null`, because a plain `['TS7006', …]` array has
+          // no tuple and no `id` property, so every element mapped to `null`. Pinning them in that
+          // state would NOT have protected them — `checkPinnedCollections` THROWS `INSTRUMENT FAULT`
+          // on a pinned table with no extractable keys, so the order would have taken the gate down.
+          //   A PIN ON A TABLE THE READER CANNOT SEE IS NOT WEAK PROTECTION — IT IS AN OUTAGE.
+          // A bare string element IS its own identity, exactly as a tuple's leading string is.
+          // ✅ VERDICT-NEUTRAL FOR EVERY ALREADY-PINNED TABLE, AND PROVEN BY BYTE-COMPARISON RATHER
+          // THAN BY THE ARGUMENT: a table that HAS keys today contains no `StringLiteral` element
+          // (one would have forced the whole table to `null`), so this branch cannot fire on it.
+          if (ts.isStringLiteral(e)) return e.text;
           return null;
         });
         out.set(d.name.text, {
