@@ -94,15 +94,19 @@ console.log(`  same spelling in both arms: ${sameSpelling}   <- without this the
 // A negative assertion needs a positive witness that the path RAN.
 import { classifyPosition, POSITION_UNCLASSIFIED } from './source-admission.mjs';
 const residualWitness = (() => {
-  // A LabeledStatement's label is an Identifier in neither type nor value space.
-  const r = P(`outer: for (const x of [1]) { break outer; }\nexport const project = (lane: Lane) => ({ v: lane.v });\n`);
+  // An ENUM MEMBER name is an Identifier in neither type nor value space under this rule.
+  // (It was a labeled statement until label handling was added and silently retired that
+  // witness — which is why this is MEASURED on every run rather than assumed once.)
+  const r = P(`enum E { A = 1 }\nexport const project = (lane: Lane) => ({ v: lane.v });\n`);
   return { fired: r.violations.some((v) => v.catcher === POSITION_UNCLASSIFIED), detail: r.violations.map((v) => `${v.catcher}`).join(',') };
 })();
 console.log(`RESIDUAL REACHABLE (POSITION_UNCLASSIFIED can actually fire): ${residualWitness.fired} [${residualWitness.detail || '-'}]`);
 console.log(`  ^ a fail-closed branch nothing can reach is a branch nobody has tested.`);
 
 console.log('='.repeat(112));
-const allOk = pass === CASES.length && propertyHolds;
+// The residual witness now GATES the exit code. It did not before, so a fail-closed branch
+// could have gone unreachable while this file still reported success.
+const allOk = pass === CASES.length && propertyHolds && residualWitness.fired;
 console.log(`${pass} / ${CASES.length} cases pass | property ${propertyHolds ? 'HOLDS' : 'FAILS'}`);
 console.log(allOk ? 'VERDICT: type-space / value-space separation is a PROPERTY of this rule.'
                   : 'VERDICT: NOT separated. Failing ids: ' + rows.filter((x) => !x.ok).map((x) => x.id).join(', '));

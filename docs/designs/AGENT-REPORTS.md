@@ -4,6 +4,54 @@
 
 ---
 
+## AR-594 · 2026-08-02 · 🛑★★★★★ **THE GRADE CAME BACK AND IT CONVICTS ME. THE `accuracy-validator` CONSTRUCTED AND **EXECUTED** A MODULE THAT REACHES THE LEDGER AND WAS **ADMITTED** BY MY RULE — `export * from './ledger.js'`, `violations = []`, `importCount = 0`.** ✅★★★★★ **I REPRODUCED BOTH CRITICALS MYSELF BEFORE TOUCHING ANYTHING, REPAIRED THEM, AND GUARDED THEM WITH FIVE NEW CORPUS ROWS. RED WITHOUT THE FIX, GREEN WITH IT, MEASURED IN BOTH DIRECTIONS.** ⚠️★★★ **TWO PRECISION CORRECTIONS BELOW — ONE TO THE GRADER, ONE TO MYSELF.**
+
+**TASK ID:** AR-594 · **PRIOR:** AR-593 (`76cae7b1`) · **RECEIPT GRADED:** `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md` (`95677435`), HUNT mode against `9be6a52a`.
+★★★★★ **THE GRADE WAS WORTH EVERY TOKEN. It found two CRITICAL admission holes and four instrument defects that eight of my own adversarial passes did not.** ⚠️ **I do not interpret its verdict; I report it as it came and act on the defects.**
+
+### 🛑★★★★★ §1 — F-1: MY CARDINALITY RULE COUNTED ONE SYNTAX FORM AND CALLED IT THE EDGE
+`[MEASURED HERE, my own `admitSource()` at `9be6a52a`, before any repair]`
+```
+export * from './ledger.js'   -> ADMITTED   violations=[]   importCount=0
+export * from 'node:fs'       -> ADMITTED   <- row 26(b)'s EXACT channel
+POSITIVE CONTROL: import form -> REJECTED   1b-S:import-cardinality   <- probe alive
+```
+🛑★★★★★ **`source-admission.mjs` claimed and emitted only for `ts.isImportDeclaration`. `ExportDeclaration` with a `moduleSpecifier` is ESM's OTHER static module edge — and in the STAR form it carries NO `Identifier` NODE AT ALL, so the identifier catchers were blind to it too. Two independent layers missed the same edge for two different reasons.**
+✅ **REPAIRED FROM THE GRAMMAR, NOT FROM THE ONE FORM THAT WAS MISSED:** `import` · `export … from` · `export * from` · `export * as ns from` · `import x = require(...)` are now enumerated as module edges. **All five now red on `1b-S:import-cardinality`** — including `ImportEqualsDeclaration`, which the grader NAMED AS UNPROBED and which I probed: it previously fell to the residual, i.e. it failed closed **for the wrong reason.**
+✅ **GUARDED: new rows `56(a)`–`56(d)`.**
+
+### 🛑★★★★★ §2 — F-2: A TYPE-SHAPED WRAPPER AROUND A VALUE SLOT, AND MY OWN CORRECTION TO THE GRADER'S FIXTURE
+`[MEASURED HERE]` **`ts.isTypeNode(ExpressionWithTypeArguments) === true` — and it is the ONE `TypeNode` kind whose `.expression` slot holds a LIVE VALUE: the `extends` heritage clause. My `classifyPosition` walked "any TypeNode ancestor ⇒ type" and therefore SILENTLY EXONERATED a real runtime capture.**
+⚠️★★★★★ **PRECISION CORRECTION, AND IT CUTS AGAINST THE GRADER'S WORDING WHILE CONFIRMING ITS FINDING:** the fixture it reported — a **NAMED** `class X extends window.Base {}` — did **NOT** reproduce as `ADMITTED` here. It **REJECTED**, but on `POSITION_UNCLASSIFIED` **fired by the class NAME `X`**, not by the capture. **So the red was INCIDENTAL and the exoneration was real underneath it.** ✅ **I built the decisive fixture — the ANONYMOUS class expression, which has no unclassified identifier — and it was `ADMITTED` outright:**
+```
+new (class extends window.Base {})()   -> ADMITTED        <- the capture, exonerated
+POSITIVE CONTROL: window.Base plainly  -> REJECTED 1b-S:direct-ambient-read
+```
+★★★★★ **THE FINDING STANDS IN FULL; ONLY ITS WITNESS NEEDED SHARPENING. `A RED FOR AN UNRELATED REASON IS NOT A CATCH, AND IT HID THIS ONE.`** ✅ **REPAIRED:** the heritage `.expression` slot is value-space; `.typeArguments` stays type-space. **Declaration names (class/interface/enum/alias/label/binding) no longer fall into the residual** — that noise is what masked the defect. ✅ **GUARDED: new row `57`, using the anonymous form.** ✅ **`type-value-proof.mjs` `12/12` still passes and its D/E property still holds.**
+
+### 🛑★★★ §3 — THE FOUR INSTRUMENT DEFECTS, ALL CONCEDED AND ALL REPAIRED
+1. 🛑 **`fixture_invalid` HAD NO ASSIGNMENT SITE — a FIVE-population partition wearing a SIX-population caption.** `0` was DEFINITIONAL, not measured. ✅ **It now has real member codes, its own gate class, and a demonstrated red path.**
+2. 🛑★★★★★ **`emitted-freeze.mjs` WAS VACUOUS ON `26(a)`/`26(b)`: deleting the planted import OUTRIGHT still read `EMIT-IDENTICAL`, because an unused import is ELIDED by the emitter. `31/38` over-counted.** ✅ **Repaired with a SECOND, non-overlapping signal (the module-edge set from the source AST); blind rows are now reported `NOT-COVERED-BY-EMIT` instead of being folded into the identical count, and the blindness is DEMONSTRATED on every run.** ⚠️★★★★★ **AND THE STRONGER INSTRUMENT IMMEDIATELY CONVICTED ME: `26(a)`'s specifier change was UNDECLARED. I had dropped its pre-registration precisely because the weak comparator said `EMIT-IDENTICAL`. RESTORED. `A DECLARATION I DROPPED BECAUSE THE INSTRUMENT COULD NOT SEE THE CHANGE IS A DECLARATION I OWED.`**
+3. 🛑 **`partition_overlap` "STRUCTURALLY UNREACHABLE" — WITHDRAWN.** My argument was sound about STATUSES and **silent about IDS**; a duplicate corpus id trips it. ✅ **Now a normal class with an id-uniqueness check and a real duplicate-row injection.** ★★★ **`A GUARD I CANNOT TRIP MAY BE A GUARD I HAVE NOT TRIED HARD ENOUGH TO TRIP.`**
+4. ✅ **PRE-REGISTRATION CO-COMMITTED WITH ITS CHECKER — the grader called this UNVERIFIABLE rather than back-filled, which is the correct grade. I cannot retro-prove it and do not try.**
+⚠️★★★ **A REPAIR SILENTLY RETIRED ONE OF MY OWN RED PATHS:** adding label handling made the `position_unclassified` injection stop reaching the residual. **Caught only because `red-proof.mjs` re-measures rather than trusting a past pass.** ✅ **Re-based on an enum member and the residual witness now GATES `type-value-proof.mjs`'s exit code, which it did not before.**
+
+### ⚠️★★★★★ §4 — A CORRECTION TO THE GRADER, ON THE RECORD
+**It reported my `AR-593` ops-note-1 as FALSE** (*"`.claude/agents/accuracy-validator.md` is committed and identical"*). `[MEASURED HERE]` **`git log -- .claude/agents/accuracy-validator.md` → `782049f5` *"Commit the v2 accuracy-validator definition (was working-tree-only)"*.** ★★★★★ **THAT COMMIT LANDED BETWEEN MY MEASUREMENT AND ITS MEASUREMENT. Both readings were correct at the time each was taken; the finding was true, and it was FIXED — by the desk, in response to it.** ⚠️ **The grader's "brief defect" is itself a STALE-PREMISE error, and it is the same species this campaign convicts most: `A LATER MEASUREMENT OF A CHANGED WORLD DOES NOT REFUTE AN EARLIER ONE.`** ✅ **Its ops-note-2 finding stands: `scripts/check-agent-parity.mjs` still does not exist.**
+
+### §5 — NUMBERS AFTER THE REPAIR, AND WHAT IS STILL OWED
+```
+LIKE-FOR-LIKE (the original 52) — UNCHANGED, because all 5 new rows are outside that set:
+  attributed 44 · honest_named_miss 3 · surface_invalid 0 · fixture_invalid 0
+  · caught_by_typechecker 5 · position_unclassified 0   SUM 52 ✅ no dupes ✅ no orphans ✅
+EXPANDED CORPUS: 64 rows · attributed 55 · greens 6/6 · every FAILED_* class 0
+RED-PROOF: control GREEN · 18 / 18 classes with a demonstrated red path
+All five gates exit 0: run · red-proof · type-value-proof · emitted-freeze · module-tuple
+```
+🛑★★★★★ **A RE-GRADE IS OWED AND I DO NOT SELF-CERTIFY THE REPAIR. `doer != grader` binds exactly as hard on a fix as on the original.** ⚠️ **The grader explicitly did NOT verify: the 44 attributed rows were never independently re-attributed · `runtime-admission.mjs` is UNAUDITED (13 of the 44 are runtime rows) · and its `G-1` sweep is a ~30-probe sample across 7 families, **NOT a closure of the `SyntaxKind` space.** ★★★★★ **READ IT AS *"AT LEAST TWO BLIND CHANNELS EXISTED"*, NEVER *"EXACTLY TWO"* — I found two more admission holes today than eight adversarial rounds found, and I have no basis to claim the third does not exist.**
+
+---
+
 ## AR-593 · 2026-08-02 · ⚠️★★★ **DISPATCH RECORD — THE `accuracy-validator` IS RUNNING AGAINST `9be6a52a` IN HUNT MODE, LAUNCHED ON THE OPERATOR'S DIRECT WORD ("execute"). RECORDED IMMEDIATELY SO THE DESK DOES NOT SPEND A SECOND GRADER ON THE SAME CLAIM.** 🛑★★★ **PLUS TWO OPS FINDINGS ABOUT THE GRADER ITSELF, FOUND BY AUDITING THE INSTRUMENT BEFORE TRUSTING IT.**
 
 **TASK ID:** AR-593 (dispatch record only; the verdict is NOT mine to interpret) · **PRIOR:** AR-592 (`9be6a52a`).

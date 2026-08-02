@@ -177,6 +177,28 @@ export const CORPUS = [
   { id: '55(c)', atom: 'only a helper function export', expect: S.EXPORTS, ...src(`export function helper(): number { return 1; }\n`) },
   { id: '55(d)', atom: 'non-callable `project` export', expect: S.EXPORTS, ...src(`export const project = 1;\n`) },
 
+  // ---- ROWS ADDED FROM THE accuracy-validator's HUNT (GRADE-P0PC-PARTITION-2026-08-02) ----
+  // Both defects were CRITICAL, both were reproduced here by execution before repair, and
+  // both are now guarded. RED WITHOUT THE FIX, GREEN WITH IT — measured in both directions.
+  //
+  // F-1: the rule keyed on `ts.isImportDeclaration` ALONE. `export * from './ledger.js'` was
+  // ADMITTED with violations=[] and importCount=0 — and the STAR form carries NO Identifier
+  // node, so the identifier catchers were blind too. These four cover the module-edge GRAMMAR
+  // rather than only the one form that was missed.
+  { id: '56(a)', atom: 'static edge: export * from', expect: S.IMPORT_CARDINALITY,
+    ...src(`export * from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
+  { id: '56(b)', atom: 'static edge: export { x } from', expect: S.IMPORT_CARDINALITY,
+    ...src(`export { read } from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
+  { id: '56(c)', atom: 'static edge: export * as ns from', expect: S.IMPORT_CARDINALITY,
+    ...src(`export * as ns from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
+  { id: '56(d)', atom: 'static edge: import x = require(...)', expect: S.IMPORT_CARDINALITY,
+    ...src(`import ledger = require('./ledger.js');\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
+  // F-2: `ts.isTypeNode(ExpressionWithTypeArguments)` is TRUE, and it is the one TypeNode kind
+  // whose `.expression` slot holds a LIVE value. The ANONYMOUS form is the decisive fixture —
+  // the NAMED form reddened only incidentally, on its class name tripping the residual.
+  { id: '57', atom: 'runtime capture in an `extends` heritage slot', expect: S.AMBIENT,
+    ...src(`export const project = (lane: Lane) => ({ v: new (class extends window.Base {})() });\n`) },
+
   // ---------- 1b-R : runtime ----------
   { id: '39', atom: 'function-valued field', expect: R.FUNCTION_VALUE,
     ...val(() => ({ id: 'L1', read: () => 'LEDGER' })) },
@@ -240,13 +262,21 @@ export const PREREGISTERED_EMIT_CHANGES = {
   '51(b)': 'as 51(a) — raw StringLiteral key form.',
   '51(c)': 'as 51(a) — escaped identifier key form.',
   '51(d)': 'as 51(a) — escaped string key form.',
-  // NOTE: 26(a) and 26(b) also carry a `.js`/type-validity edit but come back EMIT-IDENTICAL,
-  // because an UNUSED import is elided by the emitter. They are therefore not listed here —
-  // the list is exactly the set whose emitted JavaScript actually differs.
+  // ⚠️ 26(a) WAS DROPPED FROM THIS LIST AND IS RESTORED. I removed it on the reasoning that it
+  // came back EMIT-IDENTICAL — which was true, and true only because an UNUSED import is
+  // ELIDED by the emitter, so the comparator could not see the change at all. Once the
+  // accuracy-validator's F-3 forced a SECOND path (the module-edge set read from the source
+  // AST), that path convicted it immediately. `A DECLARATION I DROPPED BECAUSE THE INSTRUMENT
+  // COULD NOT SEE THE CHANGE IS A DECLARATION I OWED.`
+  // 26(b) stays off the list: measured, its module edge is genuinely UNCHANGED (`node:fs`
+  // needs no extension), so there is nothing to declare.
+  '26(a)': 'relative specifier `./ledger` -> `./ledger.js`, required by NodeNext resolution; without it the fixture is TS2792 and yields no verdict. INVISIBLE to the emit comparator because the unused import is elided — declared here on the strength of the module-edge path. The import, and therefore its cardinality, is unchanged.',
   '26(c)': 'relative specifier carries the explicit `.js` extension required by NodeNext resolution; without it the fixture is TS2792 and yields no verdict at all. This one survives emit because a bare side-effect import is not elided. The import — and therefore its cardinality, the planted mutation — is unchanged.',
   '41(a)': 'as 26(c) — dynamic `import(\'./ledger\')` -> `import(\'./ledger.js\')`. The dynamic-load channel is unchanged.',
   '53': 'as 26(c) — `./pure-math` -> `./pure-math.js`. The import-cardinality mutation is unchanged.',
 };
 
-const ADDED_SINCE_AR589 = new Set(['34(d-u)', '54', '54(b)', '55(a)', '55(b)', '55(c)', '55(d)']);
+const ADDED_SINCE_AR589 = new Set(['34(d-u)', '54', '54(b)', '55(a)', '55(b)', '55(c)', '55(d)',
+  // added from the grader's HUNT — never part of AR-589's 52, so never in the like-for-like set
+  '56(a)', '56(b)', '56(c)', '56(d)', '57']);
 export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter((id) => !ADDED_SINCE_AR589.has(id));

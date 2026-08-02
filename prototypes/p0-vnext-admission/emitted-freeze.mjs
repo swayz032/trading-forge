@@ -60,22 +60,68 @@ console.log('='.repeat(126));
 console.log(`${'id'.padEnd(9)} ${'src(was)'.padEnd(17)} ${'src(now)'.padEnd(17)} ${'emit(was)'.padEnd(17)} ${'emit(now)'.padEnd(17)} verdict`);
 console.log('-'.repeat(126));
 
+// 🛑 FOUND BY THE accuracy-validator: this comparator is VACUOUS on rows whose planted mutation
+// lives in a construct the emitter ELIDES. An UNUSED import vanishes from the emitted JS, so
+// DELETING the planted import outright still read "EMIT-IDENTICAL" — the check could not see
+// the very mutation it was certifying, and "31/38" over-counted.
+//   A COMPARATOR THAT CANNOT OBSERVE THE MUTATION IS NOT CERTIFYING THE MUTATION.
+// Rows in that condition are now reported NOT-COVERED-BY-EMIT and scored by a SECOND,
+// non-overlapping signal — the module-edge set read from the SOURCE AST — rather than being
+// counted as if the emit comparison had said something.
+function moduleEdges(body) {
+  const sf = ts.createSourceFile('x.ts', body, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
+  const out = [];
+  const walk = (n) => {
+    if (ts.isImportDeclaration(n)) out.push(`import ${n.moduleSpecifier.getText(sf)}`);
+    else if (ts.isExportDeclaration(n) && n.moduleSpecifier) out.push(`re-export ${n.moduleSpecifier.getText(sf)}`);
+    else if (ts.isImportEqualsDeclaration(n)) out.push(`import= ${n.moduleReference.getText(sf)}`);
+    ts.forEachChild(n, walk);
+  };
+  walk(sf);
+  return out.sort().join(' | ');
+}
+
 const rows = [];
 for (const id of ORIGINAL_52_IDS) {
   const b = baseById.get(id), n = nowById.get(id);
   if (!b || !n || b.kind !== 'source') continue;       // runtime rows have no source text
   const eWas = emitJs(b.body), eNow = emitJs(n.body);
   const emitSame = eWas === eNow;
+  const edgesWas = moduleEdges(b.body), edgesNow = moduleEdges(n.body);
+  // Blind iff the source declares an edge the emitted JS does not mention: the emitter elided
+  // it, so emit-equality carries no information about that construct.
+  const elided = !!edgesWas && !edgesWas.split(' | ').every((e) => eWas.includes(e.replace(/^\S+ /, '')));
   const preReg = PREREGISTERED_EMIT_CHANGES[id];
-  const ok = emitSame || !!preReg;
-  rows.push({ id, emitSame, preReg, ok, eWas, eNow });
-  console.log(`${id.padEnd(9)} ${sha(b.body).padEnd(17)} ${sha(n.body).padEnd(17)} ${sha(eWas).padEnd(17)} ${sha(eNow).padEnd(17)} ${emitSame ? 'EMIT-IDENTICAL' : (preReg ? 'CHANGED — PRE-REGISTERED' : '*** CHANGED — UNDECLARED ***')}`);
+  let verdict, ok;
+  if (elided) {
+    ok = edgesWas === edgesNow || !!preReg;
+    verdict = `NOT-COVERED-BY-EMIT — 2nd path: module edges ${edgesWas === edgesNow ? 'UNCHANGED' : (preReg ? 'CHANGED — PRE-REGISTERED' : '*** CHANGED — UNDECLARED ***')}`;
+  } else {
+    ok = emitSame || !!preReg;
+    verdict = emitSame ? 'EMIT-IDENTICAL' : (preReg ? 'CHANGED — PRE-REGISTERED' : '*** CHANGED — UNDECLARED ***');
+  }
+  rows.push({ id, emitSame, elided, preReg, ok, eWas, eNow, edgesWas, edgesNow });
+  console.log(`${id.padEnd(9)} ${sha(b.body).padEnd(17)} ${sha(n.body).padEnd(17)} ${sha(eWas).padEnd(17)} ${sha(eNow).padEnd(17)} ${verdict}`);
 }
 
-const changed = rows.filter((r) => !r.emitSame);
+const covered = rows.filter((r) => !r.elided);
+const blind = rows.filter((r) => r.elided);
+const changed = covered.filter((r) => !r.emitSame);
 const undeclared = rows.filter((r) => !r.ok);
 console.log('='.repeat(126));
-console.log(`rows compared: ${rows.length} | EMIT-IDENTICAL: ${rows.length - changed.length} | emit CHANGED: ${changed.length} | UNDECLARED: ${undeclared.length}`);
+console.log(`rows compared: ${rows.length} | COVERED by emit: ${covered.length} (EMIT-IDENTICAL ${covered.length - changed.length}, CHANGED ${changed.length}) | NOT-COVERED-BY-EMIT: ${blind.length} [${blind.map((r) => r.id).join(', ')}] | UNDECLARED: ${undeclared.length}`);
+console.log(`  ^ the NOT-COVERED rows are scored on the module-edge set instead. Reported as a`);
+console.log(`    coverage GAP rather than folded into the EMIT-IDENTICAL count.`);
+
+// The blindness must be DEMONSTRATED, not asserted: delete a planted import and show the emit
+// comparator says IDENTICAL while the second path convicts.
+const blindWitness = (() => {
+  const withImport = `import { read } from './ledger.js';\nexport const project = (lane: Lane) => ({ v: lane.v });\n`;
+  const mutationDeleted = `export const project = (lane: Lane) => ({ v: lane.v });\n`;
+  return { emitSaysIdentical: emitJs(withImport) === emitJs(mutationDeleted), edgesDiffer: moduleEdges(withImport) !== moduleEdges(mutationDeleted) };
+})();
+console.log(`BLINDNESS WITNESS — delete the planted import outright: emit comparator says IDENTICAL=${blindWitness.emitSaysIdentical}, module-edge path convicts=${blindWitness.edgesDiffer}`);
+console.log(`  ^ both true is the proof the gap is real and that the second path closes it.`);
 
 if (changed.length) {
   console.log('\nEVERY EMIT CHANGE, WITH ITS PRE-REGISTERED REASON AND ITS ACTUAL DIFF:');
@@ -95,4 +141,4 @@ const ctlDiff = emitJs('export const project = (lane) => ({ v: lane.v });\n') !=
 console.log(`\nCOMPARATOR CONTROLS — annotation-only edit reads IDENTICAL: ${ctlSame} | behaviour edit reads DIFFERENT: ${ctlDiff}`);
 console.log('  ^ both must be true, or this comparator cannot discriminate and every verdict above is void.');
 
-process.exitCode = (undeclared.length === 0 && ctlSame && ctlDiff) ? 0 : 1;
+process.exitCode = (undeclared.length === 0 && ctlSame && ctlDiff && blindWitness.emitSaysIdentical && blindWitness.edgesDiffer) ? 0 : 1;

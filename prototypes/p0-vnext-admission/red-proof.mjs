@@ -35,6 +35,12 @@ const CLASSES = [
   ['surface_invalid_rows', 'a row is SURFACE-INVALID after item 2, making the number inadmissible'],
   ['position_unclassified', 'an identifier position cannot be classified as type or value'],
   ['type_invalid_unclassified', 'a semantic diagnostic falls in none of the declared classes'],
+  ['fixture_invalid', 'a fixture carries an AUTHORING defect (its own population, formerly unassignable)'],
+  // WITHDRAWN CLAIM: I previously declared this class STRUCTURALLY UNREACHABLE and excluded it
+  // from the count. The accuracy-validator showed the argument was sound about STATUSES and
+  // silent about IDS — a duplicate corpus id puts one id in the partition twice. It is a
+  // normal red-proofed class now.
+  ['partition_overlap', 'the same id appears in two populations (duplicate corpus id)'],
 ];
 
 // These classes share ONE injection with a class above, because the planted defect genuinely
@@ -86,18 +92,10 @@ for (const [cls, viaInject, what] of SHARED) {
   console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} via inject '${viaInject}'  (${what})`);
 }
 
-// ---- DECLARED HONESTLY RATHER THAN COUNTED AS PROVEN --------------------------------
-// `partition_overlap` is enforced by run.mjs but CANNOT be reached by any injection: the six
-// populations are built by filtering on `status`, and a row has exactly one status, so
-// membership in two is structurally impossible under the present construction. It is a guard
-// against a FUTURE construction change, not a live discriminator.
-//   A guard nothing can trip is not red-proofed, and saying "16/16" while quietly counting it
-//   would be exactly the inflation this file exists to prevent.
-console.log('-'.repeat(104));
-console.log("N/A  partition_overlap    STRUCTURALLY UNREACHABLE — one row has exactly one status, so it cannot");
-console.log("                          be in two populations. Enforced as a guard against a construction change,");
-console.log("                          and DECLARED HERE rather than counted as a demonstrated red path.");
-
+// ⚠️ WITHDRAWN, 2026-08-02: this file previously declared `partition_overlap` STRUCTURALLY
+// UNREACHABLE and excluded it from the count. The accuracy-validator refuted that — the
+// argument was sound about STATUSES and silent about IDS. It is a normal red-proofed class
+// above now. `A GUARD I CANNOT TRIP MAY BE A GUARD I HAVE NOT TRIED HARD ENOUGH TO TRIP.`
 console.log('='.repeat(104));
 const allOk = controlOk && rows.every((r) => r.ok);
 console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${rows.length}`);

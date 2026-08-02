@@ -167,6 +167,8 @@ const VALUE_PARENT_KINDS = new Set([
   ts.SyntaxKind.CaseClause, ts.SyntaxKind.TemplateExpression, ts.SyntaxKind.ObjectLiteralExpression,
 ]);
 
+const isWithin = (node, ancestor) => !!ancestor && node.getStart() >= ancestor.getStart() && node.getEnd() <= ancestor.getEnd();
+
 export function classifyPosition(node) {
   // (1) TYPE-ONLY import/export -- erased wholesale by the emitter.
   for (let p = node.parent; p; p = p.parent) {
@@ -176,7 +178,21 @@ export function classifyPosition(node) {
   }
   // (2) ANY type-space ancestor. `as`/`satisfies` operands reach here because their `.type`
   //     slot IS a TypeNode; their EXPRESSION slot is not, and stays value-space.
-  for (let p = node.parent; p; p = p.parent) {
+  //
+  // 🛑 F-2, FOUND BY THE accuracy-validator (GRADE-P0PC-PARTITION-2026-08-02, CRITICAL):
+  // `ts.isTypeNode(ExpressionWithTypeArguments) === true` [MEASURED HERE], and that is the ONE
+  // TypeNode kind whose `.expression` slot holds a LIVE VALUE — the `extends` heritage clause.
+  // A naive "any TypeNode ancestor => type" walk therefore SILENTLY EXONERATES a real runtime
+  // capture: `class extends window.Base {}` was ADMITTED while reading a host global at
+  // runtime. Measured: the NAMED form reddened only because the class NAME tripped the
+  // residual; the ANONYMOUS form was admitted outright.
+  //   A TYPE-SHAPED WRAPPER AROUND A VALUE SLOT IS STILL A VALUE SLOT.
+  for (let p = node.parent, child = node; p; child = p, p = p.parent) {
+    if (ts.isExpressionWithTypeArguments(p)) {
+      // Inside `.typeArguments` it is genuinely erased; inside `.expression` it executes.
+      if (p.expression === child || isWithin(node, p.expression)) return 'value';
+      return 'type';
+    }
     if (ts.isTypeNode(p) || ts.isTypeAliasDeclaration(p) || ts.isInterfaceDeclaration(p) ||
         ts.isTypeParameterDeclaration(p)) return 'type';
   }
@@ -388,10 +404,24 @@ export function admitSource(fileName, sourceText) {
   // catcher without replacing it does not re-attribute a finding, it deletes it.
   let importCount = 0;
   const claimOwners = (node) => {
-    if (ts.isImportDeclaration(node)) {
+    // 🛑 F-1, FOUND BY THE accuracy-validator (GRADE-P0PC-PARTITION-2026-08-02, CRITICAL):
+    // this rule keyed on `ts.isImportDeclaration` ALONE, so it counted only ONE of ESM's
+    // static module edges. `export * from './ledger.js'` was ADMITTED with `violations = []`
+    // and `importCount = 0` — and in the STAR form it carries no `Identifier` node at all, so
+    // the identifier catchers were blind to it too. Reproduced here by execution: the ledger
+    // module evaluated and its names became visible to the consumer.
+    //   A CARDINALITY RULE THAT COUNTS ONE SYNTAX FORM IS NOT COUNTING THE EDGE.
+    // Enumerated from the module-edge GRAMMAR rather than from the one form that was missed:
+    // every construct that binds this module to another at load time is an edge.
+    const edge =
+      ts.isImportDeclaration(node) ? { kind: 'import', spec: node.moduleSpecifier }
+      : (ts.isExportDeclaration(node) && node.moduleSpecifier) ? { kind: 're-export', spec: node.moduleSpecifier }
+      : ts.isImportEqualsDeclaration(node) ? { kind: 'import-equals', spec: node.moduleReference }
+      : null;
+    if (edge) {
       owners.claim(node, CATCHERS.IMPORT_CARDINALITY);
       importCount += 1;
-      push(CATCHERS.IMPORT_CARDINALITY, `import ${node.moduleSpecifier.getText(srcFile)} (admitted import count is 0)`);
+      push(CATCHERS.IMPORT_CARDINALITY, `static module edge (${edge.kind}) ${edge.spec.getText(srcFile)} (admitted module-edge count is 0)`);
     }
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
       owners.claim(node, CATCHERS.DYNAMIC_LOAD);
@@ -453,8 +483,17 @@ export function admitSource(fileName, sourceText) {
     if (ts.isIdentifier(node)) {
       const name = ts.idText(node);
       const isPropName = node.parent && ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
+      // A DECLARATION's own name binds, it does not capture. Class/interface/alias names were
+      // missing here, so they fell into the residual and produced POSITION_UNCLASSIFIED noise
+      // that masked F-2: the named-class heritage capture reddened on its CLASS NAME rather
+      // than on the capture. Fixing the noise is what made the real defect visible.
       const isDeclName = node.parent && (ts.isVariableDeclaration(node.parent) || ts.isFunctionDeclaration(node.parent) ||
-                                         ts.isParameter(node.parent) || ts.isPropertyAssignment(node.parent)) && node.parent.name === node;
+                                         ts.isParameter(node.parent) || ts.isPropertyAssignment(node.parent) ||
+                                         ts.isClassDeclaration(node.parent) || ts.isClassExpression(node.parent) ||
+                                         ts.isInterfaceDeclaration(node.parent) || ts.isTypeAliasDeclaration(node.parent) ||
+                                         ts.isEnumDeclaration(node.parent) || ts.isModuleDeclaration(node.parent) ||
+                                         ts.isBindingElement(node.parent) || ts.isLabeledStatement(node.parent) ||
+                                         ts.isBreakOrContinueStatement(node.parent)) && (node.parent.name === node || node.parent.label === node);
       const owner = owners.ownerOf(node);
       const position = (isPropName || isDeclName) ? 'value' : classifyPosition(node);
       if (position === 'unclassified' && !owner) {

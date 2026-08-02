@@ -44,17 +44,28 @@ const INJECT = process.env.PROTO_INJECT || '';
 // and its verdict is withheld rather than guessed.
 const SURFACE_CODES = ['TS7006', 'TS2792', 'TS7017', 'TS1192', 'TS2591', 'TS2835', 'TS2724'];
 const TYPECHECKER_CAUGHT_CODES = ['TS2304', 'TS2540', 'TS2532', 'TS1117', 'TS2339'];
+// 🛑 FOUND BY THE accuracy-validator: `FIXTURE_INVALID` had NO ASSIGNMENT SITE — the value was
+// unreachable, so "fixture_invalid: 0" was DEFINITIONAL, not measured. A five-population
+// partition wearing a six-population caption. The class now has real members: diagnostics that
+// indicate the FIXTURE WAS WRITTEN WRONG (an authoring defect) rather than the instrument being
+// unconfigured or the planted illegality being caught. Red-proofed like every other class.
+const FIXTURE_INVALID_CODES = ['TS2554', 'TS2345', 'TS2559', 'TS2739', 'TS2741', 'TS2769'];
 function classifyTypeInvalid(diagnostics) {
   const codes = diagnostics.map((d) => d.split(':')[0]);
   if (codes.some((c) => SURFACE_CODES.includes(c))) return 'SURFACE_INVALID';
+  if (codes.some((c) => FIXTURE_INVALID_CODES.includes(c))) return 'FIXTURE_INVALID';
   if (codes.every((c) => TYPECHECKER_CAUGHT_CODES.includes(c))) return 'CAUGHT_BY_TYPECHECKER';
   // Neither recognised: FAIL CLOSED into its own reported bucket rather than being folded
   // into whichever population happens to be convenient.
   return 'TYPE_INVALID_UNCLASSIFIED';
 }
 
+// The duplicate-id injection plants a REAL duplicate row, so the id-uniqueness check runs on
+// genuinely duplicated data rather than on a flipped flag.
+const CORPUS_UNDER_TEST = INJECT === 'partition_overlap' ? [...CORPUS, { ...CORPUS.find((c) => c.id === '38') }] : CORPUS;
+
 const results = [];
-for (const c of CORPUS) {
+for (const c of CORPUS_UNDER_TEST) {
   let outcome = 'REJECTED', fired = [], detail = '', tuple = null, diagnostics = [], submittedBody = null;
   if (c.kind === 'source') {
     let body = c.body;
@@ -66,8 +77,13 @@ for (const c of CORPUS) {
     // R-546 §7's stop conditions get red paths too — a class I enforce without a
     // demonstrated red is the same "green check with no path to red" I am here to close.
     if (INJECT === 'surface_invalid_rows' && c.id === '35(b)') body = `export const project = (lane) => ({ v: window.__ledger });\n`;
-    if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `outer: for (const x of [1]) { break outer; }\nexport const project = (lane: Lane) => ({ v: window.__ledger });\n`;
-    if (INJECT === 'type_invalid_unclassified' && c.id === '48') body = `const C = deepFreeze({ a: 1 }, 2);\nexport const project = (lane: Lane) => ({ v: C.a });\n`;
+    // An ENUM MEMBER name is in neither type nor value space under this rule. The previous
+    // injection used a labeled statement, which STOPPED reaching the residual once label
+    // handling was added — a red path can be silently retired by an unrelated repair, so it
+    // is re-measured rather than assumed.
+    if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `enum E { A = 1 }\nexport const project = (lane: Lane) => ({ v: window.__ledger });\n`;
+    if (INJECT === 'fixture_invalid' && c.id === '48') body = `const C = deepFreeze({ a: 1 }, 2);\nexport const project = (lane: Lane) => ({ v: C.a });\n`;
+    if (INJECT === 'type_invalid_unclassified' && c.id === '48') body = `const C = Object.freeze({ a: 1 });\nexport const project = (lane: Lane) => ({ v: C.a === 'x' });\n`;
     submittedBody = body;
     const r = admitSource(c.file, body);
     outcome = r.outcome; tuple = r.tuple; diagnostics = r.diagnostics || [];
@@ -197,7 +213,14 @@ const partitionSum = Object.values(partition).reduce((a, ids) => a + ids.length,
 const unpartitioned = orig.filter((r) => !Object.values(SIX).includes(r.status)).map((r) => `${r.id}:${r.status}`);
 const inTwo = Object.entries(partition).flatMap(([k, ids]) => ids.map((id) => ({ id, k })))
   .reduce((acc, { id }) => { acc[id] = (acc[id] || 0) + 1; return acc; }, {});
-const duplicated = Object.entries(inTwo).filter(([, n]) => n > 1).map(([id]) => id);
+// 🛑 FOUND BY THE accuracy-validator: I declared this check STRUCTURALLY UNREACHABLE on the
+// grounds that a row has exactly one STATUS. That argument was sound about statuses and SILENT
+// ABOUT IDS — a DUPLICATE CORPUS ID puts the same id in the partition twice. The declaration
+// was convenient, not true, and it is withdrawn. The id-uniqueness check below is the missing
+// half, and both are now red-proofed.
+const idCounts = CORPUS_UNDER_TEST.reduce((a, c) => { a[c.id] = (a[c.id] || 0) + 1; return a; }, {});
+const duplicateCorpusIds = Object.entries(idCounts).filter(([, n]) => n > 1).map(([id]) => id);
+const duplicated = [...new Set([...Object.entries(inTwo).filter(([, n]) => n > 1).map(([id]) => id), ...duplicateCorpusIds])];
 
 const likeForLike = {
   population: 'AR-589 original 52 subcases, by id',
@@ -271,6 +294,9 @@ const FAILURE_CLASSES = [
   ['partition_overlap', duplicated.length > 0, () => `row(s) in two populations: ${duplicated.join(', ')}`],
   ['partition_orphan', unpartitioned.length > 0, () => `row(s) in no population: ${unpartitioned.join(', ')}`],
   ['position_unclassified', results.some((r) => r.status === 'POSITION_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'POSITION_UNCLASSIFIED').length} row(s) with an identifier position the rule cannot classify (fails closed)`],
+  // R-546 §5.0(ii): a fixture-invalid row is an AUTHORING defect and the order is FIX THE
+  // FIXTURE — so it fails the gate rather than sitting in the table as a tolerated number.
+  ['fixture_invalid', results.some((r) => r.status === 'FIXTURE_INVALID'), () => `${results.filter((r) => r.status === 'FIXTURE_INVALID').map((r) => `${r.id} [${r.diagnostics.join(';')}]`).join(' | ')}`],
   ['type_invalid_unclassified', results.some((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED').map((r) => `${r.id} [${r.diagnostics.join(';')}]`).join(' | ')}`],
 ];
 const failures = FAILURE_CLASSES.filter(([, hit]) => hit).map(([name, , msg]) => `${name}: ${msg()}`);
