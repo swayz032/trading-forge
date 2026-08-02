@@ -20,11 +20,18 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
-import { CORPUS, GREEN, ORIGINAL_52_IDS, PREREGISTERED_EMIT_CHANGES } from './corpus.mjs';
+import { CORPUS, GREEN, PREREGISTERED_EMIT_CHANGES } from './corpus.mjs';
+// ITEM 15/16: the expected membership, the pinned-baseline loader and the baseline row map all
+// come from `membership.mjs` now. This file previously carried its OWN copy of the loader and
+// iterated `ORIGINAL_52_IDS` — the self-authored set — so it inherited that set's blindness.
+import {
+  loadBaselineCorpus, BASELINE_COMMIT, BASELINE_REPO_PATH,
+  EXPECTED_ORIGINAL_IDS, EXPECTED_SOURCE_IDS, BASELINE_BY_ID,
+} from './membership.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const BASELINE_COMMIT = '8297ebbe';
-const REPO_PATH = 'prototypes/p0-vnext-admission/corpus.mjs';
+const REPO_PATH = BASELINE_REPO_PATH;
+const INJECT = process.env.PROTO_INJECT || '';
 
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 
@@ -37,21 +44,20 @@ function emitJs(body) {
   return out.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim() !== '').join('\n');
 }
 
-export function loadBaselineCorpus() {
-  const raw = execFileSync('git', ['show', `${BASELINE_COMMIT}:${REPO_PATH}`], { cwd: HERE, encoding: 'utf8' });
-  const abs = (n) => JSON.stringify(pathToFileURL(path.join(HERE, n)).href);
-  let subs = 0;
-  const patched = raw.replace(/from '\.\/(source-admission|runtime-admission)\.mjs'/g, (_m, n) => { subs += 1; return `from ${abs(`${n}.mjs`)}`; });
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'p0vnext-baseline-'));
-  const f = path.join(dir, 'baseline-corpus.mjs');
-  fs.writeFileSync(f, patched);
-  return { file: f, substitutions: subs, rawBytes: raw.length };
-}
-
-const { file, substitutions, rawBytes } = loadBaselineCorpus();
-const base = await import(pathToFileURL(file).href);
-const baseById = new Map([...base.CORPUS, ...base.GREEN].map((c) => [c.id, c]));
-const nowById = new Map([...CORPUS, ...GREEN].map((c) => [c.id, c]));
+const { substitutions, rawBytes } = loadBaselineCorpus();
+// 🛑 ITEM 16 FOUND A SILENT DROP HERE, and it is the reason the published figure said 38.
+// This file built `baseById` from the baseline ids RAW — so the baseline's row `54` was filed
+// under `54`, while the expected set asks for `54(c)`. `baseById.get('54(c)')` returned
+// undefined, the `continue` below swallowed it, and the row simply LEFT the denominator.
+// `BASELINE_BY_ID` applies the declared historical rename, so the row is compared again.
+const baseById = BASELINE_BY_ID;
+// ITEM 15 red-proof (b): R-548 requires the unique rename to go RED in BOTH gates, so this gate
+// gets the same injection. It mutates the CORPUS UNDER TEST, never the expected set.
+const corpusNow = INJECT === 'membership_rename'
+  ? CORPUS.map((c) => (c.id === '35(a)' ? { ...c, id: '35(z)' } : c))
+  : INJECT === 'membership_delete' ? CORPUS.filter((c) => c.id !== '38')
+  : CORPUS;
+const nowById = new Map([...corpusNow, ...GREEN].map((c) => [c.id, c]));
 
 console.log('EMITTED-BEHAVIOUR FREEZE (item 11)');
 console.log(`BASELINE: ${BASELINE_COMMIT}:${REPO_PATH} (${rawBytes}B, read via git show — NOT hand-copied)`);
@@ -81,10 +87,25 @@ function moduleEdges(body) {
   return out.sort().join(' | ');
 }
 
+// ---- ITEM 16 (R-548 §4): THE MEMBER SET IS ASSERTED, NOT PRINTED ----------------------
+// The line this replaces was:
+//     if (!b || !n || b.kind !== 'source') continue;   // runtime rows have no source text
+// ONE `continue` covering FOUR distinct conditions, three of which are findings:
+//   b missing        -> the expected set and the pinned baseline disagree (instrument fault)
+//   n missing        -> a frozen row was RENAMED OR DELETED out of the corpus under test
+//   kind changed     -> the row is no longer the same species of object
+//   non-source       -> the ONLY legitimate skip, and it is now COUNTED and NAMED
+// Under R-548 §2's attack B the second case fired silently: the denominator went 39 -> 38 and
+// the gate still exited 0. A gate that shrinks its own denominator is not measuring the corpus.
 const rows = [];
-for (const id of ORIGINAL_52_IDS) {
+const memberFailures = [];
+const nonSource = [];
+for (const id of EXPECTED_ORIGINAL_IDS) {
   const b = baseById.get(id), n = nowById.get(id);
-  if (!b || !n || b.kind !== 'source') continue;       // runtime rows have no source text
+  if (!b) { memberFailures.push(`${id}: ABSENT from the pinned baseline ${BASELINE_COMMIT} — expected set and baseline disagree`); continue; }
+  if (!n) { memberFailures.push(`${id}: ABSENT from the corpus under test — a frozen row was renamed or deleted`); continue; }
+  if (b.kind !== n.kind) { memberFailures.push(`${id}: KIND CHANGED ${b.kind} -> ${n.kind}`); continue; }
+  if (b.kind !== 'source') { nonSource.push(id); continue; }
   const eWas = emitJs(b.body), eNow = emitJs(n.body);
   const emitSame = eWas === eNow;
   const edgesWas = moduleEdges(b.body), edgesNow = moduleEdges(n.body);
@@ -112,6 +133,16 @@ console.log('='.repeat(126));
 console.log(`rows compared: ${rows.length} | COVERED by emit: ${covered.length} (EMIT-IDENTICAL ${covered.length - changed.length}, CHANGED ${changed.length}) | NOT-COVERED-BY-EMIT: ${blind.length} [${blind.map((r) => r.id).join(', ')}] | UNDECLARED: ${undeclared.length}`);
 console.log(`  ^ the NOT-COVERED rows are scored on the module-edge set instead. Reported as a`);
 console.log(`    coverage GAP rather than folded into the EMIT-IDENTICAL count.`);
+
+// ---- ITEM 16: THE EXACT-COUNT ASSERTION, AGAINST THE PINNED ARTIFACT ------------------
+// The expected source-row count is read from the BASELINE, not from whatever this run happened
+// to iterate. Any count other than the exact expected one is RUN-STOPPING — that is the whole
+// defect: the old comparator was free to compare fewer rows and still report success.
+const EXPECTED_SOURCE_COUNT = EXPECTED_SOURCE_IDS.length;
+const countOk = rows.length === EXPECTED_SOURCE_COUNT;
+console.log(`MEMBER SET (item 16): expected source rows ${EXPECTED_SOURCE_COUNT} (from ${BASELINE_COMMIT}) | compared ${rows.length} | non-source skipped ${nonSource.length} [${nonSource.join(', ')}] | member failures ${memberFailures.length}`);
+if (!countOk) console.log(`*** STOP CONDITION (item 16): compared ${rows.length} source rows, expected exactly ${EXPECTED_SOURCE_COUNT}`);
+for (const f of memberFailures) console.log(`*** STOP CONDITION (item 16): ${f}`);
 
 // The blindness must be DEMONSTRATED, not asserted: delete a planted import and show the emit
 // comparator says IDENTICAL while the second path convicts.
@@ -141,4 +172,5 @@ const ctlDiff = emitJs('export const project = (lane) => ({ v: lane.v });\n') !=
 console.log(`\nCOMPARATOR CONTROLS — annotation-only edit reads IDENTICAL: ${ctlSame} | behaviour edit reads DIFFERENT: ${ctlDiff}`);
 console.log('  ^ both must be true, or this comparator cannot discriminate and every verdict above is void.');
 
-process.exitCode = (undeclared.length === 0 && ctlSame && ctlDiff && blindWitness.emitSaysIdentical && blindWitness.edgesDiffer) ? 0 : 1;
+process.exitCode = (undeclared.length === 0 && ctlSame && ctlDiff && blindWitness.emitSaysIdentical
+  && blindWitness.edgesDiffer && countOk && memberFailures.length === 0) ? 0 : 1;

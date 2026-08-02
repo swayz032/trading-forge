@@ -433,6 +433,8 @@ export function admitSource(fileName, sourceText) {
     // NOT coverage, and NOT a catcher. AR-587's own law is "PARSE **and TYPE-CHECK**".
     return {
       ok: false, outcome: 'TYPE_INVALID', tuple, diagnostics: semantic.map(fmtDiag),
+      // ITEM 14: the span-carrying form. Ownership is joined on these, never on the strings.
+      diagnosticRecords: semantic.map(diagRecord),
       violations: [{ catcher: TYPE_INVALID, path: semantic.map(fmtDiag).join(' | ') }],
     };
   }
@@ -614,6 +616,31 @@ export function admitSource(fileName, sourceText) {
 
 function fmtDiag(d) {
   return `TS${d.code}: ${ts.flattenDiagnosticMessageText(d.messageText, ' ')}`;
+}
+
+// ITEM 14 (R-548 §4) — A DIAGNOSTIC MUST CARRY ITS ANCHOR, OR OWNERSHIP CANNOT BE JOINED.
+// `fmtDiag` discards the span, and a string is all `classifyTypeInvalid` ever received — which
+// is precisely why a global code list was the only join available to it.
+//   AN ERROR CODE IS A TYPE OF EVENT, NOT PROOF THE EVENT BELONGS TO THIS MUTATION.
+// The record below carries the code AND the exact source span, so the runner can ask the only
+// question that establishes ownership: does this diagnostic point AT the illegality this row
+// planted? The string form is kept unchanged beside it so every existing reader is untouched.
+export function diagRecord(d) {
+  const rec = {
+    code: `TS${d.code}`,
+    message: ts.flattenDiagnosticMessageText(d.messageText, ' '),
+    start: null, length: null, line: null, character: null, anchorText: null,
+  };
+  if (d.file && typeof d.start === 'number') {
+    const len = d.length ?? 0;
+    const lc = d.file.getLineAndCharacterOfPosition(d.start);
+    rec.start = d.start;
+    rec.length = len;
+    rec.line = lc.line + 1;
+    rec.character = lc.character + 1;
+    rec.anchorText = d.file.text.slice(d.start, d.start + len);
+  }
+  return rec;
 }
 
 // ---- SURFACE HEALTH: a positive control on the pinned surface itself -------------------

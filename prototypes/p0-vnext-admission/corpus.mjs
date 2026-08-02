@@ -79,7 +79,22 @@ export const CORPUS = [
   // single most valuable result to make a number look better.
   { id: '34(d)', atom: 'free / captured reference (declared)', expect: S.FREE_REF,
     ...src(`export const project = (lane: Lane) => ({ v: injectedReader(lane) });\n`) },
+  // ⚠️ ITEM 14 CONVICTED THIS ROW ON ITS FIRST CLEAN RUN, AND I DID NOT PLANT THAT. Under the
+  // deleted global code list, `TS2304` credited ANY row emitting it — so this row was carrying a
+  // `caught_by_typechecker` credit that had never been joined to anything. The row-bound join
+  // has no such list, so it failed closed and named the row. That is the guard working on its
+  // first execution against code nobody was attacking.
+  // ADJUDICATION OWED BY R-546 §5.12 ("re-examine whether the unresolved specimen is better
+  // classified caught_by_typechecker — your call, state which and why"), ANSWERED HERE:
+  // it IS `caught_by_typechecker` under R-546 §5.0(iii) — the planted illegality is a free
+  // reference to an UNDECLARED name, and `TS2304 Cannot find name` is that illegality itself,
+  // not an incidental error beside it. The row's own comment above already said "TS2304 BY
+  // CONSTRUCTION"; the CODE said it via a global list, which is not the same claim.
+  // `[MEASURED]` anchor: TS2304 @45+16 on `undeclaredReader`, inside the declared expression.
+  // ⚠️ This row is a DECLARED ADDITION, not one of AR-589's 52, so this changes no published
+  // like-for-like figure — re-measured below rather than asserted.
   { id: '34(d-u)', atom: 'free reference to an UNDECLARED name', expect: S.FREE_REF,
+    typecheckerOwned: [{ code: 'TS2304', expression: 'undeclaredReader(lane)', defect: 'the planted illegality IS the unresolved free reference; an undeclared name is TS2304 by construction' }],
     ...src(`export const project = (lane: Lane) => ({ v: undeclaredReader(lane) });\n`) },
 
   { id: '35(a)', atom: 'globalThis', expect: S.AMBIENT,
@@ -144,13 +159,29 @@ export const CORPUS = [
   // type-valid without deleting the duplicate -- i.e. without deleting the defect. These
   // are honest `miss_type_invalid` rows, and the finding they carry is reported in RESULTS:
   // under the pinned surface the COMPILER ITSELF owns this channel.
+  // ---- ITEM 14 (R-548 §4): TYPE-CHECKER OWNERSHIP IS ROW-BOUND -------------------------
+  // These four rows are credited `caught_by_typechecker` — the planted illegality IS ITSELF a
+  // type error. Until now that credit was granted by ONE GLOBAL CODE LIST, so ANY row emitting
+  // any listed code was credited, and R-548 §2's attack A bought a credit with an UNRELATED
+  // TS2339. The credit is now joined to (ROW, OWNED EXPRESSION, SPAN, EXPECTED DEFECT):
+  // every diagnostic the row produces must point AT one of the declared expressions, and every
+  // declared expression must be witnessed. `expression` must occur EXACTLY ONCE in the
+  // submitted body or the anchor is ambiguous and the row fails closed.
+  //   AN ERROR CODE IS A TYPE OF EVENT, NOT PROOF THE EVENT BELONGS TO THIS MUTATION.
+  // ⚠️ SCOPE, STATED HONESTLY: `defect` is the human-readable claim that ties the anchor to the
+  // plant. The MACHINE-CHECKED key is (row, expression, span, code) — I do not pretend prose is
+  // enforced. Every anchor below was MEASURED from the compiler's own span, never guessed.
   { id: '52(a)', atom: 'duplicate cooked keys (raw)', expect: S.GRAMMAR,
+    typecheckerOwned: [{ code: 'TS1117', expression: 'a: 2', defect: 'the planted illegality IS the duplicate cooked key `a`' }],
     ...src(`const C = Object.freeze({ a: 1, a: 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(b)', atom: 'duplicate cooked keys (esc string)', expect: S.GRAMMAR,
+    typecheckerOwned: [{ code: 'TS1117', expression: `"${B}x61": 2`, defect: 'duplicate cooked key via escaped STRING form — the compiler cooks `\\x61` to `a`' }],
     ...src(`const C = Object.freeze({ a: 1, "${B}x61": 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(c)', atom: 'duplicate cooked keys (esc ident)', expect: S.GRAMMAR,
+    typecheckerOwned: [{ code: 'TS1117', expression: `${B}u0061: 2`, defect: 'duplicate cooked key via escaped IDENTIFIER form — `\\u0061` cooks to `a`' }],
     ...src(`const C = Object.freeze({ a: 1, ${B}u0061: 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '52(d)', atom: 'duplicate cooked keys (mixed)', expect: S.GRAMMAR,
+    typecheckerOwned: [{ code: 'TS1117', expression: '"a": 2', defect: 'duplicate cooked key across identifier and string spellings' }],
     ...src(`const C = Object.freeze({ a: 1, "a": 2 });\nexport const project = (lane: Lane) => ({ v: C.a });\n`) },
   { id: '53',    atom: 'harmless inert static import', expect: S.IMPORT_CARDINALITY,
     ...src(`import { add } from './pure-math.js';\nexport const project = (lane: Lane) => ({ v: add(1, 2) });\n`) },
@@ -166,7 +197,17 @@ export const CORPUS = [
   // 54(c): the OLD row 54's text-level channel, retained under an HONEST caption. R-544
   // proved it is not a module-system discriminator -- it behaves identically in .mjs and
   // .cjs. It is kept so the claim it really supports stays measured.
+  // ⚠️ TWO owned diagnostics, and I found that by MEASURING rather than by declaring one and
+  // assuming: TS2532 anchors on `this` (module-scope `this` is `undefined` under ESM — the
+  // planted channel) and TS2540 anchors on `HOLDER.slot` (the frozen-container write the same
+  // statement performs). BOTH are entailed by what this row plants, so both are declared. Had I
+  // declared only the first, the second would have failed the join and the row would have
+  // dropped out of `caught_by_typechecker` — which is the guard working, not a nuisance.
   { id: '54(c)', atom: 'module-scope `this` STATEMENT (text-level)', expect: S.MODULE_SYSTEM,
+    typecheckerOwned: [
+      { code: 'TS2532', expression: 'this.inject', defect: 'module-scope `this` is `undefined` under ESM — the planted text-level channel' },
+      { code: 'TS2540', expression: 'HOLDER.slot = f', defect: 'the same statement writes through a frozen container — read-only property' },
+    ],
     ...src(`const HOLDER = Object.freeze({ slot: Object.freeze({}) });\nthis.inject = (f: unknown) => { HOLDER.slot = f; };\nexport const project = (lane: Lane) => ({ v: lane.v });\n`) },
 
   // ---- ITEM 8's COMPLEMENTS: the required export ----------------------------------------
@@ -283,9 +324,40 @@ export const PREREGISTERED_EMIT_CHANGES = {
   '26(c)': 'relative specifier carries the explicit `.js` extension required by NodeNext resolution; without it the fixture is TS2792 and yields no verdict at all. This one survives emit because a bare side-effect import is not elided. The import — and therefore its cardinality, the planted mutation — is unchanged.',
   '41(a)': 'as 26(c) — dynamic `import(\'./ledger\')` -> `import(\'./ledger.js\')`. The dynamic-load channel is unchanged.',
   '53': 'as 26(c) — `./pure-math` -> `./pure-math.js`. The import-cardinality mutation is unchanged.',
+  // ⚠️★★★★★ DECLARED LATE, AND I LABEL IT HONESTLY RATHER THAN CALLING IT A PRE-REGISTRATION.
+  // ITEM 16 RESTORED THIS ROW TO THE COMPARISON AND IT CONVICTED ON THE FIRST RUN. The freeze
+  // gate had NEVER seen 54(c): it filed the baseline row under its baseline id `54`, looked up
+  // `54(c)`, got undefined, and hit the silent `continue`. The denominator read 38 instead of 39
+  // and the row's edit went unexamined from the moment it was made.
+  //   THIS IS 26(a) AGAIN, ONE LEVEL OUT: there the comparator could not see the CHANGE; here it
+  //   could not see the ROW. `A DECLARATION I NEVER MADE BECAUSE THE INSTRUMENT COULD NOT SEE
+  //   THE ROW IS A DECLARATION I OWED.`
+  // ⚠️ F-6 SCOPE, STATED PLAINLY: this entry is NOT a prediction and I will not dress it as one.
+  // It is written AFTER the instrument first became able to see the row. It is admissible only
+  // because the reason below is MEASURED, and the measurement is reproducible on demand.
+  // `[MEASURED HERE]` the baseline body under the CURRENT pinned surface:
+  //   verbatim                  -> TS2532 `this` + TS7006 x2 (implicit any — SURFACE codes) + TS2339 `read`
+  //   + type annotations ONLY   -> TS2532 `this` + TS2339 `Property 'read' does not exist on type 'Readonly<{}>'`
+  //   current 54(c)             -> TS2532 `this` + TS2540 `Cannot assign to 'slot'`
+  // So the annotations alone leave an INCIDENTAL TS2339 that is NOT the channel under test, and
+  // corpus.mjs's own standing rule (header, lines 21-25) is: where a fixture's INCIDENTAL type
+  // error is not the channel, adjust the USE SITE and LEAVE THE DEFECT INTACT.
+  // ✅ THE PLANTED DEFECT IS INTACT: `this.inject = ...` — the module-scope `this` STATEMENT — is
+  // byte-identical across baseline and current. Only the write target inside the arrow body
+  // moved (`HOLDER.slot.read = f` -> `HOLDER.slot = f`), which is not the channel.
+  '54(c)': 'INCIDENTAL type error removed, planted channel untouched: the write target moved `HOLDER.slot.read = f` -> `HOLDER.slot = f` because the baseline form is TS2339 (`read` does not exist on `Readonly<{}>`) under the pinned surface, which is not the module-scope-`this` channel this row tests. The `this.inject` statement — the planted defect — is byte-identical. Declared LATE (not predictively): item 16 restored this row to the comparison, which had silently dropped it since 54(c) was created.',
 };
 
-const ADDED_SINCE_AR589 = new Set(['34(d-u)', '54', '54(b)', '55(a)', '55(b)', '55(c)', '55(d)',
-  // added from the grader's HUNT — never part of AR-589's 52, so never in the like-for-like set
-  '56(a)', '56(b)', '56(c)', '56(d)', '57']);
-export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter((id) => !ADDED_SINCE_AR589.has(id));
+// ---- ITEM 15 (R-548 §4) — THE SELF-AUTHORED MEMBERSHIP SET IS DELETED FROM THIS FILE ----
+// This is where the defect lived:
+//     const ADDED_SINCE_AR589 = new Set([...]);
+//     export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter((id) => !ADDED_SINCE_AR589.has(id));
+// The "frozen" 52 were computed from `CORPUS` — the very population they exist to constrain —
+// so a unique rename (35(a) -> 35(z)) produced `missing_ids: []` and exit 0. The set could not
+// disagree with a rename because it authored the rename's result.
+//
+// The expected membership now lives in `membership.mjs` and is read from the PINNED AR-589
+// artifact at 8297ebbe. It is deliberately NOT re-exported from here: R-555 §5 makes
+// re-deriving it from `CORPUS` under any new name a STOP CONDITION, and the cheapest way to
+// keep that true is for this file to have no such export to reach for.
+// Consumers import { EXPECTED_ORIGINAL_IDS, checkMembership } from './membership.mjs'.

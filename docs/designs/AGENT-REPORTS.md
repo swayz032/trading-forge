@@ -4,6 +4,132 @@
 
 ---
 
+## AR-597 · 2026-08-02 · ✅★★★★★ **ITEMS `14`–`16` AND `F-7` DELIVERED. `R-548`'s TWO FOUNDING ATTACKS ARE CLOSED AND I PROVED IT THE ONLY WAY THAT COUNTS: I REBUILT THE PRE-FIX RULE IN A THROWAWAY TREE AND RAN THE SAME INJECTIONS AGAINST IT — ATTACK A AND ATTACK B BOTH EXIT `0` THERE AND EXIT `1` HERE.** 🛑★★★★★ **AND ITEM `14` CONVICTED A ROW ON ITS FIRST CLEAN RUN THAT NOBODY WAS ATTACKING: `34(d-u)` HELD A `caught_by_typechecker` CREDIT PURCHASED ENTIRELY BY THE GLOBAL CODE LIST.** 🛑★★★★★ **ITEM `16` FOUND THAT `54(c)` HAD **NEVER BEEN COMPARED** BY THE FREEZE GATE — THE PUBLISHED `38` WAS `39` MINUS A ROW THE COMPARATOR SILENTLY DROPPED, AND THE DROPPED ROW IS THE ONE CARRYING AN UNDECLARED EMIT CHANGE.**
+
+**RULING ID:** `R-551 §6.1` items (2) + (3), as re-issued by `R-555 §6.1` · **TASK ID:** AR-597 · **PRIOR:** AR-596 (`97870c07`).
+**FAN-IN: `3 / 3` of `R-551 §6.1` — (1) `F-2-CORRECTED` closed by AR-596/`R-555`; (2) items `14`–`16` closed here; (3) `F-7` closed here. NOT A HANDOFF — I hold context and am not exhausted.**
+**SEAT:** ⚠️ **FRESH WORKER SEAT** (cleared context, same host process `21508`). **NO NEW EAR ARMED — `one monitor rig, never new+old`:** `[MEASURED HERE, Win32_Process]` PIDs `35656`/`28348` are ALIVE. ★★★ **MY FIRST PROCESS QUERY SAID THEY WERE DEAD; IT FILTERED ON `powershell/node/claude` AND THE MONITORS RUN AS `bash.exe`. I nearly reported a dead ear and armed a duplicate — `audit the instrument before believing it`, and `background monitors survive a session roll`.**
+✅★★★★★ **AND THE EAR FIRED, WHICH IS THE POSITIVE CONTROL `R-553 §1` SAID IT WAS STILL OWED:** it delivered `R-555` to me mid-build, before I had written a line of code. **`R-553` recorded PRESENCE and explicitly refused to claim FIRING. It fires.**
+**BACKFILL:** `R-555` read in full on arrival; no ruling newer than it on disk at write time; newest `GRADE-*.md` is `GRADE-P0PC-PARTITION-2026-08-02.md` (`04:28`), already consumed by `R-550`/`R-551`.
+**TREE:** campaign worktree `wt-h1-wave4-20260712`, node `v24.13.0`. **Every exit code below was read FROM THE PROCESS, never through a pipe (`R-554 §6`).**
+
+### ✅★★★★★ §1 — ITEM 14: THE GLOBAL CODE LIST IS DELETED, THE KEY IS `(ROW, EXPRESSION, SPAN, DEFECT)`
+`TYPECHECKER_CAUGHT_CODES` no longer exists. `classifyTypeInvalid` no longer receives strings; it receives span-carrying diagnostic records (`source-admission.mjs::diagRecord`) plus the ROW and the SUBMITTED BODY, and credit requires a two-direction join in `run.mjs::ownershipJoin`:
+- **every diagnostic must point INSIDE a declared owned expression** → an extra or unrelated diagnostic cannot ride along on a row that legitimately owns another one;
+- **every declared anchor must be witnessed** → the declaration is falsifiable, not decorative;
+- **the anchor must occur EXACTLY ONCE** in the submitted body, or the span join is a guess and the row fails closed.
+
+🛑★★★ **`R-555 §5` FORBADE THE NEAR-MISS AND I DID NOT SHIP IT: THERE IS NO PER-ROW CODE LIST.** A row declares `typecheckerOwned: [{ code, expression, defect }]` and the SPAN does the work.
+✅ **EVERY ANCHOR WAS MEASURED FROM THE COMPILER, NEVER GUESSED** `[MEASURED HERE]`:
+```
+52(a) TS1117 @L1:33 span[32,33) "a"        declared "a: 2"
+52(b) TS1117 @L1:33 span[32,38) "\"\\x61\""    declared "\"\\x61\": 2"
+52(c) TS1117 @L1:33 span[32,38) "\\u0061"     declared "\\u0061: 2"
+52(d) TS1117 @L1:33 span[32,35) "\"a\""       declared "\"a\": 2"
+54(c) TS2532 @L2:1  "this"  + TS2540 @L2:40 "slot"   declared "this.inject" + "HOLDER.slot = f"
+```
+⚠️★★★ **`54(c)` CARRIES **TWO** OWNED DIAGNOSTICS AND I FOUND THAT BY MEASURING, NOT BY ASSUMING ONE.** Had I declared only `TS2532`, the `TS2540` would have failed the join and dropped the row out of `caught_by_typechecker`. **The guard would have been right and my declaration wrong** — which is the direction I want that asymmetry to point.
+⚠️ **SCOPE, STATED SO IT CANNOT BORROW AUTHORITY: `defect` is PROSE and is NOT machine-checked.** The enforced key is `(row, expression, span, code)`. I will not claim a checker reads English.
+
+### 🛑★★★★★ §2 — ITEM 14 CONVICTED A ROW ON ITS FIRST CLEAN RUN, UNPROMPTED
+`[MEASURED HERE — the clean control, no injection, exit 1]`
+```
+*** type_invalid_unclassified: 34(d-u) [TS2304: Cannot find name 'undeclaredReader.']
+    OWNERSHIP: row declares NO typecheckerOwned anchor, so no diagnostic can be credited to it
+```
+🛑★★★★★ **`34(d-u)` HAD BEEN HOLDING A `caught_by_typechecker` CREDIT BOUGHT ENTIRELY BY THE GLOBAL LIST — `TS2304` was on it, so the row was credited without any join to anything.** **I did not plant this. The guard found it in code nobody was attacking, on its first execution.**
+✅ **ADJUDICATED, AND IT DISCHARGES `R-546 §5.12`'s OPEN QUESTION** (*"re-examine whether the unresolved specimen is better classified `caught_by_typechecker` — your call, state which and why"*): **it IS `caught_by_typechecker` under `R-546 §5.0(iii)`.** The planted illegality is a free reference to an UNDECLARED name, and `TS2304 Cannot find name` **IS that illegality**, not an incidental error beside it. `[MEASURED]` anchor `TS2304 @L1:46` on `undeclaredReader`, inside the declared expression. ★★★ **The row's own comment already said *"TS2304 BY CONSTRUCTION"*; the CODE said it via a global list, which is not the same claim.**
+⚠️ **`34(d-u)` IS A DECLARED ADDITION, NOT ONE OF THE `52`, so no published like-for-like figure moves. Re-measured below rather than asserted.**
+
+### ✅★★★★★ §3 — ITEM 15: MEMBERSHIP FROM A PINNED PRIOR ARTIFACT, BOTH DIRECTIONS
+`ORIGINAL_52_IDS = CORPUS.map(...)` **is deleted from `corpus.mjs`** and deliberately NOT re-exported under any name — `R-555 §5` makes re-deriving it a stop condition, and the cheapest way to keep that true is to leave nothing to reach for.
+New `membership.mjs` reads the expected set from **`8297ebbe:prototypes/p0-vnext-admission/corpus.mjs`, blob `b56e2969c1b6852a2ac42053a14adc62dbe9e899` (`11050B`, `2` declared import substitutions)** — the AR-589 artifact, via `git show`, never hand-copied.
+```
+expected cardinality 52  (asserted, throws on any other count) · uniqueness asserted
+declared historical rename: 54 -> 54(c)   (the current 54 is the container twin, NOT in the set)
+direction 1  every expected id must exist        -> missing_ids
+direction 2  every present id must be expected or DECLARED_ADDITIONS -> undeclared_ids
+uniqueness   duplicate ids in the population under test -> duplicate_ids
+CLEAN: missing [] · undeclared [] · duplicated [] · declared_but_absent []
+```
+★★★ **THE MEMBERSHIP IS READ BY EXECUTING THE PINNED MODULE, NOT BY GREPPING IT.** `[MEASURED HERE]` a `grep -c "id: '"` over the baseline source returns **`63`** — it matches the `id` fields of the runtime fixtures nested inside rows, plus the GREEN rows. **My first instrument gave me a confidently wrong number and the executed one gave me `52`.**
+⚠️★★★★★ **A `grep` FOR `CORPUS.map(` STILL HITS `membership.mjs`, AND I FLAG IT MYSELF RATHER THAN LET IT BE FOUND:** it is `baseline.CORPUS.map(...)` on the **FROZEN blob**, a different object from the mutable corpus. `R-555 §5` names the test — *"the defect is SELF-AUTHORSHIP, not the identifier"*. **AND IT IS RED-PROOFED, NOT ARGUED: red-proof `(b)` renames `35(a)`→`35(z)` in the live corpus and this set STILL EXPECTS `35(a)` AND REPORTS IT MISSING.** A self-authored set cannot do that; that is exactly what it failed to do under attack B.
+⚠️ **`DECLARED_ADDITIONS` corrected by measurement:** I first listed `58(a)`/`58(b)` for AR-596's `implements` rows. The check reported `declared_but_absent: ["58(a)","58(b)"]` — **they are GREEN neighbours, a different population.** Removed. **A stale declaration reporting itself is the check working.**
+
+### 🛑★★★★★ §4 — ITEM 16 FOUND A ROW THE FREEZE GATE HAD NEVER ONCE COMPARED
+The deleted line was `if (!b || !n || b.kind !== 'source') continue;` — **ONE `continue` covering FOUR conditions, three of which are findings.** Now: missing-in-baseline · missing-in-current · kind-changed are each RUN-STOPPING and NAME the id; non-source rows are the only legitimate skip and are COUNTED and LISTED.
+🛑★★★★★ **AND IT IMMEDIATELY EXPOSED A SILENT DROP THAT EXPLAINS THE PUBLISHED `38`:** the gate filed baseline rows under their BASELINE ids, so it looked up `54(c)`, got `undefined`, and swallowed the row. **`rows compared` is `39`, not `38`. `54(c)` had not been checked once since it was created.**
+🛑 **THE DROPPED ROW WAS CARRYING AN UNDECLARED EMIT CHANGE** — `HOLDER.slot.read = f` → `HOLDER.slot = f`, which changes emitted JS.
+✅★★★ **I ADJUDICATED IT BY MEASUREMENT, NOT BY PREFERENCE** `[MEASURED HERE, baseline body under the CURRENT pinned surface]`:
+```
+baseline verbatim          TS2532 `this` + TS7006 x2 (implicit any — SURFACE codes) + TS2339 `read`
+baseline + annotations ONLY TS2532 `this` + TS2339 "Property 'read' does not exist on type 'Readonly<{}>'"
+current 54(c)              TS2532 `this` + TS2540 "Cannot assign to 'slot'"
+```
+**The emit-invisible annotations alone leave an INCIDENTAL `TS2339` that is not the channel under test.** `corpus.mjs`'s own standing rule (header) is: *where a fixture's INCIDENTAL type error is not the channel, adjust the USE SITE and LEAVE THE DEFECT INTACT.* ✅ **THE PLANTED DEFECT IS INTACT: `this.inject = ...` is byte-identical across baseline and current;** only the write target inside the arrow body moved.
+⚠️★★★★★ **SO I DECLARED IT — AND I LABEL THE DECLARATION `LATE`, NOT `PRE-REGISTERED`, BECAUSE THAT IS WHAT IT IS.** `F-6` forbids back-filled predictions and I will not dress this as one. **It is admissible only because the REASON is measured and reproducible.** ★★★★★ **This is `26(a)` one level out: there the comparator could not see the CHANGE, here it could not see the ROW. `A DECLARATION I NEVER MADE BECAUSE THE INSTRUMENT COULD NOT SEE THE ROW IS A DECLARATION I OWED.`**
+**Exact-count assertion added: expected source rows `39`, read from the baseline, and any other count is run-stopping.**
+
+### ✅ §5 — F-7, FIXED AT THE EMITTER
+`why()` special-cased `MISS_TYPE_INVALID` — a status `R-546 §5.0` RETIRED and never assigns — so it matched nothing and the `CAUGHT_BY_TYPECHECKER` rows fell through to `r.fired`, **which is empty for a `TYPE_INVALID` outcome. The table printed `<none fired>` for exactly the rows a reader most needs to audit.**
+```
+BEFORE  52(a)  CAUGHT_BY_TYPECHECKER  duplicate cooked keys (raw)   <none fired>
+AFTER   52(a)  CAUGHT_BY_TYPECHECKER  duplicate cooked keys (raw)   TS1117@L1:33 "a"
+        54(c)  CAUGHT_BY_TYPECHECKER  module-scope `this` STATEMENT TS2532@L2:1 "this" + TS2540@L2:40 "slot"
+```
+✅ **Plus a full `TYPE-CHECKER OWNERSHIP JOIN` section printing, per row: what it DECLARED, every diagnostic it SAW with span, and the JOIN verdict.** **The runner's table can now be audited from its own output, which `F-7` said it could not.**
+
+### ✅★★★★★ §6 — THE SEVEN RED-PROOFS, AND THE DISCRIMINATION TEST THEY OWE
+`[MEASURED HERE, `red-proof.mjs`, re-measured in the run that reports them per `R-555 §3` — never inherited]`
+```
+CONTROL GREEN: true | CLASSES WITH A DEMONSTRATED RED PATH: 29 / 29   exit 0
+(a) own_unrelated_attributed -> names type_invalid_unclassified   FOUNDING ATTACK A, verbatim
+(b) membership_rename        -> names membership                 FOUNDING ATTACK B, verbatim
+(c) own_unrelated_nonowned   -> names type_invalid_unclassified
+(d) own_extra_code           -> names type_invalid_unclassified   52(a) keeps its REAL TS1117
+(e) membership_add  (f) membership_delete  (g) membership_duplicate -> all name membership
+SECOND GATE (b)/(f): emitted-freeze CONTROL exit 0 · freeze:rename exit 1 names 35(a) · freeze:delete exit 1 names 38
+OVER-CORRECTION CONTROL: the 5 legitimately compiler-owned rows STAY credited  (R-548 §4)
+```
+🛑★★★★★ **A RED PATH IS NOT EVIDENCE THE FIX CAUSED IT, SO I MEASURED THAT SEPARATELY.** I rebuilt the PRE-FIX rule (global code list + `CORPUS.map` membership) in a throwaway copy inside the worktree — **NOT the shared files, and removed afterwards** — and fired the same seven injections at it:
+```
+OLD RULE   (a) EXIT 0 GATE:PASS   (b) EXIT 0 GATE:PASS   (c) EXIT 0 GATE:PASS   (d) EXIT 0 GATE:PASS
+           (e) EXIT 1             (f) EXIT 1             (g) EXIT 1
+NEW RULE   all seven EXIT 1
+```
+✅★★★★★ **`(a)`–`(d)` DISCRIMINATE ON THE EXIT CODE: the defects were INVISIBLE before and are fatal now. Attack A and attack B are closed, reproduced rather than described.**
+⚠️★★★★★ **`(e)`/`(f)`/`(g)` DO **NOT** DISCRIMINATE ON THE EXIT CODE AND I WILL NOT REPORT THEM AS IF THEY DO.** The old gate already reddened on add/delete/duplicate — via `partition_sum` and `partition_overlap`, i.e. the ARITHMETIC, not the membership. **What item 15 adds there is the IDENTITY**, which `R-548 §4` explicitly required (*"NAMES the exact offending identity"*) `[MEASURED HERE]`:
+```
+OLD  *** partition_sum: the six populations sum to 53, not 52          <- a COUNT. No id.
+NEW  *** membership: UNDECLARED arrivals ...: 99(x)                    <- the id
+NEW  *** membership: MISSING from the corpus under test (expected by 8297ebbe): 38
+```
+★★★ **So item 15's unique contribution over the prior gate is the RENAME and the UNDECLARED-ARRIVAL direction, plus naming on all four. That is narrower than "seven new red paths" and it is what the evidence supports.**
+
+### §7 — NUMBERS, ALL RE-TAKEN AFTER THE LAST EDIT (not carried across the fixes)
+```
+run.mjs           64 rows · attributed 55 · greens 8/8 · GATE: PASS                       exit 0
+  like-for-like (the pinned 52): 44 · 3 · 0 · 0 · 5 · 0   SUM 52 ✅  UNCHANGED by this wave
+  membership: missing [] · undeclared [] · duplicated [] · cardinality 52
+red-proof.mjs     control GREEN · 29 / 29                                                 exit 0
+type-value-proof  15 / 15 · property HOLDS                                                exit 0
+emitted-freeze    rows compared 39 (was 38) · COVERED 37 (was 36) · EMIT-IDENTICAL 29
+                  · CHANGED 8 (was 7) · NOT-COVERED 2 [26(a),26(b)] · UNDECLARED 0
+                  · member failures 0 · both comparator controls true                     exit 0
+module-tuple      surface hash unchanged                                                  exit 0
+```
+⚠️ **THE FREEZE FIGURES MOVED AND THE REASON IS `§4`, NOT A NEW EDIT:** the restored row `54(c)` adds one to `rows compared`, one to `COVERED`, and one to `CHANGED`. **`EMIT-IDENTICAL` is unchanged at `29`.**
+
+### ⚠️ §8 — WHAT I DID **NOT** MEASURE, AND WHAT IS STILL OWED
+⚠️ **A FRESH GRADE IS OWED ON THIS OBJECT AND I DO NOT SELF-CERTIFY IT.** `doer != grader`. `R-555 §6.2` holds the grade until `14`–`16` land — **they have landed, so the hold's condition is discharged; the dispatch is the desk's, not mine.**
+⚠️ **`runtime-admission.mjs` REMAINS ENTIRELY UNGRADED** (`13` attributed rows) — unchanged by this wave.
+⚠️ **`[UNENUMERATED]`** whether other rows in the EXPANDED corpus (beyond `34(d-u)`) were holding list-bought credits: **the join now audits every `TYPE_INVALID` row every run, and the clean control is green — but "green today" is a measurement, not a closure of the `SyntaxKind`/diagnostic space.** `R-550 §5`'s *"sample, not closure"* applies to me here.
+⚠️ **I did NOT re-derive the `44` attributed rows independently** — that was never mine and remains the grader's open gap.
+⚠️ **`G-1` stays OPEN. Invariant 1 untouched. No runtime, trading or capital behaviour touched.** `P0PC` does not self-advance; **the node transition is the desk's call, not mine.**
+
+---
+
+
 ## AR-596 · 2026-08-02 · ✅★★★★★ **BACKFILL READ DONE (`R-548`–`R-554`) AND `F-2-CORRECTED` DELIVERED: `class Impl implements Widget` AND `interface Ext extends Widget` ARE **ADMITTED** AGAIN, WITH THE `window.Base` CONTROL STILL **RED**. THE OVER-CORRECTION `R-551 §2` CONVICTED IS CLOSED.** 🛑★★★★★ **AND THE EAR ITSELF PROVED `R-553 §URGENT` RIGHT ON ITS FIRST HOUR: IT ANNOUNCED `R-553`/`R-554` AND WAS STRUCTURALLY DEAF TO `R-551`/`R-552`. AN EAR ARMED AT `05:09` CANNOT HEAR `04:52`.**
 
 **RULING ID:** `R-551 §6.1` item (1) + `R-553` backfill order · **TASK ID:** AR-596 · **PRIOR:** AR-595 (`d25813ca`).

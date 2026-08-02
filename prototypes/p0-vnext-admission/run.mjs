@@ -17,7 +17,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { admitRuntime } from './runtime-admission.mjs';
-import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED, ORIGINAL_52_IDS } from './corpus.mjs';
+import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED } from './corpus.mjs';
+// ITEM 15: expected membership comes from the PINNED AR-589 artifact, never from `CORPUS`.
+import { EXPECTED_ORIGINAL_IDS, checkMembership, BASELINE_META } from './membership.mjs';
 
 globalThis.__GETTER_HITS__ = 0;
 
@@ -43,30 +45,112 @@ const INJECT = process.env.PROTO_INJECT || '';
 // others; a row carrying BOTH a surface code and a real catch is reported as surface-invalid
 // and its verdict is withheld rather than guessed.
 const SURFACE_CODES = ['TS7006', 'TS2792', 'TS7017', 'TS1192', 'TS2591', 'TS2835', 'TS2724'];
-const TYPECHECKER_CAUGHT_CODES = ['TS2304', 'TS2540', 'TS2532', 'TS1117', 'TS2339'];
+// 🛑 ITEM 14 (R-548 §4) — `TYPECHECKER_CAUGHT_CODES` IS DELETED. It was:
+//     const TYPECHECKER_CAUGHT_CODES = ['TS2304','TS2540','TS2532','TS1117','TS2339'];
+//     ... codes.every((c) => TYPECHECKER_CAUGHT_CODES.includes(c))
+// ONE GLOBAL LIST, consulted by membership, with `classifyTypeInvalid` receiving nothing but
+// diagnostic strings — no row id, no expected mutation, no span. R-548 §2's attack A planted an
+// UNRELATED `TS2339` on row 35(a) and BOUGHT IT A COVERAGE CREDIT: attributed 44 -> 43,
+// caught_by_typechecker 5 -> 6, gate exit 0.
+//   AN ERROR CODE IS A TYPE OF EVENT, NOT PROOF THE EVENT BELONGS TO THIS MUTATION.
+// R-555 §5 forbids the obvious near-miss too: a per-row CODE LIST is still not an ownership key.
+// The key is (ROW, OWNED EXPRESSION, SPAN, EXPECTED DEFECT) — declared per row in corpus.mjs as
+// `typecheckerOwned`, and joined below against the compiler's own diagnostic SPANS.
+//
+// ⚠️ WHAT IS *NOT* DELETED, AND WHY THAT IS NOT THE SAME DEFECT: `SURFACE_CODES` and
+// `FIXTURE_INVALID_CODES` remain global lists, and they must, because neither GRANTS A ROW ANY
+// CREDIT. Surface codes WITHHOLD a verdict (the instrument is unconfigured); fixture-invalid
+// codes FAIL THE GATE. Item 14 forbids a list that buys coverage, not every list of codes.
+// Both of these fail toward stopping the run; the deleted one failed toward flattering it.
 // 🛑 FOUND BY THE accuracy-validator: `FIXTURE_INVALID` had NO ASSIGNMENT SITE — the value was
 // unreachable, so "fixture_invalid: 0" was DEFINITIONAL, not measured. A five-population
 // partition wearing a six-population caption. The class now has real members: diagnostics that
 // indicate the FIXTURE WAS WRITTEN WRONG (an authoring defect) rather than the instrument being
 // unconfigured or the planted illegality being caught. Red-proofed like every other class.
 const FIXTURE_INVALID_CODES = ['TS2554', 'TS2345', 'TS2559', 'TS2739', 'TS2741', 'TS2769'];
-function classifyTypeInvalid(diagnostics) {
-  const codes = diagnostics.map((d) => d.split(':')[0]);
-  if (codes.some((c) => SURFACE_CODES.includes(c))) return 'SURFACE_INVALID';
-  if (codes.some((c) => FIXTURE_INVALID_CODES.includes(c))) return 'FIXTURE_INVALID';
-  if (codes.every((c) => TYPECHECKER_CAUGHT_CODES.includes(c))) return 'CAUGHT_BY_TYPECHECKER';
-  // Neither recognised: FAIL CLOSED into its own reported bucket rather than being folded
-  // into whichever population happens to be convenient.
-  return 'TYPE_INVALID_UNCLASSIFIED';
+// ---- ITEM 14: THE ROW-BOUND OWNERSHIP JOIN --------------------------------------------
+// A diagnostic may credit a row ONLY IF it is ENTAILED BY THAT ROW'S PLANTED ILLEGALITY, and
+// entailment is evidenced by the diagnostic pointing AT the declared expression. Two directions,
+// both required, because either one alone is buyable:
+//   1. EVERY diagnostic must join to a declared anchor  -> an EXTRA or UNRELATED diagnostic
+//      cannot ride along on a row that legitimately owns another one.
+//   2. EVERY declared anchor must be witnessed          -> the declaration is falsifiable; a
+//      stale or aspirational anchor is a finding, not a formality.
+// The anchor must be UNIQUE in the submitted body, or the span join is guesswork.
+function ownershipJoin(records, row, body) {
+  const owned = row.typecheckerOwned;
+  if (!owned || owned.length === 0) {
+    return { ok: false, why: `row declares NO typecheckerOwned anchor, so no diagnostic can be credited to it [${records.map((r) => r.code).join('+')}]` };
+  }
+  const anchors = [];
+  for (const o of owned) {
+    const first = body.indexOf(o.expression);
+    if (first < 0) return { ok: false, why: `declared owned expression ${JSON.stringify(o.expression)} is ABSENT from the submitted body` };
+    if (body.indexOf(o.expression, first + 1) !== -1) {
+      return { ok: false, why: `declared owned expression ${JSON.stringify(o.expression)} is AMBIGUOUS (occurs more than once) — the span join would be a guess` };
+    }
+    anchors.push({ ...o, start: first, end: first + o.expression.length });
+  }
+  const unjoined = [], witnessed = new Set();
+  for (const d of records) {
+    const hit = anchors.find((a) => a.code === d.code && d.start !== null
+      && d.start >= a.start && d.start + d.length <= a.end);
+    if (hit) witnessed.add(hit.expression);
+    else unjoined.push(`${d.code}@${d.start}${d.anchorText === null ? '' : `:${JSON.stringify(d.anchorText)}`}`);
+  }
+  const unwitnessed = anchors.filter((a) => !witnessed.has(a.expression)).map((a) => `${a.code}@${JSON.stringify(a.expression)}`);
+  if (unjoined.length === 0 && unwitnessed.length === 0) {
+    return { ok: true, why: anchors.map((a) => `${a.code}@${JSON.stringify(a.expression)}`).join(' + ') };
+  }
+  return {
+    ok: false,
+    why: [
+      unjoined.length ? `diagnostic(s) NOT owned by this row: ${unjoined.join(', ')}` : '',
+      unwitnessed.length ? `declared anchor(s) never witnessed: ${unwitnessed.join(', ')}` : '',
+    ].filter(Boolean).join(' | '),
+  };
+}
+
+function classifyTypeInvalid(records, row, body) {
+  const codes = records.map((r) => r.code);
+  // Surface FIRST: an unconfigured instrument can manufacture any of the others.
+  if (codes.some((c) => SURFACE_CODES.includes(c))) return { status: 'SURFACE_INVALID', why: codes.join(' + ') };
+  const own = ownershipJoin(records, row, body);
+  if (own.ok) return { status: 'CAUGHT_BY_TYPECHECKER', why: own.why };
+  // The join failed. The row is NOT credited. Which stopping bucket it lands in is chosen for
+  // information, not for leniency — both fail the gate.
+  if (codes.some((c) => FIXTURE_INVALID_CODES.includes(c))) return { status: 'FIXTURE_INVALID', why: `${own.why} [authoring codes: ${codes.join(' + ')}]` };
+  return { status: 'TYPE_INVALID_UNCLASSIFIED', why: own.why };
 }
 
 // The duplicate-id injection plants a REAL duplicate row, so the id-uniqueness check runs on
 // genuinely duplicated data rather than on a flipped flag.
-const CORPUS_UNDER_TEST = INJECT === 'partition_overlap' ? [...CORPUS, { ...CORPUS.find((c) => c.id === '38') }] : CORPUS;
+//
+// ---- ITEM 15's RED PATHS (R-548 red-proofs b, e, f, g) --------------------------------------
+// Every one of these mutates the CORPUS UNDER TEST and NEVER the expected set. A mutation that
+// edits the expectation cannot show the detector works — it IS the defect being guarded against.
+const dup = (id) => ({ ...CORPUS.find((c) => c.id === id) });
+function corpusUnderTest() {
+  switch (INJECT) {
+    case 'partition_overlap': return [...CORPUS, dup('38')];
+    // (b) R-548 §2's attack B VERBATIM: a unique rename, body and expectation byte-untouched.
+    //     Under the old self-authored set this produced `missing_ids: []` and exit 0.
+    case 'membership_rename': return CORPUS.map((c) => (c.id === '35(a)' ? { ...c, id: '35(z)' } : c));
+    // (e) an id arrives that is neither in the pinned 52 nor in the declared additions
+    case 'membership_add': return [...CORPUS, { ...dup('38'), id: '99(x)' }];
+    // (f) an expected id disappears
+    case 'membership_delete': return CORPUS.filter((c) => c.id !== '38');
+    // (g) the same id appears twice in the population under test
+    case 'membership_duplicate': return [...CORPUS, dup('47')];
+    default: return CORPUS;
+  }
+}
+const CORPUS_UNDER_TEST = corpusUnderTest();
 
 const results = [];
 for (const c of CORPUS_UNDER_TEST) {
   let outcome = 'REJECTED', fired = [], detail = '', tuple = null, diagnostics = [], submittedBody = null;
+  let diagRecords = [], typeWhy = '';
   if (c.kind === 'source') {
     let body = c.body;
     // Each injection MUTATES A FIXTURE, never an expectation -- a mutation that edits only
@@ -87,9 +171,20 @@ for (const c of CORPUS_UNDER_TEST) {
     if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `export const project = (lane: Lane) => { const w: Widget = { w: 1 }; return { v: Widget(lane), q: w }; };\n`;
     if (INJECT === 'fixture_invalid' && c.id === '48') body = `const C = deepFreeze({ a: 1 }, 2);\nexport const project = (lane: Lane) => ({ v: C.a });\n`;
     if (INJECT === 'type_invalid_unclassified' && c.id === '48') body = `const C = Object.freeze({ a: 1 });\nexport const project = (lane: Lane) => ({ v: C.a === 'x' });\n`;
+    // ---- ITEM 14's RED PATHS (R-548 red-proofs a, c, d) ----------------------------------
+    // (a) R-548 §2's ATTACK A, VERBATIM: an UNRELATED authoring defect (TS2339) on row 35(a),
+    //     which has nothing to do with 35(a)'s planted `globalThis` capture. Under the global
+    //     code list this MOVED THE ROW INTO `caught_by_typechecker` (44->43, 5->6) and exited 0.
+    if (INJECT === 'own_unrelated_attributed' && c.id === '35(a)') body = `const plantedFixtureRegression = ({}).missing;\n${c.body}`;
+    // (c) the same species on a DIFFERENT non-owned row, with a different code (TS2304).
+    if (INJECT === 'own_unrelated_nonowned' && c.id === '34(b)') body = `const q = undefinedIdentifierXyz;\n${c.body}`;
+    // (d) an EXTRA diagnostic beside a LEGITIMATELY compiler-owned mutation. 52(a) really does
+    //     own its TS1117; TS2304 was in the DELETED global allowlist, so the old rule kept the
+    //     credit. The row-bound join must refuse the row while the plant is still there.
+    if (INJECT === 'own_extra_code' && c.id === '52(a)') body = `const q = undefinedIdentifierXyz;\n${c.body}`;
     submittedBody = body;
     const r = admitSource(c.file, body);
-    outcome = r.outcome; tuple = r.tuple; diagnostics = r.diagnostics || [];
+    outcome = r.outcome; tuple = r.tuple; diagnostics = r.diagnostics || []; diagRecords = r.diagnosticRecords || [];
     if (INJECT === 'tuple_disagreement' && c.id === '54' && tuple) tuple = { ...tuple, tsImpliedNodeFormat: 'ESM', formatAgreement: false };
     fired = r.violations.map((v) => v.catcher);
     detail = r.violations.map((v) => `${v.catcher} @ ${v.path}`).join(' | ');
@@ -103,14 +198,17 @@ for (const c of CORPUS_UNDER_TEST) {
   const competing = uniqFired.filter((f) => f !== c.expect);
   let status;
   if (outcome === 'PARSE_ERROR') status = 'FAILED_PARSE';
-  else if (outcome === 'TYPE_INVALID') status = classifyTypeInvalid(diagnostics);
+  else if (outcome === 'TYPE_INVALID') {
+    const cl = classifyTypeInvalid(diagRecords, c, submittedBody ?? '');
+    status = cl.status; typeWhy = cl.why;
+  }
   else if (uniqFired.includes('POSITION_UNCLASSIFIED')) status = 'POSITION_UNCLASSIFIED';
   else if (c.expect === NOT_IMPLEMENTED) status = 'MISS_NOT_IMPLEMENTED';
   else if (uniqFired.includes(c.expect) && competing.length === 0) status = 'ATTRIBUTED';
   else if (uniqFired.includes(c.expect)) status = 'FAILED_OWNERSHIP';   // named fired, but not alone
   else if (uniqFired.length > 0) status = 'FAILED_WRONG_CATCHER';
   else status = 'MISS_NOT_CAUGHT';
-  results.push({ id: c.id, atom: c.atom, expect: c.expect, file: c.file, fired: uniqFired, competing, status, detail, tuple, diagnostics, submittedBody });
+  results.push({ id: c.id, atom: c.atom, expect: c.expect, file: c.file, fired: uniqFired, competing, status, detail, tuple, diagnostics, diagRecords, typeWhy, submittedBody });
 }
 
 // ---- GREEN neighbours must be ADMITTED ----
@@ -198,7 +296,14 @@ const summary = {
 // ---- THE PRE-REGISTERED COMPARISON, COMPUTED RATHER THAN ASSERTED ----
 // Scored over AR-589's ORIGINAL 52 ids only, so the fall is measured against the same
 // population and not against a corpus that grew underneath the number.
-const orig = ORIGINAL_52_IDS.map((id) => results.find((r) => r.id === id));
+// ---- ITEM 15: THE MEMBERSHIP JOIN, AGAINST THE PINNED ARTIFACT ------------------------
+// Both directions and uniqueness. A rename fires on BOTH halves at once — the old id goes
+// MISSING and the new id arrives UNDECLARED — which is exactly what the self-authored set
+// could never do.
+const membership = checkMembership(CORPUS_UNDER_TEST);
+// `.filter(Boolean)` because a MISSING expected row must be REPORTED by the membership check,
+// not crash the tally before the check is ever printed.
+const orig = EXPECTED_ORIGINAL_IDS.map((id) => results.find((r) => r.id === id)).filter(Boolean);
 const origTally = (s) => orig.filter((r) => r.status === s).length;
 // ---- R-546 §6: THE SIX-POPULATION PARTITION. THE CLAIM UNDER TEST IS THE PARTITION, NOT
 // ---- THE RATIO. `attributed` may go up or down; neither direction is success on its own.
@@ -235,13 +340,30 @@ const likeForLike = {
   rows_in_no_population: unpartitioned,
   members: partition,
   ar589_claim: '49 / 52 (retired as the test — R-546 §6 replaced "the number must fall")',
-  missing_ids: ORIGINAL_52_IDS.filter((id) => !results.some((r) => r.id === id)),
+  // ITEM 15: these come from the PINNED artifact join, not from the corpus asking itself.
+  expected_membership_source: `${BASELINE_META.commit}:corpus.mjs blob ${BASELINE_META.blob.slice(0, 12)} (${BASELINE_META.rawBytes}B, ${BASELINE_META.substitutions} declared import substitutions)`,
+  expected_cardinality: membership.expected_count,
+  missing_ids: membership.missing,
+  undeclared_ids: membership.undeclared,
+  duplicate_ids: membership.duplicated,
+  declared_but_absent: membership.declared_but_absent,
 };
 
 // A miss must show WHY it missed, or the table hides the very thing it is reporting.
+// ---- F-7 (GRADE-P0PC-PARTITION, fix point `run.mjs:218`) — FIXED AT THE EMITTER ---------
+// This special-cased `MISS_TYPE_INVALID`, a status R-546 §5.0 RETIRED and which is never
+// assigned again — so it matched nothing, and the CAUGHT_BY_TYPECHECKER rows (the only rows
+// whose population depends ENTIRELY on their diagnostics) fell through to `r.fired`, which is
+// empty for a TYPE_INVALID outcome. The table printed `<none fired>` for exactly the rows a
+// reader most needs to check. Now that item 14 makes the (code, SPAN) join load-bearing, this
+// is not cosmetic: the anchor is the evidence, so the anchor gets printed.
 const why = (r) => {
   if (r.status === 'ATTRIBUTED') return r.expect;
-  if (r.status === 'MISS_TYPE_INVALID') return (r.diagnostics.join(' + ') || 'TYPE_INVALID').slice(0, 78);
+  if (r.diagRecords && r.diagRecords.length) {
+    return r.diagRecords
+      .map((d) => `${d.code}@L${d.line}:${d.character}${d.anchorText === null ? '' : ` ${JSON.stringify(d.anchorText)}`}`)
+      .join(' + ');
+  }
   return r.fired.join(',') || '<none fired>';
 };
 const line = (r) => `${r.id.padEnd(9)} ${r.status.padEnd(22)} ${r.atom.slice(0, 40).padEnd(40)} ${why(r)}`;
@@ -250,6 +372,19 @@ console.log(`PINNED SURFACE: ${SURFACE_DIR}`);
 console.log(`EFFECTIVE-MODULE TUPLE (reference, fixture.ts): ${JSON.stringify(effectiveModuleTuple(`${SURFACE_DIR}/fixture.ts`))}`);
 console.log('='.repeat(116));
 for (const r of results) console.log(line(r));
+console.log('='.repeat(116));
+// ---- ITEM 14 + F-7: THE OWNERSHIP JOIN, PRINTED SO IT CAN BE AUDITED FROM THIS OUTPUT ----
+// The runner's own table could not previously be audited from its own output. Every TYPE_INVALID
+// row now shows the diagnostics it produced, the anchors its row DECLARED, and the join verdict.
+const typeInvalidRows = results.filter((r) => r.diagRecords && r.diagRecords.length);
+console.log(`TYPE-CHECKER OWNERSHIP JOIN (item 14) — key is (row, owned expression, span, expected defect):`);
+if (typeInvalidRows.length === 0) console.log('  <no row produced a semantic diagnostic in this run>');
+for (const r of typeInvalidRows) {
+  const decl = (CORPUS_UNDER_TEST.find((c) => c.id === r.id) || {}).typecheckerOwned;
+  console.log(`  ${r.id.padEnd(9)} ${r.status.padEnd(24)} declared=${decl ? decl.map((o) => `${o.code}@${JSON.stringify(o.expression)}`).join(' + ') : '<NONE>'}`);
+  for (const d of r.diagRecords) console.log(`${' '.repeat(14)}saw ${d.code} @L${d.line}:${d.character} span[${d.start},${d.start + d.length}) ${JSON.stringify(d.anchorText)}`);
+  console.log(`${' '.repeat(14)}JOIN: ${r.typeWhy}`);
+}
 console.log('='.repeat(116));
 console.log('GREEN NEIGHBOURS (must be admitted):');
 for (const g of greens) console.log(`  ${g.id.padEnd(28)} ${g.ok ? 'ADMITTED' : '*** REJECTED *** ' + g.detail}`);
@@ -299,8 +434,19 @@ const FAILURE_CLASSES = [
   ['position_unclassified', results.some((r) => r.status === 'POSITION_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'POSITION_UNCLASSIFIED').length} row(s) with an identifier position the rule cannot classify (fails closed)`],
   // R-546 §5.0(ii): a fixture-invalid row is an AUTHORING defect and the order is FIX THE
   // FIXTURE — so it fails the gate rather than sitting in the table as a tolerated number.
-  ['fixture_invalid', results.some((r) => r.status === 'FIXTURE_INVALID'), () => `${results.filter((r) => r.status === 'FIXTURE_INVALID').map((r) => `${r.id} [${r.diagnostics.join(';')}]`).join(' | ')}`],
-  ['type_invalid_unclassified', results.some((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED').map((r) => `${r.id} [${r.diagnostics.join(';')}]`).join(' | ')}`],
+  ['fixture_invalid', results.some((r) => r.status === 'FIXTURE_INVALID'), () => `${results.filter((r) => r.status === 'FIXTURE_INVALID').map((r) => `${r.id} [${r.diagnostics.join(';')}] OWNERSHIP: ${r.typeWhy}`).join(' | ')}`],
+  // ITEM 14: this is the bucket a FAILED row-bound ownership join lands in, and the message
+  // now names the join failure rather than only the codes — the codes are what misled before.
+  ['type_invalid_unclassified', results.some((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED'), () => `${results.filter((r) => r.status === 'TYPE_INVALID_UNCLASSIFIED').map((r) => `${r.id} [${r.diagnostics.join(';')}] OWNERSHIP: ${r.typeWhy}`).join(' | ')}`],
+  // ---- ITEM 15: MEMBERSHIP AGAINST THE PINNED ARTIFACT, BOTH DIRECTIONS + UNIQUENESS ----
+  // The old self-authored set made this class unreachable by construction: a rename changed the
+  // expectation and the actual together, so `missing_ids` was always `[]`.
+  ['membership', membership.missing.length > 0 || membership.undeclared.length > 0 || membership.duplicated.length > 0,
+    () => [
+      membership.missing.length ? `MISSING from the corpus under test (expected by ${BASELINE_META.commit}): ${membership.missing.join(', ')}` : '',
+      membership.undeclared.length ? `UNDECLARED arrivals (neither in the pinned 52 nor in DECLARED_ADDITIONS): ${membership.undeclared.join(', ')}` : '',
+      membership.duplicated.length ? `DUPLICATE ids in the population under test: ${membership.duplicated.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
 ];
 const failures = FAILURE_CLASSES.filter(([, hit]) => hit).map(([name, , msg]) => `${name}: ${msg()}`);
 

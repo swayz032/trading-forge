@@ -18,6 +18,7 @@ import path from 'node:path';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RUNNER = path.join(HERE, 'run.mjs');
+const FREEZE = path.join(HERE, 'emitted-freeze.mjs');
 
 const CLASSES = [
   ['wrong_catcher', 'a fixture reddens via a catcher other than its named one'],
@@ -51,9 +52,32 @@ const SHARED = [
   ['partition_sum', 'wrong_catcher', 'the six populations do not sum to 52'],
 ];
 
-function runWith(inject) {
+// ---- R-548 §4's SEVEN MANDATORY RED-PROOFS FOR ITEMS 14-16 ----------------------------
+// R-547 §4.3: "a guard whose founding defect is not in its mutation set is untested against the
+// only failure it has actually seen." (a) and (b) ARE R-548 §2's two executed founding attacks,
+// reproduced verbatim as injections rather than described.
+// The injection name and the failure-class name differ here (one guard, several ways to breach
+// it), so each row states the class it must see NAMED.
+const EXPECT = [
+  ['own_unrelated_attributed', 'type_invalid_unclassified', '(a) FOUNDING ATTACK A: unrelated TS2339 planted on 35(a) — under the deleted global code list this BOUGHT a caught_by_typechecker credit and exited 0'],
+  ['membership_rename',        'membership',                '(b) FOUNDING ATTACK B: unique rename 35(a) -> 35(z), body and expectation byte-untouched — the self-authored set reported missing_ids: [] and exited 0'],
+  ['own_unrelated_nonowned',   'type_invalid_unclassified', '(c) unrelated TS2304 on a NON-OWNED row (34(b))'],
+  ['own_extra_code',           'type_invalid_unclassified', '(d) an EXTRA code beside a LEGITIMATE compiler-owned mutation (52(a) keeps its real TS1117)'],
+  ['membership_add',           'membership',                '(e) membership ADD: an id neither in the pinned 52 nor in DECLARED_ADDITIONS'],
+  ['membership_delete',        'membership',                '(f) membership DELETE: an expected id disappears'],
+  ['membership_duplicate',     'membership',                '(g) membership DUPLICATE: the same id twice in the population under test'],
+];
+
+// R-548 §4 (b) requires the rename to go RED in BOTH `run.mjs` AND `emitted-freeze.mjs`. The
+// freeze gate is a SEPARATE process with a separate exit code, so it gets its own witness.
+const FREEZE_EXPECT = [
+  ['membership_rename', '35(a)', '(b, second gate) the renamed row must not vanish from the freeze denominator'],
+  ['membership_delete', '38',    '(f, second gate) a deleted row must not vanish from the freeze denominator'],
+];
+
+function runWith(inject, script = RUNNER) {
   try {
-    const stdout = execFileSync(process.execPath, [RUNNER], {
+    const stdout = execFileSync(process.execPath, [script], {
       encoding: 'utf8', timeout: 180000,
       env: { ...process.env, PROTO_INJECT: inject },
     });
@@ -91,6 +115,41 @@ for (const [cls, viaInject, what] of SHARED) {
   rows.push({ cls, ok, code: r.code, namedOurClass });
   console.log(`${ok ? 'PASS' : '*** FAIL'} ${cls.padEnd(20)} exit=${String(r.code).padEnd(3)} via inject '${viaInject}'  (${what})`);
 }
+
+// ---- ITEMS 14-16: the seven named red-proofs, each naming the class it must trip ------
+for (const [inject, cls, what] of EXPECT) {
+  const r = runWith(inject);
+  const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
+  const ok = r.code !== 0 && namedOurClass && /GATE: FAIL/.test(r.stdout);
+  rows.push({ cls: `${inject}->${cls}`, ok, code: r.code, namedOurClass });
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${inject.padEnd(26)} exit=${String(r.code).padEnd(3)} names '${cls}'=${namedOurClass}  ${what}`);
+}
+
+// ---- (b)/(f) SECOND GATE: the freeze comparator must go red on the same mutation ------
+// Its CONTROL runs first, because a suite that cannot go green cannot tell you anything about
+// its red paths (R-554 §6) — and because without it "always red" is indistinguishable from
+// "detects breakage".
+const freezeControl = runWith('', FREEZE);
+const freezeControlOk = freezeControl.code === 0;
+console.log(`${freezeControlOk ? 'PASS' : '*** FAIL'} ${'emitted-freeze CONTROL'.padEnd(26)} exit=${String(freezeControl.code).padEnd(3)} (unmutated freeze gate must be GREEN)`);
+rows.push({ cls: 'freeze_control', ok: freezeControlOk, code: freezeControl.code });
+for (const [inject, mustName, what] of FREEZE_EXPECT) {
+  const r = runWith(inject, FREEZE);
+  const named = new RegExp(`STOP CONDITION \\(item 16\\)`).test(r.stdout) && r.stdout.includes(mustName);
+  const ok = r.code !== 0 && named;
+  rows.push({ cls: `freeze:${inject}`, ok, code: r.code, namedOurClass: named });
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${`freeze:${inject}`.padEnd(26)} exit=${String(r.code).padEnd(3)} names '${mustName}'=${named}  ${what}`);
+}
+
+// ---- THE OVER-CORRECTION CONTROL (R-548 §4: "legitimately compiler-owned rows must STAY
+// ---- GREEN — a fix that convicts them has over-corrected") -----------------------------
+// Re-measured from the control run in THIS process, never inherited: R-555 §3 is now campaign
+// law — a red path is a property of the guard AND the current code, and so is a green one.
+const ownedStillGreen = /"caught_by_typechecker": 5/.test(control.stdout);
+const ownedRowsNamed = ['52(a)', '52(b)', '52(c)', '52(d)', '54(c)'].every((id) => control.stdout.includes(`${id}     CAUGHT_BY_TYPECHECKER`) || new RegExp(`${id.replace(/[()]/g, '\\$&')}\\s+CAUGHT_BY_TYPECHECKER`).test(control.stdout));
+const overCorrectionOk = controlOk && ownedStillGreen && ownedRowsNamed;
+console.log(`${overCorrectionOk ? 'PASS' : '*** FAIL'} ${'over_correction_control'.padEnd(26)} the 5 legitimately compiler-owned rows STAY credited under the row-bound join (count=${ownedStillGreen}, rows=${ownedRowsNamed})`);
+rows.push({ cls: 'over_correction_control', ok: overCorrectionOk, code: control.code });
 
 // ⚠️ WITHDRAWN, 2026-08-02: this file previously declared `partition_overlap` STRUCTURALLY
 // UNREACHABLE and excluded it from the count. The accuracy-validator refuted that — the
