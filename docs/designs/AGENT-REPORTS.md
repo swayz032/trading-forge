@@ -4,6 +4,32 @@
 
 ---
 
+## AR-559 · 2026-08-01 · ✅★★★★★ **REVIEW+CORRECTION `21:48` DELIVERED — ALL THREE ITEMS. `ORACLE.json` IS IN §7 AND DECLARED **AUTHORITATIVE FOR NOTHING**, AND §7 NOW CARRIES THE BINDING PROPERTY THAT OUTRANKS ITS OWN TABLE.**
+
+**RULING ID:** REVIEW + CORRECTION 2026-08-01 `21:48` · **TASK ID:** AR-559 · **PRIOR:** AR-558 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** `[MEASURED vs the AR-558 baseline]` · **`0` code fences — still design-only.**
+
+### ✅ §1 — THE THREE ITEMS
+**1 · `ORACLE.json` IS A NAMED BOUNDARY** `[key sets MEASURED at c304b098, not recalled]` — root `_README · _authority_hash_history · authority_file · authority_sha256 · fixtures · required_members` · fixture `_note · authority · compiled · conditions · conditions_unadjudicated · conditions_unadjudicated_ids · reasons_must_differ_from · scalars_unadjudicated · spine_bound · spine_total` · row `approximation · authority · bindable · primitive_null · reason_excludes · reason_names · reason_null · session_zone · unadjudicated`. **Unknown ⇒ reject and NAME · missing ⇒ reject and NAME · AUTHORITATIVE FOR NOTHING, compared only.**
+**2 · THE BINDING PROPERTY, PLACED ABOVE THE TABLE AND STATED TO OUTRANK IT:**
+> **`ANY OBJECT THIS GATE PARSES IS SCHEMA-CLOSED. PARSING AN OBJECT FOR WHICH NO SCHEMA IS DECLARED IS ITSELF A FAILURE`**, naming the object and the parse site.
+★★★★★ **AND ITS OPERATIONAL FORM, SO IT IS TESTABLE RATHER THAN A SLOGAN: A NEW INPUT CANNOT BE READ BY ADDING A PARSE CALL. It must arrive WITH a declared schema or the gate fails on first contact.** **Red-proof: parse any object with no declared schema → FAIL, named.** ★★★ **That test does not require anyone to predict WHERE the seventh appearance will be — which is the only reason it is different from the six fixes before it, every one of which added the missing member.**
+**3 · §12 RE-STATED:** the oracle is parsed and schema-checked and contributes to **no** membership, requiredness or completeness decision; a forged oracle is a **NAMED MISMATCH**, never a silent pass. ⚠️ **With the tripwire the desk asked for, in my own words: `IF ORACLE.json EVER BECOMES AUTHORITATIVE FOR ANYTHING, §1 IS INVERTED AND THIS DESIGN MUST BE RE-REVIEWED, NOT PATCHED.`**
+
+### ⚠️★★★ §2 — WHAT I ACCEPT ABOUT THE GAP ITSELF
+**The finding is right and it is the SIXTH appearance of one family — the second time inside a remedy for that same family.** ★★★★★ **The pattern across all six is identical and it is mine as much as anyone's: `EACH FIX ADDED THE MISSING MEMBER.` Closed-key on oracle rows · three named digest fields · the source specs · now the oracle. **Four enumerations, four gaps, and the enumeration was never the defect — the ENUMERATING was.** That is why item `2` is the delivery and item `1` is the bookkeeping.**
+⚠️ **AND I DO NOT CLAIM THE TABLE IS NOW COMPLETE.** `A SELF-CAUGHT GAP IS EVIDENCE THE AUTHOR LOOKED, NOT EVIDENCE THE LIST IS COMPLETE` — I wrote that yesterday about my own §7 and it applies unchanged today. **The property is what I am relying on; the table is what I would bet against.**
+
+### §3 — WHAT I DID NOT DO
+- **No implementation · no oracle read for anything membership-defining (the stop condition held — the oracle defines nothing) · no ledger touch · no `P3`/Gate-B · receipts, `P1`/`P2` artifacts and the tag untouched · no `checkout`/`reset`/index op.**
+- ⚠️ **The projection mechanics remain declared-unspecified (§11), and CI enforcement remains `[UNPROVEN]` (§8.4).** Both are named gaps, unchanged by this correction.
+- ★★ **I do not grade my own work.**
+
+### §4 — POSITION
+**Design CORRECTED, committed and published.** `P0-vNext` implementation **BLOCKED pending the external read** · `R-526` on `AR-554` **still owed at the desk** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-558 · 2026-08-01 · **START-RECEIPT — REVIEW+CORRECTION `21:48` ACCEPTED. ONE CORRECTION: `ORACLE.json` INTO §7, PLUS THE BINDING PROPERTY. DESIGN ONLY.**
 
 **RULING ID:** REVIEW + CORRECTION 2026-08-01 `21:48` · **TASK ID:** AR-558 · **PRIOR:** AR-557 · **SEAT:** `claude.exe 26204`.
