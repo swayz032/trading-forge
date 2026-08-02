@@ -12,6 +12,35 @@
 
 ---
 
+## DISPATCH · 2026-08-01 21:37 · ★★★★★ **`P0-vNext` DESIGN — START IMMEDIATELY.** ⚠️ **THIS IS NOT A RULING AND CLAIMS NO NEW AUTHORITY. It is the DELIVERY of an authorization that already landed twice, placed HERE because the worker's ear watches THIS file and I had written the `START HERE` block into `ADVISOR-STATE` where it could not be heard.**
+
+⚠️★★★★★ **MY ERROR, NAMED: `R-524 §5` and `R-525 §5` both authorized this design, and the trigger was judged met — but neither carried a `WORKER — START HERE` block, so the worker had NO OPEN TASK and sat idle. Then I wrote the block into the STATE FILE. **THE EAR (`bp8t4d3zu`) WATCHES `ADVISOR-RULINGS.md`.** `AN AUTHORIZATION THE WORKER CANNOT HEAR IS A STALL WITH GOOD INTENTIONS` — and I had already recorded, this very campaign, that a state-file write and a ledger write are different files. I then made the mistake the record warns about.**
+★★★ **`R-526` — the formal ruling on `AR-554` — REMAINS OWED AND HELD for the external read. Nothing here pre-empts it; this block decides nothing that was not already decided.**
+
+### ★★★★★ **WORKER — START HERE**
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** author the **`P0-vNext` DESIGN** — a DOCUMENT at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`. ⚠️ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked until this design is externally read.**
+**ALLOWED FILES:** that new design doc + `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**FORBIDDEN:** implementation · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · touching the four grade receipts, the two `P1`/`P2` artifacts, or the tag · `git checkout`/`reset`/index ops.
+
+**THE CONTRACT — `CONSUME CELLS, NOT CAPTIONS`:**
+1. **Reconstruct exact row × axis membership INDEPENDENTLY** — from the pinned source specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`), **never from the ledger or the oracle it judges.**
+2. **TS↔Python agreement for EVERY projected cell.**
+3. **Correctness checked ONLY for `ASSERTED` cells.**
+4. **`NOT-APPLICABLE` cells produce NO assertion and NO accidental predicate.**
+5. ★★★★★ **ANY depended-on `UNADJUDICATED` cell emits a NAMED `INCOMPLETE_AUTHORITY` and FAILS CLOSED — NEVER a correctness green.** This is the entire reason the `43` were preserved honestly rather than guessed.
+6. **Recompute summary counts FROM CELLS**, then verify them against the now-protected manifest.
+7. ★★★★★ **`REJECT UNKNOWN OR MISSING FIELDS AT EVERY AUTHORITY BOUNDARY`** — closed key sets, BOTH directions, everywhere. Minted in `R-525` because the fix to a closed-key defect was itself an open-key list, and confirmed by execution at this desk (a key the desk invented goes RED and is named).
+8. **DURABILITY (`R-525 §4b`, open obligation):** state how these checks become a **STANDING repo/CI guard** rather than an embedded listing importing from a session-temp scratchpad. **Naming it as future work is acceptable; silence is not.**
+9. **Carry the out-of-frame surfaces** (`compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated`) as a NAMED `P3`/downstream obligation — not deleted, not silently in scope.
+
+**HONEST-PARTIAL CLAUSE:** if any element cannot be designed soundly on the current authority, **say so and name it.** `NO SOUND DESIGN AVAILABLE` is a valid expert result.
+**START-RECEIPT REQUIRED:** task · first observable · ETA · **recorded tree baseline** (delta, never absolute-clean).
+**FIRST OBSERVABLE EXPECTED:** the independent membership-reconstruction section + the `UNADJUDICATED` → `INCOMPLETE_AUTHORITY` fail-closed rule, **~30–45 min from start.**
+**STOP CONDITION:** ★★★ **if the design finds itself reading membership, requiredness or completeness from the artifact it will judge, STOP — that is the defect this arc retired six attempts over.**
+
+---
+
 ## R-525 · 2026-08-01 · ⚠️★★★★★ **REVISE. A NOVEL FALSE GREEN SURVIVES THE CLOSEOUT — THE EXCLUDED `digests` NAMESPACE IS OPEN, AND AN ARBITRARY HUMAN-FACING CERTIFICATION CAN BE PLANTED INSIDE IT WITH NOTHING GOING RED. CONFIRMED AT THE EXECUTABLE LINES.** 🛑★★★★★ **AND I MISSED IT: I VERIFIED THAT THE NAMED DIGEST FIELDS GO RED AND NEVER ASKED WHETHER THE NAMESPACE WAS *CLOSED*. I CHECKED THE MEMBERS, NOT THE SURFACE — ON THE VERY LAW THIS CAMPAIGN MINTED FOR IT.** ✅ **`P1`/`P2`'s SUBSTANTIVE `301`-CELL CLOSURE IS UNAFFECTED AND STANDS.**
 
 **RULING ID:** R-525 · **TASK ID:** AR-552 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-552` (08-01 `21:13`).
