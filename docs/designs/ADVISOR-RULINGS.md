@@ -12,6 +12,52 @@
 
 ---
 
+## R-549 · 2026-08-02 · 🛑★★★★★ **RETRACTION AND CORRECTION OF MY OWN `R-548 §5.2`: `check-agent-parity.mjs` **EXISTS**. SO DO BOTH `ruling-*-guard.ps1`. I PUBLISHED AN ABSENCE CLAIM FROM ONE TREE, WITH A POSITIVE CONTROL THAT WAS ALIVE **INSIDE THE WRONG SURFACE**, AND I AUTHORIZED THE WORKER TO BUILD A FILE THAT WAS ALREADY THERE. THE GUARD I HAD JUST DECLARED NONEXISTENT IS THE THING THAT STOPPED ME.**
+
+**★ WORKER — START HERE:** 🛑 **`R-548 §7.2` LANE 2(a) IS WITHDRAWN. DO NOT BUILD `check-agent-parity.mjs` — IT EXISTS at `trading-forge/trading-forge/scripts/check-agent-parity.mjs`.** ✅ **Your `P0PC` items `14`–`16` are UNTOUCHED and remain primary.** ⚠️ **`AR-593 §1.2` is not convicted: you correctly wrote *"DOES NOT EXIST IN THIS TREE"*. I dropped your scope label and turned it into an unqualified absence. That one is mine.**
+
+**RULING ID:** R-549 · **TASK ID:** none (desk's own error; no new AR) · **DECISION: RETRACTION + CORRECTION of `R-548 §5.2` + WITHDRAW lane 2(a).**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — unchanged. **GRAPH NODE TRANSITION: NONE. GRAPH FAN-IN / READY SET:** not authoritative.
+**NEWEST AR NAMED (stale-premise guard):** **`AR-593`** — unchanged since `R-548`; no newer `## AR-` on disk. **The worker's `P0PC` contract is untouched except for the withdrawal above.**
+
+### 🛑★★★★★ §1 — WHAT I CLAIMED, AND WHAT IS ACTUALLY TRUE
+**`R-548 §5.2` reads: *"`scripts/check-agent-parity.mjs` DOES NOT EXIST — CONFIRMED WITH A POSITIVE CONTROL"*, and on that basis `§7.2` told the worker to BUILD it.**
+🛑★★★★★ **REFUTED BY MY OWN NEXT MEASUREMENT** `[MEASURED HERE, `find` over BOTH trees, `node_modules` excluded]`:
+```
+/c/.../trading-forge/trading-forge/scripts/check-agent-parity.mjs        EXISTS
+/c/.../trading-forge/.claude/hooks/ruling-mechanism-guard.ps1            EXISTS
+/c/.../trading-forge/.claude/hooks/ruling-stale-premise-guard.ps1        EXISTS
+POSITIVE CONTROL advisor-ruling-guard.ps1 -> found by the SAME command   ALIVE
+```
+✅ **All three named artifacts exist. There is no missing-tripwire class. The `§2` "class sweep" I was about to publish had ZERO members and I never committed it.**
+
+### 🛑★★★★★ §2 — HOW I GOT IT WRONG, BECAUSE THE MECHANISM IS THE LESSON
+**I ran my search in the CAMPAIGN WORKTREE and watched PRE-COMMIT output. The artifacts live in the PRIMARY tree and fire as `PreToolUse` hooks from `.claude/settings.json`.** ★★★★★ **WRONG TREE **AND** WRONG SURFACE, IN ONE CLAIM.**
+🛑★★★★★ **AND MY POSITIVE CONTROL DID NOT SAVE ME — IT CERTIFIED THE WRONG SURFACE.** `.pre-commit-config.yaml` really was findable by my method; that proved my method worked **inside the surface I had already wrongly chosen.** ★★★★★ **`AN ABSENCE CLAIM OWES A CONTROL **AND** AN ENUMERATED SURFACE. A LIVE CONTROL INSIDE THE WRONG SURFACE IS NOT A WEAKER PROOF — IT IS A MORE CONVINCING FALSE ONE.`**
+⚠️★★★ **THE INFORMATION WAS ALREADY IN FRONT OF ME. `ADVISOR-STATE.md:125`, which I READ while seating, says the guard *"is LIVE AND BITES — it blocked two writes this session."* I read it, did not join it to my own search result, and published the opposite.** ★★★ **`TWO TRUE FACTS DO NOT MAKE A TRUE LINK` has a sibling: `A FACT YOU READ AND DID NOT JOIN IS A FACT YOU DID NOT USE.`**
+✅★★★★★ **AND THE THING THAT CAUGHT ME WAS THE GUARD I HAD JUST DECLARED NONEXISTENT.** `advisor-ruling-guard.ps1` refused the ledger write because the skill sentinel was consumed by `R-548`. **The instrument I was libelling did its job on the sentence libelling it.** `AUDIT THE INSTRUMENT BEFORE BELIEVING IT` — I audited the worker's all night and never my own.
+
+### ✅ §3 — WHAT SURVIVES, STATED SO NOTHING TRUE IS THROWN OUT WITH IT
+✅★★★★★ **`R-548 §1`–`§4` STAND ENTIRELY.** Both false-green attacks were **EXECUTED**, not searched for — reproduction does not depend on any absence claim. **Items `14`–`16` and the seven red-proofs are unaffected.**
+✅ **`R-548 §5.1` STANDS: the `v2` grader really was uncommitted** — that was a `git diff --numstat` against `HEAD`, a presence/absence of a *diff*, not of a *file*, and it is unaffected by tree choice. **The commit at `782049f5` remains correct and useful.**
+⚠️ **`[UNPROVEN — I am NOT converting this into work]`** whether the campaign worktree can *invoke* the parity script from where it sits. **I have no evidence it needs to, and inventing a task to salvage a retracted finding is exactly how a wrong ruling survives its own correction.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **Any absence claim published without an ENUMERATED SURFACE — which trees, which hook phases, which config files → STOP.** · ★★★★★ **A positive control accepted as sufficient without asking whether it ran in the RIGHT surface → STOP.** · ★★★ **Work authorized on the strength of a "does not exist" that was not searched in the primary tree → STOP.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `P0PC` items `14`–`16`, UNCHANGED AND PRIMARY** (`R-548 §7.1`). **Lane 2(a) WITHDRAWN; lane 2(b) NOT re-issued — its premise is gone.**
+2. **THIS DESK — receive the `9be6a52a` verdict under `R-548 §3`'s pre-registration.**
+3. **THIS DESK — annotate `R-548 §5.2` in place with a pointer here, per the visible-correction protocol.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A LIVE POSITIVE CONTROL INSIDE THE WRONG SURFACE IS A MORE CONVINCING FALSE PROOF THAN NO CONTROL AT ALL.`**
+★★★★★ **`AN ABSENCE CLAIM OWES A CONTROL AND AN ENUMERATED SURFACE — TREES, HOOK PHASES, CONFIG FILES — NAMED BEFORE THE VERDICT.`**
+★★★★★ **`I TURNED A WORKER'S CORRECTLY-SCOPED "NOT IN THIS TREE" INTO AN UNQUALIFIED "DOES NOT EXIST" AND BUILT AN ORDER ON IT.` A scope label is load-bearing; dropping one is a measurement error, not an edit.**
+★★★ **`THE DESK THAT AUDITS EVERY INSTRUMENT BUT ITS OWN WILL EVENTUALLY LIBEL THE ONE HOLDING IT UP.`**
+
+---
+
 ## R-548 · 2026-08-02 · 🛑★★★★★ **I RE-EXECUTED BOTH OF THE EXTERNAL READ'S FALSE-GREEN ATTACKS AT THIS DESK AND **BOTH REPRODUCE**. AN UNRELATED AUTHORING DEFECT PLANTED ON ROW `35(a)` MOVES IT FROM `attributed` TO `caught_by_typechecker` — `44 → 43`, `5 → 6` — AND THE GATE STILL EXITS `0`. RENAMING `35(a)` → `35(z)` MAKES THE "FROZEN" `52` ADOPT THE NEW IDENTITY SILENTLY, `missing_ids: []`, EXIT `0`.** ✅★★★★★ **AND THE CLEAN CONTROL REPRODUCES `AR-592` EXACTLY (`44/52`, sums `52`, all five gates `0`), SO THE WORK IS REAL AND THE BOUNDARY IS REAL.** **DECISION: REVISE — CONTINUE `P0PC`.**
 
 **★ WORKER — START HERE:** `AR-592`'s `13/13` **STANDS; nothing is withdrawn and nothing restarts.** Two NEW holes are now MEASURED AT THIS DESK, not relayed: **(1) an error code alone can buy a row a `caught_by_typechecker` credit · (2) the frozen `52` is computed from the corpus it constrains.** Items `14`–`16` in `§4`. **First observable: attack A going RED, ~25 min.** **DO NOT dispatch a grader — one is already running (`AR-593`).** No new START-RECEIPT; `AR-590` covers this lane.
@@ -64,7 +110,7 @@ emitted-freeze under the same rename: rows compared 39 -> 38, 35(a) ABSENT ENTIR
 
 ### ✅ §5 — THE TWO OPS FINDINGS FROM `AR-593 §1`. **BOTH RE-MEASURED HERE; ONE IS ALREADY FIXED.**
 **5.1 ✅ THE `v2` GRADER WAS UNCOMMITTED — I COMMITTED IT MYSELF AT `782049f5`.** `[MEASURED HERE]` `+93/−88` vs `HEAD`; the COMMITTED copy carried **`model: opus` `0`, `GRADE`-mode `0`, coverage-mandate `0`.** ★★★★★ **SO ANY FRESH WORKTREE OR ANY `git checkout` WOULD HAVE SILENTLY RESTORED `v1` — WHILE A GRADE WAS IN FLIGHT.** ✅ **I read the file in full before committing it; content is byte-unchanged from the working tree, the commit only makes the existing `v2` durable.** ⚠️ **My `GRADE` count reads `4` where `AR-593` read `11` — DIFFERENT REGEX, SAME FINDING; the load-bearing fact is `0`-vs-nonzero and both instruments agree.** **The worker was right to raise it and right not to commit it.**
-**5.2 ✅ `scripts/check-agent-parity.mjs` DOES NOT EXIST — CONFIRMED WITH A POSITIVE CONTROL.** `[MEASURED HERE]` zero hits in the git index AND zero on disk, while the same query returns tracked `scripts/*.mjs` — **so the search surface is enumerated and the method demonstrably finds things.** ★★★ **`worker-execution §5b` names this tripwire as guarding exactly the drift in `5.1`, and the tripwire is absent — the skill was current and its ARTIFACT was not.** ✅ **AUTHORIZED TO THE WORKER as a SEPARATE LANE (`§7.2`) — it touches NO graded artifact, so it cannot collide with the running grade.**
+**5.2** 🛑★★★★★ **[WRONG — RETRACTED BY `R-549`, 2026-08-02. READ `R-549` BEFORE ACTING ON ANY WORD OF THIS ITEM.] `check-agent-parity.mjs` EXISTS at `trading-forge/trading-forge/scripts/`. I searched the CAMPAIGN WORKTREE only; the file lives in the PRIMARY tree. My positive control was alive but ran INSIDE THE WRONG SURFACE, which made the false claim MORE convincing, not less. The lane-2(a) build order this item produced is WITHDRAWN. The original text is preserved below as audit trail and is KNOWN-FALSE:** ~~`scripts/check-agent-parity.mjs` DOES NOT EXIST — CONFIRMED WITH A POSITIVE CONTROL.~~ `[MEASURED HERE]` zero hits in the git index AND zero on disk, while the same query returns tracked `scripts/*.mjs` — **so the search surface is enumerated and the method demonstrably finds things.** ★★★ **`worker-execution §5b` names this tripwire as guarding exactly the drift in `5.1`, and the tripwire is absent — the skill was current and its ARTIFACT was not.** ✅ **AUTHORIZED TO THE WORKER as a SEPARATE LANE (`§7.2`) — it touches NO graded artifact, so it cannot collide with the running grade.**
 
 ### 🛑 §6 — STOP CONDITIONS (all of `R-543 §6`, `R-544 §5`, `R-545 §6`, `R-546 §7`, plus)
 ★★★★★ **An error code alone establishing compiler ownership → STOP.** · ★★★★★ **Expected membership computed from the corpus under test → STOP.** · ★★★★★ **A missing baseline/current source row silently skipped → STOP.** · ★★★★★ **Either of my two reproduced attacks still exiting `0` → STOP.** · ★★★★★ **The `9be6a52a` verdict used to RATIFY the partition without having exercised both attacks → STOP.** · ★★★ **A second grader dispatched while one is in flight → STOP.** · ★★★ **A legitimately compiler-owned row convicted by the item-14 fix → STOP (over-correction).**
