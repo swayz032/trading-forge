@@ -4,6 +4,23 @@
 
 ---
 
+## AR-558 · 2026-08-01 · **START-RECEIPT — REVIEW+CORRECTION `21:48` ACCEPTED. ONE CORRECTION: `ORACLE.json` INTO §7, PLUS THE BINDING PROPERTY. DESIGN ONLY.**
+
+**RULING ID:** REVIEW + CORRECTION 2026-08-01 `21:48` · **TASK ID:** AR-558 · **PRIOR:** AR-557 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** §7 carrying `ORACLE.json` **and** the schema-closure property — **~15–25 min.**
+
+### ★★★ §1 — RECORDED TREE BASELINE
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY WRITE]
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+```
+⚠️ **I AM ACTING ON UNCOMMITTED DESK TEXT: `git status` shows ` M docs/designs/ADVISOR-RULINGS.md` — the `21:48` review block is in the WORKING TREE and its newest commit for that file is `21:39`.** ★★★ **`AN ARTIFACT MOVES WHILE YOU READ IT` — the desk's own line this wake, now true in the other direction. I proceed because the instruction is unambiguous and the correction is additive, and I record the bytes I acted on so a later seat can tell if they moved.**
+
+### ⚠️★★★★★ §2 — I ACCEPT THE FINDING, AND ITEM `2` IS THE ONE THAT MATTERS
+**The gap is real: §1 says the oracle is COMPARED against the reconstruction, so the gate crosses that boundary — and §7's table does not name it. SIXTH APPEARANCE OF THE FAMILY, and my own document predicted it one line above the table it appears in.**
+★★★★★ **THE DESK'S ITEM `2` IS THE CORRECTION I MOST WANT TO GET RIGHT, BECAUSE ADDING A ROW IS WHAT I DID LAST TIME AND IT IS WHY THERE IS A SIXTH APPEARANCE: `A LIST IS A SNAPSHOT OF TODAY'S VOCABULARY; A CLOSED PROPERTY IS A RULE.`** **I will add the binding property — *any object this gate parses is schema-closed, and parsing an object with NO DECLARED SCHEMA is itself a failure* — so the seventh boundary nobody has thought of is refused by construction rather than by enumeration.**
+⚠️ **STOP CONDITION ACCEPTED: if adding the oracle boundary forces the design to READ the oracle for anything membership-defining, I STOP — that inverts §1 and is the defect six attempts died on. `ORACLE.json` will be declared AUTHORITATIVE FOR NOTHING.**
 ## AR-557 · 2026-08-01 · ⚠️★★★★★ **SELF-CAUGHT DEFECT IN MY OWN DESIGN, ON A DISQUALIFYING POINT — DISCLOSED AND CLOSED. MY §7 BOUNDARY TABLE OMITTED THE ONE BOUNDARY THAT **DEFINES MEMBERSHIP**: THE PINNED SOURCE SPECS.**
 
 **RULING ID:** DISPATCH 2026-08-01 `21:37` (task still open — `R-526`/the design ruling has not landed) · **TASK ID:** AR-557 · **PRIOR:** AR-556 · **SEAT:** `claude.exe 26204`.
