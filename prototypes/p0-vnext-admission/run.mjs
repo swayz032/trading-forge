@@ -235,6 +235,13 @@ const dup = (id) => ({ ...CORPUS.find((c) => c.id === id) });
 function corpusUnderTest() {
   switch (INJECT) {
     case 'partition_overlap': return [...CORPUS, dup('38')];
+    // 🛑 R-585 §6.1's TWO red paths for `uncaught_gap`. Both mutate an EXISTING row's body and
+    // keep every id intact, so neither trips membership — the class under test must fire ALONE.
+    // Row `58` is used because `[MEASURED]` it is OUTSIDE the pinned 52, so blanking it cannot
+    // trip the partition checks either. An injection that reddens via a neighbouring class would
+    // prove nothing about this one.
+    case 'uncaught_undeclared': return CORPUS.map((c) => (c.id === '58' ? { ...CORPUS.find((x) => x.id === '59(a)'), id: '58' } : c));
+    case 'uncaught_stale': return CORPUS.map((c) => (c.id === '59(a)' ? { ...CORPUS.find((x) => x.id === '58'), id: '59(a)' } : c));
     // (b) R-548 §2's attack B VERBATIM: a unique rename, body and expectation byte-untouched.
     //     Under the old self-authored set this produced `missing_ids: []` and exit 0.
     case 'membership_rename': return CORPUS.map((c) => (c.id === '35(a)' ? { ...c, id: '35(z)' } : c));
@@ -603,7 +610,40 @@ console.log(`SEPARABILITY POSITIVE CONTROL: the tracker DID observe ${OPENED.siz
 // ---------------------------------------------------------------------------------------
 // ITEM 9 -- ENFORCEMENT. Every forbidden outcome derives a non-zero exit.
 // ---------------------------------------------------------------------------------------
+// ---- R-585 §6.1 / AR-615 §4b: `MISS_NOT_CAUGHT` IS NOW GATED, AND IN BOTH DIRECTIONS --------
+// THE GAP: the six-population partition is computed over `orig` — the pinned 52 — and
+// `MISS_NOT_CAUGHT` is not one of the SIX, so a row of the 52 in that state is caught by
+// `unpartitioned`. A row OUTSIDE the 52 was checked by NOTHING. A guard row could catch nothing,
+// forever, and no failure class would speak.
+//
+// 🛑 A BARE ALLOW-LIST IS THE WRONG FIX — one excused 24 kill-switch assertions on this campaign.
+// So this is the TRIPWIRE shape, and the SECOND half is the load-bearing one:
+//   (a) every row that catches nothing must be DECLARED a known-open gap, AND
+//   (b) every declared known-open gap must STILL catch nothing.
+// (b) means that when `F-3` is finally closed and `59(a)` starts being caught, this declaration
+// goes STALE and the gate goes RED — forcing the list to SHRINK. A list that can only grow is the
+// defect being avoided. The magnitude is stated in plain sight so a silent edit is loud in review.
+//
+// `[MEASURED]` the three are the constructor-reach rows R-575 §6.3 landed deliberately; they are
+// the visible face of the OPEN F-3 design item, not an excuse for it.
+const KNOWN_UNCAUGHT = ['59(a)', '59(b)', '59(c)'];
+const KNOWN_UNCAUGHT_COUNT = 3;
+if (KNOWN_UNCAUGHT.length !== KNOWN_UNCAUGHT_COUNT) {
+  throw new Error(`INSTRUMENT FAULT: KNOWN_UNCAUGHT declares ${KNOWN_UNCAUGHT_COUNT} known-open gap(s) but lists ${KNOWN_UNCAUGHT.length} — the declaration and its stated magnitude disagree`);
+}
+const uncaughtNow = results.filter((r) => r.status === 'MISS_NOT_CAUGHT').map((r) => r.id);
+const uncaughtUndeclared = uncaughtNow.filter((id) => !KNOWN_UNCAUGHT.includes(id));
+// A declared gap that has VANISHED is a membership problem, not a staleness one — leave that to
+// the membership class rather than reporting the same defect twice under two names.
+const uncaughtStale = KNOWN_UNCAUGHT.filter((id) => results.some((r) => r.id === id) && !uncaughtNow.includes(id));
+
 const FAILURE_CLASSES = [
+  // R-585 §6.1 — see the KNOWN_UNCAUGHT block above. Both directions, one class.
+  ['uncaught_gap', uncaughtUndeclared.length > 0 || uncaughtStale.length > 0,
+    () => [
+      uncaughtUndeclared.length ? `row(s) caught NOTHING and are NOT declared as a known-open gap: ${uncaughtUndeclared.join(', ')} — a row that catches nothing is not evidence of anything` : '',
+      uncaughtStale.length ? `declared known-open gap(s) are NOW CAUGHT: ${uncaughtStale.join(', ')} — the declaration is STALE and must shrink` : '',
+    ].filter(Boolean).join(' | ')],
   ['wrong_catcher', summary.failed_wrong_catcher > 0, () => `${summary.failed_wrong_catcher} row(s) red via a catcher other than the named one`],
   ['ownership', summary.failed_ownership > 0, () => `${summary.failed_ownership} row(s) where the named catcher fired but a competing catcher also fired`],
   ['parse', summary.failed_parse > 0, () => `${summary.failed_parse} fixture(s) failed to parse`],

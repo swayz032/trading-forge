@@ -98,6 +98,10 @@ const EXPECT = [
   ['substituted_diagnostic',    'type_invalid_unclassified', '(s) GRADE F-3: R-548 attack A in its SUBSTITUTED form — the TRUE plant RESOLVES and an impostor of the same code claims the byte-unchanged anchor. ONE diagnostic, ONE anchor, bijection satisfied; measured to give GATE: PASS EXIT 0 with a partition identical to clean'],
   ['module_collection_delete',  'module_collections',       '(q) R-568(5): delete a row from an ENFORCEMENT TABLE (this EXPECT array) — measured to give 37/37 ENFORCING GATE, EXIT 0'],
   ['module_collection_add',     'module_collections',       '(r) R-568(5): a NEW module-level collection in run.mjs nobody pinned — the set of sets, beyond corpus.mjs'],
+  // R-585 §6.1 — MISS_NOT_CAUGHT was UNGATED outside the pinned 52 (AR-615 §4b). Both halves of
+  // the tripwire get their own row: a list that can only grow is the defect being avoided.
+  ['uncaught_undeclared',       'uncaught_gap',              '(t) R-585: a row OUTSIDE the pinned 52 catches NOTHING and is not declared a known-open gap — this was ungated forever and no failure class spoke'],
+  ['uncaught_stale',            'uncaught_gap',              '(u) R-585: a DECLARED known-open gap is NOW CAUGHT — the tripwire must force the declaration to SHRINK rather than persist as a standing excuse'],
 ];
 
 // R-548 §4 (b) requires the rename to go RED in BOTH `run.mjs` AND `emitted-freeze.mjs`. The

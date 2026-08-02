@@ -4,6 +4,38 @@
 
 ---
 
+## AR-626 · 2026-08-02 · ⏳ **START-RECEIPT — `R-585 §6` ITEM `1` (`MISS_NOT_CAUGHT` GATING) STARTED. FIRST OBSERVABLE: a commit touching the gating path. ETA ~30–45 min (I am revising the desk's 20–30 UP, with a reason).** ✅ **SEAT QUESTION: `R-585 §7` IS RIGHT AND I ACCEPT IT — `advisor-ruling §0.5` outranks my flag, and `AR-625` said plainly it could work. I am working.**
+
+**RULING ID:** `R-585 §6.1` · **TASK ID:** AR-626 · **PRIOR:** AR-625 · ✅ **`worker-execution` RE-INVOKED for this ruling.**
+
+### ✅ §1 — WHAT I MEASURED BEFORE DESIGNING
+`[MEASURED HERE]` **the `3` `MISS_NOT_CAUGHT` rows are `59(a)`, `59(b)`, `59(c)` — the constructor-reach channel `R-575 §6.3` landed deliberately, and they are the visible face of the OPEN `F-3` design item.** `[MEASURED HERE, `run.mjs:488-503`]` the six-population partition is computed over `orig` = the pinned `52` only, and `MISS_NOT_CAUGHT` is not one of the `SIX` — so a row of the `52` in that state is caught by `unpartitioned`, **and a row OUTSIDE the `52` is checked by nothing at all.** That is `AR-615 §4b` exactly.
+
+### ✅ §2 — THE DESIGN, AND WHY IT IS NOT A BARE ALLOW-LIST
+🛑★★★ **A naked allow-list is the `baseline-allowlist` failure — one excused `24` kill-switch assertions on this campaign.** **So the property is the TRIPWIRE shape (`tripwire-test`: a known-broken row asserts BOTH halves):**
+> *every `MISS_NOT_CAUGHT` row must be DECLARED as a known-open gap, **and** every declared known-open gap must STILL be `MISS_NOT_CAUGHT`.*
+**The second half is the one that matters: when `F-3` is eventually closed and `59(a)` starts being caught, the declaration becomes STALE and the gate goes RED, forcing the list to SHRINK. A list that can only grow is the defect; this one is pinned to reality in both directions and states its own magnitude.**
+
+### ⚠️ §3 — TWO CONSEQUENCES I EXPECT AND AM NAMING BEFORE THEY SURPRISE ANYONE
+1. **A new failure class + a new declared collection in `run.mjs` will trip the set-of-sets guard → a PIN DANCE (two commits), same as `1a1abb46`/`0a557e37`.** That is the guard working, not an obstacle.
+2. ✅★★★ **MY OWN `F-4` FIX FROM LAST BATCH NOW BINDS ME: a new `FAILURE_CLASSES` entry with no red path will make `red-proof.mjs` go RED until I add its `EXPECT` row.** **That is the completeness property doing exactly what it was built for, against its own author, one batch later. I am reporting it as a load-bearing consequence rather than routing around it.**
+
+---
+
+## AR-625 · 2026-08-02 · ✅ **HOLD-RECEIPT — `R-584` READ. `4 / 4` APPROVED, NOTHING ASSIGNED, FOURTH GRADE IN FLIGHT AGAINST `5a5838bc`. NOT A DECLINE — BUT I AM FLAGGING SEAT COST HONESTLY, WHICH IS A DIFFERENT THING.**
+
+**RULING ID:** `R-584` · **TASK ID:** AR-625 · **PRIOR:** AR-624 · **NO CODE DELTA. NO GRAPH TRANSITION.**
+
+🛑 **HOLDING:** no `prototypes/` while the grade runs · `MISS_NOT_CAUGHT` acknowledged as mine and NOT started (it is gated on the grade returning, and starting it unilaterally is exactly the shape `R-580` warned about).
+
+⚠️★★★ **SEAT COST, STATED PLAINLY AND NOT AS A HANDOFF DECLARATION.** `worker-onboarding §4.5` says swap at a CLEAN BOUNDARY while context remains, and warns that the most expensive and most dangerous moment to swap is exhaustion mid-measurement. **This is the cleanest boundary available: fan-in `4 / 4`, batch closed, report landed, commit `5a5838bc` verified, working tree clean, nothing assigned.** **This seat has consumed a lot of context across four grade cycles** (`R-576`→`R-584`), and `MISS_NOT_CAUGHT` is a build-plus-red-proof task of comparable size to the one just closed.
+✅ **I am NOT declaring a handoff and NOT filing a decline:** my fan-in is complete, nothing is unstarted-but-assigned, and `worker-execution §10` reserves handoff for genuine exhaustion — which I have not reached. **I can take `MISS_NOT_CAUGHT` if it lands here.**
+★★★ **But a fresh seat is the OPERATOR's act (`authorize-seat`), so the observation belongs to him rather than being resolved by me: taking a large new task on a heavily-consumed seat is the documented way this campaign produces a partial result that reads as complete. Raising it at the boundary costs nothing; raising it mid-measurement costs the measurement.**
+
+**Standing by.** Live inherited ear (`6164`), tree clean, no owed measurements outstanding.
+
+---
+
 ## AR-624 · 2026-08-02 · ✅★★★★★ **`R-582 §6` BATCH CLOSED — FAN-IN `4 / 4`, ALL RED-PROOFED, CONTROL GREEN AND RESTORE BYTE-IDENTICAL EVERY TIME.** ✅★★★★★ **THE TAUTOLOGY IS GONE: THE RECORDED KEY NOW COMES FROM THE CHILD'S OWN `INJECTION:` LINE, AND THE GRADER'S MUTATION — WHICH PRODUCED **BYTE-IDENTICAL OUTPUT AND `EXIT 0`** AGAINST MY LAST DELIVERY — NOW REPORTS **`11` DECLARED CLASSES THAT NEVER RAN**, WHICH IS THE GRADE'S OWN `11 / 19` FIGURE REPRODUCED FROM THE OTHER SIDE.** 🛑★★★ **AND I CAUGHT MY OWN ENUMERATION LYING BEFORE IT REACHED YOU: MY FIRST `grep` FOR MAIN-ENTRY GUARDS FILTERED OUT `://` AND SO DELETED `file:///` — THE EXACT LINE THE RULING NAMED.**
 
 **RULING ID:** `R-582 §6` · **TASK ID:** AR-624 · **PRIOR:** AR-623 · **GRAPH: `P0PC` `active_worker` — NO TRANSITION CLAIMED (`R-578 §5`; `R-574 §0`'s law now holds a sixth time by my own count and it is the desk's to declare, not mine).**
