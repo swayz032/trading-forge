@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3603` at THIS commit, 2026-08-02 06:17 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3607` at THIS commit, 2026-08-02 06:24 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3603` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3607` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,8 +90,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `06:17`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-559` (commit `03e102d2`). Newest AR: `AR-599` (`46d6b7de`) — ✅ RULED by `R-559`. NOTHING UNRULED. WORKER ON HOLD.**
+## ★★★★★ SEAT (2026-08-02 `06:24`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-560` (commit `63deea17`). Newest AR: `AR-600` (`0caa94e5`) — ✅ RULED by `R-560`. NOTHING UNRULED. WORKER ON HOLD, NO CODE.**
+🛑★★★★★ **THE INDEPENDENT GRADE IS **DISPATCHED AND RUNNING** — `accuracy-validator`, HUNT, pin **`8a40f899`**, durable receipt → `docs/designs/GRADE-P0PC-FINAL-2026-08-02.md`. ONE SLOT, OCCUPIED. NO second grader.** ✅ **The operator reaffirmed the standing delegation in his own words this session — *"you are the boss not me"* — and I had been ASKING when memory already said `DISPATCH, don't ask`. Corrected in one motion.** ✅ **`irreversible-gap` honoured: the ACT was authorized in `R-546 §8.2` and re-affirmed in `R-551 §6.2`/`R-556 §6`/`R-559 §6.1`; `R-560` only EXECUTED it — separate motions, several rulings apart.**
+🛑★★★★★ **PIN CORRECTED `46d6b7de` → `8a40f899` (`R-560`). THE WORKER CAUGHT THAT MY PIN WAS STALE BY `25` SECONDS AND **REPORTED IT RATHER THAN QUIETLY REVERTING TO MAKE MY RULING TRUE** — Invariant 9 (`never take a real risk to remove an appearance`) applied against its own convenience.** ★★★★★ **`A PIN IS TRUE ONLY AT THE INSTANT IT IS MEASURED` — `visibility is not timing` applies to the DESK's ear too; my ear could not announce a commit that landed mid-ruling.**
+✅★★★ **THE DRIFT IS INERT, PROVEN AT THE EXECUTABLE LINE not assumed** `[MEASURED HERE]`: one line, `red-proof.mjs`'s `EXPECT` third column. `red-proof.mjs:127` destructures `[inject, cls, what]` and **`what` occurs exactly once more — inside the `console.log`**; the pass/fail uses `inject`/`cls`/`namedOurClass`/`r.code`. ★★★ **`"IT'S ONLY A CAPTION" IS A MECHANISM CLAIM` — and that string lives INSIDE the red-proof harness, an instrument.** ✅ **All six gates `EXIT 0` at the new pin, `red-proof 31/31` control GREEN; `git diff 8a40f899 HEAD -- prototypes/` is EMPTY, so the object is byte-stable.**
+🛑★★★★★ **STOP WHILE THE GRADE RUNS: ANY prototype edit invalidates the pin — that is the exact loop `R-560` just closed. And the verdict may NOT be banked without its mandatory closing coverage section (that section IS the `v2` marker), nor treated as ratifying `44/52` unless it says it independently re-derived the `44`.**
 ✅★★★★★ **BOTH FALSE GREENS CLOSED. `P0PC` = **DELIVERED-PENDING-GRADE**, output pin **`46d6b7de`**. `P0PG` BLOCKED — the INDEPENDENT GRADE is now the ONLY thing between them.**
 ✅★★★★★ **VERIFIED WITH A **BRACKETED** CONTROL AT THIS DESK'S OWN HAND** `[MEASURED HERE, detached worktree @ `46d6b7de`, every plant `grep`-verified BEFORE its verdict, exit codes off the process]`:
 ```
