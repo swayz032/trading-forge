@@ -12,6 +12,69 @@
 
 ---
 
+## R-523 · 2026-08-01 · 🛑✅★★★★★ **CENSUS `FAIL` ACCEPTED — THE DEFECT IS THE **DENOMINATOR**, NOT THE CELLS: `43` DECLARED ROWS EXIST, `30` WERE ENUMERATED, TRUE MEMBERSHIP IS `301` NOT `210`. CONFIRMED AT THIS DESK ON TWO PATHS.** ⚠️★★★★★ **AND THE READ CATCHES WHAT BOTH THE GRADER AND I MISSED: THE PROPOSED THREE-LINE UNION FIX IS **NECESSARY BUT NOT SUFFICIENT** — BOTH SETS IT UNIONS STILL LIVE INSIDE THE ORACLE BEING CHECKED. `A FROZEN AXIS SET WITH A PRESENCE-DERIVED ROW SET IS STILL SELF-AUTHORIZING.`** ✅ **ONE BOUNDED REPAIR AUTHORIZED, FOUR OBLIGATIONS, THEN ONE RE-CENSUS.**
+
+**RULING ID:** R-523 · **TASK ID:** the census `76773939` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-549` (08-01 `19:32`, HOLD-RECEIPT, no open task).
+**DECISION:** **ACCEPT** — the census `FAIL` · **ADOPT** — the read's §3 correction to the fix · **AUTHORIZE** — one bounded artifact repair (four obligations) + one re-census · **BLOCK** — `P0-vNext`, still.
+**EXTERNAL READ:** `821f446a` (08-01 `20:14`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `76773939` · `047d60e2` (my own commit) · `c80c8df7` · `c304b098` all → `commit`; `e3dc85a6` → `blob`. `0` FABRICATED — TENTH CONSECUTIVE CLEAN AUDIT.** Self-labels *"Ruling: R-523"*; `[EXTERNAL OPINION]`. **R-523 IS THIS DESK'S.**
+
+### ✅★★★ §1 — WHAT SURVIVED, STATED FIRST SO THE REPAIR DOES NOT OVER-CORRECT
+**The census attacked all `210` published cells and COULD NOT MOVE ONE.** `140/9/61` reconciles exactly · the `43` undeclared are real and honestly represented · strict-name `46` and the three alias cells correct · all `140 ASSERTED` values match the pinned oracle on their exact joins · **zero guessed cells**, confirmed by a basis-vs-source audit · generation byte-deterministic (**stronger than claimed** — a generator extracted from the packet reproduces the pinned blob byte-for-byte) · the advertised duplicate/unknown/deletion mutations discriminate.
+⚠️★★★★★ **THOSE RESULTS STAND AND ARE BINDING ON THE REPAIR: ALL `210` EXISTING CELLS PRESERVED BYTE-FOR-BYTE IN SEMANTIC CONTENT, AND THE `43` UNDECLARED STAY EXACTLY `43`.** ★★ **A repair that "improves" a verified cell is a regression with good intentions.**
+
+### ✅★★★★★ §2 — THE FAILURE, CONFIRMED **AT THIS DESK**, TWO NON-OVERLAPPING PATHS
+`[MEASURED HERE, parsed from `c304b098`]`
+1. **DIRECT RECOUNT:** `spec.entry_conditions[].id` across the twelve pinned fixture specs = **`43` rows**; the ledger enumerated **`30`**. **`13` DECLARED ROWS OMITTED → `13 × 7 = 91` CELLS. Corrected universe `43 × 7 = 301`.**
+2. **THE ORACLE'S OWN SELF-WITNESS:** `conditions_unadjudicated_ids` joins **`13/13` to the SPEC ids** and **`0/13` to the ORACLE keys.**
+★★★★★ **SO THE ORACLE NAMED THOSE THIRTEEN ROWS ITSELF, IN ITS OWN FIELD. The generator selected rows only from `fixtures[].conditions` — the PRESENCE set — so **ABSENCE REMOVED EACH ROW FROM THE UNIVERSE THAT WAS SUPPOSED TO DETECT ABSENCE.** ⚠️ **ALL THIRTEEN ARE IN `00-control-shipped.spec.json` — THE CONTROL FIXTURE.** `THE ROWS THAT WENT MISSING WERE THE ONES IN THE FILE WHOSE JOB IS TO BE THE BASELINE.`
+
+### ⚠️★★★★★ §3 — **THE READ'S CENTRAL CORRECTION, ADOPTED: THE THREE-LINE FIX IS NOT ENOUGH**
+The census proposed `sorted(_present | _declared)` — restoring the thirteen. ✅ **It works on today's artifact.** ⚠️★★★★★ **AND IT DOES NOT ESTABLISH AN INDEPENDENT ROW UNIVERSE, BECAUSE BOTH SETS STILL LIVE IN THE ORACLE BEING CHECKED. A SELF-CONSISTENT DELETION FROM BOTH LOCATIONS SHRINKS THE UNIVERSE AGAIN — the same defect, needing one more edit to hide.**
+> ★★★★★ **`A FROZEN AXIS SET WITH A PRESENCE-DERIVED ROW SET IS STILL SELF-AUTHORIZING.`**
+★★★★★ **AND THE CLASS-LEVEL STATEMENT, WHICH IS THE REAL PRIZE HERE AND WHICH I DID NOT REACH EITHER: `A REMEDY FOR SELF-AUTHORIZATION THAT ADDS A SECOND SOURCE **INSIDE THE SAME ARTIFACT** HAS NOT LEFT THE SYSTEM — IT HAS RAISED THE PRICE OF THE FORGERY BY ONE EDIT.`** ⚠️ **THIS IS NOT A PERSONAL FAILING AND I STOP CALLING IT ONE: `R-519`'s clause froze the AXES and left the ROWS; the census's fix unions two in-artifact sets. **TWO INDEPENDENT PARTIES, SAME SHAPE.** The remedy for a self-referential defect naturally reaches for another reference, and the only fix is to leave the artifact entirely.**
+
+### ★★★★★ §4 — **WORKER — START HERE** (cold-start-complete; DISPATCH beats RECORD)
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**ALLOWED FILES — EXACTLY THREE:** `docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md` · `docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` · `AGENT-REPORTS.md`.
+**FORBIDDEN:** engine · runtime · extraction · corpus · database · migrations · `HOLDOUT-26` · `P0-vNext` · `P3` · Gate B · any code outside the generator embedded in the packet · `git checkout`/`reset`/index ops in this shared tree · **touching either grade receipt (`76773939`, `d4378be2`, `48e50d80` are preserved evidence).**
+
+**A · INDEPENDENT ROW UNIVERSE.** Freeze the **`43`** condition-row identities from the twelve **PINNED SOURCE FIXTURE SPECS at `c304b098`**, keyed **`fixture filename × spec.entry_conditions[].id`**. ⚠️★★★★★ **THE ORACLE'S `conditions` KEYS AND ITS `conditions_unadjudicated_ids` MAY BE *COMPARED AGAINST* THIS UNIVERSE. NEITHER MAY *DEFINE* IT.** Publish: the exact 43-row manifest · its deterministic digest · present-in-oracle `30` · declared-absent `13` · unresolved/unexpected identities **in both directions**.
+Regenerate to **`301`** cells. The new `91` are **`UNADJUDICATED`** with basis `fixture-declared-id` (or an equally explicit source-fixture basis). ⚠️ **DO NOT FABRICATE ASSERTIONS FOR THEM.**
+✅ **EXPECTED POST-STATE — and I checked the arithmetic: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152` (`61 + 91`) · `UNDECLARED 43` UNCHANGED · **total `301`** (`140+9+152` ✓) · zero existing semantic cells altered or lost.** ★★ **If your run disagrees with any of these, that disagreement is a FINDING — report it, do not reconcile toward the expectation.**
+
+**B · DECLARE THE COMPLETENESS FRAME (closes `F-2`).** Correct every unbounded *"complete truth membership"* caption to: **complete over the pinned ENTRY-CONDITION × SEVEN-AXIS frame.** Name as explicitly OUT OF FRAME and unenumerated here: `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` · other fixture-level scalar/relational expectations. ⚠️ **THIS IS A SCOPE DECLARATION, NOT PERMISSION TO DELETE THOSE TRUTHS — record them as a NAMED DOWNSTREAM SURFACE for `P0-vNext`/`P3`.**
+
+**C · MAKE THE VERIFIER INDEPENDENT OF THE LEDGER'S DENOMINATOR (closes `F-3`).** It may **NOT** compute its expected product from `ledger.P1.row_ids` and `ledger.P2.axes`. It must independently reconstruct or receive the frozen 43-row manifest from the pinned source fixtures **and** the seven-axis contract from packet/code constants independent of the ledger under test. **It must turn ALL of these RED:** delete one cell · **delete a whole row + its 7 cells AND repair the ledger's counts/digests** · **delete a whole axis + its cells AND repair counts/digests** · add an unknown row or axis · duplicate a cell. **Clean unmodified control, final summary line, exit status.**
+
+**D · PROTECT CONTENT, NOT ONLY MEMBERSHIP (closes `F-4`).** Verify the **`canonical_document_sha256`** from an independently canonicalized representation, excluding only the digest field — it is currently **published but never verified**. **Reject duplicate JSON keys BEFORE normal parsing** (`json.load` silently keeps the last). **These must go RED:** `UNADJUDICATED`→`ASSERTED` · `NOT-APPLICABLE`→`ASSERTED` · forged `basis`/`declared_reason` · nulled/emptied asserted discriminating value · removed declaration reasons · erased `primitive`→`primitive_null` alias disclosure.
+
+**E · THE DEBT THAT IS NOW DUE.** `R-521 §1` (as annotated) queued the `9` empty `authority_citation` fields to be filled **AFTER the census, by regeneration**. ✅ **THE CENSUS IS DONE — FILL THEM IN THIS REPAIR, from the generator, citing authority §4d. Not a hand edit.**
+
+**HONEST-PARTIAL CLAUSE:** if any obligation cannot be met without leaving the three allowed files, **STOP AND SAY SO.** `NO SOUND REPAIR AVAILABLE` remains a valid expert result.
+**START-RECEIPT:** one line within ~2 min — task · first observable · ETA · **your recorded tree baseline** (delta, never absolute-clean).
+**FIRST OBSERVABLE THIS DESK EXPECTS:** the 43-row manifest frozen from the source specs with its digest, **~30–45 min from start.**
+**ACCEPTANCE (run them, paste output):**
+```
+python -c "import json;d=json.load(open('docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json',encoding='utf-8'));print(len(d['cells']))"   # expect 301
+python -c "import json,collections;d=json.load(open('docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json',encoding='utf-8'));print(collections.Counter(c['classification'] for c in d['cells']))"   # 140/9/152
+grep -n "entry-condition × seven-axis\|out of frame\|OUT OF FRAME" docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md | head -4
+grep -c "fixture-declared-id" docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json          # expect >= 91
+git status --porcelain -- docs/designs scripts ci src                                       # DELTA vs YOUR baseline
+```
+**STOP CONDITION:** ★★★ **if freezing the row universe from the source specs requires reading ANYTHING from `ORACLE.json` to decide MEMBERSHIP, STOP — that is the defect reproducing itself at the repair, and it is exactly what §3 forbids. Comparison is allowed; derivation is not.**
+
+### §5 — AFTER THE REPAIR
+**ONE re-census** against the new commit, same contract, same outcome rule (*on unresolved authority PRESERVE `UNADJUDICATED`; fail only if the ledger MISREPRESENTS its uncertainty*), durable receipt at a NEW file. ✅★★★ **I WILL DISPATCH IT WITHOUT ASKING: the operator delegated grader dispatch to this desk in his own voice on 2026-08-01 (*"ITS YOUR CALL YOU THE BOSS"*), scoped to that class and NOT to the reserved list.** ⚠️ **`P0-vNext` STAYS BLOCKED until the re-census passes.**
+
+### §6 — POSITION
+`P1`/`P2` **FAILED CENSUS — one bounded repair AUTHORIZED** · all `210` existing cells **PRESERVED** · the `43` **UNCHANGED** · corrected universe **`301`** · `P0-vNext` **BLOCKED** · seventh `P0` attempt **STILL FORBIDDEN** · `P3` · Gate B · merge/deploy/release **HOLD** · grade receipts `48e50d80` · `d4378be2` · `76773939` **PRESERVED EVIDENCE.**
+
+### ★★★★★ §7 — LESSON TO PERSIST
+> **`A REMEDY FOR SELF-AUTHORIZATION THAT ADDS A SECOND SOURCE INSIDE THE SAME ARTIFACT HAS NOT LEFT THE SYSTEM.`** `R-519` froze the axis list and left the rows presence-derived; the census then proposed unioning two sets that both live in the oracle. **Two independent parties, neither reading the other, reached for the same insufficient shape** — because the instinct when a reference is circular is to add *another reference*, and another reference inside the same document only raises the price of the forgery by one edit.
+> ★★★ **THE TEST THAT WOULD HAVE CAUGHT BOTH, AND IT IS CHEAP: *"if an adversary may edit this artifact freely, can they still make the universe agree with them?"* If yes, the universe is not frozen — it is merely inconvenient to move.**
+
+---
+
 ## R-522 · 2026-08-01 · 🛑★★★★★ **AN EXTERNAL READ SAYS *"EXECUTE NOW."* I AM NOT EXECUTING ON IT. `A CHANNEL IS NOT AN AUTHOR`, AND THE ONE THING THIS READ ASKS FOR — DISPATCHING AN AGENT — IS THE ONE THING IT CANNOT AUTHORIZE.** ✅ **THE HOLD IS UNCHANGED AND ITS ASSIGNEE IS THE OPERATOR, ASKED TWICE. EVERYTHING ELSE IN THE READ WAS ALREADY ORDERED BY `R-521`, AND ITS ONE INDEPENDENT CONTRIBUTION IS A CONVERGENCE I WELCOME.**
 
 **RULING ID:** R-522 · **TASK ID:** none — no AR is unruled · **NEWEST AR ON DISK AT WRITE TIME:** `AR-549` (08-01 `19:32`, HOLD-RECEIPT, no open task; it does not bear on this ruling except to confirm the seat is idle and correctly so).
