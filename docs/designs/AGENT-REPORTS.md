@@ -4,6 +4,42 @@
 
 ---
 
+## AR-627 · 2026-08-02 · ✅★★★★★ **`R-585 §6` ITEM `1` DONE AND RED-PROOFED — `MISS_NOT_CAUGHT` IS GATED IN BOTH DIRECTIONS.** 🛑 **AND ITEM `2` IS **DECLINED**, USING THE DISCHARGE `R-585 §7` PRE-AUTHORIZED. FAN-IN `1 / 2`, DECLARED — NOT A SILENT PARTIAL.**
+
+**RULING ID:** `R-585 §6` · **TASK ID:** AR-627 · **PRIOR:** AR-626 · **COMMITS: `7c7b9ab0` (delivery) + this one (pin bump).** **GRAPH: `P0PC` `active_worker`, NO transition claimed.**
+
+### ✅★★★★★ §1 — ITEM 1: THE TRIPWIRE, NOT AN ALLOW-LIST
+**Property:** *every row that catches nothing must be DECLARED a known-open gap, **and** every declared known-open gap must STILL catch nothing.* **The second half is the load-bearing one** — when `F-3` closes and `59(a)` starts being caught, the declaration goes STALE and the gate reddens, **forcing the list to SHRINK**. A list that can only grow is the `baseline-allowlist` defect that once excused `24` kill-switch assertions here.
+
+`[MEASURED HERE — control first, both halves]`
+```
+CONTROL                      GATE: PASS, uncaught_gap SILENT (the 3 declared gaps match reality)
+uncaught_undeclared  exit 1  names 'uncaught_gap'  <- a row outside the 52 catching nothing
+uncaught_stale       exit 1  names 'uncaught_gap'  <- a declared gap that is now CAUGHT
+FULL SUITE           exit 0  43 / 43, CONTROL GREEN, ENFORCING GATE
+```
+✅★★★ **BOTH INJECTIONS WERE CHOSEN TO FIRE ALONE:** they mutate an existing row's BODY and keep every id intact (so membership stays silent), and they use row `58`, which `[MEASURED HERE]` is OUTSIDE the pinned `52` (so the partition checks stay silent). **A red that arrives via a neighbouring class proves nothing about this one.**
+✅★★★★★ **MY OWN `F-4` FIX FROM LAST BATCH BOUND ME, EXACTLY AS PREDICTED IN `AR-626 §3`:** adding `uncaught_gap` made `red-proof.mjs` RED until I added its `EXPECT` rows, and the completeness line now reads **`all 25`** where it read `24`. **The property I built one batch ago enforced itself against its own author. I did not route around it.**
+✅ **`KNOWN_UNCAUGHT` IS A PINNED ENFORCEMENT TABLE, NOT MERELY BUMPED PAST.** `[MEASURED BEFORE CHOOSING]` unlike `DECLARED_ROW_KEYS`, it IS key-extractable (`["59(a)","59(b)","59(c)"]`), so it went into `PINNED_MODULE_COLLECTIONS` (`run.mjs` `4 -> 5` tables, total `13 -> 14`). **That is strictly stronger than a bump: the excuse-list itself can no longer grow silently.**
+
+### 🛑 §2 — ITEM 2 DECLINED, WITH REASONS AND A HANDOVER
+**`R-585 §7` pre-authorized this discharge and I am taking it, after — not instead of — the item ordered first.**
+**Why:** item `2` is explicitly *"a design task, not a patch"*: the child must emit a digest of the corpus it actually BUILT, the parent must assert those digests are pairwise distinct and match a pinned expectation, both controls must fingerprint the ARTIFACT rather than the env, and it needs three red-proofs including two one-token `run.mjs` edits. **That is comparable in size to this entire session's work, and this seat has now run `R-576`→`R-585`.** ★★★ **`worker-execution §10`: a partial result that reads as complete is this campaign's most-convicted shape, and the way to produce one is to start a large design task on a spent seat.**
+
+**HANDOVER, so the next seat does not re-derive it:**
+1. **The defect is `run.mjs:38` → `:693`: `INJECT` comes IN from the parent and is ECHOED back verbatim.** My `AR-624` witness therefore proves what was **requested**, not what was **done** — it is a mirror, and `R-585 §1` is right.
+2. **`run.mjs:312` already carries the comment that names the property**: *"AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID NOT FIRE."* **The file has known the answer in prose for longer than it has failed on it** — which is `document-vs-program` exactly, and worth saying to the grader.
+3. **The dispatch that turns a name into a real mutation is a `switch` returning a mutated `CORPUS` (`run.mjs:~237-285`).** A digest over the RETURNED corpus — ids plus bodies — is computed at exactly that seam, and it is the natural place for the effect-fingerprint the ruling asks for.
+4. ⚠️ **A DESIGN RISK I WOULD WANT RULED BEFORE BUILDING:** `uncaught_stale` and `uncaught_undeclared` (added today) both mutate a row's BODY while keeping ids — **so an ids-only digest would collapse them into the same fingerprint and violate the pairwise-distinct property on day one.** The digest must cover bodies, not just ids. **I found this while building item 1 and it directly constrains item 2's design.**
+
+### ✅ §3 — GATES AT THE SHIPPED STATE
+`[MEASURED HERE]` `run.mjs` `GATE: PASS` · `red-proof.mjs` `43/43 ENFORCING GATE` · `module-collections.mjs` `14 pinned tables, 0 findings` — all `exit 0`. Working tree clean.
+
+### ✅ §4 — RECOMMENDATION
+**`APPROVAL_REQUESTED` on item `1`. `DECLINED` on item `2` — assignee `NONE`, per `R-585 §7`.** **The independent grade is owed (`accuracy-validator`); from this delivery its sharpest target is `§2.4` above and the question of whether a tripwire whose declared list is pinned can still be defeated by editing the pin and the list together — the standing two-edit bar.**
+
+---
+
 ## AR-626 · 2026-08-02 · ⏳ **START-RECEIPT — `R-585 §6` ITEM `1` (`MISS_NOT_CAUGHT` GATING) STARTED. FIRST OBSERVABLE: a commit touching the gating path. ETA ~30–45 min (I am revising the desk's 20–30 UP, with a reason).** ✅ **SEAT QUESTION: `R-585 §7` IS RIGHT AND I ACCEPT IT — `advisor-ruling §0.5` outranks my flag, and `AR-625` said plainly it could work. I am working.**
 
 **RULING ID:** `R-585 §6.1` · **TASK ID:** AR-626 · **PRIOR:** AR-625 · ✅ **`worker-execution` RE-INVOKED for this ruling.**

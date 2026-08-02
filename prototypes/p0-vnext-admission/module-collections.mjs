@@ -63,7 +63,7 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // its CHECKED surface is unchanged across the bump: HISTORICAL_RENAMES keys ["54"] -> ["54"] and
 // the module-level collection set {HISTORICAL_RENAMES, BASELINE_META, EXPANDED_META} identical.
 // So no enforcement table is silently re-baselined by this bump. Verified before bumping, not after.
-export const MODULE_PIN_COMMIT = '1a1abb46';
+export const MODULE_PIN_COMMIT = '7c7b9ab0';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -82,7 +82,7 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
   //   SURFACE_CODES          removing a code silently promotes an UNCONFIGURED-instrument row into
   //                          a real verdict — the failure direction `run.mjs:84` exists to prevent.
   //   FIXTURE_INVALID_CODES  removing a code silently promotes an AUTHORING DEFECT into a verdict.
-  'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES', 'SIX', 'SURFACE_CODES', 'FIXTURE_INVALID_CODES']) }),
+  'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES', 'SIX', 'SURFACE_CODES', 'FIXTURE_INVALID_CODES', 'KNOWN_UNCAUGHT']) }),
   'red-proof.mjs': Object.freeze({ tables: Object.freeze(['CLASSES', 'SHARED', 'EXPECT', 'FREEZE_EXPECT']) }),
   // 🛑★★★★★ ADDED BY THE R-570 §6.3 ENUMERATION, WHICH FOUND **INSTANCE EIGHT** BY MEASUREMENT.
   // `type-value-proof.mjs` reports `${pass} / ${CASES.length}` at :126 and gates on
@@ -114,8 +114,8 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
-  'run.mjs': 'e0ff1b9c1c2bf367c3d2ec63a6c3a827d2c990dc',
-  'red-proof.mjs': 'f0a6d2e6fb1269b78eb2f9835ce5a55d3f38db0a',
+  'run.mjs': '183bbdc82c923085021e1bc6622f72686fe8ecbe',
+  'red-proof.mjs': '7e0ebf83beafb6e7397b60c69dd6e724c3e14aa0',
   'type-value-proof.mjs': '468ac763164e152a476ec88139cc76c76286ce99',
   'source-admission.mjs': 'a36d2c500deaf0ddcf3b699f56301c6f8fd65ccf',
   'runtime-admission.mjs': '6e7a3f5148181a8e02efaf28e3fa5797ab79dc53',
@@ -145,7 +145,7 @@ export const PINNED_BLOBS = Object.freeze({
 // tables it covers, in plain sight, so a silent shrink must edit a number that states its own
 // magnitude. R-578 §5 forbids the near-miss of pinning the reduce's OUTPUT — that value is BUILT.
 const COVERED_FILES = Object.freeze({
-  'run.mjs': 4,
+  'run.mjs': 5,
   'red-proof.mjs': 4,
   'type-value-proof.mjs': 1,
   'source-admission.mjs': 2,
@@ -155,7 +155,7 @@ const COVERED_FILES = Object.freeze({
 // The TOTAL is declared as a literal too, and cross-checked against the sum of the per-file
 // literals. Two independent derivations of one magnitude: a shrinker must edit BOTH, and if they
 // ever disagree the instrument says so instead of choosing one.
-const DECLARED_TABLE_TOTAL = 13;
+const DECLARED_TABLE_TOTAL = 14;
 const summedFromFiles = Object.values(COVERED_FILES).reduce((a, n) => a + n, 0);
 if (summedFromFiles !== DECLARED_TABLE_TOTAL) {
   throw new Error(`INSTRUMENT FAULT: declared table magnitudes disagree — per-file literals sum to ${summedFromFiles}, DECLARED_TABLE_TOTAL says ${DECLARED_TABLE_TOTAL}`);
