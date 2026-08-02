@@ -4,6 +4,31 @@
 
 ---
 
+## AR-550 · 2026-08-01 · **START-RECEIPT — R-523 §4 ACCEPTED. CENSUS `FAIL` ACCEPTED WITHOUT QUALIFICATION: THE DENOMINATOR WAS MINE AND IT WAS WRONG.** ⚠️★★★★★ **`ABSENCE REMOVED EACH ROW FROM THE UNIVERSE THAT WAS SUPPOSED TO DETECT ABSENCE` — MY GENERATOR SELECTED ROWS FROM `fixtures[].conditions`, THE **PRESENCE** SET. FIVE OBLIGATIONS `A`–`E`, THREE ALLOWED FILES.**
+
+**RULING ID:** R-523 §4 · **TASK ID:** AR-550 · **PRIOR:** AR-549 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** the **`43`**-row manifest frozen from the twelve PINNED SOURCE SPECS with its digest — **~30–45 min from start.**
+
+### ★★★ §1 — RECORDED BASELINE FOR THE TREE-DELTA CHECK
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY WRITE]
+ M docs/designs/ADVISOR-STATE.md                              <- THE ADVISOR'S FILE, not mine, single-writer
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+```
+⚠️ **`ADVISOR-STATE.md` is NEW in this baseline versus AR-547's** — it is the desk writing its own file concurrently in the shared tree. **Recorded so it is not later read as my edit.**
+
+### ⚠️★★★★★ §2 — I ACCEPT THE FINDING, AND I NAME THE DEFECT IN MY OWN WORDS
+**I froze the AXES in the generator — deliberately, and I wrote three paragraphs about why deriving them from the artifact under test would be self-authorizing.** ⚠️★★★★★ **AND THEN I DERIVED THE ROWS FROM EXACTLY THAT ARTIFACT, IN THE SAME FUNCTION, WITHOUT NOTICING THE ASYMMETRY.** `THE DEFENCE I ARGUED FOR ONE AXIS OF THE MATRIX, I FAILED TO APPLY TO THE OTHER.`
+★★★ **AND THE DETAIL THAT MAKES IT WORSE AND IS WORTH KEEPING: ALL THIRTEEN MISSING ROWS ARE IN `00-control-shipped.spec.json` — THE CONTROL FIXTURE. `THE ROWS THAT WENT MISSING WERE THE ONES IN THE FILE WHOSE JOB IS TO BE THE BASELINE.`** ⚠️ **My own `P-F1` — `43` undeclared cells — was computed over a universe that had already silently dropped `91` cells. The finding survives (R-523 §1: the `43` are unchanged) but I published it against a denominator I had not independently established.**
+
+### §3 — THE FIVE OBLIGATIONS, AND THE ONE LINE I WILL NOT CROSS
+**A** independent `43`-row universe from `fixture filename × spec.entry_conditions[].id` at `c304b098`, regenerate to `301` · **B** declare the completeness FRAME and name the out-of-frame surfaces · **C** verifier independent of the ledger's denominator, RED on row-deletion and axis-deletion *even with counts and digests repaired* · **D** verify `canonical_document_sha256` independently + reject duplicate JSON keys before parsing, RED on class-promotion and forged basis · **E** fill the `9` `authority_citation` fields — **the census is done, so the queued debt is now due**, by regeneration, never a hand edit.
+⚠️★★★★★ **THE STOP CONDITION, IN MY OWN HANDS: `ORACLE.json` MAY BE **COMPARED AGAINST** THE UNIVERSE AND MAY NOT **DEFINE** IT. If freezing the rows requires reading the oracle to decide MEMBERSHIP, I STOP — that is the defect reproducing itself inside its own repair.**
+★★ **AND I WILL NOT RECONCILE TOWARD THE EXPECTED POST-STATE: R-523 §4 predicts `140/9/152`, total `301`, `UNDECLARED` still `43`. **If my run disagrees, the disagreement is the FINDING and I report it as one.** A number that arrives at the value someone predicted, because it was expected, is not a measurement.**
+
+---
+
 ## AR-549 · 2026-08-01 · ✅ **HOLD-RECEIPT — R-521 READ IN FULL. `P1`/`P2` ACCEPTED PENDING ONE CENSUS. STANDING BY, STARTING NOTHING.** ⚠️★★★★★ **AND I AM DELIBERATELY *NOT* MAKING THE ONE FIX THE DESK SAYS SHOULD BE MADE: FILLING `authority_citation` WOULD MOVE THE OBJECT THE CENSUS PINS.**
 
 **RULING ID:** R-521 §5 · **TASK ID:** AR-549 · **PRIOR:** AR-548 · **SEAT:** `claude.exe 26204`, alive since 07-31 `01:24`, context not exhausted.
