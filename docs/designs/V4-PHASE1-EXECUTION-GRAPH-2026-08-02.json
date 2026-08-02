@@ -8,13 +8,13 @@
     "dependency_source": "docs/designs/GRAPH-LANES-FAKE-EDGE-MAP-2026-07-30.md",
     "dependency_source_git_blob_oid": "1e58d0948708a417f9b1178c49bb3ad25f944725",
     "status_source": "docs/designs/ADVISOR-STATE.md and newest AGENT-REPORTS.md",
-    "advisor_state_git_blob_oid": "fcf2898b2040c24a807e0060066edcee10a8ab72",
-    "status_epoch_report_commit": "3c2a83e0649c451c3eda514c76a3da1affa96f37",
-    "status_epoch_report": "AR-612",
-    "status_epoch_ruling_commit": "3ecaf9f94964832ff13cf766ecc5257a101f9920",
-    "status_epoch_ruling": "R-573",
-    "status_join_commit": "0820f88f5dd451aee827112265b64ecc0219898f",
-    "status_join_condition": "ADVISOR-STATE, newest report AR-612, and newest ruling R-573 are joined at campaign commit 0820f88f5dd451aee827112265b64ecc0219898f. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
+    "advisor_state_git_blob_oid": "63f40d938121847d927d3e34d07a2742a36d7612",
+    "status_epoch_report_commit": "613a7c152891d0ebd14994fc549b284db0dcab76",
+    "status_epoch_report": "AR-629",
+    "status_epoch_ruling_commit": "d7ac56d84e55af03e6b66cd01954c8955bc27187",
+    "status_epoch_ruling": "R-586",
+    "status_join_commit": "d7ac56d84e55af03e6b66cd01954c8955bc27187",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-629, and newest ruling R-586 are joined at campaign commit d7ac56d84e55af03e6b66cd01954c8955bc27187. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
     "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
   },
   "objective": {
@@ -142,21 +142,21 @@
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/ADVISOR-STATE.md",
-      "git_blob_oid": "fcf2898b2040c24a807e0060066edcee10a8ab72"
+      "git_blob_oid": "63f40d938121847d927d3e34d07a2742a36d7612"
     },
     {
       "id": "EPOCH_RULINGS",
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/ADVISOR-RULINGS.md",
-      "git_blob_oid": "e5ade743cc61d05914f87ff41b1fa34e916147df"
+      "git_blob_oid": "3ad5a84a057c3cbe2a61db164841108be6eddf4d"
     },
     {
       "id": "EPOCH_REPORTS",
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/AGENT-REPORTS.md",
-      "git_blob_oid": "cb325c6c4976d9353838ad73126fa52440081ea4"
+      "git_blob_oid": "17ebb20e93fe6f9e1b159caf9cb750cd8fd42601"
     },
     {
       "id": "P3_LANE_AUTHORITY",
