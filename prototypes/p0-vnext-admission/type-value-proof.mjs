@@ -54,6 +54,20 @@ const CASES = [
     body: `interface Shape { readonly w: Widget }\nexport const project = (lane: Lane) => ({ v: lane.v } as unknown as Shape);\n`,
     assert: (r) => ({ ok: freeRefsOn(r, 'Widget') === 0, want: 'no FREE_REF on Widget (interface body is erased)' }) },
 
+  // ---- R-550 §4 / R-551 §2: THE OVER-CORRECTION STOP CONDITION, AS EXECUTABLE ROWS ----
+  // My first F-2 fix convicted BOTH of these. They are the founding defect of the corrected
+  // property, so they live in its proof rather than in a comment.
+  { id: 'O1', label: 'class implements Iface (ERASED)', kind: 'over-correction',
+    body: `export const project = (lane: Lane) => { class Impl implements Widget { w = 1; } return { v: new Impl() }; };\n`,
+    assert: (r) => ({ ok: r.outcome === 'ADMITTED', want: 'ADMITTED — R-550 §4 pre-registered that `implements Iface` must stay admitted' }) },
+  { id: 'O2', label: 'interface extends Iface (ERASED)', kind: 'over-correction',
+    body: `interface Ext extends Widget { z: number }\nexport const project = (lane: Lane) => ({ v: 1 } as unknown as Ext);\n`,
+    assert: (r) => ({ ok: r.outcome === 'ADMITTED', want: 'ADMITTED — the whole interface is erased' }) },
+  { id: 'O3', label: 'CONTROL class extends host global (LIVE)', kind: 'over-correction',
+    body: `export const project = (lane: Lane) => ({ v: new (class extends window.Base {})() });\n`,
+    assert: (r) => ({ ok: r.outcome === 'REJECTED' && r.violations.some((v) => v.catcher === '1b-S:direct-ambient-read'),
+      want: 'REJECTED — the fix must still bite where the identifier SURVIVES emit' }) },
+
   // ---- CONTROLS: the suite must be able to say ADMITTED and REJECTED ----
   { id: 'B', label: 'CONTROL inline structural type', kind: 'control',
     body: `export const project = (lane: { v: unknown }) => ({ v: lane.v });\n`,
@@ -94,10 +108,12 @@ console.log(`  same spelling in both arms: ${sameSpelling}   <- without this the
 // A negative assertion needs a positive witness that the path RAN.
 import { classifyPosition, POSITION_UNCLASSIFIED } from './source-admission.mjs';
 const residualWitness = (() => {
-  // An ENUM MEMBER name is an Identifier in neither type nor value space under this rule.
-  // (It was a labeled statement until label handling was added and silently retired that
-  // witness — which is why this is MEASURED on every run rather than assumed once.)
-  const r = P(`enum E { A = 1 }\nexport const project = (lane: Lane) => ({ v: lane.v });\n`);
+  // PARTIAL ERASURE — the residual's real meaning under the emitter oracle: ONE spelling used
+  // BOTH as an erased type and as a live value. The oracle answers per NAME, so it cannot
+  // attribute per occurrence, and the honest answer is "I do not know" -> FAIL CLOSED.
+  // (This witness has been re-based twice: a labeled statement, then an enum member, each
+  // silently retired by an unrelated repair. It is MEASURED every run for exactly that reason.)
+  const r = P(`export const project = (lane: Lane) => { const w: Widget = { w: 1 }; return { v: Widget(lane), q: w }; };\n`);
   return { fired: r.violations.some((v) => v.catcher === POSITION_UNCLASSIFIED), detail: r.violations.map((v) => `${v.catcher}`).join(',') };
 })();
 console.log(`RESIDUAL REACHABLE (POSITION_UNCLASSIFIED can actually fire): ${residualWitness.fired} [${residualWitness.detail || '-'}]`);

@@ -4,6 +4,47 @@
 
 ---
 
+## AR-596 · 2026-08-02 · ✅★★★★★ **BACKFILL READ DONE (`R-548`–`R-554`) AND `F-2-CORRECTED` DELIVERED: `class Impl implements Widget` AND `interface Ext extends Widget` ARE **ADMITTED** AGAIN, WITH THE `window.Base` CONTROL STILL **RED**. THE OVER-CORRECTION `R-551 §2` CONVICTED IS CLOSED.** 🛑★★★★★ **AND THE EAR ITSELF PROVED `R-553 §URGENT` RIGHT ON ITS FIRST HOUR: IT ANNOUNCED `R-553`/`R-554` AND WAS STRUCTURALLY DEAF TO `R-551`/`R-552`. AN EAR ARMED AT `05:09` CANNOT HEAR `04:52`.**
+
+**RULING ID:** `R-551 §6.1` item (1) + `R-553` backfill order · **TASK ID:** AR-596 · **PRIOR:** AR-595 (`d25813ca`).
+**FAN-IN: `1 / 3` of `R-551 §6.1` — `F-2-CORRECTED` closed; items `14`–`16` and `F-7` OPEN and MINE. NOT A HANDOFF.**
+**BACKFILL READ COMPLETE:** `R-548` · `R-549` · `R-550` · `R-551` · `R-552` · `R-553` · `R-554`. ✅ **`R-554`: *"NOTHING FOR YOU IN THIS RULING"* — contract unchanged, no graph node scheduled.** ✅ **`R-549` received: `check-agent-parity.mjs` EXISTS in the PRIMARY tree; lane 2(a) WITHDRAWN and I am NOT building it. `AR-593 §1.2`'s scoped wording (*"DOES NOT EXIST IN THIS TREE"*) stands unconvicted.**
+
+### 🛑★★★★★ §1 — THE OVER-CORRECTION, REPRODUCED HERE BEFORE I TOUCHED IT
+`[MEASURED HERE, my own shipped `admitSource()` at `00289f07`, with `ts.transpileModule` as the erasure witness in the same run]`
+```
+class Impl implements Widget  -> REJECTED [free-captured-reference, POSITION_UNCLASSIFIED]  *** must be ADMITTED
+interface Ext extends Widget  -> REJECTED [free-captured-reference]                          *** must be ADMITTED
+    emit proves BOTH erased: "class Impl { w = 1; }"  /  the whole interface GONE
+CONTROL class extends window.Base -> REJECTED [direct-ambient-read]   emit: window.Base SURVIVES
+```
+🛑★★★★★ **ROOT CAUSE, AND IT IS THE SHAPE OF MY FIX RATHER THAN A MISSED CASE: `ExpressionWithTypeArguments` IS **ONE** `SyntaxKind` COVERING **BOTH** THE LIVE `class extends X` SLOT **AND** THE ERASED `implements X` / `interface extends X` SLOTS.** ★★★★★ **ANY HAND-WRITTEN `SyntaxKind` RULE HAS TO SPLIT THAT BY HAND, AND MINE SPLIT IT IN THE SAFE-LOOKING DIRECTION — CONVICTING ERASED CODE. `A SYNTAX LIST CANNOT DECIDE ERASURE; ONLY THE EMITTER CAN.`**
+
+### ✅★★★★★ §2 — THE CORRECTED PROPERTY: THE EMITTER IS THE ORACLE (`R-551 §3`)
+**No `SyntaxKind` allowlist and no spelling allowlist exists or may exist.** The rule now transpiles the module and compares identifier occurrence counts, source vs emitted:
+```
+emitted 0            -> every occurrence ERASED    -> type space, SILENT
+emitted >= source    -> nothing erased             -> value space, catchers apply
+0 < emitted < source -> the SAME spelling is BOTH  -> UNCLASSIFIED, FAILS CLOSED
+```
+✅ **`type-value-proof.mjs` `15 / 15`, D/E property HOLDS, and the three over-correction rows `O1`/`O2`/`O3` are now IN the proof rather than in a comment — `R-550 §5(3)`'s stop condition is executable, not prose.**
+✅★★★ **THE CORPUS `implements` GAP IS CLOSED IN THE SAME WAVE, AS ORDERED.** It held **ZERO** `implements` rows, so it was **structurally incapable of seeing the defect that tripped a pre-registered stop condition while every gate stayed green.** Two GREEN neighbours added (`implements` · `interface extends`), both ADMITTED. ★★★★★ **`A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE.`**
+
+### ⚠️★★★★★ §3 — A SECOND-ORDER FINDING I OWE, BECAUSE IT HAS NOW HAPPENED THREE TIMES
+**The `position_unclassified` RED PATH HAS BEEN SILENTLY RETIRED BY AN UNRELATED REPAIR THREE TIMES:** labeled statement (killed when I added label handling) → enum member (killed by the emitter oracle) → now re-based on partial erasure. **Each time the guard stopped guarding and the suite still read GREEN until `red-proof.mjs` re-ran it.**
+★★★★★ **MINTED FROM THIS, AND I ASK THE DESK TO RATIFY IT AS CAMPAIGN LAW: `A RED PATH IS NOT A PROPERTY OF THE GUARD. IT IS A PROPERTY OF THE GUARD **AND** THE CURRENT CODE — SO IT MUST BE RE-MEASURED EVERY RUN AND MAY NEVER BE INHERITED FROM A PAST PASS.`** ⚠️ **This is the same species as `R-547 §4.3` (*a guard whose founding defect is not in its mutation set is untested*), one level further out: a mutation set that WAS adequate can be silently invalidated by a fix elsewhere.**
+✅ **Also fixed generically rather than by another list: a NAME SLOT IS NOT A REFERENCE** (`node.parent.name === node`), **with the shorthand-property exception kept because `{ x }` IS a real reference.** The old per-kind list had missed `PropertySignature`, which made the member name `v` look partially-erased and failed two legitimate GREEN controls closed.
+
+### §4 — STATE
+```
+partition over the original 52: 44 · 3 · 0 · 0 · 5 · 0  SUM 52 ✅  (UNCHANGED by this wave)
+expanded corpus 64 rows · attributed 55 · greens 8/8 · twins PASS · surface_invalid 0
+red-proof: control GREEN · 18 / 18 · all five gates exit 0
+```
+⚠️ **OPEN AND MINE, NOT DEFERRED: items `14`–`16` (`R-548 §4`) with their seven named red-proofs `(a)`–`(g)`, then `F-7`.** ⚠️ **`R-548 §4`'s two founding attacks are STILL OPEN at the executable line — I have not started them.** ⚠️ **A fresh grade is due on the object that closes `§4`; the `9be6a52a` verdict is `SCOPED EVIDENCE ONLY` per `R-551 §3` and cannot certify this object. I do not self-certify and I will not dispatch a second grader while one slot is spoken for.**
+
+---
+
 ## AR-595 · 2026-08-02 · 🛑★★★★★ **OPERATOR-CAUGHT PROCESS DEFECT, AND IT IS THE ROOT CAUSE OF `AR-591`'s STALE FAN-IN: THE WORKER SEAT HAD **NO MONITOR ON THE RULING CHANNEL**. I FOUND `R-546` BY ACCIDENT — MY COMMIT LANDED NEXT TO IT.** ✅ **ONE EAR NOW ARMED AND PERSISTENT.**
 
 **TASK ID:** AR-595 (process; no code delta) · **RAISED BY:** the operator, in his own words — *"you dont have no montior armed to reive the rpeorts"*. **He is right.**

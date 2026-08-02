@@ -229,6 +229,15 @@ export const GREEN = [
   // THE TWIN'S GREEN ARM: byte-identical to row 54's body, different container only.
   { id: 'G-src-container-twin-esm', kind: 'source', file: 'twin.mts', body: CONTAINER_TWIN_TS },
   { id: 'G-src-container-twin-mjs', kind: 'source', file: 'twin.mjs', body: CONTAINER_TWIN_JS },
+  // ---- THE `implements` GAP, CLOSED (R-551 §3, ordered in the same wave as F-2-CORRECTED) --
+  // The corpus held ZERO `implements` rows, so it was STRUCTURALLY INCAPABLE of seeing the
+  // over-correction that R-550 §5(3) pre-registered as a stop condition — and my F-2 fix
+  // tripped it while every gate stayed green. A corpus that cannot see a defect cannot
+  // certify its absence.
+  { id: 'G-src-implements-erased', kind: 'source', file: 'green.ts',
+    body: `export const project = (lane: Lane) => { class Impl implements Widget { w = 1; } return { v: new Impl() }; };\n` },
+  { id: 'G-src-interface-extends-erased', kind: 'source', file: 'green.ts',
+    body: `interface Ext extends Widget { z: number }\nexport const project = (lane: Lane) => ({ v: 1 } as unknown as Ext);\n` },
   { id: 'G-run-plain', kind: 'runtime', factory: () => ({ id: 'L1', bindable: true, note: 'x' }) },
   { id: 'G-run-dag', kind: 'runtime', factory: () => { const s = { v: 1 }; return { id: 'L1', p: s, q: s }; } },
   { id: 'G-run-array', kind: 'runtime', factory: () => ({ id: 'L1', a: [1, 2, 3], nested: { b: null } }) },

@@ -167,7 +167,61 @@ const VALUE_PARENT_KINDS = new Set([
   ts.SyntaxKind.CaseClause, ts.SyntaxKind.TemplateExpression, ts.SyntaxKind.ObjectLiteralExpression,
 ]);
 
-const isWithin = (node, ancestor) => !!ancestor && node.getStart() >= ancestor.getStart() && node.getEnd() <= ancestor.getEnd();
+// ---------------------------------------------------------------------------------------
+// F-2-CORRECTED (R-551 §3) — THE EMITTER IS THE ORACLE.
+//
+// My first F-2 fix OVER-CORRECTED and tripped R-550 §5(3) verbatim: it convicted ERASED code.
+// `class Impl implements Widget` and `interface Ext extends Widget` were both REJECTED on
+// `free-captured-reference` while the compiler's own emit proves both identifiers are GONE.
+// The cause was that I hand-classified `ExpressionWithTypeArguments` — but that ONE node kind
+// covers BOTH the live `class extends X` slot AND the erased `implements X` / `interface
+// extends X` slots. Any hand-written SyntaxKind rule has to get that split right by hand, and
+// mine got it wrong in the safe-looking direction.
+//
+// So the discriminator is no longer a syntax list at all. It is the ORDERED PROPERTY itself:
+//
+//     AN IDENTIFIER ERASED BEFORE EXECUTION CANNOT BE RUNTIME-CAPTURE EVIDENCE.
+//
+// We ask the EMITTER, which is the only authority on erasure, and compare occurrence counts:
+//   emitted 0                      -> every occurrence erased  -> TYPE space, silent
+//   emitted >= source              -> nothing erased            -> VALUE space, catchers apply
+//   0 < emitted < source           -> the SAME spelling is both erased and live, and the
+//                                     oracle cannot attribute per occurrence -> UNCLASSIFIED,
+//                                     FAILING CLOSED. Never silently assigned to either.
+// NO SPELLING ALLOWLIST AND NO SyntaxKind ALLOWLIST EXISTS OR MAY EXIST.
+function identifierCounts(text, scriptKind) {
+  const sf = ts.createSourceFile('oracle.ts', text, ts.ScriptTarget.ES2022, true, scriptKind);
+  const counts = new Map();
+  const walk = (n) => {
+    if (ts.isIdentifier(n)) counts.set(ts.idText(n), (counts.get(ts.idText(n)) || 0) + 1);
+    ts.forEachChild(n, walk);
+  };
+  walk(sf);
+  return counts;
+}
+
+export function erasureOracle(sourceText, scriptKind) {
+  let emitted;
+  try {
+    emitted = ts.transpileModule(sourceText, {
+      compilerOptions: { target: PINNED_OPTIONS.target, module: ts.ModuleKind.ESNext },
+    }).outputText;
+  } catch {
+    return { ok: false, verdictFor: () => 'unclassified' };   // oracle unavailable -> fail closed
+  }
+  const src = identifierCounts(sourceText, scriptKind);
+  const out = identifierCounts(emitted, ts.ScriptKind.JS);
+  return {
+    ok: true,
+    emitted,
+    verdictFor(name) {
+      const s = src.get(name) || 0, e = out.get(name) || 0;
+      if (e === 0) return 'type';        // erased entirely
+      if (e >= s) return 'value';        // survives entirely
+      return 'unclassified';             // partially erased: not attributable per occurrence
+    },
+  };
+}
 
 export function classifyPosition(node) {
   // (1) TYPE-ONLY import/export -- erased wholesale by the emitter.
@@ -386,6 +440,7 @@ export function admitSource(fileName, sourceText) {
   const checker = program.getTypeChecker();
   const violations = [];
   const owners = new Owners();
+  const oracle = erasureOracle(sourceText, scriptKind);
   const push = (catcher, path_) => violations.push({ catcher, path: path_ });
 
   // ---- CONTAINER AXIS (item 6): the module system is a property of the FILE ------------
@@ -482,7 +537,18 @@ export function admitSource(fileName, sourceText) {
     }
     if (ts.isIdentifier(node)) {
       const name = ts.idText(node);
-      const isPropName = node.parent && ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
+      // A NAME SLOT IS NOT A REFERENCE — stated as a property instead of another SyntaxKind
+      // list. If an identifier occupies its parent's `.name`, it is being DECLARED (variable,
+      // function, class, interface, type alias, enum member, parameter, binding element) or is
+      // a MEMBER KEY (property assignment, property signature, property access) — in neither
+      // case does it reach anything. MEASURED CONSEQUENCE of getting this wrong: the type
+      // member name `v` in `(lane: { v: unknown })` is erased while the property key `v` in
+      // `({ v: lane.v })` survives, so the erasure oracle saw a PARTIALLY-erased spelling and
+      // failed closed on two legitimate GREEN controls.
+      // EXCEPTION, and it is load-bearing: a SHORTHAND property (`{ x }`) uses its name slot as
+      // a genuine reference. Excluding it would blind the rule to a real capture.
+      const isShorthandRef = node.parent && ts.isShorthandPropertyAssignment(node.parent);
+      const isPropName = !isShorthandRef && node.parent && node.parent.name === node;
       // A DECLARATION's own name binds, it does not capture. Class/interface/alias names were
       // missing here, so they fell into the residual and produced POSITION_UNCLASSIFIED noise
       // that masked F-2: the named-class heritage capture reddened on its CLASS NAME rather
@@ -495,7 +561,9 @@ export function admitSource(fileName, sourceText) {
                                          ts.isBindingElement(node.parent) || ts.isLabeledStatement(node.parent) ||
                                          ts.isBreakOrContinueStatement(node.parent)) && (node.parent.name === node || node.parent.label === node);
       const owner = owners.ownerOf(node);
-      const position = (isPropName || isDeclName) ? 'value' : classifyPosition(node);
+      // THE EMITTER DECIDES. `classifyPosition` is retained only as a SECOND, non-overlapping
+      // opinion for the disagreement report below — it no longer decides anything.
+      const position = (isPropName || isDeclName) ? 'value' : oracle.verdictFor(name);
       if (position === 'unclassified' && !owner) {
         // Never silently assigned to either space (R-546 s5.10's residual requirement).
         push(POSITION_UNCLASSIFIED, `identifier '${name}' in a position this rule cannot classify as type or value (parent ${ts.SyntaxKind[node.parent?.kind]}) -- FAILING CLOSED`);

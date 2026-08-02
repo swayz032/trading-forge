@@ -77,11 +77,14 @@ for (const c of CORPUS_UNDER_TEST) {
     // R-546 §7's stop conditions get red paths too — a class I enforce without a
     // demonstrated red is the same "green check with no path to red" I am here to close.
     if (INJECT === 'surface_invalid_rows' && c.id === '35(b)') body = `export const project = (lane) => ({ v: window.__ledger });\n`;
-    // An ENUM MEMBER name is in neither type nor value space under this rule. The previous
-    // injection used a labeled statement, which STOPPED reaching the residual once label
-    // handling was added — a red path can be silently retired by an unrelated repair, so it
-    // is re-measured rather than assumed.
-    if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `enum E { A = 1 }\nexport const project = (lane: Lane) => ({ v: window.__ledger });\n`;
+    // PARTIAL ERASURE: one spelling used BOTH as an erased type and as a live value, which the
+    // emitter oracle cannot attribute per occurrence -> fails closed.
+    // ⚠️ THIS WITNESS HAS NOW BEEN RETIRED THREE TIMES BY UNRELATED REPAIRS — labeled statement
+    // (killed by label handling), then enum member (killed by the emitter oracle), now this.
+    // Each time the guard silently stopped guarding while the suite still read green.
+    //   A RED PATH IS NOT A PROPERTY OF THE GUARD, IT IS A PROPERTY OF THE GUARD *AND* THE
+    //   CURRENT CODE — so it is re-measured every run and never inherited from a past pass.
+    if (INJECT === 'position_unclassified' && c.id === '35(b)') body = `export const project = (lane: Lane) => { const w: Widget = { w: 1 }; return { v: Widget(lane), q: w }; };\n`;
     if (INJECT === 'fixture_invalid' && c.id === '48') body = `const C = deepFreeze({ a: 1 }, 2);\nexport const project = (lane: Lane) => ({ v: C.a });\n`;
     if (INJECT === 'type_invalid_unclassified' && c.id === '48') body = `const C = Object.freeze({ a: 1 });\nexport const project = (lane: Lane) => ({ v: C.a === 'x' });\n`;
     submittedBody = body;
