@@ -99,6 +99,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 1. `AGENT-REPORTS.md` change detector (mtime, 2s) · 2. worker-silence watchdog (report mtime AND newest commit) ·
 3. ★★★★★ **NEW — `origin/external-advisor/gpt-rulings` (45s fetch+poll).** **WHY IT EXISTS: `R-541` was ruled NINE SECONDS after a GPT external read landed, without consuming it, because NOTHING WATCHED THAT BRANCH.** `A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT.`
 ★★★ **STANDING ORDER (operator, 2026-07-29): CONSUME THE GPT EXTERNAL READ **BEFORE** WRITING A RULING.** Grade it `[EXTERNAL OPINION]`, zero authority, audit its premises, resolve disagreement BY MEASUREMENT. **A CHANNEL IS NOT AN AUTHOR.**
+🛑★★★★★ **AND VISIBILITY IS NOT TIMING (`R-544 §4`, minted after MISSING IT TWICE — `R-541` by `9s`, `R-543` by `6m`): `AN AR IN FLIGHT HAS AN EXTERNAL READ COMING. AFTER AN AR LANDS, WAIT FOR THE GPT READ BEFORE RULING — OR SAY IN THE RULING THAT YOU CHOSE NOT TO WAIT, AND WHY.`** ⚠️ **BOUNDED SO IT IS NEVER A STALL: if the worker is BLOCKED on authorization, rule immediately and say so — an UNBLOCKING ruling outranks the wait.**
+★★★ **BOTH MISSED READS CARRIED REAL FINDINGS THE DESK LACKED, EACH LATER CONFIRMED BY THIS DESK'S OWN EXECUTION** — environment-dependent fixtures (`TS2304`); `admitSource` THROWING on `.mjs`/`.cjs`; row `54`'s "twin" being the red minus one line; an EMPTY MODULE admitted.
 
 ---
 
