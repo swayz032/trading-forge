@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3532` at THIS commit, 2026-08-02 04:10 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3540` at THIS commit, 2026-08-02 04:10 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3532` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3540` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,8 +90,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `03:27`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-547` (commit `ba73a03f`). Newest AR: 🛑 **`AR-592` (`~04:09`) — UNRULED. `AR-591` (`1958ba5d`, `03:54:33`) ALSO UNRULED. `R-548` IS OWED AND COVERS BOTH.** (`AR-590` ruled by `R-546`.)**
+## ★★★★★ SEAT (2026-08-02 `04:35`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-550` (commit `81c46400`). Newest AR: `AR-593` — ✅ RULED. `AR-591`+`AR-592` ruled by `R-548`; `AR-593` ruled by `R-548 §3` + `R-550`. NOTHING UNRULED.**
+✅★★★★★ **THE GRADE IS IN AND BANKED: `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md` (`95677435`, `04:29`), `accuracy-validator` HUNT `v2`, durable committed receipt. RULED BY `R-550`.** 🛑★★★★★ **HEADLINE: THE PARTITION'S ARITHMETIC SURVIVES; THE RULE IT SCORES DOES NOT. Two CONSTRUCTED, EXECUTED modules reach outside themselves and are `ADMITTED`: `export * from './ledger.js'` (`F-1`, ledger side effect FIRED) and `class extends window.Base {}` (`F-2`, host global READ at runtime). `G-1` is now CONFIRMED-OPEN BY CONSTRUCTION.**
+🛑★★★★★ **WORKER'S LIVE CONTRACT = `R-550 §4`, CONSOLIDATED: `F-1` → `F-2` → items `14`–`16` (`R-548 §4`) → `F-3`/`F-5` → `F-4`/`F-6`/`F-7`. Ordered as PROPERTIES, not the grade's one-line patches. NO `SyntaxKind` allowlist; WIDEN the residual. `implements Iface` must STAY admitted — convicting it is over-correction.**
+⚠️★★★★★ **`R-548 §3`'s PRE-REGISTRATION BINDS AND IS ALREADY RESOLVED: the `9be6a52a` verdict is SCOPED EVIDENCE, NOT RATIFICATION — it did NOT re-check per-row ownership and says the corpus exercises neither of this desk's two attack channels. `44/52` IS NOT INDEPENDENTLY CONFIRMED. Do not cite the grade as ratifying it.**
+✅★★★ **THIS DESK RE-EXECUTED BOTH EXTERNAL ATTACKS ITSELF (`R-548 §1`–`§2`), in an ISOLATED worktree at the pin, shared tree never mutated:** attack A (unrelated `TS2339` on `35(a)`) → attributed `44`→`43`, `GATE: PASS`, exit `0`; attack B (unique rename `35(a)`→`35(z)`) → `missing_ids []`, exit `0`, and emitted-freeze silently shrank `39`→`38`. **Root causes read at the executable line: `TYPECHECKER_CAUGHT_CODES` is one GLOBAL list; `ORIGINAL_52_IDS = CORPUS.map(...)`.** **STILL UNCLOSED — items `14`–`16`.**
+🛑★★★★★ **THIS SEAT'S OWN CONVICTED ERROR, DO NOT REPEAT: `R-549` RETRACTS `R-548 §5.2`. I published *"`check-agent-parity.mjs` does not exist — confirmed with a positive control"* and ORDERED A BUILD. IT EXISTS at `trading-forge/trading-forge/scripts/`; so do both `ruling-*-guard.ps1` in the PRIMARY tree's `.claude/hooks/`. I searched the CAMPAIGN WORKTREE and watched PRE-COMMIT output; they live in the PRIMARY tree and fire as `PreToolUse` hooks.** ★★★★★ **`A LIVE POSITIVE CONTROL INSIDE THE WRONG SURFACE IS A MORE CONVINCING FALSE PROOF THAN NO CONTROL AT ALL.` `ADVISOR-STATE.md:125` already said the guard was live; I read it and did not join it. The guard I was libelling is what blocked the write.**
+✅ **`R-548 §5.1` STANDS and was load-bearing: the `v2` grader existed ONLY as an uncommitted edit (committed copy had `model: opus` `0`, `GRADE` `0`, coverage `0`). **COMMITTED BY THIS DESK at `782049f5`.** The grade's mandatory coverage section proves `v2` was in effect — a `v1` grader produces none of it.**
+📋 **DESK QUEUE:** 1. **FRESH grade on the REPLACEMENT object** (brief it with `R-550 §4`'s red-proofs + this desk's two unclosed attacks + the `SyntaxKind`-closure question the sample could not answer) — 🛑 **NOT until the object exists.** 2. **`runtime-admission.mjs` is ENTIRELY UNGRADED — `13` of the `44` attributed rows.** 3. **V4 graph revision vs `R-547 §4`'s six criteria.** 🛑 **ONE grade in flight at a time; none in flight right now.**
+⚠️ **MONITOR RIG: THREE, ALL ALIVE, ADOPTED NOT REPLACED** — `[MEASURED HERE]` PIDs `32492` (AR mtime, 2s) · `30236` (worker-silence) · `34520` (gpt-rulings 45s), all under `claude.exe 13916` = THIS seat. **They survived the `/clear`. DO NOT infer death from an empty list.** ✅ **Monitor 3 paid for itself tonight: it delivered external read `4ac699aa` and I WAITED for it — it carried two executed attacks I did not have.**
 🛑★★★★★ **READ THIS BEFORE YOU DRAFT `R-548` — I ALMOST SHIPPED IT STALE.** I had verified the disposition *"REVISE — the worker has not delivered items `10`–`13`"* and was about to commit it. ✅ **`AR-592` LANDED FIRST, DECLARING `10`–`13` + the `§5.0` re-classification DELIVERED, FAN-IN `13/13`.** ★★★★★ **`R-416` IS LIVE, NOT HISTORICAL: `A RULING IS NOT SEALED WHEN IT IS COMMITTED — THE PREMISES UNDER IT KEEP MOVING.` The monitor and the newest-AR check are what caught it, ~60 seconds from a wrong ruling.**
 ✅ **STILL TRUE AND USEFUL AS THE BASELINE FOR THE DELTA** `[MEASURED HERE, at `1958ba5d`]`: items `10`–`13` were **ABSENT** there — `git ls-tree` shows no type/value proof and no emitted-freeze module, and `position_unclassified` · `surface_invalid` · `fixture_invalid` · `caught_by_typechecker` match **`0` files**. **So `AR-592` is a real delta, not a relabel — verify it AT `AR-592`'s commit, never at `1958ba5d`.**
 ✅★★★ **AND THE CONTRACT-ANCESTRY QUESTION IS SETTLED** `[MEASURED HERE]` **`git merge-base --is-ancestor fa876177 1958ba5d` → exit `0`.** **`R-546` WAS in the delivery commit's ancestry, so items `10`–`13` were inherited contract, not a late annotation.** ★★★ **Mint from the external read, adopted on merit: `A RULING ALREADY IN THE REPORT COMMIT'S ANCESTRY IS PART OF THE CONTRACT EVEN IF THE WORK BEGAN BEFORE IT LANDED. RE-READ THE NEWEST RULING BEFORE THE DELIVERY COMMIT, NOT ONLY BEFORE THE FIRST CODE WRITE.`**
