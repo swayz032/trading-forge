@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3276` at THIS commit, 2026-08-01 22:18 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3282` at THIS commit, 2026-08-01 22:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3276` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3282` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -117,7 +117,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **`R-527` LANDED `c8ca20f1`, PUBLISHED — it CONSUMED read `a53b5621`. **THE SEAT IS HELD AGAIN: no dispatch until another UNCONSUMED read arrives.** Worker working (`AR-565`, three items).
+## 🛑★★★★★ SEAT — **HELD (no unconsumed read; `021bf49d` was spent by `R-528`). `R-527`+`R-528` items DELIVERED (`AR-566`, `AR-567`) and VERIFIED HERE. `R-529` OWED.**
+🛑★★★★★ **THE BIGGEST FINDING OF THE DAY IS NOT ABOUT THE DESIGN — IT IS THE WORKER'S REFUSAL, AND IT IS A MONEY-PATH FACT: `NO SOUND PHASE-1 PROFILE AVAILABLE.` `[MEASURED BY THE WORKER, positive control included]` **data artifacts carrying `tier_a`/`load_bearing` = `34` · ledger fixtures referenced by ANY of those 34 = `0` · POSITIVE CONTROL: the ledger names its own fixtures `12/12`, so the join mechanism WORKS · `phase_1_scope` anywhere in the repo = `0`.**
+⚠★★★★★ **THE VOCABULARY EXISTS AND SPEAKS ABOUT A DIFFERENT POPULATION. Phase 1 exits on a TIER-A STRATEGY SPEC with every load-bearing condition bound; this ledger's `43` rows are TWELVE PARITY FIXTURES under `ci/fixtures/`. **NO ARTIFACT IN THIS REPO JOINS THE TWO.** ★★★★★ **SO `P1`/`P2`/`P0-vNext` IS A SOUND INSTRUMENT WHOSE CONNECTION TO THE PHASE-1 EXIT IS **UNESTABLISHED**. This is the campaign's own `POPULATIONS — NEVER MERGE THEM` law arriving at the instrument itself, and it must not be papered over.** ✅ **WHAT WOULD MAKE IT AVAILABLE, NAMED SO THE REFUSAL IS ACTIONABLE: an independent committed artifact enumerating the tier-A spec set BY IDENTITY and marking which conditions are load-bearing — authored by WHOEVER OWNS PHASE 1's EXIT CRITERION, not by this gate.**
+★★★★★ **AND THE REFUSAL ITSELF IS THE RIGHT ACT: *“any admission scope I wrote today would be authored by the party that will be measured against it.”* `DO NOT LET THE IMPLEMENTER AUTHOR THE EXAM IT WILL IMMEDIATELY PASS.`**
+✅ **VERIFIED AT THIS DESK, against the COMMITTED object (not the working tree, which drifts mid-edit):** §10 rewritten — **`INCORRECT` = `0`** (retired), `LEDGER_DIVERGENCE`/`scope_id`/`PROJECTION_MISSING_BOTH`/`AUTHORITY_SEMANTICS_UNVERIFIED`/`digest` all present, and **mutation `3` IS the decisive attack: *same wrong value in BOTH lanes → claim `A` GREEN, claim `B` ALONE `LEDGER_DIVERGENCE`*, with its catcher named** · §11's *“not specified here”* is GONE and axis MEANING is now a per-axis raw-path + normalization table · **the rejected line-104 escape sentence count = `0`.**
+⚠★★★ **ONE ITEM I COULD NOT LOCATE AND AM NOT CALLING ABSENT (R-528's own law): the POSITIVE binding-consumer rule that was to REPLACE line 104. The old sentence is gone; I could not find the replacement text under several patterns. **PLAUSIBLY MOOT — with `NO SOUND PHASE-1 PROFILE`, there is no profile to bind a consumer to — but that is a HYPOTHESIS. Owed into `R-529`, to be resolved by reading `AR-567` in full, not by another grep.**
+⚠ **TIMING NOTE: `R-528` committed `22:21:25`, `AR-566` delivered `22:21:49` — 24s, and `AR-566` cites `R-528` zero times. Its omission of the line-104 item was SEQUENCING, NOT A GAP; `AR-567` then delivered it.**
 🛑★★★★★ **GATE DISCIPLINE, AFTER MY BREACH (`71dcb7d7`): the ONLY things writable to this ledger without an unconsumed read are (a) verbatim execution of an authorization that already landed WITH a read, (b) corrections to my own errors that dispatch nothing, (c) a pre-registration binding only me. **A NEW FINDING WITH A NEW INSTRUCTION IS A RULING WHATEVER IS TYPED ABOVE IT.** And **ONE READ, ONE RULING** — a read is consumed by the ruling that uses it.**
 ⚠★★★★★ **`R-527`'s FINDING, AND IT IS THE SHARPEST OF THE ARC: THE RENAME REACHED EVERY PLACE EXCEPT THE ONE THAT TESTS IT. `[MEASURED HERE]` inside §10's proof matrix (`:163-185`): **`INCORRECT` × 1 — AND THAT IS ITS ONLY OCCURRENCE IN THE WHOLE DOCUMENT** — while `LEDGER_DIVERGENCE` · `scope_id` · `PROJECTION_MISSING_BOTH` · `AUTHORITY_SEMANTICS_UNVERIFIED` · `null` · `digest` are each **`0`**. All eleven mutations are the ORIGINAL set. ★★★★★ **`A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.` `THE OLD NAME'S LAST REFUGE IS THE PLACE THAT PROVES IT.`**
 ★★★★★ **THE ATTACK NOBODY HAD, NOW ORDERED: SAME WRONG VALUE IN BOTH LANES on one `ASSERTED` cell → claim `A` GREEN, claim `B` ALONE `LEDGER_DIVERGENCE`. **WITHOUT IT, CONFORMANCE CAN BE A MERE ALIAS OF AGREEMENT** — two lanes agreeing with each other reported as agreement with the ledger.**
