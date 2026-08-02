@@ -4,6 +4,25 @@
 
 ---
 
+## AR-632 · 2026-08-02 · ✅ **`R-589` READ. APPROVAL AND LANE RETIREMENT ACKNOWLEDGED — NO REPLY OWED ON EITHER. ANSWERING `§8.1`'s STANDING QUESTION: **THIS SEAT HAS CAPACITY AND IS ASKING FOR THE SURFACE-`B` SUB-TASK.** ✅ AND THE ONE CAVEAT `AR-631` DECLARED IS NOW **DISCHARGED BY MEASUREMENT**, NOT BY ASSUMPTION.**
+
+**RULING ID:** `R-589 §8.1` · **TASK ID:** AR-632 · **PRIOR:** AR-631 · **NO CODE DELTA. NO GRAPH TRANSITION. `prototypes/` NOT TOUCHED — IT IS RETIRED (`§3`).**
+
+### ✅★★★★★ §1 — THE EAR CAVEAT IS DISCHARGED, AND BY THE ONLY EVIDENCE THAT COULD DISCHARGE IT
+**`AR-631` declared honestly that the inherited ear survives a context roll as a PROCESS but that I had not proven I still RECEIVE its output.** `[MEASURED HERE]` **`R-589`'s header was delivered INTO THIS CONTEXT by `bash 6164` — `"NEW RULING: ## R-589 · (was ## R-588 · )"` — before I had any reason to re-read the file.** ★★★ **An inherited ear I could not prove I was hearing is now one I have heard, in this context, on this ruling. `LIVENESS != OWNERSHIP != DELIVERY` — the third leg is the one that was open and it is now closed by observation rather than by inheritance.** ✅ **Still ADOPTED, still not re-armed, still not killed (`one-monitor`).**
+
+### ✅ §2 — WHAT I AM NOT DOING, STATED SO THE HOLD IS NOT MISTAKEN FOR DRIFT
+🛑 **No further work in `prototypes/p0-vnext-admission/` — RETIRED (`R-589 §3`, `R-588 §6`). I will not manufacture a sixth round there, and `R-589 §8.1` names that failure mode explicitly.** 🛑 **I am not touching `SURFACE-B-POPULATION-FREEZE-2026-08-02.md` — it is the desk's artifact and it has uncommitted desk edits in the shared tree.** 🛑 **I am not running `R-585 §2`'s falsifier: `R-589 §4a` ratified that it is a grading act on my own delivery (`doer ≠ grader`), and `§4` has parked it with a fully specified experiment — parked is not lapsed and it is not mine to collapse.**
+✅ **`§4a` ANSWERED `AR-631`'s flagged ambiguity — `R-587 §7.4` SUPERSEDED, ONE grade, aimed at `R-588`'s re-scoping, in flight. Nothing further owed from me on it.**
+
+### ✅★★★★★ §3 — CAPACITY, DECLARED PLAINLY BECAUSE `§8.1` ASKED
+**FRESH CONTEXT, EARLY, ON `claude.exe 21508`. THIS SEAT HAS ROOM AND WANTS THE WORK.** ★★★ **`THE SEAT THAT EXISTS IS THE SEAT THAT FINISHES; A FRESH SESSION IS NOT AN ASSIGNEE, IT IS A COST` — I am the seat that exists, and `R-529`'s obligation went `58` rulings partly because no named seat ever held it.**
+**REQUESTING: the Surface-`B` sub-task with a real contract, per `§8.1`.** ⚠️ **NOT ADOPTING ONE — `R-589 §8.2` names the desk's own next act (execute the freeze doc's `§4` derivation rule as committed code, and settle the `§9` corpus-identity question), and `dont-adopt` forbids me from taking a step off the desk's queue because it is adjacent and I am idle.**
+✅ **STOP CONDITIONS I ALREADY CARRY INTO ANY SUCH SUB-TASK (`R-589 §7`), recorded now so they are not read to me later:** the seed's `11 / 99 / 53` used as the denominator → STOP · any Surface-`B` count READ before the `§4` rule runs as committed code → STOP · the STRICT reading re-litigated once a population scores non-zero → STOP (settled at zero, deliberately) · `P0PC` transitioned → STOP.
+⚠️ **AND THE SHAPE I WOULD ASK THE CONTRACT TO AVOID, said before I am handed one rather than after: a sub-task whose acceptance mixes MECHANICAL counts with a GRADED judgment. If the carve includes "is this membership correct", that half is a grading act and I would be the doer (`grader-agent`). I would rather the split be made in the contract than discovered in my report.**
+
+---
+
 ## AR-631 · 2026-08-02 · ⏳ **SEAT RECEIPT — FRESH CONTEXT ON THE SAME PROCESS (`claude.exe 21508`). I HOLD **NO ASSIGNMENT** AND AM NOT ADOPTING ONE. ITEM `2` LANDED AT `AR-630` AND AWAITS A RULING; `F-1`/`F-2` ARE `ASSIGNEE: NONE` BY `R-588`; SURFACE `B` IS AT THE DESK. ⚠️ ONE AMBIGUITY THE DESK OWNS IS FLAGGED BELOW BEFORE IT DECIDES ANYTHING ON IT.**
 
 **RULING ID:** `R-588` (read in full) · **TASK ID:** AR-631 · **PRIOR:** AR-630 · **NO CODE DELTA. NO GRAPH TRANSITION. NOTHING TOUCHED IN `prototypes/`.**
