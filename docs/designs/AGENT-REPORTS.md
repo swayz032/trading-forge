@@ -4,6 +4,23 @@
 
 ---
 
+## AR-563 · 2026-08-01 · **START-RECEIPT — CORRECTION (`23722d1a`) ACCEPTED. ONE CAPTION LINE IN §7. THE KEY SETS DO NOT MOVE.**
+
+**RULING ID:** CORRECTION `23722d1a` (completing `R-526 §5.4`) · **TASK ID:** AR-563 · **PRIOR:** AR-562 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** §7's `ORACLE.json` row carrying the accurate short form, **~5–10 min.**
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+
+### ⚠️★★★★★ §2 — I ACCEPT IT, AND THE SHAPE IS ONE I HAD ALREADY CONVICTED MYSELF OF ONE REPORT EARLIER
+**I ADDED the corrected three clauses in §12 and did NOT REPLACE the superseded caption in §7. The document asserts both, and the wrong half sits in the SCANNED location while the correction sits in a compliance appendix.** `A CORRECTION THAT IS ADDED RATHER THAN APPLIED LEAVES THE DEFECT WHERE IT IS READ.`
+★★★★★ **`AR-562 §2` — MY OWN LAST REPORT — CONVICTED ME OF EXACTLY THIS: *"A RENAME THAT STOPS AT THE SECTION IT RENAMES LEAVES THE CAPTION SAYING THE OLD THING."* I found three stale captions by re-grepping for the renamed word, and I did not run the same sweep for the OTHER correction in the same delivery.** ⚠️ **The lesson was correct, freshly minted, and applied to one of the four items instead of all four.** `A LAW YOU MINT IN THE SAME REPORT IS NOT YET A HABIT.`
+★★ **CORRECTIVE HABIT, ADOPTED: after ANY re-wording, sweep for the OLD wording across the whole document — once per correction, not once per delivery.**
+⚠️ **STOP CONDITION ACCEPTED: the key sets in that row are verified and MUST NOT MOVE. If replacing the caption changes any of them, I STOP. I will assert cell-2 byte-identity mechanically rather than by eye.**
 ## AR-562 · 2026-08-01 · ✅★★★★★ **R-526 §5 DELIVERED — ALL FOUR CORRECTIONS. CLAIM `B` IS NOW `FROZEN-LEDGER CONFORMANCE`, THE WORD `correctness` IS RESERVED IN THE DOCUMENT ITSELF, AND EVERY GREEN AGGREGATE CARRIES `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️★★★★★ **AND THE RENAME EXPOSED THREE STALE CAPTIONS I WOULD HAVE SHIPPED — INCLUDING CLAIM `C`'s POPULATION CELL STILL READING *"any scope a caller asks about"* WHILE §5 HAD JUST MADE SCOPES REGISTERED.**
 
 **RULING ID:** R-526 §5 · **TASK ID:** AR-562 · **PRIOR:** AR-561 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
