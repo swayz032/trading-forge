@@ -102,6 +102,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 🛑★★★★★ **AND VISIBILITY IS NOT TIMING (`R-544 §4`, minted after MISSING IT TWICE — `R-541` by `9s`, `R-543` by `6m`): `AN AR IN FLIGHT HAS AN EXTERNAL READ COMING. AFTER AN AR LANDS, WAIT FOR THE GPT READ BEFORE RULING — OR SAY IN THE RULING THAT YOU CHOSE NOT TO WAIT, AND WHY.`** ⚠️ **BOUNDED SO IT IS NEVER A STALL: if the worker is BLOCKED on authorization, rule immediately and say so — an UNBLOCKING ruling outranks the wait.**
 ★★★ **BOTH MISSED READS CARRIED REAL FINDINGS THE DESK LACKED, EACH LATER CONFIRMED BY THIS DESK'S OWN EXECUTION** — environment-dependent fixtures (`TS2304`); `admitSource` THROWING on `.mjs`/`.cjs`; row `54`'s "twin" being the red minus one line; an EMPTY MODULE admitted.
 
+### ⚠️★★★★★ V4 EXECUTION GRAPH — **RECEIVED, NOT ADOPTED** (`R-545`, `24fb2d64`)
+`docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `7111b1db`, from `337cf11d`. **Epoch VERIFIED HONEST** `[MEASURED HERE]` — its claimed join commit `da48d018` **is** the desk's `HEAD`.
+🛑 **BLOCKED ON ONE AUDIT: it lists `P1`/`P2` in `ready_worker_nodes_at_epoch` while both SHIPPED at BAND 7 on 08-01** (`GRADE-P1-P2-RECENSUS-2026-08-01.md`). **Node-state error, OR the nodes mean the open `P1/P2` `F-1` repair and are mis-titled — `[HYPOTHESIS, UNDISCRIMINATED]`.**
+✅ **NOTHING IS BLOCKED BY THIS:** the graph's own `current_money_path_node` is `P0PC`, which is what `R-543 §4` + `R-544 §3` already authorize. **Adoption is DESK work, sequenced BEHIND the live path on purpose (`R-515`: do not do the adjacent governance thing while the path waits).**
+★★★ **THE ADOPTION GATE: join each of `P1`/`P2`/`P3` to the artifact it claims to produce and to that artifact's PRESENT state, then adopt/amend/reject in a named ruling. `A GRAPH CAPTION IS NOT READINESS.`** ⚠️ **`docs/advisor-rulings/` is EXTERNAL territory — nobody here edits it; adoption is recorded in OUR ledger.**
+⚠️ **`advisor-ruling` MUTATED mid-session to add `GRAPH OBJECT` / `GRAPH NODE TRANSITION` / `GRAPH FAN-IN` fields. Carry them; they do not constitute adoption.**
+
+### 📋 THE DESK'S OWN QUEUE (owned here, not parked on anyone)
+1. **GRADE** — `accuracy-validator`, HUNT, durable committed receipt, **on delivery of the corrected coverage number**, briefed to disprove it + hunt `G-1`-species population blindness (`R-543 §5`).
+2. **V4 GRAPH ADOPTION AUDIT** (above).
+
 ---
 
 ## ★★★★★ AUTHORIZED NOW — **`R-541 §6`: PIVOT. THE ESM PIN, THEN AN EXECUTABLE PROTOTYPE. IMPLEMENTATION UNBLOCKED, NARROWLY.** (2026-08-02, `32d8d416`)
