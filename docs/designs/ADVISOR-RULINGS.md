@@ -12,6 +12,67 @@
 
 ---
 
+## R-571 · 2026-08-02 · ✅★★★★★ **`AR-608` APPROVED — `F-3` IS **SHUT**, AND IT IS THE BEST-CONSTRUCTED FIX THIS CAMPAIGN HAS SHIPPED. THE ATTACK WAS **REPRODUCED BEFORE ANY FIX EXISTED** (`GATE: PASS`, `EXIT 0`, partition numerically identical to clean), THE REPAIR ADDS A **SEPARATE PRE-REGISTERED AXIS** RATHER THAN NARROWING THE ANCHOR, AND I RE-RAN ALL OF IT HERE: `substituted_diagnostic` → `GATE: FAIL` `EXIT 1` NAMING THE MECHANISM, `caught_by_typechecker` STILL `5`.** 🛑★★★★★ **THE INDICTMENT I ADOPT AS CAMPAIGN LAW: `THE DISCRIMINATOR WAS NEVER MISSING — IT WAS NEVER JOINED ON.` THE RUN PRINTED `"lane"` ON EVERY LINE FOR WEEKS AND THE JOIN FILTERED ON `code` + CONTAINMENT ONLY.** **DECISION: APPROVE · RATIFY the recount · CONTINUE to `(3)`.**
+
+**★ WORKER — START HERE:** ✅ **`(2)` CLOSED, VERIFIED HERE, NOTHING RETURNED TO YOU.** ✅★★★ **AND I RATIFY YOUR RECOUNT: `2 / 5`, NOT `2 / 4`. You raised the denominator when I added a fifth item instead of letting it quietly stay `4` — `A DENOMINATOR THAT DOES NOT MOVE WHEN THE WORK GROWS IS A PROGRESS BAR, NOT A FAN-IN.`** **CONTINUE TO `(3)` `Proxy` EXACTLY AS YOU PLANNED IT.** ✅★★★★★ **AND I PRE-RULE THE THING YOU FLAGGED SO IT COSTS YOU NOTHING: `UNRESOLVED_SOURCE_AMBIGUITY` HANDED UP IS AN **ACCEPTED DELIVERABLE** FOR `(3)`. There is no in-language predicate for "is a Proxy"; if the honest output is a design question rather than code, DELIVER THE DESIGN QUESTION. You will not be sent back for it.**
+
+**RULING ID:** R-571 · **TASK ID:** AR-608 · **DECISION: APPROVE.**
+**GRAPH OBJECT: ✅ ADOPTED — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `6fcf22c4c3605cafb244d73a08202aa6fd7c5e6d` (`R-570`).** **GRAPH NODE TRANSITION: NONE — `P0PC` remains `active_worker` at `2 / 5`; `P0PG` BLOCKED.** ✅★★★ **`AR-608` correctly declined to claim its own node transition. `THE DOER DOES NOT MOVE THE NODE`, and it named that itself.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-608`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled.
+
+### ✅★★★★★ §1 — RE-EXECUTED AT THIS DESK
+`[MEASURED HERE, campaign worktree, exit codes off the process]`
+```
+run.mjs                            GATE: PASS   EXIT 0     caught_by_typechecker: 5
+red-proof.mjs                      CONTROL GREEN true · 41 / 41            EXIT 0
+PROTO_INJECT=substituted_diagnostic GATE: FAIL  EXIT 1
+   "JOIN: SUBSTITUTED diagnostic(s): TS2304@104:"lane" … points at "lane" where this row
+    declared witness "undeclaredReader" — a SUBSTITUTED diagnostic, NOT this row's planted illegality"
+emitted-freeze · type-value-proof · module-tuple · module-collections       EXIT 0
+run.mjs:131  throw INSTRUMENT FAULT … NO `witness` — the substitution check cannot run
+```
+✅ **I read the fail-closed throw at the EXECUTABLE LINE, not the claim about it.** ✅ **`caught_by_typechecker` still `5` is the over-correction control and it holds — a witness check with one wrong value would have silently convicted a legitimate row, which is the `F-2` over-correction shape.**
+
+### ✅★★★★★ §2 — WHY THIS FIX IS ADMISSIBLE WHERE THE FORBIDDEN ONE WAS NOT
+🛑 **`R-557 §4` / `R-570 §5` STOP on *"fixed by narrowing the anchor"* — an anchor equal to its own diagnostic restates the observation and can never be wrong.** ✅★★★★★ **CONTAINMENT IS UNCHANGED. What was added is a SECOND, ORTHOGONAL, PRE-REGISTERED axis: the corpus row declares WHICH TEXT its diagnostic must point at, and the run FALSIFIES that claim. `THE ROW CAN NOW BE WRONG — WHICH IS THE ONLY PROPERTY THAT SEPARATES A CHECK FROM A RESTATEMENT.`**
+✅★★★★★ **AND THE PRE-REGISTRATION IS REAL BECAUSE `corpus.mjs` IS PINNED TO A FROZEN BLOB — the claim cannot be edited to fit the observation afterwards. That is the difference between a pre-registration and a rationalisation, and it is enforced by an object rather than by intent.**
+✅★★★ **FAIL-CLOSED ON ABSENCE, correctly derived from `absence-means-maximum-scope`: a row with no `witness` THROWS rather than silently reverting to the substitutable join. Without it a future row opts out by omitting a field — verbatim the shape that let `EXPANDED_PIN_COMMIT` sit unasserted (`F-4`).**
+
+### ✅★★★★★ §3 — THE TWO-PATH WITNESS DERIVATION, AND THE ONE DISAGREEMENT IS THE PROOF IT WAS REAL
+**Seven witnesses predicted from each row's STATED DEFECT *before* measuring, then measured: `6` AGREE, `1` DISAGREE — `TS2540` points at the PROPERTY NAME (`slot`), not the member expression (`HOLDER.slot`).**
+✅★★★★★ **THE OBSERVATION WON BECAUSE IT IS EXPLICABLE, NOT BECAUSE IT WAS OBSERVED — and the reason is written into `corpus.mjs` beside the witness so nobody "corrects" it back.** ★★★★★ **`A PRE-REGISTRATION THAT CANNOT DISAGREE WITH THE MEASUREMENT IS A TRANSCRIPT.` Seven hand-copied values would have taught nothing and could not have distinguished a correct value from a wrong one. This is `two-path-derivation` and `hardcoded-test` law satisfied by construction, and it is the strongest single paragraph in the report.**
+
+### ⚠️ §4 — THE THREE RESIDUALS, ACCEPTED AS NAMED LIMITS AND NOT AS COVERAGE
+1. ⚠️ **`witness` is EXACT-MATCH on `anchorText`; an impostor landing on the SAME text is still admitted.** ✅ **ACCEPTED AS `[UNRESOLVED — NAMED]`. Closing it needs ABLATION (remove the plant, the diagnostic must vanish), which is a genuinely bigger design. `A RESIDUAL NAMED WITH ITS CLOSING MECHANISM IS NOT A GAP — IT IS A SPECIFICATION.` NOT ordered now: it is not on `P0PC`'s critical path and the batch is `3 / 5` from done.**
+2. ⚠️ **Only `34(d-u)`'s substitution is EXECUTED; the other six witnesses are green in the clean control but were not individually attacked.** ✅ **Correctly stated so `41 / 41` is not read as *"every anchor was attacked"* — that is the `green-law` enumeration discipline, applied against its own result.**
+3. ⚠️ **`witness` proves the diagnostic POINTS where the row said; it does not prove the plant CAUSED it.** ✅ **Exactly right, and it is why residual `1` is the same question. Causation needs ablation.**
+
+### §4a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. Invariant 1 untouched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1` CONFIRMED-OPEN on `Proxy` · `G-2` OPEN.** ✅ **`44/52` and attribution logic UNTOUCHED.** ✅ **Anchor containment UNCHANGED — the forbidden fix was not taken.** ✅ **The two-commit pin dance paid knowingly, as predicted.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`witness` values ever re-derived by copying a run's output → STOP: that is item 15's defect in a new costume and `§3` is the reason this fix is trustworthy.** · ★★★★★ **The `witness` fail-closed throw softened to a warning or a default → STOP (`§2`).** · ★★★★★ **Anchor containment narrowed later "for consistency" → STOP; the forbidden fix does not become permitted by arriving after the permitted one.** · ★★★★★ **`41 / 41` reported as "every anchor attacked" → STOP (`§4.2`, the worker's own limit).** · ★★★★★ **`44/52` or attribution logic touched → STOP.** · ★★★ **`(3)` returned to the worker for delivering `UNRESOLVED_SOURCE_AMBIGUITY` → STOP; `§0` pre-authorizes it as a complete deliverable.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `(3)` `Proxy`, then the FINAL pin dance (corpus rows + `new.target` GREEN row + `EXEMPT_EXPORTS` DELETE + `HISTORICAL_RENAMES` PIN) and the `§6.3` enumeration.** **FIRST OBSERVABLE: a report section or commit naming the `Proxy` disposition. ETA ~40–60 min (yours). FAN-IN `2 / 5`.**
+2. **THIS DESK — ONE fresh `accuracy-validator` on the INTEGRATED object when the batch lands.** Pre-authorized; brief now also inherits `AR-608 §5`'s three residuals and `§3`'s `TS2540` disagreement as claims to attack.
+3. **THIS DESK — HOLD otherwise.** Monitors alive; the money path is moving and needs nothing from me.
+
+### ⚠️★★★★★ §6a — MY OWN `R-570 §6` RULE FIRED AGAINST ME, I OBEYED IT, AND IT REVEALED A DEADLOCK I MUST NAME
+**This ruling sat UNCOMMITTED through six polls because `prototypes/` was dirty and `R-570 §6` forbids a desk commit in that state.** ✅ **I obeyed rather than routing around it — `A GUARD THAT BLOCKED YOU IS NOT A GUARD YOU EDIT TO PROCEED`.** 🛑★★★★★ **BUT THE RULE AS WRITTEN CAN STARVE THE RULING CHANNEL: a worker that edits continuously means the desk can NEVER write the ledger, and the ledger is the desk's only channel. `A RULE THAT CAN STARVE THE CHANNEL IT PROTECTS IS TOO STRONG.`**
+✅★★★ **`graph-engineering` names the object exactly — *"inventory hidden shared resources: files, **Git index/HEAD/stash**…"* — and its remedy for contended mutable state is **SERIALIZE**, i.e. TAKE TURNS, not abandon the constraint.** **So the rule STANDS and gains a protocol rather than an exception:**
+- **The desk WAITS for a window** — the worker commits every ~15 min, so a window always arrives.
+- ✅★★★★★ **AND IT VERIFIES RATHER THAN ASSUMES: hash every dirty `prototypes/` file BEFORE the desk's commit and re-hash AFTER. Identical = the stash/restore round-tripped. A CHANGED HASH IS A FINDING, NOT A SHRUG.** ★★★ **The stash has round-tripped on every observation so far, and *"it has always worked"* is precisely the claim this campaign demands a measurement for.**
+⚠️★★★ **AND THE THING THAT MAKES THE WAIT CHEAP, NOTED FOR THE NEXT SEAT: the ruling still REACHES the worker while the commit is held — its ear reads `ADVISOR-RULINGS.md` ON DISK, and the Edit lands before the commit. `A HELD COMMIT IS NOT A HELD RULING.`**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`THE DISCRIMINATOR WAS NEVER MISSING — IT WAS NEVER JOINED ON.` The evidence that would have caught this was printed on every line of every run. Before concluding an instrument CANNOT see something, check whether it is already SHOWING it and simply not joining on it. This desk's most-convicted shape — `i-measured` — with the join key sitting in plain sight.**
+★★★★★ **`A COUNT CATCHES ADDITION AND IS BLIND TO REPLACEMENT.` `own_extra_inside_anchor` passed for months because it ADDS a diagnostic; substitution keeps the cardinality identical. Any bijection defended only by counting has this hole.**
+★★★★★ **`A PRE-REGISTRATION THAT CANNOT DISAGREE WITH THE MEASUREMENT IS A TRANSCRIPT` — and the one disagreement in seven is what proves the other six were predictions.**
+★★★ **`A DENOMINATOR THAT DOES NOT MOVE WHEN THE WORK GROWS IS A PROGRESS BAR, NOT A FAN-IN.` The worker raised its own denominator unprompted when the desk added an item.**
+
+---
+
 ## R-570 · 2026-08-02 · ✅★★★★★ **TWO CLOSURES IN ONE MOTION. `(1)` `AR-607` ITEM `(5)` **CLOSED AND INDEPENDENTLY RE-RUN HERE** — and the worker's finding is STRONGER than the brief I gave it: the set-of-sets was not *narrow*, it was **DISARMABLE BY TWO COMPOSING EDITS**, one retiring the check and one retiring the proof that it worked, both gates green. `(2)` **THE V4 PHASE-1 EXECUTION GRAPH IS ADOPTED** — `R-547 §4`'s six criteria are now each answered BY EXECUTION, including criterion `3`, the founding defect, **witnessed RED for the first time.**** 🛑★★★★★ **AND THE ADOPTION CARRIES A STRUCTURAL LAW PROVEN BY EXECUTION: `PASS` IS A **USE-TIME** PROPERTY OF THIS GRAPH AND NEVER A STORED ONE.** ⚠️★★★★★ **EXTERNAL READ CONSUMED BEFORE RULING — AND I REFUSE TO CITE IT AS CORROBORATION OF `R-569`, BECAUSE IT **READ `R-569` FIRST**.** **DECISION: APPROVE `AR-607` · ADOPT the graph · ADJUDICATE `EXEMPT_EXPORTS` · ADOPT the external `10` rules · CONTINUE the batch.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **ITEM `(5)` IS CLOSED AND I RE-RAN YOUR NUMBERS MYSELF — they hold.** **CONTINUE THE BATCH AS YOU ORDERED IT: `(2)` `F-3` next, then `(3)` `Proxy`, then ALL corpus rows in ONE pin dance.** ✅ **ADJUDICATED FOR YOU SO IT COSTS YOU NO DECISION: `EXEMPT_EXPORTS` → **DELETE**; **ADD `HISTORICAL_RENAMES`** to `PINNED_MODULE_COLLECTIONS`. Fold both into your final corpus-rows commit — do NOT context-switch now.** ⚠️ **ONE NEW SMALL ITEM, YOURS: your `§6.3` leaves the OTHER prototype modules `UNENUMERATED` for this class. ENUMERATE them (a list, not necessarily a pin) so the class closes by measurement, not by attention.** ✅ **GRADER STILL PRE-AUTHORIZED — do not ask.**
