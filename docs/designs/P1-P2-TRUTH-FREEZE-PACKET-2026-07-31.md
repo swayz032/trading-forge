@@ -160,76 +160,98 @@ byte-identical across regeneration: YES
 LEDGER INTEGRITY [clean control]: PASS (301 cells, 0 checks failed)
   - MISSING CELL IDS (1): ['00-control-shipped.spec.json::bias::reason_excludes']
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 85aece6e929f, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
   - DIGEST FIELD FORGED: digests.cell_id_set_sha256
-LEDGER INTEGRITY [MUTANT: 1 cell deleted (+repaired)]: FAIL (300 cells, 3 checks failed)
+LEDGER INTEGRITY [MUTANT: 1 cell deleted (+repaired)]: FAIL (300 cells, 4 checks failed)
   - MISSING CELL IDS (7): ['00-control-shipped.spec.json::bias::approximation', '00-control-shipped.spec.json::bias::bindable']
   - ROWS ABSENT FROM LEDGER (1): ['00-control-shipped.spec.json::bias']
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 8480252234d5, expected e2d0cd77304d)
-  - DIGEST FIELD FORGED: digests.row_universe_sha256
-LEDGER INTEGRITY [MUTANT: whole ROW + 7 cells (+repaired)]: FAIL (294 cells, 5 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: whole ROW + 7 cells (+repaired)]: FAIL (294 cells, 6 checks failed)
   - MISSING CELL IDS (43): ['00-control-shipped.spec.json::bias::bindable', '00-control-shipped.spec.json::confirmation::bindable']
   - AXES ABSENT FROM LEDGER: ['bindable']
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 226945854d8d, expected e2d0cd77304d)
-  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
-LEDGER INTEGRITY [MUTANT: whole AXIS + cells (+repaired)]: FAIL (258 cells, 4 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: whole AXIS + cells (+repaired)]: FAIL (258 cells, 5 checks failed)
   - UNKNOWN CELL IDS (1): ['99-ghost.spec.json::ghost::bindable']
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 6832aa2a2d95, expected e2d0cd77304d)
-  - DIGEST FIELD FORGED: digests.row_universe_sha256
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
   - DIGEST FIELD FORGED: digests.cell_id_set_sha256
-LEDGER INTEGRITY [MUTANT: unknown ROW added (+repaired)]: FAIL (302 cells, 4 checks failed)
+LEDGER INTEGRITY [MUTANT: unknown ROW added (+repaired)]: FAIL (302 cells, 5 checks failed)
   - DUPLICATE CELL IDS (1): ['00-control-shipped.spec.json::bias::approximation']
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published e188b04b9c31, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
   - DIGEST FIELD FORGED: digests.cell_id_set_sha256
-LEDGER INTEGRITY [MUTANT: cell duplicated (+repaired)]: FAIL (302 cells, 3 checks failed)
+LEDGER INTEGRITY [MUTANT: cell duplicated (+repaired)]: FAIL (302 cells, 4 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::bias::approximation.classification: 'ASSERTED' != expected 'UNADJUDICATED'
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c3a574858314, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: UNADJUDICATED->ASSERTED]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: UNADJUDICATED->ASSERTED]: FAIL (301 cells, 3 checks failed)
   - CELL CONTENT FORGED 40-overrefusal-boundary.spec.json::bias_overnight::approximation.classification: 'ASSERTED' != expected 'NOT-APPLICABLE'
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 6d927a8f2bad, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: NOT-APPLICABLE->ASSERTED]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: NOT-APPLICABLE->ASSERTED]: FAIL (301 cells, 3 checks failed)
   - CELL CONTENT FORGED 10-lunch-orphan.spec.json::enter::reason_excludes.basis: 'fixture-declared-id' != expected 'UNDECLARED'
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 4f7c724fcfdd, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: forged basis]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: forged basis]: FAIL (301 cells, 3 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::london::approximation.value: None != expected False
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 160a3e33cc39, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: nulled asserted value]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: nulled asserted value]: FAIL (301 cells, 3 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::bias::approximation.declared_reason: None != expected '13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) � authority section 6 leaves non-session families and invalidations unadjudicated.'
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published d082f45e9116, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: removed declaration reason]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: removed declaration reason]: FAIL (301 cells, 3 checks failed)
   - CELL CONTENT FORGED 40-overrefusal-boundary.spec.json::bias_overnight::primitive_null.basis: 'row-declared-exact' != expected "row-declared-alias (declared as 'primitive')"
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 34c8d644c4c8, expected e2d0cd77304d)
-LEDGER INTEGRITY [MUTANT: erased alias disclosure]: FAIL (301 cells, 2 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [MUTANT: erased alias disclosure]: FAIL (301 cells, 3 checks failed)
 LEDGER INTEGRITY [NOOP: clone]: PASS (301 cells, 0 checks failed)
 LEDGER INTEGRITY [NOOP: clone + reseal]: PASS (301 cells, 0 checks failed)
 LEDGER INTEGRITY [NOOP: cells reversed (order is not content)]: PASS (301 cells, 0 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published e3ddd2890b33, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: cell: unknown keys added]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: unknown keys added]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published d48d000ddb4b, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: cell: value:null added to UNADJUDICATED]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: value:null added to UNADJUDICATED]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c4e3d156b77e, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: cell: axis field forged]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: axis field forged]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 03dc797fd309, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: cell: fixture field forged]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: fixture field forged]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 4aa3d8ec898c, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: cell: condition_id forged]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: condition_id forged]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 2f2781980312, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: UNDECLARED 43 -> 0]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: UNDECLARED 43 -> 0]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published b8211a49ce1f, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: counts_by_classification -> {ASSERTED:301}]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: counts_by_classification -> {ASSERTED:301}]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published a695685077c8, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: rows_declared_absent 13 -> 0]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: rows_declared_absent 13 -> 0]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c019c87ce14d, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: row_count 43 -> 30]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: row_count 43 -> 30]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published cb7c960f4626, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: cell counts 301 -> 210]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: cell counts 301 -> 210]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c912736d2b7d, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: authority_sha256_measured forged, match left True]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: authority_sha256_measured forged, match left True]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published aa9bc57b7985, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: present_expectation_count forged]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: present_expectation_count forged]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 0749da2070b8, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: census: alias_joined_cells emptied (P-F2 erased)]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: census: alias_joined_cells emptied (P-F2 erased)]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 9a055540c7cf, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: census: unknown_row_keys fabricated]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: census: unknown_row_keys fabricated]: FAIL (301 cells, 2 checks failed)
   - DIGEST FIELD FORGED: digests.row_universe_sha256
 LEDGER INTEGRITY [ESCAPE-MUTANT: digests: row_universe_sha256 -> zeroes]: FAIL (301 cells, 1 checks failed)
   - DIGEST FIELD FORGED: digests.cell_id_set_sha256
@@ -237,13 +259,22 @@ LEDGER INTEGRITY [ESCAPE-MUTANT: digests: cell_id_set_sha256 -> zeroes]: FAIL (3
   - DIGEST FIELD FORGED: digests.digest_definition
 LEDGER INTEGRITY [ESCAPE-MUTANT: digests: digest_definition prose rewritten]: FAIL (301 cells, 1 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 702fd90a14a4, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame DELETED]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame DELETED]: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published a36230b66653, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame -> 'COMPLETE OVER EVERY EXPECTATION.']: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame -> 'COMPLETE OVER EVERY EXPECTATION.']: FAIL (301 cells, 2 checks failed)
   - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published ca1a98d6ee1c, expected e2d0cd77304d)
-LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _classification_enum widened with DESK-VERIFIED]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.canonical_document_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _classification_enum widened with DESK-VERIFIED]: FAIL (301 cells, 2 checks failed)
+  - UNEXPECTED KEY(S) IN digests: ['human_facing_certification']
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: UNKNOWN KEY planted (fabricated desk certification)]: FAIL (301 cells, 1 checks failed)
+  - MISSING KEY(S) FROM digests: ['digest_definition']
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: known key DELETED]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.row_universe_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: known VALUE changed]: FAIL (301 cells, 1 checks failed)
 clean control: PASS | noop controls GREEN: 3/3
-ALL CASES DISCRIMINATE: True  (31/31 mutants caught)
+ALL CASES DISCRIMINATE: True  (34/34 mutants caught)
 verifier exit status: 0
 ```
 ★★★★★ **THE MUTANTS ARE REPAIRED ON PURPOSE. A forger who deletes a row also fixes `row_count`, `counts_by_*` and every digest — and `v1`'s verifier, which read its expected product from the ledger's own `row_ids` and `axes`, would have called that document `PASS`.** ✅ **`v2` rebuilds the row universe from the PINNED SOURCE SPECS and the axis contract from its own constant, so a self-consistent forgery still goes RED.** ★★★ **The clean control is what makes those RED results mean anything.**
@@ -662,10 +693,22 @@ def check(doc, label, dups=()):
         fail.append("CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE "
                     "(published %s, expected %s)"
                     % (str(got)[:12], exp["digests"]["canonical_document_sha256"][:12]))
-    # (3) The canonicalization EXCLUDES the `digests` object, so these fields are
-    #     unreachable by (1) and (2) and need their own comparison.
-    for f in ("row_universe_sha256", "cell_id_set_sha256", "digest_definition"):
-        if doc.get("digests", {}).get(f) != exp["digests"][f]:
+    # (3) The canonicalization EXCLUDES the whole `digests` object, so nothing
+    #     inside it is reachable by (1) or (2). THE OBJECT IS THEREFORE CLOSED,
+    #     BY KEY SET IN BOTH DIRECTIONS — not by a list of the fields known today.
+    #     A previous revision listed three names here and its own comment had
+    #     already diagnosed the hole correctly; planting an unknown key such as
+    #     `human_facing_certification: "ALL VALUES ... DESK-VERIFIED"` passed.
+    #     `A LIST IS A SNAPSHOT OF TODAY'S VOCABULARY; A CLOSED KEY SET IS A PROPERTY.`
+    got_d, exp_d = doc.get("digests", {}), exp["digests"]
+    unexpected = sorted(set(got_d) - set(exp_d))
+    absent = sorted(set(exp_d) - set(got_d))
+    if unexpected:
+        fail.append("UNEXPECTED KEY(S) IN digests: %s" % unexpected)
+    if absent:
+        fail.append("MISSING KEY(S) FROM digests: %s" % absent)
+    for f in sorted(set(exp_d) & set(got_d)):
+        if got_d[f] != exp_d[f]:
             fail.append("DIGEST FIELD FORGED: digests.%s" % f)
 
     bad = sorted({c["classification"] for c in doc.get("cells", [])}
@@ -825,6 +868,14 @@ def main():
         ("frame: _classification_enum widened with DESK-VERIFIED",
          top(["_classification_enum"], ["ASSERTED", "NOT-APPLICABLE", "UNADJUDICATED",
                                         "DESK-VERIFIED"])),
+        # --- R-525: the OPEN-NAMESPACE attack the three-name list did not see ---
+        ("digests: UNKNOWN KEY planted (fabricated desk certification)",
+         top(["digests", "human_facing_certification"],
+             "ALL VALUES IN THIS LEDGER ARE DESK-VERIFIED")),
+        ("digests: known key DELETED",
+         top(["digests", "digest_definition"], None, delete=True)),
+        ("digests: known VALUE changed",
+         top(["digests", "row_universe_sha256"], "f" * 64)),
     ]
     for name, m in escapes:
         results.append(("escape: " + name, check(reseal(m), "ESCAPE-MUTANT: " + name)))

@@ -4,6 +4,50 @@
 
 ---
 
+## AR-554 · 2026-08-01 · ✅★★★★★ **R-525 §3 DELIVERED — THE `digests` NAMESPACE IS **CLOSED BY KEY SET, BOTH DIRECTIONS**, NOT BY A LONGER LIST. `34 / 34` MUTANTS RED · `3 / 3` NOOPS GREEN · CLEAN CONTROL PASS · EXIT `0`.** ✅ **AND THE LEDGER BLOB IS STILL EXACTLY `1551c7e56480caff7d70a580e1f7a2c7ef644203` — MEASURED BY `git hash-object`, NOT BY AN EMPTY DIFF ALONE.**
+
+**RULING ID:** R-525 §3 · **TASK ID:** AR-554 · **PRIOR:** AR-553 (START-RECEIPT — filed this time) · **SEAT:** `claude.exe 26204`.
+
+### ✅ §1 — ALL SEVEN ACCEPTANCE ITEMS
+```
+1 clean control                                    PASS (301 cells, 0 checks failed)      ✅
+2 all prior 31 mutants                             RED                                    ✅
+3 3 NOOP controls (clone · reseal · reversed)      GREEN 3/3                              ✅
+4 unknown digest key planted                       FAIL — "UNEXPECTED KEY(S) IN digests:
+                                                     ['human_facing_certification']"      ✅ NAMED
+5 known digest key deleted                         FAIL — "MISSING KEY(S) FROM digests:
+                                                     ['digest_definition']"               ✅ NAMED
+6 known digest value changed                       FAIL — "DIGEST FIELD FORGED:
+                                                     digests.row_universe_sha256"         ✅
+7 ledger blob                                      git hash-object -> 1551c7e564…4203     ✅ UNCHANGED
+  ALL CASES DISCRIMINATE: True   (34/34 mutants caught)   exit 0
+```
+
+### ★★★★★ §2 — THE PROPERTY, NOT A LONGER LIST
+```
+got_d, exp_d = doc["digests"], exp["digests"]          # exp derived from the PINNED SOURCES
+unexpected = set(got_d) - set(exp_d)   ->  RED, keys NAMED
+absent     = set(exp_d) - set(got_d)   ->  RED, keys NAMED
+for f in set(exp_d) & set(got_d):  value must agree    ->  RED, field NAMED
+```
+✅ **`human_facing_certification` IS NOT IN THE VERIFIER ANYWHERE EXCEPT AS AN ATTACK FIXTURE.** R-525 §3 forbade adding it to a field list by name, and adding it would have closed one fixture while preserving the class. **The three-name loop is GONE; nothing enumerates the vocabulary any more.**
+✅ **THE SELF-CONSISTENCY CHECK IS RETAINED** — it catches the UN-RESEALED adversary, which the expected-value comparison does not see. Three comparisons, three distinct adversaries: un-resealed · resealed · outside-the-hash.
+
+### ⚠️★★★★★ §3 — WHAT I ACCEPT, AND THE ONE THING I WANT ON THE RECORD ABOUT IT
+**The finding is right and the shape is humbling: `P0`'s original `F-2` was an oracle row accepting unknown keys; the fix was closed-key on rows; and I repaired the manifest gap with an OPEN-KEY LIST one namespace over — inside the remedy to the remedy.** ★★★★★ **My own verifier comment had ALREADY DIAGNOSED the hole correctly — *"the canonicalization excludes the `digests` object, so these fields need their own comparison"* — and I answered a correct diagnosis with a list. `KNOWING A NAMESPACE IS UNPROTECTED AND THEN PROTECTING THREE OF ITS MEMBERS IS NOT A PARTIAL FIX; IT IS A FIX OF THE WRONG SHAPE.`**
+⚠️★★★ **AND THE NUMBER THAT MISLED ME IS THE ONE I PUBLISHED PROUDLY: `31/31`. `A MUTATION SCORE IS A STATEMENT ABOUT THE FIXTURE SET, NOT ABOUT THE CLAIM.` Thirty-one registered shapes were all RED and the thirty-second was never described. **The question I did not ask — *what can be ADDED that no fixture describes?* — is the only one that finds this class**, and I am carrying it as a standing question rather than a lesson about this one object.**
+
+### §4 — WHAT I DID **NOT** DO
+- **No ledger byte moved — blob pin re-measured directly.** No cell, count, classification, citation, row identity, axis or frame meaning touched.
+- **No new census · no widening · no `P0-vNext` · no `P3` · no Gate B · grade receipts and the tag untouched · no `checkout`/`reset`/index op.**
+- ⚠️ **THE DURABILITY OBLIGATION IS NOT DISCHARGED AND I AM NOT PRETENDING IT IS** (R-525 §4b): the verifier still imports its generator from a session-temporary scratchpad. **It runs today and its full source is embedded in the packet, so the RECIPE survives — but it is a closeout proof, NOT continuous enforcement.** ★★ **`P0-vNext` must carry the exact-schema and cell-derived checks in the durable consumer. Named, not done.**
+- ★★ **I do not grade my own work.**
+
+### §5 — POSITION
+**Closeout REVISED and delivered · packet COMMITTED AND PUBLISHED · ledger UNCHANGED at `1551c7e5`.** `P1`/`P2` **CLOSED (substantive closure never in question)** · `P0-vNext` **DESIGN continues** · implementation · `P3` · Gate B · merge/deploy/release **HELD**.
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-553 · 2026-08-01 · **START-RECEIPT — R-525 §3 ACCEPTED. THE `digests` NAMESPACE IS OPEN AND I ACCEPT THE FINDING: I CLOSED THE FIELDS AND LEFT THE SURFACE.**
 
 **RULING ID:** R-525 §3 · **TASK ID:** AR-553 · **PRIOR:** AR-552 · **SEAT:** `claude.exe 26204`.
