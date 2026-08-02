@@ -4,6 +4,23 @@
 
 ---
 
+## AR-595 · 2026-08-02 · 🛑★★★★★ **OPERATOR-CAUGHT PROCESS DEFECT, AND IT IS THE ROOT CAUSE OF `AR-591`'s STALE FAN-IN: THE WORKER SEAT HAD **NO MONITOR ON THE RULING CHANNEL**. I FOUND `R-546` BY ACCIDENT — MY COMMIT LANDED NEXT TO IT.** ✅ **ONE EAR NOW ARMED AND PERSISTENT.**
+
+**TASK ID:** AR-595 (process; no code delta) · **RAISED BY:** the operator, in his own words — *"you dont have no montior armed to reive the rpeorts"*. **He is right.**
+
+### 🛑★★★★★ §1 — WHAT IT ACTUALLY COST, STATED AS A CHAIN
+**`R-546` landed at `6441b9ed` WHILE I was mid-build.** It added items `10`–`13`, **retired the pre-registration I was building against**, and granted me the row-`54` scope I had deferred. ⚠️ **I did not see it until my own commit landed beside it — pure luck of ordering.** ★★★★★ **CONSEQUENCE: `AR-591` shipped saying `FAN-IN 9 / 9. NOT A HANDOFF.` when the batch was already `13`. A COMPLETION CLAIM THAT WAS TRUE WHEN WRITTEN AND FALSE WHEN READ — and `a partial result that reads as complete` is this campaign's most-convicted shape. I published one.**
+⚠️★★★ **AND I HAD ALREADY BEEN TOLD.** `R-542 §1` diagnosed exactly this species on the DESK side — *"a standing input with no sensor is an input you will eventually rule without"* — and armed a third monitor for the advisor. **Nobody asked whether the WORKER had the same hole. It did.** ★★★★★ **`THE LAW WAS MINTED FOR THE ADVISOR'S CHANNEL AND NEVER SWEPT BACKWARD TO MINE` — `mint a law then sweep it backward`, unswept.**
+
+### ✅ §2 — THE EAR, ARMED
+**ONE rig, ONE channel** (`one monitor rig, never new+old`): persistent, 30s poll on the campaign tree, emitting on **(a)** a new `## R-` ruling, **(b)** the newest ruling EDITED IN PLACE with the count unchanged, **(c)** a new `GRADE-*.md` receipt — the re-grade I owe arrives on that path.
+★★★ **COVERAGE, BECAUSE SILENCE IS NOT SUCCESS: it also alarms after 3 consecutive read failures, so a blind ear announces itself instead of looking like a quiet channel.** ⚠️ **I did NOT arm a second rig and I did not touch any existing monitor — `background monitors survive a session roll and `TaskList` cannot see them at any age`; three healthy ones were killed on that inference before.**
+
+### ⚠️ §3 — WHAT THIS DOES NOT FIX
+⚠️ **An ear is VISIBILITY, not TIMING.** `R-544 §4` minted that distinction against this desk after it ruled `+9s` and `+6m` after external reads landed. **A monitor tells me a ruling exists; it does not stop me shipping a report between its landing and my reading it.** ★★★ **The behavioural half is mine: re-check the ruling head BEFORE writing any completion claim or fan-in, not only when a notification happens to arrive.**
+
+---
+
 ## AR-594 · 2026-08-02 · 🛑★★★★★ **THE GRADE CAME BACK AND IT CONVICTS ME. THE `accuracy-validator` CONSTRUCTED AND **EXECUTED** A MODULE THAT REACHES THE LEDGER AND WAS **ADMITTED** BY MY RULE — `export * from './ledger.js'`, `violations = []`, `importCount = 0`.** ✅★★★★★ **I REPRODUCED BOTH CRITICALS MYSELF BEFORE TOUCHING ANYTHING, REPAIRED THEM, AND GUARDED THEM WITH FIVE NEW CORPUS ROWS. RED WITHOUT THE FIX, GREEN WITH IT, MEASURED IN BOTH DIRECTIONS.** ⚠️★★★ **TWO PRECISION CORRECTIONS BELOW — ONE TO THE GRADER, ONE TO MYSELF.**
 
 **TASK ID:** AR-594 · **PRIOR:** AR-593 (`76cae7b1`) · **RECEIPT GRADED:** `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md` (`95677435`), HUNT mode against `9be6a52a`.
