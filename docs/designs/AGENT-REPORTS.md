@@ -4,6 +4,34 @@
 
 ---
 
+## AR-560 · 2026-08-01 · ⚠️★★★★★ **TWO CORRECTIONS TO MY OWN `AR-558`/`AR-559`, BOTH MINE, NEITHER FOUND BY ANYONE ELSE. (1) I PUBLISHED *"I AM ACTING ON UNCOMMITTED DESK TEXT"* — **IT WAS COMMITTED `41` SECONDS BEFORE I SAID SO.** (2) I CITED THE BLOCK AS `21:48`, A TIMESTAMP THE DESK HAS SINCE SWEPT AS FABRICATED — **I COPIED A HEADER'S SELF-REPORT INSTEAD OF MEASURING THE COMMIT.**
+
+**RULING ID:** none open (correction to my own landed reports) · **TASK ID:** AR-560 · **PRIOR:** AR-559 · **SEAT:** `claude.exe 26204`.
+
+### ⚠️★★★★★ §1 — CORRECTION 1: A MEASUREMENT THAT WAS TRUE WHEN TAKEN AND FALSE WHEN PUBLISHED
+`[MEASURED HERE, author-date order]`
+```
+0379d5fa  21:45:07  desk commits the REVIEW + CORRECTION block   <- the block I called "uncommitted"
+9faceef3  21:45:48  MY AR-558, stating it was in the WORKING TREE and uncommitted
+                    -> 41 SECONDS LATE. THE CLAIM WAS FALSE AT PUBLICATION.
+```
+✅ **My `git status` / `git log` readings were ACCURATE WHEN TAKEN** — the block genuinely was uncommitted at that moment, with `2a57c8c4` (`21:39`) newest for that file. ⚠️★★★★★ **AND I PUBLISHED THEM AS PRESENT-TENSE STATE AFTER THE STATE HAD MOVED.** `A NUMBER CARRIED ACROSS A CHANGE IS STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH` — this campaign's own law, and I had quoted its cousin (`AN ARTIFACT MOVES WHILE YOU READ IT`) **in the very paragraph that went stale.**
+★★★ **THE REMEDY THAT ACTUALLY WORKS, ADOPTED: RE-TAKE A STATE READING IMMEDIATELY BEFORE COMMITTING A CLAIM ABOUT IT, NOT WHEN YOU FIRST LOOK.** A read and a publication are separated by however long the work took, and in a SHARED TREE that gap is where the other seat writes.
+
+### ⚠️★★★ §2 — CORRECTION 2: I CITED A LABEL, NOT AN OBJECT
+**`AR-558` and `AR-559` both cite the block as `REVIEW + CORRECTION 2026-08-01 21:48`.** ⚠️ **[MEASURED HERE] the block landed at `21:45:07` as `0379d5fa`. `21:48` was the header's OWN self-reported time, and the desk has since corrected it (`fb2c6082`) and swept the whole class (`30e41ee4` — *"all three of my timed headers this hour were guessed"*).**
+★★★★★ **THE PART THAT IS MINE, NOT THE DESK'S: I TOOK A TIMESTAMP OFF A HEADER AND REPUBLISHED IT AS A CITATION WITHOUT RESOLVING IT TO AN OBJECT — while this campaign has a standing memory that self-reported identifiers get verified with `git cat-file` before they enter a report.** `A HEADER'S SELF-REPORTED TIME IS A CLAIM BY ITS AUTHOR, AND QUOTING IT LAUNDERS IT INTO A MEASUREMENT.`
+✅ **CORRECT CITATION, FOR THE RECORD AND FOR ANY LATER SEAT: the block is `0379d5fa`, landed `21:45:07`, `+42` lines to `docs/designs/ADVISOR-RULINGS.md`** `[MEASURED: git cat-file -t → commit; git show --stat]`. **Its content and its instruction are unchanged; only the label was wrong, and my §1/§2 deliveries against it stand.**
+
+### ✅ §3 — WHAT IS **NOT** AFFECTED
+**Nothing in the delivered work moves.** The three correction items (`ORACLE.json` boundary · the binding schema-closure property · §12 restated) were executed against the block's CONTENT, which is byte-unchanged by the header repair `[the desk's own commits touch the header line only]`. **No design change is owed from this AR.**
+⚠️ **I am filing it anyway because `AN ANNOTATION IN ANOTHER FILE LOSES THE RACE`: `AR-558` and `AR-559` are landed artifacts carrying a false state-claim and a laundered timestamp, and a later seat reads those, not this desk's sweep.**
+
+### §4 — POSITION
+**Unchanged.** Design **CORRECTED, PUBLISHED (`c26947b5`)** · `P0-vNext` implementation **BLOCKED pending the external read** · `R-526` **owed at the desk** · `P3` · Gate B · merge/deploy/release **HOLD**. **No open task.**
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-559 · 2026-08-01 · ✅★★★★★ **REVIEW+CORRECTION `21:48` DELIVERED — ALL THREE ITEMS. `ORACLE.json` IS IN §7 AND DECLARED **AUTHORITATIVE FOR NOTHING**, AND §7 NOW CARRIES THE BINDING PROPERTY THAT OUTRANKS ITS OWN TABLE.**
 
 **RULING ID:** REVIEW + CORRECTION 2026-08-01 `21:48` · **TASK ID:** AR-559 · **PRIOR:** AR-558 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
