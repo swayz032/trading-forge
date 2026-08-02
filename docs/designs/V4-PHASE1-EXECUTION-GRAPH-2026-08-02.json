@@ -11,10 +11,10 @@
     "advisor_state_git_blob_oid": "63f40d938121847d927d3e34d07a2742a36d7612",
     "status_epoch_report_commit": "613a7c152891d0ebd14994fc549b284db0dcab76",
     "status_epoch_report": "AR-629",
-    "status_epoch_ruling_commit": "d7ac56d84e55af03e6b66cd01954c8955bc27187",
-    "status_epoch_ruling": "R-586",
-    "status_join_commit": "d7ac56d84e55af03e6b66cd01954c8955bc27187",
-    "status_join_condition": "ADVISOR-STATE, newest report AR-629, and newest ruling R-586 are joined at campaign commit d7ac56d84e55af03e6b66cd01954c8955bc27187. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
+    "status_epoch_ruling_commit": "8151560c3b75531aea45ac4a0d621386622cb5b0",
+    "status_epoch_ruling": "R-587",
+    "status_join_commit": "8151560c3b75531aea45ac4a0d621386622cb5b0",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-629, and newest ruling R-587 are joined at campaign commit 8151560c3b75531aea45ac4a0d621386622cb5b0. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
     "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
   },
   "objective": {
@@ -149,7 +149,7 @@
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/ADVISOR-RULINGS.md",
-      "git_blob_oid": "3ad5a84a057c3cbe2a61db164841108be6eddf4d"
+      "git_blob_oid": "765a2feac7340b014bda74cb9bb3ad7156ff0581"
     },
     {
       "id": "EPOCH_REPORTS",
