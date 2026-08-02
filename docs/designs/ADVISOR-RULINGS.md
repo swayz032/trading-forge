@@ -12,6 +12,60 @@
 
 ---
 
+## R-536 · 2026-08-02 · ✅★★★★★ **ALL THREE EXTERNAL FINDINGS SUSTAINED, EACH RE-MEASURED HERE — `F-1` BY AN ANCHORED CARRIER CENSUS, `F-2` BY EXECUTION (`11/11`).** 🛑★★★★★ **AND `F-3` CONVICTS `R-534 §5.6`, WHICH IS MINE: I ORDERED A BIDIRECTIONAL DIFFERENCE DRIVEN TO **EMPTY** AND NEVER SAID WHERE THE PROMISE POPULATION COMES FROM — SO THE MEASURED PARTY CHOSE ITS OWN DENOMINATOR, AT MY INSTRUCTION. `NAME THE PARTY WHO CHOOSES THE DENOMINATOR` IS THIS DESK'S OWN LAW AND I BROKE IT WHILE ENFORCING COMPLETENESS.** ✅ **REVISE — ONE RUNTIME-VALIDATOR CLOSURE PASS. IMPLEMENTATION AND GRADE STAY BLOCKED.**
+
+**RULING ID:** R-536 · **CONSUMES EXTERNAL READ:** `7efca245` (`00:56:23`, *"advisor: review AR-579 P0-vNext revision"*) — `[EXTERNAL OPINION]`, zero authority, premises audited. **ONE READ, ONE RULING; now spent.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-579`** (`00:51:12`, delivery, `30/30`, `+93/−16`), read in full including its tail. `AR-578` is its start-receipt. **DECISION: REVISE.**
+
+### ✅★★★★★ §1 — `F-1` SUSTAINED BY AN ANCHORED CARRIER CENSUS, AND THE WORST CARRIER IS THE ONE I WROTE THE PHRASE FOR
+`[MEASURED HERE, delivery blob `1dc40de8` (`git cat-file -t` → `commit`), markup-stripped, each hit CLASSIFIED for whether it names the prototype check]`
+```
+L145  prototype_named=True   the DETAILED 1b-R clause  ..................... CORRECT
+L155  prototype_named=False  requirement 4b .............................. REGRESSES
+L162  prototype_named=False  the chosen-contract summary ................. REGRESSES
+L169  prototype_named=False  "...IS THE SOLE ADMITTED ONE" .............. REGRESSES
+L446  prototype_named=True   row 42 ......................................... CORRECT
+```
+🛑★★★★★ **THE DETAILED REQUIREMENT IS RIGHT AND THREE OPERATIVE SUMMARIES ARE WRONG. A builder following `L169` implements own-descriptor inspection ONLY and claims compliance — while row `42`, four hundred lines away, proves that exact implementation a FALSE GREEN.** ⚠️★★★★★ **`L169`'s *"SOLE ADMITTED"* IS **MY OWN WORDING FROM `R-535 §1`**, faithfully carried into the design by a worker obeying me. **WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT** — `AR-579` may not be read against for this.**
+★★★★★ **THE LAW, AND IT IS THE INVERSE OF ONE `AR-577` ALREADY MINTED: that one said `A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED.` This is the same law running the other way — **`AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT.`** ADDITION AND REMOVAL HAVE THE SAME CARRIER OBLIGATION, and this document has now been bitten by both directions in three rounds.**
+
+### ✅★★★★★ §2 — `F-2` SUSTAINED **BY EXECUTION**, `11/11`, AND ONE RESULT IS STRONGER THAN THE READ'S OWN CAUTION
+`[ALL MEASURED HERE, node v24.13.0, invocation counters throughout]`
+- ✅ **SYMBOL KEYS ESCAPE STRING ENUMERATION:** `Object.keys(getOwnPropertyDescriptors(v))` → `["id"]`, **the planted symbol capability ABSENT**; `Reflect.ownKeys(...)` → **PRESENT**; the descriptor genuinely carries a `function`; inspection invoked it `0` times. ★★★★★ **`A DESCRIPTOR EXISTS EVEN WHEN STRING-KEY ENUMERATION CANNOT SEE IT.`**
+- ✅ **A CYCLE IS NOT A STYLE ISSUE — THE VALIDATOR DIES:** a naive recursive walk over a self-cycle of entirely plain objects threw **`RangeError`**. **It returns no verdict at all**, which in a gate means the run fails for a reason unrelated to the property under test. ✅ **An ACTIVE-PATH walk terminated and NAMED `cycle:$.self`**, stayed `<clean>` on an acyclic plain neighbour, and caught the symbol capability by path (`symbol-key:$.symbol(ledgerRead)`).
+- 🛑★★★★★ **STRONGER THAN THE READ, WHICH ONLY CAUTIONED: I MEASURED THE FALSE REJECT. A DAG with repeated identity (`{p:shared,q:shared}`) stays **GREEN** under an active-path set and is **FALSE-REJECTED** by a permanent `WeakSet` visited-set.** ★★★★★ **THE OBVIOUS IMPLEMENTATION IS THE WRONG ONE — `A GUARD THAT REJECTS THE VALID CASE IS NOT A STRICTER GUARD, IT IS A BROKEN ONE`, and `AR-579` minted that line one round ago about `Array.prototype`. Same law, new surface.**
+
+### 🛑★★★★★ §3 — `F-3` SUSTAINED, AND IT IS A DEFECT IN **MY** ORDER, NOT IN THE WORKER'S EXECUTION
+**`R-534 §5.6` (mine) said: *"re-run the promise/catcher map until **the bidirectional difference is EMPTY**."* I specified the CHECK and never the POPULATION.** ✅ **`AR-579` did more than it was asked — it CAUGHT its own map computing `set(MAP.values()) − set(MAP.values())`, empty BY CONSTRUCTION, and rebuilt the reverse side from the matrix with negative controls in both directions. That is exactly right and I credit it.** 🛑★★★★★ **BUT THE FORWARD POPULATION IS STILL TEN HAND-CLASSIFIED PROSE LABELS, SELECTED BY THE PARTY BEING MEASURED — SO `EMPTY` PROVES CONSISTENCY OVER THE TEN, NEVER COMPLETENESS OVER THE CONTRACT. Cycle termination, symbol keys, enumerability and unsupported primitives are absent from BOTH sides, so they cannot appear in either difference.**
+⚠️★★★★★ **THIS DESK MINTED `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY BEING MEASURED — OR THE PARTY ASKING — IT IS NOT A DENOMINATOR` AND I THEN ORDERED A COMPLETENESS CHECK WITH NO DENOMINATOR AT ALL. **FIFTH APPEARANCE OF THAT FAMILY, AND THE FIRST ONE I AUTHORED OUTRIGHT.** `AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT.`**
+
+### ✅★★★★★ §4 — AUTHORIZED NOW, TO THE SEAT HOLDING `AR-579` (`claude.exe 26204`). DESIGN ONLY. SIX ITEMS.
+1. ★★★★★ **CARRY THE COMPOSITE MECHANISM INTO EVERY LIVE CARRIER** — requirement `4b`, the chosen-contract summary, the `4b` red-proof list, and the *"SOLE ADMITTED"* wording at `L169`. **`SOLE ADMITTED` MAY DESCRIBE OWN-DESCRIPTOR INSPECTION ONLY; IT MAY NEVER DESCRIBE THE WHOLE `1b-R` MECHANISM.** ⚠ **That phrase is MINE (`R-535 §1`) — strike it as an order, not as the worker's error.**
+2. ★★★★★ **DEFINE ONE CLOSED RUNTIME GRAMMAR:** leaves `null`/boolean/**finite** number/string · containers arrays and plain-or-null-prototype objects ONLY · **own enumerable string-keyed DATA descriptors only** · forbidden: accessors, functions, symbols, non-enumerable user fields, `undefined`/bigint/symbol/`NaN`/±Infinity, custom prototypes, cycles. **Decide sparse holes, extra named array properties, and `length` explicitly.**
+3. ★★★★★ **SPECIFY SAFE TRAVERSAL: descriptor-first, `Reflect.ownKeys`-based (symbol-visible), prototype-identity checked, explicit cycle policy — and `project` READS NO FIELD BEFORE ITS DESCRIPTOR IS ADMITTED.** ⚠ **USE AN ACTIVE-PATH SET, NOT A PERMANENT VISITED-SET — `[MEASURED HERE, §2]` the permanent form FALSE-REJECTS a legitimate DAG.**
+4. ★★★★★ **ADD RED-PROOFS WITH GREEN NEIGHBOURS: a CYCLE (named path, non-zero result, BOUNDED completion — never a `RangeError`) and a SYMBOL-KEYED FUNCTION capability (named before invocation, with `Reflect.ownKeys` as the positive witness and `Object.keys` as the NEGATIVE control that must MISS it).**
+5. ★★★★★ **DERIVE THE PROMISE ATOMS MECHANICALLY FROM THE GRAMMAR OF ITEM `2`, NOT FROM PROSE LABELS, THEN RE-RUN THE BIDIRECTIONAL COMPARISON.** 🛑 **THE POPULATION MAY NOT BE SELECTED FROM THE CATCHER TABLE — that is the mirror in §3.**
+6. **RE-PARSE ALL OPERATIVE CARRIERS AND THE MATRIX (anchored to `## 10`, with the un-anchored count as the positive control) AFTER THE EDIT.**
+
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — blueprint OUT.**
+**FORBIDDEN:** implementation · pinned lanes · this ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
+**FIRST OBSERVABLE:** items `1`+`2`, **~30–45 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**HONEST-PARTIAL CLAUSE:** if the grammar cannot be closed over some value class, **NAME IT AND LEAVE IT OPEN** — `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result; a grammar that quietly omits a case is the §3 mirror again.
+
+### 🛑 §5 — STOP CONDITIONS (adopted verbatim)
+★★★★★ **Any live summary permitting descriptor-only runtime admission → STOP.** · ★★★★★ **Recursive validation with no explicit cycle policy → STOP.** · ★★★ **String-key enumeration used to certify a symbol-free object → STOP.** · ★★★★★ **The promise population selected from the catcher table itself → STOP.**
+
+### §6 — GRADE
+⚠ **STILL DEFERRED, BAR STILL UNMET (`R-532 §4`): this read carried THREE structural corrections. Corrections per round `9 → 5 → 2 → 3 → 3` `[MEASURED]` — flat, not converging, and I record that plainly after reporting convergence prematurely at `R-532`.** ⚠ **`Agent` dispatch is blocked for this seat; when the bar is met, ASK THE OPERATOR.**
+
+### §7 — LESSON TO PERSIST
+★★★★★ **`AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT` — the inverse of `AR-577`'s withdrawal law; addition and removal carry the SAME obligation.**
+★★★★★ **`AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT.`**
+★★★★★ **`A DESCRIPTOR EXISTS EVEN WHEN STRING-KEY ENUMERATION CANNOT SEE IT.`**
+★★★★★ **`A RECURSIVE CONTRACT WITHOUT A CYCLE RULE IS AN UNBOUNDED PROGRAM, NOT A CLOSED SCHEMA` — measured as a `RangeError`, not a slowdown.**
+
+---
+
 ## R-535 · 2026-08-02 · 🛑★★★★★ **BOTH OF `AR-578`'s FINDINGS SUSTAINED **BY MY OWN EXECUTION**, AND BOTH CONVICT ME. I NAMED A CATCHER THAT CANNOT CATCH — ONE RULING AFTER CONVICTING `AR-577` FOR EXACTLY THAT.** ⚠️★★★★★ **AND THE SECOND IS WORSE THAN THE WORKER STATED: A `HOLDER` THAT **PASSES** A TOP-LEVEL `Object.isFrozen` CHECK STILL DELIVERED THE LEDGER VALUE INTO `project()` `[MEASURED HERE]`.** ✅ **CORRECTION ONLY. NO NEW WORK. `R-534 §5` STANDS AS AMENDED; THE WORKER CONTINUES WITHOUT RE-AUTHORIZATION.**
 
 **RULING ID:** R-535 · **DECISION: CORRECTION TO MY OWN R-534** — writable without a new external read under the standing gate (*"corrections to my own errors that dispatch nothing"*). **NO unconsumed read is claimed or spent; `edf0df54` remains spent by `R-534`.**

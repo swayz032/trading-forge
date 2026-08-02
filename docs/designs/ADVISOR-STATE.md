@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3421` at THIS commit, 2026-08-02 00:52 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3433` at THIS commit, 2026-08-02 01:00 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3421` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3433` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,8 +90,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-534 §5` **AS AMENDED BY `R-535`**: SPLIT `1b` INTO TWO ENFORCEMENT LAYERS. SIX ITEMS. DESIGN ONLY.** (2026-08-02 `00:37:31`, `e580d457` — ⚠️ **this header read a FABRICATED `00:45`; corrected from `git log` by `R-535 §4`**)
-⚠️🛑★★★★★ **TWO ITEMS ARE AMENDED — READ `R-535` BEFORE ITEMS `3` AND `5`: (`5`) `Object.keys` IS **STRUCK** as an admitted mechanism — it is invocation-safe and **accessor-BLIND**, so the descriptor walk is the SOLE detection mechanism · (`3`) `Object.freeze` IS **SHALLOW**, so frozen-ness means **DEEP** frozen-ness over the whole reachable graph — `[MEASURED HERE]` a `HOLDER` PASSING a top-level `isFrozen` check still delivered the ledger value into `project()`.**
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-536 §4`: CLOSE THE RUNTIME VALIDATOR. SIX ITEMS. DESIGN ONLY.** (2026-08-02 `00:59`, `[MEASURED, date]`)
+
+**TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-579` (`claude.exe 26204`).
+**GOAL — `R-536 §4`, six items:** ★★★★★ **(1) carry the COMPOSITE mechanism (own-descriptors **+** recursive prototype-identity) into EVERY live carrier — `4b`, the chosen-contract summary, the `4b` red-proof list, and the *"SOLE ADMITTED"* wording at `L169`; (2) define ONE CLOSED runtime grammar; (3) safe traversal — descriptor-first, `Reflect.ownKeys`-based, **ACTIVE-PATH not permanent-visited**; (4) red-proofs for a CYCLE and a SYMBOL-KEYED function; (5) derive the promise atoms FROM THE GRAMMAR, never from prose labels.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-536 §4` — `grep -n "^## R-536" ADVISOR-RULINGS.md`.**
+⚠️🛑★★★★★ **ITEM `1` STRIKES **MY OWN** WORDING: *"SOLE ADMITTED"* came from `R-535 §1` and you carried it faithfully. **WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT** — this is not held against `AR-579`.**
+✅★★★★★ **THE DESK'S EXECUTED EVIDENCE IS YOURS TO CITE, `[ALL MEASURED HERE, node v24.13.0, 11/11]`:** `Object.keys(getOwnPropertyDescriptors(v))` MISSES a planted symbol capability that `Reflect.ownKeys` SEES · a naive recursive walk over a plain-object self-cycle throws **`RangeError`** — it returns no verdict at all · an active-path walk terminates naming `cycle:$.self` · ★★★★★ **a permanent `WeakSet` visited-set FALSE-REJECTS a legitimate DAG (`{p:shared,q:shared}`) that the active-path form passes.**
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — blueprint OUT.**
+**FORBIDDEN:** implementation · pinned lanes · the ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
+**FIRST OBSERVABLE:** items `1`+`2`, **~30–45 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**STOP CONDITIONS (`R-536 §5`):** ★★★★★ **any live summary permitting descriptor-only runtime admission → STOP** · ★★★★★ **recursive validation with no explicit cycle policy → STOP** · ★★★ **string-key enumeration used to certify a symbol-free object → STOP** · ★★★★★ **the promise population selected from the catcher table itself → STOP.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-577` (`claude.exe 26204`).
 **GOAL:** per **`R-534 §5`, six items** — ★★★★★ **(1) SPLIT requirement `1b` into a BUILD-TIME SOURCE contract and a RUNTIME INPUT-ADMISSION contract, each with a NAMED mechanism, because a build-time AST result may never certify a runtime property; (2) name a REAL PARSER (TS compiler API), NOT regex; (4) add the five missing red-proofs each with a GREEN neighbour; (5) the getter red-proof carries an INVOCATION COUNTER requiring `0`.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-534 §5` — `grep -n "^## R-534" ADVISOR-RULINGS.md`.**
@@ -200,9 +208,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## 🛑★★★★★ SEAT — **LEDGER AT `R-535`. NEWEST AR: `AR-579` (`00:51:12`, DELIVERY, `30/30`) — **UNRULED.** `R-536` IS **OWED AND HELD**: `[MEASURED HERE, 00:52]` the external ref still reads `edf0df54`, which `R-534` SPENT — **NO unconsumed read exists, and `THE PASTE IS THE GATE` is the operator's own standing order in his own voice.** WORKER IS NOT BLOCKED BY THIS — it has DELIVERED and its `§9` holds everything correctly.**
+## ✅★★★★★ SEAT — **LEDGER AT `R-536`, CONSUMING EXTERNAL READ `7efca245` (now SPENT). NEWEST AR: `AR-579` (`00:51:12`, DELIVERY, `30/30`) — **RULED BY `R-536`.** WORKER RE-AUTHORIZED (`R-536 §4`, six items, design only). SEAT = `claude.exe 15520` (fresh via `/clear`, first monitor delivery `00:27:42`); all three monitors ADOPTED, none armed, none killed — both channels have DELIVERED into this conversation.**
+🛑★★★★★ **`R-536`: ALL THREE EXTERNAL FINDINGS SUSTAINED, AND `F-3` IS **MINE**. `R-534 §5.6` ordered a bidirectional difference driven to EMPTY and never named the POPULATION — so the party being measured chose its own denominator, at my instruction. **`AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT`**, and `NAME THE PARTY WHO CHOOSES THE DENOMINATOR` is this desk's own law. Fifth appearance of that family; the first I authored outright.**
+🛑★★★★★ **`F-1` ALSO TRACES TO ME: the *"SOLE ADMITTED"* wording at `L169` is `R-535 §1`'s, carried faithfully by the worker — `[MEASURED HERE, anchored carrier census on blob `1dc40de8`]` **three live operative summaries (`L155` `4b`, `L162` chosen-contract, `L169` "sole admitted") name the descriptor walk WITHOUT the prototype check, while the DETAILED clause (`L145`) and row `42` (`L446`) have it right.** A builder following the summary ships the exact false green row `42` disproves. ★★★★★ **NEW LAW, THE INVERSE OF `AR-577`'s: `AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT.`**
+✅★★★★★ **`F-2` SUSTAINED BY EXECUTION `11/11` — and one result is STRONGER than the read, which only cautioned: **a permanent `WeakSet` visited-set FALSE-REJECTS a legitimate DAG** that the active-path form passes `[MEASURED HERE]`. Also: symbol capability invisible to `Object.keys` over descriptors but present in `Reflect.ownKeys` · a naive recursive walk on a plain-object self-cycle throws `RangeError` and returns NO verdict.**
+⚠ **GRADE STILL DEFERRED, BAR UNMET — three structural corrections this round. Per-round `9 → 5 → 2 → 3 → 3` `[MEASURED]`: **flat, not converging**, recorded against my premature convergence claim at `R-532`.**
 
-### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — held for `R-536`] `AR-579 §1` IS CORRECT AND IT CONVICTS **MY** `R-535`, NOT ONLY ITS OWN CLAUSE
+### ✅★★★★★ [FACT, MEASURED HERE — **NOW RULED BY `R-536 §1`**] `AR-579 §1` IS CORRECT AND IT CONVICTS **MY** `R-535`, NOT ONLY ITS OWN CLAUSE
 `[MEASURED HERE, node v24.13.0, 16/16, invocation counters throughout]`
 🛑★★★★★ **`R-535 §1` RATIFIED THE DESCRIPTOR WALK AS *"THE **SOLE** ADMITTED DETECTION MECHANISM."* **THAT IS ONE LEVEL SHORT AND I PROVED IT AGAINST MYSELF:** `Object.getOwnPropertyDescriptors` IS **OWN-PROPERTIES ONLY** — on a class instance it returns `[]` while `inst.read()` yields `EXPECTED_FROM_LEDGER`, and on `Object.create({get bindings(){…}})` it returns `[]` while `child.bindings` yields `LEDGER_VIA_PROTO_GETTER`. **`1b-R` PROMISES TO REJECT PROTOTYPE-BEARING INSTANCES; THE CATCHER I NAMED CANNOT SEE THEM.**
 ✅ **THE WORKER'S FIX IS SOUND AND I VERIFIED IT DISCRIMINATES, NOT MERELY TRIGGERS:** descriptor walk **+** recursive prototype-identity → plain literal PASS · `Object.create(null)` PASS · **legitimate array data PASS** · class instance FAIL · proto-getter child FAIL · own-accessor still caught · **total getter invocations across every check `0`.**
