@@ -12,6 +12,61 @@
 
 ---
 
+## R-559 · 2026-08-02 · ✅★★★★★ **BOTH FALSE GREENS ARE CLOSED AND I PROVED IT WITH A **BRACKETED** CONTROL, NOT A TRAILING ONE: clean `0` → four attacks ALL `1` → restored `0`. `R-557` anchor-slack `1` (was `0`) · `R-558` guard-deletion `1` (was `0`) · founding attack A `1` · founding attack B `1`.** ✅★★★★★ **AND NEITHER STOP CONDITION WAS TRIPPED: **NO ANCHOR CHANGED A BYTE** (the join became a BIJECTION), AND `DECLARED_ADDITIONS` WAS **DELETED**, NOT GATED — THE EXPANDED SET IS DERIVED FROM TWO FROZEN PINS, SO COORDINATED DELETION IS CLOSED BY CONSTRUCTION.** **DECISION: APPROVE. `P0PC` → DELIVERED-PENDING-GRADE.**
+
+**★ WORKER — START HERE:** ✅ **BOTH REPAIRS ACCEPTED. `P0PC` is DELIVERED and its only remaining gate is the INDEPENDENT GRADE.** 🛑 **HOLD: no self-certification, no `P0PG`, no grader dispatch, no further edits to the prototype — the object must stay byte-stable at `46d6b7de` so the grade has a fixed pin.** ⚠️ **Your three honest residuals (`AR-599 §6`) are RECEIVED and NOT dismissed: the editable pin constant, the `[UNWITNESSED]` AMBIGUOUS branch, and the vanished-plant hypothesis. I am routing the last two to the GRADER rather than to another round-trip (`§4`) — that is a sequencing decision, not a dismissal.**
+
+**RULING ID:** R-559 · **TASK ID:** AR-599 · **DECISION: APPROVE** both repairs · **TRANSITION** `P0PC` to DELIVERED-PENDING-GRADE.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** (`R-554`). **GRAPH NODE TRANSITION: `P0PC` DELIVERED-BUT-REVISION-REQUIRED → DELIVERED-PENDING-GRADE, output pin `46d6b7de`.** 🛑 **`P0PG` REMAINS BLOCKED — it is the grade, and the grade has not run. `DELIVERED IS NOT GRADED` (`R-556 §8`).**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-599`** (`46d6b7de`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** detached worktree at `46d6b7de` (`/c/tfa`), created and REMOVED. `[MEASURED HERE]` shared HEAD unchanged, no registration remains. **ONE declared substitution: bare `'typescript'` → absolute URL, 3 files.**
+
+### ✅★★★★★ §1 — THE BRACKETED CONTROL, WHICH IS THE WHOLE EVIDENCE
+`[MEASURED HERE — my own mutations, each `grep`-verified to have LANDED before its verdict was read (`R-556 §3`), exit codes off the process (`R-554 §6`)]`
+```
+1  CLEAN CONTROL                        EXIT 0
+2  R-557 anchor-slack (lane -> ln)      EXIT 1     <- was EXIT 0 / GATE: PASS at 34e65996
+3  R-558 delete guard row 56(a)         EXIT 1     <- was EXIT 0 / GATE: PASS at f58bd222
+4  FOUNDING ATTACK A (unrelated TS2339) EXIT 1
+5  FOUNDING ATTACK B (35(a) -> 35(z))   EXIT 1
+6  RESTORED CONTROL                     EXIT 0     <- proves my reverts were clean
+```
+★★★★★ **STEP `6` IS WHY STEPS `2`–`5` MEAN ANYTHING. A trailing control turns four reds from *"this tree is broken"* into *"these four mutations are detected and nothing else is."* `A RED WITHOUT A CONTROL ON BOTH SIDES OF IT IS AN UNBOUNDED CLAIM.`**
+✅ **NO OVER-CORRECTION** `[MEASURED HERE, same run]`: pinned-52 `attributed 44`, partition unchanged · expanded `total 64`, `attributed 55` · `missing_ids []`, `missing_expanded_ids []`, `undeclared_ids []`, `duplicate_ids []` · **guard rows `56(a)`, `56(d)`, `57` all present and ATTRIBUTED** · `red-proof` `31 / 31`, control GREEN, `EXIT 0` — **the count GREW at every step (`29 → 30 → 31`), which is the direction `R-558 §5` required.**
+
+### ✅★★★★★ §2 — BOTH STOP CONDITIONS CLEARED AT THE EXECUTABLE LINE
+- **`R-557 §4`: "narrowing the anchor to the diagnostic's span → STOP."** ✅ `[MEASURED HERE]` **`git diff 34e65996 HEAD -- corpus.mjs` returns NO `typecheckerOwned` lines — every anchor is byte-identical.** **The fix is CARDINALITY, not scope: the join is now a BIJECTION (each diagnostic exactly one candidate anchor; each anchor claimed exactly once; `>1` candidate → AMBIGUOUS, fails closed).** ★★★★★ **A row owning two diagnostics at one expression now DECLARES IT TWICE — `THE COUNT BECAME A CLAIM THE ROW MAKES, SO THE RUN CAN FALSIFY IT.` That is strictly better than the allowance it replaced, and it also closes overlapping/nested declarations the first version never handled.**
+- **`R-558 §5`: "adding `declared_but_absent` to the failure classes ALONE → STOP" and "an expanded pin authored in the same delivery → STOP."** ✅ **`DECLARED_ADDITIONS` IS DELETED OUTRIGHT — there is no array left to coordinate with.** ✅ `[MEASURED HERE]` **the second pin verifies: `git cat-file -t f177b2456dee` → `blob`, and `git rev-parse 53e80935:prototypes/p0-vnext-admission/corpus.mjs` → `f177b2456dee…` EXACTLY. The JOIN KEY holds, not a neighbouring object.** ✅ **Additions are DERIVED as `expanded − original` from two frozen pins, and the pins cross-audit each other at load.**
+
+### ✅★★★ §3 — WHAT THE WORKER DID THAT I WANT ON THE RECORD
+1. ✅★★★★★ **IT BUILT A REVERTED-TREE CONTROL FOR `R-557`** — bijection removed + reproducer → `EXIT 0`; bijection removed + clean → `EXIT 0`; bijection present + reproducer → `EXIT 1`. **That is the dead-control trap closed from the inside: the `EXIT 0` means *"the defect was invisible"*, not *"that copy does not run."***
+2. ✅★★★★★ **AND IT DECLARED THE ASYMMETRY IT DID NOT CLOSE:** *"for `R-558` I did NOT build a reverted-tree control … I state that asymmetry rather than implying both were tested the same way."* ★★★ **Correct, and the gap is genuinely filled from elsewhere — `R-558 §2` measured the pre-repair `EXIT 0` at this desk AND the external read measured it independently. Two paths, neither of them the worker's.**
+3. ✅ **IT REFUSED THE `one level short` FIX IT WAS WARNED ABOUT**, and took the structural one instead.
+4. ✅★★★ **IT READ `R-558` BEFORE COMMITTING** a report drafted against `R-557` alone — *"a report committed between two rulings is `AR-591`'s defect."* **The lesson from `AR-591` is now being applied prospectively rather than recited.**
+
+### ⚠️★★★ §4 — THE THREE RESIDUALS, RECEIVED AND ROUTED
+1. ⚠️ **THE PIN CONSTANT IS EDITABLE** (`EXPANDED_PIN_COMMIT` lives in `membership.mjs`). ✅ **ACCEPTED AS-IS, and the worker's own framing is the correct one: *"what changed is the COST AND VISIBILITY, not impossibility"* — suppressing a guard now requires re-pointing a NAMED PIN at a NEW COMMIT, visible as a changed constant in review, instead of dropping one array element.** ★★★ **This is the SAME guarantee item 15's original pin has always had, which `R-556 §2` already accepted. Rejecting it here would convict a mechanism I ratified three rulings ago.** ⚠️ **`[UNPROVEN]` that it is sufficient — recorded, not closed.**
+2. 🛑 **THE `AMBIGUOUS` BRANCH IS `[UNWITNESSED]`** — no corpus row declares overlapping anchors, so it fails closed by construction and nothing reaches it. ★★★ **`A FAIL-CLOSED BRANCH NOTHING CAN REACH IS A BRANCH NOBODY HAS TESTED` — this campaign's own law, and it is genuinely owed.** ✅ **ROUTED TO THE GRADER, not to another worker round-trip: constructing an overlapping-anchor fixture is exactly an independent hunter's job, and another round-trip would move the object off its pin for a branch that fails closed.**
+3. ⚠️ **THE VANISHED-PLANT HYPOTHESIS** (a diagnostic sheltering in slack when the true plant is gone) — `[HYPOTHESIS, UNPROVEN]`, flagged rather than buried. ✅ **ALSO ROUTED TO THE GRADER.** ★★ **The worker's reasoning that the `unwitnessed` check should catch it is PLAUSIBLE and UNVERIFIED; I do not credit it.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-1`/`G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED (`13` attributed rows).** ⚠️ **`44/52` UNCHANGED and still NOT ratified (`R-550 §1`).** **V4 graph NOT ADOPTED.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **Any edit to the prototype before the grade → STOP: the object must stay byte-stable at `46d6b7de` or the grade has no fixed pin.** · ★★★★★ **`P0PG` started, or `P0PC` called complete, before the grade lands → STOP.** · ★★★★★ **The grade dispatched against any pin other than `46d6b7de` → STOP.** · ★★★ **`44/52` cited as ratified → STOP.** · ★★★ **The `AMBIGUOUS` branch reported as tested → STOP; it is `[UNWITNESSED]` (`§4.2`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — THE INDEPENDENT GRADE. It is now the ONLY thing between `P0PC` and `P0PG`.** **Brief = `R-556 §6` verbatim, re-pinned to `46d6b7de`, PLUS: the four reproducers in `§1` (as regression anchors the grader may re-run) · `AR-598 §3`'s anchor-slack table · the `AMBIGUOUS` branch (`§4.2`) · the vanished-plant hypothesis (`§4.3`) · `runtime-admission.mjs`'s `13` ungraded rows · and `R-555 §2a`'s module-target null to EXTEND, not repeat.** ⚠️ **Dispatch still needs the operator's word (`R-556 §6`); the obligation is unchanged, owned by this desk, not reassigned and not deferred.**
+2. **WORKER — HOLD** (see START HERE). No code.
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`).** ✅ **The money path is genuinely idle now — this is the condition `R-554 §5.2` named. Eligible, behind item 1.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A RED WITHOUT A CONTROL ON BOTH SIDES OF IT IS AN UNBOUNDED CLAIM.` The restored-control `EXIT 0` is what converts four reds from "this tree is broken" into "exactly these four mutations are detected."**
+★★★★★ **`WHEN A GUARD IS TOO PERMISSIVE, FIX ITS CARDINALITY BEFORE ITS SCOPE.` Narrowing the anchor was the obvious fix and it was circular; making the join a BIJECTION closed the hole with every anchor byte-unchanged, and closed nested declarations as a bonus.**
+★★★ **`DELETE THE MUTABLE THING RATHER THAN GATING IT.` `DECLARED_ADDITIONS` gated would have needed a second check forever; `DECLARED_ADDITIONS` deleted has nothing left to coordinate with.**
+
+---
+
 ## R-558 · 2026-08-02 · 🛑★★★★★ **THE EXTERNAL READ FOUND A SECOND LIVE FALSE GREEN THAT IS **NOT MINE AND NOT THE WORKER'S**, AND I REPRODUCED IT: **DELETING GUARD ROW `56(a)` — THE GUARD THAT EXISTS FOR THE GRADER'S `F-1` CRITICAL — LEAVES `GATE: PASS`, `EXIT 0`.** `declared_but_absent: ["56(a)"]` IS COMPUTED, PRINTED, AND NEVER GATES.** 🛑★★★★★ **THE SHAPE: **ITEM 15 CLOSED SELF-AUTHORSHIP FOR THE OLD 52 AND LEFT IT WIDE OPEN FOR THE NEW ROWS.** `DECLARED_ADDITIONS` IS `CORPUS.map(` IN A NEW COSTUME — MUTABLE CODE IN THE SAME DELIVERY IT POLICES.** **DECISION: REVISE — fold into `R-557`'s repair, ONE replacement object.**
 
 **★ WORKER — START HERE:** 🛑 **A SECOND REPAIR JOINS `R-557 §5.1`. BOTH LAND IN ONE OBJECT — do not ship them separately.** **(2) THE EXPANDED MEMBERSHIP MUST GATE.** **REPRODUCER, VERBATIM:** delete row `56(a)` from `corpus.mjs` (two lines, `229–230` at `f58bd222`), change nothing else — **currently `total 63`, `missing_ids []`, `undeclared_ids []`, `declared_but_absent ["56(a)"]`, `GATE: PASS`, `EXIT 0`. It must EXIT 1.** ⚠️★★★★★ **ADDING `declared_but_absent` TO THE FAILURE CLASSES IS NECESSARY AND NOT SUFFICIENT — it does not survive COORDINATED deletion of the row AND its declaration, because `DECLARED_ADDITIONS` is mutable code in the same delivery. **PIN THE EXPANDED MEMBERSHIP EXTERNALLY, exactly as item 15 pinned the 52** — derive the expected expanded identities from the already-committed `53e80935` object, check BOTH directions plus uniqueness.** **First observable: the `56(a)` deletion going RED, ~30 min.**
