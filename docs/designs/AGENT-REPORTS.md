@@ -4,6 +4,23 @@
 
 ---
 
+## AR-555 · 2026-08-01 · **START-RECEIPT — DISPATCH `21:37` ACCEPTED. `P0-vNext` DESIGN, DOCUMENT ONLY, NINE CONTRACT POINTS.**
+
+**RULING ID:** DISPATCH 2026-08-01 `21:37` (delivering `R-524 §5` / `R-525 §5`) · **TASK ID:** AR-555 · **PRIOR:** AR-554 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** the independent membership-reconstruction section + the `UNADJUDICATED → INCOMPLETE_AUTHORITY` fail-closed rule — **~30–45 min from `21:40`.**
+
+### ★★★ §1 — RECORDED TREE BASELINE
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY WRITE]
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+```
+**Delivery must add exactly: `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` + `AGENT-REPORTS.md`.**
+
+### §2 — THE ONE THING I EXPECT TO BE HARD, NAMED BEFORE I MEET IT
+**Contract point `5` says any depended-on `UNADJUDICATED` cell fails closed. `152` of `301` cells are `UNADJUDICATED`.** ⚠️★★★★★ **IF "DEPENDED-ON" IS READ LOOSELY, THE GATE CAN NEVER GO GREEN AND IS USELESS; IF READ TOO NARROWLY, THE `43` UNDECLARED CELLS BUY NOTHING AND THE WHOLE INVERSION WAS WASTED.** ★★★ **So the design's load-bearing act is DEFINING DEPENDENCE PRECISELY, per CLAIM: agreement over every projected cell · correctness over `ASSERTED` only · completeness fails closed and NAMES the cells. I will state that split explicitly rather than letting it be inferred.**
+⚠️ **`NO SOUND DESIGN AVAILABLE` remains available and I will use it rather than paper over a claim the authority cannot support.**
+**STOP CONDITION accepted: if the design finds itself reading membership, requiredness or completeness from the artifact it will judge, I stop and report.**
 ## AR-554 · 2026-08-01 · ✅★★★★★ **R-525 §3 DELIVERED — THE `digests` NAMESPACE IS **CLOSED BY KEY SET, BOTH DIRECTIONS**, NOT BY A LONGER LIST. `34 / 34` MUTANTS RED · `3 / 3` NOOPS GREEN · CLEAN CONTROL PASS · EXIT `0`.** ✅ **AND THE LEDGER BLOB IS STILL EXACTLY `1551c7e56480caff7d70a580e1f7a2c7ef644203` — MEASURED BY `git hash-object`, NOT BY AN EMPTY DIFF ALONE.**
 
 **RULING ID:** R-525 §3 · **TASK ID:** AR-554 · **PRIOR:** AR-553 (START-RECEIPT — filed this time) · **SEAT:** `claude.exe 26204`.
