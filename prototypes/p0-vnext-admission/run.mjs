@@ -16,6 +16,7 @@ import { emitAndExecuteTuple } from './module-tuple.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { admitRuntime } from './runtime-admission.mjs';
 import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED } from './corpus.mjs';
 // R-562 item 3: the SET OF SETS needs the module NAMESPACE, not named imports — the whole point is
@@ -37,6 +38,72 @@ globalThis.__GETTER_HITS__ = 0;
 // This gates a TEST INJECTION, never a repair -- no correctness fix hides behind a flag.
 const INJECT = process.env.PROTO_INJECT || '';
 
+// 🛑★★★★★ R-585 §6.2 / R-586 §3 / R-587 §3 — THE EFFECT LEDGER. IDENTITY FROM WHAT WAS *BUILT*,
+// NEVER FROM WHAT WAS *ASKED FOR*.
+//
+// THE DEFECT THIS CLOSES (four grades chased it up a level and never out — R-585 §2):
+//   run.mjs:38  const INJECT = process.env.PROTO_INJECT   <- the NAME comes IN from the parent
+//   run.mjs:*   console.log(`INJECTION: ${INJECT}`)       <- the SAME name goes back OUT
+// The child was witnessing the REQUEST, not the WORK. Two one-token edits in the dispatch below
+// (`'56(a)'`->`'38'`, `'34(b)'`->`'35(a)'`) each collapsed one declared red path onto ANOTHER
+// row's mutation, and every gate stayed green with stdout BYTE-IDENTICAL to the clean control.
+//
+//   A WITNESS THAT ECHOES ITS OWN INPUT IS A RECEIPT FOR THE REQUEST, NOT A RECORD OF THE WORK.
+//
+// ✅ SO IDENTITY IS RE-BASED ON OBSERVED EFFECT: every input surface an injection can reach is
+// recorded AS ACTUALLY BUILT, and the digest of that ledger is emitted by THIS process. The
+// parent asserts the digests are PAIRWISE DISTINCT — so two rows collapsing onto one mutation
+// produce the SAME fingerprint and go RED no matter what either was called.
+//
+// ⚠️ THREE PROPERTIES THIS LEDGER MUST HAVE, EACH ORDERED AND EACH LOAD-BEARING:
+//  1. `INJECT` IS NEVER RECORDED. Recording the label would rebuild the echo one layer down and
+//     re-enter the tautology R-582 convicted. What goes in is the VALUE that reached the check.
+//  2. BODIES, NOT IDS (R-586 §3, found while building item 1): `uncaught_stale` and
+//     `uncaught_undeclared` both mutate a row's BODY while keeping every id intact, so an
+//     ids-only digest collapses them into one fingerprint and violates pairwise-distinctness on
+//     day one — against fixtures that already exist.
+//  3. DETERMINISTIC. Temp-dir names and absolute scratch paths vary per run and would make the
+//     digest a random number, so those surfaces are recorded NORMALIZED (count + basename) and
+//     the parent asserts that the same injection twice yields the SAME digest — which is what
+//     turns "deterministic" from a hope into an assertion.
+//
+// ✅ AND IT GIVES `run.mjs:312`'s PROSE LAW A PROGRAM (`document-vs-program`): an injection that
+// plants NOTHING produces the clean control's ledger exactly, so it COLLIDES WITH THE CONTROL and
+// reddens. "AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT
+// DID NOT FIRE" is no longer a sentence in a comment — it is a failing assertion.
+// ⚠️★★★★★ THE ACCUMULATOR IS PRIVATE TO A CLOSURE, AND THAT SHAPE WAS FORCED BY A MEASUREMENT
+// RATHER THAN CHOSEN FOR TASTE. My first version bound it as `const EFFECT = []` and
+// `checkPinnedCollections` immediately reported `NEW UNPINNED module-level collection 'EFFECT'`,
+// GATE: FAIL — the set-of-sets guard firing on its own author's change, one batch after the last
+// one did the same. `[MEASURED HERE]` and it cost a wrong reading first: with the run exiting at
+// that gate, 36 of 38 injections fingerprinted IDENTICALLY, which looked exactly like a total
+// collapse of this property and was in fact a TRUNCATED LEDGER. A SURPRISING RESULT ACCUSES THE
+// INSTRUMENT FIRST.
+//
+// ✅ WHY PRIVATE IS THE RIGHT ANSWER HERE AND IS NOT EVASION — the honest test is what species
+// the guard hunts. It hunts a SELF-CERTIFYING COLLECTION: a table a check reads, which can be
+// silently SHRUNK so the check quietly covers less. This accumulator is the opposite by
+// construction — it is written and then HASHED, so removing anything from it CHANGES THE DIGEST
+// and breaks the pinned expectation in `red-proof.mjs`. It cannot shrink in silence, which is the
+// entire property the guard exists to enforce. Making it unreachable from module scope means
+// nothing else can mutate it either. NOTHING THAT WAS EVER DECLARED STOPS BEING DECLARED.
+// ⚠️ AND PINNING IT WOULD HAVE BEEN THE WRONG ANSWER, not merely a costlier one: R-575 §5 forbids
+// pinning a value that is BUILT (`red-proof.mjs`'s `rows` is left unpinned for exactly this
+// reason). Pinning an accumulator is pinning a decoration — it would have LOOKED like coverage.
+// ★ The genuinely new self-certifying collection in this batch is `PINNED_EFFECT_DIGESTS` in
+// `red-proof.mjs`, and THAT one is declared, pinned, and given the law on BOTH its axes (R-587 §3).
+const recordEffect = (() => {
+  const acc = [];
+  // Emitted from an `exit` hook rather than at the end of the file, because the collection gate
+  // below EXITS EARLY (`process.exit(1)`) — a fingerprint missing exactly when a class fires would
+  // be blind to the classes that matter most. A prefix ledger is still deterministic per
+  // injection, which is all pairwise-distinctness needs.
+  process.on('exit', () => {
+    console.log(`EFFECT-DIGEST: ${createHash('sha256').update(JSON.stringify(acc)).digest('hex')}`);
+  });
+  return (surface, value) => { acc.push([surface, value]); return value; };
+})();
+
 // 🛑★★★★★ R-568 item (5) — THE SET OF SETS, BEYOND `corpus.mjs`. THIS RUNS BEFORE ANYTHING
 // ELSE AND IS DELIBERATELY **NOT** A `FAILURE_CLASSES` ENTRY.
 //
@@ -48,12 +115,15 @@ const INJECT = process.env.PROTO_INJECT || '';
 //   be retired by the same edit it exists to catch, so this one cannot live there.
 // It prints `GATE: FAIL` and names its class so `red-proof.mjs` can assert it exactly like
 // any other class, then exits immediately — nothing downstream can downgrade it.
-const collectionFindings = checkPinnedCollections({
+// The simulation arguments are built, RECORDED AS BUILT, and only then passed. Recording the
+// argument rather than the flag that produced it is the whole point: if an edit re-points
+// `module_collection_add` at the delete shape, these two rows become the same effect and collide.
+const collectionFindings = checkPinnedCollections(recordEffect('collection_simulation', {
   simulateDelete: INJECT === 'module_collection_delete'
     ? { file: 'red-proof.mjs', collection: 'EXPECT', key: 'new_unpinned_collection' } : null,
   simulateAdd: INJECT === 'module_collection_add'
     ? { file: 'run.mjs', collection: 'ROGUE_UNPINNED_TABLE' } : null,
-});
+}));
 // ⚠️ THE PARSER IS NEVER TRUSTED ON ITS OWN WORD. It is compared against the EXECUTED
 // runtime reader on `corpus.mjs` — the one module where both paths work — and on the SAME
 // BLOB, because comparing two revisions would be measuring the neighbouring object. This
@@ -267,6 +337,11 @@ function corpusUnderTest() {
   }
 }
 const CORPUS_UNDER_TEST = corpusUnderTest();
+// R-586 §3, BINDING: the row BODY is in the fingerprint, not just the id. `uncaught_stale` and
+// `uncaught_undeclared` swap two rows' bodies while keeping both ids — an ids-only digest sees
+// nothing at all and the two collapse onto one fingerprint. Order is preserved because a
+// reordering IS a different population under test.
+recordEffect('corpus_under_test', CORPUS_UNDER_TEST.map((c) => [c.id, c.kind ?? null, c.file ?? null, c.atom ?? null, c.expect ?? null, c.body ?? null]));
 
 // R-556 §3: a planted-defect test owes a positive control that the plant LANDED, printed before
 // the verdict. Populated by any injection that could silently fail to apply.
@@ -365,6 +440,12 @@ for (const c of CORPUS_UNDER_TEST) {
   else status = 'MISS_NOT_CAUGHT';
   results.push({ id: c.id, atom: c.atom, expect: c.expect, file: c.file, fired: uniqFired, competing, status, detail, tuple, diagnostics, diagRecords, typeWhy, submittedBody });
 }
+// The per-row mutations above rewrite a BODY inside the loop and never touch `CORPUS_UNDER_TEST`,
+// so the corpus fingerprint is blind to all twelve of them. This is the surface that separates
+// `wrong_catcher` from `ownership` from `parse` — the body ACTUALLY SUBMITTED to the detector.
+// `formatAgreement` rides along because `tuple_disagreement` mutates the tuple handed to the
+// tuple check and reaches no other surface.
+recordEffect('submitted_bodies', results.map((r) => [r.id, r.submittedBody ?? null, r.tuple ? r.tuple.formatAgreement : null]));
 
 // ---- GREEN neighbours must be ADMITTED ----
 // 🛑 R-561's RED PATHS. These mutate the GREEN population UNDER TEST, never the frozen pin.
@@ -396,6 +477,11 @@ const greens = GREEN_UNDER_TEST.map((g) => {
     submittedBody: g.kind === 'source' ? body : null,
   };
 });
+// Both green surfaces in one record: WHICH greens were under test (delete/add/duplicate) and WHAT
+// BODY each submitted (green_rejected/twin). `green_delete` and `green_to_red` remove the SAME
+// green row — they are told apart only because `green_to_red` also adds a corpus row, which is
+// precisely why the fingerprint has to be composite rather than per-surface.
+recordEffect('greens_under_test', greens.map((g) => [g.id, g.file ?? null, g.submittedBody ?? null]));
 
 // ---- ITEM 7: THE TWIN ASSERTION, CHECKED RATHER THAN ASSUMED ----
 // "A twin that differs by the deleted line is not a control -- it is the mutation run
@@ -442,10 +528,16 @@ if (INJECT === 'surface_health') {
   fs.writeFileSync(broken, 'export const bad: number = "not a number";\n');
   extraRoots = [broken];
 }
+// NORMALIZED, and the reason is determinism rather than tidiness: `extraRoots` holds an
+// `os.tmpdir()` path with a RANDOM suffix, so recording it raw would make this digest a fresh
+// random number every run and pairwise-distinctness would pass for the wrong reason. What is
+// load-bearing is that a broken root was submitted at all, and its basename.
+recordEffect('negative_control_reported', negControl.reported);
+recordEffect('surface_extra_roots', extraRoots.map((r) => path.basename(r)));
 const health = surfaceHealth({ extraRoots });
 
 // ---- ITEM 5 + ITEM 7 (second half): emit the artifact and EXECUTE it ----
-const emitted = emitAndExecuteTuple({ injectWrongContainer: INJECT === 'emitted_module' });
+const emitted = emitAndExecuteTuple(recordEffect('emit_tuple_args', { injectWrongContainer: INJECT === 'emitted_module' }));
 
 const tally = (s) => results.filter((r) => r.status === s).length;
 const summary = {
@@ -461,6 +553,8 @@ const summary = {
   green_total: greens.length,
   getter_invocations: globalThis.__GETTER_HITS__ + (INJECT === 'getter' ? 1 : 0),
 };
+// The counter is this injection's ONLY reachable surface — it changes no body and no population.
+recordEffect('getter_invocations', summary.getter_invocations);
 
 // ---- THE PRE-REGISTERED COMPARISON, COMPUTED RATHER THAN ASSERTED ----
 // Scored over AR-589's ORIGINAL 52 ids only, so the fall is measured against the same
@@ -489,6 +583,14 @@ const liveCollections = {
     ? collectionNamesOf({ ...corpusModule, ROGUE_SELF_CERTIFYING_SET: ['x'] })
     : collectionNamesOf(corpusModule),
 };
+// The LIVE VIEW as handed to the checker — the three auxiliary-collection injections mutate this
+// object and nothing else, so without it `twin_pairs_delete`, `prereg_delete` and
+// `new_unpinned_collection` would all fingerprint identically to the clean control.
+recordEffect('live_collections', {
+  TWIN_PAIRS: liveCollections.TWIN_PAIRS.map((p) => JSON.stringify(p)),
+  PREREGISTERED_EMIT_CHANGES: Object.keys(liveCollections.PREREGISTERED_EMIT_CHANGES),
+  collectionNames: [...liveCollections.collectionNames].sort(),
+});
 const aux = checkAuxiliaryCollections(liveCollections);
 // `.filter(Boolean)` because a MISSING expected row must be REPORTED by the membership check,
 // not crash the tally before the check is ever printed.
@@ -603,6 +705,10 @@ console.log(`GETTER INVOCATION COUNTER (required 0): ${summary.getter_invocation
 // literals, reporting 2. A check that reads its own assertion list is measuring itself.
 if (INJECT === 'ledger_read') OPENED.add('C:/fake/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json');
 const ledgerHits = [...OPENED].filter((f) => /P1-P2-TOTAL-MEMBERSHIP|ORACLE\.json/.test(f));
+// ONLY the ledger hits, never `OPENED` whole: `OPENED` also accumulates the random temp path the
+// `surface_health` injection writes, and a digest that varies run-to-run cannot certify anything.
+// The planted path is a fixed literal, so this surface stays deterministic.
+recordEffect('ledger_hits', [...ledgerHits].sort());
 console.log(`SEPARABILITY: files actually opened during this run: ${OPENED.size}`);
 console.log(`SEPARABILITY: ledger/oracle artifacts opened: ${ledgerHits.length} (required 0)`);
 console.log(`SEPARABILITY POSITIVE CONTROL: the tracker DID observe ${OPENED.size} real reads, so a 0 above is a measured absence, not a dead probe.`);

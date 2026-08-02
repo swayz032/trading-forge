@@ -83,7 +83,11 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
   //                          a real verdict — the failure direction `run.mjs:84` exists to prevent.
   //   FIXTURE_INVALID_CODES  removing a code silently promotes an AUTHORING DEFECT into a verdict.
   'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES', 'SIX', 'SURFACE_CODES', 'FIXTURE_INVALID_CODES', 'KNOWN_UNCAUGHT']) }),
-  'red-proof.mjs': Object.freeze({ tables: Object.freeze(['CLASSES', 'SHARED', 'EXPECT', 'FREEZE_EXPECT']) }),
+  //   PINNED_EFFECT_DIGESTS  the effect-addressed identity expectation (R-585 §6.2 / R-587 §3).
+  //                          Dropping an entry would retire the ONLY check that can see two
+  //                          declared red paths collapse onto one mutation, so it is pinned here
+  //                          AND carries its own declared cardinality at its definition site.
+  'red-proof.mjs': Object.freeze({ tables: Object.freeze(['CLASSES', 'SHARED', 'EXPECT', 'FREEZE_EXPECT', 'PINNED_EFFECT_DIGESTS']) }),
   // 🛑★★★★★ ADDED BY THE R-570 §6.3 ENUMERATION, WHICH FOUND **INSTANCE EIGHT** BY MEASUREMENT.
   // `type-value-proof.mjs` reports `${pass} / ${CASES.length}` at :126 and gates on
   // `pass === CASES.length` at :125 — BOTH OPERANDS FROM THE SAME MUTABLE ARRAY, the third file
@@ -146,7 +150,7 @@ export const PINNED_BLOBS = Object.freeze({
 // magnitude. R-578 §5 forbids the near-miss of pinning the reduce's OUTPUT — that value is BUILT.
 const COVERED_FILES = Object.freeze({
   'run.mjs': 5,
-  'red-proof.mjs': 4,
+  'red-proof.mjs': 5,
   'type-value-proof.mjs': 1,
   'source-admission.mjs': 2,
   'runtime-admission.mjs': 1,
@@ -155,7 +159,7 @@ const COVERED_FILES = Object.freeze({
 // The TOTAL is declared as a literal too, and cross-checked against the sum of the per-file
 // literals. Two independent derivations of one magnitude: a shrinker must edit BOTH, and if they
 // ever disagree the instrument says so instead of choosing one.
-const DECLARED_TABLE_TOTAL = 14;
+const DECLARED_TABLE_TOTAL = 15;
 const summedFromFiles = Object.values(COVERED_FILES).reduce((a, n) => a + n, 0);
 if (summedFromFiles !== DECLARED_TABLE_TOTAL) {
   throw new Error(`INSTRUMENT FAULT: declared table magnitudes disagree — per-file literals sum to ${summedFromFiles}, DECLARED_TABLE_TOTAL says ${DECLARED_TABLE_TOTAL}`);

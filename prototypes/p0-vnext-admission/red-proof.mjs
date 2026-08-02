@@ -16,6 +16,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { extractModuleCollections } from './module-collections.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -111,6 +112,79 @@ const FREEZE_EXPECT = [
   ['membership_delete', '38',    '(f, second gate) a deleted row must not vanish from the freeze denominator'],
 ];
 
+// 🛑★★★★★ THE PINNED EFFECT EXPECTATION — AND IT DECLARES **BOTH** OF ITS AXES (R-587 §3, BINDING).
+//
+// WHY BOTH, MEASURED RATHER THAN ARGUED: the fifth grade's F-1 (CRITICAL, instance ELEVEN) found
+// `module-collections.mjs` had given the self-declaring law to its TABLE axis and left its FILE
+// axis bare — `DECLARED_TABLE_TOTAL` is a literal that THROWS when contradicted, while the file
+// count beside it was `Object.keys(...).length`, asserted against nothing. Three edits retired a
+// whole enforcement file with every gate green.
+//     A NEW SELF-CERTIFYING COLLECTION OWES THE LAW TO EVERY AXIS IT HAS, NOT TO THE ONE THAT
+//     FAILED LAST TIME.
+// This collection has exactly two axes and both are declared here:
+//   VALUES      — each digest, pinned (and asserted PAIRWISE DISTINCT + BODY-COVERING below).
+//   CARDINALITY — `DECLARED_EFFECT_DIGEST_COUNT`, a literal in the `DECLARED_TABLE_TOTAL:158-161`
+//                 shape that THROWS on disagreement, never the `Object.keys().length:376` shape
+//                 that F-1 convicted. Deleting an entry to silence a collision must therefore
+//                 edit a number that states its own magnitude.
+//
+// ⚠️ THE KEY IS THE CHILD'S OWN `INJECTION:` TOKEN, transcribed verbatim — including the control's
+// sentence, em dash and all. That is deliberate: the control is a MEMBER of this set, not an
+// exception to it, and its entry is what makes the two controls fingerprint the ARTIFACT rather
+// than the env var they were invoked with (R-585 §3).
+// ⚠️ VALUES ARE GENERATED FROM THE CHILD AND TRANSCRIBED, NEVER HAND-COPIED FROM A REPORT — a
+// hand-copied expected value is a fabricated safety claim. Regenerate after any change to run.mjs
+// or corpus.mjs; a legitimate change SHOULD move these, and moving them must cost a visible edit.
+const PINNED_EFFECT_DIGESTS = Object.freeze({
+  "<none — this is the clean control>": 'c5eb7df2c8c4d6ccffdc993e15b1e55b3978641112aa44be2cb21a4a8c0c51f4',
+  "wrong_catcher": '5e2fc27318ad2bcb26eef4c1e3c9391207f1a5423602e77a4a33ab78d53cd82e',
+  "ownership": '1c4960834a8cb81313ae22248acfb5c6b1b8931848f7a20d8f4f5e2a55a9b7c0',
+  "parse": 'faf87d9cfd403205170f5bd323c76bba0098c66d40ffa24135f5fc12538253fa',
+  "green_rejected": '846aef4556ebb23a3b760c9107090b432ee80253252c890b0d91593cb9db4024',
+  "neg_control": '840067911c2206b9ac435c5a2cb184744a7b164f0af9a8959cb1957dbc06c133',
+  "getter": '14568f293edc53b6cb6fe70ea512effc8962ce9f86cede4bf235452a01d5582a',
+  "ledger_read": 'ff8a8114e4132a0f79df36f0d773953b9e66f4c620cdb66d3e6cca36cb67ad24',
+  "surface_health": '3d37a647831552eaaf935c6fb9c116a8974dbfb8c4ae36e6d0cf2a7a45787ac0',
+  "twin": '5cd3a80b6e3566643880fafd5bbecb9d4f79c8538f405b90c9cda04c559f1012',
+  "tuple_disagreement": '746d6f5994d54e00d2d4780d7f2eeac2ec7b3e71f3a62ec66916101b697dfa4b',
+  "emitted_module": 'b7abc0bfb3f1f72c2647ec7f0c32e1800c844f94320f88d1192f8aa57a1b9d46',
+  "surface_invalid_rows": '256934d2b600b7a708c4498fc3039b86b2703ea29de3107127f5e918a99d297b',
+  "position_unclassified": '8ac7bb03a552b8546f906437b7872b5dd550052cb539e50ead4d463095558a21',
+  "type_invalid_unclassified": 'a5124c3f942a5f24380446857262ddd7f4ec4b8db1276c46dff5cf189ffc838a',
+  "fixture_invalid": '5a9521c2f1fa207703c6413682b0213b50461bc6084b4039538152f4356c6a30',
+  "partition_overlap": 'da994bf0d6012445b5d4504cabb1ffcd8fb2a0b7668a0face30e330f8449e199',
+  "own_unrelated_attributed": 'c036170af6016cbd0294b5dcab27ad8ea425cbc5355a6cee488400cef8667695',
+  "membership_rename": '9ac917bc80faf2f515701d14fad70d3c746a80a99194312b15efadec810511ef',
+  "own_unrelated_nonowned": '1d770809732bbc410652656a55cd27dd83a48670e3998103515df08c1eae95ec',
+  "own_extra_code": '9d2af9ad282b93b78a38d8fc796ccc5b04222bf82e74c34bfb9ccb66c5380e13',
+  "own_extra_inside_anchor": 'bc351c3c4e0b32b2d15c7a3fd388aeb2a82ec78216e179bd528945aa798c0ec5',
+  "membership_delete_guard": '22b93b783c190999e551c8a15012a4e3a6ef1288ff52ff4867e300a975b87549',
+  "membership_add": '780fcb8fa4e8918b1fd780513bb55f184f6eb6d964b92c33dd891d20dda074db',
+  "membership_delete": 'e897633b6f5d0399bf12d5a8eb2459bf80a269d2574c793c05242488663d6922',
+  "membership_duplicate": '3a1e47489209f833d2b38f3c9c3366c195bab6a0b7eac698602ce41a33d73a26',
+  "green_delete": '3604b56b26bd80ae51a9346490cbe7ffb2121d55a6fcdffa5b96378ba949ea63',
+  "green_add": 'f36bc45c137cb47439633cd775a2df884b00afea7458d2533c0b8c09762f0538',
+  "green_duplicate": '09d87c629b0c301eb18da932848d44a55e9d12423172dbf4fda1e538540ecf30',
+  "green_to_red": '064812cfdd5dc58c2d3e67153c692fef6e40e90a6cb5859a0566104729ae5b01',
+  "twin_pairs_delete": '3dfdcddb39821cdf800fa583605c8eaf120b0e7b14fde85f1f437c7dcf30486c',
+  "prereg_delete": '2eff1213f0eca21ee1f3d88fce1580f28a1d3d825801c5683e4b8cb6b0404064',
+  "new_unpinned_collection": 'fae85395482f9bdd4dc7c4abf7d39eef0980c5cd1119716e9bdeb5e889b37511',
+  "substituted_diagnostic": '460222aad1a0b50e1a897d4770452ba01a522db3ca4939d715b55bf94411c57e',
+  "module_collection_delete": 'e0d5a53b51a06f5e7deeaf4d9458661c01397ac42d4064fd89329c50f0c4e27d',
+  "module_collection_add": '67ba9827bd50af5270bbd2100310edfc84a329019ec5603d14a8f9c7c674fcba',
+  "uncaught_undeclared": 'd9d98b7ad8399556fad154569f367610f410359cd06da7707911258e1c4e218e',
+  "uncaught_stale": 'ba39827f4d69f11adde35e2401072bd64996a7567fb2cfdeeb811b7e6e9de424',
+});
+// THE SECOND AXIS. A literal that states its own magnitude and THROWS when contradicted — the
+// `DECLARED_TABLE_TOTAL` shape, not the `Object.keys().length` shape F-1 convicted. This throws at
+// module load, so a shrunk pin cannot reach a verdict at all, let alone a green one.
+const DECLARED_EFFECT_DIGEST_COUNT = 38;
+if (Object.keys(PINNED_EFFECT_DIGESTS).length !== DECLARED_EFFECT_DIGEST_COUNT) {
+  throw new Error('INSTRUMENT FAULT: effect-digest pin magnitudes disagree — PINNED_EFFECT_DIGESTS'
+    + ` holds ${Object.keys(PINNED_EFFECT_DIGESTS).length} entries, DECLARED_EFFECT_DIGEST_COUNT says`
+    + ` ${DECLARED_EFFECT_DIGEST_COUNT}. An entry was added or silently dropped; no verdict from this run is interpretable.`);
+}
+
 function runWith(inject, script = RUNNER) {
   try {
     const stdout = execFileSync(process.execPath, [script], {
@@ -162,12 +236,59 @@ const witnessed = (r) => {
 // do not drift apart. NOTE this is NOT evading the guard: nothing existing is being hidden from
 // it, and the alternative was creating a table with no independent reason to exist.
 
+// 🛑★★★★★ R-585 §6.2 / R-586 §3 / R-587 §3 — LEVEL FIVE: IDENTITY FROM OBSERVED EFFECT.
+//
+// THE DEFECT F-1c LEFT BEHIND. F-1c moved the witness OUT of this file — the child now names the
+// injection it ran, and the parent stopped inventing it. The fifth grade showed that was still one
+// level short: `run.mjs:38` reads `PROTO_INJECT` and `run.mjs:*` prints it straight back, so
+//     THE CHILD DOES NOT WITNESS WHAT IT *RAN*; IT ECHOES WHAT IT WAS *ASKED* TO RUN.
+// Two one-token edits in run.mjs's dispatch — `'56(a)'`->`'38'` and `'34(b)'`->`'35(a)'` — each
+// collapsed a declared red path onto ANOTHER row's mutation with red-proof.mjs BYTE-UNTOUCHED, and
+// produced 41/41, ENFORCING GATE, EXIT 0, stdout byte-identical to the clean control.
+//
+// ⚠️ FOUR REMEDIES ASKED "IS THE LABEL TRUSTWORTHY?" (R-585 §2). The attack was always "CHANGE WHAT
+// THE LABEL REFERS TO", so a fifth patch of that shape was a predictable sixth grade. THE ORDER
+// CHANGED KIND:
+//     A ROW'S IDENTITY IS A FUNCTION OF THE OBSERVED EFFECT OF ITS INJECTION, NEVER OF ANY LABEL
+//     ANYONE — PARENT OR CHILD — ATTACHES TO IT.
+// The child hashes the input surfaces it ACTUALLY BUILT and emits `EFFECT-DIGEST:`. This file only
+// ever TRANSCRIBES and COMPARES that value — it never computes one, because a digest computed here
+// would rebuild the R-582 tautology one layer down (R-585 §6a, STOP).
+//
+// ✅ THREE PROPERTIES, AND EACH CATCHES SOMETHING THE OTHER TWO DO NOT:
+//   PAIRWISE DISTINCT — two rows collapsing onto one mutation get the SAME fingerprint and RED,
+//                       whatever they were called. This is the one that kills the whole species.
+//   DETERMINISTIC     — the same injection run twice must fingerprint identically, or "distinct"
+//                       would be satisfied by noise and would certify nothing.
+//   PINNED            — an injection whose effect CHANGED to something no other row produces stays
+//                       distinct, so distinctness alone cannot see it. The pin can.
+// ★★★ AND THE CONTROL IS IN THE SET, WHICH IS THE PART THAT GIVES `run.mjs:312` A PROGRAM: an
+// injection that plants NOTHING fingerprints exactly like the clean control, COLLIDES WITH IT, and
+// reddens. "AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID
+// NOT FIRE" stops being a sentence in a comment and becomes a failing assertion (`document-vs-program`).
+const observedEffect = (stdout) => {
+  const m = stdout.match(/^EFFECT-DIGEST: ([0-9a-f]{64})$/m);
+  return m ? m[1] : null;
+};
+const effectByToken = new Map();
+const effectMissing = [];
+// Keyed by the CHILD's own token, exactly as F-1c requires — the declaration never supplies a key.
+const recordEffect = (token, r) => {
+  const d = observedEffect(r.stdout);
+  if (d === null) { effectMissing.push(token); return; }
+  if (!effectByToken.has(token)) effectByToken.set(token, new Set());
+  effectByToken.get(token).add(d);
+};
+
 console.log('RED-PROOF — every enforced class must have a demonstrated red path');
 console.log('='.repeat(104));
 
 // ---- THE CONTROL FIRST: unmutated, must be GREEN (exit 0) ----
 const control = runWith('');
 const controlOk = control.code === 0 && /GATE: PASS/.test(control.stdout);
+// The control is a MEMBER of the effect set, not an exception to it — that is what lets an
+// injection which planted nothing collide with it.
+recordEffect(witnessed(control).token, control);
 console.log(`CONTROL (no injection)           exit=${String(control.code).padEnd(3)} ${controlOk ? 'GREEN  <- the discriminator: this suite is not always-red' : '*** CONTROL FAILED — every result below is uninterpretable ***'}`);
 console.log('-'.repeat(104));
 
@@ -178,6 +299,7 @@ for (const [cls, what] of CLASSES) {
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
   const gateFail = /GATE: FAIL/.test(r.stdout);
   const w = witnessed(r);
+  recordEffect(w.token, r);
   const ok = wentRed && namedOurClass && gateFail && w.provenanceOk;
   // KEY FROM THE CHILD (`w.token`), never from the loop variable `cls`.
   rows.push({ cls: w.token, ok, code: r.code, namedOurClass, declaredKey: cls, provOk: w.provenanceOk });
@@ -189,6 +311,9 @@ for (const [cls, viaInject, what] of SHARED) {
   const r = runWith(viaInject);
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
   const w = witnessed(r);
+  // The SHARED rows re-run a class already run above, so this is a free DETERMINISM witness: the
+  // same injection must fingerprint identically, or "pairwise distinct" is satisfied by noise.
+  recordEffect(w.token, r);
   const ok = r.code !== 0 && namedOurClass && w.provenanceOk;
   // The SHARED rows ride another class's injection, so the identity is the PAIR
   // (what the child actually ran, which class it named). Only the first half is child-sourced.
@@ -201,6 +326,7 @@ for (const [inject, cls, what] of EXPECT) {
   const r = runWith(inject);
   const namedOurClass = new RegExp(`\\*\\*\\* ${cls}:`).test(r.stdout);
   const w = witnessed(r);
+  recordEffect(w.token, r);
   const ok = r.code !== 0 && namedOurClass && /GATE: FAIL/.test(r.stdout) && w.provenanceOk;
   // 🛑 THE LINE F-1c IS ABOUT. `w.token` comes from the CHILD's own output; `inject` is the
   // declaration and must never reach this key, or the membership test compares EXPECT to itself.
@@ -217,7 +343,20 @@ const freezeControlOk = freezeControl.code === 0;
 // A CONTROL MUST ALSO PROVE IT IS A CONTROL. Without this, "the control" is just the row we
 // chose to call one — an injected run could occupy the control slot and the key would not notice.
 const fcW = witnessed(freezeControl);
-const fcIsControl = fcW.provenanceOk && fcW.token.startsWith(CONTROL_PREFIX);
+// 🛑★★★★★ R-585 §3 — A CONTROL MUST FINGERPRINT THE **ARTIFACT**, NOT THE ENV IT WAS INVOKED WITH.
+// THE DEFECT, MEASURED BY THE FOURTH GRADE: in BOTH of its attacks this control printed
+// `PASS … control ran '<none — this is the clean control>'` WHILE A LIVE MUTATION SAT IN run.mjs.
+//     `CONTROL GREEN: true` IS A STATEMENT ABOUT THE ENVIRONMENT, NEVER ABOUT THE ARTIFACT.
+// `emitted-freeze.mjs` is a SEPARATE program with no effect ledger of its own, so its control
+// fingerprints the artifact the only way available here: the file's own content.
+const PINNED_FREEZE_SHA = 'a4da4708a7a5fba7b3b62b19ee8092b03a46fd150d54ba22e2fe5847c81c315c';
+const freezeSha = createHash('sha256').update(fs.readFileSync(FREEZE)).digest('hex');
+const freezeArtifactOk = freezeSha === PINNED_FREEZE_SHA;
+if (!freezeArtifactOk) {
+  console.log(`***   FREEZE ARTIFACT MOVED: pinned ${PINNED_FREEZE_SHA.slice(0, 12)}… but the file on disk is`
+    + ` ${freezeSha.slice(0, 12)}… — the control certifies the environment it was invoked with, not this artifact.`);
+}
+const fcIsControl = fcW.provenanceOk && fcW.token.startsWith(CONTROL_PREFIX) && freezeArtifactOk;
 console.log(`${freezeControlOk && fcIsControl ? 'PASS' : '*** FAIL'} ${'emitted-freeze CONTROL'.padEnd(26)} exit=${String(freezeControl.code).padEnd(3)} ran '${fcW.token}' (unmutated freeze gate must be GREEN and must witness NO injection)`);
 rows.push({ cls: fcIsControl ? 'freeze_control' : `freeze_control(RAN '${fcW.token}')`, ok: freezeControlOk && fcIsControl, code: freezeControl.code, declaredKey: 'freeze_control', provOk: fcW.provenanceOk });
 // 🛑★★★★★ F-3b (SECOND INDEPENDENT GRADE, 2026-08-02) — A WITNESS THAT MATCHES THE CLEAN
@@ -269,7 +408,12 @@ const ownedRowsNamed = ['52(a)', '52(b)', '52(c)', '52(d)', '54(c)'].every((id) 
 // Same provenance discipline as the freeze control: this row reads the run.mjs CONTROL, so the
 // control must witness that it ran NO injection before its greenness means anything.
 const occW = witnessed(control);
-const occIsControl = occW.provenanceOk && occW.token.startsWith(CONTROL_PREFIX);
+// R-585 §3, and here the artifact fingerprint is the STRONGER kind — not the file's bytes but the
+// INPUTS the control actually built. A live mutation in run.mjs's dispatch changes what the clean
+// run assembles, so this control can no longer pass while a planted defect sits in the artifact.
+const occEffect = observedEffect(control.stdout);
+const occArtifactOk = occEffect !== null && occEffect === PINNED_EFFECT_DIGESTS[occW.token];
+const occIsControl = occW.provenanceOk && occW.token.startsWith(CONTROL_PREFIX) && occArtifactOk;
 const overCorrectionOk = controlOk && ownedStillGreen && ownedRowsNamed && occIsControl;
 console.log(`${overCorrectionOk ? 'PASS' : '*** FAIL'} ${'over_correction_control'.padEnd(26)} the 5 legitimately compiler-owned rows STAY credited under the row-bound join (count=${ownedStillGreen}, rows=${ownedRowsNamed}, control ran '${occW.token}')`);
 rows.push({ cls: occIsControl ? 'over_correction_control' : `over_correction_control(RAN '${occW.token}')`, ok: overCorrectionOk, code: control.code, declaredKey: 'over_correction_control', provOk: occW.provenanceOk });
@@ -379,6 +523,61 @@ if (!identityOk) {
   if (witnessedRepeatedly.length) console.log(`***   RAN MORE THAN ONCE: ${witnessedRepeatedly.join(', ')}`);
   if (witnessedUndeclared.length) console.log(`***   RAN BUT UNDECLARED: ${witnessedUndeclared.join(', ')}`);
 }
+// 🛑★★★★★ THE EFFECT-IDENTITY BLOCK (R-585 §6.2, R-586 §3, R-587 §3). Four checks, and the order
+// matters: PRESENCE is prior to DETERMINISM is prior to DISTINCTNESS is prior to the PIN. A missing
+// digest is UNINTERPRETABLE rather than wrong, and must never print as a mismatch — that is
+// R-582's whole lesson about a verdict misdescribing which layer broke.
+const effectPresenceOk = effectMissing.length === 0;
+if (!effectPresenceOk) {
+  console.log(`*** STOP CONDITION (EFFECT-PRESENCE): ${effectMissing.length} run(s) emitted no 'EFFECT-DIGEST:' line`
+    + ' — nothing witnesses what those runs BUILT, so their identity is uninterpretable, not merely wrong.');
+  for (const t of effectMissing) console.log(`***   ran '${t}': no effect digest`);
+}
+// DETERMINISM: a token observed with more than one digest means the fingerprint is noise, and a
+// noisy fingerprint satisfies "distinct" for free while certifying nothing.
+const nonDeterministic = [...effectByToken].filter(([, ds]) => ds.size > 1)
+  .map(([t, ds]) => `${t} (${ds.size} different digests)`);
+const effectDeterministicOk = nonDeterministic.length === 0;
+// PAIRWISE DISTINCTNESS — the property that kills the species. Two declared rows that collapse onto
+// one mutation produce ONE fingerprint, whatever either was called.
+const byDigest = new Map();
+for (const [t, ds] of effectByToken) for (const d of ds) {
+  if (!byDigest.has(d)) byDigest.set(d, []);
+  byDigest.get(d).push(t);
+}
+const effectCollisions = [...byDigest.entries()].filter(([, ts]) => ts.length > 1);
+const effectDistinctOk = effectCollisions.length === 0;
+// THE PIN, BOTH DIRECTIONS. An effect that CHANGED into something no other row produces stays
+// distinct, so distinctness is blind to it and only the pin can speak.
+const pinnedKeys = Object.keys(PINNED_EFFECT_DIGESTS);
+const witnessedTokens = [...effectByToken.keys()];
+const effectUnpinned = witnessedTokens.filter((t) => !(t in PINNED_EFFECT_DIGESTS));
+const effectNeverRan = pinnedKeys.filter((k) => !effectByToken.has(k));
+const effectChanged = witnessedTokens.filter((t) => t in PINNED_EFFECT_DIGESTS
+  && ![...effectByToken.get(t)].every((d) => d === PINNED_EFFECT_DIGESTS[t]))
+  .map((t) => `${t}: pinned ${PINNED_EFFECT_DIGESTS[t].slice(0, 12)}… observed ${[...effectByToken.get(t)].map((d) => d.slice(0, 12) + '…').join(' / ')}`);
+const effectPinOk = effectUnpinned.length === 0 && effectNeverRan.length === 0 && effectChanged.length === 0;
+const effectOk = effectPresenceOk && effectDeterministicOk && effectDistinctOk && effectPinOk;
+if (!effectDeterministicOk) {
+  console.log(`*** STOP CONDITION (EFFECT-DETERMINISM): ${nonDeterministic.join(', ')} — the same injection`
+    + ' fingerprinted differently across runs, so distinctness below would be satisfied by noise.');
+}
+if (!effectDistinctOk) {
+  console.log(`*** STOP CONDITION (EFFECT-COLLISION): ${effectCollisions.length} set(s) of declared rows produced the SAME`
+    + ' observed effect. Their identities are not distinguishable by what they DID, only by what they were CALLED —'
+    + ' which is exactly the defect this check exists to catch.');
+  for (const [d, ts] of effectCollisions) console.log(`***   ${d.slice(0, 16)}…: ${ts.join(', ')}`);
+}
+if (!effectPinOk) {
+  console.log('*** STOP CONDITION (EFFECT-PIN): the observed effects do not match the pinned expectation.');
+  if (effectNeverRan.length) console.log(`***   PINNED BUT NEVER RAN (${effectNeverRan.length}): ${effectNeverRan.join(', ')}`);
+  if (effectUnpinned.length) console.log(`***   RAN BUT NOT PINNED (${effectUnpinned.length}): ${effectUnpinned.join(', ')}`);
+  if (effectChanged.length) console.log(`***   EFFECT CHANGED (${effectChanged.length}): ${effectChanged.join(' | ')}`);
+}
+console.log(`EFFECT IDENTITY: ${effectByToken.size} distinct injections fingerprinted by OBSERVED EFFECT`
+  + ` | pairwise-distinct=${effectDistinctOk} deterministic=${effectDeterministicOk} pinned=${effectPinOk}`
+  + ` (declared ${DECLARED_EFFECT_DIGEST_COUNT})`);
+
 // ✅ F-4 (THIRD GRADE) — COMPLETENESS AS AN ENFORCED PROPERTY, NOT MAINTENANCE DISCIPLINE.
 // The grade's finding: all of run.mjs's declared FAILURE_CLASSES had a red path, but this file
 // contained ZERO non-comment references to FAILURE_CLASSES — so the completeness was TRUE BY CARE,
@@ -401,7 +600,7 @@ if (declaredFailureClasses === null) {
 } else {
   console.log(`COMPLETENESS (F-4): all ${declaredFailureClasses.length} of run.mjs's declared FAILURE_CLASSES have a demonstrated red path — ASSERTED, not assumed.`);
 }
-const allOk = controlOk && countOk && identityOk && provenanceOk && completenessOk && rows.every((r) => r.ok);
+const allOk = controlOk && countOk && identityOk && provenanceOk && completenessOk && effectOk && rows.every((r) => r.ok);
 // ⚠️ THE DENOMINATOR PRINTED IS THE EXPECTED ONE, NOT `rows.length`. Reporting the accumulator
 // beside a check on the accumulator is how "23 / 23" read as complete coverage.
 console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${EXPECTED_ROW_COUNT}`);
@@ -416,6 +615,10 @@ console.log(allOk
     provenanceOk ? null : `row PROVENANCE missing on ${provenanceFailureRows.length} row(s) — their identity is uninterpretable, not merely wrong`,
     countOk ? null : `row COUNT ${rows.length} != declared ${EXPECTED_ROW_COUNT}`,
     identityOk ? null : `row IDENTITY broken (${neverWitnessed.length} declared class(es) never ran, ${witnessedRepeatedly.length} ran more than once, ${witnessedUndeclared.length} undeclared)`,
+    effectPresenceOk ? null : `EFFECT witness missing on ${effectMissing.length} run(s) — uninterpretable, not merely wrong`,
+    effectDeterministicOk ? null : `EFFECT non-deterministic for ${nonDeterministic.length} injection(s)`,
+    effectDistinctOk ? null : `EFFECT COLLISION: ${effectCollisions.map(([, ts]) => ts.join('=')).join(', ')} — declared rows that produced the SAME observed effect`,
+    effectPinOk ? null : `EFFECT PIN broken (${effectNeverRan.length} pinned never ran, ${effectUnpinned.length} ran unpinned, ${effectChanged.length} changed)`,
     completenessOk ? null : (declaredFailureClasses === null ? 'FAILURE_CLASSES unreadable — completeness UNKNOWN' : `${uncoveredFailureClasses.length} declared failure class(es) have no red path: ${uncoveredFailureClasses.join(', ')}`),
     failedRows.length ? `classes without a demonstrated red path: ${failedRows.join(', ')}` : null,
   ].filter(Boolean).join(' | '));
