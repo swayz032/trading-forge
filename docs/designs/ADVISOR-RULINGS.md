@@ -12,6 +12,102 @@
 
 ---
 
+## R-540 · 2026-08-02 · ✅★★★★★ **AR-585 DELIVERED ALL FIVE ITEMS AND MY INDEPENDENT SWEEP FOUND NO DEFECT — INCLUDING THE GREEN-NEIGHBOUR SWEEP I MOST EXPECTED TO BREAK.** 🛑★★★★★ **AND ALL THREE NEW EXTERNAL FINDINGS ARE SUSTAINED — BUT `F-1` IS **MY** DEFECT: `R-539 §5.1` ORDERED THE MENU **DELETED** AND NEVER ORDERED THE DELETED CONTROL **INVERTED**. THE WORKER OBEYED ME EXACTLY AND THE CARDINALITY RULE ENDED UP WITH NO RED-PROOF.** ⚠️★★★★★ **FIFTH CONSECUTIVE RULING OF THIS DESK LANDING CORRECT AND ONE LEVEL SHORT.** ✅ **REVISE — ONE CLOSURE PASS. IMPLEMENTATION AND GRADE STAY BLOCKED.**
+
+**RULING ID:** R-540 · **TASK ID:** AR-585 · **DECISION: REVISE.**
+**CONSUMES EXTERNAL READ:** `90556c25` (`01:58:23`, *"advisor: review AR-585 P0-vNext design"*) — `[EXTERNAL OPINION]`, zero authority, premises audited. **Now spent.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-585`** (`01:52:39`, `d9db4aa7`, delivery, `38/38` + `14/14`, `+55/−11`), read in full including its `§7` honest-partial tail. `AR-584` is its start-receipt.
+**PINNED:** commit `d9db4aa7`, design blob `4f69ec6e4f48fefee491916fb95b320c1ca0fddb` `[MEASURED HERE, rev-parse + cat-file -t → blob]`. ✅ **The external read's cited blob MATCHES EXACTLY — second honest pin in a row from that channel.**
+**WORKING FILE == HEAD** `[MEASURED HERE, git status --porcelain on the design path → empty]`. **No uncommitted drift; the object I graded is the object that landed.**
+
+### ✅★★★★★ §1 — CLAIMS VERIFIED (AND HOW) — INDEPENDENTLY, BEFORE READING THE EXTERNAL REVIEW
+`[ALL MEASURED HERE, blob `d9db4aa7`, campaign tree `wt-h1-wave4-20260712`]`
+- **MATRIX:** `53` rows, unique `53`, **contiguous `1..53`**, zero duplicates, row `53` = clean control LAST → the `52+1` caption is CORRECT. Parser carries a **positive control** (sees bolded `| **3** |`) and a **negative control** (header row does not parse).
+- **MANIFEST:** **`45` records** — atoms with no subcase EMPTY · subcases with no catcher EMPTY · catchers naming a non-existent row EMPTY. **Claim MATCHES exactly.**
+- **ROWS `50`/`51`/`52` present**, and `51` carries **BOTH** promised witnesses `[MEASURED]` — own-keys AND prototype-identity. **That matters: the own-key witness ALONE reports the object CLEAN.**
+- **`L225` stale carrier REPAIRED** — no live line says *"both `4b` rows"*; the carrier now names **ALL EIGHT** (`39,40,42,43,44,45,46,47`).
+- ★★★★★ **THE GREEN-NEIGHBOUR SWEEP — THE CHECK I MOST EXPECTED TO BREAK, AND IT HELD.** The worker's own zero-import decision invalidated two green neighbours four hundred lines away; it found them, said so, and repaired them. **I swept EVERY `GREEN` line (`41`, positive control alive) for one still requiring an import: THREE flagged, ALL THREE ARE MY CLASSIFIER.** `[MEASURED HERE, FULL LINES, cell-by-cell]` rows `34`/`37` carry *"import"* only in the **MUTATION cell** while their greens are a plain-data constant and a deeply-frozen constant · row `49`'s hit is the **ENGLISH VERB** — *"each **imports** a key set the parser cannot bound at this node."* ✅ **ZERO live green neighbours require an import. `A13` CONFIRMED BY AN INDEPENDENT SWEEP.**
+
+### ⚠️★★★★★ §2 — MY INSTRUMENT-FAULT RATE TONIGHT IS `8 / 8`, RECORDED AS CALIBRATION
+**Across two rounds I generated ~eight apparent findings. EVERY ONE WAS MY OWN TOOLING:** `cp1252` stdout · a row regex blind to **bolded** row numbers (false *"row `3` MISSING"*) · summary lines parsed as records (false `42` vs `39`) · a capability partition keyed on a literal string (false orphan `[48]`) · a probe aimed at the heading instead of the carrier · and tonight's **three** green-neighbour false positives, **one matching the ordinary English word `imports`.**
+🛑★★★★★ **THE UNFLATTERING READ, STATED BECAUSE IT BEARS ON THE BAR QUESTION: THIS DESK'S INDEPENDENT VERIFICATION HAS FOUND **ZERO** REAL DEFECTS IN TWO ROUNDS WHILE THE EXTERNAL CHANNEL FOUND THREE REAL ONES EACH TIME. **MY INSTRUMENTS ARE THE WEAKER ONES, AND A DESK THAT KEEPS SCORING ITS OWN CHECKS AS CONFIRMATIONS IS MEASURING ITS OWN AGREEMENT.** Mine failed toward FALSE FINDINGS — the survivable direction, but only by luck of sign.**
+
+### 🛑★★★★★ §3 — `F-1` SUSTAINED, AND IT CONVICTS `R-539 §5.1`, WHICH IS MINE
+`[MEASURED HERE, every import-bearing manifest record printed in full]`
+```
+26(a) unallowlisted import     import {read} from './ledger'                 -> ledger
+26(b) filesystem / network     import fs from 'node:fs'                      -> capability
+26(c) transitive edge          import './helper' (helper imports ledger)     -> ledger
+41(a) import()                 await import('./ledger')                      -> ledger
+41(e) createRequire            createRequire(import.meta.url)('./ledger')    -> ledger
+harmless / inert / pure-helper import mutation ....................... NONE EXISTS
+```
+**Row `26`'s own title is *"FORBIDDEN DEPENDENCY — ... reaching a ledger/oracle reader."* **IT IS A CAPABILITY RULE. THE POLICY IT MUST PROVE IS A CARDINALITY RULE (`import count = 0`), AND NOTHING PLANTS A MUTATION VIOLATING CARDINALITY WITHOUT ALSO VIOLATING CAPABILITY.** An implementation keeping an allow-list for an inert helper **rejects all five, keeps every green green, and still breaks the chosen policy.**
+🛑★★★★★ **MY ORDER'S DEFECT, NOT THE WORKER'S. `R-539 §5.1` SAID *"DELETE THE MENU"* AND SAID NOTHING ABOUT WHAT THE DELETED GREEN MUST **BECOME**. `AR-585` DELETED IT EXACTLY AS ORDERED.** ★★★★★ **`WHEN A POLICY CHANGES A CONTROL'S POLARITY, INVERT THE CONTROL; DO NOT MERELY DELETE IT.` `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT` — `AR-585` may not be read against for this.**
+⚠️★★★★★ **FIFTH CONSECUTIVE RULING OF ONE SHAPE** — `R-534 §5.5` a catcher that cannot catch · `R-534 §5.6` `EMPTY` with no denominator · `R-535 §1` a prototype-blind sole mechanism · `R-536 §4.5` row-membership as coverage · **now `R-539 §5.1` a deletion with no inversion.**
+
+### 🛑★★★★★ §4 — `F-2` SUSTAINED **BY EXECUTION**: COOKED KEY IDENTITY, NOT SOURCE SPELLING
+`[MEASURED HERE, node v24.13.0, with controls]`
+```
+Object.freeze({ "\x5f\x5fproto__": p })  -> ownKeys [] ; proto===p TRUE ; inherited 7 ; frozen TRUE
+Object.freeze({ a:1, "\x61":2 })         -> ownKeys ["a"] ; a=2 ; first value SILENTLY DISCARDED
+CONTROL distinct keys {a:1,b:2}          -> ownKeys ["a","b"]        (stay distinct)
+CONTROL escaped ORDINARY key {"\x62":3}  -> ownKeys ["b"] ; proto = Object.prototype
+```
+★★★ **THE CONTROLS ARE THE POINT: an escaped key is NOT inherently dangerous — `"\x62"` is an ordinary own property. **THE COOKED IDENTITY DECIDES**, while the design's rules (`Key != "__proto__"`, *"all Keys DISTINCT"*) are stated against RAW SPELLINGS and the matrix plants only exact raw forms. A `getText()`-based implementation passes the design and is wrong.**
+⚠️ **SCOPED HONESTLY: I measured the escaped **STRING** form. The escaped **IDENTIFIER** form is `[CORROBORATED — the external read executed it]`, NOT measured at this desk. Both belong in the remedy; only one is mine.**
+
+### 🛑★★★★★ §5 — `F-3` SUSTAINED, VERBATIM: A ONE-TOKEN DEFECT WITH A REAL CONSEQUENCE
+`[MEASURED HERE, manifest line `L607` printed in full from the blob]`
+```
+shadowed / local freeze callee        const Object={freeze:x=>x}; O.freeze(v)       50(a)
+                                                                  ^ NEVER DECLARED
+```
+`[MEASURED HERE]` **the as-recorded shape throws `ReferenceError`; the CORRECTED shape (calling the binding it declares) yields `isFrozen = false` — the defect row `50` exists to catch.** 🛑★★★★★ **THE ROW WOULD GO RED WITHOUT EVER EXERCISING SYMBOL RESOLUTION. `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF` — the document's own rule, and `R-534 §5.5` convicted this desk for the same shape.**
+
+### §5a — ARCHITECTURE INVARIANTS TOUCHED
+- **A zero-CARDINALITY policy needs a mutation that would have been SAFE under a CAPABILITY policy**, or capability rejection masquerades as cardinality enforcement.
+- **Static object-key safety is a property of the COOKED property identity, not its source spelling.**
+- **A red mutation is evidence only when its NAMED catcher causes the red** — not an earlier parse, name or type failure.
+- **Build-time (`1b-S`) and runtime (`1b-R`) remain distinct**; nothing here lets an AST result certify a runtime property.
+- **Invariant 1 untouched:** compiler correctness and strategy profitability stay separate. **No runtime, trading or capital behaviour is authorized by this ruling.**
+
+### ✅★★★★★ §6 — REQUIRED CORRECTIONS / AUTHORIZED NOW — TO THE SEAT HOLDING `AR-585` (`claude.exe 26204`). DESIGN ONLY. FIVE ITEMS.
+1. ★★★★★ **ADD THE HARMLESS-IMPORT RED MUTATION: a direct static import of a demonstrably INERT local helper, RED **SOLELY BECAUSE IMPORT COUNT IS NON-ZERO**, specifier named — NOT because it reaches a capability. GREEN neighbour stays the zero-import module.** ★★★ **THIS IS THE INVERSION `R-539` FAILED TO ORDER.**
+2. ★★★★★ **DEFINE ONE CANONICAL COOKED-KEY IDENTITY FUNCTION** — the TypeScript AST's cooked `Identifier`/`StringLiteral` value, **NEVER `getText()` or raw source** — and apply THAT ONE FUNCTION to both the `__proto__` prohibition and duplicate detection.
+3. ★★★★★ **ADD escaped-identifier and escaped-string `__proto__` subcases plus mixed/escaped duplicate-key subcases, each with exact catcher attribution; ordinary distinct cooked keys stay GREEN.**
+4. ★★★★★ **REPAIR manifest `50(a)` to call the binding it declares (`Object.freeze(v)`), and require PARSE/TYPE VALIDITY before any symbol-identity verdict is admitted — a row may not be satisfied by a `ReferenceError`, a parse failure or a type failure.**
+5. **RECOMPUTE the manifest and BOTH anchored and un-anchored matrix counts from the parse. Never carried, never hand-copied.**
+
+**FILES / SCOPE ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — blueprint OUT.**
+**FORBIDDEN:** implementation · pinned lanes · the ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops · ⚠️ **`docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — THE GRADER'S RECEIPT. DO NOT READ AS AUTHORITY, DO NOT WRITE, DO NOT PRE-EMPT.**
+**FIRST OBSERVABLE:** the harmless-import mutation + the cooked-key identity rule, **~20–30 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**HONEST-PARTIAL:** if a spelling class cannot be canonicalised by the TS AST, **NAME IT AND LEAVE IT OPEN.** `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result.
+
+### §6a — ACCEPTANCE COMMANDS
+1. **Plant a pure local static helper import → named RED with the reason `import count = 1`, NOT a capability reason; the zero-import neighbour stays GREEN.**
+2. **Parse raw AND cooked static property names with the TypeScript API; every escaped proto variant normalises to `__proto__` and is rejected by the PROTO catcher specifically.**
+3. **Mixed/escaped duplicates normalise to one canonical key and are rejected with BOTH source positions; distinct cooked keys stay GREEN.**
+4. **Row `50(a)` type-checks and parses cleanly, THEN is rejected by non-intrinsic symbol identity — assert the verdict's cause, not merely its colour.**
+5. **Re-run bidirectional manifest joins and the section-anchored matrix parse; publish anchored AND un-anchored counts, plus both negative controls (unmapped atom, non-existent catcher row).**
+
+### 🛑 §7 — STOP CONDITIONS (adopted, audited, one added by this desk)
+★★★★★ **Zero-import INFERRED from the rejection of only DANGEROUS imports → STOP.** · ★★★★★ **Property keys compared by RAW SOURCE SPELLING → STOP.** · ★★★★★ **Any red mutation satisfiable through an undefined identifier, parse failure or type failure instead of its NAMED catcher → STOP.** · ★★★ **ADDED: a control DELETED rather than INVERTED when a policy changes its polarity → STOP.**
+
+### ⚠️★★★★★ §8 — FAILED / UNPROVEN, AND THE BAR
+**UNPROVEN AND CARRIED:** no implementation, no mutation ever executed against the gate, no CI runs any of this · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED` · Surface `B` UNOWNED · Phase-1 profile REFUSED. **Every result in `AR-585` is DESIGN TEXT over a `[PRE-REGISTERED, NOT EXECUTED]` manifest, as it says itself.**
+**Per-round `9 → 5 → 2 → 3 → 3 → 3 → 3 → 3` `[MEASURED]` — FIVE ROUNDS FLAT AT THREE.** ⚠️ **`accuracy-validator` (dispatched `01:41`, pinned `6bdb2e59`) HAS WRITTEN ITS RECEIPT FILE, BUT ITS COMPLETION IS NOT CONFIRMED TO THIS SEAT AND **I HAVE DELIBERATELY NOT READ IT.** ★★★★★ **A FILE THAT EXISTS IS NOT A FILE THAT IS FINISHED; `A PARTIAL RESULT THAT READS AS COMPLETE` IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE.**
+★★★ **AGAINST MY OWN EARLIER FRAMING, RECORDED BEFORE I SEE THE VERDICT SO IT CANNOT READ AS AGREEMENT AFTER THE FACT: this round's three include ONE I CAUSED (`F-1`) and ONE ONE-TOKEN TYPO (`F-3`). **THAT IS NOT THREE INDEPENDENT DEEP DEFECTS**, and it WEAKENS my `R-539 §7` counterweight. **ONLY `F-2` IS A GENUINELY NEW LAYER THIS ROUND.**
+
+### §9 — LESSONS TO PERSIST
+★★★★★ **`WHEN A POLICY CHANGES A CONTROL'S POLARITY, INVERT THE CONTROL; DO NOT MERELY DELETE IT.`**
+★★★★★ **`WHEN I ORDER A REMOVAL I MUST NAME WHAT REPLACES THE CONTROL THE REMOVAL KILLS.`**
+★★★★★ **`FOR STATIC OBJECT LITERALS THE SECURITY KEY IS THE COOKED PROPERTY IDENTITY, NOT THE CHARACTERS THAT SPELL IT.`**
+★★★★★ **`A RED MUTATION IS EVIDENCE ONLY WHEN THE NAMED CATCHER — NOT AN EARLIER PARSE, NAME OR TYPE FAILURE — CAUSES THE RED.`**
+★★★ **`A DESK WHOSE OWN CHECKS RETURN 8/8 INSTRUMENT FAULTS IS MEASURING ITS OWN AGREEMENT.`**
+
+---
+
 ## R-539 · 2026-08-02 · ✅★★★★★ **AR-583 DELIVERED WHAT IT CLAIMED — I RE-MEASURED ALL SIX ITEMS INDEPENDENTLY AND FOUND NO DEFECT.** 🛑★★★★★ **AND THE EXTERNAL READ'S TWO NEW FINDINGS ARE **SUSTAINED BY EXECUTION HERE**: THE ADMITTED GRAMMAR CAN BE SATISFIED BY A **SHADOWED `Object.freeze` THAT FREEZES NOTHING**, AND BY A **`__proto__` KEY THAT INSTALLS A CUSTOM PROTOTYPE WHILE REPORTING ZERO OWN KEYS.** BOTH ARE DESIGN-TIME FALSE GREENS.** ⚠️★★★★★ **THE `R-537 §7` BAR-CALIBRATION TRIGGER HAS **FIRED** (FOURTH ROUND FLAT AT THREE) — **GRADER DISPATCHED, NOT PARKED.** ✅ **REVISE — ONE SOURCE-GRAMMAR AUTHORITY PASS. IMPLEMENTATION AND GRADE STAY BLOCKED.**
 
 **RULING ID:** R-539 · **TASK ID:** AR-583 · **DECISION: REVISE.**
