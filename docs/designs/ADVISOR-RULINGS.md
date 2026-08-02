@@ -12,6 +12,72 @@
 
 ---
 
+## R-556 · 2026-08-02 · ✅★★★★★ **`3 / 3`. I RE-EXECUTED BOTH OF `R-548`'s FOUNDING ATTACKS MYSELF, IN MY OWN ISOLATED WORKTREE AT `53e80935`, AND **BOTH ARE CLOSED**: ATTACK A NOW `EXIT 1` / `GATE: FAIL` WITH `35(a) TYPE_INVALID_UNCLASSIFIED declared=<NONE>` (was `44→43`, `GATE: PASS`, exit `0`); ATTACK B NOW `EXIT 1` NAMING **BOTH** DIRECTIONS — `missing_ids ["35(a)"]` AND `undeclared_ids ["35(z)"]` (was `missing_ids []`, exit `0`).** ✅★★★★★ **THE PINNED-BLOB JOIN KEY VERIFIES AND THE MEMBERSHIP MODULE **PROVED ITS OWN MECHANISM BY FAILING** IN A NON-REPO.** 🛑 **THE INDEPENDENT GRADE IS NOW DUE AND ITS BRIEF IS WRITTEN (`§6`).** **DECISION: APPROVE `3/3`.**
+
+**★ WORKER — START HERE:** ✅ **`R-551 §6.1` IS COMPLETE — `3 / 3`, and I verified the two attacks myself rather than reading your report. Nothing is re-opened and nothing new is authorized to you this ruling.** 🛑 **HOLD ON `P0PC`: the object is DELIVERED and awaiting its INDEPENDENT GRADE (`doer != grader`). Do NOT self-certify, do NOT start `P0PG`, and do NOT dispatch a grader — that dispatch is the desk's (`§6`).** ⚠️ **If you have capacity while the grade is pending, the ONE authorized item is: write down, without changing code, which rows of the EXPANDED corpus beyond `34(d-u)` you believe may still hold list-bought credits (`AR-597 §8`'s own `[UNENUMERATED]`) — a LIST, not a repair.**
+
+**RULING ID:** R-556 · **TASK ID:** AR-597 · **DECISION: APPROVE** items (2)+(3) · **HOLD** `P0PC` at DELIVERED-PENDING-GRADE.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** (`R-554`). **GRAPH NODE TRANSITION: NONE.** ⚠️★★★ **`P0PC` does NOT advance to complete: `R-550`/`R-551` put the independent grade between `P0PC` and `P0PG`, and it has not run. `DELIVERED IS NOT GRADED.` `P0PG` stays blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-597`** (`53e80935`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** campaign worktree for reads; **attacks executed in a DETACHED worktree at `53e80935` (`/c/tfa`), created and REMOVED by this desk. `[MEASURED HERE]` shared tree HEAD unchanged and no worktree registration remains.** ⚠️ **ONE DECLARED SUBSTITUTION in that tree: bare `'typescript'` → absolute URL (3 files), because the isolated tree has no `node_modules`. Same package the campaign loads.**
+
+### ✅★★★★★ §1 — THE TWO FOUNDING ATTACKS, RE-EXECUTED BY THIS DESK
+`[MEASURED HERE — my own injections, not the worker's `red-proof` harness. Independence is not a second look at someone else's question.]`
+**CLEAN BASELINE FIRST, because a red means nothing without it:** unmodified corpus in the isolated tree → **`EXIT 0`**.
+```
+ATTACK B  unique rename '35(a)' -> '35(z)', body and expectations byte-untouched
+  BEFORE (R-548 §1, this desk)   missing_ids: []                       EXIT 0   <- the false green
+  NOW                            missing_ids:    ["35(a)"]             EXIT 1
+                                 undeclared_ids: ["35(z)"]
+  ^ BOTH directions fire and BOTH name the identity — exactly what item 15 required.
+
+ATTACK A  plant an UNRELATED TS2339 on 35(a); its planted globalThis read left INTACT
+  BEFORE (R-548 §1, this desk)   attributed 44 -> 43, GATE: PASS       EXIT 0   <- the laundered miss
+  NOW    35(a) TYPE_INVALID_UNCLASSIFIED  declared=<NONE>  TS2339@L1:98 "b"
+         GATE: FAIL (3 classes)                                        EXIT 1
+```
+★★★★★ **THE MECHANISM, WITH ITS EVIDENCE IN THE SAME SENTENCE: the row is convicted because it `declared=<NONE>` — under the new `ownershipJoin` a diagnostic can only be credited to a row that DECLARED an owning anchor, so an unrelated error can no longer buy a `caught_by_typechecker` credit. That is the ownership key doing the work, not a smaller code list.**
+
+### ✅★★★ §2 — THE MEMBERSHIP PIN, VERIFIED BY ITS JOIN KEY AND BY ITS FAILURE MODE
+`[MEASURED HERE]` **`git cat-file -t b56e2969…` → `blob`, `11050` bytes; `git rev-parse 8297ebbe:prototypes/p0-vnext-admission/corpus.mjs` → `b56e2969…` EXACTLY.** ★★★ **I check external/quoted SHAs every time because this campaign has had fabricated tails; this one is real AND it is the right object — the JOIN KEY, not a neighbouring blob.**
+✅★★★★★ **AND THE MECHANISM PROVED ITSELF BY BREAKING:** my first attempt ran the prototype from a scratchpad copy and it died on `fatal: not a git repository … git show 8297ebbe:…`. **A HAND-COPIED ID LIST WOULD HAVE RUN FINE THERE.** `[MEASURED HERE]` `membership.mjs::loadBaselineCorpus` uses `execFileSync('git', ['show', …], { cwd: HERE })` — pinned to the MODULE's own directory, so a caller's cwd cannot redirect it either. ★★★★★ **`AN INSTRUMENT THAT FAILS WHERE A FAKE WOULD SUCCEED HAS PROVEN ITS MECHANISM.`**
+✅ **Both forbidden constructions are gone from LIVE code** `[MEASURED HERE]`: `TYPECHECKER_CAUGHT_CODES` and `ORIGINAL_52_IDS = CORPUS.map(` now appear **only inside comments recording their deletion**. ✅ **`AR-597 §3`'s self-flag is honest and correct: `membership.mjs` does contain `baseline.CORPUS.map(` — on the FROZEN blob, a different object — and it is red-proofed by attack B above, which a self-authored set cannot survive.**
+✅ **All six gates `EXIT 0` in the campaign tree** `[MEASURED HERE, exit codes off the process]`: `run` · `red-proof` (`29/29`, control GREEN) · `type-value-proof` (`15/15`) · `emitted-freeze` (`39` compared, `0` undeclared) · `module-tuple` · `membership`.
+
+### 🛑★★★ §3 — MY OWN INSTRUMENT ERROR, RECORDED BECAUSE IT NEARLY BECAME A FINDING
+**My first attack-A plant used a `python` string anchor that did not match. The edit silently applied NOTHING, the run exited `0`, and that `0` looked exactly like *"attack A is still open."*** ✅ **It was caught ONLY because I had put `assert s.count(old)==1` in the script and re-verified the plant with a `grep` before reading the verdict.**
+★★★★★ **`AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID NOT FIRE.` Every planted-defect test owes a POSITIVE CONTROL THAT THE PLANT LANDED, printed before the verdict — the same law as `absence-claim`, applied to mutation testing.** ⚠️ **This desk has now been bitten by piped exit codes (`R-554`), a failed `str.replace` on a stale timestamp (`R-535`), and a failed anchor match — three shapes of the same species: `THE EDIT I DID NOT VERIFY DID NOT HAPPEN.`**
+
+### ✅★★★★★ §4 — WHAT THE WORKER DID THAT I WANT ON THE RECORD
+1. 🛑 **IT REPORTED THAT THREE OF ITS SEVEN RED-PROOFS DO NOT DISCRIMINATE** (`(e)`/`(f)`/`(g)` — the old gate already reddened via `partition_sum`/`partition_overlap`; what item 15 adds there is the IDENTITY, not the red). ★★★★★ **It could have shipped "seven new red paths" and nobody would have checked. `A DISCRIMINATION TEST THE DOER RUNS AGAINST ITS OWN FIX, AND THEN REPORTS HONESTLY WHERE IT FAILED TO DISCRIMINATE, IS THE STRONGEST SELF-EVIDENCE THIS CAMPAIGN HAS SEEN.`**
+2. ✅ **ITEM 14 CONVICTED `34(d-u)` ON ITS FIRST CLEAN RUN — a row nobody was attacking, holding a credit bought entirely by the global list.** The guard found real rot in unattacked code. **Adjudicated to `caught_by_typechecker` with a measured anchor, and it discharges `R-546 §5.12`'s open question.**
+3. ✅ **ITEM 16 FOUND `54(c)` HAD NEVER BEEN COMPARED ONCE** — one `continue` covering four conditions; the published `38` was `39` minus a silently dropped row, **and the dropped row was the one carrying an undeclared emit change.**
+4. ✅★★★ **IT LABELLED ITS `54(c)` DECLARATION `LATE`, NOT `PRE-REGISTERED`** — `F-6` forbids back-filled predictions and it refused to dress one up. ✅ **It scoped `defect` as PROSE, NOT machine-checked, rather than letting the key borrow authority it does not have.**
+5. ✅ **It caught its own `Win32_Process` filter error** (filtered `powershell/node/claude`; the monitors run as `bash.exe`) **and did not arm a duplicate rig.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️ **`G-1` OPEN — *"sample, not closure"* binds.** ⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED (`13` attributed rows).** ⚠️ **`[UNENUMERATED]` per `AR-597 §8`: whether other expanded-corpus rows held list-bought credits.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`P0PC` marked complete, or `P0PG` started, before the independent grade lands → STOP: `DELIVERED IS NOT GRADED`.** · ★★★★★ **The worker grading its own object, or dispatching its own grader → STOP.** · ★★★★★ **A mutation test reported without a positive control that the plant landed → STOP (`§3`).** · ★★★ **`(e)`/`(f)`/`(g)` cited as exit-code discriminators → STOP; the worker itself says they are not.** · ★★★ **`44/52` cited as ratified → STOP; still true, `R-550 §1` binds.**
+
+### 🛑★★★★★ §6 — THE INDEPENDENT GRADE: DUE NOW, BRIEF WRITTEN, DISPATCH STATED HONESTLY
+**`R-551 §6.2` / `R-552 §3.1` held it until `F-2-CORRECTED` AND items `14`–`16` existed. `[MEASURED HERE]` BOTH NOW EXIST — THE HOLD'S CONDITION IS DISCHARGED AND THE GRADE IS OWED.**
+**THE BRIEF, WRITTEN SO IT NEEDS NO RE-DERIVATION:** `accuracy-validator`, **HUNT** mode, pin **`53e80935`**, durable COMMITTED receipt to `docs/designs/GRADE-P0PC-FINAL-2026-08-02.md`. **Access recipe:** campaign worktree `wt-h1-wave4-20260712`, `node v24.13.0`, gates run from `prototypes/p0-vnext-admission/`, exit codes read OFF THE PROCESS. **Claims to DISPROVE, verbatim:** *"both `R-548` founding attacks are closed"* · *"`44/52` like-for-like is admissible"* · *"the ownership key is `(row, expression, span, code)` with no code allowlist"* · *"membership is externally pinned"*. **Novel-hunt request — CONSTRUCT AND EXECUTE modules, as the last grade did, which is what found `F-1`/`F-2`:** the `SyntaxKind`/heritage space the last sample could NOT close · **`runtime-admission.mjs`, ENTIRELY UNGRADED, `13` attributed rows** · other rows holding list-bought credits beyond `34(d-u)` · **and my own module-target null (`R-555 §2a`) — EXTEND it, do not repeat it.** **Ask explicitly for the honest null.**
+⚠️★★★★★ **DISPATCH STATUS, STATED PLAINLY RATHER THAN PARKED: this seat is operating under a harness constraint against unprompted subagent dispatch, so I have NOT spawned it.** ✅ **The obligation is UNCHANGED, OWNED BY THIS DESK, and needs one word from the operator.** 🛑 **It is NOT reassigned to the worker, NOT deferred to a future seat, and NOT cancelled — `R-546 §8.2` binds and `doer != grader` binds.** ★★★ **I record it here rather than in a status line so it cannot quietly become an unmade decision with a witness.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — dispatch the `§6` grade the moment the constraint clears.** Nothing else precedes it; one slot, none in flight.
+2. **WORKER — HOLD on `P0PC` (see START HERE).** Optional non-code enumeration only.
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`).** ✅ **The money path is now IDLE-PENDING-GRADE, which is exactly the condition `R-554 §5.2` named — so this is now eligible, behind item 1.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`AN INSTRUMENT THAT FAILS WHERE A FAKE WOULD SUCCEED HAS PROVEN ITS MECHANISM.` `membership.mjs` dying on `not a git repository` is stronger evidence of external pinning than any passing assertion it could print.**
+★★★★★ **`AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID NOT FIRE.` Print the positive control that the plant landed, before the verdict.**
+★★★ **`DELIVERED IS NOT GRADED` — the third member of `LANDED ≠ RUNNING` and `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.**
+
+---
+
 ## R-555 · 2026-08-02 · ✅★★★★★ **`F-2-CORRECTED` IS RECEIVED AND CLOSED — AND THE PROOF IS THAT **MY OWN PROBE, RE-RUN UNCHANGED, NOW CLEARS THE BUILD IT CONVICTED**: `implements` and `interface extends` ADMITTED, `window.Base` and `export * from` STILL RED, `0` OVER-CORRECTIONS, `0` DEAD PROBES.** ✅★★★★★ **THE FIX IS THE ORDERED PROPERTY, NOT A PATCH: NO `SyntaxKind` AND NO SPELLING ALLOWLIST EXISTS — THE EMITTER IS THE ORACLE, AND `e===0 ⟹ ABSENT FROM EMIT ⟹ CANNOT EXECUTE` MAKES THE SOUND DIRECTION SOUND BY CONSTRUCTION.** ✅★★★ **I ATTACKED THE NEW ORACLE ON ITS OWN WEAK POINT AND FOUND NOTHING — HONEST NULL, COVERAGE NAMED.** **DECISION: APPROVE `1/3` · RATIFY the worker's minted law · CONTINUE.**
 
 **★ WORKER — START HERE:** ✅ **`F-2-CORRECTED` CLOSED — do not revisit it.** **Continue `R-551 §6.1`: (2) items `14`–`16` with their seven red-proofs `(a)`–`(g)`, then (3) `F-7`.** ✅ **Your `1/3` fan-in and *"NOT A HANDOFF"* are ACCURATE — I verified both attack lines are untouched (`§4`), so nothing was quietly claimed.** ★★★★★ **YOUR `§3` LAW IS RATIFIED AS CAMPAIGN LAW (`§3` below) — apply it to items `14`–`16`: their red-proofs must be RE-MEASURED in the same run that reports them, never inherited.** **First observable: item `15`'s frozen membership loaded from a PINNED ARTIFACT with `CORPUS.map(` gone, ~30–45 min.**
