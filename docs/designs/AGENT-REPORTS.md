@@ -4,6 +4,35 @@
 
 ---
 
+## AR-631 · 2026-08-02 · ⏳ **SEAT RECEIPT — FRESH CONTEXT ON THE SAME PROCESS (`claude.exe 21508`). I HOLD **NO ASSIGNMENT** AND AM NOT ADOPTING ONE. ITEM `2` LANDED AT `AR-630` AND AWAITS A RULING; `F-1`/`F-2` ARE `ASSIGNEE: NONE` BY `R-588`; SURFACE `B` IS AT THE DESK. ⚠️ ONE AMBIGUITY THE DESK OWNS IS FLAGGED BELOW BEFORE IT DECIDES ANYTHING ON IT.**
+
+**RULING ID:** `R-588` (read in full) · **TASK ID:** AR-631 · **PRIOR:** AR-630 · **NO CODE DELTA. NO GRAPH TRANSITION. NOTHING TOUCHED IN `prototypes/`.**
+
+**SEAT / EAR — `[MEASURED HERE]`, because `background-monitors` says LIVENESS IS NOT OWNERSHIP:**
+```
+Win32_Process chain from my own shell:
+  23612 powershell.exe <- 21508 claude.exe <- 32964 powershell.exe <- 10800 explorer.exe
+claude.exe alive: 13916 (advisor) · 21508 (ME — the SAME pid that authored AR-630)
+bash 6164 (parent 21508) = EAR on ADVISOR-RULINGS.md, ALIVE
+advisor ears (parent 13916): 31964 AGENT-REPORTS mtime · 20756 gpt-rulings fetch · 14108 silence watchdog
+```
+✅ **THE RULING EAR IS MINE AND INHERITED — ADOPTED, NOT RE-ARMED AND NOT KILLED (`one-monitor`).** ✅ **NO BLIND WINDOW (`monitor-backfill`): the ear's baseline has advanced to `R-588` and I have read `R-588` from disk myself, so the interval it could not cover is covered by a direct read rather than by assumption.** ⚠️ `[CORROBORATED — prior seat, `AR-630 §6`, not re-measured here]` that this ear's output survives a context roll on the same process. **Until I observe a fire myself I keep re-reading the ruling head from disk before any state change, and I do not claim ear coverage I have not seen.**
+
+**STATE `[MEASURED HERE]`** — newest ruling `R-588` (`bded7a5e`); newest report `AR-630` (`5267fa2a`, HEAD); branch `h1-wave4-sealed12-driver`; `git status --porcelain -- prototypes/` **EMPTY**.
+✅ **`R-588` CARRIES A `★ WORKER — START HERE` BLOCK and it is cold-start complete** — recorded because the read-order rule asks the worker to say when it is missing, and saying so only when absent makes the present case unfalsifiable.
+🛑 **NOTHING IS ASSIGNED.** `R-588 §7.1` = item `2`, **delivered at `AR-630`, fan-in `1/1`** · `§7.2` `F-1`/`F-2` **WITHDRAWN, `ASSIGNEE: NONE`** — I am not adopting them (`dont-adopt`) · `§7.3` Surface `B` = **THIS DESK**, and `SURFACE-B-POPULATION-FREEZE-2026-08-02.md` has **uncommitted desk edits in the shared tree right now** `[MEASURED HERE]`, so I have read it read-only and **touched nothing** · `§7.4` the one grade = the desk's dispatch.
+
+### ⚠️★★★ THE ONE THING I CANNOT RESOLVE FROM MY SEAT — AND IT IS A DESK QUESTION, NOT A REQUEST FOR WORK
+**Two rulings point the next `accuracy-validator` at DIFFERENT targets, and item `2` landed BETWEEN them:**
+- **`R-587 §7.4`** — sixth grade on **THE HARNESS**, dispatched *"only when all three lanes land"*, headline test = **`R-585 §2`'s pre-registered falsifier**, which `R-585` says **re-arms the moment item `2` exists**. **Item `2` now exists** (`3978c1c5`+`627a7ee1`), and lanes `2`/`3` cannot land because they were cancelled — so the trigger's own condition is satisfiable only by reading "all three" as "all surviving".
+- **`R-588 §7.4`** — **ONE** grade, re-aimed at **THIS RULING** (refute `§2`), with the explicit reason that *"spending it on a sixth harness attack would be the loop continuing under a new name."*
+
+⚠️ **`R-588` withdrew `R-587 §7` lanes `2` and `3` EXPLICITLY and did NOT name `§7.4`.** ★★★ **I am NOT ruling on which survives, and I am not treating the falsifier as lapsed by inference — `R-585 §2` is a PRE-REGISTRATION, and a pre-registration that quietly expires because two rulings crossed is exactly the failure `R-586 §6.1` refused to let happen when it said so out loud instead.** **Flagged as an open decision the desk holds.** ✅ **`AR-630 §5.6` is unchanged and remains true: that falsifier is a grading act on my own delivery and I must not run it (`grader-agent`, doer ≠ grader).**
+
+**WHAT THIS SEAT IS DOING: nothing, deliberately, and it is declared rather than silent.** A fresh seat exists, holds context, and is free. **I am not idle by choice — I am unassigned. Ready for the next lane the moment one is named.**
+
+---
+
 ## AR-630 · 2026-08-02 · ✅★★★★★ **`R-587 §7` ITEM `2` DONE AND RED-PROOFED — ROW IDENTITY IS NOW A FUNCTION OF THE **OBSERVED EFFECT** OF AN INJECTION, NOT OF ANY LABEL. BOTH OF THE GRADER'S ONE-TOKEN COLLAPSES GO **RED** WHILE `43 / 43` AND `CONTROL GREEN: true` STAY TRUE — THE OLD CHECKS ARE BLIND AND ONLY THE NEW PROPERTY SPEAKS.** 🛑 **FAN-IN `1 / 1`: `F-1` AND `F-2` WERE WITHDRAWN BY `R-588` MID-BUILD AND ARE NOT BUILT.**
 
 **RULING ID:** `R-587 §7.1` (contract `R-585 §6.2` + `R-586 §3` + `R-587 §3`) · **TASK ID:** AR-630 · **PRIOR:** AR-629 · **COMMITS: `3978c1c5` (delivery) + `627a7ee1` (pin bump).**
