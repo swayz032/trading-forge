@@ -12,6 +12,49 @@
 
 ---
 
+## R-545 · 2026-08-02 · ⚠️★★★★★ **THE EXTERNAL V4 EXECUTION GRAPH IS RECEIVED, ITS EPOCH IS HONEST, AND IT IS **NOT ADOPTED** TONIGHT — ONE PREMISE FAILS MY AUDIT: IT LISTS `P1`/`P2` AS READY WORKER LANES WHEN BOTH WERE **BUILT AND VERIFIED BAND 7** ON 08-01.** ✅ **NOTHING CHANGES FOR THE WORKER: THE GRAPH ITSELF NAMES `P0PC` AS THE CURRENT MONEY-PATH NODE, WHICH IS EXACTLY WHAT `R-543`/`R-544` ALREADY AUTHORIZE.**
+
+**RULING ID:** R-545 · **TASK ID:** none (external artifact; no new AR) · **DECISION: RECEIVE + HOLD ADOPTION.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `7111b1db1b145fcc979887120cad47592b743897` `[MEASURED HERE, rev-parse + cat-file -t → blob]`, from `337cf11d` (`03:15:14`). **Epoch claimed: report `AR-589`, ruling `R-544`, join commit `da48d018`.** ✅★★★ **I VERIFIED THE EPOCH RATHER THAN READING ITS CAPTION: `da48d018` IS EXACTLY MY `HEAD`, and the newest `## AR-` on disk is still `AR-589`. ITS PIN IS HONEST — this channel has handed this campaign fabricated SHA tails before, so `cat-file -t` first, every time.**
+**GRAPH NODE TRANSITION:** **NONE.** The graph is not adopted, so no node state, artifact identity or descendant invalidation is recorded, and no validator is run.
+**GRAPH FAN-IN / READY SET:** claimed `ready_worker_nodes_at_epoch = [P0PC, P1, P2]`, `ready_advisor_nodes_at_epoch = [P3]`, `current_money_path_node = P0PC`. ⚠️ **I ACCEPT `P0PC` AND HOLD `P1`/`P2`/`P3` — see §2.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-589`** — unchanged; **no newer `## AR-` on disk.** The worker is mid-execution on `R-543 §4` + `R-544 §3` and **this ruling does not touch its contract.**
+
+### ✅★★★★★ §1 — WHAT THE ARTIFACT GETS RIGHT, AND IT IS NOT A SMALL THING
+★★★ **IT DOES NOT CLAIM AUTHORITY IT DOES NOT HAVE, IN ITS OWN WORDS** `[ARTIFACT-SOURCED, read in full]`: *"external-advisor candidate for Fable adoption"* · *"It does not silently edit the campaign blueprint or authorize production/live-capital action"* · *"The blueprint owns requirements. This graph owns execution ordering only after adoption."* ✅ **That is the correct posture and it is exactly what `A CHANNEL IS NOT AN AUTHOR` demands. `R-447`'s failure was the desk mislabelling a relay as an operator directive; this artifact pre-empts that by labelling itself.**
+✅ **Its diagnosis is sound and matches my own record:** V4 carries THREE scheduling surfaces (`§15.6` critical path · `§9` lanes register · the fake-edge map) and none is the single executable truth. **Separating *"what must be true"* (blueprint) from *"what may run now"* (graph) is a real architectural improvement**, and its `edge_rule` — *"an ordering claim without a consumed artifact is a fake edge and is removed"* — is `§8a`'s law restated correctly.
+✅ **Its `compiler_environment_rule` and `diagnostic_ownership_rule` are `R-542`/`R-543`/`R-544` verbatim in substance.** No conflict.
+
+### 🛑★★★★★ §2 — THE PREMISE THAT FAILS, AND WHY IT BLOCKS ADOPTION RATHER THAN A DETAIL
+`[MEASURED HERE, node titles read from the pinned blob]` **`P1` = *"Freeze current additive baseline"*; `P2` = *"Freeze source-keyed truth membership"* — both listed in `ready_worker_nodes_at_epoch`.**
+🛑★★★★★ **BUT `P1`/`P2` WERE BUILT AND VERIFIED ON 2026-08-01 AT BAND `7`** `[ARTIFACT-SOURCED, `GRADE-P1-P2-RECENSUS-2026-08-01.md`, verdict `CLAIM NOT REFUTED — BAND 7`, prior FAIL lifted]` — final shape `43` rows × `7` axes = `301` cells (`ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152`). **A node presented as READY TO RUN that has already SHIPPED is a node-state error, and an execution-order authority whose node states are wrong will schedule work that does not exist.**
+⚠️ **HONEST ALTERNATIVE I CANNOT YET DISCRIMINATE, STATED AS A HYPOTHESIS RATHER THAN A VERDICT:** these nodes may denote the **OPEN `P1/P2` `F-1` REPAIR** (the ledger's `check()` validates `cells[]` and no other region, so `20` of `28` novel operators pass — including forging `counts_by_basis.UNDECLARED` from `43` to `0`). **If so the nodes are legitimate and merely MIS-TITLED.** `[HYPOTHESIS — UNPROVEN. I have not opened the graph's per-node acceptance predicates.]`
+★★★★★ **EITHER WAY THE ADOPTION GATE IS THE SAME: `A GRAPH CAPTION IS NOT READINESS.` I will not hand scheduling authority to an artifact whose ready-set I have not joined, node by node, to the artifacts those nodes claim to produce. `NAME THE JOIN KEY` — the key here is `node → produced artifact → its present state`, and I have checked it for ONE node (`P0PC`) out of four.**
+
+### ✅ §3 — WHY THIS CHANGES NOTHING TONIGHT (the deliberate non-action)
+**The graph's own `current_money_path_node` is `P0PC` — *"Correct and red-proof the executable admission prototype"* — which is precisely `R-543 §4` items `1`–`5` and `R-544 §3` items `6`–`9`, already authorized and in flight.** ✅ **So adoption would not move the worker one inch tonight, and non-adoption costs nothing.**
+★★★★★ **AND THAT IS THE POINT: `R-515` CONVICTED THIS DESK FOR DOING THE ADJACENT GOVERNANCE THING WHILE THE PATH WAITED.** The money path is RUNNING. **Adjudicating a scheduling authority is governance; it waits for the path, not the reverse.** ⚠️ **`ANOTHER CHANNEL'S PUBLISHED PLAN IS NOT AUTHORIZATION` — and a published artifact does not become law by existing, however good it is.**
+
+### ⚠️★★★ §4 — RECORDED: THE PRE-RULING SKILL MUTATED UNDER ME, MID-SESSION
+`[MEASURED HERE]` **`advisor-ruling` now mandates three fields that did not exist when I wrote `R-544` twenty minutes ago — `GRAPH OBJECT`, `GRAPH NODE TRANSITION`, `GRAPH FAN-IN / READY SET` — plus a `§1` gate item and a `§8a` clause, all keyed to V4-graph adoption.** ✅ **This ruling carries them.** ★★★★★ **`A REMEMBERED SKILL IS A STALE SKILL` IS NOT A SLOGAN — I RE-INVOKED AND THE FILE HAD CHANGED; ruling from memory would have silently omitted three mandatory fields.** ⚠️ **NOTED NEUTRALLY AND WITHOUT INFERENCE: I do not know who edited it, and the edit ACCOMMODATES an artifact this ruling declines to adopt. That ordering is worth a later seat's attention — `A TOOL RESHAPED FOR A CANDIDATE IS A SOFT FORM OF ADOPTING IT.` I am not treating the edit as authorization.**
+
+### ✅★★★★★ §5 — AUTHORIZED NEXT ACTIONS (nothing is left unassigned)
+1. **WORKER — UNCHANGED, NOT RE-ISSUED:** continue `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`). ⚠️ **The graph does NOT add lanes; the worker stays ONE seat on `P0PC`. `max_money_path_implementations: 1` — which the graph itself asserts.**
+2. **THIS DESK — THE ADOPTION AUDIT, OWNED HERE AND NOT PARKED:** join each of `P1`/`P2`/`P3` to the artifact it claims to produce and to that artifact's present state, **then adopt, amend or reject the graph in a named ruling.** ⚠️ **Blocked on nothing; it is sequenced BEHIND the live money path deliberately, per `§3`.**
+3. **THIS DESK — THE GRADE (`R-543 §5`), UNCHANGED:** `accuracy-validator`, HUNT mode, durable committed receipt, dispatched **on delivery of the corrected coverage number**, briefed to disprove it and to hunt the `G-1` species of population blindness.
+**FILES / SCOPE ALLOWED (worker):** unchanged from `R-544 §3`. **FORBIDDEN:** unchanged. ⚠️ **The graph JSON and its revision doc are `docs/advisor-rulings/` — EXTERNAL territory. Neither the worker nor this desk edits them; adoption is recorded in OUR ledger.**
+
+### 🛑 §6 — STOP CONDITIONS (all of `R-543 §6` and `R-544 §5`, plus)
+★★★★★ **Any node scheduled from this graph before it is adopted in a named ruling → STOP.** · ★★★★★ **Readiness changed by deleting a hard edge, shrinking a fan-in contract, or carrying an old artifact hash → STOP.** · ★★★ **The blueprint's requirement authority treated as superseded by the graph → STOP: the graph orders execution, it never defines what must be true.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A GRAPH CAPTION IS NOT READINESS. JOIN EVERY NODE TO THE ARTIFACT IT CLAIMS TO PRODUCE BEFORE HANDING IT SCHEDULING AUTHORITY.`**
+★★★★★ **`A NODE PRESENTED AS READY THAT HAS ALREADY SHIPPED IS A NODE-STATE ERROR — AND A SCHEDULER WITH WRONG NODE STATES SCHEDULES WORK THAT DOES NOT EXIST.`**
+★★★★★ **`ADJUDICATING A SCHEDULER IS GOVERNANCE; IT WAITS FOR THE MONEY PATH, NOT THE REVERSE.`**
+★★★ **`A TOOL RESHAPED FOR A CANDIDATE IS A SOFT FORM OF ADOPTING IT` — carry the new fields, withhold the adoption.**
+
+---
+
 ## R-544 · 2026-08-02 · 🛑★★★★★ **THREE MORE DEFECTS, ALL CONFIRMED BY MY OWN EXECUTION, AND THE FIRST ONE RETRACTS A CLAIM `R-543` AND I BOTH ENDORSED: THE PROTOTYPE **CANNOT INSPECT `.mjs` OR `.cjs` AT ALL** (both THROW), AND ROW `54`'s "ESM TWIN" IS THE RED **WITH ONE LINE DELETED** — SO THERE IS **NO MEASURED MODULE-SYSTEM DISCRIMINATOR** AND `G-1` IS **NOT** SHOWN CLOSED.** 🛑★★★★★ **AND THE SOURCE CONTRACT ADMITS AN **EMPTY MODULE** — a module satisfies the purity rule by OMITTING the object whose purity it certifies. `G-2`, LIVE.** ✅ **REVISE. The prototype stays; its module-system and export claims are WITHDRAWN.**
 
 **RULING ID:** R-544 · **TASK ID:** AR-589 (second ruling; `R-543` stands except where retracted below) · **DECISION: REVISE + RETRACTION.**
