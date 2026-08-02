@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3360` at THIS commit, 2026-08-01 23:43 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3360` at THIS commit, 2026-08-01 23:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -177,7 +177,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-571` (`23:24:55`) — RULED BY `R-531`. **WORKER AUTHORIZED (`R-531 §6`, FIVE CORRECTIONS, DESIGN ONLY); START-RECEIPT AWAITED.**
+## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-572` (`23:44:13`) — a START-RECEIPT for `R-531 §6`, **NO RULING OWED** (`R-528` precedent). Last RULED: `AR-571`. **WORKER MID-TASK (five corrections, design only).** ✅★★★ **`F-2` NOW HAS THREE INDEPENDENT PATHS AGREEING AT `10`: the external read, this desk, and `AR-572 §2` — which counted it programmatically with two-way positive controls and named the exact five keys its own schema would reject (`condition_id · executed · object · role · type`), `IN MY SCHEMA BUT NOT IN MAP: none`.** ★★ **It also turned my `§1` conviction on itself unprompted — *"my `49/49` suite was ALSO derived from the order sheet"* — so the coherence lesson transferred without being ordered.**
 🛑★★★★★ **`R-531` SUSTAINED ALL THREE EXTERNAL FINDINGS, EACH RE-MEASURED HERE — AND THE CONVICTION IS MINE. `[MEASURED HERE]` `BINDING_KEY_MAP` = **`10` ENTRIES** at `c304b098:scripts/check-spec-binding-plan-parity.ts:259–270` (counted programmatically, `satisfies Record<keyof ConditionBinding, string>`) against the design's **`5`-key** frozen destination schema at `:119` — **joined on the WIRE-KEY NAME, the two contracts cannot both be satisfied literally.** · design `:65` makes `absent/absent` a failure **UNLESS** the cell is authority-classified `NOT-APPLICABLE`, so **Claim `A`'s VERDICT IS A FUNCTION OF `cell.classification`** — the coupling moved one field left, not away.**
 🛑★★★★★ **MY DEFECT, AND IT IS THE REUSABLE PART: I PRINTED PROOF ROW `7` TO MY OWN SCREEN AT `23:28` — TEN MINUTES BEFORE THE READ LANDED — AND USED IT ONLY TO CONFIRM A COUNT. It is the exact line proving Claim `A` still reads the ledger. **My four pre-registered checks all PASSED, all were TRUE, and all four asked *"did the worker change what it was told to change?"* — NOT ONE asked whether the result is self-consistent.** ★★★★★ **`A COMPLIANCE CHECK IS NOT A COHERENCE CHECK; CRITERIA DERIVED FROM THE ORDER SHEET CAN ONLY VERIFY OBEDIENCE.` Fourth round of one shape (`R-525` members-not-surface · `R-526` where-not-what · `R-527` name-not-enforcement · now obedience-not-coherence).**
 ⚠★★★ **AND THE WORKER RETIRED ONE FALSE ABSOLUTE BY MINTING ANOTHER (`A DIGEST THAT DID NOT MOVE CANNOT` [be wrong]) — `RETIRING A FALSE ABSOLUTE BY MINTING ANOTHER ABSOLUTE IS THE SAME DEFECT ONE LEVEL OUT`, and neither the worker nor I caught it; a third party did.**
