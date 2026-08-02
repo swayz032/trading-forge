@@ -163,12 +163,43 @@ const freezeControl = runWith('', FREEZE);
 const freezeControlOk = freezeControl.code === 0;
 console.log(`${freezeControlOk ? 'PASS' : '*** FAIL'} ${'emitted-freeze CONTROL'.padEnd(26)} exit=${String(freezeControl.code).padEnd(3)} (unmutated freeze gate must be GREEN)`);
 rows.push({ cls: 'freeze_control', ok: freezeControlOk, code: freezeControl.code });
-for (const [inject, mustName, what] of FREEZE_EXPECT) {
-  const r = runWith(inject, FREEZE);
-  const named = new RegExp(`STOP CONDITION \\(item 16\\)`).test(r.stdout) && r.stdout.includes(mustName);
+// 🛑★★★★★ F-3b (SECOND INDEPENDENT GRADE, 2026-08-02) — A WITNESS THAT MATCHES THE CLEAN
+// CONTROL IS NOT A WITNESS, IT IS A CONSTANT.
+//
+// THE DEFECT: this loop used `r.stdout.includes(mustName)` with `mustName` = '35(a)' / '38'.
+// `'38'` OCCURS SIXTEEN TIMES IN THE UNMUTATED OUTPUT (hex digest substrings), and every item-16
+// failure prints `compared 38 source rows`. So BOTH assertions passed under BOTH injections —
+// the 2x2 cross-product had EVERY OFF-DIAGONAL CELL GREEN, and `names '38'=true` was evidence of
+// nothing at all. This attacks the remedy the campaign relies on everywhere:
+//     A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN
+// and a witness satisfied by the clean control proves only that the program printed something.
+//
+// ✅ THE FIX IS DISCRIMINATION, PROVEN IN THREE PARTS AND ALL THREE ARE REQUIRED:
+//   1. ABSENT-FROM-CONTROL: the token must NOT appear in the unmutated freeze output. Asserted
+//      here, not assumed — if it ever becomes a constant again, THIS is the check that says so.
+//   2. PRESENT-UNDER-ITS-OWN injection.
+//   3. ABSENT-UNDER-EVERY-OTHER injection — the cross-product must be DIAGONAL.
+// The token is no longer the bare id but the id IN ITS STOP-CONDITION SENTENCE, which cannot be
+// produced by a digest substring:  `*** STOP CONDITION (item 16): <id>: ABSENT`
+const freezeWitness = (id) => new RegExp(`\\*\\*\\* STOP CONDITION \\(item 16\\): ${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}: ABSENT`);
+const freezeRuns = FREEZE_EXPECT.map(([inject]) => ({ inject, r: runWith(inject, FREEZE) }));
+for (let i = 0; i < FREEZE_EXPECT.length; i++) {
+  const [inject, mustName, what] = FREEZE_EXPECT[i];
+  const { r } = freezeRuns[i];
+  const w = freezeWitness(mustName);
+  const absentFromControl = !w.test(freezeControl.stdout);
+  const selfNamed = w.test(r.stdout);
+  const offDiagonal = freezeRuns.filter((run, j) => j !== i && w.test(run.r.stdout)).map((run) => run.inject);
+  const named = absentFromControl && selfNamed && offDiagonal.length === 0;
   const ok = r.code !== 0 && named;
   rows.push({ cls: `freeze:${inject}`, ok, code: r.code, namedOurClass: named });
-  console.log(`${ok ? 'PASS' : '*** FAIL'} ${`freeze:${inject}`.padEnd(26)} exit=${String(r.code).padEnd(3)} names '${mustName}'=${named}  ${what}`);
+  console.log(`${ok ? 'PASS' : '*** FAIL'} ${`freeze:${inject}`.padEnd(26)} exit=${String(r.code).padEnd(3)}`
+    + ` witness '${mustName}': absent-from-control=${absentFromControl} present-under-own=${selfNamed}`
+    + ` leaked-to=[${offDiagonal.join(',')}]  ${what}`);
+  if (!absentFromControl) {
+    console.log(`***   STOP CONDITION (F-3b): witness for '${mustName}' ALSO MATCHES THE CLEAN CONTROL —`
+      + ' it is a constant, not a witness, and can certify nothing.');
+  }
 }
 
 // ---- THE OVER-CORRECTION CONTROL (R-548 §4: "legitimately compiler-owned rows must STAY
@@ -220,11 +251,75 @@ if (!countOk) {
     + ` + FREEZE_EXPECT ${FREEZE_EXPECT.length} + ${STANDALONE_ROWS} standalone).`
     + ' A red path was RETIRED, not failed — a class that never ran cannot be reported as passing.');
 }
-const allOk = controlOk && countOk && rows.every((r) => r.ok);
+
+// 🛑★★★★★ F-1b (SECOND INDEPENDENT GRADE, 2026-08-02) — CARDINALITY IS NOT IDENTITY.
+//
+// THE COUNT ABOVE IS NECESSARY AND WAS NEVER SUFFICIENT, and the grader proved it in one edit:
+//     `of EXPECT`  ->  `of EXPECT.map(() => EXPECT[1])`
+// runs NINETEEN IDENTICAL ROWS, satisfies `rows.length === EXPECTED_ROW_COUNT` against the FULL
+// DECLARED DENOMINATOR, and prints "41 / 41" + "the runner is an ENFORCING GATE" + EXIT 0 while
+// EIGHTEEN OF NINETEEN RED PATHS ARE RETIRED. The F-1 fix itself waves it through, because
+// `rows.push({ cls: ... })` records THE LABEL IT WAS HANDED, never WHICH DECLARED ROW produced it.
+//
+//     A COUNT IS THE WEAKEST ASSERTION THAT LOOKS LIKE A STRONG ONE.
+//
+// ⚠️ THE RESIDUAL WAS NAMED BY THIS SEAT FIRST (AR-615 §7.3, `[UNENUMERATED]`) and not converted
+// into an ordered item until the grader executed it. Recorded so the shape is not re-learned.
+//
+// 🛑 R-578 §5 FORBIDS THE NEAR-MISS AND IT IS RIGHT: a DISTINCT-`cls` cardinality check
+// (`new Set(rows.map(r => r.cls)).size === 41`) is THE SAME CLASS ONE LAYER UP — still a count.
+// The property is MEMBERSHIP, asserted in BOTH directions:
+//     every DECLARED key is witnessed EXACTLY ONCE, and no witnessed key is UNDECLARED.
+// Substitution fails it (18 keys witnessed 0x, 1 key witnessed 19x); duplication fails it
+// (1 key witnessed 2x); retirement fails it (1 key witnessed 0x). None of the three can pass.
+const DECLARED_ROW_KEYS = [
+  ...CLASSES.map(([cls]) => cls),
+  ...SHARED.map(([cls]) => cls),
+  ...EXPECT.map(([inject, cls]) => `${inject}->${cls}`),
+  ...FREEZE_EXPECT.map(([inject]) => `freeze:${inject}`),
+  'freeze_control',
+  'over_correction_control',
+];
+const declaredCount = new Map();
+for (const k of DECLARED_ROW_KEYS) declaredCount.set(k, (declaredCount.get(k) ?? 0) + 1);
+const witnessedCount = new Map();
+for (const r of rows) witnessedCount.set(r.cls, (witnessedCount.get(r.cls) ?? 0) + 1);
+
+// Two INDEPENDENT derivations of the same magnitude must agree — if the key list and the
+// arithmetic drift apart, the guard itself has rotted and says so rather than picking one.
+const derivationsAgree = DECLARED_ROW_KEYS.length === EXPECTED_ROW_COUNT;
+// A declared key appearing twice would silently shrink the expected set — the set-of-sets shape.
+const declaredNotUnique = [...declaredCount].filter(([, n]) => n !== 1).map(([k, n]) => `${k} (DECLARED ${n}x)`);
+const neverWitnessed = [...declaredCount.keys()].filter((k) => (witnessedCount.get(k) ?? 0) === 0);
+const witnessedRepeatedly = [...declaredCount.keys()].filter((k) => (witnessedCount.get(k) ?? 0) > 1)
+  .map((k) => `${k} (witnessed ${witnessedCount.get(k)}x)`);
+const witnessedUndeclared = [...witnessedCount.keys()].filter((k) => !declaredCount.has(k));
+const identityOk = derivationsAgree && declaredNotUnique.length === 0 && neverWitnessed.length === 0
+  && witnessedRepeatedly.length === 0 && witnessedUndeclared.length === 0;
+if (!identityOk) {
+  console.log('*** STOP CONDITION (F-1b): the built rows do not MATCH the declared rows one-for-one.'
+    + ' A red path can be SUBSTITUTED or DUPLICATED without changing the count, so the count alone'
+    + ' cannot speak for coverage.');
+  if (!derivationsAgree) console.log(`***   derivations disagree: ${DECLARED_ROW_KEYS.length} declared keys vs ${EXPECTED_ROW_COUNT} counted — the guard itself is inconsistent`);
+  if (declaredNotUnique.length) console.log(`***   declared more than once: ${declaredNotUnique.join(', ')}`);
+  if (neverWitnessed.length) console.log(`***   DECLARED BUT NEVER RAN (${neverWitnessed.length}): ${neverWitnessed.join(', ')}`);
+  if (witnessedRepeatedly.length) console.log(`***   RAN MORE THAN ONCE: ${witnessedRepeatedly.join(', ')}`);
+  if (witnessedUndeclared.length) console.log(`***   RAN BUT UNDECLARED: ${witnessedUndeclared.join(', ')}`);
+}
+const allOk = controlOk && countOk && identityOk && rows.every((r) => r.ok);
 // ⚠️ THE DENOMINATOR PRINTED IS THE EXPECTED ONE, NOT `rows.length`. Reporting the accumulator
 // beside a check on the accumulator is how "23 / 23" read as complete coverage.
 console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${EXPECTED_ROW_COUNT}`);
+// ⚠️ THE FAILURE REASON MUST NAME THE FAILING PROPERTY. A verdict that only ever lists FAILED
+// rows prints an EMPTY reason when the defect is a RETIRED or SUBSTITUTED row — the failure mode
+// where every row that ran passed, and the missing ones simply never spoke.
+const failedRows = rows.filter((r) => !r.ok).map((r) => r.cls);
 console.log(allOk
-  ? 'VERDICT: the runner is an ENFORCING GATE — control green, every class red-proofed.'
-  : 'VERDICT: NOT a gate. Classes without a demonstrated red path: ' + rows.filter((r) => !r.ok).map((r) => r.cls).join(', '));
+  ? 'VERDICT: the runner is an ENFORCING GATE — control green, every declared class ran exactly once and red-proofed.'
+  : 'VERDICT: NOT a gate. ' + [
+    controlOk ? null : 'the CONTROL failed, so no result here is interpretable',
+    countOk ? null : `row COUNT ${rows.length} != declared ${EXPECTED_ROW_COUNT}`,
+    identityOk ? null : `row IDENTITY broken (${neverWitnessed.length} declared class(es) never ran, ${witnessedRepeatedly.length} ran more than once, ${witnessedUndeclared.length} undeclared)`,
+    failedRows.length ? `classes without a demonstrated red path: ${failedRows.join(', ')}` : null,
+  ].filter(Boolean).join(' | '));
 process.exitCode = allOk ? 0 : 1;

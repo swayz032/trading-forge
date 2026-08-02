@@ -119,13 +119,53 @@ export const PINNED_BLOBS = Object.freeze({
 // editable or nothing can ever legitimately change.
 // WHAT IS DONE INSTEAD IS WHAT R-564 ACCEPTED FOR THE CORPUS PIN — make a silent shrink require
 // editing a value that STATES ITS OWN MAGNITUDE IN PLAIN SIGHT, so the edit is loud in review:
-const COVERED_FILES = ['run.mjs', 'red-proof.mjs', 'type-value-proof.mjs', 'source-admission.mjs', 'runtime-admission.mjs', 'membership.mjs'];
-for (const f of COVERED_FILES) {
-  if (!PINNED_MODULE_COLLECTIONS[f] || PINNED_MODULE_COLLECTIONS[f].tables.length === 0) {
+// 🛑★★★★★ INSTANCE TEN (SECOND INDEPENDENT GRADE, 2026-08-02) — AND IT WAS IN THIS FILE, WHICH
+// WAS SHIPPED LAST BATCH (F-4) TO MAKE THIS EXACT CLASS VISIBLE.
+//   THE FILE SHIPPED TO CLOSE A CLASS IS THE FIRST PLACE TO LOOK FOR THE NEXT INSTANCE OF IT.
+//
+// THE DEFECT: `COVERED_FILES` was a declared array — so FILES stated their own magnitude and a
+// deleted file was loud. TABLES did not: the guard below rejected only `tables.length === 0`, and
+// the printed `tableCount` was a `reduce` OVER THE CONSUMPTION. So dropping THREE of run.mjs's
+// FOUR tables left `1 !== 0`, passed every check, and printed a smaller number under
+// `0 findings | PASS | EXIT 0`.  THE PIN FREEZES THE DECLARATION; THE COUNT READS THE CONSUMPTION.
+//
+// ✅ THE FIX IS THE ONE THE SIBLING ALREADY MODELS: each file DECLARES how many enforcement
+// tables it covers, in plain sight, so a silent shrink must edit a number that states its own
+// magnitude. R-578 §5 forbids the near-miss of pinning the reduce's OUTPUT — that value is BUILT.
+const COVERED_FILES = Object.freeze({
+  'run.mjs': 4,
+  'red-proof.mjs': 4,
+  'type-value-proof.mjs': 1,
+  'source-admission.mjs': 2,
+  'runtime-admission.mjs': 1,
+  'membership.mjs': 1,
+});
+// The TOTAL is declared as a literal too, and cross-checked against the sum of the per-file
+// literals. Two independent derivations of one magnitude: a shrinker must edit BOTH, and if they
+// ever disagree the instrument says so instead of choosing one.
+const DECLARED_TABLE_TOTAL = 13;
+const summedFromFiles = Object.values(COVERED_FILES).reduce((a, n) => a + n, 0);
+if (summedFromFiles !== DECLARED_TABLE_TOTAL) {
+  throw new Error(`INSTRUMENT FAULT: declared table magnitudes disagree — per-file literals sum to ${summedFromFiles}, DECLARED_TABLE_TOTAL says ${DECLARED_TABLE_TOTAL}`);
+}
+for (const [f, expectedTables] of Object.entries(COVERED_FILES)) {
+  if (!PINNED_MODULE_COLLECTIONS[f]) {
     throw new Error(`INSTRUMENT FAULT: coverage for ${f} was removed from PINNED_MODULE_COLLECTIONS — the set-of-sets no longer covers a file it is declared to cover`);
+  }
+  // MEMBERSHIP, NOT A FLOOR: the old `=== 0` test admitted every partial deletion above zero.
+  const actual = PINNED_MODULE_COLLECTIONS[f].tables.length;
+  if (actual !== expectedTables) {
+    throw new Error(`INSTRUMENT FAULT: ${f} is declared to cover ${expectedTables} enforcement table(s) but PINNED_MODULE_COLLECTIONS lists ${actual} (${PINNED_MODULE_COLLECTIONS[f].tables.join(', ') || 'none'}) — a table was added or silently dropped`);
   }
   if (!PINNED_BLOBS[f]) {
     throw new Error(`INSTRUMENT FAULT: no pinned blob declared for ${f} — the pin cannot be verified and any verdict from it is uninterpretable`);
+  }
+}
+// The reverse direction — a pinned file nobody declared coverage for would otherwise be invisible
+// to every magnitude above. Same both-directions membership lesson as F-1b.
+for (const f of Object.keys(PINNED_MODULE_COLLECTIONS)) {
+  if (!(f in COVERED_FILES)) {
+    throw new Error(`INSTRUMENT FAULT: ${f} is pinned in PINNED_MODULE_COLLECTIONS but declares no coverage magnitude in COVERED_FILES — its tables are counted by nothing`);
   }
 }
 
@@ -317,8 +357,11 @@ const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURL
 if (isDirectRun) {
   const findings = checkPinnedCollections();
   for (const f of findings) console.log(`*** module_collections: ${f}`);
-  const tableCount = Object.values(PINNED_MODULE_COLLECTIONS).reduce((a, s) => a + s.tables.length, 0);
-  console.log(`MODULE COLLECTIONS — pin ${MODULE_PIN_COMMIT} | ${COVERED_FILES.length} files | ${tableCount} pinned tables | ${findings.length} finding(s)`);
+  // ⚠️ THE PRINTED MAGNITUDE IS THE DECLARED ONE, NEVER A `reduce` OVER THE CONSUMPTION — that
+  // reduce is what let three dropped tables print a smaller number under PASS. The consumption is
+  // already asserted EQUAL to the declaration at module load, so if these could disagree the
+  // process would have thrown before reaching this line.
+  console.log(`MODULE COLLECTIONS — pin ${MODULE_PIN_COMMIT} | ${Object.keys(COVERED_FILES).length} files | ${DECLARED_TABLE_TOTAL} pinned tables (DECLARED) | ${findings.length} finding(s)`);
   console.log(findings.length
     ? 'VERDICT: FAIL — a pinned enforcement table disagrees with the pinned artifact.'
     : 'VERDICT: PASS — every pinned enforcement table matches the pinned artifact.');

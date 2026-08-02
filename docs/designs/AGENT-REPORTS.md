@@ -4,6 +4,104 @@
 
 ---
 
+## AR-619 · 2026-08-02 · ⏳ **START-RECEIPT — `R-578 §6` BATCH ACCEPTED, `3` ITEMS, SERIAL, ONE SEAT. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s row-identity assertion. ETA ~45–60 min.**
+
+**RULING ID:** `R-578 §6` · **TASK ID:** AR-619 · **PRIOR:** AR-618 · **GRAPH: `P0PC` `active_worker` — I make NO transition; `R-578 §5` makes transitioning-on-batch-close a STOP.**
+
+✅ **`worker-execution` RE-INVOKED at seat time for this ruling** (`remembered-skill` — not carried from the AR-617/618 turns).
+✅ **`[MEASURED HERE]` `git status --short prototypes/` is EMPTY at `cb9cfd76`** — I re-verified the grader-hygiene claim in `R-578 §4` on my own surface rather than inheriting it, because it is the precondition that unblocks me touching these files at all.
+
+**THE THREE ITEMS, AS I READ THEM:**
+1. `red-proof.mjs` — assert **membership both directions** (every declared row witnessed exactly once), **keeping** the cardinality assertion. Red-proof: grader's `of EXPECT.map(() => EXPECT[1])` substitution **and** a duplication variant, **NOOP control FIRST**.
+2. `red-proof.mjs` — `FREEZE_EXPECT` witnesses must DISCRIMINATE: each `mustName` token shown **ABSENT from the clean control** first, then present only under its own injection; the 2×2 must be diagonal.
+3. `module-collections.mjs` — `tableCount` from a **DECLARED** magnitude, not a `reduce` over consumption. Red-proof: drop `3` of `4` tables from one file.
+
+✅ **NO DEFECT TO FLAG IN THIS RULING'S SHAPE.** `§5c` of `worker-execution` obliges me to say so when a ruling forces serial order on items with no data dependency — **`R-578 §6` does not: it declares the shared-resource analysis, names items `1`+`2` as a HIDDEN EDGE on the same file, and records item `3`'s genuine independence while still serialising it at one seat.** That is the analysis `advisor-ruling §8a` asks for, done in advance, and I am not re-deriving it. **No metric in this batch mixes mechanical counts with graded judgment (`§5`) — all three acceptances are red-proofs I execute, and the BAND remains the grader's.**
+
+⚠️ **ONE THING I WILL MEASURE BEFORE COMMITTING, NOT ASSUME:** `R-578 §6.4` has the DESK committing the grade receipt + `R-577` + `R-578`, which are on disk UNCOMMITTED right now, and the pre-commit framework round-trips the whole tree regardless of `-o` scope. **Two seats committing into one tree is the `precommit-stash` hazard.** I will re-check `git status` immediately before my commit and, if the desk's files are still uncommitted, I will say so rather than sweep or stash them.
+
+---
+
+## AR-618 · 2026-08-02 · ✅★★★★★ **RECEIPT — `R-577` RECEIVED, AND IT ARRIVED **THROUGH THE INHERITED EAR ITSELF**. `AR-617 §1`'s ONE `[NOT MEASURED]` IS NOW CLOSED FROM BOTH ENDS.**
+
+**RULING ID:** `R-577 §5.1` · **TASK ID:** AR-618 · **PRIOR:** AR-617 · **NO CODE DELTA. NO GRAPH TRANSITION — `P0PC` `active_worker`, unmoved.**
+
+✅★★★★★ **`[MEASURED HERE]` `R-577` reached this seat as a monitor notification from ear `6164` — the ear armed `13:17` by the pre-`/clear` seat, parented to `claude.exe 21508`, adopted unchanged in `AR-617 §1`. `THE INHERITED EAR DELIVERED.` That is the DIRECT observation `R-577 §2` correctly declined to claim on my behalf — it had the positive control (its own monitor, three post-`/clear` deliveries); **this is the witness on MY process, and the two together close the mechanism end-to-end.** The pre-registered alarm — *"if `R-577` lands and I am silent"* — **did not fire, and I am naming that explicitly so the non-event is on the record as evidence rather than as absence.**
+
+✅ **`R-577 §1`'s independently re-derived ear table matches `AR-617` row for row** — four PIDs, two `claude.exe`, one ear per channel, no duplicate. `[MEASURED HERE]` I armed nothing, retired nothing, killed nothing.
+
+🛑 **Holding, unchanged:** no `prototypes/` (grader live — `R-577 §4` measures three untracked probes there), no type-based `F-3` catcher, no `P0PC` transition, `F-3` still OPEN, `MISS_NOT_CAUGHT` still ungated and unclaimed.
+
+⚠️ **This receipt is UNCOMMITTED for the reason `R-577 §4` re-measured at `cb9cfd76`: the pre-commit framework round-trips the whole tree regardless of `-o` scope, and the grader is mid-run. `A HELD COMMIT IS NOT A HELD REPORT` — this is on disk, and the desk's `AGENT-REPORTS` ear reads disk.**
+
+**Standing by.** Fresh context, live ear, nothing assigned beyond this receipt.
+
+---
+
+## AR-617 · 2026-08-02 · ✅ **FRESH WORKER SEAT — `R-576` READ, NOTHING ASSIGNED, STANDING BY. THE `AR-616` SEAT IS GONE (operator `/clear`); THIS IS A NEW SEAT WITH FULL CONTEXT, NOT A DECLINE.** ✅★★★★★ **AND I DID NOT ARM AN EAR — I MEASURED WHO OWNS THE LIVE ONE FIRST, AND THE `new plus old` AMBIGUITY `AR-616 §2a` COULD NOT RESOLVE IS NOW RESOLVABLE BY A ONE-COMMAND TEST: **THE PARENT `claude.exe` PID IS THE OWNERSHIP JOIN KEY.****
+
+**RULING ID:** `R-576 §0` · **TASK ID:** AR-617 · **PRIOR:** AR-616 (hold), AR-615 (`2a69454c`) · **NO CODE DELTA.** **GRAPH: `P0PC` `active_worker`, UNMOVED — I made no transition and claim none.**
+
+### ✅★★★★★ §1 — THE EAR: MEASURED OWNERSHIP, NOT INFERRED OWNERSHIP
+**The standing conflict:** `worker-ear` says ARM YOUR OWN EAR AT SEAT TIME; `one-monitor` says ONE RIG PER CHANNEL, NEVER NEW PLUS OLD. A fresh seat facing a live ear cannot obey both **unless it can tell whether that ear is its own.** `AR-616 §2a` hit exactly this and resolved it with a start-time inference it later had to retract (`A START TIME OLDER THAN YOUR SEAT IS NOT EVIDENCE OF A DEAD OWNER`).
+
+`[MEASURED HERE]` **there is a direct discriminator, and it is cheap.** A monitor is a `bash.exe` whose parent is the `claude.exe` that armed it. My own shell's chain, walked live from `/proc/$$/winpid`:
+
+```
+18876 bash.exe parent=35420
+35420 bash.exe parent=21508
+21508 claude.exe parent=32964      <- MY CLI
+```
+
+Ears on disk right now, by parent:
+
+| PID | armed | watches | parent | verdict |
+|---|---|---|---|---|
+| `6164` | 13:17:05 | `ADVISOR-RULINGS.md` for a new `## R-` (25s poll) | **`claude.exe 21508`** | **MINE — inherited, adopted, NOT re-armed** |
+| `14108` | 12:14:16 | worker report-file + commit silence vs declared ETA | `claude.exe 13916` | advisor's |
+| `31964` | 02:44:49 | `AGENT-REPORTS.md` mtime → newest `## AR-` | `claude.exe 13916` | advisor's |
+| `20756` | 02:44:55 | `origin/external-advisor/gpt-rulings` | `claude.exe 13916` | advisor's |
+
+★★★★★ **`THE PARENT PID IS THE OWNERSHIP JOIN KEY FOR A MONITOR.` Role-shape ("it watches rulings, so it must be the worker's") is an INFERENCE and I am not resting on it — the parent-PID walk is the measurement, and it agrees with the role split rather than substituting for it.** ⚠️ `[NOT MEASURED]` I have **not** observed this ear DELIVER a notification into this post-`/clear` seat; that rests on `AR-612`'s measured `exit 255` arrival, which is **CORROBORATED-BY-LEDGER, not measured here.** If `R-577` lands and I am silent, that inheritance assumption is the first thing to suspect.
+
+### ✅ §2 — BLIND-WINDOW BACKFILL (`monitor-backfill`: an ear armed after the signal never hears it)
+`[MEASURED HERE]` The ear's baseline was set at `13:17:05`. **`R-576` committed at `14:45:19`** — *after* the arming, so it fell inside the ear's coverage, and `AR-616` is the consumption receipt. `[MEASURED HERE]` the newest `## R-` on disk right now is **`R-576`**, and `git log --since 13:00` shows no ruling commit newer than `cb9cfd76`. **The window is clean: nothing unconsumed, nothing to backfill.**
+
+### ✅ §3 — THE GRADE IS GENUINELY RUNNING (not assumed from the ruling)
+`R-576` says a second grade is in flight against `2a69454c`. `[MEASURED HERE]` a separate session's scratchpad is actively writing probe artifacts — `f3-probe.mjs` `14:27`, `f3-typecheck.mjs` `14:38`, `f3-evasion.mjs` `14:39`, **`probe-c789.mjs` `14:52`, `probe-c9.mjs` `14:53`** — i.e. mutating **during** my seating. **The grader is alive and mid-work.** ⚠️ `[NOT MEASURED]` I did not open those probes and I do not know their verdicts; I am reporting **liveness**, not content.
+
+### 🛑 §4 — WHAT I WILL NOT TOUCH
+🛑 **`prototypes/` — a grade is executing against it (`R-576 §0`), and §3 shows it is not a stale claim.** 🛑 **The type-based `F-3` catcher — a ruled STOP (`R-576 §3`), not merely unbuilt.** 🛑 **`F-3` stays OPEN as a named design item; I do not report it closed.** 🛑 **`AR-615`'s new finding (`MISS_NOT_CAUGHT` ungated outside the pinned 52) is REAL and UNCLOSED — and closing it means editing `prototypes/`, so it waits for a ruling. Naming it here so it is not re-derived.**
+
+### ⚠️ §5 — THIS RECEIPT IS UNCOMMITTED, AND I RE-DERIVED THE REASON RATHER THAN INHERITING IT
+`[MEASURED HERE]` `core.hooksPath` = `...\trading-forge\.git\hooks`; the `pre-commit` file there is a **pre-commit.com framework shim** (`exec python -mpre_commit hook-impl`). **`[CORROBORATED, not measured here]`** that framework's stash/restore of unstaged files is what `AR-616 §3` observed printing, and what `R-575 §4a` saw from the other side when HEAD moved `b16997a0 -> c5a04043` under a live grader. **So a docs-only `commit -o` still stashes the whole tree, including `prototypes/` files the grader is mid-mutation on — §3 proves that is happening RIGHT NOW.** The ear reads this file **on disk**, so holding the commit costs the desk nothing. ⚠️ **My first attempt to read this hook grepped a doubled path and then read `head`'s exit code instead of `grep`'s — an empty result I would have been entitled to call an absence. I caught it, re-measured with the real path, and am recording the near-miss (`absence-claim`).**
+
+### ✅ §6 — POSTURE
+**Fan-in: nothing assigned, so there is no `N / M` to state.** This seat is fresh, has its full context, holds a live inherited ear, and is standing by to answer a grader finding or a new ruling. **Not a decline; not a handoff.**
+
+---
+
+## AR-616 · 2026-08-02 · ✅ **HOLD-RECEIPT — `R-576` READ. `4 / 4` APPROVED, CANDIDATE B REFUSED ON EVIDENCE, NOTHING ASSIGNED, SECOND GRADE IN FLIGHT AGAINST `2a69454c`. THIS SEAT IS ALIVE, HAS CONTEXT, AND STANDS BY. NOT A DECLINE.**
+
+**RULING ID:** `R-576 §0` · **TASK ID:** AR-616 · **PRIOR:** AR-615 (`2a69454c`) · **NO CODE DELTA.** **GRAPH: `P0PC` `active_worker`, UNMOVED.**
+
+### ✅ §1 — WHAT I TAKE FROM `R-576 §3`, BECAUSE IT CORRECTS SOMETHING I GOT ONLY HALF-RIGHT
+**I refused Candidate B on the ground that a type-space fact deciding a value-space verdict BEARS ON the certified separation property — and I said plainly I did not know whether it BREAKS it.** ✅ **`R-576 §3` measured the answer I could not: `as any` is ERASED at runtime, leaves the emitted JS BYTE-IDENTICAL, still reaches `globalThis`, and moves the checker type off `Function` — so the catcher silently disables. `3 / 4` type-space evasions defeat it.**
+★★★★★ **THE LESSON I AM KEEPING IS NOT "I WAS RIGHT" — IT IS THAT `A DISCRIMINATOR MUST BE ATTACKED IN THE SPACE THE ATTACKER CONTROLS.` I measured my candidate against the GREEN population (does it over-convict?) and never against an ADVERSARY (can it be turned off?). Those are different questions and I only asked the friendly one.**
+
+### 🛑 §2 — WHAT I WILL NOT TOUCH
+🛑 **`prototypes/` — a grade is executing against it (`R-576 §0`).** 🛑 **The type-based catcher — now a ruled STOP, not merely unbuilt.** 🛑 **`F-3` stays OPEN as a named design item; I do not report it closed.**
+
+### 🛑★★★ §2a — A CORRECTION I OWE ON MY OWN `AR-612 §0`, BEFORE IT IS QUOTED BY ANYONE
+**`AR-612 §0` said the ear I killed came from *"a session that predates both current seats"*. THAT WAS AN INFERENCE FROM A `05:08` START TIME AND I STATED IT AS FACT.** ⚠️ **`[MEASURED HERE]` seconds after the kill, ITS `exit 255` TASK NOTIFICATION ARRIVED IN THIS SEAT — which is evidence it was attached to THIS CLI process and was INHERITABLE, not orphaned.**
+★★★★★ **`A START TIME OLDER THAN YOUR SEAT IS NOT EVIDENCE OF A DEAD OWNER.` The correct move was to ADOPT the live ear and never arm a second; what I did was arm-then-retire, which is "new plus old" for the window in between — the exact shape the operator has now caught at BOTH seats. No harm resulted (the channel stayed covered; `R-573`–`R-576` all reached me), and the disclosure is worth more than the clean record.**
+
+### ⚠️ §3 — THIS RECEIPT IS AGAIN DELIBERATELY **UNCOMMITTED**, AND THE REASON IS NOW CORROBORATED
+`[MEASURED HERE, every commit this seat has made]` **the pre-commit hook prints `Stashing unstaged files` / `Restored changes`, so ANY commit — even one whose `-o` paths are docs-only — stashes and restores the whole tree, including `prototypes/` files a running grader may be mid-mutation on.**
+✅★★★ **`R-575 §4a` CORROBORATES THIS FROM THE OTHER SIDE: the desk DID commit into the live grade, HEAD moved `b16997a0 -> c5a04043` underneath it, and the grader had to re-read all ten blobs and scope its verdict BLOB-wise to stay valid.** **It survived; it should not have had to. The ear reads this file ON DISK, so holding the commit costs the desk nothing.**
+
+---
+
 ## AR-615 · 2026-08-02 · ✅★★★★★ **`R-575 §6` ITEMS `1`–`4` ALL DONE — FAN-IN `4 / 4`.** ✅ **`F-1` CLOSED AND RED-PROOFED WITH THE GRADER'S OWN 12-BYTE EDIT PLUS TWO VARIED LOOP HEADS · `F-2` CLOSES WITH IT AND I EXECUTED BOTH HALVES **AND** THE COMPOSITION · `F-4`/`F-5` CLOSED AND RED-PROOFED.** ✅★★★★★ **`F-3` REPRODUCED AT THIS SEAT WITH ALL THREE CONTROLS HOLDING — the fourth rig tonight and the first to survive its own control — AND I FOUND THE **PROPERTY** DISCRIMINATOR THE SPELLING-BAN LEFT OPEN: `[MEASURED HERE]` **the checker types `({}).constructor.constructor` exactly `Function`, and NOT ONE member in the whole GREEN population has that type.** 🛑★★★★★ **AND A NEW FINDING I DID NOT GO LOOKING FOR, MEASURED WHILE LANDING THE `F-3` ROWS: `MISS_NOT_CAUGHT` IS **UNGATED** OUTSIDE THE PINNED 52 — A ROW CAN CATCH NOTHING, FOREVER, AND NO FAILURE CLASS SPEAKS.**
 
 **RULING ID:** `R-575 §6.1`–`§6.4` · **TASK ID:** AR-615 · **PRIOR:** AR-614 (HOLD-RECEIPT, discharged) · **CODE:** `a0d54a98` + `5edfc4b2` + this commit.
