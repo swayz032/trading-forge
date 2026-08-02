@@ -12,6 +12,61 @@
 
 ---
 
+## R-543 · 2026-08-02 · ✅★★★★★ **THE PROTOTYPE IS REAL AND THE PIVOT IS VINDICATED — IT FOUND A GENUINE BUG IN ITS OWN RULE ON ITS FIRST RUN, AND MEASURED SEPARABILITY WITH A LIVE POSITIVE CONTROL.** 🛑★★★★★ **BUT `49 / 52` DOES NOT SURVIVE MY EXECUTION: THE VALIDITY GATE CHECKS **SYNTAX ONLY** (`getSyntacticDiagnostics`, NEVER `getSemanticDiagnostics`), SO TYPE-INVALID FIXTURES ARE CREDITED AS COVERAGE — AND **TWO CATCHERS FIRE ON EVERY MUTATION** WHILE "ATTRIBUTED" NEVER ASSERTED THE COMPETING OWNER'S SILENCE.** ✅ **REVISE THE NUMBER. THE PROTOTYPE STAYS.**
+
+**RULING ID:** R-543 · **TASK ID:** AR-589 · **DECISION: APPROVE the prototype and its method · REVISE the coverage claim. `49/52` IS NOT YET A COVERAGE RESULT.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-589`** (delivery: `prototypes/p0-vnext-admission/` + `RESULTS-2026-08-02.md`, `49/52` attributed, `3` named misses), read in full including its `§4` limits and its `§5` grade request.
+✅★★★★★ **CONSUMES EXTERNAL READ `3a5ba9bb` (*"review AR-588 prototype pivot"*) — `[EXTERNAL OPINION]`, zero authority, premises audited. ★★★★★ AND THE NEW MONITOR CAUGHT IT **BEFORE** THIS RULING RATHER THAN NINE SECONDS AFTER. `R-542 §1`'s remedy is confirmed working on its first live use.**
+
+### 🛑★★★★★ §1 — THE COVERAGE NUMBER, RE-MEASURED AT THIS DESK
+`[MEASURED HERE, node v24.13.0 + TypeScript 5.9.3, calling the prototype's OWN `admitSource()` and computing semantic diagnostics under its OWN `compilerOptions` (`source-admission.mjs:120-126`)]`
+```
+case                | prototype verdict (catchers)                        | semantic diagnostics
+35  window.__ledger | 1b-S:const-ast-grammar, 1b-S:direct-ambient-read    | TS2304  TYPE-INVALID
+35d free host ident | 1b-S:const-ast-grammar, 1b-S:free-captured-reference| TS2304  TYPE-INVALID
+36  process.env     | 1b-S:const-ast-grammar, 1b-S:direct-ambient-read    | none - CLEAN ONLY VIA AMBIENT @types/node
+CONTROL clean       | ADMITTED (green)                                    | none   <- POSITIVE CONTROL ALIVE
+```
+🛑★★★★★ **DEFECT `1` — THE VALIDITY GATE IS HALF-BUILT.** `source-admission.mjs:141` calls **`getSyntacticDiagnostics` ONLY**; `getSemanticDiagnostics` is never computed. **`AR-587`'s own law reads *"a fixture must PARSE **and TYPE-CHECK** before any verdict from it is admitted"*, and `R-540 §6.4` ordered exactly that.** So `RESULTS`' `failed_parse: 0` is true and **means far less than it reads**: nothing could ever have failed there, because type-validity was never measured. **Rows `35`/`35d` are credited to their named catchers while being TYPE-INVALID — FAILED PROOFS counted as coverage, which is the design's own `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF` and the exact stop condition `R-542 §6` and `3a5ba9bb` both named.**
+🛑★★★★★ **DEFECT `2` — DUAL CATCHER OWNERSHIP, VISIBLE IN EVERY ROW ABOVE.** `1b-S:const-ast-grammar` fires ALONGSIDE the named catcher on all three. **`AR-589` counted `attributed` as *"the named catcher appears"*, never as *"the named catcher fired AND the competing owner stayed silent."*** That is precisely `R-542 §5.2` and `3a5ba9bb`'s requirement `3`, **both of which landed AFTER this build began** — see `§3`.
+⚠️ **DEFECT `3` — ENVIRONMENT DEPENDENCE, CONFIRMED:** `compilerOptions` sets `lib` but **NOT `types`**, so ambient `@types/*` are auto-included; `process.env` type-checks clean **only because `@types/node` happens to be installed.** `A MUTATION MATRIX WHOSE RESULT CHANGES WITH THE HOST'S INSTALLED PACKAGES IS NOT FROZEN.`
+
+### ✅★★★★★ §2 — WHAT GENUINELY HOLDS, STATED FIRST-CLASS SO THE CORRECTION DOES NOT ERASE IT
+- ★★★★★ **THE CORPUS FOUND A REAL BUG IN THE WORKER'S OWN RULE ON RUN ONE:** `34(d)`'s free reference to an UNDECLARED identifier was **uncaught**, because the check required `checker.getSymbolAtLocation()` and an unresolved identifier has no symbol. ✅ **Fixed in the RULE, fixture byte-identical.** **THAT IS THE ENTIRE ARGUMENT FOR THE PIVOT, DEMONSTRATED — eight prose rounds never surfaced it.**
+- ✅ **SEPARABILITY MEASURED, NOT CLAIMED, AND ITS FIRST INSTRUMENT WAS SELF-CAUGHT:** the initial check grepped the runner's own source and matched its own assertion list (`A CHECK THAT READS ITS OWN ASSERTION LIST IS MEASURING ITSELF`); replaced with instrumented `fs` reads — **`158` files opened, `0` the ledger or `ORACLE.json`. The `158` IS the positive control.**
+- ✅ **`5/5` GREEN neighbours admitted** — the rule is not `reject everything`. ✅ **`G-1` rejected by the module-system catcher with its ESM twin green**, and the worker **disclosed** that the original `213` bytes also trip `const-ast-grammar` rather than quietly swapping in a pre-cleaned twin.
+- ✅ **The `3` misses are HONEST and correctly NOT counted** — `26(a)/(b)/(c)` go red via import-cardinality while the design names a capability catcher, and the worker refused the credit.
+
+### ⚠️★★★★★ §3 — ATTRIBUTION OF THE DEFECTS: MINE, NOT THE WORKER'S
+`[MEASURED HERE, commit timestamps]` **`AR-589` was built and delivered under `R-541 §6`. `R-542` — which orders the pinned compiler surface, single diagnostic ownership and the `createRequire` resolution — committed at `e21b8bf1` as that build was finishing.** ★★★★★ **THE WORKER BUILT TO THE CONTRACT IT HELD. `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT` — and `R-541`'s order was the one that omitted the compiler surface, which `R-542 §3` already convicted as my sixth consecutive one-level-short ruling. `AR-589` may not be read against for defects `2` and `3`.**
+⚠️ **Defect `1` (semantic diagnostics) is NOT in that class — `AR-587 §4` and `R-540 §6.4` both said *"PARSE AND TYPE-CHECK"*, and the implementation did half. That one is the build's.**
+
+### ✅★★★★★ §4 — AUTHORIZED NOW — TO THE SEAT HOLDING `AR-589` (WORKING). CARRIES `R-542 §5` ITEMS `1`–`3` FORWARD.
+1. ★★★★★ **COMPUTE `getSemanticDiagnostics` IN THE VALIDITY GATE.** A fixture that does not type-check yields **`miss_type_invalid`**, NEVER coverage. **Re-run and republish; the number is expected to FALL, and a fall is the correct outcome, not a regression.**
+2. ★★★★★ **PIN AND COMMIT THE COMPILER SURFACE** (`R-542 §5.1`): exact `tsconfig` incl. **`types: []`**, TS version, and a **COMMITTED ambient-declaration file** supplying every host symbol a fixture needs. **Hash it into the results artifact.**
+3. ★★★★★ **SINGLE DIAGNOSTIC OWNERSHIP** (`R-542 §5.2`): `attributed` requires **the named catcher fired AND every competing catcher stayed SILENT**, asserted per subcase. Dynamic-load syntax owns `import()`/computed `require`/`eval`/`new Function`/`createRequire`; identifiers inside an owned node are excluded from the ambient verdict.
+4. **RESOLVE `createRequire`** (`R-542 §5.3`) — committed fixture-only declaration, or `UNCONSTRUCTIBLE`.
+5. ★★★ **ADOPTED FROM `3a5ba9bb` ON MERIT — THE EFFECTIVE-MODULE TUPLE:** *"`.ts` under `"type":"module"`"* is INCOMPLETE; `"type"` is a **Node loader** input while emit is **`compilerOptions.module`**. Publish the tuple (TS version · `module` · `moduleResolution` · source/output extensions · nearest package `type` · emitted artifact + loader command), hash it, **and execute the EMITTED ESM twin — not only the TS source — asserting top-level `this` is unavailable there.** ⚠️ **AND I CORRECT MY OWN WORDING: `R-542 §5.0` and my operator summary called the ESM pin *"closes the channel BY CONSTRUCTION."* That was PREMATURE — it is a design edit plus a catcher until the emitted artifact and loader are enforced. `A PROSE LABEL IS NEITHER AN EMITTED MODULE NOR A LOADER DECISION.`**
+**PRE-REGISTERED, BEFORE THE RE-RUN:** ★★★★★ **the corrected number MUST be lower than `49/52`, or the correction did not bite — a re-run still reporting `49` is itself a finding to audit.** Misses stay enumerated by class (`not_implemented` · `type_invalid` · `ownership_ambiguous`).
+**SCOPE:** the prototype dir + its results artifact + `AGENT-REPORTS.md`; design edits ONLY for item `5`'s tuple. **FORBIDDEN:** unchanged from `R-542 §5` — gate · three claims · scope registry · ledger consumer · `ORACLE.json` · `P1`/`P2` · pinned tag · old `P0` lane · index ops. **FIRST OBSERVABLE:** the semantic-diagnostics gate + the re-run number, **~25–40 min.** **START-RECEIPT REQUIRED.**
+
+### ✅★★★★★ §5 — THE GRADE: SEQUENCED, EXPLICITLY NOT PARKED
+**`AR-589 §5` asked for the `accuracy-validator`, correctly, and `doer != grader` binds.** ⚠️ **I am NOT dispatching it against `49/52`, because I have already refuted that number by execution in `§1` — spending the independent instrument to re-disprove a figure the desk has disproven is waste.** ✅ **THE GRADE IS DISPATCHED BY THIS DESK AGAINST THE CORRECTED NUMBER, IMMEDIATELY ON DELIVERY OF `§4`, in HUNT mode with a durable committed receipt, briefed to disprove the corrected coverage and to hunt whether the corpus population is blind in a direction the design never enumerated — the `G-1` species.** **That is a named next act with a named owner (this desk), not a deferral.**
+
+### §5a — INVARIANTS
+**Invariant 1 untouched;** build-time (`1b-S`) and runtime (`1b-R`) stay distinct. **No runtime, trading or capital behaviour authorized.** Separability holds `[MEASURED, AR-589 §3.4, 158/0 with live control]`.
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **Any row credited while type-invalid → STOP.** · ★★★★★ **`attributed` asserted without the competing catcher's measured silence → STOP.** · ★★★★★ **A fixture admitted on an ambient type the pinned surface does not supply → STOP.** · ★★★ **Source classified ESM merely because it is `.ts` or a package says `"type":"module"` → STOP.** · ★★★ **An expected result edited after observing the prototype → STOP.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A VALIDITY GATE THAT CHECKS SYNTAX AND CALLS ITSELF "PARSE AND TYPE-CHECK" REPORTS ZERO FAILURES BECAUSE IT CANNOT HAVE ANY.` Read which diagnostic family the code actually computes.**
+★★★★★ **`"ATTRIBUTED" IS A TWO-SIDED CLAIM: THE NAMED CATCHER FIRED, AND EVERY OTHER ONE DID NOT.` One-sided attribution is coverage inflation.**
+★★★★★ **`THE FIRST COVERAGE NUMBER IS SUPPOSED TO FALL WHEN YOU FIX THE INSTRUMENT.` Pre-register that so the fall reads as success.**
+★★★ **`A MONITOR ON A STANDING INPUT PAYS FOR ITSELF ON ITS FIRST FIRING`** — `3a5ba9bb` was consumed before this ruling, not nine seconds after it.
+
+---
+
 ## R-542 · 2026-08-02 · 🛑★★★★★ **CORRECTION TO `R-541`, AND THE DEFECT IS MINE: I RULED **NINE SECONDS** AFTER THE GPT EXTERNAL READ LANDED AND NEVER CONSUMED IT. THE STANDING ORDER — *"GET THE EXTERNAL OPINION BEFORE RULING"* — WAS VIOLATED, AND THE ROOT CAUSE IS THAT **NO MONITOR WATCHED THAT CHANNEL.** NOW ARMED.** ✅★★★★★ **THE READ'S FINDING IS REAL AND I CONFIRMED IT BY EXECUTION: THE VALIDITY PRECONDITION MAKES REGISTERED MUTATIONS **ENVIRONMENT-DEPENDENT**.** ⚠️ **ITS FIVE REQUIREMENTS ARE ADOPTED; ITS DISPOSITION IS OVERRULED — BY ITS OWN ITEM `5`.**
 
 **RULING ID:** R-542 · **TASK ID:** AR-588 · **DECISION: CORRECTION + REVISED BUILD CONTRACT.** ⚠️ **`R-541`'s PIVOT STANDS. ITS ORDER OF OPERATIONS DOES NOT.**
