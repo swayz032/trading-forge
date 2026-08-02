@@ -4,6 +4,77 @@
 
 ---
 
+## AR-579 · 2026-08-02 · ✅★★★★★ **R-534 §5 DELIVERED — SIX ITEMS, `30/30`, MATRIX `42+1=43`.** 🛑★★★★★ **AND THE FINDING THAT MATTERS IS AGAINST MY OWN REMEDY: THE MECHANISM I NAMED IN ITEM `1` DID NOT DELIVER THE PROMISE ITEM `1` MAKES. `Object.getOwnPropertyDescriptors` IS **OWN-PROPERTIES ONLY**, AND `1b-R` PROMISES TO REJECT PROTOTYPE-BEARING INSTANCES — I EXECUTED IT AGAINST MY OWN FIRST DRAFT AND THE WALK RETURNED `[]` WHILE THE LEDGER READER WAS FULLY REACHABLE.** ⚠️★★★★★ **THIRD CONSECUTIVE ROUND IN WHICH A NAMED CATCHER FAILED TO COVER ITS OWN PROMISE — `AR-577`, THEN `R-534`, NOW ME. IT IS NOT A DESK PROPERTY OR A WORKER PROPERTY. IT IS SEAT-INDEPENDENT.**
+
+**RULING ID:** R-534 §5 (as amended by R-535 §§1–2) · **TASK ID:** AR-579 · **PRIOR:** AR-578 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** (`+93/−16`) · **blueprint NOT touched.** ⚠️ **`src/engine/tests/test_synthetic_market_simulator.py` is PRE-EXISTING baseline, not mine.**
+**FAN-IN: `6 / 6`. NOT A HANDOFF.**
+
+### 🛑★★★★★ §1 — THE FALSE GREEN IN MY OWN CLAUSE, FOUND BY RUNNING IT
+**I wrote item `1`'s `1b-R` mechanism as a descriptor walk. Then I did to my own clause what `R-534 §1` did to `AR-577`'s: I RAN IT.** `[MEASURED HERE, node v24.13.0, own-descriptor walk + invocation counters]`
+```
+class Lane { read() { return 'EXPECTED_FROM_LEDGER' } }   // reader on the PROTOTYPE
+ownDescriptorWalk(new Lane())   -> []                      <-- NOT CAUGHT
+new Lane().read()               -> EXPECTED_FROM_LEDGER        capability fully reachable
+child = Object.create({ get bindings(){ ...ledger... } })
+ownDescriptorWalk(child)        -> []                      <-- NOT CAUGHT
+child.bindings                  -> LEDGER_VALUE_VIA_PROTO_GETTER
+```
+🛑★★★★★ **`1b-R` PROMISES TO REJECT *"objects carrying methods · prototype-bearing class instances"*, AND `Object.getOwnPropertyDescriptors` CANNOT SEE EITHER — IT IS OWN-PROPERTIES ONLY. A PROMISE WITH NO CATCHER, WRITTEN BY ME, INSIDE THE REMEDY FOR A PROMISE WITH NO CATCHER.**
+✅ **FIXED BY BUILDING THE CATCHER UP, NEVER BY NARROWING THE PROMISE: `1b-R` now requires TWO checks — the descriptor walk **AND** a RECURSIVE PROTOTYPE-IDENTITY check (`Object.getPrototypeOf(v)` ∈ {`Object.prototype`, `null`, `Array.prototype` where `Array.isArray`}).** `[MEASURED HERE]` **it discriminates — plain literal PASS · `Object.create(null)` PASS · class instance FAIL · proto-getter child FAIL — at invocation count `0`.**
+⚠️★★★ **AND IT OWES AN OVER-REJECTION GUARD, ALSO MEASURED: a recursive plain-root check that omits `Array.prototype` REJECTS LEGITIMATE ARRAY DATA.** `A GUARD THAT REJECTS THE VALID CASE IS NOT A STRICTER GUARD, IT IS A BROKEN ONE.`
+★★★★★ **NEW ROW `42` CARRIES IT, and its catcher column says explicitly `NOT Object.getOwnPropertyDescriptors, which stays SILENT here` — the row is a FAILED proof if it reddens via the wrong mechanism.**
+
+### ✅★★★★★ §2 — ITEMS 1–3: THE SPLIT, THE PARSER, AND DEEP FROZEN-NESS
+**`1b` is now TWO contracts with TWO named mechanisms.** **`1b-S` BUILD-TIME SOURCE CONTRACT** — mechanism: **the TypeScript compiler API (`ts.createProgram`) or typed parser services**, six closed surfaces (imports · dynamic loading · exports · module-scope state · direct ambient reads · free/captured references). **`1b-R` RUNTIME INPUT-ADMISSION CONTRACT** — mechanism: descriptor walk **+** recursive prototype-identity, at the call boundary. 🛑 **`A 1b-S PASS IS NEVER EVIDENCE FOR A 1b-R PROPERTY`, and requirement `4` is split into `4a`/`4b` reported SEPARATELY.**
+✅ **`dynamic loading` was BROKEN OUT of the `imports` row** — `eval` / `new Function` / `createRequire` / computed specifiers are not imports and a static allow-list cannot decide them. ⚠️★★★ **THAT BROADENING CREATED A NEWLY FORBIDDEN CHANNEL, WHICH THE STOP CONDITION SAYS MAY NOT SIT WITHOUT A CATCHER — so it got ROW `41`. I did not narrow the row back to `import()` to avoid owing the proof.**
+✅ **ITEM 3 CARRIES BOTH LEGS AND `R-535`'s STRENGTHENING:** `const` is a binding guarantee (`Object.isFrozen({}) === false`), **and `Object.freeze` is SHALLOW** — with the desk's execution embedded verbatim, because `R-535 §2` proved what `AR-578` had not: **the injected reader reaches `project()`**, so a top-level `isFrozen` check does not merely fail to help, it **prints GREEN over a live coupling.** **ROW `38` catches it and its catcher column names the shallow check as the false green itself.**
+
+### ✅★★★★★ §3 — ITEMS 4–5: THE RED-PROOFS, AND THE CATCHER THE DESK STRUCK
+**Six new mutation rows, each naming its offending symbol/key, each with a GREEN discriminating neighbour:** `35` direct `globalThis` · `36` `process.env` · `37` mutable cache/lazy holder **with no setter export** (⚠️ row `34`'s setter check stays SILENT — nothing is exported) · `38` shallow-frozen nested holder · `39` function-valued field on the runtime input · `40` getter/accessor with **INVOCATION COUNTER REQUIRED `0`** · plus `41` dynamic loading and `42` prototype-borne capability.
+✅ **`R-535 §1` STRUCK `(or Object.keys)` AND THE DESIGN CARRIES THE STRIKE:** the descriptor walk is the **SOLE** admitted DETECTION mechanism; `Object.keys` is recorded **enumeration-safe-but-blind**; spread · `JSON.stringify` · `Object.values` · `Object.entries` · `structuredClone` are EXCLUDED, **each measured invoking the getter once, twice, by two independently authored harnesses.**
+
+### ✅★★★ §4 — ITEM 6: THE NARROWING, THE ANCHORED PARSE, AND A TAUTOLOGY IN MY OWN INSTRUMENT
+✅ ***"promised AND caught"* is narrowed ONCE and explicitly to DIRECT SYNTACTIC channels;** computed member access, string-built identifiers, `Reflect.*`, `Proxy` traps and prototype-chain injection via reflection are **outside the threat model and carry no claim.** ⚠️ **This narrows the ADVERTISED REACH, never a promise already made — every `1b-S`/`1b-R` channel KEEPS its red-proof.**
+🛑★★★★★ **AND I AUDITED MY OWN MAP BEFORE BELIEVING IT, BECAUSE ITS FIRST DRAFT COULD NOT FAIL: the reverse direction computed `set(MAP.values()) − set(MAP.values())` — **EMPTY BY CONSTRUCTION.** A tautology printing the answer I wanted, and my negative control only exercised the FORWARD direction.** ✅ **REPLACED with a set derived FROM THE MATRIX (rows whose catcher names `1b-S`/`1b-R`/dependency-boundary), and BOTH directions now carry a negative control** — point a promise at a non-existent row → FORWARD red; drop row `42` from the map → REVERSE reports `[42]`. `AN EMPTY DIFFERENCE IS ONLY EVIDENCE IF THE CHECK COULD HAVE BEEN NON-EMPTY.`
+✅★★★ **THE FIXED REVERSE CHECK EARNED ITS KEEP ON ITS FIRST RUN: it did not see row `34`, whose catcher still named the pre-split `requirement 1b` — ambiguous after the split. Retargeted to `1b-S`.** `A CATCHER COLUMN IS AN OPERATIVE CARRIER.`
+**BIDIRECTIONAL DIFFERENCE: `promises with NO catcher = EMPTY` · `catcher rows with NO promise = EMPTY` (10 ↔ 10).**
+
+### ⚠️★★★ §5 — THE MATRIX PARSE, ANCHORED, WITH ITS CONTROL
+`[MEASURED HERE]` **anchored to `## 10`: `43` rows, contiguous `1..43`, zero duplicates, control LAST → `42` mutations + `1` control.**
+★★★★★ **POSITIVE CONTROL, WHICH IS THE POINT: the IDENTICAL row-shape pattern with NO anchor returns `48` — the `5` extra are the field-mapping table at `:196–200`, numbered `1..5`. The parser CAN see them, so the ANCHOR is what excludes them rather than blindness.** ⚠️ **This is the exact conflation that fooled the desk TWICE (`30`, then `40`). `PARSE A TABLE BY ITS SECTION ANCHOR, NEVER BY ITS ROW SHAPE.`**
+⚠️ **AND THE CAPTION WAS RE-TAKEN, NOT CARRIED: it read `40+1` two edits before delivery and was ALREADY STALE when rows `41`–`42` landed.** `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM.`
+
+### ⚠️★★★ §6 — TWO PROBE FAULTS, BOTH MINE, BOTH VERIFIED AS ARTIFACTS BEFORE ANY PROBE WAS TOUCHED
+**Acceptance FAILED `3/29` on first run. I PRINTED BOTH PASSAGES VERBATIM BEFORE CHANGING ANYTHING** — the AR-577 discipline — **and both were instrument faults with the substance plainly present:**
+- **`3b`:** `Object.isFrozen({}) === false` is at `:119` verbatim. **My probe left `(`, `)`, `{`, `}` UNESCAPED AS REGEX METACHARACTERS.** ✅ Fixed with `re.escape`.
+- **`R1`/`R2`:** the ONLY `module or` hit is `:99`, which reads *"THE PREVIOUS REVISION OF THIS LINE READ…"* and *"ONLY as historical explanation… never as an allowed implementation form."* **My probe had lost the LIVE-vs-HISTORICAL distinction `AR-577`'s criterion `1` carried.** ✅ Fixed by classifying each hit, running two tightnesses whose disagreement is the alarm, **and carrying a CONTROL that injects a live disjunction and confirms the classifier still flags it (`live=1`).**
+★★★★★ **SAME ASSERTIONS, NOT WEAKER ONES — and I state the temptation plainly: the cheap move was deleting the three failing checks. `A PROBE DELETED BECAUSE IT WENT RED IS A TEST WEAKENED TO PASS.`**
+
+### §7 — ACCEPTANCE
+```
+items 1-3  split · parser named · regex forbidden · const/DEEP-frozen ....... PASS (10 checks)
+item  4    five channels + green neighbours ................................. PASS (6 checks)
+item  5    invocation counter 0 · descriptors sole catcher · 5 excluded ..... PASS (4 checks)
+item  6    direct-syntactic narrowing · anchored re-parse · map EMPTY ....... PASS (4 checks)
+STOP       S1 no AST-certifies-runtime · S2 not hostile-isolation · S3 no narrowing  PASS
+REGRESSION R1/R2 no live disjunction (two tightnesses AGREE) · R3 CONTROL convicts   PASS
+                                                                             30 / 30
+```
+
+### §8 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes untouched and NOT RUN this round · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT NOT TOUCHED.**
+- ⚠️★★★★★ **`30/30` IS A DESIGN-TEXT RESULT.** My executions prove the **MECHANISMS** in a scratch harness outside the repo; **they are NOT the instrument and carry NO claim about repo code.** **No `P0-vNext` implementation exists, no mutation has ever been RUN against the gate, no CI executes any of this.**
+- ⚠️ **`1b-S` + `1b-R` remain a CONTRACT, not a sandbox.** They defend against ACCIDENTAL coupling — the failure this arc has actually suffered, every time accidental — and against nothing hostile. **Reflection and obfuscation are named OUT and keep no claim.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B`'s `N` is UNKNOWN and unowned (a desk debt, `R-529 §5`).**
+- ★★ **I do not grade my own work.** **GRADE: NOT ASKING — `R-532 §4`'s bar requires a read with ZERO structural corrections; `R-534` carried three. Deferred BY RULE.**
+
+### §9 — POSITION
+**Design REVISED on all six items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **FAN-IN `6 / 6`. NOT A HANDOFF.**
+
+---
+
 ## AR-578 · 2026-08-02 · **START-RECEIPT — R-534 §5 ACCEPTED. SIX ITEMS, DESIGN ONLY.** 🛑★★★★★ **AND I RE-RAN THE DESK'S GETTER MEASUREMENT RATHER THAN RELAYING IT — `5/7` REPRODUCED EXACTLY, PLUS TWO RESULTS NEITHER PARTY HAS: `Object.keys` IS SAFE BUT **CANNOT DETECT**, AND `Object.freeze` IS **SHALLOW**. THE RULING'S OWN ITEM `5` NAMES AN IDIOM THAT CANNOT SERVE AS THE REJECTION MECHANISM.**
 
 **RULING ID:** R-534 §5 · **TASK ID:** AR-578 · **PRIOR:** AR-577 (delivery, `33/33`) · **SEAT:** `claude.exe 26204`.
