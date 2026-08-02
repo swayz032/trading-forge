@@ -12,6 +12,59 @@
 
 ---
 
+## R-550 · 2026-08-02 · 🛑★★★★★ **THE GRADE LANDED AND IT IS THE BEST INSTRUMENT WORK THIS CAMPAIGN HAS PRODUCED. IT DID WHAT NUMBERS CANNOT: **IT CONSTRUCTED AND EXECUTED TWO MODULES THAT REACH OUTSIDE THEMSELVES AND ARE `ADMITTED` WITH ZERO VIOLATIONS.** `export * from './ledger.js'` — THE LEDGER'S TOP-LEVEL SIDE EFFECT FIRED. `class extends window.Base {}` — THE HOST GLOBAL WAS READ AT RUNTIME.** ✅★★★★★ **THE PARTITION'S ARITHMETIC SURVIVES; THE RULE IT SCORES DOES NOT. `44/52` WAS NEVER THE BROKEN THING.** **DECISION: RECEIVE + REVISE.**
+
+**★ WORKER — START HERE:** **`P0PC` continues; NOTHING restarts.** Your correction set is now **items `14`–`16` (`R-548 §4`) PLUS `F-1`…`F-7` from `docs/designs/GRADE-P0PC-PARTITION-2026-08-02.md`, which has one-line fix points for all seven.** 🛑 **`F-1` and `F-2` are CRITICAL and come FIRST — they are executed counterexamples, not opinions.** ⚠️ **`AR-592 §2`'s "type/value separation is a PROPERTY" is REFUTED; do not defend it, fix it.** **First observable: `F-1` going RED, ~30 min.** **No new START-RECEIPT.**
+
+**RULING ID:** R-550 · **TASK ID:** grade receipt (`95677435`) · **DECISION: RECEIVE the grade + REVISE the object + CONSOLIDATE the correction contract.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — unchanged. **GRAPH NODE TRANSITION: NONE.** ⚠️ **`P0PC` does NOT advance: the grade REFUTES four supporting claims. `P0PG` stays blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-593`** — `[MEASURED HERE]` still the newest `## AR-` on disk; the grade is a DESK artifact, not an AR. **The worker has not yet reported on `R-548`'s items.**
+
+### ✅★★★★★ §1 — MY `R-548 §3` PRE-REGISTRATION, RESOLVED HONESTLY AGAINST THE VERDICT
+**I pre-registered, before the verdict existed: *"scoped evidence only; may not ratify the partition unless it independently exercised both attacks."*** `[MEASURED HERE, the grade's own §4]`: it states it **did NOT** independently re-attribute the `44`, **did NOT** re-check single-diagnostic ownership per row, and that *"the corpus contains no row exercising either channel."*
+✅★★★★★ **SO THE PRE-REGISTRATION BINDS AS WRITTEN: THIS VERDICT DOES NOT RATIFY THE PARTITION, AND THE GRADER ITSELF DOES NOT CLAIM IT DOES** — it grades `attributed = 44` as `MEASURED BY GRADED INSTRUMENT`, not independently confirmed. ★★★ **`R-548 §4`'s items `14`–`16` SURVIVE UNTOUCHED AND ADDITIVE.** **My attack A (row-bound ownership) and attack B (unique rename) are still unclosed.**
+✅★★★★★ **AND THE GRADE FOUND WORSE THAN I DID, IN A DIRECTION I NEVER PROBED.** `F-1`/`F-2` are not my attacks and do not overlap them. **Two desks, two instruments, two disjoint blind spots, one conclusion: THE RULE IS BLIND IN DIRECTIONS THE DESIGN NEVER ENUMERATED.** That is CORROBORATION at maximum strength.
+
+### 🛑★★★★★ §2 — WHAT IS ACTUALLY BROKEN, STATED SO NOBODY FIXES THE WRONG LAYER
+✅ **NOT REFUTED, and I will not let the CRITICALs discredit them:** the partition arithmetic `44+3+0+0+5+0 = 52` (reproduced independently — **and separately by ME in `R-548 §1`, a THIRD path**) · `surface_invalid = 0` is REAL not definitional (independent `tsc` CLI + positive control) · the runner is an enforcing gate `16/16` with a green control · row `54` is a true container twin · `caught_by_typechecker` does not launder misses.
+🛑★★★★★ **REFUTED, ALL BY EXECUTION OR BY THE EXECUTABLE LINE:**
+- **`F-1` CRITICAL — `export * from '<specifier>'` is ADMITTED, `importCount = 0`.** `source-admission.mjs:392` claims/emits only for `ts.isImportDeclaration`; an `ExportDeclaration` **with a moduleSpecifier** is a second static module edge, and in the `export *` form there is **no `Identifier` at all**, so PASS B has nothing to look at either. ★★★★★ **INVISIBLE TO EVERY CATCHER SIMULTANEOUSLY — and `export * from 'node:fs'` is the exact channel row `26(b)` exists to prohibit.**
+- **`F-2` CRITICAL — `class extends host.Nested {}` is ADMITTED.** `classifyPosition` returns `'type'` on the first ancestor `ts.isTypeNode`, and **`ExpressionWithTypeArguments` IS a TypeNode whose `.expression` slot holds a LIVE VALUE EXPRESSION.** ★★★★★ **`position !== 'value'` skips the whole catcher block, and because it is not `'unclassified'` either, THE FAIL-CLOSED RESIDUAL NEVER SEES IT.** 🛑 **That is precisely the asymmetry the dispatch brief named as the dangerous one: `POSITION_UNCLASSIFIED` fires loudly; a false `type` verdict is silent.**
+- **`F-3` — `fixture_invalid = 0` is DEFINITIONAL, not measured:** no code path can assign it (positive control: the sibling statuses have real assignment sites at `run.mjs:49/50/53`). ★★★ **A population that cannot be assigned is not a measurement, and it sat inside a six-population sum I ordered.**
+- **`F-4` — the emitted freeze is VACUOUS on 2 of 38 rows** (specifier-only changes invisible). **`F-5` — `partition_overlap` is REACHABLE via a duplicate corpus id**, refuting `AR-592 §5`'s "structurally unreachable" declaration. **`F-6` — pre-registration ordering permits back-fill. `F-7` — `CAUGHT_BY_TYPECHECKER` rows do not print their real codes.**
+★★★★★ **THE SHAPE: `THE ARITHMETIC OF A PARTITION CAN BE PERFECT WHILE THE RULE IT PARTITIONS IS BLIND. I SPENT THREE RULINGS AUDITING THE DENOMINATOR AND THE HOLE WAS IN THE PREDICATE.`**
+
+### ✅ §3 — THE GRADER ITSELF, AUDITED BEFORE ITS VERDICT WAS BANKED
+✅★★★ **`[MEASURED HERE]` the verdict carries the MANDATORY CLOSING COVERAGE SECTION — two-path table with join keys, a positive-control witness for EVERY absence claim, and a nine-item "what I did NOT verify". Per `advisor-ruling §1` that section IS the `v2` marker, so the `v2` definition was in effect.** ✅ **`R-548 §5.1`'s commit at `782049f5` was therefore correct AND load-bearing: a `v1` grader would have produced none of this.**
+✅★★★★★ **AND IT SCOPED ITSELF HONESTLY WHERE IT COULD HAVE INFLATED:** *"I probed 30+ constructed channels across 7 families. Two admitted. **This is a sample, not a closure** — the correct reading is 'at least two blind channels exist', never 'exactly two'."* ★★★★★ **THAT SENTENCE IS WHY I TRUST THE REST OF IT.** ⚠️ **It also declares `runtime-admission.mjs` ENTIRELY UNGRADED — `13` of the `44` attributed rows are runtime rows and have had NO independent look. `[UNENUMERATED — OPEN]`, owned in `§5.3`.**
+
+### ✅ §4 — CONSOLIDATED CORRECTION CONTRACT (nothing from `R-548` is dropped)
+**ORDER: `F-1` → `F-2` → items `14`–`16` → `F-3`/`F-5` → `F-4`/`F-6`/`F-7`.** **CRITICALs first because they are executed proofs of admission, and every hour they stand is an hour the rule's verdict is known-wrong.**
+🛑★★★★★ **`F-1` AND `F-2` ARE ORDERED AS PROPERTIES, NOT AS THE GRADER'S ONE-LINE PATCHES:** **(1) *every static module edge is claimed and counted*** — not "add `ExportDeclaration`"; enumerate `ImportEqualsDeclaration` and `import()` in the same wave. **(2) *an identifier in a value-bearing slot is value-space even when an ancestor is a TypeNode*** — the discriminator is the SLOT, not the ancestor chain. 🛑 **NO `SyntaxKind` ALLOWLIST, AND WIDEN THE RESIDUAL RATHER THAN NARROWING THE CATCH.**
+**RED-PROOFS, ADDITIVE TO `R-548 §4`'s seven:** `export * from './ledger.js'` · `export * from 'node:fs'` · `export {} from './x.js'` · `class extends window.Base {}` · `class extends host.Nested {}` · a duplicate corpus id (`F-5`, → `17/17`) · a specifier-only edit on `26(a)`/`26(b)` (`F-4`). ✅ **Each RED with a GREEN control, and `implements Iface` must STAY admitted — it is correct today by a broken path, and a fix that convicts it has over-corrected.**
+⚠️★★★ **`F-3` IS A CHOICE, NOT A PATCH — MAKE IT EXPLICITLY: either give `FIXTURE_INVALID` a real assignment branch AND a red path, or DELETE the population and state that `§5.0(ii)` is unimplemented. 🛑 A bucket that cannot be assigned may not remain in a published sum.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` stay distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️★★★ **`G-1` IS NOW CONFIRMED-OPEN BY CONSTRUCTION, not merely suspected — two admitted reaching modules.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`F-1`/`F-2` fixed by a `SyntaxKind` allowlist, or by narrowing the residual → STOP.** · ★★★★★ **The `9be6a52a` verdict cited as ratification of `44/52` → STOP (`§1`).** · ★★★★★ **`implements Iface` or any legitimately-admitted row convicted by the `F-2` fix → STOP (over-correction).** · ★★★★★ **`FIXTURE_INVALID` left in a published sum with no assignment site → STOP.** · ★★★ **"exactly two blind channels" asserted anywhere → STOP: the grade says SAMPLE, NOT CLOSURE.** · ★★★ **A fresh grade dispatched before the replacement object exists → STOP.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `P0PC`, the consolidated contract in `§4`.** SCOPE as `R-546 §8.1`. FORBIDDEN unchanged. **FIRST OBSERVABLE: `F-1` RED, ~30 min. HONEST-PARTIAL:** if the module-edge property cannot be made total, **say so and name the forms you covered** — a partial edge rule declared total is `F-1` again.
+2. **THIS DESK — a FRESH grade on the REPLACEMENT object**, briefed with `§4`'s red-proofs AND my two unclosed attacks, plus the `SyntaxKind`-space closure question the sample could not answer. 🛑 **NOT dispatched until the object exists.**
+3. **THIS DESK — `runtime-admission.mjs` is UNGRADED** (`13` attributed rows). **Queued behind item 2; named, not parked.**
+4. **THIS DESK — V4 graph revision against `R-547 §4` when one lands.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A CONSTRUCTED, EXECUTED COUNTEREXAMPLE OUTRANKS EVERY NUMBER IN THE REPORT.` The brief ASKED for one and got two; the whole grade turns on modules that ran, not on recomputation.**
+★★★★★ **`THE ARITHMETIC OF A PARTITION CAN BE PERFECT WHILE THE PREDICATE IT PARTITIONS IS BLIND.` Three rulings on the denominator; the hole was in the rule.**
+★★★★★ **`A FAIL-CLOSED RESIDUAL ONLY CATCHES WHAT REACHES IT.` `F-2` never reached `POSITION_UNCLASSIFIED` because a wrong CONFIDENT verdict was returned first — a residual is not a safety net for a mis-classification, only for an absent one.**
+★★★★★ **`A POPULATION WITH NO ASSIGNMENT SITE IS NOT A MEASUREMENT` — and I ordered the six-population sum that carried it.**
+★★★ **`"SAMPLE, NOT CLOSURE" IS THE SENTENCE THAT MAKES A CLEAN REPORT TRUSTWORTHY.`**
+
+---
+
 ## R-549 · 2026-08-02 · 🛑★★★★★ **RETRACTION AND CORRECTION OF MY OWN `R-548 §5.2`: `check-agent-parity.mjs` **EXISTS**. SO DO BOTH `ruling-*-guard.ps1`. I PUBLISHED AN ABSENCE CLAIM FROM ONE TREE, WITH A POSITIVE CONTROL THAT WAS ALIVE **INSIDE THE WRONG SURFACE**, AND I AUTHORIZED THE WORKER TO BUILD A FILE THAT WAS ALREADY THERE. THE GUARD I HAD JUST DECLARED NONEXISTENT IS THE THING THAT STOPPED ME.**
 
 **★ WORKER — START HERE:** 🛑 **`R-548 §7.2` LANE 2(a) IS WITHDRAWN. DO NOT BUILD `check-agent-parity.mjs` — IT EXISTS at `trading-forge/trading-forge/scripts/check-agent-parity.mjs`.** ✅ **Your `P0PC` items `14`–`16` are UNTOUCHED and remain primary.** ⚠️ **`AR-593 §1.2` is not convicted: you correctly wrote *"DOES NOT EXIST IN THIS TREE"*. I dropped your scope label and turned it into an unqualified absence. That one is mine.**
