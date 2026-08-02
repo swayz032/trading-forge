@@ -90,7 +90,30 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-539 §5`: SOURCE-GRAMMAR AUTHORITY CLOSURE. FIVE ITEMS. DESIGN ONLY.** (2026-08-02 `01:44`, `316f8819`, `[MEASURED, date]`)
+## ★★★★★ SEAT (2026-08-02 `02:2x`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-541` (commit `32d8d416`). Newest AR: `AR-587` (`cdc290dc`) — RULED by `R-541`.**
+**Advisor seat:** `claude.exe 33412`, seated `02:07`. **Predecessor `15520` is GONE and its monitors died with it.**
+**Worker seat:** `claude.exe 26204`, ALIVE, `worker_ear.py` watcher on the ledger RUNNING `[MEASURED HERE, Win32_Process]` — rulings reach it.
+
+---
+
+## ★★★★★ AUTHORIZED NOW — **`R-541 §6`: PIVOT. THE ESM PIN, THEN AN EXECUTABLE PROTOTYPE. IMPLEMENTATION UNBLOCKED, NARROWLY.** (2026-08-02, `32d8d416`)
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-587` (`claude.exe 26204`).
+🛑★★★★★ **THE PROSE-REVISION LANE IS CLOSED.** The `accuracy-validator` grade (`GRADE-P0-VNEXT-DESIGN-2026-08-02.md`, now COMMITTED at `32d8d416` — it had been UNTRACKED) returned **band `5`, CAPPED BY ARTIFACT CLASS**: bands `7+` require execution and no implementation exists. **Its `CRITICAL` `G-1` — a `269`-byte CommonJS module injecting a ledger reader through the module-wrapper `this`, with all `16` forbidden tokens absent — I REPRODUCED BY EXECUTION `[MEASURED HERE, node v24.13.0, with positive controls]`, and MEASURED STILL OPEN AT `HEAD` two rounds after it was found** `[MEASURED HERE, every matcher carrying a planted positive control: `module.exports` `0` · `CommonJS` `0` · `ESM` `0` · `.cjs`/`.mjs` `0` · `this.` `0`]`.
+**GOAL — `R-541 §6`, four items:** ★★★★★ **(0) PIN THE MODULE SYSTEM TO ESM** in the `1b-S` table — one line, closing `G-1` by construction (`[MEASURED HERE]` ESM top-level `this` is `undefined`) — with the CJS wrapper `this` named forbidden and a row + subcase planted. **(1) BUILD an executable prototype of the `1b-S` source-admission rule and the `1b-R` runtime admission walk — NOTHING ELSE.** **(2) RUN the `51`-record manifest against it as its test corpus, per subcase, attributed to its NAMED catcher.** **(3) PUBLISH the coverage number WITH its misses, as a committed artifact.**
+★★★★★ **SEPARABILITY, ENFORCEABLE NOT ASSUMED: the prototype MUST NOT READ `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` OR `ORACLE.json`.** That prohibition is what keeps this lane independent of the open `P1/P2` `check()`-region defect.
+🛑★★★★★ **PRE-REGISTERED DECISION RULE (`R-541 §6a`), WRITTEN BEFORE THE DATA: SUCCESS IS NOT `51/51` RED. Success = every subcase yields a verdict ATTRIBUTABLE TO ITS NAMED CATCHER, *or* is recorded as an HONEST NAMED MISS. `40/51` with `11` named misses is a SUCCESS. A first-run `51/51` is a RED FLAG to audit, not a triumph.**
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` (item `0` ONLY) · a NEW prototype dir + runner · a NEW committed results artifact · `AGENT-REPORTS.md`.
+**FORBIDDEN:** the gate itself · the three claims · the scope registry · the ledger consumer · pinned lanes (RUN, never MODIFY) · the ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · **the OLD `P0` lane's seventh attempt (6 attempts, closed R-520 — untouched)** · `P1`/`P2` artifacts · the pinned tag · `git checkout`/`reset`/index ops · ⚠️ **the grader's receipt — committed by the desk, not yours to edit.**
+**FIRST OBSERVABLE:** item `0` + the `1b-S` rule rejecting the `G-1` module, **~30–45 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**STOP CONDITIONS (`R-541 §7`):** ★★★★★ **prototype reading the ledger/`ORACLE.json` → STOP** · ★★★★★ **a subcase reported covered when its verdict came from a parse/type/reference error rather than its named catcher → STOP** · ★★★★★ **module system left unpinned while code is written against it → STOP** · ★★★ **scope creep into the gate/claims/registry → STOP** · ★★★ **a coverage number published without its misses → STOP.**
+
+⚠️ **THE BLOCKS BELOW (`R-539 §5`, `R-534 §5`, `R-533 §5`) ARE DISCHARGED HISTORY — contract content retained, NOT the live task.**
+
+---
+
+## ~~AUTHORIZED — `R-539 §5`~~ **[DISCHARGED BY `AR-585`+`AR-587`; content retained]** (2026-08-02 `01:44`, `316f8819`)
 
 **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-583` (`claude.exe 26204`).
 **GOAL — `R-539 §5`, five items:** ★★★★★ **(1) CHOOSE ONE IMPORT POLICY — zero-import leaf OR an exact canonical allow-list with transitive-resolution + digest rules; DELETE THE MENU and sweep for other `preferred`/`otherwise` pairs; (2) PUBLISH THE EXACT AMBIENT-INTRINSIC ALLOW-LIST and reconcile it with the `nothing` cell, resolved by TS SYMBOL IDENTITY, never by the text `Object.freeze`; (3) ADD subcases for a shadowed/local/imported/aliased `Object.freeze` → RED, intrinsic → GREEN; (4) FORBID `__proto__` in BOTH literal spellings, each its own RED subcase, with an ordinary-key GREEN neighbour; (5) REPAIR the stale `both 4b rows` carrier at `L225` and RECOMPUTE both matrix counts from the parse.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-539 §5` — `grep -n "^## R-539" ADVISOR-RULINGS.md`.**
