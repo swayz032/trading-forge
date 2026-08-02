@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3293` at THIS commit, 2026-08-01 20:17 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3297` at THIS commit, 2026-08-01 20:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3293` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3297` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-523` LANDED `032b22c5`, PUBLISHED (2026-08-01 20:16). CENSUS `FAIL` ACCEPTED. **WORKER AUTHORIZED: ONE BOUNDED `P1`/`P2` REPAIR — obligations A–E, three allowed files, no code.** `P0-vNext` STILL BLOCKED.**
+## ⚠★★★★★ SEAT — **`R-523 §4` DELIVERED (`AR-551`, repair at `f362a80b`, PUBLISHED) AND THE **RE-CENSUS IS DISPATCHED AND IN FLIGHT** (2026-08-01 20:27, pinned `f362a80b`, receipt owed at `docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md`). `R-524` OWED, HELD for the next external read. ⚠ **DO NOT DISPATCH ANOTHER — absent receipt means RUNNING, not missing.** Dispatched WITHOUT asking, under the operator's 08-01 delegation.**
+✅★★★★★ **THE REPAIR VERIFIED AT THIS DESK BEFORE I SPENT A CENSUS ON IT `[MEASURED HERE]`: `301` cells · `ASSERTED 140` / `NOT-APPLICABLE 9` / `UNADJUDICATED 152` — **exactly the pre-registered post-state** · `43` distinct rows × `7` axes · `UNDECLARED` still **`43`, unchanged** · new basis `fixture-declared-id (row absent from oracle)` = **`91`** = `13 × 7`.**
+✅★★★★★ **PRESERVATION IS SURGICAL, AND THIS WAS THE BINDING CONSTRAINT: diffed all `210` pre-existing cells against `c80c8df7` — **`0` REMOVED, `91` ADDED, AND ONLY `9` PRE-EXISTING CELLS CHANGED ANY FIELD AT ALL.** That change is `authority_citation` `None` → `ORACLE-AUTHORITY-ORPHAN-ZONES-2026` on exactly the `9` `NOT-APPLICABLE` cells — **obligation `E`, the debt I ordered filled.** NO `classification`, `basis` or `value` moved on ANY pre-existing cell.**
+✅★★★ **STOP CONDITION HONOURED: the packet declares `row universe origin = PINNED SOURCE FIXTURE SPECS — fixture filename × spec.entry_conditions[].id`, the generator's `row_universe()` reads `spec["spec"]["entry_conditions"]`, and the oracle is COMPARED AGAINST it rather than defining it.** ★★ **The worker also built the ADVERSARIAL mutant obligation `C` demanded — one that repairs `row_count`, `counts_by_*` and every digest after deleting a row — which is the case a naive verifier passes.**
+⚠ **STILL UNVERIFIED HERE and left to the re-census: verifier independence in the executable path · the repaired-mutant red-proofs · `canonical_document_sha256` verification · duplicate-JSON-key rejection · the frame declaration's completeness.**
 ✅ **WHAT SURVIVED AND BINDS THE REPAIR: the census could not move ONE of the `210` cells. `140/9/61` reconciles · the `43` are real and honestly represented · zero guessed cells · determinism stronger than claimed. **ALL `210` PRESERVED BYTE-FOR-BYTE, THE `43` STAY `43`.** A repair that “improves” a verified cell is a regression with good intentions.**
 ⚠★★★★★ **THE DEFECT IS THE DENOMINATOR — CONFIRMED HERE TWO WAYS: `43` declared rows vs `30` enumerated → `13` rows / `91` cells omitted, true universe **`301`**; and the oracle's own `conditions_unadjudicated_ids` joins `13/13` to SPEC ids, `0/13` to ORACLE keys. All thirteen are in the CONTROL fixture. Post-repair expectation: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152` · `301` total — **a disagreement with those numbers is a FINDING, not something to reconcile toward.**
 ⚠★★★★★ **THE CORRECTION A LATER SEAT MUST NOT LOSE — THE OBVIOUS FIX IS INSUFFICIENT: the census proposed unioning `conditions.keys()` with `conditions_unadjudicated_ids`. **BOTH LIVE INSIDE THE ORACLE BEING CHECKED**, so a self-consistent deletion from both shrinks the universe again. **THE ROW UNIVERSE MUST BE FROZEN FROM THE PINNED SOURCE FIXTURE SPECS (`fixture filename × spec.entry_conditions[].id`); the oracle's fields may be COMPARED against it and may NEVER DEFINE it.**
