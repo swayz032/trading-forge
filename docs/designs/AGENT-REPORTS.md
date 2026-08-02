@@ -4,6 +4,83 @@
 
 ---
 
+## AR-613 · 2026-08-02 · ✅★★★★★ **THE BATCH IS CLOSED. FAN-IN `5 / 5`.** **THE PIN DANCE LANDED IN ITS TWO COMMITS, THE GATE WENT RED IN BETWEEN EXACTLY AS PREDICTED, AND BOTH CHANNELS `AR-603 §3` LEFT UNGUARDED NOW HAVE ROWS: `58` (`import.meta`) AND `G-src-new-target-supplied`.** ✅★★★ **`R-572 §4`'s THREE COLLECTIONS ARE PINNED — BUT NOT AS ORDERED, BECAUSE `[MEASURED FIRST]` TWO OF THEM COULD NOT BE PINNED AT ALL: THE PARSER RETURNED `keys: null`, AND A PIN ON A TABLE THE READER CANNOT SEE WOULD HAVE THROWN `INSTRUMENT FAULT` AND TAKEN THE GATE DOWN.** 🛑★★★ **AND I TESTED `AR-611 §3.4`'s ONE PREDICTION RATHER THAN INHERITING IT: THE SECOND PIN BUMP IT SAID WAS REQUIRED WAS **NOT** REQUIRED, AND I PROVE THE CHECK IS STILL LIVE RATHER THAN JUST REPORTING GREEN.**
+
+**RULING ID:** `R-572 §6.1` + `§4` · **TASK ID:** AR-613 · **PRIOR:** AR-612 (`3c2a83e0`) · **CODE:** `0820f88f` + `27751213` + this commit.
+**GRAPH: `P0PC` `active_worker`. NO TRANSITION CLAIMED — `THE DOER DOES NOT MOVE THE NODE`.**
+**FAN-IN: `5 / 5`.** ✅ `(5)` set-of-sets · `(2)` `F-3` · `§6.3` enumeration · `(3)` `Proxy` design question · `R-570 §4` delete+pin · **and this seat's half: the `§4` pins and the corpus rows.**
+
+### ✅ §1 — STATE AT CLOSE, EVERY GATE RE-TAKEN AFTER THE LAST REPAIR (`red-path-decay`)
+`[MEASURED HERE, exit codes off the process, all six run after the pin bump]`
+```
+run.mjs               GATE: PASS                                          EXIT 0
+red-proof.mjs         CONTROL GREEN true · 41 / 41 red-proofed            EXIT 0
+emitted-freeze.mjs    comparator controls: identical=true different=true  EXIT 0
+type-value-proof.mjs  15 / 15 · property HOLDS                            EXIT 0
+module-tuple.mjs                                                          EXIT 0
+module-collections.mjs                                                    EXIT 0
+prototypes/ tree CLEAN
+```
+✅ **`44 / 52` AND ATTRIBUTION UNTOUCHED — the number itself re-read, not asserted: like-for-like `attributed 44`, `caught_by_typechecker 5`.** **Expanded `attributed` moved `55 -> 56` because row `58` is a NEW row that attributes; the LIKE-FOR-LIKE set is a different population and did not move.**
+
+### ⚠️★★★★★ §2 — `R-572 §4`: TWO OF THE THREE COULD NOT BE PINNED, AND FINDING THAT COST NOTHING BECAUSE I MEASURED BEFORE EDITING
+`[MEASURED HERE, `extractModuleCollections` against pinned `run.mjs` @ `cac39d45`]`
+```
+SIX                    keys = 6 named populations   <- pinnable as ordered
+SURFACE_CODES          keys = null  (7 elements)    <- NOT pinnable: bare string-literal array
+FIXTURE_INVALID_CODES  keys = null  (6 elements)    <- NOT pinnable: same shape
+```
+🛑★★★★★ **PINNING EITHER IN THAT STATE WOULD NOT HAVE PROTECTED IT — `checkPinnedCollections` THROWS `INSTRUMENT FAULT` on a pinned table with no extractable keys, so the order as written would have taken the whole gate down on the next run.** ★★★★★ **`A PIN ON A TABLE THE READER CANNOT SEE IS NOT WEAK PROTECTION — IT IS AN OUTAGE.` The parser had a case for tuple rows and a case for `id`-keyed object rows and NO case for the simplest shape of all: an element that IS its own key.**
+✅ **FIX: two lines in the array branch. AND THE CLAIM THAT IT IS VERDICT-NEUTRAL IS PROVEN, NOT ARGUED** — `[MEASURED HERE]` the full `run.mjs` output before and after the parser change plus all three new pins is **BYTE-IDENTICAL** (`diff` clean, `219` lines). ★★★ **The argument for why (a table with keys today cannot contain a `StringLiteral` element, or it would already be `null`) is written at the line, but the byte-comparison is what I am relying on.**
+
+### ✅★★★★★ §3 — THE RED-PROOF, AND I VARIED THE DELETED SIGNAL BECAUSE `R-572 §7` SAYS ONE ROW IS NOT A COLLECTION
+`[MEASURED HERE, each mutation applied to the LIVE `run.mjs`, gate executed, file restored and VERIFIED sha256-IDENTICAL]`
+```
+SIX / fixture_invalid        DELETE -> EXIT 1  "SIX MISSING row(s) … : fixture_invalid"
+SIX / position_unclassified  DELETE -> EXIT 1  "SIX MISSING row(s) … : position_unclassified"
+SURFACE_CODES / TS2792       DELETE -> EXIT 1  "SURFACE_CODES MISSING row(s) … : TS2792"
+FIXTURE_INVALID_CODES/TS2345 DELETE -> EXIT 1  "FIXTURE_INVALID_CODES MISSING row(s) … : TS2345"
+SURFACE_CODES / TS9999       ADD    -> EXIT 1  "SURFACE_CODES UNDECLARED row(s) — bump the pin"
+CONTROL (unmutated)                 -> EXIT 0  <- the suite discriminates; without this every row above is void
+run.mjs sha256 before == after: 439daef5…d372e
+```
+★★★ **TWO keys of `SIX`, not one — `R-572 §7`'s partially-protected-collection lesson applied to my own work rather than quoted. And BOTH DIRECTIONS: deletion AND arrival, because a pin that only catches shrinkage is half a pin.**
+
+### ✅★★★★★ §4 — THE CORPUS ROWS, AND WHY EACH IS THE ROW IT IS
+**`58` — `import.meta`, RED, `expect: S.FREE_REF`.** `[MEASURED HERE]` `58 ATTRIBUTED 1b-S:free-captured-reference` — **the catcher the mechanism names, not merely "it reddened"**. **`F-2` was a CRITICAL whose repair shipped with ZERO rows for the channel it fixed (`AR-603 §3`); `A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE.` The fixture is byte-for-byte the type-clean one `AR-604 §4` handed the desk and `R-566 §3` re-ran at its own hand — the SAME object both paths already measured, so this row inherits two independent verifications rather than starting a third.**
+**`G-src-new-target-supplied` — GREEN.** `[MEASURED HERE]` `ADMITTED`, `green_admitted 9 / 9`. **It sits in the GREEN set deliberately: its job is to RED if anyone ever "hardens" the rule by convicting `MetaProperty` as a class — the exact one-line over-correction `R-566 §5` names as a STOP and which would convict `lane` with it.**
+⚠️ **ONE FORCED DEVIATION, DECLARED RATHER THAN LEFT FOR A READER TO NOTICE: this row uses `export const project = function (lane: Lane) {…}` where every other fixture uses an arrow. `new.target` is a SYNTAX ERROR inside an arrow function, so the shape is forced by the grammar of the thing under test. It is the only difference from `G-src-clean`.**
+🛑 **NO `Proxy` ROWS. `R-572 §3` puts `F-1` and the `isProxy` catcher outside this batch, and a guard row for a catcher that does not exist could only ever fail.**
+
+### ✅★★★ §5 — THE DANCE, AND THE RED WINDOW IS ON THE RECORD AS DESIGN
+```
+27751213  corpus rows land        -> GATE: FAIL (2 class(es))
+            *** membership: UNDECLARED arrivals (not in pinned 53e80935): 58
+            *** green_membership: UNDECLARED green arrival(s): G-src-new-target-supplied
+this      pin bump 53e80935 -> 27751213 · blob f177b245 -> d269b5cb
+            EXPECTED_EXPANDED_CARDINALITY 64 -> 65 · EXPECTED_GREEN_CARDINALITY 8 -> 9
+                                  -> GATE: PASS EXIT 0
+```
+✅ **THE RED NAMED BOTH NEW ROWS INDIVIDUALLY. That is the pin refusing to accept growth it did not authorize, which is the entire mechanism — and it means the two rows could not have been slipped in silently.**
+
+### 🛑★★★★★ §6 — I TESTED `AR-611 §3.4` AND IT WAS WRONG, SO I DID NOT PAY ITS COST
+**`AR-611 §3.4` (mine, previous seat) said the second commit must ALSO bump `MODULE_PIN_COMMIT` + `PINNED_BLOBS['membership.mjs']` "because that same edit changes `membership.mjs`", and warned that missing it *"is how this goes green while under-counting"*.** ✅ **`[MEASURED HERE]` IT IS NOT REQUIRED: the module pin governs the PINNED REFERENCE TEXT and the check compares pinned-vs-live COLLECTIONS. Everything I edited (`EXPANDED_PIN_COMMIT`, `EXPANDED_PIN_BLOB`, two cardinalities) is a SCALAR, which `extractModuleCollections` does not admit — so no collection changed and there was nothing to re-pin.**
+✅★★★★★ **AND I REFUSE TO REST THAT ON A GREEN, BECAUSE A CHECK THAT SILENTLY STOPPED RUNNING WOULD LOOK THE SAME. POSITIVE WITNESS `[MEASURED HERE]`: with `membership.mjs` in its NEW state, emptying `HISTORICAL_RENAMES` gives `GATE: FAIL EXIT 1 — membership.mjs: table HISTORICAL_RENAMES rows are no longer key-extractable`; restored sha256-identical. THE PIN PATH IS ALIVE AGAINST THE CHANGED FILE.** ★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — and "no bump needed" is a negative assertion.**
+⚠️★★★ **WHAT THIS SAYS ABOUT THE PIN, STATED HONESTLY RATHER THAN AS GOOD NEWS: `MODULE_PIN_COMMIT` NOW POINTS AT `cac39d45`, WHICH IS NO LONGER THE NEWEST `membership.mjs`. That is correct — the pin should move when a TABLE changes, not when a file does — but a reader who assumes the module pin tracks HEAD will be wrong, and this is the sentence that stops that.**
+
+### ✅ §7 — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. Invariant 1 untouched.** ✅ **`44/52` and attribution logic UNTOUCHED — re-read at close, not carried.** ✅ **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-2` OPEN · `G-1` OPEN in the RUNTIME layer with `R-572 §3`'s ruled disposition — `F-1` is NOT closed and I do not report it as such.** ✅ **NOTHING SELF-GRADED; `accuracy-validator` remains the desk's to dispatch (`R-569 §0`) and I did not ask again.** ✅ **ONE ear (the duplicate is killed, `AR-612 §0`); every commit `git commit -o <explicit paths>`; no `add -A`, no `stash`, no `checkout`, no `reset`.**
+
+### ⚠️ §8 — WHAT I DID **NOT** MEASURE
+1. ⚠️ **The parser's new branch is proven verdict-neutral for the pinned tables BY BYTE-COMPARISON OF THIS GATE'S OUTPUT. I did not enumerate every bare-string array in every prototype module and check whether any becomes newly key-extractable — the six pinned files are covered by the byte-comparison; the unpinned ones are `[UNENUMERATED]`.**
+2. ⚠️ **Row `58` proves `import.meta` is REJECTED in the `.ts` container the corpus uses. Other containers (`.cts`, `.mjs`) are NOT probed for this channel.**
+3. ⚠️ **`G-src-new-target-supplied` proves `new.target` is ADMITTED. It does NOT prove `R-566 §1`'s residual — a `new.target` bound to a constructor from another module is still a SUPPLIED-from-outside value, and that remains the blueprint-altitude question `R-566` left open.**
+
+### ✅ §9 — SEAT
+**Batch CLOSED at `5 / 5`; the object is STABLE for the grade and the tree is CLEAN. I am NOT declaring a handoff — this seat is early in its context and holds the seat.** **Nothing dispatched, nothing owed from my side.** **Next per `R-572 §6.2`: the desk's `accuracy-validator` on the integrated object. Per `§6.1` I STOP here and do not start the `Proxy` catcher.**
+
+---
+
 ## AR-612 · 2026-08-02 · ✅ **START-RECEIPT — FRESH WORKER SEAT. I TAKE `R-572 §6.1` (THE BATCH-CLOSING PIN DANCE) AS THE WHOLE REMAINING UNIT, NOT A LANE.** ⚠️★★★★★ **AND I ANSWER `R-572 §4`'s *"if it is cheap"* **BEFORE** WRITING CODE, BECAUSE THE ANSWER SPLITS THE THREE COLLECTIONS AND ONE HALF IS NOT FREE: `[MEASURED HERE]` **`SIX` PINS FOR NOTHING; `SURFACE_CODES` AND `FIXTURE_INVALID_CODES` CANNOT BE PINNED AT ALL TODAY — THE PARSER RETURNS `keys: null` FOR BOTH, AND `checkPinnedCollections` THROWS `INSTRUMENT FAULT` ON A PINNED TABLE WITH NO EXTRACTABLE KEYS.**
 
 **RULING ID:** `R-572 §6.1` + `§4` · **TASK ID:** AR-612 · **PRIOR:** AR-611 (`68d9bf49`) · **NO CODE DELTA YET.**

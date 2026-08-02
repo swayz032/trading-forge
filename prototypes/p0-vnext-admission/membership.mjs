@@ -48,7 +48,15 @@ export const BASELINE_REPO_PATH = 'prototypes/p0-vnext-admission/corpus.mjs';
 // THE FIX IS THE SAME MECHANISM ITEM 15 ALREADY PROVED: pin the expanded identities to a FROZEN
 // COMMIT. A later commit cannot edit `53e80935`. Legitimate growth must BUMP THE PIN, which is a
 // deliberate, reviewable act in git history — not an array edit that reviews itself.
-export const EXPANDED_PIN_COMMIT = '53e80935';
+// ⚠️ BUMPED 2026-08-02 `53e80935` -> `27751213` (R-572 §6.1, the batch-closing dance). TWO rows
+// were added and the pin moved in a SEPARATE commit, so the gate was RED in between and the
+// growth is legible in git history rather than being an array edit that reviews itself:
+//   `58`                        the `import.meta` guard row — AR-603 §3 recorded the F-2 repair
+//                               as UNGUARDED, with ZERO corpus rows for the channel it fixed.
+//   `G-src-new-target-supplied` R-566's adjudication, made enforceable instead of remembered.
+// ✅ THREE MAGNITUDES MOVE WITH IT AND EACH STATES ITSELF IN PLAIN SIGHT (`64 -> 65`, `8 -> 9`,
+// and the blob), which is exactly what `F-4` proved a bare string cannot do.
+export const EXPANDED_PIN_COMMIT = '27751213';
 
 export function loadPinnedCorpus(commit) {
   const raw = execFileSync('git', ['show', `${commit}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' });
@@ -130,9 +138,9 @@ export const EXPANDED_META = Object.freeze({ commit: EXPANDED_PIN_COMMIT, blob: 
 //   A PIN NOBODY ASSERTS IS A VARIABLE, NOT A PIN.
 // Both magnitudes are now asserted, and so is the BLOB — so moving the pin requires editing three
 // named constants that each state the expected size in plain sight, and a shrink cannot be silent.
-export const EXPANDED_PIN_BLOB = 'f177b2456deec81cd1635c8a947db2730a834289';
-export const EXPECTED_EXPANDED_CARDINALITY = 64;
-export const EXPECTED_GREEN_CARDINALITY = 8;
+export const EXPANDED_PIN_BLOB = 'd269b5cbce2cc9d03905abac5c816e039a1f9cfd';
+export const EXPECTED_EXPANDED_CARDINALITY = 65;
+export const EXPECTED_GREEN_CARDINALITY = 9;
 if (expandedPin.blob !== EXPANDED_PIN_BLOB) {
   throw new Error(`INSTRUMENT FAULT: expanded pin ${EXPANDED_PIN_COMMIT} resolves to blob ${expandedPin.blob}, expected ${EXPANDED_PIN_BLOB} — the pin moved`);
 }
