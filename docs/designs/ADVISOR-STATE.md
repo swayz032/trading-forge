@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3297` at THIS commit, 2026-08-01 20:28 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3302` at THIS commit, 2026-08-01 20:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3297` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3302` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠★★★★★ SEAT — **`R-523 §4` DELIVERED (`AR-551`, repair at `f362a80b`, PUBLISHED) AND THE **RE-CENSUS IS DISPATCHED AND IN FLIGHT** (2026-08-01 20:27, pinned `f362a80b`, receipt owed at `docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md`). `R-524` OWED, HELD for the next external read. ⚠ **DO NOT DISPATCH ANOTHER — absent receipt means RUNNING, not missing.** Dispatched WITHOUT asking, under the operator's 08-01 delegation.**
+## ✅★★★★★ SEAT — **RE-CENSUS: `CLAIM NOT REFUTED — BAND 7 VERIFIED. PRIOR `FAIL` LIFTED.`** (receipt `docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md`, `a9c0d557`, PUBLISHED). **`R-524` OWED, HELD for the next external read.** Worker STANDING BY.
+✅★★★★★ **THE CENTRAL QUESTION IS ANSWERED IN THE ARTIFACT'S FAVOUR: an adversary who freely edits `ORACLE.json` AND the ledger **CANNOT MOVE THE UNIVERSE.** Proved by intercepting all `17` reads the derivation performs — `16` PINNED git objects at `c304b098`, exactly `1` mutable input (the authority doc), and a tamper test showing that input cannot move `row_ids`, the cell-id set, or any `classification`.** ✅ **`43/301` · `140-9-152` · `UNDECLARED` still `43` AND THE SAME SET (join key `cell_id`) · byte-identical regeneration · all `210` preserved with the `9` citation fills the only authorized change · the `7` frozen axes EQUAL the data-derived set · out-of-frame list exhaustive.**
+⚠★★★★★ **`F-1` HIGH — THE GUARD PROTECTS THE DATA AND NOT THE CAPTION: `check()` validates `cells[]` and **NO OTHER REGION**. `20` of `28` novel operators pass (with `5` NOOP controls green first), including **DELETING `_frame`**, rewriting it into an unbounded completeness claim, and **FORGING `counts_by_basis.UNDECLARED` `43 → 0`.** ★★★★★ **THE `43` ARE THE POINT OF THIS ARTIFACT AND THE GUARD DOES NOT PROTECT THE NUMBER A HUMAN READS. `CAPTION IS A CLAIM` — and here the data is guarded while the claim about it is not.** ✅ **ONE LINE FIXES `18` OF `20`: compare `exp["digests"]`, which `check()` ALREADY COMPUTES AND DISCARDS.**
+⚠ **`F-2` MED — the canonical-digest check is SELF-REFERENTIAL (`canon_sha(doc)` re-canonicalises the ledger itself), so it is inert against the re-sealing forger the packet names. `IT IS THE PRIOR CENSUS'S OWN REMEDY IN ITS WEAKEST FORM` — self-authorization, a fourth time, now inside the digest check.** ⚠ **`F-3` MED: `row_universe_sha256` / `cell_id_set_sha256` sit outside BOTH the canonical hash and every check. `F-5` MED-LOW: authority read unpinned from the live tree — cannot move membership but DOES move the canonical digest.**
+✅★★★★★ **`F-4` CONFIRMED AT THIS DESK AND ALREADY FIXED — IT WAS THE ONE WITH A CLOCK ON IT `[MEASURED HERE]`: `c304b098` is **NOT an ancestor** of the campaign branch, `ci/` is **absent** here, and the commit was contained by exactly **ONE** side branch (`hardening/ledger-e-delivery-r497-20260730`). **Deleting that branch would have made the ledger unverifiable in principle.** ✅ **ANCHORED: annotated tag `p1p2-frozen-source-universe-c304b098` created and PUSHED; verified at the remote, peeled object == `c304b098…`. DO NOT DELETE IT while `P1`/`P2` or any `P0-vNext` consumer is live.**
+★★★ **AND THE GRADER RECORDED TWO OF ITS OWN HARNESS FAULTS: an over-sensitive read-spy, and a false escape where two cells were semantically identical so the green was correct. Escape count corrected `21 → 20` AGAINST ITSELF.**
 ✅★★★★★ **THE REPAIR VERIFIED AT THIS DESK BEFORE I SPENT A CENSUS ON IT `[MEASURED HERE]`: `301` cells · `ASSERTED 140` / `NOT-APPLICABLE 9` / `UNADJUDICATED 152` — **exactly the pre-registered post-state** · `43` distinct rows × `7` axes · `UNDECLARED` still **`43`, unchanged** · new basis `fixture-declared-id (row absent from oracle)` = **`91`** = `13 × 7`.**
 ✅★★★★★ **PRESERVATION IS SURGICAL, AND THIS WAS THE BINDING CONSTRAINT: diffed all `210` pre-existing cells against `c80c8df7` — **`0` REMOVED, `91` ADDED, AND ONLY `9` PRE-EXISTING CELLS CHANGED ANY FIELD AT ALL.** That change is `authority_citation` `None` → `ORACLE-AUTHORITY-ORPHAN-ZONES-2026` on exactly the `9` `NOT-APPLICABLE` cells — **obligation `E`, the debt I ordered filled.** NO `classification`, `basis` or `value` moved on ANY pre-existing cell.**
 ✅★★★ **STOP CONDITION HONOURED: the packet declares `row universe origin = PINNED SOURCE FIXTURE SPECS — fixture filename × spec.entry_conditions[].id`, the generator's `row_universe()` reads `spec["spec"]["entry_conditions"]`, and the oracle is COMPARED AGAINST it rather than defining it.** ★★ **The worker also built the ADVERSARIAL mutant obligation `C` demanded — one that repairs `row_count`, `counts_by_*` and every digest after deleting a row — which is the case a naive verifier passes.**
