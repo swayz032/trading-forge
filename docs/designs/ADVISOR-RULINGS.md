@@ -12,6 +12,68 @@
 
 ---
 
+## R-547 · 2026-08-02 · 🛑★★★★★ **I WAS WRONG, AND MY OWN NEXT MEASUREMENT REFUTED ME: I ESCALATED `R-545`'s FINDING INTO *"THE GRAPH REUSES CLOSED CAMPAIGN NODE IDs FOR DIFFERENT OBJECTS"* — **THE EDGE TOPOLOGY REFUTES THAT.** `P1`/`P2` CARRY THE CAMPAIGN'S OWN ARTIFACTS INTO `GBP`/`GBS`, AND THE WHOLE CHAIN MIRRORS OUR `QUEUE` EXACTLY. **SAME OBJECTS.** I JOINED TWO TRUE FACTS INTO A FALSE LINK, ONE DAY AFTER QUOTING THE LAW AGAINST IT.** ✅★★★★★ **`R-545`'s ORIGINAL CHARGE STANDS AND IS NOW **PROVEN**: `P1`/`P2` ARE **CLOSED AT BAND `7`** AND THE GRAPH LISTS THEM READY.** ⚠️ **STILL NOT ADOPTED — but the adoption criteria are now FULLY SPECIFIED, so the next revision can be adopted mechanically instead of re-litigated.**
+
+**RULING ID:** R-547 · **TASK ID:** none (external artifact; no new AR) · **DECISION: HOLD ADOPTION + RETRACTION of my own claim + PRE-COMMITTED ADOPTION CRITERIA + ENDORSE the validator plan.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** Candidate `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `7111b1db`, from `337cf11d`. **Ratify packet `0a1fa4e3` (`03:45:41`) CONSUMED** — `[EXTERNAL OPINION]`, zero authority. `[MEASURED HERE]` `git cat-file -t 0a1fa4e3` → `commit`.
+**GRAPH NODE TRANSITION:** **NONE** — not adopted; no node state, artifact identity or descendant invalidation recorded, no validator run.
+**GRAPH FAN-IN / READY SET:** `[MEASURED HERE, all `28` nodes and all `31` edges read from the pinned blob — `len()` of each array, not counted by eye; a first draft of this line said `32`, corrected before commit]` claimed `ready_worker_nodes_at_epoch = [P0PC, P1, P2]`. ✅ **`P0PC` ACCEPTED. 🛑 `P1`/`P2` REJECTED — they are CLOSED.** `P3` HELD.
+**NEWEST AR NAMED (stale-premise guard):** **`AR-590`** (`0df28dfd`) — unchanged; no newer `## AR-` on disk. **The worker is mid-execution on `R-546 §8.1`; this ruling does not touch its contract.**
+
+### 🛑★★★★★ §1 — THE RETRACTION, FIRST, BECAUSE I PUT IT IN AN OPERATOR SUMMARY
+**I claimed, as MEASURED, that the graph's `P1`/`P2` are *"ID reuse — different objects in a different phase"*, reasoning from two facts I HAD genuinely measured:** their `phase` reads `1B-gate-b`, and no node is labelled as the campaign's closed `P1`/`P2`.
+🛑★★★★★ **THE EDGES REFUTE IT** `[MEASURED HERE, edges read from the pinned blob]`:
+```
+P1 -> GBP  artifact = "pinned current-code baseline and producer-equivalence receipt"
+P2 -> GBP  artifact = "pinned complete source-keyed truth set"
+P1 -> GBS  artifact = "frozen current-code control baseline"
+P2 -> GBS  artifact = "frozen source-keyed truth membership"
+chain: P0D->P0P->P0PC->P0PG->P0VC->P0DG->P0I->P0IG->GBP->GBR->GBS->RERANK
+       ->RESPIN->BFREEZE->BIND->FIDELITY->PH1_EXIT->PH2->PH3->PH35->PH4
+```
+✅ **Those are OUR artifacts, and the chain is OUR `QUEUE` in order — Gate B (`5`) · source-keyed sweep (`6`) · re-rank (`7`) · respin (`8`) · binding (`9`) · fidelity (`10`) · Phase-1 exit. `phase: 1B-gate-b` is a CONSUMER label — the phase that CONSUMES `P1`/`P2` — not a claim that they ARE Gate-B work. SAME OBJECTS.**
+★★★★★ **THIS IS `TWO TRUE FACTS DO NOT MAKE A TRUE LINK`, COMMITTED BY THE DESK THAT CARRIES THE LAW. `NAME THE JOIN KEY` — the key was `node → the artifact its EDGE carries`, and I read the node's `phase` field instead. THE ANSWER WAS ONE FIELD AWAY IN THE SAME BLOB.** ⚠️ **It also reached the operator as measured. Corrected to them in the same motion.**
+✅ **WHAT SURVIVES, AND IT IS THE ADOPTION BLOCKER: `P1`/`P2` ARE `CLOSED (R-524)`, `P2` BAND `7` VERIFIED — and the graph lists them in `ready_worker_nodes_at_epoch`.** `R-545 §2` was right on the charge and wrong on both hypotheses; **so was I, in the more confident direction.**
+
+### ⚠️★★★★★ §2 — A SECOND DEFECT, AND IT IS THE ONE THAT MAKES A VALIDATOR NECESSARY
+`[MEASURED HERE]` **The graph's OWN `ready_rule` reads:** *"A node is ready only when every incoming hard edge has a present, pinned artifact and every acceptance predicate on that artifact is true."* **Its per-node `state_at_epoch` for `P1`/`P2` reads `topology_ready_requires_authorization` — which is NOT "runnable".**
+🛑★★★★★ **SO THE GRAPH CONTRADICTS ITSELF: `ready_worker_nodes_at_epoch` IS A HAND-WRITTEN CAPTION THAT DISAGREES WITH THE RULE AND THE NODE STATES IN THE SAME FILE.** ★★★★★ **A DERIVED FIELD THAT IS AUTHORED BY HAND IS NOT DERIVED — IT IS AN ASSERTION WEARING A COMPUTATION'S CLOTHES,** and it is precisely the `gate-artifact` species. **The packet's diagnosis — *"no committed validator, so its own caption could publish stale state without a failing command"* — is CORRECT and I adopt it on merit.**
+
+### ✅ §3 — THE PACKET'S REMEDY IS RIGHT, AND `§1` IS WHY I CAN SAY SO
+**Packet remedy `1` (*"mark `P1`/`P2` delivered with exact artifact identities and limitations"*) is CORRECT** — and correct **only** under the reading `§1` establishes. ⚠️★★★ **Had I ruled from my ID-reuse claim I would have REJECTED the right remedy and ordered the IDs renamed — manufacturing exactly the join breakage I accused the graph of.** `A WRONG MECHANISM GETS OBEYED.`
+✅ **Remedies `2`–`5` accepted:** remove from the ready set · refresh the epoch to the committed join · keep `P0PC` the only ready worker node and `P3` advisor-owned · preserve every hard edge and fan-in predecessor. ✅ **The validator plan is good and matches this campaign's guard laws** — test-first with a failing test BEFORE the module exists · independent LITERAL expectations never derived from the structure under check · every mutation must bite with an unmutated control green · non-zero exit · machine-readable receipt.
+
+### 🛑★★★★★ §4 — PRE-COMMITTED ADOPTION CRITERIA (so the next revision is adopted, not re-litigated)
+**I bind myself to these BEFORE seeing the revision. I adopt in a named ruling when ALL hold:**
+1. ✅ **Every node's `state_at_epoch` joins to the artifact its OUTGOING EDGE names, and to that artifact's PRESENT state on disk.** `P1`/`P2` = delivered, with `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` (`1551c7e5`) and the band-`7` recensus limitations **PRESERVED, not summarised away.**
+2. ✅ **`ready_worker_nodes_at_epoch` and `recommended_parallel_batch_now` are COMPUTED BY THE VALIDATOR from edges + node states, never hand-authored.** ★★★ **A caption this desk cannot recompute is not adoptable.**
+3. ✅ **The validator goes RED on a graph with `P1`/`P2` reinjected into the ready set** — that exact mutation, because it is the defect that produced this ruling. **A guard whose founding defect is not in its mutation set is untested against the only failure it has actually seen.**
+4. ✅ **`max_money_path_implementations: 1` and `max_independent_grades: 1` are ENFORCED by the validator, not merely declared** (`§15.7`).
+5. ⚠️ **A `RESIDUAL` disposition exists: any node the validator cannot classify is `UNCLASSIFIED` and FAILS CLOSED.** An ordered taxonomy without a residual must mis-file or stay silent, and both hide the finding.
+6. 🛑 **The blueprint keeps requirement authority. The graph orders execution; it never defines what must be true.**
+
+### 🛑★★★ §5 — WHERE I DIVERGE FROM THE PACKET: DO NOT SPEND THIS CAMPAIGN'S GRADER ON IT YET
+**The packet says its tree is `[UNVERIFIED]` until an independent `accuracy-validator` hunts it.** ⚠️★★★★★ **CORRECT IN PRINCIPLE, REFUSED IN SEQUENCE: `§15.7` allows ONE independent grade in flight, and that slot is COMMITTED to the money path — `R-543 §5` / `R-546 §8.2`, the corrected admission partition.** ★★★ **A scheduler that is NOT ADOPTED and that NOTHING EXECUTES may not pre-empt the grade of the instrument the money path is actually blocked on.** ✅ **The graph's grade is AUTHORIZED AND QUEUED BEHIND IT, owned by this desk — named, not parked.**
+
+### §5a — INVARIANTS
+**No node scheduled from this graph. No runtime, trading or capital behaviour authorized. Invariant 1 untouched.** `docs/advisor-rulings/` remains EXTERNAL territory — neither this desk nor the worker edits it; adoption is recorded in OUR ledger.
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **Any node scheduled from this graph before a named adoption ruling → STOP.** · ★★★★★ **A hand-authored ready-set accepted as derived → STOP.** · ★★★★★ **Readiness changed by deleting a hard edge, shrinking a fan-in contract, or carrying a stale artifact hash → STOP.** · ★★★ **`P1`/`P2` limitations dropped while marking them delivered → STOP: `DELIVERED` IS NOT `UNCONDITIONAL`.** · ★★★ **The campaign's single grade slot spent on the scheduler while the money-path grade is owed → STOP.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — UNCHANGED, NOT RE-ISSUED:** `R-546 §8.1`. **This ruling adds nothing to its contract and schedules nothing from the graph.**
+2. **THIS DESK — adopt / amend / reject the next graph revision against `§4`, in a named ruling.**
+3. **THIS DESK — the money-path grade (`R-546 §8.2`) FIRST; the graph's grade queued behind it.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`I JOINED TWO TRUE FACTS INTO A FALSE LINK WHILE CARRYING THE LAW AGAINST IT.` The `phase` field was adjacent; the EDGE was the join key. `READ THE FIELD THAT CARRIES THE ARTIFACT, NOT THE FIELD THAT DESCRIBES THE NODE.`**
+★★★★★ **`A DERIVED FIELD THAT IS AUTHORED BY HAND IS NOT DERIVED — IT IS AN ASSERTION WEARING A COMPUTATION'S CLOTHES.` Adopt no caption you cannot recompute.**
+★★★★★ **`A GUARD WHOSE FOUNDING DEFECT IS NOT IN ITS MUTATION SET IS UNTESTED AGAINST THE ONLY FAILURE IT HAS ACTUALLY SEEN.`**
+★★★ **`AN UNADOPTED SCHEDULER THAT NOTHING EXECUTES MAY NOT PRE-EMPT THE GRADE OF THE INSTRUMENT THE MONEY PATH IS BLOCKED ON.`**
+
+---
+
 ## R-546 · 2026-08-02 · 🛑★★★★★ **MY OWN `R-543 §4.1` ORDER IS THE DEFECT, AND I MEASURED IT BEFORE THE WORKER COULD SHIP IT: THE SEMANTIC-DIAGNOSTICS GATE I ORDERED WOULD REPORT **`0 / 52`** — `39 / 39` SOURCE FIXTURES ARE TYPE-INVALID AND `TS7006` HITS EVERY ONE. THAT SATISFIES MY OWN PRE-REGISTRATION ("the number MUST FALL") WHILE BEING PURE `gate-artifact`.** 🛑★★★★★ **AND THE REPAIR THE WORKER IS BUILDING RIGHT NOW WOULD PUT A **FALSE `FREE_REF` CATCHER ON ALL `39` FIXTURES** — `(lane: Lane)` IS REPORTED AS A RUNTIME FREE REFERENCE BECAUSE THE RULE HAS **NO TYPE-SPACE / VALUE-SPACE DISCRIMINATOR AT ALL** `[MEASURED HERE: the SAME spelling in type-only and value-only position returns the IDENTICAL verdict]`.** ✅ **APPROVE the batch · AMEND four items · AMEND MY OWN ORDER · GRANT the row-54 design scope the worker correctly refused to assume.**
 
 **★ WORKER — START HERE:** your nine items stand. **Do NOT restart them.** Add items `10`–`13` in `§5`. **Before you annotate one more fixture, read `§2` — the `(lane: Lane)` scaffold you are building breaks exclusive ownership on every row.** Your `§2(c)` deferral is DISCHARGED TO YOU, not parked: you may now correct the row-`54` caption. New first observable: the type/value red-proof, `~20 min`. **No new START-RECEIPT required — `AR-590` covers this batch.**
