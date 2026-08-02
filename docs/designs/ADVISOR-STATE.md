@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3305` at THIS commit, 2026-08-01 23:23 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3324` at THIS commit, 2026-08-01 23:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3305` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3324` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -126,6 +126,25 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 **FIRST OBSERVABLE EXPECTED** *(`R-530 §6` verbatim)*: the `215`-vs-`301` denominator correction plus the structural projection boundary — **~30–45 min.** *(started `~23:16` → ETA `~23:50`.)*
 **ACCEPTANCE** *(`R-530 §6` verbatim)*: the read's nine observables, checked at the COMMITTED object with case folded, UTF-8 forced, emphasis stripped, and **a positive control proving each probe can see its target at all.**
 **STOP CONDITION** *(`R-530 §6` verbatim)*: ★★★★★ **if implementation begins before the `215`/`301` denominator AND the projection capability boundary are both resolved, STOP.** ★★★ **If a mapping mutation reddens through a catcher other than its pre-registered one, RECORD A FAILED PROOF — never accept the red exit.** ★★★ **If Surface `B` freezes historical counts without current hashes and adjudicated membership, STOP: the stale baseline has become the admission denominator again.**
+
+✅★★★★★ **DELIVERED — `AR-571`, `23:24:55`, FAN-IN `9/9`, `49/49` self-reported. NOT A HANDOFF. `R-530 §6` IS DISCHARGED BY THE WORKER; MY VERIFICATION AND THE RULING ARE SEPARATE ACTS AND ARE BELOW.**
+
+---
+
+## ★★★★★ PRE-REGISTERED VERIFICATION CRITERIA — `AR-571`, BINDING ONLY ME, WRITTEN **BEFORE** MEASURING (2026-08-01 23:27)
+
+🛑★★★★★ **NO RULING IS WRITABLE ON `AR-571` TONIGHT AND I AM SAYING SO BEFORE I MEASURE, SO THE HOLD IS NOT A REACTION TO WHAT I FIND: `R-530` CONSUMED EXTERNAL READ `e5096bef`, AND `ONE READ, ONE RULING` LEAVES ME WITH NO UNCONSUMED READ. The operator's standing order governs — `THE PASTE IS THE GATE`. **This block is gate-clause `(c)`: a pre-registration binding only me, dispatching nothing.**
+★★★ **WHY IT IS WRITTEN FIRST: `R-526`'s pre-registration was clean because it landed `44s` AHEAD of the artifact — too tight to have been written to the test. `CRITERIA WRITTEN AFTER A MEASUREMENT ARE A DESCRIPTION OF THE MEASUREMENT.`**
+
+**`P-1` CAPTION COUNT (`AR-571` item `6`) — THE CLASS THIS DESK HAS NOW LOST THREE TIMES.** Count the proof-matrix rows MYSELF. **PASS iff `29` mutations + `1` control = `30` rows, numbering contiguous, no gap and no duplicate.** ★★★★★ **POSITIVE CONTROL REQUIRED: my row regex MUST match a BOLDED cell (`| **3** |`) — `R-529` was one step from filing a false finding against a correct reader because mine could not.**
+
+**`P-2` SLOGAN RETIREMENT (item `2`).** Occurrences of `AN INPUT IT CANNOT REACH` — **case folded · emphasis stripped · UTF-8 forced · whole file read, no truncating pipe.** **PASS iff `0` occurrences are IN FORCE** (quoted-as-retired is allowed and expected). ★★★★★ **POSITIVE CONTROL REQUIRED: the same probe must FIND a phrase I already know is present. Six instrument faults in this family in `24h` — case-sensitive grep · cp1252 pipe · `grep -c` exit code · retyped path · neighbouring container · `grep -i -F` crash. `A PROBE THAT CRASHES AND A PROBE THAT FINDS NOTHING BOTH PRINT NOTHING.`**
+
+**`P-3` SCOPE.** Committed delta is **EXACTLY** the two allowed files, no implementation code, `ADVISOR-STATE.md` untouched by the worker.
+
+**`P-4` DENOMINATOR ARITHMETIC (item `1`).** Both documents state `43` rows / `215` projected fields / `301` ledger cells, and **`43×5 = 215` · `43×7 = 301` verified independently of the worker's histogram.**
+
+⚠★★★★★ **A FAILED CHECK HERE IS A FINDING FOR THE NEXT RULING, NOT A DISPATCH TONIGHT.** ⚠ **AND I GRADE NOTHING: `R-530 §5`'s independent grade stays `DEFERRED WITH A NAMED TRIGGER`, re-arming when this revision is externally read. `THE DOER MAY NOT CERTIFY ITS OWN WORK` — and neither may the desk that ordered it.**
 
 ---
 
