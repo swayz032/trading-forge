@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3433` at THIS commit, 2026-08-02 01:00 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3446` at THIS commit, 2026-08-02 01:02 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3433` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3446` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -208,7 +208,20 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **LEDGER AT `R-536`, CONSUMING EXTERNAL READ `7efca245` (now SPENT). NEWEST AR: `AR-579` (`00:51:12`, DELIVERY, `30/30`) — **RULED BY `R-536`.** WORKER RE-AUTHORIZED (`R-536 §4`, six items, design only). SEAT = `claude.exe 15520` (fresh via `/clear`, first monitor delivery `00:27:42`); all three monitors ADOPTED, none armed, none killed — both channels have DELIVERED into this conversation.**
+## ✅★★★★★ SEAT — **LEDGER AT `R-536`, EXTERNAL READ `7efca245` SPENT. NEWEST AR: **`AR-580`** (`01:01:20`, START-RECEIPT on `R-536 §4`) — **NO RULING OWED** (`R-528` precedent); it raises NO defect in my order and accepts `F-3` without qualification. `AR-579` RULED BY `R-536`. WORKER MID-TASK.**
+
+### ★★★★★ [FACT, MEASURED HERE, **NOT RULED** — `7/7`, supports an order ALREADY GIVEN; dispatches nothing] THE TRANSPORT CAN MANUFACTURE TWO-LANE AGREEMENT
+`[MEASURED HERE, node v24.13.0]` **`AR-580 §3` found it on the JSON round-trip and it is load-bearing, because `P0-vNext`'s CENTRAL claim is TS↔Python agreement on every projected cell:**
+```
+lane A emits NaN · lane B emits null   -> in memory: DISAGREE
+JSON.stringify(NaN)  -> {"v":null}     -> on the wire: BYTE-IDENTICAL to the null lane
++Infinity / -Infinity -> both null     |  undefined -> DROPPED, key vanishes
+```
+🛑★★★★★ **TWO LANES THAT DISAGREE ARE REPORTED AS AGREEING, BY THE TRANSPORT — `AGREEMENT MANUFACTURED BY THE TRANSPORT, NOT BY THE LANES`.** ✅ **ALREADY ORDERED: `R-536 §4.2` forbids `NaN`/`±Infinity`/`undefined` in the grammar, so the remedy is in flight — this is its RATIONALE, not a new instruction.**
+⚠️★★★★★ **ONE ASPECT IS *NOT* COVERED BY ANY ORDER AND IS OWED INTO THE NEXT RULING: `undefined` is DROPPED rather than nulled, so **A MISSING KEY AND AN UNDEFINED VALUE ARE INDISTINGUISHABLE AFTER TRANSPORT** — that is exactly the `PROJECTION_MISSING_BOTH` vs JSON-`null` distinction the design built deliberately (`R-529 §F-3`, the four-case presence matrix). **A DISTINCTION THE DESIGN DEFINED CAN BE ERASED BY THE WIRE IT TRAVELS ON.**
+✅★★★ **AND WHAT IS *NOT* AFFECTED, ASKED BEFORE RAISING AN ALARM `[MEASURED HERE]`: the ALREADY-CLAIMED `9/9` two-lane agreement (`AR-575`, desk-verified) carries booleans and concrete `primitive` STRINGS — `0` cells of a collapsible type. **THE HAZARD IS PROSPECTIVE, BINDING THE GATE BEING DESIGNED; IT IS NOT RETROACTIVE.** `EVIDENCE ALREADY IN HAND DOES NOT AUTOMATICALLY REACH THE CLAIM IT BEARS ON — I checked rather than assuming either way.**
+
+### ✅ SEAT DETAIL — **`R-536` CONSUMED `7efca245`.** SEAT = `claude.exe 15520` (fresh via `/clear`, first monitor delivery `00:27:42`); all three monitors ADOPTED, none armed, none killed — both channels have DELIVERED into this conversation.**
 🛑★★★★★ **`R-536`: ALL THREE EXTERNAL FINDINGS SUSTAINED, AND `F-3` IS **MINE**. `R-534 §5.6` ordered a bidirectional difference driven to EMPTY and never named the POPULATION — so the party being measured chose its own denominator, at my instruction. **`AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT`**, and `NAME THE PARTY WHO CHOOSES THE DENOMINATOR` is this desk's own law. Fifth appearance of that family; the first I authored outright.**
 🛑★★★★★ **`F-1` ALSO TRACES TO ME: the *"SOLE ADMITTED"* wording at `L169` is `R-535 §1`'s, carried faithfully by the worker — `[MEASURED HERE, anchored carrier census on blob `1dc40de8`]` **three live operative summaries (`L155` `4b`, `L162` chosen-contract, `L169` "sole admitted") name the descriptor walk WITHOUT the prototype check, while the DETAILED clause (`L145`) and row `42` (`L446`) have it right.** A builder following the summary ships the exact false green row `42` disproves. ★★★★★ **NEW LAW, THE INVERSE OF `AR-577`'s: `AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT.`**
 ✅★★★★★ **`F-2` SUSTAINED BY EXECUTION `11/11` — and one result is STRONGER than the read, which only cautioned: **a permanent `WeakSet` visited-set FALSE-REJECTS a legitimate DAG** that the active-path form passes `[MEASURED HERE]`. Also: symbol capability invisible to `Object.keys` over descriptors but present in `Reflect.ownKeys` · a naive recursive walk on a plain-object self-cycle throws `RangeError` and returns NO verdict.**
