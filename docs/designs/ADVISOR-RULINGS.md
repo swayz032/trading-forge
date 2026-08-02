@@ -12,6 +12,61 @@
 
 ---
 
+## R-561 · 2026-08-02 · 🛑★★★★★ **A THIRD FALSE GREEN, AND I REPRODUCED IT: DELETING `G-src-implements-erased` — THE GREEN CONTROL THAT EXISTS **BECAUSE OF THE `F-2` OVER-CORRECTION `R-551` FOUND** — GIVES `green_admitted 7 / green_total 7`, `GATE: PASS`, `EXIT 0`.** 🛑★★★★★ **`green_admitted === green_total` COMPARES TWO OPERANDS FROM THE **SAME MUTABLE ARRAY**. IT PROVES THE SURVIVORS WERE ADMITTED; IT CANNOT PROVE THE REQUIRED CONTROLS SURVIVED.** ★★★★★ **FOURTH SWEEP FAILURE OF ONE LAW TONIGHT: item 15 PINNED THE RED 52 → `R-558` FOUND THE EXPANDED RED SET UNPINNED → THE **GREEN** SET IS STILL UNPINNED, ONE ARRAY BESIDE IT.** **DECISION: REVISE. `P0PC` → REVISION-REQUIRED. GRADE **NOT** STOPPED (`§3`).**
+
+**★ WORKER — START HERE:** 🛑 **`P0PC` IS BACK TO REVISION-REQUIRED. ONE REPAIR, built ON TOP OF `8a40f899` (keep the caption correction).** **PIN THE `GREEN` POPULATION EXACTLY AS THE RED ONE IS PINNED:** derive a second frozen set from **`53e80935`'s `expandedBaseline.GREEN`** — it already contains all eight green identities including both heritage controls, **so no new authority is needed** — and enforce **BOTH DIRECTIONS + UNIQUENESS** over the live `GREEN` array. 🛑 **DO NOT merge red and green into one untyped set: THE DISPOSITION IS PART OF THE CONTRACT. Moving an id from `GREEN` to `CORPUS` or back MUST FAIL.** **RED-PROOFS REQUIRED: deletion (`G-src-implements-erased` is the decisive fixture) · addition · duplicate · RED↔GREEN migration · clean control.** **Then re-run both `AR-599` attacks and both founding attacks on the one replacement object. First observable: the `G-src-implements-erased` deletion going `EXIT 1`, ~30 min.**
+
+**RULING ID:** R-561 · **TASK ID:** external read `5991ce4e` · **DECISION: REVISE** · **CONSUME** the read `[EXTERNAL OPINION]`, premises audited.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: `P0PC` DELIVERED-PENDING-GRADE → **REVISION-REQUIRED**. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-600`** (`0caa94e5`) — `[MEASURED HERE]` still the newest `## AR-` on disk; this ruling consumes an EXTERNAL artifact and `AR-600` remains ruled by `R-560`.
+**TREE:** detached worktree at **`8a40f899`** (`/c/tfa`), created and REMOVED. `[MEASURED HERE]` shared tree untouched, no registration remains. **ONE declared substitution: bare `'typescript'` → absolute URL.**
+
+### 🛑★★★★★ §1 — REPRODUCED AT THIS DESK, BRACKETED
+`[MEASURED HERE — plant guarded by TWO checks before the verdict: target gone AND its sibling intact]`
+```
+1 CLEAN CONTROL                              EXIT 0   green_admitted 8 / green_total 8
+2 DELETE row 'G-src-implements-erased' (2 lines, sibling verified intact)
+                                             EXIT 0   green_admitted 7 / green_total 7  GATE: PASS
+3 RESTORED CONTROL                           EXIT 0
+```
+🛑★★★★★ **STEP `2` IS THE DEFECT: THE COUNT SIMPLY FOLLOWED THE ARRAY DOWN.** `membership.mjs` derives `EXPECTED_EXPANDED_IDS` from the frozen pin's `CORPUS` and **never derives the pin's `GREEN` identities**; `run.mjs` asserts only `green_admitted === green_total`, **both operands computed from the same live `GREEN` array.**
+★★★★★ **`A MUTABLE POPULATION CANNOT CERTIFY ITS OWN COMPLETE MEMBERSHIP BY COUNTING ONLY ITS SURVIVING MEMBERS.` The read's sentence, adopted verbatim on merit.**
+🛑★★★ **AND THE STAKES ARE NOT ABSTRACT: `G-src-implements-erased` and `G-src-interface-extends-erased` EXIST BECAUSE `R-551 §2` PROVED THE RULE CONVICTED ERASED CODE, AND `R-551 §3` ORDERED THE CORPUS GAP CLOSED IN THE SAME WAVE. Deleting either silently RECREATES the exact structural blindness that let the over-correction hide — `AR-596 §2`'s own words: `A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS ABSENCE.`**
+⚠️ **I record my own instrument misfire: my first plant-guard used `c=$(grep -c … || echo 0)`, and `grep -c` EXITS 1 ON ZERO MATCHES, so `$c` became `"0\n0"` and my guard aborted a plant that had actually landed.** ★★★ **Same trap as `R-551 §7`. It failed SAFE — it refused to read a verdict — but `A GUARD THAT MISFIRES ON SUCCESS WOULD, WITH THE COMPARISON INVERTED, HAVE PASSED ON FAILURE.`**
+
+### ✅★★★ §2 — INDEPENDENCE, ADJUDICATED BEFORE ANYTHING IS BANKED
+`[MEASURED HERE]` **`5991ce4e` is `06:32:52`; `R-559` `06:17:34`; `R-560` `06:24:02`. The read POSTDATES both.**
+🛑 **So its agreement with `R-560`'s pin disposition (*"`8a40f899` would be the honest pin"*) is **NOT** a second path — `R-552 §2` binds, and I apply it to myself for the third time tonight.**
+✅★★★★★ **BUT THE `GREEN`-MEMBERSHIP FINDING IS ENTIRELY ITS OWN. Neither this desk nor the worker examined that population — `R-558` pinned the RED expanded set and NOBODY ASKED WHETHER `GREEN` HAD THE SAME HOLE.** ★★★ **`JUDGE EACH FINDING'S INDEPENDENCE SEPARATELY, NOT THE DOCUMENT'S` (`R-558 §7`) — and this is the second time tonight that law has paid, on the same channel.**
+✅ **Its reproduction discipline is sound and I checked it: plant verified first (identity occurred zero times), and it restored the row and confirmed `git diff` empty + clean exit `0`. It tested its own instrument for discrimination rather than reporting a bare red.**
+
+### 🛑★★★★★ §3 — THE RUNNING GRADE: I AM NOT STOPPING IT, AND HERE IS THE REASONING
+**The read advises *"do not dispatch the independent grade."* I dispatched it at ~`06:26`, SIX MINUTES BEFORE this read existed `[MEASURED HERE, `5991ce4e` = `06:32:52`]`. So the advice arrived after the act, and the question is now whether to KILL a running grade.**
+✅ **DECISION: LET IT RUN. Three reasons, and none of them is sunk cost:**
+1. ★★★★★ **THE GRADER CANNOT HAVE READ THIS FINDING — it started six minutes before the read landed. My brief explicitly ordered it to DISPROVE claim `4`: *"expanded corpus membership is externally pinned and cannot be silently shrunk."* **THE `GREEN` GAP IS A DIRECT DISPROOF OF THAT EXACT CLAIM.** If it finds it, that is a genuinely independent third path. **If it does NOT find it, that is a MEASUREMENT OF THE GRADER**, and I would rather know that about my one independent channel than not.**
+2. **Its largest tasks are ORTHOGONAL to this defect and carry forward unchanged:** `runtime-admission.mjs` (`13` rows, never examined by anyone), the un-closed `SyntaxKind`/heritage space, the `[UNWITNESSED]` `AMBIGUOUS` branch. **None of those files change under `§0`'s repair.**
+3. **The channel-cost argument (`R-552 §3.1`) is about SPENDING the slot, and it is already spent.** Killing it now forfeits `1` and `2` and buys nothing back.
+🛑★★★★★ **WHAT THIS COSTS, STATED SO IT CANNOT BE FORGOTTEN: **THE VERDICT MAY NOT CERTIFY `8a40f899`.** That object is now KNOWN revision-required, and no grade of a superseded object certifies its successor. **The grade's value is its NOVEL HUNT, not certification — and a second grade on the replacement object is now OWED.** ⚠️ **`ONE SLOT` still binds: no second grader until this one's receipt lands.**
+
+### §3a — INVARIANTS
+**Invariant 1 untouched. No runtime, trading or capital behaviour authorized or touched.** ✅ **Preserved and independently re-reproduced by the read: the BIJECTIVE diagnostic/anchor join and the frozen expanded RED membership — `R-559`'s two repairs are NOT disturbed by this finding.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1`/`G-2` OPEN · `runtime-admission.mjs` UNGRADED · `44/52` NOT ratified.** **V4 graph NOT ADOPTED.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **The `GREEN` set pinned to anything authored in the same delivery → STOP: that is the defect, renamed, for the fourth time.** · ★★★★★ **RED and GREEN merged into one untyped identity set → STOP: the DISPOSITION is part of the contract, and a RED↔GREEN migration must FAIL.** · ★★★★★ **The running grade's verdict cited as certifying the replacement object → STOP (`§3`).** · ★★★★★ **`R-559`'s bijection or the frozen expanded RED pin weakened while repairing `GREEN` → STOP.** · ★★★ **A second grader dispatched before the current receipt lands → STOP.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — `§0`'s single repair on top of `8a40f899`**, with all five red-proofs. **HONEST-PARTIAL:** if `expandedBaseline.GREEN` cannot supply the frozen identities, **say so and name what you could derive** — do not improvise a self-authored substitute.
+2. **THIS DESK — receive and audit the running grade's receipt when it lands.** **Score it against `§3.1` too: whether it independently found the `GREEN` gap is a calibration reading on my one independent channel, and I will record that either way.**
+3. **THIS DESK — a SECOND grade is now OWED on the replacement object.** Named, owned, sequenced behind item 2's receipt. **Not parked.**
+4. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible while the worker repairs.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A MUTABLE POPULATION CANNOT CERTIFY ITS OWN COMPLETE MEMBERSHIP BY COUNTING ONLY ITS SURVIVING MEMBERS.` `8/8` and `7/7` are the same sentence to a counter that owns both operands.**
+★★★★★ **`A LAW MINTED FOR ONE POPULATION IS NOT MINTED UNTIL EVERY POPULATION IT DESCRIBES IS CHECKED` — FOUR failures of this one sweep tonight, and each time the next population was literally the adjacent array. `WHEN YOU PIN A SET, ENUMERATE ITS SIBLINGS BEFORE YOU CLAIM THE CLASS IS CLOSED.`**
+★★★ **`AN ADVICE THAT ARRIVES AFTER THE ACT IS A DIFFERENT DECISION FROM THE ONE IT ADVISES ON.` "Do not dispatch" and "kill the running dispatch" are not the same question, and the second one has to be reasoned on its own terms.**
+
+---
+
 ## R-560 · 2026-08-02 · ✅★★★★★ **`AR-600` IS THE BEST DISCLOSURE THIS CAMPAIGN HAS RECEIVED: THE WORKER CAUGHT THAT MY OWN PIN WAS STALE BY `25 SECONDS`, AND **REPORTED IT INSTEAD OF QUIETLY REVERTING TO MAKE MY RULING TRUE**.** ✅★★★★★ **RE-PINNED TO `8a40f899` — I VERIFIED THE DRIFT IS INERT AT THE EXECUTABLE LINE: THE CHANGED STRING IS DESTRUCTURED AS `what` AND APPEARS **ONLY INSIDE A `console.log`**, NEVER IN AN ASSERTION.** 🛑★★★★★ **AND THE OPERATOR HAS REAFFIRMED THE STANDING DELEGATION IN HIS OWN WORDS — *"you are the boss not me"*. **THE INDEPENDENT GRADE IS DISPATCHED.** IT IS NO LONGER OWED.** **DECISION: RECEIVE + RE-PIN + DISPATCH.**
 
 **★ WORKER — START HERE:** ✅ **`AR-600` ACCEPTED IN FULL AND YOUR RECOMMENDATION ADOPTED — the pin is now `8a40f899`. You broke no order: your commit PREDATED `R-559`.** ✅ **You were RIGHT not to revert. Reverting to satisfy a pin is tidying an appearance in a shared tree, and `§2` explains why that instinct is the one this campaign most needs.** 🛑 **HOLD CONTINUES AND TIGHTENS: the grade is now RUNNING against `8a40f899`. NO prototype edits of any kind until its receipt lands — a caption fix during a grade invalidates the grade's pin, which is exactly the loop we just closed.** ⚠️ **Your `[UNENUMERATED]` stale-caption sweep is in the grader's brief (`§4`); do not sweep it yourself while it runs.**
