@@ -4,6 +4,60 @@
 
 ---
 
+## AR-586 · 2026-08-02 · **START-RECEIPT — R-540 §6 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** ✅★★★★★ **ALL THREE FINDINGS RE-MEASURED HERE AND SUSTAINED, INCLUDING THE CONTROLS THAT DECIDE THE REMEDY'S SHAPE: AN ESCAPED **ORDINARY** KEY IS HARMLESS, SO THE RULE MUST TARGET **COOKED IDENTITY**, NOT ESCAPING.** 🛑★★★★★ **AND `F-1` IS THE ONE I SHOULD HAVE CAUGHT MYSELF: I VERIFIED MY IMPORT ROWS STILL WENT RED AND NEVER ASKED **WHICH RULE MADE THEM RED.**
+
+**RULING ID:** R-540 §6 · **TASK ID:** AR-586 · **PRIOR:** AR-585 (`d9db4aa7`, delivery, swept clean by `R-540 §1`) · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, AS A DELTA
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py   <- pre-existing since AR-576
+(+24 pre-existing untracked docs/designs files)
+```
+⚠️ **`GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — the grader's receipt. NOT read as authority, NOT written, NOT pre-empted.**
+
+### 🛑★★★★★ §2 — `F-1` ACCEPTED, AND THE MISS IS MINE EVEN THOUGH THE ORDER WAS SHORT
+**`[MEASURED HERE, every import-bearing manifest record printed]`**
+```
+26(a) unallowlisted import   import {read} from './ledger'              -> reaches LEDGER
+26(b) filesystem / network   import fs from 'node:fs'                   -> reaches CAPABILITY
+26(c) transitive edge        import './helper' (helper imports ledger)  -> reaches LEDGER
+41(a) import()               await import('./ledger')                   -> reaches LEDGER
+41(e) createRequire          createRequire(import.meta.url)('./ledger') -> reaches LEDGER
+HARMLESS / INERT import mutation ................................ NONE EXISTS
+```
+🛑★★★★★ **SO THE POLICY I CHOSE IS A **CARDINALITY** RULE (`import count = 0`) AND EVERY MUTATION PROVING IT ALSO VIOLATES **CAPABILITY**. An implementation that keeps an allow-list for one inert helper REJECTS ALL FIVE, KEEPS EVERY GREEN GREEN, AND STILL BREAKS THE CHOSEN POLICY.**
+⚠️★★★★★ **`R-540 §3` says the order was the defect and that `AR-585` may not be read against for it. I record the part that IS mine: **I CHANGED A POLICY FROM CAPABILITY TO CARDINALITY AND THEN CHECKED ONLY THAT THE OLD MUTATIONS STILL WENT RED.** `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF` is the document's own rule — I applied it to rows I inherited and not to the policy I had just rewritten.** ★★★★★ **`WHEN A POLICY CHANGES A CONTROL'S POLARITY, INVERT THE CONTROL; DO NOT MERELY DELETE IT` — and last round I DID sweep the green neighbours my decision invalidated. I swept the GREENS and never swept the REDS.**
+
+### ✅★★★★★ §3 — `F-2` AND `F-3` RE-MEASURED, WITH THE CONTROLS THAT SHAPE THE REMEDY
+`[ALL MEASURED HERE, node v24.13.0]`
+```
+F2  Object.freeze({ "\x5f\x5fproto__": p })  -> ownKeys [] ; proto===p TRUE ; inherited 7 ; frozen TRUE
+    Object.freeze({ a:1, "\x61":2 })         -> ownKeys ["a"] ; a=2 ; FIRST VALUE SILENTLY DISCARDED
+    CONTROL distinct { a:1, b:2 }            -> ownKeys ["a","b"]                    stay distinct
+    CONTROL escaped ORDINARY { "\x62":3 }    -> ownKeys ["b"] ; proto = Object.prototype
+F3  50(a) AS RECORDED  `const Object_={...}; O.freeze(v)`  -> ReferenceError: O is not defined
+    50(a) CORRECTED    calls the binding it declares       -> isFrozen = FALSE   <- the real defect
+```
+★★★★★ **THE ESCAPED-ORDINARY CONTROL IS THE LOAD-BEARING ONE: `"\x62"` is an ordinary own property with an untouched prototype. **ESCAPING IS NOT THE HAZARD; COOKED IDENTITY IS.** A remedy that forbade escaped keys would over-forbid on a false premise — the same trap as the computed-`__proto__` discriminator two rounds ago, and it is the second time this desk has handed me a discriminator that stops me over-correcting.**
+🛑★★★★★ **`F-3` IS MINE OUTRIGHT AND IT IS THE SHARPEST KIND: my own manifest subcase would go RED **VIA `ReferenceError`**, never reaching symbol resolution. `A MUTATION CAUGHT BY THE WRONG CHECK IS A FAILED PROOF` — a one-token slip that would have certified a rule it never exercised.**
+
+### ⚠️ §4 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** ✅ **NONE** — item `3` consumes item `2`'s canonical function, item `5` recomputes over `1`–`4`, all write ONE file. **Serial.**
+**(b) NO METRIC MIX.**
+**(c) ⚠️★★★ SCOPE NOTE I TAKE FROM `R-540 §4`: the desk measured the escaped **STRING** form and marks the escaped **IDENTIFIER** form `[CORROBORATED, not measured here]`. **I will measure the identifier form MYSELF before writing its subcase**, rather than inheriting a grade.**
+**(d) ⚠️★★★★★ ITEM `4`'s SECOND HALF IS THE GENERAL FORM AND I WILL WRITE IT AS SUCH: *"a row may not be satisfied by a `ReferenceError`, a parse failure or a type failure"* is a PRECONDITION ON EVERY ROW, not a patch to `50(a)`. Fixing only the one token would leave the class open.**
+**(e) GRADE:** **NOT ASKING.** The `accuracy-validator` receipt is the instrument and is not mine to touch or interpret.
+
+### §5 — FIRST OBSERVABLE + ETA
+**The harmless-import RED mutation (red SOLELY on cardinality) + the one canonical cooked-key identity rule — ~20–30 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts **including the grader's** · `P1`/`P2` artifacts · the pinned tag · no `checkout`/`reset`/index op · **BLUEPRINT OUT.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-585 · 2026-08-02 · ✅★★★★★ **R-539 §5 DELIVERED — FIVE ITEMS, `38/38` + `14/14`, MANIFEST `45` RECORDS, MATRIX `52+1=53`.** 🛑★★★★★ **AND THE ITEM THAT MATTERED WAS NOT ON THE LIST: CHOOSING THE ZERO-IMPORT POLICY **INVALIDATED TWO GREEN NEIGHBOURS ELSEWHERE IN THE DOCUMENT** — *"an allow-listed pure helper import stays GREEN"* BECAME UNCONSTRUCTIBLE THE MOMENT NO IMPORT WAS ADMITTED. THAT IS THE STOP CONDITION ABOUT A GREEN NEIGHBOUR ITS OWN RULE REJECTS, AND MY OWN DECISION CREATED IT.**
 
 **RULING ID:** R-539 §5 · **TASK ID:** AR-585 · **PRIOR:** AR-584 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
