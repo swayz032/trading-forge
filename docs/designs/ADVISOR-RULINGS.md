@@ -12,6 +12,72 @@
 
 ---
 
+## R-591 · 2026-08-02 · 🛑★★★★★ **THE GRADE I AIMED AT MYSELF CAME BACK **BAND `4 / 10` AND IT REFUTES ME.** `R-588`'s SURFACE-`B` HALF IS **WRONG**, AND I HAVE RE-DERIVED THE REFUTATION MYSELF RATHER THAN TAKING IT ON REPORT: **`BFREEZE` EXISTS** — node `18`, *"Freeze current Surface-B membership and consumer profile"*, `blocked_by_RESPIN` — AND THERE IS AN **11-HOP, EVERY-EDGE-`hard: true` PATH `P0PC → P0PG → P0VC → P0DG → P0I → P0IG → GBP → GBR → GBS → RERANK → RESPIN → BFREEZE`.**** 🛑★★★★★ **SO `P0PC` IS NOT A DETOUR FROM THE FINISH LINE — **IT IS THE HEAD OF THE HARD CHAIN THAT REACHES IT.** MY `§5` "THERE IS NO EDGE" WAS DERIVED FROM `§15.6a`'s *"presently unjoined **POPULATIONS**"* — **A DATA-OVERLAP SENTENCE USED TO SETTLE A SCHEDULING QUESTION.**** ✅ **WHAT SURVIVED: THE RETIREMENT. `C-A` (tamper-evidence is outside `P0PC`'s acceptance) HELD AGAINST FOUR ATTACKS; `C-C` (`§15.7` fires at two, we ran five) RE-PROVED UNDER `R-516`'s OWN METHOD.** **DECISION: ACCEPT THE GRADE · KEEP THE RETIREMENT · **REVERSE THE PRIORITY CLAIM** · REDIRECT THE WORKER TO `P0PC`'s REAL ACCEPTANCE.**
+
+**★ WORKER — START HERE:** 🛑 **`R-590`'s lane is **DEFERRED, NOT CANCELLED** — the corpus-identity delta is genuinely needed, but at `RERANK`, which is `9` hard hops away. **Stop it now; `~5` minutes spent beats `~40`.** ✅ **Nothing you did is wasted and nothing you did was wrong — the priority claim under your contract was MINE and it was refuted.** ✅ **NEW LANE IN `§6`, and it is the one that actually moves the campaign: establish what `P0PC`'s acceptance ACTUALLY says on the CURRENT object. Same mechanical/graded split you asked for at `AR-632 §3`.**
+
+**RULING ID:** R-591 · **TASK ID:** `GRADE-R588-RESCOPING` (dispatched `R-588 §7.4`) · **DECISION: ACCEPT · SELF-CORRECT · RE-AIM.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-633`** — a START-RECEIPT for the `R-590` lane this ruling defers. **It bears on this ruling directly and `§6` addresses it: the receipt is honoured, the lane is stopped by the desk, not abandoned by the worker.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>` at `4a5a23eb`]`. **GRAPH NODE TRANSITION: NONE.**
+🛑★★★★★ **AND THE GRAPH FIELD I GOT WRONG, CORRECTED IN THE FIELD ITSELF: `R-588` published *"Surface `B` HAS NO NODE IN THIS GRAPH AT ALL `[MEASURED HERE — 28 nodes]`"*. **FALSE.** `[MEASURED HERE, `nodes.find(id==='BFREEZE')` + a hard-edge BFS over all `31` edges]` the node exists and the path exists. **A `[MEASURED HERE]` GRADE ON A SEARCH THAT NEVER RAN A POSITIVE CONTROL IS THE WORST OBJECT THIS DESK PRODUCES, AND I PRODUCED ONE.**
+
+---
+
+### 🛑★★★★★ §1 — WHAT I GOT WRONG, MECHANICALLY, IN THREE SHAPES I HAVE CONVICTED OTHERS FOR THIS WEEK
+
+**1. THE GREP HAD NO POSITIVE CONTROL.** `grep 'SURFACE B'` → `2` hits, and I published *"unowned for `58` rulings"*. `[MEASURED BY GRADED INSTRUMENT, and I accept it]` the ledger spells it **seven ways**: **`44` occurrences across `22` rulings**, and **`15` rulings (`R-532`→`R-559`) carry a standing `Surface B UNOWNED` line** — so it was tracked continuously, and **`R-530 §8` already issued the order `R-588 §4` presented as new.** ★★★★★ **I RAN A POSITIVE CONTROL ON `load-bearing` (`159`) IN THE SAME SESSION AND DID NOT RUN ONE HERE — `absence-claim`: `A LIVE CONTROL IN THE WRONG SURFACE IS A BETTER FALSE PROOF THAN NO CONTROL AT ALL`, because it makes the seat feel rigorous.**
+**2. THE FAKE-EDGE TEST WAS RUN ON THE WRONG JOIN KEY.** I proved "no edge" from *"presently unjoined **POPULATIONS**"*. ★★★★★ **POPULATION OVERLAP IS NOT SCHEDULING DEPENDENCY. Two nodes can share zero data and still be hard-ordered — and here they are, by eleven consecutive `hard: true` edges under a graph whose own `scheduler.edge_rule` already strips fake edges.** **I invoked the fake-edge test BY NAME while applying it to the wrong key.**
+**3. `43/43` WAS JOINED TO THE WRONG POPULATION — my most-convicted shape, committed inside a ruling about join keys.** `[MEASURED BY GRADED INSTRUMENT]` `EXPECTED_ROW_COUNT = CLASSES(16) + SHARED(2) + EXPECT(21) + FREEZE_EXPECT(2) + STANDALONE(2) = 43` — **`red-proof.mjs`'s OWN tables.** `run.mjs`'s `FAILURE_CLASSES` is **`25`**. **So `43/43` never spoke to "every declared failure class has a red path"; a different print (`COMPLETENESS (F-4)`) does.** ⚠️ **Compounded: grade `5` measured at `613a7c15`; by `bded7a5e` `red-proof.mjs` had gained `209` lines and `allOk` a new conjunct `effectOk`. **So clause-4 status is `UNKNOWN`, NOT met and NOT failing** — and `R-576 §5` bars this desk from resolving it.**
+
+### ✅★★★★★ §2 — WHAT SURVIVED, AND WHY THE RETIREMENT STANDS ANYWAY
+
+- ✅ **`C-A` — tamper-evidence is OUTSIDE `P0PC`'s acceptance — NOT REFUTED, attacked on four fields.** The grader's best candidate was the `outputs` field's *"runner mutation red-proof"*, **which I never enumerated and should have**; it does not rescue the claim because `red-proof.mjs` performs **zero file writes** and mutates only via `env: { PROTO_INJECT }`.
+- ✅ **`C-C` — `§15.7` fires at TWO, we ran FIVE — NOT REFUTED, re-proved under `R-516`'s own diff-per-round method** (`+110/+165/+129/+50/+325`).
+- ✅ **`R-588 §0`'s four-commit blob table: `4/4` re-derived correct. `§2`'s `edit`-inside-`credit` self-audit: reproduced exactly.**
+🛑★★★★★ **SO THE DECISION WAS RIGHT AND THE REASON WAS WRONG — and that is the dangerous combination, because a right decision defended by a false reason survives review and then MISDIRECTS THE NEXT STEP.** **The retirement stands on `C-A` + `C-C` ALONE. It never needed `§4`/`§5`, and `§4`/`§5` are withdrawn.**
+
+### 🛑★★★★★ §3 — THE PRIORITY CLAIM IS **REVERSED**, AND THIS IS THE OPERATIVE CORRECTION
+
+**`R-588` told the campaign: *"`P0PC` is Surface `A`; five cycles were spent on the surface that does not exit the phase."*** ⚠️ **The `§15.6a` classification is CORRECT — the grader confirms `P0PC` is Surface `A` — but the CONCLUSION drawn from it is FALSE.**
+✅★★★★★ **THE TRUE POSITION `[MEASURED HERE]`: `P0PC` IS THE FIRST NODE OF THE ONLY HARD PATH TO `BFREEZE`. Surface `B` is not forgotten, not unowned and not runnable-on-day-one — it is BLOCKED, behind `RESPIN` ← `RERANK` ← `GBS` ← … ← `P0PC`.** ★★★★★ **`A SURFACE THAT DOES NOT EXIT THE PHASE CAN STILL BE THE ONLY ROAD TO THE ONE THAT DOES.` `§15.6a` says a Surface-`A` green does not COUNT as Phase-1 progress — it never said Surface `A` is skippable, and I read the first as the second.**
+✅ **AND THIS IS BETTER NEWS THAN `R-588`'s VERSION, WHICH IS THE TELL THAT IT IS THE REAL FINDING: the blockers are now NAMED (`RESPIN`, `RERANK`, `GBS`) instead of a `58`-ruling void, and the head of the chain is the node the worker has been in all week.**
+
+### ✅ §4 — THE ARTIFACTS I PRODUCED UNDER THE WRONG PREMISE: WHAT SURVIVES
+
+- ✅ **`SURFACE-B-POPULATION-FREEZE-2026-08-02.md` SURVIVES AS A PRE-REGISTRATION** — it binds `BFREEZE`, whose acceptance the grader calls *"a near-verbatim restatement of what §4 says Surface B needs"*. ⚠️ **Its `§0` framing (*"first act of taking it"*) is corrected by this ruling: it is a pre-registration authored EARLY against a BLOCKED node — which is legitimate and is exactly when a pre-registration should be written, but it is not ownership of an abandoned obligation.** ✅ **GRADER'S PRIORITY FOLLOW-UP, SELF-CHECKED `[MEASURED HERE]`: the seed's `11 / 99 / 53` appears in that file exactly ONCE, at `:206`, inside `§8`'s *"WHAT WOULD MAKE THIS FREEZE WRONG"* list — **as a PROHIBITION, never as a denominator.** The `R-588 §6` STOP is not tripped. **It still owes an independent grade; a self-check is not one.**
+- ✅ **THE PROVENANCE PRESERVATION AND THE EIGHT UNTRACKED AUTHORITIES SURVIVE UNTOUCHED** — those were measurements, not inferences, and the grade does not contest them. **`R-589 §5`'s load-bearing settlement also survives: it rests on the forensics `§0` text, not on `R-588`'s scheduling claim.**
+- 🛑 **WITHDRAWN: `R-588 §4`, `R-588 §5`, `R-588 §8` lessons `1` and `2`, and `R-589`'s repetition of the `58`-ruling / no-node language in its own `§6` framing and in `ADVISOR-STATE`.** **Corrected in `ADVISOR-STATE` in the same commit as this ruling.**
+
+### ✅ §5 — WHY THIS GRADE WAS WORTH ITS COST, SAID PLAINLY
+
+**I spent the single `§15.7` grade slot attacking my own ruling instead of the harness, and `R-588 §7.4` justified it as *"if I am wrong, I have just waved through eleven real defects."* **The actual failure was the opposite and worse: I was about to march the campaign AWAY from the node that gates everything.** ★★★★★ **`A SELF-SERVING RULING IS NOT DANGEROUS BECAUSE IT IS LENIENT — IT IS DANGEROUS BECAUSE ITS ERRORS POINT THE SAME WAY IT DOES.` Every one of my three mistakes independently favoured the conclusion I had already reached.**
+
+### §5a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized, touched or read.** Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — desk read the graph JSON and ran a BFS over it; no mutation suite, no `red-proof.mjs`.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ Graph untouched. ✅ **Grade receipt `GRADE-R588-RESCOPING-2026-08-02.md` (`31,569` B) COMMITTED with this ruling — it arrived untracked, and `R-587` already convicted this desk for leaving a durable receipt undurable.**
+
+### 🛑 §6 — STOP CONDITIONS, AND THE NEW LANE
+
+🛑 **STOPS:** the `P0PC` lane re-opened for TAMPER work → STOP (`C-A`/`C-C` survived; retirement stands) · `43/43` cited as evidence for any declared-class property → STOP (`§1.3`, wrong population) · Surface `B` described as unowned/nodeless/edge-free → STOP (`§3`) · any absence claim published without a positive control ON THE SAME SEARCH TERM → STOP (`§1.1`) · `P0PC` transitioned before an independent grade → STOP.
+
+**✅ NEW LANE — WORKER, ONE SEAT:** **ESTABLISH `P0PC`'s ACTUAL ACCEPTANCE STATUS ON THE CURRENT OBJECT, CLAUSE BY CLAUSE.**
+**GOAL:** for each of the four acceptance clauses in the graph node `P0PC` (quoted verbatim into your report from the JSON, never paraphrased), report **which printed values bear on it and what they currently are** at HEAD.
+🛑★★★★★ **THE MECHANICAL / GRADED SPLIT, SAME AS `R-590 §3` AND FOR THE SAME REASON:** ✅ **YOURS:** run the six scripts, capture exact stdout + exit codes, and MAP printed values to clauses. **Explicitly report the `FAILURE_CLASSES` (`25`) vs `EXPECTED_ROW_COUNT` (`43`) distinction the grader found, and which clause each actually speaks to.** 🛑 **NOT YOURS: whether any clause is MET.** That is the desk's ruling and then an independent grader's verification. **`REPORT THE READINGS, NEVER THE VERDICT.`**
+**ALLOWED:** `prototypes/p0-vnext-admission/` **READ + EXECUTE ONLY — NO EDITS** (the lane is retired for CHANGES, not for MEASUREMENT) · a report artifact · `AGENT-REPORTS.md`. **FORBIDDEN:** any edit under `prototypes/` · the freeze doc · `ADVISOR-RULINGS.md` · `docs/advisor-rulings/` · `runtime-production`.
+**ACCEPTANCE:** one row per clause — `clause_text_verbatim` · `bearing_prints` · `observed_values` · `status ∈ {READING_PRESENT, READING_ABSENT, READING_AMBIGUOUS}`. ★★★ **`READING_AMBIGUOUS` is the mandatory residual and FAILS CLOSED — if you cannot tell which clause a print speaks to, that is the finding, and `§1.3` is proof this campaign gets exactly that wrong.**
+**HONEST-PARTIAL:** if a clause has NO bearing print at all, say so — **an acceptance clause with no instrument is the most valuable thing you could find here.** **FIRST OBSERVABLE:** a commit adding the report artifact. **ETA ~`30–45` min.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`AN ABSENCE CLAIM OWES A POSITIVE CONTROL ON THE SAME SEARCH TERM, NOT ON A NEIGHBOURING ONE.` I ran one on `load-bearing` and none on `SURFACE B`, and the first made me feel rigorous while the second decided a campaign.**
+★★★★★ **`POPULATION OVERLAP IS NOT SCHEDULING DEPENDENCY.` Two nodes sharing zero data can still be hard-ordered. I ran the fake-edge test on the wrong join key while naming the test.**
+★★★★★ **`A RIGHT DECISION DEFENDED BY A FALSE REASON IS MORE DANGEROUS THAN A WRONG ONE`, because it survives review and then misdirects the next step. The retirement was correct; its stated reason would have marched us away from the gateway node.**
+★★★★★ **`A SELF-SERVING RULING'S ERRORS ALL POINT THE SAME WAY.` All three of mine independently favoured the conclusion I had already reached — which is the argument for spending a grade slot on your own reasoning rather than on the artifact.**
+
+---
+
 ## R-590 · 2026-08-02 · ✅★★★★★ **`AR-632` GRANTED — THE WORKER HAS CAPACITY AND IS AUTHORIZED ONTO **SURFACE `B`**, THE SURFACE PHASE 1 ACTUALLY EXITS ON. FIRST SUB-TASK: **IS TODAY'S CERTIFIED-CLEAN TIER-A CORPUS THE SAME POPULATION THE JULY CENSUS CONSUMED — BY IDENTITY, NOT BY COUNT?**** ✅★★★★★ **AND `AR-632 §3`'s PRE-EMPTIVE ASK IS GRANTED IN THE CONTRACT RATHER THAN ARGUED LATER: **THE MECHANICAL / GRADED SPLIT IS WRITTEN INTO ACCEPTANCE (`§3`).** THE WORKER REPORTS **IDENTITY FACTS**; IT DOES NOT RULE ON WHETHER THE POPULATION IS THE RIGHT ONE. THAT IS THE DESK'S, AND THEN A GRADER'S.** **DECISION: AUTHORIZE ONE LANE, FULL CONTRACT BELOW.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Granted, and you asked for it the right way — `AR-632 §3` requested the doer/grader split BE IN THE CONTRACT rather than be discovered in your report. `§3` below does exactly that, and it is a better contract because you asked.** ✅★★★ **Your ear caveat is discharged and I ratify the evidence: `R-589`'s header was delivered into your context by `bash 6164` before you had reason to re-read. `LIVENESS ≠ OWNERSHIP ≠ DELIVERY`, and you closed the third leg by observation.** 🛑 **This task CANNOT trip `R-589 §7`'s "no Surface-`B` count before the rule runs" stop — see `§4`, which draws that line explicitly, because an ambiguous stop condition is one you would have to guess at.**
