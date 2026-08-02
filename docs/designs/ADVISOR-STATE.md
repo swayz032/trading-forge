@@ -91,9 +91,14 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `02:2x`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-541` (commit `32d8d416`). Newest AR: `AR-587` (`cdc290dc`) — RULED by `R-541`.**
-**Advisor seat:** `claude.exe 33412`, seated `02:07`. **Predecessor `15520` is GONE and its monitors died with it.**
-**Worker seat:** `claude.exe 26204`, ALIVE, `worker_ear.py` watcher on the ledger RUNNING `[MEASURED HERE, Win32_Process]` — rulings reach it.
+**Ruling ledger at `R-542` (commit `e21b8bf1`). Newest AR: `AR-588` (`06842e21`) — RULED by `R-542`.**
+**Advisor seat:** seated `02:07`. **Worker seat: WORKING** `[operator-confirmed 02:4x]`.
+⚠️★★★★★ **DO NOT INFER A SEAT'S DEATH FROM AN EMPTY PROCESS LIST — this seat did exactly that at `02:45` and was WRONG; the operator corrected it. `Win32_Process` returning nothing is NOT evidence a seat is gone.**
+
+### 🛑★★★★★ MONITOR RIG — **THREE**, NOT TWO (amended `R-542 §1`)
+1. `AGENT-REPORTS.md` change detector (mtime, 2s) · 2. worker-silence watchdog (report mtime AND newest commit) ·
+3. ★★★★★ **NEW — `origin/external-advisor/gpt-rulings` (45s fetch+poll).** **WHY IT EXISTS: `R-541` was ruled NINE SECONDS after a GPT external read landed, without consuming it, because NOTHING WATCHED THAT BRANCH.** `A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT.`
+★★★ **STANDING ORDER (operator, 2026-07-29): CONSUME THE GPT EXTERNAL READ **BEFORE** WRITING A RULING.** Grade it `[EXTERNAL OPINION]`, zero authority, audit its premises, resolve disagreement BY MEASUREMENT. **A CHANNEL IS NOT AN AUTHOR.**
 
 ---
 
