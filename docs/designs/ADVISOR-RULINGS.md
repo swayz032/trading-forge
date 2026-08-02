@@ -12,6 +12,60 @@
 
 ---
 
+## R-524 · 2026-08-01 · ✅★★★★★ **PRIOR `FAIL` LIFTED. `P1` AND `P2` **CLOSE** AT BAND 7 — AND THIS IS THE FIRST THING IN THIS ENTIRE ARC THAT HAS *CLOSED* RATHER THAN BEEN RETIRED.** ★★★★★ **`THE DENOMINATOR IS NOW INDEPENDENT OF THE ARTIFACT IT JUDGES.`** ✅ **ONE TWO-LINE VERIFIER CLOSEOUT AUTHORIZED, THEN `P0-vNext` **DESIGN** BEGINS.** ⚠️ **THE RESIDUAL HIGH IS REAL AND CORRECTLY FRAMED: IT IS NOT A DEFECT IN THE TRUTH, IT IS A DEFECT IN THE GUARD AROUND THE *PUBLISHED REPORT* OF THE TRUTH.**
+
+**RULING ID:** R-524 · **TASK ID:** the re-census `a9c0d557` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-551` (08-01 `20:25`, R-523 §4 delivered, verified at this desk before I spent a census on it).
+**DECISION:** **ACCEPT** — the re-census; prior `FAIL` LIFTED · **CLOSE** — `P1` and `P2` · **AUTHORIZE** — one focused two-line verifier closeout, then `P0-vNext` **DESIGN** · **HOLD** — `P0-vNext` IMPLEMENTATION until that design is externally read.
+**EXTERNAL READ:** `45283129` (08-01 `21:05`). ★★★ **SHA AUDIT `[MEASURED HERE]`: `f362a80b` · `a9c0d557` · `c304b098` (short AND full) all → `commit`; `02c0a8b0` → `blob`. `0` FABRICATED — ELEVENTH CONSECUTIVE CLEAN AUDIT.** `[EXTERNAL OPINION]`; **R-524 IS THIS DESK'S.**
+
+### ✅★★★★★ §1 — WHAT IS NOW PROVEN, AND WHAT I PROVED MYSELF
+
+**`[MEASURED HERE, before the re-census was dispatched — I do not spend a census on an unverified object]`:** `301` cells · `ASSERTED 140` / `NOT-APPLICABLE 9` / `UNADJUDICATED 152` — **exactly the pre-registered post-state** · `43` distinct rows × `7` axes · `UNDECLARED` still **`43`** · new basis `fixture-declared-id` = **`91`** = `13 × 7`.
+★★★★★ **AND THE BINDING CONSTRAINT, DIFFED CELL-BY-CELL AGAINST `c80c8df7`: `0` REMOVED · `91` ADDED · and of the `210` pre-existing cells **ONLY `9` CHANGED ANY FIELD AT ALL** — `authority_citation` `None` → `ORACLE-AUTHORITY-ORPHAN-ZONES-2026`, which is obligation `E`, the debt this desk ordered filled. **NO `classification`, `basis` OR `value` MOVED ON ANY PRE-EXISTING CELL.**
+
+**`[MEASURED BY GRADED INSTRUMENT — the re-census, adversarial, independent]`:** the row universe is independently frozen from twelve pinned source specs · row/axis-deletion forgeries stay RED **even when the forger repairs counts and fingerprints** · the `7` frozen axes EQUAL the data-derived set · the out-of-frame list is exhaustive · byte-identical regeneration · **an adversary freely editing the oracle AND the ledger cannot shrink the universe**, established by intercepting all `17` reads the derivation performs (`16` pinned objects, `1` mutable input, tamper-tested inert on membership).
+> ★★★★★ **`THE DENOMINATOR IS NOW INDEPENDENT OF THE ARTIFACT IT JUDGES.`**
+★★★ **THAT SENTENCE IS THE WHOLE POINT OF THE INVERSION. Six `P0` attempts died because a sparse object was asked to prove its own completeness; the answer was never a better validator, it was an authority that does not answer to the thing it measures.**
+
+### ⚠️★★★★★ §2 — THE RESIDUAL HIGH, FRAMED CORRECTLY — I ADOPT THE READ'S DISTINCTION
+
+**`F-1`: the verifier protects the `cells[]` truth payload and does NOT protect the human-facing manifest and summary.** A forged ledger can preserve all `301` cells while changing **`UNDECLARED 43 → 0`** · `row_count 43 → 30` · the frame declaration · the classification/basis summaries.
+★★★★★ **THE READ'S FRAMING, ADOPTED VERBATIM BECAUSE IT IS THE REASON `PASS` AND A `HIGH` CAN COEXIST HONESTLY: *"That is not a defect in the truth membership itself. It is a defect in the guard around the published REPORT of that truth."*** ⚠️★★★★★ **AND WHY IT STILL CANNOT BE LEFT: `THE 43 IS LOAD-BEARING AND MUST NOT REMAIN AN UNPROTECTED CAPTION.` The `43` is the entire honesty claim of this artifact — the number that says *we do not know, and we refuse to guess.* `CAPTION IS A CLAIM`, and here the data is guarded while the claim about the data is not.**
+
+### ★★★★★ §3 — **WORKER — START HERE** (cold-start-complete; DISPATCH beats RECORD)
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** amend **ONLY the verifier listing** in `docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md`, regenerate/re-paste its proof output, append `AGENT-REPORTS.md`. ⚠️ **NOT a redesign. NOT another membership census. NO code outside the embedded verifier listing.**
+**FORBIDDEN:** engine · runtime · extraction · corpus · DB · migrations · `HOLDOUT-26` · `P0-vNext` · `P3` · Gate B · touching any of the four preserved grade receipts · `git checkout`/`reset`/index ops.
+⚠️★★★★★ **NO DATA CELL, CLASSIFICATION, BASIS, VALUE, CITATION, ROW IDENTITY, AXIS, COUNT OR FRAME MEANING MAY MOVE. The `301`-cell ledger blob must come out semantically unchanged.**
+
+**COMPARISON 1 — protect the complete manifest.** In `check()`, compare the ledger's PUBLISHED canonical document digest against the INDEPENDENTLY REGENERATED expected digest:
+`doc["digests"]["canonical_document_sha256"] == exp["digests"]["canonical_document_sha256"]`
+⚠️★★★★★ **DO NOT ACCEPT A DIGEST PRODUCED BY RE-CANONICALIZING THE POSSIBLY-FORGED LEDGER AS ITS OWN AUTHORITY — that is `F-2`, and it is this family's fourth appearance. `exp` is already computed and discarded; comparing it is the whole fix.**
+**COMPARISON 2 — protect the fields the canonicalization EXCLUDES** (it excludes the `digests` object, so they are unreachable by comparison 1): `row_universe_sha256` · `cell_id_set_sha256` · `digest_definition` if it remains a published contract field. **That closes `F-3`.**
+**ALSO:** ✅ **name the tag `p1p2-frozen-source-universe-c304b098` beside the source commit in the packet** — the read accepts it as the correct time-sensitive durability repair, and its peeled object must remain `c304b098b156106a5a81b714c7a5a3ed166d68ef`. **Do not delete or retarget it.**
+
+**CLOSEOUT PROOF — focused, not widened. Require:** clean pinned artifact → **PASS** · all previously shipped **`11` mutants → RED** · all **`20` reported manifest/digest escapes → RED** · **`UNDECLARED 43 → 0` specifically → RED** · `row_universe_sha256` and `cell_id_set_sha256` forgery → **RED** · **final summary line AND exit status** · the `301`-cell blob semantically unchanged.
+⚠️ **IF EITHER CLEAN CONTROL FAILS, STOP AND RETURN THE EXACT DEFECT. NO WIDENING.**
+**START-RECEIPT:** task · first observable · ETA · **your recorded tree baseline** (delta, never absolute-clean). **FIRST OBSERVABLE EXPECTED:** `UNDECLARED 43 → 0` going RED, **~20–35 min from start.**
+**STOP CONDITION:** ★★★ **if closing the manifest gap requires changing ANY cell, count, or frame meaning, STOP — the closeout is a GUARD change, and a guard change that edits the thing it guards is the defect it is meant to prevent.**
+
+### ✅★★★★★ §4 — `P1` AND `P2` ARE **CLOSED**
+- **`P1` CLOSED** — the observed baseline and the independently frozen `43`-row universe.
+- **`P2` CLOSED** — the `301`-cell condition × seven-axis truth ledger **with declared unknowns**.
+★★★★★ **SIX `P0` ATTEMPTS WERE RETIRED; THESE ARE THE FIRST TWO PREREQUISITES IN THIS ARC TO *CLOSE*.** ⚠️ **Closure is scoped and I state the scope so nobody widens it: complete over the pinned ENTRY-CONDITION × SEVEN-AXIS frame. `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` are OUT OF FRAME, PRESERVED, and remain a NAMED `P3`/downstream obligation — not deleted, not forgotten.**
+
+### §5 — `P0-vNext`: DESIGN AUTHORIZED AFTER THE CLOSEOUT, IMPLEMENTATION NOT
+**When the closeout passes and is committed AND PUBLISHED, `P0-vNext` DESIGN is authorized immediately. IMPLEMENTATION stays blocked until that design is externally read.** ★★★ **It must CONSUME CELLS, NOT TRUST CAPTIONS:** reconstruct exact row × axis membership independently · TS/Python agreement for EVERY projected cell · correctness ONLY for `ASSERTED` · no assertion or predicate for `NOT-APPLICABLE` · **any depended-on `UNADJUDICATED` cell emits a named `INCOMPLETE_AUTHORITY` and FAILS CLOSED, never a correctness green** · **recompute summary counts FROM CELLS and verify them against the protected manifest** · keep out-of-frame surfaces as a named `P3` obligation.
+
+### §6 — POSITION
+`P1` **CLOSED** · `P2` **CLOSED (`301` cells, band 7 verified)** · prior census `FAIL` **LIFTED** · two-line closeout **AUTHORIZED NOW** · `P0-vNext` design **AUTHORIZED AFTER CLOSEOUT** · `P0-vNext` implementation **BLOCKED** · seventh `P0` attempt **STILL FORBIDDEN** · `P3` · Gate B · merge/deploy/release **HOLD** · four grade receipts + tag `p1p2-frozen-source-universe-c304b098` **PRESERVED, DO NOT DELETE.**
+
+### ★★★★★ §7 — LESSON TO PERSIST
+> **`A GUARD THAT PROTECTS THE DATA AND NOT THE SUMMARY PROTECTS THE PART NOBODY READS.`** Every cell in this ledger is now tamper-evident, and the sentence a human actually reads — *"43 cells are undeclared"* — could be edited to `0` with nothing going red. **The `43` is not decoration; it is the artifact's entire claim to honesty, and it was the one number outside the guard.**
+> ★★★ **The general form, and it is cheap to apply: `ASK WHICH BYTES A DECISION-MAKER WILL ACTUALLY READ, AND CHECK WHETHER THOSE ARE THE BYTES THE GUARD COVERS.` They were not the same bytes here, and four separate parties had looked at this artifact before anyone noticed.**
+
+---
+
 ## R-523 · 2026-08-01 · 🛑✅★★★★★ **CENSUS `FAIL` ACCEPTED — THE DEFECT IS THE **DENOMINATOR**, NOT THE CELLS: `43` DECLARED ROWS EXIST, `30` WERE ENUMERATED, TRUE MEMBERSHIP IS `301` NOT `210`. CONFIRMED AT THIS DESK ON TWO PATHS.** ⚠️★★★★★ **AND THE READ CATCHES WHAT BOTH THE GRADER AND I MISSED: THE PROPOSED THREE-LINE UNION FIX IS **NECESSARY BUT NOT SUFFICIENT** — BOTH SETS IT UNIONS STILL LIVE INSIDE THE ORACLE BEING CHECKED. `A FROZEN AXIS SET WITH A PRESENCE-DERIVED ROW SET IS STILL SELF-AUTHORIZING.`** ✅ **ONE BOUNDED REPAIR AUTHORIZED, FOUR OBLIGATIONS, THEN ONE RE-CENSUS.**
 
 **RULING ID:** R-523 · **TASK ID:** the census `76773939` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-549` (08-01 `19:32`, HOLD-RECEIPT, no open task).
