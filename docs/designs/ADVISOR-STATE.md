@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3360` at THIS commit, 2026-08-01 21:54 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3260` at THIS commit, 2026-08-01 21:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3360` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3260` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -1183,39 +1183,6 @@ DOES NOT COMPLETE THE COMPILER, DOES NOT PRODUCE A TRADING-READY STRATEGY, AND P
 STILL FOLLOW. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
 ★★ **Blueprint adopted through `afaf7664` (`4b0095ee`) — five commits, ladder intact each time.**
 
-## ★★★★★ SEAT — CURRENT AS OF **R-494 / AR-506** (2026-07-30 05:05). **DEBT PAID · WORKER UNBLOCKED.**
-
-★★★★★ **R-494 (`6f95e948`) — APPROVE D · REVISE E · `F` STAYS CLOSED. NO GRADER DISPATCHED.**
-★★★★★ **THE HOLD EARNED ITS KEEP AND THIS IS THE CLEAREST CASE YET: THE PASTE CAUGHT A DEFECT I HAD
-VERIFIED PAST, AND MY HELD ANSWER WAS WRONG. `THE PASTE IS THE GATE` — obey it.**
-
-### ⚠️★★★★★ TWO ERRORS OF MINE, BOTH CAUGHT BY THE READ
-1. ★★★★★ **I CHECKED THE MATERIALITY EMITTER CAN *COUNT* AND NEVER THAT IT CAN *FAIL*. [MEASURED
-   HERE] `materiality-receipt-ledger-e.ts` has **`0`** `process.exit` calls; the parity gate has
-   **`5`** (positive control — the grep reaches). `compiledRose` counted `:81`, printed `:141`,
-   pass/warn selected `:144-148`, **then exit `0` EITHER WAY.** ★★★ **`A DECLARED FAILURE SIGNAL
-   THAT RETURNS SUCCESS IS NOT A GATE.` A signal has THREE parts — REACHABLE · DETECTED · STOPS THE
-   RUN — and I audited two. `AN EMITTER SELF-TEST PROVES THE EMITTER, NOT THE ENFORCEMENT PATH.`**
-2. ★★★★★ **MY HELD DELIVERY-SHAPE ANSWER ("the TREE at HEAD is the object") IS WITHDRAWN.
-   [MEASURED HERE] **11 commits** between pinned base `9af37b8f` and `8c6893fc`. That branch is
-   eleven commits of mutation-and-revert churn. `ONE ATOMIC DELIVERY COMMIT IS RELATIVE TO A BASE,
-   NOT A PROPERTY OF A TREE.` **And the adopted method needs NO history rewrite:** second worktree
-   pinned to `9af37b8f` → new branch → squash the NET DIFF there → verify diff-stat against the
-   reviewed delta → run all acceptance commands against it.**
-
-**D APPROVED — both `[UNPROVEN]` checks now FIRE and are CITABLE; R-488 §3's restriction is LIFTED.**
-**E REVISED — needs a dedicated materiality-control spec OUTSIDE the 12-spec population
-(`false→false` normally, `false→true` under ratio-loosening), the receipt must NAME it and EXIT
-NON-ZERO, the main receipt stays separate, and the control is PRE-REGISTERED before running.**
-★★ **DO NOT change either lane's real semantics to manufacture reach.**
-★★★★★ **GRADER RE-PLANT LIST IS NOW FOUR — and AR-506 nominated two of them AGAINST ITSELF:**
-C4 · the four authority controls · **D's "detector reports on everything"** · **E's ratio-loosening**.
-Its reason: *"if a grader re-runs only the happy paths it will reproduce my green and not my
-finding."* ★★★ **`THE BUILDER NAMING WHICH OF ITS OWN GREENS ARE LEAST TRUSTWORTHY IS THE MOST
-USEFUL THING IN AN EVIDENCE BUNDLE.`**
-★★ **Blueprint fully adopted through `f0682b82` (`e1b84842`) — four commits, ladder intact each time.**
-
-### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
 ## ⚠️★★★★★ ~~R-494 IS OWED AND HELD — AND THE HOLD NOW *COSTS*~~. `AR-504`·`AR-505`·`AR-506` UNRULED
 
 ★★★★★ **RE-CHECKED, AND THE ANSWER CHANGED — `A HOLD'S COST IS NOT A CONSTANT`: at AR-505 the worker
@@ -1282,34 +1249,6 @@ AGREEMENT: PASS` printed beside `188` correctness violations. `[RELAYED]` at thi
 stays a named line in the grader brief (R-493 §2).**
 **NO DISPOSITION RECORDED. Acceptance of step C is R-494's work.**
 
-## ★★★★★ SEAT — CURRENT AS OF **R-493 / AR-503** (2026-07-30 04:35). **HELD DEBT PAID.**
-
-★★★★★ **R-493 (`f08694a5`) — STEPS A AND B ACCEPTED. THE GATE MEASURES ITS OWN PROVENANCE NOW.**
-**[MEASURED HERE] THE ORDERING IS THE CLAIM AND IT HOLDS: `:597` authority check → `:599` fixture
-enumeration → `compileBindingPlan` only inside the per-fixture path. IT EXITS BEFORE ONE PLAN IS
-COMPILED.** `A FRESHNESS CHECK THAT RUNS AFTER THE WORK IS A REPORT, NOT A GATE.`
-**Step B bounded exactly to §4d — probe rows carry `bindable` + `reason_null` + `authority` +
-explicit `unadjudicated`; NOT ONE FIELD WIDER. The §5 STOP did not trip.**
-
-### ⚠️★★★★★ THE OPEN ITEM THAT MATTERS MOST — **A SHARED BLIND SPOT, MINE TOO**
-★★★★★ **THE FIVE MUTATION OUTCOMES (four fail-closed authority controls + the `12`-violation
-two-lane result) ARE `[RELAYED]` AT *BOTH* DESKS. The external read DECLARED it did not re-mutate;
-NEITHER DID I — I verified the control, the code paths and the ordering only.**
-★★★★★ **`TWO VERIFIERS AGREEING ON WHAT THEY BOTH DECLINED TO RE-RUN IS NOT CORROBORATION — IT IS
-THE SAME GAP, COUNTED TWICE.` A and B are accepted on genuinely independent evidence (control +
-paths + ordering), which is sufficient for a WIP. **THE `accuracy-validator` BRIEF NOW CARRIES, AS A
-NAMED LINE: RE-PLANT ALL FIVE MUTATIONS INDEPENDENTLY.** Do not let step F ship without it.**
-
-**AUTHORIZED: C → D → E, to the seat that filed AR-503 (its fresh-session request is a CAPACITY
-ASSESSMENT, not a reassignment).** **C:** generated P-7 property check — **`FAMILY_META` enumerates
-MEMBERSHIP, `P-7` supplies EXPECTED BEHAVIOUR** — plus adjacent `WAIT_SESSION` positive controls and
-**a membership deletion/addition RED control (if a family can be added or removed without the test
-going red, it certifies nothing)** · **D:** transient in-run controls, never permanent invalid
-members · **E:** per-spec materiality receipt. ★★★★★ **THEN ONE `accuracy-validator`. NOT BEFORE.**
-★★ **Blueprint fully adopted: `edfb9ac2` (`e34caaed`) → `50efdbd1` (`73ed361c`) → `8ff6f17a`
-(`5df756ae`). `597721eb` NOT adopted. Ladder payloads intact through all three.**
-
-### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
 ## ⚠️★★★★★ ~~R-493 IS OWED AND HELD~~ — `AR-502` + `AR-503` UNRULED, WAITING ON THE OPERATOR'S PASTE (`THE PASTE IS THE GATE`)
 
 ★★★ **[MEASURED HERE] THE HOLD IS HARMLESS THIS ROUND — CHECKED, NOT ASSUMED: R-492 §5 already
@@ -1338,47 +1277,6 @@ authorizes steps C, D, E, so the worker has queued work and is not waiting on R-
 ★★★ **NO DISPOSITION RECORDED. Acceptance of AR-502/AR-503, and any credit for the detector-before-data
 sequencing or the four-way red-proof, is R-493's work and it waits for the paste.**
 
-## ★★★★★ SEAT — CURRENT AS OF **R-492 / AR-501** (2026-07-30 04:15). **THE HELD DEBT IS PAID.**
-
-★★★★★ **THE PASTE ARRIVED AND R-492 LANDED (`a6721b55`). AR-500 + AR-501 BOTH RULED.**
-★★★★★ **`THE PASTE IS THE GATE` IS BACK IN FORCE AND I WILL NOT DRIFT AGAIN. The hold worked as
-designed and cost nothing [MEASURED]: R-491 §5 already authorized items 1–5.**
-
-**WHAT R-492 DECIDED:** AR-500 **ACCEPTED NARROWLY** — comparator coverage 30/30 including
-`invalidation_bindings` (the array whose structural absence caused the original false green), but
-**NOT semantic correctness: [MEASURED HERE] `checkOracle()` indexes `plan.bindings` only and
-`ORACLE.json` has NO invalidation key — those rows are INEXPRESSIBLE, not merely unadjudicated.
-`INEXPRESSIBLE IS NOT UNADJUDICATED.` THE SCHEMA IS NOT WIDENED.** · AR-501 **UPHELD; the gate's
-present `PASS` is INADMISSIBLE.**
-★★★★★ **THE EXTERNAL READ CORRECTED ME AND I TOOK IT: R-491 §4 offered "ASSERTED-NOT-VERIFIED" as
-acceptable — for a FINAL gate it is not. And my `DO NOT COMMIT A SECOND COPY` objection FAILS ITS
-DISCRIMINATOR: the `classify.py` hazard was a duplicate with nothing verifying the copies agree;
-**a duplicate under a hash checked on every run cannot silently drift.**
-★★★ **RESIDUAL I NAMED THAT IT DID NOT: the parity copy can still drift from the CAMPAIGN
-original. **BINDING ON THIS DESK: any authority amendment re-encodes the parity copy AND the pin
-in the SAME MOTION, or the green is VOID until it does.** I learned that by doing the opposite.**
-
-### ★★★★★ AUTHORIZED ORDER — **A → F** (R-492 §5)
-**A. AUTHORITY FRESHNESS FIRST — commit the artifact into the parity surface; the gate OPENS it,
-COMPUTES sha256, COMPARES to the pin, EXITS NON-ZERO before evaluating any plan.** ★★★ **Expect an
-immediate RED — that red is CORRECT. `FIX THE DETECTOR BEFORE THE DATA.`** ·
-**B.** repoint `ORACLE.json` → `3494d4bb…` and encode ONLY §4d's two `P-7` cells · **C.** axis 3 as
-a GENERATED property check — ★★ **`FAMILY_META` may enumerate MEMBERSHIP, `P-7` supplies SEMANTICS;
-plus a deletion-RED control** · **D.** axis 4 via TRANSIENT in-run controls, never permanent invalid
-members · **E.** materiality receipt · **F.** then ONE `accuracy-validator`, desk-dispatched.
-★★★★★ **GRADE NOT DUE BEFORE F. THE BUILDER DOES NOT GRADE.**
-
-### ⚠️★★★★★ THE AUTHORITY PIN WENT STALE **THREE TIMES TONIGHT** AND THE MIDDLE ONE WAS MINE
-`09e016fd…` (R-483 §12) → `9b708e24…` (R-484) → **`3494d4bb…` (R-491, LIVE, `16,314` B)**.
-**R-489's "correction" pinned the middle value and my own R-491 obsoleted it twenty minutes later.**
-★★★★★ **`A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS.` Step A is the only
-real fix — I was maintaining a number when I should have been building a comparison.**
-**Blueprint `50efdbd1` cherry-picked and conflict-resolved at `73ed361c`** (conflicts were both
-parties fixing the same lines). ★★ **It exposed a defect of mine: R-489's §15.8 rewrite declared a
-4-column header over 3-column rows — malformed, introduced WHILE fixing someone else's staleness.
-Now `11/11` rows at 3 columns.** `597721eb` NOT adopted.
-
-### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation for the trail)
 ## ⚠️★★★★★ ~~R-492 IS **OWED AND HELD**~~ — OPERATOR ORDER RE-ASSERTED DIRECTLY, 2026-07-30 ~03:50: *"REMEMBER WAIT ON GPT"*
 
 ★★★★★ **THE OPERATOR'S OWN WORDS, NOT A RELAY. `THE PASTE IS THE GATE` STANDS AND I HAD DRIFTED
@@ -1411,6 +1309,8 @@ recorded here — that is the held ruling's work.**
 ★ **AR-501 is a WARNING-ONLY entry: it changed no code and no fixture, and it explicitly declined to
 transcribe §4d half-way. Correct — `A PARTIAL EXPECTATION SAT BESIDE A FRESH ONE IS HOW A STALE ROW
 SURVIVES.`**
+
+> ⚠★★★ **COMPACTION, 2026-08-01: THREE SUPERSEDED SEAT BLOCKS CUT HERE — `R-494/AR-506` (33) · `R-493/AR-503` (28) · `R-492/AR-501` (41) = **`102` LINES.** **CLASSIFIED FIRST, CUT SECOND:** each was re-located BY HEADING (their line numbers had already drifted `13-14` lines since I measured them, so a line-number cut would have destroyed the wrong content), and each was re-checked for `NOT RULED` / `[FACT` content immediately before deletion — all three were pure STATUS SNAPSHOTS, sole carriers of nothing. **Fully recoverable: `git show fa68f148:docs/designs/ADVISOR-STATE.md`.** ⚠ **The `700` risky lines identified in the compaction-debt block are UNTOUCHED and still owe a per-finding ledger check.** `CUT NARRATIVE, NEVER CONTRACTS.`**
 
 ## ★★★★★ SEAT — CURRENT AS OF **R-491 / AR-499** (2026-07-30 03:55, FRESH ADVISOR SEAT)
 
