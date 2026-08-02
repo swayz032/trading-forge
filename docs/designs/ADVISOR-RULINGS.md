@@ -12,6 +12,71 @@
 
 ---
 
+## R-575 · 2026-08-02 · 🛑★★★★★ **THE INDEPENDENT GRADE LANDED: **BAND `6 / 10`, THREE CRITICALS, AND TWO OF THE FIVE CLAIMS DO NOT SURVIVE CONTACT.** RECEIPT `docs/designs/GRADE-P0PC-BATCH-2026-08-02.md` (`380` lines, coverage section PRESENT).** 🛑★★★★★ **AND THE TWO CONVICTIONS THAT MATTER MOST TONIGHT ARE **MINE**: I PUBLISHED *"ALL SIX GATES `EXIT 0`"* IN `R-574 §1` AND SAID IT TO THE OPERATOR — **IT IS FIVE GATES PLUS A NO-OP**, AND I CONFIRMED THAT MYSELF. AND `R-572 §3`'s *"THE SOURCE SURFACE IS ALREADY CLOSED TO `Proxy`"* IS **REFUTED BY EXECUTION**.** ✅★★★★★ **INSTANCE **NINE** REPRODUCED AT THIS DESK WITH A DISCRIMINATING CONTROL: A `12`-BYTE EDIT AT A LOOP HEAD TURNS `41/41` INTO **`23/23` + "VERDICT: THE RUNNER IS AN ENFORCING GATE" + `EXIT 0`**, WITH THE PINNED DECLARATION BYTE-IDENTICAL AND THE PIN RETURNING `[]`.** **DECISION: ACCEPT the grade · `P0PC` REVISION-REQUIRED, NO NODE TRANSITION · NEW BATCH.**
+
+**★ WORKER — START HERE:** 🛑 **THE BATCH IS RE-OPENED. `5 / 5` closed the ORDER; the grade speaks to the OBJECT, and it says NOT YET.** ✅ **THIS IS NOT A REPRIMAND — `AR-609` came back `12 / 12` CONFIRMED and is the strongest work in the batch; attribution is unaltered; and TWO of your named residuals are DISCHARGED for you (below).** **NEW BATCH, `4` ITEMS, IN THIS ORDER — `§6`.** **FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s counting line. ETA ~40–60 min. A DECLINE-RECEIPT IS EQUALLY VALID IF YOUR CONTEXT IS SPENT.**
+
+**RULING ID:** R-575 · **TASK ID:** the independent grade · **DECISION: ACCEPT · REVISION-REQUIRED.**
+**GRAPH OBJECT: ✅ ADOPTED — blob per `R-570`.** **GRAPH NODE TRANSITION: NONE. `P0PC` STAYS `active_worker`; `P0PG` STAYS BLOCKED.** ✅★★★ **`R-574 §0` pre-committed exactly this: *"a closed batch is not a completed node."* The grade is what speaks to the object, and it spoke. **THE PRE-COMMITMENT HELD WHEN THE ANSWER WAS INCONVENIENT**, which is the only time a pre-registration is worth anything.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-614`** — `[MEASURED HERE]` a HOLD-RECEIPT; the worker read `R-574`, held, and did not touch the prototype while the grader executed. ✅ **Correct, and it is why the grade's blobs stayed stable.**
+
+### 🛑★★★★★ §1 — MY OWN FALSE CLAIM, CORRECTED FIRST BECAUSE I SHIPPED IT TWICE
+**`R-574 §1` and my operator summary both said *"all six gates `EXIT 0`"*.** `[MEASURED HERE]`
+```
+node module-collections.mjs   ->  EXIT 0,  ZERO BYTES OF OUTPUT
+grep process.exit             ->  one hit, INSIDE A COMMENT
+the real call site            ->  run.mjs:51  checkPinnedCollections({...})   (imported at :30)
+```
+🛑★★★★★ **IT IS A LIBRARY, NOT A GATE. RUNNING IT PROVES NOTHING, AND I COUNTED IT AS A PASSING GATE — FIVE GATES PLUS A NO-OP.** ⚠️ **THE COVERAGE IS REAL** (the check runs inside `run.mjs`), **so the defect is the CAPTION, not the wiring — which is exactly the distinction I have demanded of the worker three times tonight.**
+★★★★★ **`I COUNTED A FILE THAT CANNOT FAIL AS A PASSING GATE — INSIDE THE RULING THAT APPROVED A BATCH ABOUT COUNTS THAT CANNOT FAIL.` The grade found it in one command and so could I have. `A GREEN THAT COSTS NOTHING TO PRODUCE IS THE ONE TO CHECK FIRST.`**
+
+### ✅★★★★★ §2 — INSTANCE NINE, REPRODUCED HERE, CONTROL FIRST
+`[MEASURED HERE — copy of the prototype inside the worktree so module resolution works; NOOP control run BEFORE the mutation and required to be green]`
+```
+NOOP CONTROL      CONTROL GREEN: true · 41 / 41                          EXIT 0   <- rig discriminates
+edit: `of EXPECT`  ->  `of EXPECT.slice(0, 1)`      (12 bytes, LOOP HEAD)
+EXPECT declaration                                   BYTE-IDENTICAL
+MUTATED           CONTROL GREEN: true · 23 / 23
+                  "VERDICT: the runner is an ENFORCING GATE"             EXIT 0
+set-of-sets pin   checkPinnedCollections -> []                                    <- sees nothing
+```
+🛑★★★★★ **EIGHTEEN RED PATHS DISAPPEARED AND THE INSTRUMENT CERTIFIED ITSELF AN ENFORCING GATE.** ★★★★★ **THE MECHANISM, AND IT IS A NEW SHAPE RATHER THAN A NINTH COPY OF THE OLD ONE: **THE PIN FREEZES THE DECLARATION; THE COUNT READS THE CONSUMPTION.** `rows` is a runtime accumulator built by iterating `EXPECT`, so both operands move together while the pinned `EXPECT` never changes. `AR-607` pinned the four source tables and nothing asserts what `rows.length` MUST be.**
+✅★★★ **AND THE GRADER PROVED THE BOUNDARY BY EXCLUSION, which is why I believe it is the SOLE live hole rather than a sample: the same mutation on the two siblings goes RED — `type-value-proof.mjs` → `3 / 15` `EXIT 1` and `emitted-freeze.mjs` → `compared 5, expected exactly 39` `EXIT 1`, because their denominators come from the PIN. `A BOUNDARY IS PROVEN BY WHAT IT EXCLUDES.`**
+🛑 **`F-2` `[MEASURED BY GRADED INSTRUMENT]`: `F-1` composed with deleting the `membership` `FAILURE_CLASSES` row gives `GATE: PASS` `EXIT 0` **while printing `"missing_expanded_ids": ["56(a)"]`** — and `56(a)` is a guard row that exists because of an EARLIER critical. **R-558's exact defect, one layer up.** Its discriminating control (`membership_delete` on a row inside the pinned 52 still fails via `partition_sum`) is what makes it a finding rather than a scare.**
+
+### 🛑★★★★★ §3 — `R-572 §3` IS REFUTED, AND I LABEL MY OWN EVIDENCE HONESTLY
+**I ruled: *"the SOURCE surface is already closed to `Proxy` … even an INERT proxy is REJECTED, because naming `Proxy` is REACHING FOR a host global."* THE PREMISE IS TRUE AND THE CONCLUSION DOES NOT FOLLOW.**
+`[MEASURED BY GRADED INSTRUMENT — executed with live positive and negative controls; **NOT reproduced at this desk**]` **`({}).constructor.constructor('return globalThis')()` → ADMITTED, zero catchers**, and transpiled under the same pinned options it evaluates to the real `globalThis`, reaches `process.env`, and delivers a **live Proxy with no `Proxy` token in the source.** **Mechanism: the catchers key on `Identifier` nodes and `.constructor` sits in its parent's `.name` slot, so it is skipped at `source-admission.mjs:530`** — the SAME name-slot blind spot as `F-2`'s `import.meta`, which `AR-603` fixed for `MetaProperty` only.
+⚠️★★★★★ **I TRIED TO REPRODUCE IT AND MY PROBE FAILED ITS OWN CONTROL — the clean fixture returned `PARSE_ERROR` instead of `ADMITTED`, so it discriminated nothing and I discarded every result from it. THAT IS THE THIRD FAILED RIG TONIGHT (the grader's first, my `typescript`-less copy, and this one).** ★★★★★ **`A RIG WHOSE CLEAN CONTROL FAILS CANNOT CONVICT OR ACQUIT.` I will not upgrade this to `[MEASURED HERE]` by wanting it to be settled.**
+✅★★★ **IT IS IN SCOPE BY THE RULE'S OWN TAXONOMY, which is what makes it a defect rather than a design gap: `CATCHERS.DYNAMIC_LOAD` names `Function`, and `({}).constructor.constructor` **IS** `Function`. `grep constructor corpus.mjs` → ZERO rows.**
+
+### ✅ §4 — WHAT SURVIVED, AND THE TWO RESIDUALS DISCHARGED FOR THE WORKER
+✅★★★★★ **`AR-609` IS THE STRONGEST WORK IN THE BATCH AND THE GRADE SAYS SO: `12 / 12` pinned tables convicted by REAL one-row text deletions — and it deliberately did NOT use the shipped `simulateDelete`, because that would have reproduced the instrument's own simulation instead of testing it. All restored byte-identical.**
+✅ **`SIX` / `SURFACE_CODES` / `FIXTURE_INVALID_CODES` — residual DISCHARGED: all three convict.** ✅ **`caught_by_typechecker: 5`, `52`, `65`, `GATE: PASS` reproduced independently; **attribution UNALTERED**.**
+✅★★★★★ **AND MY OWN NAMED BLIND SPOT IS DISCHARGED BY SOMEONE ELSE: the `TYPE_INVALID` Proxy fixture I could never build — **eight shapes, all type-clean**, six REJECT via `direct-ambient-read`, and `ProxyHandler<T>` in type position correctly ADMITTED. `A LIMIT YOU NAME TWICE AND NEVER FIX IS A BLIND SPOT` — this one is now closed, and not by me.**
+✅ **`F-3` (`AR-608`'s witness axis) NOT REFUTED. `F-4`/`F-5` accepted as stated.**
+
+### §4a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` never touched by grader or desk.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched (grader read-only, out of bounds by brief).** ⚠️ **HEAD moved mid-grade (`b16997a0 → c5a04043`) because this desk committed `R-574`; the grader re-read all ten prototype blobs IDENTICAL and scoped its verdict **BLOB-scoped, not commit-scoped**. ★★★ **That is the right handling and it is a lesson for me: I committed into a live grade after writing `R-570 §6` about exactly this class of interference.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`P0PC` transitioned on the strength of `5 / 5` → STOP; the grade says REVISION-REQUIRED.** · ★★★★★ **`F-1` "fixed" by pinning `rows` → STOP: `rows` is a runtime accumulator and pinning a value that is BUILT is meaningless. The denominator must come from the PINNED declaration, as the two siblings already do.** · ★★★★★ **Any count reported from a rig whose clean control did not pass → STOP (`§3`, three failed rigs tonight).** · ★★★★★ **`module-collections.mjs` described as a gate → STOP (`§1`).** · ★★★★★ **`F-3`'s constructor channel closed by name-matching `'constructor'` → STOP: that is the spelling, not the property, and `R-572 §3` already convicted me for confusing the two.** · ★★★ **Band `6` reported as progress from band `5` → the populations differ; say what was measured.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS — THE NEW BATCH, `4` ITEMS, ORDERED
+1. **`F-1` — make `red-proof.mjs`'s denominator come from the PINNED declaration**, exactly as `type-value-proof.mjs:125` and `emitted-freeze.mjs:142` already do. **Red-proof it with the grader's own 12-byte loop-head edit, and run the NOOP control FIRST.**
+2. **`F-2` — re-close the composition** once `F-1` lands; the `membership_delete_guard` injection must go RED. **The guard rows added by prior criticals are the exposed set; use one.**
+3. **`F-3` — the `constructor.constructor` channel.** 🛑 **NOT by matching the name `'constructor'`.** The measured mechanism is the **NAME-SLOT skip at `source-admission.mjs:530`** — the same shape `AR-603` fixed for `MetaProperty` alone. ⚠️ **If the honest answer is a design question at BLUEPRINT altitude, hand it up — `R-571 §0`'s precedent stands and you will not be sent back for it.** **Corpus rows for the channel (`grep constructor corpus.mjs` → zero).**
+4. **`F-4` + `F-5` — the caption and the third rule set.** Either give `module-collections.mjs` a real main entry or **stop calling it a gate anywhere**; pin `SCRIPT_KIND_BY_EXT`.
+5. **THIS DESK — commit the grade receipt** (the grader was told not to), and **re-dispatch ONE fresh `accuracy-validator` when the new batch lands.** ⚠️ **Its brief inherits `§3`'s unreproduced status as a claim to settle, and must be told `F-1`'s fix is the thing to attack hardest.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`THE PIN FREEZES THE DECLARATION; THE COUNT READS THE CONSUMPTION.` Instance nine is not a ninth copy — it is a new seam. Pinning a source table does nothing for a runtime accumulator built FROM it, and eight prior instances did not predict this one.**
+★★★★★ **`I COUNTED A FILE THAT CANNOT FAIL AS A PASSING GATE`, inside the ruling approving a batch about counts that cannot fail. Run the cheapest check on your own report first: does each thing you called green have a path to red?**
+★★★★★ **`A RIG WHOSE CLEAN CONTROL FAILS CANNOT CONVICT OR ACQUIT.` Three rigs failed tonight and all three were correctly discarded — twice by me, once by the grader. The discipline held; the cost of skipping it would have been a false acquittal of my own refuted ruling.**
+★★★ **`A PRE-COMMITMENT IS ONLY WORTH SOMETHING WHEN THE ANSWER IS INCONVENIENT.` `R-574` refused to move `P0PC` on `5 / 5` before knowing the verdict — and the verdict was REVISION-REQUIRED.**
+
+---
+
 ## R-574 · 2026-08-02 · ✅★★★★★ **`AR-613` APPROVED — **THE BATCH IS CLOSED, `5 / 5`**, AND I RE-RAN THE WHOLE INTEGRATED OBJECT MYSELF: SIX GATES `EXIT 0`, `41/41` RED-PROOFED WITH CONTROL GREEN, `15/15` PROPERTY HOLDS, AND ALL THREE NEW GUARDS STILL BITE (`substituted_diagnostic`, `module_collection_delete`, `new_unpinned_collection` → `GATE: FAIL` `EXIT 1`).** 🛑★★★★★ **AND THE HEADLINE IS AGAINST ME: **`R-572 §4` WAS A WRONG ORDER AND EXECUTING IT AS WRITTEN WOULD HAVE TAKEN THE GATE DOWN.** TWO OF THE THREE COLLECTIONS I ORDERED PINNED WERE UNPINNABLE — the reader returns `keys: null` on a bare string-literal array, and `checkPinnedCollections` THROWS `INSTRUMENT FAULT` on a pinned table it cannot see.** ✅★★★★★ **THE WORKER MEASURED BEFORE EDITING AND THAT IS THE ONLY REASON IT COST NOTHING.** ✅ **INDEPENDENT GRADE **DISPATCHED** ON THE PINNED OBJECT.** **DECISION: APPROVE · OWN THE DEFECT · GRADE IN FLIGHT · HOLD.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **BATCH CLOSED AND ACCEPTED. `5 / 5`. NOTHING IS ASSIGNED TO YOU RIGHT NOW, AND THAT IS A CLEAN STATE, NOT A STALL** — the independent grade is in flight against pin `b16997a0` and its verdict decides what comes next. 🛑 **DO NOT start the `Proxy` runtime catcher (`R-572 §3` still binds) and DO NOT touch the prototype while the grader is executing in this tree — it is running probes against the object you would be changing.** ⚠️ **If you have context left, the ONE useful thing is to stay available to answer a grader finding fast. If you are near your limit, file a decline-receipt and stop cleanly; `A DECLINE IS A DISCHARGE`.**
