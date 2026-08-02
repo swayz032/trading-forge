@@ -4,6 +4,78 @@
 
 ---
 
+## AR-599 · 2026-08-02 · ✅★★★★★ **BOTH REPAIRS IN ONE OBJECT, AS ORDERED. `R-557`'s REPRODUCER EXITS `1` — AND NOT BY NARROWING THE ANCHOR: EVERY ANCHOR IS BYTE-UNCHANGED, THE **JOIN** BECAME A **BIJECTION**, SO A SECOND DIAGNOSTIC SHELTERING INSIDE AN ANCHOR HAS NOTHING LEFT TO CLAIM.** ✅★★★★★ **`R-558`'s REPRODUCER EXITS `1` IN BOTH ITS FORMS — AND I DID **NOT** TAKE THE `one level short` FIX: `DECLARED_ADDITIONS` IS **DELETED**, NOT GATED. THE EXPANDED IDENTITIES ARE DERIVED FROM TWO FROZEN PINS, SO THE COORDINATED DELETION IS CLOSED **BY CONSTRUCTION** RATHER THAN BY A SECOND CHECK.** ✅★★★ **I MEASURED BOTH DISCRIMINATIONS MYSELF INSTEAD OF INHERITING THEM.**
+
+**RULING ID:** `R-557 §5.1` + `R-558` START-HERE item (2) — **ONE replacement object, not shipped separately** · **TASK ID:** AR-599 · **PRIOR:** AR-598 (`34e65996`).
+**FAN-IN: `2 / 2`. NOT A HANDOFF.** ✅ **`R-556`'s HOLD OBSERVED: no self-certification, `P0PG` not started, no grader dispatched.**
+⚠️ **I read `R-558` BEFORE committing this report** — `AR-599` was written against `R-557` alone and was NOT committed; the second repair was folded in first. **A report committed between two rulings is `AR-591`'s defect.**
+
+### ✅★★★★★ §1 — `R-557`: ITEM 14's THIRD CLAUSE, CLOSED BY CARDINALITY NOT BY NARROWING
+🛑 **`R-557 §4` makes narrowing the anchor to the diagnostic's span a STOP, and it is right — an anchor equal to its own diagnostic restates the observation and can never be wrong.** ✅ **`[MEASURED HERE]` NO ANCHOR CHANGED: all six declarations are byte-identical to `34e65996`.**
+**What changed is the CARDINALITY of the join — it is now a BIJECTION:**
+- every diagnostic must have **EXACTLY ONE** candidate anchor (`0` → not owned · `>1` → **AMBIGUOUS, fails closed**, which also closes overlapping/nested declarations the first version never handled);
+- every anchor may be claimed by **EXACTLY ONE** diagnostic — a second is `EXTRA` and convicts the row;
+- every anchor must still be claimed.
+★★★ **A row that genuinely owns two diagnostics at one expression declares that expression TWICE — the count becomes a CLAIM THE ROW MAKES and the run can falsify it, instead of an unbounded allowance.**
+```
+PROTO_INJECT=own_extra_inside_anchor   EXIT 1   GATE: FAIL
+PLANT LANDED (positive control): 34(d-u): '(lane: Lane)' -> '(ln: Lane)' (72B -> 70B),
+                                 anchor 'undeclaredReader(lane)' left byte-unchanged
+*** type_invalid_unclassified: 34(d-u) OWNERSHIP: EXTRA diagnostic(s) on an owned row:
+    TS2304@60:"lane" is an EXTRA diagnostic sheltering inside "undeclaredReader(lane)",
+    already owned by TS2304@43:"undeclaredReader" — NOT entailed by this row's planted illegality
+```
+
+### ✅★★★★★ §2 — `R-558`: THE EXPANDED MEMBERSHIP IS PINNED, AND THE MUTABLE ARRAY IS GONE
+🛑 **`R-558` warned that adding `declared_but_absent` to `FAILURE_CLASSES` is NECESSARY AND NOT SUFFICIENT — it catches deleting the ROW while leaving the DECLARATION, and not the coordinated deletion of both. I DID NOT DO THAT FIX.**
+✅★★★★★ **`DECLARED_ADDITIONS` IS DELETED OUTRIGHT.** The expanded identities are now read from a second frozen pin — **`53e80935:corpus.mjs`, blob `f177b2456dee`, `31105B`, `64` ids** — and the additions are **DERIVED** as `expanded − original` from the two pins. **There is no array left to edit, so there is nothing for a coordinated deletion to coordinate with.** ★★★ **Legitimate growth must BUMP `EXPANDED_PIN_COMMIT` — a deliberate, reviewable act in git history, not an array element that reviews itself.**
+✅ **The pin audits itself at load, exactly as the 52's pin does:** uniqueness · and **the two pins must agree** — if `8297ebbe` expects an id absent from `53e80935`, that throws as an instrument fault rather than producing a verdict.
+**BOTH FORMS OF THE REPRODUCER, because the injection is not literally the act R-558 named:**
+```
+(i)  PROTO_INJECT=membership_delete_guard                       EXIT 1  GATE: FAIL
+(ii) FILE-LEVEL: 56(a)'s two lines DELETED from corpus.mjs in a throwaway copy
+     plant verified first: grep "id: '56(a)'" -> 0 occurrences, 188B / 2 lines removed
+     total 63   (R-558 measured 63 with GATE: PASS, EXIT 0)      EXIT 1  GATE: FAIL
+     *** membership: MISSING from the pinned EXPANDED corpus (expected by 53e80935): 56(a)
+```
+★★★ **`56(a)` is the `export * from './ledger.js'` guard — the row that exists because the grader's `F-1` CRITICAL admitted a module that reached the ledger. The gate now protects the guards against the campaign's two worst findings, which it previously did not.**
+
+### ✅★★★ §3 — DISCRIMINATION, MEASURED BY ME, WITH LIVE CONTROLS
+`[MEASURED HERE — throwaway copies inside the worktree, created and REMOVED in the same command; shipped files untouched]`
+```
+BIJECTION REVERTED + R-557 reproducer   EXIT 0  GATE: PASS   34(d-u) CAUGHT_BY_TYPECHECKER, BOTH TS2304 credited
+BIJECTION REVERTED + clean control      EXIT 0  GATE: PASS   <- that tree is not simply broken
+BIJECTION PRESENT  + R-557 reproducer   EXIT 1  GATE: FAIL
+```
+✅★★★★★ **THIS REPRODUCES `R-557 §1` AT MY OWN HAND RATHER THAN CITING IT, and the reverted-tree control is what makes the `EXIT 0` mean "the defect was invisible" instead of "that copy does not run" — the dead-control trap.**
+⚠️ **FOR `R-558` I DID NOT BUILD A REVERTED-TREE CONTROL: the desk measured the pre-repair `EXIT 0` at `f58bd222` and the external read measured it independently.** `[MEASURED BY THE DESK, R-558 §2 — not re-derived here.]` **I re-ran the reproducer against the REPAIRED object only. I state that asymmetry rather than implying both were tested the same way.**
+
+### ✅ §4 — NO OVER-CORRECTION, RE-MEASURED IN THE RUN THAT REPORTS IT (`R-555 §3`)
+```
+clean control            GATE: PASS  EXIT 0
+6 rows still CAUGHT_BY_TYPECHECKER with declarations  (5 in the pinned 52 + 34(d-u))
+like-for-like partition  44 · 3 · 0 · 0 · 5 · 0   SUM 52 ✅  UNCHANGED by either repair
+expanded pin             64 expected · missing_expanded [] · undeclared [] · duplicates []
+red-proof                control GREEN · 31 / 31   (29 -> 30 -> 31; it GREW at every step)
+all five gates           run · red-proof · type-value-proof · emitted-freeze · module-tuple   ALL EXIT 0
+```
+✅ **`R-557 §4`'s four stop conditions all clear: anchor not narrowed · no owned row lost its credit · the reproducer goes RED · control green and the count grew.**
+
+### ✅★★★ §5 — `R-556 §3`'s LAW, APPLIED RATHER THAN ADMIRED
+**Both reproducers mutate by a form that can silently apply NOTHING** — a string `replace` and a source-slice deletion — **and a plant that did not land yields a green indistinguishable from a guard that did not fire.**
+✅ **The `own_extra_inside_anchor` injection THROWS if its replace is a no-op and prints `PLANT LANDED` with the byte delta BEFORE any verdict.** ✅ **The file-level deletion was `grep`-verified to `0` occurrences before its verdict was read.**
+⚠️ **SCOPE, HONESTLY: the in-code witness covers the ONE injection that mutates by `replace`. The others assign whole bodies, where this failure mode does not arise in the same way. I have NOT retro-fitted a general plant-witness contract and do not claim one.**
+
+### ⚠️ §6 — WHAT IS STILL NOT PROVEN, INCLUDING A LIMIT OF MY OWN FIX
+🛑★★★ **THE PIN CONSTANT IS ITSELF EDITABLE, AND I WILL NOT LET THIS FIX CLAIM MORE THAN IT EARNS.** `EXPANDED_PIN_COMMIT = '53e80935'` lives in `membership.mjs`. **A determined coordinated edit could delete row `56(a)` AND re-point the pin at the mutilated commit.** ★★★★★ **What changed is the COST AND VISIBILITY, not impossibility: suppressing a guard now requires re-pointing a NAMED PIN at a NEW COMMIT — an act that shows up as a changed constant in review — rather than silently dropping one element from an array.** ⚠️ **`[UNPROVEN]` that this is sufficient; it is the same guarantee item 15's original pin has always had, and `R-556 §2` accepted that mechanism. If the desk wants it stronger, the pin must move outside the delivery entirely.**
+⚠️ **`[UNWITNESSED]` the AMBIGUOUS branch (a diagnostic matching two overlapping declared anchors). It fails closed by construction, but no corpus row declares overlapping anchors, so I could not witness it without authoring one — beyond these two repairs.**
+⚠️ **`[HYPOTHESIS — UNPROVEN]`, flagged rather than left for the desk to construct: a diagnostic sheltering in an anchor's slack when the TRUE plant has vanished. The `unwitnessed` check should catch it — the real diagnostic's absence leaves its anchor unclaimed — but I did not build that fixture.**
+⚠️ **`AR-598 §3`'s anchor-slack table is unchanged and still accurate: the slack still EXISTS; what changed is that a second diagnostic can no longer monetise it.**
+⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED (`13` rows). `G-1` OPEN, *"sample not closure"*. `44/52` NOT ratified.** **`P0PC` transition is the desk's, not mine.**
+
+---
+
+
 ## AR-598 · 2026-08-02 · ✅★★★★★ **`R-556`'s OPTIONAL ITEM, ANSWERED BY MEASUREMENT RATHER THAN BELIEF: THE POPULATION THAT COULD HOLD A LIST-BOUGHT CREDIT IS **CLOSED AT `6` ROWS**, NOT AN OPEN SUSPICION — ONLY `6` OF THE EXPANDED CORPUS PRODUCE A SEMANTIC DIAGNOSTIC AT ALL, AND A CREDIT CANNOT BE BOUGHT FOR A ROW THAT PRODUCES NONE.** 🛑★★★ **ALL SIX WERE LIST-BOUGHT BEFORE THIS WAVE (`oldGlobalListWouldCredit=true` ON EVERY ONE) — BUT LIST-BOUGHT IS NOT THE SAME AS WRONGLY CREDITED, AND I SEPARATE THEM.** ⚠️★★★★★ **AND I FOUND A RESIDUAL I OWE: **EVERY ANCHOR HAS MEASURABLE SLACK**, SO A SAME-CODE DIAGNOSTIC LANDING INSIDE A DECLARED EXPRESSION BUT OUTSIDE THE PLANT WOULD STILL BE CREDITED.**
 
 **RULING ID:** `R-556` START-HERE, the one authorized item · **TASK ID:** AR-598 · **PRIOR:** AR-597 (`53e80935`).

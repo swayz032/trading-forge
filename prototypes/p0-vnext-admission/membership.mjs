@@ -34,9 +34,25 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const BASELINE_COMMIT = '8297ebbe';
 export const BASELINE_REPO_PATH = 'prototypes/p0-vnext-admission/corpus.mjs';
 
-export function loadBaselineCorpus() {
-  const raw = execFileSync('git', ['show', `${BASELINE_COMMIT}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' });
-  const blob = execFileSync('git', ['rev-parse', `${BASELINE_COMMIT}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' }).trim();
+// 🛑 R-558 §3 — THE SECOND PIN, AND THE LAW THIS FILE FAILED TO SWEEP.
+// Item 15 pinned the ORIGINAL 52 externally and left the EXPANDED corpus's membership in
+// `DECLARED_ADDITIONS`: a mutable array, in this file, in the same delivery it polices.
+//   THAT WAS `CORPUS.map(` WEARING A DIFFERENT NAME.
+// An external read constructed the consequence and the desk reproduced it: DELETING GUARD ROW
+// `56(a)` — the row that exists because the accuracy-validator's `F-1` CRITICAL admitted a module
+// that reached the ledger — left `GATE: PASS`, `EXIT 0`. `declared_but_absent` was computed,
+// printed, and gated nothing.
+// ⚠️ AND ADDING THAT FIELD TO THE FAILURE CLASSES WOULD BE `ONE LEVEL SHORT`: it catches deleting
+// the ROW while leaving its DECLARATION, and NOT the coordinated deletion of both — because the
+// declaration was editable in the same commit.
+// THE FIX IS THE SAME MECHANISM ITEM 15 ALREADY PROVED: pin the expanded identities to a FROZEN
+// COMMIT. A later commit cannot edit `53e80935`. Legitimate growth must BUMP THE PIN, which is a
+// deliberate, reviewable act in git history — not an array edit that reviews itself.
+export const EXPANDED_PIN_COMMIT = '53e80935';
+
+export function loadPinnedCorpus(commit) {
+  const raw = execFileSync('git', ['show', `${commit}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' });
+  const blob = execFileSync('git', ['rev-parse', `${commit}:${BASELINE_REPO_PATH}`], { cwd: HERE, encoding: 'utf8' }).trim();
   const abs = (n) => JSON.stringify(pathToFileURL(path.join(HERE, n)).href);
   let subs = 0;
   const patched = raw.replace(/from '\.\/(source-admission|runtime-admission)\.mjs'/g, (_m, n) => { subs += 1; return `from ${abs(`${n}.mjs`)}`; });
@@ -46,27 +62,21 @@ export function loadBaselineCorpus() {
   return { file: f, substitutions: subs, rawBytes: raw.length, blob };
 }
 
+/** The AR-589 baseline, kept as a named alias because `emitted-freeze.mjs` consumes it. */
+export function loadBaselineCorpus() { return loadPinnedCorpus(BASELINE_COMMIT); }
+
 // The ONE historical identity change between AR-589's corpus and this one. It is declared here
 // because item 15 names it explicitly: AR-589's row `54` was the module-scope `this` STATEMENT,
 // which now lives at `54(c)`. The CURRENT row `54` is the container twin — a DIFFERENT OBJECT
 // that was never in AR-589's 52 and must NOT be scored as if it were.
 export const HISTORICAL_RENAMES = Object.freeze({ '54': '54(c)' });
 
-// Rows present in the corpus under test that were NEVER part of AR-589's 52. This is a
-// DECLARATION ABOUT ADDITIONS — it does not derive expected membership from anything. Its only
-// power is to say "these ids are allowed to be new"; an id that is neither expected nor declared
-// here is reported as an undeclared arrival rather than absorbed.
-export const DECLARED_ADDITIONS = Object.freeze([
-  '34(d-u)', '54', '54(b)', '55(a)', '55(b)', '55(c)', '55(d)',
-  // added from the accuracy-validator's HUNT (F-1/F-2 guards)
-  '56(a)', '56(b)', '56(c)', '56(d)', '57',
-  // ⚠️ AR-596's two `implements` / interface-`extends` rows are NOT listed here and that is
-  // correct, not an omission: they were added as GREEN NEIGHBOURS
-  // (`G-src-implements-erased`, `G-src-interface-extends-erased`), which are a different
-  // population from the scored CORPUS. `[MEASURED]` — listing them produced
-  // `declared_but_absent: ["58(a)","58(b)"]` on my first run, which is exactly the report a
-  // stale declaration is supposed to produce, and it corrected me.
-]);
+// 🛑 R-558: `DECLARED_ADDITIONS` IS DELETED. It read:
+//     export const DECLARED_ADDITIONS = Object.freeze(['34(d-u)','54',...,'56(a)',...,'57']);
+// and it was the self-authorship item 15 closed for the 52 and left open for everything else.
+// The additions are now DERIVED FROM TWO FROZEN PINS (expanded minus original), so no mutable
+// array decides which rows are allowed to exist, and there is nothing to edit in a coordinated
+// deletion. ✅ THE COORDINATED CASE IS CLOSED BY CONSTRUCTION, NOT BY A SECOND CHECK.
 
 const { file, substitutions, rawBytes, blob } = loadBaselineCorpus();
 const baseline = await import(pathToFileURL(file).href);
@@ -104,6 +114,25 @@ if (EXPECTED_ORIGINAL_IDS.length !== EXPECTED_CARDINALITY) {
   throw new Error(`INSTRUMENT FAULT: pinned baseline ${BASELINE_COMMIT} yields ${EXPECTED_ORIGINAL_IDS.length} ids, expected ${EXPECTED_CARDINALITY}`);
 }
 
+// ---- R-558: THE EXPANDED PIN, AUDITED THE SAME WAY THE 52's PIN IS -----------------------
+const expandedPin = loadPinnedCorpus(EXPANDED_PIN_COMMIT);
+const expandedBaseline = await import(pathToFileURL(expandedPin.file).href);
+export const EXPANDED_META = Object.freeze({ commit: EXPANDED_PIN_COMMIT, blob: expandedPin.blob, rawBytes: expandedPin.rawBytes });
+export const EXPECTED_EXPANDED_IDS = Object.freeze(expandedBaseline.CORPUS.map((c) => c.id));
+const EXPECTED_EXPANDED_SET = new Set(EXPECTED_EXPANDED_IDS);
+const expandedDupes = EXPECTED_EXPANDED_IDS.filter((id, i) => EXPECTED_EXPANDED_IDS.indexOf(id) !== i);
+if (expandedDupes.length) {
+  throw new Error(`INSTRUMENT FAULT: expanded pin ${EXPANDED_PIN_COMMIT} yields duplicate ids: ${[...new Set(expandedDupes)].join(', ')}`);
+}
+// The expanded set MUST contain the pinned 52. If it does not, the two pins disagree about the
+// campaign's own history and no membership verdict computed from them means anything.
+const notInExpanded = EXPECTED_ORIGINAL_IDS.filter((id) => !EXPECTED_EXPANDED_SET.has(id));
+if (notInExpanded.length) {
+  throw new Error(`INSTRUMENT FAULT: pins disagree — ${BASELINE_COMMIT} expects ids absent from ${EXPANDED_PIN_COMMIT}: ${notInExpanded.join(', ')}`);
+}
+/** Additions DERIVED from two frozen pins, replacing the hand-maintained DECLARED_ADDITIONS. */
+export const DERIVED_ADDITIONS = Object.freeze(EXPECTED_EXPANDED_IDS.filter((id) => !EXPECTED_ORIGINAL_IDS.includes(id)));
+
 /**
  * BOTH DIRECTIONS, as item 15 orders. A rename fires on BOTH halves at once:
  * the old id goes MISSING and the new id arrives UNDECLARED.
@@ -112,18 +141,24 @@ if (EXPECTED_ORIGINAL_IDS.length !== EXPECTED_CARDINALITY) {
 export function checkMembership(corpusUnderTest) {
   const actual = corpusUnderTest.map((c) => c.id);
   const actualSet = new Set(actual);
-  const declared = new Set([...EXPECTED_ORIGINAL_IDS, ...DECLARED_ADDITIONS]);
   const counts = actual.reduce((a, id) => { a[id] = (a[id] || 0) + 1; return a; }, {});
   return {
     expected_count: EXPECTED_ORIGINAL_IDS.length,
+    expected_expanded_count: EXPECTED_EXPANDED_IDS.length,
     actual_count: actual.length,
-    // direction 1: every expected id must still exist under its expected name
+    // direction 1, the pinned 52: every expected id must still exist under its expected name
     missing: EXPECTED_ORIGINAL_IDS.filter((id) => !actualSet.has(id)),
-    // direction 2: every id present must be expected or declared-new
-    undeclared: actual.filter((id) => !declared.has(id)),
+    // 🛑 R-558 — direction 1 for the EXPANDED population, which had NO gate at all. This is what
+    // makes deleting guard row 56(a) fatal: the pinned 53e80935 still expects it, and no edit to
+    // this delivery can change what that commit contains.
+    missing_expanded: EXPECTED_EXPANDED_IDS.filter((id) => !actualSet.has(id)),
+    // direction 2: every id present must be in the pinned expanded set. Legitimate growth bumps
+    // EXPANDED_PIN_COMMIT — a reviewable act in git history, not an array edit.
+    undeclared: actual.filter((id) => !EXPECTED_EXPANDED_SET.has(id)),
     // uniqueness in the population under test
     duplicated: Object.entries(counts).filter(([, n]) => n > 1).map(([id]) => id),
-    // a declared addition that never arrived is a stale declaration, reported not enforced
-    declared_but_absent: DECLARED_ADDITIONS.filter((id) => !actualSet.has(id)),
+    // Retained for diagnosis only, and now DERIVED from two pins rather than declared by hand.
+    // ⚠️ It no longer carries the gate: `missing_expanded` does, and it cannot be edited away.
+    derived_additions_absent: DERIVED_ADDITIONS.filter((id) => !actualSet.has(id)),
   };
 }

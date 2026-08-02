@@ -19,7 +19,7 @@ import path from 'node:path';
 import { admitRuntime } from './runtime-admission.mjs';
 import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED } from './corpus.mjs';
 // ITEM 15: expected membership comes from the PINNED AR-589 artifact, never from `CORPUS`.
-import { EXPECTED_ORIGINAL_IDS, checkMembership, BASELINE_META } from './membership.mjs';
+import { EXPECTED_ORIGINAL_IDS, checkMembership, BASELINE_META, EXPANDED_META } from './membership.mjs';
 
 globalThis.__GETTER_HITS__ = 0;
 
@@ -91,21 +91,54 @@ function ownershipJoin(records, row, body) {
     }
     anchors.push({ ...o, start: first, end: first + o.expression.length });
   }
-  const unjoined = [], witnessed = new Set();
+  // 🛑 R-557 §1 — THE THIRD CLAUSE OF ITEM 14, WHICH THE FIRST VERSION DID NOT DELIVER.
+  // Containment alone is not ownership. `AR-598 §3` measured that every anchor is WIDER than the
+  // diagnostic it owns, and the desk CONSTRUCTED the consequence: renaming 34(d-u)'s parameter
+  // `(lane: Lane)` -> `(ln: Lane)` lands a SECOND, unrelated `TS2304` on `lane` INSIDE the
+  // declared anchor `undeclaredReader(lane)`. Both were credited; GATE: PASS; EXIT 0.
+  //   AN ANCHOR WIDE ENOUGH TO BE FALSIFIABLE IS WIDE ENOUGH TO SHELTER AN IMPOSTOR.
+  //
+  // 🛑 THE REPAIR IS *NOT* TO NARROW THE ANCHOR TO THE DIAGNOSTIC'S SPAN (R-557 §4 makes that a
+  // STOP, and it is right: an anchor equal to its own diagnostic restates the observation and can
+  // never be wrong). The anchor stays exactly as wide as the OWNED EXPRESSION. What changes is
+  // that the join must be a BIJECTION: every diagnostic joins EXACTLY ONE anchor, and every
+  // anchor is joined by EXACTLY ONE diagnostic. A second diagnostic sheltering inside an anchor
+  // has no anchor of its own left to claim, so it convicts the row instead of riding along.
+  // A row that genuinely owns two diagnostics at one expression declares that expression TWICE —
+  // the count is then a CLAIM the row makes and the run can falsify.
+  const unjoined = [], ambiguous = [];
+  const claimedBy = new Map();          // anchor index -> the diagnostic that claimed it
+  const surplus = [];
   for (const d of records) {
-    const hit = anchors.find((a) => a.code === d.code && d.start !== null
-      && d.start >= a.start && d.start + d.length <= a.end);
-    if (hit) witnessed.add(hit.expression);
-    else unjoined.push(`${d.code}@${d.start}${d.anchorText === null ? '' : `:${JSON.stringify(d.anchorText)}`}`);
+    if (d.start === null) { unjoined.push(`${d.code}@<no span>`); continue; }
+    const cands = anchors
+      .map((a, i) => ({ a, i }))
+      .filter(({ a }) => a.code === d.code && d.start >= a.start && d.start + d.length <= a.end);
+    const shown = `${d.code}@${d.start}${d.anchorText === null ? '' : `:${JSON.stringify(d.anchorText)}`}`;
+    if (cands.length === 0) { unjoined.push(shown); continue; }
+    // Overlapping/nested declared expressions make ownership undecidable — fail closed rather
+    // than pick one, which is the same discipline as the ambiguous-anchor check above.
+    if (cands.length > 1) { ambiguous.push(`${shown} matches ${cands.length} declared anchors`); continue; }
+    const { i } = cands[0];
+    if (claimedBy.has(i)) {
+      surplus.push(`${shown} is an EXTRA diagnostic sheltering inside ${JSON.stringify(anchors[i].expression)}, already owned by ${claimedBy.get(i)} — it is NOT entailed by this row's planted illegality`);
+      continue;
+    }
+    claimedBy.set(i, shown);
   }
-  const unwitnessed = anchors.filter((a) => !witnessed.has(a.expression)).map((a) => `${a.code}@${JSON.stringify(a.expression)}`);
-  if (unjoined.length === 0 && unwitnessed.length === 0) {
+  const unwitnessed = anchors
+    .map((a, i) => ({ a, i }))
+    .filter(({ i }) => !claimedBy.has(i))
+    .map(({ a }) => `${a.code}@${JSON.stringify(a.expression)}`);
+  if (unjoined.length === 0 && ambiguous.length === 0 && surplus.length === 0 && unwitnessed.length === 0) {
     return { ok: true, why: anchors.map((a) => `${a.code}@${JSON.stringify(a.expression)}`).join(' + ') };
   }
   return {
     ok: false,
     why: [
       unjoined.length ? `diagnostic(s) NOT owned by this row: ${unjoined.join(', ')}` : '',
+      surplus.length ? `EXTRA diagnostic(s) on an owned row: ${surplus.join(', ')}` : '',
+      ambiguous.length ? `AMBIGUOUS ownership (overlapping declared anchors): ${ambiguous.join(', ')}` : '',
       unwitnessed.length ? `declared anchor(s) never witnessed: ${unwitnessed.join(', ')}` : '',
     ].filter(Boolean).join(' | '),
   };
@@ -142,10 +175,19 @@ function corpusUnderTest() {
     case 'membership_delete': return CORPUS.filter((c) => c.id !== '38');
     // (g) the same id appears twice in the population under test
     case 'membership_duplicate': return [...CORPUS, dup('47')];
+    // 🛑 R-558's REPRODUCER: delete guard row 56(a) — the `export * from './ledger.js'` guard that
+    // exists BECAUSE the accuracy-validator's F-1 CRITICAL admitted a module reaching the ledger.
+    // This exited 0 before the expanded pin: the row vanished, `declared_but_absent` printed it,
+    // and nothing gated. The pinned 53e80935 still expects it, and no edit here can change that.
+    case 'membership_delete_guard': return CORPUS.filter((c) => c.id !== '56(a)');
     default: return CORPUS;
   }
 }
 const CORPUS_UNDER_TEST = corpusUnderTest();
+
+// R-556 §3: a planted-defect test owes a positive control that the plant LANDED, printed before
+// the verdict. Populated by any injection that could silently fail to apply.
+const PLANT_WITNESS = [];
 
 const results = [];
 for (const c of CORPUS_UNDER_TEST) {
@@ -182,6 +224,21 @@ for (const c of CORPUS_UNDER_TEST) {
     //     own its TS1117; TS2304 was in the DELETED global allowlist, so the old rule kept the
     //     credit. The row-bound join must refuse the row while the plant is still there.
     if (INJECT === 'own_extra_code' && c.id === '52(a)') body = `const q = undefinedIdentifierXyz;\n${c.body}`;
+    // 🛑 R-557 §1's REPRODUCER, VERBATIM AS THE DESK CONSTRUCTED IT — the founding defect of the
+    // third clause, so it lives in the mutation set and not only in prose (R-547 §4.3).
+    // Renaming the PARAMETER leaves the declared anchor `undeclaredReader(lane)` byte-unchanged
+    // and still occurring exactly once, but lands a SECOND unrelated TS2304 on `lane` INSIDE it.
+    // Before the bijection this exited 0 with BOTH diagnostics credited.
+    // ⚠️ R-556 §3, applied rather than admired: this is the ONE injection here that mutates by
+    // string REPLACE, and a replace whose anchor does not match applies NOTHING and yields a
+    // green indistinguishable from a guard that did not fire. The desk was bitten by exactly
+    // this shape. So the plant is VERIFIED TO HAVE LANDED, loudly, before any verdict is read.
+    //   AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID NOT FIRE.
+    if (INJECT === 'own_extra_inside_anchor' && c.id === '34(d-u)') {
+      body = c.body.replace('(lane: Lane)', '(ln: Lane)');
+      if (body === c.body) throw new Error("INSTRUMENT FAULT: own_extra_inside_anchor planted NOTHING — '(lane: Lane)' did not match 34(d-u)'s body; any verdict from this run is void");
+      PLANT_WITNESS.push(`34(d-u): '(lane: Lane)' -> '(ln: Lane)' (${c.body.length}B -> ${body.length}B), anchor 'undeclaredReader(lane)' left byte-unchanged`);
+    }
     submittedBody = body;
     const r = admitSource(c.file, body);
     outcome = r.outcome; tuple = r.tuple; diagnostics = r.diagnostics || []; diagRecords = r.diagnosticRecords || [];
@@ -343,10 +400,14 @@ const likeForLike = {
   // ITEM 15: these come from the PINNED artifact join, not from the corpus asking itself.
   expected_membership_source: `${BASELINE_META.commit}:corpus.mjs blob ${BASELINE_META.blob.slice(0, 12)} (${BASELINE_META.rawBytes}B, ${BASELINE_META.substitutions} declared import substitutions)`,
   expected_cardinality: membership.expected_count,
+  // R-558: the expanded population is now pinned too, and its absences GATE.
+  expanded_membership_source: `${EXPANDED_META.commit}:corpus.mjs blob ${EXPANDED_META.blob.slice(0, 12)} (${EXPANDED_META.rawBytes}B)`,
+  expected_expanded_cardinality: membership.expected_expanded_count,
   missing_ids: membership.missing,
+  missing_expanded_ids: membership.missing_expanded,
   undeclared_ids: membership.undeclared,
   duplicate_ids: membership.duplicated,
-  declared_but_absent: membership.declared_but_absent,
+  derived_additions_absent: membership.derived_additions_absent,
 };
 
 // A miss must show WHY it missed, or the table hides the very thing it is reporting.
@@ -373,6 +434,9 @@ console.log(`EFFECTIVE-MODULE TUPLE (reference, fixture.ts): ${JSON.stringify(ef
 console.log('='.repeat(116));
 for (const r of results) console.log(line(r));
 console.log('='.repeat(116));
+// R-556 §3: the plant witness prints BEFORE the verdict, so a no-op injection is visible as a
+// no-op rather than reading as a clean run.
+if (PLANT_WITNESS.length) for (const w of PLANT_WITNESS) console.log(`PLANT LANDED (positive control): ${w}`);
 // ---- ITEM 14 + F-7: THE OWNERSHIP JOIN, PRINTED SO IT CAN BE AUDITED FROM THIS OUTPUT ----
 // The runner's own table could not previously be audited from its own output. Every TYPE_INVALID
 // row now shows the diagnostics it produced, the anchors its row DECLARED, and the join verdict.
@@ -441,10 +505,15 @@ const FAILURE_CLASSES = [
   // ---- ITEM 15: MEMBERSHIP AGAINST THE PINNED ARTIFACT, BOTH DIRECTIONS + UNIQUENESS ----
   // The old self-authored set made this class unreachable by construction: a rename changed the
   // expectation and the actual together, so `missing_ids` was always `[]`.
-  ['membership', membership.missing.length > 0 || membership.undeclared.length > 0 || membership.duplicated.length > 0,
+  // 🛑 R-558: `missing_expanded` JOINS THE GATE. Deleting guard row 56(a) — the guard that exists
+  // for the accuracy-validator's F-1 CRITICAL — previously left GATE: PASS, EXIT 0, because the
+  // expanded population was policed by a mutable array in the same delivery and nothing gated it.
+  ['membership', membership.missing.length > 0 || membership.missing_expanded.length > 0
+    || membership.undeclared.length > 0 || membership.duplicated.length > 0,
     () => [
-      membership.missing.length ? `MISSING from the corpus under test (expected by ${BASELINE_META.commit}): ${membership.missing.join(', ')}` : '',
-      membership.undeclared.length ? `UNDECLARED arrivals (neither in the pinned 52 nor in DECLARED_ADDITIONS): ${membership.undeclared.join(', ')}` : '',
+      membership.missing.length ? `MISSING from the pinned 52 (expected by ${BASELINE_META.commit}): ${membership.missing.join(', ')}` : '',
+      membership.missing_expanded.length ? `MISSING from the pinned EXPANDED corpus (expected by ${EXPANDED_META.commit}): ${membership.missing_expanded.join(', ')}` : '',
+      membership.undeclared.length ? `UNDECLARED arrivals (not in the pinned expanded set ${EXPANDED_META.commit} — legitimate growth must BUMP THE PIN): ${membership.undeclared.join(', ')}` : '',
       membership.duplicated.length ? `DUPLICATE ids in the population under test: ${membership.duplicated.join(', ')}` : '',
     ].filter(Boolean).join(' | ')],
 ];

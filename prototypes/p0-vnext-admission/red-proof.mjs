@@ -63,6 +63,13 @@ const EXPECT = [
   ['membership_rename',        'membership',                '(b) FOUNDING ATTACK B: unique rename 35(a) -> 35(z), body and expectation byte-untouched — the self-authored set reported missing_ids: [] and exited 0'],
   ['own_unrelated_nonowned',   'type_invalid_unclassified', '(c) unrelated TS2304 on a NON-OWNED row (34(b))'],
   ['own_extra_code',           'type_invalid_unclassified', '(d) an EXTRA code beside a LEGITIMATE compiler-owned mutation (52(a) keeps its real TS1117)'],
+  // R-557 §1's constructed reproducer — the founding defect of item 14's THIRD clause. AR-598 §3
+  // named this residual in PROSE and the suite stayed 29/29 green, because describing a hole and
+  // testing for it are different acts. It is in the mutation set now.
+  ['own_extra_inside_anchor',  'type_invalid_unclassified', '(h) R-557: an EXTRA same-code diagnostic SHELTERING INSIDE the declared anchor (34(d-u) param renamed; anchor byte-unchanged) — this exited 0 crediting BOTH'],
+  // R-558's reproducer. The row it deletes is the guard for the grader's F-1 CRITICAL, so this
+  // class protects the guards against the two worst findings the campaign has made.
+  ['membership_delete_guard',  'membership',                '(i) R-558: DELETE guard row 56(a) (the F-1 `export * from` guard) — this exited 0 with declared_but_absent printed and never gated'],
   ['membership_add',           'membership',                '(e) membership ADD: an id neither in the pinned 52 nor in DECLARED_ADDITIONS'],
   ['membership_delete',        'membership',                '(f) membership DELETE: an expected id disappears'],
   ['membership_duplicate',     'membership',                '(g) membership DUPLICATE: the same id twice in the population under test'],
