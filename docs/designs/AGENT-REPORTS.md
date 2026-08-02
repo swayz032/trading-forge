@@ -4,6 +4,41 @@
 
 ---
 
+## AR-612 · 2026-08-02 · ✅ **START-RECEIPT — FRESH WORKER SEAT. I TAKE `R-572 §6.1` (THE BATCH-CLOSING PIN DANCE) AS THE WHOLE REMAINING UNIT, NOT A LANE.** ⚠️★★★★★ **AND I ANSWER `R-572 §4`'s *"if it is cheap"* **BEFORE** WRITING CODE, BECAUSE THE ANSWER SPLITS THE THREE COLLECTIONS AND ONE HALF IS NOT FREE: `[MEASURED HERE]` **`SIX` PINS FOR NOTHING; `SURFACE_CODES` AND `FIXTURE_INVALID_CODES` CANNOT BE PINNED AT ALL TODAY — THE PARSER RETURNS `keys: null` FOR BOTH, AND `checkPinnedCollections` THROWS `INSTRUMENT FAULT` ON A PINNED TABLE WITH NO EXTRACTABLE KEYS.**
+
+**RULING ID:** `R-572 §6.1` + `§4` · **TASK ID:** AR-612 · **PRIOR:** AR-611 (`68d9bf49`) · **NO CODE DELTA YET.**
+**GRAPH: `P0PC` `active_worker`. NO TRANSITION CLAIMED.** **FAN-IN INHERITED: `4.5 / 5`** — AR-611's count, adopted unchanged.
+**SEAT: ear armed `17:17:05Z` on `ADVISOR-RULINGS.md`, baseline `R-572`.** ⚠️ **AND THE OPERATOR CAUGHT AN ERROR OF MINE BEFORE I DID, EXACTLY AS `AR-606 §1`: A SECOND EAR WAS LIVE.** `[MEASURED HERE]` a `05:08:39` poller from a session that predates both current seats was still running; I killed it (`PID 35656`/`28348`, exit `255` confirmed) and verified ONE ear remains. **REPORTED, NOT QUIETLY REPAIRED — and `one-monitor` is now the second law this campaign has had to enforce at a seat boundary rather than at arming time.**
+
+### ✅ §1 — BASELINE, RE-MEASURED AT THIS SEAT BEFORE ANY EDIT (`red-path-decay`)
+`[MEASURED HERE, exit code off the process]`
+```
+run.mjs   GATE: PASS   EXIT 0    prototypes/ tree CLEAN at 68d9bf49
+```
+
+### ⚠️★★★★★ §2 — `R-572 §4`, ANSWERED BY EXECUTION RATHER THAN BY ESTIMATE
+`[MEASURED HERE, `extractModuleCollections` run against pinned `run.mjs` @ `cac39d45` blob `e0ff1b9c`]`
+```
+SIX                    keys = [attributed, honest_named_miss, surface_invalid,
+                               fixture_invalid, caught_by_typechecker, position_unclassified]   <- PINNABLE NOW
+SURFACE_CODES          keys = null   (7 elements)      <- NOT PINNABLE: plain string-literal array
+FIXTURE_INVALID_CODES  keys = null   (6 elements)      <- NOT PINNABLE: same shape
+FAILURE_CLASSES        keys = 24                        <- the already-pinned control, alive
+```
+🛑★★★ **SO PINNING THE TWO CODE LISTS TODAY WOULD NOT PROTECT THEM — IT WOULD THROW `INSTRUMENT FAULT` AT `module-collections.mjs:259` (*"pinned table has no extractable row keys"*) AND TAKE THE WHOLE GATE DOWN.** ★★★ **`A PIN ON A TABLE THE READER CANNOT SEE IS NOT WEAK PROTECTION — IT IS AN OUTAGE.`**
+✅ **THE FIX IS TWO LINES AND I JUDGE IT CHEAP: the array branch has no case for a bare `StringLiteral` element, so it maps every element to `null`. I will add it, and the claim that this is VERDICT-NEUTRAL for every already-pinned table is falsifiable — a table with keys today has, by construction, no `StringLiteral` elements — so I will PROVE it by byte-comparing the gate output before and after rather than by arguing it.**
+
+### 🛑 §3 — ONE PREDICTION IN AR-611 I WILL TEST RATHER THAN INHERIT
+**`AR-611 §3.4` says the second commit must ALSO bump `MODULE_PIN_COMMIT` + `PINNED_BLOBS['membership.mjs']` "because that same edit changes `membership.mjs`".** ⚠️ **`[HYPOTHESIS — UNPROVEN, MINE]` I believe that is NOT required: the module pin governs the PINNED reference text, and the check compares pinned-vs-live COLLECTIONS. `EXPANDED_PIN_COMMIT`/`EXPANDED_PIN_BLOB`/the cardinalities are SCALARS, which `extractModuleCollections` does not admit, so editing them changes no collection.** **I will run the gate and let it decide; if it reds, AR-611 was right and I bump. Either way the answer is measured, not carried.**
+
+### ✅ §4 — ORDER OF WORK, AND WHY THE RED WINDOW IS LAST
+1. **`§4` pins first** (parser branch + `SIX`/`SURFACE_CODES`/`FIXTURE_INVALID_CODES`), each newly-pinned table red-proofed by an EXECUTED deletion — `R-572 §7`'s *"a partially protected collection produces a red on the first row you try"* applies directly and one sample will not do.
+2. **THEN the corpus rows** (`import.meta` RED guard row · `new.target` GREEN row) and the two-commit pin dance.
+🛑 **NO `Proxy` ROWS AND NO `isProxy` CATCHER — `R-572 §3` puts both outside this batch, and starting either is a named STOP.**
+**FIRST OBSERVABLE: a commit pinning the three `run.mjs` tables. ETA ~20–30 min.**
+
+---
+
 ## AR-611 · 2026-08-02 · ✅★★★ **`R-570 §4` DISCHARGED: `EXEMPT_EXPORTS` **DELETED**, `HISTORICAL_RENAMES` **PINNED**, AND ITS DELETION WITNESSED CAUGHT.** 🛑★★★★★ **AND I STATE THE FAN-IN PRECISELY BECAUSE THIS IS WHERE A PARTIAL WOULD READ AS COMPLETE: **`4.5 / 5`.** THE LAST ITEM — THE **CORPUS ROWS** AND THEIR PIN DANCE — IS **NOT STARTED**, AND I NAME IT WITH ITS ADDRESS RATHER THAN LET "the final pin dance" SOUND LIKE ONE THING WHEN IT IS TWO.**
 
 **RULING ID:** `R-570 §4` + `§7.1` remainder · **TASK ID:** AR-611 · **PRIOR:** AR-610 · **CODE:** `cac39d45` + this commit.
