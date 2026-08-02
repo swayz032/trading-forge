@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3527` at THIS commit, 2026-08-02 03:55 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3532` at THIS commit, 2026-08-02 04:10 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3527` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3532` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -91,7 +91,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `03:27`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-547` (commit `ba73a03f`). Newest AR: 🛑 **`AR-591` (`03:54`) — UNRULED. `R-548` IS OWED.** (`AR-590` ruled by `R-546`.)**
+**Ruling ledger at `R-547` (commit `ba73a03f`). Newest AR: 🛑 **`AR-592` (`~04:09`) — UNRULED. `AR-591` (`1958ba5d`, `03:54:33`) ALSO UNRULED. `R-548` IS OWED AND COVERS BOTH.** (`AR-590` ruled by `R-546`.)**
+🛑★★★★★ **READ THIS BEFORE YOU DRAFT `R-548` — I ALMOST SHIPPED IT STALE.** I had verified the disposition *"REVISE — the worker has not delivered items `10`–`13`"* and was about to commit it. ✅ **`AR-592` LANDED FIRST, DECLARING `10`–`13` + the `§5.0` re-classification DELIVERED, FAN-IN `13/13`.** ★★★★★ **`R-416` IS LIVE, NOT HISTORICAL: `A RULING IS NOT SEALED WHEN IT IS COMMITTED — THE PREMISES UNDER IT KEEP MOVING.` The monitor and the newest-AR check are what caught it, ~60 seconds from a wrong ruling.**
+✅ **STILL TRUE AND USEFUL AS THE BASELINE FOR THE DELTA** `[MEASURED HERE, at `1958ba5d`]`: items `10`–`13` were **ABSENT** there — `git ls-tree` shows no type/value proof and no emitted-freeze module, and `position_unclassified` · `surface_invalid` · `fixture_invalid` · `caught_by_typechecker` match **`0` files**. **So `AR-592` is a real delta, not a relabel — verify it AT `AR-592`'s commit, never at `1958ba5d`.**
+✅★★★ **AND THE CONTRACT-ANCESTRY QUESTION IS SETTLED** `[MEASURED HERE]` **`git merge-base --is-ancestor fa876177 1958ba5d` → exit `0`.** **`R-546` WAS in the delivery commit's ancestry, so items `10`–`13` were inherited contract, not a late annotation.** ★★★ **Mint from the external read, adopted on merit: `A RULING ALREADY IN THE REPORT COMMIT'S ANCESTRY IS PART OF THE CONTRACT EVEN IF THE WORK BEGAN BEFORE IT LANDED. RE-READ THE NEWEST RULING BEFORE THE DELIVERY COMMIT, NOT ONLY BEFORE THE FIRST CODE WRITE.`**
+⚠️★★★★★ **EXTERNAL READ `6d46fafc` (`04:08:22`, AR-591) IS CONSUMED BUT PARTIALLY SUPERSEDED BY `AR-592` — DO NOT DISCARD IT, IT CARRIES A FINDING NOTHING ELSE OWNS:** a **`TS2322`-style FIXTURE SEMANTIC REGRESSION is currently accepted as an HONEST MISS**, i.e. **fixture corruption converts to green.** `A DIAGNOSTIC GATE THAT TREATS EVERY COMPILER ERROR AS AN HONEST MISS CONVERTS FIXTURE CORRUPTION INTO GREEN.` **Its other live asks: make `surface_invalid`/`fixture_invalid`/`position_unclassified` RUN-STOPPING (a taxonomy's buckets must decide whether the process stops, not decorate a report) · reconcile the six populations over BOTH the frozen-52 and expanded views, COMPUTED from row identities, never copied · row `54` must execute BOTH arms of the same BEHAVIOUR-BEARING source, not a generic `typeof this` probe.** ✅ **It also reproduced `44/52`, `missing_ids: []`, and the `.cts`/`.mts` twins in an ISOLATED worktree at the exact SHA — `[RELAYED, and unusually well-evidenced; this desk did NOT re-run it]`.**
+🛑★★★★★ **THE GRADE: DO NOT DISPATCH IT YET.** `R-546 §8.2` made it due *"on delivery of the corrected partition"*; the external read independently recommends holding it until the corrected committed object exists, and I agree — **`AR-592` is that candidate and is UNVERIFIED.** ✅ **`doer != grader` still binds; the grade is OWED, sequenced, and owned by this desk — not cancelled.**
 🛑★★★★★ **`AR-591` — ALL NINE DELIVERED. DO NOT RE-DERIVE THIS; VERIFY IT.** `[RELAYED — the desk has NOT re-executed it]` **`44 / 52` LIKE-FOR-LIKE** over `AR-589`'s original `52` ids with `missing_ids: []` as the join's own witness · expanded corpus `50 / 59` published SEPARATELY because the corpus grew `52`→`59` and *"the raw ratio is not comparable"* · a TRUE twin: one byte-identical source `ADMITTED` as `.mts`, `REJECTED` as `.cts` by the module-system catcher ALONE · runner is now a GATE, `11/11` forbidden classes with a demonstrated red path and the control green · `green_admitted 6/6`, `getter_invocations 0`, `failed_wrong_catcher 0`, `failed_ownership 0` · **two defects the worker introduced, measured and reported itself, one caught by its own red-proof.**
 ✅★★★ **IT INDEPENDENTLY REPRODUCED `R-546 §1`:** `41` source fixtures, `41` TYPE-INVALID, `0` VALID before repair. **Two seats, two instruments, same finding.**
 🛑★★★★★ **FIRST THING THE NEXT SEAT MUST CHECK, AND IT IS NOT YET MEASURED: `AR-591` DELIVERS THE NINE — IT IS `[UNVERIFIED]` WHETHER IT CARRIES `R-546 §5`'s ITEMS `10`–`13` OR THE SIX-POPULATION PARTITION.** ⚠️ **Its `miss_type_invalid: 5` is the OLD two-way classification, which suggests `R-546` landed (`03:47`) too late for this delivery (`03:54`) — `[HYPOTHESIS, UNDISCRIMINATED. Do not credit and do not convict without opening the artifact.]` **The type-space/value-space property (`§5.10`) is the one that decides whether `44/52` is admissible at all.**
