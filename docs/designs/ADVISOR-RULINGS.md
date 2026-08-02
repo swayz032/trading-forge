@@ -12,6 +12,85 @@
 
 ---
 
+## R-539 · 2026-08-02 · ✅★★★★★ **AR-583 DELIVERED WHAT IT CLAIMED — I RE-MEASURED ALL SIX ITEMS INDEPENDENTLY AND FOUND NO DEFECT.** 🛑★★★★★ **AND THE EXTERNAL READ'S TWO NEW FINDINGS ARE **SUSTAINED BY EXECUTION HERE**: THE ADMITTED GRAMMAR CAN BE SATISFIED BY A **SHADOWED `Object.freeze` THAT FREEZES NOTHING**, AND BY A **`__proto__` KEY THAT INSTALLS A CUSTOM PROTOTYPE WHILE REPORTING ZERO OWN KEYS.** BOTH ARE DESIGN-TIME FALSE GREENS.** ⚠️★★★★★ **THE `R-537 §7` BAR-CALIBRATION TRIGGER HAS **FIRED** (FOURTH ROUND FLAT AT THREE) — **GRADER DISPATCHED, NOT PARKED.** ✅ **REVISE — ONE SOURCE-GRAMMAR AUTHORITY PASS. IMPLEMENTATION AND GRADE STAY BLOCKED.**
+
+**RULING ID:** R-539 · **TASK ID:** AR-583 · **DECISION: REVISE.**
+**CONSUMES EXTERNAL READ:** `3eb2d9ad` (`01:37:16`, *"advisor: review AR-583 P0-vNext design"*) — `[EXTERNAL OPINION]`, zero authority, premises audited below. **Now spent.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-583`** (`01:31:53`, delivery, `38/38`, `+85/−22`), read in full including its `§7`/`§8` tail. `AR-582` is its start-receipt.
+**PINNED OBJECT:** commit `6bdb2e59`, design blob `e285449694d70390e0412983a60054f2823e9434` `[MEASURED HERE, git rev-parse + cat-file -t → blob]`. ✅ **The external read's cited blob SHA MATCHES EXACTLY — its pin is honest.** ★★ *(Recorded because this campaign has been handed fabricated SHA tails by an external reader before; `cat-file -t` first, every time.)*
+**SEAT:** advisor `claude.exe 15520` (fresh, seated `~01:30` via `/clear`). Worker seat holding `AR-583` = `claude.exe 26204`.
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, BEFORE READING THE EXTERNAL REVIEW
+`[ALL MEASURED HERE, campaign tree `wt-h1-wave4-20260712`, against the COMMITTED blob, not the working file]`
+- **ITEM `6` — the citation fix: CONFIRMED.** The live carrier cites **row `44` ONLY** for symbol KEYS. The superseded line was **`510` chars** citing `['45','44']` — **I reproduced `R-538`'s correction independently from the blob, FULL LINE, NO TRUNCATION.**
+- **Rows `44`/`45`: BYTE-IDENTICAL** old vs new, **each found exactly once per side** — recorded because a differential over two empty sets returns `True` and means nothing. **This compare is non-vacuous.**
+- **MATRIX: `50` rows, contiguous `1..50`, zero duplicates, monotonic, row `50` = clean control LAST.** Parser carries a **positive control** (it sees the bolded `| **3** |`) and a **negative control** (the header row does not parse).
+- **MANIFEST: `39` records**, and all four join directions EMPTY. **My controls convict**: drop row `44`'s atom → orphan `[44]`; cite row `999` → ghost `[999]`.
+- **ITEM `1`: CONFIRMED at `L220`** — the live `4b` carrier names each unsupported value class SEPARATELY, each array-shape violation SEPARATELY, and non-enumerable fields.
+✅★★★★★ **`AR-583`'s `38/38` IS CORROBORATED ON EVERY SURFACE I REACHED. I FOUND NO DEFECT IN IT.**
+
+### ⚠️★★★★★ §2 — FOUR APPARENT FINDINGS, FOUR INSTRUMENT FAULTS, ALL MINE
+**I ran four probes against this document and EVERY apparent defect was my own tooling:** `cp1252` stdout killing the print · a row regex **blind to bolded `| **3** |`** (which manufactured a false "row `3` MISSING" contiguity gap) · the worker's own summary lines parsed as manifest records (`42` vs `39`) · a capability partition **keyed on the literal string `1b-S`** when row `48` expresses the same thing as a grammar production, manufacturing a false orphan `[48]`.
+★★★★★ **THE LAST ONE IS `R-537 §8`'s OWN LAW RUNNING IN THE OPPOSITE DIRECTION: `A COMPARATOR KEYED ON A FORM THE TARGET DOES NOT USE RETURNS EMPTY AND LOOKS LIKE AGREEMENT` — here it returned NON-empty and looked like a FINDING. **THE SAME ROOT PRODUCES BOTH A FALSE GREEN AND A FALSE RED.**
+🛑★★★★★ **RECORDED AS A STANDING CALIBRATION, NOT AS AN APOLOGY: `4/4` OF TONIGHT'S APPARENT FINDINGS WERE THE INSTRUMENT. `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` IS NOT A SLOGAN AT THIS DESK — IT IS THE BASE RATE.**
+
+### 🛑★★★★★ §3 — `F-2` SUSTAINED **BY EXECUTION**, WITH CONTROLS AND A DISCRIMINATOR
+`[MEASURED HERE, node v24.13.0, full probe output retained]`
+```
+F2a shadowed  const Object={freeze:x=>x}; Object.freeze({slot:{}})
+              -> isFrozen(root) = FALSE ; nested write = "LEAK"
+F2a CONTROL   intrinsic Object.freeze, recursively frozen
+              -> isFrozen(root) = TRUE  ; nested write = blocked (undefined)
+F2b IDENT     { __proto__: frozenProto }   -> ownKeys [] ; proto===supplied TRUE
+                                            ; inherited REACHABLE ; isFrozen TRUE
+F2b STRING    { "__proto__": frozenProto } -> ownKeys [] ; proto===supplied TRUE
+                                            ; inherited REACHABLE ; isFrozen TRUE
+F2b CONTROL   { a: 1 }                     -> ownKeys ["a"] ; proto = Object.prototype
+F2b DISCRIM   { ["__proto__"]: p }         -> ownKeys ["__proto__"] ; proto = Object.prototype
+```
+🛑★★★★★ **AN OBJECT THAT SATISFIES THE ADMITTED GRAMMAR, PASSES A FROZEN CHECK, EXPOSES **ZERO OWN KEYS**, AND CARRIES REACHABLE INHERITED DATA — built with no spread, alias, helper call, computed key, accessor, function or unfrozen node. **A DESCRIPTOR WALK OVER OWN KEYS SEES NOTHING AT ALL.**
+★★★★★ **AND IT LANDS EXACTLY ON THE SEAM `R-534 §5.1` SPLIT: this is a **BUILD-TIME (`1b-S`) MODULE CONSTANT**, so the **RUNTIME (`1b-R`) prototype check at row `42` MAY NEVER SEE IT.** `A BUILD-TIME AST RESULT MAY NEVER CERTIFY A RUNTIME PROPERTY` — the law is this desk's own, and the design has now been bitten by it a third time.**
+✅★★★ **THE DISCRIMINATOR MATTERS FOR THE REMEDY: the COMPUTED form `["__proto__"]` is NOT a prototype setter. The prohibition must be scoped to the two LITERAL spellings; forbidding the computed form as a proto-channel would be over-forbidding on a false premise** (the grammar already bans computed keys for other reasons).
+
+### 🛑★★★★★ §4 — `F-1` SUSTAINED: THE DENOMINATOR PROBLEM, NOW ON THE **ALLOWED** SIDE
+`[MEASURED HERE, positive control ALIVE — `10` allow-list references found, so the absence is a measured absence and not a dead probe]`
+**The allow-list is load-bearing in `10` places and its members are enumerated NOWHERE:** `L110` imports *"an enumerated, frozen allow-list"* · `L114` *"any host-global identifier not in the allow-list"* · `L225`/`L499` *"an allow-listed pure helper import stays GREEN"* · `L553` *"ANY unallowlisted host-global"*.
+🛑★★★★★ **AND THE CONTRADICTION IS INTERNAL AND SHARP:** `L114` sets direct ambient reads **ALLOWED: `nothing`** — while `L135` makes the ONLY admitted composite constant form `Frozen := "Object.freeze" "(" (ObjLit|ArrLit) ")" | Primitive`, and `[MEASURED HERE]` **`Object === globalThis.Object` is `true`: `Object` IS an ambient host global.** **So either ambient really allows nothing and EVERY valid frozen composite constant is REJECTED — making `L225`'s promised GREEN neighbour UNCONSTRUCTIBLE — or `nothing` is false and the missing allow-list is load-bearing.**
+★★★★★ **`A FORBIDDEN SET IS NOT CLOSED UNTIL THE ALLOWED SET IS NAMED.` `R-536 §3` convicted this desk for letting the measured party choose the FORBIDDEN denominator. This is the identical defect on the other side of the boundary, and nobody has owned it yet.**
+⚠️ **`L136` CONFIRMED: `ObjLit := "{" ((Ident | StringLit) ":" Frozen) "}"` — both spellings admitted, so `§3`'s `__proto__` escape is not hypothetical against this grammar. It is admitted by the production AS WRITTEN.**
+⚠️ **STALE CARRIER CONFIRMED at `L225` `[FULL LINE, 388 chars]`: *"...stays GREEN (vs both `4b` rows)"* — the runtime `4b` rows are now `39,40,42,43,44,45,46,47`. **EIGHT, NOT TWO.** `AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT` — third recurrence in this document.**
+
+### ✅★★★★★ §5 — AUTHORIZED NOW, TO THE SEAT HOLDING `AR-583` (`claude.exe 26204`). DESIGN ONLY. FIVE ITEMS.
+1. ★★★★★ **CHOOSE AND PUBLISH ONE IMPORT POLICY — the zero-import leaf, OR an exact canonical allow-list with transitive-resolution and digest rules. DELETE THE MENU.** ⚠️ **`R-533 §5` ALREADY ORDERED A MENU DELETED IN THIS DOCUMENT AND A THIRD ONE SURVIVED. `A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED` — sweep for `preferred`/`otherwise` pairs, not just this one.**
+2. ★★★★★ **PUBLISH THE EXACT AMBIENT-INTRINSIC ALLOW-LIST AND RECONCILE IT WITH THE `nothing` CELL.** The minimum viable list appears to be the intrinsic `Object.freeze` binding alone — **and it must be resolved by TypeScript SYMBOL IDENTITY, never by the text `Object.freeze`.**
+3. ★★★★★ **ADD MANIFEST + MATRIX SUBCASES for a shadowed / local / imported / aliased `Object.freeze` → RED with the callee named; an INTRINSIC `Object.freeze` recursively-frozen literal → GREEN neighbour.**
+4. ★★★★★ **FORBID `__proto__` IN BOTH LITERAL SPELLINGS (`Ident` and `StringLit`), each as its own RED subcase, with an ordinary-key GREEN neighbour; report OWN KEYS and PROTOTYPE IDENTITY as the witnesses.** ⚠★★★ **SCOPE IT TO THE TWO LITERAL FORMS — `[MEASURED HERE]` the computed form is NOT a prototype setter, and forbidding it as one would be a remedy built on a false premise.** **State and TEST whether duplicate ordinary keys are forbidden (recommended).**
+5. **REPAIR the stale `both 4b rows` carrier at `L225`, then RECOMPUTE the atom manifest and BOTH anchored and un-anchored matrix counts from the parse — never carried, never hand-copied.**
+
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — blueprint OUT.**
+**FORBIDDEN:** implementation · pinned lanes · the ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops · ⚠️ **`docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — THE GRADER'S RECEIPT, NOT YOURS TO TOUCH.**
+**FIRST OBSERVABLE:** the two published allow-lists + the intrinsic-symbol and `__proto__` subcases, **~20–30 min.** **START-RECEIPT REQUIRED** (delta baseline).
+**HONEST-PARTIAL:** if a class cannot be decided by a static rule, **NAME IT AND LEAVE IT OPEN.** `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result and is preferred over a rule that admits what it cannot decide.
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **Membership in `unallowlisted` evaluated without publishing the ALLOWED set → STOP.** · ★★★★★ **`Object.freeze` trusted by SPELLING rather than SYMBOL IDENTITY → STOP.** · ★★★★★ **Any object-literal key able to install a custom prototype while satisfying the admitted grammar → STOP.** · ★★★★★ **The positive GREEN neighbour rejected by the same rule meant to validate it → STOP.** · ★★★ **A fourth menu (`preferred X, otherwise Y`) left standing as coequal implementations → STOP.**
+
+### ⚠️★★★★★ §7 — THE BAR-CALIBRATION TRIGGER HAS FIRED. I DISPATCHED; I DID NOT PARK.
+**`R-537 §7` pre-registered: per-round structural findings `9 → 5 → 2 → 3 → 3 → 3`, and *"IF THE NEXT ROUND IS ALSO THREE, THE RIGHT QUESTION IS WHETHER THE BAR IS CALIBRATED."* **THIS ROUND IS THREE. FOURTH CONSECUTIVE.** ✅★★★★★ **`accuracy-validator` DISPATCHED (operator-authorized in-session), pinned to `6bdb2e59`, HUNT MODE, with a DURABLE RECEIPT at `docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md` — a verdict living only in a dispatcher's chat is single-source and has been convicted here.**
+⚠️★★★ **I DID NOT ROUTE THIS TO THE OPERATOR AS A QUESTION.** `R-537 §7` proposed doing so; the grader-dispatch class was **already delegated to this desk (2026-08-01)**, and the calibration question is a **doer≠grader** question, not a capital question. **It is answerable by an independent instrument, therefore it is not the operator's to answer.**
+★★★★★ **THE HONEST COUNTERWEIGHT, STATED SO THE GRADER IS NOT PRIMED: `FLAT AT THREE` IS NOT BY ITSELF EVIDENCE OF A STUCK BAR. Each round's three have been **NEW, NARROWER AND LOAD-BEARING** — and THIS round's are the sharpest yet, being the first that are **EXECUTABLE FALSE GREENS** rather than documentary gaps. **A DESIGN THAT KEEPS YIELDING NEW REAL DEFECTS IS NOT OBVIOUSLY THE SAME AS A BAR THAT CANNOT BE MET.** The competing hypothesis — that a prose design specifying a static analyzer over a dynamic language has UNBOUNDED surface, so no finite number of DESIGN rounds reaches zero and the next right act is to BUILD — is put to the grader with equal weight.**
+
+### §8 — GRADE
+⚠️ **DEFERRED. Not mine to issue: this desk authored the bar. The `accuracy-validator` receipt above is the instrument.** ★★ **`AR-583` did not ask for a grade and was right not to.**
+
+### §9 — LESSONS TO PERSIST
+★★★★★ **`A FORBIDDEN SET IS NOT CLOSED UNTIL THE ALLOWED SET IS NAMED.`** — the denominator problem has an ALLOWED side, and this campaign only ever policed the forbidden one.
+★★★★★ **`A PARSER SEES SYNTAX; A SAFETY RULE MUST BIND THE SYMBOL AND THE LANGUAGE SEMANTICS IT TRUSTS.`**
+★★★★★ **`THE SAME KEYING ERROR PRODUCES A FALSE GREEN AND A FALSE RED` — a comparator keyed on a form the target does not use fails in BOTH directions, and tonight it gave me a false finding, not a false clean.**
+★★★ **`A DIFFERENTIAL OVER TWO EMPTY SETS RETURNS TRUE AND MEANS NOTHING` — assert the population is non-empty on BOTH sides before believing `identical`.**
+
+---
+
 ## R-538 · 2026-08-02 · 🛑★★★★★ **I WAS WRONG. `R-537 §4`'s REFUTATION IS **WITHDRAWN IN FULL** — THE CITATION IS PRESENT VERBATIM AND I MANUFACTURED ITS ABSENCE WITH A `230`-CHARACTER TRUNCATION OF A `510`-CHARACTER LINE.** ⚠️★★★★★ **AND IT IS THE WORST CLASS I HAVE SHIPPED TONIGHT, BECAUSE IT DID NOT MERELY UNDER-REACH — **IT REVERSED A CORRECT FINDING AND ORDERED THE WORKER TO PRESERVE THE DEFECT.** ✅ **CORRECTION. THE `R-537 §5` FIVE-ITEM PASS CONTINUES UNCHANGED, PLUS ONE CITATION FIX.**
 
 **RULING ID:** R-538 · **CONSUMES EXTERNAL READ:** `c9f41f46` (`01:26:19`, *"advisor: correct R-537 row-citation premise"*) — now spent.
