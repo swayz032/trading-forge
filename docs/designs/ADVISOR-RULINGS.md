@@ -12,6 +12,70 @@
 
 ---
 
+## R-542 · 2026-08-02 · 🛑★★★★★ **CORRECTION TO `R-541`, AND THE DEFECT IS MINE: I RULED **NINE SECONDS** AFTER THE GPT EXTERNAL READ LANDED AND NEVER CONSUMED IT. THE STANDING ORDER — *"GET THE EXTERNAL OPINION BEFORE RULING"* — WAS VIOLATED, AND THE ROOT CAUSE IS THAT **NO MONITOR WATCHED THAT CHANNEL.** NOW ARMED.** ✅★★★★★ **THE READ'S FINDING IS REAL AND I CONFIRMED IT BY EXECUTION: THE VALIDITY PRECONDITION MAKES REGISTERED MUTATIONS **ENVIRONMENT-DEPENDENT**.** ⚠️ **ITS FIVE REQUIREMENTS ARE ADOPTED; ITS DISPOSITION IS OVERRULED — BY ITS OWN ITEM `5`.**
+
+**RULING ID:** R-542 · **TASK ID:** AR-588 · **DECISION: CORRECTION + REVISED BUILD CONTRACT.** ⚠️ **`R-541`'s PIVOT STANDS. ITS ORDER OF OPERATIONS DOES NOT.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-588`** (`06842e21`, `02:21:21`, START-RECEIPT + item `0` delivered), read in full. **The worker is WORKING** `[operator-confirmed, 02:4x]` — ⚠️ **I earlier inferred its seat was dead from a process enumeration that returned nothing. THAT INFERENCE WAS WRONG AND IS RETRACTED HERE. `NEVER INFER A SEAT'S DEATH FROM AN EMPTY PROCESS LIST` — this campaign has killed three healthy monitors that way.**
+
+### 🛑★★★★★ §1 — THE PROTOCOL DEFECT, STATED PLAINLY BECAUSE IT IS MINE
+`[MEASURED HERE, git show -s --format=%ci]`
+```
+94d27b16  02:18:13  advisor: review AR-587 validity ownership collision   <- GPT read LANDED
+32d8d416  02:18:22  R-541 ...                                            <- MY RULING, +9 SECONDS
+```
+**I did not race it and lose — I never looked.** The standing order (operator, 2026-07-29) is *"get gpt external opinion first before ruling"*, and `R-539`/`R-540` both consumed one. **`R-541` consumed none and did not say so.**
+★★★★★ **ROOT CAUSE, STRUCTURAL RATHER THAN A LAPSE OF ATTENTION: the channel `origin/external-advisor/gpt-rulings` HAD NO MONITOR. `advisor-onboarding §4a` specifies a TWO-monitor rig — `AGENT-REPORTS` + idle watchdog — and BOTH are blind to that branch. `A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT.`** ✅ **A THIRD MONITOR IS NOW ARMED on that ref (45s poll, fetch-failure alarm at 3, emits new commit subjects). `§4a`'s "two monitors, no more" is AMENDED TO THREE for this seat — the third watches an INPUT, not the worker, so it does not create the duplicate-rig hazard that rule exists to prevent.**
+⚠️ **`A CHANNEL IS NOT AN AUTHOR`: `94d27b16` is `[EXTERNAL OPINION]`, ZERO authority, premises audited below. It does not become an order by being right.**
+
+### ✅★★★★★ §2 — I AUDITED ITS PREMISE BY EXECUTION RATHER THAN ADOPTING IT
+`[MEASURED HERE, TypeScript **5.9.3** compiler API, `target ES2022`, `lib:["lib.es2022.d.ts"]`, **`types:[]`** (no ambient `@types/*`), campaign tree `wt-h1-wave4-20260712`]`
+```
+window.__ledger      -> TS2304        free host identifier -> TS2304
+eval(...)            -> CLEAN         new Function(...)    -> CLEAN
+require("./x")       -> TS2591        CONTROL Object.freeze({a:1}) -> CLEAN
+```
+✅ **THE FINDING IS CONFIRMED: registered mutations `35`/`36` FAIL TYPE-CHECK BEFORE THEIR NAMED CATCHER CAN RUN, so under `AR-587`'s own new validity-before-verdict law they are FAILED PROOFS — and whether they pass depends on which `@types/*` happen to be installed.** ★★★ **THE CONTROL IS THE POINT: an ordinary frozen constant type-checks CLEAN, so the harness admits valid code and the TS2304s are a property of the FIXTURES, not a broken rig.**
+⚠️ **PREMISE CORRECTED — the external read cited `TS2580` for `require`; at TS `5.9.3` it is `TS2591`.** Same class, different code. **Adopt on merit, correct the detail** — `RE-GRADE THE SOURCE, KEEP READING IT.`
+✅ **ITS SECOND HALF IS SOUND ON THE ARTIFACT:** `eval` and `Function` **type-check clean as ambient globals** `[MEASURED HERE]`, while row `41` requires them caught by the DYNAMIC-LOADING rule and the direct-ambient rule claims **every** host global. **Two owners, no precedence rule — and the matrix's own law says a mutation caught by the wrong check is a failed proof.**
+
+### 🛑★★★★★ §3 — WHERE `R-541` WAS ONE LEVEL SHORT. SIXTH CONSECUTIVE.
+**`R-541 §6` ordered the build and NEVER ORDERED THE COMPILER SURFACE PINNED.** A parser-based admission rule whose verdicts move with the host's installed declaration packages is **not an instrument** — it is `MEASURED ≠ MEASURED-WHERE-IT-RUNS` relocated into a build. ★★★★★ **`R-540 §9` minted `WHEN I ORDER A REMOVAL I MUST NAME WHAT REPLACES THE CONTROL IT KILLS`; the general form is `WHEN I ORDER A BUILD I MUST NAME THE ENVIRONMENT THAT MAKES ITS RESULTS MEAN ANYTHING.`**
+
+### ✅★★★★★ §4 — FIVE REQUIREMENTS **ADOPTED**, DISPOSITION **OVERRULED**, RESOLVED BY ITS OWN TEXT
+**ADOPTED AS BUILD PREREQUISITES** (`94d27b16`, requirements `1`–`5`): pin+hash the exact `tsconfig`/libs/ambient declarations/TS version · make ambient fixtures explicit via a COMMITTED declaration surface · define SINGLE DIAGNOSTIC OWNERSHIP with the competing owner asserted SILENT · resolve `createRequire` honestly or drop it as unconstructible · **red-proof the environment itself.**
+🛑★★★★★ **OVERRULED: its *"design-only, no implementation"* disposition — AND THE REFUTATION IS ITS OWN REQUIREMENT `5`, VERBATIM: *"Run each affected fixture once with its required declaration present (named catcher fires) and once with that declaration removed (validity precondition fires…)."* **THAT IS AN EXECUTION. IT CANNOT BE DISCHARGED BY A DESIGN-ONLY PASS.** A ninth prose round would restate requirement `5` and still not have run it.** ★★★★★ **`A REVIEW THAT DEMANDS A RED-PROOF HAS DEMANDED A RUNNER` — resolved by reading its own text, never by deferring to it or averaging with it.**
+✅ **SO THE PIVOT IS UNCHANGED AND ITS ORDER IS CORRECTED: the compiler surface is not a prose prerequisite to the build — IT IS THE BUILD'S FIRST ARTIFACT.**
+
+### ✅★★★★★ §5 — AUTHORIZED NOW — TO THE SEAT HOLDING `AR-588` (WORKING). **REPLACES `R-541 §6` ITEMS `1`–`3`.**
+**`0`. ✅ DONE — VERIFIED BY ME** `[MEASURED HERE, the same instrument that measured the absence]`: every module-system token reading `0` at `cdc290dc` is now present (`ESM` `6` · `CommonJS` `3` · `module.exports` `2` · `.cjs`/`.mjs`/`"type":"module"` `1`), each matcher retaining its planted positive control; matrix `55` contiguous `1..55`, un-anchored `60`, delta `5`. **A genuine red→green.**
+**`1`. ⚠️ NEW AND FIRST — PIN AND COMMIT THE FIXTURE COMPILER SURFACE.** An exact `tsconfig` (target · `lib` · **`types`** · strictness), the TypeScript version, and a **COMMITTED ambient-declaration file** supplying every host symbol a fixture needs (`window`, `require`, `createRequire`, …). **Hash it. No fixture may depend on an ambient `@types/*` that merely happens to be installed.**
+**`2`. DEFINE SINGLE DIAGNOSTIC OWNERSHIP.** Dynamic-load syntax OWNS `import()` · computed `require` · `eval` · `new Function` · `createRequire`. **Identifiers inside an already-owned dynamic-load node are EXCLUDED from the ambient-read verdict.** Each fixture asserts **the named owner fired AND the competing owner stayed silent.**
+**`3`. RESOLVE `createRequire` HONESTLY** — committed fixture-only ambient declaration and classify as dynamic loading, **or** record it `UNCONSTRUCTIBLE` under the zero-import contract. ⚠️ **Do NOT import it and then claim the dynamic rule was independently exercised — the cardinality gate wins first.**
+**`4`. THEN BUILD** the `1b-S` source-admission rule + `1b-R` runtime admission walk against that pinned surface, **and RED-PROOF THE ENVIRONMENT: every affected fixture run WITH its declaration (named catcher fires) and WITHOUT it (validity precondition fires and the named catcher is EXPLICITLY NOT CREDITED).**
+**`5`. RUN the `52`-record manifest and PUBLISH the coverage number WITH its misses**, as a committed artifact.
+★★★★★ **SEPARABILITY UNCHANGED AND STILL THE CONDITION OF THIS AUTHORIZATION: the prototype MUST NOT READ `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` OR `ORACLE.json`, asserted BY MEASUREMENT in the results artifact.**
+**PRE-REGISTERED DECISION RULE — `R-541 §6a` STANDS UNCHANGED AND IS NOT RESTATABLE BY THE DOER:** success = every subcase attributable to its NAMED catcher **or** an HONEST NAMED MISS. **A first-run `52/52` is a RED FLAG to audit, not a triumph.**
+**SCOPE:** as `R-541 §6c`, plus the new pinned-compiler-surface files. **FIRST OBSERVABLE:** the committed `tsconfig` + ambient declaration surface + its hash, **~20–30 min.** **START-RECEIPT REQUIRED.** **HONEST-PARTIAL:** a spelling or symbol class the pinned surface cannot express → **NAME IT AND LEAVE IT OPEN.**
+
+### §5a — ARCHITECTURE INVARIANTS TOUCHED
+**Invariant 1 untouched** — compiler correctness and strategy profitability stay separate. **No runtime, trading or capital behaviour is authorized.** Build-time (`1b-S`) and runtime (`1b-R`) stay distinct; nothing here lets an AST result certify a runtime property.
+
+### 🛑 §6 — STOP CONDITIONS (`R-541 §7` carried, three ADDED)
+All of `R-541 §7`, plus: ★★★★★ **A fixture admitted on an ambient type the pinned surface does not supply → STOP.** · ★★★★★ **A row credited to its named catcher when a competing owner also fired, or when the competing owner's silence was not asserted → STOP.** · ★★★ **The build proceeding before the compiler surface is committed and hashed → STOP.**
+
+### ⚠️ §7 — FAILED / UNPROVEN, CARRIED
+`G-2`/`G-3`/`G-4`/`G-5` open · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED` · Surface `B` UNOWNED · Phase-1 profile correctly REFUSED · `P1/P2` `F-1` OPEN and untouched · **no mutation has yet run against any gate.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT.` The fix for a missed input is a MONITOR, not more resolve.**
+★★★★★ **`VALIDITY IS A PROPERTY OF (SOURCE, COMPILER ENVIRONMENT); DIAGNOSTIC OWNERSHIP IS A PROPERTY OF (SYNTAX NODE, RULE PRECEDENCE). SOURCE TEXT ALONE DEFINES NEITHER.`** (external read, adopted on merit)
+★★★★★ **`A REVIEW THAT DEMANDS A RED-PROOF HAS DEMANDED A RUNNER.`**
+★★★ **`NEVER INFER A SEAT'S DEATH FROM AN EMPTY PROCESS LIST.`**
+
+---
+
+## ⚠️ R-541 — **ANNOTATED BY `R-542`: ISSUED WITHOUT CONSUMING THE GPT EXTERNAL READ `94d27b16` (landed 9s earlier). THE PIVOT STANDS; `§6` ITEMS `1`–`3` ARE SUPERSEDED BY `R-542 §5`.**
+
 ## R-541 · 2026-08-02 · ✅★★★★★ **AR-587 DELIVERED FIVE OF FIVE AND MY INDEPENDENT RE-PARSE CORROBORATES IT.** 🛑★★★★★ **AND THE GRADE THIS DESK DISPATCHED HAS LANDED: `BAND 5`, **CAPPED BY ARTIFACT CLASS, NOT BY EFFORT** — AND ITS `CRITICAL` (`G-1`) **I REPRODUCED BY EXECUTION HERE AND MEASURED STILL OPEN AT `HEAD`, TWO FULL ROUNDS AFTER IT WAS FOUND.** ⚠️★★★★★ **THE PROSE-REVISION LANE IS CLOSED. `R-540 §9` MINTED *"WHEN I ORDER A REMOVAL I MUST NAME WHAT REPLACES IT"* AND THE SIXTH CONSECUTIVE ONE-LEVEL-SHORT RULING WOULD BE A NINTH PROSE ROUND. ✅ **PIVOT: BUILD THE EXECUTABLE PROTOTYPE.**
 
 **RULING ID:** R-541 · **TASK ID:** AR-587 · **DECISION: APPROVE (delivery) + PIVOT (lane change).**
