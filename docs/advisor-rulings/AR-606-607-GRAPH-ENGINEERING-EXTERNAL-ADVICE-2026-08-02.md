@@ -1,6 +1,6 @@
 # AR-606 / AR-607 external GPT review and V4 graph correction — 2026-08-02
 
-**Objects read:** campaign `bfb54ede` (AR-607 plus its pin bump), `AR-606`, and ruling `R-569`.  
+**Objects read:** campaign `bfb54ede` (AR-607 plus its pin bump), `AR-606`, and ruling `R-569`.
 **External decision:** **AR-607 is a sound partial for item (5); keep the worker serial order. Adopt graph engineering as two independent lanes, not as a three-worker repair diamond.**
 
 This document is external advice only. It is neither a campaign ruling nor an independent grade.
