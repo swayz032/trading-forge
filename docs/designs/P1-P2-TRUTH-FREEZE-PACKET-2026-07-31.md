@@ -25,6 +25,7 @@
 | item | value |
 |---|---|
 | source commit | `c304b098b156106a5a81b714c7a5a3ed166d68ef` |
+| **pinned tag — DO NOT DELETE OR RETARGET** | **`p1p2-frozen-source-universe-c304b098`** → peels to `c304b098b156106a5a81b714c7a5a3ed166d68ef` |
 | **row universe origin** | **PINNED SOURCE FIXTURE SPECS — `fixture filename × spec.entry_conditions[].id`** |
 | oracle path (compared, never authoritative for membership) | `ci/fixtures/spec-binding-parity-expanded/ORACLE.json` |
 | oracle blob sha1 | `f57a9d005fb8e43b4772dac9f32cc94894c40fe1` |
@@ -158,30 +159,91 @@ byte-identical across regeneration: YES
 ```
 LEDGER INTEGRITY [clean control]: PASS (301 cells, 0 checks failed)
   - MISSING CELL IDS (1): ['00-control-shipped.spec.json::bias::reason_excludes']
-LEDGER INTEGRITY [MUTANT: 1 cell deleted (+repaired)]: FAIL (300 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 85aece6e929f, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
+LEDGER INTEGRITY [MUTANT: 1 cell deleted (+repaired)]: FAIL (300 cells, 3 checks failed)
   - MISSING CELL IDS (7): ['00-control-shipped.spec.json::bias::approximation', '00-control-shipped.spec.json::bias::bindable']
   - ROWS ABSENT FROM LEDGER (1): ['00-control-shipped.spec.json::bias']
-LEDGER INTEGRITY [MUTANT: whole ROW + 7 cells (+repaired)]: FAIL (294 cells, 2 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 8480252234d5, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.row_universe_sha256
+LEDGER INTEGRITY [MUTANT: whole ROW + 7 cells (+repaired)]: FAIL (294 cells, 5 checks failed)
   - MISSING CELL IDS (43): ['00-control-shipped.spec.json::bias::bindable', '00-control-shipped.spec.json::confirmation::bindable']
   - AXES ABSENT FROM LEDGER: ['bindable']
-LEDGER INTEGRITY [MUTANT: whole AXIS + cells (+repaired)]: FAIL (258 cells, 2 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 226945854d8d, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
+LEDGER INTEGRITY [MUTANT: whole AXIS + cells (+repaired)]: FAIL (258 cells, 4 checks failed)
   - UNKNOWN CELL IDS (1): ['99-ghost.spec.json::ghost::bindable']
-LEDGER INTEGRITY [MUTANT: unknown ROW added (+repaired)]: FAIL (302 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 6832aa2a2d95, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.row_universe_sha256
+  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
+LEDGER INTEGRITY [MUTANT: unknown ROW added (+repaired)]: FAIL (302 cells, 4 checks failed)
   - DUPLICATE CELL IDS (1): ['00-control-shipped.spec.json::bias::approximation']
-LEDGER INTEGRITY [MUTANT: cell duplicated (+repaired)]: FAIL (302 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published e188b04b9c31, expected e2d0cd77304d)
+  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
+LEDGER INTEGRITY [MUTANT: cell duplicated (+repaired)]: FAIL (302 cells, 3 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::bias::approximation.classification: 'ASSERTED' != expected 'UNADJUDICATED'
-LEDGER INTEGRITY [MUTANT: UNADJUDICATED->ASSERTED]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c3a574858314, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: UNADJUDICATED->ASSERTED]: FAIL (301 cells, 2 checks failed)
   - CELL CONTENT FORGED 40-overrefusal-boundary.spec.json::bias_overnight::approximation.classification: 'ASSERTED' != expected 'NOT-APPLICABLE'
-LEDGER INTEGRITY [MUTANT: NOT-APPLICABLE->ASSERTED]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 6d927a8f2bad, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: NOT-APPLICABLE->ASSERTED]: FAIL (301 cells, 2 checks failed)
   - CELL CONTENT FORGED 10-lunch-orphan.spec.json::enter::reason_excludes.basis: 'fixture-declared-id' != expected 'UNDECLARED'
-LEDGER INTEGRITY [MUTANT: forged basis]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 4f7c724fcfdd, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: forged basis]: FAIL (301 cells, 2 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::london::approximation.value: None != expected False
-LEDGER INTEGRITY [MUTANT: nulled asserted value]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 160a3e33cc39, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: nulled asserted value]: FAIL (301 cells, 2 checks failed)
   - CELL CONTENT FORGED 00-control-shipped.spec.json::bias::approximation.declared_reason: None != expected '13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) � authority section 6 leaves non-session families and invalidations unadjudicated.'
-LEDGER INTEGRITY [MUTANT: removed declaration reason]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published d082f45e9116, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: removed declaration reason]: FAIL (301 cells, 2 checks failed)
   - CELL CONTENT FORGED 40-overrefusal-boundary.spec.json::bias_overnight::primitive_null.basis: 'row-declared-exact' != expected "row-declared-alias (declared as 'primitive')"
-LEDGER INTEGRITY [MUTANT: erased alias disclosure]: FAIL (301 cells, 1 checks failed)
-ALL CASES DISCRIMINATE: True  (clean=PASS, 11/11 mutants caught)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 34c8d644c4c8, expected e2d0cd77304d)
+LEDGER INTEGRITY [MUTANT: erased alias disclosure]: FAIL (301 cells, 2 checks failed)
+LEDGER INTEGRITY [NOOP: clone]: PASS (301 cells, 0 checks failed)
+LEDGER INTEGRITY [NOOP: clone + reseal]: PASS (301 cells, 0 checks failed)
+LEDGER INTEGRITY [NOOP: cells reversed (order is not content)]: PASS (301 cells, 0 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published e3ddd2890b33, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: unknown keys added]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published d48d000ddb4b, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: value:null added to UNADJUDICATED]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c4e3d156b77e, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: axis field forged]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 03dc797fd309, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: fixture field forged]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 4aa3d8ec898c, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: cell: condition_id forged]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 2f2781980312, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: UNDECLARED 43 -> 0]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published b8211a49ce1f, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: counts_by_classification -> {ASSERTED:301}]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published a695685077c8, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: rows_declared_absent 13 -> 0]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c019c87ce14d, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: row_count 43 -> 30]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published cb7c960f4626, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: cell counts 301 -> 210]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published c912736d2b7d, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: authority_sha256_measured forged, match left True]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published aa9bc57b7985, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: manifest: present_expectation_count forged]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 0749da2070b8, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: census: alias_joined_cells emptied (P-F2 erased)]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 9a055540c7cf, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: census: unknown_row_keys fabricated]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.row_universe_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: row_universe_sha256 -> zeroes]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.cell_id_set_sha256
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: cell_id_set_sha256 -> zeroes]: FAIL (301 cells, 1 checks failed)
+  - DIGEST FIELD FORGED: digests.digest_definition
+LEDGER INTEGRITY [ESCAPE-MUTANT: digests: digest_definition prose rewritten]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published 702fd90a14a4, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame DELETED]: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published a36230b66653, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _frame -> 'COMPLETE OVER EVERY EXPECTATION.']: FAIL (301 cells, 1 checks failed)
+  - CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE (published ca1a98d6ee1c, expected e2d0cd77304d)
+LEDGER INTEGRITY [ESCAPE-MUTANT: frame: _classification_enum widened with DESK-VERIFIED]: FAIL (301 cells, 1 checks failed)
+clean control: PASS | noop controls GREEN: 3/3
+ALL CASES DISCRIMINATE: True  (31/31 mutants caught)
 verifier exit status: 0
 ```
 ★★★★★ **THE MUTANTS ARE REPAIRED ON PURPOSE. A forger who deletes a row also fixes `row_count`, `counts_by_*` and every digest — and `v1`'s verifier, which read its expected product from the ledger's own `row_ids` and `axes`, would have called that document `PASS`.** ✅ **`v2` rebuilds the row universe from the PINNED SOURCE SPECS and the axis contract from its own constant, so a self-consistent forgery still goes RED.** ★★★ **The clean control is what makes those RED results mean anything.**
@@ -518,9 +580,33 @@ def parse_reject_dups(text):
 
 
 def canon_sha(doc):
+    """Canonical digest over everything EXCEPT the `digests` object.
+
+    `cells` is sorted by cell_id first, so ARRAY ORDER IS NOT TREATED AS CONTENT:
+    two documents differing only in cell order misrepresent nothing, and a guard
+    that reddens on them is a false positive that teaches readers to ignore it.
+    For the pinned artifact the generator already emits sorted cells, so this is
+    a NO-OP there and the published digest value is unchanged [MEASURED].
+    """
     d = {k: v for k, v in doc.items() if k != "digests"}
+    if isinstance(d.get("cells"), list):
+        # sorted by cell_id — the SAME key the generator emits in, so for the
+        # pinned artifact this reproduces its exact serialization byte-for-byte.
+        d["cells"] = sorted(d["cells"], key=lambda c: c.get("cell_id", ""))
     return hashlib.sha256(json.dumps(d, sort_keys=True, ensure_ascii=True,
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def reseal(doc):
+    """What a forger actually does: re-seal the canonical digest and NOTHING else.
+
+    `repair()` recomputes counts FROM the cells, which would UNDO a manifest
+    forgery — using it for manifest mutants tests nothing. Caught here by running
+    the battery and finding six 'escapes' that were my own harness erasing the
+    mutation. `AUDIT THE INSTRUMENT BEFORE BELIEVING IT.`
+    """
+    doc["digests"]["canonical_document_sha256"] = canon_sha(doc)
+    return doc
 
 
 def check(doc, label, dups=()):
@@ -564,9 +650,23 @@ def check(doc, label, dups=()):
                             % (c["cell_id"], f, c.get(f), e.get(f)))
                 break
 
+    # --- DIGEST GUARD, BOTH DIRECTIONS. One alone closes nothing. ---
+    # (1) SELF-CONSISTENCY catches a forger who edits and does NOT reseal.
+    # (2) EXPECTED-VALUE catches a forger who edits AND reseals. `exp` is derived
+    #     from the pinned sources, so it is not the forged document's own authority.
+    #     Comparison (1) by itself is self-referential and closes nothing.
     got = doc.get("digests", {}).get("canonical_document_sha256")
     if got != canon_sha(doc):
-        fail.append("CANONICAL DOCUMENT DIGEST MISMATCH (published %s)" % str(got)[:12])
+        fail.append("CANONICAL DIGEST NOT SELF-CONSISTENT (published %s)" % str(got)[:12])
+    if got != exp["digests"]["canonical_document_sha256"]:
+        fail.append("CANONICAL DIGEST != INDEPENDENTLY REGENERATED EXPECTED VALUE "
+                    "(published %s, expected %s)"
+                    % (str(got)[:12], exp["digests"]["canonical_document_sha256"][:12]))
+    # (3) The canonicalization EXCLUDES the `digests` object, so these fields are
+    #     unreachable by (1) and (2) and need their own comparison.
+    for f in ("row_universe_sha256", "cell_id_set_sha256", "digest_definition"):
+        if doc.get("digests", {}).get(f) != exp["digests"][f]:
+            fail.append("DIGEST FIELD FORGED: digests.%s" % f)
 
     bad = sorted({c["classification"] for c in doc.get("cells", [])}
                  - set(doc.get("_classification_enum", [])))
@@ -657,14 +757,91 @@ def main():
         m = clone(doc); m["cells"][idx].update(patch)
         results.append((label, check(repair(m), "MUTANT: " + label)))
 
+    # --- NOOP CONTROLS: must stay GREEN, or the guard is merely "always red" ---
+    noops = []
+    noops.append(("noop: clone", check(clone(doc), "NOOP: clone")))
+    noops.append(("noop: reseal", check(repair(clone(doc)), "NOOP: clone + reseal")))
+    m = clone(doc); m["cells"].reverse()
+    noops.append(("noop: cells reversed", check(m, "NOOP: cells reversed (order is not content)")))
+
+    # --- THE 20 OPERATORS THE RE-CENSUS (a9c0d557 F-1) FOUND ESCAPING ---
+    def cell_mut(pred, patch=None, add=None, drop=None):
+        m = clone(doc)
+        i = next(j for j, c in enumerate(m["cells"]) if pred(c))
+        if patch:
+            m["cells"][i].update(patch)
+        if add:
+            m["cells"][i].update(add)
+        if drop:
+            m["cells"][i].pop(drop, None)
+        return m
+
+    def top(path, value, delete=False):
+        m = clone(doc)
+        node = m
+        for k in path[:-1]:
+            node = node[k]
+        if delete:
+            node.pop(path[-1], None)
+        else:
+            node[path[-1]] = value
+        return m
+
+    ASSERTED = lambda c: c["classification"] == "ASSERTED"
+    UNADJ = lambda c: c["classification"] == "UNADJUDICATED"
+    escapes = [
+        ("cell: unknown keys added", cell_mut(ASSERTED, add={"desk_verified": True,
+                                                            "reviewed_by": "nobody"})),
+        ("cell: value:null added to UNADJUDICATED", cell_mut(UNADJ, add={"value": None})),
+        ("cell: axis field forged", cell_mut(ASSERTED, patch={"axis": "bindable"})),
+        ("cell: fixture field forged", cell_mut(ASSERTED, patch={"fixture": "99-ghost.spec.json"})),
+        ("cell: condition_id forged", cell_mut(ASSERTED, patch={"condition_id": "ghost"})),
+        ("manifest: UNDECLARED 43 -> 0",
+         top(["P2_total_membership", "counts_by_basis", "UNDECLARED"], 0)),
+        ("manifest: counts_by_classification -> {ASSERTED:301}",
+         top(["P2_total_membership", "counts_by_classification"], {"ASSERTED": 301})),
+        ("manifest: rows_declared_absent 13 -> 0",
+         top(["P1_observed_baseline", "rows_declared_absent_from_oracle"], 0)),
+        ("manifest: row_count 43 -> 30", top(["P1_observed_baseline", "row_count"], 30)),
+        ("manifest: cell counts 301 -> 210",
+         top(["P2_total_membership", "actual_cell_count"], 210)),
+        ("manifest: authority_sha256_measured forged, match left True",
+         top(["P1_observed_baseline", "authority_sha256_measured"], "0" * 64)),
+        ("manifest: present_expectation_count forged",
+         top(["P1_observed_baseline", "present_expectation_count"], 301)),
+        ("census: alias_joined_cells emptied (P-F2 erased)",
+         top(["integrity_census", "alias_joined_cells"], [])),
+        ("census: unknown_row_keys fabricated",
+         top(["integrity_census", "unknown_row_keys"], ["fake::row::key"])),
+        ("digests: row_universe_sha256 -> zeroes",
+         top(["digests", "row_universe_sha256"], "0" * 64)),
+        ("digests: cell_id_set_sha256 -> zeroes",
+         top(["digests", "cell_id_set_sha256"], "0" * 64)),
+        ("digests: digest_definition prose rewritten",
+         top(["digests", "digest_definition"], "whatever the publisher says it is")),
+        ("frame: _frame DELETED", top(["_frame"], None, delete=True)),
+        ("frame: _frame -> 'COMPLETE OVER EVERY EXPECTATION.'",
+         top(["_frame"], "COMPLETE OVER EVERY EXPECTATION.")),
+        ("frame: _classification_enum widened with DESK-VERIFIED",
+         top(["_classification_enum"], ["ASSERTED", "NOT-APPLICABLE", "UNADJUDICATED",
+                                        "DESK-VERIFIED"])),
+    ]
+    for name, m in escapes:
+        results.append(("escape: " + name, check(reseal(m), "ESCAPE-MUTANT: " + name)))
+
     clean_ok = results[0][1]
+    noop_escaped = [n for n, ok in noops if not ok]
     mutants = results[1:]
     caught = [n for n, ok in mutants if not ok]
     escaped = [n for n, ok in mutants if ok]
-    print("ALL CASES DISCRIMINATE: %s  (clean=PASS, %d/%d mutants caught%s)"
-          % (clean_ok and not escaped, len(caught), len(mutants),
+    ok_all = clean_ok and not escaped and not noop_escaped
+    print("clean control: %s | noop controls GREEN: %d/%d%s"
+          % ("PASS" if clean_ok else "FAIL", len(noops) - len(noop_escaped), len(noops),
+             "" if not noop_escaped else "  REGRESSED: %s" % noop_escaped))
+    print("ALL CASES DISCRIMINATE: %s  (%d/%d mutants caught%s)"
+          % (ok_all, len(caught), len(mutants),
              "" if not escaped else ", ESCAPED: %s" % escaped))
-    return 0 if (clean_ok and not escaped) else 1
+    return 0 if ok_all else 1
 
 
 if __name__ == "__main__":
