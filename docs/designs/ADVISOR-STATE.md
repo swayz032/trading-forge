@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3523` at THIS commit, 2026-08-02 03:53 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3527` at THIS commit, 2026-08-02 03:55 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3523` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3527` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -91,7 +91,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `03:27`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-547` (commit `ba73a03f`). Newest AR: `AR-590` (`0df28dfd`, `03:30:16`) — **RULED by `R-546`.** Nothing unruled.**
+**Ruling ledger at `R-547` (commit `ba73a03f`). Newest AR: 🛑 **`AR-591` (`03:54`) — UNRULED. `R-548` IS OWED.** (`AR-590` ruled by `R-546`.)**
+🛑★★★★★ **`AR-591` — ALL NINE DELIVERED. DO NOT RE-DERIVE THIS; VERIFY IT.** `[RELAYED — the desk has NOT re-executed it]` **`44 / 52` LIKE-FOR-LIKE** over `AR-589`'s original `52` ids with `missing_ids: []` as the join's own witness · expanded corpus `50 / 59` published SEPARATELY because the corpus grew `52`→`59` and *"the raw ratio is not comparable"* · a TRUE twin: one byte-identical source `ADMITTED` as `.mts`, `REJECTED` as `.cts` by the module-system catcher ALONE · runner is now a GATE, `11/11` forbidden classes with a demonstrated red path and the control green · `green_admitted 6/6`, `getter_invocations 0`, `failed_wrong_catcher 0`, `failed_ownership 0` · **two defects the worker introduced, measured and reported itself, one caught by its own red-proof.**
+✅★★★ **IT INDEPENDENTLY REPRODUCED `R-546 §1`:** `41` source fixtures, `41` TYPE-INVALID, `0` VALID before repair. **Two seats, two instruments, same finding.**
+🛑★★★★★ **FIRST THING THE NEXT SEAT MUST CHECK, AND IT IS NOT YET MEASURED: `AR-591` DELIVERS THE NINE — IT IS `[UNVERIFIED]` WHETHER IT CARRIES `R-546 §5`'s ITEMS `10`–`13` OR THE SIX-POPULATION PARTITION.** ⚠️ **Its `miss_type_invalid: 5` is the OLD two-way classification, which suggests `R-546` landed (`03:47`) too late for this delivery (`03:54`) — `[HYPOTHESIS, UNDISCRIMINATED. Do not credit and do not convict without opening the artifact.]` **The type-space/value-space property (`§5.10`) is the one that decides whether `44/52` is admissible at all.**
+🛑★★★★★ **THE GRADE IS OWED AND NOT YET DISPATCHED** (`R-546 §8.2`): `accuracy-validator`, HUNT mode, durable COMMITTED receipt, briefed to DISPROVE `44/52` and to hunt `G-1`-species population blindness. ⚠️ **This seat did not spawn it — it is operating under a harness constraint against unprompted subagent dispatch. `THE OBLIGATION IS UNCHANGED AND IT IS THE NEXT SEAT'S FIRST ACT.` `doer != grader` binds.**
 **Advisor seat:** FRESH via `/clear`, seated `03:2x` inside `claude.exe 13916`. **Worker seat: FRESH, ALIVE, WORKING — `AR-590` START-RECEIPT landed `03:29`.**
 ✅★★★★★ **AND THE 41-MINUTE SILENCE RESOLVED CORRECTLY BECAUSE IT WAS REPORTED RATHER THAN DIAGNOSED.** `[MEASURED HERE, 03:27:38]` `AGENT-REPORTS.md` mtime `02:47:33` · prototype dir newest `02:46:50` · no worker commit after `8297ebbe` — against `R-543 §4` (`02:51`) and `R-544 §3` (`03:06`), both `START-RECEIPT REQUIRED`, first observable `~25–45 min`. **THE SILENCE WAS REAL AND ITS CAUSE WAS A SEAT ROLL — `AR-590 §SEAT` states it in the worker's own words: the seat holding `AR-587`–`AR-589` (`claude.exe 26204`) is GONE and its context with it.** ★★★★★ **A DESK THAT HAD DECLARED IT DEAD WOULD HAVE BEEN RIGHT BY ACCIDENT AND WRONG BY METHOD — `:96` and `:253` both convict that inference. `MEASURE THE SILENCE, NAME ITS DURATION, LET THE SEAT ITSELF RESOLVE IT.`** ⚠️ **The tree-wide `03:18:39` mtimes are PRE-COMMIT HOOK stamping — read the report file and the git log ONLY.**
 ✅★★★★★ **`AR-590` RULED BY `R-546` — AND THE DESK WAITED FOR THE GPT READ THIS TIME** (`AR-590` `03:29` → read `bac6f50b` `03:41` → ruling after it). **`R-544 §4` obeyed, not merely monitored.**
