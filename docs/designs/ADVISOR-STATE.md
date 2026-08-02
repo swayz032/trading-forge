@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3302` at THIS commit, 2026-08-01 20:50 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3308` at THIS commit, 2026-08-01 21:09 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3302` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3308` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -85,7 +85,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **RE-CENSUS: `CLAIM NOT REFUTED — BAND 7 VERIFIED. PRIOR `FAIL` LIFTED.`** (receipt `docs/designs/GRADE-P1-P2-RECENSUS-2026-08-01.md`, `a9c0d557`, PUBLISHED). **`R-524` OWED, HELD for the next external read.** Worker STANDING BY.
+## ✅★★★★★ SEAT — **`R-524` LANDED `f91e57cf`, PUBLISHED (2026-08-01 21:08). **`P1` CLOSED · `P2` CLOSED · BAND 7 VERIFIED · PRIOR `FAIL` LIFTED.** ★★★★★ **THESE ARE THE FIRST TWO THINGS IN THIS ARC TO *CLOSE* RATHER THAN BE RETIRED — six `P0` attempts were retired before them.**
+★★★★★ **`THE DENOMINATOR IS NOW INDEPENDENT OF THE ARTIFACT IT JUDGES.` An adversary freely editing BOTH `ORACLE.json` and the ledger cannot shrink the universe — proved by intercepting all `17` reads (`16` pinned objects, `1` mutable input, tamper-tested inert on membership).**
+⚠★★★ **WORKER AUTHORIZED (R-524 §3): a FOCUSED TWO-LINE VERIFIER CLOSEOUT — compare the published `canonical_document_sha256` against the INDEPENDENTLY regenerated `exp` digest (never a re-canonicalisation of the possibly-forged ledger), plus the canonicalization-excluded fields `row_universe_sha256` / `cell_id_set_sha256`. **NOT a redesign, NOT another census. No cell, count or frame meaning may move.**
+⚠★★★★★ **WHY IT STILL MATTERS AT BAND 7: the guard protects `cells[]` and NOT the human-facing summary — `UNDECLARED 43 → 0` and `row_count 43 → 30` currently forge clean. **THE `43` IS THE ARTIFACT'S ENTIRE CLAIM TO HONESTY AND IT WAS THE ONE NUMBER OUTSIDE THE GUARD.** `A GUARD THAT PROTECTS THE DATA AND NOT THE SUMMARY PROTECTS THE PART NOBODY READS.`**
+🔒 **TAG `p1p2-frozen-source-universe-c304b098` — accepted by the read as the correct durability repair. Peeled object must remain `c304b098b156106a5a81b714c7a5a3ed166d68ef`. **DO NOT DELETE OR RETARGET while `P1`/`P2` or any consumer is live.**
+✅ **AFTER THE CLOSEOUT: `P0-vNext` DESIGN authorized; IMPLEMENTATION still blocked until that design is externally read. It must CONSUME CELLS, NOT TRUST CAPTIONS — correctness only on `ASSERTED`, no predicate on `NOT-APPLICABLE`, and any depended-on `UNADJUDICATED` emits a named `INCOMPLETE_AUTHORITY` and FAILS CLOSED.**
 ✅★★★★★ **THE CENTRAL QUESTION IS ANSWERED IN THE ARTIFACT'S FAVOUR: an adversary who freely edits `ORACLE.json` AND the ledger **CANNOT MOVE THE UNIVERSE.** Proved by intercepting all `17` reads the derivation performs — `16` PINNED git objects at `c304b098`, exactly `1` mutable input (the authority doc), and a tamper test showing that input cannot move `row_ids`, the cell-id set, or any `classification`.** ✅ **`43/301` · `140-9-152` · `UNDECLARED` still `43` AND THE SAME SET (join key `cell_id`) · byte-identical regeneration · all `210` preserved with the `9` citation fills the only authorized change · the `7` frozen axes EQUAL the data-derived set · out-of-frame list exhaustive.**
 ⚠★★★★★ **`F-1` HIGH — THE GUARD PROTECTS THE DATA AND NOT THE CAPTION: `check()` validates `cells[]` and **NO OTHER REGION**. `20` of `28` novel operators pass (with `5` NOOP controls green first), including **DELETING `_frame`**, rewriting it into an unbounded completeness claim, and **FORGING `counts_by_basis.UNDECLARED` `43 → 0`.** ★★★★★ **THE `43` ARE THE POINT OF THIS ARTIFACT AND THE GUARD DOES NOT PROTECT THE NUMBER A HUMAN READS. `CAPTION IS A CLAIM` — and here the data is guarded while the claim about it is not.** ✅ **ONE LINE FIXES `18` OF `20`: compare `exp["digests"]`, which `check()` ALREADY COMPUTES AND DISCARDS.**
 ⚠ **`F-2` MED — the canonical-digest check is SELF-REFERENTIAL (`canon_sha(doc)` re-canonicalises the ledger itself), so it is inert against the re-sealing forger the packet names. `IT IS THE PRIOR CENSUS'S OWN REMEDY IN ITS WEAKEST FORM` — self-authorization, a fourth time, now inside the digest check.** ⚠ **`F-3` MED: `row_universe_sha256` / `cell_id_set_sha256` sit outside BOTH the canonical hash and every check. `F-5` MED-LOW: authority read unpinned from the live tree — cannot move membership but DOES move the canonical digest.**
@@ -2862,9 +2867,10 @@ IT CITES.**
 > ★★★★★ **`A SPARSE OBJECT CANNOT PROVE THAT AN OMITTED TRUTH WAS DELETED.`**
 > ★★★ **`OBSERVED BASELINE AND INTENDED TRUTH ARE DIFFERENT OBJECTS.`**
 
-1. **`P1` — FREEZE THE OBSERVED BASELINE.** *"What exists now?"* — commit + blob identities, `12` fixtures, `30` rows, `140` present expectations, per-axis `29/29/26/26/22/4/4`, deterministic digest, duplicate/unresolved census. ⚠ **MUST NOT convert present-presence into intended truth.**
-2. **`P2` — FREEZE THE TOTAL TYPED TRUTH MEMBERSHIP.** The complete Cartesian set: **`30` rows × `7` axes = `210` CELLS**, each `ASSERTED` / `NOT-APPLICABLE` / `UNADJUDICATED`. `140` present ⇒ **`70` absent cells each need an EXPLICIT classification.** ⚠★★★★★ **IF THE SOURCE AUTHORITY CANNOT DETERMINE A CELL, RECORD `UNADJUDICATED` — DO NOT GUESS TO COMPLETE THE MATRIX. A guessed cell converts an honest absence into a false assertion and is STRICTLY WORSE than the sparse object.**
-3. **`P0-vNext` — DERIVED MECHANICALLY from `P1`/`P2` as a THIN CONSUMER**, checking two DISTINCT claims: **agreement** (TS ↔ Python projections agree) and **correctness** (both satisfy the frozen `P2` ledger). ⚠ **MUST NOT infer requiredness from the sparse legacy `ORACLE.json`.**
+1. ✅ **`P1` — CLOSED (R-524).** Observed baseline + the independently frozen **`43`-row universe**, derived from the twelve pinned source fixture specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`).
+2. ✅ **`P2` — CLOSED (R-524), BAND 7 VERIFIED.** The **`301`-cell** condition × seven-axis truth ledger: `ASSERTED 140` · `NOT-APPLICABLE 9` · `UNADJUDICATED 152`, of which **`UNDECLARED 43`** — declared unknowns, never guessed. ⚠ **SCOPED: complete over the pinned ENTRY-CONDITION × SEVEN-AXIS frame ONLY. `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` are OUT OF FRAME, PRESERVED, and are a named `P3`/downstream obligation.**
+2a. ⚠ **IN FLIGHT — the two-line verifier closeout (R-524 §3)**, protecting the manifest/summary region. `P0-vNext` design unlocks when it passes and is published.
+3. **`P0-vNext` — DESIGN authorized after 2a; IMPLEMENTATION blocked until the design is externally read.** A THIN CONSUMER: reconstruct membership independently · TS↔Python agreement on every projected cell · correctness ONLY on `ASSERTED` · no predicate for `NOT-APPLICABLE` · **`UNADJUDICATED` → named `INCOMPLETE_AUTHORITY`, FAIL CLOSED, never a correctness green** · recompute summary counts FROM CELLS and check them against the protected manifest.
 4. **`P3`** — producer-proof lane, runtime integration lane, transfer receipt.
 5. **Deterministic Gate B** — immutable source record, typed projections, exact-slice provenance, protected sentinel.
 6. **Source-keyed control/treatment sweep** — every consumer transition and incidence; reject proxy improvements.
