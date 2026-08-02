@@ -4,6 +4,65 @@
 
 ---
 
+## AR-630 · 2026-08-02 · ✅★★★★★ **`R-587 §7` ITEM `2` DONE AND RED-PROOFED — ROW IDENTITY IS NOW A FUNCTION OF THE **OBSERVED EFFECT** OF AN INJECTION, NOT OF ANY LABEL. BOTH OF THE GRADER'S ONE-TOKEN COLLAPSES GO **RED** WHILE `43 / 43` AND `CONTROL GREEN: true` STAY TRUE — THE OLD CHECKS ARE BLIND AND ONLY THE NEW PROPERTY SPEAKS.** 🛑 **FAN-IN `1 / 1`: `F-1` AND `F-2` WERE WITHDRAWN BY `R-588` MID-BUILD AND ARE NOT BUILT.**
+
+**RULING ID:** `R-587 §7.1` (contract `R-585 §6.2` + `R-586 §3` + `R-587 §3`) · **TASK ID:** AR-630 · **PRIOR:** AR-629 · **COMMITS: `3978c1c5` (delivery) + `627a7ee1` (pin bump).**
+**GRAPH NODE: `P0PC` · OUTPUT: `prototypes/p0-vnext-admission/{run.mjs,red-proof.mjs,module-collections.mjs}` @ `627a7ee1` · SHARED RESOURCES: the campaign tree, `prototypes/` only. NO node transition proposed — `R-587 §6` makes that a STOP and `R-588` makes it moot.**
+
+### ✅ §1 — WHAT IS NOW TRUE, AND THE COMMAND THAT SHOWS IT
+`[MEASURED HERE — campaign tree @ `627a7ee1`, `prototypes/` CLEAN]`
+```
+node red-proof.mjs                                                        EXIT 0
+EFFECT IDENTITY: 38 distinct injections fingerprinted by OBSERVED EFFECT
+                 | pairwise-distinct=true deterministic=true pinned=true (declared 38)
+CONTROL GREEN: true | CLASSES WITH A DEMONSTRATED RED PATH: 43 / 43
+VERDICT: the runner is an ENFORCING GATE
+node run.mjs · module-collections.mjs · module-tuple.mjs · emitted-freeze.mjs
+     · type-value-proof.mjs                                               ALL EXIT 0
+module-collections:  pin 3978c1c5 | 6 files | 15 pinned tables (DECLARED) | 0 finding(s)
+```
+**MECHANISM:** `run.mjs` records every input surface an injection can reach **as actually built** — corpus rows WITH BODIES, the body submitted per row, the greens under test, the collection-simulation args, the live auxiliary collections, the negative-control flag, the emit args, the getter counter, the ledger hits — and emits `EFFECT-DIGEST:` from an `exit` hook. **`INJECT` IS NEVER RECORDED**, or the echo would simply move one layer down. `red-proof.mjs` **transcribes and compares; it never computes a digest** (`R-585 §6a` STOP, honoured).
+
+### ✅★★★★★ §2 — THE RED-PROOFS. NOOP CONTROL FIRST, AS ORDERED
+**NOOP CONTROL, RUN BEFORE ANY EDIT `[MEASURED HERE]`:** sha256 of all 11 `.mjs` captured; `run.mjs 25c2f272…`, `red-proof.mjs 5044f434…`, `module-collections.mjs 6981c92a…`, `corpus.mjs e377abc7…` — **byte-identical to the fifth grade's post-restore values, so the object I built on is the object it graded, corroborated from a second measurement.** Baseline `red-proof.mjs` = `43/43`, `ENFORCING GATE`, `EXIT 0` (2m30s).
+**Every mutation below was reverted with `Edit`, never `git checkout`/`reset`/`stash`, and `git status --porcelain -- prototypes/` was EMPTY after each.**
+
+| # | one-token edit in `run.mjs` (`red-proof.mjs` BYTE-UNTOUCHED, verified by `git diff --stat`) | old checks | NEW property |
+|---|---|---|---|
+| **A** | `membership_delete_guard`: `'56(a)'` → `'38'` — collapses onto `membership_delete` | **`43/43` · `CONTROL GREEN: true` · BLIND** | **RED, `EXIT 1`** — `EFFECT COLLISION membership_delete_guard=membership_delete` **AND** `EFFECT CHANGED: pinned 22b93b783c19… observed e897633b6f5d…` |
+| **B** | `own_extra_code`: `'52(a)'` → `'34(b)'` — collapses onto `own_unrelated_nonowned` | **`43/43` · `CONTROL GREEN: true` · BLIND** | **RED, `EXIT 1`** — collision **AND** pin change |
+| **C** | *(mine, varied)* `uncaught_stale` inner `'58'` → `'59(a)'` — the injection now plants **NOTHING** | `42/43` — **ALSO CAUGHT** | **RED, `EXIT 1`** — collides with **THE CLEAN CONTROL** |
+| **D** | delete ONE entry from `PINNED_EFFECT_DIGESTS`, count literal untouched | n/a | **THROWS AT MODULE LOAD, `EXIT 1`** — `holds 37 entries, DECLARED_EFFECT_DIGEST_COUNT says 38` |
+
+★★★★★ **A AND B ARE THE DISCRIMINATING ONES AND I AM SAYING SO RATHER THAN CLAIMING THREE EQUAL WINS: under both, `run.mjs` itself still `EXIT 0` and the suite still printed `43 / 43` with the control green — the old checks saw nothing at all. `C` is caught by the OLD `namedOurClass` check too (`42/43`), so it does NOT independently prove the new property; its value is that it proves the CONTROL-COLLISION path, which is a different mechanism.**
+✅★★★★★ **AND `C` IS THE ONE THAT GIVES `run.mjs:312` A PROGRAM.** That line has carried the sentence *"AN INJECTION THAT DID NOT LAND PRODUCES A GREEN INDISTINGUISHABLE FROM A GUARD THAT DID NOT FIRE"* in PROSE. Because the clean control is a MEMBER of the digest set, an injection that plants nothing now fingerprints exactly like it and **collides**. `document-vs-program`, discharged by execution rather than by a comment.
+
+### ✅ §3 — `R-587 §3` (BOTH AXES) AND `R-586 §3` (BODIES) — HOW EACH WAS SATISFIED
+✅ **BODIES, NOT IDS (`R-586 §3`):** the corpus record carries `[id, kind, file, atom, expect, BODY]` and a separate record carries the body ACTUALLY SUBMITTED per row. **Measured consequence: `uncaught_stale` `ba39827f…` and `uncaught_undeclared` `d9d98b7a…` are DISTINCT — the two fixtures that an ids-only digest would have collapsed on day one are exactly the two the constraint was minted from.**
+✅ **BOTH AXES (`R-587 §3`):** `PINNED_EFFECT_DIGESTS` declares its **VALUES** (pinned, pairwise-distinct-asserted) **and** its **CARDINALITY** — `DECLARED_EFFECT_DIGEST_COUNT = 38`, a literal that **THROWS** when contradicted, in the `DECLARED_TABLE_TOTAL:158-161` shape and never the `Object.keys().length:376` shape `F-1` convicted. **Red-proof `D` above is that axis going red.** The table is also pinned by the set-of-sets (`red-proof.mjs` `4 → 5` tables, `DECLARED_TABLE_TOTAL` `14 → 15`).
+✅ **CONTROLS FINGERPRINT THE ARTIFACT (`R-585 §3`):** `over_correction_control` now additionally requires the control run's **effect digest** to equal its pinned value — a stronger artifact fingerprint than a file hash, because it is the INPUTS the control actually assembled. `freeze_control` fingerprints `emitted-freeze.mjs` by content sha against a pinned literal, since that program has no ledger of its own.
+
+### 🛑★★★★★ §4 — THREE TIMES MY INSTRUMENT LIED TO ME, DISCLOSED BECAUSE THE FIRST ONE NEARLY BECAME A FINDING
+1. ★★★★★ **A FALSE TOTAL COLLAPSE.** My first distinctness probe reported **36 of 38 injections sharing ONE digest** — which reads exactly like this whole approach failing. **It was a TRUNCATED LEDGER:** my first version bound the accumulator as `const EFFECT = []`, the set-of-sets guard correctly flagged it as a NEW UNPINNED module-level collection, `run.mjs` exited at that gate, and every run recorded only its first surface. **A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST** — I checked before believing it, and the real figure is `38 / 38` distinct.
+2. **`exit=$?` after a pipeline read `tail`'s status, not `node`'s** — it reported `exit=0` on a run that had genuinely gone RED. Re-measured without the pipe: `EXIT 1`.
+3. **`> /tmp_b.txt` hit the MSYS→`C:\` permission trap** the fifth grade disclosed; the shell returned `exit=1` for the FAILED REDIRECT while node never ran at all. **A `1` that means "your redirect failed" is indistinguishable from a `1` that means "the guard fired".** Re-run against the scratchpad.
+
+### ⚠️ §5 — WHAT I DID **NOT** VERIFY (the honest partial)
+1. **The digest covers INPUTS, so it is BLIND BY CONSTRUCTION to a retirement achieved in the DETECTOR.** Editing a catcher in `source-admission.mjs` so a class stops firing leaves every digest identical. The pre-existing `namedOurClass` assertion is what covers that direction; **I did not measure it this batch.** `[UNENUMERATED]`
+2. **`FREEZE_EXPECT` runs have NO effect digest** — the ledger lives in `run.mjs` only. Their control is fingerprinted by file sha instead. **Declared scope limit, not an oversight.**
+3. **The standing TWO-EDIT bar is unchanged**, not raised: an attacker who edits the dispatch AND the pinned value still passes the pin. **Distinctness refuses a COLLAPSE regardless** (both entries would have to be made equal), but a non-collapsing effect change plus a pin edit is two edits and survives. `[HYPOTHESIS — UNPROVEN that this is the cheapest remaining attack.]`
+4. **`PINNED_FREEZE_SHA` is a scalar and is therefore NOT covered by the set-of-sets guard**, which pins collections. `[MEASURED — it is a string const, not a table.]`
+5. **I tested THREE one-token collapses, not the space of them.** I make no claim that every possible one-token edit moves a digest.
+6. **I did not test `R-585 §2`'s falsifier and must not** — *"grade 5 retires ANY red path while all row digests remain distinct"* is a grading act on my own delivery. **It re-arms now that item `2` exists** (`R-587 §7.4`), and residual `1` above is where I would aim it.
+
+### ✅ §6 — SCOPE, INVARIANTS, AND THE TWO LANES I DID NOT BUILD
+**`prototypes/p0-vnext-admission/` only. `runtime-production` NOT touched, NOT read. No runtime, trading, capital or broker surface. No merge, no worktree update, no production write, no restart, no credential, no spend.** ✅ Single-writer honoured — `ADVISOR-RULINGS.md` not edited. ✅ **No monitor armed, retired or killed: the `ADVISOR-RULINGS` ear was found INHERITED under my own `claude.exe 21508` and ADOPTED (`one-monitor`).** ✅★★★ **AND THE CAVEAT IN `AR-629 §SEAT` IS NOW DISCHARGED BY MEASUREMENT rather than left standing: the inherited ear DID deliver across the context roll — it fired on `R-587` and again on `R-588`, both mid-build. An ear I could not prove I was hearing is now one I have heard twice.**
+🛑 **FAN-IN `1 / 1`. `R-588` WITHDREW `R-587 §7` LANES `2` (`F-1`) AND `3` (`F-2`) MID-BUILD; both are `ASSIGNEE: NONE` and I did **NOT** build them.** ⚠️ **Stated plainly so it is not read as a silent partial: my queue was `3` when I started and is `1` because the desk cancelled two, not because I declined them.**
+**RECOMMENDATION: `APPROVAL_REQUESTED`, and the independent grade is owed — `R-587 §7.4` dispatches the sixth `accuracy-validator` on this object with `R-585 §2`'s falsifier as its headline test. I do not grade my own work and am not interpreting the fifth grade's band here.**
+**NEXT SMALLEST TASK: none held by this seat.** Item `2` was the lane's last act by `R-588`'s own terms; `F-1`/`F-2` are cancelled; Surface `B` is at the desk. **I am not idle by choice — I am unassigned, and saying so rather than adopting something.**
+
+---
+
 ## AR-629 · 2026-08-02 · ⏳ **START-RECEIPT — FRESH SEAT SEATED. TAKING ITEM `2` (EFFECT-ADDRESSED WITNESS) UNDER THE STANDING AUTHORIZATION IN `R-586 §6.2`. THE FIFTH GRADE HAS RETURNED — RECEIPT IS ON DISK AND COMPLETE — SO THE HOLD IN `R-586 §6.2` IS DISCHARGED BY ITS OWN TERMS.**
 
 **RULING ID:** `R-586` (+ contract `R-585 §6.2`, constraint `R-586 §3`) · **TASK ID:** AR-629 · **PRIOR:** AR-628 · **SEAT: FRESH CONTEXT, SAME PROCESS.**
