@@ -4,6 +4,54 @@
 
 ---
 
+## AR-572 · 2026-08-01 · **START-RECEIPT — R-531 §6 ACCEPTED. FIVE CORRECTIONS, ONE RECEIPT, DESIGN ONLY.** 🛑★★★★★ **AND THE DESK'S CONVICTION OF ITS OWN PRE-REGISTRATION LANDS ON ME IDENTICALLY: MY `49/49` SUITE WAS ALSO DERIVED FROM THE ORDER SHEET. IT PROVED I DID WHAT I WAS TOLD AND NEVER ASKED WHETHER THE RESULT CONTRADICTS ITSELF.**
+
+**RULING ID:** R-531 §6 · **TASK ID:** AR-572 · **PRIOR:** AR-571 · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+⚠️ **`ADVISOR-STATE.md` is no longer dirty — the advisor committed it since `AR-570`. Recorded because my last two baselines carried it.**
+
+### ✅★★★★★ §2 — `F-2` RE-MEASURED HERE, AND IT IS EXACTLY AS STATED
+`[MEASURED HERE, `c304b098`, counted programmatically — POSITIVE CONTROLS: a key that must be present `True`, a key that must not `False`]`
+```
+BINDING_KEY_MAP entries                        10   satisfies Record<keyof ConditionBinding, string>
+ConditionBinding fields (python dataclass)     10
+destination keys in the map                    10
+my frozen "closed destination wire schema"      5
+IN MAP BUT NOT IN MY SCHEMA   condition_id · executed · object · role · type   <-- 5 legitimate keys my
+                                                                                   schema would REJECT
+IN MY SCHEMA BUT NOT IN MAP   (none)
+```
+🛑★★★★★ **SO `AR-571 §3` CREATED AN UNIMPLEMENTABLE MIDDLE AND I DID NOT NOTICE: `projectExhaustively()` is COMPILE-TIME EXHAUSTIVE over ten raw fields, and I froze a five-key CLOSED destination schema beside it. Pass all ten and my schema rejects five legitimate destinations; pass five and the exhaustive check flags the other five as extra; pre-select five before the guard and the SELECTOR becomes a silent-drop surface the "exhaustive" check never sees.** ★★★ **I introduced a closed schema without joining it against the map it was supposed to close. `A CLOSED SCHEMA IS A CLAIM ABOUT A KEY SET, AND A KEY-SET CLAIM IS ONLY TRUE RELATIVE TO THE SET IT WAS JOINED AGAINST.`**
+⚠️★★★ **AND A SECOND DEFECT I FOUND WHILE MEASURING, NOT ORDERED BY THE RULING: `AR-571 §3` said *"exactly ONE is a real rename — `sessionZone`."* **OVER THE FULL MAP THERE ARE TWO: `conditionId → condition_id` AND `sessionZone → session_zone`.** My statement was true of the five axis-bearing fields and I wrote it as though it characterised the map. `A COUNT IS ONLY TRUE INSIDE THE POPULATION IT WAS TAKEN OVER, AND I OMITTED THE POPULATION.`**
+
+### 🛑★★★★★ §3 — `F-1` AND `F-3` ACCEPTED, BOTH MINE
+**`F-1` — THE COUPLING MOVED ONE FIELD TO THE LEFT.** I severed claim `A` from `cell.value` and left its verdict reading `cell.classification`: the presence matrix's *"UNLESS that exact cell is authority-classified `NOT-APPLICABLE`"* and §10 row `7`. ⚠️★★★★★ **`SEALED BEFORE THE LEDGER IS PARSED` AND `GREEN ONLY IF THE LEDGER SAYS NOT-APPLICABLE` CANNOT BOTH BE TRUE OF ONE CLAIM — and I wrote both, in the same document, in the same delivery.** ★★★ **Worse, the exception says *"that exact cell"* AFTER I had established that one projected `reason` feeds THREE ledger cells, so it is not even well-defined on the `215`-field frame it governs.**
+**`F-3` — I RETIRED A FALSE ABSOLUTE BY MINTING ANOTHER ONE.** `A CAPABILITY ARGUMENT CAN BE WRONG ABOUT THE MECHANISM; A DIGEST THAT DID NOT MOVE CANNOT` is mine, and it is false in the same way: **an unchanged digest proves invariance UNDER THE MUTATION RUN, over the exercised `43` rows — not unreachability.** A forbidden read of classification counts, ledger length, schema version, citations or scope digest survives it untouched, as does any branch those rows never reach. ★★★★★ **`R-530` convicted the desk's absolute; my replacement was a different absolute, which is this campaign's `my remedies land correct and one level short` law — and a third party caught it, not me.** ✅ **The mutation is KEPT; its universal quantifier is DELETED.**
+
+### 🛑★★★★★ §4 — THE COHERENCE GAP IS MINE TOO, AND I RAISE IT BEFORE STARTING
+**`R-531 §1` convicts the desk's four pre-registered checks: all passed, all true, all the wrong question.** ⚠️★★★★★ **MY `49/49` HAS THE IDENTICAL BLINDNESS AND I BUILT IT: every check maps to a numbered item on the order sheet. `CRITERIA DERIVED FROM THE INSTRUCTIONS CAN ONLY VERIFY OBEDIENCE.` Not one of my forty-nine asked whether §2's *"sealed before the ledger is parsed"* contradicts §2's own `NOT-APPLICABLE` exception — a contradiction that was already in the document while my suite printed green.**
+✅ **THEREFORE, ADDED THIS ROUND WITHOUT BEING ASKED: a CONTRADICTION PASS over claim `A` — enumerate every clause that makes a claim-`A` decision and assert that NONE of them names a ledger field (`classification`, `value`, `authority_citation`, `scope`, `basis`, `cell_id`). ★★★ **It is derived from the INVARIANT, not from the order sheet, which is the only kind of check that could have caught this.**
+
+### ⚠️ §5 — TWO THINGS RAISED BEFORE STARTING
+**(a) FAKE-EDGE TEST.** Item `5` genuinely consumes items `1`–`3`'s rows. Items `1`, `2`, `3`, `4` are independent in reasoning but write one file, so they run serially in this seat — a property of the file, not a defect in the ruling.
+**(b) NO METRIC MIX.** The read's seven acceptance criteria are all mechanical/structural — parses, set differences, key counts, byte-identity, a re-parsed count. **None requires ground truth.**
+⚠️ **The grade stays DEFERRED with the trigger re-armed to `R-531 §6` (`R-531 §5`). I am not asking for it; the trigger has not fired.**
+
+### §6 — FIRST OBSERVABLE + ETA
+**Items `1`+`2` — claim `A` severed from `NOT-APPLICABLE` entirely (all five wire keys ALWAYS emitted, JSON `null` carrying inapplicability) plus the classification-only mutation requiring byte-identical projection AND verdict — ~30–45 min from this receipt.**
+
+### §7 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · no ledger WRITE · no `ORACLE.json` · no WRITE to the Tier-A census · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · no `P3` · no Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · the blueprint addendum ONLY if Surface-`A` wording must change.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-571 · 2026-08-01 · ✅★★★★★ **R-530 §6 DELIVERED — ALL NINE OBSERVABLES, `49/49` CHECKS PASS INCLUDING A DISCRIMINATOR CONTROL ON THE ACCEPTANCE SUITE ITSELF. CLAIM `A`'s DENOMINATOR IS `215`, MY FALSE SLOGAN IS GONE, AND THE CATCHER I NAMED LAST DELIVERY IS REPLACED BY ONE THAT CAN ACTUALLY CATCH.**
 
 **RULING ID:** R-530 §6 · **TASK ID:** AR-571 · **PRIOR:** AR-570 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
