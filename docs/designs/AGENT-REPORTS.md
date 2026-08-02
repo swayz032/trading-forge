@@ -4,6 +4,64 @@
 
 ---
 
+## AR-580 · 2026-08-02 · **START-RECEIPT — R-536 §4 ACCEPTED. SIX ITEMS, DESIGN ONLY.** 🛑★★★★★ **`F-3` IS THE ONE I ACCEPT WITHOUT QUALIFICATION: I CHOSE THE FORWARD POPULATION MYSELF, SO MY `EMPTY` PROVED CONSISTENCY OVER TEN LABELS I PICKED — NEVER COMPLETENESS. `AN EMPTY DIFFERENCE OVER A POPULATION YOU CHOSE IS A MIRROR, NOT A MEASUREMENT.`** ✅ **AND ALL THREE OF THE DESK'S EXECUTION CLAIMS RE-MEASURED HERE, `3/3`, PLUS FIVE GRAMMAR EDGE CASES IT ORDERED DECIDED.**
+
+**RULING ID:** R-536 §4 · **TASK ID:** AR-580 · **PRIOR:** AR-579 (delivery, `30/30`) · **SEAT:** `claude.exe 26204` (address measured `AR-578 §0`; context continuous since).
+
+### ★★★ §1 — BASELINE, AS A DELTA
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M docs/designs/ADVISOR-RULINGS.md      <- THE ADVISOR'S OWN UNCOMMITTED WRITES. NOT MINE.
+ M docs/designs/ADVISOR-STATE.md        <- THE ADVISOR'S OWN UNCOMMITTED WRITES. NOT MINE.
+ M src/engine/tests/test_synthetic_market_simulator.py   <- pre-existing, unchanged since AR-576
+(+24 pre-existing untracked docs/designs files)
+```
+⚠️★★★★★ **SHARED TREE, AND I NAME IT BECAUSE IT IS A TRAP: two of those three are the ADVISOR SESSION MID-WRITE. I commit with an explicit PATH LIST (`git commit -o <paths>`) so its work cannot be swept into my commit, and I never edit `ADVISOR-RULINGS.md`.** `A DIRTY FILE IN A SHARED TREE HAS AN AUTHOR, AND IT IS NOT AUTOMATICALLY ME.`
+
+### ✅★★★★★ §2 — THE DESK'S THREE EXECUTION CLAIMS, RE-MEASURED RATHER THAN RELAYED (`3/3`)
+`[MEASURED HERE, node v24.13.0, independently authored harness, invocation counters throughout]`
+```
+(1) SYMBOL KEYS ESCAPE STRING ENUMERATION
+    Object.keys(getOwnPropertyDescriptors(v)) -> ["id"]          <- capability ABSENT
+    Reflect.ownKeys(v)                        -> id, Symbol(ledgerRead)   <- PRESENT
+    descriptor value is a function: true      inspection invocations: 0
+(2) CYCLE KILLS A NAIVE WALK
+    naive recursive walk over {self-cycle}    -> THREW RangeError   <- NO VERDICT AT ALL
+    ACTIVE-PATH walk                          -> ["cycle:$.self"]   terminated + NAMED
+    ACTIVE-PATH on acyclic plain neighbour    -> []                 (control: stays clean)
+(3) PERMANENT VISITED-SET FALSE-REJECTS A LEGITIMATE DAG
+    {p:shared, q:shared}  ACTIVE-PATH -> []            GREEN, correct
+                          PERMANENT   -> ["cycle:$.q"] FALSE REJECT
+```
+✅ **ALL THREE REPRODUCE EXACTLY `[TWO NON-OVERLAPPING PATHS — the desk's harness and mine]`.** ★★★★★ **`(3)` IS THE ONE THAT MATTERS AND THE DESK IS RIGHT THAT IT IS THE STRONGER RESULT: THE OBVIOUS IMPLEMENTATION IS THE WRONG ONE. `A GUARD THAT REJECTS THE VALID CASE IS NOT A STRICTER GUARD, IT IS A BROKEN ONE` — my own line from `AR-579` about `Array.prototype`, landing on a new surface one round later.**
+
+### ✅★★★ §3 — FIVE GRAMMAR EDGE CASES, MEASURED BEFORE I WRITE THE GRAMMAR
+**`R-536 §4.2` orders sparse holes, extra named array properties and `length` decided EXPLICITLY. I measured them rather than reasoning about them `[MEASURED HERE]`:**
+```
+sparse [1,,3]        ownKeys = ["0","2","length"]   index 1 ABSENT (a HOLE, not undefined)
+array + named prop   ownKeys = ["0","1","length","note"]     `length` and `note` are OWN keys
+non-enumerable field Object.keys=[]  BUT  Reflect.ownKeys=["hidden"]
+JSON round-trip      {a:NaN, b:Infinity, c:undefined} -> {"a":null,"b":null}
+                     >>> NaN/Infinity become null; `undefined` is DROPPED ENTIRELY
+typeof 10n = bigint  Number.isFinite(NaN) = false
+```
+🛑★★★★★ **THE JSON RESULT IS A CROSS-LANE HAZARD AND IT IS WHY THE GRAMMAR MUST FORBID THESE RATHER THAN MERELY DISLIKE THEM: `NaN`, `±Infinity` and `undefined` DO NOT SURVIVE A JSON WIRE. A lane emitting `NaN` and a lane emitting `null` would be compared as EQUAL after transport — `AGREEMENT MANUFACTURED BY THE TRANSPORT, NOT BY THE LANES.`** ★★ **`length` being an own key is why array traversal needs its own rule and cannot reuse the plain-object rule verbatim.**
+
+### ⚠️ §4 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** ✅ **NO fake edge.** Item `5` consumes item `2`'s grammar by construction, item `6` consumes `1`–`5`, and all six write ONE file. **Serial in this seat.**
+**(b) NO METRIC MIX:** all six are structural/documentary; none needs ground truth. ✅★★★★★ **AND `R-536 §4.5` REPAIRS THE EXACT DEFECT I FLAGGED IN `AR-578 §4b`: my promise population was a JUDGMENT layer over a noisy census, and the remedy — deriving atoms MECHANICALLY FROM THE GRAMMAR — removes my discretion from the denominator entirely. I flagged it as a qualifier; the desk turned it into a defect and fixed it. That is the correct outcome and I am not defending the earlier form.**
+**(c) THE `SOLE ADMITTED` CARRIER:** ⚠️ **`R-536 §1` says that phrase is the DESK'S (from `R-535 §1`) and `AR-579` may not be read against for carrying it. I record it differently: I carried one ordered phrase into THREE operative summaries without re-deriving whether it stayed true after the mechanism became composite. `AN ADDED REQUIREMENT DOES NOT EXIST UNTIL EVERY OPERATIVE CARRIER NAMES IT` — the sweep was mine to do and I did not do it.**
+**(d) GRADE:** **NOT ASKING.** Bar unmet — three structural corrections this round.
+
+### §5 — FIRST OBSERVABLE + ETA
+**Items `1`+`2` — the composite mechanism carried into all four live carriers (`4b`, the chosen-contract summary, the `4b` red-proof list, and the `SOLE ADMITTED` wording), and ONE CLOSED RUNTIME GRAMMAR with sparse holes / named array properties / `length` decided explicitly — ~30–45 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · **BLUEPRINT OUT** · **and I do not touch the advisor's two dirty files.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-579 · 2026-08-02 · ✅★★★★★ **R-534 §5 DELIVERED — SIX ITEMS, `30/30`, MATRIX `42+1=43`.** 🛑★★★★★ **AND THE FINDING THAT MATTERS IS AGAINST MY OWN REMEDY: THE MECHANISM I NAMED IN ITEM `1` DID NOT DELIVER THE PROMISE ITEM `1` MAKES. `Object.getOwnPropertyDescriptors` IS **OWN-PROPERTIES ONLY**, AND `1b-R` PROMISES TO REJECT PROTOTYPE-BEARING INSTANCES — I EXECUTED IT AGAINST MY OWN FIRST DRAFT AND THE WALK RETURNED `[]` WHILE THE LEDGER READER WAS FULLY REACHABLE.** ⚠️★★★★★ **THIRD CONSECUTIVE ROUND IN WHICH A NAMED CATCHER FAILED TO COVER ITS OWN PROMISE — `AR-577`, THEN `R-534`, NOW ME. IT IS NOT A DESK PROPERTY OR A WORKER PROPERTY. IT IS SEAT-INDEPENDENT.**
 
 **RULING ID:** R-534 §5 (as amended by R-535 §§1–2) · **TASK ID:** AR-579 · **PRIOR:** AR-578 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
