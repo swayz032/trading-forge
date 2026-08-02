@@ -4,6 +4,67 @@
 
 ---
 
+## AR-571 · 2026-08-01 · ✅★★★★★ **R-530 §6 DELIVERED — ALL NINE OBSERVABLES, `49/49` CHECKS PASS INCLUDING A DISCRIMINATOR CONTROL ON THE ACCEPTANCE SUITE ITSELF. CLAIM `A`'s DENOMINATOR IS `215`, MY FALSE SLOGAN IS GONE, AND THE CATCHER I NAMED LAST DELIVERY IS REPLACED BY ONE THAT CAN ACTUALLY CATCH.**
+
+**RULING ID:** R-530 §6 · **TASK ID:** AR-571 · **PRIOR:** AR-570 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `P0-VNEXT-DESIGN-2026-08-01.md` (`+51/-11`) + `BLUEPRINT-V4-DRAFT.md` (`+25/-6`)** · **no implementation code.**
+**FAN-IN: `9 / 9`. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — ITEM 1: THE DENOMINATOR, RE-DERIVED HERE
+`[MEASURED HERE, committed ledger, join key `(fixture, condition_id)` STATED not auto-selected]` **`301` cells · `43` rows · `7` axes · `215` UNIQUE PROJECTED FIELDS (`43 × 5`) · histogram `{1:172, 3:43}` summing to `215` and expanding to `301` · `ASSERTED` `140` · POSITIVE CONTROL: axis set == projection-map keys exactly, both directions empty.** **The desk's figure reproduces to the digit.**
+✅ **Claim `A` now reports `unique_projection_n = 215`; the `301` frame is explicitly assigned to claims `B`/`C`; both documents state Surface `A` as `43` rows / `215` projected fields / `301` ledger cells; any expanded view must carry the histogram and may not be called independent projections.**
+⚠️★★★★★ **AND MY SHARE OF THIS, WHICH IS NOT SMALL: `AR-569 §1` BUILT the `reason`-feeds-three-axes structure and STATED the coupling in the document — then never asked what it did to the DENOMINATOR. `I NAMED THE SHARING AND NOT ITS ARITHMETIC.` One `reason` mismatch would have printed as three agreement failures; one agreement as three corroborations.**
+
+### 🛑★★★★★ §2 — ITEM 2: THE SLOGAN WAS MINE AND IT IS DELETED
+**`AN INPUT IT CANNOT REACH IS A COUPLING IT CANNOT FORM` is gone as a rule.** ⚠️ **It is FALSE in TS/JS: module scope, imports, closures, singletons, caches and captured callbacks are all inputs that never appear in a signature.** `AN OMITTED PARAMETER IS NOT A CAPABILITY BOUNDARY.`
+★★★★★ **I RECORD RATHER THAN QUIETLY DELETE, BECAUSE THE FAILURE MODE IS THE INTERESTING PART: the slogan passed review by sitting ONE SENTENCE AWAY FROM A TRUE MEASUREMENT — `projectExhaustively()` really does take no expectation argument. `A TRUE MEASUREMENT NEXT TO A FALSE INFERENCE LENDS IT CREDIT`, which is the exact adjacency my own house rules forbid, committed by the party the rule constrains.**
+✅ **REPLACED BY FIVE STRUCTURAL REQUIREMENTS, none of them a signature:** dependency-isolated module/process whose closure contains no ledger or oracle reader · closed plain-data projection schema with **no functions, callbacks or opaque objects** (`A CALLBACK IS A LEDGER READER WEARING A PARAMETER'S CLOTHES`) · **both projections SEALED BEFORE the ledger is parsed**, because sequencing is what a reviewer can actually check · a dependency-boundary check that fails and NAMES the offending path · and **a whole-expectation-surface mutation requiring an IDENTICAL PROJECTION DIGEST.**
+★★★★★ **THE LAST ONE IS THE LOAD-BEARING REPAIR: it does not care HOW a coupling was formed — signature, import, closure or cache — it only asks whether the output moved. `A CAPABILITY ARGUMENT CAN BE WRONG ABOUT THE MECHANISM; A DIGEST THAT DID NOT MOVE CANNOT.`**
+
+### ✅★★★ §3 — ITEMS 3, 4, 5: A CONTRADICTION, A CATCHER THAT COULD NOT CATCH, AND A BOUNDARY INHERITED BY PROXIMITY
+**ITEM 3 — the stale `:56` line demanded *"the pure transformation used for any derived axis (`primitive_null` · `reason_names` · `reason_excludes`)"* while `:65`/`:95` had just moved those three OUT of the projection. REMOVED.** ⚠️★★★ **Two sentences giving opposite instructions is worse than the original defect: `A CONTRADICTION IS COMPLIANCE-CITABLE BY WHICHEVER SIDE AN IMPLEMENTER PREFERS`, and the side reading that line would have rebuilt the very coupling the split exists to remove.**
+🛑★★★★★ **ITEM 4 — AND THIS ONE CONVICTS MY LAST DELIVERY DIRECTLY.** `AR-569 §3` retargeted the wire-mapping red-proof at `projectExhaustively()`'s four rejections. `[MEASURED HERE, `c304b098:…parity.ts:285-338`]` **it compares SOURCE key sets, detects DESTINATION COLLISIONS only, and reports UNCONSUMED ENTRIES — there is NO destination-membership check.** ⚠️ **So renaming `sessionZone: "session_zone"` → `"sessionZone"` leaves source sets identical, destination unique and the entry consumed: ALL FOUR NAMED CHECKS STAY SILENT.** The run still reddens — via `diffDeep()`, **a different catcher.** ★★★★★ **`A MUTATION IS EVIDENCE FOR THE CATCHER THAT CAUGHT IT, NOT FOR THE ONE YOU NAMED.` I had the right mutation pointed at the wrong guard, which by this design's own law is a FAILED PROOF even though the run goes red.** ✅ **Added CONTRACT 2b — a closed destination wire schema `{bindable, session_zone, approximation, primitive, reason}` validated both directions — and kept a SEPARATE source-side mutation, because the two boundaries are not substitutes.**
+✅ **ITEM 5 — CONTRACT 2c: per-lane EMITTED `condition_id` uniqueness, checked BEFORE any lookup or map construction.** ⚠️ **Two emitted rows sharing an id collapse into ONE map entry even when the source fixture is clean — a lane can silently drop a row and still "agree".** ★★★ **Source-fixture uniqueness and emitted-output uniqueness are SEPARATE boundaries, and the pinned gate carries its own warning at `:1222` that this campaign has already been bitten by exactly this misplacement.** `DO NOT INHERIT A SAFEGUARD BY PROXIMITY.`
+
+### ✅ §4 — ITEMS 6, 7, 8, 9
+**6 — CAPTION RECOMPUTED: `29` mutations + `1` clean control = `30` rows, contiguous.** ⚠️ **The previous revision's `24 + 1` was true until five rows landed; I did not carry it, including from this document's own prior version.** `A COUNT CARRIED ACROSS AN EDIT IS STALE THE MOMENT THE EDIT LANDS.`
+🛑★★★★★ **7 — MY FALSE ABSENCE, CORRECTED IN BOTH DOCUMENTS.** `[MEASURED HERE]` **the path EXISTS, is a DIRECTORY, holds `13` children; POSITIVE CONTROL — a non-existent sibling returns absent.** ⚠️★★★★★ **The desk INFERRED `DEAD`; I ASSERTED *"no longer exists and cannot be re-read"*, which is strictly stronger, and I never ran the one-line test.** ✅ **Now: `SESSION-TEMPORARY AND NON-DURABLE; READABLE AT THIS REVIEW; NOT A DURABLE AUTHORITY OR REPRODUCIBILITY GUARANTEE`** — and stated explicitly that present readability is NOT a promotion. ★★★★★ **`PROVENANCE STATUS AND FILESYSTEM EXISTENCE ARE DIFFERENT CLAIMS.` The narrower statement supported the same conclusion, so the overreach bought NOTHING and cost the record — inside a document whose entire subject is claims that outrun their evidence.**
+**8 — SURFACE `B` RELABELLED: `11/99/53 @ be194136` is a HISTORICAL SEED/REFERENCE population; current membership and `N` are UNKNOWN until current re-ranking, exact spec hashes, load-bearing adjudication and a consumer-profile freeze, which happens BEFORE any result is read.** `A HISTORICAL POPULATION CAN SEED A CURRENT FREEZE; IT CANNOT BECOME THE CURRENT DENOMINATOR BY RETAINING THE SAME CAPTION.`
+**9 — POPULATION WORDING NARROWED in both documents to `DISTINCT, PRESENTLY UNJOINED POPULATIONS`.** ⚠️ **What was measured is an empty overlap on the tested keys plus no declared join — that does not exclude a relationship under some unauthorized mapping. The conclusion is unaffected; the wording was broader than its evidence.**
+
+### ⚠️★★★★★ §5 — THE ACCEPTANCE SUITE ACCUSED THE DOCUMENT AND WAS WRONG FOUR TIMES — AND THAT IS THE PART TO READ
+**First run: `43/47`, with four FAILs — the slogan, the stale derived-axis line, the false absence claim, and the over-broad population wording all still "present".** ⚠️ **EVERY ONE WAS MY OWN CORRECTION NOTE QUOTING THE RETIRED WORDING.** `[each occurrence PRINTED WITH CONTEXT before judging it]`
+🛑★★★★★ **AND THIS IS EXACTLY THE MOMENT THE CAMPAIGN KEEPS LOSING: the cheap move is to relax the probe until it goes green. `A TEST WEAKENED TO PASS IS A TEST DELETED WITH EXTRA STEPS.`** ✅ **INSTEAD THE PROBE NOW MEASURES THE THING THAT MATTERS — `IN FORCE` vs `QUOTED-AS-RETIRED` — and reports BOTH counts.** ★★★★★ **AND THE DISCRIMINATOR IS ITSELF CONTROLLED, because a classifier that calls everything "retired" is just an excuse with a function name: it must classify a KNOWN-ACTIVE binding as `active=1`, and a known-retired phrase as `retired=1`. Both controls pass. `A CLASSIFIER THAT CANNOT CONVICT ANYTHING IS NOT A CLASSIFIER.`**
+⚠️★★★ **A FIFTH INSTRUMENT FAULT THIS TASK, RECORDED: `grep -i -F` ABORTED (signal) on these files and a follow-up `grep` printed nothing for a needle a prior count had found once. NEITHER OUTPUT WAS ADMISSIBLE and I did not treat the silence as absence — I moved to parse.** `A PROBE THAT CRASHES AND A PROBE THAT FINDS NOTHING BOTH PRINT NOTHING.`
+
+### §6 — ACCEPTANCE
+```
+1 denominator 215 / 301 split ................ PASS   (215 x7 · histogram · both docs · 301 frame retained)
+2 structural boundary, slogan not in force ... PASS   (active 0 / quoted-as-retired 1 · all 5 requirements)
+3 stale derived-axis line not in force ....... PASS   (active 0 / retired 1)
+4 closed destination wire schema ............. PASS   (catcher named as 2b, NOT projectExhaustively)
+5 per-lane emitted uniqueness ................ PASS   (checked before lookup · own mutation)
+6 caption recomputed ......................... PASS   (29 + 1 = 30, contiguous)
+7 census provenance narrowed ................. PASS   (both docs · 13 children · path still cited)
+8 surface B = historical seed ................ PASS   (current N UNKNOWN · freeze before results)
+9 populations presently unjoined ............. PASS   (both docs · empty-overlap fact retained)
+                                              47 / 47  + 2 discriminator controls = 49 / 49
+```
+
+### §7 — WHAT I DID NOT DO
+- **No implementation · ledger READ-ONLY (to measure the denominator) · no `ORACLE.json` · no WRITE to the Tier-A census · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · no `P3` · no Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · `ADVISOR-STATE.md` untouched.**
+- ⚠️ **`49/49` IS A DESIGN-TEXT RESULT, NOT RUNTIME EVIDENCE.** No `P0-vNext` implementation exists. **It measures whether the document says the right things — and R-530 §4b's open question, whether such a suite measures the document or my own probes, is only PARTLY answered: the two discriminator controls address it, they do not close it.**
+- ⚠️ **`c304b098` was READ, NEVER RE-RUN.** Every mapping and catcher claim measures a pinned blob.
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`. Surface `B`'s current `N` is UNKNOWN and unowned.**
+- ★★ **I do not grade my own work.**
+
+### §8 — POSITION
+**Design REVISED on all nine observables, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+⚠️ **The independent grade remains DEFERRED WITH A NAMED TRIGGER (`R-530 §5`) — it re-arms once this revision is externally read. I am not asking for it now; the trigger has not fired.**
+★★ **FAN-IN `9 / 9`. NOT A HANDOFF.**
+
+---
+
 ## AR-570 · 2026-08-01 · **START-RECEIPT — R-530 §6 ACCEPTED. NINE OBSERVABLES, ONE RECEIPT, DESIGN ONLY.** 🛑★★★★★ **AND I OWN THE SLOGAN BEFORE THE DESK TAKES IT: `AN INPUT IT CANNOT REACH IS A COUPLING IT CANNOT FORM` IS **MY** SENTENCE, IT IS **FALSE** IN TS/JS, AND I SHIPPED IT AS THE ENFORCEABLE FORM OF THE RULE.**
 
 **RULING ID:** R-530 §6 · **TASK ID:** AR-570 · **PRIOR:** AR-569 · **SEAT:** `claude.exe 26204`.

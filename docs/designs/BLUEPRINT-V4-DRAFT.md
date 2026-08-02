@@ -858,12 +858,29 @@ addendum, which records a decomposition, not a new gate.**
 Phase 1's exit criterion stands exactly as written: *"≥1 tier-A spec compiles
 with ALL load-bearing conditions concretely bound AND the compile-fidelity
 forensics gate passes calibration."* What `R-529` records is that **two distinct
-surfaces sit beneath it, over two populations that do not intersect:**
+surfaces sit beneath it, over distinct, presently unjoined populations:**
 
 | | surface | population | what closing it buys |
 |---|---|---|---|
-| **A** | **PARITY INSTRUMENT** — `P0-vNext`, steps 1–2 above | `12` synthetic parity fixtures · `43` rows · `301` cells | **qualifies the INSTRUMENT.** Does **NOT** advance Phase-1 exit. |
-| **B** | **TIER-A COMPILE-FIDELITY GATE** | `11` real strategy specs · `99` conditions · `53` load-bearing `[MEASURED, `be194136`]` | **THIS is the surface Phase 1 exits on.** |
+| **A** | **PARITY INSTRUMENT** — `P0-vNext`, steps 1–2 above | `12` synthetic parity fixtures · `43` rows · **`215` unique projected fields** · `301` ledger cells | **qualifies the INSTRUMENT.** Does **NOT** advance Phase-1 exit. |
+| **B** | **TIER-A COMPILE-FIDELITY GATE** | ⚠️ **CURRENT MEMBERSHIP AND `N` ARE UNKNOWN.** Historical SEED/REFERENCE only: `11` specs · `99` conditions · `53` load-bearing `[be194136]` | **THIS is the surface Phase 1 exits on.** |
+
+⚠️★★★★★ **SURFACE `B`'s COUNTS ARE A HISTORICAL SEED, NOT A DENOMINATOR.** The `11 / 99 / 53`
+figures are the historical structural enumerator's, and they may **NOT** become
+Surface `B`'s admission denominator by retaining the same caption. Its current
+`N` is UNKNOWN until **current re-ranking · exact spec hashes · load-bearing
+adjudication · and a consumer-profile freeze** are complete — **and that freeze
+happens BEFORE any result is read.**
+
+> **`A HISTORICAL POPULATION CAN SEED A CURRENT FREEZE; IT CANNOT BECOME THE
+> CURRENT DENOMINATOR BY RETAINING THE SAME CAPTION.`** This is the
+> stale-baseline-as-admission-denominator defect that killed six `P0` attempts,
+> and it re-enters through a caption if the seed figures are left standing
+> unqualified.
+> **`A SHARED OBSERVATION REFERENCED THREE TIMES IS ONE OBSERVATION WITH
+> MULTIPLICITY THREE`** — Surface `A`'s agreement denominator is `215` unique
+> projected fields, not `301` cells; the `301` frame belongs to the conformance
+> and completeness claims.
 
 **BINDING, and stronger than the rule it replaces:** `BLUEPRINT PHASE 1 MAY NOT
 CITE ANY P0-vNext GREEN AS COMPILE FIDELITY.` `R-526` already forbade citing
@@ -884,9 +901,11 @@ membership/conformance surface** keyed at minimum `tier_a_spec_id × condition_i
 × fidelity_axis`, carrying current spec hashes, load-bearing membership,
 authority citations, and a consumer profile frozen before any result is read.
 **The existing tier-A compile census (`be194136`) is a HISTORICAL STRUCTURAL
-ENUMERATOR — sound for what it counts, carrying a dead session-temp
-`extraction_source` and a RANKING-scoped `SUPERSESSION_MARKER` — and it is
-neither promotable to that surface nor the thing to re-commission.**
+ENUMERATOR — sound for what it counts, carrying a SESSION-TEMPORARY,
+NON-DURABLE `extraction_source` (readable at this review; NOT a durable
+authority or reproducibility guarantee) and a RANKING-scoped
+`SUPERSESSION_MARKER` — and it is neither promotable to that surface nor the
+thing to re-commission.**
 
 ⚠️ **This addendum changes no step in `15.6`.** It states which of those steps
 qualify the instrument (1–2) and which bear on the exit (7–10), so that a green
