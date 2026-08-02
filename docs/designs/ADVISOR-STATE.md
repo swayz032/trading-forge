@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3300` at THIS commit, 2026-08-01 22:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3305` at THIS commit, 2026-08-01 23:23 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3300` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3305` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,9 +90,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-529 §6`, FIVE ITEMS. START IMMEDIATELY.** (2026-08-01 22:41)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-530 §6`, NINE OBSERVABLES. WORKER MID-TASK.** (2026-08-01 23:14, `e71bac47`)
 
-✅★★★★★ **`R-529` LANDED (`cb54d313`), CONSUMING EXTERNAL READ `c3a179d4`. ALL FOUR FINDINGS SUSTAINED AND RE-MEASURED HERE — the design is REVISE, not reject, and implementation stays BLOCKED.**
+🛑★★★★★ **THIS HEADER READ `R-529 §6, FIVE ITEMS` UNTIL `23:26` — A SUPERSEDED CONTRACT PUBLISHED UNDER THE ONE HEADING A COLD SEAT READS FIRST. `[MEASURED HERE]` `9d7a41a7` ("State current to R-530") touched `18` lines / `11`+`7` — the three corrections ONLY — and never reached this block, so the ledger advanced to `R-530` while its carrier still named `R-529`. ★★★★★ **`ADVANCING THE SEAT BLOCK IS NOT ADVANCING THE CONTRACT BLOCK` — they are separate carriers and this file updated one of them. Same erosion species as the `v3-N` payload losses, one heading over. STANDING: WHEN A RULING RE-AUTHORIZES THE WORKER, `AUTHORIZED NOW` MOVES IN THE SAME COMMIT AS `SEAT`, OR NEITHER MOVES.**
+
+✅★★★ **BACKGROUND THAT STILL STANDS (`R-529`, `cb54d313`, consuming external read `c3a179d4`) — RETAINED AS FINDINGS, **NOT** AS THE LIVE TASK: all four findings sustained and re-measured; the design is REVISE, not reject; implementation stays BLOCKED.**
 🛑★★★★★ **THE RESULT THAT OUTRANKS THE FOUR: `P0-vNext` IS A PARITY-FIXTURE INSTRUMENT, NOT A PHASE-1 ADMISSION FRAME. `[MEASURED HERE]` ledger universe = `12` synthetic fixtures / `43` rows / `301` cells; Tier-A universe = `11` real specs / `99` conditions / `53` load-bearing; **no declared identity join, and ZERO EXACT OVERLAP ON THE TESTED filename/stub KEYS.** ⚠️★★★ **CORRECTED BY `R-530 §1(3)`: this line previously read *"exact identity intersection EMPTY"* and `R-529 §3` said *"the two populations do not intersect"* — BOTH BROADER THAN THE MEASUREMENT. **BINDING WORDING: `DISTINCT, PRESENTLY UNJOINED POPULATIONS`** — an unmeasured semantic/provenance relationship under an unauthorized mapping is NOT excluded. The conclusion is unaffected; the claim was.** ★★★★★ **`ZERO OVERLAP IS EVIDENCE THE POPULATIONS DIFFER — NEVER EVIDENCE THAT ONE LACKS AN ENUMERATOR`**, and inverting that is what aimed a CORRECT refusal at the WRONG remedy.**
 ⚠★★★★★ **SO `AR-566`'s REFUSAL STANDS AND ITS PRESCRIPTION DOES NOT: it named "an artifact enumerating tier-A specs by identity with load-bearing marked" as the missing thing — **THAT ARTIFACT EXISTS** (`tier-a-compile-census.json`, committed `be194136`; `[MEASURED HERE, recomputed from member records]` `11` specs · `11` unique stubs · `99` conditions · `53` load-bearing · all `11` carry ≥1). **Acting on the refusal as written would have commissioned a DUPLICATE ENUMERATOR, equally inadmissible.** ⚠ **The census is HISTORICAL-STRUCTURAL only — its `extraction_source` is `SESSION-TEMPORARY AND NON-DURABLE; READABLE AT THIS REVIEW; NOT A DURABLE AUTHORITY OR REPRODUCIBILITY GUARANTEE`, and its `SUPERSESSION_MARKER` is scoped to the RANKING (the enumeration is live: `UNBOUND 28` + `APPROXIMATED 25` = the `53`). 🛑★★★★★ **CORRECTED BY `R-530 §1(2)` — THIS LINE SAID `DEAD` AND THAT WAS FALSE. `[MEASURED HERE]` the path EXISTS, is a DIRECTORY, and holds `13` children; positive control on a non-existent sibling returns `False`. **I INFERRED `DEAD` FROM `session-temp` AND NEVER RAN THE ONE-LINE TEST**, then published it here AND in a commit message. `PROVENANCE STATUS AND FILESYSTEM EXISTENCE ARE DIFFERENT CLAIMS` — and the narrower true statement supports the same conclusion, so the overreach bought nothing.** `A SUPERSESSION MARKER IS SCOPED; QUOTING IT WITHOUT ITS SCOPE KILLS A GOOD ARTIFACT.`** ✅ **THE MISSING OBJECT IS NAMED IN `R-529 §4`: a CURRENT, AUTHORITY-RATIFIED Tier-A compile-fidelity membership surface keyed `tier_a_spec_id × condition_id × fidelity_axis`.**
 🛑★★★★★ **THE DESK'S OWN OPEN OBLIGATION, UNASSIGNED AND SAID SO ON PURPOSE (`R-529 §5`): PHASE 1 NOW HAS **TWO SURFACES** — `A` = `P0-vNext` over the 12 fixtures (prerequisite; closing it does NOT exit Phase 1) · `B` = a Tier-A compile-fidelity gate over the real population (**this is what exits Phase 1**). **SURFACE `B` HAS NO OWNER AS OF THIS RULING. That is a debt on THIS DESK, not on the worker, and it is not authorized to anyone tonight.**
@@ -102,9 +104,9 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 > 🛑★★★ **WHAT DOES *NOT* CHANGE, STATED SO THIS BLOCK IS NOT OVER-READ AS "SURFACE `B` IS BUILT": I have NOT shown that any of this machinery EMITS the authority-ratified `tier_a_spec_id × condition_id × fidelity_axis` membership/conformance surface `§4` describes. **`§4`'s missing object STANDS.** What changes is only the STARTING POINT: `B`'s owner begins from wired forensics plus a calibration battery, not from nothing. `[MECHANISM UNPROVEN — I read callers and filenames, not the emitted artifact.]`** ⚠ **BLUEPRINT v4's LADDER IS UNCHANGED — this is a decomposition INSIDE Phase 1, never a rewrite; no `v3-N` payload was touched.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
-**GOAL:** **REVISE** the `P0-vNext` design at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` per **`R-529 §6`, five items** — ★★★★★ **the load-bearing one is item `1`: SPLIT `project()` FROM `evaluate()`, so claim `A` never reads `cell.value` or any oracle expectation.** ⚠ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked.** ★★★ **READ `R-529 §6` FOR THE CONTRACT; IT IS NOT PARAPHRASED HERE (`CARRIER-DISCIPLINE`: duplicate verbatim or point, never re-paraphrase).**
-**ALLOWED FILES:** that design doc + a NARROW Phase-1 addendum in `docs/designs/BLUEPRINT-V4-DRAFT.md` (`R-529 §6` item `4` ONLY) + `AGENT-REPORTS.md`. **NOTHING ELSE.**
-**FORBIDDEN:** implementation · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · touching the four grade receipts, the two `P1`/`P2` artifacts, or the tag · `git checkout`/`reset`/index ops.
+**GOAL:** **REVISE** the `P0-vNext` design at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` per **`R-530 §6`, NINE observables** — ★★★★★ **the two load-bearing ones are item `1` (claim `A`'s denominator is `215` UNIQUE PROJECTION FIELDS, **not** `301`) and item `2` (REPLACE THE SIGNATURE ARGUMENT WITH A STRUCTURAL BOUNDARY, and DELETE the false `AN INPUT IT CANNOT REACH` slogan the desk endorsed).** ⚠ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked.** ★★★ **READ `R-530 §6` FOR THE NINE ITEMS; THEY ARE NOT PARAPHRASED HERE (`CARRIER-DISCIPLINE`: duplicate verbatim or point, never re-paraphrase). `grep -n "^## R-530" ADVISOR-RULINGS.md`, never a line number.**
+**ALLOWED FILES** *(`R-530 §6` verbatim)*: `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · the narrow `§15.6a` addendum in `docs/designs/BLUEPRINT-V4-DRAFT.md` · `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**FORBIDDEN** *(`R-530 §6` verbatim)*: implementation · the ledger · `ORACLE.json` · any WRITE to the Tier-A census · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · the grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops. ⚠ **AND STILL: a seventh `P0` attempt is not authorizable (`QUEUE` §3, count `6`, threshold `2`).**
 
 **THE DESIGN CONTRACT (R-524 §5 verbatim + R-525 §5's sharpening) — `CONSUME CELLS, NOT CAPTIONS`:**
 1. **Reconstruct exact row × axis membership INDEPENDENTLY** — from the pinned source specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`), never from the ledger or the oracle it judges.
@@ -117,10 +119,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 8. **DURABILITY (R-525 §4b, the open obligation): the design must state how these checks become a STANDING repo/CI guard rather than an embedded listing importing from a session-temp scratchpad.** Naming it as future work is acceptable; silence is not.
 9. **Carry the out-of-frame surfaces** (`compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated`) as a NAMED `P3`/downstream obligation — not deleted, not silently in scope.
 
-**HONEST-PARTIAL CLAUSE:** if any element cannot be designed soundly on the current authority, **say so and name it.** `NO SOUND DESIGN AVAILABLE` is a valid expert result.
-**START-RECEIPT REQUIRED:** task · first observable · ETA · **recorded tree baseline** (delta, never absolute-clean).
-**FIRST OBSERVABLE EXPECTED:** the independent membership-reconstruction section + the `UNADJUDICATED` → `INCOMPLETE_AUTHORITY` fail-closed rule, **~30–45 min from start.**
-**STOP CONDITION:** ★★★ **if the design finds itself reading membership, requiredness, or completeness from the artifact it will judge, STOP — that is the defect this entire arc retired six attempts over.**
+⚠★★★ **THE NINE ABOVE ARE `R-524 §5`+`R-525 §5`, THE STANDING DESIGN CONTRACT — THEY REMAIN IN FORCE AND ARE **NOT** `R-530 §6`'s NINE OBSERVABLES. TWO DIFFERENT NINES; DO NOT CONFLATE THEM. `R-530 §6`'s list lives in the ledger and is pointed at, never copied.**
+
+**HONEST-PARTIAL CLAUSE** *(`R-530 §6` verbatim)*: if any item cannot be designed soundly on current authority, say so and name it. `NO SOUND DESIGN AVAILABLE` remains valid.
+**START-RECEIPT REQUIRED** *(`R-530 §6` verbatim)*: one receipt · task · first observable · ETA · recorded tree baseline as a DELTA. ✅ **DELIVERED — `AR-570`, `23:16`, accepts all nine. NO RULING OWED (a receipt is not a deliverable; `R-528` precedent).**
+**FIRST OBSERVABLE EXPECTED** *(`R-530 §6` verbatim)*: the `215`-vs-`301` denominator correction plus the structural projection boundary — **~30–45 min.** *(started `~23:16` → ETA `~23:50`.)*
+**ACCEPTANCE** *(`R-530 §6` verbatim)*: the read's nine observables, checked at the COMMITTED object with case folded, UTF-8 forced, emphasis stripped, and **a positive control proving each probe can see its target at all.**
+**STOP CONDITION** *(`R-530 §6` verbatim)*: ★★★★★ **if implementation begins before the `215`/`301` denominator AND the projection capability boundary are both resolved, STOP.** ★★★ **If a mapping mutation reddens through a catcher other than its pre-registered one, RECORD A FAILED PROOF — never accept the red exit.** ★★★ **If Surface `B` freezes historical counts without current hashes and adjudicated membership, STOP: the stale baseline has become the admission denominator again.**
 
 ---
 
