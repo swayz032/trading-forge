@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3759` at THIS commit, 2026-08-02 17:36 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3762` at THIS commit, 2026-08-02 17:44 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3759` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3762` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -91,7 +91,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `15:25`, FRESH ADVISOR SEAT via `/clear` — SAME `claude.exe 13916`)
-**Ruling ledger at `R-585`. Newest AR: `AR-625` `[MEASURED HERE]` — a hold-receipt, answered in `R-585 §7`. NOTHING UNRULED. Worker: ✅ HOLDING, new batch of `2` authorized (`R-585 §6`). `P0PC` `active_worker` — NO transition, `P0PG` BLOCKED across FOUR grade cycles.**
+**Ruling ledger at `R-585` (COMMITTED `435e17aa`, with the grade receipt). Newest AR: `AR-626` `[MEASURED HERE]` — a START-RECEIPT on `R-585 §6.1`. **NO RULING OWED** (`advisor-ruling §0`: no finding, no authorization requested, no scope change — I read its tail and say so rather than leave silence to be read as a debt). Worker: ✅ **ACTIVE on item `1` (`MISS_NOT_CAUGHT` gating), ETA `30–45` min from `17:2x`** — it revised my `20–30` UP with a reason, which is correct behaviour. `P0PC` `active_worker`; `P0PG` BLOCKED across FOUR grade cycles.**
+✅★★★ **`AR-626`'s DESIGN IS SOUND AND NEEDS NO RULING TO PROCEED — recorded so the next seat does not re-open it: it refuses a bare allow-list (`baseline-allowlist`, which once excused `24` kill-switch assertions) and takes the TRIPWIRE shape instead — *every `MISS_NOT_CAUGHT` row is DECLARED, **and** every declared gap is STILL `MISS_NOT_CAUGHT`*. **The second half is the load-bearing one: when `F-3` closes and `59(a)` starts being caught, the declaration goes STALE and the gate goes RED, forcing the list to SHRINK. A list that can only grow is the defect.**
+⚠️ **TWO CONSEQUENCES THE WORKER NAMED IN ADVANCE (expect them, they are the guards working): a new failure class + new declared collection will trip the set-of-sets guard → a two-commit PIN DANCE, gate RED in between BY DESIGN · and its own `F-4` completeness fix from last batch now BINDS IT — a new `FAILURE_CLASSES` entry with no red path reddens `red-proof.mjs` until its `EXPECT` row exists. **The property biting its own author one batch later is the strongest evidence it is real.****
+🛑★★★★★ **THIS ADVISOR SEAT IS HANDING OFF — everything above is COMMITTED, nothing is unruled, and the worker holds a valid contract for BOTH `§6` items. **NEXT DESK ACT: rule the item-`1` delivery when it lands (~`30–45` min), then item `2` is already authorized.** Re-dispatch a fifth `accuracy-validator` only when BOTH items land, with `R-585 §2`'s pre-registered FALSIFIER as its headline test.**
 🛑★★★★★ **FOURTH GRADE: BAND `5 / 10`, receipt `GRADE-P0PC-BATCH4-2026-08-02.md` (`30,042` B). `C1` REFUTED A FOURTH TIME — AND THE FINDING IS THE **REMEDY STRATEGY**, NOT THE BUG. `[MEASURED HERE]` `run.mjs:38` reads `PROTO_INJECT` from the ENV and `:693` echoes it back verbatim; the dispatch that turns that name into a real mutation (`:237`–`:278`) is unpinned and unwitnessed. **THE CHILD DOES NOT WITNESS WHAT IT RAN; IT ECHOES WHAT IT WAS ASKED TO RUN.** Two ONE-TOKEN edits in `run.mjs` (`red-proof.mjs` byte-untouched) each gave `41/41 · ENFORCING GATE · EXIT 0` with **stdout byte-identical to the clean control**.**
 🛑★★★★★ **THE PIVOT (`R-585 §2`), AND IT IS THE MOST IMPORTANT LINE IN THIS FILE: FOUR REMEDIES — `R-561` pin the array · `R-578` assert identity · `R-582` take the witness from the child · `R-585` — **EACH MOVED THE DEFECT ONE LEVEL UP AND NEVER OUT.** `[ARITHMETIC MEASURED HERE]` retirable rows `Σ(size−1) = 4+4+2+1 = 11` — **identical before and after the fix.** `WHEN THE BLAST RADIUS DOES NOT MOVE, THE FIX RELOCATED THE ATTACK RATHER THAN REMOVING IT.` ✅ **ORDERED ONE LEVEL *OUT*: `A ROW'S IDENTITY MUST BE A FUNCTION OF THE OBSERVED EFFECT OF ITS INJECTION, NOT OF ANY LABEL.`** ⚠️ `[HYPOTHESIS — UNPROVEN]` **that this terminates the species. FALSIFIER PRE-REGISTERED BEFORE THE DATA: falsified if grade 5 retires any red path while all row digests remain distinct.**
 🛑★★★★★ **MY `R-584 §1` IS REFUTED BY EXECUTION: I certified `R-583 §2.2`'s acceptance MET — that a missing witness reports as PROVENANCE and NOT as "declared but never ran" — by observing the PRESENCE of the right string at `:366`. `[MEASURED HERE]` BOTH branches exist (`:366` and `:374`) and the grader induced the condition: **BOTH PRINT.** `I ASSERTED AN ABSENCE BY OBSERVING A PRESENCE` — `absence-claim`, mine, twice this session.**
