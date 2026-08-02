@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3284` at THIS commit, 2026-08-01 22:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3288` at THIS commit, 2026-08-01 22:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3284` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3288` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,13 +90,16 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN. START IMMEDIATELY.** (2026-08-01 21:35)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-529 §6`, FIVE ITEMS. START IMMEDIATELY.** (2026-08-01 22:41)
 
-⚠★★★★★ **THIS IS NOT A NEW AUTHORIZATION — IT IS THE EXECUTION OF ONE THAT ALREADY LANDED TWICE (`R-524 §5`, re-affirmed `R-525 §5` *“`P0-vNext` DESIGN: CONTINUES”*). ITS TRIGGER CONDITION WAS JUDGED MET BY THIS DESK. **THE ONLY THING MISSING WAS A `START HERE` BLOCK, AND THAT ABSENCE IS MY STALL, NOT THE WORKER'S IDLENESS.** `A RULING THAT CLOSES ONE TASK AND OPENS NONE IS A STOP ORDER.`**
+✅★★★★★ **`R-529` LANDED (`cb54d313`), CONSUMING EXTERNAL READ `c3a179d4`. ALL FOUR FINDINGS SUSTAINED AND RE-MEASURED HERE — the design is REVISE, not reject, and implementation stays BLOCKED.**
+🛑★★★★★ **THE RESULT THAT OUTRANKS THE FOUR: `P0-vNext` IS A PARITY-FIXTURE INSTRUMENT, NOT A PHASE-1 ADMISSION FRAME. `[MEASURED HERE]` ledger universe = `12` synthetic fixtures / `43` rows / `301` cells; Tier-A universe = `11` real specs / `99` conditions / `53` load-bearing; **exact identity intersection EMPTY.** ★★★★★ **`ZERO OVERLAP IS EVIDENCE THE POPULATIONS DIFFER — NEVER EVIDENCE THAT ONE LACKS AN ENUMERATOR`**, and inverting that is what aimed a CORRECT refusal at the WRONG remedy.**
+⚠★★★★★ **SO `AR-566`'s REFUSAL STANDS AND ITS PRESCRIPTION DOES NOT: it named "an artifact enumerating tier-A specs by identity with load-bearing marked" as the missing thing — **THAT ARTIFACT EXISTS** (`tier-a-compile-census.json`, committed `be194136`; `[MEASURED HERE, recomputed from member records]` `11` specs · `11` unique stubs · `99` conditions · `53` load-bearing · all `11` carry ≥1). **Acting on the refusal as written would have commissioned a DUPLICATE ENUMERATOR, equally inadmissible.** ⚠ **The census is HISTORICAL-STRUCTURAL only — its `extraction_source` is a DEAD session-temp scratchpad, and its `SUPERSESSION_MARKER` is scoped to the RANKING (the enumeration is live: `UNBOUND 28` + `APPROXIMATED 25` = the `53`). `A SUPERSESSION MARKER IS SCOPED; QUOTING IT WITHOUT ITS SCOPE KILLS A GOOD ARTIFACT.`** ✅ **THE MISSING OBJECT IS NAMED IN `R-529 §4`: a CURRENT, AUTHORITY-RATIFIED Tier-A compile-fidelity membership surface keyed `tier_a_spec_id × condition_id × fidelity_axis`.**
+🛑★★★★★ **THE DESK'S OWN OPEN OBLIGATION, UNASSIGNED AND SAID SO ON PURPOSE (`R-529 §5`): PHASE 1 NOW HAS **TWO SURFACES** — `A` = `P0-vNext` over the 12 fixtures (prerequisite; closing it does NOT exit Phase 1) · `B` = a Tier-A compile-fidelity gate over the real population (**this is what exits Phase 1**). **SURFACE `B` HAS NO OWNER AS OF THIS RULING. That is a debt on THIS DESK, not on the worker, and it is not authorized to anyone tonight.** ⚠ **BLUEPRINT v4's LADDER IS UNCHANGED — this is a decomposition INSIDE Phase 1, never a rewrite; no `v3-N` payload was touched.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
-**GOAL:** author the **`P0-vNext` DESIGN** — a DOCUMENT at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`. ⚠ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked until this design is externally read.**
-**ALLOWED FILES:** that new design doc + `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**GOAL:** **REVISE** the `P0-vNext` design at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` per **`R-529 §6`, five items** — ★★★★★ **the load-bearing one is item `1`: SPLIT `project()` FROM `evaluate()`, so claim `A` never reads `cell.value` or any oracle expectation.** ⚠ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked.** ★★★ **READ `R-529 §6` FOR THE CONTRACT; IT IS NOT PARAPHRASED HERE (`CARRIER-DISCIPLINE`: duplicate verbatim or point, never re-paraphrase).**
+**ALLOWED FILES:** that design doc + a NARROW Phase-1 addendum in `docs/designs/BLUEPRINT-V4-DRAFT.md` (`R-529 §6` item `4` ONLY) + `AGENT-REPORTS.md`. **NOTHING ELSE.**
 **FORBIDDEN:** implementation · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · touching the four grade receipts, the two `P1`/`P2` artifacts, or the tag · `git checkout`/`reset`/index ops.
 
 **THE DESIGN CONTRACT (R-524 §5 verbatim + R-525 §5's sharpening) — `CONSUME CELLS, NOT CAPTIONS`:**
@@ -117,7 +120,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## 🛑★★★★★ SEAT — **FRESH SEAT 22:27 (predecessor's successor; same `claude.exe 15520`). HELD: no unconsumed read — `021bf49d` was spent by `R-528`. `R-529` OWED AND **DEFERRED ON THE OPERATOR'S OWN WORD, 2026-08-01 22:26: *"REMEMBER ALSO WAIT ON GPT RULING."*** Worker idle by DESIGN, not by stall: `AR-567` delivered `22:23`, `NOT A HANDOFF`, and the next authorization is gated on the external read. ⚠ **THIS IS THE ONE CASE WHERE `A RULING THAT OPENS NONE` IS CORRECT — the block is an external input the desk may not self-supply, and the operator named it.**
+## ✅★★★★★ SEAT — **ACTIVE. LEDGER AT `R-529` (`cb54d313`), WHICH CONSUMED EXTERNAL READ `c3a179d4`. NO UNCONSUMED READ REMAINS. WORKER AUTHORIZED (`R-529 §6`, five design-only items) — NOT IDLE, NOT BLOCKED.** Newest AR: `AR-567`, RULED. ★★ **SHA audit `6/6` real, `0` fabricated — sixteenth consecutive clean.**
+⚠★★★★★ **THE HOLD THAT PRECEDED THIS, RECORDED SO THE SEQUENCE READS CORRECTLY: `R-529` was DEFERRED on the operator's own word (`22:26`, *"REMEMBER ALSO WAIT ON GPT RULING"*) until the read landed at `22:34:58`. **The wait was ~8 minutes and it was the right call** — the read carried four findings, three of which this desk had passed over. `A CHANNEL IS NOT AN AUTHOR`, but a channel this desk keeps being wrong against is one to keep opening.**
 🛑★★★★★ **MY OWN ERROR THIS SEAT, WITH THE DISPROOF ATTACHED — I KILLED THREE HEALTHY MONITORS ON A BLIND INSTRUMENT'S ZERO. `[MEASURED HERE]` I ran `TaskList`, got `No tasks found`, and concluded the predecessor's monitors were orphaned processes delivering to nobody. I retired all three. **THE KILL ITSELF DISPROVED THE PREMISE: three `<task-notification>` death events arrived in THIS conversation carrying the prior session's task ids — so the channel was live all along.** ★★★★★ **THEN THE POSITIVE CONTROL, WHICH I SHOULD HAVE RUN FIRST: I re-armed three monitors in THIS session, confirmed their task ids (`b7slnowdk`/`bj0268m9t`/`bb7613w67`), and `TaskList` STILL RETURNS `No tasks found`. **`TaskList` DOES NOT SEE `Monitor` TASKS AT ALL, AT ANY AGE.** My zero was not evidence of death; it was an instrument that cannot see the thing.**
 ⚠★★★★★ **STANDING, MINTED HERE — AND IT CORRECTS THE ONBOARDING SKILL: `TaskList` IS NOT A LIVENESS INSTRUMENT FOR MONITORS. Enumerate monitors BY PROCESS (`advisor-onboarding` §4a's `Get-CimInstance` walk, which was correct and which I ran and then overrode). ★★★ **AND THE LAW I BROKE IS THE ONE I HAD JUST WRITTEN INTO THIS FILE SIX MINUTES EARLIER, ABOUT A CASE-SENSITIVE GREP: `AN ABSENCE CLAIM OWES A POSITIVE CONTROL THAT THE INSTRUMENT CAN SEE THE THING AT ALL.` Seventh instrument fault in this family in twelve hours, third of them mine tonight.** ✅ **NO COVERAGE WAS LOST: the gap was verified empty BEFORE the kill (newest `AR-567`, mtime `22:23:08` unmoved; GPT ref `021bf49d` = the read `R-528` already spent), and equivalent monitors are re-armed and registered to this seat.** ⚠ **NET: the three monitors are now MINE rather than the predecessor's, which is the state `§4a` wants — but I reached it by accident, not by method, and it could as easily have deafened the seat.**
 🛑★★★★★ **THE BIGGEST FINDING OF THE DAY IS NOT ABOUT THE DESIGN — IT IS THE WORKER'S REFUSAL, AND IT IS A MONEY-PATH FACT: `NO SOUND PHASE-1 PROFILE AVAILABLE.` `[MEASURED BY THE WORKER, positive control included]` **data artifacts carrying `tier_a`/`load_bearing` = `34` · ledger fixtures referenced by ANY of those 34 = `0` · POSITIVE CONTROL: the ledger names its own fixtures `12/12`, so the join mechanism WORKS · `phase_1_scope` anywhere in the repo = `0`.**
