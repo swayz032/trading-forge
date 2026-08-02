@@ -214,15 +214,17 @@ export const collectionNamesOf = (mod) => Object.keys(mod).filter((k) => isColle
 /** THE SET OF SETS, frozen. Adding an exported collection to corpus.mjs must be a FINDING. */
 export const EXPECTED_COLLECTION_NAMES = Object.freeze(collectionNamesOf(expandedBaseline));
 
-// ✅ EXEMPTIONS, DECLARED IN CODE WITH A STATED REASON (R-562 item 2 allows pin-or-exempt).
-// These are exported SCALARS, not collections: a gate cannot iterate them, so they cannot shrink
-// silently the way an array can. They are still covered by the SET-OF-SETS check in the sense that
-// promoting one to a collection would change the collection-name set and be reported.
-export const EXEMPT_EXPORTS = Object.freeze({
-  NOT_IMPLEMENTED: 'string scalar — a catcher name, not an iterable population',
-  CONTAINER_TWIN_TS: 'string scalar — fixture source text; its INTEGRITY is covered by the twin byte-identity assertion',
-  CONTAINER_TWIN_JS: 'string scalar — as CONTAINER_TWIN_TS',
-});
+// 🛑★★★★★ `EXEMPT_EXPORTS` IS DELETED (R-570 §4, ruling on AR-607 §5's measurement). It read:
+//     export const EXEMPT_EXPORTS = Object.freeze({ NOT_IMPLEMENTED: '…', CONTAINER_TWIN_TS: '…', … });
+// and its caption claimed "EXEMPTIONS, DECLARED IN CODE WITH A STATED REASON (R-562 item 2 allows
+// pin-or-exempt)". `grep -rn EXEMPT_EXPORTS *.mjs` returned exactly ONE hit — its own declaration.
+// ZERO CONSUMERS. Scalars are excluded by `isCollection` returning false, never by this table.
+// 🛑 THE DANGER WAS THE **ACTIVE** DIRECTION, not the dead one: a future seat adding a name here to
+// exempt a REAL collection would have seen the check fire anyway.
+//   A CAPABILITY ADVERTISED AND ABSENT IS WORSE THAN ONE NEVER CLAIMED.
+// Same species as `F-5` `classifyPosition`, deleted by R-564 item (4) for exactly this reason.
+// ✅ If this campaign later wants pin-or-exempt it gets BUILT — with a consumer and a red-proof —
+// not resurrected from a decoration.
 
 /**
  * R-562: every remaining self-authored collection, both directions plus uniqueness, against the
