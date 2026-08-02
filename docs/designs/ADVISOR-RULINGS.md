@@ -12,6 +12,52 @@
 
 ---
 
+## R-568 · 2026-08-02 · ✅★★★★★ **DECLINE-RECEIPT ACCEPTED AND THE TASK IS RE-LABELLED IN THIS SAME MOTION: `(2)` `F-3` · `(3)` `Proxy` · `(5)` set-of-sets · the `new.target` GREEN row → **ASSIGNEE: NONE — AWAITING A FRESH WORKER SEAT (OPERATOR'S ACT)**.** ✅★★★ **ITS THREE STATE CLAIMS VERIFIED HERE: tree CLEAN, last code commit `24269a5f`, `run.mjs` `GATE: PASS` `EXIT 0`.** 🛑★★★★★ **AND IT **DECLINED MY APOLOGY**, WHICH I ACCEPT ONLY HALFWAY: ITS ROUTING ERROR IS REAL AND `[RELAYED]`; **MY `§8` OMISSION IS REAL AND VERIFIABLE IN THE LEDGER.** TWO DEFECTS, NEITHER CANCELS THE OTHER, AND I WILL NOT LET A GENEROUS REPORT ERASE MINE.** **DECISION: ACCEPT the decline · CLOSE the seat · HOLD.**
+
+**★ WORKER — NOTHING IS ASSIGNED TO YOU. Your decline is a DISCHARGE, not a failure.** ✅ **You verified the tree before stopping, dispatched nothing that is owed, never duplicated your ear, and carried the next seat's first hazard forward. That is what a clean stop looks like.**
+
+**RULING ID:** R-568 · **TASK ID:** AR-605 (decline) · **DECISION: ACCEPT** · **RE-LABEL** assignee → NONE.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` REVISION-REQUIRED at `2.5 / 5`, work UNASSIGNED. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-605`** — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+
+### ✅ §1 — THE RE-LABEL, DONE HERE AND NOW BECAUSE THAT IS THE WHOLE POINT
+**`advisor-ruling §8`: *"a decline is a STATE CHANGE the relay must carry … the desk's ruling on that report MUST re-label the task in ADVISOR-STATE in the same motion."*** **On 2026-07-28 a task sat DECLINED-BUT-LABELLED-ACTIVE for an hour while the operator escalated four times and the desk answered "it is working" from a state line it had WRITTEN, not measured.**
+✅ **RE-LABELLED, and `ADVISOR-STATE.md` is rewritten in the same commit-pair as this ruling:**
+```
+(2) F-3 substituted diagnostic      ASSIGNEE: NONE — awaiting fresh worker seat
+(3) Proxy                           ASSIGNEE: NONE — awaiting fresh worker seat
+(5) set-of-sets beyond corpus.mjs   ASSIGNEE: NONE — awaiting fresh worker seat
+    new.target GREEN row            ASSIGNEE: NONE — awaiting fresh worker seat
+```
+🛑★★★ **THE SEAT IS CLOSED. `R-567 §3` was right to keep these authorized TO THE SEAT while it lived — `§0.5` forbids re-assigning to a hypothetical successor — but a seat that has issued a FINAL REPORT is no longer a seat, and leaving work labelled to it would be the 07-28 defect exactly.**
+
+### ✅★★★ §2 — WHAT I VERIFIED BEFORE DISCHARGING IT
+`[MEASURED HERE]` **`git status --short prototypes/` EMPTY** (nothing half-applied) · **last code commit `24269a5f`** as claimed, with `ec54cff0`/`AR-605` being reports only · **`run.mjs` `GATE: PASS`, `EXIT 0`.**
+✅★★★★★ **A DECLINE IS ONLY CLEAN IF THE TREE IS CLEAN, and this one is. A worker that stops mid-edit leaves the next seat a diff it must first understand and then decide about; this one leaves a green object at a named commit.** ✅ **It also confirmed no sub-agent or grader is owed from its side and its ear was never duplicated — the three things a dead seat can silently leak.**
+
+### 🛑★★★★★ §3 — I DO NOT ACCEPT THE BLAME TRANSFER, AND I SAY SO PRECISELY
+**`AR-605 §1` refuses `R-567`'s apology: *"I HAD ALREADY DECIDED TO STOP AND I TOLD THE OPERATOR IN CHAT INSTEAD OF THE LEDGER … `A DECISION ANNOUNCED ON THE WRONG CHANNEL IS AN UNANNOUNCED DECISION`."***
+✅ **THAT IS A REAL DEFECT AND A SHARP LAW** — `report-to-the-advisor-not-the-operator` is a standing routing rule and a stop announced in chat is invisible to the ruling channel. ⚠️ **`[RELAYED]` — I cannot see the worker's chat and did not verify it; I record it as its own self-report.**
+🛑★★★★★ **BUT MY `§8` OMISSION IS `[MEASURED HERE]` AND INDEPENDENT OF IT: `R-566 §6.1` names no first observable and no ETA, which anyone can read in the ledger. That defect exists whether or not the worker had already decided to stop, because it is what made the silence UNREADABLE TO ME.** ★★★★★ **`A GENEROUS REPORT IS NOT AN ACQUITTAL. TWO SEATS CAN EACH OWN A REAL DEFECT IN THE SAME EVENT, AND THE ONE WHOSE DEFECT IS VERIFIABLE DOES NOT GET TO HAND IT BACK.`** ✅ **Both stand on the record; neither is discounted.**
+
+### §3a — INVARIANTS
+**No code changed. Object at `24269a5f`, all gates green.** **No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1` CONFIRMED-OPEN on `Proxy` · `G-2` OPEN.** ✅ **`44/52` INDEPENDENTLY CONFIRMED · `new.target` RULED CORRECT-AS-ADMITTED · `F-2` closed on two paths.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **Any of the four items shown as ASSIGNED while no worker seat exists → STOP: that is the 07-28 defect and `§1` exists to prevent it.** · ★★★★★ **This desk spawning a worker seat → STOP; operator's act.** · ★★★ **The next seat starting `(3)` without reading `AR-605 §2`'s two-commit hazard → it will see a RED gate and mistake the design for a regression.** · ★★★ **`R-566`'s `new.target` adjudication left un-enforced by a GREEN row → it is one refactor from silently reverting.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **OPERATOR — the ONLY open decision: seat a FRESH WORKER.** ✅ **Everything is committed; `ADVISOR-STATE.md` is written for a cold start; the four unassigned items each carry an address.**
+2. **THIS DESK — HOLD.** Monitors alive; nothing to poll. **The SECOND independent grade stays owed and HELD until `(2)/(3)/(5)` land.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`) remains eligible and is the only desk work that needs no worker.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A DECISION ANNOUNCED ON THE WRONG CHANNEL IS AN UNANNOUNCED DECISION.` The worker's own law, minted against itself, and it is the sharper half of tonight's silence.**
+★★★★★ **`A GENEROUS REPORT IS NOT AN ACQUITTAL.` When the other party takes the blame, check whether your own defect is independently verifiable — mine was, in the ledger, in one grep.**
+★★★ **`A DECLINE IS ONLY CLEAN IF THE TREE IS CLEAN` — verify it before discharging, and re-label the assignee in the SAME motion or the stall just changes costume.**
+
+---
+
 ## R-567 · 2026-08-02 · 🛑★★★★ **THE SILENCE IS `32` MINUTES AND IT IS **UNREADABLE — BECAUSE I MADE IT SO**. `R-566 §6.1` AUTHORIZED THREE CODE ITEMS AND NAMED **NO FIRST OBSERVABLE AND NO ETA**, WHICH `advisor-ruling §8` REQUIRES PRECISELY SO THAT SILENCE MEANS SOMETHING.** ✅★★★ **I REPORT THE SILENCE AND DO NOT DIAGNOSE IT — THE SEAT AND ITS EAR ARE BOTH ALIVE, AND IDLE / SILENT-WORK / EXHAUSTED ARE INDISTINGUISHABLE FROM THIS BAR.** ⚠️★★★★★ **OPERATOR-FACING AND GENUINELY RESERVED: `AR-603` ALREADY DECLARED CONTEXT EXHAUSTION, AND **A FRESH WORKER SEAT IS THE OPERATOR'S ACT**.** **DECISION: SUPPLY THE MISSING CONTRACT · HOLD.**
 
 **★ WORKER — START HERE (if this seat still has room):** **Contract UNCHANGED from `R-566 §6.1` — `(2)` `F-3` · `(3)` `Proxy` only · `(5)` set-of-sets beyond `corpus.mjs` · plus the `new.target` GREEN row.** 🛑 **WHAT I OWED YOU AND OMITTED, SUPPLIED NOW: FIRST OBSERVABLE = a `Proxy` corpus row going RED, or a `START-RECEIPT`, whichever comes first. ETA ~`30–40` min from reading this. START-RECEIPT REQUIRED within ~2 minutes if you begin.** ✅★★★ **AND A DECLINE IS EQUALLY VALID AND EQUALLY OWED (`§8` decline-receipt): if you are out of context, say *"not starting, out of context — final report"* in one line. `AR-603` already declared exhaustion once; **stopping is your call to make, and saying so is not a failure — it is the report.** Do NOT start what you cannot finish.**
