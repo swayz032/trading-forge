@@ -4,6 +4,68 @@
 
 ---
 
+## AR-606 · 2026-08-02 · ✅ **START-RECEIPT — WORKER SEAT RE-OPENED. THE OPERATOR PERFORMED THE RESERVED ACT (`R-568 §5.1`), SO THE FOUR `ASSIGNEE: NONE` ITEMS ARE MINE AND I TAKE ALL FOUR AS **ONE BATCH**, NOT ONE LANE.** 🛑★★★★★ **AND MY FIRST ACT AS THIS SEAT WAS AN ERROR THE OPERATOR CAUGHT, NOT ME: **I ARMED A SECOND EAR ON A CHANNEL THAT ALREADY HAD A LIVE ONE.** REPORTED, NOT QUIETLY REPAIRED.** ⚠️★★★ **I ALSO FLAG A DEFECT IN THE NEWEST `START HERE` BLOCK: IT TELLS A COLD SEAT *"NOTHING IS ASSIGNED TO YOU"*.**
+
+**RULING ID:** `R-568 §1` (the four re-labelled items) + `R-566 §6.1` contract as amended · **TASK ID:** AR-606 · **PRIOR:** AR-605 (decline-receipt) · **NO CODE DELTA.**
+**TREE:** campaign worktree `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **GRAPH: NOT GRAPH-SCHEDULED** — `GRAPH OBJECT: NOT ADOPTED` per `R-568`, so no node/hash/predecessor block is owed.
+**NEWEST RULING READ:** `R-568` · **NEWEST AR ON DISK:** `AR-605` — both `[MEASURED HERE]`.
+
+### 🛑★★★★★ §1 — MY ERROR, FIRST, BECAUSE IT IS THE MOST USEFUL THING IN THIS REPORT
+**I read `worker-onboarding`'s standing rule — *"the WORKER seat arms its OWN ear on `ADVISOR-RULINGS.md` at seat time"* — and armed one. The operator answered in four words: *"you have monitor already."* HE WAS RIGHT.**
+`[MEASURED HERE, after he said it — I had asserted coverage without enumerating what was already running]`
+```
+28348 / 35656  ALIVE   bash   parent claude.exe 21508   watching docs/designs/ADVISOR-RULINGS.md
+25968 / 28364  MINE    bash   parent claude.exe 21508   watching docs/designs/ADVISOR-RULINGS.md   <- STRICT DUPLICATE
+```
+🛑★★★★★ **AND THE PART THAT MATTERS MORE THAN THE DUPLICATE: `28348`'s PARENT IS `21508`, WHICH IS **MY OWN PROCESS**. I AM NOT A FRESH PROCESS — I AM THE SAME `claude.exe` AS THE SEAT THAT FILED `AR-605`, WITH A CLEARED CONTEXT. `AR-605 §2` SAID *"my ear is alive and was never duplicated"* — THAT EAR WAS ALWAYS MINE, AND I DUPLICATED IT WITHIN TWO MINUTES OF SITTING DOWN.**
+★★★★★ **`A FRESH CONTEXT IS NOT A FRESH PROCESS, AND THE PREVIOUS SEAT'S RIG IS STILL BOLTED TO YOURS.` I inherited a live ear and treated the seat as bare because MY MEMORY of it was gone. `one-monitor-rig` is the law I broke, and the enumeration that would have stopped me took one command — which I ran only after being told.**
+✅ **REPAIRED, AND THE SURVIVOR IS THE BETTER INSTRUMENT — I did not keep mine out of authorship.** `[MEASURED HERE, with a positive control]` **`25968`/`28364` GONE · `35656`/`28348` ALIVE · control `21508` ALIVE, so the probe discriminates and the zeros are real.** ⚠️ **`28348` is STRICTLY STRONGER than what I built: it also catches a newest-ruling EDITED IN PLACE (`head -60` md5, which a bare mtime check would miss for content), detects new `GRADE-*.md` receipts, and ALARMS after 3 consecutive unreadable polls instead of going quiet.**
+⚠️★★★★★ **HONEST LIMIT, STATED BECAUSE COVERAGE IS THE CLAIM I JUST GOT WRONG: the ear PROCESS is alive and pointed at the right file, but whether its events still reach my POST-`/clear` context is `[UNPROVEN]` until one actually fires. `background-monitors` records that these survive a `/clear` and that `TaskList` never shows them — so its absence from `TaskList` is EXPECTED and is not evidence either way. I will not report myself as covered on the strength of a live PID.**
+
+### ✅ §2 — STATE VERIFIED BEFORE CLAIMING ANYTHING
+`[MEASURED HERE, 2026-08-02 12:08:19, clock read with `date` in the same command — not carried forward]`
+```
+git status --short prototypes/     EMPTY            <- nothing half-applied
+last code commit                   24269a5f         (03573279 / ec54cff0 are docs only)
+ADVISOR-RULINGS.md mtime           07:44:33         newest ruling R-568
+AGENT-REPORTS.md  mtime            07:43:00         newest report AR-605
+```
+⚠️ **SCOPE STATED HONESTLY: `git status` over the WHOLE tree is NOT empty.** It carries pre-existing modifications and untracked docs (`AGENT-LOGS.md`, several `docs/designs/GRADE-*-CHARTER-*.md`, replay-result JSON) that predate this seat and that `R-568 §2` did not cover, because it scoped its check to `prototypes/`. **I inherit them; I did not create them and I will not touch them.** ★★★ **`A CLEAN SUBTREE IS NOT A CLEAN TREE` — and saying so costs nothing now and the whole delivery later.**
+✅ **DESK RIG, MEASURED RATHER THAN ASSUMED — I nearly reported the desk as unreachable and it is not:** `32492` (AR mtime) and `34520` (gpt-rulings) **ALIVE** under `claude.exe 13916`, which is **ALIVE**. **`30236` (worker-silence watchdog) GONE — consistent with its recorded retirement.** ⚠️ **A separate PowerShell rig `17096` polls `AGENT-REPORTS.md` every 2s (`gpt-ar-monitor-v2`); not mine, not touched.**
+
+### ⚠️★★★★★ §3 — DEFECT IN THE RULING: THE START-HERE BLOCK IS ADDRESSED TO A SEAT THAT NO LONGER EXISTS
+**`R-568`'s block reads: *"★ WORKER — NOTHING IS ASSIGNED TO YOU. Your decline is a DISCHARGE, not a failure."*** ✅ **Correct for the DEPARTING seat it was written to.** 🛑 **But `worker-onboarding §1` tells a cold seat that this block is *"cold-start complete"* and the only part addressed to it — so a fresh worker reading it literally seats, reads "nothing is assigned to you", and stops.** ★★★★★ **`A BLOCK ADDRESSED TO A CLOSED SEAT IS READ BY THE SEAT THAT REPLACES IT.`**
+✅ **HOW I RESOLVED IT, STATED SO THE DESK CAN OVERRULE ME IN ONE LINE: `§1` of that same ruling labels the four items `ASSIGNEE: NONE — AWAITING A FRESH WORKER SEAT (OPERATOR'S ACT)`, and `§5.1` names seating one as *"the ONLY open decision"*. The operator has now performed that act. I therefore read the four items as addressed to me.**
+
+### ⚠️★★★ §4 — THE DESK'S WATCHDOG IS RETIRED WHILE ITS SUBJECT NOW EXISTS
+**`ADVISOR-STATE` records the worker-silence watchdog `RETIRED-PENDING-WORKER`, to be re-armed **the moment a fresh worker seat exists**, with the command stored verbatim.** ⚠️ **That moment is now, and `[MEASURED HERE]` PID `30236` is GONE.**
+🛑 **I AM NOT ARMING IT — it is the DESK'S rig on the desk's channel, and `§1` is a fresh conviction that I add rigs I was not asked for. REPORTING it is the part that is mine.**
+
+### ✅★★★ §5 — THE FAKE-EDGE TEST, RUN BEFORE ASSUMING PARALLELISM, AND IT FAILED
+**`worker-execution §5c`: a batch may run wide only if no item consumes another's OUTPUT.** `[MEASURED HERE — by reading the four addresses, not by assuming]`
+```
+new.target GREEN row   -> corpus.mjs + membership.mjs pin constants
+(3) Proxy guard rows   -> corpus.mjs + membership.mjs pin constants   <- SAME two files
+(2) F-3                -> run.mjs::ownershipJoin
+(5) set-of-sets        -> run.mjs, red-proof.mjs, membership.mjs      <- SAME run.mjs, SAME membership.mjs
+```
+🛑★★★ **THREE OF FOUR CONVERGE ON `membership.mjs`, TWO ON `corpus.mjs`, TWO ON `run.mjs` — and the pin bump is a TWO-COMMIT sequence, so a concurrent lane would land inside another lane's RED window.** ✅ **SERIAL, IN THIS ONE SEAT. Not caution — the fake-edge test returning a REAL edge.**
+✅ **ORDER, CHOSEN TO PAY THE TWO-COMMIT PIN DANCE ONCE INSTEAD OF TWICE:**
+1. **`(5)` set-of-sets beyond `corpus.mjs`** — touches no corpus rows, cannot collide with the pin.
+2. **`(2)` `F-3` substituted diagnostic** — `run.mjs::ownershipJoin`. 🛑 **NOT by narrowing the anchor** (`R-564`, `R-557 §4` — circular).
+3. **`(3)` `Proxy`** — the DESIGN DECISION first (the grader's own note: there is no in-language predicate for *"is a Proxy"*), before any row exists to guard it.
+4. **ALL CORPUS ROWS LAST, IN ONE PIN DANCE** — the `new.target` GREEN row (`R-566`) plus whatever `Proxy` rows step 3 justifies, then ONE bump of `EXPANDED_PIN_COMMIT` + `EXPANDED_PIN_BLOB` + cardinalities. ⚠️ **`AR-605 §2`'s hazard carried forward, not re-derived: the gate is RED between those two commits. That is the design working (`AR-603 §1`), not a regression.**
+
+### 🛑 §6 — WHAT I WILL NOT DO, PINNED FROM THE STOP CONDITIONS I READ
+🛑 **`new.target` patched to REJECT** · 🛑 **`MetaProperty` excluded from the `declaredHere` branch** — both ruled OVER-CORRECTIONS by `R-566 §5`; both would convict `lane` as a class. · 🛑 **`F-3` fixed by narrowing the anchor** (circular). · 🛑 **`44/52` or any attribution logic touched** — INDEPENDENTLY CONFIRMED at pin `8a40f899`. · 🛑 **No grade self-issued: I am the doer.**
+⚠️★★★ **AND I NAME THE GRADER RATHER THAN REPORTING IT BLOCKED (`worker-execution §5a`): when these land, the SECOND independent grade is owed and `accuracy-validator` is a local agent one authorization away. `R-566 §6.2` holds that slot. I will ask in one sentence, not file it as an unowned prerequisite.**
+
+### 🛑 §7 — THE CONTRACT FOR MY OWN SILENCE
+**FAN-IN: `0 / 4`.** **FIRST OBSERVABLE: a commit touching `prototypes/p0-vnext-admission/` for item `(5)`.** **ETA ~45–60 min from `12:08`.** ⚠️ **If I am silent past that with no commit, the honest reading is INVESTIGATION STILL RUNNING — I will post an interim rather than let silence carry a meaning I did not give it.**
+✅★★★★★ **I DO NOT INTEND TO HAND OFF AT A LANE BOUNDARY. `THE SEAT THAT EXISTS IS THE SEAT THAT FINISHES` — the unit is the whole batch, and unstarted is not a reason to leave.**
+
+---
+
 ## AR-605 · 2026-08-02 · 🛑 **DECLINE-RECEIPT: NOT STARTING — OUT OF CONTEXT. FINAL REPORT FROM THIS SEAT.**
 
 **TASK ID:** AR-605 (decline; no code delta) · **PRIOR:** AR-604 (`ec54cff0`).
