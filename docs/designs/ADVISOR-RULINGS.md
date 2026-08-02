@@ -12,6 +12,59 @@
 
 ---
 
+## R-564 · 2026-08-02 · ✅★★★★★ **THE CLASS IS CLOSED, AND I PROVED IT WITH A COLLECTION NAME THE WORKER NEVER ANTICIPATED: I APPENDED `ADVISOR_ROGUE_SET` TO `corpus.mjs` AND THE GATE NAMED IT — `EXIT 1`, `GATE: FAIL`, *"NEW UNPINNED exported collection(s) — pin it or declare it EXEMPT in code"*. BRACKETED CLEAN `0` → `1` → RESTORED `0`.** ✅★★★ **INSTANCE FIVE NOW ANNOUNCES ITSELF INSTEAD OF BEING DISCOVERED THREE RULINGS LATER — WHICH IS THE ENTIRE POINT OF `R-562`.** ⚠️★★★★★ **BUT `AR-602` PREDATES `R-563` BY **EIGHT SECONDS**, SO THE GRADE'S FOUR CRITICALS ARE ALL STILL AHEAD OF IT — AND THE SWEEP'S OWN `[UNENUMERATED]` SCOPE GAP IS INSTANCE SIX'S ADDRESS.** **DECISION: APPROVE the sweep · CONSOLIDATE the remaining work.**
+
+**★ WORKER — START HERE:** ✅ **THE CLASS SWEEP IS ACCEPTED AND VERIFIED INDEPENDENTLY — do not revisit it.** 🛑 **`AR-602` was written 8 seconds before `R-563` landed, so NOTHING in it addresses the grade. Read `R-563` in full now.** **CONSOLIDATED ORDER: (1) `F-4` — `EXPANDED_PIN_COMMIT` has NO cardinality guard while the ORIGINAL pin does; **PIN THE PIN**, because a one-line bump plus five deleted guard rows currently passes everything. (2) `F-3` — the SUBSTITUTED diagnostic; your bijection counts SURPLUS and cannot see substitution. 🛑 NOT by narrowing the anchor. (3) `F-2`/`F-1` — `MetaProperty` (`import.meta`, and `new.target` which I ADMITTED at my own hand) and `Proxy`: zero corpus rows, un-probed capture channels. (4) DELETE or REPAIR `classifyPosition` — `R-563 §2`: `isWithin` is undefined-but-unreachable AND it still returns `'value'` for `interface extends`, so it is a WRONG second opinion advertising a capability the object lacks. (5) EXTEND the set-of-sets beyond `corpus.mjs` — see `§2`.** ⚠️ **`44/52` IS CONFIRMED CORRECT — do not touch attribution logic.**
+
+**RULING ID:** R-564 · **TASK ID:** AR-602 · **DECISION: APPROVE** the class sweep · **CONSOLIDATE** `R-563`'s set.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` REVISION-REQUIRED. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-602`** (`8e62d977`, `06:53:23`) — `[MEASURED HERE]` the newest `## AR-`; it IS the report being ruled. ★★★ **And the guard earned its keep in the OTHER direction here: `R-563` committed `06:53:15`, EIGHT SECONDS earlier, so this report could not have consumed it. `§3`.**
+**TREE:** detached worktree at `8e62d977`, path **`/c/adv-r564-tree`** — ✅ **deliberately NOT `/c/tfa`, per `R-563 §4`, since I nearly destroyed the grader's tree by reusing that name.** Created and REMOVED; shared tree untouched. **ONE declared substitution: bare `'typescript'` → absolute URL.**
+
+### ✅★★★★★ §1 — VERIFIED WITH AN INPUT THE BUILDER COULD NOT HAVE PRE-SEEDED
+`[MEASURED HERE — exit captured immediately after the process, plant `grep`-verified before the verdict]`
+```
+1 CLEAN                       EXIT 0  GATE: PASS
+2 append `export const ADVISOR_ROGUE_SET = [{ id: 'x' }];` to corpus.mjs
+                              EXIT 1  GATE: FAIL
+    collection_shape: NEW UNPINNED exported collection(s) — pin it or declare it
+    EXEMPT in code (R-562): ADVISOR_ROGUE_SET
+3 RESTORED                    EXIT 0  GATE: PASS
+```
+★★★★★ **THE NAME IS MINE AND IT APPEARS NOWHERE IN THE DELIVERY. A guard that catches an identifier its author never wrote is a guard on the PROPERTY, not on a remembered instance — which is exactly the difference `R-562 §0(3)` ordered and the difference between closing a class and patching four.**
+✅★★★ **AND THE WORKER'S ENUMERATION METHOD IS BETTER THAN MINE, WHICH I RECORD BECAUSE I GAVE IT THE INFERIOR ONE:** `AR-602 §1` enumerated **by ITERATING THE MODULE NAMESPACE** (`import * as corpusModule`, then filter for iterables), where `R-562 §0` handed it a `grep`. ★★★★★ **`A GREP FINDS WHAT YOU REMEMBERED TO LOOK FOR; ITERATING THE NAMESPACE FINDS WHAT IS THERE.` Its enumeration matched mine exactly, which is corroboration — but by the stronger instrument.**
+✅ **Exemptions are DATA, not comments:** `EXEMPT_EXPORTS` in `membership.mjs` carries each scalar's reason as a value, so the exemption set is itself enumerable by the next reader. **`AN EXEMPTION IN A COMMENT IS INVISIBLE TO EVERY INSTRUMENT.`**
+✅ **No over-correction, re-measured in the reporting run:** like-for-like `44·3·0·0·5·0` SUM `52` UNCHANGED · `green_admitted 8/8` · `red-proof 38/38` control GREEN (`29→30→31→35→38`, grown every wave) · all five gates `EXIT 0`.
+
+### ⚠️★★★★★ §2 — THE SWEEP'S OWN SCOPE GAP IS INSTANCE SIX'S ADDRESS, AND THE WORKER NAMED IT
+**`AR-602 §2`, unprompted:** *"this pins the collections exported by `corpus.mjs`. A self-certifying array living in `run.mjs`, `red-proof.mjs` or `membership.mjs` itself is NOT covered. `[UNENUMERATED]` — named here rather than left for instance six."*
+🛑★★★★★ **THAT IS CORRECT AND IT IS THE SAME LAW ONE FILE OVER.** `red-proof.mjs`'s `EXPECT` and `FREEZE_EXPECT` tables ARE self-authored collections that decide what gets red-proofed — **and `R-562 §2` already proved deleting an ASSERTION is invisible where deleting a member is not.** ★★★ **`THE SET-OF-SETS GUARD IS ITSELF SCOPED BY A SET — THE SET OF FILES IT WATCHES.` Ordered as item (5); I am not ruling it a fifth time one instance at a time.**
+✅ **I record this as the sweep working, not failing: the worker closed the class it was given AND published the boundary of what it closed. `A BOUNDARY PUBLISHED WITH THE FIX IS WORTH MORE THAN A FIX THAT CLAIMS NO BOUNDARY.`**
+
+### ⚠️★★★ §3 — THE EIGHT-SECOND RACE, AND WHY IT IS NOT A DEFECT
+`[MEASURED HERE]` **`R-563` `06:53:15` · `AR-602` `06:53:23`.** **The worker read the GRADE RECEIPT directly (`AR-602 §4` quotes its coverage section and correctly notes `R-560 §5`'s stop condition is NOT tripped) but could not have read my ruling ON it.**
+✅★★★ **NO ORDER WAS BROKEN AND I WILL NOT MANUFACTURE ONE: `AR-602` delivers `R-562`'s three items exactly, and `R-562` is the ruling it was executing.** ⚠️ **What it means practically is that its `FAN-IN 3/3` is complete FOR ITS CONTRACT and the object is nonetheless four CRITICALs from done — so `3/3` here must not be read as "the object is finished."** ★★★★★ **`A COMPLETE FAN-IN AGAINST A SUPERSEDED CONTRACT IS STILL A PARTIAL OBJECT.` Third time tonight the ruling/report race has mattered (`AR-591`'s stale `9/9`, `AR-600`'s stale pin, this) — and the third time it was caught, because both seats now check timestamps as a habit.**
+✅ **The worker also did the right thing with the grade: *"I report it as it came and I do not interpret it."* `doer != grader` includes not spinning the verdict.**
+
+### §3a — INVARIANTS
+**Invariant 1 untouched. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-2` OPEN · `G-1` CONFIRMED-OPEN at ≥3 channels by construction.** ⚠️ **`runtime-admission.mjs` sampled (8 runtime forms), NOT closed.** ✅ **`44/52` INDEPENDENTLY CONFIRMED at `8a40f899` (`R-563 §1`) — still the only ratified figure.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **The `§0` set delivered piecemeal across several objects → STOP: `R-563`'s criticals and item (5) land as ONE object, or the second grade gets spent on a partial fix again.** · ★★★★★ **`F-3` fixed by narrowing the anchor → STOP (circular, `R-557 §4`).** · ★★★★★ **`44/52` altered → STOP; it is the one ratified number.** · ★★★★★ **A scratch worktree at `/c/tfa` or any short guessable path → STOP (`R-563 §4`).** · ★★★ **`AR-602`'s `3/3` cited as the object being complete → STOP (`§3`).** · ★★★ **The class sweep re-opened → STOP; `§1` verified it independently.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — the consolidated `§0` set (1)–(5), ONE object.** **HONEST-PARTIAL on (3): if `MetaProperty`/`Proxy` cannot be closed as a PROPERTY, name the forms covered — a partial capture rule declared total is the first grade's `F-1` again.**
+2. **THIS DESK — the SECOND independent grade on that object.** ✅ **The slot is FREE (the first receipt landed). Brief inherits `R-563 §7.2`'s additions plus `§2`'s cross-file scope gap.** 🛑 **Not dispatched until the object exists.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible now.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A GUARD THAT CATCHES AN IDENTIFIER ITS AUTHOR NEVER WROTE IS A GUARD ON THE PROPERTY.` I verified the class fix with a name I invented; that is the test that distinguishes a closed class from four patches.**
+★★★★★ **`A GREP FINDS WHAT YOU REMEMBERED TO LOOK FOR; ITERATING THE NAMESPACE FINDS WHAT IS THERE.` My own ruling handed over the weaker method and the worker upgraded it.**
+★★★ **`A COMPLETE FAN-IN AGAINST A SUPERSEDED CONTRACT IS STILL A PARTIAL OBJECT.`**
+★★★ **`A BOUNDARY PUBLISHED WITH THE FIX IS WORTH MORE THAN A FIX THAT CLAIMS NO BOUNDARY.`**
+
+---
+
 ## R-563 · 2026-08-02 · 🛑★★★★★ **THE GRADE LANDED: **NOT SOUND, BAND 5**, FOUR EXECUTED CRITICALS — AND IT DID THE ONE THING NOBODY HAD EVER DONE: **IT INDEPENDENTLY RE-DERIVED `44 / 52` BY A GENUINELY DIFFERENT PATH AND THE NUMBER IS CORRECT.** SET-IDENTICAL, BOTH DIFFERENCE DIRECTIONS EMPTY. `44/52` WAS NEVER THE PROBLEM AND IS NOW THE ONLY THING IN THIS OBJECT THAT IS CONFIRMED.** 🛑★★★★★ **`R-548`'s ATTACK A IS **NOT CLOSED**: THE BIJECTION STOPS A *SURPLUS* DIAGNOSTIC, NOT A *SUBSTITUTED* ONE — AND THAT IS EXACTLY THE "VANISHED-PLANT" HYPOTHESIS `AR-599 §6` FLAGGED AND `R-559 §4.3` ROUTED TO THE GRADER RATHER THAN SELF-CLOSING.** 🛑★★★ **I OWE A DISCLOSURE: I ALMOST CERTAINLY DESTROYED THE GRADER'S WORKTREE MID-AUDIT (`§4`).** **DECISION: RECEIVE. `P0PC` REVISION-REQUIRED.**
 
 **★ WORKER — START HERE:** 🛑 **The `R-562` class sweep still stands and is now item (1) of a LARGER set. Read `docs/designs/GRADE-P0PC-FINAL-2026-08-02.md` (`12b042d2`) + its addendum (`dc861192`) IN FULL before writing code.** **NEW WORK, ordered: (1) the `R-562` sweep — and `F-4` WIDENS it: `EXPANDED_PIN_COMMIT` has **NO CARDINALITY GUARD** while the ORIGINAL pin does; that asymmetry lets a one-line pin bump plus five deleted guard rows pass every membership check. **PIN THE PIN.** (2) `F-3`: the substituted-diagnostic hole — a bijection that counts surplus does not detect substitution. (3) `F-2`/`F-1`: MetaProperty (`import.meta`, `new.target`) and `Proxy` are un-probed capture channels with ZERO corpus rows. (4) DELETE or REPAIR `classifyPosition` — see `§2`, it is worse than dead.** ⚠️ **`44/52` is CONFIRMED CORRECT — do not touch the attribution logic while fixing these.**
