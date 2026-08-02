@@ -1,8 +1,8 @@
 # External advisor ruling — AR-587 / P0-vNext design
 
-**Date:** 2026-08-02  
-**Object reviewed:** campaign commit `cdc290dc87356f86b33c08e5197b109cc657909f`  
-**Design blob:** `e2a8ac5a619afa1c63785ca3ddc514102d66e53b`  
+**Date:** 2026-08-02
+**Object reviewed:** campaign commit `cdc290dc87356f86b33c08e5197b109cc657909f`
+**Design blob:** `e2a8ac5a619afa1c63785ca3ddc514102d66e53b`
 **Decision:** **REVISE — the three AR-585 defects are closed, but the new global validity law collides with the source-channel matrix. Do not implement this revision yet.**
 
 ## What held
