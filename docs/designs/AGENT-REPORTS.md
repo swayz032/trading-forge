@@ -4,6 +4,68 @@
 
 ---
 
+## AR-584 · 2026-08-02 · **START-RECEIPT — R-539 §5 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** ✅★★★★★ **BOTH NEW FINDINGS RE-MEASURED HERE AND SUSTAINED.** 🛑★★★★★ **AND I NEARLY FILED A FALSE DISCREPANCY AGAINST THE DESK'S OWN TABLE: MY FIRST `__proto__` PROBE TESTED AN **UNWRAPPED** LITERAL AND GOT `isFrozen=false` AGAINST THE DESK'S `true`. THE DESK IS RIGHT — THE GRAMMAR-CONFORMING FORM IS THE **FROZEN** ONE, AND I HAD TESTED AN OBJECT THE GRAMMAR DOES NOT ADMIT.**
+
+**RULING ID:** R-539 §5 · **TASK ID:** AR-584 · **PRIOR:** AR-583 (delivery, `38/38`, corroborated by `R-539 §1` with no defect found) · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, AS A DELTA
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py   <- pre-existing since AR-576
+(+24 pre-existing untracked docs/designs files)
+```
+⚠️ **`docs/designs/GRADE-P0-VNEXT-DESIGN-2026-08-02.md` is the GRADER'S receipt. I do not read it as authority, I do not write it, and I do not touch it.**
+
+### ✅★★★★★ §2 — BOTH FALSE GREENS RE-MEASURED, WITH CONTROLS AND THE DISCRIMINATOR
+`[ALL MEASURED HERE, node v24.13.0, independently authored harness]`
+```
+F2a SHADOWED   const Object_={freeze:x=>x}; Object_.freeze({slot:{}})
+               -> isFrozen(root)=FALSE ; nested write returned EXPECTED_FROM_LEDGER   *** LEAK ***
+    CONTROL    intrinsic Object.freeze, every nested literal wrapped
+               -> isFrozen(root)=TRUE  ; nested write blocked (undefined)              GREEN
+F2b IDENT      Object.freeze({ __proto__: frozenProto })
+               -> ownKeys [] ; proto===supplied TRUE ; inherited REACHABLE ; isFrozen TRUE
+    STRING     Object.freeze({ "__proto__": frozenProto })   -> IDENTICAL on all four
+    CONTROL    { a: 1 }              -> ownKeys ["a"] ; proto === Object.prototype
+    DISCRIM    { ["__proto__"]: p }  -> ownKeys ["__proto__"] ; proto === Object.prototype  NOT a setter
+```
+🛑★★★★★ **SUSTAINED: AN OBJECT THAT SATISFIES THE ADMITTED GRAMMAR, PASSES `isFrozen`, EXPOSES **ZERO OWN KEYS**, AND SERVES REACHABLE INHERITED DATA — built with no spread, alias, helper call, computed key, accessor or unfrozen node. **A DESCRIPTOR WALK OVER OWN KEYS SEES NOTHING AT ALL.**
+✅★★★ **AND THE DISCRIMINATOR IS REAL AND I CONFIRM IT INDEPENDENTLY: the COMPUTED form is NOT a prototype setter. Scoping the prohibition to the two LITERAL spellings is correct; forbidding the computed form AS A PROTO CHANNEL would be a remedy built on a false premise.**
+
+### 🛑★★★★★ §3 — MY OWN NEAR-MISS, RECORDED BECAUSE IT WOULD HAVE BEEN A FALSE FINDING
+**My first probe built `{ __proto__: p }` UNWRAPPED and measured `isFrozen = false`, against `R-539 §3`'s table saying `TRUE`. `[MEASURED HERE]` re-run with the wrapper: `Object.freeze({__proto__: p})` → `isFrozen = TRUE`, ownKeys `[]`, proto === supplied, inherited reachable.**
+★★★★★ **THE DESK IS RIGHT AND I TESTED AN OBJECT THE GRAMMAR DOES NOT ADMIT. `A DISCREPANCY ACCUSES YOUR FIXTURE BEFORE IT ACCUSES THE OTHER PARTY'S MEASUREMENT` — and one round after co-signing a false refutation, filing this would have been the same error with the polarity flipped.**
+
+### ✅★★★ §4 — THE THREE PREMISES ITEMS 1–5 REST ON, MEASURED BEFORE I EDIT
+```
+Object === globalThis.Object            -> TRUE   (so `Object` IS an ambient host global:
+                                                   the L114 `ALLOWED: nothing` cell and the
+                                                   L135 Object.freeze-only grammar CONTRADICT)
+allow-list references in the document   -> 10     (positive control ALIVE: the absence of an
+                                                   enumerated membership is a MEASURED absence)
+surviving menu at L110                  -> "none in the preferred form; OTHERWISE an
+                                            enumerated, frozen allow-list"   <- FOURTH MENU
+stale carrier at L225                   -> "(vs both `4b` rows)"  while 4b rows are now EIGHT
+duplicate ordinary keys { a:1, a:2 }    -> ownKeys ["a"], last value 2, NO ERROR
+                                           >>> a duplicate key SILENTLY DISCARDS the first value
+```
+✅ **On item `4`'s open question I will therefore FORBID duplicate ordinary keys and red-proof it: a silent last-wins override in a frozen constant is exactly the class this document exists to refuse.**
+
+### ⚠️ §5 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** ✅ **NONE** — item `3` red-proofs item `2`'s allow-list, item `5` recomputes over `1`–`4`, all write ONE file. **Serial.**
+**(b) NO METRIC MIX.**
+**(c) 🛑★★★★★ THE STOP CONDITION I EXPECT TO BIND ME: *"the positive GREEN neighbour rejected by the same rule meant to validate it."* If `ambient reads ALLOWED: nothing` stands literally, EVERY valid frozen composite constant is rejected and `L225`'s promised GREEN neighbour is UNCONSTRUCTIBLE. **I must reconcile that cell rather than paper over it, and if it cannot be reconciled soundly I will say `UNRESOLVED_SOURCE_AMBIGUITY` rather than invent an allow-list.**
+**(d) GRADE:** ⚠️ **The `accuracy-validator` is DISPATCHED and its receipt is NOT mine to touch, read as authority, or pre-empt. I do not grade my own work and I do not interpret the grade I did not ask for.**
+
+### §6 — FIRST OBSERVABLE + ETA
+**The two published allow-lists (import policy chosen, ambient intrinsics enumerated by SYMBOL IDENTITY) + the shadowed-freeze and `__proto__` subcases — ~20–30 min.**
+
+### §7 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts **including the grader's** · `P1`/`P2` artifacts · the pinned tag · no `checkout`/`reset`/index op · **BLUEPRINT OUT.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-583 · 2026-08-02 · ✅★★★★★ **R-537 §5 + R-538 §4 DELIVERED — SIX ITEMS, `38/38`, MUTATION-JOIN CLOSED, MATRIX `49+1=50`.** 🛑★★★★★ **AND THE CORRECTION I OWE IS MINE, NOT THE DESK'S ABSOLUTION: `AR-582` CONCURRED WITH A REFUTATION BY MEASURING THE **ROW DEFINITIONS** WHEN THE FINDING WAS ABOUT A **CITATION**. I ANSWERED THE QUESTION I WAS POSED INSTEAD OF THE CLAIM THAT WAS MADE — AND A CORRECT MEASUREMENT OF THE WRONG PROPOSITION IS HOW A FALSE REFUTATION GETS A SECOND SIGNATURE.**
 
 **RULING ID:** R-537 §5 (items `1`–`5`) + R-538 §4 (item `6`) · **TASK ID:** AR-583 · **PRIOR:** AR-582 · **SEAT:** `claude.exe 26204`.
