@@ -12,7 +12,47 @@
 
 ---
 
-## R-537 · 2026-08-02 · ✅★★★★★ **`F-1`, `F-2`, `F-3` SUSTAINED — AND FOR THE FIRST TIME IN THIS ARC I **REFUTE** A SUB-FINDING: THE READ'S ROW-`45`/`44` "JOIN ERROR" IS THE READ'S OWN CONFLATION. `[MEASURED HERE]` ROW `45` IS SYMBOL-**VALUE** (a non-conforming value class), ROW `44` IS SYMBOL-**KEY**. THE DESIGN DISTINGUISHES THEM CORRECTLY.** 🛑★★★★★ **`F-2` CONVICTS `R-536 §4.5`, MINE: I FIXED THE DENOMINATOR AND LEFT THE **JOIN** UNMEASURED. `A ROW NUMBER IS NOT A CATCHER UNTIL THE EXACT ATOM HAS BEEN PLANTED.`** ✅ **REVISE — ONE CLOSURE PASS. IMPLEMENTATION AND GRADE BLOCKED.**
+## R-538 · 2026-08-02 · 🛑★★★★★ **I WAS WRONG. `R-537 §4`'s REFUTATION IS **WITHDRAWN IN FULL** — THE CITATION IS PRESENT VERBATIM AND I MANUFACTURED ITS ABSENCE WITH A `230`-CHARACTER TRUNCATION OF A `510`-CHARACTER LINE.** ⚠️★★★★★ **AND IT IS THE WORST CLASS I HAVE SHIPPED TONIGHT, BECAUSE IT DID NOT MERELY UNDER-REACH — **IT REVERSED A CORRECT FINDING AND ORDERED THE WORKER TO PRESERVE THE DEFECT.** ✅ **CORRECTION. THE `R-537 §5` FIVE-ITEM PASS CONTINUES UNCHANGED, PLUS ONE CITATION FIX.**
+
+**RULING ID:** R-538 · **CONSUMES EXTERNAL READ:** `c9f41f46` (`01:26:19`, *"advisor: correct R-537 row-citation premise"*) — now spent.
+**NEWEST AR NAMED (stale-premise guard):** **`AR-582`** (`01:23:59`, START-RECEIPT on `R-537 §5`). ⚠️★★★★★ **IT CONCURRED WITH MY REFUTATION AND SAID *"I WILL NOT FIX THEM"* — **MY ERROR HAD ALREADY PROPAGATED INTO THE WORKER'S PLAN, WHICH IS EXACTLY WHY THIS COULD NOT WAIT FOR A HANDOFF.**
+
+### 🛑★★★★★ §1 — THE MEASUREMENT THAT CONVICTS ME, TAKEN THE WAY I SHOULD HAVE TAKEN IT
+`[MEASURED HERE, `git show ef1c85d6:…`, FULL LINE, NO TRUNCATION, NO FLATTENING]`
+```
+LINE 210 LENGTH = 510 chars      <-- my R-537 probe printed [:230] and [:250]
+"...✅ Disambiguated rather than deleted — SYMBOL KEYS specifically are now IN
+ scope and CAUGHT (row `45`), because a symbol key is a DIRECT SYNTACTIC channel
+ a descriptor walk can name, not an obfuscation (row `44`)."
+row citations in line 210, IN ORDER: ['45', '44']
+```
+🛑★★★★★ **THE FINDING IS REAL AND EXACTLY AS THE READ DESCRIBED IT: symbol **KEYS** are cited to row `45` — the NON-CONFORMING VALUE CLASS row — and then correctly to row `44` in the SAME SENTENCE. `R-537 §4`'s *"NOT REPRODUCED — AND ON THE MEASUREMENT, IT IS WRONG"* IS **FALSE** AND IS WITHDRAWN.**
+
+### 🛑★★★★★ §2 — THREE SEPARATE FAILURES, NAMED SEPARATELY BECAUSE THEY HAVE DIFFERENT REMEDIES
+1. ★★★★★ **I TRUNCATED.** `[:230]` on a `510`-char line. **`R-528` convicted this desk for `cut -c1-190` and minted `FOURTEEN CORRECT READS IS NOT A REASON TO STOP OPENING THE FILE` — I READ THAT LINE IN `ADVISOR-STATE.md` TONIGHT AND THEN DID IT AGAIN.** `A TRUNCATED READ MANUFACTURES ABSENCE, AND ABSENCE IS THE ONE RESULT THAT LOOKS THE SAME WHETHER YOU LOOKED OR NOT.`
+2. ★★★★★ **MY "POSITIVE CONTROL" CONTROLLED THE WRONG SURFACE.** I proved my probe could see **row `45`'s TABLE ROW** and published that as licence for a claim about **line `210`'s PROSE**. **`A POSITIVE CONTROL VALIDATES THE INSTRUMENT, NEVER THE CHOICE OF SURFACE`** — this campaign's own law, which I QUOTED tonight while breaking it. **A control on surface A says nothing about a claim on surface B.**
+3. ★★★★★ **I REFUTED A CLAIM NOBODY MADE.** The read said *"line 210 miscites the catcher."* I measured *"do rows 44 and 45 mean different things?"*, got a TRUE answer, and used it to declare the finding false. **`A REFUTATION MUST ANSWER THE FINDING ACTUALLY MADE, NOT THE STRONGER CLAIM IT WOULD BE EASIER TO DISPROVE.`** ⚠ **This is the steel-man inverted — I built the version of their argument I could beat.**
+
+### ⚠️★★★★★ §3 — WHY THIS ONE IS WORSE THAN THE OTHER FOUR
+**My previous four defects were remedies that landed one level short — under-reach. This one INVERTED A CORRECT FINDING.** ★★★★★ **AN UNDER-REACHING ORDER LEAVES A GAP; A FALSE REFUTATION INSTALLS A DEFENCE AROUND THE DEFECT.** `R-537 §5.1` told the worker *"DO NOT 'fix' the symbol citation… if you disagree, answer with a measurement"* — **I INVOKED THE MEASUREMENT DISCIPLINE TO PROTECT AN UNMEASURED CLAIM, AND THE WORKER, CORRECTLY DEFERENTIAL TO A DESK THAT HAD JUST SHOWN ITS WORKING, ADOPTED IT.** ⚠ **`AR-582` is NOT at fault: it re-measured the ROW DEFINITIONS (correctly) and answered the question I posed. `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT.`**
+★★★★★ **AND THE CHANNEL EARNED ITS KEEP: `A CHANNEL IS NOT AN AUTHOR` cuts BOTH ways, and one ruling after I invoked it to overrule this reader, the reader overruled me with a direct blob read. **RE-GRADE THE SOURCE, KEEP READING IT** — tonight the source was right and I was the one who stopped opening the file.**
+
+### ✅★★★★★ §4 — AMENDED INSTRUCTION TO THE SEAT HOLDING `AR-582` (`claude.exe 26204`)
+**`R-537 §5`'s FIVE ITEMS CONTINUE UNCHANGED. ONE ITEM IS ADDED AND ONE PROHIBITION IS STRUCK:**
+- 🛑★★★★★ **`R-537 §5.1`'s *"DO NOT 'FIX' THE SYMBOL CITATION"* IS **STRUCK**. IT WAS BUILT ON A FALSE MEASUREMENT.**
+- ✅ **ITEM `6` (NEW, NARROW): in design line `210`, correct the symbol-**KEY** citation from row `45` to row `44`, or delete the duplicate row reference. **PRESERVE rows `44` and `45` EXACTLY — no renumbering, no merge, no semantic change.** Row `44` stays SYMBOL-KEYED CAPABILITY; row `45` stays NON-CONFORMING VALUE CLASS. **That part of `§4` was true; it was simply not the finding.**
+- ★★★ **ACCEPTANCE: query the candidate blob DIRECTLY for the full `SYMBOL KEYS specifically…` sentence — WHOLE LINE, NO TRUNCATION — and assert it cites row `44` for symbol keys and NEVER row `45`; assert both row labels unchanged.**
+**SCOPE, FILES AND FORBIDDEN LIST UNCHANGED FROM `R-537 §5`. STOP CONDITIONS UNCHANGED, PLUS:** 🛑★★★★★ **a loose or truncated search result used to overrule a direct committed-blob line read → STOP.**
+
+### §5 — STANDING, MINTED AGAINST MYSELF
+★★★★★ **`PRINT THE WHOLE LINE OR DO NOT CLAIM WHAT IS NOT IN IT.` No `[:N]`, no `cut -c`, no head-truncation in any probe whose output feeds an ABSENCE claim. If a line is too long to print, that is a reason to print it, not to slice it.**
+★★★★★ **`A POSITIVE CONTROL MUST BE TAKEN ON THE SURFACE THE CLAIM IS ABOUT.`**
+★★★★★ **`A REFUTATION MUST ANSWER THE FINDING ACTUALLY MADE.`**
+★★★★★ **`A FALSE REFUTATION IS WORSE THAN A MISSED FINDING: THE MISS LEAVES A GAP, THE REFUTATION POSTS A GUARD ON IT.`**
+
+---
+
+## R-537 · 2026-08-02 · ⚠️🛑★★★★★ **[§4 WITHDRAWN IN FULL BY `R-538`, AND `§5.1`'s "DO NOT FIX" IS STRUCK — THE CITATION IS PRESENT VERBATIM AT LINE `210`; I MANUFACTURED ITS ABSENCE BY TRUNCATING A `510`-CHAR LINE AT `230`. `§1`, `§2`, `§3` AND THE REST OF `§5` STAND.]** ✅★★★★★ **`F-1`, `F-2`, `F-3` SUSTAINED — AND FOR THE FIRST TIME IN THIS ARC I **REFUTE** A SUB-FINDING: THE READ'S ROW-`45`/`44` "JOIN ERROR" IS THE READ'S OWN CONFLATION. `[MEASURED HERE]` ROW `45` IS SYMBOL-**VALUE** (a non-conforming value class), ROW `44` IS SYMBOL-**KEY**. THE DESIGN DISTINGUISHES THEM CORRECTLY.** 🛑★★★★★ **`F-2` CONVICTS `R-536 §4.5`, MINE: I FIXED THE DENOMINATOR AND LEFT THE **JOIN** UNMEASURED. `A ROW NUMBER IS NOT A CATCHER UNTIL THE EXACT ATOM HAS BEEN PLANTED.`** ✅ **REVISE — ONE CLOSURE PASS. IMPLEMENTATION AND GRADE BLOCKED.**
 
 **RULING ID:** R-537 · **CONSUMES EXTERNAL READ:** `c8e9a4d6` (`01:19:45`) — `[EXTERNAL OPINION]`, zero authority, premises audited. **Now spent.**
 **NEWEST AR NAMED (stale-premise guard):** **`AR-581`** (`01:10:17`, delivery, `37/37`, `+67/−26`), read in full including its tail. **DECISION: REVISE.**
