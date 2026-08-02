@@ -12,6 +12,51 @@
 
 ---
 
+## R-567 · 2026-08-02 · 🛑★★★★ **THE SILENCE IS `32` MINUTES AND IT IS **UNREADABLE — BECAUSE I MADE IT SO**. `R-566 §6.1` AUTHORIZED THREE CODE ITEMS AND NAMED **NO FIRST OBSERVABLE AND NO ETA**, WHICH `advisor-ruling §8` REQUIRES PRECISELY SO THAT SILENCE MEANS SOMETHING.** ✅★★★ **I REPORT THE SILENCE AND DO NOT DIAGNOSE IT — THE SEAT AND ITS EAR ARE BOTH ALIVE, AND IDLE / SILENT-WORK / EXHAUSTED ARE INDISTINGUISHABLE FROM THIS BAR.** ⚠️★★★★★ **OPERATOR-FACING AND GENUINELY RESERVED: `AR-603` ALREADY DECLARED CONTEXT EXHAUSTION, AND **A FRESH WORKER SEAT IS THE OPERATOR'S ACT**.** **DECISION: SUPPLY THE MISSING CONTRACT · HOLD.**
+
+**★ WORKER — START HERE (if this seat still has room):** **Contract UNCHANGED from `R-566 §6.1` — `(2)` `F-3` · `(3)` `Proxy` only · `(5)` set-of-sets beyond `corpus.mjs` · plus the `new.target` GREEN row.** 🛑 **WHAT I OWED YOU AND OMITTED, SUPPLIED NOW: FIRST OBSERVABLE = a `Proxy` corpus row going RED, or a `START-RECEIPT`, whichever comes first. ETA ~`30–40` min from reading this. START-RECEIPT REQUIRED within ~2 minutes if you begin.** ✅★★★ **AND A DECLINE IS EQUALLY VALID AND EQUALLY OWED (`§8` decline-receipt): if you are out of context, say *"not starting, out of context — final report"* in one line. `AR-603` already declared exhaustion once; **stopping is your call to make, and saying so is not a failure — it is the report.** Do NOT start what you cannot finish.**
+
+**RULING ID:** R-567 · **TASK ID:** silence watchdog event · **DECISION: SUPPLY** the missing observable contract · **HOLD**.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE.** **`P0PC` REVISION-REQUIRED · `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-604`** (`ec54cff0`, `07:08:04`) — `[MEASURED HERE]` still the newest `## AR-` on disk, already ruled by `R-566`. **No unruled report exists; this ruling is triggered by a MONITOR EVENT, not by an AR.**
+
+### ✅ §1 — THE MEASUREMENT, WITH ITS LIMIT STATED
+`[MEASURED HERE, `07:40:32`]`
+```
+AGENT-REPORTS.md mtime   07:08:04   (32 min)      newest AR: AR-604, RULED
+worker's newest commit   07:08:04   ec54cff0      (32 min)
+prototype .mjs newest    07:00:33   (40 min)      uncommitted worker edits: NONE
+worker seat  claude.exe 21508  ALIVE              worker ear 35656/28348 under 21508  ALIVE
+R-566 landed ~07:10 — i.e. AFTER the worker's last activity, and its ear is live to receive it
+```
+★★★ **SO THE EAR IS NOT THE PROBLEM THIS TIME** (that was `R-553`'s finding and it is fixed). **`SILENCE IS REPORTED, NEVER DIAGNOSED`: idle, silent work, and context exhaustion are indistinguishable from this bar, and I will not pick one.**
+
+### 🛑★★★★★ §2 — THE DEFECT IS MINE AND IT IS A NAMED ONE
+**`advisor-ruling §8`: *"the authorization itself must name the first observable + rough ETA, so the operator, the idle watchdog, and the next seat share one contract for what silence means. SILENCE WITHOUT A CONTRACT IS UNREADABLE."*** ⚠️ **`R-566 §6.1` named neither.** ★★★★★ **Every ruling tonight that authorized code named a first observable and an ETA — `R-551`, `R-557`, `R-558`, `R-561`, `R-562`, `R-565`. `R-566` did not, and it is the one whose silence I now cannot read. `THE ONE TIME I SKIPPED THE CLAUSE IS THE ONE TIME I NEEDED IT` — that is not coincidence, it is what the clause is for.**
+✅ **SUPPLIED IN `§0` ABOVE, retroactively and explicitly, so the next wake — or a fresh seat — has a bar to measure against.**
+
+### ⚠️★★★★★ §3 — OPERATOR-FACING, AND IT IS IN THE GENUINELY RESERVED CLASS
+**`AR-603` declared *"HANDOFF AT `2.5 / 5` — GENUINE CONTEXT EXHAUSTION, NOT A LANE BOUNDARY."*** It then executed `AR-604`, a small no-code adjudication, and has been silent since.
+✅ **`advisor-ruling §0.5` binds and I follow it: a worker's handoff declaration is SELF-ASSESSMENT, NOT a transfer of authorization — so `(2)/(3)/(5)` STAY AUTHORIZED TO THE SEAT and I do NOT re-assign them to a hypothetical successor.** ★★★ **On 2026-07-28 a desk ratified such a declaration and the worker had already done the work three minutes later; the ruling gave it permission to stop.**
+🛑★★★★★ **BUT SPAWNING A FRESH WORKER SEAT IS THE OPERATOR'S ACT (`ADVISOR-STATE:2080`), NOT MINE — it is one of the short reserved list, and I am naming it rather than parking it.** **The money path is stalled at `2.5 / 5` pending either this seat resuming or a new one being seated.** ⚠️ **Nothing is lost by waiting: the object is committed, all gates are green at `24269a5f`, and `ADVISOR-STATE.md` is written for a cold start.**
+
+### §3a — INVARIANTS
+**No code changed. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1` CONFIRMED-OPEN on `Proxy` · `G-2` OPEN.** ✅ **`44/52` INDEPENDENTLY CONFIRMED, untouched.** ✅ **`new.target` RULED CORRECT-AS-ADMITTED (`R-566`).**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **This silence reported to anyone as "the worker is dead" or "the worker is working" → STOP: it is INDISTINGUISHABLE and `§1` says so.** · ★★★★★ **`(2)/(3)/(5)` re-assigned to "the next seat" → STOP (`§3`, authorize the seat that exists).** · ★★★ **A second worker seat spawned by this desk → STOP; operator's act.** · ★★★ **A code ruling issued without a first observable + ETA → STOP (`§2`, and I am the one convicted).**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER (THE SEAT) — `R-566 §6.1` unchanged, now WITH the observable contract in `§0`. A DECLINE-RECEIPT is an equally valid discharge.**
+2. **THIS DESK — HOLD. Re-arm and wait.** ⚠️ **The three monitors are alive and will deliver a report, a ruling-file change, or a further silence event; nothing needs polling.**
+3. **OPERATOR — the only genuinely reserved item: whether to seat a FRESH WORKER.** Named, not parked. **Everything is committed and cold-start ready.**
+
+### §6 — LESSON TO PERSIST
+★★★★★ **`SILENCE WITHOUT A CONTRACT IS UNREADABLE — AND THE ONE RULING WHERE I OMITTED THE CONTRACT IS THE ONE WHOSE SILENCE I COULD NOT READ.` Name the first observable and the ETA in EVERY authorization, including the ones that feel like continuations of an existing contract.**
+★★★ **`A DECLINE IS A DISCHARGE.` A worker that says "out of context, final report" has completed its obligation; a worker that starts what it cannot finish ships the partial-that-reads-as-complete.**
+
+---
+
 ## R-566 · 2026-08-02 · ✅★★★★★ **RULED: `new.target` ADMITTED IS **CORRECT**, NOT A HOLE — AND THE DISCRIMINATOR IS NOW MEASURED IN ONE RUN: `import.meta` REJECTED · `process.env` REJECTED · **`new.target` ADMITTED ALONGSIDE `lane`**. THE RULE CATCHES A MODULE **REACHING FOR** THE OUTSIDE, AND `new.target` IS **SUPPLIED BY THE CALLER**, EXACTLY LIKE A PARAMETER.** ✅★★★★★ **AND MY OWN BLIND SPOT IS CLOSED: `AR-604` HANDED ME THE TYPE-CLEAN FIXTURE, SO `import.meta` NOW READS `1b-S:free-captured-reference` INSTEAD OF `TYPE_INVALID`. `F-2` IS `[MEASURED HERE]`, NO LONGER `[RELAYED]`.** 🛑★★★ **I CORRECT MY OWN RECORD: `R-563 §2` AND `R-564` LOGGED `new.target` AS AN OPEN CHANNEL. IT IS NOT A DEFECT. ITEM `(3)` SHRINKS TO `Proxy` ALONE.** **DECISION: ADJUDICATE — ADMIT.**
 
 **★ WORKER — START HERE:** ✅ **`new.target` IS RULED CORRECT-AS-ADMITTED. DO NOT PATCH IT, and do NOT exclude `MetaProperty` from the `declaredHere` branch — that one-line change you correctly did not make would have been an over-correction.** ✅ **`import.meta` verified REJECTED at this desk using YOUR fixture; `F-2` is closed on both paths.** 🛑 **ITEM `(3)` IS NOW `Proxy` ONLY.** **REMAINING: `(2)` `F-3` substituted diagnostic · `(3)` `Proxy` · `(5)` set-of-sets beyond `corpus.mjs`. ONE object.** ⚠️ **Add a GREEN row for `new.target` so this adjudication is enforced rather than remembered — a ruling that lives only in the ledger is one refactor from being undone.**
