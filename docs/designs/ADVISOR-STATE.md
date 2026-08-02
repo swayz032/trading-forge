@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3360` at THIS commit, 2026-08-01 23:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3367` at THIS commit, 2026-08-01 23:52 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3360` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3367` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -177,7 +177,14 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-572` (`23:44:13`) — a START-RECEIPT for `R-531 §6`, **NO RULING OWED** (`R-528` precedent). Last RULED: `AR-571`. **WORKER MID-TASK (five corrections, design only).** ✅★★★ **`F-2` NOW HAS THREE INDEPENDENT PATHS AGREEING AT `10`: the external read, this desk, and `AR-572 §2` — which counted it programmatically with two-way positive controls and named the exact five keys its own schema would reject (`condition_id · executed · object · role · type`), `IN MY SCHEMA BUT NOT IN MAP: none`.** ★★ **It also turned my `§1` conviction on itself unprompted — *"my `49/49` suite was ALSO derived from the order sheet"* — so the coherence lesson transferred without being ordered.**
+## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-573` (`23:50:09`, `abf98956`) — `R-531 §6` **DELIVERED**, `5/5`, `42/42`. Last RULED: `AR-571`. 🛑★★★★★ **`R-532` IS OWED AND **HELD**: `R-531` CONSUMED `acde95c8`, `ONE READ, ONE RULING`. `THE PASTE IS THE GATE`. **THE WORKER IS AGAIN IDLE BY THE GATE, NOT BY MY OMISSION.**
+✅★★★★★ **MY VERIFICATION OF `AR-573`, AND THIS TIME THE CRITERIA CAME FROM THE **INVARIANT**, NOT MY ORDER SHEET — the `R-531 §1` conviction, applied to myself one ruling later `[ALL MEASURED HERE, committed `abf98956`]`:**
+> ✅ **INVARIANT — *Claim `A`'s projection and verdict depend on NO ledger field*: I enumerated it MYSELF with my OWN pattern — `10` candidate lines naming claim `A` alongside a ledger concept — and read every one. **`0` GATE A CLAIM-`A` OUTCOME.** All ten are prohibitions, lessons, or required-outcome rows. ★★★★★ **ROW `7` IS THE ACTUAL FIX: claim `A` is now `UNAFFECTED` **because the key IS emitted as `null`** — decided on the PROJECTION, never on the classification. `INAPPLICABILITY IS CARRIED BY VALUE, NEVER BY OMISSION.`** **CONTROLS BEHAVED: a planted claim-`A` dependency FLAGGED; a genuine independence line NOT flagged.**
+> ⚠★★★ **I DID **NOT** AUDIT THE WORKER'S OWN CONTRADICTION PASS — DELIBERATELY. It was `TUNED TWICE` by its own admission, which is the `weakened to pass` shape, and `INDEPENDENCE IS NOT A SECOND LOOK AT THEIR QUESTION; IT IS SOMEONE ELSE'S QUESTION.` My enumeration found `10` candidates where theirs found `9` — **different patterns, same verdict of `0`. TWO PATHS.**
+> ✅ **CAPTION `[MEASURED HERE]`: `33` rows, `1..33` contiguous, `0` duplicates, row `33` = `clean control — unmutated`. **`32 + 1 = 33` IS CORRECT** — the fourth recomputation, and the first to survive my count.**
+> ✅ **THE UNORDERED SELF-CORRECTION IS RIGHT `[MEASURED HERE, `c304b098`]`: exactly **TWO** real renames — `conditionId → condition_id` and `sessionZone → session_zone`. `AR-571`'s *"exactly ONE"* was false and the worker caught it unprompted while measuring something else.**
+> ✅ **SCOPE: delta is the design doc `+46/-12` + the AR ONLY. The blueprint addendum was correctly NOT touched, with the reason stated (Surface-`A` wording already carried `215`).**
+> ⚠ **STILL OPEN AND NAMED, NOT HIDDEN: same-process ambient denial is `[UNRESOLVED — NAMED]` · `42/42` is a DESIGN-TEXT result, no implementation exists and NO mutation has ever been RUN · the `140` stay `AUTHORITY_SEMANTICS_UNVERIFIED` · Surface `B`'s current `N` UNKNOWN and UNOWNED.**
 🛑★★★★★ **`R-531` SUSTAINED ALL THREE EXTERNAL FINDINGS, EACH RE-MEASURED HERE — AND THE CONVICTION IS MINE. `[MEASURED HERE]` `BINDING_KEY_MAP` = **`10` ENTRIES** at `c304b098:scripts/check-spec-binding-plan-parity.ts:259–270` (counted programmatically, `satisfies Record<keyof ConditionBinding, string>`) against the design's **`5`-key** frozen destination schema at `:119` — **joined on the WIRE-KEY NAME, the two contracts cannot both be satisfied literally.** · design `:65` makes `absent/absent` a failure **UNLESS** the cell is authority-classified `NOT-APPLICABLE`, so **Claim `A`'s VERDICT IS A FUNCTION OF `cell.classification`** — the coupling moved one field left, not away.**
 🛑★★★★★ **MY DEFECT, AND IT IS THE REUSABLE PART: I PRINTED PROOF ROW `7` TO MY OWN SCREEN AT `23:28` — TEN MINUTES BEFORE THE READ LANDED — AND USED IT ONLY TO CONFIRM A COUNT. It is the exact line proving Claim `A` still reads the ledger. **My four pre-registered checks all PASSED, all were TRUE, and all four asked *"did the worker change what it was told to change?"* — NOT ONE asked whether the result is self-consistent.** ★★★★★ **`A COMPLIANCE CHECK IS NOT A COHERENCE CHECK; CRITERIA DERIVED FROM THE ORDER SHEET CAN ONLY VERIFY OBEDIENCE.` Fourth round of one shape (`R-525` members-not-surface · `R-526` where-not-what · `R-527` name-not-enforcement · now obedience-not-coherence).**
 ⚠★★★ **AND THE WORKER RETIRED ONE FALSE ABSOLUTE BY MINTING ANOTHER (`A DIGEST THAT DID NOT MOVE CANNOT` [be wrong]) — `RETIRING A FALSE ABSOLUTE BY MINTING ANOTHER ABSOLUTE IS THE SAME DEFECT ONE LEVEL OUT`, and neither the worker nor I caught it; a third party did.**
