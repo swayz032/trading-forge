@@ -4,6 +4,23 @@
 
 ---
 
+## AR-553 · 2026-08-01 · **START-RECEIPT — R-525 §3 ACCEPTED. THE `digests` NAMESPACE IS OPEN AND I ACCEPT THE FINDING: I CLOSED THE FIELDS AND LEFT THE SURFACE.**
+
+**RULING ID:** R-525 §3 · **TASK ID:** AR-553 · **PRIOR:** AR-552 · **SEAT:** `claude.exe 26204`.
+**FIRST OBSERVABLE + ETA:** a planted unknown `digests` key going **RED and NAMED** — **~15–25 min from start.**
+
+### ★★★ §1 — RECORDED TREE BASELINE (missed on AR-552; R-525 §4a names the concrete cost — the delta check had no reference)
+```
+git status --porcelain -- docs/designs scripts ci src        [MEASURED HERE, BEFORE ANY WRITE]
+ M src/engine/tests/test_synthetic_market_simulator.py        <- pre-existing, another lane's
+?? 24 untracked docs/designs files dated 07-19 → 07-22        <- pre-existing, another lane's
+LEDGER BLOB PIN: 1551c7e56480caff7d70a580e1f7a2c7ef644203     <- must be UNCHANGED at delivery
+```
+
+### ⚠️★★★★★ §2 — I ACCEPT THE FINDING, AND IT IS THE SAME DEFECT I WROTE THE PACKET TO CLOSE
+**My verifier's own comment said the `digests` object is EXCLUDED from the canonicalization and therefore "needs their own comparison" — and then I answered that with a THREE-NAME LIST.** ⚠️★★★★★ **`P0`'s original `F-2` WAS AN ORACLE ROW ACCEPTING UNKNOWN KEYS. THE FIX WAS CLOSED-KEY ON ROWS. AND I REPAIRED THE MANIFEST GAP WITH AN OPEN-KEY LIST, ONE NAMESPACE OVER — the fifth appearance of one family, this time inside the remedy to the remedy.**
+★★★★★ **`A LIST IS A SNAPSHOT OF TODAY'S VOCABULARY; A CLOSED KEY SET IS A PROPERTY.` And `31/31` proved thirty-one registered shapes and nothing outside them — `A MUTATION SCORE IS A STATEMENT ABOUT THE FIXTURE SET, NOT ABOUT THE CLAIM.`**
+⚠️ **I WILL NOT ADD `human_facing_certification` TO THE FIELD LIST.** That closes one fixture and preserves the class, and R-525 §3 forbids it by name. **The property implemented is EXACT KEY-SET EQUALITY IN BOTH DIRECTIONS PLUS VALUE AGREEMENT**, with the self-consistency check RETAINED — it catches the distinct un-resealed adversary.
 ## AR-552 · 2026-08-01 · ✅★★★★★ **R-524 §3 CLOSEOUT DELIVERED — THE MANIFEST IS NOW GUARDED. `31 / 31` MUTANTS RED (`11` SHIPPED + THE CENSUS'S `20` ESCAPES), `3 / 3` NOOP CONTROLS GREEN, CLEAN CONTROL PASS, EXIT `0`.** ✅ **AND THE CONSTRAINT THAT MATTERED MOST IS MEASURED, NOT ASSERTED: `git diff` ON THE LEDGER IS **EMPTY** — NOT ONE CELL, COUNT, CITATION OR FRAME MEANING MOVED.** ⚠️★★★★★ **I ALSO CAUGHT **TWO DEFECTS IN MY OWN HARNESS** MID-TASK, AND ONE OF THEM WAS MANUFACTURING SIX FAKE "ESCAPES".**
 
 **RULING ID:** R-524 §3 · **TASK ID:** AR-552 · **PRIOR:** AR-551 · **SEAT:** `claude.exe 26204`.
