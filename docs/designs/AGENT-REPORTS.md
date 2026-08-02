@@ -4,6 +4,77 @@
 
 ---
 
+## AR-609 · 2026-08-02 · ✅★★★★★ **THE `R-570 §6.3` ENUMERATION IS DONE AND IT DID NOT COME BACK A LIST — IT CAME BACK WITH **INSTANCE EIGHT, EXECUTED**: `type-value-proof.mjs` REPORTS `${pass} / ${CASES.length}` AND GATES ON `pass === CASES.length`. DELETING THE `T3` COVERAGE CASE GAVE **`14 / 14 cases pass | property HOLDS`, `EXIT 0`** — A COVERAGE CASE VANISHED AND THE GATE STILL **CERTIFIED THE PROPERTY**.** 🛑★★★★★ **AND THE ENUMERATION NAMED SOMETHING WORSE THAT NOBODY HAD PINNED: **THE RULE SETS THEMSELVES.** `source-admission.mjs::CATCHERS` AND `runtime-admission.mjs::CATCHERS` — THE CATCHERS EVERY VERDICT IN THIS PROTOTYPE IS PRODUCED BY.** ✅ **ALL THREE ARE NOW PINNED AND EACH DELETION IS WITNESSED CAUGHT.**
+
+**RULING ID:** `R-570 §0` (the fifth item) · **TASK ID:** AR-609 · **PRIOR:** AR-608 · **CODE:** this commit.
+**FAN-IN: `3 / 5`. NOT A HANDOFF.** **GRAPH: `P0PC` `active_worker`, blob `6fcf22c4…`. NO TRANSITION CLAIMED — `THE DOER DOES NOT MOVE THE NODE`.**
+
+### ✅★★★ §1 — THE ENUMERATION, BY AST OVER EVERY MODULE — NOT BY GREP AND NOT BY ATTENTION
+**`R-570 §0` asked for this *"so the class closes by measurement, not by attention"*. I ran the extractor built for item `(5)` over all `11` prototype `.mjs` files.** `[MEASURED HERE]` **Load-bearing populations that were NOT pinned:**
+```
+source-admission.mjs   CATCHERS     8  exported   <- THE SOURCE RULE SET
+runtime-admission.mjs  CATCHERS     8  exported   <- THE RUNTIME RULE SET
+type-value-proof.mjs   CASES       15  local      <- instance EIGHT, executed below
+run.mjs                SIX          6  local      <- the six populations of the partition
+run.mjs                SURFACE_CODES 7 / FIXTURE_INVALID_CODES 6   classification allowlists
+membership.mjs         HISTORICAL_RENAMES 1       <- R-570 §4 already ordered this PINNED
+```
+⚠️ **DISTINCTION THAT MATTERS AND THAT A GREP WOULD HAVE FLATTENED: entries like `rows`, `results`, `PLANT_WITNESS`, `extraRoots` report `0 items` because they are **RUNTIME ACCUMULATORS** declared empty and pushed to. They are not self-certifying populations and pinning them would be noise. `A COLLECTION DECLARED EMPTY IS NOT A POPULATION.`**
+
+### 🛑★★★★★ §2 — INSTANCE EIGHT, AND WHY I HAD TO **EXECUTE** IT RATHER THAN READ IT
+**At the executable line, `type-value-proof.mjs:125-126`:**
+```
+const allOk = pass === CASES.length && propertyHolds && residualWitness.fired;
+console.log(`${pass} / ${CASES.length} cases pass | property ${propertyHolds ? 'HOLDS' : 'FAILS'}`);
+```
+**BOTH OPERANDS FROM THE SAME MUTABLE ARRAY — the third file with this exact shape, after `red-proof.mjs:178` and `run.mjs:606`.** `[MEASURED HERE, AST-spliced by node span, restored hash-identical]`
+```
+baseline                       15 / 15 cases pass | property HOLDS   EXIT 0
+delete CASES[7] (id T3, "type ARGUMENT" coverage)
+                               14 / 14 cases pass | property HOLDS   EXIT 0
+                               VERDICT: ... separation is a PROPERTY of this rule.
+```
+🛑★★★★★ **AND I REPORT MY OWN NEAR-MISS, BECAUSE IT IS THE WHOLE ARGUMENT FOR EXECUTING: MY FIRST ATTEMPT DELETED CASE `D` AND THE GATE WENT **RED** — WHICH WOULD HAVE READ AS *"protected, no defect here"*. It was red for an UNRELATED reason: `propertyHolds = D.ok && E.ok && sameSpelling` names `D` and `E` INDIVIDUALLY, so those two alone are protected and the other THIRTEEN are not.** ★★★★★ **`A PARTIALLY PROTECTED COLLECTION PRODUCES A RED ON THE FIRST ROW YOU TRY AND A GREEN ON THE ONES THAT MATTER.` Reading the line would have found the defect; deleting the wrong row would have hidden it. Both mattered.**
+
+### ✅★★★★★ §3 — THE RULE SETS WERE UNPINNED, WHICH IS THE SHARPEST THING IN THIS REPORT
+**`CATCHERS` in `source-admission.mjs` and `runtime-admission.mjs` are the catcher identities every violation in this prototype is reported under. Nothing pinned either.** ⚠️ **DELETING A CATCHER REMOVES A DETECTION RULE, and every population it feeds simply gets smaller — the same operand defect, one layer deeper than any instance so far.**
+✅ **NOW PINNED AND WITNESSED CAUGHT** `[MEASURED HERE, restored hash-identical each time]`
+```
+delete DYNAMIC_LOAD from source-admission CATCHERS
+   -> GATE: FAIL EXIT 1  *** module_collections: source-admission.mjs: CATCHERS MISSING row(s): DYNAMIC_LOAD
+delete CASES[7] T3 from type-value-proof
+   -> GATE: FAIL EXIT 1  *** module_collections: type-value-proof.mjs: CASES MISSING row(s): T3
+clean                                          GATE: PASS EXIT 0
+```
+✅ **The extractor needed one honest extension to reach them: it keyed only tuple rows, so `CASES` and both `CATCHERS` came back `keys: null` — **the three tables it most needed to certify.** Object rows are now keyed by `id` (and `CATCHERS` is an object literal keyed by property name). ★★★ **`A READER THAT CANNOT SEE A POPULATION CANNOT CERTIFY IT, AND A `null` LOOKS EXACTLY LIKE COVERAGE.`** ✅ **The two-path corpus cross-check was RE-RUN after the extractor change and still AGREES — I did not assume a parser change was verdict-neutral.**
+🛑★★★ **AND MY PROBE WAS WRONG TWICE BEFORE IT WAS RIGHT, RECORDED RATHER THAN TIDIED: it missed `CATCHERS` because it did not unwrap `Object.freeze(...)`, then again because `CATCHERS` is an OBJECT, not an array. The EXTRACTOR was right both times. `WHEN THE PROBE AND THE INSTRUMENT DISAGREE, AUDIT THE PROBE FIRST` — each failure restored the file hash-identical, so nothing was risked.**
+
+### ⚠️ §4 — WHAT I DID **NOT** PIN, AND WHY (so the gap is chosen, not overlooked)
+- ⚠️ **`run.mjs::SIX` (the six populations), `SURFACE_CODES`, `FIXTURE_INVALID_CODES`.** **NOT pinned, deliberately: these are consumed by the partition/classification logic that `44/52` rests on, and `R-570 §5` STOPS on touching attribution. Pinning is additive and would not alter attribution — but the judgement is the desk's, and I will not widen into that surface unasked.** `[UNRESOLVED — NAMED]`
+- ⚠️ **`membership.mjs` NOT pinned here.** `R-570 §0` ordered `EXEMPT_EXPORTS` DELETED and `HISTORICAL_RENAMES` PINNED, folded into the FINAL corpus commit — pinning `membership.mjs` now would pin a table the desk has ordered deleted. **Deferred on the desk's own instruction, not forgotten.**
+- ⚠️ **`module-collections.mjs` still cannot pin itself** (`AR-607 §6.1`) — structural, unchanged, mitigated by the `COVERED_FILES` throw, which now names five files.
+
+### 🛑 §5 — STATE AND NEXT
+```
+run.mjs GATE: PASS EXIT 0 · red-proof CONTROL GREEN 41 / 41 EXIT 0
+emitted-freeze · type-value-proof 15/15 · module-tuple · module-collections   all EXIT 0
+```
+✅ **`44/52` and attribution logic UNTOUCHED.** ✅ **No pin bump needed: the three added files were pinned at the EXISTING `MODULE_PIN_COMMIT dfbad040`, and no pinned collection changed.**
+**FAN-IN `3 / 5`.** ✅ **`(5)` · `(2)` · `§6.3` enumeration.** 🛑 **OPEN: `(3)` `Proxy` · the FINAL pin dance (corpus rows + `new.target` GREEN row + `EXEMPT_EXPORTS` DELETE + `HISTORICAL_RENAMES` PIN).**
+✅ **NO sub-agent dispatched, nothing owed from my side. NOTHING SELF-GRADED.**
+**NEXT: `(3)` `Proxy`.** ✅ **`R-571 §0` pre-ruled that `UNRESOLVED_SOURCE_AMBIGUITY` handed up is an ACCEPTED deliverable, which is exactly the shape I expect.**
+
+### ⚠️ §6 — `(3)` `Proxy` STARTED, **NOT** CLOSED — banked so it is not re-derived
+`[MEASURED HERE]` **`grep -rn Proxy *.mjs` returns ZERO hits: no Proxy handling anywhere. The eight runtime catchers — `ACCESSOR` · `FUNCTION_VALUE` · `SYMBOL_KEY` · `NON_ENUMERABLE` · `VALUE_CLASS` · `PROTOTYPE` · `CYCLE` · `ARRAY_SHAPE` — are each satisfiable by a Proxy whose `get` trap returns a plain number, so all eight pass while the field reaches host state.**
+✅★★★ **ONE INTERPRETABLE RESULT, AND ITS CONTROL DISCRIMINATED: `export const project = (lane: Lane) => ({ v: new Proxy({ a: 1 }, {}) });` → **`REJECTED 1b-S:direct-ambient-read`**, while the clean control → `ADMITTED`. `Proxy` IS A HOST GLOBAL AND `AMBIENT_ALLOWED` IS ONLY `{'Object'}`, SO **NAMING `Proxy` IN ADMITTED SOURCE IS ALREADY REJECTED.`** ⚠️ **`[HYPOTHESIS — UNPROVEN]` that narrows `F-1` considerably: the source surface may already be closed against source-CONSTRUCTED proxies, and the grade's `project(lane).v` returning the real `process.pid` must arrive by a path that never names `Proxy` in the admitted source. THAT PATH IS NOT YET IDENTIFIED AND I HAVE NOT REPRODUCED `F-1`.**
+🛑★★★★★ **AND I DECLARE MY OWN PROBE UNINTERPRETABLE RATHER THAN READING IT: my two `Proxy`-reaching-host fixtures came back `TYPE_INVALID` — **AND SO DID MY `process.pid` AMBIENT CONTROL, WHICH SHOULD HAVE BEEN `REJECTED`.** A control that fails means the instrument, not the subject, is what I measured. **This is the SAME limit `R-565 §1` named and `AR-604 §4` solved with a type-clean fixture; I did not build one before probing.** `A RESULT WHOSE CONTROL FAILED IS NOT A WEAK RESULT, IT IS NO RESULT.`
+⚠️ **NEXT SEAT / NEXT STEP, SPECIFIED: build the `AR-604 §4` type-clean fixture form first (`export const project = (lane: Lane) => ({ v: … });` in a `.ts` container under the pinned surface, verified by a REJECTING `process.env` control IN THE SAME RUN), then re-run the two Proxy cases. Only then is the `[HYPOTHESIS]` above testable.**
+
+### ⚠️ §7 — AN INSTRUMENT TRAP THAT ALMOST ENTERED THIS REPORT AS A FAILURE
+⚠️ **My background job reported `failed with exit code 1` while its own output read `41 / 41` and `VERDICT: ENFORCING GATE`.** `[MEASURED HERE]` **The cause was my own command: a trailing `grep -c '^\*\*\* FAIL'` found ZERO matches and therefore exited `1`, and that became the pipeline's status. `red-proof.mjs` itself recorded `EXIT=0`, re-confirmed by reading `status` DIRECTLY off the process (`spawnSync().status === 0`).** ★★★★★ **`A PIPED EXIT CODE IS THE LAST STAGE'S OPINION, NOT THE GATE'S.` I resolved the contradiction by re-measuring instead of choosing the reading I preferred.**
+
+---
+
 ## AR-608 · 2026-08-02 · ✅★★★★★ **ITEM `(2)` CLOSED — `GRADE F-3` IS SHUT. I REPRODUCED `R-548`'S ATTACK A IN ITS **SUBSTITUTED** FORM FIRST: THE TRUE PLANT MADE TO **RESOLVE**, AN IMPOSTOR OF THE SAME CODE CLAIMING THE BYTE-UNCHANGED ANCHOR — **ONE DIAGNOSTIC, ONE ANCHOR, BIJECTION SATISFIED**, `GATE: PASS`, `EXIT 0`, PARTITION **NUMERICALLY IDENTICAL TO CLEAN**.** 🛑★★★★★ **AND THE RUN WAS PRINTING THE SMOKING GUN THE WHOLE TIME — `TS2304@L2:61 "lane"`. THE DISCRIMINATOR WAS IN THE RECORD AND THE JOIN NEVER USED IT.** ✅★★★ **FIXED WITHOUT NARROWING THE ANCHOR, RED-PROOFED AT BIRTH, AND THE OVER-CORRECTION CONTROL HOLDS: ALL SIX OWNED ROWS KEEP THEIR CREDIT.**
 
 **RULING ID:** `R-570 §7.1` (item `(2)`) · **TASK ID:** AR-608 · **PRIOR:** AR-607 · **CODE:** `dfbad040` + the pin-bump commit carrying this report.

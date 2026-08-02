@@ -61,12 +61,30 @@ export const MODULE_PIN_COMMIT = 'dfbad040';
 export const PINNED_MODULE_COLLECTIONS = Object.freeze({
   'run.mjs': Object.freeze({ tables: Object.freeze(['FAILURE_CLASSES']) }),
   'red-proof.mjs': Object.freeze({ tables: Object.freeze(['CLASSES', 'SHARED', 'EXPECT', 'FREEZE_EXPECT']) }),
+  // 🛑★★★★★ ADDED BY THE R-570 §6.3 ENUMERATION, WHICH FOUND **INSTANCE EIGHT** BY MEASUREMENT.
+  // `type-value-proof.mjs` reports `${pass} / ${CASES.length}` at :126 and gates on
+  // `pass === CASES.length` at :125 — BOTH OPERANDS FROM THE SAME MUTABLE ARRAY, the third file
+  // with this exact shape. `[MEASURED HERE, AST-spliced, restored hash-identical]` removing the
+  // `T3` coverage case ("type ARGUMENT") gave `14 / 14 cases pass | property HOLDS`, EXIT 0:
+  // a coverage case vanished and the gate still CERTIFIED THE PROPERTY.
+  // ⚠️ `D`/`E` are individually named by `propertyHolds`, so they are protected; the other 13 are
+  // not. A partial protection is why this needed executing rather than reading — my first attempt
+  // deleted `D`, went red for the WRONG reason, and would have "confirmed" the defect falsely.
+  'type-value-proof.mjs': Object.freeze({ tables: Object.freeze(['CASES']) }),
+  // ★★★★★ AND THESE TWO ARE THE RULE SETS THEMSELVES — the catchers every verdict in this
+  // prototype is produced by. Nothing pinned them. Deleting a catcher removes a DETECTION RULE,
+  // and every population that rule feeds simply gets smaller.
+  'source-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
+  'runtime-admission.mjs': Object.freeze({ tables: Object.freeze(['CATCHERS']) }),
 });
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
   'run.mjs': 'e0ff1b9c1c2bf367c3d2ec63a6c3a827d2c990dc',
   'red-proof.mjs': '78d76b0babdaaf894a21b33fd38b3bc9a28e34cc',
+  'type-value-proof.mjs': '468ac763164e152a476ec88139cc76c76286ce99',
+  'source-admission.mjs': 'a36d2c500deaf0ddcf3b699f56301c6f8fd65ccf',
+  'runtime-admission.mjs': '6e7a3f5148181a8e02efaf28e3fa5797ab79dc53',
 });
 
 // ⚠️★★★★★ THE RESIDUAL, NAMED RATHER THAN PAPERED OVER — THIS FILE CANNOT PIN ITSELF.
@@ -78,7 +96,7 @@ export const PINNED_BLOBS = Object.freeze({
 // editable or nothing can ever legitimately change.
 // WHAT IS DONE INSTEAD IS WHAT R-564 ACCEPTED FOR THE CORPUS PIN — make a silent shrink require
 // editing a value that STATES ITS OWN MAGNITUDE IN PLAIN SIGHT, so the edit is loud in review:
-const COVERED_FILES = ['run.mjs', 'red-proof.mjs'];
+const COVERED_FILES = ['run.mjs', 'red-proof.mjs', 'type-value-proof.mjs', 'source-admission.mjs', 'runtime-admission.mjs'];
 for (const f of COVERED_FILES) {
   if (!PINNED_MODULE_COLLECTIONS[f] || PINNED_MODULE_COLLECTIONS[f].tables.length === 0) {
     throw new Error(`INSTRUMENT FAULT: coverage for ${f} was removed from PINNED_MODULE_COLLECTIONS — the set-of-sets no longer covers a file it is declared to cover`);
@@ -127,9 +145,23 @@ export function extractModuleCollections(text, fileName = 'x.mjs') {
       if (ts.isArrayLiteralExpression(init)) {
         const keys = init.elements.map((el) => {
           const e = unwrap(el);
-          if (!ts.isArrayLiteralExpression(e) || e.elements.length === 0) return null;
-          const first = e.elements[0];
-          return ts.isStringLiteral(first) ? first.text : null;
+          // Tuple rows: the leading string literal is the row's identity (FAILURE_CLASSES, EXPECT…).
+          if (ts.isArrayLiteralExpression(e) && e.elements.length > 0) {
+            const first = e.elements[0];
+            return ts.isStringLiteral(first) ? first.text : null;
+          }
+          // ⚠️ OBJECT ROWS KEYED BY `id` — added after the R-570 §6.3 enumeration MEASURED that the
+          // tuple-only reader returned `keys: null` for `type-value-proof.mjs::CASES` and both
+          // `CATCHERS` sets, i.e. the three tables it most needed to certify. A reader that cannot
+          // see a population cannot certify it, and returning `null` would have looked like coverage.
+          if (ts.isObjectLiteralExpression(e)) {
+            const idProp = e.properties.find((p) => p.name
+              && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))
+              && p.name.text === 'id');
+            return idProp && idProp.initializer && ts.isStringLiteral(idProp.initializer)
+              ? idProp.initializer.text : null;
+          }
+          return null;
         });
         out.set(d.name.text, {
           exported,
