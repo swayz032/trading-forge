@@ -4,6 +4,45 @@
 
 ---
 
+## AR-635 · 2026-08-02 · ✅★★★★★ **`R-591 §6` DONE — `P0PC`'s ELEVEN ACCEPTANCE FRAGMENTS MAPPED TO THEIR PRINTS ON THE CURRENT OBJECT. **TEN `READING_PRESENT`, ONE `READING_AMBIGUOUS`.** ✅★★★★★ **THE `25` vs `43` SPLIT IS CONFIRMED BY INDEPENDENT RE-DERIVATION, NOT RELAYED: `43` IS `red-proof.mjs`'s OWN FOUR TABLES (`16+2+21+2+2`), `25` IS `run.mjs`'s `FAILURE_CLASSES` — `SAME POPULATION? false`.** 🛑 **AND MY OWN COUNTER LIED FIRST (`46`/`18`); DISCLOSED IN `§5` BECAUSE IT NEARLY BECAME A FABRICATED DISCREPANCY IN THE OBJECT I WAS SENT TO MEASURE.**
+
+**RULING ID:** `R-591 §6` · **TASK ID:** AR-635 · **PRIOR:** AR-634 · **ARTIFACT: `docs/designs/P0PC-CLAUSE-STATUS-2026-08-02.md` (ships in THIS commit, `ar-ships`).**
+**GRAPH NODE: `P0PC` — MEASURED, **NO TRANSITION PROPOSED**. `R-591 §6` makes a transition-before-grade a STOP, and `R-574 §0` has held nine times.**
+
+### ✅ §1 — THE OBJECT, PINNED, AND UNCHANGED BY MY MEASURING IT
+`[MEASURED HERE — `b203cba4`, `git status --porcelain -- prototypes/` EMPTY BEFORE **AND** AFTER]`
+```
+node run.mjs · module-collections.mjs · module-tuple.mjs · emitted-freeze.mjs
+     · type-value-proof.mjs · red-proof.mjs                    ALL EXIT 0, stderr 0 bytes
+sha256 re-checked after the six runs: run.mjs a85c3f0d… red-proof.mjs 942b3473…
+     module-collections.mjs cbb2cccf…   -> BYTE-IDENTICAL to the pre-run capture
+```
+✅ **ZERO EDITS UNDER `prototypes/` — the lane is retired for CHANGES and I measured it without touching it (`R-591 §6`).** ✅ **All 11 `.mjs` hashes are in the artifact's `§0` so the desk can re-pin the exact object.**
+
+### ✅ §2 — THE ANSWER, IN ONE TABLE-ROW EACH (detail in the artifact `§2`)
+**`1a` disjoint + sums to 52 → PRESENT** (`partition_sums_to: 52`, `must_sum_to: 52`, `rows_in_two_populations: []`, `rows_in_no_population: []`) · **`1b` surface-invalid inadmissible → PRESENT** (`run.mjs:765` fires on `>0`; reachable per `red-proof`) · **`1c` mutation-as-type-error names the checker → PRESENT** (the `item 14` join, `6` rows, each with code+span) · 🛑 **`1d` only surface-valid fixture-valid rows may credit 1b-S → `READING_AMBIGUOUS`** · **`2` type/value separation → PRESENT** (D/E property HOLDS, same spelling `true`, residual REACHABLE, `15/15`) · **`3` fixture scaffolding preserves emitted behaviour → PRESENT** (`39` compared, `29` identical, `8` CHANGED each with a pre-registered diff, `2` NOT-COVERED, comparator controls both `true`) · **`4a` tuple is an input → PRESENT** (`AGREE on all rows`) · **`4b` one source as CJS and ESM → PRESENT** (`sameBytes=true`, ESM `this`=undefined vs CJS positive control `this`=object) · **`4c` exactly one callable project export → PRESENT** (`55(a)`–`55(d)`) · **`4d` terminal failure exits non-zero, restored control exits zero → PRESENT** (`CONTROL … exit=0 GREEN`, 43 rows `exit=1`, `ENFORCING GATE`).
+🛑★★★★★ **NOT ONE OF THESE IS A VERDICT. `status` says an INSTRUMENT EXISTS AND WHAT IT PRINTED — never that the property holds. `REPORT THE READINGS, NEVER THE VERDICT`, and the artifact carries no MET column by design.**
+
+### ✅★★★★★ §3 — THE `25` vs `43` FINDING, RE-DERIVED RATHER THAN INHERITED
+**`R-591 §1.3` is a claim about the object I was sent to measure, so I re-derived it `[MEASURED HERE, executable lines]`:** `red-proof.mjs:452` builds `EXPECTED_ROW_COUNT` from **its own** `CLASSES+SHARED+EXPECT+FREEZE_EXPECT+STANDALONE`; `red-proof.mjs:589` builds `declaredFailureClasses` by **parsing `run.mjs`'s source** — `extractModuleCollections(readFileSync(RUNNER)).get('FAILURE_CLASSES').keys` — **a real cross-file join, not a hand-copy.** Counted with the campaign's own extractor: **`16+2+21+2+2 = 43`** vs **`FAILURE_CLASSES = 25`**, **`SAME POPULATION? false`**, and `R-591`'s decomposition reproduces exactly.
+✅ **MAPPING: `43/43` bears on clause `4d` ONLY. The print that bears on "every class `run.mjs` declares has a red path" is the SEPARATE `COMPLETENESS (F-4): all 25 …` line — which is CONDITIONAL (`:596-601` prints a `*** STOP CONDITION (F-4)` instead when unreadable or uncovered), so its mere appearance is the signal.**
+
+### 🛑★★★★★ §4 — THE ONE GAP, AND WHY IT TAKES THE RESIDUAL
+**Clause `1d`.** The exclusion is real in STRUCTURE (`run.mjs:604-605` gives `SURFACE_INVALID`/`FIXTURE_INVALID` their own partition slots, so such a row cannot also be `attributed`) — **but that is an argument from reading code, not a printed observation.** ⚠️ **In the clean run both populations are EMPTY (`0`,`0`), so no row is observed being denied credit; and the injections that populate them FAIL THE GATE (`exit=1`) rather than printing a credit-denial for a surviving run — a stronger and DIFFERENT statement.**
+★★★★★ **AND THE REASON I REFUSE TO READ THAT ZERO AS A PASS IS IN THE FILE'S OWN VOICE, `run.mjs:175`: *"`FIXTURE_INVALID` had NO ASSIGNMENT SITE — the value was unreachable, so `fixture_invalid: 0` was DEFINITIONAL, not measured. A five-population partition wearing a six-population caption."*** ✅ **That defect IS fixed and today's zero has a reachability witness the historical one lacked. ⚠️ But `A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION` — `absence-claim`.**
+✅ **WHAT WOULD RESOLVE IT, NAMED SO THE DESK ORDERS IT INSTEAD OF RE-DERIVING IT:** one injection making exactly one row `SURFACE_INVALID`/`FIXTURE_INVALID`, printing **that id absent from the `attributed` member list while the partition still sums** — the exclusion observed on a LIVE member rather than inferred from an empty set.
+
+### 🛑 §5 — MY INSTRUMENT LIED FIRST, AND THAT IS THE PART WORTH READING
+**My hand-rolled brace-scanner returned `CLASSES 13 · EXPECT 27 · SUM 46` and `FAILURE_CLASSES 18`. ALL WRONG.** It disagreed with the programs' runtime `.length` prints, so **I accused my parser before the object** and replaced it with `extractModuleCollections` — the campaign's own extractor, the same function the file under test uses for this join — which reproduced `43` and `25` exactly. ★★★★★ **Had I trusted it, `§3` would have opened with a fabricated `46 ≠ 43` discrepancy inside the very object I was sent to measure, and it would have read like a finding.** ⚠️ **Two more of mine, neither a finding about the prototype: a bash quote-nesting `unexpected EOF`, and `ERR_UNSUPPORTED_ESM_URL_SCHEME` on a Windows absolute import path.**
+
+### ⚠️ §6 — SCOPE, INVARIANTS, HONEST PARTIAL
+**`prototypes/` READ + EXECUTE ONLY, ZERO EDITS. `runtime-production` NOT touched, NOT read. No runtime, trading, capital or broker surface. No merge, no worktree update, no production write, no restart, no credential, no spend.** ✅ Single-writer honoured. ✅ No monitor armed/retired/killed — the `ADVISOR-RULINGS` ear stays ADOPTED under `claude.exe 21508` and has now delivered **three** rulings into this seat (`R-589`, `R-590`, `R-591`), the last of which stopped a lane mid-build.
+🛑 **WHAT I DID NOT MEASURE (artifact `§6`, five items):** **I ran no injection myself** — every `exit=1` is the object's own output about its own injections `[MEASURED BY THE OBJECT UNDER TEST]` · I did **not** diff `613a7c15`→`b203cba4` on `red-proof.mjs`, so I cannot say what the `+209` lines and the new `effectOk` conjunct changed `[UNENUMERATED]` · the four-sentence clause split is **MY assumption**, corroborated twice from the ledger but not confirmed by the desk · I verified the DENOMINATORS independently, not that all 43 rows exercise distinct paths.
+**RECOMMENDATION: `APPROVAL_REQUESTED` on the readings. The MET/NOT-MET ruling is the desk's, and an independent `accuracy-validator` grade is owed on it — I am the doer here and will not interpret my own mapping.**
+**NEXT SMALLEST TASK: none held. The `R-590` corpus-identity lane remains deferred to `RERANK` with its measurements banked in `AR-634`.**
+
+---
+
 ## AR-634 · 2026-08-02 · ⏳ **START-RECEIPT — `R-591` STOPPED THE `R-590` LANE MID-BUILD AND I STOPPED. TAKING THE NEW LANE: **`P0PC`'s ACTUAL ACCEPTANCE STATUS ON THE CURRENT OBJECT, CLAUSE BY CLAUSE.****
 
 **RULING ID:** `R-591 §6` · **TASK ID:** AR-634 · **PRIOR:** AR-633 (**SUPERSEDED — struck, not deleted**) · **ONE SEAT.**
