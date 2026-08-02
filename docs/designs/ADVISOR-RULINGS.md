@@ -12,6 +12,78 @@
 
 ---
 
+## R-548 · 2026-08-02 · 🛑★★★★★ **I RE-EXECUTED BOTH OF THE EXTERNAL READ'S FALSE-GREEN ATTACKS AT THIS DESK AND **BOTH REPRODUCE**. AN UNRELATED AUTHORING DEFECT PLANTED ON ROW `35(a)` MOVES IT FROM `attributed` TO `caught_by_typechecker` — `44 → 43`, `5 → 6` — AND THE GATE STILL EXITS `0`. RENAMING `35(a)` → `35(z)` MAKES THE "FROZEN" `52` ADOPT THE NEW IDENTITY SILENTLY, `missing_ids: []`, EXIT `0`.** ✅★★★★★ **AND THE CLEAN CONTROL REPRODUCES `AR-592` EXACTLY (`44/52`, sums `52`, all five gates `0`), SO THE WORK IS REAL AND THE BOUNDARY IS REAL.** **DECISION: REVISE — CONTINUE `P0PC`.**
+
+**★ WORKER — START HERE:** `AR-592`'s `13/13` **STANDS; nothing is withdrawn and nothing restarts.** Two NEW holes are now MEASURED AT THIS DESK, not relayed: **(1) an error code alone can buy a row a `caught_by_typechecker` credit · (2) the frozen `52` is computed from the corpus it constrains.** Items `14`–`16` in `§4`. **First observable: attack A going RED, ~25 min.** **DO NOT dispatch a grader — one is already running (`AR-593`).** No new START-RECEIPT; `AR-590` covers this lane.
+
+**RULING ID:** R-548 · **TASK ID:** AR-591 + AR-592 + AR-593 (all three ruled here) · **DECISION: REVISE (continue) + APPROVE what holds + 3 ADDITIVE ITEMS + 2 OPS DISPOSITIONS.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `7111b1db`. `R-547 §4`'s six adoption criteria stand unmet; no revision has landed. **Nothing here is scheduled from it.**
+**GRAPH NODE TRANSITION:** **NONE** — not adopted, so no node state, artifact identity or descendant invalidation is recorded and no validator runs.
+**GRAPH FAN-IN / READY SET:** not authoritative. This ruling concerns `P0PC` only, whose authority is `R-543`/`R-544` as carried by `R-545 §5.1` and `R-546 §8.1`.
+**NEWEST AR NAMED (stale-premise guard):** **`AR-593`** — read in full. `[MEASURED HERE]` it is the newest `## AR-` on disk at write time. **It records that the `accuracy-validator` is ALREADY RUNNING against `9be6a52a` on the operator's direct word (`"execute"`), and it changes this ruling materially — see `§3`.**
+✅ **CONSUMES EXTERNAL READ `4ac699aa`** (`04:20:09`, *"review AR-592 corrected delivery false greens"*) — `[EXTERNAL OPINION]`, zero authority. `[MEASURED HERE]` `git cat-file -t 4ac699aa` → `commit`. ★★★★★ **AND I WAITED FOR IT.** `AR-592` landed `04:09`; I held the ruling and said so to the operator at `04:16` rather than ruling into the gap. **`VISIBILITY IS NOT TIMING` — the third monitor exists because `R-541` was ruled `9s` early, and tonight it paid for itself.** ⚠️ **Its two decisive claims are RE-EXECUTED below; nothing of it is taken on trust.**
+
+### ✅★★★★★ §1 — I RE-EXECUTED IT RATHER THAN RELAYING IT, AND THE CONTROL CAME FIRST
+`[MEASURED HERE. **TREE: an ISOLATED detached worktree at the pinned `9be6a52a`, created and removed with `git worktree`, NEVER `rm -rf` — a junction removal has wiped a target on this box before. The SHARED campaign tree was NOT mutated: `git diff --quiet 9be6a52a HEAD -- prototypes/p0-vnext-admission` exits `0` before AND after this work, so the RUNNING GRADE was never disturbed.**]`
+🛑★★★ **MY FIRST CONTROL DIED AND I DID NOT PROCEED PAST IT:** a fresh worktree has no `node_modules`, so `run.mjs` exited `1` on `ERR_MODULE_NOT_FOUND: typescript`. **A dead control makes every attack result meaningless.** ✅ **DECLARED SUBSTITUTION, on `R-546 §2`'s precedent: the bare `'typescript'` specifier in `source-admission.mjs` · `emitted-freeze.mjs` · `module-tuple.mjs` rewritten to an absolute `file:///` URL — `git diff --numstat` = `1/1` per file, THREE LINES, no logic touched.**
+```
+CLEAN CONTROL   attributed 44/52 · caught_by_typechecker 5 · sums 52 · missing_ids []   GATE: PASS exit 0
+                run · red-proof · type-value-proof · emitted-freeze · module-tuple      ALL exit 0
+```
+✅★★★★★ **THAT INDEPENDENTLY REPRODUCES `AR-592`'s HEADLINE AT A SECOND DESK ON A SECOND INSTRUMENT. The `44/52`, the six-population sum, the reachable residual — REAL. `AR-592` is not overturned by anything below.**
+
+### 🛑★★★★★ §2 — THE TWO ATTACKS, BOTH REPRODUCED, WITH A BRACKETING REVERT CONTROL
+**ATTACK A — an UNRELATED authoring defect on row `35(a)`** (`const plantedFixtureRegression = ({}).missing;` → `TS2339`, which has NOTHING to do with `35(a)`'s planted `globalThis` ambient capture):
+```
+35(a)  CAUGHT_BY_TYPECHECKER   attributed 44 -> 43 · caught_by_typechecker 5 -> 6
+       partition_sums_to 52 · rows_in_no_population []          GATE: PASS   exit 0
+REVERT CONTROL -> attributed back to 44, caught back to 5, exit 0   <- the bracket holds
+```
+🛑★★★★★ **A ROW LOST ITS COVERAGE CREDIT AND THE GATE CALLED IT CLEAN. `FIXTURE CORRUPTION CONVERTS TO GREEN` — the exact species the external `AR-591` read named and `ADVISOR-STATE` recorded as unowned. IT IS NOW OWNED.** `[MEASURED HERE]` **the cause is at `run.mjs:46-50`: `TYPECHECKER_CAUGHT_CODES` is ONE GLOBAL LIST and `classifyTypeInvalid()` receives only diagnostic strings — never the row ID, the expected mutation, or the span.** ★★★★★ **`AN ERROR CODE IS A TYPE OF EVENT, NOT PROOF THE EVENT BELONGS TO THIS MUTATION.`**
+**ATTACK B — a UNIQUE RENAME, `35(a)` → `35(z)`, body and expectation byte-untouched:**
+```
+total 52 · partition_sums_to 52 · rows_in_no_population [] · missing_ids []   GATE: PASS   exit 0
+emitted-freeze under the same rename: rows compared 39 -> 38, 35(a) ABSENT ENTIRELY,        exit 0
+```
+🛑★★★★★ **THE FROZEN IDENTITY VANISHED AND ITS REPLACEMENT WAS ADOPTED IN SILENCE.** `[MEASURED HERE, executable line read, `corpus.mjs:252`]`: **`export const ORIGINAL_52_IDS = CORPUS.map((c) => c.id).filter((id) => !ADDED_SINCE_AR589.has(id));`** ★★★★★ **THE "FROZEN" POPULATION IS COMPUTED FROM THE MUTABLE POPULATION IT EXISTS TO CONSTRAIN, SO `missing_ids: []` IS THE SET ASKING ITSELF WHETHER ITS OWN MEMBERS EXIST. IT CANNOT EVER DISAGREE WITH A RENAME.** ⚠️ **And `emitted-freeze.mjs` shrank its own denominator by one and still exited `0` — a SECOND gate false-greening on ONE mutation.**
+★★★★★ **BOTH ARE `gate-artifact` — `BLUEPRINT v4`'s MODAL failure bin. THE INSTRUMENT LIED, AND IT LIED IN THE DIRECTION THAT FLATTERS.**
+
+### 🛑★★★★★ §3 — WHAT THIS DOES TO THE GRADE THAT IS ALREADY RUNNING
+✅ **`AR-593` IS CORRECT PROCEDURE AND I RATIFY IT.** The worker did not self-authorize; it asked and the operator said `execute`. **The operator outranks my routing, always.** ✅ **`doer != grader` intact; it briefed the grader to disprove it and will not interpret the verdict.**
+🛑★★★★★ **BUT THE GRADE IS RUNNING AGAINST `9be6a52a`, AND `9be6a52a` CONTAINS BOTH FALSE GREENS I JUST REPRODUCED.** ⚠️ **I CANNOT AMEND THE LIVE BRIEF — I do not hold the handle and the worker dispatched it.** ★★★★★ **THEREFORE, PRE-REGISTERED NOW, BEFORE THE VERDICT ARRIVES SO IT CANNOT BE READ TO TASTE: THE VERDICT IS `SCOPED EVIDENCE ONLY` AND MAY NOT RATIFY THE PARTITION UNLESS IT INDEPENDENTLY EXERCISED BOTH ATTACKS. A CLEAN VERDICT THAT DID NOT RUN THEM IS EVIDENCE THE GRADER DID NOT LOOK THERE — IT IS NOT EVIDENCE THE HOLES ARE ABSENT.** ⚠️ **A `9be6a52a` grade can never certify the REPLACEMENT object; a fresh grade becomes due on the object that closes `§4`.**
+🛑 **DO NOT DISPATCH A SECOND GRADER** (`§15.7`, one slot). ✅ **If the running grade independently finds either hole, that is CORROBORATION at maximum strength — two instruments, two desks, one finding.**
+
+### ✅ §4 — REQUIRED CORRECTIONS. **ADDITIVE TO THE THIRTEEN. NOTHING RESTARTS.**
+**14. ★★★★★ TYPE-CHECKER OWNERSHIP IS ROW-BOUND. ORDERED AS A PROPERTY:** *a diagnostic may credit a row ONLY IF that diagnostic is ENTAILED BY THAT ROW'S PLANTED ILLEGALITY.* Bind the join to `(row ID, expected code set, source anchor/span)`. **A diagnostic on a non-owned row · an EXTRA diagnostic on an owned row · the right code at the wrong anchor → `FIXTURE_INVALID` or `TYPE_INVALID_UNCLASSIFIED`, and the run STOPS.** 🛑 **NO GLOBAL CODE ALLOWLIST. A list of codes is not an ownership key.**
+**15. ★★★★★ EXPECTED MEMBERSHIP MUST BE INDEPENDENT OF THE CORPUS UNDER TEST.** Load the original `52` from a PINNED PRIOR ARTIFACT or a separately frozen manifest — **never `CORPUS.map()`** — including the explicit historical `54 → 54(c)` mapping. **Compare exact sets in BOTH directions and assert uniqueness AND cardinality.** ★★★ `A SET THAT AUTHORS ITS OWN EXPECTED MEMBERSHIP WILL ALWAYS AGREE WITH ITS RENAMES.`
+**16. ★★★ `emitted-freeze.mjs` ASSERTS ITS MEMBER SET, IT DOES NOT PRINT IT.** Iterate the INDEPENDENT expected membership; **delete the silent `continue` for a missing row**; a missing baseline/current row, a changed kind, or any count other than the exact expected source count is RUN-STOPPING.
+**RED-PROOFS — MANDATORY, AND MY TWO ATTACKS ARE NAMED BECAUSE THEY ARE THE FOUNDING DEFECTS** (`R-547 §4.3`: *a guard whose founding defect is not in its mutation set is untested against the only failure it has actually seen*): **(a) unrelated `TS2339` on `35(a)` · (b) unique rename `35(a)`→`35(z)`, which must go RED in BOTH `run.mjs` AND `emitted-freeze.mjs` · (c) unrelated `TS2304` on a non-owned row · (d) an EXTRA allowed code beside a legitimate compiler-owned mutation · (e) membership add · (f) delete · (g) duplicate.** **Each exits non-zero and NAMES the exact offending identity.** ✅ **Legitimately compiler-owned rows must STAY GREEN — a fix that convicts them has over-corrected.**
+
+### §4a — ARCHITECTURE INVARIANTS TOUCHED
+**Invariant 1 untouched; `1b-S` build-time and `1b-R` runtime stay distinct. No runtime, trading or capital behaviour authorized or touched. The prototype still may not read `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` or `ORACLE.json`.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.**
+
+### ✅ §5 — THE TWO OPS FINDINGS FROM `AR-593 §1`. **BOTH RE-MEASURED HERE; ONE IS ALREADY FIXED.**
+**5.1 ✅ THE `v2` GRADER WAS UNCOMMITTED — I COMMITTED IT MYSELF AT `782049f5`.** `[MEASURED HERE]` `+93/−88` vs `HEAD`; the COMMITTED copy carried **`model: opus` `0`, `GRADE`-mode `0`, coverage-mandate `0`.** ★★★★★ **SO ANY FRESH WORKTREE OR ANY `git checkout` WOULD HAVE SILENTLY RESTORED `v1` — WHILE A GRADE WAS IN FLIGHT.** ✅ **I read the file in full before committing it; content is byte-unchanged from the working tree, the commit only makes the existing `v2` durable.** ⚠️ **My `GRADE` count reads `4` where `AR-593` read `11` — DIFFERENT REGEX, SAME FINDING; the load-bearing fact is `0`-vs-nonzero and both instruments agree.** **The worker was right to raise it and right not to commit it.**
+**5.2 ✅ `scripts/check-agent-parity.mjs` DOES NOT EXIST — CONFIRMED WITH A POSITIVE CONTROL.** `[MEASURED HERE]` zero hits in the git index AND zero on disk, while the same query returns tracked `scripts/*.mjs` — **so the search surface is enumerated and the method demonstrably finds things.** ★★★ **`worker-execution §5b` names this tripwire as guarding exactly the drift in `5.1`, and the tripwire is absent — the skill was current and its ARTIFACT was not.** ✅ **AUTHORIZED TO THE WORKER as a SEPARATE LANE (`§7.2`) — it touches NO graded artifact, so it cannot collide with the running grade.**
+
+### 🛑 §6 — STOP CONDITIONS (all of `R-543 §6`, `R-544 §5`, `R-545 §6`, `R-546 §7`, plus)
+★★★★★ **An error code alone establishing compiler ownership → STOP.** · ★★★★★ **Expected membership computed from the corpus under test → STOP.** · ★★★★★ **A missing baseline/current source row silently skipped → STOP.** · ★★★★★ **Either of my two reproduced attacks still exiting `0` → STOP.** · ★★★★★ **The `9be6a52a` verdict used to RATIFY the partition without having exercised both attacks → STOP.** · ★★★ **A second grader dispatched while one is in flight → STOP.** · ★★★ **A legitimately compiler-owned row convicted by the item-14 fix → STOP (over-correction).**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS (nothing left unassigned)
+1. **WORKER — CONTINUE `P0PC`.** Items `14`–`16` + the seven red-proofs. **SCOPE:** as `R-546 §8.1`. **FORBIDDEN:** unchanged. **FIRST OBSERVABLE: attack A going RED, ~25 min.** **HONEST-PARTIAL:** if row-bound ownership cannot be made a property here, **SAY SO and leave the affected rows an OPEN MISS** rather than shipping a code allowlist.
+2. **WORKER — LANE 2, INDEPENDENT** (`§8a` fake-edge test: it consumes NOTHING from lane 1, shares no file, touches no graded artifact): **build `scripts/check-agent-parity.mjs`** — it must go RED on a tree whose committed agent definition differs from the master repo's, with a GREEN control. **Small; do it only if lane 1 is blocked on a run.**
+3. **THIS DESK — RECEIVE the `9be6a52a` verdict** under `§3`'s pre-registration, and **hold the fresh grade for the replacement object.**
+4. **THIS DESK — the V4 graph revision against `R-547 §4`'s six criteria, when one lands.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`AN ERROR CODE IS A TYPE OF EVENT, NOT PROOF THAT THE EVENT BELONGS TO THIS MUTATION. OWNERSHIP NEEDS THE ROW AND THE SOURCE LOCATION.`**
+★★★★★ **`A FROZEN POPULATION COMPUTED FROM THE MUTABLE POPULATION IT CONSTRAINS CAN NEVER DISAGREE WITH A RENAME.`** `missing_ids: []` was the set asking itself whether its own members exist.
+★★★★★ **`A GRADE RUNNING AGAINST AN OBJECT WITH A KNOWN HOLE IS SCOPED EVIDENCE, NEVER RATIFICATION`** — and the scoping must be pre-registered BEFORE the verdict lands, or it will be read to taste.
+★★★ **`I WAITED FOR THE EXTERNAL READ AND IT CARRIED TWO EXECUTED ATTACKS I DID NOT HAVE.`** Eleven minutes. **The wait is not politeness; it is the cheapest evidence this campaign buys.**
+★★★ **`A DEAD CONTROL STOPS THE EXPERIMENT.`** My first isolated run died on a missing `node_modules`; proceeding would have produced two confident results about nothing.
+
+---
+
 ## R-547 · 2026-08-02 · 🛑★★★★★ **I WAS WRONG, AND MY OWN NEXT MEASUREMENT REFUTED ME: I ESCALATED `R-545`'s FINDING INTO *"THE GRAPH REUSES CLOSED CAMPAIGN NODE IDs FOR DIFFERENT OBJECTS"* — **THE EDGE TOPOLOGY REFUTES THAT.** `P1`/`P2` CARRY THE CAMPAIGN'S OWN ARTIFACTS INTO `GBP`/`GBS`, AND THE WHOLE CHAIN MIRRORS OUR `QUEUE` EXACTLY. **SAME OBJECTS.** I JOINED TWO TRUE FACTS INTO A FALSE LINK, ONE DAY AFTER QUOTING THE LAW AGAINST IT.** ✅★★★★★ **`R-545`'s ORIGINAL CHARGE STANDS AND IS NOW **PROVEN**: `P1`/`P2` ARE **CLOSED AT BAND `7`** AND THE GRAPH LISTS THEM READY.** ⚠️ **STILL NOT ADOPTED — but the adoption criteria are now FULLY SPECIFIED, so the next revision can be adopted mechanically instead of re-litigated.**
 
 **RULING ID:** R-547 · **TASK ID:** none (external artifact; no new AR) · **DECISION: HOLD ADOPTION + RETRACTION of my own claim + PRE-COMMITTED ADOPTION CRITERIA + ENDORSE the validator plan.**
