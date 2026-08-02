@@ -122,7 +122,29 @@ For every one of the `43` rows the gate obtains the TS projection and the Python
 > INJECTED  {"value":"EXPECTED_FROM_LEDGER"}   <- crossed the boundary
 > ESM top-level `typeof this` = "undefined"    <- the channel does not exist under ESM
 > ```
-> ★★★★★ **THE MECHANISM: the CJS wrapper `this` is a `ThisExpression`, NOT an identifier binding — so a scope analyser enumerating unresolved identifiers never sees it, and `this !== globalThis`, so the ambient-reads row cannot reach it either.** **`A CLOSED SET THAT NEVER NAMED ITS MODULE SYSTEM IS NOT CLOSED.`** ✅ **Pinning ESM closes it BY CONSTRUCTION rather than by a check.**
+> ★★★★★ **THE MECHANISM: the CJS wrapper `this` is a `ThisExpression`, NOT an identifier binding — so a scope analyser enumerating unresolved identifiers never sees it, and `this !== globalThis`, so the ambient-reads row cannot reach it either.** **`A CLOSED SET THAT NEVER NAMED ITS MODULE SYSTEM IS NOT CLOSED.`**
+>
+> ⚠️🛑★★★★★ **CORRECTED HERE (`R-543 §4.5`, entered by `AR-591`). THIS PARAGRAPH PREVIOUSLY ENDED *"Pinning ESM closes it BY CONSTRUCTION rather than by a check."* THAT WAS PREMATURE AND IS WITHDRAWN.** `"type": "module"` is a **Node LOADER** input; emit is decided by **`compilerOptions.module`**. They are different knobs, and a design naming only one has not pinned the module system. **`A PROSE LABEL IS NEITHER AN EMITTED MODULE NOR A LOADER DECISION.`** ✅ **What closes the channel is the EFFECTIVE-MODULE TUPLE below, executed rather than asserted.**
+>
+> #### ✅★★★★★ THE EFFECTIVE-MODULE TUPLE — **PUBLISHED, HASHED, AND EXECUTED** (`R-543 §4.5` item 5)
+> ```
+> TS version            5.9.3
+> module                NodeNext          <- EMIT decision   (compilerOptions)
+> moduleResolution      NodeNext
+> lib / types           ["es2022"] / []   <- `types: []` is load-bearing: no host @types/*
+> source extension  ->  format   .mts/.mjs = ESM · .cts/.cjs = CJS · .ts/.js = from package type
+> nearest package.json  prototypes/p0-vnext-admission/surface/package.json  "type": "module"
+>                                         <- LOADER decision (Node), distinct from the above
+> emitted artifact      probe.mts -> probe.mjs      probe.cts -> probe.cjs
+> loader command        node probe.mjs              node probe.cjs
+> ```
+> ✅★★★★★ **MEASURED BY EXECUTING THE EMITTED ARTIFACTS, not the TS source** `[MEASURED, `AR-591`, `prototypes/p0-vnext-admission/module-tuple.mjs`]`:
+> ```
+> emitted probe.mjs  ->  top-level `typeof this` = "undefined"   <- the channel does not exist
+> emitted probe.cjs  ->  top-level `typeof this` = "object"      <- POSITIVE CONTROL, alive
+> ```
+> ★★★★★ **THE CJS ARM IS NOT DECORATION. *"Top-level `this` is absent under ESM"* is an ABSENCE CLAIM, and an absence measured by a probe never shown capable of observing PRESENCE is indistinguishable from a dead probe.** ✅ **PINNED SURFACE HASH (sha256 over the 6 committed surface files): `56903b2a09c0b0d4085b5b4e6fe2c6978e4aa6db2e364ed5dd6416e158a8d914`.**
+> ⚠️★★★ **AND THE CONTAINER, NOT THE TEXT, IS THE DISCRIMINATOR** `[MEASURED, `AR-591`]`: one byte-identical source text is **ADMITTED as `.mts` and REJECTED as `.cts` by the module-system catcher alone**, with every text-level catcher SILENT in both arms. **A module-scope `this` STATEMENT behaves identically in `.mjs` and `.cjs` and therefore cannot discriminate the module system at all.**
 > #### 🛑★★★★★ THE AMBIENT-INTRINSIC ALLOW-LIST — **PUBLISHED, BECAUSE A FORBIDDEN SET IS NOT CLOSED UNTIL THE ALLOWED SET IS NAMED**
 > ⚠️🛑★★★★★ **THE CONTRADICTION THIS CLOSES, MEASURED: the previous ambient cell read `ALLOWED: nothing`, while the constant grammar's ONLY admitted composite form is `Object.freeze(...)` — and `[MEASURED, `AR-584 §4`, node v24.13.0]` **`Object === globalThis.Object` is `true`. `Object` IS AN AMBIENT HOST GLOBAL.** So `nothing` was literally false, and taken literally it REJECTED EVERY VALID FROZEN CONSTANT — making the GREEN neighbour this design promises **UNCONSTRUCTIBLE**, which is a STOP CONDITION in its own right.**
 > ✅ **THE ALLOWED SET, ENUMERATED — MEMBERSHIP `1`:**

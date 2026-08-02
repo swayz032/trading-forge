@@ -4,6 +4,82 @@
 
 ---
 
+## AR-591 · 2026-08-02 · ✅★★★★★ **ALL NINE DELIVERED — `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`). THE NUMBER FELL AS PRE-REGISTERED: `49 / 52` → **`44 / 52`** LIKE-FOR-LIKE, SCORED OVER THE SAME 52 IDS WITH `missing_ids: []`.** ✅★★★★★ **THE TRUE TWIN EXISTS: ONE BYTE-IDENTICAL SOURCE TEXT, `ADMITTED` AS `.mts` AND `REJECTED` AS `.cts` BY THE MODULE-SYSTEM CATCHER **ALONE**, EVERY TEXT-LEVEL CATCHER SILENT IN BOTH ARMS.** ✅★★★★★ **AND THE RUNNER IS NOW A GATE, NOT A REPORT: `11 / 11` FORBIDDEN CLASSES HAVE A DEMONSTRATED RED PATH WITH THE CONTROL GREEN.** 🛑★★★★★ **TWO DEFECTS I INTRODUCED AND MEASURED MYSELF ARE REPORTED IN FULL BELOW — ONE OF THEM WAS CAUGHT BY MY OWN RED-PROOF, NOT BY REVIEW.**
+
+**RULING ID:** `R-543 §4` items `1`–`5` + `R-544 §3` items `6`–`9` · **TASK ID:** AR-591 · **PRIOR:** AR-590 (START-RECEIPT, `0df28dfd`).
+**DELTA:** `prototypes/p0-vnext-admission/` — REWRITTEN `source-admission.mjs` · `corpus.mjs` · `run.mjs` · REPUBLISHED `RESULTS-2026-08-02.md` · NEW `surface/` (6 committed files) · NEW `module-tuple.mjs` · NEW `red-proof.mjs` · **ONE design edit, scoped to item `5`'s tuple** (`P0-VNEXT-DESIGN-2026-08-01.md` §2) · this AR.
+**FAN-IN: `9 / 9`. NOT A HANDOFF.** **GRAPH: NOT GRAPH-SCHEDULED** — `R-545` received the V4 graph and did not adopt it; nothing here was scheduled from it.
+
+### ✅★★★★★ §1 — THE PRE-REGISTERED NUMBER, AND WHY TWO NUMBERS ARE PUBLISHED
+```
+LIKE-FOR-LIKE (AR-589's ORIGINAL 52 ids)     EXPANDED CORPUS (59 rows)
+  attributed            44 / 52                attributed            50 / 59
+  miss_not_implemented   3                     miss_not_implemented   3
+  miss_type_invalid      5                     miss_type_invalid      6
+  miss_not_caught        0                     miss_not_caught        0
+  failed_wrong_catcher   0                     failed_wrong_catcher   0
+  failed_ownership       0                     failed_ownership       0
+  missing_ids           []                     green_admitted       6 / 6   getter_invocations 0
+```
+🛑★★★★★ **THE CORPUS GREW `52` → `59` THIS ROUND, SO THE RAW RATIO IS NOT COMPARABLE — `50/59` AGAINST `49/52` WOULD BE TWO DIFFERENT POPULATIONS, WHICH IS THIS CAMPAIGN'S MOST-CONVICTED JOIN ERROR.** ✅ **So `ORIGINAL_52_IDS` is enumerated BY ID in `corpus.mjs` and scored separately by the runner. `missing_ids: []` is the join's own witness.** ★★ **`AR-589`'s row `54` (module-scope `this` STATEMENT) now lives at `54(c)`; the new `54` is the container twin and is EXCLUDED from the like-for-like set.**
+
+### 🛑★★★★★ §2 — THE MEASUREMENT THAT NEARLY MADE ITEM 1 PRODUCE A ZERO
+`[MEASURED HERE, before any repair, TS 5.9.3 under the pinned surface]`
+```
+source fixtures: 41   TYPE-INVALID: 41   VALID: 0
+codes {TS7006:45, TS2792:4, TS2304:5, TS2591:2, TS7017:1, TS2339:5, TS1117:4, TS2540:2, TS2532:1}
+  positive control (type-valid probe)   -> no diagnostics
+  positive control (type-invalid probe) -> TS2339      <- the probe DISCRIMINATES
+```
+★★★★★ **`41 OF 41` SOURCE FIXTURES — INCLUDING BOTH GREENS — WERE TYPE-INVALID, because `strict` implies `noImplicitAny` and every fixture was `(lane) => ...`.** ⚠️ **A naive item-`1` would have reported ~`0` coverage and that would have been THE SURFACE BEING WRONG, NOT THE CORPUS.** ✅ **`AR-590 §2b` flagged this before I wrote a line; the committed surface now supplies `Lane` and every fixture carries `(lane: Lane)`. THE BYTE CHANGE IS DELIVERED WITH ITS REASON AND A PER-ROW TABLE IN `RESULTS §2`, not made quietly — `AR-589 §2.1` rested on byte-identical fixtures.** ★★★ **The uniform rule I applied and published: NEVER edit a fixture in the direction that removes the thing it exists to prove. Where the type error IS the defect (`52(a)`–`(d)`, `54(c)`) the fixture was NOT rescued.**
+
+### 🛑★★★★★ §3 — TWO DEFECTS I INTRODUCED, BOTH FOUND BY MEASUREMENT, BOTH REPORTED
+1. 🛑 **THE OWNERSHIP PASS DELETED THREE FINDINGS.** My first item-`3` build claimed `require(...)`, `eval(...)` and `createRequire(...)` as owned nodes **but emitted no violation for them**, so the interior identifier was suppressed and rows `41(b)`/`(c)`/`(e)` fell silently to `MISS_NOT_CAUGHT`. ★★★★★ **`SUPPRESSING A CATCHER WITHOUT REPLACING IT DOES NOT RE-ATTRIBUTE A FINDING — IT DELETES IT.` Fixed: every owner emits its own violation at claim time.**
+2. 🛑★★★★★ **MY TWIN ASSERTION WAS READING THE DECLARATION, NOT THE MEASUREMENT — AND MY OWN RED-PROOF CAUGHT IT, NOT MY REVIEW.** The byte-equality check compared the bodies declared in `corpus.mjs` rather than the bodies actually handed to `admitSource`, so the planted `twin` mutation **did not go red** (`10 / 11` on the first red-proof run). ✅ **Fixed to compare the SUBMITTED bytes; `11 / 11` now.** ★★★★★ **`AN ASSERTION THAT READS THE FIXTURE TABLE INSTEAD OF THE RUN IS ASSERTING WHAT THE CORPUS SAYS, NOT WHAT THE RULE WAS HANDED.`**
+✅ **A third, smaller one, same class: my first pinned surface flagged the `Lane` in `(lane: Lane)` as a free/captured reference. A TYPE-POSITION identifier is erased at emit and cannot capture a value; the rule now excludes type positions.**
+
+### ✅★★★★★ §4 — ITEMS 6+7: THE MODULE SYSTEM IS A **CONTAINER** AXIS, MEASURED TWO WAYS
+`[MEASURED HERE]` **The `.mjs`/`.cjs` throw is explained, not just fixed: with `allowJs` off those files were dropped from the program root, `getSourceFile` returned `undefined`, and the next line threw. AN INSTRUMENT FAULT, NEVER A VERDICT. All six extensions now handled.**
+```
+TWIN  54 (twin.cts) vs G-src-container-twin-esm (twin.mts)  sameBytes=true (131B)
+      CJS -> only-module-system=true | ESM -> admitted=true          PASS
+TWIN  54(b) (twin.cjs) vs G-src-container-twin-mjs (twin.mjs) sameBytes=true (96B)  PASS
+TUPLE CROSS-CHECK (my derivation vs ts.impliedNodeFormat): AGREE on all rows
+```
+★★★★★ **The container decides; the text does not. And `R-544`'s retraction is confirmed from a second angle: the module-scope `this` STATEMENT produces IDENTICAL diagnostics in `.mjs` and `.cjs`, so it can never discriminate the module system.** ✅ **`54(c)` retains that channel under an honest caption.**
+**ITEMS 5+7 SECOND HALF — THE EMITTED ARTIFACT IS EXECUTED, NOT DESCRIBED:**
+```
+emitted probe.mjs -> top-level `typeof this` = "undefined"   <- the channel does not exist
+emitted probe.cjs -> top-level `typeof this` = "object"      <- POSITIVE CONTROL, ALIVE
+```
+★★★★★ **THE CJS ARM IS NOT DECORATION: *"absent under ESM"* is an ABSENCE CLAIM, and an absence measured by a probe never shown able to observe PRESENCE is a dead probe.** ✅ **Tuple published + hashed in the design (`56903b2a…`), and the desk's premature *"closes the channel BY CONSTRUCTION"* wording is WITHDRAWN there in `R-543 §4.5`'s own words.**
+
+### ✅★★★★★ §5 — ITEM 9: IT IS A GATE, AND HERE IS ITS PATH TO RED
+```
+CONTROL (no injection) exit=0 GREEN   <- the discriminator: this suite is not always-red
+11 / 11 classes red-proofed: wrong_catcher · ownership · parse · green_rejected · neg_control
+  · getter · ledger_read · surface_health · twin · tuple_disagreement · emitted_module
+```
+★★★ **Every injection mutates A FIXTURE OR AN ARTIFACT, never an expectation, and each must name ITS OWN class — a red for the wrong reason fails here too.** ⚠️ **The injector is env-gated and gates a TEST INJECTION, never a repair; no correctness fix hides behind a flag.**
+
+### ⚠️★★★★★ §6 — THE MISSES, AND THE ONE DISPOSITION I WANT OVERRULED IF THE DESK DISAGREES
+**`miss_not_implemented` (3):** `26(a)/(b)/(c)` — dependency-boundary catcher not implemented; they red via import-cardinality and **are not counted.** Unchanged.
+**`miss_type_invalid` (6):** `34(d-u)` `TS2304` · `52(a)`–`(d)` `TS1117` · `54(c)` `TS2532`+`TS2540`.
+🛑★★★★★ **THE `34(d)` SPLIT — FLAGGED IN `AR-590 §2a` BEFORE THE BUILD.** `34(d)` is the row that found a real bug in my rule on run one. **It cannot be both TYPE-VALID and UNRESOLVED — that is arithmetic, not a choice.** ✅ **Split: `34(d)` DECLARED free reference, type-valid, still a genuine capture, COUNTED · `34(d-u)` UNDECLARED form, `TYPE_INVALID`, NOT COUNTED, RETAINED IN FULL with the rule's unresolved branch still implemented and exercised.** ⚠️★★★★★ **I am naming this loudly because it is the ONE place a re-classification could be mistaken for burying an inconvenient result. Overrule me if you read it that way.**
+⚠️★★★ **A FINDING INSIDE THE MISSES: under the pinned surface the COMPILER ITSELF owns three of these channels** — `TS1117` rejects every duplicate-cooked-key form including both escaped variants, and `TS2532` rejects module-scope `this`. **Those channels are closed; they are not closed by the rule the design credits.** `A CHANNEL CLOSED BY A DIFFERENT MECHANISM THAN THE DESIGN NAMES IS STILL A DESIGN THAT DOES NOT KNOW WHY IT IS SAFE.`
+
+### ⚠️ §7 — WHAT THIS DOES NOT SHOW
+- ⚠️★★★★★ **THE NUMBER IS A CLAIM UNTIL AN INDEPENDENT INSTRUMENT RE-DERIVES IT.** `doer != grader`, and I built the rule, the corpus, the gate AND its red-proof. **`R-543 §5` already assigns this to the `accuracy-validator` against the corrected number — it is now delivered and the grade is dispatchable.** ⚠️ **I do not dispatch it and I will not interpret it.**
+- ⚠️ **`59` is the population the DESIGN enumerates — not proof the design enumerates every channel. `G-2` is NOT closed; item `8` closes it for the REQUIRED EXPORT only.**
+- 🛑 **OWED DESIGN EDIT, DEFERRED FOR SCOPE AND NOT FORGOTTEN (`AR-590 §2c`): the design matrix's row-`54` caption still claims a module-system discriminator `R-544` retracted. `R-543 §4` scopes design edits to item `5`'s tuple, so it is FLAGGED, NOT EDITED. It is one line and it is the desk's to make.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED; `P0-vNext` gate BLOCKED; Phase-1 REFUSED; the old `P0` lane untouched. No runtime, trading or capital behaviour authorised or touched. Separability re-measured: `80` files opened, `0` ledger/oracle.**
+
+### §8 — POSITION
+**`HEAD` after this commit. All nine items closed and re-measured after every repair.** ★★ **FAN-IN `9 / 9`. NOT A HANDOFF — the batch was the unit of work and it is finished.**
+**REPRODUCE:** `cd prototypes/p0-vnext-admission && node run.mjs && node red-proof.mjs && node module-tuple.mjs`
+
+---
+
 ## AR-590 · 2026-08-02 · **START-RECEIPT — FRESH SEAT, BATCH OF NINE ACCEPTED: `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`), UNCHANGED BY `R-545 §5.1`.** ⚠️★★★ **FOUR THINGS RAISED **BEFORE** I WRITE CODE, INCLUDING ONE THAT WILL RE-CLASSIFY THE CORPUS'S SINGLE MOST VALUABLE FIND — I WOULD RATHER BE OVERRULED NOW THAN HAVE IT READ AS BURIAL AT DELIVERY.**
 
 **RULING ID:** `R-543 §4` items `1`–`5` + `R-544 §3` items `6`–`9` · **TASK ID:** AR-590 · **PRIOR:** AR-589 (`8297ebbe`).

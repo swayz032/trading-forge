@@ -1,0 +1,23 @@
+{
+  "//": "THE PINNED COMPILER SURFACE (R-543 s4 item 2). Every fixture verdict in this",
+  "//1": "prototype is computed under EXACTLY these options. `types: []` is the load-bearing",
+  "//2": "entry: without it TypeScript auto-includes every ambient @types/* the HOST happens",
+  "//3": "to have installed, and `process.env` type-checks clean only because @types/node is",
+  "//4": "present. A mutation matrix whose result changes with the host's installed packages",
+  "//5": "is not frozen (R-543 s1, defect 3).",
+  "//6": "module/moduleResolution NodeNext are what make `impliedNodeFormat` computable, which",
+  "//7": "is the CONTAINER axis the module-system catcher reads (R-544 s3 item 6).",
+  "//8": "allowJs+checkJs are what stop .mjs/.cjs from being dropped from the program root,",
+  "//9": "which is the mechanism behind the TypeError R-544 measured.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["es2022"],
+    "types": [],
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true
+  }
+}
