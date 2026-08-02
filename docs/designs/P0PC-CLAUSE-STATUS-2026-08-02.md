@@ -207,6 +207,82 @@ member, not inferred from an empty set.
 
 ---
 
+## 4a. ✅ DATED ADDENDUM — 2026-08-02, `R-592 §5`: CLAUSE `1d` IS **OBSERVED**, AND IT NEEDED NO CODE
+
+**Appended as a dated block, not a rewrite of `§4`. `§4` said the reading was
+ambiguous and named the experiment that would resolve it; `R-592 §5` authorized
+that experiment. It has now been RUN, and the answer is that the instrument
+already existed.**
+
+🛑★★★★★ **THE HEADLINE, STATED AGAINST MY OWN `§4`: I reported that the
+injections populating these classes *"fail the gate rather than printing a
+credit-denial"*. **THAT WAS WRONG — THEY DO BOTH.** The credit-denial is printed,
+in full, in the `members` block of the same run. `§4` was right that the clean
+run cannot show it and right to refuse the zero; it was wrong that no run shows
+it. **The observation was available all along and had never been taken.**
+
+**METHOD `[MEASURED HERE]` — NOOP control first, then one injection per excluded
+population. `PROTO_INJECT` is an ENVIRONMENT variable and the run performs no
+file writes, so no edit under `prototypes/` was made or needed:**
+
+```
+sha256 run.mjs    BEFORE  a85c3f0d3541cd465725140af06266eb451118da03e6ae229643b12c3786557e
+sha256 corpus.mjs BEFORE  e377abc758897aa5dc3d49834634d81f803c58cfe648a8503ed37c75f7d78d27
+
+node run.mjs                                    CONTROL   EXIT 0   GATE: PASS
+PROTO_INJECT=fixture_invalid       node run.mjs            EXIT 1   GATE: FAIL (1 class(es))
+PROTO_INJECT=surface_invalid_rows  node run.mjs            EXIT 1   GATE: FAIL (1 class(es))
+
+sha256 run.mjs    AFTER   a85c3f0d…  (IDENTICAL)
+sha256 corpus.mjs AFTER   e377abc7…  (IDENTICAL)
+git status --porcelain -- prototypes/           EMPTY
+```
+
+**THE EXCLUSION, OBSERVED ON A LIVE MEMBER, IN BOTH POPULATIONS:**
+
+| run | `INJECTION:` witness | partition | sums | `48` ∈ `attributed` | `48` ∈ `fixture_invalid` | `35(b)` ∈ `attributed` | `35(b)` ∈ `surface_invalid` |
+|---|---|---|---|---|---|---|---|
+| **CONTROL** | `<none — this is the clean control>` | `attributed 44 · surface_invalid 0 · fixture_invalid 0` | `52 / 52` | **true** | false | **true** | false |
+| **INJ `fixture_invalid`** | `fixture_invalid` | `attributed 43 · fixture_invalid 1` | `52 / 52` | 🛑 **false** | ✅ **true** | true *(unmoved)* | false |
+| **INJ `surface_invalid_rows`** | `surface_invalid_rows` | `attributed 43 · surface_invalid 1` | `52 / 52` | true *(unmoved)* | false | 🛑 **false** | ✅ **true** |
+
+**`rows_in_two_populations: []` and `rows_in_no_population: []` in ALL THREE runs.**
+
+**AND THE ROW'S OWN DISPOSITION LINE MOVES WITH IT:**
+
+```
+CLEAN : 48     ATTRIBUTED        helper-returned module constant   1b-S:const-ast-grammar
+INJ-FI: 48     FIXTURE_INVALID   helper-returned module constant   TS2554@L1:32 "2"
+
+CLEAN : 35(b)  ATTRIBUTED        window                            1b-S:direct-ambient-read
+INJ-SI: 35(b)  SURFACE_INVALID   window                            TS7006@L1:25 "lane"
+```
+
+✅★★★★★ **THIS SATISFIES THE ACCEPTANCE `R-592 §5` WROTE, TERM BY TERM:** the run
+prints the offending id (`48` / `35(b)`) ✅ · shows it **ABSENT from the
+`attributed` member list** — and present in the clean control, which is the
+discriminator ✅ · shows **the partition still summing to `52`** ✅ · the clean
+control restores byte-identical ✅.
+✅★★★ **PLUS AN ISOLATION WITNESS THE CONTRACT DID NOT ASK FOR AND THAT I THINK IT
+NEEDS: each injection moves EXACTLY ITS OWN ROW — `35(b)` is unmoved under the
+fixture injection and `48` is unmoved under the surface injection.** ★★★★★ **`A
+ROW LEAVING attributed PROVES NOTHING IF EVERY ROW LEFT` — without the cross-row
+check, a global collapse would read identically to a targeted exclusion.**
+
+⚠️ **THE ONE INTERPRETIVE QUESTION I AM NOT DECIDING, BECAUSE IT IS THE DESK'S:**
+`R-592 §5` asks for the denial *"on a SURVIVING run"* and says the exit code is
+not the evidence. **These runs exit `1`.** They survive to collect and print the
+entire partition, member lists and disposition table BEFORE exiting non-zero —
+which is precisely the behaviour clause `4d` requires (*"exits non-zero AFTER
+evidence collection"*). **So the evidence the clause needs is printed by a run
+that then fails the gate.** ★★★ **Whether that is "surviving" in the sense `§5`
+intended is a reading of the desk's own contract, and `REPORT THE READINGS, NEVER
+THE VERDICT` applies to the contract as much as to the code.** **If the desk means
+a run that exits `0`, that is a DIFFERENT experiment and I have not run it —
+`[UNENUMERATED]`.**
+
+---
+
 ## 5. ⚠️ MY OWN INSTRUMENT LIED FIRST — DISCLOSED, BECAUSE IT NEARLY BECAME §3
 
 **My first count of the two populations was a hand-rolled brace-depth scanner in

@@ -4,7 +4,44 @@
 
 ---
 
-## AR-635 · 2026-08-02 · ✅★★★★★ **`R-591 §6` DONE — `P0PC`'s ELEVEN ACCEPTANCE FRAGMENTS MAPPED TO THEIR PRINTS ON THE CURRENT OBJECT. **TEN `READING_PRESENT`, ONE `READING_AMBIGUOUS`.** ✅★★★★★ **THE `25` vs `43` SPLIT IS CONFIRMED BY INDEPENDENT RE-DERIVATION, NOT RELAYED: `43` IS `red-proof.mjs`'s OWN FOUR TABLES (`16+2+21+2+2`), `25` IS `run.mjs`'s `FAILURE_CLASSES` — `SAME POPULATION? false`.** 🛑 **AND MY OWN COUNTER LIED FIRST (`46`/`18`); DISCLOSED IN `§5` BECAUSE IT NEARLY BECAME A FABRICATED DISCREPANCY IN THE OBJECT I WAS SENT TO MEASURE.**
+## AR-636 · 2026-08-02 · ✅★★★★★ **`R-592 §5` DONE — CLAUSE `1d` IS **OBSERVED ON A LIVE MEMBER, IN BOTH EXCLUDED POPULATIONS**, WITH THE CLEAN CONTROL AS DISCRIMINATOR AND A CROSS-ROW ISOLATION WITNESS.** 🛑★★★★★ **AND I WROTE **ZERO LINES OF CODE**: THE INSTRUMENT ALREADY EXISTED. **MY OWN `AR-635 §4` WAS WRONG** — I SAID THE INJECTIONS *"FAIL THE GATE RATHER THAN PRINTING A CREDIT-DENIAL"*; THEY DO **BOTH**. THE MEASUREMENT HAD SIMPLY NEVER BEEN TAKEN.** ✅ **`AR-635`'s HEADER MISCOUNT CORRECTED, STRUCK NOT REWRITTEN.**
+
+**RULING ID:** `R-592 §5` · **TASK ID:** AR-636 · **PRIOR:** AR-635 · **GRAPH NODE: `P0PC` — MEASURED, **NO TRANSITION PROPOSED** (`R-592` reserves it to `1d` observed **AND** an independent grade).**
+
+### 🛑★★★★★ §1 — THE CORRECTION AGAINST MY OWN PRIOR REPORT, FIRST
+**`AR-635 §4` / artifact `§4` stated: the injections that populate `SURFACE_INVALID`/`FIXTURE_INVALID` *"FAIL THE GATE (`exit=1`) rather than printing a credit-denial for a surviving run."*** 🛑 **The second half is FALSE. Both injections print the credit-denial in full — the `members` block of the very same run names the excluded id and omits it from `attributed`.** ✅ **What `§4` got right and I still stand behind: the CLEAN run cannot show it (both populations empty), and `run.mjs:175`'s record of a once-definitional zero is why that emptiness must not be read as satisfaction.** ★★★★★ **But `I INFERRED A LIMIT OF THE INSTRUMENT FROM THE GATE'S EXIT CODE INSTEAD OF READING ITS OUTPUT` — the exit code was the loudest thing in the run and I let it stand for what the run had printed. `A GATE VERDICT IS NOT A SUMMARY OF THE RUN.`**
+
+### ✅ §2 — THE OBSERVATION (full table + commands in the artifact's new `§4a`)
+`[MEASURED HERE — NOOP CONTROL FIRST; `PROTO_INJECT` is an ENV var and the run writes no files, so no `prototypes/` edit was made or needed]`
+```
+                         partition                    sums   48∈attributed  48∈fixture_invalid  35(b)∈attributed  35(b)∈surface_invalid
+CONTROL   (EXIT 0, PASS) attributed 44 · si 0 · fi 0   52/52      true            false               true                false
+INJ fixture_invalid      attributed 43 · fi 1          52/52     FALSE            TRUE                true  (unmoved)      false
+INJ surface_invalid_rows attributed 43 · si 1          52/52      true  (unmoved)  false              FALSE               TRUE
+rows_in_two_populations: []   rows_in_no_population: []   — in ALL THREE runs
+48:    ATTRIBUTED 1b-S:const-ast-grammar   ->  FIXTURE_INVALID  TS2554@L1:32 "2"
+35(b): ATTRIBUTED 1b-S:direct-ambient-read ->  SURFACE_INVALID  TS7006@L1:25 "lane"
+sha256 run.mjs / corpus.mjs BEFORE == AFTER · git status --porcelain -- prototypes/  EMPTY
+```
+✅ **`R-592 §5`'s acceptance, term by term: prints the offending id ✅ · ABSENT from `attributed` (and PRESENT in the control, which is what makes it a reading rather than a coincidence) ✅ · partition still sums to `52` ✅ · clean control restores byte-identical ✅.**
+✅★★★★★ **AND ONE WITNESS THE CONTRACT DID NOT ASK FOR: each injection moves EXACTLY ITS OWN ROW — `35(b)` unmoved under the fixture injection, `48` unmoved under the surface injection. `A ROW LEAVING attributed PROVES NOTHING IF EVERY ROW LEFT`; without the cross-row check a global collapse reads identically to a targeted exclusion.**
+
+### ✅★★★★★ §3 — WHY I CHANGED NOTHING, AND WHY THAT IS THE DELIVERABLE
+🛑 **`R-592 §5` narrowly re-opened `prototypes/` for exactly one change. I USED NONE OF IT.** The experiment I specified at `AR-635 §4` turned out to be runnable against the object AS COMMITTED — the classification, the member lists and the partition sum were all already printed; what was missing was that **nobody had run the injection and read the `members` block.**
+★★★★★ **`AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE, AND THE CHEAPEST WAY TO SATISFY AN ACCEPTANCE IS TO DISCOVER IT IS ALREADY SATISFIED.` A narrow re-opening is exactly the moment to check whether the thing needs building at all — the campaign has five cycles of evidence that a permission to edit gets spent.** ✅ **The retirement is therefore untouched: no new guard, no new pinned collection, no hardening, not one byte under `prototypes/`.**
+
+### ✅ §4 — THE CAPTION FIX (`R-592 §2`)
+✅ **`AR-635`'s header said *"ELEVEN … TEN `READING_PRESENT`"*; the artifact's table is TEN fragments, NINE present. **The artifact was right.** Header struck-and-corrected in place with a dated note, per preserve-and-strike — not silently rewritten.** ⚠️ **My error, one sentence: I counted the fragments in prose after writing the table and did not re-count against it. `A HEADLINE NUMBER THAT DISAGREES WITH ITS OWN TABLE` is the shape, and the fix is to derive the caption FROM the table rather than beside it.**
+
+### ⚠️ §5 — SCOPE, INVARIANTS, AND WHAT I DID NOT DO
+**`prototypes/` READ + EXECUTE ONLY — ZERO EDITS, byte-identical before and after. `runtime-production` NOT touched, NOT read. No runtime, trading, capital or broker surface. No merge, no worktree update, no production write, no restart, no credential, no spend.** ✅ Single-writer honoured. ✅ No monitor armed/retired/killed — the adopted ear has now delivered **four** rulings into this seat (`R-589`→`R-592`).
+🛑 **WHAT I DID NOT DO:** **I did not run a variant that exits `0`** — `R-592 §5` asks for the denial *"on a SURVIVING run"*, and these runs print everything the clause needs and THEN exit `1`, which is clause `4d`'s designed *"exits non-zero after evidence collection"*. **Whether that reading of `§5` is the desk's own is a question about the desk's contract and I am not answering it; if `§5` means an `EXIT 0` run, that is a different experiment `[UNENUMERATED]`.** · **I tested TWO injections, not the space of them** — I make no claim that every route into these populations prints the same way. · **I still ran no injection of my own design; both are the object's existing, previously-red-proofed plants.**
+**RECOMMENDATION: `APPROVAL_REQUESTED` on the observation. The MET ruling on `1d` and the node transition are the desk's, and `R-592 §24` already reserves the transition to an independent grade — I am the doer and will not interpret this.**
+**NEXT SMALLEST TASK: none held.**
+
+---
+
+## AR-635 · 2026-08-02 · ✅★★★★★ **`R-591 §6` DONE — `P0PC`'s ~~ELEVEN~~ **TEN** ACCEPTANCE FRAGMENTS MAPPED TO THEIR PRINTS ON THE CURRENT OBJECT. ~~**TEN `READING_PRESENT`**~~ **NINE `READING_PRESENT`**, ONE `READING_AMBIGUOUS`.** 🛑 **[CORRECTED 2026-08-02 per `R-592 §2`, struck not rewritten: this header miscounted its own artifact by one. The artifact's table was and is right — ten fragments, nine present. Substance unchanged; the single gap is `1d` on every count. `caption-is-a-claim`.]** ✅★★★★★ **THE `25` vs `43` SPLIT IS CONFIRMED BY INDEPENDENT RE-DERIVATION, NOT RELAYED: `43` IS `red-proof.mjs`'s OWN FOUR TABLES (`16+2+21+2+2`), `25` IS `run.mjs`'s `FAILURE_CLASSES` — `SAME POPULATION? false`.** 🛑 **AND MY OWN COUNTER LIED FIRST (`46`/`18`); DISCLOSED IN `§5` BECAUSE IT NEARLY BECAME A FABRICATED DISCREPANCY IN THE OBJECT I WAS SENT TO MEASURE.**
 
 **RULING ID:** `R-591 §6` · **TASK ID:** AR-635 · **PRIOR:** AR-634 · **ARTIFACT: `docs/designs/P0PC-CLAUSE-STATUS-2026-08-02.md` (ships in THIS commit, `ar-ships`).**
 **GRAPH NODE: `P0PC` — MEASURED, **NO TRANSITION PROPOSED**. `R-591 §6` makes a transition-before-grade a STOP, and `R-574 §0` has held nine times.**
