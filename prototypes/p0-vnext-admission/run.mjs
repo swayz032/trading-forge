@@ -26,6 +26,8 @@ import {
   EXPECTED_ORIGINAL_IDS, checkMembership, checkGreenMembership, checkAuxiliaryCollections,
   collectionNamesOf, BASELINE_META, EXPANDED_META,
 } from './membership.mjs';
+// R-568 item (5): the set-of-sets extended past corpus.mjs to the ENFORCEMENT TABLES.
+import { checkPinnedCollections, assertParserAgreesWithRuntime, loadPinnedText } from './module-collections.mjs';
 
 globalThis.__GETTER_HITS__ = 0;
 
@@ -34,6 +36,37 @@ globalThis.__GETTER_HITS__ = 0;
 // env var is set, and the clean control run below proves the off-branch is the real one.
 // This gates a TEST INJECTION, never a repair -- no correctness fix hides behind a flag.
 const INJECT = process.env.PROTO_INJECT || '';
+
+// 🛑★★★★★ R-568 item (5) — THE SET OF SETS, BEYOND `corpus.mjs`. THIS RUNS BEFORE ANYTHING
+// ELSE AND IS DELIBERATELY **NOT** A `FAILURE_CLASSES` ENTRY.
+//
+// WHY IT SITS OUTSIDE THE TABLE IT PROTECTS, measured rather than argued (AR-607 §1):
+//   deleting the `collection_shape` entry from `FAILURE_CLASSES` (5 lines) made the very
+//   injection that reddens this gate report `GATE: PASS`, `EXIT 0`. `failures` is
+//   `FAILURE_CLASSES.filter(...)` — BOTH OPERANDS FROM THE SAME MUTABLE ARRAY, which is
+//   R-561's defect on the enforcement list itself. A check registered IN that array could
+//   be retired by the same edit it exists to catch, so this one cannot live there.
+// It prints `GATE: FAIL` and names its class so `red-proof.mjs` can assert it exactly like
+// any other class, then exits immediately — nothing downstream can downgrade it.
+const collectionFindings = checkPinnedCollections({
+  simulateDelete: INJECT === 'module_collection_delete'
+    ? { file: 'red-proof.mjs', collection: 'EXPECT', key: 'new_unpinned_collection' } : null,
+  simulateAdd: INJECT === 'module_collection_add'
+    ? { file: 'run.mjs', collection: 'ROGUE_UNPINNED_TABLE' } : null,
+});
+// ⚠️ THE PARSER IS NEVER TRUSTED ON ITS OWN WORD. It is compared against the EXECUTED
+// runtime reader on `corpus.mjs` — the one module where both paths work — and on the SAME
+// BLOB, because comparing two revisions would be measuring the neighbouring object. This
+// cross-check already earned its place: it caught this parser blind to object-literal
+// collections (`PREREGISTERED_EMIT_CHANGES`) before the check shipped.
+assertParserAgreesWithRuntime(loadPinnedText(EXPANDED_META.commit, 'corpus.mjs').raw, collectionNamesOf(corpusModule));
+if (collectionFindings.length) {
+  console.log('='.repeat(116));
+  console.log(`GATE: FAIL (${collectionFindings.length} class(es))`);
+  for (const f of collectionFindings) console.log(`  *** module_collections: ${f}`);
+  console.log(`INJECTION: ${INJECT || '<none — this is the clean control>'}`);
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------------------
 // R-546 §5.0 — `miss_type_invalid` CONFLATED THREE POPULATIONS AND IS RETIRED. Each now has

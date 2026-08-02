@@ -84,6 +84,17 @@ const EXPECT = [
   ['twin_pairs_delete',        'twin_pairs_membership',     '(n) R-562: delete a TWIN_PAIRS entry — both rows it names stay ALIVE, so every membership and disposition check passed while the twin assertions went 2 -> 1'],
   ['prereg_delete',            'prereg_membership',         '(o) delete a PREREGISTERED_EMIT_CHANGES key — invisible to emitted-freeze for an EMIT-IDENTICAL row'],
   ['new_unpinned_collection',  'collection_shape',          '(p) THE SET OF SETS: introduce a NEW exported collection nobody pinned — instance five must announce itself'],
+  // 🛑★★★★★ R-568 item (5) / AR-607 — INSTANCES SIX AND SEVEN, AND THEY WERE ON THE
+  // ENFORCEMENT FILES THEMSELVES. Both were MEASURED before the fix was written:
+  //   deleting ONE row from THIS array gave "37 / 37", "VERDICT: ENFORCING GATE", EXIT 0,
+  //   with the retired class leaving zero trace in the output; and deleting the
+  //   `collection_shape` entry from run.mjs's FAILURE_CLASSES made the `new_unpinned_collection`
+  //   injection above report GATE: PASS, EXIT 0 — i.e. row (p) could be silently disarmed.
+  // TOGETHER THEY COMPOSE INTO A COORDINATED TWO-EDIT DELETION that removes the R-562 class fix
+  // AND its proof with both gates green — the shape R-558 closed for corpus rows and left open
+  // here. `A COUNT OF SURVIVING MEMBERS CANNOT SPEAK ABOUT MEMBERS THAT WERE REMOVED.`
+  ['module_collection_delete',  'module_collections',       '(q) R-568(5): delete a row from an ENFORCEMENT TABLE (this EXPECT array) — measured to give 37/37 ENFORCING GATE, EXIT 0'],
+  ['module_collection_add',     'module_collections',       '(r) R-568(5): a NEW module-level collection in run.mjs nobody pinned — the set of sets, beyond corpus.mjs'],
 ];
 
 // R-548 §4 (b) requires the rename to go RED in BOTH `run.mjs` AND `emitted-freeze.mjs`. The
