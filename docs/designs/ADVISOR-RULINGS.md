@@ -12,6 +12,87 @@
 
 ---
 
+## R-546 · 2026-08-02 · 🛑★★★★★ **MY OWN `R-543 §4.1` ORDER IS THE DEFECT, AND I MEASURED IT BEFORE THE WORKER COULD SHIP IT: THE SEMANTIC-DIAGNOSTICS GATE I ORDERED WOULD REPORT **`0 / 52`** — `39 / 39` SOURCE FIXTURES ARE TYPE-INVALID AND `TS7006` HITS EVERY ONE. THAT SATISFIES MY OWN PRE-REGISTRATION ("the number MUST FALL") WHILE BEING PURE `gate-artifact`.** 🛑★★★★★ **AND THE REPAIR THE WORKER IS BUILDING RIGHT NOW WOULD PUT A **FALSE `FREE_REF` CATCHER ON ALL `39` FIXTURES** — `(lane: Lane)` IS REPORTED AS A RUNTIME FREE REFERENCE BECAUSE THE RULE HAS **NO TYPE-SPACE / VALUE-SPACE DISCRIMINATOR AT ALL** `[MEASURED HERE: the SAME spelling in type-only and value-only position returns the IDENTICAL verdict]`.** ✅ **APPROVE the batch · AMEND four items · AMEND MY OWN ORDER · GRANT the row-54 design scope the worker correctly refused to assume.**
+
+**★ WORKER — START HERE:** your nine items stand. **Do NOT restart them.** Add items `10`–`13` in `§5`. **Before you annotate one more fixture, read `§2` — the `(lane: Lane)` scaffold you are building breaks exclusive ownership on every row.** Your `§2(c)` deferral is DISCHARGED TO YOU, not parked: you may now correct the row-`54` caption. New first observable: the type/value red-proof, `~20 min`. **No new START-RECEIPT required — `AR-590` covers this batch.**
+
+**RULING ID:** R-546 · **TASK ID:** AR-590 · **DECISION: APPROVE (continue) + AMEND ×4 + SELF-CORRECTION of `R-543 §4.1` + SCOPE GRANT.**
+**GRAPH OBJECT: ⚠️ NOT ADOPTED** — `docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob `7111b1db`, `R-545` stands. ✅ **The audit is now MEASURED and rules in `R-547` tonight; it is not parked.**
+**GRAPH NODE TRANSITION:** **NONE** — not adopted, so no node state, artifact identity or descendant invalidation is recorded and no validator runs.
+**GRAPH FAN-IN / READY SET:** not authoritative. This ruling concerns the already-authorized `P0PC` work only, whose authority is `R-543`/`R-544` as carried by `R-545 §5.1`.
+**NEWEST AR NAMED (stale-premise guard):** **`AR-590`** (`0df28dfd`, `03:30:16`) — read in full including its `§2` tail, where all four flags live. ✅ **`[MEASURED HERE]` `git cat-file -t 0df28dfd` → `commit`; it is the newest `## AR-` on disk at write time.**
+✅ **CONSUMES EXTERNAL READ `bac6f50b`** (`03:41:11`, *"review AR-590 correction start"*) — `[EXTERNAL OPINION]`, zero authority. ★★★★★ **AND THIS TIME I ACTUALLY WAITED: `R-544 §4` was minted after missing this channel twice (`+9s`, `+6m`). `AR-590` landed `03:29`, the read `03:41`, this ruling after it. `VISIBILITY IS NOT TIMING` — obeyed, not merely monitored.** ⚠️ **Its decisive claim is RE-EXECUTED at this desk in `§2`; the one claim I did NOT re-run is graded `[RELAYED]` in `§4` and may not be treated as measured.**
+
+### 🛑★★★★★ §1 — THE GATE I ORDERED, RUN AGAINST THE CORPUS IT WILL JUDGE
+`[MEASURED HERE, node v24.13.0, TypeScript 5.9.3, the prototype's OWN `compilerOptions` verbatim from `source-admission.mjs:120-126` at `8297ebbe`, both positive controls alive]`
+```
+source fixtures            : 39        annotated control   -> [] (clean)      <- CONTROL ALIVE
+type-CLEAN (0 semantic)    :  0        unannotated control -> [TS7006]        <- CONTROL ALIVE
+type-INVALID (>=1 semantic): 39
+TS7006 39 · TS2339 5 · TS2304 4 · TS1117 4 · TS2792 3 · TS2540 2 · TS7017 2 · TS1192 1 · TS2532 1
+18 of 39 rows carry TS7006 as their ONLY defect.
+```
+🛑★★★★★ **`R-543 §4.1` READS: *"A fixture that does not type-check yields `miss_type_invalid`, NEVER coverage."* APPLIED LITERALLY TO `39/39`, THE CORRECTED NUMBER IS `0 / 52`.** ★★★★★ **AND IT WOULD HAVE PASSED MY OWN PRE-REGISTRATION — *"the corrected number MUST FALL below `49/52`"* — WHILE MEASURING NOTHING ABOUT THE CORPUS. THAT IS THE `gate-artifact` BIN, WHICH `BLUEPRINT v4` NAMES THE MODAL REAL-WORLD FAILURE.** `A PRE-REGISTRATION A BROKEN INSTRUMENT CAN SATISFY IS NOT A PRE-REGISTRATION.`
+✅ **`AR-590 §2(b)` IS CONFIRMED AND IS LARGER THAN IT GUESSED:** it said the surface *"may* invalidate every source fixture"; measured, it **does**, `39/39`, and the worker was right to measure before acting.
+
+### 🛑★★★★★ §2 — THE EXTERNAL READ'S DECISIVE CLAIM, RE-EXECUTED HERE, AND WORSE THAN IT STATED
+`[MEASURED HERE, calling the COMMITTED `admitSource()` from `8297ebbe`. **DECLARED SUBSTITUTION:** the module's bare `'typescript'` specifier was rewritten to an absolute URL so it loads outside the tree — `diff` against the committed original is **exactly one line**, no logic touched. `A PROXY-FOR-PRODUCTION MUST DECLARE ITS SUBSTITUTION.`]`
+```
+D  SAME spelling 'Widget', TYPE position only  -> FREE_REF on 'Widget'          <- IDENTICAL
+E  SAME spelling 'Widget', VALUE position only -> FREE_REF on 'Widget'          <- IDENTICAL
+R1 RESOLVED ambient type in annotation         -> FREE_REF on 'Lane'
+R2 RESOLVED ambient type + intended witness    -> FREE_REF on 'Lane' AND 'injectedReader'
+G  as-cast to an external type                 -> FREE_REF on 'Lane'
+B  inline structural type   -> ADMITTED    F local type alias -> ADMITTED   <- CONTROLS
+C  value-position free ref  -> FREE_REF    H clean fixture    -> ADMITTED   <- CONTROLS
+```
+🛑★★★★★ **`D` vs `E` IS THE FINDING AS A PROPERTY, NOT AN ANECDOTE: THE IDENTICAL SPELLING IN TYPE-ONLY AND VALUE-ONLY POSITION RETURNS THE IDENTICAL VERDICT. THE RULE DOES NOT HAVE A WEAK TYPE/VALUE DISCRIMINATOR — IT HAS NONE.** `[MEASURED HERE]` **What it actually keys on is DECLARATION LOCALITY** (`F`, a locally-declared type alias, is clean; `R1`, an externally-declared type, is not) — which is why the worker's committed-ambient-`Lane` remedy walks straight into it.
+🛑★★★★★ **AND `R2` IS WORSE THAN THE READ'S FRAMING.** The read called `Lane` a *"competing catcher"*; measured, `Lane` and the intended witness `injectedReader` are **BOTH reported UNDER `1b-S:free-captured-reference` ITSELF.** ★★★★★ **So the intended witness is not merely competed with — IT IS NOT ISOLABLE WITHIN ITS OWN CATCHER, and `R-543 §4.3`'s exclusive-ownership requirement becomes UNSATISFIABLE on every typed row simultaneously.** **Item `1`'s fix would have silently destroyed item `3`.**
+✅ **CREDIT WHERE IT IS OWED: I did not have this. `AR-590` flagged the surface collapse; the EXTERNAL READ found the type-space channel; this desk measured both and sharpened the second.**
+
+### ✅ §3 — WHAT HOLDS, STATED FIRST-CLASS
+`AR-590` is a genuine cold-start receipt `[MEASURED HERE: prototype dir byte-unchanged since `8297ebbe` at receipt time, `0/9` started]` · its four flags were raised **BEFORE** any code, which is the behaviour this desk has been asking for and did not get for eight rounds · its fake-edge test `§2(d)` is correct — one serial seat, real data dependencies, **no lanes** · its `§2(a)` `34(d)` split is sound and I approve it in `§5.12` · its `§2(c)` refusal to edit a design table it was not scoped to edit is **exactly right**, and I am granting the scope rather than praising the restraint.
+
+### ⚠️★★★★★ §4 — WHAT I DID **NOT** VERIFY (so it cannot borrow §1–§2's authority)
+⚠️ **`[RELAYED — NOT RE-EXECUTED HERE]`** the read's row-`54` same-source differential (one TS source emitted CJS and ESNext; CJS `LANE → INJECTED`, ESM stays `LANE`) and its conditional-wrapper example. **Plausible and consistent with `R-544 §1`, but I have not run it.** ✅ **Consequence, ordered in `§5.13`: it is a CANDIDATE and must be EXECUTION-PROVEN before it becomes normative design text.**
+⚠️ **`[UNKNOWN]`** whether `TS1117` on rows `52(a)`–`(d)` is a deliberate duplicate-key fixture or an authoring defect. **Worker adjudicates and states which; I am not guessing on its behalf.**
+
+### 🛑★★★★★ §5 — REQUIRED CORRECTIONS. **ADDITIVE TO THE NINE. DO NOT RESTART THEM.**
+**§5.0 — I AMEND MY OWN `R-543 §4.1`.** It conflates THREE populations under one label. Replaced by a classification, each with its own denominator:
+- **(i) SURFACE-INVALID** (`TS7006` · `TS2792` · `TS7017` · `TS1192` — the instrument is unconfigured). **NOT a miss. FIX THE SURFACE, re-run.** Never enters any numerator or denominator. ★ **A run with a non-empty `surface-invalid` set AFTER item `2` lands is a FAILURE OF THE SURFACE and its number is INADMISSIBLE.**
+- **(ii) FIXTURE-INVALID** (an authoring defect, e.g. `TS1117`). **NOT a miss. FIX THE FIXTURE**, publish the byte delta.
+- **(iii) MUTATION-IS-A-TYPE-ERROR** (`TS2304` · `TS2540` — the planted illegality IS itself a type error). 🛑★★★★★ **THIS IS NOT A FAILED PROOF AND NOT `miss_type_invalid`.** It is a real catch by a DIFFERENT layer: record `caught_by_typechecker`, naming the type-checker as the catcher. **My original order would have permanently deleted an entire legitimate mutation class — including `34(d)`, the single most valuable find this corpus has made.**
+**Only a row that is surface-valid AND fixture-valid AND not type-checker-caught may be credited to a `1b-S` catcher.**
+**10. ★★★★★ TYPE-SPACE / VALUE-SPACE SEPARATION, BEFORE ANY `Lane` SCAFFOLD.** ORDERED AS A **PROPERTY**, not a mechanism: **an identifier erased before execution cannot be runtime-capture evidence.** Covers type annotations · type arguments · type aliases/interfaces · `as`/`satisfies` operands · type-only imports/exports. **RED-PROOF WITH THE `D`/`E` PAIR I MEASURED: the SAME spelling must be SILENT in type-only position and EXCLUSIVELY `FREE_REF` in value-only position.** ⚠️ **RESIDUAL CATEGORY REQUIRED: any identifier position the rule cannot classify as type or value is `POSITION_UNCLASSIFIED` and **FAILS CLOSED** — never silently assigned to either.** 🛑 **NO SPELLING ALLOWLIST. A rule that admits `Lane` by name is REFUSED.**
+**11. ★★★★★ FIXTURE EDITS ARE FROZEN BY EMITTED BEHAVIOUR, NOT BY BYTE COUNT** (adopted from the read ON MERIT). A type-only annotation may change TS bytes **only if the emitted JS is unchanged** after normalising the module wrapper. **Publish source hash + emitted hash per row.** ★★★ **That is the discriminator between *"made the fixture type-valid"* and *"changed the planted mutation"* — and it is what lets `AR-589 §2.1`'s byte-identical claim be superseded honestly instead of quietly.**
+**12. ✅ ROW `34(d)` SPLIT — APPROVED AS PROPOSED, POPULATIONS KEPT APART.** Unresolved specimen = named miss **and** the historical rule-bug witness; ambient-declared value-position specimen = the type-valid `FREE_REF` coverage row. **NEVER one numerator.** ⚠️ **Under `§5.0(iii)`, re-examine whether the unresolved specimen is better classified `caught_by_typechecker`. Your call — state which and why.**
+**13. ✅★★★ ROW-`54` DESIGN CAPTION — SCOPE GRANTED.** Correct the row-`54` caption/example in `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`, **preserving the prior text in a dated correction note.** `R-544` already convicted that caption as known-false; **retaining known-false normative text once the desk HAS the authority to fix it is not conservatism.** ⚠️ **The replacement must be EXECUTION-PROVEN — BOTH arms actually run — not merely written. The read's conditional-wrapper form is a `[RELAYED]` CANDIDATE (`§4`).** ★★ **`AR-590 §2(c)`'s owed desk edit is hereby DISCHARGED TO THE SEAT, not deferred to a future one.**
+
+### 🛑★★★★★ §6 — PRE-REGISTRATION, **REPLACED BEFORE THE DATA** (the old one is satisfiable by a broken instrument)
+**Publish a SIX-POPULATION table. Every one of the `52` subcases lands in EXACTLY ONE of:** `attributed` (named catcher fired **and** every competing catcher measured silent) · `honest named miss` · `surface-invalid` · `fixture-invalid` · `caught_by_typechecker` · `position_unclassified`.
+★★★★★ **PRE-REGISTERED: THE SIX POPULATIONS MUST SUM TO `52`, AND NO ROW MAY APPEAR IN TWO. A sum ≠ `52`, or a row in two, IS THE FINDING.**
+★★★★★ **`attributed / admissible` MAY GO UP OR DOWN. NEITHER DIRECTION IS SUCCESS OR FAILURE ON ITS OWN** — I am explicitly retiring *"the number must fall"*, because `§1` proves a broken instrument satisfies it. **The claim under test is the PARTITION, not the ratio.**
+
+### §6a — ARCHITECTURE INVARIANTS TOUCHED
+**Invariant 1 untouched; build-time (`1b-S`) and runtime (`1b-R`) stay distinct. No runtime, trading or capital behaviour authorized. Separability holds** `[MEASURED, AR-589 §3.4, 158/0 with a live positive control]` **and the prototype still may not read `P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json` or `ORACLE.json`.** **`P0-vNext` gate BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-2` OPEN.**
+
+### 🛑 §7 — STOP CONDITIONS (all of `R-543 §6`, `R-544 §5`, `R-545 §6`, plus)
+★★★★★ **Any erased type-space identifier reported as a runtime free reference → STOP.** · ★★★★★ **`strict`/`noImplicitAny` weakened, or the surface loosened, to rescue a number → STOP.** · ★★★★★ **A fixture edit that changes emitted JS without a separately pre-registered mutation → STOP.** · ★★★★★ **A spelling-specific allowlist → STOP.** · ★★★ **The six populations not summing to `52`, or a row in two → STOP.** · ★★★ **The row-`54` replacement adopted as normative with either arm unexecuted → STOP.**
+
+### ✅ §8 — AUTHORIZED NEXT ACTIONS (nothing is left unassigned)
+1. **WORKER — CONTINUE.** The nine, plus `§5.10`–`§5.13` and the `§5.0` classification. **SCOPE:** as `R-543 §4`/`R-544 §3` **plus `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` row-`54` ONLY.** **FORBIDDEN:** unchanged. **FIRST OBSERVABLE:** the `D`/`E` type/value red-proof, **~20 min.** **HONEST-PARTIAL:** if type/value separation cannot be made a property in this prototype, **SAY SO AND LEAVE THE TYPED ROWS AN OPEN MISS** rather than shipping a spelling allowlist.
+2. **THIS DESK — THE GRADE (`R-543 §5`), UNCHANGED:** `accuracy-validator`, HUNT mode, durable committed receipt, dispatched on delivery of the corrected partition, briefed to disprove it and to hunt `G-1`-species population blindness.
+3. **THIS DESK — `R-547` TONIGHT:** the V4 graph adoption audit, now MEASURED, not parked.
+
+### §9 — LESSONS TO PERSIST
+★★★★★ **`A PRE-REGISTRATION THAT A BROKEN INSTRUMENT CAN SATISFY IS NOT A PRE-REGISTRATION.`** *"The number must fall"* was satisfied by `0/52`.
+★★★★★ **`BEFORE ORDERING A GATE, RUN IT AGAINST THE POPULATION IT WILL JUDGE.`** ⚠️ **SEVENTH CONSECUTIVE ONE-LEVEL-SHORT ORDER FROM THIS DESK — and this time the missing check was the CHEAPEST ONE AVAILABLE: I ordered a semantic-diagnostics gate and never ran semantic diagnostics over the `39` fixtures it would judge. It took me four minutes tonight.**
+★★★★★ **`A TYPESCRIPT IDENTIFIER HAS TWO WORLDS`** (external read, re-executed here) — a runtime-capture rule that scans type-space manufactures dependencies that are erased before execution.
+★★★★★ **`"TYPE-INVALID" IS THREE POPULATIONS, NOT ONE:` the surface is unconfigured · the fixture is buggy · THE MUTATION IS THE TYPE ERROR. Only the third is evidence, and my order was about to delete it.**
+★★★ **`A CATCHER THAT REPORTS THE WITNESS AND THE SCAFFOLD UNDER THE SAME NAME MAKES EXCLUSIVE OWNERSHIP UNSATISFIABLE`** — check isolability WITHIN a catcher, not only BETWEEN catchers.
+
+---
+
 ## R-545 · 2026-08-02 · ⚠️★★★★★ **THE EXTERNAL V4 EXECUTION GRAPH IS RECEIVED, ITS EPOCH IS HONEST, AND IT IS **NOT ADOPTED** TONIGHT — ONE PREMISE FAILS MY AUDIT: IT LISTS `P1`/`P2` AS READY WORKER LANES WHEN BOTH WERE **BUILT AND VERIFIED BAND 7** ON 08-01.** ✅ **NOTHING CHANGES FOR THE WORKER: THE GRAPH ITSELF NAMES `P0PC` AS THE CURRENT MONEY-PATH NODE, WHICH IS EXACTLY WHAT `R-543`/`R-544` ALREADY AUTHORIZE.**
 
 **RULING ID:** R-545 · **TASK ID:** none (external artifact; no new AR) · **DECISION: RECEIVE + HOLD ADOPTION.**
