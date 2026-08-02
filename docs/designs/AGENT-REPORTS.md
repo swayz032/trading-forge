@@ -4,6 +4,72 @@
 
 ---
 
+## AR-575 · 2026-08-02 · ✅★★★★★ **R-532 §5 DELIVERED — FIVE CORRECTIONS, `35/35`. AND THE ONE THAT COUNTS IS NOT A TEXT EDIT: I EXECUTED THE TS LANE. NINE CELLS, BOTH LANES, `9/9` AGREE, `6` NON-NULL / `3` NULL — THE AGREEMENT CLAIM THE DESK MARKED `[RELAYED]` IS NOW `[MEASURED HERE]`.**
+
+**RULING ID:** R-532 §5 · **TASK ID:** AR-575 · **PRIOR:** AR-574 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** · **no implementation code · the pinned lanes were RUN, never modified.**
+**FAN-IN: `5 / 5`. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — THE EXECUTION, WHICH IS THE POINT OF THIS ROUND
+`[MEASURED HERE BY EXECUTION — BOTH LANES, pinned worktree `wt-ledger-e-delivery-r497-20260730` at `HEAD = c304b098`. Each lane fed `doc["spec"]`, the ARTIFACT BODY, never the `{_why, spec, video}` wrapper. Positive control: `3/3` target rows matched in EACH lane before any value was read.]`
+```
+                 approximation   primitive                                      session_zone
+filter_lunch     True            'entry_quality.confluence_factor_presence'     None
+bias_overnight   True            'bias_engine.classify_institutional_regime'    None
+retest_midday    True            'spec_condition_compiler.retest_touch_check'   None
+
+PYTHON  6 NON-NULL / 3 NULL      TS  6 NON-NULL / 3 NULL
+TS vs PYTHON:  9 CELLS COMPARED · 9 AGREE · 0 DISAGREE
+NEGATIVE CONTROL: flip one TS value True->null  =>  DISAGREE = 1   (the comparator CAN see a difference)
+```
+✅★★★★★ **THE DESK'S PYTHON FIGURES REPRODUCE VALUE-FOR-VALUE AT MY DESK, INCLUDING ALL THREE PRIMITIVE STRINGS.** ✅ **AND THE HALF NOBODY HAD — THE TS LANE — NOW EXISTS AS A MEASUREMENT: `compileBindingPlan()` emits the SAME six non-null values.** ⚠️★★★ **`R-532 §1` explicitly marked the two-lane agreement `[RELAYED, NOT VERIFIED HERE]`. It is no longer relayed. It is measured, with a negative control proving the comparator is not blind.**
+
+### 🛑★★★★★ §2 — ITEMS 1 + 2: MY SENTENCE WAS FALSE AGAINST THE RUNNING CODE
+**`AR-573` wrote *"a semantically inapplicable field is emitted as JSON `null`"* and built row `7` on it. **SIX OF THE NINE VALUES ARE NON-NULL.** That sentence would have REWRITTEN SIX REAL RUNTIME VALUES to satisfy a classification that never spoke about them.**
+✅ **NOW: ALL FIVE PROJECTION KEYS ARE ALWAYS EMITTED AND EACH IS COMPARED EXACTLY AS EMITTED. `null` is a LEGITIMATE RUNTIME VALUE WHERE THE LANE ACTUALLY EMITTED NULL. Only `MISSING` — the lane failed to emit a required key — is universally invalid.**
+⚠️★★★★★ **THE ROOT CONFUSION, NAMED AND MEASURED: `NOT-APPLICABLE` IS THE AUTHORITY DECLINING TO ASSERT — a CLAIM-`B` PREDICATE STATUS, never a claim-`A` DATA VALUE.** `[MEASURED HERE]` **all `9` N/A cells' `declared_reason` begins `NO EXPECTATION` and `0/9` carry a value — POSITIVE CONTROL: `140` `ASSERTED` cells DO carry one, so the probe can see the field.** ★★★★★ **`NO EXPECTATION IS NOT AN EXPECTATION OF NULL` · `A SKIP IN THE AUTHORITY LAYER MUST NOT ERASE A VALUE IN THE OBSERVATION LAYER.`**
+🛑★★★★★ **AND THE LADDER CONVICTS ME EXACTLY WHERE `R-532 §2` SAYS: `OBEDIENCE → COHERENCE → CORRESPONDENCE.` `AR-573`'s contradiction pass WAS a better check and its answer is STILL TRUE tonight — claim `A` gates on no ledger field. **A DOCUMENT CAN BE PERFECTLY SELF-CONSISTENT AND FACTUALLY FALSE ABOUT THE SYSTEM IT DESCRIBES.** I built a coherence check and never ran the interpreter. `THE ONLY CHECK THAT OUTRANKS READING IS RUNNING.`**
+
+### ✅★★★★★ §3 — ITEM 3: ROW `7` REBUILT ON THE REAL POPULATION, PLUS THE DISCRIMINATOR
+**Row `7` is now the measured `3` rows × `3` axes — claim `A` compares all nine NORMALLY and is GREEN **BECAUSE THE LANES AGREE**, claim `B` emits `9` skip witnesses and no predicates.**
+🛑★★★★★ **ROW `33` IS THE DISCRIMINATOR AND IT IS THE ROW THAT MATTERS: one lane only, `approximation True → null` on an N/A cell → **claim `A` RED (`DISAGREEMENT`, path and both values named) while claim `B` STILL EMITS THE SAME NINE SKIP WITNESSES.`** ⚠️ **Without it the N/A population is untested in the only direction that matters — it is the proof that authority silence does NOT suppress agreement.** ✅ **And it is not hypothetical: my negative control already demonstrated the comparator produces exactly `1` disagreement under that mutation.**
+
+### ✅★★★ §4 — ITEM 4: THE MENU IS DELETED AND I CHOSE THE WEAKER, HONEST OPTION
+✅ **CHOSEN: (b) a NON-ADVERSARIAL PURE-MODULE CONTRACT enforced by a CLOSED DEPENDENCY GRAPH — `project()`'s transitive import closure is enumerated and frozen, and a build-time dependency/AST rule FAILS THE BUILD if it acquires a ledger/oracle reader, a filesystem/network module, or a dynamic `import()`.**
+🛑★★★★★ **AND ITS CLAIM IS NARROWED TO WHAT IT DELIVERS: IT PREVENTS *ACCIDENTAL* COUPLING. IT IS NOT A SANDBOX AND DOES NOT MAKE THE LEDGER UNREACHABLE TO DETERMINED CODE.** ✅ **THREAT MODEL STATED: it defends against an implementer wiring the ledger in BY MISTAKE — the failure this arc has actually suffered four times, every one accidental.** ⚠️ **`globalThis`, environment variables and post-review dependency behaviour are named OUT OF SCOPE rather than left to be assumed covered — `A CHANNEL A CONTRACT DOES NOT CLAIM TO DENY GETS NO RED-PROOF AND NO CLAIM.`**
+⚠️★★★ **WHY NOT (a): a restricted runtime would be STRONGER and I cannot NAME its enforcement mechanism on this host today, nor red-proof each channel. Writing *"separate process"* and calling it filesystem isolation would have been my third false absolute in three rounds.** `A TOPOLOGY STATEMENT IS NOT A CAPABILITY PROOF` · `A CHILD PROCESS IS A BOUNDARY FOR STATE, NOT AUTOMATICALLY A BOUNDARY FOR AUTHORITY.` ✅ **I pre-registered this choice in `AR-574 §4` BEFORE writing it, so it cannot be read as fitted to the result.**
+
+### ⚠️★★★ §5 — THREE INSTRUMENT FAULTS THIS TASK, ALL CAUGHT BY CONTROLS
+**(a) THE RECEIPT DIED AT PARSE TIME** — two heredocs in one shell invocation, `unexpected EOF`. ✅ **NOTHING was written: scratch file absent, tree unchanged, both verified before proceeding.** `A COMMAND THAT DIES AT PARSE TIME CHANGES NOTHING — BUT ONLY CHECKING PROVES THAT.` **Sixth shell-quoting fault of this campaign; published through the file tool instead.**
+**(b) MY FIXTURE PROBE PRINTED `condition_id = None` FIVE TIMES.** ⚠️ **The fixture's key is `id`. I accused my probe, opened the condition, and found the real key — rather than concluding the fixture had no condition ids.** `AN EMPTY FIELD IS A QUESTION ABOUT YOUR KEY BEFORE IT IS A FACT ABOUT THE DATA.`
+**(c) I NUMBERED THE DISCRIMINATOR `7a`** — which my own counter cannot see, so it would have been a real mutation row absent from the caption arithmetic and would have broken the contiguity criterion. ✅ **Caught by re-running the counter, moved to row `33`.** ★★★ **`A ROW YOUR COUNTER CANNOT SEE IS A ROW YOUR CAPTION DOES NOT COVER.`**
+
+### §6 — ACCEPTANCE (the read's six)
+```
+1 nine N/A cells parsed, declared_reason printed .... PASS  (9 cells · all NO EXPECTATION · 0 carry value
+                                                             · CONTROL: 140 ASSERTED cells DO carry one)
+2 BOTH lanes re-run, nine values embedded .......... PASS  (9/9 agree · 6 non-null · flip-control = 1)
+3 one-lane True->null reddens A, B still skips ..... PASS  (row 33)
+4 clean N/A control keeps 6 non-null / 3 null ...... PASS  (row 7 · green BECAUSE lanes agree)
+5 ONE mechanism, threat model, red-proofs .......... PASS  (menu deleted · not-a-sandbox · out-of-scope named)
+6 contiguous, one control, caption recomputed ...... PASS  (33 + 1 = 34)
+                                                     35 / 35
+```
+
+### §7 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · no ledger/`ORACLE.json`/census WRITE · NO EDIT to the pinned lanes (READ and RUN only) · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT NOT TOUCHED (no wording newly introduced there changed).**
+- ⚠️★★★ **THE EXECUTION COVERS ONE FIXTURE — `40-overrefusal-boundary`, the only file carrying `NOT-APPLICABLE` cells. It is the whole N/A population and NOT the whole `43`-row frame. The other `40` rows remain unexecuted here.**
+- ⚠️ **`35/35` mixes design-text checks with two RUNTIME measurements; only criteria `1` and `2` are executional. No `P0-vNext` implementation exists, no mutation has been RUN against an implementation, no CI executes this.**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B`'s current `N` is UNKNOWN and unowned; the chosen capability contract is explicitly NOT a sandbox.**
+- ★★ **I do not grade my own work.**
+
+### §8 — POSITION
+**Design REVISED on all five corrections, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+⚠️ **GRADE: `R-532 §4` pre-registered the firing bar — first external read returning ZERO structural corrections, or two consecutive non-structural-only reads. NOT ASKING; the bar has not been met.** ✅ **I record that the desk set that bar BEFORE this round's result was known, and that the correction count is converging: `9 → 5 → 2`.**
+★★ **FAN-IN `5 / 5`. NOT A HANDOFF.**
+
+---
+
 ## AR-574 · 2026-08-02 · **START-RECEIPT — R-532 §5 ACCEPTED. FIVE CORRECTIONS, ONE RECEIPT, DESIGN ONLY.** 🛑★★★★★ **AND THE ONE THAT MATTERS IS NOT A TEXT EDIT: I OWE AN EXECUTION. THE DESK RAN PYTHON; THE TS LANE IS MINE, AND UNTIL I RUN IT THE AGREEMENT CLAIM IS UNVERIFIED.**
 
 **RULING ID:** R-532 §5 · **TASK ID:** AR-574 · **PRIOR:** AR-573 · **SEAT:** `claude.exe 26204`.
