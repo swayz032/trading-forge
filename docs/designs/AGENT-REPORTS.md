@@ -4,6 +4,61 @@
 
 ---
 
+## AR-610 · 2026-08-02 · ✅★★★★★ **ITEM `(3)` — `F-1` **REPRODUCED AND RELOCATED**. THE GRADE'S ONE-LINE NOTE (*"no in-language predicate for is-a-Proxy"*) IS TRUE AND SENT THE QUESTION TO THE WRONG LAYER: `[MEASURED HERE]` **THE SOURCE SURFACE IS ALREADY CLOSED — NAMING `Proxy` IN ADMITTED SOURCE IS `REJECTED 1b-S:direct-ambient-read`, BECAUSE `Proxy` IS A HOST GLOBAL AND `AMBIENT_ALLOWED` IS ONLY `{'Object'}`.** `F-1` LIVES ENTIRELY IN THE **RUNTIME** LAYER.** ✅★★★ **AND A WORKING PREDICATE **DOES** EXIST THERE: `util.types.isProxy` — `true` ON THE PROXY, `false` ON A PLAIN OBJECT.** 🛑★★★★★ **I AM NOT IMPLEMENTING IT: ADDING A HOST-API DEPENDENCY TO AN INSTRUMENT IS AN ARCHITECTURE DECISION, AND `ratify-packet` MAKES IT THE DESK'S. DESIGN QUESTION HANDED UP WITH ITS EVIDENCE AND A RECOMMENDATION.**
+
+**RULING ID:** `R-570 §7.1` / `R-571 §0` (item `(3)`) · **TASK ID:** AR-610 · **PRIOR:** AR-609 · **NO CODE DELTA.**
+**FAN-IN: `4 / 5`** — `(3)` delivered as the DESIGN QUESTION `R-571 §0` pre-ruled an accepted deliverable. **GRAPH: `P0PC` `active_worker`. NO TRANSITION CLAIMED.**
+
+### ✅★★★★★ §1 — I BUILT A DISCRIMINATING CONTROL BEFORE READING ANYTHING, BECAUSE MY FIRST PROBE HAD NONE
+🛑 **`AR-609 §6` recorded my first Proxy probe as UNINTERPRETABLE — its `process.pid` ambient control came back `TYPE_INVALID` instead of `REJECTED`.** `[MEASURED HERE]` **THE CAUSE, now known: `pid` is not declared on the pinned surface, so the fixture fails to compile. `process.env` is. THE SUBJECT WAS NEVER THE PROBLEM; MY CONTROL WAS BADLY CHOSEN.**
+✅ **CONTROLS THAT DISCRIMINATE, all in the same run:**
+```
+process.env   REJECTED  1b-S:direct-ambient-read        <- ambient control alive
+import.meta   REJECTED  1b-S:free-captured-reference    <- second control alive
+clean         ADMITTED                                   <- not rejecting everything
+```
+
+### ✅★★★★★ §2 — THE SOURCE SURFACE IS ALREADY CLOSED, AND THAT IS THE FINDING THAT MOVES THE QUESTION
+`[MEASURED HERE, controls above alive in the same run]`
+```
+new Proxy({}, { get: () => process.env })   REJECTED  1b-S:direct-ambient-read x2
+new Proxy({ a: 1 }, {})                     REJECTED  1b-S:direct-ambient-read
+```
+★★★★★ **EVEN THE **INERT** PROXY IS REJECTED — not because the rule understands proxies, but because `Proxy` IS AN AMBIENT GLOBAL and the module had to REACH FOR IT to name it. That is `R-566`'s `REACHED-FOR vs SUPPLIED` discriminator doing exactly what it was built for, one layer away from where anyone was looking.**
+⚠️ **`[HONEST LIMIT]` this closes source-CONSTRUCTED proxies. A proxy that arrives without the module naming `Proxy` is a different path, and one probe of that shape (`new Proxy({}, {get: () => leaked})`) came back `TYPE_INVALID` — **still uninterpretable, still not counted.**
+
+### 🛑★★★★★ §3 — `F-1` IS A **RUNTIME** DEFECT, REPRODUCED
+**`runtime-admission.mjs` receives an ALREADY-CONSTRUCTED value from a corpus `factory()`. No source is admitted on that path, so `§2`'s protection does not apply at all.** `[MEASURED HERE]`
+```
+admitRuntime({ v: new Proxy({}, { get: () => process.pid }) })   ADMITTED   <- F-1
+admitRuntime({ v: 1 })                                            ADMITTED   <- control, correctly admitted
+project(lane).v  ->  31252   ==   real process.pid 31252          <- the field genuinely reaches the host
+```
+✅ **WHY ALL EIGHT CATCHERS MISS IT, enumerated rather than asserted: `ACCESSOR` (a `get` TRAP is not a property descriptor) · `FUNCTION_VALUE` (the trap returns a number) · `SYMBOL_KEY` · `NON_ENUMERABLE` · `VALUE_CLASS` · `PROTOTYPE` · `CYCLE` · `ARRAY_SHAPE` — a Proxy answers every one of them exactly as a plain object would. `THE PROXY IS NOT HIDING FROM THE CATCHERS; IT IS ANSWERING THEM HONESTLY.`**
+
+### ⚠️★★★★★ §4 — THE DESIGN QUESTION, WITH THE FACT THAT DECIDES IT
+**The grade's note — *"there is no in-language predicate for is-a-Proxy"* — is TRUE OF THE LANGUAGE AND FALSE OF THE HOST.** `[MEASURED HERE]`
+```
+util.types.isProxy(hostReachingProxy) = true
+util.types.isProxy(plainObject)       = false     <- it discriminates; it does not convict everything
+```
+**SO THE QUESTION IS NOT *"can we detect it"* BUT *"MAY THIS INSTRUMENT DEPEND ON A NODE/V8 HOST API?"*** — and that is an ARCHITECTURE decision, not a patch.
+✅★★★ **MY RECOMMENDATION, WITH THE ARGUMENT AND THE COST BOTH STATED: **ADOPT IT** for the RUNTIME layer only. `runtime-admission.mjs` ALREADY executes in Node and already inspects live Node values with `Object.getOwnPropertyDescriptor`, `Object.getPrototypeOf` and enumerability — **it is host-bound today**, so `util.types.isProxy` adds a dependency of a kind it already has, rather than a new kind.** ⚠️ **THE COST, NOT HIDDEN: it would NOT port to a non-Node host, and the SOURCE layer must NOT take this dependency — its whole discriminator is textual.**
+⚠️★★★ **AND THE DEEPER QUESTION I WILL NOT ANSWER ALONE, because it decides more than this catcher: is the property being policed *"is a Proxy"* or *"reading this field reaches host state"*? THEY ARE NOT THE SAME SET. A Proxy that returns a constant is inert; a plain object with a getter is not a Proxy and IS already caught by `ACCESSOR`. **A CATCHER NAMED FOR A MECHANISM RATHER THAN A PROPERTY WILL CONVICT THE INERT AND MISS THE NEXT MECHANISM.** `[UNRESOLVED_SOURCE_AMBIGUITY — the altitude is BLUEPRINT, not rule-patch, exactly as `R-566 §1` left the `lane`/`new.target` residual.]`
+🛑 **NO CODE WRITTEN. `ratify-packet`: an instrument change of this class is the desk's, and `AR-604`'s precedent is that the worker measures the mechanism fully and hands the disposition up.**
+
+### 🛑 §5 — STATE AND WHAT REMAINS
+```
+run.mjs GATE: PASS EXIT 0 · red-proof CONTROL GREEN 41 / 41 EXIT 0 (status read off the process)
+emitted-freeze · type-value-proof 15/15 · module-tuple · module-collections   all EXIT 0
+```
+✅ **`44/52` and attribution logic UNTOUCHED. Tree CLEAN in `prototypes/`.**
+**FAN-IN `4 / 5`.** ✅ **`(5)` set-of-sets · `(2)` `F-3` · `§6.3` enumeration (+ instance eight + the rule sets) · `(3)` `Proxy` delivered as the ruled-acceptable design question.**
+🛑 **REMAINING — ONE ITEM: the FINAL pin dance. `R-570 §0`/`§4` specify it completely: corpus rows for the open channels · the `new.target` GREEN row (`R-566`) · `EXEMPT_EXPORTS` **DELETE** · `HISTORICAL_RENAMES` **PIN** into `PINNED_MODULE_COLLECTIONS` · then ONE bump of the corpus pin (+ `MODULE_PIN_COMMIT`/`PINNED_BLOBS`, since `membership.mjs` joins the covered set).** ⚠️ **Two commits by construction: land the rows (gate RED on the pin), then bump. That is the design working (`AR-603 §1`).**
+✅ **NO sub-agent dispatched, nothing owed from my side. NOTHING SELF-GRADED — the `accuracy-validator` remains the desk's to dispatch (`R-569 §0`), and I have not asked again.**
+
+---
+
 ## AR-609 · 2026-08-02 · ✅★★★★★ **THE `R-570 §6.3` ENUMERATION IS DONE AND IT DID NOT COME BACK A LIST — IT CAME BACK WITH **INSTANCE EIGHT, EXECUTED**: `type-value-proof.mjs` REPORTS `${pass} / ${CASES.length}` AND GATES ON `pass === CASES.length`. DELETING THE `T3` COVERAGE CASE GAVE **`14 / 14 cases pass | property HOLDS`, `EXIT 0`** — A COVERAGE CASE VANISHED AND THE GATE STILL **CERTIFIED THE PROPERTY**.** 🛑★★★★★ **AND THE ENUMERATION NAMED SOMETHING WORSE THAT NOBODY HAD PINNED: **THE RULE SETS THEMSELVES.** `source-admission.mjs::CATCHERS` AND `runtime-admission.mjs::CATCHERS` — THE CATCHERS EVERY VERDICT IN THIS PROTOTYPE IS PRODUCED BY.** ✅ **ALL THREE ARE NOW PINNED AND EACH DELETION IS WITNESSED CAUGHT.**
 
 **RULING ID:** `R-570 §0` (the fifth item) · **TASK ID:** AR-609 · **PRIOR:** AR-608 · **CODE:** this commit.
