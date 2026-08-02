@@ -4,6 +4,70 @@
 
 ---
 
+## AR-602 · 2026-08-02 · ✅★★★★★ **THE CLASS IS PINNED, NOT INSTANCE FOUR: `TWIN_PAIRS` AND `PREREGISTERED_EMIT_CHANGES` ARE NOW PINNED BOTH DIRECTIONS, THE SCALARS ARE **EXEMPT IN CODE WITH STATED REASONS**, AND THE **SET OF SETS** IS FROZEN — INTRODUCING A NEW EXPORTED COLLECTION NOBODY PINNED IS ITSELF A FINDING, SO INSTANCE FIVE ANNOUNCES ITSELF.** 🛑★★★★★ **AND THE INDEPENDENT GRADE LANDED WHILE I BUILT THIS: `NOT SOUND — BAND 5`, FOUR EXECUTED COUNTEREXAMPLES, TWO OF THEM LIVE RUNTIME-CAPTURE CLASSES THE RULE **ADMITS**. I REPORT IT AS IT CAME AND I DO NOT INTERPRET IT.**
+
+**RULING ID:** `R-562` START-HERE items (1)(2)(3) · **TASK ID:** AR-602 · **PRIOR:** AR-601 (`83c9e946`).
+**FAN-IN: `3 / 3` of the class sweep. NOT A HANDOFF.**
+
+### ✅★★★★★ §1 — ITEM (1): THE ENUMERATION, AND IT MATCHES THE DESK'S
+`[MEASURED HERE — by ITERATING THE MODULE NAMESPACE, not by reading the file. `import * as corpusModule` then filter for values a gate could iterate. A grep would have found what I remembered to look for; this finds what is there.]`
+```
+CORPUS                      ✅ pinned (R-548 item 15 + R-558)
+GREEN                       ✅ pinned (R-561)
+TWIN_PAIRS                  ✅ PINNED HERE — both directions + uniqueness
+PREREGISTERED_EMIT_CHANGES  ✅ PINNED HERE — key set, both directions
+NOT_IMPLEMENTED             ✅ EXEMPT IN CODE: string scalar, a catcher name, not an iterable population
+CONTAINER_TWIN_TS / _JS     ✅ EXEMPT IN CODE: string scalars; their INTEGRITY is already covered by
+                               the twin byte-identity assertion
+```
+✅ **The exemptions are `EXEMPT_EXPORTS` in `membership.mjs`, each carrying its reason as a value — not a comment — so the exemption is data the next reader can enumerate.**
+
+### ✅★★★★★ §2 — ITEM (3): THE SET OF SETS IS WHAT ACTUALLY CLOSES THE CLASS
+🛑 **Items (1) and (2) close instance four. They do NOT stop instance five, and `R-562` is right that ruling one at a time is the defect.**
+✅ **`EXPECTED_COLLECTION_NAMES` is frozen from `53e80935`, and the live module's collection-name set is compared BOTH DIRECTIONS every run.** ★★★★★ **A NEW EXPORTED COLLECTION THAT NOBODY PINNED IS ITSELF A GATE FAILURE, naming the offender and telling the author to pin it or declare it exempt.** ★★★ **`A REMOVED COLLECTION` fires too — the same defect in the other direction.**
+⚠️ **SCOPE, STATED NARROWLY SO IT CANNOT BORROW AUTHORITY: this pins the collections exported by `corpus.mjs`. A self-certifying array living in `run.mjs`, `red-proof.mjs` or `membership.mjs` itself is NOT covered.** `[UNENUMERATED]` **— named here rather than left for instance six.**
+
+### ✅★★★★★ §3 — RED-PROOFS, BRACKETED
+`[MEASURED HERE, exit codes captured IMMEDIATELY after each process — the trap that bit me in `AR-601 §4`]`
+```
+1 CLEAN CONTROL              EXIT 0  GATE: PASS
+2 twin_pairs_delete          EXIT 1  *** twin_pairs_membership: MISSING twin pair(s)
+                                         (expected by 53e80935): 54(b)=>G-src-container-twin-mjs
+3 prereg_delete              EXIT 1  *** prereg_membership: MISSING pre-registration key(s)
+                                         (expected by 53e80935): 54(c)
+4 new_unpinned_collection    EXIT 1  *** collection_shape: NEW UNPINNED exported collection(s) —
+                                         pin it or declare it EXEMPT in code: ROGUE_SELF_CERTIFYING_SET
+5 RESTORED CONTROL           EXIT 0  GATE: PASS
+```
+✅ **ALL FIVE GATES `EXIT 0`. `red-proof` `38 / 38`, control GREEN** (`35 → 38`; the count has grown at every wave: `29 → 30 → 31 → 35 → 38`). ✅ **NO OVER-CORRECTION: like-for-like `44 · 3 · 0 · 0 · 5 · 0` SUM `52` UNCHANGED; `green_admitted 8 / 8`.**
+
+### 🛑★★★★★ §4 — THE GRADE LANDED. I REPORT IT; I DO NOT INTERPRET IT
+**`docs/designs/GRADE-P0PC-FINAL-2026-08-02.md`, HUNT mode, pin `8a40f899`, `358` lines.** ✅ **`[MEASURED HERE]` the MANDATORY CLOSING COVERAGE section is PRESENT (`## MANDATORY CLOSING COVERAGE`), which `R-550 §3` makes the `v2` marker — so `R-560 §5`'s "banked without its coverage section → STOP" is NOT tripped.**
+**VERDICT AS WRITTEN: `NOT SOUND — band 5`.** Its own claim table, verbatim:
+```
+1 Both founding attacks closed              REFUTED           (F-3)
+2 44/52 like-for-like admissible            CONFIRMED — independently re-derived, set-identical
+3 Ownership key / bijection                 PARTIALLY CONFIRMED
+4 Expanded membership externally pinned     REFUTED for the coordinated case (F-4)
+5 Emitter-oracle type/value property        PARTIALLY REFUTED (F-5)
+```
+**Four executed counterexamples, two of them NEW CRITICAL admission holes:**
+- **F-1 CRITICAL — `runtime-admission.mjs` ADMITS a `Proxy`.** The walk reads descriptors and `Reflect.ownKeys` only, so it never observes the `get` trap; the admitted value reached `process.pid`. **The same capture written as a GETTER is REJECTED — one spelling caught, the other missed.** Corpus has **zero** `Proxy` rows.
+- **F-2 CRITICAL — `import.meta` is ADMITTED**, `violations: []`, and the emitted module was executed: `import.meta.url`, `.dirname` and a live `.resolve` escaped to the caller. **Mechanism measured: a `MetaProperty`'s `.name` IS its Identifier, so my `isPropName` name-slot rule classed `meta` as a name and skipped every catcher.** `new.target` likewise. **This is the THIRD blind channel — `R-550 §5`'s "sample, not closure" holding exactly as written.**
+- **F-3 CRITICAL — my own `[HYPOTHESIS, UNPROVEN]` from `AR-599 §6`, NOW PROVEN.** The bijection catches a *surplus* diagnostic and not a *substituted* one: make the true plant RESOLVE, and an impostor `TS2304` in the anchor's slack claims the anchor, `unwitnessed` is empty, row credited, **partition numerically IDENTICAL to clean.**
+- **F-4 CRITICAL — the coordinated shrink I said was "closed by construction" is NOT.** The grader bumped `EXPANDED_PIN_COMMIT` one line and deleted the five guard rows; every membership check reported clean. ★★★ **It names the exact asymmetry: the ORIGINAL pin has a hardcoded `EXPECTED_CARDINALITY = 52` that throws; the EXPANDED pin has NO cardinality guard at all.**
+🛑★★★★★ **`AR-599 §2`'s claim *"THE COORDINATED CASE IS CLOSED BY CONSTRUCTION, NOT BY A SECOND CHECK"* IS REFUTED BY EXECUTION. I wrote it, and it was wrong.** ⚠️ **`AR-599 §6` did flag the pin constant as editable and `[UNPROVEN]` — but `§2`'s headline claimed closure, and a caveat further down does not repair an overclaim in the headline. `A HYPOTHESIS LOSES ITS LABEL IN TRANSLATION` applies to my own two sections.**
+
+### 🛑 §5 — WHAT I HAVE **NOT** DONE, AND WILL NOT DO UNASKED
+🛑 **NONE of the grade's findings are repaired here. `R-562` authorized a CLASS SWEEP, not the grade's remediation, and the verdict is the desk's to receive and rule on (`R-560 §6.1`). I do not interpret it and I do not act on it.**
+🛑★★★★★ **AND THE CLASS SWEEP DOES **NOT** CLOSE `F-4`. I state that explicitly so nobody reads this commit as covering it:** the sweep pins collection CONTENTS and NAMES; **it adds no assertion on the PIN VALUE itself, which is exactly what `F-4` exploited.** ⚠️ **A cardinality guard on the expanded pin, mirroring `EXPECTED_CARDINALITY = 52`, is the obvious remedy and is NOT in my contract.**
+⚠️ **THE GRADE'S PIN IS `8a40f899`. It predates BOTH `AR-601`'s green pin (`83c9e946`) AND this class sweep.** **Its verdict therefore describes an object two waves old.** ★★★ **That neither excuses `F-1`/`F-2`/`F-3`/`F-4` — all four are in code still live — nor lets a later green be read as answering it.**
+⚠️ **`44/52` — the grade says it INDEPENDENTLY RE-DERIVED it, set-identical, and CONFIRMED it. `R-560 §5` pre-registered that as the condition. Whether that discharges `R-550 §1` is the DESK'S RULING, not mine, and I make no claim about it.**
+⚠️ **`[UNENUMERATED]` self-certifying collections outside `corpus.mjs` (`§2`). `runtime-admission.mjs` now has TWO CRITICALs against it and remains otherwise ungraded.**
+
+---
+
+
 ## AR-601 · 2026-08-02 · ✅★★★★★ **THE GREEN POPULATION IS PINNED TO THE SAME FROZEN COMMIT AS THE RED ONE, AND DISPOSITION IS NOW PART OF THE CONTRACT: DELETING `G-src-implements-erased` EXITS `1` (WAS `7/7`, `GATE: PASS`, `EXIT 0`), AND MOVING IT FROM `GREEN` TO `CORPUS` — WHERE THE ID STILL EXISTS — EXITS `1` ON A SEPARATE `disposition` CLASS.** ✅★★★★★ **BRACKETED CONTROL, AS `R-559 §1` TAUGHT: CLEAN `0` → **SIX** ATTACKS ALL `1` → RESTORED `0`.** 🛑★★★ **AND I CAUGHT MY OWN INSTRUMENT LYING MID-VERIFICATION: MY FIRST BRACKET REPORTED `EXIT=0` FOR EVERY ATTACK BESIDE `GATE: FAIL`. THE GATE WAS RIGHT; MY SCRIPT WAS READING THE WRONG `$?`.**
 
 **RULING ID:** `R-561` START-HERE — the single authorized repair, built ON TOP of `8a40f899` · **TASK ID:** AR-601 · **PRIOR:** AR-600 (`0caa94e5`).

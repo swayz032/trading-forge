@@ -18,8 +18,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { admitRuntime } from './runtime-admission.mjs';
 import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED } from './corpus.mjs';
+// R-562 item 3: the SET OF SETS needs the module NAMESPACE, not named imports — the whole point is
+// to notice an exported collection nobody named.
+import * as corpusModule from './corpus.mjs';
 // ITEM 15: expected membership comes from the PINNED AR-589 artifact, never from `CORPUS`.
-import { EXPECTED_ORIGINAL_IDS, checkMembership, checkGreenMembership, BASELINE_META, EXPANDED_META } from './membership.mjs';
+import {
+  EXPECTED_ORIGINAL_IDS, checkMembership, checkGreenMembership, checkAuxiliaryCollections,
+  collectionNamesOf, BASELINE_META, EXPANDED_META,
+} from './membership.mjs';
 
 globalThis.__GETTER_HITS__ = 0;
 
@@ -383,6 +389,22 @@ const membership = checkMembership(CORPUS_UNDER_TEST);
 // disposition contract. `green_admitted === green_total` is retained but is no longer the only
 // green assertion, because it can only ever speak about the members that survived.
 const greenMembership = checkGreenMembership(GREEN_UNDER_TEST, CORPUS_UNDER_TEST);
+
+// ---- R-562: THE CLASS SWEEP -----------------------------------------------------------
+// The remaining self-authored collections, and the SET OF COLLECTION NAMES itself. The
+// injections mutate the LIVE VIEW handed to the checker, never the frozen pin.
+const liveCollections = {
+  TWIN_PAIRS: INJECT === 'twin_pairs_delete' ? TWIN_PAIRS.slice(0, -1) : TWIN_PAIRS,
+  PREREGISTERED_EMIT_CHANGES: INJECT === 'prereg_delete'
+    ? Object.fromEntries(Object.entries(corpusModule.PREREGISTERED_EMIT_CHANGES).slice(0, -1))
+    : corpusModule.PREREGISTERED_EMIT_CHANGES,
+  // A NEW exported collection nobody pinned is itself the finding — that is what closes the class
+  // rather than closing instance four.
+  collectionNames: INJECT === 'new_unpinned_collection'
+    ? collectionNamesOf({ ...corpusModule, ROGUE_SELF_CERTIFYING_SET: ['x'] })
+    : collectionNamesOf(corpusModule),
+};
+const aux = checkAuxiliaryCollections(liveCollections);
 // `.filter(Boolean)` because a MISSING expected row must be REPORTED by the membership check,
 // not crash the tally before the check is ever printed.
 const orig = EXPECTED_ORIGINAL_IDS.map((id) => results.find((r) => r.id === id)).filter(Boolean);
@@ -555,6 +577,30 @@ const FAILURE_CLASSES = [
     () => [
       greenMembership.green_found_in_corpus.length ? `id(s) pinned GREEN found among the RED rows: ${greenMembership.green_found_in_corpus.join(', ')}` : '',
       greenMembership.red_found_in_green.length ? `id(s) pinned RED found among the GREEN rows: ${greenMembership.red_found_in_green.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
+  // 🛑 R-562: TWIN_PAIRS. Deleting an entry leaves both rows it names ALIVE, so every membership
+  // and disposition check passes while the twin assertions silently go 2 -> 1.
+  //   THE CHECK IS REMOVED RATHER THAN FAILED — which no count of surviving members can detect.
+  ['twin_pairs_membership', aux.twin_missing.length > 0 || aux.twin_undeclared.length > 0 || aux.twin_duplicated.length > 0,
+    () => [
+      aux.twin_missing.length ? `MISSING twin pair(s) (expected by ${EXPANDED_META.commit}): ${aux.twin_missing.join(', ')}` : '',
+      aux.twin_undeclared.length ? `UNDECLARED twin pair(s): ${aux.twin_undeclared.join(', ')}` : '',
+      aux.twin_duplicated.length ? `DUPLICATE twin pair(s): ${aux.twin_duplicated.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
+  // 🛑 R-562: PREREGISTERED_EMIT_CHANGES, consumed by emitted-freeze.mjs. Dropping a key for an
+  // EMIT-IDENTICAL row is invisible to that gate, so the key set is pinned here.
+  ['prereg_membership', aux.prereg_missing.length > 0 || aux.prereg_undeclared.length > 0,
+    () => [
+      aux.prereg_missing.length ? `MISSING pre-registration key(s) (expected by ${EXPANDED_META.commit}): ${aux.prereg_missing.join(', ')}` : '',
+      aux.prereg_undeclared.length ? `UNDECLARED pre-registration key(s): ${aux.prereg_undeclared.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
+  // 🛑★★★★★ R-562 item 3 — THE SET OF SETS. This is what closes the CLASS instead of instance
+  // four: a NEW exported collection that nobody pinned is itself a finding, so instance five
+  // announces itself rather than waiting to be discovered by hand.
+  ['collection_shape', aux.collection_missing.length > 0 || aux.collection_undeclared.length > 0,
+    () => [
+      aux.collection_missing.length ? `exported collection(s) REMOVED from corpus.mjs (expected by ${EXPANDED_META.commit}): ${aux.collection_missing.join(', ')}` : '',
+      aux.collection_undeclared.length ? `NEW UNPINNED exported collection(s) — pin it or declare it EXEMPT in code (R-562): ${aux.collection_undeclared.join(', ')}` : '',
     ].filter(Boolean).join(' | ')],
 ];
 const failures = FAILURE_CLASSES.filter(([, hit]) => hit).map(([name, , msg]) => `${name}: ${msg()}`);

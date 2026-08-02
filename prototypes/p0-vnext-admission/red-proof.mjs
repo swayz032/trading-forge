@@ -79,6 +79,11 @@ const EXPECT = [
   ['green_add',                'green_membership',          '(k) an undeclared green arrival not in the pinned green set'],
   ['green_duplicate',          'green_membership',          '(l) the same green id twice'],
   ['green_to_red',             'disposition',               '(m) RED<->GREEN MIGRATION: the id still EXISTS, only its disposition changed — an existence-only check waves this through'],
+  // R-562's CLASS SWEEP. (o) is the one that closes the class rather than instance four: a NEW
+  // self-certifying array is itself a finding, so instance five announces itself.
+  ['twin_pairs_delete',        'twin_pairs_membership',     '(n) R-562: delete a TWIN_PAIRS entry — both rows it names stay ALIVE, so every membership and disposition check passed while the twin assertions went 2 -> 1'],
+  ['prereg_delete',            'prereg_membership',         '(o) delete a PREREGISTERED_EMIT_CHANGES key — invisible to emitted-freeze for an EMIT-IDENTICAL row'],
+  ['new_unpinned_collection',  'collection_shape',          '(p) THE SET OF SETS: introduce a NEW exported collection nobody pinned — instance five must announce itself'],
 ];
 
 // R-548 §4 (b) requires the rename to go RED in BOTH `run.mjs` AND `emitted-freeze.mjs`. The

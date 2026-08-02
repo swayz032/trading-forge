@@ -162,6 +162,61 @@ if (crossPinned.length) {
   throw new Error(`INSTRUMENT FAULT: pin ${EXPANDED_PIN_COMMIT} lists ids as BOTH red and green: ${crossPinned.join(', ')}`);
 }
 
+// 🛑★★★★★ R-562 — THE CLASS FIX. FOUR INSTANCES OF ONE DEFECT WERE RULED ONE AT A TIME:
+//   item 15 pinned the red 52 · R-558 the expanded red set · R-561 the GREEN set ·
+//   R-562 found TWIN_PAIRS — deleting an entry leaves both rows it names ALIVE, so every
+//   membership and disposition check passes while the twin assertions go 2 -> 1, GATE: PASS.
+//     THE CHECK IS REMOVED RATHER THAN FAILED.
+// Each time, the next victim was THE ADJACENT ARRAY. So this stops enumerating victims and pins
+// the CLASS: every self-authored collection any gate consumes, PLUS the SET OF COLLECTION NAMES
+// ITSELF — so ADDING A NEW SELF-CERTIFYING ARRAY IS ITSELF A FINDING, and instance five does not
+// have to be discovered by hand.
+export const EXPECTED_TWIN_KEYS = Object.freeze(
+  (expandedBaseline.TWIN_PAIRS ?? []).map((t) => `${t.redId}=>${t.greenId}`),
+);
+export const EXPECTED_PREREG_KEYS = Object.freeze(Object.keys(expandedBaseline.PREREGISTERED_EMIT_CHANGES ?? {}));
+
+/** A value is a "collection" if a gate could iterate it. Scalars are not self-certifying sets. */
+const isCollection = (v) => Array.isArray(v) || v instanceof Set || v instanceof Map
+  || (v !== null && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype);
+export const collectionNamesOf = (mod) => Object.keys(mod).filter((k) => isCollection(mod[k])).sort();
+
+/** THE SET OF SETS, frozen. Adding an exported collection to corpus.mjs must be a FINDING. */
+export const EXPECTED_COLLECTION_NAMES = Object.freeze(collectionNamesOf(expandedBaseline));
+
+// ✅ EXEMPTIONS, DECLARED IN CODE WITH A STATED REASON (R-562 item 2 allows pin-or-exempt).
+// These are exported SCALARS, not collections: a gate cannot iterate them, so they cannot shrink
+// silently the way an array can. They are still covered by the SET-OF-SETS check in the sense that
+// promoting one to a collection would change the collection-name set and be reported.
+export const EXEMPT_EXPORTS = Object.freeze({
+  NOT_IMPLEMENTED: 'string scalar — a catcher name, not an iterable population',
+  CONTAINER_TWIN_TS: 'string scalar — fixture source text; its INTEGRITY is covered by the twin byte-identity assertion',
+  CONTAINER_TWIN_JS: 'string scalar — as CONTAINER_TWIN_TS',
+});
+
+/**
+ * R-562: every remaining self-authored collection, both directions plus uniqueness, against the
+ * same frozen pin — and the set of collection NAMES, so a NEW unpinned array is itself a finding.
+ */
+export function checkAuxiliaryCollections(live) {
+  const twinKeys = (live.TWIN_PAIRS ?? []).map((t) => `${t.redId}=>${t.greenId}`);
+  const prereg = Object.keys(live.PREREGISTERED_EMIT_CHANGES ?? {});
+  const names = live.collectionNames;
+  const dupes = (a) => [...new Set(a.filter((x, i) => a.indexOf(x) !== i))];
+  return {
+    twin_missing: EXPECTED_TWIN_KEYS.filter((k) => !twinKeys.includes(k)),
+    twin_undeclared: twinKeys.filter((k) => !EXPECTED_TWIN_KEYS.includes(k)),
+    twin_duplicated: dupes(twinKeys),
+    prereg_missing: EXPECTED_PREREG_KEYS.filter((k) => !prereg.includes(k)),
+    prereg_undeclared: prereg.filter((k) => !EXPECTED_PREREG_KEYS.includes(k)),
+    collection_missing: EXPECTED_COLLECTION_NAMES.filter((n) => !names.includes(n)),
+    collection_undeclared: names.filter((n) => !EXPECTED_COLLECTION_NAMES.includes(n)),
+    expected_twin_count: EXPECTED_TWIN_KEYS.length,
+    expected_prereg_count: EXPECTED_PREREG_KEYS.length,
+    expected_collection_names: EXPECTED_COLLECTION_NAMES,
+  };
+}
+
 /**
  * The GREEN population, checked exactly as the red one is: BOTH directions plus uniqueness,
  * against a frozen pin the live delivery cannot edit.
