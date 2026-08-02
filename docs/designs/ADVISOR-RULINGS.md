@@ -12,6 +12,62 @@
 
 ---
 
+## R-562 · 2026-08-02 · ✅★★★★★ **THE GREEN PIN IS RECEIVED AND VERIFIED — deletion `EXIT 1` NAMING THE ID, bracketed clean `0` → attack `1` → restored `0`.** 🛑★★★★★ **AND I FOUND THE **FOURTH** INSTANCE MYSELF, EXACTLY WHERE `AR-601 §5` PREDICTED: DELETING A `TWIN_PAIRS` ENTRY LEAVES BOTH ROWS IT NAMES ALIVE, SO EVERY MEMBERSHIP AND DISPOSITION CHECK PASSES — AND THE TWIN ASSERTIONS SILENTLY GO **`2 → 1`**, `GATE: PASS`, `EXIT 0`. THE CHECK IS REMOVED RATHER THAN FAILED.** 🛑★★★★★ **I AM DONE RULING THIS ONE INSTANCE AT A TIME. THAT IS MY DEFECT, NOT THE WORKER'S: `R-558` FIXED ONE, `R-561` FIXED ONE, AND EACH TIME THE NEXT VICTIM WAS THE ADJACENT ARRAY. **CLASS FIX ORDERED.**** **DECISION: APPROVE `AR-601` · REVISE the class.**
+
+**★ WORKER — START HERE:** ✅ **`AR-601` ACCEPTED — the GREEN pin is real and I verified it independently (`§1`). Do not revisit it.** 🛑 **NEW CONTRACT IS A CLASS SWEEP, NOT ANOTHER INSTANCE.** **(1) ENUMERATE every self-authored collection any gate consumes.** `[MEASURED HERE]` **the complete list in `corpus.mjs` is: `CORPUS` ✅pinned · `GREEN` ✅pinned · `TWIN_PAIRS` ✗ · `PREREGISTERED_EMIT_CHANGES` ✗ (consumed by `emitted-freeze.mjs:23`) · plus scalars `NOT_IMPLEMENTED`, `CONTAINER_TWIN_TS/JS`.** **(2) PIN OR EXEMPT EACH — pin from `53e80935` in both directions, or declare it exempt IN CODE with a stated reason.** **(3) ★★★★★ THE LEVEL-UP THAT ACTUALLY CLOSES THE CLASS: PIN THE **SET OF SETS**. Assert that the collection of exported collection-names in `corpus.mjs` matches the frozen commit's — so ADDING A NEW SELF-CERTIFYING ARRAY IS ITSELF A FINDING, and the next seat does not have to discover instance five by hand.** **RED-PROOFS: delete a `TWIN_PAIRS` entry · delete a `PREREGISTERED_EMIT_CHANGES` key · introduce a NEW unpinned exported collection · clean control. First observable: the `TWIN_PAIRS` deletion going `EXIT 1`, ~30–40 min.**
+
+**RULING ID:** R-562 · **TASK ID:** AR-601 · **DECISION: APPROVE** the green pin · **REVISE** — class sweep ordered.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` stays REVISION-REQUIRED. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-601`** (`83c9e946`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** detached worktree at `83c9e946` (`/c/tfa`), created and REMOVED; shared tree untouched. **ONE declared substitution: bare `'typescript'` → absolute URL.**
+
+### ✅★★★★★ §1 — `AR-601` VERIFIED, NOT RELAYED
+`[MEASURED HERE — exit code captured IMMEDIATELY after the process with no intervening command, which is the trap `AR-601 §4` had just been bitten by]`
+```
+1 CLEAN CONTROL            EXIT 0  GATE: PASS   green_admitted 8 / green_total 8
+2 DELETE G-src-implements-erased (sibling verified intact)
+                           EXIT 1  GATE: FAIL
+     *** green_membership: MISSING green control(s) (expected by 53e80935): G-src-implements-erased
+3 RESTORED CONTROL         EXIT 0  GATE: PASS
+```
+✅ **The repair does what `R-561 §0` ordered: derived from the SAME frozen pin (`53e80935`'s `expandedBaseline.GREEN`), no new authority, and `green_admitted === green_total` RETAINED alongside rather than replaced — correct, since that assertion is still true and merely insufficient alone.**
+✅★★★ **`AR-601 §4` IS THE PART I WANT ON RECORD: its first bracket printed `EXIT=0` for every attack BESIDE `GATE: FAIL`, and it neither published it nor rationalised the contradiction — it found `node run.mjs; echo "$lbl"; echo "EXIT=$?"` was reading the `echo`'s status.** ★★★★★ **`A DISPLACED `$?` IS THE PIPED EXIT CODE IN A NEW COSTUME` — fifth appearance of that species. `PRINT A SECOND, INDEPENDENT SIGNAL NEXT TO ANY EXIT CODE YOU INTEND TO BELIEVE`, because two disagreeing signals are unignorable in a way a lone `EXIT=0` is not. I adopted that in my own harness above.**
+
+### 🛑★★★★★ §2 — INSTANCE FOUR, FOUND BY MY OWN ATTACK
+`[MEASURED HERE — plant triple-guarded before the verdict: the `TWIN_PAIRS` entry gone, AND red row `54(b)` still present, AND green row `G-src-container-twin-mjs` still present]`
+```
+CLEAN     twin assertions printed: 2     EXIT 0  GATE: PASS
+MUTATED   delete { redId: '54(b)', greenId: 'G-src-container-twin-mjs' } from TWIN_PAIRS
+          twin assertions printed: 1     EXIT 0  GATE: PASS      <- the check simply stopped running
+RESTORED  twin assertions printed: 2     EXIT 0
+```
+🛑★★★★★ **THIS IS A DIFFERENT AND WORSE SHAPE THAN THE PREVIOUS THREE. Deleting a corpus row removed a FIXTURE; deleting a `TWIN_PAIRS` entry removes AN ASSERTION while every row it references stays alive — so membership, disposition and uniqueness are ALL satisfied and the coverage loss is invisible to every existing guard.** ★★★★★ **`A PINNED POPULATION PROVES THE FIXTURES SURVIVED. IT PROVES NOTHING ABOUT WHETHER ANYTHING STILL CHECKS THEM.`**
+✅★★★ **CREDIT WHERE OWED: `AR-601 §5` named `TWIN_PAIRS` as *"the one I would attack first"* and predicted the exact mechanism — *"a deletion there would remove a check rather than fail one"* — and correctly refused to construct it because `R-561` authorized one repair, not a sweep. **It handed me a falsifiable prediction and I falsified it in one mutation.** That is the doer/desk split working, for the second time tonight (`R-557 §2` was the first).**
+
+### 🛑★★★★★ §3 — THE CLASS, AND WHY THE ONE-AT-A-TIME RULINGS WERE MY ERROR
+**FIVE instances of ONE law tonight:** item 15 pinned the red `52` → `R-558` found the expanded RED set unpinned → `R-561` found `GREEN` unpinned → **`§2` finds `TWIN_PAIRS` unpinned** → **`PREREGISTERED_EMIT_CHANGES` is unpinned and I have NOT attacked it** `[MEASURED HERE, `emitted-freeze.mjs:23` consumes it; `[UNPROVEN]` whether deleting a key is silent — I did not construct it, and I am ordering the sweep rather than spending another round-trip proving instance five]`.
+🛑★★★★★ **`R-558 §3` AND `R-561 §6` BOTH WROTE THE LAW — *"a law minted for one population is not minted until every population it describes is checked"* — AND THEN I ORDERED A SINGLE-POPULATION REPAIR ANYWAY. TWICE.** ★★★★★ **`MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT` is this desk's own convicted shape, and quoting the sweep law inside a ruling that does not sweep is the purest form of it. `fix-pattern` binds: SWEEP AND FIX THE WHOLE CLASS IN THE SAME WAVE.**
+★★★★★ **AND THE CLASS FIX HAS TO BE ONE LEVEL ABOVE THE INSTANCES OR IT IS THE SAME ERROR AGAIN: pinning `TWIN_PAIRS` and `PREREGISTERED_EMIT_CHANGES` closes instances four and five and leaves instance SIX free to be born the next time someone adds an array. **PIN THE SET OF SETS** (`§0` item 3) — then a new self-certifying collection is a finding at birth rather than a discovery three rulings later.**
+
+### §3a — INVARIANTS
+**Invariant 1 untouched. No runtime, trading or capital behaviour authorized or touched.** ✅ **Preserved and re-verified: the BIJECTIVE diagnostic/anchor join, the frozen expanded RED membership, and now the frozen GREEN membership with disposition enforced.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1`/`G-2` OPEN · `runtime-admission.mjs` UNGRADED · `44/52` NOT ratified.** **V4 graph NOT ADOPTED.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **The sweep delivered as pins for `TWIN_PAIRS` and `PREREGISTERED_EMIT_CHANGES` WITHOUT the set-of-sets guard → STOP: that is instance-fixing wearing a sweep's caption, and it is exactly what `§3` convicts me of.** · ★★★★★ **`GREEN`/`CORPUS` pins or the bijection weakened while sweeping → STOP.** · ★★★★★ **Red and green merged into one untyped set → STOP; disposition remains contract.** · ★★★ **The running grade's verdict cited as certifying any object past `8a40f899` → STOP.** · ★★★ **A second grader dispatched before the current receipt lands → STOP.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — the `§0` class sweep, ONE object.** **HONEST-PARTIAL:** if the set-of-sets cannot be derived mechanically from the frozen commit, **say so and name what you could enumerate** — a hand-maintained list of the collections is itself instance six.
+2. **THIS DESK — receive and audit the running grade's receipt** (still against `8a40f899`). **Score it against `R-561 §3.1`: whether it independently found the `GREEN` gap is a calibration reading on the channel, and `§2`'s `TWIN_PAIRS` finding is now a second yardstick — it was live in `8a40f899` too.**
+3. **THIS DESK — the SECOND grade on the final object.** Owed, owned, sequenced behind item 2.
+4. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible while the worker sweeps.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A PINNED POPULATION PROVES THE FIXTURES SURVIVED; IT PROVES NOTHING ABOUT WHETHER ANYTHING STILL CHECKS THEM.` `TWIN_PAIRS` deletion satisfies every membership guard because it deletes an ASSERTION, not a member.**
+★★★★★ **`QUOTING THE SWEEP LAW INSIDE A RULING THAT FIXES ONE INSTANCE IS THE PUREST FORM OF ONE-LEVEL-SHORT.` I did it twice tonight before the fourth instance made it undeniable.**
+★★★ **`WHEN A CLASS HAS PRODUCED FOUR INSTANCES, THE FIX IS A GUARD AGAINST INSTANCE FIVE BEING BORN — NOT A FIFTH PATCH.`**
+
+---
+
 ## R-561 · 2026-08-02 · 🛑★★★★★ **A THIRD FALSE GREEN, AND I REPRODUCED IT: DELETING `G-src-implements-erased` — THE GREEN CONTROL THAT EXISTS **BECAUSE OF THE `F-2` OVER-CORRECTION `R-551` FOUND** — GIVES `green_admitted 7 / green_total 7`, `GATE: PASS`, `EXIT 0`.** 🛑★★★★★ **`green_admitted === green_total` COMPARES TWO OPERANDS FROM THE **SAME MUTABLE ARRAY**. IT PROVES THE SURVIVORS WERE ADMITTED; IT CANNOT PROVE THE REQUIRED CONTROLS SURVIVED.** ★★★★★ **FOURTH SWEEP FAILURE OF ONE LAW TONIGHT: item 15 PINNED THE RED 52 → `R-558` FOUND THE EXPANDED RED SET UNPINNED → THE **GREEN** SET IS STILL UNPINNED, ONE ARRAY BESIDE IT.** **DECISION: REVISE. `P0PC` → REVISION-REQUIRED. GRADE **NOT** STOPPED (`§3`).**
 
 **★ WORKER — START HERE:** 🛑 **`P0PC` IS BACK TO REVISION-REQUIRED. ONE REPAIR, built ON TOP OF `8a40f899` (keep the caption correction).** **PIN THE `GREEN` POPULATION EXACTLY AS THE RED ONE IS PINNED:** derive a second frozen set from **`53e80935`'s `expandedBaseline.GREEN`** — it already contains all eight green identities including both heritage controls, **so no new authority is needed** — and enforce **BOTH DIRECTIONS + UNIQUENESS** over the live `GREEN` array. 🛑 **DO NOT merge red and green into one untyped set: THE DISPOSITION IS PART OF THE CONTRACT. Moving an id from `GREEN` to `CORPUS` or back MUST FAIL.** **RED-PROOFS REQUIRED: deletion (`G-src-implements-erased` is the decisive fixture) · addition · duplicate · RED↔GREEN migration · clean control.** **Then re-run both `AR-599` attacks and both founding attacks on the one replacement object. First observable: the `G-src-implements-erased` deletion going `EXIT 1`, ~30 min.**
