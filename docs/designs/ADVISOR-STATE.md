@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3320` at THIS commit, 2026-08-01 21:33 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3347` at THIS commit, 2026-08-01 21:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3320` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3347` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -82,6 +82,33 @@ MAY BE THEIR ONLY CARRIER** (e.g. the `classify.py` byte-exact reproduction, the
 **THE REMAINING WORK, SPECIFIED SO IT NEEDS NO RE-DERIVATION: for each `NOT RULED` block,
 grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block is cuttable;
 if not, PROMOTE it into a contract section first, THEN cut.**
+
+---
+
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN. START IMMEDIATELY.** (2026-08-01 21:35)
+
+⚠★★★★★ **THIS IS NOT A NEW AUTHORIZATION — IT IS THE EXECUTION OF ONE THAT ALREADY LANDED TWICE (`R-524 §5`, re-affirmed `R-525 §5` *“`P0-vNext` DESIGN: CONTINUES”*). ITS TRIGGER CONDITION WAS JUDGED MET BY THIS DESK. **THE ONLY THING MISSING WAS A `START HERE` BLOCK, AND THAT ABSENCE IS MY STALL, NOT THE WORKER'S IDLENESS.** `A RULING THAT CLOSES ONE TASK AND OPENS NONE IS A STOP ORDER.`**
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** author the **`P0-vNext` DESIGN** — a DOCUMENT at `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`. ⚠ **DESIGN ONLY. NO IMPLEMENTATION CODE — implementation stays blocked until this design is externally read.**
+**ALLOWED FILES:** that new design doc + `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**FORBIDDEN:** implementation · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · touching the four grade receipts, the two `P1`/`P2` artifacts, or the tag · `git checkout`/`reset`/index ops.
+
+**THE DESIGN CONTRACT (R-524 §5 verbatim + R-525 §5's sharpening) — `CONSUME CELLS, NOT CAPTIONS`:**
+1. **Reconstruct exact row × axis membership INDEPENDENTLY** — from the pinned source specs at `c304b098` (tag `p1p2-frozen-source-universe-c304b098`), never from the ledger or the oracle it judges.
+2. **TS↔Python agreement for EVERY projected cell.**
+3. **Correctness checked ONLY for `ASSERTED` cells.**
+4. **`NOT-APPLICABLE` cells produce NO assertion and NO accidental predicate.**
+5. ★★★★★ **ANY depended-on `UNADJUDICATED` cell emits a NAMED `INCOMPLETE_AUTHORITY` and FAILS CLOSED — NEVER a correctness green.** This is the whole reason the `43` were preserved honestly.
+6. **Recompute summary counts FROM CELLS** and verify them against the now-protected manifest.
+7. ★★★★★ **`REJECT UNKNOWN OR MISSING FIELDS AT EVERY AUTHORITY BOUNDARY`** — R-525's sharpening, minted because the fix to a closed-key defect was itself an open-key list. **Closed key sets, both directions, everywhere — not a list of the fields known today.**
+8. **DURABILITY (R-525 §4b, the open obligation): the design must state how these checks become a STANDING repo/CI guard rather than an embedded listing importing from a session-temp scratchpad.** Naming it as future work is acceptable; silence is not.
+9. **Carry the out-of-frame surfaces** (`compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated`) as a NAMED `P3`/downstream obligation — not deleted, not silently in scope.
+
+**HONEST-PARTIAL CLAUSE:** if any element cannot be designed soundly on the current authority, **say so and name it.** `NO SOUND DESIGN AVAILABLE` is a valid expert result.
+**START-RECEIPT REQUIRED:** task · first observable · ETA · **recorded tree baseline** (delta, never absolute-clean).
+**FIRST OBSERVABLE EXPECTED:** the independent membership-reconstruction section + the `UNADJUDICATED` → `INCOMPLETE_AUTHORITY` fail-closed rule, **~30–45 min from start.**
+**STOP CONDITION:** ★★★ **if the design finds itself reading membership, requiredness, or completeness from the artifact it will judge, STOP — that is the defect this entire arc retired six attempts over.**
 
 ---
 
