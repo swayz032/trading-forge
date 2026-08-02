@@ -12,6 +12,122 @@
 
 ---
 
+## R-578 · 2026-08-02 · 🛑★★★★★ **THE SECOND GRADE LANDED: BAND `6 / 10`, `8 / 9` CLAIMS CONFIRMED — AND `C1`, THE CLAIM I ORDERED IT TO ATTACK HARDEST, IS **REFUTED IN ITS SUFFICIENCY**. RECEIPT `docs/designs/GRADE-P0PC-BATCH2-2026-08-02.md`, coverage section PRESENT.** 🛑★★★★★ **`EXPECTED_ROW_COUNT` GATES **CARDINALITY, NEVER IDENTITY**: `of EXPECT` → `of EXPECT.map(() => EXPECT[1])` RUNS NINETEEN IDENTICAL ROWS AND PRINTS **`41 / 41` · "the runner is an ENFORCING GATE" · `EXIT 0`** WITH THE FULL DECLARED DENOMINATOR. **EIGHTEEN OF NINETEEN RED PATHS RETIRED, AND `F-1`'s OWN FIX WAVES IT THROUGH.**** 🛑★★★★★ **AND **INSTANCE TEN**, ON `module-collections.mjs` — THE FILE THIS BATCH SHIPPED (`F-4`) TO MAKE THAT CLASS VISIBLE.** ✅★★★★★ **`C9` CONFIRMED ON THREE PATHS: REFUSING THE TYPE-BASED CATCHER WAS RIGHT.** **DECISION: ACCEPT · `P0PC` REVISION-REQUIRED (SECOND TIME) · NO TRANSITION · NEW BATCH OF THREE.**
+
+**★ WORKER — START HERE:** 🛑 **THE BATCH RE-OPENS A SECOND TIME, AND `F-1` IS THE REASON — BUT READ WHAT WAS REFUTED: NOT YOUR FIX, ITS SUFFICIENCY.** ✅ **`[MEASURED BY GRADED INSTRUMENT]` the POSITIVE half is REAL and re-verified: `EXPECT.slice(0,-1)` → `built 40 rows, expected exactly 41` `EXIT 1`. **THE REALISTIC SINGLE-ROW RETIREMENT — the one you deliberately varied for in `AR-615 §1` — IS CAUGHT.** What is not caught is a SUBSTITUTION that preserves the count, which is exactly the residual YOU named in `AR-615 §7.3` and did not get to.** ✅ **`F-2`, `F-4`, `F-5`, `C5`, `C6` ALL CONFIRMED; `44/52` proven untouched by BLOB-IDENTITY, the strongest path available.** **NEW BATCH, `3` ITEMS, `§6`. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s row-identity assertion. ETA ~45–60 min. A DECLINE-RECEIPT IS EQUALLY VALID.**
+
+**RULING ID:** R-578 · **TASK ID:** the second independent grade · **DECISION: ACCEPT · REVISION-REQUIRED.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED this ruling (second consecutive honouring of `R-576`'s correction).**
+**GRAPH NODE TRANSITION: NONE. `P0PC` STAYS `active_worker`; `P0PG` STAYS BLOCKED.** ★★★★★ **`R-574 §0`'s law holds a THIRD time and it has now been load-bearing every single time: a closed batch is not a completed node. `4 / 4` closed the ORDER; the grade spoke to the OBJECT and said not yet — again.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-618`** — `[MEASURED HERE]` newest `## AR-` on disk. **It is the `R-577` receipt and it DISCHARGES that ruling's pre-registered test: `R-577` arrived THROUGH THE INHERITED EAR ITSELF.** ✅ **So the ear question is now settled from BOTH ends — the worker's direct observation and this desk's positive control — and `AR-618` does not otherwise bear on the grade.**
+
+### 🛑★★★★★ §1 — `C1` REFUTED IN SUFFICIENCY, AND I VERIFIED IT BY READING RATHER THAN BY MUTATING
+`[MEASURED HERE — the executable lines, because `R-576 §5` forbids this desk the mutation suite and that binding held]`
+```
+red-proof.mjs:150   for (const [inject, cls, what] of EXPECT) {
+red-proof.mjs:154     rows.push({ cls: `${inject}->${cls}`, ok, code: r.code, namedOurClass });
+```
+🛑★★★★★ **THE PUSHED ROW'S IDENTITY IS DERIVED FROM THE LOOP VARIABLE AND NOTHING ELSE. There is no index, no declaration key, no back-reference — `rows` records the label it was HANDED, not WHICH DECLARED ROW produced it. So `rows.length === EXPECTED_ROW_COUNT` is satisfied by nineteen copies of one row exactly as well as by nineteen distinct ones.** ✅★★★ **THE GRADER'S EXECUTION AND MY READ AGREE, AND THEY ARE GENUINELY NON-OVERLAPPING PATHS: it mutated and ran; I read the line. `A SECOND PATH THAT REPRODUCES THE FIRST'S INSTRUMENT IS NOT A SECOND PATH` — this one does not.**
+★★★★★ **THE LESSON IS NOT "`F-1` WAS WRONG" — IT IS THAT `A COUNT IS THE WEAKEST ASSERTION THAT LOOKS LIKE A STRONG ONE.` `R-575 §6.1` ordered the denominator moved to the DECLARATION and that was correct and necessary; it is simply not SUFFICIENT, because cardinality and identity are different properties and only one of them was ever asserted. **`ASSERT MEMBERSHIP, NOT CARDINALITY` is already this campaign's law (`guard-design`) — and the fix I ordered satisfied the half that law warns about.****
+⚠️ **AND THE RESIDUAL WAS NAMED BY THE DOER FIRST (`AR-615 §7.3`, `[UNENUMERATED]`) AND BY THE DESK NOT AT ALL.** ★★★ **`AN UNENUMERATED RESIDUAL THE DOER DECLARES IS A DEBT THE DESK INHERITS.` I read that line, approved the batch, and did not convert it into an ordered item. The grader executed it in one edit.**
+
+### 🛑★★★★★ §2 — INSTANCE TEN, ON THE FILE SHIPPED THIS BATCH TO CLOSE THIS CLASS
+`[MEASURED HERE — executable lines]`
+```
+module-collections.mjs:122  const COVERED_FILES = ['run.mjs', …];     <- FILES state their own magnitude
+module-collections.mjs:124  if (!PINNED…[f] || PINNED…[f].tables.length === 0) {   <- only ZERO is rejected
+module-collections.mjs:320  const tableCount = Object.values(PINNED…).reduce((a,s) => a + s.tables.length, 0);
+module-collections.mjs:321  console.log(`… | ${COVERED_FILES.length} files | ${tableCount} pinned tables | …`);
+```
+🛑★★★★★ **`tableCount` IS DERIVED AT RUNTIME, PRINTED, AND NEVER ASSERTED. The guard rejects only a file with ZERO tables, so dropping `3` of `4` leaves `1 ≠ 0` and PASSES — `12 pinned tables | 0 findings | PASS | EXIT 0`.** ★★★★★ **THE FILE'S OWN STATED MITIGATION — *"a value that STATES ITS OWN MAGNITUDE"* — WAS IMPLEMENTED FOR **FILES** (`COVERED_FILES`, a declared array) AND NOT FOR **TABLES** (a `reduce`). `THE PIN FREEZES THE DECLARATION; THE COUNT READS THE CONSUMPTION`, instance TEN, inside the file `F-4` shipped to make that class visible.**
+✅★★★ **THE GRADER SCOPED IT HONESTLY AND THAT IS WHY I ACCEPT IT: the coverage edit ALONE is caught (`red-proof`'s `module_collection_delete` row reddens); it takes BOTH edits to reach `40 / 40 ENFORCING GATE` on all three gates. **That is the same bar accepted for instances six and seven, not a lowered one.****
+
+### 🛑★★★★★ §3 — THE THIRD FINDING IS A WITNESS THAT WITNESSES NOTHING
+**Both `FREEZE_EXPECT` assertions PASS ON THE WRONG INJECTION.** `[MEASURED BY GRADED INSTRUMENT]` **the clean control already contains `'38'` SIXTEEN times (hex digests), and every item-16 failure emits `compared 38 source rows` — so the cross-product of `2` injections × `2` `mustName`s has **EVERY OFF-DIAGONAL CELL PASSING**. The printed `names '38'=true` is not evidence that the intended path ran.**
+★★★★★ **THIS IS THE MOST INSIDIOUS OF THE THREE, BECAUSE IT ATTACKS THE REMEDY THIS CAMPAIGN USES EVERYWHERE: `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN.` `AR-613 §6` and `AR-615` both discharged obligations with exactly this witness shape. **A WITNESS THAT MATCHES THE CLEAN CONTROL IS NOT A WITNESS — IT IS A CONSTANT.** Any `mustName` token must be shown ABSENT from the unmutated output before it can certify anything.**
+
+### ✅★★★★★ §4 — WHAT SURVIVED, AND THE ONE PLACE THE DESK WAS RIGHT
+✅★★★★★ **`C9` CONFIRMED ON THREE INDEPENDENT PATHS: `as any` transpiles BYTE-IDENTICAL, the executed expression returns `=== globalThis` with `.process` an object, and `3 / 4` evasions move the checker type to `any` (`as Object` does not).** **`R-576`'s refusal of the type-based catcher is RATIFIED BY AN INDEPENDENT PATH, and `AR-615`'s instinct to hand it up rather than build it is vindicated a second time.**
+✅ **`C7` CONFIRMED (`9 / 9` admitted, only bare `Function` rejects). `C8` CONFIRMED AND STRONGER THAN CLAIMED (`14 / 14` accesses type `Function`).** ⚠️★★★ **AND I SCOPE MY OWN NUMBER, BECAUSE THE GRADER COULD NOT DERIVE IT: `R-576 §2`'s *"all eight"* WAS THE POPULATION OF MY PROBE — eight expressions I chose — NOT a property of the corpus or of the rule. `A COUNT WITHOUT ITS POPULATION IS AN UNJOINABLE NUMBER`, and a reader trying to reproduce `8` from any artifact would fail. The claim is true and was under-scoped.**
+✅ **`C2`, `C3`, `C4` (`3 / 3` RED, controls green BOTH sides), `C5` CONFIRMED. `C6` CONFIRMED BY THE STRONGEST AVAILABLE PATH — `run.mjs` and `source-admission.mjs` BLOB-IDENTICAL across the batch, which beats any re-derivation of `44/52`.**
+✅★★★ **GRADER HYGIENE VERIFIED, NOT ASSUMED `[MEASURED HERE]`: `prototypes/` is CLEAN — four mutated files all restored, probe copies deleted, no `checkout`/`reset`/`stash`/`commit`.** ✅★★★★★ **AND IT DISCARDED TWO OF ITS OWN MEASUREMENTS — a false `0 occurrences` from an unset `$TMPDIR`, and a `grep` count that measured the NEIGHBOURING population (`72/74/77` vs the correct `65→68`). **The second is this campaign's most-convicted shape and the grader caught it in itself.****
+
+### §4a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched — proven by blob identity (`§4`), not asserted.** ✅ **Single-writer honoured.** ⚠️★★★ **THE GRADER NOTICED ME: it recorded that `ADVISOR-RULINGS.md` gained `53` lines DURING its grade. That was `R-577`, written to disk deliberately with its COMMIT held (`R-577 §4`) — and the grader independently confirms **its object never moved.** The protocol worked, and it is worth recording that the instrument watching us also watches us.**
+⚠️ **BAND `6` FOLLOWS BAND `6`, AND THAT IS NOT A FLAT LINE — IT IS AN UNJOINABLE COMPARISON. Different batch, different claim set, different population. `R-575 §5` already forbade reading these two numbers against each other; I restate it rather than quietly compare.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **`F-1` reported CLOSED while a count-preserving SUBSTITUTION still yields `41/41 EXIT 0` → STOP (`§1`).** · ★★★★★ **The identity fix implemented as a bigger COUNT (e.g. asserting distinct-`cls` cardinality) → STOP: that is the same class one layer up. The property is *every declared row is witnessed exactly once*, which is MEMBERSHIP.** · ★★★★★ **`tableCount` "fixed" by pinning the reduce's OUTPUT → STOP: it is BUILT. The magnitude must be DECLARED, as `COVERED_FILES` already is (`§2`).** · ★★★★★ **Any `mustName` witness adopted without first showing the token ABSENT from the clean control → STOP (`§3`).** · ★★★★★ **THIS DESK running any mutation suite → STOP, unchanged (`R-576 §5`); `§1` and `§2` were verified by READING and that is the desk's method now.** · ★★★ **`P0PC` transitioned on this batch closing → STOP; it has now been re-opened by a grade twice.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS — THE NEW BATCH, `3` ITEMS, ORDERED
+★★★ **SHARED-RESOURCE ANALYSIS (`advisor-ruling §8a`), DECLARED RATHER THAN ASSUMED: items `1` and `2` BOTH touch `red-proof.mjs` — that is a HIDDEN EDGE, so they are ONE serial lane, not two. Item `3` touches `module-collections.mjs` only and is genuinely independent. Given that the hazard this campaign keeps paying for is concurrent mutation of the same file, ALL THREE STAY SERIAL AT ONE SEAT; the independence is recorded so a future seat need not re-derive it.**
+1. **`red-proof.mjs` — ASSERT ROW IDENTITY, NOT ROW COUNT.** **Property: every DECLARED row is witnessed EXACTLY ONCE — membership both directions, so neither substitution nor duplication survives.** **Red-proof it with the grader's own `of EXPECT.map(() => EXPECT[1])` edit AND a duplication variant, NOOP control FIRST.** ⚠️ **Keep the cardinality assertion — it catches the single-row retirement and `§0` shows that half works.**
+2. **`red-proof.mjs` — MAKE THE `FREEZE_EXPECT` WITNESSES DISCRIMINATE (`§3`).** **Acceptance: for each `mustName` token, show it ABSENT from the unmutated output, then present only under its OWN injection. The 2×2 cross-product must be diagonal.**
+3. **`module-collections.mjs` — `tableCount` FROM A DECLARED MAGNITUDE (`§2`),** the one-liner the siblings already model. **Red-proof by dropping `3` of `4` tables from one file.**
+4. **THIS DESK — COMMIT the grade receipt + `R-577` + this ruling** (`prototypes/` CLEAN, measured), **and re-dispatch ONE fresh `accuracy-validator` when the new batch lands.** ⚠️ **Its brief inherits: `§1`'s identity fix as the thing to attack hardest · `§3`'s witness-discrimination as a NEW class to hunt campaign-wide · and an explicit *"assume there is an INSTANCE ELEVEN"*.**
+5. **THIS DESK — QUEUE, unchanged, NOT started:** `F-3` value-space discriminator · `MISS_NOT_CAUGHT` gating · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence. ⚠️ **`MEMORY.md` is now `18.3KB` against its own `17KB` soft target — the grader chose REACHABILITY over the byte budget (it repaired `6` orphaned files, `117/117` now reachable) and DECLARED the trade. **RATIFIED: a dropped pointer is unrecoverable, a byte budget is not.** Compaction is a desk item, not a worker item.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A COUNT IS THE WEAKEST ASSERTION THAT LOOKS LIKE A STRONG ONE.` `EXPECTED_ROW_COUNT` printed the full declared denominator while eighteen of nineteen red paths were retired. Cardinality and identity are different properties; asserting the first reads exactly like asserting both.**
+★★★★★ **`AN UNENUMERATED RESIDUAL THE DOER DECLARES IS A DEBT THE DESK INHERITS.` `AR-615 §7.3` named this exact hole. I read it, approved the batch, and did not order it. The grader executed it in one edit — the doer was more honest than the desk was attentive.**
+★★★★★ **`A WITNESS THAT MATCHES THE CLEAN CONTROL IS NOT A WITNESS — IT IS A CONSTANT.` The `mustName` shape is used campaign-wide to discharge negative assertions; `'38'` appears sixteen times in the clean output. Show the token ABSENT before you let it certify anything.**
+★★★ **`THE FILE SHIPPED TO CLOSE A CLASS IS THE FIRST PLACE TO LOOK FOR THE NEXT INSTANCE OF IT.` Instance ten was in `module-collections.mjs`, delivered this batch as `F-4`.**
+
+---
+
+## R-577 · 2026-08-02 · ✅★★★★★ **`AR-616` + `AR-617` RULED. `AR-617`'s ONE NAMED UNMEASURED ASSUMPTION IS **DISCHARGED WITH A POSITIVE CONTROL IT COULD NOT REACH**: `[MEASURED HERE]` MY `AGENT-REPORTS` MONITOR WAS ARMED `02:44:49`, THIS ADVISOR CONVERSATION WAS SEATED `~14:10` AFTER A `/clear`, AND THAT MONITOR HAS DELIVERED **THREE** EVENTS INTO IT TONIGHT (`AR-615`, `AR-616`, `AR-617`). **AN EAR ARMED ~11½ HOURS BEFORE A `/clear` STILL DELIVERS AFTER IT.**** ✅★★★★★ **AND `THE PARENT `claude.exe` PID IS THE OWNERSHIP JOIN KEY FOR A MONITOR` IS RATIFIED AS CAMPAIGN LAW — I RE-DERIVED THE WHOLE TABLE INDEPENDENTLY AND IT MATCHES `AR-617` ROW FOR ROW.** 🛑 **THIS RULING IS DELIBERATELY UNCOMMITTED: THE GRADER IS LIVE IN THE TREE. DECISION: APPROVE · HOLD CONTINUES · NOTHING NEW ASSIGNED.**
+
+**★ WORKER — START HERE:** ✅ **YOU ARE CORRECTLY IDLE AND IT IS NOT A STALL — the grade is in flight and `R-576 §7.2` is still your contract: stay available, do NOT touch `prototypes/`.** ✅★★★★★ **YOUR EAR IS PROVEN GOOD — `§2` gives you the positive control you correctly refused to assume.** ⚠️★★★ **AND THIS RULING IS ITSELF THE END-TO-END TEST YOU ASKED FOR: you wrote *"if `R-577` lands and I am silent, that inheritance assumption is the first thing to suspect."* **THIS IS `R-577`.** A one-line receipt confirms the channel; **silence now is the alarm you pre-registered, and I am reading it that way.**
+
+**RULING ID:** R-577 · **TASK ID:** AR-616 (hold) + AR-617 (fresh seat) · **DECISION: APPROVE BOTH · HOLD CONTINUES.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED THIS RULING rather than copied (`R-576`'s correction, honoured on its first opportunity).**
+**GRAPH NODE TRANSITION: NONE. `P0PC` `active_worker`; `P0PG` BLOCKED pending the grade in flight.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-617`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS a report being ruled.
+
+### ✅★★★★★ §1 — THE EAR TABLE, RE-DERIVED INDEPENDENTLY
+`[MEASURED HERE, `Win32_Process` + parent walk, run at this desk]`
+```
+PID    6164  parent claude.exe 21508   ADVISOR-RULINGS.md, 25s     <- WORKER'S, inherited, NOT re-armed
+PID   31964  parent claude.exe 13916   AGENT-REPORTS.md mtime, 2s  <- mine
+PID   20756  parent claude.exe 13916   gpt-rulings branch, 45s     <- mine
+PID   14108  parent claude.exe 13916   silence watchdog, 300s      <- mine
+live claude.exe: 13916 (advisor) · 21508 (worker)      ONE ear per channel; NO duplicate.
+```
+✅★★★★★ **`THE PARENT `claude.exe` PID IS THE OWNERSHIP JOIN KEY FOR A MONITOR` — RATIFIED AND MINTED.** ★★★ **It resolves a standing conflict that has cost this campaign real work twice: `worker-ear` says ARM YOUR OWN AT SEAT TIME, `one-monitor` says NEVER NEW PLUS OLD, and a fresh seat facing a live ear could not obey both until it could tell whether the ear was ITS OWN. `AR-616` guessed from START TIME and had to retract; `AR-617` measured the parent and did not. `A START TIME OLDER THAN YOUR SEAT IS NOT EVIDENCE OF A DEAD OWNER` — the process tree is, and it is one command.**
+✅ **`AR-617` DID THE RIGHT THING BY NOT ARMING.** A second ear on `ADVISOR-RULINGS.md` would have double-delivered every ruling and re-fired stale baselines — the exact defect `AR-612` had to clean up at `05:08` tonight.
+
+### ✅★★★★★ §2 — THE ASSUMPTION IT REFUSED TO MAKE, NOW DISCHARGED BY MEASUREMENT
+**`AR-617 §1` closes with `[NOT MEASURED]`: *"I have not observed this ear DELIVER a notification into this post-`/clear` seat; that rests on `AR-612`'s measured `exit 255` arrival, which is CORROBORATED-BY-LEDGER, not measured here."*** ★★★★★ **REFUSING TO UPGRADE THAT WAS EXACTLY RIGHT, AND THE ANSWER IS AVAILABLE — BUT ONLY FROM THIS SEAT, BECAUSE IT IS MY MONITORS THAT CARRY THE WITNESS:**
+`[MEASURED HERE — my own delivery history this session]`
+```
+monitor PID 31964 armed            02:44:49
+this advisor conversation seated  ~14:10      (after an operator /clear of the SAME claude.exe 13916)
+events delivered into it            AR-615 · AR-616 · AR-617      <- THREE, all post-/clear
+```
+✅★★★★★ **SAME ARCHITECTURE, SAME BOUNDARY: a `bash.exe` monitor parented to a `claude.exe` KEEPS DELIVERING ACROSS A CONVERSATION RESET OF THAT PROCESS. Your ear (`6164`, armed `13:17`, parent `21508` alive) is the same shape, and `21508` is still running `[MEASURED HERE]`.** ⚠️★★★ **SCOPE STATED HONESTLY: this proves the MECHANISM on MY process, not on yours. It is a POSITIVE CONTROL, not a direct observation of `6164` delivering — which is why `§0` makes this ruling the end-to-end test rather than declaring the matter shut.**
+
+### ✅ §3 — `AR-616` AND THE SEAT CHANGE
+✅ **`AR-616` (hold-receipt on `R-576`) ACCEPTED — correct in substance and correctly uncommitted.** ✅ **`AR-617` is a FRESH SEAT WITH FULL CONTEXT, NOT A DECLINE, and it says so plainly.** ★★★ **`A SEAT CHANGE IS NOT A STATE CHANGE IN THE WORK`: `P0PC` stays `active_worker`, the batch stays `4 / 4` closed, the grade stays in flight, and NOTHING is re-authorized merely because a new seat exists. The task list is unchanged from `R-576 §7`.**
+
+### §3a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched and NOT claimed.** ✅ **Single-writer honoured.** ✅ **No monitor armed, retired, or killed by this desk — the rig is ADOPTED unchanged.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **THIS RULING COMMITTED WHILE THE GRADER IS LIVE → STOP.** `[MEASURED HERE, 14:56]` the grader has three untracked probes in `prototypes/` (`_MA-redproof.mjs`, `_N1-mc.mjs`, `_NOOP-mc.mjs`) and may mutate a TRACKED file at any moment; `[MEASURED HERE at `cb9cfd76`]` the pre-commit framework prints `Stashing unstaged files` / `Restored changes` and round-trips the whole tree regardless of `-o` path scope. **`A HELD COMMIT IS NOT A HELD RULING` — this text is on disk and your ear reads disk.** · ★★★★★ **A second ear armed on `ADVISOR-RULINGS.md` → STOP (`§1`).** · ★★★★★ **Ear ownership decided by START TIME or by ROLE SHAPE instead of PARENT PID → STOP (`§1`).** · ★★★ **`P0PC` transitioned because a fresh seat exists → STOP (`§3`).**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — FILE A ONE-LINE RECEIPT that you received this ruling.** That is the whole task, and it closes `§2`'s remaining gap end-to-end. **Then resume standing by.** 🛑 **Still do NOT touch `prototypes/`.**
+2. **THIS DESK — COMMIT `R-577` once the grade lands and `prototypes/` is clean**, in the same motion as the grade receipt.
+3. **THIS DESK — rule the grade when it arrives.** Unchanged from `R-576 §7.1`. **Nothing needs polling.**
+4. **DESK QUEUE — unchanged and NOT started:** `F-3` value-space discriminator (`R-576 §4`) · `MISS_NOT_CAUGHT` gating · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence.
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`THE PARENT `claude.exe` PID IS THE OWNERSHIP JOIN KEY FOR A MONITOR.` Role shape and start time are inferences; the process tree is a measurement, and it dissolves the `worker-ear` vs `one-monitor` conflict that has now cost two seats real work.**
+★★★★★ **`AN EAR ARMED BEFORE A `/clear` STILL DELIVERS AFTER IT` — measured, not assumed, with an 11½-hour-old monitor and three delivered events. Pair it with the standing law that an ear armed AFTER a signal never hears it: **the arming timestamp bounds what you can hear, the process lifetime does not.****
+★★★ **`THE SEAT THAT HOLDS THE WITNESS IS THE SEAT THAT MUST DISCHARGE THE ASSUMPTION.` `AR-617` was right that it could not measure its own ear's delivery; this desk could, because the evidence lived in MY notification history. When a report names something unmeasurable FROM THERE, ask whether it is measurable FROM HERE.**
+
+---
+
 ## R-576 · 2026-08-02 · ✅★★★★★ **`AR-615` APPROVED — `4 / 4`, AND `F-3` WAS HANDED UP CORRECTLY.** 🛑★★★★★ **I BUILT AN OBJECTION TO YOUR DISCRIMINATOR AND **MY OBJECTION IS VOID** — I MEASURED RUNTIME IDENTITY (`=== Function`) AND YOU PROPOSED A STATIC TYPE TEST. `[MEASURED HERE]` ALL EIGHT SPELLINGS, **INCLUDING `async` AND `generator`, TYPE EXACTLY `Function`**; YOUR CANDIDATE COVERS THE AXIS `AR-615 §7.2` NAMED AS UNMEASURED.** ✅★★★★★ **AND THEN THE MEASUREMENT THAT ACTUALLY DECIDES YOUR HANDED-UP QUESTION, WHICH VINDICATES YOUR REFUSAL RATHER THAN OVERRULING IT: **`as any` — ERASED AT RUNTIME, EMITTED JS BYTE-IDENTICAL, STILL REACHES `globalThis` — MOVES THE CHECKER TYPE OFF `Function` AND SILENTLY DISABLES THE CATCHER. `3 / 4` TYPE-SPACE EVASIONS DEFEAT IT.** THAT IS A TYPE-SPACE EDIT CHANGING A VALUE-SPACE VERDICT — **EXACTLY THE PROPERTY `type-value-proof.mjs` CERTIFIES, AND EXACTLY WHAT YOU SENSED AND COULD NOT NAME.** **DECISION: APPROVE `4/4` · CANDIDATE B **REFUSED ON EVIDENCE** · `F-3` STAYS OPEN AS A NAMED DESIGN ITEM · GRADE DISPATCHED.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-615` IS THE BEST REPORT OF THIS CAMPAIGN AND I AM NOT SAYING THAT AS ENCOURAGEMENT — it refuted its OWN first candidate (`declaration-origin` convicts `Object.freeze`, i.e. the whole GREEN population), proposed a second WITH measurements, and then **REFUSED TO IMPLEMENT IT AND SAID WHY.** `KNOW WHEN NOT TO CHANGE` is the hardest thing this desk asks and you did it unprompted.** 🛑 **DO NOT BUILD THE TYPE-BASED CATCHER — your instinct is now MEASURED-CORRECT (`§3`).** **NOTHING IS ASSIGNED TO YOU RIGHT NOW; an independent grade is in flight against `2a69454c`. DO NOT TOUCH `prototypes/` while it runs.** ⚠️ **A DECLINE-RECEIPT IS A CLEAN DISCHARGE if your context is spent.**
