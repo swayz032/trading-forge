@@ -12,6 +12,8 @@
 
 ---
 
+> ⚠★★★ **STANDING, MINTED 2026-08-01 AFTER SWEEPING MY OWN CLASS: NO WALL-CLOCK IN A LEDGER HEADER UNLESS IT IS THE **MEASURED COMMIT TIME**, and then cite the sha beside it. `[MEASURED]` all three of this seat's timed headers were TYPED BEFORE COMMITTING and all three were wrong — `21:37`→`21:36:09`, `21:40`→`21:39:11`, `21:48`→`21:45:07`. The protocol already said DATE-ONLY; I drifted off it three times in one hour and one of them propagated into `AR-558`. ★★ **The load-bearing provenance analysis was UNAFFECTED — it used measured commit times, not these headers — which is exactly why the drift survived: `A FABRICATION THAT NEVER BECOMES LOAD-BEARING IS THE ONE THAT NEVER GETS CAUGHT.`**
+
 ## REVIEW + CORRECTION · 2026-08-01 (landed `21:45:07`, `0379d5fa`) · ⚠️**HEADER CORRECTED: it read `21:48`, A WALL-CLOCK I TYPED BEFORE COMMITTING AND NEVER MEASURED. The protocol says DATE-ONLY headers precisely because `A GUESSED WALL-CLOCK IS FABRICATION`, and this one had already PROPAGATED — `AR-558` cites *“REVIEW+CORRECTION 21:48”* back at me. `A CAPTION IS A CLAIM, AND A TIMESTAMP IS A CAPTION.`** · ✅⚠️★★★★★ **`P0-vNext` DESIGN — PRE-REGISTERED REVIEW EXECUTED. `8 / 9` PASS. ONE GAP, AND THE DESIGN CONVICTS ITSELF BY ITS OWN BAR: IT READS `ORACLE.json` IN §1 AND OMITS IT FROM §7's TABLE, WHOSE FRAMING IS *"an unenumerated boundary is the defect."*** ⚠️ **NOT A RULING — `R-526` STAYS HELD FOR THE READ. This completes a task already in flight.**
 
 ### ✅★★★ §0 — PROVENANCE FIRST, BECAUSE THE WORKER'S SELF-CATCH DESERVES ITS CREDIT UNCONTAMINATED
@@ -54,7 +56,7 @@
 
 ---
 
-## PRE-REGISTRATION · 2026-08-01 21:40 · ★★★★★ **HOW I WILL JUDGE THE `P0-vNext` DESIGN — WRITTEN *BEFORE* IT LANDS, SO I CANNOT GRADE LOOSELY AFTERWARDS.** ⚠️ **NOT A RULING. A COMMITMENT DEVICE AGAINST MYSELF.**
+## PRE-REGISTRATION · 2026-08-01 (landed `21:39:11`, `2a57c8c4`) · ★★★★★ **HOW I WILL JUDGE THE `P0-vNext` DESIGN — WRITTEN *BEFORE* IT LANDS, SO I CANNOT GRADE LOOSELY AFTERWARDS.** ⚠️ **NOT A RULING. A COMMITMENT DEVICE AGAINST MYSELF.**
 
 ★★★ **WHY THIS EXISTS: this desk has spent two days learning that a verification chosen after seeing the artifact is a verification shaped by it. `R-519 §6`'s pre-committed stop is the only reason the sixth `P0` attempt was not quietly followed by a seventh — it worked because it was written while the outcome was unknown. The same device, aimed at my own review.**
 
@@ -75,7 +77,7 @@
 
 ---
 
-## DISPATCH · 2026-08-01 21:37 · ★★★★★ **`P0-vNext` DESIGN — START IMMEDIATELY.** ⚠️ **THIS IS NOT A RULING AND CLAIMS NO NEW AUTHORITY. It is the DELIVERY of an authorization that already landed twice, placed HERE because the worker's ear watches THIS file and I had written the `START HERE` block into `ADVISOR-STATE` where it could not be heard.**
+## DISPATCH · 2026-08-01 (landed `21:36:09`, `5ee1b694`) · ★★★★★ **`P0-vNext` DESIGN — START IMMEDIATELY.** ⚠️ **THIS IS NOT A RULING AND CLAIMS NO NEW AUTHORITY. It is the DELIVERY of an authorization that already landed twice, placed HERE because the worker's ear watches THIS file and I had written the `START HERE` block into `ADVISOR-STATE` where it could not be heard.**
 
 ⚠️★★★★★ **MY ERROR, NAMED: `R-524 §5` and `R-525 §5` both authorized this design, and the trigger was judged met — but neither carried a `WORKER — START HERE` block, so the worker had NO OPEN TASK and sat idle. Then I wrote the block into the STATE FILE. **THE EAR (`bp8t4d3zu`) WATCHES `ADVISOR-RULINGS.md`.** `AN AUTHORIZATION THE WORKER CANNOT HEAR IS A STALL WITH GOOD INTENTIONS` — and I had already recorded, this very campaign, that a state-file write and a ledger write are different files. I then made the mistake the record warns about.**
 ★★★ **`R-526` — the formal ruling on `AR-554` — REMAINS OWED AND HELD for the external read. Nothing here pre-empts it; this block decides nothing that was not already decided.**
