@@ -4,6 +4,38 @@
 
 ---
 
+## AR-604 · 2026-08-02 · 🛑★★★★★ **MY OWN `[HYPOTHESIS — UNPROVEN]` IS **REFUTED**, AND I TESTED IT BEFORE WRITING A FIX AS `R-565` ORDERED: `verdictFor('target')` RETURNS `value` — IDENTICAL TO `meta` — SO THE CATCHER BLOCK **IS** ENTERED AND MY NAMED SUSPECT WAS INNOCENT.** ✅★★★★★ **THE REAL MECHANISM, MEASURED: `checker.getSymbolAtLocation(target)` RESOLVES TO THE **ENCLOSING `FunctionDeclaration`**, `declaredHere = true`, SO THE RULE SEES A LOCAL REFERENCE AND ADMITS IT.** ⚠️★★★★★ **AND THAT IS ARGUABLY **CORRECT**, NOT A HOLE — SO I AM NOT PATCHING IT. ADJUDICATION HANDED UP, NO CODE CHANGED.**
+
+**RULING ID:** `R-565` START-HERE, `(3)`'s first move · **TASK ID:** AR-604 · **PRIOR:** AR-603 (`24269a5f`). **NO CODE DELTA.**
+
+### 🛑★★★★★ §1 — THE HYPOTHESIS I NAMED, AND ITS REFUTATION
+**`AR-603 §3` said: *"`[HYPOTHESIS — UNPROVEN]` it is `verdictFor`."*** `[MEASURED HERE — the identifier walk instrumented in a throwaway copy inside the worktree, created and REMOVED in the same command; shipped files untouched]`
+```
+[NT] name=target isPropName=false isDeclName=false isMeta=true owner=null verdictFor=value position=value
+[NT] name=meta   isPropName=false isDeclName=false isMeta=true owner=null verdictFor=value position=value
+```
+🛑★★★ **EVERY INPUT IS IDENTICAL BETWEEN THE TWO. `verdictFor` is not the difference and my `MetaProperty` fix IS reaching `target` correctly.** ★★★ **I would have "fixed" the oracle and changed nothing — `LOCATE THE FAILING LAYER BEFORE FIXING ANY LAYER`, and the desk was right to order the test first.**
+
+### ✅★★★★★ §2 — THE ACTUAL MECHANISM
+`[MEASURED HERE, same method, instrumenting the symbol branch]`
+```
+[SYM] target sym=true decls=1 kinds=FunctionDeclaration declaredHere=true
+```
+**`checker.getSymbolAtLocation` on the `target` of `new.target` resolves to the ENCLOSING `FunctionDeclaration` — `project` itself.** So `declaredHere` is TRUE, the `!declaredHere` branch never runs, and no catcher fires. **For `meta` the checker resolves NOTHING, so it falls to the unresolved-free-reference branch and reddens.**
+
+### ⚠️★★★★★ §3 — ADJUDICATION: I BELIEVE `new.target` ADMITTED IS CORRECT, AND I WILL NOT DECIDE IT ALONE
+**The `1b-S` rule exists to catch a module REACHING OUTSIDE ITSELF.** `[MEASURED]` the two `MetaProperty` forms are not the same species:
+- **`import.meta` CARRIES HOST STATE** — the grader executed it and got `url`, `dirname`, and a live `resolve`, i.e. dynamic module resolution. **It resolves to nothing local because it comes from outside. REJECTING IT IS RIGHT.**
+- **`new.target` IS FUNCTION-LOCAL METADATA** — it reports how the ENCLOSING function was invoked, and TypeScript's own resolution says so by binding it to that function. **It cannot reach a host global, the ledger, or the module system.** ★★★ **The checker's answer and the semantics agree, which is the two-path shape this campaign asks for.**
+🛑 **SO I AM NOT PATCHING IT, AND I AM NOT CLOSING `(3)` ON MY OWN WORD EITHER.** ⚠️ **`R-564` recorded that the desk *"ADMITTED `new.target` at my own hand"* as a finding; I am reporting that the ADMISSION MAY BE THE CORRECT VERDICT and asking the desk to rule.** ★★★ **`worker-execution §6`: inventing a rejection to make a finding-shaped thing go away would be inventing behaviour. `UNRESOLVED_SOURCE_AMBIGUITY` on the SEMANTICS, not on the mechanism — the mechanism is now fully measured.**
+⚠️ **IF THE DESK RULES IT MUST BE REJECTED, the fix point is NOT the oracle: it is the `declaredHere` branch, which would need `MetaProperty` excluded from "resolves locally ⇒ safe". That is a one-line change and I have NOT made it.**
+
+### ⚠️ §4 — STATE, UNCHANGED
+**No code changed; all five gates untouched at `24269a5f`.** **FAN-IN still `2.5 / 5`: `(2)` `F-3`, `(3)` `Proxy` + `new.target`'s DISPOSITION, `(5)` set-of-sets beyond `corpus.mjs` remain open.** ⚠️ **`R-565` records it could not verify the `F-2` fix because its probe returns `TYPE_INVALID` on `import.meta`. `[MEASURED HERE]` MY type-clean fixture is exactly: `export const project = (lane: Lane) => ({ v: import.meta });` in a `.ts` container under the pinned surface — it returns `REJECTED 1b-S:free-captured-reference`, and `({ v: process.env })` REJECTS while a clean module ADMITS in the same run. **Handing the desk the fixture so its next probe is not blocked on building one.**
+
+---
+
+
 ## AR-603 · 2026-08-02 · ✅★★★ **`R-564` ITEMS `(1)` AND `(4)` CLOSED AND BRACKETED: **PIN THE PIN** — the grader's one-line pin bump now throws `INSTRUMENT FAULT` (`EXIT 1`) where it silently shrank `64 → 59`; and `classifyPosition` + `VALUE_PARENT_KINDS` are **DELETED**, which makes two false captions true again.** ⚠️★★★★★ **HALF OF `(3)`: `import.meta` IS CLOSED, **`new.target` IS STILL ADMITTED** AND I AM NOT CLAIMING OTHERWISE.** 🛑★★★★★ **HANDOFF AT `2.5 / 5` — GENUINE CONTEXT EXHAUSTION, NOT A LANE BOUNDARY. THE REMAINING THREE ARE UNSTARTED AND I NAME EACH WITH ITS ADDRESS SO NOTHING IS RE-DERIVED.**
 
 **RULING ID:** `R-564` consolidated order · **TASK ID:** AR-603 · **PRIOR:** AR-602 (`8e62d977`) · **CODE:** `6b246c95` + this commit.
