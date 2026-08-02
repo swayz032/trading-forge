@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3373` at THIS commit, 2026-08-02 00:07 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3374` at THIS commit, 2026-08-02 00:08 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3373` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3374` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -184,6 +184,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ⚠★★★ **AND MY PROBE FAILED FIRST, CAUGHT BY MY OWN CONTROL: first execution returned `bindings=0`, `0/3` rows — I passed the file wrapper `{_why, spec, video}` to a function documented to take the artifact body. Eighth instrument fault of this family; the control is the only reason it did not become a false finding against a correct reader.**
 ✅★★ **GRADE RE-DEFERRED A THIRD TIME — AND THE BAR IS NOW PRE-REGISTERED (`R-532 §4`) SO IT CANNOT REGRESS FOREVER: it FIRES on the first external read with **ZERO structural corrections**, or two consecutive reads with only non-structural items. Corrections per round are converging `9 → 5 → 2` `[MEASURED]`. ⚠ **Harness blocks `Agent` dispatch for this seat — WHEN THE BAR IS MET, ASK THE OPERATOR.**
 ⚠ **`[RELAYED, NOT VERIFIED HERE]` the TS lane and the two-lane agreement claim — I ran PYTHON only, and `R-532` assigns that execution to the worker.**
+⚠★★★★ **PUSH CADENCE LAPSED AT THE SEAT ROLL AND I CAUGHT IT LATE `[MEASURED HERE]`: `origin` sat at `b10f1f73` (`23:18`) — the last commit BEFORE I was seated — while `16` local commits accumulated, including two rulings and a correction annotation. **Pushing IS the established norm on this branch; it stopped exactly when the seat changed hands, because a handoff transfers the WRITING and silently drops the HOUSEKEEPING.** ✅ **Pushed and verified by SHA equality (`24360132`), not by the push command's own output; `behind=0` confirmed before pushing, never forced.** ★★★ **STANDING: A COLD SEAT INHERITS THE LEDGER AND THE QUEUE — IT DOES NOT AUTOMATICALLY INHERIT THE CHORES. CHECK `git log @{u}..` ONCE PER SEAT.**
 ✅★★★★★ **MY VERIFICATION OF `AR-573`, AND THIS TIME THE CRITERIA CAME FROM THE **INVARIANT**, NOT MY ORDER SHEET — the `R-531 §1` conviction, applied to myself one ruling later `[ALL MEASURED HERE, committed `abf98956`]`:**
 > ✅ **INVARIANT — *Claim `A`'s projection and verdict depend on NO ledger field*: I enumerated it MYSELF with my OWN pattern — `10` candidate lines naming claim `A` alongside a ledger concept — and read every one. **`0` GATE A CLAIM-`A` OUTCOME.** All ten are prohibitions, lessons, or required-outcome rows. ★★★★★ **ROW `7` IS THE ACTUAL FIX: claim `A` is now `UNAFFECTED` **because the key IS emitted as `null`** — decided on the PROJECTION, never on the classification. `INAPPLICABILITY IS CARRIED BY VALUE, NEVER BY OMISSION.`** **CONTROLS BEHAVED: a planted claim-`A` dependency FLAGGED; a genuine independence line NOT flagged.**
 > ⚠★★★ **I DID **NOT** AUDIT THE WORKER'S OWN CONTRADICTION PASS — DELIBERATELY. It was `TUNED TWICE` by its own admission, which is the `weakened to pass` shape, and `INDEPENDENCE IS NOT A SECOND LOOK AT THEIR QUESTION; IT IS SOMEONE ELSE'S QUESTION.` My enumeration found `10` candidates where theirs found `9` — **different patterns, same verdict of `0`. TWO PATHS.**
