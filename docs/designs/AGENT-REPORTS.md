@@ -4,6 +4,89 @@
 
 ---
 
+## AR-607 · 2026-08-02 · ✅★★★★★ **ITEM `(5)` CLOSED — AND THE SET-OF-SETS WAS NOT MERELY *NARROW*, IT WAS **DISARMABLE**. TWO EXECUTED COUNTEREXAMPLES, BOTH MEASURED BEFORE A LINE OF FIX WAS WRITTEN: DELETING ONE `EXPECT` ROW GAVE **`37 / 37`, "VERDICT: ENFORCING GATE", `EXIT 0`**; DELETING `collection_shape` FROM `FAILURE_CLASSES` MADE THE VERY INJECTION THAT REDDENS THE GATE REPORT **`GATE: PASS`, `EXIT 0`**.** 🛑★★★★★ **THEY **COMPOSE**: A COORDINATED TWO-EDIT DELETION REMOVES THE `R-562` CLASS FIX **AND ITS PROOF**, BOTH GATES GREEN — VERBATIM THE SHAPE `R-558` CLOSED FOR CORPUS ROWS AND LEFT OPEN ON THE FILES THAT DO THE ENFORCING.** ⚠️★★★ **I ALSO REPORT A DORMANT TABLE I DID **NOT** PATCH, AND THREE NAMED LIMITS.**
+
+**RULING ID:** `R-569 §7.1` (item `(5)`, my order ratified) · **TASK ID:** AR-607 · **PRIOR:** AR-606 · **CODE:** `7740292f` + the pin-bump commit carrying this report.
+**FAN-IN: `1 / 4`. NOT A HANDOFF — I am continuing to `(2)` immediately.** **GRAPH: NOT GRAPH-SCHEDULED** (`GRAPH OBJECT: NOT ADOPTED`, `R-569`).
+**TREE:** campaign worktree, branch `h1-wave4-sealed12-driver`. **Lane discipline honoured: every commit via `git commit -o <explicit paths>`, never `add -A`, never `stash`/`checkout`/`reset` (`R-569 §3`).**
+
+### 🛑★★★★★ §1 — THE DEFECT, LOCATED AT THE EXECUTABLE LINE AND PROVEN BY EXECUTION
+**`ADVISOR-STATE` gave item `(5)` as *"`red-proof.mjs`'s `EXPECT`/`FREEZE_EXPECT` tables are self-certifying collections"*. That is true, and it UNDERSTATES it.** `[MEASURED HERE — mutation asserted to have applied before the run, so this is not a false proof]`
+```
+red-proof.mjs  delete ONE EXPECT row (asserted: exactly 1 line)
+               ->  CLASSES WITH A DEMONSTRATED RED PATH: 37 / 37
+                   VERDICT: the runner is an ENFORCING GATE        EXIT 0
+                   grep of the whole output for the retired class: 0 hits
+run.mjs        delete the `collection_shape` FAILURE_CLASSES entry (asserted: exactly 5 lines)
+               ->  PROTO_INJECT=new_unpinned_collection
+                   shipped run.mjs   GATE: FAIL   EXIT 1     <- control, the check works
+                   mutated run.mjs   GATE: PASS   EXIT 0     <- the check is GONE
+```
+★★★★★ **THE ROOT CAUSE IS ONE LINE IN EACH FILE, AND IT IS `R-561`'S DEFECT ON THE ENFORCEMENT LISTS THEMSELVES:**
+```
+red-proof.mjs:178   `${rows.filter((r) => r.ok).length} / ${rows.length}`
+run.mjs:606         `FAILURE_CLASSES.filter(([, hit]) => hit)`
+```
+**BOTH OPERANDS COMPUTED FROM THE SAME MUTABLE ARRAY** — `R-561` named exactly this for `green_admitted === green_total` and the sweep stopped at `corpus.mjs`. ★★★★★ **`A COUNT OF SURVIVING MEMBERS CANNOT SPEAK ABOUT MEMBERS THAT WERE REMOVED.`**
+🛑★★★★★ **AND THE COMPOSITION IS THE REAL FINDING, NOT EITHER HALF: edit 1 retires the set-of-sets check; edit 2 retires row `(p)`, the proof that it worked. `TWO EDITS, BOTH SILENT, AND THE R-562 CLASS FIX IS GONE WITH BOTH GATES GREEN.` `R-558` closed precisely this coordinated shape for corpus rows — `mint-law` unswept again, and this time onto the files that do the enforcing.**
+
+### ✅★★★ §2 — WHAT I BUILT, AND WHY IT PARSES INSTEAD OF EXECUTING
+**New `module-collections.mjs`. The mechanism is item 15 / `R-558`'s, applied to a new surface: expected membership read from a PINNED artifact via `git show`, NEVER from the delivery under test.**
+⚠️ **THE ONE REAL DESIGN FORK, AND ITS COST STATED: `membership.mjs` reads its pin by IMPORTING it, which is strictly better. That is NOT available here — `red-proof.mjs` exports NOTHING (`EXPECT`/`CLASSES`/`SHARED`/`FREEZE_EXPECT` are module-local `const`s, which is exactly why `collectionNamesOf` cannot reach them), and importing `run.mjs` or `red-proof.mjs` EXECUTES a full gate run. So the pinned text is PARSED with the TypeScript compiler this prototype already depends on — a real AST, not a regex.**
+✅★★★★★ **AND THE PARSER IS NOT TRUSTED ON ITS OWN WORD. It is cross-checked against the EXECUTED runtime reader on `corpus.mjs` — the one module where both paths work — on the **SAME BLOB**, because comparing two revisions would be measuring the neighbouring object.** `[MEASURED HERE]`
+```
+blob read by parser  f177b2456dee…   == membership.EXPANDED_PIN_BLOB : true   <- join key checked
+parser  : ["CORPUS","GREEN","PREREGISTERED_EMIT_CHANGES","TWIN_PAIRS"]
+runtime : ["CORPUS","GREEN","PREREGISTERED_EMIT_CHANGES","TWIN_PAIRS"]        AGREE
+negative control (seed one fake name) -> THROWS INSTRUMENT FAULT               <- discriminates
+```
+✅★★★★★ **THAT CROSS-CHECK PAID IMMEDIATELY AND I REPORT IT AGAINST MYSELF: my first draft accepted only ARRAY literals, so it was blind to `PREREGISTERED_EMIT_CHANGES` (a plain object). The runtime path caught it on the first run, before the check shipped.** ★★★ **`A PARSER-ONLY VERDICT WOULD HAVE SHIPPED BLIND TO EVERY KEYED TABLE IN THE DELIVERY` — the two-path rule is not ceremony, it found a live hole in the instrument I was writing to close a hole.**
+🛑★★★ **THE CHECK DELIBERATELY DOES **NOT** LIVE IN `FAILURE_CLASSES`, and that is the whole architectural point: a check registered in that array can be retired by the same edit it exists to catch (`§1`, edit 2). It runs early, prints `GATE: FAIL` and names its class so `red-proof.mjs` asserts it exactly like any other, then `process.exit(1)` — nothing downstream can downgrade it.**
+
+### ✅★★★★★ §3 — RED-PROOFED AT BIRTH, INCLUDING AGAINST THE **REAL** FILE EDIT
+⚠️★★★ **A SIMULATION IS A PROXY AND I DID NOT STOP AT ONE.** The two new injections drive the check in memory (the established pattern — `run.mjs` already does this for `TWIN_PAIRS` and `collectionNames`), **but the decisive test is the ACTUAL 5-line deletion that produced `GATE: PASS` in `§1`:** `[MEASURED HERE — mutated in place, run, then restored, with the restore VERIFIED BY BLOB HASH and independently by `git diff --stat`]`
+```
+                                    BEFORE THIS FIX      AFTER THIS FIX
+real 5-line FAILURE_CLASSES delete  GATE: PASS  EXIT 0   GATE: FAIL  EXIT 1
+                                                         *** module_collections: run.mjs:
+                                                         FAILURE_CLASSES MISSING row(s): collection_shape
+restore                             blob 555bd4e9…  identical=true   (git diff: only my intended edit)
+```
+✅ **RED WITHOUT THE FIX, GREEN WITH IT, ON THE UNCHANGED INSTRUMENT THAT CONVICTED IT.** 🛑 **No `git checkout` was used to restore — a byte-copy taken first and hash-verified after, because `checkout` in a shared tree is forbidden and would have been the lazy path.**
+✅ **THE PIN ALSO FIRED ON A REAL, LEGITIMATE CHANGE, WHICH IS THE OTHER HALF OF THE PROOF:** adding the two new `EXPECT` rows turned the gate RED with `EXPECT UNDECLARED row(s) … legitimate growth must bump the pin`. **That is the two-commit dance `AR-603 §1` predicted and `AR-605 §2` carried forward — the design working, not a regression.**
+
+### ✅ §4 — RESULTS, RE-MEASURED AFTER THE REPAIR (never carried across it)
+`[MEASURED HERE]`
+```
+run.mjs            GATE: PASS                      EXIT 0
+red-proof.mjs      CONTROL GREEN: true   40 / 40      EXIT 0   (was 38/38; +q +r)
+emitted-freeze.mjs comparator controls both true   EXIT 0
+type-value-proof   15 / 15  property HOLDS         EXIT 0
+module-tuple.mjs                                   EXIT 0
+module_collection_delete  GATE: FAIL EXIT 1 · module_collection_add  GATE: FAIL EXIT 1
+new_unpinned_collection (pre-existing)  GATE: FAIL EXIT 1   <- no regression
+self-coverage assert, negative control  THROWS INSTRUMENT FAULT   <- not inert
+```
+✅ **`44/52` and all attribution logic UNTOUCHED, as ordered.**
+
+### ⚠️★★★★★ §5 — A DORMANT TABLE I FOUND AND DID **NOT** PATCH
+`[MEASURED HERE]` **`grep -rn EXEMPT_EXPORTS *.mjs` returns exactly ONE hit — its own declaration. `membership.mjs`'s exemption registry has ZERO CONSUMERS.**
+🛑 **ITS CAPTION CLAIMS A MECHANISM THAT DOES NOT EXIST: *"EXEMPTIONS, DECLARED IN CODE WITH A STATED REASON (R-562 item 2 allows pin-or-exempt)"*. Nothing reads it. Scalars are excluded by `isCollection` returning false, not by that table.** ⚠️★★★★★ **THE TRAP IS THE ACTIVE DIRECTION, NOT THE DEAD ONE: a future seat adding a name to `EXEMPT_EXPORTS` to exempt a real collection WOULD SEE THE CHECK FIRE ANYWAY. A capability advertised and absent is worse than one never claimed.**
+✅ **SAME SPECIES AS `F-5` `classifyPosition`, which `R-564` item (4) ordered DELETED for exactly this — zero call sites, advertising a capability the object lacks.** 🛑 **I AM NOT DELETING IT ON MY OWN WORD: whether this campaign WANTS an exemption mechanism is a design question, and `AR-604`'s precedent is that a worker hands the disposition up rather than patching to close a finding-shaped thing. `UNRESOLVED_SOURCE_AMBIGUITY` on the intent; the mechanism is fully measured.**
+
+### ⚠️ §6 — LIMITS, NAMED SO THEY ARE NOT INHERITED AS COVERAGE
+1. ⚠️★★★ **THIS FILE CANNOT PIN ITSELF.** `PINNED_MODULE_COLLECTIONS`/`PINNED_BLOBS` are themselves self-certifying, and adding this module to its own pinned set cannot work — the pin values live in the file being pinned, so every legitimate bump would break its own pin. **THE REGRESS IS STRUCTURAL, and `membership.mjs` reaches the same floor.** ✅ **MITIGATED to `R-564`'s accepted standard: a `COVERED_FILES` load-time throw makes removing a covered file loud rather than silent — negative-controlled above.**
+2. ⚠️ **THE PARSER READS DECLARATIONS.** A table built at runtime (`push`, spread, computed keys) is outside what it can see. Stated in the file header, not just here.
+3. ⚠️★★★ **COVERAGE IS `run.mjs` + `red-proof.mjs` ONLY. `membership.mjs` — named in `AR-603 §4.3` alongside them — IS NOT COVERED**, because its only module-level tables are `HISTORICAL_RENAMES` (consumed, 1 entry) and `EXEMPT_EXPORTS` (`§5`, dormant). **I judged pinning a dormant table to be pinning a decoration; if the desk disagrees it is one entry in `PINNED_MODULE_COLLECTIONS`.** **The other prototype modules are UNENUMERATED for this class — I did not sweep them.**
+
+### 🛑 §7 — STATE AND WHAT IS NEXT
+**FAN-IN `1 / 4`.** ✅ **`(5)` set-of-sets CLOSED.** 🛑 **REMAINING, unchanged: `(2)` `F-3` substituted diagnostic (`run.mjs::ownershipJoin`, NOT by narrowing the anchor) · `(3)` `Proxy` design decision · then ALL corpus rows + the `new.target` GREEN row in ONE pin dance.**
+⚠️★★★ **ONE CONSEQUENCE THE NEXT WAVES INHERIT, so it is not re-derived: `run.mjs` and `red-proof.mjs` are now PINNED. Item `(2)` will add a `FAILURE_CLASSES` entry and a red-proof row — both are collection changes, so they WILL turn the gate RED until `MODULE_PIN_COMMIT` + `PINNED_BLOBS` are bumped. I will fold that bump into the single pin dance already planned for the corpus rows, so the batch still pays it once.**
+✅ **NO sub-agent dispatched, nothing owed from my side. NOTHING SELF-GRADED — `R-569 §7.3` pre-authorizes the desk's `accuracy-validator` dispatch when the batch lands, and I have not asked again.**
+**NEXT: `(2)` `F-3`. FIRST OBSERVABLE: a commit touching `run.mjs::ownershipJoin`. ETA ~40–60 min.**
+
+---
+
 ## AR-606 · 2026-08-02 · ✅ **START-RECEIPT — WORKER SEAT RE-OPENED. THE OPERATOR PERFORMED THE RESERVED ACT (`R-568 §5.1`), SO THE FOUR `ASSIGNEE: NONE` ITEMS ARE MINE AND I TAKE ALL FOUR AS **ONE BATCH**, NOT ONE LANE.** 🛑★★★★★ **AND MY FIRST ACT AS THIS SEAT WAS AN ERROR THE OPERATOR CAUGHT, NOT ME: **I ARMED A SECOND EAR ON A CHANNEL THAT ALREADY HAD A LIVE ONE.** REPORTED, NOT QUIETLY REPAIRED.** ⚠️★★★ **I ALSO FLAG A DEFECT IN THE NEWEST `START HERE` BLOCK: IT TELLS A COLD SEAT *"NOTHING IS ASSIGNED TO YOU"*.**
 
 **RULING ID:** `R-568 §1` (the four re-labelled items) + `R-566 §6.1` contract as amended · **TASK ID:** AR-606 · **PRIOR:** AR-605 (decline-receipt) · **NO CODE DELTA.**

@@ -51,7 +51,7 @@ const REPO_DIR = 'prototypes/p0-vnext-admission';
 // 🛑 PIN THE PIN (R-564 item 1). `EXPANDED_PIN_COMMIT` was once a bare string with nothing
 // asserting its value, and a one-line bump silently shrank the expected corpus 64 -> 59.
 // The blob of every pinned file is asserted below, so moving this constant cannot be quiet.
-export const MODULE_PIN_COMMIT = '24269a5f';
+export const MODULE_PIN_COMMIT = '7740292f';
 
 /**
  * THE ENFORCEMENT TABLES. Each of these is a module-level collection whose SHRINKAGE
@@ -65,9 +65,28 @@ export const PINNED_MODULE_COLLECTIONS = Object.freeze({
 
 /** Asserted blobs for the pinned revision of each covered file (pin-the-pin). */
 export const PINNED_BLOBS = Object.freeze({
-  'run.mjs': '93476af24d3379ab4043108d6388652f1139de57',
-  'red-proof.mjs': '00dd60460669add2596f5b8b33530c1570defd2a',
+  'run.mjs': '555bd4e9d907448a0ccd89c8af86282275766d84',
+  'red-proof.mjs': 'ad69d298f301313a8182304ac81026f63e461e7f',
 });
+
+// ⚠️★★★★★ THE RESIDUAL, NAMED RATHER THAN PAPERED OVER — THIS FILE CANNOT PIN ITSELF.
+// `PINNED_MODULE_COLLECTIONS` and `PINNED_BLOBS` are themselves self-certifying collections:
+// deleting an entry removes coverage of that file, and this check would not notice. Adding
+// this module to its OWN pinned set does not close it — the pin values live in the file being
+// pinned, so every legitimate bump would break its own pin. THE REGRESS IS STRUCTURAL, not an
+// oversight, and it is the same one `membership.mjs` reaches: at some point a constant must be
+// editable or nothing can ever legitimately change.
+// WHAT IS DONE INSTEAD IS WHAT R-564 ACCEPTED FOR THE CORPUS PIN — make a silent shrink require
+// editing a value that STATES ITS OWN MAGNITUDE IN PLAIN SIGHT, so the edit is loud in review:
+const COVERED_FILES = ['run.mjs', 'red-proof.mjs'];
+for (const f of COVERED_FILES) {
+  if (!PINNED_MODULE_COLLECTIONS[f] || PINNED_MODULE_COLLECTIONS[f].tables.length === 0) {
+    throw new Error(`INSTRUMENT FAULT: coverage for ${f} was removed from PINNED_MODULE_COLLECTIONS — the set-of-sets no longer covers a file it is declared to cover`);
+  }
+  if (!PINNED_BLOBS[f]) {
+    throw new Error(`INSTRUMENT FAULT: no pinned blob declared for ${f} — the pin cannot be verified and any verdict from it is uninterpretable`);
+  }
+}
 
 export function loadPinnedText(commit, file) {
   const raw = execFileSync('git', ['show', `${commit}:${REPO_DIR}/${file}`], { cwd: HERE, encoding: 'utf8' });
