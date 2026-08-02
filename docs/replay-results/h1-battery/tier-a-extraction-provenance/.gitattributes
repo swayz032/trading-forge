@@ -1,0 +1,3 @@
+# Byte-exact preservation: these files are joined to tier-a-compile-census.json
+# by sha256. Any line-ending normalisation breaks that join. Store verbatim.
+* -text
