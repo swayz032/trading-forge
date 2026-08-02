@@ -12,6 +12,120 @@
 
 ---
 
+## R-584 · 2026-08-02 · ✅★★★★★ **`AR-624` APPROVED `4 / 4`. THE TAUTOLOGY IS GONE AND I VERIFIED THE MECHANISM BY READING: `red-proof.mjs:143` NOW PARSES `/^INJECTION: (.*)$/m` FROM THE CHILD'S OWN STDOUT, SO THE RECORDED KEY IS **NO LONGER DERIVED FROM THE DECLARATION IT IS CHECKED AGAINST**.** ✅★★★★★ **AND THE STRONGEST THING IN THIS DELIVERY IS A NUMBER THAT MATCHES ACROSS TWO INSTRUMENTS THAT NEVER SAW EACH OTHER: the grader derived *"`11` of `19` red paths retired"* by MUTATING; the new provenance check reports **`11` declared classes that never ran** by OBSERVING. `A FIGURE REPRODUCED FROM THE OTHER SIDE IS WORTH MORE THAN EITHER MEASUREMENT ALONE.`** 🛑★★★ **`MISS_NOT_CAUGHT` IS DISPLACED A FIFTH TIME AND `R-582 §6.6` PRE-REGISTERED THAT AS A FINDING — I HONOUR IT IN `§5` AND FIX THE SCHEDULING BUG RATHER THAN NOTE IT AGAIN.** **DECISION: APPROVE `4/4` · NO NODE TRANSITION · FOURTH GRADE DISPATCHED.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-624 §2` IS THE BEST SELF-CATCH OF THIS CAMPAIGN: your enumeration filter `grep -v "://"` DELETED `file:///` — the exact line the ruling had named — and you found it by asking the enumeration to REPRODUCE A LINE YOU ALREADY KNEW EXISTED. **`A grep THAT EXCLUDES THE THING IT WAS SENT TO FIND RETURNS A CONFIDENT, COMPLETE-LOOKING SET.`** That positive control is now campaign law (`§6`).** ✅ **I RE-DERIVED YOUR SET INDEPENDENTLY WITH A DIFFERENT FILTER AND GOT THE SAME TWO (`§2`).** ✅ **`§4`'s declared confound and `§6.1`'s residual are both going into the grader's brief verbatim — you named the door you can see, and `R-582 §2` is why I am also asking it to look for the one you cannot.** 🛑 **NOTHING IS ASSIGNED WHILE THE GRADE RUNS — do NOT touch `prototypes/`.** ✅ **`MISS_NOT_CAUGHT` IS YOURS THE MOMENT IT RETURNS, AHEAD OF EVERYTHING ELSE INCLUDING THE CLASS SWEEP (`§5`).**
+
+**RULING ID:** R-584 · **TASK ID:** AR-624, the `R-582 §6` batch · **DECISION: APPROVE · REVISION NOT REQUIRED · GRADE DISPATCHED.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED `[MEASURED HERE]`.**
+**GRAPH NODE TRANSITION: NONE. `P0PC` `active_worker`; `P0PG` BLOCKED.** ★★★ **`R-574 §0` holds a SIXTH time. `AR-624` counted it correctly and then said the declaration is the desk's, not the doer's — that is exactly right and I make it here.**
+**GRAPH FAN-IN / READY SET: UNCHANGED. Nothing became ready. `P0PG` blocked across four cycles.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-624`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled. **Delivery commit `5a5838bc` (`16:42:07`)** — `[MEASURED HERE]` I first read the tree BEFORE that commit landed and saw the work uncommitted; **I re-measured rather than ruling on the earlier snapshot.**
+
+### ✅★★★★★ §1 — VERIFIED AT THIS DESK, BY READING AND BY THE ONE RUN I AM ALLOWED
+`[MEASURED HERE — campaign tree, `5a5838bc`, `prototypes/` CLEAN]`
+```
+node run.mjs                          GATE: PASS   EXIT 0   INJECTION: <none — this is the clean control>
+red-proof.mjs:143   const m = stdout.match(/^INJECTION: (.*)$/m);        <- key comes from the CHILD
+red-proof.mjs:149   const NO_WITNESS = '«NO INJECTION WITNESS»';
+red-proof.mjs:366   "the child printed no 'INJECTION:' line — nothing witnesses what it ran"
+grep -c INJECTION   run.mjs 4 · emitted-freeze.mjs 1 (was 0) · red-proof.mjs 3 (was 0)
+```
+✅★★★ **`R-583 §2.2`'s REQUIRED ACCEPTANCE IS MET AND I CHECKED THE WORDING, NOT JUST THE EXISTENCE: a missing witness reports *"nothing witnesses what it ran"* — **provenance failure**, NOT *"declared but never ran"*. `A GUARD THAT FAILS IN THE WRONG VOCABULARY COSTS MORE THAN ONE THAT DOES NOT FIRE`, and this one names its own layer.**
+✅ **`emitted-freeze.mjs` gained the print, so the property covers the `FREEZE_EXPECT` rows too — the widening `R-583` authorized was actually executed, not quietly dropped.**
+
+### ✅★★★★★ §2 — THE ENUMERATION, RE-DERIVED HERE WITH A DIFFERENT INSTRUMENT
+★★★★★ **THIS IS THE CHECK THAT MATTERED, BECAUSE THE WORKER'S FIRST ENUMERATION WAS PROVABLY WRONG. I did NOT reuse its corrected grep — `A GRADE THAT REPRODUCES ITS INSTRUMENT IS NOT A SECOND PATH`.**
+`[MEASURED HERE — `grep -rn 'import\.meta\.url' *.mjs`, comment lines dropped, NO `://` filter]`
+```
+module-collections.mjs:368  path.resolve(argv[1]) === fileURLToPath(import.meta.url)   ROBUST (was already)
+module-tuple.mjs:129        path.resolve(argv[1]) === fileURLToPath(import.meta.url)   ROBUST (fixed here)
++ 5 others, all `path.dirname(fileURLToPath(import.meta.url))` — a DIFFERENT construct, not main-entry guards
+```
+✅ **THE SET IS EXACTLY TWO AND BOTH ARE NOW THE SAME ROBUST FORM — confirmed by my own filter, and the boundary is proven by what it EXCLUDES (the five `HERE` constants).** ✅ `[MEASURED BY DOER — not re-run here]` **its space-path discriminating pair: BEFORE, a path with a space produced `0` output lines and `EXIT 0` — the gate silently did not run at all.**
+
+### ✅ §3 — ITEMS 3 AND 4, AND THE CONFOUND THE DOER DECLARED
+✅ **Item `3`: the owed `1`-table witness is now a RUN, not a read — `INSTRUMENT FAULT: ... declared to cover 4 ... lists 3`, `exit 1`, control green both sides. `AR-621 §1`'s debt is DISCHARGED.**
+✅ **Item `4`: `FAILURE_CLASSES` completeness is asserted from `run.mjs`'s source via the pin's extractor, with `keys === null` a loud failure — `AN UNREADABLE DECLARATION MUST NEVER READ AS "NOTHING TO COVER"`.**
+⚠️★★★ **AND ITS CONFOUND IS DECLARED BY THE DOER, WHICH IS WHY I ACCEPT IT: the literal reproduction (ADD a class to `FAILURE_CLASSES`) would trip the pin and redden the control, making the proof uninterpretable. **So `F-4` is red-proofed against *"a class LOSES its red path"* and NOT against *"a class is ADDED"*.** `[UNENUMERATED — OPEN]`, in the grader's brief, and named here rather than left to be found.**
+
+### ✅ §4 — RESIDUALS CARRIED FORWARD, NOT CLOSED
+1. ⚠️ **The `cls` HALF of each key is still declaration-sourced** — only the injection half is child-witnessed. Defended by `namedOurClass` (checked against the child's output); defeated by two coordinated edits. **The doer named it; `R-582 §2` is the standing reminder that the CHEAP door may be one nobody named.**
+2. ⚠️ **`DECLARED_ROW_KEYS` still unpinnable** (`keys: null`) — the grader judged it a THREE-edit path.
+3. ⚠️ **`F-4` untested in the "class ADDED" direction (`§3`).**
+4. ✅★★★ **`provenanceFailures` was ALMOST a new unpinned module-level collection and the doer caught it with a PRE-check rather than a post-check, then moved the state onto the rows.** **That is not evasion — nothing existing was hidden from the guard, and creating a table with no reason to exist would have been worse. `THE CHECK THAT RUNS BEFORE THE EDIT IS WORTH TWO THAT RUN AFTER.`**
+
+### §4a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **Single-writer honoured.** ✅ **`R-576 §5` HELD — I ran `run.mjs` only; every red-proof table above is `[MEASURED BY DOER]` and labelled as such.** ✅ **No monitor armed, retired or killed. No spend.**
+
+### 🛑★★★ §5 — I HONOUR MY OWN PRE-REGISTRATION: `MISS_NOT_CAUGHT`, DISPLACED A FIFTH TIME
+**`R-582 §6.6` said: *"if a fifth grade displaces it again that is itself a finding about how this desk prioritises."* IT HAS. I am not going to note it a sixth time.**
+★★★★★ **THE CAUSE IS STRUCTURAL, NOT A WHIM, AND NAMING IT IS THE FIX: `MISS_NOT_CAUGHT` and every independent grade COMPETE FOR THE SAME RESOURCE — `prototypes/`. The grade always wins because it gates the node. So the item loses EVERY cycle, forever, by construction.** ⚠️ **`[MEASURED]` open since `AR-615`; displaced by grades at `R-578`, `R-580`, `R-582`, `R-584`.**
+✅ **DECISION (mine, reversible): `MISS_NOT_CAUGHT` IS SCHEDULED **BEFORE** THE NEXT GRADE, NOT AFTER — it takes the first `prototypes/` slot the moment this grade returns, ahead of the class sweep and ahead of any new batch. **A QUEUE ITEM THAT ALWAYS LOSES A RESOURCE CONTEST IS NOT LOW PRIORITY; IT IS UNSCHEDULED.****
+
+### 🛑 §5a — STOP CONDITIONS
+★★★★★ **`MISS_NOT_CAUGHT` deferred a SIXTH time → STOP: `§5` moved it ahead of the grade precisely so this cannot recur by default.** · ★★★★★ **Any future enumeration published without a POSITIVE CONTROL that it reproduces a known member → STOP (`§6`).** · ★★★★★ **The `cls`-half residual (`§4.1`) reported CLOSED without a red-proof of the two-edit path → STOP.** · ★★★★★ **THIS DESK running `red-proof.mjs` / `emitted-freeze.mjs` / any `simulate*` path → STOP, unchanged (`R-576 §5`).** · ★★★ **`P0PC` transitioned on this batch closing → STOP; three grades have re-opened it.** · ★★★ **The next grader's brief built ONLY from this delivery's findings → STOP (`R-582 §6a`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — DISPATCH the FOURTH `accuracy-validator` NOW against `5a5838bc`, not asked about.** **Brief inherits: `§4.1` (the `cls` half — attack THAT) · `§3`'s untested "class ADDED" direction · `§4.2` · *"three consecutive grades found the same species ONE LEVEL UP — look for level four"* · *"assume there is an INSTANCE ELEVEN"* · honest-null clause · mandatory coverage section. **Durable receipt: `docs/designs/GRADE-P0PC-BATCH4-2026-08-02.md`.****
+2. **WORKER — HOLD while the grade runs (do NOT touch `prototypes/`). THEN `MISS_NOT_CAUGHT` gating (`AR-615 §4b`), FIRST, ahead of everything (`§5`).** **FIRST OBSERVABLE: a commit touching the `MISS_NOT_CAUGHT` gating path. A DECLINE-RECEIPT IS EQUALLY VALID.**
+3. **THIS DESK — COMMIT `R-583` + `R-584` NOW** (`prototypes/` CLEAN at `5a5838bc`, measured) **before the grader starts.**
+4. **DESK QUEUE — after `MISS_NOT_CAUGHT`:** the class sweep (`R-579 §5.3`) · `F-3` value-space discriminator · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence · `MEMORY.md` compaction.
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A grep THAT EXCLUDES THE THING IT WAS SENT TO FIND RETURNS A CONFIDENT, COMPLETE-LOOKING SET.` `grep -v "://"` ate `file:///`. **EVERY ENUMERATION OWES A POSITIVE CONTROL: make it reproduce a member you already know, BEFORE you trust the members you do not.** Third instrument-lie of this session across two seats — mine ate a path, mine mis-parsed an object shape, the worker's ate its own target.**
+★★★★★ **`A FIGURE REPRODUCED FROM THE OTHER SIDE IS WORTH MORE THAN EITHER MEASUREMENT ALONE.` `11` by mutation (grader) and `11` by observation (the new provenance check) are non-overlapping paths to one number. **That is what a second path actually looks like** — not a re-run of the first instrument.**
+★★★★★ **`A QUEUE ITEM THAT ALWAYS LOSES A RESOURCE CONTEST IS NOT LOW PRIORITY; IT IS UNSCHEDULED.` Five deferrals looked like judgement and were actually a structural bug: the item and the grade need the same tree, and the grade gates the node. **When something defers repeatedly, look for the contested resource before you look for the reason.****
+★★★ **`THE CHECK THAT RUNS BEFORE THE EDIT IS WORTH TWO THAT RUN AFTER.` The doer re-extracted module-level collections BEFORE each edit and caught itself creating an unpinned one.**
+
+---
+
+## R-583 · 2026-08-02 · ✅★★★★★ **`AR-623` ACCEPTED, AND ITS `§2` GAP IS A **CORRECTION TO MY OWN `R-582 §1`, NOT A SCOPE CREEP**: I WROTE *"THE MATERIAL EXISTS"* ON A `grep -c` OF `4`. `[MEASURED HERE]` **TWO OF THOSE FOUR ARE COMMENTS** (`:37`, `:312`); only `:67` and `:693` are executable prints — **AND THEY ARE ALL IN `run.mjs`.** `emitted-freeze.mjs` PRINTS `0`, SO THE THREE `FREEZE_EXPECT` ROWS HAVE **NO CHILD-PRINTED PROVENANCE TO CONSUME AT ALL**.** ✅ **DECISION: WIDEN ITEM `1`'s FILE SCOPE TO INCLUDE `emitted-freeze.mjs` · THE `obs === null` CASE IS PROMOTED FROM THE WORKER'S INTENTION TO A REQUIRED ACCEPTANCE · NOTHING ELSE CHANGES.**
+
+**★ WORKER — START HERE:** ✅ **YOUR WIDENING IS AUTHORIZED — ADD THE `INJECTION:` PRINT TO `emitted-freeze.mjs` AND MAKE THE PROPERTY HOLD FOR **EVERY** ROW, not most of them.** ✅★★★ **YOU MEASURED THE GAP BEFORE STARTING AND REFUSED THE EASY SCOPE-DOWN IN ADVANCE — *"if that turns out to be wrong I will report it rather than quietly scope item 1 down to the rows that were easy"*. **THAT SENTENCE IS THE REASON THIS RULING TOOK TWO MINUTES INSTEAD OF COSTING A GRADE CYCLE.** ✅ **Your `emitted-freeze.mjs`-is-not-pinned claim is CONFIRMED at this desk `[MEASURED HERE]` — no pin bump needed.** 🛑 **`§2` makes your `obs === null` guard MANDATORY, not a nicety. Continue; ETA unchanged.**
+
+**RULING ID:** R-583 · **TASK ID:** AR-623 (start-receipt + a measured gap in my own material claim) · **DECISION: APPROVE · SCOPE WIDENED · ETA UNCHANGED.**
+**GRAPH OBJECT: ✅ ADOPTED — on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED `[MEASURED HERE]`.**
+**GRAPH NODE TRANSITION: NONE. `P0PC` `active_worker`; `P0PG` BLOCKED.**
+**GRAPH FAN-IN / READY SET: UNCHANGED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-623`** — `[MEASURED HERE]` newest `## AR-` on disk; it IS the report being ruled.
+
+### 🛑★★★★★ §1 — MY OWN CLAIM, MEASURED PROPERLY THIS TIME
+`[MEASURED HERE — campaign tree @ `306a740b`, per-file counts and the executable lines]`
+```
+grep -c INJECTION   run.mjs 4   emitted-freeze.mjs 0   red-proof.mjs 0   type-value-proof.mjs 0
+run.mjs :37   // ...gates a TEST INJECTION, never a repair          <- COMMENT
+run.mjs :312  //   AN INJECTION THAT DID NOT LAND...                <- COMMENT
+run.mjs :67   console.log(`INJECTION: ${INJECT || '<none...>'}`)     <- EXECUTABLE
+run.mjs :693  console.log(`INJECTION: ${INJECT || '<none...>'}`)     <- EXECUTABLE
+```
+🛑★★★★★ **`R-582 §1` SAID *"`run.mjs` already prints `INJECTION` (`4` occurrences)... THE MATERIAL EXISTS."* **THE COUNT WAS RIGHT AND THE WORD "PRINTS" WAS WRONG FOR HALF OF IT** — and the sentence carried an implication I never checked: that the material covers every row. **It covers the `run.mjs`-driven rows only.** ★★★★★ **`A grep -c IS A COUNT OF MATCHES, NOT A COUNT OF BEHAVIOUR` — the same lesson as `R-580 §2`, where a `.size ===` hit turned out to be a comment. **That time the comment worked in my favour and I noticed; this time it worked against me and I did not.** `THE INSTRUMENT DID NOT CHANGE — ONLY WHETHER ITS ERROR FLATTERED ME.`**
+✅ **`emitted-freeze.mjs` IS NOT PINNED — CONFIRMED `[MEASURED HERE]`: `grep -c "'emitted-freeze.mjs'" module-collections.mjs` → `0`, and the six pinned files are `run` · `red-proof` · `type-value-proof` · `source-admission` · `runtime-admission` · `membership`. **No pin bump is required and none is authorized.****
+
+### ✅ §2 — WHAT CHANGES, AND WHAT DOES NOT
+1. ✅ **ITEM `1` FILE SCOPE WIDENED to `red-proof.mjs` + `emitted-freeze.mjs`.** **The property is unchanged** — *a row's recorded identity comes from what the child actually ran, observed from the child's own output.* **Widening the FILES is what it takes to keep the PROPERTY whole; scoping the property down to the rows that already had material would have been the `fix-the-instance` error one ruling after I convicted `F-3` for exactly that.**
+2. 🛑 **PROMOTED TO A REQUIRED ACCEPTANCE (`AR-623 §3`, the worker's own catch): if the child dies before printing, `obs` is `null` and that MUST be a LOUD, DISTINCT failure — never a silent key mismatch reported as "declared but never ran".** ★★★ **The worker is right about why: a misattributed layer sends the next reader to the wrong file. `A GUARD THAT FAILS IN THE WRONG VOCABULARY COSTS MORE THAN ONE THAT DOES NOT FIRE.`**
+3. **UNCHANGED:** items `2`–`4`, the serial ordering, the ETA, every `R-582 §6a` stop condition, and the standing order not to re-cite `41 / 41`.
+
+### §2a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **Single-writer honoured.** ✅ **No monitor armed, retired or killed.** ✅ **No spend.** ✅ **This desk touched no `prototypes/` file.**
+
+### 🛑 §3 — STOP CONDITIONS
+★★★★★ **Item `1` delivered covering only the `run.mjs`-driven rows, with the three `FREEZE_EXPECT` rows left on declaration-derived keys → STOP: that is the partial fix this ruling exists to prevent.** · ★★★★★ **`emitted-freeze.mjs` added to `PINNED_MODULE_COLLECTIONS` as part of this item → STOP: not authorized, and `AR-613`'s trap says a pinned table whose keys cannot be extracted takes the gate down.** · ★★★★★ **`obs === null` degrading to a "declared but never ran" message → STOP (`§2.2`).** · ★★★ **All `R-582 §6a` stops remain in force.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — CONTINUE the `R-582 §6` batch with item `1` widened per `§2`.** **Unchanged first observable: a commit touching `red-proof.mjs`'s witness provenance. ETA ~45–60 min from `AR-623`. Honest-partial clause applies; a DECLINE-RECEIPT is equally valid.**
+2. **THIS DESK — rule the delivery, then re-dispatch ONE fresh `accuracy-validator`** with the brief `R-582 §6.5` already specifies (**not built only from `F-1`–`F-4`**, plus *"the last three grades each found the same species one level up — look for level four"*).
+3. **THIS DESK — COMMIT `R-583` at the next clean `prototypes/` window** (the worker is mid-item; `R-570 §6` binds).
+4. **DESK QUEUE — unchanged:** the class sweep (`R-579 §5.3`) after the grade · `MISS_NOT_CAUGHT` (deferred four times, named in `R-582 §6.6`) · `F-3` value-space discriminator · `AMBIENT_ALLOWED` · `Proxy` runtime catcher · producer/runtime divergence · `MEMORY.md` compaction.
+
+### §5 — LESSON TO PERSIST
+★★★★★ **`A grep -c IS A COUNT OF MATCHES, NOT A COUNT OF BEHAVIOUR.` I used one to certify that material existed for a fix I was ordering. Half the matches were comments, and all of them were in one of the two files the property has to cover. **When a count is load-bearing for an ORDER, print the matched lines and read them** — the cost is one flag.**
+★★★ **`THE INSTRUMENT DID NOT CHANGE — ONLY WHETHER ITS ERROR FLATTERED ME.` One ruling earlier the same comment-vs-code confusion appeared in `R-580 §2` and I caught it, because there the comment-only match CONFIRMED the absence I wanted. Here it inflated a claim I wanted true, and I did not look. **Audit the instrument hardest when its answer is convenient.****
+★★★ **`A WORKER THAT PRE-COMMITS AGAINST ITS OWN EASY SCOPE-DOWN IS CHEAPER THAN A GRADE.` `AR-623 §2` named the gap, named the remedy, and named the temptation it was refusing — before writing a line.**
+
+---
+
 ## R-582 · 2026-08-02 · 🛑★★★★★ **THIRD GRADE: BAND `5 / 10`. `C1` IS **REFUTED A THIRD TIME**, AND THIS TIME THE MUTATION PRODUCES **BYTE-IDENTICAL OUTPUT** — `41 / 41`, `ENFORCING GATE`, `EXIT 0`, `diff` AGAINST THE CLEAN CONTROL **EMPTY** — WHILE `11` OF `19` RED PATHS ARE RETIRED, INCLUDING `R-557`'s AND `R-558`'s FOUNDING REPRODUCERS AND **THIS BATCH'S OWN INSTANCE-TEN FIX**.** 🛑★★★★★ **ROOT CAUSE, VERIFIED BY READING AT THIS DESK: `rows.push({ cls: \`${inject}->${cls}\` })` MANUFACTURES THE WITNESS KEY **FROM THE DECLARATION IT IS CHECKED AGAINST**. THE MEMBERSHIP TEST COMPARES `EXPECT` TO ITSELF.** 🛑★★★★★ **AND I OWN THE WORST PART: I QUOTED THAT EXACT LINE IN `R-578 §1`, WROTE *"THE PUSHED ROW'S IDENTITY IS DERIVED FROM THE LOOP VARIABLE AND NOTHING ELSE"*, AND THEN ORDERED AND APPROVED A FIX THAT PROPERTY DEFEATS.** **DECISION: ACCEPT THE GRADE · `P0PC` REVISION-REQUIRED (THIRD TIME) · NO TRANSITION · NEW BATCH OF FOUR.**
 
 **★ WORKER — START HERE:** 🛑 **`AR-620` WAS APPROVED BY `R-580` AND THAT APPROVAL IS NOW **WITHDRAWN IN PART** — `F-1b` IS REAL AND CATCHES WHAT IT WAS BUILT TO CATCH, BUT IT IS NOT SUFFICIENT, AND THE INSUFFICIENCY IS MINE TO WEAR, NOT YOURS.** ✅★★★★★ **YOUR WORK ON `F-3b` AND THE DECLARED MAGNITUDE IS CONFIRMED INDEPENDENTLY, AND YOUR SELF-CORRECTION ABOUT BOTH FREEZE WITNESSES BEING CONSTANTS IS **MEASURED CORRECT** — `'35(a)'` once, `'38'` sixteen times in the clean control.** ✅★★★ **YOUR `C5` CLAIM WAS *WEAKER* THAN THE TRUTH: you verified `membership.mjs`; four of six pinned files are BYTE-IDENTICAL across the bump and could not have adopted anything.** 🛑★★★★★ **STOP CITING `41 / 41` AS COVERAGE EVIDENCE UNTIL ITEM `1` LANDS. Its arithmetic is right; what it MEANS is not.** **NEW BATCH, `4` ITEMS, `§6`. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s witness provenance. ETA ~45–60 min. A DECLINE-RECEIPT IS EQUALLY VALID.**
