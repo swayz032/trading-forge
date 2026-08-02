@@ -4,6 +4,51 @@
 
 ---
 
+## AR-566 · 2026-08-01 · ✅★★★★★ **R-527 §5 DELIVERED — THREE ITEMS. THE PROOF MATRIX NOW TESTS THE DESIGN IT DOCUMENTS (`23` MUTATIONS, EACH WITH ITS **NAMED CATCHER**), PROJECTION MEANING IS CONTRACT, AND ITEM `2` IS A MEASURED **REFUSAL**: `NO SOUND PHASE-1 PROFILE AVAILABLE`.**
+
+**RULING ID:** R-527 §5 · **TASK ID:** AR-566 · **PRIOR:** AR-565 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** · **no implementation code.**
+
+### ✅★★★★★ §1 — ITEM 1: THE MATRIX NOW TESTS THE DESIGN
+**`23` pre-registered mutations, each carrying THE CATCHER — the specific check obliged to fire.** ★★★ **`A MUTATION CAUGHT BY THE WRONG CHECK IS A COINCIDENCE, NOT A PROOF` — a row that reddens via a different mechanism than the one named is a FAILED proof even though the run was red.**
+★★★★★ **ROW `3` IS THE ONE THE MATRIX EXISTED WITHOUT: THE SAME WRONG VALUE IN BOTH LANES on one `ASSERTED` cell → claim `A` STAYS GREEN, claim `B` ALONE emits `LEDGER_DIVERGENCE` with the citation.** **Without it an implementation may make conformance A MERE ALIAS OF AGREEMENT and satisfy every other row — two lanes agreeing WITH EACH OTHER reported as conformance TO THE LEDGER.**
+✅ **THE STOP CONDITION DID NOT FIRE: claim `B` has a source of truth independent of claim `A` — the frozen `cell.value` — so the mutation is expressible.** ⚠️ **Had it not been, the honest result was a finding that conformance is structurally an alias of agreement, and I checked that before writing the row rather than after.**
+**Also added:** both-lanes-missing (non-`NOT-APPLICABLE` → `PROJECTION_MISSING_BOTH`; exact-`NOT-APPLICABLE` → skip witness with NO claim-`B` predicate) · `MISSING` vs JSON `null` · the five registry conditions · consumer id/digest rejection · **removal of `AUTHORITY_SEMANTICS_UNVERIFIED` ⇒ invalid output, non-zero** · unknown/missing key at any boundary · **parse-with-no-declared-schema** · tag retarget · one clean control.
+
+### 🛑★★★★★ §2 — ITEM 2 IS A REFUSAL, AND IT IS MEASURED
+```
+data artifacts carrying tier_a / load_bearing                     34
+ledger fixtures referenced by ANY of those 34                      0
+POSITIVE CONTROL: the ledger names its own fixtures            12 / 12     (the join works)
+phase_1_scope anywhere in the repo                                 0
+```
+⚠️★★★★★ **THE VOCABULARY EXISTS AND SPEAKS ABOUT A DIFFERENT POPULATION.** Phase 1 exits on a **TIER-A STRATEGY SPEC**; this ledger's `43` rows are **TWELVE PARITY FIXTURES** under `ci/fixtures/`. **Nothing joins them.**
+★★★★★ **SO ANY ADMISSION SCOPE I WROTE TODAY WOULD BE AUTHORED BY THE PARTY THAT WILL BE MEASURED AGAINST IT — the EIGHTH sighting of the denominator family, aimed at the consumer, and the first one I could REFUSE instead of closing one level in.**
+✅ **THE REFUSAL IS ACTIONABLE, NOT A SHRUG:** what would make it available is an independent committed artifact enumerating the tier-A spec set by identity and marking each spec's load-bearing conditions — **authored by whoever owns Phase 1's exit criterion, not by this gate.** ⚠️ **Until then the Phase-1 consumer has NO registered profile, and a consumer with no profile FAILS CLOSED rather than defaulting to the full frame.**
+★★ **I pre-registered this expectation in `AR-565 §3` BEFORE measuring, then measured rather than assuming. The answer could have gone the other way, and the search surface is published either way.**
+
+### ✅ §3 — ITEM 3: PROJECTION MEANING IS CONTRACT
+**Per axis, the RAW PATH and the NORMALIZATION `[MEASURED in the shipped gate at c304b098]`:** `bindable` direct · `session_zone` **STRUCTURAL compare, not `===`** · `approximation` direct · and **FOUR DERIVED**: `primitive_null` from `primitive === null`, and `reason_null` / `reason_names` / `reason_excludes` **all from the single raw field `reason`**.
+★★★ **THREE AXES READ ONE FIELD — a change to how `reason` is emitted moves three axes at once. That coupling is a property of the design and is now STATED rather than discovered.**
+⚠️ **ONE LAYER REMAINS GENUINELY UNNAMED AND IS DECLARED AS UNKNOWN: the TS-source-field ↔ wire-name mapping.** `A DECLARED UNKNOWN IS ADMISSIBLE; CALLING IT IMPLEMENTATION IS NOT.`
+
+### ⚠️★★★★★ §4 — THREE DEFECTS I CAUGHT IN MY OWN WORK **DURING** THIS TASK
+**(a) MY VERIFICATION HAD PUBLISHED A FALSE CLEAN.** `AR-562` reported *"INCORRECT-as-verdict: 0"* — from a shell grep whose backticks were mis-escaped inside single quotes, so the pattern matched nothing. **The truth was `1`, in the proof matrix — exactly what `R-527` found.** ★★★★★ **`A GREP THAT MATCHES NOTHING AND A GREP THAT FINDS NOTHING PRINT THE SAME ZERO.`** ✅ **Every absence claim in this delivery is measured BY PARSE, explicit UTF-8, with a POSITIVE CONTROL token that must be found.**
+**(b) I WROTE A SENTENCE THAT DISPROVED ITSELF BY EXISTING.** My first draft of the retirement note said the old token *"appears nowhere in this design"* — **while being the single place it appeared.** ★★★★★ **Caught by COUNTING THE TOKEN instead of trusting the claim, and now recorded in the document as its own example.**
+**(c) I APPLIED THE `AR-563` HABIT AND IT PAID:** swept for the OLD wording after item `3` and found §11 still calling projection *"implementation"* — **REPLACED, not supplemented.** `A CORRECTION THAT IS ADDED RATHER THAN APPLIED LEAVES THE DEFECT WHERE IT IS READ.`
+
+### §5 — WHAT I DID NOT DO
+- **No implementation · no ledger touch · no `P3`/Gate-B · receipts, `P1`/`P2` artifacts and the tag untouched · no `checkout`/`reset`/index op.**
+- ⚠️ **The `140` are still not re-derived against the authority.** `AUTHORITY_SEMANTICS_UNVERIFIED` remains on every green for exactly that reason.
+- ⚠️ **I did NOT author a Phase-1 scope — that IS the deliverable for item `2`, not a gap in it.**
+- ★★ **I do not grade my own work.**
+
+### §6 — POSITION
+**Design REVISED, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED, with the unblocking artifact named** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
+
 ## AR-565 · 2026-08-01 · **START-RECEIPT — R-527 §5 ACCEPTED. THREE ITEMS: THE §10 PROOF MATRIX, THE PHASE-1 PROFILE, AND PROJECTION MEANING OUT OF §11.**
 
 **RULING ID:** R-527 §5 · **TASK ID:** AR-565 · **PRIOR:** AR-564 · **SEAT:** `claude.exe 26204`.

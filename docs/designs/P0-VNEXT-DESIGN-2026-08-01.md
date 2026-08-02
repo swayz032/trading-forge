@@ -56,6 +56,22 @@ For every one of the `301` cells the gate obtains the TS projection and the Pyth
 > **PER-PROJECTION RECORD, required fields:** raw lane path · **raw presence, with `MISSING` DISTINCT FROM JSON `null`** · raw value · canonical type · normalized value · **the pure transformation used for any derived axis** (`primitive_null` · `reason_names` · `reason_excludes`).
 > ★★ **`MISSING` and `null` collapsing into one another is how an absent projection becomes a legitimate-looking value; they are recorded as different states, always.**
 
+> ### ★★★★★ WHAT EACH AXIS *MEANS* — RAW PATH AND NORMALIZATION. **CONTRACT, NOT MECHANICS.**
+> ⚠️ **Claim `A`'s meaning is fixed by WHICH RAW FIELD represents each axis and HOW it is normalized. A presence matrix over an unspecified extraction still lets two lanes agree about the WRONG FIELD.** `[paths MEASURED in the shipped gate at `c304b098`; row identity is `condition_id`]`
+>
+> | axis | raw path (both lanes, in the projected plan) | normalization |
+> |---|---|---|
+> | `bindable` | `bindings[condition_id].bindable` | direct boolean compare |
+> | `session_zone` | `bindings[condition_id].session_zone` | STRUCTURAL compare (`JSON.stringify`), not `===` |
+> | `approximation` | `bindings[condition_id].approximation` | direct boolean compare |
+> | `primitive_null` | ⚠️ **DERIVED** from `bindings[condition_id].primitive` | `primitive === null` → boolean |
+> | `reason_null` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | `reason === null` → boolean |
+> | `reason_names` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | substring/zone-naming predicate over the reason string |
+> | `reason_excludes` | ⚠️ **DERIVED** from `bindings[condition_id].reason` | exclusion predicate over the reason string |
+>
+> ★★★ **FOUR OF SEVEN AXES ARE DERIVED, AND THREE OF THOSE READ ONE RAW FIELD — `reason`.** A change to how `reason` is emitted moves three axes at once; that coupling is a property of the design and is stated rather than discovered.
+> ⚠️ **`[DECLARED UNKNOWN, not deferred]` The per-lane EMITTER paths — which TypeScript source field becomes each wire name — are fixed by the normalization mapping in the gate, and I have NOT enumerated that mapping here. The axis, its projected path and its normalization are named above; the TS-source-field ↔ wire-name mapping is the one layer still unnamed, and it is named AS unnamed.** `A DECLARED UNKNOWN IS ADMISSIBLE; CALLING IT IMPLEMENTATION IS NOT.`
+
 ---
 
 ## 3 — CONTRACT 3: **FROZEN-LEDGER CONFORMANCE** ONLY FOR `ASSERTED` — **AND IT IS NOT CORRECTNESS**
@@ -98,6 +114,18 @@ Operationally, and this is the whole definition:
 > ★★★★★ **WHY THE PREVIOUS VERSION WAS INSUFFICIENT, IN ITS OWN WORDS:** it said no caller may narrow its scope *silently*, and enforced that by PRINTING the requested scope. **`PRINTING IT IS DISCLOSURE, NOT ENFORCEMENT.`** A caller passing `scope = []`, or any subset containing no `UNADJUDICATED` cells, obtained a completeness GREEN exactly as designed, and a downstream consumer reading status still saw a false ready-signal.
 > ★★★★★ **THIS IS THE SEVENTH SIGHTING OF ONE FAMILY, NOW AT THE CALLER BOUNDARY: axis → row → `digests` namespace → CALLER SCOPE. `THE DENOMINATOR MUST BE INDEPENDENT OF THE CALLER FOR THE SAME REASON LEDGER MEMBERSHIP HAD TO BE INDEPENDENT OF THE LEDGER.`** **The general test: `NAME THE PARTY WHO CHOOSES THE DENOMINATOR. IF IT IS THE PARTY BEING MEASURED — OR THE PARTY ASKING — IT IS NOT A DENOMINATOR.`**
 >
+> ### 🛑★★★★★ THE PHASE-1 ADMISSION PROFILE: **`NO SOUND PHASE-1 PROFILE AVAILABLE`**
+> **I was asked to freeze a Phase-1 profile — `consumer_id` · `required_claim_set` · `scope_id` · exact sorted cell-id set · scope digest · derivation authority · out-of-frame exclusions — or to record that none is available and say why. I RECORD THE REFUSAL, ON MEASUREMENT.**
+> ```
+> data artifacts carrying `tier_a` / `load_bearing`                     34
+> ledger fixtures referenced by ANY of those 34 artifacts                0
+> POSITIVE CONTROL: the ledger names its own fixtures                   12 / 12   (the join works)
+> `phase_1_scope` anywhere in the repo                                   0
+> ```
+> ⚠️★★★★★ **THE VOCABULARY EXISTS AND IT SPEAKS ABOUT A DIFFERENT POPULATION.** Phase 1 exits on a **TIER-A STRATEGY SPEC** with every load-bearing condition bound; this ledger's `43` rows are **TWELVE PARITY FIXTURES** under `ci/fixtures/`. **No artifact in this repo joins the two.**
+> ★★★★★ **SO ANY ADMISSION SCOPE I WROTE TODAY WOULD BE AUTHORED BY THE PARTY THAT WILL BE MEASURED AGAINST IT — the eighth sighting of the denominator family, aimed at the consumer, and the one place I can still refuse it rather than close it one level in.** `DO NOT LET THE IMPLEMENTER AUTHOR THE EXAM IT WILL IMMEDIATELY PASS.`
+> ✅ **WHAT WOULD MAKE IT AVAILABLE, NAMED SO THE REFUSAL IS ACTIONABLE:** an independent, committed artifact that (i) enumerates the tier-A spec set by identity and (ii) marks which of each spec's conditions are load-bearing — authored by whoever owns Phase 1's exit criterion, **not by this gate and not by its implementer.** ⚠️ **Until then the Phase-1 consumer has NO registered profile, and a consumer with no profile FAILS CLOSED rather than defaulting to the full frame.**
+
 > ⚠️★★★ **THE RESIDUAL, STATED AS A LIMIT RATHER THAN CLAIMED AWAY: a registry cannot make scope selection immune to WHOEVER WRITES THE REGISTRY.** What it does is make every scope **VISIBLE, DIFFABLE, and PRE-REGISTERED** — a scope change becomes a reviewed commit rather than a runtime argument, and the pre-registration rule stops it being written after the answer is known. ★★ **That is a real reduction in a real attack and it is NOT airtight, and I would rather the desk judge a stated limit than inherit an implied guarantee.**
 
 ⚠️★★★★★ **AND THE OLDER RULE STANDS ON TOP OF IT: NO CALLER MAY OBTAIN A COMPLETENESS GREEN BY NARROWING ITS SCOPE SILENTLY** — the resolved scope and its digest are printed with the verdict, so *"complete over `X`"* always carries `X`. **`A COMPLETENESS CLAIM WITHOUT ITS SCOPE IS THE CAPTION DEFECT WEARING A VERDICT'S CLOTHES.`**
@@ -164,21 +192,36 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 
 **Every rule above owes a mutation that turns it RED, plus a clean control that stays GREEN.** A mutation suite without the unmutated control cannot tell *catches breakage* from *always red*.
 
-| # | mutation | required result |
-|---|---|---|
-| 1 | delete a row from the ledger | **RED** — `LEDGER_INCOMPLETE`, named |
-| 2 | add a cell outside the reconstruction | **RED** — `LEDGER_UNKNOWN_CELL`, named |
-| 3 | make one lane emit a different value | **RED** — `DISAGREEMENT`, both values named |
-| 4 | make one lane emit nothing where the other emits | **RED** — not silently equal |
-| 5 | corrupt an `ASSERTED` expectation | **RED** — `INCORRECT`, citation printed |
-| 6 | graft an expectation onto a `NOT-APPLICABLE` cell | **RED** |
-| 7 | ask for completeness over a scope containing an `UNADJUDICATED` cell | **RED** — `INCOMPLETE_AUTHORITY`, every such cell named |
-| 8 | forge `counts_by_basis.UNDECLARED` `43 → 0` | **RED** — recomputed-vs-published mismatch, both numbers |
-| 9 | plant an unknown key at ANY boundary | **RED** — key named |
-| 10 | delete a known key at ANY boundary | **RED** — key named |
-| 11 | retarget or delete the pinned tag | **RED** |
-| 12 | **clean control — unmutated** | **GREEN**, with the frame and scope printed |
-★★★ **`7` IS THE ONE THAT MATTERS MOST: it is the only test that proves the `43` were preserved for a reason.**
+| # | mutation | required result | **THE CATCHER** |
+|---|---|---|---|
+| 1 | delete a row from the ledger | RED — `LEDGER_INCOMPLETE`, named | §1 reconstruction diff |
+| 2 | add a cell outside the reconstruction | RED — `LEDGER_UNKNOWN_CELL`, named | §1 reconstruction diff |
+| **3** | ★★★★★ **THE SAME WRONG VALUE IN BOTH LANES, on one `ASSERTED` cell** | ★★★★★ **claim `A` stays GREEN · claim `B` ALONE emits `LEDGER_DIVERGENCE`, citation printed** | §3 conformance against `cell.value` |
+| 4 | one lane emits a different value | RED — `DISAGREEMENT`, both values named | §2 matrix row 1 |
+| 5 | one lane emits nothing where the other emits a value | RED — `DISAGREEMENT`, path + value named | §2 matrix rows 2–3 |
+| 6 | both lanes missing a **non-`NOT-APPLICABLE`** cell | RED — `PROJECTION_MISSING_BOTH` | §2 matrix row 4 |
+| 7 | both lanes missing an **exact `NOT-APPLICABLE`** cell | GREEN **plus the named skip witness**, and **NO claim-`B` predicate** | §4 skip witness |
+| 8 | `MISSING` on one side vs JSON `null` on the other | RED | §2 per-projection record |
+| 9 | graft an expectation onto a `NOT-APPLICABLE` cell | RED, named | §4 |
+| 10 | completeness over a scope containing an `UNADJUDICATED` cell | RED — `INCOMPLETE_AUTHORITY`, every such cell named | §5 |
+| 11 | unknown `scope_id` | RED, named | §5 registry |
+| 12 | registered but **EMPTY** scope | RED, named | §5 registry |
+| 13 | scope member **added** at runtime | RED, named | §5 registry |
+| 14 | scope member **removed** at runtime | RED, named | §5 registry |
+| 15 | scope **digest mismatch** | RED, named | §5 registry |
+| 16 | consumer-required `scope_id` / digest mismatch | **CONSUMER REJECTION** | §5 consumer contract |
+| 17 | `AUTHORITY_SEMANTICS_UNVERIFIED` removed from any green aggregate | **INVALID OUTPUT, non-zero exit** | §3 |
+| 18 | forge `counts_by_basis.UNDECLARED` `43 → 0` | RED — recomputed-vs-published, both numbers | §6 |
+| 19 | plant an unknown key at ANY boundary | RED, key named | §7 |
+| 20 | delete a known key at ANY boundary | RED, key named | §7 |
+| 21 | parse an object with **no declared schema** | RED, object + parse site named | §7 binding property |
+| 22 | retarget or delete the pinned tag | RED | §8 |
+| **23** | **clean control — unmutated** | **GREEN**, with the frame, resolved scope and digest printed | all |
+
+⚠️★★★★★ **`3` IS THE MUTATION THIS MATRIX EXISTS FOR, AND NOTHING BEFORE THIS REVISION TESTED IT.** **Without it an implementation may make claim `B` A MERE ALIAS OF CLAIM `A` and still satisfy every other row** — the two lanes agreeing *with each other* would be reported as conformance *to the ledger*, and the gate would print a green that means far less than it says. ★★★ **It is the only row that forces claim `B` to have a source of truth INDEPENDENT of claim `A`.**
+★★★ **`10` IS THE ONE THAT PROVES THE `43` WERE PRESERVED FOR A REASON**, and `21` is the one that survives the next unenumerated boundary.
+⚠️★★★★★ **EVERY ROW NAMES ITS CATCHER, AND THAT COLUMN IS NOT DECORATION: `A MUTATION CAUGHT BY THE WRONG CHECK IS A COINCIDENCE, NOT A PROOF.` A row that reddens via a different mechanism than the one named is a FAILED proof even though the run was red.**
+⚠️ **THE OLD FAILURE NAME IS RETIRED: it no longer labels any verdict, and its ONLY remaining occurrence in this document is the retirement note you are reading.** ★★ **Stated that way on purpose — the first draft of this line said it *"appears nowhere in this design"* while being the one place it appeared. `A SENTENCE THAT DISPROVES ITSELF BY EXISTING IS THIS FAMILY'S PUREST FORM`, and it was caught by counting the token instead of trusting the claim.** ★★★★★ **It survived here — and ONLY here — through the rename, which is why the rule now stands: `A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.` After any rename, grep the PROOF section for BOTH the new token and the old one; the old name's last refuge is the place that proves it.**
 
 ---
 
@@ -187,7 +230,7 @@ Every count the gate reports — per class, per basis, per axis, totals — is *
 - ⚠️ **It does not make the `140` asserted values CORRECT against the authority document.** They are frozen **as observed**; a correctly-cited but mis-transcribed value survives every check here. **This is the standing rung-3 limit** — *"is this expectation SOURCED"* and *"is it WELL-FORMED"* are closed; *"does the cited authority actually SAY this"* is not. **Named, not closed.**
 - ⚠️ **It does not close the `43` undeclared cells.** `R-521 §2` settled that: no cell may be promoted without a named source authority, and neither the desk nor this seat may invent one. **The gate's job is to REFUSE to claim completeness over them, and it does.**
 - ⚠️ **CI enforcement is `[UNPROVEN]`** — §8.4. Naming it as future work is what the contract permits; claiming it works would be the thing this campaign convicts.
-- ⚠️ **The projection mechanics are not specified here** — how the TS and Python lanes are invoked and how a cell's projected value is extracted from each. **That is implementation, and this is a design document.** ★★ **I flag it because it is where a "cell" could quietly become "whatever the lane happens to emit", which would re-import the presence-derived defect at the projection layer.**
+- ✅ **PROJECTION MEANING IS NO LONGER DEFERRED — §2 now names, per axis, the RAW PATH and the NORMALIZATION**, because claim `A`'s meaning depends on them entirely and *"a presence matrix over an unspecified extraction still lets two lanes agree about the wrong field."* ⚠️ **What remains genuinely unnamed is ONE layer: the TS-source-field ↔ wire-name mapping. It is DECLARED as unknown in §2, not called implementation.** ★★★ **The earlier version of this bullet called the whole thing "implementation" — that was the gap sitting in the one interface most able to manufacture a false green.**
 - ★★ **I do not grade my own work.** Whether this design is sound is an independent call.
 
 ---
