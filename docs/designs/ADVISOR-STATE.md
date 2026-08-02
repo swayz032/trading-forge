@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3666` at THIS commit, 2026-08-02 07:52 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3668` at THIS commit, 2026-08-02 07:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3666` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3668` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -107,6 +107,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 - **`(5)` SET-OF-SETS covers `corpus.mjs` EXPORTS ONLY.** `red-proof.mjs`'s `EXPECT`/`FREEZE_EXPECT` tables are self-certifying collections — instance six's address, published by the worker itself.
 ✅★★★★★ **THIS DESK'S BLIND SPOT IS NOW CLOSED (`R-566 §3`) — the fixture is `export const project = (lane: Lane) => ({ v: import.meta });` in a `.ts` container; it REJECTS with a real catcher. ⚠️ SUPERSEDED text follows: **THIS DESK'S OWN BLIND SPOT, NAMED SO THE NEXT SEAT FIXES IT RATHER THAN INHERITING IT: my `import.meta` and `Proxy` probes return `TYPE_INVALID` — the fixture never compiles cleanly enough to reach an admission verdict, so I CANNOT SEE THOSE CHANNELS. I named this in `R-563 §2` and did not repair it. `A LIMIT YOU NAME TWICE AND NEVER FIX IS A BLIND SPOT, NOT A CAVEAT.` Build a type-clean fixture, or the second grade must reach it.**
 📋 **DESK QUEUE:** 1. **SECOND independent grade** — slot FREE (first receipt landed); HELD until `(2)(3)(5)` land; brief inherits `R-563 §7.2` + `R-564 §2` + the `import.meta` hole above. 2. **V4 adoption `(a)`–`(d)` (`R-554 §3`) — eligible NOW, money path is idle.** 3. Rule the next external read.
+✅★★★ **EXTERNAL CHANNEL WENT DARK AND RECOVERED — TRANSIENT, NOTHING MISSED** `[MEASURED HERE ~07:55]`. The gpt-rulings monitor ALARMED after 3 consecutive fetch failures (`ssh: connect to host github.com port 22: Connection timed out`) — **its coverage clause working exactly as designed; a monitor that cannot read its file must SAY SO, not go quiet.** ✅ **`git fetch` now `EXIT 0`, head UNCHANGED at `5991ce4e` — the read already consumed by `R-561`. Nothing landed during the dark window and nothing was missed. Both monitors survived the alarm and are ALIVE (`34520` gpt · `32492` AR).**
+🛑★★★★★ **AND AN INSTRUMENT TRAP WORTH CARRYING: BASH `/dev/tcp` PROBES ON THIS BOX GAVE A CONFIDENTLY WRONG READING.** They reported `github.com:443` UNREACHABLE while cloudflare/google/anthropic were reachable — I was one step from telling the operator *"GitHub is blocked from your machine specifically"*. **PowerShell `Test-NetConnection` contradicted it (`TcpTestSucceeded=True`), and the REAL operation (`git fetch`) settled it.** ★★★★★ **`PREFER THE FORM WITH FEWEST LAYERS BETWEEN YOU AND THE THING — AND WHEN TWO INSTRUMENTS DISAGREE, RUN THE ACTUAL OPERATION RATHER THAN A PROBE OF IT.` Use `Test-NetConnection` or the real command for reachability here; do NOT trust `/dev/tcp` under Git Bash.**
 🛑★★★★★ **MONITOR RIG IS NOW **TWO**, DELIBERATELY — THE WORKER-SILENCE WATCHDOG IS **RETIRED-PENDING-WORKER** AND **MUST BE RE-ARMED THE MOMENT A FRESH WORKER SEAT EXISTS**.** **WHY:** the worker seat is CLOSED (`AR-605`/`R-568`), so that watchdog now alarms on a PERMANENTLY-TRUE condition — it fired twice on an already-resolved silence. ★★★★★ **`A MONITOR THAT ALARMS ON A PERMANENTLY-TRUE STATE TRAINS ITS READER TO IGNORE IT` — and a desensitised silence alarm is exactly how the worker went earless for hours (`R-553`).** ✅ **RE-ARM COMMAND, RECORDED VERBATIM SO IT NEEDS NO RE-DERIVATION (one rig, one channel — do NOT add a second):**
 ```
 F=/c/Users/tonio/Projects/wt-h1-wave4-20260712/docs/designs/AGENT-REPORTS.md
