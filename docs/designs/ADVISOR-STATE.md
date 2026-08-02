@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3324` at THIS commit, 2026-08-01 23:26 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3340` at THIS commit, 2026-08-01 23:29 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3324` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3340` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -145,6 +145,22 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 **`P-4` DENOMINATOR ARITHMETIC (item `1`).** Both documents state `43` rows / `215` projected fields / `301` ledger cells, and **`43×5 = 215` · `43×7 = 301` verified independently of the worker's histogram.**
 
 ⚠★★★★★ **A FAILED CHECK HERE IS A FINDING FOR THE NEXT RULING, NOT A DISPATCH TONIGHT.** ⚠ **AND I GRADE NOTHING: `R-530 §5`'s independent grade stays `DEFERRED WITH A NAMED TRIGGER`, re-arming when this revision is externally read. `THE DOER MAY NOT CERTIFY ITS OWN WORK` — and neither may the desk that ordered it.**
+
+---
+
+## ★★★★★ [FACT, MEASURED HERE, **NOT RULED**] — ALL FOUR PRE-REGISTERED CHECKS ON `AR-571` PASS, AT THE COMMITTED OBJECT `a6f1426f` (2026-08-01 23:31)
+
+✅ **`P-3` SCOPE — PASS.** `[MEASURED HERE, `git show --numstat a6f1426f`]` delta is EXACTLY `AGENT-REPORTS.md` `+61/-0` · `BLUEPRINT-V4-DRAFT.md` `+25/-6` · `P0-VNEXT-DESIGN` `+51/-11`. **Matches `AR-571`'s stated delta to the digit**, no implementation code, no engine/runtime/corpus path, and `ADVISOR-STATE.md` untouched by the worker (its only three commits tonight are mine).
+✅ **`P-1` CAPTION — PASS, AND MY INSTRUMENT FAILED TWICE GETTING THERE.** `[MEASURED HERE]` §10 holds **`30` rows numbered `1..30`, contiguous, no gap, no duplicate**; rows `1–29` are mutations each with a required result and a NAMED catcher, row `30` is `clean control — unmutated`. **`29 + 1 = 30`. The recomputed caption is TRUE.**
+> 🛑★★★★★ **BOTH OF MY PROBES WERE WRONG AND THE DOCUMENT WAS RIGHT BOTH TIMES — recorded because this is the campaign's most-convicted species and it was MINE, twice inside one check.** **(1)** a keyword probe for `control|noop|clean` returned `3`, matching rows `23` and `29` where `CLEAN` describes a FIXTURE STATE, not a control role. **(2)** a `awk -F'|'` GREEN/RED classifier returned `4` controls / `22` mutations / `4` unparsed — because `|` inside code spans breaks field splitting, AND because several mutations legitimately require **claim `A` GREEN while claim `B` REDDENS** (rows `3`, `24`) or require **digest INVARIANCE** (row `25`). ★★★★★ **`A BINARY GREEN/RED CLASSIFIER CANNOT EXPRESS "CAUGHT ON ONE CLAIM AND CORRECTLY SILENT ON THE OTHER" — AND A ROW IT CANNOT EXPRESS IS A ROW IT MISCOUNTS.` The positive control I pre-registered (bolded `| **3** |`) DID fire `3/3`, so the regex was sound and the CLASSIFIER was not. `A VALIDATED MATCHER DOES NOT VALIDATE THE PREDICATE YOU APPLY TO WHAT IT MATCHED.`**
+✅ **`P-2` SLOGAN — PASS.** `[MEASURED HERE, case folded · emphasis stripped · UTF-8 forced · whole file, no truncating pipe]` **POSITIVE CONTROLS FIRED FIRST** (`PROJECTION` `33` in the design, `PHASE` `49` in the blueprint) — the probe can see the thing. `AN INPUT IT CANNOT REACH`: **`1` occurrence in the design, `0` in the blueprint, and the single occurrence is QUOTED-AS-RETIRED** — *"THAT SLOGAN IS DELETED BECAUSE IT IS FALSE"*. **`0` IN FORCE.**
+✅ **`P-4` DENOMINATOR — PASS.** `[MEASURED HERE, independent of the worker's histogram]` `43 × 5 = 215` · `43 × 7 = 301`. Both documents carry `215`, `301` and `43 rows`.
+
+🛑★★★★★ **WHAT THIS DOES **NOT** ESTABLISH, STATED SO THE PASS IS NOT OVER-READ:**
+> ⚠ **THIS IS A DESIGN-TEXT RESULT, NOT RUNTIME EVIDENCE — `AR-571 §7` says so itself and I confirm it. NO `P0-vNext` IMPLEMENTATION EXISTS. Not one mutation in that matrix has ever been RUN; `A PRE-REGISTERED RED-PROOF IS A PROMISE UNTIL SOMETHING EXECUTES IT.`**
+> ⚠ **I CHECKED `4` SURFACES, NOT `9`. Items `3`, `4`, `5`, `7`, `8`, `9` are `RELAYED` from `AR-571`, NOT verified here.** ★★★ **`AR-571 §3`'s item-`4` self-conviction — that its previous mutation reddened through `diffDeep()` rather than the catcher it NAMED — is the single most consequential unverified claim in the report, and it is exactly the class `R-530 §6`'s stop condition calls a FAILED PROOF. IT IS THE FIRST THING THE NEXT READ SHOULD OPEN.**
+> ⚠ **`49/49` REMAINS THE WORKER'S OWN INSTRUMENT MEASURING THE WORKER'S OWN DOCUMENT. The two discriminator controls narrow `R-530 §4b`'s open question; they do not close it, and `AR-571 §7` concedes exactly that.**
+> ✅ **NO RULING WRITTEN. NO DISPATCH ISSUED. THE GRADE IS UNMOVED.**
 
 ---
 
