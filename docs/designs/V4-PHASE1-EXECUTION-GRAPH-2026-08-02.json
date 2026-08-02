@@ -8,13 +8,13 @@
     "dependency_source": "docs/designs/GRAPH-LANES-FAKE-EDGE-MAP-2026-07-30.md",
     "dependency_source_git_blob_oid": "1e58d0948708a417f9b1178c49bb3ad25f944725",
     "status_source": "docs/designs/ADVISOR-STATE.md and newest AGENT-REPORTS.md",
-    "advisor_state_git_blob_oid": "0d38286f897ffc77abb78e748f82a167bcc54676",
-    "status_epoch_report_commit": "cae7a2ba44e345dfbfb4a2786d587de8a0c2466a",
-    "status_epoch_report": "AR-606",
-    "status_epoch_ruling_commit": "5d8e272d4c531ce0fb689de1144726d37341270b",
-    "status_epoch_ruling": "R-569",
-    "status_join_commit": "6d8c4f20a65b6067c4b49f05c15f236424b10b51",
-    "status_join_condition": "ADVISOR-STATE, newest report AR-606, and newest ruling R-569 are joined at campaign commit 6d8c4f20a65b6067c4b49f05c15f236424b10b51. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
+    "advisor_state_git_blob_oid": "fcf2898b2040c24a807e0060066edcee10a8ab72",
+    "status_epoch_report_commit": "3c2a83e0649c451c3eda514c76a3da1affa96f37",
+    "status_epoch_report": "AR-612",
+    "status_epoch_ruling_commit": "3ecaf9f94964832ff13cf766ecc5257a101f9920",
+    "status_epoch_ruling": "R-573",
+    "status_join_commit": "0820f88f5dd451aee827112265b64ecc0219898f",
+    "status_join_condition": "ADVISOR-STATE, newest report AR-612, and newest ruling R-573 are joined at campaign commit 0820f88f5dd451aee827112265b64ecc0219898f. Any later campaign commit, AR, ruling, or state rewrite invalidates node states until the graph is refreshed. Refreshing this epoch asserts FRESHNESS ONLY -- it does not re-verify that the node-state partition is still true, which remains a desk judgement.",
     "rule": "The blueprint owns requirements. This graph owns execution ordering only after adoption."
   },
   "objective": {
@@ -39,14 +39,13 @@
       "P0D",
       "P0P",
       "P1",
-      "P2"
+      "P2",
+      "P3"
     ],
     "active_worker": [
       "P0PC"
     ],
-    "ready_advisor": [
-      "P3"
-    ],
+    "ready_advisor": [],
     "blocked": [
       "P0PG",
       "P0VC",
@@ -143,21 +142,28 @@
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/ADVISOR-STATE.md",
-      "git_blob_oid": "0d38286f897ffc77abb78e748f82a167bcc54676"
+      "git_blob_oid": "fcf2898b2040c24a807e0060066edcee10a8ab72"
     },
     {
       "id": "EPOCH_RULINGS",
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/ADVISOR-RULINGS.md",
-      "git_blob_oid": "1f3782d39a56c8dd5aa3a2e34363b0a2c59eaa16"
+      "git_blob_oid": "e5ade743cc61d05914f87ff41b1fa34e916147df"
     },
     {
       "id": "EPOCH_REPORTS",
       "node": "EPOCH",
       "kind": "git_blob",
       "path": "docs/designs/AGENT-REPORTS.md",
-      "git_blob_oid": "c3ecc83f645c297286fbc027071d8f712ce53fa0"
+      "git_blob_oid": "cb325c6c4976d9353838ad73126fa52440081ea4"
+    },
+    {
+      "id": "P3_LANE_AUTHORITY",
+      "node": "P3",
+      "kind": "git_commit",
+      "commit_oid": "3ecaf9f94964832ff13cf766ecc5257a101f9920",
+      "note": "R-573: P3 lane-authority ruling and producer/runtime transfer contract"
     }
   ],
   "fan_in_contracts": {
@@ -680,7 +686,10 @@
       "to": "GBP",
       "type": "authority",
       "hard": true,
-      "artifact": "producer-proof lane ruling and transfer contract"
+      "artifact": "producer-proof lane ruling and transfer contract",
+      "evidence_ref_ids": [
+        "P3_LANE_AUTHORITY"
+      ]
     },
     {
       "from": "REG",
@@ -701,7 +710,10 @@
       "to": "GBR",
       "type": "authority",
       "hard": true,
-      "artifact": "executing runtime SHA and graph-to-spec transfer contract"
+      "artifact": "executing runtime SHA and graph-to-spec transfer contract",
+      "evidence_ref_ids": [
+        "P3_LANE_AUTHORITY"
+      ]
     },
     {
       "from": "GBR",
