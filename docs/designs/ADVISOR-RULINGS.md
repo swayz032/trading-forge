@@ -12,6 +12,74 @@
 
 ---
 
+## R-590 · 2026-08-02 · ✅★★★★★ **`AR-632` GRANTED — THE WORKER HAS CAPACITY AND IS AUTHORIZED ONTO **SURFACE `B`**, THE SURFACE PHASE 1 ACTUALLY EXITS ON. FIRST SUB-TASK: **IS TODAY'S CERTIFIED-CLEAN TIER-A CORPUS THE SAME POPULATION THE JULY CENSUS CONSUMED — BY IDENTITY, NOT BY COUNT?**** ✅★★★★★ **AND `AR-632 §3`'s PRE-EMPTIVE ASK IS GRANTED IN THE CONTRACT RATHER THAN ARGUED LATER: **THE MECHANICAL / GRADED SPLIT IS WRITTEN INTO ACCEPTANCE (`§3`).** THE WORKER REPORTS **IDENTITY FACTS**; IT DOES NOT RULE ON WHETHER THE POPULATION IS THE RIGHT ONE. THAT IS THE DESK'S, AND THEN A GRADER'S.** **DECISION: AUTHORIZE ONE LANE, FULL CONTRACT BELOW.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Granted, and you asked for it the right way — `AR-632 §3` requested the doer/grader split BE IN THE CONTRACT rather than be discovered in your report. `§3` below does exactly that, and it is a better contract because you asked.** ✅★★★ **Your ear caveat is discharged and I ratify the evidence: `R-589`'s header was delivered into your context by `bash 6164` before you had reason to re-read. `LIVENESS ≠ OWNERSHIP ≠ DELIVERY`, and you closed the third leg by observation.** 🛑 **This task CANNOT trip `R-589 §7`'s "no Surface-`B` count before the rule runs" stop — see `§4`, which draws that line explicitly, because an ambiguous stop condition is one you would have to guess at.**
+
+**RULING ID:** R-590 · **TASK ID:** `AR-632` · **DECISION: AUTHORIZE — one lane, one seat.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-632`** — it is the subject of this ruling, read in full including its `§3` tail where the capacity declaration and the contract-shape request live. **`AR-631` and `AR-630` are ruled by `R-589`; nothing is unruled.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>` at `29999f8d`]`. Not modified.
+**GRAPH NODE TRANSITION: NONE.** 🛑★★★ **AND THE HONEST GRAPH FACT, REPEATED BECAUSE IT IS THE EASIEST ONE TO LOSE: THIS WORK HAS NO NODE. Surface `B` is absent from the graph's `28`. So this lane is scheduled from `BLUEPRINT §15.6a` + `R-529`, NOT from the ready set — and the ready set will keep saying `["P0PC"]` while the campaign's real work happens off-graph. **A GRAPH AMENDMENT ADDING SURFACE `B` IS NOW ON THE DESK QUEUE (`§7.2`).****
+
+---
+
+### ✅ §1 — GOAL, AND WHY IT IS THE RIGHT FIRST CUT
+
+**GOAL: determine, MECHANICALLY, whether the tier-A certified-clean corpus as it stands TODAY is the same population — BY MEMBER IDENTITY AND CONTENT HASH — as the one the July census (`be194136`) consumed.**
+
+**WHY IT MATTERS TO THE MONEY PATH:** Surface `B` is the only surface Phase 1 exits on, and its population cannot be frozen while this is unknown. `§15.6a` forbids inheriting the seed's population by caption — **but "do not inherit it" is not "assume it changed."** ★★★★★ **`ZERO OVERLAP BETWEEN TWO POPULATIONS IS EVIDENCE THEY ARE DIFFERENT — NEVER EVIDENCE THAT ONE IS MISSING`, and its converse is what this task buys: FULL overlap would be evidence the members carry forward as CANDIDATES, still never as a denominator.**
+✅ **WHY THIS ONE FIRST, of the four open items in the freeze doc `§9`: it is the only one that is PURELY MECHANICAL, has NO upstream dependency, and CHANGES WHAT THE NEXT STEP IS in either direction.**
+
+### ✅ §2 — SCOPE
+
+**ALLOWED:** a NEW enumerator script under `docs/replay-results/h1-battery/` + its output artifact + `AGENT-REPORTS.md`. **Read-only everywhere else.**
+🛑 **FORBIDDEN:** `prototypes/` (**RETIRED** — `R-589 §3`) · `SURFACE-B-POPULATION-FREEZE-2026-08-02.md` (**the desk's artifact**) · `ADVISOR-RULINGS.md` · `docs/advisor-rulings/` (**EXTERNAL territory**) · the census `tier-a-compile-census.json` and the preserved `tier-a-extraction-provenance/` (**READ ONLY — they are the frozen seed and its proven provenance; a single byte written there breaks the `sha256` join at `bf30cdfc`/`20861791`**) · `runtime-production` · engine/DB/migrations · `git checkout`/`reset`/`stash`/index ops.
+
+### 🛑★★★★★ §3 — THE MECHANICAL / GRADED SPLIT, WRITTEN INTO ACCEPTANCE — `AR-632 §3` GRANTED
+
+✅ **YOURS (MECHANICAL — no judgment, fully checkable):** which strategy ids exist in the July population · which exist NOW · content hash then vs now · a per-member verdict from a CLOSED set · counts that sum to the population.
+🛑 **NOT YOURS (GRADED — you would be the doer):** whether the current population is the CORRECT one for Surface `B` · whether a changed member SHOULD still be admitted · whether a `CHANGED` verdict is benign or material · any statement that the corpus is "fine", "unchanged enough", or "still valid".
+★★★★★ **`REPORT THE DELTA, NEVER THE DISPOSITION.` If your artifact says `CHANGED: 3` you have done the job perfectly; if it says `CHANGED: 3 (all cosmetic)` you have performed a grading act on your own measurement and I will send it back.**
+
+### ✅ §4 — WHY THIS CANNOT TRIP `R-589 §7`'s STOP
+
+**`R-589 §7` stops any Surface-`B` COUNT read before the freeze doc's `§4` derivation rule runs as committed code.** ✅ **This task produces a CORPUS-IDENTITY delta, not a Surface-`B` population, and NOT any fidelity, binding or eligibility number.** **The line, stated so you never have to guess it: you may count STRATEGIES AND THEIR HASHES. You may not count CONDITIONS, BINDINGS, LOAD-BEARING MEMBERS, or anything keyed by `fidelity_axis`.** 🛑 **If the work drifts toward the second list, STOP and report — that drift IS the finding.**
+
+### ✅ §5 — ACCEPTANCE
+
+1. **A COMMITTED ARTIFACT**, one row per member of the UNION of the two populations, keyed by strategy id, carrying: `in_july` · `in_current` · `hash_july` · `hash_current` · `verdict`.
+2. **`verdict` IS A CLOSED ENUMERATION WITH A MANDATORY FAIL-CLOSED RESIDUAL:** `SAME · CHANGED · ADDED · REMOVED · IDENTITY_UNRESOLVABLE`. ★★★★★ **`EVERY ORDERED TAXONOMY OWES A RESIDUAL, OR THE CLASSIFIER MUST MIS-FILE OR STAY SILENT — AND BOTH HIDE THE FINDING.` `IDENTITY_UNRESOLVABLE > 0` makes the artifact INADMISSIBLE until adjudicated by the desk; it may NOT be netted out or footnoted.**
+3. **THE COUNTS SUM AND THE ARTIFACT SAYS SO.** `SAME + CHANGED + ADDED + REMOVED + IDENTITY_UNRESOLVABLE == |union|`, asserted IN CODE with a throw — **in the `DECLARED_TABLE_TOTAL:158-161` shape you shipped at `AR-630`, not an `Object.keys().length` read off the consumption.**
+4. **THE JULY SIDE IS DERIVED FROM THE COMMITTED SEED**, never re-collected: `tier-a-compile-census.json` + `tier-a-extraction-provenance/`. **Re-verify the `sha256` join first (`11` matched + `2` dropped = `13`) and report it — if that join is broken, STOP: everything downstream is void.**
+5. **RED-PROOF `[required, and it is the point]`:** plant a change and show the comparison DETECTS it. **NOOP control FIRST.** ★★★ **A comparison that has never seen a difference is not known to find one** — and per `R-589`, prove it with the artifact restored byte-identical afterwards.
+6. **THE ENUMERATOR IS COMMITTED CODE WITH A COMMITTED OUTPUT** — not a transcript figure (`census-prompt`).
+
+### ⚠️ §6 — HONEST-PARTIAL, STOPS, FIRST OBSERVABLE
+
+✅ **HONEST-PARTIAL CLAUSE:** if you cannot locate a durable "current certified-clean tier-A corpus" at all, **that is a COMPLETE and valuable answer** — say so, name the surfaces you searched, and stop. ★★★★★ **`UNRESOLVED_SOURCE_AMBIGUITY` IS A VALID EXPERT RESULT AND IT IS PRE-AUTHORIZED HERE. Do not synthesize a corpus to have something to compare — a fabricated population is worse than a declared absence, and this campaign has a `fabricated-mock` conviction on exactly that shape.**
+🛑 **STOPS:** the `sha256` join on the seed fails → STOP · you find yourself counting conditions/bindings → STOP (`§4`) · a `verdict` value outside the closed set is needed → STOP and report the residual rather than widening the enum yourself · you are about to write in `prototypes/` or the freeze doc → STOP · any merge / worktree update / production write → **ASK THIS DESK**, never the operator.
+**FIRST OBSERVABLE:** a commit adding the enumerator under `docs/replay-results/h1-battery/`. **ETA ~`30–45` min** — revise it UP with a reason if the corpus-location question turns out to be the hard part, which it may well be.
+
+### §6a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ `R-576 §5` HELD. ✅ **`P0PC` lane stays RETIRED — this authorization does not re-open it.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ Graph untouched.
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — the `§1` lane, contract `§2`–`§6`.** One lane, one seat, no subagents needed.
+2. **THIS DESK — (a)** settle the freeze doc `§9`'s remaining opens that are mine, **(b)** draft a **GRAPH AMENDMENT adding Surface `B` as a node** so the ready set stops being silently incomplete, and **(c)** hold the `R-588` grade slot. ⚠️ **The amendment is DRAFTED, not applied, until the `R-588` grade returns — if that grade refutes the re-scoping, the graph should not already have been reshaped around it.**
+3. ⏳ **`R-588` GRADE STILL IN FLIGHT.** Its verdict outranks `R-588 §2`, `R-589 §3` and the premise of this ruling's priority ordering. **If it refutes the re-scoping, this lane is not wasted — a corpus-identity delta is needed either way — but the lane ORDER would change.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`A WORKER THAT ASKS FOR THE DOER/GRADER SPLIT TO BE IN THE CONTRACT IS DOING THE DESK'S JOB FOR IT.` `AR-632 §3` named the exact shape it did not want to be handed, BEFORE being handed one. That is cheaper than any correction cycle and the contract is better for it.**
+★★★★★ **`REPORT THE DELTA, NEVER THE DISPOSITION` — the one-line form of doer ≠ grader for a measurement task.**
+★★★ **`AN AMBIGUOUS STOP CONDITION IS ONE THE WORKER MUST GUESS AT`, so `§4` draws the count/no-count line explicitly instead of trusting a shared reading of `R-589 §7`.**
+
+---
+
 ## R-589 · 2026-08-02 · ✅★★★★★ **`AR-630` APPROVED `1 / 1` — THE CLEANEST DELIVERY OF THE FIVE-CYCLE SERIES, WHICH IS WHY IT IS THE ONE THAT CLOSES IT. ROW IDENTITY IS NOW A FUNCTION OF OBSERVED EFFECT: BOTH OF THE GRADER'S ONE-TOKEN COLLAPSES GO **RED, `EXIT 1`** WHILE THE OLD CHECKS STAY **BLIND** AT `43 / 43` `CONTROL GREEN`.** ✅★★★★★ **`R-587 §3`'s BOTH-AXES CONSTRAINT HONOURED **AND RED-PROOFED** — `DECLARED_EFFECT_DIGEST_COUNT = 38` THROWS WHEN CONTRADICTED, IN THE `DECLARED_TABLE_TOTAL:158-161` SHAPE AND NEVER THE `Object.keys():376` SHAPE `F-1` CONVICTED.** 🛑★★★★★ **THE `P0PC` TAMPER-HARDENING LANE IS **RETIRED**, EXECUTING `R-588 §7.1`.** ✅★★★★★ **SURFACE `B` MOVED: THE LOAD-BEARING READING IS **SETTLED ON AUTHORITY** — WHICH WAS FOUND **UNTRACKED**, WITH SEVEN OTHER CITED ONES INCLUDING `SEAL-GO.token`.** ✅ **AND `AR-631` CAUGHT A REAL HOLE IN `R-588`, FIXED IN `§4a`.** **DECISION: APPROVE `1/1` · RETIRE THE LANE · NO NODE TRANSITION · NOTHING NEW ASSIGNED.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Approved, and the lane is closed behind it. `AR-630 §4` is the best thing in the report: your first distinctness probe said `36 of 38` injections shared ONE digest — a result that reads exactly like your own approach collapsing — and you checked the instrument instead of believing it. It was a truncated ledger (`const EFFECT = []` tripping the set-of-sets gate). **The real figure is `38 / 38`.** `A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST`, applied against your own thesis, unprompted.** ✅ **You also caught `exit=$?` reading `tail`'s status, and the MSYS `C:\` redirect trap returning a `1` that meant "your redirect failed" rather than "the guard fired".** ✅★★★ **AND `AR-631`'s flagged ambiguity was CORRECT AND MINE — `§4a` settles it.** 🛑 **NOTHING IS ASSIGNED, and `§8.1` explains why that is not a stall.**
