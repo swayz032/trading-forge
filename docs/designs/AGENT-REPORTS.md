@@ -4,6 +4,70 @@
 
 ---
 
+## AR-551 · 2026-08-01 · ✅★★★★★ **R-523 §4 DELIVERED — ALL FIVE OBLIGATIONS `A`–`E`, FAN-IN `5 / 5`. THE UNIVERSE IS NOW `43` ROWS FROZEN FROM THE **PINNED SOURCE SPECS**, THE LEDGER IS `301` CELLS, AND `ORACLE.json` NO LONGER DEFINES ITS OWN DENOMINATOR.** ⚠️★★★★★ **AND I DID NOT TAKE THE FIX THAT WAS OFFERED: THE PROPOSED `present | declared` UNION ALSO YIELDS `43` TODAY AND IS STILL SELF-AUTHORIZING, BECAUSE BOTH SETS LIVE INSIDE THE ARTIFACT BEING CHECKED.** ✅ **`11 / 11` MUTANTS CAUGHT — INCLUDING EVERY ONE THAT REPAIRED ITS OWN COUNTS AND DIGESTS FIRST.**
+
+**RULING ID:** R-523 §4 · **TASK ID:** AR-551 · **PRIOR:** AR-550 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+
+### ✅ §1 — ACCEPTANCE, RUN VERBATIM
+```
+$ python -c "…len(d['cells'])"                                301                                    ✅ expect 301
+$ python -c "…Counter(c['classification'] …)"                 UNADJUDICATED 152 · ASSERTED 140 · NOT-APPLICABLE 9   ✅ expect 140/9/152
+$ grep -n "entry-condition × seven-axis|out of frame|OUT OF FRAME" …packet.md    :8 · :9 · :194     ✅
+$ grep -c "fixture-declared-id" …json                         92                                     ✅ expect >= 91
+$ git status --porcelain -- docs/designs scripts ci src        [DELTA vs THE AR-550 BASELINE]
+ M docs/designs/P1-P2-TOTAL-MEMBERSHIP-2026-07-31.json   <- MINE
+ M docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md  <- MINE
+ M src/engine/tests/test_synthetic_market_simulator.py   <- IN THE RECORDED BASELINE, not mine
+```
+★★ **THE `92` IS FULLY ACCOUNTED, BECAUSE AN UNEXPLAINED COUNT IS A CLAIM: `91` CELLS + `1` OCCURRENCE IN THE `counts_by_basis` SUMMARY KEY** `[MEASURED HERE, `91` cells confirmed by parsing rather than by grep]`.
+
+### ✅★★★★★ §2 — OBLIGATION `A`: THE ROW UNIVERSE, AND THE FIX I REFUSED
+**[MEASURED HERE, from the twelve PINNED SOURCE SPECS at `c304b098`, `fixture filename × spec.entry_conditions[].id`]**
+```
+row universe 43   present in oracle 30   declared-absent 13   in oracle NOT in universe 0   absent AND undeclared 0
+cells 301 = 43 x 7      ASSERTED 140   NOT-APPLICABLE 9   UNADJUDICATED 152   UNDECLARED still 43
+```
+✅ **THE JOIN WAS RUN IN BOTH DIRECTIONS** — `0` oracle rows fall outside the universe, and all `13` absent rows are named in `conditions_unadjudicated_ids`, so `0` are absent-and-undeclared.
+⚠️★★★★★ **AND THE REPAIR IS DELIBERATELY NOT THE ONE THE CENSUS PROPOSED. `sorted(_present | _declared)` yields `43` today — and BOTH sets live inside `ORACLE.json`, so a deletion from both shrinks the universe again and the check passes.** `A REMEDY FOR SELF-AUTHORIZATION THAT ADDS A SECOND SOURCE INSIDE THE SAME ARTIFACT HAS NOT LEFT THE SYSTEM — IT HAS RAISED THE PRICE OF THE FORGERY BY ONE EDIT.` ★★★ **The universe now comes from a DIFFERENT FILE SET than the artifact under test. The oracle is COMPARED against it and never defines it — R-523's stop condition, honoured at the line.**
+★★★ **I ALSO CONTROL-PROBED MY OWN NULL RESULT AND IT SAVED THE MEASUREMENT: my first pass read `spec.entry_conditions` at the TOP level and returned `0` rows for all twelve fixtures. `entry_conditions` is nested under `spec`. **A `0` FROM A WRONG PATH LOOKS EXACTLY LIKE A `0` FROM THE DATA** — I caught it only because I printed the top-level keys beside the count.**
+
+### ⚠️★★★★★ §3 — I DID NOT RECONCILE TOWARD THE PREDICTED POST-STATE
+**R-523 §4 predicted `140 / 9 / 152`, total `301`, `UNDECLARED` unchanged at `43`. My run produced exactly that.** ★★★ **AR-550 §3 pre-committed to reporting any disagreement as a FINDING rather than tuning toward the expectation, and the discipline that makes the agreement meaningful is structural, not a promise: the generator NEVER READS AN EXPECTED VALUE. It derives the universe from the specs and the classes from the authority rule, and the counts fall out.** ⚠️ **The one number I could have fooled myself on is the universe size, so I derived it by a both-direction join with two independent zero-results rather than by matching `43`.**
+
+### ✅★★★★★ §4 — OBLIGATIONS `C` + `D`: THE VERIFIER NOW SURVIVES A COMPETENT FORGER
+⚠️★★★★★ **FIRST, THE ADMISSION THAT MATTERS: `v1`'s VERIFIER COMPUTED ITS EXPECTED PRODUCT FROM THE LEDGER'S OWN `P1.row_ids` AND `P2.axes`. A forger who deleted a row AND deleted it from `row_ids` produced a self-consistent document that `v1` CALLED `PASS`.** **The verifier had the same defect as the generator, one level out, and I shipped both.**
+✅ **`v2` REBUILDS THE `43`-ROW UNIVERSE FROM THE PINNED SPECS AND HOLDS THE SEVEN-AXIS CONTRACT IN ITS OWN CONSTANT.** **Every membership mutant is REPAIRED FIRST — counts, `row_ids`, `axes`, `counts_by_*`, and all three digests recomputed — and still goes RED:**
+```
+clean control                         PASS (301 cells)
+1 cell deleted (+repaired)            FAIL      whole ROW + 7 cells (+repaired)   FAIL
+whole AXIS + cells (+repaired)        FAIL      unknown ROW added (+repaired)     FAIL
+cell duplicated (+repaired)           FAIL      UNADJUDICATED->ASSERTED           FAIL
+NOT-APPLICABLE->ASSERTED              FAIL      forged basis                      FAIL
+nulled asserted value                 FAIL      removed declaration reason        FAIL
+erased alias disclosure               FAIL
+ALL CASES DISCRIMINATE: True  (clean=PASS, 11/11 mutants caught)   exit 0
+```
+✅ **`D` also verifies `canonical_document_sha256` from an INDEPENDENT canonicalization** (it was published but never checked) **and REJECTS DUPLICATE JSON KEYS BEFORE PARSING** — `json.load` silently keeps the last, so a plain parse cannot see them.
+★★ **ONE DESIGN CHOICE I STATE OPENLY: the verifier IMPORTS the generator's derivation rather than re-implementing it. Two copies of one rule drift, and then breaking the shipped one would not fail its own proof — this campaign's R-513 conviction. **What must be independent is the SOURCE, not the arithmetic**, and the source is the pinned specs.**
+
+### ✅ §5 — OBLIGATIONS `B` AND `E`
+**`B` — THE FRAME IS DECLARED AT THE TOP OF THE PACKET, ABOVE EVERY COUNT:** complete over the pinned **entry-condition × seven-axis** frame **and over nothing else**. **Named `OUT OF FRAME` and NOT enumerated: `compiled` · `spine_bound` · `spine_total` · `reasons_must_differ_from` · `scalars_unadjudicated` · other fixture-level scalar/relational expectations** — recorded as a **NAMED DOWNSTREAM SURFACE for `P0-vNext`/`P3`**. ★★★ **`A SCOPE DECLARATION IS NOT PERMISSION TO DELETE WHAT IT EXCLUDES` — those truths are real and this ledger simply does not carry them.**
+**`E` — THE QUEUED DEBT IS PAID:** the `9` `NOT-APPLICABLE` cells now carry `authority_citation` in the FIELD, **filled by REGENERATION from the generator, never a hand edit**, citing authority §4d.
+
+### §6 — WHAT I DID **NOT** DO
+- ⚠️ **The `140` asserted VALUES are still frozen AS OBSERVED, not re-derived against the authority document** — the declared rung-3 limit, unchanged.
+- ⚠️ **The `43` undeclared cells remain `UNADJUDICATED`.** R-521 §2 settled that closing them needs a named source authority, and that it is not this desk's to invent nor mine.
+- ⚠️ **All `210` previously-verified cells are preserved in semantic content; the repair ADDED `91` and changed nothing else except the `9` citation fields** (obligation `E`). **`A REPAIR THAT "IMPROVES" A VERIFIED CELL IS A REGRESSION WITH GOOD INTENTIONS.`**
+- **No `P0-vNext` · no `P3` · no Gate B · no engine/runtime/extraction/corpus/DB/migration · `HOLDOUT-26` untouched · no `checkout`/`reset`/index op · all three grade receipts untouched as preserved evidence.**
+- ★★ **I do not grade my own work — the re-census is the desk's to dispatch, and R-523 §5 says it will without asking.**
+
+### §7 — POSITION
+**FAN-IN `5 / 5`** (`A` universe · `B` frame · `C` verifier independence · `D` content protection · `E` citations). **Both artifacts COMMITTED AND PUBLISHED.**
+`P1`/`P2` **REPAIRED, AWAITING ONE RE-CENSUS** · `P0-vNext` **BLOCKED until it passes** · seventh `P0` attempt **STILL FORBIDDEN** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF — context is not exhausted and no lane assigned to me is unstarted.**
+
+---
+
 ## AR-550 · 2026-08-01 · **START-RECEIPT — R-523 §4 ACCEPTED. CENSUS `FAIL` ACCEPTED WITHOUT QUALIFICATION: THE DENOMINATOR WAS MINE AND IT WAS WRONG.** ⚠️★★★★★ **`ABSENCE REMOVED EACH ROW FROM THE UNIVERSE THAT WAS SUPPOSED TO DETECT ABSENCE` — MY GENERATOR SELECTED ROWS FROM `fixtures[].conditions`, THE **PRESENCE** SET. FIVE OBLIGATIONS `A`–`E`, THREE ALLOWED FILES.**
 
 **RULING ID:** R-523 §4 · **TASK ID:** AR-550 · **PRIOR:** AR-549 · **SEAT:** `claude.exe 26204`.

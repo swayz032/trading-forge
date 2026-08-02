@@ -32,10 +32,23 @@
    "session_zone": 26
   },
   "present_expectation_count": 140,
-  "row_count": 30,
+  "row_count": 43,
   "row_ids": [
+   "00-control-shipped.spec.json::bias",
+   "00-control-shipped.spec.json::confirmation",
+   "00-control-shipped.spec.json::direction",
+   "00-control-shipped.spec.json::enable",
+   "00-control-shipped.spec.json::enter",
+   "00-control-shipped.spec.json::exception",
+   "00-control-shipped.spec.json::filter",
+   "00-control-shipped.spec.json::hint",
    "00-control-shipped.spec.json::london",
+   "00-control-shipped.spec.json::reset",
+   "00-control-shipped.spec.json::retest",
+   "00-control-shipped.spec.json::structure",
+   "00-control-shipped.spec.json::unknown",
    "00-control-shipped.spec.json::unknown-session",
+   "00-control-shipped.spec.json::verify",
    "10-lunch-orphan.spec.json::enter",
    "10-lunch-orphan.spec.json::sess",
    "11-premarket-orphan.spec.json::enter",
@@ -65,10 +78,44 @@
    "50-family-axis-invalidations.spec.json::inv_in_entry",
    "50-family-axis-invalidations.spec.json::sess"
   ],
+  "row_universe_origin": "PINNED SOURCE FIXTURE SPECS at c304b098, keyed `fixture filename x spec.entry_conditions[].id`. ORACLE.json is COMPARED against this universe and NEVER DEFINES it.",
+  "rows_absent_and_undeclared": [],
+  "rows_declared_absent_from_oracle": 13,
+  "rows_declared_absent_ids": [
+   "00-control-shipped.spec.json::bias",
+   "00-control-shipped.spec.json::confirmation",
+   "00-control-shipped.spec.json::direction",
+   "00-control-shipped.spec.json::enable",
+   "00-control-shipped.spec.json::enter",
+   "00-control-shipped.spec.json::exception",
+   "00-control-shipped.spec.json::filter",
+   "00-control-shipped.spec.json::hint",
+   "00-control-shipped.spec.json::reset",
+   "00-control-shipped.spec.json::retest",
+   "00-control-shipped.spec.json::structure",
+   "00-control-shipped.spec.json::unknown",
+   "00-control-shipped.spec.json::verify"
+  ],
+  "rows_in_oracle_not_in_universe": [],
+  "rows_per_fixture": {
+   "00-control-shipped.spec.json": 15,
+   "10-lunch-orphan.spec.json": 2,
+   "11-premarket-orphan.spec.json": 2,
+   "20-nyam-evaluable.spec.json": 2,
+   "21-fivemin-chart.spec.json": 2,
+   "22-nypm-evaluable.spec.json": 2,
+   "23-silverbullet-evaluable.spec.json": 2,
+   "24-macrowindow-evaluable.spec.json": 2,
+   "30-compiled-flip.spec.json": 3,
+   "31-flip-neg-control.spec.json": 3,
+   "40-overrefusal-boundary.spec.json": 5,
+   "50-family-axis-invalidations.spec.json": 3
+  },
+  "rows_present_in_oracle": 30,
   "source_commit": "c304b098b156106a5a81b714c7a5a3ed166d68ef"
  },
  "P2_total_membership": {
-  "actual_cell_count": 210,
+  "actual_cell_count": 301,
   "axes": [
    "approximation",
    "bindable",
@@ -81,6 +128,7 @@
   "axis_list_origin": "FROZEN IN THE GENERATOR \u2014 never derived from ORACLE.json",
   "counts_by_basis": {
    "UNDECLARED": 43,
+   "fixture-declared-id (row absent from oracle)": 91,
    "fixture-declared-prose": 13,
    "present-in-oracle": 140,
    "row-declared-alias (declared as 'primitive')": 3,
@@ -89,18 +137,579 @@
   "counts_by_classification": {
    "ASSERTED": 140,
    "NOT-APPLICABLE": 9,
-   "UNADJUDICATED": 61
+   "UNADJUDICATED": 152
   },
-  "expected_cell_count": 210
+  "expected_cell_count": 301
  },
  "_classification_enum": [
   "ASSERTED",
   "NOT-APPLICABLE",
   "UNADJUDICATED"
  ],
- "_generated_by": "gen_p1p2.py (source embedded verbatim in docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md)",
- "_schema": "P1-P2-TOTAL-MEMBERSHIP/1",
+ "_frame": "COMPLETE OVER THE PINNED ENTRY-CONDITION x SEVEN-AXIS FRAME. Fixture-level scalar and relational expectations (compiled, spine_bound, spine_total, reasons_must_differ_from, scalars_unadjudicated) are OUT OF FRAME and are NOT enumerated here.",
+ "_generated_by": "gen_p1p2.py v2 (source embedded verbatim in docs/designs/P1-P2-TRUTH-FREEZE-PACKET-2026-07-31.md)",
+ "_schema": "P1-P2-TOTAL-MEMBERSHIP/2",
  "cells": [
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::bias::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "bias",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::confirmation::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "confirmation",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::direction::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "direction",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enable::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enable",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::enter::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "enter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::exception::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "exception",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::filter::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "filter",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::hint::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "hint",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
   {
    "authority_citation": "authority section 2 (london = 180/1440, evaluable) + P-1",
    "axis": "approximation",
@@ -132,6 +741,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "fixture-declared-prose",
    "cell_id": "00-control-shipped.spec.json::london::reason_excludes",
@@ -141,6 +751,7 @@
    "fixture": "00-control-shipped.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "fixture-declared-prose",
    "cell_id": "00-control-shipped.spec.json::london::reason_names",
@@ -170,6 +781,217 @@
    "value": "london"
   },
   {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::reset::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "reset",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::retest::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "retest",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::structure::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "structure",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "00-control-shipped.spec.json::unknown-session::approximation",
@@ -209,6 +1031,7 @@
    "value": "session_zone_refused_uncomputable_window"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "fixture-declared-prose",
    "cell_id": "00-control-shipped.spec.json::unknown-session::reason_names",
@@ -236,6 +1059,146 @@
    "condition_id": "unknown-session",
    "fixture": "00-control-shipped.spec.json",
    "value": null
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::unknown::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "unknown",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "approximation",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::approximation",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "bindable",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::bindable",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "primitive_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::primitive_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_excludes",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::reason_excludes",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_names",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::reason_names",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "reason_null",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::reason_null",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
+  },
+  {
+   "authority_citation": null,
+   "axis": "session_zone",
+   "basis": "fixture-declared-id (row absent from oracle)",
+   "cell_id": "00-control-shipped.spec.json::verify::session_zone",
+   "classification": "UNADJUDICATED",
+   "condition_id": "verify",
+   "declared_reason": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) \u2014 authority section 6 leaves non-session families and invalidations unadjudicated.",
+   "fixture": "00-control-shipped.spec.json"
   },
   {
    "authority_citation": "authority P-5 \u2014 ENTER names the ACT of entering, satisfied by spine completion",
@@ -268,6 +1231,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "10-lunch-orphan.spec.json::enter::reason_excludes",
@@ -277,6 +1241,7 @@
    "fixture": "10-lunch-orphan.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "10-lunch-orphan.spec.json::enter::reason_names",
@@ -336,6 +1301,7 @@
    "value": true
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "10-lunch-orphan.spec.json::sess::reason_excludes",
@@ -405,6 +1371,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "11-premarket-orphan.spec.json::enter::reason_excludes",
@@ -414,6 +1381,7 @@
    "fixture": "11-premarket-orphan.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "11-premarket-orphan.spec.json::enter::reason_names",
@@ -473,6 +1441,7 @@
    "value": true
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "11-premarket-orphan.spec.json::sess::reason_excludes",
@@ -542,6 +1511,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "20-nyam-evaluable.spec.json::enter::reason_excludes",
@@ -551,6 +1521,7 @@
    "fixture": "20-nyam-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "20-nyam-evaluable.spec.json::enter::reason_names",
@@ -610,6 +1581,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "20-nyam-evaluable.spec.json::sess::reason_excludes",
@@ -619,6 +1591,7 @@
    "fixture": "20-nyam-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "20-nyam-evaluable.spec.json::sess::reason_names",
@@ -678,6 +1651,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "21-fivemin-chart.spec.json::enter::reason_excludes",
@@ -687,6 +1661,7 @@
    "fixture": "21-fivemin-chart.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "21-fivemin-chart.spec.json::enter::reason_names",
@@ -716,6 +1691,7 @@
    "value": null
   },
   {
+   "authority_citation": null,
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "21-fivemin-chart.spec.json::sess::approximation",
@@ -755,6 +1731,7 @@
    "value": "session_zone_refused_uncomputable_window"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "21-fivemin-chart.spec.json::sess::reason_names",
@@ -814,6 +1791,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "22-nypm-evaluable.spec.json::enter::reason_excludes",
@@ -823,6 +1801,7 @@
    "fixture": "22-nypm-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "22-nypm-evaluable.spec.json::enter::reason_names",
@@ -882,6 +1861,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "22-nypm-evaluable.spec.json::sess::reason_excludes",
@@ -891,6 +1871,7 @@
    "fixture": "22-nypm-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "22-nypm-evaluable.spec.json::sess::reason_names",
@@ -950,6 +1931,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "23-silverbullet-evaluable.spec.json::enter::reason_excludes",
@@ -959,6 +1941,7 @@
    "fixture": "23-silverbullet-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "23-silverbullet-evaluable.spec.json::enter::reason_names",
@@ -1018,6 +2001,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "23-silverbullet-evaluable.spec.json::sess::reason_excludes",
@@ -1027,6 +2011,7 @@
    "fixture": "23-silverbullet-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "23-silverbullet-evaluable.spec.json::sess::reason_names",
@@ -1086,6 +2071,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "24-macrowindow-evaluable.spec.json::enter::reason_excludes",
@@ -1095,6 +2081,7 @@
    "fixture": "24-macrowindow-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "24-macrowindow-evaluable.spec.json::enter::reason_names",
@@ -1154,6 +2141,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "24-macrowindow-evaluable.spec.json::sess::reason_excludes",
@@ -1163,6 +2151,7 @@
    "fixture": "24-macrowindow-evaluable.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "24-macrowindow-evaluable.spec.json::sess::reason_names",
@@ -1222,6 +2211,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "30-compiled-flip.spec.json::enter::reason_excludes",
@@ -1231,6 +2221,7 @@
    "fixture": "30-compiled-flip.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "30-compiled-flip.spec.json::enter::reason_names",
@@ -1290,6 +2281,7 @@
    "value": true
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "30-compiled-flip.spec.json::sess::reason_excludes",
@@ -1329,6 +2321,7 @@
    "value": null
   },
   {
+   "authority_citation": null,
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "30-compiled-flip.spec.json::third::approximation",
@@ -1368,6 +2361,7 @@
    "value": "session_zone_refused_uncomputable_window"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "30-compiled-flip.spec.json::third::reason_names",
@@ -1427,6 +2421,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "31-flip-neg-control.spec.json::enter::reason_excludes",
@@ -1436,6 +2431,7 @@
    "fixture": "31-flip-neg-control.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "31-flip-neg-control.spec.json::enter::reason_names",
@@ -1495,6 +2491,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "31-flip-neg-control.spec.json::sess::reason_excludes",
@@ -1504,6 +2501,7 @@
    "fixture": "31-flip-neg-control.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "31-flip-neg-control.spec.json::sess::reason_names",
@@ -1533,6 +2531,7 @@
    "value": "ny_am"
   },
   {
+   "authority_citation": null,
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "31-flip-neg-control.spec.json::third::approximation",
@@ -1572,6 +2571,7 @@
    "value": "session_zone_refused_uncomputable_window"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "31-flip-neg-control.spec.json::third::reason_names",
@@ -1601,6 +2601,7 @@
    "value": null
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::approximation",
@@ -1620,6 +2621,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "primitive_null",
    "basis": "row-declared-alias (declared as 'primitive')",
    "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::primitive_null",
@@ -1629,6 +2631,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::reason_excludes",
@@ -1638,6 +2641,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::reason_names",
@@ -1657,6 +2661,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "session_zone",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::bias_overnight::session_zone",
@@ -1696,6 +2701,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::enter::reason_excludes",
@@ -1705,6 +2711,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::enter::reason_names",
@@ -1734,6 +2741,7 @@
    "value": null
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::approximation",
@@ -1753,6 +2761,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "primitive_null",
    "basis": "row-declared-alias (declared as 'primitive')",
    "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::primitive_null",
@@ -1762,6 +2771,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::reason_excludes",
@@ -1771,6 +2781,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::reason_names",
@@ -1790,6 +2801,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "session_zone",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::filter_lunch::session_zone",
@@ -1799,6 +2811,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "approximation",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::approximation",
@@ -1818,6 +2831,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "primitive_null",
    "basis": "row-declared-alias (declared as 'primitive')",
    "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::primitive_null",
@@ -1827,6 +2841,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::reason_excludes",
@@ -1836,6 +2851,7 @@
    "fixture": "40-overrefusal-boundary.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::reason_names",
@@ -1855,6 +2871,7 @@
    "value": true
   },
   {
+   "authority_citation": "ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md \u00a74d",
    "axis": "session_zone",
    "basis": "row-declared-exact",
    "cell_id": "40-overrefusal-boundary.spec.json::retest_midday::session_zone",
@@ -1894,6 +2911,7 @@
    "value": true
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "UNDECLARED",
    "cell_id": "40-overrefusal-boundary.spec.json::sess::reason_excludes",
@@ -1963,6 +2981,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::enter::reason_excludes",
@@ -1972,6 +2991,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::enter::reason_names",
@@ -2001,6 +3021,7 @@
    "value": null
   },
   {
+   "authority_citation": null,
    "axis": "approximation",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::approximation",
@@ -2010,6 +3031,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "bindable",
    "basis": "row-declared-exact",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::bindable",
@@ -2019,6 +3041,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "primitive_null",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::primitive_null",
@@ -2028,6 +3051,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_excludes",
@@ -2037,6 +3061,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_names",
@@ -2046,6 +3071,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_null",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::reason_null",
@@ -2055,6 +3081,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "session_zone",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::inv_in_entry::session_zone",
@@ -2094,6 +3121,7 @@
    "value": false
   },
   {
+   "authority_citation": null,
    "axis": "reason_excludes",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::sess::reason_excludes",
@@ -2103,6 +3131,7 @@
    "fixture": "50-family-axis-invalidations.spec.json"
   },
   {
+   "authority_citation": null,
    "axis": "reason_names",
    "basis": "fixture-declared-prose",
    "cell_id": "50-family-axis-invalidations.spec.json::sess::reason_names",
@@ -2133,9 +3162,10 @@
   }
  ],
  "digests": {
-  "canonical_document_sha256": "dbb871dd73da83e4e7b690efecde3e7a3230fc4076187da11bc4c2b38681d087",
-  "cell_id_set_sha256": "de761836ba64f00fb2982e4bf7c3b23fecd799a50f3b8eab64681b22914ee8de",
-  "digest_definition": "canonical_document_sha256 = sha256 of json.dumps(doc without 'digests', sort_keys=True, ensure_ascii=True, separators=(',',':'))"
+  "canonical_document_sha256": "e2d0cd77304dc0cd38ffe3dfea3003ddb9c8de43b9ddf7409429748035a9c7b0",
+  "cell_id_set_sha256": "a62906faf3f97cc53acabf9aad8d3181af749b73759df75b27100d0815b162b7",
+  "digest_definition": "canonical_document_sha256 = sha256 of json.dumps(doc WITHOUT 'digests', sort_keys=True, ensure_ascii=True, separators=(',',':'))",
+  "row_universe_sha256": "dd8c33d30a48dd37e7abb0ab856a488137bd204413e2d417b3a0cb61aa38f046"
  },
  "integrity_census": {
   "alias_joined_cells": [
@@ -2143,12 +3173,11 @@
    "40-overrefusal-boundary.spec.json::filter_lunch::primitive_null",
    "40-overrefusal-boundary.spec.json::retest_midday::primitive_null"
   ],
-  "detection_rule": "The cell-id set is the CARTESIAN PRODUCT of P1's frozen row_ids and the frozen axes. Any added, duplicated or missing cell is mechanically detectable by re-deriving that product and diffing it against cell_id_set_sha256 below.",
+  "detection_rule": "The cell-id set is the CARTESIAN PRODUCT of the SOURCE-SPEC row universe and the frozen axes. A verifier must rebuild BOTH from the pinned sources \u2014 never from this document's own row_ids or axes, which a forger may edit alongside the cells.",
   "duplicate_cell_ids": [],
   "duplicate_json_keys_in_source": [],
   "missing_cell_ids": [],
   "unknown_cell_ids": [],
-  "unknown_row_keys": [],
-  "unresolved_declared_gap_keys": []
+  "unknown_row_keys": []
  }
 }
