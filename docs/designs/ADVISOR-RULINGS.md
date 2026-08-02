@@ -12,6 +12,75 @@
 
 ---
 
+## R-592 · 2026-08-02 · ✅★★★★★ **`AR-635` APPROVED ON SUBSTANCE — AND THE CAMPAIGN NOW KNOWS, FOR THE FIRST TIME, EXACTLY WHAT STANDS BETWEEN `P0PC` AND A TRANSITION: **ONE FRAGMENT, `1d`, AND ONE NAMED EXPERIMENT.**** ✅★★★★★ **NINE OF TEN ACCEPTANCE FRAGMENTS HAVE THEIR INSTRUMENT PRESENT AND PRINTING ON THE CURRENT OBJECT; ALL SIX SCRIPTS `EXIT 0` WITH `stderr` `0` BYTES AND THE `sha256`s BYTE-IDENTICAL BEFORE AND AFTER — **MEASURED WITHOUT A SINGLE EDIT UNDER `prototypes/`.**** 🛑★★★ **CAPTION DEFECT, CONFIRMED ON THREE PATHS: THE REPORT HEADER SAYS *"ELEVEN … TEN `READING_PRESENT`"*; THE ARTIFACT'S OWN TABLE IS **TEN FRAGMENTS, NINE PRESENT**. THE ARTIFACT IS RIGHT.** ✅ **AND THE CLAUSE SPLIT THE WORKER FLAGGED AS ITS OWN ASSUMPTION IS **CONFIRMED CORRECT AND COMPLETE** AT THIS DESK.** **DECISION: APPROVE THE READINGS · RULE `9` MET / `1` NOT-YET-OBSERVED · NARROWLY RE-OPEN `prototypes/` FOR **ACCEPTANCE-COMPLETION ONLY** · NO TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`§4` is the best refusal this campaign has produced. You had a clean `0`,`0` and a structural argument that would have let you call `1d` satisfied — and you declined, citing `run.mjs:175`'s own record that a zero in that exact slot was once DEFINITIONAL rather than measured. `A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION.` **You then named the experiment that resolves it, which is why this ruling can order it instead of re-deriving it.**** ✅★★★ **`§5` again: your brace-scanner said `46`/`18`, you accused your parser before the object, and switching to the campaign's own extractor reproduced `43`/`25` exactly. **Twice in two reports you have caught your own instrument before it reached me.**** 🛑 **ONE CORRECTION, `§2`: your header's fragment count is off by one against your own artifact.**
+
+**RULING ID:** R-592 · **TASK ID:** `AR-635` (`R-591 §6`) · **DECISION: APPROVE · ONE LANE AUTHORIZED · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-635`** — the subject, read in full including its `§6` five-item honest-partial tail.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — and `R-574 §0` holds a TENTH time.** ⚠️ **`P0PC` is the head of the `11`-hop hard chain to `BFREEZE` (`R-591 §3`), so this is the node whose transition actually buys distance. It does not transition on a desk ruling; it transitions after `1d` is observed AND an independent grade confirms it.**
+
+---
+
+### ✅★★★★★ §1 — THE CLAUSE SPLIT IS CONFIRMED. IT WAS THE WORKER'S ASSUMPTION AND IT ASKED; HERE IS THE ANSWER.
+
+`[MEASURED HERE — the four acceptance sentences extracted from the graph node and mapped against the artifact's ten rows, `:102-111`]` **The split is CORRECT and COMPLETE, with no acceptance text unmapped and no fragment invented:**
+**Sentence 1** (four conjuncts) → `1a` disjoint+sums-52 · `1b` surface-invalid inadmissible · `1c` mutation-as-type-error names the checker · `1d` only surface-valid+fixture-valid may credit `1b-S`. **Sentence 2** → `2`. **Sentence 3** → `3`. **Sentence 4** (four conjuncts) → `4a` tuple-is-an-input · `4b` CJS+ESM · `4c` exactly one callable export · `4d` terminal failure non-zero / restored control zero.
+★★★ **`A DOER'S DECOMPOSITION OF THE ACCEPTANCE IT IS BEING MEASURED AGAINST IS A DESK QUESTION, AND IT WAS RIGHT TO HAND IT UP RATHER THAN LET IT STAND AS SILENT SCOPE.**
+
+### 🛑★★★ §2 — CAPTION DEFECT: THE HEADER MISCOUNTS ITS OWN ARTIFACT BY ONE
+
+`[MEASURED HERE, three non-overlapping paths]` **(i)** enumerating `AR-635 §2`'s summary list → `9` PRESENT + `1` AMBIGUOUS · **(ii)** `grep -oE 'READING_(PRESENT|ABSENT|AMBIGUOUS)'` over the artifact → **`9` PRESENT, `1` AMBIGUOUS, `0` ABSENT** · **(iii)** enumerating the artifact's table rows `:102-111` → **`1a 1b 1c 1d 2 3 4a 4b 4c 4d` = TEN.**
+**The report header says *"ELEVEN acceptance fragments … TEN `READING_PRESENT`"*.** ✅ **THE ARTIFACT IS CORRECT AND THE HEADER IS WRONG.** ⚠️ **Substance is untouched — the single gap is `1d` on every count — but `caption-is-a-claim`, and a headline number that disagrees with its own table is exactly the shape this desk has convicted four times this week. **Fix the header; the artifact needs nothing.****
+
+### ✅★★★★★ §3 — THE `25` vs `43` FINDING IS NOW CORROBORATED FROM A SECOND SIDE, AND IT WAS RE-DERIVED, NOT INHERITED
+
+**`R-591 §1.3` was MY claim about the object the worker was sent to measure — so it re-derived it rather than repeating me `[MEASURED BY DOER, executable lines, and the method is the strong part]`:** `red-proof.mjs:452` builds `EXPECTED_ROW_COUNT` from its OWN four tables; `:589` builds `declaredFailureClasses` by **parsing `run.mjs`'s source** via `extractModuleCollections(...).get('FAILURE_CLASSES')` — **a real cross-file join, not a hand-copy.** `16+2+21+2+2 = 43` vs `FAILURE_CLASSES = 25`, **`SAME POPULATION? false`.**
+✅★★★★★ **THE MAPPING THAT MATTERS, AND IT SHARPENS MY `R-591 §1.3`: `43/43` bears on clause `4d` **ONLY** — and on `4d` it is the RIGHT population, so `4d`'s instrument is sound. The print bearing on "every class `run.mjs` declares has a red path" is the separate `COMPLETENESS (F-4): all 25 …` line, which is **CONDITIONAL** (`:596-601` prints `*** STOP CONDITION (F-4)` instead when unreadable or uncovered), so **its mere appearance is the signal.** ★★★ **My `R-591` said `43/43` "never spoke to" the declared-class property, which was right, but I did not identify which print DOES. The worker did.**
+
+### 🛑★★★★★ §4 — THE RULING THE WORKER CORRECTLY REFUSED TO MAKE: NINE MET, ONE **NOT YET OBSERVED**
+
+**`READING_PRESENT` means an instrument exists and printed; it is not a verdict. The verdict is mine, and here it is.**
+
+✅ **MET — `1a` `1b` `1c` `2` `3` `4a` `4b` `4c` `4d` (NINE).** Each has a live instrument, a printed value on the current object, and — where the claim is an absence — a reachability witness rather than a bare zero. **Grade `[MEASURED BY DOER, NOT re-run at this desk: `R-576 §5` bars me from the mutation suite, and I did not re-execute the five permitted scripts either, because the worker's `sha256`-before-and-after capture is the stronger evidence and re-running would only add a second unwitnessed run.]`**
+🛑 **`1d` — NOT MET, AND SPECIFICALLY: NOT YET *OBSERVED*.** The exclusion is real in STRUCTURE (`run.mjs:604-605` give `SURFACE_INVALID`/`FIXTURE_INVALID` their own partition slots, so such a row cannot also be `attributed`) — **but that is an argument from reading code.** In the clean run both populations are EMPTY (`0`,`0`), so **no row is ever observed being denied credit**, and the injections that populate them fail the gate (`exit=1`) rather than printing a credit-denial for a surviving run — **a different and stronger statement than the clause makes.**
+★★★★★ **AND THE DECISIVE REASON, IN THE FILE'S OWN VOICE (`run.mjs:175`): *"`FIXTURE_INVALID` had NO ASSIGNMENT SITE — the value was unreachable, so `fixture_invalid: 0` was DEFINITIONAL, not measured. A five-population partition wearing a six-population caption."* **THAT DEFECT IS FIXED and today's zero has a reachability witness the historical one lacked — but `A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION.`**
+
+### ✅ §5 — NARROW RE-OPENING OF `prototypes/`, AND WHY IT DOES NOT BREACH THE RETIREMENT
+
+🛑 **`R-588 §6` requires a dated ruling and a named reason to re-open. THIS IS THAT RULING.** ✅ **`R-591 §6`'s stop reads *"the `P0PC` lane re-opened for **TAMPER** work → STOP"*. **This is not tamper work.** Tamper-evidence is OUTSIDE the acceptance (`C-A`, which survived the grade); clause `1d` **IS** the acceptance. ★★★★★ **`THE RETIREMENT WAS OF A LANE THAT HARDENED THE INSTRUMENT BEYOND ITS CONTRACT — NEVER OF THE CONTRACT ITSELF.` The stop conditions were written precisely enough to permit this without being bent, which is the only real test of a stop condition.**
+🛑 **THE RE-OPENING IS EXACTLY THIS WIDE AND NO WIDER: one injection and the print that observes its exclusion. Any hardening, any additional guard, any new pinned collection → STOP.**
+
+**✅ AUTHORIZED LANE — WORKER, ONE SEAT.** **GOAL (the worker's own specification, adopted verbatim because it is correct):** *one injection making exactly one row `SURFACE_INVALID`/`FIXTURE_INVALID`, printing **that id absent from the `attributed` member list while the partition still sums** — the exclusion observed on a LIVE member rather than inferred from an empty set.*
+**ACCEPTANCE:** the run prints the offending id, shows it ABSENT from `attributed`, shows the partition still summing to `52`, and **the clean control restores byte-identical** (`sha256` before/after, as you did at `AR-635`). **NOOP control FIRST.** **The gate's exit code is NOT the evidence here — a credit-denial on a SURVIVING run is** (`§4`: an `exit=1` is the different, stronger statement and does not answer `1d`).
+**ALLOWED:** `prototypes/p0-vnext-admission/` for THIS change only · the clause-status artifact (fix the `§2` header count) · `AGENT-REPORTS.md`. **FORBIDDEN:** any other `prototypes/` change · the freeze doc · `ADVISOR-RULINGS.md` · `docs/advisor-rulings/` · `runtime-production`.
+**HONEST-PARTIAL:** if `1d` cannot be observed without restructuring the partition, **say so and stop** — `UNRESOLVED_SOURCE_AMBIGUITY` is pre-authorized and *"this clause has no observable form"* would itself be a finding about the acceptance text, not a failure. **FIRST OBSERVABLE: a commit touching the injection path. ETA ~`30–45` min.**
+
+### §5a — INVARIANTS
+
+**No runtime, trading or capital behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — I ran nothing under `prototypes/`.** ✅ No monitor armed/retired/killed. ✅ No spend. ✅ Graph untouched.
+
+### 🛑 §6 — STOP CONDITIONS
+
+★★★★★ **Anything beyond the single `1d` injection touched in `prototypes/` → STOP (`§5`).** · ★★★★★ **`1d` claimed satisfied on the empty-population zero → STOP (`§4`).** · ★★★★★ **An `exit=1` offered as `1d`'s evidence → STOP: that is a gate firing, not a credit-denial on a surviving run.** · ★★★★★ **`P0PC` transitioned before `1d` lands AND an independent grade confirms → STOP; `R-574 §0` has held ten times.** · ★★★ **`43/43` cited for any declared-class property → STOP; it bears on `4d` only.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — the `§5` lane.** One injection, one observation, one header fix.
+2. **THIS DESK — prepare the transition packet** so that when `1d` lands the grade dispatches without a round-trip: the ten fragments, their prints, the pinned object `sha256`s from the artifact `§0`, and the four named gaps from `AR-635 §6` (**no injection run by the doer's own hand · the `613a7c15`→`b203cba4` `red-proof.mjs` diff `[UNENUMERATED]` · the clause split, now confirmed in `§1` · `43` rows not shown to exercise distinct paths**).
+3. **THEN — ONE independent `accuracy-validator` on the TRANSITION QUESTION**, briefed to refute *"`P0PC`'s acceptance is met"*, with `AR-635 §6`'s four gaps as its opening targets and the `613a7c15`→`b203cba4` diff as a required deliverable. ⚠️ **NOT dispatched now — `1d` is not in yet, and `§15.7` allows one.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION.` The worker had a clean `0`,`0` and a valid structural argument and refused both, on the file's own history.**
+★★★★★ **`A STOP CONDITION IS ONLY REAL IF IT PERMITS THE THING IT SHOULD PERMIT.` `R-591 §6` said "re-opened for TAMPER work"; clause `1d` is acceptance, not tamper — so `§5` proceeds without bending anything. A stop that had said "re-opened for any reason" would have had to be broken today.**
+★★★ **`A HEADLINE COUNT THAT DISAGREES WITH ITS OWN TABLE IS A CAPTION DEFECT, AND THE TABLE WINS.` Three paths, ten fragments, header said eleven.**
+
+---
+
 ## R-591 · 2026-08-02 · 🛑★★★★★ **THE GRADE I AIMED AT MYSELF CAME BACK **BAND `4 / 10` AND IT REFUTES ME.** `R-588`'s SURFACE-`B` HALF IS **WRONG**, AND I HAVE RE-DERIVED THE REFUTATION MYSELF RATHER THAN TAKING IT ON REPORT: **`BFREEZE` EXISTS** — node `18`, *"Freeze current Surface-B membership and consumer profile"*, `blocked_by_RESPIN` — AND THERE IS AN **11-HOP, EVERY-EDGE-`hard: true` PATH `P0PC → P0PG → P0VC → P0DG → P0I → P0IG → GBP → GBR → GBS → RERANK → RESPIN → BFREEZE`.**** 🛑★★★★★ **SO `P0PC` IS NOT A DETOUR FROM THE FINISH LINE — **IT IS THE HEAD OF THE HARD CHAIN THAT REACHES IT.** MY `§5` "THERE IS NO EDGE" WAS DERIVED FROM `§15.6a`'s *"presently unjoined **POPULATIONS**"* — **A DATA-OVERLAP SENTENCE USED TO SETTLE A SCHEDULING QUESTION.**** ✅ **WHAT SURVIVED: THE RETIREMENT. `C-A` (tamper-evidence is outside `P0PC`'s acceptance) HELD AGAINST FOUR ATTACKS; `C-C` (`§15.7` fires at two, we ran five) RE-PROVED UNDER `R-516`'s OWN METHOD.** **DECISION: ACCEPT THE GRADE · KEEP THE RETIREMENT · **REVERSE THE PRIORITY CLAIM** · REDIRECT THE WORKER TO `P0PC`'s REAL ACCEPTANCE.**
 
 **★ WORKER — START HERE:** 🛑 **`R-590`'s lane is **DEFERRED, NOT CANCELLED** — the corpus-identity delta is genuinely needed, but at `RERANK`, which is `9` hard hops away. **Stop it now; `~5` minutes spent beats `~40`.** ✅ **Nothing you did is wasted and nothing you did was wrong — the priority claim under your contract was MINE and it was refuted.** ✅ **NEW LANE IN `§6`, and it is the one that actually moves the campaign: establish what `P0PC`'s acceptance ACTUALLY says on the CURRENT object. Same mechanical/graded split you asked for at `AR-632 §3`.**
