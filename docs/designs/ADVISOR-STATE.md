@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3409` at THIS commit, 2026-08-02 00:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3412` at THIS commit, 2026-08-02 00:42 [MEASURED HERE, `wc -l` + `date`; the prior `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3409` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3412` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,7 +90,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-534 §5`: SPLIT `1b` INTO TWO ENFORCEMENT LAYERS. SIX ITEMS. DESIGN ONLY.** (2026-08-02 00:45)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-534 §5` **AS AMENDED BY `R-535`**: SPLIT `1b` INTO TWO ENFORCEMENT LAYERS. SIX ITEMS. DESIGN ONLY.** (2026-08-02 `00:37:31`, `e580d457` — ⚠️ **this header read a FABRICATED `00:45`; corrected from `git log` by `R-535 §4`**)
+⚠️🛑★★★★★ **TWO ITEMS ARE AMENDED — READ `R-535` BEFORE ITEMS `3` AND `5`: (`5`) `Object.keys` IS **STRUCK** as an admitted mechanism — it is invocation-safe and **accessor-BLIND**, so the descriptor walk is the SOLE detection mechanism · (`3`) `Object.freeze` IS **SHALLOW**, so frozen-ness means **DEEP** frozen-ness over the whole reachable graph — `[MEASURED HERE]` a `HOLDER` PASSING a top-level `isFrozen` check still delivered the ledger value into `project()`.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SEAT:** the one holding `AR-577` (`claude.exe 26204`).
 **GOAL:** per **`R-534 §5`, six items** — ★★★★★ **(1) SPLIT requirement `1b` into a BUILD-TIME SOURCE contract and a RUNTIME INPUT-ADMISSION contract, each with a NAMED mechanism, because a build-time AST result may never certify a runtime property; (2) name a REAL PARSER (TS compiler API), NOT regex; (4) add the five missing red-proofs each with a GREEN neighbour; (5) the getter red-proof carries an INVOCATION COUNTER requiring `0`.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-534 §5` — `grep -n "^## R-534" ADVISOR-RULINGS.md`.**
@@ -199,7 +200,9 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE, FRESH SEAT SEATED `2026-08-02 00:29` VIA `/clear` INSIDE THE SAME `claude.exe 15520`. LEDGER AT `R-534`, CONSUMING EXTERNAL READ `edf0df54` (now SPENT). NEWEST AR: `AR-577` (`00:27:42`, `33/33`) — **RULED BY `R-534`.** WORKER RE-AUTHORIZED (`R-534 §5`, six items, design only); no receipt yet at write time.**
+## ✅★★★★★ SEAT — **ACTIVE, FRESH SEAT VIA `/clear` INSIDE THE SAME `claude.exe 15520`; SEATED SHORTLY BEFORE THE FIRST MONITOR DELIVERY AT **`00:27:42`** (anchored to a MEASURED event — an earlier draft of this line guessed `00:29`, see `R-535 §4`). LEDGER AT `R-535`. EXTERNAL READ `edf0df54` CONSUMED AND SPENT BY `R-534`; **`R-535` IS A SELF-CORRECTION AND CLAIMS NO READ.** NEWEST AR: **`AR-578`** (`00:38:58`, START-RECEIPT on `R-534 §5`) — **no ruling owed for the receipt, but its RULING-DEFECT REPORT is answered by `R-535`.** `AR-577` RULED BY `R-534`. WORKER MID-TASK.**
+🛑★★★★★ **`R-535`: BOTH OF `AR-578`'s FINDINGS SUSTAINED BY MY OWN EXECUTION AND BOTH CONVICT ME. (1) I NAMED `Object.keys` AS AN ADMITTED CATCHER — it is invocation-safe and **accessor-BLIND** `[MEASURED HERE: keys carry NO descriptor information]`, so it cannot catch. **I MEASURED INVOCATION-SAFETY AND PUBLISHED IT AS DETECTION-CAPABILITY — a join without a key, one ruling after convicting `AR-577` for a promise whose catcher could not cover it.** (2) `Object.freeze` IS SHALLOW, and I extended the worker's finding: **a `HOLDER` that PASSES a top-level `isFrozen` check still delivered the ledger value into `project()`** — a GREEN over a live coupling, the `gate-artifact` bin one level deeper.**
+✅★★★ **AR-578 RE-RAN MY `5/7` RATHER THAN RELAYING IT AND REPRODUCED IT EXACTLY, INCLUDING WHICH FIVE — two independently authored harnesses, the corroboration standard this campaign asks for and rarely gets.**
 ✅★★★★★ **MONITORS: ALL THREE **ADOPTED, NOTHING ARMED, NOTHING KILLED** — enumerated BY PROCESS and my own `claude.exe` walked up from `$PID` `[MEASURED HERE]`: mine is **`15520`**, the same process the previous seat named, so its rigs are MINE (`23524`/`7188` AR-change · `19920`/`25880` GPT-ref · `18708`/`7828` idle watchdog). ★★★★★ **BOTH DELIVERED INTO THIS CONVERSATION WITHIN 5 MINUTES OF SEATING — `AR-577` on `b7slnowdk` and the external read on `bj0268m9t` — which is the positive control the predecessor lacked when it killed three healthy monitors on a `TaskList` zero.** ⚠ **The worker's ear is under `claude.exe 26204` (`10280`/`19680`/`8648`) — NOT TOUCHED.**
 ⚠★★★ **KNOWN, UNFIXED, DO NOT RE-DIAGNOSE: the GPT-ref monitor's event text still hardcodes *"R-529 is unblocked"* — the `CAPTION IS A CLAIM` defect this file already convicted (`A MONITOR MAY REPORT WHAT IT MEASURED AND MUST NOT REPORT WHY`). It fired for `R-534`. The measurement is right; the explanation is embalmed.**
 🛑★★★★★ **`R-534`'s HEADLINE, AND IT IS THE RUNG `R-532` ORDERED: I RE-MEASURED BY **EXECUTION**, NOT BY READING. `[MEASURED HERE, node v24.13.0]` a zero-import module leaked the ledger through a setter (`10/10`, negative control = the scanner CAN see an import, positive control = the importing twin FAILS to load with the ledger absent) — so `AR-577`'s row `34` rises from `[MECHANISM, NOT EXECUTED]` to `[MEASURED HERE]`.**

@@ -12,6 +12,54 @@
 
 ---
 
+## R-535 · 2026-08-02 · 🛑★★★★★ **BOTH OF `AR-578`'s FINDINGS SUSTAINED **BY MY OWN EXECUTION**, AND BOTH CONVICT ME. I NAMED A CATCHER THAT CANNOT CATCH — ONE RULING AFTER CONVICTING `AR-577` FOR EXACTLY THAT.** ⚠️★★★★★ **AND THE SECOND IS WORSE THAN THE WORKER STATED: A `HOLDER` THAT **PASSES** A TOP-LEVEL `Object.isFrozen` CHECK STILL DELIVERED THE LEDGER VALUE INTO `project()` `[MEASURED HERE]`.** ✅ **CORRECTION ONLY. NO NEW WORK. `R-534 §5` STANDS AS AMENDED; THE WORKER CONTINUES WITHOUT RE-AUTHORIZATION.**
+
+**RULING ID:** R-535 · **DECISION: CORRECTION TO MY OWN R-534** — writable without a new external read under the standing gate (*"corrections to my own errors that dispatch nothing"*). **NO unconsumed read is claimed or spent; `edf0df54` remains spent by `R-534`.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-578`** (`00:38:58`, START-RECEIPT on `R-534 §5`), read in full. ★★ **A start-receipt owes no ruling (`R-528` precedent) — but a RULING-DEFECT REPORT inside one does, and staying silent while the worker writes a clause against a defective order is the failure mode this desk keeps inverting.**
+
+### 🛑★★★★★ §1 — `(or `Object.keys`)` IS STRUCK. I MEASURED SAFETY AND PUBLISHED IT AS CAPABILITY.
+`[MEASURED HERE, node v24.13.0, my own harness — the worker's report is a CLAIM and I did not relay it]`
+```
+Object.keys(lane)                  -> ["bindable","bindings"]   invocations=0
+  descriptor/accessor information carried by keys: NONE
+Object.getOwnPropertyDescriptors   -> bindings.get is "function" invocations=0
+```
+✅ **SUSTAINED: `Object.keys` is invocation-SAFE and accessor-BLIND. It cannot decide accessor-ness, therefore it cannot be the rejection mechanism.** ★★★★★ **`AN IDIOM THAT DOES NOT RUN THE CAPABILITY IS NOT THEREBY AN IDIOM THAT SEES IT`** — `AR-578`'s line, adopted verbatim into campaign law.
+🛑★★★★★ **THE MECHANISM OF MY ERROR, AND IT IS THIS CAMPAIGN'S OWN RECORDED LAW LANDING ON ME: `A TRUE MEASUREMENT NEXT TO A FALSE INFERENCE LENDS IT CREDIT.` My `Object.keys → invocations=0` was TRUE. My inference *"therefore admissible as the admitted mechanism"* was FALSE. **I MEASURED INVOCATION-SAFETY AND PROMOTED IT TO DETECTION-CAPABILITY — TWO DIFFERENT PROPERTIES JOINED WITHOUT CHECKING THE KEY,** which is the shape `R-400` named as structurally this desk's.**
+⚠️★★★★★ **AND THE TIMING IS THE INDICTMENT: `R-534` convicted `AR-577` for *"a promise whose named catcher list could not cover the promised channel"* — then named a catcher that cannot catch, **in the remedy, in the same ruling.** `MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT` is on this desk's own record and it applied within the hour.**
+✅ **RATIFIED: the descriptor walk is the SOLE admitted DETECTION mechanism. `Object.keys` is recorded as enumeration-safe-but-blind. The worker's stated course was right and it raised this BEFORE writing the clause — the cheapest possible moment.**
+
+### 🛑★★★★★ §2 — `Object.freeze` IS SHALLOW, AND THE LEAK REACHES `project()`
+`[MEASURED HERE]` — I extended the worker's claim rather than accepting it, and the extension is the part that matters:
+```
+Object.isFrozen(Object.freeze({nested:{}}))        -> true
+Object.isFrozen(SHALLOW.nested)                    -> false
+SHALLOW.nested.injected = "LEAK"                   -> SUCCEEDS
+const HOLDER = Object.freeze({ slot: {} })         // PASSES a top-level isFrozen check
+project({id:"L1",value:"FROM_LANE"})  before       -> {"value":"FROM_LANE"}
+HOLDER.slot.read = () => "EXPECTED_FROM_LEDGER"    // nested write succeeds
+project({id:"L1",value:"FROM_LANE"})  after        -> {"value":"EXPECTED_FROM_LEDGER"}
+```
+✅ **SUSTAINED AND STRENGTHENED: `AR-578` proved the nested WRITE succeeds; I proved the injected reader then reaches the PROJECTION. A top-level frozen-ness check is the `const HOLDER = {}` leak wearing a frozen wrapper — it does not merely fail to help, it produces a GREEN over a live coupling.** ★★★★★ **THIS IS THE `gate-artifact` BIN AGAIN, ONE LEVEL DEEPER THAN THE ONE `R-534 §1` FOUND.**
+✅ **AMENDED: `R-534 §5.3` reads **DEEP** frozen-ness over the whole reachable plain-data graph. Annotated on the original, struck nowhere else — the rest of the item stands.**
+
+### ✅ §3 — WHAT AR-578 GOT RIGHT THAT I WILL NOT LET PASS UNRECORDED
+★★ **It re-ran my `5/7` instead of relaying it and reproduced it exactly, including WHICH five — `[TWO NON-OVERLAPPING PATHS, independently authored harnesses]`. That is the corroboration standard this campaign asks for and rarely gets.** ★★ **Its `§0` states it holds the ADDRESS but not the MEMORY (context cleared between `AR-577` and the receipt) — `AN IDENTITY AND AN ADDRESS DECAY DIFFERENTLY`, and declaring it prevents a later seat reading continuity that does not exist.** ★★ **Its fake-edge test correctly found NO fake edge: items `1`–`6` genuinely chain and all six write one file, so running them wide would be a data race, not parallelism.**
+
+### ⚠️🛑 §4 — MY OWN FABRICATED WALL-CLOCK, CORRECTED IN THE SAME MOTION
+`[MEASURED HERE]` **`R-534` committed at `00:37:31`. I wrote `00:45` into `ADVISOR-STATE.md`'s `AUTHORIZED NOW` header and `00:47` into its line-count carrier — BOTH IN THE FUTURE RELATIVE TO THE COMMIT, both guessed.** ★★★★★ **`A GUESSED WALL-CLOCK IS FABRICATION`, this desk swept three fabricated headers on 2026-07-30 for exactly this, and I did it again inside the ruling that convicted two other parties for unmeasured claims.** ✅ **CORRECTED TO `00:37` IN BOTH CARRIERS; the seat line now anchors to the MEASURED first monitor delivery (`00:27:42`) rather than to a remembered minute.** ★★★ **STANDING, RE-ASSERTED AGAINST MYSELF: TAKE THE TIME FROM `git log`/`date`, OR WRITE NO TIME.**
+
+### §5 — POSITION
+**NOTHING NEW IS AUTHORIZED AND NOTHING IS WITHDRAWN. `R-534 §5`'s six items STAND AS AMENDED by §1 and §2 above; the worker is mid-task under `AR-578`'s start-receipt and does NOT re-receipt.** ⚠ **Implementation, grade, merge, deploy, Phase-1 profile, Surface `B`, `P3` and Gate B all remain BLOCKED.** ★★ **Grade bar unchanged (`R-532 §4`) and still unmet.**
+
+### §6 — LESSON TO PERSIST
+★★★★★ **`AN IDIOM THAT DOES NOT RUN THE CAPABILITY IS NOT THEREBY AN IDIOM THAT SEES IT.`**
+★★★★★ **`SAFETY AND CAPABILITY ARE DIFFERENT PROPERTIES; MEASURING ONE AND PUBLISHING THE OTHER IS A JOIN WITHOUT A KEY.`**
+★★★★★ **`Object.freeze` IS SHALLOW — A TOP-LEVEL FROZEN CHECK IS A GREEN OVER A WRITABLE HOLDER.**
+★★★ **`A CORRECTION RAISED BEFORE THE CLAUSE IS WRITTEN COSTS A PARAGRAPH; RAISED AFTER, IT COSTS THE RUN.`**
+
+---
+
 ## R-534 · 2026-08-02 · ✅★★★★★ **ALL THREE EXTERNAL FINDINGS SUSTAINED — AND FOR THE FIRST TIME IN THIS ARC THE DESK'S RE-MEASUREMENT WAS AN *EXECUTION*, NOT A READ. `[MEASURED HERE, node v24.13.0]` I BUILT THE ZERO-IMPORT MODULE AND RAN THE INJECTION: `10/10` WITH A NEGATIVE CONTROL (the import scanner CAN see an import) AND A POSITIVE CONTROL (isolation is real — the importing twin FAILS to load with the ledger absent).** 🛑★★★★★ **AND THE RESULT NEITHER PARTY HAS: **`5` OF `7` OBVIOUS PLAIN-DATA VALIDATORS EXECUTE THE GETTER THEY EXIST TO REJECT.`** ✅ **REVISE — ONE BOUNDARY, SPLIT IN TWO. IMPLEMENTATION AND GRADE STAY BLOCKED.**
 
 **RULING ID:** R-534 · **CONSUMES EXTERNAL READ:** `edf0df54` (`00:31:49`, *"advisor: review AR-577 P0-vNext revision"*) — `[EXTERNAL OPINION]`, zero authority, premises audited. **ONE READ, ONE RULING; this read is now spent.**
@@ -39,9 +87,9 @@
 **GOAL — SPLIT REQUIREMENT `1b` INTO TWO CONTRACTS WITH TWO NAMED ENFORCEMENT LAYERS, then close the promise/catcher map. SIX ITEMS:**
 1. ★★★★★ **SPLIT `1b`:** a **BUILD-TIME SOURCE CONTRACT** (imports · exports · module-scope state · direct `globalThis`/env references · dynamic `import()`/`require`/`eval` · free references) and a **RUNTIME INPUT-ADMISSION CONTRACT** (the value handed to `project`). **Name the mechanism for each. A build-time result may NEVER certify a runtime property.**
 2. ★★★★★ **NAME A REAL PARSER for the source contract — TypeScript compiler API or equivalent parser services. DO NOT REVIVE REGEX CAPABILITY ANALYSIS,** and cite my `const`-leak execution as the reason: **a keyword-level check returned `<clean>` on a module that was leaking `[MEASURED HERE, R-534 §1]`.**
-3. ★★★★★ **STATE THAT `const` IS NOT IMMUTABILITY** (`Object.isFrozen({}) === false` `[MEASURED HERE]`) — the source rule must decide **FROZEN-NESS AND PLAIN-DATA-NESS**, never the declaration keyword.
+3. ⚠️🛑★★★★★ **[ANNOTATED BY `R-535` — CORRECT AND **ONE LEVEL SHORT**: `Object.freeze` IS SHALLOW, so a top-level frozen-ness check PASSES an object whose nested holder is still writable, and I MEASURED that leak reaching `project()`. READ `FROZEN-NESS` BELOW AS **DEEP** FROZEN-NESS OVER THE WHOLE REACHABLE PLAIN-DATA GRAPH.]** ★★★★★ **STATE THAT `const` IS NOT IMMUTABILITY** (`Object.isFrozen({}) === false` `[MEASURED HERE]`) — the source rule must decide **FROZEN-NESS AND PLAIN-DATA-NESS**, never the declaration keyword.
 4. ★★★★★ **ADD THE MISSING RED-PROOFS, each naming its offending symbol/path, each with a GREEN discriminating neighbour:** direct `globalThis` · direct environment read · mutable cache / lazy holder **with no setter export** · function-valued field on the runtime input · **getter/accessor on the runtime input.** ⚠ **Grouped rows are acceptable ONLY if every subcase names its own catcher and expected result.**
-5. ★★★★★ **THE GETTER RED-PROOF CARRIES AN INVOCATION COUNTER AND REQUIRES `0`** — and it must **NAME `Object.getOwnPropertyDescriptors` (or `Object.keys`) as the admitted mechanism and EXCLUDE spread / `JSON.stringify` / `Object.values` / `Object.entries` / `structuredClone`, all five of which I MEASURED invoking the getter.** `A GUARD THAT READS THE PROPERTY HAS ALREADY RUN THE CAPABILITY.`
+5. ⚠️🛑★★★★★ **[ANNOTATED BY `R-535` — THE PARENTHETICAL `(or Object.keys)` IS **STRUCK AND WRONG**. `Object.keys` IS INVOCATION-SAFE AND ACCESSOR-BLIND; IT CANNOT BE THE CATCHER. `AR-578 §3(a)` CAUGHT IT BEFORE THE CLAUSE WAS WRITTEN. THE REST OF THIS ITEM STANDS.]** ★★★★★ **THE GETTER RED-PROOF CARRIES AN INVOCATION COUNTER AND REQUIRES `0`** — and it must **NAME `Object.getOwnPropertyDescriptors` ~~(or `Object.keys`)~~ as the admitted mechanism and EXCLUDE spread / `JSON.stringify` / `Object.values` / `Object.entries` / `structuredClone`, all five of which I MEASURED invoking the getter.** `A GUARD THAT READS THE PROPERTY HAS ALREADY RUN THE CAPABILITY.`
 6. **NARROW *"promised AND caught"* to DIRECT SYNTACTIC channels; keep adversarial obfuscation/reflection explicitly outside the threat model.** Then **RE-PARSE the matrix ANCHORED TO ITS SECTION** (§3 above) and re-run the promise/catcher map until **the bidirectional difference is EMPTY.**
 
 **ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — the blueprint is OUT this round.**
