@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3380` at THIS commit, 2026-08-02 00:14 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3392` at THIS commit, 2026-08-02 00:23 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3380` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3392` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,7 +90,19 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-532 §5`, FIVE CORRECTIONS. DESIGN ONLY.** (2026-08-02 00:04, `840b1c99`)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN, `R-533 §5`, ONE NARROW BOUNDARY. DESIGN ONLY.** (2026-08-02 00:22, `b3e7221c`)
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** close the capability boundary per **`R-533 §5`, four items** — ★★★★★ **(1) REPLACE operative requirement `1`'s `module OR a separate process` disjunction with the single selected pure-module form, then SWEEP EVERY OPERATIVE CARRIER; (2) specify the module's CLOSED export/state surface, preferring a ZERO-IMPORT LEAF; (3) ADD the clean-import captured-reader mutation + an immutable-constant GREEN neighbour, and DO NOT narrow requirement `4`/row `26` away.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE BLOCKED.** ★★★ **READ `R-533 §5` — `grep -n "^## R-533" ADVISOR-RULINGS.md`.**
+**ALLOWED FILES:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — the blueprint is explicitly OUT this round.**
+**FORBIDDEN:** implementation · pinned lanes (RUN, never MODIFY) · ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
+**FIRST OBSERVABLE:** items `1`+`2`, **~25–40 min.** **START-RECEIPT REQUIRED** (delta baseline).
+★★★ **ACCEPTANCE PROBE WARNING, FROM MY OWN MISS: the search for a surviving menu MUST TOLERATE DETERMINERS — `OR **A** SEPARATE PROCESS` is how mine returned `0` on live text.**
+**STOP CONDITIONS (`R-533 §5`, verbatim):** ★★★★★ **A clean import graph treated as proof that no callback, setter, mutable singleton or captured reference can feed expectations into `project()` → STOP.** ★★★ **"Separate process" remaining an operative choice without a named sandbox mechanism → STOP.**
+
+---
+
+## ~~AUTHORIZED — `R-532 §5`~~ **[DISCHARGED BY `AR-575`, `5/5`; contract content below retained]** (2026-08-02 00:04, `840b1c99`)
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
 **GOAL:** revise the `P0-vNext` design per **`R-532 §5`, five corrections** — ★★★★★ **load-bearing: (1) DELETE every equation of `NOT-APPLICABLE` with JSON `null` — design `:72` and proof row `7`; (3) REBUILD row `7` on the REAL nine cells and add the discriminator (one-lane `approximation True → null` → claim `A` RED while claim `B` still skips); (4) SELECT ONE capability-isolation contract and DELETE THE MENU.** ⚠ **DESIGN ONLY. IMPLEMENTATION AND GRADE STAY BLOCKED.** ★★★ **READ `R-532 §5`; NOT PARAPHRASED HERE — `grep -n "^## R-532" ADVISOR-RULINGS.md`.**
@@ -178,13 +190,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (`claude.exe 15520`, seated `2026-08-01 23:21`). LEDGER AT `R-532` (`840b1c99`) + correction annotation (`f3ea78f1`), CONSUMING EXTERNAL READ `bf5b073d`. NEWEST AR: `AR-575` (`00:11:59`, `6d743db4`) — `R-532 §5` DELIVERED, `5/5`, `35/35`, TS lane EXECUTED. Last RULED: `AR-573`. **`R-533` OWED AND HELD — `R-532` consumed `bf5b073d`, ONE READ ONE RULING. WORKER IDLE BY THE GATE.** ✅★★★ **`AR-574` ACCEPTS `F-1` AND OWES AN **EXECUTION, NOT A TEXT EDIT**: it takes the TS lane, will report agreement as MEASURED or REFUSED, and PRE-STATES its refusal wording (`AGREEMENT UNVERIFIED — TS LANE NOT EXECUTED`) rather than letting the Python result stand in for both. It also carries my instrument fault forward as a `3/3`-rows-matched control of its own.**
+## ✅★★★★★ SEAT — **ACTIVE (`claude.exe 15520`, seated `2026-08-01 23:21`). LEDGER AT `R-533` (`b3e7221c`), CONSUMING EXTERNAL READ `dbd4c0fe`. **`R-534` OWED AND HELD — one read, one ruling.** NEWEST AR: `AR-575` — **RULED BY `R-533`.** WORKER AUTHORIZED (`R-533 §5`, one narrow boundary, design only); START-RECEIPT AWAITED. ✅★★★ **`AR-574` ACCEPTS `F-1` AND OWES AN **EXECUTION, NOT A TEXT EDIT**: it takes the TS lane, will report agreement as MEASURED or REFUSED, and PRE-STATES its refusal wording (`AGREEMENT UNVERIFIED — TS LANE NOT EXECUTED`) rather than letting the Python result stand in for both. It also carries my instrument fault forward as a `3/3`-rows-matched control of its own.**
 🛑★★★★★ **`R-532`'s HEADLINE, AND IT IS MINE: `[MEASURED HERE BY EXECUTION, `compile_binding_plan()` in `wt-ledger-e-delivery-r497-20260730` @ `c304b098`]` the three `NOT-APPLICABLE` rows emit `approximation=True` and a CONCRETE `primitive` string — **`6` NON-NULL, `3` NULL**, reproducing the read's table value-for-value. **`R-531 §6` ITEM `1` — MY OWN ORDER — SAID *"JSON `null` carrying a semantically inapplicable value"*, AND OBEYING IT WOULD HAVE REWRITTEN SIX REAL RUNTIME VALUES.** ✅ **ANNOTATED ON THE ORIGINAL (`f3ea78f1`), struck, with the rest of the item left standing. `WHEN THE DOER OBEYS AND THE RESULT IS WRONG, THE ORDER IS THE DEFECT` — `AR-573` executed my instruction faithfully and the record must not read against it.**
 🛑★★★★★ **MY LADDER, THIRD RUNG IN THREE RULINGS: `OBEDIENCE` → `COHERENCE` → `CORRESPONDENCE`. `R-531` convicted me for checking obedience; I switched to an invariant-derived coherence check and **that check is still true** — and it still missed this, because **A DOCUMENT CAN BE PERFECTLY SELF-CONSISTENT AND FACTUALLY FALSE ABOUT THE SYSTEM IT DESCRIBES.** `THE ONLY CHECK THAT OUTRANKS READING IS RUNNING.`**
 ⚠★★★ **AND MY PROBE FAILED FIRST, CAUGHT BY MY OWN CONTROL: first execution returned `bindings=0`, `0/3` rows — I passed the file wrapper `{_why, spec, video}` to a function documented to take the artifact body. Eighth instrument fault of this family; the control is the only reason it did not become a false finding against a correct reader.**
 ✅★★ **GRADE RE-DEFERRED A THIRD TIME — AND THE BAR IS NOW PRE-REGISTERED (`R-532 §4`) SO IT CANNOT REGRESS FOREVER: it FIRES on the first external read with **ZERO structural corrections**, or two consecutive reads with only non-structural items. Corrections per round are converging `9 → 5 → 2` `[MEASURED]`. ⚠ **Harness blocks `Agent` dispatch for this seat — WHEN THE BAR IS MET, ASK THE OPERATOR.**
 ⚠ **`[RELAYED, NOT VERIFIED HERE]` the TS lane and the two-lane agreement claim — I ran PYTHON only, and `R-532` assigns that execution to the worker.**
-🛑★★★★★ **[FACT, MEASURED HERE, **NOT RULED** — OWED INTO `R-533`, WHICH IS HELD FOR THE NEXT EXTERNAL READ] `AR-575`'s ACCEPTANCE ITEM `5` CLAIMS *"menu deleted"* AND THE MENU SURVIVES.** `[MEASURED HERE, committed `6d743db4`, design `:98`]` **requirement `1` of the FIVE STRUCTURAL REQUIREMENTS still reads *"`project()` LIVES IN A DEPENDENCY-ISOLATED MODULE **OR A SEPARATE PROCESS**"* — while the NEW section at `:106–111` says *"ONE OPTION, CHOSEN. THE MENU IS DELETED"* and picks `(b)`.**
+✅★★★★★ **[NOW RULED — `R-533 §1`. THE DEBT BELOW IS PAID; KEPT BECAUSE THE PROVENANCE MATTERS.] `AR-575`'s ACCEPTANCE ITEM `5` CLAIMS *"menu deleted"* AND THE MENU SURVIVES.** `[MEASURED HERE, committed `6d743db4`, design `:98`]` **requirement `1` of the FIVE STRUCTURAL REQUIREMENTS still reads *"`project()` LIVES IN A DEPENDENCY-ISOLATED MODULE **OR A SEPARATE PROCESS**"* — while the NEW section at `:106–111` says *"ONE OPTION, CHOSEN. THE MENU IS DELETED"* and picks `(b)`.**
 > ⚠★★★★★ **THIS IS THE CAMPAIGN'S OWN CONVICTED SPECIES, AND `AR-573` RETIRED AN IDENTICAL ONE ONE ROUND AGO (the stale `:56` derived-axis line): `A CONTRADICTION IS COMPLIANCE-CITABLE BY WHICHEVER SIDE AN IMPLEMENTER PREFERS.` `:98` is NORMATIVE (*"`project()` LIVES IN…"*), so an implementer can satisfy requirement `1` by choosing the separate process — the branch `R-532 §5` item `4` ordered deleted and whose stop condition forbids citing it as isolation.** ✅ **NARROW: the `:106–111` REASONING IS SOUND and I do not disturb it — the choice of `(b)`, the not-a-sandbox narrowing, the explicit threat model and the four named red-proofs are all present and correct `[MEASURED HERE]`. **ONE SURVIVING LINE, NOT A BAD ARGUMENT.**
 > 🛑★★★★★ **AND MY PROBE NEARLY CERTIFIED IT CLEAN — NINTH INSTRUMENT FAULT OF THIS FAMILY: I searched `OR SEPARATE PROCESS` and got **`0`**, because the text is `OR **A** SEPARATE PROCESS`. **ONE ARTICLE.** I only caught it because a SECOND, looser probe (`MODULE OR`) returned `1` and I opened the line instead of trusting the first zero. ★★★★★ **`A PHRASE PROBE MUST TOLERATE ARTICLES AND DETERMINERS, OR MATCH A CASE-STABLE ANCHOR — PROSE IS NOT A KEY`, and `TWO PROBES DISAGREEING IS THE CHEAPEST BUG DETECTOR I HAVE.`**
 > ✅ **VERIFIED CLEAN IN THE SAME PASS `[MEASURED HERE]`: caption `34` rows, `1..34` contiguous, `0` duplicates, row `7` rebuilt on the REAL `3×3` population, row `33` the one-lane `True→null` DISCRIMINATOR, row `34` the sole clean control — **`33 + 1 = 34` CORRECT** · the `NOT-APPLICABLE`↔`null` equation survives on exactly ONE line and it is the RETRACTION (`:73`), never a rule · scope = the design doc `+25/-11` + the AR only.**
