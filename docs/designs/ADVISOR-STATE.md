@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3651` at THIS commit, 2026-08-02 07:12 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3654` at THIS commit, 2026-08-02 07:42 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3651` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3654` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,8 +90,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `07:12`, `[MEASURED HERE, date]`)
-**Ruling ledger at `R-566` (commit `8b26c4c4`). Newest AR: `AR-604` — ✅ RULED by `R-566`. NOTHING UNRULED.**
+## ★★★★★ SEAT (2026-08-02 `07:42`, `[MEASURED HERE, date]`)
+**Ruling ledger at `R-567` (commit `56d50066`). Newest AR: `AR-604` — ✅ RULED by `R-566`. NOTHING UNRULED.**
+🛑★★★★★ **MONEY PATH IS STALLED AT `2.5 / 5` AND THE ONE RESERVED DECISION IS THE OPERATOR'S: WHETHER TO SEAT A **FRESH WORKER**.** `[MEASURED HERE `07:40`]` **worker seat `21508` ALIVE, its ear `35656`/`28348` ALIVE, last report AND last commit both `07:08` (32 min), prototype untouched since `07:00`, NO uncommitted edits. `R-566` landed `~07:10` — after its last activity, into a live ear, and produced no start-receipt.** ★★★ **`SILENCE IS REPORTED, NEVER DIAGNOSED` — idle / silent-work / exhausted are INDISTINGUISHABLE from this bar and I do not pick one.** ⚠️ **`AR-603` had already declared GENUINE CONTEXT EXHAUSTION; `(2)/(3)/(5)` STAY AUTHORIZED TO THE SEAT (`§0.5`: a handoff declaration is self-assessment, not a transfer), and a FRESH WORKER SEAT IS THE OPERATOR'S ACT.**
+🛑★★★ **AND THE UNREADABILITY IS MY DEFECT (`R-567 §2`): `R-566 §6.1` authorized three code items and named NO first observable and NO ETA. Every other code ruling tonight named both. `THE ONE TIME I SKIPPED THE CLAUSE IS THE ONE TIME I NEEDED IT.` Supplied retroactively in `R-567 §0`, with a DECLINE-RECEIPT path made explicit — a decline is a discharge.**
+✅ **NOTHING IS LOST BY WAITING: object committed at `24269a5f`, all five gates GREEN, this file written for a cold start.**
 ✅★★★★★ **`R-566` ADJUDICATED `new.target` = **CORRECT AS ADMITTED**, NOT A HOLE. Discriminator MEASURED in one run with controls: `import.meta` REJECTED · `process.env` REJECTED · **`new.target` ADMITTED ALONGSIDE `lane`**.** ★★★★★ **THE PROPERTY THIS RULE WAS ALWAYS ABOUT: `REACHED-FOR` vs `SUPPLIED`. `import.meta` yields host state whoever calls; `new.target` yields only what the caller's invocation determined — the same relationship `lane` has. TypeScript's checker independently binds it to the enclosing function.** 🛑 **DO NOT PATCH IT, and do NOT exclude `MetaProperty` from the `declaredHere` branch — that is the over-correction, and it would convict `lane` as a class.**
 🛑★★★ **I CORRECTED MY OWN RECORD IN `R-566 §2`: `R-563`/`R-564` logged `new.target` as an OPEN CHANNEL and a `G-1` instance. The MEASUREMENT was right; the INTERPRETATION was wrong.** ★★★★★ **`I CONFIRMED A CLASS BY ITS SPELLING AND NOT BY ITS SEMANTICS` — two `MetaProperty` nodes, one dangerous and one benign, and I let `SyntaxKind` be the join key for three rulings. `i-measured`'s law in a new costume.**
 ✅★★★★★ **AND MY OWN BLIND SPOT IS **CLOSED**, not inherited: `AR-604 §4` handed over the type-clean fixture my probes could not build, and `[MEASURED HERE]` `export const project = (lane: Lane) => ({ v: import.meta });` → **`REJECTED 1b-S:free-captured-reference`** (was `TYPE_INVALID`), controls alive in the same run. **`F-2` is now confirmed on TWO paths, NEITHER relayed. `R-565 §1`'s `[RELAYED]` label is DISCHARGED.**
