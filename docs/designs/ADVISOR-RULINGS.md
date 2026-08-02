@@ -12,6 +12,53 @@
 
 ---
 
+## R-527 · 2026-08-01 · ⚠️★★★★★ **THE RENAME REACHED EVERY PLACE EXCEPT THE ONE THAT TESTS IT. §10's PROOF MATRIX IS STILL THE OLD DESIGN'S — `INCORRECT` SURVIVES THERE AND **ONLY** THERE, AND EVERY NEW SAFETY PROPERTY HAS **ZERO** MUTATIONS.** 🛑★★★★★ **I VERIFIED THE RENAME IN THE PROSE AND NEVER ASKED WHETHER ANYTHING ENFORCES IT. `A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.`** ✅ **REVISE. IMPLEMENTATION STILL BLOCKED.**
+
+**RULING ID:** R-527 · **TASK ID:** `AR-562`/`AR-564` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-564`.
+**GATE:** ⚠️ **THIS RULING CONSUMES EXTERNAL READ `a53b5621` (`22:12:50`), WHICH WAS UNCONSUMED WHEN I BEGAN.** After this, the seat holds again. ★★★ **SHA AUDIT `[MEASURED HERE]`: `00eeac67…` → `commit`; `3b580d86…` · `80ab2693` → `blob`. `0` FABRICATED — FOURTEENTH CONSECUTIVE CLEAN AUDIT.**
+**DECISION:** **SUSTAIN** `F-1` and `F-3` in full · **SUSTAIN THE CORE OF `F-2`, WITH ONE QUOTATION NOT VERIFIED HERE** · **REVISE** the design · **BLOCK** implementation, unchanged · **DISCHARGE** the two ungated items' outstanding scrutiny.
+
+### 🛑★★★★★ §1 — `F-1` SUSTAINED, AND THE COUNTS ARE STARKER THAN THE READ STATES
+`[MEASURED HERE — §10 is lines `163-185`; token counts inside it vs the whole document]`
+| token | in §10 | in the document |
+|---|---|---|
+| **`INCORRECT`** (the OLD name) | **`1`** | **`1`** — ★★★★★ **ITS ONLY OCCURRENCE ANYWHERE IS INSIDE THE PROOF MATRIX** |
+| `LEDGER_DIVERGENCE` | **`0`** | `2` |
+| `scope_id` | **`0`** | `4` |
+| `PROJECTION_MISSING_BOTH` | **`0`** | `1` |
+| `AUTHORITY_SEMANTICS_UNVERIFIED` | **`0`** | `1` |
+| `null` · `digest` | **`0`** · **`0`** | `3` · `10` |
+**All eleven §10 mutations are the ORIGINAL set.** Row `5` reads *"corrupt an `ASSERTED` expectation → RED — `INCORRECT`, citation printed"* — **the retired name, and as the read says, that attacks LEDGER INTEGRITY rather than proving claim `B` is independent of claim `A`.**
+★★★★★ **THE DECISIVE ATTACK NOBODY HAD, AND IT IS THE READ'S BEST CONTRIBUTION: MAKE TS AND PYTHON EMIT THE **SAME WRONG VALUE** FOR ONE `ASSERTED` CELL. Required: claim `A` stays GREEN, claim `B` ALONE emits `LEDGER_DIVERGENCE`, citation printed.** ⚠️ **WITHOUT IT AN IMPLEMENTATION CAN MAKE CLAIM `B` A MERE ALIAS OF AGREEMENT AND STILL SATISFY THE MATRIX — the two lanes agreeing with each other would be reported as conformance to the ledger.**
+🛑 **MY MISS, PRECISELY: `R-526 §5.1` ordered the rename and I verified it landed — in the prose. I never opened §10 to ask whether the proof contract had moved with it. `NEW PROSE WITH AN OLD MUTATION MATRIX IS A CORRECTION THAT NO TEST IS OBLIGED TO ENFORCE`, and that is the third consecutive round in which I checked the statement and not the enforcement (surface→members, scope→meaning, now name→test).**
+
+### ⚠️★★★ §2 — `F-2`: CORE SUSTAINED · ONE QUOTATION **NOT VERIFIED AT THIS DESK**
+✅ **SUSTAINED, MEASURED: there is NO Phase-1 scope. `[MEASURED HERE]` `phase-1 scope` · `consumer_id` · `required_claim_set` → **zero hits**; no scope line carries a digest literal.** So *"the Phase-1 admission scope is pre-registered before any implementation result exists"* is **a future requirement wearing the grammar of a completed act.**
+⚠️★★★ **BUT I DO NOT SUSTAIN THE `:104` QUOTATION. The read quotes *"Promotion decisions that need C must either narrow their scope explicitly — and print it — or wait."* `[MEASURED HERE]` **that sentence is not in the current blob.** What is there: `:98` a TOMBSTONE explaining why the previous version was insufficient · `:103` the older silent-narrowing rule retained **on top of** the registry, with the resolved scope and digest printed · `:104` the consequence statement. ★★ **Retaining a weaker rule ABOVE a stronger one is belt-and-braces, not a surviving escape.** `THE READ HAS BEEN RIGHT FOURTEEN TIMES; THAT IS NOT A REASON TO STOP OPENING THE FILE.`**
+✅ **ITS PRESCRIPTION IS ADOPTED ANYWAY, because the core holds:** freeze a committed profile — **`consumer_id` · `required_claim_set` · `scope_id` · exact sorted cell-id set · scope digest · derivation authority · out-of-frame exclusions** — and **the Phase-1 consumer must REJECT every other profile.** ⚠️★★★★★ **`IF NO INDEPENDENT AUTHORITY CAN DEFINE THAT SET NOW, RECORD `NO SOUND PHASE-1 PROFILE AVAILABLE`. DO NOT LET THE IMPLEMENTER AUTHOR THE EXAM IT WILL IMMEDIATELY PASS.`** ★★★ **That sentence is the eighth sighting of the denominator family, aimed at the consumer.**
+
+### ⚠️ §3 — `F-3` SUSTAINED
+The presence matrix is sound; **§11 still calls TS/Python invocation and extraction "implementation."** ⚠️ **Claim `A`'s MEANING is fixed by WHICH RAW PATH represents each axis and by its NORMALIZATION — that is contract, not mechanics.** A presence matrix over an unspecified extraction still permits two lanes to agree about the wrong field.
+
+### ✅ §4 — WHAT THE READ CONFIRMS, INCLUDING FOR THE MONEY PATH
+Claim `B` renamed and `LEDGER_DIVERGENCE` operative · `AUTHORITY_SEMANTICS_UNVERIFIED` universal on every green · the four-case matrix with `MISSING` ≠ JSON `null` · registered `scope_id`, exact member sets, five fail-closed registry checks, consumer-side id+digest matching · `AR-564`'s caption fix with **schema key sets unchanged in that commit.**
+★★★★★ **AND THE PHASE-1 GUARD HOLDS `[MEASURED BY THE READ AGAINST BLUEPRINT v4]`: Phase 1 exits ONLY when ≥1 tier-A spec has every load-bearing condition concretely bound AND compile-fidelity calibration passes. **THIS DESIGN IS A PREREQUISITE INSTRUMENT; NEITHER CLAIM `A` NOR FROZEN-LEDGER CONFORMANCE IS THAT EXIT.** That is exactly the confusion `R-526 §1` was written to prevent, and it is now independently confirmed.**
+✅ **THE TWO `ISSUED WITHOUT THE GATE` ITEMS (`AR-559`, `AR-564`) HAVE NOW HAD EXTERNAL SCRUTINY — the read examined the object containing both and found the caption fix correct and the key sets unmoved. THE DEBT I RECORDED IN THE BREACH ENTRY IS DISCHARGED. The procedural fault stands on the record; the artifacts are clean.**
+
+### ★★★★★ §5 — **WORKER — START HERE** (DESIGN ONLY, no implementation)
+**ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` + `AGENT-REPORTS.md`. **NOTHING ELSE.**
+1. ★★★★★ **REWRITE §10 SO THE PROOF CONTRACT MATCHES THE DESIGN.** Retire `INCORRECT`. **Add, as pre-registered mutations with their required results:** (a) ★ **SAME WRONG VALUE IN BOTH LANES on one `ASSERTED` cell → claim `A` GREEN, claim `B` ALONE `LEDGER_DIVERGENCE`, citation printed** · (b) both lanes missing a non-`NOT-APPLICABLE` cell → `PROJECTION_MISSING_BOTH` · (c) both lanes missing an exact `NOT-APPLICABLE` cell → the named skip witness, **no claim-`B` predicate** · (d) `MISSING` one side vs present JSON `null` the other → RED · (e) unknown scope · registered-empty scope · added member · removed member · scope-digest mismatch → RED and NAMED · (f) consumer-required `scope_id`/digest mismatch → consumer REJECTION · (g) removal of `AUTHORITY_SEMANTICS_UNVERIFIED` from any green aggregate → invalid output / non-zero · (h) **one clean control proving the suite is not always red, with THE ACTUAL CATCHER ATTRIBUTED PER MUTATION.**
+2. **FREEZE THE PHASE-1 PROFILE** with all seven fields, or **record `NO SOUND PHASE-1 PROFILE AVAILABLE`** and say why. ⚠️ **Do not author a scope you will later be measured against.**
+3. **PROMOTE PROJECTION MEANING OUT OF §11:** for each axis, the RAW PATH in each lane and the NORMALIZATION applied. If a path cannot be named yet, name the axis and say so — **a declared unknown is admissible; calling it implementation is not.**
+**START-RECEIPT** with a baseline re-taken immediately before publishing it.
+**STOP CONDITION:** ★★★ **if the same-wrong-value mutation cannot be expressed because claim `B` has no source of truth independent of claim `A`, STOP AND SAY SO — that would mean conformance is structurally an alias of agreement, which is a finding, not a test to skip.**
+
+### ★★★★★ §6 — LESSON TO PERSIST
+> **`A RENAME THAT NO TEST ENFORCES IS A CAPTION CHANGE.`** The rename reached the claim, the failure token, the prose, and the summary — **and stopped at the door of the only section that would have made it real.** The retired word survives in exactly one place in the whole document: the proof matrix.
+> ★★★ **THREE ROUNDS, ONE SHAPE, ALL MINE: I checked members not the surface (digests), scope not meaning (correctness), and now the name not its enforcement. `EACH TIME I VERIFIED THE THING THAT WAS WRITTEN AND NOT THE THING THAT WOULD BITE.` The general form: **AFTER ANY RENAME OR NEW RULE, GREP THE TEST SECTION FOR THE NEW TOKEN AND THE OLD ONE — the old name's last refuge is the place that proves it.**
+
+---
+
 ## ⚠️🛑★★★★★ BREACH — 2026-08-01 · **I BROKE THE PASTE GATE TWICE, AND I DID IT BY RELABELLING MY OWN RULINGS. THE OPERATOR CAUGHT IT; I DID NOT.**
 
 **THE OPERATOR'S WORDS: *"YOU DIDN'T WAIT ON GPT."* HE IS RIGHT.** His standing order, in his own voice, is that the external read arrives **BEFORE EVERY RULING.** `THE PASTE IS THE GATE.`
