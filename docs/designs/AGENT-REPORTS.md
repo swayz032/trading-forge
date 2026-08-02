@@ -4,6 +4,35 @@
 
 ---
 
+## AR-564 · 2026-08-01 · ✅ **CORRECTION (`23722d1a`) DELIVERED — §7's `ORACLE.json` CAPTION REPLACED, KEY SETS PROVEN UNMOVED ON TWO PATHS, STALE PHRASE COUNT `0`.** ⚠️★★★ **AND A NEAR-FALSE-ALARM AGAINST MY OWN EDIT: MY VERIFICATION SAID THE KEY-SET CELL HAD CHANGED. IT HAD NOT — MY CHECKER WAS READING UTF-8 THROUGH A `cp1252` PIPE.**
+
+**RULING ID:** CORRECTION `23722d1a` · **TASK ID:** AR-564 · **PRIOR:** AR-563 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+
+### ✅ §1 — THE ONE LINE, AND THE PROOF THAT NOTHING ELSE MOVED
+**§7's row now reads:** `ORACLE.json` — **AUTHORITATIVE FOR NO MEMBERSHIP, REQUIREDNESS OR COMPLETENESS DECISION; HISTORICAL SOURCE OF THE FROZEN VALUES; COMPARED ONLY (see §12)** — so §7 and §12 can no longer disagree.
+```
+stale phrase "AUTHORITATIVE FOR NOTHING" in the document        0          ✅
+key sets, re-counted:  root 6/6 · fixture 10/10 · row 9/9                  ✅
+PATH 1  in-process assertion at edit time: cell-2 byte-identical           ✅
+PATH 2  cell-2 vs the LAST COMMITTED version, line-endings normalised      ✅ identical
+delta   exactly docs/designs/P0-VNEXT-DESIGN-2026-08-01.md                 ✅
+```
+★★★ **I asserted byte-identity MECHANICALLY inside the edit — replacing only cell 1 and re-reading cell 2 after the write — rather than eyeballing the row, because the stop condition said the schema is verified and the caption is the only defect.**
+
+### ⚠️★★★★★ §2 — THE INSTRUMENT SLIP, RECORDED BECAUSE IT NEARLY BECAME A FINDING AGAINST MY OWN WORK
+**My second-path check reported `key-set cell identical to committed version: False`.** ⚠️ **THAT WAS FALSE, AND THE DEFECT WAS IN THE CHECKER: it piped `git show` into a `python -c` reading `sys.stdin`, and on this box stdin decodes as `cp1252`, which mangles the UTF-8 stars and arrows in the row.** ✅ **Re-run against BYTES, with line endings normalised: identical.**
+★★★ **Two encoding faults in one task — the same run also died printing the caption, `'charmap' codec can't encode`. `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST`, and I had a prior, stronger measurement (the in-process byte assertion) that the second path was contradicting. `WHEN TWO PATHS DISAGREE, THE ANSWER IS TO GO MEASURE — NEVER TO AVERAGE AND NEVER TO PICK THE CONVENIENT ONE.`**
+⚠️ **Had I trusted it, I would have reported a phantom regression in a cell the ruling explicitly forbade me to move.**
+
+### ⚠️★★★ §3 — THE DEFECT THAT CAUSED THIS TASK, IN ONE LINE
+**I ADDED the corrected clauses in §12 and did not REPLACE the superseded caption in §7 — so the document asserted both, with the wrong half in the scanned position.** `A CORRECTION THAT IS ADDED RATHER THAN APPLIED LEAVES THE DEFECT WHERE IT IS READ.`
+★★★★★ **AND `AR-562 §2`, MY OWN PREVIOUS REPORT, HAD JUST CONVICTED ME OF THE IDENTICAL SHAPE — I swept for the OLD wording after the rename and found three stale captions, then did not run that sweep for the other correction in the same delivery.** `A LAW YOU MINT IN THE SAME REPORT IS NOT YET A HABIT.` ✅ **Adopted: sweep for the OLD wording ONCE PER CORRECTION, not once per delivery.**
+
+### §4 — POSITION
+**Design CORRECTED, committed and published.** `P0-vNext` implementation **BLOCKED pending the external read** · `P3` · Gate B · merge/deploy/release **HOLD**. **No open task.**
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-563 · 2026-08-01 · **START-RECEIPT — CORRECTION (`23722d1a`) ACCEPTED. ONE CAPTION LINE IN §7. THE KEY SETS DO NOT MOVE.**
 
 **RULING ID:** CORRECTION `23722d1a` (completing `R-526 §5.4`) · **TASK ID:** AR-563 · **PRIOR:** AR-562 · **SEAT:** `claude.exe 26204`.
