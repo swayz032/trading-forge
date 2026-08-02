@@ -4,6 +4,53 @@
 
 ---
 
+## AR-598 · 2026-08-02 · ✅★★★★★ **`R-556`'s OPTIONAL ITEM, ANSWERED BY MEASUREMENT RATHER THAN BELIEF: THE POPULATION THAT COULD HOLD A LIST-BOUGHT CREDIT IS **CLOSED AT `6` ROWS**, NOT AN OPEN SUSPICION — ONLY `6` OF THE EXPANDED CORPUS PRODUCE A SEMANTIC DIAGNOSTIC AT ALL, AND A CREDIT CANNOT BE BOUGHT FOR A ROW THAT PRODUCES NONE.** 🛑★★★ **ALL SIX WERE LIST-BOUGHT BEFORE THIS WAVE (`oldGlobalListWouldCredit=true` ON EVERY ONE) — BUT LIST-BOUGHT IS NOT THE SAME AS WRONGLY CREDITED, AND I SEPARATE THEM.** ⚠️★★★★★ **AND I FOUND A RESIDUAL I OWE: **EVERY ANCHOR HAS MEASURABLE SLACK**, SO A SAME-CODE DIAGNOSTIC LANDING INSIDE A DECLARED EXPRESSION BUT OUTSIDE THE PLANT WOULD STILL BE CREDITED.**
+
+**RULING ID:** `R-556` START-HERE, the one authorized item · **TASK ID:** AR-598 · **PRIOR:** AR-597 (`53e80935`).
+**NO CODE CHANGED — a LIST, as ordered.** ✅ **`P0PC` HELD at DELIVERED-PENDING-GRADE. I have not self-certified, not started `P0PG`, and not dispatched a grader (`R-556 §5`).** The probe below was a throwaway written to the prototype directory (so bare `'typescript'` resolves) and **REMOVED in the same command** `[MEASURED HERE]`; no shipped artifact was touched. **`git status` clean apart from this report.**
+
+### ✅★★★★★ §1 — THE POPULATION IS CLOSED, AND THAT IS A STRONGER ANSWER THAN A LIST OF SUSPECTS
+`[MEASURED HERE — `admitSource` over EVERY source row of the expanded corpus AND the GREEN neighbours, at `53e80935`]`
+**`6` rows produce a semantic diagnostic. Zero others.** ★★★★★ **A `caught_by_typechecker` credit can only be bought by a row that HAS a diagnostic to buy it with — so the population at risk is not "the corpus", it is these six, and it is enumerable rather than believed.**
+```
+34(d-u)  TS2304   declared TS2304@"undeclaredReader(lane)"
+52(a)    TS1117   declared TS1117@"a: 2"
+52(b)    TS1117   declared TS1117@"\"\\x61\": 2"
+52(c)    TS1117   declared TS1117@"\\u0061: 2"
+52(d)    TS1117   declared TS1117@"\"a\": 2"
+54(c)    TS2532 + TS2540   declared TS2532@"this.inject" + TS2540@"HOLDER.slot = f"
+TOTAL rows producing semantic diagnostics: 6 · rows with NO declaration: 0
+```
+✅ **AND THE GATE ALREADY ENFORCES THE CLOSURE:** an undeclared row with a diagnostic fails the ownership join and the run stops (that is exactly how `34(d-u)` was caught). **So "are there other rows holding list-bought credits" has a mechanical answer today: `NO`, because the clean control is GREEN and a single undeclared credit would make it RED.**
+
+### 🛑★★★ §2 — ALL SIX WERE LIST-BOUGHT. ONLY ONE WAS WRONG. I WILL NOT BLUR THAT
+`[MEASURED HERE]` **`oldGlobalListWouldCredit = true` on ALL SIX** — every one of their codes (`TS2304`, `TS1117`, `TS2532`, `TS2540`) sat in the deleted `TYPECHECKER_CAUGHT_CODES`.
+★★★★★ **SO THE HONEST FRAMING IS: *ALL SIX CREDITS WERE PURCHASED BY THE LIST; FIVE OF THEM HAPPENED TO ALSO BE GENUINELY OWNED, AND NOBODY HAD CHECKED WHICH.*** The wave did not find one bad row among six good ones — **it found six unexamined rows, five of which survived examination.** ⚠️ **`34(d-u)` is the one that did not, and it is not special except in having been wrong.**
+
+### ⚠️★★★★★ §3 — THE RESIDUAL I OWE, MEASURED: EVERY ANCHOR HAS SLACK
+The join requires the diagnostic span to fall **INSIDE** the declared expression. **Every declared expression is WIDER than the diagnostic it owns**, and that difference is a region where a *different* diagnostic **of the same code** would be silently credited as the plant.
+`[MEASURED HERE — `<<DIAG>>` marks the owned diagnostic's span inside its anchor]`
+```
+34(d-u)  anchor 22ch  diag 16ch  slack R=6   "<<DIAG>>(lane)"            <- WIDEST; slack contains `lane`
+54(c)    anchor 15ch  diag  4ch  slack L=7 R=4  "HOLDER.<<DIAG>> = f"    <- slack BOTH sides; contains `HOLDER`, `f`
+54(c)    anchor 11ch  diag  4ch  slack R=7   "<<DIAG>>.inject"           <- slack contains `inject`
+52(a)    anchor  4ch  diag  1ch  slack R=3   "<<DIAG>>: 2"
+52(b)/(c) anchor 9ch  diag  6ch  slack R=3   "<<DIAG>>: 2"
+52(d)    anchor  6ch  diag  3ch  slack R=3   "<<DIAG>>: 2"
+```
+🛑★★★ **THE CONCRETE FAILURE THIS ADMITS, stated as a scenario and NOT as a proven defect:** if `lane` in `34(d-u)` ever became unresolvable, its `TS2304` would land at offset `62` — **inside `undeclaredReader(lane)`** — and be credited as the planted free reference. **The plant would be gone and the credit would remain.** ⚠️ **`[HYPOTHESIS — UNPROVEN]`: I did NOT construct that fixture, because `R-556` authorized a list and not a repair. It is a reachable shape, not an observed one.**
+⚠️ **THE `52(*)` AND `inject` SLACKS ARE LOW-RISK BUT NOT ZERO-RISK** — a numeric literal `2` or a property name rarely carries a `TS1117`/`TS2532`, and `TS1117` is emitted at the KEY by construction. **I am not claiming they are safe; I am ranking them.**
+★★★★★ **THE DESIGN TENSION, SO NOBODY RESOLVES IT SILENTLY LATER: an anchor equal to the diagnostic span is CIRCULAR — it restates what was observed and cannot ever be wrong. An anchor equal to the OWNED EXPRESSION is falsifiable but carries slack. I chose the second and it is the right choice, but it is a choice, and this is its cost.** ⚠️ **A tightening (e.g. requiring the diagnostic span to be the anchor's leading token) is a REPAIR and therefore not mine under `R-556`. Named, owned, not done.**
+
+### ⚠️ §4 — WHAT THIS ENUMERATION DOES **NOT** COVER
+⚠️ **It is scoped to the CURRENT pinned surface.** A row that is `ADMITTED` today could become `TYPE_INVALID` under a different `tsconfig`, joining the population. **`[UNENUMERATED]` and not measurable without changing the surface, which is out of scope.**
+⚠️ **`runtime-admission.mjs`'s `13` rows are NOT in this enumeration** — they are runtime rows, carry no source text and no semantic diagnostics, so they cannot hold a typechecker credit at all. **That is a real exclusion, not a clearance: they remain ENTIRELY UNGRADED for every other question.**
+⚠️ **I did not re-verify the five surviving declarations against an independent reading of what each row "intends"** — I verified each anchor against the compiler's span. **Whether the declared `defect` prose is a TRUE description of the plant is a judgment, and per `doer != grader` it is not mine to certify.**
+✅ **`R-556 §6`'s grade is unaffected by this report: it is an enumeration handed to the grader as input, not a finding that changes the object.** The pin `53e80935` still stands — **no code changed here.**
+
+---
+
+
 ## AR-597 · 2026-08-02 · ✅★★★★★ **ITEMS `14`–`16` AND `F-7` DELIVERED. `R-548`'s TWO FOUNDING ATTACKS ARE CLOSED AND I PROVED IT THE ONLY WAY THAT COUNTS: I REBUILT THE PRE-FIX RULE IN A THROWAWAY TREE AND RAN THE SAME INJECTIONS AGAINST IT — ATTACK A AND ATTACK B BOTH EXIT `0` THERE AND EXIT `1` HERE.** 🛑★★★★★ **AND ITEM `14` CONVICTED A ROW ON ITS FIRST CLEAN RUN THAT NOBODY WAS ATTACKING: `34(d-u)` HELD A `caught_by_typechecker` CREDIT PURCHASED ENTIRELY BY THE GLOBAL CODE LIST.** 🛑★★★★★ **ITEM `16` FOUND THAT `54(c)` HAD **NEVER BEEN COMPARED** BY THE FREEZE GATE — THE PUBLISHED `38` WAS `39` MINUS A ROW THE COMPARATOR SILENTLY DROPPED, AND THE DROPPED ROW IS THE ONE CARRYING AN UNDECLARED EMIT CHANGE.**
 
 **RULING ID:** `R-551 §6.1` items (2) + (3), as re-issued by `R-555 §6.1` · **TASK ID:** AR-597 · **PRIOR:** AR-596 (`97870c07`).
