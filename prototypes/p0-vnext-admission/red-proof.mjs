@@ -186,8 +186,44 @@ rows.push({ cls: 'over_correction_control', ok: overCorrectionOk, code: control.
 // argument was sound about STATUSES and silent about IDS. It is a normal red-proofed class
 // above now. `A GUARD I CANNOT TRIP MAY BE A GUARD I HAVE NOT TRIED HARD ENOUGH TO TRIP.`
 console.log('='.repeat(104));
-const allOk = controlOk && rows.every((r) => r.ok);
-console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${rows.length}`);
+// 🛑★★★★★ F-1 (INDEPENDENT GRADE 2026-08-02, INSTANCE NINE) — THE DENOMINATOR NOW COMES FROM
+// THE DECLARATIONS AND NEVER FROM THE ACCUMULATOR.
+//
+// THE DEFECT, MEASURED BY THE GRADER AND REPRODUCED BY THE DESK (R-575 §2): a TWELVE-BYTE edit
+// at a LOOP HEAD — `of EXPECT` -> `of EXPECT.slice(0, 1)` — turned this line into
+//     "CONTROL GREEN: true | CLASSES WITH A DEMONSTRATED RED PATH: 23 / 23"
+//     "VERDICT: the runner is an ENFORCING GATE"   EXIT 0
+// EIGHTEEN RED PATHS DISAPPEARED AND THE INSTRUMENT CERTIFIED ITSELF AN ENFORCING GATE.
+//
+// ⚠️ AND IT IS NOT A NINTH COPY OF THE OLD DEFECT — IT IS A NEW SEAM, WHICH IS WHY EIGHT PRIOR
+// INSTANCES DID NOT PREDICT IT:
+//     THE PIN FREEZES THE DECLARATION; THE COUNT READS THE CONSUMPTION.
+// `AR-607` pinned `CLASSES`/`SHARED`/`EXPECT`/`FREEZE_EXPECT` and the pin was WORKING — the
+// declaration was BYTE-IDENTICAL and `checkPinnedCollections` correctly returned `[]`. `rows` is
+// a RUNTIME ACCUMULATOR built by iterating those tables, so both operands of `x / rows.length`
+// moved together while the pinned text never changed.
+//
+// 🛑 R-575 §5 FORBIDS THE OBVIOUS NEAR-MISS AND IT IS RIGHT: pinning `rows` would be meaningless,
+// because `rows` is BUILT. The fix is the one `type-value-proof.mjs:125` (`pass === CASES.length`)
+// and `emitted-freeze.mjs:142` (`rows.length === EXPECTED_SOURCE_COUNT`) already use, and the
+// grade proved the boundary by exclusion: the SAME mutation reds both siblings.
+//
+// ✅ THE TWO MECHANISMS COMPOSE, AND NEITHER IS SUFFICIENT ALONE:
+//   edit the DECLARATION  -> `module_collections` convicts it against the pinned artifact
+//   edit the CONSUMPTION  -> this count convicts it against the declaration
+const STANDALONE_ROWS = 2; // `freeze_control` + `over_correction_control`: pushed outside any loop
+const EXPECTED_ROW_COUNT = CLASSES.length + SHARED.length + EXPECT.length + FREEZE_EXPECT.length + STANDALONE_ROWS;
+const countOk = rows.length === EXPECTED_ROW_COUNT;
+if (!countOk) {
+  console.log(`*** STOP CONDITION (F-1): built ${rows.length} rows, expected exactly ${EXPECTED_ROW_COUNT}`
+    + ` from the DECLARED tables (CLASSES ${CLASSES.length} + SHARED ${SHARED.length} + EXPECT ${EXPECT.length}`
+    + ` + FREEZE_EXPECT ${FREEZE_EXPECT.length} + ${STANDALONE_ROWS} standalone).`
+    + ' A red path was RETIRED, not failed — a class that never ran cannot be reported as passing.');
+}
+const allOk = controlOk && countOk && rows.every((r) => r.ok);
+// ⚠️ THE DENOMINATOR PRINTED IS THE EXPECTED ONE, NOT `rows.length`. Reporting the accumulator
+// beside a check on the accumulator is how "23 / 23" read as complete coverage.
+console.log(`CONTROL GREEN: ${controlOk} | CLASSES WITH A DEMONSTRATED RED PATH: ${rows.filter((r) => r.ok).length} / ${EXPECTED_ROW_COUNT}`);
 console.log(allOk
   ? 'VERDICT: the runner is an ENFORCING GATE — control green, every class red-proofed.'
   : 'VERDICT: NOT a gate. Classes without a demonstrated red path: ' + rows.filter((r) => !r.ok).map((r) => r.cls).join(', '));

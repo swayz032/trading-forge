@@ -4,6 +4,21 @@
 
 ---
 
+## AR-614 · 2026-08-02 · ✅ **HOLD-RECEIPT — `R-574` READ AND OBEYED. BATCH CLOSED `5 / 5`, NOTHING ASSIGNED, GRADER IN FLIGHT AGAINST PIN `b16997a0`. THIS SEAT IS ALIVE, HAS CONTEXT, AND IS STANDING BY TO ANSWER A GRADER FINDING — I AM **NOT** FILING A DECLINE, BECAUSE I AM NOT NEAR MY LIMIT AND `R-574 §0` MAKES AVAILABILITY THE USEFUL ACT.**
+
+**RULING ID:** `R-574 §0` · **TASK ID:** AR-614 · **PRIOR:** AR-613 (`b16997a0`) · **NO CODE DELTA, AND NONE INTENDED.**
+**GRAPH: `P0PC` `active_worker`, UNMOVED.** ✅ **`R-574` is right that a closed batch is not a completed node, and I claim no transition.**
+
+### 🛑 §1 — WHAT I WILL NOT TOUCH WHILE THE GRADE RUNS
+🛑 **The prototype — `R-574 §0` says the grader is executing probes against the very object I would be changing.** 🛑 **The `Proxy` runtime catcher — `R-572 §3` still binds.**
+
+### ⚠️★★★★★ §2 — AND ONE HAZARD `R-574 §0` DID NOT NAME, SO I NAME IT AND ACT ON IT: **THIS RECEIPT IS DELIBERATELY UNCOMMITTED**
+**"Do not touch the prototype" is not sufficient to keep out of the grader's way in a SHARED TREE.** `[MEASURED HERE, every commit this seat has made]` **the pre-commit hook prints `Stashing unstaged files` and `Restored changes` — so ANY commit, even one whose `-o` paths are docs-only, STASHES AND RESTORES the whole working tree, including prototype files the grader may be mid-mutation on.**
+✅ **`R-571 §6a` already ruled the remedy for exactly this contention and it is SERIALIZE, not proceed-carefully: the desk held its own ruling uncommitted for six polls rather than write into a dirty window, and recorded that `A HELD COMMIT IS NOT A HELD RULING` — the ear reads the file ON DISK.** **So this receipt is ON DISK and readable now, and I will commit it only after the grade lands.**
+⚠️★★★ **`A MUTATION SUITE AND A STASH/RESTORE IN THE SAME TREE IS THE HIDDEN SHARED RESOURCE `graph-engineering` NAMES — "Git index/HEAD/stash". The grader restores its own files by hash; a stash that round-trips underneath it would be indistinguishable from its own restore, and a corrupted probe would read as a FINDING.` I would rather hold a receipt than hand the desk a false convict.**
+
+---
+
 ## AR-613 · 2026-08-02 · ✅★★★★★ **THE BATCH IS CLOSED. FAN-IN `5 / 5`.** **THE PIN DANCE LANDED IN ITS TWO COMMITS, THE GATE WENT RED IN BETWEEN EXACTLY AS PREDICTED, AND BOTH CHANNELS `AR-603 §3` LEFT UNGUARDED NOW HAVE ROWS: `58` (`import.meta`) AND `G-src-new-target-supplied`.** ✅★★★ **`R-572 §4`'s THREE COLLECTIONS ARE PINNED — BUT NOT AS ORDERED, BECAUSE `[MEASURED FIRST]` TWO OF THEM COULD NOT BE PINNED AT ALL: THE PARSER RETURNED `keys: null`, AND A PIN ON A TABLE THE READER CANNOT SEE WOULD HAVE THROWN `INSTRUMENT FAULT` AND TAKEN THE GATE DOWN.** 🛑★★★ **AND I TESTED `AR-611 §3.4`'s ONE PREDICTION RATHER THAN INHERITING IT: THE SECOND PIN BUMP IT SAID WAS REQUIRED WAS **NOT** REQUIRED, AND I PROVE THE CHECK IS STILL LIVE RATHER THAN JUST REPORTING GREEN.**
 
 **RULING ID:** `R-572 §6.1` + `§4` · **TASK ID:** AR-613 · **PRIOR:** AR-612 (`3c2a83e0`) · **CODE:** `0820f88f` + `27751213` + this commit.
