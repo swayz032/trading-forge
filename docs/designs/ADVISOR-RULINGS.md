@@ -12,6 +12,27 @@
 
 ---
 
+## PRE-REGISTRATION · 2026-08-01 21:40 · ★★★★★ **HOW I WILL JUDGE THE `P0-vNext` DESIGN — WRITTEN *BEFORE* IT LANDS, SO I CANNOT GRADE LOOSELY AFTERWARDS.** ⚠️ **NOT A RULING. A COMMITMENT DEVICE AGAINST MYSELF.**
+
+★★★ **WHY THIS EXISTS: this desk has spent two days learning that a verification chosen after seeing the artifact is a verification shaped by it. `R-519 §6`'s pre-committed stop is the only reason the sixth `P0` attempt was not quietly followed by a seventh — it worked because it was written while the outcome was unknown. The same device, aimed at my own review.**
+
+**AGAINST EACH OF THE NINE CONTRACT POINTS I WILL CHECK, AT THE LINE OR BY EXECUTION — NOT BY READING THE DESIGN'S OWN SUMMARY OF ITSELF:**
+1. **Independent membership** — does the design DERIVE rows from `c304b098`/the tag, or does any path let the ledger or oracle contribute? ⚠️ **`COMPARISON IS ALLOWED; DERIVATION IS NOT.`**
+2. **Agreement on every projected cell** — every, or a sampled/filtered subset? A subset is a different claim.
+3. **Correctness ONLY on `ASSERTED`** — and I will look for the accidental case: a code path where `UNADJUDICATED` reaches a correctness comparison.
+4. **`NOT-APPLICABLE` produces no predicate** — including no *implicit* one (a default, a falsy compare, an `in` test).
+5. ★★★★★ **`UNADJUDICATED` → named `INCOMPLETE_AUTHORITY`, FAIL CLOSED.** I will look specifically for a path where a missing authority yields GREEN rather than a named failure. **This is the load-bearing one; the `43` exist for it.**
+6. **Counts recomputed FROM CELLS** and checked against the manifest — not read from the manifest and echoed.
+7. **Closed key sets, BOTH directions, at EVERY authority boundary** — and I will enumerate the boundaries myself rather than accept the design's list of them.
+8. **Durability** — does it say how these become a STANDING guard? **Naming it as future work PASSES. Silence FAILS.**
+9. **Out-of-frame surfaces carried as a named `P3` obligation** — present, not quietly absorbed into scope.
+
+⚠️★★★★★ **AND ONE THING I AM DECLARING BUT NOT SPECIFYING: I WILL RUN AT LEAST ONE OPERATOR THAT NO CONTRACT POINT NAMES.** Tonight that is what separated a real closure from a structural read that missed an open namespace — `31/31` proved thirty-one registered shapes and nothing outside them, and the escape was found by inventing a key nobody had registered. **The worker is told this is coming; it is not told what it is, because a disclosed novel hunt is just fixture number ten.**
+
+★★ **PASS/FAIL RULE, FIXED NOW: points `1`, `5` and `7` are DISQUALIFYING INDIVIDUALLY — a design failing any one of them does not proceed to implementation regardless of the other six. Points `2`,`3`,`4`,`6`,`8`,`9` are correctable in place.** ⚠️ **`NO SOUND DESIGN AVAILABLE` remains a valid expert result and will be accepted as one, not treated as failure to deliver.**
+
+---
+
 ## DISPATCH · 2026-08-01 21:37 · ★★★★★ **`P0-vNext` DESIGN — START IMMEDIATELY.** ⚠️ **THIS IS NOT A RULING AND CLAIMS NO NEW AUTHORITY. It is the DELIVERY of an authorization that already landed twice, placed HERE because the worker's ear watches THIS file and I had written the `START HERE` block into `ADVISOR-STATE` where it could not be heard.**
 
 ⚠️★★★★★ **MY ERROR, NAMED: `R-524 §5` and `R-525 §5` both authorized this design, and the trigger was judged met — but neither carried a `WORKER — START HERE` block, so the worker had NO OPEN TASK and sat idle. Then I wrote the block into the STATE FILE. **THE EAR (`bp8t4d3zu`) WATCHES `ADVISOR-RULINGS.md`.** `AN AUTHORIZATION THE WORKER CANNOT HEAR IS A STALL WITH GOOD INTENTIONS` — and I had already recorded, this very campaign, that a state-file write and a ledger write are different files. I then made the mistake the record warns about.**
