@@ -577,6 +577,7 @@ The graduation hot-path gained 4 new audit-action namespaces. Future agents shou
 | `ratify-packet` | Any change touching INSTRUMENT code (engine, gates, classifiers, measurement, sizing) — BEFORE writing code. Staged-not-started; packet landing ≠ authorization; "board is moving" ≠ ratify. |
 | `migration-author` | Creating/editing/reviewing any SQL migration or `_journal.json` entry — BEFORE the file lands. (BOM crashloop, 0175 type mismatch, dup-`when`.) |
 | `worktree-session` | Starting/landing any worktree, dispatching `isolation:"worktree"` agents, or verifying inside a worktree. (846-line moving-HEAD revert, troll `npx tsc` false-clean.) |
+| `graph-engineering` | Before coordinating 2+ tasks, agents, files, audit lanes, or verification stages—or claiming parallel speedup. Derive real artifact edges, shared resources, node contracts, fan-in, fresh verification, and serial barriers. |
 | `transcript-audit` | After EVERY gemma probe, before any mass (re-)extraction, and when grading extraction quality or intake rejects. Probe-green ≠ extraction quality. |
 
 ### Subagent assignments (4-pass execution pattern)
@@ -592,11 +593,12 @@ The graduation hot-path gained 4 new audit-action namespaces. Future agents shou
 | `critic-optimizer` | Critic loop, bounded refinement, calibration harness |
 
 ### Coordination rules
-1. Sequential subagents within a track when dependencies exist (migration → service → route → frontend)
-2. Parallel subagents across tracks within a pass when independent
-3. `trading-forge-architect` runs LAST per track
-4. `observability-reliability` runs after EVERY pass
-5. Parent claude reviews each subagent output before approving merge
+1. Before parallel dispatch, invoke `graph-engineering` and publish hard edges plus carried artifacts, shared resources/owners, parallel layers, serial barriers, and expected fan-in. Different prompts do not establish independence.
+2. Sequential subagents within a track when dependencies exist (migration → service → route → frontend)
+3. Parallel subagents across tracks within a pass when independent
+4. `trading-forge-architect` runs LAST per track
+5. `observability-reliability` runs after EVERY pass
+6. Parent claude reviews each subagent output before approving merge
 
 ---
 

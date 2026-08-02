@@ -15288,6 +15288,20 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-08-02 Claude-only Graph Engineering skill
+
+**Mission:** Add Graph Engineering to Claude without creating a Codex mirror or changing advisor/worker onboarding.
+
+**Work completed:** Installed the workspace-local Claude skill at `.claude/skills/graph-engineering/SKILL.md`; added its mandatory trigger and pre-dispatch graph contract to `CLAUDE.md` §11; preserved the design and implementation plan under `docs/superpowers/`.
+
+**Verification:** canonical skill validator passed; installed and staged skill SHA-256 values matched; skill remained below 500 words; fresh-context pressure testing produced explicit hard edges, shared ownership, fail-closed fan-in, verifier separation, caps, and a critical path; `git diff --check` passed. One initial pressure node timed out, which caused the skill to gain explicit per-node timeout/retry/cost caps before the successful retry.
+
+**Scope:** Claude only. No `.agents/skills/graph-engineering`, advisor-onboarding, worker-onboarding, runtime service, compiler, database, workflow, or trading behavior changed.
+
+**Carry-forward:** Merge or otherwise consume branch `docs/graph-engineering-skill-20260802` after review; do not duplicate the skill into Codex or onboarding unless separately authorized.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
