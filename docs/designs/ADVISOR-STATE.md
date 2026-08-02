@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3343` at THIS commit, 2026-08-01 23:30 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3360` at THIS commit, 2026-08-01 23:43 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3343` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3360` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -90,7 +90,20 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-530 §6`, NINE OBSERVABLES. WORKER MID-TASK.** (2026-08-01 23:14, `e71bac47`)
+## ★★★★★ AUTHORIZED NOW — **`P0-vNext` DESIGN **REVISION**, `R-531 §6`, FIVE CORRECTIONS. DESIGN ONLY.** (2026-08-01 23:42, `771dd97d`)
+
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** revise the `P0-vNext` design per **`R-531 §6`, five corrections** — ★★★★★ **load-bearing: (1) SEVER Claim `A` FROM `NOT-APPLICABLE` entirely — all five wire keys always emitted, `null` for inapplicable, `absent/absent` ALWAYS `PROJECTION_MISSING_BOTH`; (2) a CLASSIFICATION-ONLY ledger mutation requiring Claim `A`'s projection AND VERDICT byte-identical; (3) the TWO-STAGE `10`-field normalization → `5`-key selection contract.** ⚠ **DESIGN ONLY. IMPLEMENTATION STAYS BLOCKED.** ★★★ **READ `R-531 §6`; IT IS NOT PARAPHRASED HERE — `grep -n "^## R-531" ADVISOR-RULINGS.md`.**
+**ALLOWED FILES:** the design doc · the `§15.6a` blueprint addendum **only if Surface-`A` wording must change** · `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**FORBIDDEN:** implementation · the ledger · `ORACLE.json` · Tier-A census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
+**FIRST OBSERVABLE:** items `1`+`2`, **~30–45 min** from start. **START-RECEIPT REQUIRED** (delta baseline, never absolute-clean).
+**STOP CONDITIONS (`R-531 §6`, verbatim):** ★★★★★ **Claim `A` parsing the ledger to decide a missing field is acceptable → STOP.** ★★★ **Five keys validated out of a ten-key raw binding without proving the full boundary first → STOP.** ★★★ **An unchanged digest offered as proof of universal non-reachability → STOP.**
+
+⚠ **THE `R-530 §6` MATERIAL BELOW IS **DISCHARGED** (`AR-571`, `9/9`) AND IS RETAINED AS FINDINGS AND STANDING CONTRACT — **NOT** AS THE LIVE TASK.**
+
+---
+
+## ~~AUTHORIZED — `R-530 §6`~~ **[DISCHARGED BY `AR-571`; CONTRACT CONTENT BELOW STILL BINDS]** (2026-08-01 23:14, `e71bac47`)
 
 🛑★★★★★ **THIS HEADER READ `R-529 §6, FIVE ITEMS` UNTIL `23:26` — A SUPERSEDED CONTRACT PUBLISHED UNDER THE ONE HEADING A COLD SEAT READS FIRST. `[MEASURED HERE]` `9d7a41a7` ("State current to R-530") touched `18` lines / `11`+`7` — the three corrections ONLY — and never reached this block, so the ledger advanced to `R-530` while its carrier still named `R-529`. ★★★★★ **`ADVANCING THE SEAT BLOCK IS NOT ADVANCING THE CONTRACT BLOCK` — they are separate carriers and this file updated one of them. Same erosion species as the `v3-N` payload losses, one heading over. STANDING: WHEN A RULING RE-AUTHORIZES THE WORKER, `AUTHORIZED NOW` MOVES IN THE SAME COMMIT AS `SEAT`, OR NEITHER MOVES.**
 
@@ -164,7 +177,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-530` (`e71bac47`). NEWEST AR: `AR-571` (`23:24:55`) — `R-530 §6` **DELIVERED**, `9/9`, NOT a handoff. Last RULED report: `AR-569`.** 🛑★★★★★ **`R-531` IS OWED AND **HELD**: `R-530` CONSUMED `e5096bef`, `ONE READ, ONE RULING`, SO I HOLD NO UNCONSUMED READ. `THE PASTE IS THE GATE` (operator's own standing order). **THE WORKER IS IDLE BY THE GATE, NOT BY MY OMISSION — and it knows: `AR-571 §8` names the same deferred trigger.** ⚠ **DO NOT MISTAKE THIS FOR "a desk that closed one task and opened none" — the ledger is deliberately silent and this line is the receipt for that.**
+## ✅★★★★★ SEAT — **ACTIVE (FRESH SEAT, `claude.exe 15520`, seated `23:21`). LEDGER AT `R-531` (`771dd97d`), CONSUMING EXTERNAL READ `acde95c8`. NEWEST AR: `AR-571` (`23:24:55`) — RULED BY `R-531`. **WORKER AUTHORIZED (`R-531 §6`, FIVE CORRECTIONS, DESIGN ONLY); START-RECEIPT AWAITED.**
+🛑★★★★★ **`R-531` SUSTAINED ALL THREE EXTERNAL FINDINGS, EACH RE-MEASURED HERE — AND THE CONVICTION IS MINE. `[MEASURED HERE]` `BINDING_KEY_MAP` = **`10` ENTRIES** at `c304b098:scripts/check-spec-binding-plan-parity.ts:259–270` (counted programmatically, `satisfies Record<keyof ConditionBinding, string>`) against the design's **`5`-key** frozen destination schema at `:119` — **joined on the WIRE-KEY NAME, the two contracts cannot both be satisfied literally.** · design `:65` makes `absent/absent` a failure **UNLESS** the cell is authority-classified `NOT-APPLICABLE`, so **Claim `A`'s VERDICT IS A FUNCTION OF `cell.classification`** — the coupling moved one field left, not away.**
+🛑★★★★★ **MY DEFECT, AND IT IS THE REUSABLE PART: I PRINTED PROOF ROW `7` TO MY OWN SCREEN AT `23:28` — TEN MINUTES BEFORE THE READ LANDED — AND USED IT ONLY TO CONFIRM A COUNT. It is the exact line proving Claim `A` still reads the ledger. **My four pre-registered checks all PASSED, all were TRUE, and all four asked *"did the worker change what it was told to change?"* — NOT ONE asked whether the result is self-consistent.** ★★★★★ **`A COMPLIANCE CHECK IS NOT A COHERENCE CHECK; CRITERIA DERIVED FROM THE ORDER SHEET CAN ONLY VERIFY OBEDIENCE.` Fourth round of one shape (`R-525` members-not-surface · `R-526` where-not-what · `R-527` name-not-enforcement · now obedience-not-coherence).**
+⚠★★★ **AND THE WORKER RETIRED ONE FALSE ABSOLUTE BY MINTING ANOTHER (`A DIGEST THAT DID NOT MOVE CANNOT` [be wrong]) — `RETIRING A FALSE ABSOLUTE BY MINTING ANOTHER ABSOLUTE IS THE SAME DEFECT ONE LEVEL OUT`, and neither the worker nor I caught it; a third party did.**
+✅★★ **GRADE RE-DEFERRED, TRIGGER RE-ARMED to `R-531 §6` landing + external read of its exact objects. ⚠ This seat's harness blocks `Agent` dispatch unless the operator requests it — **ASK HIM, DO NOT ROUTE AROUND IT.**
 ✅★★★ **MY VERIFICATION OF `AR-571` IS DONE AND IS `4`-OF-`9`, PRE-REGISTERED BEFORE MEASURING (`bf03ec0a` → facts at `c807616e`). ALL FOUR PASS. The remaining five observables are `RELAYED`, NOT verified — and `AR-571 §3`'s item-`4` self-conviction is the first thing the next read should open.**
 ⚠★★★★★ **CARRIER DEFECT FOUND AND FIXED ON ARRIVAL (`6eaef0f0`): `## AUTHORIZED NOW` was still publishing `R-529 §6` while the ledger ran `R-530 §6`. `9d7a41a7` advanced THIS block and not that one. **STANDING: `SEAT` AND `AUTHORIZED NOW` MOVE IN THE SAME COMMIT, OR NEITHER MOVES.** This block was updated under that rule.**
 ★★ **MONITORS: all three ADOPTED, not replaced — enumerated BY PROCESS under `claude.exe 15520` (`23524`/`7188` AR-change · `19920`/`25880` GPT ref · `18708`/`7828` idle watchdog). They survived the session roll and DELIVERED here (`AR-571` arrived on task `b7slnowdk`, registered by the PRIOR conversation). ★★★★★ **`TaskList` STILL CANNOT SEE THEM — it is not a liveness instrument. The predecessor killed three healthy monitors on its zero; I did not re-run that mistake.**
