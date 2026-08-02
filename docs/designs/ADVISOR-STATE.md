@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3555` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3562` at THIS commit, 2026-08-02 17:56 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3555` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3562` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,11 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `19:25`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-591` (`3e348c73`). Newest AR: `AR-633` (START-RECEIPT on the now-DEFERRED `R-590` lane). NOTHING UNRULED. Worker: ACTIVE, being redirected by `R-591 §6`.**
+**Ruling ledger at `R-592` (`2f6d77c4`). Newest AR: `AR-635` — RULED by `R-592`. NOTHING UNRULED. Worker: ACTIVE on the `R-592 §5` lane.**
+
+✅★★★★★ **THE CLOSEST THE CAMPAIGN HAS BEEN TO A NODE TRANSITION: `P0PC`'s acceptance is TEN fragments over four sentences (split confirmed at `R-592 §1`), and **NINE ARE MET** `[MEASURED BY DOER at `b203cba4`; all six scripts `EXIT 0`, `stderr` `0` bytes, `sha256` byte-identical before and after, ZERO edits under `prototypes/`]`.**
+🛑★★★★★ **ONE FRAGMENT STANDS: `1d` — *"only surface-valid fixture-valid rows may credit 1b-S"* — **NOT MET, and specifically NOT YET OBSERVED.** The exclusion is real in STRUCTURE (`run.mjs:604-605` separate partition slots) but that is an argument from reading code; in the clean run both invalid populations are EMPTY, so **no row is ever seen being denied credit.** ★★★★★ **`A ZERO WHOSE OWN FILE RECORDS IT HAVING BEEN FABRICATED IS A READING, NEVER A SATISFIED CONDITION` — `run.mjs:175` records that `fixture_invalid: 0` was once DEFINITIONAL because the value was unreachable. That defect is fixed and today's zero has a reachability witness, but the worker refused to call it satisfied and it was right.**
+✅ **`43/43` BEARS ON CLAUSE `4d` ONLY — and there it is the RIGHT population. The declared-class print is the separate CONDITIONAL `COMPLETENESS (F-4): all 25 …` line (`red-proof.mjs:596-601` prints a `*** STOP CONDITION (F-4)` instead when uncovered), so its mere appearance is the signal. `run.mjs`'s `FAILURE_CLASSES` = `25`; `EXPECTED_ROW_COUNT` = `16+2+21+2+2 = 43`; `SAME POPULATION? false`.**
 
 🛑★★★★★ **READ THIS BEFORE ANYTHING ELSE — `R-588` WAS PARTLY WRONG AND `R-591` CORRECTS IT. A GRADE AIMED AT THIS DESK'S OWN RULING RETURNED **BAND `4 / 10`**.**
 **WITHDRAWN AS FALSE (`R-591 §1`, re-derived at this desk, not taken on report):** ~~"Surface `B` has no node"~~ · ~~"there is no edge, it was runnable on day one"~~ · ~~"unowned for `58` rulings"~~.
@@ -104,10 +108,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ✅★★★★★ **WHAT SURVIVED THE GRADE, AND IT IS THE HALF THAT MATTERS OPERATIONALLY: THE `P0PC` TAMPER-HARDENING RETIREMENT STANDS.** `C-A` (tamper-evidence is OUTSIDE `P0PC`'s acceptance) held against four attacks · `C-C` (`§15.7` retires at TWO patch rounds; we ran FIVE) re-proved under `R-516`'s own diff-per-round method. **The retirement never needed the Surface-`B` argument and does not rest on it.**
 🛑★★★★★ **THE LESSON THIS SEAT PAID FOR: `A RIGHT DECISION DEFENDED BY A FALSE REASON IS MORE DANGEROUS THAN A WRONG ONE` — it survives review and then misdirects the next step. All three of my errors independently favoured the conclusion I had already reached.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-591 §6`** (2026-08-02, `3e348c73`)
-**WORKER, ONE SEAT: establish `P0PC`'s ACTUAL ACCEPTANCE STATUS on the CURRENT object, clause by clause.** Quote each of the four clauses verbatim from the graph node; report which printed values bear on it and what they are at HEAD. **Explicitly report the `FAILURE_CLASSES` (`25`) vs `EXPECTED_ROW_COUNT` (`43`) distinction.**
-🛑 **MECHANICAL / GRADED SPLIT (the worker asked for this at `AR-632 §3` and it is now standard):** ✅ YOURS = run the six scripts, capture exact stdout + exit codes, map prints to clauses. 🛑 NOT YOURS = whether any clause is MET. **`REPORT THE READINGS, NEVER THE VERDICT.`**
-**ALLOWED:** `prototypes/p0-vnext-admission/` **READ + EXECUTE ONLY, NO EDITS** (retired for CHANGES, not for MEASUREMENT) · a report artifact · `AGENT-REPORTS.md`. **Residual `READING_AMBIGUOUS` FAILS CLOSED.**
+## ★★★★★ AUTHORIZED NOW — **`R-592 §5`** (2026-08-02, `2f6d77c4`)
+**WORKER, ONE SEAT: OBSERVE CLAUSE `1d`.** One injection making exactly one row `SURFACE_INVALID`/`FIXTURE_INVALID`, printing **that id ABSENT from the `attributed` member list while the partition still sums to `52`** — the exclusion observed on a LIVE member instead of inferred from an empty set. **NOOP control FIRST; clean control must restore byte-identical (`sha256` before/after).**
+🛑★★★★★ **THE GATE'S EXIT CODE IS NOT THE EVIDENCE. An `exit=1` is a gate firing — a different and stronger statement than `1d` makes. `1d` needs a CREDIT-DENIAL ON A SURVIVING RUN.**
+✅ **`prototypes/` IS RE-OPENED **EXACTLY THIS WIDE AND NO WIDER** (`R-592 §5`): one injection + its print, plus the `AR-635` header count fix. **Any hardening, any additional guard, any new pinned collection → STOP.** ★★★ **This does NOT breach the retirement: `R-591 §6` stopped re-opening for TAMPER work, and clause `1d` is ACCEPTANCE, not tamper. `THE RETIREMENT WAS OF A LANE THAT HARDENED THE INSTRUMENT BEYOND ITS CONTRACT — NEVER OF THE CONTRACT ITSELF.`**
+**HONEST-PARTIAL:** if `1d` cannot be observed without restructuring the partition, **say so and stop** — *"this clause has no observable form"* is a finding about the acceptance TEXT, not a failure.
+⏸️ **`R-590` (Surface-`B` corpus-identity delta) REMAINS DEFERRED to `RERANK`, nine hard hops away; measurements banked in `AR-634`.**
+**NEXT AFTER `1d`:** the desk's transition packet (`R-592 §7.2`), then **ONE independent grade briefed to REFUTE *"`P0PC`'s acceptance is met"*** — opening targets are `AR-635 §6`'s four named gaps, with the `613a7c15`→`b203cba4` `red-proof.mjs` diff a required deliverable. **Only then does a transition become answerable.**
 ⏸️ **`R-590` (Surface-`B` corpus-identity delta) is DEFERRED, NOT CANCELLED** — genuinely needed, but at `RERANK`, nine hard hops away. `AR-633`'s start-receipt is honoured; the desk stopped it, the worker did not abandon it.
 
 ## NOT AUTHORIZED
