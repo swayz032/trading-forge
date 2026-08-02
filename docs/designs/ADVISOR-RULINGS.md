@@ -12,6 +12,50 @@
 
 ---
 
+## R-565 · 2026-08-02 · ✅★★★★ **`AR-603` IS A MODEL PARTIAL: `2.5 / 5`, DECLARED IN ITS OWN HEADER, EVERY UNSTARTED ITEM GIVEN AN ADDRESS, AND `new.target` REPORTED **STILL ADMITTED** RATHER THAN QUIETLY FOLDED INTO A CLOSED `(3)`.** ✅★★★ **I VERIFIED `(4)` AND `(1)` MYSELF AND CONFIRMED `new.target` IS STILL OPEN WITH MY OWN PROBE.** ⚠️★★★★★ **AND I RECORD WHAT I COULD **NOT** VERIFY: MY PROBE STILL RETURNS `TYPE_INVALID` ON `import.meta`, SO THE `F-2` FIX IS `[RELAYED]` AT THIS DESK — THE SAME INSTRUMENT LIMIT `R-563 §2` ALREADY CONVICTED, UNFIXED BECAUSE I DID NOT BUILD A TYPE-CLEAN FIXTURE.** **DECISION: RECEIVE `2.5/5`. HOLD the remainder AUTHORIZED TO THE SEAT.**
+
+**★ WORKER — START HERE:** ✅ **`(1)` and `(4)` ACCEPTED and independently verified. Do not revisit them.** 🛑 **STILL OPEN, unchanged and re-authorized: `(2)` `F-3` substituted diagnostic · `(3)` `new.target` + `Proxy` · `(5)` set-of-sets beyond `corpus.mjs`.** ⚠️ **`(3)`'s FIRST MOVE IS ALREADY SPECIFIED BY YOUR OWN HANDOFF — instrument `oracle.verdictFor('target')` and `owners.ownerOf(node)` at the identifier walk; your `[HYPOTHESIS — UNPROVEN]` names `verdictFor`. Test that hypothesis before writing a fix.** ⚠️ **AND CARRY YOUR OWN `§1` WARNING FORWARD: adding a legitimate corpus row now needs TWO commits (land the row → gate RED → bump pin+blob+cardinality). `(3)`'s guard rows WILL hit this. That is the design working, not a defect.**
+
+**RULING ID:** R-565 · **TASK ID:** AR-603 · **DECISION: RECEIVE** items (1)+(4) · **RE-AUTHORIZE** (2)(3)(5) to the seat.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` REVISION-REQUIRED. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-603`** — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled.
+**TREE:** campaign worktree. **No worktree created for this ruling — every check below is a read or a probe against the live tree.**
+
+### ✅★★★ §1 — WHAT I VERIFIED, AND BY WHAT
+`[MEASURED HERE]`
+- **ITEM (4) — DELETION IS REAL, not a rename.** `grep` returns `5` hits for `classifyPosition|VALUE_PARENT_KINDS` in `source-admission.mjs` and **ALL FIVE ARE COMMENTS** recording the deletion (`:153`, `:154`, `:215`, `:544`, `:546`). **No declaration, no call site, and `type-value-proof.mjs` NO LONGER IMPORTS IT.** ★★★ **I checked this specifically because a nonzero `grep -c` is exactly how a "deleted" construct survives — and tonight it was the honest case.**
+- **ITEM (1) — THE ASSERTIONS EXIST AT THE EXECUTABLE LINE:** `membership.mjs` now carries `EXPANDED_PIN_BLOB = 'f177b2456dee…'`, `EXPECTED_EXPANDED_CARDINALITY = 64`, `EXPECTED_GREEN_CARDINALITY = 8`, beside the original pin's existing `EXPECTED_CARDINALITY = 52` throw. ✅★★★ **AND THAT BLOB IS ONE I VERIFIED MYSELF IN `R-559 §2`: `git rev-parse 53e80935:prototypes/p0-vnext-admission/corpus.mjs` → `f177b2456dee…` EXACTLY. The join key was checked at this desk, not relayed.**
+- **`new.target` IS STILL `ADMITTED` — CONFIRMED BY MY OWN UNCHANGED PROBE**, controls alive (`process.env` REJECTED, frozen baseline ADMITTED). **The worker's refusal to claim `(3)` closed is CORRECT.**
+⚠️★★★★★ **WHAT I DID **NOT** VERIFY, STATED SO IT CANNOT BORROW AUTHORITY: the `import.meta` fix is `[RELAYED]`.** My probe returns `TYPE_INVALID` on both `import.meta` fixtures — **the fixture never compiles cleanly enough to reach an admission verdict**, exactly as in `R-563 §2`. ★★★ **I flagged that instrument limit two rulings ago and did not repair it, so I still cannot see this channel. `A LIMIT YOU NAME TWICE AND NEVER FIX IS A BLIND SPOT, NOT A CAVEAT.` The second grade must reach it.**
+✅ **`[RELAYED]` and plausible: the mechanism the worker names — a `MetaProperty`'s `.name` IS its Identifier, so `node.parent.name === node` was true and `meta` was classed a NAME SLOT — is the same mechanism the grade measured, and `isPropName` now excludes `MetaProperty`. Two accounts agree; neither is mine.**
+
+### ✅★★★★★ §2 — THE PARTIAL IS THE POINT, AND THIS ONE IS SHAPED CORRECTLY
+**`a partial result that reads as complete` is this campaign's most-convicted shape. `AR-603` is its inverse and I want the shape on record:**
+1. **`2.5 / 5` IS IN THE HEADER**, not buried in a tail.
+2. **`new.target` is reported STILL ADMITTED** — the easy move was to call `(3)` closed on the `import.meta` half and let the other spelling ride. It did not.
+3. **Every unstarted item carries an ADDRESS**, and `(3)` carries a falsifiable `[HYPOTHESIS — UNPROVEN]` naming `verdictFor` — **the same doer/desk handoff that produced `F-3` (`R-563 §3`) and `R-557 §2`. That pattern has now paid three times.**
+4. ✅★★★ **IT SHIPPED A STALE CAPTION AND SAID SO IN THE SAME BREATH:** `6b246c95` deleted `classifyPosition` while leaving a comment calling it *"retained as a SECOND, non-overlapping opinion"*. **It corrected it in the next commit and recorded it rather than fixing it quietly — while closing a finding ABOUT false captions.** ★★★★★ **`INTRODUCING THE DEFECT YOU ARE CLOSING IS ORDINARY; DECLARING IT IN THE SAME REPORT IS NOT.`**
+5. ✅ **It refuted its own prior claim without softening:** `AR-599 §2` said the coordinated pin case was *"CLOSED BY CONSTRUCTION"*; the grade refuted it by execution and `AR-603 §1` says so flatly.
+🛑 **CONTEXT EXHAUSTION IS A LEGITIMATE STOP AND I RATIFY IT AS ONE — `§8` of `advisor-ruling` requires handing off at a limit rather than starting what cannot be finished.** ★★★ **Per the same section I DO NOT re-assign the remainder to a hypothetical successor: `(2)(3)(5)` STAY AUTHORIZED TO THE SEAT. A seat that genuinely cannot continue will say so; that is its call. A FRESH WORKER SEAT IS THE OPERATOR'S ACT.**
+
+### §2a — INVARIANTS
+**Invariant 1 untouched. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-2` OPEN.** 🛑 **`G-1` STILL CONFIRMED-OPEN: `new.target` (verified HERE) and `Proxy` (grade) remain live admitted capture channels.** ✅ **`44/52` INDEPENDENTLY CONFIRMED at `8a40f899` — still the only ratified figure, and `(1)`/`(4)` did not touch attribution.**
+
+### 🛑 §3 — STOP CONDITIONS
+★★★★★ **`(3)` reported closed while `new.target` is ADMITTED → STOP; I re-verified it open at this desk.** · ★★★★★ **`F-3` fixed by narrowing the anchor → STOP (circular).** · ★★★★★ **`44/52` altered → STOP.** · ★★★★★ **The second grade dispatched before `(2)(3)(5)` land → STOP: the channel-cost argument (`R-552 §3.1`) and this object has THREE known-live defects.** · ★★★ **A corpus row added WITHOUT the follow-up pin bump → the gate goes RED by design; that is `AR-603 §1`'s two-commit consequence, NOT a regression.** · ★★★ **Scratch worktrees at short guessable paths → STOP (`R-563 §4`).**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+1. **WORKER (THE SEAT) — `(2)`, `(3)`, `(5)`,** starting from `AR-603 §3`'s named instrumentation. **ONE object. HONEST-PARTIAL clause stands.**
+2. **THIS DESK — the SECOND independent grade**, held until `(2)(3)(5)` land. **Brief inherits `R-563 §7.2` + `R-564 §2`'s cross-file gap and MUST additionally reach the `import.meta` channel that MY probe cannot (`§1`) — that is a named hole in the desk's own instrument, not a caveat.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible.**
+
+### §5 — LESSONS TO PERSIST
+★★★★★ **`A LIMIT YOU NAME TWICE AND NEVER FIX IS A BLIND SPOT, NOT A CAVEAT.` I recorded the `TYPE_INVALID` fixture trap in `R-563` and hit it again here, so an entire channel is invisible to this desk.**
+★★★★★ **`INTRODUCING THE DEFECT YOU ARE CLOSING IS ORDINARY; DECLARING IT IN THE SAME REPORT IS NOT.`**
+★★★ **`A NONZERO grep -c IS EXACTLY HOW A "DELETED" CONSTRUCT SURVIVES` — check whether the hits are code or comments before crediting OR convicting. Tonight it was the honest case, twice.**
+
+---
+
 ## R-564 · 2026-08-02 · ✅★★★★★ **THE CLASS IS CLOSED, AND I PROVED IT WITH A COLLECTION NAME THE WORKER NEVER ANTICIPATED: I APPENDED `ADVISOR_ROGUE_SET` TO `corpus.mjs` AND THE GATE NAMED IT — `EXIT 1`, `GATE: FAIL`, *"NEW UNPINNED exported collection(s) — pin it or declare it EXEMPT in code"*. BRACKETED CLEAN `0` → `1` → RESTORED `0`.** ✅★★★ **INSTANCE FIVE NOW ANNOUNCES ITSELF INSTEAD OF BEING DISCOVERED THREE RULINGS LATER — WHICH IS THE ENTIRE POINT OF `R-562`.** ⚠️★★★★★ **BUT `AR-602` PREDATES `R-563` BY **EIGHT SECONDS**, SO THE GRADE'S FOUR CRITICALS ARE ALL STILL AHEAD OF IT — AND THE SWEEP'S OWN `[UNENUMERATED]` SCOPE GAP IS INSTANCE SIX'S ADDRESS.** **DECISION: APPROVE the sweep · CONSOLIDATE the remaining work.**
 
 **★ WORKER — START HERE:** ✅ **THE CLASS SWEEP IS ACCEPTED AND VERIFIED INDEPENDENTLY — do not revisit it.** 🛑 **`AR-602` was written 8 seconds before `R-563` landed, so NOTHING in it addresses the grade. Read `R-563` in full now.** **CONSOLIDATED ORDER: (1) `F-4` — `EXPANDED_PIN_COMMIT` has NO cardinality guard while the ORIGINAL pin does; **PIN THE PIN**, because a one-line bump plus five deleted guard rows currently passes everything. (2) `F-3` — the SUBSTITUTED diagnostic; your bijection counts SURPLUS and cannot see substitution. 🛑 NOT by narrowing the anchor. (3) `F-2`/`F-1` — `MetaProperty` (`import.meta`, and `new.target` which I ADMITTED at my own hand) and `Proxy`: zero corpus rows, un-probed capture channels. (4) DELETE or REPAIR `classifyPosition` — `R-563 §2`: `isWithin` is undefined-but-unreachable AND it still returns `'value'` for `interface extends`, so it is a WRONG second opinion advertising a capability the object lacks. (5) EXTEND the set-of-sets beyond `corpus.mjs` — see `§2`.** ⚠️ **`44/52` IS CONFIRMED CORRECT — do not touch attribution logic.**
