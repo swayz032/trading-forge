@@ -12,6 +12,130 @@
 
 ---
 
+## R-580 · 2026-08-02 · ✅★★★★★ **`AR-620` APPROVED — `3 / 3`, AND THE DECISIVE ROW IS THE ONE WHERE **THE COUNT STAYS GREEN AND THE GATE GOES RED**. `CARDINALITY AND IDENTITY ARE NOW SEPARATELY ASSERTED`, VERIFIED AT THIS DESK BY READING THE EXECUTABLE LINES.** 🛑★★★★★ **AND I CORRECT MY OWN `R-578 §2`: I MEASURED THE PINNED DECLARATION AT BOTH COMMITS AND IT IS **`13` BEFORE AND `13` AFTER** — SO THE GRADE'S QUOTED `12` JOINS TO A **ONE**-TABLE DELETION, NOT THE *"dropping 3 of 4"* I CAPTIONED IT WITH. **THE DEFECT WAS REAL; MY CAPTION'S JOIN KEY WAS NEVER CHECKED.** THE WORKER FLAGGED IT AND REFUSED TO INVENT AN EXPLANATION, WHICH IS THE CORRECT ACT.** ✅ **DECISION: APPROVE `3/3` · NO NODE TRANSITION · INDEPENDENT GRADE DISPATCHED.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-620` IS APPROVED AND YOUR `§6.1` RESIDUAL IS WHY I BELIEVE IT — you named the two-edit path around `DECLARED_ROW_KEYS` yourself, before any grader could. `AN UNENUMERATED RESIDUAL THE DOER DECLARES IS A DEBT THE DESK INHERITS` (`R-578 §7`), so I am ORDERING it into the grader's brief rather than reading it and moving on, which is exactly what I failed to do last batch.** ✅ **Your `§5` scoping — *"these six scripts exited 0"*, NOT *"six gates are green"* — is the discipline `R-575` had to teach this desk about its OWN caption. You applied it unprompted.** 🛑 **NOTHING IS ASSIGNED TO YOU RIGHT NOW. A grade is in flight against `0a557e37`. DO NOT TOUCH `prototypes/` while it runs.** ✅ **`MISS_NOT_CAUGHT` gating is ACKNOWLEDGED as your next task and is authorized the moment the grade lands — not before, and not by you unilaterally.** ⚠️ **A DECLINE-RECEIPT IS A CLEAN DISCHARGE if your context is spent.**
+
+**RULING ID:** R-580 · **TASK ID:** AR-620, the `R-578 §6` batch · **DECISION: APPROVE · REVISION NOT REQUIRED · GRADE DISPATCHED.**
+**GRAPH OBJECT: ✅ ADOPTED — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED at this ruling `[MEASURED HERE, `git hash-object`]`.**
+**GRAPH NODE TRANSITION: NONE. `P0PC` stays `active_worker`; `P0PG` stays BLOCKED.** ★★★★★ **`R-574 §0`'s law holds a FOURTH time: a closed batch is not a completed node. `3/3` closed the ORDER; the grade speaks to the OBJECT. `R-578 §5` makes transitioning-on-batch-close an explicit STOP and I am honouring it.**
+**GRAPH FAN-IN / READY SET: UNCHANGED — no hard predecessor gained or lost; nothing became ready. `P0PG` still awaits `P0PC` completion, which a grade has now deferred twice.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-620`** — `[MEASURED HERE `15:44`]` newest `## AR-` on disk; it IS the report being ruled.
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AND HOW (the desk's method is READING, per `R-576 §5`)
+`[MEASURED HERE — campaign tree `wt-h1-wave4-20260712`, HEAD `0a557e37`, `prototypes/` CLEAN before and after]`
+```
+node run.mjs        GATE: PASS — every enforced class is clean       EXIT 0
+                    total 68 | attributed 56 | miss_not_caught 3 | green 9/9 | getter_invocations 0
+                    like-for-like 52: partition sums to 52, missing_ids [], duplicate_ids []
+```
+✅ **THE ORDERED PROPERTY IS IMPLEMENTED AS A PROPERTY, NOT A MECHANISM `[MEASURED HERE, executable lines]`:** `:275` `DECLARED_ROW_KEYS` · `:284`–`:286` two `Map`s of per-key counts · `:293`–`:296` `neverWitnessed` / `witnessedRepeatedly` / `witnessedUndeclared` · `:290` `derivationsAgree` cross-checks the key list against the independently-derived count · `:298` conjunctive `identityOk` · `:321`–`:322` **BOTH** `countOk` and `identityOk` in the exit expression. **That is membership in both directions, which is what `R-578 §6.1` ordered and what `guard-design` demands when a population may grow but must not shrink.**
+
+### ✅★★★★★ §2 — THE FOUR STOP CONDITIONS OF `R-578 §5`, TESTED RATHER THAN ASSUMED
+| `R-578 §5` STOP | verdict | evidence `[MEASURED HERE]` |
+|---|---|---|
+| `F-1` closed while count-preserving substitution still `EXIT 0` | **NOT TRIPPED** | `identityOk` is in the exit expression `:322`; the doer's substitution run exits `1` with `18` never-ran / `1` ran `19x` |
+| identity fix implemented as a BIGGER COUNT (distinct-`cls` cardinality) | **NOT TRIPPED** | grep for `.size ===` / `new Set(rows` returns **exactly one** line — `:270`, a **COMMENT** naming the shape as forbidden. ★★★ **The pattern MATCHED something, so the grep is LIVE; the absence in executable code is a MEASURED absence, not a dead probe (`absence-claim` positive control, satisfied incidentally).** |
+| `tableCount` fixed by pinning the reduce's OUTPUT | **NOT TRIPPED** | `:147` `COVERED_FILES` is now per-file **literals**; `:158` `DECLARED_TABLE_TOTAL = 13` literal; `:159`–`:161` throws if the literals disagree; `:179`–`:180` throws on a pinned file with **no** declared magnitude (reverse direction); `:376` prints the **DECLARED** figure |
+| a `mustName` witness adopted without showing the token ABSENT from the clean control | **NOT TRIPPED** | `:190` `absentFromControl = !w.test(freezeControl.stdout)`, conjunctive in `:193` `named`; `:199`–`:200` emits the `F-3b` stop |
+| THIS DESK running any mutation suite | **NOT TRIPPED** | I ran `run.mjs` only. `R-576 §5` held. |
+
+### 🛑★★★★★ §3 — MY OWN NUMBER, CORRECTED — AND THE WORKER WAS RIGHT TO REFUSE TO SMOOTH IT
+**`AR-620 §3` reports it cannot reconcile `R-578 §2`'s quoted *"`12 pinned tables`"* against a measured baseline of `13`. I resolved it, and the error is MINE.**
+`[MEASURED HERE — the pinned declaration read directly at BOTH commits, fewest layers, no parser]`
+```
+1a1abb46^ (PRE-FIX)   run 4 + red-proof 4 + type-value 1 + source-admission 2 + runtime-admission 1 + membership 1 = 13
+0a557e37  (POST-FIX)  identical membership, DECLARED_TABLE_TOTAL = 13                                              = 13
+```
+🛑★★★★★ **THE BASELINE NEVER MOVED. `13 − 3 = 10`, NOT `12`. The grade's `12` is consistent with a **ONE**-table deletion; `R-578 §2` paired that number with the caption *"dropping `3` of `4`"*. **TWO TRUE THINGS ASSERTED TO CORRESPOND, WITH THE JOIN KEY UNCHECKED** — `i-measured`, and it is the desk's most-convicted shape.**
+✅★★★ **THE FINDING ITSELF IS UNAFFECTED AND STANDS: the pre-fix guard rejected only `tables.length === 0`, so ANY partial deletion above zero passed — true at `1` dropped or at `3`. **The defect was real; the illustration was mis-joined.** `A FALSE FIGURE SHIPPED BESIDE A TRUE FINDING DISCOUNTS THE TRUE FINDING`, which is why this is corrected in its own section rather than a footnote.**
+
+### 🛑★★★ §4 — MY OWN INSTRUMENTS FAILED TWICE GETTING TO `§3`, DISCLOSED
+1. **I passed an MSYS `/tmp` path to `node`, which resolved it as `C:\tmp` → `ENOENT`.** ★★★★★ **THAT IS THE EXACT TRAP `AR-620 §7.2` HAD JUST DISCLOSED, AND I READ THAT DISCLOSURE ONE TURN BEFORE COMMITTING IT.** `READING A TRAP IS NOT THE SAME AS HAVING AVOIDED IT.`
+2. **My replacement regex assumed `'file.mjs': { tables: [...] }` and the real shape is `Object.freeze({ tables: Object.freeze([...]) })` — it returned `0` for BOTH files.** ⚠️ **A `0` that agrees with itself across two inputs is the most convincing false measurement available; I only caught it because `0` was absurd.** ✅ **Resolved by dropping the parser and READING the declaration — `prefer the form with fewest layers between you and the thing`.**
+3. ✅ **My third attempt carried a positive control (`wrote bytes: 21692`) before believing anything downstream.**
+
+### ✅ §5 — WHAT I DID **NOT** VERIFY, STATED SO IT CANNOT BORROW AUTHORITY BY ADJACENCY
+⚠️ `[MEASURED BY DOER — NOT reproduced here]` **the three red-proof tables in `AR-620 §1`–`§3` (substitution, duplication, witness-leak, table-drop).** **`R-576 §5` forbids this desk the mutation suite and that binding held; the adversarial re-execution is the dispatched grader's job.**
+⚠️ `[NOT MEASURED]` **WHICH of the six scripts is the no-op `R-575` identified. `AR-620 §5` explicitly declines to claim it and so do I.**
+⚠️ `[UNENUMERATED — OPEN]` **`§6.1`'s two-edit path around `DECLARED_ROW_KEYS`; `MISS_NOT_CAUGHT` ungated outside the pinned `52`; `AMBIENT_ALLOWED` unpinnable; the `Proxy` runtime catcher; producer/runtime divergence.**
+
+### §5a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` re-derived by `run.mjs` this ruling: `attributed 44`, `partition_sums_to 52`, `missing_ids []`.** ✅ **Single-writer honoured.** ✅ **No monitor armed, retired or killed.** ✅ **No `checkout`/`reset`/`stash`/amend by this desk.** ✅ **No spend; the grader is a local agent.**
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **`P0PC` transitioned before an independent grade returns → STOP. Twice now a closed batch has been re-opened by a grade; the third time is not different because it feels different.** · ★★★★★ **The `DECLARED_ROW_KEYS` residual (`AR-620 §6.1`) reported CLOSED without a red-proof of the TWO-EDIT path → STOP: a residual the doer named is not discharged by the doer's confidence.** · ★★★★★ **Any future ruling quoting a figure from a grade WITHOUT re-deriving the mutation that produced it → STOP (`§3`).** · ★★★★★ **THIS DESK running the mutation suite → STOP, unchanged (`R-576 §5`).** · ★★★ **A ruling STALLED pending a GPT external read → STOP (`R-579 §4`): the channel is suspended.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — DISPATCH ONE FRESH `accuracy-validator` NOW, against `0a557e37`.** ★★★★★ **DISPATCHED, NOT ASKED ABOUT (`R-579 §3`, fifth grant).** **Brief inherits, verbatim: `R-578 §1`'s identity fix as the claim to attack HARDEST · `§3`'s witness-discrimination as a NEW campaign-wide class · `AR-620 §6.1`'s TWO-EDIT path around `DECLARED_ROW_KEYS` as the doer's own sharpest self-criticism · an explicit *"assume there is an INSTANCE ELEVEN"* · and the honest-null clause.** **DURABLE RECEIPT REQUIRED: `docs/designs/GRADE-P0PC-BATCH3-2026-08-02.md`, committed — a verdict living only in my chat is single-source.**
+2. **WORKER — HOLD, and the hold is bounded, not open:** stay available, do NOT touch `prototypes/` while the grade runs. ✅ **`MISS_NOT_CAUGHT` gating is YOUR next task, authorized to THIS SEAT the moment the grade lands** (`authorize-seat`: not to a successor, not to "a fresh session"). **FIRST OBSERVABLE when it starts: a commit touching the `MISS_NOT_CAUGHT` gating path. A DECLINE-RECEIPT IS EQUALLY VALID.**
+3. **THIS DESK — COMMIT `R-579` + `R-580` NOW, in one motion, BEFORE the grader starts** `[MEASURED HERE `15:44`]` — `prototypes/` is CLEAN, which is the window `R-570 §6` requires and the reason the two held rulings are landing together.
+4. **THIS DESK — THE BATCH AFTER THE GRADE IS THE CLASS SWEEP (`R-579 §5.3`), unchanged and NOT started:** enumerate EVERY derived magnitude that is printed, gated or reported and never asserted against a DECLARED value, residual category mandatory. ⚠️ `[HYPOTHESIS — UNPROVEN]` that the class is enumerable; an unbounded list is itself the finding.
+5. **DESK QUEUE — unchanged, NOT started:** `F-3` value-space discriminator · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence · `MEMORY.md` compaction (`18.9KB`; trimmed from `19.6KB` this seat with **zero** pointers dropped, `128/128` resolving — the remaining overage is DECLINED on the ratified ground that a lost hook costs more than the bytes save).
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`A COUNT THAT STAYS GREEN WHILE THE GATE GOES RED IS THE PROOF THAT IDENTITY WAS THE MISSING ASSERTION.` The substitution row is the only one of the three that could not have been caught by any count, at any layer — which is precisely why `R-578 §5` forbade fixing it with a bigger count.**
+★★★★★ **`READING A TRAP IS NOT THE SAME AS HAVING AVOIDED IT.` `AR-620 §7.2` disclosed the MSYS-path trap; I read it, and committed the identical error one turn later. A disclosure in a report I ruled on is not a guard on my own hands.**
+★★★ **`A ZERO THAT AGREES WITH ITSELF ACROSS TWO INPUTS IS THE MOST CONVINCING FALSE MEASUREMENT AVAILABLE.` My regex returned `0` for both the pre-fix and post-fix files and looked like a clean comparison. Consistency across inputs is evidence about the INSTRUMENT, not about the artifacts.**
+★★★ **`THE DOER NAMED THE RESIDUAL AND THE DESK ORDERED IT THIS TIME.` Last batch the grader executed the residual `AR-615 §7.3` had declared and the desk had merely read. `AR-620 §6.1` is that same shape, and it is now IN THE BRIEF rather than in my notes.**
+
+---
+
+## R-579 · 2026-08-02 · 🛑★★★★★ **THE EXTERNAL GPT CHANNEL IS **SUSPENDED BY OPERATOR ORDER** — *"you can put gpt on hold for now you are the only advisor for right now"*. THE STANDING ORDER `CONSUME THE GPT EXTERNAL READ BEFORE WRITING A RULING` IS **LIFTED**, AND NO RULING MAY STALL ON THAT CHANNEL AGAIN.** 🛑★★★★★ **AND THIS DESK'S OWN DEFECT IS THE REASON THE ORDER WAS NEEDED: I MEASURED A `19`-REPORT BACKLOG AND THEN TOLD THE OPERATOR *"the consumption step is HIS"* — **A CLAIM ABOUT WHO CAN ACT, LIFTED OFF AN INHERITED `ADVISOR-STATE` LINE, NEVER TESTED.** HE ANSWERED IT BY REMOVING THE DEPENDENCY AND BY RESTATING THE DELEGATION FOR THE **FIFTH** TIME. **DECISION: ADOPT THE HOLD · NO CHANGE TO THE WORKER'S CONTRACT.**
+
+**★ WORKER — START HERE:** ✅ **NOTHING CHANGES FOR YOU. `R-578 §6`'s three items remain your whole contract and I have not touched them.** ✅ `[MEASURED HERE `15:28`]` **your commit `1a1abb46` (`15:26:04`) is on disk carrying items `1`–`3`, captioned *"1 of 2"*, and `module-collections.mjs` is dirty — you are mid-second-commit and AHEAD of your own `45–60` min ETA.** 🛑 **Do NOT report on the GPT hold, do NOT re-scope, do NOT wait for an external read on your delivery — there will not be one. Finish the batch and file the delivery AR.**
+
+**RULING ID:** R-579 · **TASK ID:** operator suspension of the external-read channel + this desk's standing-delegation defect · **DECISION: ADOPT · NO WORKER SCOPE CHANGE.**
+**GRAPH OBJECT: ✅ ADOPTED — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, on-disk blob `4b806d3555486c5eb0b79444ea1e6499b973050f`, RE-DERIVED at this ruling `[MEASURED HERE, `git hash-object`]` (third consecutive honouring of `R-576`'s never-copy-forward correction).**
+**GRAPH NODE TRANSITION: NONE. `P0PC` stays `active_worker`; `P0PG` stays BLOCKED.** ★★★ **This ruling changes a DESK INPUT, not a node artifact. `A GOVERNANCE CHANGE IS NOT A NODE TRANSITION.`**
+**GRAPH FAN-IN / READY SET: UNCHANGED — no hard predecessor gained or lost. Nothing became ready.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-619`** — `[MEASURED HERE `15:28`]` newest `## AR-` on disk; a START-RECEIPT on `R-578 §6`. **It does NOT bear on this ruling** (it predates the operator's order and speaks only to the batch), and I say so explicitly rather than let silence imply I checked.
+
+### 🛑★★★★★ §1 — THE ORDER, AND WHAT IT SUSPENDS
+**Operator, verbatim, two messages:** *"you can put gpt on hold for now you are the only advisor for right now"* · *"subscription chatgpt not api"*.
+**SUSPENDED, EFFECTIVE NOW:** the standing order recorded in `ADVISOR-STATE` (*"CONSUME THE GPT EXTERNAL READ **BEFORE** WRITING A RULING"*) and `R-544 §4`'s **`AFTER AN AR LANDS, WAIT FOR THE GPT READ BEFORE RULING`**. **A ruling written with no external read is now NORMAL and needs no justification clause.**
+**NOT suspended, and I scope this narrowly on purpose:** ★★★ **`A CHANNEL IS NOT AN AUTHOR` still binds** if the channel returns — a future read is `[EXTERNAL OPINION]`, zero authority, premises audited, disagreement resolved BY MEASUREMENT. **The hold is on the WAIT, not on the scepticism.**
+✅ **THE BRANCH MONITOR (`20756`, `origin/external-advisor/gpt-rulings`, 45s) STAYS ARMED AND IS NOT RETIRED.** ★★★ **Reason, stated so it is not read as neglect: `monitor-backfill` — `AN EAR ARMED AFTER THE SIGNAL NEVER HEARS IT`. Retiring it costs nothing today and costs a blind window the day the hold lifts. Its silence is now EXPECTED, not an alarm; that belongs in `KNOWN-BENIGN`.**
+
+### 🛑★★★★★ §2 — THE CAPABILITY QUESTION, MEASURED RATHER THAN ASSERTED
+**The operator asked whether a ChatGPT MCP could be built. I answered by measuring, because the whole defect in `§3` was answering this class of question from a document.**
+`[MEASURED HERE — presence only, no values read]`
+```
+OPENAI_API_KEY / OPENAI_KEY / CHATGPT_API_KEY / AZURE_OPENAI_API_KEY
+        user=False  machine=False  process=False        (all four names)
+.env* under trading-forge carrying OPENAI_API_KEY       none
+MCP servers configured (~/.claude.json)                 voicemode · n8n-mcp · elevenlabs
+```
+🛑 **NO API CREDENTIAL EXISTS ON THIS BOX, AND THE OPERATOR CONFIRMS THE ACCOUNT IS A SUBSCRIPTION, NOT AN API PLAN. A SUBSCRIPTION IS NOT PROGRAMMATICALLY REACHABLE — the MCP is not buildable, and that is now MEASURED rather than assumed in either direction.**
+⚠️ **THE ONE PATH THAT DOES EXIST, NAMED HONESTLY SO NOBODY RE-DISCOVERS IT AS AN OPTION I HID: Chrome automation (`mcp__claude-in-chrome__*`) driving his logged-in `chatgpt.com` tab. **NOT TAKEN, and this is a genuine reserved-list call, not a parked decision** — it publishes campaign content outward through his personal account, and `blast radius you cannot bound` is exactly the reserved clause. ★★★ **It is available on his word and needs no further design; I am not asking for that word, because he has already chosen the hold.**
+⚠️ `[UNENUMERATED — NOT INVESTIGATED]` **this repo contains scripts that call `gpt-5.4` (`scripts/h1-frontier-designpool.ts` et al.) and a populated `result-cache/`.** **I did NOT open them and I make NO claim about how they authenticate** — they may predate a key rotation, use a different provider path, or be dead. **Naming it as unmeasured rather than letting `§2`'s clean negative over-reach.**
+
+### 🛑★★★★★ §3 — THIS DESK'S DEFECT, STATED BEFORE ANY CREDIT
+**In my first operator report of this seat I wrote — to him and into `ADVISOR-STATE` — *"the consumption step is HIS, so this is reported to him, not fixed here."*** **I had measured the backlog correctly. I had NOT measured the premise.** `THE PASTE IS THE GATE` is a line an EARLIER SEAT wrote into `ADVISOR-STATE`; I republished it as a fact about who is able to act.
+★★★★★ **`A STEP YOU CALL "THE OPERATOR'S" BECAUSE A DOCUMENT SAYS SO IS AN UNMEASURED MECHANISM CLAIM — AND IT IS THE ONE CLASS OF UNMEASURED CLAIM THAT SPENDS HIS TIME INSTEAD OF MINE.`**
+★★★ **WHY IT EVADED MY OWN CHECKS, WHICH IS THE PART WORTH KEEPING: it is a HYBRID of two convicted classes — `wrong-mechanism` (unmeasured MECHANISM claim) and the standing-delegation law. Each alone I test for. **The hybrid's conclusion is "ask the operator", so it reads as DEFERENCE and never trips the "am I parking this?" test. Deference is the disguise.**
+⚠️ **AND THE AGGRAVATION: the `advisor-onboarding` skill warns in as many words that an `OPERATOR-FACING / DECISION PENDING` block is *"a smell"* and *"an unmade decision with a witness."* I READ THAT LINE THIS SEAT, QUOTED ITS SUBSTANCE IN MY STATE WRITE, AND THEN PRODUCED THE BLOCK ANYWAY.** ★★★★★ **FIFTH GRANT. `A STANDING DELEGATION IS USER INPUT AND DOES NOT EXPIRE ON A SESSION ROLL.` Persisted to seat memory ([[grader-agent]]) in the same motion as this ruling, per `mint-law`.**
+
+### §3a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` NOT touched, NOT read.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED.** ✅ **`44/52` untouched and NOT claimed.** ✅ **Single-writer honoured — `AGENT-REPORTS.md` not edited.** ✅ **No monitor armed, retired, or killed by this desk; the rig is ADOPTED unchanged (`31964` · `20756` · `14108` under `claude.exe 13916`; the worker's `6164` under `21508` untouched).** ✅ **No spend. No outward-facing act.**
+
+### 🛑 §4 — STOP CONDITIONS
+★★★★★ **Any future ruling DELAYED, or any worker task HELD, pending a GPT external read → STOP. The channel is suspended; waiting on it is now the defect, not the discipline (`§1`).** · ★★★★★ **A returning external read treated as an AUTHORITY rather than `[EXTERNAL OPINION]` → STOP. The hold lifted the WAIT, never the scepticism (`§1`).** · ★★★★★ **This desk driving `chatgpt.com` through Chrome without the operator's explicit word → STOP: outward-facing publication through his personal account (`§2`).** · ★★★★★ **Any claim that a step belongs to the OPERATOR, sourced from a document rather than from his words or a measurement → STOP (`§3`).** · ★★★ **`P0PC` transitioned on this ruling → STOP: it changes a desk input, not a node (`GRAPH NODE TRANSITION`).**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — UNCHANGED: finish `R-578 §6`'s three items and file the delivery AR.** ✅ **Items `1`–`3` are already on disk at `1a1abb46`; the second commit is in flight.** **NO new scope, NO receipt owed for this ruling — it does not ask you for anything.** **FIRST OBSERVABLE: the second commit + the delivery AR. A DECLINE-RECEIPT REMAINS EQUALLY VALID.**
+2. **THIS DESK — RULE THE DELIVERY WHEN IT LANDS, WITH NO EXTERNAL READ AND NO JUSTIFYING CLAUSE** (`§1`). **Then RE-DISPATCH ONE FRESH `accuracy-validator` per `R-578 §6.4`, whose brief inherits `R-578 §1`'s identity fix as the thing to attack hardest, `§3`'s witness-discrimination as a NEW campaign-wide class, and an explicit *"assume there is an INSTANCE ELEVEN"*.** ★★★ **DISPATCH IT — DO NOT ASK (`§3`, fifth grant).**
+3. **THIS DESK — THE NEXT BATCH AFTER THAT IS THE CLASS SWEEP, ALREADY DECIDED AND NOW RULED:** *"list EVERY derived magnitude in the prototype that is printed, gated, or reported and is NEVER asserted against a DECLARED value"*, residual category MANDATORY. ★★★★★ **Ten instances found ONE AT A TIME, each costing a full grade cycle, and instance TEN was inside the file shipped to close instance NINE. `A FLAT FINDING RATE IS A PIVOT TRIGGER` and the rate is not falling.** ⚠️ `[HYPOTHESIS — UNPROVEN]` **that the class is small enough to enumerate; an unbounded list is itself the finding and changes the instrument's certification story, not merely its bug count.** 🛑 **NOT added to the running batch — `R-572 §7`: a batch that grows while it closes never closes.**
+4. **THIS DESK — COMMIT `R-579` when `prototypes/` is CLEAN.** `[MEASURED HERE `15:28`]` `module-collections.mjs` is DIRTY (worker mid-commit), so `R-570 §6` BINDS and this text is DELIBERATELY UNCOMMITTED. **`A HELD COMMIT IS NOT A HELD RULING` — the worker's ear reads disk.**
+5. **DESK QUEUE — unchanged, NOT started:** `F-3` value-space discriminator · `MISS_NOT_CAUGHT` gating · `AMBIENT_ALLOWED` pinning · `Proxy` runtime catcher · producer/runtime divergence · `MEMORY.md` compaction (`19.7KB`, over its own `17KB` target — **mine, not the worker's**).
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A STEP YOU CALL "THE OPERATOR'S" BECAUSE A DOCUMENT SAYS SO IS AN UNMEASURED MECHANISM CLAIM.` Enumerate the actors before naming one, and ask whether HE said it or a PRIOR SEAT wrote it. `A STATE FILE IS A CHANNEL, AND A CHANNEL IS NOT AN AUTHOR` — the law this campaign applies to external readers applies to its own documents.**
+★★★★★ **`DEFERENCE IS THE DISGUISE.` An unmeasured claim whose conclusion is "ask the operator" never trips the anti-parking check, because it wears humility. The two guards this desk runs — "is this mechanism measured?" and "am I parking this?" — each pass it individually. Test the HYBRID.**
+★★★ **`A HOLD ON AN INPUT IS NOT A HOLD ON THE SCEPTICISM THAT INPUT EXISTED TO SUPPLY.` Suspending the GPT wait removes a latency, not a standard: this desk now owes, alone, the adversarial read that channel was providing — which is precisely why `§5.2` dispatches the grader without asking.**
+
+---
+
 ## R-578 · 2026-08-02 · 🛑★★★★★ **THE SECOND GRADE LANDED: BAND `6 / 10`, `8 / 9` CLAIMS CONFIRMED — AND `C1`, THE CLAIM I ORDERED IT TO ATTACK HARDEST, IS **REFUTED IN ITS SUFFICIENCY**. RECEIPT `docs/designs/GRADE-P0PC-BATCH2-2026-08-02.md`, coverage section PRESENT.** 🛑★★★★★ **`EXPECTED_ROW_COUNT` GATES **CARDINALITY, NEVER IDENTITY**: `of EXPECT` → `of EXPECT.map(() => EXPECT[1])` RUNS NINETEEN IDENTICAL ROWS AND PRINTS **`41 / 41` · "the runner is an ENFORCING GATE" · `EXIT 0`** WITH THE FULL DECLARED DENOMINATOR. **EIGHTEEN OF NINETEEN RED PATHS RETIRED, AND `F-1`'s OWN FIX WAVES IT THROUGH.**** 🛑★★★★★ **AND **INSTANCE TEN**, ON `module-collections.mjs` — THE FILE THIS BATCH SHIPPED (`F-4`) TO MAKE THAT CLASS VISIBLE.** ✅★★★★★ **`C9` CONFIRMED ON THREE PATHS: REFUSING THE TYPE-BASED CATCHER WAS RIGHT.** **DECISION: ACCEPT · `P0PC` REVISION-REQUIRED (SECOND TIME) · NO TRANSITION · NEW BATCH OF THREE.**
 
 **★ WORKER — START HERE:** 🛑 **THE BATCH RE-OPENS A SECOND TIME, AND `F-1` IS THE REASON — BUT READ WHAT WAS REFUTED: NOT YOUR FIX, ITS SUFFICIENCY.** ✅ **`[MEASURED BY GRADED INSTRUMENT]` the POSITIVE half is REAL and re-verified: `EXPECT.slice(0,-1)` → `built 40 rows, expected exactly 41` `EXIT 1`. **THE REALISTIC SINGLE-ROW RETIREMENT — the one you deliberately varied for in `AR-615 §1` — IS CAUGHT.** What is not caught is a SUBSTITUTION that preserves the count, which is exactly the residual YOU named in `AR-615 §7.3` and did not get to.** ✅ **`F-2`, `F-4`, `F-5`, `C5`, `C6` ALL CONFIRMED; `44/52` proven untouched by BLOB-IDENTITY, the strongest path available.** **NEW BATCH, `3` ITEMS, `§6`. FIRST OBSERVABLE: a commit touching `red-proof.mjs`'s row-identity assertion. ETA ~45–60 min. A DECLINE-RECEIPT IS EQUALLY VALID.**
