@@ -133,6 +133,58 @@ if (notInExpanded.length) {
 /** Additions DERIVED from two frozen pins, replacing the hand-maintained DECLARED_ADDITIONS. */
 export const DERIVED_ADDITIONS = Object.freeze(EXPECTED_EXPANDED_IDS.filter((id) => !EXPECTED_ORIGINAL_IDS.includes(id)));
 
+// 🛑 R-561 — THE **GREEN** POPULATION WAS STILL UNPINNED, ONE ARRAY BESIDE THE RED ONE.
+// FOURTH SWEEP FAILURE OF THE SAME LAW: item 15 pinned the red 52 · R-558 found the expanded red
+// set unpinned · and the GREEN set sat unpinned the whole time. `run.mjs` asserted only
+// `green_admitted === green_total` — BOTH OPERANDS COMPUTED FROM THE SAME MUTABLE ARRAY. Deleting
+// `G-src-implements-erased` gave `7 / 7`, `GATE: PASS`, `EXIT 0`: the count simply followed the
+// array down.
+//   A MUTABLE POPULATION CANNOT CERTIFY ITS OWN COMPLETE MEMBERSHIP BY COUNTING ONLY ITS
+//   SURVIVING MEMBERS.
+// 🛑 THE STAKES ARE NOT ABSTRACT: `G-src-implements-erased` and `G-src-interface-extends-erased`
+// EXIST BECAUSE R-551 §2 proved the rule convicted ERASED code, and R-551 §3 ordered the corpus
+// gap closed in the same wave. Deleting either silently recreates the exact structural blindness
+// that let the over-correction hide — `A CORPUS THAT CANNOT SEE A DEFECT CANNOT CERTIFY ITS
+// ABSENCE` (AR-596 §2).
+// ✅ NO NEW AUTHORITY IS NEEDED: the SAME frozen pin already carries all eight green identities.
+export const EXPECTED_GREEN_IDS = Object.freeze(expandedBaseline.GREEN.map((g) => g.id));
+const EXPECTED_GREEN_SET = new Set(EXPECTED_GREEN_IDS);
+const greenDupes = EXPECTED_GREEN_IDS.filter((id, i) => EXPECTED_GREEN_IDS.indexOf(id) !== i);
+if (greenDupes.length) {
+  throw new Error(`INSTRUMENT FAULT: expanded pin ${EXPANDED_PIN_COMMIT} yields duplicate GREEN ids: ${[...new Set(greenDupes)].join(', ')}`);
+}
+// 🛑 DISPOSITION IS PART OF THE CONTRACT (R-561): red and green are NOT merged into one untyped
+// set. An id pinned GREEN must never appear in the live CORPUS, and an id pinned RED must never
+// appear in the live GREEN — moving a row between them changes what it CLAIMS, and a membership
+// check that only asked "does this id exist somewhere" would wave that through.
+const crossPinned = EXPECTED_GREEN_IDS.filter((id) => EXPECTED_EXPANDED_SET.has(id));
+if (crossPinned.length) {
+  throw new Error(`INSTRUMENT FAULT: pin ${EXPANDED_PIN_COMMIT} lists ids as BOTH red and green: ${crossPinned.join(', ')}`);
+}
+
+/**
+ * The GREEN population, checked exactly as the red one is: BOTH directions plus uniqueness,
+ * against a frozen pin the live delivery cannot edit.
+ * @param {Array<{id: string}>} greenUnderTest
+ * @param {Array<{id: string}>} corpusUnderTest — for the disposition (RED<->GREEN) check
+ */
+export function checkGreenMembership(greenUnderTest, corpusUnderTest) {
+  const actual = greenUnderTest.map((g) => g.id);
+  const actualSet = new Set(actual);
+  const counts = actual.reduce((a, id) => { a[id] = (a[id] || 0) + 1; return a; }, {});
+  const corpusIds = new Set(corpusUnderTest.map((c) => c.id));
+  return {
+    expected_count: EXPECTED_GREEN_IDS.length,
+    actual_count: actual.length,
+    missing: EXPECTED_GREEN_IDS.filter((id) => !actualSet.has(id)),
+    undeclared: actual.filter((id) => !EXPECTED_GREEN_SET.has(id)),
+    duplicated: Object.entries(counts).filter(([, n]) => n > 1).map(([id]) => id),
+    // disposition: a pinned-GREEN id appearing among the RED rows, or vice versa
+    green_found_in_corpus: EXPECTED_GREEN_IDS.filter((id) => corpusIds.has(id)),
+    red_found_in_green: actual.filter((id) => EXPECTED_EXPANDED_SET.has(id)),
+  };
+}
+
 /**
  * BOTH DIRECTIONS, as item 15 orders. A rename fires on BOTH halves at once:
  * the old id goes MISSING and the new id arrives UNDECLARED.

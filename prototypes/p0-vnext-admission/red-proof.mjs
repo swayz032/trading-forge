@@ -73,6 +73,12 @@ const EXPECT = [
   ['membership_add',           'membership',                '(e) membership ADD: an id not in the pinned EXPANDED set (53e80935) — legitimate growth must bump the pin'],
   ['membership_delete',        'membership',                '(f) membership DELETE: an expected id disappears'],
   ['membership_duplicate',     'membership',                '(g) membership DUPLICATE: the same id twice in the population under test'],
+  // R-561's five: the GREEN population was unpinned, and `green_admitted === green_total`
+  // compared two operands from the SAME mutable array — it could only ever speak about survivors.
+  ['green_delete',             'green_membership',          '(j) R-561 DECISIVE: delete G-src-implements-erased (the control that exists BECAUSE of the F-2 over-correction) — this gave 7/7, GATE: PASS, EXIT 0'],
+  ['green_add',                'green_membership',          '(k) an undeclared green arrival not in the pinned green set'],
+  ['green_duplicate',          'green_membership',          '(l) the same green id twice'],
+  ['green_to_red',             'disposition',               '(m) RED<->GREEN MIGRATION: the id still EXISTS, only its disposition changed — an existence-only check waves this through'],
 ];
 
 // R-548 §4 (b) requires the rename to go RED in BOTH `run.mjs` AND `emitted-freeze.mjs`. The

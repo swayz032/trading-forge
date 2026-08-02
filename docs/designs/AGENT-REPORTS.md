@@ -4,6 +4,56 @@
 
 ---
 
+## AR-601 · 2026-08-02 · ✅★★★★★ **THE GREEN POPULATION IS PINNED TO THE SAME FROZEN COMMIT AS THE RED ONE, AND DISPOSITION IS NOW PART OF THE CONTRACT: DELETING `G-src-implements-erased` EXITS `1` (WAS `7/7`, `GATE: PASS`, `EXIT 0`), AND MOVING IT FROM `GREEN` TO `CORPUS` — WHERE THE ID STILL EXISTS — EXITS `1` ON A SEPARATE `disposition` CLASS.** ✅★★★★★ **BRACKETED CONTROL, AS `R-559 §1` TAUGHT: CLEAN `0` → **SIX** ATTACKS ALL `1` → RESTORED `0`.** 🛑★★★ **AND I CAUGHT MY OWN INSTRUMENT LYING MID-VERIFICATION: MY FIRST BRACKET REPORTED `EXIT=0` FOR EVERY ATTACK BESIDE `GATE: FAIL`. THE GATE WAS RIGHT; MY SCRIPT WAS READING THE WRONG `$?`.**
+
+**RULING ID:** `R-561` START-HERE — the single authorized repair, built ON TOP of `8a40f899` · **TASK ID:** AR-601 · **PRIOR:** AR-600 (`0caa94e5`).
+**FAN-IN: `1 / 1`. NOT A HANDOFF.** ✅ **Caption correction from `8a40f899` KEPT, as ordered.**
+
+### ✅★★★★★ §1 — THE REPAIR: THE GREEN SET GETS EXACTLY WHAT THE RED SET GOT
+🛑 **THE DEFECT, at the executable line:** `run.mjs` asserted `green_admitted === green_total` — **both operands computed from the same live `GREEN` array**, so the count followed the array down. `membership.mjs` derived expected identities from the frozen pin's `CORPUS` and **never touched its `GREEN`.**
+✅ **`EXPECTED_GREEN_IDS` is now derived from `53e80935`'s `expandedBaseline.GREEN`** — the SAME pin already in use, so **no new authority was introduced**, exactly as `R-561` noted. Both directions + uniqueness, audited at load.
+✅★★★★★ **DISPOSITION IS ENFORCED SEPARATELY AND RED/GREEN ARE **NOT** MERGED (`R-561`, explicit):** a pinned-GREEN id appearing among the RED rows, or a pinned-RED id among the GREEN rows, trips its own `disposition` class. ★★★ **This is the case an existence-only check waves through: after a migration the id STILL EXISTS — only what it CLAIMS has changed.**
+✅ **The pins cross-audit at load: if the frozen commit ever listed an id as BOTH red and green, that throws as an instrument fault rather than producing a verdict.**
+✅ **`green_admitted === green_total` is RETAINED, not replaced** — it is still true and still worth asserting. **It simply is no longer the ONLY green assertion, because it can only ever speak about the members that survived.**
+
+### ✅★★★★★ §2 — THE BRACKETED CONTROL
+`[MEASURED HERE, exit codes captured immediately after each process — see `§4`]`
+```
+1 CLEAN CONTROL                    EXIT 0  GATE: PASS   green_admitted 8 / green_total 8
+2 R-557 anchor-slack               EXIT 1  GATE: FAIL
+3 R-558 guard-row deletion         EXIT 1  GATE: FAIL
+4 FOUNDING ATTACK A                EXIT 1  GATE: FAIL
+5 FOUNDING ATTACK B                EXIT 1  GATE: FAIL
+6 R-561 green-control deletion     EXIT 1  GATE: FAIL   *** green_membership: MISSING green control(s)
+                                                            (expected by 53e80935): G-src-implements-erased
+7 R-561 RED<->GREEN migration      EXIT 1  GATE: FAIL   *** disposition: id(s) pinned GREEN found
+                                                            among the RED rows: G-src-implements-erased
+8 RESTORED CONTROL                 EXIT 0  GATE: PASS
+```
+★★★★★ **Step `8` is why `2`–`7` mean anything — `R-559 §7`'s law applied rather than recited. `R-561` ordered both `AR-599` attacks and both founding attacks re-run on the replacement object; they are rows `2`–`5` and all four still bite.**
+
+### ✅ §3 — NO OVER-CORRECTION, RE-MEASURED IN THE RUN THAT REPORTS IT
+```
+clean control      GATE: PASS  EXIT 0 · green_admitted 8 / green_total 8
+like-for-like      44 · 3 · 0 · 0 · 5 · 0   SUM 52 ✅  UNCHANGED by this repair
+red-proof          control GREEN · 35 / 35   (31 -> 35; +4 = green delete/add/duplicate/migration)
+all five gates     run · red-proof · type-value-proof · emitted-freeze · module-tuple   ALL EXIT 0
+```
+⚠️ **`red-proof.mjs` now spawns `35` full runner processes and exceeded a 2-minute harness default on my first invocation.** **It COMPLETED and exited `0` when given headroom — but a future seat running it under a short timeout will see a kill, not a verdict. Recording it so that is read as a timeout rather than a red.**
+
+### 🛑★★★ §4 — MY OWN INSTRUMENT ERROR, RECORDED BECAUSE THE DESK RECORDS ITS OWN
+**My first bracketed run printed `EXIT=0` for EVERY attack while the same lines showed `GATE: FAIL`.** ✅ **I did not publish it and I did not rationalise the contradiction.** **Cause: I wrote `node run.mjs; echo "$lbl"; echo "EXIT=$?"` — the intervening `echo` succeeds, so `$?` reported ITS status, never the runner's.**
+★★★★★ **`A DISPLACED `$?` IS THE PIPED EXIT CODE IN A NEW COSTUME` — the trap `R-554 §6` minted, which has now bitten this campaign five times. What saved it was printing the GATE verdict BESIDE the exit code: two signals from one run disagreed, and disagreement is unignorable in a way a lone `EXIT=0` is not.** ★★★ **`PRINT A SECOND, INDEPENDENT SIGNAL NEXT TO ANY EXIT CODE YOU INTEND TO BELIEVE.`**
+
+### ⚠️ §5 — WHAT THIS DOES **NOT** CLOSE
+🛑★★★★★ **THE SWEEP THIS RULING IS THE FOURTH INSTANCE OF IS STILL NOT PROVABLY COMPLETE, AND I WILL NOT DECLARE IT SO.** Item 15 pinned the red `52` → `R-558` found the expanded red set unpinned → `R-561` found the GREEN set unpinned. ⚠️ **I have now pinned every population I can NAME: red-52, red-expanded, green. `[UNENUMERATED]` whether another mutable set still certifies itself — `TWIN_PAIRS`, `PREREGISTERED_EMIT_CHANGES` and `NOT_IMPLEMENTED` are all hand-authored in the delivery and I have NOT audited them against a pin.** ★★★ **Naming them explicitly so the next finding is expected rather than a surprise: `A LAW THAT HAS FAILED TO SWEEP THREE TIMES SHOULD BE ASSUMED UNSWEPT UNTIL ENUMERATED.`**
+⚠️ **`TWIN_PAIRS` is the one I would attack first** — it names ids in both populations and drives the twin assertion; a deletion there would remove a check rather than fail one. **`[UNPROVEN]` — I did not construct it, and `R-561` authorized one repair, not a sweep.**
+⚠️ **THE GRADE IS RUNNING AGAINST `8a40f899` AND THIS COMMIT SUPERSEDES IT.** `R-561 §3` ruled the grade NOT stopped and ordered this repair anyway, so that is the desk's decision and not mine to revisit — **but the verdict, when it lands, will describe an object that no longer has the newest green pin.** ★★★ **Flagging it so nobody reads a clean verdict on `8a40f899` as covering `§1`.**
+⚠️ **`AR-599 §6`'s three residuals stand unchanged** (editable pin constant · `[UNWITNESSED]` AMBIGUOUS branch · vanished-plant hypothesis). ⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED. `44/52` NOT ratified. `P0PC` transition is the desk's.**
+
+---
+
+
 ## AR-600 · 2026-08-02 · 🛑★★★★★ **DISCLOSURE, NOT A DELIVERY: `R-559` PINS THE OBJECT AT `46d6b7de` AND ORDERS IT BYTE-STABLE — BUT THE PROTOTYPE AT `HEAD` IS **ONE COMMIT PAST THAT PIN**. I COMMITTED A ONE-LINE CAPTION FIX (`8a40f899`) `25 SECONDS` BEFORE `R-559` LANDED, AND THE DESK ALMOST CERTAINLY NEVER SAW IT.** ✅ **THE DRIFT IS ONE DESCRIPTION STRING, ZERO BEHAVIOUR. BOTH COMMITS ARE `31/31` GREEN.** 🛑 **THE PIN DECISION IS THE DESK'S AND I HAVE NOT TOUCHED ANYTHING.**
 
 **TASK ID:** AR-600 (disclosure; no code delta) · **PRIOR:** AR-599 (`46d6b7de`).

@@ -19,7 +19,7 @@ import path from 'node:path';
 import { admitRuntime } from './runtime-admission.mjs';
 import { CORPUS, GREEN, TWIN_PAIRS, NOT_IMPLEMENTED } from './corpus.mjs';
 // ITEM 15: expected membership comes from the PINNED AR-589 artifact, never from `CORPUS`.
-import { EXPECTED_ORIGINAL_IDS, checkMembership, BASELINE_META, EXPANDED_META } from './membership.mjs';
+import { EXPECTED_ORIGINAL_IDS, checkMembership, checkGreenMembership, BASELINE_META, EXPANDED_META } from './membership.mjs';
 
 globalThis.__GETTER_HITS__ = 0;
 
@@ -180,6 +180,13 @@ function corpusUnderTest() {
     // This exited 0 before the expanded pin: the row vanished, `declared_but_absent` printed it,
     // and nothing gated. The pinned 53e80935 still expects it, and no edit here can change that.
     case 'membership_delete_guard': return CORPUS.filter((c) => c.id !== '56(a)');
+    // 🛑 R-561: the RED<->GREEN MIGRATION. The id still exists in the delivery — it just moved
+    // populations. `atom`/`expect` are supplied only so the runner's loop can process the row;
+    // the defect being tested is the DISPOSITION change, not this row's verdict.
+    case 'green_to_red': return [...CORPUS, {
+      ...GREEN.find((g) => g.id === 'G-src-implements-erased'),
+      atom: 'RED<->GREEN migration probe', expect: '1b-S:module-system',
+    }];
     default: return CORPUS;
   }
 }
@@ -269,7 +276,21 @@ for (const c of CORPUS_UNDER_TEST) {
 }
 
 // ---- GREEN neighbours must be ADMITTED ----
-const greens = GREEN.map((g) => {
+// 🛑 R-561's RED PATHS. These mutate the GREEN population UNDER TEST, never the frozen pin.
+// The decisive fixture is `G-src-implements-erased`: it exists BECAUSE R-551 §2 proved the rule
+// convicted erased code, and deleting it previously gave `7 / 7`, GATE: PASS, EXIT 0.
+const GREEN_UNDER_TEST = (() => {
+  switch (INJECT) {
+    case 'green_delete': return GREEN.filter((g) => g.id !== 'G-src-implements-erased');
+    case 'green_add': return [...GREEN, { ...GREEN.find((g) => g.id === 'G-src-clean'), id: 'G-src-undeclared' }];
+    case 'green_duplicate': return [...GREEN, { ...GREEN.find((g) => g.id === 'G-src-clean') }];
+    // RED<->GREEN migration: the row still EXISTS, so any check asking only "does this id exist
+    // somewhere" waves it through. Its DISPOSITION changed, and disposition is the contract.
+    case 'green_to_red': return GREEN.filter((g) => g.id !== 'G-src-implements-erased');
+    default: return GREEN;
+  }
+})();
+const greens = GREEN_UNDER_TEST.map((g) => {
   let body = g.body;
   if (INJECT === 'green_rejected' && g.id === 'G-src-clean') body = `let leak = 1;\n${g.body}`;
   // The twin injection reproduces the EXACT defect R-544 convicted: a "twin" whose arms
@@ -358,6 +379,10 @@ const summary = {
 // MISSING and the new id arrives UNDECLARED — which is exactly what the self-authored set
 // could never do.
 const membership = checkMembership(CORPUS_UNDER_TEST);
+// R-561: the GREEN population gets the SAME treatment — both directions, uniqueness, and the
+// disposition contract. `green_admitted === green_total` is retained but is no longer the only
+// green assertion, because it can only ever speak about the members that survived.
+const greenMembership = checkGreenMembership(GREEN_UNDER_TEST, CORPUS_UNDER_TEST);
 // `.filter(Boolean)` because a MISSING expected row must be REPORTED by the membership check,
 // not crash the tally before the check is ever printed.
 const orig = EXPECTED_ORIGINAL_IDS.map((id) => results.find((r) => r.id === id)).filter(Boolean);
@@ -515,6 +540,21 @@ const FAILURE_CLASSES = [
       membership.missing_expanded.length ? `MISSING from the pinned EXPANDED corpus (expected by ${EXPANDED_META.commit}): ${membership.missing_expanded.join(', ')}` : '',
       membership.undeclared.length ? `UNDECLARED arrivals (not in the pinned expanded set ${EXPANDED_META.commit} — legitimate growth must BUMP THE PIN): ${membership.undeclared.join(', ')}` : '',
       membership.duplicated.length ? `DUPLICATE ids in the population under test: ${membership.duplicated.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
+  // 🛑 R-561: the GREEN population, pinned and gated exactly as the red one is.
+  ['green_membership', greenMembership.missing.length > 0 || greenMembership.undeclared.length > 0
+    || greenMembership.duplicated.length > 0,
+    () => [
+      greenMembership.missing.length ? `MISSING green control(s) (expected by ${EXPANDED_META.commit}): ${greenMembership.missing.join(', ')}` : '',
+      greenMembership.undeclared.length ? `UNDECLARED green arrival(s) (not in the pinned green set): ${greenMembership.undeclared.join(', ')}` : '',
+      greenMembership.duplicated.length ? `DUPLICATE green ids: ${greenMembership.duplicated.join(', ')}` : '',
+    ].filter(Boolean).join(' | ')],
+  // 🛑 R-561: DISPOSITION IS PART OF THE CONTRACT. A row that merely MOVED between populations
+  // still exists, so an existence-only check would wave it through — this one will not.
+  ['disposition', greenMembership.green_found_in_corpus.length > 0 || greenMembership.red_found_in_green.length > 0,
+    () => [
+      greenMembership.green_found_in_corpus.length ? `id(s) pinned GREEN found among the RED rows: ${greenMembership.green_found_in_corpus.join(', ')}` : '',
+      greenMembership.red_found_in_green.length ? `id(s) pinned RED found among the GREEN rows: ${greenMembership.red_found_in_green.join(', ')}` : '',
     ].filter(Boolean).join(' | ')],
 ];
 const failures = FAILURE_CLASSES.filter(([, hit]) => hit).map(([name, , msg]) => `${name}: ${msg()}`);
