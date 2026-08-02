@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3347` at THIS commit, 2026-08-01 21:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3352` at THIS commit, 2026-08-01 21:42 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -69,7 +69,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3347` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3352` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -79,6 +79,11 @@ MAY BE THEIR ONLY CARRIER** (e.g. the `classify.py` byte-exact reproduction, the
 **`AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE` — deleting it would be exactly the
 `CUT NARRATIVE, NEVER CONTRACTS` violation this file has already suffered twice.**
 ✅★★★ **THE CLASSIFICATION HALF IS NOW DONE AND LIVES OUTSIDE THIS FILE (so discharging the debt does not grow it): `docs/designs/ADVISOR-STATE-COMPACTION-TRIAGE-2026-07-31.md` — `19` blocks / `625` lines / `20%` of the file, tiered by SOLE-CARRIER RISK, with the instrument's weakness named. ⚠️ IT AUTHORIZES NO CUTS — a token in the ledger is not the finding in the ledger.**
+✅★★★★★ **TIERED FOR YOU 2026-08-01 — THE SAFE CUT IS MEASURED AND READY, SO NOBODY HAS TO RE-CLASSIFY IT `[MEASURED HERE]`. SIX STALE SEAT BLOCKS FROM THE 07-30 SEATS TOTAL `802` LINES, AND THEY SPLIT CLEANLY:**
+- ✅ **SAFE — PURE STATUS SNAPSHOTS, NO `NOT RULED` / `[FACT` CONTENT, CUTTABLE WITHOUT A LEDGER CHECK: `:1173-1205` (33) · `:1272-1299` (28) · `:1328-1368` (41) = **`102` LINES**.**
+- ⚠ **NEEDS THE PER-FINDING LEDGER CHECK FIRST — these DO contain `NOT RULED` / `[FACT` blocks and may be SOLE CARRIERS: `:828-849` (22) · `:850-1172` (323) · `:1402-1756` (355) = **`700` LINES.** Boundaries are heading-to-heading, so the risky flag may cover only part of each; sub-classify before cutting.**
+⚠★★★ **AND WHY I DID *NOT* CUT THE SAFE `102` TONIGHT, RECORDED SO IT DOES NOT READ AS AN OVERSIGHT: `102 / 3348` IS `3%`, THE MONEY PATH WAS *RUNNING* (worker mid-design), AND `§15.7` PARKS HOUSEKEEPING THAT DOES NOT INVALIDATE EVIDENCE THE NEXT GATE CONSUMES. **`R-515` CONVICTED THIS DESK FOR DOING THE ADJACENT GOVERNANCE THING WHILE THE PATH WAITED — the measurement is the deliverable here, not the deletion.** Cut it when the path is genuinely idle.**
+★★ **ALSO MEASURED: THIS SEAT'S OWN WRITES ARE NOT THE PROBLEM — the file grew `3225 → 3347` (`+122`) across ~20 commits this session because the seat block is REPLACED, not appended. The bulk is inherited 07-30 narrative.**
 **THE REMAINING WORK, SPECIFIED SO IT NEEDS NO RE-DERIVATION: for each `NOT RULED` block,
 grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block is cuttable;
 if not, PROMOTE it into a contract section first, THEN cut.**
