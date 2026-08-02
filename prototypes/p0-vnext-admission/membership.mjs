@@ -118,6 +118,36 @@ if (EXPECTED_ORIGINAL_IDS.length !== EXPECTED_CARDINALITY) {
 const expandedPin = loadPinnedCorpus(EXPANDED_PIN_COMMIT);
 const expandedBaseline = await import(pathToFileURL(expandedPin.file).href);
 export const EXPANDED_META = Object.freeze({ commit: EXPANDED_PIN_COMMIT, blob: expandedPin.blob, rawBytes: expandedPin.rawBytes });
+
+// 🛑★★★★★ GRADE F-4 CRITICAL / R-564 item (1) — **PIN THE PIN.**
+// I claimed in AR-599 §2 that the coordinated case was "CLOSED BY CONSTRUCTION". THE GRADER
+// REFUTED THAT BY EXECUTION: `EXPANDED_PIN_COMMIT` was a bare string with NOTHING asserting its
+// value, so bumping it ONE LINE to `9be6a52a` and deleting the five rows that commit lacks —
+// `56(a)`–`(d)` and `57`, THE GUARD ROWS FOR BOTH PRIOR CRITICALS — passed every membership
+// check, with `expected_expanded_cardinality` silently falling 64 -> 59.
+// The grader also named the exact asymmetry: the ORIGINAL pin has an asserted cardinality that
+// THROWS; the expanded pin had none. Same file, one guarded, one not — `mint-law` unswept AGAIN.
+//   A PIN NOBODY ASSERTS IS A VARIABLE, NOT A PIN.
+// Both magnitudes are now asserted, and so is the BLOB — so moving the pin requires editing three
+// named constants that each state the expected size in plain sight, and a shrink cannot be silent.
+export const EXPANDED_PIN_BLOB = 'f177b2456deec81cd1635c8a947db2730a834289';
+export const EXPECTED_EXPANDED_CARDINALITY = 64;
+export const EXPECTED_GREEN_CARDINALITY = 8;
+if (expandedPin.blob !== EXPANDED_PIN_BLOB) {
+  throw new Error(`INSTRUMENT FAULT: expanded pin ${EXPANDED_PIN_COMMIT} resolves to blob ${expandedPin.blob}, expected ${EXPANDED_PIN_BLOB} — the pin moved`);
+}
+if (expandedBaseline.CORPUS.length !== EXPECTED_EXPANDED_CARDINALITY) {
+  throw new Error(`INSTRUMENT FAULT: expanded pin yields ${expandedBaseline.CORPUS.length} CORPUS rows, expected ${EXPECTED_EXPANDED_CARDINALITY} — a silent shrink`);
+}
+if (expandedBaseline.GREEN.length !== EXPECTED_GREEN_CARDINALITY) {
+  throw new Error(`INSTRUMENT FAULT: expanded pin yields ${expandedBaseline.GREEN.length} GREEN rows, expected ${EXPECTED_GREEN_CARDINALITY} — a silent shrink`);
+}
+// Symmetry, since the asymmetry is what the grader exploited: the ORIGINAL pin gets its blob
+// asserted too, not just its cardinality.
+export const BASELINE_PIN_BLOB = 'b56e2969c1b6852a2ac42053a14adc62dbe9e899';
+if (blob !== BASELINE_PIN_BLOB) {
+  throw new Error(`INSTRUMENT FAULT: baseline pin ${BASELINE_COMMIT} resolves to blob ${blob}, expected ${BASELINE_PIN_BLOB} — the pin moved`);
+}
 export const EXPECTED_EXPANDED_IDS = Object.freeze(expandedBaseline.CORPUS.map((c) => c.id));
 const EXPECTED_EXPANDED_SET = new Set(EXPECTED_EXPANDED_IDS);
 const expandedDupes = EXPECTED_EXPANDED_IDS.filter((id, i) => EXPECTED_EXPANDED_IDS.indexOf(id) !== i);

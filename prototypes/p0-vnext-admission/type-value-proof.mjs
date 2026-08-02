@@ -106,7 +106,7 @@ console.log(`  same spelling in both arms: ${sameSpelling}   <- without this the
 
 // ---- THE RESIDUAL MUST BE REACHABLE, or "fails closed" is an untested branch ----
 // A negative assertion needs a positive witness that the path RAN.
-import { classifyPosition, POSITION_UNCLASSIFIED } from './source-admission.mjs';
+import { POSITION_UNCLASSIFIED } from './source-admission.mjs';
 const residualWitness = (() => {
   // PARTIAL ERASURE — the residual's real meaning under the emitter oracle: ONE spelling used
   // BOTH as an erased type and as a live value. The oracle answers per NAME, so it cannot

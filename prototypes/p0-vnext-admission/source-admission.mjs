@@ -150,22 +150,11 @@ function isIntrinsicFreezeCallee(node, checker, srcFile) {
 // ---------------------------------------------------------------------------------------
 export const POSITION_UNCLASSIFIED = 'POSITION_UNCLASSIFIED';
 
-const VALUE_PARENT_KINDS = new Set([
-  ts.SyntaxKind.CallExpression, ts.SyntaxKind.NewExpression, ts.SyntaxKind.PropertyAccessExpression,
-  ts.SyntaxKind.ElementAccessExpression, ts.SyntaxKind.BinaryExpression, ts.SyntaxKind.PrefixUnaryExpression,
-  ts.SyntaxKind.PostfixUnaryExpression, ts.SyntaxKind.ConditionalExpression, ts.SyntaxKind.ArrayLiteralExpression,
-  ts.SyntaxKind.PropertyAssignment, ts.SyntaxKind.ShorthandPropertyAssignment, ts.SyntaxKind.SpreadElement,
-  ts.SyntaxKind.SpreadAssignment, ts.SyntaxKind.TemplateSpan, ts.SyntaxKind.ParenthesizedExpression,
-  ts.SyntaxKind.ArrowFunction, ts.SyntaxKind.FunctionExpression, ts.SyntaxKind.ReturnStatement,
-  ts.SyntaxKind.VariableDeclaration, ts.SyntaxKind.ExpressionStatement, ts.SyntaxKind.AwaitExpression,
-  ts.SyntaxKind.TypeOfExpression, ts.SyntaxKind.NonNullExpression, ts.SyntaxKind.AsExpression,
-  ts.SyntaxKind.SatisfiesExpression, ts.SyntaxKind.ExportAssignment, ts.SyntaxKind.TaggedTemplateExpression,
-  ts.SyntaxKind.Decorator, ts.SyntaxKind.ComputedPropertyName, ts.SyntaxKind.DeleteExpression,
-  ts.SyntaxKind.VoidExpression, ts.SyntaxKind.YieldExpression, ts.SyntaxKind.ThrowStatement,
-  ts.SyntaxKind.IfStatement, ts.SyntaxKind.WhileStatement, ts.SyntaxKind.ForStatement,
-  ts.SyntaxKind.ForOfStatement, ts.SyntaxKind.ForInStatement, ts.SyntaxKind.SwitchStatement,
-  ts.SyntaxKind.CaseClause, ts.SyntaxKind.TemplateExpression, ts.SyntaxKind.ObjectLiteralExpression,
-]);
+// 🛑 R-563 item (4) / GRADE F-5 — `VALUE_PARENT_KINDS` IS DELETED. It was a `Set` of
+// `ts.SyntaxKind` values declared here and consulted by `classifyPosition`, i.e. A LIVE
+// `SyntaxKind` ALLOWLIST — while line ~191 claimed "NO SPELLING ALLOWLIST AND NO `SyntaxKind`
+// ALLOWLIST EXISTS OR MAY EXIST". The grader was right: THE ABSOLUTE WAS FALSE AS WRITTEN.
+// The emitter-oracle DECISION path never consulted it; deleting it makes the caption true again.
 
 // ---------------------------------------------------------------------------------------
 // F-2-CORRECTED (R-551 §3) — THE EMITTER IS THE ORACLE.
@@ -223,38 +212,18 @@ export function erasureOracle(sourceText, scriptKind) {
   };
 }
 
-export function classifyPosition(node) {
-  // (1) TYPE-ONLY import/export -- erased wholesale by the emitter.
-  for (let p = node.parent; p; p = p.parent) {
-    if ((ts.isImportSpecifier(p) || ts.isExportSpecifier(p)) && p.isTypeOnly) return 'type';
-    if (ts.isImportClause(p) && p.isTypeOnly) return 'type';
-    if (ts.isImportDeclaration(p) && p.importClause?.isTypeOnly) return 'type';
-  }
-  // (2) ANY type-space ancestor. `as`/`satisfies` operands reach here because their `.type`
-  //     slot IS a TypeNode; their EXPRESSION slot is not, and stays value-space.
-  //
-  // 🛑 F-2, FOUND BY THE accuracy-validator (GRADE-P0PC-PARTITION-2026-08-02, CRITICAL):
-  // `ts.isTypeNode(ExpressionWithTypeArguments) === true` [MEASURED HERE], and that is the ONE
-  // TypeNode kind whose `.expression` slot holds a LIVE VALUE — the `extends` heritage clause.
-  // A naive "any TypeNode ancestor => type" walk therefore SILENTLY EXONERATES a real runtime
-  // capture: `class extends window.Base {}` was ADMITTED while reading a host global at
-  // runtime. Measured: the NAMED form reddened only because the class NAME tripped the
-  // residual; the ANONYMOUS form was admitted outright.
-  //   A TYPE-SHAPED WRAPPER AROUND A VALUE SLOT IS STILL A VALUE SLOT.
-  for (let p = node.parent, child = node; p; child = p, p = p.parent) {
-    if (ts.isExpressionWithTypeArguments(p)) {
-      // Inside `.typeArguments` it is genuinely erased; inside `.expression` it executes.
-      if (p.expression === child || isWithin(node, p.expression)) return 'value';
-      return 'type';
-    }
-    if (ts.isTypeNode(p) || ts.isTypeAliasDeclaration(p) || ts.isInterfaceDeclaration(p) ||
-        ts.isTypeParameterDeclaration(p)) return 'type';
-  }
-  // (3) A known value-carrying parent.
-  if (node.parent && VALUE_PARENT_KINDS.has(node.parent.kind)) return 'value';
-  // (4) FAIL CLOSED. Not type, not a recognised value slot -> say so out loud.
-  return 'unclassified';
-}
+// 🛑 R-563 item (4) / GRADE F-5 — `classifyPosition` IS DELETED, AND DELETION IS THE ORDERED
+// CHOICE RATHER THAN REPAIR. Measured by the grader and confirmed by the desk (R-563 §2):
+//   * ZERO call sites — defined here, named in a comment, imported by `type-value-proof.mjs`
+//     and never invoked. There was NO "disagreement report" anywhere in the delivery.
+//   * it referenced `isWithin(...)`, WHICH IS DEFINED NOWHERE in this directory. The desk's
+//     precision correction stands: that branch is UNREACHABLE (`p.expression === child`
+//     short-circuits first), so it was dead code with an undefined reference, not a throw.
+// ⚠️ THE CAPTION IT SUPPORTED WAS THE REAL DEFECT: the delivery ADVERTISED "a SECOND,
+// non-overlapping opinion" it did not have — which is precisely the two-path property this
+// campaign grades against. Deleting the code makes the claim honest; repairing it would have
+// meant BUILDING a second opinion nobody had specified.
+//   A CAPTION PROMISING A SECOND PATH THAT DOES NOT EXIST IS WORSE THAN NO SECOND PATH.
 
 // ---------------------------------------------------------------------------------------
 // ITEM 3 -- OWNERSHIP. A node-level catcher claims its whole subtree; identifier-level
@@ -550,7 +519,15 @@ export function admitSource(fileName, sourceText) {
       // EXCEPTION, and it is load-bearing: a SHORTHAND property (`{ x }`) uses its name slot as
       // a genuine reference. Excluding it would blind the rule to a real capture.
       const isShorthandRef = node.parent && ts.isShorthandPropertyAssignment(node.parent);
-      const isPropName = !isShorthandRef && node.parent && node.parent.name === node;
+      // 🛑 GRADE F-2 CRITICAL — THE THIRD BLIND CHANNEL. A `MetaProperty` node (`import.meta`,
+      // `new.target`) has its Identifier in its `.name` slot, so `node.parent.name === node` was
+      // TRUE and `meta` was classed a NAME SLOT — which skips every catcher below. `import.meta`
+      // was ADMITTED with `violations: []`, and the executed module handed the caller a live
+      // `import.meta.resolve`, i.e. dynamic module resolution, the exact capability
+      // `CATCHERS.DYNAMIC_LOAD` exists to reject when spelled `require`/`import()`.
+      //   A NAME SLOT IS NOT A REFERENCE — UNLESS THE NODE ITSELF IS THE CAPTURE.
+      const isMetaProperty = node.parent && ts.isMetaProperty(node.parent);
+      const isPropName = !isShorthandRef && !isMetaProperty && node.parent && node.parent.name === node;
       // A DECLARATION's own name binds, it does not capture. Class/interface/alias names were
       // missing here, so they fell into the residual and produced POSITION_UNCLASSIFIED noise
       // that masked F-2: the named-class heritage capture reddened on its CLASS NAME rather
