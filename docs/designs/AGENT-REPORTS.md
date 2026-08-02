@@ -4,6 +4,41 @@
 
 ---
 
+## AR-556 · 2026-08-01 · ✅★★★★★ **DISPATCH `21:37` DELIVERED — `P0-vNext` DESIGN, ALL NINE CONTRACT POINTS, FAN-IN `9 / 9`. DOCUMENT ONLY: `0` CODE FENCES, NO IMPLEMENTATION.** ★★★★★ **THE LOAD-BEARING ACT IS THE ONE I FLAGGED IN AR-555 BEFORE STARTING: `DEPENDED-ON` IS DEFINED **PER CLAIM**, AND THAT IS WHAT LETS THE GATE BE BOTH USABLE AND HONEST WITH `152 / 301` CELLS UNADJUDICATED.**
+
+**RULING ID:** DISPATCH 2026-08-01 `21:37` · **TASK ID:** AR-556 · **PRIOR:** AR-555 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**ARTIFACT:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`. **DELTA = exactly that file** `[MEASURED vs the AR-555 baseline]`.
+
+### ★★★★★ §1 — THE DESIGN'S CENTRAL MOVE: THREE CLAIMS, THREE POPULATIONS, THREE DEPENDENCIES
+| claim | population | depends on `UNADJUDICATED`? |
+|---|---|---|
+| **A · AGREEMENT** TS↔Python | **ALL `301`** | **NO** — two lanes compared to each other; no oracle needed |
+| **B · CORRECTNESS** vs the frozen expectation | **`ASSERTED` only (`140`)** | **NO, by construction** |
+| **C · COMPLETENESS** | any scope a caller declares | ★★★★★ **YES — any unadjudicated cell in scope ⇒ `INCOMPLETE_AUTHORITY`, every cell NAMED, FAIL CLOSED** |
+★★★★★ **AND THE CONSEQUENCE STATED IN THE DESIGN RATHER THAN DISCOVERED LATER: ON TODAY'S AUTHORITY A COMPLETENESS CLAIM OVER THE FULL FRAME CANNOT GO GREEN. `152` cells are unadjudicated and `43` are not even declared. **THAT IS THE CORRECT ANSWER, NOT A BUG** — and A and B can both go green today, so the gate is still useful.**
+⚠️ **The rule that stops the comfortable reading: NO CALLER MAY EARN A COMPLETENESS GREEN BY SILENTLY NARROWING ITS SCOPE. The scope is declared before the run and printed with the verdict.** `A COMPLETENESS CLAIM WITHOUT ITS SCOPE IS THE CAPTION DEFECT WEARING A VERDICT'S CLOTHES.`
+★★★ **`AGREEMENT IS NOT CORRECTNESS AND NEITHER IS COMPLETENESS` — the historic failure (`AR-499 §2`: both lanes over-refusing identically, gate printed `EXIT 0 · PASS`) is claim A passing while claim B is never asked. Separating them IS the repair.**
+
+### ✅ §2 — THE OTHER EIGHT, BRIEFLY
+**1 MEMBERSHIP** rebuilt every run from the pinned specs at tag `p1p2-frozen-source-universe-c304b098`; **neither the ledger nor `ORACLE.json` may define it** — a cell missing from the ledger is `LEDGER_INCOMPLETE`, one outside the frame is `LEDGER_UNKNOWN_CELL`, both fail, neither is absorbed. **2 AGREEMENT** over all `301`, and **a lane emitting NOTHING where the other emits a value is a DISAGREEMENT, not silently equal.** **3 CORRECTNESS** only on `ASSERTED`, **no verdict of any kind emitted for other classes — not `pass`, not `skip`.** **4 `NOT-APPLICABLE`** contributes no predicate, **and the absence is WITNESSED by an explicit `NOT_APPLICABLE_SKIPPED` record naming all `9`** — `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN`. **6 COUNTS** recomputed by summing cells then compared to the manifest, **mismatch names both numbers and prefers neither.** **7 CLOSED KEY SETS** at every boundary, both directions, **with the boundaries ENUMERATED in a table — an unenumerated boundary is the defect.** **9 OUT-OF-FRAME** surfaces carried as a named `P3` obligation and printed in the scope line every run.
+★★★ **§10 pre-registers the RED-PROOF — `11` mutations plus a clean control, written before any implementation exists — and names test `7` (completeness over a scope containing an `UNADJUDICATED` cell) as the one that matters most, because it is the only test that proves the `43` were preserved for a reason.**
+
+### ⚠️★★★ §3 — DURABILITY: NAMED, WITH ONE CLAIM I REFUSED TO MAKE
+**§8 states the shape: derivation moves INTO THE REPO as a committed module · the gate is a committed script with non-zero exit and a final summary line · the pinned source is the TAG, whose peeled object the gate asserts equals `c304b098b156106a5a81b714c7a5a3ed166d68ef` · everything it reads is a pinned git object plus one committed ledger, so it is NOT machine-bound.**
+⚠️★★★★★ **AND THE CLAIM I DID NOT MAKE: I did NOT assert that wiring it into CI works. This campaign has previously measured that `ci.yml` does not fire on campaign branches, so "wire it into CI" is itself a claim requiring execution on the branch where it will run.** **Marked `[UNPROVEN — not measured in this task]` rather than promised.** `NAMING IT AS FUTURE WORK IS PERMITTED; CLAIMING IT WORKS IS THE THING THIS CAMPAIGN CONVICTS.`
+
+### §4 — WHAT I DID **NOT** DO
+- ⚠️ **The `140` asserted VALUES are still not re-derived against the authority document** — rung 3, named and NOT closed. A correctly-cited but mis-transcribed value survives every check in this design.
+- ⚠️ **The `43` undeclared cells are NOT closed** — `R-521 §2` settled that no cell moves without a named source authority. **The gate's job is to REFUSE completeness over them, and it does.**
+- ⚠️★★★ **THE PROJECTION MECHANICS ARE DELIBERATELY UNSPECIFIED** — how each lane is invoked and how a cell's projected value is extracted. That is implementation. **I flag it because it is exactly where a "cell" could quietly become "whatever the lane happens to emit", which would re-import the presence-derived defect at the projection layer.**
+- **No implementation code · no engine/runtime/extraction/corpus/DB/migration · no `P3` · no Gate B · no seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts and the tag untouched · no `checkout`/`reset`/index op.**
+- ★★ **I do not grade my own work.**
+
+### §5 — POSITION
+**FAN-IN `9 / 9`.** Design **DELIVERED, COMMITTED, PUBLISHED** · `P0-vNext` implementation **BLOCKED pending the external read** · `R-526` on `AR-554` **still OWED at the desk** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
 ## AR-555 · 2026-08-01 · **START-RECEIPT — DISPATCH `21:37` ACCEPTED. `P0-vNext` DESIGN, DOCUMENT ONLY, NINE CONTRACT POINTS.**
 
 **RULING ID:** DISPATCH 2026-08-01 `21:37` (delivering `R-524 §5` / `R-525 §5`) · **TASK ID:** AR-555 · **PRIOR:** AR-554 · **SEAT:** `claude.exe 26204`.
