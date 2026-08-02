@@ -4,6 +4,50 @@
 
 ---
 
+## AR-576 · 2026-08-02 · **START-RECEIPT — R-533 §5 ACCEPTED. FOUR ITEMS, ONE NARROW BOUNDARY, DESIGN ONLY.** 🛑★★★★★ **`F-2` IS MINE AND IT IS THE CLEANEST DEFECT OF THE ARC: I WROTE A PROMISE TO REJECT A `captured reference` IN TWO PLACES AND GAVE IT FOUR RED-PROOFS THAT ARE ALL IMPORT-BASED. `AN IMPORT GRAPH CLOSES IMPORTS. IT DOES NOT CLOSE STATE INJECTION.`**
+
+**RULING ID:** R-533 §5 · **TASK ID:** AR-576 · **PRIOR:** AR-575 · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, RE-TAKEN AT PUBLICATION
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M src/engine/tests/test_synthetic_market_simulator.py
+(+24 pre-existing untracked docs/designs files, unchanged)
+```
+
+### 🛑★★★★★ §2 — BOTH FINDINGS ACCEPTED, AND I RE-READ THE THREE LEGS MYSELF
+`[MEASURED HERE, committed object]`
+```
+:98   req 1  "project() LIVES IN A DEPENDENCY-ISOLATED MODULE OR A SEPARATE PROCESS."   <- operative disjunction
+:101  req 4  "...FAILS THE RUN on any forbidden import path or captured reference..."   <- the promise
+:111  red-proofs, ALL FOUR IMPORT-BASED: ledger-reader import · filesystem module ·
+                                         dynamic import() · transitive dependency      <- no captured path
+:366  row 26 "an import or captured reference reaching a ledger/oracle reader"          <- the promise again
+```
+⚠️★★★★★ **`F-1`: I wrote *"THE MENU IS DELETED"* and left the disjunction standing in the OPERATIVE requirement one paragraph above it. An implementer can cite `:98` to take the very branch `:109` declined for want of an enforceable mechanism.** `A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED` — **second carrier-survival defect in this document in two rounds, and the first one (`§11` calling projection "implementation") was also mine.**
+🛑★★★★★ **`F-2` IS THE BETTER FINDING AND I HAD ALL THREE LEGS IN ONE PASS. I checked that the menu CLOSED and never asked whether the CHOICE PAID ITS DEBTS.** ★★★ **This is `R-527`'s law returning at the capability layer: `NO PROMISE MAY EXIST WITHOUT A MATCHING CATCHER.` A promise whose named catcher list cannot cover the promised channel is a caption, and it is measurable without any runtime — which is why I have no excuse for it.**
+⚠️ **`:99` forbids callbacks in the projection DATA CONTRACT. That is a DIFFERENT SURFACE from module-scope state injection and it does NOT discharge requirement `4` — I note that before anyone (including me) reaches for it as cover.**
+
+### ✅★★★ §3 — THE CONSTRAINT I ACCEPT MOST DELIBERATELY
+**`R-533 §5.3`: PRESERVE requirement `4` and row `26` AS REAL PROMISES — do NOT narrow the captured-reference claim away.**
+★★★★★ **THIS IS THE INSTRUCTION I WOULD HAVE BEEN MOST TEMPTED TO GET WRONG, AND I SAY SO NOW SO THE RECORD PREDATES THE WORK: the cheap repair is to delete the words *"or captured reference"* from `:101` and `:366`, which makes the promise match the catcher and the acceptance go green.** ⚠️ **`NARROWING A PROMISE TO MATCH A WEAK CATCHER IS A TEST WEAKENED TO PASS.` The promise stays; the CATCHER gets built up to it.**
+⚠️★★★ **AND THE STOP CONDITION IS LIVE FOR ME: if a clean import graph is treated as proof that no callback, setter, mutable singleton or captured reference can feed expectations into `project()`, I STOP. I do not yet know whether a closed export/state surface is fully specifiable without a runtime I cannot name — if it is not, `NO SOUND DESIGN AVAILABLE` on that leg is the honest result and I will say so rather than invent a mechanism.**
+
+### ⚠️ §4 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** item `4` is conditional on items `2`–`3` adding a row; items `1`–`3` write one file → serial in this seat.
+**(b) NO METRIC MIX:** the five acceptance criteria are structural/documentary. **None needs ground truth, and none is executional this round** — unlike `R-532`, this boundary is provable at the text because the defect is a promise/catcher mismatch.
+**(c) PROBE DISCIPLINE, ORDERED EXPLICITLY:** ⚠️★★★★★ **the desk's probe missed `:98` because it searched `OR SEPARATE PROCESS` and the text reads `OR **A** SEPARATE PROCESS` — ONE ARTICLE, ninth instrument fault of this family. My acceptance probes will TOLERATE DETERMINERS and will carry a second, looser probe whose disagreement with the first is itself the alarm.** `TWO PROBES DISAGREEING IS THE CHEAPEST BUG DETECTOR THIS DESK HAS.`
+**(d) GRADE:** `R-532 §4`'s pre-registered bar did NOT fire — this read returned a structural finding. ✅ **Deferred BY RULE, not by anyone's preference. Not asking.** ⚠️ **And I record the desk's own correction: the correction counts are `9 → 5 → 2 → 4`, NOT a convergence. `A TREND IS NOT A MEASUREMENT.` I repeated that convergence gloss in `AR-575 §8` and it was wrong there too.**
+
+### §5 — FIRST OBSERVABLE + ETA
+**Items `1`+`2` — the `:98` disjunction replaced by the single pure-module form, and the module's CLOSED export/state/free-reference surface printed as closed sets — ~25–40 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes RUN not MODIFIED · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations edit · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · **THE BLUEPRINT IS EXPLICITLY OUT THIS ROUND.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-575 · 2026-08-02 · ✅★★★★★ **R-532 §5 DELIVERED — FIVE CORRECTIONS, `35/35`. AND THE ONE THAT COUNTS IS NOT A TEXT EDIT: I EXECUTED THE TS LANE. NINE CELLS, BOTH LANES, `9/9` AGREE, `6` NON-NULL / `3` NULL — THE AGREEMENT CLAIM THE DESK MARKED `[RELAYED]` IS NOW `[MEASURED HERE]`.**
 
 **RULING ID:** R-532 §5 · **TASK ID:** AR-575 · **PRIOR:** AR-574 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
