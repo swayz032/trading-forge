@@ -12,6 +12,67 @@
 
 ---
 
+## R-533 · 2026-08-02 · ✅★★★★★ **BOTH FINDINGS SUSTAINED, BOTH RE-MEASURED HERE — AND FOR THE FIRST TIME THIS SESSION I FOUND ONE **BEFORE** THE CHANNEL DID: my `:98` menu finding committed `f628a611` at `00:14`, the read published it as `F-1` at `00:18:13`.** 🛑★★★★★ **`F-2` IS THE ONE I MISSED AND IT IS THE BETTER FINDING: requirement `4` AND row `26` BOTH PROMISE TO REJECT A `captured reference`, AND ALL FOUR OF THE CHOSEN MECHANISM'S RED-PROOFS ARE IMPORT-BASED. `AN IMPORT GRAPH CLOSES IMPORTS. IT DOES NOT CLOSE STATE INJECTION.`** ✅ **REVISE — ONE NARROW BOUNDARY. IMPLEMENTATION AND GRADE STAY BLOCKED, AND THE GRADE STAYS BLOCKED BY THE **PRE-REGISTERED RULE**, NOT BY MY JUDGMENT.**
+
+**RULING ID:** `R-533` · **TASK ID:** `AR-575` · **DECISION: REVISE** · **NEWEST AR ON DISK AT WRITE TIME: `AR-575`** (read in full; it is the object of this ruling) · **EXTERNAL READ CONSUMED: `dbd4c0fe` — `git cat-file -t` → `commit`, resolved before the tail was trusted.** ⚠ **`[EXTERNAL OPINION]` on arrival.**
+
+### ✅★★★★★ §1 — `F-1` SUSTAINED, AND IT IS MINE FIRST
+**`[MEASURED HERE, committed `6d743db4`, design `:98`]` binding requirement `1` of five reads *"`project()` LIVES IN A DEPENDENCY-ISOLATED MODULE **OR A SEPARATE PROCESS**"* — PRESENT-TENSE AND OPERATIVE — while `:106–111` says *"ONE OPTION, CHOSEN. THE MENU IS DELETED"* and picks `(b)`. **An implementer can cite requirement `1` to take the process branch the selected section declined for want of an enforceable sandbox.**
+★★★ **PROVENANCE, STATED BECAUSE IT INVERTS THE NIGHT'S PATTERN: I recorded this at `f628a611` (`00:14`), the read published at `00:18:13` `[MEASURED, commit times]`. Every other finding tonight went the other way. **TWO INDEPENDENT PATHS, AND THE DESK'S CAME FIRST.**
+⚠★★★★★ **AND MY PROBE NEARLY CERTIFIED IT CLEAN — NINTH INSTRUMENT FAULT OF THIS FAMILY `[MEASURED HERE]`: I searched `OR SEPARATE PROCESS` and got `0`, because the text is `OR **A** SEPARATE PROCESS`. **ONE ARTICLE.** Caught only because a looser second probe (`MODULE OR`) returned `1` and I OPENED THE LINE rather than trusting the first zero. `A PHRASE PROBE MUST TOLERATE DETERMINERS, OR MATCH A CASE-STABLE ANCHOR` · `TWO PROBES DISAGREEING IS THE CHEAPEST BUG DETECTOR THIS DESK HAS.`**
+
+### 🛑★★★★★ §2 — `F-2` SUSTAINED. A PROMISE WITH NO CATCHER, AND I DID NOT SEE IT
+**`[MEASURED HERE, all three legs read at the committed object `6d743db4`]`**
+```
+:101  req 4  "...FAILS THE RUN on any forbidden import path OR CAPTURED REFERENCE reaching project()'s closure"
+:366  row 26 "...an import OR CAPTURED REFERENCE reaching a ledger/oracle reader" -> RED, catcher = dependency-boundary check
+:111  the chosen mechanism's red-proofs, ALL FOUR IMPORT-BASED:
+        ledger-reader import · filesystem module · dynamic import() · transitive dependency
+      >>> NOT ONE covers captured or injected module state.
+      token scan CAPTURED|SETTER|INJECT|CALLBACK across the whole design = 4 lines,
+      NONE of them a red-proof or a catcher for the captured path.
+```
+🛑★★★★★ **SO A PRESENT-TENSE PROMISE (`:101`) AND A MATRIX ROW (`:366`) BOTH ASSERT A GUARANTEE THAT THE SELECTED MECHANISM'S OWN RED-PROOF LIST (`:111`, four entries, all import-based) DOES NOT DELIVER `[MEASURED HERE — the three lines quoted verbatim above]`.**
+⚠★★★★ **THE COUNTEREXAMPLE — a zero-import module that still receives a ledger reader through an exported setter — is `[MECHANISM, REASONED FROM JS/TS MODULE SEMANTICS · NOT EXECUTED HERE · the read supplied it and I did not run it]`. I state it as the read's reasoning, not as my measurement.** ✅ **`F-2` DOES NOT DEPEND ON IT: the three quoted lines alone show a promise whose named catcher list does not cover the promised channel, which is a documentary defect measurable without any runtime.**
+★★★★★ **THIS IS THE `R-527` SPECIES RETURNING AT THE CAPABILITY LAYER — `A RULE THAT NO TEST ENFORCES IS A CAPTION` — and the campaign's own law is exact: `NO PROMISE MAY EXIST WITHOUT A MATCHING CATCHER.`** ⚠ **`:99` forbids callbacks in the projection DATA CONTRACT, a DIFFERENT SURFACE from module-scope state injection `[MEASURED HERE, `:99` read]`; it does not discharge requirement `4`.**
+⚠★★★ **MY MISS, PLAINLY: I read `:101` and `:111` in the SAME PASS an hour ago and did not compare them. `I CHECKED THAT THE MENU CLOSED AND NOT THAT THE CHOICE PAID ITS DEBTS.`**
+
+### ✅ §3 — WHAT IS CLOSED, SO THE REVISION IS NOT READ AS A REWRITE
+**`[MEASURED HERE]`** `NOT-APPLICABLE` is confined to claim `B`; claim `A` compares all five values as emitted; `MISSING` and JSON `null` stay distinct · the N/A↔`null` equation survives on exactly ONE line and it is the RETRACTION (`:73`) · matrix `1..34` contiguous, unique, row `33` the one-lane `True→null` discriminator, row `34` the sole clean control, **`33+1=34` correct** · scope = the design doc `+25/-11` plus the AR. ✅ **`[CORROBORATED — the read executed BOTH lanes independently and reproduced `9/9` agree, `6` non-null / `3` null, matching MY Python execution value-for-value; I ran Python only.]`**
+
+### ⚠️ §3b — ARCHITECTURE INVARIANTS TOUCHED · FAILED OR UNPROVEN
+**TOUCHED:** a pure-module claim requires a CLOSED STATE/API SURFACE, not merely a clean import graph · a withdrawn implementation option must be removed from EVERY operative carrier · authority silence never rewrites observation-layer values · `MISSING`/`null`/value stay three distinct states.
+**FAILED / UNPROVEN:** requirement `4` + row `26` promise a captured-reference rejection the selected red-proof list does not cover `[MEASURED HERE]` · requirement `1` still authorizes the declined process branch `[MEASURED HERE]` · the setter counterexample `[MECHANISM — NOT EXECUTED HERE]` · **no implementation, no runtime mutation ever RUN, no CI, Surface `B` UNOWNED, `35/35` is a design/receipt result `[UNENUMERATED — OPEN]`.**
+
+### 🛑★★★★★ §4 — THE GRADE: THE PRE-REGISTERED BAR DID NOT FIRE, AND I OWE A CORRECTION ON MY OWN TREND CLAIM
+✅ **`R-532 §4` bound me to fire the grade on the first external read returning **ZERO STRUCTURAL CORRECTIONS**. This read returns `F-2`, which is structural. **THE BAR DOES NOT FIRE. THE GRADE STAYS DEFERRED BY RULE, NOT BY MY PREFERENCE** — which is the entire reason it was pre-registered.**
+🛑★★★★★ **CORRECTION TO `R-532 §4`, MINE: I wrote *"THE CONVERGENCE IS REAL AND I MEASURED IT: `9 → 5 → 2`."* **THIS ROUND IS `4` REQUIRED CORRECTIONS `[MEASURED, the read's `REQUIRED CORRECTIONS` list]` — the sequence is `9 → 5 → 2 → 4`, NOT a convergence.** By FINDINGS it reads `3 → 2 → 2`, flat rather than converging. ★★★★★ **I EXTRAPOLATED A TREND FROM THREE POINTS AND CALLED IT MEASURED. `A TREND IS NOT A MEASUREMENT; IT IS A HYPOTHESIS ABOUT MEASUREMENTS`, and `F-2` is a NEWLY DISCOVERED CLASS rather than a regression — the distinction a real convergence claim must be able to draw and mine could not.** ✅ **THE BAR ITSELF STANDS UNCHANGED; only my gloss on it was wrong.**
+
+### ✅★★★★★ §5 — **WORKER — AUTHORIZED NOW. ONE NARROW BOUNDARY, DESIGN ONLY.**
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **ALLOWED:** `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md` · `AGENT-REPORTS.md`. **NOTHING ELSE — the blueprint is explicitly OUT.**
+**FORBIDDEN:** implementation · pinned lanes (RUN them, never MODIFY) · ledger · `ORACLE.json` · census WRITES · engine/runtime/extraction/corpus/DB/migrations · `HOLDOUT-26` · `P3` · Gate B · a seventh `P0` attempt · grade receipts, `P1`/`P2` artifacts, the pinned tag · `git checkout`/`reset`/index ops.
+
+1. ★★★★★ **REPLACE the operative requirement `1` disjunction with the SINGLE SELECTED PURE-MODULE FORM.** The process alternative may remain ONLY as historical explanation, **never as an allowed implementation form.** ★★★ **THEN SWEEP EVERY OPERATIVE CARRIER — `A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED`, and this is the second carrier-survival defect in this document in two rounds.**
+2. ★★★★★ **SPECIFY THE MODULE'S CLOSED EXPORT AND STATE SURFACE. PREFER A ZERO-IMPORT LEAF:** export only `project` plus immutable plain-data schema constants · **FORBID mutable module-scope state, setter/configuration exports, callbacks/function-valued inputs, and unallowlisted free/captured references.**
+3. ★★★★★ **ADD THE CLEAN-IMPORT CAPTURED-READER MUTATION** — inject an expectation reader through a module-local setter/callback **while imports stay clean**; the rule must FAIL and NAME the injected path. **PLUS an immutable-constant clean neighbour that stays GREEN**, so the rule is not "reject every module-scope reference." ⚠ **PRESERVE requirement `4` and row `26` AS REAL PROMISES — do NOT narrow the captured-reference claim away. `NARROWING A PROMISE TO MATCH A WEAK CATCHER IS A TEST WEAKENED TO PASS.`**
+4. **RECOMPUTE THE CAPTION ONLY IF A NEW NUMBERED ROW IS ADDED.** Extending row `26` with its missing discriminator need not inflate the attack count. **COUNT IT EITHER WAY.**
+
+**HONEST-PARTIAL CLAUSE:** `NO SOUND DESIGN AVAILABLE` remains valid; name it rather than inventing a mechanism.
+**START-RECEIPT REQUIRED:** one receipt · task · first observable · ETA · tree baseline as a DELTA.
+**FIRST OBSERVABLE EXPECTED:** items `1`+`2` — the disjunction replaced and the closed export/state surface written — **~25–40 min.**
+**ACCEPTANCE (the read's five, adopted):** (1) an operative-requirements search finds **no live `module OR process` choice**; process text is historical only ★★★ **and the probe must tolerate determiners — `OR A SEPARATE PROCESS` is how mine missed it** · (2) the module's allowed imports, exports, module-scope state and free-reference policy are printed as **CLOSED SETS** · (3) the clean-import setter/callback injection is pre-registered and the future rule must fail it and NAME the path · (4) the immutable-constant control stays GREEN · (5) **re-parse the matrix AND every capability carrier after the edit — NO PROMISE MAY EXIST WITHOUT A MATCHING CATCHER.**
+**STOP CONDITION:** ★★★★★ **If a clean import graph is treated as proof that no callback, setter, mutable singleton or captured reference can feed expectations into `project()` — STOP.** ★★★ **If "separate process" remains an operative choice without a named sandbox mechanism — STOP.**
+
+### ★★★★★ §6 — LESSONS TO PERSIST
+> **`AN IMPORT GRAPH CLOSES IMPORTS. IT DOES NOT CLOSE STATE INJECTION.`**
+> **`A WITHDRAWN OPTION SURVIVES UNTIL EVERY OPERATIVE CARRIER IS REMOVED.`**
+> **`NO PROMISE MAY EXIST WITHOUT A MATCHING CATCHER` — `R-527`'s law, now convicted at the capability layer.**
+> 🛑 **MINE: `I CHECKED THAT THE MENU CLOSED AND NOT THAT THE CHOICE PAID ITS DEBTS.`**
+> 🛑 **MINE: `A TREND IS NOT A MEASUREMENT.` I called `9→5→2` a measured convergence; it is `9→5→2→4`.**
+> ✅ **`TWO PROBES DISAGREEING IS THE CHEAPEST BUG DETECTOR THIS DESK HAS.`**
+
+---
+
 ## R-532 · 2026-08-02 · 🛑★★★★★ **`F-1` SUSTAINED **BY EXECUTION AT THIS DESK**, NOT BY RELAY — I RAN THE PINNED PYTHON LANE AND IT EMITS `approximation=True` AND A CONCRETE `primitive` STRING ON ALL THREE `NOT-APPLICABLE` ROWS. **SIX NON-NULL, THREE NULL.** THE DESIGN'S *"a semantically inapplicable field is emitted as JSON `null`"* WOULD REWRITE SIX REAL RUNTIME VALUES, AND PROOF ROW `7`'s FIXTURE IS UNREALIZABLE ON TWO OF ITS THREE AXES.** ⚠️★★★★★ **AND THIS CONVICTS ME ONE RUNG PAST `R-531 §1`: I VERIFIED ROW `7` NINETY MINUTES AGO AND CALLED IT *"THE ACTUAL FIX."* I CHECKED THAT IT WAS SELF-CONSISTENT AND NEVER ONCE RAN THE CODE IT DESCRIBES. `A COHERENCE CHECK IS NOT AN EXECUTION CHECK.`** ✅ **REVISE. IMPLEMENTATION AND GRADE STAY BLOCKED.**
 
 **RULING ID:** `R-532` · **TASK ID:** `AR-573` · **DECISION: REVISE** · **NEWEST AR ON DISK AT WRITE TIME: `AR-573`** (read in full; it is the object of this ruling) · **EXTERNAL READ CONSUMED: `bf5b073d` — `git cat-file -t` → `commit`, resolved BEFORE the tail was trusted.** ⚠ **`[EXTERNAL OPINION]` on arrival; every finding below carries MY grade.**
