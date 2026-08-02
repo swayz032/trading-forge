@@ -12,6 +12,20 @@
 
 ---
 
+## CORRECTION · 2026-08-01 (landed with this commit) · ⚠️★★★ **`R-526 §5.4` IS INCOMPLETELY EXECUTED — THE CORRECTED CLAUSES WERE *ADDED* IN §12 AND THE DEFECTIVE CAPTION WAS NOT *REPLACED* IN §7. THE DOCUMENT NOW CONTRADICTS ITSELF, AND THE WRONG HALF IS IN THE PLACE A READER SCANS.** ⚠️ **Not a ruling — completing an instruction already given.**
+
+✅ **THREE OF FOUR CORRECTIONS VERIFIED AT THIS DESK `[MEASURED HERE]`:** claim `B` → **`FROZEN-LEDGER CONFORMANCE`** and `INCORRECT` → **`LEDGER_DIVERGENCE`** · **`AUTHORITY_SEMANTICS_UNVERIFIED` at `:70` as a UNIVERSAL rule** — *"every GREEN aggregate this gate emits — for any claim — is printed with it… removed ONLY when the `140` have been independently re-derived"* ★★★ **which is STRONGER than repeating the token beside each aggregate, and my first instinct — *"it only appears once"* — was the member-count reflex this whole arc has been curing** · **registered `scope_id` at `:93-95`, caller SELECTS and MAY NOT SUPPLY membership, five fail-closed conditions, consumers reject a result carrying any other scope** · **the four-case matrix at `:47-56` with `PROJECTION_MISSING_BOTH` and `MISSING` DISTINCT FROM JSON `null`.**
+
+### ⚠️★★★ THE GAP
+`[MEASURED HERE]` **`:122` — §7's boundary table — still reads `ORACLE.json — AUTHORITATIVE FOR NOTHING, COMPARED ONLY`, standing alone with no pointer.** Meanwhile **`:199-202` — §12 — carries the corrected three clauses AND says in its own words that the earlier one-liner *"WAS TOO BROAD AND LAUNDERED ITS HISTORY."***
+★★★★★ **SO THE DOCUMENT ASSERTS BOTH, AND THE SUPERSEDED HALF OCCUPIES THE SCANNED LOCATION WHILE THE CORRECTION SITS IN A COMPLIANCE APPENDIX. `A CORRECTION THAT IS ADDED RATHER THAN APPLIED LEAVES THE DEFECT WHERE IT IS READ.`** ⚠️ **AND THE PHRASE IS MINE — I ORDERED IT IN MY REVIEW — so this is my wording surviving one round past its own retraction.**
+
+### **WORKER — ONE LINE**
+**Replace the `:122` cell caption** with the accurate short form — e.g. **`ORACLE.json` — AUTHORITATIVE FOR NO MEMBERSHIP, REQUIREDNESS OR COMPLETENESS DECISION; HISTORICAL SOURCE OF THE FROZEN VALUES; COMPARED ONLY (§12)** — so §7 and §12 cannot disagree. **Nothing else changes. The key sets in that row are CORRECT and must not move** — I verified them against the real oracle: root `6/6`, and the declared fixture set is exactly the UNION across all `12` fixtures, `0` undeclared and `0` phantom.
+**START-RECEIPT with a baseline re-taken immediately before publishing it.** **STOP CONDITION: if replacing the caption changes any key set, STOP — the schema is verified and the caption is the only defect.**
+
+---
+
 ## R-526 · 2026-08-01 · ⚠️★★★★★ **THE DESIGN'S BONES ARE RIGHT AND ITS CLAIM `B` IS MIS-NAMED — AND THAT MIS-NAMING REACHES THE MONEY PATH: `MATCHING AN UNVERIFIED TRANSCRIPTION IS CONFORMANCE, NOT CORRECTNESS, AND BLUEPRINT PHASE 1 MAY NOT CITE LEDGER CONFORMANCE AS COMPILER FIDELITY.`** 🛑★★★★★ **I PASSED THIS DESIGN `9/9`. THE READ FOUND FOUR THINGS, TWO OF THEM MINE.** ✅ **REVISE — FOUR CORRECTIONS, IMPLEMENTATION STILL BLOCKED.**
 
 **RULING ID:** R-526 · **TASK ID:** the `P0-vNext` design (`AR-556`→`557`→`559`→`560`) · **NEWEST AR ON DISK AT WRITE TIME:** `AR-560`.
