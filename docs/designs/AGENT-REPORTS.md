@@ -4,6 +4,46 @@
 
 ---
 
+## AR-582 · 2026-08-02 · **START-RECEIPT — R-537 §5 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** 🛑★★★★★ **`F-2` IS THE SHARPEST FINDING TAKEN AGAINST MY WORK IN THIS ARC AND I ACCEPT IT WHOLE: I BUILT AN `atom → ROW` MAP AND CALLED IT COVERAGE. **A ROW NUMBER IS NOT A CATCHER UNTIL THE EXACT ATOM HAS BEEN PLANTED.** ✅ **AND I CONCUR WITH THE DESK'S REFUTATION BY MY OWN MEASUREMENT — ROWS `44`/`45` ARE SYMBOL-KEY vs SYMBOL-VALUE AND ARE ALREADY CORRECT. I WILL NOT "FIX" THEM.**
+
+**RULING ID:** R-537 §5 · **TASK ID:** AR-582 · **PRIOR:** AR-581 (delivery, `37/37`) · **SEAT:** `claude.exe 26204`.
+
+### ★★★ §1 — BASELINE, AS A DELTA
+```
+git status --porcelain -- docs/designs scripts ci src   [MEASURED IMMEDIATELY BEFORE THIS COMMIT]
+ M docs/designs/ADVISOR-RULINGS.md      <- THE ADVISOR MID-WRITE. NOT MINE. Path-scoped commit.
+ M src/engine/tests/test_synthetic_market_simulator.py   <- pre-existing since AR-576
+(+24 pre-existing untracked docs/designs files)
+```
+
+### 🛑★★★★★ §2 — WHAT I ACCEPT, AND IT IS THE JOIN
+**`R-537 §2`: `atom → ROW` is MAPPING coverage; `atom → PLANTED MUTATION → NAMED CATCHER` is MUTATION coverage, and only the second is evidence.** ★★★★★ **ONE REPRESENTATIVE CAN CERTIFY AN ENTIRE CATEGORY IT NEVER EXERCISED — and mine did.** `[MEASURED HERE, node v24.13.0]` **`typeof global === "object"` and `global === globalThis` → `true` on this host, while row `35` plants `globalThis` ONLY and `1b-S` forbids *"any host-global identifier not in the allow-list."* **The alias is unexercised and the contract's own quantifier is `any`.**
+⚠️★★★ **`F-1` IS THE SAME LAW RE-ARMING ON ME: I swept the prototype requirement into every carrier as ordered, THEN ADDED ROWS `45`–`47` AND DID NOT RE-SWEEP. **THE SWEEP IS NOT A ONE-TIME ACT; IT RE-ARMS ON EVERY ADDITION** — including additions I make while obeying the sweep order.**
+
+### ✅★★★★ §3 — WHERE I CONCUR WITH THE DESK **AGAINST** THE READ, BY MY OWN MEASUREMENT
+**`R-537 §4` refutes the read's claim that the design conflates row `45` with row `44` on symbol keys. `[MEASURED HERE, row cells printed from the committed blob]`:**
+```
+row 44  SYMBOL-KEYED FUNCTION CAPABILITY   -> a capability under a Symbol() KEY   (catcher: Reflect.ownKeys)
+row 45  NON-CONFORMING VALUE CLASS          -> a SYMBOL VALUE among undefined/bigint/NaN/±Infinity
+                                                                                  (catcher: grammar leaf rule)
+```
+✅ **TWO DIFFERENT PROMISES — a KEY and a VALUE — correctly separated. I do NOT change them, and I record my agreement as a MEASUREMENT rather than as deference.** ★★★ **`A CHANNEL IS NOT AN AUTHOR` cuts both ways, and obeying a wrong correction would have BROKEN a distinction the document got right.**
+
+### ⚠️ §4 — RAISED BEFORE STARTING
+**(a) FAKE-EDGE:** ✅ **NONE.** Item `2`'s manifest consumes item `3`'s expanded subcases and item `4`'s AST grammar; item `5` recomputes from `2`. All write ONE file. **Serial.**
+**(b) NO METRIC MIX.** All five are structural/documentary.
+**(c) ⚠️★★★★★ THE ONE I FLAG BEFORE I START, BECAUSE IT DECIDES WHAT `MUTATION COVERAGE` CAN HONESTLY MEAN HERE: no implementation exists, so NO MUTATION CAN ACTUALLY BE RUN AGAINST THE GATE. A manifest of `atom → concrete plantable mutation subcase → named catcher` is a PRE-REGISTRATION, not an execution record.** ✅ **I will build it as the strongest available form — every subcase CONCRETE and PLANTABLE — and label the whole artifact `PRE-REGISTERED, NOT EXECUTED`, because calling a pre-registration `mutation coverage` would be the exact substitution `F-2` convicts, one level out.**
+**(d) GRADE:** **NOT ASKING.** ⚠️ **I note `R-537 §7` puts the BAR-CALIBRATION question to the operator, not to me — I do not pre-empt it.**
+
+### §5 — FIRST OBSERVABLE + ETA
+**The corrected `4b`/`EVERY-CHANNEL` carrier (adding value classes, array-shape and non-enumerable fields) + the structured ATOM MANIFEST — ~20–30 min.**
+
+### §6 — WHAT I WILL NOT TOUCH
+**No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts, `P1`/`P2` artifacts or the pinned tag · no `checkout`/`reset`/index op · **BLUEPRINT OUT** · **the advisor's dirty file untouched** · **and NOT the symbol row citation.**
+★★ **I do not grade my own work.**
+
+---
+
 ## AR-581 · 2026-08-02 · ✅★★★★★ **R-536 §4 DELIVERED — SIX ITEMS, `37/37`, MATRIX `47+1=48`.** 🛑★★★★★ **AND THE DERIVED POPULATION IS THE WHOLE POINT: DERIVING THE PROMISE ATOMS FROM THE GRAMMAR MOVED THE DENOMINATOR `10 → 34` AND **IMMEDIATELY EXPOSED FOUR FORBIDDEN CHANNELS WITH NO CATCHER AT ALL.** MY HAND-PICKED TEN COULD NOT HAVE SURFACED ONE OF THEM.** ✅ **ROWS `45`–`47` WERE ADDED FOR THEM; THE GRAMMAR WAS NOT TRIMMED TO MATCH THE MATRIX.**
 
 **RULING ID:** R-536 §4 · **TASK ID:** AR-581 · **PRIOR:** AR-580 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
