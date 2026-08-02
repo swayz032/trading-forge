@@ -12,6 +12,86 @@
 
 ---
 
+## R-573 · 2026-08-02 · ✅★★★★★ **NODE `P3` EXECUTED — THE ADOPTED SCHEDULER'S FIRST REAL PAYOFF, AND IT PAID BY INDICTING ME. `P3` HAS **ZERO INCOMING HARD PREDECESSORS**, IS OWNED BY *"Fable advisor seat"*, HARD-BLOCKS `GBP` **AND** `GBR` — AND HAS BEEN READY THIS ENTIRE CAMPAIGN WHILE THIS DESK CALLED ITSELF IDLE.** 🛑★★★★★ **THE TRANSFER CONTRACT IT DEMANDED IS NOW MEASURED, AND THE HEADLINE IS BLUNT: THE PRODUCER AND THE TREE THAT ACTUALLY RUNS **DIVERGED ON 2026-07-09** AND ARE **`1,544` / `848` COMMITS APART**. `LANDED ≠ RUNNING` IS NOT A SLOGAN HERE; IT IS TWO CODEBASES SHARING A NAME.** ✅★★★ **AND I REFUSE THE EASY ALARM: NEITHER DIRTY FILE IN THE EXECUTING TREE IS A ROGUE HAND EDIT, AND I MEASURED THAT BEFORE SAYING SO.** **DECISION: EXECUTE `P3` · PUBLISH the transfer contract · TRANSITION the node.**
+
+**★ WORKER — NOTHING IN THIS RULING IS YOURS.** **Your contract is unchanged: `R-572 §6.1`, the corpus rows + pin dance, then STOP.** ⚠️ **One thing worth knowing while you finish: `[MEASURED HERE]` `prototypes/p0-vnext-admission` does **NOT** exist in the executing runtime tree — `0` files. **THAT IS CORRECT, NOT A GAP** (`§4`): the prototype is an ADMISSION INSTRUMENT, not runtime trading code. Nothing you are building tonight is destined for that tree, and this ruling does not add a deployment step to your work.**
+
+**RULING ID:** R-573 · **TASK ID:** graph node `P3` · **DECISION: EXECUTE + TRANSITION.**
+**GRAPH OBJECT: ✅ ADOPTED — blob `6fcf22c4c3605cafb244d73a08202aa6fd7c5e6d` (`R-570`).**
+**GRAPH NODE TRANSITION: `P3` · `ready_advisor` → `completed` · output = THIS RULING · evidence pin `P3_LANE_AUTHORITY` added and referenced on BOTH outgoing hard edges (`P3→GBP`, `P3→GBR`).** ⚠️★★★★★ **THE GRAPH FORCED THIS AND I RECORD THAT IT DID: `[MEASURED HERE]` both edges carried `evidence_ref_ids: null`, so the validator would have thrown `COMPLETED_EDGE_EVIDENCE_MISSING` had I marked `P3` done without pinning an artifact. **A SCHEDULER THAT MAKES THE DESK PIN ITS OWN EVIDENCE IS EARNING ITS ADOPTION.**
+**GRAPH FAN-IN / READY SET AFTER THIS RULING:** `GBP` needs `[P0IG,P1,P2,P3,REG]` and `GBR` needs `[GBP,P3]`; **`P0IG` remains BLOCKED, so NOTHING becomes newly ready.** ⚠️ **`P3` closing unblocks nobody today — stated so this is not read as progress it is not.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-611`** — `[MEASURED HERE]` newest `## AR-` on disk. **It concerns the worker's pin dance and does NOT bear on `P3`; ruled separately at `R-572`/on batch close.**
+
+### 🛑★★★★★ §1 — THE FINDING THAT MATTERS MOST IS THAT THIS NODE WAS NEVER BLOCKED
+`[MEASURED HERE, read from the adopted graph]`
+```
+P3  kind judgment · owner "Fable advisor seat" · wip_class judgment
+    incoming hard edges:  NONE          <- ready from the first epoch, and every epoch since
+    outgoing hard edges:  P3 -> GBP     (producer-proof lane ruling and transfer contract)
+                          P3 -> GBR     (executing runtime SHA and graph-to-spec transfer contract)
+```
+★★★★★ **A NODE WITH NO PREDECESSORS THAT BLOCKS TWO DOWNSTREAM NODES IS THE CHEAPEST WORK IN THE GRAPH, AND IT SAT UNDONE BECAUSE NOTHING ENUMERATED IT.** ✅ **`R-570 §7.4` warned that *"a ruling that ignores the scheduler adopted nothing"* — I then spent two rulings describing the desk as idle while my own ready set said `ready_advisor_nodes: ["P3"]` in the receipt I published. `THE SCHEDULER TOLD ME AND I DID NOT READ MY OWN OUTPUT.`**
+
+### ✅★★★★★ §2 — ACCEPTANCE ITEM 1 & 2: THE TWO SHAs, AND THEIR DIVERGENCE
+`[MEASURED HERE, both trees read directly]`
+```
+PRODUCER   68d9bf49b4488618d32728d3fdd83bfdbb340693
+           C:/Users/tonio/Projects/wt-h1-wave4-20260712   branch h1-wave4-sealed12-driver
+EXECUTING  9af37b8ff36a13c05fb0ec26752c42a97fc300d7      last commit 2026-07-29 04:47
+           C:/Users/tonio/Projects/trading-forge/runtime-production
+           branch hardening/slumhouse-shared-office-parity-20260723
+           git-dir: .../trading-forge/trading-forge/.git/worktrees/runtime-production
+
+merge-base a9d7a71a56f375ca79a89663c6685e2ce44d2331   2026-07-09 15:27
+producer commits absent from runtime : 1544
+runtime  commits absent from producer :  848
+```
+🛑★★★★★ **THESE ARE NOT A BRANCH AND ITS DEPLOY — THEY ARE TWO LINEAGES THAT SPLIT THREE WEEKS AGO AND BOTH KEPT MOVING.** ★★★★★ **`MEASURED ≠ MEASURED-WHERE-IT-RUNS` has a magnitude now: any campaign claim about production behaviour that was verified in the campaign tree is a claim about a codebase `1,544` commits away from the one executing.**
+⚠️★★★★★ **AND THE EXECUTING SHA **UNDERDETERMINES THE EXECUTING CONTENT** — which is the single most important sentence in this contract. `[MEASURED HERE]` the runtime tree is DIRTY, so *"runtime is at `9af37b8f`"* is TRUE and INSUFFICIENT. **ANY FUTURE STATEMENT OF A RUNTIME SHA MUST BE ACCOMPANIED BY ITS DIRTY SET OR IT IS OVERSTATING WHAT IT KNOWS.**
+
+### ✅★★★ §3 — I REFUSED THE EASY ALARM, AND HERE IS THE MEASUREMENT THAT EARNED THE REFUSAL
+**A dirty executing tree is exactly the shape that reads as *"someone hand-edited production"*. I checked both files before characterising either.** `[MEASURED HERE]`
+- ✅ **`src/engine/economic_release_dates.json` — GENERATED, NOT HAND-EDITED.** One-line JSON carrying `"generatedHorizon"` and `"sources":["eia:generated", …]`, and `src/server/services/economic-calendar-sync-service.ts` + `src/server/scheduler.ts` WRITE it. **A scheduled service refreshing its own artifact in place is the system working.**
+- ✅ **`.claude/agents/accuracy-validator.md` — v2 PROPAGATED, NOT ALTERED.** `[MEASURED HERE]` all three trees' WORKING copies are byte-identical (`sha1 eced219d…`, `12164` bytes); the diff exists only because that four-day-old branch still has **v1 committed**. **The file is ahead of its branch, not off-standard.**
+🛑★★★ **SO THE DIRT IS EXPLAINED AND NEITHER FILE IS A VIOLATION.** ★★★★★ **`A DIRTY PRODUCTION TREE IS A QUESTION, NOT A VERDICT` — and this desk has twice this session been one sentence from publishing an alarm it had not measured (`/dev/tcp` said GitHub was blocked; a piped exit code said this campaign's own parity guard could not fail).**
+
+### ✅★★★★★ §3a — AND ONE THING I CAUGHT ONLY BECAUSE I WAS ABOUT TO TRUST IT
+**I am about to dispatch `accuracy-validator`. `[MEASURED HERE, exit code read OFF THE PROCESS]` `node scripts/check-agent-parity.mjs` → **TRUE EXIT `1`**, `RED`, three drifted copies.**
+🛑 **MY FIRST READING OF THAT GUARD SAID `EXIT 0` AND WAS MY OWN ERROR — I took `$?` after a `| tail`, which is the piped-exit-code trap this campaign has been convicted on four times. Corrected within one command, recorded rather than quietly fixed.**
+✅★★★★★ **AND THE JOIN KEY IS WHAT SETTLES IT, NOT THE HEADLINE: the drifted `accuracy-validator` copy is in `wt-gpt-advisor-ar552-20260801`, **NOT** the copy this seat's cwd resolves (`eced219d…`, at parity with master). The two other drifts are `autonomous-readiness` and `institutional-edge-researcher`.** **THE GRADER I WILL DISPATCH IS AT PARITY — verified by path, not by the guard's overall colour.** ⚠️ **`A RED GUARD IS NOT A RED VERDICT ON EVERY FILE IT COVERS`; read the row that names your artifact.**
+
+### ✅★★★★★ §4 — ACCEPTANCE ITEM 3: THE GRAPH-TO-SPEC HANDOFF, AND WHAT IS *NOT* IN SCOPE
+`[MEASURED HERE]` **`prototypes/p0-vnext-admission` → `0` files in the executing tree.**
+✅★★★★★ **THAT IS CORRECT AND I RULE IT SO EXPLICITLY, BECAUSE IT IS THE EXACT SHAPE A FUTURE READER WILL MISTAKE FOR A DEPLOYMENT GAP: the prototype is an **ADMISSION INSTRUMENT** — it decides what may enter `P0-vNext` — and it is **NOT RUNTIME TRADING CODE.** An instrument that never runs in production is not undeployed; it is correctly scoped.** ★★★ **`ABSENT FROM PRODUCTION IS A DEFECT ONLY FOR THINGS PRODUCTION IS SUPPOSED TO RUN` — enumerate the intent before reading the absence.**
+**HANDOFF RULE: the graph orders EXECUTION; the BLUEPRINT owns REQUIREMENTS (`R-547 §4.6`, re-verified by the validator's verbatim Phase-1-exit check). A node's output artifact transfers to a spec ONLY through a named ruling that pins the artifact — never by a tree copy and never by adjacency.**
+
+### 🛑★★★★★ §5 — ACCEPTANCE ITEMS 4 & 5: THE TRANSFER RECEIPT, AND THE FORBIDDEN EDITS
+**BINDING FROM THIS RULING. This contract governs FUTURE transfers; `[MEASURED, §4]` no transfer is pending today.**
+**A change reaches the executing runtime by EXACTLY ONE PATH:** branch off the executing branch → PR → CI → merge → **the runtime worktree updated to a NAMED SHA.** 🛑 **NO file copying. NO patch application. NO `git checkout` of a campaign branch into `runtime-production`.**
+✅ **A TRANSFER RECEIPT — required before any claim that something is RUNNING — names FIVE things and is worthless missing any one:** `(1)` producer SHA · `(2)` executing SHA **BEFORE** · `(3)` executing SHA **AFTER** · `(4)` **the executing tree's DIRTY SET at both points** (`§2`: the SHA underdetermines the content) · `(5)` a **post-update verification command AND ITS OUTPUT, run IN the executing tree.** ★★★★★ **`A DEPLOY WITHOUT A POST-UPDATE MEASUREMENT IN THE EXECUTING TREE IS A CLAIM ABOUT A TREE NOBODY LOOKED AT.`**
+🛑 **FORBIDDEN IN `runtime-production`, absolutely:** any hand edit to TRACKED source · any `git checkout`/`reset`/`stash` that would DISCARD a scheduled service's in-place writes · committing a generated artifact as though it were authored · and **any campaign seat writing there at all** — this desk and the worker operate the campaign tree, never the executing one.
+✅ **EXPLICITLY ALLOWED, so the rule is not broken by normal operation:** scheduled services writing their OWN generated artifacts — today, `src/engine/economic_release_dates.json` via `economic-calendar-sync-service.ts`. ⚠️ **That allowance is an ENUMERATED LIST, not a category: a second generated artifact appearing in the dirty set is a FINDING until it is added here.**
+
+### §5a — INVARIANTS
+**No runtime, trading or capital behaviour authorized or touched. `runtime-production` was READ ONLY — `[MEASURED HERE]` its dirty set is byte-for-byte what it was before this ruling, and no command in this investigation wrote to it.** **Invariant 1 untouched. `P0-vNext` BLOCKED · Phase-1 REFUSED.** ✅ **`44/52` untouched. No worker contract changed.**
+
+### 🛑 §6 — STOP CONDITIONS
+★★★★★ **A runtime SHA stated WITHOUT its dirty set → STOP (`§2`): the SHA underdetermines the content, measured.** · ★★★★★ **Anything moved into `runtime-production` by copy, patch, or checkout of a campaign branch → STOP (`§5`).** · ★★★★★ **`RUNNING` claimed without a five-part transfer receipt → STOP (`§5`).** · ★★★★★ **The prototype's absence from the executing tree reported as a deployment gap → STOP (`§4`): it is an instrument and is correctly scoped.** · ★★★★★ **A grader dispatched on the strength of the parity guard's overall colour rather than the row naming its own copy → STOP (`§3a`).** · ★★★ **A new generated artifact in the runtime dirty set treated as allowed → STOP; the allowance is a list (`§5`).**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — transition `P3` in the graph IN THE COMMIT PAIR WITH THIS RULING**, add pin `P3_LANE_AUTHORITY`, reference it on both outgoing edges, then `refresh → validate` and paste the receipt. **A node transition without a validator run is a caption.**
+2. **WORKER — UNCHANGED (`R-572 §6.1`).** Corpus rows + pin dance, then STOP.
+3. **THIS DESK — dispatch ONE fresh `accuracy-validator` when the dance lands.** ✅ **Its parity is now VERIFIED BY PATH (`§3a`), which removes the last unchecked premise under that dispatch.**
+4. **THIS DESK — QUEUE: the producer/runtime divergence (`§2`) is a BLUEPRINT-altitude question, not a chore.** `1,544`/`848` apart means the campaign has no current answer to *"how does hardening ever reach the thing that trades?"* **Named, owned, NOT scheduled tonight — the money path is mid-batch.**
+
+### §8 — LESSONS TO PERSIST
+★★★★★ **`A READY NODE WITH NO PREDECESSORS IS THE CHEAPEST WORK IN THE GRAPH, AND IT IS THE EASIEST TO NEVER NOTICE.` I published a receipt naming `P3` ready, twice, and then called the desk idle. Read your own ready set as an ORDER, not as a field.**
+★★★★★ **`THE SHA UNDERDETERMINES THE CONTENT.` A dirty executing tree means the deploy identity is a PAIR — commit plus dirty set — and every claim that names only the commit is overstating what it knows.**
+★★★★★ **`A DIRTY PRODUCTION TREE IS A QUESTION, NOT A VERDICT.` Both files here looked like hand edits and neither was; the measurement took two commands and would have prevented a false alarm to the operator.**
+★★★ **`A RED GUARD IS NOT A RED VERDICT ON EVERY FILE IT COVERS.` Read the row that names your artifact — and read the exit code off the process, not through a pipe.**
+
+---
+
 ## R-572 · 2026-08-02 · ✅★★★★★ **`AR-609` + `AR-610` APPROVED — FAN-IN `4 / 5`. THE ENUMERATION I ORDERED AS A LIST CAME BACK AS **INSTANCE EIGHT, EXECUTED** (`type-value-proof.mjs` certified `property HOLDS` at `14 / 14` after a coverage case was deleted) AND, WORSE AND BETTER, AS **THE UNPINNED RULE SETS**: `source-admission::CATCHERS` and `runtime-admission::CATCHERS` — the catchers EVERY verdict in this prototype is produced under.** ✅★★★★★ **`F-1` IS **RELOCATED, NOT PATCHED**: the SOURCE surface is already closed (even an INERT `Proxy` is `REJECTED 1b-S:direct-ambient-read`, because naming `Proxy` is REACHING FOR a host global), so `F-1` lives ENTIRELY in the RUNTIME layer.** 🛑★★★★★ **AND I NOW ANSWER THE ARCHITECTURE QUESTION THE WORKER CORRECTLY REFUSED TO ANSWER ALONE — INCLUDING THE HALF IT ASKED THAT IS SHARPER THAN THE ONE IT WAS SENT.** **DECISION: APPROVE both · RULE the Proxy architecture · AUTHORIZE the batch-closing pin dance.**
 
 **★ WORKER — START HERE:** ✅ **`AR-609` AND `AR-610` BOTH APPROVED; nothing returns to you.** ✅★★★★★ **`(3)` IS ACCEPTED AS DELIVERED — a measured design question WAS the right output and you were right not to write the code.** 🛑 **RULED, SO YOU DO NOT CARRY IT: `util.types.isProxy` IS AUTHORIZED FOR THE RUNTIME LAYER ONLY — **BUT NOT IN THIS BATCH** (`§3`). DO NOT START IT.** ✅ **YOUR LAST ITEM IS THE PIN DANCE, EXACTLY AS `AR-610 §5` SPECIFIES IT. CLOSE THE BATCH AND STOP THERE — the object must be STABLE for the grade.** ⚠️ **`§4`: I also RULE your `run.mjs::SIX` / `SURFACE_CODES` / `FIXTURE_INVALID_CODES` deferral — **PIN THEM**, and I explain below why that does not breach the attribution STOP. Fold into the same dance if it is cheap; if it is not, say so and it becomes the next item rather than a rushed one.**
