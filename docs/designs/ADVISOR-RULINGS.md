@@ -12,6 +12,60 @@
 
 ---
 
+## R-558 · 2026-08-02 · 🛑★★★★★ **THE EXTERNAL READ FOUND A SECOND LIVE FALSE GREEN THAT IS **NOT MINE AND NOT THE WORKER'S**, AND I REPRODUCED IT: **DELETING GUARD ROW `56(a)` — THE GUARD THAT EXISTS FOR THE GRADER'S `F-1` CRITICAL — LEAVES `GATE: PASS`, `EXIT 0`.** `declared_but_absent: ["56(a)"]` IS COMPUTED, PRINTED, AND NEVER GATES.** 🛑★★★★★ **THE SHAPE: **ITEM 15 CLOSED SELF-AUTHORSHIP FOR THE OLD 52 AND LEFT IT WIDE OPEN FOR THE NEW ROWS.** `DECLARED_ADDITIONS` IS `CORPUS.map(` IN A NEW COSTUME — MUTABLE CODE IN THE SAME DELIVERY IT POLICES.** **DECISION: REVISE — fold into `R-557`'s repair, ONE replacement object.**
+
+**★ WORKER — START HERE:** 🛑 **A SECOND REPAIR JOINS `R-557 §5.1`. BOTH LAND IN ONE OBJECT — do not ship them separately.** **(2) THE EXPANDED MEMBERSHIP MUST GATE.** **REPRODUCER, VERBATIM:** delete row `56(a)` from `corpus.mjs` (two lines, `229–230` at `f58bd222`), change nothing else — **currently `total 63`, `missing_ids []`, `undeclared_ids []`, `declared_but_absent ["56(a)"]`, `GATE: PASS`, `EXIT 0`. It must EXIT 1.** ⚠️★★★★★ **ADDING `declared_but_absent` TO THE FAILURE CLASSES IS NECESSARY AND NOT SUFFICIENT — it does not survive COORDINATED deletion of the row AND its declaration, because `DECLARED_ADDITIONS` is mutable code in the same delivery. **PIN THE EXPANDED MEMBERSHIP EXTERNALLY, exactly as item 15 pinned the 52** — derive the expected expanded identities from the already-committed `53e80935` object, check BOTH directions plus uniqueness.** **First observable: the `56(a)` deletion going RED, ~30 min.**
+
+**RULING ID:** R-558 · **TASK ID:** external read `589e0411` · **DECISION: REVISE** · **CONSUME** the read `[EXTERNAL OPINION]`, premises audited.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE.** 🛑★★★ **`P0PC` IS RE-LABELLED **DELIVERED-BUT-REVISION-REQUIRED**, not delivered-pending-grade — the read is right that those are different states and I had it in the weaker one. `P0PG` blocked.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-598`** (`34e65996`) — `[MEASURED HERE]` still the newest `## AR-` on disk; this ruling consumes an EXTERNAL artifact, and `AR-598` remains ruled by `R-557`.
+**ARTIFACT:** `docs/advisor-rulings/AR-597-598-EXTERNAL-DELIVERY-REVIEW-2026-08-02.md`, commit `589e0411` (`06:03:38`), `64` lines, on `origin/external-advisor/gpt-rulings`.
+
+### ✅★★★ §1 — INDEPENDENCE, ADJUDICATED BY MY OWN `R-552 §2` LAW BEFORE ANYTHING ELSE
+`[MEASURED HERE]` **`589e0411` is `06:03:38`. `R-556` committed `05:55:41`; `R-557` committed `06:01:22`. The read POSTDATES both and discusses `R-557` by name.**
+🛑 **SO ITS AGREEMENT WITH `R-557`'s ANCHOR-SLACK FINDING IS **NOT** A SECOND PATH AND I DO NOT BANK IT AS ONE** — same ruling as `R-552 §2`, applied to myself again. **`THE TIMESTAMP IS THE JOIN KEY.`**
+✅★★★★★ **BUT THE MEMBERSHIP FINDING IS A DIFFERENT DEFECT THAT NEITHER I NOR THE WORKER RAISED, so timing cannot have manufactured it. That one is GENUINELY ITS OWN**, and it is the most valuable thing this channel has produced tonight. ★★★ **`A LATE READER CANNOT CORROBORATE YOUR FINDING, BUT IT CAN STILL FIND A DIFFERENT ONE. JUDGE EACH FINDING'S INDEPENDENCE SEPARATELY, NOT THE DOCUMENT'S.`**
+
+### 🛑★★★★★ §2 — REPRODUCED AT THIS DESK
+`[MEASURED HERE — detached worktree at `f58bd222` (`/c/tfa`), created and REMOVED; shared HEAD unchanged, no registration left. ONE declared substitution: bare `'typescript'` → absolute URL, 3 files. Clean baseline `EXIT 0` FIRST; deletion `grep`-verified to `0` occurrences BEFORE the verdict was read (`R-556 §3`).]`
+```
+MUTATION  delete row 56(a) (two lines). Original 52 and every expectation UNTOUCHED.
+RESULT    expanded total: 64 -> 63
+          missing_ids: []   undeclared_ids: []   duplicate_ids: []
+          declared_but_absent: ["56(a)"]        <- COMPUTED. PRINTED. IGNORED.
+          GATE: PASS — every enforced class is clean          EXIT 0
+```
+🛑★★★★★ **`56(a)` IS THE `export * from './ledger.js'` GUARD — the row that exists BECAUSE the `accuracy-validator` constructed a module that reached the ledger and was ADMITTED (`F-1`, CRITICAL). `56(a)`–`(d)` and `57` are the guards for BOTH criticals. The gate protects the historical `52` while letting the guards against the two worst findings of the campaign vanish without a word.**
+⚠️ **SCOPE OF MY CHECK, STATED HONESTLY: I verified the BEHAVIOUR by execution. I did NOT verify the read's `run.mjs:444-449` line cite — and per `R-555 §7` I would not cite it by line anyway.** `[MEASURED HERE]` `declared_but_absent` is computed at `membership.mjs:127` and surfaced at `run.mjs:401`; **it appears in no failure condition, which the mutation confirms empirically.**
+
+### 🛑★★★★★ §3 — THE SHAPE, AND IT IS THIS CAMPAIGN'S OWN LAW UNSWEPT
+★★★★★ **`ITEM 15 CLOSED SELF-AUTHORSHIP FOR THE OLD POPULATION AND LEFT IT OPEN FOR THE NEW ONE.`** The `52` are now pinned to an external frozen blob and survive attack B (`R-556 §1`). **The expanded corpus's membership is `DECLARED_ADDITIONS` — a mutable array in the same file, in the same delivery, authored by the object under test.** ★★★★★ **THAT IS `CORPUS.map(` WEARING A DIFFERENT NAME, and `R-555 §5`'s own stop condition says the defect is SELF-AUTHORSHIP, NOT THE IDENTIFIER.**
+✅★★★ **THE READ'S SUFFICIENCY ARGUMENT IS CORRECT AND I ADOPT IT ON MERIT:** *"Simply adding `declared_but_absent` to `FAILURE_CLASSES` closes the demonstrated deletion when the declaration remains. It does not close coordinated deletion of both the row and its declaration."* **A fix that only catches the uncoordinated case would be `one level short` — this desk's own convicted shape.**
+★★★★★ **`mint-law` AGAIN, AND THAT IS THREE TONIGHT** (`R-542`'s sensor law unswept to the worker → `R-553`; the cite-by-construction law unswept to code → `R-555 §7`; item 15's external-pin law unswept to the expanded corpus → here). **`A LAW MINTED FOR ONE POPULATION IS NOT MINTED UNTIL EVERY POPULATION IT DESCRIBES IS CHECKED.`**
+
+### ✅ §4 — WHAT THE READ CONFIRMS, AND WHERE IT IS GENUINELY A SECOND PATH
+✅ **It re-ran all five gates ITSELF on `53e80935` and got the same numbers** (`64` expanded, `44+3+0+0+5+0=52`, `29/29`, `15/15`, `39` compared, all exit `0`). **That IS a second path — it executed them.**
+✅ **It confirms the two founding attacks are closed "for the intended reasons".** ⚠️ **`[NOT A SECOND PATH]` on the reasons — `R-556 §1` published them first and it read them.**
+✅ **Its clean control returned to `EXIT 0` after restoring the mutation — it checked its own instrument was discriminating rather than always-red.** ★★★ **I did the same, independently, and record it as the reason both of us can be believed here.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; `1b-S`/`1b-R` distinct. No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · Surface `B` UNOWNED · `G-1`/`G-2` OPEN · the `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`.** ⚠️ **`runtime-admission.mjs` ENTIRELY UNGRADED.** ⚠️ **`44/52` unchanged and still NOT ratified.** **V4 graph NOT ADOPTED — the read concurs.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **The membership repair shipped as `declared_but_absent` added to the failure classes ALONE → STOP: necessary, not sufficient (`§3`).** · ★★★★★ **The expanded membership pinned to anything authored in the same delivery → STOP: that is the defect, renamed.** · ★★★★★ **`R-557`'s anchor-slack repair and this one shipped as SEPARATE objects → STOP: one replacement object, both red-proofed, or the grade gets spent on a partial fix.** · ★★★ **Any of `56(a)`–`(d)`, `57`, or the original `52` losing its credit → STOP (over-correction).** · ★★★ **`P0PC` reported as delivered-pending-grade → STOP; it is DELIVERED-BUT-REVISION-REQUIRED (`§0`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **WORKER — ONE replacement object carrying BOTH repairs:** `R-557 §5.1` (extra-diagnostic clause) **AND** `§0`'s expanded-membership pin. **ACCEPTANCE, all in the same run:** the `34(d-u)` parameter-rename RED · the `56(a)` deletion RED · both `R-548` founding attacks still RED · clean control GREEN · `29/29`+ not shrinking · the five owned rows still credited. **HONEST-PARTIAL:** if the expanded set cannot be pinned externally without a new committed artifact, **say so and propose the artifact** — do not improvise a self-authored substitute.
+2. **THIS DESK — the grade, brief at `R-556 §6`, now ALSO carrying:** `R-557`'s anchor-slack reproducer, this membership reproducer, and the anchor-slack table. 🛑 **HELD until item 1 lands — and the read independently reaches the same hold, which is `R-552 §3.1`'s channel-cost argument a second time.** ⚠️ **Dispatch still needs the operator's word; obligation unchanged, owned by this desk, not reassigned.**
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`), eligible while the worker repairs.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A FIELD THAT IS COMPUTED, PRINTED AND NEVER CONSUMED IS A DECORATION WEARING A GUARD'S CLOTHES.` `declared_but_absent` reported the deletion correctly, in the output, while the gate passed — the same species as `fixture_invalid` having no assignment site (`F-3`).**
+★★★★★ **`JUDGE EACH FINDING'S INDEPENDENCE SEPARATELY, NOT THE DOCUMENT'S.` This read could not corroborate my anchor-slack finding (it postdates it) and still handed me a defect neither seat had seen.**
+★★★ **`A GUARD ADDED FOR A CRITICAL IS ITSELF A POPULATION THAT NEEDS PROTECTING.` The rows defending against `F-1`/`F-2` were the least protected rows in the corpus.**
+
+---
+
 ## R-557 · 2026-08-02 · 🛑★★★★★ **THE WORKER NAMED A RESIDUAL AND LABELLED IT `[HYPOTHESIS — UNPROVEN]`. I CONSTRUCTED IT AND **IT REPRODUCES**: AN EXTRA, UNRELATED `TS2304` PLANTED INSIDE `34(d-u)`'s DECLARED ANCHOR IS CREDITED AS THE PLANT — `GATE: PASS`, `EXIT 0`.** 🛑★★★★★ **`R-548 §4` ITEM `14` REQUIRED VERBATIM THAT *"AN **EXTRA** DIAGNOSTIC ON AN OWNED ROW → `FIXTURE_INVALID` OR `TYPE_INVALID_UNCLASSIFIED`, AND THE RUN **STOPS**"*. IT DOES NOT STOP. **ITEM 14 IS TWO-THIRDS DELIVERED, NOT CLOSED.**** ✅★★★ **`AR-598` IS OTHERWISE EXCELLENT AND ITS CLOSURE ARGUMENT SURVIVES.** **DECISION: REVISE — one narrow repair, then the grade.**
 
 **★ WORKER — START HERE:** ✅ **You found this yourself in `AR-598 §3` and were right to call it a repair you were not authorized to make. YOU ARE NOW AUTHORIZED.** **ONE ITEM: make item `14`'s third clause real — an EXTRA diagnostic on an owned row must STOP THE RUN.** 🛑 **THE REPRODUCER, VERBATIM, so you do not have to re-derive it:** in `34(d-u)` change the parameter `(lane: Lane)` → `(ln: Lane)` and leave the body's `undeclaredReader(lane)` untouched. **The declared anchor still occurs exactly once, an extra `TS2304` lands on `lane` INSIDE it, and the gate currently exits `0` crediting BOTH.** **RED-PROOF IT, and keep the clean control GREEN and the five legitimately-owned rows CREDITED.** ⚠️ **`R-556`'s HOLD otherwise stands: no self-certification, no `P0PG`, no grader dispatch.**
