@@ -4,6 +4,38 @@
 
 ---
 
+## AR-567 · 2026-08-01 · ✅ **R-528 §4 DELIVERED — THE LINE-104 SENTENCE IS REPLACED BY THE BINDING CONSUMER RULE. `A REGISTRY OF DENOMINATORS IS NOT A DENOMINATOR UNTIL THE CONSUMER IS BOUND TO ONE.`** ⚠️★★★ **AND I NOTE, WITHOUT DEFLECTING ANY OF MY OWN RECORD: THE SENTENCE THE DESK BRIEFLY CALLED ABSENT WAS IN MY DOCUMENT ALL ALONG, AND IT WAS A REAL ESCAPE.**
+
+**RULING ID:** R-528 §4 (folded into the `AR-565` receipt, as ordered — **no second START-RECEIPT opened**) · **TASK ID:** AR-567 · **PRIOR:** AR-566 · **SEAT:** `claude.exe 26204`.
+
+### ✅ §1 — THE REPLACEMENT
+**WAS:** *"Promotion decisions that need C must either narrow their scope explicitly — and print it — or wait for an authority amendment."*
+**NOW:** **a promotion decision requiring claim `C` may consume ONLY the exact pre-registered consumer profile (`consumer_id` · required claims · `scope_id` · scope digest); it MAY NOT narrow or select another scope at decision time; absent a sound profile or an authority amendment, IT WAITS.**
+```
+old sentence remaining          0
+new binding present             1
+POSITIVE CONTROL consumer_id    2      (measured BY PARSE, explicit UTF-8, no truncating pipe)
+delta                           exactly the design document
+```
+★★★★★ **WHY THE OLD WORDING WAS AN ESCAPE AND NOT A NUANCE: registration makes scope DEFINITIONS reviewable; it does NOT make caller SELECTION safe once several registered scopes exist. A promotion decision could still pick the friendliest registered scope and satisfy the letter by printing it.** ★★★ **`PRINTING IT IS DISCLOSURE, NOT ENFORCEMENT` — the same sentence that convicted the pre-registry version, surviving one level out. Ninth sighting of the family, and this binding is on the CONSUMER side.**
+
+### ⚠️★★★ §2 — ON THE RETRACTION ITSELF, BRIEFLY, BECAUSE IT BEARS ON HOW I MEASURE
+**`R-527 §2` said the sentence was not in the blob; `R-528` retracts that — the sentence was present, and the absence was manufactured by a `cut -c1-190` that amputated it at character `321` of a `453`-character line.**
+✅ **THE SUBSTANTIVE CONSEQUENCE IS UNCHANGED FOR ME: the sentence existed, it was an escape, and it is now replaced. The retraction did not reduce my work; it corrected the record about my document.**
+★★★★★ **AND I TAKE THE MINTED LAW AS MINE TOO, BECAUSE I HAVE THE SAME WOUND FROM THE SAME HOUR: `NEVER TEST FOR ABSENCE THROUGH A TRUNCATING PIPE.` My `AR-562` false clean came from a mis-escaped shell pattern; this one came from a width limit. **Different mechanism, identical failure: a query that COULD NOT HAVE FOUND the thing, reported as the thing NOT BEING THERE.** `A GREP THAT CANNOT MATCH AND A GREP THAT FINDS NOTHING PRINT THE SAME ZERO.`**
+✅ **Standing, applied in this very delivery: the sentence was located by exact-substring PARSE, its containing line MEASURED at `441` characters, and the needle's offset (`313`) reported — so the fraction I actually read is on the record rather than assumed.**
+
+### §3 — WHAT I DID NOT DO
+- **No implementation · no ledger touch · no `P3`/Gate-B · receipts, `P1`/`P2` artifacts and the tag untouched · no `checkout`/`reset`/index op · no second start-receipt.**
+- ⚠️ **The Phase-1 profile remains `NO SOUND PHASE-1 PROFILE AVAILABLE` (`AR-566 §2`) — this replacement BINDS the consumer to a profile that does not yet exist, which is the correct order: the binding must be in place before the profile is authored, or the profile gets written to fit a consumer that already decided.**
+- ★★ **I do not grade my own work.**
+
+### §4 — POSITION
+**Design REVISED, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED, unblocking artifact named** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **NOT A HANDOFF.**
+
+---
+
 ## AR-566 · 2026-08-01 · ✅★★★★★ **R-527 §5 DELIVERED — THREE ITEMS. THE PROOF MATRIX NOW TESTS THE DESIGN IT DOCUMENTS (`23` MUTATIONS, EACH WITH ITS **NAMED CATCHER**), PROJECTION MEANING IS CONTRACT, AND ITEM `2` IS A MEASURED **REFUSAL**: `NO SOUND PHASE-1 PROFILE AVAILABLE`.**
 
 **RULING ID:** R-527 §5 · **TASK ID:** AR-566 · **PRIOR:** AR-565 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
