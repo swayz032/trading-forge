@@ -4,6 +4,65 @@
 
 ---
 
+## AR-587 · 2026-08-02 · ✅★★★★★ **R-540 §6 DELIVERED — FIVE ITEMS, `38/38` + `14/14` + `13/13`, MANIFEST `51` RECORDS, MATRIX `53+1=54`.** 🛑★★★★★ **AND THE FAULT WORTH THE MOST IS ONE MY AUTHORING LAYER CREATED TWICE: MY OWN TOOLING **SILENTLY RESOLVED `__` INTO `__`**, TURNING THE ESCAPED-IDENTIFIER FIXTURES INTO PLAIN ONES — THE EXACT DEFECT `F-2` IS ABOUT, REPRODUCED INSIDE THE REMEDY FOR IT.**
+
+**RULING ID:** R-540 §6 · **TASK ID:** AR-587 · **PRIOR:** AR-586 (START-RECEIPT) · **SEAT:** `claude.exe 26204`.
+**DELTA = exactly `docs/designs/P0-VNEXT-DESIGN-2026-08-01.md`** (`+38/−10`) · **grader's receipt untouched.**
+**FAN-IN: `5 / 5`. NOT A HANDOFF.**
+
+### 🛑★★★★★ §1 — THE INSTRUMENT FAULT THAT MATTERS, BECAUSE IT IS THE FINDING ITSELF
+**I wrote the escaped-identifier fixtures TWICE and BOTH TIMES MY AUTHORING LAYER COOKED THEM `[MEASURED HERE — on-disk byte check]`: `__proto__` landed as literal `__proto__`, so three lines of the measured block became DUPLICATES of the plain form directly above them, and my scratch probe would have measured the plain identifier while claiming to measure the escaped one.**
+★★★★★ **THAT IS `F-2` HAPPENING TO ME WHILE I FIXED `F-2`: `THE COOKED IDENTITY DECIDES, NOT THE SPELLING YOU THINK YOU WROTE.` A tool that silently canonicalises your fixture makes you measure the safe case and report the dangerous one.**
+✅ **REMEDY: every escape-bearing line is now written through a byte-level writer and **VERIFIED ON DISK** (`backslash-u` count `10`, `backslash-x` count `7`) before any claim rests on it — and the acceptance battery carries `B13`, which FAILS if the literal escapes ever get normalised again.** `A FIXTURE YOU DID NOT READ BACK IS A HYPOTHESIS ABOUT A FIXTURE.`
+
+### ✅★★★★★ §2 — ITEM 1: THE INVERSION, AND WHY THE OLD ROWS COULD NOT PROVE THE POLICY
+✅ **ROW `53` — HARMLESS-IMPORT CARDINALITY MUTATION: a static import of a demonstrably INERT local helper whose closure reaches NO ledger, oracle, filesystem or network module. RED **SOLELY BECAUSE IMPORT COUNT IS NON-ZERO**, specifier named.** 🛑★★★★★ **AND THE ROW EXPLICITLY **FAILS IF IT REDDENS VIA A CAPABILITY CHECK** — it is the only mutation separating the CARDINALITY policy from the CAPABILITY policy it replaced. Catcher = the zero-import rule; the dependency check stays SILENT.**
+⚠️ **`R-540 §3` calls its own order the defect. The part that is MINE: I changed the policy's TYPE and then re-checked only that the inherited mutations still went red — I swept the GREENS my decision invalidated last round and never swept the REDS.** `WHEN A POLICY CHANGES A CONTROL'S POLARITY, INVERT THE CONTROL; DO NOT MERELY DELETE IT.`
+
+### ✅★★★★★ §3 — ITEMS 2+3: COOKED IDENTITY, AND THE CONTROL THAT STOPPED ME OVER-FORBIDDING
+✅ **ONE canonical `cooked(Key)` — the TS AST cooked value (`Identifier.escapedText` / `StringLiteral.text`), **NEVER `getText()`, never the raw slice, never a regex.** BOTH key rules now read `cooked(Key) != "__proto__"` and `all cooked(Key) DISTINCT`.**
+✅ **SUBCASES ADDED, each with its own catcher attribution: row `51` `(c)` escaped IDENTIFIER + `(d)` escaped STRING; row `52` rebuilt as DUPLICATE COOKED KEYS with raw / escaped-string / escaped-identifier / mixed subcases.**
+★★★★★ **THE ESCAPED-IDENTIFIER FORM IS `[MEASURED HERE]`, NOT INHERITED — I promised that in `AR-586 §4c` because the desk marked it `[CORROBORATED, not measured there]`: `ownKeys []`, `proto === p`, inherited `7` reachable, `isFrozen TRUE`.**
+⚠️★★★★★ **AND I KEPT THE DESK'S DISCRIMINATOR AGAIN: an escaped ORDINARY key (`"\x62"` / `b` → `b`) is an ordinary own property with an UNTOUCHED prototype. **ESCAPING IS NOT THE HAZARD; COOKED IDENTITY IS.** A rule forbidding escaped keys would over-forbid on a false premise — second time in three rounds a supplied control has stopped me correcting past the defect.**
+⚠️ **HONEST-PARTIAL: `cooked()` covers `Identifier` and `StringLiteral` only. A NUMERIC key (`{1: x}`) is FORBIDDEN OUTRIGHT rather than canonicalised, because its identity involves a numeric→string coercion this design does not specify. `AN UNLISTED CASE FAILS CLOSED.`**
+
+### ✅★★★★★ §4 — ITEM 4: WRITTEN AS A CLASS, NOT A TOKEN
+✅ **Manifest `50(a)` repaired to call the binding it declares.** 🛑★★★★★ **BUT THE REAL FIX IS THE GENERAL ONE I FLAGGED IN `AR-586 §4d`: a new **VALIDITY-BEFORE-VERDICT PRECONDITION BINDS EVERY ROW IN THE MATRIX** — a fixture must PARSE and TYPE-CHECK before any verdict from it is admitted, and no row is satisfied by a `ReferenceError`, a parse failure, a type failure, or any error raised BEFORE the named catcher runs.**
+★★★★★ **`AN ERROR THAT FIRES BEFORE THE CATCHER IS THE WRONG CHECK IN ITS PUREST FORM: THE RUN IS RED, THE RULE IS UNTESTED, AND THE MATRIX READS AS COVERED.` Fixing only the one token would have left the class open — `[MEASURED, `AR-586 §3`]` the as-recorded `50(a)` threw `ReferenceError` and row `50` would have gone red without ever exercising symbol resolution.**
+
+### ⚠️★★★ §5 — ITEM 5 AND TWO MORE PROBE FAULTS, BOTH VERIFIED VERBATIM FIRST
+`[MEASURED HERE]` **MANIFEST `51` records — all four join directions EMPTY, both controls convict. MATRIX anchored `54`, contiguous `1..54`, control LAST → `53+1`. UN-ANCHORED `59` published alongside. Caption re-taken from the parse (TENTH recomputation).**
+**Acceptance failed `2` on first run; both were my instrument and both had the substance plainly present:**
+1. **`A11` asserted *"duplicate ORDINARY keys"* — wording item `2` DELIBERATELY RENAMED to COOKED. A stale assertion in my own test, not a regression.** ✅ **Re-pointed at the current canonical names.**
+2. **`B10` failed because the flattener strips `>` (the blockquote marker), mangling `x=>x` inside the manifest record.** ✅ **Re-pointed at the record line itself.** ★★★ **Same family as last round's `_`-stripping that mangled `__proto__`: `A FLATTENER TUNED FOR MARKUP WILL EAT THE OPERATORS YOUR CLAIM DEPENDS ON.`**
+
+### §6 — ACCEPTANCE
+```
+R-536 carry-forward battery ................................................ 38 / 38
+R-539 battery (import policy, ambient allow-list, proto, duplicates) ....... 14 / 14
+R-540 items 1-5:
+  B1-B3  harmless-import RED on cardinality only; fails if capability-red ... PASS
+  B4-B6  one canonical cooked(Key); never getText; both rules use it ....... PASS
+  B7-B9  escaped ident+string subcases; escaped-ordinary control ........... PASS
+  B10-B12 50(a) repaired; validity-before-verdict binds EVERY row .......... PASS
+  B13    literal escape sequences survived authoring (backslash-u = 10) .... PASS
+                                                                            13 / 13
+manifest join: 51 records, all four directions EMPTY, both controls convict
+```
+
+### §7 — WHAT I DID NOT DO
+- **No implementation · no seventh `P0` attempt · pinned lanes · no ledger/`ORACLE.json`/census WRITE · no engine/runtime/extraction/corpus/DB/migrations · no `HOLDOUT-26` · `P3` · Gate B · no grade receipts · `P1`/`P2` artifacts · the pinned tag · no `checkout`/`reset`/index op · BLUEPRINT OUT.**
+- ⚠️★★★★★ **`GRADE-P0-VNEXT-DESIGN-2026-08-02.md` NOT touched, NOT read as authority, NOT pre-empted.**
+- ⚠️★★★★★ **EVERY RESULT IS DESIGN-TEXT OVER A `[PRE-REGISTERED, NOT EXECUTED]` MANIFEST. My executions prove MECHANISMS in a scratch harness outside the repo. NO MUTATION HAS EVER BEEN RUN AGAINST THE GATE; NO CI EXECUTES ANY OF THIS.**
+- ⚠️★★★ **AND THE VALIDITY-BEFORE-VERDICT PRECONDITION IS ITSELF UNENFORCED: it is a design rule stating what an implementation must do, with no implementation to obey it. `A PRECONDITION WITH NO RUNNER IS A PROMISE.`**
+- ⚠️ **The `140` remain `AUTHORITY_SEMANTICS_UNVERIFIED`; Surface `B` UNOWNED.** ★★ **I do not grade my own work. GRADE: NOT ASKING.**
+
+### §8 — POSITION
+**Design REVISED on all five items, committed and published.** `P0-vNext` implementation **BLOCKED** · Phase-1 profile **REFUSED** · Surface `B` **UNOWNED** · `P3` · Gate B · merge/deploy/release **HOLD**.
+★★ **FAN-IN `5 / 5`. NOT A HANDOFF.**
+
+---
+
 ## AR-586 · 2026-08-02 · **START-RECEIPT — R-540 §6 ACCEPTED. FIVE ITEMS, DESIGN ONLY.** ✅★★★★★ **ALL THREE FINDINGS RE-MEASURED HERE AND SUSTAINED, INCLUDING THE CONTROLS THAT DECIDE THE REMEDY'S SHAPE: AN ESCAPED **ORDINARY** KEY IS HARMLESS, SO THE RULE MUST TARGET **COOKED IDENTITY**, NOT ESCAPING.** 🛑★★★★★ **AND `F-1` IS THE ONE I SHOULD HAVE CAUGHT MYSELF: I VERIFIED MY IMPORT ROWS STILL WENT RED AND NEVER ASKED **WHICH RULE MADE THEM RED.**
 
 **RULING ID:** R-540 §6 · **TASK ID:** AR-586 · **PRIOR:** AR-585 (`d9db4aa7`, delivery, swept clean by `R-540 §1`) · **SEAT:** `claude.exe 26204`.
