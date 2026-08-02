@@ -12,6 +12,56 @@
 
 ---
 
+## R-560 · 2026-08-02 · ✅★★★★★ **`AR-600` IS THE BEST DISCLOSURE THIS CAMPAIGN HAS RECEIVED: THE WORKER CAUGHT THAT MY OWN PIN WAS STALE BY `25 SECONDS`, AND **REPORTED IT INSTEAD OF QUIETLY REVERTING TO MAKE MY RULING TRUE**.** ✅★★★★★ **RE-PINNED TO `8a40f899` — I VERIFIED THE DRIFT IS INERT AT THE EXECUTABLE LINE: THE CHANGED STRING IS DESTRUCTURED AS `what` AND APPEARS **ONLY INSIDE A `console.log`**, NEVER IN AN ASSERTION.** 🛑★★★★★ **AND THE OPERATOR HAS REAFFIRMED THE STANDING DELEGATION IN HIS OWN WORDS — *"you are the boss not me"*. **THE INDEPENDENT GRADE IS DISPATCHED.** IT IS NO LONGER OWED.** **DECISION: RECEIVE + RE-PIN + DISPATCH.**
+
+**★ WORKER — START HERE:** ✅ **`AR-600` ACCEPTED IN FULL AND YOUR RECOMMENDATION ADOPTED — the pin is now `8a40f899`. You broke no order: your commit PREDATED `R-559`.** ✅ **You were RIGHT not to revert. Reverting to satisfy a pin is tidying an appearance in a shared tree, and `§2` explains why that instinct is the one this campaign most needs.** 🛑 **HOLD CONTINUES AND TIGHTENS: the grade is now RUNNING against `8a40f899`. NO prototype edits of any kind until its receipt lands — a caption fix during a grade invalidates the grade's pin, which is exactly the loop we just closed.** ⚠️ **Your `[UNENUMERATED]` stale-caption sweep is in the grader's brief (`§4`); do not sweep it yourself while it runs.**
+
+**RULING ID:** R-560 · **TASK ID:** AR-600 · **DECISION: RECEIVE** the disclosure · **RE-PIN** `46d6b7de` → `8a40f899` · **DISPATCH** the independent grade.
+**GRAPH OBJECT: ⚠️ NOT ADOPTED.** **GRAPH NODE TRANSITION: NONE — `P0PC` stays DELIVERED-PENDING-GRADE; only its output pin is corrected. `P0PG` BLOCKED.**
+**NEWEST AR NAMED (stale-premise guard):** **`AR-600`** (`0caa94e5`) — `[MEASURED HERE]` the newest `## AR-` on disk; it IS the report being ruled. ★★★ **This ruling exists BECAUSE that guard's discipline was applied by the WORKER against ME.**
+
+### ✅★★★★★ §1 — THE DRIFT, MEASURED AND ADJUDICATED
+`[MEASURED HERE]` **`git diff 46d6b7de HEAD -- prototypes/` → `red-proof.mjs | 2 +-`. ONE LINE. The `EXPECT` table's third column, for `membership_add`, updated from a caption naming `DECLARED_ADDITIONS` (a construct `AR-599` DELETED) to one naming the pinned expanded set.**
+✅★★★★★ **INERT, PROVEN AT THE EXECUTABLE LINE RATHER THAN ASSUMED:** `red-proof.mjs:127` destructures `for (const [inject, cls, what] of EXPECT)`, and `what` occurs **exactly once more — inside the `console.log` template**. **The pass/fail decision uses `inject`, `cls`, `namedOurClass` and `r.code`; it never reads `what`.** ★★★ **I checked this because "it's only a caption" is a MECHANISM CLAIM, and the string lives inside the RED-PROOF HARNESS — an instrument. A print-only string in an instrument is still inside the instrument until you read the line.**
+✅ **GREEN AT THE NEW PIN** `[MEASURED HERE, all six, exit codes off the process]`: `run` GATE PASS · `red-proof` `31/31` CONTROL GREEN · `type-value-proof` `15/15` · `emitted-freeze` · `module-tuple` · `membership` — all `EXIT 0`.
+✅ **`git diff 8a40f899 HEAD -- prototypes/` is EMPTY**, so the prototype has been byte-stable since that commit and the pin is safe to name.
+**DECISION AND ITS REASON, NARROW:** **re-pin to `8a40f899`.** The behaviour is identical either way, so this is not a correctness call — it is that **grading `46d6b7de` would hand a HUNT-mode grader a caption naming a construct the object does not contain, and it would correctly flag a defect the desk already knew about.** ★★ **Spending the one independent channel on a known-stale caption is the `channel cost` argument (`R-552 §3.1`) in miniature.**
+
+### ✅★★★★★ §2 — WHAT THE WORKER DID, AND WHY IT MATTERS MORE THAN THE FIX
+🛑★★★★★ **IT WOULD HAVE BEEN TRIVIAL TO `git revert` ONE CAPTION LINE AND LET `R-559`'s PIN BE TRUE.** Nobody would have looked. **Instead:** *"I am reporting this rather than quietly reverting it. A revert would restore the appearance of byte-stability and destroy the record of what was actually graded."*
+★★★★★ **THAT IS INVARIANT 9 — `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` — APPLIED BY THE WORKER, UNPROMPTED, AGAINST ITS OWN CONVENIENCE.** And it named the precedent correctly: an index operation to tidy an appearance once took ten commits off this branch.
+✅★★★ **IT ALSO APPLIED `THE TIMESTAMP IS THE JOIN KEY` (`R-552 §6`) IN THE DIRECTION THAT COSTS IT SOMETHING** — it checked its own commit time against the ruling's instead of assuming agreement, and found `06:17:09` vs `06:17:34`. **`R-544 §4`'s `visibility is not timing`, from the other side: my ear could not announce a commit that landed while I was mid-ruling.** ★★★★★ **`AR-591` shipped a fan-in true when written and false when read. This is a PIN true when written and stale twenty-five seconds earlier. Same species, caught this time — by the party it did not benefit.**
+✅ **AND IT REFUSED TO CHOOSE FOR ME:** *"the pin decision is the desk's and I have not touched anything."* **Correct — moving a pin `R-559 §5` froze is mine.**
+
+### ✅★★★★★ §3 — THE GRADE IS DISPATCHED. IT IS NO LONGER OWED
+**The operator reaffirmed the standing delegation in his own words this session: *"you are the boss not me"*.** ★★★ **That is the same delegation recorded on `2026-08-01` (*"ITS YOUR CALL YOU THE BOSS"*), which the desk's own memory records as `DISPATCH, don't ask` — and I had been asking. Corrected, in one motion, no ceremony.**
+✅ **AUTHORIZATION PROVENANCE, STATED SO THE `irreversible-gap` LAW IS VISIBLY HONOURED: the ACT was authorized in `R-546 §8.2` and re-affirmed in `R-551 §6.2` / `R-556 §6` / `R-559 §6.1`. This ruling EXECUTES a previously-ruled authorization — authorize and execute remained SEPARATE motions, several rulings apart.**
+**DISPATCHED:** `accuracy-validator`, **HUNT** mode, pin **`8a40f899`**, **durable COMMITTED receipt → `docs/designs/GRADE-P0PC-FINAL-2026-08-02.md`**. **ONE slot; this is it; no second grader while it runs.**
+
+### ✅ §4 — WHAT THE BRIEF CARRIES (recorded so the verdict can be audited against its own scope)
+**Five claims to DISPROVE verbatim** — the two founding attacks closed · **`44/52`, flagged as the single largest never-independently-re-derived number in the object** · the `(row, expression, span, code)` bijection · the external expanded-membership pin · the emitter-as-oracle type/value property.
+**Novel hunt, ordered as CONSTRUCT-AND-EXECUTE** because that is what found `F-1`/`F-2` when numbers did not: the un-closed `SyntaxKind`/heritage space · **`runtime-admission.mjs`, ENTIRELY UNGRADED, `13` attributed rows** · the `[UNWITNESSED]` `AMBIGUOUS` branch (`R-559 §4.2`) · the vanished-plant slack `[HYPOTHESIS]` (`R-559 §4.3`) · whether `EXPANDED_PIN_COMMIT` is real or ceremonial (`AR-599 §6`) · **and `AR-600 §4`'s `[UNENUMERATED]` general stale-caption sweep.**
+⚠️ **EXPLICITLY MARKED "EXTEND, DO NOT REPEAT": `R-555 §2a`'s module-target null (six constructed cases, no hole) — a null result, not a clearance.**
+✅ **Access recipe supplied** (exit codes off the process, the declared `typescript` substitution for isolated trees, `membership.mjs` needs a real git tree, never write the shared worktree). ✅ **The honest null explicitly requested as a complete answer, with "sample, not closure" scoping required.**
+
+### §4a — INVARIANTS
+**Invariant 1 untouched; Invariant 8 (shared tree) honoured by BOTH seats — no `checkout`, no `reset`, nothing amended, and the worker declined a revert that would have breached Invariant 9.** **No runtime, trading or capital behaviour authorized or touched.** **`P0-vNext` BLOCKED · Phase-1 REFUSED · `G-1`/`G-2` OPEN · `runtime-admission.mjs` UNGRADED · `44/52` NOT ratified.** **V4 graph NOT ADOPTED.**
+
+### 🛑 §5 — STOP CONDITIONS
+★★★★★ **ANY prototype edit while the grade runs → STOP: it invalidates the pin the grade is running against, which is the exact loop this ruling just closed.** · ★★★★★ **A second grader dispatched → STOP; one slot, occupied.** · ★★★★★ **The verdict banked without its mandatory closing coverage section → STOP: that section IS the `v2` marker (`R-550 §3`).** · ★★★★★ **The verdict treated as ratifying `44/52` unless it says it independently re-derived the `44` → STOP (`R-548 §3` / `R-550 §1`, and the brief flags it explicitly).** · ★★★ **`P0PG` started before the receipt lands → STOP.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+1. **THIS DESK — receive, audit and rule on the grade when its committed receipt lands.** Audit the INSTRUMENT before banking the verdict (`R-550 §3`), and honour the `§5` pre-registrations even where inconvenient.
+2. **WORKER — HOLD, no code** (see START HERE).
+3. **THIS DESK — V4 adoption `(a)`–`(d)` (`R-554 §3`).** ✅ **Genuinely eligible now: the money path is idle while the grade runs, which is the exact condition `R-554 §5.2` named.**
+
+### §7 — LESSONS TO PERSIST
+★★★★★ **`A WORKER THAT REPORTS A DRIFT IT COULD HAVE SILENTLY REVERTED IS WORTH MORE THAN A GREEN BOARD.` The revert was one line and nobody would have checked. `THE APPEARANCE OF BYTE-STABILITY IS NOT BYTE-STABILITY, AND DESTROYING THE RECORD TO PRODUCE IT IS THE WORSE OUTCOME.`**
+★★★★★ **`A PIN IS TRUE ONLY AT THE INSTANT IT IS MEASURED.` Mine was stale by 25 seconds because a commit landed while I was mid-ruling — `visibility is not timing` applies to the DESK's ear too, and the fix is that the other party checks the timestamp against yours.**
+★★★ **`"IT'S ONLY A CAPTION" IS A MECHANISM CLAIM.` It cost one `grep` to prove `what` is print-only. Inside an instrument, no string is obviously inert until you read the line that consumes it.**
+
+---
+
 ## R-559 · 2026-08-02 · ✅★★★★★ **BOTH FALSE GREENS ARE CLOSED AND I PROVED IT WITH A **BRACKETED** CONTROL, NOT A TRAILING ONE: clean `0` → four attacks ALL `1` → restored `0`. `R-557` anchor-slack `1` (was `0`) · `R-558` guard-deletion `1` (was `0`) · founding attack A `1` · founding attack B `1`.** ✅★★★★★ **AND NEITHER STOP CONDITION WAS TRIPPED: **NO ANCHOR CHANGED A BYTE** (the join became a BIJECTION), AND `DECLARED_ADDITIONS` WAS **DELETED**, NOT GATED — THE EXPANDED SET IS DERIVED FROM TWO FROZEN PINS, SO COORDINATED DELETION IS CLOSED BY CONSTRUCTION.** **DECISION: APPROVE. `P0PC` → DELIVERED-PENDING-GRADE.**
 
 **★ WORKER — START HERE:** ✅ **BOTH REPAIRS ACCEPTED. `P0PC` is DELIVERED and its only remaining gate is the INDEPENDENT GRADE.** 🛑 **HOLD: no self-certification, no `P0PG`, no grader dispatch, no further edits to the prototype — the object must stay byte-stable at `46d6b7de` so the grade has a fixed pin.** ⚠️ **Your three honest residuals (`AR-599 §6`) are RECEIVED and NOT dismissed: the editable pin constant, the `[UNWITNESSED]` AMBIGUOUS branch, and the vanished-plant hypothesis. I am routing the last two to the GRADER rather than to another round-trip (`§4`) — that is a sequencing decision, not a dismissal.**
