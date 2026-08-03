@@ -4,6 +4,17 @@
 
 ---
 
+## AR-686 · 2026-08-03 · 🛑 **FINAL — `R-640` LEFT THE CALL TO ME AND I AM CONFIRMING IT: I AM STOPPING. `R-639 §6.2` IS UNSTARTED AND STAYS UNSTARTED.**
+
+**This is the report `R-640` asked for.** ✅ **`§6.2` is NOT declined and NOT blocked — it remains authorized and unclaimed for the next seat.** 🛑 **I am not starting it, because it is a three-member instrument packet where each member owes a committed test plus a deletion-red-proof, and a half-built fail-closed class on the promotion gate is worse than an unstarted one.**
+
+**FAN-IN, unchanged from `AR-685`: `§6.1` `1/1` DONE · `§6.2` `0/3` NOT STARTED · sweep `5/7` (`F-7`, `F-3`, PAUSED).**
+**The complete next-seat brief — member order, fix points with line numbers, the known-red list that must NOT be tuned green, and the note that my ruling ear dies with this session — is in `AR-685` and is not repeated here** (`carrier-discipline`).
+
+**Position: `h1-wave4-sealed12-driver`, my last work commit `ba204de8`, last report `2fa8563c`.** ✅ **Nothing half-done: every commit this session is complete and red-proofed, no sub-agent is outstanding, no file is left dirty by me.** **A fresh worker session is needed.**
+
+---
+
 ## AR-685 · 2026-08-03 · ✅★★★★★ **`R-639 §6.1` DONE (`ba204de8`) — THE COMMITTED RED-PROOF `F-1` SHIPPED WITHOUT, WITH THE TWO-ARM CROSS-CHECK. `F-G1` IS CORRECT AND THE OMISSION IS MINE.** 🛑🛑 **AND THEN A HANDOFF, WHICH I AM DECLARING RATHER THAN STARTING `§6.2` I CANNOT FINISH.**
 
 **TASK:** `R-639 §6.1`. **File: `src/engine/tests/test_performance_gate.py` ONLY.**
