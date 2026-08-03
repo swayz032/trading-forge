@@ -12,6 +12,85 @@
 
 ---
 
+## R-618 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE GRADE REFUTES THIS DESK FOUR TIMES, AND THE MOST URGENT ONE IS THAT **THE `$7K` IS REAL AND I HAD IT WITHDRAWN.** `[MEASURED HERE, `invariant_harness/core.py:14`]` — *"Would have caught: Topstep `ending_balance` **+$7K** on a losing strategy (DLL-cap firing on EOD MTM swings inflated reported balance)"*, from the `2026-05-19` accuracy audit, commits `c7ac642`/`b8a2140`. **MY PATTERN SEARCHED `7000`; THE TEXT SAYS `+$7K`. AND I SEARCHED THE GRADE RECEIPT, NOT THE INSTRUMENT'S OWN HEADER.** THE OPERATOR WITHDREW HIS OWN CORRECT FIGURE ON MY BAD MEASUREMENT — **`§1` RESTORES IT.**** 🛑🛑★★★★★ **AND THE CRUELLEST FORM OF THE FINDING: `INV-1` DOCUMENTS, IN ITS OWN DOCSTRING, THE EXACT HISTORICAL DEFECT IT IS STRUCTURALLY INCAPABLE OF DETECTING.** 🛑🛑 **AND THE REMEDY THE OPERATOR AND I BOTH SPECIFIED WOULD HAVE BEEN HARMFUL.** **DECISION: FOUR CORRECTIONS · `$7K` RESTORED AS EVIDENCE · THE `INV-1` REMEDY WITHDRAWN AND REPLACED · SEVERITY INVERSION IS THE REAL FIX.**
+
+**★ WORKER — START HERE:** 🛑★★★★★ **DO NOT BUILD THE `INV-1` REMEDY `R-617 §4.5` ORDERED. IT IS WITHDRAWN (`§3`) — comparing an independently derived balance against the reported `ending_balance` would fire on CORRECT behaviour, because `prop_sim.py:96-100` makes that field a DELIBERATE DLL-capped artifact and `INV-13` already owns the uncapped check.** ✅ **`§5` is the replacement and it is a smaller job than the one I withdrew.** ✅★★★ **And your `AR-660` "starved" framing is corrected to TAUTOLOGICAL — but note that I adopted your framing over my own earlier correct reading, so the error compounded at this desk, not at yours.**
+
+**RULING ID:** R-618 · **TASK ID:** the polarity/starvation grade (receipt `7dc14a0a`) · **DECISION: CORRECT · RESTORE · REPLACE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-661`** `[MEASURED HERE]` — ruled at `R-617`. **No newer AR at write time; the subject of this ruling is a GRADE receipt, not an AR.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-SIXTH time.**
+
+---
+
+### 🛑🛑★★★★★ §1 — THE `$7K` IS RESTORED AS EVIDENCE, AND MY WITHDRAWAL OF IT WAS THE NIGHT'S WORST MEASUREMENT ERROR
+
+`[MEASURED HERE, `invariant_harness/core.py:10-15`, read at the line]`
+```
+:10  These invariants were designed to catch concrete bug classes found during
+:11  the 2026-05-19 accuracy audit session (commits c7ac642 and b8a2140):
+:13  INV-1  balance_arithmetic
+:14    Would have caught: Topstep ending_balance +$7K on a losing strategy
+:15    (DLL-cap firing on EOD MTM swings inflated reported balance).
+```
+✅ **SO THE FIGURE IS REAL, DATED, AND COMMIT-CITED. `R-616 §5` and `R-617 §4.6` are WITHDRAWN; the operator's original ruling was right and he retracted a correct number on my say-so.**
+🛑★★★★★ **MY ERROR, NAMED EXACTLY: I searched `7000` / `7,000` / `inflat` — **the text says `+$7K` and `inflated`**, which neither pattern matches — and I searched `GRADE-INVARIANT-HARNESS-2026-08-03.md` when the figure lives in **the instrument's own docstring.** ★★★★★ **AND MY "POSITIVE CONTROL" WAS WORTHLESS AND WORSE THAN NONE: `INV-1` → `12` hits proved the cmdlet ran on that file. It proved NOTHING about whether the file was the right SURFACE or `7000` the right PATTERN.** `absence-claim`: *A LIVE POSITIVE CONTROL INSIDE THE WRONG SURFACE IS NOT A WEAKER PROOF — IT IS A MORE CONVINCING FALSE ONE.* **I have quoted that law twice tonight and then performed it on the operator.**
+★★★★★ **AND THE CRUELLEST PART: `INV-1` EXISTS SPECIFICALLY TO CATCH THAT `$7K` DEFECT, NAMES IT IN ITS OWN HEADER, AND CANNOT DETECT IT.** `[MEASURED BY GRADED INSTRUMENT]` `44`/`44` absent-input shapes PASS at `severity="CRITICAL"`. **A guard written for one named historical bug, carrying that bug's description as documentation, structurally unable to fire on it.**
+
+### 🛑★★★★★ §2 — `INV-1` IS **TAUTOLOGICAL**, NOT STARVED — AND I HAD IT RIGHT BEFORE I TALKED MYSELF OUT OF IT
+
+`[MEASURED BY GRADED INSTRUMENT + MEASURED HERE at `core.py:171-177`]` **`:173` defaults `ending` to `starting + total_return`; `:175` sets `expected_ending` to the same expression. `44`/`44` absent-input shapes pass at `CRITICAL`.**
+⚠️★★★★★ **`R-615 §1` CALLED THIS AN IDENTITY AND WAS RIGHT. `R-616 §4` THEN ADOPTED `AR-660`'s "STARVED, NOT BROKEN" FRAMING AND CALLED MY OWN EARLIER READING MIS-LOCATED. **THE GRADE RESTORES `R-615`.** ★★★ **I had the correct measurement and replaced it with a better-sounding root-cause story from a report. `A FRAMING THAT EXPLAINS MORE IS NOT THEREBY MORE TRUE`, and the doer's framing carried an implied remedy that `§3` shows is harmful — so the framing error propagated into an order.**
+✅ **The worker's contribution stands where it is right: the level mismatch (`prop_sim.py:465` nesting under `prop_compliance[firm]`) is REAL and is why nobody noticed. **It is a second defect, not the root cause of the first.****
+
+### 🛑🛑★★★★★ §3 — THE REMEDY THE OPERATOR AND I BOTH SPECIFIED IS **WITHDRAWN AS HARMFUL**
+
+`[MEASURED HERE, `prop_sim.py:96-100`, read at the line]` — *"Track DLL cap simulation artifact: difference between true strategy P&L and DLL-capped P&L. Each time the firm's DLL would have halted trading, we cap that day's loss at the DLL — but the strategy's trade list is NOT re-filtered (per-firm-resize is a Wave 24 carry-forward). So the capped `ending_balance` reflects 'if the firm halted you and you stopped trading…'"*
+🛑🛑★★★★★ **SO `prop_compliance[firm].ending_balance` IS A DELIBERATE DLL-CAPPED SIMULATION ARTIFACT AND IS NOT THE TRUE BALANCE BY DESIGN. **A GUARD COMPARING AN INDEPENDENTLY DERIVED TRUE BALANCE AGAINST IT WOULD FIRE ON CORRECT BEHAVIOUR** every time the DLL cap engaged.** ★★★★★ **The operator's spec — *"compare that independently derived result against the engine's reported ending balance"* — and my `R-616 §4` both pointed at that field. **BOTH WOULD HAVE SHIPPED A FALSE-POSITIVE GUARD ONTO A PROMOTION GATE.****
+✅ **AND `INV-13` ALREADY OWNS THE CORRECT UNCAPPED CHECK** `[MEASURED BY GRADED INSTRUMENT]`. ★★★ **`R-610 §7`'s lesson recurs: `THE CHEAPEST WIN WAS ALREADY IN THE TREE` — and this time the expensive version was actively dangerous, not merely redundant.**
+★★★★★ **ROOT CAUSE OF THE BAD ORDER: WE BOTH ACCEPTED "STARVED", WHICH IMPLIES *"WIRE IT TO THE VALUE THAT EXISTS."* **THE VALUE THAT EXISTS IS INTENTIONALLY NOT THE TRUTH.** A characterisation that smuggles in a remedy is more dangerous than a wrong number.**
+
+### 🛑★★★★★ §4 — CLAIM 1's MAGNITUDE IS REFUTED, AND THE TRUTH IS WORSE THAN THE CLAIM
+
+`[MEASURED BY GRADED INSTRUMENT — it fed the REAL producer's output rather than a synthetic all-`True` array]` **suppression is `76.89%` on the actual `--smoke` data and `92.5%` on its ET walk — NOT `100%`.** ⚠️ **`R-616`/`R-617`'s "100% of entry signals" is WITHDRAWN; `AR-659`'s three-arm control measured a SYNTHETIC all-`True` mask, and the real builder does not produce all-`True`.**
+🛑🛑★★★★★ **BUT THE CORRECTED FINDING IS WORSE, NOT MILDER: **ALL `30`/`30` SURVIVING ENTRIES SAT INSIDE THE FOMC WINDOW THE MASK EXISTS TO AVOID.** **THE ENGINE TRADES *ONLY* DURING MACRO EVENTS.** ★★★★★ **A filter built to sit out macro events now permits ONLY macro events — a perfect inversion of intent, and every DSL-path trade ever taken was taken in exactly the window the system was designed to avoid.**
+🛑★★★★★ **AND THE OBSERVABILITY WAS INVERTED WITH IT `[MEASURED BY GRADED INSTRUMENT, `backtester.py:3980`]`: the log prints `(~event_mask).sum()`, so it announced *"masking 30 bars"* while blocking `370` — and `if _masked_bars > 0` means **TOTAL SUPPRESSION PRINTS NOTHING AT ALL.**** ★★★ **The one telemetry that would have surfaced this under-reported by `12×` and went silent in the worst case. `A LOG THAT REPORTS THE COMPLEMENT OF WHAT IT MEASURES IS WORSE THAN NO LOG.`**
+✅ **AND THE MAGNITUDE CORRECTION IS WHAT ACTUALLY DISSOLVES THE `60`/`90` PUZZLE — not my path story (`§5.4`). `~77%` suppression is entirely consistent with `60` of `90` backtests taking trades.**
+
+### 🛑★★★ §5 — THE REMAINING CORRECTIONS AGAINST THIS DESK
+
+1. ⚠️ **MY `60`/`90` RECONCILIATION IS REFUTED WITH MY OWN EVIDENCE.** `[MEASURED BY GRADED INSTRUMENT, AST]` **`:5323` is inside `run_backtest`, and `AR-658`'s own witness recorded it firing `60×` — the DSL path.** So my *"the battery's trading backtests ran the class path"* (`R-616 §2`) is **FALSE**, and I built it from a **code comment** rather than behaviour. ★★★ **Band `3` on claim 3, briefed *"attack it hardest"*, and it deserved it.**
+2. ✅ **`:7503` IS LIVE, NOT DEAD** — the `0`/`90` was a presence-derived denominator; that battery never entered its function. **`AR-659`'s correction of `R-615` is itself confirmed.**
+3. ✅ **`AR-661` IS INDEPENDENTLY CORROBORATED** — the grader found no producer for `event_calendar` on its own path, with its own controls (`fill_model` `23`, `exit_engine` `26`, vs `6` declaration/read-only). ★★★★★ **`R-617`'s central finding SURVIVES an independent attack. It is the one thing tonight that got stronger under grading.**
+4. 🛑 **THE `60`/`90` LEG IS SINGLE-SOURCE AND STAYS **UNVERIFIABLE** UNTIL THE BATTERY IS RE-RUN** — the grader never ran it. **No ruling may treat it as established.**
+5. ★★★ **TOOLING TRAP, self-disclosed by the grader and worth more than a note: `git grep 'dir/**/*.py'` MISSES FILES DIRECTLY IN `dir` and manufactured a false absence in its own work.** **Add to the same shelf as `grep -v test` deleting every `backtester.py` line.**
+6. ⚠️ **AND A COSMETIC DEFECT IN MY OWN COMMIT, RECORDED RATHER THAN REWRITTEN: the receipt commit's subject reads *"The \ IS REAL"* — PowerShell consumed the `$7K`. **The receipt content is intact; I am not rewriting history over a mangled subject.****
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+
+1. 🛑★★★★★ **`INV-1`'s REMEDY IS REPLACED, AND THE REPLACEMENT IS THE SEVERITY INVERSION: `[MEASURED BY GRADED INSTRUMENT]` the check that CANNOT FAIL (`INV-1`, `CRITICAL`) BLOCKS promotion, while the one that CAN (`INV-13`, which owns the correct uncapped check) DOES NOT.** ✅ **WORKER: report `INV-13`'s severity and its consumers, and propose — do not apply — the severity correction. That is a contract decision and it is mine.** 🛑 **DO NOT wire `INV-1` to `prop_compliance[firm].ending_balance` (`§3`). DO NOT delete `INV-1` yet — its disposition follows the severity decision.**
+2. ⏸️ **`R-617 §5.1` STILL STANDS AND IS STILL FIRST: did DSL-path backtests historically report ZERO trades?** ⚠️ **AMENDED BY `§4`: the question is now *how many trades and WHEN*, not zero-vs-nonzero — `~77%` suppression means the record will show trades, and the discriminating signal is whether surviving entries cluster inside macro windows.**
+3. ⏸️ **The fallback repair (`R-617 §5.2`) unchanged and still authorized** — preserve `True = SIT_OUT`, fix the fallback only, seven-arm matrix. ✅ **AND ADD AN EIGHTH ARM: `backtester.py:3980`'s log must report the count it actually masks, and must print on total suppression** (`§4`).
+4. 🛑 **NO patching of the other production path until the operator's items 2–4 are recorded.**
+5. 🛑 **CARRIED: the four false-green paths (`R-616 §5`), the propagation question past the `try:` swallow — which this grade also did NOT close — and everything in `R-617 §5.5`.**
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; derived-baseline ownership guard. ✅ **`R-576 §5` HELD — I ran nothing; `§1`/`§3` are read-only source reads.** ✅ Graph read, not modified.
+🛑 **STILL LIVE, all of `R-617 §6` plus:** ★★★★★ **`INV-1` wired to the reported `ending_balance` → STOP; that field is a deliberate DLL-capped artifact (`§3`).** · ★★★★★ **"100% of entries suppressed" repeated → STOP; it is `76.89%` measured, and the real finding is that only macro-window entries survive (`§4`).** · ★★★★★ **the `60`/`90` figure treated as verified → STOP; single-source, unverifiable until re-run (`§5.4`).** · ★★★★★ **the `$7K` treated as unsourced → STOP; RESTORED at `core.py:14` (`§1`).** · ★★★ **my "class path explains 60/90" reading cited → STOP; REFUTED (`§5.1`).**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`I PERFORMED THE EXACT LAW I HAD QUOTED TWICE THE SAME NIGHT.` `A LIVE POSITIVE CONTROL INSIDE THE WRONG SURFACE IS A MORE CONVINCING FALSE PROOF` — my `INV-1` → `12` control proved the cmdlet ran and nothing else, and on that I had the operator withdraw a correct, dated, commit-cited figure. **Quoting a law is not applying it, and the surface and the pattern are two separate ways to be wrong.****
+★★★★★ **`A CHARACTERISATION THAT SMUGGLES IN A REMEDY IS MORE DANGEROUS THAN A WRONG NUMBER.` "Starved, not broken" implies *wire it to the value that exists* — and that value is intentionally not the truth. **Both the operator and I ordered a guard that would have fired on correct behaviour.** Ask of any root-cause framing: what fix does this imply, and is that fix safe?**
+★★★★★ **`A FRAMING THAT EXPLAINS MORE IS NOT THEREBY MORE TRUE.` `R-615` measured the identity correctly; `R-616` replaced it with a tidier story from a report and called my own reading mis-located. **The grade restored the measurement.****
+★★★★★ **`A LOG THAT REPORTS THE COMPLEMENT OF WHAT IT MEASURES IS WORSE THAN NO LOG.` `:3980` announced `30` masked bars while blocking `370`, and printed nothing at all under total suppression. **The single telemetry that could have surfaced this was inverted with the thing it watched.****
+★★★ **`THE CORRECTED MAGNITUDE WAS WORSE THAN THE OVERSTATED ONE.` `100%` → `76.89%` sounds like a de-escalation until you see that all `30` survivors sat inside the FOMC window. **A refuted magnitude is not automatically good news.****
+
+---
+
 ## R-617 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-661` ANSWERS THE QUESTION WORTH EVERYTHING, AND THE ANSWER IS **NO**: `event_calendar` HAS **NO PRODUCER ANYWHERE IN THE REPOSITORY** — DECLARATION, READER, FOUR PROPAGATION-ONLY SITES, AND A NEVER-ASSIGNED TYPE DECLARATION. **SO `if request.event_calendar and …policies` IS UNREACHABLE IN PRODUCTION AND THE POLARITY-INVERTED `elif` FALLBACK IS THE ONLY BRANCH A DSL BACKTEST CAN TAKE.** ★★★★★ **THE OPERATOR'S PRE-REGISTERED DISPOSITION THEREFORE FIRES: PRIORITY ROOT-CAUSE REPAIR.** 🛑🛑 **AND ONE MEASUREMENT SEPARATES *CANDIDATE* ROOT CAUSE FROM *ROOT CAUSE*, WHICH I AM ORDERING BEFORE ANYONE SAYS THE LARGER SENTENCE: **DID DSL-PATH BACKTESTS HISTORICALLY REPORT ZERO TRADES?**** ✅ **THE OPERATOR'S SECOND RULING OF `2026-08-03` IS ADOPTED AS THE OPERATIVE TASK CONTRACT, WITH ITS ITEM 1 NOW DISCHARGED BY `AR-661` AND ITS ITEM 2's LABEL CORRECTED.** **DECISION: ADOPT · DISPOSITION FIRED · CONFIRMING MEASUREMENT ORDERED · STILL NO PATCHING.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-661` is the highest-value report of this campaign and its POSITIVE CONTROLS are why I can act on it: sibling fields of the SAME TypeScript interface populated `17`/`16`/`4` times while `event_calendar` is `0`, a camelCase control at `0`, an all-filetype sweep, and a FALSE FRIEND (`macro.ts:210`) identified and EXCLUDED rather than counted. **That is what an absence claim is supposed to look like and almost never does.**** 🛑 **`§5.1` is your next task and it is ONE measurement, not the repair — the repair is authorized but SECOND, because `§3` is the difference between a true sentence and an enormous one.**
