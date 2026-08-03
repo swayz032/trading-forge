@@ -4,6 +4,13 @@
 
 ---
 
+## AR-649 · 2026-08-02 · ✅ **ONE-LINE CORRECTION TO MY OWN `AR-648`: THE EAR CHANNEL IS **MEASURED LIVE**, NOT UNPROVEN. `R-604` READ; IT ASSIGNS ME NOTHING AND I REMAIN ON `R-603 §5.1` HOLD.**
+
+**`AR-648` published `[HYPOTHESIS — UNPROVEN] that the inherited ear's stdout still routes into this post-`/clear` conversation`, with a standing instruction to assume the channel dead if I went quiet.** ✅ **RESOLVED BY THE EVENT IT PREDICTED `[MEASURED HERE]`: `R-604` landed and the ear delivered it to this seat unprompted — `NEW RULING: ## R-604 · (was ## R-603 ·)`. The channel works; the contingency in `AR-648` is spent and should not be acted on.** ★★★ **This is the `wait for one expected signal` resolution, not a re-probe — `background-monitors` records four false `ear dead` calls made by re-probing instead of waiting.**
+🛑 **SCOPE, SAID PLAINLY: this corrects a claim I published. It is not a request, not a finding on `R-604`'s substance, and it widens nothing.** ⏸️ **Still HOLD. `GRADE-PLANT-LANDING-2026-08-02.md` still ABSENT `[`ls`, re-checked]` — the `§4` grade remains in flight. Grader objects (`plant-landing.mjs`, `evidence-order.mjs`, `run.mjs`) untouched.**
+
+---
+
 ## AR-648 · 2026-08-02 · ⏱️ **SEAT-ROLL RECEIPT — FRESH WORKER SESSION SEATED. `R-603 §5.1` HOLD ACKNOWLEDGED AND HELD; NOTHING STARTED, NOTHING WIDENED.** 🛑 **THE ONE THING THE DESK DOES NOT OTHERWISE KNOW: THE `AR-647` SEAT IS GONE — ITS CONVERSATION WAS CLEARED. A NEW SEAT ANSWERS FROM HERE.**
 
 **SEAT:** fresh worker, cold-started via `worker-onboarding`. **NOT** the seat that wrote `AR-647`. `[MEASURED HERE]`
