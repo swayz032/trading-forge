@@ -4,6 +4,72 @@
 
 ---
 
+## AR-669 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-620 §4.1` — ARM B PASSES AND ARM A IS **UNANSWERABLE AS POSED**, BECAUSE **THERE IS NO SUCH THING AS A DLL-CAPPED RUN IN THIS CODE.** THE CAP WAS **REMOVED** BY THE `PHASE21-PART3` FIX. `dll_capped_losses_total` IS STRUCTURALLY ALWAYS `0.0` AND `ending_balance` **ALWAYS EQUALS** `ending_balance_uncapped`.** 🛑🛑★★★★★ **SO `R-618 §3`'s FIRST REASON FOR WITHDRAWING THE `INV-1` REMEDY — *"WOULD FIRE ON CORRECT BEHAVIOUR every time the DLL cap engaged"* — IS **REFUTED**. IT WAS BUILT FROM `prop_sim.py:96-100`, A **COMMENT**, WHICH DESCRIBES BEHAVIOUR THAT NO LONGER EXISTS.** ⚠️ **THE WITHDRAWAL ITSELF STILL STANDS ON ITS SECOND REASON — I AM NOT RE-OPENING IT.** ✅ **`INV-13` BITES: PLANTED `+$7000` → FIRES AND NAMES THE EXACT AMOUNT.** 🛑 **NO SEVERITY CHANGED.**
+
+**TASK:** `R-620 §4.1` / `R-624 §5.2`. **`core.py`, `prop_sim.py` NOT modified.**
+
+### ✅ ARM B — `INV-13` CAN STILL FAIL, AND IT NAMES THE NUMBER
+
+`[MEASURED HERE — real `simulate_all_firms` output, then a planted corruption]`
+```
+planted +$7000.00 on topstep_50k.ending_balance_uncapped
+passed  = False
+actual  = 1 / 2 firms failed
+evidence= topstep_50k: ending_balance_uncapped=53780.00 vs expected=46780.00 (diff $7000.00)
+```
+✅★★★★★ **THIS SATISFIES THE OPERATOR'S NEGATIVE-CONTROL SPEC VERBATIM (`R-617 §4.6`): *"inject a controlled discrepancy you therefore know, and require the gate to name the exact amount."* **It named `$7000.00` and the firm.** `INV-13` is a working, falsifiable check.**
+
+### 🛑🛑🛑★★★★★ ARM A — THE QUESTION CANNOT BE ASKED: THE DLL CAP DOES NOT EXIST
+
+**`R-620 §4.1` asked: *"does `INV-13` PASS on a legitimately DLL-capped run?"* `[MEASURED HERE]` **NO SUCH RUN IS CONSTRUCTIBLE.** Three independent proofs:**
+
+**1 — THE EXECUTABLE LINE SAYS SO** (`prop_sim.py:129-152`): *"**PHASE21-PART3 FIX: do NOT cap `net_pnl`.** The previous behavior capped the day's loss at the firm DLL … the cap was firing on days with no trades at all … making Topstep `ending_balance` LOOK profitable on losing strategies."* **The breach branch at `:149` only APPENDS to `daily_loss_breaches`. It does not modify `net_pnl`.**
+
+**2 — STRUCTURAL DEADNESS, BY ENUMERATING EVERY ASSIGNMENT** `[MEASURED HERE]`: `net_pnl` is written **once**, at `:110` (`= record["pnl"]`). The only other occurrences as an assignment target are **copies** — `:111 true_net_pnl = net_pnl` and `:148 original_net_pnl = net_pnl`. **`net_pnl` is NEVER reassigned in the loop body.**
+🛑 **THEREFORE `:193 if true_net_pnl != net_pnl:` IS STRUCTURALLY DEAD**, `:194 dll_capped_losses_total += …` **NEVER EXECUTES**, and the only write to that variable is its `0.0` initialiser at `:105`. **And since `:184 balance += net_pnl` and `:192 uncapped_balance += true_net_pnl` add the SAME value from the SAME start, the two balances are equal by construction on every path.**
+
+**3 — EMPIRICAL, WITH A LIVE POSITIVE WITNESS ON THE RIGHT SURFACE** `[MEASURED HERE, real `simulate_all_firms`, `-$3,500` day against a `$50k` account]`:
+```
+daily_loss_limit_breaches = ['2026-01-07']    <-- THE BREACH PATH RAN
+breach_day                = 2026-01-07
+trailing_dd_breached      = True
+dll_capped_losses_total   = 0.0
+ending_balance            = 46780.0
+ending_balance_uncapped   = 46780.0   -> IDENTICAL
+```
+✅★★★★★ **THIS IS THE `absence-claim` SHAPE DONE PROPERLY: the DLL threshold WAS crossed and the breach branch DID execute — a positive witness that the path was reached — and the cap STILL did not engage. **The absence is of the CAP, not of the code path**, which is the distinction that makes this a measurement rather than an empty grep.**
+
+### 🛑🛑★★★★★ WHAT THIS DOES TO `R-618 §3` — PRECISELY, AND NO FURTHER
+
+**`R-618 §3` withdrew the `INV-1` remedy on TWO grounds. They do not fare the same:**
+| ground | status |
+|---|---|
+| **(a)** *"`prop_compliance[firm].ending_balance` IS A DELIBERATE DLL-CAPPED ARTIFACT … a guard comparing against it WOULD FIRE ON CORRECT BEHAVIOUR every time the DLL cap engaged"* | 🛑 **REFUTED. The cap cannot engage; the field is not a capped artifact; it equals the uncapped balance on every path.** |
+| **(b)** *"`INV-13` ALREADY OWNS THE CORRECT UNCAPPED CHECK"* | ✅ **STANDS — independently confirmed by `AR-663` and by ARM B above.** |
+
+🛑🛑★★★★★ **AND THE PROVENANCE OF (a) IS THE POINT: `R-618 §3` cited `prop_sim.py:96-100` — a COMMENT BLOCK — and that comment describes the PRE-`PHASE21-PART3` behaviour. **The desk convicted itself at `R-618 §5.1` for exactly this** (*"I built it from a code comment rather than behaviour"*), in the same ruling, one section apart. **`A STALE COMMENT OUTLIVES THE CODE IT DESCRIBES AND KEEPS ITS AUTHORITY.`** The comment at `:457-467` carries the same stale claim.**
+⚠️ **I AM NOT RE-OPENING THE WITHDRAWAL. It survives on (b), and whether `INV-1` gets a remedy at all is the desk's contract decision (`R-620 §4.3`), not mine.** ★★★ **But any FUTURE reasoning that leans on "the reported balance is DLL-capped" is now known-false, and `R-618 §7`'s STOP condition worded on that basis rests on a refuted premise.**
+
+### ✅ CONSEQUENCE FOR THE SEVERITY DECISION (`R-620 §3`, still the desk's)
+
+**The specific false-positive hazard `R-620 §3` feared — *"if `INV-13` fires on legitimate DLL-capped runs, promoting it to `CRITICAL` builds the false-positive guard on the promotion gate that I just forbade"* — is `[MEASURED]` **ZERO, because no run can be DLL-capped.**
+⚠️ **THE OTHER HAZARD I RAISED IN `AR-663` IS STILL UNTESTED AND I AM NOT LETTING THIS RESULT ABSORB IT:** if `total_return` is absent from BOTH the top level and `oos_metrics`, `_aggregate_metric` (`core.py:157-162`) returns `0.0`, `expected_end` collapses to `starting`, and `INV-13` fires spuriously. **I did NOT measure whether that shape occurs.**
+
+### ⚠️ MY OWN INSTRUMENT PRINTED A MISLEADING VERDICT — CORRECTING IT MYSELF
+
+**My probe's closing line computed `discriminates = a.passed and not b.passed` → `True`. THAT SUMMARY IS WRONG-BY-CONSTRUCTION:** ARM A passed on a run where the cap never engaged, so it demonstrated *"`INV-13` passes on an UNCAPPED run"* — **not** what `§4.1` asked. ✅ **Only the probe's own POSITIVE CONTROL (`CAP ENGAGED: False`, printed with an explicit `!! POSITIVE CONTROL FAILED` line) exposed it.** ★★★★★ **`A GREEN VERDICT LINE COMPUTED FROM TWO ARMS IS WORTHLESS IF ONE ARM IS VACUOUS` — I wrote the control in before I knew I would need it, and it is the only reason this report is not a false GREEN.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Whether any OTHER code path caps a balance** — I enumerated assignments to `net_pnl` inside `simulate_prop_firm` only. `[HYPOTHESIS — other firms/callers UNENUMERATED.]`
+2. **Whether `dll_capped_losses_total` has downstream consumers** that now read a permanently-zero field, or whether any UI/report displays it as meaningful. **Not swept.**
+3. **The `_aggregate_metric` false-positive shape** (above) — the one open hazard for promotion.
+4. **`INV-1`/`INV-13` overlap (`R-620 §4.3`)** — next, not started.
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** ⚠️ **AND A FLAG THE DESK SHOULD RULE ON: the stale comments at `prop_sim.py:96-103` and `:457-467` actively misled a ruling. Correcting them is a doc-only change I did NOT make, since `prop_sim.py` is outside my contract.**
+
+---
+
 ## AR-668 · 2026-08-03 · ⚠️★★★★ **`R-624 §5.1` IS ALREADY DISCHARGED — ITS PREMISE WENT STALE **58 SECONDS** BEFORE IT PUBLISHED. I DID NOT RE-COMMIT, BECAUSE THERE WAS NOTHING TO COMMIT.** ✅ **PROCEEDING TO `§5.2` (`R-620 §4.1`).** 🛑 **AND THE `§6` GRADE: I CANNOT FIRE IT EITHER — NAMING THE ONE ACTOR WHO CAN, RATHER THAN REPORTING IT BLOCKED.**
 
 ### ⚠️ `§5.1` — DISCHARGED BEFORE IT WAS ISSUED `[MEASURED HERE]`
