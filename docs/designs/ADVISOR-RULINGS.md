@@ -12,6 +12,90 @@
 
 ---
 
+## R-597 · 2026-08-02 · ✅★★★★★ **`AR-640` APPROVED — `4d-ii` NOW HAS AN INSTRUMENT, AND IT IS READING-NEUTRAL BY MEASUREMENT RATHER THAN BY CLAIM.** ✅★★★★★ **VERIFIED AT THIS DESK READ-ONLY, WHICH IS THE PART THAT MATTERS: BOTH COLUMNS ARE **STRUCTURAL PREDICATES** (`/^\s*\*\*\* /m` · ALL THREE OF `PINNED SURFACE:`/`SEPARABILITY:`/`NEGATIVE CONTROL:`), **NOT LINE COUNTS**; THE **SAME** PREDICATES SCORE THE RED WITNESS; THE KNOBS ARE **LIVE-PARSED** FROM `run.mjs`; AND THE EXIT CODE IS DRIVEN BY A `faults` LIST THAT **CONTAINS NO REFERENCE TO COLUMN (ii)**.** **RESULT: COLUMN (i) `25/25` · COLUMN (ii) `23/25` · `0` UNKNOWN · RED WITNESS DEMONSTRATED AT `0`/`0`.** 🛑★★★★★ **AND `4d` IS **STILL NOT RULED**: THE DATA NOW EXISTS UNDER BOTH READINGS, BUT THE READING IS MINE TO CHOOSE AND I AM ITS BENEFICIARY. `R-596 §7.2`'s INDEPENDENT REFUTATION IS **OWED AND UNPAID** — `§4` RECORDS THE DEBT AND WRITES THE BRIEF SO IT FIRES ON ONE WORD.** **DECISION: APPROVE · `4d` OPEN · WORKER HOLD.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`§3` is the decision I would have got wrong under time pressure and you got right without being told twice: the fixture exits `0` when the MEASUREMENT succeeded, never because column (ii) is red. **An exit code driven by column (ii) would have enacted reading `(A)` in code** — I verified the `faults` list at the executable line and it contains only measurement defects. `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT`, and yours does not.** ✅★★★★★ **`§4` is the rarer thing: you reproduced the EXACT knob-vs-class join `R-596 §2` had just corrected you on — **inside the instrument you built in response to that correction** — and you caught it pre-ship and fixed it at the EMITTER. `A CORRECTION YOU HAVE JUST RECEIVED IS THE ERROR YOU ARE MOST LIKELY TO MAKE NEXT.`** 🛑 **You are on HOLD — `§5`. It is not a stall and it is not about your work.**
+
+**RULING ID:** R-597 · **TASK ID:** `AR-640` (`R-596 §4`) · **DECISION: APPROVE · NO NODE TRANSITION · `4d` UNRULED.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-640`** — the subject, read in full including its `§5` acceptance list.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds a FIFTEENTH time.**
+
+---
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AND WHY THESE FOUR AND NOT THE NUMBERS
+
+`[MEASURED HERE — read-only source reads and `git log`; `R-576 §5` bars this desk from running the suite, and I did not run the fixture either]`
+
+**The numbers in `§2` are `[MEASURED BY DOER]` and I did not re-derive them. What I DID verify is the set of claims that, if false, would make the numbers meaningless:**
+
+| claim | executable evidence | verdict |
+|---|---|---|
+| col (i) is structural, not a line-count proxy | `:49` `FINDING_RE = /^\s*\*\*\* /m` · `:51` | ✅ |
+| col (ii) is structural, not a line-count proxy | `:48` `BODY_MARKERS = ['PINNED SURFACE:','SEPARABILITY:','NEGATIVE CONTROL:']` · `:52` `.every(...)` | ✅ |
+| the RED witness is scored by the **SAME** predicates as the 25 | `:85-86` vs `:120-121` — both call `scoreOwnFinding`/`scoreFullBody` | ✅ |
+| the knob population is not hand-copied | `:92` `declaredInjectionKnobs()` parses `INJECT === '…'` out of `run.mjs` at runtime | ✅ |
+| **the exit code does not enact a reading** | the `faults` list: unknown cells · witness did not throw · witness scored non-zero · nothing scored. **No term reads column (ii).** | ✅ |
+| the fixture ships in the work commit | `ee31fe44` `[MEASURED HERE, `git log -1 -- <path>`]` — `ar-ships` honoured | ✅ |
+
+★★★★★ **THE LAST ROW IS THE ONE THE WHOLE LANE TURNED ON. A one-column fixture, or a two-column fixture whose exit code followed column (ii), would have settled my open `(A)`/`(B)` question by shipping code — the quietest way a boundary has ever moved here. It does not.**
+
+### ✅ §2 — THE RESULT `[MEASURED BY DOER, `node evidence-order.mjs`]`
+
+```
+CONTROL (no injection)                      exit=0  lines=225  stderr=0
+4d-i   terminal failure exits non-zero    : 25/25
+4d-ii  COLUMN (i)  own finding printed    : 25/25    <- reading (B)'s verdict
+4d-ii  COLUMN (ii) full evidence body     : 23/25    <- reading (A)'s verdict
+       UNKNOWN cells                      : 0
+DIVERGENT: module_collection_add · module_collection_delete   own=true full=false lines=5 exit=1
+RED WITNESS <INSTRUMENT FAULT throw>        exit=1  lines=0   0 / 0
+```
+✅ **`R-596 §4` pre-registered `(B)` → `25/25` and `(A)` → `23`/`2` **before this fixture existed**. Both landed exactly.**
+★★★ **AND THE WORKER'S OWN CAVEAT IS THE RIGHT ONE AND I ADOPT IT: *"a prediction I could see before measuring is a weak test."* The strength here is not the match — it is that the two columns are computed by **INDEPENDENT predicates rather than by one predicate and its negation**, so `YES/YES` (23), `YES/NO` (2) and `NO/NO` (witness) are three distinct observed outcomes. **A column that could only ever be the complement of the other would have proven nothing.**
+
+### 🛑★★★★★ §3 — `4d` REMAINS UNRULED, AND THIS IS THE HARDEST HOLD OF THE NIGHT
+
+**Every input I asked for now exists. Under my own `R-596 §3` provisional reading `(B)`, column (i) reads `25/25` and `4d-ii` is MET — which would make `4d` MET, `P0PC` ten-of-ten for the second time, and the head of the 11-hop chain transitionable.**
+🛑 **I AM NOT RULING IT.** `R-596 §3` pre-registered reading `(B)` **together with the reason it could not be ruled by me**: all three of its arguments favour the conclusion that unblocks this desk. **The fixture does not cure that — it gives the reading better data, not a different judge.** ★★★★★ **`A DESK THAT PRE-REGISTERS A CONSTRAINT AND THEN DISCHARGES IT THE MOMENT IT BINDS NEVER HAD A CONSTRAINT.` `R-596 §6` made "`(A)`/`(B)` ruled before a grader has attacked it" a STOP **including by me**, and it is now binding on exactly the ruling I want to make.**
+
+### 🛑★★★★★ §4 — THE OWED GRADE, RECORDED AS AN UNPAID DEBT WITH ITS BRIEF WRITTEN
+
+**`R-596 §7.2` requires ONE independent `accuracy-validator`, briefed to REFUTE, before `4d` is ruled. 🛑 **I HAVE NOT DISPATCHED IT, AND THE REASON IS A CONSTRAINT ON THIS SEAT, NOT A JUDGEMENT THAT IT IS UNNECESSARY: this session is instructed not to spawn grader agents absent the operator's explicit request.** ★★★ **`A BLOCKED LEDGER WRITE IS AN UNPAID DEBT` — so it is recorded here as OWED, with the brief written out, rather than quietly dropped or silently substituted with my own reading.**
+
+**THE BRIEF, READY TO FIRE VERBATIM:**
+- **CLAIM TO REFUTE:** *"`P0PC` acceptance clause `4d` is MET at `ee31fe44` under reading `(B)` — every terminal acceptance failure prints its own finding before exiting non-zero, and the restored control exits zero."*
+- **PINNED OBJECT:** `prototypes/p0-vnext-admission/` at `ee31fe44`; fixture `evidence-order.mjs`.
+- **NAMED TARGETS — attack these, do not free-roam:** (1) **`R-596 §3`'s three arguments for reading `(B)`** — untrusted-output, `run.mjs:117` downgrade-immunity, and the `:96-100` exit-hook precedent — **all three authored by the desk that benefits from `(B)`.** (2) **Is `OWN_FINDING` (`/^\s*\*\*\* /m`) too weak a predicate** — does a run scoring `true` actually explain its own failure, or merely emit a `***`-prefixed line? (3) **The `2` divergent rows: is `collection_shape` a *terminal acceptance failure* at all**, given `run.mjs:108` calls the check "DELIBERATELY NOT A `FAILURE_CLASSES` ENTRY" while `collection_shape` IS an entry at `:746`? (4) **`AR-639 §5`'s carried `[UNENUMERATED]`: 1 of 22 throw sites exercised.** (5) **Does the fixture's own exit logic leak a reading anywhere I did not look?**
+- **HONEST NULL EXPLICITLY WANTED:** *"no refutation found, here is what I covered and what I could not"* is a complete answer.
+- **DURABLE RECEIPT:** `docs/designs/GRADE-P0PC-4D-READING-2026-08-02.md`, committed.
+
+### §4a — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — read-only source and `git log` only; I did not run `evidence-order.mjs`.** ✅ **`prototypes/` byte-unchanged by this desk;** `AR-640` reports the `11` pre-existing `.mjs` `sha256`-identical and the only addition is the fixture, now committed. ✅ No monitor armed, retired or killed. ✅ No spend. ✅ Graph untouched.
+
+### 🛑 §4b — STOP CONDITIONS
+
+★★★★★ **`4d` ruled — by anyone, in either direction — before the `§4` grade returns → STOP. INCLUDING BY ME, and `§3` is the ruling I am holding back.** · ★★★★★ **`P0PC` transitioned → STOP.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **`evidence-order.mjs` given an exit code that follows column (ii) → STOP; that enacts `(A)`.** · ★★★ **The `:108`-vs-`:746` caption "fixed" → STOP; it is now a NAMED GRADER TARGET (`§4`.3) and changing it would destroy the thing the grader is being asked to read.** · ★★★ **`F-2`/`F-3` reflex-fixed → STOP.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — HOLD.** ✅ **Nothing is assigned and nothing is wrong with your work: `AR-640` discharged its contract completely.** The single open item is the `§4` grade, and **the doer cannot be its own grader** — `THE DOER DOES NOT GRADE THE GRADE THAT GRADED IT`, and equally does not grade the instrument it just built. 🛑 **Do NOT widen scope while holding** — no hardening, no `[UNENUMERATED]` clean-up, no touching the named grader targets. `R-515` convicted this desk for doing the adjacent thing while the path waited.
+2. **THIS DESK — the `§4` grade is OWED and BLOCKED on the operator's word.** Surfaced to the operator in plain terms this turn; **the brief above fires verbatim on one word.** ✅ **The blocker is NAMED and ASSIGNED — it is not a prerequisite left with nobody.**
+3. **THEN — rule `4d`, on the grade, not on `R-596 §3`.**
+4. ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A DESK THAT PRE-REGISTERS A CONSTRAINT AND DISCHARGES IT THE MOMENT IT BINDS NEVER HAD A CONSTRAINT.` `R-596 §3` bound tonight, on the exact ruling this desk wanted to make, and holding it is the whole value of having written it.**
+★★★★★ **`A CORRECTION YOU HAVE JUST RECEIVED IS THE ERROR YOU ARE MOST LIKELY TO MAKE NEXT` — the worker reproduced the knob-vs-class join inside the instrument it built in response to that very correction, and caught it pre-ship.**
+★★★ **VERIFY THE CLAIMS THAT WOULD MAKE THE NUMBERS MEANINGLESS, NOT THE NUMBERS.** This desk cannot re-run the suite; it CAN read the predicates, the population source and the exit logic — and those five reads are what make `25/25` and `23/25` worth anything.**
+★★★ **AN INSTRUMENT'S EXIT CODE IS A VERDICT. Ask what proposition it encodes before shipping it, because it will be obeyed long after the ruling that motivated it is forgotten.**
+
+---
+
 ## R-596 · 2026-08-02 · ✅★★★★★ **`AR-639` APPROVED — AND IT REFUTES A LEG OF MY OWN `R-594 §2`, WHICH I WITHDRAW: THE `22`-THROW CLASS TERMINATES EMITTING **ZERO STDOUT**, SO READING `(B)` **HAS A LIVE PATH TO RED** AND IS NOT UNFALSIFIABLE. **THE `(A)`/`(B)` QUESTION IS THEREFORE LIVE AND I NO LONGER GET TO DISSOLVE IT.**** ✅★★★★★ **THE PRE-REGISTERED FALSIFIER CAME BACK A **CLEAN NEGATIVE WITH A POSITIVE CONTROL**: `PINNED_MODULE_COLLECTIONS` covers SIX files, ALL INSTRUMENT — `corpus.mjs`, THE OBJECT UNDER TEST, IS NOT AMONG THEM. **`R-594 §3`'s CATEGORY BOUNDARY HOLDS AND THE `~22` `INSTRUMENT FAULT` SITES ARE OUT OF `4d`.**** 🛑★★★★★ **AND THE TRUNCATION SURVIVES IT UNTOUCHED, ON A JOIN I RE-DERIVED RATHER THAN ACCEPTED: `[MEASURED HERE]` `module_collection_add`/`_delete` are **INJECTION KNOBS, NOT CLASSES** — the declared class they fire is **`collection_shape`, AND IT IS ONE OF THE `25`.** So the truncating failure is inside the acceptance population by **BOTH** denominators, `25` and `43`.** **DECISION: APPROVE · BOUNDARY RULED · STEP `3` AUTHORIZED READING-NEUTRAL · NO TRANSITION.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`§4` is the best refusal of the four you have now made, and it is a category above the others: you were authorized to build, you found that BUILDING EITHER FIXTURE WOULD SILENTLY RULE ON MY OPEN QUESTION, and you designed a two-column instrument that measures both readings and picks neither. `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — that is a law this desk did not have and should have.** ✅★★★ **You also caught your own `grep -cE "^\s*throw "` anchor dropping every `if (…) throw …`, and you accused your regex before you accused the grade. **The grade was wrong too** (`11` counts a comment, `6` under-counts `9`) — you found that by disagreeing with it and checking yourself first.** 🛑 **ONE CAPTION CORRECTION, `§2` below: substance right, join named one level off.**
