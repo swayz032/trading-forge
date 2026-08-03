@@ -4,6 +4,16 @@
 
 ---
 
+## AR-715 · 2026-08-03 · ⏳ **START-RECEIPT — `R-662 §7`, THE `F-1` REPAIR. ATTEMPT `1` OF `2`.**
+
+**FRESH WORKER SEAT** (the `AR-714` seat is gone — `/clear`; this is its successor, and `R-662 §7`'s *"authorized TO THE SEAT that exists"* is read as addressed to me). **I inherit `AR-714`'s position and re-verified the three facts a fresh seat must not inherit `[MEASURED HERE]`: `git status --porcelain -- src/engine/spec_family_bindings.py` EMPTY · patch present at `docs/designs/lane-a-exact-clock-route-2026-08-03.patch` (`10,400` B, `e460c88d`) · the guard is real at `test_spec_family_bindings.py:1945`.**
+
+**TASK:** give the exactness decision a FIDELITY TERM — `approximation=False` iff the BOUND window equals the span parsed from the taught text, compared at bind time. **FIRST OBSERVABLE: the located layer + `Test D` committed RED. ETA ~20 min.**
+⚠️ **ONE NOTE ON THE ACCEPTANCE BASELINE, RAISED BEFORE I START (`worker-execution §5`): `§7` pins `334 passed` at HEAD `6cc33ed6`, but HEAD is now `11eca4ef` — two doc-only commits later. `RED PATHS DECAY`; I will RE-MEASURE the baseline at the HEAD I actually build on and reconcile against `334` rather than inheriting it.**
+🛑 **The `18`-phrase keyword list is `[RELAYED]` to me by `§7.1`; I will count it myself before using it.**
+
+---
+
 ## AR-714 · 2026-08-03 · ✅🛑 **STATUS RECEIPT — **BOTH AUTHORIZED LANES ARE CLOSED, FAN-IN `2 / 2`, AND I HAVE NO FURTHER AUTHORIZED WORK.** ⚠️ **`R-661`'s `★ WORKER — START HERE` SAYS LANE B IS *"AUTHORIZED AND UNSTARTED"* — **IT IS DELIVERED, AT `AR-713` / `915b1486`, AND `R-661`'s OWN HEADER DESCRIBES IT AS SUCH.** SAME SHAPE `AR-711` CAUGHT AT `R-660 §6`, AND `R-659 §1` MINTED THE PROTOCOL FIX FOR IT.** 🛑 **I AM NOT RE-DOING IT AND I AM NOT INVENTING A LANE.**
 
 **WHY THIS IS A RECEIPT AND NOT SILENCE:** a task with no doer and an in-flight label is a stall with extra steps. **Nothing is owed by me; the open item is a DESK decision.**

@@ -3099,3 +3099,100 @@ def test_asia_session_reason_string_changes_under_the_flag_and_that_is_declared(
     binding = bind_condition({"id": "p:7", "type": "WAIT_SESSION", "object": "asia session", "role": "spine"})
     assert binding.bindable is False
     assert binding.reason == "session_zone_refused_uncomputable_window:overnight"
+
+
+# ─── F-1: THE FIDELITY TERM ON THE KEYWORD ROUTE (R-662 §7) ─────────────────
+#
+# THE DEFECT, MEASURED AT THE EXECUTABLE LINE BEFORE THESE TESTS WERE WRITTEN:
+# at DEFAULT flags the keyword route granted `approximation=False` by MEMBERSHIP
+# in SESSION_KEYWORDS alone. No term anywhere compared the window it bound to
+# against the span the source actually taught. So a row teaching a 5-minute
+# opening range bound to `ny_am` = [420,600) — 180 minutes, 36× too wide — and
+# was certified EXACT. `A GATE THAT CHECKS MEMBERSHIP INSTEAD OF FIDELITY
+# REWARDS VAGUENESS AND PUNISHES PRECISION.`
+#
+# ★ WHY THE ASSERTIONS BELOW ARE SELF-WITNESSING (the "positive witness that the
+# path ran" law): WAIT_SESSION's base_approximation is False, so False is what a
+# route that NEVER EXECUTED leaves behind. `approximation is True` can therefore
+# only be produced by the fidelity term actually running — the refusal arms
+# cannot be satisfied by a no-op.
+
+_F1_EXACT_5_MIN_ON_NY_AM = "the new york am session from 9:30 a.m. to 9:35 a.m. Eastern"
+_F1_SPAN_EQUALS_LONDON = "the london session from 2:00 a.m. to 5:00 a.m. Eastern"
+_F1_SPAN_EQUALS_NY_PM = "the new york pm session from 1:30 p.m. to 4:00 p.m. Eastern"
+
+
+def test_f1_taught_span_narrower_than_bound_window_is_not_certified_exact(monkeypatch):
+    """★ THE RED ARM (R-662 §7.3's `Test D`). A row whose taught span is 5
+    minutes may NOT earn approximation=False from a binding to a 180-minute
+    zone. This is a FALSE ACCEPT, and a false accept outranks a false refuse:
+    it costs the trustworthiness of every receipt behind the gate."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    binding = bind_condition(
+        {"id": "f1:red", "type": "WAIT_SESSION", "object": _F1_EXACT_5_MIN_ON_NY_AM, "role": "spine"}
+    )
+    # The bind itself is NOT the defect and is left alone — only the exactness
+    # claim on it is. Pinned so a future "fix" that simply refuses the row
+    # instead of downgrading it fails here.
+    assert binding.bindable is True
+    assert binding.session_zone == "ny_am"
+
+    taught = (9 * 60 + 30, 9 * 60 + 35)
+    bound = _REAL_ZONE_INTERVALS["ny_am"]
+    assert bound == ((420, 600),), "zone constant moved — re-derive this test's premise"
+    assert (taught[1] - taught[0]) * 36 == sum(e - s for s, e in bound), "the 36× premise no longer holds"
+
+    assert binding.approximation is True, (
+        "F-1: a 5-minute taught span certified EXACT against a 180-minute bound window"
+    )
+
+
+def test_f1_taught_span_equal_to_bound_window_still_earns_exactness(monkeypatch):
+    """★ THE GREEN ARM (R-662 §7.4). A guard with no green arm is not a guard,
+    it is an outage. A row whose taught span genuinely EQUALS the window the
+    primitive evaluates must STILL earn approximation=False — otherwise the
+    repair is just "refuse everything" wearing a fidelity costume."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    for obj, zone, taught in (
+        (_F1_SPAN_EQUALS_LONDON, "london", (120, 300)),
+        (_F1_SPAN_EQUALS_NY_PM, "ny_pm", (810, 960)),
+    ):
+        binding = bind_condition({"id": "f1:green", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+        assert binding.bindable is True, obj
+        assert binding.session_zone == zone, obj
+        assert _REAL_ZONE_INTERVALS[zone] == (taught,), f"{zone} constant moved — premise stale"
+        assert binding.approximation is False, (
+            f"{obj!r}: taught span EQUALS the bound window and must stay certified exact"
+        )
+
+
+def test_f1_unparseable_clock_teaching_fails_closed_to_approximate(monkeypatch):
+    """★ FAIL CLOSED (R-662 §7.5). A row that carries clock teaching the route
+    cannot resolve to ONE unambiguous span never falls through to False. Six
+    clock tokens spanning three windows is the golden slice's own shape: picking
+    one of them is a derivation loss, so the honest answer is `approximate`."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    obj = "the new york am session from 9:30 a.m. to 9:35 a.m. or 9:30 a.m. to 9:45 a.m. Eastern"
+    from src.engine.spec_family_bindings import _SESSION_CLOCK_TOKEN_RE
+
+    assert len(_SESSION_CLOCK_TOKEN_RE.findall(obj)) > 2, "premise: this row must carry >2 clock tokens"
+
+    binding = bind_condition({"id": "f1:failclosed", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+    assert binding.bindable is True
+    assert binding.session_zone == "ny_am"
+    assert binding.approximation is True, "clock teaching that cannot be resolved must fail CLOSED"
+
+
+def test_f1_name_only_row_is_untouched_by_the_fidelity_term(monkeypatch):
+    """★ THE SCOPE BOUNDARY, PINNED SO IT CANNOT WIDEN SILENTLY. A phrase that
+    names a session and carries NO clock makes no clock claim, so there is
+    nothing to compare and the term does not fire. This is R-284 Decision A's
+    standing argument (the primitive evaluates that exact window; there is no
+    clock derivation in the path). Widening the term to these rows would flip
+    published verdicts and is a RE-BASELINE decision for the desk, not a
+    worker's — R-662 stop condition ①."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    binding = bind_condition({"id": "f1:scope", "type": "WAIT_SESSION", "object": "ny am session", "role": "spine"})
+    assert binding.bindable is True
+    assert binding.session_zone == "ny_am"
+    assert binding.approximation is False
