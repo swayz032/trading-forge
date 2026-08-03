@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3745` at THIS commit, 2026-08-03 09:5x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3746` at THIS commit, 2026-08-03 10:5x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3745` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3746` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `08:3x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-641` (`b3e68916`). Newest AR: `AR-686` — the worker's FINAL report, UNRULED (it is a stop confirmation, not a work product).**
+**Ruling ledger at `R-642` (`9a704e0c`). Newest AR: `AR-686` — the worker's FINAL report, UNRULED (it is a stop confirmation, not a work product).**
 🛑🛑 **WORKER SEAT IS STOPPED.** `AR-685` declared exhaustion; `R-640 §4` correctly left the call to the seat rather than withdrawing the task; **`AR-686` confirms the stop. `R-639 §6.2` IS UNSTARTED.** ★★★ **The protocol worked as designed: the desk did not convert a self-assessment into a stop order, and the seat made its own call.**
 🛑 **OPERATOR ACTION REQUIRED — A FRESH WORKER SEAT MUST BE STARTED.** ✅ **It can begin `§6.2` COLD: `AR-685`'s handoff packet carries every fix point, line number and ordering rationale, and the authorization below is complete.** ✅ **`§6.2` remains authorized to whatever seat next occupies the role — NOT re-scoped, NOT re-derived.**
 **SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`, the PID that wrote `R-630` — no sibling, no write-freeze.
@@ -127,7 +127,8 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 8. 🛑 **`AN ARM IS A MEASUREMENT; A TEST IS A GUARD.` A repair verified only by an uncommitted probe is a repair with no guard.**
 
 ## ⏳ DESK OWES
-🛑 **`SWEEP-F8` PRODUCT QUESTION — MINE:** `exportable=True` with `band='alert_only'` for a `volume_profile` strategy — compiler defect or deliberate design?
+✅★★★★★ **`SWEEP-F8` PRODUCT QUESTION — **SETTLED AT `R-642`: IT IS A DEFECT AND THE TEST IS RIGHT.** `exportability.py:476` is `_exportable = (score >= 50)`, while `:45` sizes the NONE_MAPPED deduction to `-50` *"ensuring exportable=False"* and `:54` sizes ICT deductions to `-25` each *"so 2 ICT indicators score ≤50 → exportable=False"*. **`100-50 = 50` and `50 >= 50` is `True`, so BOTH deductions produce the OPPOSITE of what they were sized to guarantee.** ★★★ *Two independently-authored sites assuming the same exclusive boundary is what makes this a defect rather than a stale test.* ✅ **FIX: `(score > 50)` — the BOUNDARY, not the magnitudes.** 🛑 **Instrument surface → `ratify-packet` first; QUEUED BEHIND `§6.2` because Pine export is family-monitor-only while the promotion gate reaches live capital.**
+⚠️ **MY OWN WATCHDOG'S COMMIT CHANNEL TRACKS *THIS DESK'S* COMMITS, NOT THE WORKER'S (`R-642 §4`).** While the desk is active, **only the report-file channel is a true worker signal** — do NOT read "newest commit 62m" as worker activity. *A watchdog on a shared channel cannot attribute silence to the party it watches.* Honest fix (named, not built): filter the commit channel by author or path.
 ✅★★★★★ **GUARD REPAIR — **BUILT AND RED-PROOFED AT `R-641`** (`advisor-ruling-guard` + `receipt` now gate `Bash` ledger COMMITS via a SEPARATE matcher block; six-case proof incl. two false-positive controls; old-guard control confirms it previously exited `0`). **Full cycle verified live: Skill arms the sentinel → commit passes → receipt CONSUMES it.** 🛑 **The `R-384` once-per-ruling property had ALSO degraded to once-per-hour because the RECEIPT never consumed either — `A CONTROL WHOSE ARM WORKS AND WHOSE DISARM DOES NOT IS STILL BROKEN`.**
 ⚠️🛑 **STILL BLIND: `ruling-mechanism-guard` and `ruling-stale-premise-guard`.** They inspect the CONTENT being written and a `git commit` payload carries none, so they need a **read-from-disk redesign**, not a matcher change. **`R-631`–`R-641` remain ungated for mechanism-claims and stale-premise — both were satisfied BY HAND every ruling, which is the desk being careful, not the guard working.** 🛑 **Known limit: `git commit -a` evades the new gate (already a protocol violation).** ⚠️ **`.claude/` is NOT a git repo — originals backed up to the session scratchpad; there is no `git checkout` undo.**
 ⏳ **`GRADEB-F5` is the SAME CLASS as `F-G1`** — dispose together · `expected_single`'s uncompared SHA-256 in `test_pine_compiler.py` · `GRADEA-F-C` · `GRADEA-F-D` · ~35 unconfirmed sweep candidates · **`F-1b`'s LATENT verdict is filesystem-scoped.**
