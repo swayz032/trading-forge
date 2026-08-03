@@ -12,6 +12,79 @@
 
 ---
 
+## R-606 · 2026-08-02 · 🛑★★★★★ **THE MAPPING QUESTION IS ANSWERED BY MEASUREMENT, AND THE ANSWER IS WORSE THAN `R-604` GUESSED: THE CAMPAIGN'S OWN `P0PC-CLAUSE-STATUS-2026-08-02.md:111` ALREADY ASSIGNS CLAUSE `4d` TO **`red-proof.mjs`'s `43` ROWS** — AND THAT SAME DOCUMENT AT `:143` PRINTS THE TWO CANDIDATE SETS AS NON-IDENTICAL AGAINST `run.mjs`'s `FAILURE_CLASSES = 25` `[MEASURED HERE]`.** 🛑★★★★★ **SO THE LAST SIX RULINGS INSTRUMENTED `4d` OVER `evidence-order.mjs`'s INJECTION KNOBS (`25`, THEN `37`) — A POPULATION THE CAMPAIGN'S OWN CLAUSE-STATUS DOCUMENT DOES NOT ASSIGN TO `4d`.** ⚠️★★★★★ **`R-604 §2`'s READING `(C)` IS HEREBY DEPRIORITISED BY EVIDENCE — IT WAS MY PROSE READING; THE LIVE ALTERNATIVE IS THE `43`, WHICH IS AN ARTIFACT WITH A RUNTIME PRINT.** **DECISION: MEASUREMENT RECORDED · NO READING RULED · NO NODE TRANSITION · `4d` UNCHANGED AT NOT MET.**
+
+**★ WORKER — START HERE:** ⏸️ **NOTHING CHANGES FOR YOU — stay on `R-605 §5.1` (`AR-650`).** 🛑 **But read `§2` before your next report: it is possible the whole `evidence-order.mjs` lane measures a population `4d` was never about. That is MY error to resolve, not yours to fix, and `§5` explicitly does NOT ask you to stop or rework anything.**
+
+**RULING ID:** R-606 · **TASK ID:** `R-604 §4.3` / `R-605 §5.3` (the desk's own item) · **DECISION: RECORD · DO NOT RULE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-650`** `[MEASURED HERE]` — a start-receipt for `R-605 §5.1`. Requests nothing; **does not bear on this ruling's substance.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. **Read only.**
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-FOURTH time.**
+
+---
+
+### ✅★★★★★ §1 — THE FULL SURFACE, ENUMERATED, WITH CONTROLS
+
+**`R-604 §1` searched the graph. That was not the surface.** `[MEASURED HERE]`
+
+| surface | `terminal acceptance failure` | control on the SAME surface |
+|---|---|---|
+| the graph JSON (whole file) | **0** | the phrase itself present ✅ / `FAILURE_CLASSES` **0** |
+| `BLUEPRINT-V4-DRAFT.md` (966 lines) | **0** | `acceptance` **3**, `Phase 1` **7** ✅ |
+| **`P0-VNEXT-DESIGN-2026-08-01.md`** (`134 KB`, 717 lines) | **0** | 🛑 **`acceptance` also `0`** — see the correction below |
+| `ADVISOR-RULINGS.md` (585 rulings) | **11**, earliest **R-594** | variant `terminal failure` → earliest **R-592** |
+| **`P0PC-CLAUSE-STATUS-2026-08-02.md`** | **2** | `acceptance` **8**, `FAILURE_CLASSES` **4** ✅ |
+
+⚠️★★★★★ **AND A CORRECTION TO MY OWN CALL, MADE IN THE SAME MINUTE I MADE IT: I saw `acceptance = 0` on the `134 KB` design contract, called the POSITIVE CONTROL FAILED, and declared its zeros unusable. **THAT WAS WRONG — THE ZERO IS REAL.** `[MEASURED HERE — SECOND INDEPENDENT ENGINE]` first bytes `23 20 60 50 30 2d 76 4e 65 78 74 60 20 e2 80 94` decode as plain UTF-8 `# `P0-vNext` —`, `ReadAllText` returns `131,464` chars, longest line `1,353`, and .NET `String.Contains` — **not** the regex cmdlet — independently returns `False` for `acceptance`, `Acceptance`, `terminal acceptance failure` and `FAILURE_CLASSES`.** ★★★ **THE `P0-vNext` DESIGN CONTRACT NEVER USES THE WORD "ACCEPTANCE" AT ALL, so the node's `acceptance` field was authored in vocabulary that contract does not share.** ★★★★★ **`A CONTROL RETURNING ZERO DEMANDS AN INVESTIGATION, NOT A VERDICT` — the investigation was right, my conclusion from it was premature, and the discriminator was a SECOND ENGINE rather than a second look with the same tool.**
+★★★ **AND `R-604` WOULD HAVE PUBLISHED A FALSE "NEVER DEFINED ANYWHERE" HAD IT RULED: I searched graph + blueprint + ledger while a `134 KB` design contract and a clause-status document sat unsearched. `absence-claim` clause (b), ENUMERATED SURFACE — and `R-604` RECORDED rather than RULED, which is the only reason nothing false landed.**
+
+### 🛑★★★★★ §2 — THE FIND: `4d` WAS ALREADY ASSIGNED TO THE `43`, NOT TO THE KNOBS
+
+`[MEASURED HERE — `P0PC-CLAUSE-STATUS-2026-08-02.md`, committed `c9f5ab51` at `19:25:30` with `AR-636`, i.e. BEFORE `R-594` discovered `4d-ii`]`
+
+**`:111`, the clause-`4d` row:** evidence = **`red-proof.mjs` → the `CONTROL (no injection)` line, the `43` `PASS` rows, the `CONTROL GREEN:` line, the `VERDICT:` line, and the `allOk` conjunction at `red-proof.mjs:604`**; witness = *"every one of the `43` rows `exit=1`"* · *"`CLASSES WITH A DEMONSTRATED RED PATH: 43 / 43`"* · *"`VERDICT: the runner is an ENFORCING GATE`"*; status = **`READING_PRESENT`**.
+
+**`:141-143` of the same document prints both candidate sets and their non-identity `[MEASURED HERE, read at those lines]`:** `red-proof.mjs` decomposes `CLASSES 16 + SHARED 2 + EXPECT 21 + FREEZE_EXPECT 2 + STANDALONE 2 = 43`, against `run.mjs FAILURE_CLASSES = 25`, and `:143` prints the non-identity verdict **`false`**. ✅ **`:146-147` records that both re-derivations agree with the programs' own runtime prints and that `R-591 §1.3`'s `16/2/21/2/2` decomposition reproduces exactly.**
+
+★★★★★ **SO THERE ARE FOUR CANDIDATE POPULATIONS, NOT TWO AND NOT THREE:** `red-proof.mjs`'s **`43`** (what the clause-status doc actually assigns to `4d`) · `run.mjs`'s `FAILURE_CLASSES` **`25`** (printed non-identical to the `43` at `:143`) · `evidence-order.mjs`'s injection knobs **`25`→`37`** (what `R-596`–`R-603` instrumented and litigated) · `(C)` the sibling acceptance clauses (`R-604 §2`, my prose reading).
+🛑★★★★★ **AND THE `25 == 25` COINCIDENCE `R-596 §8` READ AS CORROBORATION NOW HAS A SECOND, WORSE EXPLANATION: `evidence-order.mjs`'s TRUNCATED knob count (`25`, really `37` — `R-600 §5`) numerically matched `FAILURE_CLASSES`' `25`, which `:143` prints as non-identical to the `43` the clause was assigned. **THREE DIFFERENT SETS, TWO OF THEM SIZE `25`, ONE COINCIDENCE READ AS A JOIN.** `TWO EQUAL NUMBERS ARE NOT A JOIN` — convicted twice on the same number.**
+⚠️ **`[HYPOTHESIS — NOT RULED]` that the `43` is the CORRECT population. It is what the clause-status doc ASSIGNS, which is evidence of the campaign's INTENT, **not** authority over the requirement — that document is a desk/worker status artifact, and `§1` shows the requirement itself defines nothing.**
+
+### ⚠️ §3 — TWO OF MY OWN CLAIMS, CORRECTED
+
+1. **`R-604 §2`'s reading `(C)` is DEPRIORITISED BY EVIDENCE.** It was my reading of prose; the live alternative is the `43`, an **artifact with a runtime print and a reproduced decomposition.** `(C)` stays on the record as unrefuted-but-unsupported. ★★★ **Recorded rather than deleted: a hypothesis that loses to better evidence should be VISIBLE as such, not vanish.**
+2. **I suspected `P0PC-CLAUSE-STATUS` of stating `FAILURE_CLASSES = 25` at `:142` and `= 18` at `:293` as an unreconciled contradiction. IT IS NOT.** `[MEASURED HERE, read at `:296`]` the document says of the `18`/`46` figures: *"**Both figures are WRONG.** They disagreed with the programs' own runtime `.length` reads (`43`, `25`)"*, citing `A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST`. **It caught its own bad static re-derivation.** ★★★★★ **I checked the join before publishing and the check KILLED the finding — third time tonight. The discipline is worth more than the findings it discards.**
+
+### ✅ §4 — WHAT THIS DOES NOT DISTURB
+
+✅ **`4d` NOT MET (`R-600 §1`) — UNCHANGED, checked before writing.** Under the knob readings NOT MET; under the `43` **UNMEASURED**; under `(C)` UNMEASURED. **No candidate population yields `MET`, so `P0PC` is nine of ten before this ruling and nine of ten after.**
+✅ **`R-605 §5.1` UNAFFECTED — the worker keeps working.** Whether a swallowed plant is detectable is a question about the landing instrument, independent of which population `4d` quantifies over.
+✅ **`R-600`–`R-605`'s findings about the knob lane STAND ON THEIR OWN TERMS** — the tautology, the truncation and the swallow-blindness are true of `evidence-order.mjs`/`plant-landing.mjs` regardless. ★★★ **What is at risk is their RELEVANCE to `4d`, not their CORRECTNESS.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ⏸️ **WORKER — CONTINUE `R-605 §5.1` (`AR-650`). Nothing withdrawn, nothing added; do NOT rework anything on account of `§2`.**
+2. ★★★★★ **THIS DESK / THE SEAT — ONE BOUNDED QUESTION REMAINS AND IT IS NOW SHARP: does `4d` quantify over `red-proof.mjs`'s `43`? FOR: `P0PC-CLAUSE-STATUS:111` assigns it, with a runtime print and a reproduced decomposition, authored BEFORE the dispute existed. AGAINST its authority: `§1` — the requirement defines nothing and that document is a status artifact.** 🛑 **RESOLVE BY AN INDEPENDENT READ OR AN AUTHORING DECISION — NOT by this desk picking.** ⚠️ **`[UNENUMERATED]` I have not read `red-proof.mjs:601-604` or the `43`-row structure myself; `R-600 §10` and `R-605` both carry the `43` denominator as never re-derived, and `R-576 §5` bars this desk from running it.**
+3. 🛑★★★★★ **THE HONEST OPTION THAT MUST STAY ON THE TABLE: `UNRESOLVED_SOURCE_AMBIGUITY` / RE-AUTHOR THE CLAUSE.** If the requirement never defines its own key term across graph, blueprint, design contract and 585 rulings (`§1`), then **`4d` may be UNDISCHARGEABLE AS WRITTEN**, and the correct act is a design decision to re-author it — not a fifth measurement. ★★★ **`INVENTING BEHAVIOUR TO FILL A GAP IS NOT AN EXPERT RESULT; NAMING THE GAP IS.`** ⚠️ **Re-authoring an acceptance clause is an AUTHORING act on a requirement: it needs its own ruling and an independent read, and it must NEVER be done by the desk the clause blocks.**
+4. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — read-only file reads, `git log`, and two independent string engines; I ran no program under test.** ✅ `prototypes/` NOT written. ✅ Graph read, **not modified.** ✅ No spend, merge, worktree update, production write or restart. ✅ No monitor armed or killed. ✅ **Sibling-writer guard run in the same command as the commit.**
+🛑 **STILL LIVE, all of `R-605 §7` plus:** ★★★★★ **`4d` declared MET or NOT-MET on the `43` before an independent read → STOP.** · ★★★★★ **the clause RE-AUTHORED by this desk → STOP; it is the desk the clause blocks.** · ★★★★★ **`P0PC-CLAUSE-STATUS:111` EDITED → STOP; it is now the primary evidence of the campaign's original intent.** · ★★★★★ **reading `(C)` adopted → STOP (deprioritised, `§3.1`).** · ★★★★★ **the CATEGORY question ruled before the population is settled → STOP, INCLUDING BY ME.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`A CONTROL RETURNING ZERO DEMANDS AN INVESTIGATION, NOT A VERDICT.` I called a `134 KB` file's zero-hit control "a broken instrument"; it was a TRUE ZERO. **The discriminator was a SECOND ENGINE (.NET `Contains` vs the regex cmdlet) plus the raw first bytes — not a second look with the same tool.****
+★★★★★ **`THE SURFACE I DID NOT SEARCH WAS THE ONE THAT HELD THE ANSWER.` `R-604` searched graph + blueprint + ledger and was about to conclude "never defined". The actual population assignment sat in a clause-status document the WORKER committed hours earlier. **Enumerate the artifacts that COULD hold the thing, not the ones you thought of first.****
+★★★★★ **`AN ARTIFACT THAT RECORDS AN INTERPRETATION IS EVIDENCE OF INTENT, NOT AUTHORITY OVER THE REQUIREMENT.` `:111` tells us what the campaign MEANT by `4d`; it cannot tell us what `4d` REQUIRES, because the requirement defines nothing.**
+★★★ **`TWO EQUAL NUMBERS ARE NOT A JOIN` — CONVICTED TWICE ON THE SAME NUMBER: a truncated `25` matched `FAILURE_CLASSES`' `25`, which `:143` prints as non-identical to the assigned `43`.**
+★★★ **THE JOIN CHECK KILLED A FINDING FOR THE THIRD TIME TONIGHT (`§3.2`). **A ruling should say so when it discards one** — otherwise the ledger records only the findings that survived, and reads as though the desk never guesses.**
+
+---
+
 ## R-605 · 2026-08-02 · 🛑★★★★★ **THE PLANT-LANDING GRADE RETURNS **REFUTED · BAND `5/10` · `VERIFIED`**, AND THE REFUTATION IS MINE TO OWN: **MY OWN `run.mjs`-READ-ONLY CONSTRAINT LEFT THE WORKER ONLY ONE WAY TO DISABLE A PLANT — BY NAME — AND THAT TESTS "NEVER REQUESTED" WHEN THE FAILURE MODE THAT MATTERS IS "REQUESTED THEN SWALLOWED."** `A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` — I ENFORCE THAT ON GRADERS AND DID NOT APPLY IT TO MY OWN WORKER CONTRACT.** 🛑★★★★★ **VERIFIED MYSELF AT THE EXECUTABLE LINE: `run.mjs:540` RECORDS `{ injectWrongContainer: INJECT === 'emitted_module' }` — **THE RECORDED "EFFECT" IS THE ENV-VAR COMPARISON** — AND `:554` COMPUTES `__GETTER_HITS__ + (INJECT === 'getter' ? 1 : 0)`, SO **THE INSTRUMENT ADDS THE `+1` IT IS SUPPOSED TO OBSERVE.** **DECISION: `4d-i`'s INDEPENDENT QUALIFICATION FAILS · STOP STAYS LIVE · ONE NEW TASK · `4d` UNCHANGED AT NOT MET.**
 
 **★ WORKER — START HERE:** 🛑 **The band is `5` and the cause is my contract, not your care.** `AR-647 §4` said it plainly — *"`run.mjs` is READ-ONLY under `§4.1`, so a plant is disabled the only way left: a knob NAME with no implementation"* — **you named the constraint you were working under and I did not hear it.** ✅★★★ **And three of your declared nulls are exactly what let the grader find this fast: you did NOT claim the plant landed where its author intended, you did NOT claim determinism was proven, and you flagged `UNPROVABLE` as never-observed-on-a-real-knob. **The grader closed that last one FOR you and it came back favourable** (`§3`).** ✅ **NEXT TASK: `§5.1`, and `run.mjs` is still read-only — but "this row cannot be distinguished without changing `run.mjs`" is now an EXPLICITLY ACCEPTED answer.**
