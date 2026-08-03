@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3737` at THIS commit, 2026-08-03 08:2x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3744` at THIS commit, 2026-08-03 08:3x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3737` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3744` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,46 +93,53 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-03 `08:2x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-639` (`f5c149d9`). Newest AR: `AR-684` — RULED at `R-639 §5b`.** Worker: ✅ **free; next is `R-639 §6.1`. SWEEP IS PAUSED (gate defects outrank).**
-**SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`, the PID that wrote `R-630` — pre-`/clear` seat was MYSELF, no sibling, no write-freeze.
+## ★★★★★ SEAT (2026-08-03 `08:3x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-640` (`f0359199`). Newest AR: `AR-686` — the worker's FINAL report, UNRULED (it is a stop confirmation, not a work product).**
+🛑🛑 **WORKER SEAT IS STOPPED.** `AR-685` declared exhaustion; `R-640 §4` correctly left the call to the seat rather than withdrawing the task; **`AR-686` confirms the stop. `R-639 §6.2` IS UNSTARTED.** ★★★ **The protocol worked as designed: the desk did not convert a self-assessment into a stop order, and the seat made its own call.**
+🛑 **OPERATOR ACTION REQUIRED — A FRESH WORKER SEAT MUST BE STARTED.** ✅ **It can begin `§6.2` COLD: `AR-685`'s handoff packet carries every fix point, line number and ordering rationale, and the authorization below is complete.** ✅ **`§6.2` remains authorized to whatever seat next occupies the role — NOT re-scoped, NOT re-derived.**
+**SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`, the PID that wrote `R-630` — no sibling, no write-freeze.
 
-## 🛑🛑🛑★★★★★ READ FIRST — THE `F-1` GRADE (band `5/10`) CONVICTS **THIS DESK**. FOUR OPEN GATE DEFECTS.
-**`F-G1` CRITICAL — `F-1`'S REPAIR HAS NO PATH TO RED.** Delete the whole `"error"` arm → population **byte-identical** (`6 failed, 101 passed, 3 skipped, 8281 deselected`, same 6 names). ✅ **POSITIVE CONTROL: deleting the sibling DD arm reddens `test_crisis_veto_triggers_on_dd_breach`.** `crisis-stress-unevaluated` = **zero test files across 20+ trees**. ★★★★★ **I MINTED THIS LAW AT `R-634 §4` AND BROKE IT ONE RULING LATER. `AN ARM IS A MEASUREMENT; A TEST IS A GUARD.`**
-**`F-G2` CRITICAL — `Q1` AND `F-1b` ARE ONE DEFECT AND I RULED THEM AS TWO.** At `prop_firm_max_dd=1500`, scenario DD `1800`: **stress test says FAIL, gate says PASS** (`veto=False, passed=True, 17.7`) — the two halves of one rule compare against different numbers. 🛑 **`R-633 §4` NAMED THAT ROW AND READ IT BACKWARDS**, treating it as protected product behaviour. **Option B is safe ONLY because `F-1b` is latent.** 🛑 **The shipped comment at `performance_gate.py:331-341` is a FALSE MECHANISM CLAIM until `F-1b` lands.** ⚠️ **`F-1b` = LATENT but **FILESYSTEM-SCOPED**: the grader did NOT query Postgres; if configs persist as JSONB it could be wrong. `[UNENUMERATED]`**
-**`F-G3` CRITICAL — a WHOLESALE stress-test crash deletes the crisis evaluation.** `RuntimeError`/`TypeError`/`ZeroDivisionError` propagate out of `run_stress_test`; `backtester.py:8432` swallows to `crisis_results = None`; the veto loop never runs **AND** the crisis-aware rescore at `:8410` (inside the same `try`) never happens, so `forge_score` silently keeps its **crisis-blind** value. One stderr line is the only trace.
-**`F-G4` HIGH — `crisis_results={}`, missing `max_drawdown`, `NaN` (`nan > 2000.0` is `False`) all score clean.** `s.get("max_drawdown", 0.0)` defaults an absent measurement to a passing value — `F-1`'s own vacuity shape on the neighbouring key.
-✅ **HONEST NULLS (results, not gaps): the `break` IS correct · sign convention CLEAN (positive by construction, `:5464`/`:7685`) · sole-producer CONFIRMED.**
+## ✅★★★★★ `F-G1` IS CLOSED (`ba204de8`) — VERIFIED HERE WITH THE INSTRUMENT THAT CONVICTED IT
+`test_crisis_veto_triggers_on_unevaluated_scenario` landed. `[MEASURED HERE, materialised scratch copies]` delete `performance_gate.py:325` `if "error" in s:` → **only that test reddens**; delete `:318` `if scenario_dd > firm_max_dd:` → **only `…on_dd_breach` reddens**. Campaign tree `1 failed, 30 passed` (the failure is pre-existing `test_tier1_passes`). ★★★★★ **`crisis-stress-unevaluated` HAS A COMMITTED GUARD FOR THE FIRST TIME. `CLOSE A FINDING WITH THE INSTRUMENT THAT OPENED IT.`**
 
-## ★★★★★ AUTHORIZED NOW — **`R-639 §6`** (`f5c149d9`)
-1. 🛑 **`§6.1` THE COMMITTED RED-PROOF `F-1` NEVER GOT.** `test_performance_gate.py` ONLY (a test → no packet). Assert the CRASHED shape `{"passed": False, "max_drawdown": 0, "error": ...}` → `crisis_veto is True` **and** `score == 0.0`. 🛑 **ACCEPTANCE: delete the `"error" in s` arm in a materialised scratch copy → your test MUST go RED; and deleting the DD arm must redden `test_crisis_veto_triggers_on_dd_breach` and NOT yours.** *(`test_performance_gate.py` currently contains ZERO occurrences of the key `"error"`.)*
-2. 🛑 **`§6.2` ONE `ratify-packet` FOR THE CLASS** (`fix-pattern`, not three tickets). **CLASS PROPERTY:** *a crisis evaluation that did not happen, or was compared against the wrong limit, must never score as clean.* **(a) `F-1b` FIRST** — `backtester.py:8410` pass `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)`, the same expression already at `:8396`. **(b) `F-G3` sentinel** — `:8432` emits `{"scenarios":[{"name":"stress_suite","passed":False,"max_drawdown":0,"error":str(e)}]}` not `None`, **and the rescore must not be skipped.** **(c) `F-G4` schema** — missing/`None`/non-finite `max_drawdown` → `crisis-stress-unevaluated`; non-empty `crisis_results` with no usable `scenarios` = unevaluated, not absent. 🛑 **EVERY member ships a COMMITTED TEST red-proofed by deletion-in-scratch.** 🛑 **`never-flag`.** **Then correct the false comment in the same packet.**
-3. ⏸️ **`§6.3` RESUME SWEEP — REMAINING IS `SWEEP-F7` + `SWEEP-F3` ONLY** (fan-in `5/7`). Then `SWEEP-F6`'s fixture **with its red-proof** (`R-638 §7.2`), `SWEEP-F5`'s two-branch measurement, `track3`, `INV-13 → CRITICAL`, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`.
-🛑 **NEVER mutate the shared tree to build an arm** (`git archive <sha> | tar -x -C <scratch>`).
-**STOP CONDITION:** if `§6.2`(a) changes any existing test's verdict, **STOP and report the failure-set diff** — a test may have encoded the `2000.0` default as intended behaviour, and that is a ruling.
+## 🛑🛑 STILL OPEN ON THE PROMOTION GATE — `R-639 §6.2`, THE AUTHORIZED WORK
+**`F-G2` CRITICAL — `Q1` AND `F-1b` ARE ONE DEFECT (I ruled them as two).** At `prop_firm_max_dd=1500`, scenario DD `1800`: **stress test says FAIL, gate says PASS** — the two halves of one rule compare against different numbers. 🛑 **`R-633 §4` named that row and read it backwards as protected product behaviour.** 🛑 **The comment at `performance_gate.py:331-341` is a FALSE MECHANISM CLAIM until `F-1b` lands.** ⚠️ **`F-1b` = LATENT but **FILESYSTEM-SCOPED**; Postgres unqueried. `[UNENUMERATED]`**
+**`F-G3` CRITICAL — a WHOLESALE stress-test crash deletes the crisis evaluation.** `RuntimeError`/`TypeError`/`ZeroDivisionError` propagate out of `run_stress_test`; `backtester.py:8432` swallows to `crisis_results = None`; the veto loop never runs **AND** the rescore at `:8410` (same `try`) never happens, so `forge_score` keeps its **crisis-blind** value. One stderr line is the only trace.
+**`F-G4` HIGH — `crisis_results={}`, missing `max_drawdown`, `NaN` (`nan > 2000.0` is `False`) all score clean.**
+
+## ★★★★★ AUTHORIZED NOW — **`R-639 §6.2` / `R-640 §5`** — ONE `ratify-packet` FOR THE CLASS
+**CLASS PROPERTY:** *a crisis evaluation that did not happen, or was compared against the wrong limit, must never score as clean.* `fix-pattern` — one packet, not three tickets.
+1. **`F-1b` THREADING FIRST** — `backtester.py:8410` → `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)`, **the identical expression already at `:8396`.** ★★★ **First because it makes the shipped comment TRUE.**
+2. **`F-G3` VETO SENTINEL** — `backtester.py:8432` emits `{"scenarios":[{"name":"stress_suite","passed":False,"max_drawdown":0,"error":str(e)}]}` not `None`, **reusing the arm now guarded by `ba204de8`.** 🛑 **AND the second hop: the rescore must not be skipped when the stress test raises.**
+3. **`F-G4` SCHEMA** — `performance_gate.py:296-298`: missing/`None`/non-finite `max_drawdown` → `crisis-stress-unevaluated`; non-empty `crisis_results` with no usable `scenarios` = **unevaluated, not absent.**
+🛑 **EVERY member ships a COMMITTED test, red-proofed BY DELETION IN A MATERIALISED SCRATCH COPY** (`git archive <sha> | tar -x -C <scratch>`). 🛑 **`never-flag`.** **Then correct the comment at `:331-341` in the same packet.**
+**STOP CONDITION:** if `F-1b` threading changes any existing test's verdict, **STOP and report the failure-set diff** — a test may have encoded `2000.0` as intended behaviour, and that is a ruling.
+**THEN (sweep un-paused, fan-in `5/7`):** **`SWEEP-F7`** (`tests/python/test_validate_scaling_schedule.py:604` — unlink the report before the subprocess, assert on `returncode`) · **`SWEEP-F3`** (five sizing-parity tests dead behind a false caption — `test_paper_backtest_sizing_parity.py:262-292` fixture needs `exit` added and `take_profit.type` corrected from `'fixed_r'`; `:299/316/327/341/353` must stop converting arbitrary `Exception` into a skip) · **`SWEEP-F6`'s fixture with its own red-proof** · `SWEEP-F5`'s two-branch measurement · `track3` proposal · `INV-13 → CRITICAL` → `INV-1` deletion (🛑 never while `INV-13` is `WARNING`).
 
 ## 🛑 STANDING LAW — BINDS WORKER **AND** DESK
-1. **Every acceptance count ships its VERBATIM command; any `-k`/path filter is stated AS THE POPULATION** (`R-635 §1`) — **and this now extends to SCORES: `AR-678`'s `28.8` is UNVERIFIABLE because no committed fixture reproduces it.**
-2. **State which `KR-*` blocks are IN/OUT** (`R-638 §3`): **`KR-ORPHAN`** `track3` `40` (closes by disposition ruling; may never go green) · **`KR-GAP`** `SWEEP-F4/F5/F6` `3` + `SWEEP-F8/F9` `2` (**MUST go green when the gap closes — an ageing `KR-GAP` is debt**) · **`KR-BASE`** `6` inherited.
-3. **Every grader dispatch owes a START-RECEIPT and a commit-and-verify obligation.** ⚠️ **A background subagent has NO channel to the desk before completion — the receipt must be a FILE, or the obligation is unenforceable.**
+1. **Every acceptance count ships its VERBATIM command; any `-k`/path filter is stated AS THE POPULATION** — **extends to SCORES** (`AR-678`'s `28.8` is UNVERIFIABLE; no committed fixture reproduces it).
+2. **State which `KR-*` blocks are IN/OUT:** **`KR-ORPHAN`** `track3` `40` (closes by disposition ruling) · **`KR-GAP`** `SWEEP-F4/F5/F6` + `F8/F9` (**MUST go green when the gap closes — an ageing `KR-GAP` is debt**) · **`KR-BASE`** `6` inherited.
+3. **Every grader dispatch owes a START-RECEIPT + commit-and-verify.** ⚠️ **A background subagent has NO channel before completion — the receipt must be a FILE or the obligation is unenforceable.**
 4. 🛑 **`UNVERIFIABLE` MAY NOT SIT IN THE LEDGER AS IF IT WERE `VERIFIED`.**
-5. **A two-guard red-proof needs BOTH directions — each mutation fires ONLY its own** (`R-637 §1`); **re-run every arm after refactoring the guard's extractor.**
-6. 🛑 **PRECONDITION (`R-637 §3`): `event_calendar` MAY NOT BE WIRED until `economic_calendar.generate_event_mask` has a mutation-red-proofed polarity guard.**
-7. **Namespace finding IDs — `SWEEP-Fn` / `GRADEA-Fn` / `GRADEB-Fn`.** Bare `F-n` is ambiguous across three sets.
+5. **Two-guard red-proofs need BOTH directions — each mutation fires ONLY its own; re-run every arm after refactoring the extractor.**
+6. 🛑 **PRECONDITION: `event_calendar` MAY NOT BE WIRED until `economic_calendar.generate_event_mask` has a mutation-red-proofed polarity guard.**
+7. **Namespace finding IDs — `SWEEP-Fn` / `GRADEA-Fn` / `GRADEB-Fn`.**
+8. 🛑 **`AN ARM IS A MEASUREMENT; A TEST IS A GUARD.` A repair verified only by an uncommitted probe is a repair with no guard.**
 
 ## ⏳ DESK OWES
-🛑 **`SWEEP-F8` PRODUCT QUESTION — MINE:** is `exportable=True` with `band='alert_only'` correct for a `volume_profile` strategy, or a compiler defect? Rule after `§6.2`.
-🛑 **GUARD REPAIR — still unbuilt.** All three ruling guards match `Write|Edit|MultiEdit`; this desk writes by SHELL, so **none has gated `R-631`–`R-639`.** ⚠️ **Adding `Bash` to the matcher ALONE makes it PASS BY FAILING.**
-⏳ **`GRADEB-F5` is the SAME CLASS as `F-G1`** (an arm is not a test) — dispose together · **`expected_single` in `test_pine_compiler.py` computes a SHA-256 and never compares it `[NOT MEASURED]`** · `GRADEA-F-C` · `GRADEA-F-D` · ~35 unconfirmed sweep candidates.
+🛑 **`SWEEP-F8` PRODUCT QUESTION — MINE:** `exportable=True` with `band='alert_only'` for a `volume_profile` strategy — compiler defect or deliberate design?
+🛑 **GUARD REPAIR — still unbuilt.** All three ruling guards match `Write|Edit|MultiEdit`; this desk writes by SHELL, so **none has gated `R-631`–`R-640`.** ⚠️ **Adding `Bash` alone makes it PASS BY FAILING.**
+⏳ **`GRADEB-F5` is the SAME CLASS as `F-G1`** — dispose together · `expected_single`'s uncompared SHA-256 in `test_pine_compiler.py` · `GRADEA-F-C` · `GRADEA-F-D` · ~35 unconfirmed sweep candidates · **`F-1b`'s LATENT verdict is filesystem-scoped.**
+⚠️ **DESK/WORKER `index.lock` CONTENTION IS REAL AND BENIGN `[MEASURED across `R-631`–`R-640`]`** — this desk commits into the same repo while the worker commits code. `commit -o <path>` scopes every write and the hook's stash/restore preserved the worker's dirty files every time. 🛑 **NEVER remove a lock you did not create.**
 
 ## ⚠️★★★★★ INSTRUMENT TRAPS — THIS BOX
 ```
 ar=$(grep -m1 -a "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*" | head -1)   # head -1 IS LOAD-BEARING
 ```
 ★★★★★ **`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT`:** Windows-form paths (`C:/...`) for Python — MSYS `/c/...` exits `4`; mangled `PYTHONPATH` exits `1`; **a PIPED exit code is `tail`'s**; `--deselect` must match the COLLECTED nodeid; a class method needs `File::Class::test`.
-★★★★★ **`A SKIP REASON IS A CLAIM NOBODY VERIFIES`** (`R-639 §5b`) — `SWEEP-F9`'s skip blamed scipy for the entire life of a wrong-signature call. **Sweep for `pytest.skip` inside a broad `except`.**
-★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A GUARD`** (`R-636 §2`) · **`A GUARD ADDED TO THE WRONG CLASS CAN SILENTLY WEAKEN A DIFFERENT GUARD`** · **`DELETING AN ASSERTION IS VISIBLE IN A DIFF; TUNING A FIXTURE IS NOT`** (`R-638 §9`).
-★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT`** (`R-633 §6`) · **`A BEHAVIOUR PROTECTED BY A TEST IS NOT NECESSARILY INTENDED BEHAVIOUR`** (`R-639 §8`).
+★★★★★ **`A SKIP REASON IS A CLAIM NOBODY VERIFIES`** — `SWEEP-F9`'s skip blamed scipy for the whole life of a wrong-signature call. **Sweep for `pytest.skip` inside a broad `except`.**
+★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A GUARD`** · **`A GUARD ADDED TO THE WRONG CLASS CAN SILENTLY WEAKEN A DIFFERENT GUARD`** · **`DELETING AN ASSERTION IS VISIBLE IN A DIFF; TUNING A FIXTURE IS NOT`** · **`CLOSE A FINDING WITH THE INSTRUMENT THAT OPENED IT`**.
+★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT`** · **`A BEHAVIOUR PROTECTED BY A TEST IS NOT NECESSARILY INTENDED BEHAVIOUR`**.
 ## ⚠️ SWEEP COVERAGE — WHAT `9 DEMONSTRATED` DOES **NOT** MEAN
 **`7.4%` of the surface it names: `14` of `189` `A7`/`A8` files traced; ~`410` `A7` and all `278` `A9` UNTRACED; NO TypeScript/vitest sweep at all.** ★★★★★ **`THE 497 STRUCTURAL SITES ARE A CAPABILITY SIGNAL, NOT A DEFECT COUNT` — the `3/87` (~3%) rate is NOT transferable (the 14 files were chosen for money-path relevance, not at random). Extrapolating is a HYPOTHESIS and the grader labelled it one.** ✅ **Honest nulls: `contextlib.suppress` and `try/finally: return` are `0` across all `374` files.**
 
