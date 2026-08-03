@@ -1,0 +1,169 @@
+diff --git a/src/engine/tests/test_metric_snapshot.py b/src/engine/tests/test_metric_snapshot.py
+index b161af57..db89d917 100644
+--- a/src/engine/tests/test_metric_snapshot.py
++++ b/src/engine/tests/test_metric_snapshot.py
+@@ -598,6 +598,164 @@ class TestSnapshotRiskMetricsAnchor:
+             )
+ 
+ 
++class TestReportedProfitFactorEngineAnchor:
++    """LANE-3 / R-614 §6.1(a) — anchor for the REPORTED profit_factor.
++
++    Why this class exists, and why it is NOT a second Tier 2.
++    ---------------------------------------------------------
++    TestSnapshotRiskMetricsAnchor above anchors src.engine.risk_metrics.
++    Measured 2026-08-03 (AR-658, isolated SHA-pinned tree, 90-backtest
++    null-calibration battery):
++
++      * risk_metrics IS live — compute_max_drawdown_distribution /
++        compute_sharpe_distribution are reached via compute_all_risk_metrics
++        (risk_metrics.py:830-831) <- monte_carlo.py:1457. Tier 2 guards a real
++        surface and must NOT be repointed or removed.
++      * But it is NOT the surface that produces result["profit_factor"].
++        risk_metrics has no profit-factor function at all (18 compute_*
++        functions, none for PF). The reported PF comes from an inline
++        expression in backtester.py.
++      * backtester.py carries TWO byte-identical PF expressions (:5323 and
++        :7503). Planting them SEPARATELY separates them: :5323 moved the
++        reported PF on 60 of the 60 backtests that took trades and executed
++        60x; :7503 moved 0/90 and executed 0x under that vehicle. So :5323 is
++        the reporting implementation.
++
++    AR-654 planted exactly that inline PF expression (plant P4, inverted
++    gross_profit/gross_loss) and the whole battery produced BYTE-IDENTICAL
++    output. Nothing in this file could have caught it either: Tier 1's _pf()
++    compares a local reimplementation to a stored snapshot, and Tier 2 anchors
++    a module that does not compute PF.
++
++    What this class does instead
++    ----------------------------
++    Runs the ENGINE end-to-end and cross-checks the engine's own reported
++    aggregate against PF re-derived from the engine's OWN emitted trade list.
++    The join key is measured, not assumed: backtester.py:5227 appends the raw
++    `net_pnl` to the series the PF expression consumes, and :5242 writes that
++    same value to trade["PnL"] rounded to 2dp. So the emitted per-trade field
++    and the aggregate's input are the same series, up to rounding.
++
++    A corruption of the inline expression moves the reported aggregate while
++    leaving the per-trade PnLs untouched, so the two disagree and this test
++    goes RED naming profit_factor.
++
++    PR gate only. Every engine import is function-level, so Tier 1's
++    pre-commit fast path stays import-light exactly as :92-94 documents.
++    """
++
++    # Rounding budget only. trade["PnL"] is round(net_pnl, 2), so re-deriving
++    # PF from the emitted trades differs from the engine's unrounded PF by the
++    # accumulated per-trade rounding error and nothing else. Measured headroom
++    # on this fixture is ~4 orders of magnitude below this bound (see AR-658).
++    REL_TOLERANCE = 1e-3
++
++    def _engine_result(self) -> dict:
++        """Run a real backtest and return the engine's own result dict."""
++        pytest.importorskip("src.engine.backtester")
++        from datetime import datetime, timedelta
++
++        import polars as pl
++
++        from src.engine.backtester import run_backtest
++        from src.engine.config import (
++            BacktestRequest,
++            IndicatorConfig,
++            PositionSizeConfig,
++            StopConfig,
++            StrategyConfig,
++        )
++
++        n = 200
++        base = datetime(2023, 1, 1)
++        closes = [4000.0 + i * 0.5 + (i % 7) * 3 - 10 for i in range(n)]
++        data = pl.DataFrame({
++            "ts_event": [base + timedelta(days=i) for i in range(n)],
++            "open": [c - 2.0 for c in closes],
++            "high": [c + 5.0 for c in closes],
++            "low": [c - 5.0 for c in closes],
++            "close": closes,
++            "volume": [50000] * n,
++        })
++        request = BacktestRequest(
++            strategy=StrategyConfig(
++                name="PF Engine Anchor",
++                symbol="MES",
++                timeframe="daily",
++                indicators=[
++                    IndicatorConfig(type="sma", period=10),
++                    IndicatorConfig(type="sma", period=30),
++                    IndicatorConfig(type="atr", period=14),
++                ],
++                entry_long="close crosses_above sma_10",
++                entry_short="close crosses_below sma_10",
++                exit="close crosses_below sma_30",
++                stop_loss=StopConfig(type="atr", multiplier=2.0),
++                position_size=PositionSizeConfig(
++                    type="dynamic_atr", target_risk_dollars=500
++                ),
++            ),
++            start_date="2023-01-01",
++            end_date="2023-06-30",
++            commission_per_side=0.62,
++        )
++        return run_backtest(request, data=data)
++
++    def test_fixture_actually_exercises_the_pf_expression(self):
++        """Positive witness: the anchor below is not vacuous.
++
++        The engine initialises profit_factor = 0.0 and only reaches the inline
++        expression when trades exist. Without this witness, a fixture that
++        stopped producing trades would make the anchor pass by never running
++        the code it exists to check — which is the exact defect class LANE-6
++        measured across the invariant harness.
++        """
++        result = self._engine_result()
++        trades = result.get("trades", [])
++        assert result.get("total_trades", 0) > 0, (
++            "anchor fixture produced 0 trades, so the engine never evaluated the "
++            "profit_factor expression — the anchor would be vacuous"
++        )
++        assert len(trades) > 0, "engine reported trades but emitted no trade list"
++        losers = [t for t in trades if float(t.get("PnL", 0.0)) < 0]
++        winners = [t for t in trades if float(t.get("PnL", 0.0)) > 0]
++        assert losers and winners, (
++            f"anchor fixture needs both winners and losers to exercise "
++            f"gross_profit/gross_loss; got {len(winners)}W/{len(losers)}L"
++        )
++
++    def test_reported_profit_factor_matches_engine_trade_list(self):
++        """The reported profit_factor must be derivable from the engine's own trades.
++
++        RED when backtester.py's inline PF expression is corrupted (AR-654 P4
++        inverts it); GREEN on the unmodified engine.
++        """
++        result = self._engine_result()
++        trades = result["trades"]
++        pnls = [float(t.get("PnL", 0.0)) for t in trades]
++
++        gross_profit = sum(p for p in pnls if p > 0)
++        gross_loss = abs(sum(p for p in pnls if p < 0))
++        assert gross_loss > 0, (
++            "fixture has no losing trades; engine substitutes 999.99 for an "
++            "infinite PF and this anchor cannot discriminate"
++        )
++
++        derived = gross_profit / gross_loss
++        reported = float(result["profit_factor"])
++        delta = abs(reported - derived)
++        budget = max(1e-6, self.REL_TOLERANCE * derived)
++
++        assert delta <= budget, (
++            f"profit_factor: engine reported {reported:.6f} but its own emitted "
++            f"trade list gives gross_profit {gross_profit:.2f} / gross_loss "
++            f"{gross_loss:.2f} = {derived:.6f} (delta {delta:.6f} > budget "
++            f"{budget:.6f}). The reported aggregate disagrees with the trades it "
++            f"was computed from — inspect the inline profit_factor expression in "
++            f"backtester.py."
++        )
++
++
+ # ═══════════════════════════════════════════════════════════════════════
+ # TIER 3 — CROSS-FIXTURE SNAPSHOT CONSISTENCY
+ # ═══════════════════════════════════════════════════════════════════════

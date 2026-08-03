@@ -12,6 +12,75 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-658 · 2026-08-03 · 🛑★★★★★ **`LANE-3` TRACED TO THE EXECUTABLE LINE — `AR-657`'s `[HYPOTHESIS — NOT TRACED]` IS NOW MEASURED: `backtester.py:5323` IS THE REPORTING `profit_factor` IMPLEMENTATION (`60` of the `60` backtests that took trades moved under a plant there; execution witness `60×`), AND `:7503` MOVED `0/90` AND EXECUTED `0×` — WHICH ALSO CLOSES `AR-654`'s "PLANTED BOTH TOGETHER, CANNOT SEPARATE THEM".** 🛑🛑★★★★★ **AND A `CRITICAL` INVARIANT IS NOT MERELY BLIND, IT IS **TAUTOLOGICAL ON EVERY REAL BACKTEST**: `INV-1 _check_balance_arithmetic` READS `starting_balance` AND `ending_balance`, AND THE ENGINE **EMITS NEITHER** — `0/90` AT RUNTIME AND `0` OCCURRENCES OF THE STRING IN `backtester.py`. BOTH DEFAULT, AND `ending`'s DEFAULT IS *LITERALLY* THE EXPRESSION IT IS THEN COMPARED AGAINST. `diff` IS STRUCTURALLY `0.0`.** 🛑 **THE PF ANCHOR IS WRITTEN AND IS **NOT DELIVERABLE**: NO FIXTURE I CAN BUILD MAKES THE ENGINE EMIT A SINGLE ENTRY SIGNAL, SO I CANNOT GREEN-CONTROL IT. REPORTED, NOT SHIPPED.**
+
+**TASK:** `LANE-3` (`R-614 §6.1`, re-issued SERIAL) · **BRANCH:** `h1-wave4-sealed12-driver` · **ISOLATED TREE:** `wt-lane3-pfanchor-20260803`, detached, pinned to SHA `6eb4326d`. 🛑 **`backtester.py` BYTE-PRISTINE at delivery — `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, identical to its pre-lane value. `runtime-production` NOT touched, NOT read. Main repo NOT written. No push, no merge, no PR.**
+
+### ✅★★★★★ §1 — THE TRACE `R-614 §6.1(b)` NEEDED, AND IT SEPARATES THE TWO PF SITES
+
+**`backtester.py` carries TWO byte-identical PF expressions. `AR-654` planted them TOGETHER and recorded it could not tell them apart. I planted them SEPARATELY — one battery run each, hash-asserted moved and restored.**
+
+| plant (isolated tree · `null_gate_calibration.py --smoke` · `n=90`) | reported `profit_factor` changed | engine hash |
+|---|---|---|
+| **`:5323` only** — `gross_profit/gross_loss` inverted | 🛑 **`60` / `90`** | `9ee7c43e` |
+| **`:7503` only** — same inversion | ✅ **`0` / `90`** | `0b4ed254` |
+| control, un-planted | — | `177ec9e1` |
+
+✅ **THE `60` IS NOT A PARTIAL — IT IS COMPLETE.** The `30` unmoved runs all have `total_trades == 0` and `profit_factor == 0.0`; they never reach the expression (it initialises at `:5040`). **So attribution is `60` of the `60` runs that actually computed a PF.**
+✅★★★★★ **AND A POSITIVE EXECUTION WITNESS, because "output unchanged" and "the line never ran" are indistinguishable without one (`AR-654`'s own lesson):** a fail-safe counter at BOTH sites, control probe `90` harness calls, `Errors: 0` → **`HIT5323` × `60`** and **`HIT7503` ZERO times**.
+🛑 **SCOPE, STATED HONESTLY: `:7503` is `0×`-executed BY THIS VEHICLE.** That is NOT "dead code" — the null-cal battery drives one entry path and `:7503` sits in the `run_class_backtest` assembly. **`[UNENUMERATED]` — which vehicles reach `:7503` is not measured here.**
+
+### ✅★★★★★ §2 — `R-614 §6.1(b)` ANSWERED: **DO NOT REPOINT TIER 2. SUPPLEMENT IT.**
+
+**The ruling asked whether Tier 2 should anchor the inline `backtester.py` math instead of `risk_metrics.compute_*_distribution`. My answer is NO — and it rests on correcting my own near-miss.**
+⚠️★★★★★ **NEAR-MISS, DISCLOSED: I grepped for callers of the two anchored functions while EXCLUDING `risk_metrics.py` itself, got zero non-test hits, and was one step from publishing *"Tier 2 anchors functions nothing calls."* **THAT WOULD HAVE BEEN FALSE.** They ARE live — `compute_all_risk_metrics` (`risk_metrics.py:830-831`) calls both, and `monte_carlo.py:1457` calls it.** ★★★ **`i-measured-the-neighbouring-object`: I excluded the one file that could hold the internal caller. Sixth this session; second caught pre-publication.**
+✅ **CORRECTED PICTURE: Tier 2 guards the MONTE-CARLO RISK-DISTRIBUTION surface, which is real and live. **Repointing it would DELETE a working guard.** What is missing is an ADDITIONAL anchor on the inline math producing the headline metrics.** `[MEASURED HERE]` **`risk_metrics.py` exposes `18` `compute_*` functions and NONE computes profit factor** — there was never anything there to anchor PF against.
+✅ **JOIN KEY FOR ANY SUCH ANCHOR, MEASURED NOT ASSUMED: `:5227` appends raw `net_pnl` to the series the PF expression consumes; `:5242` writes that same value to `trade["PnL"]` as `round(net_pnl, 2)`. The emitted per-trade field and the aggregate's input are THE SAME SERIES up to 2dp** — which is what makes a re-derivation from `result["trades"]` a legitimate anchor rather than a second reimplementation.
+
+### 🛑🛑★★★★★ §3 — OUTSIDE THE LANE, AND IT OUTRANKS IT: `INV-1` IS TAUTOLOGICAL, NOT BLIND
+
+**Found while measuring which keys a REAL result carries — `90` live backtests, key census via a probe in the harness, isolated tree.**
+
+| claim | path 1 — RUNTIME (`90` real results) | path 2 — SOURCE |
+|---|---|---|
+| `starting_balance` present | 🛑 **`0` of `90`** | 🛑 **`grep -c 'starting_balance' backtester.py` → `0`** |
+| `ending_balance` present | 🛑 **`0` of `90`** | 🛑 same |
+| positive control — `max_drawdown` · `profit_factor` · `win_rate` · `total_return` · `trades` · `daily_pnls` · `equity_bars` · `prop_compliance` · `long_short_split` · `avg_trade_pnl` | ✅ **`90` of `90` each** | — |
+
+🛑★★★★★ **CONSEQUENCE, read off `core.py:171-177`: `starting` falls back to the `50_000.0` constant; `ending` falls back to `starting + total_return`; `expected_ending` is THEN COMPUTED AS `starting + total_return`. **The check compares a default against the identical expression that produced it.** `diff` is structurally `0.0` — so a `CRITICAL` invariant named for the `+$7K` Topstep DLL-cap inflation **cannot fail on engine output at all.** It is not "blind to absence"; it is a tautology.**
+★★★★★ **A THIRD CLASS, BEYOND `R-614 §3`'s TAXONOMY. `CLASS A` = metric absent, accessor default passes · `CLASS B` = metric present but wrong · **`CLASS C` = THE REQUIRED INPUT IS NEVER EMITTED BY THE ENGINE**, so the predicate degenerates to an identity.** 🛑 **`LANE-6`'s sweep scores `INV-1` as `BLIND`, which is true and UNDERSTATES it: a Class-A absence fix would make `INV-1` FAIL on all `90` real backtests — a false alarm, not a repair.** ★★★ **The sweep's `empty = {"total_trades": 10}` fixture CANNOT distinguish Class A from Class C, because both present as PASS-on-absent. That is a limitation of an instrument I shipped.**
+🛑 **I AM NOT FIXING IT.** `INV-1` is `CRITICAL`, so any repair changes `overall_passed` on every real backtest — a production-behaviour change, and `R-614 §6.3` reserves the propagation/severity contract to the desk. **The honest option set: (i) the engine emits the two balances · (ii) `INV-1` is re-grounded on keys that exist · (iii) it is retired. All three are rulings.**
+
+### 🛑★★★★★ §4 — THE PF ANCHOR: WRITTEN · RED-PROOF **NOT** RUN · **NOT DELIVERABLE**
+
+**`docs/designs/LANE3-PF-ANCHOR-DIFF-2026-08-03.patch` — `158` insertions, `test_metric_snapshot.py` ONLY, zero engine lines.** Class `TestReportedProfitFactorEngineAnchor`: runs the engine end-to-end, re-derives PF from the engine's OWN emitted trades, asserts against the reported aggregate. **Every engine import FUNCTION-LEVEL, so Tier 1's documented import-light path at `:92-94` is untouched; Tier 2 unmodified** (`R-614 §7` STOPs both honoured).
+🛑🛑★★★★★ **AND IT DOES NOT WORK, BECAUSE NO FIXTURE I CAN BUILD MAKES THE ENGINE TRADE `[MEASURED HERE]`:**
+```
+repo's own _make_trending_data(200) + e2e request   -> total_trades = 0
+seeded random walk, n=252 / 400, seeds 42 / 7       -> total_trades = 0
+fixed sizing (contracts=1) instead of dynamic_atr   -> total_trades = 0
+use_eligibility_gate = False                        -> total_trades = 0
+signal_vector                                       -> ALL ZEROS in every case
+```
+★★★★★ **THE BLOCKER IS UPSTREAM OF EXECUTION: no ENTRY SIGNAL is generated at all. So it is not sizing, not the exit rule, and not the eligibility gate — which reports `passthrough`, i.e. everything passes unfiltered.**
+✅★★★★★ **AND THE ANCHOR'S OWN WITNESS TEST IS WHAT CAUGHT THIS.** `test_fixture_actually_exercises_the_pf_expression` FAILED with *"anchor fixture produced 0 trades … the anchor would be vacuous."* **I wrote that witness because `LANE-6` had just spent a night on guards that pass because their input never arrives — and it convicted my own fixture on its first run.** **Without it I would have shipped a GREEN test that never evaluated the expression it exists to check: the exact defect class, re-created by the person fixing it.**
+🛑★★★★★ **A FINDING FALLING OUT OF THE SAME PROBE: `src/engine/tests/test_e2e_backtest.py` PRODUCES `0` TRADES, AND ITS ASSERTIONS ARE `assert "total_trades" in result`.** **The repo's end-to-end backtest suite is itself VACUOUS for every trade-dependent behaviour — `6` passing tests over a run that never traded.** `[MEASURED HERE]` ⚠️ **Its `7th`, `test_walk_forward_mode`, fails PRE-EXISTING on the pristine tree — baseline taken before I wrote a line; NOT mine.**
+
+### ⚠️★★★★★ §5 — INSTRUMENT AUDIT: MY FIRST TWO WITNESS PROBES WERE BROKEN, AND A CONTROL CAUGHT THEM
+
+**Attempt 1 reported `HIT` at NEITHER site — which, against a plant that had just moved `60/90`, is self-contradictory. I did not publish it.** The control probe — `90` harness calls in every prior run — wrote **nothing**, proving the run never reached the harness at all. **Cause: backslash mangling in the injected path produced a `SyntaxError`, and `rc=0` hid it because the battery caught the error per-trial.** Attempt 2 failed the same way and was caught by an added `py_compile` assert. **Attempt 3** (forward-slash path, `try/except`, compile-asserted) produced the `§1` numbers with `Errors: 0` and a live control.
+★★★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST.` The finding *"neither PF site executes"* was FALSE and would have been a spectacular publication. **The only reason it died is that the control probe ran in the same command, and its silence was louder than the witness's.****
+
+### §6 — WHAT I DID **NOT** DO
+
+**No engine change.** · **No red-proof of the PF anchor** — the plant exists (`§1`) but the anchor cannot be green-controlled, and **a RED with no GREEN control is not evidence.** · 🛑 **BOTH TREES NOT ADDRESSED** — the campaign-tree copy of `test_metric_snapshot.py` is untouched; `R-614 §6.1`'s both-trees clause is **NOT MET**. · **`LANE-6`'s remaining `9` UNTOUCHED** (`R-614 §6.2` queues them behind `LANE-3`). · **Class-B exposure across the other `12`: still UNMEASURED, no instrument.** · **Which vehicles reach `:7503`: not measured.** · **I have graded NOTHING and claim no band.**
+
+**FAN-IN: `LANE-1` · `2` · `5` · `6`(partial) CLOSED · `LANE-3` TRACED-NOT-DELIVERED · `LANE-4` QUEUED = `4.5 / 6`.**
+**RECOMMENDATION: `BLOCKED` — on EVIDENCE this time, not on a ruling.** The lane cannot close until the engine can be made to trade in-test. **Three decisions are the desk's:** **(i)** `INV-1`'s Class-C tautology (`§3`) — emit the balances, re-ground, or retire · **(ii)** whether the PF anchor's vehicle should be an in-test engine run at all, given `signal_vector` is all-zero on every synthetic fixture — the alternative is a golden corpus generated BY the engine and pinned · **(iii)** whether `test_e2e_backtest.py`'s vacuity (`§4`) opens its own lane.
+**NEXT SMALLEST TASK:** find why `signal_vector` is all-zero on synthetic OHLCV. It is ONE layer (signal generation), it blocks the anchor, and it is the same question `test_e2e_backtest.py` has silently failed to ask for its entire existence.
+
+---
+
 ## AR-657 · 2026-08-03 · 🛑★★★★★ **`LANE-3` INVESTIGATED — THE DEFECT IS REAL BUT **A DIFFERENT SHAPE THAN `R-613 §4.2` DESCRIBES**, AND THE DIFFERENCE DECIDES THE FIX. THERE ARE **TWO TIERS**, AND TIER 2 (`TestSnapshotRiskMetricsAnchor`) **DOES** ANCHOR AGAINST THE ENGINE — SO "the test compares the engine against a copy of its own math" IS TRUE OF TIER 1 ONLY, AND TIER 1 IS DOCUMENTED AS DELIBERATE.** 🛑★★★★★ **THE REAL GAPS ARE TWO AND NEITHER WAS NAMED: **`profit_factor` HAS NO ENGINE ANCHOR IN EITHER TIER**, AND TIER 2 ANCHORS AGAINST `risk_metrics.compute_*_distribution` — **NOT** THE INLINE `backtester.py` MATH THAT `AR-654` MEASURED PRODUCING THE REPORTED NUMBERS.** ✅ **AND THE CONSTRAINT THE RULING CALLED REAL IS FALSE: the engine imports in `1.0s` and `vectorbt` NEVER LOADS.**
 
 🛑 **NO FIX BUILT. NO PLANT-BASED RED-PROOF RUN. This is an investigation result, filed because the mechanism I was about to build would have been aimed at the wrong gap.**
