@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3773` at THIS commit, 2026-08-03 12:0x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3787` at THIS commit, 2026-08-03 12:0x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3773` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
+**File is `3787` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `12:0x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FOURTH `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-646` (`7d9dd8df`). Newest AR: `AR-690` — RULED at `R-646`.**
+**Ruling ledger at `R-648` (`c2a75d28`). Newest AR: `AR-694` — a START-RECEIPT on `TASK-1`, requesting nothing, deliberately UNRULED (`advisor-ruling §0` — a manufactured ruling is noise). `AR-691`/`AR-692` accepted inside `R-648`.**
 ✅✅ **WORKER SEAT IS LIVE, FAST, AND UNBLOCKED.** `AR-687` opened it → `AR-688` landed the packet and hit the desk's STOP CONDITION → `R-644` discharged it → **`AR-689`: `R-639 §6.2` COMPLETE `3/3` (`eac48f29`), 11 committed tests, four-arm deletion red-proof** → **`AR-690`: `SWEEP-F7` closed (`5639067f`) with a `2×2` that proves the old test passed against a CLI mutated to exit `0`.** **NOW ON `SWEEP-F3`.** 🛑 **The `R-642`-era "OPERATOR ACTION REQUIRED — start a worker seat" line is DISCHARGED and deleted; do not reinstate it.**
 🛑🛑★★★★★ **`§6.2` IS LANDED, NOT CERTIFIED — AND THIS DESK MAY NOT CERTIFY IT.** `R-644 §3` was MY design decision, so grading its implementation is authorship admiring itself. ✅ **ADVERSARIAL `accuracy-validator` DISPATCHED (`R-645 §3`), DURABLE RECEIPT: `docs/designs/GRADE-CRISIS-FAILCLOSED-2026-08-03.md`, committed by the grader.** **Aimed at the 122-line `backtester.py` helper extraction — the deviation the worker declared itself.** ⏳ **RULE IT WHEN THE RECEIPT LANDS.**
 ✅ **DESK RE-RAN `§6.2` INDEPENDENTLY `[MEASURED HERE]`: `1 failed, 41 passed`, the failure the pre-existing `test_tier1_passes` — matches `AR-689`. Fixture carries a real `500.0`; positive witness present; the false comment is deleted.** 🛑 **NOT verified by me: the four-arm red-proof · the 7-file regression population · the "moved VERBATIM" extraction claim. `[RELAYED]` — that is what the grade is for.**
@@ -126,11 +126,25 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 **`F-G3` CRITICAL — a WHOLESALE stress-test crash deletes the crisis evaluation.** `RuntimeError`/`TypeError`/`ZeroDivisionError` propagate out of `run_stress_test`; `backtester.py:8432` swallows to `crisis_results = None`; the veto loop never runs **AND** the rescore at `:8410` (same `try`) never happens, so `forge_score` keeps its **crisis-blind** value. One stderr line is the only trace.
 **`F-G4` HIGH — `crisis_results={}`, missing `max_drawdown`, `NaN` (`nan > 2000.0` is `False`) all score clean.**
 
-## ★★★★★ AUTHORIZED NOW — **`SWEEP-F3` (in flight), THEN `SWEEP-F10` (`R-646 §4`)**
-✅ **`SWEEP-F3`** — five sizing-parity tests dead behind a false caption: `test_paper_backtest_sizing_parity.py:262-292` fixture needs `exit` added and `take_profit.type` corrected from `'fixed_r'`; `:299/316/327/341/353` must stop converting an arbitrary `Exception` into a skip. 🛑 **`A SKIP REASON IS A CLAIM` — report what was underneath, do not tune to green.**
-🛑★★★★★ **`SWEEP-F10` — TESTS MUST NOT USE TRACKED ARTIFACTS AS SCRATCH. SCOPE = EXACTLY TWO SITES:** `src/engine/tests/test_audit_a12.py` · `tests/python/test_validate_scaling_schedule.py::test_cli_report_file_created`. 🛑🛑 **FORBIDDEN: `scripts/wave25_exit_engine_ab_report.py` and `scripts/h1_designpool_support.py` — writing a tracked artifact is their PURPOSE.** ★★★★★ **`A TEST THAT WRITES A TRACKED FILE IS USING THE REPOSITORY AS SCRATCH; A GENERATOR THAT WRITES ONE IS DOING ITS JOB` — same `git status` line, opposite dispositions.** 🛑 **NEVER `git checkout`/`restore` a dirty tracked file: it may be a live grader's mid-run state (`R-599 §8`) — RECORD IT AND LEAVE IT.**
-**BOTH LANES:** committed tests · red-proofed by deletion in a MATERIALISED SCRATCH copy · `never-flag` · state the NON-DEGENERATE witness value. **STOP CONDITION: if unblinding reveals a PRODUCTION defect (as `F-8`/`F-9` did), STOP that lane and report — do not fix production under a test-vacuity authorization.**
-**QUEUE AFTER:** `SWEEP-F6`'s fixture + red-proof · `SWEEP-F5`'s two-branch measurement · the `R-642 §2` exportability boundary packet · `track3` disposition · `INV-13 → CRITICAL` → `INV-1` deletion.
+## 🛑🛑🛑★★★★★ AUTHORIZED NOW — **`R-648 §4`, UNDER THE 2026-08-03 OPERATOR DIRECTIVE (ADOPTED IN FULL)**
+🛑★★★★★ **THE OPERATOR REJECTED THIS DESK'S FRAMING AND HE WAS RIGHT. `0/155` AND `0/16` ARE THE PINNED *BEFORE* FIGURE (`R-401`) — **THE PLAN'S EXIT IS `≥1 TIER-A SPEC`.** Quoting a corpus-completion denominator for a one-strategy finish line made it look like a completion project. `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG.`**
+🛑 **`SWEEP-*` IS A CLOSED LANE — not paused. Recorded findings STAY recorded, but NOTHING re-enters the critical path unless it PREVENTS THE GOLDEN SLICE FROM COMPILING OR INVALIDATES ITS RECEIPT. That is the ONLY admission test now.**
+**TASK-1 (worker, IN FLIGHT `AR-694`) — A MEASUREMENT, NOT A BUILD:** is the compile-fidelity machinery **WIRED or DORMANT**? `[MEASURED HERE]` `forensics/compile_fidelity.py` **915 lines** (`run_leg_a_phase1`, `Phase1Seal`, `ConditionVerdict`, `_check_concretely_bound`) · `forensics/calibration_battery.py` **imports `run_leg_a`** · `parity_engine/diff_harness.py` **561 lines** (`run_parity_diff`, vectorbt reference oracle) = **1,476 lines** — **while `battery/passage_ledger.py:29` still calls it *"CONDITIONAL + RESERVED (not-yet-built)"*.** ★★★★★ **`dormant-activation`, 4× convicted here, sitting on the Phase-1 exit's SECOND LEG. The answer re-sizes every remaining estimate.** 🛑 **REPORT ONLY — change nothing.**
+**TASK-2 (queued):** propose the golden slice — 3 candidate tier-A specs with condition count, already-bindable count, instrument, timeframe, dataset determinism. **Recommend one; ratification is the DESK'S.**
+🛑 **FORBIDDEN:** any new comparator/oracle · new checkers · architecture redesign · re-opening `§6.2` or any `SWEEP-*` · **a seventh `P0` attempt** (count `6`, threshold `2`; renaming a hypothesis does not reset it).
+
+## ★★★★★ THE DASHBOARD — `R-648 §3`. `0/155` AND `0/16` ARE **SCALING** METRICS AND MAY NOT BE QUOTED AS BREAKTHROUGH DISTANCE AGAIN, INCLUDING BY THIS DESK
+| # | breakthrough metric | value |
+|---|---|---|
+| 1 | golden-strategy conditions BOUND / total | `[UNSELECTED — TASK-2]` |
+| 2 | compiler stages passed (spec · binding · emit · execute · compare · planted-defect) | **`0 / 6`** |
+| 3 | first divergence location | `n/a — no comparison run` |
+| 4 | planted-defect propagation | **`NOT BUILT`** |
+🛑 **SEPARATE ROW, KEPT SO NOBODY CONFLATES THEM: `PHASE-1 EXIT = 0 of 3 hard gates` (`BIND`, `FIDELITY`, `P0IG`).** ★★★ **The golden slice is a BREAKTHROUGH DEMONSTRATION, not a certified phase exit — the slice moves `BIND`/`FIDELITY`; `P0IG` is Surface-A instrument qualification, blocked by `4d-ii`.**
+
+### ⏳ TWO INDEPENDENT GRADES IN FLIGHT (`§15.7` deviation DECLARED — disjoint surfaces, disjoint receipts, operator-authorized parallel lanes)
+1. **crisis fail-closed `eac48f29`** → `docs/designs/GRADE-CRISIS-FAILCLOSED-2026-08-03.md`
+2. **`MAPPING` / "terminal acceptance failure"** → `docs/designs/GRADE-MAPPING-TERMINAL-ACCEPTANCE-2026-08-03.md` — 🛑 **rule it under the `R-647 §4` PRE-REGISTERED rule above; the brief forbids the grader from considering node status and orders the desk's own reading `(C)` refuted first.**
 
 ### ~~SUPERSEDED — `R-639 §6.2` CONTRACT, COMPLETED `3/3` AT `eac48f29` (`AR-689`), KEPT FOR THE AMENDMENT'S REASONING~~
 ✅★★★★★ **`R-644` DISCHARGED THE STOP CONDITION `AR-688` RAISED. MEMBER 3 = OPTION A, AMENDED:** `F-G4` ships AS WORDED (not narrowed), and the three fixtures at `test_performance_gate.py:256/:323/:338` gain an **explicit REAL under-limit `max_drawdown` — NOT `0`**, because `0` is the literal default the missing-key path returns and would re-create the shorthand in a new costume. 🛑 **PLUS MANDATORY: `test_score_capped_at_100` gains a POSITIVE WITNESS (`crisis_veto is False` AND `score > 0`) — under `F-G4` it stays GREEN while asserting on `0.0`.** ★★★★★ **`A TEST THAT GOES VACUOUS CHANGES MEANING WITHOUT CHANGING COLOUR` — every failure-set diff this campaign runs is structurally blind to that class.** 🛑 **The false comment at `test_performance_gate.py:322` (*"no max_drawdown field — no veto should fire"*) is DELETED in the same packet; it teaches that absence means safety.**
