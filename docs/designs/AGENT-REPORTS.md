@@ -4,6 +4,30 @@
 
 ---
 
+## AR-696 · 2026-08-03 · 📋 **START-RECEIPT — `R-649 §4` TASK-2 / TASK-3 / TASK-4 ACCEPTED IN ORDER. READ-ONLY UNTIL TASK-3; nothing observable lands before the TASK-2 receipt.** ✅ **AND THE FIRST THING MEASURED ANSWERS STOP CONDITION (i) IN THE NEGATIVE: THE TIER-A POPULATION *IS* ENUMERABLE FROM THE REPOSITORY.**
+
+**SEAT — SAME PROCESS, NEW CONVERSATION `[MEASURED HERE, parent-PID walk]`:** I am `claude.exe 21508`, the same CLI that wrote `AR-687`…`AR-695`. **`/clear` rolled the conversation, not the seat.** No handoff occurred and none is declared. **Fan-in on `R-649 §4` is `0 / 3` and all three are UNSTARTED, not blocked — per `worker-onboarding §5`, unstarted is the reason to stay.**
+✅ **EAR: ONE RIG, STILL ARMED ACROSS THIS SECOND `/clear` `[MEASURED HERE]`.** `bash 13568` (parent `21508`) **fired `R-649`/`508a8be3` into THIS conversation.** 🛑 **No second ear armed.** ⚠️ **Blind window: none for the ruling channel — `R-649` is the newest ruling `[MEASURED HERE, `git log -1 -- docs/designs/ADVISOR-RULINGS.md`]` and I read it in full, including `§5`'s desk actions.**
+
+**TASKS, AS `§4` SCOPES THEM — I will run them in the ruling's order:**
+1. **TASK-2** — enumerate the **repository-defined tier-A / spearhead `11`-spec / `53`-load-bearing-condition** population DIRECTLY, seal it, publish its OWN receipt. 🛑 **`161`/`16` are the `claude-rung-v32` shakedown population and will NOT be quoted as golden-slice distance.** Then name the simplest real golden strategy by fewest approximation + unbound failures.
+2. **TASK-3** — the ONE bounded session-keyword repair at the SHARED normalization/binding boundary, re-running the EXACT SAME sealed artifacts. 🛑 **I will not patch the `26` individually — that would destroy the evidence they were ever one cause.**
+3. **TASK-4** — partition the `134` by detector + reason code into DISTINCT proxy mechanisms with multiplicities, not `134` rows.
+
+🛑 **FORBIDDEN LIST ACKNOWLEDGED VERBATIM:** weakening `automated_verdict` · promoting any approximation to a pass · caller-supplied `BindingPlan` · a second oracle · new checkers mid-slice · a seventh `P0` attempt.
+🛑 **STOP CONDITIONS ACKNOWLEDGED AS TWO, NOT ONE (`§3`'s lesson applied to the desk's own new text):** **(i)** tier-A population not enumerable from the repository → STOP and report, do **not** substitute the shakedown set. **(ii)** the session-keyword repair collapses FEWER than `20` of the `26` → STOP and report the residual; the one-cause hypothesis is then wrong and that is a ruling, not a fix.
+
+### ✅★★★ EARLY MEASUREMENT — STOP CONDITION (i) IS **NOT** MET `[MEASURED HERE]`
+The population is a **committed artifact with a committed generator**, not a reconstruction:
+`docs/replay-results/h1-battery/tier-a-compile-census.json` · generator `docs/replay-results/h1-battery/tier_a_compile_census.py` · receipt source `docs/replay-results/h1-battery/tier-a-clean-strategy-receipt.json`.
+**Its own fields: `n_selected` `11` · `n_compiled` `11` · `n_conditions` **`99`** · `n_spine_or_trigger` **`53`** · `specs[]` length `11`.**
+★★★ **SO THE RULING'S `53` IS `n_spine_or_trigger`, AND THE TOTAL CONDITION COUNT IS `99`, NOT `53`.** ⚠️ **I have NOT yet proven that `spine|trigger` is the same predicate as `compile_fidelity`'s `load_bearing: true`. Until I do, `53` is the CENSUS's load-bearing count, not necessarily the SEAL's — and quoting one for the other is the denominator error one ruling later. That equivalence is the first thing TASK-2 measures.**
+⚠️ **DECLARED RISK, NOT YET RESOLVED:** the census's `extraction_source` is a **session-scratchpad path under `AppData\Local\Temp` belonging to a DIFFERENT session (`d96dba1d-…`)**. **If the tier-A spec bodies live only there and that directory is gone, the population is enumerable but possibly not SEALABLE from the repository** — which is a different finding from stop condition (i) and I will report it as such rather than folding it in.
+
+**FIRST OBSERVABLE:** the TASK-2 receipt, as `AR-697`. **ETA ≤ 60 min.** 🛑 **Nothing is written to the shared tree by TASK-2; execution runs in a materialised scratch copy (`git archive HEAD | tar -x`), as `AR-695` did.**
+
+---
+
 ## AR-695 · 2026-08-03 · ✅★★★★★ **`R-648 §4 TASK-1` — ANSWERED, AND THE ANSWER SPLITS THREE WAYS RATHER THAN THE TWO THE RULING OFFERED: `compile_fidelity` IS **BUILT AND WORKING BUT UNWIRED** · `calibration_battery` IS **TEST-ONLY** · `diff_harness` IS **WIRED INTO PRODUCTION AND SWITCHED OFF**.** 🛑🛑★★★★★ **AND THE MEASUREMENT THAT RE-SIZES EVERYTHING: I RAN THE SEAL ON **16 REAL CORPUS SPECS** AND IT WORKED FIRST TIME — `161` LOAD-BEARING CONDITIONS, `0` PASS. **BUT `134` OF THE `161` FAIL AS *"BOUND TO AN APPROXIMATION"*, NOT AS UNBOUND.** ★★★★★ `THE COMPILER IS NOT FAILING TO BIND. IT IS BINDING TO PROXIES, AND THE DETECTOR HONESTLY REFUSES TO CERTIFY THEM.`**
 
 **TASK:** `R-648 §4 TASK-1`. 🛑 **NOTHING CHANGED — no build, no wiring, no fix. Every execution below ran in a MATERIALISED SCRATCH COPY (`git archive HEAD | tar -x`), never in the shared tree.**
