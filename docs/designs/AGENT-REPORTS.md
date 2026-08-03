@@ -12,6 +12,58 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-657 · 2026-08-03 · 🛑★★★★★ **`LANE-3` INVESTIGATED — THE DEFECT IS REAL BUT **A DIFFERENT SHAPE THAN `R-613 §4.2` DESCRIBES**, AND THE DIFFERENCE DECIDES THE FIX. THERE ARE **TWO TIERS**, AND TIER 2 (`TestSnapshotRiskMetricsAnchor`) **DOES** ANCHOR AGAINST THE ENGINE — SO "the test compares the engine against a copy of its own math" IS TRUE OF TIER 1 ONLY, AND TIER 1 IS DOCUMENTED AS DELIBERATE.** 🛑★★★★★ **THE REAL GAPS ARE TWO AND NEITHER WAS NAMED: **`profit_factor` HAS NO ENGINE ANCHOR IN EITHER TIER**, AND TIER 2 ANCHORS AGAINST `risk_metrics.compute_*_distribution` — **NOT** THE INLINE `backtester.py` MATH THAT `AR-654` MEASURED PRODUCING THE REPORTED NUMBERS.** ✅ **AND THE CONSTRAINT THE RULING CALLED REAL IS FALSE: the engine imports in `1.0s` and `vectorbt` NEVER LOADS.**
+
+🛑 **NO FIX BUILT. NO PLANT-BASED RED-PROOF RUN. This is an investigation result, filed because the mechanism I was about to build would have been aimed at the wrong gap.**
+
+### ✅ §0 — TWO ROUTING ITEMS FOR THIS DESK (operator-corrected, `2026-08-03`)
+
+⚠️ **The operator corrected my routing in his own words — *"IF YOU HAVE A QUESTION ABOUT SUBAGENTS REPORT TO ADVISOR NOT ME."* Both items below were previously raised in operator chat. That was my error; they belong here. I will not re-raise either with him.**
+1. 🛑 **`R-613 §4.2` ORDERED `LANE-3` AS A SUBAGENT LANE. THIS SEAT CANNOT DISPATCH ONE.** Its harness carries a standing instruction — *"Do not call the AgentTool unless the user requested it"* — and the operator has not requested it. **So `LANE-3` ran SERIALLY, not in parallel, and `R-613 §4`'s parallelism was not achieved.** ★★★ **This is a CAPABILITY claim and I am naming the actor rather than reporting a blocker: the desk can either obtain the operator's word, or re-issue the lane as serial. `AN UNOWNED PREREQUISITE IS A CLAIM ABOUT WHO CAN ACT.`**
+2. 🛑 **THE INDEPENDENT GRADE IS STILL OWED AND UNASKED-FOR IN THE RIGHT CHANNEL.** `accuracy-validator` is a local agent one authorization from running; **the same harness rule blocks me from dispatching it.** Findings now awaiting a grade: `AR-654 §4` (`INV-7` could not fail), `AR-656 §1` (my own `13/14` was wrong), and this report's `§2`. **Repairs awaiting a grade: `INV-7`, `INV-9`, `INV-10`.** ★★★ **I have never graded any of them and am not claiming a band.**
+
+### 🛑★★★★★ §1 — WHAT THE RULING GOT RIGHT, AND THE PART IT MISSED
+
+✅ **CONFIRMED AT THE EXECUTABLE LINE:** `test_metric_snapshot.py:50-52` says *"Metric helpers (copied from `test_golden_fixtures`…) must stay self-contained so the pre-commit hook can run them without importing the full engine (which has heavy deps: vectorbt, etc.)"*, and `:54` defines its own `_pf`. **The Tier-1 classes compute every metric with local reimplementations and compare to a pinned snapshot.**
+🛑 **BUT THE FILE DOCUMENTS A SECOND TIER AT `:92-94`, WHICH `R-613 §4.2` DOES NOT MENTION:** *"They are used ONLY by `TestSnapshotRiskMetricsAnchor` (Tier 2 / PR-gate), never by the Tier 1 pre-commit classes, so the pre-commit fast path stays import-light exactly as designed."* **`_max_dd_via_risk_metrics` (`:96`) and `_sharpe_via_risk_metrics` (`:107`) DO import and call `src.engine.risk_metrics`.**
+★★★★★ **SO THE TWO-TIER SPLIT IS DELIBERATE AND SELF-DOCUMENTED, AND "the metric gate cannot detect an engine error" IS NOT TRUE AS WRITTEN. Building the ruling's fix would have re-created a Tier 2 that already exists.**
+⚠️ **MY OWN NEAR-MISS, DISCLOSED:** my first enumeration grepped `^import|^from` — **module level only — and returned "zero engine imports", which I was one step from publishing.** The two engine imports are FUNCTION-LEVEL at `:99`/`:114`. ★★★ **`i-measured-the-neighbouring-object`, fifth time this session: my join key was "imports at column 0", and the claim was "imports at all."**
+
+### 🛑★★★★★ §2 — THE TWO REAL GAPS, NEITHER OF WHICH THE RULING NAMED
+
+1. 🛑 **`profit_factor` HAS NO ENGINE ANCHOR IN EITHER TIER.** There is a `_max_dd_via_risk_metrics` and a `_sharpe_via_risk_metrics`; **there is no `_pf_via_*`.** `[MEASURED HERE]` — `grep` for `_pf_via` / `profit_factor` in the anchor helpers returns nothing. **PF is the metric with a live perf-gate threshold (`performance_gate.py:127`, PF ≥ 1.7) and an inline engine implementation at `backtester.py:5371`/`:7592`, and it is anchored nowhere.** ★★★ **`AR-654` plant `P4` inverted exactly that line and produced byte-identical battery output; this file could not have caught it either.**
+2. 🛑 **TIER 2 ANCHORS THE WRONG IMPLEMENTATION.** It calls `risk_metrics.compute_max_drawdown_distribution` / `compute_sharpe_distribution`. **The reported `sharpe_ratio` and `max_drawdown` are produced by DIFFERENT, INLINE code in `backtester.py` — `[MEASURED, AR-654]`: plants `P2` (`drawdown_dollars` sign) and `P3` (`np.sqrt(252)→np.sqrt(12)`) both moved the engine's reported numbers, and both live in `backtester.py`, not `risk_metrics.py`.** ★★★★★ **AN ANCHOR THAT AGREES WITH A SECOND IMPLEMENTATION SAYS NOTHING ABOUT THE ONE WHOSE OUTPUT SHIPS.** ⚠️ **`[HYPOTHESIS — NOT TRACED]`: I have not read the assignment that puts the inline value into the result dict, so "the anchored implementation is never the reporting one" is inference from the plant evidence, not a traced call path. It is the single thing a fix must confirm first.**
+
+### ✅ §3 — THE STATED CONSTRAINT IS FALSE, WHICH WIDENS THE OPTIONS
+
+**The ruling flagged the comment's constraint as real, citing `AR-652`'s measured `vectorbt` hang.** ✅ **MEASURED HERE, and it is not:**
+```
+python -c "import time; t=time.time(); import src.engine.backtester; print(time.time()-t); import sys; print('vectorbt' in sys.modules)"
+  -> backtester imported in 1.0s   |   vectorbt actually loaded? False   |   rc=0
+```
+★★★ **`AR-652` measured that `import vectorbt` hangs — TRUE — and that both its import sites are LAZY, inside functions. Importing the engine therefore never triggers it. The comment's premise was correct when written and is now stale; Tier 2 already relies on that, which is why it works.**
+🛑 **BUT IMPORTING IS NOT ENOUGH: the engine's PF is an INLINE EXPRESSION at `backtester.py:5371`, not a callable.** **There is no `profit_factor()` to import.** ★★★ **So the honest option set is: (a) EXTRACT the inline metric math into pure helpers the engine and the test both import — the only one that gives a single source of truth, and it modifies `backtester.py`; or (b) pin a golden corpus generated BY the engine. `(a)` is a production-engine refactor and I am not starting it without a ruling.**
+
+### §4 — COMMANDS + RESULTS
+
+```
+grep -nE "^\s*(import|from) " test_metric_snapshot.py -> 7 stdlib/3rd-party + 2 ENGINE at :99,:114 (function-level)
+sed -n '92,94p'                                       -> "used ONLY by TestSnapshotRiskMetricsAnchor (Tier 2 / PR-gate)"
+pytest TestSnapshotPerfect TestSnapshotMarginal -q    -> 7 passed in 0.17s   (pre-commit tier, currently green)
+import src.engine.backtester                          -> 1.0s, vectorbt NOT in sys.modules
+main repo @ c766f468, 35 modified tracked files       -> NOT WRITTEN; no worktree created this lane
+```
+
+### 🛑 §5 — WHAT I DID **NOT** DO
+
+**No fix, no diff, nothing to land.** · **NO PLANT-BASED RED-PROOF** — I did not create the isolated worktree or plant an engine-side metric error, so *"the gate stays green under an engine defect"* is **`[HYPOTHESIS]` supported by the import structure and by `AR-654`'s `P2`/`P3`/`P4`, NOT by a run of this gate against a planted engine.** ★★★ **That plant is the first thing the fix owes, and it is cheap now that `§3` shows the engine imports.** · **I did not read `TestSnapshotRiskMetricsAnchor`'s body** — so what Tier 2 actually asserts, and whether it runs in CI, is **`[UNENUMERATED]`.** · **BOTH TREES (`R-613 §4.2`) NOT ADDRESSED** — I looked only at the MAIN repo; the campaign tree's copy is unexamined. · **`LANE-6`'s remaining `9` untouched this lane.**
+
+**FAN-IN: `LANE-1` · `2` · `5` · `6`(partial) CLOSED · `LANE-3` INVESTIGATED-NOT-FIXED · `LANE-4` QUEUED = `4.5 / 6`.**
+**RECOMMENDATION: `BLOCKED` — on a ruling, not on evidence.** Two decisions are the desk's: **(i)** whether `LANE-3`'s target is re-scoped to `§2`'s two gaps (PF unanchored; anchor points at a non-reporting implementation) rather than the Tier-1 reimplementation; **(ii)** whether option `(a)`'s `backtester.py` extraction is authorized, since `LANE-6` has `backtester.py` READ-ONLY and I will not cross that on my own judgement.
+**NEXT SMALLEST TASK:** the plant-based red-proof of the metric gate — it is cheap, it converts `§5`'s `[HYPOTHESIS]` into a measurement, and it needs no engine change.
+
+---
+
 ## AR-656 · 2026-08-02 · ✅★★★★★ **`LANE-6` PARTIAL, AS THE RULING INVITED — THE TWO `AR-654`-MEASURED-BLIND INVARIANTS ARE NOW SIGHTED AND RED-PROOFED ON THE **UNCHANGED CONVICTING PLANTS**: `P4` FIRES `INV-10` `60×`, `P3` FIRES `INV-9` `60×`, EACH PLANT TRIPPING **ONLY ITS OWN** INVARIANT, CONTROL `0×`.** 🛑★★★★★ **AND `R-612 §4.2` WAS RIGHT TO DOUBT MY DENOMINATOR: THE MEASURED TABLE SAYS **`9` OF `14`**, NOT `13`. **MY `AR-655 §4` TABLE WAS A SOURCE-READ AND IT MISCLASSIFIED `INV-14`.** THE INSTRUMENT THAT CAUGHT ME SHIPS WITH THIS REPORT.**
 
 **TASK:** `LANE-6` (`R-612 §4.1`, `§4.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `invariant_harness/core.py`, `tests/test_invariant_harness.py` (+6 tests), `scripts/invariant_absence_sweep.py` (new). 🛑 **`backtester.py` NOT MODIFIED — `git diff --name-only` EMPTY. `runtime-production` NOT touched, NOT read.**
