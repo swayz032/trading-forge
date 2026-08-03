@@ -12,6 +12,84 @@
 
 ---
 
+## R-607 · 2026-08-02 · ✅★★★★★ **VELOCITY ORDER ACCEPTED — THE OPERATOR IS RIGHT AND `R-606` IS THE EVIDENCE, NOT THE DEFENCE. §8a BATCHING BECOMES THE DEFAULT · TWO OFF-PATH LANES CHARTERED · THE REFERENCE-ORACLE EVALUATION CHARTERED AT DESIGN CLOSURE (NOT ADOPTED).** 🛑★★★★★ **AND A CORRECTION I OWE THE OPERATOR AND THE LEDGER: I TOLD HIM *"THE DAY ADVERSARIAL PASSES COME BACK EMPTY IS THE FIRST HONEST SIGN THE EQUIPMENT IS SOUND."* **THAT STOP RULE IS TOO WEAK** — five researched sources incl. Jane Street's engineering blog put empty passes at **NECESSARY BUT NOT SUFFICIENT**, their mature quickcheck+fuzz+chaos stack having missed a real bug for a month. **MY RULE WOULD HAVE LICENSED CONFIDENCE AT EXACTLY THE WRONG MOMENT.** **DECISION: AUTHORIZE WIDTH · CHARTER · CORRECT · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅ **Stay on `R-605 §5.1` (`AR-650`) — nothing here interrupts you and nothing is withdrawn.** ✅★★★★★ **What changes is that you will NOT be left idle again: `§3` queues two contracts behind your current one, so a grade window never costs you a task. `R-603 §5.1`/`R-597 §5.1` held you on HOLD through two grade windows while non-conflicting work existed — that was my defect, not caution.**
+
+**RULING ID:** R-607 · **TASK ID:** `EXT-CONSULT-1` + `EXT-CONSULT-2` (operator-ordered consultant deliveries) · **DECISION: AUTHORIZE + CHARTER + CORRECT.**
+
+**NEWEST AR NAMED (`R-416`):** newest `## AR-` is **`AR-650`** (worker active, `R-605 §5.1`) `[MEASURED HERE]`. **Two non-`AR-` blocks also sit above it — `## EXT-CONSULT-1` and `## EXT-CONSULT-2`, operator-ordered consultant deliveries, deliberately not `^## AR-` so neither ear's `grep -m1` breaks.** ✅ **Both read in full; this ruling is their disposition.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-FIFTH time.**
+
+---
+
+### 🛑★★★★★ §1 — THE VELOCITY DIAGNOSIS, AND IT IS NOT "VERIFICATION IS SLOW"
+
+**Operator order `[RELAYED via EXT-CONSULT-1 §1 — I did not hear him; CONFIRM]`:** *"We need real breakthroughs, the work is moving too slow… we shouldn't be moving this slow on building the compiler."*
+✅ **ACCEPTED. Three measured causes, and two of the three are mine:**
+1. 🛑★★★★★ **`R-606`: six rulings instrumented and litigated `4d` over a population the campaign's own `P0PC-CLAUSE-STATUS-2026-08-02.md:111` does not assign to it — and that document existed at `19:25`, readable, all night.** ★★★ **That is not slow work. It is fast work aimed the wrong way, which is strictly worse, and no amount of rigour recovers it.**
+2. 🛑★★★★★ **I SERIALIZED WHERE THE ADOPTED GRAPH ALLOWS WIDTH.** `[ARTIFACT-SOURCED — the graph's own scheduler]` `max_worker_lanes: 4`; **I ran one, and held the worker on HOLD through two grade windows** (`R-597 §5.1`, `R-603 §5.1`) **while a non-conflicting task existed** — the `43`-denominator re-derivation, open since `R-600 §10` and touching none of the grader's named objects. ★★★ **`advisor-ruling §8` says *"Queue depth, not single tasks — authorize the next 2–4 items."* I did not, and `EXT-CONSULT-1 R1` caught me on it correctly.**
+3. **`R-574 §0` has now held TWENTY-FIVE times on one node across EIGHT grades.** ★★★★★ **A process that cannot move a node in twenty-five attempts has a STRUCTURAL problem, not a thoroughness problem — and `§4` is the structural answer.**
+⚠️ **Honest counter-weight, because the consultant offered it against its own recommendation and it is true: the tail of tonight already moved — grade landed, receipt committed, `R-605` ruled, worker off HOLD and started inside ~20 minutes. The width and batching defects are real; "the desk sits on grades" was being fixed while the report was written.**
+
+### 🛑★★★★★ §2 — THE CORRECTION I OWE, AND IT IS THE MOST IMPORTANT LINE IN THIS RULING
+
+**I told the operator, in writing:** *"The day those passes start coming back empty is the day the pace should change, because that's the first honest sign the equipment is sound."*
+🛑★★★★★ **THAT IS WRONG AND I AM WITHDRAWING IT.** `[RELAYED — `RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`; the phrase `Jane Street` returns `11` hits in that file `[MEASURED HERE]`, but I have NOT read the bodies or the citations]` **five sources put "adversarial passes come back empty" at NECESSARY BUT NOT SUFFICIENT — a mature quickcheck + fuzz + chaos stack still missed a real bug for a month.**
+★★★★★ **WHY THIS MATTERS MORE THAN THE VELOCITY POINT: my rule told the operator when to START TRUSTING THE NUMBERS. An empty adversarial pass on FOUR instruments that could not fail in the way that mattered (`R-605 §3`) would have read as *sound* under my rule. **THE CORRECT SIGNAL IS ORACLE DIVERSITY, NOT SILENCE.** `A GREEN CHECK WITH NO PATH TO RED` — and I had built a STOP RULE out of exactly that shape.**
+✅ **REPLACEMENT RULE, ADOPTED: an empty adversarial pass is a NECESSARY precondition and NEVER a sufficient one. Confidence requires a SECOND INDEPENDENT ORACLE disagreeing-or-agreeing, not one instrument going quiet.**
+
+### ✅★★★★★ §3 — WIDTH: §8a BATCHING BECOMES THE DEFAULT, AND TWO CONTRACTS ARE QUEUED NOW
+
+**`EXT-CONSULT-1` R1/R2 ADOPTED.** From this ruling forward: **every ruling authorizes 2–4 independent lanes after the fake-edge test**, and **the worker idles only when EVERY available task would touch a grader's named objects.**
+**FAKE-EDGE TEST RUN, per `§8a`:** does any queued lane consume another's output? **No.** Shared resources? **`LANE-1` owns `plant-landing.mjs` + its harnesses; `LANE-2` owns `scripts/` battery-rig files; `LANE-3` is in a DIFFERENT REPO.** No shared file, no shared table, no shared rate-limited API. **Three fake edges → three parallel lanes.**
+
+- ✅ **`LANE-1` (RUNNING, `AR-650`): `R-605 §5.1` swallow-detector.** Unchanged.
+- ✅ **`LANE-2` (QUEUED — start when `LANE-1` closes, or NOW if `LANE-1` blocks): PHASE-2 BATTERY-RIG FAULT-INJECTION CALIBRATION, OFF THE CRITICAL PATH.** **GOAL:** the wave rig has **never fired** (`backtests = 0`) — show it goes **RED on a planted defect** before the first real wave. `BLUEPRINT v4` Phase-2 ENTRY already requires this; ★★★ **`A RIG THAT HAS NEVER GONE RED IS NOT AN INSTRUMENT`, and it is the same class as tonight's four (`R-605 §3`).** ⚠️ **NAME COLLISION IS REAL `[MEASURED HERE]`: `scripts/null_gate_calibration.py` EXISTS in this worktree and is a DIFFERENT experiment (H₀ false-pass). Do NOT extend, rename or conflate it.** **Scoping to CONSUME CRITICALLY, not obey:** `docs/research/SCOPING-BATTERY-NULLCAL-2026-08-03.md` (`6.8 KB` `[MEASURED HERE]`, advisory, un-re-derived). **FIRST ACT: a step-zero import/resource check — `briefs-assert`, and I have verified only that the scoping file exists, not that its plant points are reachable.**
+- ✅ **`LANE-3` (QUEUED, DIFFERENT REPO — read `§5` before starting): THE MAIN-REPO METRICS-TEST GAP.** ✅★★★★★ **CONFIRMED BY ME AT THE EXECUTABLE LINE, NOT RELAYED `[MEASURED HERE]`: `C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/tests/test_metric_snapshot.py:50-52` reads *"Metric helpers (copied from test_golden_fixtures — no circular import) … These must stay self-contained so the pre-commit hook can run them without importing the full engine (which has heavy deps: vectorbt, etc.)"*, and `:54` defines its own `_pf`.** 🛑 **SO AN ENGINE-SIDE DEFECT IN PF / SHARPE / MAX-DD CAN PASS `test:metrics` GREEN — the test compares the engine against a COPY OF ITSELF.** ★★★★★ **`hardcoded-test`: a hand-copied expected value is a fabricated safety claim. AND THE COMMENT DOCUMENTS THE TRADE — the guard was weakened for dependency convenience, deliberately, with the reason written down. That is worse than an accident and easier to fix.** **This is BACKTEST-NUMBER trust, i.e. the money path.**
+
+### 🛑★★★★★ §4 — THE REFERENCE ORACLE: **EVALUATION CHARTERED AT DESIGN CLOSURE. NOT ADOPTED TONIGHT.**
+
+`[RELAYED — `EXT-CONSULT-2 §2`; the research file genuinely contains it `[MEASURED HERE]`: `245/246` ×6, `375,000` ×3, `reference interpreter` ×9, `differential test` ×14, control `compiler` ×27. **I have NOT read the bodies or verified one citation.**]`
+**The pattern:** one deliberately-simple, obviously-faithful **reference interpreter** of the compiler's intermediate representation, qualified **ONCE**, with **differential testing against it as the primary oracle**, plus cheap property tests (fee-monotonicity, cash-invariance) as a second layer catching a different bug class. In-domain evidence: a third party hit **245/246 Pine-v6 strategies at trade-for-trade parity over 375,000+ trades** by diffing against TradingView's real compiler.
+★★★★★ **AND THE REASON THIS IS NOT FOREIGN ADVICE — IT IS THIS CAMPAIGN'S OWN LAW AT ARCHITECTURE SCALE: `advisor-ruling §5` ALREADY SAYS *"Prefer a shared ORACLE over an A-vs-B comparison: A-vs-B passes when both drift together."* **I have been enforcing that at TEST scale while the campaign builds an N-BESPOKE-CHECKER chain at ARCHITECTURE scale** — `P0PG → P0VC → P0DG → P0I → P0IG`, five more qualification steps, each costing what tonight cost.**
+🛑★★★★★ **NOT ADOPTED, AND THE REASON IS NOT CAUTION: the consultant states plainly that the researcher NEVER CROSS-REFERENCED THIS CAMPAIGN'S ACTUAL COMPILER OR VERIFICATION CODE. Whether an oracle slots in at `P0VC`, reshapes `P0-vNext` wholesale, or interacts with `R-606`'s population finding is UNMEASURED MAPPING.** ★★★ **`A WRONG MECHANISM GETS OBEYED` — and an architecture recommendation adopted on an unjoined mapping is the largest such mechanism this campaign could obey.**
+✅ **CHARTERED: the design-closure step evaluates oracle adoption, and it is gated on ONE prerequisite — `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` (`66.9 KB`) READ BY THE DESK, per the operator's relayed directive *"read it before the next design-closure ruling."*** 🛑 **NO design-closure ruling may issue before that read. STOP CONDITION, including for me.**
+
+### ⚠️ §5 — RELAYED ORDERS, AND ONE CONSULTANT CLAIM THAT FAILS VERIFICATION
+
+**All of `EXT-CONSULT-1 §1` and `EXT-CONSULT-2 §3` are `[RELAYED]` — heard in a window this desk cannot hear.** Per `order-premise-grade`, **anything they drive is CONDITIONAL on the operator's confirmation**, and `§3`/`§4` are written so nothing irreversible depends on them.
+- ✅ **THE DATE: `[RELAYED]` "end of the month" → "August 22" → **"don't think about the date, we need better growth anyway."** `later-dated` — **the last supersedes. NO DATE IS PROMISED, and none will be.** Two finish lines have been withdrawn on this campaign. **The operator gets MEASURED WEEKLY VELOCITY instead: steps closed, lanes running, finding-rate trend.**
+- 🛑 **RESERVED TO THE OPERATOR — REAL SPEND: the TopstepX API + eval purchase on first-wave promise (`R-060`'s pre-positioned last mile). Surfaced to him; his call; NOT authorized here.**
+- 🛑★★★ **A CONSULTANT CLAIM THAT IS FALSE AGAINST THE ARTIFACT `[MEASURED HERE]`: `EXT-CONSULT-2 §1` states the researcher "folded evidence into" `docs/institutional-evidence/spec-to-code-fidelity.md` and `instrument-qualification-velocity.md`. **BOTH FILES DO NOT EXIST.** No ruling may cite them. ★★★ **The rest of the relay verified CLEAN, which is exactly why this one matters: `A CHANNEL IS NOT AN AUTHOR`, and a report that is right five times is not therefore right the sixth.**
+- ✅ **LANE-3 SCOPE NOTE: it is in the MAIN repo, outside this worktree.** `worktree-isolation` applies; **it is NOT `runtime-production` and touches no live trading surface.** Authorized as a **test-only fix + a ticket**, no engine change without a further ruling.
+- ✅ **DISPOSITION OF THE CONSULTANT ARTIFACTS: COMMITTED by this desk in this wave** (they were left uncommitted for my disposition, and they are now evidence). **The consultant honoured single-writer — `[MEASURED HERE]` my files and the graph untouched — and its watchers are genuinely retired (`0` bash children of `26296`).**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — `LANE-1` continues (`AR-650`). Then `LANE-2`. `LANE-3` on your judgement of capacity — say which you took.**
+2. **THIS DESK — the `4d` population read is IN FLIGHT** (independent reader, six targets, isolation anchored to `git cat-file blob`, receipt `docs/designs/GRADE-4D-POPULATION-2026-08-02.md`). **On return: commit, then rule the population.**
+3. **THIS DESK — READ `RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` before any design-closure ruling (`§4`). Assigned to THIS SEAT.**
+4. **THIS DESK — confirm `§5`'s relayed orders with the operator.** ✅ Surfaced to him this turn.
+5. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NOT transitioned, NINE of ten. ✅ Single-writer honoured by this desk and, `[MEASURED HERE]`, by the consultant. ✅ **`R-576 §5` HELD — I ran nothing under test.** ✅ Graph read, not modified. ✅ No spend authorized. ✅ **`prototypes/` is legitimately DIRTY with `LANE-1`'s live work — RECORDED AND LEFT UNTOUCHED per `R-599 §8`.**
+🛑 **STILL LIVE, all of `R-606 §6` plus:** ★★★★★ **a design-closure ruling issued before the research file is read → STOP.** · ★★★★★ **the reference oracle ADOPTED before its mapping to this campaign's actual code is measured → STOP.** · ★★★★★ **`docs/institutional-evidence/*` cited → STOP; those files do not exist.** · ★★★★★ **any date promised to the operator → STOP.** · ★★★★★ **`scripts/null_gate_calibration.py` extended or renamed by `LANE-2` → STOP; different experiment.** · ★★★ **an engine change in `LANE-3` without a further ruling → STOP; test-only.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`AN EMPTY ADVERSARIAL PASS IS NECESSARY, NEVER SUFFICIENT.` I built a stop rule out of instrument silence — the exact shape (`a green with no path to red`) I spend every ruling attacking. **The signal is ORACLE DIVERSITY, not quiet.****
+★★★★★ **`FAST WORK AIMED THE WRONG WAY IS WORSE THAN SLOW WORK.` The velocity complaint was correct, and the proof was my own `R-606`: six rulings against a population a readable file had already excluded. **When accused of being slow, check for being wrong first.****
+★★★★★ **`I ENFORCED §5's ORACLE LAW AT TEST SCALE WHILE THE CAMPAIGN BUILT N BESPOKE CHECKERS AT ARCHITECTURE SCALE.` A law applied at one altitude and not the next is `one-level-short` — this desk's own convicted shape, now found in its own guard-design doctrine.**
+★★★ **`A REPORT THAT IS RIGHT FIVE TIMES IS NOT THEREFORE RIGHT THE SIXTH.` Five relayed claims verified clean; the sixth named two files that do not exist. **Verify per-claim, not per-source.****
+★★★ **`A GUARD WEAKENED FOR CONVENIENCE, WITH THE REASON WRITTEN IN THE COMMENT, IS WORSE THAN AN ACCIDENT AND EASIER TO FIX` — `test_metric_snapshot.py:50-52` documents its own hole.**
+
+---
+
 ## R-606 · 2026-08-02 · 🛑★★★★★ **THE MAPPING QUESTION IS ANSWERED BY MEASUREMENT, AND THE ANSWER IS WORSE THAN `R-604` GUESSED: THE CAMPAIGN'S OWN `P0PC-CLAUSE-STATUS-2026-08-02.md:111` ALREADY ASSIGNS CLAUSE `4d` TO **`red-proof.mjs`'s `43` ROWS** — AND THAT SAME DOCUMENT AT `:143` PRINTS THE TWO CANDIDATE SETS AS NON-IDENTICAL AGAINST `run.mjs`'s `FAILURE_CLASSES = 25` `[MEASURED HERE]`.** 🛑★★★★★ **SO THE LAST SIX RULINGS INSTRUMENTED `4d` OVER `evidence-order.mjs`'s INJECTION KNOBS (`25`, THEN `37`) — A POPULATION THE CAMPAIGN'S OWN CLAUSE-STATUS DOCUMENT DOES NOT ASSIGN TO `4d`.** ⚠️★★★★★ **`R-604 §2`'s READING `(C)` IS HEREBY DEPRIORITISED BY EVIDENCE — IT WAS MY PROSE READING; THE LIVE ALTERNATIVE IS THE `43`, WHICH IS AN ARTIFACT WITH A RUNTIME PRINT.** **DECISION: MEASUREMENT RECORDED · NO READING RULED · NO NODE TRANSITION · `4d` UNCHANGED AT NOT MET.**
 
 **★ WORKER — START HERE:** ⏸️ **NOTHING CHANGES FOR YOU — stay on `R-605 §5.1` (`AR-650`).** 🛑 **But read `§2` before your next report: it is possible the whole `evidence-order.mjs` lane measures a population `4d` was never about. That is MY error to resolve, not yours to fix, and `§5` explicitly does NOT ask you to stop or rework anything.**
