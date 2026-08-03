@@ -4,6 +4,37 @@
 
 ---
 
+## AR-717 · 2026-08-03 · ✅🛑 **STATUS RECEIPT — FRESH SEAT, POSITION RE-MEASURED AT `HEAD` RATHER THAN INHERITED, AND **I HAVE NO AUTHORIZED LANE.** THE NEWEST RULING'S TASK (`R-662 §7` as amended by `R-663 §1`) IS **DELIVERED AT `AR-716`**, AND `AR-716` IS **UNRULED**.** 🛑★★★★★ **THE ONE LIVE OBLIGATION IS THE INDEPENDENT GRADE `AR-716 §10` ASKED FOR, AND IT IS ONE WORD AWAY — I HAVE PUT THE ASK TO THE OPERATOR IN HIS CHANNEL RATHER THAN WRITING THAT IT IS BLOCKED.** ✅ **I AM NOT INVENTING A LANE (`AR-714` PRECEDENT).**
+
+**SEAT:** successor to the `AR-716` seat, which is gone (`/clear`). **NOT GRAPH-SCHEDULED** — no graph node is open to me.
+
+### ✅ §1 — THE FACTS A FRESH SEAT MAY NOT INHERIT, RE-MEASURED HERE AT `HEAD 1fa4ac6c`
+`[MEASURED HERE]` — `AR-716` measured at `c067a652`; I re-took every one of these at the later `HEAD`, because `A NUMBER CARRIED ACROSS A COMMIT IS STALE`.
+| fact | command | result |
+|---|---|---|
+| the fidelity term is actually in the shipped module | `git show HEAD:src/engine/spec_family_bindings.py \| grep -c _session_keyword_fidelity_approximation` | **`2`** |
+| branch green | `python -m pytest src/engine/tests/test_spec_family_bindings.py -q` | **`339 passed in 1.59s`** ✅ *reproduces `AR-716`'s `339` at a different HEAD* |
+| the byte-identity guard **RAN**, not `SKIPPED` | `pytest -v -k "m3_s7_flag_off_is_byte_identical or m3_prepacket_module_really_is_pre_packet"` | **`2 passed`**, both lines read `PASSED` |
+| my scope is clean (shared tree, `~90` dirty paths from other seats) | `git status --porcelain -- src/engine/spec_family_bindings.py src/engine/tests/test_spec_family_bindings.py` | **EMPTY** |
+★★★ **THE `SKIPPED` CHECK IS NOT CEREMONY: `AR-716 §7.2` REPORTED THAT `_load_battery` CALLS `pytest.skip` WHEN ITS FIXTURE IS MISSING, SO THAT GUARD CAN DISAPPEAR RATHER THAN FAIL. `skipped must not read as pass` — SO I READ THE WORD, NOT THE EXIT CODE.**
+
+### 🛑 §2 — WHY I AM CLAIMING NO LANE, STATED AS A READ AND NOT AS A FEELING
+`[MEASURED HERE]` **NEWEST RULING = `R-663`**, an amendment to `R-662 §7`; its `★ WORKER — START HERE` names **`R-662 §7`, the `F-1` repair**. **NEWEST `AR` = `AR-716`, which delivers exactly that lane at fan-in `1/1`.** **There is no ruling after `AR-716`.** 🛑 **`R-662 §7`'s attempt budget stands at `1` of `2` and is NOT consumed by a delivery — nothing has failed.**
+✅ **SO THE CORRECT STATE IS: WORK DELIVERED, RULING OWED, WORKER IDLE — the same shape `AR-714` filed and the desk accepted at `R-662 §6`.** 🛑 **I AM NOT PULLING `AR-716 §7`'s TWO REPORTED FINDINGS (cross-file env pollution · the `pytest.skip` fragility). They are REPORTED, and `SWEEP-*` IS CLOSED (`R-648`). Neither prevents the golden slice from compiling.**
+
+### 🛑★★★★★ §3 — THE GRADE, AND THE ONLY THING I AM ACTUALLY ASKING FOR
+🛑 **`doer ≠ grader` is unsatisfied on `c067a652`: the seat that repaired the fidelity gate is the seat that measured its own corpus impact.** ✅ **`AR-716 §10` wrote the brief correctly — claim verbatim, pinned commit, novel false-green hunt on the tier-2 conjunct and on the `0`-impact sweep, durable receipt committed.** ⚠️ **I cannot dispatch `accuracy-validator`; the operator's word does. THE ASK IS WITH HIM NOW.** ★★★★★ **`A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST` — so this is an ASK, not a report that the grade is blocked.**
+
+### ⚠️ §4 — STILL ON THE DESK, NAMED SO THEY ARE NOT RE-DERIVED
+`AR-716 §4` — `§7.6` NOT DONE, with the measurement as the reason (`0` of `26` guard rows bind by session keyword; positive control fires). **Mine was a refusal to amend a guard my change cannot touch; ruling it is yours.** · `AR-716 §8` — the tier-2 conjunct in the ported `resolve_exact_clock_span`, **declared and yours to overrule.** · `AR-713` — still `NOT AUTHORIZED TO LAND` pending a re-baseline ruling (`R-660 §4.7`). · `R-661 §2` — `BIND` vs `PASS` **still `[UNVERIFIED]`; this repair creates no pass path and I am not reporting it as one.**
+
+### ⚠️ §5 — WHAT I DID NOT MEASURE
+🛑 **I did NOT re-verify `AR-716`'s corpus-impact sweep (`2,129` objects), its `161`-row field diff, or its `17`-phrase keyword count.** ★★★ **DELIBERATE: re-running the doer's own instrument is not a second path — it is `grader-independence` theatre, and it would spend the seat on work the `accuracy-validator` is the right instrument for.** **`RELAYED` to me, `[MEASURED BY THE DOER]`, awaiting the grade.**
+
+**FAN-IN `0/0` — no lane authorized to me. I HOLD THE SEAT AND HAVE FULL CONTEXT. Standing by for the next ruling or the operator's word on the grader.**
+
+---
+
 ## AR-716 · 2026-08-03 · ✅★★★★★ **`R-662 §7` + `R-663 §1` DELIVERED — THE FIDELITY TERM IS IN, `5` TESTS RED→GREEN, `339 passed`.** 🛑🛑★★★★★ **AND I DID **NOT** DO `§7.6`: THE GUARD AMENDMENT IS **NOT OWED**, BECAUSE THE GUARD NEVER GOES RED — `0` OF ITS `26` ROWS BIND BY SESSION KEYWORD, MEASURED, WITH A POSITIVE CONTROL. **AMENDING A CORRECT GUARD THAT MY CHANGE CANNOT TOUCH WOULD BE A GRATUITOUS WEAKENING**, so I stopped and am reporting instead.** ⚠️ **`§7.1`'s RELAYED `18`-PHRASE KEYWORD LIST IS **`17`** — counted here, as you told me to.**
 
 **TASK:** `R-662 §7` (attempt `1` of `2`), as amended mid-task by `R-663 §1`. **COMMITS: `9de44345` (4 tests RED) · `61be9fa7` (adjacent-value test RED) · `c067a652` (the fix).** **NOT GRAPH-SCHEDULED.**
