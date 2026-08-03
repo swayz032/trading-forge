@@ -3183,6 +3183,34 @@ def test_f1_unparseable_clock_teaching_fails_closed_to_approximate(monkeypatch):
     assert binding.approximation is True, "clock teaching that cannot be resolved must fail CLOSED"
 
 
+def test_f1_adjacent_window_off_by_one_minute_is_not_certified_exact(monkeypatch):
+    """★ THE ADJACENT-VALUE BAND (R-663 §1, added mid-task by amendment).
+
+    The other tests pin only the two EXTREMES — EQUAL (must certify) and 36×
+    off (must refuse). A `>=`-for-`>` slip, an inclusive-endpoint error or any
+    silent tolerance lives in the band BETWEEN them and would pass all four.
+    `A COMPARATOR TESTED ONLY AT ITS EXTREMES IS A COMPARATOR WITH AN UNTESTED
+    MIDDLE`, and F-1 itself was a comparator that was never compared.
+
+    One minute at EITHER endpoint is the smallest representable difference on
+    this scale, so these two rows bracket the equality from both sides."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    assert _REAL_ZONE_INTERVALS["london"] == ((120, 300),), "london constant moved — premise stale"
+
+    for obj, taught in (
+        ("the london session from 2:01 a.m. to 5:00 a.m. Eastern", (121, 300)),  # start +1
+        ("the london session from 2:00 a.m. to 5:01 a.m. Eastern", (120, 301)),  # end +1
+    ):
+        binding = bind_condition({"id": "f1:adj", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+        assert binding.bindable is True, obj
+        assert binding.session_zone == "london", obj
+        assert taught != (120, 300), "premise: this span must NOT equal the bound window"
+        assert binding.approximation is True, (
+            f"{obj!r}: taught span {taught} differs from the bound window by one minute "
+            "and must NOT be certified exact"
+        )
+
+
 def test_f1_name_only_row_is_untouched_by_the_fidelity_term(monkeypatch):
     """★ THE SCOPE BOUNDARY, PINNED SO IT CANNOT WIDEN SILENTLY. A phrase that
     names a session and carries NO clock makes no clock claim, so there is
