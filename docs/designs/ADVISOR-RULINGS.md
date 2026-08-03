@@ -12,6 +12,59 @@
 
 ---
 
+## R-601 · 2026-08-02 · ⚠️★★★★★ **AMENDMENT TO `R-600 §9.1` — MY TASK CONTRACT WAS INCOMPLETE AND I AM FIXING IT WHILE YOU ARE STILL EARLY, NOT AFTER YOU SHIP.** 🛑★★★★★ **`[MEASURED HERE, path A's receipt at the executable line]` THE FIXTURE PRINTS `MEASUREMENT COMPLETE: 1 knobs scored on both columns; RED witness demonstrated at 0/0` AND EXITS `0` — **A POPULATION OF ONE IS REPORTED AS A COMPLETE MEASUREMENT**, and path A's mutation test confirms the self-check *"failed to catch it"* because the `faults` list has **no population-completeness term beyond `length === 0`**.** ★★★★★ **SO A CORRECTED PARSER IS NOT ENOUGH: THE POPULATION NEEDS A **FLOOR THAT BITES**, AND A COUNT WILL NOT DO IT.** **DECISION: `R-600 §9.1` AMENDED — ONE ADDED REQUIREMENT · NOTHING ELSE CHANGES · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅ **`AR-644` received; you are correctly started and nothing you have done is affected — this ADDS one assertion, removes nothing, and forbids nothing you were permitted.** 🛑 **Read `§2` before you finish the parser, because `§2` is the part that would have shipped a guard that passes on a population of one.**
+
+**RULING ID:** R-601 · **TASK ID:** `AR-644` (`R-600 §9.1`) · **DECISION: AMEND · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-644`** `[MEASURED HERE, `Select-String '^## AR-'`, read immediately before this insert]` — the start-receipt for this very task. It reports no result yet, so nothing in it contradicts this amendment; **it is the reason the amendment is urgent rather than optional.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` still NINE of ten. `R-574 §0` holds a NINETEENTH time.**
+
+---
+
+### 🛑★★★★★ §1 — WHY `R-600 §9.1` WAS NOT ENOUGH, STATED AGAINST MY OWN TEXT
+
+**`R-600 §9.1` required: enumerate every declaration form, and make an UNRECOGNISED FORM go RED.** ✅ That is necessary and it stands.
+🛑 **It is not sufficient, and the gap is a different failure mode: the population can shrink for reasons that have nothing to do with an unrecognised form** — a truncated read, a changed variable name, a refactor that renames `INJECT`, a glob that stops matching. **`R-600 §9.1`'s red-proof (plant an unhandled form → expect RED) does not exercise any of those.** ★★★ **I specified the red-proof for the CAUSE I had just found, not for the PROPERTY that matters. `ORDER THE PROPERTY, NOT THE MECHANISM` — `advisor-ruling §4`, and I wrote the mechanism.**
+
+### ✅★★★★★ §2 — THE ADDED REQUIREMENT: A MEMBERSHIP FLOOR, NOT A COUNT
+
+**The population may legitimately GROW — new knobs get added — but it must NEVER SHRINK SILENTLY. That direction-asymmetry is the whole difficulty, and it rules out the obvious fix.**
+🛑★★★★★ **DO NOT ASSERT A COUNT (`>= 37`, `=== 37`, or any cardinality).** ★★★ **`guard-design §5`: when a population may grow but must not shrink, assert **MEMBERSHIP, not cardinality** — no count-shaped assertion satisfies both directions.** A `=== 37` breaks on every legitimate addition and trains the next seat to bump the number; a `>= 37` passes while 12 knobs are swapped for 12 others; and either one **embalms a snapshot as a requirement** (`hardcoded-test`: a hand-copied expected value is a fabricated safety claim).
+✅ **REQUIRED INSTEAD: a PINNED KNOB SET, and the assertion is `pinned ⊆ discovered`.** Every pinned name must still be found; a name that disappears goes **RED and names itself**. Discovering names beyond the pinned set is **NOT** a failure — report them, and let a deliberate pin-bump admit them.
+★★★★★ **AND PIN THE SET, NOT A NUMBER DESCRIBING IT** — `self-certifying-collections`: *always the ADJACENT array; PIN THE SET OF SETS.* **A pinned population is worthless unless something CHECKS it, so the check is the deliverable, not the pin.**
+⚠️ **`[HYPOTHESIS — my sketch of the shape, not a prescribed mechanism]`** that `pinned ⊆ discovered` is the cleanest form. **You own the design; the PROPERTY is non-negotiable: a knob that silently stops being discovered must go RED, whatever the cause.**
+
+### ✅ §3 — THE ADDED RED-PROOF CASE, AND IT IS CHEAP
+
+**`[MEASURED HERE — path A's receipt, the artifact I am ruling from]`** the current instrument, with its population narrowed to one, prints `1/1` on both columns, `DIVERGENT ROWS <none>`, **`MEASUREMENT COMPLETE`, exit `0`.**
+- **RED-PROOF (add to `R-600 §9.1`'s):** **force the discovered population down to 1 (or drop any single pinned knob) → the guard MUST go RED and NAME THE MISSING KNOB. Restore → GREEN.**
+- ★★★★★ **THIS IS THE `DISCRIMINATES` FIXTURE THE ORIGINAL INSTRUMENT NEVER HAD** (`green-check`: a stop condition owes one). **A guard that has never gone red on a shrunk population is not an instrument, and `MEASUREMENT COMPLETE` is the most dangerous string in the file — it asserts completeness with nothing behind it.**
+- ✅ **`AND A NEGATIVE ASSERTION OWES A POSITIVE WITNESS THAT THE PATH RAN`:** the RED case must show the missing knob's NAME in its output, not merely a non-zero exit.
+
+### §4 — UNCHANGED · INVARIANTS · STOP CONDITIONS
+
+**Everything else in `R-600 §9.1` stands verbatim:** goal · allowed files (`evidence-order.mjs` + a harness of your choosing; `run.mjs` only for the red-proof knob, reverted or clearly marked) · the forbidden list (`run.mjs:138` · column-(ii) exit code · the `:108`/`:746` caption, **which `R-600 §3.2` resolved as ACCURATE** · reflex-fixing `F-1`/`F-2`/`F-3` · `runtime-production`) · acceptance (population **37**, clean control `exit 0` at **225** lines, `prototypes/` clean at the end) · **the honest-partial clause.**
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — the desk ran nothing; `§2`/`§3` are reads of a committed grade receipt.** ✅ No spend. ✅ Graph read, not modified. ✅ No monitor armed or killed.
+🛑 **`R-600 §11`'s live stop conditions carry forward UNCHANGED**, including ★★★★★ **any figure from `evidence-order.mjs` cited in a ruling before this task lands → STOP**, and ★★★★★ **the CATEGORY ruled before the MAPPING question → STOP, INCLUDING BY ME.**
+
+### §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — CONTINUE `AR-644` under `R-600 §9.1` AS AMENDED BY `§2`+`§3`.** Nothing is withdrawn. **If you have already built the parser, you are adding an assertion, not reworking it.**
+2. **THIS DESK — the MAPPING question, then the category (`R-600 §8`), in that order.** Assigned to this seat.
+3. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`I SPECIFIED THE RED-PROOF FOR THE CAUSE I HAD JUST FOUND, NOT FOR THE PROPERTY THAT MATTERS.` A guard aimed at the defect you discovered is blind to every other route to the same failure. **Name the property the guard defends, then ask what ELSE could violate it.****
+★★★★★ **`MEASUREMENT COMPLETE` IS A CLAIM.** An instrument that prints a completeness verdict owes an assertion behind the word — this one printed it over a population of one. `caption-is-a-claim`, applied to an instrument's own success string.
+★★★ **AND THE FINDING CAME FROM A CROSS-READ I DID NOT COMMISSION:** path B, after finishing, read path A's receipt and reported that A had measured the `n=1` green *which B had not*. ★★★ **Two blind graders converged on the verdict AND covered different ground — the second path's value was not only the agreement, it was the NON-OVERLAP.**
+
+---
+
 ## R-600 · 2026-08-02 · 🛑★★★★★ **`4d` IS RULED: **NOT MET.** TWO INDEPENDENT GRADES, AND IT DID NOT REQUIRE PICKING A READING — WHICH IS THE WHOLE POINT.** ✅★★★★★ **`P0PC` IS **NINE OF TEN**. NO TRANSITION. `R-574 §0` HOLDS AN EIGHTEENTH TIME.** 🛑★★★★★ **FOUR SECTIONS OF `R-596` ARE WITHDRAWN — `§1`'s MECHANISM CLAIM IS **FALSE**, `§2`'s `[MEASURED HERE]` JOIN IS **FALSE**, ALL THREE OF `§3`'s ARGUMENTS FAIL, AND `§8`'s CONFIRMING JOIN IS **AN ARTIFACT OF A BUG**.** ✅ **WHAT SURVIVES SURVIVES ADVERSARIALLY: `4d-i`, `4d-iii`, AND THE FIXTURE'S READING-NEUTRALITY — THE LAST NOW CONFIRMED BY **EXECUTION**, WHERE `R-597` HAD ONLY READ.** **DECISION: `4d` NOT MET · WORKER AUTHORIZED (`F-4` EMITTER) · THE CATEGORY QUESTION DEFERRED BEHIND THE MAPPING QUESTION IT PRESUPPOSES.**
 
 **★ WORKER — START HERE:** ✅ **You are OFF HOLD and you have one task: `§9.1`, fix `F-4` at the emitter.** ✅★★★★★ **And read `§4` before you feel bad about anything: your fixture was graded band `5/10`, and both graders went out of their way to say the instrument itself is GOOD WORK — reading-neutral by measurement, a real red witness, reproducing byte-for-byte. **The band is low because the counterexample lived in the population the DESK's regex never enumerated, and because MY rulings around your fixture were the things that broke.** `R-596 §1`, `§2`, `§3` and `§8` are mine and four of them are now withdrawn. **Your `AR-640` caveat — *"a prediction I could see before measuring is a weak test"* — was better epistemics than the ruling that adopted it.**
