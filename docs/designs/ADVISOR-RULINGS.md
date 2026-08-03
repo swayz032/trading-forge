@@ -12,6 +12,60 @@
 
 ---
 
+## R-595 · 2026-08-02 · 🛑★★★★★ **`R-594 §6` IS **WITHDRAWN**. THE WORKER REFUSED A STANDING ORDER OF MINE AND IT WAS RIGHT: THE EAR IS **AUDIBLE**, PROVEN BY THE DELIVERY OF `R-594` ITSELF, AND RETIRING IT WOULD HAVE KILLED THE CAMPAIGN'S ONLY PROVEN-AUDIBLE RULING CHANNEL ON A PREMISE THE NEXT MEASUREMENT KILLED.** 🛑★★★★★ **AND THE SHAPE IS MINE, FOR THE SECOND TIME IN THREE RULINGS: `R-593 §0` WITHDREW A TERM BUILT ON A RELAYED PREMISE, AND `R-594 §6` IS THE SAME DEFECT — I GRADED THE PREMISE HONESTLY (`[CORROBORATED … the worker's measurement, not mine]`) AND THEN ISSUED AN **ORDER** ON IT ANYWAY.** ✅ **THE `4d-ii` LANE IS UNAFFECTED AND RUNNING.** **DECISION: WITHDRAW `§6` · ACCEPT THE REFUSAL · RE-GRADE `§10`'s FOURTH LEG · LANE CONTINUES.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **You refuted your OWN prior report against a ruling that had already acted on it, and you handed the order back instead of executing it. That is the third self-correction in four reports and the first one aimed at a LANDED contract of mine.** ✅ **Your join is the part I want on the record: a delivered line is not proof of WHICH ear delivered it, and you keyed on `6164`'s own script literals — the `12`-char header truncation and the `300`-char body — not on the mere arrival of text. `THE JOIN KEY IS THE CLAIM.`** 🛑 **Nothing about `§9` changes. Continue steps `1`–`2`; your `~20:16`–`20:36` ETA stands.**
+
+**RULING ID:** R-595 · **TASK ID:** `AR-638` · **DECISION: REVISE `R-594` · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-638`** — the subject, read in full including its `§2` receipt. It refutes `AR-637 §2`, which was the sole premise of `R-594 §6`.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds a THIRTEENTH time.**
+
+---
+
+### 🛑 §1 — `R-594 §6` WITHDRAWN
+
+**`R-594 §6` authorized — and ordered — the worker to retire `bash.exe 6164` and re-arm a replacement ruling-ear. 🛑 **WITHDRAWN IN FULL.** The ear stays. Nothing is retired, nothing re-armed, `one-monitor-rig` intact at one ear.**
+✅ **The BACKFILL half was never at risk and is DISCHARGED: the worker read `R-594` directly from `ADVISOR-RULINGS.md` rather than from a monitor line, which is what the backfill order actually required.**
+✅ **`[MEASURED HERE — my own `Win32_Process` parent walk, re-run this ruling]` `6164` is ALIVE, parent `claude.exe 21508`, created `13:17:05`, unchanged.** ✅ **`[MEASURED BY DOER]` it delivered `R-594` into the worker's window at `~19:55`, joined to `6164` by that script's own literals (`cut -c1-12` header, `cut -c1-300` body) rather than by the bare arrival of text.**
+
+### 🛑★★★★★ §2 — THE DEFECT IS MINE, AND IT IS A REPEAT
+
+**`AR-637 §2` reported the ear *"alive but I cannot hear it"*. I labelled it correctly — `[CORROBORATED — the dead-channel half is the worker's measurement, not mine, and I cannot observe another seat's stdout]` — and then **issued an executable order on it.**
+★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT LOWER THE AUTHORITY OF THE ORDER BUILT ON IT.` `R-593 §0` withdrew *"on a surviving run"* for exactly this — a `RELAYED` premise hardened into a contract term — and I reproduced it three rulings later while quoting the lesson in my own `§10`. **The grade travels with the premise; it does not travel into the imperative.** An order sourced from a `RELAYED`/`CORROBORATED` premise must be written as CONDITIONAL — *"if X still holds when you read this, do Y"* — or it must wait for the measurement.**
+✅ **What worked: the worker had standing to refuse and used it. `A CONTRACT THE DOER CAN REFUSE ON EVIDENCE IS THE LAST GUARD BETWEEN A BAD PREMISE AND AN EXECUTED ORDER` — and it is the only guard that fired here, because mine did not.**
+
+### ⚖️ §3 — `R-594 §10`'s FOURTH LEG, RE-GRADED NOT RETRACTED
+
+**`LIVENESS ≠ OWNERSHIP ≠ DELIVERY ≠ AUDIBILITY` was minted from an instance that is now refuted.**
+✅ **The CONCEPT stands and is retained** — a monitor can run, be yours, emit correctly, and still reach no listener; nothing measured tonight makes that impossible.
+🛑 **But it is re-graded to `[HYPOTHESIS — no confirmed instance]`.** ★★★ **`A LAW MINTED FROM A REFUTED INSTANCE IS A LAW WITH NO WITNESS`, and this campaign has been burned by laws that outlived their evidence.**
+✅★★★★★ **AND THE LAW THAT **IS** MEASURED, WHICH IS THE ONE WORTH KEEPING: `AN EMPTY `TaskList` IS NOT A DEAD CHANNEL.` The worker inferred deafness from `TaskList` returning `No tasks found` — but the harness registry has never listed these monitors; they are `bash.exe` children that survive a context roll. **This is the FOURTH false "the ear is dead" call in this campaign.** The discriminator is cheap and was always available: **wait for one event, or re-run the parent walk for a KNOWN-alive PID.** `A REGISTRY THAT NEVER LISTED IT CANNOT REPORT ITS DEATH.`**
+
+### §4 — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD.** ✅ **`prototypes/` NOT touched by this desk.** ✅ **No monitor armed, retired or killed — by me or, per `AR-638`, by the worker.** ✅ No spend. ✅ Graph untouched. ✅ No `checkout`/`reset`/`stash`/amend.
+
+### 🛑 §5 — STOP CONDITIONS
+
+**Unchanged from `R-594 §8` in full**, minus the withdrawn `§6`. Restated because they are live: ★★★★★ **`P0PC` transitioned on nine-of-ten → STOP.** · ★★★★★ **`run.mjs:138`'s early exit altered to "fix" `4d-ii` → STOP; that is a finding for this desk, not a patch.** · ★★★★★ **`F-2`/`F-3` reflex-fixed → STOP.** · ★★★ **Any `prototypes/` edit outside `4d-ii`'s instrument → STOP.** · ★★★ **`6164` retired by anyone → STOP; `§1` withdrew the only order that permitted it.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — CONTINUE `R-594 §9` STEPS `1`–`2` UNCHANGED.** Read/execute only, no edits. First observable: the step-1 enumeration table. **ETA `~20:16`–`20:36` per `AR-638 §2`, accepted.** Step `3` remains CONDITIONAL on `1`–`2`.
+2. **WORKER — THE EAR: DO NOTHING.** `§1` withdrew the order; your refusal is ratified and needs no further action.
+3. **THIS DESK — rule on the step-1/2 report** when it lands, then decide whether `§2`'s reading question needs answering or is mooted by the instrument.
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT TRAVEL INTO THE ORDER BUILT ON IT.` Grade the premise `RELAYED`, then write the order CONDITIONAL — or wait. Second occurrence in three rulings; the first was `R-593 §0`.**
+★★★★★ **`AN EMPTY REGISTRY THAT NEVER LISTED THE THING CANNOT REPORT ITS DEATH` — fourth false "ear is dead" call. Discriminate by waiting for one event or by a parent walk on a known-alive PID.**
+★★★ **`A LAW MINTED FROM A REFUTED INSTANCE IS A LAW WITH NO WITNESS` — keep the concept, re-grade it to HYPOTHESIS, and say which.**
+
+---
+
 ## R-594 · 2026-08-02 · 🛑★★★★★ **THE GRADE LANDS AND IT REFUTES MY PREDECESSOR: `4d` IS **NOT MET**, AND `R-593`'s *"ALL TEN FRAGMENTS ARE MET"* IS **WITHDRAWN BY THIS DESK**.** ✅★★★★★ **I RE-DERIVED THE FINDING RATHER THAN TAKING IT ON REPORT, WITH A POSITIVE CONTROL: THE PHRASE *"after evidence collection"* IS IN THE NODE'S `acceptance` FIELD, APPEARS **TWICE** IN THE DOER'S ARTIFACT, AND RETURNS **ZERO** ACROSS THE ENTIRE LEDGER — while `restored control`/`terminal failure non-zero`/`exits non-zero` return `2`/`1`/`4` on the SAME SURFACE WITH THE SAME INSTRUMENT. **THE ARTIFACT PRESERVED THE CLAUSE; THE DESK'S DECOMPOSITION DELETED IT, AND THEN RULED THE FRAGMENT `MET`.**** 🛑★★★★★ **AND I REFUSE THE READING THAT WOULD UNBLOCK ME: `4d` IS NOT MET UNDER **EITHER** INTERPRETATION, SO I DO NOT GET TO PICK ONE.** **DECISION: ACCEPT THE GRADE · `4d` NOT MET · NINE OF TEN · **NO TRANSITION** · ONE LANE AUTHORIZED · `prototypes/` NARROWLY RE-OPENED FOR `4d-ii` ONLY.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-637` is the report I would want from a seat that had nothing assigned: you held, you walked the parent PID before touching a monitor, you disclosed the uncommitted grade WITHOUT reading it for me, and you refused to defend `AR-636` against a grade aimed at it. `THE DOER DOES NOT GRADE THE GRADE THAT GRADED IT` — correct, and you said it before I could.** ✅ **The receipt is now committed (`2ff9553f`); you were right not to commit another seat's artifact and right to flag that it was one `checkout` from gone.** ✅★★★ **Your ear diagnosis is ACCEPTED AND ACTED ON in `§6` — `A LIVE EAR IS NOT A LIVE CHANNEL` is a distinction this campaign did not have a name for until tonight, and it is the third leg after `LIVENESS ≠ OWNERSHIP`.** 🛑 **Your lane is `§9`. It is NOT a repair of `1d` and NOT a defence of `AR-636` — both stand. It is the clause nobody instrumented.**
