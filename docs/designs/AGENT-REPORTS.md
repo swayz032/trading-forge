@@ -4,6 +4,45 @@
 
 ---
 
+## AR-675 · 2026-08-03 · ✅★★★★★ **`R-630 §4.1` — `F-2` CLOSED AT THE SOURCE (`4b6892a8`), AND ARM B REPRODUCED THE DEFECT EXACTLY BEFORE CLOSING IT: WITH `run_backtest` FORCED TO RAISE, **BEFORE = `3 passed`** (a crashed backtest producing three GREEN tests), **AFTER = `3 failed`**.** 🛑★★★★★ **AND I OWE THE GRADER A CONCESSION: MY `R-623 §7.2` FIX WAS THE WRONG SHAPE. I MADE THE SWALLOW **VISIBLE** AND LEFT IT **LOAD-BEARING** — THE STUB STILL RETURNED, SO THE VACUOUS PASSES SURVIVED MY OWN REPAIR.** ✅ **`assert skipped >= 10` NOT WEAKENED. NORMAL RUN `54 passed`.**
+
+**TASK:** `R-630 §4.1`. **File: `src/engine/tests/test_entry_windows.py` ONLY.**
+
+### ✅ THE FIX — THE `except` SHAPE, AS THE RULING PREFERRED
+
+`_make_minimal_backtest_result`'s `except` no longer returns `{"engine_audit": {"skipped_outside_window_count": 0}, "_error": ...}` — **it calls `pytest.fail(...)`.** ✅ **Chosen over the three-call-site variant because it closes the class at the SOURCE: any future test added to `TestBacktesterWindowMask` inherits the protection instead of having to remember an `assert "_error" not in result` line.**
+
+### ✅★★★★★ ARM B — THE GRADER'S OWN INSTRUMENT, RE-MEASURED THIS RUN
+
+**Instrument: an autouse fixture monkeypatching `src.engine.backtester.run_backtest` to raise, then the THREE vacuous tests ALONE.**
+| | result |
+|---|---|
+| **BEFORE** — stub helper (HEAD `903039cf` version) | 🛑 **`3 passed, 1 deselected`** |
+| **AFTER** — `pytest.fail` helper | ✅ **`3 failed, 1 deselected`** |
+
+🛑🛑★★★★★ **THE BEFORE ARM IS THE FINDING, NOT A FORMALITY: `run_backtest` RAISED ON EVERY CALL AND ALL THREE TESTS REPORTED GREEN.** `red-path-decay` satisfied — re-measured this run, not carried from the sweep receipt.
+⚠️ **AND MY FIRST ARM B WAS WRONG AND I CAUGHT IT:** I built the BEFORE tree with `git checkout`, which reverted to the **pre-`AR-667`** fixture — so it failed at `BacktestRequest` construction and showed `3 failed`, which would have looked like "the hole was never there." ✅ **CORRECTED by materialising BEFORE from `git show HEAD:...` — the fixture-repaired, stub-returning version, which is the actual pre-fix state.** ★★★ **`A CONTROL THAT FAILS FOR THE WRONG REASON LOOKS EXACTLY LIKE A CONTROL THAT PASSES` — and a `3 failed` BEFORE would have let me claim a red-proof I had not performed.**
+
+### 🛑★★★★ THE CONCESSION I OWE THE GRADER
+
+**`AR-667` reported: *"the `except` now prints the exception and a full traceback … A swallowed failure can no longer read as a measurement."*** ⚠️ **THAT WAS TOO STRONG AND THE SWEEP WAS RIGHT.** The traceback made the failure **visible to a human reading stderr** — it did **nothing** to the assertions, because the stub was still returned and still satisfied them. **`pytest` reported GREEN either way.**
+★★★★★ **`MAKING A FAILURE VISIBLE IS NOT THE SAME AS MAKING IT FATAL.` I fixed the OBSERVABILITY of the swallow and left its EFFECT intact, then described the effect as closed. That is the same class as a `WARNING`-tier check with no readers — the information exists and changes nothing.**
+
+### ✅ CONTRACT COMPLIANCE — MEASURED
+
+✅ **`assert skipped >= 10` INTACT at `:457`** (explicitly forbidden to weaken) · ✅ **normal unforced run: `54 passed`** — the real path is unaffected · ✅ **only `test_entry_windows.py` committed** (`test_synthetic_market_simulator.py` remains inherited dirt, not mine) · ✅ **removed lines are the stub `return` and its comments — no assertion removed.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **`F-3`–`F-9` (`§4.4`) — NOT STARTED.** Seven demonstrated findings still owed a disposition this wave (`zero-carry`).
+2. **`F-1` (`§4.2`) — NOT STARTED**, and it is correctly gated behind a `ratify-packet` as an instrument change.
+3. **Whether the other `105` swallow-sites in the sweep share this shape** — I fixed the one instance named; **the class sweep is the desk's (`R-624 §5.3`).**
+4. **I did not re-run the broader engine suite** — only `test_entry_windows.py`.
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT: `§4.4` (`F-3`–`F-9`) unless the desk re-orders — they are own-surface and `zero-carry` says they close in this wave.**
+
+---
+
 ## AR-674 · 2026-08-03 · ✅★★★★★ **`R-627 §3.2` ANSWERED: **YES — A PRODUCER DISCRIMINATOR EXISTS IN THE RESULT DICT ITSELF. IT IS `wf_metadata`.** PRESENT ON **BOTH** WALK-FORWARD RESULT LITERALS AS AN UNCONDITIONAL SIBLING OF `prop_compliance`; **ZERO** OCCURRENCES IN `backtester.py`; CONFIRMED ABSENT ON A REAL `run_backtest` RESULT.** 🛑★★★★ **THIS PARTIALLY CONTRADICTS `R-627 §2`'s PREMISE THAT *"no predicate over the result alone can separate the two absences"* — FOR THE SPLIT THAT ACTUALLY MATTERS, ONE DOES.** ⚠️ **BUT IT IS A TWO-WAY, NOT THREE-WAY, DISCRIMINATOR — AND THAT IS SUFFICIENT, FOR A REASON I NAME.** 🛑 **NO CODE CHANGE, AS ORDERED.**
 
 **TASK:** `R-627 §3.2` / `R-628 §4.2`. **Nothing modified.**
