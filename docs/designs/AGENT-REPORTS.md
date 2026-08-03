@@ -4,6 +4,78 @@
 
 ---
 
+## AR-704 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-654 §5` — ALL FOUR ANSWERED. **STOP CONDITION `1` FIRES.** THE `09:30–09:35 ET` WINDOW **CANNOT BE REPRESENTED WITHOUT INVENTING A CANONICAL ENTRY**, AND THE REFUSAL IS NOT A MATCHER GAP — IT IS A **PINNED GUARD THAT REFUSES CLOCK TOKENS ON PURPOSE**: `resolve_session_name_to_window` `:852-855`, *"A clock token anywhere disqualifies the name path outright."*** 🛑🛑🛑★★★★★ **VERDICT ON THE ROW: **BLOCKED, NOT UNDETERMINED.** `THE ONLY (ii)-ELIGIBLE ROW IN THE ONLY VIABLE SPEC IS UNREPRESENTABLE BY ANY PERMITTED MEANS.` I AM STOPPING AND NOT BUILDING.** ✅ **`§5.3`/`§5.4` COMPLETED AS READS (no build, `§5.4` specified only) because your ACCEPTANCE asks for all four — say if you would rather I had halted at `§5.2`.**
+
+**TASK:** `R-654 §5.1–§5.4`. 🛑 **READ-ONLY — no source file changed, nothing built, no canonical entry added.** **Within the `≤ 45 min` ETA.** ✅ **Sweep scratch files left uncommitted and uncited, per your `§5` housekeeping.**
+
+### ✅★★★★★ §1 — `§5.1` `resolve_session_keyword` **CANNOT** PARSE A CLOCK LITERAL, AND THE `None` IS CONTROLLED
+`[MEASURED HERE — `src/engine/spec_family_bindings.py:789-800`, read at the executable line, then run live on the row's own object text]`
+```
+resolve_session_keyword("The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m.
+                         Eastern. …")                                    -> None
+refused_session_zone(same)                                               -> None
+```
+✅ **IT IS A PHRASE MATCHER OVER A CLOSED `5`-KEY ENUM — `for zone, keywords in SESSION_KEYWORDS.items(): if _session_phrase_hit(...)`. There is no clock branch, no time parser, no numeric path. It cannot parse a clock literal because it does not read clocks at all.**
+✅ **POSITIVE CONTROLS, SO THE `None` IS NOT A DEAD INSTRUMENT:** `'the london session' → 'london'` · `'ny am session' → 'ny_am'` · `'silver bullet' → 'silver_bullet'`. **The resolver returns non-`None` on demand.**
+✅ **`R-651 §4`'s HYPOTHESIS IS CONFIRMED, AND UPGRADED FROM GUESS TO MECHANISM:** the desk wrote *"`[HYPOTHESIS — UNPROVEN]` that the matcher is keyword-only and cannot parse a clock literal."* **It is keyword-only and it cannot. `A DETECTOR'S SILENCE IS EVIDENCE ABOUT THE DETECTOR` — and here the detector's source says so itself.** ★★★ **`R-651 §6.2` is now discharged, one ruling after you recorded it as a desk carry-forward.**
+
+### 🛑🛑🛑★★★★★ §2 — `§5.2` THE CANONICAL SET IS **FIVE WINDOWS** AND NONE OF THEM IS THE TAUGHT ONE
+`[MEASURED HERE — `_REAL_ZONE_INTERVALS` interrogated live, all `5`, minute-of-day]`
+| zone | exact window `is_in_killzone` evaluates |
+|---|---|
+| `london` | `02:00–05:00` |
+| `ny_am` | `07:00–10:00` |
+| `ny_pm` | `13:30–16:00` |
+| `silver_bullet` | `03:00–04:00` · `10:00–11:00` · `14:00–15:00` |
+| `macro_window` | `09:50–10:10` · `02:33–03:00` · `04:03–04:30` |
+🛑 **TAUGHT WINDOW `09:30–09:35 ET` (minute-of-day `570–575`). CANONICAL ZONES WHOSE EXACT WINDOW EQUALS IT: **`NONE`.**
+🛑 **AND THE NEAREST CONTAINER IS NOT A NEAR MISS — IT IS `36×` TOO WIDE: `ny_am` = `07:00–10:00` = `180` minutes against the taught `5`.** ★★★★★ **BINDING THIS ROW TO `ny_am` WOULD BE THE `OPTIMISTIC_LOOSER_THAN_TAUGHT` FAILURE `R-651 §4.4` ALREADY PINNED ON THIS SLICE, AT `36×`. IT IS NOT AN OPTION — IT IS THE DEFECT WITH A ZONE NAME ON IT.**
+⚠️ **INCIDENTAL, REPORTED NOT PULLED (`R-648`):** `_REAL_ZONE_INTERVALS['ny_am'] = 07:00–10:00` (ICT convention) while `context/session_context.py:58` documents `ny_killzone_active` as **`9:30-11:00 ET`**. **TWO DEFINITIONS OF THE NY AM WINDOW IN ONE ENGINE.** `[NOT MEASURED]` which consumers read which. ★★★ **Same shape as your `§6.1` `opening_range` field collision, on the adjacent object — flagged because this slice's mechanic is a session window and I am not opening it.**
+
+### 🛑🛑🛑★★★★★ §3 — WHY IT IS UNREPRESENTABLE: A **PINNED GUARD**, NOT A GAP — AND I PROVED IT DISCRIMINATES
+`[MEASURED HERE — `spec_family_bindings.py:840-859`, read at the executable line]`
+```python
+def resolve_session_name_to_window(object_text) -> tuple[str,str] | None:
+    """… for an UNAMBIGUOUS session NAME in the closed enum that CARRIES NO CLOCK TOKEN
+       — bindable=True, approximation=False, primitive is_in_killzone. …
+       Pinned (i): NO clock tokens ANYWHERE in the name path — a phrase carrying a clock
+       is clock-derived-coarse, not a name, and refuses."""
+    if _SESSION_CLOCK_TOKEN_RE.search(object_text.strip()):
+        return None          # ← (i) A clock token anywhere disqualifies the name path outright.
+```
+🛑 **LIVE ON THE ROW: the guard matches `'9:30 a.m.'` and `resolve_session_name_to_window(row)` → `None`.**
+✅★★★★★ **DISCRIMINATING CONTROL — I PROVED IT IS THE **GUARD** AND NOT THE ENUM THAT REFUSES, BY MAKING THREE BINDING NAMES FAIL:**
+| input | result |
+|---|---|
+| `'the london session'` | ✅ `('london', 'name-route\|zone=london\|window=[120,300)')` |
+| `'ny am session'` | ✅ `('ny_am', …[420,600))` |
+| `'silver bullet'` | ✅ `('silver_bullet', …)` |
+| **`'the london session from 9:30 a.m. Eastern'`** | 🛑 **`None`** |
+| **`'ny am session from 9:30 a.m. Eastern'`** | 🛑 **`None`** |
+| **`'silver bullet from 9:30 a.m. Eastern'`** | 🛑 **`None`** |
+★★★★★ **THREE PHRASES THAT BIND CLEANLY ALL COLLAPSE TO `None` THE MOMENT A CLOCK IS APPENDED. `THE ROW IS NOT REFUSED FOR BEING UNRECOGNISED — IT IS REFUSED FOR BEING A CLOCK, BY A GUARD WRITTEN TO REFUSE CLOCKS.` The design calls this class `clock-derived-coarse` and routes it to a named refusal on purpose.**
+🛑🛑🛑 **STOP CONDITION `1` IS MET ON ITS OWN TERMS. Representing `09:30–09:35` requires EITHER adding a sixth canonical entry — **INVENTING ONE, which your `FORBIDDEN` list names in terms** — OR building a new exact-clock route that can honestly declare `approximation=False`. **THE SECOND IS NOT A ROW REPAIR; IT IS A NEW BINDING ARCHITECTURE, AND IT IS YOURS TO RULE.**
+
+### ✅★★★★ §4 — `§5.3` THE DETECTOR EXISTS AND IS **LIVE** — AND I MUST CORRECT MY OWN `AR-702 §4`
+`[MEASURED HERE — every reference to `compute_opening_range_breakout` in `src/`, test files separated]`
+🛑 ~~**`AR-702 §4`: *"SEVENTH `dormant-activation` CONVICTION."*~~ **WITHDRAWN — IT IS NOT DORMANT.** ✅ **It has REAL non-test callers: `indicators/core.py:649` and `:760`, both inside the `compute_indicators` dispatcher, driven by `IndicatorConfig(type="opening_range_breakout", range_minutes=…, session_start_et=…)`. Also consumed by `frankenstein_test.py:383`.** ★★★ **I called it dormant on the strength of the spec-binding path alone and did not check the indicator pipeline. `EXISTENCE IS NOT WIRING` cuts BOTH WAYS — I applied it to convict and skipped the control that would have acquitted.**
+🛑 **THE ACCURATE STATEMENT IS NARROWER AND STILL THE POINT: it is `UNEXPOSED TO THE SPEC-BINDING PATH.` `[MEASURED]` `spec_condition_compiler.py:51` imports only `compute_atr, compute_ema` from `indicators.core` — **not** this function; and **no `FAMILY_META` entry declares an `indicators.core` primitive** (all `14` listed and checked). **`compile_binding_plan` cannot reach it.**
+✅ **SO THE EDUCATOR'S MECHANIC IS COMPUTED CORRECTLY SOMEWHERE IN THIS ENGINE AND IS INVISIBLE TO THE COMPILER THAT IS TRYING TO COMPILE IT.** ★★★ **That is a real finding and it does not need the word "dormant" to carry.**
+
+### 🛑★★★★★ §5 — `§5.4` WHAT THE BINDING WOULD HAVE TO DECLARE — **SPECIFIED, NOT BUILT**
+**To move this row to a concrete `PASS` it must satisfy BOTH, and they are independent:**
+1. **`(i) bindable=True`** — a route must RETURN a binding. **The only honest `WAIT_SESSION` route is the name route, which refuses clock tokens by pinned guard (`§3`). No other route grants `WAIT_SESSION` a bind today.**
+2. **`(ii) approximation=False`** — requires **BOTH** `FAMILY_META['WAIT_SESSION'].enforced_honest_approximation() == False` ✅ **(already true — this is the `1` of `11` rows that clears the family term, `AR-703`)** **AND** `binding.approximation == False`, which the architecture grants **only** to `SESSION_NAME_ROUTE_PRIMITIVE = session_windows.is_in_killzone` evaluating an **exact canonical window**.
+🛑🛑★★★★★ **THEREFORE THE REQUIRED DECLARATION IS: a primitive that evaluates the EXACT `[570,575)` window, with `approximation=False` HONESTLY earned because no clock derivation sits in the path.** **`is_in_killzone` cannot do it — it knows five windows and this is not one.** ★★★★★ **`THE HONEST DECLARATION IS UNAVAILABLE NOT BECAUSE THE ROW IS VAGUE BUT BECAUSE IT IS TOO PRECISE FOR THE ENUM. THE MOST BINDABLE SESSION CONDITION IT IS POSSIBLE TO WRITE IS REFUSED FOR CARRYING THE PRECISION THAT MAKES IT BINDABLE.`**
+
+### ✅ §6 — VERDICT, AND WHAT I DID NOT DO
+🛑 **REACHABILITY OF A CONCRETE `PASS` ON THIS ROW: **BLOCKED.** Not `UNDETERMINED` — I can name the guard, the line, and the control that proves it discriminates.**
+🛑 **CONSEQUENCE, STATED WITHOUT SOFTENING AND FOR YOU TO RULE: `10` of `14` families are family-blocked (`AR-703`); the golden slice's one `(ii)`-eligible row is architecturally unrepresentable (`§3`). **ON THE RATIFIED SLICE, NO ROW CAN REACH A CONCRETE `PASS` UNDER THE CURRENT `FORBIDDEN` LIST.** ⚠️ **`[NOT MEASURED]` whether any OTHER tier-A spec carries an `EXCEPTION`/`EXIT_HINT`/`RESET`/`WAIT_SESSION` row that is NAME-shaped rather than clock-shaped — **that is the question that decides whether Phase-1 has any open door at all, and it is one join away from artifacts I already hold.** I did not run it: it re-opens spec selection, which is yours.**
+⚠️ **`[UNENUMERATED]`** the `ny_am` two-definitions collision (`§2`) · whether `_SESSION_CLOCK_TOKEN_RE` also fires on the other `3` `WAIT_SESSION`-family rows in tier-A · your `§6.1` `opening_range` field collision, **untouched — and I note your bar stands: no fidelity receipt for this slice until it is answered.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `416388eb` at read. No source file modified. `R-654 §5` fan-in `4 / 4`, halted at pre-registered stop `1`. NOT handing off — I hold the seat.**
+
+---
+
 ## AR-703 · 2026-08-03 · 🛑🛑🛑★★★★★ **CORRECTION TO MY OWN `AR-702 §7.3`, POSTED BEFORE YOU CAN SPEND A LANE ON IT — **I HAD IT BACKWARDS.** THE `9` `WAIT_STRUCTURE` ROWS ARE **NOT** A CHEAPER TARGET; THEY ARE **FAMILY-BLOCKED, EXACTLY LIKE `INVALIDATE`.** I READ *"the two columns AGREE"* AS *"no block"* WHEN AGREEMENT AT `True` **IS** THE BLOCK.** ✅★★★★★ **AND THE CORRECTED MEASUREMENT HANDS YOU THE ANSWER THE WHOLE LANE HAS BEEN LOOKING FOR: **OF THE GOLDEN SLICE'S `11` ROWS, EXACTLY `1` CAN EVER REACH A CONCRETE PASS — THE `WAIT_SESSION` ROW.** `9 × WAIT_STRUCTURE` AND `1 × INVALIDATE` ARE BLOCKED AT THE FAMILY WHATEVER THEY BIND TO. `[MEASURED HERE, ALL 14 FAMILIES, LIVE AT HEAD]`**
 
 **TASK:** correction to `AR-702` (`R-652 §5.2`). 🛑 **Read-only. Nothing in `AR-702 §1–§6` changes — `§5`'s disjunction proof is what generated this, and `§2`'s construction proof is untouched. Only my forward-looking SUGGESTION in `§7.3` was wrong.** ⚠️ **`§5.3` remains blocked on your stop-`2` ruling; this does not unblock it and I am not proceeding.**
