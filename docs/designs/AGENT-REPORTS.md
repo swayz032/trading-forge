@@ -4,6 +4,64 @@
 
 ---
 
+## AR-698 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-649 §4` TASK-3 — **STOP CONDITION (ii) FIRES. `17` OF `26` COLLAPSE, AND `20` WAS THE BAR.** I AM STOPPING AND REPORTING THE RESIDUAL, AS ORDERED.** 🛑🛑★★★★★ **AND THE HARDER NUMBER IS THE ONE THE STOP CONDITION DID NOT ASK FOR: **`ZERO` ROWS CHANGED VERDICT.** `161` `BLOCK` BEFORE, `161` `BLOCK` AFTER; `(ii)` PASSES `0 → 0`. **THE `17` MOVED ONLY TO A MORE HONEST REFUSAL, NOT TOWARD A BINDING.** ✅ **AND THE REPAIR NEEDED NO AUTHORING — IT WAS ALREADY BUILT, BEHIND A DEFAULT-OFF FLAG. FIFTH `dormant-activation` CONVICTION.**
+
+**TASK:** `R-649 §4` TASK-3. **Fan-in `3 / 3` on `R-649 §4`.** 🛑 **NOTHING CHANGED — no code written, no flag default flipped, no shipped behaviour altered. Both arms ran in the materialised scratch copy at `b3c7ddaa`, one arm per PROCESS so no module-level flag read could be cached across arms.**
+
+### ✅★★★★★ §1 — I DID NOT WRITE THE REPAIR BECAUSE THE REPAIR ALREADY EXISTS AT THE SHARED BOUNDARY
+`[MEASURED HERE — read at the executable line, not the comment]` **`classify_session_role` (`spec_family_bindings.py:2085`) is the role-aware session resolver. It is consulted by `_bind_condition_dispatch` ONLY after `resolve_session_keyword` has already returned `None` for that exact text — i.e. it sits EXACTLY at the shared normalization/binding boundary the ruling names — and it is gated on `TF_SESSION_ROLE_RESOLVER_ENABLED`, read at `:2312` with `os.environ.get(..., "false")`. **DEFAULT OFF.**
+★★★★★ **SO "THE ONE BOUNDED REPAIR AT THE SHARED BOUNDARY" IS AN ACTIVATION, NOT A BUILD** — `dormant-activation`, the class this campaign has now convicted five times. 🛑 **I did NOT flip the default. Flipping a shipped default is a behaviour change and it is not mine to make unbidden; I set the flag IN-PROCESS for the measurement only.**
+
+### 🛑★★★★★ §2 — THE ACCEPTANCE EVIDENCE, IN THE EXACT FORM `R-649 §4` SPECIFIED
+**Same `16` artifacts (`claude-rung-v32/shakedown_specs/*.spec.json`), same `run_leg_a_phase1`, same seal. Row-key sets asserted IDENTICAL across arms (`161` = `161`) so the diff is a join, not a comparison of two different populations.**
+| measure | flag OFF | flag ON |
+|---|---|---|
+| specs · `automated_verdict` | `16` · `BLOCK` ×16 | `16` · `BLOCK` ×16 |
+| condition rows | `161` | `161` |
+| `WAIT_SESSION` rows | `27` | `27` |
+| **`no_recognized_session_keyword`** | **`26`** | **`9`** |
+| rows whose `(ii)` REASON changed | — | **`17`** |
+| **rows whose `(ii)` VERDICT changed** | — | **`0`** |
+| rows passing `(ii)` | `0` | **`0`** |
+| rows `BLOCK` | `161` | **`161`** |
+🛑🛑🛑★★★★★ **`17 < 20`. STOP CONDITION (ii) IS MET ON ITS OWN TERMS AND I AM STOPPING.** ★★★★★ **BUT THE ONE-CAUSE HYPOTHESIS FAILS TWICE, NOT ONCE: `17` of `26` on the REASON CODE, and **`0` of `26` ON THE GATE.** The `17` that "collapsed" all moved to ONE destination — `session_teaching_recognized_no_computable_window` — which is *"we recognize this as genuine session teaching, but none of the `5` real windows can compute it."* ★★★★★ **`A REFUSAL THAT BECAME MORE SPECIFIC IS NOT A CONDITION THAT BECAME BOUND` — and a count that moves `26 → 9` looks like `65%` progress while the gate it feeds has not moved by one row.**
+
+### 🛑 §3 — THE RESIDUAL `9`, NAMED INDIVIDUALLY (the acceptance requires it)
+```
+-igpOZs8LsM__s0::WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1
+-igpOZs8LsM__s0::WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3
+0xygpCMwxbQ__s0::WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10
+0xygpCMwxbQ__s0::WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8
+0xygpCMwxbQ__s0::WAIT_SESSION:taking-that-one-step-further-by-using-an#4
+4cT8WTyxhYY__s0::WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6
+E9MzEC_yNoM__s1::WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4
+E9MzEC_yNoM__s1::WAIT_SESSION:when-price-breaks-below-this-previous-lo#5
+R5L890juvRw__s0::WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2
+```
+
+### 🛑🛑★★★★★ §4 — THE RESIDUAL IS NOT A SESSION GAP. IT IS A MIS-TYPE — AND THIS CAMPAIGN ALREADY REGISTERED THE CLASS *AND FORBADE THE REMEDY TASK-3 ORDERS*
+`[MEASURED HERE — quoted verbatim from the committed `tier-a-compile-census.json`, field `session_mistype_class`]`
+> *"`R-083 §2(ii)` registered this class for explicit hunting on tier-a. **A `WAIT_SESSION` condition whose text resolves to NO session zone is mis-typed: it is not a wiring gap, it is a classifier defect, so it is fixed by RECLASSIFICATION, never by building session support.**"*
+✅ **AND THE RESIDUAL TEXTS CORROBORATE IT — these are not session teachings at all `[MEASURED HERE, read from the spec artifacts]`:**
+- `[WAIT_SESSION/confluence]` *"as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled"* — **a risk/reward gloss.**
+- `[WAIT_SESSION/spine]` *"A liquidity sweep is going to be a brief fake out below or above the level…"* — **a structure teaching.**
+- `[WAIT_SESSION/spine]` *"you might have a long idea for your session"* — **an aside; the word `session` is the only session-like thing in it.**
+★★★★★ **THE CAMPAIGN'S OWN REGISTERED REMEDY FOR THIS EXACT CLASS IS RECLASSIFICATION, AND IT SAYS IN TERMS: *"never by building session support."* TASK-3 ORDERED SESSION SUPPORT.** 🛑 **That is not a criticism of the ruling — the class was registered on `tier-a` and TASK-3 was aimed at the shakedown — it is the reason the stop condition was the right instrument and why I am not proceeding past it.**
+
+### ✅★★★ §5 — CORROBORATION I FOUND *AFTER* MEASURING, AND DELIBERATELY DID NOT RELAY INSTEAD OF MEASURING
+**A committed artifact already recorded this experiment: `docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json` — *"binding movement (bound_and_concrete) `0` of `155` global / `0` of `27` `WAIT_SESSION`; diagnostic refusal-reason movement `17` of `155` / `17` of `27`."*** ✅ **`17` and `0` — the SAME two numbers I derived independently above.** 🛑 **I did not read it as my answer. I re-derived both arms first and am reporting the agreement as CORROBORATION, because `R-649 §1`'s whole point was that a load-bearing number is measured, not relayed.** ★★★ **`verdicts-LOCKED.json` also pins the same population — `27` rows over the same `16` files, `classify_session_role` yielding a concrete zone for `9/27` — which is the complement of my residual and matches it exactly.**
+
+### §6 — WHAT THIS ANSWERS THAT `AR-697 §6` ASKED
+✅ **The aim question is now settled BY MEASUREMENT rather than by ruling, and it did not cost the repair to settle it.** **Session-keyword is not the lane: `0` of `26` on the shakedown gate, `2` of `53` load-bearing on tier-A.** **`structure_engine.compute_structure_state` is `78` of the `134` and `18` of tier-A's `53` (`AR-697 §4`).** 🛑 **I am NOT re-aiming myself — that is the desk's. I am reporting that the evidence for the re-aim is now complete and no longer needs the session repair spent to obtain it.**
+
+### WHAT I DID **NOT** MEASURE
+🛑 **Whether activating the flag is SAFE to ship** — I measured yield, not regression. The `17` rows change a published refusal reason, and `[UNENUMERATED]` I did not run the test suite in the ON arm, so I cannot say what asserts on `no_recognized_session_keyword`.
+🛑 **The `1` `session_zone_refused_uncomputable_window:overnight` row is untouched in both arms** — it was never in the `26` and I did not probe it. · **Tier-A was NOT re-sealed in the ON arm** — the `2` load-bearing session rows there are unmeasured under the flag. · **The mis-type finding is `[MEASURED]` for the `3` rows I quoted and `[HYPOTHESIS]` for the other `6`; I read three texts, not nine.**
+
+**Position: `h1-wave4-sealed12-driver`, HEAD `b52b42ea` at read. Shared tree untouched. `R-649 §4` fan-in `3 / 3` — TASK-2, TASK-3, TASK-4 all closed. Nothing is half-done and no sub-agent is owed. I am not handing off.**
+
+---
+
 ## AR-697 · 2026-08-03 · ✅★★★★★ **`R-649 §4` TASK-2 **AND** TASK-4 — BOTH ANSWERED. `11/11` TIER-A SPECS SEALED THROUGH `run_leg_a_phase1` FIRST TIME, NO ADAPTER, NO EXCEPTION. AND TASK-4'S ANSWER IS THE ONE THAT RE-SIZES THE BUILD: **THE `134` APPROXIMATIONS ARE `6` DETECTORS, AND ONE OF THEM IS `78` OF THEM.**** 🛑🛑★★★★★ **BUT TASK-3's PREMISE DOES **NOT** CARRY TO TIER-A, AND THE WAY IT FAILS IS A TRAP: TIER-A ALSO HAS A *`26`* — AND IT IS A **DIFFERENT** `26` WITH THE **OPPOSITE** CAUSE. SESSION-KEYWORD IS `2` OF `53` HERE, NOT `26`.**
 
 **TASK:** `R-649 §4` TASK-2 (re-scoped) + TASK-4. 🛑 **NOTHING CHANGED IN THE SHARED TREE — every execution ran in a materialised scratch copy (`git archive HEAD | tar -x`) at `b3c7ddaa`. No build, no wiring, no repair. TASK-3 is NOT started and `§6` says why.**
