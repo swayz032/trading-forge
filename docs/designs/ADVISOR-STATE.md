@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3689` at THIS commit, 2026-08-03 05:0x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3691` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3689` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3691` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,12 +94,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-623` (`69204523`). Newest AR: `AR-666` — **RULED / APPROVED** at `R-623`.** Worker: ✅ **ACTIVE, not blocked.**
+**Ruling ledger at `R-624` (`fad2ff1b`). Newest AR: `AR-667` — **RULED / APPROVED** at `R-624`.** Worker: ✅ **ACTIVE, not blocked.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-623 §7`** (2026-08-03, `69204523`)
-1. ✅ **WORKER — LAND `AR-666`:** commit `src/engine/backtester.py` **alone** from `wt-eventmask-fix-20260803` onto the campaign branch, `commit -o` (shared tree, lanes live in it). 🛑 **`LANDED ≠ RUNNING` — no deploy; `runtime-production` untouched.**
-2. ✅★★★★★ **WORKER — THEN REVIVE THE DEAD GUARD.** `src/engine/tests/test_entry_windows.py` ONLY: add the missing `start_date`/`end_date` to `_make_minimal_backtest_result` (`:313`). 🛑 **FIX THE FIXTURE, NEVER THE ASSERTION.** Acceptance: all four reach a real verdict, **RED on the pre-fix base and GREEN on the fix, same unchanged fixture, base re-measured THIS run** (`red-path-decay`). ★★★ **This IS the end-to-end proof `AR-666` named as its own honest ceiling — not a new harness, the one already written for this defect.**
-3. ⏸️ `R-620 §4.1` (`INV-13` on a capped run), then `INV-1`'s overlap.
+## ★★★★★ AUTHORIZED NOW — **`R-624 §5`** (2026-08-03, `fad2ff1b`)
+1. ✅ **WORKER — COMMIT THE REVIVED FIXTURE:** `commit -o src/engine/tests/test_entry_windows.py`, **that file alone**. 🛑 **It is UNCOMMITTED and is the sole carrier of the revived guard.** 🛑 **`test_synthetic_market_simulator.py` is INHERITED DIRT (` M` in the `04:41` snapshot) — NOT the worker's to commit.**
+2. ✅ **THEN `R-620 §4.1`** (`INV-13` discriminates on a capped run?), then `INV-1`'s overlap.
+3. ✅ **DONE, `R-623 §7.1`/`§7.2`:** engine fix LANDED (`28a95a9a`, `backtester.py` alone, `+42/−10`) and the four `TestBacktesterWindowMask` guards REVIVED — **end-to-end proof exists**: `total_trades` `0 → 1`, window-masked signals `0 → 10`, real `63`/`64`-key result dicts. **Desk re-ran it: `4 passed`, assert count `59 → 59`.** 🛑 **Synthetic 20-bar fixture — proves POLARITY, says NOTHING about real-data trade counts.**
 4. 🛑★★★★★ **DESK — `R-623 §4`'s NO-OPT-OUT BLACKOUT is a NAMED PHASE-2 ENTRY BLOCKER.** Mine to specify as a `ratify-packet`. Not delegated, not parked on the operator.
 5. 🛑 **DESK — the `WARNING`-tier decision (`R-620 §4.4`) and the `INV-1` disposition remain MINE.** ⚠️ **Aged five rulings — named so they cannot quietly become a standing sentence.**
 
@@ -272,7 +272,9 @@ Merge · worktree update · production write · service restart · spend · any 
 - MSYS `/tmp` resolves to `C:\tmp` under node and to something else under bash — use the scratchpad. Bit both the worker (`AR-630 §4.3`) and this desk.
 
 ## OPERATOR-FACING
-**Nothing is parked on him and nothing is waiting.** No capital, spend, runtime or irreversible act anywhere in this work. The one thing only he can do is start a NEW worker CLI process, and it is NOT needed — the live seat has capacity and holds the contract.
+🛑🛑★★★★★ **ONE THING IS NOW GENUINELY HIS, AND IT IS A CAPABILITY QUESTION, NOT A DECISION (`R-624 §6`, 2026-08-03): THE INDEPENDENT-GRADE CAPABILITY EXISTS NOWHERE ON THIS CAMPAIGN.** `R-614 §2` measured that the WORKER's harness forbids it spawning agents; `[MEASURED HERE 2026-08-03]` **this ADVISOR seat's harness carries the same standing instruction — *"Do not call the AgentTool unless the user requested it."*** ★★★★★ **So `doer ≠ grader` is currently unsatisfiable: `AR-666`/`AR-667` are approved on THIS DESK'S OWN RE-EXECUTION, which is a real second run but is NOT independence — and `R-624 §1` proves why that matters, because the defect needing catching was in MY OWN ORDER.** **The grade is recorded as OWED AND UNPAID, not skipped. Only he can restore the capability.**
+⚠️ **Note this contradicts the sentence that stood here until now — *"nothing is parked on him and nothing is waiting"* — which had become boilerplate. `A CLAIM REPEATED BECOMES A PREMISE`; it was true when written and stopped being true without anything editing it.**
+✅ **Otherwise unchanged: no capital, spend, runtime, deploy or irreversible act anywhere in this work.** ✅ **A new worker CLI process is NOT needed — the live seat has capacity and holds the contract.**
 
 ---
 ## ~~AUTHORIZED NOW — `R-543 §4` (`1`–`5`) + `R-544 §3` (`6`–`9`), ADDITIVE, ONE BATCH OF NINE. CARRIED FORWARD UNCHANGED BY `R-545 §5.1`. ACCEPTED BY `AR-590`.~~ **[SUPERSEDED BY `R-587 §7`; content retained, NOT the live task]** (2026-08-02, `11c6ddfc` + `eaca5324`)
