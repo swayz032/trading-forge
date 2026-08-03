@@ -4,6 +4,63 @@
 
 ---
 
+## AR-679 · 2026-08-03 · 🛑★★★★★ **`R-634` IS RIGHT AND THE DEFECT IS MINE: I PUBLISHED AN ACCEPTANCE COUNT WITHOUT THE SELECTION THAT PRODUCED IT, SO NOBODY COULD RE-RUN IT. **HERE IS THE EXACT COMMAND, AND THE RECONCILIATION.**** ✅ **`track3`'s `40 failed` AND MY `6 failed` ARE BOTH TRUE — MY `-k` FILTER ADMITTED **`5` OF ITS `49`** TESTS AND DESELECTED `44`.** ✅★★★ **AND THE QUESTION THAT ACTUALLY MATTERED IS NOW MEASURED: `track3` IS `40 failed / 9 passed` ON **BASE AND CHANGED ALIKE** — MY CHANGE IS RESPONSIBLE FOR NONE OF THEM.**
+
+**TASK:** `R-634` — one command, one paste, plus the reconciliation.
+
+### ✅ THE EXACT COMMAND BEHIND `6 failed / 101 passed / 3 skipped`
+
+```
+python -m pytest src/engine/tests/ -q -k "performance_gate or forge_score or stress or crisis"
+→ 6 failed, 101 passed, 3 skipped, 8280 deselected, 16 warnings in 81.17s
+```
+```
+python -m pytest src/engine/tests/test_track3_strategy_regime_wiring.py -q
+→ 40 failed, 9 passed in 0.67s
+```
+
+### ✅ THE RECONCILIATION — BOTH NUMBERS ARE TRUE
+
+```
+python -m pytest src/engine/tests/test_track3_strategy_regime_wiring.py -q \
+       -k "performance_gate or forge_score or stress or crisis"
+→ 5 failed, 44 deselected
+```
+| | |
+|---|---|
+| `track3` total | **`49`** tests (`40 failed + 9 passed`) |
+| admitted by my `-k` | **`5`** — the `test_exit_style_d_on_crisis[...]` parametrisations, which match the token `crisis` |
+| **deselected by my `-k`** | 🛑 **`44`** — **including `35` FAILING tests my sweep never saw** |
+| my `6` failures decompose as | **`5`** `test_track3_strategy_regime_wiring.py` + **`1`** `test_performance_gate.py::test_tier1_passes` `[MEASURED — grouped from the FAILED lines]` |
+
+### 🛑🛑★★★★★ THE DEFECT, OWNED PLAINLY
+
+**`AR-678` said *"back to EXACT baseline: `6 failed / 101 passed / 3 skipped`"* and never named the population.** ★★★★★ **A `-k` EXPRESSION IS A POPULATION DEFINITION, AND AN UNNAMED POPULATION MAKES "BACK TO BASELINE" UNFALSIFIABLE — the desk tried three populations and could not reproduce mine, which is exactly the failure mode: the number was not wrong, it was NOT CHECKABLE.**
+🛑 **AND THE OMISSION IS WORSE THAN GENERIC, NOT BETTER:** the `35` invisible failures live in the file whose *selected* tests are named `..._on_crisis` — **the same subsystem my change touched.** **My filter admitted the crisis-named tests and silently dropped `35` others in the very file most adjacent to the work.** ★★★ **`result-claim` scoping requires the corpus be named with the result; I gave the result and withheld the corpus.**
+
+### ✅ THE QUESTION UNDER IT, NOW MEASURED
+
+| | BASE `performance_gate.py` | CHANGED |
+|---|---|---|
+| `pytest .../test_track3_strategy_regime_wiring.py -q` | **`40 failed, 9 passed`** | **`40 failed, 9 passed`** |
+
+✅ **IDENTICAL. My `F-1` change is responsible for NONE of the `40`.** ★★★ **This is the claim `AR-678` should have made and could not, because it never looked outside its own filter.**
+⚠️ **BUT I AM NOT CALLING `track3` "PRE-EXISTING AND FINE": `40 / 49` FAILING IS A SUBSYSTEM-SCALE FAILURE THE LEDGER'S STANDING *"6 pre-existing"* DOES NOT DESCRIBE, AND `R-634` IS RIGHT TO SEPARATE IT. I have NOT diagnosed a single one of the `40`.**
+
+### ⚠️ WHAT I AM CHANGING ABOUT MY OWN REPORTING
+
+**Every future acceptance count ships with the VERBATIM command that produced it, and any `-k`/path filter is stated as the population.** ★★★ **A filtered count with an unstated filter is the test-suite form of `I MEASURED THE NEIGHBOURING OBJECT` — I measured a real population and reported it as if it were the suite.**
+
+### ⚠️ STILL NOT MEASURED
+
+1. **Any diagnosis of the `40` `track3` failures** — untouched, and now visibly larger than the ledger's standing figure.
+2. **Whether other reports of mine this session carry the same unstated-population defect** — `[UNENUMERATED]`. ⚠️ **`AR-666`/`AR-667`'s `54 passed` and `AR-672`/`AR-673`'s counts were single-FILE selections, which are self-naming; the `-k` ones are the exposed class.**
+3. **`F-A`, `F-3`–`F-9`** — not started, waiting on this.
+
+**RECOMMENDATION:** `F-1`'s acceptance is now reproducible. **NEXT: `F-A` unless the desk wants the `track3` `40` triaged first — it is a bigger hole than anything in my current queue.**
+
+---
+
 ## AR-678 · 2026-08-03 · ✅★★★★★ **`R-633` OPTION B LANDED (`6b03a61c`) — `F-1` STAYS CLOSED AND THE TREE IS BACK TO **EXACT BASELINE**: `6 failed / 101 passed / 3 skipped`, FAILURE-SET DIFF **EMPTY**, AND `test_crisis_partial_fail_without_dd_breach_no_veto` PASSES AGAIN.** ✅ **ALL THREE ARMS RE-MEASURED ON THE NARROWED CODE — NOT CARRIED FROM `AR-677`.**
 
 **TASK:** `R-633`. **File: `performance_gate.py` only.**
