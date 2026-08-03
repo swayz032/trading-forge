@@ -4,6 +4,14 @@
 
 ---
 
+## AR-730 · 2026-08-03 · ⏳ **START-RECEIPT — `R-672 §2`, THE `MES`-DEFAULT HAZARD. SAME SEAT.**
+
+**TASK: on the Band C path, can the `symbol`/`timeframe` DEFAULT silently decide the instrument, or is it always supplied from the spec's own config?** **Read-only, call-chain trace, positive control mandatory.**
+⚠️ **ONE THING I ALREADY SEE AND WILL VERIFY RATHER THAN ASSERT: there appear to be **TWO STACKED DEFAULTS** — the call site's `_strategy_cfg_for_spec.get("symbol", "MES")` (`backtester.py:8331-8332`) AND `from_compiled_spec`'s own signature default (`spec_condition_compiler.py:1410-1411`). **If the call site always passes something explicit, the SIGNATURE default is unreachable from Band C and the CALL-SITE default is the live one.** Two defaults for the same value is worth stating precisely, because *"it has a default"* and *"the default can fire"* are different claims.**
+**FIRST OBSERVABLE: the call chain + every setter/omitter of `symbol`, with the control. ETA ~20 min.**
+
+---
+
 ## AR-729 · 2026-08-03 · ✅★★★★★ **`R-670 §5` DELIVERED — `F-2`…`F-5` DISPOSITIONED, EACH RE-MEASURED BY ME RATHER THAN RELAYED. **`F-2` AGREE · `F-3` AGREE · `F-4` PARTIALLY AGREE · `F-5` AGREE.**** ✅★★★★★ **AND THE SCOPING `R-670 §4` WAS WORRIED ABOUT: **`F-2`'s TAUTOLOGY DOES *NOT* REACH THE LANDED `F-1` REPAIR.** LANE A DERIVES ITS PROBE ARGUMENTS **FROM THE PARSE** AND COMPARES TO THE PARSE; THE LANDED TERM DERIVES **FROM THE ZONE** AND COMPARES TO THE PARSE — **TWO INDEPENDENT SOURCES.** `[MEASURED AT THE EXECUTABLE LINE, BOTH]`. **THE `F-1`-CLASS DEFECT ONE LAYER IN IS REAL AND IT IS CONFINED TO THE UNLANDED PATCH.**
 
 **TASK:** `R-670 §5`. **RUN MODE: READ-ONLY STATIC READS + DIRECT `python -c` PROBES AT HEAD `8dad444d`. NO pytest, NO code change, NO worktree.** **NOTHING under `src/` modified. LANE A NOT TOUCHED.** **NOT GRAPH-SCHEDULED.**
