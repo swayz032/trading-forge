@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3712` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3723` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3712` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3723` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-629` (`3fccbfab`). Newest AR: `AR-673` — **RULED / APPROVED** at `R-629`.** Worker: ✅ **ACTIVE on `R-627 §3.2`, not blocked, no new authorization needed.**
+**Ruling ledger at `R-630` (`127379c2`). Newest AR: `AR-674` — **RULED / APPROVED** at `R-630 §3a`.** Worker: ✅ **ACTIVE on `R-630 §4.1` (`F-2`), not blocked.**
+
+## 🛑🛑🛑★★★★★ READ THIS FIRST — `F-1`, THE HIGHEST-SEVERITY OPEN FINDING (`R-630 §1`)
+**A CRISIS-STRESS SCENARIO THAT *CRASHES* CANNOT TRIGGER THE CRISIS HARD-VETO.** `stress_test.py:131-139` returns `{max_drawdown: 0, passed: False, error: <str>}` on an exception; `performance_gate.py:296-298` vetoes only on `max_drawdown > firm_max_dd`; `0 > firm_max_dd` is never true. **The honest `passed:False` and `error` flags are in the same dict and are NEVER READ.** Two arms, identical but for crash-vs-breach: `CRASHED → crisis_veto=False, passed=True, score=67.1` vs `BREACHED → crisis_veto=True, passed=False, score=0.0`.
+🛑 **GRADES, KEPT SEPARATE: the BLINDNESS is `[MEASURED BY GRADED INSTRUMENT]`. The PRODUCTION CONSEQUENCE is `[HYPOTHESIS]` — the grader states it *"proved the veto is blind by calling the function, but did not confirm any strategy was actually promoted this way."*** ✅ **`forge_score` → promotion scoring → live capital is the REASONED chain. Nothing is live, `backtests = 0`, and per `R-623 §5` there is no persisted history to check — so historical impact is UNKNOWABLE, not merely unchecked.**
+✅ **FIX POINT (grader-named): `performance_gate.py:296-298` must treat `"error" in s` or `s.get("passed") is False` as a veto.** 🛑 **`ratify-packet` FIRST — it is the score promotion trusts.** 🛑 **`never-flag`: correctness repair, ships unconditionally, NO opt-out.**
+
+## ⚠️🛑 RETRACTED — `R-624 §2` (`R-630 §2`)
+**It ratified *"a swallowed failure can no longer read as a measurement."* **FALSE.** The traceback remedy left the stub and all three vacuous assertions untouched; its visibility is an accident of a NEIGHBOURING test failing (pytest discards captured stderr on passing tests). Deselect the sibling → `3 passed`, total silence.** ★★★★★ **`A DIAGNOSTIC THAT ONLY PRINTS WHEN SOMETHING ELSE FAILS IS NOT A DIAGNOSTIC — TEST IT IN ISOLATION.`** ⚠️ **LATENT, not firing today (all four tests pass for real).**
 
 ## ⚠️★★★★★ THE PUBLISH-TIME GATE HAD A LATENT DEFECT — FIXED, AND RECORD WHY IT PASSED BEFORE
 **`R-625 §2` minted: re-read every asserted tree/AR state AT PUBLISH TIME. The gate I wrote for it was:**
@@ -104,12 +112,15 @@ ar=$(grep -m1 "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*" | head -1)   # FI
 ```
 🛑 **`grep -o` returns EVERY match on the line, and an AR header often CITES A PRIOR AR** (`AR-673`'s cites `AR-672`). So `$ar` became two lines and the equality test failed — **the gate reported STALE against a perfectly current file.** ★★★★★ **AND THE DANGEROUS HALF IS WHY IT PASSED FOUR TIMES BEFORE: those headers happened to name only one AR. `THE GATE WAS CORRECT BY LUCK OF THE DATA, NOT BY CONSTRUCTION` — a guard that has only ever seen the easy input is not a guard that works.** ✅ **It failed CLOSED (refused the commit), which is the right direction, and a surprising result correctly accused the instrument first.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-628 §3`/`§4`** (2026-08-03, `c7d34143`)
-1. ✅★★★★★ **WORKER — REWRITE ONE ASSERTION.** `src/engine/tests/test_invariant_harness.py:511` `TestPerFirmEndings::test_passes_when_no_prop_compliance` asserts `check.passed` after popping `prop_compliance` — **it is a transcript of the fail-open `R-627 §3.1` deliberately removed.** 🛑★★★★★ **THE STANDING "NEVER EDIT AN ASSERTION" STOP IS LIFTED FOR THIS ONE TEST ONLY (`R-628 §3`).** Must assert POSITIVELY: `passed is False` **and** `applicable is False` · evidence names WHY · **and a witness that `overall_passed` is UNCHANGED vs the same result WITH `prop_compliance`** — that last one is what would catch a future promotion accidentally gating on absence. **RENAME it. Red-proof against `core.py` at `f936b2dd~1`.**
-2. ⏸️ **THEN — `R-627 §3.2`: MEASURE THE PRODUCER DISCRIMINATOR.** Does the result dict carry any field identifying `run_backtest` vs `run_class_backtest` vs `walk_forward`? **NO code change. "There is none" is a complete answer** and makes gating a producer-side change needing its own `ratify-packet`.
-3. ⏸️ **HELD on item 2: `INV-13 → CRITICAL` and `INV-1` DELETION** (`R-627 §3.3`). 🛑 **`INV-1` must NOT be deleted while `INV-13` is still `WARNING`.**
-4. ⏸️ **`WARNING`-tier enumeration** (`R-626 §5.2`).
-5. ⏳ **DESK — TWO GRADER LANES IN FLIGHT, fan-in `0/2`** `[MEASURED — neither receipt on disk as of `R-628`]`: `GRADE-EVENTMASK-REPAIR-2026-08-03.md` (grades `AR-666`/`AR-667`) · `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` (class sweep owed since `R-624 §5.3`). 🛑 **Both counted; a missing lane is a finding, never an omission.**
+## ★★★★★ AUTHORIZED NOW — **`R-630 §4`** (2026-08-03, `127379c2`)
+1. ✅★★★★★ **WORKER — CLOSE `F-2` PROPERLY (in flight).** **PROPERTY:** *a swallowed `run_backtest` failure cannot produce a passing test, with or without a failing sibling.* **File:** `src/engine/tests/test_entry_windows.py` ONLY. Either `except → pytest.fail()`/re-raise (**preferred — closes the class at source**) or the three assertions stop accepting the default. **ACCEPTANCE: re-run the grader's ARM B — the three vacuous tests ALONE with `run_backtest` forced to raise — and show it goes RED.** 🛑 **ARM A cannot detect this.** 🛑 **Do NOT weaken `assert skipped >= 10`.**
+2. 🛑★★★★★ **THEN `F-1` — `ratify-packet` FIRST, then the repair.** See the block above. **Doer ≠ grader: it gets its own `accuracy-validator` lane on delivery, dispatched by THIS DESK on its own authority.**
+3. ⏸️ **`F-3`–`F-9` — SEVEN more DEMONSTRATED findings, none dropped**, each owed a disposition. **Detail lives in `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` — do NOT re-paraphrase it.** Includes a novel mechanism (`F-8`): an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, so **the failing assertion launders itself into a PASS**.
+4. ⏸️ **`INV-13 → CRITICAL`** — its gate (`R-627 §3.2`) is now DISCHARGED: **`wf_metadata` IS the producer discriminator** (`AR-674`, unconditional on both walk-forward literals, zero in `backtester.py`). **Order it as its own instrument item once `F-2` closes.** Then **`INV-1` DELETION** — 🛑 **never while `INV-13` is still `WARNING`.** Then the **`WARNING`-tier enumeration** (`R-626 §5.2`).
+5. ⏳ **DESK — GRADER FAN-IN `1/2`** `[MEASURED at `R-630`]`: ✅ `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` RETURNED and ruled at `R-630`. 🛑 **`GRADE-EVENTMASK-REPAIR-2026-08-03.md` (grades `AR-666`/`AR-667`) IS STILL IN FLIGHT — not on disk. A missing lane is a finding, never an omission; the next seat OWES its disposition.**
+
+## ⚠️ SWEEP COVERAGE — WHAT `9 DEMONSTRATED` DOES **NOT** MEAN
+**`7.4%` of the surface it names: `14` of `189` `A7`/`A8` files traced; ~`410` `A7` and all `278` `A9` UNTRACED; NO TypeScript/vitest sweep at all.** ★★★★★ **`THE 497 STRUCTURAL SITES ARE A CAPABILITY SIGNAL, NOT A DEFECT COUNT` — the `3/87` (~3%) rate is NOT transferable (the 14 files were chosen for money-path relevance, not at random). Extrapolating is a HYPOTHESIS and the grader labelled it one.** ✅ **Honest nulls: `contextlib.suppress` and `try/finally: return` are `0` across all `374` files.**
 
 ## 🛑★★★★★ THE STANDING QUESTION AT `INV-13` (`R-628 §2`, law)
 **`A "NOT APPLICABLE" SUBTRACTED FROM THE FAILURE SET IS A FAIL-OPEN WEARING A TAXONOMY.`** `not_applicable` checks stay IN `failed`/`warnings` and carry a flag — **never subtracted**, or the absence silently exempts itself the moment the check gates. ★★★ **Absence-passes-the-gate re-entered FOUR times on 2026-08-03, twice through its own remedy (`R-618 §3` · `R-626 §4.1` · `R-627 §1` composition · the subtraction). ASK OF EVERY CHANGE NEAR `INV-13`: "does this make absence pass?"**
