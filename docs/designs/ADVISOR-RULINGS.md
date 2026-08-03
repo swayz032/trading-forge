@@ -12,6 +12,80 @@
 
 ---
 
+## R-632 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE EVENTMASK GRADE RETURNED — BAND `6/10`, ADOPTED — AND ITS NOVEL HUNT IS WORTH MORE THAN ITS BANDS: `F-A` (CRITICAL) THE FOUR-TEST POLARITY GUARD **RUNS THE UTC FALLBACK AND NEVER THE PRODUCTION ET BUILDER**, SO RE-INTRODUCING THE EXACT DEFECT IN THE FUNCTION THAT ACTUALLY RUNS LEAVES THE SUITE `4 passed`. VERIFIED BY ME AT THE EXECUTABLE LINE.** 🛑★★★★★ **`F-B` (HIGH): THE `F-2` REPAIR I APPROVED AT `R-631 §1` CLOSES THE **EXCEPTION** PATH ONLY — a `run_backtest` that RETURNS `{}` WITHOUT RAISING STILL PASSES `2 of 4`, AT `HEAD`, TODAY. `pytest.fail` IN AN `except` CANNOT SEE A SUCCESSFUL-BUT-EMPTY RETURN.** 🛑🛑★★★★★ **`F-A` + `F-B` TOGETHER: THE POLARITY CERTIFICATION'S ENTIRE DISCRIMINATING POWER RESTS ON **ONE** TEST.** ✅ **`AR-676`'s RATIFY-PACKET APPROVED — IMPLEMENT `F-1`.** ⚠️ **AND I CORRECT `R-631 §4` VISIBLY: THAT LANE WAS NEVER DEAD, ONLY SLOW.**
+
+**★ WORKER — START HERE:** ✅ **`F-1`: PACKET APPROVED, IMPLEMENT IT NOW under `§5` — including the clean-arm control `(c)` you added yourself, which `R-630 §4.2` did not ask for and which is the only thing separating "correctly stricter" from "vetoes everything".** ⏸️ **THEN `§6.1` — `F-A`+`F-B` as ONE instrument repair on `test_entry_windows.py`.** 🛑 **`F-3`–`F-9` still queued, still not dropped.**
+
+**RULING ID:** R-632 · **TASK ID:** grader lane 2 fan-in + `AR-676` packet approval · **DECISION: ADOPT · APPROVE · ORDER · SELF-CORRECT.**
+**NEWEST AR NAMED (`R-416`):** **`AR-676`** `[MEASURED HERE, `| head -1` gate form]` — it IS a subject of this ruling (`§5`). `AR-675` ruled at `R-631`.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED. NODE: NONE — `P0PC` nine of ten.**
+**GRAPH FAN-IN: `2` of `2` — BOTH LANES IN.** Class sweep ruled at `R-630`; eventmask grade adopted here. ✅ **A THIRD lane (`-B-`) is in flight by this desk's own dispatch; it is a bonus second path, NOT an outstanding obligation.**
+
+---
+
+### ⚠️🛑★★★★★ §1 — I CORRECT `R-631 §4`. THE LANE WAS IN FLIGHT, NOT DEAD.
+`R-631 §4` stated: *"`GRADE-EVENTMASK-REPAIR-2026-08-03.md` is STILL not on disk `[MEASURED HERE, ls]`."* ✅ **That measurement was TRUE when taken.** 🛑 **THE CONCLUSION DRAWN AROUND IT WAS NOT: the lane returned at `05:52:05` `[MEASURED HERE, `stat`]`, roughly four minutes after I measured its absence and while I was drafting `R-631`. It ran ~40 minutes end-to-end. IT WAS NEVER DEAD — IT WAS SLOW, AND I HAD NO INSTRUMENT THAT COULD TELL ME THE DIFFERENCE.**
+★★★★★ **LESSON, MINTED: `A LANE WITH NO LIVENESS CHANNEL IS INDISTINGUISHABLE FROM A DEAD ONE, AND "RE-DISPATCH" IS THEREFORE A BET, NOT A DIAGNOSIS.` The `§8` START-RECEIPT contract exists for exactly this and I did not require one of the grader when I dispatched it. **Every future grader dispatch from this desk carries a START-RECEIPT obligation: one line, task + first observable + ETA.** That is the missing instrument, and it is cheap.**
+✅ **THE RE-DISPATCH STANDS AND WAS NOT WASTED — but I restate its status honestly: it is a SECOND PATH on a band-`6` verdict, not the recovery of a lost lane. The `-B-` receipt path did its job: nothing was clobbered.**
+✅ **DURABLE-RECEIPT RESCUE `[MEASURED HERE]`: the grader WROTE the file but never COMMITTED it — it sat UNTRACKED. The dispatch contract required a committed receipt. I committed it unmodified at `de26d981` (`325` insertions, content untouched). ★★★ `A RECEIPT THAT IS NOT COMMITTED IS ONE `git clean` FROM NOT EXISTING` — and the contract's weak point is that the doer reports success on WRITE, not on COMMIT.**
+
+### ✅ §2 — THE GRADE IS ADOPTED. BAND `6/10`. THREE CLAIMS COME DOWN.
+**Receipt: `docs/designs/GRADE-EVENTMASK-REPAIR-2026-08-03.md` (`325` lines, committed `de26d981`).** It declared its own lineage unprompted (it had graded the DEFECT this work repairs), proved single-variable isolation by two-sided sha256, ran read-only against a live worker's tree, and recorded **two self-convictions where its own instrument nearly produced a false CRITICAL.** ★★★ **That last item is why I am adopting a verdict that is largely bad news: an instrument that reports its own near-misses is one whose nulls mean something.**
+- 🛑 **`C1` MAGNITUDE REFUTED.** *"100% of entry signals ANDed away"* is false in general — re-derived as **`95.83%` / `92.31%` / `85.71%`** by session shape. `100%` holds ONLY when the data has zero bars in the blackout windows, **which is exactly the fixture that produced the claim.** ★★★ **`A UNIVERSAL QUANTIFIER MEASURED ON ONE FIXTURE IS A PROPERTY OF THE FIXTURE.`**
+- 🛑 **`C3` STRUCTURALLY REFUTED — and this is an INDEPENDENT SECOND PATH on `F-2`.** It planted a raise and got **`3 of 4` still PASSING**, at the pin, **before it saw the worker's fix commits.** ✅ **It then re-verified `0/4` on its UNCHANGED instrument after `4b6892a8` landed. Two lanes, non-overlapping, same finding, same closure — this is the strongest evidence state the campaign has produced this session.**
+- 🛑 **`C6` REFUTED — AND IT CHANGES THE REMEDY, WHICH IS WHY IT MATTERS.** *"There is NO opt-out"* is false: `policies=[IGNORE]` is truthy, takes branch 1 at `backtester.py:3892`, and skips the default blackout entirely; `economic_calendar.py:1258` guarantees an `IGNORE`-only calendar blocks nothing. **The override is documented three lines above the code it overrides.** ✅ **What SURVIVES is "no caller uses it" — zero producers, with a planted positive control proving the census instrument can find one.** ★★★★★ **`A WIRING GAP AND A DESIGN DEFECT NEED DIFFERENT FIXES; CALLING ONE THE OTHER BUILDS A SECOND OVERRIDE BESIDE THE ONE THAT ALREADY WORKS.`**
+✅ **`C2` (`8`), `C4` (`8`), `C5` (`8`) VERIFIED — `C4` by a STRONGER instrument than claimed: assertion CONTENT byte-identical (`sha256 0276fb12…`), not merely `59 == 59`. ★★★ Note its trap: hashing with `grep -n` would have given a false positive, because line numbers move when content does not.**
+
+### 🛑🛑🛑★★★★★ §3 — `F-A` IS CRITICAL, IT IS OPEN AT `HEAD`, AND I VERIFIED IT MYSELF.
+**`[MEASURED HERE — campaign tree `wt-h1-wave4-20260712`, executable lines]`**
+- `backtester.py:3970` — `if "ts_et" in df.columns:` → `:3971` `_build_default_event_mask_et(df["ts_et"])`; **else** `:3999` `_build_default_event_mask_utc(...)`.
+- `src/engine/tests/test_entry_windows.py` — **`ts_et` occurs ZERO times.** ✅ **POSITIVE CONTROL for that absence: the identical grep returns `8` hits in `backtester.py`, so the instrument can find the string and its null is meaningful (`absence-claim`).**
+🛑 **THEREFORE ALL FOUR `TestBacktesterWindowMask` TESTS TAKE THE UTC FALLBACK — the branch the code itself labels *"Legacy fallback … should be rare post-data-loader fix"* — AND NEVER EXECUTE `_build_default_event_mask_et`, THE PRODUCTION PATH.** ✅ **The grader's mutation arms are the proof and they discriminate: ET-REVERT → `4 passed` (blind); UTC-REVERT → `1 failed, 3 passed` (sighted). Re-run at end-`HEAD`: still `4 passed`.** `[MEASURED BY GRADED INSTRUMENT; the selector and the fixture's missing column are MEASURED HERE by me.]`
+★★★★★ **`A GUARD THAT STAYS GREEN WHEN YOU RE-INTRODUCE THE EXACT DEFECT IN THE EXACT FUNCTION THAT RUNS IN PRODUCTION IS NOT A GUARD FOR THAT DEFECT.` This is the `green-check` law with a live body: a STOP CONDITION owing a DISCRIMINATES fixture.**
+
+### 🛑★★★★ §4 — `F-B` LIMITS THE APPROVAL I GAVE ONE RULING AGO. SAID PLAINLY.
+`R-631 §1` approved `AR-675` against the acceptance `R-630 §4.1` set, and that acceptance was **exception-scoped**. ✅ **The approval was correct AS SCOPED and I do not withdraw it.** 🛑 **BUT THE PROPERTY IS NOT CLOSED: `[MEASURED HERE, `:438-446`]` both `test_empty_windows_no_skipped` and `test_no_windows_field_no_skipped` read `result.get("engine_audit", {}).get("skipped_outside_window_count", 0)` and then `assert skipped == 0`. THE DEFAULT **IS** THE ASSERTED VALUE. A `run_backtest` returning `{}` — no exception, so `pytest.fail` never runs — SATISFIES BOTH.** ✅ **Grader measured `2 of 4` passing on a planted `{}` return at end-`HEAD`.**
+★★★★★ **`pytest.fail` IN AN `except` BLOCK DEFENDS ONLY AGAINST THINGS THAT RAISE. `A REPAIR SCOPED TO THE EXCEPTION PATH DOES NOT CLOSE THE VACUITY CLASS` — and `R-630 §4.1`'s property, as worded, invited exactly that reading.**
+
+### ✅★★★★★ §5 — `AR-676` RATIFY-PACKET **APPROVED**. IMPLEMENT `F-1` NOW.
+✅ **The packet does what the skill requires: defect at the executable line, blast radius bounded, scope locked, rollback named, and it correctly self-classifies as AUTONOMOUS (pre-live, `backtests = 0`, all-`CANDIDATE`, nothing promoting) rather than parking a reversible instrument repair on the operator.**
+✅★★★★★ **CREDIT WHERE IT IS DUE, AND IT IS THE DIFFERENCE BETWEEN A GUARD AND A RUBBER STAMP: the packet ADDS a third arm `(c)` — the CLEAN control, all scenarios passing, verdict and score byte-identical before/after — which `R-630 §4.2` did not order. Without `(c)`, arms `(a)`+`(b)` cannot distinguish "correctly stricter" from "now vetoes everything". `A TIGHTENING WITH NO UNCHANGED-CASE CONTROL IS INDISTINGUISHABLE FROM A BREAKAGE.`**
+✅ **AUTHORIZED, SCOPE EXACTLY AS THE PACKET LOCKED IT:** `src/engine/performance_gate.py`, the crisis-veto loop only; add `"error" in s` and `s.get("passed") is False` as veto conditions beside the DD compare, reason string naming which fired. 🛑 **OUT: the DD comparison · `firm_max_dd` · every other scoring component · `stress_test.py` · any threshold or weight · NO FEATURE FLAG (`never-flag`).**
+✅ **ACCEPTANCE: all three arms `(a)` FLIPS · `(b)` UNCHANGED · `(c)` BYTE-IDENTICAL, each re-measured this run.** 🛑 **Build `(a)` on a `ValueError`/`IndexError`/`KeyError` — `R-631 §3`: those are the only types `stress_test.py:129` catches, and a generic `Exception` fixture would prove nothing.**
+✅ **`firm_max_dd > 0` — `R-631 §3` flagged this UNVERIFIED; answer it in the delivery report.**
+✅ **DOER ≠ GRADER: this desk dispatches the `accuracy-validator` lane on delivery. Do not grade your own repair.**
+
+---
+
+### ★★★★★ §6 — AUTHORIZED NOW (after `§5` lands). QUEUE DEPTH `3`, ALL TO **THIS** SEAT.
+
+**§6.1 🛑★★★★★ `F-A` + `F-B` AS ONE INSTRUMENT REPAIR — they are one file and one class, so they are one lane.**
+- **PROPERTY:** *the polarity guard fails when the polarity is re-inverted in the builder that runs in production, and no test in the class can pass on a result that carries no measurement.*
+- **FILES:** `src/engine/tests/test_entry_windows.py` ONLY.
+- **`F-A` FIX POINT (grader-named, verified by me):** the fixture DataFrame (`~:333`) must emit a **`ts_et`** column, or gain a sibling case that does. **One column converts a blind guard into a real one.**
+- **`F-B` FIX POINT:** drop the defaults so a missing key RAISES — `result["engine_audit"]["skipped_outside_window_count"]` — or assert key presence before reading.
+- **ACCEPTANCE, and this is the whole point:** 🛑 **MUTATION-PROOF, not a green run. Re-invert `_build_default_event_mask_et` (`:3941 zeros→ones`, `:3964 True→False`) in a MATERIALISED SCRATCH COPY and the suite must go RED.** Today it is `4 passed`. 🛑 **AND: monkeypatch `run_backtest` to return `{}` — every test in the class must go RED.** Today `2 of 4` pass.
+- 🛑 **NEVER mutate the shared tree to build an arm — `git archive <sha> | tar -x -C <scratch>`. A live worker and a live grader share this checkout.**
+- **HONEST-PARTIAL:** if the `ts_et` fixture hits the dtype cast the grader could not chase (`str` → `datetime[μs, UTC]`), **report that as the finding and stop** — do not fabricate a passing fixture around it.
+- **FIRST OBSERVABLE + ETA:** the mutation arm's RED output, ~25 min. START-RECEIPT within 2 min.
+
+**§6.2 ⏸️ `F-3`–`F-9`** — seven DEMONSTRATED findings, each owed a disposition (`zero-carry`). Read `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`; do NOT re-paraphrase it.
+
+**§6.3 ⏸️ `INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 **never while `INV-13` is `WARNING`.**
+
+**§6.4 🛑 DESK-OWNED, NOT THE WORKER'S — I take these so they are not silently dropped:**
+- ⏳ **`F-D` (HIGH): three suites certify production code they never execute** (`test_wave_a_dsr_sharpe_fixes.py:28-41` re-implements `walk_forward`'s DSR handler in the test and asserts its own literal; `_select_chandelier_multiplier` is DEFINED IN THE TEST with zero occurrences outside tests). **This is the `dormant-activation` species pointed at the test layer.** Desk queues it as its own lane.
+- ⏳ **`test_pnl_accuracy.py:859` — `[RELAYED — UNVERIFIED]`, and it is the single most alarming line in the receipt: the commission-accuracy suite SKIPS when `total_trades == 0`, and the polarity defect produced zero-trade runs BY CONSTRUCTION. If true, that suite was green-by-skip for the entire life of the bug.** 🛑 **UNVERIFIED — nobody has opened it. It gets its own lane and it is NOT to be cited as fact until someone does.**
+- ⏳ **~35 further sweep candidates `[RELAYED — UNVERIFIED]`.** The grader hand-checked `4 of 4` and says explicitly that certifies nothing about the rest. 🛑 **`DO NOT READ THE ABSENCE OF FURTHER FINDINGS AS THEIR NON-EXISTENCE.`**
+- ⏳ **`F-C` (LOW): `2 failed, 442 passed` pre-existing red, identical on both arms, previously undisclosed.** Not caused by this work; owed a disposition anyway.
+
+**STOP AND ASK THIS DESK (nothing else):** a merge · a worktree update · a production write or restart · a scope you cannot stay inside.
+
+**STOP CONDITION:** if `§6.1`'s `ts_et` fixture cannot be built without touching `backtester.py`, **STOP and report** — that would move a test repair onto the engine surface and it is a different ratification.
+
+### ★★★ §7 — WHAT IS STILL UNVERIFIED, NAMED SO IT CANNOT BE MISTAKEN FOR CLEAN
+🛑 **`runtime-production` WAS NOT READ (brief prohibition — my brief's restriction, my hole).** So *"the default blackout suppresses every DSL run"* is **UNVERIFIED FOR WHAT IS ACTUALLY DEPLOYED.** `LANDED ≠ RUNNING` · 🛑 **the sibling tree `wt-eventmask-fix-20260803` exists, is named for this exact fix, and was NOT swept — `C6`'s "repo-wide" is scoped to ONE tree of 10+** · 🛑 **the ET builder inside a real `run_backtest` is `HYPOTHESIS`, never executed** · 🛑 **the parse-failure branch is FAIL-OPEN by design and UNTESTED — `absence-means-maximum-scope` says that widens, not narrows, the risk.**
+
 ## R-631 · 2026-08-03 · ✅★★★★★ **`AR-675` APPROVED — AND I DID NOT TAKE THE WORKER'S WORD FOR IT: I RE-RAN THE RED-PROOF MYSELF, FOUR ARMS, AND IT REPRODUCES EXACTLY.** 🛑★★★★★ **THE SAME RUN INDEPENDENTLY CONFIRMS `R-630 §2`'s RETRACTION BY A WITNESS THE WORKER DID NOT HAVE: in the four-test run the traceback appears under the ***failing sibling's*** `Captured stderr call`, and with the sibling removed the three vacuous tests exit `0` in TOTAL SILENCE. `A DIAGNOSTIC THAT ONLY PRINTS WHEN SOMETHING ELSE FAILS IS NOT A DIAGNOSTIC` is now MEASURED, not argued.** ⚠️★★★ **I NARROW `F-1`'s SCOPE AGAINST MY OWN LEDGER: `R-630 §1` says "a crisis scenario that CRASHES". THE EXECUTABLE LINE SAYS `except (ValueError, IndexError, KeyError)` — `RuntimeError`/`ImportError`/`TypeError` PROPAGATE BY DESIGN. THE BLINDNESS IS REAL BUT IT IS SCOPED TO DATA-CLASS ERRORS, AND A FINDING STATED BROADER THAN ITS EVIDENCE IS THE ONE THE OPERATOR CANNOT CHECK.** ✅ **GRADER LANE 2 RE-DISPATCHED AS LANE `B`, NOT WRITTEN OFF.**
 
 **★ WORKER — START HERE:** 🛑★★★★★ **YOU RECOMMENDED `§4.4` (`F-3`–`F-9`) NEXT. I AM HOLDING THE STANDING ORDER: `F-1` IS NEXT (`R-630 §4.2`), NOT `F-3`–`F-9`.** Reason, so it is not arbitrary: `F-1` is the only open finding that sits on the **live promotion gate** rather than in a test, and `zero-carry` ranks by consequence, not by convenience. ✅ **`F-3`–`F-9` are NOT dropped and NOT deferred to a future seat — they are `§5.2` below, authorized to YOU, this seat.**
