@@ -77,7 +77,7 @@ $0.50 for avg_trade_pnl absorbs the mean of the per-trade rounding errors.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # ─── Public dataclasses ──────────────────────────────────────────────────────
 
@@ -91,6 +91,14 @@ class InvariantCheck:
     actual: str          # formatted computed value
     evidence: str        # human-readable explanation
     severity: str        # "CRITICAL" | "WARNING"
+    # R-627 §3.1: False means the check COULD NOT RUN — its input was absent or
+    # unusable — as opposed to running and passing. Defaults True so every
+    # existing construction site keeps its current meaning unchanged.
+    #
+    # WHY THIS EXISTS: `passed=True` was previously returned for BOTH "I checked
+    # and it was fine" and "I had nothing to check". Those are different facts,
+    # and a verdict must not be able to claim the first while meaning the second.
+    applicable: bool = True
 
 
 @dataclass
@@ -103,6 +111,15 @@ class InvariantReport:
     warnings: list[InvariantCheck]
     all_checks: list[InvariantCheck]
     overall_passed: bool   # False if any CRITICAL failed
+    # R-627 §3.1: checks that could not run. REPORTING ONLY — these are ALSO
+    # left in `failed`/`warnings` rather than being subtracted out.
+    #
+    # DELIBERATE, AND LOAD-BEARING FOR R-627 §3.3: subtracting them would mean a
+    # check promoted to CRITICAL could go not-applicable and vanish from
+    # `critical_failures` — reintroducing the fail-open this item exists to
+    # close, by a new route. Leaving them in means a future promotion makes the
+    # absence VISIBLE at the gate instead of silently exempt.
+    not_applicable: list[InvariantCheck] = field(default_factory=list)
 
 
 # ─── Internal helpers ────────────────────────────────────────────────────────
@@ -748,13 +765,23 @@ def _check_per_firm_endings(result: dict) -> InvariantCheck:
     prop_compliance = result.get("prop_compliance", {})
 
     if not prop_compliance:
+        # R-627 §3.1: NOT a pass. This is the LEGITIMATE absence — walk_forward.py
+        # (:2224/:3005) leaves prop_compliance None whenever a run produced no OOS
+        # trades, so this state is expected on real runs and must NOT be reported
+        # as "checked and fine". Severity stays WARNING, so overall_passed is
+        # unaffected; only the REPORTED state changes.
         return InvariantCheck(
             name="per_firm_endings_consistent",
-            passed=True,
+            passed=False,
+            applicable=False,
             tolerance=f"${TOLERANCE:.2f}",
             expected="firm.ending_balance_uncapped ≈ starting + total_return for each firm",
-            actual="prop_compliance is empty — check skipped",
-            evidence="No prop_compliance data; invariant not applicable.",
+            actual="NOT APPLICABLE — prop_compliance absent/empty; nothing was checked",
+            evidence=(
+                "INV-13 did not run: no prop_compliance data on this result. "
+                "This is expected for runs with no OOS trades (walk_forward sets it "
+                "None) and is NOT evidence that balances are consistent."
+            ),
             severity="WARNING",
         )
 
@@ -780,13 +807,25 @@ def _check_per_firm_endings(result: dict) -> InvariantCheck:
             )
 
     if firms_checked == 0:
+        # R-627 §3.1: NOT a pass — and unlike the branch above this one is
+        # SUSPICIOUS rather than expected: prop_sim.py:466 writes
+        # ending_balance_uncapped for every firm it simulates, so a populated
+        # prop_compliance with no such field is a malformed result, not a
+        # legitimate shape. Distinguishing the two is R-627 §3.2's question and
+        # is deliberately NOT decided here.
         return InvariantCheck(
             name="per_firm_endings_consistent",
-            passed=True,
+            passed=False,
+            applicable=False,
             tolerance=f"${TOLERANCE:.2f}",
             expected="firm.ending_balance_uncapped ≈ starting + total_return for each firm",
-            actual="No firms with ending_balance_uncapped — check skipped",
-            evidence="No checkable firm data found.",
+            actual="NOT APPLICABLE — prop_compliance present but no firm carried ending_balance_uncapped",
+            evidence=(
+                "INV-13 did not run: prop_compliance was present but no firm exposed "
+                "ending_balance_uncapped. prop_sim.py:466 writes that field for every "
+                "simulated firm, so this shape is unexpected and is NOT evidence that "
+                "balances are consistent."
+            ),
             severity="WARNING",
         )
 
@@ -928,6 +967,11 @@ class InvariantHarness:
         critical_failures = [c for c in failed_checks if c.severity == "CRITICAL"]
         warnings = [c for c in failed_checks if c.severity == "WARNING"]
 
+        # R-627 §3.1: reporting-only. NOT subtracted from failed/warnings — see
+        # InvariantReport.not_applicable for why that subtraction would be a
+        # fail-open once a not-applicable check is promoted to CRITICAL.
+        not_applicable = [c for c in all_checks if not c.applicable]
+
         return InvariantReport(
             backtest_id=backtest_id,
             total_checks=len(all_checks),
@@ -937,6 +981,7 @@ class InvariantHarness:
             warnings=warnings,
             all_checks=all_checks,
             overall_passed=len(critical_failures) == 0,
+            not_applicable=not_applicable,
         )
 
 
