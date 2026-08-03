@@ -12,6 +12,40 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-653 · 2026-08-02 · ⏱️ **START-RECEIPT — `LANE-2` CONTINUES (`R-608 §6.1`). SAME SEAT, NOT A NEW ONE: THE OPERATOR `/clear`-ed THIS WINDOW AT A TASK BOUNDARY AND RE-SEATED IT.** 🛑 **AND ONE CORRECTION TO MY OWN `AR-652`: THE "TRUSTED PRE-PLANT BASELINE" I NAMED AS THE NEXT GATE WAS THE **WRONG BASELINE**.**
+
+**TASK:** `LANE-2` — battery-rig fault-injection calibration. **FAN-IN: `LANE-1` CLOSED (`AR-651`, approved `R-608`) · `LANE-2` IN PROGRESS · `LANE-3` NOT STARTED = `1 / 3`.** ★ Per `worker-execution §10`, `1/3` with nothing blocked is a reason to stay, not to hand off. **No handoff is being declared.**
+
+### ✅ §0 — SEAT CENSUS, BECAUSE `HEAD` HAD MOVED `61s` BEFORE I WAS SEATED
+
+**`two-operator-windows` requires seat-vacancy proof before onboarding, and `HEAD` moving mid-turn is its FREEZE trigger. Measured before I wrote anything:**
+
+| claude.exe | started | seat | evidence |
+|---|---|---|---|
+| `13916` | 02:42:12 | **ADVISOR, LIVE** | session `bf71e513`, turn ended `23:16:14`, `1` pending background agent |
+| `21508` | 02:42:20 | **WORKER — ME** | my own ancestry walk `PID→ppid`; predecessor session `2f5c3b39` (turn ended `23:15:09`) authored `AR-651`+`AR-652`; `/clear` opened `ad909bc1` at `23:16:07` **on this same process** |
+| `26296` | 21:58:09 | **CONSULTANT, NO SEAT** | self-declared at `EXT-CONSULT-2` (`AGENT-REPORTS.md:13`), watchers retired via `TaskStop` |
+
+✅ **THERE IS NO SIBLING WORKER. `HEAD`'s two moves at `23:14:52`/`23:15:53` were my OWN predecessor's `AR-652` and the advisor's `ADVISOR-STATE` — not a second writer.** ★★★ **Joined on PROCESS ANCESTRY and SESSION-FILE mtime, not on the commit subject — `R-609 §2`'s corrected rule, applied to the seat question rather than the commit question.** ✅ **`R-609 §2` discriminator re-run over `35251ab7..HEAD`: every advisor-owned-file commit is an advisor ruling. Clean.**
+🛑 **WHAT THIS DOES NOT PROVE:** that the advisor seat is idle. **It is LIVE and may write at any moment** — normal single-writer separation, not a freeze condition. I write only `AGENT-REPORTS.md`, with `git commit -o`.
+
+### 🛑 §1 — CORRECTION TO `AR-652`: I NAMED THE WRONG BASELINE
+
+**`AR-652 §3` said the next gate was "establish the trusted pre-plant baseline (~53 vitest + ~100 pytest pre-existing failures)", inheriting the scout's declared unknown (4).** ★★★★★ **THAT BASELINE BELONGS TO A LANE THIS ONE IS NOT RUNNING.** The scoping file's own **headline finding 1** says the opposite in its last sentence: *"The null-cal must therefore drive the BATTERY, not the test suite"* — precisely because `npm run test:metrics` re-implements the metric math and would pass a defect planted in `backtester.py`. **If the vehicle is the battery, the test suite's pre-existing failures are not in the diff at all.**
+✅ **THE BASELINE THIS LANE ACTUALLY NEEDS is the battery's OWN un-planted behaviour, and its load-bearing property is DETERMINISM** — a plant-then-diff against a rig that varies run-to-run is uninterpretable no matter how green the suite is. **`rc=0` from `AR-652` is necessary and not sufficient: one green run is not a baseline.**
+★★★ **I carried a prerequisite from the brief's frame without re-deriving it against my own vehicle, and it would have cost a full test-suite triage this lane never needed. `A BRIEF IS A CLAIM` — including the parts of it I had already agreed with.**
+
+### ⏱️ §2 — FIRST OBSERVABLE + ETA
+
+**IN FLIGHT NOW:** `--smoke` run **twice**, un-planted, `DETERMINISM_MODE=true`, reports to an out-of-repo scratch path (`--report-out`/`--manifest` default to CWD and would otherwise dirty this SHARED TREE — scoping finding 4). **FIRST OBSERVABLE: the two runs' verdict-field diff.** ⏱️ **ETA ~15 min** — the smoke run's wall-clock is **`[UNENUMERATED]`**; `AR-652` recorded `rc=0` but not a duration.
+**THEN:** plants in an ISOLATED tree — **never in this shared worktree** — ordered `A3` (sign flip, brief's "cleanest certain RED" → proves the rig CAN fire) before `A2` (Sharpe scale, brief's predicted **SILENT-PASS** → the finding worth having). `C4` stays pre-registered as possibly-NO-OP so a null is not misread as a rig failure.
+
+### 🛑 §3 — DECLARED BEFORE I START
+
+**I have NOT verified a single plant-point line number contains the code the brief says it does** — `AR-652` confirmed file existence and nothing more. · **`git status` shows this tree carries pre-existing uncommitted modifications I did not author and will not touch.** · **No engine file will be modified in this worktree; if isolation turns out to be unavailable, that is a STOP, not a workaround.**
+
+---
+
 ## AR-652 · 2026-08-02 · ✅★★★★★ **`LANE-2` STEP-ZERO DONE (`R-607 §3` / `R-608 §6.1`) — THE VEHICLE **WORKS**, AND THE SCOUT'S TWO DECLARED UNKNOWNS ARE NOW **ANSWERED BY EXECUTION**.** 🛑★★★★★ **BUT THE BRIEF IS WRONG BY OMISSION IN A WAY THAT WOULD HAVE READ AS "THE RIG IS BROKEN": `--smoke` DIES INSTANTLY WITH `ModuleNotFoundError` UNLESS THE REPO ROOT IS ON `PYTHONPATH`. WITH IT, **`rc=0`, A FULL BATTERY END-TO-END.** ⚠️ **`import vectorbt` GENUINELY HANGS (`>240s`, NO ERROR) — REAL, AND **NOT** BLOCKING, BECAUSE IT IS A LAZY IMPORT THE SMOKE PATH NEVER REACHES.**
 
 **TASK:** `LANE-2` step-zero (`briefs-assert`: *a brief is a claim — verify resources BEFORE work depends on them*). 🛑 **THIS IS STEP-ZERO ONLY. NO DEFECT HAS BEEN PLANTED AND THE RIG HAS NOT BEEN SHOWN TO GO RED — `LANE-2`'s actual goal is NOT met and nothing here should be read as progress on it.**
