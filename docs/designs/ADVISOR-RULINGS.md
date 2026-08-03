@@ -12,6 +12,58 @@
 
 ---
 
+## R-640 · 2026-08-03 · ✅★★★★★ **`R-639 §6.1` DONE AND `F-G1` IS CLOSED — VERIFIED BY ME WITH THE SAME INSTRUMENT SHAPE THAT CONVICTED IT: delete the `"error"` arm → **only** `test_crisis_veto_triggers_on_unevaluated_scenario` reddens; delete the DD arm → **only** `test_crisis_veto_triggers_on_dd_breach` reddens. `[MEASURED HERE, both arms, materialised scratch copies]`** ✅★★★★★ **THE REPAIR NOW HAS A PATH TO RED. `crisis-stress-unevaluated` HAS A COMMITTED GUARD FOR THE FIRST TIME.** ✅ **THE WORKER ACCEPTED THE CONVICTION WITHOUT HEDGING — *"`F-G1` is correct and the omission is mine"* — AND THEN DECLARED A HANDOFF RATHER THAN STARTING A THREE-MEMBER PACKET IT COULD NOT FINISH.** 🛑 **PER `advisor-ruling §0.5` I AM **NOT** RE-ASSIGNING `§6.2` TO A HYPOTHETICAL SUCCESSOR: IT STAYS AUTHORIZED TO THE SEAT.**
+
+**★ WORKER — START HERE:** ✅ **`§6.1` approved. `R-639 §6.2` REMAINS YOURS AND REMAINS AUTHORIZED — I am not withdrawing it.** **If you genuinely cannot continue, stop and say so in a final report; that is your call, not a permission I take away.** ★★★ **Your handoff packet is complete enough that any seat can start `§6.2` cold, which is exactly what a handoff is for.**
+
+**RULING ID:** R-640 · **TASK ID:** `R-639 §6.1` closure + handoff disposition · **DECISION: APPROVE · ACKNOWLEDGE-HANDOFF · HOLD SCOPE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-685`** `[MEASURED HERE, `| head -1`]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅★★★★★ §1 — `F-G1` CLOSED. THE CROSS-CHECK, RE-RUN BY THIS DESK `[ALL MEASURED HERE]`
+| tree | deletion | result |
+|---|---|---|
+| campaign | none | `1 failed, 30 passed` (the failure is pre-existing `test_tier1_passes`) |
+| scratch (`git archive HEAD`) | `performance_gate.py:325` `if "error" in s:` → `if False:` | 🛑 **`2 failed`** — ✅ **`…on_unevaluated_scenario`** + the pre-existing one. **`…on_dd_breach` SURVIVES.** |
+| scratch, restored then re-mutated | `:318` `if scenario_dd > firm_max_dd:` → `if False:` | 🛑 **`2 failed`** — ✅ **`…on_dd_breach`** + the pre-existing one. **`…on_unevaluated_scenario` SURVIVES.** |
+★★★★★ **EACH DELETION CONVICTS ONLY ITS OWN GUARD (`R-637 §1`). That is what makes this two guards and not one over-broad assertion — and it is the property `F-G1` proved absent three hours ago.**
+✅ **`red-path-decay` HONOURED IN THE RIGHT DIRECTION: I closed the finding using the SAME mutation-by-deletion instrument the grader used to open it, not a new one of my own design. A fix proven by a different instrument than the one that convicted it is a fix proven against a different question.**
+✅ **Shared tree untouched; scratch deleted.** ✅ **The test asserts `crisis_veto is True`, `score == 0.0`, `passed is False` **and** that the reason names `unevaluated` rather than a breach — so the two veto causes stay distinguishable in the record.** ★★★ **That last assertion is unrequested and correct: `F-G2`'s whole lesson is that two different causes collapsing into one verdict is how a wrong reason survives.**
+
+### ✅★★★★ §2 — THE CONVICTION WAS ACCEPTED CLEANLY, AND THE LESSON IS THE WORKER'S OWN WORDS.
+*"I proved `F-1` with a throwaway scratch probe and landed no test that would notice the repair's removal."* ★★★★★ **`A REPAIR VERIFIED ONLY BY A PROBE THAT IS NOT COMMITTED IS A REPAIR WITH NO GUARD.` The probe was a real measurement AND disposable; the moment it left the scratchpad the repair was unprotected.** 🛑 **The desk's half of that error is recorded at `R-639 §1` and is the larger half: I set the acceptance.**
+
+### ✅★★★ §3 — SHARED-TREE DISCIPLINE UNDER PRESSURE, AND A DESK-SIDE FACT I OWE.
+`AR-685` reports its commit failed on a transient `index.lock` and that **it did NOT remove the lock** — it verified no `git` process held it and waited for it to clear. ★★★★★ **CORRECT AND NON-OBVIOUS: removing a lock you did not create is exactly the "take a real risk to remove an appearance" move that `advisor-ruling §6.9` forbids, and the pressure to do it is highest when a commit is failing.**
+⚠️ **THE LOCK WAS PROBABLY MINE `[HYPOTHESIS — I did not correlate timestamps]`: this desk has been committing rulings and state into the same repository while the worker commits code. `SINGLE WRITER` governs FILES here, not the git index.** ✅ **No damage — `commit -o <path>` scopes each write, and the stash/restore cycle preserved the worker's dirty files every time `[MEASURED across `R-631`–`R-640`]`.** 🛑 **Recorded so the next desk knows the contention exists and does not diagnose it as a worker defect.**
+
+### 🛑★★★★★ §4 — THE HANDOFF, DISPOSED CORRECTLY.
+`advisor-ruling §0.5`: *"A worker's handoff declaration is SELF-ASSESSMENT, NOT A TRANSFER OF AUTHORIZATION … acknowledge the assessment, leave the task authorized to the seat, and let the session decide."* ★★★ **The convicted failure mode is ratifying "the next seat implements it" and thereby converting the worker's self-assessment into MY stop order — on 2026-07-28 the worker had already implemented it three minutes later.**
+✅ **SO: `R-639 §6.2` IS NOT REASSIGNED, NOT DEFERRED, AND NOT WITHDRAWN. It stands authorized to the seat that exists.** ✅ **The declaration itself is sound reasoning and I say so: `§6.2` is a three-member instrument packet, each member owing a committed test and a deletion-red-proof plus a comment correction, and starting it at exhaustion is precisely the *"partial result that reads as complete"* this campaign convicts most often.**
+✅★★★★ **AND THE HANDOFF PACKET IS GOOD ENOUGH THAT THIS COSTS NOTHING: it carries all three members with exact fix points and line numbers, the ordering rationale (`F-1b` first, because it is what makes the shipped comment TRUE), the red-proof method, `never-flag`, and the two remaining sweep items with their exact defects (`SWEEP-F7`'s unlink-before-subprocess; `SWEEP-F3`'s fixture needing `exit` added and `take_profit.type` corrected from `'fixed_r'`). `A HANDOFF THAT REQUIRES NO RE-DERIVATION IS THE ONLY KIND WORTH WRITING.`**
+
+---
+
+### ★★★★★ §5 — AUTHORIZED NOW (unchanged from `R-639 §6.2`; restated so it is one read, not two)
+🛑 **ONE `ratify-packet` FOR THE CRISIS-FAIL-CLOSED CLASS.** **CLASS PROPERTY:** *a crisis evaluation that did not happen, or was compared against the wrong limit, must never score as clean.*
+1. **`F-1b` THREADING FIRST** — `backtester.py:8410` → `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)`, the identical expression already at `:8396`. **It is first because it makes the comment at `performance_gate.py:331-341` true; until it lands that comment is a false instruction.**
+2. **`F-G3` VETO SENTINEL** — `backtester.py:8432` emits `{"scenarios": [{"name": "stress_suite", "passed": False, "max_drawdown": 0, "error": str(e)}]}` instead of `None`, **reusing the arm now guarded by `ba204de8`.** 🛑 **AND the second hop: the crisis-aware rescore must not be skipped when the stress test raises.**
+3. **`F-G4` SCHEMA** — `performance_gate.py:296-298`: missing / `None` / non-finite `max_drawdown` → `crisis-stress-unevaluated`; non-empty `crisis_results` with no usable `scenarios` = **unevaluated, not absent.**
+🛑 **EVERY member ships a COMMITTED test, red-proofed BY DELETION IN A MATERIALISED SCRATCH COPY.** 🛑 **`never-flag`.** **Then correct the comment in the same packet.**
+**THEN (sweep un-paused):** `SWEEP-F7` · `SWEEP-F3` · `SWEEP-F6`'s fixture with its red-proof · `SWEEP-F5`'s two-branch measurement · `track3` proposal · `INV-13 → CRITICAL` → `INV-1` deletion (🛑 never while `INV-13` is `WARNING`).
+**STOP CONDITION:** if `F-1b` threading changes any existing test's verdict, **STOP and report the failure-set diff** — a test may have encoded `2000.0` as intended behaviour, and that is a ruling.
+
+### ⏳ §6 — DESK OWES (unchanged)
+🛑 **`SWEEP-F8` product question — MINE** (`exportable=True` with `band='alert_only'`). 🛑 **GUARD REPAIR — still unbuilt** (`R-631`–`R-640` ungated). ⏳ `GRADEB-F5` — **same class as `F-G1`, dispose together** · `expected_single`'s uncompared SHA-256 · `GRADEA-F-C` · `GRADEA-F-D` · ~35 unconfirmed sweep candidates · **`F-1b`'s LATENT verdict is FILESYSTEM-SCOPED — Postgres unqueried.**
+
+### ★★★ §7 — LESSONS TO PERSIST
+★★★★★ **`A REPAIR VERIFIED ONLY BY A PROBE THAT IS NOT COMMITTED IS A REPAIR WITH NO GUARD.`**
+★★★★★ **`CLOSE A FINDING WITH THE INSTRUMENT THAT OPENED IT` — a fix proven by a different instrument is proven against a different question.**
+★★★ **`REMOVING A LOCK YOU DID NOT CREATE IS TAKING A REAL RISK TO REMOVE AN APPEARANCE`** — and the pressure to do it peaks exactly when a commit keeps failing.
+★★★ **`A HANDOFF THAT REQUIRES NO RE-DERIVATION IS THE ONLY KIND WORTH WRITING.`**
+
 ## R-639 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE `F-1` GRADE RETURNED AT BAND `5/10` AND IT CONVICTS **THIS DESK**, NOT THE WORKER. `F-G1`: **THE `F-1` REPAIR HAS NO PATH TO RED — DELETE IT ENTIRELY AND THE POPULATION IS BYTE-IDENTICAL** (`6 failed, 101 passed, 3 skipped, 8281 deselected` both ways), WITH A **POSITIVE CONTROL** PROVING THE INSTRUMENT CAN CONVICT A DELETED VETO ARM. `crisis-stress-unevaluated` APPEARS IN **ZERO TEST FILES IN ANY TREE**.** 🛑🛑★★★★★ **I RULED ON THIS EXACT LESSON AT `R-634 §4` — `GRADEB-F5`, *"the load-bearing red-proof for a money-path instrument has no durable artifact"* — AND THEN APPROVED `F-1` ON TRANSCRIPT-ONLY ARMS **ONE RULING LATER**. `I MINTED THE LAW AND BROKE IT IN THE NEXT WAVE.`** 🛑🛑🛑★★★★★ **`F-G2`: MY `R-633` OPTION-B DECISION IS CORRECT **ONLY IF `F-1b` IS FIXED**, AND THE PROTECTIVE COMMENT I PRAISED AT `R-636 §1` ASSERTS A MECHANISM THAT IS FALSE BY CONSTRUCTION. `Q1` AND `F-1b` ARE **ONE DEFECT**, AND I SPLIT THEM INTO TWO QUEUE ITEMS.** ✅ **`F-G3`/`F-G4` ARE TWO MORE CRITICAL/HIGH HOLES ON THE SAME GATE.**
 
 **★ WORKER — START HERE:** 🛑 **PAUSE the sweep (`SWEEP-F7/F8/F9/F3`). These are live promotion-gate defects and they outrank test-vacuity findings.** **NEXT: `§6.1` (the committed red-proof `F-1` never got), then `§6.2` (ONE ratify-packet for the crisis-fail-closed CLASS).**
