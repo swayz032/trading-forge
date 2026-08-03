@@ -4,6 +4,59 @@
 
 ---
 
+## AR-707 · 2026-08-03 · ✅★★★★★ **`R-656 §4` — THE EXPOSURE CENSUS IS BUILT, **COMMITTED AS AN EXTENSION** (`9944ce2f`), AND RE-RUNNABLE. **`23` DETECTORS ON THE DECLARED SURFACE: `5` REACHABLE · `15` `BUILT+UNREACHABLE-BY-COMPILER` · `3` NO NON-TEST CALLER · `0` ABSENT.** THE OPERATOR'S PATTERN IS NOW A NUMBER: **`15` OF `23` THINGS THIS ENGINE COMPUTES, THE COMPILER CANNOT BIND TO.**** 🛑🛑🛑★★★★★ **AND THE GRADER'S RECEIPT LANDED ON DISK WHILE I WORKED. **ITS `F-1` REFUTES A MECHANISM CLAIM IN MY OWN `AR-704`/`AR-705` AND I ADOPT IT IN FULL** — the clock guard I called *"PINNED"* sits **ONLY on the NAME route, which is DEFAULT-OFF**. 🛑 **MY VERDICT SURVIVES; MY EXPLANATION OF IT DID NOT.** ✅ **AND I MEASURED WHAT THE GRADER COULD NOT: `F-1`'s EXPOSURE ON THE REAL CORPUS IS **`0` OF `31`**.**
+
+**TASK:** `R-656 §4.1–§4.4`, delivered as `AR-707` (numbering flagged at `AR-706`). ⚠️ **SIDE EFFECT DECLARED: `docs/replay-results/h1-battery/exposure-census.log` is `.gitignore`d (`*.log`, `:6`) — the JSON IS committed, so nothing I cite is uncommitted (`R-654 §5`).** 🛑 **The desk's own grader receipt `session-window-representability-grade-2026-08-03.md` is UNTRACKED on disk — **not mine to commit**, flagged so it is not cited before it lands.**
+
+### ✅★★★★★ §1 — THE ADDITIVE GUARANTEE, **VERIFIED NOT ASSERTED**
+🛑 **`§4.0` ordered EXTEND, and the file I extended is a COMMITTED ACCEPTANCE INSTRUMENT whose own header warns that the enforcement packet's before/after comparison is *"only valid if the SAME instrument produces both tables."* **BREAKING THAT WOULD HAVE BEEN A WORSE DEFECT THAN THE ONE I WAS SENT TO FIX.**
+✅ **SO THE EXTENSION RUNS **AFTER** `OUT.close()`, WRITES ITS OWN HANDLE AND ITS OWN JSON, AND TOUCHES NO COUNTER, CONTROL, `TARGETS` ENTRY, `RES` KEY OR EXISTING JSON KEY.**
+✅★★★★★ **AND I PROVED IT RATHER THAN CLAIMING IT `[MEASURED HERE]`: `family-meta-reachability-sweep.log` is **`21,910` BYTES BEFORE THE EXTENSION AND `21,910` BYTES AFTER**, same tail (`DONE`). **A mechanism claim needs its evidence in the same sentence, and this one has it.**
+
+### ✅★★★★★ §2 — `§4.1` + `§4.2`: THE TWO SETS, WITH THE SURFACE DECLARED
+**`§4.1` COMPILER-REACHABLE SET, `n=32`** = `8` `FAMILY_META` declared primitives (leaf names) ∪ `26` symbols `spec_condition_compiler` imports from `src.engine`.
+**`§4.2` BUILT SET, `n=23`.** 🛑 **SURFACE AND RULE PUBLISHED, BECAUSE A CENSUS IS BOUNDED BY ITS SURFACE AS WELL AS ITS PATTERN:**
+> **SURFACE:** the `5` modules you named — `indicators/core.py` · `context/structure_engine.py` · `context/structural_stops.py` · `session_windows.py` · `context/session_context.py`.
+> **RULE:** module-level `def`, name matches `^(compute_|detect_|is_|resolve_|classify_)`, not `_private`.
+⚠️ **DECLARED LIMITATION, NOT BURIED: the rule is a PROXY for *"computes a market quantity"*. It over-includes helpers (`compute_indicators` is a dispatcher) and may under-include a detector named otherwise. **The full `23`-row list is printed in the artifact so the over/under-inclusion is AUDITABLE rather than hidden in a count.**
+
+### 🛑🛑🛑★★★★★ §3 — `§4.3` THE DIFF. **THE DELIVERABLE**
+| state | n | symbols |
+|---|---|---|
+| ✅ `BUILT+REACHABLE` | **`5`** | `compute_atr` · `compute_ema` · `compute_structural_stop` · `compute_structure_state` · `is_in_killzone` |
+| 🛑 **`BUILT+UNREACHABLE-BY-COMPILER`** | **`15`** | `compute_opening_range_breakout` · `compute_vwap` · `compute_vwap_with_bands` · `compute_anchored_vwap` · `compute_rsi` · `compute_sma` · `compute_macd` · `compute_bbands` · `compute_adx` · `compute_adr` · `compute_donchian` · `compute_htf_indicators` · `compute_indicators` · `compute_session_context` · **`resolve_session_keyword`** |
+| ⚠️ `BUILT+NO-NONTEST-CALLER` | `3` | `compute_multi_htf_indicators` · `is_in_any_killzone` · `is_in_lunch_blackout` |
+| `ABSENT` | `0` | nothing on the surface was expected-but-missing |
+🛑🛑★★★★★ **`15` OF `23`. `THE ENGINE COMPUTES VWAP, RSI, SMA, MACD, BOLLINGER BANDS, ADX, DONCHIAN, ANCHORED VWAP AND THE OPENING RANGE — ALL WITH REAL NON-TEST CALLERS — AND `compile_binding_plan` CAN BIND TO NONE OF THEM.` The compiler's whole vocabulary of market quantities is `compute_atr`, `compute_ema`, `compute_structure_state`, `compute_structural_stop`, `is_in_killzone`.**
+★★★★★ **THIS IS THE OPERATOR'S OBSERVATION, MEASURED: `A CORPUS THAT TEACHES VWAP AND MOVING AVERAGES IS BEING COMPILED BY A BINDER THAT CANNOT NAME THEM, WHILE THE ENGINE THAT WOULD COMPUTE THEM SITS IN THE SAME REPO WITH LIVE CALLERS.`**
+✅ **INSTRUMENT CONTROLS, ASSERTED IN-SCRIPT BEFORE ANY ZERO IS PUBLISHED (`assert … "exposure census instrument untrusted"`):** POSITIVE `compute_atr` callers `= 38` · POSITIVE `compute_structure_state` reachable `= True` · **NEGATIVE `3` symbols with ZERO callers — because a counter that returns non-zero for EVERYTHING is not discriminating.**
+🛑 **AND A FALSE ZERO I MADE AND FIXED, PINNED IN THE SCRIPT SO IT IS NOT RE-INTRODUCED:** my first caller-counter EXCLUDED the defining file, which reported **`compute_opening_range_breakout` callers `= 0`** — a false zero **on the census's single most load-bearing symbol**, whose only callers are in its own file (`core.py:649`, `:760`, the `compute_indicators` dispatcher). ✅ **Corrected count `= 2`, agreeing exactly with `AR-704 §4`'s independently-derived read.**
+
+### ✅ §4 — `§4.4` THE PAYING QUESTION. **REPORT ONLY — NOT EXPOSED**
+**`compute_opening_range_breakout` → `BUILT+UNREACHABLE-BY-COMPILER` · `indicators/core.py:467` · `2` non-test callers · NOT in the reachable set.**
+⚠️ **`[DESK JUDGMENT, NOT A MEASUREMENT — and your stop condition `3` is why I am not resolving it]` exposing it LOOKS bounded on the read surface: it is a pure function of a `DataFrame` returning three Series, with no execution-path side effects. **BUT reaching it from a binding requires a `FAMILY_META` entry or an import into `spec_condition_compiler`, and BOTH are on your FORBIDDEN list and are architecture changes.** 🛑 **I DID NOT EXPOSE IT AND I AM NOT RECOMMENDING THE MECHANISM.**
+
+### 🛑🛑🛑★★★★★ §5 — THE GRADER REFUTED A MECHANISM CLAIM OF MINE. **ADOPTED IN FULL**
+🛑 ~~**`AR-704` / `AR-705`: *"refused by a PINNED GUARD … `resolve_session_name_to_window` `:852-855`"* as the explanation of the refusal under live conditions.**~~ **CORRECTED.**
+🛑🛑★★★★★ **`F-1` `[MEASURED BY GRADED INSTRUMENT — 6,016 traced dispatch calls, 64 flag combos × 47 objects × 2]`: THAT GUARD EXISTS **ONLY ON THE NAME ROUTE (`:2484`), GATED ON `TF_SESSION_ROLE_RESOLVER_ENABLED`, DEFAULT `"false"`.** UNDER DEFAULT FLAGS THE LIVE BIND ROUTE IS THE **KEYWORD ROUTE (`:2499`), WHICH CONSULTS NO CLOCK REGEX AT ALL.**
+★★★★★ **SO MY CAPTION NAMED A ROUTE THAT DOES NOT RUN. `A WRONG MECHANISM GETS OBEYED` — and I stated it in a verdict's voice, which is exactly the shape `R-654 §1` convicted me for one ruling ago. **THE VERDICT (`0` bindable) IS UNCHANGED AND WAS NEVER LOAD-BEARING ON THE GUARD: I ran `resolve_session_keyword` on every row too, and it returns `None` on all `31`. The right explanation is *"no keyword matches"*, not *"the clock guard refuses"*.**
+🛑🛑🛑 **AND `F-1` IS A REAL MONEY-PATH DEFECT THAT MY FRAMING CONCEALED, WHICH I AM RESTATING RATHER THAN MINIMISING: under DEFAULT flags an object like `"ny am 09:30-09:35"` binds `approximation=False` to `ny_am [420,600)` — **`36×` WIDER THAN TAUGHT — AND PASSES `(ii)`**, with a scope line hard-coded to the literal `name-route` (`compile_fidelity.py:567`) **naming a route that did not execute.** ★★★ **`THE FLAG THE CAMPAIGN INTENDS TO TURN ON IS THE ONLY THING STANDING BETWEEN A CLOCK PHRASE AND A CONFIDENT FALSE PASS.`**
+✅★★★★★ **AND HERE IS THE PART ONLY I COULD MEASURE, BECAUSE THE GRADER GRADED A CLAIM AND NOT THE CORPUS `[MEASURED HERE — all `31` `WAIT_SESSION` rows, both populations]`:**
+| | count |
+|---|---|
+| rows where `resolve_session_keyword()` HITS | **`0` of `31`** |
+| rows carrying a clock token | `7` of `31` |
+| **rows with BOTH — the `F-1` false-PASS shape** | 🛑 **`0` of `31`** |
+✅ **POSITIVE CONTROL: the shape IS constructible — the grader's `'ny am 09:30-09:35'` → `keyword='ny_am'`, `clock=True`.** ★★★★★ **`F-1` IS A LOADED LANDMINE WITH ZERO CURRENT INSTANCES, NOT A LIVE WOUND — AND IT FIRES THE MOMENT ONE EXTRACTION SAYS *"the NY AM session, from 9:30 to 9:35"*, WHICH IS AN ENTIRELY ORDINARY WAY TO TEACH. `A DEFECT WITH ZERO INSTANCES TODAY AND AN ORDINARY TRIGGER IS NOT A LOW-SEVERITY DEFECT.`**
+✅ **`F-2` ADOPTED AND IT NARROWS MY OWN WORDING: *"cannot be represented"* is too strong — `compute_opening_range_breakout(range_minutes=5)` computes `[570,575)` **exactly**, committed and config-exposed. **The correct scope is `UNREPRESENTABLE ON THE BINDING SURFACE`, not in the engine.** ★★★ **AND `F-2` AND MY `§3` ARE TWO INDEPENDENT PATHS TO ONE FACT — its grep-with-positive-control and my AST census both land on `compute_opening_range_breakout` being absent from the binder. `AR-705`'s corpus verdict (`0` of `260` rows pass) is untouched by either finding.**
+
+### ⚠️ §6 — WHAT I DID NOT DO
+⚠️ **`[NOT MEASURED]`** whether the `15` unreachable detectors have `FAMILY_META`-shaped analogues that WOULD be bindable · whether `F-1`'s false-PASS shape occurs in the wider `73`/`155` corpus (I measured the `27`-spec Phase-1 population only) · the `F-1` fix itself (`compile_fidelity.py:567` caption, `spec_family_bindings.py:2497` missing guard) — **both are code changes and neither is authorized.**
+🛑 **NOT DONE, DELIBERATELY: nothing exposed, no `FAMILY_META` entry added, no flag flipped, no canonical window added, no spec re-selected.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `9944ce2f` at write. Lanes: `R-655 §5` CLOSED (`AR-705`) · `R-656 §4` CLOSED (this) · fan-in `2 / 2` as you counted it. NOT handing off — I hold the seat.**
+
+---
+
 ## AR-706 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-656 §4.0` — PRECONDITION DISCHARGED. **STOP CONDITION `1` DOES NOT FIRE: THE EXISTING SWEEP CANNOT ANSWER `§4.2` OR `§4.3`, AND THE REASON IS THE FINDING.** `family_meta_reachability_sweep.py` DERIVES ITS ENTIRE POPULATION **FROM THE DECLARATIONS IT IS CHECKING** — a hand-maintained `TARGETS` dict of `7` names, every one of them already a `FAMILY_META` primitive.** ★★★★★ **`AN INSTRUMENT WHOSE POPULATION IS THE DECLARATION SET CAN NEVER FIND A DETECTOR THAT NO FAMILY DECLARES. IT IS BLIND TO `compute_opening_range_breakout` BY CONSTRUCTION, NOT BY OVERSIGHT — AND THAT IS EXACTLY THE CLASS THE OPERATOR NAMED.** ✅ **I WILL **EXTEND** IT, NOT AUTHOR A SIBLING.**
 
 **START-RECEIPT — `R-656 §4`.** 🛑 **READ-ONLY SO FAR; nothing built, nothing exposed.** ⚠️ **NUMBERING DEVIATION, FLAGGED NOT SILENT: your `§4` pinned `AR-706` to the `§4.3` TABLE, but the `§4.0` verdict is a STOP-CONDITION EVALUATION and had to land first and numbered. **This is `AR-706`; the table will be `AR-707`.** Say if you want them renumbered.** **ETA for the table: `≤ 60 min` from this receipt, unchanged.**
