@@ -2,10 +2,13 @@
 
 import math
 
-import numpy as np
 import polars as pl
 import pytest
 
+from src.engine.config import (
+    CONTRACT_SPECS,
+    PositionSizeConfig,
+)
 from src.engine.firm_config import (
     FIRM_COMMISSIONS,
     FIRM_CONTRACT_CAPS,
@@ -13,12 +16,6 @@ from src.engine.firm_config import (
     get_contract_cap,
 )
 from src.engine.sizing import compute_position_sizes
-from src.engine.config import (
-    ContractSpec,
-    PositionSizeConfig,
-    CONTRACT_SPECS,
-)
-
 
 # ─── Task 3.11: Per-Firm Commission Tests ────────────────────────
 
@@ -87,7 +84,7 @@ class TestContractCaps:
         deep-scan Backtest #9 (stale-fixture fix): the old assertion hard-coded cap==15 for 8 pruned
         firms — replaced with the real 2-firm caps asserted against the config's own bounds.
         """
-        from src.engine.firm_config import CONTRACT_CAP_MIN, CONTRACT_CAP_MAX
+        from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
         for firm_key in {"topstep_50k", "mffu_50k"}:
             for symbol in ["MES", "MNQ", "MCL"]:
                 cap = get_contract_cap(firm_key, symbol)
@@ -99,6 +96,11 @@ class TestContractCaps:
         """Pending firms use conservative cap (clamped to CONTRACT_CAP_MIN)."""
         from src.engine.firm_config import CONTRACT_CAP_MIN
         pending_firms = {"top_one_50k", "yrm_prop_50k", "fundingpips_50k"}
+        # F-5 (R-630 sweep): every pending firm was absent from
+        # FIRM_CONTRACT_CAPS, so `continue` fired for all three and the
+        # assertion below never executed — the test reported GREEN while
+        # verifying nothing. Count what was actually checked and require it.
+        checked = 0
         for firm_key in pending_firms:
             if firm_key not in FIRM_CONTRACT_CAPS:
                 continue
@@ -107,6 +109,12 @@ class TestContractCaps:
                 assert cap == CONTRACT_CAP_MIN, (
                     f"{firm_key} {symbol} cap should be conservative ({CONTRACT_CAP_MIN}), got {cap}"
                 )
+                checked += 1
+        assert checked > 0, (
+            f"none of {sorted(pending_firms)} is present in FIRM_CONTRACT_CAPS, "
+            "so the conservative-cap rule was never checked — this test cannot "
+            "pass vacuously"
+        )
 
     def test_cap_clamped_to_min_10(self):
         """get_contract_cap never returns below CONTRACT_CAP_MIN (10)."""
@@ -125,6 +133,7 @@ class TestContractCaps:
     def test_atr_wants_more_capped_to_firm_limit(self):
         """ATR sizing wants >15 MES, firm cap 15 → capped to 15."""
         from datetime import datetime, timedelta
+
         from src.engine.indicators.core import compute_atr
 
         n = 30
@@ -155,13 +164,23 @@ class TestContractCaps:
         )
 
         # Find bars where uncapped > 15
+        # F-6 (R-630 sweep): NO bar exceeded 15 (every non-NaN uncapped size was
+        # exactly 15.0), so this assertion never executed and the test reported
+        # GREEN. Require the premise the test is named for.
+        exceeded = 0
         for i in range(n):
             if not math.isnan(sizes_uncapped[i]) and sizes_uncapped[i] > 15:
+                exceeded += 1
                 assert sizes_capped[i] == 15
+        assert exceeded > 0, (
+            "no bar had an uncapped size above the firm cap of 15, so the clamp "
+            "was never exercised — this test cannot pass vacuously"
+        )
 
     def test_atr_below_cap_unchanged(self):
         """ATR wants 3 MES, firm cap 15 → stays at 3."""
         from datetime import datetime, timedelta
+
         from src.engine.indicators.core import compute_atr
 
         n = 30

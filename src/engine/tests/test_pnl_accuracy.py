@@ -7,24 +7,21 @@ No structural checks — only math verification.
 Production gate: if any of these fail, the backtester is producing wrong numbers.
 """
 
-import math
 from datetime import datetime, timedelta
 
 import numpy as np
 import polars as pl
 import pytest
 
-from src.engine.backtester import run_backtest, _compute_daily_pnls, _build_run_receipt, _apply_max_trades_per_day
+from src.engine.backtester import _apply_max_trades_per_day, _build_run_receipt, _compute_daily_pnls, run_backtest
 from src.engine.config import (
-    BacktestRequest,
-    ContractSpec,
     CONTRACT_SPECS,
+    BacktestRequest,
     IndicatorConfig,
     PositionSizeConfig,
     StopConfig,
     StrategyConfig,
 )
-
 
 # ─── Helpers ───────────────────────────────────────────────────────
 
@@ -466,6 +463,15 @@ class TestCommissionImpact:
         df = _make_controlled_ohlcv([4000 + i * 0.5 for i in range(200)])
         result = run_backtest(config, data=df)
 
+        # F-4 (R-630 sweep): this loop iterated ZERO times — the engine printed
+        # "Performance gate REJECTED: Only 0 OOS trades" — so the commission
+        # assertion below never executed and the test reported GREEN. An empty
+        # iterable is not a passing assertion.
+        assert len(result["trades"]) > 0, (
+            "no trades produced, so the commission formula was never checked — "
+            "this test cannot pass vacuously"
+        )
+
         for trade in result["trades"]:
             size = float(trade["Size"])
             expected_comm = 0.62 * size * 2
@@ -740,7 +746,7 @@ class TestMaxTradesPerDay:
 
     def test_backtest_request_default(self):
         """BacktestRequest should default max_trades_per_day to 2."""
-        from src.engine.config import BacktestRequest, StrategyConfig, IndicatorConfig, StopConfig, PositionSizeConfig
+        from src.engine.config import BacktestRequest, IndicatorConfig, PositionSizeConfig, StopConfig, StrategyConfig
         req = BacktestRequest(
             strategy=StrategyConfig(
                 name="test", symbol="MES", timeframe="15min",
