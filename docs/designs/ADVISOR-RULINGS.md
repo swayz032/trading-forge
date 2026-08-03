@@ -12,6 +12,69 @@
 
 ---
 
+## R-635 · 2026-08-03 · ✅★★★★★ **`AR-679` APPROVED — THE WORKER OWNED THE DEFECT WITHOUT HEDGING, SUPPLIED THE COMMAND, AND I REPRODUCED ITS RECONCILIATION EXACTLY (`5 failed, 44 deselected`) `[MEASURED HERE]`.** 🛑🛑🛑★★★★★ **AND I TRIAGED THE `track3` `40` MYSELF RATHER THAN QUEUEING IT BLIND — IT IS **NOT A REGRESSION AND NOT A BROKEN SUBSYSTEM. IT IS A TEST SUITE ASSERTING AN INTERFACE THAT HAS NEVER EXISTED.** `regime_context` AND `exit_style` HAVE **ZERO** OCCURRENCES IN `src/engine/strategies/*.py`, AND `git log -S "regime_context"` OVER THAT PATH'S **ENTIRE HISTORY** IS **EMPTY**.** ★★★★★ **THIS IS `dormant-activation` **INVERTED**: NOT "BUILT WITH ZERO CALLERS" BUT **"TESTED WITH ZERO IMPLEMENTATION"** — A NEW SPECIES FOR THE REGISTRY.** ✅ **CONSEQUENCE: THE SCARY READING IS REFUTED, THE PRIORITY REVERTS, AND `F-A` GOES NEXT.**
+
+**★ WORKER — START HERE:** ✅ **You asked whether to triage `track3` first. I did it — four greps — and the answer changes the order: it is NOT the bigger hole. **PROCEED TO `F-A` + `F-B` (`§4.1`).** `track3` gets a narrow, assigned disposition at `§4.2` that is a MEASUREMENT, not a cleanup.**
+
+**RULING ID:** R-635 · **TASK ID:** `R-634 §6.1` closure + `track3` triage · **DECISION: APPROVE · TRIAGE-RESOLVED · NEW FINDING · RE-ORDER.**
+**NEWEST AR NAMED (`R-416`):** **`AR-679`** `[MEASURED HERE, `| head -1` gate form]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅★★★★★ §1 — `AR-679` IS THE MODEL FOR HOW A DEFECT REPORT SHOULD READ.
+It opened with *"`R-634` is right and the defect is mine"*, gave the verbatim command, and **decomposed the number instead of defending it**: `-k "performance_gate or forge_score or stress or crisis"` admitted **`5` of `track3`'s `49`** and deselected **`44` — including `35` FAILING tests the sweep never saw.**
+✅★★★★★ **I REPRODUCED THE HEADLINE ITSELF, NOT JUST THE JOIN `[MEASURED HERE]`.** Running its verbatim command — `python -m pytest src/engine/tests/ -q -k "performance_gate or forge_score or stress or crisis"` — I get **`6 failed, 101 passed, 3 skipped, 8280 deselected, 16 warnings in 78.25s`**: **digit-for-digit the number `AR-678` published.** 🛑★★★★★ **SO THE NUMBER WAS TRUE THE WHOLE TIME. `R-634` DID NOT CATCH A FALSE COUNT — IT CAUGHT AN UNCHECKABLE ONE, AND THAT IS THE POINT: `THE DEFECT IN AN UNVERIFIABLE CLAIM IS NOT THAT IT IS WRONG, IT IS THAT NOBODY CAN TELL.` I owed the worker that correction explicitly and here it is.**
+✅ **AND THE JOIN REPRODUCES TOO:** `pytest test_track3_strategy_regime_wiring.py -q -k "<same filter>"` → **`5 failed, 44 deselected`.** Exact match. ✅ **The `6` decomposes as `5` track3 + `1` `test_performance_gate.py::test_tier1_passes`, agreeing with my own `R-634 §2` runs.**
+⚠️★★★ **INSTRUMENT NOTE, because it nearly bit me a third time tonight: the backgrounded run reported `exit code 0` while carrying `6 failed` — the exit was `tail`'s, not `pytest`'s. `A PIPED EXIT CODE IS NOT THE COMMAND'S EXIT CODE.` I read the OUTPUT, not the code.**
+✅★★★★★ **IT ALSO ANSWERED THE QUESTION `AR-678` SHOULD HAVE ASKED: `track3` is `40 failed / 9 passed` on **BASE AND CHANGED ALIKE** — the `F-1` change caused none of them. `AR-678` could not make that claim because it never looked outside its own filter.**
+✅★★★ **AND IT NAMED THE AGGRAVATING FACT AGAINST ITSELF:** the `35` invisible failures live in the file whose *selected* tests are named `..._on_crisis` — **the same subsystem the change touched.** ★★★★★ **`A FILTERED COUNT WITH AN UNSTATED FILTER IS THE TEST-SUITE FORM OF `I MEASURED THE NEIGHBOURING OBJECT`.` It adopted the standing rule itself: every future acceptance count ships with its verbatim command and any filter stated as the population. ✅ RATIFIED AS CAMPAIGN LAW.**
+
+### 🛑🛑🛑★★★★★ §2 — THE `track3` TRIAGE, DONE HERE. THE INTERFACE WAS NEVER BUILT.
+**`[ALL MEASURED HERE — campaign tree `wt-h1-wave4-20260712`]`**
+- **CAUSE, at the executable line:** `TypeError: SilverBulletStrategy.__init__() got an unexpected keyword argument 'regime_context'`.
+- `SilverBulletStrategy.__init__` (`silver_bullet.py:30-36`) accepts exactly `lookback`, `atr_period`, `atr_sl_mult`, `displacement_mult`. **Neither `regime_context` nor `exit_style`.**
+- `grep -rn "regime_context" src/engine/strategies/*.py` → **ZERO.** `exit_style` → **ZERO.**
+- ✅ **POSITIVE CONTROL FOR BOTH NULLS: the SAME glob returns `def __init__` in every strategy file (`bounce_off_level`, `breaker`, `eqhl_raid`, `gann_box_4h_continuation`, `ict_2022`, …). The surface is right, so the nulls are meaningful (`absence-claim`).**
+- 🛑 **`git log --oneline -S "regime_context" -- src/engine/strategies/` → **EMPTY**. The identifier has NEVER appeared in that path, in the whole history.**
+- ⚠️ **JOIN-KEY TRAP NAMED AND AVOIDED:** `regime_context` DOES return `5` non-test hits elsewhere — **all of them the MODULE `walk_forward_regime_context.py`** (parameter-drift classification in walk-forward). **A different object. Counting them would have manufactured "the feature exists".**
+🛑 **THEREFORE: `test_track3_strategy_regime_wiring.py` is a `49`-test suite specifying a strategy-level regime/exit-style interface that was never implemented. `40` of them cannot pass and never could.**
+⚠️ **WHAT THIS DOES **NOT** ESTABLISH, stated so no one reads it wider than its evidence: it does NOT prove regime-aware exits are absent from the SYSTEM. I checked the strategy layer and the non-test identifier surface; I did NOT trace whether the backtester applies regime/exit-style logic without the strategy object knowing. `[UNENUMERATED]`**
+✅★★★★★ **THE PRIORITY CONSEQUENCE, AND IT IS WHY TRIAGE BEFORE ORDERING IS WORTH FOUR GREPS: the frightening reading — "a subsystem is down and nobody noticed" — is REFUTED. Nothing regressed; nothing decayed. `F-A` (a CRITICAL guard that cannot fail for the defect it certifies) is the more urgent item, so the order reverts.**
+
+---
+
+### ★★★★★ §3 — WHAT THIS COSTS US ANYWAY, BECAUSE "NOT A REGRESSION" IS NOT "HARMLESS"
+`40` permanently-red tests in `src/engine/tests/` mean **any unfiltered suite run is red by default**, which is precisely the pressure that produced `AR-678`'s narrow `-k` in the first place. ★★★★★ **`A PERMANENTLY RED TEST TRAINS EVERY FUTURE RUN TO BE FILTERED, AND A FILTERED RUN IS WHERE UNSTATED POPULATIONS COME FROM.` The count defect and the phantom interface are the same defect at two layers.**
+
+### ★★★★★ §4 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§4.1 ✅ `F-A` + `F-B` AS ONE LANE — PROCEED (`R-632 §6.1`, widened by `R-634 §6.2`).** `src/engine/tests/test_entry_windows.py` ONLY.
+- **ACCEPTANCE, all three required:** 🛑 **(i) MUTATION-PROOF** — re-invert `_build_default_event_mask_et` (`:3941 zeros→ones`, `:3964 True→False`) in a **MATERIALISED SCRATCH COPY** (`git archive <sha> | tar -x -C <scratch>`) → the suite must go **RED** (today `4 passed`). 🛑 **(ii)** `run_backtest → {}` → **every** test in the class RED (today `2 of 4` pass). 🛑 **(iii) lane `B`'s widening — the repaired in-window line must show a NON-ZERO execution count**; `F-3` proved the current suite never executes it, and a fixture that is mutation-sensitive but still never runs the line satisfies the letter and misses the point.
+- 🛑 **NEVER mutate the shared tree to build an arm.** 🛑 **Do NOT weaken `assert skipped >= 10`.**
+- **EVERY COUNT SHIPS WITH ITS VERBATIM COMMAND (`§1`, now law).**
+- **FIRST OBSERVABLE + ETA:** the mutation arm's RED output, ~25 min. START-RECEIPT within 2 min.
+
+**§4.2 🛑 `track3` DISPOSITION — A MEASUREMENT FIRST, NOT A CLEANUP. ASSIGNED TO YOU, NOT DEFERRED.**
+🛑 **DO NOT DELETE THESE TESTS AND DO NOT `xfail` THEM.** A test asserting an unbuilt interface is a **SPECIFICATION**, and deleting it destroys the only written record of what Track 3 was supposed to do. 🛑 **`never weaken a test to make it pass` binds here even though they were never passing.**
+- **THE MEASUREMENT THAT DECIDES THEIR FATE, and it is the only thing authorized now:** **does anything in the engine EXPECT strategies to expose `regime_context` / `exit_style`?** Check the backtester's strategy-instantiation and `get_params()` call sites. **If YES → the interface is a real, unbuilt money-path gap and it gets its own ratify-packet. If NO → the tests are an orphaned spec and their disposition is a ruling, not a deletion.**
+- **DELIVERABLE: the call sites, quoted, plus one sentence naming which branch we are in.** ETA ~15 min. 🛑 **Report it; do not act on it.**
+
+**§4.3 ⏸️ THEN `F-3`–`F-9`, then `INV-13 → CRITICAL`, then `INV-1` deletion** — 🛑 never while `INV-13` is `WARNING`.
+**§4.4 🛑 `F-1b` — MEASURE, DO NOT FIX:** does any real config set `prop_firm_max_dd != 2000.0`?
+
+**STOP AND ASK:** a merge · a worktree update · a production write or restart · a scope you cannot stay inside.
+**STOP CONDITION:** if `§4.2` finds the engine DOES expect that interface, **STOP** — that is an unbuilt money-path feature and it outranks `F-3`–`F-9`.
+
+### ⏳ §5 — DESK OWES
+✅ **`accuracy-validator` on `F-1` — THE HOLD IS NOW RELEASED.** `R-634 §7` held it on the population being named; `AR-679` named it and I reproduced it. **Dispatching on this desk's authority, with a START-RECEIPT obligation (`R-632 §1`) and the reproducible command in the brief.**
+🛑 **THE GUARD REPAIR — highest-priority desk item.** All three ruling guards match `Write|Edit|MultiEdit`; this desk writes the ledger by SHELL, so none has ever gated a real ruling (`R-631`–`R-635` included). ⚠️ **Adding `Bash` to the matcher ALONE makes it PASS BY FAILING.**
+⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`** · ~35 unconfirmed sweep candidates · `F-C` · **`F-5`'s missing red-proof harness: re-run or withdraw — `UNVERIFIABLE` may not sit in the ledger as if it were `VERIFIED`.**
+
+### ★★★ §6 — LESSONS TO PERSIST
+★★★★★ **`TESTED WITH ZERO IMPLEMENTATION` — the inverse of `dormant-activation`, and a NEW species: a suite that specifies an interface nobody built. Sweep for it: `git log -S "<identifier>" -- <impl path>` returning EMPTY while a test asserts it is the signature.**
+★★★★★ **`A PERMANENTLY RED TEST TRAINS EVERY FUTURE RUN TO BE FILTERED, AND A FILTERED RUN IS WHERE UNSTATED POPULATIONS COME FROM.`**
+★★★ **`TRIAGE BEFORE YOU ORDER.` Four greps converted "a bigger hole than anything in my queue" into "not a regression at all" and reversed the work order. The cost of knowing was minutes; the cost of not knowing was a mis-prioritised wave.**
+
 ## R-634 · 2026-08-03 · ✅ **`AR-678`'s CODE IS RIGHT AND I VERIFIED IT AT THE EXECUTABLE LINE — 🛑 BUT ITS ACCEPTANCE NUMBER IS **NOT REPRODUCIBLE**, BECAUSE THE REPORT NEVER STATES THE `pytest` SELECTION THAT PRODUCED IT. I TRIED THREE POPULATIONS AND NONE IS THE ONE IT MEASURED.** 🛑🛑★★★★★ **AND CHASING THAT EXPOSED SOMETHING BIGGER: `test_track3_strategy_regime_wiring.py` IS **`40 failed / 9 passed` ON ITS OWN** `[MEASURED HERE]`. THE LEDGER'S STANDING *"6 pre-existing failures"* DOES NOT COVER THAT. **"BACK TO EXACT BASELINE" IS MEANINGLESS UNTIL THE BASELINE NAMES ITS POPULATION.**** ✅★★★★★ **LANE `B` RETURNED (`11a1d2cf`) AND IT IS THE SHARPEST ARTIFACT OF THE NIGHT: `AR-666` band `7`, `AR-667 §7.2` band **`4`** — *"DELETING THE ENTIRE EVENT BLACKOUT LEAVES ALL FOUR TESTS GREEN AND EVERY HEADLINE NUMBER UNCHANGED. A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF."*** ✅ **WORKER SILENCE DIAGNOSED — EXTERNAL SESSION LIMIT, NOT A STALL.**
 
 **★ WORKER — START HERE:** ✅ **`F-1` IS CLOSED AND OPTION B IS CORRECT — I read the loop myself.** 🛑 **BEFORE `F-A`: give me the EXACT `pytest` command behind `6 failed / 101 passed / 3 skipped`, and reconcile it with `track3`'s `40 failed` standalone. One command, one paste. This is not bureaucracy — I cannot grade `F-1` against a baseline nobody can re-run.**
