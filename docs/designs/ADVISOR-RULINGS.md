@@ -12,6 +12,76 @@
 
 ---
 
+## R-608 · 2026-08-02 · ✅★★★★★ **`AR-651` APPROVED — THE SWALLOW DETECTOR IS FIXED AT THE RIGHT LAYER, RED-PROOFED ON `6` REAL SWALLOWS **USING THE GRADER'S OWN MUTATIONS VERBATIM**, AND THE STRICTER RULE COSTS **ZERO** COVERAGE — MEASURED BEFORE IT WAS WRITTEN.** ✅★★★★★ **AND THE FINDING THAT MATTERS MOST: THE GRADER'S OPEN `[HYPOTHESIS]` IS CONFIRMED — **`F-1` IS A `6`-ROW DEFECT, NOT `3`.** THE PINNED DETECTOR'S FALSE-GREEN SURFACE WAS `62%` LARGER THAN THE GRADE THAT CONVICTED IT.** ✅ **LANE-2 AUTHORIZED IN THE SAME MOTION — NO IDLE WINDOW THIS TIME (`R-607 §1.2` WAS MY DEFECT AND THIS IS THE FIX IN PRACTICE, NOT IN PROSE).** **DECISION: APPROVE · LANE-2 STARTS · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Approved, and three things go on the record by name.** **(1) `§3` — you red-proofed with the GRADER'S OWN THREE MUTATIONS, reproduced verbatim, and said why: *"Had I authored easier mutations I would be grading my repair with a test I built to pass it."* `A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT` — applied without being told.** **(2) `§2` — you MEASURED that the stricter rule loses no true positive BEFORE adopting it, and said that had one row been digest-only it would have been a real trade-off. That is the difference between a design and a preference.** **(3) `§4` — you closed the grader's open hypothesis and it made your own repair look WORSE, not better. **You went looking for more of the defect you had just fixed.**** ✅ **NEXT: `§4`, LANE-2. It is off the critical path and it is the same class of work you just finished.**
+
+**RULING ID:** R-608 · **TASK ID:** `AR-651` (`R-605 §5.1`) · **DECISION: APPROVE · AUTHORIZE LANE-2.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-651`** `[MEASURED HERE]` — the subject, read in full including its `§5` per-row table and its shared-tree disclosure. **Two `## EXT-CONSULT-*` blocks sit above it; both were disposed of at `R-607` and neither is an AR.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-SIXTH time.**
+
+---
+
+### ✅★★★★★ §1 — THE LAYER WAS NAMED CORRECTLY, AND THAT IS THE WHOLE RULING
+
+**`AR-651 §1`, at the executable line: the old `classify()` CAPTURED `r.exit`, PRINTED it in the table, and NEVER USED IT IN A VERDICT. The exit column was decorative.** Verdicts came from `digest ≠ control`, and `run.mjs:540` records the ARGUMENT handed to the consumer — so the ledger moved on the REQUEST whether or not anything consumed it.
+★★★★★ **`THE WITNESS THAT COULD HAVE CAUGHT IT WAS ALREADY IN THE ROW, UNREAD.` The defect was not a missing observable and not the knobs — it was the **EVIDENCE RULE**. `R-605 §5.1` asked for the property and refused to prescribe a mechanism; **the doer found the layer I had not identified**, which is what ordering a property instead of a mechanism is for.**
+
+### ✅★★★★★ §2 — THE REPAIR, AND WHY IT IS A DESIGN RATHER THAN A PREFERENCE
+
+**Channels split by PROVENANCE:** **CONSUMER** = `run.mjs`'s exit code + its normalized stdout (the guarded code REACTING) · **REQUEST** = `EFFECT-DIGEST`. **A `LANDED` verdict now REQUIRES a consumer channel; digest-only is a new named verdict `REQUEST-ONLY` and is a FAULT.**
+✅ **VERIFIED READ-ONLY AT THIS DESK `[MEASURED HERE]`:** `plant-landing.mjs:153` returns `{ verdict: 'REQUEST-ONLY', how: 'digest≠control, consumer output identical' }` — returned **exactly** when the request channel moved and the consumer channels did not · `:165-166` routes every non-`LANDED` verdict into the fault path · `:29` documents the verdict's meaning in the header · `:31` preserves **`UNPROVABLE` is never collapsed into `NOT LANDED`**. 🛑 **The exit-code linkage itself is `[MEASURED BY DOER — proven by SPAWNING in `§3`, not by my read]`; I did not trace it to `process.exitCode` and I am not claiming to have.**
+✅★★★★★ **AND THE FACT THAT MADE IT A DESIGN: `[MEASURED BY DOER, all 37 + control ×2]` **every** pinned knob moves BOTH consumer channels, so `37/37` still LAND — **the stricter rule loses no true positive.** ★★★ **The doer measured that BEFORE adopting it and said plainly that one digest-only row would have made it a real trade-off. `A STRICTER RULE THAT COSTS NOTHING IS NOT A TRADE-OFF — BUT YOU DO NOT KNOW WHICH YOU HAVE UNTIL YOU MEASURE.`**
+✅ **`PLANT_WITNESS` removed as a verdict shortcut** — the witness line survives `normalize()` so it was subsumed by stdout, and keeping it left **a second non-consumer path to `LANDED` for a future edit to widen.** ★★★ **Closing a redundant path that is currently harmless is `fix-pattern` discipline: the defect class, not the instance.**
+✅★★★ **AND THE SCOPE LIMIT LIVES IN THE INSTRUMENT'S OWN HEADER (`:39-40`), not only in a report: *"whether a plant landed WHERE ITS AUTHOR INTENDED / exercised the class it is named for"* is NOT tested and **must not be read into a `LANDED` verdict.** `caption-is-a-claim`, done right — a future seat cannot over-read this instrument without deleting its own warning.**
+
+### ✅★★★★★ §3 — THE RED-PROOF, AND WHY IT DISCRIMINATES
+
+**`node plant-swallow-redproof.mjs` → exit `0`, `6/6` `[MEASURED BY DOER]`.** Every row: **PINNED detector → exit `0` · `LANDED` (the false green reproduced) · CANDIDATE detector → exit `1` · NAMED.** Swallow sites are one-line edits **at the CONSUMER** in `module-collections.mjs:334/:347`, `module-tuple.mjs:63`, `membership.mjs:249/:252/:255`.
+★★★★★ **THE FIRST THREE MUTATIONS ARE THE GRADER'S OWN, REPRODUCED VERBATIM.** `red-path-decay`: **`A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT`** — and the doer named the alternative it refused: *"Had I authored easier mutations I would be grading my repair with a test I built to pass it."*
+✅ **DISCRIMINATION ON THREE INDEPENDENT CONTROLS, so this is not a blanket red:** the healthy companion `fixture_invalid` rides every mutant population and **`LANDED`, unfaulted, `6/6`** · only the intended file drifts from the pin (`0` others, all six) · the CANDIDATE on the **UNMUTATED** pin over all six knobs + companion → **exit `0`, no faults.** ★★★ **`"EVERYTHING REDS" IS INDISTINGUISHABLE FROM A WORKING GUARD WITHOUT A GREEN CASE` — three greens supplied.**
+✅ **FIXTURE PROVEN, NOT ASSUMED: `21/21` blobs materialised from `3b9cc68e` and `git hash-object`-matched to the pin; each mutation asserts EXACTLY ONE matched site and that the file's hash actually MOVED.** 🛑 **`copy == working-tree` deliberately NOT the check, citing `R-600 §6` — my own lesson, absorbed and applied.**
+
+### 🛑★★★★★ §4 — THE GRADE IS AMENDED: `F-1` IS A `6`-ROW DEFECT
+
+**`GRADE-PLANT-LANDING-2026-08-02.md` recorded, honestly, in its own "what I did not verify": `run.mjs:589 live_collections`' three knobs are *"structurally swallowable in the same way as `F-1`… I did NOT run that mutation. `[HYPOTHESIS]` — if confirmed, `F-1`'s count rises from 3 to 6."***
+✅ **RUN. CONFIRMED `[MEASURED BY DOER]` — all three score `LANDED` with exit `0` under the pinned detector. `F-1` IS `6` ROWS.**
+★★★★★ **SO THE PINNED DETECTOR'S FALSE-GREEN SURFACE WAS `62%` LARGER THAN THE GRADE THAT CONVICTED IT — and it was ONE HARNESS PARAMETER from being settled, because the grader wrote down what it had not done.** ★★★ **`AN HONEST [UNENUMERATED] IS THE CHEAPEST FINDING ON THE BOARD.` `R-603 §4` target 5 asked the grader to enumerate a branch the doer left open; `R-608` is the same trade running the other way, doer→grader. **The relay works in both directions when both sides publish their gaps.****
+
+### ✅ §5 — THE SHARED-TREE DISCLOSURE WAS HANDLED CORRECTLY
+
+**`AR-651 §-disclosure`: the worker found `EXT-CONSULT-1`/`-2` already written and UNCOMMITTED in `AGENT-REPORTS.md`, and since `git commit -o <file>` cannot commit its own lines alone, ITS COMMIT CARRIES THE CONSULTANT'S TWO BLOCKS.** ✅ **It did not author, edit, reorder or act on them, and it ran NO INDEX OPERATION to separate them, citing `precommit-stash` — *"tidying an appearance on a shared tree is how ten commits were once lost."*** ★★★★★ **THAT IS THE RIGHT CALL AND IT IS THE HARDER ONE: the tidy-looking option was the dangerous one. `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` — invariant 9, honoured by the worker under time pressure.** ✅ **No conflict with `R-607`, which committed the consultant's REPORT FILES, not `AGENT-REPORTS.md`.**
+
+### ✅ §6 — AUTHORIZED NEXT ACTIONS · **LANE-2 STARTS NOW**
+
+1. ✅★★★★★ **WORKER — START `LANE-2` (`R-607 §3`): PHASE-2 BATTERY-RIG FAULT-INJECTION CALIBRATION, OFF THE CRITICAL PATH.** **GOAL:** the wave rig has **never fired** (`backtests = 0`); show it goes **RED on a planted defect** before any real wave. `BLUEPRINT v4`'s Phase-2 ENTRY already requires it. ★★★ **`A RIG THAT HAS NEVER GONE RED IS NOT AN INSTRUMENT` — and you have now built exactly this twice tonight, so the pattern is yours: name the layer, split evidence by provenance, red-proof with mutations you did not author where possible, and supply a green control.**
+   - 🛑 **NAME COLLISION IS REAL `[MEASURED HERE]`: `scripts/null_gate_calibration.py` EXISTS in this worktree and is a DIFFERENT experiment (H₀ false-pass). Do NOT extend, rename, or conflate it.**
+   - **CONSUME CRITICALLY, DO NOT OBEY: `docs/research/SCOPING-BATTERY-NULLCAL-2026-08-03.md` (`6.8 KB`, committed at `7f36a890`, advisory, un-re-derived).** ⚠️ **I have verified only that the file EXISTS — not that its plant points are reachable. `briefs-assert`: FIRST ACT is a step-zero import/resource check, and "the scoping is wrong about X" is a welcome result.**
+   - **ACCEPTANCE:** the rig demonstrably RED on a planted defect and GREEN un-planted, the planted defect named in the output, a discriminating green control, and `prototypes/`+`scripts/` clean at the end. **Honest-partial clause applies; an enumeration of what could not be planted is a complete result.**
+   - **FIRST OBSERVABLE + ETA:** start-receipt within ~2 min.
+2. **`LANE-3` (main-repo metrics-test gap, `R-607 §3`) REMAINS QUEUED — take it on your own judgement of capacity and say which you took.** **Test-only; no engine change without a further ruling.**
+3. **THIS DESK — the `4d` population read is IN FLIGHT** (receipt `docs/designs/GRADE-4D-POPULATION-2026-08-02.md`). On return: commit, then rule the population.
+4. **THIS DESK — READ `RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` before any design-closure ruling (`R-607 §4`). STILL OWED, assigned to THIS SEAT.**
+5. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NOT transitioned, NINE of ten · `4d` STILL NOT MET (`R-600 §1`) — ★★★ **and nothing in `AR-651` bears on it: a better landing detector does not change which population `4d` quantifies over (`R-606`), nor cure column (i)'s tautology (`R-600 §2`).** ✅ **`run.mjs` byte-unchanged `[MEASURED HERE, `git diff --stat HEAD`]` — no row required touching it, so `STOP AND ASK` was correctly never reached.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — I ran nothing.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-607 §7` plus:** ★★★★★ **`37/37 LANDED` cited as evidence that a plant exercised the class it NAMES → STOP; `plant-landing.mjs:39-40` excludes that axis in its own header.** · ★★★★★ **`F-1` cited as a `3`-row defect → STOP; it is `6` (`§4`).** · ★★★ **`scripts/null_gate_calibration.py` extended or renamed by `LANE-2` → STOP.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`THE WITNESS THAT COULD HAVE CAUGHT IT WAS ALREADY IN THE ROW, UNREAD.` The exit code was captured and PRINTED and never used in a verdict. **Before adding an observable, ask which observables you already collect and discard** — a decorative column is a guard you have already paid for and not wired.**
+★★★★★ **`SPLIT EVIDENCE BY PROVENANCE: WHO PRODUCED IT?` Consumer channels (the guarded code reacting) vs request channels (the harness re-encoding its own input). **A verdict built on a request channel measures your intent, not the system's behaviour** — and this is the general form of `R-605 §2`.**
+★★★★★ **`A STRICTER RULE THAT COSTS NOTHING IS NOT A TRADE-OFF — BUT YOU DO NOT KNOW WHICH YOU HAVE UNTIL YOU MEASURE.` `37/37` still land, measured before adoption. Had one row been digest-only, the same change would have been a real coverage loss requiring a different decision.**
+★★★ **`AN HONEST [UNENUMERATED] IS THE CHEAPEST FINDING ON THE BOARD.` The grader wrote down a mutation it had not run; the doer ran it and `F-1` grew `62%`. **Both sides publishing their gaps is what made the relay compound instead of merely alternate.****
+★★★ **`NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` — the worker's commit carries another seat's uncommitted lines and it DISCLOSED that rather than running an index operation to look tidy.**
+
+---
+
 ## R-607 · 2026-08-02 · ✅★★★★★ **VELOCITY ORDER ACCEPTED — THE OPERATOR IS RIGHT AND `R-606` IS THE EVIDENCE, NOT THE DEFENCE. §8a BATCHING BECOMES THE DEFAULT · TWO OFF-PATH LANES CHARTERED · THE REFERENCE-ORACLE EVALUATION CHARTERED AT DESIGN CLOSURE (NOT ADOPTED).** 🛑★★★★★ **AND A CORRECTION I OWE THE OPERATOR AND THE LEDGER: I TOLD HIM *"THE DAY ADVERSARIAL PASSES COME BACK EMPTY IS THE FIRST HONEST SIGN THE EQUIPMENT IS SOUND."* **THAT STOP RULE IS TOO WEAK** — five researched sources incl. Jane Street's engineering blog put empty passes at **NECESSARY BUT NOT SUFFICIENT**, their mature quickcheck+fuzz+chaos stack having missed a real bug for a month. **MY RULE WOULD HAVE LICENSED CONFIDENCE AT EXACTLY THE WRONG MOMENT.** **DECISION: AUTHORIZE WIDTH · CHARTER · CORRECT · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ✅ **Stay on `R-605 §5.1` (`AR-650`) — nothing here interrupts you and nothing is withdrawn.** ✅★★★★★ **What changes is that you will NOT be left idle again: `§3` queues two contracts behind your current one, so a grade window never costs you a task. `R-603 §5.1`/`R-597 §5.1` held you on HOLD through two grade windows while non-conflicting work existed — that was my defect, not caution.**
