@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3699` at THIS commit, 2026-08-03 02:52 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3689` at THIS commit, 2026-08-03 05:0x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3699` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3689` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,31 +93,23 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-02 `20:4x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FRESH CONVERSATION after a `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-614` (`6eb4326d`). Newest AR: `AR-657` — **RULED / APPROVED** at `R-614`.** Worker: ✅ **`LANE-3`, re-issued SERIAL and re-scoped (`R-614 §6.1`).**
+## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-623` (`69204523`). Newest AR: `AR-666` — **RULED / APPROVED** at `R-623`.** Worker: ✅ **ACTIVE, not blocked.**
 
-## 🛑🛑★★★★★ THE THREE QUESTIONS THAT DECIDE WHETHER TONIGHT'S GUARD WORK IS WORTH ANYTHING
-**A grade is IN FLIGHT on exactly these** (`accuracy-validator`, resumed `02:47` after a hard session-limit failure; receipt `docs/designs/GRADE-INVARIANT-HARNESS-2026-08-03.md`):
-1. 🛑★★★★★ **DOES A FAILING INVARIANT REACH ANYTHING?** `AR-656 §6`, verbatim: *"These checks can now fail; **I have still not shown anyone listens.**"* **We spent the night making guards able to fail and have not shown a failure propagates.**
-2. 🛑 **`INV-9`/`INV-10` are `severity="WARNING"` — neither sets `overall_passed = False`.** So the two just repaired **cannot fail a run.** A contract decision the doer correctly refused to make alone. **MINE.**
-3. 🛑 **The `try:` at `backtester.py:5939` wraps the `run_invariants` call sites (`:5941`, `:8418`)** — may swallow a harness throw. **Unadjudicated since `R-611 §5.5`.**
+## ★★★★★ AUTHORIZED NOW — **`R-623 §7`** (2026-08-03, `69204523`)
+1. ✅ **WORKER — LAND `AR-666`:** commit `src/engine/backtester.py` **alone** from `wt-eventmask-fix-20260803` onto the campaign branch, `commit -o` (shared tree, lanes live in it). 🛑 **`LANDED ≠ RUNNING` — no deploy; `runtime-production` untouched.**
+2. ✅★★★★★ **WORKER — THEN REVIVE THE DEAD GUARD.** `src/engine/tests/test_entry_windows.py` ONLY: add the missing `start_date`/`end_date` to `_make_minimal_backtest_result` (`:313`). 🛑 **FIX THE FIXTURE, NEVER THE ASSERTION.** Acceptance: all four reach a real verdict, **RED on the pre-fix base and GREEN on the fix, same unchanged fixture, base re-measured THIS run** (`red-path-decay`). ★★★ **This IS the end-to-end proof `AR-666` named as its own honest ceiling — not a new harness, the one already written for this defect.**
+3. ⏸️ `R-620 §4.1` (`INV-13` on a capped run), then `INV-1`'s overlap.
+4. 🛑★★★★★ **DESK — `R-623 §4`'s NO-OPT-OUT BLACKOUT is a NAMED PHASE-2 ENTRY BLOCKER.** Mine to specify as a `ratify-packet`. Not delegated, not parked on the operator.
+5. 🛑 **DESK — the `WARNING`-tier decision (`R-620 §4.4`) and the `INV-1` disposition remain MINE.** ⚠️ **Aged five rulings — named so they cannot quietly become a standing sentence.**
 
-## 🛑🛑★★★★★ WIDTH COMES FROM THE DESK OR IT DOES NOT COME (`R-614 §2`)
-**`R-613 §4.2` ordered `LANE-3` as a SUBAGENT lane. `[RELAYED — `AR-657 §0.1`]` THE WORKER'S HARNESS FORBIDS IT FROM SPAWNING AGENTS** (*"Do not call the AgentTool unless the user requested it"*). **So `R-607 §3`'s adoption of §8a batching was NEVER ACHIEVABLE AS WRITTEN.**
-✅★★★ **THE CORRECTED MODEL: §8a "parallel lanes" = DESK-DISPATCHED AGENT LANES alongside ONE SERIAL worker lane. That is what actually delivered width tonight — four graders + a scout, all desk-dispatched. I mis-attributed the mechanism.** 🛑 **NO ruling may order the worker to fan out until the operator grants that seat the capability.**
-✅ **ROUTING, operator-ordered and relayed via `AR-657 §0`: *"IF YOU HAVE A QUESTION ABOUT SUBAGENTS REPORT TO ADVISOR NOT ME."* Subagent + grader questions come HERE.**
-
-## 🛑★★★★★ THE GRADE WAS OWED THREE TIMES AND ONLY THE DESK COULD FIRE IT
-**Asked at `AR-654`, re-asked at `AR-655`, re-asked at `AR-656 §6` — and I APPROVED the work each time instead.** ★★★★★ **`WHEN THE DOER DEFERS A GRADE AND THE DESK APPROVES INSTEAD, THE DESK HAS MADE ITSELF THE GRADER OF WORK IT ORDERED.` Aggravated: the worker CANNOT dispatch it, so asking again was its only available action and I read three requests as diligence. **Worst process error of the session.****
-
-## 🛑★★★★★ TWO DEFECT CLASSES — I HAD CONFLATED THEM (`R-614 §3`)
-**`CLASS A` = metric ABSENT, the accessor's default supplies a passing value → the `9` remaining; one accessor change plausibly covers them.** **`CLASS B` = metric PRESENT BUT WRONG (sign-flipped, collapsed, finite-but-false) → `INV-9`/`INV-10`, which `AR-654` planted.** 🛑 **AN ABSENCE FIX CATCHES NO CLASS-B DEFECT — so `R-612 §4.1` ordered a Class-A mechanism against a Class-B priority and the two did not meet.** ⚠️ **CLASS-B EXPOSURE ACROSS THE OTHER `12` IS UNMEASURED and needs PLANTS, not a predicate read.** 🛑 **`9`-of-`14` is a CLASS-A figure only — citing it as total blindness is a STOP.**
-
-## ⚠️ `R-613 §4.2` WAS THE WRONG SHAPE (`R-614 §1`)
-`[MEASURED HERE]` **the metric test has TWO TIERS and Tier 2 DOES anchor the engine** — `:96`/`:99` and `:107`/`:114` import `src.engine.risk_metrics`, **FUNCTION-LEVEL**, which is why a module-level grep misses them. Tier 1's self-containment is **documented deliberate** at `:92-94`. **My ordered fix would have rebuilt a Tier 2 that exists.**
-🛑 **THE TWO REAL GAPS: `profit_factor` has NO engine anchor in either tier** (zero occurrences, positive-controlled) · **Tier 2 anchors `risk_metrics.compute_*_distribution`, NOT the inline `backtester.py` math that produces the reported numbers.** ★★★★★ **`AN ANCHOR POINTED AT A DIFFERENT IMPLEMENTATION THAN THE ONE THAT PRODUCES THE NUMBER IS AN ANCHOR TO NOWHERE` — second instance tonight; `parity_engine/` does the same (`R-610 §2`).**
-⚠️ **AND A CONSTRAINT I ASSERTED IS FALSE: the engine imports in `~1.0s` and `vectorbt` NEVER loads on that path.** I carried `AR-652`'s true direct-`import vectorbt` hang one file too far. **`A TRUE FINDING APPLIED TO THE WRONG SURFACE IS A FALSE CONSTRAINT.`**
-
+## ★★★★★ THE POSITION IN ONE PARAGRAPH (2026-08-03)
+**The engine's default event blackout was polarity-inverted and suppressed `100%` of entry signals on the `run_backtest` path.** `AR-666` repaired it — `+42/−10` in ONE file, both builders (legacy UTC too), red-proofed `2/8` → `8/8` on an unchanged AST-extraction harness. `[MEASURED HERE, `R-623 §1`]` **`git status` in the isolated worktree is ` M src/engine/backtester.py` and nothing else, so *"never invert `signals.py`"* is proven by the modification set, not by the report; and I reran the suite myself: `6 failed, 438 passed, 6 skipped`.**
+🛑🛑🛑★★★★★ **THE SIX FAILURES ARE DIAGNOSED (`R-623 §2`) AND FOUR OF THEM ARE A FINDING: `TestBacktesterWindowMask` — the guard class named for THIS defect — dies at request construction on a `pydantic ValidationError` and has never executed a line of mask logic.** The other two (`test_skip_engine`) are structurally unreachable from the change (builders nested inside `run_backtest` at `:3915`; zero imports).
+🛑🛑★★★★★ **AND THE DANGEROUS STATE IS THE ONE THAT REMAINS: THERE IS NO OPT-OUT FROM THE BLACKOUT.** `100%` suppression was the obvious form and is fixed; what is left is `08:30–09:00` + `14:00–14:30` ET suppressed on **every run, forever, un-disableable** — which makes `BLUEPRINT v4`'s `OVERLAY-CONFLICT` bin **unfalsifiable against `edge-absent`**, so no Phase-2 wave verdict may be interpreted until it exists.
+✅★★★★★ **CLOSED PERMANENTLY (`R-623 §5`): the historical *"did DSL backtests trade only in news windows"* question.** `backtests` and `backtest_trades` hold **`0` rows and never received a single insert** — two independent desk lanes, four proof paths including **OID ordering** (`backtests 68225 < strategies 69520`, refuting DROP-and-recreate). **`N = 0`, named as a FOURTH condition rather than back-fitting `R-622 §4`'s schema branch.** 🛑 **The retired claim STAYS RETIRED.**
+✅ `[MEASURED HERE]` **`.env` HOSTS, so no seat re-derives them:** campaign tree (`07-13`, STALE) → `switchback.proxy.rlwy.net:36475`; **main repo (`07-23`, CURRENT) → `sakura.proxy.rlwy.net:34357`.** **Both lanes read `sakura` — the authoritative one.** ⚠️ **Lane 1's *"if rows exist anywhere it is switchback"* is INVERTED and corrected at `R-623 §5`.**
+⚠️ **`85 DSL / 3 class` from lane 1 is WITHDRAWN (`R-623 §6`):** only `3` of `88` are positively class-path; the remainder are **UNMARKED, not DSL** (`absence-claim`).
 ## (superseded seat lines below)
 **`AR-652`/`AR-653` — unruled BY DESIGN: progress receipts on an already-authorized lane, requesting nothing.**
 
@@ -206,7 +198,7 @@ passed = max_dd >= 0.0
 🛑★★★ **`R-594 §6` WAS WITHDRAWN BY `R-595` WITHIN THE HOUR — the worker refused a standing order of mine and was RIGHT.** I ordered the worker's ruling-ear retired on `AR-637 §2`'s *"alive but deaf"*; the ear then **delivered `R-594` into the worker's window**. ★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT TRAVEL INTO THE ORDER BUILT ON IT` — I graded it `[CORROBORATED — the worker's measurement, not mine]` and issued an executable order anyway. **Second occurrence in three rulings** (`R-593 §0` was the first). Write orders from RELAYED premises as CONDITIONAL, or wait.**
 ✅ **What survives from the grade, and it is most of it: NINE fragments held under adversarial attack, including two injections of the grader's own design (`49(a)`/TS2345, `49(b)`/TS7017) that the doer had declared undone. `1d` GENERALIZES — four witnesses, two populations, four TS codes, plus a single-assignment-site mechanism (`run.mjs:289`/`:294`).**
 
-## ★★★★★ AUTHORIZED NOW — **`R-605 §5`** (2026-08-02, `0a3d3215`)
+## ⚠️ SUPERSEDED — THE LIVE AUTHORIZATION IS IN THE `SEAT` BLOCK AT THE TOP OF THIS FILE (`R-623 §7`, 2026-08-03). This block was `R-605 §5` (2026-08-02, `0a3d3215`) and is KEPT — not cut — ONLY because its item 2 carries an unruled `FAILURE_CLASSES` measurement. `[MEASURED HERE 2026-08-03: the ledger independently carries `FAILURE_CLASSES` `35×`, so this file is NOT its sole carrier and the block is cuttable once someone confirms the match is the same finding.]`
 ✅★★★★★ **WORKER — ONE TASK: MAKE THE LANDING DETECTOR CATCH A *SWALLOWED* PLANT (`R-605 §5.1`).** **THE PROPERTY, NOT THE MECHANISM** — distinguish *"requested AND had an effect"* from *"requested AND swallowed at the consumer"*, and go RED on a swallow, naming the row. 🛑 **DO NOT just pin more digests** — `emitted_module`'s digest is byte-identical landed-vs-swallowed, so a tighter pin there is a guard that cannot fire. ★★★ **THE LEAD: only `red-proof.mjs`'s EXIT-CODE assertion caught the swallow while its `EFFECT IDENTITY … pinned=true` line did not — that asymmetry is where to start.**
 ✅★★★★★ **`run.mjs` STAYS READ-ONLY — BUT *"this row cannot be distinguished without changing `run.mjs`"* IS NOW AN EXPLICITLY ACCEPTED, WELCOME PER-ROW ANSWER.** 🛑 **If a `run.mjs` change is required, STOP AND ASK — it is the object under test, and `R-605 §3` is what happened when the desk decided that alone.** ★★★ **An honest per-row `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` verdict OUTRANKS a detector reporting coverage it does not have.**
 **ACCEPTANCE:** per-row table over all `37` — **`DISTINGUISHABLE (red-proofed on a swallow)` / `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` / `REQUIRES run.mjs CHANGE (stopped and asked)`** — with the swallow red-proof demonstrated on **at least the three rows the grader swallowed** (`emitted_module` among them). `prototypes/` clean; honest-partial clause. **ALLOWED: `plant-landing.mjs` + harnesses. FIRST OBSERVABLE: start-receipt ~2 min.**
@@ -267,15 +259,13 @@ Merge · worktree update · production write · service restart · spend · any 
 - 🛑 **`advisor-ruling`'s guards are LIVE and consume a sentinel PER RULING** — re-invoke the skill before EVERY ruling, not once per session.
 - 🛑 **THE `P0PC` TAMPER LANE IS RETIRED FOR CHANGES.** Re-opening needs a dated ruling and a named reason. **`4d-ii` is ACCEPTANCE work, not tamper work** — the same distinction `R-592 §5` drew and `R-593` upheld.
 
-## ★★★★★ MONITOR RIG — TWO LIVE CHANNELS (the GPT channel is DORMANT under `R-579`)
-`[MEASURED HERE, Win32_Process + parent walk, re-run 2026-08-02 ~19:5x]` under `claude.exe 13916` (THIS seat): `31964` `AGENT-REPORTS` mtime/2s ✅ **delivered `AR-637` and `AR-638` into this window** · `14108` silence watchdog. **ADOPTED ACROSS THE CONTEXT ROLL, NOT RE-ARMED.** ⚠️ **`20756` (GPT-branch poller) is GONE — no longer in the process table. Under `R-579` the GPT channel is SUSPENDED, so its absence is not a gap.**
-`6164` under `claude.exe 21508` is the **WORKER'S EAR — NEVER TOUCHED, AND PROVEN AUDIBLE**: it delivered `R-594` into the worker's window at `~19:55`, joined to `6164` by that script's OWN literals (`cut -c1-12` header, `cut -c1-300` body), not by the bare arrival of text. ✅ **`LIVENESS ≠ OWNERSHIP ≠ DELIVERY` — all three legs now closed by observation.**
-✅★★★★★ **PLANT-LANDING RECEIPT WATCHER ARMED (`R-603 §4`): task **`b34yle31n`**, 20s poll on `docs/designs/GRADE-PLANT-LANDING-2026-08-02.md`, heartbeats every 15 min, **exits on its own when the receipt lands**. ★★★ Armed because `R-599 §1` learned that a dispatch whose only channel is a notification is a dispatch you can lose — **the file is the durable channel even though that notification did, in the end, arrive.**
-✅ **RECEIPT WATCHER `b4kgiqdn8` (armed `R-599 §4`) HAS RETIRED ITSELF — it emitted on path `A`, then path `B`, then exited on its own terms when both landed. `[MEASURED HERE]` NOTHING TO KILL; it is not an orphan.** ★★★ **`one-monitor-rig` was INTACT throughout: it covered an UNCOVERED channel (`docs/designs/GRADE-*`), never doubled one. **A monitor with a defined end condition is the shape to prefer** — it needed no retirement decision from any seat.**
-✅★★★★★ **`31964` DELIVERY PROVEN THREE TIMES THIS SEAT, NOT ASSUMED: it fired `AR-642`, `AR-643` and `AR-644` into this window `[MEASURED HERE]`.** `LIVENESS ≠ OWNERSHIP ≠ DELIVERY` — all three legs closed by observation for this seat, this session.
-⚠️★★★ **AND `R-599 §1`'s HYPOTHESIS THAT A `/clear` KILLS SUBAGENT NOTIFICATIONS IS **REFUTED** — the orphaned `R-598` grader's completion notification DID arrive. **Keep the receipt-plus-file-watch discipline anyway: it does not depend on a delivery mechanism whose cross-roll behaviour I still cannot state.****
-🛑 **GPT standing order SUSPENDED by `R-579` (operator). No ruling may stall on it.**
-
+## ★★★★★ MONITOR RIG — THREE CHANNELS, ALL RE-ARMED IN THIS CONVERSATION (2026-08-03 `04:46`)
+`[MEASURED HERE — each verified BY ITS OWN FIRST EVENT, never by assuming it started]` under `claude.exe 13916` (THIS seat):
+- **`bz0x1287r`** — `AGENT-REPORTS.md` mtime / 2s ear, deaf-alarm after 3 unreadable polls. ✅★★★★★ **DELIVERY PROVEN, NOT ASSUMED: it fired `AR-666` into this window.**
+- **`bm5h17ew0`** — worker-silence watchdog, **BOTH** channels (report mtime AND newest commit), 60m, reports silence and explicitly NOT a diagnosis. ✅★★★★★ **RED-PROOFED: a threshold-`0` twin emitted `SILENCE … ALARM BRANCH REACHED THE DESK`, which DISCHARGES the `R-622 §0` open item that this watchdog had never demonstrated a path to red.**
+- **`bn89djpe6`** — GPT branch fetcher, baseline `953a907c2583`. 🛑 **WAIT half DORMANT under `R-579` — keeps the ear, never blocks a ruling.**
+🛑★★★★★ **THE WORKER'S EAR IS `bash 32468` under `claude.exe 21508`, re-armed by it at `04:43:16` (`AR-665`) — NEVER TOUCH IT. Its identity decays: `6164` → `27624` → `32468`. Enumerate by OWNERSHIP (parent `claude.exe` walk), never by age.**
+⚠️★★★★★ **A CORRECTION THIS SEAT OWES ITSELF, RECORDED SO THE NEXT ONE DOES NOT REPEAT IT: I killed my three inherited monitors believing the `/clear` had orphaned them — **AND THE KILL NOTIFICATIONS ARRIVED IN THIS CONVERSATION, WHICH MEANS THEY WERE STILL DELIVERING.** I tore down working coverage on an inference.** ★★★ **`TaskList` returning *"No tasks found"* is a DOCUMENTED-BLIND instrument for these monitors and is NOT evidence of orphanhood.** ✅ **This file already carried the answer — `R-599 §1`'s "a `/clear` kills subagent notifications" hypothesis was already marked REFUTED — and both orphaned desk lanes then returned into this window, corroborating it twice more.** ★★★★★ **`LIVENESS AND REACHABILITY BOTH SURVIVE A `/clear` WITHIN ONE `claude.exe`. RE-ARM ONLY WHAT YOU HAVE MEASURED DEAF.`**
 ## KNOWN-BENIGN (do not investigate)
 - **THE V4 GRAPH VALIDATOR CANNOT BE GREEN AT `HEAD`, BY CONSTRUCTION `[MEASURED HERE]`:** it pins the `ADVISOR-RULINGS.md` blob AND campaign `HEAD`; every ruling moves both, so committing the refreshed graph moves `HEAD` past the join it just recorded. Refresh + validate UNCOMMITTED → `errors: []`; one commit later → `ARTIFACT_PIN_MISMATCH` + `EPOCH_JOIN_MISMATCH` + two `EPOCH_RULING_*`. **Node states and the ready set are unaffected. Refresh is a READ-TIME act, not a commit-time gate. Do not chase green.**
 - A ledger `grep` for `v3-` returning zero is EXPECTED (the tags live only in the carriers).
