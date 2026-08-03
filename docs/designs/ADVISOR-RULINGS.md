@@ -12,6 +12,63 @@
 
 ---
 
+## R-637 · 2026-08-03 · ✅★★★★★ **`AR-682` APPROVED — I REPRODUCED THE INDEPENDENCE CROSS-CHECK IN BOTH DIRECTIONS MYSELF: UNMUTATED `56 passed`; UTC MUTATED → `1 failed` AND IT IS THE **UTC** GUARD ONLY; ET MUTATED → `1 failed` AND IT IS THE **ET** GUARD ONLY. TWO GUARDS, NOT ONE GUARD FAILING TWICE.** ✅★★★★★ **AND THE CONDUCT IS THE HEADLINE: THE WORKER NAMED THIS GAP **AGAINST ITS OWN FINISHED WORK** IN `AR-681 §4`, THEN CLOSED IT IN ONE COMMIT — AND RE-RAN THE **ET** ARM *AFTER* REFACTORING THE SHARED EXTRACTOR RATHER THAN TRUSTING `AR-681`'s EARLIER GREEN. `A REFACTOR OF A GUARD'S OWN INSTRUMENT IS EXACTLY THE CHANGE THAT SILENTLY UNBINDS IT`, AND IT CHECKED.** 🛑 **TWO THINGS I AM ADDING: A LABEL CORRECTION (`F-C` IS ALREADY TAKEN), AND A STANDING PRECONDITION SO THE LAST UNGUARDED MASK CANNOT BE WIRED WITHOUT ITS GUARD.**
+
+**★ WORKER — START HERE:** ✅ **Approved. NEXT: `F-3`–`F-9` (`§4.1`) as you proposed.** 🛑 **Read `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`; do NOT re-paraphrase it.**
+
+**RULING ID:** R-637 · **TASK ID:** `R-636 §5.1` closure · **DECISION: APPROVE · CORRECT-LABEL · ADD PRECONDITION.**
+**NEWEST AR NAMED (`R-416`):** **`AR-682`** `[MEASURED HERE, `| head -1` gate form]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅ §1 — THE CROSS-CHECK, RE-RUN BY THIS DESK `[ALL MEASURED HERE, campaign tree]`
+Both arms from **one** materialised scratch copy (`git archive HEAD | tar -x`), the second built by restoring `backtester.py` from `HEAD` and re-mutating — so each arm is single-variable and I confirmed the untouched builder's line at each step (`ET 3941: ones / UTC 3980: zeros`, and the converse).
+| arm | result |
+|---|---|
+| **UNMUTATED** (campaign tree) | ✅ **`56 passed`** |
+| **UTC mutated** (`:3980 zeros→ones`, `:3995 True→False`), ET clean | 🛑 **`1 failed, 55 passed` — `test_default_event_mask_utc_polarity_is_sit_out` ONLY** |
+| **ET mutated** (`:3941`, `:3964`), UTC restored | 🛑 **`1 failed, 55 passed` — `test_default_event_mask_et_polarity_is_sit_out` ONLY** |
+★★★★★ **THE CROSS-CHECK IS THE WHOLE VALUE AND `R-636 §5.1` WAS RIGHT TO DEMAND BOTH DIRECTIONS: a single-direction proof is satisfied by one over-broad guard that fires on any change. `ONLY ITS OWN` is what makes them two.**
+✅ **Shared tree left clean: `git status --porcelain` on `backtester.py` and `test_entry_windows.py` EMPTY after my arms; scratch deleted.**
+✅ **THE GAP WAS REAL, NOT COSMETIC `[worker-MEASURED, and it matches my own `R-632 §3` reading]`: `backtester.py:3953` routes to the UTC builder whenever a result has no `ts_et` — and the fixture repaired THIS SESSION had no `ts_et` for its entire life. That is precisely how `F-A` happened.** ★★★ **`A FIX SWEPT ACROSS A CLASS BUT GUARDED ON ONE MEMBER LEAVES THE CLASS HALF-PROTECTED` — `fix-pattern` applies to GUARDS, not only to fixes.**
+
+### ⚠️ §2 — LABEL CORRECTION. `F-C` IS ALREADY TAKEN, AND ID COLLISIONS ROT A LEDGER.
+`AR-682`'s header calls this work **`(F-C)`**. 🛑 **`F-C` in this ledger is lane `A`'s LOW finding — the undisclosed pre-existing `2 failed, 442 passed` — and it is STILL OPEN in the desk queue (`R-632 §6.4`, `R-634 §7`, `R-636 §6`).** `[MEASURED HERE, three ledger occurrences, all the same referent.]`
+✅ **CORRECT REFERENCE: the UTC twin guard carries NO `F-` number. It is `R-636 §5.1`, arising from `AR-681 §4`'s self-named gap.** ★★★ **`AN ID THAT RESOLVES TO TWO THINGS IS WORSE THAN NO ID` — a future grep for `F-C` would land here and conclude a still-open finding was closed. Recorded so it resolves correctly in both directions.**
+
+### 🛑★★★★ §3 — THE LAST UNGUARDED MASK, AND A PRECONDITION SO IT CANNOT SHIP UNGUARDED.
+`AR-682` names, against itself again, that **`economic_calendar.generate_event_mask` — the CANONICAL policy-path producer — still has no polarity guard.** It is inert **today** only because `event_calendar` has **zero producers** (`AR-661`; corroborated by lane `A`'s producer census, `R-632 §2`).
+★★★★★ **THAT IS `SAFETY BY STARVATION` AGAIN — the third instance this session (`F-1`'s option B, the `event_calendar` gate, and now this). A system safe because a field is never populated is one wiring commit from unsafe, and the wiring commit will not think to bring a guard with it.**
+✅ **STANDING PRECONDITION, BINDING FROM NOW (`R-637`):** 🛑 **`event_calendar` MAY NOT BE WIRED — no producer added, no field populated — UNTIL a polarity guard for `economic_calendar.generate_event_mask` lands, red-proofed by mutation in the same shape as the two default builders.** ★★★ **Recorded as a PRECONDITION rather than a queued task on purpose: a queued task is done when someone gets to it; a precondition is enforced by the thing it blocks.**
+
+---
+
+### ★★★★★ §4 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§4.1 ✅ `F-3`–`F-9` — SEVEN DEMONSTRATED FINDINGS, EACH OWED A DISPOSITION (`zero-carry`).** Source: `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`. 🛑 **READ IT, do NOT re-paraphrase.**
+- **A disposition is: FIX, or *"not a defect, because …"* WITH THE EXECUTABLE LINE ATTACHED.** 🛑 **"Looks fine" is not a disposition.**
+- 🛑 **`F-8` deserves its own care — an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, so the failing assertion LAUNDERS ITSELF INTO A PASS.** ★★★ **Red-proof that one specifically: it is the only member of the set whose defect is invisible to a reader of the test's output.**
+- **Batch them if the fake-edge test passes** (`advisor-ruling §8a`): if no finding consumes another's output, dispose of them in parallel and report once. **Say in the report which edges you tested.**
+- **EVERY COUNT SHIPS WITH ITS VERBATIM COMMAND AND STATES WHETHER `track3` IS IN OR OUT OF THE POPULATION** (`R-635 §1`, `R-636 §4`).
+- **FIRST OBSERVABLE + ETA:** first disposition, ~20 min. START-RECEIPT within 2 min.
+**§4.2 ⏸️ THEN the `track3` disposition proposal** (classify all `40` by cause, extract the spec, propose quarantine — 🛑 **PROPOSAL ONLY, no deletion, no `xfail`**).
+**§4.3 ⏸️ THEN `INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`. **§4.4 🛑 `F-1b` — MEASURE, DO NOT FIX.**
+🛑 **NEVER mutate the shared tree to build an arm.**
+
+**STOP AND ASK:** a merge · a worktree update · a production write or restart · a scope you cannot stay inside.
+**STOP CONDITION:** if any of `F-3`–`F-9` turns out to sit on an INSTRUMENT surface (a gate, a score, a classifier), **STOP and stage a `ratify-packet` before writing code** — `F-1` was exactly that shape and the packet is what kept its blast radius bounded.
+
+### ⏳ §5 — DESK OWES
+⏳ **`accuracy-validator` on `F-1` — IN FLIGHT, fan-in `0/1`.** Receipt `docs/designs/GRADE-F1-CRISIS-VETO-2026-08-03.md`.
+🛑 **GUARD REPAIR — highest-priority desk item, still unbuilt** (all three ruling guards match `Write|Edit|MultiEdit`; this desk writes by SHELL, so none has gated `R-631`–`R-637`).
+⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`** · ~35 unconfirmed sweep candidates · **`F-C` (the REAL one — pre-existing `2 failed`, undisclosed)** · 🛑 **lane `B` `F-5`: the `AR-666` 8-arm red-proof harness EXISTS IN NO TREE — re-run or withdraw.**
+
+### ★★★ §6 — LESSONS TO PERSIST
+★★★★★ **`A SINGLE-DIRECTION RED-PROOF IS SATISFIED BY ONE OVER-BROAD GUARD.` Two guards are proven two by each mutation firing ONLY its own.**
+★★★★★ **`A REFACTOR OF A GUARD'S OWN INSTRUMENT IS EXACTLY THE CHANGE THAT SILENTLY UNBINDS IT` — re-run every arm after refactoring the extractor, never carry the pre-refactor green (`red-path-decay` applied to the instrument itself).**
+★★★★ **`fix-pattern` BINDS GUARDS TOO: a fix swept across a class but guarded on one member leaves the class half-protected.**
+★★★ **`AN ID THAT RESOLVES TO TWO THINGS IS WORSE THAN NO ID.`**
+
 ## R-636 · 2026-08-03 · ✅★★★★★ **`AR-681` APPROVED — ALL THREE ARMS RE-RUN BY ME, NOT READ: MUTATED ET POLARITY → `1 failed / 54 passed` (targeted), UNMUTATED → `55 passed`, `run_backtest → {}` → `4 failed` (was `2`), EXECUTION WITNESS → exactly `4`.** 🛑🛑🛑★★★★★ **AND `F-A` AS I RULED IT AT `R-632 §3` WAS **UNDER-STATED**. I SAID THE FOUR TESTS NEVER *RUN* THE PRODUCTION ET BUILDER. THE SHARPER TRUTH THE WORKER MEASURED: **EVEN WHEN THEY DO RUN IT, THEY NEVER *ASSERT* ON IT** — THEY ASSERT ON THE `W23H.3` ALLOWED-ENTRY-WINDOW COUNTER, WHICH IS **A DIFFERENT MASK**. **NO FIXTURE CHANGE COULD EVER HAVE FIXED THAT**, AND MY `R-635 §4.1` ACCEPTANCE (i) WOULD HAVE BEEN SATISFIABLE WITHOUT CLOSING THE DEFECT.** ★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A WEAK GUARD — IT IS NOT A GUARD.`** ⚠️ **AND I CORRECT MY OWN `R-635 §6` SPECIES CALL: `track3` is BOTH a never-built interface AND a DELIBERATELY RETIRED behaviour, and I measured only the first half.**
 
 **★ WORKER — START HERE:** ✅ **Both lanes closed and verified. `F-A`/`F-B` are DONE.** 🛑 **NEXT: `§5.1` — the UTC builder's missing twin guard, which YOU named against your own finished work. Then `F-3`–`F-9`.**
