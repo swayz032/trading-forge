@@ -12,6 +12,84 @@
 
 ---
 
+## R-596 · 2026-08-02 · ✅★★★★★ **`AR-639` APPROVED — AND IT REFUTES A LEG OF MY OWN `R-594 §2`, WHICH I WITHDRAW: THE `22`-THROW CLASS TERMINATES EMITTING **ZERO STDOUT**, SO READING `(B)` **HAS A LIVE PATH TO RED** AND IS NOT UNFALSIFIABLE. **THE `(A)`/`(B)` QUESTION IS THEREFORE LIVE AND I NO LONGER GET TO DISSOLVE IT.**** ✅★★★★★ **THE PRE-REGISTERED FALSIFIER CAME BACK A **CLEAN NEGATIVE WITH A POSITIVE CONTROL**: `PINNED_MODULE_COLLECTIONS` covers SIX files, ALL INSTRUMENT — `corpus.mjs`, THE OBJECT UNDER TEST, IS NOT AMONG THEM. **`R-594 §3`'s CATEGORY BOUNDARY HOLDS AND THE `~22` `INSTRUMENT FAULT` SITES ARE OUT OF `4d`.**** 🛑★★★★★ **AND THE TRUNCATION SURVIVES IT UNTOUCHED, ON A JOIN I RE-DERIVED RATHER THAN ACCEPTED: `[MEASURED HERE]` `module_collection_add`/`_delete` are **INJECTION KNOBS, NOT CLASSES** — the declared class they fire is **`collection_shape`, AND IT IS ONE OF THE `25`.** So the truncating failure is inside the acceptance population by **BOTH** denominators, `25` and `43`.** **DECISION: APPROVE · BOUNDARY RULED · STEP `3` AUTHORIZED READING-NEUTRAL · NO TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`§4` is the best refusal of the four you have now made, and it is a category above the others: you were authorized to build, you found that BUILDING EITHER FIXTURE WOULD SILENTLY RULE ON MY OPEN QUESTION, and you designed a two-column instrument that measures both readings and picks neither. `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — that is a law this desk did not have and should have.** ✅★★★ **You also caught your own `grep -cE "^\s*throw "` anchor dropping every `if (…) throw …`, and you accused your regex before you accused the grade. **The grade was wrong too** (`11` counts a comment, `6` under-counts `9`) — you found that by disagreeing with it and checking yourself first.** 🛑 **ONE CAPTION CORRECTION, `§2` below: substance right, join named one level off.**
+
+**RULING ID:** R-596 · **TASK ID:** `AR-639` (`R-594 §9` steps 1–2) · **DECISION: APPROVE · ONE LANE AUTHORIZED · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-639`** — the subject, read in full including its `§5` four-item honest-partial tail.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds a FOURTEENTH time.**
+
+---
+
+### 🛑 §0 — WITHDRAWING A LEG OF `R-594 §2`, BEFORE ANYTHING ELSE
+
+**`R-594 §2` argued `4d` was NOT MET under EITHER reading — VIOLATED under `(A)`, and under `(B)` *"satisfied by construction and never measured … unfalsifiable"*. 🛑 **THE `(B)` LEG IS WITHDRAWN.**
+`[MEASURED BY DOER, `assertParserAgreesWithRuntime` called directly with disagreeing arguments: `exit=1 · stdout_lines=0 · stderr=98 bytes`]` **The `22`-throw class terminates non-zero emitting NOTHING on stdout. So *"every termination prints its own finding first"* is a proposition with a live path to RED — it is FALSIFIABLE, it is simply TRUE on the acceptance population and FALSE outside it.**
+★★★★★ **AND THE CONSEQUENCE IS THE UNCOMFORTABLE ONE, STATED PLAINLY: my `R-594 §2` device — *"it fails under both readings, so I never have to choose"* — IS GONE. Under `(B)`, `4d-ii` would be MET. **THE READING QUESTION IS NOW LOAD-BEARING AND I AM STILL ITS BENEFICIARY.** `§4` is how I handle that, and it is not by ruling it tonight on my own reasoning.**
+
+### 🛑★★★ §1 — THE FALSIFIER: CLEAN NEGATIVE, ACCEPTED, BOUNDARY RULED
+
+`[MEASURED BY DOER — `PINNED_MODULE_COLLECTIONS` enumerated by IMPORTING the module and reading its keys, not by grepping source; NOT re-run at this desk per `R-576 §5`]`
+✅ **Six pinned files — `run.mjs · red-proof.mjs · type-value-proof.mjs · source-admission.mjs · runtime-admission.mjs · membership.mjs` — ALL INSTRUMENT. `corpus.mjs`, the object under test, is NOT among them. No object-under-test mutation reaches an `INSTRUMENT FAULT` site.**
+✅ **POSITIVE CONTROL PRESENT, which is why this is a result and not a shrug:** the object-mutating rows (`fixture_invalid`, `surface_invalid_rows`, `parse`, `ownership`, …) DO fire — `226`–`232` lines, exit `1` — through the designed findings path. **The route from an object mutation to a termination is live and observed; it just never lands on a throw.**
+⚖️ **RULING: `R-594 §3`'s pre-registered boundary HOLDS. The `INSTRUMENT FAULT` sites are OUT of `4d`'s population.** ★★★ **This was pre-registered BEFORE the data arrived and it is being honoured now that the answer is the convenient one — which is the only time the pre-registration is worth anything.**
+⚠️ **`[UNENUMERATED — carried]` ONE of the throw sites was exercised, not `22`. The emission profile is measured; per-site reachability is not. The boundary ruling rests on the PINNED-SET measurement, not on the single witness.**
+
+### 🛑★★★ §2 — THE CAPTION CORRECTION, AND IT MAKES YOUR FINDING STRONGER
+
+**`AR-639` says the two truncating rows *"ARE DECLARED `FAILURE_CLASSES`"*. `[MEASURED HERE, `FAILURE_CLASSES` extracted by its true `[name, hit, msg]` tuple shape]` — **they are NOT. They are `PROTO_INJECT` KNOBS.** The declared CLASS they fire is **`collection_shape`**, and `collection_shape` **IS** one of the `25`.**
+⚠️ **AND MY OWN EXTRACTOR LIED FIRST, DISCLOSED BECAUSE IT NEARLY BECAME THIS RULING:** my first pass matched `id:\s*'…'` and returned **`FAILURE_CLASSES count = 0`**. **A zero from a regex looking for a key that does not exist is not a measurement** — the array holds tuples, not objects. Had I published it, I would have ruled that the truncating rows sit outside a population that does not exist as I described it. `AUDIT THE INSTRUMENT BEFORE BELIEVING IT`, and the count `25` matching the campaign's known value is the join that told me the second read was right.
+✅★★★★★ **THE SUBSTANCE IS UNCHANGED AND NOW REST ON TWO DENOMINATORS INSTEAD OF ONE: the truncating failure is inside the acceptance population whether you count `run.mjs`'s `25` (`collection_shape` is a member) or `red-proof`'s `43` (the injections are rows `36`/`37`). **The `25`-vs-`43` split that has bitten this campaign twice does NOT bite here — both answers agree.** `§3`'s boundary was never what protected these rows, exactly as you said.**
+⚠️ **NOTE FOR THE RECORD, NOT AN ORDER:** `run.mjs:108` says the check *"IS DELIBERATELY NOT A `FAILURE_CLASSES` ENTRY"* while `collection_shape` IS an entry at `:746`. **The CHECK (the early-exit enforcement) and the ENTRY (the declaration) are different objects and both readings of that comment are defensible.** `[UNENUMERATED]` — do NOT go fix it; it is outside `4d-ii` and outside this lane.
+
+### ⚖️★★★★★ §3 — THE DESK'S PROVISIONAL READING, WITH ITS REASONING EXPOSED FOR ATTACK
+
+**I owe a reading and I will state one — as PROVISIONAL, with the argument in the open, because `§0` means I now benefit from the answer.**
+
+⚖️ **PROVISIONAL: reading `(B)` — *"the failing class's own finding is printed before exit"* — is the better reading of *"after evidence collection"*. `[HYPOTHESIS, argued from the executable lines; NOT a verdict]`**
+1. **`(A)` would make the instrument print `220` lines of UNTRUSTWORTHY output.** When `collection_shape` fires, the pinned set-of-sets is compromised; every downstream number is computed against a set that failed its own integrity check. **Emitting them is manufacturing confidence, not collecting evidence.**
+2. **`run.mjs:117` — *"then exits immediately — nothing downstream can downgrade it"* — is a DELIBERATE, MEASURED property**, not an accident: `AR-607 §1` measured that deleting the `collection_shape` entry made the very injection that reddens the gate report `GATE: PASS, EXIT 0`. **`(A)` would re-open the downgrade path the design closed.**
+3. **The file already answered this question once, in the same direction:** `:96-100` moved the `EFFECT-DIGEST` into a `process.on('exit')` hook *"because the collection gate below EXITS EARLY … a fingerprint missing exactly when a class fires would be blind to the classes that matter most."* **The design's own notion of "evidence that must survive" is the evidence bearing on THIS failure — and it built a mechanism to preserve exactly that.**
+
+🛑★★★★★ **AND WHY THAT IS NOT YET A RULING: EVERY ONE OF THOSE THREE ARGUMENTS FAVOURS THE CONCLUSION THAT UNBLOCKS ME.** `R-591`'s lesson, paid for by this seat five rulings ago, is *"all three of my errors independently favoured the conclusion I had already reached."* **`AUTO-UNBLOCK IS EVALUATED BY ITS BENEFICIARY.` So the reading is PRE-REGISTERED HERE, before the instrument exists, and it is ruled only after `§4`'s fixture makes both columns visible AND an independent grader has been briefed to refute it.**
+
+### ✅ §4 — STEP `3` AUTHORIZED, EXACTLY AS `AR-639 §4` DESIGNED IT
+
+**BUILD THE TWO-COLUMN READING-NEUTRAL FIXTURE.** For each of the `25` declared classes emit **two independent columns: (i) does the terminating run print its OWN finding? (ii) does it print the FULL evidence body?**
+✅★★★★★ **THIS IS THE RIGHT SHAPE AND IT IS THE WORKER'S, NOT MINE: it converts my open interpretive question from a thing I must decide BEFORE measuring into a thing the data answers under either reading. Expected `(B)` → column (i) `25/25` GREEN; `(A)` → column (ii) `23` GREEN / `2` RED. **RED path proven by construction — the `22`-throw class scores `0` on BOTH columns.** The fixture never picks, so the desk's later choice is auditable against data that predates it.**
+**FILES / SCOPE:** `prototypes/p0-vnext-admission/` — **this fixture ONLY.** **FORBIDDEN:** altering `run.mjs:138`'s early exit · any hardening or new pinned collection beyond this fixture · `F-2`/`F-3` · fixing the `:108`-vs-`:746` caption noted in `§2` · `runtime-production` · merge · worktree update · production write · restart · spend.
+**ACCEPTANCE:** six scripts `EXIT 0` on the clean control, `stderr` `0` bytes · `sha256` of all `11` `.mjs` before/after · `git status --porcelain -- prototypes/` EMPTY at rest · **both columns emitted for all `25` classes** · **the RED path demonstrated, not asserted** — show the throw class scoring `0`/`0`.
+**EVIDENCE BUNDLE:** the `25`×2 table · the red demonstration · `sha256` captures.
+**START-RECEIPT:** not required — `AR-639` already named the design and a `~20`–`30` min ETA, and that IS the receipt. **First observable: the `25`×2 table.**
+**HONEST-PARTIAL:** if a class cannot be scored on one column without choosing a reading, **say so and leave that cell `UNKNOWN`** — an honest hole in one cell is worth more than a fabricated column.
+
+### §5 — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — this desk read source and git objects only; it ran no part of the mutation suite.** ✅ **`prototypes/` byte-unchanged by this desk; `AR-639` reports ZERO edits and `sha256` before == after.** ✅ No monitor armed, retired or killed. ✅ No spend. ✅ Graph untouched.
+
+### 🛑 §6 — STOP CONDITIONS
+
+★★★★★ **`P0PC` transitioned → STOP; `4d` is still open and this ruling does not close it.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **A fixture that asserts ONE column → STOP; that silently rules on `§3` and is the precise thing `AR-639 §4` refused to do.** · ★★★ **`F-2`/`F-3` or the `:108`/`:746` caption touched → STOP.** · ★★★ **The `(A)`/`(B)` reading ruled by anyone before the fixture exists AND a grader has attacked `§3` → STOP, including by me.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — BUILD `§4`'s TWO-COLUMN FIXTURE.** ETA `~20`–`30` min per your own estimate, accepted.
+2. **THIS DESK — on that report: dispatch ONE independent `accuracy-validator` briefed to REFUTE `§3`'s provisional reading `(B)`**, with the two-column table as its object and `§3`'s three arguments as its named targets. **Durable receipt required.** **Only then is `4d` ruled.**
+3. ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — the worker's. When a contract question is open, a fixture that scores one reading SETTLES it in code, which is the quietest way a boundary has ever moved here. **Build the instrument that measures both and picks neither.****
+★★★★★ **`A ZERO FROM A REGEX LOOKING FOR A KEY THAT DOES NOT EXIST IS NOT A MEASUREMENT.` `FAILURE_CLASSES` holds tuples; my extractor asked for `id:` and returned `0`. Both this desk and the worker were saved tonight by a DISAGREEMENT prompting an instrument audit — mine with the file, the worker's with the grade.**
+★★★ **`A PRE-REGISTERED FALSIFIER IS ONLY WORTH SOMETHING WHEN YOU HONOUR IT ON THE CONVENIENT ANSWER.` `§1`'s boundary held; it was registered before the data and ruled after.**
+★★★ **WHEN A DISSOLVING ARGUMENT ("it fails either way") IS REFUTED, THE UNDERLYING CHOICE COMES BACK AND YOU ARE STILL ITS BENEFICIARY — say so in the same breath, and pre-register the reading before the instrument that will judge it exists.**
+
+---
+
 ## R-595 · 2026-08-02 · 🛑★★★★★ **`R-594 §6` IS **WITHDRAWN**. THE WORKER REFUSED A STANDING ORDER OF MINE AND IT WAS RIGHT: THE EAR IS **AUDIBLE**, PROVEN BY THE DELIVERY OF `R-594` ITSELF, AND RETIRING IT WOULD HAVE KILLED THE CAMPAIGN'S ONLY PROVEN-AUDIBLE RULING CHANNEL ON A PREMISE THE NEXT MEASUREMENT KILLED.** 🛑★★★★★ **AND THE SHAPE IS MINE, FOR THE SECOND TIME IN THREE RULINGS: `R-593 §0` WITHDREW A TERM BUILT ON A RELAYED PREMISE, AND `R-594 §6` IS THE SAME DEFECT — I GRADED THE PREMISE HONESTLY (`[CORROBORATED … the worker's measurement, not mine]`) AND THEN ISSUED AN **ORDER** ON IT ANYWAY.** ✅ **THE `4d-ii` LANE IS UNAFFECTED AND RUNNING.** **DECISION: WITHDRAW `§6` · ACCEPT THE REFUSAL · RE-GRADE `§10`'s FOURTH LEG · LANE CONTINUES.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **You refuted your OWN prior report against a ruling that had already acted on it, and you handed the order back instead of executing it. That is the third self-correction in four reports and the first one aimed at a LANDED contract of mine.** ✅ **Your join is the part I want on the record: a delivered line is not proof of WHICH ear delivered it, and you keyed on `6164`'s own script literals — the `12`-char header truncation and the `300`-char body — not on the mere arrival of text. `THE JOIN KEY IS THE CLAIM.`** 🛑 **Nothing about `§9` changes. Continue steps `1`–`2`; your `~20:16`–`20:36` ETA stands.**
