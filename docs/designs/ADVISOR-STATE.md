@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3741` at THIS commit, 2026-08-03 08:0x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3743` at THIS commit, 2026-08-03 08:2x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3741` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3743` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,50 +93,52 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-03 `08:0x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-635` (`b60036bd`). Newest AR: `AR-680` — a START-RECEIPT, no ruling owed.** Worker: ✅ **ACTIVE on BOTH `R-635 §4.1` (`F-A`+`F-B`) and `§4.2` (`track3` measurement), fan-in `0/2`, self-declared.**
+## ★★★★★ SEAT (2026-08-03 `08:2x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-636` (`74f24080`). Newest AR: `AR-681` — RULED at `R-636`.** Worker: ✅ **free, next task is `R-636 §5.1` (UTC twin guard).**
 **SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`, the PID that wrote `R-630` — pre-`/clear` seat was MYSELF, no sibling, no write-freeze. ★★★ **`ASKED != SEATED`: walk the PID chain.**
 
-## ✅★★★★★ RESOLVED THIS SESSION — DO NOT RE-OPEN, AND DO NOT RE-SCARE YOURSELF WITH IT
-**`track3`'s `40 failed / 9 passed` IS NOT A REGRESSION AND NOT A BROKEN SUBSYSTEM (`R-635 §2`).** `[MEASURED HERE]` `regime_context` and `exit_style` have **ZERO** occurrences in `src/engine/strategies/*.py` `[positive control: the same glob finds `def __init__` in every strategy file]`; `SilverBulletStrategy.__init__` takes four unrelated params; and **`git log -S "regime_context" -- src/engine/strategies/` over the ENTIRE history is EMPTY.** ⚠️ **JOIN-KEY TRAP: the `5` non-test hits elsewhere are all the MODULE `walk_forward_regime_context.py` — a different object; counting them manufactures "the feature exists".**
-★★★★★ **NEW SPECIES FOR THE REGISTRY — `TESTED WITH ZERO IMPLEMENTATION`, the inverse of `dormant-activation`. Detector: `git log -S "<identifier>" -- <impl path>` EMPTY while a test asserts it.**
-⚠️ **NOT ESTABLISHED: that regime-aware exits are absent from the SYSTEM. I checked the strategy layer and the non-test identifier surface only. `[UNENUMERATED]` — `§4.2` is measuring exactly this.**
-✅ **`AR-678`'s count was TRUE all along — I reproduced it digit-for-digit (`6 failed, 101 passed, 3 skipped, 8280 deselected`) once the command was named.** ★★★★★ **`R-634` caught an UNCHECKABLE claim, not a false one. `THE DEFECT IN AN UNVERIFIABLE CLAIM IS NOT THAT IT IS WRONG, IT IS THAT NOBODY CAN TELL.`**
+## ✅ CLOSED THIS SESSION — VERIFIED BY THIS DESK, DO NOT RE-OPEN
+- **`F-1` (crisis hard-veto blind to a crashed scenario)** — closed `6b03a61c`, OPTION B (`"error" in s` only). ⚠️ **Scope: `stress_test.py:129` catches only `(ValueError, IndexError, KeyError)`.** ⚠️ **Residual ACCEPTED KNOWINGLY: B is safe only because `:138` always sets `error` — `SAFETY BY STARVATION`, kept visible.**
+- **`F-2` (swallowed failure read as a measurement)** — closed `4b6892a8`.
+- **`F-A`+`F-B`** — closed `9368f2da`. ✅ **`[MEASURED HERE]` mutated ET polarity in a scratch copy → `1 failed / 54 passed` (targeted); unmutated → `55 passed`; `run_backtest → {}` → `4 failed` (was `2`); execution witness → `4`.**
+- **`track3`'s `40`** — diagnosed, NOT a regression (`R-635 §2`, `R-636 §3`). **TWO species mixed:** the `regime_context` strategy kwarg **never existed** (`git log -S` over `src/engine/strategies/` EMPTY) **and** Style D was **REAL and DELIBERATELY RETIRED** (`git log -S "style_d"` → `5` commits; `src/engine/context/structural_targets.py:279` *"Style D is DEAD"*, Wave 23 canonical).
 
-## ★★★★★ CAMPAIGN LAW RATIFIED `R-635 §1` — BINDS THE WORKER AND THIS DESK
-**EVERY acceptance count ships with the VERBATIM command that produced it, and any `-k`/path filter is stated AS THE POPULATION.** ★★★ **`A FILTERED COUNT WITH AN UNSTATED FILTER IS THE TEST-SUITE FORM OF `I MEASURED THE NEIGHBOURING OBJECT`.`** ★★★ **`A PERMANENTLY RED TEST TRAINS EVERY FUTURE RUN TO BE FILTERED, AND A FILTERED RUN IS WHERE UNSTATED POPULATIONS COME FROM` — the `40` reds and the unstated `-k` are ONE defect at two layers.**
+## 🛑★★★★★ STANDING LAW MINTED THIS SESSION — BINDS WORKER **AND** DESK
+1. **EVERY acceptance count ships with its VERBATIM command, and any `-k`/path filter is stated AS THE POPULATION** (`R-635 §1`).
+2. 🛑 **AND MUST STATE WHETHER `track3` IS IN OR OUT** (`R-636 §4`) — its `40` are a **NAMED KNOWN-RED BLOCK**. ★★★ *A permanently-red test trains every future run to be filtered, and a filtered run is where unstated populations come from.*
+3. **Every grader dispatch owes a START-RECEIPT** (task · first observable · ETA) **and an explicit commit-and-verify obligation** (`R-632 §1`, `R-634 §4`).
+4. 🛑 **`UNVERIFIABLE` MAY NOT SIT IN THE LEDGER AS IF IT WERE `VERIFIED`.**
 
-## 🛑🛑★★★★★ OPEN DEFECTS — ALL VERIFIED AT THE EXECUTABLE LINE BY THIS DESK
-**`F-1` ✅ CLOSED (`6b03a61c`, OPTION B).** DD compare FIRST (original reason byte-for-byte), then `"error" in s`; the `passed is False` condition deliberately absent **with a comment recording why** — so `R-630 §4.2`'s superseded spec is not "restored" by the next editor. ⚠️ **Scope: `stress_test.py:129` catches only `(ValueError, IndexError, KeyError)`.** ⚠️ **Residual the desk ACCEPTED KNOWINGLY: B is safe only because `:138` always sets `error` — `SAFETY BY STARVATION`, kept visible on purpose.**
-**`F-1b` (NOT FIXED).** `backtester.py:8410` calls `full_forge_score(..., crisis_results=crisis)` with **NO `firm_max_dd=`** → veto compares against hardcoded `2000.0` while `stress_test` uses configured `prop_firm_max_dd`. **Zero non-test callers pass it.** ⚠️ **`[UNENUMERATED]` whether any real config differs — decides LATENT vs LIVE. MEASURE FIRST, DO NOT FIX.**
-**`F-A` (CRITICAL, OPEN) — CORROBORATED BY TWO INDEPENDENT LANES.** `backtester.py:3970` picks the ET builder only `if "ts_et" in df.columns`; `test_entry_windows.py` has **ZERO** `ts_et` `[positive control: 8 hits in `backtester.py`]`. Re-inverting the ET builder leaves the suite `4 passed`. 🛑 **Lane `B`'s `F-3` is WIDER: the repaired in-window line has ZERO EXECUTIONS across the entire `run_backtest` test surface.**
-**`F-B` (HIGH, OPEN).** `:438-446` read `.get(..., 0)` then `assert skipped == 0` — the default IS the asserted value, so `run_backtest → {}` passes `2 of 4`. 🛑 **`pytest.fail` in an `except` defends only against things that RAISE; my `R-631 §1` approval is EXCEPTION-SCOPED (`R-632 §4`).**
+## 🛑 OPEN DEFECTS — VERIFIED AT THE EXECUTABLE LINE BY THIS DESK
+**`F-1b` (NOT FIXED).** `backtester.py:8410` calls `full_forge_score(..., crisis_results=crisis)` with **NO `firm_max_dd=`** → the veto compares against a hardcoded `2000.0` while `stress_test` uses the configured `prop_firm_max_dd`. **Zero non-test callers pass it.** ⚠️ **`[UNENUMERATED]` whether any real config differs — decides LATENT vs LIVE. MEASURE FIRST.**
+**UTC BUILDER HAS NO POLARITY GUARD** (`AR-681`, self-named). The new `TestDefaultEventMaskPolarity` asserts the **ET** builder only; a re-inversion of `_build_default_event_mask_utc` would be caught by nothing.
 
-## ★★★★★ AUTHORIZED NOW — **`R-635 §4`** (`b60036bd`)
-1. ✅ **`F-A`+`F-B` AS ONE LANE (in flight).** `test_entry_windows.py` ONLY. **ACCEPTANCE, all three:** 🛑 **(i)** re-invert `_build_default_event_mask_et` (`:3941 zeros→ones`, `:3964 True→False`) in a **MATERIALISED SCRATCH COPY** → suite must go **RED** (today `4 passed`) · 🛑 **(ii)** `run_backtest → {}` → **every** test in the class RED (today `2/4` pass) · 🛑 **(iii)** the repaired in-window line must show a **NON-ZERO execution count** (lane `B` `F-3`: the suite never runs it). 🛑 **Never mutate the shared tree to build an arm** (`git archive <sha> | tar -x -C <scratch>`). 🛑 **Do NOT weaken `assert skipped >= 10`.**
-2. ✅ **`track3` DISPOSITION — MEASUREMENT ONLY (in flight).** 🛑 **DO NOT DELETE AND DO NOT `xfail` THESE TESTS — a test asserting an unbuilt interface is the ONLY written specification of what Track 3 was meant to do.** **Deliverable: does anything in the engine EXPECT strategies to expose `regime_context`/`exit_style`? Quote the call sites + one sentence naming the branch. REPORT, DO NOT ACT.**
-3. ⏸️ **THEN `F-3`–`F-9`**, then **`INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`.
-4. 🛑 **`F-1b` — MEASURE, DO NOT FIX.**
-**STOP CONDITION:** if item 2 finds the engine DOES expect that interface, **STOP** — an unbuilt money-path feature outranks `F-3`–`F-9`.
+## ★★★★★ AUTHORIZED NOW — **`R-636 §5`** (`74f24080`)
+1. 🛑 **`§5.1` UTC TWIN GUARD.** `test_entry_windows.py` ONLY, **AST-extraction shape — never a hand-copy.** **ACCEPTANCE BOTH DIRECTIONS:** mutate `_build_default_event_mask_utc` in a **materialised scratch copy** → UTC guard RED **and ET guard GREEN**; then the converse. 🛑 **Or it is one guard wearing two names.** **STOP CONDITION:** if the UTC builder is genuinely unreachable in production, **STOP and report** — a guard for dead code is a different decision.
+2. ⏸️ **`§5.2` `F-3`–`F-9`** — `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`, 🛑 do NOT re-paraphrase. Includes `F-8`: an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, so the failing assertion launders itself into a PASS.
+3. ⏸️ **`§5.3` `track3` disposition** — classify all `40` by cause, extract the spec to a doc, **propose** quarantine. 🛑 **PROPOSAL ONLY; the disposition is a ruling.** 🛑 **NO deletion, NO `xfail`** — these tests are the surviving record of Style D.
+4. ⏸️ **`§5.4` `INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`. **`§5.5` `F-1b` — MEASURE, DO NOT FIX.**
+🛑 **NEVER mutate the shared tree to build an arm** (`git archive <sha> | tar -x -C <scratch>`) — a live worker and live graders share this checkout.
 
 ## ⏳ DESK OWES
-⏳ **`accuracy-validator` on `F-1` — DISPATCHED `08:0x` (hold released; `R-635 §5`).** Receipt: `docs/designs/GRADE-F1-CRISIS-VETO-2026-08-03.md`. **Brief carries a START-RECEIPT obligation AND an explicit commit-and-verify obligation.** Fan-in `0/1`.
-🛑 **THE GUARD REPAIR — highest-priority desk item.** All three ruling guards match `Write|Edit|MultiEdit`; this desk writes the ledger by SHELL, so **none has ever gated a real ruling** (`R-631`–`R-635`). ⚠️ **Adding `Bash` to the matcher ALONE makes it PASS BY FAILING** — the guards key on `tool_input.file_path`, absent on Bash, and `SilentlyContinue` exits `0`. ⚠️ **The rig can also fail CLOSED though written to fail OPEN (a .NET aggregate exception blocked a scratchpad write with a FRESH sentinel; retry succeeded).**
-⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`: commission suite SKIPS on `total_trades == 0`, the exact state the polarity bug produced — own lane, do NOT cite as fact until opened** · ~35 unconfirmed sweep candidates · `F-C` · 🛑 **lane `B`'s `F-5`: the 8-arm red-proof harness behind `AR-666` EXISTS IN NO TREE. `UNVERIFIED`, not refuted. `UNVERIFIABLE MAY NOT SIT IN THE LEDGER AS IF IT WERE VERIFIED` — re-run or withdraw.**
+⏳ **`accuracy-validator` on `F-1` — IN FLIGHT, fan-in `0/1`.** Receipt `docs/designs/GRADE-F1-CRISIS-VETO-2026-08-03.md`.
+🛑 **GUARD REPAIR — highest-priority desk item, STILL UNBUILT.** `[MEASURED HERE, `.claude/settings.json`]` all three ruling guards match `Write|Edit|MultiEdit`; this desk writes the ledger by SHELL, so **none has gated `R-631`–`R-636`.** ⚠️ **Adding `Bash` to the matcher ALONE makes it PASS BY FAILING** — the guards key on `tool_input.file_path`, absent on Bash, and `SilentlyContinue` exits `0`. ⚠️ **The rig can also fail CLOSED though written to fail OPEN.**
+⏳ `F-D` (3 suites certify code they never execute) · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`: commission suite SKIPS on `total_trades == 0`, the exact state the polarity bug produced — own lane, do NOT cite as fact until opened** · ~35 unconfirmed sweep candidates · `F-C` · 🛑 **lane `B` `F-5`: the `AR-666` 8-arm red-proof harness EXISTS IN NO TREE — re-run or withdraw.**
 
-## ✅ GRADER FAN-IN HISTORY — `3 of 3` RETURNED ON THE EVENTMASK/SWEEP WAVE
-`SWEEP-SWALLOWED-EXCEPTION` (`R-630`) · `GRADE-EVENTMASK-REPAIR` band `6/10` (`R-632`) · `GRADE-EVENTMASK-REPAIR-B` `AR-666` band `7` / `AR-667 §7.2` band **`4`** (`R-634`).
-★★★★★ **LANE `B`'s `F-2`: three DIFFERENTLY-BROKEN masks reproduce `AR-667`'s headline numbers EXACTLY. `A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF.`**
-✅★★★ **LANE `B` DECLARED TWO CONTAMINATION EXPOSURES AND GAVE UP GROUND FOR BOTH. Cite it when briefing future graders.**
-⚠️★★★★★ **IT WAS REPORTED TO ME AS *FAILED* WITH ITS WORK COMPLETE AND COMMITTED. `A FAILURE SIGNAL IS NOT FAILED WORK — VERIFY THE ARTIFACT.`** ★★★ **Twin (`R-631 §4`): I called a lane missing on a TRUE measurement and a WRONG conclusion — SLOW, not dead. `A LANE WITH NO LIVENESS CHANNEL IS INDISTINGUISHABLE FROM A DEAD ONE` → START-RECEIPT now mandatory on every grader dispatch.**
+## ✅ GRADER FAN-IN — EVENTMASK/SWEEP WAVE `3 of 3` RETURNED AND RULED
+`SWEEP-SWALLOWED-EXCEPTION` (`R-630`) · `GRADE-EVENTMASK-REPAIR` band `6/10` (`R-632`) · `GRADE-EVENTMASK-REPAIR-B` — `AR-666` band `7`, `AR-667 §7.2` band **`4`** (`R-634`).
+★★★★★ **Lane `B` `F-2`: three DIFFERENTLY-BROKEN masks reproduce `AR-667`'s headline numbers EXACTLY. `A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF.`**
+✅★★★ **Lane `B` declared two contamination exposures and gave up ground for both — cite it when briefing graders.** ⚠️★★★★★ **It was reported to me as *FAILED* with its work complete and committed: `A FAILURE SIGNAL IS NOT FAILED WORK — VERIFY THE ARTIFACT.`** ★★★ **Twin (`R-631 §4`): I called a lane missing on a TRUE measurement and a WRONG conclusion — SLOW, not dead.**
 
-## ⚠️★★★★★ INSTRUMENT TRAPS — THIS BOX, THIS SESSION
+## ⚠️★★★★★ INSTRUMENT TRAPS — THIS BOX
 ```
 ar=$(grep -m1 -a "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*" | head -1)   # head -1 IS LOAD-BEARING
 ```
-🛑 **`grep -o` returns EVERY match and AR headers often CITE a prior AR. It passed four times before only because those headers named one AR — `CORRECT BY LUCK OF THE DATA, NOT BY CONSTRUCTION`.**
-★★★★★ **`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT`:** Windows-form paths (`C:/...`) for Python — MSYS `/c/...` exits `4`; a mangled `PYTHONPATH` exits `1`; **a PIPED exit code is `tail`'s, not `pytest`'s (a `6 failed` run reported exit `0`)**; `--deselect` must match the COLLECTED nodeid; a class method needs `File::Class::test`.
-★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT` (`R-633 §6`) — `stress_test.py:171-172` is a post-construction mutation site and it decided `R-633`.**
+★★★★★ **`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT`:** Windows-form paths (`C:/...`) for Python — MSYS `/c/...` exits `4`; mangled `PYTHONPATH` exits `1`; **a PIPED exit code is `tail`'s (a `6 failed` run reported exit `0`)**; `--deselect` must match the COLLECTED nodeid; a class method needs `File::Class::test`.
+★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A GUARD`** (`R-636 §2`) — presence and execution are **not** assertion. When ordering a guard, ask *which assertion reads the defective value*.
+★★★★★ **`A GUARD ADDED TO THE WRONG CLASS CAN SILENTLY WEAKEN A DIFFERENT GUARD`** (`R-636 §2`).
+★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT`** (`R-633 §6`).
+★★★ **`A FILE-LEVEL DIAGNOSIS OF A MIXED-CAUSE FAILURE SET IS A POPULATION ERROR`** (`R-636 §3`).
 ## ⚠️ SWEEP COVERAGE — WHAT `9 DEMONSTRATED` DOES **NOT** MEAN
 **`7.4%` of the surface it names: `14` of `189` `A7`/`A8` files traced; ~`410` `A7` and all `278` `A9` UNTRACED; NO TypeScript/vitest sweep at all.** ★★★★★ **`THE 497 STRUCTURAL SITES ARE A CAPABILITY SIGNAL, NOT A DEFECT COUNT` — the `3/87` (~3%) rate is NOT transferable (the 14 files were chosen for money-path relevance, not at random). Extrapolating is a HYPOTHESIS and the grader labelled it one.** ✅ **Honest nulls: `contextlib.suppress` and `try/finally: return` are `0` across all `374` files.**
 
