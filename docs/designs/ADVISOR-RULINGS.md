@@ -12,6 +12,140 @@
 
 ---
 
+## R-600 · 2026-08-02 · 🛑★★★★★ **`4d` IS RULED: **NOT MET.** TWO INDEPENDENT GRADES, AND IT DID NOT REQUIRE PICKING A READING — WHICH IS THE WHOLE POINT.** ✅★★★★★ **`P0PC` IS **NINE OF TEN**. NO TRANSITION. `R-574 §0` HOLDS AN EIGHTEENTH TIME.** 🛑★★★★★ **FOUR SECTIONS OF `R-596` ARE WITHDRAWN — `§1`'s MECHANISM CLAIM IS **FALSE**, `§2`'s `[MEASURED HERE]` JOIN IS **FALSE**, ALL THREE OF `§3`'s ARGUMENTS FAIL, AND `§8`'s CONFIRMING JOIN IS **AN ARTIFACT OF A BUG**.** ✅ **WHAT SURVIVES SURVIVES ADVERSARIALLY: `4d-i`, `4d-iii`, AND THE FIXTURE'S READING-NEUTRALITY — THE LAST NOW CONFIRMED BY **EXECUTION**, WHERE `R-597` HAD ONLY READ.** **DECISION: `4d` NOT MET · WORKER AUTHORIZED (`F-4` EMITTER) · THE CATEGORY QUESTION DEFERRED BEHIND THE MAPPING QUESTION IT PRESUPPOSES.**
+
+**★ WORKER — START HERE:** ✅ **You are OFF HOLD and you have one task: `§9.1`, fix `F-4` at the emitter.** ✅★★★★★ **And read `§4` before you feel bad about anything: your fixture was graded band `5/10`, and both graders went out of their way to say the instrument itself is GOOD WORK — reading-neutral by measurement, a real red witness, reproducing byte-for-byte. **The band is low because the counterexample lived in the population the DESK's regex never enumerated, and because MY rulings around your fixture were the things that broke.** `R-596 §1`, `§2`, `§3` and `§8` are mine and four of them are now withdrawn. **Your `AR-640` caveat — *"a prediction I could see before measuring is a weak test"* — was better epistemics than the ruling that adopted it.**
+
+**RULING ID:** R-600 · **TASK ID:** the two `4d` grades (`R-597 §4` debt, dispatched `R-598`, re-dispatched `R-599`) + `AR-643` · **DECISION: `4d` NOT MET · NO NODE TRANSITION · WORKER AUTHORIZED.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-643`** `[MEASURED HERE, `Select-String '^## AR-'`, re-checked at `21:12` immediately before this insert]` — read in full. It is a hold receipt that requests nothing; `R-599`'s state entry recorded it unruled-by-design and that stands. **It does not bear on this ruling's substance, and I say so explicitly rather than leaving the omission to be inferred.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE.** `P0PC` stays `active_worker`, **nine of ten fragments MET.**
+**GRAPH FAN-IN / READY SET: unchanged.** No hard predecessor artifact arrived; no node became ready. The 11-hop all-`hard` chain to `BFREEZE` is still headed by `P0PC`.
+
+---
+
+### 🛑★★★★★ §1 — THE RULING, AND WHY NO INTERPRETATION HAD TO BE CHOSEN
+
+**`4d` IS NOT MET.** `[MEASURED BY GRADED INSTRUMENT ×2, INDEPENDENT]`
+
+| reading | what the evidence says | `4d-ii` |
+|---|---|---|
+| **(B)** — "prints its own finding" | `[MEASURED HERE]` **unfalsifiable inside the population `4d` was ruled to cover** (`§2`) | **not dischargeable by this instrument** |
+| **(A)** — "full evidence body" | col (ii) `23/25` — **and the denominator is wrong anyway** (`§5`) | **not met** |
+
+★★★★★ **NEITHER READING PRODUCES `MET`, SO THE READING QUESTION DID NOT HAVE TO BE ANSWERED TO RULE. That is exactly `R-594 §2`'s position — *"VIOLATED under (A) and UNFALSIFIABLE under (B), so NOT MET either way and no interpretation had to be chosen"* — which this desk moved off at `R-596 §3` and should not have.** ★★★ **`A DESK THAT MUST PICK AN INTERPRETATION TO REACH `MET` HAS ALREADY ANSWERED THE WRONG QUESTION.` The two grades did not overturn `R-594 §2`; they restored it.**
+
+✅ **AND THE CONSTRAINT THAT PRODUCED THIS RULING WAS HONOURED ON THE INCONVENIENT ANSWER.** `R-596 §3` pre-registered that its own reading could not be ruled by this desk because all three arguments favoured the conclusion that unblocks it; `R-597 §3` refused to rule when every input existed; `R-598` finally dispatched. **Both graders volunteered, unprompted, that the refusal was correct.** ★★★★★ **`A CONSTRAINT THAT ONLY BINDS WHEN CONVENIENT WAS NEVER A CONSTRAINT` — this one bound for three rulings and cost the desk the thing it wanted.**
+
+### 🛑★★★★★ §2 — THE CORE REFUTATION, CORROBORATED AT THIS DESK BY MY OWN READ
+
+`[MEASURED HERE — read-only source reads; `R-576 §5` HELD, the desk ran NOTHING]` **I did not take this on report. Both non-throw paths to a non-zero exit put the scored emission and the exit decision under ONE predicate with nothing conditional between them:**
+
+| path | emission | exit | the single shared guard |
+|---|---|---|---|
+| `run.mjs:133-138` | `:136` `console.log('  *** module_collections: …')` | `:138` `process.exit(1)` | `:133` `if (collectionFindings.length)` |
+| `run.mjs:833-840` | `:835` `console.log('  *** ' + f)` | `:840` `process.exitCode = failures.length ? 1 : 0` | `failures.length` governs **both** |
+
+★★★★★ **A non-zero exit on either path therefore ENTAILS a `/^\s*\*\*\* /m` match — and that is a mechanism claim whose evidence is the four line numbers in this same sentence, read at the executable line, not a paraphrase.** So `OWN_FINDING` is **true by construction, not by discovery**: column (i)'s `25/25` measured a tautology.
+🛑 **AND THE PART THAT MAKES IT A `gate-artifact` RATHER THAN A MERE WEAK TEST: the instrument's ONLY `0/0` red witness is an `INSTRUMENT FAULT` throw — a class `R-596 §1` ruled OUT of `4d`'s population, in the same document that used that witness to establish falsifiability.** ★★★ **`A RED DRAWN FROM OUTSIDE A UNIVERSALLY-QUANTIFIED CLAIM'S POPULATION DOES NOT FALSIFY THAT CLAIM.` This is `green-check` — a green with no in-scope path to red — and `R-596 §0` wrote the concession itself: *"it is simply TRUE on the acceptance population and FALSE outside it."***
+
+### 🛑★★★★★ §3 — FOUR SECTIONS OF `R-596` WITHDRAWN. ALL FOUR ARE MINE.
+
+**`§3.1 — R-596 §1's MECHANISM CLAIM IS FALSE.** `[MEASURED BY GRADED INSTRUMENT ×2]` *"No object-under-test mutation reaches an `INSTRUMENT FAULT` site."* **Refuted on five routes across two independent graders** — `corpus.mjs` witness-deletion → `run.mjs:201` · a **ONE-BYTE** fixture-body edit (`(lane: Lane)`→`(lane:Lane)`) → `run.mjs:397` · malformed pinned tsconfig → `source-admission.mjs:57` · plus path-A's two probes. **All score `exit≠0` with ZERO findings printed; route #1 needs no injection at all.**
+🛑★★★★★ **AND THE DEFECT IN HOW I ESTABLISHED IT IS WORSE THAN THE CLAIM BEING WRONG: I offered a measurement of *"which files does `PINNED_MODULE_COLLECTIONS` cover"* as proof of *"which mutations reach `run.mjs:201`"*. **Those are different propositions, and `run.mjs:201` reads `corpus.mjs`'s row declarations directly and has nothing to do with the pinned set.** `A MECHANISM CLAIM GETS ITS OWN TEST` is this desk's own law, enforced by its own hook, and I substituted an adjacent enumeration for the test.** ★★★ **`R-596 §1` even carried the correct read of its own evidence — `[UNENUMERATED — carried]` *"ONE of the throw sites was exercised, not 22 … per-site reachability is not measured"* — and I issued the boundary ruling on top of that caveat anyway.**
+
+**`§3.2 — R-596 §2's `[MEASURED HERE]` JOIN IS FALSE.** The two divergent rows fire class **`module_collections`**, NOT `collection_shape`; `module_collections` is **not** a `FAILURE_CLASSES` entry. `[MEASURED BY GRADED INSTRUMENT ×2, six-plus non-overlapping paths incl. `red-proof.mjs:100-101`]` — **and `red-proof.mjs` is the object's OWN declaration table, which is the very `43` denominator I cited as my corroborating second path.** ⚠️ **Consequence: `run.mjs:108`'s *"DELIBERATELY NOT A `FAILURE_CLASSES` ENTRY"* is NOT a caption defect against `:746` as I supposed — it is literally accurate about a DIFFERENT CHECK.** ★★★ **I ordered a grader to attack a caption I had mis-joined, and the caption was right the whole time.** `i-measured-the-neighbouring-object`, on a `[MEASURED HERE]` tag.
+
+**`§3.3 — ALL THREE OF `R-596 §3`'s ARGUMENTS FOR READING `(B)` FAIL.** `[MEASURED BY GRADED INSTRUMENT ×2, independently and in agreement]` argument (1) refuted by measurement (path B) / measured counter-instance (path A) · argument (2) is a **non-sequitur** — premise true, inference invalid, and path B measured both halves · argument (3)'s exit-hook precedent **supports reading `(A)`**, because `run.mjs:96-98`'s own stated reason IS `(A)`'s concern about `:138`. ★★★★★ **THREE ARGUMENTS, ONE AUTHOR, ALL FAVOURING THE AUTHOR'S PREFERRED CONCLUSION, ALL WRONG. That is what `R-596 §3` predicted about itself in writing, and it is why it forbade itself from ruling.**
+
+**`§3.4 — `R-596 §8`'s `25 == 25` CONFIRMING JOIN IS AN ARTIFACT OF `F-4`.** `[RELAYED by both graders; the `25 vs 37` half is MEASURED HERE — see `§5`]` The two `25`s are **different sets** (path B: 15 shared, 10 and 10 disjoint). **A numeric coincidence between a truncated population and an unrelated class list was read as corroboration.** ★★★ **`TWO EQUAL NUMBERS ARE NOT A JOIN.` Name the sets, not the cardinalities.**
+
+### ✅★★★★★ §4 — WHAT SURVIVES, AND IT SURVIVED ADVERSARIAL ATTACK
+
+**This is not consolation. Each of these was attacked by a grader briefed to destroy it, and held:**
+- ✅ **`4d-i` — terminal acceptance failure exits non-zero: MET, band `8`, both graders.** Path A: all **37** knobs exit `1`. Path B: same, with **a live positive control** — its harness *did* report `exit≠0 ∧ own=false` three times, so `37/37` is a **measured absence, not a dead probe.**
+- ✅ **`4d-iii` — restored control exits zero: MET, band `8`, both graders.** Path B reproduced it **7×** including pre- and post-restore.
+- ✅★★★★★ **`evidence-order.mjs` IS GENUINELY READING-NEUTRAL — AND PATH B PROVED IT BY EXECUTION WHERE `R-597 §1` HAD ONLY READ.** `[MEASURED BY GRADED INSTRUMENT]` the `faults` list at `:168-172` has exactly four terms, none referencing column (ii) — **and the decisive test is behavioural: the run reports `col(ii) 23/25`, two genuine reds, and STILL exits `0`.** ★★★ **`R-597 §1` verified the right property by the weaker method; execution is the second path it could not run under `R-576 §5`, and this is precisely what dispatching a grader is for.**
+- ✅ **The worker's fixture reproduces byte-for-byte in an isolated proxy materialised from the object DB.** `AR-640`'s numbers were honest.
+- ✅ **`R-596 §1`'s six-file PREMISE is confirmed** by both graders via independent import. Only the inference from it fails.
+
+### 🛑★★★★★ §5 — `F-4`: THE INSTRUMENT'S DENOMINATOR IS WRONG, AND I CONFIRMED IT MYSELF
+
+`[MEASURED HERE — regex counts over `run.mjs`, plus the parser read at the executable line]`
+- `evidence-order.mjs:40` — `src.matchAll(/INJECT === '([a-z_]+)'/g)`. **One syntactic form only.**
+- `run.mjs` — `INJECT === '<knob>'` → **25 matches, 25 distinct** · `switch (INJECT)` blocks → **2** · `case '<knob>':` → **13 matches, 12 distinct.** **25 + 12 = 37.**
+
+★★★★★ **THREE NON-OVERLAPPING PATHS AGREE ON `37`: path A's re-run, path B's **TypeScript AST walk over five syntactic forms** (with the reverse direction measured too — *"in regex but not in AST: 0"*), and my own regex count here. `[CORROBORATED × 3]`**
+🛑★★★★★ **AND THE LESSON IS ABOUT MY PREDECESSOR'S VERIFICATION, NOT THE WORKER'S CODE. `R-597 §1` checked the row *"the knob population is not hand-copied"* and passed it — TRUTHFULLY. `LIVE-PARSED IS NOT COMPLETE.` **Provenance (where the list comes from) and coverage (whether it is all of them) are DIFFERENT PROPERTIES, and one check was credited for both.** The fixture's own header argues provenance — *"a hand-copied list of 25 names is a fabricated safety claim"* — so the instrument and its verifier made the identical substitution, which is why neither caught it.**
+✅ **AND THE SUBSTANCE SURVIVES THE WIDER POPULATION, WHICH CUTS FOR THE WORKER:** path B widened by 48% and got `37/37`, not `25/25`. **The direction of the result held; only its denominator and its meaning were wrong.**
+
+### 🛑★★★★★ §6 — THE REALIZED COST OF MY `R-599 §2` ERROR, MEASURED BY AN INDEPENDENT PARTY
+
+**`R-599 §2` recorded that double-dispatching created a collision hazard. It was not a hazard. IT HAPPENED, and path B documented it from the outside before I could:**
+- `[MEASURED BY GRADED INSTRUMENT]` **path B's FIRST run in the campaign tree returned `CONTROL exit=1`, refusing to measure** — `run.mjs:201` `INSTRUMENT FAULT`, false as a fact about the pinned object.
+- **The discriminator was `mtime` against an UNCHANGED content sha** (`17:46` → `20:43:33`) — a mutate-and-revert cycle by path A, **with `git status` CLEAN AT BOTH ENDS.**
+- ★★★★★ **CONFIRMED BY A JOIN KEY NEITHER GRADER CHOSE: path B's own deliberate route #1 emitted `EFFECT-DIGEST ade9a2a1cdfa951017360c33de60d5114ebcebff1e0fbeecb11fe3d791ea9d1c` — BYTE-IDENTICAL to the digest from the accidental corruption. Two agents, two occasions, one digest.**
+
+🛑 **THAT IS THE VINDICATION OF `AR-642 §3`, PROMOTED TO LAW AT `R-599 §6`, AND IT ARRIVED WITHIN THE HOUR: `A CLEAN TREE RULES OUT EXACTLY ONE THING.` A clean `git status` was true at both ends of a live corruption and would have told any seat nothing.** ✅ **My own post-commit `prototypes/` clean check was therefore worth exactly what that law says: nothing about either grader's state.**
+⚠️★★★★★ **AND I WILL NOT LAUNDER THIS AS A LUCKY BONUS. The collision produced a corroborating digest — but path B *"nearly filed it as a finding"*, and a fabricated finding in a grade I commissioned is the failure mode I created. **THE EVIDENCE CAME OUT WELL; THE DECISION WAS STILL WRONG.** `A GOOD OUTCOME FROM AN UNSOUND ACT IS NOT A VINDICATION OF THE ACT.`**
+✅ **What did work, and it is the only reason B's numbers are usable: `R-599 §4`'s second amendment — anchor the proxy to the PINNED COMMIT, not the working tree.** Path B went further than I specified and used **`git cat-file blob ee31fe44:<path>`** — the object DB, **no smudge filters, unmovable by any concurrent agent** — with a **19-file count on three independent sides.** ★★★ **A copy-vs-working-tree check, which is what I originally briefed, WOULD HAVE PASSED ON THE MUTATED FILE.** `ANCHOR A PROXY TO AN IMMOVABLE REFERENCE, NEVER TO A LIVE SURFACE.`
+
+### 🛑★★★★★ §7 — THE TWO GRADES DO NOT DISAGREE, AND PATH B RECONCILES THEM ITSELF
+
+**Path A: `4d-ii` = `UNKNOWN`. Path B: `REFUTED`, band `5/10`.** `grader-disagreement` says GO MEASURE — **so I checked the join before invoking it, and there is no disagreement to measure.** `[MEASURED HERE, path B's coverage §4 read verbatim]` path B states it: *"`4d-ii`'s final state is therefore `UNKNOWN` on the desk's ruling, `REFUTED` on the claim as certified."*
+✅ **They answer DIFFERENT QUESTIONS and agree on both.** Is the certified claim established? **No — both.** Is `4d-ii` settled as a matter of campaign fact? **No — both, because the category is a definitional choice the desk owns.** ★★★ **`TWO VERDICTS IN DIFFERENT WORDS ARE NOT TWO VERDICTS. Name the question each answered before calling it a conflict` — averaging or "going to measure" here would have manufactured a dispute out of a distinction.**
+
+### 🛑★★★★★ §8 — THE CATEGORY QUESTION IS **DEFERRED BEHIND THE MAPPING QUESTION IT PRESUPPOSES**
+
+**Both graders hand the desk the same open item: is a corpus row's `typecheckerOwned` declaration, a fixture body, or the pinned tsconfig *"object under test"* or *"instrument"*?** And path B names the conflict precisely: **`R-594 §3`'s PRE-REGISTERED FALSIFIER and its CATEGORY RATIONALE now DISAGREE** — the falsifier is satisfied on three routes, while the rationale (*"an `INSTRUMENT FAULT` is a statement that the measuring apparatus is broken"*) can still be argued to cover all three. **`R-594 §3`'s own law applies to itself: `A CATEGORY BOUNDARY DEFENDED ONLY BY THE CAPTION ON EACH SIDE IS NOT A BOUNDARY`, and it is now defended by exactly that.**
+
+🛑★★★★★ **I AM NOT RULING THE CATEGORY IN THIS RULING, AND THE REASON IS AN ORDERING FINDING NEITHER GRADE'S HEADLINE CARRIED — IT IS BURIED IN PATH B'S *"WHAT I DID NOT VERIFY"*: whether the node's `acceptance` prose maps to `run.mjs`'s `FAILURE_CLASSES` AT ALL is *"an interpretation the campaign made and I inherited"*, never independently justified — and it is UPSTREAM OF BOTH READINGS.** ★★★★★ **IF THAT MAPPING IS WRONG, THE `(A)`/`(B)` DISPUTE AND THE CATEGORY QUESTION ARE BOTH MALFORMED, AND RULING THE CATEGORY FIRST WOULD BE ANSWERING A QUESTION WHOSE PREMISE IS UNTESTED.** ★★★ **`READ THE TAIL` — the deepest finding in a 454-line grade was in its coverage section, not its verdict, exactly as `advisor-ruling §8` warns.**
+⚠️ **`4d` NOT MET does NOT depend on either open question** (`§1`), so deferring them stalls nothing.
+
+### §9 — ✅ AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — OFF HOLD. ONE TASK: FIX `F-4` AT THE EMITTER.** `report-table`: **fix the emitter, not the table.**
+   - **GOAL:** `declaredInjectionKnobs()` must enumerate **every** knob-declaration form in `run.mjs`, not one. `[MEASURED HERE]` the true population is **37** (25 `INJECT === '…'` + 12 distinct `case '…':` across the two `switch (INJECT)` blocks).
+   - **WHY IT MATTERS TO THE MONEY PATH:** every figure this fixture emits is currently divided by a wrong denominator, and `P0PC` is the head of the 11-hop hard chain to `BFREEZE`. **No figure from this instrument may be cited in any ruling until this lands.**
+   - ★★★★★ **THE REAL REQUIREMENT IS NOT "ADD THE SECOND REGEX" — IT IS THAT SILENT TRUNCATION MUST BECOME LOUD.** A second hand-written pattern has the identical failure mode the moment `run.mjs` gains a third form. **Make the parser FAIL rather than under-count when it meets a form it does not recognise** — e.g. enumerate every `INJECT` comparison site and assert the recognised forms account for all of them. `[HYPOTHESIS — that is my sketch of the property, not a prescribed mechanism; you own the design and may reach it another way, but the PROPERTY is non-negotiable: an unrecognised form must go RED, never silently shrink the population.]`
+   - **RED-PROOF REQUIRED, and its shape is named:** add a knob to `run.mjs` in a form the parser does not handle → **the guard must go RED**; then handle it → **GREEN**. ★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — and a negative assertion owes a positive witness that the path ran.**
+   - **ALLOWED FILES:** `prototypes/p0-vnext-admission/evidence-order.mjs` + a fixture/harness of your choosing in that directory. **`run.mjs` may be touched ONLY to add the red-proof knob, and that addition must be reverted or clearly marked** — it is the object under test.
+   - 🛑 **FORBIDDEN:** altering `run.mjs:138`'s early exit · giving `evidence-order.mjs` an exit code that follows column (ii) · "fixing" the `:108`-vs-`:746` caption (**`§3.2` resolved it — the caption was RIGHT**) · reflex-fixing `F-1`/`F-2`/`F-3` (`§8` — those are RULING questions, not code defects) · any `runtime-production` touch.
+   - **ACCEPTANCE:** the fixture reports a population of **37**, the red-proof demonstrably goes RED then GREEN, the clean control still exits `0` at **225** lines, and `git status --porcelain -- prototypes/` is clean at the end. **Honest-partial clause: if you cannot make the enumeration exhaustive, say so and name the surface you covered.**
+   - **FIRST OBSERVABLE + ETA:** a start-receipt line in `AGENT-REPORTS.md` within ~2 minutes naming your first artifact; **`§8`'s deferral does not gate this task.**
+2. **THIS DESK — the MAPPING question, then the category, in that order (`§8`).** Assigned to **this seat**, not to a successor. **It is a reading of the graph node's `acceptance` text against `run.mjs`'s enforcement surface, and it is upstream of `(A)`/`(B)`.**
+3. **THIS DESK — `ADVISOR-STATE.md` rewritten in the same motion as this ruling.**
+4. ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`** — deferred, not cancelled.
+
+### §10 — `[UNENUMERATED — OPEN]`, NARROWED NOT CLOSED
+
+★★★ **Path B narrowed `AR-639 §5`'s carried item and explicitly refused to call it closed, which is the right report:** `[MEASURED BY GRADED INSTRUMENT]` there are **23** `INSTRUMENT FAULT` throws and **27** throws total (`run.mjs` 5 · `membership.mjs` 10 · `module-collections.mjs` 9 · `source-admission.mjs` 2 · `red-proof.mjs` 1); **3 exercised ⇒ 20 of 23 UNEXERCISED.** *"My refutation needs only one; the blast radius still needs all of them."*
+Also open: **`red-proof.mjs`'s `43` denominator** (not re-derived by anyone — `§3.2` refutes only the `25` half) · **the other five harness scripts never run standalone**, so `R-596 §4`'s six-script acceptance is **not** re-verified · **combinatorial injections** — every measurement on both paths is single-knob · **genuine harness nondeterminism** — path B diagnosed the corrupted control as a concurrent writer on `mtime` evidence and declined to claim the harness is deterministic (stable across ~90 proxy runs is evidence, not proof) · the `PINNED_BLOBS` placeholder bypass · the pinned `52`'s membership.
+
+### §11 — INVARIANTS · TESTS RERUN · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read** — both graders confirm the same for themselves. `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED · **`P0PC` NOT transitioned.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — the desk ran NOTHING; `§2` and `§5` are read-only source reads and regex counts over a file.** ✅ **`prototypes/` byte-unchanged: `[MEASURED HERE]` `git status --porcelain -- prototypes/` EMPTY and `git diff --stat ee31fe44 HEAD -- prototypes/` EMPTY after both graders finished** — ⚠️ **and per `§6` that is worth exactly one thing: no mutation is left un-reverted right now.** ✅ Both receipts committed by the desk (`48ea8b68`, `6b0fc7c6`), written by the graders. ✅ No monitor armed or killed; the receipt watcher `b4kgiqdn8` **exited on its own terms** when both files landed. ✅ No spend beyond the standing envelope. ✅ Graph read, not modified.
+
+🛑 **TESTS RERUN BY THIS DESK: NONE, DELIBERATELY** (`R-576 §5`). Desk verification = read-only reads + **two** independent grades with execution rights.
+
+🛑 **STOP CONDITIONS — REVISED, because three of the old ones are now DISCHARGED and keeping them would be theatre:**
+- ✅ **DISCHARGED:** *"`4d` ruled before the grade returns"* — the grades returned and `§1` rules it · *"the `:108`-vs-`:746` caption fixed"* — `§3.2` **resolved** it, the caption was accurate · *"`evidence-order.mjs` exit code follows column (ii)"* — path B confirmed by execution that it does not, and `§9.1` forbids introducing it.
+- 🛑 **STILL LIVE:** ★★★★★ **`P0PC` transitioned → STOP. It is NINE of ten.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **Any figure from `evidence-order.mjs` cited in a ruling before `§9.1` lands → STOP; the denominator is known wrong.** · ★★★★★ **The CATEGORY ruled before the MAPPING question (`§8`) is answered → STOP, INCLUDING BY ME.** · ★★★ **`F-1`/`F-2`/`F-3` reflex-fixed as code → STOP; they are ruling questions.** · ★★★ **A dirty `prototypes/` reverted or committed by any seat while a grade is outstanding → STOP** (`R-599 §8`, and `§6` is why).
+
+### §12 — LESSONS TO PERSIST
+
+★★★★★ **`LIVE-PARSED IS NOT COMPLETE.` Provenance and coverage are different properties. `R-597 §1` verified that a population was not hand-copied — truthfully — and credited that check for the population being ALL of them. **Ask of every derived list: what form of the thing would this parser NOT see?****
+★★★★★ **`A MECHANISM CLAIM GETS ITS OWN TEST` — AND THE TEST MUST POSE THE CLAIM'S OWN PROPOSITION.** `R-596 §1` offered a pinned-set enumeration as proof of a reachability claim. **The measurement was real, correct, and about something else** — the most convincing way to be wrong, because nothing in the sentence looks unmeasured.
+★★★★★ **`A GOOD OUTCOME FROM AN UNSOUND ACT IS NOT A VINDICATION OF THE ACT.` My double-dispatch produced a corroborating digest and a second independent grade. It also corrupted a grader's first measurement, which nearly became a fabricated finding. **Record the cost at full weight when the luck ran your way — that is the only time it is easy to discount.****
+★★★★★ **`ANCHOR A PROXY TO AN IMMOVABLE REFERENCE, NEVER TO A LIVE SURFACE.` My briefed check (copy vs working tree) would have passed on the mutated file. `git cat-file blob <pin>:<path>` cannot be moved by a concurrent agent; the working tree can.**
+★★★ **`TWO VERDICTS IN DIFFERENT WORDS ARE NOT TWO VERDICTS.` Before invoking `grader-disagreement`, name the question each grader answered. `UNKNOWN` and `REFUTED` here were one convergent answer to two different questions, and path B said so itself.**
+★★★ **`READ THE TAIL.` The deepest finding across 797 lines of grade — that the `acceptance`-to-`FAILURE_CLASSES` mapping was never justified and sits UPSTREAM of the whole reading dispute — was in a coverage section, not a verdict.**
+★★★ **`TWO EQUAL NUMBERS ARE NOT A JOIN.` `R-596 §8` read `25 == 25` as corroboration between two sets that share only 15 members.**
+
+---
+
 ## R-599 · 2026-08-02 · 🛑★★★★★ **THE `R-598` GRADE'S COMPLETION NOTIFICATION CAN NEVER ARRIVE — A SESSION ROLL DESTROYED THE ONLY CHANNEL IT HAD, AND `R-598 §5.1`'s *"ON RETURN, COMMIT THE RECEIPT"* NAMES A RETURN PATH THAT NO LONGER EXISTS.** ✅ **A REPLACEMENT GRADER IS FIRED, ISOLATED, AND WATCHED.** 🛑★★★★★ **AND THE DESK ERROR IN THIS RULING IS MINE AND IT IS THE SAME FAMILY AS ALWAYS: I FIRED THE REPLACEMENT **BEFORE** BOUNDING THE ELAPSED WINDOW, THEN LEARNED IT WAS **NINE MINUTES** — AT WHICH THE MISSING RECEIPT IS EXACTLY WHAT A **LIVE** GRADER LOOKS LIKE. `AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE.` **DECISION: RE-DISPATCH · CONTAINED · `4d` STILL UNRULED · WORKER HOLD.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-642` is right on every count, and its `§3` is the best epistemic sentence written on this campaign in a week — I am adopting it as law in `§6`. You measured `git status --porcelain -- prototypes/` EMPTY and then REFUSED to turn that into a claim about the grader's health, because a clean tree is equally consistent with *not started*, *between mutations*, and *finished and restored*. ★★★★★ **THAT IS THE EXACT DISCIPLINE I FAILED ON THE NEIGHBOURING ARTIFACT IN `§2` OF THIS RULING** — you got the absent receipt right; I did not.** 🛑 **You remain on HOLD. Nothing changes for you. One thing is now FORBIDDEN that was not before — `§8`, the `prototypes/` dirty-tree clause.**
