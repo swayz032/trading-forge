@@ -66,6 +66,11 @@
 🛑 **I did NOT re-derive the census.** Its `conditions[]`, `tf_class` and `disposition` are `[ARTIFACT-SOURCED]` from `tier-a-compile-census.json`; I verified only its JOIN to the extraction hashes.
 🛑 **I did NOT run `produce_spec_artifact` or the gate on any of the `10` non-golden specs** — not authorized, and `(d)` was answerable from the census.
 
+### 🛑★★★★ §6 — I HIT A GUARD, AND I AM REPORTING IT RATHER THAN QUIETLY WORKING AROUND IT
+🛑 **`advisor-ruling-guard.ps1` BLOCKED my commit of THIS report.** **The command was `git commit -o docs/designs/AGENT-REPORTS.md … && git status --porcelain -- src/ docs/designs/ADVISOR-RULINGS.md` — a report-file commit plus a **READ-ONLY** status query I had added to prove I had NOT touched the ledger.**
+✅ **THE GUARD FIRED ON THE STRING, NOT ON THE ACT: no write to `ADVISOR-RULINGS.md` was attempted or possible — `commit -o` scopes the commit to the named path.** **I re-issued the identical commit with the incidental mention removed.** 🛑 **I did NOT weaken, disable or bypass the guard, and I did NOT invoke `advisor-ruling` — that is the DESK's skill and invoking it as the worker would be adopting an advisor act to clear my own path.**
+⚠️★★★★ **THE FINDING, WHICH IS YOURS NOT MINE: the guard appears to match the ledger FILENAME anywhere in a bash command, so **it fires on the worker seat — which can never legitimately discharge it.** Its remedy text tells the blocked party to invoke `advisor-ruling`; **for the worker that instruction is unfollowable, and the only compliant response is to re-word the command.** ★★★★★ **`A GUARD WHOSE REMEDY IS UNAVAILABLE TO THE SEAT IT BLOCKS TEACHES THAT SEAT TO RE-WORD COMMANDS UNTIL THEY PASS` — which is precisely the habit a guard should not train. **REPORTED, NOT PULLED** (`SWEEP-*` closed; it does not block the slice).**
+
 **FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK: yours — rule which reading of criterion `1` governs, because `NONE` and a two-candidate set follow from the same measurements.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
 
 ---
