@@ -4,6 +4,15 @@
 
 ---
 
+## AR-726 · 2026-08-03 · ⏳ **START-RECEIPT — `R-669 §5`, THE STAGE-4/5 GAP SCOPE. SAME SEAT, STILL HOLDING CONTEXT.**
+
+**ORDER: `(d)` FIRST, THEN `(a)` → `(b)` → `(c)`.** 🛑 **REASON, AND IT IS NOT ARBITRARY: `(c)`'s gap is measured AGAINST "the executing comparator". **IF A FOURTH EXECUTION PATH EXISTS, I WOULD HAVE SCOPED THE GAP TO THE WRONG TARGET AND THE WHOLE `(c)` TABLE WOULD BE A PRECISE ANSWER TO THE WRONG QUESTION.** `(d)` is cheap and it bounds the others, so it goes first.**
+✅ **`(d)` GETS A POSITIVE CONTROL AS ORDERED — an absence claim about *"no fourth execution path"* needs a witness that the finder fires. **I will run the control as a SEPARATE STATEMENT, never chained behind the thing it controls** (`R-669 §7.5`: `grep -c` exits `1` on zero matches and an `&&` chain silently drops what follows — that shape has now bitten this campaign three times tonight and I am not making it four).**
+🛑 **HELD: REPORT ONLY. I will not write an adapter, shim or any wiring, and I will not substitute a portable threshold form for a taught one (`§3`). If any part needs wiring code to answer, that is the stop condition and I report it.**
+**FIRST OBSERVABLE: `(d)`'s sweep result with its control. ETA ~30 min for all four.**
+
+---
+
 ## AR-725 · 2026-08-03 · ✅★★★★★ **`R-668 §5` DELIVERED — `(i)` AND `(ii)`, BOTH ANSWERED STATICALLY. **NEITHER STOP CONDITION FIRED.**** ✅★★★★★ **`(i)` = ANSWER `(1)`: THE REFERENCE SIDE IS AN **INDEPENDENT SECOND ENGINE RE-EXECUTING THE SAME DSL** (`vectorbt` vs `backtrader`) — **NOT** THE EDUCATOR'S TRADES. SO READING `B` IS **NOT** DEAD ON ARRIVAL BY YOUR `(i)` TEST.** 🛑🛑🛑★★★★★ **BUT THE QUALIFIER OUTWEIGHS THE ANSWER: **THAT HARNESS IS NOT WIRED TO THE SPEC COMPILER AT ALL.** IT ACCEPTS `entry_indicator ∈ {ema_crossover, atr_breakout}` AND **RAISES `NotImplementedError` ON ANYTHING ELSE**, FED BY `_reconstruct_dsl(BacktestRequest)` — **NEVER BY `produce_spec_artifact`.** AND `compile_fidelity.py` **HAS NO EXECUTION SURFACE WHATSOEVER** `[MEASURED — `0` hits for backtest/execute across the file]`.** 🛑🛑★★★★★ **`(ii)`: **NEITHER SURVIVOR TRANSFERS CLEANLY, FOR TWO DIFFERENT REASONS** — one is taught in `points` on **NIFTY**, the other is scoped by the educator's own words to **"every currency pair."**
 
 **TASK:** `R-668 §5`. **RUN MODE: READ-ONLY STATIC SOURCE READS + `python -c` ARTIFACT INSPECTION AT HEAD `b103e056`. NO pytest, NO harness run, NO producer, NO backtest.** **NOT GRAPH-SCHEDULED. NOTHING under `src/` modified.** 🛑 **THIS LANE IS NOT ADOPTION OF READING `B` (`R-668 §4`), AND I NAME, RANK AND PREFER NO CANDIDATE.**
