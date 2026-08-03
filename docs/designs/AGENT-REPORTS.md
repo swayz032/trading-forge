@@ -4,6 +4,57 @@
 
 ---
 
+## AR-676 · 2026-08-03 · 📋★★★★★ **`R-630 §4.2` / `F-1` — **RATIFY-PACKET STAGED BEFORE ANY CODE**, AS THE SKILL REQUIRES. NO CODE WRITTEN YET.** 🛑🛑★★★★★ **THE DEFECT IS CONFIRMED AT THE EXECUTABLE LINE AND IT IS THE VACUITY SHAPE ON A **PROMOTION-GATE NUMBER**: A CRISIS SCENARIO THAT **CRASHED** REACHES `compute_forge_score` AS `max_drawdown = 0`, SO `0 > firm_max_dd` IS FALSE AND **NO VETO FIRES.** A SCENARIO THAT FAILED TO COMPUTE IS SCORED AS A CLEAN PASS.**
+
+**CLASS:** instrument-touching (promotion-gate math). ✅ **AUTONOMOUS class, not reserved:** the system is **pre-live** — `backtests = 0`, all-`CANDIDATE`, nothing promoting, no live default in force, no frozen ref re-baselined. **So: stage packet → implement → INDEPENDENT GRADE.** 🛑 **The grade is the gate, and `R-630 §4.2` assigns its dispatch to the DESK — I am the doer and may not grade it.**
+
+### 1 · WHAT & WHY NOW — with receipts, not narrative
+
+`[MEASURED HERE, `stress_test.py`, the two construction sites]`
+```
+:122  "name": scenario.name,          :132  "name": scenario.name,
+:123  "passed": True,                 :133  "passed": False,
+:124  "max_drawdown": result.get(...) :134  "max_drawdown": 0,
+                                      :138  "error": str(e),
+```
+`[MEASURED HERE, `performance_gate.py:296-306`]`
+```python
+scenarios = crisis_results.get("scenarios", [])
+for s in scenarios:
+    scenario_dd = s.get("max_drawdown", 0.0)
+    if scenario_dd > firm_max_dd:      # <-- THE ONLY VETO CONDITION
+        crisis_veto = True
+```
+🛑🛑★★★★★ **THE CRASHED-SCENARIO PATH SETS `max_drawdown` TO `0`. `0 > firm_max_dd` IS FALSE. THE LOOP READS NEITHER `passed` NOR `error`. **SO A CRISIS TEST THAT BLEW UP IS INDISTINGUISHABLE FROM ONE THAT SURVIVED CLEANLY**, and `compute_forge_score` returns `passed=True`.**
+★★★ **AND `stress_test.py` ITSELF ALREADY KNOWS BETTER (`:171-174`): it sets `result["passed"] = False` on breach and has an explicit `elif "error" in result:` branch. **The producer distinguishes the cases and the consumer discards the distinction** — the same shape as `INV-13`'s `WARNING` reaching nothing.**
+
+### 2 · BLAST RADIUS
+
+**Changes behaviour ONLY for results that already contain a crashed/failed crisis scenario.** A run whose scenarios all computed is **byte-identical** — the added conditions are false for every `{"passed": True}` scenario with no `error` key.
+⚠️ **INVALIDATES: any prior `forge_score`/`passed` verdict computed over a result set containing a crashed scenario.** `[UNENUMERATED — I have not measured how many historical results contain one; the DB that would answer it is the one `AR-664` could not reach.]`
+✅ **DOWNSTREAM: `compute_forge_score`'s `passed`/`crisis_veto` feed the promotion path. `backtests = 0` and all-`CANDIDATE` today, so no strategy's live status changes on landing.** 🛑 **`LANDED ≠ RUNNING` — `runtime-production` not touched.**
+
+### 3 · THE EXACT CHANGE, SCOPE-LOCKED
+
+**IN:** `src/engine/performance_gate.py`, the crisis-veto loop only — add `"error" in s` and `s.get("passed") is False` as veto conditions alongside the existing DD compare, with a reason string naming which condition fired.
+🛑 **OUT OF SCOPE, EXPLICITLY:** the DD comparison itself · `firm_max_dd` · every other scoring component · `stress_test.py` · any threshold or weight · **no feature flag** (`never-flag`: this is a correctness repair and the OFF branch would BE the defect — `R-630 §4.2` orders it unconditional).
+
+### 4 · VERIFICATION PLAN
+
+**Red-proof, both arms, re-measured this run (`red-path-decay`):**
+- **(a) CRASHED-SCENARIO ARM** — a scenario with `{"passed": False, "max_drawdown": 0, "error": ...}` must go `passed=False` AFTER and is `passed=True` BEFORE. **This is the arm that must FLIP.**
+- **(b) BREACHED ARM** — a scenario with `max_drawdown > firm_max_dd` must be **UNCHANGED** (`passed=False` both sides), proving I did not merely make everything fail.
+- **(c) CLEAN ARM — the control `R-630 §4.2` did not name and I am adding:** all scenarios `passed=True`, no `error` → **verdict and score byte-identical before/after.** ★★★ **Without (c), (a)+(b) cannot distinguish "correctly stricter" from "always vetoes".**
+🛑 **I DO NOT GRADE THIS. The `accuracy-validator` lane is the desk's to dispatch (`R-630 §4.2`).**
+
+### 5 · ROLLBACK
+
+**Single-file, single-block revert:** `git revert` the commit, or restore the loop's original three lines. **No migration, no state, no persisted artifact, no config.** ✅ **No flag needed precisely because the change is unconditional — rollback is the revert, not a toggle.**
+
+**STATUS: PACKET STAGED. Implementing next, then reporting both arms plus the clean control.**
+
+---
+
 ## AR-675 · 2026-08-03 · ✅★★★★★ **`R-630 §4.1` — `F-2` CLOSED AT THE SOURCE (`4b6892a8`), AND ARM B REPRODUCED THE DEFECT EXACTLY BEFORE CLOSING IT: WITH `run_backtest` FORCED TO RAISE, **BEFORE = `3 passed`** (a crashed backtest producing three GREEN tests), **AFTER = `3 failed`**.** 🛑★★★★★ **AND I OWE THE GRADER A CONCESSION: MY `R-623 §7.2` FIX WAS THE WRONG SHAPE. I MADE THE SWALLOW **VISIBLE** AND LEFT IT **LOAD-BEARING** — THE STUB STILL RETURNED, SO THE VACUOUS PASSES SURVIVED MY OWN REPAIR.** ✅ **`assert skipped >= 10` NOT WEAKENED. NORMAL RUN `54 passed`.**
 
 **TASK:** `R-630 §4.1`. **File: `src/engine/tests/test_entry_windows.py` ONLY.**
