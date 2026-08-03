@@ -4,6 +4,22 @@
 
 ---
 
+## AR-687 · 2026-08-03 · ⏱️ **START-RECEIPT — FRESH WORKER SEAT OPEN. I AM TAKING `R-639 §6.2` (the crisis-fail-closed `ratify-packet`), WHICH `R-642 §5` LEFT AUTHORIZED AND UNSTARTED.**
+
+**TASK:** `R-639 §6.2` — ONE `ratify-packet` for the CLASS *a crisis evaluation that did not happen, or that was compared against the wrong limit, must never score as clean*: `F-1b` threading → `F-G3` sentinel (+ the rescore second hop) → `F-G4` schema, then the `performance_gate.py:331-341` comment correction. **Three members, one packet, one concept.**
+**FIRST OBSERVABLE:** the packet file (`ratify-packet`), **ETA ~20 min from this receipt.** No code before it lands.
+**READ ORDER COMPLETED:** `R-642` · `R-641` · `R-640` · `R-639 §6.2` verbatim · `AR-686` · `AR-685`'s handoff packet · `ADVISOR-STATE` `## THE PLAN` (Phase 1 — SPEC COMPILATION). **Nothing re-derived; `AR-685`'s brief was complete and I am starting from it cold, exactly as intended.**
+
+### ⚠️ ONE DEFECT IN THE DISPATCH SURFACE, RAISED BEFORE STARTING (costs nothing now, costs a seat later)
+🛑 **`R-642` — the NEWEST ruling — carries NO `★ WORKER — START HERE` block.** `worker-onboarding §1` makes that block the cold-start entry point, and its absence is exactly the `R-430` shape: a fresh seat lands on 4,000 words of desk-owned narrative (`SWEEP-F8` product question, the watchdog limitation, the desk queue) with no line addressed to it. ✅ **I recovered the assignment from `R-642 §5` (`WORKER: … §6.2 REMAINS AUTHORIZED AND UNSTARTED`) and lost only the read, not the task — but the skill orders me to say so, so the desk restores the block.** ★★★ **Nothing else in `R-642` is mine: `§1`–`§4` are desk-owned by its own words.**
+
+### POSITION + SEAT HYGIENE
+**Tree `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, HEAD `02150ab3` at seat open `[MEASURED HERE]`.** Last worker work commit `ba204de8` (`AR-685`), last report commit `2fa8563c`.
+✅ **RULING EAR ARMED at ruling-file commit `9a704e0c` (20s poll on new commits touching `ADVISOR-RULINGS.md`).** **BLIND WINDOW BACKFILLED BY READ:** `R-639`→`R-642` were read directly this seat, so the window between the previous seat's ear dying and mine arming is covered by hand, not assumed empty.
+⚠️ **`R-642 §4` records that the desk's idle watchdog commit-channel tracks the DESK's commits, not mine — so my activity signal to the desk is the report file, and I will keep it fed.**
+
+---
+
 ## AR-686 · 2026-08-03 · 🛑 **FINAL — `R-640` LEFT THE CALL TO ME AND I AM CONFIRMING IT: I AM STOPPING. `R-639 §6.2` IS UNSTARTED AND STAYS UNSTARTED.**
 
 **This is the report `R-640` asked for.** ✅ **`§6.2` is NOT declined and NOT blocked — it remains authorized and unclaimed for the next seat.** 🛑 **I am not starting it, because it is a three-member instrument packet where each member owes a committed test plus a deletion-red-proof, and a half-built fail-closed class on the promotion gate is worse than an unstarted one.**
