@@ -4,6 +4,36 @@
 
 ---
 
+## AR-678 · 2026-08-03 · ✅★★★★★ **`R-633` OPTION B LANDED (`6b03a61c`) — `F-1` STAYS CLOSED AND THE TREE IS BACK TO **EXACT BASELINE**: `6 failed / 101 passed / 3 skipped`, FAILURE-SET DIFF **EMPTY**, AND `test_crisis_partial_fail_without_dd_breach_no_veto` PASSES AGAIN.** ✅ **ALL THREE ARMS RE-MEASURED ON THE NARROWED CODE — NOT CARRIED FROM `AR-677`.**
+
+**TASK:** `R-633`. **File: `performance_gate.py` only.**
+
+### ✅ THE NARROWING, VERIFIED
+
+| arm | OPTION B result |
+|---|---|
+| **(a) CRASHED** | ✅ **`passed=False, veto=True, score=0.0`** — `crisis-stress-unevaluated: … its drawdown is unknown, not zero`. **F-1 REMAINS CLOSED.** |
+| **(b) BREACHED** | ✅ `passed=False, veto=True` — original reason string `crisis-stress-breach: … $9999 exceeds … $2000`, unchanged |
+| **(c) CLEAN** | ✅ `passed=True, veto=False, score=28.8` — byte-identical |
+
+✅ **REGRESSION: `comm -13` over the sorted FAILED sets vs baseline → EMPTY.** `6 failed / 101 passed / 3 skipped` — **the same six pre-existing failures, by name.** ★★★ **Re-measured this run on the narrowed code; `AR-677`'s arm results were NOT carried forward (`red-path-decay`).**
+
+### ✅ I LEFT THE REVERT ITS REASON, SO IT IS NOT SILENTLY RE-ADDED
+
+**A bare deletion would leave `R-630 §4.2`'s original spec (*"`error` **or** `passed is False`"*) as the newest written instruction at that site — and the next reader would "restore" it.** So the reverted condition is replaced by a comment recording **why it is absent**: every scenario `stress_test.py` can produce with `passed=False` already carries either a real `max_drawdown` (`:122-124`, caught by the DD compare) or an `error` key (`:132-138`, caught above), **so it added no coverage while vetoing a deliberate product behaviour.**
+★★★ **`A REVERT WITHOUT ITS REASON IS AN INVITATION TO RE-COMMIT THE MISTAKE` — the ledger holds the ruling, but the person editing this loop next is reading the file, not the ledger.**
+
+### ⚠️ WHAT REMAINS TRUE AND UNMEASURED
+
+1. **The narrowing rests on a completeness claim I flagged as reasoned, not measured, in `AR-677` and still have not measured exhaustively:** that `stress_test.py`'s two construction sites are the ONLY producers of crisis `scenarios` dicts. `[UNENUMERATED — if a third producer emits `passed=False` with neither a drawdown nor an error, option B does not catch it and option A would have.]` ★★★ **That is the exact residual risk the desk accepted in choosing B, and it should stay visible rather than being closed by this report.**
+2. **The other 6 baseline failures — still pre-existing, still not diagnosed.**
+3. 🛑 **NOT GRADED BY ME.** The `accuracy-validator` lane for `F-1` is the desk's (`R-630 §4.2`).
+4. **`F-3`–`F-9` (`R-630 §4.4`) and `R-632`'s `F-A` (the four-test polarity guard running the UTC fallback, never the production ET builder) — NOT STARTED.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT: `R-632 §6.1` / `F-A`, or `F-3`–`F-9` — the desk's call.**
+
+---
+
 ## AR-677 · 2026-08-03 · ✅★★★★★ **`F-1` IMPLEMENTED (`67bc4178`) — ALL THREE ARMS AS STAGED: **(a) CRASHED FLIPS `passed True → False`**, **(b) BREACHED UNCHANGED INCLUDING ITS REASON STRING BYTE-FOR-BYTE**, **(c) CLEAN BYTE-IDENTICAL (`score 28.8`)**.** 🛑🛑★★★★★ **ONE NEW TEST FAILURE, AND IT IS A **SPEC QUESTION, NOT A DEFECT TRANSCRIPT** — `test_crisis_partial_fail_without_dd_breach_no_veto` DELIBERATELY ASSERTS THAT `passed=False` WITHOUT A DD BREACH MUST **NOT** VETO. **I DID NOT TOUCH IT.**** ✅★★★★ **AND THERE IS A STRICTLY NARROWER FIX THAT CLOSES `F-1` AND BREAKS NOTHING — I NAME IT RATHER THAN QUIETLY CHOOSING IT.**
 
 **TASK:** `R-630 §4.2` / `R-632 §5`. **Packet staged first at `5ab07c69`; code second.** **File: `performance_gate.py` only.**
