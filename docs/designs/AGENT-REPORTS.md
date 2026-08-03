@@ -4,6 +4,32 @@
 
 ---
 
+## AR-668 · 2026-08-03 · ⚠️★★★★ **`R-624 §5.1` IS ALREADY DISCHARGED — ITS PREMISE WENT STALE **58 SECONDS** BEFORE IT PUBLISHED. I DID NOT RE-COMMIT, BECAUSE THERE WAS NOTHING TO COMMIT.** ✅ **PROCEEDING TO `§5.2` (`R-620 §4.1`).** 🛑 **AND THE `§6` GRADE: I CANNOT FIRE IT EITHER — NAMING THE ONE ACTOR WHO CAN, RATHER THAN REPORTING IT BLOCKED.**
+
+### ⚠️ `§5.1` — DISCHARGED BEFORE IT WAS ISSUED `[MEASURED HERE]`
+
+**`R-624 §5.1`:** *"COMMIT THE FIXTURE … **It is currently UNCOMMITTED** and is the sole carrier of the revived guard."*
+| fact | measurement |
+|---|---|
+| fixture committed at | **`98dfa126`, `2026-08-03 05:07:15 -0400`** |
+| `R-624` published at | **`fad2ff1b`, `05:08:13 -0400`** |
+| gap | 🛑 **`58` seconds — my commit LANDED FIRST** |
+| working tree | `git status --porcelain src/engine/tests/test_entry_windows.py` → **empty** |
+| revived fixture present in the HEAD **blob** | ✅ **`2`/`2` markers (`start_date=timestamps_utc`, `fixed_contracts=6`)** — checked in `git show HEAD:...`, not in the working file |
+
+✅ **SO THE GUARD IS NOT ONE `git checkout` FROM NEVER HAVING EXISTED — that risk was real when the desk read the tree and was closed before the ruling landed.** 🛑 **I DID NOT RE-RUN THE COMMIT: with a clean tree it is a no-op at best and an empty/noise commit at worst, and `R-624 §5.1` also warns me off `test_synthetic_market_simulator.py` (inherited dirt) which a careless re-run could have swept in.** ✅ **`git status` confirms I have left that file alone; it remains dirty and is not mine.**
+★★★★★ **THE CLASS, AND IT IS THE MIRROR OF `R-617 §7`'s LESSON: that one recorded *"a ruling is not sealed when it is committed — the newest REPORT can invalidate one written minutes earlier."* **This is the same defect running the other way: the newest COMMIT invalidated a ruling written seconds earlier.** The desk read a true tree state, drafted, and the tree moved underneath it. **`annotation-read`: an instruction aimed at a tree state owes a re-read of that state at publish time, not at draft time.**
+
+### 🛑★★★★★ `§6` — THE OWED GRADE: I AM NOT REPORTING IT BLOCKED, I AM NAMING WHO CAN FIRE IT
+
+**`R-624 §6`: the desk cannot grade `AR-667` because it DESIGNED `§7.2` — and `§1` proves that empirically, since what needed catching was a defect in the desk's own order.** ✅ **Correct, and I cannot grade it either: I am the doer. `YOU CANNOT GRADE WHAT YOU DESIGNED` and `THE DOER MAY NOT CERTIFY ITS OWN WORK` between them exclude BOTH seats.**
+🛑 **AND I CANNOT DISPATCH `accuracy-validator` MYSELF — this harness does not launch a subagent unless the operator asks.** ⚠️ **ROUTING, WHICH I AM DELIBERATELY NOT GETTING WRONG AGAIN: `AR-660 §9` recorded the operator correcting exactly this — the grader ask goes to the ADVISOR, not the operator, and `worker-execution §5a`'s "one sentence to the operator" was flagged SUPERSEDED for that reason.** ★★★ **BUT `§6` is the case that correction did not cover: the ADVISOR has now recused itself. So the ask cannot terminate at the desk, and the ONLY remaining actor who can authorize the launch is the operator.**
+✅ **THEREFORE, STATED ONCE AND NOT AS A BLOCKER:** the independent grade of `AR-667` is owed; the brief is ready (claim verbatim · pinned commits `28a95a9a` + `98dfa126` · the RED/GREEN recipe · an explicit novel false-green hunt · a durable receipt path); **it needs one word from the operator to run.** 🛑 **I am NOT waiting on it — `§5.2` is independent and I am starting it now.**
+
+**NEXT: `R-620 §4.1` — does `INV-13` discriminate on a legitimately DLL-capped run?** Both arms, as `R-620 §4.1` requires: it must not fire on correct capped behaviour, AND it must fire on a real inconsistency. 🛑 **No severity change — that stays the desk's.**
+
+---
+
 ## AR-667 · 2026-08-03 · ✅★★★★★ **`R-623 §7.1` LANDED (`28a95a9a`) AND `§7.2` DELIVERED — **THE END-TO-END PROOF I SAID I COULD NOT GIVE NOW EXISTS.** SAME UNCHANGED FIXTURE: pre-fix base `1 failed / 3 passed` → fixed `4 passed`, running the REAL `run_backtest`.** 🛑🛑★★★★★ **AND THE TRADE-LEVEL DISCRIMINATOR IS THE HEADLINE: **`total_trades` `0` → `1`** and **window-masked signals `0` → `10`**, on real `63`/`64`-key result dicts — NOT the stub.** 🛑🛑🛑★★★★★ **BUT `§7.2` UNDERESTIMATED THE ROT BY THREE LAYERS: THE FIXTURE HAD **FOUR** BLOCKERS, NOT ONE, AND THE `ValidationError` WAS ONLY THE FIRST. THE OTHER THREE WERE HIDDEN BEHIND A SILENT `except` WHOSE STUB **SATISFIED THREE OF THE FOUR ASSERTIONS VACUOUSLY.**** ✅ **NO ASSERTION TOUCHED — PROVEN, NOT CLAIMED.**
 
 **TASK:** `R-623 §7.1` (land) + `§7.2` (revive the four `TestBacktesterWindowMask`). **Fixture file only.**
