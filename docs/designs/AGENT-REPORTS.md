@@ -4,6 +4,53 @@
 
 ---
 
+## AR-712 · 2026-08-03 · ✅🛑🛑★★★★★ **`R-660 §5` LANE A — **THE ROUTE IS BUILT AND EVERY ACCEPTANCE CRITERION IS MET.** THE TARGET ROW GOES `BLOCK → BIND`, `approximation=False` **EARNED BY COMPARISON**, `1` ROW CHANGED OUT OF `260`, RED-PROVEN BY ABLATION WITH THE ROUTE STILL CONSULTED IN THE RED ARM.** 🛑🛑🛑★★★★★ **AND IT **CANNOT LAND**: IT TURNS **TWO EXISTING GUARDS RED**, AND THEY ARE **CORRECT**. `test_m3_s7_flag_off_is_byte_identical_to_the_parent_commit` PINS FLAG-OFF BINDING OUTPUT BYTE-IDENTICAL TO `ee49fdca~1` OVER A `26`-ROW POPULATION **THAT CONTAINS MY TARGET ROW.** ★★★★★ **`LANE A'S WHOLE POINT IS TO BIND AT DEFAULT FLAGS. THAT GUARD'S WHOLE POINT IS THAT DEFAULT-FLAG OUTPUT NEVER MOVES. BOTH CANNOT HOLD.`** ✅ **I DID NOT WEAKEN THEM, DID NOT LAND A RED BRANCH, AND PRESERVED THE WORK AS A COMMITTED PATCH.**
+
+**TASK:** `R-660 §5` Lane A. **DELIVERED AS `AR-712`** (numbering flagged at `AR-711`). 🛑 **`ATTEMPT BUDGET UNTOUCHED — `0/2`. This is not a failed attempt; the build succeeded and a protected boundary blocks the landing.**
+**WHERE THE WORK IS:** `docs/designs/lane-a-exact-clock-route-2026-08-03.patch` — **`170` insertions, `0` deletions, `4` hunks, purely additive.** `src/engine/spec_family_bindings.py` **IS REVERTED AND THE BRANCH IS GREEN: `472 passed, 2 xfailed`** re-measured after the revert.
+
+### ✅★★★★★ §1 — RED / GREEN, **BY ABLATION**, WITH THE RED ARM PROVEN TO HAVE RUN
+🛑 **The red arm is the DECLARATION REMOVED (`exact_clock_primitive=None`), not the code deleted — so the route still executes and still declines.** ★★★ **That matters: `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN`, and an ablation that stops the code from running proves nothing.**
+| arm | route `consulted` | route `bound` | target row |
+|---|---|---|---|
+| 🔴 **RED** (declaration ablated) | **`30`** | **`0`** | `bindable=False`, `reason='no_recognized_session_keyword'` |
+| 🟢 **GREEN** (as built) | **`30`** | **`1`** | `bindable=True`, `primitive=…compute_opening_range_breakout`, `approximation=False` |
+✅ **`consulted=30` IN BOTH ARMS. The red is a REFUSAL, not an absence.**
+
+### ✅★★★★★ §2 — `0` UNRELATED VERDICT CHANGES, AND I RECONCILED THE DENOMINATOR RATHER THAN QUOTING IT
+`[MEASURED — every row bound under BOTH arms and diffed field-by-field on `bindable · primitive · approximation · executed · reason · session_zone`]`
+🛑🛑★★★★★ **AND HERE IS THE COUNT THAT DID NOT RECONCILE, DISCLOSED BECAUSE THIS SESSION HAS CAUGHT THREE FALSE ZEROES EXACTLY THIS WAY: my diff covered **`249`** rows, not `260`. **I did not report `0 of 260` until I knew why.** `[MEASURED]` `260 = 249 entry_conditions + 11 invalidations`, and **`compile_binding_plan` returns bindings for entry conditions only.**
+✅ **THE `11` ARE PROVEN UNREACHABLE, NOT ASSUMED: all `11` are family `INVALIDATE`, whose `requires_session_keyword` is `False` — and the route lives INSIDE the `if meta.requires_session_keyword:` block. **POSITIVE CONTROL: `WAIT_SESSION.requires_session_keyword = True`.** So the route cannot be reached for any of them by construction, and the construction is measured.**
+**RESULT: `249` diffed → **EXACTLY `1` CHANGED** · `11` structurally unreachable → **`0` CHANGED** · **TOTAL `1` OF `260`, AND IT IS THE INTENDED ROW.**
+
+### ✅★★★★★ §3 — `approximation=False` IS **EARNED BY COMPARISON**, WHICH IS THE CURE ADDRESSED TO `R-655 §3`'s DIAGNOSIS
+✅ **`_derive_exact_clock_primitive_window` **EXECUTES** the declared primitive on synthetic one-minute bars whose `high`/`low` carry minute-of-day, so the returned opening-range high/low **REPORT THE BOUNDS OF THE WINDOW THE PRIMITIVE ACTUALLY USED.** The bind is granted **iff** that observed window equals the span parsed from the taught text.
+✅ **`[MEASURED HERE]` derived by execution: `15m@09:30 → (570,585)` · `5m@09:30 → (570,575)` · `30m@09:30 → (570,600)`.** ⚠️ **DISCLOSED AGAINST YOUR FORBIDDEN LIST: those three calls are an INSTRUMENT CHECK of my own derivation function, **not** a binding act and **not** a variant selection — no row was bound by them and the golden slice was not touched. **If you read that as inside *"executing all three variants"*, discard the `5`/`30` values; Lane A depends only on the `15`.**
+★★★★★ **NOTHING IS GRANTED BY MEMBERSHIP. `R-655 §3` named the root cause as *"`approximation=False` granted by MEMBERSHIP in a pre-enumerated set, never by demonstrated fidelity"* — this route cannot certify a window it did not reproduce.** ✅ **AND IT FAILS CLOSED: any import/execution/shape failure returns `None` and the row falls through to the unbound return. A primitive we cannot run is a primitive we do not certify.**
+
+### ✅★★★★ §4 — THE PREDICATE AND THE PLACEMENT
+✅ **`1` of `260`, derived conjunct-by-conjunct (`AR-711 §1`). The narrowing conjunct is `_SESSION_CLOCK_SPAN_PREP_RE` — an EXISTING guard whose set excludes `at` and `into` — so your mandatory negative arm `#2` (*"this one **at** 7:00 a.m. and this one **at** 8:00 a.m."*) and the overnight row (*"**into** New York market open"*) are refused **structurally, not by special case.**
+✅ **PLACED BELOW EVERY REFUSAL, as `R-660 §3` made law. Every orphan-zone / wrapping / recognized-no-window / clock-coarse return is reached first. The route can only convert `NO-BIND → BIND`.**
+⚠️★★★ **AND I DROPPED TWO CONJUNCTS I HAD PROPOSED, BECAUSE THEY WERE INERT: `role=='spine'` and the `start==570` anchor never discriminate on this corpus (`n` is already `1` when they run). **I did not keep them as decoration. `A CONTROL THAT NEVER FIRES IS NOT A VALIDATED CONTROL`, and shipping unfalsified conjuncts as though they were guards is the shape I flagged at `AR-711`.** The tier-1 market-context conjunct is retained and is **also `[UNFALSIFIED ON THIS POPULATION]`** — kept because the module records a MEASURED false bind from bare-timezone context, so it guards a real, recorded failure rather than an imagined one.
+
+### 🛑🛑🛑★★★★★ §5 — WHY IT CANNOT LAND, AND WHY THE GUARD IS RIGHT
+🛑 **`pytest` after the build: `2 failed, 470 passed` — `test_s7_flag_off_byte_identity_over_the_full_26_row_population` and `test_m3_s7_flag_off_is_byte_identical_to_the_parent_commit`.**
+✅★★★★★ **I READ THEM BEFORE JUDGING THEM, AND THEY ARE EXCELLENT INSTRUMENTS:** the second **loads the ACTUAL parent revision `ee49fdca~1`** and diffs `bind_condition()` field-by-field, flag OFF, over `26` rows. It carries **its own anti-vacuity control** (*"if the loaded revision already had the resolver, the diff would be comparing the change to itself"*) **and its own can-it-fail control.** Its docstring even records that it REPLACED a hand-copied expected value that was *"a fabricated safety-claim on a boundary."*
+🛑🛑★★★★★ **THE CONFLICT IS STRUCTURAL AND NEITHER SIDE IS WRONG: `LANE A EXISTS TO BIND AT DEFAULT FLAGS. THAT GUARD EXISTS TO ASSERT DEFAULT-FLAG OUTPUT NEVER MOVES FROM THE PRE-PACKET PARENT. MY TARGET ROW IS IN ITS 26-ROW POPULATION.** The guard is not obstructing a bug — **it is correctly reporting the exact behaviour change you ordered.**
+✅★★★★★ **AND IT IS THE SAME SHAPE YOU RULED ON FOR LANE B AT `§4.7`, ARRIVING ON LANE A: `A CHANGE THAT MOVES A PINNED BASELINE RETIRES THE MEASUREMENTS TAKEN THROUGH IT, AND LANDING REQUIRES A RULING THAT EXPLICITLY RETIRES THE SUPERSEDED BASELINE.` **I am not extending that ruling to Lane A on my own authority — I am reporting that it applies.**
+🛑 **YOUR FORBIDDEN LIST SAYS *"weakening `FAMILY_META`, any guard, or `automated_verdict`."* **A GUARD IS EXACTLY WHAT STANDS IN THE WAY, SO THERE IS NO ACTION AVAILABLE TO ME THAT IS NOT FORBIDDEN. I STOPPED.**
+
+### ✅ §6 — WHAT I DID INSTEAD OF LANDING OR ABANDONING
+✅ **Patch committed at `docs/designs/lane-a-exact-clock-route-2026-08-03.patch` — the work is backed, not stranded in a working tree.** ✅ **`src/engine/spec_family_bindings.py` reverted; branch re-verified GREEN (`472 passed, 2 xfailed`) AFTER the revert, not before.** 🛑 **I used `git checkout --` on that ONE file only, after confirming its diff was `170` insertions / `0` deletions and entirely mine.**
+🛑 **NOT DONE: no guard edited, no test weakened, no baseline re-pinned, no flag flipped, no `automated_verdict` touched, golden slice not re-selected, Lane B not started.**
+
+### ⚠️ §7 — WHAT I DID NOT MEASURE
+⚠️ **`[NOT MEASURED]`** whether the target row's Phase-1 seal verdict actually moves `BLOCK → PASS` (I measured the BINDING, not the seal — and `(ii)` has further conjuncts) · the full repo test suite beyond the `5` session/binding files · whether the `26`-row guard population overlaps other pinned baselines · signal-level impact on `compute()` · Lane B.
+🛑🛑 **AND THE CLAIM GUARD YOU ORDERED, HONOURED: **THIS IS A COMPONENT WIRING WITNESS, NOT A STRATEGY BREAKTHROUGH.** One row of one SHAKEDOWN spec binds. The golden slice is untouched, its `10` other rows remain family-blocked, and **nothing here is a compiled strategy.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `d477e9c8` at write. Lanes: Lane A BUILT + BLOCKED (this) · Lane B NOT STARTED — **fan-in `1 / 2`, and I am staying to do Lane B.** NOT handing off.**
+
+---
+
 ## AR-711 · 2026-08-03 · ✅★★★★★ **START-RECEIPT ON `R-660 §5` LANE A — AND IT CARRIES THE ORDERED GATING VERDICT: **`STOP CONDITION 1` DOES NOT FIRE. THE PREDICATE TIGHTENS TO EXACTLY `1` ROW OUT OF `260`.**** 🛑🛑★★★★★ **AND THE CONJUNCT THAT DOES **ALL** THE NARROWING — `4 → 1` ON ITS OWN — IS `_SESSION_CLOCK_SPAN_PREP_RE`, **A GUARD THIS ENGINE ALREADY BUILT**, WHOSE OWN COMMENT AT `:1585` RECORDS THAT *"`at` AND `into` ARE NOT IN ITS SET."* **THE TWO ROWS THAT WOULD HAVE BEEN WRONG BINDS ARE REJECTED BY AN EXISTING GUARD, FOR EXACTLY THE REASON IT WAS WRITTEN.**
 
 **TASK:** `R-660 §5` Lane A (build + red/green + negative arms), then Lane B (SPEC ONLY). ⚠️ **NUMBERING: your `§5` pins Lane A to `AR-710`, but `AR-710` was already spent on the `R-657 §4a` residual and **your own header accepts it**. **Lane A will be `AR-712`; Lane B `AR-713`.** ETA Lane A `≤ 60 min`.**

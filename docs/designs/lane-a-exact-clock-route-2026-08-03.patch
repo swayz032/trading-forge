@@ -1,0 +1,202 @@
+diff --git a/src/engine/spec_family_bindings.py b/src/engine/spec_family_bindings.py
+index 7c9e69a1..2bcfbc76 100644
+--- a/src/engine/spec_family_bindings.py
++++ b/src/engine/spec_family_bindings.py
+@@ -558,6 +558,15 @@ class FamilyMeta:
+     calls with trace=True (all four signal columns byte-identical either way). The primitive
+     exists and is reachable -- but only in the trace path, so declaring it plainly `executed`
+     overstates what production does."""
++    exact_clock_primitive: str | None = None
++    """Dotted path to the primitive the EXACT-CLOCK route binds to (R-660 Lane A).
++
++    ★ EXTENDS THE ONE REGISTRY RATHER THAN STANDING BESIDE IT (R-659 section 3): a second
++    mapping table of concept -> engine calculation would be the two-carrier class at maximum
++    scale, and FAMILY_META's own recorded defect is a POINTER LIE. So this declaration is
++    RED-PROOFED: test_exact_clock_route.py asserts the dotted path actually imports and is
++    callable, and the route itself FAILS CLOSED if it does not. A declared mapping that is
++    not reachable fails a test rather than lying quietly."""
+ 
+     def enforced_declaration(self) -> tuple[str | None, str | None]:
+         """(primitive, mechanism) as declared UNDER ENFORCEMENT, with `_INHERIT` resolved to
+@@ -615,6 +624,7 @@ FAMILY_META: dict[str, FamilyMeta] = {
+         base_approximation=False,
+         unbound_reason="no_recognized_session_keyword",
+         enforced_primitive="session_windows.is_in_killzone",
++        exact_clock_primitive="src.engine.indicators.core.compute_opening_range_breakout",
+     ),
+     # ── PARTIAL (branch-conditional) in the baseline sweep: measured 198 calls on n=2000, and
+     # the WIRE-1 branch probe shows the wired-column path bypasses the primitive entirely on
+@@ -2312,6 +2322,125 @@ def session_role_resolver_enabled() -> bool:
+     return os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED", "false").strip().lower() == "true"
+ 
+ 
++# ─── EXACT-CLOCK ROUTE (R-660 Lane A) ────────────────────────────────────────
++# WHY THIS EXISTS. R-655 section 3 diagnosed the campaign's root cause:
++# "approximation=False IS GRANTED BY MEMBERSHIP IN A PRE-ENUMERATED SET -- a
++# static family declaration at one level, a closed window enum at the other --
++# AND NEVER BY DEMONSTRATED FIDELITY TO THE SOURCE." This route is the cure
++# addressed to that diagnosis: it grants approximation=False ONLY when the
++# declared primitive's OWN window, obtained by EXECUTING it, EQUALS the span
++# parsed out of the taught text. Nothing is granted by membership.
++_EXACT_CLOCK_ROUTE_STATS: dict[str, int] = {"consulted": 0, "bound": 0}
++
++
++def exact_clock_route_stats() -> dict[str, int]:
++    """Positive-witness counter. A negative assertion ("this row did not bind")
++    is satisfied by a route that never executed, so every refusal test asserts
++    consulted >= 1 alongside bound == 0."""
++    return dict(_EXACT_CLOCK_ROUTE_STATS)
++
++
++def reset_exact_clock_route_stats() -> None:
++    _EXACT_CLOCK_ROUTE_STATS["consulted"] = 0
++    _EXACT_CLOCK_ROUTE_STATS["bound"] = 0
++
++
++def resolve_exact_clock_span(object_text: str) -> tuple[int, int] | None:
++    """Taught text -> (start_min, end_min) for ONE unambiguous clock span, else None.
++
++    CONJUNCTS, ALL REQUIRED, FAIL-CLOSED. Measured over all 260 Phase-1 rows: this
++    selects EXACTLY ONE row (AR-711). The conjunct that does all the narrowing is
++    the span-preposition test, which is an EXISTING guard in this module --
++    _SESSION_CLOCK_SPAN_PREP_RE, whose set deliberately excludes `at` and `into`
++    (see the note at the LEVEL_ZONE neighbourhood comment). That is why
++    "this one AT 7:00 a.m. and this one AT 8:00 a.m." (two POINT references, not
++    a span) and "after 3:00 a.m. ... INTO New York market open" are both refused
++    structurally rather than by special case.
++    """
++    if not object_text:
++        return None
++    text = object_text.strip()
++
++    # (1) EXACTLY two clock tokens. Three or more means a parameterised family
++    #     taught in one row -- the golden slice carries SIX, spanning three
++    #     windows -- and picking one of them is a derivation loss (R-660 section 1).
++    toks = list(_SESSION_CLOCK_TOKEN_RE.finditer(text))
++    if len(toks) != 2:
++        return None
++
++    mins: list[int] = []
++    for m in toks:
++        hour, minute, meridiem = _session_clock_token_parts(m)
++        hh = hour % 12
++        if meridiem and meridiem.lower().startswith("p"):
++            hh += 12
++        mins.append(hh * 60 + minute)
++
++    # (2) Two DISTINCT anchors in order. Equal or reversed is not a span.
++    if len(set(mins)) != 2 or mins[0] >= mins[1]:
++        return None
++
++    # (3) BOTH numerals governed by a span preposition -- the delimiting test.
++    if len(_SESSION_CLOCK_SPAN_PREP_RE.findall(text)) < 2:
++        return None
++
++    # (4) TIER-1 market context, never a bare timezone. This module records a
++    #     measured false bind where "eastern time" alone attached a coaching-
++    #     session sentence to the london window.
++    if not _SESSION_CLOCK_MARKET_CONTEXT_RE.search(text):
++        return None
++
++    return mins[0], mins[1]
++
++
++def _derive_exact_clock_primitive_window(
++    range_minutes: int, session_start_et: str
++) -> tuple[int, int] | None:
++    """EXECUTE the declared primitive and OBSERVE the window it aggregates over.
++
++    ★ THIS NEVER RESTATES A CONSTANT. R-660 section 3: "a cheaper comparison
++    against the primitive's DECLARED window arithmetic qualifies ONLY if it
++    COMPARES against something DERIVED FROM THE PRIMITIVE. Re-asserting a
++    constant is not a comparison and would reinstate the defect under a new
++    name." So: synthetic one-minute bars for a whole day with high == low ==
++    minute-of-day, which makes the returned opening-range high/low report the
++    BOUNDS OF THE WINDOW THE PRIMITIVE ACTUALLY USED.
++
++    FAILS CLOSED: any import, execution or shape problem returns None, and the
++    caller then declines to bind. A primitive we cannot run is a primitive we
++    do not certify."""
++    try:
++        import datetime as _datetime
++        import importlib
++
++        import polars as _pl
++
++        meta = FAMILY_META["WAIT_SESSION"]
++        dotted = meta.exact_clock_primitive
++        if not dotted:
++            return None
++        module_path, _, fn_name = dotted.rpartition(".")
++        fn = getattr(importlib.import_module(module_path), fn_name)
++
++        day = _datetime.date(2024, 1, 3)
++        ts = [_datetime.datetime.combine(day, _datetime.time(m // 60, m % 60))
++              for m in range(1440)]
++        marks = [float(m) for m in range(1440)]
++        df = _pl.DataFrame({"ts_event": ts, "high": marks, "low": marks})
++
++        orh, orl, _range = fn(df, range_minutes=range_minutes,
++                              session_start_et=session_start_et)
++        hi = orh.drop_nulls().max()
++        lo = orl.drop_nulls().min()
++        if hi is None or lo is None:
++            return None
++        # high/low carry minute-of-day, so the locked OR high is the LAST minute
++        # the primitive included and the OR low is the FIRST. End is exclusive.
++        return int(lo), int(hi) + 1
++    except Exception:  # noqa: BLE001 - fail closed, never bind on a broken probe
++        return None
++
++
+ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> ConditionBinding:
+     """Bind a single spec condition {id, type, object, role, span, evidence} to
+     a primitive descriptor. Never raises; unknown condition types are honestly
+@@ -2671,6 +2800,47 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
+         # conditions, that is a SEPARATE decision about unbound spine handling
+         # and belongs in its own packet; it is not something to fix by keeping an
+         # always-False gate alive.
++
++        # ── EXACT-CLOCK ROUTE (R-660 Lane A) ─────────────────────────────────
++        # ★ PLACED HERE DELIBERATELY, AND THE PLACEMENT IS THE SAFETY PROPERTY.
++        # R-660 section 3 made it law: "THE ROUTE MAY ONLY EVER CONVERT
++        # NO-BIND -> BIND, NEVER REFUSAL -> BIND." Every refusal in this family
++        # -- orphan zone, wrapping window, recognized-no-window, clock-derived
++        # coarse -- returns ABOVE this point and is therefore reached first and
++        # left untouched. This file already records the measured cost of the
++        # opposite ordering: a route placed above the orphan-zone refusal
++        # converted "a correct refusal into a confident bind" on 2 real rows.
++        #
++        # The counter increments on CONSULT, not on success: a negative
++        # assertion needs a positive witness that the path actually ran.
++        _EXACT_CLOCK_ROUTE_STATS["consulted"] += 1
++        _span = resolve_exact_clock_span(obj)
++        if _span is not None:
++            _start, _end = _span
++            _derived = _derive_exact_clock_primitive_window(
++                _end - _start, f"{_start // 60:02d}:{_start % 60:02d}"
++            )
++            # ★ THE HONESTY MECHANISM. approximation=False is EARNED here and
++            # nowhere else in this family: it is granted if and only if the
++            # primitive's OWN executed window equals the span parsed from the
++            # taught text. No enum membership, no static declaration, no
++            # restated constant. If the primitive cannot be run, _derived is
++            # None and this falls through to the unbound return -- FAIL CLOSED.
++            if _derived is not None and _derived == (_start, _end):
++                _EXACT_CLOCK_ROUTE_STATS["bound"] += 1
++                return ConditionBinding(
++                    condition_id=cond_id,
++                    type=cond_type,
++                    role=role,
++                    object=obj,
++                    bindable=True,
++                    primitive=meta.exact_clock_primitive,
++                    approximation=False,
++                    executed=meta.executed,
++                    reason=None,
++                    session_zone=None,
++                )
++
+         return ConditionBinding(
+             condition_id=cond_id,
+             type=cond_type,
