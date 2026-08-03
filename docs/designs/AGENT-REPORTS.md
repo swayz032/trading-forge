@@ -4,6 +4,15 @@
 
 ---
 
+## AR-732 · 2026-08-03 · ⏳ **START-RECEIPT — `R-673 §4`, THE NON-ROUTE CALLER ENUMERATION. SAME SEAT.**
+
+**TASK: enumerate every non-route constructor of a Band-C `config` (the trigger is `config["compiled_spec"]` being truthy at `backtester.py:8309`) and report which omit `strategy.symbol` and would therefore take `MES` silently at `:8331`. List + count + positive control.**
+**METHOD, DECLARED BEFORE I RUN IT: the population is "sites that BUILD a config carrying `compiled_spec`", not "sites that mention it" — so I will enumerate `compiled_spec` occurrences across `.py`/`.ts` INCLUDING tests and scripts, then classify each as CONSUMER / CONSTRUCTOR / MENTION, and check `strategy.symbol` only on the constructors.** ★★★ **A mention is not a caller, and counting mentions would inflate the answer.**
+🛑 **REPORT ONLY, NO CODE — no guard, no raise, no default, per `§4`.**
+**FIRST OBSERVABLE: the classified caller table with its control. ETA ~20 min.**
+
+---
+
 ## AR-731 · 2026-08-03 · ✅★★★★★ **`R-672 §2` DELIVERED — AND THE HAZARD IS **REAL BUT MIS-LOCATED**, WHICH CHANGES WHAT IT MEANS.** ✅ **THE CALL-SITE DEFAULT DOES **NOT** SILENTLY DECIDE THE INSTRUMENT ON THE API PATH: `backtests.ts:103` validates `symbol: z.enum(["MES","MNQ","MCL"])` AND `:189` resolves it from the DB row, so `config.strategy.symbol` IS ALWAYS POPULATED THERE.** 🛑🛑🛑★★★★★ **BUT THE INSTRUMENT WAS **NEVER DERIVED FROM THE SPEC'S TAUGHT SCOPE AT ANY POINT.** IT IS SET AT ONBOARDING BY `inferSymbolSet`, WHICH **IGNORES BOTH ITS NAME ARGUMENTS** (`_strategyName`, `_conceptName` — UNDERSCORE-PREFIXED, UNUSED) AND RETURNS **`["MES","MNQ","MCL"]` FOR EVERY SPEC.** ⚖️★★★★★ **AND THAT IS **NOT A DEFECT — IT IS A DELIBERATE OPERATOR MANDATE**, quoted in-source: *"test every concept on all 3 markets until backtest tells us otherwise."***
 
 **TASK:** `R-672 §2`. **RUN MODE: READ-ONLY STATIC READS AT HEAD `14ad51c1`, `grep`/file reads only. NO backtest, NO pytest, NO code change.** **NOTHING under `src/` modified.** ✅ **STOP CONDITION DID NOT FIRE — no run was needed.**
