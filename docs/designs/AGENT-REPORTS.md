@@ -4,6 +4,56 @@
 
 ---
 
+## AR-729 · 2026-08-03 · ✅★★★★★ **`R-670 §5` DELIVERED — `F-2`…`F-5` DISPOSITIONED, EACH RE-MEASURED BY ME RATHER THAN RELAYED. **`F-2` AGREE · `F-3` AGREE · `F-4` PARTIALLY AGREE · `F-5` AGREE.**** ✅★★★★★ **AND THE SCOPING `R-670 §4` WAS WORRIED ABOUT: **`F-2`'s TAUTOLOGY DOES *NOT* REACH THE LANDED `F-1` REPAIR.** LANE A DERIVES ITS PROBE ARGUMENTS **FROM THE PARSE** AND COMPARES TO THE PARSE; THE LANDED TERM DERIVES **FROM THE ZONE** AND COMPARES TO THE PARSE — **TWO INDEPENDENT SOURCES.** `[MEASURED AT THE EXECUTABLE LINE, BOTH]`. **THE `F-1`-CLASS DEFECT ONE LAYER IN IS REAL AND IT IS CONFINED TO THE UNLANDED PATCH.**
+
+**TASK:** `R-670 §5`. **RUN MODE: READ-ONLY STATIC READS + DIRECT `python -c` PROBES AT HEAD `8dad444d`. NO pytest, NO code change, NO worktree.** **NOTHING under `src/` modified. LANE A NOT TOUCHED.** **NOT GRAPH-SCHEDULED.**
+
+### ✅★★★★★ §1 — `F-2` **AGREE** — AND THE BOUNDARY IS THE PART THAT MATTERS
+🛑 **THE TAUTOLOGY IS REAL IN LANE A `[MEASURED HERE — the patch text, `lane-a-exact-clock-route-2026-08-03.patch:176-178`]`:**
+```
+_derived = _derive_exact_clock_primitive_window(_end - _start, f"{_start // 60:02d}:{_start % 60:02d}")
+… if _derived is not None and _derived == (_start, _end):
+```
+★★★★★ **BOTH ARGUMENTS ARE COMPUTED FROM `_start`/`_end`, WHICH ARE THE PARSE. The probe is asked *"aggregate `N` minutes starting at `T`"* and its answer is compared to `T…T+N`. **IT CAN ONLY DISAGREE BY MALFUNCTIONING.** The grader's `1946`-span sweep (`1946` equal / `0` unequal / `0` None) is the empirical face of what the call signature already guarantees. **AGREE.**
+✅★★★★★ **BUT THE LANDED TERM IS NOT BUILT THAT WAY `[MEASURED HERE — `spec_family_bindings.py:2455-2461` at HEAD]`:**
+```
+span    = resolve_exact_clock_span(object_text)          # ← from the TAUGHT TEXT
+derived = _derive_session_zone_window_by_execution(zone) # ← from the ZONE, not the parse
+return derived != (span,)
+```
+★★★★★ **THE TWO SIDES COME FROM DIFFERENT SOURCES, SO A WRONG PARSE **CAN** BE CAUGHT: a fabricated span is compared against the zone's own executed window and fails. `THE LANDED COMPARISON DISCRIMINATES; LANE A'S CANNOT.` **`F-2` IS A FINDING ABOUT THE UNLANDED PATCH ONLY.**
+🛑 **WHAT `F-2` THEREFORE DOES CONVICT: `R-661 §1`'s credit that Lane A's `approximation=False` was *"EARNED by executing the primitive and comparing"*. **It IS executed and it DOES catch a lying primitive (the grader's tamper control proves that: `PASS → BLOCK`). It does NOT catch a lying PARSE.** ★★★ **`AN EXECUTED COMPARISON IS NOT AUTOMATICALLY AN INDEPENDENT ONE — ASK WHERE EACH SIDE CAME FROM.`**
+✅ **STOP CONDITION DID NOT FIRE: answered by static read of the patch + HEAD, no code change.**
+
+### ✅★★★★★ §2 — `F-3` **AGREE**, AND THE CAPTION IT CONVICTS IS **OURS**
+`[MEASURED HERE — `spec_family_bindings.py:2452-2454`, the executable lines]`
+```
+if not _SESSION_CLOCK_TOKEN_RE.search(object_text or ""):
+    return base_approximation      # WAIT_SESSION base_approximation = False
+```
+✅ **CONFIRMED: a row naming a session and carrying NO clock token returns `False` — EXACT — with no span parsed and no comparison performed.** **`"ny am session"` is certified exact against a `180`-minute zone, exactly as `F-3` states.**
+✅ **AND THE FINDING IS CORRECTLY AIMED AT THE CAPTION, NOT THE CODE: the docstring's own next sentence scopes it — *"Everything else **that carries clock teaching** resolves to True"* — and `c067a652` PINS the behaviour deliberately in `test_f1_name_only_row_is_untouched_by_the_fidelity_term`, which `R-662` stop condition `1` reserved to the desk.** 🛑🛑 **THE DROPPED QUALIFIER IS IN THE CLAIM TEXT `AR-716 §10` HANDED TO THE GRADER — **THIS SEAT'S LINEAGE, NOT THE GRADER'S ERROR AND NOT THE CODE'S.** `A CAPTION IS A CLAIM`, and this one dropped the scope at precisely the place the original defect lives.**
+
+### ⚖️★★★★★ §3 — `F-4` **PARTIALLY AGREE**: THE ARITHMETIC HOLDS, **THE SINGLE-DENOMINATOR PRESENTATION DOES NOT**, AND THAT PRESENTATION IS MINE
+✅ **AGREE, AND I VERIFIED THE TRAP MYSELF `[MEASURED HERE]`: `shakedown_specs/CLDEIsNpVRc__s0.spec.json` yields exactly `11` taught conditions — so an `11`-row artifact really does sit INSIDE the `161`, and anyone reconstructing `172` by sweeping stored artifacts would double-count it. **The grader's caution is correct and well-founded.**
+🛑 **WHERE I DISAGREE, WITH THE REASON: my `+11` was NOT that file.** It came from **RUNNING `produce_spec_artifact`** on the phase_b read `SEALED-READ/phase_b/st5e-YJRfKc__s0.json` (`strategies[0]`, `video='v'`, `transcript_chars=9386`) → `spec_hash b109c7da…`, `11` rows — the same recipe the earlier golden-slice grade receipt published. ★★★★★ **THE GOLDEN SLICE IS PRODUCED ON THE FLY AND IS NOT A STORED ARTIFACT — `AR-716 §9` recorded exactly that — SO A STORED-ARTIFACT SWEEP CANNOT FIND IT **BY CONSTRUCTION**, WHICH IS WHY THE GRADER'S METHOD RETURNED NOTHING. Its `[UNVERIFIED]` is honest and its inference of a double-count does not apply to my figure.**
+✅ **AND THE TWO POPULATIONS ARE DISJOINT `[MEASURED]`: no `st5e-YJRfKc*` file exists in `shakedown_specs/` (`16` files, listed).** **So `161 + 11 = 172` distinct rows really were compared across both arms.**
+🛑🛑★★★★ **WHAT I CONCEDE, AND IT IS THE REAL DEFECT: `161` AND `+11` COME FROM **TWO DIFFERENT GENERATORS** — stored artifacts vs a live producer run — AND I SUMMED THEM INTO **ONE DENOMINATOR**. ★★★★★ **`A COUNT IS ONLY COMPARABLE TO ONE TAKEN AT THE SAME JOIN KEY` — I wrote that sentence myself at `AR-723 §3` about someone else's numbers, and then did this one four reports earlier.** ✅ **CORRECT FORM GOING FORWARD: *"`1` PASS in `161` stored-artifact rows; separately, `0` of `11` produced golden-slice rows moved."* **`R-666 §3`'s *"`1` PASS in `172` rows"* should be restated that way, and I am not defending the merged form.**
+
+### ✅ §4 — `F-5` **AGREE**, REPRODUCED EXACTLY
+`[MEASURED HERE]` **mirror `_REAL_ZONE_INTERVALS["macro_window"]` = `((590,610),(153,180),(243,270))` · derived `_derive_session_zone_window_by_execution("macro_window")` = `((153,180),(243,270),(590,610))` — `equal? False`, `same members? True`.** **Ordering drift, exactly as reported.**
+✅ **HARMLESS TODAY FOR THE REASON GIVEN: the term compares against a `1`-tuple `(span,)`, which a `3`-run zone can never equal, so multi-run zones fail CLOSED regardless of order.** ★★★ **ITS VALUE IS AS A STANDING TRAP MARKER: it is precisely the substitution `R-660 §3` forbids, and the drift proves the mirror is already stale — so a future "cheaper" swap would be wrong on day one, not eventually.**
+
+### ⚠️ §5 — WHAT I DID **NOT** MEASURE
+🛑 **I did NOT re-run the grader's `1946`-span sweep, its tamper control, or the combined-tree `PASS`-survival arms.** `[MEASURED BY GRADED INSTRUMENT — RELAYED]`. **My `F-2` agreement rests on my OWN static read of the call signature, which is an independent path to the same conclusion, not a reproduction of its numbers.**
+🛑 **I did NOT read `F-1` afresh** — `R-670 §1`/`§2` already ruled it and the hard gate stands; **it was not in my scope and I did not re-open it.**
+🛑 **`[UNENUMERATED]`: whether any OTHER zone in `_REAL_ZONE_INTERVALS` has drifted beyond `macro_window`.** `F-5` names one; **I checked only that one and did not sweep the mirror.**
+🛑 **`[UNENUMERATED]`: whether the `161`-vs-`172` restatement affects any OTHER published figure.** I checked `R-666 §3`; **I did not sweep the ledger for other uses of `172`.**
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK: yours — the `172` restatement is a one-line ledger correction, and `F-2`'s boundary (`§1`) is the thing I would want reflected before Lane A is ever reconsidered.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
+
+---
+
 ## AR-728 · 2026-08-03 · ⏳ **START-RECEIPT — `R-670 §5`, DISPOSITION `F-2`–`F-5`. SAME SEAT, STILL HOLDING CONTEXT.**
 
 ✅ **THE GATING PRECONDITION IS MET: `R-670 §5` says *"AFTER `R-669 §5`'s stage-4/5 scope is delivered, and NOT before."* **IT IS DELIVERED — `AR-727`, commit `85d5ac2e`.** ⚠️ **`R-670` names `AR-726` as newest, so it was written BEFORE `AR-727` landed; the desk has not yet seen it. **`AR-727` REFUTES `R-669 §2` — a fourth execution path exists and is already wired to the spec compiler — and that is worth reading before this lane's output is interpreted.**
