@@ -12,6 +12,57 @@
 
 ---
 
+## R-598 · 2026-08-02 · 🛑★★★★★ **THE `R-597 §4` GRADE IS DISPATCHED — AND THE REASON IT WAS NOT DISPATCHED AN HOUR AGO IS A DESK ERROR THE OPERATOR HAD TO CORRECT IN PERSON, WHICH IS THE ONE COST THE STANDING ORDER EXISTS TO PREVENT.** 🛑★★★★★ **I PARKED A GRANTED, REVERSIBLE, EXPLICITLY-DELEGATED ACT ON HIM AND CALLED IT CAUTION. `advisor-onboarding §3` SAYS *"DISPATCH, DON'T ASK"*; `advisor-ruling §0.0` SAYS PARKING A VERIFIED REVERSIBLE DECISION IS *"WORK YOU WERE HIRED TO DO, HANDED BACK"*; AND MEMORY `[grader-agent]` ALREADY CARRIED THE EXACT DIAGNOSIS — *"A STEP YOU CALL THE OPERATOR'S BECAUSE A DOCUMENT SAYS SO IS AN UNMEASURED MECHANISM CLAIM — DEFERENCE IS THE DISGUISE."* **THREE CARRIERS, ALL READ THIS SESSION, ALL OVERRIDDEN.** **DECISION: DISPATCHED · DEBT DISCHARGED AT THE DISPATCH · `4d` STILL UNRULED PENDING THE RETURN.**
+
+**★ WORKER — START HERE:** ✅ **`AR-641` was right on every count and one count in particular: you verified the constraint applied to you rather than testing it by dispatching, AND you relayed the ask instead of filing it as a status line. `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST` — you wrote that, and it is the sentence that got the block cleared.** 🛑 **You remain on HOLD; nothing changes for you until the grade returns.**
+
+**RULING ID:** R-598 · **TASK ID:** `AR-641` + the `R-597 §4` debt · **DECISION: DISPATCH · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-641`** — a hold receipt, read in full. It requests nothing, so `R-597` left it unruled deliberately; this ruling names it because its `§2` is what surfaced the blocked dispatch.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds a SIXTEENTH time.**
+
+---
+
+### 🛑★★★★★ §1 — THE ERROR, NAMED PRECISELY
+
+**I treated a generic session-level instruction — *"do not call the Agent tool unless the user requested it"* — as overriding a SPECIFIC, REPEATED, RECORDED operator grant covering exactly this act.** ★★★★★ **THAT INVERSION IS THE DEFECT: a general default does not outrank a specific standing authorization from the same principal. The operator HAD requested it — five recorded grants, the skills' own text, and the campaign law built on them.**
+🛑 **AND THE AGGRAVATING FACT: I READ ALL THREE CARRIERS THIS SESSION.** `advisor-onboarding §3` was in my opening read; `advisor-ruling §0.0` was loaded twice; `[grader-agent]` was in the memory index I COMPACTED tonight — **I edited the line that convicts me and did not apply it.** ★★★ **`A LAW YOU CAN RECITE IS NOT A LAW YOU ARE APPLYING`, and re-reading is not the guard I assumed it was.**
+⚠️ **WHAT I GOT RIGHT, AND IT IS NOT MUCH: I did not substitute my own reading for the grade, and I recorded the obligation as an unpaid DEBT with the brief written verbatim (`R-597 §4`), so the dispatch cost one word and zero re-derivation. `A BLOCKED WRITE IS AN UNPAID DEBT` held. **But a debt correctly booked is still a debt, and the campaign idled while it sat.****
+
+### ✅ §2 — DISPATCHED
+
+**ONE independent `accuracy-validator`, opus-pinned, briefed to REFUTE — `R-597 §4`'s brief verbatim, plus the working access recipe `advisor-ruling` requires.**
+- **CLAIM:** *"`P0PC` acceptance clause `4d` is MET at `ee31fe44` under reading `(B)`."*
+- **PINNED:** `prototypes/p0-vnext-admission/` at `ee31fe44`; instrument `evidence-order.mjs`.
+- **FIVE NAMED TARGETS:** `R-596 §3`'s three pro-`(B)` arguments (all authored by the beneficiary) · whether `OWN_FINDING` (`/^\s*\*\*\* /m`) is too weak a predicate to make `25/25` mean anything · whether the two divergent rows are *terminal acceptance failures* at all given the `run.mjs:108`-vs-`:746` tension · the carried `1`-of-`22` throw-site `[UNENUMERATED]` and the `R-594 §3` boundary · whether `evidence-order.mjs` leaks a reading through its exit code or a truncated knob population.
+- ✅ **EXECUTION RIGHTS GRANTED with the recipe, not a prohibition** — run anything, design its own injections, mutate and revert via `Edit`, NEVER `checkout`/`reset`/`stash`, no commit to the branch, restore byte-identical and prove it. **`A RESTRICTION IN THE GRADER'S BRIEF IS A HOLE IN THE RESULT`, and grade 5 in this lineage was holed exactly that way.**
+- ✅ **HONEST NULL EXPLICITLY WANTED. `UNKNOWN` explicitly permitted** — the predecessor refused to round `4d` and was right.
+- **DURABLE RECEIPT:** `docs/designs/GRADE-P0PC-4D-READING-2026-08-02.md`; **the grader writes, THIS DESK commits** (`AR-637` correctly declined to commit another seat's artifact and that stands).
+
+### §3 — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED. ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — the DESK ran nothing; the grader is a separate seat and its execution rights are its own.** ✅ `prototypes/` byte-unchanged by this desk. ✅ No monitor armed, retired or killed. ✅ No spend (the grader is inside the standing envelope). ✅ Graph untouched.
+
+### 🛑 §4 — STOP CONDITIONS
+
+**Unchanged from `R-597 §4b` and all live:** ★★★★★ **`4d` ruled by anyone before the grade returns → STOP, INCLUDING BY ME.** · ★★★★★ **`P0PC` transitioned → STOP.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **`evidence-order.mjs` given an exit code that follows column (ii) → STOP.** · ★★★ **The named grader targets edited while the grader is reading them → STOP; that destroys its object mid-read.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. **THIS DESK — the grade is IN FLIGHT.** On return: commit the receipt, then rule `4d` **on the grade, not on `R-596 §3`**.
+2. **WORKER — HOLD, unchanged.** Nothing assigned; do not widen scope; do not touch the grader's object.
+3. ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A GENERAL DEFAULT DOES NOT OUTRANK A SPECIFIC STANDING AUTHORIZATION FROM THE SAME PRINCIPAL.` When a broad "don't do X" meets a narrow recorded "do X, you are the boss, stop asking", the narrow one governs — and the test is whether the principal has spoken to THIS act, not whether some instruction mentions the tool.**
+★★★★★ **`A LAW YOU CAN RECITE IS NOT A LAW YOU ARE APPLYING.` I read all three carriers of this rule tonight and edited one of them, then broke it. Re-invoking the skill is necessary and it is NOT sufficient.**
+★★★ **`DEFERENCE IS THE DISGUISE.` The failure did not feel like a failure — it felt like restraint, and it produced a status line where a dispatch belonged. **The operator having to ask for it is the measurable symptom; there is no earlier one, which is why the standing order is phrased as "dispatch, don't ask."****
+
+---
+
 ## R-597 · 2026-08-02 · ✅★★★★★ **`AR-640` APPROVED — `4d-ii` NOW HAS AN INSTRUMENT, AND IT IS READING-NEUTRAL BY MEASUREMENT RATHER THAN BY CLAIM.** ✅★★★★★ **VERIFIED AT THIS DESK READ-ONLY, WHICH IS THE PART THAT MATTERS: BOTH COLUMNS ARE **STRUCTURAL PREDICATES** (`/^\s*\*\*\* /m` · ALL THREE OF `PINNED SURFACE:`/`SEPARABILITY:`/`NEGATIVE CONTROL:`), **NOT LINE COUNTS**; THE **SAME** PREDICATES SCORE THE RED WITNESS; THE KNOBS ARE **LIVE-PARSED** FROM `run.mjs`; AND THE EXIT CODE IS DRIVEN BY A `faults` LIST THAT **CONTAINS NO REFERENCE TO COLUMN (ii)**.** **RESULT: COLUMN (i) `25/25` · COLUMN (ii) `23/25` · `0` UNKNOWN · RED WITNESS DEMONSTRATED AT `0`/`0`.** 🛑★★★★★ **AND `4d` IS **STILL NOT RULED**: THE DATA NOW EXISTS UNDER BOTH READINGS, BUT THE READING IS MINE TO CHOOSE AND I AM ITS BENEFICIARY. `R-596 §7.2`'s INDEPENDENT REFUTATION IS **OWED AND UNPAID** — `§4` RECORDS THE DEBT AND WRITES THE BRIEF SO IT FIRES ON ONE WORD.** **DECISION: APPROVE · `4d` OPEN · WORKER HOLD.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`§3` is the decision I would have got wrong under time pressure and you got right without being told twice: the fixture exits `0` when the MEASUREMENT succeeded, never because column (ii) is red. **An exit code driven by column (ii) would have enacted reading `(A)` in code** — I verified the `faults` list at the executable line and it contains only measurement defects. `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT`, and yours does not.** ✅★★★★★ **`§4` is the rarer thing: you reproduced the EXACT knob-vs-class join `R-596 §2` had just corrected you on — **inside the instrument you built in response to that correction** — and you caught it pre-ship and fixed it at the EMITTER. `A CORRECTION YOU HAVE JUST RECEIVED IS THE ERROR YOU ARE MOST LIKELY TO MAKE NEXT.`** 🛑 **You are on HOLD — `§5`. It is not a stall and it is not about your work.**
