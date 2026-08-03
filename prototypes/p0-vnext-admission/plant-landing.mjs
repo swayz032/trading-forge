@@ -16,21 +16,39 @@
  * below EXITS EARLY … a fingerprint missing exactly when a class fires would be blind to the
  * classes that matter most." [MEASURED] the 5-line module_collection_add run still prints one.
  *
- * ★ WHAT THIS INSTRUMENT MAY AND MAY NOT CONCLUDE:
- *   A digest that DIFFERS from the control is attributable to the injection — the env var is
- *   the only thing that changed between the two runs, and C0 establishes the control is
- *   reproducible. That is a LANDING.
- *   A digest EQUAL to the control's is NOT a not-landing. It is consistent with "the plant did
- *   not apply" AND with "the plant applied but recorded no effect before exit". Those are not
- *   separated here, so such a row is reported UNPROVABLE and never collapsed into NOT LANDED.
+ * 🛑 THE RULE BELOW WAS REFUTED AND REPLACED (R-605, grade REFUTED · band 5/10). The previous
+ *   version concluded LANDED from `digest ≠ control`. That is now known to be UNSOUND: three
+ *   plants swallowed at their consumer scored LANDED with run.mjs exiting 0 and its stdout
+ *   byte-identical to the control. The digest moved because it had recorded the REQUEST.
+ *
+ * ★ WHAT THIS INSTRUMENT MAY AND MAY NOT CONCLUDE, AS REBUILT:
+ *   A LANDING is concluded ONLY from a CONSUMER-produced channel — run.mjs's exit code or its
+ *   normalized stdout differing from the control. Those are outputs of the guarded code
+ *   reacting to the injection, so a swallow at the consumer restores them.
+ *   A digest that differs while BOTH consumer channels match the control is reported
+ *   REQUEST-ONLY — the injection was requested and recorded, and nothing consumed it. That is
+ *   a FAULT, named per row, not a landing.
+ *   Everything matching the control is UNPROVABLE and is never collapsed into NOT LANDED:
  *   `AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE` (R-599 §10).
  *
- * ★ run.mjs IS READ-ONLY HERE. No witness was added to it (R-602 §4.1 forbids it). The
- *   red-proof disables a plant the only way available without editing the object: a knob NAME
- *   with no implementation. Nothing is written to disk by this file.
+ * ★ THE TWO AXES, KEPT APART (R-605 §8):
+ *   "NEVER REQUESTED"        — a knob name with no implementation. Tested by the disabled-name
+ *                              red-proof below (stage 1/2), which was always sound.
+ *   "REQUESTED THEN SWALLOWED" — the axis that failed. Tested by `plant-swallow-redproof.mjs`,
+ *                              which mutates ISOLATED COPIES of the pin at the consumer.
+ *   ⚠️ A THIRD AXIS IS STILL NOT TESTED HERE AND MUST NOT BE READ INTO A LANDED VERDICT:
+ *   whether a plant landed WHERE ITS AUTHOR INTENDED / exercised the class it is named for.
+ *   R-605 §1 measured 4 recordEffect sites recording a pure function of PROTO_INJECT
+ *   (`getter` at :554 ADDS the +1 it claims to observe; `neg_control` at :519 hardcodes the
+ *   reported boolean). Those two rows LAND on this axis and remain vacuous on that one.
  *
- * EXIT: 0 = every pinned knob is proven to land AND every disabled plant was caught.
- *       1 = a pinned knob could not be proven to land, or the instrument could not measure.
+ * ★ run.mjs IS READ-ONLY HERE. No witness was added to it (R-602 §4.1, reaffirmed R-605 §5.1).
+ *   Nothing is written to disk by this file.
+ *
+ * EXIT: 0 = every pinned knob is proven to land on a CONSUMER channel AND every disabled plant
+ *           was caught.
+ *       1 = a pinned knob could not be proven to land, was requested-but-swallowed, or the
+ *           instrument could not measure.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -92,11 +110,48 @@ console.log(`C0 control exit=${CONTROL.exit} (a clean control must exit 0)`);
 if (CONTROL.exit !== 0) note('the clean control did not exit 0');
 
 // ── THE PER-KNOB TABLE ────────────────────────────────────────────────────────────────────
+// ★★★ WHAT COUNTS AS EVIDENCE OF A LANDING — REWRITTEN UNDER R-605 §5.1, AND THE OLD RULE IS
+// THE DEFECT. The graded instrument swallowed three plants AT THEIR CONSUMER by one-token
+// edits and this file scored all three `LANDED`, printed `LANDING PROVEN` and exited 0.
+// ROOT CAUSE, at the executable line: four of run.mjs's ten `recordEffect` sites record a pure
+// function of `PROTO_INJECT` rather than anything the guarded code produced — `:540`
+// `recordEffect('emit_tuple_args', { injectWrongContainer: INJECT === 'emitted_module' })` is
+// the clearest: it records the ARGUMENT handed to the consumer, so the ledger moves on the
+// REQUEST whether or not the consumer ever acted on it. For `emitted_module` the swallowed
+// digest is BYTE-IDENTICAL to the landed one, so no digest pin anywhere can rescue that row.
+//
+// ★ SO THE CHANNELS ARE SPLIT BY PROVENANCE, NOT BY STRENGTH:
+//   CONSUMER channels — run.mjs's process EXIT CODE and its normalized STDOUT. Both are
+//     produced by the guarded code REACTING to the injection. A swallow restores both to the
+//     control's values; that restoration is precisely the signature the old rule could not see.
+//   REQUEST channel  — `EFFECT-DIGEST`. It records what was ASKED FOR. It cannot witness the
+//     answer, so on its own it is no longer sufficient for a LANDED verdict.
+//
+// ★ AND THIS COSTS NO COVERAGE — [MEASURED HERE, all 37 against the pristine pin, control x2
+//   reproducible]: every pinned knob moves BOTH consumer channels (exit 0→1 AND stdout≠control).
+//   So 37/37 still LAND under the stricter rule; the only thing removed is the ability to score
+//   a swallowed plant as a landing. A stricter rule that loses no true positive is not a
+//   trade-off, and it would have been one had even one row been digest-only.
+//
+// ⚠️ `PLANT_WITNESS` IS DELIBERATELY NO LONGER A VERDICT SHORTCUT. The witness line survives
+//   `normalize()`, so a witnessed run ALWAYS moves stdout — the branch was subsumed, and keeping
+//   it would leave a second, non-consumer path to `LANDED` for a future edit to widen.
+//   Witness coverage is still reported below, as a coverage figure rather than as evidence.
 function classify(r) {
   if (r.digest === null) return { verdict: 'UNMEASURED', how: 'no EFFECT-DIGEST emitted' };
-  if (r.witness) return { verdict: 'LANDED', how: 'PLANT_WITNESS' };
-  if (r.digest !== CONTROL.digest) return { verdict: 'LANDED', how: 'digest≠control' };
-  if (normalize(r.out) !== normalize(CONTROL.out)) return { verdict: 'LANDED', how: 'stdout≠control' };
+  const exitMoved = r.exit !== CONTROL.exit;
+  const stdoutMoved = normalize(r.out) !== normalize(CONTROL.out);
+  if (exitMoved || stdoutMoved) {
+    return {
+      verdict: 'LANDED',
+      how: [exitMoved && `exit ${CONTROL.exit}→${r.exit}`, stdoutMoved && 'stdout≠control']
+        .filter(Boolean).join('+'),
+    };
+  }
+  // The swallow signature: the ledger moved, nothing the consumer produced did.
+  if (r.digest !== CONTROL.digest) {
+    return { verdict: 'REQUEST-ONLY', how: 'digest≠control, consumer output identical' };
+  }
   return { verdict: 'UNPROVABLE', how: 'digest==control and stdout==control' };
 }
 
@@ -108,8 +163,14 @@ function classify(r) {
 function faultsFor(rs) {
   return rs
     .filter((r) => r.verdict !== 'LANDED')
-    .map((r) => `PLANT NOT PROVEN TO LAND: '${r.knob}' — ${r.how}; its exit code cannot be `
-      + 'credited to an injection');
+    .map((r) => (r.verdict === 'REQUEST-ONLY'
+      // Named as its own failure mode, because "requested then swallowed" and "never requested"
+      // are DIFFERENT AXES (R-605 §8) and a reader who cannot tell them apart cannot act on this.
+      ? `PLANT REQUESTED BUT SWALLOWED: '${r.knob}' — ${r.how}; run.mjs recorded the injection `
+        + 'and then produced an exit code and output identical to the control, so no consumer '
+        + 'acted on it; its exit code cannot be credited to an injection'
+      : `PLANT NOT PROVEN TO LAND: '${r.knob}' — ${r.how}; its exit code cannot be `
+        + 'credited to an injection'));
 }
 
 // `--population a,b,c` exists ONLY so the red-proof can spawn this file over a doctored
@@ -175,6 +236,7 @@ if (caughtDisabled.length !== disabled.length) {
 
 // ── SUMMARY ───────────────────────────────────────────────────────────────────────────────
 const landed = rows.filter((r) => r.verdict === 'LANDED');
+const requestOnly = rows.filter((r) => r.verdict === 'REQUEST-ONLY');
 const unprovable = rows.filter((r) => r.verdict === 'UNPROVABLE');
 const unmeasured = rows.filter((r) => r.verdict === 'UNMEASURED');
 const byHow = landed.reduce((a, r) => (a[r.how] = (a[r.how] ?? 0) + 1, a), {});
@@ -183,6 +245,7 @@ console.log('');
 console.log('='.repeat(110));
 console.log(`POPULATION: ${POPULATION.length} pinned knobs`);
 console.log(`LANDED     : ${landed.length}/${POPULATION.length}  ${JSON.stringify(byHow)}`);
+console.log(`REQUEST-ONLY (SWALLOWED): ${requestOnly.length}${requestOnly.length ? ` (${requestOnly.map((r) => r.knob).join(', ')})` : ''}`);
 console.log(`UNPROVABLE : ${unprovable.length}${unprovable.length ? ` (${unprovable.map((r) => r.knob).join(', ')})` : ''}`);
 console.log(`UNMEASURED : ${unmeasured.length}${unmeasured.length ? ` (${unmeasured.map((r) => r.knob).join(', ')})` : ''}`);
 console.log(`PLANT_WITNESS coverage: ${rows.filter((r) => r.witness).length}/${POPULATION.length}`

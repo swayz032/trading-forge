@@ -4,6 +4,87 @@
 
 ---
 
+## EXT-CONSULT-2 · 2026-08-02 · **OPERATOR-ORDERED DELIVERY (not the worker, not an AR): THE PLAN + research-complete notice → `docs/designs/CONSULTANT-REPORT-PLAN-2026-08-02.md`**
+
+**Operator's orders, verbatim shape:** *"SO WHAT'S THE PLAN?"* then *"WRITE THE REPORT TO THE ADVISOR NOW."* Same bounded deviation as EXT-CONSULT-1: one file + this block. **Two things the desk may not know:** (1) the compiler-acceleration research is **COMPLETE** at `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` (+ two files under `docs/institutional-evidence/`), operator directive relayed: **read before the next design-closure ruling**; (2) its headline, [RELAYED]: a once-qualified **reference-interpreter oracle with differential testing** as the primary correctness check — in-domain evidence 245/246 Pine-v6 strategies at trade-for-trade parity over 375k+ trades — as the candidate that collapses the post-`P0PC` bespoke-checker chain; the architecture-to-node mapping is explicitly NOT established and is yours. The report §3 relays the operator's intended sequence (fork at design closure · rig fault-injection + metrics-test lanes in parallel · purchase-on-first-wave-promise · weekly measured velocity · no date promised). Grade all of it [RELAYED]; confirm §3 with the operator.
+
+## EXT-CONSULT-1 · 2026-08-02 · **OPERATOR-ORDERED DELIVERY (not the worker, not an AR): outside-consultant report + relay of tonight's operator orders → `docs/designs/CONSULTANT-REPORT-VELOCITY-2026-08-02.md`**
+
+**Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
+
+## AR-651 · 2026-08-02 · ✅★★★★★ **`R-605 §5.1` DONE — THE DETECTOR NOW CATCHES A SWALLOWED PLANT, RED-PROOFED ON **`6`** REAL SWALLOWS, AND THE PINNED DETECTOR REPRODUCES ITS FALSE GREEN ON ALL SIX IN THE SAME RUNS.** 🛑★★★★★ **AND THE GRADER'S OWN OPEN `[HYPOTHESIS]` IS NOW **CONFIRMED BY MEASUREMENT**: `live_collections`' THREE KNOBS ARE SWALLOWABLE EXACTLY AS `F-1` PREDICTED. **`F-1` IS `6` ROWS, NOT `3`.**** ✅ **`37/37` STILL LAND UNDER THE STRICTER RULE — THE REPAIR COSTS **ZERO** COVERAGE, AND THAT IS MEASURED, NOT ARGUED.**
+
+**TASK:** `R-605 §5.1` · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `plant-landing.mjs` (modified), `plant-swallow-redproof.mjs` (new). 🛑 **`run.mjs` NOT TOUCHED — `git diff --stat HEAD -- …/run.mjs` EMPTY. No row required changing it, so `STOP AND ASK` was never reached.**
+⚠️ **SHARED-TREE DISCLOSURE, FIRST BECAUSE IT AFFECTS THIS COMMIT:** I found `EXT-CONSULT-1`/`EXT-CONSULT-2` **already written into this file and UNCOMMITTED** by the consultant seat. `git commit -o <file>` cannot commit my lines alone, so **my commit carries their two blocks.** I did not author, edit, reorder or act on them, and I ran **no index operation** to separate them (`precommit-stash`: tidying an appearance on a shared tree is how ten commits were once lost). **Their content is theirs; the commit is mine.**
+
+### ✅ §1 — ROOT CAUSE, AT THE EXECUTABLE LINE
+
+**The old `classify()` captured `r.exit`, PRINTED it in the table, and never used it in a verdict.** The exit column was decorative. Verdicts came from `digest ≠ control`, and `run.mjs:540` records `{ injectWrongContainer: INJECT === 'emitted_module' }` — **the ARGUMENT handed to the consumer**, so the ledger moves on the REQUEST whether or not anything consumed it.
+★★★ **THE LAYER IS NAMED: not the ledger, not the knobs — the EVIDENCE RULE. `A LEDGER THAT RECORDS THE REQUEST CANNOT WITNESS THE EFFECT`, and the witness that could was already in the row, unread.**
+
+### ✅ §2 — THE REPAIR: CHANNELS SPLIT BY PROVENANCE
+
+**CONSUMER channels** (produced by the guarded code REACTING): `run.mjs`'s exit code · its normalized stdout. **REQUEST channel**: `EFFECT-DIGEST`. **A LANDING now requires a CONSUMER channel; digest-only is a new named verdict `REQUEST-ONLY` and is a FAULT.** `PLANT_WITNESS` was removed as a verdict shortcut — the witness line survives `normalize()`, so it was subsumed by stdout, and keeping it left a second non-consumer path to `LANDED`.
+✅★★★★★ **AND IT COSTS NOTHING — the fact that decided the design `[MEASURED HERE, probe over all 37 + control x2 reproducible]`: **every** pinned knob moves BOTH consumer channels (`exit 0→1` AND `stdout≠control`). `37/37` still LAND. **A stricter rule that loses no true positive is not a trade-off — and had even one row been digest-only it would have been, which is why this was measured before it was written.**
+
+### ✅★★★★★ §3 — THE SWALLOW RED-PROOF (`plant-swallow-redproof.mjs`), AND WHY IT DISCRIMINATES
+
+`node plant-swallow-redproof.mjs` → **exit 0**, `6/6`:
+
+| knob | swallow site (one line, at the CONSUMER) | PINNED detector | CANDIDATE detector |
+|---|---|---|---|
+| `module_collection_add` | `module-collections.mjs:334` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+| `module_collection_delete` | `module-collections.mjs:347` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+| `emitted_module` | `module-tuple.mjs:63` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+| `twin_pairs_delete` ★new | `membership.mjs:249` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+| `prereg_delete` ★new | `membership.mjs:252` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+| `new_unpinned_collection` ★new | `membership.mjs:255` | **exit 0 · `LANDED`** 🛑 | **exit 1 · NAMED** ✅ |
+
+★★★★★ **THE FIRST THREE MUTATIONS ARE THE GRADER'S OWN, REPRODUCED VERBATIM — `A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT`. Had I authored easier mutations I would be grading my repair with a test I built to pass it.**
+✅ **DISCRIMINATION, not a blanket red — three independent controls:** the healthy companion `fixture_invalid` rides in **every** mutant population and **LANDED, unfaulted, 6/6** · only the intended file drifts from the pin (**`0` other files, all six**) · the CANDIDATE on the **UNMUTATED** pin over all six knobs + companion → **exit 0, no faults.**
+✅ **FIXTURE PROVEN, NOT ASSUMED:** `21/21` blobs materialised from `3b9cc68e` **`git hash-object`-match the pin**; each mutation asserts **exactly 1** matched site and that the file's hash actually moved. 🛑 **`copy == working-tree` is deliberately NOT the check — `R-600 §6` measured that passing on a mutated file.**
+
+### 🛑★★★★★ §4 — NEW FINDING: THE GRADER'S `[HYPOTHESIS]` IS CONFIRMED
+
+The grade's *"what I did not verify"* recorded: *"`run.mjs:589 live_collections` — 3 knobs … structurally swallowable in the same way as `F-1`. I did **not** run that mutation. `[HYPOTHESIS]` — if confirmed, `F-1`'s count rises from 3 to 6."*
+✅ **RUN. CONFIRMED. `[MEASURED HERE]`** — all three are scored `LANDED` with exit `0` by the pinned detector. **`F-1` IS A `6`-ROW DEFECT.** ★★★ **The pinned detector's false-green surface was `62%` larger than the grade that convicted it, and the grader flagged it honestly enough that it was one harness parameter away from being settled.**
+
+### ✅ §5 — PER-ROW DISPOSITION OVER ALL `37` (the `§5.1` acceptance table)
+
+| disposition | count | rows |
+|---|---|---|
+| **`DISTINGUISHABLE`, red-proofed on a REAL swallow** | **`6`** | the six in `§3` |
+| **`DISTINGUISHABLE` on available observables**, swallow not individually fixtured | **`31`** | the remaining pinned knobs — each moves `exit 0→1` AND `stdout≠control` `[MEASURED HERE]`; that a swallow of each would be caught is **`[HYPOTHESIS]`** from the shared consumer-channel structure, not 31 fixtures |
+| **`INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES`** | **`0`** | — |
+| **`REQUIRES run.mjs CHANGE (stopped and asked)`** | **`0`** | — |
+
+🛑★★★★★ **AND THE LIMIT THAT MUST TRAVEL WITH THIS TABLE, STATED FIRST SO IT IS NOT OVER-READ: THIS IS THE *LANDING* AXIS ONLY.** `R-605 §1`'s `F-2` is **untouched and still true** — `getter` (`run.mjs:554` ADDS the `+1` it claims to observe) and `neg_control` (`:519` hardcodes the reported boolean) **LAND on this axis and remain vacuous on the axis of "did it exercise the class it names."** ✅ **Fixing that needs `run.mjs`, which is the object under test — I did not touch it and am not asking to.**
+
+### ✅ §6 — TWO DEFECTS IN MY OWN HARNESS, DISCLOSED BECAUSE BOTH PRESENTED AS "THE REPAIR FAILED"
+
+🛑 **(1)** a non-recursive `git ls-tree` materialised **`15`** blobs and silently dropped the **`surface/` subtree (6 files)**. **(2)** with that fixed, an out-of-repo copy died on `ERR_MODULE_NOT_FOUND` (bare `typescript` resolves by walking parents for `node_modules`), then on `fatal: not a git repository` (`module-collections.mjs:189` runs `git show` with `cwd` = its own dir). **In all three states the harness printed *"the CANDIDATE is not green on the unmutated pin"* — a true statement about a broken instrument, and it would have read as a failed repair had I believed it.** ★★★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — I stopped inferring and read the subprocess's actual stderr, which named both causes in one line each.** ✅ Fixture now lives in the repo's git-ignored `tmp/` (asserted with `git check-ignore`), so it is invisible to the advisor session on this SHARED TREE, and **the `node_modules` junction was removed rather than made safe — a recursive delete through a Windows junction has already wiped this repo's `node_modules` once.** Cleanup asserts the fixture is gone and `node_modules` intact; `ls tmp/` after the run is **EMPTY**.
+
+### §7 — COMMANDS + RESULTS
+
+```
+node plant-landing.mjs          -> exit 0 | LANDED 37/37 {"exit 0→1+stdout≠control":37} | REQUEST-ONLY 0 | UNPROVABLE 0
+                                   disabled-name red-proof 3/3 | STAGE 2 doctored pop exit=1, names knob, 2 real knobs pass
+node plant-swallow-redproof.mjs -> exit 0 | 6/6 swallows: PINNED exit 0 LANDED, CANDIDATE exit 1 NAMED
+                                   companion fixture_invalid LANDED+unfaulted 6/6 | control on pin exit 0 no-faults
+                                   fixture 21/21 hash-match pin | other-file drift 0/6 | cleanup verified
+git diff --stat HEAD -- prototypes/p0-vnext-admission/run.mjs -> EMPTY
+git status --porcelain -- prototypes/ -> only plant-landing.mjs (M) + plant-swallow-redproof.mjs (??)
+```
+
+### 🛑 §8 — WHAT I DID **NOT** MEASURE
+
+**31 of 37 rows have no individual swallow fixture** (`§5`) — `[HYPOTHESIS]` from shared structure, and I say so rather than implying 37 red-proofs. · **`F-2`'s two vacuous rows are NOT repaired** and cannot be without `run.mjs`. · **Combinatorial swallows not tested** — every mutation is single-site. · **I did not re-derive the grade's `5/10`, the `28`-run determinism result, or `red-proof.mjs`'s `43` denominator.** · **I did not verify my repair against `red-proof.mjs`'s `PINNED_EFFECT_DIGESTS`**, which the grade flags as containing an `emitted_module` entry measured blind — **that pin may now be stale, and it is `[UNENUMERATED]` whether my change interacts with it.** · **`R-606 §2` read as instructed:** if the `evidence-order.mjs` lane measures a population `4d` was never about, **this repair is still correct on its own terms but may be pointed at the wrong population** — the desk's to resolve; I assumed neither way. · **I did not read or act on the `EXT-CONSULT` blocks** beyond noting their existence.
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` — and the grade is not mine to give.** 🛑★★★★★ **I WROTE BOTH THE REPAIR AND THE INSTRUMENT THAT CERTIFIES IT. `THE DOER DOES NOT GRADE HIS OWN INSTRUMENT`, and the last time this exact shape shipped it came back `REFUTED` at band `5`. **Say the word and the `accuracy-validator` runs against it** — suggested claim: *"the landing detector distinguishes a plant that had an effect from one requested and swallowed at its consumer, and cannot score a swallow as a landing."* **The sharpest target I can name against myself: `§5`'s 31 unfixtured rows — find a knob whose consumer can be swallowed while `exit` or `stdout` still moves.**
+**NEXT SMALLEST TASK:** none proposed — `§8`'s `PINNED_EFFECT_DIGESTS` staleness is the desk's call, not a task I should self-assign.
+
+---
+
 ## AR-650 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-605 §5.1`, MAKE THE LANDING DETECTOR CATCH A *SWALLOWED* PLANT. OFF HOLD, STARTED.**
 
 **TASK READ AS:** the detector must distinguish **"requested AND had an effect"** from **"requested AND swallowed at the consumer"**, and go **RED on a swallow, NAMING the row**. ✅ **PROPERTY, NOT MECHANISM — `R-605 §5.1` says so explicitly and gives the reason (two prescribed mechanisms were wrong tonight). I will not treat the `red-proof.mjs` exit-code lead as an instruction.**
