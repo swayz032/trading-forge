@@ -4,6 +4,58 @@
 
 ---
 
+## AR-677 · 2026-08-03 · ✅★★★★★ **`F-1` IMPLEMENTED (`67bc4178`) — ALL THREE ARMS AS STAGED: **(a) CRASHED FLIPS `passed True → False`**, **(b) BREACHED UNCHANGED INCLUDING ITS REASON STRING BYTE-FOR-BYTE**, **(c) CLEAN BYTE-IDENTICAL (`score 28.8`)**.** 🛑🛑★★★★★ **ONE NEW TEST FAILURE, AND IT IS A **SPEC QUESTION, NOT A DEFECT TRANSCRIPT** — `test_crisis_partial_fail_without_dd_breach_no_veto` DELIBERATELY ASSERTS THAT `passed=False` WITHOUT A DD BREACH MUST **NOT** VETO. **I DID NOT TOUCH IT.**** ✅★★★★ **AND THERE IS A STRICTLY NARROWER FIX THAT CLOSES `F-1` AND BREAKS NOTHING — I NAME IT RATHER THAN QUIETLY CHOOSING IT.**
+
+**TASK:** `R-630 §4.2` / `R-632 §5`. **Packet staged first at `5ab07c69`; code second.** **File: `performance_gate.py` only.**
+
+### ✅ THE THREE ARMS — MEASURED, SINGLE-VARIABLE
+
+| arm | BEFORE (base) | AFTER |
+|---|---|---|
+| **(a) CRASHED** `{passed: False, max_drawdown: 0, error: ...}` | 🛑 **`passed=True, veto=False, score=28.8`** | ✅ **`passed=False, veto=True, score=0.0`** |
+| **(b) BREACHED** `max_drawdown 9999 > 2000` | `passed=False, veto=True` · reason `crisis-stress-breach: … $9999 exceeds … $2000` | ✅ **IDENTICAL — verdict AND reason string** |
+| **(c) CLEAN** all `passed=True` | `passed=True, veto=False, score=28.8` | ✅ **BYTE-IDENTICAL** |
+
+🛑🛑★★★★★ **ARM (a) IS THE DEFECT: A CRISIS SCENARIO THAT CRASHED SCORED `28.8` AND `passed=True`. It now vetoes with `crisis-stress-unevaluated: … its drawdown is unknown, not zero`.**
+✅★★★ **ARM (c) IS THE ONE `R-630 §4.2` DID NOT ASK FOR AND `R-632` RATIFIED ME ADDING: without it, (a)+(b) both going `passed=False` is equally consistent with *"vetoes everything"*. **(c) is the only arm that proves the change is discriminating rather than merely stricter.****
+
+### ✅ A DESIGN CORRECTION I MADE MID-RUN, AGAINST MYSELF
+
+**My first implementation put the two new conditions BEFORE the DD compare. Arm (b)'s verdict was unchanged but its REASON string changed** — a genuine `$9999` breach started reporting *"passed=False"* instead of the specific breach message. ⚠️ **That silently widened the blast radius past what my own packet `§2` promised (*"byte-identical for results whose scenarios all computed"*).**
+✅ **REORDERED so the DD compare stays FIRST.** ★★★ **`A VERDICT THAT MATCHES IS NOT THE SAME AS BEHAVIOUR THAT MATCHES` — the diagnostic is part of the output, and a gate that reports the wrong reason is a worse instrument even when it reaches the right answer.**
+
+### 🛑🛑★★★★★ THE ONE NEW FAILURE — AND WHY I DID NOT TOUCH IT
+
+`[MEASURED — failure-set diff, not a count]` **baseline `6 failed / 101 passed` → after `7 failed / 100 passed`; `comm` over the sorted FAILED lists returns EXACTLY ONE new entry and ZERO disappearances.** ★★★ **A count delta of `+1` would have been consistent with "one fixed, two broken"; the set diff is what makes this a single, identified regression.**
+**`test_performance_gate.py:279` `test_crisis_partial_fail_without_dd_breach_no_veto`:**
+```python
+"""Partial failure (scenarios passed=False but no max_drawdown key) does not veto."""
+crisis_partial = {"passed": False, "scenarios": [{"passed": True}]*7 + [{"passed": False}]}
+assert result["crisis_veto"] is False
+```
+🛑★★★★★ **THIS IS NOT THE `R-628 §3` SHAPE AND I WILL NOT TREAT IT AS ONE.** That test's name and body were a transcript of a fail-open. **This one has a docstring NAMING an intentional behaviour** — *"partial failure … does not veto"* — so it is a **deliberate product decision**, and my order-of-conditions change collides with it head-on. **`fix the FIXTURE, never the ASSERTION` and `an edited assertion is a STOP` both bind, and `R-628 §3` established that overriding them REQUIRES A RULING. I have no such ruling for this test.**
+
+### ✅★★★★ THE NARROWER FIX I AM NAMING RATHER THAN CHOOSING
+
+⚠️ **`R-630 §4.2` ordered *"`"error" in s` **or** `s.get("passed") is False`"*. **BUT THE DEMONSTRATED DEFECT ONLY NEEDS THE FIRST.** `stress_test.py:132-138` gives every crashed scenario an `error` key, so **`"error" in s` ALONE flips arm (a)** — and it would **not** touch `test_crisis_partial_fail_without_dd_breach_no_veto`, whose fixture has **no `error` key**.
+| option | closes F-1's demonstrated defect | breaks the existing test |
+|---|---|---|
+| **A — as ordered** (`error` OR `passed is False`) — **what I shipped** | ✅ | 🛑 yes |
+| **B — narrower** (`error` only) | ✅ | ✅ no |
+⚠️ **`[REASONED FROM THE FIXTURES, NOT SEPARATELY MEASURED]` — I did not build and run option B; the claim rests on the crashed fixture carrying `error` and the test fixture not.** 🛑 **I shipped A because it is what the ruling ordered, and I am not narrowing a ruling on my own judgment. **The desk chooses; if it picks B the revert is three lines.****
+★★★ **AND THE REAL QUESTION UNDER IT, WHICH ONLY THE DESK CAN ANSWER: is a scenario reporting `passed=False` with no drawdown and no error a shape `stress_test.py` can even PRODUCE? `[MEASURED]` its two construction sites (`:122-124`, `:132-138`) BOTH always set `max_drawdown`. **So the test's fixture may describe a shape that cannot occur** — which would make option A harmless in production and the test wrong. **I did not verify that exhaustively and will not assert it.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Option B, empirically** (above).
+2. **Whether any OTHER producer** builds crisis `scenarios` dicts — I read `stress_test.py:183` only. `[UNENUMERATED]`
+3. **The other 6 baseline failures** — pre-existing, unchanged, **not diagnosed** (`test_tier1_passes` + 5 `test_exit_style_d_on_crisis`).
+4. 🛑 **I DID NOT GRADE THIS.** `R-630 §4.2` assigns the `accuracy-validator` lane to the desk. **Doer ≠ grader.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED**, with **one decision owed: option A (authorize the test update) or option B (narrow the fix).** ⚠️ **The tree is RED on one test until that is ruled.**
+
+---
+
 ## AR-676 · 2026-08-03 · 📋★★★★★ **`R-630 §4.2` / `F-1` — **RATIFY-PACKET STAGED BEFORE ANY CODE**, AS THE SKILL REQUIRES. NO CODE WRITTEN YET.** 🛑🛑★★★★★ **THE DEFECT IS CONFIRMED AT THE EXECUTABLE LINE AND IT IS THE VACUITY SHAPE ON A **PROMOTION-GATE NUMBER**: A CRISIS SCENARIO THAT **CRASHED** REACHES `compute_forge_score` AS `max_drawdown = 0`, SO `0 > firm_max_dd` IS FALSE AND **NO VETO FIRES.** A SCENARIO THAT FAILED TO COMPUTE IS SCORED AS A CLEAN PASS.**
 
 **CLASS:** instrument-touching (promotion-gate math). ✅ **AUTONOMOUS class, not reserved:** the system is **pre-live** — `backtests = 0`, all-`CANDIDATE`, nothing promoting, no live default in force, no frozen ref re-baselined. **So: stage packet → implement → INDEPENDENT GRADE.** 🛑 **The grade is the gate, and `R-630 §4.2` assigns its dispatch to the DESK — I am the doer and may not grade it.**
