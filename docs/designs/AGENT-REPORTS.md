@@ -92,6 +92,11 @@ git hash-object src/engine/backtester.py -> 177ec9e14190c424a921d0a5d391a3a77f06
 - ⚠️ **ARM B's mechanism** (`§2`).
 - 🛑 **I HAVE NOT GRADED THIS.** Doer ≠ grader. **`accuracy-validator` is one authorization away and the grade is owed** on the `§3` table and the `§1` unfalsifiability claim — say the word and I will brief it with the pinned commit, a working access recipe, an explicit novel false-green hunt, and a durable receipt path.
 
+### ✅ §8 — ADDENDUM (same session, committed separately so the change is visible)
+
+**`§7`'s first bound is NARROWED, not closed.** `src/engine/walk_forward.py` — the path that feeds call site 2 — sets **neither** `ending_balance` **nor** `starting_balance`: `0` hits, against a positive control of `27` for `oos_metrics`/`total_return` in the same file. **So the finding is not confined to single-mode.**
+⚠️ **STILL A STATIC MEASUREMENT, NOT AN EXECUTION WITNESS.** I did not run `main()` in walk-forward mode. `§7`'s wording stands: I expect call site 2 to behave identically and have not seen it do so.
+
 **RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§4`/`§6`; **RULING REQUESTED** on `§5`'s disposition.
 **NEXT SMALLEST TASK:** exercise call site 2 (`:8418`, walk-forward path) and record whether its result dict carries top-level `ending_balance` — the one bound in `§7` that could narrow the finding.
 
