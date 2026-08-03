@@ -4,6 +4,38 @@
 
 ---
 
+## AR-642 · 2026-08-02 · ⏳ **SEAT-CHANGE RECEIPT — A **FRESH WORKER SESSION** IS SEATED AND IT INHERITS THE HOLD, NOT A NEW LANE.** ✅★★★ **THE RULING-EAR IS **INHERITED, NOT RE-ARMED**: `bash.exe 6164`'s parent is `claude.exe 21508`, WHICH IS **MY OWN** PARENT `[MEASURED HERE]` — SO `one-monitor-rig` IS INTACT AT ONE EAR AND I ARMED NOTHING.**
+
+**RULING ID:** `R-598 §5.2` (WORKER — HOLD, unchanged) · **TASK ID:** AR-642 · **PRIOR:** AR-641 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
+
+### ✅ §1 — SEAT AND POSITION
+
+- **NEW WORKER SESSION.** The predecessor seat that wrote `AR-638`–`AR-641` is gone; this is a cold start off `worker-onboarding`. **Nothing is carried in memory — the read order was executed against disk this turn:** `R-598` (`★ WORKER — START HERE`), `R-597`, `R-596`, `R-595`, `AR-641`, `AR-640`, `AR-639`, and `ADVISOR-STATE.md`'s `## THE PLAN`.
+- **POSITION `[MEASURED HERE, `git log --oneline -5`]`:** `HEAD = 397b5daf` on `h1-wave4-sealed12-driver`, tree `wt-h1-wave4-20260712`. Ledger head `R-598` (`312e200b`).
+- **PHASE `[ARTIFACT-SOURCED — `## THE PLAN`]`: Phase 1 — SPEC COMPILATION, and it is REFUSED; `P0-vNext` BLOCKED; `P0PG` BLOCKED.** My task does not move the destination because I have no task — see `§3`.
+
+### ✅★★★ §2 — THE EAR: INHERITED, SO NOT RE-ARMED
+
+`[MEASURED HERE — `Win32_Process` parent walk from my own `$PID`, plus a full `bash.exe` enumeration]`
+```
+my chain : 29408 powershell.exe -> 21508 claude.exe -> 32964 powershell.exe -> 10800 explorer.exe
+bash.exe : 6164 (parent 21508, created 13:17:05)   <- MY parent == the ear's parent
+           31964 / 20756 / 14108 (parent 13916 = the ADVISOR seat) -- NOT MINE, NOT TOUCHED
+```
+✅ **`6164` is ALIVE and is THIS seat's ear by ownership, so `worker-ear`'s ARM-ONLY-IF-NOT-INHERITED test returns NOT-ARM. `one-monitor-rig` holds at one ear; I did not create, retire or kill anything.**
+⚠️ **`[HYPOTHESIS — no fresh delivery observed yet this seat]` that it will deliver into THIS window. I am NOT calling it deaf and will NOT re-arm on that suspicion: `AN EMPTY REGISTRY IS NOT A DEAD CHANNEL` and this campaign has made **four** false "the ear is dead" calls. **The blind-window risk is already discharged by construction — I read `R-598` directly from `ADVISOR-RULINGS.md`, not from a monitor line**, so a missed signal costs nothing until the next ruling lands.
+
+### ⏸️ §3 — HOLDING, AND WHAT I DID *NOT* DO
+
+**`R-598 §5.2` assigns nothing. I hold.** ✅ **Scope NOT widened:** no hardening, no `AR-640 §6` `[UNENUMERATED]` clean-up, no `F-2`/`F-3`, no `:108`-vs-`:746` caption.
+🛑★★★ **THE GRADER'S OBJECT IS NOT MINE TO TOUCH AND I DID NOT TOUCH IT — `R-598 §4` makes editing a named grader target a STOP because it destroys what the grader is mid-read on.** `[MEASURED HERE]` `git status --porcelain -- prototypes/` is **EMPTY** at this instant. ⚠️ **That is NOT a claim the grade has not started: `R-598 §2` grants the grader mutate-and-revert rights, so a clean tree is consistent with "not started", "between mutations", and "finished and restored" alike. It rules out only one thing — a mutation left un-reverted right now.**
+`[MEASURED HERE]` **`docs/designs/GRADE-P0PC-4D-READING-2026-08-02.md` DOES NOT EXIST.** ✅ **So `4d` is still open and no verdict has landed for anyone to act on.** ⚠️ **Absence of the receipt is not evidence about the grader's health — that seat is the desk's, not mine, and I can neither see nor chase it.**
+✅ `runtime-production` NOT touched, NOT read. No merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured.
+
+**NEXT SMALLEST TASK: none. Holding for the `4d` grade or a new lane.**
+
+---
+
 ## AR-641 · 2026-08-02 · ⏳ **HOLD RECEIPT (`R-597 §5.1`) — HOLDING, NOTHING ADOPTED, SCOPE NOT WIDENED.** ✅ **AND THE ONE THING I CAN DO ABOUT THE `§4` GRADER DEBT, DONE: **I HAVE ASKED THE OPERATOR FOR THE WORD, IN ONE SENTENCE, IN PLAIN ENGLISH.****
 
 **RULING ID:** `R-597 §5.1` · **TASK ID:** AR-641 · **PRIOR:** AR-640 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
