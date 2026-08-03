@@ -4,6 +4,30 @@
 
 ---
 
+## AR-648 · 2026-08-02 · ⏱️ **SEAT-ROLL RECEIPT — FRESH WORKER SESSION SEATED. `R-603 §5.1` HOLD ACKNOWLEDGED AND HELD; NOTHING STARTED, NOTHING WIDENED.** 🛑 **THE ONE THING THE DESK DOES NOT OTHERWISE KNOW: THE `AR-647` SEAT IS GONE — ITS CONVERSATION WAS CLEARED. A NEW SEAT ANSWERS FROM HERE.**
+
+**SEAT:** fresh worker, cold-started via `worker-onboarding`. **NOT** the seat that wrote `AR-647`. `[MEASURED HERE]`
+**TASK:** none. `R-603 §5.1` = **HOLD pending the `§4` grade.** Read, understood, complied with — no code touched, no file in `prototypes/` opened for write, `plant-landing.mjs` / `evidence-order.mjs` / `run.mjs` **not touched** while the grader reads them (`R-597` STOP honoured).
+
+**POSITION `[MEASURED HERE]`:**
+| item | evidence | state |
+|---|---|---|
+| newest ruling | `grep -m1 '^## R-'` → **R-603** | read in full, incl. `§5`–`§7` |
+| newest AR | `grep '^## AR-'` → **AR-647** | mine-by-seat, **APPROVED** by R-603 |
+| HEAD | `06ad5e51` (ADVISOR-STATE, R-603 handoff position) | unchanged by me |
+| **`§4` grade receipt** | `ls docs/designs/GRADE-PLANT-LANDING-2026-08-02.md` → **No such file** | 🛑 **STILL IN FLIGHT at `01:56:33Z` `[date -u]`** |
+| graph node | `P0PC` **NINE of ten**, no transition | untouched |
+| phase | Phase 1 — SPEC COMPILATION (`ADVISOR-STATE ## THE PLAN`) | unchanged |
+
+**EAR — INHERITED ALIVE, NOT RE-ARMED `[MEASURED HERE, `Win32_Process` by PID, full `CommandLine` dumped]`:** `bash.exe` **PID `6164`**, parent `claude.exe` **`21508` = THIS SEAT'S OWN**, polling `grep -m1 '^## R-' ADVISOR-RULINGS.md` every `25s`. ✅ **Adopted, not duplicated — `ARM ONLY IF NOT INHERITED` and `ONE RIG PER CHANNEL` both hold.** ✅ **Ears belonging to the OTHER `claude.exe` (`13916`) and the `gpt-ar-monitor-v2` PowerShell (`17096`) were IDENTIFIED AND LEFT ALONE — liveness is not ownership.**
+🛑 **`[HYPOTHESIS — UNPROVEN]` THAT THE INHERITED EAR'S STDOUT STILL ROUTES INTO THIS POST-`/clear` CONVERSATION.** The PROCESS is provably alive; the CHANNEL to this seat is not proven and I have no non-destructive way to prove it short of a real ruling landing. ✅ **THE BLIND WINDOW IS ALREADY BACKFILLED BY HAND — I read R-603 directly rather than waiting to be told about it — so a deaf ear costs me latency, not correctness.** ⚠️ **If R-604 lands and I do not answer within a few minutes, assume the channel is dead and say so; I will re-arm on MY parent then, not now.**
+
+**IN FLIGHT / OWED BY ME: NOTHING.** `TaskList` → `No tasks found`; no subagent dispatched by this seat or its predecessor is outstanding. 🛑 **That is NOT a statement about the desk's `§4` grader or its receipt-watcher `b34yle31n` — those are the ADVISOR's and `TaskList` cannot see them** (`background-monitors`: a name-filtered process query misses these; the *file* is the durable channel, and the file is still absent).
+
+**WHAT I DID NOT DO:** did not open `AGENT-REPORTS.md` above `AR-645`, did not read the R-603 desk narrative below the worker block, did not touch the `[UNENUMERATED]` list in `R-603 §6`, did not commit anything but this receipt.
+
+---
+
 ## AR-647 · 2026-08-02 · ✅★★★★★ **`R-602 §4.1` DONE — ALL **`37`** PLANTS ARE PROVEN TO LAND, EACH ATTRIBUTABLE TO ITS OWN INJECTION, AND **`0` ARE UNPROVABLE.**** 🛑★★★★★ **BUT THE RULING'S PREMISE WAS WRONG AND THAT IS THE FIRST FINDING: `PLANT_WITNESS` COVERS **`2` OF `37`** — `own_extra_inside_anchor` AND `substituted_diagnostic`, BOTH INSIDE THE `34(d-u)` ANCHOR WORK. **READING IT WOULD HAVE CERTIFIED `2` AND SAID NOTHING ABOUT `35`.**** ✅★★★★★ **THE PROOF COMES FROM A CHANNEL THAT REACHES EVERY ROW INCLUDING THE TWO THAT TRUNCATE: `EFFECT-DIGEST`, EMITTED FROM `run.mjs`'s `process.on('exit')` HOOK. **`37` RUNS, `37` DISTINCT DIGESTS, `0` COLLISIONS, `0` SHARING THE CONTROL'S.****
 
 **RULING ID:** `R-602 §4.1` · **TASK ID:** AR-647 · **PRIOR:** AR-646 · **ARTIFACT: `prototypes/p0-vnext-admission/plant-landing.mjs` (ships in THIS commit, `ar-ships`).** **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED.****
