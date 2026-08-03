@@ -4,6 +4,65 @@
 
 ---
 
+## AR-640 · 2026-08-02 · ✅★★★★★ **`R-596 §4` DONE — THE TWO-COLUMN READING-NEUTRAL FIXTURE IS BUILT, RUN, AND SHIPS IN THIS COMMIT.** ✅★★★★★ **IT LANDS EXACTLY ON THE PRE-REGISTERED SPLIT: **COLUMN (i) `25/25` · COLUMN (ii) `23/25`**, THE TWO DIVERGENT ROWS NAMED, AND THE **RED WITNESS DEMONSTRATED AT `0`/`0`** — NOT ASSERTED.** 🛑★★★ **AND I FIXED A CAPTION DEFECT IN MY OWN INSTRUMENT BEFORE SHIPPING IT: IT COUNTED **KNOBS** AND CALLED THEM **CLASSES** — THE EXACT JOIN `R-596 §2` HAD JUST CORRECTED ME ON, REPRODUCED INSIDE THE FIXTURE BUILT IN RESPONSE TO IT.**
+
+**RULING ID:** `R-596 §4` · **TASK ID:** AR-640 · **PRIOR:** AR-639 · **ARTIFACT: `prototypes/p0-vnext-admission/evidence-order.mjs` (ships in THIS commit, `ar-ships`).** **GRAPH NODE: `P0PC` — **NO TRANSITION PROPOSED**; `4d` is not mine to rule and `§7.2`'s grader has not run.**
+
+### ✅ §1 — THE TABLE
+
+`[MEASURED HERE — `node evidence-order.mjs`, which spawns `node run.mjs` once per knob and scores stdout]`
+
+```
+POPULATION: 25 injection KNOBS (not classes; the knob->class join is not 1:1)
+CONTROL (no injection): exit=0 lines=225 stderr_bytes=0
+
+4d-i   terminal failure exits non-zero      : 25/25
+4d-ii  COLUMN (i)  own finding printed      : 25/25   <- reading (B)'s verdict
+4d-ii  COLUMN (ii) full evidence body       : 23/25   <- reading (A)'s verdict
+       cells UNKNOWN                        : 0
+
+DIVERGENT ROWS (the two columns disagree — these ARE the reading question):
+  module_collection_add:    own_finding=true full_body=false lines=5 exit=1
+  module_collection_delete: own_finding=true full_body=false lines=5 exit=1
+
+<INSTRUMENT FAULT throw>   exit=1  lines=0   OWN_FINDING=NO   FULL_BODY=NO   <- RED WITNESS
+```
+✅ **`R-596 §4`'s expectation was pre-registered as `(B)` → `25/25`, `(A)` → `23`/`2`. **It is met on the nose, and I note that a prediction I could see before measuring is a weak test — the strength here is that the two columns were computed by INDEPENDENT predicates, not by one predicate and its negation.**
+
+### ✅★★★★★ §2 — HOW THE COLUMNS ARE SCORED, AND WHY NEITHER IS A LINE COUNT
+
+🛑 **The obvious implementation — *"did it print ~225 lines?"* — is a PROXY, and a proxy silently re-scopes the moment the body changes length for an unrelated reason.** ✅ **Both columns are STRUCTURAL predicates over named sections `[MEASURED HERE — markers chosen by diffing a full run against a truncated one, not guessed]`:**
+- **(i) `OWN_FINDING`** = stdout matches `/^\s*\*\*\* /m` — the run printed its own finding line. **Survives the `:138` early exit (both truncated rows score YES).**
+- **(ii) `FULL_BODY`** = stdout contains **ALL** of `PINNED SURFACE:`, `SEPARABILITY:`, `NEGATIVE CONTROL:` — body-only sections the early exit skips.
+✅★★★ **THE PREDICATES ARE PROVEN NON-CONSTANT — three distinct outcomes from the same two predicates: `YES/YES` (23), `YES/NO` (2), `NO/NO` (the throw witness). `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK`; both columns have a demonstrated red.**
+✅ **The `25` knob names are PARSED OUT OF `run.mjs` at runtime, never hand-copied — a hardcoded list would keep passing after `run.mjs` gained or lost a knob (`hardcoded-test`).**
+
+### ✅★★★★★ §3 — THE EXIT SEMANTICS ARE THE LOAD-BEARING DESIGN DECISION
+
+**The fixture exits `0` when the MEASUREMENT succeeded — every knob scored on both columns, no `UNKNOWN` cell, RED witness at `0`/`0`. It exits `1` only when the INSTRUMENT could not measure.** 🛑★★★★★ **IT DOES NOT EXIT NON-ZERO BECAUSE COLUMN (ii) HAS TWO REDS. **An exit code driven by column (ii) would enact reading `(A)` in code** — which is the precise thing `AR-639 §4` refused to do and `R-596 §8` made a law. **The fixture's own failure modes are printed as `*** STOP CONDITION (4d-ii instrument):` lines and are about measurement integrity only.**
+
+### 🛑★★★ §4 — MY OWN CAPTION DEFECT, CAUGHT PRE-SHIP
+
+**`R-596 §2` corrected me: `module_collection_add`/`_delete` are **INJECTION KNOBS**, and the declared class they fire is `collection_shape`.** 🛑 **My first build printed *"`25` classes scored"* while its column header said `knob` — **I reproduced the corrected join inside the instrument I built in response to the correction.** Fixed before shipping: the summary now reads `POPULATION: 25 injection KNOBS (not classes; the knob->class join is not 1:1)`, with the non-1:1 mapping stated in a comment at the emitter.** ★★★ **`FIX THE EMITTER, NOT THE TABLE` — the caption is now derived at the print site from what was actually counted.**
+
+### ✅ §5 — ACCEPTANCE, TERM BY TERM
+
+`[MEASURED HERE]`
+- ✅ **six scripts `EXIT 0` on the clean control, `stderr` `0` bytes:** `run.mjs` · `module-collections.mjs` · `module-tuple.mjs` · `emitted-freeze.mjs` · `type-value-proof.mjs` · `red-proof.mjs` — **all `exit=0`, all `stderr_bytes=0`, WITH the new file present in the directory.** ★★★ **That is the part that could have broken and did not: adding a 12th `.mjs` tripped no pinned-collection or file-set guard.**
+- ✅ **`sha256` of all `11` pre-existing `.mjs` BYTE-IDENTICAL to the baseline captured before I ran anything.**
+- ✅ **`git status --porcelain -- prototypes/` shows exactly one line: `?? …/evidence-order.mjs`** — the new fixture and nothing else.
+- ✅ **both columns emitted for all `25` knobs, `0` UNKNOWN.** ✅ **RED path DEMONSTRATED (`0`/`0`), not asserted.**
+- ✅ **Exit code read via `${PIPESTATUS[0]}` where a pipe was used — `AR-630 §4`'s convicted defect (`$?` reading `tail`'s status) not repeated.**
+
+### ⚠️ §6 — SCOPE, INVARIANTS, AND WHAT I DID NOT DO
+
+**ONE FILE ADDED, ZERO EXISTING FILES MODIFIED. `run.mjs:138` NOT touched. `F-2`/`F-3` NOT touched. The `:108`-vs-`:746` caption NOT touched (`R-596 §2` said do not).** `runtime-production` NOT touched, NOT read. No runtime, trading, capital or broker surface. No merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured. ✅ No monitor armed, retired or killed — `6164` untouched.
+🛑 **WHAT I DID NOT DO:** **I did not rule on `(A)` vs `(B)` and the fixture does not** — `R-596 §6` reserves it until a grader attacks `§3`, and I am the doer. · **The RED witness is ONE of the 22 throw sites** (`assertParserAgreesWithRuntime`, raised with disagreeing arguments); **the other 21 are `[UNENUMERATED]` as individually-reachable** and I claim only that the class emits `0` stdout. · **I did not score the `43`-row red-proof population** — different denominator, not joined (`R-592 §3`). · **I did not verify the knob→class mapping for the other 23 knobs** — `R-596 §2` established it for the two divergent rows; I did not re-derive the rest, so *"25 knobs"* is the only population I stand behind.
+**RECOMMENDATION: `APPROVAL_REQUESTED`, then `R-596 §7.2`'s independent grader on the provisional reading `(B)`. The two-column table is its object and it PREDATES any ruling on the reading, which was the design goal.**
+**NEXT SMALLEST TASK: none held.**
+
+---
+
 ## AR-639 · 2026-08-02 · ✅★★★★★ **`R-594 §9` STEPS `1`–`2` DONE, ZERO EDITS.** ✅★★★★★ **THE FALSIFIER IS A **CLEAN NEGATIVE** AND IT IS DECISIVE, NOT A SHRUG: `PINNED_MODULE_COLLECTIONS` COVERS **SIX FILES, ALL INSTRUMENT** — **`corpus.mjs`, THE OBJECT UNDER TEST, IS NOT AMONG THEM.** THE DESK'S `§3` CATEGORY BOUNDARY HOLDS.** 🛑★★★★★ **AND IT DOES NOT RESCUE `4d-ii`, WHICH IS THE POINT: THE TWO ROWS THAT TRUNCATE **WERE NEVER INSTRUMENT-FAULT THROWS.** THEY ARE DECLARED `FAILURE_CLASSES` — INSIDE THE ACCEPTANCE POPULATION — HITTING `run.mjs:138`. **THE BOUNDARY QUESTION AND THE `4d-ii` QUESTION TURN OUT TO BE DISJOINT.**** 🛑 **STEP `3` NOT BUILT: ITS ACCEPTANCE PREDICATE IS THE `§2` READING QUESTION THE DESK RESERVED, AND I WILL NOT ENCODE A READING. DESIGN SPECIFIED BELOW.**
 
 **RULING ID:** `R-594 §9` (steps `1`–`2`) · **TASK ID:** AR-639 · **PRIOR:** AR-638 · **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED.**
