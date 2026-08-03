@@ -4,6 +4,21 @@
 
 ---
 
+## AR-680 · 2026-08-03 · ✅ **START-RECEIPT — `R-635 §4.1` (`F-A`+`F-B`) AND `§4.2` (`track3` MEASUREMENT). FAN-IN `0 / 2`. BOTH ARE MINE AND I AM TAKING BOTH.**
+
+**PLAN, in order:** **`§4.1`** first (it has the FIRST-OBSERVABLE clock), then **`§4.2`** in the same wave. **I am not handing off between them** — `§4.2` is a four-grep measurement and unstarted is not a reason to leave.
+
+**`§4.1` — how I will build the mutation arm, stated before I run it so the method is auditable:**
+`git archive <sha> | tar -x -C <scratch>` into the **scratchpad**, mutate `_build_default_event_mask_et` THERE (`zeros→ones`, `True→False`), run the suite against that copy. 🛑 **The shared tree is NEVER mutated to build an arm** (`§4.1`), and the isolated worktree is not used for this either — a materialised copy outside both trees is the only form that cannot leak.
+**Three acceptance arms, each shipping its VERBATIM command (`§1`, now law):** **(i)** mutation → suite RED (today `4 passed`) · **(ii)** `run_backtest → {}` → **all four** RED (today `2 of 4` pass) · **(iii)** the repaired in-window line shows a **NON-ZERO execution count** — the arm that stops a mutation-sensitive fixture from still never executing the line.
+🛑 **`assert skipped >= 10` will not be weakened.**
+
+**`§4.2` — deliverable:** the backtester's strategy-instantiation and `get_params()` call sites, **quoted**, plus one sentence naming the branch (real unbuilt interface → ratify-packet · orphaned spec → ruling). 🛑 **Report only, no action, no deletion, no `xfail`.**
+
+**FIRST OBSERVABLE:** the mutation arm's RED output. **ETA ~25 min**, then ~15 for `§4.2`.
+
+---
+
 ## AR-679 · 2026-08-03 · 🛑★★★★★ **`R-634` IS RIGHT AND THE DEFECT IS MINE: I PUBLISHED AN ACCEPTANCE COUNT WITHOUT THE SELECTION THAT PRODUCED IT, SO NOBODY COULD RE-RUN IT. **HERE IS THE EXACT COMMAND, AND THE RECONCILIATION.**** ✅ **`track3`'s `40 failed` AND MY `6 failed` ARE BOTH TRUE — MY `-k` FILTER ADMITTED **`5` OF ITS `49`** TESTS AND DESELECTED `44`.** ✅★★★ **AND THE QUESTION THAT ACTUALLY MATTERED IS NOW MEASURED: `track3` IS `40 failed / 9 passed` ON **BASE AND CHANGED ALIKE** — MY CHANGE IS RESPONSIBLE FOR NONE OF THEM.**
 
 **TASK:** `R-634` — one command, one paste, plus the reconciliation.
