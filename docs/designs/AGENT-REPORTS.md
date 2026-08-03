@@ -4,6 +4,18 @@
 
 ---
 
+## AR-646 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-602 §4.1`, PROVE EACH INJECTION LANDS.** 🛑★★★★★ **AND THE RULING'S OWN `[HYPOTHESIS]` IS ALREADY REFUTED, WHICH CHANGES THE DELIVERABLE: `PLANT_WITNESS` COVERS **`2` OF `37`**, NOT `37`.**
+
+**RULING ID:** `R-602 §4.1` · **TASK ID:** AR-646 · **PRIOR:** AR-645 · **GRAPH NODE: `P0PC` — no transition proposed.**
+
+🛑 **`[MEASURED HERE, `grep -n PLANT_WITNESS run.mjs`]` FOUR SITES ONLY: `:348` declares, `:673` prints, and the pushes are at `:398` and `:413` — **both inside the `34(d-u)` anchor work, i.e. `own_extra_inside_anchor` and `substituted_diagnostic`.** `R-602 §4.1` graded its own sufficiency claim `[HYPOTHESIS — I have read three lines of `PLANT_WITNESS` and not its consumers]`; **it is refuted, and the honest deliverable is therefore the ENUMERATION the ruling asked for as the fallback, not a witness read.**
+✅★★★★★ **BUT A UNIVERSAL CHANNEL DOES EXIST AND I HAVE CONFIRMED IT SURVIVES THE EARLY EXIT `[MEASURED HERE]`: `run.mjs:95-103` emits `EFFECT-DIGEST` from a `process.on('exit')` hook, and the `5`-line truncated `module_collection_add` run still prints one (`67ba9827…`).** **So every one of the `37` has an observable fingerprint, including the two rows that truncate.**
+**FIRST ARTIFACT:** a per-knob table over all `37` — `LANDED (digest differs from control)` · `LANDED (PLANT_WITNESS)` · `LANDED (stdout differs beyond the echo line)` · **`UNPROVABLE`** — plus pairwise-distinctness across the `37` digests. **ETA ~30 min.**
+⚠️★★★ **I WILL NOT COLLAPSE `UNPROVABLE` INTO `NOT LANDED`.** A digest equal to the control's is consistent with *the plant did not apply* AND with *the plant applied but recorded no effect before exit* — `AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE` (`R-599 §10`), and manufacturing a verdict there is exactly what `§4.1` forbids.
+**RED-PROOF, IN MEMORY PER `§4.1`:** a **disabled plant** is a knob name with no implementation, so the detector is run against mangled names — it must score them **NOT LANDED and NAME them** while the real `37` score LANDED. **Plus determinism first: the control run twice must yield an identical digest, or digest-comparison is not an instrument at all.** **`run.mjs` READ-ONLY — no witness added, nothing written to it.**
+
+---
+
 ## AR-645 · 2026-08-02 · ✅★★★★★ **`R-600 §9.1` AS AMENDED BY `R-601 §2`/`§3` — DONE, AND BOTH HALVES ARE RED-PROOFED BY DEMONSTRATION.** ✅★★★★★ **POPULATION IS NOW **`37`**, WITH ALL **`30`** `INJECT` OCCURRENCES IN `run.mjs` ACCOUNTED FOR BY FORM — **AN OCCURRENCE THE PARSER CANNOT CLASSIFY REDDENS THE INSTRUMENT BEFORE A SINGLE MEASUREMENT IS TAKEN.** THE PINNED-SET GUARD GOES RED AND **NAMES THE LOST KNOBS** ON **FOUR INDEPENDENT SHRINK CAUSES**, INCLUDING THE HISTORICAL `F-4` DEFECT ITSELF.** 🛑★★★★★ **AND THE THING THAT MUST NOT BE MISREAD, SAID FIRST: **FIXING THE DENOMINATOR DOES NOT MAKE COLUMN (i) MEAN ANYTHING.** `R-600 §2` PROVED `OWN_FINDING` IS TRUE **BY CONSTRUCTION**; IT IS NOW A TAUTOLOGY OVER `37` ROWS INSTEAD OF `25`. **`37/37` IS NOT EVIDENCE FOR READING `(B)`.**
 
 **RULING ID:** `R-600 §9.1` + `R-601 §2`/`§3` · **TASK ID:** AR-645 · **PRIOR:** AR-644 · **BRANCH:** `h1-wave4-sealed12-driver` · **ARTIFACTS SHIP IN THIS COMMIT (`ar-ships`).** **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED**; `4d` is NOT MET (`R-600 §1`) and nothing here changes that.**
