@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3827` at THIS commit, 2026-08-03 13:4x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3833` at THIS commit, 2026-08-03 13:4x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3827` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
+**File is `3833` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,8 +93,14 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-03 `14:1x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SIXTH `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-654` (`28340cab`). Newest AR: `AR-703` — RULED at `R-654`. `R-652 §5` CLOSED `3/3`; **`R-654 §5` IS THE LIVE CONTRACT** (four reads on the session row), fan-in `0/1`.**
+## ★★★★★ SEAT (2026-08-03 `14:5x`, ADVISOR `claude.exe 13916`, **SIXTH `/clear` — 🛑 HANDING OFF, A FRESH ADVISOR IS NEEDED.** Autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-660` (`d520f8bd`). Newest AR: `AR-710` — RULED at `R-660`. **`R-660 §5` IS THE LIVE CONTRACT: TWO LANES — `A` wiring witness (BUILD allowed), `B` producer repair (**SPEC ONLY, MAY NOT LAND**).** Everything committed; nothing half-ruled.**
+🛑🛑🛑★★★★★ **THE ARCHITECTURE POSITION (`R-658`, branch `2` of a rule pre-registered at `R-657 §3` BEFORE its data existed): **THE DEFICIT IS EXPOSURE, NOT CAPABILITY.** The compiler's whole vocabulary of market quantities is **`5` symbols** (`compute_atr` · `compute_ema` · `compute_structure_state` · `compute_structural_stop` · `is_in_killzone`). It cannot name VWAP, SMA, MACD, RSI, Bollinger, ADX, Donchian, anchored VWAP **or the opening range** — while the corpus teaches `sma14_strong_close_crossover`, `vwap_band_breakout`, `anchored_vwap_pullback`, `opening_range_breakout`.** ★★★★★ **`DICTIONARY, NOT ENGINE` — the operator's frame, adopted as the campaign's plain-English statement.**
+⚠️🛑★★★★★ **BUT THE HEADLINE NUMBER IS A FLOOR AND MUST BE QUOTED AS ONE (`R-659 §2`, confirmed with data at `AR-710`): `15 of 23` WAS COMPUTED OVER **`10.5%`** OF ITS OWN RULE'S REACH — the module residual is **`197` unswept prefix-matching symbols across `79` modules**, total reach `220`. 🛑 **`15` IS A FLOOR. AND DO NOT QUOTE `220` AS A DICTIONARY GAP EITHER — the `197` are UNCLASSIFIED, many are helpers.** ★★★ **I published `15 of 23` as exact in a ruling headline, a commit message and to the operator. The worker caught it. Cause: I amended a live task contract inside a ruling about a different subject — MINTED FIX: an amendment gets its own `★ WORKER — START HERE` line naming the amended task, or it does not exist.**
+🛑🛑🛑★★★★★ **THE GOLDEN SLICE STANDS (`R-660 §4.1`) BUT ITS SESSION ROW IS **NOT BUILDABLE** (`AR-709`): it carries ALL THREE taught windows in ONE object — `6` clock tokens, `4` anchors `[570,575,585,600]`. **ANY BIND PICKS ONE OF THREE, AND A PICK IS A DERIVATION LOSS.** ★★★★★ **AND THE DISAMBIGUATION EXISTS ONE LAYER UP, ALREADY LABELLED: `produce_spec_artifact` DISCARDS `variants[]` — for a GOOD, MEASURED anti-fabrication reason (`spec_producer.py:614-624`). `NO BINDER CHANGE CAN RECOVER INFORMATION THE PRODUCER DISCARDED.` MY `R-658 §5` SCOPED IT AS ROUTING; IT IS A ROW-SHAPE PROBLEM.**
+✅★★★★★ **THE CURE, ADOPTED (`R-660 §3`, from `AR-709 §6`) — IT INVERTS THE ROOT CAUSE: grant `approximation=False` **IF AND ONLY IF THE PRIMITIVE'S COMPUTED WINDOW EQUALS THE PARSED SPAN — COMPARED AT BIND TIME, NEVER ASSERTED.** Earned by demonstrated fidelity instead of membership in a closed enum, which `R-655 §3` proved is the cause of `0/161`, `0/99`, `0/260`.** 🛑 **Re-asserting a constant is NOT a comparison.**
+🛑 **NEVER (carried): weaken `FAMILY_META` · flip `TF_FAMILY_META_ENFORCED` · treat `compute_structural_stop` as concrete · wire the framework-owned exit (**DENIED `R-654 §1` — measured to move `(ii)` by ZERO rows**) · land Lane B without a RE-BASELINE ruling (it retires `260`/`31`/`99`/`161`/`AR-707`) · create a `15th` family by fiat · compile a parameterised family as any one instance.**
+⏳ **IN FLIGHT / OWED:** operator-ordered repo-wide `SYSTEM-INVENTORY` (**subagent, GENERATED not hand-written, reports to the NEXT seat**) · the `opening_range` two-producer collision — 🛑 **BAR STANDS: no fidelity receipt for this slice until answered** · `WAIT_STRUCTURE`'s exact primitive (`78` of `134`) · `AR-702 §3`'s `0/495` non-reproduction · `F-1` false-pass defect (**exposure `0 of 31`, measured twice; remedy is the permanent tripwire in `R-660 §5`, not a repair**).
 🛑🛑🛑★★★★★ **THE ONE TABLE A COLD SEAT MUST NOT BE WITHOUT — `[MEASURED HERE, `FAMILY_META` interrogated live at HEAD, all `14`, no sampling; derived INDEPENDENTLY by this desk and by the worker (`AR-703 §2`), exact agreement]`. `(ii)` READS `_honest_approximation` = `meta.enforced_honest_approximation() OR binding.approximation` — **A DISJUNCTION ANCHORED AT THE FAMILY, SO A `True` FAMILY TERM CONVICTS THE ROW BEFORE THE BINDING IS EVEN CONSULTED:**
 | ✅ `honest()` = `False` → **CAN EVER PASS `(ii)`** (`4`) | 🛑 `honest()` = `True` → **BLOCKED WHATEVER IT BINDS TO** (`10`) |
 |---|---|
