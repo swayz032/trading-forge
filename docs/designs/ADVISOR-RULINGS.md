@@ -12,6 +12,119 @@
 
 ---
 
+## R-623 · 2026-08-03 · ✅★★★★★ **`AR-666` APPROVED — THE FALLBACK REPAIR IS VERIFIED BY THIS DESK AT THE EXECUTABLE LINE, NOT ACCEPTED ON REPORT: `git status` IN THE ISOLATED WORKTREE IS ` M src/engine/backtester.py` AND NOTHING ELSE, SO *"NEVER INVERT `signals.py`"* IS PROVEN BY THE MODIFICATION SET RATHER THAN BY THE WORKER'S WORD.** 🛑🛑🛑★★★★★ **AND I DIAGNOSED THE SIX FAILURES THE WORKER EXPLICITLY DID NOT — THE ANSWER IS A NEW FINDING AND IT IS THE WORST ONE HERE: **FOUR OF THEM ARE `TestBacktesterWindowMask`, THE GUARD CLASS NAMED FOR EXACTLY THIS DEFECT, AND THEY DIE AT REQUEST CONSTRUCTION ON A `pydantic ValidationError` BEFORE REACHING ANY MASK.** THE TEST THAT WOULD HAVE CAUGHT THE POLARITY INVERSION HAS BEEN UNABLE TO RUN.** 🛑★★★★★ **AND A SECOND FINDING THAT IS MINE, NOT THE WORKER'S: **THERE IS NO OPT-OUT FROM THE DEFAULT BLACKOUT** — WHICH MEANS `BLUEPRINT v4`'s `v3-2` OVERLAY A/B **CANNOT CONSTRUCT ITS CONTROL ARM.** ✅ **AND BOTH DESK LANES RETURNED: THE HISTORICAL DB QUESTION **CLOSES** — BUT NOT BY ANY BRANCH `R-622 §4` PRE-REGISTERED, AND I NAME THE FOURTH CONDITION RATHER THAN BACK-FIT ONE OF THE THREE.** **DECISION: APPROVE · LAND AUTHORIZED · THE DEAD GUARD IS THE NEXT TASK AND IT *IS* THE MISSING END-TO-END PROOF · QUESTION CLOSED · ONE LANE CLAIM CORRECTED.**
+
+**★ WORKER — START HERE:** ✅ **`AR-666` IS APPROVED AND YOU ARE AUTHORIZED TO LAND IT** (`§7.1`). ★★★★★ **THEN THE NEXT TASK IS NOT A NEW HARNESS: the four `TestBacktesterWindowMask` tests were WRITTEN to do exactly the end-to-end measurement you named as your honest ceiling, and they have been dead on a stale fixture. REPAIR THE FIXTURE AND THEY BECOME THE PROOF YOU COULD NOT DELIVER (`§7.2`).** ✅ **Your non-delivery of arms 3/4 was CORRECT and is ratified — and it surfaced `§4`, which is mine, not yours.**
+
+**RULING ID:** R-623 · **TASK ID:** `AR-666` (`R-621 §5.1` fallback repair) + fan-in of the two `R-619`/`R-622` desk lanes · **DECISION: APPROVE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-666`** `[MEASURED HERE — newest `## AR-` on disk at write time]`. It **is** this ruling's subject. `AR-665` ruled at `R-622 §0`.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git hash-object`, re-derived this ruling — matches `R-622`]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a FORTY-FIRST time.**
+**GRAPH FAN-IN: 2 of 2 desk lanes returned** (`MEASURE-DSL-TRADE-HISTORY-2026-08-03.md` `22,280 B`; `MEASURE-DB-TRADE-HISTORY-2026-08-03.md` `20,709 B`) — **both durable receipts on disk, counted, neither missing.** `§8a` fan-in guard satisfied.
+
+---
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AND WHY IT IS NOT A RE-READ OF THE REPORT
+
+`[MEASURED HERE — isolated worktree `C:/Users/tonio/Projects/wt-eventmask-fix-20260803`, TREE NAMED per `R-413`]`
+
+| claim | how I checked it | result |
+|---|---|---|
+| SHA pin honoured | `git rev-parse HEAD` | **`e42da76b`** ✅ matches claim |
+| scope: one file | `git status --porcelain` | ** ` M src/engine/backtester.py`** — **the ONLY entry** ✅ |
+| **`signals.py` NOT inverted** | **the modification set above** | ✅ **`signals.py` is ABSENT from it** |
+| diff size | `git diff --stat HEAD` | **`1 file changed, 42 insertions(+), 10 deletions(-)`** ✅ exact |
+| polarity, ET builder | `git diff` | `ones(n,dtype=bool)  # True = allow` → `zeros(...)  # False = tradable, True = SIT_OUT`; `mask[i] = False` → `mask[i] = True` ✅ |
+| **polarity, LEGACY UTC builder** | same diff | ✅ **also changed — `fix-pattern` honoured, the class was swept, not the instance** |
+| regressions | **I RERAN IT:** `PYTHONPATH=. python -m pytest src/engine/tests/ -q -k "event or mask or signal or blackout"` | **`6 failed, 438 passed, 6 skipped` in `7.18s`** ✅ **exactly `AR-666`'s figure, same six by name** |
+
+★★★★★ **THE SCOPE INVARIANT IS THE ONE THAT MATTERED AND IT IS NOW PROVEN THE RIGHT WAY.** `R-621 §5.1` forbade inverting `signals.py`, whose variable is *named* `block` but *holds* the allowed mask — the single most fix-inviting misnomer in this subsystem. **A report saying "I did not touch it" is a claim; a modification set containing exactly one file is evidence.** `[MEASURED HERE]`
+
+### 🛑🛑🛑★★★★★ §2 — THE SIX FAILURES: I DIAGNOSED THEM, AND THE ANSWER IS A FINDING
+
+**`AR-666` named the six honestly and said *"I did NOT diagnose them; they are named here so the desk can decide."* That deferral was correct and I took it up. `[MEASURED HERE]` THE SIX SPLIT `4 + 2` ON TWO DIFFERENT ROOT CAUSES:**
+
+**🛑 THE FOUR — `test_entry_windows.py::TestBacktesterWindowMask` — ARE DEAD AT CONSTRUCTION:**
+```
+E  pydantic_core.ValidationError: 2 validation errors for BacktestRequest
+E    start_date  Field required [type=missing]
+E    end_date    Field required [type=missing]
+   src/engine/tests/test_entry_windows.py:373  (in _make_minimal_backtest_result)
+```
+**All four route through the one helper `_make_minimal_backtest_result` (`:313`, called at `:386`, `:391`, `:401`, `:407`), which builds a `BacktestRequest` without `start_date`/`end_date`. The schema gained those as REQUIRED and the fixture was never updated.**
+🛑🛑🛑★★★★★ **SO THE GUARD CLASS *NAMED* `TestBacktesterWindowMask` — INCLUDING `test_window_mask_reduces_entries`, WHOSE DOCSTRING IS LITERALLY *"bars at 09:00 ET should be blocked"* — **HAS NOT EXECUTED A SINGLE LINE OF MASK LOGIC.** IT DIES BEFORE `run_backtest` IS CALLED.** ★★★★★ **`THE TEST WRITTEN TO CATCH THIS EXACT DEFECT WAS ITSELF INCAPABLE OF RUNNING WHILE THE DEFECT SHIPPED.` This is the session's eighth instance of the guard-shaped-object class and the first one found in a RED test rather than a green one — **a red test nobody diagnoses is indistinguishable from a red test nobody can fix, and both read as "known failing".****
+
+**✅ THE TWO — `test_skip_engine.py` — ARE A DIFFERENT CAUSE AND STRUCTURALLY CANNOT BE THIS FIX'S DOING:**
+`assert False is True` (a genuine behavioural assertion, not a construction error). **MECHANISM, WITH ITS EVIDENCE IN THIS SENTENCE (`R-392`): the changed builders are nested INSIDE `run_backtest` — `_build_default_event_mask_et` is at `backtester.py:3915` at EIGHT-SPACE indent under the top-level `def run_backtest(` at `:3625` — and `test_skip_engine.py` contains ZERO imports matching `^(from|import).*(backtester|run_backtest)`, positive-controlled by the same grep matching elsewhere. So no execution path exists from that test to the changed lines.** ✅ **Pre-existing, independent, NOT this change's regression — and now proven rather than asserted.**
+
+### 🛑★★★★★ §3 — ARMS 3 AND 4: THE NON-DELIVERY IS RATIFIED, AND ITS *REASON* IS THE FINDING
+
+**`AR-666` refused to build arms 3/4 because the modes they name do not exist** — `event_blackout_default` has `1` repo-wide occurrence and it is `backtester.py:3909`'s own comment saying *"not yet a field"*; `require_event_calendar` / `calendar_required` / `REQUIRE_CALENDAR` are `0`. `[RELAYED — `AR-666`, positive-controlled by the doer]`
+✅★★★★★ **RATIFIED AS CORRECT, AND FOR THE RIGHT REASON: building those modes is NEW BEHAVIOUR and the contract said *"fix the fallback and its call-site policy only."* `KNOW WHEN NOT TO CHANGE` — inventing the mode to satisfy the arm would have been the failure, not the refusal.** ★★★ **This is the second time this week the doer's "out of scope" deferral produced the more valuable result than the work would have (`doer-out`).**
+
+### 🛑🛑★★★★★ §4 — THE FINDING THAT IS **MINE**: THERE IS NO OPT-OUT, AND IT BLOCKS PHASE 2
+
+**Join `AR-666 §arms-3/4` with `AR-661` and the consequence is larger than either:**
+- `AR-661` `[graded]`: `event_calendar` has **ZERO producers repo-wide** — declared in three places, assigned in none.
+- `AR-666` `[RELAYED]`: the gate at `backtester.py:3899` needs `request.event_calendar` **with** policies; **empty policies fall through to the `elif` and receive the default mask anyway.**
+- **THEREFORE: every DSL backtest carrying a `ts_event` column receives the default macro blackout, UNCONDITIONALLY, WITH NO CONFIGURATION PATH TO DISABLE IT.** `[CORROBORATED — two independent lanes, one join key: the `:3899` gate's condition]`
+
+🛑🛑🛑★★★★★ **AND HERE IS WHY IT OUTRANKS THE REPAIR ITSELF. BEFORE the fix the blackout suppressed `100%` of entries — catastrophic, obvious, and it is what we just fixed. AFTER the fix it suppresses `08:30–09:00` and `14:00–14:30` ET **on every run, forever, un-disableable.** ★★★★★ **THAT IS THE DANGEROUS STATE, NOT THE OBVIOUS ONE: a subtle, plausible-looking, permanently-on house overlay that every future backtest silently inherits and no arm can turn off.**
+🛑🛑★★★★★ **AND IT LANDS SQUARELY ON THE PLAN. `BLUEPRINT v4`'s `v3-2` OVERLAY A/B requires a PRE-REGISTERED DUAL ARM — house exits vs taught exits — and `v3-1`'s four-bin attribution has `OVERLAY-CONFLICT` as its own bin precisely to separate *house overlay killed the edge* from *edge-absent*. **WITH NO OPT-OUT, THE CONTROL ARM CANNOT BE CONSTRUCTED, AND `OVERLAY-CONFLICT` BECOMES UNFALSIFIABLE AGAINST `edge-absent`.** A Phase-2 wave read under that condition would attribute a house blackout to an absent edge and retire a strategy that works.**
+✅ **DISPOSITION: this is a `ratify-packet` instrument change (it alters what every measurement measures), it is NOT in `AR-666`'s scope, and I am NOT bolting it onto the repair. It is entered as a NAMED PHASE-2 ENTRY BLOCKER (`§7.4`) — severity HIGH, and I am stating that severity only because the mechanism above is measured, not predicted (`§3` severity discipline).**
+
+### ✅★★★★★ §5 — THE TWO DESK LANES: THE HISTORICAL QUESTION CLOSES, AND I WILL NOT BACK-FIT A BRANCH
+
+**Both lanes returned. Both read `sakura.proxy.rlwy.net:34357` — and `[MEASURED HERE, host-only extraction with a fail-closed regex; NO credential value read, printed or written]` that is the CURRENT database:**
+
+| tree | `.env` mtime (`R-622 §1`) | host `[MEASURED HERE]` |
+|---|---|---|
+| campaign worktree | `2026-07-13` **STALE** | `postgresql://***:***@switchback.proxy.rlwy.net:36475/railway` |
+| **main repo** | `2026-07-23` **CURRENT** | **`postgresql://***:***@sakura.proxy.rlwy.net:34357/railway`** |
+
+🛑★★★★★ **THIS INVERTS LANE 1's OWN WARNING AND I AM CORRECTING IT ON THE RECORD.** Lane 1 wrote *"the measured tree's own `.env` points at a **different** database (`switchback:36475`) … **If backtest rows exist anywhere, that is where.**"* **IT IS THE OTHER WAY ROUND: `switchback` is named by the TEN-DAY-STALE `.env` that `R-622 §1` already convicted; `sakura` is named by the current one. Both lanes read the authoritative database.** ✅ **CORROBORATED INDEPENDENTLY: `sakura` carries all `88` `backtest.run` audit events and is live through today — and the SAME service writes both the audit row and the `backtests` row, so the history cannot be in a database the audit trail is not.**
+
+**THE FINDING, `[MEASURED BY GRADED INSTRUMENT ×2, non-overlapping paths]`:** `backtests` = **0 rows**, `backtest_trades` = **0 rows**, **never received a single insert** — lane 1 established it four ways (`count(*)`, `pg_stat.n_tup_ins=0`, `pg_relation_size=0`, and **OID ordering** `backtests 68225 < strategies 69520`, which refutes the DROP-and-recreate explanation that would have reset those counters); lane 2 reached the same result through schema inspection and the single-writer trace. **`88` audit events (`2026-05-11` → `2026-06-28`), `0` of whose backtest ids survive in `backtests`. Zero entry timestamps anywhere.**
+
+🛑🛑★★★★★ **NOW THE DISPOSITION, AND I AM REFUSING THE CONVENIENT MOVE. `R-622 §4` pre-registered THREE branches: LINK ESTABLISHED · LINK REFUTED · *"the schema cannot distinguish the paths → CLOSED PERMANENTLY."* **THE ACTUAL RESULT IS `N = 0`, WHICH IS NONE OF THE THREE.** It would be easy to read the third branch onto it — lane 2 even hands me the wording — but **the third branch is about the SCHEMA and the real reason is the POPULATION, and stretching a pre-registered branch to cover an outcome it did not name is precisely the goalpost move pre-registration exists to prevent.**
+✅★★★★★ **SO I NAME THE FOURTH CONDITION EXPLICITLY: `THE POPULATION IS EMPTY AND ALWAYS WAS.` The question is **CLOSED PERMANENTLY FOR THE HISTORICAL RECORD**, and by something STRICTER than any pre-registered branch — there is no sample, no timestamp, and no fifth source, since the authoritative database is the one that was read.** 🛑 **The retired claim (`R-621 §1`) STAYS RETIRED — nothing here re-establishes it, and `R-622 §4` permitted only re-establishment on new evidence.**
+✅ **A FUTURE-FACING version remains possible and is NOT authorized here: lane 2 correctly notes it needs a producer-side change (stamp the resolved path at insert time) with its own ratify packet.**
+
+### 🛑★★★ §6 — THE TWO LANES DISAGREED ONCE, AND ONE OF THEM IS OVERSTATED
+
+**DISAGREEMENT:** lane 1 read `85 DSL / 3 class`; lane 2 said *"absence of a marker does **not** prove DSL-path — only `3` of `88` are positively identifiable as class-path."*
+✅ **RESOLVED IN LANE 2's FAVOUR, BY LAW NOT BY PREFERENCE (`absence-claim`): an absence both hypotheses predict is not evidence. The `85` are UNMARKED, not DSL. `[The two agree on the DATUM — 3 positively identified — and differ only on the inference drawn from the complement.]`**
+
+🛑★★★★★ **AND A CORRECTION TO LANE 2, `[MEASURED HERE]`, BECAUSE ITS DECISIVE SENTENCE IS TOO BROAD TO PUBLISH:** lane 2 wrote that `strategyClass` is *"a function argument … **never written to any column**."* **The first half is right — `backtest-service.ts:433` declares it as a parameter, and it occurs exactly `3` times in the file. The second half is FALSE: `:3060` writes `originClass: strategyClass ?? null` into `strategy_names.origin_class` (column defined at `src/server/db/migrations/0019_strategy_names.sql:14`), inside a `TIER_1`-only auto-naming branch.**
+✅★★★★★ **THE CONCLUSION SURVIVES ANYWAY, AND FOR A REASON THAT DOES NOT DEPEND ON THE CORRECTED CLAIM: `origin_class` carries a PATH LABEL AND NO TIMESTAMP, so it could not support a clustering read even if fully populated. **The question closes on `N = 0` and on the absence of timestamps — never on "no column exists."** `A TRUE CONCLUSION RESTING ON A FALSE PREMISE IS ONE RE-READ FROM COLLAPSE`, so the premise is corrected here and the conclusion re-derived on the surviving ground.** ⚠️ `[UNENUMERATED]` whether `strategy_names.origin_class` is populated at all — **deliberately not chased, because it cannot change the disposition.**
+
+### ✅ §7 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — LAND `AR-666`.** Commit `src/engine/backtester.py` (that ONE file) from `wt-eventmask-fix-20260803` onto the campaign branch. **Authorized by this desk under `advisor-ruling §0.0`; reversible, campaign-branch only.** 🛑 **`LANDED ≠ RUNNING` — this does NOT reach `runtime-production` and no deploy is authorized.** 🛑 **`commit -o <path>` only — shared tree, the desk and lanes are live in it.**
+2. ✅★★★★★ **THEN — REPAIR THE FOUR DEAD `TestBacktesterWindowMask` TESTS, AND UNDERSTAND WHY THIS IS THE HIGH-VALUE TASK.** You named your honest ceiling as *"NO END-TO-END BACKTEST — arms 6/7 prove behaviour at the MASK level, not by running `run_backtest` and counting real trades."* **Those four tests DO exactly that and have been dead on a stale fixture. Add the missing `start_date`/`end_date` to `_make_minimal_backtest_result` (`test_entry_windows.py:313`) and they become the end-to-end proof you could not deliver — you are not building a new harness, you are reviving the one that was already written for this.**
+   **CONTRACT:** files — `src/engine/tests/test_entry_windows.py` only · forbidden — any change to `backtester.py`, `signals.py`, or the assertions themselves (**fix the FIXTURE, never the ASSERTION** — weakening a test to make it pass is a standing stop) · acceptance — the four run to a real verdict, and you report **RED on the pre-fix base and GREEN on the fix** using the SAME unchanged fixture (`red-path-decay`: re-measure the base this run, do not carry `AR-666`'s) · **honest-partial clause: if an assertion turns out to encode the OLD polarity, STOP and report — do not re-point it.**
+   **FIRST OBSERVABLE + ETA (`§8`):** the `ValidationError` gone and a real pass/fail verdict for `test_window_mask_reduces_entries`, ~20 min. **START-RECEIPT owed if nothing is observable in 10.**
+3. ⏸️ **`R-620 §4.1` (`INV-13` on a capped run) then `INV-1`'s overlap** — still queued, still behind the above.
+4. 🛑★★★★★ **THIS DESK — `§4` IS A NAMED PHASE-2 ENTRY BLOCKER.** No Phase-2 wave verdict may be interpreted while the macro blackout has no opt-out, because `v3-1`'s `OVERLAY-CONFLICT` bin is unfalsifiable against `edge-absent` without a control arm. **Mine to specify as a ratify packet. Not delegated, not parked on the operator.**
+5. **THIS DESK — the `WARNING`-tier decision (`R-620 §4.4`) and the `INV-1` disposition remain MINE.** ⚠️ **Both now aged four rulings; named here so they cannot quietly become a standing sentence.**
+6. ⚠️ **CARRIED, unchanged: `R-622 §5.5`** (the campaign tree's dead `DATABASE_URL` since `2026-07-13` — now with `§5`'s host measurement attached, so a future seat need not re-derive it) **and all of `R-621 §5.4`.**
+
+### §8 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** ✅ **No credential value read, printed or written — `§5`'s host extraction used a fail-closed regex that prints nothing unless it matches `@host:port/db`.** ✅ Single-writer honoured. ✅ Graph read, not modified, blob re-derived. ✅ No spend. `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET.
+🛑 **STILL LIVE, all of `R-622 §6` plus:** ★★★★★ **`signals.py` modified in any repair of this defect → STOP; its `block` variable holds the ALLOWED mask and the misnomer is not the bug.** · ★★★★★ **any Phase-2 wave verdict INTERPRETED before `§4`'s opt-out exists → STOP (`OVERLAY-CONFLICT` is unfalsifiable without it).** · ★★★★★ **an ASSERTION edited in the four revived tests → STOP; the contract is fixture-only.** · ★★★ **the historical DB question re-opened without a NEW source → STOP; `§5` closed it permanently and there is no fifth source.** · ★★★ **`85 DSL` cited from lane 1 → STOP (`§6`); the correct figure is `3` positively identified class-path out of `88`, remainder UNMARKED.** · ★★★ **`AR-666`'s repair described as proven end-to-end → STOP; it is proven at the MASK level only until `§7.2` lands.**
+
+### §9 — LESSONS TO PERSIST
+
+★★★★★ **`THE GUARD NAMED FOR THE DEFECT WAS ITSELF UNABLE TO RUN.`** Four tests in a class called `TestBacktesterWindowMask`, one of them documented *"bars at 09:00 ET should be blocked"*, died at request construction on a schema field they never supplied — **while the polarity inversion they exist to catch shipped and suppressed 100% of entries.** ★★★ **Eighth instance of the guard-shaped-object class this session, and the FIRST found in a RED test: `A RED TEST NOBODY DIAGNOSES IS INDISTINGUISHABLE FROM A RED TEST NOBODY CAN FIX.` "Known failing" is where a dead guard hides — sweep the red list for tests that never reach their subject.**
+★★★★★ **`FIXING THE CATASTROPHIC FORM OF A DEFECT CAN LEAVE THE DANGEROUS FORM BEHIND.`** `100%` entry suppression was obvious and is now repaired; what remains is an un-disableable macro blackout that every future backtest silently inherits. **The obvious failure was never the risk — the plausible one is, and the repair is what makes it plausible.**
+★★★★★ **`A PRE-REGISTERED BRANCH THAT DOES NOT FIT IS NOT A BRANCH TO STRETCH.`** The result was `N = 0`; the nearest branch was about the schema. **Naming a fourth condition costs one paragraph; reading the third branch onto it would have converted pre-registration into decoration on the one night it was tested.**
+★★★★ **`VERIFY A SCOPE PROMISE BY THE MODIFICATION SET, NOT BY THE SENTENCE THAT PROMISES IT.`** *"I did not touch `signals.py`"* and ` M src/engine/backtester.py` as the sole `git status` entry are the same claim at two evidence grades, and only one of them is checkable in three seconds.
+★★★ **`A TRUE CONCLUSION RESTING ON A FALSE PREMISE IS ONE RE-READ FROM COLLAPSE.`** Lane 2's *"never written to any column"* was false (`strategy_names.origin_class`) while its conclusion was right. **Correct the premise and re-derive, or the next reader who checks the premise discards the conclusion with it.**
+
+---
 ## R-622 · 2026-08-03 · ✅★★★★★ **OPERATOR AUTHORIZES CREDENTIAL USE (*"ANY CREDS ARE IN THE FILES"*) — AND THE `ECONNRESET` IS DIAGNOSED: **A TEN-DAY-STALE CREDENTIAL, NOT AN ACCESS PROBLEM.** `[MEASURED HERE, PATHS AND KEY-PRESENCE ONLY, NO VALUE READ OR PRINTED]` THE CAMPAIGN WORKTREE'S `.env` IS `2026-07-13 12:44`; THE MAIN REPO'S AND `runtime-production`'s ARE BOTH `2026-07-23 21:42`; AND A `.env.bak-slumdawg-secret-rotation-20260710` EXISTS — **SO CREDENTIALS WERE ROTATED AND THE WORKER WAS HOLDING THE PRE-ROTATION COPY.** RIGHT HOST, OLD PASSWORD, IDENTICAL RESET UNDER BOTH SSL MODES — EXACTLY THE DIFFERENTIAL `AR-664` REPORTED.** 🛑★★★★★ **AND THE OBSTRUCTION WAS MINE: MY OWN STANDING `runtime-production` PROHIBITION BLOCKED THE CURRENT COPY. **I AM NOT LIFTING IT** — `§2` ROUTES TO THE MAIN REPO'S IDENTICAL-MTIME COPY INSTEAD.** **DECISION: DESK LANE DISPATCHED · PROHIBITION INTACT · RETIRED CLAIM STAYS RETIRED · READING PRE-REGISTERED AGAIN.**
 
 **★ WORKER — START HERE:** ✅ **NOTHING CHANGES FOR YOU. Stay on the fallback repair (`R-621 §5.1`), first and alone.** ★★★ **The DB query is a DESK LANE precisely so it does not interrupt you — that is the corrected width model (`R-614 §2`) working as intended rather than being restated.** ✅ **And `AR-664`'s differential was right: TCP open + identical `ECONNRESET` under both SSL modes ruled out TLS and pointed at credentials. `§1` found the credential was simply ten days old.**
