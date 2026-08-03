@@ -503,6 +503,28 @@ class TestBacktesterWindowMask:
         assert "skipped_outside_window_count" in result["engine_audit"]
 
 
+def _extract_builder(func_name: str):
+    """Extract a NESTED builder's real source from backtester.py and exec it.
+
+    These builders live inside run_backtest and cannot be imported. Extracting
+    the real source by AST (never a hand-copy) is what makes these guards bind
+    to shipped code — a copy would assert against a duplicate of the bug.
+    """
+    import ast
+
+    src_path = pathlib.Path(__file__).resolve().parents[1] / "backtester.py"
+    source = src_path.read_text(encoding="utf-8")
+    node = next(
+        (n for n in ast.walk(ast.parse(source))
+         if isinstance(n, ast.FunctionDef) and n.name == func_name),
+        None,
+    )
+    assert node is not None, f"could not extract {func_name}"
+    ns: dict = {}
+    exec(ast.unparse(node), ns)  # noqa: S102 — the real function under test
+    return ns[func_name]
+
+
 class TestDefaultEventMaskPolarity:
     """R-635 §4.1 (F-A): its own class ON PURPOSE.
 
@@ -527,23 +549,7 @@ class TestDefaultEventMaskPolarity:
         its REAL source is extracted from backtester.py by AST and executed —
         never a hand-copy, which would assert against a duplicate of the bug.
         """
-        import ast
-
-        src_path = (
-            pathlib.Path(__file__).resolve().parents[1] / "backtester.py"
-        )
-        source = src_path.read_text(encoding="utf-8")
-        node = next(
-            (n for n in ast.walk(ast.parse(source))
-             if isinstance(n, ast.FunctionDef)
-             and n.name == "_build_default_event_mask_et"),
-            None,
-        )
-        assert node is not None, "could not extract _build_default_event_mask_et"
-
-        ns: dict = {}
-        exec(ast.unparse(node), ns)  # noqa: S102 — the real function under test
-        build_et = ns["_build_default_event_mask_et"]
+        build_et = _extract_builder("_build_default_event_mask_et")
 
         in_window = ["2026-03-04T08:30:00-05:00", "2026-03-04T08:59:00-05:00",
                      "2026-03-04T14:00:00-05:00", "2026-03-04T14:29:00-05:00"]
@@ -564,4 +570,34 @@ class TestDefaultEventMaskPolarity:
         assert (~mask[4:]).all(), (
             "non-window bars must be False (tradable); got "
             f"{mask[4:].tolist()} — the ET builder's polarity is INVERTED"
+        )
+
+    def test_default_event_mask_utc_polarity_is_sit_out(self):
+        """R-636 §5.1 (F-C): the LEGACY UTC builder's twin guard.
+
+        AR-666 fixed this builder's polarity alongside the ET one, but nothing
+        guarded it: AR-681 §4 named that gap against its own finished work, and
+        this closes it. The UTC fallback runs whenever a result has no `ts_et`
+        column, so an inversion here is silently reachable in production.
+
+        Its windows are the UTC equivalents: 12:30-14:00 and 18:00-19:30.
+        """
+        build_utc = _extract_builder("_build_default_event_mask_utc")
+
+        in_window = ["2026-03-04T12:30:00+00:00", "2026-03-04T13:59:00+00:00",
+                     "2026-03-04T18:00:00+00:00", "2026-03-04T19:29:00+00:00"]
+        out_window = ["2026-03-04T12:29:00+00:00", "2026-03-04T14:00:00+00:00",
+                      "2026-03-04T15:00:00+00:00", "2026-03-04T19:30:00+00:00"]
+        mask = build_utc(in_window + out_window)
+
+        # POSITIVE CONTROL: the extraction executed real code.
+        assert mask.dtype == bool and mask.shape == (8,)
+
+        assert mask[:4].all(), (
+            "UTC blackout-window bars must be True (SIT_OUT); got "
+            f"{mask[:4].tolist()} — the UTC builder's polarity is INVERTED"
+        )
+        assert (~mask[4:]).all(), (
+            "UTC non-window bars must be False (tradable); got "
+            f"{mask[4:].tolist()} — the UTC builder's polarity is INVERTED"
         )
