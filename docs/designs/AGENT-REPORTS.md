@@ -4,6 +4,16 @@
 
 ---
 
+## AR-722 · 2026-08-03 · ⏳ **START-RECEIPT — `R-667 §5`, THE TIER-A ENUMERATION. SAME SEAT, STILL HOLDING CONTEXT.**
+
+✅★★★★★ **THE POPULATION SOURCE, NAMED AS ORDERED — AND IT IS BETTER THAN THE STANDING CONCERN ASSUMED: `docs/replay-results/h1-battery/tier-a-extraction-provenance/`, **A REAL DIRECTORY ON DISK** carrying `13` spec JSONs **plus `_MANIFEST.json`.** 🛑 **THE MANIFEST IS THE AUTHORITY, BY ID AND BY HASH — NOT MY `ls`:** it declares `files: 13`, **`matched_to_census_specs: 11`**, `dropped_not_clean: 2`, joined by *"recomputed sha256 of each file vs the census `specs[].extraction_sha256"*` against `tier-a-compile-census.json`. **THE `11` ARE THE `dropped:false` ENTRIES, AND I WILL TAKE THEM FROM THE MANIFEST'S OWN FLAGS RATHER THAN FROM A FILE LISTING.**
+✅ **SO THE STOP CONDITION DOES NOT FIRE AND NO PRODUCER NEEDS RUNNING.** ★★★ **THIS ALSO PARTLY DISCHARGES `AR-716 §9` / `AR-719 §2`'s standing `[UNENUMERATED AS A NAMED POPULATION]`: the tier-A rows are not a *spec-artifact* directory, but the tier-A **EXTRACTIONS** are, preserved at `R-588` off a dead session temp dir. **I will state precisely which of the two that closes and which it does not.**
+🛑 **I WILL VERIFY THE MANIFEST'S HASHES MYSELF RATHER THAN TRUSTING ITS `in_census_by_sha` FLAGS** — a manifest is a claim like any other, and its join key is re-computable in one pass.
+✅ **CONSTRAINTS I AM HOLDING: `(d)` family composition is REPORTED, NEVER RANKED (`§4.4`). **I WILL NAME WHICH CANDIDATES MEET CRITERIA `1`–`3` AND WILL NOT RECOMMEND, RANK, OR IMPLY A PREFERENCE.** `[UNENUMERATED]` is a legitimate cell value and I will use it rather than guess an instrument.**
+**FIRST OBSERVABLE: the manifest hash re-verification + the `(a)`/`(b)`/`(c)` table. ETA ~25 min.**
+
+---
+
 ## AR-721 · 2026-08-03 · ✅★★★★★ **`R-666 §6` DELIVERED — `Q1` + `Q2`. **THE FAMILY-TERM BLOCK IS HONEST. THE NINE `WAIT_STRUCTURE` ROWS ARE HONESTLY BLOCKED, AND SO IS THE `INVALIDATE` ROW.** THIS IS THE OUTCOME YOUR PRE-REGISTERED GUARD NAMED AS EXPECTED, AND I AM REPORTING IT AS A COMPLETE RESULT, NOT A DISAPPOINTMENT.** 🛑🛑★★★★★ **`Q1`'s LITERAL QUESTION — *"on how many bars, out of how many"* — **HAS NO DENOMINATOR: THE GOLDEN SLICE HAS NO DATASET.** ITS OWN ARTIFACT CLASSIFIES IT AS **`equities` / "stocks", "S&P 500"** (worked example ~`616`–`617`, i.e. CASH INDEX LEVELS), AND `data_cache/` HOLDS **ONLY FUTURES** (`CL`,`ES`,`MES`,`NQ`). **YOUR STOP CONDITION FIRES — AND IT FIRES INTO A BETTER ANSWER THAN A BAR COUNT.**
 
 **TASK:** `R-666 §6`. **RUN MODE FOR EVERY FIGURE BELOW: STATIC SOURCE READ + DIRECT `python -c` INSPECTION AT HEAD `9f9d57fe`. NO pytest, NO `-k` FILTER, NO BACKTEST.** ✅ **So the `R-665 §5` no-`.git` skip class cannot reach a single number here.** **NOT GRAPH-SCHEDULED. NOTHING under `src/` modified.**
