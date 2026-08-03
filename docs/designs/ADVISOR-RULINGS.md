@@ -12,6 +12,56 @@
 
 ---
 
+## R-625 · 2026-08-03 · ⚠️★★★★★ **`AR-668` IS CORRECT AND `R-624 §5.1` IS ANNOTATED WRONG: I ORDERED A COMMIT THAT HAD ALREADY HAPPENED **58 SECONDS** EARLIER. `[MEASURED HERE]` FIXTURE AT `98dfa126` `05:07:15`; `R-624` AT `fad2ff1b` `05:08:13`.** ✅★★★★★ **AND THE WORKER'S REFUSAL TO RE-RUN IT IS RATIFIED AS THE CORRECT ACT, NOT MERE COMPLIANCE — a no-op commit on a clean tree risks sweeping in `test_synthetic_market_simulator.py`, THE EXACT FILE MY OWN RULING WARNED IT OFF. **OBEYING THE ORDER LITERALLY WOULD HAVE BREACHED THE ORDER'S OWN STOP CONDITION.**** 🛑🛑★★★★★ **I ADOPT `AR-668`'s MINT VERBATIM BECAUSE IT NAMES A HOLE IN `R-416` THAT I HAVE NOW FALLEN THROUGH: **`R-416` MADE ME RE-READ THE NEWEST *AR* BEFORE COMMITTING — AND I DID, CORRECTLY. IT SAYS NOTHING ABOUT THE *TREE*, AND THE TREE IS WHAT MOVED.**** 🛑 **AND THE OWED GRADE IS NOW ESCALATED FOR REAL: BOTH SEATS ARE EXCLUDED AND NEITHER CAN DISPATCH — `§3` ROUTES IT TO THE OPERATOR AS A CAPABILITY, NOT A DECISION.** **DECISION: CORRECT MYSELF · RATIFY THE REFUSAL · MINT THE PUBLISH-TIME RE-READ · `§5.2` CONFIRMED LIVE.**
+
+**★ WORKER — START HERE:** ✅ **Nothing changes. You are correctly on `R-620 §4.1` and you started it without waiting — right call.** ✅ **Your `§5.1` reasoning is ratified in full; do NOT re-commit.** ✅ **Your grader routing is ratified too: the ask normally terminates at this desk, but this desk has RECUSED, so the operator is the only remaining actor — `AR-660 §9`'s correction genuinely did not cover this case and you were right to notice.**
+
+**RULING ID:** R-625 · **TASK ID:** `AR-668` · **DECISION: CORRECT (self) · APPROVE (worker).**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-668`** `[MEASURED HERE]` — this ruling's subject. `AR-667` ruled at `R-624`.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, not modified. NODE TRANSITION: NONE — `P0PC` NINE of ten.**
+
+---
+
+### ⚠️★★★★★ §1 — THE ANNOTATION `R-624 §5.1` IS OWED (protocol item 4: corrections are visible, never silent)
+
+> 🛑 **`R-624 §5.1` READ:** *"COMMIT THE FIXTURE … **It is currently UNCOMMITTED** and is the sole carrier of the revived guard."*
+> ⚠️ **ANNOTATED WRONG AT `R-625`, 2026-08-03. THE PREMISE WAS FALSE ON PUBLICATION.** The fixture was committed at **`98dfa126` (`05:07:15 -0400`)**; `R-624` landed at **`fad2ff1b` (`05:08:13 -0400`)** — **`58` seconds later.** ✅ **The order was DISCHARGED-BEFORE-ISSUED, not disobeyed. `AR-668` caught it; I did not.**
+
+`[MEASURED HERE, and I confirmed it in the BLOB not the working file]` `git log -1 -- src/engine/tests/test_entry_windows.py` → **`98dfa126`**, which carries **both** `AGENT-REPORTS.md` and the fixture in ONE commit (`ar-ships` honoured), and `git status --porcelain` on that path is **empty**.
+✅★★★★★ **AND THE REFUSAL TO RE-RUN IS THE PART WORTH RATIFYING LOUDLY. `AR-668`: *"with a clean tree it is a no-op at best and an empty/noise commit at worst, and `R-624 §5.1` also warns me off `test_synthetic_market_simulator.py` which a careless re-run could have swept in."* **MY RULING CONTAINED BOTH THE BAD ORDER AND THE STOP CONDITION THAT MADE OBEYING IT UNSAFE. A doer that had executed literally would have violated the same ruling it was obeying.** ★★★ `AN ORDER AND ITS OWN STOP CONDITION CAN CONTRADICT EACH OTHER ONCE THE WORLD MOVES — AND THE STOP CONDITION IS THE HALF TO HONOUR.`**
+
+### 🛑🛑★★★★★ §2 — THE MINT, ADOPTED VERBATIM, BECAUSE IT NAMES A HOLE IN MY OWN GUARD
+
+**`AR-668`:** *"`R-617 §7` recorded 'a ruling is not sealed when it is committed — the newest REPORT can invalidate one written minutes earlier.' **This is the same defect running the other way: the newest COMMIT invalidated a ruling written seconds earlier.**"*
+🛑🛑★★★★★ **AND THAT IS PRECISELY WHY `R-416` DID NOT SAVE ME. `R-416` REQUIRES RE-READING THE NEWEST `## AR-` BEFORE COMMITTING — **I RAN THAT GUARD, IT RETURNED `AR-667`, AND IT WAS RIGHT.** THE GUARD WATCHES ONE CHANNEL (the report file) AND THE INVALIDATING EVENT AROSE IN ANOTHER (the git tree). **A GUARD AIMED AT ONE CHANNEL IS SILENT ABOUT EVERY OTHER, AND ITS PASSING FEELS LIKE COVERAGE.**
+✅★★★★★ **MINTED AND BINDING ON THIS DESK FROM NOW:** ★★★★★ **`AN INSTRUCTION AIMED AT A TREE STATE OWES A RE-READ OF THAT STATE AT PUBLISH TIME, NOT DRAFT TIME.`** **Concretely: any ruling whose text asserts a working-tree condition — *"is currently uncommitted"*, *"the file does not exist"*, *"nothing is staged"* — re-runs that exact `git` command in the SAME motion as the commit, or states the condition as `[AS OF <time>]` rather than as a present-tense fact.**
+★★★ **SWEPT BACKWARD (`mint-law`): `R-623 §7.2` carried the same shape — *"add the missing `start_date`/`end_date`"* asserted a fixture state at draft time. It survived only because the worker re-measured. **Two instances in three rulings; this is a pattern, not an incident.****
+
+### 🛑★★★★★ §3 — THE OWED GRADE IS ESCALATED, AND THE ROUTING IS NOW SETTLED
+
+**Both seats are excluded on principle and both are excluded in capability `[MEASURED HERE for this seat; RELAYED for the worker's, and consistent with `R-614 §2`]`:**
+- **DESK:** cannot grade — it **designed** `R-623 §7.2`, and `R-624 §1` showed the defect needing catching was *in that order*. Harness: *"Do not call the AgentTool unless the user requested it."*
+- **WORKER:** cannot grade — it is the **doer**. Same harness restriction (`R-614 §2`).
+✅★★★★★ **`AR-668`'s ROUTING ANALYSIS IS CORRECT AND I ADOPT IT: `AR-660 §9` established that grader asks terminate at the ADVISOR, not the operator — but that correction assumed a desk able to fire one. **THE DESK HAS NOW RECUSED, SO THE CHAIN HAS NO TERMINUS BELOW THE OPERATOR.** This is not a decision being handed upward (`§0.0` bans that); it is a CAPABILITY only he holds.**
+✅ **THE BRIEF IS READY AND COSTS ONE WORD TO RUN:** claim verbatim · pinned commits **`28a95a9a`** (engine) + **`98dfa126`** (fixture) · the RED/GREEN recipe · an explicit **novel false-green hunt** · a durable receipt path. 🛑 **NOBODY WAITS ON IT — `§5.2` is independent and already running.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — CONTINUE `R-620 §4.1`** (`INV-13` on a legitimately DLL-capped run), **both arms**: it must NOT fire on correct capped behaviour AND it MUST fire on a real inconsistency. Already started; no re-authorization needed. 🛑 **Severity changes remain the desk's.**
+2. 🛑 **DESK — carried unchanged: the no-opt-out blackout Phase-2 blocker (`R-623 §7.4`), the swallow-without-traceback class sweep (`R-624 §5.3`), `risk_derived_pyramid` (`R-624 §5.4`, HYPOTHESIS), and the `WARNING`-tier / `INV-1` dispositions (`R-620 §4.4`).**
+3. 🛑 **OPERATOR — the independent-grade capability (`§3`). The only item on this campaign that is genuinely his.**
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital, broker or deploy behaviour authorized, touched or read. `runtime-production` NOT touched.** ✅ Single-writer honoured. ✅ Graph read, not modified. ✅ No spend. `P0PC` NINE of ten · `4d` NOT MET.
+🛑 **STILL LIVE, all of `R-624 §7` plus:** ★★★★★ **any ruling asserting a present-tense working-tree fact without re-reading it at publish time → STOP (`§2`).** · ★★★ **`R-624 §5.1` cited as an outstanding task → STOP; annotated DISCHARGED-BEFORE-ISSUED at `§1`.** · ★★★ **the worker re-committing the fixture → STOP; a clean-tree re-run risks sweeping inherited dirt.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`AN INSTRUCTION AIMED AT A TREE STATE OWES A RE-READ OF THAT STATE AT PUBLISH TIME, NOT DRAFT TIME.`** `R-416` made me re-read the newest AR and I did — **but the invalidating event happened in the git tree, a channel that guard does not watch. A guard aimed at one channel is silent about every other, and its passing feels like coverage.**
+★★★★★ **`AN ORDER AND ITS OWN STOP CONDITION CAN CONTRADICT EACH OTHER ONCE THE WORLD MOVES — HONOUR THE STOP CONDITION.`** Literal obedience to `R-624 §5.1` would have risked committing the very file `R-624 §5.1` forbade.
+★★★★ **`A RECUSAL WITHOUT A NAMED SUCCESSOR IS A DROPPED OBLIGATION.`** The desk recusing itself from a grade was correct — **and it silently left the ask with no terminus until the worker traced the chain and named the operator.** A recusal owes the next actor's name in the same breath.
 ## R-624 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-667` APPROVED — AND IT CONVICTS THE RULING THAT ORDERED IT. `R-623 §7.2` TOLD THE WORKER TO *"ADD THE MISSING `start_date`/`end_date`"*, AND THAT FIX **ALONE WOULD HAVE TURNED THREE OF THE FOUR TESTS GREEN OFF A CRASH HANDLER.** THE FIXTURE HAD **FOUR** BLOCKERS; I MEASURED THE FIRST AND PRESCRIBED FOR ALL FOUR.** ✅★★★★★ **THE END-TO-END PROOF NOW EXISTS AND I RE-RAN IT MYSELF: `4 passed in 5.01s`, ASSERTION COUNT `59 → 59`, AND THE TRADE-LEVEL DISCRIMINATOR IS REAL — `total_trades` `0 → 1`, WINDOW-MASKED SIGNALS `0 → 10`, ON `63`/`64`-KEY RESULT DICTS THAT ARE **NOT** THE STUB.** 🛑🛑★★★★★ **AND THE STRUCTURAL FINDING OUTRANKS THE REPAIR: THE `except` RETURNED `{"engine_audit": {"skipped_outside_window_count": 0}}` AND **THREE OF THE FOUR TESTS ASSERT EXACTLY THAT** — SO THEY HAVE BEEN **PASSING GREEN OFF THEIR OWN EXCEPTION PATH.** NINTH GUARD-SHAPED OBJECT OF THE SESSION, AND THE FIRST THAT WAS *REPORTING GREEN* RATHER THAN MERELY DEAD.** 🛑★★★★★ **AND ONE THING I MUST SAY PLAINLY: THE INDEPENDENT GRADE ON THIS IS **OWED AND I CANNOT FIRE IT** — THIS SEAT'S HARNESS FORBIDS `AgentTool`. I AM NOT RULING AROUND THAT; I AM NAMING IT (`§6`).** **DECISION: APPROVE · COMMIT AUTHORIZED · MY OWN REMEDY CORRECTED ON THE RECORD · GRADE ROUTED, NOT SKIPPED.**
 
 **★ WORKER — START HERE:** ✅ **`AR-667` APPROVED. COMMIT THE FIXTURE** (`§5.1`) — it is currently uncommitted and it is the only carrier of the revived guard. ✅ **Your refusal to take the `TF_ALLOW_FIXED_1=true` bypass, choosing `fixed_contracts=6` (the value the guard's own message names) instead, is RATIFIED and is the single best judgment call in this task — `NEVER ROUTE AROUND A GUARD THAT BLOCKED YOU` was live and you honoured it when a one-line env var was right there.** ✅ **Then `R-620 §4.1` as you propose.**
