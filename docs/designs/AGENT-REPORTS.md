@@ -4,6 +4,48 @@
 
 ---
 
+## AR-683 · 2026-08-03 · ✅★★★★★ **`F-4`, `F-5`, `F-6` CLOSED (`7b5621b4`) — SWEPT AS ONE CLASS, NOT THREE TICKETS. ALL THREE WERE A LOOP OR `continue` ITERATING **ZERO TIMES**.** 🛑🛑★★★★★ **AND THE DELIVERABLE IS THREE **NEW RED TESTS** — THAT IS THE POINT, NOT A REGRESSION: `60 passed / 3 skipped` → `3 failed / 57 passed / 3 skipped`. **THREE FALSE GREENS ARE NOW HONEST FAILURES.**** ⚠️ **THE UNDERLYING GAPS ARE **NOT** CLOSED BY THIS COMMIT AND I NAME EACH ONE.** **FAN-IN `3 / 7`.**
+
+**TASK:** `R-637 §4.1`, findings `F-4`–`F-6` from `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`. **Files: `test_pnl_accuracy.py`, `test_firm_config.py`.**
+
+### ✅ THE CLASS, AND WHY ONE WAVE
+
+| finding | the vacuity | guard added |
+|---|---|---|
+| **F-4** `test_commission_per_trade_matches_formula` | `for trade in result["trades"]:` — **zero trades**; engine printed *"Only 0 OOS trades"* | `assert len(result["trades"]) > 0` before the loop |
+| **F-5** `test_pending_firms_conservative_cap` | `if firm_key not in FIRM_CONTRACT_CAPS: continue` — **all three** pending firms absent, so `continue` fired every time | count `checked`, `assert checked > 0` |
+| **F-6** `test_atr_wants_more_capped_to_firm_limit` | `if sizes_uncapped[i] > 15:` — **no bar exceeded 15** (every non-NaN uncapped size was exactly `15.0`) | count `exceeded`, `assert exceeded > 0` |
+
+★★★ **`fix-pattern`: one shape — *an empty iterable is not a passing assertion* — so one wave, not three.**
+
+### ✅ MEASURED, WITH THE VERBATIM COMMAND (`R-634 §1`, now law)
+
+```
+python -m pytest src/engine/tests/test_pnl_accuracy.py src/engine/tests/test_firm_config.py -q
+  BASELINE (base tree):  60 passed, 3 skipped
+  AFTER:                  3 failed, 57 passed, 3 skipped
+```
+✅ **The delta is exactly the three named tests — no other test moved.** ✅ **`assert` counts `73 → 74` (pnl) and `12 → 14` (firm): additions only, nothing removed or weakened.**
+
+### 🛑🛑★★★★★ WHAT THE THREE REDS ACTUALLY SAY — THESE ARE FINDINGS, NOT CHORES
+
+1. **F-4 — THE COMMISSION FORMULA IS UNVERIFIED.** The fixture produces **zero trades**, so the money-path assertion the sweep calls *"the test that would have caught a commission off-by-one"* has never run. ⚠️ **This is the same wall `AR-658` hit: no fixture it could build made the engine emit an entry signal. Making this test real is a separate job.**
+2. **F-5 — THE CONSERVATIVE-CAP RULE IS UNVERIFIED, AND MAY BE AN ORPHANED SPEC.** `{top_one_50k, yrm_prop_50k, fundingpips_50k}` ∩ `FIRM_CONTRACT_CAPS` = **∅**. ⚠️ **Either those firms should be configured and are not, or the test describes firms that no longer exist — the `track3` shape again. `[NOT DETERMINED — I did not measure which.]`**
+3. **F-6 — THE FIRM-CAP CLAMP IS UNEXERCISED.** The fixture's ATR never wants more than the cap. **This one is genuinely fixture-fixable** (make the ATR small enough that uncapped size exceeds 15) **and I did NOT do it** — it is beyond "add the guard the sweep specified", and I would rather the desk see the honest red than a fixture I tuned to go green.
+
+★★★★★ **I AM DELIBERATELY LEAVING THREE RED TESTS.** `never weaken a test to make it pass` cuts both ways: **the cheap way to "close" F-4–F-6 is to delete the new asserts, and the second-cheapest is to tune fixtures until they pass. Both would restore the false green.** **The red is the true state of the system and it should be visible until each gap is genuinely closed.**
+
+### ⚠️ NOT DONE / NOT MEASURED
+
+1. **`F-3`, `F-7`, `F-8`, `F-9` — NOT STARTED. FAN-IN `3 / 7`.** They are UNSTARTED, not blocked.
+2. **Whether F-5's firms are a config gap or an orphaned spec** — undetermined.
+3. **Pre-existing ruff debt cleared in both files** (`10` errors, safe fixes only, proven pre-existing by running `ruff` against `git show HEAD:`). **No `--unsafe-fixes`.**
+4. ⚠️ **I reported this commit as landed once when it had NOT** — the hook rejected it on that lint debt and `git log` still showed the desk's `316561cc`. **Caught by checking `git status` rather than the command's output. Second time this session; the check is now reflexive.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED. NEXT: `F-7`, `F-8`, `F-9`, then `F-3` (largest).**
+
+---
+
 ## AR-682 · 2026-08-03 · ✅★★★★★ **`R-636 §5.1` (`F-C`) CLOSED (`ed4a33d5`) — THE UTC BUILDER NOW HAS ITS TWIN GUARD, AND BOTH ARE RED-PROOFED **INDEPENDENTLY**: EACH MUTATION FIRES **ONLY ITS OWN** GUARD.** ✅ **THIS WAS THE GAP I NAMED AGAINST MY OWN FINISHED WORK IN `AR-681 §4`, AND CLOSING IT TOOK ONE COMMIT.**
 
 **TASK:** `R-636 §5.1`. **File: `src/engine/tests/test_entry_windows.py` ONLY.**
