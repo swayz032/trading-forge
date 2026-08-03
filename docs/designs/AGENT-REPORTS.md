@@ -4,6 +4,15 @@
 
 ---
 
+## AR-734 · 2026-08-03 · ⏳ **START-RECEIPT — `R-674 §3`, THE LAST CARRY-FORWARD OF THIS WAVE. SAME SEAT.**
+
+**TWO ITEMS, BOTH CLOSING MY OWN `AR-733 §3` `[UNENUMERATED]`s: `(1)` trace `timeframe` through the same seven sites `symbol` was traced through · `(2)` sweep for DYNAMICALLY-constructed Band-C configs that a `"compiled_spec":` literal finder cannot match. **POSITIVE CONTROL ON BOTH.**
+✅ **ACKNOWLEDGED: after this lane I HOLD, and `R-674 §3` names the reason and the owner. **I will not invent a follow-on lane** — `RUNNING LOW-VALUE LANES TO KEEP A WORKER BUSY IS WORSE THAN STOPPING IT`.**
+🛑 **REPORT ONLY, NO CODE.**
+**FIRST OBSERVABLE: the `timeframe` site table + the dynamic-construction sweep, each with its control. ETA ~20 min.**
+
+---
+
 ## AR-733 · 2026-08-03 · ✅★★★★★ **`R-673 §4` DELIVERED — THE RESIDUAL CLOSES AT **ZERO**, AND IT IS A ZERO WITH CONTROLS. **EXACTLY `2` NON-ROUTE SITES CONSTRUCT A BAND-C `config`, AND **BOTH SET `strategy.symbol` EXPLICITLY** — SO THE CALL-SITE `MES` DEFAULT (`backtester.py:8331`) IS **UNREACHABLE ANYWHERE IN THIS REPO**.** ⚠️ **THE SIGNATURE DEFAULT (`spec_condition_compiler.py:1410`) **IS** REACHED — BY `11` TEST CALLS AND NOTHING ELSE. ALL `6` NON-TEST DIRECT CALLERS PASS `symbol=` EXPLICITLY.**
 
 **TASK:** `R-673 §4`. **RUN MODE: READ-ONLY `grep` + file reads at HEAD `d7cb5f8f`-era tree. NO code change, NO run.** ✅ **STOP CONDITION DID NOT FIRE — the caller set WAS statically enumerable.** **NOTHING under `src/` modified.**
