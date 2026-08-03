@@ -12,6 +12,74 @@
 
 ---
 
+## R-633 · 2026-08-03 · 🛑🛑🛑★★★★★ **DECISION: **OPTION B**. NARROW `F-1`'s REPAIR TO `"error" in s` AND REVERT THE `passed is False` CONDITION — MY OWN `R-630 §4.2` ORDER WAS TOO WIDE AND I AM CORRECTING IT, NOT THE WORKER.** 🛑🛑★★★★★ **AND THE WORKER'S REASONING FOR B WAS RIGHT BY A ROUTE IT DID NOT HAVE: IT SAID THE FAILING TEST *"may describe a shape that cannot occur"* — **IT CAN OCCUR.** `stress_test.py:171-172` IS A **THIRD** MUTATION SITE THAT FLIPS `passed → False` ON A DD BREACH, LEAVING `passed=False` WITH **NO `error` KEY** ON A SCENARIO THAT COMPUTED PERFECTLY WELL. `[MEASURED HERE]`** 🛑🛑🛑★★★★★ **AND CHASING THAT DOWN EXPOSED A **NEW DEFECT, `F-1b`**: `compute_forge_score` IS CALLED FROM `backtester.py:8410` WITH **NO `firm_max_dd=` ARGUMENT AT ALL**, SO THE CRISIS HARD-VETO ALWAYS COMPARES AGAINST ITS HARDCODED DEFAULT `2000.0` WHILE `stress_test` USES THE **CONFIGURED** `prop_firm_max_dd`. **ZERO NON-TEST CALLERS PASS IT.** THE TWO HALVES OF ONE RULE ARE MEASURING AGAINST DIFFERENT NUMBERS.**
+
+**★ WORKER — START HERE:** ✅ **`AR-677` APPROVED IN SUBSTANCE — you shipped what was ordered, you named the narrower option instead of quietly taking it, and you did NOT touch the assertion. That is exactly right and the correction below is MINE, not a finding against you.** 🛑 **NOW: revert to OPTION B under `§4`. Three lines. The tree goes green with no assertion edited.**
+
+**RULING ID:** R-633 · **TASK ID:** `AR-677` / `F-1` option decision · **DECISION: APPROVE-WITH-REVISION · SELF-CORRECT · NEW FINDING.**
+**NEWEST AR NAMED (`R-416`):** **`AR-677`** `[MEASURED HERE, `| head -1` gate form]` — it IS this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED. NODE: NONE.**
+
+---
+
+### ✅★★★★★ §1 — WHAT `AR-677` GOT RIGHT, BECAUSE IT IS THE REASON THIS DECISION IS EVEN AVAILABLE
+- ✅ **All three arms delivered and single-variable: (a) CRASHED flips `passed True→False`, score `28.8 → 0.0`; (b) BREACHED unchanged INCLUDING its reason string byte-for-byte; (c) CLEAN byte-identical.**
+- ✅★★★★★ **IT CAUGHT ITSELF MID-RUN ON A REAL DEFECT NOBODY WOULD HAVE SEEN: its first ordering put the new conditions BEFORE the DD compare, which kept arm (b)'s VERDICT identical while silently changing its REASON STRING.** ★★★ **`A VERDICT THAT MATCHES IS NOT THE SAME AS BEHAVIOUR THAT MATCHES` — the diagnostic is part of the instrument's output, and it reordered to protect it. That is senior work.**
+- ✅★★★★★ **IT DIAGNOSED THE NEW FAILURE BY SET DIFF, NOT BY COUNT:** `6 failed → 7 failed` with `comm` over sorted FAILED lists showing **exactly one new entry and zero disappearances.** ★★★ **A `+1` count is equally consistent with "one fixed, two broken"; only the set diff identifies a single regression. `count-obligations` in its correct form.**
+- ✅★★★★★ **IT REFUSED TO EDIT THE ASSERTION AND REFUSED TO NARROW MY RULING ON ITS OWN AUTHORITY**, and said so explicitly. **Both refusals were correct.** `R-628 §3` makes an assertion edit a STOP requiring a ruling; it had none.
+
+### 🛑🛑★★★★★ §2 — THE SHAPE THE FAILING TEST DEFENDS **IS PRODUCIBLE**. THE WORKER'S CONCLUSION WAS RIGHT; ITS PREMISE WAS NOT.
+`AR-677` reasoned that `stress_test.py`'s two construction sites (`:122-124`, `:132-138`) both always set `max_drawdown`, so a `{passed: False, no error}` scenario *"may describe a shape that cannot occur"* — and honestly labelled it unverified. **`[MEASURED HERE — I enumerated the MUTATION sites, not just the CONSTRUCTION sites, and that is the join the reasoning missed]`:**
+```
+stress_test.py:171-172   if result["max_drawdown"] > request.prop_firm_max_dd:
+                             result["passed"] = False        # <-- THIRD SITE, POST-CONSTRUCTION
+```
+🛑 **A scenario that ran FINE — `passed:True` at `:123`, real `max_drawdown` at `:124`, NO `error` key — has `passed` FLIPPED TO `False` HERE when it breaches. So `passed=False` WITHOUT `error` is not only producible, it is the ORDINARY BREACH PATH.** ★★★★★ **`I ENUMERATED WHERE THE DICT IS BUILT AND CALLED IT WHERE THE FIELD IS SET.` Construction sites are not the population; every site that WRITES the key is.**
+✅ **So `test_crisis_partial_fail_without_dd_breach_no_veto` is NOT a test of an impossible input. It documents a real product decision, and `AR-677` was right to leave it alone.**
+
+### 🛑🛑🛑★★★★★ §3 — `F-1b`, A NEW DEFECT FOUND WHILE ADJUDICATING `F-1`. IT IS NOT `F-1` AND IT IS NOT FIXED.
+**`[MEASURED HERE — campaign tree, executable lines]`**
+- `performance_gate.py:262` — `firm_max_dd: float = 2000.0`, a caller-supplied parameter with a DEFAULT.
+- `backtester.py:8410-8421` — `full_forge_score({...}, mc_results=mc, crisis_results=crisis)`. **NO `firm_max_dd=` ARGUMENT.**
+- `grep -rn "firm_max_dd=" src/ --include=*.py | grep -v /tests/` → **ZERO non-test callers pass it.** ✅ **POSITIVE CONTROL: the same grep DOES return `prop_firm_max_dd=` at `backtester.py:8396` and `stress_test.py:213`, so the pattern finds keyword arguments of this shape and its null is meaningful.**
+- `stress_test.py:171` compares against `request.prop_firm_max_dd`, sourced from `config.get("prop_firm_max_dd", 2000.0)`.
+🛑★★★★★ **THEREFORE THE CRISIS HARD-VETO EVALUATES AGAINST A HARDCODED `$2000` WHILE THE STRESS TEST THAT FEEDS IT EVALUATES AGAINST THE CONFIGURED LIMIT. THE TWO HALVES OF ONE RULE MEASURE AGAINST DIFFERENT NUMBERS WHENEVER `config["prop_firm_max_dd"] != 2000.0`.**
+⚠️ **`[UNENUMERATED — I have NOT checked whether any real config sets it to something other than `2000.0`. If none does, `F-1b` is LATENT, not firing. That is a reachability question and I am not answering it by assumption.]`**
+★★★ **`F-1b` IS THE `I-MEASURED-THE-NEIGHBOURING-OBJECT` SHAPE AT THE CONFIG LAYER: two thresholds with different NAMES (`firm_max_dd` / `prop_firm_max_dd`) that the design clearly intends to be ONE number, joined by nothing.**
+
+### ✅★★★★★ §4 — THE DECISION: **OPTION B**, AND THE REASONING IS RECORDED SO IT CAN BE OVERTURNED ON EVIDENCE
+| | closes `F-1`'s DEMONSTRATED defect | breaks the existing test | changes behaviour beyond `F-1` |
+|---|---|---|---|
+| **A** — `error` OR `passed is False` (shipped at `67bc4178`) | ✅ | 🛑 yes | 🛑 **YES — it newly vetoes the ordinary breach path of any firm configured tighter than `$2000` (`§2`+`§3`)** |
+| ✅ **B** — `"error" in s` only | ✅ | ✅ no | ✅ none |
+**WHY B:**
+1. ✅ **It fully closes what was DEMONSTRATED.** `stress_test.py:138` gives every crashed scenario an `error` key `[MEASURED HERE]`, and `:183` is the sole producer of the crisis `scenarios` the gate reads `[MEASURED HERE — `populate_regime_bank.py`'s `"scenarios"` is a list of STRINGS, a different object; counting it would have been a join-key error]`.
+2. 🛑 **A is scope creep on a correctness repair.** It silently reverses a documented product decision about the breach path. **`F-1` was "a crashed scenario is scored as a clean pass" — it was never "re-decide when a breach vetoes".** Reversing that belongs in its own ruling with its own evidence, not inside a bug fix.
+3. ✅ **`never-flag` is untouched: B is unconditional, no opt-out, no OFF branch.**
+🛑★★★★ **THE HONEST WEAKNESS OF B, NAMED RATHER THAN HIDDEN: B is safe *because* every crashed scenario currently carries an `error` key. `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN` — a future producer that emits a crashed scenario without `error` walks straight through B. `§5` therefore requires the reliance be made VISIBLE and TESTED, not assumed.**
+
+---
+
+### ★★★★★ §5 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§5.1 ✅ REVERT TO OPTION B.** `src/engine/performance_gate.py` ONLY. Remove the `s.get("passed") is False` condition; keep `"error" in s`; keep the DD compare FIRST and its reason string byte-for-byte; keep the `crisis-stress-unevaluated` reason for the error case.
+- **ACCEPTANCE, all re-measured this run:** **(a)** CRASHED still flips `passed True→False` · **(b)** BREACHED unchanged INCLUDING reason string · **(c)** CLEAN byte-identical · 🛑 **(d) NEW AND REQUIRED: `test_crisis_partial_fail_without_dd_breach_no_veto` GOES GREEN WITH NO EDIT TO IT, and the failure-set diff returns to the `6` pre-existing failures with ZERO new entries and ZERO disappearances** (set diff, not count — `§1`).
+- 🛑 **(e) ANTI-STARVATION, and this is not optional:** add a test asserting that **a scenario carrying neither a usable measurement nor an `error` key cannot be scored as a clean pass** — or, if that shape is genuinely unreachable today, a comment at the veto naming the invariant it depends on (`stress_test.py:138` always sets `error` on the crash path) **so the next producer author sees the contract they must honour.** ★★★ **B's safety is inherited from a neighbour; make the inheritance visible.**
+- **FIRST OBSERVABLE + ETA:** the four-arm output, ~15 min. START-RECEIPT within 2 min.
+
+**§5.2 🛑 `F-1b` — RAISE IT, DO NOT FIX IT IN THIS LANE.** Write it up as its own item (a ratify-packet surface: it changes what a gate compares against). 🛑 **DO NOT thread `firm_max_dd` in the same commit as `§5.1`** — that is a second concept and this desk's own `small, reversible, narrow` law forbids it. **FIRST DELIVERABLE IS A MEASUREMENT, NOT A FIX: does any real config set `prop_firm_max_dd != 2000.0`? That answer decides whether `F-1b` is LATENT or LIVE, and it is cheap.**
+
+**§5.3 ⏸️ THEN `F-A` + `F-B` as one lane (`R-632 §6.1`)** — unchanged, mutation-proof acceptance, materialised scratch copies only.
+**§5.4 ⏸️ THEN `F-3`–`F-9`, then `INV-13 → CRITICAL`.** Unchanged.
+
+**DESK OWES (not the worker's):** ⏳ **the `accuracy-validator` lane on `F-1`. 🛑 I am HOLDING it until `§5.1` lands — grading `67bc4178` would grade an implementation this ruling supersedes, and a grade of a superseded artifact is waste that reads as coverage.** ⏳ `F-D` · `test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]` · ~35 unconfirmed sweep candidates · `F-C` (`R-632 §6.4`).
+
+**STOP AND ASK:** a merge · a worktree update · a production write or restart · a scope you cannot stay inside.
+**STOP CONDITION:** if reverting to B does NOT return the failure set to exactly the `6` pre-existing entries, **STOP and report the set diff** — a second regression hiding behind the first is exactly what a count would miss.
+
+### ★★★ §6 — LESSON TO PERSIST
+★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT.`** Both `AR-677` and I read `stress_test.py`'s two dict LITERALS and reasoned about what shapes exist. The shape that decided this ruling was created by a **post-construction assignment** thirty-nine lines later. **A construction-site census answers "how is it built"; the question was "what can this field hold", and those are different populations.**
+★★★ **AND: `MY ORDER WAS THE DEFECT.` `R-630 §4.2` ordered two conditions where the demonstrated evidence supported one. The worker implemented my width faithfully and the width broke a test that was doing its job. `AN ORDER IS AN ARTIFACT AND IT GETS THE SAME SCRUTINY AS A REPORT.`**
+
 ## R-632 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE EVENTMASK GRADE RETURNED — BAND `6/10`, ADOPTED — AND ITS NOVEL HUNT IS WORTH MORE THAN ITS BANDS: `F-A` (CRITICAL) THE FOUR-TEST POLARITY GUARD **RUNS THE UTC FALLBACK AND NEVER THE PRODUCTION ET BUILDER**, SO RE-INTRODUCING THE EXACT DEFECT IN THE FUNCTION THAT ACTUALLY RUNS LEAVES THE SUITE `4 passed`. VERIFIED BY ME AT THE EXECUTABLE LINE.** 🛑★★★★★ **`F-B` (HIGH): THE `F-2` REPAIR I APPROVED AT `R-631 §1` CLOSES THE **EXCEPTION** PATH ONLY — a `run_backtest` that RETURNS `{}` WITHOUT RAISING STILL PASSES `2 of 4`, AT `HEAD`, TODAY. `pytest.fail` IN AN `except` CANNOT SEE A SUCCESSFUL-BUT-EMPTY RETURN.** 🛑🛑★★★★★ **`F-A` + `F-B` TOGETHER: THE POLARITY CERTIFICATION'S ENTIRE DISCRIMINATING POWER RESTS ON **ONE** TEST.** ✅ **`AR-676`'s RATIFY-PACKET APPROVED — IMPLEMENT `F-1`.** ⚠️ **AND I CORRECT `R-631 §4` VISIBLY: THAT LANE WAS NEVER DEAD, ONLY SLOW.**
 
 **★ WORKER — START HERE:** ✅ **`F-1`: PACKET APPROVED, IMPLEMENT IT NOW under `§5` — including the clean-arm control `(c)` you added yourself, which `R-630 §4.2` did not ask for and which is the only thing separating "correctly stricter" from "vetoes everything".** ⏸️ **THEN `§6.1` — `F-A`+`F-B` as ONE instrument repair on `test_entry_windows.py`.** 🛑 **`F-3`–`F-9` still queued, still not dropped.**
