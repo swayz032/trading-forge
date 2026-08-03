@@ -4,6 +4,15 @@
 
 ---
 
+## AR-720 · 2026-08-03 · ⏳ **START-RECEIPT — `R-666 §6`, Q1 + Q2. SAME SEAT (`AR-717`/`AR-718`/`AR-719`), STILL HOLDING CONTEXT.**
+
+**ORDER: `Q2` FIRST, THEN `Q1`.** `Q2` (what makes `INVALIDATE`'s ENFORCED value `True`, and is that a measurement or a declaration) is a **static source read at HEAD** — answerable with certainty and no dataset. `Q1` needs a dataset before it needs anything else.
+🛑 **THE `Q1` DATASET IS NOT NAMED IN THIS RECEIPT, AND I AM NOT INVENTING ONE TO FILL THE FIELD.** `[UNVERIFIED AT THIS MOMENT]` **whether any dataset carrying `htf_structure_active` bars for the golden slice exists in this tree at all.** ★★★ **ESTABLISHING THAT IS `Q1`'s FIRST STEP, AND `§6`'s STOP CONDITION PRE-AUTHORIZES THE ANSWER *"not answerable from static analysis"* AS A REAL RESULT** — the campaign's own plan records the battery rig has never fired (`backtests = 0`), so a missing dataset is a live possibility, not an excuse I am pre-building. **I will name the dataset and its bar count, or name its absence with the search that establishes it.**
+✅ **PRE-REGISTERED GUARD ACKNOWLEDGED AND ACCEPTED BEFORE I LOOK: if the branch IS taken, `approximation=True` is CORRECT and *"the nine rows are honestly blocked"* is my complete answer. **I will not conclude "therefore flip the family term" under ANY result** — `NEVER REPAIR AN HONEST GATE TO MAKE A COUNT MOVE`.**
+**FIRST OBSERVABLE: `Q2`'s provenance verdict (measurement vs declaration) with the source line. ETA ~25 min for both.**
+
+---
+
 ## AR-719 · 2026-08-03 · ✅★★★★★ **`R-664 §7` — BOTH LANES DELIVERED, FAN-IN `2/2`.** ✅★★★★★ **LANE 1: **THE ROW REACHES `row_verdict=PASS`.** `R-661 §2`'s `[UNVERIFIED]` CLOSES **POSITIVELY** — `R-665 §3` READING `(i)`. `1` PASS ROW IN A `172`-ROW POPULATION, `0` WITHOUT THE PATCH.** ✅★★★★★ **LANE 2: THE DESK'S DERIVATION IS **CONFIRMED EXACTLY — `10` FAMILY-BLOCKED / `1` BINDER-DECIDED** — `R-665 §2` READING `(A)`, POSITIVE CONTROL ALIVE.** 🛑🛑★★★★★ **AND THE FINDING NEITHER LANE WAS ASKED FOR: **THE LANE A PATCH NO LONGER APPLIES AT `c067a652`** — `6` CONFLICT HUNKS, BECAUSE `F-1` ALREADY PORTED `resolve_exact_clock_span` INTO IT. **I MEASURED AT THE PATCH'S OWN BASE INSTEAD AND PROVED THE SEAL IS BYTE-IDENTICAL BETWEEN THE TWO.**
 
 **TASK:** `R-664 §7` Lanes 1+2, interpretation pre-registered at `R-665 §2`/`§3`. **NOT GRAPH-SCHEDULED.** **NOTHING LANDED. NO GUARD TOUCHED. NO `src/` FILE IN THE CAMPAIGN TREE MODIFIED** `[MEASURED — `git status --porcelain -- src/` shows only `test_synthetic_market_simulator.py`, ALREADY DIRTY AT MY SEATING AND ANOTHER SEAT'S WORK].
