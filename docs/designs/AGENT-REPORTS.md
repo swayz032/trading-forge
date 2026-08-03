@@ -4,6 +4,38 @@
 
 ---
 
+## AR-733 · 2026-08-03 · ✅★★★★★ **`R-673 §4` DELIVERED — THE RESIDUAL CLOSES AT **ZERO**, AND IT IS A ZERO WITH CONTROLS. **EXACTLY `2` NON-ROUTE SITES CONSTRUCT A BAND-C `config`, AND **BOTH SET `strategy.symbol` EXPLICITLY** — SO THE CALL-SITE `MES` DEFAULT (`backtester.py:8331`) IS **UNREACHABLE ANYWHERE IN THIS REPO**.** ⚠️ **THE SIGNATURE DEFAULT (`spec_condition_compiler.py:1410`) **IS** REACHED — BY `11` TEST CALLS AND NOTHING ELSE. ALL `6` NON-TEST DIRECT CALLERS PASS `symbol=` EXPLICITLY.**
+
+**TASK:** `R-673 §4`. **RUN MODE: READ-ONLY `grep` + file reads at HEAD `d7cb5f8f`-era tree. NO code change, NO run.** ✅ **STOP CONDITION DID NOT FIRE — the caller set WAS statically enumerable.** **NOTHING under `src/` modified.**
+
+### ✅ §1 — THE CLASSIFICATION, AS RECEIPTED (mentions are not callers)
+✅ **POSITIVE CONTROL, RUN AS ITS OWN STATEMENT: `23` files mention `compiled_spec` at all — **the finder fires**, so the narrow counts below are measurements, not dead greps.**
+
+**(A) CONFIG CONSTRUCTORS — the only shape that can reach `backtester.py:8331`.** Population rule: a dict literal carrying a `"compiled_spec":` key. `[MEASURED]` **EXACTLY `2`:**
+| site | sets `strategy.symbol`? |
+|---|---|
+| `scripts/corpus-v3-reference-rederivation.py:116` | ✅ **YES** — `"strategy": {"symbol": symbol, "timeframe": timeframe_engine, "name": name}` |
+| `scripts/corpus-v3-shadow-gate3.py:125` | ✅ **YES** — identical shape |
+🛑🛑★★★★★ **COUNT THAT OMIT IT: `0`. THE CALL-SITE DEFAULT CANNOT FIRE FROM ANY SITE IN THIS REPO.** ★★★ **AND BOTH ARE RESEARCH HARNESSES WHOSE `symbol` IS A **REQUIRED POSITIONAL PARAMETER** of their own `run_backtest(compiled_spec, symbol, timeframe_engine, name, …)` — so the value cannot be omitted upstream either.**
+
+**(B) DIRECT `from_compiled_spec()` CALLERS — these bypass the config path and can only reach the SIGNATURE default.** `[MEASURED]`
+- **NON-TEST: `6`, ALL PASSING `symbol=` EXPLICITLY** — `composition-experiment-controlled-run.py:91` · `composition-gating-diagnostic.py:177` · `full-battery-mode-ab.py:554` · `fvg-experiment-controlled-run.py:248` · `or-branches-experiment-controlled-run.py:110` · `residual-probe-2concepts.py:85`. **(Plus `backtester.py:8330`, which IS the Band C site itself, not a separate caller.)**
+- ⚠️ **TESTS: `11` calls of the bare form `from_compiled_spec(spec)` in `test_spec_condition_compiler.py` — these DO take `symbol="MES"`, `timeframe="5m"`.** ✅ **I do NOT count these as the hazard: they never build a `config`, they never touch Band C dispatch, and a test deliberately exercising defaults is a test doing its job.**
+
+### ✅★★★★★ §2 — THE ANSWER, STATED AT THE RIGHT SCOPE
+✅ **`R-673 §1`'s `[UNENUMERATED]` — *"any non-route caller… reaches site `6` and gets `MES` silently"* — **IS CLOSED, AND THE ANSWER IS NONE.** Every config constructor in the repo supplies the symbol.**
+★★★ **SO THE HAZARD RE-LOCATES ONE MORE TIME, AND IT LANDS WHERE `AR-731 §3` PUT IT: **the instrument is not silently defaulted anywhere — it is deliberately fanned out to `MES`/`MNQ`/`MCL` by operator mandate.** `THERE IS NO ACCIDENT HERE TO FIX. THERE IS A POLICY TO RECONCILE WITH TAUGHT SCOPE, AND THAT IS THE OPERATOR'S QUESTION (`R-673 §3`).**
+
+### ⚠️ §3 — WHAT I DID **NOT** MEASURE, AND ONE RESIDUAL THAT IS **NOT** STATICALLY CLOSEABLE
+🛑🛑★★★★ **A HAND-AUTHORED JSON CONFIG FILE IS NOT ENUMERABLE FROM THE REPO.** `[MEASURED]` both `(A)` sites write their config to a **temp JSON file** and invoke the production CLI. **So anyone who hand-writes a config JSON carrying `compiled_spec` WITHOUT a `strategy` block, and passes it to the CLI, reaches site `6` and gets `MES`.** ★★★★★ **THAT PATH LEAVES NO ARTIFACT IN THE REPO TO GREP, SO MY `0` IS A STATEMENT ABOUT **CODE IN THIS REPO**, NOT ABOUT **EVERY POSSIBLE INVOCATION**. `A ZERO OVER THE ENUMERABLE SURFACE IS NOT A ZERO OVER THE REACHABLE ONE`, and I will not let this one read as the stronger claim.**
+🛑 **`[UNENUMERATED]`: dynamic construction** — my constructor finder keyed on the `"compiled_spec":` literal; a config built by assignment (`config["compiled_spec"] = …`) or by dict-merge would not match. **I did not sweep for those forms.**
+🛑 **`[UNENUMERATED]`: `timeframe`** — same two-default shape, still untraced (carried from `AR-731 §4`).
+🛑 **I did NOT verify that the `2` `(A)` scripts are ever actually run**, only that they exist and are correct if run.
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NO FURTHER AUTHORIZED LANE — `R-673 §5` holds the pivot for the incoming advisor seat.** **I HOLD THE SEAT AND HAVE CONTEXT.**
+
+---
+
 ## AR-732 · 2026-08-03 · ⏳ **START-RECEIPT — `R-673 §4`, THE NON-ROUTE CALLER ENUMERATION. SAME SEAT.**
 
 **TASK: enumerate every non-route constructor of a Band-C `config` (the trigger is `config["compiled_spec"]` being truthy at `backtester.py:8309`) and report which omit `strategy.symbol` and would therefore take `MES` silently at `:8331`. List + count + positive control.**
