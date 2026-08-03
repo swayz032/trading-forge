@@ -12,6 +12,69 @@
 
 ---
 
+## R-621 · 2026-08-03 · 🛑★★★★★ **`AR-664` RETURNS `UNKNOWN`, AND THE PRE-REGISTERED BRANCH FIRES: **THE "THIS IS WHY NOTHING EVER GRADUATED" CLAIM IS RETIRED — NOT DEFERRED, NOT PENDING.** `R-619 §5.2` FIXED THAT DISPOSITION BEFORE THE ANSWER EXISTED, PRECISELY BECAUSE I AM THE BENEFICIARY OF THE CONFIRMING BRANCH. **THE INCONVENIENT BRANCH CAME BACK AND I AM HONOURING IT WITHOUT AMENDMENT.**** ✅★★★★★ **AND IT IS AN EXEMPLARY `UNKNOWN`: THE RECORD CARRIES **NO PATH FIELD** (`run_backtest`/`run_class_backtest`/`dsl`/`class_path`/`event_mask`/`ts_event` → `0` EACH, AGAINST POSITIVE CONTROLS OF `24` AND `16` FILES ELSEWHERE), **NO TRADE-LEVEL TIMESTAMPS**, AND THE ONE AUTHORITATIVE SOURCE — THE PRODUCTION DB — IS UNREACHABLE FROM THAT SEAT.** 🛑 **AND THE DOER NAMED ITS OWN LARGEST GAP RATHER THAN BURYING IT: *"the `backtest_trades` table … WAS NEVER READ. That is the largest gap in this answer and I am not dressing it up."*** **DECISION: CLAIM RETIRED · ONE NAMED REVIVAL CONDITION, AND IT IS NOT MINE.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-664` is the answer I pre-authorized and it is worth more than a confirmation would have been.** Three things by name: **(1)** your DB diagnosis is a real differential — **TCP opens** (`TcpTestSucceeded: True`) so it is not a network absence, and **identical `ECONNRESET` under both `ssl=require` and `ssl=off` rules out TLS and points at credentials.** **(2)** you positive-controlled the missing path field — the tokens ARE findable in `24` and `16` files elsewhere, so the field is absent rather than your search broken. **(3)** you named `backtest_trades` as your own largest gap in your own headline. ⚠️ **AND ONE THING THAT IS MY ERROR, NOT YOURS: I had already reassigned this question to a desk agent lane at `R-619 §3` while `R-618 §6.2` still listed it for you — third instance of that same marker ambiguity. You duplicated my lane because my ledger told you to.**
+
+**RULING ID:** R-621 · **TASK ID:** `AR-664` (`R-618 §6.2` / `R-617 §5.1`) · **DECISION: RETIRE THE CLAIM · ESCALATE ONE ACCESS ITEM.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-664`** `[MEASURED HERE]` — read through its `(c)`. ⚠️ **`[UNENUMERATED — anything after it unread]`.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-NINTH time.**
+
+---
+
+### 🛑★★★★★ §1 — THE PRE-REGISTRATION IS HONOURED: THE CLAIM IS RETIRED
+
+**`R-619 §5.2`, written before the answer existed: *"clustering present → link ESTABLISHED · clustering absent → link REFUTED · record cannot distinguish paths → **UNKNOWN and the larger claim is RETIRED, not deferred.**"***
+`[MEASURED BY DOER]` **the record cannot distinguish paths. So:**
+🛑🛑★★★★★ **THE CLAIM *"THE POLARITY INVERSION IS WHY NOTHING EVER GRADUATED"* IS **RETIRED.** IT MAY NOT BE STATED, IMPLIED, OR CARRIED AS "PENDING" BY ANY SEAT, INCLUDING ME.**
+★★★★★ **AND THIS IS THE ONLY PART OF TONIGHT I AM UNAMBIGUOUSLY PROUD OF: I dispatched the lane that could confirm my largest claim, fixed what each outcome would mean **before** the answer existed *because* I was its beneficiary, and the inconvenient branch came back. **`A DESK THAT PRE-REGISTERS A CONSTRAINT AND THEN DISCHARGES IT THE MOMENT IT BINDS NEVER HAD A CONSTRAINT` — this one bound, and it is honoured without amendment.****
+⚠️ **WHAT SURVIVES, UNCHANGED AND STILL MEASURED: the polarity inversion is real (`R-616 §1`), `event_calendar` has no producer (`AR-661`, independently corroborated `R-618 §5.3`), the defective fallback is the only DSL branch, and `76.89%` of entries are suppressed with all survivors inside the FOMC window (`R-618 §4`). ★★★ **The DEFECT is established. Only its EXPLANATORY LINK to the campaign's history is retired.** Those were always two claims and the second never had its own evidence.**
+
+### ✅★★★★★ §2 — WHY THE RECORD CANNOT ANSWER, AND WHY THAT IS A MEASUREMENT
+
+`[MEASURED BY DOER, positive-controlled throughout]`
+1. **NO PATH FIELD.** The battery ledger (`docs/replay-results/h1-battery/passage-ledger.json`, `192` rows, `2026-07-19`) carries **`16` trade counts — `18,16,18,17,17,17,18,18,16,17,18,17,18,18,17,17` — and ZERO of them are zero.** 🛑 **But `run_backtest` · `run_class_backtest` · `dsl` · `class_path` · `event_mask` · `ts_event` → `0` occurrences EACH.** ✅ **POSITIVE CONTROL: those tokens ARE findable when present — `run_class_backtest` in `24` files under `docs/`, `run_backtest` in `16`. The searcher works; the field is absent.**
+2. **NO TRADE-LEVEL TIMESTAMPS**, so `R-618 §4`'s amended discriminator — *do surviving entries cluster inside the macro windows* — **cannot be evaluated on that artifact at all.** Only `3` JSON files repo-wide carry `entry_timestamp`, and the trade-bearing one is **explicitly `run_class_backtest`** (`defect9-macro-window-tally-2026-07-07.json`).
+3. ★★★ **AND A FINDING INSIDE THE `UNKNOWN`: NO PERSISTED *RESULT* ARTIFACT IN THE REPOSITORY IS IDENTIFIABLE AS A DSL-PATH RUN.** Of the `16` `run_backtest` carriers, every one with trade counts is **narrative — a design doc, ruling, report or patch — not result data.** ⚠️ **`[HYPOTHESIS — AND EXACTLY THE ONE `§1` RETIRES]` that this is because the DSL path never produced results. It is equally consistent with results living only in the DB. **THAT INDISTINGUISHABILITY *IS* THE `UNKNOWN`, and it is why the claim cannot be rescued by re-reading the repo.****
+
+### 🛑★★★★★ §3 — THE ONE REVIVAL CONDITION, AND IT IS AN OPERATOR ITEM
+
+`[MEASURED BY DOER]` **the production DB is reachable at the TCP layer — `Test-NetConnection` → `TcpTestSucceeded: True`, `66.33.22.230` — but every session is reset: `read ECONNRESET` under `ssl=require` AND under `ssl=off`.** ★★★★★ **Identical failure under both modes RULES OUT a TLS-negotiation cause and points at CREDENTIALS.** The only readable `.env` is dated **`2026-07-13`**; the primary tree has none; `runtime-production` was correctly NOT read.
+🛑 **SO `backtest_trades` — the source `R-617 §5.1` named FIRST — WAS NEVER READ, and the doer said so in its own headline rather than letting the `UNKNOWN` absorb it.**
+★★★★★ **THIS IS THE ONE ITEM TONIGHT THAT GENUINELY QUALIFIES FOR OPERATOR ESCALATION UNDER HIS OWN STANDING ORDER — *"escalate only for … unresolved requirements that cannot be answered from the repository."* **This literally cannot be answered from the repository.** It is a database-credential question, not investigation, not grading, not bounded evidence collection.**
+✅ **BUT THE CLAIM STAYS RETIRED REGARDLESS. `§1` is not conditional on `§3`.** ★★★ **`A NAMED REVIVAL CONDITION IS NOT A DEFERRAL` — if credentials arrive and the DB shows the clustering, the claim is re-established on NEW evidence under a NEW ruling. It does not sit in the ledger as "probably true, pending."**
+
+### ⚠️ §4 — MY DUPLICATION, AND ITS ACCIDENTAL UPSIDE
+
+**`R-619 §3` reassigned this question to a desk agent lane (`MEASURE-DSL-TRADE-HISTORY-2026-08-03.md`, in flight) while `R-618 §6.2` still listed it for the worker. **The worker did it because my ledger told it to.**
+★★★ **THIRD INSTANCE OF THE SAME DEFECT: markers and prose disagreeing about ownership (`AR-662`, `R-619 §2`, and now this). `R-619` fixed the markers and did not fix the ALREADY-ISSUED item — a correction that does not sweep backward is half a correction (`mint-law`).**
+✅ **THE UPSIDE IS REAL AND I AM NOT CLAIMING CREDIT FOR IT: the desk lane will hit the same credential wall, so if it also returns `UNKNOWN` that is a SECOND INDEPENDENT PATH to the same answer — on the one question where I most wanted the other answer.** ★★ **Accidental corroboration is still corroboration; accidental duplication is still my error.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — THE FALLBACK REPAIR (`R-619 §3`), NOW GENUINELY FIRST AND ALONE.** Every diagnostic that was ahead of it is answered or retired: `§6.1` done (`R-620`), `§6.2` `UNKNOWN` (this ruling). **Contract unchanged: preserve `True = SIT_OUT` · fix `_build_default_event_mask_et` and its call-site policy only · never invert `signals.py` · the operator's seven arms plus the eighth (`backtester.py:3980` must report the count it actually masks and print under total suppression) · SHA-pinned isolated worktree · diff reported, no push/merge/PR.**
+2. ⏸️ **`R-620 §4.1` (`INV-13` discriminates on a capped run?) follows the repair.** ⏸️ **Then `INV-1`'s overlap measurement.**
+3. **THIS DESK — the `WARNING`-tier decision (`R-620 §4.4`) and the `INV-1` disposition remain MINE.**
+4. 🛑 **CARRIED: all of `R-620 §5`** — the `try:` fail-open, `run_invariants({})` → `14/14`, the `60`/`90` leg unverifiable until the battery is re-run.
+5. 🛑 **AND `§3` IS SURFACED TO THE OPERATOR AS THE ONE ESCALATION-QUALIFYING ITEM: DB read credentials.** ★★★ **Named as a question, not as a blocker on the repair — the repair does not need the DB.**
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read — and the doer honoured that even while hunting a DB it could not reach.** ✅ **Its probe was `SELECT`-only, no writes, no schema access, credentials redacted in every command and never written into the report.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; derived-baseline ownership guard. ✅ **`R-576 §5` HELD — I ran nothing this ruling.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-620 §5` plus:** ★★★★★ **the retired claim stated, implied, or carried as "pending" by ANY seat including me → STOP (`§1`).** · ★★★★★ **the `16` nonzero trade counts in the battery ledger cited as DSL-path evidence → STOP; that artifact has NO path field (`§2.1`).** · ★★★ **`backtest_trades` described as checked → STOP; it was never read (`§3`).**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`THE PRE-REGISTRATION BOUND, AND IT BOUND ME.` I dispatched the lane that could confirm my largest claim, fixed each outcome's meaning before the answer existed *because* I was its beneficiary, and the inconvenient branch returned. **Pre-registering only matters on the night it costs you something.****
+★★★★★ **`A NAMED REVIVAL CONDITION IS NOT A DEFERRAL.` The DB could still answer this. That does NOT let the claim sit in the ledger as "probably true, pending credentials" — it is retired, and new evidence would re-establish it under a new ruling. **"Pending" is where withdrawn claims go to keep their authority.****
+★★★★★ **`TWO CLAIMS WERE ALWAYS BUNDLED AND ONLY ONE HAD EVIDENCE.` The defect is established; its explanatory link to the campaign's history never had its own proof. **Bundling a measured finding with an unmeasured explanation is how a true thing lends its authority to a guess.****
+★★★ **`A CORRECTION THAT DOES NOT SWEEP BACKWARD IS HALF A CORRECTION.` `R-619` fixed the markers and left the already-issued item pointing at the worker, so it duplicated a desk lane. **Third instance of markers-vs-prose in three rulings — the fix has to reach the work already in flight.****
+
+---
+
 ## R-620 · 2026-08-03 · 🛑🛑★★★★★ **`AR-663` APPROVED — THE SEVERITY INVERSION IS **COMPLETE AND MEASURED**, AND I VERIFIED THE ALGEBRA MYSELF AT ONE LINE: `core.py:939` `overall_passed = len(critical_failures) == 0`, WITH `warnings` COMPUTED AT `:929`, CARRIED AT `:937`, AND **NEVER ENTERING THE VERDICT.**** 🛑★★★★★ **WORSE THAN `R-618` SAID, IN THE DIRECTION THAT MATTERS: `WARNING` IS NOT A WEAKER SIGNAL, IT IS A **DISCONNECTED WIRE THAT IS TYPED IN TYPESCRIPT** — PRODUCED, SERIALIZED, DECLARED AT `backtest-service.ts:376`, AND READ BY NOBODY.** **DECISION: `INV-13` PROMOTION AUTHORIZED **CONDITIONALLY** · `INV-1` HELD PENDING A MEASURED OVERLAP · THE `WARNING` TIER MUST BE WIRED OR RETIRED.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-663`'s controls are the best absence proof of the campaign: `critical_failures` → `5`/`2`/`41` hits on the SAME searches while `warnings` → none, plus THREE false friends found and EXCLUDED rather than counted (`statistical_warnings`, `lifecycle-service.ts`'s zero, `compliance["warnings"]`). **That is why I can act on this without re-deriving it.**** ⚠️ **AND NOTE: you did `§6.1` while `R-619 §3` made the fallback repair first-and-alone — that is NOT scope drift, you were working from `R-618`'s markers, which is exactly the ambiguity `AR-662` flagged and `R-619` fixed. **The timing is mine, the work is good.**** 🛑 **`§4.1` is your next task and it is a MEASUREMENT, not the promotion.**
