@@ -4,6 +4,30 @@
 
 ---
 
+## AR-708 · 2026-08-03 · 🛑🛑🛑★★★★★ **START-RECEIPT ON `R-658 §5` — AND IT OPENS BY REPORTING A DROPPED OBLIGATION, BECAUSE `R-658` HAS JUST CLOSED `R-656 §4` AT FAN-IN `2/2` AND **ONE OF ITS MANDATORY CLAUSES WAS NEVER DISCHARGED.** `R-657 §4a`'s RESIDUAL ADDITION — WHICH THAT RULING MARKED **"AND IT IS NOT OPTIONAL"** — IS **ABSENT FROM THE COMMITTED CENSUS.** `[MEASURED HERE]` NEITHER THE `SYMBOL RESIDUAL` NOR THE `MODULE RESIDUAL` EXISTS IN `family_meta_reachability_sweep.py` AT HEAD `d9cf1c6a`.** ✅ **FRESH SEAT, SEATED NOW, ON THE `§5` DESIGN.**
+
+**TASK ACCEPTED:** `R-658 §5.1`–`§5.4` — **DESIGN ONLY, NOTHING BUILT.** ⚠️ **NUMBERING DEVIATION, FLAGGED NOT SILENT (`R-657 §4a` ANSWER `1` is the precedent you set): your `§5` pins the design to `AR-708`, but `R-658` landed on disk **while this receipt was being written**, and a mandatory-clause gap in a ruling you have just marked closed is a state change that must land numbered and now. **THIS IS `AR-708`; THE `§5` DESIGN WILL BE `AR-709`.** Say the word and I renumber.** **ETA for the design: `≤ 60 min` from this receipt, unchanged.**
+
+### 🛑★★★★★ §1 — THE GAP, MEASURED, NOT INFERRED FROM PROSE
+`[MEASURED HERE — `docs/replay-results/h1-battery/family_meta_reachability_sweep.py` read in full at HEAD `d9cf1c6a`]`
+🛑 **The ONLY occurrence of the string `residual` in the whole file is `:360` — `X(f"   {'ABSENT':34s} 0   (residual: nothing on the surface was expected-but-missing)")`. **That is the `§4.3` taxonomy's own `ABSENT` bucket. It is NOT either of the two residuals `R-657 §4a` ordered.**
+🛑 **`R-657 §4a` ITEM `1` — SYMBOL RESIDUAL:** *"in the five swept modules, ALSO list every module-level public `def` that does NOT match the prefix rule, as an explicit `UNCLASSIFIED` bucket."* **ABSENT.** `:299-301` `continue`s past every non-matching `def` and no record of them survives.
+🛑 **`R-657 §4a` ITEM `2` — MODULE RESIDUAL:** *"report the COUNT of prefix-matching public symbols in `src/engine/` modules that are NOT among the five."* **ABSENT.** `_SURFACE` (`:261-267`) is the only module list in the section; nothing outside it is counted.
+
+### ⚠️ §2 — HOW IT WAS DROPPED, STATED SO THE CAUSE IS ON THE RECORD AND NOT THE PERSON
+`[MEASURED — `git log --date=format:%H:%M`]`: `R-657` committed **`14:36`** · the census script **`14:38`** · `AR-707` **`14:40`**.
+⚠️ **So the amendment landed on disk `2` minutes before the instrument it amends was committed. `AR-707` names `R-656 §4` throughout and never names `R-657` — the prior seat was mid-flight on the ruling it started from and did not re-read the newer one.** ★★★★★ **`AN AMENDMENT THAT LANDS MID-FLIGHT IS INVISIBLE TO A SEAT THAT ALREADY HAS ITS ORDERS.` That seat DID re-read for the grader's receipt, which arrived the same way and WAS adopted — so the miss is specific to the ruling stream, not general inattention.**
+🛑 **AND THE CONSEQUENCE IS EXACTLY THE ONE `R-657 §4a` PREDICTED IN WRITING: *"Without this the census's own blind spot is the same shape as the sweep's."* `AR-707` `§2` publishes its rule as a PROXY with a declared limitation — but publishing a limitation is not measuring it. **The `23`-row table currently has an UNMEASURED denominator, and `15 of 23` is quoted in a commit message.**
+
+### ✅ §3 — SEQUENCING, AND WHY THE GAP DOES **NOT** BLOCK `§5`
+✅ **`R-658 §5` IS THE CRITICAL PATH AND IT GOES FIRST.** The residual is a `≤ 20 min` additive tail on an already-committed instrument, still authorized by `R-657 §4a` and never revoked; **I close it after the design unless you rule otherwise.**
+✅★★★ **AND I CHECKED WHETHER IT IS LOAD-BEARING ON `§5` RATHER THAN ASSUMING IT IS NOT: it is not. `§5` turns on `compute_opening_range_breakout`, which is DIRECTLY MEASURED — `AR-707` located it at `indicators/core.py:467`, the grader EXECUTED it to `[570,575)`, and the desk read its signature at `R-655 §1`. **The residual could only ADD symbols to the built set; it cannot remove the one `§5` is about.**
+⚠️ **WHAT THE GAP DOES PUT AT RISK, STATED PLAINLY: the DENOMINATOR. `15 of 23` is now quoted in `R-658 §2`, in a commit message, and as the operator-facing headline. **If the surface under-included, `23` is wrong and `15` is a floor, not a count.** ★★★ **That direction is the safe one — the finding gets bigger, never smaller — but a number reported as exact must be exact, and I am not leaving it unmeasured.**
+🛑 **NOT DOING: no re-run of the `§4.3` verdicts as a "fix", no surface change, nothing exposed, no `FAMILY_META` entry, no flag flipped, nothing built for `§5`.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `d9cf1c6a` at read (`R-658` = `57939946` landed mid-write and IS read). Lanes: `R-658 §5` IN FLIGHT · `R-657 §4a` residual OWED, mine, queued behind it. NOT handing off — I just sat down.**
+
+---
+
 ## AR-707 · 2026-08-03 · ✅★★★★★ **`R-656 §4` — THE EXPOSURE CENSUS IS BUILT, **COMMITTED AS AN EXTENSION** (`9944ce2f`), AND RE-RUNNABLE. **`23` DETECTORS ON THE DECLARED SURFACE: `5` REACHABLE · `15` `BUILT+UNREACHABLE-BY-COMPILER` · `3` NO NON-TEST CALLER · `0` ABSENT.** THE OPERATOR'S PATTERN IS NOW A NUMBER: **`15` OF `23` THINGS THIS ENGINE COMPUTES, THE COMPILER CANNOT BIND TO.**** 🛑🛑🛑★★★★★ **AND THE GRADER'S RECEIPT LANDED ON DISK WHILE I WORKED. **ITS `F-1` REFUTES A MECHANISM CLAIM IN MY OWN `AR-704`/`AR-705` AND I ADOPT IT IN FULL** — the clock guard I called *"PINNED"* sits **ONLY on the NAME route, which is DEFAULT-OFF**. 🛑 **MY VERDICT SURVIVES; MY EXPLANATION OF IT DID NOT.** ✅ **AND I MEASURED WHAT THE GRADER COULD NOT: `F-1`'s EXPOSURE ON THE REAL CORPUS IS **`0` OF `31`**.**
 
 **TASK:** `R-656 §4.1–§4.4`, delivered as `AR-707` (numbering flagged at `AR-706`). ⚠️ **SIDE EFFECT DECLARED: `docs/replay-results/h1-battery/exposure-census.log` is `.gitignore`d (`*.log`, `:6`) — the JSON IS committed, so nothing I cite is uncommitted (`R-654 §5`).** 🛑 **The desk's own grader receipt `session-window-representability-grade-2026-08-03.md` is UNTRACKED on disk — **not mine to commit**, flagged so it is not cited before it lands.**
