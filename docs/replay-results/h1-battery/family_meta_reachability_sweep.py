@@ -369,9 +369,91 @@ for _r in _ROWS:
         X(f"   callers : {_r['nontest_callers']} -> {_r['caller_sites']}")
         X(f"   in REACHABLE set? {_r['symbol'] in _REACHABLE}")
 X("")
+
+# ── THE TWO RESIDUALS (R-657 §4a, "AND IT IS NOT OPTIONAL") ──────────────────
+# Ordered because the §4.2 RULE is a name-prefix PROXY for "computes a market
+# quantity", and an ordered taxonomy owes a RESIDUAL category or the classifier
+# must mis-file or stay silent -- and both hide the finding. Without these the
+# census's own blind spot is the SAME SHAPE as the sweep's (a population defined
+# by the thing it is auditing). Added 2026-08-03 after AR-708 caught the clause
+# dropped: R-657 landed 14:36, the census committed 14:38, AR-707 14:40.
+#
+# ★ 15-of-23 IS A FLOOR, NOT A COUNT (R-659 §2). These make the floor visible.
+def _public_defs(path):
+    """Module-level, non-underscore-prefixed def names in one file."""
+    return [n.name for n in _ast.parse(open(path, encoding="utf-8").read()).body
+            if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef))
+            and not n.name.startswith("_")]
+
+# RESIDUAL 1 -- SYMBOL: public defs ON THE SWEPT SURFACE that the prefix rule
+# does NOT match. A detector named otherwise is then VISIBLE, not silently absent.
+_unclassified = {}
+for _f in _SURFACE:
+    miss = [n for n in _public_defs(_f) if not _RULE.match(n)]
+    if miss:
+        _unclassified[_f] = sorted(miss)
+_n_unclassified = sum(len(v) for v in _unclassified.values())
+
+X("=== RESIDUAL 1of2 -- SYMBOL (R-657 4a item 1) ===")
+X("  Public module-level defs ON THE SWEPT SURFACE that the prefix RULE does NOT match.")
+X(f"  UNCLASSIFIED n={_n_unclassified}")
+for _f in _SURFACE:
+    for _n in _unclassified.get(_f, []):
+        X(f"   {'UNCLASSIFIED':32s} {_n:38s} {_f}")
+
+# DISCRIMINATING CONTROL -- a zero here would be inadmissible without one, and
+# the finder must be shown able to FIRE. spec_producer.py is off-surface and
+# carries public defs that cannot match the rule.
+_ctl_src = "src/engine/extraction/spec_producer.py"
+_ctl_pub = _public_defs(_ctl_src)
+_ctl_miss = [n for n in _ctl_pub if not _RULE.match(n)]
+X(f"  CONTROL   off-surface {_ctl_src}: public={len(_ctl_pub)} non-matching={len(_ctl_miss)}")
+X(f"            (the residual finder CAN fire; e.g. {sorted(_ctl_miss)[:3]})")
+assert _ctl_pub and _ctl_miss, "symbol-residual finder untrusted (control did not fire)"
+X("  -> CONTROL PASSES")
+X("")
+
+# RESIDUAL 2 -- MODULE: prefix-matching public symbols in src/engine modules
+# NOT on the surface. R-657 4a: "Do not sweep them; just make the boundary's
+# cost visible. A bounded surface is legitimate; an unmeasured one is not."
+_surface_abs = {os.path.normpath(p) for p in _SURFACE}
+_off_hits, _off_mods = 0, {}
+for _p in _NONTEST:
+    if not _p.startswith("src/engine/") or os.path.normpath(_p) in _surface_abs:
+        continue
+    try:
+        hits = [n for n in _public_defs(_p) if _RULE.match(n)]
+    except Exception:
+        continue
+    if hits:
+        _off_hits += len(hits); _off_mods[_p] = len(hits)
+
+X("=== RESIDUAL 2of2 -- MODULE (R-657 4a item 2) ===")
+X("  Prefix-matching PUBLIC symbols in src/engine modules NOT among the five swept.")
+X("  NOT SWEPT, NOT CLASSIFIED -- reported so the boundary's cost is visible.")
+X(f"  OFF-SURFACE prefix-matching symbols n={_off_hits} across {len(_off_mods)} modules")
+X(f"  (swept surface carries {len(_built)}; so the RULE's full reach is {len(_built) + _off_hits})")
+for _p in sorted(_off_mods, key=lambda k: -_off_mods[k])[:15]:
+    X(f"   {'OFF-SURFACE':32s} {_off_mods[_p]:3d} symbols  {_p}")
+if len(_off_mods) > 15:
+    X(f"   ... and {len(_off_mods) - 15} further modules (counts only, by order)")
+X("")
+X("*** THEREFORE THE 15/23 HEADLINE IS A FLOOR OVER A BOUNDED SURFACE, NOT A")
+X("*** POPULATION COUNT. The reachable set is a CLOSED 32, so any symbol outside")
+X("*** the surface is ALSO unreachable -- the numerator can only grow (R-659 2).")
+X("")
+
 json.dump({"surface": _SURFACE, "rule": _RULE.pattern, "reachable_n": len(_REACHABLE),
            "reachable": sorted(_REACHABLE), "built_n": len(_built), "rows": _ROWS,
            "taxonomy": dict(_Counter(r["state"] for r in _ROWS)),
+           "residual_symbol_unclassified_n": _n_unclassified,
+           "residual_symbol_unclassified": _unclassified,
+           "residual_module_offsurface_symbol_n": _off_hits,
+           "residual_module_offsurface_modules_n": len(_off_mods),
+           "residual_module_offsurface_by_module": _off_mods,
+           "residual_controls": {"offsurface_control_file": _ctl_src,
+                                 "offsurface_control_public": len(_ctl_pub),
+                                 "offsurface_control_nonmatching": len(_ctl_miss)},
            "controls": {"compute_atr_callers": _c_pos, "structure_state_reachable": _c_reach,
                         "zero_caller_symbols": _c_neg}},
           open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),

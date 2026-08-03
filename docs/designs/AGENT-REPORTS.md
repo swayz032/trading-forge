@@ -4,6 +4,42 @@
 
 ---
 
+## AR-710 · 2026-08-03 · ✅🛑★★★★★ **`R-657 §4a` — THE DROPPED CLAUSE IS **DISCHARGED**, AND THE NUMBER IT WAS ORDERED TO EXPOSE IS BIGGER THAN ANYONE ESTIMATED. **MODULE RESIDUAL: `197` PREFIX-MATCHING PUBLIC SYMBOLS ACROSS `79` `src/engine/` MODULES THAT THE CENSUS NEVER SWEPT.** THE SWEPT SURFACE CARRIES `23`. **SO THE RULE'S FULL REACH IS `220`, AND `R-658`'s HEADLINE WAS COMPUTED OVER `23` OF THEM — `10.5%`.**** ✅ **SYMBOL RESIDUAL: `4` `UNCLASSIFIED`, UNDER A CONTROL THAT PROVED THE FINDER CAN FIRE.** ✅★★★★★ **ADDITIVE GUARANTEE RE-PROVEN, NOT INHERITED: the acceptance instrument's log is **BYTE-IDENTICAL — SAME `md5`, `21,910` BYTES** — and the census JSON **LOST `0` KEYS, WITH ALL `8` PRE-EXISTING KEYS UNCHANGED.**
+
+**TASK:** `R-657 §4a` items `1` and `2`, the clause `AR-708` caught and `R-659 §1` verified independently. **Committed as a further additive extension of the same instrument — EXTEND, never a sibling.** ⚠️ **`R-659 §2`'s structural argument is CONFIRMED by the data, not merely repeated: `15` was a FLOOR.**
+
+### ✅★★★★★ §1 — THE ADDITIVE GUARANTEE, **RE-MEASURED THIS RUN** (a number carried across a change is stale)
+| artifact | before | after | verdict |
+|---|---|---|---|
+| `family-meta-reachability-sweep.log` | `41e5794c…`, `21,910` B | `41e5794c…`, `21,910` B | ✅ **`cmp` IDENTICAL** |
+| `exposure-census-latest.json` keys | `8` | `14` | ✅ **`0` LOST · `8/8` pre-existing UNCHANGED · `6` GAINED** |
+✅ **AND THE `§4.3` VERDICTS REPRODUCED EXACTLY ACROSS THE RE-RUN: `BUILT+REACHABLE 5` · `BUILT+UNREACHABLE-BY-COMPILER 15` · `BUILT+NO-NONTEST-CALLER 3` · `built_n 23` · `reachable_n 32`.** ★★★ **The extension is proven inert on everything it did not add.**
+
+### ✅★★★★ §2 — RESIDUAL `1` — **SYMBOL.** `4` `UNCLASSIFIED`
+`[MEASURED HERE]` public module-level `def`s ON the swept surface that the prefix rule does **not** match:
+| symbol | module |
+|---|---|
+| `get_sweep_buffer_points` · `get_sweep_buffer_ticks` | `context/structural_stops.py` |
+| **`active_killzones`** · **`refused_session_zone`** | **`session_windows.py`** |
+🛑 **DISCRIMINATING CONTROL, because `4` is a small number and a finder that barely fires is indistinguishable from one that is broken:** the same finder run off-surface on `spec_producer.py` returns `public=2, non-matching=2` (`dispose_inventory`, `produce_spec_artifact`), **asserted in-script before the result is published** (`assert … "symbol-residual finder untrusted"`). ✅ **IT CAN FIRE.**
+⚠️★★★ **AND TWO OF THE FOUR ARE SESSION-DOMAIN SYMBOLS IN THE MODULE THIS WHOLE LANE IS ABOUT.** `active_killzones` and `refused_session_zone` were **invisible to `AR-707`'s census by naming alone.** **`[NOT MEASURED]` whether either is a detector in the `§4.2` sense — that is a classification and I am not making it unprompted.**
+
+### 🛑🛑🛑★★★★★ §3 — RESIDUAL `2` — **MODULE.** `197` SYMBOLS, `79` MODULES, **NOT SWEPT AND NOT CLASSIFIED**
+`[MEASURED HERE — `src/engine/**`, non-test, excluding the five swept]`
+**`197` prefix-matching public symbols across `79` modules. Swept surface: `23`. RULE'S FULL REACH: `220`.**
+**HEAVIEST, counts only — `R-657 §4a` said *"do not sweep them; just make the boundary's cost visible"* and I did not classify one of them:**
+`risk_metrics.py 18` · `analytics.py 15` · `spec_family_bindings.py 9` · **`indicators/sessions.py 9`** · `indicators/market_structure.py 8` · `indicators/liquidity.py 7` · `indicators/order_flow.py 7` · `indicators/price_delivery.py 7` · `sizing.py 6` · `context/bias_engine.py 6` · `indicators/volume_profile.py 4` · … **`64` further modules.**
+🛑🛑★★★★★ **`R-659 §2`'s STRUCTURAL ARGUMENT IS CONFIRMED, AND IT IS STRONGER THAN THE CORRECTION ADMITTED: the reachable set is a CLOSED `32`. **EVERY ONE OF THESE `197` THAT IS NOT AMONG THOSE `32` IS ALSO `BUILT+UNREACHABLE-BY-COMPILER`.** So `15` is a floor whose true value is bounded above by `212`, not by `23`.**
+🛑 **THE BOUNDARY'S COST, STATED AS A RATIO BECAUSE THAT IS THE HONEST FORM: the census swept `23 / 220 = 10.5%` OF ITS OWN RULE'S REACH.** ★★★★★ **`A BOUNDED SURFACE IS LEGITIMATE; AN UNMEASURED ONE IS NOT` — and for three rulings this one was unmeasured while its output was the campaign's headline.**
+⚠️ **AND I STOPPED WHERE THE ORDER STOPPED: intersecting those `197` against the closed `32` would convert the floor into a real count, and it is **one cheap set operation away**. `R-657 §4a` ordered a COUNT and explicitly forbade sweeping them. **I am not widening my own scope — it is yours to order, and I would run it in minutes.**
+
+### ⚠️ §4 — WHAT I DID NOT DO
+⚠️ **`[NOT MEASURED]`** whether any of the `197` is reachable · whether `active_killzones`/`refused_session_zone` are detectors · whether the `4` `UNCLASSIFIED` have non-test callers · anything about modules outside `src/engine/`.
+🛑 **NOTHING EXPOSED, no `FAMILY_META` entry, no flag flipped, no existing counter/control/`TARGETS`/`RES` key touched, and the `§4.3` code path is unmodified.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `63bee719` (`AR-709`) at write. Lanes: `R-658 §5` CLOSED (`AR-709`) · `R-657 §4a` CLOSED (this) · **fan-in `2 / 2`, nothing owed.** NOT handing off — I hold the seat and have context.**
+
+---
+
 ## AR-709 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-658 §5` — THE DESIGN. **VERDICT: `NOT BUILDABLE` FOR THE ROW YOUR RULING NAMED, AND `STOP CONDITION 1` FIRES — `§5.2`'s HONESTY ARGUMENT CANNOT BE MADE FOR THE GOLDEN SLICE'S `WAIT_SESSION` ROW.** THE REASON IS MECHANICAL, NOT A JUDGMENT CALL: **THAT ROW CARRIES ALL THREE TAUGHT WINDOWS IN ONE OBJECT** — `6` CLOCK TOKENS, `4` DISTINCT MINUTE ANCHORS `[570, 575, 585, 600]`. **ANY BIND PICKS ONE OF THREE, AND A PICK IS A DERIVATION LOSS.**** ✅★★★★★ **BUT THE LANE IS NOT DEAD: `§5.1`–`§5.4` ARE SPECIFIED IN FULL FOR THE CASE WHERE THE ARGUMENT **CAN** BE EARNED, AND **I FOUND A ROW IN THE PHASE-1 POPULATION THAT MEETS IT EXACTLY** — SINGLE SPAN `9:30→9:45`, AN OPENING-RANGE TEACHING, MATCHING `compute_opening_range_breakout`'s **DEFAULT PARAMETERS** WITH ZERO DERIVATION. 🛑 **REPORT ONLY — SPEC RE-SELECTION IS YOURS AND IS ON YOUR FORBIDDEN LIST.**
 
 **TASK:** `R-658 §5.1`–`§5.4`, as ratified by `R-659`. 🛑 **DESIGN ONLY — NOTHING BUILT, NO SOURCE FILE MODIFIED, NOTHING EXPOSED, NO `FAMILY_META` ENTRY ADDED, NO FLAG FLIPPED.** ✅ **`STOP CONDITION 3` ALSO FIRES — blast radius is NOT `0` under the naive predicate, and `§8` is that report, delivered before proceeding as ordered.**
