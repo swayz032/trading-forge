@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3606` at THIS commit, 2026-08-02 21:21 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3610` at THIS commit, 2026-08-02 21:38 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3606` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3610` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:4x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FRESH CONVERSATION after a `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-600` (`3065fccf`). Newest AR: `AR-643` (unruled by design — a receipt requesting nothing). `AR-642` RULED by `R-599`. Worker: ✅ **OFF HOLD, ONE TASK — `R-600 §9.1`, the `F-4` emitter fix.****
+**Ruling ledger at `R-602` (`33ee85c4`). Newest AR: `AR-645` — **RULED / APPROVED** by `R-602`. `AR-643` unruled by design (a receipt requesting nothing). **NOTHING UNRULED.** Worker: ✅ **WORKING — `R-602 §4.1`, prove each of the `37` injections LANDS.****
+✅★★★★★ **`F-4` IS FIXED AND LANDED (`483b177e`, `AR-645`, approved `R-602`).** Population **`37`**, all **`30`** `INJECT` occurrences accounted for by form, **an unclassifiable occurrence REFUSES the measurement before a row is scored.** ✅ **VERIFIED READ-ONLY AT THIS DESK, NOT ON THE DOER'S NUMBERS:** `evidence-order.mjs:243`/`:244` = `pinned ⊆ discovered` (**MEMBERSHIP, never cardinality**) · `:343` names the lost knob · **`:365-368`/`:452`/`:463` drive `process.exitCode`, so `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` is satisfied and `C10` proves it by SPAWNING** · `:190` names `${label}` not a hardcoded `run.mjs` · `:229` pin `Object.freeze`d · `run.mjs` byte-unchanged · `prototypes/` clean.
+✅★★★ **RED-PROOFED ON `11` CASE GROUPS INCLUDING A GREEN DISCRIMINATOR (`C1`) AND TWO NEGATIVE CONTROLS (`C11`)** — four independent shrink causes go RED: the historical `F-4` parser itself, a truncated read, **a population of ONE** (the exact state that used to print `MEASUREMENT COMPLETE`, exit `0`), and a renamed identifier. **Growth is green (`C4`, a 38th knob).**
+🛑★★★★★ **AND WHAT IT DOES NOT BUY — THE WORKER SAID IT BEFORE I DID (`AR-645 §2`): `4d` IS STILL NOT MET. COLUMN (i) IS NOW A `37`-WIDE TAUTOLOGY INSTEAD OF A `25`-WIDE ONE. `A CORRECT DENOMINATOR DOES NOT REPAIR A TAUTOLOGOUS NUMERATOR.`**
 
 ## 🛑★★★★★ THE HEADLINE: `4d` IS RULED **NOT MET**. `P0PC` IS **NINE OF TEN**. (`R-600`)
 **BOTH grades landed and BOTH refuted the desk.** Receipts committed: `docs/designs/GRADE-P0PC-4D-READING-2026-08-02.md` (path A, `48ea8b68`) and `...-4D-READING-B-...md` (path B, `6b0fc7c6`, band `5/10` `VERIFIED`).
@@ -127,12 +130,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 🛑★★★ **`R-594 §6` WAS WITHDRAWN BY `R-595` WITHIN THE HOUR — the worker refused a standing order of mine and was RIGHT.** I ordered the worker's ruling-ear retired on `AR-637 §2`'s *"alive but deaf"*; the ear then **delivered `R-594` into the worker's window**. ★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT TRAVEL INTO THE ORDER BUILT ON IT` — I graded it `[CORROBORATED — the worker's measurement, not mine]` and issued an executable order anyway. **Second occurrence in three rulings** (`R-593 §0` was the first). Write orders from RELAYED premises as CONDITIONAL, or wait.**
 ✅ **What survives from the grade, and it is most of it: NINE fragments held under adversarial attack, including two injections of the grader's own design (`49(a)`/TS2345, `49(b)`/TS7017) that the doer had declared undone. `1d` GENERALIZES — four witnesses, two populations, four TS codes, plus a single-assignment-site mechanism (`run.mjs:289`/`:294`).**
 
-## ★★★★★ AUTHORIZED NOW — **`R-601 §5`** (2026-08-02, `105c639d`)
-✅★★★★★ **WORKER IS OFF HOLD, ONE TASK, ALREADY STARTED (`AR-644` start-receipt): FIX `F-4` AT THE EMITTER** — `evidence-order.mjs:40` must enumerate **every** knob-declaration form, not just `INJECT === '…'`. `[MEASURED HERE]` true population **37** (25 `INJECT === '…'` + **12** distinct `case '…':` across two `switch (INJECT)` blocks). `report-table`: **fix the EMITTER, not the table.**
-🛑★★★★★ **AMENDED AT `R-601 §2` WHILE THE WORKER WAS STILL EARLY — AND THIS IS THE HALF I GOT WRONG FIRST: `R-600 §9.1` demanded that an UNRECOGNISED FORM go red, which aims the guard at the CAUSE I had just found. **The population can also shrink from a truncated read, a renamed binding, or a glob that stops matching, and none of those trip that red-proof.** `ORDER THE PROPERTY, NOT THE MECHANISM.`**
-✅★★★★★ **SO THE REQUIRED PROPERTY IS A **MEMBERSHIP FLOOR, NEVER A COUNT**: pin the knob SET, assert `pinned ⊆ discovered`, report extras rather than failing them. `guard-design §5` — a population that may GROW but must never SHRINK admits **no count-shaped assertion**: `=== 37` breaks on every legitimate addition, `>= 37` passes while 12 knobs are swapped for 12 others, and either embalms a snapshot as a requirement.**
-🛑★★★★★ **THE RED-PROOF THAT DID NOT EXIST: `[MEASURED HERE, path A's receipt]` the current fixture prints `MEASUREMENT COMPLETE: 1 knobs scored on both columns` and exits `0`. **A POPULATION OF ONE IS REPORTED AS A COMPLETE MEASUREMENT** — the `faults` list has no completeness term beyond `length === 0`. Required: force the population to 1 (or drop one pinned knob) → **RED, NAMING THE MISSING KNOB**, restore → GREEN. `MEASUREMENT COMPLETE` IS A CLAIM.**
-🛑 **FORBIDDEN in this task:** altering `run.mjs:138` · a column-(ii) exit code · "fixing" the `:108`/`:746` caption (**`R-600 §3.2` resolved it — the caption was ACCURATE about a different check**) · reflex-fixing `F-1`/`F-2`/`F-3` (**ruling questions, not code defects**) · `runtime-production`. **`run.mjs` may be touched ONLY for the red-proof knob, reverted or clearly marked.**
+## ★★★★★ AUTHORIZED NOW — **`R-602 §4`** (2026-08-02, `33ee85c4`)
+✅★★★★★ **WORKER — ONE TASK: PROVE EACH OF THE `37` INJECTIONS ACTUALLY **LANDS** (`R-602 §4.1`).** It closes the hole `AR-645 §8` named on itself.
+🛑★★★★★ **THE DEFECT: all `37` knobs exit `1`, but `run.mjs`'s OWN law is that *"an injection that did not land produces a green indistinguishable from a guard that did not fire."* **A knob whose plant silently no-opped would still exit `1` for an unrelated reason and be scored as a pass** — so `4d-i`'s band `8` currently rests on `37` exits whose plants are UNCONFIRMED. **This campaign's modal failure wearing a new hat.**
+✅ **`[MEASURED HERE]` a witness channel already exists — `run.mjs:348` `const PLANT_WITNESS = []`, pushes at `:398`/`:413`. **Determine whether it covers all `37` or only some, and SAY WHICH.** ⚠️ **`[HYPOTHESIS — I read three lines of it, not its consumers]` that reading it suffices. If it does not cover all `37`, the honest deliverable is the ENUMERATION of which knobs can and cannot be proven to land — NOT a manufactured witness for the rest. `UNRESOLVED_SOURCE_AMBIGUITY` is a valid result.**
+🛑★★★★★ **`run.mjs` IS READ-ONLY FOR THIS TASK. If the fix genuinely requires touching it — STOP AND ASK THE DESK.** ✅ **KEEP THE IN-MEMORY RED-PROOF PATTERN (`AR-645 §6`): I WITHDREW my own permission to touch `run.mjs` for plants, because the worker's reasoning — citing `R-600 §6`'s measured corruption of a concurrent grader — beat my permission. `AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE.`**
+**ACCEPTANCE:** a per-knob **landed / not-landed / unprovable** table over all `37`, its instrument **red-proofed (a disabled plant must go RED and NAME the knob)**, `prototypes/` clean, honest-partial clause.
+🛑 **FORBIDDEN, unchanged:** altering `run.mjs:138` · a column-(ii) exit code · "fixing" the `:108`/`:746` caption (**`R-600 §3.2` resolved it — the caption was ACCURATE about a different check**) · reflex-fixing `F-1`/`F-2`/`F-3` (**ruling questions, not code defects**) · `runtime-production`.
 ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`, nine hard hops away — deferred, NOT cancelled.**
 ⏸️★★★★★ **THIS DESK'S OWN NEXT ITEM, ASSIGNED TO THIS SEAT: the MAPPING question, THEN the category (`R-600 §8`), in that order.** Whether the node's `acceptance` prose maps to `run.mjs`'s `FAILURE_CLASSES` **at all** is an interpretation the campaign inherited and never justified, and it is **upstream of both readings** — so ruling the category first would answer a question whose premise is untested. ★★★ **Found in a grade's COVERAGE TAIL, not its verdict.**
 
