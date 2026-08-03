@@ -12,6 +12,71 @@
 
 ---
 
+## R-604 · 2026-08-02 · 🛑★★★★★ **THE MAPPING QUESTION IS **MEASURED** AND DELIBERATELY **NOT RULED**: `FAILURE_CLASSES` APPEARS **NOWHERE IN THE ENTIRE GRAPH JSON** — POSITIVE-CONTROLLED ON THE SAME SURFACE. **THE IDENTIFICATION THE WHOLE `(A)`/`(B)` DISPUTE RESTS ON HAS NO SUPPORT IN THE REQUIREMENTS OBJECT.**** ⚠️★★★★★ **AND A THIRD CANDIDATE READING FALLS OUT OF THE ACCEPTANCE TEXT'S OWN SHAPE — `[HYPOTHESIS, MINE, UNVERIFIED]` — WHICH IS PRECISELY WHY THIS RULING RECORDS THE MEASUREMENT AND STOPS. **DECISION: MEASUREMENT RECORDED · READING NOT RULED · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ⏸️ **NOTHING CHANGES FOR YOU. Still HOLD per `R-603 §5.1`; this is desk work on the desk's own open item and it assigns you nothing.** ✅ `AR-648` received — a fresh seat holding correctly, requesting nothing, grader objects untouched. **No ruling owed on it and none written; that is the disposition, not an oversight.**
+
+**RULING ID:** R-604 · **TASK ID:** `R-603 §5.2` (the desk's own item) · **DECISION: RECORD · DO NOT RULE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-648`** `[MEASURED HERE, `Select-String '^## AR-'`, read before this insert]` — a seat-roll receipt. It requests nothing and **does not bear on this ruling's substance**; I say so explicitly rather than leaving the silence to be inferred.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived]`. **Read only — not modified.**
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-SECOND time.**
+
+---
+
+### ✅★★★★★ §1 — THE MEASUREMENT
+
+`[MEASURED HERE — `ConvertFrom-Json` on the graph, plus a raw-text search of the whole file; POSITIVE-CONTROLLED]`
+
+| what I searched | result | control on the SAME surface |
+|---|---|---|
+| `FAILURE_CLASSES` in `P0PC`'s `acceptance` field | **absent** | `acceptance` → present |
+| `FAILURE_CLASSES` in the **ENTIRE** graph JSON (all nodes, all fields) | **absent** | `terminal acceptance failure` → **present** |
+
+**`P0PC`'s `acceptance` text, VERBATIM, final clause:** *"…every terminal acceptance failure exits non-zero after evidence collection while the restored control exits zero."*
+★★★★★ **SO: the requirements object names the concept *"terminal acceptance failure"* and NEVER defines it. `run.mjs`'s `FAILURE_CLASSES` (`:746`, consumed `:830`, gating `:833`→`:840`) is an IMPLEMENTATION ARRAY that the requirements object has never heard of.** ✅ **Path B's `[UNENUMERATED]` — *"the identification of terminal acceptance failure with `FAILURE_CLASSES` is an interpretation the campaign made and I inherited; I did not independently justify it"* — is CONFIRMED, and it is stronger than it stated: the support is not weak, it is **absent from the authoritative object entirely.****
+★★★ **AND THE WIDENED SURFACE IS THE PART THAT MATTERS.** Searching only `P0PC`'s field would have left "maybe another node defines it". **The whole-JSON search with a live control closes that** — `absence-claim` clause (b), ENUMERATED SURFACE, applied deliberately after being convicted on it before.
+
+### ⚠️★★★★★ §2 — A THIRD CANDIDATE READING, LABELLED AS THE HYPOTHESIS IT IS
+
+**`[HYPOTHESIS — MINE, UNVERIFIED, AND I AM NOT ACTING ON IT]`** The clause sits as the **last item in a list of sibling acceptance criteria** in the same field (disjoint populations summing to the frozen `52` · surface-invalid inadmissible · mutation-as-type-error naming the checker · `1b-S` credit · type-only silence and `FREE_REF` exclusivity with `POSITION_UNCLASSIFIED` fail-closed · scaffolding preserving emitted behaviour · the tuple as an input · CJS-and-ESM · exactly one callable export). **On that shape, *"acceptance failure"* reads most naturally as *"failure of an acceptance criterion of THIS node"* — i.e. the siblings — rather than as an entry in an implementation array.**
+
+**So there are now THREE candidate populations for `4d`, not two:**
+| reading | population of "terminal acceptance failure" | status |
+|---|---|---|
+| **(A)** / **(B)** as litigated | `FAILURE_CLASSES` ∪ the early collection gate | **`[MEASURED HERE]` rests on an identification ABSENT from the requirements object** |
+| **(C)** `[HYPOTHESIS]` | the failure modes of this node's OTHER acceptance clauses | **UNVERIFIED — not derived, not tested** |
+
+🛑★★★★★ **I AM NOT RULING THIS, AND THE REASON IS NOT SYMMETRY WITH `R-596 §3` — IT IS THAT `(C)` RE-SCOPES THE NODE.** Under `(C)` the population is neither the `37` knobs nor `FAILURE_CLASSES`, which would make the entire `(A)`/`(B)` litigation **an answer to the wrong question** and change what `P0PC` must demonstrate. ★★★ **`A DESK THAT RE-SCOPES A NODE ON ITS OWN UNVERIFIED READING HAS AWARDED ITSELF THE POWER TO MOVE THE FINISH LINE`, and this campaign has had a finish line withdrawn twice. `(C)` gets an independent read or it gets derived from the design record — never adopted because it occurred to me.**
+⚠️ **NOTE ON WHO BENEFITS, stated because `R-596 §3` taught this desk to state it: `(C)` is NOT the convenient reading — it would make `4d` HARDER, requiring a failure-mode map over every sibling clause. **That does not license adopting it either.** A reading that costs me more is still a reading I chose.
+
+### ✅ §3 — WHAT THIS DOES *NOT* DISTURB
+
+✅ **`4d` NOT MET (`R-600 §1`) IS UNAFFECTED AND I CHECKED THIS BEFORE WRITING.** Under `(A)` and `(B)` it is NOT MET (`R-600`); under `(C)` it is **UNMEASURED**, which is not `MET` either. **No candidate reading yields `MET`, so `§1` re-opens nothing and `P0PC` stays NINE of ten.**
+✅ **The `R-603 §4` plant-landing grade in flight is UNTOUCHED by this** — its six targets are about whether injections LAND, a question orthogonal to which population `4d` quantifies over. **Its brief explicitly fenced the tautology/reading question out of scope.**
+🛑 **AND THE ORDER HOLDS: the CATEGORY question (`INSTRUMENT FAULT` throws in or out) STAYS BEHIND THIS ONE.** `§2` is why — you cannot rule what is inside a population before the population is identified.
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ⏸️ **WORKER — HOLD, unchanged** (`R-603 §5.1`). Nothing assigned; do not widen scope; grader objects untouched.
+2. **THIS DESK / THE SEAT — the `R-603 §4` receipt on arrival: commit, then rule `4d-i`'s qualification.** Watcher `b34yle31n` armed.
+3. ★★★★★ **THIS DESK / THE SEAT — RESOLVE THE MAPPING QUESTION, and `§1`+`§2` mean it is now a BOUNDED task rather than an open one:** the measurement is done and the candidate set is enumerated. **What remains is to derive the intended population from the DESIGN RECORD — `BLUEPRINT-V4-DRAFT.md` and the `R-053..R-061` blueprint rulings — or to dispatch one independent reader on `(C)` vs `(A)`/`(B)`.** 🛑 **NOT from my own reading of the prose, which is `§2`.** ⚠️ **`[UNENUMERATED]` — I have not opened the blueprint on this question; it may settle it in one paragraph or not address it at all.**
+4. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §5 — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NOT transitioned · Phase-1 REFUSED · `P0-vNext` BLOCKED · `P0PG` BLOCKED. ✅ **`R-576 §5` HELD — read-only JSON parse and source reads; I ran nothing.** ✅ `prototypes/` NOT written; graph read, **not modified**. ✅ Single-writer honoured. ✅ No spend, merge, worktree update, production write or restart. ✅ No monitor armed, retired or killed.
+🛑 **STOP CONDITIONS — all of `R-603 §7` carry forward, plus:** ★★★★★ **reading `(C)` ADOPTED — by anyone, including me — without an independent read or a design-record derivation → STOP.** · ★★★★★ **the CATEGORY question ruled before the MAPPING question → STOP, INCLUDING BY ME.** · ★★★ **`P0PC`'s `acceptance` field EDITED to "clarify" this → STOP; that is moving the requirement to fit the instrument, and it would destroy the only authoritative text.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`WIDEN THE SURFACE BEFORE PUBLISHING AN ABSENCE.` Searching `P0PC`'s field alone would have left *"perhaps another node defines it"* alive; the whole-JSON search with a live control on the same surface closed it. **The surface, not the pattern, is where this desk's absence claims have failed.****
+★★★★★ **`A TERM THE REQUIREMENTS OBJECT NEVER DEFINES IS NOT AMBIGUOUS BETWEEN TWO READINGS — IT IS UNDEFINED, AND THE READINGS ARE ALL IMPORTS.` Two sessions litigated `(A)` vs `(B)` as though the requirement had a meaning to recover. `[MEASURED HERE]` it does not name the thing either reading assumes.**
+★★★ **`A READING THAT COSTS ME MORE IS STILL A READING I CHOSE.` `(C)` is inconvenient, and that is not independence. **Non-beneficiary status is not a licence to self-adopt** — the disqualification is authorship, not incentive.**
+
+---
+
 ## R-603 · 2026-08-02 · ✅★★★★★ **`AR-647` APPROVED — ALL `37` PLANTS PROVEN TO LAND, `0` UNPROVABLE, AND THE GRADE THE WORKER ASKED FOR IS **DISPATCHED IN THIS SAME MOTION**.** 🛑★★★★★ **AND THE FIRST FINDING IS AGAINST MY OWN RULING: `R-602 §4.1`'s PREMISE THAT `PLANT_WITNESS` COULD ANSWER THIS WAS **WRONG — IT COVERS `2` OF `37`.** I GRADED IT `[HYPOTHESIS]`, AND THAT GRADE IS THE ONLY REASON THE WORKER PIVOTED INSTEAD OF CERTIFYING TWO KNOBS IN A REPORT THAT READ AS COMPLETE.** ✅★★★★★ **THE REAL CHANNEL IS `EFFECT-DIGEST` FROM `run.mjs`'s `process.on('exit')` HOOK — **VERIFIED AT `run.mjs:101-103` BY ME, READ-ONLY** — WHICH REACHES EVEN THE ROWS THAT TRUNCATE. **DECISION: APPROVE · GRADE DISPATCHED · WORKER HOLD PENDING THE GRADE · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Approved, and your `RECOMMENDATION` was the correct call and you made it against your own interest: *"Two instruments now stand behind `4d-i` and I built both — `THE DOER DOES NOT GRADE HIS OWN INSTRUMENT`."* **I have fired that grade this turn rather than booking it** — `IF YOU HAVE WRITTEN THE BRIEF, FIRE IT IN THE SAME MOTION`, and your suggested claim is the one I briefed, near-verbatim.** ✅ **`§4`'s two-stage red-proof is the best guard shape shipped on this campaign: STAGE 1 proves the classifier's return value, STAGE 2 SPAWNS the instrument to prove the PROCESS reddens — and you said in your own words why stage 1 alone is not the claim.** 🛑 **HOLD until the grade returns (`§5`). It is not about your work.**
