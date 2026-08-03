@@ -4,6 +4,38 @@
 
 ---
 
+## AR-682 · 2026-08-03 · ✅★★★★★ **`R-636 §5.1` (`F-C`) CLOSED (`ed4a33d5`) — THE UTC BUILDER NOW HAS ITS TWIN GUARD, AND BOTH ARE RED-PROOFED **INDEPENDENTLY**: EACH MUTATION FIRES **ONLY ITS OWN** GUARD.** ✅ **THIS WAS THE GAP I NAMED AGAINST MY OWN FINISHED WORK IN `AR-681 §4`, AND CLOSING IT TOOK ONE COMMIT.**
+
+**TASK:** `R-636 §5.1`. **File: `src/engine/tests/test_entry_windows.py` ONLY.**
+
+### ✅ WHY THE GAP WAS REAL, NOT COSMETIC
+
+**`AR-666` fixed BOTH builders' polarity — `fix-pattern`, the class not the instance. But `AR-681` guarded only the ET one.** `[MEASURED]` **`backtester.py:3953` routes to `_build_default_event_mask_utc` whenever a result has no `ts_et` column** — and that is not hypothetical: **the fixture I repaired this very session had no `ts_et` for its entire life, which is exactly how `F-A` happened.** ★★★ **So a re-inversion of the UTC builder was silently reachable in production and nothing would have caught it. A fix swept across a class, guarded on only one member, leaves the class half-protected.**
+
+### ✅ RED-PROOF — INDEPENDENT, EACH IN ITS OWN MATERIALISED SCRATCH COPY
+
+| mutation | verbatim command | result |
+|---|---|---|
+| **UTC builder** (`:3980 zeros→ones`, `:3995 True→False`), ET untouched | `python -m pytest src/engine/tests/test_entry_windows.py -q` *(UTC-mutated scratch copy)* | 🛑 **`1 failed, 55 passed`** — `…::test_default_event_mask_utc_polarity_is_sit_out` **ONLY** |
+| **ET builder** (`:3941`, `:3964`), post-refactor | same command *(ET-mutated scratch copy)* | 🛑 **`1 failed, 55 passed`** — `…::test_default_event_mask_et_polarity_is_sit_out` **ONLY** |
+| unmutated | same command *(campaign tree)* | ✅ **`56 passed`** |
+
+★★★★★ **THE CROSS-CHECK IS THE POINT: each mutation fires ONLY its own guard. That proves they are two independent guards rather than one guard that happens to fail twice — and it re-verified the ET arm AFTER I refactored its extraction, which is exactly where a refactor would have silently unbound it.** 🛑 **Neither tree was ever mutated; every arm is a `git archive` copy.**
+
+### ✅ ONE REFACTOR, MADE FOR A REASON
+
+**Factored the AST extraction into `_extract_builder(func_name)`** so both guards bind to shipped source through **one** path. ⚠️ **A refactor of a guard's own instrument is exactly the change that can silently unbind it — which is why the ET mutation was re-run AFTER the refactor rather than trusting `AR-681`'s earlier result (`red-path-decay`).**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **No third builder exists** — `[MEASURED: the two `_build_default_event_mask_*` definitions are the only ones in `backtester.py`]`, but **I did not sweep the repo for other event-mask producers.**
+2. **`economic_calendar.generate_event_mask`** — the *canonical* policy-path producer — **still has no polarity guard of this kind.** ⚠️ **It is currently unreachable in production (`AR-661`: `event_calendar` has no producer), so an inversion there is inert TODAY — but that is an argument for guarding it when the field is wired, not for leaving it unguarded.** **Named, not built.**
+3. **`F-3`–`F-9`** — still not started; next.
+
+**RECOMMENDATION: APPROVAL_REQUESTED. NEXT: `F-3`–`F-9`.**
+
+---
+
 ## AR-681 · 2026-08-03 · ✅★★★★★ **`R-635 §4.1` (`F-A`+`F-B`) CLOSED (`9368f2da`) — ALL THREE ARMS SATISFIED — AND `§4.2` ANSWERED. FAN-IN `2 / 2`.** 🛑🛑★★★★★ **THE FIXTURE REPAIR ALONE WAS **NOT ENOUGH**, AND THAT IS THE FINDING: EVEN AFTER `ts_et` LANDED AND THE ET BUILDER RAN, RE-INVERTING ITS POLARITY LEFT THE SUITE **GREEN** — BECAUSE ALL FOUR TESTS ASSERT ON THE **W23H.3 WINDOW COUNTER, A DIFFERENT MASK.** NO FIXTURE CHANGE CAN MAKE THEM POLARITY-SENSITIVE.** 🛑★★★★ **`§4.2`: **NO** — THE ENGINE NEVER READS `regime_context`/`exit_style` OFF A STRATEGY, AND STYLE D IS **DELIBERATELY DEAD**. ORPHANED SPEC.**
 
 ### ✅ `§4.1` — THE THREE ARMS, EACH WITH ITS VERBATIM COMMAND
