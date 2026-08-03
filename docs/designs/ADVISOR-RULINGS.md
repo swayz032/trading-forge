@@ -12,6 +12,46 @@
 
 ---
 
+## R-673 · 2026-08-03 · ✅★★★★★ **`AR-731` ACCEPTED — AND IT **RE-LOCATES MY OWN `R-671 §2` HAZARD**, WHICH IS THE THIRD TIME TONIGHT A NAMED `[UNENUMERATED]` HAS CORRECTED THIS DESK.** 🛑 **I WROTE *"a default that picks an instrument is a semantic decision made by an argument list."* **THE DEFAULT IS NOT THE MECHANISM: `[MEASURED]` on the API path `symbol` is `z.enum(["MES","MNQ","MCL"])`-VALIDATED (`backtests.ts:103`) and DB-RESOLVED (`:189`), so the call-site default cannot fire there, and the signature default is unreachable from Band C entirely.** ✅★★★★★ **THE REAL MECHANISM IS BIGGER AND IT IS **NOT A DEFECT**: `inferSymbolSet` **DOES NOT INFER** — both name parameters are underscore-prefixed and UNUSED, and it returns `["MES","MNQ","MCL"]` FOR EVERY SPEC, **BY EXPLICIT OPERATOR MANDATE QUOTED IN-SOURCE**: *"test every concept on all 3 markets until backtest tells us otherwise… we let backtest decide, not the LLM-derived concept name."*** ★★★★★ **`THE INSTRUMENT WAS NEVER DERIVED FROM TAUGHT SCOPE AT ANY POINT — NOT BY ACCIDENT, BY POLICY.`**
+
+**RULING ID:** R-673 · **TASK ID:** `R-672 §2` · **DECISION: APPROVE · CORRECT my `R-671 §2` mechanism · **RULE THE FAN-OUT NOT-A-DEFECT AND NOT TO BE CHANGED** · route the labelling question to the operator alongside `R-669 §4` · one bounded lane · HOLD the pivot.**
+**NEWEST AR NAMED (`R-416`):** **`AR-731`** `[MEASURED HERE — read in full including its `§4` non-measurement tail.]`
+**TREE NAMED (`R-413`):** campaign worktree `C:/Users/tonio/Projects/wt-h1-wave4-20260712`. **GRAPH: ADOPTED · NOT MODIFIED. NODE TRANSITION: none.**
+
+### 🛑★★★★★ §1 — MY MECHANISM WAS WRONG; THE CONCERN UNDERNEATH IT SURVIVES AND IS SHARPER
+🛑 **CORRECTED: `R-671 §2` located the hazard in `from_compiled_spec`'s `symbol="MES"` default. `[MEASURED — `AR-731 §1`/`§2`, seven enumerated sites]` **that default is unreachable via the API route, and the signature default is never consulted from Band C because site `6` always passes an explicit keyword.** **My sentence named a real default and the wrong mechanism.**
+✅★★★★★ **THE HONEST SCOPING THE WORKER INSISTED ON, WHICH I ADOPT VERBATIM RATHER THAN ROUNDING UP: *"cannot fire via the route"*, **NOT** *"cannot fire"*. `[UNENUMERATED]` — any non-route caller (direct Python, CLI, script, test) that builds `config` without `strategy.symbol` reaches site `6` and gets `MES` silently. **Ordered at `§4`.**
+✅ **POSITIVE CONTROL PRESENT AND RUN UNCHAINED (`R-669 §7.5` now visibly absorbed): `grep -c "export function"` on `wave25-strategy-defaults.ts` → `6`, so the `inferSymbolSet` read is a measurement, not a dead grep.**
+
+### ⚖️★★★★★ §2 — THE FAN-OUT IS **NOT A DEFECT**, IT IS AN OPERATOR MANDATE, AND IT IS NOT TO BE CHANGED
+`[MEASURED — `wave25-strategy-defaults.ts:98-115`, executable lines + its own in-source justification]` **`inferSymbolSet(_strategyName, _conceptName, originalMarket)` ignores both names and returns `originalMarket ∪ ["MES","MNQ","MCL"]`. Its comment records the decision and its date: *"Wave 26 Pass F.2 (2026-05-25) — operator mandate… Removed the nasdaq/oil/S&P-specific detection from Pass E."***
+✅ **RULED: THIS STAYS. **The desk does not touch an explicit operator mandate**, and the reasoning behind it is sound on its own terms — *"we let backtest decide, not the LLM-derived concept name"* is a refusal to trust an LLM's naming, which is exactly the scepticism this campaign runs on.** 🛑 **NO CHANGE AUTHORIZED, NOW OR AS A CONSEQUENCE OF ANY LATER PIVOT RULING, WITHOUT THE OPERATOR'S OWN WORD.**
+
+### 🛑🛑★★★★★ §3 — THE TENSION, STATED PRECISELY — AND IT IS A **LABELLING** QUESTION, NOT A PIPELINE DEFECT
+**`AR-731 §3` names it exactly right and I am adopting its sentence: `THE FAN-OUT IS A POLICY DECISION ABOUT WHERE EDGE MIGHT EXIST; THE TAUGHT SCOPE IS A STATEMENT ABOUT WHAT THE EDUCATOR CLAIMED. THEY ARE DIFFERENT QUESTIONS.`**
+✅★★★★★ **AND BECAUSE THEY ARE DIFFERENT QUESTIONS, THEY DO NOT ACTUALLY CONFLICT — I want that on the record before anyone reads a contradiction into it. **You may faithfully compile what an educator taught AND separately test it on three markets to find out where edge exists.** `R-669 §3`'s spec says *"every currency pair"*; onboarding it as `MES`/`MNQ`/`MCL` is a legitimate SEARCH, and the search proving it works on `MES` would be a real finding about `MES`.**
+🛑🛑🛑★★★★★ **WHAT WOULD BE WRONG IS A LABEL, AND THAT IS THE ONLY THING AT RISK HERE: **A RECEIPT PRODUCED BY RUNNING A FOREX-TAUGHT STRATEGY ON `MES` MAY NOT BE PRESENTED AS EVIDENCE OF FIDELITY TO WHAT THE EDUCATOR TAUGHT.** It is evidence about `MES`. ★★★★★ **`THE INSTRUMENT A RECEIPT WAS PRODUCED ON IS PART OF WHAT THE RECEIPT SAYS.`**
+🛑 **I AM **NOT** RULING THE LABELLING RULE INTO LAW TONIGHT, AND THE REASON IS DELIBERATE: it is the SAME FAMILY as `R-669 §4`'s `[UNRESOLVED — INTENT]` (does stage `5` mean ENGINE PARITY or EDUCATOR FIDELITY?), and **answering half a question that has one owner is how a desk manufactures a contradiction with itself.** **BOTH GO TO THE OPERATOR TOGETHER, AS ONE QUESTION.**
+⚠️ **LATENT TODAY `[MEASURED — `R-668 §2`]`: no tier-A spec has an instrument this repo holds data for and none is executing. **Nothing is mis-attributed right now.**
+
+### ✅ §4 — AUTHORIZED (bounded, read-only, closes a named `[UNENUMERATED]`)
+**GOAL:** enumerate the NON-ROUTE callers that construct a Band-C `config` — direct Python, CLI, scripts, tests — and report which of them omit `strategy.symbol` and would therefore silently take `MES` at `backtester.py:8331`. **A list and a count, with a POSITIVE CONTROL proving the finder fires.**
+🛑 **REPORT ONLY. NO CODE. Do not add a guard, a raise, or a default — if the residual is real, the remedy is a ruling, not a patch.**
+**FILES / SCOPE:** read-only reads at HEAD · throwaway script in the session scratchpad. **NOTHING under `src/` modified.**
+🛑 **FORBIDDEN:** touching `inferSymbolSet` or the fan-out (`§2`) · landing/re-basing Lane A · conjunct `(3)` · `FAMILY_META` · stage-4/5 wiring · selecting/ratifying a spec · a seventh `P0` attempt.
+**FIRST OBSERVABLE + ETA:** START-RECEIPT within ~2 min; **ETA ~20 min.** 🛑 **STOP CONDITION: if the caller set cannot be enumerated statically, say so — *"not determinable without running"* is a result.**
+✅ **HONEST-PARTIAL CLAUSE applies.**
+
+### 🛑 §5 — THE PIVOT REMAINS HELD (`R-672 §3`), UNCHANGED
+🛑 **`R-672 §3`'s HOLD stands: the three-way direction call (stage-5 wiring · engine layer · population) is the INCOMING ADVISOR SEAT'S FIRST ACT, per `R-668 §3`'s pre-registration.** **`§3` above adds a SECOND operator question that should travel with the first — they are one question wearing two hats.**
+
+### ★★★★★ §6 — LESSONS
+1. 🛑★★★★★ **`I NAMED A REAL DEFAULT AND THE WRONG MECHANISM.`** The `MES` default exists, is reachable in principle, and is NOT how the instrument gets chosen. **A hazard is not located until you have walked every site that sets the field** — `AR-731` enumerated seven.
+2. ★★★★★ **`THE FAN-OUT AND THE TAUGHT SCOPE ANSWER DIFFERENT QUESTIONS, SO THEY DO NOT CONFLICT — ONLY THE LABEL CAN BE WRONG.`** Reading a contradiction into two compatible policies would have manufactured work against an operator mandate.
+3. ★★★★★ **`THE INSTRUMENT A RECEIPT WAS PRODUCED ON IS PART OF WHAT THE RECEIPT SAYS.`**
+4. ★★★★ **`ANSWERING HALF A QUESTION THAT HAS ONE OWNER IS HOW A DESK MANUFACTURES A CONTRADICTION WITH ITSELF.`** The labelling rule and the stage-`5` intent question go to the operator together.
+5. ★★★★★ **THIRD TIME TONIGHT A NAMED `[UNENUMERATED]` CORRECTED THIS DESK** (`AR-725 §4` → `R-671`; `AR-731 §2` → here). **`WRITING DOWN WHAT YOU DID NOT CHECK IS THE HIGHEST-YIELD SENTENCE IN THIS CAMPAIGN.`**
+
 ## R-672 · 2026-08-03 · ✅★★★★★ **`AR-729` ACCEPTED — `F-2`…`F-5` DISPOSITIONED, EACH RE-MEASURED RATHER THAN RELAYED. **AND THE ANSWER TO THE ONE `R-670 §4` FLAGGED AS DANGEROUS IS THE GOOD ONE: `F-2`'s TAUTOLOGY DOES *NOT* REACH THE LANDED `F-1` REPAIR.**** `[MEASURED AT THE EXECUTABLE LINE, BOTH SIDES]` **Lane A derives its probe arguments FROM THE PARSE and compares to the parse — it can only disagree by malfunctioning. The LANDED term derives from the **ZONE** (`_derive_session_zone_window_by_execution`) and compares against the **TAUGHT TEXT** (`resolve_exact_clock_span`) — **TWO INDEPENDENT SOURCES, SO IT DISCRIMINATES.** THE `F-1`-CLASS DEFECT ONE LAYER IN IS REAL AND **CONFINED TO THE UNLANDED PATCH.**** 🛑🛑★★★★★ **THIS IS MY LAST RULING THIS SEAT. **THE STRATEGIC PIVOT IS EXPLICITLY HELD FOR A FRESH ADVISOR SEAT — NOT DEFERRED OUT OF FATIGUE, BUT BECAUSE `R-668 §3` PRE-REGISTERED EXACTLY THAT** *("a pivot of that size gets its own ruling, on a fresh seat, with the grader's receipt in hand")* **AND THE RECEIPT IS NOW IN HAND. I AM HONOURING MY OWN PRE-REGISTRATION RATHER THAN RULING IT TIRED.**
 
 **RULING ID:** R-672 · **TASK ID:** `R-670 §5` (the `F-2`–`F-5` disposition) · **DECISION: APPROVE all four dispositions · CORRECT `R-661 §1`'s credit · AUTHORIZE one bounded lane · **HOLD the strategic pivot, assigned to the INCOMING ADVISOR SEAT as its first act.**
