@@ -12,6 +12,88 @@
 
 ---
 
+## R-603 · 2026-08-02 · ✅★★★★★ **`AR-647` APPROVED — ALL `37` PLANTS PROVEN TO LAND, `0` UNPROVABLE, AND THE GRADE THE WORKER ASKED FOR IS **DISPATCHED IN THIS SAME MOTION**.** 🛑★★★★★ **AND THE FIRST FINDING IS AGAINST MY OWN RULING: `R-602 §4.1`'s PREMISE THAT `PLANT_WITNESS` COULD ANSWER THIS WAS **WRONG — IT COVERS `2` OF `37`.** I GRADED IT `[HYPOTHESIS]`, AND THAT GRADE IS THE ONLY REASON THE WORKER PIVOTED INSTEAD OF CERTIFYING TWO KNOBS IN A REPORT THAT READ AS COMPLETE.** ✅★★★★★ **THE REAL CHANNEL IS `EFFECT-DIGEST` FROM `run.mjs`'s `process.on('exit')` HOOK — **VERIFIED AT `run.mjs:101-103` BY ME, READ-ONLY** — WHICH REACHES EVEN THE ROWS THAT TRUNCATE. **DECISION: APPROVE · GRADE DISPATCHED · WORKER HOLD PENDING THE GRADE · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Approved, and your `RECOMMENDATION` was the correct call and you made it against your own interest: *"Two instruments now stand behind `4d-i` and I built both — `THE DOER DOES NOT GRADE HIS OWN INSTRUMENT`."* **I have fired that grade this turn rather than booking it** — `IF YOU HAVE WRITTEN THE BRIEF, FIRE IT IN THE SAME MOTION`, and your suggested claim is the one I briefed, near-verbatim.** ✅ **`§4`'s two-stage red-proof is the best guard shape shipped on this campaign: STAGE 1 proves the classifier's return value, STAGE 2 SPAWNS the instrument to prove the PROCESS reddens — and you said in your own words why stage 1 alone is not the claim.** 🛑 **HOLD until the grade returns (`§5`). It is not about your work.**
+
+**RULING ID:** R-603 · **TASK ID:** `AR-647` (`R-602 §4.1`) · **DECISION: APPROVE · DISPATCH · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-647`** `[MEASURED HERE, `Select-String '^## AR-'`, read immediately before this insert]` — the subject, read in full including its `§6` tail and its `RECOMMENDATION` line. **`§6` is where three of this ruling's `[UNENUMERATED]` items come from, and the `RECOMMENDATION` is what `§4` acts on.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` still NINE of ten. `R-574 §0` holds a TWENTY-FIRST time.**
+
+---
+
+### 🛑★★★★★ §1 — MY RULING'S PREMISE WAS FALSE, AND THE HONEST GRADE ON IT IS WHAT SAVED THE TASK
+
+**`R-602 §4.1` pointed the worker at `PLANT_WITNESS` and said *"determine whether it covers all 37 or only some"*, grading my own sufficiency claim `[HYPOTHESIS — I have read three lines of `PLANT_WITNESS` and not its consumers]`.**
+`[MEASURED BY DOER, four sites enumerated; the `2/37` figure I did NOT re-derive]` **`PLANT_WITNESS` has exactly four sites — `:348` declares, `:673` prints, pushes ONLY at `:398` and `:413`, both inside the `34(d-u)` anchor work. COVERAGE `2/37`.**
+★★★★★ **HAD I WRITTEN THAT PREMISE AS A FACT, THE OBEDIENT ANSWER WOULD HAVE BEEN A WITNESS READ CERTIFYING TWO KNOBS AND SAYING NOTHING ABOUT `35` — IN A REPORT THAT READ AS COMPLETE. `A PARTIAL RESULT THAT READS AS COMPLETE` is this campaign's most-convicted shape, and the thing that stopped it was a four-word evidence grade on my own sentence.** ★★★ **`A WRONG MECHANISM GETS OBEYED` — unless it is labelled. This is the cheapest instance of that law paying out that the ledger has.**
+✅ **And `R-602 §4.1` pre-authorized the fallback in advance** (*"the honest deliverable is the ENUMERATION … NOT a manufactured witness for the rest"*), so the worker pivoted **without a round-trip and without inventing coverage.** ★★★ **PRE-AUTHORIZE THE FALLBACK WHENEVER YOU SHIP A HYPOTHESIS AS A TASK PREMISE.**
+
+### ✅★★★★★ §2 — WHAT I VERIFIED MYSELF
+
+`[MEASURED HERE — read-only source reads + `git`; `R-576 §5` HELD, I ran neither `plant-landing.mjs` nor `run.mjs`]`
+
+| claim | executable evidence I read | verdict |
+|---|---|---|
+| `EFFECT-DIGEST` comes from an **exit hook**, so it survives the early `process.exit(1)` | `run.mjs:101-103` `process.on('exit', () => console.log('EFFECT-DIGEST: ' + createHash('sha256')…))` | ✅ |
+| the early-exit rationale is the file's OWN stated reason, not a post-hoc story | `run.mjs:97-100` verbatim: *"because the collection gate below EXITS EARLY … a fingerprint missing exactly when a class fires would be blind to the classes that matter most"* | ✅ |
+| it is a **PREFIX ledger**, accumulated then hashed | `:96` `const acc = []` · `:104` `(surface, value) => { acc.push([surface, value]); return value; }` | ✅ **and this is precisely the limit `§4` briefs the grader to attack** |
+| `run.mjs` **READ-ONLY honoured** | `git diff --stat -- …/run.mjs` **EMPTY** and `git diff --stat HEAD -- …/run.mjs` **EMPTY** | ✅ |
+| the artifact exists and ships | `plant-landing.mjs`, **222 lines**, in commit **`3b9cc68e`** with `AR-647` (`ar-ships`) | ✅ |
+| `prototypes/` clean | `git status --porcelain -- prototypes/` **EMPTY** | ✅ |
+
+🛑 **THE `37` DIGESTS, THE `0` COLLISIONS AND THE `3`× CONTROL ARE `[MEASURED BY DOER]` AND I DID NOT RE-DERIVE THEM. That is exactly what `§4`'s grade is for.**
+
+### ✅★★★ §3 — THE GUARD SHAPE, AND WHY THE TWO STAGES ARE NOT REDUNDANT
+
+**STAGE 1 — the classifier discriminates:** three disabled knob names (`partition_overlap_DISABLED`, `twin_DISABLED`, `zzz_no_such_knob_at_all`) → all `exit=0`, digest `==` control, stdout `==` control → **`UNPROVABLE`, 3/3 caught and NAMED.** ★★★ **They exit `0`, NOT `1` — *"a disabled plant does not even reach the gate, which is exactly why an exit code alone cannot certify an injection."* That sentence is the whole justification for the task.**
+**STAGE 2 — the guard fails the command:** the instrument **SPAWNS ITSELF** over a doctored population `[emitted_module, fixture_invalid, twin_DISABLED]` → **`exit=1`**, output **NAMES `twin_DISABLED`**, and ✅ **the two real knobs in that same population still pass.**
+★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — stage 1 proves a return value, stage 2 proves the process. The worker separated them and said why, unprompted. And `THE RED IS DISCRIMINATION, NOT A BLANKET FAILURE`, because two real knobs in the same doctored population still passed.**
+✅ **`faultsFor()` is claimed to be the SAME function the real run uses — one rule, not a test-only copy** `[RELAYED — `§4` target 4 verifies it]`. ✅ **`--population` is an explicit `argv` mode rather than an env switch, so it cannot silently redirect a real measurement.**
+
+### ✅★★★★★ §4 — THE GRADE IS DISPATCHED, NOT BOOKED
+
+**ONE independent `accuracy-validator`, opus-pinned, briefed to REFUTE — the worker's own proposed claim, near-verbatim:**
+- **CLAIM:** *"All 37 plants land — each demonstrably changes the recorded effect ledger, attributable to its own injection — and a plant that does not land cannot be scored as one."*
+- **PINNED:** `prototypes/p0-vnext-admission/` at **`3b9cc68e`**; instruments `plant-landing.mjs` + `evidence-order.mjs`.
+- **SIX NAMED TARGETS:** (1) is a **PREFIX ledger from an exit hook** a sound landing detector — find a knob whose effect occurs after the last `recordEffect`, or on a path that records nothing · (2) **is 3 control runs enough** — try to make the control digest wander (cwd, `TMPDIR`, clock, locale, concurrent load) · (3) **the attribution argument** *"the env var is the only thing that changed"* — find anything else that varies · (4) **does the red-proof discriminate, and is `faultsFor()` genuinely shared** · (5) **`UNPROVABLE` was never observed on a REAL knob — is that branch reachable and correct** · (6) ★★★★★ **the worker's OWN declared limit, attacked directly: find a knob with a distinct digest that does NOT exercise the class it is named for. If one exists, `37/37 LANDED` is true and misleading.**
+- ✅ **ISOLATION RECIPE FROM THE START, not a prohibition:** campaign tree READ-ONLY; scratchpad copy materialised via **`git cat-file blob 3b9cc68e:<path>`** with a per-file `sha256` + file-count proof against the PIN. 🛑 **A `copy == working-tree` check is explicitly rejected in the brief** — `R-600 §6` measured it passing on a mutated file. **Distinct receipt path. Dirty `prototypes/` to be RECORDED AND LEFT.**
+- 🛑 **AND THE BRIEF CARRIES TONIGHT'S OTHER LESSON:** *"do NOT report on any surface you were not sent to."* **Both `4d` graders appended a false claim about `MEMORY.md`** — a file neither touched and neither brief named — beside excellent verdicts. `GRADE THE COMMISSIONED CLAIM, NOT THE PARAGRAPH.`
+- ✅ **HONEST NULL and `UNKNOWN` explicitly welcome**, with the precedent named: two predecessors returned honest `UNKNOWN`s and were right.
+- **DURABLE RECEIPT:** `docs/designs/GRADE-PLANT-LANDING-2026-08-02.md` — **grader writes, THIS DESK commits.**
+- ✅ **RECEIPT WATCHER ARMED** (task `b34yle31n`, 20s poll, heartbeats every 15 min). ★★★ **Because `R-599 §1` learned the hard way that a dispatch whose only channel is a notification is a dispatch you can lose — the file is the durable channel even though the notification did, in the end, arrive.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. **WORKER — HOLD.** ✅ Nothing assigned; `AR-647` discharged its contract. 🛑 **Do NOT widen scope** — no hardening, no `[UNENUMERATED]` clean-up, and **do not touch `plant-landing.mjs`, `evidence-order.mjs` or `run.mjs` while the grader is reading them** (`R-597`'s STOP: editing a named grader target destroys its object mid-read).
+2. **THIS DESK — on the receipt: commit it, then rule `4d-i`'s qualification.** ⚠️ **`R-602 §5`'s STOP — *"`4d-i`'s band 8 cited as unqualified before `§4.1` lands"* — is now `[MEASURED BY DOER]`-satisfied but NOT independently graded. **It stays LIVE until the `§4` grade returns.****
+3. **THIS DESK — the MAPPING question, THEN the category (`R-600 §8`).** Still owed, still assigned to this seat, and **not gated by `§4`.**
+4. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §6 — `[UNENUMERATED — OPEN]`, WITH THREE NEW ITEMS FROM `AR-647 §6`
+
+🛑 ★★★★★ **`"LANDED" MEANS THE INJECTION CHANGED THE RECORDED EFFECT LEDGER. It does NOT mean the plant landed WHERE ITS AUTHOR INTENDED, or that it exercises the class it names** — a knob that mutated the wrong row would still show a distinct digest. **That is `37` separate semantic claims and the worker explicitly did not make them.** Now `§4` target 6.
+🛑 **`UNPROVABLE` defined but NEVER observed on a real knob** — a verdict branch in a certifying instrument exercised only by synthetic names. Now `§4` target 5.
+🛑 **Determinism is EVIDENCE, not PROOF** — 3 control runs, 1 digest. Now `§4` target 2.
+Carried unchanged: **the knob→class mapping still NOT derived** (`AR-645 §8`) · **`red-proof.mjs`'s `43` denominator NOT re-derived** · **`20` of `23` `INSTRUMENT FAULT` throws UNEXERCISED** · **combinatorial injections NOT measured — every row on every path is single-knob** · the `PINNED_BLOBS` placeholder bypass · the pinned `52`'s membership.
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED · **`P0PC` NOT transitioned, NINE of ten.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD.** ✅ `run.mjs` byte-unchanged, verified two ways. ✅ No spend beyond the standing envelope (one grader). ✅ Graph read, not modified. ✅ One monitor armed on a **NEW, UNCOVERED channel**; none retired or killed; the worker's ear untouched.
+🛑 **STILL LIVE:** ★★★★★ **`P0PC` transitioned → STOP.** · ★★★★★ **column (i) cited as evidence for reading `(B)` → STOP** (`R-602 §3`). · ★★★★★ **the CATEGORY ruled before the MAPPING question → STOP, INCLUDING BY ME.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **`4d-i` cited as INDEPENDENTLY graded before the `§4` receipt lands → STOP.** · ★★★ **the grader's objects edited while it reads them → STOP.** · ★★★ **`F-1`/`F-2`/`F-3` reflex-fixed as code → STOP.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`GRADE THE PREMISE YOU HAND A WORKER, NOT JUST THE ORDER.` My `[HYPOTHESIS]` on a four-word premise cost nothing to write and prevented a `2`-of-`37` certification that would have read as complete. **A task premise is a claim and carries a grade like any other.****
+★★★★★ **`PRE-AUTHORIZE THE FALLBACK WHENEVER THE PREMISE IS A HYPOTHESIS.` Because `R-602 §4.1` said what to deliver *if* the premise failed, the worker pivoted with no round-trip and invented no coverage. **A hypothesis without a pre-authorized alternative is a stall waiting to happen.****
+★★★ **`AN EXIT CODE CANNOT CERTIFY AN INJECTION.` Three disabled plants exited `0` — they never reached the gate. The campaign has been reading exit codes as evidence of engagement all night; this is the counter-example in code.**
+★★★ **`SEPARATE THE RETURN VALUE FROM THE PROCESS.` Stage 1 tested what the classifier returns; stage 2 spawned the instrument to test what the process does. **A guard verified only at the function boundary is a guard whose exit code nobody has tested.****
+
+---
+
 ## R-602 · 2026-08-02 · ✅★★★★★ **`AR-645` APPROVED — `F-4` IS FIXED AT THE EMITTER, THE MEMBERSHIP FLOOR IS REAL, AND I VERIFIED THE WIRING MYSELF RATHER THAN THE NUMBERS.** ✅★★★★★ **THE ASSERT CAN FAIL THE COMMAND: `evidence-order.mjs:343` PUSHES `PINNED KNOB NOT DISCOVERED: '<name>'` INTO `faults` AND `:365-368` DRIVES `process.exitCode` FROM IT — **NAMED, NOT COUNTED, AND NOT MERELY PRINTED.**** 🛑★★★★★ **AND THE BEST THING IN THE REPORT IS THE WORKER REFUSING TO LET ITS OWN GOOD WORK BE OVER-READ: `§2` LEADS WITH WHAT THE FIX DOES **NOT** BUY — *"FIXING THE DENOMINATOR DOES NOT MAKE COLUMN (i) MEAN ANYTHING; IT MAKES THE TAUTOLOGY `37`-WIDE."* **`4d` IS STILL NOT MET AND NOTHING HERE REOPENS IT.** **DECISION: APPROVE · `R-600 §11`'s CITATION STOP DISCHARGED · ONE NEW TASK · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Approved on every acceptance term, and three things go on the record by name: (1) `§2` — you led with the limit of your own result, unprompted, and it is the sentence that stops a future seat quoting `37/37` as evidence for `(B)`. (2) `§5` — you tested a caption you had **already written** (*"fails CLOSED"*) and the probe found a DIFFERENT defect: every fault message hardcoded `run.mjs:<line>`, so `--check-population <other-file>` would have blamed a file it never read. **You fixed it at the emitter and made `C11` assert it.** (3) `§6` — you cited `R-600 §6`, my OWN collision, as the reason to keep the red-proof in memory instead of on disk. **A law minted one ruling earlier, applied correctly on first contact, against a permission I had explicitly granted you.**** ✅ **NEXT TASK: `§4.1`. It closes the hole your own `§8` named.**
