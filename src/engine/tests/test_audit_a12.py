@@ -37,6 +37,7 @@ the documented design — not a bug. Cat 5 verifies the MICRO values are correct
 """
 from __future__ import annotations
 
+import os
 import re
 from collections import OrderedDict
 from datetime import datetime, timezone
@@ -62,7 +63,26 @@ from src.engine.monte_carlo import optimal_block_length
 # ─── Audit Result Collector ────────────────────────────────────────────────
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-REPORT_PATH = REPO_ROOT / "docs" / "A12-AUDIT-REPORT.md"
+
+# SWEEP-F10 (R-646 §4): this module used to write docs/A12-AUDIT-REPORT.md on
+# every run — a TRACKED file carrying a "Generated:" timestamp, so any pytest
+# invocation that touched this module left a modified tracked file in a shared
+# worktree. `git status` is a load-bearing instrument on this campaign
+# (R-599 §6, the pre-commit stash/restore cycle, every seat's tree check), and a
+# tree permanently dirty from test runs trains every seat to skim past dirty
+# files. It also meant `git commit -a` would sweep test output into a commit.
+#
+# The default output is now an UNTRACKED sibling, so the report is still
+# produced and readable after a run — this module IS the thing that renders it —
+# without the repository being used as scratch. Set TF_A12_REPORT_PATH to
+# refresh the committed record deliberately:
+#   TF_A12_REPORT_PATH=docs/A12-AUDIT-REPORT.md pytest src/engine/tests/test_audit_a12.py
+_REPORT_OVERRIDE = os.environ.get("TF_A12_REPORT_PATH")
+REPORT_PATH = (
+    (REPO_ROOT / _REPORT_OVERRIDE)
+    if _REPORT_OVERRIDE
+    else REPO_ROOT / "docs" / "A12-AUDIT-REPORT.local.md"
+)
 
 
 # Use OrderedDict so the report is deterministic regardless of test order.

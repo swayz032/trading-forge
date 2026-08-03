@@ -656,31 +656,63 @@ class TestCLISmoke:
         )
 
     def test_cli_report_file_created(self):
-        """CLI must create report file in docs/scaling-validation/."""
+        """CLI must create report file in docs/scaling-validation/.
+
+        SWEEP-F10 (R-646 §4): this test used `cli-report-existence-test.md`,
+        which is TRACKED IN GIT, so every run left a modified tracked file in a
+        shared worktree — the report carries a generation timestamp, so the
+        content always differs. `git status` is a load-bearing instrument on
+        this campaign, and a tree permanently dirty from test runs trains every
+        seat to skim past dirty files.
+
+        A TEST WANTS A TEMP FILE AND THIS ONE GRABBED A COMMITTED ONE. The
+        report name is now untracked and removed before AND after the run, so
+        existence is evidence about THIS run and the tree is left as found.
+        """
         script = str(_REPO_ROOT / "scripts" / "validate-scaling-schedule.py")
-        report_name = "cli-report-existence-test"
+        report_name = "cli-report-existence-run"
         report_path = _REPO_ROOT / "docs" / "scaling-validation" / f"{report_name}.md"
-        # Remove if exists from prior run
         report_path.unlink(missing_ok=True)
 
-        subprocess.run(
-            [
-                sys.executable, script,
-                "--synth-daily-pnl", "30.0",
-                "--synth-daily-std", "60.0",
-                "--tiers", "9",
-                "--n-sims", "100",
-                "--n-steps", "30",
-                "--report-name", report_name,
-                "--seed", "7",
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(_REPO_ROOT),
-        )
-        assert report_path.exists(), (
-            f"Report file was not created at {report_path}"
-        )
+        try:
+            result = subprocess.run(
+                [
+                    sys.executable, script,
+                    "--synth-daily-pnl", "30.0",
+                    "--synth-daily-std", "60.0",
+                    "--tiers", "9",
+                    "--n-sims", "100",
+                    "--n-steps", "30",
+                    "--report-name", report_name,
+                    "--seed", "7",
+                ],
+                capture_output=True,
+                text=True,
+                cwd=str(_REPO_ROOT),
+            )
+            # POSITIVE WITNESS: the file existing proves nothing about WHY it
+            # exists unless the run that wrote it also reached a verdict. A
+            # crash that happened to leave a partial file would otherwise pass.
+            #
+            # 🛑 NOT `returncode == 0`: I asserted that first and it was WRONG.
+            # `[MEASURED HERE]` this fixture (tier 9, seed 7) is not benign — it
+            # returns UNSAFE at an 18.00% breach and the CLI correctly exits 1.
+            # The subject of THIS test is that a report is written REGARDLESS of
+            # verdict, so the witness must be that a verdict was reached, not
+            # that it was a passing one. Asserting exit 0 here would have
+            # encoded "the gate must pass" into a file-existence test.
+            assert "SAFE" in result.stdout or "UNSAFE" in result.stdout, (
+                f"CLI produced no verdict — the report cannot be evidence about "
+                f"a run that never evaluated a tier.\n"
+                f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+            )
+            assert report_path.exists(), (
+                f"Report file was not created at {report_path}\n"
+                f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+            )
+            assert report_path.stat().st_size > 0, "report file is empty"
+        finally:
+            report_path.unlink(missing_ok=True)
 
 
 # ─── Integration: simulate_firm_survival (real, no mock) ─────────────────────

@@ -4,6 +4,32 @@
 
 ---
 
+## AR-692 · 2026-08-03 · ✅★★★★★ **`SWEEP-F10` CLOSED — BOTH SITES. THE PROOF IS A BEFORE/AFTER `sha256` IN TWO FRESH SCRATCH TREES: THE OLD TESTS **REWRITE BOTH TRACKED ARTIFACTS** ON AN ORDINARY `pytest` RUN; THE REPAIRED ONES LEAVE THEM **BYTE-IDENTICAL**.** 🛑 **AND I GOT ONE ASSERTION WRONG FIRST AND THE TEST CAUGHT ME — DETAIL BELOW, BECAUSE IT IS THE USEFUL PART.**
+
+**TASK:** `R-646 §4` (`SWEEP-F10`), scope **exactly the two sites the desk named.** 🛑 **`scripts/wave25_exit_engine_ab_report.py` and `scripts/h1_designpool_support.py` NOT TOUCHED — writing a tracked artifact is their purpose.** **AR ships in the work commit.**
+
+### WHAT LANDED
+- **`test_cli_report_file_created`** — untracked report name, unlinked before AND after in a `finally`, plus a positive witness.
+- **`test_audit_a12.py`** — the module wrote `docs/A12-AUDIT-REPORT.md` (tracked, and it carries a `Generated:` timestamp, so **every** run dirtied it). ⚠️ **DEVIATION FROM THE PRESCRIBED PATTERN, DECLARED: I did NOT unlink-after here.** This module genuinely renders a report a human reads after a run — deleting it in a `finally` would destroy the artifact's purpose. **Default output is now an untracked `docs/A12-AUDIT-REPORT.local.md`; `TF_A12_REPORT_PATH` refreshes the committed record deliberately.** ✅ **Both new paths plus `F-7`'s are `.gitignore`d, so they do not trade tracked dirt for untracked noise.**
+
+### ✅★★★★★ THE RED-PROOF — TWO FRESH TREES FROM `caa7ee06`, SAME COMMAND, `sha256` EITHER SIDE
+| tree | `docs/A12-AUDIT-REPORT.md` | `docs/scaling-validation/cli-report-existence-test.md` | untracked output |
+|---|---|---|---|
+| **OLD** | 🛑 **REWRITTEN** | 🛑 **REWRITTEN** | absent |
+| **NEW** | ✅ **UNCHANGED** | ✅ **UNCHANGED** | `A12-...local.md` present · CLI report correctly **absent** (unlinked in `finally`) |
+
+**Both trees: `52 passed`.** ★★★ **Same population, same verdicts — the repair changed where bytes land, not what is tested.**
+
+### 🛑 THE ASSERTION I GOT WRONG, AND WHY IT MATTERS MORE THAN THE FIX
+I first wrote `assert result.returncode == 0` as the positive witness, calling the fixture a *"benign synthetic run"*. **It is not.** `[MEASURED HERE]` tier 9 / seed 7 returns **`UNSAFE (18.00% breach)`** and the CLI correctly exits `1`. ★★★★★ **I WOULD HAVE ENCODED "THE GATE MUST PASS" INTO A FILE-EXISTENCE TEST — a false expectation of the exact shape `SWEEP-F8` convicted this morning, written by the seat that just fixed it.** ✅ **The witness is now `"SAFE" in stdout or "UNSAFE" in stdout`: the subject is that a report is written REGARDLESS of verdict, so the witness must prove a verdict was REACHED, not that it was a passing one.** ★★★ **I assumed "benign" from the fixture's shape instead of running it; the test failed on the first run and told me.**
+
+### ⏸️ ONE THING I CANNOT DO AND AM NOT DOING QUIETLY
+🛑 **The two tracked files are STILL DIRTY in the shared tree from runs that predate this fix** (`docs/A12-AUDIT-REPORT.md`, `docs/scaling-validation/cli-report-existence-test.md`). **Restoring them needs `git checkout --`, which the worker protocol forbids me in a shared tree, and committing test output is exactly what `R-646 §3` warns against.** **Yours to dispose of — the leak is closed either way; this is only the puddle it already left.**
+
+**Position: `h1-wave4-sealed12-driver`. Queue: `F-7` · `F-3` · `F-10` DONE · NEXT `SWEEP-F6`'s fixture with its red-proof, then `SWEEP-F5`'s two-branch measurement.**
+
+---
+
 ## AR-691 · 2026-08-03 · ✅★★★★★ **`SWEEP-F3` CLOSED — FIVE TESTS THAT HAD **NEVER ONCE RUN** NOW RUN AND PASS (`32 passed, 5 skipped` → `37 passed, 0 skipped`).** 🛑🛑★★★★★ **THE SKIP REASON WAS FALSE AND THERE WERE **THREE** FIXTURE DEFECTS UNDER IT, NOT THE TWO THE SWEEP NAMED — THE THIRD ONE ONLY BECAME VISIBLE AFTER FIXING THE FIRST TWO.** ✅ **NO PRODUCTION DEFECT UNDERNEATH — the `R-645 §4` STOP CONDITION did not fire, and I checked rather than assumed.**
 
 **TASK:** `R-645 §4` LANE 2 (`SWEEP-F3`). **FILE: `src/engine/tests/test_paper_backtest_sizing_parity.py` ONLY.** **AR ships in the work commit.**

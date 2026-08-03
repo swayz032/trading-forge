@@ -69,3 +69,10 @@ all_ids.txt
 Userstonio*
 scripts/_tmp_*
 workflows/n8n-prefix/
+
+# SWEEP-F10 (R-646): test-run outputs that must never dirty a tracked path.
+# The committed docs/A12-AUDIT-REPORT.md is refreshed deliberately via
+# TF_A12_REPORT_PATH; the .local.md sibling is what an ordinary pytest run writes.
+docs/A12-AUDIT-REPORT.local.md
+docs/scaling-validation/cli-report-existence-run.md
+docs/scaling-validation/cli-smoke-risky-run.md
