@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3641` at THIS commit, 2026-08-02 23:15 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3674` at THIS commit, 2026-08-02 23:39 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3641` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3674` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,40 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:4x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FRESH CONVERSATION after a `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-609` (`509387a0`). Newest AR: `AR-652` — **unruled BY DESIGN: a step-zero progress receipt on an already-authorized lane that requests nothing.** `AR-651` RULED/APPROVED at `R-608`; `AR-643`/`644`/`646`/`648`/`649`/`650` unruled by design. **NOTHING UNRULED-AND-OWED.** Worker: ✅ **WORKING on `LANE-2` (`R-608 §6.1`).** ★★★ **NOT RULING A PURE PROGRESS RECEIPT IS THE VELOCITY FIX IN PRACTICE (`R-607 §3`) — a round-trip per receipt is what dominated wall-clock.**
+**Ruling ledger at `R-611` (`258cd45c`). Newest AR: `AR-654` — **RULED / APPROVED** at `R-611`.** Worker: ✅ **next task `R-611 §5.2` = `LANE-5`, the max-drawdown invariant.**
+
+## 🛑🛑★★★★★ THE MONEY-PATH DEFECT — READ THIS FIRST (`R-611 §1`)
+**Sign-flipping the max-drawdown computation collapses `max_drawdown` to `0.0` on ALL `90` backtests, and the live **`CRITICAL`** invariant named for exactly that defect PASSES it.** `[MEASURED BY DOER, 90 backtests]`
+✅★★★★★ **CONFIRMED AT THE EXECUTABLE LINE BY THIS DESK, AND IT IS WORSE THAN THE REPORT `[MEASURED HERE — `invariant_harness/core.py`, `_check_max_drawdown_non_negative`]`:**
+```python
+max_dd = _aggregate_metric(result, "max_drawdown", 0.0)   # <- DEFAULT IS 0.0
+passed = max_dd >= 0.0
+```
+🛑★★★★★ **SO IT PASSES ON **THREE** DISTINCT CONDITIONS: drawdown legitimately zero · drawdown MISCOMPUTED to zero · **drawdown ABSENT FROM THE RESULT ENTIRELY**, where the default silently supplies the passing value. **THE GUARD HANDS ITSELF THE ANSWER WHEN THE METRIC IS MISSING.**
+★★★★★ **`A DEFAULT THAT SUPPLIES A PASSING VALUE CANNOT DETECT ABSENCE.` `absence-means` says an absent constraint must WIDEN scope and fail CLOSED; this fails OPEN via a defaulted argument.** ✅ **`R-611 §5.2`'s contract already orders the sweep on "absent, zero, or unset", so `LANE-5` covers it — this entry records the CONFIRMED MECHANISM so the sweep is concrete rather than speculative.**
+🛑 **MAX DRAWDOWN IS A PROP-FIRM SURVIVAL METRIC. Until `LANE-5` lands, NO max-drawdown figure from a backtest may be trusted or cited — `R-611 §6` STOP.**
+
+## 🛑★★★★★ PHASE-2 ENTRY IS MEASURED FAILING (`R-611 §2`)
+**The battery rig did NOT go red on `4` of `4` planted defects; two produced BYTE-IDENTICAL output.** ✅★★★★★ **AND THE DISCRIMINATOR THAT MAKES IT A FINDING: positive witness probes prove the corrupted lines EXECUTE (`45` and `30` hits) — `"OUTPUT UNCHANGED" AND "THE PLANT NEVER LANDED" ARE THE SAME OBSERVATION UNTIL A WITNESS SEPARATES THEM.**
+🛑 **So `BLUEPRINT v4`'s Phase-2 ENTRY precondition is FAILING and `PH2` CANNOT be entered on the current rig. `REVISION_REQUIRED` adopted; the blueprint edit owes its OWN ruling.** ✅★★★★★ **THE PULL-FORWARD LANE PAID FOR ITSELF IN ONE SHOT — found before a real wave, off the critical path. `EXT-CONSULT-1` R4 was right.**
+
+## ⚠️★★★★★ TWO OVER-STATEMENTS I MADE TO THE OPERATOR, BOTH CORRECTED, BOTH IN THE SAME DIRECTION
+1. **`R-606`'s "six rulings measured the wrong population" — REFUTED** by the population grade: candidates 1 and 3 are the same tables in different units (`43 = 37 knobs + 2 SHARED + 2 FREEZE + 2 controls`). **Those rulings are NOT voided.**
+2. **"The oracle collapses the five prove-the-checker steps" — WRONG.** `[MEASURED BY GRADED INSTRUMENT, scout PART 4]` **it replaces NONE of them**; `P0PG→P0IG` qualify a COMPILE-TIME ADMISSION instrument, the oracle is a RUNTIME-SEMANTICS one, and it sits **under `FIDELITY`** — a node that names no instrument. ✅ `R-610 §4` had already refused this in the ledger, so only the operator message was wrong.
+★★★★★ **BOTH RAN TOWARD THE MORE DRAMATIC STORY. `A BIAS HAS A SIGN — CHECK YOURS BEFORE THE NEXT SUMMARY, NOT AFTER.`**
+
+## ✅ ORACLE DECISION (`R-610`): ADOPT THE DIRECTION, **RE-WIRE NOT BUILD**, GATED ON TWO BLOCKERS
+**`src/engine/parity_engine/` is ~1,400 lines already wired into the production backtest path with a full audit/Discord/SSE rail — but `diff_harness.py:19-21` refuses to import `backtester.py`, so it diffs a MINIMAL RE-IMPLEMENTATION against backtrader and the production trade list is never one of the two sides** (absence measured, positive control `vbt_total_pnl` → 3 hits). **Archetype coverage `2`; the Tier-A lane excluded by construction; default OFF with runtime value NOT MEASURED.**
+🛑 **BLOCKER 1 — INDEPENDENCE, ALREADY REALISED HERE: `AR-499 §2`, *"both lanes over-refusing identically while the gate printed EXIT 0 · PASS."*** And `spec-family-bindings.ts:18-20` **contractually requires the two "independent" lanes to change in the SAME COMMIT — two implementations required to change together are one implementation.**
+🛑 **BLOCKER 2 — DETERMINISM: identical IR does NOT imply identical trades** (27 env vars, a registry bypass at `backtester.py:318-323` on a name-normalisation miss, and `_build_run_receipt` fingerprinting NO env). **A diff disagreement is not attributable.**
+🛑★★★ **AND A BOOBY TRAP: `src/engine/compiler/compiler.py:41 compile_to_backtest` LOOKS like the compiler and is DEAD — zero non-test callers, both trees. AN ORACLE BUILT THERE WOULD BE GREEN FOREVER.**
+
+## ⚠️ CARRIED, UNADJUDICATED (each owes its own ruling)
+`backtester.py:5939`'s `try:` swallows an invariant-harness throw · `PARITY_SHADOW_ENABLED` default-OFF, runtime value unmeasured · `null_gate_calibration.py:666-694` silently ignores `--report-out`/`--manifest` under `--smoke` (`rc=0`, no artifact) · `backtest-service.ts:912-917` collapses per-trade timestamps to one `start_date` while its comment claims an offset the line does not add · the dead `compiler.py` · **`import vectorbt` HANGS silently (`rc=124` at 240s), lazy today at `backtester.py:4982`/`:7207`.**
+★★★ **TOOLING TRAP FOR EVERY SEAT: `grep … | grep -v test` DELETES EVERY `backtester.py` LINE — "test" is a substring of the FILENAME. It falsely convicted a live harness as dormant.**
+
+## (superseded seat lines below)
+**`AR-652`/`AR-653` — **unruled BY DESIGN: progress receipts on an already-authorized lane, requesting nothing.** `AR-651` RULED/APPROVED at `R-608`; `AR-643`/`644`/`646`/`648`/`649`/`650` unruled by design. **NOTHING UNRULED-AND-OWED.** Worker: ✅ **WORKING on `LANE-2` (`R-608 §6.1`).** ★★★ **NOT RULING A PURE PROGRESS RECEIPT IS THE VELOCITY FIX IN PRACTICE (`R-607 §3`) — a round-trip per receipt is what dominated wall-clock.**
 🛑★★★★★ **`AR-652` — TWO FINDINGS TO KEEP `[MEASURED BY DOER, commands quoted]`:** **(1) MY OWN LANE-2 BRIEF WAS WRONG BY OMISSION and it would have read as "THE RIG IS BROKEN": `scripts/null_gate_calibration.py --smoke` dies instantly with `ModuleNotFoundError: No module named 'scripts.generate_null_strategies'` — **the file EXISTS; it is a `sys.path` fault.** With the repo root on `PYTHONPATH`: **`rc=0`, a full battery end-to-end.** ✅ **THE VEHICLE WORKS.** ★★★ **`briefs-assert` PAID OFF — I told the worker to consume the scoping doc CRITICALLY, NOT OBEY IT, and step-zero is exactly what caught the omission before work depended on it.**
 ⚠️★★★★★ **(2) A REAL LATENT HAZARD, RECORDED BECAUSE IT WILL NOT ANNOUNCE ITSELF: `import vectorbt` HANGS — `rc=124` at `240s`, NO output, NO traceback, NO error.** ✅ **NOT blocking today: `[MEASURED BY DOER]` `src/engine/backtester.py:4982` and `:7207` are both LAZY imports inside functions, and `null_gate_calibration.py` does not import it at all.** 🛑 **BUT ANY future non-lazy import of `vectorbt` HANGS THE ENGINE SILENTLY — no error to alert on. `[UNENUMERATED — OPEN]` whether other modules import it eagerly, and the root cause of the hang. `absence-means`: a silent hang fails OPEN, which is the worst failure shape for an unattended run.**
 ✅★★★★★ **AND THE DISCIPLINE THAT MADE `AR-652` TRUSTWORTHY: it refused to let a green vehicle read as progress on the goal — *"THIS IS STEP-ZERO ONLY. NO DEFECT HAS BEEN PLANTED AND THE RIG HAS NOT BEEN SHOWN TO GO RED — `LANE-2`'s actual goal is NOT met."* ★★★ **That is the exact opposite of the four instruments that failed tonight, and it is a doer separating VEHICLE-WORKS from GUARD-BITES unprompted.**
