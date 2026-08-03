@@ -60,6 +60,14 @@
 
 **RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT:** `R-620 §4.1` (`INV-13` on a capped run), which is queued behind this.
 
+### ⚠️ ADDENDUM (same day, post-commit `98dfa126`) — MY "EVERY REMOVED LINE" LIST ABOVE WAS COMPLETE WHEN WRITTEN AND IS NOW STALE. CORRECTING IT RATHER THAN LEAVING IT.
+
+**The commit was BLOCKED THREE TIMES by the `ruff lint` pre-commit hook** on **pre-existing** debt in this file — import ordering (`I001`), then unused `EntryWindow`, then unused `ZoneInfo`. ✅ **PROVEN PRE-EXISTING, NOT MINE `[MEASURED HERE]`: `ruff check --select I` on `git show HEAD:...` returned the SAME `2` errors as my working copy.** The hook only lints CHANGED files, so this debt had never been enforced on a file nobody was committing.
+🛑 **SO THE FINAL DIFF IS LARGER THAN THE FOUR SCAFFOLDING LINES I LISTED:** it also reorders the import block and removes two genuinely unused imports. ✅ **`EntryWindow` verified unused first — its only other hits are the CLASS NAMES `TestParseEntryWindow`/`TestParseEntryWindows`, false friends, excluded rather than counted.**
+✅ **WHAT DID NOT CHANGE, RE-MEASURED AFTER EVERY STEP: `assert` count `59` → `59`, and `pytest src/engine/tests/test_entry_windows.py` → `54 passed`.** **No assertion was touched at any point.**
+✅ **AND I DID NOT SKIP THE HOOK.** `--no-verify` was never used. ⚠️ **`ruff --fix` was run with SAFE fixes only — never `--unsafe-fixes`, which `ruff-unsafe-fixes` records as modernising the WHOLE file.** **`4` `datetime.UTC`-alias suggestions remain OPEN in this file; the hook accepts them and I left them alone as out-of-contract.**
+★★★ **AND THE PROCESS LESSON IS MINE: I reported `git commit` as done once already this task and it HAD NOT LANDED** — the hook aborted and `git log` still showed the desk's `f48bcced`. **`completion-signal`: I verified the ARTIFACT (`git status` + `grep` for `## AR-667` in `HEAD`) instead of trusting the command, and that is the only reason this was caught.**
+
 ---
 
 ## AR-666 · 2026-08-03 · ✅★★★★★ **`R-621 §5.1` — THE FALLBACK REPAIR IS BUILT AND RED-PROOFED. `2/8` ARMS ON THE UNFIXED BASE → `8/8` ON THE FIX, SAME UNCHANGED HARNESS.** ✅★★★★★ **AND THE RED ARM INDEPENDENTLY REPRODUCED `R-618 §4`'s FINDING WITHOUT BEING BUILT TO LOOK FOR IT: on the base, `kept out-window = 0/8` and `kept in-window = 5/5` — **THE ENGINE KEEPS ONLY MACRO-WINDOW ENTRIES.**** 🛑 **ZERO REGRESSIONS — the same `6` tests fail identically before and after, MEASURED on the same tree.** 🛑 **ARMS 3 AND 4 ARE NOT DELIVERABLE: THE MODES THEY NAME DO NOT EXIST IN THE CODE. Reported, not faked.** **DIFF ONLY — no push, no merge, no PR.**
