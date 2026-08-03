@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3746` at THIS commit, 2026-08-03 10:5x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3750` at THIS commit, 2026-08-03 12:0x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3746` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3750` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,11 +93,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-03 `08:3x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-642` (`9a704e0c`). Newest AR: `AR-686` — the worker's FINAL report, UNRULED (it is a stop confirmation, not a work product).**
-🛑🛑 **WORKER SEAT IS STOPPED.** `AR-685` declared exhaustion; `R-640 §4` correctly left the call to the seat rather than withdrawing the task; **`AR-686` confirms the stop. `R-639 §6.2` IS UNSTARTED.** ★★★ **The protocol worked as designed: the desk did not convert a self-assessment into a stop order, and the seat made its own call.**
-🛑 **OPERATOR ACTION REQUIRED — A FRESH WORKER SEAT MUST BE STARTED.** ✅ **It can begin `§6.2` COLD: `AR-685`'s handoff packet carries every fix point, line number and ordering rationale, and the authorization below is complete.** ✅ **`§6.2` remains authorized to whatever seat next occupies the role — NOT re-scoped, NOT re-derived.**
-**SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`, the PID that wrote `R-630` — no sibling, no write-freeze.
+## ★★★★★ SEAT (2026-08-03 `12:0x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FOURTH `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-644` (`b15dd16a`). Newest AR: `AR-688` — RULED at `R-644`.**
+✅✅ **WORKER SEAT IS LIVE AND WORKING.** `AR-687` opened a fresh seat and took `R-639 §6.2`; `AR-688` landed the `ratify-packet` (`1c9c5ecf`) and hit the desk's own STOP CONDITION on member 3. **`R-644` discharged it (Option A, amended). Members 1 and 2 in flight.** 🛑 **The `R-642`-era "OPERATOR ACTION REQUIRED — start a worker seat" line is DISCHARGED and deleted; do not reinstate it.**
+**SEAT IDENTITY `[MEASURED HERE]`:** parent is `claude.exe 13916`. **Four `claude.exe` alive; `21508` is the WORKER's CLI. HEAD moved mid-turn at `95a4da08` — I checked AUTHOR AND PATH before concluding: it was the worker, not a sibling desk. NO write-freeze.**
+🛑★★★★★ **TOOLING REPAIRED THIS TURN AND IT WAS BLOCKING BOTH SEATS (`R-644 §6`):** the `pre-commit` hook's `INSTALL_PYTHON` pointed at a **0-byte Windows Store App Execution Alias** — failed `Permission denied` on one call, **HUNG 2 minutes on another and left a stale `index.lock`**. **Repointed to `C:/Program Files/Python313/python.exe` (carries `pre-commit 4.6.0`); backup in the session scratchpad — `.git/hooks/` is UNTRACKED, so there is no `git checkout` undo.** ✅ **Verified by `pre_commit run --files` (exit `0`) and by `R-643`/`R-644` landing through it.**
+🛑★★★★★ **NEW GUARD DEFECT, MINE TO FIX — THE MIRROR OF `R-641`'s:** **a FAILED ledger commit CONSUMES the `advisor-ruling` sentinel, so the RETRY is blocked** `[MEASURED HERE]`. `R-641` fixed *"the disarm never fires"*; this is *"the disarm fires on a NON-EVENT"*. **The receipt must consume on commit SUCCESS only.**
+⚠️★★★ **AND THE LOCK LESSON, BOTH DIRECTIONS IN ONE TURN:** I removed a stale lock that WAS mine (created `11:44:40` by my own killed commit, no `git.exe` alive) — correct. **Then a second lock appeared and my git said `File exists`, proving it PREDATED my call, so it was NOT mine; I waited and it cleared on its own.** ★★★★★ **`NEVER REMOVE A LOCK YOU DID NOT CREATE` — and `"Unable to create ... File exists"` is the discriminator that tells you which case you are in.**
 
 ## ✅★★★★★ `F-G1` IS CLOSED (`ba204de8`) — VERIFIED HERE WITH THE INSTRUMENT THAT CONVICTED IT
 `test_crisis_veto_triggers_on_unevaluated_scenario` landed. `[MEASURED HERE, materialised scratch copies]` delete `performance_gate.py:325` `if "error" in s:` → **only that test reddens**; delete `:318` `if scenario_dd > firm_max_dd:` → **only `…on_dd_breach` reddens**. Campaign tree `1 failed, 30 passed` (the failure is pre-existing `test_tier1_passes`). ★★★★★ **`crisis-stress-unevaluated` HAS A COMMITTED GUARD FOR THE FIRST TIME. `CLOSE A FINDING WITH THE INSTRUMENT THAT OPENED IT.`**
@@ -107,7 +109,9 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 **`F-G3` CRITICAL — a WHOLESALE stress-test crash deletes the crisis evaluation.** `RuntimeError`/`TypeError`/`ZeroDivisionError` propagate out of `run_stress_test`; `backtester.py:8432` swallows to `crisis_results = None`; the veto loop never runs **AND** the rescore at `:8410` (same `try`) never happens, so `forge_score` keeps its **crisis-blind** value. One stderr line is the only trace.
 **`F-G4` HIGH — `crisis_results={}`, missing `max_drawdown`, `NaN` (`nan > 2000.0` is `False`) all score clean.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-639 §6.2` / `R-640 §5`** — ONE `ratify-packet` FOR THE CLASS
+## ★★★★★ AUTHORIZED NOW — **`R-639 §6.2` / `R-640 §5`, MEMBER 3 AMENDED BY `R-644 §3`** — ONE `ratify-packet` FOR THE CLASS
+✅★★★★★ **`R-644` DISCHARGED THE STOP CONDITION `AR-688` RAISED. MEMBER 3 = OPTION A, AMENDED:** `F-G4` ships AS WORDED (not narrowed), and the three fixtures at `test_performance_gate.py:256/:323/:338` gain an **explicit REAL under-limit `max_drawdown` — NOT `0`**, because `0` is the literal default the missing-key path returns and would re-create the shorthand in a new costume. 🛑 **PLUS MANDATORY: `test_score_capped_at_100` gains a POSITIVE WITNESS (`crisis_veto is False` AND `score > 0`) — under `F-G4` it stays GREEN while asserting on `0.0`.** ★★★★★ **`A TEST THAT GOES VACUOUS CHANGES MEANING WITHOUT CHANGING COLOUR` — every failure-set diff this campaign runs is structurally blind to that class.** 🛑 **The false comment at `test_performance_gate.py:322` (*"no max_drawdown field — no veto should fire"*) is DELETED in the same packet; it teaches that absence means safety.**
+🛑 **NEW ACCEPTANCE OBLIGATION (`R-644 §5`): the evidence bundle names, for every test whose fixture it edited, the NON-DEGENERATE VALUE it now asserts on.** A fixture edit with no stated witness value is indistinguishable from tuning to green.
 **CLASS PROPERTY:** *a crisis evaluation that did not happen, or was compared against the wrong limit, must never score as clean.* `fix-pattern` — one packet, not three tickets.
 1. **`F-1b` THREADING FIRST** — `backtester.py:8410` → `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)`, **the identical expression already at `:8396`.** ★★★ **First because it makes the shipped comment TRUE.**
 2. **`F-G3` VETO SENTINEL** — `backtester.py:8432` emits `{"scenarios":[{"name":"stress_suite","passed":False,"max_drawdown":0,"error":str(e)}]}` not `None`, **reusing the arm now guarded by `ba204de8`.** 🛑 **AND the second hop: the rescore must not be skipped when the stress test raises.**
