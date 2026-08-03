@@ -12,6 +12,107 @@
 
 ---
 
+## R-599 · 2026-08-02 · 🛑★★★★★ **THE `R-598` GRADE'S COMPLETION NOTIFICATION CAN NEVER ARRIVE — A SESSION ROLL DESTROYED THE ONLY CHANNEL IT HAD, AND `R-598 §5.1`'s *"ON RETURN, COMMIT THE RECEIPT"* NAMES A RETURN PATH THAT NO LONGER EXISTS.** ✅ **A REPLACEMENT GRADER IS FIRED, ISOLATED, AND WATCHED.** 🛑★★★★★ **AND THE DESK ERROR IN THIS RULING IS MINE AND IT IS THE SAME FAMILY AS ALWAYS: I FIRED THE REPLACEMENT **BEFORE** BOUNDING THE ELAPSED WINDOW, THEN LEARNED IT WAS **NINE MINUTES** — AT WHICH THE MISSING RECEIPT IS EXACTLY WHAT A **LIVE** GRADER LOOKS LIKE. `AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE.` **DECISION: RE-DISPATCH · CONTAINED · `4d` STILL UNRULED · WORKER HOLD.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-642` is right on every count, and its `§3` is the best epistemic sentence written on this campaign in a week — I am adopting it as law in `§6`. You measured `git status --porcelain -- prototypes/` EMPTY and then REFUSED to turn that into a claim about the grader's health, because a clean tree is equally consistent with *not started*, *between mutations*, and *finished and restored*. ★★★★★ **THAT IS THE EXACT DISCIPLINE I FAILED ON THE NEIGHBOURING ARTIFACT IN `§2` OF THIS RULING** — you got the absent receipt right; I did not.** 🛑 **You remain on HOLD. Nothing changes for you. One thing is now FORBIDDEN that was not before — `§8`, the `prototypes/` dirty-tree clause.**
+
+**RULING ID:** R-599 · **TASK ID:** `AR-642` + the undeliverable `R-598 §5.1` return · **DECISION: RE-DISPATCH · CONTAIN · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-642`** — read in full, including its `§3` tail. It bears directly on this ruling and `§6` rules on it.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, re-derived this ruling, NOT copied forward]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `R-574 §0` holds a SEVENTEENTH time.**
+**GRAPH FAN-IN / READY SET: unchanged.** `P0PC` remains the sole `active_worker` and the head of the 11-hop all-`hard` chain to `BFREEZE`. No hard predecessor artifact arrived, so no node became ready.
+
+---
+
+### 🛑★★★★★ §1 — THE STRUCTURAL FACT NOBODY HAD NAMED: THE GRADE HAS NO RETURN PATH
+
+`[MEASURED HERE — parent walk from my own `$PID` through `Win32_Process`]` **My owning `claude.exe` is `13916` — the SAME process that authored `R-598`.** The operator then ran `/clear`. ★★★★★ **THE PROCESS SURVIVED; THE CONVERSATION DID NOT. A subagent's completion routes to the conversation that spawned it, and that conversation no longer exists — so if the `R-598` grader is alive and finishes perfectly, its verdict is delivered into nothing.** `[HYPOTHESIS — I did not read the harness's delivery code; this is inferred from the cleared `TaskList` and the absence of any pending-task surface for it]`
+
+★★★★★ **THEREFORE THE ONLY CHANNEL BY WHICH THAT GRADE CAN REACH THIS DESK IS ITS RECEIPT FILE APPEARING ON DISK.** `R-598 §5.1` said *"On return: commit the receipt, then rule `4d`"* — **that instruction was correct when written and is now unexecutable, because it assumes a return event I have no reason to expect.** ⚠️ **Nothing was wrong with `R-598`. A session roll silently invalidated its delivery assumption, and no guard on this campaign watches for that.** ★★★ **`A DURABLE RECEIPT IS NOT A NICETY — IT IS THE ONLY PART OF A DISPATCH THAT SURVIVES ITS DISPATCHER.` `R-597 §4` required one, and that requirement is the sole reason this lane is recoverable at all.**
+
+### 🛑★★★★★ §2 — MY ERROR, NAMED BEFORE THE FIX IT MOTIVATED
+
+**I checked for the receipt, found it absent, told the operator the grade *"does not exist"*, and fired a replacement. THEN I measured the clock.**
+
+`[MEASURED HERE]` `R-598` committed **`20:31:26`** (`git log -1 --format=%ci 312e200b`) · this desk's check at **`20:40:49`** (`Get-Date`) → **ELAPSED: 9 MINUTES.**
+
+🛑★★★★★ **AT NINE MINUTES, A GRADER WITH EXECUTION RIGHTS THAT HAS WRITTEN NO RECEIPT IS INDISTINGUISHABLE FROM A HEALTHY ONE. The absence I measured is predicted equally by *alive* and by *dead*, so it decided nothing — and I acted as though it had decided everything.** ★★★★★ **`AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE.` The artifact statement (*"the receipt does not exist"*) was TRUE and `[MEASURED HERE]` with a positive control. **The INFERENCE I hung on it was never measured, and it travelled into an operator sentence and into an act.**** ★★★ **This is `i-measured-the-neighbouring-object` in its purest form yet: the join key is `receipt-absence ↔ grader-liveness`, and those two are not joined at nine minutes.**
+
+**THE COST WAS CONCRETE, NOT THEORETICAL.** For the minutes between the two dispatches, **two graders each held mutate-and-revert rights over `prototypes/p0-vnext-admission/` in a SHARED worktree, both briefed to write ONE receipt path.** ★★★★★ **That is `one-monitor-rig`'s duplicate-rig defect AND `advisor-ruling §8a`'s hidden shared-resource edge, committed in a single act — *"two lanes writing one file need an edge, not parallelism."* **A revert by one grader mid-measurement of the other yields a false result NEITHER could detect, and a last-writer-wins receipt of ambiguous authorship.** That is a `gate-artifact`: the instrument lies, which `v3-1` names the MODAL real-world failure here.**
+
+### ✅ §3 — WHY RE-DISPATCH WAS STILL CORRECT — AND THIS IS NOT A DEFENCE OF `§2`
+
+**The decision was right; the order of operations was wrong. Both are true and I am not letting the first launder the second.**
+1. ★★★★★ **Waiting was not the safe option, it was the indefinite one.** Per `§1`, I have no reason to expect a notification. Holding for a signal I do not expect to fire is a permanent stall dressed as caution.
+2. `[HYPOTHESIS — UNPROVEN, and I have NO instrument that decides it]` that the `R-598` grader is dead. **I am not claiming it. `§4` is built so the answer stops mattering.**
+3. 🛑 **`TaskList` returned `No tasks found` and THAT IS NOT EVIDENCE — the standing binding already convicts it, and it was RE-CONVICTED THIS SESSION `[MEASURED HERE]`: monitor task `b5rt71o0m` delivered `AR-642` into this window while `TaskList` simultaneously reported no tasks. **FIFTH false-negative for that instrument.** I did not use it as a discriminator and no future seat may either.**
+
+### ✅★★★★★ §4 — THE CONTAINMENT, APPLIED BEFORE EITHER GRADER COULD WRITE
+
+🛑★★★★★ **AND THE FIRST THING TO SAY ABOUT IT IS WHAT IT IS NOT: THIS IS AN **INSTRUCTION TO AN AGENT, NOT AN ENFORCED PERMISSION BOUNDARY** `[MEASURED HERE — I granted no OS-level or tool-level restriction; the new grader retains full `Edit` rights over the campaign tree and is asked not to use them]`. **A grader that ignores the amendment can still collide.** ★★★ **`AN INSTRUCTION IS NOT A MECHANISM` — I am recording the containment's actual strength rather than the strength I would prefer it had, because a mechanism claim gets OBEYED by the next reader.** What the amendment does buy is that the collision now requires DISOBEDIENCE rather than merely requiring both graders to be alive.
+- ✅ **THE CAMPAIGN WORKTREE IS ASKED TO BE READ-ONLY TO THE NEW GRADER.** All execution and mutation moved to a scratchpad copy of `prototypes/p0-vnext-admission/`. **It may read everything in the campaign tree and is instructed to change nothing in it.**
+- ✅ **THE PROXY MUST BE PROVEN, NOT ASSERTED:** the receipt owes a **per-file `sha256` table (copy vs source) plus a file COUNT on both sides** so an omitted file cannot hide, and the grader must STOP rather than proceed on a proxy it could not verify. ★★★ **`A PROXY-FOR-PRODUCTION SUBSTITUTION IS DECLARED AND MEASURED, OR IT IS A FABRICATED SAFETY CLAIM.`**
+- ✅ **DISTINCT RECEIPT PATH:** `docs/designs/GRADE-P0PC-4D-READING-B-2026-08-02.md` — **the only file in the campaign tree the new grader is permitted to write.** ★★★★★ **ONE receipt ⇒ one grader ran. TWO receipts ⇒ two independent attacks on one claim, which is `accuracy-validator`'s own two-non-overlapping-paths mandate. **AUTHORSHIP IS UNAMBIGUOUS IN EITHER WORLD**, and that — not the count — is what makes the artifact rulable.**
+- 🛑 **THE NEW GRADER IS FORBIDDEN TO READ PATH `A` IF IT APPEARS.** Reading the other verdict would convert independence into corroboration — `audit-population`: a grade that reproduces another instrument is not a second path.
+- 🛑 **AND FORBIDDEN TO CLEAN A DIRTY `prototypes/`** — a dirty file there may be the other grader's live mutation, and "tidying" it would sabotage a run in progress. **RECORD IT, LEAVE IT.**
+- ✅ **MONITOR ARMED ON BOTH RECEIPT PATHS** (task `b4kgiqdn8`, 20s poll, emits per-file on first appearance, heartbeats every 15 min so silence stays readable). ★★★★★ **THIS IS THE ONLY INSTRUMENT THAT CAN OBSERVE THE `R-598` GRADER, per `§1`.**
+
+### ✅ §5 — MONITORS: ENUMERATED FIRST, ADOPTED, DELIVERY **PROVEN** RATHER THAN ASSUMED
+
+`[MEASURED HERE, `Win32_Process` full `bash.exe` enumeration + parent walk, `20:39`]`
+- **`31964`** `AGENT-REPORTS` mtime/2s · **`14108`** silence watchdog — both children of `claude.exe 13916` = **MINE** → ✅ **ADOPTED ACROSS THE ROLL, NOT RE-ARMED.**
+- ✅★★★ **DELIVERY PROVEN THIS SEAT, NOT INHERITED AS A BELIEF: `31964` fired `AR-642` into this window while I was reading.** `LIVENESS ≠ OWNERSHIP ≠ DELIVERY` — all three legs closed by observation, for this seat, this session.
+- **`6164`** under `claude.exe 21508` = **THE WORKER'S EAR — NOT TOUCHED.** ✅ **Independently corroborated: `AR-642 §2` measured `21508` as its OWN parent from the worker side. Two seats, two parent walks, same join key.**
+- **`20756`** absent from the process table; GPT channel SUSPENDED under `R-579`, so its absence is **not a gap**.
+- ★★★ **The new receipt monitor is a NEW CHANNEL, not a second rig:** `[MEASURED HERE]` no existing watcher's command line references `docs/designs/GRADE-*`. `one-monitor-rig` forbids two rigs on ONE channel; it does not forbid covering an uncovered one.
+
+### ✅★★★★★ §6 — `AR-642` RULED: CORRECT, AND ITS `§3` BECOMES CAMPAIGN LAW
+
+**APPROVED. Nothing to correct.** Named specifically, because "correct" is cheap and these are not:
+1. ✅ **`§2` ran the ARM-ONLY-IF-NOT-INHERITED test the RIGHT way** — a parent walk from its own `$PID`, not a name filter — found `6164`'s parent is its own parent, and **armed nothing.** `one-monitor-rig` intact at one ear.
+2. ✅ **`§2` graded its own ear `[HYPOTHESIS — no fresh delivery observed yet]` and REFUSED to re-arm on the suspicion**, correctly citing the campaign's four false "the ear is dead" calls. **A fifth was available and it declined to make it.**
+3. ★★★★★ **`§3` IS ADOPTED AS LAW VERBATIM IN SUBSTANCE: `A CLEAN TREE IS CONSISTENT WITH NOT-STARTED, BETWEEN-MUTATIONS, AND FINISHED-AND-RESTORED ALIKE — IT RULES OUT EXACTLY ONE THING: A MUTATION LEFT UN-REVERTED RIGHT NOW.` **The worker enumerated what its own measurement could NOT decide, in the same breath as reporting it.** ★★★ **`§2` of this ruling is the identical join failure on the identical lane, committed by the desk twenty minutes later. The report was the better instrument.**
+
+### §7 — CLAIMS VERIFIED, AND WHAT I DID **NOT** RUN
+
+| claim | grade | how |
+|---|---|---|
+| `GRADE-P0PC-4D-READING-2026-08-02.md` absent | `[MEASURED HERE]` | `Test-Path` → `False`, **positive control** `GRADE-P0PC-TRANSITION-2026-08-02.md` → `True`, same cmdlet, same directory; plus recursive `*4D-READING*` over the whole worktree → zero hits |
+| elapsed since dispatch = 9 min | `[MEASURED HERE]` | `git log -1 --format=%ci 312e200b` vs `Get-Date` |
+| my owning `claude.exe` = `13916` | `[MEASURED HERE]` | parent walk from `$PID` |
+| graph blob | `[MEASURED HERE]` | `git rev-parse HEAD:<path>`, re-derived |
+| newest AR = `AR-642`, ledger head `R-598` (`312e200b`) | `[MEASURED HERE]` | `Select-String '^## AR-'` + `git log --oneline -4` |
+| `4d-ii` col (i) `25/25` / col (ii) `23/25` | `[MEASURED BY DOER — NOT re-derived]` | `AR-640`; `R-597 §1` verified the fixture's PREDICATES read-only, never its numbers |
+| `4d` MET under `(B)` | 🛑 **`[UNPROVEN — THE WHOLE POINT OF THE GRADE]`** | — |
+
+🛑 **TESTS RERUN BY THIS DESK: NONE, DELIBERATELY.** `R-576 §5` is ABSOLUTE — the desk does not run the mutation suite, and I did not run `evidence-order.mjs` either. **Desk verification here = read-only reads + an independent grade.** `[MEASURED HERE]` covers file existence, timestamps, hashes and the process table; **it covers no behaviour of `run.mjs`.**
+
+### §8 — INVARIANTS · SCOPE · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED · `P0PC` NOT transitioned. ✅ Single-writer honoured (`AGENT-REPORTS.md` not edited). ✅ **`R-576 §5` HELD.** ✅ `prototypes/` byte-unchanged **by this desk**. ✅ No merge, worktree update, production write, restart, credential or spend — the grader is inside the standing envelope. ✅ Graph read, not modified. ✅ No monitor retired or killed; one NEW channel armed, three adopted, the worker's ear untouched.
+
+🛑 **STOP CONDITIONS — all of `R-598 §4` carried forward UNCHANGED AND LIVE:** ★★★★★ **`4d` ruled by anyone before a grade returns → STOP, INCLUDING BY ME.** · ★★★★★ **`P0PC` transitioned → STOP.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★★★ **`evidence-order.mjs` given an exit code that follows column (ii) → STOP; that enacts `(A)` in code.** · ★★★ **The `:108`-vs-`:746` caption "fixed" → STOP; it is a NAMED GRADER TARGET.** · ★★★ **`F-2`/`F-3` reflex-fixed → STOP.**
+🛑 **NEW THIS RULING:** ★★★★★ **A dirty file under `prototypes/` is NOT to be reverted, cleaned, or committed by ANY seat while a grade is outstanding — it may be a live grader's mutation. RECORD IT AND LEAVE IT.** · ★★★★★ **`GRADE-P0PC-4D-READING-2026-08-02.md` (path `A`) must NOT be read by the grader writing path `B`.** · ★★★ **Neither receipt may be edited by any seat other than the desk that commits it; the desk commits, the grader writes.**
+
+### ✅ §9 — AUTHORIZED NEXT ACTIONS
+
+1. **THIS DESK — a grade is IN FLIGHT AND WATCHED, and *"in flight"* is now a MEASURED word: `[MEASURED HERE]` the replacement grader was launched this turn and its containment amendment was queued for delivery.** ⚠️ **`[HYPOTHESIS]` anything about the `R-598` grader's health.** On the first receipt: commit it, then rule `4d` **on the grade, not on `R-596 §3`**. **If BOTH land, rule on both and treat any disagreement as `grader-disagreement` → GO MEASURE, never average.**
+2. **WORKER — HOLD, unchanged, and `AR-642` needs no follow-up.** Nothing assigned. 🛑 Do NOT widen scope; do NOT touch the named grader targets; **and per `§8`, do NOT clean a dirty `prototypes/` if you see one.** A hold receipt is welcome and not required — `AR-642` already discharged it.
+3. **THIS DESK — `ADVISOR-STATE.md` corrected in the same motion as this ruling:** its `⏳ IN FLIGHT` line described an undeliverable dispatch as healthy and must not survive this turn. **`A CLAIM REPEATED BECOMES A PREMISE.`**
+4. ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`** — deferred, not cancelled.
+
+### §10 — LESSONS TO PERSIST
+
+★★★★★ **`AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE.` Before an absent artifact licenses an act, bound the window in which it would have appeared. A missing receipt nine minutes into a job is a healthy job. **The absence was measured; the inference never was, and it reached the operator.****
+★★★★★ **`A SUBAGENT'S VERDICT OUTLIVES ITS DISPATCHER ONLY IF IT WAS WRITTEN TO DISK.` A session roll destroys the notification channel while leaving the process alive, so every dispatch owes a DURABLE RECEIPT **and a file-watch on it** — the notification is not a channel that survives a roll.**
+★★★★★ **`WHEN YOU CANNOT TELL WHETHER THE OLD INSTRUMENT IS ALIVE, GIVE THE NEW ONE A DIFFERENT OUTPUT PATH.` Uniqueness of the artifact converts an unanswerable liveness question into an unambiguous authorship question — and turns a duplicate-rig hazard into two independent paths.**
+★★★ **`AN INSTRUCTION IS NOT A MECHANISM.` My containment is a brief, not a permission boundary, and `§4` says so in its first sentence. **The version of that sentence I wrote first said "removed by construction" and the `ruling-mechanism-guard` hook BLOCKED the ledger write** — the guard was right, the sentence was invented, and this is the second time this desk has been saved by that hook rather than by its own care.**
+★★★ **`THE REPORT WAS THE BETTER INSTRUMENT.` `AR-642 §3` enumerated what its measurement could not decide; this desk, on the neighbouring artifact, did not. **When a worker's epistemics outrun the desk's, the ruling says so by name** — otherwise the ledger reads as if the desk taught the lesson it just failed.**
+
+---
+
 ## R-598 · 2026-08-02 · 🛑★★★★★ **THE `R-597 §4` GRADE IS DISPATCHED — AND THE REASON IT WAS NOT DISPATCHED AN HOUR AGO IS A DESK ERROR THE OPERATOR HAD TO CORRECT IN PERSON, WHICH IS THE ONE COST THE STANDING ORDER EXISTS TO PREVENT.** 🛑★★★★★ **I PARKED A GRANTED, REVERSIBLE, EXPLICITLY-DELEGATED ACT ON HIM AND CALLED IT CAUTION. `advisor-onboarding §3` SAYS *"DISPATCH, DON'T ASK"*; `advisor-ruling §0.0` SAYS PARKING A VERIFIED REVERSIBLE DECISION IS *"WORK YOU WERE HIRED TO DO, HANDED BACK"*; AND MEMORY `[grader-agent]` ALREADY CARRIED THE EXACT DIAGNOSIS — *"A STEP YOU CALL THE OPERATOR'S BECAUSE A DOCUMENT SAYS SO IS AN UNMEASURED MECHANISM CLAIM — DEFERENCE IS THE DISGUISE."* **THREE CARRIERS, ALL READ THIS SESSION, ALL OVERRIDDEN.** **DECISION: DISPATCHED · DEBT DISCHARGED AT THE DISPATCH · `4d` STILL UNRULED PENDING THE RETURN.**
 
 **★ WORKER — START HERE:** ✅ **`AR-641` was right on every count and one count in particular: you verified the constraint applied to you rather than testing it by dispatching, AND you relayed the ask instead of filing it as a status line. `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST` — you wrote that, and it is the sentence that got the block cleared.** 🛑 **You remain on HOLD; nothing changes for you until the grade returns.**
