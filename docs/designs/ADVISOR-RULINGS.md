@@ -12,6 +12,49 @@
 
 ---
 
+## R-629 · 2026-08-03 · ✅★★★★★ **`AR-673` APPROVED — THE ONE AUTHORIZED ASSERTION CHANGE LANDED AND IT **STRENGTHENED** THE TEST, WHICH I VERIFIED THE ONLY WAY THAT DISTINGUISHES A SPEC UPDATE FROM A WEAKENING: `[MEASURED HERE]` `assert` COUNT `97 → 102`, `0` `xfail`/`skip` ADDED, `core.py` ABSENT FROM THE DIFF, AND THE SUITE IS `67 passed`.** ✅★★★★★ **AND THE WITNESS I DEMANDED IS THERE VERBATIM, NOT PARAPHRASED: `run_invariants(without_prop).overall_passed is run_invariants(with_prop).overall_passed`, failing with *"absence changed `overall_passed` — `INV-13` is gating on absence."* **`R-628 §2`'s hazard is now a TEST, not a note in a ledger nobody re-reads.**** ✅★★★ **AND IT CHOSE `is False` OVER `not check.passed` FOR THE STATED REASON — the loose form is satisfied by `None`/`0`/absence and would still pass **if the check were deleted entirely**. That is the difference between asserting a contract and asserting that nothing exploded.** **DECISION: APPROVE · KNOWN-RED CLOSED · NO NEW AUTHORIZATION NEEDED — `R-628 §4.2` ALREADY HOLDS.**
+
+**★ WORKER — START HERE:** ✅ **Approved, nothing to redo. Continue to `R-627 §3.2` (measure the producer discriminator; NO code change) — already authorized at `R-628 §4.2`, so you are not waiting on me.**
+
+**RULING ID:** R-629 · **TASK ID:** `AR-673` (`R-628 §3`) · **DECISION: APPROVE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-673`** `[MEASURED HERE]`. `AR-672` ruled at `R-628`.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, not modified. NODE: NONE — `P0PC` NINE of ten.**
+
+---
+
+### ✅ §1 — VERIFIED BY THIS DESK
+
+| requirement (`R-628 §3`) | measurement | result |
+|---|---|---|
+| test file ALONE | `git show --stat 8ef3397e` | **1 file, `+40/−2`** ✅ |
+| `core.py` untouched | same | **absent from the diff** ✅ |
+| asserts BOTH axes positively | diff | `assert check.passed is False` · `assert check.applicable is False` ✅ |
+| evidence names WHY | diff | asserts `"did not run"` and `"not evidence"` ✅ |
+| **`overall_passed`-unchanged witness** | diff | ✅ **present, with the diagnostic message** |
+| renamed | diff | → `test_absent_prop_compliance_is_not_applicable_not_a_pass` ✅ |
+| **not weakened** | `grep -c 'assert '` HEAD~1 vs HEAD | **`97 → 102`** ✅ · `xfail`/`skip` added: **`0`** ✅ |
+| suite green | **I RERAN IT:** `pytest test_invariant_harness.py -q` | **`67 passed in 0.15s`** ✅ |
+
+★★★★★ **THE ASSERT-COUNT DELTA IS THE LOAD-BEARING CHECK AND IT IS WHY THIS RULING IS SHORT. `R-628 §3` lifted a standing prohibition; the risk of lifting it is that "update the spec" becomes cover for "delete the inconvenient assertion." **`97 → 102` with zero `xfail` is the discriminator, and it is mechanical — no judgment, no trust.** A lift like this must always ship with a countable acceptance, or the exception eats the rule.**
+
+### ✅ §2 — WHAT CLOSES HERE
+✅ **`AR-672`'s known-red item is CLOSED** — the suite went red by construction when `core.py` got stricter, and is green again without `core.py` moving. ★★★ **That sequence is itself the proof the change was a real behaviour change and not a no-op: a test that never went red would have told us nothing.**
+✅ **`R-628 §3`'s lift is SPENT.** 🛑 **It was one test wide and it is now closed — the standing "never edit an assertion" stop is FULLY BACK IN FORCE.**
+
+### ✅ §3 — NEXT (no new authorization required)
+1. ✅ **WORKER — `R-627 §3.2`**, already authorized at `R-628 §4.2`: does the result dict carry any field identifying its producer? **No code change. "There is none" is a complete answer.**
+2. ⏸️ **HELD on that: `INV-13 → CRITICAL`, `INV-1` deletion, `WARNING`-tier enumeration.**
+3. ⏳ **DESK — grader lanes, fan-in `0/2`** `[MEASURED HERE — neither receipt on disk]`.
+4. 🛑 **DESK — CARRIED: no-opt-out blackout Phase-2 blocker (`R-623 §7.4`) · `risk_derived_pyramid` (`R-624 §5.4`, HYPOTHESIS).**
+
+### §4 — INVARIANTS · STOP CONDITIONS
+**No runtime, trading, capital, broker or deploy behaviour authorized, touched or read. `runtime-production` NOT touched.** ✅ Single-writer. ✅ Graph read, not modified. ✅ No spend. `P0PC` NINE of ten · `4d` NOT MET.
+🛑 **STILL LIVE, all of `R-628 §5`, with one CHANGE:** ★★★★★ **the `§3` assertion lift is SPENT — any further assertion edit is a STOP again, with no exceptions outstanding.** · ★★★★★ **`not_applicable` subtracted from `failed`/`warnings` → STOP (`R-628 §2`).** · ★★★ **`INV-13` promoted before `R-627 §3.2` returns → STOP.**
+
+### §5 — LESSONS TO PERSIST
+★★★★★ **`A LIFTED PROHIBITION MUST SHIP WITH A COUNTABLE ACCEPTANCE, OR THE EXCEPTION EATS THE RULE.`** "Update the spec" is indistinguishable from "delete the inconvenient assertion" by reading the diff sympathetically. **`assert` count `97 → 102` and `xfail` count `0` decide it mechanically — and a lift with no such counter should not be granted.**
+★★★★★ **`ASSERT THE CONTRACT, NOT THAT NOTHING EXPLODED.`** `not check.passed` is satisfied by `None`, `0`, and by the check being deleted; `check.passed is False` is satisfied only by the contract. **The loose form is the default a hurried author reaches for and it silently accepts the check's own absence.**
+★★★ **`A TEST THAT WENT RED WHEN THE CODE GOT STRICTER, THEN GREEN WITHOUT THE CODE MOVING, IS ITS OWN PROOF THE CHANGE WAS REAL.`** The known-red window was evidence, not damage.
 ## R-628 · 2026-08-03 · ✅★★★★★ **`AR-672` APPROVED — `R-627 §3.1` SHIPPED CLEAN AND I VERIFIED THE HARD CONSTRAINT AT THE OBJECT ITSELF, NOT THE REPORT: `[MEASURED HERE]` `f936b2dd` TOUCHES `core.py` ALONE (`+52/−7`), THE DIFF CONTAINS **ZERO** `severity` LINES, AND THE LIVE CHECK OBJECT PRINTS `severity='WARNING', applicable=False`.** 🛑🛑★★★★★ **AND THE DOER MADE THE ONE DESIGN DECISION THAT KEPT THIS FROM BEING A FOURTH-ROUTE FAIL-OPEN, UNPROMPTED: **`not_applicable` CHECKS ARE NOT SUBTRACTED FROM `failed`.** Subtracting them — the obvious implementation — would mean that the moment `INV-13` becomes `CRITICAL`, a not-applicable result vanishes from `critical_failures` and **passes the gate**, silently restoring the exact hole this item existed to close.** ✅★★★★★ **AND IT CAUGHT ITS OWN CONTROL BEING VACUOUS: `overall_passed` was `[False,False,False]` on BOTH sides, which **cannot detect a flip**, so it re-ran on a REAL result where the value is genuinely `True` — `True → True`, `passed 13 / failed 1` identical.** 🛑 **ONE TEST NOW FAILS BY CONSTRUCTION BECAUSE ITS ASSERTION ENCODES THE DEFECT WE REMOVED. `§3` LIFTS MY OWN STOP FOR IT, NARROWLY AND IN WRITING.** **DECISION: APPROVE · RATIFY THE NON-SUBTRACTION · AUTHORIZE ONE ASSERTION CHANGE.**
 
 **★ WORKER — START HERE:** ✅ **`§3` is your next task and it is the ONE case where you may edit an assertion — read its bounds, they are tight.** ✅ **Your non-subtraction reasoning is ratified as campaign law (`§2`); it is the best independent call of the session.**
