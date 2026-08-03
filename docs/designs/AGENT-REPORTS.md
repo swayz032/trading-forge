@@ -4,6 +4,56 @@
 
 ---
 
+## AR-672 · 2026-08-03 · ✅★★★★★ **`R-627 §3.1` SHIPPED (`f936b2dd`) — `INV-13`'s TWO SKIP PATHS NO LONGER REPORT AS PASSES, AND `overall_passed` IS BYTE-IDENTICAL, PROVEN AGAINST A **NON-VACUOUS** CONTROL (`True → True` ON A REAL RESULT, NOT JUST `False → False` ON SYNTHETIC DICTS).** 🛑🛑★★★★★ **AND I CAUGHT MY OWN CONTROL BEING CONFOUNDED MID-RUN: MY FIRST BEFORE/AFTER DIFFERED IN **TWO** VARIABLES, NOT ONE, AND SHOWED A FALSE `14 → 13` REGRESSION THAT WAS ACTUALLY THE POLARITY FIX PRODUCING A TRADE.** 🛑 **ONE TEST NOW FAILS **BY CONSTRUCTION** — `test_passes_when_no_prop_compliance` ASSERTS THE EXACT CONTRACT `§3.1` ORDERED CHANGED, AND MY CONTRACT FORBIDS ME TOUCHING IT.**
+
+**TASK:** `R-627 §3.1`. **Files: `src/engine/invariant_harness/core.py` ONLY** `[VERIFIED — `git status src/` shows core.py plus the inherited-dirt `test_synthetic_market_simulator.py`, which I did NOT commit]`.
+
+### ✅ WHAT SHIPPED
+
+**`InvariantCheck.applicable: bool = True`** — defaulted, so **every existing construction site keeps its current meaning**. **`InvariantReport.not_applicable: list`** for visibility. **Both skip paths (`:750` absent/empty, `:782` present-but-no-firm-field) now return `passed=False, applicable=False`** with evidence naming *why* nothing was checked and stating explicitly that it **is not evidence balances are consistent**.
+🛑★★★★★ **DESIGN DECISION I WANT ON THE RECORD, BECAUSE THE OBVIOUS IMPLEMENTATION IS A TRAP: `not_applicable` checks are **NOT** subtracted from `failed`/`warnings`. Subtracting them would mean that once `§3.3` promotes `INV-13` to `CRITICAL`, a not-applicable result would vanish from `critical_failures` and pass the gate — **reintroducing the exact fail-open this item exists to close, by a fourth route.** Leaving them in means a future promotion makes the absence VISIBLE at the gate rather than silently exempt.**
+✅ **CONTRACT HONOURED `[MEASURED]`: `git diff | grep -c "^[-+].*severity="` → **`0`** (no severity touched) · the `overall_passed=len(critical_failures) == 0` expression is **not** in the diff as a `-`/`+` line · `prop_sim.py` / `walk_forward.py` untouched · what `INV-13` compares is unchanged.**
+
+### ✅ ACCEPTANCE — SINGLE-VARIABLE, RE-RUN THIS RUN
+
+| case | BEFORE (`core.py` base) | AFTER |
+|---|---|---|
+| (a) present-and-correct | `passed=True` | `passed=True, applicable=True` |
+| (b) present-and-corrupted `+$7000` | `passed=False` | `passed=False, applicable=True` |
+| (c) `prop_compliance` ABSENT | 🛑 **`passed=True`** — a pass | ✅ **`passed=False, applicable=False`** |
+| `overall_passed` (all three) | `[False, False, False]` | `[False, False, False]` — **identical** |
+| `not_applicable` list | `[]` | `['per_firm_endings_consistent']` |
+
+✅ **ARM (a) RE-RUN, NOT CARRIED (`red-path-decay`): planted `+$7000` fires and names it — `"topstep_50k: ending_balance_uncapped=53750.00 vs expected=46750.00 (diff $7000.00)"`.**
+✅★★★★★ **AND THE `overall_passed` CONTROL IS NON-VACUOUS, WHICH THE SYNTHETIC TABLE ALONE IS NOT:** `[False,False,False]` on both sides **cannot detect a flip**. So I re-ran on a **REAL `run_backtest` result** where `overall_passed` is genuinely `True`: **`True → True`, with `passed 13 / failed 1` IDENTICAL on both sides.** ★★★ **I nearly shipped the vacuous version — the same shape I convicted myself for in `AR-669`, two reports apart.**
+
+### 🛑🛑★★★★★ MY CONTROL WAS CONFOUNDED AND I FOUND IT BY DISBELIEVING A SURPRISING RESULT
+
+**My first before/after showed `passed 14 → 13, failed 0 → 1` on the real result — a regression my change could not possibly cause, since I only touched skip paths on a result that HAS `prop_compliance`.**
+`[MEASURED]` **CAUSE: THE TWO TREES DIFFERED IN TWO VARIABLES.** The isolated worktree still held the **pre-polarity-fix `backtester.py`** from `AR-667`'s red arm. So BEFORE had `total_return = 0.0` / `uncapped = 50000.0` (**zero trades**) and AFTER had `total_return = -52.44` / `uncapped = 49947.56` (**one trade**). **The failing check was `commission_per_trade_reasonable` — it fires because there is now a trade to have commission on. That delta is the LANDED POLARITY FIX, not this change.**
+✅ **FIXED THE INSTRUMENT: copied the fixed `backtester.py` into the worktree so `core.py` was the ONLY difference, then re-ran. `passed 13 / failed 1` on BOTH sides — zero delta from my change.**
+★★★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — and the accusation was correct. Had I reported the first table, I would have filed a regression against my own change that did not exist, and attributed the polarity fix's first-ever real trade to a bug.**
+
+### 🛑 ONE TEST NOW FAILS BY CONSTRUCTION — REPORTED, NOT REPAIRED
+
+`[MEASURED]` `pytest src/engine/tests/test_invariant_harness.py` → **`1 failed, 66 passed`**; broader sweep → **`1 failed, 100 passed, 3 skipped`**. **The single failure is `TestPerFirmEndings::test_passes_when_no_prop_compliance` (`:511-515`):**
+```
+result.pop("prop_compliance")
+check = _check_per_firm_endings(result)
+assert check.passed          # <-- asserts absence IS a pass
+```
+🛑★★★★★ **ITS NAME AND ITS ASSERTION ENCODE THE EXACT CONTRACT `§3.1` ORDERED CHANGED. This is not a regression — it is the ordered behaviour change colliding with the test that pinned the old behaviour.** 🛑 **I DID NOT TOUCH IT: `§3.1` says *"Files: `src/engine/invariant_harness/core.py` only"*, and rewriting an assertion to match my own change is the shape this campaign forbids outright.** ⚠️ **SO THE SUITE IS RED ON ONE TEST AT `f936b2dd`, KNOWINGLY, AND THE DESK MUST EITHER AUTHORIZE UPDATING THAT TEST OR RECONSIDER `§3.1`. I am not choosing between those.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Any consumer of `InvariantReport` outside `backtester.py`** — I added a field with a default, which is additive, but I did **not** sweep for code that constructs `InvariantReport` positionally or serialises it exhaustively. `[HYPOTHESIS — additive is safe.]`
+2. **Whether `backtester.py`'s serializer should emit `applicable`/`not_applicable`** — `_serialize_inv_check` (`:5943`) does not carry the new field, so **the TS side cannot see it.** ⚠️ **That is arguably required for the property *"the run's verdict must never claim `INV-13` checked something it did not"* to hold END-TO-END rather than in-process. `backtester.py` is outside `§3.1`'s file scope — FLAGGED, NOT DONE.**
+3. **`§3.2`** (producer-identifying field) — not started.
+
+**RECOMMENDATION: APPROVAL_REQUESTED**, with two items the desk must rule on: **the red test**, and **whether the new state must reach the serializer to satisfy the property end-to-end.**
+
+---
+
 ## AR-671 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-626 §5.1` — **STOPPED UNDER ITS OWN HONEST-PARTIAL CLAUSE. I DID NOT WRITE THE FIX.** ABSENCE **IS** LEGITIMATE ON A REAL RUN CLASS: `walk_forward.py:2225`/`:3006` SET `prop_compliance = None` UNLESS `all_oos_pnl_records and all_oos_trades`.** 🛑🛑★★★★★ **SO CLOSING THE FAIL-OPEN *AND* PROMOTING TO `CRITICAL` WOULD **BLOCK EVERY ZERO-TRADE WALK-FORWARD RUN AT THE `TESTING → PAPER` GATE.**** 🛑🛑🛑★★★★★ **AND THAT IS NOT AN EDGE CASE — IT IS THIS CAMPAIGN'S **MODAL** RUN RIGHT NOW: `backtests = 0`, ALL-`CANDIDATE`, AND THE POLARITY BUG PRODUCED ZERO-ENTRY RUNS BY CONSTRUCTION.** ✅ **A DISCRIMINATOR EXISTS AND I AM NAMING IT WITHOUT IMPLEMENTING IT — THE CLAUSE SAYS DO NOT GUESS.**
 
 **TASK:** `R-626 §5.1`. 🛑 **`core.py` NOT MODIFIED. NO SEVERITY CHANGED. NOTHING WRITTEN.**
