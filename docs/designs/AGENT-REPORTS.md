@@ -4,6 +4,99 @@
 
 ---
 
+## AR-660 · 2026-08-03 · 🛑🛑🛑★★★★★ **`LANE-7` ANSWERED: `INV-1` **CANNOT** BE MADE CAPABLE OF FAILING INSIDE MY ALLOWED SURFACE, AND THE REASON IS A **JOIN-KEY** DEFECT, NOT A MISSING FEATURE. THE ENGINE EMITS `ending_balance` — AT `prop_sim.py:465`, ONE LEVEL DOWN, INSIDE `prop_compliance[firm]`. `INV-1` READS IT AT **TOP LEVEL**, WHERE **NOTHING WRITES IT, EVER.**** ✅★★★★★ **PROVEN BY EXECUTION, NOT BY GREP: A THREE-ARM PROBE SPYING ON THE REAL `run_invariants(result)` CALL SITE, INCLUDING A **TRADING** ARM (`3` TRADES, `total_return = -16.22`) IN WHICH `INV-1` STILL RETURNS `diff = 0.0000` **EXACTLY** AND PUBLISHES `ending_balance = 49983.78` — A NUMBER THE ENGINE NEVER PRODUCED.** ✅ **`§4.2` DELIVERED: THIRD CATEGORY BUILT, TABLE RE-PUBLISHED, `9`/`5` NOW RESOLVES TO `guarded 5` · `BLIND-but-falsifiable 8` · `UNFALSIFIABLE 1`.** ⚠️ **AND MY OWN INSTRUMENT LIED TO ME TWICE BEFORE IT TOLD THE TRUTH — BOTH SELF-CORRECTIONS ARE IN `§4`.**
+
+**TASK:** `LANE-7` (`R-615 §4.1` + `§4.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **SEAT:** worker, `claude.exe 21508` (same OS process as `AR-658`/`AR-659`; `/clear` replaced the conversation, not the seat). 🛑 **`invariant_harness/core.py` **NOT MODIFIED** — the disposition is a contract decision and `R-615 §4.1` said propose, do not take. `backtester.py` BYTE-PRISTINE, `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, identical to `AR-658`/`AR-659`'s pin. `runtime-production` NOT touched, NOT read.**
+
+### 🛑★★★★★ §1 — THE ANSWER: NO REACHABLE INPUT CAN FALSIFY `INV-1`
+
+**`INV-1` is falsifiable in principle and unfalsifiable in practice, and the two facts have different causes:**
+
+| | evidence |
+|---|---|
+| the predicate WORKS when fed | ✅ supply `ending_balance = 57_000` against `50_000 + 1_000` → `passed = False`. **It is starved, not broken.** |
+| the input NEVER ARRIVES | 🛑 `ending_balance` / `starting_balance` appear **`0`** times in `backtester.py`; repo-wide the ONLY writer is `prop_sim.py:465`, which writes it **nested under `prop_compliance[firm]`**. Positive controls, same search: `total_return` `75`, `profit_factor` `105`, `max_drawdown` `161`. |
+
+★★★★★ **SO THE DEFECT IS A LEVEL MISMATCH, WHICH IS WHY IT SURVIVED REVIEW: the key is not missing from the system, it is missing from the SCOPE `INV-1` reads. A reader checking "does the engine produce an ending balance?" finds `yes` and moves on.**
+
+### ✅★★★★★ §2 — THE EXECUTION WITNESS (three arms, real `run_backtest`)
+
+**Probe monkey-patches `run_invariants` and records key presence AT the call site (`backtester.py:5941`), then runs real backtests. Nothing in the repo was modified to obtain this.**
+
+| arm | path | trades | `total_return` | top-level `ending_balance` | `INV-1` |
+|---|---|---|---|---|---|
+| **A** | `ts_event` 00:00, no calendar | `0` | `0.00` | 🛑 **ABSENT** | ✅ PASS, `diff = 0.0000` |
+| **B** | `ts_event` 08:45, no calendar | `0` | `0.00` | 🛑 **ABSENT** | ✅ PASS, `diff = 0.0000` |
+| **C** | IGNORE calendar (bypasses the `AR-659` inversion) | 🛑 **`3`** | 🛑 **`-16.22`** | 🛑 **ABSENT** | ✅ PASS, `diff = 0.0000` |
+
+★★★★★ **ARM C IS THE ONE THAT MATTERS. With `total_return ≠ 0`, a real check would have had something to disagree with. `INV-1` reported `ending_balance = 49983.78` — it computed the value it was supposed to be verifying, then verified it against itself. `diff` is not "small", it is EXACTLY `0.0000`, because both sides are the same Python expression.**
+✅ **POSITIVE CONTROLS in every arm:** `total_return` · `max_drawdown` · `profit_factor` · `total_trades` all present (so the dict is a real result), and `[k for k in result if "balance" in k]` → `[]`.
+✅ **FROZEN ARTIFACT for re-derivation: `docs/replay-results/inv-reachable-keys-2026-08-03.json`** — the union of `64` top-level keys across the three arms, with `ending_balance_reachable: false`. ★★ Union deliberately, and taken from the FINAL dict (`64`) rather than the at-call-site dict (`61`): the larger set can only make unfalsifiability HARDER to claim, so the bound is conservative.
+⚠️ **ARM B DID NOT DISCRIMINATE AND I AM NOT HIDING IT.** I predicted `08:45` would land inside the blackout window and invert `AR-659`'s mask into a trading arm. It produced `0` trades like ARM A. **`[UNMEASURED]` why** — the mask builder may not parse a `datetime` series the way it parses the battery's. ARM C reached the trading state by a different route, so the finding does not rest on B, but **my stated mechanism for B was wrong.**
+
+### ✅★★★★★ §3 — `§4.2` DELIVERED: THE THIRD CATEGORY IS BUILT AND MECHANICAL
+
+**`scripts/invariant_absence_sweep.py` extended. The original two columns and the `9 of 14` line are UNCHANGED and still print, so every prior citation stays re-derivable; the third category is added below them.**
+
+**The discriminator — an adversarial search, not a label:** from two bases (absent + good), drive one reachable field at a time to a hostile value and ask whether ANY input makes the check return `False`.
+
+| category | n | meaning |
+|---|---|---|
+| `guarded` | **`5`** | fails on absence — detects a missing metric |
+| `BLIND (falsifiable)` | **`8`** | passes on absence, but a reachable input CAN falsify it |
+| 🛑 **`UNFALSIFIABLE`** | **`1`** | **`_check_balance_arithmetic` — no reachable input falsifies it** |
+
+✅★★★★★ **THIS IS A SECOND, INDEPENDENT PATH TO `R-615 §1`. The searcher reads no source and knows nothing about defaults; it reproduces the desk's hand-read tautology mechanically, and isolates it as the ONLY one of `14`.**
+✅ **CONTROL ON THE SEARCHER ITSELF: it falsified `8` of the `9` absence-passing checks. A searcher that found nothing would report every check as unfalsifiable and the column would be an artefact — the run prints `SEARCHER LIVE` from that count.**
+✅ **RED-PROOFED ON THE CLASS, NOT THE INSTANCE** (`test_detector_flags_a_planted_tautology_and_spares_a_real_check`): a PLANTED tautology of `INV-1`'s shape is detected, a PLANTED real check is not. **Without both arms, a detector that flags everything and one that flags nothing agree with a single-instance test.**
+
+### ⚠️★★★★★ §4 — MY INSTRUMENT LIED TWICE, IN OPPOSITE DIRECTIONS, BEFORE IT WAS RIGHT
+
+**Recorded because the corrections are the reusable part, and because the first version would have shipped a table contradicting a proven ruling:**
+1. 🛑 **FALSE NEGATIVE — the search fabricated its own input.** v1 drew hostile fields from the GOOD fixture's key space, which **contains `ending_balance`**. Handing `INV-1` that key falsifies it instantly, so v1 reported `INV-1` as `BLIND (falsifiable)` — **flatly contradicting `R-615 §1`.** ★★★★★ **THE SURPRISE ACCUSED THE INSTRUMENT AND THE INSTRUMENT WAS GUILTY: a search that may INVENT an unreachable key is not searching the reachable class at all.** Fixed by restricting the space to the frozen `64`-key set, with **no fallback** — a missing artifact aborts, because silently reverting to the fixture key space is precisely the defect.
+2. 🛑 **THEN THE SAME ERROR MOVED INTO THE BASE.** Adding the `good` base (needed for checks like `INV-5` that early-return on absence and need two fields moved) re-introduced `ending_balance` — via the base instead of the mutation — and `INV-1` went falsifiable again on `[good] total_return=0.0`. **The reachability rule has to bind the base as well as the mutation.**
+3. ⚠️ **AND v2 PRODUCED `3` FALSE POSITIVES I KILLED BY READING SOURCE, NOT BY TRUSTING THE TOOL:** `INV-5`, `INV-8`, `INV-12` were nominated `UNFALSIFIABLE`; all three have reachable falsifying inputs the search could not reach (`INV-5` needs two fields moved together; `INV-8`/`INV-12` need hostile list VALUES, not hostile list shapes). ★★★ **`A MECHANICAL LAYER NOMINATES; JUDGMENT CLASSIFIES` — the column is labelled `UNFALSIFIABLE?` in the raw output and the script prints that it is a nomination requiring confirmation at the executable line.**
+
+### 🛑★★★★★ §5 — THE DISPOSITION IS YOURS. THREE OPTIONS, WITH THE COST OF EACH
+
+**I did not take it. `R-615 §4.1` reserved it and the blast radius confirms that was right:**
+1. **FAIL / NOT-APPLICABLE ON ABSENCE** (`invariant_harness/` only — inside my surface). **Cost: every backtest in the repo flips to a `CRITICAL` failure immediately**, because no result carries the key. That is a truthful report of a real gap, but it is a campaign-wide state change.
+2. **MAKE THE ENGINE EMIT THE KEY** (`backtester.py` — OUTSIDE my surface, READ-ONLY under `R-615`). Restores `INV-1` to a genuine check. **Cost: an engine change, and `prop_sim` already owns a same-named nested field — the naming collision is what caused this.**
+3. **DELETE / DISABLE `INV-1`.** Honest about what is actually verified. **Cost: loses the Topstep `+$7K` regression intent the harness docstring cites** — though `§1` shows that intent has never been enforced at top level anyway.
+⚠️ **DO NOT POINT `INV-1` AT `prop_compliance[firm]["ending_balance"]`.** `prop_sim.py:457-462` states that field is **deliberately DLL-cap-inflated**; comparing it to `starting + total_return` would fail by design. `INV-13` already owns the uncapped figure.
+
+### ✅ §6 — WHAT LANDED, AND THE COMMANDS
+
+**Files (3) — `core.py` and `backtester.py` deliberately NOT among them:**
+- `scripts/invariant_absence_sweep.py` (M) — third category, reachability-bound search, searcher control
+- `src/engine/tests/test_inv1_unfalsifiable_r615.py` (new, `21` tests) — tripwire + red-proofs
+- `docs/replay-results/inv-reachable-keys-2026-08-03.json` (new) — frozen reachable key set
+
+```
+python -m pytest src/engine/tests/test_inv1_unfalsifiable_r615.py \
+                 src/engine/tests/test_invariant_harness.py -q
+  -> 88 passed          (21 new + 67 existing harness tests, no regression)
+python scripts/invariant_absence_sweep.py
+  -> 9 of 14 PASS on absent metrics        (unchanged, prior citation intact)
+  -> guarded=5  BLIND-but-falsifiable=8  UNFALSIFIABLE?=1
+  -> control — searcher found a falsifying input for 8 of 9 ... SEARCHER LIVE
+git hash-object src/engine/backtester.py -> 177ec9e14190c424a921d0a5d391a3a77f06dbd1
+```
+★★★ **THE TRIPWIRE ASSERTS BOTH HALVES AND IS ITSELF RED-PROOFED** (`test_the_tripwire_itself_goes_red_on_a_repaired_inv1`): it pins the defect, AND shows the pin BREAKS against a repaired `INV-1`, AND shows the repaired version still passes a genuinely-correct input. **When the desk rules, test 1 must start failing — a silent repair cannot land without tripping this file.**
+
+### 🛑 §7 — WHAT I DID **NOT** MEASURE
+
+- 🛑 **CALL SITE 2 (`backtester.py:8418`, inside `main()`) WAS NEVER EXERCISED.** My probe reaches only `:5941` via `run_backtest()`. **The walk-forward result path assembles its own dict** (the `:8418` comment says so explicitly). ⚠️ **`[UNMEASURED]` whether a walk-forward result carries top-level `ending_balance`** — if it does, `INV-1` is live on that path and my claim is bounded to single-mode. **The `§1` grep says no writer exists anywhere, so I expect not, but I did not witness it.**
+- 🛑 **ONE strategy config, ONE synthetic dataset, `3` arms.** Not the null-cal battery, not a real corpus strategy.
+- ⚠️ **`UNFALSIFIABLE` is a BOUNDED search result** — single-field mutations from two bases. It is a nomination everywhere except `INV-1`, which additionally has `R-615 §1`'s source proof.
+- ⚠️ **ARM B's mechanism** (`§2`).
+- 🛑 **I HAVE NOT GRADED THIS.** Doer ≠ grader. **`accuracy-validator` is one authorization away and the grade is owed** on the `§3` table and the `§1` unfalsifiability claim — say the word and I will brief it with the pinned commit, a working access recipe, an explicit novel false-green hunt, and a durable receipt path.
+
+**RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§4`/`§6`; **RULING REQUESTED** on `§5`'s disposition.
+**NEXT SMALLEST TASK:** exercise call site 2 (`:8418`, walk-forward path) and record whether its result dict carries top-level `ending_balance` — the one bound in `§7` that could narrow the finding.
+
+---
+
 ## EXT-CONSULT-2 · 2026-08-02 · **OPERATOR-ORDERED DELIVERY (not the worker, not an AR): THE PLAN + research-complete notice → `docs/designs/CONSULTANT-REPORT-PLAN-2026-08-02.md`**
 
 **Operator's orders, verbatim shape:** *"SO WHAT'S THE PLAN?"* then *"WRITE THE REPORT TO THE ADVISOR NOW."* Same bounded deviation as EXT-CONSULT-1: one file + this block. **Two things the desk may not know:** (1) the compiler-acceleration research is **COMPLETE** at `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` (+ two files under `docs/institutional-evidence/`), operator directive relayed: **read before the next design-closure ruling**; (2) its headline, [RELAYED]: a once-qualified **reference-interpreter oracle with differential testing** as the primary correctness check — in-domain evidence 245/246 Pine-v6 strategies at trade-for-trade parity over 375k+ trades — as the candidate that collapses the post-`P0PC` bespoke-checker chain; the architecture-to-node mapping is explicitly NOT established and is yours. The report §3 relays the operator's intended sequence (fork at design closure · rig fault-injection + metrics-test lanes in parallel · purchase-on-first-wave-promise · weekly measured velocity · no date promised). Grade all of it [RELAYED]; confirm §3 with the operator.
