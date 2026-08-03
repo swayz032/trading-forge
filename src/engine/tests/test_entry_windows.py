@@ -43,19 +43,18 @@ Coverage:
 from __future__ import annotations
 
 import datetime as dt
+import sys
+
 import pytest
-from zoneinfo import ZoneInfo
 
 from src.engine.entry_windows import (
+    is_bar_in_any_window,
+    is_bar_in_window,
     parse_entry_window,
     parse_entry_windows,
-    is_bar_in_window,
-    is_bar_in_any_window,
     window_to_pine_time_string,
-    EntryWindow,
 )
 from src.engine.pine_compiler import _build_session_filter
-
 
 # ─── Parser tests ─────────────────────────────────────────────────────────────
 
@@ -320,13 +319,14 @@ def _make_minimal_backtest_result(
     every bar so we can count how many are masked.
     """
     import polars as pl
+
     from src.engine.backtester import run_backtest
     from src.engine.config import (
         BacktestRequest,
-        StrategyConfig,
         IndicatorConfig,
-        StopConfig,
         PositionSizeConfig,
+        StopConfig,
+        StrategyConfig,
     )
 
     # Build a synthetic DataFrame with 20 bars.
@@ -360,23 +360,67 @@ def _make_minimal_backtest_result(
         timeframe="1m",
         indicators=[IndicatorConfig(type="atr", period=14)],
         entry_long="close > open",   # always true (close = price+1 > price)
-        entry_short="",
+        # Fixture repair (R-623 §7.2), SECOND blocker: entry_short="" made
+        # signals.py:157 raise `Cannot parse expression: ''`, which the
+        # try/except below SWALLOWED — returning the stub
+        # {"skipped_outside_window_count": 0}. That stub is why three of these
+        # four tests passed VACUOUSLY and the fourth failed with "got 0":
+        # none of them ever reached mask logic. Use the same never-true
+        # sentinel this fixture already uses for `exit`.
+        entry_short="high < low",    # never true (sentinel)
         exit="high < low",           # never true (sentinel)
         stop_loss=StopConfig(type="atr", multiplier=1.5),
+        # Fixture repair (R-623 §7.2), THIRD blocker: type="risk_derived_pyramid"
+        # with only base_contracts set crashed compute_position_sizes
+        # (backtester.py:4326) with "'>' not supported between NoneType and int"
+        # — the pyramid fields (tier_increment, tier_threshold_dollars,
+        # max_risk_pct_per_trade) are Optional[...] = None, so that config is
+        # constructible but not runnable. Sizing is incidental scaffolding for a
+        # WINDOW-MASK test, so use the simple documented "fixed" type rather than
+        # invent pyramid tuning values.
+        # FOURTH blocker: a validator rejects fixed_contracts=1 as a probable
+        # misconfiguration and offers TF_ALLOW_FIXED_1=true as a test-only
+        # bypass. Setting an EXPLICIT size satisfies the guard on its own terms
+        # instead of switching it off — the guard's own message names 6 as the
+        # MES base. Contract size does not affect what this test counts (bars
+        # skipped outside the entry window), only position sizing.
         position_size=PositionSizeConfig(
-            type="risk_derived_pyramid",
-            base_contracts=1,
+            type="fixed",
+            fixed_contracts=6,
         ),
         allowed_entry_windows=allowed_entry_windows,
     )
 
-    request = BacktestRequest(strategy=strategy_cfg)
+    # Fixture repair (R-623 §7.2): `start_date`/`end_date` became REQUIRED on
+    # BacktestRequest and this helper was never updated, so all four
+    # TestBacktesterWindowMask tests died here with a pydantic ValidationError
+    # BEFORE reaching any mask logic — note this construction sits OUTSIDE the
+    # try/except below, so the error escaped instead of being swallowed.
+    # Derived from the synthetic bars above rather than hardcoded, so the dates
+    # cannot drift away from the data they describe.
+    request = BacktestRequest(
+        strategy=strategy_cfg,
+        start_date=timestamps_utc[0][:10],
+        end_date=timestamps_utc[-1][:10],
+    )
     try:
         result = run_backtest(request, data=data)
         return result
     except Exception as exc:
         # If backtester fails on the tiny df (warm-up insufficient etc.) return empty result
         # so the skipped_outside_window_count field is still tested
+        #
+        # R-623 §7.2: this swallow is WHY these tests stayed dead and looked
+        # alive — the stub below returns skipped_outside_window_count=0, which
+        # SATISFIES three of the four assertions vacuously. Surface the
+        # traceback so a swallowed failure can never again read as a measurement.
+        import traceback as _tb
+        print(
+            f"[_make_minimal_backtest_result] run_backtest RAISED — returning STUB, "
+            f"NOT a measurement: {exc!r}",
+            file=sys.stderr,
+        )
+        _tb.print_exc(file=sys.stderr)
         return {"engine_audit": {"skipped_outside_window_count": 0}, "_error": str(exc)}
 
 

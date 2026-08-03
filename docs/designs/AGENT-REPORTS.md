@@ -4,6 +4,64 @@
 
 ---
 
+## AR-667 · 2026-08-03 · ✅★★★★★ **`R-623 §7.1` LANDED (`28a95a9a`) AND `§7.2` DELIVERED — **THE END-TO-END PROOF I SAID I COULD NOT GIVE NOW EXISTS.** SAME UNCHANGED FIXTURE: pre-fix base `1 failed / 3 passed` → fixed `4 passed`, running the REAL `run_backtest`.** 🛑🛑★★★★★ **AND THE TRADE-LEVEL DISCRIMINATOR IS THE HEADLINE: **`total_trades` `0` → `1`** and **window-masked signals `0` → `10`**, on real `63`/`64`-key result dicts — NOT the stub.** 🛑🛑🛑★★★★★ **BUT `§7.2` UNDERESTIMATED THE ROT BY THREE LAYERS: THE FIXTURE HAD **FOUR** BLOCKERS, NOT ONE, AND THE `ValidationError` WAS ONLY THE FIRST. THE OTHER THREE WERE HIDDEN BEHIND A SILENT `except` WHOSE STUB **SATISFIED THREE OF THE FOUR ASSERTIONS VACUOUSLY.**** ✅ **NO ASSERTION TOUCHED — PROVEN, NOT CLAIMED.**
+
+**TASK:** `R-623 §7.1` (land) + `§7.2` (revive the four `TestBacktesterWindowMask`). **Fixture file only.**
+
+### ✅ §7.1 — LANDED
+
+`git commit -o src/engine/backtester.py` → **`28a95a9a`**, `1 file changed, +42 −10`. ✅ **`commit -o` used — shared tree, desk and lanes live in it.** ✅ **`8/8` arms re-verified IN THE CAMPAIGN TREE before the commit, not carried from the worktree.** 🛑 **`LANDED ≠ RUNNING` — no deploy, `runtime-production` NOT touched.**
+
+### 🛑🛑★★★★★ §7.2 — FOUR BLOCKERS, EACH HIDDEN BY THE ONE IN FRONT OF IT
+
+| # | blocker | why it stayed invisible |
+|---|---|---|
+| 1 | `BacktestRequest(strategy=...)` missing REQUIRED `start_date`/`end_date` | construction sits **OUTSIDE** the `try`, so this one escaped — the only visible failure |
+| 2 | `entry_short=""` → `signals.py:157` `Cannot parse expression: ''` | **inside** the `try` → swallowed → stub returned |
+| 3 | `type="risk_derived_pyramid"` with only `base_contracts` → `compute_position_sizes` (`backtester.py:4326`) `'>' not supported between NoneType and int` | swallowed |
+| 4 | validator rejects `fixed_contracts=1` as probable misconfiguration | swallowed |
+
+🛑🛑🛑★★★★★ **THE STRUCTURAL FINDING, AND IT IS WORSE THAN THE STALE FIXTURE: THE `except` RETURNS `{"engine_audit": {"skipped_outside_window_count": 0}}` — AND **THREE OF THE FOUR TESTS ASSERT `skipped == 0` OR MERELY THAT THE KEY EXISTS.** SO THE STUB **SATISFIES THEM**. `test_empty_windows_no_skipped`, `test_no_windows_field_no_skipped` and `test_engine_audit_key_present` HAVE BEEN **PASSING GREEN OFF A CRASH HANDLER**, and the only test that demanded a NONZERO number was the only one that failed.**
+★★★★★ **`A STUB THAT RETURNS THE ASSERTED VALUE CONVERTS A CRASH INTO A PASS.` This is the ninth guard-shaped-object of the session and the first where the guard was **reporting GREEN off its own exception path.** `R-623 §2` found the four were dead; the sharper fact is that **three of them looked ALIVE while dead.****
+✅ **REMEDIATED IN THE FIXTURE: the `except` now prints the exception and a full traceback to stderr, prefixed `run_backtest RAISED — returning STUB, NOT a measurement`. A swallowed failure can no longer read as a measurement.**
+
+### ✅★★★★★ THE RED/GREEN — SAME UNCHANGED FIXTURE, BASE RE-MEASURED THIS RUN
+
+| | PRE-FIX BASE `e42da76b` | FIXED (`28a95a9a`) |
+|---|---|---|
+| `pytest ...::TestBacktesterWindowMask` | 🛑 **`1 failed, 3 passed`** | ✅ **`4 passed`** |
+| `test_window_mask_reduces_entries` | 🛑 FAIL — `Expected >= 10 skipped bars, got 0` | ✅ PASS |
+| **`total_trades`** | 🛑 **`0`** | ✅ **`1`** |
+| **window signals masked** | 🛑 **`0`** | ✅ **`10`** — `W23H.3 entry windows: masked 10 entry signals outside windows ['09:45-12:00 ET']` |
+| result dict | **real, `63` keys — NOT the stub** | real, `64` keys |
+| default-blackout log | 🛑 **PRINTED NOTHING AT ALL** | ✅ `masking 0/20 bars` |
+
+★★★★★ **THIS IS THE CEILING FROM `AR-666` BROKEN.** I wrote *"NO END-TO-END BACKTEST — arms 6/7 prove behaviour at the MASK level, not by running `run_backtest` and counting real trades."* **`total_trades` `0` → `1` IS that count, through the real engine, on the same fixture, with the base re-measured this run rather than carried.**
+★★★★★ **AND THE EIGHTH ARM IS NOW WITNESSED IN A LIVE RUN, NOT A HARNESS: on base the blackout log printed **NOTHING** while suppressing **every** entry — `R-618 §4`'s *"total suppression prints nothing at all"*, reproduced end-to-end. After the fix it prints unconditionally. **The silence was the bug and the silence is gone.****
+⚠️ **MECHANISM `[MEASURED]`:** no fixture bar falls in `8:30-9:00`/`14:00-14:30` ET, so the correct mask is all-`False`. Pre-fix it was all-`True`(ALLOW) → `~mask` all-`False` → **every entry ANDed away → 0 trades → nothing left for the window mask to skip → `0`.** The revived test discriminates the polarity **through** the window counter.
+
+### ✅ NO ASSERTION TOUCHED — PROVEN
+
+**Every removed line in the diff, complete:** `entry_short=""` · `type="risk_derived_pyramid"` · `base_contracts=1` · `request = BacktestRequest(strategy=strategy_cfg)`. **Four lines, all scaffolding.**
+✅ **`assert` count HEAD `59` → working `59`.** 🛑 **`fix the FIXTURE, never the ASSERTION` honoured.** ✅ **`backtester.py` and `signals.py` NOT in this change** (`git status` = `M src/engine/tests/test_entry_windows.py` only).
+✅ **AND I DID NOT ROUTE AROUND THE GUARD:** blocker 4 offered `TF_ALLOW_FIXED_1=true` as a test-only bypass. **I set an explicit `fixed_contracts=6` — the value the guard's own message names — satisfying it on its terms instead of switching it off.**
+
+### 🛑 TWO FINDINGS FOR THE DESK — NEITHER IS MINE TO FIX
+
+1. **`PositionSizeConfig(type="risk_derived_pyramid")` IS CONSTRUCTIBLE BUT NOT RUNNABLE.** `tier_increment`, `tier_threshold_dollars`, `max_risk_pct_per_trade` are `Optional[...] = None` (`config.py:369-375`), so pydantic accepts a config that crashes in `compute_position_sizes` with a `TypeError`. **A validator would catch this at construction. `[HYPOTHESIS — I did not enumerate other callers, so I do not know whether any PRODUCTION path can build one.]`**
+2. **THE SWALLOW-WITHOUT-TRACEBACK PATTERN.** I fixed this one instance in this one fixture. **I did NOT sweep for the class** — `fix-pattern` says the sweep is owed, and it is outside a fixture-only contract.
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **The `1` trade is a SYNTHETIC 20-bar fixture, not real market data** — S3 was unreachable (no AWS creds) and the run went through `htf_passthrough_engaged` with the eligibility gate in passthrough. **It proves the polarity end-to-end; it does NOT establish anything about real-data trade counts.**
+2. **`Performance gate REJECTED: only 19 OOS trading days`** in both arms — expected on a 20-bar fixture, unchanged by the fix, and **not** investigated.
+3. **I did not re-run the full suite** after the fixture change — only `TestBacktesterWindowMask`. **The other four of the original six (`test_skip_engine` ×2) are untouched and still failing as `R-623 §2` diagnosed.**
+4. **The isolated worktree `wt-eventmask-fix-20260803` currently holds `backtester.py` at BASE** (reverted for the red arm). **The authoritative fix is the landed `28a95a9a`; that worktree is now redundant.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT:** `R-620 §4.1` (`INV-13` on a capped run), which is queued behind this.
+
+---
+
 ## AR-666 · 2026-08-03 · ✅★★★★★ **`R-621 §5.1` — THE FALLBACK REPAIR IS BUILT AND RED-PROOFED. `2/8` ARMS ON THE UNFIXED BASE → `8/8` ON THE FIX, SAME UNCHANGED HARNESS.** ✅★★★★★ **AND THE RED ARM INDEPENDENTLY REPRODUCED `R-618 §4`'s FINDING WITHOUT BEING BUILT TO LOOK FOR IT: on the base, `kept out-window = 0/8` and `kept in-window = 5/5` — **THE ENGINE KEEPS ONLY MACRO-WINDOW ENTRIES.**** 🛑 **ZERO REGRESSIONS — the same `6` tests fail identically before and after, MEASURED on the same tree.** 🛑 **ARMS 3 AND 4 ARE NOT DELIVERABLE: THE MODES THEY NAME DO NOT EXIST IN THE CODE. Reported, not faked.** **DIFF ONLY — no push, no merge, no PR.**
 
 **TASK:** `R-621 §5.1` (contract `R-619 §3`, arms `R-616 §6.2` + eighth `R-618 §6.3`). **Re-confirmed by `R-622`'s START-HERE.**
