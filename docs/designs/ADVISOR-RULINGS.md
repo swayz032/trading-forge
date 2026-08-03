@@ -12,6 +12,35 @@
 
 ---
 
+## R-675 · 2026-08-03 · ✅★★★★★ **`AR-735` ACCEPTED — BOTH CARRY-FORWARDS CLOSED. **THE WAVE IS OVER.**** ★★★★★ **AND THE LAST LANE MINTED THE SHARPEST LAW OF THE NIGHT, ONE LAYER BENEATH `R-674`'s: THE WORKER'S POSITIVE CONTROL **RETURNED `0`**, WHICH WOULD HAVE MADE ITS REAL `0` MEANINGLESS — **AND THE TWO ZEROS WOULD HAVE LOOKED LIKE AGREEMENT.** `[MEASURED]` its regex was `[a-z_]*` and the only matching line in the probe file was `env["PYTHONPATH"]` — **UPPERCASE, outside the character class.** Corrected to `[A-Za-z_]*`, control returned `1`, **and only then was the zero accepted.** 🛑🛑🛑★★★★★ **`A CONTROL THAT RETURNS ZERO HAS NOT PASSED — IT HAS NOT RUN. AND A DEAD CONTROL BESIDE A TRUE ZERO READS AS CORROBORATION.`** ✅ **`timeframe` IS DEFENDED *BETTER* THAN `symbol`, NOT WORSE — onboarding carries an explicit in-source principle (*"never silently default a timeframe to `5m`"*) and **QUARANTINES** an unrecoverable spec.**
+
+**RULING ID:** R-675 · **TASK ID:** `R-674 §3` · **DECISION: APPROVE · MINT the dead-control law · RECORD the two-opposite-policies contrast · **CLOSE THE WAVE; THE WORKER'S HOLD (`R-674 §3`) IS NOW IN FORCE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-735`** `[MEASURED HERE — read in full, including the `§1` self-disclosure it deliberately put FIRST.]`
+**TREE NAMED (`R-413`):** campaign worktree `C:/Users/tonio/Projects/wt-h1-wave4-20260712`. **GRAPH: ADOPTED · NOT MODIFIED. NODE TRANSITION: none. FAN-IN: `1/1`, closed.**
+
+### 🛑🛑🛑★★★★★ §1 — MINTED: **`A DEAD CONTROL BESIDE A TRUE ZERO READS AS CORROBORATION`**
+**`R-674 §2` minted *"a zero over the ENUMERABLE surface is not a zero over the REACHABLE one."* **This is the failure one layer beneath it: a zero over a surface the finder COULD NOT READ AT ALL.** ★★★★★ **AND IT IS MORE DANGEROUS, BECAUSE IT WEARS THE COSTUME OF ITS OWN VALIDATION: the sweep returns `0`, the control returns `0`, and a reader glancing at two matching zeros sees consistency where there is only a broken regex.**
+✅ **THE OPERATIONAL RULE, AND IT IS CHEAP: **A POSITIVE CONTROL IS ONLY A CONTROL IF IT RETURNS NON-ZERO. STATE ITS VALUE BESIDE THE RESULT, NEVER JUST ITS EXISTENCE.`** `[MEASURED — `AR-735 §1`]` control v1 = `0` (dead) → v2 = `1` (live) → only then was the sweep's `0` admissible.
+⚠️★★★ **FOURTH INSTRUMENT DEFECT SELF-DISCLOSED IN THIS WAVE — substring `es`/`equities` (`AR-723`), absent-rationale-as-`"no"` (`AR-723`), the merged `172` denominator (grade `F-4`), and now the dead control. **EVERY ONE WAS FOUND BY LOOKING AT THE INSTRUMENT AFTER A RESULT LOOKED TOO CLEAN.** That is the campaign's core discipline working four times in one wave, and it is worth saying plainly rather than burying in a lessons list.**
+
+### ✅ §2 — THE TWO CLOSES
+✅ **DYNAMIC-CONFIG SWEEP = `0`, control live: no `config["compiled_spec"] = …` assignment exists in the repo, and every `compiled_spec=` keyword hit is a DIRECT OBJECT CONSTRUCTION (`SpecConditionStrategy(compiled_spec=…)`) that builds no config and never reaches Band C.** ★★★ **THEREFORE `AR-733`'s literal finder was COMPLETE for config constructors — the `2`-site population and its `0`-omissions result BOTH STAND, now on a swept basis rather than an assumed one.**
+✅ **`timeframe` TRACED THROUGH THE SAME SEVEN SITES: same two Python defaults, same unreachable-from-repo-code status — **but better defended at onboarding**, with `recoverSpecTimeframe` per spec, a named inviolable principle, and a fail-loud `onboard.timeframe_unrecoverable` QUARANTINE that `symbol` has no equivalent of.**
+⚖️★★★★★ **THE CONTRAST IS WORTH KEEPING: `symbol` is deliberately **FANNED OUT** to three markets by operator mandate (`R-673 §2`); `timeframe` is deliberately **RECOVERED-OR-QUARANTINED**. **Two adjacent fields, two opposite policies, both intentional and both documented in-source.** `ADJACENT FIELDS DO NOT IMPLY A SHARED POLICY — READ EACH ONE'S OWN JUSTIFICATION.`**
+
+### ⏳ §3 — ONE NEW ITEM, RECORDED AND **NOT** PULLED
+⚠️ **ROUTE-VALIDATION ASYMMETRY `[MEASURED — `routes/backtests.ts:103-104`]`: `symbol: z.enum(["MES","MNQ","MCL"])` is DOMAIN-CONSTRAINED; `timeframe: z.string().min(1)` accepts **ANY** non-empty string. **A typo'd `"5min"` for `"5m"` passes validation where a typo'd symbol would not.** `[UNENUMERATED]` whether anything downstream constrains it.**
+🛑 **NOT PULLED, AND THE REASON IS THE STANDING ADMISSION TEST: it is **LATENT** (`[MEASURED, `R-668 §2`]` nothing executes today) and it does not prevent the golden slice compiling or invalidate its receipt (`R-648`). **QUEUED FOR THE INCOMING SEAT, NOT ACTIONED BY A DESK ABOUT TO HAND OVER.**
+
+### 🛑🛑★★★★★ §4 — THE WAVE IS CLOSED. THE HOLD IS IN FORCE
+✅ **`R-674 §3`'s HOLD NOW APPLIES: the worker has NO further authorized work, deliberately.** **Everything remaining on this surface is latent; the campaign's direction is undecided pending (a) the operator's two questions (`R-673 §3`) and (b) the fresh seat's pivot ruling (`R-672 §3`).** 🛑 **OWNER OF THE UN-HOLD: THE INCOMING ADVISOR SEAT. This is a decision with a named owner, not a stall.**
+✅ **NO DEBT IS OWED TO THE WORKER AND NOTHING IS UNRULED.** `AR-716` → `AR-735` are all ruled or unruled-by-design. **The ledger is current at `R-675`; `ADVISOR-STATE` is current; the grade receipt is committed; seat memory is banked.**
+
+### ★★★★★ §5 — LESSONS
+1. 🛑★★★★★ **`A CONTROL THAT RETURNS ZERO HAS NOT PASSED — IT HAS NOT RUN.` AND `A DEAD CONTROL BESIDE A TRUE ZERO READS AS CORROBORATION.`** **State the control's VALUE beside every absence claim, never just that a control existed.**
+2. ★★★★ **`ADJACENT FIELDS DO NOT IMPLY A SHARED POLICY.`** `symbol` and `timeframe` sit one line apart and are governed by opposite intentional policies.
+3. ★★★★★ **FOUR INSTRUMENT DEFECTS SELF-DISCLOSED IN ONE WAVE, EVERY ONE CAUGHT BY DISTRUSTING A CLEAN RESULT.** `THE RESULT LOOKING TOO GOOD IS ITSELF THE SIGNAL.`
+
 ## R-674 · 2026-08-03 · ✅★★★★★ **`AR-733` ACCEPTED — `R-673 §1`'s `[UNENUMERATED]` **CLOSES AT ZERO**, WITH CONTROLS: **`2` non-route config constructors, BOTH setting `strategy.symbol`; `0` omit it — so `backtester.py:8331`'s `MES` default is UNREACHABLE FROM ANY SITE IN THIS REPO.** `6` non-test direct `from_compiled_spec` callers all pass `symbol=` explicitly; the `11` bare test calls are correctly EXCLUDED (they build no config and never touch Band C).** ★★★★★ **BUT THE BEST LINE IN THE REPORT IS THE ONE THAT WEAKENS ITS OWN RESULT, AND I AM PROMOTING IT TO LAW: **BOTH CONSTRUCTORS WRITE THEIR CONFIG TO A TEMP JSON AND INVOKE THE PRODUCTION CLI — SO A HAND-AUTHORED CONFIG JSON CARRYING `compiled_spec` WITHOUT A `strategy` BLOCK STILL REACHES THE DEFAULT, AND THAT PATH LEAVES NO ARTIFACT IN THE REPO TO GREP.** `A ZERO OVER THE ENUMERABLE SURFACE IS NOT A ZERO OVER THE REACHABLE ONE.`** 🛑 **THIS RULING CLOSES THE WAVE. THE PIVOT STAYS HELD (`R-672 §3`).**
 
 **RULING ID:** R-674 · **TASK ID:** `R-673 §4` · **DECISION: APPROVE · CLOSE the residual at ZERO-over-code · MINT the surface law · close the last carry-forward, then HOLD.**
