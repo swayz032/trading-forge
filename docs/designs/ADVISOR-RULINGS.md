@@ -12,6 +12,66 @@
 
 ---
 
+## R-619 · 2026-08-03 · ✅★★★★★ **`AR-662`'s TWO DISPATCH DEFECTS ARE BOTH REAL AND BOTH FIXED HERE — AND THE SECOND ONE EXPOSED A WORSE INCONSISTENCY OF MINE ONE LEVEL UP: **I TOLD THE OPERATOR THE NEXT MILESTONE IS "FIX THE FILTER AND RE-RUN ONE BACKTEST" WHILE MY OWN LEDGER MARKED THAT REPAIR `⏸️` BEHIND TWO DIAGNOSTICS.** MY OPERATOR MESSAGE AND MY RULING DISAGREED ABOUT WHAT IS NEXT.** ✅★★★★★ **RESOLVED BY RULING THE PRIORITY EXPLICITLY RATHER THAN RESTATING IT: **THE FALLBACK REPAIR IS FIRST FOR THE WORKER**, AND THE HISTORICAL-RECORD MEASUREMENT MOVES TO A **DESK-DISPATCHED AGENT LANE — ALREADY FIRED.** WIDTH FROM THE DESK, APPLIED PROPERLY FOR THE FIRST TIME (`R-614 §2`).** **DECISION: CORRECT · SET PRIORITY · PARALLELIZE FROM THIS SEAT.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`R-618 §6.3` — THE FALLBACK REPAIR — IS YOUR FIRST AND ONLY TASK. It is no longer `⏸️`.** ✅ **Both of your dispatch defects are accepted: the replacement item is `§6.1` of `R-618`, NOT `§5` (my typo), and `§6`'s markers contradicted its text about what came first — `§2` here settles it.** ✅★★★ **You have now caught defects in four consecutive dispatches of mine, and this one you caught in the START-HERE block specifically — which you correctly identified as the highest-leverage place in a ruling to be wrong, because it is the one part a cold seat is told to trust without reading further.**
+
+**RULING ID:** R-619 · **TASK ID:** `AR-662` (start-receipt with two dispatch defects) · **DECISION: CORRECT · RE-PRIORITIZE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-662`** `[MEASURED HERE]` — read through its `DEFECT 2` table. ⚠️ **`[UNENUMERATED — the table body and anything after it unread]`.** ✅ **It reports `R-618` read at HEAD `cead23ed` with the committed copy verified identical to the working-tree copy it first read — `a read and a publication are separate events`, checked by the doer.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-SEVENTH time.**
+
+---
+
+### ✅ §1 — DEFECT 1 ACCEPTED: THE POINTER, AND WHY IT IS NOT COSMETIC
+
+**`R-618`'s `★ WORKER — START HERE` block says *"`§5` is the replacement."* `[MEASURED BY DOER]` `§5` is `THE REMAINING CORRECTIONS AGAINST THIS DESK`; the replacement — the severity inversion — is **`§6.1`**.** ✅ **CORRECTED: the replacement is `R-618 §6.1`.**
+★★★★★ **AND THE DOER'S REASONING IS BETTER THAN "COSMETIC", WHICH IS HOW IT CHARITABLY LABELLED IT: *"the START-HERE block is the one part of a ruling a cold seat is told to trust without reading further, so a wrong pointer in it is the highest-leverage typo in the file."*** ★★★ **I BUILT THAT BLOCK TO BE THE THING A COLD SEAT TRUSTS WITHOUT VERIFYING. That design choice is exactly what makes an error inside it propagate maximally — `THE ORIENTING LINE IS THE ONE A COLD SEAT TRUSTS MOST AND CHECKS LEAST`, which `ADVISOR-STATE`'s own navigation block already records about itself.**
+
+### 🛑★★★★★ §2 — DEFECT 2 ACCEPTED, AND IT UNCOVERED A WORSE ONE OF MINE
+
+**`AR-662`: `R-618 §6`'s MARKERS AND TEXT DISAGREE ABOUT WHAT IS FIRST.** `§6.1` carries `✅` while its text says *"report … and propose — do not apply"*; `§6.2` carries `⏸️` while its text says *"STILL STANDS AND IS STILL FIRST."* ★★★ **A worker following the markers does one thing; a worker reading the text does another. **A contract whose formatting and prose disagree has no single reading, and the doer stopped rather than picking.****
+🛑🛑★★★★★ **AND CHECKING IT SURFACED A WORSE INCONSISTENCY, ONE LEVEL UP AND MINE ALONE: MINUTES BEFORE THAT RULING I TOLD THE OPERATOR, IN WRITING, THAT THE NEXT MILESTONE IS *"fix the filter, re-run one backtest, and see real trades outside the news window — days, not weeks."* **MY LEDGER SIMULTANEOUSLY MARKED THAT REPAIR `⏸️` BEHIND TWO DIAGNOSTIC MEASUREMENTS.** ★★★★★ **SO THE OPERATOR AND THE WORKER WERE HOLDING DIFFERENT PLANS, BOTH AUTHORED BY ME, IN THE SAME TEN MINUTES. **THE MARKER BUG THE DOER FOUND IS THE SAME DEFECT CLASS AT A SMALLER SCALE — AND IT IS THE SMALLER ONE THAT GOT CAUGHT.****
+★★★ **`plain-english` requires the operator summary to be a faithful projection of the ledger, and I have been treating it as a separate document. **A summary that promises a sequence the ledger does not authorize is not a simplification, it is a second plan.****
+
+### ✅★★★★★ §3 — THE PRIORITY, RULED EXPLICITLY
+
+**FIRST, AND FOR THE WORKER ALONE: the fallback repair (`R-618 §6.3` / `R-617 §5.2`).** Reasons, in order:
+1. ✅ **It is the only queued item that produces a TRUSTWORTHY NUMBER rather than a better description of an untrustworthy one.**
+2. ✅ **The operator's pre-registered disposition already made it a PRIORITY ROOT-CAUSE REPAIR (`R-617 §2`) — binding, not discretionary.**
+3. ✅ **It is what I told the operator (`§2`), and the ledger now matches.**
+**CONTRACT, unchanged from `R-617 §5.2` + `R-618 §6.3`:** preserve `True = SIT_OUT` · fix `_build_default_event_mask_et` and its call-site policy **only** · **never invert `signals.py`** · the operator's **seven-arm** proof matrix · **plus the eighth arm: `backtester.py:3980`'s log must report the count it actually masks and must print under total suppression.** **SHA-pinned isolated worktree, diff reported, no push/merge/PR.**
+✅ **THE HISTORICAL-RECORD MEASUREMENT IS NOT CANCELLED — IT IS REASSIGNED. Dispatched THIS TURN as a desk agent lane** (receipt `docs/designs/MEASURE-DSL-TRADE-HISTORY-2026-08-03.md`), **briefed with the signature the defect actually predicts — not "zero trades" but FEWER trades CLUSTERED INSIDE the `8:30-9:00`/`14:00-14:30` ET windows — plus a required class-path contrast, a required `N` and date range, and an explicit instruction that *"the record cannot answer this"* is a complete and more valuable answer than a confirmation.**
+★★★★★ **THIS IS THE FIRST TIME TONIGHT WIDTH HAS BEEN APPLIED THE WAY `R-614 §2` SAID IT MUST BE: **the worker runs one serial lane, the DESK supplies the parallelism.** `R-613` audited me for queuing instead of running; `R-614` found the worker cannot fan out; **`§3` is the first ruling that actually acts on that correction instead of restating it.****
+
+### ⚠️ §4 — AND THE TRAP I NAMED IN THE DISPATCH, RECORDED HERE SO IT BINDS THE READING TOO
+
+**The agent lane is briefed that the trap is CONFIRMATION: this desk WANTS the clustering to be there.** 🛑★★★★★ **`§5.2` therefore pre-registers the reading BEFORE the answer arrives: if the record shows the clustering, the link is established and the larger sentence becomes sayable. **If it does not, or cannot answer, the link is REFUTED or UNKNOWN and the larger sentence stays unsaid — permanently, not "pending more work."**** ★★★ **`auto-unblock`: a conditional reading is judged by whoever benefits, and I am the beneficiary of the confirming branch.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — THE FALLBACK REPAIR, FIRST AND ALONE (`§3`).** Nothing else is assigned; do not widen.
+2. ⏸️ **PRE-REGISTERED READING OF THE AGENT LANE (`§4`):** clustering present → link ESTABLISHED · clustering absent → link REFUTED · record cannot distinguish paths → **UNKNOWN and the larger claim is retired, not deferred.**
+3. ⏸️ **`R-618 §6.1` (`INV-13` severity + consumers, report-and-propose) follows the repair.** ⏸️ **Then the operator's items 2–4.**
+4. **THIS DESK — the `INV-1` severity/disposition contract decision is MINE and waits on `§5.3`'s report.**
+5. 🛑 **CARRIED: all of `R-618 §6.5` — the four false-green paths, the propagation question past the `try:` swallow, and the `60`/`90` leg which stays UNVERIFIABLE until the battery is re-run.**
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read** — and the agent lane is briefed the same. `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; derived-baseline ownership guard. ✅ **`R-576 §5` HELD — I ran nothing this ruling.** ✅ Graph read, not modified. ✅ No spend beyond the standing envelope.
+🛑 **STILL LIVE, all of `R-618 §7` plus:** ★★★★★ **an operator summary that promises a sequence the ledger does not authorize → STOP; `§2` is why, and the ledger is the authority.** · ★★★★★ **the larger "this is why nothing graduated" claim made on anything but `§5.2`'s ESTABLISHED branch → STOP.** · ★★★ **`R-618 §5` cited as the `INV-1` replacement → STOP; it is `§6.1` (`§1`).**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`MY OPERATOR SUMMARY AND MY LEDGER HELD DIFFERENT PLANS IN THE SAME TEN MINUTES.` I promised him "fix the filter next" while the ruling marked that repair paused behind two diagnostics. **The operator summary is a PROJECTION of the ledger, not a separate document — and when they disagree, two principals are executing different plans and neither can see the other's.****
+★★★★★ **`A WRONG POINTER IN THE BLOCK YOU BUILT TO BE TRUSTED WITHOUT VERIFICATION IS THE HIGHEST-LEVERAGE TYPO IN THE FILE.` The `START HERE` block exists so a cold seat need not read further; that is precisely why an error in it propagates maximally.**
+★★★★★ **`WHEN A CONTRACT'S FORMATTING AND ITS PROSE DISAGREE, IT HAS NO SINGLE READING.` `✅`/`⏸️` markers said one thing and the sentences said another. **The doer stopped and asked instead of picking — which is the only safe response, and the reason the bigger inconsistency got found.****
+★★★ **`PRE-REGISTER THE READING OF A MEASUREMENT YOU WANT A PARTICULAR ANSWER FROM.` I dispatched the lane that could confirm my biggest claim, so `§4` fixes what each outcome means before the answer exists — including that "cannot answer" retires the claim rather than deferring it.**
+
+---
+
 ## R-618 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE GRADE REFUTES THIS DESK FOUR TIMES, AND THE MOST URGENT ONE IS THAT **THE `$7K` IS REAL AND I HAD IT WITHDRAWN.** `[MEASURED HERE, `invariant_harness/core.py:14`]` — *"Would have caught: Topstep `ending_balance` **+$7K** on a losing strategy (DLL-cap firing on EOD MTM swings inflated reported balance)"*, from the `2026-05-19` accuracy audit, commits `c7ac642`/`b8a2140`. **MY PATTERN SEARCHED `7000`; THE TEXT SAYS `+$7K`. AND I SEARCHED THE GRADE RECEIPT, NOT THE INSTRUMENT'S OWN HEADER.** THE OPERATOR WITHDREW HIS OWN CORRECT FIGURE ON MY BAD MEASUREMENT — **`§1` RESTORES IT.**** 🛑🛑★★★★★ **AND THE CRUELLEST FORM OF THE FINDING: `INV-1` DOCUMENTS, IN ITS OWN DOCSTRING, THE EXACT HISTORICAL DEFECT IT IS STRUCTURALLY INCAPABLE OF DETECTING.** 🛑🛑 **AND THE REMEDY THE OPERATOR AND I BOTH SPECIFIED WOULD HAVE BEEN HARMFUL.** **DECISION: FOUR CORRECTIONS · `$7K` RESTORED AS EVIDENCE · THE `INV-1` REMEDY WITHDRAWN AND REPLACED · SEVERITY INVERSION IS THE REAL FIX.**
 
 **★ WORKER — START HERE:** 🛑★★★★★ **DO NOT BUILD THE `INV-1` REMEDY `R-617 §4.5` ORDERED. IT IS WITHDRAWN (`§3`) — comparing an independently derived balance against the reported `ending_balance` would fire on CORRECT behaviour, because `prop_sim.py:96-100` makes that field a DELIBERATE DLL-capped artifact and `INV-13` already owns the uncapped check.** ✅ **`§5` is the replacement and it is a smaller job than the one I withdrew.** ✅★★★ **And your `AR-660` "starved" framing is corrected to TAUTOLOGICAL — but note that I adopted your framing over my own earlier correct reading, so the error compounded at this desk, not at yours.**
