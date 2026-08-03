@@ -8,10 +8,6 @@ All tests use synthetic dict fixtures — no real backtest data required.
 """
 from __future__ import annotations
 
-import math
-
-import pytest
-
 from src.engine.invariant_harness import InvariantHarness, run_invariants
 from src.engine.invariant_harness.core import (
     _check_avg_trade_pnl_consistent,
@@ -274,6 +270,44 @@ class TestMaxDrawdownNonNegative:
         check = _check_max_drawdown_non_negative(result)
         assert not check.passed
         assert "sign" in check.evidence.lower() or "negative" in check.evidence.lower()
+
+    # ── AR-654 §4 / R-611: the three arms the original predicate could not reach.
+    # `max_dd >= 0` is satisfied by 0.0, and 0.0 is also what the aggregator
+    # returns for an ABSENT key — so a max_drawdown that stopped being computed
+    # read as healthy. Measured: a sign flip in backtester.py drove
+    # result["max_drawdown"] to 0.0 on all 90 backtests of a smoke battery and
+    # this CRITICAL check reported clean on every one.
+
+    def test_catches_zero_dd_on_a_losing_run(self):
+        """A run that ends below its starting equity cannot have zero drawdown."""
+        result = _make_good_result(total_return=-2_000.0, max_drawdown=0.0)
+        check = _check_max_drawdown_non_negative(result)
+        assert not check.passed
+        assert "not being computed" in check.evidence
+
+    def test_catches_absent_dd_when_trades_exist(self):
+        result = _make_good_result(max_drawdown=0.0)
+        result.pop("max_drawdown", None)
+        oos = result.get("oos_metrics")
+        if isinstance(oos, dict):
+            oos.pop("max_drawdown", None)
+        check = _check_max_drawdown_non_negative(result)
+        assert not check.passed
+        assert "ABSENT" in check.actual
+
+    def test_passes_absent_dd_when_no_trades(self):
+        """Discriminating green — absence is a fault only if trades were taken.
+
+        Without this case the two tests above could be satisfied by a check that
+        simply always fails on a missing key.
+        """
+        result = _make_good_result(total_return=0.0, total_trades=0)
+        result.pop("max_drawdown", None)
+        oos = result.get("oos_metrics")
+        if isinstance(oos, dict):
+            oos.pop("max_drawdown", None)
+        check = _check_max_drawdown_non_negative(result)
+        assert check.passed
 
 
 # ─── INV-8 peak_equity_at_least_starting ────────────────────────────────────

@@ -77,7 +77,7 @@ $0.50 for avg_trade_pnl absorbs the mean of the per-trade rounding errors.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # ─── Public dataclasses ──────────────────────────────────────────────────────
 
@@ -360,22 +360,87 @@ def _check_win_rate_in_range(result: dict) -> InvariantCheck:
     )
 
 
+_MISSING = object()
+
+
 def _check_max_drawdown_non_negative(result: dict) -> InvariantCheck:
-    """INV-7 CRITICAL: max_drawdown >= 0 (stored as positive loss in dollars)."""
-    max_dd = _aggregate_metric(result, "max_drawdown", 0.0)
-    passed = max_dd >= 0.0
+    """INV-7 CRITICAL: max_drawdown must be COMPUTED, and non-negative.
+
+    Three failure modes, not one. The original predicate was `max_dd >= 0`,
+    which `0.0` satisfies — and `0.0` is also exactly what `_aggregate_metric`
+    returns when the key is ABSENT. A max_drawdown that stopped being computed,
+    or collapsed to zero through a sign error, therefore read as healthy.
+
+    Measured 2026-08-02 (AR-654 §4, ruled R-611): flipping the drawdown sign in
+    backtester.py drove result["max_drawdown"] to 0.0 on all 90 backtests of a
+    smoke battery, and this CRITICAL check reported clean on every one of them.
+
+    The added arm is arithmetic, not a heuristic: if the strategy ENDED below
+    where it started (total_return < 0), then peak-to-trough drawdown is at
+    least that loss, so max_drawdown == 0 is impossible rather than merely
+    unlikely. A genuinely drawdown-free winning strategy is untouched.
+    """
+    raw = _aggregate_metric_raw(result, "max_drawdown", _MISSING)
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
+
+    if raw is _MISSING:
+        # ABSENT. Only consistent with a run that took no trades at all.
+        passed = total_trades == 0
+        return InvariantCheck(
+            name="max_drawdown_non_negative",
+            passed=passed,
+            tolerance="exact",
+            expected="max_drawdown present whenever trades were taken",
+            actual="max_drawdown is ABSENT from the result",
+            evidence=(
+                "No trades and no max_drawdown — consistent empty-run case."
+                if passed else
+                f"max_drawdown is missing from the result but total_trades={total_trades}. "
+                "Drawdown computation did not run or did not persist."
+            ),
+            severity="CRITICAL",
+        )
+
+    max_dd = _safe_float(raw)
+
+    if max_dd < 0.0:
+        return InvariantCheck(
+            name="max_drawdown_non_negative",
+            passed=False,
+            tolerance="exact",
+            expected="max_drawdown >= 0",
+            actual=f"max_drawdown = {max_dd:.4f}",
+            evidence=(
+                f"max_drawdown {max_dd:.4f} is negative. Sign convention error — "
+                "should be positive dollar loss."
+            ),
+            severity="CRITICAL",
+        )
+
+    if max_dd == 0.0 and total_return < 0.0:
+        return InvariantCheck(
+            name="max_drawdown_non_negative",
+            passed=False,
+            tolerance="exact",
+            expected="max_drawdown > 0 when total_return < 0",
+            actual=f"max_drawdown = 0.0000 with total_return = {total_return:.2f}",
+            evidence=(
+                f"max_drawdown is exactly 0 while the strategy lost ${abs(total_return):.2f} "
+                f"over {total_trades} trades. A run that ends below its starting equity has a "
+                "drawdown of at least that loss, so zero here means max_drawdown is not being "
+                "computed — not that the strategy never drew down."
+            ),
+            severity="CRITICAL",
+        )
 
     return InvariantCheck(
         name="max_drawdown_non_negative",
-        passed=passed,
+        passed=True,
         tolerance="exact",
-        expected="max_drawdown >= 0",
+        expected="max_drawdown >= 0, and > 0 when total_return < 0",
         actual=f"max_drawdown = {max_dd:.4f}",
-        evidence=(
-            f"max_drawdown ${max_dd:.2f} is non-negative (positive loss figure)"
-            if passed else
-            f"max_drawdown {max_dd:.4f} is negative. Sign convention error — should be positive dollar loss."
-        ),
+        evidence=f"max_drawdown ${max_dd:.2f} is non-negative (positive loss figure)",
         severity="CRITICAL",
     )
 

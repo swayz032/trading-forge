@@ -12,6 +12,75 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-655 · 2026-08-02 · ✅★★★★★ **`LANE-5` DONE (`R-611 §5.2`) — `INV-7` NOW FAILS WHEN `max_drawdown` IS NOT BEING COMPUTED, RED-PROOFED ON THE **UNCHANGED CONVICTING DEFECT**: `60` CRITICAL FIRINGS NAMING THE METRIC WHERE THE PINNED CHECK GAVE `0`.** 🛑★★★★★ **AND THE CLASS SWEEP THE RULING ASKED FOR IS WORSE THAN THE INSTANCE: **`13` OF THE `14` INVARIANTS HAVE A PREDICATE SATISFIABLE BY THE METRIC BEING ABSENT, ZERO OR UNSET.** ONLY `INV-3` CROSS-REFERENCES ANYTHING — AND ITS IDIOM IS THE ONE I COPIED. **TWO OF THE REMAINING `12` ARE ALREADY MEASURED BLIND BY `AR-654`'s OWN PLANTS.**
+
+**TASK:** `LANE-5` (`R-611 §5.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `src/engine/invariant_harness/core.py` (modified), `src/engine/tests/test_invariant_harness.py` (+3 tests). 🛑 **`backtester.py` NOT MODIFIED — held READ-ONLY as ordered; `git diff --stat HEAD -- src/engine/backtester.py` EMPTY.** **`runtime-production` NOT touched, NOT read. No runtime/trading/capital/broker surface.**
+⚠️ **SCOPE DEVIATION, DISCLOSED RATHER THAN ABSORBED:** the commit was **rejected by the repo's own `ruff` pre-commit gate** on **`3` PRE-EXISTING unused imports** (`dataclasses.field` in `core.py`; `math`, `pytest` in the test file). ✅ **MEASURED that they are not mine — `git diff HEAD` touches `0` import lines — and that all three are genuinely unused (`field(`/`math.`/`pytest.` → `0` occurrences each).** I removed them and fixed the resulting import spacing. **This is `worker-execution §7`'s "no unrelated cleanup" bent by the repo's gate, not by my choice; `--no-verify` was never considered.** ★ *A pre-existing lint failure surfaces on whoever next stages the file.*
+⚠️ **PROCESS NOTE, DISCLOSED BECAUSE IT WORKED:** my first write of this fix was **BLOCKED by the `worker-execution` guard hook** — `R-610`/`R-611` had landed since I loaded the standard. I re-loaded and re-issued rather than routing around it. **The guard was correct and it is the only reason I did not code from a two-ruling-stale copy.**
+
+### ✅ §1 — THE DEFECT, AT THE PREDICATE
+
+**`_aggregate_metric(result, "max_drawdown", 0.0)` returns `0.0` for an ABSENT key, and the predicate was `max_dd >= 0.0`.** ★★★★★ **So the sentinel for "not computed" and the value for "computed as zero" were THE SAME NUMBER, and both satisfied the check. The only reachable red was a genuinely negative stored value — which is why `AR-654`'s sign flip, which drove `max_drawdown` to `0.0` on all `90` backtests, was scored clean `90` times.**
+
+### ✅ §2 — THE REPAIR, AND WHY THE NEW ARM IS ARITHMETIC RATHER THAN A HEURISTIC
+
+**Three arms now:** **(1)** key ABSENT → FAIL unless `total_trades == 0` · **(2)** `max_dd < 0` → FAIL (the original, preserved) · **(3)** `max_dd == 0.0` **AND** `total_return < 0` → FAIL.
+★★★ **Arm (3) is not a threshold I chose. If a run ENDS below where it started, peak-to-trough drawdown is at least that loss, so `max_drawdown == 0` is *impossible*, not merely suspicious. A genuinely drawdown-free WINNING strategy is untouched — and the suite's pre-existing `test_passes_on_zero_dd` still passes unmodified, which is the evidence for that claim rather than my assurance.**
+✅ **IDIOM BORROWED, NOT INVENTED:** `INV-3 _check_daily_pnl_sum` already cross-references `total_trades` to separate "legitimately empty" from "silently failed." **I copied the file's own existing pattern instead of introducing a new one.**
+
+### ✅★★★★★ §3 — RED-PROOF ON THE UNCHANGED CONVICTING DEFECT
+
+**Same sign-flip plant as `AR-654 §2 P2`, same isolated tree, same battery — the instrument that convicted the old check, not a new one I authored:**
+
+| run | `critical_failures` per invariant call | verdict |
+|---|---|---|
+| **PINNED check + flip** (`AR-654`) | `[]` × `90` | 🛑 **false green reproduced** |
+| **FIXED check + flip** | 🛑 **`['max_drawdown_non_negative']` × `60`** · `[]` × `30` | ✅ **RED, and it NAMES the metric** |
+| **FIXED check, un-planted** | `[]` × `90` | ✅ **GREEN — zero false positives** |
+
+★★★★★ **THE `30` THAT STAY GREEN IN *BOTH* PLANTED AND UN-PLANTED STATES ARE THE DISCRIMINATING CONTROL, AND THEY ARE NOT A GAP:** they are exactly the calls whose `max_drawdown` is `0.0` in the **un-planted control too** (no-trade / no-loss runs). **`60` of `90` calls had a real drawdown to corrupt, and `60` of `60` fired.** ★★★ **Without those `30` this would be indistinguishable from a check that reds on any zero.**
+✅ **UNIT-LEVEL RED-PROOF TOO — `3` tests added, and I ran them against the PINNED `core.py`:** `test_catches_zero_dd_on_a_losing_run` **FAILS** without the fix · `test_catches_absent_dd_when_trades_exist` **FAILS** without the fix · `test_passes_absent_dd_when_no_trades` **PASSES in both** (so the two above cannot be satisfied by a check that merely always fails on a missing key). **Suite: `58 → 61 passed`; the `58` pre-existing pass identically before and after — no regression, measured both ways.**
+
+### 🛑★★★★★ §4 — THE CLASS SWEEP (`fix-pattern`, ordered by `R-611 §5.2`)
+
+**`14` invariants in `invariant_harness/core.py`. Every metric read defaults to `0.0` or `0` — `[MEASURED HERE]`, all `18` `_aggregate_metric*` call sites. So for `13` of `14`, ABSENT and ZERO are the same input.**
+
+| verdict | count | invariants |
+|---|---|---|
+| **GUARDED** — cross-references another field to separate empty-but-valid from silently-failed | **`2`** | `INV-3 daily_pnl_sum` (pre-existing) · **`INV-7 max_drawdown` (this lane)** |
+| 🛑 **SATISFIABLE BY ABSENT / ZERO / UNSET** | **`12`** | `INV-1 balance_arithmetic`, `INV-2 trade_pnl_sum`, `INV-4 long_short_split_sum`, `INV-5 long_short_count`, `INV-6 win_rate_in_range`, `INV-8 peak_equity`, `INV-9 sharpe_finite`, `INV-10 profit_factor_finite`, `INV-11 avg_trade_pnl_consistent`, `INV-12 commission_reasonable`, `INV-13 per_firm_endings`, `INV-14 equity_curve_continuous` |
+
+**THREE SHAPES, so a repair wave can be scoped rather than guessed:**
+- **`diff <= TOLERANCE` with both sides defaulting to `0`** (`INV-1`, `INV-2`, `INV-4`, `INV-11`) — absent data gives `diff = 0` → pass.
+- **RANGE / SIGN predicates that `0` satisfies** (`INV-5` `0==0`, `INV-6` `0.0 <= 0.0 <= 1.0`, `INV-12` `0 <= max`, and formerly `INV-7`).
+- **EXPLICIT AUTO-PASS on missing data** (`INV-4` returns `passed=True, actual="check skipped"`; `INV-8` comments *"no data — trivially pass"*; `INV-13`/`INV-14` count failures in an empty collection → `0`). ★★★ **`INV-4`/`INV-8` are the honest ones — they SAY they skipped — but they still return `passed=True` at `severity=CRITICAL`, so `overall_passed` cannot tell "verified" from "not applicable." `A NOT-APPLICABLE RENDERED AS A PASS IS A GREEN THAT MEANS NOTHING.` A third state would fix the whole shape at once.**
+🛑★★★★★ **TWO OF THE `12` ARE NOT HYPOTHETICAL — `AR-654` ALREADY MEASURED THEM BLIND:** `INV-9 sharpe_finite` (plant `P3`: `sqrt(252)→sqrt(12)`, no gate reacted) and `INV-10 profit_factor_finite` (plant `P4`: PF inverted, output **byte-identical**). **Both check only non-finiteness, and a wrong-but-finite number is the exact defect class the metrics carry.**
+
+### §5 — COMMANDS + RESULTS
+
+```
+python -m py_compile src/engine/invariant_harness/core.py      -> OK
+pytest src/engine/tests/test_invariant_harness.py -q           -> 61 passed   (was 58, +3)
+  same suite, PINNED core.py                                   -> 58 passed   (no regression)
+  new tests -k TestMaxDrawdown vs PINNED core.py               -> 2 failed, 4 passed  <- RED-PROOF
+battery, FIXED check + sign flip   -> ['max_drawdown_non_negative'] x60, [] x30
+battery, FIXED check, un-planted   -> [] x90
+battery, PINNED check + sign flip  -> [] x90                   (AR-654, unchanged instrument)
+git diff --stat HEAD -- src/engine/backtester.py               -> EMPTY
+git -C wt-lane2-plant-20260802 status --porcelain              -> EMPTY (restored to pin)
+```
+
+### 🛑 §6 — WHAT I DID **NOT** DO
+
+**I fixed `1` of the `13`.** The other `12` are enumerated, **not repaired, and not individually red-proofed** — the shapes in `§4` are read from their predicates, and only `INV-9`/`INV-10` have execution evidence behind them. · **I did not add the third `NOT_APPLICABLE` state** that would fix the `INV-4`/`INV-8` shape wholesale — that changes `InvariantReport`'s contract and consumers I have not enumerated, so it needs a ruling. · **I did not measure whether `INV-7`'s new RED actually PROPAGATES** — `AR-654 §7` and `R-611 §5.5` both carry the unadjudicated `try:` swallow at `backtester.py:5939`, and **a CRITICAL failure raised inside a swallowed block may still reach nobody.** ★★★ **My fix makes the check able to fail; it does NOT prove anything downstream listens. That is a separate lane and I am not claiming it.** · **`0` runs against the real wave rig.** · **I did not re-run the full pytest suite** — only `test_invariant_harness.py`.
+🛑 **I DID NOT GRADE THIS.** **`accuracy-validator` is one authorization away** — `AR-654 §4`'s defect claim and this repair both want an independent read, with a durable receipt path and an explicit novel false-green hunt. **Still awaiting the operator's word; asked at `AR-654` and re-asked here.**
+
+**FAN-IN: `LANE-1` CLOSED · `LANE-2` CLOSED · `LANE-5` CLOSED (this report) · `LANE-4` QUEUED (`R-611 §5.3`) · `LANE-3` NOT STARTED = `3 / 5`.** ⚠️ **Unstarted, not blocked — no handoff.**
+**RECOMMENDATION: `APPROVAL_REQUESTED`.**
+**NEXT SMALLEST TASK:** `LANE-4` (determinism precondition, `R-610 §5.2` / `R-611 §5.3`) unless the desk prefers the `§4` sweep — **my read: the `12` remaining are one wave of the same edit, and `INV-9`/`INV-10` already have measured blindness, so that wave is cheaper and better-evidenced than it looks.**
+
+---
+
 ## AR-654 · 2026-08-02 · 🛑★★★★★ **`LANE-2` ANSWERED, AND THE ANSWER IS NO: THE BATTERY RIG DID **NOT** GO RED ON ANY OF `4` PLANTED DEFECTS. TWO OF THEM PRODUCED **BYTE-IDENTICAL** OUTPUT — AND POSITIVE WITNESS PROBES PROVE THE CORRUPTED LINES **EXECUTE** (`45` AND `30` HITS), SO THIS IS BLINDNESS, NOT DEAD CODE.** 🛑★★★★★ **AND THE FINDING THAT OUTLIVES THE LANE: SIGN-FLIPPING MAX-DRAWDOWN COLLAPSES `max_drawdown` TO **`0.0` ON ALL `90` BACKTESTS**, AND THE LIVE `CRITICAL` INVARIANT NAMED FOR EXACTLY THAT DEFECT — `_check_max_drawdown_non_negative` — **PASSES IT, BECAUSE ITS PREDICATE IS `max_dd >= 0` AND `0.0 >= 0`.** ✅ **GREEN CONTROL + `4` DISCRIMINATING CONTROLS SUPPLIED. `RECOMMENDATION: REVISION_REQUIRED` — of the Phase-2 ENTRY item, not of my harness.**
 
 **TASK:** `LANE-2` (`R-608 §6.1`). **RULING:** `R-608`; `R-610 §"WORKER — START HERE"` re-confirmed *"finish `LANE-2` first"* mid-run — **read, no reassignment taken.**
