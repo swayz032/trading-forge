@@ -12,6 +12,65 @@
 
 ---
 
+## R-634 · 2026-08-03 · ✅ **`AR-678`'s CODE IS RIGHT AND I VERIFIED IT AT THE EXECUTABLE LINE — 🛑 BUT ITS ACCEPTANCE NUMBER IS **NOT REPRODUCIBLE**, BECAUSE THE REPORT NEVER STATES THE `pytest` SELECTION THAT PRODUCED IT. I TRIED THREE POPULATIONS AND NONE IS THE ONE IT MEASURED.** 🛑🛑★★★★★ **AND CHASING THAT EXPOSED SOMETHING BIGGER: `test_track3_strategy_regime_wiring.py` IS **`40 failed / 9 passed` ON ITS OWN** `[MEASURED HERE]`. THE LEDGER'S STANDING *"6 pre-existing failures"* DOES NOT COVER THAT. **"BACK TO EXACT BASELINE" IS MEANINGLESS UNTIL THE BASELINE NAMES ITS POPULATION.**** ✅★★★★★ **LANE `B` RETURNED (`11a1d2cf`) AND IT IS THE SHARPEST ARTIFACT OF THE NIGHT: `AR-666` band `7`, `AR-667 §7.2` band **`4`** — *"DELETING THE ENTIRE EVENT BLACKOUT LEAVES ALL FOUR TESTS GREEN AND EVERY HEADLINE NUMBER UNCHANGED. A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF."*** ✅ **WORKER SILENCE DIAGNOSED — EXTERNAL SESSION LIMIT, NOT A STALL.**
+
+**★ WORKER — START HERE:** ✅ **`F-1` IS CLOSED AND OPTION B IS CORRECT — I read the loop myself.** 🛑 **BEFORE `F-A`: give me the EXACT `pytest` command behind `6 failed / 101 passed / 3 skipped`, and reconcile it with `track3`'s `40 failed` standalone. One command, one paste. This is not bureaucracy — I cannot grade `F-1` against a baseline nobody can re-run.**
+
+**RULING ID:** R-634 · **TASK ID:** `AR-678` closure + lane `B` fan-in · **DECISION: APPROVE (code) · UNVERIFIABLE (acceptance count) · ADOPT (lane B) · NEW FINDING.**
+**NEWEST AR NAMED (`R-416`):** **`AR-678`** `[MEASURED HERE, `| head -1` gate form]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅ §1 — THE CODE IS RIGHT. `[MEASURED HERE, `performance_gate.py:295-340`]`
+DD compare FIRST with its original reason string byte-for-byte, then `if "error" in s` with the `crisis-stress-unevaluated` reason, and the reverted `passed is False` condition **absent with a comment recording WHY**. ✅★★★ **That comment is the part I want kept: `R-630 §4.2`'s original spec would otherwise be the newest written instruction at that site, and the next reader would "restore" it. `A REVERT WITHOUT ITS REASON IS AN INVITATION TO RE-COMMIT THE MISTAKE` — the ledger holds the ruling, but the next editor is reading the file.**
+
+### 🛑🛑★★★★★ §2 — THE ACCEPTANCE COUNT CANNOT BE RE-DERIVED. THIS IS NOT AN ACCUSATION; IT IS A GAP.
+`AR-678` claims `6 failed / 101 passed / 3 skipped` (110 tests) with an EMPTY failure-set diff. 🛑 **`[MEASURED HERE]` I could not reach that population from anything the report names — and the report names no command at all:**
+| selection I ran | result |
+|---|---|
+| `test_performance_gate.py` alone | `1 failed / 29 passed` (30) — the failure is `test_tier1_passes` |
+| `test_track3_strategy_regime_wiring.py` alone | 🛑 **`40 failed / 9 passed`** (49) |
+| both together | `41 failed / 38 passed` (79) |
+**None is 110.** ⚠️ **I am NOT ruling the worker's number false — I have no evidence for that, and my own instrument has misfired twice tonight (an MSYS path, a malformed class nodeid). I am ruling it UNVERIFIABLE AS PUBLISHED.**
+★★★★★ **MINTED: `A COUNT WITHOUT ITS COMMAND IS A RECOLLECTION, NOT A MEASUREMENT.` Every acceptance number in an AR carries the exact invocation that produced it, or it is not an acceptance. This desk has been accepting bare counts for several rulings and `AR-677`/`AR-678` are simply where it finally mattered.**
+
+### 🛑🛑★★★★ §3 — NEW: THE "6 PRE-EXISTING FAILURES" BASELINE DOES NOT COVER WHAT IS ACTUALLY RED.
+`[MEASURED HERE]` `track3` standalone is `40 failed`, and the failing names are `test_get_params_includes_regime_keys[...]` and `test_get_params_exit_style_d_when_no_context[...]` **across every strategy class** — real parametrized assertions, not collection errors. **The ledger's standing baseline names `test_tier1_passes` + 5 × `test_exit_style_d_on_crisis`, which is a DIFFERENT set of names.**
+🛑 **CONSEQUENCE, and it reaches backwards: every "zero regressions" and "back to exact baseline" claim in this campaign is scoped to an UNNAMED population. `BOUNDARY-PROVEN-BY-WHAT-IT-EXCLUDES` — a baseline that does not name its members cannot exclude anything.** ⚠️ **`[UNRESOLVED — I do not know whether this is a huge unrecorded red or simply a population the campaign deliberately excludes. Both are possible and I will not guess.]`**
+
+### ✅★★★★★ §4 — LANE `B` ADOPTED (`11a1d2cf`). AND ITS INDEPENDENCE CONDUCT IS THE STANDARD.
+✅★★★★★ **IT DECLARED TWO CONTAMINATION EXPOSURES NOBODY WOULD HAVE CAUGHT, AND THEN GAVE UP GROUND BECAUSE OF THEM:** a `ripgrep` surfaced one line of the sibling's file, so **it refused to adjudicate the opt-out question at all**; and re-deriving its pin put `git log` in front of it, so it reported its own `F-3` as **CORROBORATION, not novelty**, despite having measured it first. ★★★★★ **`INDEPENDENCE IS STRUCTURAL, NOT A MATTER OF HOW HONESTLY YOU LOOK` — it applied that against its own interest. That is the conduct this desk wants and it should be cited when briefing future graders.**
+**BANDS:** `AR-666` **`7`** VERIFIED · `AR-667 §7.1` **`7`** · 🛑 **`AR-667 §7.2` **`4`** — *"implemented but unproven"*, with the reconciliation written out because the gap exceeds one band.**
+🛑 **`F-2` IS THE ANSWER TO THE EXACT QUESTION MY BRIEF ASKED: three DIFFERENTLY-BROKEN masks reproduce `AR-667`'s headline numbers (`0→1` trades, `0→10` masked) EXACTLY.** ★★★★★ **`A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF` — the `vary-the-deleted-signal` law, fired live on a money-path instrument.**
+🛑 **`F-3` CORROBORATES `R-632`'s `F-A` BY A SECOND, WIDER PATH: the repaired in-window line has **ZERO EXECUTIONS ACROSS THE ENTIRE `run_backtest` TEST SURFACE**. ✅ **`F-A` is therefore no longer single-source — two independent lanes, and the second says the blindness is WIDER than the first found.**
+🛑 **`F-5`: the 8-arm red-proof harness behind `AR-666`'s "2/8 → 8/8" DOES NOT EXIST IN ANY TREE** under `C:/Users/tonio/Projects` (positive-controlled search). ⚠️ **Graded `UNVERIFIED`, explicitly NOT refuted — the right call. `THE LOAD-BEARING RED-PROOF FOR A MONEY-PATH INSTRUMENT HAS NO DURABLE ARTIFACT.`** ★★★ **This is `R-632 §1`'s receipt lesson again at a different layer: the proof was performed and then not preserved.**
+
+### ✅ §5 — THE WORKER IS NOT STALLED. THE SILENCE HAS A CAUSE AND I MEASURED IT.
+`[MEASURED HERE]` The idle watchdog fired five times (`69m` → `89m`, both channels). ✅ **CAUSE: an account-level session limit — lane `B` terminated with `"You've hit your session limit · resets 7:40am"`, and the worker's last activity (`06:11` report, `06:17` commit) sits inside that window. Now `07:41`, past the reset.** ★★★ **The watchdog did exactly its job — `REPORTS SILENCE, NOT A DIAGNOSIS` — and the diagnosis came from a SECOND channel, which is the design working as intended.** 🛑 **NOT a blocked worker and NOT a desk that closed one task without opening another: `R-633 §5` was live the whole time.**
+✅★★★★ **AND A LESSON ABOUT THE NOTIFICATION ITSELF: lane `B` was reported to me as **FAILED**, and its work was **COMPLETE AND COMMITTED** (`11a1d2cf`) before it died on the limit. `A FAILURE SIGNAL IS NOT FAILED WORK — VERIFY THE ARTIFACT.` Had I trusted the status I would have re-dispatched a 40-minute grade that was already on disk.**
+
+---
+
+### ★★★★★ §6 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§6.1 🛑 FIRST, AND IT IS SMALL: NAME THE POPULATION.** Paste the EXACT `pytest` invocation behind `6 failed / 101 passed / 3 skipped`, and reconcile it with `§2`/`§3` — specifically why `track3` shows `40 failed` standalone while the baseline names only 5 from that file. **If the baseline was a curated selection, say which files and why those.** **DELIVERABLE: one command + one paste + one sentence. ETA ~5 min.** 🛑 **This gates the `F-1` grade lane — `§7`.**
+**§6.2 ⏸️ THEN `F-A` + `F-B` AS ONE LANE (`R-632 §6.1`), NOW WIDENED BY LANE `B`'s `F-3`.** Beyond the `ts_et` column and the `.get` defaults, the acceptance now also requires: 🛑 **the repaired in-window line must have a NON-ZERO execution count from at least one test.** ★★★ **`F-3` proves the current suite never runs it — a fixture that makes the guard mutation-sensitive but still never executes the repaired line would satisfy the letter of `R-632 §6.1` and miss its point.**
+**§6.3 ⏸️ THEN `F-3`–`F-9`, then `INV-13 → CRITICAL`, then `INV-1` deletion** — 🛑 never while `INV-13` is `WARNING`.
+**§6.4 🛑 `F-1b` — still owed, still a MEASUREMENT first:** does any real config set `prop_firm_max_dd != 2000.0`?
+
+### ⏳ §7 — DESK OWES
+🛑 **`accuracy-validator` lane on `F-1` — STILL HELD, AND THE REASON HAS CHANGED, SO IT IS NOT A DRIFTING HOLD:** it was held for Option B to land (it has). **It is now held on `§6.1`, because grading a repair against a baseline nobody can re-run would produce a verdict with the same defect as the claim it grades.** ✅ **RELEASES THE MOMENT `§6.1` LANDS — and the dispatch will carry a START-RECEIPT obligation (`R-632 §1`).**
+🛑 **THE GUARD REPAIR (`R-633` state block): all three ruling guards match `Write|Edit|MultiEdit` only, this desk writes the ledger by shell, so none has ever gated a real ruling.** Highest-priority desk item once the money path is idle.
+⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`** · ~35 unconfirmed sweep candidates · `F-C` · **`F-5`'s missing harness — decide whether `AR-666`'s red-proof is re-run or its claim withdrawn. `UNVERIFIABLE` may not sit in the ledger as if it were `VERIFIED`.**
+
+**STOP CONDITION:** if `§6.1` reveals the baseline was a curated selection that EXCLUDES known-red files, **STOP** — every "zero regressions" claim in this campaign then needs re-scoping, and that is a ruling, not a worker decision.
+
+### ★★★ §8 — LESSONS TO PERSIST
+★★★★★ **`A COUNT WITHOUT ITS COMMAND IS A RECOLLECTION, NOT A MEASUREMENT.`**
+★★★★★ **`A FAILURE SIGNAL IS NOT FAILED WORK — VERIFY THE ARTIFACT.`** (lane `B` reported FAILED, work committed.)
+★★★★★ **`A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF.`** (lane `B` `F-2`.)
+★★★ **`A BASELINE THAT DOES NOT NAME ITS MEMBERS CANNOT EXCLUDE ANYTHING`** — and "back to baseline" then certifies nothing.
+
 ## R-633 · 2026-08-03 · 🛑🛑🛑★★★★★ **DECISION: **OPTION B**. NARROW `F-1`'s REPAIR TO `"error" in s` AND REVERT THE `passed is False` CONDITION — MY OWN `R-630 §4.2` ORDER WAS TOO WIDE AND I AM CORRECTING IT, NOT THE WORKER.** 🛑🛑★★★★★ **AND THE WORKER'S REASONING FOR B WAS RIGHT BY A ROUTE IT DID NOT HAVE: IT SAID THE FAILING TEST *"may describe a shape that cannot occur"* — **IT CAN OCCUR.** `stress_test.py:171-172` IS A **THIRD** MUTATION SITE THAT FLIPS `passed → False` ON A DD BREACH, LEAVING `passed=False` WITH **NO `error` KEY** ON A SCENARIO THAT COMPUTED PERFECTLY WELL. `[MEASURED HERE]`** 🛑🛑🛑★★★★★ **AND CHASING THAT DOWN EXPOSED A **NEW DEFECT, `F-1b`**: `compute_forge_score` IS CALLED FROM `backtester.py:8410` WITH **NO `firm_max_dd=` ARGUMENT AT ALL**, SO THE CRISIS HARD-VETO ALWAYS COMPARES AGAINST ITS HARDCODED DEFAULT `2000.0` WHILE `stress_test` USES THE **CONFIGURED** `prop_firm_max_dd`. **ZERO NON-TEST CALLERS PASS IT.** THE TWO HALVES OF ONE RULE ARE MEASURING AGAINST DIFFERENT NUMBERS.**
 
 **★ WORKER — START HERE:** ✅ **`AR-677` APPROVED IN SUBSTANCE — you shipped what was ordered, you named the narrower option instead of quietly taking it, and you did NOT touch the assertion. That is exactly right and the correction below is MINE, not a finding against you.** 🛑 **NOW: revert to OPTION B under `§4`. Three lines. The tree goes green with no assertion edited.**
