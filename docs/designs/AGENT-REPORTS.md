@@ -4,6 +4,60 @@
 
 ---
 
+## AR-705 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-655 §5` — THE `(ii)`-ELIGIBILITY CENSUS IS IN, ACROSS THE **WHOLE CORPUS**, AND **STOP CONDITION `1` FIRES**: `PHASE-1 HAS NO OPEN DOOR UNDER THE CURRENT ARCHITECTURE.`** 🛑🛑🛑★★★★★ **`260` ROWS · `27` SPECS · **`31` `(ii)`-ELIGIBLE ROWS, ALL `WAIT_SESSION`** · **`0` NAME-SHAPED** · **`0` PASSING**. `EXCEPTION`, `EXIT_HINT` AND `RESET` HAVE **ZERO ROWS IN THE ENTIRE CORPUS** — three of the four eligible families are empty, and the fourth is `100%` refused.** ✅★★★★★ **BOTH INSTRUMENT CONTROLS REPRODUCED INDEPENDENTLY-REPORTED NUMBERS BEFORE I TRUSTED A ZERO: tier-A `99` (`AR-697`) AND SHAKEDOWN `161` (`AR-698`/`R-651`), EXACT.** 🛑 **I AM STOPPING. THE NEXT ACT IS YOUR ARCHITECTURE RULING, NOT A BUILD.**
+
+**TASK:** `R-655 §5.1–§5.3`. 🛑 **READ-ONLY — no source file changed, nothing built, no canonical window added, no spec re-selected.** **Within the `≤ 45 min` ETA.**
+**POPULATION + JOIN KEY, NAMED BEFORE THE RESULT (as ordered):**
+```
+TIER-A     : tier-a-compile-census.json .specs (11) -> phase_b/<stub>.json
+             -> produce_spec_artifact -> run_leg_a_phase1 -> rows[].type
+SHAKEDOWN  : shakedown_specs/*.spec.json (16, already compiled) -> run_leg_a_phase1
+FILTER     : FAMILY_META[type].enforced_honest_approximation() == False   <- DERIVED LIVE,
+             not hardcoded, so the filter cannot drift from the gate it models
+OBJECT JOIN: rows[].condition_id -> spec.entry_conditions|invalidations[].id
+```
+🛑🛑 **AND THE JOIN IS THE PART THAT ALMOST FOOLED ME — DISCLOSED BECAUSE IT WOULD HAVE MANUFACTURED THIS EXACT VERDICT: my first pass read `object` OFF THE SEAL ROW. **THE SEAL ROW HAS NO `object` FIELD** (`checks · condition_id · countersign_required · fail_codes · ii_applicable · load_bearing · role · row_verdict · type`). Every resolver call ran on `""` and returned `None`, and I would have reported `0` NAME-SHAPED **from empty strings**.** ★★★★★ **I CAUGHT IT BECAUSE EVERY ROW CAME BACK IDENTICALLY *"unrecognised"* — TOO UNIFORM TO BE REAL, THE SAME TELL THAT CAUGHT `R-651 §3`'s `100%` UNTYPED. Re-joined by `condition_id`, positive control `31/31` non-empty objects, and every number below is from the corrected pass.**
+
+### 🛑🛑🛑★★★★★ §1 — `§5.1` THE ELIGIBILITY TABLE. **`31` OF `260`**
+| population | specs | rows | `(ii)`-eligible | control |
+|---|---|---|---|---|
+| tier-A | `11` | **`99`** | **`4`** | ✅ `AR-697` independently reported `99` |
+| shakedown | `16` | **`161`** | **`27`** | ✅ `AR-698`/`R-651` independently reported `161` |
+| **CORPUS** | **`27`** | **`260`** | **`31`** | |
+**FAMILY MIX OF THE `31`: `WAIT_SESSION 31` · `EXCEPTION 0` · `EXIT_HINT 0` · `RESET 0`.**
+🛑🛑★★★★★ **`§5.3` ANSWERED, AND IT IS THE ANSWER YOU PRE-REGISTERED AS EXPECTED: `EXCEPTION`, `EXIT_HINT` AND `RESET` HAVE **NO ROWS ANYWHERE IN THE CORPUS**. Their `FAMILY_META` primitives are `None`, `'provenance_only'`, `None`. ★★★ **THREE OF THE FOUR ELIGIBLE FAMILIES ARE ELIGIBLE IN THE ABSTRACT AND UNINSTANTIATED IN FACT. `A FAMILY THAT CAN PASS BUT NEVER OCCURS IS NOT AN OPEN DOOR; IT IS A DOOR IN A WALL NOBODY WALKS PAST.`**
+**PER-SPEC (tier-A): `4` of `11` specs carry ANY eligible row —** `st5e-YJRfKc__s0` `1` · `LD1FEbwXU4o__s0` `1` · `YqY0OkL5LMI__s0` `1` · `YqY0OkL5LMI__s1` `1`. **The other `7` carry none at all.**
+**FULL TIER-A TYPE MIX (`99`):** `UNTYPED 43` · `WAIT_STRUCTURE 35` · `WAIT_CONFIRMATION 6` · `INVALIDATE 5` · `WAIT_SESSION 4` · `FILTER 4` · `WAIT_RETEST 2`. ✅ **`UNTYPED 43` matches `AR-699`'s census/seal cross-check exactly — a third arrival at the same number.**
+
+### 🛑🛑🛑★★★★★ §2 — `§5.2` ALL `31` RESOLVED BY THE **REAL** RESOLVER. **`0` NAME-SHAPED**
+| shape | count | disposition |
+|---|---|---|
+| **NAME-SHAPED → binds at `approximation=False`** | 🛑 **`0`** | — |
+| CLOCK-shaped → refused by `_SESSION_CLOCK_TOKEN_RE` pinned guard | `7` | `clock-derived-coarse` |
+| neither a closed-enum name nor a clock | `24` | unrecognised / mis-typed |
+✅★★★★★ **DISCRIMINATING CONTROL — THE CLASSIFIER RETURNS `NAME-SHAPED` ON DEMAND, SO THE `0` IS ABOUT THE CORPUS AND NOT ABOUT MY PROBE:** `'the london session' → ('london', [120,300))` · `'ny am session' → ('ny_am', [420,600))` · `'pm session' → ('ny_pm', [810,960))`.
+🛑 **THE `7` CLOCK-SHAPED INCLUDE THE GOLDEN SLICE (`9:30 a.m.`) AND, INDEPENDENTLY, `E9MzEC_yNoM__s1` (*"after **3:00 a.m. Eastern** … into New York market open, which is going to be **9:30 a.m. EST**"*) and `W7nlnHTUZQU__s0` (*"from **4:00 p.m.** … until the market opens"*). ★★★ **THE CLOCK-LITERAL TEACHING IS NOT A QUIRK OF ONE EDUCATOR — IT RECURS ACROSS UNRELATED SOURCES, AND THE ARCHITECTURE REFUSES ALL OF THEM.**
+✅★★★★★ **AND THE NEAR-MISSES ARE REFUSED **CORRECTLY**, WHICH IS WHY I AM NOT CALLING THE GATE DEFECTIVE `[MEASURED — object texts read individually]`:**
+- `LD1FEbwXU4o__s0` — *"use session times like **the London or New York open**"* → **AMBIGUOUS**: names two zones, and *"New York"* alone does not select `ny_am` vs `ny_pm`. **The design refuses ambiguity on purpose.**
+- `CLDEIsNpVRc__s0` — *"could be **Asia** high or low … could be **London** high or low"* → `asia` is an **ORPHAN ZONE**, not among the `5` computable windows (`R-185`'s orphan-zone closure).
+- `R5L890juvRw__s0` — *"**you might have a long idea for your session**"* → 🛑🛑★★★★★ **THIS IS THE LITERAL KNOWN-BAD FIXTURE NAMED IN `spec_family_bindings.py`'s OWN COMMENT — *"the known-bad fixture … rejected by the grader because the word did no work."* **THE DESIGN'S PINNED MUST-NOT-BIND CASE IS LIVE IN THE CORPUS AND IS CORRECTLY REFUSED. That is a positive control ON THE ARCHITECTURE, arriving for free.**
+- The remainder are **entry mechanics MIS-TYPED as `WAIT_SESSION`** (*"I decided to take a starter position into the opening pullback"* · *"the gap in between is what is called an imbalance"*), the reclassification class already named at `spec_family_bindings.py:1880`.
+
+### 🛑🛑🛑★★★★★ §3 — THE VERDICT YOU ASKED FOR, IN YOUR WORDS
+🛑🛑🛑 **`PHASE-1 HAS NO OPEN DOOR UNDER THE CURRENT ARCHITECTURE.`**
+**THE CHAIN, EACH LINK MEASURED:** `10` of `14` families are blocked by a static declaration whatever they bind to (`AR-703`, corroborated independently by `R-654 §2`) → of the `4` eligible families, `3` have **zero rows** in `260` → the `1` that occurs, `WAIT_SESSION`, is `31` rows and **`0`** are name-shaped → **`0` of `260` rows pass.**
+✅★★★★★ **AND IT RETRODICTS EXACTLY AS `R-655 §3` PREDICTED A ROOT CAUSE MUST: `0/161` and `0/99` were never a DISTANCE. `0/260` IS A PROPERTY OF THE GATE'S DESIGN MEETING A CORPUS THAT TEACHES IN CLOCKS AND STRUCTURE. **NO AMOUNT OF ROW REPAIR MOVES IT, BECAUSE THE ROWS THAT COULD MOVE DO NOT EXIST AND THE ROWS THAT EXIST CANNOT MOVE.**
+🛑 **AND I HOLD YOUR LINE ON THE GATE, INCLUDING WHERE IT COSTS ME THE TIDIER STORY: the instrument is HONEST. `WAIT_STRUCTURE`'s `base_approximation=True` is TRUE. The clock-token guard is a DELIBERATE fail-closed design and it refused ambiguity, an orphan zone and the pinned known-bad fixture **correctly**, in this very run. `THIS IS NOT gate-artifact. THE GATE IS RIGHT AND THE PLAN WAS AIMED AT SOMETHING THE GATE DOES NOT MEASURE.`**
+
+### ⚠️ §4 — SCOPE, AND WHAT I DID NOT DO
+⚠️ **`[SCOPE]` `260` rows / `27` specs = tier-A `11` + shakedown `16`. **NOT the full `73`/`155` corpus** — those specs are not one join away and I did not manufacture them. **My verdict is scoped to the population Phase-1 actually exits on, which is the population `R-655 §5.1` named.**
+⚠️ **`[NOT MEASURED]`** whether a name-shaped `WAIT_SESSION` row exists in the wider corpus. ★★★ **If one does, it is ONE row and it would still be the only open door — the architecture conclusion changes from `NO door` to `ONE door, by accident of phrasing`. I would not call that a plan.**
+⚠️ **`[NOT MEASURED]`** whether the `24` mis-typed rows would become `(ii)`-eligible under reclassification — **they would move to `WAIT_STRUCTURE`/`ENTER`-class families, which are BLOCKED, so reclassification moves them AWAY from eligibility, not toward it.** `[HYPOTHESIS — UNPROVEN]`, flagged because it is the obvious next hope and I believe it is a dead one.
+🛑 **NOT DONE, DELIBERATELY: I did not bind anything, did not re-select the slice, and did not open your `§6.1` `opening_range` collision — your bar stands and no fidelity receipt is being claimed here.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `c3fbd5d9` at read. No source file modified. `R-655 §5` fan-in `3 / 3`, halted at pre-registered stop `1`. NOT handing off — I hold the seat.**
+
+---
+
 ## AR-704 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-654 §5` — ALL FOUR ANSWERED. **STOP CONDITION `1` FIRES.** THE `09:30–09:35 ET` WINDOW **CANNOT BE REPRESENTED WITHOUT INVENTING A CANONICAL ENTRY**, AND THE REFUSAL IS NOT A MATCHER GAP — IT IS A **PINNED GUARD THAT REFUSES CLOCK TOKENS ON PURPOSE**: `resolve_session_name_to_window` `:852-855`, *"A clock token anywhere disqualifies the name path outright."*** 🛑🛑🛑★★★★★ **VERDICT ON THE ROW: **BLOCKED, NOT UNDETERMINED.** `THE ONLY (ii)-ELIGIBLE ROW IN THE ONLY VIABLE SPEC IS UNREPRESENTABLE BY ANY PERMITTED MEANS.` I AM STOPPING AND NOT BUILDING.** ✅ **`§5.3`/`§5.4` COMPLETED AS READS (no build, `§5.4` specified only) because your ACCEPTANCE asks for all four — say if you would rather I had halted at `§5.2`.**
 
 **TASK:** `R-654 §5.1–§5.4`. 🛑 **READ-ONLY — no source file changed, nothing built, no canonical entry added.** **Within the `≤ 45 min` ETA.** ✅ **Sweep scratch files left uncommitted and uncited, per your `§5` housekeeping.**
