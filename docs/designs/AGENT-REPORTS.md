@@ -4,6 +4,53 @@
 
 ---
 
+## AR-725 · 2026-08-03 · ✅★★★★★ **`R-668 §5` DELIVERED — `(i)` AND `(ii)`, BOTH ANSWERED STATICALLY. **NEITHER STOP CONDITION FIRED.**** ✅★★★★★ **`(i)` = ANSWER `(1)`: THE REFERENCE SIDE IS AN **INDEPENDENT SECOND ENGINE RE-EXECUTING THE SAME DSL** (`vectorbt` vs `backtrader`) — **NOT** THE EDUCATOR'S TRADES. SO READING `B` IS **NOT** DEAD ON ARRIVAL BY YOUR `(i)` TEST.** 🛑🛑🛑★★★★★ **BUT THE QUALIFIER OUTWEIGHS THE ANSWER: **THAT HARNESS IS NOT WIRED TO THE SPEC COMPILER AT ALL.** IT ACCEPTS `entry_indicator ∈ {ema_crossover, atr_breakout}` AND **RAISES `NotImplementedError` ON ANYTHING ELSE**, FED BY `_reconstruct_dsl(BacktestRequest)` — **NEVER BY `produce_spec_artifact`.** AND `compile_fidelity.py` **HAS NO EXECUTION SURFACE WHATSOEVER** `[MEASURED — `0` hits for backtest/execute across the file]`.** 🛑🛑★★★★★ **`(ii)`: **NEITHER SURVIVOR TRANSFERS CLEANLY, FOR TWO DIFFERENT REASONS** — one is taught in `points` on **NIFTY**, the other is scoped by the educator's own words to **"every currency pair."**
+
+**TASK:** `R-668 §5`. **RUN MODE: READ-ONLY STATIC SOURCE READS + `python -c` ARTIFACT INSPECTION AT HEAD `b103e056`. NO pytest, NO harness run, NO producer, NO backtest.** **NOT GRAPH-SCHEDULED. NOTHING under `src/` modified.** 🛑 **THIS LANE IS NOT ADOPTION OF READING `B` (`R-668 §4`), AND I NAME, RANK AND PREFER NO CANDIDATE.**
+
+### ✅★★★★★ §1 — `(i)` THE THREE NAMED INSTRUMENTS DO **THREE DIFFERENT JOBS**, AND ONLY ONE OF THEM EXECUTES ANYTHING
+| instrument | does it EXECUTE? | what is the reference side? |
+|---|---|---|
+| `forensics/compile_fidelity.py` (`run_leg_a_phase1`) | 🛑 **NO** | **none — there is no comparison.** It is a STATIC per-condition seal (checks `i`…`vi`). `[MEASURED HERE]` **`grep "backtest\|run_backtest\|execute(\|Backtest"` → `0` hits**, and its full `def` list is parse/check/seal helpers only. |
+| `forensics/calibration_battery.py` (`run_calibration`) | 🛑 **NO** | **the CLEAN spec.** It is the PLANTED-DEFECT harness (`m1..m7` mutation slots), requiring both a CONVICTION and an ANTI-VACUITY COMPANION — run through the **static** Leg A detector. |
+| `parity_engine/diff_harness.py` (`run_parity_diff`) | ✅ **YES — the only one** | ✅★★★★★ **A SECOND ENGINE.** Its own docstring: *"Run **both engines** on the same data"* — a `vectorbt` side and a `run_backtrader` side, compared on trade count, PnL % and Sharpe against fixed tolerances. |
+✅★★★★★ **THEREFORE `(i)` = **ANSWER `(1)`**: where a comparison exists at all, the reference is an **INDEPENDENT RE-EXECUTION OF THE SAME COMPILED LOGIC BY A DIFFERENT ENGINE.** **NOWHERE IN ANY OF THE THREE IS THERE A RECORD OF THE EDUCATOR'S OWN TRADES.** `[MEASURED — the executable lines quoted above]`.
+✅ **STOP CONDITION `1` DID NOT FIRE: `(i)` was fully determinable statically. I did not run the harness.**
+
+### 🛑🛑🛑★★★★★ §2 — THE QUALIFIER, WHICH I THINK MATTERS MORE THAN THE ANSWER
+`[MEASURED HERE — `shadow_runner.py:50-62` and `:66-96`, executable lines]`
+- **`parity_supported(dsl)` returns `True` only for `entry_indicator ∈ {ema_crossover, atr_breakout}`**; `run_parity_diff` itself **`raise NotImplementedError(f"No vectorbt runner for indicator '{ind}'")`** on anything else.
+- **Its `dsl` is built by `_reconstruct_dsl(request: BacktestRequest)` from a `StrategyConfig`** — *"the minimal DSL dict that diff_harness.py expects… entry_indicator, entry_params, direction, stop_loss_atr_multiple, take_profit_atr_multiple. **Everything else is ignored**."*
+🛑🛑★★★★★ **SO THE ONLY EXECUTING COMPARATOR THIS CAMPAIGN OWNS CANNOT TODAY BE FED A COMPILED TIER-A SPEC: it consumes a `StrategyConfig`/`BacktestRequest`, supports `2` hard-coded archetypes, and discards everything a taught spec carries.** ★★★★★ **`R-648`'s STAGE `4` (EXECUTE) AND STAGE `5` (TRADE-BY-TRADE COMPARE) HAVE NO PATH FROM `produce_spec_artifact` TODAY — AND THAT IS TRUE **REGARDLESS OF WHICH INSTRUMENT OR WHICH SPEC IS CHOSEN.** `[UNENUMERATED]`: how large that wiring gap is — I did not scope it, and I am not proposing to build it.**
+⚠️★★★★ **AND THE OBSERVATION I OWE YOU, LABELLED AS AN OBSERVATION AND NOT A RULING: `R-648`'s stage `5` says the slice must *"match the reference **trade-by-trade**."* `[MEASURED, §1]` **the reference is a SECOND ENGINE RUNNING THE SAME SPEC. A trade-by-trade match against that measures ENGINE PARITY — that two implementations agree — NOT FIDELITY TO WHAT THE EDUCATOR TAUGHT.** ★★★★★ **`TWO ENGINES AGREEING PROVES THE SPEC WAS EXECUTED CONSISTENTLY; IT CANNOT PROVE THE SPEC IS WHAT HE TAUGHT.` **This is `[HYPOTHESIS — NOT MEASURED]` as to INTENT** — I have not read a ruling stating which of the two stage 5 was meant to be, and I am not assuming it is a defect. **It may be exactly what was intended. It is yours to say.**
+
+### 🛑🛑★★★★★ §3 — `(ii)` UNIT PORTABILITY. **NEITHER SURVIVOR TRANSFERS CLEANLY, AND THE TWO FAILURES ARE DIFFERENT IN KIND**
+**Taught text QUOTED, not paraphrased** `[MEASURED HERE — the frozen extractions, verified population from `AR-723 §1`]`:
+
+**🛑 `ExB66jcyKxg__s0` — `sma14_strong_close_crossover`: INSTRUMENT-SPECIFIC ABSOLUTE UNITS, AND IT NAMES THE INSTRUMENT.**
+- STOP: *"stop loss should always be set at 1/3rd of your profit"*, **example: *"exactly 20 points as my stop loss"*** *(`value: null`)*
+- TARGET: *"it's best to keep a fixed target as the exit"*, **example: *"**for nifty**, I always used to use **60 points** as my target"*** *(`value: null`)*
+- ✅ TRANSFERABLE: *"the time length of the indicator needs to be set at 14"* · *"We will be trading in 15 mins time frame"* · *"with a risk to reward of 3:1"*
+🛑★★★★★ **VERDICT: THE THRESHOLDS ARE TAUGHT IN **POINTS ON NIFTY** — an Indian index this repo holds no data for. **`60` points on NIFTY is a different fraction of price than `60` points on `ES` by roughly an order of magnitude**, so the absolute form does NOT transfer.** ⚠️ **NOTE THE INTERNAL RESCUE AND ITS LIMIT: the strategy ALSO states a DIMENSIONLESS `3:1` and *"1/3rd of your profit"* (consistent with `20`/`60`). **Compiling the RATIO instead of the POINTS would transfer — but choosing the ratio form over the taught absolute is a DERIVATION the educator did not make, and that is a `PRESERVE MEANING` decision, not mine.**
+
+**🛑 `0RBexa9JpIg__s0` — `fibonacci_pullback_continuation`: UNITS TRANSFER, BUT THE EDUCATOR EXPLICITLY SCOPES THE INSTRUMENT CLASS.**
+- ✅ THRESHOLDS ARE DIMENSIONLESS RATIOS: *"wait for the price to touch the **50 or 61.8%** line. And place your buy trade anywhere between these two levels."*
+- ✅ STOP/TARGET ARE STRUCTURAL, NOT FIXED-UNIT: *"Place your stop loss **below the swing low**"* · *"Place your take profit **above the previous swing high**."*
+- ✅ TIMEFRAMES DETERMINABLE: *"a **4 hour** time frame and a trend line"* (trend) · *"We will use a **1 hour** time frame for this strategy."*
+- 🛑🛑★★★★★ **BUT ITS FOURTH CONFLUENCE READS, VERBATIM: *"You can apply this strategy on **every currency pair**."*** ★★★★★ **THE EDUCATOR STATES THE INSTRUMENT SCOPE HIMSELF, AND IT IS `FX`. NOT *"every market"* — *"every currency pair."* **RUNNING IT ON `ES`/`MES` WOULD BE OUTSIDE THE SCOPE HE TAUGHT, IN HIS OWN WORDS, EVEN THOUGH EVERY NUMBER IN IT IS DIMENSIONLESS.**
+✅ **STOP CONDITION `2` DID NOT FIRE: the taught thresholds WERE present in the extraction (in `stop.example` / `targets[].example` / `confluences[]`), so I did not need the transcript.** ⚠️ **`[UNENUMERATED]`: whether the transcript carries FURTHER unit-bearing text these extraction fields dropped — I read only the extraction.**
+
+### ⚠️ §4 — WHAT I DID **NOT** MEASURE
+🛑 **I did NOT run `run_parity_diff`, `run_calibration`, the backtester, or any producer.** All `§1`–`§3` figures are static reads.
+🛑 **`[UNENUMERATED]`: the SIZE of the stage-4/5 wiring gap** — I measured only that no path exists from `produce_spec_artifact` to `run_parity_diff` today; I did not scope what building one would take, and I am not proposing it.
+🛑 **`[UNENUMERATED]`: `run_backtrader`'s own internals** — I read the call and its arguments, not its body. **My `(i)` verdict rests on `run_parity_diff` invoking two independent engines, which is visible at the call site; it does not rest on either engine's correctness.**
+🛑 **I did NOT check whether any OTHER comparator exists outside the three you named.** `R-648` names these three as the built set; **I took that as given rather than sweeping for a fourth.**
+🛑 **`[HYPOTHESIS — NOT MEASURED]` `§2`'s engine-parity-vs-educator-fidelity observation, as to INTENT.** Measured: what the code compares. Not measured: what stage `5` was designed to mean.
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK: yours — `(i)` clears reading `B`'s first hurdle and `(ii)` puts an instrument-scope problem on BOTH survivors, so the reading-`B` ruling now has the evidence `R-668 §4` said it needed.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
+
+---
+
 ## AR-724 · 2026-08-03 · ⏳ **START-RECEIPT — `R-668 §5`, `(i)` THEN `(ii)`. SAME SEAT, STILL HOLDING CONTEXT.**
 
 **ORDER: `(i)` FIRST — WHAT THE COMPARISON COMPARES AGAINST.** **REASON: `§4` makes it the DECIDING question — *"if the former, reading `B` is dead on arrival"*. `(ii)` only matters if `(i)` survives, so measuring `(i)` first is the cheapest path to a real answer, including the answer that closes the lane.**
