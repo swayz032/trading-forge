@@ -4,6 +4,67 @@
 
 ---
 
+## AR-700 · 2026-08-03 · ✅★★★★★ **`R-652 §5.1` — **STOP CONDITION `3` DOES NOT FIRE.** THE TAUGHT MECHANIC IS **NOT** EQUITIES-SPECIFIC ON ANY OF THE FIVE SURFACES YOU NAMED: `share size` · `halts` · `float` · `pre-market mechanics` · `single-name behaviour` ARE **ZERO ACROSS ALL `48` STRING VALUES OF THE EXTRACTION AND ALL `9,386` CHARACTERS OF THE SOURCE TRANSCRIPT**, UNDER LIVE POSITIVE CONTROLS.** 🛑🛑★★★★★ **AND THE ZERO IS **DISCRIMINATING, NOT AN ARTEFACT OF MY PROBE**: THE IDENTICAL PROBE RUN ON `gap_and_go` FIRES ON FOUR TOKENS INSIDE ITS CONDITION ROWS AND FINDS ITS DISQUALIFIER IN A FIELD THE GOLDEN SLICE **DOES NOT HAVE**.** ⚠️★★★ **BUT I AM SCOPING THE CLAIM EXACTLY: `NOT EQUITIES-SPECIFIC` IS NOT `MEASURED FUTURES-APPROPRIATE`. THE SOURCE SAYS `futures` **ZERO TIMES**. `§4` IS THAT BOUNDARY AND IT IS THE HONEST RESIDUAL.**
+
+**TASK:** `R-652 §5.1`. 🛑 **READ-ONLY — nothing changed, no code touched. `§5.2` and `§5.3` NOT started.** **Within the `≤ 30 min` ETA.** ⚠️ **NO SEPARATE START-RECEIPT: your `FIRST OBSERVABLE` clause pinned `AR-700` to the `§5.1` VERDICT, so a numbered receipt would have consumed it. Flagging rather than leaving the protocol gap to be inferred.**
+**SEAT:** fresh worker seated `13:45`; predecessor's ear on `ADVISOR-RULINGS.md` (armed `11:32:58`, PID `13568`) **still live and it is how `R-652` reached me at `13:47`** — inherited, NOT re-armed (`one-monitor`). **Armed before `R-651` and before `R-652`: no blind window on either.**
+
+### ✅★★★★★ §1 — THE FIVE NAMED SURFACES, MEASURED TO ZERO WITH THE COUNTER SELF-TESTED FIRST
+`[MEASURED HERE — `transcripts/st5e-YJRfKc.txt` (`9,386` chars) and `phase_b/st5e-YJRfKc__s0.json` (`48` string values), both read IN FULL, Python `io.open(encoding='utf-8')`]`
+🛑 **INSTRUMENT AUDIT BEFORE THE RESULT (`R-650 §3` records `grep -c` returning EMPTY instead of a count on this box, and the default `cp1252` codec threw on this very file):** I did not use `grep -c`. Every count below is from a Python counter that **printed its positive controls in the same pass** — `opening range 17` · `9:30 5` · `half range 11` · `breakout 13` · `stock 3` (transcript). ★★★ **A counter that cannot return a non-zero is not evidence of absence, and this one demonstrably can.**
+| probe | transcript | extraction |
+|---|---|---|
+| `share` / `shares` | **`0`** | **`0`** |
+| `float` | **`0`** | **`0`** |
+| `halt` · `luld` · `circuit break` | **`0`** | **`0`** |
+| `gapper` · `gap up` · `small cap` · `small-cap` | **`0`** | **`0`** |
+| `borrow` · `short interest` · `ssr` · `dilution` · `offering` · `penny stock` | **`0`** | **`0`** |
+| `earnings` · `position size` · `round lot` | **`0`** | **`0`** |
+| `pre-market` | `1` | **`0`** |
+🛑 **THE ONE HIT, QUOTED IN FULL RATHER THAN COUNTED AWAY:** *"You have all of the **pre-market positioning**, every institutional order, everything that collides at this opening range when that opening bell rings."* ✅ **It is DESCRIPTIVE COLOUR explaining why the open is volatile — not a filter, not a condition, not an entry rule — and it does NOT reach the extraction at all (`0`).** ⚠️ **`[DESK JUDGMENT, NOT MEASURED]` overnight positioning colliding at the `09:30 ET` cash open is if anything MORE true of an index future than of a single name; I record that as judgment, not as a count.**
+✅ **DISCARDED ONE OF MY OWN PROBES: `'es '` returned `23` and is **substring noise** (`rang*es* `, `pric*es* `), not the `ES` contract. Reported rather than quietly dropped.**
+
+### ✅★★★★★ §2 — THE DECISIVE CUT: EVERY EQUITIES REFERENCE IN THE ARTIFACT IS **METADATA**, NOT A CONDITION ROW
+`[MEASURED HERE — whole-file walk, all `48` string values, same regex I ran on `gap_and_go`]`
+🛑 **`/futur|small|momentum|stock|gapp?|pre-market|share|float|halt/i` MATCHES EXACTLY `2` OF `48` STRINGS, AND BOTH ARE IN `instrument_classification`:**
+```
+.instrument_classification.instruments_mentioned[0] -> "stocks"
+.instrument_classification.rationale               -> "Speaker references combing through 'thousands of
+   stocks' on Thinkorswim/TradingView and uses the S&P 500 (price levels ~616-617) as the worked example."
+```
+✅ **POSITIVE CONTROL ON THE SWEEP ITSELF: `/opening range/` matches `9` of the same `48` strings. The sweep is live.**
+✅★★★★★ **SO ACROSS ALL `16` CONDITION ROWS (`5` confluence · `5` entry_sequence · `1` stop · `2` targets · `3` variants): `stock 0` · `share 0` · `float 0` · `halt 0` · `pre-market 0` · `gap 0` · `equit 0` · `ticker 0`.** **The two row-level hits are `scanner 1`** (*"that's what you would see inside of **the scanner**"* — the vendor's product UI) **and `penny 1`** (*"Sellers were not able to break **a penny** below this level"* — an idiom for the minimum increment; the MES equivalent is a tick). **Neither is a mechanic.**
+⚠️★★★ **JOIN-KEY DECLARED, NOT GLOSSED (`R-400`): `16` is the EXTRACTION's structured fields; the seal/census `11` is the COMPILED condition-row count. DIFFERENT OBJECTS. `§5.1` ordered the extraction read and the extraction is what I probed — I am not asserting a `16 = 11` correspondence anywhere.**
+
+### 🛑🛑🛑★★★★★ §3 — THE DISCRIMINATING CONTROL, BECAUSE A ZERO FROM A BLIND PROBE IS WORTH NOTHING
+🛑 **`green-check`: a stop condition that clears owes a fixture proving it COULD have fired. I ran the IDENTICAL probe on `gap_and_go` — the spec this desk has already disqualified — and it fires.**
+| | `st5e-YJRfKc__s0` | `YqY0OkL5LMI__s1` `gap_and_go` |
+|---|---|---|
+| condition rows | `16` | `12` |
+| **equities tokens IN ROWS** | ✅ **`0` mechanics** (`scanner 1`, `penny 1`) | 🛑 **`stock 2` · `gap 2` · `pre-market 1`** |
+| `instrument_classification` keys | `asset_class`, `instruments_mentioned`, `rationale` | **+ `notes`** |
+| disqualifying text | 🛑 **NONE — the field does not exist** | 🛑 **PRESENT** |
+✅★★★★★ **AND I VERIFIED YOUR `R-651 §4` QUOTE AT ITS SOURCE RATHER THAN RELAYING IT. It is real, it is verbatim, and I can now name the field it lives in — `.instrument_classification.notes`:**
+> *"Small-cap momentum stocks traded on the cash equities open (**shares, pre-market gappers**); **not futures**."*
+🛑🛑★★★★★ **THAT FIELD DOES NOT EXIST ON THE GOLDEN SLICE `[MEASURED HERE — `'notes' in d['instrument_classification']` → `False`]`.** ★★★★★ **`THE SAME READER, THE SAME SCHEMA, THE SAME PASS: WHERE THE MECHANIC WAS INSTRUMENT-BOUND IT SAID SO IN TERMS, AND ON THIS SLICE IT WROTE NOTHING.` The silence is from a reader demonstrably willing to speak — which is the only condition under which a silence is evidence about the world (`R-651 §8`).**
+✅ **CORROBORATING, FROM `gap_and_go`'s ROWS: *"if we focus on the **pre-market session**… it spikes up… consolidates into the open"* · *"even after I **sell my shares**"* · named single tickers `NUWE`, `Lucy`, `VCIG`. **Real single-name mechanics. The golden slice has no analogue of any of them.**
+
+### ✅★★★ §4 — WHAT THE MECHANIC ACTUALLY IS, AND THE BOUNDARY I WILL NOT CROSS
+✅ **THE TAUGHT MECHANIC, FROM THE ROWS: opening range = high/low between `09:30–09:35` / `09:30–09:45` / `09:30–10:00` ET · range value = `high − low` · half range = `range ÷ 2` · breakout above/below defines direction · half-range stop *"below this halfrange mark"* · half-range and full-range targets projected off the range.** ★★★ **PURE PRICE GEOMETRY. Scale-free arithmetic on one instrument's own range — no share count, no notional, no float, no borrow, no halt logic anywhere in it.**
+✅★★★★★ **AND THE EDUCATOR'S OWN AND ONLY WORKED EXAMPLE IS `S&P 500` AT `617.64 / 616.61` — a BROAD INDEX, not a single name. The extraction's own `rationale` for `asset_class: equities` rests on two limbs and the second one is an INDEX.** 🛑 **The first limb — *"thousands of stocks"*, Thinkorswim/TradingView — is the PRODUCT UNIVERSE the vendor scans, not the mechanic he teaches. `A SCANNER'S UNIVERSE IS NOT A STRATEGY'S REQUIREMENT.`**
+🛑🛑★★★★★ **NOW THE BOUNDARY, STATED BEFORE YOU HAVE TO ASK FOR IT:**
+1. ⚠️ **`[MEASURED]` the source says `futures` **`0` times**, `index` `0`, `ETF` `0`. IT IS SILENT ON FUTURES — it does not endorse them and it does not exclude them.** ★★★★★ **`I HAVE REFUTED EQUITIES-SPECIFICITY. I HAVE NOT MEASURED FUTURES-APPROPRIATENESS, AND THOSE ARE NOT THE SAME CLAIM.`**
+2. ⚠️ **`[NOT MEASURED — GENUINELY LOAD-BEARING]` the mechanic IS anchored to the `09:30 ET` **cash** open, which is real and non-negotiable. That `MES`/`MNQ` carry a tradeable `09:30 ET` opening range is `[DESK/DOMAIN JUDGMENT]` — it is NOT derivable from this transcript, and it is the one assumption the slice rests on that no artifact in this campaign has tested.**
+3. ⚠️ **`[NOT MEASURED]` tick granularity. The source works in cents (`52 cents`, `a penny`); `MES` is `0.25` index points. **The half-range rule is arithmetic and survives rescaling — but rounding a half-range stop to a tick is a real decision the source does not make.** Not a disqualifier; a `§5.3` design question I am flagging now rather than discovering inside the repair.**
+
+### ✅ §5 — VERDICT AND POSITION
+✅★★★★★ **`R-652 §5.1` CLEARS. STOP CONDITION `3` DOES NOT FIRE — reported explicitly, as you ordered, precisely because a stop that clears silently is indistinguishable from one never run.**
+✅ **YOUR `R-651 §4.5` DESK JUDGMENT (*"the taught mechanic is instrument-neutral"*) IS **CONFIRMED ON THE MECHANIC** by a check that outranks it — and I am telling you the half of it that is still judgment (`§4.2`) rather than letting the confirmation cover the whole sentence.**
+⚠️ **`[UNENUMERATED]`** whether any of the other `10` tier-A extractions carry an `instrument_classification.notes` disqualifier (I read `2` of `13` in full: the slice and `gap_and_go`) · the `09:30 ET` cash-open assumption at `§4.2` · tick-granularity at `§4.3`.
+**Position: `h1-wave4-sealed12-driver`, HEAD `45ce9a63` at read; the desk's `b16cbc46` (ADVISOR-STATE, `R-652` position) landed WHILE I was writing this and I am naming it rather than publishing a stale HEAD — **it touches no file I write and my splice anchor was re-asserted against the live file, not the one I read.** Shared tree untouched — this AR is the only write, committed with `-o` so no unrelated pre-existing modification is swept in. `R-652 §5` fan-in `1 / 3`. NOT handing off: `§5.2` (reachability before semantics) is next and I am proceeding to it under this ruling unless you say otherwise.**
+
+---
+
 ## AR-699 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-651 §6.1` — YOUR RATIFICATION IS **CONFIRMED ON WIREABILITY** BY MY AUG-3 INSTRUMENT: EXACTLY `2` OF `11` ARE WIREABLE AND `st5e-YJRfKc__s0` IS THE ONLY ONE NOT INSTRUMENT-DISQUALIFIED.** 🛑🛑🛑★★★★★ **BUT **STOP CONDITION `2` FIRES**: ITS `INVALIDATE` ROW DOES **NOT** BIND AT THE SEAL. IT IS AN APPROXIMATION, `ii_passed=False`, `row_verdict=BLOCK`. **THE "ALREADY HAS A WORKING EXIT" CLAIM IS WRONG — AND THE SOURCE CALLS THE VALUE IT RESTS ON A *"FIDELITY LIE"* IN TERMS.** I AM STOPPING AND REPORTING, AS PRE-REGISTERED.**
 
 **TASK:** `R-651 §6.1`. 🛑 **NOTHING CHANGED — read-only. `§6.2`, `§6.3` and `§6.4` are NOT started: the stop fired inside `§6.1` and I did not walk past it.** **Within the `≤ 45 min` ETA.**
