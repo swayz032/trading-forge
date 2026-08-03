@@ -4,6 +4,41 @@
 
 ---
 
+## AR-703 · 2026-08-03 · 🛑🛑🛑★★★★★ **CORRECTION TO MY OWN `AR-702 §7.3`, POSTED BEFORE YOU CAN SPEND A LANE ON IT — **I HAD IT BACKWARDS.** THE `9` `WAIT_STRUCTURE` ROWS ARE **NOT** A CHEAPER TARGET; THEY ARE **FAMILY-BLOCKED, EXACTLY LIKE `INVALIDATE`.** I READ *"the two columns AGREE"* AS *"no block"* WHEN AGREEMENT AT `True` **IS** THE BLOCK.** ✅★★★★★ **AND THE CORRECTED MEASUREMENT HANDS YOU THE ANSWER THE WHOLE LANE HAS BEEN LOOKING FOR: **OF THE GOLDEN SLICE'S `11` ROWS, EXACTLY `1` CAN EVER REACH A CONCRETE PASS — THE `WAIT_SESSION` ROW.** `9 × WAIT_STRUCTURE` AND `1 × INVALIDATE` ARE BLOCKED AT THE FAMILY WHATEVER THEY BIND TO. `[MEASURED HERE, ALL 14 FAMILIES, LIVE AT HEAD]`**
+
+**TASK:** correction to `AR-702` (`R-652 §5.2`). 🛑 **Read-only. Nothing in `AR-702 §1–§6` changes — `§5`'s disjunction proof is what generated this, and `§2`'s construction proof is untouched. Only my forward-looking SUGGESTION in `§7.3` was wrong.** ⚠️ **`§5.3` remains blocked on your stop-`2` ruling; this does not unblock it and I am not proceeding.**
+
+### 🛑★★★★★ §1 — THE ERROR, NAMED PRECISELY
+🛑 ~~**`AR-702 §7.3`: *"the `9` `WAIT_STRUCTURE` rows sit on a family whose two columns AGREE at `True`, so they carry NO family-level structural block… they may be repairable by binding where `INVALIDATE` is not."*~~ 🛑 **WITHDRAWN. FALSE.**
+★★★★★ **`I CONFLATED TWO DIFFERENT PROPERTIES OF THE SAME PAIR OF COLUMNS.` *"The columns agree"* means there is no **legacy fidelity LIE** — the artifact is not misreporting itself. It says NOTHING about whether the honest value **passes**. `WAIT_STRUCTURE` agrees at `True`, and `True` **IS** `approximation` — so the disjunction `honest() or binding.approximation` is `True` and `(ii)` **FAILS**, identically to `INVALIDATE`.** 🛑 **I had the live number in `AR-702 §5` as a POSITIVE CONTROL and drew the opposite conclusion from it two sections later. `A CONTROL YOU CITE AND THEN MIS-READ IS WORSE THAN ONE YOU NEVER RAN.`**
+
+### ✅★★★★★ §2 — THE FULL `14`-FAMILY TABLE, WHICH I SHOULD HAVE PUBLISHED THE FIRST TIME
+`[MEASURED HERE — `FAMILY_META` interrogated live at HEAD, all `14`, no sampling]` **A row can EVER pass `(ii)` only if `enforced_honest_approximation()` is `False` — otherwise the disjunction is `True` before the binding is even consulted.**
+| `honest()` = `False` → **CAN PASS `(ii)`** | `honest()` = `True` → 🛑 **BLOCKED AT THE FAMILY, WHATEVER IT BINDS TO** |
+|---|---|
+| ✅ `EXCEPTION` · `EXIT_HINT` · `RESET` · **`WAIT_SESSION`** | 🛑 `CONFIRM_DIRECTION` · `ENABLE_ENTRY` · `ENTER` · `FILTER` · **`INVALIDATE`** · `VERIFY_STRUCTURE` · `WAIT_BIAS` · `WAIT_CONFIRMATION` · `WAIT_RETEST` · **`WAIT_STRUCTURE`** |
+🛑🛑🛑★★★★★ **`4` OF `14` FAMILIES CAN EVER PRODUCE A CONCRETE PASS. `10` CANNOT.** ★★★ **This is a property of the CAMPAIGN'S GATE, not of any spec — and it was measurable at any point in the last two weeks with three lines.**
+
+### ✅★★★★★ §3 — APPLIED TO THE RATIFIED SLICE: THERE IS EXACTLY ONE VIABLE ROW, AND IT IS THE ONE `R-651 §4` FOUGHT TO SAVE
+`[MEASURED — slice row census from `AR-699 §2`, joined to the family table above]`
+| rows | family | can reach concrete `PASS`? |
+|---|---|---|
+| `9` | `WAIT_STRUCTURE` | 🛑 **NO — family-blocked** |
+| `1` | `INVALIDATE` | 🛑 **NO — family-blocked (`AR-702 §5`)** |
+| **`1`** | **`WAIT_SESSION`** | ✅ **YES** |
+🛑🛑🛑★★★★★ **SO `R-652 §5.3`'s FIRST ACCEPTANCE CRITERION — *"`ii_passed False → True` on that row"* — IS ACHIEVABLE ON THIS SLICE **ONLY VIA THE `WAIT_SESSION` ROW.** EVERY OTHER ROW IS UNREACHABLE BY ANY PERMITTED MEANS, AND `§5.3` AS CURRENTLY AIMED (THE EXIT) CANNOT SUCCEED EVEN IF YOU AUTHORIZE THE WIRING.**
+✅★★★★★ **AND THE ROUTE IS NOT MY INVENTION — `compile_fidelity._honest_approximation`'s OWN DOCSTRING NAMES IT `[MEASURED HERE, `:520-523`]`:**
+> *"a **`WAIT_SESSION` family reads honest=`False`**, so a CLOCK-DERIVED coarse-overlap proxy (`approximation=True` on the binding) used to be certified honest through the family read alone. Now that same coarse proxy FAILS (ii). **The name→canonical-window route stays eligible: its binding declares `approximation=False`, so both terms are `False`.**"*
+★★★★★ **THE GATE DOCUMENTS ITS OWN ONE OPEN DOOR, AND THE SLICE'S SESSION ROW IS THE BEST POSSIBLE CANDIDATE FOR IT: `R-651 §4` ALREADY PROVED IT IS A LITERAL CLOCK RANGE — *"from 9:30 a.m. Eastern to 9:35 a.m. Eastern"* — AND CORRECTED THE CENSUS'S `n_mistyped: 4` OVER-CLAIM THAT WOULD HAVE CONDEMNED IT. `THE ROW THE DESK RESCUED ON A POINT OF PRINCIPLE TURNS OUT TO BE THE ONLY ROW THAT CAN WIN.`**
+🛑 **AND I AM STATING THE TENSION RATHER THAN BURYING IT: `R-651` CLOSED THE SESSION LANE.** ⚠️ **That closure was measured on a DIFFERENT question — `TF_SESSION_ROLE_RESOLVER_ENABLED` moved `17` of `26` REFUSAL REASONS and `0` of `161` GATE VERDICTS. `A REFUSAL THAT BECAME MORE SPECIFIC IS NOT A CONDITION THAT BECAME BOUND` — your words, and they still hold. **This is not that flag and not that repair: it is the `name→canonical-window` BINDING route, which the gate's own docstring certifies as eligible.** 🛑 **I am NOT claiming the closure was wrong and I am NOT re-opening it. `THE LANE IS YOURS TO RE-OPEN OR TO REFUSE — I AM REPORTING THAT THE ARITHMETIC NOW POINTS AT IT.`**
+
+### ⚠️ §4 — WHAT I HAVE NOT MEASURED, SO THIS IS NOT OVERSOLD
+⚠️ **`[NOT MEASURED]`** whether the slice's `WAIT_SESSION` row can actually take the `name→canonical-window` route — it is currently `UNBOUND` (`R-651 §4`), so it fails `(i)`/`bindable` today, and **`(ii)`-eligibility is necessary, not sufficient.** ⚠️ **`[NOT MEASURED]`** whether a `09:30–09:35 ET` window exists as a canonical window, or whether the corpus's canonical set is `killzone`-shaped and would need a new entry — **which is a different and possibly larger question than it looks.**
+✅ **WHAT IS MEASURED AND SOLID: the `14`-family table, and that `9 + 1` of the slice's `11` rows are family-blocked.** ★★★ **That much is arithmetic on live values and it stands whatever the session answer turns out to be.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `c10b1c83` (`AR-702`) at read. No source file modified. `R-652 §5` fan-in `2 / 3`, `§5.3` still blocked on your stop-`2` ruling. NOT handing off.**
+
+---
+
 ## AR-702 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-652 §5.2` — **STOP CONDITION `2` FIRES.** THE `INVALIDATE` ROW **CANNOT** BE MOVED TO `PASS` BY ANY BINDING CHANGE, AND I CAN PROVE IT AT THE EXECUTABLE LINE: `(ii)` IS A **DISJUNCTION** ANCHORED AT THE **FAMILY**, SO `INVALIDATE` FAILS `(ii)` **WHATEVER PRIMITIVE IT BINDS TO**. `[MEASURED HERE, LIVE AT HEAD, BOTH ARMS]`** 🛑🛑🛑★★★★★ **THE ONLY HONEST ROUTE IS `production_executed False → True` — WHICH MEANS WIRING THE SPEC'S INVALIDATION INTO THE **FRAMEWORK-OWNED EXIT PATH**. THAT IS A SHIPPED EXECUTION PATH. **IT IS YOURS TO RULE, NOT MINE TO MAKE.** I AM STOPPING AT `§5.2(c)` AND NOT BUILDING `(d)`.** ✅★★★★★ **AND THE GOOD NEWS IS LARGER THAN THE STOP: **AN EXACT DETECTOR FOR THE TAUGHT MECHANIC ALREADY EXISTS AND IS COMMITTED** — `indicators/core.py:467 compute_opening_range_breakout`, `09:30 ET`-anchored, parameterised on `range_minutes`, emitting `orh`/`orl`/`or_range`. **SEVENTH `dormant-activation`.**
 
 **TASK:** `R-652 §5.2` as re-affirmed by `R-653 §5`. 🛑 **READ-ONLY — no source file changed. `§5.3` NOT started.** **Within the `≤ 45 min` ETA.** ⚠️ **ONE SIDE EFFECT DECLARED: re-running the committed sweep wrote two UNTRACKED files (`family-meta-reachability-sweep-latest.json`, `…-sweep.log`) into `docs/replay-results/h1-battery/`. `[MEASURED — `git status`]` NO TRACKED ARTIFACT MODIFIED. Not committed. Say if you want them removed.**
