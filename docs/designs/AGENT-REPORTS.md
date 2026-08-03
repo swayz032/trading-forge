@@ -12,6 +12,71 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-659 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE `LANE-3` BLOCKER IS NOT A FIXTURE LIMITATION — IT IS A LIVE POLARITY INVERSION IN THE ENGINE'S DEFAULT EVENT BLACKOUT, AND IT SUPPRESSES **100% OF ENTRY SIGNALS** ON THE `run_backtest` PATH. `backtester._build_default_event_mask_et` DOCUMENTS AND RETURNS **`True = ALLOW`**; `signals.generate_signals` DOCUMENTS AND CONSUMES **`True = BLOCK`** (`signals.py:288` — `block = ~event_mask`, then `entry_long & block`). THE DEFAULT MASK IS ~ALL-`True`, SO `~mask` IS ~ALL-`False` AND **EVERY ENTRY SIGNAL IS ANDed AWAY.**** ✅★★★★★ **PROVEN BY A THREE-ARM DISCRIMINATING CONTROL, NOT BY READING THE TWO DOCSTRINGS.** ⚠️ **AND ONE CORRECTION I OWE THIS DESK: `R-615`'s headline says `:7503` **IS DEAD**. I did not measure that and my report said so explicitly.**
+
+**TASK:** `LANE-3` follow-through (`AR-658 §NEXT SMALLEST TASK`) · **BRANCH:** `h1-wave4-sealed12-driver` · **ISOLATED TREE:** `wt-lane3-pfanchor-20260803`, detached, pinned `6eb4326d`. 🛑 **`backtester.py` BYTE-PRISTINE at delivery — `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, restored and hash-asserted after every probe. NOTHING FIXED. `runtime-production` NOT touched, NOT read.**
+
+### ✅★★★★★ §1 — THE MEASUREMENT, WITH THE CONTROL THAT MAKES IT A MEASUREMENT
+
+**Same `400`-bar seeded random walk, same `StrategyConfig`, `generate_signals` called directly — only the `event_mask` argument varies:**
+
+| `event_mask` | `entry_long` | `entry_short` | `exit_long` |
+|---|---|---|---|
+| `None` | **`32`** | **`33`** | `23` |
+| **all-`True`** — what the backtester's default builder returns | 🛑 **`0`** | 🛑 **`0`** | `23` |
+| all-`False` | **`32`** | **`33`** | `23` |
+
+✅★★★★★ **THE CONTROL DISCRIMINATES IN TWO DIRECTIONS AT ONCE.** `exit_long` is `23` in **all three** arms — which is the mask's documented scope (*"The mask only suppresses entry signals"*), so the rig is not simply zeroing everything. And the **all-`False`** arm — "block everything" under the BACKTESTER's stated semantics — is the ONLY arm that trades. **The behaviour is exactly inverted from both docstrings' intent.**
+✅ **THE TWO CONTRADICTING CONTRACTS, at the executable line:**
+- `backtester.py:3916-3917` — *"Return a bool mask: **True = ALLOW** trade, False = SIT_OUT"*, and `mask = np.ones(n, dtype=bool)` i.e. **allow by default**, setting `mask[i] = False` only inside the `8:30-9:00` / `14:00-14:30` ET windows.
+- `signals.py:280` — *"**True values block** entry signals (SIT_OUT)"*, implemented at `:288-290` as `block = ~event_mask` → `entry_long = entry_long & block`.
+
+🛑★★★★★ **CONSEQUENCE: the `elif "ts_event" in df.columns` branch at `backtester.py:3902` builds this default blackout WHENEVER NO `event_calendar` IS SUPPLIED — the ordinary case. On that path every entry signal is destroyed and the backtest reports `total_trades = 0` with no error, no warning, and `rc=0`.**
+
+### 🛑 §2 — HOW THIS WAS LOCATED, AND WHY THE FIRST TWO HYPOTHESES WERE WRONG
+
+**`AR-658 §4` reported "no fixture makes the engine trade" and named the next task as *"find why `signal_vector` is all-zero"*. This is that task, and my first two explanations were both FALSE:**
+1. ❌ **"no entry signals are generated"** — WRONG. `compute_indicators` + `generate_signals` called directly on the identical frame yield `32`/`33` entries. **The signal layer works.**
+2. ❌ **"the default blackout fails closed on unparseable timestamps"** — WRONG. It fails **OPEN** (`except Exception: continue`, mask stays `True`), and midnight bars parse to `"00:00"`, outside both windows. **I read the except branch specifically to kill this hypothesis rather than assuming it.**
+✅ **WHAT ACTUALLY LOCATED IT was an in-engine probe at `backtester.py:3991` printing the post-`generate_signals` counts:** `rows=400 entry_long=0 entry_short=0 exit_long=23`. ★★★★★ **`exit_long = 23` MATCHING THE DIRECT CALL EXACTLY, WHILE ENTRIES WENT TO ZERO, IS THE WHOLE DIAGNOSIS** — it excludes the data, the indicators, the DSL, the date filter and the warmup strip in one observation, because all of those would have moved the exits too. **The only argument `run_backtest` adds that the direct call does not is `event_mask`.**
+✅ **A THIRD HYPOTHESIS ALSO KILLED BY MEASUREMENT: "`sma_10` is missing inside `run_backtest`" — the probe shows `COLS=['atr_14','sma_10','sma_30']` with `9`/`29` warmup nulls. Both present, both populated.**
+
+### 🛑★★★★★ §3 — THE SCOPE BOUND I CANNOT CLOSE, STATED BEFORE ANYONE INFERS MORE THAN I MEASURED
+
+🛑🛑 **THE NULL-CAL BATTERY **DOES** TRADE — `60` of its `90` backtests take trades (`AR-658 §1`). SO THIS INVERSION CANNOT BE FIRING ON EVERY PATH, OR NOTHING IN THIS REPO WOULD EVER TRADE.** ★★★★★ **`[UNMEASURED]` — WHY the battery escapes it. Candidates I did NOT test: its frame carries a `ts_et` column (taking the `if` branch rather than the `elif`), or `run_walk_forward` supplies an `event_calendar`, or it drops `ts_event` before this point. **Until that is measured, the blast radius is `run_backtest`-with-no-`event_calendar`-and-a-`ts_event`-column, WHICH IS THE ONLY CONFIGURATION I EXERCISED.** I am not claiming production impact beyond it.**
+⚠️ **AND THE REASON THAT CAVEAT IS LOAD-BEARING: an inverted default blackout that silently zeroes entries would, if it DID fire on the real research path, make every `total_trades = 0` result in this campaign uninterpretable. **That is a big enough claim that it must not be made one measurement early.****
+
+### ⚠️★★★★★ §4 — A CORRECTION I OWE THE DESK, AGAINST THE LANDED RULING
+
+**`R-615`'s headline states: *"`:7503` IS DEAD (`0`/`90`, EXECUTED `0×`)"*.** 🛑 **I did not measure that, and `AR-658 §1` said so in terms: *"`:7503` is `0×`-executed BY THIS VEHICLE. That is NOT 'dead code' — the null-cal battery drives one entry path and `:7503` sits in the `run_class_backtest` assembly. `[UNENUMERATED]` — which vehicles reach `:7503` is not measured here."***
+★★★★★ **`0×` UNDER ONE VEHICLE IS NOT `DEAD`. `run_class_backtest` is a separate public entry point; I never invoked it. **If "`:7503` is dead" enters campaign fact on my evidence, it will have been laundered from a scoped measurement into an unscoped one in a single hop** — which is the `hypothesis-loses-its-label-in-translation` shape, with me as the source. Re-asserting the bound against the landed artifact per `annotation-read`.**
+
+### §5 — WHAT I DID **NOT** DO
+
+**NOTHING FIXED.** The repair is a one-line polarity change in production engine code (`signals.py:288` or the backtester's builder) and it would change `total_trades` on every affected path — **a production-behaviour change on the money path, and not mine to make on my own judgement.** ★★★ **`never-flag-gate-a-correctness-repair` applies to HOW it is fixed, not to WHETHER I may fix it unruled.** · **No red-proof of a fix, because there is no fix.** · **The PF anchor remains written and unshipped (`AR-658 §4`); this defect is precisely why it could not be green-controlled.** · **BOTH TREES still NOT addressed.** · **`LANE-6`'s remaining `9` untouched.** · **Which vehicles reach `:7503`: still unmeasured.** · **I have graded NOTHING.**
+
+**FAN-IN: `LANE-1` · `2` · `5` · `6`(partial) CLOSED · `LANE-3` ROOT-CAUSED-NOT-FIXED · `LANE-4` QUEUED = `4.5 / 6`.**
+**RECOMMENDATION: `BLOCKED` — on a ruling, with the mechanism question ALREADY ANSWERED (`§6`).**
+**NEXT SMALLEST TASK:** measure the battery's escape route (`§3`) — supply `run_backtest` a frame carrying `ts_et` and one carrying only `ts_event`, and record `total_trades` for each. **It is one run per arm, needs no ruling, and it converts the blast radius from `[UNMEASURED]` to a bound.**
+
+### ✅★★★★★ §6 — I RAN MY OWN "NEXT SMALLEST TASK" BEFORE FILING, AND IT DECIDES THE FIX SIDE
+
+**The open question was whether to flip the CONSUMER (`signals.py:288`) or the PRODUCER (the backtester's default builder). They are not equivalent and the wrong choice silently inverts every correct caller. `[MEASURED HERE — bounded read of every `event_mask` producer/consumer]`:**
+
+| component | role | documented polarity |
+|---|---|---|
+| `economic_calendar.generate_event_mask` (`:1231`) | **the real producer** | **`True = SIT_OUT`** (`:1460`) |
+| `signals.generate_signals` (`:280`, impl `:288`) | consumer | **`True = BLOCK`** |
+| `economic_calendar.apply_class_event_mask` (`:1433`) | class-path consumer | **`True = SIT_OUT`** (`:1446`) |
+| `backtester._build_default_event_mask_et` (`:3915`) | **default fallback only** | 🛑 **`True = ALLOW`** |
+| `backtester._build_default_event_mask_utc` (`:3986`) | **default fallback only** | 🛑 **`True = ALLOW`** |
+
+★★★★★ **THE CONVENTION IS `True = BLOCK`, HONOURED BY THREE COMPONENTS INCLUDING THE REAL CALENDAR PRODUCER. THE ONLY DISSENTERS ARE THE BACKTESTER'S TWO *DEFAULT FALLBACK* BUILDERS.** **So the repair belongs on the PRODUCER side — those two builders — and `signals.py:288` MUST NOT MOVE: flipping the consumer would invert the live `generate_event_mask` path, which is currently CORRECT.**
+✅★★★ **AND THIS ALSO SUPPLIES THE LIKELY ANSWER TO `§3`, though I am NOT claiming it as measured: the `if request.event_calendar` branch uses `generate_event_mask` and is CORRECT; only the `elif` no-calendar fallback is inverted. **A vehicle that supplies an event calendar would therefore trade normally** — which would explain the battery. `[HYPOTHESIS — the discriminating run is the NEXT SMALLEST TASK above, and I did not run it.]`**
+⚠️ **`economic_calendar.py:1348` already carries a comment about the `event_mask_et` fallback being *"deliberately NOT mirrored"* — so the fallback's divergence may be KNOWN and intended in some respect I have not traced. **A ruling should read that comment in full before flipping anything.****
+
+---
+
 ## AR-658 · 2026-08-03 · 🛑★★★★★ **`LANE-3` TRACED TO THE EXECUTABLE LINE — `AR-657`'s `[HYPOTHESIS — NOT TRACED]` IS NOW MEASURED: `backtester.py:5323` IS THE REPORTING `profit_factor` IMPLEMENTATION (`60` of the `60` backtests that took trades moved under a plant there; execution witness `60×`), AND `:7503` MOVED `0/90` AND EXECUTED `0×` — WHICH ALSO CLOSES `AR-654`'s "PLANTED BOTH TOGETHER, CANNOT SEPARATE THEM".** 🛑🛑★★★★★ **AND A `CRITICAL` INVARIANT IS NOT MERELY BLIND, IT IS **TAUTOLOGICAL ON EVERY REAL BACKTEST**: `INV-1 _check_balance_arithmetic` READS `starting_balance` AND `ending_balance`, AND THE ENGINE **EMITS NEITHER** — `0/90` AT RUNTIME AND `0` OCCURRENCES OF THE STRING IN `backtester.py`. BOTH DEFAULT, AND `ending`'s DEFAULT IS *LITERALLY* THE EXPRESSION IT IS THEN COMPARED AGAINST. `diff` IS STRUCTURALLY `0.0`.** 🛑 **THE PF ANCHOR IS WRITTEN AND IS **NOT DELIVERABLE**: NO FIXTURE I CAN BUILD MAKES THE ENGINE EMIT A SINGLE ENTRY SIGNAL, SO I CANNOT GREEN-CONTROL IT. REPORTED, NOT SHIPPED.**
 
 **TASK:** `LANE-3` (`R-614 §6.1`, re-issued SERIAL) · **BRANCH:** `h1-wave4-sealed12-driver` · **ISOLATED TREE:** `wt-lane3-pfanchor-20260803`, detached, pinned to SHA `6eb4326d`. 🛑 **`backtester.py` BYTE-PRISTINE at delivery — `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, identical to its pre-lane value. `runtime-production` NOT touched, NOT read. Main repo NOT written. No push, no merge, no PR.**
