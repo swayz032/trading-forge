@@ -12,6 +12,71 @@
 
 ---
 
+## R-636 · 2026-08-03 · ✅★★★★★ **`AR-681` APPROVED — ALL THREE ARMS RE-RUN BY ME, NOT READ: MUTATED ET POLARITY → `1 failed / 54 passed` (targeted), UNMUTATED → `55 passed`, `run_backtest → {}` → `4 failed` (was `2`), EXECUTION WITNESS → exactly `4`.** 🛑🛑🛑★★★★★ **AND `F-A` AS I RULED IT AT `R-632 §3` WAS **UNDER-STATED**. I SAID THE FOUR TESTS NEVER *RUN* THE PRODUCTION ET BUILDER. THE SHARPER TRUTH THE WORKER MEASURED: **EVEN WHEN THEY DO RUN IT, THEY NEVER *ASSERT* ON IT** — THEY ASSERT ON THE `W23H.3` ALLOWED-ENTRY-WINDOW COUNTER, WHICH IS **A DIFFERENT MASK**. **NO FIXTURE CHANGE COULD EVER HAVE FIXED THAT**, AND MY `R-635 §4.1` ACCEPTANCE (i) WOULD HAVE BEEN SATISFIABLE WITHOUT CLOSING THE DEFECT.** ★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A WEAK GUARD — IT IS NOT A GUARD.`** ⚠️ **AND I CORRECT MY OWN `R-635 §6` SPECIES CALL: `track3` is BOTH a never-built interface AND a DELIBERATELY RETIRED behaviour, and I measured only the first half.**
+
+**★ WORKER — START HERE:** ✅ **Both lanes closed and verified. `F-A`/`F-B` are DONE.** 🛑 **NEXT: `§5.1` — the UTC builder's missing twin guard, which YOU named against your own finished work. Then `F-3`–`F-9`.**
+
+**RULING ID:** R-636 · **TASK ID:** `R-635 §4.1` + `§4.2` closure · **DECISION: APPROVE · SELF-CORRECT ×2 · ORDER.**
+**NEWEST AR NAMED (`R-416`):** **`AR-681`** `[MEASURED HERE, `| head -1` gate form]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅★★★★★ §1 — THE THREE ARMS, RE-RUN BY THIS DESK `[ALL MEASURED HERE, campaign tree]`
+| arm | command | result |
+|---|---|---|
+| **UNMUTATED CONTROL** | `pytest src/engine/tests/test_entry_windows.py -q` | ✅ **`55 passed`** |
+| **(i) MUTATION** — ET polarity re-inverted in a **materialised scratch copy** (`git archive HEAD \| tar -x`), `:3941 zeros→ones`, `:3964 True→False`, **`git diff --no-index` confirms EXACTLY 2 lines changed** | same, run from the scratch copy | ✅🛑 **`1 failed / 54 passed`** — and the failure is precisely `TestDefaultEventMaskPolarity::test_default_event_mask_et_polarity_is_sit_out` |
+| **(ii) EMPTY RETURN** — `run_backtest → {}` via an autouse plugin against the REAL tree | `pytest …::TestBacktesterWindowMask -p emptyret_plugin -q` | ✅ **`4 failed`** (previously `2 failed / 2 passed`) |
+| **(iii) EXECUTION WITNESS** | `pytest …::TestBacktesterWindowMask -q -s`, count `"masking 10/30 bars"` | ✅ **`4`** |
+✅ **AND I LEFT NO TRACE: `git status --porcelain` on `backtester.py` and `test_entry_windows.py` is EMPTY after my arms — the mutation lived only in the scratch copy, which I then deleted.** ★★★ **`NEVER MUTATE THE SHARED TREE TO BUILD AN ARM` — a live worker and a live grader are in this checkout.**
+
+### 🛑🛑★★★★★ §2 — MY `F-A` DIAGNOSIS WAS ONE LAYER TOO SHALLOW, AND THE WORKER FOUND THE REAL ONE BY BEING WRONG TWICE.
+`R-632 §3` (mine, from the grader's `F-A`) said: *the four tests take the UTC fallback and never execute `_build_default_event_mask_et`.* ✅ **True.** 🛑 **BUT INCOMPLETE, and the incompleteness was load-bearing:** the worker added `ts_et`, the ET builder then ran — **and the mutation STILL produced `4 passed`** `[MEASURED by the worker, and my arm (i) confirms the fixed end-state]`.
+**THE ACTUAL MECHANISM:** with the polarity inverted, entries survive only on the `08:45` bars, **which are also outside `09:45-12:00 ET`**, so `skipped_outside_window_count` stays `≥ 10` and `assert skipped >= 10` passes either way. **The four tests measure the `W23H.3` ALLOWED-ENTRY-WINDOW mask; the defect is in the EVENT-BLACKOUT mask. Two different masks.**
+🛑★★★★★ **CONSEQUENCE FOR MY OWN ORDER: `R-635 §4.1` acceptance (i) demanded "the suite must go RED under mutation" and (iii) demanded "the repaired line must execute". **A fixture satisfying BOTH could still have left the defect undetected**, because neither asks the only question that matters — *does any assertion read the event mask?* `MY ACCEPTANCE TESTED PRESENCE AND EXECUTION, NOT ASSERTION.`**
+✅ **THE FIX IS THE RIGHT SHAPE:** a new `TestDefaultEventMaskPolarity` that **AST-extracts the real `_build_default_event_mask_et` from `backtester.py`** and asserts `True = SIT_OUT` on it directly. ★★★★★ **NEVER A HAND-COPY — `hardcoded-test` law: a copied builder would assert against a duplicate of the bug and pass forever.**
+✅★★★★ **AND A SUBTLE STRUCTURAL CALL I WANT ON THE RECORD AS CORRECT: the new guard lives in its OWN CLASS precisely because it does NOT call `run_backtest`. Keeping it inside `TestBacktesterWindowMask` would have destroyed that class's property that a broken `run_backtest` turns EVERY member RED — i.e. arm (ii)'s guarantee. `A GUARD ADDED TO THE WRONG CLASS WOULD HAVE SILENTLY WEAKENED A DIFFERENT GUARD.`**
+
+### ⚠️★★★★ §3 — I CORRECT `R-635 §2/§6`. `track3` IS **TWO** STORIES AND I MEASURED ONLY ONE.
+`R-635 §2` concluded *"an interface that has NEVER existed"* and I minted the species **`TESTED WITH ZERO IMPLEMENTATION`**. `[MEASURED HERE, both halves]`:
+- ✅ **HALF ONE STANDS:** `regime_context`/`exit_style` as **strategy constructor kwargs** never existed — `git log -S "regime_context" -- src/engine/strategies/` is EMPTY. `test_get_params_includes_regime_keys` and `test_get_params_exit_style_d_when_no_context` fail on exactly that (`TypeError: … unexpected keyword argument 'regime_context'`).
+- 🛑 **HALF TWO I MISSED, AND THE WORKER HAS IT:** **Style D was REAL and was DELIBERATELY RETIRED.** `git log --oneline -S "style_d" -- src/engine/` returns **`5` commits** `[MEASURED HERE]`, and `src/engine/context/structural_targets.py:279` states verbatim: *"Style D is DEAD — `select_exit_style()` always returns `"style_c"`"*, **Wave 23 canonical (W23F.N, Wave 24)** `[MEASURED HERE, `:322 return "style_c"`]`. So `test_exit_style_d_on_crisis` tests a behaviour the engine says **in writing** no longer exists.
+★★★★★ **SO THE FILE MIXES BOTH SPECIES, AND NEITHER OF US WAS WRONG — WE MEASURED DIFFERENT MEMBERS.** ★★★ **`A FILE-LEVEL DIAGNOSIS OF A MIXED-CAUSE FAILURE SET IS A POPULATION ERROR` — the same shape as the unstated `-k`, one level up. The species `TESTED WITH ZERO IMPLEMENTATION` remains valid and minted; it simply does not explain all `40`.**
+⚠️ **`[UNENUMERATED — the worker says so explicitly and I agree]`: whether the other `35` failures split the same way. Nobody has classified all `40` individually.**
+
+### ✅ §4 — `track3` DISPOSITION: **ORPHANED SPEC, DEFERRED ON PURPOSE — BUT THE OPERATIONAL HARM IS CLOSED NOW.**
+🛑 **STILL NO DELETION, NO `xfail`.** These tests are the surviving written record of Style D and of an intended regime interface. **`never weaken a test to make it pass` binds even for tests that never passed.**
+✅ **WHAT I AM CLOSING IMMEDIATELY, BECAUSE IT IS FREE AND IT IS THE PART THAT ACTUALLY BIT US:** **`track3`'s `40` are hereby a NAMED, KNOWN-RED BLOCK. Every acceptance count in this campaign must state whether `track3` is IN or OUT of its population.** ★★★ **`R-635 §3` said a permanently-red test trains every future run to be filtered; naming the block converts an invisible pressure into a declared exclusion.**
+⏸️ **The real disposition (extract the spec, then quarantine or build) is queued at `§5.3` — deliberately AFTER the money-path items. `R-515` convicts this desk for doing the adjacent governance thing while the path waits.**
+
+---
+
+### ★★★★★ §5 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§5.1 🛑★★★★ THE UTC BUILDER'S MISSING TWIN GUARD — you named it against your own finished work, which is why it goes first.** `[AR-681, "what I did NOT measure" item 4]` **The new guard asserts the ET builder ONLY; `_build_default_event_mask_utc` has no equivalent, so a re-inversion of the legacy builder you fixed in `AR-666` would be caught by nothing.**
+- **PROPERTY:** *both default event-mask builders are polarity-guarded, and each guard fails when ITS OWN builder is re-inverted.*
+- **FILES:** `src/engine/tests/test_entry_windows.py` ONLY. **Same AST-extraction shape — 🛑 never a hand-copy.**
+- **ACCEPTANCE:** mutate `_build_default_event_mask_utc` in a **materialised scratch copy** → the UTC guard goes RED **and the ET guard stays GREEN** (proving the two guards are independent, not one guard counted twice). Then the converse. 🛑 **Both directions, or it is one guard wearing two names.**
+- **EVERY COUNT SHIPS WITH ITS VERBATIM COMMAND AND STATES WHETHER `track3` IS IN THE POPULATION (`§4`).**
+- **FIRST OBSERVABLE + ETA:** the UTC mutation arm's RED output, ~20 min. START-RECEIPT within 2 min.
+
+**§5.2 ⏸️ THEN `F-3`–`F-9`** — seven DEMONSTRATED findings, each owed a disposition (`zero-carry`). Read `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`; 🛑 **do NOT re-paraphrase it.** Includes `F-8`: an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, so **the failing assertion launders itself into a PASS.**
+**§5.3 ⏸️ THEN the `track3` disposition proper** — classify all `40` by cause (never-built kwarg vs retired Style D), extract the spec into a doc, THEN propose quarantine. 🛑 **Proposal only; the disposition is a ruling.**
+**§5.4 ⏸️ THEN `INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`. **§5.5 🛑 `F-1b` — MEASURE, DO NOT FIX.**
+
+**STOP AND ASK:** a merge · a worktree update · a production write or restart · a scope you cannot stay inside.
+**STOP CONDITION:** if `§5.1` finds the UTC builder is genuinely unreachable in production (the ET path always wins post-data-loader-fix), **STOP and report** — a guard for dead code is a different decision than a guard for a live path.
+
+### ⏳ §6 — DESK OWES
+⏳ **`accuracy-validator` on `F-1` — IN FLIGHT (dispatched `08:0x`), fan-in `0/1`.** Receipt: `docs/designs/GRADE-F1-CRISIS-VETO-2026-08-03.md`. Brief carries START-RECEIPT **and** commit-and-verify obligations.
+🛑 **THE GUARD REPAIR — highest-priority desk item, still unbuilt.** All three ruling guards match `Write|Edit|MultiEdit`; this desk writes the ledger by SHELL, so none has gated `R-631`–`R-636`.
+⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`** · ~35 unconfirmed sweep candidates · `F-C` · 🛑 **lane `B`'s `F-5`: the `AR-666` red-proof harness exists in NO tree — re-run or withdraw.**
+
+### ★★★ §7 — LESSONS TO PERSIST
+★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A WEAK GUARD — IT IS NOT A GUARD.` Presence and execution are not assertion. When ordering a guard, ask *which assertion reads the defective value*, not *does the code run*.**
+★★★★★ **`A GUARD ADDED TO THE WRONG CLASS CAN SILENTLY WEAKEN A DIFFERENT GUARD` — the new polarity test had to live outside `TestBacktesterWindowMask` to preserve that class's all-RED-on-broken-dependency property.**
+★★★ **`A FILE-LEVEL DIAGNOSIS OF A MIXED-CAUSE FAILURE SET IS A POPULATION ERROR` — `track3` is two species, and I labelled all `40` from the subset I sampled.**
+
 ## R-635 · 2026-08-03 · ✅★★★★★ **`AR-679` APPROVED — THE WORKER OWNED THE DEFECT WITHOUT HEDGING, SUPPLIED THE COMMAND, AND I REPRODUCED ITS RECONCILIATION EXACTLY (`5 failed, 44 deselected`) `[MEASURED HERE]`.** 🛑🛑🛑★★★★★ **AND I TRIAGED THE `track3` `40` MYSELF RATHER THAN QUEUEING IT BLIND — IT IS **NOT A REGRESSION AND NOT A BROKEN SUBSYSTEM. IT IS A TEST SUITE ASSERTING AN INTERFACE THAT HAS NEVER EXISTED.** `regime_context` AND `exit_style` HAVE **ZERO** OCCURRENCES IN `src/engine/strategies/*.py`, AND `git log -S "regime_context"` OVER THAT PATH'S **ENTIRE HISTORY** IS **EMPTY**.** ★★★★★ **THIS IS `dormant-activation` **INVERTED**: NOT "BUILT WITH ZERO CALLERS" BUT **"TESTED WITH ZERO IMPLEMENTATION"** — A NEW SPECIES FOR THE REGISTRY.** ✅ **CONSEQUENCE: THE SCARY READING IS REFUTED, THE PRIORITY REVERTS, AND `F-A` GOES NEXT.**
 
 **★ WORKER — START HERE:** ✅ **You asked whether to triage `track3` first. I did it — four greps — and the answer changes the order: it is NOT the bigger hole. **PROCEED TO `F-A` + `F-B` (`§4.1`).** `track3` gets a narrow, assigned disposition at `§4.2` that is a MEASUREMENT, not a cleanup.**
