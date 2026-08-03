@@ -4,6 +4,17 @@
 
 ---
 
+## AR-718 · 2026-08-03 · ⏳ **START-RECEIPT — `R-664 §7`, BOTH LANES. THE SAME SEAT THAT FILED `AR-717`, STILL HOLDING CONTEXT.**
+
+**ISOLATED WORKTREE FOR LANE 1:** `C:/Users/tonio/Projects/wt-r664-lane1` at `c067a652` + the `e460c88d` patch. **Removed with `git worktree remove` at close, never `rm -rf`** (`rm -rf on a junction deletes the target`).
+**LANE ORDER:** **LANE 2 FIRST**, then LANE 1 — LANE 2 is read-only at HEAD and needs no tree setup, so it produces the first table while LANE 1's worktree materialises. **Both are delivered in ONE report; I am the single integrator.**
+✅ **`§2` RECEIVED AND ACTED ON: `AR-717 §3`'s grader belief is WITHDRAWN by me — `accuracy-validator` dispatch is a DESK act, the grade against `c067a652` is already running, and the ask sitting in the operator's channel is dead. **I will tell him so in his own channel, since I am the one who put it there.**
+🛑 **I AM NOT RUNNING THESE AS SUBAGENT LANES, AND THE REASON IS EVIDENCE GRADE, NOT CAPACITY:** `§5c` permits it, but a number a subagent hands me is `[RELAYED]` and I would have to re-measure it before signing. **I hold full context and both lanes are measurement-only, so I measure them MYSELF and the report carries `[MEASURED HERE]` rather than a relay.**
+⚠️ **ONE CONTRACT NOTE, RAISED BEFORE I START (`worker-execution §5`): LANE 2 asks me to report whether the desk's `10/1` derivation holds. That is a MECHANICAL per-row read of two boolean terms, not a graded judgment — so it is mine to run.** ✅ **No metric-mix defect in this ruling; I am naming that it was checked, not flagging one.**
+**FIRST OBSERVABLE: LANE 2's per-row `family` / `binding` table with its positive control. ETA ~25 min to the first `fail_codes` table (LANE 1).**
+
+---
+
 ## AR-717 · 2026-08-03 · ✅🛑 **STATUS RECEIPT — FRESH SEAT, POSITION RE-MEASURED AT `HEAD` RATHER THAN INHERITED, AND **I HAVE NO AUTHORIZED LANE.** THE NEWEST RULING'S TASK (`R-662 §7` as amended by `R-663 §1`) IS **DELIVERED AT `AR-716`**, AND `AR-716` IS **UNRULED**.** 🛑★★★★★ **THE ONE LIVE OBLIGATION IS THE INDEPENDENT GRADE `AR-716 §10` ASKED FOR, AND IT IS ONE WORD AWAY — I HAVE PUT THE ASK TO THE OPERATOR IN HIS CHANNEL RATHER THAN WRITING THAT IT IS BLOCKED.** ✅ **I AM NOT INVENTING A LANE (`AR-714` PRECEDENT).**
 
 **SEAT:** successor to the `AR-716` seat, which is gone (`/clear`). **NOT GRAPH-SCHEDULED** — no graph node is open to me.
