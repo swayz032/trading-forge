@@ -12,6 +12,52 @@
 
 ---
 
+## R-642 · 2026-08-03 · ✅★★★★★ **THE `SWEEP-F8` PRODUCT QUESTION IS SETTLED — I TOOK IT AT `R-639 §6.4` AND IT IS **A DEFECT, NOT AN OUTDATED EXPECTATION. THE TEST IS RIGHT.**** 🛑🛑★★★★★ **IT IS AN OFF-BY-ONE ON AN INCLUSIVE BOUNDARY, AND THE PROOF IS THAT **TWO INDEPENDENTLY-AUTHORED DEDUCTIONS WERE BOTH SIZED ON THE ASSUMPTION THE BOUNDARY WAS EXCLUSIVE**: `exportability.py:45` sets the NONE_MAPPED deduction to **`-50`** *"ensuring exportable=False"*, and `:54` sets ICT deductions to `-25` each *"so a strategy with 2 ICT indicators scores ≤50 → exportable=False"*. **`100 - 50 = 50`, and `:476` is `_exportable = (score >= 50)`, so `50 >= 50` is `True`. BOTH DEDUCTIONS PRODUCE THE EXACT OPPOSITE OF WHAT THEY WERE SIZED TO GUARANTEE.**** ✅ **`alert_only` STAYS EXPORTABLE — that reading is REFUTED by `:159-160`, which calls `alert_only` at `score=60` *"correct by contract, exportable=True"*.**
+
+**RULING ID:** R-642 · **TASK ID:** `R-639 §6.4` desk-owned product question · **DECISION: DEFECT CONFIRMED · TEST UPHELD · QUEUED BEHIND THE MONEY PATH.**
+**NEWEST AR NAMED (`R-416`):** **`AR-686`** `[MEASURED HERE, `| head -1`]` — the worker's stop confirmation. **No AR bears on this: the question was reserved to the desk and answered by the desk.**
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### 🛑🛑★★★★★ §1 — THE FINDING, AT THE EXECUTABLE LINES `[ALL MEASURED HERE, campaign tree]`
+```
+:463-472   band: >=90 clean · >=70 reducible · >=50 alert_only · else do_not_export
+:475       # comment: "exportable=False when score < 50 …"
+:476       _exportable = (score >= 50) and _faithful
+:45        NONE_MAPPED deduction = -50, "ensuring exportable=False for any strategy
+           whose primary indicator is None-mapped"
+:54        ICT deduction = -25 each, "so a strategy with 2 ICT indicators scores
+           ≤50 → exportable=False"
+```
+**OBSERVED (`AR-684`, and it is what raised this):** a `volume_profile` strategy compiles to `score=50.0`, `band='alert_only'`, `indicator_scores={'volume_profile': 0.0}`, **`exportable=True`** — while `test_volume_profile_indicator_returns_placeholder_not_crash` asserts `exportable=False`.
+★★★★★ **THE DISCRIMINATOR BETWEEN "DEFECT" AND "STALE TEST" IS THAT THE INTENT IS WRITTEN DOWN TWICE, BY DIFFERENT HANDS, AT TWO UNRELATED SITES — and both sized their arithmetic to land on `50` expecting that to mean non-exportable. `A COMMENT IS A CLAIM, BUT TWO INDEPENDENT COMMENTS AGREEING ON AN ARITHMETIC ASSUMPTION ARE EVIDENCE OF INTENT.` The code and its own adjacent comment at `:475` agree with each other and BOTH disagree with the two upstream design comments.**
+✅ **THE THIRD READING IS REFUTED, NOT MERELY REJECTED:** *"maybe `alert_only` is simply meant to be non-exportable"* — `:159-160` states `alert_only` at `score=60` is *"correct by contract, score=60, exportable=True"*. **So the band is not the problem; the `50` boundary is.**
+
+### ✅ §2 — THE FIX, AND WHY THIS SHAPE
+**`_exportable = (score > 50) and _faithful`**, with `:475`'s comment corrected to match. 🛑 **NOT by re-sizing the deductions to `-51` / `-25.5`** — that would patch two call sites and leave the class open for the next deduction author, who would make the same assumption for the same reason. `fix-pattern`: **the boundary is the defect, not the magnitudes.**
+✅ **BLAST RADIUS, BOUNDED AND IN THE SAFE DIRECTION:** only strategies scoring **exactly `50.0`** change, and they change from `exportable=True` → `False`. **For an export gate, fewer things exported is the conservative direction.** `[UNENUMERATED — I have not counted how many artifacts currently sit at exactly 50.0; that belongs in the packet.]`
+🛑 **INSTRUMENT SURFACE → `ratify-packet` BEFORE CODE.** `score_exportability` produces a number other decisions trust.
+
+### ⏸️ §3 — PRIORITY: THIS QUEUES **BEHIND** THE MONEY PATH, DELIBERATELY.
+**Pine export is family-monitor-only** (campaign standing fact), so an export-gate boundary ranks below `R-639 §6.2`'s promotion-gate class, which reaches live capital. ✅ **Recorded now, with the diagnosis complete, so whoever takes it does not re-derive it — that is the whole value of settling it while the path is idle.**
+
+### ⚠️ §4 — AN INSTRUMENT LIMITATION IN MY OWN MONITOR RIG, RECORDED BEFORE IT MISLEADS SOMEONE
+`[MEASURED HERE]` The idle watchdog reports **both** channels — report-file mtime AND newest commit. Its latest events read *"report file 135m old AND newest commit 62m old"*. 🛑 **THE COMMIT CHANNEL IS TRACKING MY OWN RULING AND STATE COMMITS, NOT THE WORKER'S.** So while this desk is active, the commit channel is a measure of the DESK, and only the report-file channel is a true worker signal.
+★★★★★ **`I MEASURED THE NEIGHBOURING OBJECT`, in my own instrument: a watchdog that watches a shared channel cannot attribute silence to the party it is watching.** ✅ **It has not produced a false conclusion — it reports silence and refuses to diagnose, exactly as `§4a` requires, and I supplied the diagnosis from a second channel each time.** 🛑 **But the next desk must not read "newest commit 62m" as worker activity. The honest fix is to filter the commit channel by author or by path; not built, named.**
+
+---
+
+### ★★★★★ §5 — AUTHORIZED / STANDING
+**WORKER:** 🛑 **SEAT STOPPED (`AR-686`).** **`R-639 §6.2` — the crisis-fail-closed `ratify-packet` (`F-1b` threading → `F-G3` sentinel → `F-G4` schema, each with a COMMITTED test red-proofed by deletion-in-scratch) — REMAINS AUTHORIZED AND UNSTARTED.** **OPERATOR ACTION: start a worker seat.**
+**QUEUE AFTER `§6.2`:** `SWEEP-F7` · `SWEEP-F3` · `SWEEP-F6`'s fixture (with its red-proof) · `SWEEP-F5`'s two-branch measurement · **this `§2` exportability boundary packet** · `track3` disposition proposal · `INV-13 → CRITICAL` → `INV-1` deletion (🛑 never while `INV-13` is `WARNING`).
+**DESK (mine, remaining):** ⏳ **`GRADEB-F5` + `F-G1` disposed as ONE class** (`an arm is not a test`) · ⏳ `expected_single`'s uncompared SHA-256 · ⏳ `GRADEA-F-C`, `GRADEA-F-D`, ~35 unconfirmed sweep candidates · ⏳ **the two still-blind guards (`R-641 §6`) — read-from-disk redesign, idle-time only.**
+
+### ★★★ §6 — LESSONS TO PERSIST
+★★★★★ **`TWO INDEPENDENT COMMENTS AGREEING ON AN ARITHMETIC ASSUMPTION ARE EVIDENCE OF INTENT` — that is what separates "the code is wrong" from "the test is stale", and it is checkable rather than a matter of taste.**
+★★★★★ **`FIX THE BOUNDARY, NOT THE MAGNITUDES` — re-sizing two deductions would leave the next deduction author to make the same assumption for the same reason.**
+★★★ **`A WATCHDOG ON A SHARED CHANNEL CANNOT ATTRIBUTE SILENCE TO THE PARTY IT WATCHES.`**
+
 ## R-641 · 2026-08-03 · ✅★★★★★ **THE GUARD REPAIR IS BUILT AND RED-PROOFED — THE DESK ITEM OUTSTANDING SINCE `R-633` IS CLOSED, AND IT WAITED FOR THE RIGHT CONDITION: THE MONEY PATH IS IDLE (worker seat stopped at `AR-686`, `§6.2` blocked on a fresh seat), WHICH IS EXACTLY WHEN `R-515` PERMITS ADJACENT GOVERNANCE WORK.** 🛑🛑★★★★★ **AND THE REPAIR FOUND A **SECOND HALF NOBODY HAD SPOTTED**: THE `RECEIPT` NEVER CONSUMED THE SENTINEL EITHER, BECAUSE IT TOO KEYED ON `Write|Edit|MultiEdit`. SO THE GATE WAS NOT MERELY UNARMED — IT WAS **"ONCE PER HOUR" INSTEAD OF "ONCE PER RULING"**. ★★★★★ `A CONTROL WHOSE ARM WORKS AND WHOSE DISARM DOES NOT IS STILL BROKEN.`** ✅ **SIX-CASE RED-PROOF + AN OLD-GUARD CONTROL, ALL `[MEASURED HERE]`.**
 
 **RULING ID:** R-641 · **TASK ID:** desk-owned guard repair (carried `R-633`→`R-640`) · **DECISION: BUILT · RED-PROOFED · SCOPE-LIMITED.**
