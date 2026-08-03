@@ -4,6 +4,63 @@
 
 ---
 
+## AR-681 · 2026-08-03 · ✅★★★★★ **`R-635 §4.1` (`F-A`+`F-B`) CLOSED (`9368f2da`) — ALL THREE ARMS SATISFIED — AND `§4.2` ANSWERED. FAN-IN `2 / 2`.** 🛑🛑★★★★★ **THE FIXTURE REPAIR ALONE WAS **NOT ENOUGH**, AND THAT IS THE FINDING: EVEN AFTER `ts_et` LANDED AND THE ET BUILDER RAN, RE-INVERTING ITS POLARITY LEFT THE SUITE **GREEN** — BECAUSE ALL FOUR TESTS ASSERT ON THE **W23H.3 WINDOW COUNTER, A DIFFERENT MASK.** NO FIXTURE CHANGE CAN MAKE THEM POLARITY-SENSITIVE.** 🛑★★★★ **`§4.2`: **NO** — THE ENGINE NEVER READS `regime_context`/`exit_style` OFF A STRATEGY, AND STYLE D IS **DELIBERATELY DEAD**. ORPHANED SPEC.**
+
+### ✅ `§4.1` — THE THREE ARMS, EACH WITH ITS VERBATIM COMMAND
+
+**ARM (i) MUTATION** — materialised scratch copy via `git archive HEAD | tar -x -C <scratch>`, ET builder re-inverted there (`:3941 zeros→ones`, `:3964 True→False`). 🛑 **Neither tree was ever mutated.**
+```
+python -m pytest src/engine/tests/test_entry_windows.py -q      [mutated scratch copy]
+→ 1 failed, 54 passed
+   FAILED …::TestDefaultEventMaskPolarity::test_default_event_mask_et_polarity_is_sit_out
+```
+**ARM (ii) `run_backtest → {}`** — stubbed in a second scratch copy:
+```
+python -m pytest src/engine/tests/test_entry_windows.py::TestBacktesterWindowMask -q   [stubbed copy]
+→ 4 failed        (was 2 failed, 2 passed)
+```
+**ARM (iii) IN-WINDOW EXECUTION WITNESS:**
+```
+python -m pytest src/engine/tests/test_entry_windows.py::TestBacktesterWindowMask -q -s
+→ "Default event blackout: masking 10/30 bars"   ×4     (was 0 bars in-window, line never executed)
+```
+**UNMUTATED CONTROL:** `python -m pytest src/engine/tests/test_entry_windows.py -q` → **`55 passed`**. ✅ **`assert skipped >= 10` INTACT at `:498`.**
+
+### 🛑🛑★★★★★ WHAT THE MEASUREMENT ACTUALLY TAUGHT — I WAS WRONG TWICE BEFORE I WAS RIGHT
+
+1. **First attempt — fixture emitted a `ts_et` column:** mutation **STILL `4 passed`.** `[MEASURED]`
+2. **Diagnosis:** with the polarity inverted, entries survive only on the `08:45` bars — **which are ALSO outside `09:45-12:00 ET`**, so `skipped_outside_window_count` stays `≥ 10` and `assert skipped >= 10` passes either way. ★★★★★ **THE FOUR TESTS MEASURE THE W23H.3 ALLOWED-ENTRY-WINDOW MASK. THE DEFECT IS IN THE EVENT-BLACKOUT MASK. THEY ARE DIFFERENT MASKS, AND NO FIXTURE CAN BRIDGE THAT — only an assertion about the event mask can.**
+3. **So I added `TestDefaultEventMaskPolarity`**, which **AST-extracts the real `_build_default_event_mask_et` from `backtester.py`** and asserts `True = SIT_OUT` directly. **Never a hand-copy** — a copy would assert against a duplicate of the bug.
+★★★★★ **`A GUARD THAT WATCHES THE WRONG INSTRUMENT IS NOT A WEAK GUARD, IT IS NOT A GUARD.` `R-632`'s `F-A` said these tests never run the ET builder; the sharper fact is that **even when they DO run it, they never ASSERT on it.****
+
+✅ **AND A STRUCTURAL CHOICE, MADE FOR ARM (ii)'s SAKE:** the new guard lives in its **own class**, because it deliberately does not call `run_backtest` — keeping it inside `TestBacktesterWindowMask` would have broken that class's property that a broken `run_backtest` turns **every** member RED.
+✅ **TWO ASSERTIONS STRENGTHENED, NOT WEAKENED:** `result.get("engine_audit", {}).get(…, 0)` → explicit key-existence asserts + indexing. **That defaulting form is exactly why `{}` passed them; it is what makes ARM (ii) go from `2 failed` to `4 failed`.**
+⚠️ **AND A FIXTURE TRAP I HIT AND FIXED:** naive ET strings crashed `liquidity.py:55`, which casts `ts_et` to `Datetime(tz="UTC")` for all `30/30` rows. **`ts_et` must be OFFSET-AWARE (`-05:00`)** — the builder's `ts_str[11:16]` slice still reads `"08:45"`.
+
+### 🛑★★★★ `§4.2` — `track3`: THE ANSWER IS **NO**, AND IT IS STRONGER THAN "UNBUILT"
+
+**QUESTION: does anything in the engine EXPECT strategies to expose `regime_context` / `exit_style`?**
+| probe | result |
+|---|---|
+| `grep -n "\.regime_context\|\.exit_style" src/engine/backtester.py` | 🛑 **EMPTY — the backtester never reads either off a strategy object** |
+| strategy instantiation | `_load_strategy_class` (`:8060`), called once at `:8119`. **No `get_params()` call site exists in `backtester.py` at all.** |
+| ✅ **POSITIVE CONTROL** | the same tokens return **`43`** hits in `test_track3_strategy_regime_wiring.py` — findable when present |
+| `structural_targets.py:279` | 🛑 **"Style D is DEAD — `select_exit_style()` always returns `"style_c"`"**, Wave 23 canonical (W23F.N, Wave 24) |
+
+🛑🛑★★★★★ **BRANCH: ORPHANED SPEC — its disposition is a RULING, not a deletion.** ★★★★★ **AND STRONGER THAN `§4.2` ANTICIPATED: these `40` tests do not assert an interface that was *never built* — they assert **Style D**, a behaviour that was **DELIBERATELY RETIRED** by a named Wave 23/24 decision. `test_exit_style_d_on_crisis` is testing a thing the engine says, in writing, does not exist any more.** ⚠️ **That makes "orphaned spec" the right label and makes DELETION more tempting and more wrong: the tests are the surviving record of what Style D was meant to do.**
+🛑 **REPORTED, NOT ACTED ON. Nothing deleted, nothing `xfail`-ed, `track3` untouched.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Whether the OTHER `35` `track3` failures share the Style-D cause** — I measured the interface question `§4.2` asked, **not all 40 failures individually.** `[UNENUMERATED]`
+2. **Whether `select_exit_style`'s retained `vp_shape`/`macro_state` args have live callers** that would make the interface partially real. **Not chased.**
+3. **`F-3`–`F-9`** — still not started.
+4. ⚠️ **The new polarity guard asserts the ET builder ONLY. The legacy UTC builder has no equivalent guard** — I fixed its polarity in `AR-666` but nothing would catch a re-inversion of it. **Named, not built.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** **Fan-in `2 / 2`, both lanes closed.**
+
+---
+
 ## AR-680 · 2026-08-03 · ✅ **START-RECEIPT — `R-635 §4.1` (`F-A`+`F-B`) AND `§4.2` (`track3` MEASUREMENT). FAN-IN `0 / 2`. BOTH ARE MINE AND I AM TAKING BOTH.**
 
 **PLAN, in order:** **`§4.1`** first (it has the FIRST-OBSERVABLE clock), then **`§4.2`** in the same wave. **I am not handing off between them** — `§4.2` is a four-grep measurement and unstarted is not a reason to leave.
