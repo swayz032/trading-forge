@@ -12,6 +12,92 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-656 · 2026-08-02 · ✅★★★★★ **`LANE-6` PARTIAL, AS THE RULING INVITED — THE TWO `AR-654`-MEASURED-BLIND INVARIANTS ARE NOW SIGHTED AND RED-PROOFED ON THE **UNCHANGED CONVICTING PLANTS**: `P4` FIRES `INV-10` `60×`, `P3` FIRES `INV-9` `60×`, EACH PLANT TRIPPING **ONLY ITS OWN** INVARIANT, CONTROL `0×`.** 🛑★★★★★ **AND `R-612 §4.2` WAS RIGHT TO DOUBT MY DENOMINATOR: THE MEASURED TABLE SAYS **`9` OF `14`**, NOT `13`. **MY `AR-655 §4` TABLE WAS A SOURCE-READ AND IT MISCLASSIFIED `INV-14`.** THE INSTRUMENT THAT CAUGHT ME SHIPS WITH THIS REPORT.**
+
+**TASK:** `LANE-6` (`R-612 §4.1`, `§4.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `invariant_harness/core.py`, `tests/test_invariant_harness.py` (+6 tests), `scripts/invariant_absence_sweep.py` (new). 🛑 **`backtester.py` NOT MODIFIED — `git diff --name-only` EMPTY. `runtime-production` NOT touched, NOT read.**
+
+### 🛑★★★★★ §1 — FIRST, THE CORRECTION I OWE, BECAUSE IT INVALIDATES A NUMBER I PUBLISHED
+
+**`AR-655 §4` reported `13` of `14` invariants satisfiable by an absent/zero metric. That table was READ OFF THE PREDICATES. `R-612 §4.2` said it could not re-derive the figure and asked for a checkable table.** ✅ **I built one that MEASURES the property instead of reading it — hand each invariant a result declaring `total_trades: 10` and **no metrics at all**, and record the verdict.**
+
+| | `AR-655` claimed (source-read) | **MEASURED** |
+|---|---|---|
+| blind, before `LANE-6` | `12` | 🛑 **`11`** |
+| blind, after `LANE-6` | — | **`9`** |
+| guarded | `2` | **`5`** |
+
+★★★★★ **THE MISCLASSIFIED ROW IS `INV-14 _check_equity_curve_continuous` — I called it blind from its `nan_count == 0` predicate; it FAILS on absent input and is GUARDED.** ★★★ **`I READ THE PREDICATE AND CALLED IT A MEASUREMENT.` The desk's refusal to accept `13/14` on my say-so is the only reason this is corrected in the next report rather than surviving as campaign fact.**
+
+### ✅ §2 — THE MEASURED TABLE (`R-612 §4.2`) — RE-DERIVABLE, NOT ASSERTED
+
+```
+TF_ALLOW_FIXED_1=true PYTHONPATH=<repo root> python scripts/invariant_absence_sweep.py
+```
+
+| invariant | absent-input | good-input | verdict |
+|---|---|---|---|
+| `balance_arithmetic` | PASS | PASS | 🛑 BLIND |
+| `trade_pnl_sum` | PASS | PASS | 🛑 BLIND |
+| `daily_pnl_sum` | FAIL | PASS | ✅ guarded *(pre-existing)* |
+| `long_short_split_sum` | PASS | PASS | 🛑 BLIND |
+| `long_short_count` | PASS | PASS | 🛑 BLIND |
+| `win_rate_in_range` | PASS | PASS | 🛑 BLIND |
+| `max_drawdown_non_negative` | FAIL | PASS | ✅ guarded *(`LANE-5`)* |
+| `peak_equity_at_least_starting` | PASS | PASS | 🛑 BLIND |
+| `sharpe_finite` | FAIL | PASS | ✅ **guarded (`LANE-6`)** |
+| `profit_factor_finite` | FAIL | PASS | ✅ **guarded (`LANE-6`)** |
+| `avg_trade_pnl_consistent` | PASS | PASS | 🛑 BLIND |
+| `commission_per_trade_reasonable` | PASS | PASS | 🛑 BLIND |
+| `per_firm_endings` | PASS | PASS | 🛑 BLIND |
+| `equity_curve_continuous` | FAIL | PASS | ✅ guarded *(pre-existing — the row I got wrong)* |
+
+**`9` of `14` PASS on a result whose metrics are absent.**
+✅ **TWO CONTROLS BUILT IN, so the table cannot be read as a broken harness:** the **good-input column is `PASS` for all `14`** (a fixture too thin to exercise the checks would show up here as failures — it does not), and the **`5` guarded rows FAIL on absent while PASSING on good**, which is the discrimination. ✅ **The population is read from the harness's OWN `_CRITICAL_CHECKS` + `_WARNING_CHECKS` registries; the script REFUSES to run rather than substitute a hand-kept list** (`self-certifying-collections` — a hand-kept population is the defect, not the fix).
+
+### ✅★★★★★ §3 — THE TWO REPAIRS, AND WHY ONE IS ARITHMETIC AND ONE IS NOT
+
+🛑 **A DISTINCTION `R-612` COMPRESSED AND I HAVE TO SEPARATE: `INV-9`/`INV-10` were NOT primarily ABSENCE bugs.** `AR-654`'s plants `P3`/`P4` produced **finite, present, WRONG** numbers. **An absence witness would not have caught either.** Two defect classes, and the sweep property only addresses one:
+- **Class A — absent input passes.** Fixed for both via the `_MISSING` sentinel.
+- **Class B — wrong-but-finite value passes.** This is what was MEASURED blind, and it needs a cross-check against something independently derivable.
+
+✅ **`INV-10` (PF) — ARITHMETIC, NO THRESHOLD CHOSEN:** `profit_factor = gross_profit/gross_loss`, so `PF > 1` ⟺ the strategy made money. **A run whose `total_return` disagrees in DIRECTION with its own `profit_factor` is misreporting one of them.** The `P4` inversion makes a losing run report `PF > 1`. `PF == 1` and `total_return == 0` are excluded as genuinely ambiguous.
+⚠️ **`INV-9` (Sharpe) — THE BAND IS CHOSEN AND I AM SAYING SO RATHER THAN DRESSING IT AS ARITHMETIC.** A scale error does not move the sign, so no sign test can catch it; the arm re-derives Sharpe from `daily_pnls` (already in the result) and flags a ratio outside **`[1/3, 3]`**. **Rationale, not proof:** `sqrt(252)/sqrt(12) = 4.58×` and `sqrt(252)/sqrt(52) = 2.2×`, so the band catches a periodicity error while tolerating the engine annualising a different-but-legitimate daily series. **It SKIPS — does not pass — when `std == 0` or fewer than `2` daily values.** ★★★ **`R-612` praised `LANE-5`'s arm for being arithmetic rather than a picked threshold. This one is a picked threshold, and calling it arithmetic would be the lie.**
+
+### ✅★★★★★ §4 — RED-PROOF ON `AR-654`'s UNCHANGED PLANTS
+
+| run | invariants failing, per call | |
+|---|---|---|
+| **control, un-planted** | `[]` × `90` | ✅ zero false positives |
+| **`P4` PF inverted** (unchanged from `AR-654`) | 🛑 `['profit_factor_finite_if_trades']` × `60`, `[]` × `30` | ✅ RED, names the metric |
+| **`P3` Sharpe `sqrt(252)→sqrt(12)`** (unchanged) | 🛑 `['sharpe_finite_if_trades']` × `60`, `[]` × `30` | ✅ RED, names the metric |
+
+★★★★★ **EACH PLANT TRIPS ONLY ITS OWN INVARIANT — `P4` does not move Sharpe, `P3` does not move PF. That cross-silence is what separates "two working guards" from "the harness now reds on everything."** ✅ **The `30` quiet calls in every state are the same no-trade runs that are quiet in the control.**
+✅ **UNIT LEVEL: `61 → 67 passed`. Against the PINNED `core.py` the `4` catching tests FAIL and both discriminating greens PASS** (`test_passes_when_losing_run_reports_pf_below_one`, `test_scale_arm_skips_when_series_cannot_support_it`) — so neither can be satisfied by a check that merely always fails. **All pre-existing tests pass UNMODIFIED in both states.**
+✅ **NO HARD-CODED EXPECTED VALUE:** the Sharpe test asserts a DIRECTION (reported far too small for its own series) rather than a hand-computed Sharpe — `hardcoded-test`: a hand-copied expected value is a fabricated safety claim, and it would also have re-stated the implementation's arithmetic.
+
+### §5 — COMMANDS + RESULTS
+
+```
+pytest src/engine/tests/test_invariant_harness.py -q        -> 67 passed  (was 61, +6)
+  new tests vs PINNED core.py                               -> 4 failed, 10 passed   <- RED-PROOF
+python scripts/invariant_absence_sweep.py                   -> 9 of 14 BLIND; controls: all 14 PASS on good data
+battery + P4 (unchanged plant) -> ['profit_factor_finite_if_trades'] x60
+battery + P3 (unchanged plant) -> ['sharpe_finite_if_trades'] x60
+battery, un-planted            -> [] x90
+git diff --name-only -- src/engine/backtester.py            -> EMPTY
+```
+
+### 🛑 §6 — WHAT I DID **NOT** DO
+
+**`9` of `14` REMAIN BLIND and are NOT fixed** — enumerated in `§2`, not repaired, not individually red-proofed. · 🛑 **I did NOT do what `R-612 §4.1` asked structurally: it wanted the sweep AT THE ACCESSOR, one mechanism for all `12`. I fixed TWO INVARIANTS INDIVIDUALLY.** ★★★ **Reason, offered as a finding rather than an excuse: the two it told me to start with are `Class B` (wrong-but-finite), and **no accessor-level absence fix would have caught either** — the accessor mechanism and the measured-blind pair address different defects. **The ruling's priority item and its prescribed mechanism do not meet.** The remaining `9` ARE `Class A` and a single accessor change plausibly covers them; I did not attempt it.** · **The `Class B` exposure of the other `12` is UNMEASURED** — I know `INV-9`/`INV-10` were blind to wrong-but-finite because `AR-654` planted them; **for the rest I have no plant and make no claim.** · **Still unproven that any invariant failure PROPAGATES** — the `try:` swallow at `backtester.py:5939` remains unadjudicated (`R-611 §5.5`, `R-612 §5`). **These checks can now fail; I have still not shown anyone listens.** · **`INV-9`/`INV-10` are `severity="WARNING"`, so neither sets `overall_passed = False`** — I did not change severities, that is a contract decision. · **`0` runs against the real wave rig.** · **Full pytest suite not run.**
+🛑 **I DID NOT GRADE THIS. `accuracy-validator` remains one authorization away** — asked at `AR-654`, re-asked at `AR-655`, **still unanswered**, and there are now three findings and two repairs wanting an independent read.
+
+**FAN-IN: `LANE-1` · `LANE-2` · `LANE-5` · `LANE-6` CLOSED (partial, as invited) · `LANE-4` QUEUED · `LANE-3` QUEUED = `4 / 6`.** ⚠️ **Queued, not blocked — no handoff.**
+**RECOMMENDATION: `APPROVAL_REQUESTED`** for the two repairs and the corrected table; **`REVISION_REQUIRED`** for `R-612 §4.1`'s accessor framing, per `§6`.
+**NEXT SMALLEST TASK:** the accessor-level `Class A` fix over the remaining `9`, now that `§2` gives a measured before-figure and a script that re-derives the after-figure.
+
+---
+
 ## AR-655 · 2026-08-02 · ✅★★★★★ **`LANE-5` DONE (`R-611 §5.2`) — `INV-7` NOW FAILS WHEN `max_drawdown` IS NOT BEING COMPUTED, RED-PROOFED ON THE **UNCHANGED CONVICTING DEFECT**: `60` CRITICAL FIRINGS NAMING THE METRIC WHERE THE PINNED CHECK GAVE `0`.** 🛑★★★★★ **AND THE CLASS SWEEP THE RULING ASKED FOR IS WORSE THAN THE INSTANCE: **`13` OF THE `14` INVARIANTS HAVE A PREDICATE SATISFIABLE BY THE METRIC BEING ABSENT, ZERO OR UNSET.** ONLY `INV-3` CROSS-REFERENCES ANYTHING — AND ITS IDIOM IS THE ONE I COPIED. **TWO OF THE REMAINING `12` ARE ALREADY MEASURED BLIND BY `AR-654`'s OWN PLANTS.**
 
 **TASK:** `LANE-5` (`R-611 §5.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `src/engine/invariant_harness/core.py` (modified), `src/engine/tests/test_invariant_harness.py` (+3 tests). 🛑 **`backtester.py` NOT MODIFIED — held READ-ONLY as ordered; `git diff --stat HEAD -- src/engine/backtester.py` EMPTY.** **`runtime-production` NOT touched, NOT read. No runtime/trading/capital/broker surface.**

@@ -343,6 +343,39 @@ class TestSharpeFinite:
         assert check.passed
         assert check.severity == "WARNING"
 
+    # ── AR-654 plant P3 / R-612 §4.1: a FINITE but WRONGLY-SCALED Sharpe
+    # (sqrt(252) -> sqrt(12)) moved two display numbers and tripped nothing.
+
+    def test_catches_wrongly_scaled_sharpe(self):
+        """Reported Sharpe is orders off what this run's own daily P&Ls imply.
+
+        No expected Sharpe is hard-coded here — the assertion is directional
+        (reported is far too small for the series), so the test cannot drift
+        into re-stating the implementation's own arithmetic.
+        """
+        result = _make_good_result(total_return=590.0, total_trades=10)
+        result["daily_pnls"] = [100.0, -50.0, 200.0, -30.0, 150.0,
+                                80.0, -20.0, 90.0, 110.0, -40.0]
+        result["sharpe_ratio"] = 0.001      # far below the series' implied Sharpe
+        check = _check_sharpe_finite(result)
+        assert not check.passed
+        assert "scaled" in check.evidence.lower() or "annualis" in check.evidence.lower()
+
+    def test_catches_absent_sharpe_when_trades_exist(self):
+        result = _make_good_result()
+        result.pop("sharpe_ratio", None)
+        check = _check_sharpe_finite(result)
+        assert not check.passed
+        assert "ABSENT" in check.actual
+
+    def test_scale_arm_skips_when_series_cannot_support_it(self):
+        """Discriminating green — a flat daily series has no std to compare against,
+        so the scale arm must SKIP rather than fail. Without this the two tests
+        above could be satisfied by a check that simply always fails."""
+        result = _make_good_result(sharpe=1.5)   # uniform daily_pnls -> std == 0
+        check = _check_sharpe_finite(result)
+        assert check.passed
+
     def test_passes_when_no_trades(self):
         result = _make_good_result(total_trades=0)
         result["sharpe_ratio"] = float("nan")
@@ -370,6 +403,29 @@ class TestProfitFactorFinite:
         check = _check_profit_factor_finite(result)
         assert check.passed
         assert check.severity == "WARNING"
+
+    # ── AR-654 plant P4 / R-612 §4.1: a FINITE but INVERTED profit factor passed
+    # the finiteness check and produced byte-identical battery output.
+
+    def test_catches_pf_that_disagrees_with_total_return(self):
+        """PF > 1 claims the strategy made money; total_return says it lost."""
+        result = _make_good_result(total_return=-2_000.0, profit_factor=1.8)
+        check = _check_profit_factor_finite(result)
+        assert not check.passed
+        assert "inverted" in check.evidence.lower()
+
+    def test_catches_absent_pf_when_trades_exist(self):
+        result = _make_good_result()
+        result.pop("profit_factor", None)
+        check = _check_profit_factor_finite(result)
+        assert not check.passed
+        assert "ABSENT" in check.actual
+
+    def test_passes_when_losing_run_reports_pf_below_one(self):
+        """Discriminating green — a losing run with a consistent PF is fine."""
+        result = _make_good_result(total_return=-2_000.0, profit_factor=0.6)
+        check = _check_profit_factor_finite(result)
+        assert check.passed
 
     def test_passes_when_no_trades(self):
         result = _make_good_result(total_trades=0)

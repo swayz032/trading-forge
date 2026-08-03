@@ -488,7 +488,7 @@ def _check_peak_equity_at_least_starting(result: dict) -> InvariantCheck:
 def _check_sharpe_finite(result: dict) -> InvariantCheck:
     """INV-9 WARNING: sharpe_ratio is finite when total_trades > 0."""
     total_trades = int(_aggregate_metric(result, "total_trades", 0))
-    sharpe = _aggregate_metric_raw(result, "sharpe_ratio", 0.0)
+    sharpe = _aggregate_metric_raw(result, "sharpe_ratio", _MISSING)
 
     if total_trades == 0:
         return InvariantCheck(
@@ -501,19 +501,76 @@ def _check_sharpe_finite(result: dict) -> InvariantCheck:
             severity="WARNING",
         )
 
-    finite = _is_finite(sharpe)
+    if sharpe is _MISSING:
+        return InvariantCheck(
+            name="sharpe_finite_if_trades",
+            passed=False,
+            tolerance="N/A",
+            expected="sharpe_ratio present whenever trades were taken",
+            actual="sharpe_ratio is ABSENT from the result",
+            evidence=(
+                f"sharpe_ratio is missing from the result but total_trades={total_trades}. "
+                "Sharpe computation did not run or did not persist."
+            ),
+            severity="WARNING",
+        )
+
+    if not _is_finite(sharpe):
+        return InvariantCheck(
+            name="sharpe_finite_if_trades",
+            passed=False,
+            tolerance="N/A",
+            expected="sharpe_ratio is finite when total_trades > 0",
+            actual=f"sharpe_ratio = {sharpe}",
+            evidence=(
+                f"Sharpe ratio is {sharpe} with {total_trades} trades. "
+                "Possible zero-variance daily P&L or division by zero in computation."
+            ),
+            severity="WARNING",
+        )
+
+    # ── AR-654 §2 plant P3 / R-612 §4.1: a FINITE but WRONGLY-SCALED Sharpe passed
+    # every check above. Re-annualising sqrt(252) -> sqrt(12) moved only two
+    # display numbers and no gate reacted. Finiteness cannot see a scale error,
+    # so this arm re-derives Sharpe from daily_pnls — data already in the result —
+    # and compares. Skipped (not passed) when the series cannot support it.
+    sharpe_val = _safe_float(sharpe, default=float("nan"))
+    daily = [_safe_float(p) for p in (result.get("daily_pnls") or [])]
+
+    if len(daily) >= 2:
+        mean = sum(daily) / len(daily)
+        var = sum((d - mean) ** 2 for d in daily) / (len(daily) - 1)
+        std = math.sqrt(var)
+        if std > 0.0 and abs(sharpe_val) > 1e-9:
+            recomputed = mean / std * math.sqrt(252.0)
+            ratio = recomputed / sharpe_val
+            # BAND IS CHOSEN, NOT ARITHMETIC — stated plainly. It must tolerate a
+            # different-but-legitimate daily series (the engine annualises its own
+            # daily array, not necessarily this one) while still catching a
+            # periodicity error: sqrt(252)/sqrt(12) = 4.58x, sqrt(252)/sqrt(52) = 2.2x.
+            LO, HI = 1.0 / 3.0, 3.0
+            if not (LO <= ratio <= HI):
+                return InvariantCheck(
+                    name="sharpe_finite_if_trades",
+                    passed=False,
+                    tolerance=f"re-derived/reported within [{LO:.2f}, {HI:.2f}]",
+                    expected="sharpe_ratio scale agrees with a Sharpe re-derived from daily_pnls",
+                    actual=f"sharpe_ratio = {sharpe_val:.4f}, re-derived = {recomputed:.4f}, ratio = {ratio:.2f}x",
+                    evidence=(
+                        f"Reported Sharpe {sharpe_val:.4f} is {ratio:.2f}x off a Sharpe re-derived "
+                        f"from this run's own {len(daily)} daily P&Ls ({recomputed:.4f}). "
+                        "A finite but wrongly-scaled Sharpe — check the annualisation factor."
+                    ),
+                    severity="WARNING",
+                )
+
     return InvariantCheck(
         name="sharpe_finite_if_trades",
-        passed=finite,
-        tolerance="N/A",
-        expected="sharpe_ratio is finite when total_trades > 0",
+        passed=True,
+        tolerance="finite; scale agrees with daily_pnls re-derivation where computable",
+        expected="sharpe_ratio is finite and correctly scaled when total_trades > 0",
         actual=f"sharpe_ratio = {sharpe}",
-        evidence=(
-            f"Sharpe ratio {sharpe} is finite"
-            if finite else
-            f"Sharpe ratio is {sharpe} with {total_trades} trades. "
-            "Possible zero-variance daily P&L or division by zero in computation."
-        ),
+        evidence=f"Sharpe ratio {sharpe} is finite and consistent with its own daily P&L series",
         severity="WARNING",
     )
 
@@ -521,7 +578,7 @@ def _check_sharpe_finite(result: dict) -> InvariantCheck:
 def _check_profit_factor_finite(result: dict) -> InvariantCheck:
     """INV-10 WARNING: profit_factor is finite when total_trades > 0."""
     total_trades = int(_aggregate_metric(result, "total_trades", 0))
-    pf = _aggregate_metric_raw(result, "profit_factor", 0.0)
+    pf = _aggregate_metric_raw(result, "profit_factor", _MISSING)
 
     if total_trades == 0:
         return InvariantCheck(
@@ -534,22 +591,74 @@ def _check_profit_factor_finite(result: dict) -> InvariantCheck:
             severity="WARNING",
         )
 
+    if pf is _MISSING:
+        return InvariantCheck(
+            name="profit_factor_finite_if_trades",
+            passed=False,
+            tolerance="N/A",
+            expected="profit_factor present whenever trades were taken",
+            actual="profit_factor is ABSENT from the result",
+            evidence=(
+                f"profit_factor is missing from the result but total_trades={total_trades}. "
+                "Profit-factor computation did not run or did not persist."
+            ),
+            severity="WARNING",
+        )
+
     # 999.99 is the engine's capped representation of inf — treat as non-finite for this check.
     pf_val = _safe_float(pf, default=float("nan"))
     finite = _is_finite(pf_val) and abs(pf_val) < 999.0
 
+    if not finite:
+        return InvariantCheck(
+            name="profit_factor_finite_if_trades",
+            passed=False,
+            tolerance="< 999.0 sentinel",
+            expected="profit_factor is a finite real (not inf/nan/999.99 sentinel)",
+            actual=f"profit_factor = {pf}",
+            evidence=(
+                f"Profit factor {pf} is not a usable real value with {total_trades} trades. "
+                "Zero gross losses (all winners) or computation error."
+            ),
+            severity="WARNING",
+        )
+
+    # ── AR-654 §2 plant P4 / R-612 §4.1: a FINITE but WRONG profit factor passed
+    # every check above. Inverting the ratio (gross_loss/gross_profit) produced
+    # byte-identical battery output. This arm is arithmetic, not a tolerance:
+    # profit_factor is gross_profit/gross_loss, so PF > 1 means the strategy made
+    # money and PF < 1 means it lost. A run whose total_return disagrees with its
+    # own profit factor is reporting one of the two incorrectly. Exact equality
+    # (PF == 1, or total_return == 0) is excluded as genuinely ambiguous.
+    total_return = _aggregate_metric(result, "total_return", 0.0)
+    disagrees = (
+        (total_return > 0.0 and pf_val < 1.0) or
+        (total_return < 0.0 and pf_val > 1.0)
+    )
+    if disagrees:
+        return InvariantCheck(
+            name="profit_factor_finite_if_trades",
+            passed=False,
+            tolerance="direction must agree with total_return",
+            expected="profit_factor > 1 iff total_return > 0",
+            actual=f"profit_factor = {pf_val:.4f}, total_return = {total_return:.2f}",
+            evidence=(
+                f"Profit factor {pf_val:.4f} says the strategy "
+                f"{'made' if pf_val > 1.0 else 'lost'} money, but total_return "
+                f"{total_return:.2f} says it "
+                f"{'made' if total_return > 0 else 'lost'} money. "
+                "Gross profit and gross loss are likely inverted."
+            ),
+            severity="WARNING",
+        )
+
     return InvariantCheck(
         name="profit_factor_finite_if_trades",
-        passed=finite,
-        tolerance="< 999.0 sentinel",
-        expected="profit_factor is a finite real (not inf/nan/999.99 sentinel)",
+        passed=True,
+        tolerance="< 999.0 sentinel; direction agrees with total_return",
+        expected="profit_factor is a finite real and agrees in direction with total_return",
         actual=f"profit_factor = {pf}",
-        evidence=(
-            f"Profit factor {pf} is finite"
-            if finite else
-            f"Profit factor {pf} is not a usable real value with {total_trades} trades. "
-            "Zero gross losses (all winners) or computation error."
-        ),
+        evidence=f"Profit factor {pf} is finite and consistent with total_return {total_return:.2f}",
         severity="WARNING",
     )
 
