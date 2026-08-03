@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3691` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3692` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3691` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3692` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,11 +94,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-624` (`fad2ff1b`). Newest AR: `AR-667` — **RULED / APPROVED** at `R-624`.** Worker: ✅ **ACTIVE, not blocked.**
+**Ruling ledger at `R-625` (`2572a056`). Newest AR: `AR-668` — **RULED** at `R-625`.** Worker: ✅ **ACTIVE on `R-620 §4.1`, not blocked, no re-authorization needed.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-624 §5`** (2026-08-03, `fad2ff1b`)
-1. ✅ **WORKER — COMMIT THE REVIVED FIXTURE:** `commit -o src/engine/tests/test_entry_windows.py`, **that file alone**. 🛑 **It is UNCOMMITTED and is the sole carrier of the revived guard.** 🛑 **`test_synthetic_market_simulator.py` is INHERITED DIRT (` M` in the `04:41` snapshot) — NOT the worker's to commit.**
-2. ✅ **THEN `R-620 §4.1`** (`INV-13` discriminates on a capped run?), then `INV-1`'s overlap.
+## ★★★★★ AUTHORIZED NOW — **`R-625 §4`** (2026-08-03, `2572a056`)
+1. ✅ **WORKER — `R-620 §4.1`:** does `INV-13` discriminate on a legitimately DLL-capped run? **BOTH arms** — it must NOT fire on correct capped behaviour AND it MUST fire on a real inconsistency. Already running. 🛑 **Severity changes remain the desk's.**
+2. ⚠️ **`R-624 §5.1` IS ANNOTATED WRONG AND CLOSED (`R-625 §1`): DISCHARGED-BEFORE-ISSUED.** The fixture was committed at `98dfa126` (`05:07:15`) — **58 seconds before `R-624` published** (`fad2ff1b`, `05:08:13`). 🛑 **Do NOT cite it as outstanding; do NOT re-commit (a clean-tree re-run risks sweeping inherited dirt).**
+3. ★★★★★ **MINTED AT `R-625 §2`, BINDING ON THIS DESK: `AN INSTRUCTION AIMED AT A TREE STATE OWES A RE-READ OF THAT STATE AT PUBLISH TIME, NOT DRAFT TIME.`** `R-416` covers the newest **AR**; it is silent about the **git tree**, which is the channel that moved. **Any ruling asserting *"is currently uncommitted"* / *"does not exist"* re-runs that `git` command in the SAME motion as the commit, or writes `[AS OF <time>]`.**
 3. ✅ **DONE, `R-623 §7.1`/`§7.2`:** engine fix LANDED (`28a95a9a`, `backtester.py` alone, `+42/−10`) and the four `TestBacktesterWindowMask` guards REVIVED — **end-to-end proof exists**: `total_trades` `0 → 1`, window-masked signals `0 → 10`, real `63`/`64`-key result dicts. **Desk re-ran it: `4 passed`, assert count `59 → 59`.** 🛑 **Synthetic 20-bar fixture — proves POLARITY, says NOTHING about real-data trade counts.**
 4. 🛑★★★★★ **DESK — `R-623 §4`'s NO-OPT-OUT BLACKOUT is a NAMED PHASE-2 ENTRY BLOCKER.** Mine to specify as a `ratify-packet`. Not delegated, not parked on the operator.
 5. 🛑 **DESK — the `WARNING`-tier decision (`R-620 §4.4`) and the `INV-1` disposition remain MINE.** ⚠️ **Aged five rulings — named so they cannot quietly become a standing sentence.**
