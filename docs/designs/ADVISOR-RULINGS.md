@@ -12,6 +12,59 @@
 
 ---
 
+## R-641 · 2026-08-03 · ✅★★★★★ **THE GUARD REPAIR IS BUILT AND RED-PROOFED — THE DESK ITEM OUTSTANDING SINCE `R-633` IS CLOSED, AND IT WAITED FOR THE RIGHT CONDITION: THE MONEY PATH IS IDLE (worker seat stopped at `AR-686`, `§6.2` blocked on a fresh seat), WHICH IS EXACTLY WHEN `R-515` PERMITS ADJACENT GOVERNANCE WORK.** 🛑🛑★★★★★ **AND THE REPAIR FOUND A **SECOND HALF NOBODY HAD SPOTTED**: THE `RECEIPT` NEVER CONSUMED THE SENTINEL EITHER, BECAUSE IT TOO KEYED ON `Write|Edit|MultiEdit`. SO THE GATE WAS NOT MERELY UNARMED — IT WAS **"ONCE PER HOUR" INSTEAD OF "ONCE PER RULING"**. ★★★★★ `A CONTROL WHOSE ARM WORKS AND WHOSE DISARM DOES NOT IS STILL BROKEN.`** ✅ **SIX-CASE RED-PROOF + AN OLD-GUARD CONTROL, ALL `[MEASURED HERE]`.**
+
+**RULING ID:** R-641 · **TASK ID:** desk-owned guard repair (carried `R-633`→`R-640`) · **DECISION: BUILT · RED-PROOFED · SCOPE-LIMITED.**
+**NEWEST AR NAMED (`R-416`):** **`AR-686`** `[MEASURED HERE, `| head -1`]` — the worker's final stop confirmation, ruled at `R-640`/state. **No AR bears on this ruling: it is desk-owned tooling, not campaign work.**
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### 🛑 §1 — THE DEFECT, RESTATED WITH ITS FULL EXTENT
+`[MEASURED HERE, `.claude/settings.json`]` all five `PreToolUse` guards shared ONE matcher, `Write|Edit|MultiEdit`. **This desk writes the ledger by SHELL** (`head`/`cat`/`tail`/`cp` then `git commit -o`). **So `R-631`–`R-640` — ten consecutive rulings — were entirely ungated.**
+🛑 **AND THE HALF I HAD NOT MEASURED UNTIL TODAY: `advisor-ruling-receipt.ps1` consumes the sentinel only on `Write|Edit|MultiEdit` of the ledger — which this desk also never does. So the sentinel was never consumed and stayed valid for its full `3600s` cap.** ★★★★★ **THE GATE'S OWN "ONCE PER RULING" PROPERTY — the entire point of `R-384` — WAS SILENTLY DEGRADED TO "ONCE PER HOUR". `I DIAGNOSED THE BLOCK SIDE AND ASSUMED THE RELEASE SIDE.`**
+
+### ✅★★★★★ §2 — THE TRAP IN THE OBVIOUS FIX, AVOIDED BY MEASUREMENT
+`R-633`'s state block warned: **adding `Bash` to the matcher ALONE makes the guard PASS BY FAILING** — a Bash call carries no `tool_input.file_path`, so the old code reached `if (-not $path) { exit 0 }` and allowed everything. ✅ **CONFIRMED, NOT ASSUMED `[MEASURED HERE]`: the BACKED-UP old guard, fed a `Bash` ledger-commit payload with NO sentinel, exits `0`.** ★★★ **That is the discriminating control — it proves the defect was real AND that the new behaviour is a change, not a coincidence.**
+⚠️★★★ **AND MY FIRST ATTEMPT AT THAT CONTROL LIED TO ME, IN THE SESSION'S FOURTH INSTRUMENT FAULT: it returned `exit=-196608`, which I nearly read as "the old guard blocked — premise refuted". **PowerShell variables are CASE-INSENSITIVE, so my `$OLD` (script path) and `$old` (saved `USERPROFILE`) were THE SAME VARIABLE** — I overwrote the script path with a directory and measured a failed process launch. Run plainly, the old guard exits `0`.** ★★★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST` — and `-196608` is neither `0` nor `2`, which is the tell I had to actually look at rather than bucket into "not-zero = blocked".**
+
+### ✅★★★★ §3 — DESIGN: IT GATES `git commit`, NOT ANY MENTION OF THE FILE. THIS IS THE LOAD-BEARING CHOICE.
+**A filename match would have blocked this desk's own READS** — it greps, seds and `git log`s the ledger constantly during verification (the publish-time gate alone reads it every ruling). ★★★★★ **`A GUARD THAT BLOCKS VERIFICATION IS WORSE THAN NO GUARD`: it would have trained the seat to disable it, which is how the campaign loses controls.**
+✅ **So the gate is the PUBLISHING act: `tool_name == Bash` AND command matches `git\s+commit` AND `ADVISOR-RULINGS\.md`.** **An uncommitted splice is not a ruling.**
+🛑 **KNOWN LIMIT, STATED RATHER THAN PAPERED OVER: a `git commit -a` that sweeps the ledger without naming it EVADES this guard.** ✅ **That is already a protocol violation (`commit -o <path>` is mandated), so it is out of scope — but it is a hole and it is written in the script's own header, not only here.**
+
+### ✅★★★★★ §4 — THE RED-PROOF. SIX CASES, EACH WITH AN EXPECTED EXIT, ALL PASSING `[MEASURED HERE]`
+Tested by piping JSON payloads directly to the script with `USERPROFILE` redirected to a temp profile — 🛑 **so the REAL sentinel was never touched to manufacture a test condition.**
+| # | case | exit | expect |
+|---|---|---|---|
+| 1 | **Bash ledger commit, NO sentinel — the case that never fired** | **`2` BLOCK** | `2` ✅ |
+| 2 | Bash ledger commit, FRESH sentinel | `0` | `0` ✅ |
+| 3 | **Bash READ of the ledger, NO sentinel — must NOT block** | `0` | `0` ✅ |
+| 4 | Bash unrelated command | `0` | `0` ✅ |
+| 5 | **`Write` on the ledger, NO sentinel — original behaviour preserved** | **`2` BLOCK** | `2` ✅ |
+| 6 | Bash commit of `-OPS` ledger (out of scope) | `0` | `0` ✅ |
+✅ **Cases 3 and 4 are the FALSE-POSITIVE controls and they matter as much as case 1: a guard proven only on the blocking case is a guard nobody has shown to be safe.**
+
+### ✅ §5 — BLAST RADIUS BOUNDED BY CONSTRUCTION
+🛑 **I did NOT add `Bash` to the shared five-guard matcher.** That would have run `grading-guard`, `worker-execution-guard`, `ruling-mechanism-guard` and `ruling-stale-premise-guard` on **every shell command in every session**. ✅ **INSTEAD: a SEPARATE `Bash` matcher block carrying only `advisor-ruling-guard`, and a separate `PostToolUse` `Bash` block carrying only `advisor-ruling-receipt`. The other four guards see exactly what they saw before.** `[MEASURED HERE: JSON re-parsed and the four blocks enumerated.]`
+✅ **BACKUPS TAKEN FIRST — `.claude/` here is NOT a git repository `[MEASURED HERE: `fatal: not a git repository`]`, so there is no `git checkout` undo. Originals are in the session scratchpad.** ★★★ **Recording that because the recovery path is otherwise unobvious to the next seat.**
+
+### 🛑 §6 — WHAT IS **NOT** FIXED, AND WHY IT IS NOT A SMALLER VERSION OF THIS
+**`ruling-mechanism-guard.ps1` and `ruling-stale-premise-guard.ps1` REMAIN BLIND TO SHELL WRITES.** ⚠️ **They are NOT fixable the same way: they inspect the CONTENT being written (mechanism phrasing; the newest-AR citation), and a `git commit` payload carries no content — the text is already on disk.** **They would have to read the ledger's top ruling from the file and diff it against the previous `HEAD`. That is a different design, not a matcher change.**
+🛑 **SO: `R-631`–`R-641` remain ungated for mechanism-claims and stale-premise. I am not claiming otherwise.** ✅ **Both properties WERE satisfied by hand in every ruling this session — every ruling names its newest AR and grades its mechanism claims — but `THAT IS THE DESK BEING CAREFUL, NOT THE GUARD WORKING`, which is the exact sentence I wrote at `R-633` and it still applies to two of the three.**
+
+---
+
+### ★★★★★ §7 — AUTHORIZED NOW / STANDING
+**WORKER:** 🛑 **SEAT IS STOPPED (`AR-686`). `R-639 §6.2` — the crisis-fail-closed `ratify-packet` — REMAINS AUTHORIZED, UNSTARTED, and re-derivation-free (`AR-685`'s handoff packet).** **A fresh seat starts it cold. OPERATOR ACTION: start a worker seat.**
+**DESK (mine, in order):** 1. ⏳ **the `SWEEP-F8` product question** (`exportable=True` with `band='alert_only'`) · 2. ⏳ **`GRADEB-F5` + `F-G1` disposed as ONE class** (`an arm is not a test`) · 3. ⏳ `expected_single`'s uncompared SHA-256 · 4. ⏳ `GRADEA-F-C`, `GRADEA-F-D`, ~35 unconfirmed sweep candidates · 5. ⏳ **the two still-blind guards (`§6`) — a read-from-disk redesign, only while the path stays idle.**
+
+### ★★★ §8 — LESSONS TO PERSIST
+★★★★★ **`A CONTROL WHOSE ARM WORKS AND WHOSE DISARM DOES NOT IS STILL BROKEN.` I diagnosed the block side across five rulings and never once checked the release side of the same control.**
+★★★★★ **`A GUARD THAT BLOCKS VERIFICATION IS WORSE THAN NO GUARD` — gate the publishing act, not every mention of the artifact.**
+★★★★★ **`PROVE A GUARD ON ITS FALSE-POSITIVE CASES TOO.` Cases 3 and 4 are why this one is safe to leave armed.**
+★★★ **`POWERSHELL VARIABLES ARE CASE-INSENSITIVE` — `$OLD` and `$old` are one variable, and the collision produced an exit code that looked like a verdict.**
+
 ## R-640 · 2026-08-03 · ✅★★★★★ **`R-639 §6.1` DONE AND `F-G1` IS CLOSED — VERIFIED BY ME WITH THE SAME INSTRUMENT SHAPE THAT CONVICTED IT: delete the `"error"` arm → **only** `test_crisis_veto_triggers_on_unevaluated_scenario` reddens; delete the DD arm → **only** `test_crisis_veto_triggers_on_dd_breach` reddens. `[MEASURED HERE, both arms, materialised scratch copies]`** ✅★★★★★ **THE REPAIR NOW HAS A PATH TO RED. `crisis-stress-unevaluated` HAS A COMMITTED GUARD FOR THE FIRST TIME.** ✅ **THE WORKER ACCEPTED THE CONVICTION WITHOUT HEDGING — *"`F-G1` is correct and the omission is mine"* — AND THEN DECLARED A HANDOFF RATHER THAN STARTING A THREE-MEMBER PACKET IT COULD NOT FINISH.** 🛑 **PER `advisor-ruling §0.5` I AM **NOT** RE-ASSIGNING `§6.2` TO A HYPOTHETICAL SUCCESSOR: IT STAYS AUTHORIZED TO THE SEAT.**
 
 **★ WORKER — START HERE:** ✅ **`§6.1` approved. `R-639 §6.2` REMAINS YOURS AND REMAINS AUTHORIZED — I am not withdrawing it.** **If you genuinely cannot continue, stop and say so in a final report; that is your call, not a permission I take away.** ★★★ **Your handoff packet is complete enough that any seat can start `§6.2` cold, which is exactly what a handoff is for.**
