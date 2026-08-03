@@ -12,6 +12,68 @@
 
 ---
 
+## R-620 · 2026-08-03 · 🛑🛑★★★★★ **`AR-663` APPROVED — THE SEVERITY INVERSION IS **COMPLETE AND MEASURED**, AND I VERIFIED THE ALGEBRA MYSELF AT ONE LINE: `core.py:939` `overall_passed = len(critical_failures) == 0`, WITH `warnings` COMPUTED AT `:929`, CARRIED AT `:937`, AND **NEVER ENTERING THE VERDICT.**** 🛑★★★★★ **WORSE THAN `R-618` SAID, IN THE DIRECTION THAT MATTERS: `WARNING` IS NOT A WEAKER SIGNAL, IT IS A **DISCONNECTED WIRE THAT IS TYPED IN TYPESCRIPT** — PRODUCED, SERIALIZED, DECLARED AT `backtest-service.ts:376`, AND READ BY NOBODY.** **DECISION: `INV-13` PROMOTION AUTHORIZED **CONDITIONALLY** · `INV-1` HELD PENDING A MEASURED OVERLAP · THE `WARNING` TIER MUST BE WIRED OR RETIRED.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-663`'s controls are the best absence proof of the campaign: `critical_failures` → `5`/`2`/`41` hits on the SAME searches while `warnings` → none, plus THREE false friends found and EXCLUDED rather than counted (`statistical_warnings`, `lifecycle-service.ts`'s zero, `compliance["warnings"]`). **That is why I can act on this without re-deriving it.**** ⚠️ **AND NOTE: you did `§6.1` while `R-619 §3` made the fallback repair first-and-alone — that is NOT scope drift, you were working from `R-618`'s markers, which is exactly the ambiguity `AR-662` flagged and `R-619` fixed. **The timing is mine, the work is good.**** 🛑 **`§4.1` is your next task and it is a MEASUREMENT, not the promotion.**
+
+**RULING ID:** R-620 · **TASK ID:** `AR-663` (`R-618 §6.1`) · **DECISION: CONDITIONAL AUTHORIZATION · HOLD · CONTRACT DECISION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-663`** `[MEASURED HERE]` — read through its `ANSWER 2`. ⚠️ **`[UNENUMERATED — anything after it unread]`.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-EIGHTH time.**
+
+---
+
+### 🛑★★★★★ §1 — THE ALGEBRA, VERIFIED AT THIS DESK
+
+`[MEASURED HERE — read-only, `invariant_harness/core.py`]`
+```
+:928  critical_failures = [c for c in failed_checks if c.severity == "CRITICAL"]
+:929  warnings          = [c for c in failed_checks if c.severity == "WARNING"]
+:937      warnings=warnings,
+:939      overall_passed=len(critical_failures) == 0,
+```
+★★★★★ **`overall_passed` COUNTS ONLY `critical_failures`. `warnings` IS COMPUTED, CARRIED, AND NEVER READ INTO THE VERDICT — verified by me rather than relayed.**
+✅ **`INV-13` IS `WARNING` ON EVERY SURFACE `[MEASURED HERE]`:** `:53` header table · `:744` `def _check_per_firm_endings` · `:752`/`:784`/`:795` all three `InvariantCheck` returns · `:888` registry membership.
+✅ **AND WHAT `CRITICAL` REACHES, DOCUMENTED THREE TIMES IN THE CONSUMER `[MEASURED HERE, `lifecycle-service.ts`]`:** `:1416` *"CRITICAL #6: read resultExtras for invariants.overall_passed"* · `:1653` *"invariants.overall_passed=false → BLOCK (hard gate…)"* · `:1687` *"Invariant harness (B-2): hard block if overall_passed=false"* — **the `TESTING → PAPER` trust boundary.**
+🛑🛑★★★★★ **SO THE INVERSION IS TOTAL `[MEASURED — `INV-1`'s identity at `core.py:171-177`, its `44`/`44` absent-shape passes per the graded instrument, the hard gate at `lifecycle-service.ts:1653`/`:1687`, and `INV-13`'s `WARNING` at the five sites above with zero readers]`: **`INV-1` GUARDS PAPER TRADING WHILE `INV-13` REACHES NOTHING.****
+
+### 🛑★★★★★ §2 — `WARNING` IS NOT A WEAKER SIGNAL, IT IS A DISCONNECTED WIRE THAT LOOKS CONNECTED
+
+`[MEASURED BY DOER, positive-controlled, false friends excluded]` **the verdict travels four hops and dies: `core.py:929` → `backtester.py:5959`/`:8427` serialization → `backtest-service.ts:376` **TS TYPE DECLARATION** `warnings: Array<string>` → NO READER.**
+★★★★★ **THE TYPE DECLARATION IS THE AGGRAVATING FACT. A serialized field with a TypeScript type reads as wired to every future reviewer — the same shape as `event_calendar`, whose declaration at `backtest-service.ts:233` is likewise never assigned (`AR-661`). **TWO INDEPENDENT CHANNELS IN THIS SYSTEM ARE TYPED, PLAUSIBLE, AND DEAD.****
+🛑★★★ **AND IT COMPOUNDS WITH `R-616 §5(c)`: with only WARNING failures, `backtest-service.ts:1304-1319` takes an early return and logs *"backtest.truthiness: all checks passed."* **SO AN `INV-13` FAILURE PRODUCES: no gate effect, no reader, AND a log asserting all checks passed.** Three layers of nothing, one of them actively false.**
+
+### ✅★★★★★ §3 — THE CONTRACT DECISION, AND THE TRAP IN IT
+
+**`INV-13` MUST GATE. It owns the correct uncapped balance check (`R-618 §3`), it CAN fail, and it currently reaches nothing.** ✅ **PROMOTION TO `CRITICAL` IS THE RIGHT DIRECTION AND IT IS MY CALL.**
+🛑🛑★★★★★ **BUT IT IS AUTHORIZED **CONDITIONALLY**, BECAUSE THE TRAP I WITHDREW AT `R-618 §3` RETURNS BY A DIFFERENT ROUTE: IF `INV-13` FIRES ON LEGITIMATE DLL-CAPPED RUNS, PROMOTING IT TO `CRITICAL` **BUILDS THE FALSE-POSITIVE GUARD ON THE PROMOTION GATE THAT I JUST FORBADE.** ★★★ **`[MEASURED HERE, `prop_sim.py:96-100`]` the capped `ending_balance` is a deliberate artifact, so a check that does not model the cap will condemn correct behaviour — and this time at a hard gate rather than into a dead channel.**
+✅ **BLAST RADIUS OF THE PROMOTION, MEASURED: ZERO TODAY.** Nothing is promoting `TESTING → PAPER` (all-`CANDIDATE`, `backtests = 0`), so a new hard block cannot break a live flow. ★★★ **That is exactly why this is the right moment to make a real check gate — and the wrong moment to skip proving it first.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. 🛑★★★★★ **WORKER — MEASURE BEFORE PROMOTING (`§3`): does `INV-13` PASS on a legitimate DLL-capped run?** Construct or find a run where the DLL cap engaged and the reported per-firm ending is therefore intentionally inflated, and **record whether `INV-13` fires.** ✅ **AND the converse: a run with a REAL inconsistency where it fires correctly** — `A GUARD NEVER SHOWN TO GO GREEN IS AS UNTRUSTWORTHY AS ONE NEVER SHOWN TO GO RED` (`R-615 §3`). 🛑 **DO NOT change any severity yet. Report both arms.**
+2. ⏸️ **THEN the promotion, if `§4.1` shows it discriminates.** 🛑 **If it fires on correct capped behaviour, the promotion is CANCELLED and `INV-13` needs the cap modelled first — report that outcome and stop.**
+3. ⏸️ **`INV-1` DISPOSITION IS HELD, deliberately.** 🛑 **I will not retire a `CRITICAL` check on the INFERENCE that `INV-13` covers it.** **Measure the overlap: `balance_arithmetic` vs `per_firm_endings_consistent` — same ground or adjacent?** ★★★ **If `INV-13` covers it, `INV-1` retires rather than occupying a `CRITICAL` slot it cannot earn. If not, `INV-1` needs a real remedy and the one I ordered at `R-617 §4.5` was harmful.**
+4. 🛑★★★★★ **THE `WARNING` TIER ITSELF: WIRE IT OR RETIRE IT — and that is MY decision, not a task.** ⏸️ **Deferred one ruling: it depends on `§4.1`, because if `INV-13` becomes `CRITICAL` the tier may have no members worth wiring.** ★★★ **`A SEVERITY TIER WITH NO CONSUMER IS NOT A LOWER PRIORITY, IT IS A LIE WITH A TYPE SIGNATURE.`**
+5. ⏸️ **THE FALLBACK REPAIR (`R-619 §3`) REMAINS THE PRIORITY LANE** once `§4.1` is reported — it is the only item that produces a trustworthy number. ⏸️ **The desk's historical-record agent lane is in flight** (`MEASURE-DSL-TRADE-HISTORY-2026-08-03.md`), reading pre-registered at `R-619 §4`.
+6. 🛑 **CARRIED: all of `R-619 §5.5`** — the `try:` fail-open, `run_invariants({})` → `14/14`, the `60`/`90` leg unverifiable until re-run.
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; derived-baseline ownership guard. ✅ **`R-576 §5` HELD — read-only source reads only.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-619 §6` plus:** ★★★★★ **`INV-13` promoted to `CRITICAL` before `§4.1` shows it discriminates → STOP; that is `R-618 §3`'s withdrawn false-positive guard arriving by another route, at a hard gate.** · ★★★★★ **`INV-1` retired on the inference that `INV-13` covers it → STOP; measure the overlap (`§4.3`).** · ★★★★★ **any `WARNING`-severity invariant described as a gate, a check, or a signal → STOP; it has zero readers and its TS type makes it look wired (`§2`).** · ★★★ **an `INV-13` failure cited from a log while `backtest-service.ts:1304-1319` prints *"all checks passed"* → STOP; that log is false under WARNING-only failure.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A SEVERITY TIER WITH NO CONSUMER IS NOT A LOWER PRIORITY, IT IS A LIE WITH A TYPE SIGNATURE.` `warnings` is computed, serialized, and DECLARED in TypeScript — and read by nobody. **The type declaration is what makes it survive review: a typed field reads as wired.****
+★★★★★ **`TWO INDEPENDENT CHANNELS IN THIS SYSTEM ARE TYPED, PLAUSIBLE, AND DEAD` — `invariants.warnings` (`backtest-service.ts:376`) and `event_calendar` (`:233`). **Same file, same shape, found by two different lanes on the same night. `fix-pattern`: a declared-but-never-assigned field is a species here, not an incident.****
+★★★★★ **`THE WITHDRAWN TRAP RETURNED BY A DIFFERENT ROUTE.` I forbade a guard that would compare against the deliberately-capped balance (`R-618 §3`); promoting `INV-13` to `CRITICAL` re-creates that exact hazard **at a hard gate** if it does not model the cap. **A remedy withdrawn in one form must be checked for in every other form the same ruling authorizes.****
+★★★ **`THE RIGHT MOMENT TO MAKE A REAL CHECK GATE IS WHEN THE BLAST RADIUS IS ZERO — AND THEREFORE THE WRONG MOMENT TO SKIP PROVING IT.` Nothing promotes to paper today, so a new hard block breaks nothing. That is an argument for doing it now, not for doing it unproven.**
+
+---
+
 ## R-619 · 2026-08-03 · ✅★★★★★ **`AR-662`'s TWO DISPATCH DEFECTS ARE BOTH REAL AND BOTH FIXED HERE — AND THE SECOND ONE EXPOSED A WORSE INCONSISTENCY OF MINE ONE LEVEL UP: **I TOLD THE OPERATOR THE NEXT MILESTONE IS "FIX THE FILTER AND RE-RUN ONE BACKTEST" WHILE MY OWN LEDGER MARKED THAT REPAIR `⏸️` BEHIND TWO DIAGNOSTICS.** MY OPERATOR MESSAGE AND MY RULING DISAGREED ABOUT WHAT IS NEXT.** ✅★★★★★ **RESOLVED BY RULING THE PRIORITY EXPLICITLY RATHER THAN RESTATING IT: **THE FALLBACK REPAIR IS FIRST FOR THE WORKER**, AND THE HISTORICAL-RECORD MEASUREMENT MOVES TO A **DESK-DISPATCHED AGENT LANE — ALREADY FIRED.** WIDTH FROM THE DESK, APPLIED PROPERLY FOR THE FIRST TIME (`R-614 §2`).** **DECISION: CORRECT · SET PRIORITY · PARALLELIZE FROM THIS SEAT.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`R-618 §6.3` — THE FALLBACK REPAIR — IS YOUR FIRST AND ONLY TASK. It is no longer `⏸️`.** ✅ **Both of your dispatch defects are accepted: the replacement item is `§6.1` of `R-618`, NOT `§5` (my typo), and `§6`'s markers contradicted its text about what came first — `§2` here settles it.** ✅★★★ **You have now caught defects in four consecutive dispatches of mine, and this one you caught in the START-HERE block specifically — which you correctly identified as the highest-leverage place in a ruling to be wrong, because it is the one part a cold seat is told to trust without reading further.**
