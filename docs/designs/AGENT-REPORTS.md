@@ -4,6 +4,47 @@
 
 ---
 
+## AR-661 · 2026-08-03 · 🛑🛑🛑★★★★★ **`LANE-8` ANSWERED: **NO — AND IT IS WORSE THAN THE QUESTION ASKED.** THE COMPILED-SPEC / TIER-A LANE DOES NOT SUPPLY `event_calendar.policies`, BECAUSE **NO LANE IN THE REPOSITORY DOES.** THE FIELD IS **DECLARED IN THREE PLACES AND ASSIGNED IN NONE.**** ✅★★★★★ **REPO-WIDE, EVERY FILE TYPE, WITH POSITIVE CONTROLS: `event_calendar` HAS **ZERO** PRODUCERS. THE ONLY NON-TEST OCCURRENCES ARE A PYDANTIC FIELD DECLARATION (`config.py`, DEFAULT `None`), THE READER + DEFECTIVE FALLBACK (`backtester.py`), FOUR PURE PROPAGATIONS (`walk_forward.py`, `request.event_calendar` → itself), AND A TYPESCRIPT INTERFACE FIELD THAT IS NEVER ASSIGNED.** 🛑 **NO FIX MADE, NO FILE MODIFIED — `R-616 §6.1` SAID REPORT THE ANSWER AND NOTHING ELSE.**
+
+**TASK:** `LANE-8` (`R-616 §6.1`) · **BRANCH:** `h1-wave4-sealed12-driver` · **READ-ONLY.** 🛑 **`runtime-production` NOT touched, NOT read. `backtester.py` NOT modified — `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, unchanged.**
+
+### 🛑★★★★★ §1 — THE ANSWER
+
+**`R-616 §3`'s gate is `if request.event_calendar and request.event_calendar.policies and "ts_event" in df.columns:` — else the defective fallback. So the question is whether anything ever populates that field. It does not.**
+
+| surface | occurrences | kind |
+|---|---|---|
+| `src/engine/config.py:638` | `1` | **DECLARATION** — `event_calendar: Optional[EventCalendarConfig] = None` |
+| `src/engine/backtester.py` | reader | the `if`/`elif` gate + `_build_default_event_mask_et` |
+| `src/engine/walk_forward.py` | `4` | **PROPAGATION ONLY** — all four are `event_calendar=request.event_calendar` |
+| `src/server/services/backtest-service.ts:233` | `1` | **TYPE DECLARATION ONLY**, `event_calendar?:` — never assigned |
+| everything else | `0` | tests + docs only |
+
+✅★★★★★ **POSITIVE CONTROLS, SAME SEARCHES, SAME SURFACES — this is not an empty grep over a wrong path:** in the *same* TypeScript config surface, sibling fields of the *same* interface are set repeatedly — `max_trades_per_day` `17`, `commission_per_side` `16`, `walk_forward_splits` `4`. **The searcher finds config fields that are populated; `event_calendar` is not one of them.** ✅ **`grep -rIl` across EVERY file type (`.ts/.tsx/.js/.cjs/.mjs/.json/.yaml/.yml/.py/.md`) returns no producer.** ✅ **camelCase control: `eventCalendar` → `0` hits, so it is not hiding behind a naming convention.**
+⚠️ **`src/server/routes/macro.ts:210` is a FALSE FRIEND and I checked it rather than counting it: it is a Python import string for `src.data.macro.event_calendar`, an unrelated module.**
+
+### 🛑🛑★★★★★ §2 — SO EVERY DSL BACKTEST TAKES THE DEFECTIVE BRANCH
+
+**Combining `§1` with `R-616 §2`'s measured scope:** the class path applies no mask and is unaffected; the DSL `run_backtest` path with a `ts_event` column and no policies hits `_build_default_event_mask_et`. **Since no caller can supply policies, the `if` branch is unreachable in production and the `elif` fallback is the ONLY branch a DSL backtest can take.**
+★★★★★ **THE `if` BRANCH IS DEAD CODE BY THE SAME STANDARD `AR-658` USED TO CONVICT `:7503`** — except this one is dead for want of a caller rather than for want of reachability, and `R-616 §2`'s opt-out (*"callers can disable this by passing event_calendar with an empty policies list"*) **names an escape hatch that no caller in the repository uses.**
+
+### ⚠️★★★★★ §3 — THE HALF I DID **NOT** CLOSE, STATED BEFORE ANYONE READS `§2` AS THE ROOT CAUSE
+
+🛑 **`§2` establishes "every DSL backtest is affected". It does NOT establish "the Phase-1 / Tier-A lane is a DSL backtest" — and `R-616 §3`'s candidate-root-cause hypothesis needs BOTH.**
+**What I measured about the discriminator:** `src/server/lib/backtest-args.ts:33` passes `--strategy-class` **only** when `opts.strategyClass` is truthy; `strategyClass` is populated **only** from `stratConfig.strategy_class` (`routes/backtests.ts:173`, `carter-actions.ts:134`), and `strategy_class` is written only by explicitly class-based entry points (`routes/agent.ts` `run-class-strategy`, `scripts/batch_backtest.py:210`, the `40`-entry `ARCHETYPE_REGISTRY` in `direct-bucket-graduator.ts`). **A config without `strategy_class` therefore takes the DSL path.**
+⚠️ **`[UNMEASURED]` — I did not trace a compiled Phase-1 spec end-to-end to its `BacktestConfig` and confirm `strategy_class` is absent on it.** ★★★★★ **I am deliberately not asserting the campaign-wide root cause on an inference. `R-616 §3` called it *"the largest single finding in the campaign's history, which is exactly why it gets measured before it gets said"* — and the second half of that measurement is the one I have not taken.**
+**NEXT SMALLEST TASK:** take one real compiled Phase-1 / Tier-A spec and record whether its config carries `strategy_class`. That single fact converts `§2` + `§3` into either a campaign-wide root cause or a bounded DSL-only defect.
+
+### §4 — WHAT I DID NOT DO
+
+🛑 **No fix. No file modified. No `signals.py` touch. `LANE-9` NOT started** — `R-616 §7` makes fixing the fallback before this measurement a STOP condition, and `§3` shows the measurement is only half complete.
+⚠️ **Static trace, not execution.** I read call sites and searched producers; I did not run the Phase-1 lane.
+🛑 **Not graded — doer ≠ grader.** The `accuracy-validator` request already standing at `AR-660 §9` covers this AR too; the highest-value false-green hunt here is **"find any producer of `event_calendar` I missed."**
+
+**RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§2`; **`§3`'s remaining half requested as the next lane.**
+
+---
+
 ## AR-660 · 2026-08-03 · 🛑🛑🛑★★★★★ **`LANE-7` ANSWERED: `INV-1` **CANNOT** BE MADE CAPABLE OF FAILING INSIDE MY ALLOWED SURFACE, AND THE REASON IS A **JOIN-KEY** DEFECT, NOT A MISSING FEATURE. THE ENGINE EMITS `ending_balance` — AT `prop_sim.py:465`, ONE LEVEL DOWN, INSIDE `prop_compliance[firm]`. `INV-1` READS IT AT **TOP LEVEL**, WHERE **NOTHING WRITES IT, EVER.**** ✅★★★★★ **PROVEN BY EXECUTION, NOT BY GREP: A THREE-ARM PROBE SPYING ON THE REAL `run_invariants(result)` CALL SITE, INCLUDING A **TRADING** ARM (`3` TRADES, `total_return = -16.22`) IN WHICH `INV-1` STILL RETURNS `diff = 0.0000` **EXACTLY** AND PUBLISHES `ending_balance = 49983.78` — A NUMBER THE ENGINE NEVER PRODUCED.** ✅ **`§4.2` DELIVERED: THIRD CATEGORY BUILT, TABLE RE-PUBLISHED, `9`/`5` NOW RESOLVES TO `guarded 5` · `BLIND-but-falsifiable 8` · `UNFALSIFIABLE 1`.** ⚠️ **AND MY OWN INSTRUMENT LIED TO ME TWICE BEFORE IT TOLD THE TRUTH — BOTH SELF-CORRECTIONS ARE IN `§4`.**
 
 **TASK:** `LANE-7` (`R-615 §4.1` + `§4.2`) · **BRANCH:** `h1-wave4-sealed12-driver` · **SEAT:** worker, `claude.exe 21508` (same OS process as `AR-658`/`AR-659`; `/clear` replaced the conversation, not the seat). 🛑 **`invariant_harness/core.py` **NOT MODIFIED** — the disposition is a contract decision and `R-615 §4.1` said propose, do not take. `backtester.py` BYTE-PRISTINE, `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, identical to `AR-658`/`AR-659`'s pin. `runtime-production` NOT touched, NOT read.**
