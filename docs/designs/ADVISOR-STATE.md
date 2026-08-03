@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3638` at THIS commit, 2026-08-02 22:40 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3641` at THIS commit, 2026-08-02 23:15 [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3638` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3641` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:4x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FRESH CONVERSATION after a `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-606` (`28c149a6`). Newest AR: `AR-650` (start-receipt) — unruled by design, as are `AR-643`/`644`/`646`/`648`/`649`. `AR-647` **RULED / APPROVED** by `R-603`. **NOTHING UNRULED.** Worker: ✅ **WORKING on `R-605 §5.1`.**
+**Ruling ledger at `R-609` (`509387a0`). Newest AR: `AR-652` — **unruled BY DESIGN: a step-zero progress receipt on an already-authorized lane that requests nothing.** `AR-651` RULED/APPROVED at `R-608`; `AR-643`/`644`/`646`/`648`/`649`/`650` unruled by design. **NOTHING UNRULED-AND-OWED.** Worker: ✅ **WORKING on `LANE-2` (`R-608 §6.1`).** ★★★ **NOT RULING A PURE PROGRESS RECEIPT IS THE VELOCITY FIX IN PRACTICE (`R-607 §3`) — a round-trip per receipt is what dominated wall-clock.**
+🛑★★★★★ **`AR-652` — TWO FINDINGS TO KEEP `[MEASURED BY DOER, commands quoted]`:** **(1) MY OWN LANE-2 BRIEF WAS WRONG BY OMISSION and it would have read as "THE RIG IS BROKEN": `scripts/null_gate_calibration.py --smoke` dies instantly with `ModuleNotFoundError: No module named 'scripts.generate_null_strategies'` — **the file EXISTS; it is a `sys.path` fault.** With the repo root on `PYTHONPATH`: **`rc=0`, a full battery end-to-end.** ✅ **THE VEHICLE WORKS.** ★★★ **`briefs-assert` PAID OFF — I told the worker to consume the scoping doc CRITICALLY, NOT OBEY IT, and step-zero is exactly what caught the omission before work depended on it.**
+⚠️★★★★★ **(2) A REAL LATENT HAZARD, RECORDED BECAUSE IT WILL NOT ANNOUNCE ITSELF: `import vectorbt` HANGS — `rc=124` at `240s`, NO output, NO traceback, NO error.** ✅ **NOT blocking today: `[MEASURED BY DOER]` `src/engine/backtester.py:4982` and `:7207` are both LAZY imports inside functions, and `null_gate_calibration.py` does not import it at all.** 🛑 **BUT ANY future non-lazy import of `vectorbt` HANGS THE ENGINE SILENTLY — no error to alert on. `[UNENUMERATED — OPEN]` whether other modules import it eagerly, and the root cause of the hang. `absence-means`: a silent hang fails OPEN, which is the worst failure shape for an unattended run.**
+✅★★★★★ **AND THE DISCIPLINE THAT MADE `AR-652` TRUSTWORTHY: it refused to let a green vehicle read as progress on the goal — *"THIS IS STEP-ZERO ONLY. NO DEFECT HAS BEEN PLANTED AND THE RIG HAS NOT BEEN SHOWN TO GO RED — `LANE-2`'s actual goal is NOT met."* ★★★ **That is the exact opposite of the four instruments that failed tonight, and it is a doer separating VEHICLE-WORKS from GUARD-BITES unprompted.**
 🛑★★★★★ **`R-606` — THE BIGGEST FINDING OF THE SESSION, AND IT IS ABOUT THE DESK'S OWN LANE: `P0PC-CLAUSE-STATUS-2026-08-02.md:111` (committed `c9f5ab51` at `19:25` with `AR-636`, **BEFORE `R-594` discovered `4d-ii`**) ALREADY ASSIGNS CLAUSE `4d` TO **`red-proof.mjs`'s `43` ROWS** — the `CONTROL GREEN:` line, the `VERDICT:` line and the `allOk` conjunction at `red-proof.mjs:604` — status `READING_PRESENT`.** `:141-143` prints `red-proof.mjs = 43` against `run.mjs FAILURE_CLASSES = 25` with a **non-identity verdict of `false`**, both re-derivations agreeing with the programs' own runtime prints `[MEASURED HERE]`.
 🛑★★★★★ **SO `R-596`–`R-603` INSTRUMENTED AND LITIGATED `4d` OVER `evidence-order.mjs`'s INJECTION KNOBS (`25`, THEN `37`) — A POPULATION THE CAMPAIGN'S OWN CLAUSE-STATUS DOC DOES NOT ASSIGN TO `4d`.** **FOUR candidates now: the `43` · `FAILURE_CLASSES`' `25` · the knobs' `25`→`37` · `(C)`.** ⚠️ **`[HYPOTHESIS]` that the `43` is CORRECT — it is evidence of INTENT, not authority; `R-606 §1` shows the requirement defines nothing anywhere.**
 🛑★★★★★ **AND `R-596 §8`'s `25 == 25` "CORROBORATION" HAS A WORSE EXPLANATION: the TRUNCATED knob count matched `FAILURE_CLASSES`' `25`, which `:143` prints non-identical to the assigned `43`. **THREE SETS, TWO OF SIZE `25`, ONE COINCIDENCE READ AS A JOIN.** `TWO EQUAL NUMBERS ARE NOT A JOIN` — convicted twice on the same number.**
