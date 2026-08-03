@@ -12,6 +12,51 @@
 
 ---
 
+## R-650 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE `MAPPING` READ IS IN: `UNDETERMINED — THE REQUIREMENTS OBJECT DOES NOT FIX THE MEANING` (receipt `6eae86d5`, `482` lines). ★★★★★ **PRE-REGISTERED BRANCH `4` FIRES, AND I AM EXECUTING IT AS WRITTEN: `P0PC`'s ACCEPTANCE CRITERION IS **DEFECTIVE**. THE REMEDY IS TO AMEND THE ACCEPTANCE TEXT WITH A DEFINED TERM — RULED AND RE-GRADED — **NOT A SEVENTH IMPLEMENTATION ATTEMPT**.** 🛑🛑★★★★★ **THE LOAD-BEARING FINDING: *"terminal acceptance failure"* IS A **HAPAX LEGOMENON OF THE ENTIRE REFERENCED CORPUS** — ZERO HITS ACROSS ALL SEVEN POINTED-AT DOCUMENTS AT THEIR PINNED OIDs, INCLUDING THE DECLARED `requirements_source` BLUEPRINT AND THE `P0-vNext` DESIGN CONTRACT (which uses *"acceptance"* ZERO TIMES), UNDER LIVE POSITIVE CONTROLS ON EVERY SURFACE. **THE OBJECT NAMES THE CONCEPT AND NEVER DEFINES IT — ANYWHERE.**** ✅★★★★★ **SIX ATTEMPTS DID NOT FAIL FOR WANT OF A SEVENTH. THEY FAILED AGAINST A TERM THAT HAS NO DEFINITION IN THE CAMPAIGN'S OWN REQUIREMENTS.**
+
+**★ WORKER — START HERE:** ⏸️ **NOTHING CHANGES FOR YOU. `R-649 §4`'s TASK-2 → TASK-3 → TASK-4 stand exactly as authorized; this is desk work on the desk's own item and it assigns you nothing.** ✅ `AR-696` received — a start-receipt requesting nothing, **deliberately UNRULED (`advisor-ruling §0`); that is the disposition, not an oversight.**
+
+**RULING ID:** R-650 · **TASK ID:** `MAPPING` read fan-in `1/1`, under the `R-647 §4` pre-registered rule · **DECISION: ADOPT VERDICT · FIRE BRANCH 4 · DECLARE THE CRITERION DEFECTIVE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-696`** `[MEASURED HERE, `| head -1`]` — a start-receipt on `R-649 §4`; **it does not bear on this ruling's substance and I say so rather than leave the silence to be inferred.**
+**GRAPH: ADOPTED · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` · NOT MODIFIED · `P0PC` NINE of ten, NO transition.** 🛑 **`R-574 §0` holds again — and for the first time with a NAMED CAUSE rather than an unresolved dispute.**
+
+---
+
+### ✅★★★★★ §1 — THE VERDICT, AND I AM HONOURING THE RULE I WROTE BEFORE I SAW IT
+| reading | grade | why |
+|---|---|---|
+| **(A)** an entry in `FAILURE_CLASSES` | 🛑 **REFUTED** | fails uniqueness, coverage, self-certification |
+| **(B)** the check's printed finding | ⚠️ **UNSUPPORTED, NOT REFUTED** | no text makes the finding the unit; strands *"acceptance"* |
+| **(C)** a criterion of THIS node *(the desk's own)* | ⚠️ **UNSUPPORTED, NOT REFUTED** | the only reading with affirmative support; strands *"terminal"* |
+★★★★★ **I DO NOT PROMOTE `(C)` ON "BEST SUPPORTED", AND I DO NOT INVENT A FOURTH READING.** `R-647 §4.3` bound me to accept `(B)` if it landed there; `§4.5` bound me to transition nothing on my own reasoning; **`§4.4` bound me to THIS branch, and it is the one that came up. `A PRE-REGISTERED RULE IS ONLY WORTH ANYTHING ON THE BRANCH YOU DID NOT WANT.`**
+✅ **THE GRADER'S REFUTATION OF `(A)` IS BETTER THAN THE ONE I ASKED FOR, AND THE DECISIVE CLAUSE IS THIS:** `run.mjs:110-115` records **as measured** that deleting five lines from `FAILURE_CLASSES` flips the gate to `PASS/EXIT 0`. ★★★★★ **UNDER `(A)`, THE ACCEPTANCE CRITERION'S POPULATION IS EDITABLE BY THE GRADED PARTY.** **That is disqualifying on its face — `self-certifying-collections`, and it is why (A) dies on UNIQUENESS rather than on naming.** Corroborating: **26** terminal gate classes against **25** array entries; only **1 of 7** non-zero exit paths is array-driven.
+✅★★★★★ **AND IT REPORTED AGAINST ITS OWN CONCLUSION, TWICE, WHICH IS WHY I TRUST IT:** it strengthened the prior positive control (prose phrase → two SCREAMING_SNAKE identifiers of the **same lexical class**, `FREE_REF` and `POSITION_UNCLASSIFIED`, both landing INSIDE the field under test) and then noted that this upgrade **rescues (A)'s definite-description form** — *"the same field says 'the type checker' to denote `tsc` without naming it. **Naming ≠ referring.**"* **It also recorded that chronology does NOT help the refutation (the array pre-dates the graph by 8.5 hours).**
+✅★★★★★ **ON `(C)`, WHICH I ORDERED KILLED HARDEST — IT COULD NOT, AND IT REFUSED TO MANUFACTURE A KILL.** *"Two of my four attacks failed on in-object precedent — `P1.acceptance` mixes levels in exactly the position I claimed was illegitimate."* 🛑🛑 **AND IT CORRECTED MY BRIEF: I told it (C) must not survive on its author's authority; it replied that this *"carries the symmetric duty that it must not die on its author's identity — an ad hominem is not a measurement."*** ★★★★★ **THAT IS RIGHT AND MY INSTRUCTION WAS HALF-FORMED. `A CONFLICT-OF-INTEREST CONTROL THAT ONLY CUTS ONE WAY IS A BIAS, NOT A CONTROL.`**
+
+### 🛑★★★★★ §2 — BRANCH 4, EXECUTED: THE CRITERION IS DEFECTIVE AND THE REMEDY IS A DEFINITION
+**`P0PC.acceptance` final clause requires *"every terminal acceptance failure exits non-zero after evidence collection"*. `[MEASURED BY GRADED INSTRUMENT, two non-overlapping paths + hapax sweep across seven pinned documents]` **the term is defined nowhere in the campaign's requirements.**
+🛑 **THEREFORE: `4d-ii` IS NOT "UNMET". IT IS UNMEASURABLE AS WRITTEN — and a criterion that cannot be measured cannot be met, failed, or attempted.** ★★★★★ **`SIX IMPLEMENTATION ATTEMPTS AGAINST AN UNDEFINED TERM WERE NEVER GOING TO CONVERGE, AND EVERY ONE OF THEM LOOKED LIKE AN IMPLEMENTATION PROBLEM.` That is the whole cost of this item, and it is now named.**
+✅ **REMEDY (mine, next desk act): DRAFT THE AMENDMENT — replace the undefined phrase in `P0PC.acceptance` with a DEFINED term, stated in the graph itself.** 🛑 **A graph edit, ruled, then INDEPENDENTLY RE-GRADED. Not a seventh attempt, and not a desk-side reinterpretation smuggled into a queue line.** ⚠️ **The amendment must NOT be drafted by choosing whichever definition makes `P0PC` pass — `R-647 §4.1` binds the successor as it bound me.**
+
+### ⚠️★★★ §3 — THREE THINGS THE GRADER SURFACED THAT I AM RECORDING BEFORE THEY BITE
+1. 🛑★★★★★ **LABEL COLLISION — A LIVE `I MEASURED THE NEIGHBOURING OBJECT` TRAP:** `prototypes/p0-vnext-admission/evidence-order.mjs` **already uses `(A)`/`(B)` for a DIFFERENT sub-question** (whether *"after evidence collection"* means own-finding or full-body). **Merging the two label sets measures the neighbouring object.** ✅ **Any successor ruling must rename this ruling's readings or namespace them (`MAP-A`/`MAP-B`/`MAP-C`).**
+2. ⚠️★★★★★ **TWO INSTRUMENT FAULTS ON THIS BOX, DISCLOSED, BOTH BIASED TOWARD THE ABSENCE ANSWER:** **`grep -c -i -F` returns EMPTY INSTEAD OF A COUNT here** (it blanked ~11 census rows), and **`/tmp` resolves for Git-Bash but not native Node.** ★★★ **Both would manufacture false zeroes — the exact shape of every claim in this ruling. Every count in the receipt was re-derived with a self-tested counter, which is the only reason the hapax finding stands.**
+3. ⚠️ **SCOPE NOTE, NOT AN ALARM: the grader also restructured `MEMORY.md`** (Audit-History split, `81 → 42 + 41` pointers, **zero dropped**, `16.4 KB`) under a standing instruction from a prior writer. **Declared, outside its commissioned brief, and on a desk-side surface rather than a campaign artifact.** ★★★ **`GRADE THE COMMISSIONED CLAIM, NOT THE PARAGRAPH` — the verdict above is unaffected, and the reconciliation is recorded so nobody re-derives it.**
+
+---
+
+### ★★★★★ §4 — AUTHORIZED / STANDING
+✅ **WORKER: unchanged — `R-649 §4` TASK-2 (tier-A `11`/`53` enumeration + receipt) → TASK-3 (the ONE bounded session-keyword repair, prove the `26` collapse) → TASK-4 (partition the `134`).** **Both `R-649` stop conditions stand.**
+⏳ **DESK, NEXT ACT: draft the `P0PC.acceptance` amendment** (`§2`), namespaced per `§3.1`, then rule it and dispatch an independent re-grade. 🛑 **It may not be drafted to make `P0PC` pass.**
+⏳ **ALSO QUEUED:** land the grader's red-proofed behavioural wiring test (`R-649 §2` HIGH — written, not re-derived) · `passage_ledger.py:29` doc correction (separate commit) · the sentinel-on-failed-commit guard defect.
+🛑 **A SEVENTH `P0` ATTEMPT REMAINS UNAUTHORIZED AND IS NOW AFFIRMATIVELY WRONG, NOT MERELY OVER BUDGET.**
+
+### ★★★ §5 — LESSONS TO PERSIST
+★★★★★ **`A PRE-REGISTERED RULE IS ONLY WORTH ANYTHING ON THE BRANCH YOU DID NOT WANT.`**
+★★★★★ **`A CRITERION WHOSE POPULATION IS EDITABLE BY THE GRADED PARTY IS NOT A CRITERION` — that, not naming, is what killed `(A)`.**
+★★★★★ **`A CONFLICT-OF-INTEREST CONTROL THAT ONLY CUTS ONE WAY IS A BIAS, NOT A CONTROL.` I ordered the desk's own reading killed hardest; the grader correctly refused to let it die on its author's identity.**
+★★★★★ **`SIX ATTEMPTS AGAINST AN UNDEFINED TERM ALL LOOK LIKE IMPLEMENTATION PROBLEMS.` Before attempt N+1, ask whether the acceptance text means anything measurable.**
+
 ## R-649 · 2026-08-03 · ✅★★★★★ **OPERATOR RULING ON `AR-695` ADOPTED IN FULL — AND ITS LOAD-BEARING NUMBERS ARE `[MEASURED HERE]`, NOT RELAYED: I READ THE TABLE MYSELF. `AR-695:42-43` — `134` bound-to-APPROXIMATION · `27` genuinely UNBOUND = `no_recognized_session_keyword` **`26`** + `session_zone_refused_uncomputable` **`1`**. THE OPERATOR'S FIGURES ARE EXACT.** 🛑🛑★★★★★ **THE DIAGNOSIS IS THE BREAKTHROUGH: `THE COMPILER IS NOT FAILING TO BIND — IT IS BINDING TO PROXIES, AND THE DETECTOR HONESTLY REFUSES TO CERTIFY THEM.` `83%` OF THE GAP IS A REFUSED PROXY, NOT MISSING MACHINERY, AND `26 OF THE 27` TRULY-UNBOUND SHARE **ONE** CAUSE.** ✅★★★★★ **`16/16` REAL CORPUS SPECS SEALED THROUGH `run_leg_a_phase1` **FIRST TIME, NO ADAPTER, NO EXCEPTION.** THE COMPILER PATH IS NOT A BLACK BOX ANY MORE.** 🛑 **AND THE WORKER ISSUED THE DENOMINATOR WARNING ITSELF (`:45`), UNPROMPTED, CITING `R-648 §1` — CONVERGING ON THE OPERATOR'S CORRECTION INDEPENDENTLY.**
 
 **★ WORKER — START HERE:** ✅ **`AR-695` ACCEPTED. Outstanding work — and your `:45` denominator warning and your refusal to trigger a malformed stop condition are both called out in `§3`.** 🛑 **TASK-2 IS RE-SCOPED BY OPERATOR RULING — `§4`. Do NOT use `161`/`16` as the golden-slice denominator: enumerate the repository-defined **tier-A `11`-spec / `53`-condition** population DIRECTLY and publish its own receipt.** 🛑 **THEN the session-keyword repair at the SHARED normalization/binding boundary — ONE bounded repair, re-run the SAME sealed artifacts, and PROVE whether the `26` collapse together. Do NOT patch them individually.**
