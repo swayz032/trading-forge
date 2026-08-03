@@ -4,6 +4,46 @@
 
 ---
 
+## AR-731 · 2026-08-03 · ✅★★★★★ **`R-672 §2` DELIVERED — AND THE HAZARD IS **REAL BUT MIS-LOCATED**, WHICH CHANGES WHAT IT MEANS.** ✅ **THE CALL-SITE DEFAULT DOES **NOT** SILENTLY DECIDE THE INSTRUMENT ON THE API PATH: `backtests.ts:103` validates `symbol: z.enum(["MES","MNQ","MCL"])` AND `:189` resolves it from the DB row, so `config.strategy.symbol` IS ALWAYS POPULATED THERE.** 🛑🛑🛑★★★★★ **BUT THE INSTRUMENT WAS **NEVER DERIVED FROM THE SPEC'S TAUGHT SCOPE AT ANY POINT.** IT IS SET AT ONBOARDING BY `inferSymbolSet`, WHICH **IGNORES BOTH ITS NAME ARGUMENTS** (`_strategyName`, `_conceptName` — UNDERSCORE-PREFIXED, UNUSED) AND RETURNS **`["MES","MNQ","MCL"]` FOR EVERY SPEC.** ⚖️★★★★★ **AND THAT IS **NOT A DEFECT — IT IS A DELIBERATE OPERATOR MANDATE**, quoted in-source: *"test every concept on all 3 markets until backtest tells us otherwise."***
+
+**TASK:** `R-672 §2`. **RUN MODE: READ-ONLY STATIC READS AT HEAD `14ad51c1`, `grep`/file reads only. NO backtest, NO pytest, NO code change.** **NOTHING under `src/` modified.** ✅ **STOP CONDITION DID NOT FIRE — no run was needed.**
+
+### ✅ §1 — THE CALL CHAIN, EVERY SITE THAT SETS OR OMITS `symbol`
+| # | site | what it does with `symbol` |
+|---|---|---|
+| `1` | `spec-onboarding-service.ts:469-470` | `opts.symbols ?? (inferSymbolSet(null, conceptName, "MES"))` — **the `"MES"` here is `originalMarket`, a THIRD default upstream of the backtester** |
+| `2` | `wave25-strategy-defaults.ts:98-115` | `inferSymbolSet(_strategyName, _conceptName, originalMarket)` → `new Set([originalMarket, ...SYMBOL_AGNOSTIC_DEFAULT])`, where `SYMBOL_AGNOSTIC_DEFAULT = ["MES","MNQ","MCL"]` (`:96`) |
+| `3` | `spec-onboarding-service.ts:534-535` | `for (const symbol of symbols)` — **ONE DB `strategies` ROW PER SYMBOL**; `symbol` is a persisted column |
+| `4` | `routes/backtests.ts:103` | request schema: **`symbol: z.enum(["MES","MNQ","MCL"])` — REQUIRED, validated** |
+| `5` | `routes/backtests.ts:189` | `symbol: strat!.symbol` — resolved from the DB strategy row when no inline config |
+| `6` | `backtester.py:8331-8332` | `symbol=_strategy_cfg_for_spec.get("symbol", "MES")` — **the call-site default** |
+| `7` | `spec_condition_compiler.py:1410-1411` | `def from_compiled_spec(..., symbol="MES", timeframe="5m")` — **the signature default** |
+✅ **POSITIVE CONTROL, RUN AS ITS OWN STATEMENT: `grep -c "export function"` on `wave25-strategy-defaults.ts` → `6`. **The finder fires on that file, so the `inferSymbolSet` read is a measurement.**
+
+### ✅★★★★★ §2 — ANSWERING THE QUESTION AS ASKED: **CAN THE DEFAULT SILENTLY DECIDE?**
+🛑 **SEPARATING THE TWO STACKED DEFAULTS, AS I RECEIPTED I WOULD:**
+- **SITE `7` (the signature default) IS UNREACHABLE FROM BAND C** — site `6` always passes an explicit keyword argument, so the signature default is never consulted on this path. **It has a default; the default cannot fire here.**
+- **SITE `6` (the call-site default) IS REACHABLE ONLY IF `config["strategy"]` IS ABSENT OR NOT A DICT, OR LACKS `"symbol"`.** `[MEASURED]` `_strategy_cfg_for_spec = config.get("strategy", {}) if isinstance(config.get("strategy"), dict) else {}` — **a non-dict or missing `strategy` collapses to `{}` and `"MES"` fires.**
+✅ **ON THE API PATH IT CANNOT FIRE: sites `4`+`5` mean `symbol` is zod-validated and DB-resolved before the Python side is reached.**
+🛑 **`[UNENUMERATED]` — THE RESIDUAL SURFACE, NAMED RATHER THAN DISMISSED: any caller that constructs `config` WITHOUT the API route — a direct Python invocation, a CLI, a script, a test — reaches site `6` and gets `MES` silently. **I did NOT enumerate those callers.** ★★★ **So the honest verdict is *"cannot fire via the route"*, NOT *"cannot fire"*.**
+
+### 🛑🛑🛑★★★★★ §3 — THE FINDING THAT ACTUALLY MATTERS, AND IT IS NOT A DEFECT
+`[MEASURED HERE — `wave25-strategy-defaults.ts:98-115`, the executable lines]` **`inferSymbolSet` DOES NOT INFER.** Both name parameters are **underscore-prefixed and unused**; the body returns `originalMarket` unioned with `["MES","MNQ","MCL"]` — **which is always just those three.**
+✅ **ITS IN-SOURCE JUSTIFICATION, QUOTED VERBATIM:** *"Wave 26 Pass F.2 (2026-05-25) — **operator mandate**: 'test every concept on all 3 markets until backtest tells us otherwise'. DEPLOY-stage filters to markets where the concept proves out. Removed the nasdaq/oil/S&P-specific detection from Pass E… **we let backtest decide, not the LLM-derived concept name**."*
+⚖️★★★★★ **SO THE INSTRUMENT IS CHOSEN BY A DELIBERATE FAN-OUT, ON THE OPERATOR'S OWN INSTRUCTION, AND EXPLICITLY *NOT* FROM THE CONCEPT NAME.** 🛑 **I AM NOT CALLING THIS A DEFECT AND I AM NOT PROPOSING A CHANGE.**
+🛑🛑★★★★★ **WHAT I AM REPORTING IS THE TENSION, BECAUSE IT IS EXACTLY THE QUESTION `R-669 §3` LEFT OPEN: **`R-669 §3` measured that instrument scope is TAUGHT TEXT — `0RBexa9JpIg__s0`'s educator says *"You can apply this strategy on every currency pair."*** **AND THIS PIPELINE WOULD ONBOARD IT AS THREE ROWS: `MES`, `MNQ`, `MCL`.** ★★★★★ **`THE FAN-OUT IS A POLICY DECISION ABOUT WHERE EDGE MIGHT EXIST; THE TAUGHT SCOPE IS A STATEMENT ABOUT WHAT THE EDUCATOR CLAIMED. THEY ARE DIFFERENT QUESTIONS AND THE PIPELINE CURRENTLY ANSWERS ONLY THE FIRST.` **That is the `PRESERVE MEANING` question `R-669 §4` reserved to the desk, now with a measured mechanism attached rather than a hypothetical one.**
+⚠️ **AND IT IS LATENT, AS `R-672 §2` SAID: `[MEASURED — `R-668 §2`]` no tier-A spec has an instrument this repo holds data for, and none is executing. **Nothing is mis-attributed today.**
+
+### ⚠️ §4 — WHAT I DID **NOT** MEASURE
+🛑 **`[UNENUMERATED]`: non-route callers that reach site `6`** (see `§2`) — the residual surface for a silent `MES`.
+🛑 **`[UNENUMERATED]`: `timeframe`.** I traced `symbol` end-to-end; **`timeframe="5m"` has the same two-default shape at sites `6`/`7` and I did NOT trace its setters.** ★★★ **I am naming this rather than letting a `symbol`-only trace read as a `symbol`+`timeframe` answer.**
+🛑 **`[UNENUMERATED]`: whether `MCL` resolves to the `CL` data in `data_cache/`.** `data_cache/` holds `CL`, not `MCL` `[MEASURED, `AR-723`]`; **whether the loader maps micro→full symbols is unchecked, and I am not inferring it.**
+🛑 **I did NOT verify that `opts.symbols` is ever actually supplied by a real caller** — if it always is, site `1`'s `"MES"` is as unreachable as site `7`. **Untraced.**
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`.** ✅ **AND I HAVE NO FURTHER AUTHORIZED LANE: `R-672 §3` holds the strategic pivot for a FRESH ADVISOR SEAT, and `R-672 §2` was the last lane addressed to me.** **I HOLD THE SEAT AND HAVE CONTEXT — but this is a clean boundary with zero outstanding work, and `worker-onboarding §4.5` names exactly that as the cheap moment to swap. **THAT IS THE OPERATOR'S CALL, NOT A HANDOFF DECLARATION BY ME.**
+
+---
+
 ## AR-730 · 2026-08-03 · ⏳ **START-RECEIPT — `R-672 §2`, THE `MES`-DEFAULT HAZARD. SAME SEAT.**
 
 **TASK: on the Band C path, can the `symbol`/`timeframe` DEFAULT silently decide the instrument, or is it always supplied from the spec's own config?** **Read-only, call-chain trace, positive control mandatory.**
