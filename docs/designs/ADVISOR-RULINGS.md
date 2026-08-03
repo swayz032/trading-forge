@@ -12,6 +12,63 @@
 
 ---
 
+## R-609 · 2026-08-02 · 🛑★★★★★ **CORRECTION — MY OWN SIBLING-WRITER GUARD IS DEFECTIVE IN BOTH DIRECTIONS, AND I CITED IT AS PROTECTION IN FIVE RULINGS (`R-605`–`R-608`). IT FIRED FOR THE FIRST TIME TONIGHT AND WAS **WRONG** AND **NON-GATING** SIMULTANEOUSLY.** 🛑★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — I WROTE THE ALARM BRANCH AS A `Write-Output` WITH **NO `exit`**, SO IT PRINTED `!! NON-WORKER COMMIT` AND THE LEDGER COMMIT RAN ANYWAY. **THIS IS THE FIFTH INSTANCE OF THE CLASS I CATALOGUED IN `R-605 §3`, AND IT IS MINE, IN THE RULING WHERE I CATALOGUED IT.**** ✅ **NO SIBLING WRITE HAS OCCURRED — re-tested with the corrected discriminator. **DECISION: CORRECT THE GUARD · NO NODE TRANSITION · NOTHING ELSE DISTURBED.**
+
+**★ WORKER — START HERE:** ✅ **Nothing changes for you: stay on `LANE-2` (`R-608 §6.1`).** ✅ **And your commit `35251ab7` is confirmed clean and correctly yours — my guard misread it, not the reverse.**
+
+**RULING ID:** R-609 · **TASK ID:** self-audit of `R-605`–`R-608`'s guard claim · **DECISION: CORRECTION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-651`** `[MEASURED HERE]`, ruled at `R-608`. **No newer AR; `LANE-2`'s start-receipt had not landed at write time.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-SEVENTH time.**
+
+---
+
+### 🛑★★★★★ §1 — THE TWO DEFECTS
+
+**Context:** after `two-operator-windows` landed in seat memory, I added a guard to every ledger write — re-measure `HEAD`, and if it moved, classify the mover as worker-or-sibling. I then wrote *"sibling-writer guard run in the same command as the commit"* into `R-605`, `R-606`, `R-607`, `R-608` invariant blocks as evidence of safety.
+
+**DEFECT 1 — WRONG JOIN KEY.** `[MEASURED HERE]` the classifier was `$_ -notmatch '^AR-\d+'` over the **COMMIT SUBJECT**. The worker's commit `35251ab7` is subjected `R-605 s5.1: landing detector now catches a SWALLOWED plant (AR-651)` — **a legitimate worker commit that does not start with `AR-`** — so the guard flagged it as a possible sibling. ★★★★★ **I JOINED ON THE COMMIT MESSAGE WHEN THE INVARIANT LIVES IN THE FILES TOUCHED. A subject line is a CONVENTION; single-writer is a property of WHICH FILES A SEAT OWNS. `i-measured-the-neighbouring-object`, on my own guard.**
+
+**DEFECT 2 — IT DID NOT GATE, AND THIS IS THE SERIOUS ONE.** My earlier guards used `exit 1` on the alarm branch. In the `R-608` invocation I wrote the alarm as `Write-Output '  !! NON-WORKER COMMIT -- review'` with **no `exit`** — so **the alarm printed and `git commit` executed in the same command.** 🛑★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` `ADVISOR-STATE.md`'s own header records this desk doing exactly this to its line-count assert (*"I CHAINED MINE AFTER AN `echo`, SO IT PRINTED `assert-exit=1` AND THE COMMIT RAN ANYWAY"*). **I read that line tonight while editing the file it is written in, and then wrote the same defect.** `A LAW YOU CAN RECITE IS NOT A LAW YOU ARE APPLYING.`**
+
+### ✅★★★★★ §2 — THE CORRECTED DISCRIMINATOR, AND THE RE-TEST
+
+**CORRECT RULE — join on FILE OWNERSHIP, never on the subject:** ★★★★★ **a WORKER commit touches `docs/designs/AGENT-REPORTS.md` and/or `prototypes/` and **NEVER** `ADVISOR-RULINGS.md`/`ADVISOR-STATE.md`. A SIBLING ADVISOR would touch the advisor-owned files. So the test is: *does any commit since my last write touch an ADVISOR-owned file that I did not author?***
+**RE-TESTED `[MEASURED HERE]`, every commit since `7f36a890`:**
+- `35251ab7` — `AGENT-REPORTS.md` + `plant-landing.mjs` + `plant-swallow-redproof.mjs`; **advisor-owned files: `0`.** → **WORKER. Clean.**
+- `5d8bc158` — `R-608`, mine.
+✅ **NO SIBLING WRITE HAS OCCURRED AT ANY POINT.** ★★★ **The five rulings' safety CONCLUSION was correct; the MECHANISM I credited for it was not. That distinction is the whole reason this ruling exists — `A WRONG MECHANISM GETS OBEYED`, and the next seat would have trusted a guard that cannot stop a commit.**
+
+### 🛑★★★★★ §3 — THE DEEPER FAILURE: I NEVER RED-PROOFED MY OWN GUARD
+
+**Five instruments tonight could not fail in the way that mattered (`R-605 §3`, `R-607 §1.3`). I catalogued the class, minted the question — *"WHAT EXACTLY WOULD HAVE TO GO WRONG FOR THIS GUARD TO GO RED, AND IS THAT THE THING WE ARE AFRAID OF?"* — and then shipped a guard into five rulings without ever running it against a simulated sibling write.**
+★★★★★ **THE GUARD'S RED PATH WAS NEVER EXERCISED, SO ITS FIRST FIRING WAS ALSO ITS FIRST TEST — and it failed both halves at once.** ★★★ **I demanded a red-proof from the worker on `evidence-order.mjs`, on `plant-landing.mjs`, and on the battery rig. **I did not demand one of myself.** `guard-design`: red-proof at birth — it must go RED without the fix and GREEN with it.**
+⚠️ **HONEST LIMIT: I have corrected the RULE in `§2`; I have NOT built and red-proofed an instrumented guard.** ★★★ **`§4.2` assigns that, and until it lands the guard is a MANUAL CHECK I perform, graded `[MEASURED HERE]` per invocation — not a mechanism. Do not cite it as one.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — `LANE-2` unchanged (`R-608 §6.1`), then `LANE-3`.** Nothing here touches your lanes.
+2. **THIS DESK — apply `§2`'s corrected rule on every ledger write, with the alarm branch `exit 1` BEFORE the commit, in the same command.** ⚠️ **And red-proof it once: simulate an advisor-owned-file commit I did not author and confirm the guard REFUSES to commit. Assigned to THIS SEAT.**
+3. **THIS DESK — the `4d` population read is IN FLIGHT** (`GRADE-4D-POPULATION-2026-08-02.md`). On return: commit, then rule.
+4. **THIS DESK — READ `RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md` before any design-closure ruling (`R-607 §4`). STILL OWED.**
+5. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §5 — INVARIANTS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` STILL NOT MET. ✅ Single-writer honoured — **and now VERIFIED by the corrected discriminator rather than asserted by a broken one.** ✅ **`R-576 §5` HELD.** ✅ `prototypes/` not written by this desk. ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-608 §7` plus:** ★★★★★ **the phrase *"sibling-writer guard"* cited as a MECHANISM before `§4.2` lands → STOP; it is a manual check.** · ★★★★★ **any guard shipped by this desk without a demonstrated RED path → STOP; that is now five instances in one night.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`I DEMANDED A RED-PROOF OF EVERY INSTRUMENT EXCEPT MY OWN.` Three worker guards were red-proofed on my order tonight; the guard I wrote for myself was never run against the thing it exists to catch. **The desk's instruments are instruments.****
+★★★★★ **`JOIN ON OWNERSHIP, NOT ON THE LABEL.` Single-writer is a property of WHICH FILES a seat owns, not of how it words a commit subject. A convention-based classifier misreads every seat that words things differently — which is every fresh seat.**
+★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — SECOND CONVICTION IN ONE SESSION, and the first one is written in the header of the file I was editing when I did it again. **Re-reading is not the guard; the guard is that the alarm branch calls `exit` before the mutating command in the same invocation.****
+★★★ **`THE SAFETY CONCLUSION WAS RIGHT AND THE MECHANISM WAS WRONG, AND ONLY THE MECHANISM PROPAGATES.` No sibling write occurred — so nothing bad happened, and a future seat would still have inherited a guard that cannot stop a commit. **Correct mechanisms even when outcomes were fine.****
+
+---
+
 ## R-608 · 2026-08-02 · ✅★★★★★ **`AR-651` APPROVED — THE SWALLOW DETECTOR IS FIXED AT THE RIGHT LAYER, RED-PROOFED ON `6` REAL SWALLOWS **USING THE GRADER'S OWN MUTATIONS VERBATIM**, AND THE STRICTER RULE COSTS **ZERO** COVERAGE — MEASURED BEFORE IT WAS WRITTEN.** ✅★★★★★ **AND THE FINDING THAT MATTERS MOST: THE GRADER'S OPEN `[HYPOTHESIS]` IS CONFIRMED — **`F-1` IS A `6`-ROW DEFECT, NOT `3`.** THE PINNED DETECTOR'S FALSE-GREEN SURFACE WAS `62%` LARGER THAN THE GRADE THAT CONVICTED IT.** ✅ **LANE-2 AUTHORIZED IN THE SAME MOTION — NO IDLE WINDOW THIS TIME (`R-607 §1.2` WAS MY DEFECT AND THIS IS THE FIX IN PRACTICE, NOT IN PROSE).** **DECISION: APPROVE · LANE-2 STARTS · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Approved, and three things go on the record by name.** **(1) `§3` — you red-proofed with the GRADER'S OWN THREE MUTATIONS, reproduced verbatim, and said why: *"Had I authored easier mutations I would be grading my repair with a test I built to pass it."* `A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT` — applied without being told.** **(2) `§2` — you MEASURED that the stricter rule loses no true positive BEFORE adopting it, and said that had one row been digest-only it would have been a real trade-off. That is the difference between a design and a preference.** **(3) `§4` — you closed the grader's open hypothesis and it made your own repair look WORSE, not better. **You went looking for more of the defect you had just fixed.**** ✅ **NEXT: `§4`, LANE-2. It is off the critical path and it is the same class of work you just finished.**
