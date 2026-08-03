@@ -1,13 +1,11 @@
 """Tests for performance gates + Forge Score — TDD."""
 
-import pytest
 
 from src.engine.performance_gate import (
     check_performance_gate,
     classify_tier,
     compute_forge_score,
 )
-
 
 # ─── Helpers ───────────────────────────────────────────────────────
 
@@ -275,6 +273,45 @@ class TestForgeScore:
         assert result["crisis_veto"] is True
         assert result["score"] == 0.0
         assert result["passed"] is False
+
+    def test_crisis_veto_triggers_on_unevaluated_scenario(self):
+        """R-639 §6.1 (F-1 / F-G1): a crisis scenario that CRASHED must veto.
+
+        stress_test.py:132-138 emits a failed scenario as
+        {"passed": False, "max_drawdown": 0, "error": "..."}. A DD-only veto
+        reads 0 > firm_max_dd as False, so a crisis test that BLEW UP scored as
+        a clean pass — the strategy looked like it survived 2008 because the
+        2008 check never ran.
+
+        This is the committed red-proof the F-1 repair shipped without: deleting
+        the `"error" in s` arm in performance_gate.py must turn THIS test red
+        and leave test_crisis_veto_triggers_on_dd_breach green.
+        """
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        # The CRASHED shape, verbatim from stress_test.py:132-138. Note
+        # max_drawdown=0: a DD compare alone CANNOT distinguish this from a
+        # scenario that survived with zero drawdown.
+        crisis_crashed = {
+            "passed": False,
+            "scenarios": [
+                {"passed": True, "max_drawdown": 100.0, "name": "covid_crash"},
+                {"passed": False, "max_drawdown": 0, "name": "gfc_2008",
+                 "error": "ZeroDivisionError('stress run failed')"},
+            ],
+        }
+        result = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_crashed)
+        assert result["crisis_veto"] is True, (
+            "a crisis scenario carrying an 'error' key did not veto — an "
+            "unevaluated stress test is being scored as a clean pass"
+        )
+        assert result["score"] == 0.0
+        assert result["passed"] is False
+        # The reason must name WHY, so a reader cannot mistake it for a breach.
+        assert "unevaluated" in result["crisis_veto_reason"], (
+            f"veto reason should identify the scenario as unevaluated, got: "
+            f"{result['crisis_veto_reason']!r}"
+        )
 
     def test_crisis_partial_fail_without_dd_breach_no_veto(self):
         """Partial failure (scenarios passed=False but no max_drawdown key) does not veto."""
