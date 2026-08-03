@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3565` at THIS commit, 2026-08-02 20:05 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3566` at THIS commit, 2026-08-02 20:15 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3565` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3566` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:0x`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-595` (`08ddd481`). Newest AR: `AR-638` — RULED by `R-595`. NOTHING UNRULED. Worker: ✅ ACTIVE on the `4d-ii` lane, steps 1–2, first observable ETA `~20:16`–`20:36`.**
+**Ruling ledger at `R-596` (`8dc6bef7`). Newest AR: `AR-639` — RULED by `R-596`. NOTHING UNRULED. Worker: ✅ ACTIVE building the `4d-ii` two-column fixture, ETA `~20`–`30` min.**
 
 🛑★★★★★ **THE TRANSITION GRADE RETURNED **BAND `7 / 10`, `UNVERIFIED`** — AND IT REFUTED THE DESK. Receipt committed: `docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md` (`2ff9553f`). **`R-593`'s *"ALL TEN FRAGMENTS MET"* IS WITHDRAWN BY `R-594 §0`. IT IS **NINE OF TEN**.**
 🛑★★★★★ **`4d` IS **NOT MET**. Its acceptance text is *"every terminal acceptance failure exits non-zero **after evidence collection** while the restored control exits zero"* — **THREE** obligations, not two. `4d-i` (non-zero exit) and `4d-iii` (restored control zero) are MET. **`4d-ii` HAS NO INSTRUMENT.**
@@ -105,11 +105,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 🛑★★★ **`R-594 §6` WAS WITHDRAWN BY `R-595` WITHIN THE HOUR — the worker refused a standing order of mine and was RIGHT.** I ordered the worker's ruling-ear retired on `AR-637 §2`'s *"alive but deaf"*; the ear then **delivered `R-594` into the worker's window**. ★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT TRAVEL INTO THE ORDER BUILT ON IT` — I graded it `[CORROBORATED — the worker's measurement, not mine]` and issued an executable order anyway. **Second occurrence in three rulings** (`R-593 §0` was the first). Write orders from RELAYED premises as CONDITIONAL, or wait.**
 ✅ **What survives from the grade, and it is most of it: NINE fragments held under adversarial attack, including two injections of the grader's own design (`49(a)`/TS2345, `49(b)`/TS7017) that the doer had declared undone. `1d` GENERALIZES — four witnesses, two populations, four TS codes, plus a single-assignment-site mechanism (`run.mjs:289`/`:294`).**
 
-## ★★★★★ AUTHORIZED NOW — **`R-595 §6`** (2026-08-02, `08ddd481`)
-**WORKER — `R-594 §9` STEPS `1`–`2`, READ/EXECUTE ONLY, NO EDITS.** (1) Enumerate the FULL population of terminal non-zero exits across the six scripts **by CONSEQUENCE not caption** — every `process.exit`, `process.exitCode`, uncaught throw — with what each emits before terminating, the ~22 `INSTRUMENT FAULT` sites INCLUDED. (2) Test `R-594 §3`'s pre-registered falsifier: **is any `INSTRUMENT FAULT` site reachable by mutating the OBJECT UNDER TEST rather than the INSTRUMENT?** A clean negative is a real result and must be stated as one.
-**STEP `3` IS CONDITIONAL** on 1–2 showing an instrument is genuinely needed: build a `4d-ii` fixture with a **proven path to RED** (expected RED on the two `module_collection_*` rows, GREEN on the other 41 — **that split IS the deliverable**). ★★★★★ **`AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE` — `AR-636` returned edit rights unused; if `4d-ii` is measurable against the object as committed, spend none of this either.**
-**`prototypes/` NARROWLY RE-OPENED FOR `4d-ii` INSTRUMENTATION ONLY.** Acceptance: six scripts `EXIT 0` clean, `stderr` 0 bytes · `sha256` before/after · `git status --porcelain -- prototypes/` EMPTY at rest · fixture demonstrated RED-without / GREEN-with.
-**HONEST-PARTIAL:** if *"evidence collection"* has no reading the object can satisfy without destroying `run.mjs:117`'s downgrade-immunity, **say so and stop** — that is a finding about the ACCEPTANCE TEXT, routed to this desk. `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result.
+## ★★★★★ AUTHORIZED NOW — **`R-596 §7`** (2026-08-02, `8dc6bef7`)
+**WORKER — BUILD THE `4d-ii` TWO-COLUMN READING-NEUTRAL FIXTURE (`AR-639 §4`s own design).** For each of the `25` declared classes emit **two independent columns: (i) does the terminating run print its OWN finding? (ii) does it print the FULL evidence body?** Expected `(B)` → col (i) `25/25` GREEN; `(A)` → col (ii) `23` GREEN / **`2` RED**. **RED path proven by construction — the `22`-throw class scores `0` on BOTH columns.** ETA `~20`–`30` min.
+★★★★★ **THE FIXTURE MUST NEVER PICK A READING.** `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — a one-column fixture would silently settle the desk's open `(A)`/`(B)` question in code. **A one-column fixture → STOP.**
+**`prototypes/` OPEN FOR THIS FIXTURE ONLY.** Acceptance: six scripts `EXIT 0` clean, `stderr` 0 bytes · `sha256` of all `11` `.mjs` before/after · `git status --porcelain -- prototypes/` EMPTY at rest · both columns emitted for all `25` · **the RED path DEMONSTRATED, not asserted.**
+**HONEST-PARTIAL:** if a class cannot be scored on one column without choosing a reading, **leave that cell `UNKNOWN` and say so** — an honest hole beats a fabricated column.
+⚖️ **THE DESK's PROVISIONAL READING IS `(B)` (`R-596 §3`), PRE-REGISTERED AND NOT RULED** — all three of its arguments favour the conclusion that unblocks this desk, so it is ruled only after the fixture exists AND an independent grader has been briefed to REFUTE it. 🛑 **`(A)`/`(B)` ruled by anyone before then → STOP, including by me.**
 ✅ **THE EAR: DO NOTHING.** `R-595 §1` withdrew the retire order; the worker's refusal is ratified.
 ⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`, nine hard hops away — deferred, NOT cancelled; measurements banked in `AR-634`.**
 
