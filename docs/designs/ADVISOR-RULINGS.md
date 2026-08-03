@@ -12,6 +12,80 @@
 
 ---
 
+## R-615 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-658` APPROVED — AND IT FOUND THE PUREST INSTANCE OF THE NIGHT'S DEFECT CLASS, IN THE **FIRST** INVARIANT, AT **`CRITICAL`** SEVERITY: `INV-1 _check_balance_arithmetic` IS **A TAUTOLOGY ON EVERY REAL BACKTEST.** I CONFIRMED IT AT THE EXECUTABLE LINE: `core.py:173` DEFAULTS `ending` TO `starting + total_return`, `:175` SETS `expected_ending = starting + total_return` — **THE IDENTICAL EXPRESSION** — SO `:176`'s `diff` IS `0.0` AND `:177` PASSES, ALWAYS. AND THE KEY IS ALWAYS ABSENT: `starting_balance` AND `ending_balance` EACH APPEAR **`0`** TIMES IN `backtester.py` (CONTROLS `max_drawdown` `10`, `profit_factor` `34`, SAME FILE, SAME SEARCH). **IT HAS NEVER BEEN CAPABLE OF FAILING.** ✅ **AND THE PF TRACE CLOSES `AR-654`'s OPEN ITEM: `:5323` IS THE LIVE REPORTING IMPLEMENTATION (`60`/`90`, WITNESS `60×`), `:7503` IS DEAD (`0`/`90`, EXECUTED `0×`).** 🛑 **THE PF ANCHOR IS WRITTEN AND DELIBERATELY **NOT SHIPPED** — NO FIXTURE CAN MAKE THE ENGINE EMIT AN ENTRY SIGNAL, SO IT CANNOT BE GREEN-CONTROLLED.** **DECISION: APPROVE · `INV-1` ESCALATED ABOVE EVERYTHING · NON-DELIVERY RATIFIED AS CORRECT.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Three things, and the third is the one I most want to keep.** **(1)** You separated the two byte-identical PF sites by planting them **individually** where `AR-654` had planted them together and honestly said it could not tell them apart — **that closes a carried `[UNENUMERATED]` with an execution witness on each side.** **(2)** `INV-1` is the best finding of the session and you found it while doing something else. **(3)** ★★★★★ **YOU WROTE THE PF ANCHOR AND REFUSED TO SHIP IT, because you could not build a fixture that makes the engine emit a single entry signal and therefore could not GREEN-control it. `A STOP CONDITION OWES A DISCRIMINATES FIXTURE` — you had the code and withheld it for want of the control. **That is the discipline this campaign has spent all night failing at, applied by the doer against its own deliverable.****
+
+**RULING ID:** R-615 · **TASK ID:** `AR-658` (`LANE-3`, `R-614 §6.1`) · **DECISION: APPROVE · ESCALATE `INV-1` · RATIFY THE NON-DELIVERY.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-658`** `[MEASURED HERE]` — read through `§1`'s plant table. ⚠️ **`[UNENUMERATED — `§2` onward unread]`.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-THIRD time.**
+
+---
+
+### 🛑🛑🛑★★★★★ §1 — `INV-1` IS A TAUTOLOGY, CONFIRMED AT THIS DESK
+
+`[MEASURED HERE — read-only, `invariant_harness/core.py`]`
+```
+:171  starting        = _safe_float(result.get("starting_balance", _STARTING_BALANCE))
+:172  total_return    = _aggregate_metric(result, "total_return", 0.0)
+:173  ending          = _safe_float(result.get("ending_balance", starting + total_return))   <- DEFAULT
+:175  expected_ending = starting + total_return                                              <- IDENTICAL
+:176  diff            = abs(ending - expected_ending)
+:177  passed          = diff <= TOLERANCE
+```
+★★★★★ **`:173`'s DEFAULT AND `:175`'s EXPECTED VALUE ARE THE SAME EXPRESSION. When `ending_balance` is absent, `ending == expected_ending` exactly, `diff == 0.0`, `passed == True` — for every input, forever.**
+✅ **AND THE ABSENCE IS PERMANENT, NOT SITUATIONAL `[MEASURED HERE, positive-controlled on the same file and search]`: `starting_balance` → `0` occurrences in `backtester.py` · `ending_balance` → `0` · CONTROL `max_drawdown` → `10` · CONTROL `profit_factor` → `34`.** **The engine has never emitted either key, so the default path is the ONLY path.**
+🛑🛑 **SO A `CRITICAL`-SEVERITY GUARD, THE FIRST IN THE HARNESS, COMPARES A VALUE TO ITSELF. `INV-7`'s `0.0 >= 0` was blind to a class of defect; `INV-1` is blind to ALL of them.** ★★★★★ **`A GUARD WHOSE EXPECTED VALUE IS COMPUTED FROM ITS OWN DEFAULT IS AN IDENTITY, NOT A CHECK` — and `starting` is a module constant too, so BOTH sides of the comparison are derived from the same two numbers.**
+⚠️ **AND IT REFRAMES EVERY COUNT I HAVE PUBLISHED TONIGHT: `9`-of-`14`-blind treated blindness as one property. **`INV-1` is not on that spectrum — it is unfalsifiable rather than under-guarded**, and no absence-sweep can distinguish those two, because a tautology PASSES the absence probe exactly as a blind check does. `§3`.**
+
+### ✅★★★★★ §2 — THE PF TRACE CLOSES A CARRIED `[UNENUMERATED]`
+
+**`backtester.py` carries TWO byte-identical PF expressions. `AR-654` planted them TOGETHER and honestly recorded that it could not separate them. `AR-658` planted each ALONE, one battery run per plant, hash-asserted moved and restored** `[MEASURED BY DOER, `n=90` each]`:
+
+| plant | reported `profit_factor` changed | execution witness | verdict |
+|---|---|---|---|
+| **`:5323` only** | 🛑 **`60` / `90`** (every backtest that took trades) | **`60×`** | **THE LIVE REPORTING IMPLEMENTATION** |
+| **`:7503` only** | ✅ **`0` / `90`** | **`0×`** | **DEAD — never executes** |
+
+★★★★★ **THE EXECUTION WITNESS IS WHAT MAKES THIS A FINDING RATHER THAN A GUESS: `0`/`90` alone would be indistinguishable from "the plant did not land". `0` changes AND `0` executions separates DEAD from UNREACHED.** ★★★ **Same law that made `AR-654`'s blindness result load-bearing (`R-611 §2`), applied to a second question. **The campaign now has a repeatable technique for "is this code live?" and it is cheaper than reading callers.****
+✅ **`backtester.py` BYTE-PRISTINE at delivery — `git hash-object` `177ec9e1…`, identical to its pre-lane value; isolated tree `wt-lane3-pfanchor-20260803` detached and pinned to SHA `6eb4326d`; main repo NOT written; no push/merge/PR.** ★★★ **Second lane running the SHA-pinned isolated-worktree pattern without being told again.**
+
+### ✅★★★★★ §3 — THE NON-DELIVERY IS RATIFIED, AND IT CONTAINS ITS OWN FINDING
+
+**`AR-658` wrote the `profit_factor` engine anchor and DID NOT SHIP IT: *"NO FIXTURE I CAN BUILD MAKES THE ENGINE EMIT A SINGLE ENTRY SIGNAL, SO I CANNOT GREEN-CONTROL IT. REPORTED, NOT SHIPPED."***
+✅★★★★★ **RATIFIED AS THE CORRECT CALL. `green-check`: A STOP CONDITION OWES A DISCRIMINATES FIXTURE.** A guard that has never been shown to go GREEN on a healthy input is as untrustworthy as one that has never gone RED — **it might be reddening on everything, and "it caught the plant" would not distinguish those.** ★★★ **The doer had working code and withheld it for want of the control. **On a night when seven guards shipped without that property, the eighth was withheld BY THE DOER.****
+🛑★★★★★ **AND THE FINDING INSIDE THE NON-DELIVERY IS BIGGER THAN THE ANCHOR: IF NO FIXTURE CAN MAKE THE ENGINE EMIT AN ENTRY SIGNAL, THEN **THE TEST SUITE CANNOT EXERCISE `profit_factor` END-TO-END AT ALL.** That is why it has no anchor in either tier (`R-614 §1`) — **not an oversight, a TESTABILITY GAP**, and it is `[UNENUMERATED]` how many other metrics share it.**
+🛑 **A FINDING ABOUT MY OWN INSTRUMENT, from `§1`: `scripts/invariant_absence_sweep.py` CANNOT DISTINGUISH "blind to absence" from "cannot fail at all."** A tautology passes the absence probe identically to a merely-blind check. **So the sweep's `9`/`5` split is a Class-A partition and says NOTHING about unfalsifiability.** ⚠️ **`INV-1` may therefore be counted among the "guarded" `5` — I have NOT checked which bucket it landed in, and `§4.2` orders it.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — `LANE-7`, AND IT OUTRANKS EVERYTHING QUEUED: MAKE `INV-1` CAPABLE OF FAILING, OR REPORT THAT IT CANNOT BE.**
+   - **THE PROPERTY: the check must be able to return `False` on some reachable input.** ⚠️ **Note the honest possibility: if the engine emits neither balance key and never will, the correct outcome may be to **DELETE or DISABLE `INV-1`** rather than repair it — a `CRITICAL` check that cannot fail is worse than no check, because it occupies the slot and reports green. **That is a contract decision; propose it, do not take it.**
+   - **RED-PROOF: construct an input on which `INV-1` returns `False`, and a GREEN control on which it returns `True` for a real reason rather than by identity.** 🛑 **If you cannot build the RED case, that IS the finding and it decides the disposition.**
+   - **ALLOWED: `invariant_harness/` + its tests. `backtester.py` READ-ONLY.** `runtime-production` NOT touched.
+2. ✅ **AND RE-CLASSIFY THE SWEEP (`§3`): report which bucket `INV-1` landed in, and add a THIRD category — `UNFALSIFIABLE` — distinct from `blind`.** ★★★ **Then re-publish the table. `9`/`5` is a Class-A partition and I have been quoting it as if it measured guard strength.**
+3. ⏸️ **`LANE-3`'s PF anchor STAYS UNSHIPPED, correctly** — and the **testability gap** (`§3`) is now the reason, recorded. ⏸️ **`LANE-6`'s remaining Class-A `9` still queued behind these.**
+4. **THIS DESK — the invariant-harness grade is IN FLIGHT.** ⚠️ **I am DELIBERATELY NOT feeding it `§1`.** ★★★ **If it finds `INV-1` independently that is corroboration on a second path; if it misses a `CRITICAL` tautology in the first invariant of the file it was sent to attack, **that is a finding about the GRADER's coverage** and I want to know it. Contaminating it would destroy both readings.**
+5. 🛑 **CARRIED, UNADJUDICATED: everything in `R-614 §6.5`**, plus **the propagation / `WARNING`-severity / `try:`-swallow trio (`R-614 §6.3`) — still the three that decide whether any of this counts.**
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; ownership guard with `exit` before each write. ✅ **`R-576 §5` HELD — I ran nothing; `§1` is read-only source reads and `Select-String` counts.** ✅ **`backtester.py` byte-pristine, hash-asserted by the doer.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-614 §7` plus:** ★★★★★ **`INV-1` cited as a passing CRITICAL check → STOP; it is an identity and has never been able to fail.** · ★★★★★ **the sweep's `9`/`5` cited as a measure of guard STRENGTH → STOP; it partitions Class-A absence only and cannot see unfalsifiability (`§3`).** · ★★★★★ **the PF anchor shipped without a GREEN control → STOP; `AR-658` withheld it for exactly that reason.** · ★★★ **`:7503` "fixed" → STOP; it is measured DEAD (`0` executions) and editing it changes nothing while adding risk.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A GUARD WHOSE EXPECTED VALUE IS COMPUTED FROM ITS OWN DEFAULT IS AN IDENTITY, NOT A CHECK.` `INV-1` compares `starting + total_return` against a default of `starting + total_return`. **It is `CRITICAL`, it is first in the file, and it has never been able to fail.** Look for this shape wherever a check supplies a fallback for the value it is about to test.**
+★★★★★ **`BLIND AND UNFALSIFIABLE ARE DIFFERENT PROPERTIES AND NO ABSENCE SWEEP SEPARATES THEM.` A tautology passes an absence probe exactly as a blind check does — so my `9`-of-`14` has been describing Class-A coverage while I quoted it as guard strength.**
+★★★★★ **`A GUARD NEVER SHOWN TO GO GREEN IS AS UNTRUSTWORTHY AS ONE NEVER SHOWN TO GO RED.` The doer wrote a working anchor and withheld it for want of a green control. **Withholding a finished deliverable for a missing control is the hardest form of this discipline and it came from the doer, not the desk.****
+★★★★★ **`ZERO CHANGES PLUS ZERO EXECUTIONS SEPARATES DEAD FROM UNREACHED.` Planting the two identical PF sites individually, each with an execution witness, closed a carried `[UNENUMERATED]` and gives the campaign a cheap repeatable test for "is this code live?" — cheaper than reading callers, and it does not lie about dynamic dispatch.**
+★★★ **`A NON-DELIVERY CAN CONTAIN A BIGGER FINDING THAN THE DELIVERY WOULD HAVE.` "I cannot build a fixture that emits an entry signal" is not an excuse — it is the measured reason `profit_factor` is unanchored in both tiers, and it raises the open question of how many other metrics are untestable end-to-end.**
+
+---
+
 ## R-614 · 2026-08-03 · 🛑★★★★★ **`AR-657` APPROVED, AND IT CORRECTS `R-613 §4.2` TWICE OVER: THE METRIC TEST HAS **TWO TIERS**, TIER 2 (`TestSnapshotRiskMetricsAnchor`) **DOES** ANCHOR AGAINST THE ENGINE, AND TIER 1's SELF-CONTAINMENT IS **DOCUMENTED AS DELIBERATE** — SO MY ORDERED FIX WOULD HAVE RE-CREATED A TIER 2 THAT ALREADY EXISTS.** 🛑🛑★★★★★ **AND THE CAPABILITY ERROR THAT INVALIDATES MY WHOLE VELOCITY PLAN: `R-613 §4.2` ORDERED `LANE-3` AS A **SUBAGENT LANE**, AND THE WORKER'S HARNESS **FORBIDS IT FROM SPAWNING AGENTS.** **SO `R-607 §3`'s ADOPTION OF §8a BATCHING WAS NEVER ACHIEVABLE AS WRITTEN — WIDTH CANNOT COME FROM THE WORKER AT ALL.** ✅ **AND THE THREE-TIMES-OWED GRADE IS FIRED — BLOCKED ONCE ON A HARD SESSION LIMIT, RESUMED AT `02:47`.** **DECISION: APPROVE · CORRECT `R-613 §4.2` AND `R-612 §4.1` · RE-SCOPE `LANE-3` · WIDTH MOVES TO THE DESK.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-657` is exactly right to have built NOTHING, and `§1` is why: you found my target description was the wrong shape and stopped rather than implementing to it. **Three of my contracts tonight have named a mechanism that did not meet the defect, and you caught all three.** ✅ **`§0`'s routing correction is accepted in full — subagent and grader questions come here, and you were right that they are CAPABILITY claims naming an actor rather than blockers. The grade is FIRED (`§5`); you never could have fired it, and three unanswered requests were my failure, not your patience.** ✅★★★ **And your own near-miss disclosure — grepping `^import|^from` and nearly publishing "zero engine imports" when both are FUNCTION-LEVEL at `:99`/`:114` — is the fifth `i-measured-the-neighbouring-object` this session and the second caught by its own author before publication.**
