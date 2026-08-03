@@ -4,6 +4,59 @@
 
 ---
 
+## AR-716 · 2026-08-03 · ✅★★★★★ **`R-662 §7` + `R-663 §1` DELIVERED — THE FIDELITY TERM IS IN, `5` TESTS RED→GREEN, `339 passed`.** 🛑🛑★★★★★ **AND I DID **NOT** DO `§7.6`: THE GUARD AMENDMENT IS **NOT OWED**, BECAUSE THE GUARD NEVER GOES RED — `0` OF ITS `26` ROWS BIND BY SESSION KEYWORD, MEASURED, WITH A POSITIVE CONTROL. **AMENDING A CORRECT GUARD THAT MY CHANGE CANNOT TOUCH WOULD BE A GRATUITOUS WEAKENING**, so I stopped and am reporting instead.** ⚠️ **`§7.1`'s RELAYED `18`-PHRASE KEYWORD LIST IS **`17`** — counted here, as you told me to.**
+
+**TASK:** `R-662 §7` (attempt `1` of `2`), as amended mid-task by `R-663 §1`. **COMMITS: `9de44345` (4 tests RED) · `61be9fa7` (adjacent-value test RED) · `c067a652` (the fix).** **NOT GRAPH-SCHEDULED.**
+
+### ✅★★★★★ §1 — THE LAYER, LOCATED BEFORE ANY CODE
+`[MEASURED HERE — `bind_condition()` called directly, default flags]` **The grant is `spec_family_bindings.py:2497-2510`, the FLAG-**OFF** keyword branch: `zone = resolve_session_keyword(obj)` → bind with `approximation=meta.effective_approximation()` = **`False` for `WAIT_SESSION`, unconditionally.** **Nothing on that path ever compared the bound window against the taught text.**
+✅★★★★ **AND THE FLAG-**ON** NAME ROUTE IS NOT DEFECTIVE — `resolve_session_name_to_window` already refuses any phrase carrying a clock token (its pinned `(i)`). **SO `F-1` IS A FLAG-OFF-ONLY DEFECT**, which is why it sits on the DEFAULT path and why it matters.
+🛑 **I REPRODUCED IT WITH AN EXPLICIT TAUGHT SPAN RATHER THAN AN ABSENT ONE — a strictly stronger arm than `R-662 §1`'s:** `"the new york am session from 9:30 a.m. to 9:35 a.m. Eastern"` → `bindable=True`, `zone=ny_am`, **`approximation=False`**, bound window `[420,600)` = `180` min against a `5`-minute teaching. **`36×`, certified exact.**
+
+### ✅★★★★★ §2 — RED-PROOF, WITH THE CONVICTING INSTRUMENT, RE-MEASURED IN THE SAME RUN
+`[MEASURED HERE]` **at `61be9fa7` (fix absent, verified by `grep -c` = `0`): `3 failed, 2 passed`. At `c067a652`: `5 passed`.**
+✅ **THE TWO THAT PASSED AT BOTH ENDS ARE THE ARMS THAT MUST NOT MOVE** — the green witness (taught span EQUALS the bound window) and the scope boundary (no clock → term does not fire). **A fix that "refused everything" would have broken them; `§7.4` is satisfied by construction AND by measurement.**
+✅★★★★★ **THE REFUSAL ARMS ARE SELF-WITNESSING, so `absence-claim` is honoured without a counter: `WAIT_SESSION`'s `base_approximation` is `False`, so **`False` is exactly what a route that never executed leaves behind.** `approximation is True` can only be produced by the term actually running.
+✅ **`R-663 §1`'s adjacent band is closed: london `[120,300)` vs taught `2:01–5:00` and `2:00–5:01` — one minute at either endpoint, both must refuse. RED before, GREEN after.**
+
+### ✅★★★★★ §3 — WHAT IS COMPARED, AND WHY IT IS NOT A RESTATED CONSTANT
+✅ **`_derive_session_zone_window_by_execution()` EXECUTES `session_windows.is_in_killzone` over all `1440` ET minutes and reads the window off its OWN answers.** 🛑 **`_REAL_ZONE_INTERVALS` is a LOCAL MIRROR of `session_windows.py` — a restated constant — and is deliberately NOT what this compares against (`R-660 §3`: *"re-asserting a constant is not a comparison"*).** ✅ **FAILS CLOSED on any import/execution/shape error.**
+
+### 🛑🛑★★★★★ §4 — `§7.6` NOT DONE, AND THE MEASUREMENT IS THE REASON
+`[MEASURED HERE, before the fix and again after]` **`0` of the guard's `26` rows bind by session keyword; `5` carry clock tokens; `0` have BOTH — and BOTH is the only shape this term can move.** **POSITIVE CONTROL: a synthetic row with both properties fires the detector (`zone=ny_am`, `clocks=2`).**
+✅ **`test_m3_s7_flag_off_is_byte_identical_to_the_parent_commit` **PASSED**, and I verified with `-v` that it RAN rather than SKIPPED, together with `test_m3_prepacket_module_really_is_pre_packet`.**
+🛑★★★★★ **SO THERE IS NOTHING TO AMEND. `R-661`/`R-662` expected this conflict because **LANE A** converts `NO-BIND → BIND` on a row inside that population; **MY ROUTE ONLY EVER MOVES THE EXACTNESS FLAG ON ROWS THAT ALREADY BIND, AND THERE ARE NONE THERE.** `A TOLERANCE ADDED TO A GUARD OWES A FRESH DEMONSTRATION THAT IT STILL BITES` — I would have owed you that, and I would rather owe you nothing.** ⚠️ **`§7.6`'s STOP applies to an amendment I did not make; it is not fired, it is not reached.**
+
+### ✅★★★★★ §5 — CORPUS IMPACT `0`, MEASURED THREE WAYS, EACH WITH A POSITIVE CONTROL
+| population | n | rows changed |
+|---|---|---|
+| the guard's `session-ab` rows | `26` | **`0`** |
+| `claude-rung-v32/shakedown_specs`, field-by-field vs `HEAD` | **`161`** ✅ *reproduces the campaign's own `161`* | **`0`** |
+| every `object` string in `1,077` JSON under `docs/` | **`2,129` distinct** | **`0` bind by session keyword AT ALL** |
+✅ **ANTI-VACUITY on the diff harness: it asserts the `HEAD` module LACKS `_session_keyword_fidelity_approximation` before diffing, and its positive control shows `False → True` on a synthetic row — so `0` is a measurement, not a broken loop.**
+🛑 **STOP CONDITION ① DOES NOT FIRE: no published pass/fail count moves.** ★★★ **This also gives a THIRD independent path to `R-662 §3`'s *"exposure `0`, currently latent"* — from `2,129` objects rather than `31` rows.**
+
+### ⚠️ §6 — MY OWN FALSE ZERO, DISCLOSED
+🛑 **My first corpus diff reported `population: 0 condition rows` from the `phase_b` reads — I pointed it at artifacts whose conditions live under `strategies`, not `.spec.entry_conditions`. **The printed population count is what exposed it**, which is why it is printed.** ★★★ **Same shape the desk disclosed at `R-658 §1`. I fixed the pointer and re-ran; the `161` figure reproducing the campaign's published count is the corroboration that I then hit the right population.**
+
+### 🛑 §7 — TWO THINGS I FOUND AND DID **NOT** TOUCH (`SWEEP-*` is closed; reporting duty is not)
+1. 🛑🛑 **CROSS-FILE ENV POLLUTION, PRE-EXISTING — PROVEN, NOT ASSUMED.** `test_compile_fidelity_leg_a.py:471`, `test_session_role_adversarial_fence.py:823,858` set `os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"]` **directly, not via `monkeypatch`**, and it leaks across files. Running the dependent set together fails `test_wait_session_binds_on_recognized_keyword`, `test_s1_…`, `test_s7_…`. ✅★★★★★ **NOT MINE, AND I PROVED IT RATHER THAN ARGUING IT: I checked out `61be9fa7` in a throwaway worktree (fix absent, `grep -c` = `0`) and ran the SAME pair — `6 failed`: those same `3`, PLUS my `3` F-1 reds. With the fix: `3 failed`, only the pollution. **The `3` exist without me.** (Worktree removed; `git worktree list` clean.)** ⚠️ **A flag-off correctness guard that a sibling file can silently flip to flag-on is worth a lane. NOT PULLED.**
+2. ⚠️ **`_load_battery` calls `pytest.skip` when its fixture is missing — so `test_m3_s7…`, the byte-identity guard, can DISAPPEAR rather than fail if the battery file ever moves.** *(`skipped must not read as pass`.)* **NOT PULLED.**
+
+### ⚖️★★★★ §8 — THE ONE JUDGMENT CALL, DECLARED RATHER THAN FOLDED IN
+🛑 **`resolve_exact_clock_span` is ported from Lane A's patch (`e460c88d`) — `§7.2`, reuse not rebuild — with ONE difference: its context conjunct `(4)` accepts TIER 2 (timezone/meridiem) as well as TIER 1.** ✅ **JUSTIFICATION: conjunct `(3)` already requires BOTH numerals to be governed by a span preposition, which is **this module's own stated condition for admitting tier 2** (`_SESSION_CLOCK_TZ_CONTEXT_RE`'s docstring). And the risk asymmetry is inverted: Lane A converts `NO-BIND → BIND`, where a false span invents a confident bind; **this route only ever converts EXACT → APPROXIMATE unless the span EQUALS the executed window.** 🛑 **TIER-1-ONLY WOULD HAVE MADE THE GREEN ARM UNREACHABLE FOR EVERY `"9:30 a.m. … Eastern"` ROW — i.e. "refuse everything", which `§7.4` forbids.** ⚠️ **YOURS TO OVERRULE. If you want tier-1-only, say so and the green arm needs a different witness.**
+
+### ⚠️ §9 — WHAT I DID **NOT** MEASURE
+🛑 **THE TIER-A `99`-ROW HALF OF THE `260` IS NOT A DIRECTORY ON DISK.** I searched `docs/` for produced spec artifacts carrying `entry_conditions`: only `shakedown_specs` (`16` files / `161` rows) and `packet2_dod_specs` (`2`). **The tier-A rows appear to be produced on the fly by `produce_spec_artifact` from the `phase_b` reads, and I did NOT run that producer.** ✅ **The `2,129`-object sweep is a SUPERSET by construction and returns `0`, so I do not believe a tier-A row can move — but `[UNENUMERATED AS A NAMED POPULATION]`, and I am not rounding that up.**
+🛑 **NOT MEASURED: the seal.** `BIND` vs `PASS` is untouched by this work and `R-661 §2`'s `[UNVERIFIED]` item is still open. **This repair makes the gate STRICTER; it creates no pass path** — exactly as `R-663 §2` says, and I am not reporting it as progress toward one.
+
+### 🛑★★★★★ §10 — THE GRADE IS OWED AND IT IS ONE ASK AWAY
+🛑 **`doer ≠ grader`: I repaired a FIDELITY GATE and then measured its own impact. That is authorship marking its own homework.** ✅ **ASK: dispatch `accuracy-validator` against `c067a652` — claim verbatim *"`approximation=False` is granted iff the parsed taught span equals the window `is_in_killzone` is observed to evaluate; corpus impact `0`"*, with an explicit **NOVEL false-green hunt** on the tier-2 conjunct in `§8` and on my `0`-impact sweep, durable receipt committed.** ⚠️ **I cannot dispatch it; one word does.**
+
+**FAN-IN `1/1` — the amended lane is complete. I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off. Branch GREEN, `339 passed`, re-measured at `c067a652`.**
+
+---
+
 ## AR-715 · 2026-08-03 · ⏳ **START-RECEIPT — `R-662 §7`, THE `F-1` REPAIR. ATTEMPT `1` OF `2`.**
 
 **FRESH WORKER SEAT** (the `AR-714` seat is gone — `/clear`; this is its successor, and `R-662 §7`'s *"authorized TO THE SEAT that exists"* is read as addressed to me). **I inherit `AR-714`'s position and re-verified the three facts a fresh seat must not inherit `[MEASURED HERE]`: `git status --porcelain -- src/engine/spec_family_bindings.py` EMPTY · patch present at `docs/designs/lane-a-exact-clock-route-2026-08-03.patch` (`10,400` B, `e460c88d`) · the guard is real at `test_spec_family_bindings.py:1945`.**
