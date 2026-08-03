@@ -12,6 +12,75 @@
 
 ---
 
+## R-610 · 2026-08-02 · ✅★★★★★ **THE ORACLE DECISION IS MADE, AND IT IS NOT "BUILD ONE" — IT IS **RE-WIRE THE ONE THAT ALREADY EXISTS.** `src/engine/parity_engine/` IS ~1,400 LINES, ALREADY WIRED INTO THE PRODUCTION BACKTEST PATH, WITH A COMPLETE AUDIT/DISCORD/SSE OBSERVABILITY RAIL — AND IT DIFFS **A MINIMAL RE-IMPLEMENTATION AGAINST BACKTRADER**, SO THE PRODUCTION TRADE LIST IS NEVER ONE OF THE TWO SIDES.** 🛑★★★★★ **AND THE BLOCKING HAZARD IS NOT HYPOTHETICAL — WE HAVE ALREADY SUFFERED IT: `AR-499 §2`, *"BOTH LANES OVER-REFUSING IDENTICALLY WHILE THE GATE PRINTED EXIT 0 · PASS."* **THAT IS `advisor-ruling §5`'s *"A-VS-B PASSES WHEN BOTH DRIFT TOGETHER"*, REALISED IN-HOUSE — THE EXACT FAILURE AN ORACLE EXISTS TO PREVENT.** **DECISION: ADOPT THE ARCHITECTURE · GATED ON TWO NAMED BLOCKERS · DETERMINISM LANE FIRST · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ⏸️ **Finish `LANE-2` first (`AR-653`) — nothing here interrupts it.** ✅ **Then `§5.1`, and it is NOT the oracle build: it is the DETERMINISM PRECONDITION, because `§3` measures that identical IR does **not** currently imply identical trades, and until it does a diff of two implementations is not a well-posed comparison. **There is no point wiring an oracle to a non-deterministic left-hand side.****
+
+**RULING ID:** R-610 · **TASK ID:** the `R-607 §4` oracle charter + the architecture scout · **DECISION: ADOPT, GATED.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-653`** `[MEASURED HERE]` — a `LANE-2` continuation receipt after an operator `/clear` at a task boundary; requests nothing, **does not bear on this ruling.** `AR-652` recorded unruled-by-design.
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. **Read only — NOT modified, and `§6` forbids modifying it on this ruling.**
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-EIGHTH time.**
+**SCOUT RECEIPT COMMITTED:** `docs/designs/SCOUT-ORACLE-FIT-2026-08-02.md` at **`6160f80d`** (294 lines), under the corrected ownership guard.
+
+---
+
+### ✅★★★★★ §1 — THE PRECONDITIONS THE RESEARCH ASSUMED WERE MISSING ARE **ALREADY MET**
+
+`[MEASURED BY GRADED INSTRUMENT — read-only architecture scout, `file:line` throughout, tree-labelled per finding; I have NOT re-derived these myself]`
+- ✅ **AN IR EXISTS — TWO, at different layers, both structured and serialisable JSON, both persisted in `strategies.config`.** The research's central risk — *"spec → code with no inspectable IR"* — **does not apply.** ⚠️ The IR is a **HYBRID**, which the scout calls the single most important structural fact, and **one named compiler is DEAD CODE.**
+- ✅ **A PER-TRADE RECORD EXISTS AND IS A **SUPERSET** OF PINEFORGE'S DIFF KEY:** `diff_harness.py:39-49` `@dataclass VBTTrade` = `entry_bar, exit_bar, entry_price, exit_price, direction, contracts, net_pnl, exit_reason`. **Trade-for-trade diffing is not blocked.**
+- ✅★★★★★ **AND THE PATTERN IS ~80% BUILT AND WIRED INTO PRODUCTION:** `src/engine/parity_engine/` (`diff_harness` 561 · `shadow_runner` 452 · `backtrader_adapter` 393), invoked at `backtester.py:6126-6140` (DSL) and `:8451-8464` (class) behind `PARITY_SHADOW_ENABLED`, with **a COMPLETE observability rail** — stderr sentinel → `python-runner.ts:234/:239/:427-428/:498` (including a chunk-straddle reassembly buffer at `:411-419` so a split sentinel is not silently lost) → `backtest-service.ts:1245-1300` classifying `parityFailed`/`parityCatastrophic`/`parityUnexpectedSkip` → audit + Discord + SSE, persisted as a typed field at `jsonb-shapes.ts:230`.
+- ✅★★★ **THE RESEARCH'S "CHEAP WIN" IS ALSO ALREADY BUILT AND UNCONDITIONAL:** `invariant_harness/core.py:771` `run_invariants(result)`, called at `backtester.py:5941`/`:8418` in a block commented *"always runs — cheap pure validation … Never env-gated"*; 12+ invariants recompute metrics from the raw trade list. **That is §1.5's "test the engine, not the strategy," shipped.** ★★★ **I was about to queue building it. `THE CHEAPEST WIN IS THE ONE ALREADY IN THE TREE` — and the reason I did not know is that I had never asked.**
+- ✅ **Differential testing is ALREADY the campaign's dominant idiom** — seven TS↔Python parity scripts ship, two npm-scripted. ★★★ **But every one of them lives at the DECISION-PROJECTION layer and NONE at the TRADE layer.** That gap is the whole opportunity.
+
+### 🛑★★★★★ §2 — WHY IT DOES NOT DELIVER: THE PRODUCTION ENGINE IS NOT ONE OF THE TWO SIDES
+
+**`diff_harness.py:19-21`, verbatim:** *"This module does NOT import from backtester.py to avoid pulling in the full production dependency tree into the parity test. The vectorbt run here is a **minimal re-implementation** of the EMA crossover / ATR breakout signal logic."*
+**And `run_parity_shadow` (`shadow_runner.py:333-448`) receives the production `result` but uses it ONLY for OHLCV** — `:374` `_extract_production_data(result, df)`, whose body at `:200-237` touches only `open/high/low/close/volume` and the index.
+✅ **ABSENCE MEASURED WITH A POSITIVE CONTROL ON THE SAME SURFACE AND TOOL:** `grep -rn '"trades"|\.trades' src/engine/parity_engine/` → **exit 1, no matches**; control `grep -rn "vbt_total_pnl"` → **3 matches** (`diff_harness.py:57,551`, `shadow_runner.py:270`).
+🛑★★★★★ **SO IT IS `minimal-reimpl` VS `backtrader` — NOT `reference` VS `production`. IT IS STRUCTURALLY INCAPABLE OF CATCHING A BUG IN `run_backtest`'s 2,527 LINES, `_apply_static_styleC_management`'s 511, OR THE C4 MANAGED-EXIT OVERRIDE.** ★★★ **A parity gate that never reads the production trade list is a guard aimed away from the thing it is named for — the sixth instance tonight of an instrument that cannot fail in the way that matters, and by far the most expensive, because it has a full alerting rail attached to it.**
+🛑 **Two further limits:** **archetype coverage is `2`** (`shadow_runner.py:40` `{ema_crossover, atr_breakout}`) — **the Tier-A `compiled_spec` lane, the entire Phase-1 target, is out of scope BY CONSTRUCTION** (`:365-371` returns `ran=False`) · **default OFF** (`:356-358`). ⚠️ **`[NOT MEASURED — MACHINE-BOUND]` whether `PARITY_SHADOW_ENABLED` is set in the executing runtime; the scout correctly did not open `runtime-production`.**
+
+### 🛑★★★★★ §3 — THE TWO BLOCKERS, AND ONE HAS ALREADY BURNED US
+
+**BLOCKER 1 — INDEPENDENCE, AND IT IS NOT THEORETICAL.** `P0-VNEXT-DESIGN-2026-08-01.md §0` records verbatim: *"the parity gate's historic failure mode — **AR-499 §2: both lanes over-refusing identically while the gate printed EXIT 0 · PASS.**"*
+★★★★★ **THAT IS CORRELATED FAILURE OF TWO PEER IMPLEMENTATIONS PRODUCING A FALSE GREEN — precisely what `advisor-ruling §5` warns of (*"A-vs-B passes when both drift together"*) and precisely what an ORACLE is supposed to eliminate. **WE HAVE ALREADY REALISED THE FAILURE MODE THE FIX IS MEANT TO PREVENT, WHICH MAKES INDEPENDENCE THE WHOLE DESIGN PROBLEM RATHER THAN A DETAIL.**
+🛑 **AND THE ANTI-PATTERN IS WRITTEN INTO THE TREE AS A REQUIREMENT:** `spec-family-bindings.ts:4-20` — *"If you change `FAMILY_META` … you MUST change `src/engine/spec_family_bindings.py` in the SAME commit."* ★★★★★ **TWO "INDEPENDENT" IMPLEMENTATIONS CONTRACTUALLY REQUIRED TO CHANGE TOGETHER HAVE NO ORACLE POWER. Whatever the reference side becomes, it must NOT acquire a same-commit coupling contract.**
+
+**BLOCKER 2 — DETERMINISM: IDENTICAL IR DOES NOT CURRENTLY IMPLY IDENTICAL TRADES.** `[MEASURED BY GRADED INSTRUMENT]` **27 env vars in `backtester.py`** · **a Python module-level strategy registry that silently BYPASSES the entire 7-layer gate** · **a run receipt that fingerprints NO env.**
+★★★★★ **SO "DIFF TWO IMPLEMENTATIONS OF THE SAME IR" IS NOT YET A WELL-POSED COMPARISON — a diff could disagree because of an env var and nobody would know which side was wrong. **THIS IS WHY `§5.1` IS THE DETERMINISM LANE AND NOT THE ORACLE BUILD.****
+
+### ✅★★★★★ §4 — THE DECISION
+
+✅ **ADOPTED AS THE CAMPAIGN'S CORRECTNESS ARCHITECTURE, in direction: differential testing against an independent reference, at the TRADE layer, as the primary oracle — replacing the N-bespoke-checker chain wherever it can.** ★★★ **This is not a foreign import: `advisor-ruling §5` has prescribed the oracle-over-A-vs-B pattern all along, and `§1` shows the campaign already applies differential testing seven times over at a different layer. **The decision is to move an existing idiom down a layer, not to import a new one.****
+🛑 **NOT ADOPTED: any claim that this collapses `P0PG → P0VC → P0DG → P0I → P0IG` today.** The scout mapped the relationship; **I have not read `§PART 4` closely enough to rule node-by-node, and I am not going to pretend otherwise at this hour.** ⚠️ **`[UNENUMERATED — OPEN]` the per-node disposition; NO graph edit is authorized by this ruling and `§6` makes that a STOP.**
+🛑 **AND THE HONEST SCOPE OF THE PRIZE: re-wiring the left-hand side buys a gate that can catch production-engine bugs. It does NOT by itself buy Phase-1, because archetype coverage is `2` and the Tier-A lane is excluded by construction.**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ⏸️ **WORKER — FINISH `LANE-2` FIRST** (`AR-653`, plant a defect, show the rig RED). Unchanged.
+2. ✅★★★★★ **THEN `LANE-4` — THE DETERMINISM PRECONDITION. This is the new critical-path item and it is bounded.** **GOAL: establish whether identical IR + identical data ⇒ identical trade list, and if not, WHAT MOVES IT.** Deliverables: **(a)** enumerate the `27` env vars `backtester.py` reads and mark each as trade-affecting / not / unknown, **(b)** determine whether the module-level strategy registry can bypass the 7-layer gate on a path reachable today — `[HYPOTHESIS, scout-relayed]`, not yet confirmed by me, **(c)** state plainly whether the run receipt can be made to fingerprint the env that actually affects trades. 🛑 **READ-ONLY + a fingerprint proposal — NO behaviour change to `backtester.py` without a further ruling. `runtime-production` NOT to be touched or read.** ★★★ **`UNRESOLVED` per item is a complete answer; an enumeration I can act on beats a fix I cannot trust.**
+3. **THIS DESK — read `SCOUT-ORACLE-FIT-2026-08-02.md §PART 4` and rule the per-node disposition.** Assigned to **THIS SEAT.** ⚠️ **Until then no node's purpose may be declared redundant.**
+4. 🛑 **THIS DESK — TWO DEFECTS FOUND IN PASSING, NEITHER ADJUDICATED, BOTH RECORDED SO THEY ARE NOT LOST:** **(i)** the invariant-harness call sites sit inside `try:` at `backtester.py:5939`, **so a harness throw is SWALLOWED rather than failing the run** — a guard that "always runs" and cannot fail is this night's signature defect, in the one harness the research called required. **(ii)** `PARITY_SHADOW_ENABLED` default-OFF with an unmeasured runtime value. **Both owe their own ruling; neither is authorized for repair here.**
+5. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read — by me or the scout.** `P0PC` NINE of ten, NOT transitioned · `4d` STILL NOT MET and **UNDER-SPECIFIED** (`R-606`, and the population grade). ✅ Single-writer honoured; **ownership guard run before each write, with `exit` before the mutating command (`R-609 §2`).** ✅ **`R-576 §5` HELD — I ran nothing; `§1`–`§3` are a graded scout's `file:line` reads.** ✅ Graph read, **not modified.** ✅ No spend.
+🛑 **STILL LIVE, all of `R-609 §5` plus:** ★★★★★ **ANY graph edit or node-redundancy claim on this ruling → STOP (`§4`, `§5.3`).** · ★★★★★ **`parity_engine/` re-wired to read the production trade list WITHOUT solving BLOCKER 1 → STOP; that manufactures a second `AR-499 §2` with an alerting rail attached.** · ★★★★★ **a reference implementation given a same-commit coupling contract → STOP (`§3`).** · ★★★★★ **any diff-based verdict trusted before BLOCKER 2 is closed → STOP; the comparison is not well-posed.** · ★★★ **`backtester.py` behaviour changed by `LANE-4` → STOP; read-only.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`THE CHEAPEST WIN WAS ALREADY IN THE TREE, AND I WAS ABOUT TO AUTHORIZE BUILDING IT.` The research called metamorphic engine invariants "required at our scale"; `invariant_harness` has shipped them unconditionally all along. **Before chartering a build, ask what already exists — the answer here was ~1,400 lines plus a full alerting rail.****
+★★★★★ **`WE HAD ALREADY SUFFERED THE FAILURE THE FIX PREVENTS.` `AR-499 §2` — two lanes over-refusing identically, gate printing PASS — is `advisor-ruling §5`'s law realised in-house. **A campaign's own incident history is the highest-grade evidence available about whether an architecture will work here**, and it outranks a 245/246 result from someone else's codebase.**
+★★★★★ **`TWO IMPLEMENTATIONS REQUIRED TO CHANGE IN THE SAME COMMIT ARE ONE IMPLEMENTATION.` The mirror-pair contract is explicit in the source and it is the exact thing that destroys oracle power. **Check for coupling contracts before calling anything independent.****
+★★★ **`A GUARD WITH A FULL ALERTING RAIL AIMED AT THE WRONG OBJECT IS THE MOST EXPENSIVE KIND.` `parity_engine/` has audit, Discord, SSE, typed persistence, chunk-straddle protection — and never reads the production trade list. **The rail is not the guard.****
+★★★ **A TOOLING TRAP FOR EVERY FUTURE SEAT, self-reported by the scout: `grep ... | grep -v test` DELETES EVERY `backtester.py` LINE, because the FILENAME contains "test". It initially misgraded a live harness as having zero non-test callers. **That filter will misgrade any Python surface in this repo.****
+
+---
+
 ## R-609 · 2026-08-02 · 🛑★★★★★ **CORRECTION — MY OWN SIBLING-WRITER GUARD IS DEFECTIVE IN BOTH DIRECTIONS, AND I CITED IT AS PROTECTION IN FIVE RULINGS (`R-605`–`R-608`). IT FIRED FOR THE FIRST TIME TONIGHT AND WAS **WRONG** AND **NON-GATING** SIMULTANEOUSLY.** 🛑★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — I WROTE THE ALARM BRANCH AS A `Write-Output` WITH **NO `exit`**, SO IT PRINTED `!! NON-WORKER COMMIT` AND THE LEDGER COMMIT RAN ANYWAY. **THIS IS THE FIFTH INSTANCE OF THE CLASS I CATALOGUED IN `R-605 §3`, AND IT IS MINE, IN THE RULING WHERE I CATALOGUED IT.**** ✅ **NO SIBLING WRITE HAS OCCURRED — re-tested with the corrected discriminator. **DECISION: CORRECT THE GUARD · NO NODE TRANSITION · NOTHING ELSE DISTURBED.**
 
 **★ WORKER — START HERE:** ✅ **Nothing changes for you: stay on `LANE-2` (`R-608 §6.1`).** ✅ **And your commit `35251ab7` is confirmed clean and correctly yours — my guard misread it, not the reverse.**
