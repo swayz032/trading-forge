@@ -4,6 +4,40 @@
 
 ---
 
+## AR-735 · 2026-08-03 · ✅★★★★★ **`R-674 §3` DELIVERED — BOTH CARRY-FORWARDS CLOSED. **`timeframe` IS PROTECTED *BETTER* THAN `symbol`, NOT WORSE** — onboarding carries an explicit in-source principle *"never silently default a timeframe to `5m`"* and **QUARANTINES** a spec whose timeframe cannot be recovered. **DYNAMIC-CONFIG SWEEP: `0`, UNDER A LIVE CONTROL.**** ⚠️🛑★★★★★ **AND MY FIRST CONTROL WAS **DEAD** AND I CAUGHT IT: it returned `0`, which would have made my `0` meaningless. **THE REGEX WAS `[a-z_]*` AND THE ONLY MATCHING LINE IN THE PROBE FILE WAS `env["PYTHONPATH"]` — UPPERCASE.** Corrected to `[A-Za-z_]*`, control returned `1`, **and only then did I accept the zero.**
+
+**TASK:** `R-674 §3`, the wave's last lane. **RUN MODE: READ-ONLY `grep` + file reads at HEAD. NO code change, NO run.** **NOTHING under `src/` modified.**
+
+### ⚠️🛑★★★★★ §1 — THE DEAD CONTROL, DISCLOSED FIRST BECAUSE IT NEARLY VALIDATED A ZERO
+🛑 **`R-674` minted `A ZERO OVER THE ENUMERABLE SURFACE IS NOT A ZERO OVER THE REACHABLE ONE`. **This is the shallower failure one layer beneath it: a zero over a surface my finder could not read at all.**
+`[MEASURED HERE]` **control v1: `grep -c '\["[a-z_]*"\][[:space:]]*='` on `corpus-v3-shadow-gate3.py` → `0`.** 🛑 **A control that does not fire cannot license anything.** ✅ **DIAGNOSIS: the file's assignment lines are `env["PYTHONPATH"] = …` — **UPPERCASE**, outside my character class.** ✅ **control v2 `[A-Za-z_]*` → `1`. **The form is detectable, so the real sweep's `0` is now admissible.**
+★★★★★ **`I ALMOST PUBLISHED A ZERO WHOSE CONTROL WAS ALSO ZERO — AND THE TWO ZEROS WOULD HAVE LOOKED LIKE AGREEMENT.` Fourth instrument defect I have had to disclose in this wave (substring `es`, absent-rationale, merged denominator, and now this). **Every one was found by looking at the instrument after a result looked too clean.**
+
+### ✅ §2 — DYNAMIC-CONFIG SWEEP: **`0`**, WITH THE CONTROL LIVE
+`[MEASURED HERE, control v2 firing]` **`grep '\["compiled_spec"\][[:space:]]*='` across all `.py`/`.ts` → `0` occurrences.** **There is no `config["compiled_spec"] = …` assignment anywhere in the repo.**
+✅ **AND THE KEYWORD FORM IS NOT A CONFIG PATH: every `compiled_spec=` hit is a DIRECT OBJECT CONSTRUCTION — `SpecConditionStrategy(compiled_spec=…)` (12 in `test_family_meta_enforcement.py`) or the factory's own line (`spec_condition_compiler.py:1429`). **None builds a `config` dict, so none reaches Band C dispatch.**
+✅★★★ **THEREFORE `AR-733`'s `"compiled_spec":` LITERAL FINDER WAS COMPLETE FOR CONFIG CONSTRUCTORS. The `2`-site population stands, and its `0`-omissions result stands with it.**
+
+### ✅★★★★★ §3 — `timeframe` TRACED THROUGH THE SAME SEVEN SITES — **AND IT IS THE STRONGER OF THE TWO**
+| # | site | `timeframe` |
+|---|---|---|
+| `1`–`3` | `spec-onboarding-service.ts` | 🛑★★★★★ **STRONGER THAN `symbol`.** `recoverSpecTimeframe` (`:54`) recovers it **PER SPEC**; the in-source contract at `:367-370`/`:473` states ***"THE ONE INVIOLABLE PRINCIPLE: never silently default a timeframe to `5m`"*** and *"a spec whose timeframe cannot be recovered is **QUARANTINED** (fail-loud audit `onboard.timeframe_unrecoverable`), **NEVER onboarded at a guessed 5m**."* **An explicit operator `--timeframe` override wins only for a known-uniform batch.** |
+| `4` | `routes/backtests.ts:104` | ✅ **REQUIRED** — `timeframe: z.string().min(1)` |
+| `5` | `routes/backtests.ts:190` | ✅ resolved from the DB row — `timeframe: strat!.timeframe` |
+| `6` | `backtester.py:8332` | `_strategy_cfg_for_spec.get("timeframe", "5m")` — **identical reachability to `symbol`'s: only if `config["strategy"]` is missing/non-dict/lacks the key.** `[MEASURED, `AR-733 §1`]` **both `(A)` constructors set it explicitly → cannot fire from repo code.** |
+| `7` | `spec_condition_compiler.py:1411` | `timeframe="5m"` signature default — **reached by the same `11` bare test calls, and nothing else.** |
+✅★★★★★ **VERDICT: `timeframe` CARRIES THE SAME TWO PYTHON DEFAULTS AS `symbol` AND THE SAME (UNREACHABLE-FROM-REPO-CODE) STATUS — BUT AT ONBOARDING IT IS **BETTER DEFENDED**, WITH A NAMED PRINCIPLE AND A FAIL-LOUD QUARANTINE THAT `symbol` HAS NO EQUIVALENT OF.** ★★★ **THE CONTRAST IS THE INTERESTING PART: `symbol` is deliberately FANNED OUT by operator mandate (`AR-731 §3`); `timeframe` is deliberately RECOVERED-OR-QUARANTINED. **Two adjacent fields, two opposite policies, both intentional.**
+⚠️🛑 **ONE ASYMMETRY I FLAG AND DO NOT PULL: at the route, `symbol` is `z.enum(["MES","MNQ","MCL"])` — domain-constrained — while `timeframe` is `z.string().min(1)`, **ANY non-empty string.** **A typo'd timeframe (`"5min"` for `"5m"`) passes validation where a typo'd symbol would not.** `[UNENUMERATED]` whether anything downstream constrains it. **LATENT — nothing executes (`R-668 §2`). REPORTED, NOT PULLED.**
+
+### ⚠️ §4 — WHAT I DID **NOT** MEASURE
+🛑 **`[UNENUMERATED]`: `recoverSpecTimeframe`'s own body.** I read its CONTRACT (the docstring principle + quarantine path) and its import; **I did not read its recovery logic or test whether the quarantine actually fires.** ★★★ **`A STATED PRINCIPLE IS A CLAIM` — I am reporting that the principle is WRITTEN and where, not that it HOLDS.**
+🛑 **`[UNENUMERATED]`: whether any downstream consumer constrains the timeframe string** (the `§3` asymmetry).
+🛑 **THE HAND-AUTHORED-JSON PATH REMAINS OPEN AND UNCLOSEABLE STATICALLY** — `AR-733 §3` and `R-674`'s minted law. **Nothing in this lane changes it.**
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`.** 🛑✅ **AND I NOW **HOLD**, PER `R-674 §3` — no further authorized work, deliberately, with the un-hold owned by the INCOMING ADVISOR SEAT. **I will not invent a lane.** **I HOLD THE SEAT AND HAVE CONTEXT; the wave is closed.**
+
+---
+
 ## AR-734 · 2026-08-03 · ⏳ **START-RECEIPT — `R-674 §3`, THE LAST CARRY-FORWARD OF THIS WAVE. SAME SEAT.**
 
 **TWO ITEMS, BOTH CLOSING MY OWN `AR-733 §3` `[UNENUMERATED]`s: `(1)` trace `timeframe` through the same seven sites `symbol` was traced through · `(2)` sweep for DYNAMICALLY-constructed Band-C configs that a `"compiled_spec":` literal finder cannot match. **POSITIVE CONTROL ON BOTH.**
