@@ -1,0 +1,323 @@
+{
+ "surface": [
+  "src/engine/indicators/core.py",
+  "src/engine/context/structure_engine.py",
+  "src/engine/context/structural_stops.py",
+  "src/engine/session_windows.py",
+  "src/engine/context/session_context.py"
+ ],
+ "rule": "^(compute_|detect_|is_|resolve_|classify_)",
+ "reachable_n": 32,
+ "reachable": [
+  "BaseStrategy",
+  "BindingPlan",
+  "ConditionBinding",
+  "FamilyMetaEnforcementError",
+  "candle_confirmation_check",
+  "classify_institutional_regime",
+  "classify_population_a_kind",
+  "compile_binding_plan",
+  "compute_atr",
+  "compute_bias_signal",
+  "compute_confirmation_signal",
+  "compute_ema",
+  "compute_fvg_signal",
+  "compute_mss_signal",
+  "compute_structural_stop",
+  "compute_structure_state",
+  "compute_sweep_signal",
+  "confluence_factor_presence",
+  "detect_bearish_ob",
+  "detect_bullish_ob",
+  "detect_buyside_liquidity",
+  "detect_sellside_liquidity",
+  "detect_swings",
+  "ensure_enforced",
+  "family_meta_enforced",
+  "get_classifications_for_video",
+  "is_in_killzone",
+  "or_branches_enabled",
+  "retest_touch_check",
+  "role_demotion_mode",
+  "session_windows",
+  "spine_completion_trigger"
+ ],
+ "built_n": 23,
+ "rows": [
+  {
+   "symbol": "compute_adr",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:145",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:754",
+    "src/engine/indicators/core.py:643"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_adx",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:102",
+   "nontest_callers": 4,
+   "caller_sites": [
+    "src/engine/regime.py:72",
+    "src/engine/indicators/core.py:750",
+    "src/engine/indicators/core.py:639",
+    "src/engine/indicators/paper_bridge.py:218"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_anchored_vwap",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:379",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:636",
+    "src/engine/indicators/core.py:796"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_atr",
+   "state": "BUILT+REACHABLE",
+   "where": "src/engine/indicators/core.py:76",
+   "nontest_callers": 38,
+   "caller_sites": [
+    "src/engine/backtester.py:6792",
+    "src/engine/gate_block_analyzer.py:763",
+    "src/engine/regime.py:76",
+    "src/engine/sizing.py:1268",
+    "src/engine/slippage.py:128",
+    "src/engine/spec_condition_compiler.py:916"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_bbands",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:169",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/indicators/core.py:617",
+    "src/engine/indicators/core.py:736",
+    "src/engine/indicators/paper_bridge.py:244"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_donchian",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:94",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:768",
+    "src/engine/indicators/core.py:658"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_ema",
+   "state": "BUILT+REACHABLE",
+   "where": "src/engine/indicators/core.py:27",
+   "nontest_callers": 11,
+   "caller_sites": [
+    "src/engine/regime.py:88",
+    "src/engine/spec_condition_compiler.py:729",
+    "src/engine/spec_condition_compiler.py:730",
+    "src/engine/spec_condition_compiler.py:914",
+    "src/engine/indicators/core.py:161",
+    "src/engine/indicators/core.py:162"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_htf_indicators",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:667",
+   "nontest_callers": 1,
+   "caller_sites": [
+    "src/engine/indicators/core.py:853"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_indicators",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:579",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/backtester.py:3875",
+    "src/engine/strategy_base.py:89"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_macd",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:154",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/indicators/core.py:607",
+    "src/engine/indicators/core.py:726",
+    "src/engine/indicators/paper_bridge.py:225"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_multi_htf_indicators",
+   "state": "BUILT+NO-NONTEST-CALLER",
+   "where": "src/engine/indicators/core.py:806",
+   "nontest_callers": 0,
+   "caller_sites": [],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_opening_range_breakout",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:467",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:760",
+    "src/engine/indicators/core.py:649"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_rsi",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:57",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/indicators/core.py:596",
+    "src/engine/indicators/core.py:715",
+    "src/engine/indicators/paper_bridge.py:254"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_session_context",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/context/session_context.py:124",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/backtester.py:410",
+    "src/engine/context_runner.py:92",
+    "src/engine/context_runner.py:183"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_sma",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:22",
+   "nontest_callers": 5,
+   "caller_sites": [
+    "src/engine/indicators/core.py:175",
+    "src/engine/indicators/core.py:588",
+    "src/engine/indicators/core.py:707",
+    "src/engine/indicators/paper_bridge.py:252",
+    "src/engine/strategies/bounce_off_level.py:148"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_structural_stop",
+   "state": "BUILT+REACHABLE",
+   "where": "src/engine/context/structural_stops.py:194",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/backtester.py:438",
+    "src/engine/context_runner.py:231",
+    "src/engine/spec_condition_compiler.py:1377"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_structure_state",
+   "state": "BUILT+REACHABLE",
+   "where": "src/engine/context/structure_engine.py:210",
+   "nontest_callers": 3,
+   "caller_sites": [
+    "src/engine/spec_condition_compiler.py:675",
+    "src/engine/context/bias_engine.py:1217",
+    "src/engine/context/htf_columns.py:121"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_vwap",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:182",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:627",
+    "src/engine/indicators/core.py:746"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "compute_vwap_with_bands",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/indicators/core.py:271",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/indicators/core.py:631",
+    "src/engine/indicators/core.py:778"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "is_in_any_killzone",
+   "state": "BUILT+NO-NONTEST-CALLER",
+   "where": "src/engine/session_windows.py:172",
+   "nontest_callers": 0,
+   "caller_sites": [],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "is_in_killzone",
+   "state": "BUILT+REACHABLE",
+   "where": "src/engine/session_windows.py:155",
+   "nontest_callers": 1,
+   "caller_sites": [
+    "src/engine/spec_condition_compiler.py:489"
+   ],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "is_in_lunch_blackout",
+   "state": "BUILT+NO-NONTEST-CALLER",
+   "where": "src/engine/session_windows.py:177",
+   "nontest_callers": 0,
+   "caller_sites": [],
+   "module_TF_flags": []
+  },
+  {
+   "symbol": "resolve_session_keyword",
+   "state": "BUILT+UNREACHABLE-BY-COMPILER",
+   "where": "src/engine/session_windows.py:244",
+   "nontest_callers": 2,
+   "caller_sites": [
+    "src/engine/spec_family_bindings.py:856",
+    "src/engine/spec_family_bindings.py:2497"
+   ],
+   "module_TF_flags": []
+  }
+ ],
+ "taxonomy": {
+  "BUILT+UNREACHABLE-BY-COMPILER": 15,
+  "BUILT+REACHABLE": 5,
+  "BUILT+NO-NONTEST-CALLER": 3
+ },
+ "controls": {
+  "compute_atr_callers": 38,
+  "structure_state_reachable": true,
+  "zero_caller_symbols": [
+   "compute_multi_htf_indicators",
+   "is_in_any_killzone",
+   "is_in_lunch_blackout"
+  ]
+ }
+}

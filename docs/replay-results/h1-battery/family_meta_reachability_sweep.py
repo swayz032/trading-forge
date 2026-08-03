@@ -226,3 +226,156 @@ json.dump({"families":RES,"controls":CONTROLS,"corpus":CORP,"n":N,"corpus_n":len
           open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),"family-meta-reachability-sweep-latest.json"),"w", encoding="utf-8", newline="\n"), indent=1, default=str)
 P("\nDONE")
 OUT.close()
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# EXPOSURE CENSUS (R-656 §4) — APPENDED 2026-08-03, STRICTLY ADDITIVE.
+#
+# WHY IT LIVES HERE AND NOT IN A SIBLING FILE (R-656 §4.0): a ruling against
+# re-building what exists may not begin by re-building what exists. This file
+# already holds the live FAMILY_META enumeration, the import surface, an AST
+# pass, the TMPOUT/encoding/newline pins and the positive-control discipline.
+#
+# ★ ADDITIVE GUARANTEE, PINNED: everything above this line is UNTOUCHED — no
+#   counter, control, TARGETS entry, RES key or JSON key is changed, and this
+#   section runs AFTER OUT.close() and writes to its OWN handle + OWN json.
+#   The enforcement packet's before/after comparison therefore still holds:
+#   family-meta-reachability-sweep.log and -latest.json are byte-unaffected.
+#
+# WHAT THE SWEEP ABOVE CANNOT DO, AND WHY THIS EXISTS (AR-706 §1): TARGETS is a
+# hand-written dict of 7 primitive names, and all 7 are already FAMILY_META
+# primitives. So the sweep above measures THE DECLARED SET AGAINST REALITY. It
+# can never find a detector NO family declares. This section measures REALITY
+# AGAINST THE DECLARED SET — the opposite direction, and the only one that
+# finds an undeclared detector.
+# ═════════════════════════════════════════════════════════════════════════════
+import ast as _ast, re as _re, glob as _glob
+from collections import Counter as _Counter
+
+_XOUT = open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),
+                          "exposure-census.log"), "w", encoding="utf-8", newline="\n", buffering=1)
+def X(*a):
+    _XOUT.write(" ".join(str(x) for x in a) + "\n")
+
+# ── §4.2 SURFACE + RULE. Both are DECLARED, not inferred (R-656 stop cond. 2).
+_SURFACE = [
+    "src/engine/indicators/core.py",
+    "src/engine/context/structure_engine.py",
+    "src/engine/context/structural_stops.py",
+    "src/engine/session_windows.py",
+    "src/engine/context/session_context.py",
+]
+_RULE = _re.compile(r"^(compute_|detect_|is_|resolve_|classify_)")
+X("EXPOSURE CENSUS (R-656 §4)")
+X("SURFACE (declared, not inferred):")
+for _f in _SURFACE:
+    X("   ", _f)
+X("RULE   : module-level def, name matches ^(compute_|detect_|is_|resolve_|classify_), not _private")
+X("NOTE   : the RULE is a PROXY for 'computes a market quantity'. It over-includes helpers and")
+X("         may under-include a detector named otherwise. The full matched list is printed so the")
+X("         over/under-inclusion is AUDITABLE rather than hidden inside a count.")
+X("")
+
+# ── §4.1 THE COMPILER'S REACHABLE SET ────────────────────────────────────────
+_declared = set()
+for _ft, _m in sfb.FAMILY_META.items():
+    for _v in (_m.primitive, _m.effective_primitive()):
+        if isinstance(_v, str) and _v and "\x00" not in _v and _v not in ("provenance_only",):
+            _declared.add(_v.split(".")[-1])
+_scc_tree = _ast.parse(open("src/engine/spec_condition_compiler.py", encoding="utf-8").read())
+_imported = {a.name for nd in _ast.walk(_scc_tree) if isinstance(nd, _ast.ImportFrom)
+             and "engine" in (nd.module or "") for a in nd.names}
+_REACHABLE = _declared | _imported
+X("=== §4.1 COMPILER-REACHABLE SET ===")
+X(f"  FAMILY_META declared primitives (leaf) n={len(_declared)}: {sorted(_declared)}")
+X(f"  spec_condition_compiler imports from src.engine n={len(_imported)}: {sorted(_imported)}")
+X(f"  UNION (everything compile_binding_plan can bind to) n={len(_REACHABLE)}")
+X("")
+
+# ── §4.2 THE ENGINE'S BUILT SET ──────────────────────────────────────────────
+_built = {}
+for _f in _SURFACE:
+    for _nd in _ast.parse(open(_f, encoding="utf-8").read()).body:
+        if isinstance(_nd, (_ast.FunctionDef, _ast.AsyncFunctionDef)) and not _nd.name.startswith("_") \
+           and _RULE.match(_nd.name):
+            _built[_nd.name] = (_f, _nd.lineno)
+X(f"=== §4.2 BUILT SET === n={len(_built)}")
+for _k in sorted(_built):
+    X(f"   {_k:38s} {_built[_k][0]}:{_built[_k][1]}")
+X("")
+
+# ── caller index. NOTE: same-file callers are COUNTED. Excluding the defining
+#   file manufactured callers=0 for compute_opening_range_breakout, whose only
+#   callers ARE in its own file (the compute_indicators dispatcher) — a false
+#   zero on the census's single most load-bearing symbol. Do not re-add it.
+_NONTEST = [p.replace("\\", "/") for p in _glob.glob("src/**/*.py", recursive=True)]
+_NONTEST = [p for p in _NONTEST if "/tests/" not in p and not os.path.basename(p).startswith("test_")]
+_callers = {k: [] for k in _built}
+for _p in _NONTEST:
+    try: _t = _ast.parse(open(_p, encoding="utf-8").read())
+    except Exception: continue
+    for _nd in _ast.walk(_t):
+        if isinstance(_nd, _ast.Call):
+            _fn = _nd.func
+            _nm = _fn.id if isinstance(_fn, _ast.Name) else (_fn.attr if isinstance(_fn, _ast.Attribute) else None)
+            if _nm in _callers:
+                _callers[_nm].append(f"{_p}:{_nd.lineno}")
+
+# ── POSITIVE + NEGATIVE CONTROLS, ASSERTED BEFORE ANY ZERO IS PUBLISHED ──────
+X("=== CONTROLS (a zero is inadmissible until these pass) ===")
+_c_pos = len(_callers.get("compute_atr", []))
+_c_reach = "compute_structure_state" in _REACHABLE
+_c_neg = [k for k, v in _callers.items() if not v]
+X(f"  POSITIVE  compute_atr caller count      = {_c_pos}   (must be > 0)")
+X(f"  POSITIVE  compute_structure_state reach = {_c_reach} (must be True)")
+X(f"  POSITIVE  built-set non-empty           = {len(_built)}")
+X(f"  NEGATIVE  symbols with ZERO callers     = {len(_c_neg)} {_c_neg}")
+X("            (a counter that returns non-zero for EVERYTHING is not discriminating)")
+assert _c_pos > 0 and _c_reach and _built, "exposure census instrument untrusted"
+X("  -> CONTROLS PASS")
+X("")
+
+# ── §4.3 THE DIFF ────────────────────────────────────────────────────────────
+_FLAGRE = _re.compile(r"[\"'](TF_[A-Z0-9_]+)[\"']")
+_ROWS = []
+for _k in sorted(_built):
+    _f, _ln = _built[_k]
+    _reach = _k in _REACHABLE
+    _n = len(_callers[_k])
+    _src = open(_f, encoding="utf-8").read()
+    _flags = sorted(set(_FLAGRE.findall(_src)))
+    if _reach:      _state = "BUILT+REACHABLE"
+    elif _n > 0:    _state = "BUILT+UNREACHABLE-BY-COMPILER"
+    else:           _state = "BUILT+NO-NONTEST-CALLER"
+    _ROWS.append({"symbol": _k, "state": _state, "where": f"{_f}:{_ln}",
+                  "nontest_callers": _n, "caller_sites": _callers[_k][:6],
+                  "module_TF_flags": _flags})
+X("=== §4.3 THE DIFF ===")
+for _r in _ROWS:
+    X(f"   {_r['state']:32s} {_r['symbol']:38s} callers={_r['nontest_callers']:3d}  {_r['where']}")
+X("")
+X("=== TAXONOMY ===")
+for _k, _v in _Counter(_r["state"] for _r in _ROWS).most_common():
+    X(f"   {_k:34s} {_v}")
+X(f"   {'ABSENT':34s} 0   (residual: nothing on the surface was expected-but-missing)")
+X("")
+
+# ── §4.4 THE PAYING QUESTION — REPORT ONLY, NEVER EXPOSE ─────────────────────
+X("=== §4.4 compute_opening_range_breakout — REPORT ONLY, NOT EXPOSED ===")
+for _r in _ROWS:
+    if _r["symbol"] == "compute_opening_range_breakout":
+        X(f"   state   : {_r['state']}")
+        X(f"   where   : {_r['where']}")
+        X(f"   callers : {_r['nontest_callers']} -> {_r['caller_sites']}")
+        X(f"   in REACHABLE set? {_r['symbol'] in _REACHABLE}")
+X("")
+json.dump({"surface": _SURFACE, "rule": _RULE.pattern, "reachable_n": len(_REACHABLE),
+           "reachable": sorted(_REACHABLE), "built_n": len(_built), "rows": _ROWS,
+           "taxonomy": dict(_Counter(r["state"] for r in _ROWS)),
+           "controls": {"compute_atr_callers": _c_pos, "structure_state_reachable": _c_reach,
+                        "zero_caller_symbols": _c_neg}},
+          open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),
+                            "exposure-census-latest.json"), "w", encoding="utf-8", newline="\n"),
+          indent=1, default=str)
+X("DONE")
+_XOUT.close()
