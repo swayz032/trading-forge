@@ -4,6 +4,58 @@
 
 ---
 
+## AR-691 · 2026-08-03 · ✅★★★★★ **`SWEEP-F3` CLOSED — FIVE TESTS THAT HAD **NEVER ONCE RUN** NOW RUN AND PASS (`32 passed, 5 skipped` → `37 passed, 0 skipped`).** 🛑🛑★★★★★ **THE SKIP REASON WAS FALSE AND THERE WERE **THREE** FIXTURE DEFECTS UNDER IT, NOT THE TWO THE SWEEP NAMED — THE THIRD ONE ONLY BECAME VISIBLE AFTER FIXING THE FIRST TWO.** ✅ **NO PRODUCTION DEFECT UNDERNEATH — the `R-645 §4` STOP CONDITION did not fire, and I checked rather than assumed.**
+
+**TASK:** `R-645 §4` LANE 2 (`SWEEP-F3`). **FILE: `src/engine/tests/test_paper_backtest_sizing_parity.py` ONLY.** **AR ships in the work commit.**
+
+### 🛑 WHAT WAS ACTUALLY UNDER THE SKIP — MEASURED BY REMOVING THE HANDLER, NOT BY READING IT
+The five tests all carried `except Exception → pytest.skip("run_backtest_internal unavailable in this test context")`. ★★★★★ **`run_backtest_internal` WAS PERFECTLY AVAILABLE. THE FIXTURE COULD NOT BE CONSTRUCTED.** `[MEASURED HERE, probe with the handler removed]`
+```
+pydantic_core.ValidationError: 2 validation errors for StrategyConfig
+  exit             Field required
+  take_profit.type Input should be 'atr','fixed' or 'trailing_atr'  [input: 'fixed_r']
+```
+🛑🛑 **AND THEN, ONLY AFTER THOSE TWO WERE FIXED, A THIRD:**
+```
+ValueError: Unknown column 'ema_fast'. Available: ['atr_14','close','ema_21','ema_9', ...]
+```
+★★★★★ **`IndicatorConfig` HAS NO `name` FIELD `[MEASURED HERE, config.py:320-335]` — pydantic ignores unknown keys, so `name="ema_fast"` was silently dropped and the engine materialised `ema_9`/`ema_21`, while every expression in the fixture referenced the invented names.** ★★★ **A DEFECT THAT ONLY APPEARS AFTER YOU FIX THE ONE IN FRONT OF IT IS THE ARGUMENT AGAINST DECLARING A LANE CLOSED FROM A DIAGNOSIS: the sweep named two, the tree had three, and the third was invisible until the first two stopped shadowing it.**
+
+### WHAT LANDED, WITH SEMANTIC IDENTITY PRESERVED AND STATED
+- **`exit="ema_9 < ema_21"`** — mirrors `entry_long`, matching the sibling convention (`test_backtester.py:174`, `test_a_plus_gate_parity.py:641`).
+- **`take_profit={"type":"atr","multiplier":3.0}`** — the author wrote `r_multiple: 2.0`, i.e. a **2R** target. `StopConfig` has no R vocabulary, **but the stop is `1.5` ATR, so a `3.0` ATR target IS 2R in the units this model actually has.** 🛑 **That is a translation with its arithmetic on the record, not a new trading rule invented to make a test pass.**
+- **`entry_long`/`exit` reference `ema_9`/`ema_21`; the fake `name=` kwargs are gone.** The crossover is unchanged.
+- **The five broad-except-to-skip handlers are DELETED.** If the call raises now, the test FAILS with its traceback.
+✅ **`R-644 §4` NON-DEGENERATE VALUES, STATED AS ORDERED — what these five now assert on `[MEASURED HERE]`:** `vol_scale = 0.5` and `vol_scale_applied = True` at `vix_now=36` (**not** the fail-open `1.0`) · `vol_scale = 1.0` **with** `parity_warn.no_vix_in_backtest` present when VIX is absent · both `no_vix_in_backtest` **and** `no_depth_ratio_in_backtest` in the two-warning case · `dsl_guards.vol_scale_applied` equal to the `parity_metadata` value on a run where that value is **`True`**, so the equality is not two `False`s agreeing.
+
+### ✅★★★★★ THE RED-PROOF — 2×2 AGAIN, AND THE TOP ROW IS THE FINDING
+**Mutation: `backtester.py:4283` `_vol_scale` forced to `1.0` — the VIX vol-scale never applies, which is the exact property these tests claim to guard. Materialised scratch (`git archive 088601ec`); the shared tree was never mutated.**
+
+| tests | engine UNMUTATED | engine MUTATED (`vol_scale=1.0`) |
+|---|---|---|
+| **OLD (at `HEAD`)** | PASS — **`5 skipped`** | 🛑 **PASS — `5 skipped`** ← blind to a real sizing regression |
+| **NEW (repaired)** | ✅ PASS — `5 passed` | ✅ **FAIL — `1 failed, 4 passed`** |
+
+★★★ **ONLY ONE of the five convicts, and that is correct** (`R-637 §1`): only `test_parity_metadata_vol_scale_applied_with_vix` owns the VIX property; the other four guard warnings and guard-flag mirroring and must NOT redden on this mutation. **A mutation that reddened all five would mean the tests were over-broad, not thorough.**
+
+### COMMANDS AND RESULTS
+```
+python -m pytest src/engine/tests/test_paper_backtest_sizing_parity.py -q -rs
+  before: 32 passed, 5 skipped in 1.18s   (5 × "run_backtest_internal unavailable in this test context")
+  after:  37 passed, 0 skipped in 5.27s
+```
+**The +4s is the five tests actually running a backtest for the first time.** ★★★ **A suite that gets SLOWER after a test repair is a suite that started doing work it had been skipping.**
+
+### ✅ STOP CONDITION CHECKED, NOT ASSUMED
+🛑 **`R-645 §4`: if unblinding reveals a PRODUCTION defect, STOP the lane and report.** ✅ **It does not.** `[MEASURED HERE]` with the fixture repaired, the engine returns exactly what the five tests expect — `vol_scale_applied=True`/`vol_scale=0.5` at VIX 36, both parity warnings when inputs are absent, and `dsl_guards` mirroring `parity_metadata`. **All three defects were in the TEST fixture. No production line was touched.**
+⚠️ **ONE ADJACENT OBSERVATION, FLAGGED NOT CHASED (`R-646`'s sizing rule is the desk's, not mine):** `IndicatorConfig` **silently accepts and drops unknown keys** — that is what let `name="ema_fast"` look correct for the life of this fixture. **A typo'd config field costs nothing at write time and everything at read time. Not touched: it is a global pydantic model policy, far outside a test-vacuity lane.**
+
+⚠️ **PROCESS: THIS COMMIT WAS REJECTED ONCE.** `pre-commit`'s `ruff-lint` failed on **2 `I001` import-sort errors that are PRE-EXISTING** `[MEASURED HERE: identical count on a clean `git archive` of `HEAD` and in my working copy — my edits added none]`. **The hook only sees files a commit TOUCHES, so the debt was invisible until this lane touched the file.** ✅ **Applied `ruff check --fix --select I001` on that ONE file — safe fixes only, no `--unsafe-fixes` (`ruff-unsafe-fixes`: it modernises the whole file).** ★★★ **Reporting the rejection rather than presenting a clean first attempt: `AR-685` hit the identical wall and the pattern is now twice-confirmed.**
+
+**Position: `h1-wave4-sealed12-driver`. Queue: `SWEEP-F7` DONE (`R-646` accepted, `5639067f`) · `SWEEP-F3` DONE · **`SWEEP-F10` NEXT** (`R-646 §3`, scoped to `test_audit_a12.py` + `test_validate_scaling_schedule.py::test_cli_report_file_created`, and explicitly NOT the two report generators) · then `SWEEP-F6`'s fixture, `SWEEP-F5`'s two-branch measurement.**
+
+---
+
 ## AR-690 · 2026-08-03 · ✅★★★★★ **`SWEEP-F7` CLOSED — AND THE VACUITY WAS WORSE THAN "IT DIDN'T CHECK THE EXIT CODE": THE FILE IT ASSERTED ON IS **TRACKED IN GIT**, SO `report.exists()` WAS SATISFIED BY A COPY COMMITTED TO THE REPO WHETHER OR NOT THE SUBPROCESS PRODUCED ANYTHING.** ✅★★★★★ **RED-PROOFED BY A 2×2 THAT ASSERTS BOTH HALVES: the OLD test PASSES on a CLI mutated to exit `0` on gate failure; the NEW test FAILS on it. `[MEASURED HERE]`**
 
 **TASK:** `SWEEP-F7` (`R-643 §5` queue). **FILE: `tests/python/test_validate_scaling_schedule.py` ONLY** — a test, so no packet. **AR ships in the work commit.**

@@ -18,10 +18,9 @@ import pytest
 
 from src.engine.sizing import (
     compute_liquidity_haircut,
-    compute_vol_scale,
     compute_risk_derived_contracts,
+    compute_vol_scale,
 )
-
 
 # ── 1. Unit parity: vol-scale math matches TypeScript ─────────────────────────
 
@@ -253,11 +252,13 @@ class TestBacktesterParityMetadata:
 
     def _run_backtest_internal(self, request_kwargs: dict) -> dict:
         """Invoke the internal backtest function with a synthetic DataFrame."""
-        from src.engine.config import (
-            BacktestRequest, StrategyConfig, PositionSizeConfig,
-            IndicatorConfig, ContractSpec, CONTRACT_SPECS,
-        )
         from src.engine.backtester import run_backtest as run_backtest_internal
+        from src.engine.config import (
+            BacktestRequest,
+            IndicatorConfig,
+            PositionSizeConfig,
+            StrategyConfig,
+        )
 
         strategy = StrategyConfig(
             name="test_ema_crossover",
@@ -265,15 +266,38 @@ class TestBacktesterParityMetadata:
             timeframe="1min",
             direction="long",
             entry_indicator="ema_crossover",
-            entry_long="ema_fast > ema_slow",
+            # SWEEP-F3, THIRD DEFECT UNDER THE FIRST TWO: these expressions
+            # referenced `ema_fast`/`ema_slow`, which are not columns the engine
+            # produces. IndicatorConfig has NO `name` field (config.py:320-335) —
+            # pydantic ignores unknown keys, so `name="ema_fast"` was silently
+            # dropped and the engine materialised `ema_9` / `ema_21`. The
+            # measured error was `ValueError: Unknown column 'ema_fast'.
+            # Available: [... 'ema_21', 'ema_9' ...]`. Same crossover, named the
+            # way the engine actually names it.
+            entry_long="ema_9 > ema_21",
             entry_short="high < low",   # sentinel — never triggers
             entry_params={"fast": 9, "slow": 21},
             indicators=[
-                IndicatorConfig(type="ema", period=9, name="ema_fast"),
-                IndicatorConfig(type="ema", period=21, name="ema_slow"),
+                IndicatorConfig(type="ema", period=9),
+                IndicatorConfig(type="ema", period=21),
             ],
+            # SWEEP-F3 (R-645 §4 lane 2): this fixture NEVER BUILT. StrategyConfig
+            # requires `exit` (config.py:447) and take_profit is a StopConfig whose
+            # type is Literal["atr","fixed","trailing_atr"] (config.py:349-352) —
+            # there is no "fixed_r" and no r_multiple field. Pydantic raised
+            # ValidationError naming exactly those two errors, and the broad
+            # `except Exception → pytest.skip` below reported it as
+            # "run_backtest_internal unavailable in this test context" — false for
+            # the entire life of the defect. A SKIP REASON IS A CLAIM.
+            #
+            # SEMANTIC PRESERVATION: the author wrote r_multiple=2.0, i.e. a 2R
+            # target. StopConfig has no R vocabulary — but the stop is 1.5 ATR, so
+            # a 3.0 ATR target IS 2R expressed in the units this model actually
+            # has. `exit` mirrors entry_long, matching the sibling convention in
+            # test_backtester.py:174 and test_a_plus_gate_parity.py:641.
+            exit="ema_9 < ema_21",
             stop_loss={"type": "atr", "multiplier": 1.5},
-            take_profit={"type": "fixed_r", "r_multiple": 2.0},
+            take_profit={"type": "atr", "multiplier": 3.0},
             position_size=PositionSizeConfig(
                 type="risk_derived_pyramid",
                 base_contracts=6,
@@ -294,10 +318,11 @@ class TestBacktesterParityMetadata:
 
     def test_parity_metadata_present_when_vix_absent(self):
         """result['parity_metadata'] always present; warns when vix_now absent."""
-        try:
-            result = self._run_backtest_internal({})
-        except Exception:
-            pytest.skip("run_backtest_internal unavailable in this test context")
+        # SWEEP-F3: the `except Exception → pytest.skip` that used to sit here is
+        # GONE. It converted a broken fixture into a clean-looking environmental
+        # skip for the whole life of the defect. If this call raises, the test
+        # must FAIL and show the traceback.
+        result = self._run_backtest_internal({})
 
         assert "parity_metadata" in result, "parity_metadata key missing from result"
         pm = result["parity_metadata"]
@@ -311,10 +336,9 @@ class TestBacktesterParityMetadata:
 
     def test_parity_metadata_vol_scale_applied_with_vix(self):
         """vix_now=36 → vol_scale=0.5 → vol_scale_applied=True."""
-        try:
-            result = self._run_backtest_internal({"vix_now": 36.0})
-        except Exception:
-            pytest.skip("run_backtest_internal unavailable in this test context")
+        # SWEEP-F3: broad-except-to-skip removed; see the note in
+        # test_parity_metadata_present_when_vix_absent.
+        result = self._run_backtest_internal({"vix_now": 36.0})
 
         pm = result.get("parity_metadata", {})
         assert pm.get("vol_scale_applied") is True, "vol_scale_applied should be True at VIX=36"
@@ -322,10 +346,9 @@ class TestBacktesterParityMetadata:
 
     def test_dsl_guards_contain_vol_scale_flag(self):
         """dsl_guards['vol_scale_applied'] must be present and match parity_metadata."""
-        try:
-            result = self._run_backtest_internal({"vix_now": 36.0})
-        except Exception:
-            pytest.skip("run_backtest_internal unavailable in this test context")
+        # SWEEP-F3: broad-except-to-skip removed; see the note in
+        # test_parity_metadata_present_when_vix_absent.
+        result = self._run_backtest_internal({"vix_now": 36.0})
 
         dg = result.get("dsl_guards", {})
         pm = result.get("parity_metadata", {})
@@ -336,10 +359,11 @@ class TestBacktesterParityMetadata:
 
     def test_dsl_guards_contain_liquidity_haircut_flag(self):
         """dsl_guards['liquidity_haircut_applied'] present (False when no depth ratio)."""
-        try:
-            result = self._run_backtest_internal({})
-        except Exception:
-            pytest.skip("run_backtest_internal unavailable in this test context")
+        # SWEEP-F3: the `except Exception → pytest.skip` that used to sit here is
+        # GONE. It converted a broken fixture into a clean-looking environmental
+        # skip for the whole life of the defect. If this call raises, the test
+        # must FAIL and show the traceback.
+        result = self._run_backtest_internal({})
 
         dg = result.get("dsl_guards", {})
         assert "liquidity_haircut_applied" in dg, "liquidity_haircut_applied missing from dsl_guards"
@@ -348,10 +372,11 @@ class TestBacktesterParityMetadata:
 
     def test_no_vix_no_depth_both_warn(self):
         """Both absent → two parity_warn entries emitted."""
-        try:
-            result = self._run_backtest_internal({})
-        except Exception:
-            pytest.skip("run_backtest_internal unavailable in this test context")
+        # SWEEP-F3: the `except Exception → pytest.skip` that used to sit here is
+        # GONE. It converted a broken fixture into a clean-looking environmental
+        # skip for the whole life of the defect. If this call raises, the test
+        # must FAIL and show the traceback.
+        result = self._run_backtest_internal({})
 
         warns = result.get("parity_metadata", {}).get("parity_warn", [])
         assert any("no_vix_in_backtest" in w for w in warns), (
