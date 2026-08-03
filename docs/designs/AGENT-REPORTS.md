@@ -4,6 +4,51 @@
 
 ---
 
+## AR-662 · 2026-08-03 · ✅ **START-RECEIPT — WORKER SEAT TAKEN ON `R-618`. TWO DEFECTS IN THE DISPATCH ITSELF, RAISED BEFORE I START (`worker-execution §5`: free now, costs the whole run at delivery).** ⚠️ **ONE IS A POINTER ERROR, ONE IS AN ORDERING CONTRADICTION BETWEEN `§6`'s MARKERS AND `§6`'s OWN TEXT — I HAVE MADE A REVERSIBLE CALL AND NAMED IT SO THE DESK CAN OVERRIDE AT ZERO COST.**
+
+**SEAT:** worker · tree `C:\Users\tonio\Projects\wt-h1-wave4-20260712` · branch `h1-wave4-sealed12-driver`.
+
+**SEAT VACANCY — MEASURED, NOT ASSUMED** `[MEASURED HERE]`. `two-operator-windows` requires this before onboarding, and the check FIRED: **`ADVISOR-RULINGS.md` HEAD MOVED MID-TURN.** My first read saw HEAD `7dc14a0a` with `R-618` uncommitted in the working tree; seconds later HEAD was `cead23ed` (`2026-08-03 04:18:21 -0400`) with `R-618` committed — against a wall clock of `04:18:32`. **An advisor seat is LIVE and was writing while I was reading.**
+✅ **THAT IS THE COUNTERPART SEAT, NOT A SIBLING WORKER, AND IT DOES NOT BLOCK ME** — advisor and worker share this tree by design under single-writer-per-file, and the file it moved is one I never write.
+✅ **WORKER SEAT IS VACANT, ON THE EVIDENCE THAT ACTUALLY DISCRIMINATES:** `git status --porcelain docs/designs/AGENT-REPORTS.md` → **empty**; newest AR is `AR-661` and it has already been ruled on **twice** (`R-617`, `R-618`). **No worker report is in flight.**
+⚠️ **WHAT I DID NOT MEASURE:** four live `claude.exe` PIDs exist (`13916`, `21508`, `26296`, `35308`) and **I cannot attribute any of them to a seat.** None was created at my session's start, which is consistent with `orphaned-subagent` (`/clear` kills the conversation, not the process) — so my own seat is very likely one of them. **PID liveness is NOT seat ownership; I rested the vacancy claim on the clean report file, not on the process table.**
+
+**RULING READ:** `R-618` at HEAD `cead23ed` (committed copy verified identical to the working-tree copy I first read). Prior: `R-617`, `R-616`. Own last reports: `AR-661`, `AR-660`.
+
+### ⚠️ DEFECT 1 — POINTER ERROR IN THE `★ WORKER — START HERE` BLOCK
+
+The block reads *"`§5` is the replacement and it is a smaller job than the one I withdrew."* `[MEASURED HERE]` **`§5` is `THE REMAINING CORRECTIONS AGAINST THIS DESK`. The replacement — the severity inversion — is `§6.1`.** Cosmetic, but the START-HERE block is the one part of a ruling a cold seat is told to trust without reading further, so a wrong pointer in it is the highest-leverage typo in the file.
+
+### 🛑 DEFECT 2 — `§6`'s MARKERS AND `§6`'s TEXT DISAGREE ABOUT WHAT IS FIRST
+
+| item | marker | what its text says |
+|---|---|---|
+| `§6.1` INV-13 severity + consumers | ✅ | *"WORKER: report ... and propose — do not apply"* |
+| `§6.2` did DSL-path backtests report zero trades | ⏸️ | *"**STILL STANDS AND IS STILL FIRST**"* |
+
+**Both are worker work. The markers say `§6.1` is active and `§6.2` is queued; `§6.2`'s own sentence says it is FIRST.** ★★★ **I read `⏸️` as *carried/pending*, not *blocked*, because `§6.3` uses the same marker on an item it simultaneously calls *"unchanged and still authorized"*.** So the marker is not a priority signal there, and it probably is not one here either.
+
+✅ **MY CALL, AND IT IS REVERSIBLE:** I take **`§6.1` first**, because the `★ WORKER — START HERE` block is the campaign's designated cold-seat dispatch (`worker-onboarding §1`) and it names **only** the `§6.1` replacement as my task — it does not mention `§6.2` at all. `§6.1` is also minutes of work, so taking it first costs `§6.2` almost nothing. **Then `§6.2` in the same wave.** 🛑 **DESK: if `§6.2`'s "STILL FIRST" was meant literally over the START-HERE block, say so and I flip the order — nothing is spent yet.**
+
+### ✅ FAKE-EDGE TEST (`worker-execution §5c`)
+
+**`§6.1` does not consume `§6.2`'s output.** INV-13's declared severity and its consumer list are static properties of the harness; the historical DSL trade record is persisted backtest data. **No data passes between them → no real edge → this is a BATCH, and the whole batch is mine** (operator-ordered 2026-07-31: finish all lanes before any handoff). Single integrator, single signer, fan-in reported as `N / 2`.
+
+### THE TASK, AS I READ IT
+
+1. **`§6.1`** — report `INV-13`'s severity and every consumer of it, and **PROPOSE** the severity correction. The finding it rests on: `INV-1` is `CRITICAL` and structurally cannot fail; `INV-13` owns the correct uncapped check and does not block. **Proposal only — the contract decision is the desk's.**
+2. **`§6.2`** — from persisted results (`backtest_trades`, stored result JSON, run receipts), **separate DSL-path runs from class-path runs before counting**, then report how many trades and **WHEN**. ⚠️ **Amended by `R-618 §4`: the discriminating signal is whether surviving entries cluster inside macro windows, NOT zero-vs-nonzero — `~77%` suppression means the record WILL show trades.** ✅ **`UNKNOWN` is a complete answer if the record cannot distinguish the two paths, and I will say so rather than guess.**
+
+### 🛑 WHAT I AM NOT DOING (from `R-618 §6` and `§7`)
+
+**No wiring of `INV-1` to `prop_compliance[firm].ending_balance`** — withdrawn as harmful (`§3`); that field is a deliberate DLL-capped artifact. · **No deletion of `INV-1`** — its disposition follows the severity decision. · **No applying of the severity change** — propose only. · **No patching of the other production path** (`§6.4`). · **No `runtime-production` read or touch.** · **No repetition of the `100%` figure** (it is `76.89%`), **no treating `60`/`90` as verified** (single-source), **no "this is why nothing ever graduated"** (`R-617 §3` — the link is a third claim).
+
+### RECEIPT TERMS
+
+**Writes nothing observable until the first deliverable.** **FIRST OBSERVABLE:** `§6.1`'s severity + consumer table, as an AR. **ETA ~20–30 min.** **`§6.2` follows in the same wave, ETA ~60–90 min after that.** Grades on every load-bearing line, and I will name what I did NOT measure.
+
+---
+
 ## AR-661 · 2026-08-03 · 🛑🛑🛑★★★★★ **`LANE-8` ANSWERED: **NO — AND IT IS WORSE THAN THE QUESTION ASKED.** THE COMPILED-SPEC / TIER-A LANE DOES NOT SUPPLY `event_calendar.policies`, BECAUSE **NO LANE IN THE REPOSITORY DOES.** THE FIELD IS **DECLARED IN THREE PLACES AND ASSIGNED IN NONE.**** ✅★★★★★ **REPO-WIDE, EVERY FILE TYPE, WITH POSITIVE CONTROLS: `event_calendar` HAS **ZERO** PRODUCERS. THE ONLY NON-TEST OCCURRENCES ARE A PYDANTIC FIELD DECLARATION (`config.py`, DEFAULT `None`), THE READER + DEFECTIVE FALLBACK (`backtester.py`), FOUR PURE PROPAGATIONS (`walk_forward.py`, `request.event_calendar` → itself), AND A TYPESCRIPT INTERFACE FIELD THAT IS NEVER ASSIGNED.** 🛑 **NO FIX MADE, NO FILE MODIFIED — `R-616 §6.1` SAID REPORT THE ANSWER AND NOTHING ELSE.**
 
 **TASK:** `LANE-8` (`R-616 §6.1`) · **BRANCH:** `h1-wave4-sealed12-driver` · **READ-ONLY.** 🛑 **`runtime-production` NOT touched, NOT read. `backtester.py` NOT modified — `git hash-object` = `177ec9e14190c424a921d0a5d391a3a77f06dbd1`, unchanged.**
