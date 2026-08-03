@@ -4,6 +4,42 @@
 
 ---
 
+## AR-673 · 2026-08-03 · ✅★★★★★ **`R-628 §3` DONE (`8ef3397e`) — THE ONE ASSERTION THAT ENCODED THE FAIL-OPEN NOW ASSERTS THE NEW CONTRACT **POSITIVELY**, AND IT IS RED-PROOFED: IT **FAILS** AGAINST BASE `core.py` AND GREENS (`67 passed`) AGAINST THE CHANGE — SAME TEST FILE BOTH TIMES.** ✅ **THE SUITE IS NO LONGER RED. `AR-672`'s KNOWN-RED ITEM IS CLOSED.** ✅ **CONTRACT PROVEN BY THE DIFF, NOT CLAIMED: `2` LINES REMOVED, `assert` COUNT `97 → 102` (STRENGTHENED), `0` `xfail`/`skip`, `core.py` UNTOUCHED.**
+
+**TASK:** `R-628 §3`. **File: `src/engine/tests/test_invariant_harness.py` ONLY, that ONE test.**
+
+### ✅ THE FOUR REQUIRED ASSERTIONS, ALL PRESENT
+
+Renamed `test_passes_when_no_prop_compliance` → **`test_absent_prop_compliance_is_not_applicable_not_a_pass`** (the old name asserted the defect in its own title).
+1. ✅ **`check.passed is False` AND `check.applicable is False`** — both explicitly. ★★★ **`is False`, not `not check.passed`, deliberately: the loose form is satisfied by `None`/`0`/absence, and `§3` warned that a test which only checks "stopped failing" would still pass if the check were DELETED.**
+2. ✅ **The evidence names WHY** — asserts `"did not run"` and `"not evidence"` appear, so the state cannot be read as verified-consistent.
+3. ✅★★★★★ **THE POSITIVE WITNESS `§3` ASKED FOR: `overall_passed` with `prop_compliance` ABSENT `is` `overall_passed` with it PRESENT.** **This is the assertion that catches a future promotion accidentally gating on absence — `§2`'s hazard, now a test rather than a note.**
+4. ✅ **The report surfaces it** — `per_firm_endings_consistent` must appear in `not_applicable`, so the state cannot be silently dropped instead of reported.
+
+### ✅ RED-PROOF — SAME FILE, BOTH TREES
+
+| | BASE `core.py` (isolated worktree) | CHANGED `core.py` (campaign) |
+|---|---|---|
+| the rewritten test | 🛑 **FAILED** — `AssertionError` at `:529` | ✅ **PASSED** |
+| full file | — | ✅ **`67 passed`** (was `1 failed, 66 passed`) |
+
+★★★ **The RED arm used the IDENTICAL test file copied into a tree whose `core.py` is at base (`git status` on `core.py` → empty). So the only variable is the code under test — `red-path-decay` satisfied, and re-measured this run rather than carried.**
+
+### ✅ CONTRACT COMPLIANCE — MEASURED
+
+**Every removed line in the diff, complete:** `def test_passes_when_no_prop_compliance(self):` and `assert check.passed`. **That is all.** ✅ **No other assertion in the file was touched** · ✅ **`assert` count `97 → 102`** — the test got **stronger**, which is the direction that distinguishes a spec change from a weakening · ✅ **`xfail`/`skip` introduced: `0`** (explicitly forbidden) · ✅ **`core.py` not in the change set.**
+⚠️ **`test_synthetic_market_simulator.py` remains dirty in the tree — inherited, not mine, not committed** (`R-624 §5.1`).
+
+### ⚠️ WHAT I DID **NOT** MEASURE / STILL OPEN
+
+1. 🛑 **`_serialize_inv_check` (`backtester.py:5943`) STILL does not carry `applicable`** — so the new state is in-process only and **the TS gate cannot see it.** ⚠️ **Raised in `AR-672`, still unaddressed, still outside my file scope. The property *"the verdict must never claim INV-13 checked something it did not"* holds in Python and NOT end-to-end.**
+2. **`R-627 §3.2`** (does the result carry a producer-identifying field?) — **not started; it is the next queued item.**
+3. **I did not re-run the broader suite** this commit — only `test_invariant_harness.py` (`67 passed`).
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT: `R-627 §3.2`** unless the desk re-orders.
+
+---
+
 ## AR-672 · 2026-08-03 · ✅★★★★★ **`R-627 §3.1` SHIPPED (`f936b2dd`) — `INV-13`'s TWO SKIP PATHS NO LONGER REPORT AS PASSES, AND `overall_passed` IS BYTE-IDENTICAL, PROVEN AGAINST A **NON-VACUOUS** CONTROL (`True → True` ON A REAL RESULT, NOT JUST `False → False` ON SYNTHETIC DICTS).** 🛑🛑★★★★★ **AND I CAUGHT MY OWN CONTROL BEING CONFOUNDED MID-RUN: MY FIRST BEFORE/AFTER DIFFERED IN **TWO** VARIABLES, NOT ONE, AND SHOWED A FALSE `14 → 13` REGRESSION THAT WAS ACTUALLY THE POLARITY FIX PRODUCING A TRADE.** 🛑 **ONE TEST NOW FAILS **BY CONSTRUCTION** — `test_passes_when_no_prop_compliance` ASSERTS THE EXACT CONTRACT `§3.1` ORDERED CHANGED, AND MY CONTRACT FORBIDS ME TOUCHING IT.**
 
 **TASK:** `R-627 §3.1`. **Files: `src/engine/invariant_harness/core.py` ONLY** `[VERIFIED — `git status src/` shows core.py plus the inherited-dirt `test_synthetic_market_simulator.py`, which I did NOT commit]`.
