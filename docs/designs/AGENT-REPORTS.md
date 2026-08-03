@@ -4,6 +4,74 @@
 
 ---
 
+## AR-697 · 2026-08-03 · ✅★★★★★ **`R-649 §4` TASK-2 **AND** TASK-4 — BOTH ANSWERED. `11/11` TIER-A SPECS SEALED THROUGH `run_leg_a_phase1` FIRST TIME, NO ADAPTER, NO EXCEPTION. AND TASK-4'S ANSWER IS THE ONE THAT RE-SIZES THE BUILD: **THE `134` APPROXIMATIONS ARE `6` DETECTORS, AND ONE OF THEM IS `78` OF THEM.**** 🛑🛑★★★★★ **BUT TASK-3's PREMISE DOES **NOT** CARRY TO TIER-A, AND THE WAY IT FAILS IS A TRAP: TIER-A ALSO HAS A *`26`* — AND IT IS A **DIFFERENT** `26` WITH THE **OPPOSITE** CAUSE. SESSION-KEYWORD IS `2` OF `53` HERE, NOT `26`.**
+
+**TASK:** `R-649 §4` TASK-2 (re-scoped) + TASK-4. 🛑 **NOTHING CHANGED IN THE SHARED TREE — every execution ran in a materialised scratch copy (`git archive HEAD | tar -x`) at `b3c7ddaa`. No build, no wiring, no repair. TASK-3 is NOT started and `§6` says why.**
+✅ **`R-650` READ — it assigns me nothing and my orders are unchanged.**
+
+### ✅★★★★★ §1 — STOP CONDITION (i) IS **NOT** MET, AND BY A WIDER MARGIN THAN `AR-696` CLAIMED
+**The tier-A population is enumerable AND sealable ENTIRELY FROM COMMITTED REPOSITORY ARTIFACTS `[MEASURED HERE]`:** receipt `docs/replay-results/h1-battery/tier-a-clean-strategy-receipt.json` (pins `11` clean of `13` total) · extractions `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/phase_b/` (**`13` files, in the repo**) · selection + load-bearing predicate imported from the committed generator `tier_a_compile_census.py`, **never restated**.
+✅ **`AR-696`'s DECLARED RISK IS RESOLVED, IN THE GOOD DIRECTION.** I flagged that the census's `extraction_source` points at another session's `AppData\Temp` scratchpad. **That field is STALE, not load-bearing:** the generator reads `PHASE_B_REL = docs/replay-results/h1-sealed-read-frozen/SEALED-READ` (`:69-72`, the executable line) and publishes that repo-relative form at `:471`. ✅ **AND I PROVED THE TWO COPIES ARE THE SAME BYTES BEFORE RELYING ON EITHER: `sha256` over all `13`, `13/13` MATCH.** ★★★ **The committed artifact's own provenance field disagreed with its own generator; the bytes settled it.**
+
+### 🛑🛑★★★★★ §2 — THE SEAL RESULT, AND A DENOMINATOR DEFECT THAT INFLATES THE TIER-A GAP BY `46` ROWS
+`[MEASURED HERE — scratch @ `b3c7ddaa`, `run_leg_a_phase1` per spec]`
+| measure | value |
+|---|---|
+| specs sealed | **`11 / 11`**, `automated_verdict` = **`BLOCK`** on all 11, **`0` seal failures, no adapter** |
+| condition rows | **`99`** |
+| rows the SEAL treats as `load_bearing` | **`99`** |
+| rows the CENSUS treats as load-bearing (`role in spine\|trigger`) | **`53`** |
+| rows passing check `ii` | **`0`** |
+🛑🛑★★★★★ **THE TWO DENOMINATORS ARE COMPUTED BY DIFFERENT PREDICATES AND I JOINED THEM ROW-BY-ROW RATHER THAN COMPARING TOTALS: the agreement matrix is `(seal=True, census=True) 53` · `(seal=True, census=False) 46` · **nothing else**.** **`compile_fidelity.py:416-417` reads `cond.get("load_bearing", True)` — DEFAULT TRUE — and `produce_spec_artifact` emits no `load_bearing` field and no `non_lb_disposition`, so all `99` are gated by `(ii)`.** **The `46` are `41` `confluence` + `5` `invalidation` rows.**
+⚠️ **THIS IS DELIBERATE FAIL-CLOSED, NOT A BUG — I read the comment AND the executable line:** *"§0 load-bearing determination. DEFAULT True; non-LB requires a written disposition."* ★★★★★ **SO THE RULING'S `53` AND THE SEAL'S DENOMINATOR ARE NOT THE SAME OBJECT, AND `53/99` IS EXACTLY THE SHAPE `R-648 §1` CONVICTED ONE RULING AGO — I am not quoting either as "distance" without saying which predicate produced it.** **`[HYPOTHESIS — UNPROVEN]` the remedy is the compiler emitting role-derived `load_bearing` plus a WRITTEN disposition for each non-LB row; I have not tested it and it is not mine to do unbidden. 🛑 It must never be closed by relaxing the seal's default.**
+⚠️ **ALSO UNEXERCISED, SAME AS `AR-695`: all `11` carry leg-level `vi_cert` because I passed no `certificate`. Even with every `(ii)` green these `11` would still `BLOCK`.** **A real golden-slice PASS must exercise the certificate/countersign path; nothing I ran touches it.**
+
+### 🛑🛑🛑★★★★★ §3 — TASK-3's PREMISE IS POPULATION-SPECIFIC, AND THE COINCIDENCE IS THE TRAP
+`[MEASURED HERE, by reason code, both populations, same instrument]`
+| population | unbound rows | `no_recognized_session_keyword` | `unknown_condition_type` |
+|---|---|---|---|
+| shakedown `161` (`AR-695`, re-derived by me in `§4`) | `27` | **`26`** + `1` `session_zone_refused_uncomputable` | `0` |
+| **tier-A, all `99`** | `47` | **`4`** | **`43`** |
+| **tier-A, the `53` load-bearing** | `28` | **`2`** | **`26`** |
+🛑🛑★★★★★ **BOTH POPULATIONS HAVE A `26` THAT "SHARES ONE CAUSE", AND THE TWO CAUSES ARE DIFFERENT ONES.** **`R-649`'s sentence — *"26 of the 27 truly-unbound share ONE cause"* — is TRUE of the shakedown and FALSE of tier-A, where the `26` is `unknown_condition_type` and session-keyword is `2`.** ★★★★★ **`THE SAME NUMBER IN TWO POPULATIONS IS NOT THE SAME FINDING` — a seat carrying that sentence across would repair session keywords, move `2` of `53`, and believe it had moved `26`.**
+✅ **CONSEQUENCE, STATED PLAINLY: the ONE bounded session-keyword repair is worth `2` rows of `53` on the population the golden slice is drawn from.** **It is not wrong and it is not wasted — it is just not the tier-A blocker.** **The tier-A blocker is `UNTYPED`, and the census's own `SUPERSESSION_MARKER` already says why that is not a wiring job: *"UNTYPED is not a family that can be wired, it is the absence of a type"* — it carries `NOT_WIREABLE`.**
+
+### ✅★★★★★ §4 — TASK-4 ANSWERED: THE `134` ARE **SIX** MECHANISMS, AND ONE IS `58%` OF THEM
+`[MEASURED HERE — same `16` shakedown artifacts, same `run_leg_a_phase1`]` ✅ **MY RE-RUN REPRODUCES `AR-695` EXACTLY BY AN INDEPENDENT PATH: `16/16` `BLOCK` · `161` rows · `134` approximation · `27` unbound (`26` + `1`) · `0` pass.** ★★★ **That is a two-path corroboration of the numbers `R-649` adopted, and it is also the positive control on my reason-string classifier.**
+| n | condition family | detector it binds to |
+|---|---|---|
+| **`78`** | `WAIT_STRUCTURE` | **`structure_engine.compute_structure_state`** |
+| `23` | `WAIT_CONFIRMATION` | `spec_condition_compiler.candle_confirmation_check` |
+| `20` | `WAIT_RETEST` | `spec_condition_compiler.retest_touch_check` |
+| `6` | `INVALIDATE` | `structural_stops.compute_structural_stop` |
+| `4` | `WAIT_BIAS` | `bias_engine.classify_institutional_regime` |
+| `3` | `FILTER` | `entry_quality.confluence_factor_presence` |
+🛑★★★★★ **`134` ROWS ARE `6` DETECTORS. NOT `134` MISSING FEATURES — `6`.** **Tier-A's `52` approximations use `5` of the same `6` (no `WAIT_BIAS`), `35` of them on `structure_engine.compute_structure_state`; within the `53` load-bearing, `18`.** ★★★★★ **ONE CONCRETE DETECTOR — `compute_structure_state` — IS THE SINGLE HIGHEST-LEVERAGE BUILD IN THE CAMPAIGN ON BOTH POPULATIONS INDEPENDENTLY.**
+
+### ★★★★★ §5 — THE GOLDEN-SLICE RANKING, AND THE INSTRUMENT PROBLEM THAT DECIDES IT
+`[MEASURED HERE]` ranked by load-bearing failures, fewest first. `LB` = the census's `53`.
+| stub | strategy | `LB` | apx | unb | all-row apx/unb | distinct detectors | asset_class |
+|---|---|---|---|---|---|---|---|
+| **`YqY0OkL5LMI__s1`** | **`gap_and_go_opening_range_breakout`** | `3` | `3` | **`0`** | `7`/`1` | **`1`** | 🛑 **`equities`** |
+| `0RBexa9JpIg__s0` | `fibonacci_pullback_continuation` | `3` | `2` | `1` | `4`/`4` | `2` | `forex` |
+| **`ExB66jcyKxg__s0`** | **`sma14_strong_close_crossover`** | `3` | `2` | `1` | `3`/`6` | `2` | ✅ **`index`** |
+| `st5e-YJRfKc__s0` | `opening_range_breakout` | `5` | `4` | `1` | `10`/`1` | `2` | `equities` |
+| `hcHuDfxdywI__s0` | `institutional_order_block_reversal_entry` | `6` | `5` | `1` | `9`/`1` | `1` | `forex` |
+| `st5e-YJRfKc__s1` · `dENM6gt8ZRg__s0` · `LD1FEbwXU4o__s0` · `YqY0OkL5LMI__s0` · `pKzXxB9Blts__s0` · `YGdFksLavKE__s0` | *(remaining six)* | `3`–`8` | | `3`–`7` | | `1`–`3` | mixed |
+✅★★★★★ **ON COMPILER DISTANCE ALONE THE WINNER IS UNAMBIGUOUS: `gap_and_go_opening_range_breakout` — `3` load-bearing conditions, **ZERO unbound**, and `7` of its `8` rows bind to the SAME single detector `structure_engine.compute_structure_state`. Its entire spec is one detector plus one session keyword.**
+🛑🛑🛑★★★★★ **AND IT IS AN EQUITIES STRATEGY. ITS OWN EXTRACTION SAYS SO VERBATIM: *"Small-cap momentum stocks traded on the cash equities open (shares, pre-market gappers); **not futures**."*** 🛑🛑★★★★★ **I THEN CHECKED ALL ELEVEN AND THIS IS THE FINDING I DID NOT EXPECT: **NOT ONE OF THE `11` TIER-A CERTIFIED-CLEAN SPECS IS A FUTURES STRATEGY** — `equities` `3` · `forex` `2` · `stocks` `1` · `index` `1` · unclassified `4`.** 🛑 **THE ONLY `index_futures` EXTRACTION IN THE SEALED-READ SET IS `XbRI0sfcXU4__s0` (*"nq price action afternoon time"*) — AND IT IS ONE OF THE **TWO DROPPED** (`n_clean_strategies: 0`, receipt `per_video`).** ★★★★★ **`THE POPULATION PHASE-1 EXITS ON CONTAINS NO INSTANCE OF THE INSTRUMENT THIS BOT TRADES` — and the clean-selection rule is what removed the one that did.**
+**MY RECOMMENDATION, AND IT IS A RECOMMENDATION — `R-648 §4` says ratification is the DESK'S:** ✅ **`ExB66jcyKxg__s0` `sma14_strong_close_crossover`, asset_class `index`** — equal-cheapest on load-bearing distance (`3` LB: `2` approximations on `candle_confirmation_check` + `1` `UNTYPED`), and the only candidate whose taught instrument maps onto a futures contract the engine actually trades (`MES`/`MNQ`) **without changing what the educator taught.** 🛑 **`gap_and_go` is cheaper to COMPILE and wrong to EXECUTE: running a small-cap pre-market gapper on index futures would preserve the number and destroy the meaning.**
+⚠️ **`[UNENUMERATED]` I did NOT verify that a deterministic `MES`/`MNQ` dataset at this strategy's timeframe exists in the repo, and I did NOT read WHY the two specs were dropped — the receipt publishes only the `n_clean_strategies: 0` rollup, not the uncleanliness reason.**
+
+### 🛑 §6 — WHY TASK-3 IS NOT STARTED, AND WHAT I AM ASKING FOR
+✅ **TASK-3 IS READY AND I AM NOT REFUSING IT.** The boundary is located, the population is sealed, and the before/after instrument is the script that produced `§4`. **`R-649`'s stop condition (ii) is about the collapse rate, not about relevance, so it does not fire here and I am not claiming it does.**
+🛑 **But `§3` is a MATERIAL CHANGE TO ITS PREMISE, measured after the ruling was written, and `R-649 §4`'s own admission test is *"does it PREVENT THE GOLDEN SLICE FROM COMPILING"*.** **On tier-A the session-keyword repair moves `2` of `53`; `structure_engine.compute_structure_state` moves `18` of `53` and `78` of the shakedown's `134`.** **Spending the ONE bounded repair is a one-way choice of aim, so I am reporting before spending it rather than after.** ★★★ **I have done everything that does not depend on the answer: TASK-2 and TASK-4 are both complete above.**
+**THE ASK, IN ONE SENTENCE:** **confirm TASK-3's aim — session-keyword as written (`2` of `53` on tier-A, `26` of `27` on the shakedown), or re-aim it at `compute_structure_state`** — and I execute the same turn either way.
+
+**Position: `h1-wave4-sealed12-driver`, HEAD `b3c7ddaa` at read. Shared tree untouched by this task. Fan-in `2 / 3` on `R-649 §4`; TASK-3 is UNSTARTED, not blocked, and I am not handing off.**
+
+---
+
 ## AR-696 · 2026-08-03 · 📋 **START-RECEIPT — `R-649 §4` TASK-2 / TASK-3 / TASK-4 ACCEPTED IN ORDER. READ-ONLY UNTIL TASK-3; nothing observable lands before the TASK-2 receipt.** ✅ **AND THE FIRST THING MEASURED ANSWERS STOP CONDITION (i) IN THE NEGATIVE: THE TIER-A POPULATION *IS* ENUMERABLE FROM THE REPOSITORY.**
 
 **SEAT — SAME PROCESS, NEW CONVERSATION `[MEASURED HERE, parent-PID walk]`:** I am `claude.exe 21508`, the same CLI that wrote `AR-687`…`AR-695`. **`/clear` rolled the conversation, not the seat.** No handoff occurred and none is declared. **Fan-in on `R-649 §4` is `0 / 3` and all three are UNSTARTED, not blocked — per `worker-onboarding §5`, unstarted is the reason to stay.**
