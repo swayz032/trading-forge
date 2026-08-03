@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3794` at THIS commit, 2026-08-03 12:0x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3799` at THIS commit, 2026-08-03 12:0x [MEASURED HERE, `wc -l` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3794` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
+**File is `3799` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `12:0x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, FOURTH `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-649` (`508a8be3`). Newest AR: `AR-695` — RULED at `R-649`.**
+**Ruling ledger at `R-650` (`994744f2`). Newest AR: `AR-696` — a start-receipt requesting nothing, deliberately UNRULED (`advisor-ruling §0`). `AR-695` ruled at `R-649`.**
+🛑🛑🛑★★★★★ **`MAPPING` READ IS IN AND THE PRE-REGISTERED RULE HAS ALREADY FIRED — DO NOT RE-DECIDE IT (`R-650`, receipt `6eae86d5`, `482` lines).** **VERDICT: `UNDETERMINED — the requirements object does not fix the meaning`.** **`(A)` REFUTED on uniqueness — decisively, because `run.mjs:110-115` records AS MEASURED that deleting five lines from `FAILURE_CLASSES` flips the gate to `PASS/EXIT 0`, so under `(A)` the criterion's population is EDITABLE BY THE GRADED PARTY. `(B)` and `(C)` UNSUPPORTED-BUT-NOT-REFUTED.**
+★★★★★ **THE PHRASE *"terminal acceptance failure"* IS A HAPAX LEGOMENON OF THE WHOLE REFERENCED CORPUS — zero hits across all seven pointed-at documents at their pinned OIDs, including the declared `requirements_source` blueprint, under live positive controls. `4d-ii` IS NOT "UNMET" — IT IS **UNMEASURABLE AS WRITTEN**.**
+🛑 **BRANCH `4` EXECUTED: `P0PC.acceptance` IS DEFECTIVE. NEXT DESK ACT = DRAFT THE AMENDMENT replacing the undefined phrase with a DEFINED term in the graph, then rule it and dispatch an INDEPENDENT RE-GRADE.** 🛑🛑 **IT MAY NOT BE DRAFTED TO MAKE `P0PC` PASS (`R-647 §4.1` binds the successor exactly as it bound this desk). A SEVENTH `P0` ATTEMPT IS NOW AFFIRMATIVELY WRONG, NOT MERELY OVER BUDGET.**
+🛑 **LABEL COLLISION — NAMESPACE BEFORE REUSING:** `prototypes/p0-vnext-admission/evidence-order.mjs` ALREADY uses `(A)`/`(B)` for a DIFFERENT sub-question. **Use `MAP-A`/`MAP-B`/`MAP-C`.**
+⚠️ **TWO INSTRUMENT FAULTS ON THIS BOX, BOTH BIASING TOWARD FALSE ZEROES:** **`grep -c -i -F` returns EMPTY instead of a count here** (blanked ~11 census rows) · **`/tmp` resolves for Git-Bash but NOT native Node.**
 🛑🛑★★★★★ **THE POSITION CHANGED MATERIALLY AT `R-649`.** `[MEASURED, `AR-695:42-43`, desk-verified at the artifact]` **`16/16` real corpus specs sealed through `run_leg_a_phase1` FIRST TIME — no adapter, no exception. `161` load-bearing conditions, `0` pass — BUT `134` fail as **BOUND-TO-AN-APPROXIMATION**, only `27` as genuinely UNBOUND, and `26` of those `27` share ONE cause (`no_recognized_session_keyword`; the 27th is `session_zone_refused_uncomputable`).**
 ★★★★★ **`THE COMPILER IS NOT FAILING TO BIND — IT IS BINDING TO PROXIES, AND THE DETECTOR HONESTLY REFUSES TO CERTIFY THEM.` The blocker is no longer "possibly hundreds of missing pieces": ONE concentrated unbound family plus a measurable approximation-conversion queue.**
 🛑 **`161`/`16` IS THE `claude-rung-v32` SHAKEDOWN POPULATION AND MAY NOT BE THE GOLDEN-SLICE DENOMINATOR** — the slice is drawn from **tier-A `11` specs / `53` conditions**, which NOBODY HAS SEALED YET (`TASK-2`). **The worker raised this itself at `AR-695:45`.**
