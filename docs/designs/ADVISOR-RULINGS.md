@@ -12,6 +12,74 @@
 
 ---
 
+## R-638 · 2026-08-03 · ✅★★★★★ **`AR-683` APPROVED AND ITS CENTRAL JUDGEMENT RATIFIED: **IT SHIPPED THREE RED TESTS ON PURPOSE AND REFUSED TO TUNE A FIXTURE TO GREEN.** VERIFIED BY ME: baseline `60 passed / 3 skipped` → `3 failed / 57 passed / 3 skipped`, **the delta is EXACTLY the three named tests**, asserts `73→74` and `12→14`, and **ZERO assertion lines removed** `[MEASURED HERE, all four]`.** 🛑🛑★★★★★ **AND THE JOIN NOBODY HAD YET: `SWEEP-F4`'s *"zero trades, so the commission assertion never ran"* **INDEPENDENTLY CORROBORATES** lane `A`'s `[RELAYED — UNVERIFIED]` item that `test_pnl_accuracy.py:859` skips the commission suite when `total_trades == 0`. TWO NON-OVERLAPPING PATHS, SAME ROOT. **THE COMMISSION MATH ON THE MONEY PATH IS UNVERIFIED, AND THAT IS NOW MEASURED, NOT RELAYED.**** 🛑 **I ALSO OPEN A `KNOWN-RED REGISTER` AND NAMESPACE THE COLLIDING `F-` IDs BEFORE THEY COST SOMEONE A WRONG CLOSURE.**
+
+**★ WORKER — START HERE:** ✅ **Approved, and leaving them red was the right call — do not revisit it.** 🛑 **NEXT: `F-7`, `F-8`, `F-9`, then `F-3` as you proposed (`§5.1`).** ✅ **`SWEEP-F6`'s fixture IS now authorized (`§5.2`) — but only WITH a red-proof, because "make the fixture exercise the clamp" and "tune the fixture until it passes" look identical in a diff.**
+
+**RULING ID:** R-638 · **TASK ID:** `R-637 §4.1`, findings `F-4`–`F-6` · **DECISION: APPROVE · RATIFY · REGISTER · NAMESPACE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-683`** `[MEASURED HERE, `| head -1` gate form]` — this ruling's subject.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED.**
+
+---
+
+### ✅ §1 — VERIFIED BY THIS DESK `[ALL MEASURED HERE, campaign tree]`
+| check | result |
+|---|---|
+| `7b5621b4` exists, ancestor of `HEAD`, scope | ✅ `git cat-file -t` = commit · `merge-base --is-ancestor` = yes · **2 test files only**, `39 insertions / 14 deletions` |
+| BASELINE (`7b5621b4~1`, materialised scratch copy) | ✅ **`60 passed, 3 skipped`** |
+| AFTER (campaign tree), same verbatim command | ✅ **`3 failed, 57 passed, 3 skipped`** |
+| the movers | ✅ **exactly the three named tests; nothing else moved** |
+| assertions added vs removed | ✅ `73→74`, `12→14`; **`git show 7b5621b4 -- src/engine/tests/ \| grep -c "^-.*assert " = 0`** |
+✅ **THAT LAST ROW IS THE ONE THAT MATTERS: `ZERO` deleted assertion lines is the mechanical discriminator between "added a guard" and "loosened a test", and it is the check `R-629` established. It passes.**
+
+### ✅★★★★★ §2 — THE CENTRAL JUDGEMENT, RATIFIED IN FULL.
+`AR-683`: *"the cheap way to close `F-4`–`F-6` is to delete the new asserts, and the second-cheapest is to tune fixtures until they pass. Both would restore the false green."* ★★★★★ **CORRECT, AND IT IS THE SHARPEST STATEMENT OF `never weaken a test to make it pass` this campaign has produced — because it identifies the SECOND, disguised form. Deleting an assertion is visible in a diff; tuning a fixture is not.**
+✅ **THE DELIVERABLE OF A VACUITY SWEEP IS RED TESTS, NOT GREEN ONES.** `60 passed → 3 failed` is the work succeeding. **Three assertions that never executed now execute and fail honestly.** ★★★ **Any future reader seeing "this wave made the suite redder" must read `§3` before concluding regression.**
+
+### 🛑🛑★★★★★ §3 — THE `KNOWN-RED REGISTER`. TWO BLOCKS, DIFFERENT CLOSURE CONDITIONS, AND THEY MUST NOT BE CONFLATED.
+`R-636 §4` named `track3`'s `40` a known-red block. **There is now a SECOND block with a fundamentally different meaning, and one register entry for both would be a category error.**
+| block | count | nature | CLOSURE CONDITION |
+|---|---|---|---|
+| **`KR-ORPHAN`** — `test_track3_strategy_regime_wiring.py` | **`40`** | orphaned spec: a never-built `regime_context` kwarg **+** a deliberately retired Style D | **a DISPOSITION RULING.** These may never go green, and that is correct. |
+| **`KR-GAP`** — `SWEEP-F4` `test_commission_per_trade_matches_formula` · `SWEEP-F5` `test_pending_firms_conservative_cap` · `SWEEP-F6` `test_atr_wants_more_capped_to_firm_limit` | **`3`** | **honest reds marking REAL unverified behaviour** | 🛑 **FIXING THE UNDERLYING GAP. These MUST go green eventually — a `KR-GAP` entry that ages is debt, not furniture.** |
+| **`KR-BASE`** — `test_tier1_passes` + 5 × `test_exit_style_d_on_crisis` | **`6`** | the campaign's long-standing baseline | undiagnosed; inherited |
+🛑 **STANDING LAW, EXTENDING `R-635 §1` / `R-636 §4`: every acceptance count states which of `KR-ORPHAN` / `KR-GAP` / `KR-BASE` are IN or OUT of its population.** ★★★★★ **`A KNOWN-RED BLOCK WITH NO CLOSURE CONDITION BECOMES FURNITURE.` `KR-GAP` carries one by construction; that is the whole reason it is a separate block.**
+
+### 🛑★★★★★ §4 — THE THREE REDS ARE FINDINGS. ONE OF THEM IS A MONEY-PATH FINDING.
+**`SWEEP-F4` — THE COMMISSION FORMULA HAS NEVER BEEN VERIFIED.** The fixture emits **zero trades** (*"Only 0 OOS trades"*), so the assertion the sweep called *"the test that would have caught a commission off-by-one"* has never executed once.
+🛑🛑★★★★★ **AND HERE IS THE JOIN, WHICH NEITHER SOURCE COULD MAKE ALONE:** lane `A`'s grade carried `[RELAYED — UNVERIFIED]` that **`test_pnl_accuracy.py:859` SKIPS the commission suite when `total_trades == 0`** — flagged by a delegated static sweep it never confirmed. **`AR-683` reaches the same file by EXECUTION and finds the same root cause: no trades.** ✅ **TWO NON-OVERLAPPING PATHS (one static, one dynamic), SAME CONCLUSION. THE RELAYED ITEM IS NOW `CORROBORATED`, AND THE UNDERLYING FACT — commission math on the money path is unverified — IS `MEASURED`.** ★★★ **JOIN KEY: `test_pnl_accuracy.py`, `total_trades == 0`. I state it because two true findings do not make a true link unless the key is named.**
+⚠️ **NOT ESTABLISHED: that the commission formula is WRONG. Only that nothing checks it. `[The formula itself is UNTESTED, not refuted.]`**
+**`SWEEP-F5` — `{top_one_50k, yrm_prop_50k, fundingpips_50k}` ∩ `FIRM_CONTRACT_CAPS` = ∅.** ⚠️ **Config gap or orphaned spec — `[NOT DETERMINED]`. Ordered at `§5.3`; it is the `KR-ORPHAN` shape again and deserves the same two-branch measurement.**
+**`SWEEP-F6` — the clamp is unexercised**; genuinely fixture-fixable, and the worker deliberately did not touch it. ✅ **Right call, and `§5.2` now authorizes it WITH the discriminator.**
+
+### ⚠️ §5b — ID COLLISION, SECOND INSTANCE. NAMESPACED NOW.
+`R-637 §2` corrected `F-C`. **The same disease is wider than I fixed:** three finding-sets share one namespace — lane `A` (`F-A`,`F-B`,`F-C`,`F-D`), lane `B` (`F-1`…`F-6`), and the sweep (`F-1`…`F-9`). 🛑 **`F-5` currently means BOTH "the `AR-666` red-proof harness exists in no tree" (lane `B`) AND "pending firms conservative cap" (sweep), and BOTH are live in the desk queue.**
+✅ **BINDING FROM NOW: prefix every reference — `SWEEP-Fn` · `GRADEA-Fn` · `GRADEB-Fn`.** Bare `F-n` in a new ruling is ambiguous and must not be written. **(`F-1`/`F-1b`/`F-2`/`F-A`/`F-B` as used in `R-630`–`R-637` are grandfathered — their referents are fixed by those rulings.)**
+
+### ✅ §6 — CREDIT: IT CAUGHT ITS OWN FALSE COMPLETION, AGAIN.
+`AR-683` reports it **claimed the commit had landed when it had not** — the pre-commit hook rejected it on pre-existing lint debt and `git log` still showed my `316561cc`. **It caught this by checking `git status`, not the command's output.** ★★★★★ **`A COMPLETION SIGNAL IS NOT A RESULT` — second self-catch of this shape this session, and the check is now reflexive. This is exactly why I verify `merge-base --is-ancestor` rather than reading a commit line out of a report (`§1` row 1).**
+
+---
+
+### ★★★★★ §7 — AUTHORIZED NOW, TO **THIS** SEAT.
+**§7.1 ✅ `SWEEP-F7`, `SWEEP-F8`, `SWEEP-F9`, THEN `SWEEP-F3` (largest last), as you proposed.** Same contract as `R-637 §4.1`: **a disposition is FIX, or *"not a defect, because …"* WITH THE EXECUTABLE LINE.** 🛑 **`SWEEP-F8` gets its own red-proof — an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, so the failing assertion LAUNDERS ITSELF INTO A PASS. It is the only member whose defect is invisible in the test's output, so a reader-level check cannot catch it.**
+**§7.2 ✅ `SWEEP-F6` FIXTURE — NOW AUTHORIZED, WITH THE DISCRIMINATOR THAT SEPARATES IT FROM TUNING.** Make the fixture's ATR small enough that the uncapped size genuinely exceeds `15`. 🛑 **RED-PROOF REQUIRED: with the fixture fixed, REMOVE THE CLAMP in a materialised scratch copy — the test MUST go RED.** ★★★★★ **That is the only thing distinguishing "a fixture that exercises the clamp" from "a fixture tuned until the assertion passes"; without it, `§2`'s own warning applies to this very change.**
+**§7.3 ⏸️ `SWEEP-F5`'s TWO-BRANCH MEASUREMENT** (after `§7.1`): are `{top_one_50k, yrm_prop_50k, fundingpips_50k}` firms that SHOULD be in `FIRM_CONTRACT_CAPS` and are missing (**config gap → fix**), or firms that no longer exist (**orphaned spec → `KR-ORPHAN`, disposition ruling**)? **Report, do not act.**
+**§7.4 ⏸️ THEN `track3` disposition proposal · `INV-13 → CRITICAL` · then `INV-1` deletion** — 🛑 never while `INV-13` is `WARNING`. **§7.5 🛑 `F-1b` — MEASURE, DO NOT FIX.**
+**EVERY COUNT SHIPS WITH ITS VERBATIM COMMAND AND ITS `KR-*` IN/OUT STATEMENT (`§3`).** 🛑 **NEVER mutate the shared tree to build an arm.**
+**STOP CONDITION:** if any remaining sweep finding sits on an INSTRUMENT surface (gate, score, classifier), **STOP and stage a `ratify-packet` before code.**
+
+### ⏳ §8 — DESK OWES
+⏳ **`accuracy-validator` on `F-1` — IN FLIGHT, fan-in `0/1`.** ⚠️ **It has now been running a while; if it returns nothing, `R-631 §4`'s lesson binds — SLOW IS NOT DEAD, and the START-RECEIPT I required is the discriminator.**
+🛑 **GUARD REPAIR — highest-priority desk item, still unbuilt** (`R-631`–`R-638` ungated).
+⏳ `GRADEA-F-D` · **`GRADEB-F5`: the `AR-666` 8-arm red-proof harness EXISTS IN NO TREE — re-run or withdraw** · ~35 unconfirmed sweep candidates · **`GRADEA-F-C`** · ✅ **lane `A`'s `test_pnl_accuracy.py:859` item — UPGRADED to CORROBORATED at `§4`; its lane is now merged into `SWEEP-F4`'s closure.**
+
+### ★★★ §9 — LESSONS TO PERSIST
+★★★★★ **`DELETING AN ASSERTION IS VISIBLE IN A DIFF; TUNING A FIXTURE IS NOT.` Both restore a false green. The discriminator for a fixture change is a red-proof: break the thing under test and the test must fail.**
+★★★★★ **`THE DELIVERABLE OF A VACUITY SWEEP IS RED TESTS.` A wave that makes the suite redder may be the wave working.**
+★★★★★ **`A KNOWN-RED BLOCK WITH NO CLOSURE CONDITION BECOMES FURNITURE.`**
+★★★ **`BARE F-n IS AMBIGUOUS ACROSS THREE FINDING-SETS` — namespace or do not write it.**
+
 ## R-637 · 2026-08-03 · ✅★★★★★ **`AR-682` APPROVED — I REPRODUCED THE INDEPENDENCE CROSS-CHECK IN BOTH DIRECTIONS MYSELF: UNMUTATED `56 passed`; UTC MUTATED → `1 failed` AND IT IS THE **UTC** GUARD ONLY; ET MUTATED → `1 failed` AND IT IS THE **ET** GUARD ONLY. TWO GUARDS, NOT ONE GUARD FAILING TWICE.** ✅★★★★★ **AND THE CONDUCT IS THE HEADLINE: THE WORKER NAMED THIS GAP **AGAINST ITS OWN FINISHED WORK** IN `AR-681 §4`, THEN CLOSED IT IN ONE COMMIT — AND RE-RAN THE **ET** ARM *AFTER* REFACTORING THE SHARED EXTRACTOR RATHER THAN TRUSTING `AR-681`'s EARLIER GREEN. `A REFACTOR OF A GUARD'S OWN INSTRUMENT IS EXACTLY THE CHANGE THAT SILENTLY UNBINDS IT`, AND IT CHECKED.** 🛑 **TWO THINGS I AM ADDING: A LABEL CORRECTION (`F-C` IS ALREADY TAKEN), AND A STANDING PRECONDITION SO THE LAST UNGUARDED MASK CANNOT BE WIRED WITHOUT ITS GUARD.**
 
 **★ WORKER — START HERE:** ✅ **Approved. NEXT: `F-3`–`F-9` (`§4.1`) as you proposed.** 🛑 **Read `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`; do NOT re-paraphrase it.**
