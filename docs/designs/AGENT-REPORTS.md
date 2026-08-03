@@ -4,6 +4,80 @@
 
 ---
 
+## AR-719 · 2026-08-03 · ✅★★★★★ **`R-664 §7` — BOTH LANES DELIVERED, FAN-IN `2/2`.** ✅★★★★★ **LANE 1: **THE ROW REACHES `row_verdict=PASS`.** `R-661 §2`'s `[UNVERIFIED]` CLOSES **POSITIVELY** — `R-665 §3` READING `(i)`. `1` PASS ROW IN A `172`-ROW POPULATION, `0` WITHOUT THE PATCH.** ✅★★★★★ **LANE 2: THE DESK'S DERIVATION IS **CONFIRMED EXACTLY — `10` FAMILY-BLOCKED / `1` BINDER-DECIDED** — `R-665 §2` READING `(A)`, POSITIVE CONTROL ALIVE.** 🛑🛑★★★★★ **AND THE FINDING NEITHER LANE WAS ASKED FOR: **THE LANE A PATCH NO LONGER APPLIES AT `c067a652`** — `6` CONFLICT HUNKS, BECAUSE `F-1` ALREADY PORTED `resolve_exact_clock_span` INTO IT. **I MEASURED AT THE PATCH'S OWN BASE INSTEAD AND PROVED THE SEAL IS BYTE-IDENTICAL BETWEEN THE TWO.**
+
+**TASK:** `R-664 §7` Lanes 1+2, interpretation pre-registered at `R-665 §2`/`§3`. **NOT GRAPH-SCHEDULED.** **NOTHING LANDED. NO GUARD TOUCHED. NO `src/` FILE IN THE CAMPAIGN TREE MODIFIED** `[MEASURED — `git status --porcelain -- src/` shows only `test_synthetic_market_simulator.py`, ALREADY DIRTY AT MY SEATING AND ANOTHER SEAT'S WORK].
+
+### ⚖️★★★★★ §0 — PRE-REGISTRATION TIMING, DISCLOSED BECAUSE IT IS THE WHOLE POINT OF `R-665 §1`
+✅ **I MEASURED LANE 2 **BEFORE** I HAD READ `R-665`.** My ear delivered `R-665` mid-Lane-1, after the Lane 2 table already existed. **So neither side could have tuned to the other: the desk fixed its four readings without my numbers, and I produced my numbers without its readings.** ★★★ **I am stating this rather than letting a reader assume the ordering, because `A DECISION RULE WRITTEN AFTER THE DATA IS A PREFERENCE WEARING A RULE'S CLOTHES` cuts both ways — a MEASUREMENT taken after reading the rule is equally suspect, and mine was not.**
+
+---
+
+## ✅★★★★★ LANE 2 — THE FAMILY-vs-BINDING CENSUS. READING `(A)`: **CONFIRMED, EXACTLY `10 / 1`**
+
+**COMMAND** `[MEASURED HERE]`, run in the campaign tree at HEAD `a6ebaa74`, **SINGLE-FILE DIRECT GATE CALL — not a pytest run, so the `R-665 §5` no-`.git` skip class cannot apply to it:**
+`python scratchpad/lane2_per_term.py` → **POPULATION: the pristine golden slice `st5e-YJRfKc__s0`, `strategies[0]`, `produce_spec_artifact(s, video='v', transcript_chars=9386)`, `spec_hash b109c7da…`, `11` rows, ALL `load_bearing=True`.**
+🛑 **PRISTINE — I did NOT apply the grade receipt's `s['entry_sequence'][1]['action']='ny am session'` mutation. That edit is the grader's `F-1` demonstration, not the slice.**
+
+| # | family | `family_term` | `binding.approx` | `(ii)`? | what actually fails |
+|---|---|---|---|---|---|
+| 1,3–10 (`9` rows) | `WAIT_STRUCTURE` | **`True`** | `True` | YES | *"bound to an approximation … `structure_engine.compute_structure_state`"* |
+| 11 | `INVALIDATE` | **`True`** | **`False`** | YES | *"bound to an approximation … `structural_stops.compute_structural_stop`"* |
+| 2 | `WAIT_SESSION` | **`False`** | **`False`** | YES | 🛑 *"**unbound** taught condition (`no_recognized_session_keyword`); §6a unenforced"* |
+
+✅ **`DESK DERIVATION CHECK -> family-blocked: 10 | binder-decided: 1 (desk predicted 10 / 1)`.** **CONFIRMED, not approximately — exactly.**
+✅ **POSITIVE CONTROL (`absence-claim`), REQUIRED BY THE LANE AND SATISFIED IN-POPULATION: the printer reports `family=True` on `10` rows and `family=False` on `1`. **A uniform `True` would have been indistinguishable from a broken printer; it is not uniform.**
+🛑🛑★★★★★ **TWO REFINEMENTS THAT MAKE THE DESK'S FINDING SHARPER, NOT WEAKER — AND THE SECOND ONE MATTERS MORE THAN THE HEADLINE:**
+1. ★★★★★ **ROW `11` IS THE CLEANEST INSTANCE OF THE HIDDEN GATE. `INVALIDATE`'s BINDING DECLARES ITSELF **EXACT** (`approximation=False`) — AND THE ROW IS BLOCKED ANYWAY, BECAUSE THE FAMILY TERM SHORT-CIRCUITS FIRST.** **Binder work on that row is not merely insufficient; it is INVISIBLE.** `A SHORT-CIRCUITING DISJUNCTION IS A HIDDEN GATE`, demonstrated on a live row.
+2. 🛑🛑★★★★★ **THE `1` "BINDER-DECIDED" ROW IS NOT DECIDED BY THE APPROXIMATION TERM EITHER — **BOTH** TERMS ARE `False`, SO THE DISJUNCTION IS `False` AND `F-1`-CLASS FIDELITY WORK CANNOT MOVE IT.** **It fails `(ii)` one step earlier, on `bindable=False`.** ★★★★★ **SO THE HONEST STATEMENT IS STRICTER THAN `10/1`: `NOT ONE OF THE GOLDEN SLICE'S 11 LOAD-BEARING ROWS IS BLOCKED BY THE APPROXIMATION TERM THE BINDER CONTROLS. TEN ARE FAMILY-BLOCKED; THE ELEVENTH IS UNBOUND.`**
+⚠️ **LEG-LEVEL, DISCLOSED: `automated_verdict=BLOCK` with `leg_level_failures=['vi_cert']` — *"no certificate supplied"*. That is a property of MY invocation (`certificate=None`), matching the grade receipt's own repro. **It is not a row-level finding and I am not counting it as one.**
+
+## ✅★★★★★ LANE 1 — **A BOUND ROW REACHES `PASS`.** READING `(i)`
+
+### 🛑 §1.1 — FIRST, THE OBSTACLE, BECAUSE IT CHANGES WHERE THE NUMBER WAS TAKEN
+🛑 **`R-664 §7` ordered: apply the patch *"on top of `c067a652`"*. `[MEASURED HERE]` **IT DOES NOT APPLY THERE.** `git apply --check` → `error: patch failed: src/engine/spec_family_bindings.py:2312`. A `-3` merge yields **`6` CONFLICT HUNKS.**
+✅ **ROOT CAUSE, LOCATED — NOT PATCHED AROUND:** `[MEASURED]` `resolve_exact_clock_span` is **ALREADY PRESENT at `c067a652`** (`def` count `1`), because **`AR-716 §8` PORTED IT OUT OF THIS VERY PATCH** — with a declared behavioural difference (tier-2 context). **The patch tries to add a function that now exists in a modified form.** What is genuinely absent at `c067a652` is the rest of Lane A: `_derive_exact_clock_primitive_window` (`0`), plus `exact_clock_route_stats` / `reset_exact_clock_route_stats`.
+🛑🛑★★★★★ **I DID NOT HAND-RESOLVE THE `6` HUNKS. RESOLVING THEM MEANS CHOOSING WHICH `resolve_exact_clock_span` SURVIVES — A SEMANTIC DECISION ON A DIFFERENCE THIS DESK RULED ON AT `R-664 §5`. **THAT IS AUTHORING A MERGED IMPLEMENTATION, NOT MEASURING ONE**, and `Lane 1` is a measurement lane.**
+✅★★★★★ **INSTEAD I REMOVED THE VARIABLE BY MEASUREMENT: `[MEASURED HERE]` `git diff --stat e460c88d c067a652 -- src/engine/forensics/` is **EMPTY — `compile_fidelity.py` IS BYTE-IDENTICAL ACROSS THE TWO BASES.** **THE SEAL THAT DECIDES `PASS` IS THE SAME OBJECT AT BOTH.** The whole `e460c88d..c067a652` src delta is `spec_family_bindings.py` + its tests. **So I applied the patch at `e460c88d`, where it applies CLEANLY, and the `PASS` question is answered against the identical seal.**
+
+### ✅★★★★★ §1.2 — THE RESULT, BOTH ARMS, SAME RUN
+**POPULATION (stated, not implied): all `16` files of `docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json` = **`161` rows** ✅ *reproduces the campaign's published `161`* — **PLUS** the `11` golden-slice rows = **`172` rows total.** **DIRECT GATE CALLS, no pytest, no `-k` filter.**
+
+| arm | patch present? (`grep -c _derive_exact_clock_primitive_window`) | target row | PASS rows in `161` |
+|---|---|---|---|
+| **RED** (`e460c88d`, clean) | **`0`** | 🛑 `BLOCK`, `bindable=False`, `fail_codes=['ii']` | **`0`** |
+| **GREEN** (`e460c88d` + patch) | **`2`** | ✅ **`PASS`**, `bindable=True`, `approximation=False`, `fail_codes=[]` | **`1`** |
+
+✅ **THE TARGET ROW, NAMED IN FULL:** `kFyD3H6I1I8__s0 | WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6`.
+✅ **ITS `(ii)` REASON FLIPS FROM** *"unbound taught condition (`no_recognized_session_keyword`); §6a unenforced"* **TO** *"concretely bound honest approximation=False -> `'src.engine.indicators.core.compute_opening_range_breakout'`"*.
+★★★★★ **`approximation=False` IS EARNED BY EXECUTING `compute_opening_range_breakout` AND COMPARING, NOT BY MEMBERSHIP — THE MECHANISM `R-660 §3` ORDERED, NOW CARRIED ALL THE WAY THROUGH A SEAL TO A ROW VERDICT.**
+
+### ✅★★★★★ §1.3 — STOP CONDITION: **DOES NOT FIRE**, AND THE HARNESS IS PROVEN NON-VACUOUS
+**Field-by-field diff of both arms over all `172` rows:**
+- **`ROWS THAT MOVED: 1`** — the target, and only the target. **`KEY-SET DELTA: only-clean=0 only-patched=0`** (no row appeared or vanished).
+- **`STOP CONDITION: rows moved OTHER THAN the target: 0`.**
+- ✅ **GOLDEN SLICE, SEPARATELY: `GOLDEN SLICE ROWS MOVED BY THE PATCH: 0`, `PASS rows: []` in BOTH arms.** ★★★ **MEASURED, NOT ASSUMED: Lane A's route does **NOT** transfer to the golden slice's `WAIT_SESSION` row — consistent with `AR-709`'s three-taught-windows finding, and now a measurement rather than an inference.**
+- ✅ **ANTI-VACUITY CONTROL: a synthetic mutation on the target row IS detected by the diff harness (`{'row_verdict'}`). `A DIFF THAT CAN NEVER FIRE IS NOT A DIFF` — this one fires.**
+✅ **This independently reproduces `AR-712`'s *"`1` row changed"* claim on a population I enumerated myself.**
+
+### 🛑🛑★★★★★ §1.4 — SCOPING THE `PASS` BEFORE ANYONE ROUNDS IT UP (`R-665 §3`, obeyed to the letter)
+🛑 **THE **ROW** REACHES `PASS`. THE **SPEC** DOES NOT: `automated_verdict=BLOCK` in BOTH arms, on `leg_level_failures=['vi_cert']` — no certificate supplied.** ★★★★★ **`ROW PASS ≠ SPEC PASS ≠ PHASE-1 EXIT.` I am naming all three because the distance between them is exactly where this campaign has over-claimed before.**
+🛑 **`1` ROW · ON A SHAKEDOWN SPEC · **NOT** THE GOLDEN SLICE · WHOSE OTHER `19` ROWS ALL STILL `BLOCK`.** **A COMPONENT WIRING WITNESS, NOT A PHASE-1 EXIT** (`R-648`, `R-665 §3`). **NO BREAKTHROUGH LANGUAGE FROM ME.**
+🛑 **AND `R-664 §8.3` IS NOT UNBLOCKED BY THIS: landing Lane A still requires a merge with `F-1` that DOES NOT YET EXIST.**
+
+### ⚠️ §2 — WHAT I DID **NOT** MEASURE
+🛑🛑★★★★★ **WHETHER THE TARGET ROW STILL REACHES `PASS` AT `c067a652` + LANE A. `[UNMEASURED — STRUCTURALLY, NOT BY OMISSION]`: the two changes conflict in `6` hunks, so that tree does not exist. **The seal is byte-identical, but the BINDER is not, and `F-1`'s term lives in the binder.** ★★★ **I will not reason my way to an answer here: *"the target binds via the exact-clock route, so `F-1`'s keyword term cannot touch it"* is a MECHANISM CLAIM (`R-392`) and I have no measurement for it.**
+🛑 **THE TIER-A `99`-ROW HALF** — still not a directory on disk (`AR-716 §9`); not swept. `[UNENUMERATED]`.
+🛑 **WHICH `10` TESTS SKIP WITHOUT `.git`** (`R-665 §8` item `2a`) — **not mine, not pulled.** ✅ **But I checked its exposure to MY numbers and it is nil: every figure above comes from a DIRECT GATE CALL, not a pytest run.** ⚠️ **My Lane 1 worktree did carry a `.git` file `[MEASURED]`, so even a pytest run there would not have been in the no-`.git` condition.**
+🛑 **I did NOT re-verify `AR-716`'s own sweeps — same reasoning as `AR-717 §5`, ratified at `R-664 §7`.**
+
+### ✅ §3 — HYGIENE
+✅ **Isolated worktree `C:/Users/tonio/Projects/wt-r664-lane1` **REMOVED** via `git worktree remove` (never `rm -rf` — `rm -rf on a junction deletes the target`); `git worktree list | grep -c` → `0`.** ✅ **All probes under the session scratchpad; nothing written under `src/`; campaign-tree scope clean.**
+
+**FAN-IN `2/2`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK (one, not a roadmap): the desk rules the two readings, and decides whether Lane A's route is re-based onto `F-1` — that is a merge decision, and it is yours.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
+
+---
+
 ## AR-718 · 2026-08-03 · ⏳ **START-RECEIPT — `R-664 §7`, BOTH LANES. THE SAME SEAT THAT FILED `AR-717`, STILL HOLDING CONTEXT.**
 
 **ISOLATED WORKTREE FOR LANE 1:** `C:/Users/tonio/Projects/wt-r664-lane1` at `c067a652` + the `e460c88d` patch. **Removed with `git worktree remove` at close, never `rm -rf`** (`rm -rf on a junction deletes the target`).
