@@ -4,6 +4,47 @@
 
 ---
 
+## AR-674 · 2026-08-03 · ✅★★★★★ **`R-627 §3.2` ANSWERED: **YES — A PRODUCER DISCRIMINATOR EXISTS IN THE RESULT DICT ITSELF. IT IS `wf_metadata`.** PRESENT ON **BOTH** WALK-FORWARD RESULT LITERALS AS AN UNCONDITIONAL SIBLING OF `prop_compliance`; **ZERO** OCCURRENCES IN `backtester.py`; CONFIRMED ABSENT ON A REAL `run_backtest` RESULT.** 🛑★★★★ **THIS PARTIALLY CONTRADICTS `R-627 §2`'s PREMISE THAT *"no predicate over the result alone can separate the two absences"* — FOR THE SPLIT THAT ACTUALLY MATTERS, ONE DOES.** ⚠️ **BUT IT IS A TWO-WAY, NOT THREE-WAY, DISCRIMINATOR — AND THAT IS SUFFICIENT, FOR A REASON I NAME.** 🛑 **NO CODE CHANGE, AS ORDERED.**
+
+**TASK:** `R-627 §3.2` / `R-628 §4.2`. **Nothing modified.**
+
+### ✅ THE ANSWER
+
+| producer | `wf_metadata` | `prop_compliance` emission |
+|---|---|---|
+| `walk_forward.py` result at `:2329` | ✅ **`"wf_metadata": {` at `:2344`** | conditional — `None` if no OOS trades |
+| `walk_forward.py` result at `:3039` | ✅ **`"wf_metadata": {` at `:3055`** | conditional — same shape |
+| `backtester.py` `run_backtest` (`:5784`) | 🛑 **ABSENT** | unconditional |
+| `backtester.py` `run_class_backtest` (`:7944`) | 🛑 **ABSENT** | unconditional |
+
+**EVIDENCE, THREE WAYS:**
+1. **SAME-DICT PROOF BY INDENT** `[MEASURED HERE]` — `:2329` `"prop_compliance"` and `:2344` `"wf_metadata"` are both at **indent 8**; likewise `:3039`/`:3055`. **Same dict literal, both unconditional keys — so a walk-forward result carries `wf_metadata` EVEN WHEN `prop_compliance` is `None`.** ★★★ **That co-location is the whole point: the discriminator survives exactly the case it must discriminate.**
+2. **ABSENCE FROM THE OTHER PRODUCER** `[MEASURED HERE]` — `grep '"wf_metadata"' src/engine/backtester.py` → **0 hits.** ✅ **POSITIVE CONTROL: the same grep shape returns `4` hits in `walk_forward.py`, and a dict-key grep over `backtester.py` returns `627` — the searcher works on that file.**
+3. **EMPIRICAL NEGATIVE** `[MEASURED HERE, live `run_backtest`]` — `wf_metadata present=False`, and so are `windows`, `oos_metrics`, `param_stability_status`, `mode`. **Four independent walk-forward markers, all absent from a real backtester result.**
+
+### ⚠️ IT IS TWO-WAY, NOT THREE-WAY — AND WHY THAT IS ENOUGH
+
+🛑 **`wf_metadata` separates `walk_forward` from BOTH backtester functions. It does NOT separate `run_backtest` from `run_class_backtest`.** ✅ **BUT `§3.2`'s purpose is to decide whether an ABSENT `prop_compliance` is legitimate, and on that question the two backtester paths are IDENTICAL — `AR-671` measured both emitting it UNCONDITIONALLY (`:5784`, `:7944`).** ★★★ **So the needed partition is `walk_forward` vs `not-walk_forward`, which is exactly the partition this field provides. The three-way split is not required for the gating question.**
+
+### ✅ THE PREDICATE THIS MAKES AVAILABLE — STATED, NOT BUILT
+
+```
+wf_metadata present  + prop_compliance absent  ->  LEGITIMATE (no OOS trades)
+wf_metadata absent   + prop_compliance absent  ->  UNEXPECTED (both backtester paths emit it unconditionally)
+```
+🛑 **I HAVE NOT IMPLEMENTED THIS — `§3.2` says NO code change, and `§3.3` reserves the gating design.** ⚠️ **AND IT IS A COUPLING WORTH RULING ON EXPLICITLY: it makes `INV-13`'s verdict depend on a field owned by `walk_forward.py`, so a future producer that stops emitting `wf_metadata`, or a THIRD producer that emits neither field, would silently re-open the hole. `A DISCRIMINATOR BORROWED FROM ANOTHER MODULE IS A CONTRACT BETWEEN THEM, AND NOTHING CURRENTLY ENFORCES IT.`**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. 🛑 **I DID NOT RUN A WALK-FORWARD.** The walk-forward half is **STATIC** — read from the two dict literals and their indentation. **The backtester half is empirical.** ★★★ **So the claim "WF results carry `wf_metadata`" is `[MEASURED FROM SOURCE]`, not `[MEASURED AT RUNTIME]`, and I am not upgrading it.**
+2. **The other two `wf_metadata` sites (`:546`, `:1037`)** — different code regions; **I did not determine whether they belong to other result shapes** that might also reach `run_invariants`.
+3. **Whether any THIRD producer** builds a result reaching `INV-13` — **UNENUMERATED.** That is the gap that would make the predicate silently wrong.
+4. **Nothing about `run_class_backtest` vs `run_backtest`** — not separable by this field, not needed here, not investigated further.
+
+**RECOMMENDATION:** `§3.2` **ANSWERED — a discriminator EXISTS.** `§3.3` (`INV-13 → CRITICAL`, `INV-1` deletion) is now unblocked on this question. ⚠️ **Before it ships I would want item 1 above converted to a runtime witness — a walk-forward result observed carrying `wf_metadata` with `prop_compliance` `None` — because the whole design rests on that co-occurrence and I have only proven it from source.**
+
+---
+
 ## AR-673 · 2026-08-03 · ✅★★★★★ **`R-628 §3` DONE (`8ef3397e`) — THE ONE ASSERTION THAT ENCODED THE FAIL-OPEN NOW ASSERTS THE NEW CONTRACT **POSITIVELY**, AND IT IS RED-PROOFED: IT **FAILS** AGAINST BASE `core.py` AND GREENS (`67 passed`) AGAINST THE CHANGE — SAME TEST FILE BOTH TIMES.** ✅ **THE SUITE IS NO LONGER RED. `AR-672`'s KNOWN-RED ITEM IS CLOSED.** ✅ **CONTRACT PROVEN BY THE DIFF, NOT CLAIMED: `2` LINES REMOVED, `assert` COUNT `97 → 102` (STRENGTHENED), `0` `xfail`/`skip`, `core.py` UNTOUCHED.**
 
 **TASK:** `R-628 §3`. **File: `src/engine/tests/test_invariant_harness.py` ONLY, that ONE test.**
