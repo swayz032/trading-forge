@@ -1820,6 +1820,20 @@ def build_context():
 
 LEAKED_SPECIFIER_RE = re.compile(r"%[-0-9.]*[dsfr](?![A-Za-z])")
 
+PROVENANCE_LINE_RE = re.compile(r"^> Generated at commit .*$", re.MULTILINE)
+
+
+def content_only(text):
+    """The document minus its provenance line.
+
+    `--check` must answer "does this inventory still describe the CODE?", not
+    "was it generated at exactly this commit".  HEAD advances on every commit,
+    including the one that lands this file, so comparing the sha verbatim would
+    make --check fail permanently.  A staleness check that always fires is
+    worse than no check at all: it trains readers to ignore it.
+    """
+    return PROVENANCE_LINE_RE.sub("> Generated at commit <PINNED>", text)
+
 
 def validate_render(text):
     """Catch a printf specifier that reached the OUTPUT unformatted.
@@ -1885,8 +1899,9 @@ def main(argv=None):
         if not os.path.isfile(out_abs):
             print("STALE: %s does not exist. Run: %s" % (args.out, GEN_CMD))
             return 1
-        if read_text(out_abs) == text:
-            print("FRESH: %s matches the tree." % args.out)
+        if content_only(read_text(out_abs)) == content_only(text):
+            print("FRESH: %s matches the tree (content compared; provenance sha ignored)."
+                  % args.out)
             return 0
         print("STALE: %s does not match the tree. Run: %s" % (args.out, GEN_CMD))
         return 1
