@@ -4,6 +4,41 @@
 
 ---
 
+## AR-684 · 2026-08-03 · ✅★★★★★ **`F-8` + `F-9` CLOSED (`af2d8073`) — AND EACH ONE, ONCE UNBLINDED, EXPOSED A **REAL DEFECT UNDERNEATH**, NOT JUST A WEAK TEST.** 🛑🛑★★★★★ **`F-9` IS THE WORSE ONE: THE TEST HAS BEEN CALLING A **SIGNATURE THAT DOES NOT EXIST** — `TypeError: compute_mc_confidence_intervals() got an unexpected keyword argument 'daily_returns'` — AND `except Exception → pytest.skip` REPORTED THAT AS A CLEAN ENVIRONMENTAL SKIP.** **FAN-IN `5 / 7`.**
+
+**TASK:** `R-638 §5.1`, findings `F-8`, `F-9`. **Files: `test_pine_compiler.py`, `test_quantum_mc.py`.**
+
+### ✅ THE TWO MECHANISMS
+
+**`F-8` — A FAILING ASSERTION LAUNDERING ITSELF INTO A PASS.** The inner `assert not dual_result.exportability.exportable` carries the message *"…for volume_profile strategy"*. It raises `AssertionError`; the broad `except Exception as exc:` catches it; the outer check `assert "volume_profile" in str(exc)` then finds `"volume_profile"` — **in the failure's own message.** ★★★★★ **THE TEST'S FAILURE WAS THE THING THAT SATISFIED ITS FALLBACK ASSERTION.** ✅ **FIX: `except AssertionError: raise` ahead of the broad handler — an `AssertionError` is the TEST failing, not the compiler raising.**
+**`F-9` — ASSERTIONS INSIDE A SKIP-CONVERTING `try`.** Both asserts sat inside a `try` whose `except Exception:` called `pytest.skip(...)`, so **any** assertion failure became a skip. ✅ **FIX: the `try` now wraps ONLY the call, and only `ImportError` — the genuinely environmental case the skip message claims — converts to a skip.**
+
+### 🛑🛑★★★★★ WHAT THE UNBLINDING REVEALED
+
+1. **`F-9`: THE TEST CALLS A NON-EXISTENT API.** `TypeError: compute_mc_confidence_intervals() got an unexpected keyword argument 'daily_returns'`. **The signature changed and the test was never updated — and the skip made that invisible.** ★★★★★ **The skip reason claimed *"env may lack scipy"*. It was never scipy. `A SKIP REASON IS A CLAIM, AND THIS ONE WAS FALSE FOR THE ENTIRE LIFE OF THE DEFECT.` Nobody could have learned the truth without removing the handler.**
+2. **`F-8`: `compile_dual_artifacts` RETURNS `exportable=True` FOR A `volume_profile` STRATEGY** — `score=50.0`, `band='alert_only'`, `indicator_scores={'volume_profile': 0.0}`. The test expects `False`. ⚠️ **`[NOT DETERMINED]` whether that is a compiler defect or an outdated expectation: `band='alert_only'` with `exportable=True` may be a deliberate design (alert-only export is still export). **This is a product question and I did not answer it.****
+
+### ✅ MEASURED
+
+```
+python -m pytest src/engine/tests/test_pine_compiler.py src/engine/tests/test_quantum_mc.py -q
+  → 2 failed, 31 passed, 4 skipped
+```
+🛑 **Neither was tuned to green** — `R-638` ratified that judgement for `F-4`–`F-6` and it applies unchanged here.
+
+### ⚠️ PROCESS NOTES
+
+1. ⚠️ **THE COMMIT FAILED TWICE BEFORE LANDING** — the `ruff` hook rejected it on **pre-existing** debt in `test_pine_compiler.py` (`4` errors, **identical on `git show HEAD:`**). ✅ **Cleared safe fixes, then removed two dead assignments (`lines`, `expected_single`) BY HAND — `--unsafe-fixes` NOT used** (`ruff-unsafe-fixes`: it modernises the whole file). ★★★ **I verified the artifact with `git status` each time rather than trusting the command; that is the only reason I did not report a phantom commit for the third time today.**
+2. ⚠️ **`expected_single` was computing an expected SHA-256 and never comparing it** — the surrounding test checks only that the hash is 64 hex chars. **I removed the dead assignment as lint debt; I did NOT investigate whether the missing comparison is itself a gap. `[NOT MEASURED — plausibly an F-4-class vacuity in a file I was only passing through.]`**
+
+### ⚠️ FAN-IN AND WHAT REMAINS
+
+**`5 / 7`** — done: `F-4`, `F-5`, `F-6`, `F-8`, `F-9`. **Remaining: `F-7`** (CLI test passing with a nonexistent script — `tests/python/test_validate_scaling_schedule.py:604`, unlink before the subprocess + assert on `returncode`) and **`F-3`** (five sizing-parity tests dead behind a false caption — the largest). ✅ **Both UNSTARTED, neither blocked.** Also outstanding: **`R-638 §5.2`'s authorized `F-6` fixture**, which needs its own red-proof.
+
+**RECOMMENDATION: APPROVAL_REQUESTED. NEXT: `F-7`, then `F-3`.**
+
+---
+
 ## AR-683 · 2026-08-03 · ✅★★★★★ **`F-4`, `F-5`, `F-6` CLOSED (`7b5621b4`) — SWEPT AS ONE CLASS, NOT THREE TICKETS. ALL THREE WERE A LOOP OR `continue` ITERATING **ZERO TIMES**.** 🛑🛑★★★★★ **AND THE DELIVERABLE IS THREE **NEW RED TESTS** — THAT IS THE POINT, NOT A REGRESSION: `60 passed / 3 skipped` → `3 failed / 57 passed / 3 skipped`. **THREE FALSE GREENS ARE NOW HONEST FAILURES.**** ⚠️ **THE UNDERLYING GAPS ARE **NOT** CLOSED BY THIS COMMIT AND I NAME EACH ONE.** **FAN-IN `3 / 7`.**
 
 **TASK:** `R-637 §4.1`, findings `F-4`–`F-6` from `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`. **Files: `test_pnl_accuracy.py`, `test_firm_config.py`.**
