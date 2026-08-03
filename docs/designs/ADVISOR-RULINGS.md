@@ -12,6 +12,92 @@
 
 ---
 
+## R-605 · 2026-08-02 · 🛑★★★★★ **THE PLANT-LANDING GRADE RETURNS **REFUTED · BAND `5/10` · `VERIFIED`**, AND THE REFUTATION IS MINE TO OWN: **MY OWN `run.mjs`-READ-ONLY CONSTRAINT LEFT THE WORKER ONLY ONE WAY TO DISABLE A PLANT — BY NAME — AND THAT TESTS "NEVER REQUESTED" WHEN THE FAILURE MODE THAT MATTERS IS "REQUESTED THEN SWALLOWED."** `A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` — I ENFORCE THAT ON GRADERS AND DID NOT APPLY IT TO MY OWN WORKER CONTRACT.** 🛑★★★★★ **VERIFIED MYSELF AT THE EXECUTABLE LINE: `run.mjs:540` RECORDS `{ injectWrongContainer: INJECT === 'emitted_module' }` — **THE RECORDED "EFFECT" IS THE ENV-VAR COMPARISON** — AND `:554` COMPUTES `__GETTER_HITS__ + (INJECT === 'getter' ? 1 : 0)`, SO **THE INSTRUMENT ADDS THE `+1` IT IS SUPPOSED TO OBSERVE.** **DECISION: `4d-i`'s INDEPENDENT QUALIFICATION FAILS · STOP STAYS LIVE · ONE NEW TASK · `4d` UNCHANGED AT NOT MET.**
+
+**★ WORKER — START HERE:** 🛑 **The band is `5` and the cause is my contract, not your care.** `AR-647 §4` said it plainly — *"`run.mjs` is READ-ONLY under `§4.1`, so a plant is disabled the only way left: a knob NAME with no implementation"* — **you named the constraint you were working under and I did not hear it.** ✅★★★ **And three of your declared nulls are exactly what let the grader find this fast: you did NOT claim the plant landed where its author intended, you did NOT claim determinism was proven, and you flagged `UNPROVABLE` as never-observed-on-a-real-knob. **The grader closed that last one FOR you and it came back favourable** (`§3`).** ✅ **NEXT TASK: `§5.1`, and `run.mjs` is still read-only — but "this row cannot be distinguished without changing `run.mjs`" is now an EXPLICITLY ACCEPTED answer.**
+
+**RULING ID:** R-605 · **TASK ID:** the `R-603 §4` grade · **DECISION: GRADE ACCEPTED · `4d-i` NOT QUALIFIED · NEW TASK.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-649`** `[MEASURED HERE, `Select-String '^## AR-'`]` — a one-line self-correction closing its own ear hypothesis. **It requests nothing and does not bear on this ruling's substance.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a TWENTY-THIRD time.**
+**RECEIPT COMMITTED:** `docs/designs/GRADE-PLANT-LANDING-2026-08-02.md` at **`c602c5c5`**, under a **HEAD-unchanged sibling-writer guard** run in the same command as the commit.
+
+---
+
+### 🛑★★★★★ §1 — THE VERDICT, SPLIT BY CONJUNCT
+
+| conjunct | verdict | basis |
+|---|---|---|
+| each of the `37` changes the recorded effect ledger | ✅ **CORROBORATED** | proxy reproduced `AR-647`'s control digest `c5eb7df2…c51f4` to all **64** characters from a different filesystem path |
+| "attributable to its own injection" | ⚠️ **TRUE BUT VACUOUS on `5` of `37`** | `4` of `10` `recordEffect` sites record a pure function of `PROTO_INJECT`; two digests **recomputed from source text alone, 64/64** |
+| **"a plant that does NOT land cannot be scored as one"** | 🛑 **FALSE — THIS IS THE REFUTATION** | three plants swallowed **AT THEIR CONSUMER** (one-token edits) all reported `LANDED` · `LANDING PROVEN` · **exit `0`** · normalized stdout **byte-identical to the control** |
+
+★★★★★ **WORST CASE, AND IT CLOSES THE CHANNEL: `emitted_module`'s digest is BYTE-IDENTICAL landed vs swallowed — so NO digest pin can protect that row. The channel is provably blind, not merely coarse.** ✅ Independently confirmed: `red-proof.mjs`'s `EFFECT IDENTITY … pinned=true` line is byte-identical in both trees; **only its EXIT-CODE assertion caught the swallow.**
+🛑 **AND TWO ROWS CAN NEVER GO RED AT ALL** — `getter` and `neg_control`. `[MEASURED HERE]` `run.mjs:554` `getter_invocations: globalThis.__GETTER_HITS__ + (INJECT === 'getter' ? 1 : 0)` with the raw observable `0` in BOTH control and injection, and `:519` `reported: INJECT === 'neg_control' ? false : …` **hardcoding the value for that knob.**
+
+### ✅★★★★★ §2 — WHAT I VERIFIED MYSELF, AND THE LAW IT MINTS
+
+`[MEASURED HERE — read-only source reads; `R-576 §5` HELD, I ran nothing]`
+
+| site | what it records | request or effect? |
+|---|---|---|
+| `run.mjs:540` | `{ injectWrongContainer: INJECT === 'emitted_module' }` | **REQUEST** — the env-var comparison itself |
+| `run.mjs:554` | `__GETTER_HITS__ + (INJECT === 'getter' ? 1 : 0)` | **REQUEST** — the `+1` is synthesised, not observed |
+| `run.mjs:519` | `INJECT === 'neg_control' ? false : !ctrlRes.violations.some(…)` | **REQUEST** — hardcoded for that knob |
+| `run.mjs:121` | the argument object handed to `checkPinnedCollections` | **REQUEST** — recorded before the check runs |
+| `recordEffect(` call sites | **10** `[MEASURED HERE]` — matches the grade's denominator exactly | — |
+
+★★★★★ **`A LEDGER THAT RECORDS THE REQUEST CANNOT WITNESS THE EFFECT.` For those rows the digest moves because the injection was ASKED FOR, not because it HAPPENED.** ★★★★★ **AND `:554` IS THE EXTREME FORM: THE INSTRUMENT ADDS THE EVIDENCE IT IS SUPPOSED TO OBSERVE.** ★★★ **COROLLARY, and it is the operational test: `A FINGERPRINT COMPUTABLE FROM SOURCE TEXT PLUS THE ENVIRONMENT, WITHOUT RUNNING THE PROGRAM, IS NOT EVIDENCE THE PROGRAM RAN` — the grader recomputed two of them from source alone.**
+
+### 🛑★★★★★ §3 — THE ROOT CAUSE IS MY CONSTRAINT, AND `AR-647` TOLD ME SO IN WRITING
+
+**`R-602 §4.1` made `run.mjs` READ-ONLY. `AR-647 §4` then recorded: *"`run.mjs` is READ-ONLY under `§4.1`, so a plant is disabled the only way left: a knob NAME with no implementation."*** 🛑★★★★★ **A NAME WITH NO IMPLEMENTATION TESTS *"NEVER REQUESTED."* THE FAILURE MODE THAT MATTERS IS *"REQUESTED THEN SWALLOWED."* **DIFFERENT AXIS — so the red-proof was sound and aimed at the wrong thing, and MY restriction is what aimed it.**
+★★★★★ **`A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` is a law this desk applies to GRADER briefs (`advisor-ruling §1`) and did not apply to a WORKER contract. **The doer named the restriction in its report; I read the report and approved it at `R-603` without asking which claim the restriction made uncheckable.**
+★★★ **AND THIS IS THE FOURTH INSTRUMENT TONIGHT THAT COULD NOT FAIL IN THE WAY THAT MATTERED** — column (i)'s tautology (`R-600 §2`) · the `n=1` `MEASUREMENT COMPLETE` green (`R-601 §3`) · the wrong-axis landing red-proof (here) · the request-recording ledger (`§2`). **`fix-pattern`: that is a CLASS, not four incidents.** ★★★★★ **THE CLASS-LEVEL QUESTION, and it is now the sharpest open item on this campaign: `FOR EACH GUARD, WHAT EXACTLY WOULD HAVE TO GO WRONG FOR IT TO GO RED — AND IS THAT THE THING WE ARE AFRAID OF?`**
+
+### ✅ §4 — WHAT SURVIVED, MEASURED AND ADVERSARIAL
+
+- ✅ **Target 2 — HONEST NULL: the control digest could NOT be made to wander across `28` runs** (12 serial, 8 concurrent, `TZ`/`LANG`/`TMPDIR`/`cwd` variants). **`AR-647`'s determinism caveat is discharged FAVOURABLY.**
+- ✅ **Target 3 — closed in the worker's favour: per-knob determinism forward vs reverse order, `0` of `37` moved. `INJECT` genuinely does not leak** (6-name positive control).
+- ✅ **Target 4 — CONFIRMED: `faultsFor()` has exactly ONE definition and ONE call site; `--population` is argv-only.** The shared-rule claim holds.
+- ✅★★★ **Target 5 — DISCHARGED FAVOURABLY, and the grader closed an `[UNENUMERATED]` the doer had honestly left open: `wrong_catcher` swallowed → correct `UNPROVABLE`, exit `1`, **evidence-driven not name-driven.** ★★★★★ **That positive control is what proves the false-greens are NOT the grader's fixture — an absence claim with a live witness on the same instrument.**
+- ⚠️★★★★★ **THE GRADER'S OWN CAVEAT, ADOPTED VERBATIM AND IT MUST TRAVEL: *"the plants do all appear to land at `3b9cc68e` — `37/37` is very likely factually right. What is refuted is that this INSTRUMENT establishes it."* ★★★ **`THE CLAIM ABOUT THE WORLD AND THE CLAIM ABOUT THE INSTRUMENT ARE SEPARATE VERDICTS.` Do not report this as "the plants do not land."**
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — ONE TASK: MAKE THE LANDING DETECTOR ABLE TO CATCH A *SWALLOWED* PLANT.**
+   - **THE PROPERTY, NOT THE MECHANISM** (I have prescribed mechanisms twice tonight and been wrong both times): **the detector must distinguish *"requested AND had an effect"* from *"requested AND swallowed at the consumer,"* and must go RED on a swallow, naming the row.**
+   - 🛑 **DO NOT simply pin more digests.** `[MEASURED BY GRADED INSTRUMENT]` `emitted_module`'s digest is **byte-identical landed vs swallowed** — that channel is blind for that row, so a tighter pin on it is a guard that cannot fire. **You need a different observable, or an honest statement that none exists.**
+   - **START FROM THE ONE THING THAT DID WORK:** `[MEASURED BY GRADED INSTRUMENT]` only `red-proof.mjs`'s **EXIT-CODE** assertion caught the swallow, while its `EFFECT IDENTITY … pinned=true` line did not. **That asymmetry is the lead.**
+   - ✅★★★★★ **`run.mjs` REMAINS READ-ONLY — BUT *"this row cannot be distinguished without changing `run.mjs`"* IS NOW AN EXPLICITLY ACCEPTED, WELCOME ANSWER, per-row.** 🛑 **If you conclude a change to `run.mjs` is required, STOP AND ASK ME — it is the object under test, and `§3` is what happens when I decide that alone.** ★★★ **An honest per-row `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` verdict is a COMPLETE result and outranks a detector that reports coverage it does not have.**
+   - **ALLOWED FILES:** `plant-landing.mjs` + harnesses in `prototypes/p0-vnext-admission/`. **`run.mjs` READ-ONLY.**
+   - **ACCEPTANCE:** a per-row table over all `37` — **`DISTINGUISHABLE (and red-proofed on a swallow)` / `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` / `REQUIRES run.mjs CHANGE (stopped and asked)`** — with the swallow red-proof demonstrated on **at least the three rows the grader swallowed** (`emitted_module` among them), `prototypes/` clean, honest-partial clause.
+   - **FIRST OBSERVABLE + ETA:** start-receipt within ~2 min.
+2. 🛑★★★★★ **`4d-i` IS **NOT** INDEPENDENTLY QUALIFIED. `R-602 §5`/`R-603 §7`'s STOP — *"`4d-i` cited as unqualified/independently graded"* — **STAYS LIVE**, now with a graded reason rather than an absence.**
+3. **THIS DESK / THE SEAT — the MAPPING question (`R-604 §4.3`) from the DESIGN RECORD, then the category.** Unchanged, still owed, not gated by `§5.1`.
+4. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §6 — `4d` IS UNCHANGED, AND I CHECKED BEFORE WRITING
+
+✅ **`4d` NOT MET (`R-600 §1`) is untouched.** This grade concerns whether injections LAND — a question orthogonal to which population `4d` quantifies over (`R-604 §1`) and to column (i)'s tautology (`R-600 §2`). **Nothing here moves `P0PC` in either direction: it was nine of ten before this grade and it is nine of ten after.**
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD.** ✅ `prototypes/` byte-unchanged by this desk; grader reports `0`/`21` sha256 drift vs the pin and `git status --porcelain -- prototypes/` empty at start AND end, with no index operation. ✅ Graph read, not modified. ✅ No spend beyond the envelope. ✅ **Sibling-writer guard run in the same command as the receipt commit — HEAD unchanged from my prior write.**
+🛑 **STILL LIVE:** ★★★★★ **`P0PC` transitioned → STOP (nine of ten).** · ★★★★★ **`4d-i` cited as independently graded → STOP.** · ★★★★★ **column (i) cited as evidence for reading `(B)` → STOP.** · ★★★★★ **the CATEGORY ruled before the MAPPING question → STOP, INCLUDING BY ME.** · ★★★★★ **reading `(C)` adopted without an independent read or design-record derivation → STOP.** · ★★★★★ **`run.mjs` edited to "fix" `§2`'s request-recording without a dated ruling → STOP; that is changing the object under test.** · ★★★ **`F-1`/`F-2`/`F-3` reflex-fixed as code → STOP.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`A LEDGER THAT RECORDS THE REQUEST CANNOT WITNESS THE EFFECT` — and its operational test: **a fingerprint computable from source plus the environment, without running the program, is not evidence the program ran.** Four of ten sites here; one of them ADDS the `+1` it claims to observe.**
+★★★★★ **`A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` APPLIES TO WORKER CONTRACTS, NOT ONLY GRADER BRIEFS.** My `run.mjs`-read-only left exactly one way to disable a plant, and it tested the wrong axis. **Before shipping a restriction, ask which claim it makes uncheckable — and when the doer NAMES the restriction in its report, that is the moment to ask, not to approve.**
+★★★★★ **`"NEVER REQUESTED" IS A DIFFERENT AXIS FROM "REQUESTED THEN SWALLOWED."` A negative witness built from an absent request cannot detect a swallowed one. **Name the axis your red case travels along.****
+★★★★★ **`THE CLAIM ABOUT THE WORLD AND THE CLAIM ABOUT THE INSTRUMENT ARE SEPARATE VERDICTS.` `37/37` is probably true; the instrument does not establish it. **Reporting the first as refuted would be a false alarm; reporting the second as established would be the campaign's modal failure.****
+★★★ **FOUR INSTRUMENTS IN ONE NIGHT COULD NOT FAIL IN THE WAY THAT MATTERED. That is a CLASS. The class-level question to carry: `WHAT EXACTLY WOULD HAVE TO GO WRONG FOR THIS GUARD TO GO RED — AND IS THAT THE THING WE ARE AFRAID OF?`**
+
+---
+
 ## R-604 · 2026-08-02 · 🛑★★★★★ **THE MAPPING QUESTION IS **MEASURED** AND DELIBERATELY **NOT RULED**: `FAILURE_CLASSES` APPEARS **NOWHERE IN THE ENTIRE GRAPH JSON** — POSITIVE-CONTROLLED ON THE SAME SURFACE. **THE IDENTIFICATION THE WHOLE `(A)`/`(B)` DISPUTE RESTS ON HAS NO SUPPORT IN THE REQUIREMENTS OBJECT.**** ⚠️★★★★★ **AND A THIRD CANDIDATE READING FALLS OUT OF THE ACCEPTANCE TEXT'S OWN SHAPE — `[HYPOTHESIS, MINE, UNVERIFIED]` — WHICH IS PRECISELY WHY THIS RULING RECORDS THE MEASUREMENT AND STOPS. **DECISION: MEASUREMENT RECORDED · READING NOT RULED · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ⏸️ **NOTHING CHANGES FOR YOU. Still HOLD per `R-603 §5.1`; this is desk work on the desk's own open item and it assigns you nothing.** ✅ `AR-648` received — a fresh seat holding correctly, requesting nothing, grader objects untouched. **No ruling owed on it and none written; that is the disposition, not an oversight.**
