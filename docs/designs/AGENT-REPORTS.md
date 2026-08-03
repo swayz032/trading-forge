@@ -4,6 +4,72 @@
 
 ---
 
+## AR-723 · 2026-08-03 · ✅★★★★★ **`R-667 §5` DELIVERED — THE `11` TIER-A SPECS ENUMERATED FROM A VERIFIED MANIFEST (`13/13` SHA256 RE-COMPUTED BY ME, `11/11` JOINED).** 🛑🛑🛑★★★★★ **HEADLINE: **NOT ONE OF THE `11` NAMES AN INSTRUMENT THIS REPO HAS DATA FOR.** `forex` `3` · `equities` `3` · `stocks` `1` · `index` `1` · `None` `3`. **UNDER CRITERION `1` AS LITERALLY WRITTEN, THE ANSWER IS `NONE` — `§4.5`'s PRE-REGISTERED OUTCOME.** 🛑🛑★★★★★ **BUT CRITERION `1` HAS A SECOND READING I WILL NOT DECIDE FOR YOU: the census's `disposition=compilable-futures` (`5` specs) means **"compiles + PORTABLE MECHANIC"** `[MEASURED — `spec_producer.py:748`]`, **NOT** "this strategy is about futures". **PORTABILITY IS A DIFFERENT QUESTION FROM WHAT THE EDUCATOR TAUGHT ON, AND WHICH ONE CRITERION `1` MEANS IS YOURS.** ⚠️🛑 **AND I CONVICTED MY OWN INSTRUMENT TWICE BEFORE PUBLISHING — BOTH DISCLOSED BELOW.**
+
+**TASK:** `R-667 §5`. **RUN MODE: READ-ONLY `python` INSPECTION OF TWO FROZEN ARTIFACTS AT HEAD `157a227e`. NO pytest, NO producer run, NO `src/` modification, NO backtest.** **NOT GRAPH-SCHEDULED.**
+
+### ⚠️🛑★★★★★ §0 — TWO DEFECTS IN MY OWN INSTRUMENT, CAUGHT AND FIXED BEFORE THE NUMBER SHIPPED
+🛑🛑★★★★★ **DEFECT `1` — SUBSTRING MATCHING, AND IT INVERTED THE HEADLINE.** My first matcher tested futures tokens with Python `in` against a lowercased blob. **`"es" IS A SUBSTRING OF `"equitiES"`** — so all **`3`** equities specs were reported **`in_cache = YES`**, and my first table named them as the qualifying candidates. ✅ **FIXED: whole-token matching (`re.findall(r"[a-z0-9&\-]+")`), with an explicit **MATCHER CONTROL BLOCK** printed on every run — `equities→NO`, `stocks→NO`, `forex→NO`, `ES futures→YES`, `crude oil→YES`, `""→[UNENUM]`, all `OK`.** ★★★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — the surprise was that only the equities rows qualified, which is exactly backwards, and that is what made me re-read the matcher instead of the data.**
+🛑🛑★★★★★ **DEFECT `2` — MY CRITERION-`3` "no" WAS ABSENCE OF EVIDENCE WEARING A VERDICT'S CLOTHES.** My screen detector scans `instrument_classification.rationale` + condition objects. `[MEASURED HERE]` **`10` of the `11` specs carry `rationale: None` AND `instruments_mentioned: None`** — **so for those `10` the detector had almost nothing to read and returned `"no"` because the text was ABSENT, not because a screen was.** ✅ **CORRECTED BELOW: criterion `3` is `[UNENUMERATED]` for `9` specs, `YES` for `1`, and settled-by-existing-ruling for `1`.** ★★★★★ **`ABSENCE FROM A LIST IS NOT A PASS.`**
+
+### ✅★★★★★ §1 — POPULATION: THE STOP CONDITION DOES NOT FIRE, AND THE MANIFEST IS VERIFIED NOT TRUSTED
+✅ **SOURCE: `docs/replay-results/h1-battery/tier-a-extraction-provenance/` + its `_MANIFEST.json`, preserved at `R-588` off a dead session temp dir.** `[MEASURED HERE]` **`13/13` files' `sha256` RE-COMPUTED BY ME MATCH the manifest** · **`11/11` census `extraction_sha256` JOIN to it** · `dropped_not_clean = 2`. ✅ **CONTROL: an all-zero sha does NOT join — the key discriminates.**
+✅★★★ **THIS PARTLY DISCHARGES `AR-716 §9` / `AR-719 §2`'s standing `[UNENUMERATED AS A NAMED POPULATION]`, AND I AM SCOPING WHICH HALF: the tier-A **EXTRACTIONS** ARE a directory on disk and are now enumerated. **The tier-A produced SPEC ARTIFACTS still are not** — they remain produced on the fly. **The open item narrows; it does not close.**
+✅★★★★ **AND AN INDEPENDENT REPRODUCTION FELL OUT OF `(d)` WITHOUT BEING ASKED FOR: `[MEASURED HERE]` **`9` of the `11` carry at least one `UNTYPED` load-bearing spine row; the only two that do NOT are `st5e-YJRfKc__s0` and `YqY0OkL5LMI__s1`.** ★★★★★ **THAT REPRODUCES `R-651`/`R-652`'s *"`9` of `11` carry an `UNTYPED` spine row and can NEVER compile by any wire; only `2` are wireable"* — **EXACTLY, from the census rather than from that ruling.** Two paths, same partition.**
+
+### 🛑 §2 — `(a)` INSTRUMENT · `(b)` TIMEFRAME · `(c)` SCREEN
+`[MEASURED HERE]` **`data_cache/` = `CL`, `ES`, `MES`, `NQ` — FUTURES ONLY.**
+
+| stub | strategy | `asset_class` | instrument in `data_cache`? | tf taught | cross-sectional screen? |
+|---|---|---|---|---|---|
+| `0RBexa9JpIg__s0` | fibonacci_pullback_continuation | `None` (extracted `forex`) | 🛑 **NO** — non-futures:`forex` | `2` | `[UNENUMERATED]` |
+| `ExB66jcyKxg__s0` | sma14_strong_close_crossover | `index` | 🛑 **NO** — non-futures:`index` | `2` | `[UNENUMERATED]` |
+| `LD1FEbwXU4o__s0` | ltf_liquidity_zone_rejection_scalp | `forex` | 🛑 **NO** | `2` | `[UNENUMERATED]` |
+| `YGdFksLavKE__s0` | vwap_band_breakout | `None` | **`[UNENUM]`** | 🛑 `0` | `[UNENUMERATED]` |
+| `YqY0OkL5LMI__s0` | double_inside_bar_daily_breakout | `stocks` | 🛑 **NO** | `1` | `[UNENUMERATED]` |
+| `YqY0OkL5LMI__s1` | gap_and_go_opening_range_breakout | `equities` | 🛑 **NO** | `1` | 🛑 **EXCLUDED BY `R-662 §5.3`** (see below) |
+| `dENM6gt8ZRg__s0` | orb_5m_retest | `None` | **`[UNENUM]`** | `1` | `[UNENUMERATED]` |
+| `hcHuDfxdywI__s0` | institutional_order_block_reversal | `forex` | 🛑 **NO** | 🛑 `0` | `[UNENUMERATED]` |
+| `pKzXxB9Blts__s0` | anchored_vwap_pullback_from_volume | `None` | **`[UNENUM]`** | 🛑 `0` | `[UNENUMERATED]` |
+| `st5e-YJRfKc__s0` | opening_range_breakout *(current slice)* | `equities` | 🛑 **NO** | `3` | 🛑 **YES** — its own rationale: *"combing through thousands of stocks"* |
+| `st5e-YJRfKc__s1` | opening_range_pullback | `equities` | 🛑 **NO** | 🛑 `0` | `[UNENUMERATED]` |
+
+🛑🛑★★★★★ **`(a)` SUMMARY: `0` OF `11` NAME AN INSTRUMENT PRESENT IN `data_cache/`.** **`3` are `[UNENUM]` (no asset class recorded at all) — those are UNKNOWN, not NO, and I am not counting them either way.**
+✅ **`(b)`: timeframe determinable for `7`; `[UNENUMERATED]` (all `TF_UNSPECIFIED`) for `4`.** **Basis: the census's own `tf_class` per condition (`HTF_TAUGHT` + `EXEC_TAUGHT` > 0).**
+🛑★★★ **`(c)`: I can only answer it for `1` spec from evidence. **`gap_and_go` I mark EXCLUDED NOT FROM MY DETECTOR BUT FROM YOUR EXISTING RULING** — `R-662 §5.3` excluded it *"on a MEASURED mechanic dependency (a cross-sectional screen over thousands of names — `MES`/`MNQ` is two instruments, not a universe)"*. **My text detector did NOT catch it (its extraction carries no rationale), which is `§0` defect `2` demonstrated on the one case where the truth is independently known.** ★★★★★ **THE RULING OUTRANKS MY DETECTOR, AND THE DISAGREEMENT IS THE PROOF THAT MY DETECTOR IS WEAK — not that the ruling is.**
+
+### ✅ §3 — `(d)` LOAD-BEARING COUNT + FAMILY COMPOSITION — **INFORMATION ONLY, NOT A RANKING KEY (`§4.4`)**
+| stub | disposition | LB | families |
+|---|---|---|---|
+| `0RBexa9JpIg__s0` | `compilable-futures` | `3` | `UNTYPED 1`, `WAIT_STRUCTURE 2` |
+| `ExB66jcyKxg__s0` | `compilable-futures` | `3` | `UNTYPED 1`, `WAIT_CONFIRMATION 2` |
+| `LD1FEbwXU4o__s0` | `compile-degraded` | `5` | `WAIT_STRUCTURE 1`, `UNTYPED 3`, `WAIT_CONFIRMATION 1` |
+| `YGdFksLavKE__s0` | `compile-degraded` | `8` | `UNTYPED 7`, `WAIT_CONFIRMATION 1` |
+| `YqY0OkL5LMI__s0` | `compile-degraded` | `4` | `UNTYPED 3`, `WAIT_SESSION 1` |
+| `YqY0OkL5LMI__s1` | `compilable-futures` | `3` | `WAIT_STRUCTURE 3` |
+| `dENM6gt8ZRg__s0` | `compile-degraded` | `5` | `WAIT_STRUCTURE 2`, `UNTYPED 3` |
+| `hcHuDfxdywI__s0` | `compilable-futures` | `6` | `WAIT_STRUCTURE 5`, `UNTYPED 1` |
+| `pKzXxB9Blts__s0` | `compile-degraded` | `8` | `FILTER 1`, `UNTYPED 4`, `WAIT_RETEST 2`, `WAIT_STRUCTURE 1` |
+| `st5e-YJRfKc__s0` | `compilable-futures` | `5` | `WAIT_STRUCTURE 4`, `WAIT_SESSION 1` |
+| `st5e-YJRfKc__s1` | `compile-degraded` | `3` | `UNTYPED 3` |
+🛑 **I ATTACH NO INTERPRETATION TO THIS TABLE AND DO NOT SORT BY IT.** ⚠️ **NOTE THE DENOMINATOR DIFFERS FROM `R-664 §6`'s: the census counts `load_bearing_spine` (`5` for `st5e-YJRfKc__s0`); the live gate counts `load_bearing` (`11`). **DIFFERENT FIELDS, DIFFERENT GENERATORS — I am NOT reconciling them here and neither number is wrong.** `A COUNT IS ONLY COMPARABLE TO ONE TAKEN AT THE SAME JOIN KEY.**
+
+### 🛑🛑🛑★★★★★ §4 — CRITERIA `1`–`3`: THE ANSWER DEPENDS ON A READING OF CRITERION `1` THAT IS YOURS, NOT MINE
+🛑 **READING `A` — CRITERION `1` AS LITERALLY WRITTEN (*"The spec's instrument must be one this repo HAS DATA FOR"*): **`CANDIDATES SATISFYING 1-3: NONE`.** `[MEASURED]` **Zero of eleven.** ★★★★★ **THIS IS `R-667 §4.5`'s PRE-REGISTERED OUTCOME, AND YOU COMMITTED IN ADVANCE TO ACCEPTING IT: *"the vertical slice is not demonstrable on tier-A today, and the campaign's next question is the ENGINE layer, not the compiler."***
+🛑 **READING `B` — VIA `disposition`. `[MEASURED — `spec_producer.py:740-748`]` `compilable-futures` = *"compiles + portable mechanic"*, where non-portable means *"needs L2/tape/order-flow/options microstructure the OHLCV battery cannot carry"*. **IT IS A STATEMENT ABOUT THE MECHANIC, NOT ABOUT THE INSTRUMENT THE EDUCATOR TAUGHT ON.** Under this reading `5` specs carry a mechanic runnable on OHLCV futures bars, and combined with criteria `2`+`3` the mechanically-surviving set is: **`0RBexa9JpIg__s0`** (forex-taught, tf `2`) and **`ExB66jcyKxg__s0`** (index-taught, tf `2`) — with **`YqY0OkL5LMI__s1` surviving my mechanical test but ALREADY EXCLUDED BY `R-662 §5.3`**, `hcHuDfxdywI__s0` failing criterion `2`, and `st5e-YJRfKc__s0` failing criterion `3`.
+🛑🛑🛑★★★★★ **I AM NOT CHOOSING BETWEEN THE READINGS, AND THE REASON IS NOT TIMIDITY: **READING `B` MEANS RUNNING A STRATEGY THE EDUCATOR TAUGHT ON FOREX OR AN INDEX AGAINST `MES`/`ES` BARS. THAT IS A SEMANTIC-PRESERVATION QUESTION — *"does this strategy still mean what he taught when the instrument changes?"* — AND `worker-execution §4` PUTS IT ON YOUR SIDE OF THE LINE, NOT MINE.** ★★★ **AND UNDER **EITHER** READING, CRITERION `3` IS `[UNENUMERATED]` FOR BOTH SURVIVORS, SO EVEN READING `B`'s SET IS PROVISIONAL.**
+✅ **NO RANKING. NO RECOMMENDATION. NO CANDIDATE PREFERRED. `(d)` WAS NOT USED AS A KEY ANYWHERE ABOVE.**
+
+### ⚠️ §5 — WHAT I DID **NOT** MEASURE
+🛑 **CRITERION `3` FOR `9` SPECS — `[UNENUMERATED]`, per `§0` defect `2`. **Answering it properly needs the transcripts or the strategy prose, not the classification block.** ★★★ **The cheapest honest fix is a rationale-presence audit; I did not pull it, and I am naming it rather than papering the cells with `"no"`.**
+🛑 **THE `3` `[UNENUM]` ASSET CLASSES** (`YGdFksLavKE__s0`, `dENM6gt8ZRg__s0`, `pKzXxB9Blts__s0`) — no `asset_class` anywhere in census or extraction. **UNKNOWN, not NO.** `dENM6gt8ZRg__s0` is named `orb_5m_retest`, which *suggests* a timeframe — **I did NOT infer an instrument from a strategy NAME.**
+🛑 **I did NOT re-derive the census.** Its `conditions[]`, `tf_class` and `disposition` are `[ARTIFACT-SOURCED]` from `tier-a-compile-census.json`; I verified only its JOIN to the extraction hashes.
+🛑 **I did NOT run `produce_spec_artifact` or the gate on any of the `10` non-golden specs** — not authorized, and `(d)` was answerable from the census.
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK: yours — rule which reading of criterion `1` governs, because `NONE` and a two-candidate set follow from the same measurements.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
+
+---
+
 ## AR-722 · 2026-08-03 · ⏳ **START-RECEIPT — `R-667 §5`, THE TIER-A ENUMERATION. SAME SEAT, STILL HOLDING CONTEXT.**
 
 ✅★★★★★ **THE POPULATION SOURCE, NAMED AS ORDERED — AND IT IS BETTER THAN THE STANDING CONCERN ASSUMED: `docs/replay-results/h1-battery/tier-a-extraction-provenance/`, **A REAL DIRECTORY ON DISK** carrying `13` spec JSONs **plus `_MANIFEST.json`.** 🛑 **THE MANIFEST IS THE AUTHORITY, BY ID AND BY HASH — NOT MY `ls`:** it declares `files: 13`, **`matched_to_census_specs: 11`**, `dropped_not_clean: 2`, joined by *"recomputed sha256 of each file vs the census `specs[].extraction_sha256"*` against `tier-a-compile-census.json`. **THE `11` ARE THE `dropped:false` ENTRIES, AND I WILL TAKE THEM FROM THE MANIFEST'S OWN FLAGS RATHER THAN FROM A FILE LISTING.**
