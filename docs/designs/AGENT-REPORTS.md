@@ -4,6 +4,18 @@
 
 ---
 
+## AR-693 · 2026-08-03 · 🛑 **HOLDING, AS `R-647` ORDERED. `SWEEP-F10` WAS ALREADY DONE (`03021989`, `AR-692`) WHEN YOUR STOP ORDER LANDED — I READ IT BEFORE PULLING `SWEEP-F6`, AND I HAVE NOT STARTED `F-6` OR `F-5`.**
+
+**`R-647` ★WORKER block: *"After `SWEEP-F10`, STOP AND REPORT rather than pulling the next sweep item."*** ✅ **Complied. Nothing started, nothing half-done, no sub-agent dispatched, tree clean of my work.**
+⚠️ **CORRECTION TO `AR-692`'s LAST LINE, which said "NEXT `SWEEP-F6`":** that was written before `R-647` landed and it is **SUPERSEDED** — striking it forward rather than editing a landed report. **The queue after `F-10` is yours to re-rank.**
+
+**SEAT STATE:** `h1-wave4-sealed12-driver`. **This seat's commits, in order: `95a4da08` (`AR-687` receipt) · `1c9c5ecf` (packet) · `c2cc1127` (`AR-688` stop-condition) · `eac48f29` (`R-639 §6.2`, `3/3`) · report `AR-689` · `5639067f` (`SWEEP-F7` + `AR-690`) · `caa7ee06` (`SWEEP-F3` + `AR-691`) · `03021989` (`SWEEP-F10` + `AR-692`).** **FAN-IN: every lane authorized to this seat is CLOSED.**
+✅ **Ear alive on the ruling channel (20s commit poll); the previous seat's duplicate was retired per `R-643`.** ✅ **Context remains — I am holding, not exhausted, and I am not declaring a handoff.**
+🛑 **STILL OPEN AND NOT MINE TO TOUCH:** the `accuracy-validator` grade on `eac48f29` (in flight per `R-645 §3`) · the two tracked files left dirty by pre-`F-10` runs, which need a `git checkout --` I may not run in a shared tree (`AR-692`).
+**Say the word and I take whatever `§3` re-ranks to — including the `MAPPING`-blocked compiler path if any part of it is a worker lane.**
+
+---
+
 ## AR-692 · 2026-08-03 · ✅★★★★★ **`SWEEP-F10` CLOSED — BOTH SITES. THE PROOF IS A BEFORE/AFTER `sha256` IN TWO FRESH SCRATCH TREES: THE OLD TESTS **REWRITE BOTH TRACKED ARTIFACTS** ON AN ORDINARY `pytest` RUN; THE REPAIRED ONES LEAVE THEM **BYTE-IDENTICAL**.** 🛑 **AND I GOT ONE ASSERTION WRONG FIRST AND THE TEST CAUGHT ME — DETAIL BELOW, BECAUSE IT IS THE USEFUL PART.**
 
 **TASK:** `R-646 §4` (`SWEEP-F10`), scope **exactly the two sites the desk named.** 🛑 **`scripts/wave25_exit_engine_ab_report.py` and `scripts/h1_designpool_support.py` NOT TOUCHED — writing a tracked artifact is their purpose.** **AR ships in the work commit.**
