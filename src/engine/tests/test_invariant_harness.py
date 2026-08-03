@@ -508,11 +508,49 @@ class TestPerFirmEndings:
         assert check.passed
         assert check.severity == "WARNING"
 
-    def test_passes_when_no_prop_compliance(self):
+    def test_absent_prop_compliance_is_not_applicable_not_a_pass(self):
+        """R-627 §3.1 / R-628 §3: absence must NOT report as a pass.
+
+        This test previously asserted `check.passed` on absent prop_compliance —
+        it was a TRANSCRIPT OF THE FAIL-OPEN, not a specification. The code got
+        stricter; the assertion is updated to the new contract (R-628 §3).
+
+        walk_forward.py:2224/:3005 leave prop_compliance None whenever a run
+        produced no OOS trades, so absence is a LEGITIMATE state — but it is not
+        evidence that balances are consistent, and must not be reported as one.
+        """
         result = _make_good_result()
         result.pop("prop_compliance")
         check = _check_per_firm_endings(result)
-        assert check.passed
+
+        # 1. The new state, asserted POSITIVELY on both axes — not merely
+        #    "stopped failing". Checking only `not passed` would also hold if
+        #    the check were deleted outright.
+        assert check.passed is False
+        assert check.applicable is False
+
+        # 2. The evidence must say WHY nothing was checked, so a reader cannot
+        #    mistake the state for a verified-consistent result.
+        assert "did not run" in check.evidence.lower()
+        assert "not evidence" in check.evidence.lower()
+
+        # 3. POSITIVE WITNESS THAT THIS IS A SKIP, NOT A GATE FAILURE.
+        #    overall_passed must be IDENTICAL to the same result WITH
+        #    prop_compliance present. This is the assertion that catches a
+        #    future promotion accidentally gating on absence (R-628 §2).
+        with_prop = _make_good_result()
+        without_prop = _make_good_result()
+        without_prop.pop("prop_compliance")
+        assert (
+            run_invariants(without_prop).overall_passed
+            is run_invariants(with_prop).overall_passed
+        ), "absence changed overall_passed — INV-13 is gating on absence"
+
+        # 4. And the report must surface it as not-applicable rather than
+        #    silently dropping it.
+        assert "per_firm_endings_consistent" in [
+            c.name for c in run_invariants(without_prop).not_applicable
+        ]
 
     def test_catches_dll_inflated_uncapped_balance(self):
         """If ending_balance_uncapped itself is wrong, harness must catch it."""
