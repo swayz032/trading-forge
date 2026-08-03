@@ -404,24 +404,33 @@ def _make_minimal_backtest_result(
         end_date=timestamps_utc[-1][:10],
     )
     try:
-        result = run_backtest(request, data=data)
-        return result
+        return run_backtest(request, data=data)
     except Exception as exc:
-        # If backtester fails on the tiny df (warm-up insufficient etc.) return empty result
-        # so the skipped_outside_window_count field is still tested
+        # R-630 §4.1 (grader finding F-2) — THE SWALLOW IS REMOVED, NOT JUST LOGGED.
         #
-        # R-623 §7.2: this swallow is WHY these tests stayed dead and looked
-        # alive — the stub below returns skipped_outside_window_count=0, which
-        # SATISFIES three of the four assertions vacuously. Surface the
-        # traceback so a swallowed failure can never again read as a measurement.
+        # HISTORY, because this took three passes to get right:
+        #   Originally this returned a STUB
+        #   {"engine_audit": {"skipped_outside_window_count": 0}, "_error": ...}
+        #   "so the field is still tested". That stub SATISFIES the three
+        #   assertions that check `skipped == 0` or merely that the key exists —
+        #   so a crashed run_backtest produced THREE GREEN TESTS.
+        #   R-623 §7.2 added a traceback print, which made the failure VISIBLE
+        #   but still returned the stub, so the vacuous passes survived. The
+        #   class sweep caught that (F-2).
+        #
+        # PROPERTY NOW ENFORCED: a swallowed run_backtest failure cannot produce
+        # a passing test — with or without a failing sibling in the same run.
+        # Failing here closes the hole at the SOURCE rather than at three
+        # separate call sites, so a future test added to this class inherits the
+        # protection instead of having to remember it.
         import traceback as _tb
-        print(
-            f"[_make_minimal_backtest_result] run_backtest RAISED — returning STUB, "
-            f"NOT a measurement: {exc!r}",
-            file=sys.stderr,
-        )
         _tb.print_exc(file=sys.stderr)
-        return {"engine_audit": {"skipped_outside_window_count": 0}, "_error": str(exc)}
+        pytest.fail(
+            f"run_backtest() raised, so nothing was measured: {exc!r}. "
+            "This helper no longer returns a stub result — a crashed backtest "
+            "must not be reportable as skipped_outside_window_count=0.",
+            pytrace=False,
+        )
 
 
 class TestBacktesterWindowMask:
