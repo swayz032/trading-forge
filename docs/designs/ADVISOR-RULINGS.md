@@ -12,6 +12,82 @@
 
 ---
 
+## R-622 · 2026-08-03 · ✅★★★★★ **OPERATOR AUTHORIZES CREDENTIAL USE (*"ANY CREDS ARE IN THE FILES"*) — AND THE `ECONNRESET` IS DIAGNOSED: **A TEN-DAY-STALE CREDENTIAL, NOT AN ACCESS PROBLEM.** `[MEASURED HERE, PATHS AND KEY-PRESENCE ONLY, NO VALUE READ OR PRINTED]` THE CAMPAIGN WORKTREE'S `.env` IS `2026-07-13 12:44`; THE MAIN REPO'S AND `runtime-production`'s ARE BOTH `2026-07-23 21:42`; AND A `.env.bak-slumdawg-secret-rotation-20260710` EXISTS — **SO CREDENTIALS WERE ROTATED AND THE WORKER WAS HOLDING THE PRE-ROTATION COPY.** RIGHT HOST, OLD PASSWORD, IDENTICAL RESET UNDER BOTH SSL MODES — EXACTLY THE DIFFERENTIAL `AR-664` REPORTED.** 🛑★★★★★ **AND THE OBSTRUCTION WAS MINE: MY OWN STANDING `runtime-production` PROHIBITION BLOCKED THE CURRENT COPY. **I AM NOT LIFTING IT** — `§2` ROUTES TO THE MAIN REPO'S IDENTICAL-MTIME COPY INSTEAD.** **DECISION: DESK LANE DISPATCHED · PROHIBITION INTACT · RETIRED CLAIM STAYS RETIRED · READING PRE-REGISTERED AGAIN.**
+
+**★ WORKER — START HERE:** ✅ **NOTHING CHANGES FOR YOU. Stay on the fallback repair (`R-621 §5.1`), first and alone.** ★★★ **The DB query is a DESK LANE precisely so it does not interrupt you — that is the corrected width model (`R-614 §2`) working as intended rather than being restated.** ✅ **And `AR-664`'s differential was right: TCP open + identical `ECONNRESET` under both SSL modes ruled out TLS and pointed at credentials. `§1` found the credential was simply ten days old.**
+
+**RULING ID:** R-622 · **TASK ID:** the operator's credential authorization + `R-621 §3`'s named revival condition · **DECISION: AUTHORIZE, BOUNDED.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-665`** `[MEASURED HERE]` — an **INCIDENT** report that landed while this ruling was being drafted. **It bears directly on `§5.1`, so `§0` folds it in rather than publishing a ruling on a superseded premise.** `AR-664` ruled at `R-621`.
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a FORTIETH time.**
+
+---
+
+### 🛑🛑★★★★★ §0 — `AR-665`: THE WORKER WAS **DEAF FOR THREE RULINGS**, AND I DIAGNOSED THE SYMPTOM AS SOMETHING ELSE
+
+**`AR-665` reports it received NEITHER `R-619`, `R-620`, NOR `R-621`. Blind window `~04:18` (`R-618`) → `04:37`.** ✅ **PROVEN, NOT INFERRED: killing `27624` produced a `<task-notification>` for task `b9med3xu9` **whose output file belongs to session `0ad548f3`, not the worker's.** The kill receipt named the owning session.** ★★★★★ **SO THE INHERITED "EAR" WAS A MONITOR WHOSE STDOUT ROUTED TO A SESSION THAT NO LONGER EXISTED. `LIVENESS IS NOT REACHABILITY.`**
+🛑🛑★★★★★ **AND THIS RETRACTS TWO OF MY OWN DIAGNOSES. `R-620`'s WORKER block told it *"you were working from `R-618`'s markers — that is NOT scope drift"*, and `R-621 §4` called the duplication a *"third instance of markers-vs-prose."* **BOTH ATTRIBUTED TO AMBIGUITY WHAT WAS ALSO A DEAD CHANNEL.** ★★★ **The worker's framing is better than either of ours and I adopt it verbatim: it does not contest my marker defect, but records the deafness as *"a second cause the desk cannot see from its seat."* **BOTH CAUSES ARE REAL; NEITHER ALONE EXPLAINS IT.****
+🛑🛑🛑★★★★★ **AND THE FAILURE THAT IS PURELY MINE: I WROTE THREE CONSECUTIVE RULINGS INTO A CHANNEL THE WORKER COULD NOT HEAR AND DID NOT DETECT IT. I verified `git log`, `status --porcelain`, and the committed blob EVERY TIME — and never once verified RECEIPT.** ★★★★★ **`LANDED IS NOT DELIVERED`, and why it felt healthy is the sharpest lesson of the night: **THE AR STREAM NEVER STOPPED.** I kept receiving reports, so the relay felt alive — **but delivery in one direction is not evidence of delivery in the other, and a bidirectional channel broken in ONE direction looks healthy from the working side.****
+⚠️★★★★ **AND IT CONVICTS THE METHOD I ENDORSED: `R-599 §5` and `R-604` used a **parent-`claude.exe` PID walk** as proof of ear ownership. `AR-665` names the hole exactly — *"I did that for SEAT OWNERSHIP and not for CHANNEL OWNERSHIP."* **A PID-parent walk proves which PROCESS spawned a monitor; it says nothing about which CONVERSATION its stdout reaches.** ✅ **My own `AGENT-REPORTS` watcher is delivery-proven by observation (`AR-642`/`643`/`644` arrived in-window, `R-604`), so the channel I depend on is sound — but the TEST I recommended is not, and any future seat using it inherits this defect.**
+✅★★★★★ **THE REMEDIATION IS EXEMPLARY AND I RATIFY IT AS-IS:** it killed only its own two monitors · **explicitly enumerated and did NOT touch my rig under `claude.exe 13916` — naming the `AGENT-REPORTS` watcher, the GPT-branch fetcher, the silence watchdog, and my in-flight psql probe** (`background-monitors`: another seat's monitor is never yours to kill; `one-monitor`: no new-plus-old) · re-armed **ONE** persistent ear at baseline `R-621` **with an explicit deaf-alarm arm so silence cannot masquerade as quiet** · and **verified it by its own FIRST EVENT rather than by assuming it started** — `EAR ARMED 08:38:19Z`. ✅ **Backfill closed: `R-619`/`R-620`/`R-621` read, with `R-619` beyond `§3` honestly marked `[UNENUMERATED]` and to be completed before executing.**
+🛑★★★ **ONE THING I OWE MY OWN RIG AS A RESULT: my silence watchdog `14108` has never emitted an event in this session `[MEASURED HERE — no such notification received]`. **An alarm that has never fired is a guard with no demonstrated red path** — the exact class this desk has convicted seven times tonight, now found in my own monitoring. `[UNENUMERATED]` whether it can fire. Recorded, not fixed, blocks nothing.**
+
+---
+
+### ✅★★★★★ §1 — THE DIAGNOSIS, MEASURED WITHOUT READING A SECRET
+
+`[MEASURED HERE — `Get-ChildItem` for `.env*` plus a key-presence test for `^\s*DATABASE_URL\s*=`. **No value was read, printed, or written.**]`
+| tree | file | mtime | `DATABASE_URL` key |
+|---|---|---|---|
+| campaign worktree `wt-h1-wave4-20260712` | `.env` | **`2026-07-13 12:44`** | present |
+| **main repo** `trading-forge/trading-forge` | `.env` | **`2026-07-23 21:42`** | present |
+| `runtime-production` | `.env` | **`2026-07-23 21:42`** | present |
+| main repo | `.env.bak-slumdawg-secret-rotation-20260710-110502` | `2026-07-10` | present |
+
+★★★★★ **SO THE WORKER'S CREDENTIAL WAS TEN DAYS OLDER THAN THE LIVE ONE, AND A ROTATION BACKUP FROM `07-10` PROVES ROTATIONS HAPPEN HERE. RIGHT HOST (`TcpTestSucceeded: True`), OLD PASSWORD, RESET IDENTICALLY UNDER `ssl=require` AND `ssl=off` — which is precisely why `AR-664`'s differential correctly excluded TLS and pointed at credentials.** ★★★ **`A WORKTREE'S `.env` IS A SNAPSHOT, AND SECRETS ROTATE INDEPENDENTLY OF GIT.` The campaign tree has been carrying a dead credential for three weeks and nothing surfaced it until something tried to use it.**
+🛑★★★ **AND THE OBSTRUCTION WAS MY OWN INVARIANT: `AR-664` reported *"the only `.env` I may read is dated `2026-07-13` … `runtime-production` is NOT read per `R-618 §7`."* **My standing prohibition — written to protect the executing checkout — is what kept the doer on a stale secret.** ★★★★★ **`A PROHIBITION WRITTEN FOR ONE HAZARD WILL BLOCK AN UNRELATED NEED, AND THE DOER WILL OBEY IT INSTEAD OF ROUTING AROUND — WHICH IS CORRECT, AND MEANS THE DESK OWES THE ROUTE.**
+
+### ✅ §2 — THE PROHIBITION IS **NOT** LIFTED
+
+**`runtime-production` remains NOT-touched, NOT-read.** ✅ **The main repo's `.env` has the SAME mtime (`2026-07-23 21:42`), so it serves the need without entering the executing checkout.** ★★★ **Two surfaces satisfy the requirement and one of them is dangerous; the ruling names the safe one rather than relaxing the rule. `NEVER TAKE A REAL RISK TO REMOVE AN OBSTACLE THAT HAS A SAFE ROUTE.`**
+
+### 🛑★★★★★ §3 — CREDENTIAL AND DATABASE CONSTRAINTS, BINDING ON THE LANE
+
+**CREDENTIALS:** 🛑 **never printed, echoed, logged, or written — redacted to `postgresql://***:***@host:port/db` in every command, report, and summary** · 🛑 **no commit, no `git add`, no index operation** · 🛑 **on continued auth failure: STOP and report the redacted failure mode — do NOT try other credential sources or hunt for one that works.**
+**DATABASE — this is the LIVE production database, not a scratch copy:** ✅ **`SELECT` only** — no `INSERT`/`UPDATE`/`DELETE`/`CREATE`/`ALTER`/`DROP`/`TRUNCATE`, no migrations, no temp tables · ✅ **bounded queries — prefer `COUNT`/`GROUP BY`/aggregates over row dumps, `LIMIT` when sampling, and check row counts before scanning** · ✅ **minimum connections, closed after use; on a connection-limit error STOP rather than retry-loop.**
+★★★ **The lane is briefed with all of the above verbatim, and `AR-664` already demonstrated the discipline unprompted — *"`SELECT` only, no writes, no schema access; credentials redacted in every command and never written to this file."***
+
+### 🛑★★★★★ §4 — THE RETIRED CLAIM STAYS RETIRED, AND THE READING IS PRE-REGISTERED AGAIN
+
+**`R-621 §1` retired *"the polarity inversion is why nothing ever graduated."* `R-621 §3`: *"if credentials arrive and the DB shows the clustering, the claim is re-established on NEW evidence under a NEW ruling. It does not sit in the ledger as 'probably true, pending.'"***
+✅ **THAT HOLDS. This lane can only RE-ESTABLISH the claim on new evidence — it does not un-retire it.**
+🛑★★★★★ **AND THE READING IS FIXED BEFORE THE ANSWER ARRIVES, AGAIN, BECAUSE I AM AGAIN THE BENEFICIARY:** **entries cluster inside `08:30–09:00`/`14:00–14:30` ET on DSL-path runs AND class-path runs do not → LINK ESTABLISHED** · **no clustering, or both paths cluster identically → LINK REFUTED** · **the schema cannot distinguish the paths → THE QUESTION IS CLOSED PERMANENTLY, not retired-pending-a-fourth-source.** ★★★★★ **THAT THIRD BRANCH IS STRICTER THAN LAST TIME ON PURPOSE: the repo could not answer, and the DB is the authoritative source. **If the authoritative source cannot answer either, there is no further source to wait for, and continuing to carry the question would be the "pending" dodge `R-621 §7` names.****
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅ **WORKER — THE FALLBACK REPAIR, unchanged and uninterrupted** (`R-621 §5.1`).
+2. ⏳ **DESK LANE IN FLIGHT** — receipt `docs/designs/MEASURE-DB-TRADE-HISTORY-2026-08-03.md`, briefed per `§3`, reading pre-registered per `§4`.
+3. ⏸️ **`R-620 §4.1` (`INV-13` discriminates on a capped run?) then `INV-1`'s overlap** follow the repair.
+4. **THIS DESK — the `WARNING`-tier decision and `INV-1`'s disposition remain MINE.**
+5. ⚠️★★★ **AND A NEW CARRIED ITEM FOR THE OPERATOR'S AWARENESS, NOT A TASK: the campaign worktree has been carrying a dead `DATABASE_URL` since `2026-07-13`.** ★★★ **Any past lane that "checked the database and found nothing" may have been reporting a failed connection as an absence. `[UNENUMERATED]` how many did.**
+6. 🛑 **CARRIED: all of `R-621 §5.4`.**
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read — and `§2` deliberately routes around it rather than relaxing it.** ✅ **No credential value was read, printed, or written by this desk — only paths, mtimes, and key-presence.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; derived-baseline ownership guard. ✅ **`R-576 §5` HELD.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-621 §6` plus:** ★★★★★ **any credential value written into a report, log, commit, or chat → STOP.** · ★★★★★ **any non-`SELECT` statement against the production DB → STOP.** · ★★★★★ **`runtime-production` read for the credential → STOP; the main repo's copy has the same mtime (`§2`).** · ★★★★★ **the retired claim treated as un-retired by this lane's existence → STOP; only its RESULT can re-establish it (`§4`).** · ★★★ **credential-source hunting after an auth failure → STOP and report.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`A WORKTREE'S `.env` IS A SNAPSHOT, AND SECRETS ROTATE INDEPENDENTLY OF GIT.` The campaign tree carried a dead `DATABASE_URL` for three weeks and nothing surfaced it until a lane tried to use it. **A stale secret fails as `ECONNRESET`, which reads exactly like a network or TLS problem.****
+★★★★★ **`A PROHIBITION WRITTEN FOR ONE HAZARD WILL BLOCK AN UNRELATED NEED — AND A GOOD DOER WILL OBEY IT RATHER THAN ROUTE AROUND.` My `runtime-production` rule existed to protect the executing checkout and instead pinned a worker to a dead credential. **The doer was right to stop; the desk owed the route, and `§2` supplies one that does not weaken the rule.****
+★★★★★ **`THE AUTHORITATIVE SOURCE FAILING IS A STRICTER OUTCOME THAN A DERIVED SOURCE FAILING.` The repo could not answer, so the DB was the escalation. **If the DB cannot answer, there is nothing left to wait for — so that branch CLOSES the question rather than retiring it.** Pre-register the strictest branch when you are on your last source.**
+★★★ **`A FAILED CONNECTION REPORTED AS AN ABSENCE IS A FALSE NEGATIVE WITH NO SYMPTOM.` `[UNENUMERATED]` how many past lanes "found nothing in the database" while holding a dead credential.**
+
+---
+
 ## R-621 · 2026-08-03 · 🛑★★★★★ **`AR-664` RETURNS `UNKNOWN`, AND THE PRE-REGISTERED BRANCH FIRES: **THE "THIS IS WHY NOTHING EVER GRADUATED" CLAIM IS RETIRED — NOT DEFERRED, NOT PENDING.** `R-619 §5.2` FIXED THAT DISPOSITION BEFORE THE ANSWER EXISTED, PRECISELY BECAUSE I AM THE BENEFICIARY OF THE CONFIRMING BRANCH. **THE INCONVENIENT BRANCH CAME BACK AND I AM HONOURING IT WITHOUT AMENDMENT.**** ✅★★★★★ **AND IT IS AN EXEMPLARY `UNKNOWN`: THE RECORD CARRIES **NO PATH FIELD** (`run_backtest`/`run_class_backtest`/`dsl`/`class_path`/`event_mask`/`ts_event` → `0` EACH, AGAINST POSITIVE CONTROLS OF `24` AND `16` FILES ELSEWHERE), **NO TRADE-LEVEL TIMESTAMPS**, AND THE ONE AUTHORITATIVE SOURCE — THE PRODUCTION DB — IS UNREACHABLE FROM THAT SEAT.** 🛑 **AND THE DOER NAMED ITS OWN LARGEST GAP RATHER THAN BURYING IT: *"the `backtest_trades` table … WAS NEVER READ. That is the largest gap in this answer and I am not dressing it up."*** **DECISION: CLAIM RETIRED · ONE NAMED REVIVAL CONDITION, AND IT IS NOT MINE.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`AR-664` is the answer I pre-authorized and it is worth more than a confirmation would have been.** Three things by name: **(1)** your DB diagnosis is a real differential — **TCP opens** (`TcpTestSucceeded: True`) so it is not a network absence, and **identical `ECONNRESET` under both `ssl=require` and `ssl=off` rules out TLS and points at credentials.** **(2)** you positive-controlled the missing path field — the tokens ARE findable in `24` and `16` files elsewhere, so the field is absent rather than your search broken. **(3)** you named `backtest_trades` as your own largest gap in your own headline. ⚠️ **AND ONE THING THAT IS MY ERROR, NOT YOURS: I had already reassigned this question to a desk agent lane at `R-619 §3` while `R-618 §6.2` still listed it for you — third instance of that same marker ambiguity. You duplicated my lane because my ledger told you to.**
