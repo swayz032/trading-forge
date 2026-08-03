@@ -4,6 +4,44 @@
 
 ---
 
+## AR-690 · 2026-08-03 · ✅★★★★★ **`SWEEP-F7` CLOSED — AND THE VACUITY WAS WORSE THAN "IT DIDN'T CHECK THE EXIT CODE": THE FILE IT ASSERTED ON IS **TRACKED IN GIT**, SO `report.exists()` WAS SATISFIED BY A COPY COMMITTED TO THE REPO WHETHER OR NOT THE SUBPROCESS PRODUCED ANYTHING.** ✅★★★★★ **RED-PROOFED BY A 2×2 THAT ASSERTS BOTH HALVES: the OLD test PASSES on a CLI mutated to exit `0` on gate failure; the NEW test FAILS on it. `[MEASURED HERE]`**
+
+**TASK:** `SWEEP-F7` (`R-643 §5` queue). **FILE: `tests/python/test_validate_scaling_schedule.py` ONLY** — a test, so no packet. **AR ships in the work commit.**
+
+### THE FINDING, AT THE EXECUTABLE LINES
+`test_cli_risky_synthetic_exits_nonzero` **promised a non-zero exit in its own name and asserted only `report.exists()`.** `[MEASURED HERE]` `git ls-files docs/scaling-validation/` returns **`cli-smoke-risky.md` — TRACKED**, and the file was present in the tree. ★★★★★ **SO THE ASSERTION COULD NOT FAIL: it was testing that a file in the repository exists.** The exit code — the subject of the test — was never read.
+🛑 **THE OLD COMMENT JUSTIFIED THAT WITH LUCK:** *"If somehow it passes (unlikely) … a lucky seed — so we assert on the report file existing, not strictly on exit code."* **The seed is PINNED at `42`. `[MEASURED HERE]`: the run is deterministic and returns `rc=1` with `UNSAFE (100.00% breach)` against a `5%` gate — not marginal, and not luck.** ★★★ **`A CAVEAT THAT WOULD DISSOLVE ON ONE MEASUREMENT IS NOT A REASON, IT IS AN UNCHECKED WORRY` — and it bought a permanently vacuous assertion.**
+
+### WHAT LANDED
+- `assert result.returncode != 0` — **the promise in the name.**
+- ✅ **A POSITIVE WITNESS: `assert "UNSAFE" in result.stdout`.** 🛑 **Non-zero alone is ALSO what an `ImportError` or a bad flag produces; without this the repaired test would accept a crash as proof of scaling safety.**
+- The report goes to an **UNTRACKED** name, unlinked **before and after** (`finally`), so existence is evidence about THIS run and **the test stops rewriting a tracked artifact in a shared worktree.**
+
+### ✅★★★★★ THE RED-PROOF — 2×2, BECAUSE A KNOWN-BROKEN STATE OWES BOTH HALVES
+**Mutation: `scripts/validate-scaling-schedule.py` gate-failure branch `sys.exit(1)` → `sys.exit(0)` — the exact defect the test's name promises to catch. Materialised scratch (`git archive eac48f29`); the shared tree was never mutated.**
+
+| test | script UNMUTATED | script MUTATED to exit 0 |
+|---|---|---|
+| **OLD (at `HEAD`)** | PASS | 🛑 **PASS** ← the vacuity, proven rather than argued |
+| **NEW (repaired)** | ✅ PASS | ✅ **FAIL** |
+
+★★★ **The top-right cell is the finding and the bottom-right is the repair. Either alone would have been a claim.**
+
+### COMMANDS AND RESULTS
+```
+python -m pytest tests/python/test_validate_scaling_schedule.py -q
+  → 38 passed in 1.62s        (baseline at eac48f29: 38 passed — same population, no verdict changed)
+direct CLI, seed 42:  rc=1, "GATE FAILED … UNSAFE (100.00% breach)", real 0m0.411s
+```
+⚠️ **INSTRUMENT NOTE ON MYSELF:** I first read `0.39s` for a test that shells out to a 500-simulation CLI as *too fast to be real* and suspected a skipped subprocess. **I timed the CLI directly rather than assuming either way: it genuinely runs in `0.41s`.** ★★★ **The suspicion was right to have; resolving it by measurement rather than by reasoning is the only part that mattered.**
+
+### ⚠️ ADJACENT, NOT FIXED, NAMED SO IT IS NOT MISTAKEN FOR CLEAN
+🛑 **`test_cli_report_file_created` REWRITES A TRACKED FILE ON EVERY RUN** — `docs/scaling-validation/cli-report-existence-test.md` is `M` in `git status` right now and was `M` before I arrived. **Same class as what I just fixed (a test using a tracked artifact as scratch), one file over.** ✅ **NOT touched: `SWEEP-F7` is the authorized lane and `R-639`'s sweep order is explicit. Flagging, not chasing.**
+
+**Position: `h1-wave4-sealed12-driver`. Fan-in on the queue: `SWEEP-F7` DONE · `SWEEP-F3` NEXT (starting now) · then `SWEEP-F6`'s fixture, `SWEEP-F5`'s two-branch measurement.**
+
+---
+
 ## AR-689 · 2026-08-03 · ✅★★★★★ **`R-639 §6.2` IS COMPLETE — ALL THREE MEMBERS LANDED IN ONE COMMIT (`eac48f29`) WITH ELEVEN COMMITTED TESTS AND A FOUR-ARM DELETION RED-PROOF IN WHICH **EVERY ARM CONVICTS ONLY ITS OWN GUARD**.** ✅ **`R-644`'s OPTION A TOOK EFFECT INSIDE THE SAME WAVE — THE `:323` FIXTURE CARRIES A REAL `500.0`, NOT `0`, AND `test_score_capped_at_100` HAS ITS POSITIVE WITNESS.** **FAN-IN `3 / 3`.**
 
 **TASK:** `R-639 §6.2` (+ `R-643 §5`, `R-644 §3`/`§4`). **BRANCH** `h1-wave4-sealed12-driver`. **WORK COMMIT `eac48f29`.** **PACKET** `docs/designs/CRISIS-FAIL-CLOSED-RATIFY-PACKET-2026-08-03.md` (`1c9c5ecf`, amended in `eac48f29`).

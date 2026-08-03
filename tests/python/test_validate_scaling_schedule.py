@@ -580,32 +580,63 @@ class TestCLISmoke:
         assert "SAFE" in result.stdout
 
     def test_cli_risky_synthetic_exits_nonzero(self, tmp_path):
-        """Synthetic extremely-risky P&L should fail one or more tiers and exit non-zero."""
+        """Synthetic extremely-risky P&L must FAIL the gate and exit non-zero.
+
+        SWEEP-F7 (R-639 §6.3): this test's name promised a non-zero exit and it
+        asserted nothing of the kind. It checked only that
+        docs/scaling-validation/cli-smoke-risky.md EXISTED — and that file is
+        TRACKED IN GIT, so the assertion was satisfied by a copy committed to
+        the repo whether or not this subprocess produced anything at all. The
+        exit code, which is the whole subject of the test, was never read.
+
+        The old comment justified that with "a lucky seed" possibly passing.
+        The seed is PINNED at 42, so the outcome is deterministic — measured:
+        exit 1, "UNSAFE (100.00% breach)" against a 5% gate. Not marginal, and
+        not luck.
+
+        The report now goes to an UNTRACKED name that is removed before and
+        after, so (a) existence is evidence about THIS run, and (b) the test
+        stops rewriting a tracked artifact and dirtying a shared worktree.
+        """
         script = str(_REPO_ROOT / "scripts" / "validate-scaling-schedule.py")
-        result = subprocess.run(
-            [
-                sys.executable, script,
-                "--synth-daily-pnl", "0.5",
-                "--synth-daily-std", "500.0",   # huge variance vs tiny edge
-                "--synth-n-days", "252",
-                "--tiers", "50",                 # top tier only — most likely to breach
-                "--n-sims", "500",
-                "--n-steps", "63",
-                "--report-name", "cli-smoke-risky",
-                "--seed", "42",
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(_REPO_ROOT),
-        )
-        # Very high-variance scenario should breach the 5% gate at 50 contracts.
-        # If somehow it passes (unlikely), we note that's a valid outcome with a lucky
-        # seed — so we assert on the report file existing, not strictly on exit code.
-        report = _REPO_ROOT / "docs" / "scaling-validation" / "cli-smoke-risky.md"
-        assert report.exists(), (
-            f"Report file must be created regardless of pass/fail.\n"
-            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
-        )
+        report = _REPO_ROOT / "docs" / "scaling-validation" / "cli-smoke-risky-run.md"
+        report.unlink(missing_ok=True)
+        try:
+            result = subprocess.run(
+                [
+                    sys.executable, script,
+                    "--synth-daily-pnl", "0.5",
+                    "--synth-daily-std", "500.0",   # huge variance vs tiny edge
+                    "--synth-n-days", "252",
+                    "--tiers", "50",                 # top tier only — most likely to breach
+                    "--n-sims", "500",
+                    "--n-steps", "63",
+                    "--report-name", "cli-smoke-risky-run",
+                    "--seed", "42",
+                ],
+                capture_output=True,
+                text=True,
+                cwd=str(_REPO_ROOT),
+            )
+            assert result.returncode != 0, (
+                f"Expected non-zero exit: a 100% breach rate against a 5% gate must "
+                f"fail CLOSED.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+            )
+            # POSITIVE WITNESS: a non-zero exit alone is also what an ImportError
+            # or a bad argument produces. This proves the gate actually ran and
+            # reached a verdict, so the exit code means what the name says.
+            assert "UNSAFE" in result.stdout, (
+                f"Non-zero exit without an UNSAFE verdict — the process failed "
+                f"before evaluating the gate, so the exit code is not evidence "
+                f"about scaling safety.\nSTDOUT:\n{result.stdout}\n"
+                f"STDERR:\n{result.stderr}"
+            )
+            assert report.exists(), (
+                f"Report file must be created regardless of pass/fail.\n"
+                f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+            )
+        finally:
+            report.unlink(missing_ok=True)
 
     def test_cli_no_data_source_exits_nonzero(self):
         """CLI with no data source must exit non-zero (fail-CLOSED)."""
