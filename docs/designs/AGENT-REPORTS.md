@@ -4,6 +4,68 @@
 
 ---
 
+## AR-695 · 2026-08-03 · ✅★★★★★ **`R-648 §4 TASK-1` — ANSWERED, AND THE ANSWER SPLITS THREE WAYS RATHER THAN THE TWO THE RULING OFFERED: `compile_fidelity` IS **BUILT AND WORKING BUT UNWIRED** · `calibration_battery` IS **TEST-ONLY** · `diff_harness` IS **WIRED INTO PRODUCTION AND SWITCHED OFF**.** 🛑🛑★★★★★ **AND THE MEASUREMENT THAT RE-SIZES EVERYTHING: I RAN THE SEAL ON **16 REAL CORPUS SPECS** AND IT WORKED FIRST TIME — `161` LOAD-BEARING CONDITIONS, `0` PASS. **BUT `134` OF THE `161` FAIL AS *"BOUND TO AN APPROXIMATION"*, NOT AS UNBOUND.** ★★★★★ `THE COMPILER IS NOT FAILING TO BIND. IT IS BINDING TO PROXIES, AND THE DETECTOR HONESTLY REFUSES TO CERTIFY THEM.`**
+
+**TASK:** `R-648 §4 TASK-1`. 🛑 **NOTHING CHANGED — no build, no wiring, no fix. Every execution below ran in a MATERIALISED SCRATCH COPY (`git archive HEAD | tar -x`), never in the shared tree.**
+
+### 🛑 TWO DEVIATIONS I OWE BEFORE THE FINDINGS
+1. ⚠️ **MY `AR-694` START-RECEIPT WAS WRITTEN BUT NEVER COMMITTED, SO IT WAS NEVER OBSERVABLE — it lands in THIS commit, which defeats its purpose.** **Declared, not quietly fixed:** for ~20 minutes I was a read-only seat with no visible receipt, which is the exact ambiguity the protocol exists to remove. **The receipt is preserved as written rather than back-dated.**
+2. ⚠️★★★★★ **MY FIRST PROBE PRINTED `bound_and_concrete = 0` FROM A KEY THAT DOES NOT EXIST.** The real keys are `automated_verdict` / `row_verdict` / `fail_codes` / `checks[].code`. **A wrong key name and a true finding produce the SAME zero** — `I MEASURED THE NEIGHBOURING OBJECT`. ✅ **Every number below is re-derived from the dumped key list, not from my guess.**
+
+### ✅ (a) NON-TEST CALLERS — `existence is not wiring` `[MEASURED HERE, `git grep` over `*.py|ts|mjs|js|json|yml|yaml|toml|sh|ps1`, docs excluded]`
+| module | non-test callers | verdict |
+|---|---|---|
+| `forensics/compile_fidelity.py` (`915`) | **`calibration_battery.py:34`** only — and *that* module's only importers are `tests/_forensics_fixtures.py` and `test_calibration_battery_framework.py` | 🛑 **CHAIN TERMINATES IN TESTS — no production caller** |
+| `forensics/calibration_battery.py` | **NONE.** No CLI, no `main`, no `argparse` | 🛑 **TEST-ONLY** |
+| `parity_engine/diff_harness.py` (`561`) | `shadow_runner.py:398,406` ← **`backtester.py:6160` and `:8555`** | ✅ **GENUINELY WIRED TO PRODUCTION** |
+🛑 **BUT THE WIRING IS SWITCHED OFF:** both `backtester.py` call sites sit inside `if os.environ.get("PARITY_SHADOW_ENABLED", "false") == "true"`. `.env.example:573` ships **`false`**. **The only `=true` anywhere in the tree is `monkeypatch.setenv` inside `test_shadow_runner.py`.** ★★★ **`A WIRED PATH BEHIND A DEFAULT-OFF FLAG RUNS EXACTLY AS OFTEN AS AN UNWIRED ONE.`**
+✅ **NULL RESULT CONTROL-PROBED:** the CLI/config sweep returned empty for all three modules; the **same command, same file types, token `backtest`** returns `.pre-commit-config.yaml` + 4 frontend files. **The instrument can see those file types — the absence is real.**
+
+### ✅ (b) DOES EACH RUN TODAY, AND ON WHAT INPUT `[MEASURED HERE, scratch @ `af64f7ea`]`
+✅ **Under pytest, yes, and cleanly:** `test_compile_fidelity_leg_a.py` + `test_calibration_battery_framework.py` + `test_cross_engine_parity.py` → **`101 passed in 3.66s`**, on synthetic fixtures from `tests/_forensics_fixtures.py`.
+🛑 **Outside pytest: NOTHING invokes them.** `compile_fidelity` has a `__main__` CLI (`:901`); **nothing in the repo calls it.** Its own docstring concedes the CLI is half-built: *"Certificate/countersign are not wired on the CLI — so a lone artifact BLOCKs fail-closed on (vi)."*
+
+### ✅★★★★★ (c) WHAT `run_leg_a_phase1` REQUIRES — AND THE ANSWER IS CHEAPER THAN THE RULING ASSUMED
+**`run_leg_a_phase1(artifact: dict, *, certificate: dict | None = None) -> Phase1Seal`.**
+🛑🛑★★★★★ **A `BindingPlan` IS *NOT* AN INPUT AND CANNOT BE PASSED.** `:354-359` derives it live via `compile_binding_plan(spec)`, with the reason in the source: *"NEVER accepted from a caller: a caller-injected plan would be an ungated bypass of the very re-derivation (ii) exists to enforce (R-260 deliverable #3 — the parameter is removed entirely)."* ✅ **So the input contract is ONE dict:** `artifact` (or `artifact["spec"]`) carrying `entry_conditions[]` + `invalidations[]`, each `{id,type,object,role}`, plus `spec_hash`. **`compile_binding_plan` lives at `spec_family_bindings.py:2762` and is already live in `spec_producer.py:46` and five `scripts/`.**
+
+### 🛑★★★★★ (d) `passage_ledger.py:29` — **STALE**, AND THE FILE ALREADY CONTRADICTS ITSELF
+`:29` says `compile_fidelity_forensics` is *"CONDITIONAL + RESERVED (**not-yet-built**, R-040 pin 2iv)"*. **`:107` and `:113` in the SAME FILE say the opposite and are correct:** *"Detector: forensics/compile_fidelity.py:run_leg_a"* / *"RESERVED invocation — **detector BUILT**"*. ★★★★★ **The docstring is stale on BUILT and still true on RESERVED-INVOCATION. `THE CORRECTION WAS ALREADY IN THE FILE, TWO SCREENS BELOW THE CLAIM THAT MISLED US` — a reader who stopped at the docstring got the wrong sizing, which is what happened.**
+
+### 🛑🛑🛑★★★★★ THE FINDING THAT CHANGES THE PLAN — IT RUNS ON REAL SPECS **TODAY**
+**16 committed `*.spec.json` from `claude-rung-v32/shakedown_specs/`, straight into `run_leg_a_phase1`. No adapter written. No exception. Every one produced a full per-condition table.**
+| measure | value |
+|---|---|
+| specs sealed | **`16 / 16`**, `automated_verdict` = **`BLOCK`** on all 16 |
+| condition rows | **`161`**, all `load_bearing: true` |
+| rows passing check `ii` | **`0`** |
+| **`ii` fails: bound to an APPROXIMATION** (proxy/pass-through, *"honest accounting"*) | **`134`** |
+| **`ii` fails: genuinely UNBOUND** — `no_recognized_session_keyword` `26` + `session_zone_refused_uncomputable` `1` | **`27`** |
+★★★★★ **`83%` OF THE GAP IS NOT MISSING MACHINERY — IT IS A PROXY THE DETECTOR REFUSES TO CALL CONCRETE** (e.g. `WAIT_RETEST` → `spec_condition_compiler.retest_touch_check`, `row_verdict: BLOCK`, `countersign_required: true`). 🛑 **And `26` of the `27` truly-unbound share ONE cause — session-keyword recognition.** ★★★ **The detector already itemises the remaining work per condition, with a reason string, for free.**
+⚠️🛑★★★★★ **DENOMINATOR WARNING, STATED BECAUSE `R-648 §1` CONVICTED EXACTLY THIS ERROR ONE RULING AGO:** `161` is the **`claude-rung-v32` shakedown population**. **It is NOT the `tier-A/spearhead` `11`-spec / `53`-condition population the golden slice is drawn from, and it must not be quoted as golden-slice distance.** **`[UNENUMERATED — I did not run tier-A; the spec paths for that population were not in this task's scope.]`**
+
+### 🛑 THE `§4` STOP CONDITION — WHY I DID NOT TRIGGER IT, STATED PRECISELY
+The condition is *"if TASK-1 finds the machinery is **wired and working**"*. **It is WORKING but NOT WIRED — the two halves have opposite answers, so the condition is not met as written.** ✅ **I stopped anyway and changed nothing, so the outcome is the same either way; the disposition is yours.**
+
+### WHAT I DID **NOT** MEASURE
+🛑 **The production env is `[UNENUMERATED]`: there is NO tree named `runtime-production` on this box** `[MEASURED HERE, `ls /c/Users/tonio/Projects/*/`]`, and the canonical checkout `C:\Users\tonio\Projects\trading-forge` **has no `.env`**, so I cannot say what `PARITY_SHADOW_ENABLED` is where the tower actually runs. **Default-false is a CODE fact, not a deployment fact.**
+🛑 `calibration_battery`'s `m1..m7` mutation arms outside pytest · the `certificate`/countersign path (every run above BLOCKs on `vi_cert` because I passed none — **expected, and it means check `(vi)` is UNEXERCISED by my probe**) · tier-A specs · whether `diff_harness`'s vectorbt oracle actually runs (its tests mock `run_parity_diff` at three sites).
+
+**Position: `h1-wave4-sealed12-driver`, HEAD `af64f7ea` at read. Shared tree untouched by this task. `TASK-2` (golden-slice candidates) is queued and I have NOT started it — `§4` says not before TASK-1 reports. Say the word.**
+
+---
+
+## AR-694 · 2026-08-03 · 📋 **START-RECEIPT — `R-648 §4 TASK-1` (is the compile-fidelity machinery WIRED or DORMANT). READ-ONLY: nothing observable lands until the report.**
+
+**HOLD RELEASED, TASK ACCEPTED.** `R-648`'s ★WORKER block reached me and `SWEEP-*` is closed as a lane — **I will not pull another sweep item.**
+**SEAT — SAME PROCESS, NEW CONVERSATION `[MEASURED HERE, parent-PID walk]`:** I am `claude.exe 21508`, the *same* CLI that wrote `AR-687`…`AR-693`. **`/clear` rolled the conversation, not the seat.** No handoff occurred and none is being declared.
+✅★★★ **EAR: ONE RIG, AND DELIVERY ACROSS A `/clear` IS NOW PROVEN RATHER THAN ASSUMED `[MEASURED HERE]`.** `bash 13568` (20s poll on `ADVISOR-RULINGS.md`, parent `21508`) **fired `R-648`/`c2a75d28` into THIS conversation.** 🛑 **No second ear armed — `R-643`'s two-ears-on-one-channel defect is not being re-created.** ⚠️ **Blind window is zero: I had already read to `R-647` by hand before the ear fired.**
+**TASK, as `§4` scopes it:** for `compile_fidelity.py` · `calibration_battery.py` · `diff_harness.py` — **(a)** non-test callers (*existence is not wiring*) · **(b)** does each RUN today, on what input · **(c)** what `run_leg_a_phase1` actually requires (spec artifact shape, `BindingPlan`) · **(d)** is `passage_ledger.py:29`'s *"not-yet-built"* comment **STALE or TRUE**.
+🛑 **REPORT ONLY. NOTHING CHANGED — no build, no wiring, no fix.** 🛑 **STOP CONDITION ACKNOWLEDGED: if the machinery is wired and working, I stop and report BEFORE touching anything.**
+**FIRST OBSERVABLE:** the report, as `AR-695`. **ETA ≤ 45 min.**
+
+---
+
 ## AR-693 · 2026-08-03 · 🛑 **HOLDING, AS `R-647` ORDERED. `SWEEP-F10` WAS ALREADY DONE (`03021989`, `AR-692`) WHEN YOUR STOP ORDER LANDED — I READ IT BEFORE PULLING `SWEEP-F6`, AND I HAVE NOT STARTED `F-6` OR `F-5`.**
 
 **`R-647` ★WORKER block: *"After `SWEEP-F10`, STOP AND REPORT rather than pulling the next sweep item."*** ✅ **Complied. Nothing started, nothing half-done, no sub-agent dispatched, tree clean of my work.**
