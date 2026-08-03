@@ -4,6 +4,81 @@
 
 ---
 
+## AR-645 · 2026-08-02 · ✅★★★★★ **`R-600 §9.1` AS AMENDED BY `R-601 §2`/`§3` — DONE, AND BOTH HALVES ARE RED-PROOFED BY DEMONSTRATION.** ✅★★★★★ **POPULATION IS NOW **`37`**, WITH ALL **`30`** `INJECT` OCCURRENCES IN `run.mjs` ACCOUNTED FOR BY FORM — **AN OCCURRENCE THE PARSER CANNOT CLASSIFY REDDENS THE INSTRUMENT BEFORE A SINGLE MEASUREMENT IS TAKEN.** THE PINNED-SET GUARD GOES RED AND **NAMES THE LOST KNOBS** ON **FOUR INDEPENDENT SHRINK CAUSES**, INCLUDING THE HISTORICAL `F-4` DEFECT ITSELF.** 🛑★★★★★ **AND THE THING THAT MUST NOT BE MISREAD, SAID FIRST: **FIXING THE DENOMINATOR DOES NOT MAKE COLUMN (i) MEAN ANYTHING.** `R-600 §2` PROVED `OWN_FINDING` IS TRUE **BY CONSTRUCTION**; IT IS NOW A TAUTOLOGY OVER `37` ROWS INSTEAD OF `25`. **`37/37` IS NOT EVIDENCE FOR READING `(B)`.**
+
+**RULING ID:** `R-600 §9.1` + `R-601 §2`/`§3` · **TASK ID:** AR-645 · **PRIOR:** AR-644 · **BRANCH:** `h1-wave4-sealed12-driver` · **ARTIFACTS SHIP IN THIS COMMIT (`ar-ships`).** **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED**; `4d` is NOT MET (`R-600 §1`) and nothing here changes that.**
+
+### ✅ §1 — THE MEASUREMENT `[MEASURED HERE — `node evidence-order.mjs`, re-run in full AFTER the §4 repair]`
+
+```
+INJECT occurrences in run.mjs, ALL accounted for: 30 {"declaration":1,"strict_equality":25,"echo":2,"switch":2}
+declared injection knobs parsed from run.mjs: 37
+pinned knobs: 37 | missing from discovery: 0 | discovered beyond the pin: 0
+CONTROL (no injection): exit=0 lines=225 stderr_bytes=0
+
+4d-i   terminal failure exits non-zero      : 37/37
+4d-ii  COLUMN (i)  own finding printed      : 37/37    <- reading (B)'s verdict
+4d-ii  COLUMN (ii) full evidence body       : 35/37    <- reading (A)'s verdict
+       cells UNKNOWN                        : 0
+DIVERGENT: module_collection_add · module_collection_delete   own=true full=false lines=5 exit=1
+<INSTRUMENT FAULT throw>   exit=1  lines=0   0/0   <- RED WITNESS
+```
+✅ **`37/37` on `4d-i` independently REPRODUCES path B's figure** (`R-600 §4`), from a different parser and a different seat. ✅ **The two divergent rows are the SAME two as at `25`** — the `12` newly-discovered knobs all score `YES/YES`, so widening the population by `48%` moved column (ii) from `23/25` to `35/37` and changed nothing structural.
+
+### 🛑★★★★★ §2 — WHAT THIS FIX DOES **NOT** BUY, STATED BEFORE ANYONE QUOTES A NUMBER
+
+**`R-600 §2` established at the executable line that on BOTH non-throw paths the scored emission and the exit decision sit under ONE shared guard, so a non-zero exit ENTAILS a `/^\s*\*\*\* /m` match.** 🛑 **Column (i) therefore measures a tautology, and a correct denominator does not repair that — it makes the tautology `37`-wide.** ★★★★★ **`A RED DRAWN FROM OUTSIDE A UNIVERSALLY-QUANTIFIED CLAIM'S POPULATION DOES NOT FALSIFY THAT CLAIM`: the only `0/0` witness is the `INSTRUMENT FAULT` throw, which `R-596 §1` ruled OUT of `4d`'s population. **I have annotated that row in the fixture's own output rather than leaving the caption to be inferred** — but annotating it does not cure it. **This instrument still has no in-scope path to red on column (i), and I am not claiming one.**
+
+### ✅★★★★★ §3 — THE TWO GUARDS, AND WHY NEITHER IS A COUNT
+
+**`R-600 §9.1` — EXHAUSTIVE FORM ACCOUNTING.** Every `\bINJECT\b` occurrence must classify into a recognized form (`declaration` · `=== '<name>'` · `switch (INJECT)` · echo); **anything else is a FAULT that refuses the measurement.** `case` labels are collected by **BRACE-MATCHING the switch block** over a comment- and string-masked copy, so an unrelated `switch` elsewhere could never leak rows in and a `'{'` inside a string could never mis-terminate the block. ★★★ **A `case` label that is not a plain string literal (`case FOO:`) is itself a fault — naming nothing while counting nothing is precisely how `F-4` happened.**
+**`R-601 §2` — MEMBERSHIP, NOT CARDINALITY.** `PINNED_KNOBS` is a frozen `37`-name set; the assertion is **`pinned ⊆ discovered`**. **A knob that stops being discovered goes RED AND NAMES ITSELF, whatever the cause. Knobs discovered BEYOND the pin are reported and are NOT a failure** — growth is legitimate, and `C4` demonstrates a `38`th knob passing green.
+✅ **The pin was GENERATED from the parser's own output, never typed** — and `[MEASURED HERE]` a transcription error in it cannot pass silently, because an invented name is a name that is never discovered and the subset check reddens on it.
+✅★★★ **The pin is cross-checked against two independent counts of the same file: `25` `INJECT === '…'` + `12` distinct `case '…':` = `37`, which is also the figure `R-600 §5` corroborated on three non-overlapping paths. `TWO EQUAL NUMBERS ARE NOT A JOIN` — so I also verified the new parser is a strict SUPERSET of the old (`C2`): the `25` are all still there, the `12` are the `case`-form knobs, and the sets are named, not just counted.**
+
+### ✅★★★★★ §4 — RED-PROOF: `11` CASE GROUPS, ALL DEMONSTRATED `[MEASURED HERE — `node knob-population-redproof.mjs`, exit 0]`
+
+| case | what is planted | verdict |
+|---|---|---|
+| **C1 control** | nothing — the real `run.mjs` | **GREEN**, `37`, `0` missing ← *the discriminator: the guard is not simply always red* |
+| **C2 `F-4` witness** | the ORIGINAL one-form parser's own output | **RED**, names all **`12`** dropped knobs |
+| **C3 unrecognized form** | `if (INJECT == '…')` (loose equality) | **RED**, names the line; **remove it → GREEN again** |
+| **C4 growth** | a new `INJECT === 'red_proof_strict'` | **GREEN**, `38`, reported as beyond-pin |
+| **C5 case form** | a new `case 'red_proof_case':` | **GREEN**, seen by the fix, **invisible to the old parser** |
+| **C6 non-literal case** | `case SOME_CONSTANT:` | **RED**, says so explicitly |
+| **C7 truncated read** | source cut to ⅓ | **RED**, names `35` missing |
+| **C8 population of ONE** | one knob only | **RED** — *this is the exact state `R-601 §3` measured printing `MEASUREMENT COMPLETE`, exit `0`* |
+| **C9 identifier renamed** | `INJECT` → `INJEKT` | **RED**, names all `37` |
+| **C10 process exit** | real vs shrunk file via `--check-population` | **exit `0` vs exit `1`**, missing knob NAMED in stdout |
+| **C11 fail-closed** | 4 unclassifiable references + 2 negative controls | **RED** on all 4, **green** on both controls |
+★★★★★ **`C10` is the one that matters most: `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT`. The guard changes the fixture's PROCESS EXIT CODE, proven by spawning it, not by reading its source.** ★★★ **`C11`'s two negative controls exist because "everything reds" is indistinguishable from a working guard without them.**
+
+### 🛑★★★ §5 — MY OWN CAPTION DEFECT, FOUND BY PROBING A CLAIM I HAD ALREADY WRITTEN
+
+**I wrote in the header that the parser *"fails CLOSED"*, then tested it instead of trusting it — and the probe exposed a DIFFERENT defect: every fault message hardcoded the string `run.mjs:<line>`, so `--check-population <other-file>` would have reported faults against a file it never read.** ✅ **Fixed at the EMITTER — `parseInjectionKnobs(src, label)` takes the label from the caller — and `C11` now asserts the message names the file it was actually given.** ★★★ **`A MECHANISM CLAIM GETS ITS OWN TEST`, and the test found something the claim was not even about.**
+
+### ⚠️ §6 — THE DEVIATION I FLAGGED IN `AR-644`, EXERCISED
+
+**`R-600 §9.1` permitted touching `run.mjs` for the red-proof knob. `[MEASURED HERE]` I did not: `git diff -- run.mjs` is EMPTY and `sha256` of all `11` pre-existing `.mjs` is BYTE-IDENTICAL to the baseline captured before I ran anything.** The parser is PURE over source TEXT, so every plant above is a string in memory; the two process-level cases write to the OS temp dir and delete it. 🛑 **`R-600 §6` measured a mutate-and-revert cycle on this exact directory corrupting a concurrent grader's control run with `git status` CLEAN AT BOTH ENDS — an in-memory red-proof cannot do that to anyone, and it is deterministic.** ⚠️ **The desk may still want the on-disk variant; say so and I will run it.**
+
+### ✅ §7 — ACCEPTANCE, TERM BY TERM `[MEASURED HERE]`
+
+- ✅ **population `37`** · ✅ **clean control `exit 0` at `225` lines, `stderr` `0` bytes** · ✅ **red-proof RED then GREEN, demonstrated on `4` independent shrink causes plus the unrecognized-form case** · ✅ **`git status --porcelain -- prototypes/` clean at the end** (after this commit) · ✅ **all `11` pre-existing `.mjs` `sha256`-identical; `run.mjs` untouched.**
+- ✅ **REGRESSION CHECK ON MY OWN CHANGE:** all six standalone scripts still `exit 0` with `stderr` `0` bytes **with a 13th `.mjs` now in the directory** — `run.mjs` · `module-collections.mjs` · `module-tuple.mjs` · `emitted-freeze.mjs` · `type-value-proof.mjs` · `red-proof.mjs`. **Adding the harness tripped no pinned-collection or file-set guard.**
+- ✅ **Exit codes read via `${PIPESTATUS[0]}` wherever a pipe was used.** ✅ No monitor armed, retired or killed. ✅ `runtime-production` NOT touched, NOT read. ✅ No merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured.
+
+### ⚠️ §8 — WHAT I DID **NOT** MEASURE
+
+- 🛑 **I did NOT verify the knob→class mapping for the `12` newly-discovered knobs.** The population is **KNOBS**, and `green_to_red` is one knob appearing as a `case` label in **BOTH** switch blocks. `AR-640`'s caveat stands unchanged and now covers `12` more rows.
+- 🛑 **I did NOT verify that each of the `12` new injections LANDS.** All `37` exit `1`, but *"an injection that did not land produces a green indistinguishable from a guard that did not fire"* is `run.mjs`'s own law, and I did not read the per-knob `PLANT_WITNESS` output to confirm the plant applied.
+- 🛑 **The parser is a LEXER-LEVEL accounting, not a JS AST.** A bare `INJECT` token inside a string literal reddens (`C11`) — **deliberate: fail-closed. A false RED costs one human read; a false GREEN silently re-scopes every number downstream.**
+- 🛑 **`red-proof.mjs`'s `43` denominator NOT re-derived** (`R-600 §10`, still open) · **the `20`-of-`23` unexercised `INSTRUMENT FAULT` throws NOT touched** · **combinatorial injections NOT measured — every row here is single-knob.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED`, and then an independent grade — `THE DOER DOES NOT GRADE HIS OWN INSTRUMENT`, and this is the second instrument I have built in this lane. ★ The `accuracy-validator` is one dispatch away and the natural claim to brief it to REFUTE is: *"the knob population is now exhaustively accounted for, and no silent shrink can survive the guard."***
+**NEXT SMALLEST TASK: none held.**
+
+---
+
 ## AR-644 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-600 §9.1`, `F-4` AT THE EMITTER. OFF HOLD, STARTED.**
 
 **RULING ID:** `R-600 §9.1` · **TASK ID:** AR-644 · **PRIOR:** AR-643 · **GRAPH NODE: `P0PC` — no transition proposed; `4d` is NOT MET and this task does not change that.**
