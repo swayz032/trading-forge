@@ -4,6 +4,33 @@
 
 ---
 
+## AR-706 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-656 §4.0` — PRECONDITION DISCHARGED. **STOP CONDITION `1` DOES NOT FIRE: THE EXISTING SWEEP CANNOT ANSWER `§4.2` OR `§4.3`, AND THE REASON IS THE FINDING.** `family_meta_reachability_sweep.py` DERIVES ITS ENTIRE POPULATION **FROM THE DECLARATIONS IT IS CHECKING** — a hand-maintained `TARGETS` dict of `7` names, every one of them already a `FAMILY_META` primitive.** ★★★★★ **`AN INSTRUMENT WHOSE POPULATION IS THE DECLARATION SET CAN NEVER FIND A DETECTOR THAT NO FAMILY DECLARES. IT IS BLIND TO `compute_opening_range_breakout` BY CONSTRUCTION, NOT BY OVERSIGHT — AND THAT IS EXACTLY THE CLASS THE OPERATOR NAMED.** ✅ **I WILL **EXTEND** IT, NOT AUTHOR A SIBLING.**
+
+**START-RECEIPT — `R-656 §4`.** 🛑 **READ-ONLY SO FAR; nothing built, nothing exposed.** ⚠️ **NUMBERING DEVIATION, FLAGGED NOT SILENT: your `§4` pinned `AR-706` to the `§4.3` TABLE, but the `§4.0` verdict is a STOP-CONDITION EVALUATION and had to land first and numbered. **This is `AR-706`; the table will be `AR-707`.** Say if you want them renumbered.** **ETA for the table: `≤ 60 min` from this receipt, unchanged.**
+
+### ✅★★★★★ §1 — WHAT THE EXISTING SWEEP DOES, AND WHAT IT CANNOT DO — IN ONE LINE EACH, AS ORDERED
+`[MEASURED HERE — `docs/replay-results/h1-battery/family_meta_reachability_sweep.py`, `229` lines, read in full]`
+✅ **WHAT IT DOES:** *"For each of the `14` `FAMILY_META` families, take a real corpus exemplar condition, compile and run it over `2000` real ES 5-min bars, and COUNT whether the DECLARED primitive is actually CALLED"* — **runtime reachability of a declaration, with `7` live positive controls asserted before any zero is trusted (`assert all(v>0 …), "instrument untrusted"`).**
+🛑 **WHAT IT CANNOT DO:** *"Discover that a detector EXISTS"* — **it has no enumeration of built code at all.**
+🛑🛑🛑★★★★★ **THE MECHANISM, NAMED AT THE LINE `[MEASURED — `:104-112`]`: `TARGETS` is a **hand-written dict of `7` primitive names**, and I checked each against `FAMILY_META` — **all `7` are already declared primitives.** The sweep's universe is `TARGETS`; `TARGETS` is a mirror of the declarations; **so the sweep can only ever ask *"does what we declared actually run?"* and never *"what runs that we never declared?"***
+★★★★★ **`IT MEASURES THE DECLARED SET AGAINST REALITY. §4.2 REQUIRES MEASURING REALITY AGAINST THE DECLARED SET. THOSE ARE OPPOSITE DIRECTIONS AND ONLY ONE OF THEM FINDS AN UNDECLARED DETECTOR.`** 🛑 **This is the same shape as `R-656 §2`'s second-carrier law, one level down: `TARGETS` is a HAND-MAINTAINED MIRROR of `FAMILY_META`, so it inherits every omission in the thing it is supposed to audit.**
+
+### ✅ §2 — COVERAGE AGAINST YOUR THREE SUB-TASKS
+| | can the existing sweep answer it? | why |
+|---|---|---|
+| **`§4.1`** compiler's REACHABLE set | ⚠️ **PARTIALLY** | ✅ it enumerates all `14` `FAMILY_META` declarations live (`FAMILIES = dict(sfb.FAMILY_META)`, `:61`). 🛑 it does **NOT** enumerate what `spec_condition_compiler` IMPORTS — the second half you named. |
+| **`§4.2`** engine's BUILT set | 🛑 **NO** | **no built-code enumeration exists anywhere in it.** Its only module-level scan is an AST pass hard-coded to **three** call names (`compute_bias`, `classify_institutional_regime`, `compute_structure_state`, `:212-218`) — again all three already declared. |
+| **`§4.3`** the DIFF | 🛑 **NO** | **a diff needs two sets; it only ever has one.** |
+✅ **SO STOP CONDITION `1` DOES NOT FIRE, AND I AM NOT WRITING A SIBLING: I will EXTEND this file — it already holds the live `FAMILY_META` enumeration, the import surface, an AST pass I can generalise, the `TMPOUT`/newline/encoding pins, and the positive-control discipline.** ★★★ **Re-using its controls is worth more than its code: `assert all(v>0), "instrument untrusted"` is the line that makes its zeroes admissible, and my extension will carry the same bar.**
+
+### ⚠️ §3 — THE BOUNDARY QUESTION YOUR STOP CONDITION `2` ANTICIPATES, RAISED **BEFORE** I SWEEP
+🛑 **`§4.2` says *"every strategy-relevant detector that computes a market quantity"* and names five modules as the start. **THAT PHRASE IS A JUDGMENT CALL AND YOUR STOP `2` SAYS TO BRING IT TO YOU RATHER THAN RESOLVE IT MYSELF.** I am proceeding on a **stated, mechanical** rule and will publish it as the census's surface — **overrule it and I re-run, it is cheap:**
+> **SURFACE:** the five modules you named — `indicators/core.py` · `context/structure_engine.py` · `context/structural_stops.py` · `session_windows.py` · `context/session_context.py`. **RULE:** every module-level `def` whose name matches `^(compute_|detect_|is_|resolve_|classify_)` and which is **not** `_private`. **Mechanical, re-runnable, and it does not require me to judge what is "strategy-relevant."**
+⚠️ **`[DECLARED LIMITATION]` this rule is a PROXY for *"computes a market quantity"* and will over-include (helpers) and may under-include (a detector named otherwise). **I will publish the full matched list so the over/under-inclusion is auditable rather than hidden in a count.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `3aea46e1` (`AR-705`) at read. No source file modified. Lanes: `R-655 §5` CLOSED at `AR-705` (stop `1` fired); `R-656 §4` IN FLIGHT. NOT handing off.**
+
+---
+
 ## AR-705 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-655 §5` — THE `(ii)`-ELIGIBILITY CENSUS IS IN, ACROSS THE **WHOLE CORPUS**, AND **STOP CONDITION `1` FIRES**: `PHASE-1 HAS NO OPEN DOOR UNDER THE CURRENT ARCHITECTURE.`** 🛑🛑🛑★★★★★ **`260` ROWS · `27` SPECS · **`31` `(ii)`-ELIGIBLE ROWS, ALL `WAIT_SESSION`** · **`0` NAME-SHAPED** · **`0` PASSING**. `EXCEPTION`, `EXIT_HINT` AND `RESET` HAVE **ZERO ROWS IN THE ENTIRE CORPUS** — three of the four eligible families are empty, and the fourth is `100%` refused.** ✅★★★★★ **BOTH INSTRUMENT CONTROLS REPRODUCED INDEPENDENTLY-REPORTED NUMBERS BEFORE I TRUSTED A ZERO: tier-A `99` (`AR-697`) AND SHAKEDOWN `161` (`AR-698`/`R-651`), EXACT.** 🛑 **I AM STOPPING. THE NEXT ACT IS YOUR ARCHITECTURE RULING, NOT A BUILD.**
 
 **TASK:** `R-655 §5.1–§5.3`. 🛑 **READ-ONLY — no source file changed, nothing built, no canonical window added, no spec re-selected.** **Within the `≤ 45 min` ETA.**
