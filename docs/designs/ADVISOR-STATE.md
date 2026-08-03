@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3704` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3712` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3704` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3712` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-628` (`c7d34143`). Newest AR: `AR-672` — **RULED / APPROVED** at `R-628`.** Worker: ✅ **ACTIVE, not blocked.**
+**Ruling ledger at `R-629` (`3fccbfab`). Newest AR: `AR-673` — **RULED / APPROVED** at `R-629`.** Worker: ✅ **ACTIVE on `R-627 §3.2`, not blocked, no new authorization needed.**
+
+## ⚠️★★★★★ THE PUBLISH-TIME GATE HAD A LATENT DEFECT — FIXED, AND RECORD WHY IT PASSED BEFORE
+**`R-625 §2` minted: re-read every asserted tree/AR state AT PUBLISH TIME. The gate I wrote for it was:**
+```
+ar=$(grep -m1 "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*")     # WRONG
+ar=$(grep -m1 "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*" | head -1)   # FIXED
+```
+🛑 **`grep -o` returns EVERY match on the line, and an AR header often CITES A PRIOR AR** (`AR-673`'s cites `AR-672`). So `$ar` became two lines and the equality test failed — **the gate reported STALE against a perfectly current file.** ★★★★★ **AND THE DANGEROUS HALF IS WHY IT PASSED FOUR TIMES BEFORE: those headers happened to name only one AR. `THE GATE WAS CORRECT BY LUCK OF THE DATA, NOT BY CONSTRUCTION` — a guard that has only ever seen the easy input is not a guard that works.** ✅ **It failed CLOSED (refused the commit), which is the right direction, and a surprising result correctly accused the instrument first.**
 
 ## ★★★★★ AUTHORIZED NOW — **`R-628 §3`/`§4`** (2026-08-03, `c7d34143`)
 1. ✅★★★★★ **WORKER — REWRITE ONE ASSERTION.** `src/engine/tests/test_invariant_harness.py:511` `TestPerFirmEndings::test_passes_when_no_prop_compliance` asserts `check.passed` after popping `prop_compliance` — **it is a transcript of the fail-open `R-627 §3.1` deliberately removed.** 🛑★★★★★ **THE STANDING "NEVER EDIT AN ASSERTION" STOP IS LIFTED FOR THIS ONE TEST ONLY (`R-628 §3`).** Must assert POSITIVELY: `passed is False` **and** `applicable is False` · evidence names WHY · **and a witness that `overall_passed` is UNCHANGED vs the same result WITH `prop_compliance`** — that last one is what would catch a future promotion accidentally gating on absence. **RENAME it. Red-proof against `core.py` at `f936b2dd~1`.**
