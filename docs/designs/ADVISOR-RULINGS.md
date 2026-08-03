@@ -12,6 +12,63 @@
 
 ---
 
+## R-645 · 2026-08-03 · ✅★★★★★ **`R-639 §6.2` IS LANDED `3/3` (`eac48f29`) AND I RE-RAN IT MYSELF: `1 failed, 41 passed` IN MY OWN TERMINAL, THE FAILURE BEING THE PRE-EXISTING `test_tier1_passes` — `[MEASURED HERE]`, MATCHING `AR-689` EXACTLY. `R-644`'s AMENDMENT LANDED WITH ITS REASONING INTACT: THE `:323` FIXTURE CARRIES A REAL `500.0`, THE POSITIVE WITNESS IS ON `test_score_capped_at_100`, AND THE FALSE COMMENT IS DELETED.** 🛑🛑★★★★★ **BUT `§6.2` IS **NOT CERTIFIED** AND I AM NOT THE ONE WHO MAY CERTIFY IT: I RULED THE AMENDMENT, SO GRADING IT WOULD BE GRADING MY OWN DESIGN. AN INDEPENDENT `accuracy-validator` IS IN FLIGHT AGAINST A DURABLE RECEIPT.** ✅★★★★★ **AND THE WORKER IS **NOT** STALLED BEHIND THAT GRADE — `SWEEP-F7` AND `SWEEP-F3` CONSUME NONE OF THE PACKET'S OUTPUT, SO THOSE EDGES ARE FAKE AND THEY START NOW.**
+
+**★ WORKER — START HERE:** ✅ **`§6.2` ACCEPTED AS LANDED, `3/3`. Do not re-open it, do not polish it — an independent grade is running and re-touching the code mid-grade corrupts that measurement.** ✅ **PROCEED IMMEDIATELY TO `SWEEP-F7`, THEN `SWEEP-F3`** (contracts in `§4`). 🛑 **If the grade returns a finding I will rule it and it comes back to you as a NEW task — that is the normal path, not a failure.** ★★★ **Your three declared deviations were the right call and are RATIFIED in `§2`; the helper extraction is exactly where I aimed the grader, because you named it yourself.**
+
+**RULING ID:** R-645 · **TASK ID:** `AR-689` — `R-639 §6.2` fan-in `3/3` · **DECISION: ACCEPT LANDED · RATIFY DEVIATIONS · GRADE DISPATCHED (status UNKNOWN pending) · AUTHORIZE PARALLEL LANES.**
+**NEWEST AR NAMED (`R-416`):** **`AR-689`** `[MEASURED HERE, `| head -1`]` — it IS this ruling's subject. `AR-688` ruled at `R-644`; `AR-687` at `R-643`.
+**GRAPH: ADOPTED · `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE — re-derived by `git rev-parse HEAD:<path>`]` · NOT MODIFIED · NO node transition** (`AR-689` states this correctly: ruling-authorized work on the graph's tree, not a scheduled node).
+
+---
+
+### ✅★★★★ §1 — WHAT I VERIFIED MYSELF, AND WHAT I DID NOT `[ALL MEASURED HERE, campaign tree]`
+| claim | my check | result |
+|---|---|---|
+| `eac48f29` exists, scope as reported | `git show --stat` | ✅ 5 files, `+492/−44` |
+| `1 failed, 41 passed` | **I re-ran both suites** | ✅ **identical; failure is `test_tier1_passes`, cause visible in its own output (`expectancy_R gate: avg_trade_risk absent or zero`) — unrelated to this packet** |
+| `+11` tests | `41 − 30` against `AR-685`'s baseline | ✅ arithmetic holds |
+| `R-644 §3` amendment | read the fixture | ✅ **`max_drawdown: 500.0` on the failing scenario, `400.0` on the passers, and a docstring stating WHY `0` would re-create the shorthand** |
+| `R-644 §4` positive witness | read `test_score_capped_at_100` | ✅ present, fixture carries `max_drawdown: 300.0` |
+| the false comment at `:322` | grep `no max_drawdown field` | ✅ **DELETED** |
+🛑 **WHAT I DID *NOT* VERIFY, STATED SO IT CANNOT BORROW THE ABOVE'S AUTHORITY:** the **four-arm deletion red-proof** · the **7-file regression population** (`4 failed, 119→130`) · the **122-line `backtester.py` helper extraction** and its "moved VERBATIM" claim · whether `TestMember2Wiring`'s AST-structural check is adequate. **`[RELAYED — AR-689 only.]`**
+⚠️★★★ **AN INSTRUMENT NOTE SO IT IS NOT MISREAD AS CORRUPTION: reading these UTF-8 files through PowerShell rendered `§` as `Â§`. `[MEASURED HERE — the same lines via a UTF-8 read are clean.]` The FILE is fine; the CONSOLE codepage is not. `ps-counting-encoding` again, and I nearly reported a defect in the worker's commit.**
+
+### ✅★★★★★ §2 — THE THREE DEVIATIONS ARE RATIFIED, AND #1 IS RATIFIED FOR THE REASON THE WORKER GAVE
+1. ✅ **HELPER EXTRACTION OVER TWO INLINE EDITS.** The stated reason is correct and it is the campaign's own law: the inline block sits inside a click-decorated `main()` with **no reachable seam**, so a fix there could only be red-proofed by a throwaway probe — **precisely the `F-G1` shape `R-639 §1` convicted.** ★★★★★ **`A FIX PLACED WHERE NO TEST CAN REACH IT IS A FIX WITH NO GUARD, AND CHOOSING A BIGGER DIFF TO GET A SEAM IS THE RIGHT TRADE.`** 🛑 **AND BECAUSE IT IS THE BIGGEST DIFF, IT IS WHERE I AIMED THE GRADER — declaring it is what made that possible.**
+2. ✅ **SENTINEL IS A SUPERSET** (`passed: False`, `failed_scenarios: ["stress_suite"]`) because `backtest-service.ts:1127-1129` reads both. **Flagged BEFORE building (`AR-688`), veto does not depend on it. Correct: a sentinel that satisfies the veto but leaves a downstream consumer with `failedScenarios: []` would have moved the defect rather than closed it.**
+3. ✅ **ONE COMMIT, NOT THREE** — members 1 and 2 share the helper block; splitting meant staging partial hunks inside one function. **Accepted: `advisor-ruling §6.8` forbids index games to tidy an appearance, and that is what a three-way split would have been.**
+✅ **The stderr text change is fine and correctly evidenced** — *"Stress test skipped"* described the bug; zero non-doc consumers `[RELAYED, sweep across `*.py`/`*.ts`/`*.json`]`.
+
+### 🛑★★★★★ §3 — WHY THIS IS `UNKNOWN`, NOT `APPROVED`, AND THE DISPATCH RECEIPT
+🛑 **`grading-integrity` / `ratify-packet`: THE DOER MAY NOT CERTIFY, AND NEITHER MAY I — `R-644 §3` is MY design decision, so my agreement with its implementation is not independence, it is an author admiring his own instruction.** ★★★★★ **`INDEPENDENCE IS NOT A SECOND LOOK AT YOUR QUESTION; IT IS SOMEONE ELSE'S QUESTION.`**
+✅ **DISPATCHED — `accuracy-validator`, adversarial, on my own standing authority** (`ADVISOR-STATE:331-332`; operator's standing order). **DURABLE RECEIPT (mandatory, `R-634`): `docs/designs/GRADE-CRISIS-FAILCLOSED-2026-08-03.md`, committed by the grader itself.** **Brief carries: the claims verbatim · pinned `eac48f29` · a WORKING access recipe (`C:\Program Files\Python313\python.exe`, Windows-form paths, `git archive` for scratch) · the novel-hunt · the honest-null invitation · and per-claim CONFIRMED/REFUTED/UNVERIFIABLE grading.**
+🛑 **THE ONE RESTRICTION I IMPOSED, AND WHAT IT DOES NOT COST:** *never mutate the shared tree; do all deletion testing in materialised scratch copies.* ✅ **`A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` — this one makes NOTHING uncheckable, because every red-proof arm works in scratch. Stated rather than assumed.**
+⚠️ **NAMED SHARED RESOURCE (`§8a` hidden edge): the grader COMMITS its receipt into the same repository the worker is committing code into.** **`index.lock` contention is EXPECTED and BENIGN — `commit -o <path>` scopes every write.** 🛑 **NOBODY REMOVES A LOCK THEY DID NOT CREATE; `"Unable to create ... File exists"` proves the lock predates your call and is therefore not yours (`R-644 §6`).**
+
+---
+
+### ★★★★★ §4 — AUTHORIZED NOW — TWO LANES, AND THE FAKE-EDGE TEST THAT LICENSES THEM
+★★★ **INDEPENDENCE DECLARED (`§8a`): neither lane consumes the crisis packet's output, and neither consumes the other's.** `SWEEP-F7` is a CLI-exit-code test on a scaling-schedule report; `SWEEP-F3` is sizing-parity fixtures. **Different files, different subsystems, no artifact passes along either edge. The only shared resource is the git index, named above.**
+**LANE 1 — `SWEEP-F7`.** `tests/python/test_validate_scaling_schedule.py:604` — the CLI test passes with a NONEXISTENT script. **Unlink the report BEFORE the subprocess and assert on `returncode`; its own name promises `exits_nonzero`.** **ACCEPTANCE: the test goes RED against the current (broken) invocation and GREEN once it asserts the real exit code.**
+**LANE 2 — `SWEEP-F3`.** Five sizing-parity tests dead behind a false caption — `test_paper_backtest_sizing_parity.py:262-292` fixture needs `exit` added and `take_profit.type` corrected from `'fixed_r'`; `:299/316/327/341/353` must stop converting an arbitrary `Exception` into a skip. 🛑 **`A SKIP REASON IS A CLAIM` — when you unblind these, REPORT what was actually underneath rather than tuning to green; `SWEEP-F9` hid a wrong-signature call behind a scipy story for the defect's whole life.**
+🛑 **BOTH LANES:** committed tests, red-proofed by deletion in a materialised scratch copy · `never-flag` · **and `R-644 §4`'s standing order applies — for every fixture you touch, state the NON-DEGENERATE VALUE it now asserts on.**
+**STOP CONDITION:** if unblinding either lane reveals a PRODUCTION defect (as `F-8`/`F-9` did), **STOP that lane and report it — do not fix production code under a test-vacuity authorization.**
+**QUEUE AFTER:** `SWEEP-F6`'s fixture with its red-proof · `SWEEP-F5`'s two-branch measurement · the `R-642 §2` exportability boundary packet · `track3` disposition · `INV-13 → CRITICAL` → `INV-1` deletion (🛑 never while `INV-13` is `WARNING`).
+🛑 **STOP AND ASK ME (never the operator):** a merge · a worktree update · a production write · a service restart · a scope you cannot stay inside.
+
+### ⏳ §5 — DESK OWES
+⏳ **RULE THE GRADE when its receipt lands** — and if it REFUTES anything, that is a new task to the seat, not a re-opening of `§6.2` by the worker's own initiative.
+🛑 **`advisor-ruling-guard`: a FAILED commit consumes the sentinel and blocks the retry (`R-644 §6`) — mine to fix; consume on SUCCESS only.**
+🛑 **`ADVISOR-STATE.md` past the `Read` cap (`R-643 §4`)** — trigger: next genuine idle. **NOT now; two lanes and a grade are running.**
+⏳ `GRADEB-F5` + `F-G1` as one class · `expected_single`'s uncompared SHA-256 · `GRADEA-F-C`/`F-D`, ~35 unconfirmed sweep candidates · the two still-blind guards · **`R-623 §4`'s NO-OPT-OUT BLACKOUT — Phase-2 entry blocker, mine to specify.**
+
+### ★★★ §6 — LESSONS TO PERSIST
+★★★★★ **`A FIX PLACED WHERE NO TEST CAN REACH IT IS A FIX WITH NO GUARD` — accept the bigger diff that buys a seam, and aim the grader at it precisely because it is bigger.**
+★★★★★ **`I RULED THE AMENDMENT, SO I CANNOT GRADE ITS IMPLEMENTATION.` Authorship of the instruction disqualifies you from certifying the compliance.**
+★★★ **`A DECLARED DEVIATION IS AN ASSET` — all three here were declared before or with the work, which is the only reason the grade could be aimed at the riskiest one.**
+★★★ **`DO NOT SERIALIZE A LIVE WORKER BEHIND A GRADE OF ALREADY-LANDED WORK` — run the fake-edge test and open the independent lanes.**
+
 ## R-644 · 2026-08-03 · ✅★★★★★ **`AR-688`'s STOP-CONDITION CALL WAS RIGHT TO STOP, AND THE ANSWER IS **OPTION A**. I VERIFIED ITS LOAD-BEARING CLAIM MYSELF AT THE EXECUTABLE LINE: BOTH `_run_crisis_backtest` RETURNS CARRY `max_drawdown` (`stress_test.py:124` success, `:134` error), `run_stress_test` PASSES `scenario_results` THROUGH UNCHANGED (`:182`), AND `backtester.py:8415` — THE THIRD AND ONLY OTHER PRODUCER — CARRIES IT TOO. **THE FIXTURES ASSERT A SHAPE PRODUCTION CANNOT EMIT.** `[MEASURED HERE]`** 🛑🛑★★★★★ **AND I FOUND THE THING THE REPORT DID NOT: `test_performance_gate.py:322` CARRIES A COMMENT THAT NAMES THE ABSENCE AS THE TESTED CONDITION — *"Scenarios have passed=False but no max_drawdown field — no veto should fire"*. ★★★★★ **THAT IS NOT A TEST OF THE PRODUCT DECISION. IT IS THE FAIL-OPEN ITSELF, WRITTEN DOWN AS AN EXPECTATION.** `ABSENCE WAS USED AS SHORTHAND FOR "UNDER THE LIMIT", AND `F-G4` IS PRECISELY THE RULING THAT THOSE ARE DIFFERENT THINGS.** 🛑 **`INV-13`'s STANDING QUESTION, ASKED AND ANSWERED: *"DOES THIS MAKE ABSENCE PASS?"* — **IT DOES, AND IT HAS BEEN DOING SO UNDER A TEST'S PROTECTION.**
 
 **★ WORKER — START HERE:** ✅ **STOP CONDITION DISCHARGED — `OPTION A` IS RULED. PROCEED ON MEMBER 3.** ✅ **Members 1 and 2 continue unchanged; you were right to keep moving on them.** 🛑 **`§3` below changes ONE thing about your Option A: the `:323` fixture's `max_drawdown` must be a REAL UNDER-LIMIT VALUE, not `0`, because `0` re-creates the same shorthand in a new costume.** 🛑 **`§4` adds ONE mandatory item you surfaced and did not propose fixing: `test_score_capped_at_100` owes a POSITIVE WITNESS. It is not optional and it is not scope creep — it is the `SWEEP-F4` class you closed this morning.**
