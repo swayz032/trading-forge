@@ -4,6 +4,36 @@
 
 ---
 
+## AR-688 · 2026-08-03 · ✅ **PACKET LANDED (`1c9c5ecf`) — `R-639 §6.2` STAGED BEFORE ANY CODE, AS ORDERED.** 🛑🛑★★★★★ **AND IT HIT YOUR OWN STOP CONDITION ON MEMBER 3: `F-G4` IMPLEMENTED **EXACTLY AS `§6.2.3` WORDS IT** TURNS TWO EXISTING TESTS RED — ONE OF WHICH `performance_gate.py:332-342` CALLS *"a deliberate product decision"*. THIS AR IS THAT REPORT. MEMBERS 1 AND 2 ARE UNCONFLICTED AND I AM PROCEEDING ON THEM NOW.**
+
+**ARTIFACT:** `docs/designs/CRISIS-FAIL-CLOSED-RATIFY-PACKET-2026-08-03.md` (`1c9c5ecf`). **Five parts + the collision block at the top. Read that block first; everything else is standard.**
+✅ **`R-643` READ IN FULL — old ear `bash 32468` / task `b3ukzmyrv` RETIRED, verified by its own command line (`2s poll, grep '^## R-', session=36e08bf7`) and not by PID order.** **ONE rig on the worker channel again: my 20s commit poll.** ⚠️ **HONEST DELTA: the retired ear watched the FILE and carried a deafness alarm; mine watches COMMITS and has none. Commits are the publishing act (`R-641 §3`), so the channel is right, but an uncommitted splice is invisible to me and I would rather say so than let you assume coverage I do not have.**
+
+### 🛑🛑★★★★★ THE STOP CONDITION, WITH THE FAILURE-SET DIFF YOU ASKED FOR
+**`[MEASURED HERE — materialised scratch copy (`git archive HEAD | tar -x`); THE SHARED TREE WAS NEVER MUTATED.]`**
+
+| tree | `python -m pytest src/engine/tests/test_performance_gate.py -q` |
+|---|---|
+| campaign, unmodified | **`1 failed, 30 passed`** (`test_tier1_passes`, pre-existing — matches `AR-685`) |
+| scratch + `F-G4` exactly as worded | 🛑 **`3 failed, 28 passed`** — `+ test_crisis_veto_all_pass_no_score_change` `+ test_crisis_partial_fail_without_dd_breach_no_veto` |
+
+🛑🛑★★★★★ **AND THE HALF THE DIFF DOES NOT SHOW, WHICH IS THE WORSE ONE: `test_score_capped_at_100` STAYS GREEN AND STOPS TESTING ANYTHING.** Its only assertion is `score <= 100`; under `F-G4` its fixture vetoes, so it asserts on `0.0` `[MEASURED HERE: `score= 0.0 veto= True`]`. ★★★★★ **`A FAILURE-SET DIFF ONLY SEES TESTS THAT CHANGE VERDICT. A TEST THAT GOES VACUOUS CHANGES MEANING WITHOUT CHANGING COLOUR` — I would have reported "2 new failures" and shipped a dead cap test.**
+
+**WHY:** all three fixtures use scenario dicts with **no `max_drawdown` key at all** (`test_performance_gate.py:256`, `:323`, `:338`), and `F-G4` routes a missing key to `crisis-stress-unevaluated`.
+✅ **THE DISCRIMINATOR, AND IT IS CHECKABLE:** **the real producer cannot emit that shape.** `[MEASURED HERE]` `_run_crisis_backtest` has exactly two returns and **both carry `max_drawdown`** — `stress_test.py:121-128` (success) and `:131-139` (CRASHED). `run_stress_test` passes them through unchanged (`:181-186`), and `backtester.py:8420` is the sole non-test producer (`R-639 §5`, re-confirmed here). **So the fixtures assert a shape production cannot produce.**
+🛑 **BUT I AM NOT TAKING THAT CALL.** `performance_gate.py:332-342` names `test_crisis_partial_fail_without_dd_breach_no_veto` as a deliberate product decision and `R-633` ruled on it. **Editing three existing tests to make my own change pass is indistinguishable in a diff from tuning to green, and `R-639 §8` is the reason: `A BEHAVIOUR PROTECTED BY A TEST IS NOT NECESSARILY INTENDED BEHAVIOUR` — deciding which of the two this is, is yours.**
+
+### THE THREE OPTIONS (detail + reasoning in the packet, `§0`)
+- **A — `F-G4` as written + correct the three fixtures to carry an explicit `max_drawdown`.** Keeps the product decision in its real meaning (*partial failure WITH a real drawdown under the limit does not veto*) and makes the fixtures producible. **← MY RECOMMENDATION.**
+- **B — narrow `F-G4` to `None`/non-finite only.** No test moves; leaves `s.get("max_drawdown", 0.0)`'s vacuity exactly where `R-639 §4` found it.
+- **C — as written, leave them RED** (`R-638` precedent). **Not recommended: two of the three would be red for a shape production cannot emit — noise, not honesty.**
+
+### PROCEEDING NOW, WITHOUT WAITING
+**MEMBER 1 (`F-1b` threading) and MEMBER 2 (`F-G3` sentinel + the rescore second hop) do NOT depend on this ruling and are unconflicted — I am building them now, each with its committed test and its deletion-red-proof in scratch.** **Member 3 is the only thing parked.** ⚠️ **ONE PROPOSED DEVIATION FROM THE LITERAL SENTINEL SHAPE, FLAGGED NOT TAKEN SILENTLY: I intend to add `"passed": False` and `"failed_scenarios": ["stress_suite"]` to the top level of the sentinel, because `backtest-service.ts:1127-1129` reads both and would otherwise persist a crashed run with `failedScenarios: []`. The veto does not depend on it. Say the word if you want the literal shape instead.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `1c9c5ecf`.**
+
+---
+
 ## AR-687 · 2026-08-03 · ⏱️ **START-RECEIPT — FRESH WORKER SEAT OPEN. I AM TAKING `R-639 §6.2` (the crisis-fail-closed `ratify-packet`), WHICH `R-642 §5` LEFT AUTHORIZED AND UNSTARTED.**
 
 **TASK:** `R-639 §6.2` — ONE `ratify-packet` for the CLASS *a crisis evaluation that did not happen, or that was compared against the wrong limit, must never score as clean*: `F-1b` threading → `F-G3` sentinel (+ the rescore second hop) → `F-G4` schema, then the `performance_gate.py:331-341` comment correction. **Three members, one packet, one concept.**
