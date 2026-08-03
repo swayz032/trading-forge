@@ -4,6 +4,99 @@
 
 ---
 
+## AR-709 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-658 §5` — THE DESIGN. **VERDICT: `NOT BUILDABLE` FOR THE ROW YOUR RULING NAMED, AND `STOP CONDITION 1` FIRES — `§5.2`'s HONESTY ARGUMENT CANNOT BE MADE FOR THE GOLDEN SLICE'S `WAIT_SESSION` ROW.** THE REASON IS MECHANICAL, NOT A JUDGMENT CALL: **THAT ROW CARRIES ALL THREE TAUGHT WINDOWS IN ONE OBJECT** — `6` CLOCK TOKENS, `4` DISTINCT MINUTE ANCHORS `[570, 575, 585, 600]`. **ANY BIND PICKS ONE OF THREE, AND A PICK IS A DERIVATION LOSS.**** ✅★★★★★ **BUT THE LANE IS NOT DEAD: `§5.1`–`§5.4` ARE SPECIFIED IN FULL FOR THE CASE WHERE THE ARGUMENT **CAN** BE EARNED, AND **I FOUND A ROW IN THE PHASE-1 POPULATION THAT MEETS IT EXACTLY** — SINGLE SPAN `9:30→9:45`, AN OPENING-RANGE TEACHING, MATCHING `compute_opening_range_breakout`'s **DEFAULT PARAMETERS** WITH ZERO DERIVATION. 🛑 **REPORT ONLY — SPEC RE-SELECTION IS YOURS AND IS ON YOUR FORBIDDEN LIST.**
+
+**TASK:** `R-658 §5.1`–`§5.4`, as ratified by `R-659`. 🛑 **DESIGN ONLY — NOTHING BUILT, NO SOURCE FILE MODIFIED, NOTHING EXPOSED, NO `FAMILY_META` ENTRY ADDED, NO FLAG FLIPPED.** ✅ **`STOP CONDITION 3` ALSO FIRES — blast radius is NOT `0` under the naive predicate, and `§8` is that report, delivered before proceeding as ordered.**
+
+### ✅★★★★★ §1 — INSTRUMENT CONTROLS FIRST. BOTH REPRODUCE INDEPENDENTLY-REPORTED TOTALS
+`[MEASURED HERE — tier-A `11` specs via `tier-a-compile-census.json` → `phase_b` → `produce_spec_artifact`; shakedown `16` via `shakedown_specs/*.spec.json`; the join `AR-705` published]`
+| control | mine | independently reported |
+|---|---|---|
+| total condition rows | **`260`** | ✅ `260` (`AR-705`) |
+| `WAIT_SESSION` rows | **`31`** | ✅ `31` (`AR-705`) |
+| rows carrying ≥1 clock token | **`7`** | ✅ `7` (`AR-705 §2`) |
+✅ **THREE EXACT REPRODUCTIONS ON A POPULATION I ENUMERATED FROM THE SOURCE ARTIFACTS RATHER THAN FROM `AR-705`. The instrument is admissible before any of the zeroes below.**
+
+### 🛑🛑🛑★★★★★ §2 — `STOP CONDITION 1` FIRES. THE ROW IS A **THREE-WINDOW** ROW, AND I PROVED IT WITH THE ENGINE'S OWN REGEX
+**THE ROW, VERBATIM** `[MEASURED — `produce_spec_artifact` output, id `WAIT_SESSION:the-5m-minute-ob-takes-place-from-9-30-a#1`, role `spine`]`:
+> *"The 5m minute OB takes place from **9:30 a.m.** Eastern to **9:35 a.m.** Eastern. The 15-minute is the first 15 minutes of the market. So, from **9:30** to now **9:45**. And the 30 minute is from **9:30** to **10 a.m.** Eastern."*
+`[MEASURED — `sfb._SESSION_CLOCK_TOKEN_RE`, the engine's own tokenizer, not my eye]`: **`6` tokens → `4` distinct minute anchors `[570, 575, 585, 600]` → THREE spans: `[570,575)`, `[570,585)`, `[570,600)`.**
+✅ **DISCRIMINATING CONTROL, because a token count is only evidence if it separates:** the same tokenizer returns **`2`** on a genuinely single-span phrase (*"the 5m OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern"*), **`0`** on *"the london session"*, and **`0`** on the pinned known-bad *"you might have a long idea for your session"*. **`6` vs `2` vs `0` is a real separation, not a threshold I chose.**
+🛑🛑★★★★★ **THEREFORE `approximation=False` CANNOT BE EARNED ON THIS ROW BY ANY ROUTE. `§5.2` SETS THE BAR AS *"no derivation loss between the taught text and `[570,575)`"*. **THE TAUGHT TEXT OF THIS ROW YIELDS THREE WINDOWS; SELECTING ONE IS EXACTLY A DERIVATION LOSS, AND ASSERTING EXACTNESS OVER A THREE-WAY CHOICE IS THE FIDELITY LIE THE SECTION FORBIDS.**
+🛑 **AND THE TEMPTING ESCAPE IS THE ONE THE DESK ALREADY OUTLAWED: binding it to the `30`-minute because `R-655 §1` showed the educator's WORKED EXAMPLE is the `30`. **That is compiling a parameterised family as a chosen instance, and `R-655 §7` minted the law against it in this exact strategy.** Compiling it as its *worked* instance instead of its *first* instance is the same act with a better excuse.**
+
+### 🛑🛑★★★★★ §3 — AND THE DISAMBIGUATION **EXISTS ONE LAYER UP**, ALREADY SEPARATED, AND IS DELIBERATELY DISCARDED
+`[MEASURED — `phase_b/st5e-YJRfKc__s0.json`, `strategies[0].variants`]` **the extraction ALREADY carries the three windows as three LABELLED, INDIVIDUALLY-SCOPED objects:**
+| `variant_label` | `description` | span |
+|---|---|---|
+| `5-minute opening range` | *"The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern."* | `[570,575)` |
+| `15-minute opening range` | *"The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45."* | `[570,585)` |
+| `30-minute opening range` | *"And the 30 minute is from 9:30 to 10 a.m. Eastern."* | `[570,600)` |
+🛑 **`produce_spec_artifact` COLLAPSES the one `entry_sequence` step into ONE row and DOES NOT CARRY `variants` — the spec body's keys are `direction · entry_conditions · and_groups · or_branches · invalidations · entry_trigger_id · framework_overlay`. `variants` is gone.**
+⚖️★★★★★ **AND I AM NOT CALLING THAT A DEFECT, BECAUSE I READ THE REASON AND IT IS GOOD `[MEASURED — `spec_producer.py:614-624`]`:** `or_branches` is **PINNED EMPTY, HONESTLY**, because across the design-pool `22` the `variants[]` field is *"HETEROGENEOUS — direction-mirrors, alternate confirmation blends, timeframe variants, re-entry locations, and pure risk-management variants… Deriving OR-branches from this mixed field would FABRICATE untaught runnable structure."* ★★★ **THAT IS THE SAME ANTI-FABRICATION DISCIPLINE THIS CAMPAIGN RUNS ON, AND I AM NOT PROPOSING TO OVERTURN IT.**
+🛑🛑🛑★★★★★ **BUT IT LOCATES THE FAILING LAYER, WHICH IS THE POINT OF `§2`: `THE INFORMATION THAT WOULD MAKE THIS ROW EXACT EXISTS, IS ALREADY DISAMBIGUATED, AND IS DISCARDED ONE LAYER ABOVE THE BINDER — SO NO BINDER CHANGE CAN RECOVER IT.` **`R-658 §5` scoped this as a routing problem. It is measured to be a ROW-SHAPE problem, and the row is shaped by the PRODUCER.**
+
+### ⚠️★★★★ §4 — A SECOND OBSTACLE THE RULING DID NOT NAME, AND IT SURVIVES EVEN IF `§2` AND `§3` ARE SOLVED
+🛑 **`WAIT_SESSION` asks *"are we in this session window?"* — a membership predicate, and its declared enforced primitive is `session_windows.is_in_killzone` `[MEASURED — `FAMILY_META['WAIT_SESSION']`]`. **THE TAUGHT MEANING OF THIS ROW IS NOT MEMBERSHIP.** In the educator's sequence the window is *"the interval over which the opening range HIGH and LOW are computed"* — a **PARAMETER of the mechanic**, consumed by the next rows (*"We take the opening range high and the opening range low in between these time periods"*).
+⚠️ **SO `compute_opening_range_breakout` matches the row's MEANING while `WAIT_SESSION` describes its TYPE, and the two disagree.** ★★★ **`A ROUTE THAT BINDS A MEMBERSHIP TYPE TO A RANGE-COMPUTATION PRIMITIVE IS A TYPE COERCION, AND A SILENT ONE WOULD BE THE `caption-is-a-claim` SHAPE AGAIN.` I am naming it rather than designing around it — `[UNRESOLVED — yours]` whether the honest representation is a re-type of the row or a new family.**
+
+### ✅★★★★★ §5 — `§5.1` THE ROUTE, SPECIFIED FOR THE CASE WHERE IT **CAN** BE EARNED
+**ATTACH POINT:** inside `_bind_condition_dispatch`'s `if meta.requires_session_keyword:` block (`spec_family_bindings.py:2465`), **as a THIRD route consulted only AFTER the name/keyword routes AND after every existing refusal has had its chance.**
+🛑🛑★★★★★ **THAT ORDERING IS NOT A PREFERENCE — IT IS THE LESSON ALREADY WRITTEN INTO THIS FILE AT `:2511-2529`: the orphan-zone refusal *"used to sit BELOW the role resolver, so enabling the flag converted a correct refusal into a confident bind"*, measured on `2` real rows. **A NEW ROUTE PLACED ANYWHERE ABOVE A REFUSAL REPEATS THAT DEFECT EXACTLY. The route may only ever convert `NO-BIND → BIND`, never `REFUSAL → BIND`.**
+**REGISTRY — PER `R-659`, EXTEND THE ONE REGISTRY, NEVER STAND BESIDE IT:** the primitive is declared as a **new `FAMILY_META` field on the existing `WAIT_SESSION` entry** (alongside `enforced_primitive`), **not** in a new mapping table. ★★★ **And per `R-659 §3`'s correction it is RED-PROOFED at birth: a declared mapping that is not actually reachable must FAIL A TEST — which is the cure for `FAMILY_META`'s recorded pointer lie, applied to the entry that would be added.**
+**PREDICATE — ALL CONJUNCTS REQUIRED, FAIL-CLOSED:** `(1)` exactly `2` clock tokens · `(2)` exactly `2` distinct minute anchors, ordered `start < end` · `(3)` TIER-1 market context present (`_SESSION_CLOCK_MARKET_CONTEXT_RE` — *"New York Stock Exchange"*, *"market open"*, *"cash open"*), **not** a bare timezone, which `:995-1004` records as having already bound a coaching-session sentence to `london` · `(4)` `start` equals a session anchor the primitive accepts · `(5)` no existing refusal fired.
+
+### ✅★★★★★ §6 — `§5.2` THE HONESTY ARGUMENT, AND IT INVERTS THE ROOT CAUSE YOU NAMED AT `R-655 §3`
+🛑 **`R-655 §3`'s root cause: *"`approximation=False` IS GRANTED BY MEMBERSHIP IN A PRE-ENUMERATED SET… NEVER BY DEMONSTRATED FIDELITY TO THE SOURCE."***
+✅★★★★★ **SO THE ROUTE MUST NOT GRANT IT BY MEMBERSHIP EITHER — AND IT DOES NOT NEED TO. THE MECHANISM: **PARSE the span from the taught text, EXECUTE the primitive, and grant `approximation=False` IF AND ONLY IF the primitive's computed window EQUALS the parsed span.** Not asserted — **COMPARED, at bind time.**
+★★★★★ **`THE FLAG IS THEN EARNED BY DEMONSTRATED FIDELITY RATHER THAN BY MEMBERSHIP IN A CLOSED ENUM — WHICH IS THE EXACT DEFECT `R-655 §3` IDENTIFIED AS THE CAUSE OF `0/161` AND `0/99`.` A route built this way cannot certify a window it did not reproduce, so it cannot produce the `F-1` false-pass shape by construction — and I still specify the tripwire below rather than resting on that argument.**
+⚠️ **`[HYPOTHESIS — NOT MEASURED]` that `compute_opening_range_breakout` can be evaluated cheaply enough at bind time, or that a bind-time execution is architecturally acceptable at all. **A bind that runs a detector is a bigger change than a bind that names one, and that is yours to weigh.** The falsifiable alternative is to compare against the primitive's *declared* window arithmetic rather than its output — cheaper, and one step further from demonstrated fidelity.**
+
+### ✅★★★★ §7 — `§5.3` THE RED-PROOF PLAN, **PRE-REGISTERED BEFORE ANY CODE EXISTS**
+| arm | fixture | required result |
+|---|---|---|
+| 🔴 **RED without** | the target single-span row | `bindable=False`, `reason='no_recognized_session_keyword'` → `(ii)` **BLOCK** `[MEASURED TODAY — this is the current live state, §9]` |
+| 🟢 **GREEN with** | same row | `bindable=True`, `approximation=False`, window `[570,585)` |
+| 🛑 **NEGATIVE 1** | **the golden slice's own `6`-token row** | **MUST STILL REFUSE** — the best negative arm available, because it is a REAL corpus row that a sloppy predicate would bind |
+| 🛑 **NEGATIVE 2** | *"we had a 3:00 coaching session with the mentor yesterday, EASTERN TIME"* | MUST STILL REFUSE (tier-2 context alone; `:995-1004`'s recorded false bind) |
+| 🛑 **NEGATIVE 3** | the orphan-zone overnight row | MUST STILL REFUSE in **every** flag state (`:2519-2527`) |
+| 🛑 **`F-1` TRIPWIRE, PERMANENT** | all `31` `WAIT_SESSION` rows | **NO row binds via the KEYWORD route while carrying a clock token.** Currently **`0` of `31`** — the tripwire is what keeps it `0` |
+✅★★★ **AND THE POSITIVE WITNESS, because a negative assertion needs proof the path RAN: the route increments a consult-counter, and every NEGATIVE arm asserts `consulted ≥ 1` alongside `bound == False`. **Otherwise a route that never executes passes all three refusal arms.**
+
+### 🛑🛑★★★★★ §8 — `§5.4` BLAST RADIUS. **`STOP CONDITION 3` FIRES: IT IS NOT `0`**
+`[MEASURED HERE — all `31` `WAIT_SESSION` rows tokenized]`
+| shape | n | disposition under the `§5` predicate |
+|---|---|---|
+| `0` clock tokens | **`24`** | ✅ untouched — predicate needs `2` |
+| `1` token | `2` | ✅ untouched |
+| `2` tokens, one span | **`4`** | ⚠️ **CANDIDATES — this is the blast radius** |
+| `>2` tokens, multi-span | `1` | ✅ refused — **and it is the golden slice** |
+🛑 **THE `4`, NAMED INDIVIDUALLY, BECAUSE A COUNT IS NOT A BLAST RADIUS:**
+1. `kFyD3H6I1I8__s0#6` — *"marking out the top and the bottom of that range from **9:30 to 9:45**. That's the first 15 minutes of the **New York Stock Exchange** open"* → `[570,585)`. ✅ **A TRUE OPENING-RANGE TEACHING.**
+2. `kFyD3H6I1I8__s0#18` — *"opening range with breakouts… Time period 15 minute, **9:30 to 9:45** UTC minus 4"* → `[570,585)`. ⚠️ **role `confluence`; it is a TOOL-SETTINGS sentence, not a teaching.**
+3. `kFyD3H6I1I8__s0#2` — *"two candles, this one at **7:00 a.m.** and this one at **8:00 a.m.**"* → 🛑 **`2` tokens but NOT A SPAN — two POINT references. A naive `start<end` predicate binds this WRONGLY as `[420,480)`.**
+4. `E9MzEC_yNoM__s1#1` — *"after **3:00 a.m.** Eastern… into New York market open, which is going to be **9:30 a.m.** EST"* → a genuine span `[180,570)`, but an **OVERNIGHT RANGE, NOT AN OPENING RANGE — and no detector computes it.**
+🛑🛑★★★★★ **SO THE NAIVE 2-TOKEN PREDICATE HAS A BLAST RADIUS OF `4` AND **AT LEAST ONE OF THEM (`#2`) WOULD BE A CONFIDENT WRONG BIND.** `TWO CLOCK TOKENS IS NOT A SPAN, AND I FOUND THE COUNTEREXAMPLE IN THE CORPUS RATHER THAN IMAGINING IT.` Conjunct `(3)`+`(4)` reduce it, but I have NOT proven the reduced set is `1`, and `§5.4` makes `0` unrelated changes an ACCEPTANCE CRITERION, not a hope. **Reporting before proceeding, as stop condition `3` orders.**
+
+### 🛑🛑🛑★★★★★ §9 — THE FINDING THAT MAY CHANGE YOUR SELECTION. **REPORT ONLY**
+✅ **`kFyD3H6I1I8__s0#6` IS THE ROW `R-658 §5` DESCRIBES — and it is not the one `§5` names.** `[MEASURED — live binding at default flags]`
+> **object:** *"marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session"* · **role `spine`** · **current: `bindable=False`, `primitive=None`, `reason='no_recognized_session_keyword'`.**
+✅★★★★★ **WHY IT IS THE CLEAN CASE, ON EVERY AXIS `§5` ASKS ABOUT:** **ONE** span, not three · an explicit **opening-range** teaching, so no type coercion (`§4`) · TIER-1 market context in the sentence itself · and **`compute_opening_range_breakout`'s DEFAULT ARGUMENTS — `range_minutes=15, session_start_et="09:30"` — compute `[570,585)` EXACTLY.** ★★★★★ **`THE DETECTOR'S DEFAULTS ARE THIS ROW'S TAUGHT WINDOW. THE DERIVATION LOSS IS ZERO WITHOUT ANY PARAMETER BEING CHOSEN BY ANYONE.`**
+🛑 **AND A SECOND, INDEPENDENT EDUCATOR TEACHES IT — `kFyD3H6I1I8` is not `st5e-YJRfKc`. Your `R-657 §1` argument (*"teaching in clocks is not one educator's quirk"*) now has a second instance that is also EXACT.**
+🛑🛑 **I AM NOT ACTING ON THIS. It is in the SHAKEDOWN population, not tier-A, and `re-selecting the spec` is on `R-658`'s FORBIDDEN list and was reserved to you at `R-655 §5`. **I report it because `§5`'s goal is *"the first concrete PASS in this campaign's history"*, and the row I was pointed at cannot produce one while this row might.**
+
+### 🛑 §10 — THE VERDICT `§5` REQUIRES
+🛑🛑🛑 **`NOT BUILDABLE WITHOUT WEAKENING SOMETHING` — for `WAIT_SESSION:the-5m-minute-ob-takes-place-from-9-30-a#1`, the row `R-658 §5` names.** The something is `§5.2`'s own honesty bar, and the weakening would be granting `approximation=False` over a three-way selection.
+✅ **`BUILDABLE` — for a row satisfying `§5`'s predicate, and `§5`–`§7` above is that specification.** ⚠️ **CONDITIONAL on two things I did NOT resolve: the bind-time-execution question (`§6`) and the type coercion (`§4`).**
+🛑 **TWO STOP CONDITIONS FIRED — `1` (honesty argument, `§2`) and `3` (blast radius, `§8`). Both are reported, neither is resolved, and I have started nothing.**
+
+### ⚠️ §11 — WHAT I DID **NOT** MEASURE
+⚠️ **`[NOT MEASURED]`** whether `compute_opening_range_breakout` executes correctly on the `15`/`30` variants (`R-659 §3` flags the grader executed only `range_minutes=5`) · whether the reduced predicate's blast radius is exactly `1` · whether a bind-time execution is architecturally admissible · whether any other spec's rows change verdict outside the `31` (I swept `WAIT_SESSION` only) · the `F-1` shape in the wider `73`/`155` corpus.
+🛑 **NOT DONE, DELIBERATELY: nothing built, no source file touched, no `FAMILY_META` field added, no route written, no spec re-selected, no primitive exposed.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `70310fcd` (`R-659`) at write; my last commit `41e20227`. Lanes: `R-658 §5` CLOSED by this report · `R-657 §4a` residual OWED and next. NOT handing off.**
+
+---
+
 ## AR-708 · 2026-08-03 · 🛑🛑🛑★★★★★ **START-RECEIPT ON `R-658 §5` — AND IT OPENS BY REPORTING A DROPPED OBLIGATION, BECAUSE `R-658` HAS JUST CLOSED `R-656 §4` AT FAN-IN `2/2` AND **ONE OF ITS MANDATORY CLAUSES WAS NEVER DISCHARGED.** `R-657 §4a`'s RESIDUAL ADDITION — WHICH THAT RULING MARKED **"AND IT IS NOT OPTIONAL"** — IS **ABSENT FROM THE COMMITTED CENSUS.** `[MEASURED HERE]` NEITHER THE `SYMBOL RESIDUAL` NOR THE `MODULE RESIDUAL` EXISTS IN `family_meta_reachability_sweep.py` AT HEAD `d9cf1c6a`.** ✅ **FRESH SEAT, SEATED NOW, ON THE `§5` DESIGN.**
 
 **TASK ACCEPTED:** `R-658 §5.1`–`§5.4` — **DESIGN ONLY, NOTHING BUILT.** ⚠️ **NUMBERING DEVIATION, FLAGGED NOT SILENT (`R-657 §4a` ANSWER `1` is the precedent you set): your `§5` pins the design to `AR-708`, but `R-658` landed on disk **while this receipt was being written**, and a mandatory-clause gap in a ruling you have just marked closed is a state change that must land numbered and now. **THIS IS `AR-708`; THE `§5` DESIGN WILL BE `AR-709`.** Say the word and I renumber.** **ETA for the design: `≤ 60 min` from this receipt, unchanged.**
