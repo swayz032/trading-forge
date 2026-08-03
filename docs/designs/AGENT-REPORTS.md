@@ -4,6 +4,50 @@
 
 ---
 
+## AR-664 · 2026-08-03 · 🛑★★★★★ **`§6.2` ANSWERED: **`UNKNOWN`** — AND IT IS THE PRE-AUTHORIZED ANSWER, NOT A FAILURE TO LOOK. THE HISTORICAL RECORD **CANNOT** SEPARATE DSL-PATH FROM CLASS-PATH RUNS: THE PRODUCTION DB IS **UNREACHABLE** FROM THIS SEAT, AND THE ONE PERSISTED TRADE RECORD IN THE REPO CARRIES **NO PATH FIELD AND NO TRADE-LEVEL TIMESTAMPS.**** ✅ **WHAT I *CAN* REPORT: `16` PERSISTED RUNS, **ALL NONZERO** (`16`–`18` TRADES EACH), `2026-07-19` — UNATTRIBUTABLE TO EITHER PATH.** 🛑🛑★★★ **AND I FOUND A DIRECT CONTRADICTION BETWEEN THE BATTERY'S OWN VERDICT FILE AND `R-618 §5.1`'s GRADED ATTRIBUTION. **NOMINATION, NOT A VERDICT** — `§5.4` FORBIDS RESOLVING IT AND I DID NOT TRY.**
+
+**TASK:** `R-618 §6.2` / `R-617 §5.1`. **FAN-IN: `2 / 2` — BOTH LANES CLOSED. No handoff.**
+
+### 🛑 THE ANSWER: `UNKNOWN`
+
+`R-617 §5.1` pre-authorized this exact answer — *"`UNKNOWN` is a complete answer if the record cannot distinguish the two paths — say so rather than guessing."* **The record cannot. Here is the measurement, in three parts.**
+
+**(a) THE PRODUCTION DB IS UNREACHABLE FROM THIS SEAT** `[MEASURED HERE]`
+`DATABASE_URL` → Railway (`switchback.proxy.rlwy.net:36475/railway`). **TCP OPENS** (`Test-NetConnection` → `TcpTestSucceeded: True`, `66.33.22.230`) — **so this is not a network absence** — but the session is **reset on every attempt**: `read ECONNRESET` under `ssl=require` **and** under `ssl=off`. ★★★ **Identical failure under both modes rules OUT a TLS-negotiation cause and points at credentials.** The only `.env` I may read is dated **`2026-07-13`**; the primary tree has none, and `runtime-production` is **NOT read** per `R-618 §7`. ✅ **Read-only probe throughout — `SELECT` only, no writes, no schema access; credentials redacted in every command and never written to this file.**
+⚠️ **SO THE `backtest_trades` TABLE — the source `R-617 §5.1` names FIRST — WAS NEVER READ. That is the largest gap in this answer and I am not dressing it up.**
+
+**(b) THE REPO-LOCAL TRADE RECORD EXISTS, IS NONZERO, AND IS UNATTRIBUTABLE** `[MEASURED HERE]`
+Only `4` JSON artifacts under `docs/` carry `total_trades`. The battery ledger (`docs/replay-results/h1-battery/passage-ledger.json`, `192` rows, `recorded_at` `2026-07-19T07:21`→`23:13`) carries **`16` trade counts: `18,16,18,17,17,17,18,18,16,17,18,17,18,18,17,17`.** **ZERO of them are zero.**
+🛑 **BUT IT CARRIES NO PATH FIELD.** Tokens `run_backtest` · `run_class_backtest` · `dsl` · `class_path` · `event_mask` · `ts_event` → **`0` occurrences each.** ✅ **POSITIVE CONTROL — the tokens are findable when present:** `run_class_backtest` occurs in **`24`** files under `docs/`, `run_backtest` in **`16`**. **The searcher works; the field is absent from the ledger.**
+🛑 **AND NO TRADE-LEVEL TIMESTAMPS** — so `R-618 §4`'s amended discriminator (*do surviving entries cluster inside macro windows*) **cannot be evaluated on this artifact at all.** Only `3` JSON files repo-wide carry `entry_timestamp`, and the trade-bearing one is class-path (below).
+
+**(c) NO PERSISTED *RESULT* ARTIFACT IS IDENTIFIABLE AS A DSL-PATH RUN** `[MEASURED HERE]`
+Of the `16` `run_backtest` carriers, every one that also carries trade counts is a **design doc, ruling, report or patch** — narrative, not result data. The only two JSON members are `inv-reachable-keys-2026-08-03.json` (a key census from `LANE-7`, no trade counts) and `defect9-macro-window-tally-2026-07-07.json`, which is **explicitly `run_class_backtest`.**
+
+### 🛑🛑★★★ THE CONTRADICTION I FOUND — REPORTED, DELIBERATELY NOT RESOLVED
+
+`[MEASURED HERE, `wave-1R-verdict.json:23-27`]` the battery's own verdict describes its runs as **the class-CPCV walk-forward path**, four times, naming `run_class_backtest` at `:26`.
+⚠️ **`R-618 §5.1` `[MEASURED BY GRADED INSTRUMENT]` attributes the `60`/`90` to `:5323` inside `run_backtest` — the DSL path — and used that to refute the desk's class-path reading.**
+✅★★★★★ **AND THE TWO CANNOT BOTH DESCRIBE THE SAME RUNS, BECAUSE THE PATHS ARE STRUCTURALLY SEPARATE** `[MEASURED HERE, call-graph]`: `run_backtest` spans `:3625–6540`, `run_class_backtest` spans `:6541–8062`, and **the only two `run_backtest(` call sites are `:6108` (inside `run_backtest`, the determinism re-run) and `:8325` (inside `main`). `run_class_backtest` NEVER CALLS `run_backtest`.**
+🛑 **THIS IS A NOMINATION, NOT A FINDING.** `R-618 §5.4` rules the `60`/`90` leg **single-source and unverifiable until the battery is re-run**, so I did not attempt to adjudicate it, and **nothing above should be read as re-opening it.** ★★★ **The likeliest benign explanation — that `AR-658`'s `90` and the ledger's `192` are DIFFERENT populations — is `[HYPOTHESIS, UNMEASURED]`; I did not enumerate either population.**
+✅★★★ **ONE THING THE CALL-GRAPH DOES ESTABLISH INDEPENDENTLY: `R-616 §3`'s blast-radius bound holds at the call-graph level too — the class path cannot inherit the DSL fallback defect by delegation, because there is no delegation.** That is a second, non-overlapping path to a finding previously resting on the `:6835-6837` comment.
+
+### ⚠️ INSTRUMENT AUDIT — MY OWN COUNT LIED FIRST
+
+**A raw substring count over the ledger reported `32` `total_trades`; a structural key-walk found `16`.** The other `16` are **feature-name strings inside `inputs_seen` arrays**, not fields. ★★★ **`A SUBSTRING COUNT IS NOT A FIELD COUNT.` I caught it before the number reached a conclusion, but the `32` would have doubled the population and I would not have noticed downstream.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. 🛑 **`backtest_trades` — never read** (DB unreachable). **This is the authoritative source and it is untouched.** ✅ **If the desk supplies working credentials, this becomes a ~10-minute query and `UNKNOWN` may well collapse to a real answer.**
+2. **Whether the battery's `16` runs are DSL or class** — the verdict file's attribution is **PROSE in a report, not a machine-recorded field**, and `document-vs-program` says a document cannot discharge that.
+3. **The macro-window clustering question — entirely unanswered.** No persisted DSL-path trade timestamps exist to test it.
+4. **I did not enumerate `AR-658`'s `90`-backtest population** or reconcile it with the ledger's `192`.
+5. ⚠️ **NOT LINKED, DELIBERATELY:** `defect9`'s finding that the engine's macro calendar holds **zero events before `2024-01-02`** concerns the **policy-driven** mask via `_events_for_type`, **NOT** `_build_default_event_mask_et`, which is the defective fallback. **Different code path — connecting them would be exactly the two-true-facts link `R-617 §3` forbids.**
+
+**FILES MODIFIED: NONE** (this report only). **`core.py`, `backtester.py`, `prop_sim.py` untouched. No fix applied, no patching of either production path.**
+
+---
+
 ## AR-663 · 2026-08-03 · 🛑🛑★★★★★ **`§6.1` ANSWERED — AND THE SEVERITY INVERSION IS WORSE THAN `R-618` DESCRIBED, IN THE DIRECTION THAT MATTERS. `INV-13` IS `WARNING`, ITS VERDICT HAS **ZERO CONSUMERS ANYWHERE**, AND — THE PART NOBODY HAS MEASURED — **IT IS NEITHER TAUTOLOGICAL NOR STARVED.** ITS JOIN KEY MATCHES A REAL PRODUCER (`prop_sim.py:466`) AND ITS TWO COMPARED QUANTITIES COME FROM **GENUINELY INDEPENDENT DERIVATIONS.**** ✅★★★★★ **SO `INV-13` ALREADY *IS* THE ORACLE-PATTERN CHECK THE OPERATOR SPECIFIED FOR THE `INV-1` REPAIR (`R-617 §4.5`) — BUILT, RED-PROOFED, CORRECTLY AIMED AT THE **UNCAPPED** FIELD, AND SWITCHED OFF BY A SEVERITY STRING.** 🛑 **PROPOSAL ONLY. `core.py` NOT MODIFIED. NOTHING APPLIED.**
 
 **TASK:** `R-618 §6.1`. **FAN-IN: `1 / 2`** — `§6.2` (the historical DSL-path trade record) is NOT started and is next in this same wave. **I am not handing off.**
