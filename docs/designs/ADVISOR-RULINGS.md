@@ -12,6 +12,90 @@
 
 ---
 
+## R-631 · 2026-08-03 · ✅★★★★★ **`AR-675` APPROVED — AND I DID NOT TAKE THE WORKER'S WORD FOR IT: I RE-RAN THE RED-PROOF MYSELF, FOUR ARMS, AND IT REPRODUCES EXACTLY.** 🛑★★★★★ **THE SAME RUN INDEPENDENTLY CONFIRMS `R-630 §2`'s RETRACTION BY A WITNESS THE WORKER DID NOT HAVE: in the four-test run the traceback appears under the ***failing sibling's*** `Captured stderr call`, and with the sibling removed the three vacuous tests exit `0` in TOTAL SILENCE. `A DIAGNOSTIC THAT ONLY PRINTS WHEN SOMETHING ELSE FAILS IS NOT A DIAGNOSTIC` is now MEASURED, not argued.** ⚠️★★★ **I NARROW `F-1`'s SCOPE AGAINST MY OWN LEDGER: `R-630 §1` says "a crisis scenario that CRASHES". THE EXECUTABLE LINE SAYS `except (ValueError, IndexError, KeyError)` — `RuntimeError`/`ImportError`/`TypeError` PROPAGATE BY DESIGN. THE BLINDNESS IS REAL BUT IT IS SCOPED TO DATA-CLASS ERRORS, AND A FINDING STATED BROADER THAN ITS EVIDENCE IS THE ONE THE OPERATOR CANNOT CHECK.** ✅ **GRADER LANE 2 RE-DISPATCHED AS LANE `B`, NOT WRITTEN OFF.**
+
+**★ WORKER — START HERE:** 🛑★★★★★ **YOU RECOMMENDED `§4.4` (`F-3`–`F-9`) NEXT. I AM HOLDING THE STANDING ORDER: `F-1` IS NEXT (`R-630 §4.2`), NOT `F-3`–`F-9`.** Reason, so it is not arbitrary: `F-1` is the only open finding that sits on the **live promotion gate** rather than in a test, and `zero-carry` ranks by consequence, not by convenience. ✅ **`F-3`–`F-9` are NOT dropped and NOT deferred to a future seat — they are `§5.2` below, authorized to YOU, this seat.**
+
+**RULING ID:** R-631 · **TASK ID:** `R-630 §4.1` closure (`AR-675`) + grader fan-in disposition · **DECISION: APPROVE · RE-DISPATCH · SCOPE-CORRECT.**
+**NEWEST AR NAMED (`R-416`):** **`AR-675`** `[MEASURED HERE, the `R-629 §1` fixed gate form with `| head -1`]`. It IS the subject of this ruling; nothing landed after it during drafting.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, NOT MODIFIED by this ruling. NODE: NONE — `P0PC` nine of ten.**
+**GRAPH FAN-IN: `1` of `2`, lane 2 RESPAWNED as lane `B`.** See `§4`.
+
+---
+
+### ✅★★★★★ §1 — `AR-675` APPROVED. THE ACCEPTANCE WAS MET, AND I VERIFIED IT WITH MY OWN HANDS, NOT WITH THE REPORT'S TABLE.
+
+`R-630 §4.1` set the acceptance as: *"re-run the grader's ARM B — the three vacuous tests ALONE with `run_backtest` forced to raise — and show it goes RED."* **I ran it myself rather than reading the worker's table, because `red-path-decay` says a red path is re-measured every run and a fix is proven by the UNCHANGED instrument.**
+
+**INSTRUMENT [MEASURED HERE]:** an autouse `conftest.py` fixture monkeypatching `src.engine.backtester.run_backtest` to raise. ✅ **This binds because the import at `test_entry_windows.py:323` is FUNCTION-LOCAL (`from src.engine.backtester import run_backtest` inside the helper), so the patch resolves at call time — a module-level import would have made this instrument silently inert, and that is worth writing down.**
+
+| # | arm | tree | result | grade |
+|---|---|---|---|---|
+| 1 | **BEFORE**, 3 vacuous ALONE, `run_backtest` raising | `4b6892a8~1` materialised to scratch | 🛑 **`3 passed, 1 deselected`, exit `0`** | `[MEASURED HERE]` |
+| 2 | **BEFORE**, all 4 | `4b6892a8~1` materialised to scratch | `1 failed, 3 passed` — traceback ONLY under the failing sibling | `[MEASURED HERE]` |
+| 3 | **AFTER**, 3 vacuous ALONE, `run_backtest` raising | campaign tree `HEAD` | ✅ **`3 failed, 1 deselected`, exit `1`** | `[MEASURED HERE]` |
+| 4 | **AFTER**, normal unforced, real file | campaign tree `HEAD` | ✅ **`54 passed`, exit `0`** | `[MEASURED HERE]` |
+
+🛑🛑★★★★★ **ARM 1 IS THE FINDING AND IT IS UGLY: `run_backtest` RAISED ON EVERY CALL AND `pytest` EXITED `0`.** ✅ **ARM 3 is the closure. ARM 4 is the positive control that the repair did not buy its RED by breaking the real path.**
+
+✅ **EXECUTABLE LINE READ, NOT THE COMMENT:** `test_entry_windows.py:408-432` — the `except` calls `pytest.fail(..., pytrace=False)`; there is no stub `return` in it. ✅ **`assert skipped >= 10` INTACT at `:457`** — I grepped the assertion itself, not the report's claim about it. ✅ **`git show --stat 4b6892a8` = `1 file changed`, `test_entry_windows.py` ONLY — the file-scope contract held.**
+
+✅ **CONTROL-MATERIALISATION INDEPENDENTLY VERIFIED, because this is exactly where the worker's FIRST attempt went wrong:** the BEFORE file I ran contains the stub `return {"engine_audit": {"skipped_outside_window_count": 0}, "_error": str(exc)}` at `:424` **and** contains `BacktestRequest` (3 occurrences), i.e. it is the **`AR-667`-repaired** fixture, NOT the pre-`AR-667` one that dies at construction. ★★★ **`A CONTROL THAT FAILS FOR THE WRONG REASON LOOKS EXACTLY LIKE A CONTROL THAT PASSES` — the worker caught this on itself and reported it; that self-catch is the most creditable thing in `AR-675`.**
+
+✅ **THE CONCESSION IS ACCEPTED AND IT IS THE RIGHT ONE.** `AR-667` claimed a swallowed failure could no longer read as a measurement; it had only made the swallow VISIBLE, not FATAL. ★★★★★ **`MAKING A FAILURE VISIBLE IS NOT THE SAME AS MAKING IT FATAL` — I ratified that overclaim at `R-624 §2`, so the error is the desk's as much as the worker's.**
+
+### ✅★★★★★ §2 — `R-630 §2`'s RETRACTION NOW HAS A POSITIVE **AND** A NEGATIVE WITNESS.
+`R-630 §2` retracted `R-624 §2` on the argument that the traceback's visibility is an accident of a neighbouring test failing. **That retraction was correct but argued from one arm. It now has both, `[MEASURED HERE]`:**
+- **POSITIVE (mechanism firing):** ARM 2 — the traceback is present, and `pytest` attaches it to the **failing sibling** under `Captured stderr call`.
+- **NEGATIVE (mechanism absent):** ARM 1 — remove the failing sibling and the SAME swallow produces **no output at all** and exit `0`.
+
+★★★★★ **LESSON, MINTED: `TEST A DIAGNOSTIC IN ISOLATION. pytest DISCARDS CAPTURED stderr ON PASSING TESTS, SO A DIAGNOSTIC VERIFIED ONLY IN A RUN THAT CONTAINS A FAILURE HAS BEEN VERIFIED IN THE ONE CONDITION THAT HIDES ITS DEFECT.`**
+
+### ⚠️🛑★★★ §3 — I NARROW `F-1` AGAINST MY OWN PREVIOUS RULING. THE FINDING SURVIVES; ITS SCOPE DOES NOT.
+**`[MEASURED HERE — campaign tree `wt-h1-wave4-20260712`, executable lines, not comments]`**
+- `src/engine/performance_gate.py:293-305`: the crisis loop reads **only** `s.get("max_drawdown", 0.0)` and vetoes **only** on `scenario_dd > firm_max_dd`. **`passed` and `error` are never read in that loop.** ✅ **`F-1`'s BLINDNESS IS CONFIRMED — and it is now `[MEASURED HERE]`, upgraded from `R-630`'s `[MEASURED BY GRADED INSTRUMENT]`.**
+- `src/engine/stress_test.py:129-139`: the handler is **`except (ValueError, IndexError, KeyError)`**, carrying the deliberate comment *"Let RuntimeError/ImportError/TypeError propagate."*
+
+🛑★★★★★ **SO `R-630 §1`'s PHRASE "A CRISIS SCENARIO THAT **CRASHES**" IS BROADER THAN THE CODE. THE CORRECT STATEMENT IS: *a crisis scenario that fails with a **data-class** error (`ValueError`/`IndexError`/`KeyError`) is scored as `max_drawdown = 0` and cannot trigger the hard veto.* Other exception types propagate and fail loudly.** ✅ **This makes `F-1` NARROWER, NOT SMALLER: a data-class error is exactly what a malformed or short crisis series produces, so the reachable path is the LIKELY one, not an exotic one.** `[REACHABILITY: HYPOTHESIS — I have NOT exhibited a real input that raises one of the three inside a crisis scenario.]`
+
+⚠️ **`firm_max_dd > 0` is ASSUMED by the claim "`0 > firm_max_dd` is never true". `[UNVERIFIED — I did not read `firm_max_dd`'s domain.]` If it can be `≤ 0` the veto is differently broken, not un-broken. The worker resolves this inside `§5.1`.**
+
+### ✅ §4 — GRADER FAN-IN: LANE 2 RE-DISPATCHED, NOT WRITTEN OFF.
+**`GRADE-EVENTMASK-REPAIR-2026-08-03.md` is STILL not on disk `[MEASURED HERE, `ls`]`.** `TaskList` returns `No tasks found` — 🛑 **that is NOT evidence the lane is dead; this harness's task list is known-blind to these dispatches, and treating a blind instrument's silence as a negative result is the `absence-claim` error.** **But a lane I cannot observe, which has produced no artifact, is indistinguishable from a dead one — and the campaign may not wait on an unobservable.**
+
+✅ **DISPOSITION: re-dispatched to a fresh `accuracy-validator`; receipt path `docs/designs/GRADE-EVENTMASK-REPAIR-B-2026-08-03.md`.** ★★★ **The `-B-` name is deliberate: if the original lane is alive it writes the non-`B` file and NOTHING IS CLOBBERED — and the desk then holds two non-overlapping grades of one claim, which is better than the one it ordered.**
+✅ **The re-dispatch is NOT a duplicate.** Its brief carries premises the original could not have had (`AR-675`'s concession, and `§1`'s arms), and it asks a sharper question the original was never given: **how many of `AR-667`'s "4 passed" actually DISCRIMINATE?** Three of those four assert `skipped == 0` or mere key-presence and would pass whether or not anything was measured. `[HYPOTHESIS — that is the question I sent, not a result I hold.]`
+
+---
+
+### ★★★★★ §5 — AUTHORIZED NOW. QUEUE DEPTH `3`, ALL TO **THIS** SEAT.
+
+**§5.1 🛑★★★★★ `F-1` — `ratify-packet` FIRST, THEN THE REPAIR. (supersedes the worker's proposed re-order)**
+- **GOAL / PROPERTY (not a mechanism):** *a crisis scenario that did not produce a valid drawdown measurement cannot be scored as if it produced a passing one.*
+- **WHY IT MATTERS TO THE MONEY PATH:** `forge_score` → promotion scoring → live capital. It is the score promotion trusts.
+- **FILES ALLOWED:** `src/engine/performance_gate.py` · `src/engine/stress_test.py` (only if the packet concludes the fix belongs there) · their tests · the ratify-packet doc.
+- **FORBIDDEN:** 🛑 **NO FLAG, NO OPT-OUT — `never-flag`: this is a correctness repair, and an OFF branch IS the defect.** 🛑 No unrelated cleanup. 🛑 Do not weaken any existing gate assertion.
+- **REQUIRED FIRST:** the `ratify-packet` skill — this is an INSTRUMENT surface.
+- **ANSWER INSIDE THE PACKET:** is `firm_max_dd` guaranteed `> 0`? (`§3` left this open and it changes the fix.)
+- **ACCEPTANCE:** a test that goes **RED without the fix and GREEN with it**, built on a crisis scenario raising a **`ValueError`/`IndexError`/`KeyError`** — 🛑 **NOT a generic `Exception`, which `stress_test.py` does not catch and which would therefore be a fixture that proves nothing.** ★★★ **The negative assertion ("no veto fired") owes a POSITIVE WITNESS that the crisis path actually ran.**
+- **EVIDENCE BUNDLE:** both arms, commands and output verbatim, tree named.
+- **HONEST-PARTIAL CLAUSE:** if you cannot exhibit a real input that raises one of the three inside a crisis scenario, **say so and name the surface you covered.** `UNRESOLVED` is a valid expert result and is worth more than a synthetic fixture dressed up as reachability.
+- **FIRST OBSERVABLE + ETA (`§8`):** the ratify-packet file appears under `docs/designs/` within **~20 min**; START-RECEIPT within 2 min.
+- **DOER ≠ GRADER:** on delivery THIS DESK dispatches its own `accuracy-validator` lane. Do not grade your own repair.
+
+**§5.2 ⏸️ THEN `F-3`–`F-9` — seven DEMONSTRATED findings, each owed a DISPOSITION (`zero-carry`).** Detail is in `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`; 🛑 **do NOT re-paraphrase it — read it.** A disposition may be FIX, or *"not a defect, because …"* with the executable line attached. Includes `F-8`'s novel mechanism: an `AssertionError` whose own message satisfies the handler's `in str(exc)` check, **so the failing assertion launders itself into a PASS.**
+
+**§5.3 ⏸️ THEN `INV-13 → CRITICAL`.** Its gate is DISCHARGED (`AR-674`: `wf_metadata` is the producer discriminator). 🛑 **`INV-1` DELETION STAYS BLOCKED while `INV-13` is `WARNING` — that order is not negotiable.**
+
+**STOP AND ASK THIS DESK (nothing else):** a merge · a worktree update · a production write or restart · a scope you cannot stay inside. **Everything else proceeds without a round-trip.**
+
+**STOP CONDITION:** if the `ratify-packet` concludes the fix belongs in `stress_test.py` rather than `performance_gate.py`, **STOP and report before writing it** — that moves the repair onto a different instrument surface than `R-630 §1` named.
+
+### ★★★ §6 — LESSON TO PERSIST (this desk's own, from tonight)
+**`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT.`** Building `§1`'s arms I hit `exit 1` (plugin `ImportError` from a mangled `PYTHONPATH`) and `exit 4` (pytest could not resolve an MSYS `/c/...` path). **Either one, skimmed, says "the BEFORE arm is RED" — which would have destroyed the finding by making the hole look pre-closed.** ✅ **Both were caught by reading the OUTPUT, not the CODE.** ★★★ **On this box: Windows-form paths (`C:/...`) for anything handed to Python; and `--deselect` must match the nodeid pytest actually COLLECTED or it silently does nothing** — mine silently did nothing, all four tests ran, and that accident is the only reason `§2`'s positive arm exists.
+
+---
+
 ## R-630 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE CLASS SWEEP RETURNED AND IT IS THE MOST VALUABLE ARTIFACT OF THE SESSION — `374` FILES, `105` SWALLOW-SITES, `779` VACUITY-SITES, **`9` DEMONSTRATED** (not suspected). RECEIPT: `docs/designs/SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` (`408` lines).** 🛑🛑🛑★★★★★ **`F-1` IS THE HIGHEST-SEVERITY FINDING OF THIS ENTIRE SESSION AND IT IS **NOT IN A TEST — IT IS ON THE LIVE PROMOTION GATE**: A CRISIS SCENARIO THAT **CRASHES** RETURNS `max_drawdown: 0`, AND THE CRISIS HARD-VETO ONLY FIRES ON `max_drawdown > firm_max_dd`. **A CRASHED CRISIS SCENARIO CANNOT VETO.** THE HONEST `passed: False` AND `error` FLAGS ARE SITTING IN THE SAME DICT AND ARE **NEVER READ**. BLAST RADIUS RUNS `forge_score` → PROMOTION SCORING → **LIVE CAPITAL**.** 🛑🛑🛑★★★★★ **AND `F-2` REFUTES MY OWN RATIFICATION: `R-624 §2` DECLARED *"a swallowed failure can no longer read as a measurement"* — **FALSE.** THE REMEDY ADDED A TRACEBACK AND LEFT THE STUB AND ALL THREE VACUOUS ASSERTIONS UNTOUCHED; ITS VISIBILITY IS AN **ACCIDENTAL SIDE EFFECT OF A NEIGHBOURING TEST FAILING**, PROVEN BY DESELECTING THAT SIBLING → `3 passed`, TOTAL SILENCE.** **DECISION: `F-1` ESCALATED AS A `ratify-packet` INSTRUMENT REPAIR · `R-624 §2` RETRACTED · `F-2` FIXED FIRST · `F-3`–`F-9` QUEUED, NONE DROPPED.**
 
 **★ WORKER — START HERE:** 🛑★★★★★ **STOP `R-627 §3.2` AND TAKE `§4.1` — `F-2` FIRST, because it is small, it is in a file you already own, and it re-opens the exact hole you and I both believed closed.** ✅ **`R-627 §3.2` is NOT cancelled, it moves to `§4.3`.** ✅ **And your `AR-667` work is NOT withdrawn: the four tests genuinely pass for real today; `F-2` is a LATENT re-opening, and the grader says so explicitly.**
