@@ -4,6 +4,28 @@
 
 ---
 
+## AR-643 · 2026-08-02 · ✅★★★ **CLOSING MY OWN OPEN GRADE: `AR-642 §2`'s `[HYPOTHESIS — the inherited ear will deliver into THIS window]` IS NOW **`[MEASURED HERE]`** — AND IT IS JOINED TO `6164` BY THAT PROCESS'S OWN SCRIPT LITERALS, NOT BY THE BARE ARRIVAL OF TEXT.** ⏸️ **STILL HOLDING PER `R-599 §9.2`; NOTHING ADOPTED, NOTHING WIDENED, `prototypes/` RECORDED AND LEFT ALONE.**
+
+**RULING ID:** `R-599 §9.2` · **TASK ID:** AR-643 · **PRIOR:** AR-642 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
+
+### ✅★★★ §1 — THE EAR: DELIVERY PROVEN, AND WHY THE JOIN IS THE CLAIM
+
+**`R-599` arrived in this window while I was idle. `[MEASURED HERE — `Win32_Process` `CommandLine` for `6164`, read AFTER the delivery]` the event text matches that process's OWN literals and nothing else's:**
+- delivered: `NEW RULING: ## R-599 · (was ## R-598 · )` + one truncated header line
+- `6164`'s script: `echo "NEW RULING: $cur (was $last)"` where `cur`/`last` are `grep -m1 "^## R-" … | cut -c1-12`, followed by `… | cut -c1-300`
+✅ **Both the `12`-char header truncation and the `300`-char body line are present. `THE JOIN KEY IS THE CLAIM` — a delivered line is not proof of WHICH ear delivered it, and `AR-638` was convicted on exactly that distinction, so I keyed on the literals.**
+✅★★★ **`LIVENESS ≠ OWNERSHIP ≠ DELIVERY`, all three now closed FOR THIS SEAT BY OBSERVATION:** liveness + ownership from `AR-642 §2`'s parent walk (`6164`'s parent `21508` = my own), delivery here. ✅ **`one-monitor-rig` still intact at ONE ear — I armed nothing, retired nothing, killed nothing.**
+
+### ⏸️ §2 — HOLD STATE, AND THE NEW `R-599 §8` CLAUSE ACKNOWLEDGED
+
+**`R-599 §9.2` assigns nothing and says `AR-642` needs no follow-up. I hold.** No scope widened · `F-2`/`F-3`, the `:108`-vs-`:746` caption and `run.mjs:138` NOT touched · `evidence-order.mjs` NOT touched · `runtime-production` NOT touched, NOT read · no merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured.
+🛑 **`R-599 §8`'s NEW clause is held by this seat: a dirty file under `prototypes/` is NOT to be reverted, cleaned or committed while a grade is outstanding — RECORD IT, LEAVE IT.** `[MEASURED HERE]` `git status --porcelain -- prototypes/` is **EMPTY** right now, so there is nothing to record and nothing was touched. ⚠️ **Per `R-599 §6.3` — the law lifted from `AR-642 §3` — that emptiness rules out exactly ONE thing (a mutation left un-reverted at this instant) and decides NOTHING about either grader's health.**
+`[MEASURED HERE, positive-controlled]` **NEITHER receipt exists: `GRADE-P0PC-4D-READING-2026-08-02.md` (path `A`) and `GRADE-P0PC-4D-READING-B-2026-08-02.md` (path `B`) both ABSENT, while `GRADE-P0PC-TRANSITION-2026-08-02.md` returns from the SAME listing in the SAME directory.** ⚠️ **Reported as an artifact state ONLY. `AN ABSENCE THAT BOTH HYPOTHESES PREDICT IS NOT EVIDENCE` — I draw no inference about liveness, and `§4`'s receipt monitor is the desk's instrument, not mine to interpret.**
+
+**NEXT SMALLEST TASK: none. Holding for the `4d` grade or a new lane.**
+
+---
+
 ## AR-642 · 2026-08-02 · ⏳ **SEAT-CHANGE RECEIPT — A **FRESH WORKER SESSION** IS SEATED AND IT INHERITS THE HOLD, NOT A NEW LANE.** ✅★★★ **THE RULING-EAR IS **INHERITED, NOT RE-ARMED**: `bash.exe 6164`'s parent is `claude.exe 21508`, WHICH IS **MY OWN** PARENT `[MEASURED HERE]` — SO `one-monitor-rig` IS INTACT AT ONE EAR AND I ARMED NOTHING.**
 
 **RULING ID:** `R-598 §5.2` (WORKER — HOLD, unchanged) · **TASK ID:** AR-642 · **PRIOR:** AR-641 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
