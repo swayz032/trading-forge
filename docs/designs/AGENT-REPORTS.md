@@ -4,6 +4,54 @@
 
 ---
 
+## AR-699 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-651 §6.1` — YOUR RATIFICATION IS **CONFIRMED ON WIREABILITY** BY MY AUG-3 INSTRUMENT: EXACTLY `2` OF `11` ARE WIREABLE AND `st5e-YJRfKc__s0` IS THE ONLY ONE NOT INSTRUMENT-DISQUALIFIED.** 🛑🛑🛑★★★★★ **BUT **STOP CONDITION `2` FIRES**: ITS `INVALIDATE` ROW DOES **NOT** BIND AT THE SEAL. IT IS AN APPROXIMATION, `ii_passed=False`, `row_verdict=BLOCK`. **THE "ALREADY HAS A WORKING EXIT" CLAIM IS WRONG — AND THE SOURCE CALLS THE VALUE IT RESTS ON A *"FIDELITY LIE"* IN TERMS.** I AM STOPPING AND REPORTING, AS PRE-REGISTERED.**
+
+**TASK:** `R-651 §6.1`. 🛑 **NOTHING CHANGED — read-only. `§6.2`, `§6.3` and `§6.4` are NOT started: the stop fired inside `§6.1` and I did not walk past it.** **Within the `≤ 45 min` ETA.**
+🛑 **AND I OWN THE ERROR YOU CAUGHT FIRST: `AR-697` named `ExB66jcyKxg__s0`'s `UNTYPED` spine row and then recommended the spec anyway. My own instrument refutes my own recommendation — `UNTYPED_spine 1`, `UNTYPED_any 6`, NOT wireable. `Fewest blocked rows` was the wrong sort key and `a single unwireable row is an infinite blocker` is the correction.**
+
+### ✅★★★★★ §1 — THE `§6.1` TABLE, RECONCILED AGAINST THE COMMITTED CENSUS
+`[MEASURED HERE — my Aug-3 seal `tier-a-phase1-seal.json`, joined per-condition to `tier-a-compile-census.json`'s `conditions[]`]`
+| stub | strategy | rows | `UNTYPED` spine | `UNTYPED` any | unique mechanisms | **WIREABLE** |
+|---|---|---|---|---|---|---|
+| `YqY0OkL5LMI__s1` | `gap_and_go_opening_range_breakout` | `8` | **`0`** | **`0`** | **`1`** | ✅ **YES** |
+| **`st5e-YJRfKc__s0`** | **`opening_range_breakout`** | `11` | **`0`** | **`0`** | **`2`** | ✅ **YES** |
+| `hcHuDfxdywI__s0` | `institutional_order_block_reversal_entry` | `10` | `1` | `1` | `1` | 🛑 no |
+| `0RBexa9JpIg__s0` | `fibonacci_pullback_continuation` | `8` | `1` | `4` | `2` | 🛑 no |
+| **`ExB66jcyKxg__s0`** | **`sma14_strong_close_crossover`** *(`AR-697`'s pick)* | `9` | **`1`** | **`6`** | `2` | 🛑 **no** |
+| `st5e-YJRfKc__s1` | `opening_range_pullback` | `5` | `3` | `3` | `1` | 🛑 no |
+| `dENM6gt8ZRg__s0` | `orb_5m_retest` | `7` | `3` | `5` | `1` | 🛑 no |
+| `YqY0OkL5LMI__s0` | `double_inside_bar_daily_breakout` | `7` | `3` | `4` | `2` | 🛑 no |
+| `LD1FEbwXU4o__s0` | `ltf_liquidity_zone_rejection_scalp` | `13` | `3` | `7` | `3` | 🛑 no |
+| `pKzXxB9Blts__s0` | `anchored_vwap_pullback_from_volume_rotation` | `10` | `4` | `5` | `3` | 🛑 no |
+| `YGdFksLavKE__s0` | `vwap_band_breakout` | `11` | `7` | `8` | `3` | 🛑 no |
+✅ **`9 of 11` UNWIREABLE, `2` WIREABLE — YOUR COUNT, CONFIRMED BY A SECOND INSTRUMENT.** ✅★★★ **CROSS-CHECK, TWO PATHS ON THE SAME QUANTITY: census `conditions[]` `UNTYPED` total = **`43`**; my seal's `unknown_condition_type` total = **`43`**. The July census and the Aug-3 seal agree exactly on the population that kills nine specs.**
+✅ **AND THE STRICTER CRITERION DOES NOT CHANGE THE ANSWER — I checked both because it could have:** since the seal gates ALL `99` rows (`load_bearing` defaults True, `AR-697 §2`), an `UNTYPED` row in ANY role is terminal, not just a spine one. **`UNTYPED_spine == 0` and `UNTYPED_any == 0` select the SAME two specs.** ★★★ **Worth stating because for four other specs the two counts differ sharply (`0RBexa9JpIg` `1` vs `4`, `ExB66jcyKxg` `1` vs `6`) — the criteria coincide on the winners by fact, not by construction.**
+**APPLYING *"fewest UNIQUE MECHANISM repairs, only among the wireable"*:** `gap_and_go` `1` · `opening_range_breakout` `2`. 🛑 **`gap_and_go` is excluded on instrument (*"not futures"*, its own extraction, accepted at your `§4`), so `st5e-YJRfKc__s0` IS the selection. ✅ RATIFICATION CONFIRMED ON THIS AXIS.**
+
+### ✅ §2 — STOP CONDITION `1`: DOES **NOT** FIRE
+`[MEASURED HERE]` **`st5e-YJRfKc__s0` carries `0` `UNTYPED` rows and `0` `unknown_condition_type` refusals across all `11`.** ✅ **Your `§4.1` is correct.** **Row census, and it matches your `§4` exactly: `9` × `WAIT_STRUCTURE` · `1` × `WAIT_SESSION` · `1` × `INVALIDATE`.**
+
+### 🛑🛑🛑★★★★★ §3 — STOP CONDITION `2`: **FIRES.** THE EXIT DOES NOT BIND, AND I CAN NAME THE MECHANISM AT THE EXECUTABLE LINE
+`[MEASURED HERE]` **the `INVALIDATE` row at the seal: `ii_passed` `False` · bucket `APPROXIMATION` · `row_verdict` `BLOCK` · reason *"bound to an approximation (proxy/pass-through, honest accounting): 'structural_stops.compute_structural_stop'"*.**
+🛑 **THE CENSUS SAYS THE OPPOSITE, AND I DID NOT STOP AT THE DISAGREEMENT `[MEASURED HERE]`:** its row reads `bind_status: BINDS` · `binds_to: structural_stops.compute_structural_stop` · **`approximation: False`** · `bindable: True` · `executed: True`. **Two instruments, one row, opposite answers — so one of them is not measuring fidelity.**
+✅★★★★★ **RESOLVED AT THE SOURCE, NOT BY PREFERENCE `[MEASURED HERE, `FAMILY_META` interrogated live]`:**
+```
+FAMILY_META['INVALIDATE'].enforced_honest_approximation() = True     <- what (ii) reads
+FAMILY_META['INVALIDATE'].effective_approximation()       = False    <- what the census published
+```
+🛑🛑★★★★★ **AND `compile_fidelity._honest_approximation`'s DOCSTRING (`:505-508`) NAMES THIS EXACT FAMILY AND THIS EXACT TRAP, UNPROMPTED:** *"With `TF_FAMILY_META_ENFORCED` OFF (the default), `binding.approximation` carries `effective_approximation()` = the LEGACY convenience label — **which for `ENABLE_ENTRY`/`ENTER`/`INVALIDATE` is `False` while the honest value is `True`** (the `FAMILY_META` comments call the legacy value **a fidelity lie**)."*
+✅ **AND THE CENSUS IS NOT AT FAULT — IT DECLARES ITS OWN SCOPE HONESTLY.** Its `scope_line` reads *"binder = `compile_binding_plan` with **ALL FLAGS OFF (legacy column)**"*. ★★★★★ **THE ARTIFACT PUBLISHED THE LEGACY COLUMN AND SAID SO. THE OVER-READ WAS TREATING THAT COLUMN AS A FIDELITY VERDICT.** ★★★★★ **`TWO INSTRUMENTS THAT DISAGREE ON ONE ROW ARE NOT BOTH MEASURING FIDELITY — READ WHICH COLUMN EACH ONE PUBLISHES.`** **Same shape as your own `§8` lesson, one layer down: the census's silence was evidence about its flag state, not about the world.**
+🛑 **CONSEQUENCE, STATED WITHOUT SOFTENING: the ratified slice does NOT already have a working, source-faithful exit. It has `2` mechanism repairs ahead of it (`structure_engine.compute_structure_state` × `9` rows + `structural_stops.compute_structural_stop` × `1`), not `1` repair plus a free exit.** ⚠️ **`[NOT MEASURED]` whether `compute_structural_stop` is a good proxy for *"a half range stop… below this halfrange mark"* — I read the verdict, not the implementation.**
+
+### §4 — WHAT I DID **NOT** DO, AND WHY
+🛑 **`§6.2` (can `resolve_session_keyword` parse `"9:30 a.m. Eastern to 9:35 a.m. Eastern"`) · `§6.3` (instrument-specific read) · `§6.4` (the one repair) are ALL UNSTARTED.** **The stop condition is pre-registered and binding and it fired; walking past it to do the interesting parts is the exact failure the instrument exists to prevent.**
+✅ **THE RATIFICATION MAY WELL STILL STAND AND I AM NOT RE-RATIFYING — that is yours.** **`4` of your `5` axes are untouched: `0` UNTYPED (confirmed here) · `9` of `11` on one detector (confirmed) · classifier `100%` confident (census `n_confident 10`, `classifier_approximation_rate 0.0`) · `OPTIMISTIC_LOOSER_THAN_TAUGHT` so the repair tightens (census, unread by me at the source).** 🛑 **Only axis `3` is refuted. `st5e-YJRfKc__s0` remains `1` of only `2` wireable specs and the only one that is not instrument-disqualified — the choice may be unchanged while the WORK it implies is larger.**
+⚠️ **`[UNENUMERATED]`** the other wireable spec's `INVALIDATE` status under the honest column · whether any of the `9` `WAIT_STRUCTURE` rows would also flip under `TF_FAMILY_META_ENFORCED` (`WAIT_STRUCTURE`'s two columns already AGREE at `True`, so those `9` are unaffected — **that one I did check**).
+
+**Position: `h1-wave4-sealed12-driver`, HEAD `576fe6bb` at read. Shared tree untouched. `R-651 §6` fan-in `1 / 4`, halted at a pre-registered stop, not by exhaustion. I am not handing off and I hold the seal to resume the moment you rule.**
+
+---
+
 ## AR-698 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-649 §4` TASK-3 — **STOP CONDITION (ii) FIRES. `17` OF `26` COLLAPSE, AND `20` WAS THE BAR.** I AM STOPPING AND REPORTING THE RESIDUAL, AS ORDERED.** 🛑🛑★★★★★ **AND THE HARDER NUMBER IS THE ONE THE STOP CONDITION DID NOT ASK FOR: **`ZERO` ROWS CHANGED VERDICT.** `161` `BLOCK` BEFORE, `161` `BLOCK` AFTER; `(ii)` PASSES `0 → 0`. **THE `17` MOVED ONLY TO A MORE HONEST REFUSAL, NOT TOWARD A BINDING.** ✅ **AND THE REPAIR NEEDED NO AUTHORING — IT WAS ALREADY BUILT, BEHIND A DEFAULT-OFF FLAG. FIFTH `dormant-activation` CONVICTION.**
 
 **TASK:** `R-649 §4` TASK-3. **Fan-in `3 / 3` on `R-649 §4`.** 🛑 **NOTHING CHANGED — no code written, no flag default flipped, no shipped behaviour altered. Both arms ran in the materialised scratch copy at `b3c7ddaa`, one arm per PROCESS so no module-level flag read could be cached across arms.**
