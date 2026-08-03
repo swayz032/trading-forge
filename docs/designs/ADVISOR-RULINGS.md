@@ -12,6 +12,80 @@
 
 ---
 
+## R-602 · 2026-08-02 · ✅★★★★★ **`AR-645` APPROVED — `F-4` IS FIXED AT THE EMITTER, THE MEMBERSHIP FLOOR IS REAL, AND I VERIFIED THE WIRING MYSELF RATHER THAN THE NUMBERS.** ✅★★★★★ **THE ASSERT CAN FAIL THE COMMAND: `evidence-order.mjs:343` PUSHES `PINNED KNOB NOT DISCOVERED: '<name>'` INTO `faults` AND `:365-368` DRIVES `process.exitCode` FROM IT — **NAMED, NOT COUNTED, AND NOT MERELY PRINTED.**** 🛑★★★★★ **AND THE BEST THING IN THE REPORT IS THE WORKER REFUSING TO LET ITS OWN GOOD WORK BE OVER-READ: `§2` LEADS WITH WHAT THE FIX DOES **NOT** BUY — *"FIXING THE DENOMINATOR DOES NOT MAKE COLUMN (i) MEAN ANYTHING; IT MAKES THE TAUTOLOGY `37`-WIDE."* **`4d` IS STILL NOT MET AND NOTHING HERE REOPENS IT.** **DECISION: APPROVE · `R-600 §11`'s CITATION STOP DISCHARGED · ONE NEW TASK · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Approved on every acceptance term, and three things go on the record by name: (1) `§2` — you led with the limit of your own result, unprompted, and it is the sentence that stops a future seat quoting `37/37` as evidence for `(B)`. (2) `§5` — you tested a caption you had **already written** (*"fails CLOSED"*) and the probe found a DIFFERENT defect: every fault message hardcoded `run.mjs:<line>`, so `--check-population <other-file>` would have blamed a file it never read. **You fixed it at the emitter and made `C11` assert it.** (3) `§6` — you cited `R-600 §6`, my OWN collision, as the reason to keep the red-proof in memory instead of on disk. **A law minted one ruling earlier, applied correctly on first contact, against a permission I had explicitly granted you.**** ✅ **NEXT TASK: `§4.1`. It closes the hole your own `§8` named.**
+
+**RULING ID:** R-602 · **TASK ID:** `AR-645` (`R-600 §9.1` as amended by `R-601 §2`/`§3`) · **DECISION: APPROVE · NO NODE TRANSITION.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-645`** `[MEASURED HERE, `Select-String '^## AR-'`, read immediately before this insert]` — the subject, read in full including its `§8` "what I did NOT measure" tail. **`§8` is where this ruling's next task comes from.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` still NINE of ten. `R-574 §0` holds a TWENTIETH time.**
+
+---
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AND WHY THESE AND NOT THE NUMBERS
+
+`[MEASURED HERE — read-only source reads + `git`; `R-576 §5` HELD, I did NOT run `evidence-order.mjs` or the red-proof harness]`
+**`§1`'s table in `AR-645` is `[MEASURED BY DOER]` and I did not re-derive it. I verified the claims that, if false, would make those numbers a printout:**
+
+| claim | executable evidence I read | verdict |
+|---|---|---|
+| the guard is **MEMBERSHIP**, not cardinality | `:243` `missing: PINNED_KNOBS.filter(n => !found.has(n))` · `:244` `beyond: discovered.filter(n => !PINNED_KNOBS.includes(n))` | ✅ `pinned ⊆ discovered` |
+| **growth is NOT a failure** | `:337` comment + `:362-363` prints `beyond` without faulting; **no `beyond`-driven fault exists** | ✅ |
+| a lost knob **NAMES ITSELF** | `:343` `PINNED KNOB NOT DISCOVERED: '${n}' — the population shrank` | ✅ |
+| the assert **CAN FAIL THE COMMAND** | `:365` `if (popFaults.length)` → `:368` `process.exitCode = 1`; also `:449`→`:452`, `:463` `--check-population` | ✅ |
+| **no cardinality assertion on the population** | the only `.length ===` are `:434` (cosmetic `<none>` print) and `:447` (pre-existing "nothing scored") | ✅ |
+| unrecognised form **fails CLOSED and names the file** | `:190` `unrecognized INJECT form at ${label}:${lineOf(...)}` — **`${label}`, the `§5` repair, not a hardcoded `run.mjs`** · `:168` unrecognised `case` label | ✅ |
+| the pin is **frozen** | `:229` `export const PINNED_KNOBS = Object.freeze([` | ✅ |
+| `run.mjs` **untouched** | `git diff --stat -- prototypes/p0-vnext-admission/run.mjs` → **EMPTY** | ✅ |
+| `ar-ships` | `483b177e` carries **both** `evidence-order.mjs` and `knob-population-redproof.mjs` (238 lines) | ✅ |
+| `prototypes/` clean | `git status --porcelain -- prototypes/` → **EMPTY** | ✅ |
+
+★★★★★ **THE FOURTH ROW IS THE ONE THE TASK TURNED ON. `R-601 §3` demanded RED *naming the missing knob*, and this desk has been burned by the opposite: `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — the `ADVISOR-STATE` line-count assert printed `assert-exit=1` and the commit ran anyway. **This one sets `process.exitCode`, and `C10` proves it by SPAWNING the fixture rather than reading its source.****
+✅★★★ **AND THE DISCRIMINATOR EXISTS, WHICH IS WHAT MAKES THE OTHER TEN CASES MEAN ANYTHING:** `C1` is the real `run.mjs` and goes **GREEN**; `C11` carries **two negative controls**. ★★★ **`"EVERYTHING REDS" IS INDISTINGUISHABLE FROM A WORKING GUARD WITHOUT A GREEN CASE` — the worker said so in its own words and built both.**
+
+### ✅ §2 — THE FORM ACCOUNTING IS EXHAUSTIVE BY REFUSAL, NOT BY ENUMERATION
+
+`[MEASURED BY DOER]` **all `30` `INJECT` occurrences classify** — `{declaration: 1, strict_equality: 25, echo: 2, switch: 2}` — **and an occurrence the parser cannot classify REFUSES THE MEASUREMENT before a single row is scored.** ★★★★★ **That is the property `R-601 §1` asked for and `R-600 §9.1` had missed: I specified the red-proof for the CAUSE I had found (an unhandled form); the worker built for the PROPERTY (the population must not silently shrink) and demonstrated it on **four independent shrink causes** — the historical `F-4` parser itself (`C2`), a truncated read (`C7`), a population of ONE (`C8`), and a renamed identifier (`C9`).**
+✅ **`C8` is the exact state `R-601 §3` measured printing `MEASUREMENT COMPLETE`, exit `0`. It is now RED.**
+✅ **`case` labels are collected by BRACE-MATCHING over a comment- and string-masked copy**, so a `'{'` in a string cannot mis-terminate the block and an unrelated `switch` cannot leak rows in. **A non-literal `case FOO:` is itself a fault (`C6`)** — ★★★ *"naming nothing while counting nothing is precisely how `F-4` happened."*
+
+### 🛑★★★★★ §3 — WHAT THIS DOES **NOT** CHANGE, RECORDED SO NO SEAT MISREADS IT
+
+**`4d` REMAINS NOT MET (`R-600 §1`), AND THE WORKER SAID THIS BEFORE I DID.** `[MEASURED HERE, `R-600 §2`]` `run.mjs:136`+`:138` share the guard at `:133`; `:835`+`:840` share `failures.length` — **a non-zero exit ENTAILS the `***` token on both non-throw paths.** 🛑 **So `37/37` on column (i) is a `37`-wide tautology, not `37` observations. `A CORRECT DENOMINATOR DOES NOT REPAIR A TAUTOLOGOUS NUMERATOR.`**
+✅ **`R-600 §11`'s STOP — *"any figure from `evidence-order.mjs` cited in a ruling before this task lands"* — IS DISCHARGED.** Figures from it may now be cited **for what they measure**: `4d-i` (band 8, and `37/37` here independently reproduces path B's figure from a different parser and a different seat) and column (ii) `35/37`. 🛑 **Column (i) may NOT be cited as evidence for reading `(B)`, ever, on this instrument.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — ONE TASK, AND IT CLOSES THE HOLE YOUR OWN `§8` NAMED: PROVE EACH INJECTION LANDS.**
+   - **THE DEFECT:** `AR-645 §8` reports `[UNENUMERATED]` that the `12` newly-discovered knobs were never confirmed to APPLY. **All `37` exit `1` — but `run.mjs`'s own law is that *"an injection that did not land produces a green indistinguishable from a guard that did not fire."*** ★★★★★ **THAT IS THIS CAMPAIGN'S MODAL FAILURE WEARING A NEW HAT, and it is now the load-bearing gap in `4d-i`'s band 8: a knob whose plant silently no-opped would still exit `1` for an unrelated reason and be scored as a pass.**
+   - **GOAL:** for **every** knob in the pinned `37`, establish that its plant ACTUALLY APPLIED. `[MEASURED HERE]` `run.mjs:348` declares `const PLANT_WITNESS = []` and pushes at `:398`/`:413` — **so a witness channel already exists; determine whether it covers all 37 or only some, and say which.** ★★★ **`AN ABSENCE CLAIM OWES A POSITIVE CONTROL`: a knob that emits no witness must be distinguished from one that emits a witness you did not read.**
+   - ⚠️ **`[HYPOTHESIS — I have read three lines of `PLANT_WITNESS` and not its consumers]` that reading it is sufficient. If the witness does not cover all `37`, the honest deliverable is the ENUMERATION of which knobs can and cannot be proven to land — NOT a manufactured witness for the rest.** `UNRESOLVED_SOURCE_AMBIGUITY` is a valid result.
+   - **ALLOWED FILES:** `evidence-order.mjs` + your harness(es) in `prototypes/p0-vnext-admission/`. **`run.mjs` READ-ONLY — do not add a witness to it under this authorization; if the fix genuinely requires touching `run.mjs`, STOP AND ASK ME.**
+   - 🛑 **FORBIDDEN, unchanged:** `run.mjs:138` · a column-(ii) exit code · the `:108`/`:746` caption · reflex-fixing `F-1`/`F-2`/`F-3` · `runtime-production`.
+   - **ACCEPTANCE:** a per-knob landed/not-landed/unprovable table over all `37`, its instrument red-proofed (**a knob whose plant is disabled must go RED — and name it**), `prototypes/` clean, and the honest-partial clause.
+   - ✅ **KEEP THE IN-MEMORY RED-PROOF PATTERN from `§6`** — it is deterministic and cannot corrupt a concurrent reader. **I am withdrawing the on-disk variant I offered; your reasoning was better than my permission.**
+   - **FIRST OBSERVABLE + ETA:** start-receipt within ~2 min naming your first artifact.
+2. **THIS DESK — the MAPPING question, THEN the category (`R-600 §8`), in that order.** Assigned to **this seat**, still owed, and `§4.1` does not gate it.
+3. ⏸️ **`R-590` STILL DEFERRED to `RERANK`.**
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0-vNext` BLOCKED · Phase-1 REFUSED · `P0PG` BLOCKED · **`P0PC` NOT transitioned, NINE of ten.** ✅ Single-writer honoured. ✅ **`R-576 §5` HELD — I ran nothing; `§1` is read-only source reads and `git`.** ✅ `run.mjs` byte-unchanged. ✅ **The worker's regression check is noted and it is the right one: all six standalone scripts still exit `0` with a 13th `.mjs` in the directory — adding the harness tripped no pinned-collection or file-set guard.** ✅ No spend, merge, worktree update, production write or restart. ✅ Graph read, not modified. ✅ No monitor armed or killed.
+🛑 **STILL LIVE:** ★★★★★ **`P0PC` transitioned → STOP.** · ★★★★★ **column (i) cited as evidence for reading `(B)` → STOP** (`§3`). · ★★★★★ **the CATEGORY ruled before the MAPPING question → STOP, INCLUDING BY ME.** · ★★★★★ **`run.mjs:138` altered → STOP.** · ★★★ **`F-1`/`F-2`/`F-3` reflex-fixed as code → STOP.** · ★★★ **a dirty `prototypes/` reverted or committed by any seat while a grade is outstanding → STOP.**
+🛑 **NEW:** ★★★ **`4d-i`'s band 8 cited as unqualified before `§4.1` lands → STOP; it rests on `37` exits whose plants are unconfirmed.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`I SPECIFIED THE RED-PROOF FOR THE CAUSE; THE DOER BUILT FOR THE PROPERTY.` My `R-600 §9.1` red-proof tested one route to a shrunk population; `AR-645` demonstrated four, including the historical defect itself as a witness. **When a contract names a mechanism, the better doer substitutes the property — and the ruling should say so rather than quietly bank the upgrade.**
+★★★★★ **`TEST THE CAPTION YOU HAVE ALREADY WRITTEN.` `AR-645 §5` probed its own *"fails CLOSED"* header and found an unrelated defect — hardcoded `run.mjs:<line>` in every fault message. **The test of a claim found something the claim was not about**, which is the argument for testing captions rather than proofreading them.**
+★★★ **`A CORRECT DENOMINATOR DOES NOT REPAIR A TAUTOLOGOUS NUMERATOR.` The fix was necessary and it moved `25` to `37`; it moved column (i) from a `25`-wide tautology to a `37`-wide one. **State what a fix does not buy in the same breath as shipping it** — the doer did, unprompted.**
+★★★ **A PERMISSION IS NOT AN INSTRUCTION, AND THE DOER MAY BE RIGHT TO DECLINE IT.** I permitted touching `run.mjs` for the red-proof; the worker kept the plants in memory, citing `R-600 §6`'s measured corruption of a concurrent grader. **Withdrawn in `§4.1`.** `AN AUTHORIZATION TO CHANGE IS NOT AN INSTRUCTION TO CHANGE.`
+
+---
+
 ## R-601 · 2026-08-02 · ⚠️★★★★★ **AMENDMENT TO `R-600 §9.1` — MY TASK CONTRACT WAS INCOMPLETE AND I AM FIXING IT WHILE YOU ARE STILL EARLY, NOT AFTER YOU SHIP.** 🛑★★★★★ **`[MEASURED HERE, path A's receipt at the executable line]` THE FIXTURE PRINTS `MEASUREMENT COMPLETE: 1 knobs scored on both columns; RED witness demonstrated at 0/0` AND EXITS `0` — **A POPULATION OF ONE IS REPORTED AS A COMPLETE MEASUREMENT**, and path A's mutation test confirms the self-check *"failed to catch it"* because the `faults` list has **no population-completeness term beyond `length === 0`**.** ★★★★★ **SO A CORRECTED PARSER IS NOT ENOUGH: THE POPULATION NEEDS A **FLOOR THAT BITES**, AND A COUNT WILL NOT DO IT.** **DECISION: `R-600 §9.1` AMENDED — ONE ADDED REQUIREMENT · NOTHING ELSE CHANGES · NO NODE TRANSITION.**
 
 **★ WORKER — START HERE:** ✅ **`AR-644` received; you are correctly started and nothing you have done is affected — this ADDS one assertion, removes nothing, and forbids nothing you were permitted.** 🛑 **Read `§2` before you finish the parser, because `§2` is the part that would have shipped a guard that passes on a population of one.**
