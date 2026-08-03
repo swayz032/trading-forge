@@ -4,6 +4,16 @@
 
 ---
 
+## AR-728 · 2026-08-03 · ⏳ **START-RECEIPT — `R-670 §5`, DISPOSITION `F-2`–`F-5`. SAME SEAT, STILL HOLDING CONTEXT.**
+
+✅ **THE GATING PRECONDITION IS MET: `R-670 §5` says *"AFTER `R-669 §5`'s stage-4/5 scope is delivered, and NOT before."* **IT IS DELIVERED — `AR-727`, commit `85d5ac2e`.** ⚠️ **`R-670` names `AR-726` as newest, so it was written BEFORE `AR-727` landed; the desk has not yet seen it. **`AR-727` REFUTES `R-669 §2` — a fourth execution path exists and is already wired to the spec compiler — and that is worth reading before this lane's output is interpreted.**
+**ORDER: `F-2` FIRST.** **REASON: it is the only one requiring a MEASUREMENT rather than a read, `R-670 §4` calls it *"the important one"*, and if Lane A's comparison IS a tautology against the parse then the `approximation=False` that `R-661`/`R-666` credited as EARNED is partly self-certifying — `F-1` one layer in.**
+🛑 **`F-4` IS ABOUT MY OWN NUMBER AND I WILL NOT SOFT-PEDAL IT: the `172` denominator is mine (`AR-719 §1.2`), quoted onward by `R-666 §3`. **I will read the grader's reasoning in full and state AGREE or DISAGREE-WITH-REASON like any other finding — my authorship is not a reason to concede it OR to defend it.**
+🛑 **HELD: REPORT ONLY, NO CODE. I will not touch `resolve_exact_clock_span`, land or re-base Lane A, or build stage-4/5 wiring. If `F-2` cannot be answered without changing code, that is the stop condition and I report it.**
+**FIRST OBSERVABLE: `F-2`'s tautology verdict with a path-to-red demonstration either way. ETA ~25 min.**
+
+---
+
 ## AR-727 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-669 §5` DELIVERED — AND `(d)` REFUTES `R-669 §2`, WHICH IS A CONCLUSION **I HELPED PRODUCE**. **A FOURTH EXECUTION PATH EXISTS AND IT IS ALREADY WIRED TO THE SPEC COMPILER: `backtester.py:8309`, "BAND C — COMPILED-SPEC CONDITION-FAMILY DISPATCH".** `config["compiled_spec"]` → `from_compiled_spec()` → `SpecConditionStrategy` → **"the same `run_class_backtest()` path every archetype strategy uses"** — plus `run_walk_forward_class` for walkforward.** ✅★★★★★ **SO `R-648` STAGE `4` (EXECUTE) **IS REACHABLE FROM A COMPILED SPEC TODAY.** 🛑 **STAGE `5` (TRADE-BY-TRADE COMPARE) STILL IS NOT — `run_parity_diff` remains `2`-archetype-only, and `0` OF `11` TIER-A SPECS MAP ONTO IT WITHOUT A DERIVATION THE EDUCATOR DID NOT MAKE.**
 
 **TASK:** `R-669 §5` `(a)`–`(d)`. **RUN MODE: READ-ONLY STATIC SOURCE READS AT HEAD `aded71b4`. NO pytest, NO producer, NO backtest, NO harness run.** **NOTHING under `src/` modified. NO ADAPTER, SHIM OR WIRING WRITTEN.** **NOT GRAPH-SCHEDULED.**
