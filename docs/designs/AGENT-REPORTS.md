@@ -12,6 +12,89 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-654 · 2026-08-02 · 🛑★★★★★ **`LANE-2` ANSWERED, AND THE ANSWER IS NO: THE BATTERY RIG DID **NOT** GO RED ON ANY OF `4` PLANTED DEFECTS. TWO OF THEM PRODUCED **BYTE-IDENTICAL** OUTPUT — AND POSITIVE WITNESS PROBES PROVE THE CORRUPTED LINES **EXECUTE** (`45` AND `30` HITS), SO THIS IS BLINDNESS, NOT DEAD CODE.** 🛑★★★★★ **AND THE FINDING THAT OUTLIVES THE LANE: SIGN-FLIPPING MAX-DRAWDOWN COLLAPSES `max_drawdown` TO **`0.0` ON ALL `90` BACKTESTS**, AND THE LIVE `CRITICAL` INVARIANT NAMED FOR EXACTLY THAT DEFECT — `_check_max_drawdown_non_negative` — **PASSES IT, BECAUSE ITS PREDICATE IS `max_dd >= 0` AND `0.0 >= 0`.** ✅ **GREEN CONTROL + `4` DISCRIMINATING CONTROLS SUPPLIED. `RECOMMENDATION: REVISION_REQUIRED` — of the Phase-2 ENTRY item, not of my harness.**
+
+**TASK:** `LANE-2` (`R-608 §6.1`). **RULING:** `R-608`; `R-610 §"WORKER — START HERE"` re-confirmed *"finish `LANE-2` first"* mid-run — **read, no reassignment taken.**
+**BRANCH:** `h1-wave4-sealed12-driver` · **PLANT TREE:** `C:/Users/tonio/Projects/wt-lane2-plant-20260802`, detached at **`aa34c3ed`** (`worktree-session`: pinned to a SHA, never a branch name). 🛑 **NO ENGINE FILE WAS MODIFIED IN THE SHARED CAMPAIGN TREE AT ANY POINT** — `git status --porcelain` on the plant tree is **EMPTY** after every plant, verified by `git hash-object` restore-match on all `8` runs.
+**NOT GRAPH-SCHEDULED.** **NO** runtime/trading/capital/broker surface touched; `runtime-production` NOT read.
+
+### ✅ §1 — THE BASELINE, AND WHY `AR-652`'s NAMED BASELINE WAS THE WRONG ONE
+
+**`AR-653 §1` corrected it and this is the execution:** the vehicle is the BATTERY, so the test suite's `~53 vitest / ~100 pytest` pre-existing failures are **not in the diff at all**. The baseline this lane needs is the battery's own un-planted behaviour, and its load-bearing property is **DETERMINISM**.
+✅ **MEASURED `[MEASURED HERE]`** — `--smoke` twice, un-planted: **stdout byte-identical except `3` wall-clock fields** (`[12.1s]` vs `[11.1s]`). **All verdicts, all metrics, all summary lines identical.** Normalizer strips exactly those two varying classes (elapsed time, absolute tree path) and nothing else — `runbattery.sh`, documented in its own header.
+🛑 **AND A DEFECT IN THE VEHICLE, FOUND BY PASSING IT FLAGS THAT DID NOTHING:** `--report-out` / `--manifest` are **silently ignored in `--smoke`** (`scripts/null_gate_calibration.py:666-694` — `if args.smoke:` prints a summary; `Path(args.report_out).write_text` is in the `else`). **`rc=0` with no artifact at either path.** ★★★ **`A COMPLETION SIGNAL IS NOT A RESULT` — I only caught it because I went looking for the files rather than trusting the exit code.** ⚠️ **Consequence: stdout is the ONLY observable this vehicle has.**
+✅ **ISOLATED TREE IS A FAITHFUL VEHICLE:** its control vs the shared-tree baseline differs on **`182` lines, all one class** — `"cache stale (>24h)"` vs `"cache miss"` ×`180` (the plant tree lacks untracked `data_cache/`) plus the script's own absolute path ×`2`. **Zero verdict/metric differences.** All plant diffs below are internal to the plant tree, so that class cancels.
+
+### 🛑★★★★★ §2 — THE FOUR PLANTS. `0 / 4` MOVED THE RIG'S HEADLINE VERDICT.
+
+**Every plant: content-anchored (never line numbers), exact site count asserted, file hash asserted MOVED, restored from the pristine copy and hash-asserted RESTORED, other-file drift asserted `0`.**
+
+| # | plant | sites | battery output vs control | headline `full_battery` / false-pass |
+|---|---|---|---|---|
+| `P1` | `performance_gate.py:91` min-trades floor `< 100` → `< 1` | `1/1` | **`60` lines — rejection REASON changed** (`"Only 83 OOS trades"` → pnl/consistency reasons) | 🛑 **`0/3` · `0.0%` — UNCHANGED** |
+| `P2` | `backtester.py` max-DD sign flip `peak - equity` → `equity - peak` | `2/2` | 🛑🛑 ***BYTE-IDENTICAL*** | 🛑 **`0/3` · `0.0%` — UNCHANGED** |
+| `P3` | `backtester.py` Sharpe `np.sqrt(252)` → `np.sqrt(12)` | `2/2` | **`4` lines — only `BIF IS_true` on `2` of `3` nulls** (`-5.7686`→`-1.2588`) | 🛑 **`0/3` · `0.0%` — UNCHANGED** |
+| `P4` | `backtester.py` PF inverted `gross_profit/gross_loss` → `gross_loss/gross_profit` | `2/2` | 🛑🛑 ***BYTE-IDENTICAL*** | 🛑 **`0/3` · `0.0%` — UNCHANGED** |
+
+★★★★★ **THE LINE THE DESK AND THE OPERATOR WOULD ACTUALLY READ IS IDENTICAL IN ALL FIVE STATES — control and all four plants:**
+`Noise floor note: Full-battery false-pass rate = 0.0% (0/3 nulls). … Battery is reasonably selective.`
+**It says that whether the engine's drawdown maths is correct or sign-flipped, and whether profit factor is right or inverted.**
+✅ **`P3` CONFIRMS THE SCOUT'S PRE-REGISTERED PREDICTION VERBATIM** — the brief called `A2` *"likely SILENT-PASS today (only non-finite is checked) → highest-value plant."* **Measured: silent. Two numbers moved, no gate reacted.** ★★★ **A pre-registered prediction that comes true is worth more than a finding discovered after the fact, and it was the scout's, not mine.**
+
+### ✅★★★★★ §3 — THE POSITIVE WITNESS, BECAUSE "NO DIFF" AND "DEAD CODE" LOOK THE SAME
+
+🛑 **`P2`/`P4` returning *no observable change whatsoever* is EXACTLY what a plant in unreached code produces. I did not get to call the rig blind until I proved the lines run.**
+✅ **WITNESS PROBES `[MEASURED HERE]` — same two anchors, made to `raise` instead of miscompute:**
+- `W1` `drawdown_dollars = peak - equity; raise RuntimeError("PLANT_WITNESS_MAXDD")` → **`45` hits in the run output.**
+- `W2` PF line `; raise RuntimeError("PLANT_WITNESS_PF")` → **`30` hits.**
+★★★★★ **THE CORRUPTED LINES EXECUTE. `P2` AND `P4` ARE BLINDNESS, NOT DORMANCY.** *(`worker-execution`: a negative assertion needs a positive witness that the path RAN — and `A NEGATIVE RESULT FROM AN UNREACHED PLANT IS THE SAME SHAPE AS A WORKING GUARD.`)*
+🛑 **AND A SECOND FINDING FELL OUT OF THE WITNESS RUNS, UNASKED:** with `45` `RuntimeError`s raised from the core metrics path, the battery still printed **`Errors: 0`**, still printed **`"Battery is reasonably selective"`**, and still exited **`rc=0`**. Verdict letters degraded to skip/degenerate (`dsr:D pbo:S wrc:S spa:S`) — **but nothing in the summary a reader would check says anything went wrong.**
+
+### 🛑★★★★★ §4 — THE GUARD THAT CANNOT FAIL ON ITS OWN DEFECT
+
+**The brief named `A3`'s expected detector: `_check_max_drawdown_non_negative` (`invariant_harness/core.py:363`, `INV-7 CRITICAL`), and called `A3` *"the cleanest certain RED."*** ✅ **It is genuinely live:** `backtester.py:5940` / `:8417`, both commented *"always runs — cheap pure validation … Never env-gated."*
+⚠️ **MY FIRST PROBE WAS WRONG AND I NEARLY REPORTED IT:** I grepped **stdout** for `invariant` and got `0`, which reads as *"the harness never ran."* **It writes into the result dict; it does not print.** *(`i-measured-the-neighbouring-object` — I measured the wrong CHANNEL. Fourth join error of my session, all four mine, all four caught by control.)*
+✅ **THE PROBE THAT DISCRIMINATES `[MEASURED HERE]` — print the value the invariant reads, clean vs flipped:**
+
+| run | `result["max_drawdown"]` across `90` invariant calls | `critical_failures` |
+|---|---|---|
+| **clean** | `30` × `0.0`, `60` × **real values** (`1074.29`, `1105.64`, `1108.25`, `1125.63`, `1142.90`, …) | `[]` |
+| **max-DD flipped** | 🛑 **`90` × `0.0` — every backtest, no exceptions** | 🛑 **`[]`** |
+
+★★★★★ **SO THE PLANT DID REACH THE FIELD — `max_drawdown` went from real positive drawdowns to `0.0` ON EVERY SINGLE BACKTEST — AND THE `CRITICAL` INVARIANT NAMED FOR IT REPORTED CLEAN, BECAUSE ITS PREDICATE IS `max_dd >= 0.0` AND `0.0 >= 0.0` IS TRUE.**
+★★★★★ **`A GUARD WHOSE PREDICATE IS SATISFIED BY THE CORRUPTION IT IS NAMED FOR HAS NO PATH TO RED.` "Every strategy in the population has exactly zero drawdown" is a physically impossible result, and `INV-7` reads it as healthy.** ★★★ **The brief's `A3` prediction — *"cleanest certain RED"* — is **DISCONFIRMED BY MEASUREMENT.** It is the single most silent plant of the four.**
+⚠️ **`[HYPOTHESIS]`, NOT MEASURED: the mechanism is presumably a `max(...)` over a now-non-positive series clamping to the `0.0` seed. I did not read that line. The MEASURED fact is the `1074→0.0` collapse and the empty critical list; the *why* is unproven.**
+
+### ✅ §5 — CONTROLS, SO THIS IS NOT A BLANKET NULL
+
+**`"nothing moved"` is indistinguishable from `"my harness never ran"` without positives. Four supplied:** `P1` moved `60` lines and `P3` moved `2` numbers **through the same harness that reported `P2`/`P4` identical** · `W1`/`W2` fired `45`/`30` witnesses · the clean invariant probe returned **real** drawdowns where the flipped one returned `0.0` · every plant asserted its own file-hash movement and restore.
+
+### §6 — COMMANDS + RESULTS
+
+```
+runbattery.sh <tree> <label>   -> --smoke, normalize [Ts] + abs path
+base1 vs base2 (shared tree)   -> identical except 3 elapsed-time fields
+ctrl0 (plant tree)             -> rc=0 | full_battery 0/3 | false-pass 0.0%
+P1 60 diff lines  | P2 NO DIFF | P3 4 diff lines | P4 NO DIFF   (headline unchanged in all 4)
+W1 PLANT_WITNESS_MAXDD x45 | W2 PLANT_WITNESS_PF x30            (both: Errors: 0, rc=0)
+INV_VAL clean   -> max_dd real (1074.29 ...) crit=[]
+INV_VAL flipped -> max_dd 0.0 x90            crit=[]
+git -C wt-lane2-plant-20260802 status --porcelain -> EMPTY (after all 8 runs)
+```
+
+### 🛑 §7 — WHAT I DID **NOT** MEASURE / ACCEPTANCE AGAINST `R-608 §6.1`
+
+**ACCEPTANCE, HONESTLY SCORED:** ✅ green control · ✅ discriminating controls · ✅ `prototypes/`+`scripts/` clean · 🛑 **"the rig demonstrably RED on a planted defect" — NOT ACHIEVED** · 🛑 **"the planted defect named in the output" — NOT ACHIEVED; nothing named anything.** ★★★ **`R-608` granted the honest-partial clause and this is me using it: the lane's question is ANSWERED, and the answer is that this vehicle does not satisfy Phase-2 ENTRY.**
+**NOT MEASURED:** the `B` (walk-forward), `C3`/`C4` (TS-gate), `D` (prop-rule) and `E` (fill/slippage) plant families — **`0` of those attempted**; my `4` are all `A`/`C1-C2` class. · **Whether a LENIENCY plant large enough to flip a null to PASS would register** — `P1` was my leniency attempt and downstream gates still rejected; **I did not escalate to a plant that disables those too.** · **Whether the two `backtester.py` code paths (`~5323`/`~7503`) are both live or one is vestigial** — I planted both together every time and cannot separate them. · **Whether `max_drawdown` reaching `0.0` would be caught anywhere ELSE downstream** (TS gates, promotion) — **only the battery and `INV-7` were in scope.** · **`0` runs against the real wave rig** — this is the null-cal vehicle the brief proposed, and `backtests = 0` is unchanged.
+🛑 **I DID NOT GRADE THIS.** `§4` is a defect claim about a production invariant and I am the doer. **`accuracy-validator` is one authorization away — say the word and I will hand it the pinned tree, the `INV_VAL` recipe and an explicit novel false-green hunt, with a durable receipt path.**
+
+**FAN-IN: `LANE-1` CLOSED · `LANE-2` CLOSED (this report) · `LANE-3` NOT STARTED = `2 / 3`.** ⚠️ **`LANE-3` is unstarted, not blocked — I am not handing off.**
+**RECOMMENDATION: `REVISION_REQUIRED`** — of the Phase-2 ENTRY item's chosen vehicle, not of this harness.
+**NEXT SMALLEST TASK:** the desk's call between (a) `LANE-3`, (b) `R-610 §5.1` determinism precondition, or (c) `§4`'s `INV-7` predicate as its own repair. **My read: `§4` is the one with a live blast radius, because it is a `CRITICAL` invariant in the production backtest path that currently cannot fail.**
+🧹 **PLANT TREE LEFT IN PLACE** for re-execution: `git worktree remove C:/Users/tonio/Projects/wt-lane2-plant-20260802` when the desk is done with it — **never `rm -rf`** (`reference_rm_rf_junction_deletes_target`).
+
+---
+
 ## AR-653 · 2026-08-02 · ⏱️ **START-RECEIPT — `LANE-2` CONTINUES (`R-608 §6.1`). SAME SEAT, NOT A NEW ONE: THE OPERATOR `/clear`-ed THIS WINDOW AT A TASK BOUNDARY AND RE-SEATED IT.** 🛑 **AND ONE CORRECTION TO MY OWN `AR-652`: THE "TRUSTED PRE-PLANT BASELINE" I NAMED AS THE NEXT GATE WAS THE **WRONG BASELINE**.**
 
 **TASK:** `LANE-2` — battery-rig fault-injection calibration. **FAN-IN: `LANE-1` CLOSED (`AR-651`, approved `R-608`) · `LANE-2` IN PROGRESS · `LANE-3` NOT STARTED = `1 / 3`.** ★ Per `worker-execution §10`, `1/3` with nothing blocked is a reason to stay, not to hand off. **No handoff is being declared.**
