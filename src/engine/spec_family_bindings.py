@@ -2312,6 +2312,155 @@ def session_role_resolver_enabled() -> bool:
     return os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED", "false").strip().lower() == "true"
 
 
+# ─── THE FIDELITY TERM ON THE SESSION-KEYWORD ROUTE (F-1, R-662 §7) ─────────
+# WHY THIS EXISTS. R-662 §1 measured the gate INVERTED at the executable line:
+# a row naming a session bound to that session's canonical window and its
+# binding DECLARED EXACTNESS -- with no term anywhere comparing that window
+# against the span the source actually taught. So a 5-minute taught opening
+# range bound to ny_am = [420,600) and was certified exact, 36x too wide.
+# `A GATE THAT CHECKS MEMBERSHIP INSTEAD OF FIDELITY REWARDS VAGUENESS AND
+# PUNISHES PRECISION.`
+#
+# ★ SCOPE, AND IT IS DELIBERATELY NARROW: this term fires ONLY on rows that
+# CARRY CLOCK TEACHING. A phrase naming a session and carrying NO clock makes
+# no clock claim, so there is nothing to compare and R-284 Decision A's
+# standing argument stands untouched (the primitive evaluates that exact
+# window; there is no clock derivation in the path). Widening it to name-only
+# rows would move published verdicts -- a RE-BASELINE decision for the desk
+# (R-662 stop condition (1)), not a worker's.
+
+
+def resolve_exact_clock_span(object_text: str) -> tuple[int, int] | None:
+    """Taught text -> (start_min, end_min) for ONE unambiguous clock span, else None.
+
+    ★ PORTED from the preserved Lane A patch
+    (docs/designs/lane-a-exact-clock-route-2026-08-03.patch, e460c88d) rather
+    than re-authored -- R-648 section 2.5 / R-662 section 7.2, "REUSE, DO NOT
+    REBUILD". When Lane A lands there is ONE parser here, not two. Conjunct (4)
+    is the single declared difference; see its note.
+
+    CONJUNCTS, ALL REQUIRED, FAIL-CLOSED. The conjunct that does the narrowing
+    is the span-preposition test, an EXISTING guard in this module --
+    _SESSION_CLOCK_SPAN_PREP_RE, whose set deliberately excludes `at` and
+    `into`. That is why "this one AT 7:00 a.m. and this one AT 8:00 a.m." (two
+    POINT references, not a span) is refused structurally, not by special case.
+    """
+    if not object_text:
+        return None
+    text = object_text.strip()
+
+    # (1) EXACTLY two clock tokens. Three or more means a parameterised family
+    #     taught in one row -- the golden slice carries SIX, spanning three
+    #     windows -- and picking one of them is a derivation loss (R-660 s1).
+    toks = list(_SESSION_CLOCK_TOKEN_RE.finditer(text))
+    if len(toks) != 2:
+        return None
+
+    mins: list[int] = []
+    for m in toks:
+        hour, minute, meridiem = _session_clock_token_parts(m)
+        hh = hour % 12
+        if meridiem and meridiem.lower().startswith("p"):
+            hh += 12
+        mins.append(hh * 60 + minute)
+
+    # (2) Two DISTINCT anchors in order. Equal or reversed is not a span.
+    if len(set(mins)) != 2 or mins[0] >= mins[1]:
+        return None
+
+    # (3) BOTH numerals governed by a span preposition -- the delimiting test.
+    if len(_SESSION_CLOCK_SPAN_PREP_RE.findall(text)) < 2:
+        return None
+
+    # (4) Clock context. TIER 1 (names the market itself) is sufficient alone.
+    #     TIER 2 (a bare timezone / meridiem) counts HERE because conjunct (3)
+    #     has already established that both numerals are doing delimiting work
+    #     -- precisely the condition this module's own tier-2 note states: "a
+    #     tier-2 marker now counts only when the clock token is additionally
+    #     GOVERNED by a span/selection preposition".
+    #     ! THIS IS THE ONE PLACE THIS FUNCTION DIFFERS FROM THE LANE A PATCH,
+    #     WHICH REQUIRES TIER 1 OUTRIGHT. Declared rather than quietly folded
+    #     in: Lane A converts NO-BIND -> BIND, where a false span invents a
+    #     confident bind; this route only ever converts EXACT -> APPROXIMATE
+    #     unless the span EQUALS the executed window, so the risk asymmetry is
+    #     inverted, and tier-1-only would make the green arm unreachable for
+    #     every "9:30 a.m. ... Eastern" row -- i.e. "refuse everything", which
+    #     R-662 section 7.4 forbids.
+    if not (_SESSION_CLOCK_MARKET_CONTEXT_RE.search(text) or _SESSION_CLOCK_TZ_CONTEXT_RE.search(text)):
+        return None
+
+    return mins[0], mins[1]
+
+
+def _derive_session_zone_window_by_execution(zone: str) -> tuple[tuple[int, int], ...] | None:
+    """EXECUTE is_in_killzone and OBSERVE the window it actually evaluates.
+
+    ★ THIS NEVER RESTATES A CONSTANT. R-660 section 3 made it law: "a cheaper
+    comparison against the primitive's DECLARED window arithmetic qualifies
+    ONLY if it COMPARES against something DERIVED FROM THE PRIMITIVE.
+    Re-asserting a constant is not a comparison and would reinstate the defect
+    under a new name." _REAL_ZONE_INTERVALS is exactly such a restated constant
+    -- a LOCAL MIRROR of session_windows.py -- so it is deliberately NOT what
+    this compares against. We probe the real primitive minute by minute and
+    read the window off its own answers.
+
+    FAILS CLOSED: any import, execution or shape problem returns None and the
+    caller then declines to certify. A primitive we cannot run is a primitive
+    we do not certify."""
+    try:
+        import datetime as _datetime
+        import importlib
+
+        sw = importlib.import_module("src.engine.session_windows")
+        # 2024-01-03: a Wednesday with no ET DST transition, so ET minute-of-day
+        # is a bijection with UTC minute-of-day and 1440 probes cover every ET
+        # minute exactly once.
+        base = _datetime.datetime(2024, 1, 3, tzinfo=_datetime.UTC)
+        hits: set[int] = set()
+        for i in range(1440):
+            dt = base + _datetime.timedelta(minutes=i)
+            et_min = sw._to_et_minutes_of_day(dt)
+            if et_min is None:
+                return None
+            if sw.is_in_killzone(dt, zone):
+                hits.add(int(et_min))
+        if not hits:
+            return None
+        runs: list[tuple[int, int]] = []
+        start = prev = None
+        for m in sorted(hits):
+            if start is None:
+                start = prev = m
+            elif m == prev + 1:
+                prev = m
+            else:
+                runs.append((start, prev + 1))
+                start = prev = m
+        runs.append((start, prev + 1))
+        return tuple(runs)
+    except Exception:  # noqa: BLE001 - fail closed, never certify on a broken probe
+        return None
+
+
+def _session_keyword_fidelity_approximation(object_text: str, zone: str, base_approximation: bool) -> bool:
+    """`approximation` for a keyword-route bind, WITH A FIDELITY TERM.
+
+    Returns False (exact) IF AND ONLY IF the span parsed from the taught text
+    EQUALS the window the primitive is OBSERVED to evaluate. Everything else
+    that carries clock teaching resolves to True. Nothing is granted by
+    membership."""
+    if not _SESSION_CLOCK_TOKEN_RE.search(object_text or ""):
+        # No clock teaching -> no clock claim -> nothing to compare. Untouched.
+        return base_approximation
+    span = resolve_exact_clock_span(object_text)
+    if span is None:
+        return True  # clock taught, no single unambiguous span -> FAIL CLOSED
+    derived = _derive_session_zone_window_by_execution(zone)
+    if derived is None:
+        return True  # primitive not runnable -> FAIL CLOSED
+    return derived != (span,)
+
+
 def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> ConditionBinding:
     """Bind a single spec condition {id, type, object, role, span, evidence} to
     a primitive descriptor. Never raises; unknown condition types are honestly
@@ -2496,6 +2645,13 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         else:
             zone = resolve_session_keyword(obj)
             if zone is not None:
+                # ★ F-1 (R-662 §7). approximation is no longer granted by
+                # MEMBERSHIP in SESSION_KEYWORDS. If the row carries clock
+                # teaching, exactness is EARNED only when the parsed span
+                # equals the window is_in_killzone is OBSERVED to evaluate;
+                # otherwise it fails closed to True. Rows with no clock make no
+                # clock claim and are untouched. The BIND itself is unchanged —
+                # this only ever moves the exactness flag, never bindable.
                 return ConditionBinding(
                     condition_id=cond_id,
                     type=cond_type,
@@ -2503,7 +2659,9 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                     object=obj,
                     bindable=True,
                     primitive=meta.effective_primitive(),
-                    approximation=meta.effective_approximation(),
+                    approximation=_session_keyword_fidelity_approximation(
+                        obj, zone, meta.effective_approximation()
+                    ),
                     executed=meta.executed,
                     reason=None,
                     session_zone=zone,
