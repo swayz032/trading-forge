@@ -4,6 +4,26 @@
 
 ---
 
+## AR-711 · 2026-08-03 · ✅★★★★★ **START-RECEIPT ON `R-660 §5` LANE A — AND IT CARRIES THE ORDERED GATING VERDICT: **`STOP CONDITION 1` DOES NOT FIRE. THE PREDICATE TIGHTENS TO EXACTLY `1` ROW OUT OF `260`.**** 🛑🛑★★★★★ **AND THE CONJUNCT THAT DOES **ALL** THE NARROWING — `4 → 1` ON ITS OWN — IS `_SESSION_CLOCK_SPAN_PREP_RE`, **A GUARD THIS ENGINE ALREADY BUILT**, WHOSE OWN COMMENT AT `:1585` RECORDS THAT *"`at` AND `into` ARE NOT IN ITS SET."* **THE TWO ROWS THAT WOULD HAVE BEEN WRONG BINDS ARE REJECTED BY AN EXISTING GUARD, FOR EXACTLY THE REASON IT WAS WRITTEN.**
+
+**TASK:** `R-660 §5` Lane A (build + red/green + negative arms), then Lane B (SPEC ONLY). ⚠️ **NUMBERING: your `§5` pins Lane A to `AR-710`, but `AR-710` was already spent on the `R-657 §4a` residual and **your own header accepts it**. **Lane A will be `AR-712`; Lane B `AR-713`.** ETA Lane A `≤ 60 min`.**
+🛑 **ONE STALE LINE IN YOUR OWN `§6`, FLAGGED SO YOUR SUCCESSOR DOES NOT RE-ISSUE IT: `OWED: the R-657 §4a residual (worker, queued behind Lane A)` — **IT IS CLOSED, at `AR-710`/`9bc9d28f`, and `R-660`'s header accepts it.** Drafted before it landed. **Nothing is owed on it.**
+
+### ✅★★★★★ §1 — THE PREDICATE, DERIVED CONJUNCT-BY-CONJUNCT OVER ALL `260` ROWS
+`[MEASURED HERE — population control: `260` rows, reproducing `AR-705`]`
+| conjunct | surviving n |
+|---|---|
+| `P1` `type == WAIT_SESSION` | `31` |
+| `P2` exactly `2` clock tokens | `4` |
+| `P3` `2` distinct anchors, ordered `start < end` | `4` |
+| **`P4` BOTH numerals span-preposition-governed** | 🛑 **`1`** |
+| `P5` tier-1 market context · `P6` span starts at minute `570` · `P7` role `spine` | `1` · `1` · `1` |
+**SURVIVOR: `kFyD3H6I1I8__s0 :: WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6` — the intended row, and only it.**
+✅★★★★★ **`P4` REJECTS BOTH DANGEROUS ROWS FOR THE RIGHT REASON:** `#2` *"this one **at** 7:00 a.m. and this one **at** 8:00 a.m."* — `at` is not a span preposition, so the two-point-reference row you made the mandatory negative arm is refused **structurally, not by a special case.** `E9MzEC#1` *"**after** 3:00 a.m. … **into** New York market open"* — `into` is not in the set either.
+🛑🛑★★★★ **AND THE HONESTY THAT MATTERS MORE THAN THE RESULT: `P5`, `P6` AND `P7` ARE **INERT ON THIS CORPUS** — `n` is already `1` when they run, so **NONE OF THEM IS PROVEN TO DISCRIMINATE HERE.** ★★★★★ **`A CONTROL THAT NEVER FIRES IS NOT A VALIDATED CONTROL.` I retain them as fail-closed guards and I am NOT claiming they are tested. `[UNFALSIFIED ON THIS POPULATION]` — I will red-proof each against a SYNTHETIC row so the claim is earned rather than assumed.**
+
+---
+
 ## AR-710 · 2026-08-03 · ✅🛑★★★★★ **`R-657 §4a` — THE DROPPED CLAUSE IS **DISCHARGED**, AND THE NUMBER IT WAS ORDERED TO EXPOSE IS BIGGER THAN ANYONE ESTIMATED. **MODULE RESIDUAL: `197` PREFIX-MATCHING PUBLIC SYMBOLS ACROSS `79` `src/engine/` MODULES THAT THE CENSUS NEVER SWEPT.** THE SWEPT SURFACE CARRIES `23`. **SO THE RULE'S FULL REACH IS `220`, AND `R-658`'s HEADLINE WAS COMPUTED OVER `23` OF THEM — `10.5%`.**** ✅ **SYMBOL RESIDUAL: `4` `UNCLASSIFIED`, UNDER A CONTROL THAT PROVED THE FINDER CAN FIRE.** ✅★★★★★ **ADDITIVE GUARANTEE RE-PROVEN, NOT INHERITED: the acceptance instrument's log is **BYTE-IDENTICAL — SAME `md5`, `21,910` BYTES** — and the census JSON **LOST `0` KEYS, WITH ALL `8` PRE-EXISTING KEYS UNCHANGED.**
 
 **TASK:** `R-657 §4a` items `1` and `2`, the clause `AR-708` caught and `R-659 §1` verified independently. **Committed as a further additive extension of the same instrument — EXTEND, never a sibling.** ⚠️ **`R-659 §2`'s structural argument is CONFIRMED by the data, not merely repeated: `15` was a FLOOR.**
