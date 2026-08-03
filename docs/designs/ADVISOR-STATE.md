@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3700` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3704` at THIS commit, 2026-08-03 05:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3700` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3704` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,13 +94,17 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-03 `04:5x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, SECOND `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-626` (`2e02a911`). Newest AR: `AR-670` — **RULED / APPROVED** at `R-626` (with `AR-669`).** Worker: ✅ **ACTIVE, not blocked. Every previously-queued worker item is CLOSED; `R-626 §5.1` is the new one.**
+**Ruling ledger at `R-628` (`c7d34143`). Newest AR: `AR-672` — **RULED / APPROVED** at `R-628`.** Worker: ✅ **ACTIVE, not blocked.**
 
-## ★★★★★ AUTHORIZED NOW — **`R-626 §5`** (2026-08-03, `2e02a911`)
-1. ✅★★★★★ **WORKER — CLOSE `INV-13`'s FAIL-OPEN, THEN ITS PROMOTION TO `CRITICAL` SHIPS.** **PROPERTY (not a mechanism): *`INV-13` cannot return a passing verdict on absent or unusable data.*** `[MEASURED HERE — it currently returns `passed=True` at `core.py:750` (`prop_compliance` empty) and `:782` (no firm has `ending_balance_uncapped`).]` **Files:** `src/engine/invariant_harness/core.py` ONLY. **Forbidden:** touching `prop_sim.py`, changing WHAT `INV-13` compares, widening its tolerance. **ACCEPTANCE:** red-proofed BOTH ways on the unchanged convicting instrument — planted `+$7000` still fires and names the amount (re-run, not carried), AND `prop_compliance`-absent does NOT produce a pass; then flip to `CRITICAL` in the same change and show `overall_passed` goes `False`. **HONEST-PARTIAL:** if absence is legitimate on some real run class, STOP — do not guess a discriminator.
-2. ⏸️ **THEN — ENUMERATE THE `WARNING` TIER** (`R-626 §4.3`): every `severity="WARNING"` check, whether its witness is real or absent, PROMOTE-or-DELETE recommendation. **Recommendation only — dispositions are the desk's.**
-3. ⏸️ **THEN — DELETE `INV-1`** (`R-626 §4.2`), as a SEPARATE change after item 1 lands, so the harness is never without coverage of that identity.
-4. ⏳ **DESK — TWO GRADER LANES IN FLIGHT, fan-in `0/2`:** `GRADE-EVENTMASK-REPAIR-2026-08-03.md` (grades `AR-666`/`AR-667`) and `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` (the class sweep owed since `R-624 §5.3`). 🛑 **Both counted; a missing lane is a finding, never an omission.**
+## ★★★★★ AUTHORIZED NOW — **`R-628 §3`/`§4`** (2026-08-03, `c7d34143`)
+1. ✅★★★★★ **WORKER — REWRITE ONE ASSERTION.** `src/engine/tests/test_invariant_harness.py:511` `TestPerFirmEndings::test_passes_when_no_prop_compliance` asserts `check.passed` after popping `prop_compliance` — **it is a transcript of the fail-open `R-627 §3.1` deliberately removed.** 🛑★★★★★ **THE STANDING "NEVER EDIT AN ASSERTION" STOP IS LIFTED FOR THIS ONE TEST ONLY (`R-628 §3`).** Must assert POSITIVELY: `passed is False` **and** `applicable is False` · evidence names WHY · **and a witness that `overall_passed` is UNCHANGED vs the same result WITH `prop_compliance`** — that last one is what would catch a future promotion accidentally gating on absence. **RENAME it. Red-proof against `core.py` at `f936b2dd~1`.**
+2. ⏸️ **THEN — `R-627 §3.2`: MEASURE THE PRODUCER DISCRIMINATOR.** Does the result dict carry any field identifying `run_backtest` vs `run_class_backtest` vs `walk_forward`? **NO code change. "There is none" is a complete answer** and makes gating a producer-side change needing its own `ratify-packet`.
+3. ⏸️ **HELD on item 2: `INV-13 → CRITICAL` and `INV-1` DELETION** (`R-627 §3.3`). 🛑 **`INV-1` must NOT be deleted while `INV-13` is still `WARNING`.**
+4. ⏸️ **`WARNING`-tier enumeration** (`R-626 §5.2`).
+5. ⏳ **DESK — TWO GRADER LANES IN FLIGHT, fan-in `0/2`** `[MEASURED — neither receipt on disk as of `R-628`]`: `GRADE-EVENTMASK-REPAIR-2026-08-03.md` (grades `AR-666`/`AR-667`) · `SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md` (class sweep owed since `R-624 §5.3`). 🛑 **Both counted; a missing lane is a finding, never an omission.**
+
+## 🛑★★★★★ THE STANDING QUESTION AT `INV-13` (`R-628 §2`, law)
+**`A "NOT APPLICABLE" SUBTRACTED FROM THE FAILURE SET IS A FAIL-OPEN WEARING A TAXONOMY.`** `not_applicable` checks stay IN `failed`/`warnings` and carry a flag — **never subtracted**, or the absence silently exempts itself the moment the check gates. ★★★ **Absence-passes-the-gate re-entered FOUR times on 2026-08-03, twice through its own remedy (`R-618 §3` · `R-626 §4.1` · `R-627 §1` composition · the subtraction). ASK OF EVERY CHANGE NEAR `INV-13`: "does this make absence pass?"**
 
 ## ★★★★★ DECIDED AT `R-626 §4` — THREE THINGS THE DESK HAD CARRIED SINCE `R-620`
 - **`INV-13` → `CRITICAL`, GATED on item 1 above.** The `R-620 §4.1` condition is DISCHARGED: its feared false-positive was *"fires on a legitimately DLL-capped run"*, and **no such run is constructible** — `AR-669` proved the cap was removed by `PHASE21-PART3` (`net_pnl` assigned once at `prop_sim.py:110`, `:193` structurally dead, `ending_balance == ending_balance_uncapped` by construction), and I confirmed all three proofs at the executable line.
