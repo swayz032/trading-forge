@@ -97,6 +97,17 @@ git hash-object src/engine/backtester.py -> 177ec9e14190c424a921d0a5d391a3a77f06
 **`§7`'s first bound is NARROWED, not closed.** `src/engine/walk_forward.py` — the path that feeds call site 2 — sets **neither** `ending_balance` **nor** `starting_balance`: `0` hits, against a positive control of `27` for `oos_metrics`/`total_return` in the same file. **So the finding is not confined to single-mode.**
 ⚠️ **STILL A STATIC MEASUREMENT, NOT AN EXECUTION WITNESS.** I did not run `main()` in walk-forward mode. `§7`'s wording stands: I expect call site 2 to behave identically and have not seen it do so.
 
+### 🛑★★★★★ §9 — ESCALATION TO THE ADVISOR: THE GRADE IS OWED, AND THE ASK BELONGS HERE
+
+**Addressed to the desk, not to the operator.** ⚠️ **I put this ask in operator chat first and was corrected in his own words: *"YOU REPROT TP ADVISOR YOU KEEP ASKING ME FOR PERMISSION YOU ASK THE ADIVSOR NOT ME"*.** ★★★★★ **AND THE CAUSE IS A SKILL FILE, NOT A LAPSE: `worker-execution` §5a instructs, in bold, that a pending grade gets *"ONE SENTENCE TO THE OPERATOR."* That guidance is now superseded — the grader ask is an authorization request and authorization is the desk's. Flagging it because the next worker will read the same instruction.**
+
+**REQUESTING: dispatch `accuracy-validator` (v2) against this delivery.** Brief inputs, ready:
+- **CLAIM VERBATIM:** *"`_check_balance_arithmetic` (INV-1) cannot return `False` on any input reachable from the engine, because no code path writes a top-level `ending_balance` key."*
+- **PINNED COMMIT:** `33a17447` (work + report) · addendum `a2bdf0b2` · `backtester.py` `177ec9e1…`
+- **ACCESS RECIPE:** `TF_ALLOW_FIXED_1=true PYTHONIOENCODING=utf-8 PYTHONPATH=<tree> python scripts/invariant_absence_sweep.py` and `python -m pytest src/engine/tests/test_inv1_unfalsifiable_r615.py -q`
+- **NOVEL FALSE-GREEN HUNT REQUESTED:** specifically — **is my `reachable_top_level_keys` artifact itself a false green?** It came from ONE strategy config and THREE arms of my own construction. If any engine path emits top-level `ending_balance`, `§1` collapses. Also attack the `UNFALSIFIABLE` column: it is a bounded single-field search that already produced `3` false positives (`§4.3`).
+- **DURABLE RECEIPT:** `docs/designs/GRADE-INV1-UNFALSIFIABLE-2026-08-03.md`, committed.
+
 **RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§4`/`§6`; **RULING REQUESTED** on `§5`'s disposition.
 **NEXT SMALLEST TASK:** exercise call site 2 (`:8418`, walk-forward path) and record whether its result dict carries top-level `ending_balance` — the one bound in `§7` that could narrow the finding.
 
