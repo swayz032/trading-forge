@@ -4,6 +4,19 @@
 
 ---
 
+## AR-641 · 2026-08-02 · ⏳ **HOLD RECEIPT (`R-597 §5.1`) — HOLDING, NOTHING ADOPTED, SCOPE NOT WIDENED.** ✅ **AND THE ONE THING I CAN DO ABOUT THE `§4` GRADER DEBT, DONE: **I HAVE ASKED THE OPERATOR FOR THE WORD, IN ONE SENTENCE, IN PLAIN ENGLISH.****
+
+**RULING ID:** `R-597 §5.1` · **TASK ID:** AR-641 · **PRIOR:** AR-640 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
+
+✅ **HOLDING.** No assignment held or adopted. **Scope NOT widened:** no hardening, no `[UNENUMERATED]` clean-up from `AR-640 §6`, and the named grader targets (`F-2` · `F-3` · the `:108`-vs-`:746` caption) are **NOT TOUCHED** — `R-597 §4b` makes changing them destructive of the grader's own object. ✅ No monitor armed, retired or killed. ✅ `prototypes/` clean at rest. ✅ `runtime-production` NOT touched, NOT read. ✅ No spend.
+
+🛑★★★★★ **THE DEBT, AND WHY I DID NOT JUST REPORT IT AS BLOCKED:** `R-597 §3a` records `R-596 §7.2`'s independent refutation as **OWED AND UNPAID**, because that seat is instructed not to spawn grader agents absent the operator's explicit request. **THIS SEAT IS UNDER THE SAME CONSTRAINT — I verified it applies to me and did not test it by dispatching.** ★★★★★ **But `A CAPABILITY YOU FORGOT YOU HAD READS EXACTLY LIKE ONE THAT DOES NOT EXIST`, and the standing correction on this desk is that a grade owed is **one sentence away**, never a status line. **So the ask has been MADE, not filed** — the operator has been told in plain English that one word runs the `accuracy-validator` and closes `4d`. The brief already exists, written out at `R-597 §4`; nothing needs re-deriving when the word comes.**
+⚠️ **I am NOT calling this discharged.** The debt closes when the grader RUNS, not when the ask is relayed — `A COMPLETION SIGNAL IS NOT A RESULT`, and an ask is not even a signal.
+
+**NEXT SMALLEST TASK: none. Holding for the grade or for a new lane.**
+
+---
+
 ## AR-640 · 2026-08-02 · ✅★★★★★ **`R-596 §4` DONE — THE TWO-COLUMN READING-NEUTRAL FIXTURE IS BUILT, RUN, AND SHIPS IN THIS COMMIT.** ✅★★★★★ **IT LANDS EXACTLY ON THE PRE-REGISTERED SPLIT: **COLUMN (i) `25/25` · COLUMN (ii) `23/25`**, THE TWO DIVERGENT ROWS NAMED, AND THE **RED WITNESS DEMONSTRATED AT `0`/`0`** — NOT ASSERTED.** 🛑★★★ **AND I FIXED A CAPTION DEFECT IN MY OWN INSTRUMENT BEFORE SHIPPING IT: IT COUNTED **KNOBS** AND CALLED THEM **CLASSES** — THE EXACT JOIN `R-596 §2` HAD JUST CORRECTED ME ON, REPRODUCED INSIDE THE FIXTURE BUILT IN RESPONSE TO IT.**
 
 **RULING ID:** `R-596 §4` · **TASK ID:** AR-640 · **PRIOR:** AR-639 · **ARTIFACT: `prototypes/p0-vnext-admission/evidence-order.mjs` (ships in THIS commit, `ar-ships`).** **GRAPH NODE: `P0PC` — **NO TRANSITION PROPOSED**; `4d` is not mine to rule and `§7.2`'s grader has not run.**
