@@ -4,6 +4,66 @@
 
 ---
 
+## AR-663 · 2026-08-03 · 🛑🛑★★★★★ **`§6.1` ANSWERED — AND THE SEVERITY INVERSION IS WORSE THAN `R-618` DESCRIBED, IN THE DIRECTION THAT MATTERS. `INV-13` IS `WARNING`, ITS VERDICT HAS **ZERO CONSUMERS ANYWHERE**, AND — THE PART NOBODY HAS MEASURED — **IT IS NEITHER TAUTOLOGICAL NOR STARVED.** ITS JOIN KEY MATCHES A REAL PRODUCER (`prop_sim.py:466`) AND ITS TWO COMPARED QUANTITIES COME FROM **GENUINELY INDEPENDENT DERIVATIONS.**** ✅★★★★★ **SO `INV-13` ALREADY *IS* THE ORACLE-PATTERN CHECK THE OPERATOR SPECIFIED FOR THE `INV-1` REPAIR (`R-617 §4.5`) — BUILT, RED-PROOFED, CORRECTLY AIMED AT THE **UNCAPPED** FIELD, AND SWITCHED OFF BY A SEVERITY STRING.** 🛑 **PROPOSAL ONLY. `core.py` NOT MODIFIED. NOTHING APPLIED.**
+
+**TASK:** `R-618 §6.1`. **FAN-IN: `1 / 2`** — `§6.2` (the historical DSL-path trade record) is NOT started and is next in this same wave. **I am not handing off.**
+
+### ✅ ANSWER 1 — `INV-13`'s SEVERITY IS `WARNING`
+
+`[MEASURED HERE, read at the line]` — four carriers, all agreeing:
+| site | evidence |
+|---|---|
+| `core.py:53` | header table — `INV-13 per_firm_endings_consistent   (WARNING)` |
+| `core.py:758` · `:790` · `:806` | all three `return InvariantCheck(...)` paths carry `severity="WARNING"` |
+| `core.py:888` | registry membership — `_check_per_firm_endings` is in **`_WARNING_CHECKS`**, not `_CRITICAL_CHECKS` |
+
+### 🛑 ANSWER 2 — ITS CONSUMERS: **ZERO. THE VERDICT IS PRODUCED, SERIALIZED, TYPED, AND READ BY NOBODY.**
+
+`[MEASURED HERE]` The severity algebra is decided at one line: **`core.py:939` — `overall_passed=len(critical_failures) == 0`.** `WARNING` failures are collected at `:929` and **excluded from `overall_passed` by construction.** Then the value travels four hops and dies:
+1. `backtester.py:5959` / `:8427` — serialized into `result["invariants"]["warnings"]`.
+2. `backtest-service.ts:376` — **DECLARED** in the TS type as `warnings: Array<string>`.
+3. **No reader.** ✅ **POSITIVE CONTROL ON THE SAME SURFACE, SAME SEARCH SHAPE:** `critical_failures` → `5` hits in `backtest-service.ts`, `2` in `lifecycle-service.ts`; repo-wide `41` non-doc hits. **The method finds readers when they exist.** ✅ **FALSE FRIENDS CHECKED AND EXCLUDED, NOT COUNTED:** the only other `warnings` token in `backtest-service.ts` is `"statistical_warnings"` (`:98`, different key); `lifecycle-service.ts` has **`0`**; the sole Python hit is `compliance["warnings"]` (`compliance_gate.py:342`, unrelated dict).
+4. **Contrast — what `CRITICAL` reaches** `[MEASURED HERE]`: `overall_passed` → `lifecycle-service.ts:1689` → `if (invariants?.overall_passed === false)` → **hard block on `TESTING → PAPER`**, the trust boundary before paper trading (`:1653`).
+
+✅★★★ **CORROBORATED, AND I NAME THE ORDERING SO IT IS NOT MISTAKEN FOR A SECOND PATH IT ISN'T:** I derived the zero-readers result independently, **then** found `GRADE-INVARIANT-HARNESS-2026-08-03.md:74` had already reached it with the same positive control and a `30`-token enumerated surface. ⚠️ **AND IT IS NOT NEW TO THE DESK EITHER — `R-616 §5(b)` already carries it as a false-green path.** **I am confirming a known finding on an independent path, not discovering one.**
+
+### 🛑🛑★★★★★ ANSWER 3 — THE PART THAT IS ACTUALLY NEW, AND IT DECIDES THE PROPOSAL
+
+⚠️★★★★★ **I ALMOST PROPOSED A NO-OP.** `AR-660` proved `INV-1` is starved by a level mismatch; the obvious fear was that `INV-13` is starved the same way, in which case promoting it to `CRITICAL` changes nothing. **I measured instead of assuming, and the answer is the opposite.**
+
+| | `INV-1` (`CRITICAL`, gates promotion) | `INV-13` (`WARNING`, gates nothing) |
+|---|---|---|
+| reads | `result["ending_balance"]` — **TOP LEVEL** `[core.py:173]` | `prop_compliance[firm]["ending_balance_uncapped"]` `[core.py:770]` |
+| producer at that key+level | **NONE** — `prop_sim.py:465` writes one level down `[AR-660]` | ✅ **`prop_sim.py:466` — EXACT KEY, EXACT LEVEL** |
+| tautological? | ✅ **YES** — `:173` defaults `ending` to `starting + total_return`; `:175` sets `expected_ending` to the same expression `[MEASURED HERE]` | 🛑 **NO — see below** |
+| red path | none — `44`/`44` absent shapes pass `[graded instrument]` | ✅ **`test_catches_dll_inflated_uncapped_balance` plants `54_000` vs expected `47_000`, asserts `not check.passed`** |
+
+**WHY `INV-13` IS NOT TAUTOLOGICAL — TWO INDEPENDENT DERIVATIONS** `[MEASURED HERE, traced to the executable line]`:
+- **Path A** — `prop_sim.py:104` `uncapped_balance = account_size`, then `:192` `uncapped_balance += true_net_pnl` accumulated **day-by-day inside the daily loop**, where `:111` `true_net_pnl = net_pnl` is captured **pre-DLL-cap**.
+- **Path B** — `total_return`, read by `core.py:747` via `_aggregate_metric` from the **backtester's own aggregate metric**. `[MEASURED HERE]` `total_return` is **never computed in `prop_sim.py`** — it appears there only in a comment (`:459`).
+🛑★★★★★ **SO `INV-13` COMPARES `account_size + Σ(daily pre-cap P&L)` AGAINST `starting_balance + total_return` — TWO SEPARATE COMPUTATIONS OF THE SAME QUANTITY. THAT IS A REAL ORACLE-PATTERN INVARIANT, NOT AN IDENTITY.**
+
+✅★★★★★ **AND THEREFORE THE FINDING THAT MATTERS MOST: `R-617 §4.5` RECORDED THE OPERATOR'S `INV-1` SPEC AS *"construct the witness independently from starting balance + the canonical trade ledger … and compare it AGAINST the engine's reported ending balance."* **THAT CHECK ALREADY EXISTS. IT IS `INV-13`.** And it is aimed at the field `R-618 §3` says is correct — `ending_balance_uncapped`, which `prop_sim.py:462` states *"Operators MUST read"* for the real-economics view — rather than at the DLL-capped artifact that would have fired on correct behaviour.** ★★★ **`R-610 §7` recurs a third time: `THE CHEAPEST WIN WAS ALREADY IN THE TREE.`**
+
+### 📋 PROPOSAL — NOT APPLIED, AND IT IS THE DESK'S CONTRACT DECISION
+
+**PROPOSE: promote `INV-13` `WARNING → CRITICAL`** (move `_check_per_firm_endings` from `_WARNING_CHECKS:888` to `_CRITICAL_CHECKS`, update the three `severity=` strings and the `:53` header). **One-line-class change, fully reversible.**
+🛑★★★ **BUT I WILL NOT CALL IT SAFE, AND HERE IS THE ONE CONDITION THAT COULD REPEAT `§3`'s ERROR — a guard that fires on correct behaviour:** `[MEASURED HERE, `core.py:157-162`]` `_aggregate_metric` returns its default `0.0` when `total_return` is missing from **both** the top level **and** `oos_metrics`. **If any real result shape has `ending_balance_uncapped` present while `total_return` is absent from both layouts, `expected_end` collapses to `starting` and `INV-13` fires spuriously — on a promotion gate.** ⚠️ **I have NOT measured whether that shape occurs.** ★★★ **Note the harness already knows this failure class: `:148-152` documents the Pass-D fix added precisely because a single-layout read *"will false-positive every walk-forward backtest."***
+**SO THE PROPOSAL IS CONDITIONAL:** promote **after** an execution witness on real results confirms (a) `INV-13` evaluates rather than skips, and (b) it does not fire on a known-good run. ✅ **That witness is `AR-660`'s method exactly — spy on the real `run_invariants` call site — and I can build it on the desk's word.**
+🛑 **NOT PROPOSED, DELIBERATELY:** any change to `INV-1` — its disposition follows this severity decision (`R-618 §6.1`), and I did not touch it.
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. 🛑 **NO EXECUTION WITNESS.** Everything above about `INV-13` firing is **static** — join-key match, independent-derivation trace, and a **fixture-level** red-proof. **I have not observed `INV-13` return `passed=False` on a real backtest.** `AR-660`'s lesson is that a check can look wired and still be inert at runtime; **this claim is one class stronger than `INV-1`'s was, but it is not an execution witness and I will not let it read as one.**
+2. **Whether the false-positive shape in the proposal actually occurs** — the deciding measurement for promotion, unmeasured.
+3. **Consumers outside this repo** — n8n workflows, dashboards, or any `runtime-production` reader. `runtime-production` **NOT read, NOT touched** (`R-618 §7`).
+4. **`INV-13`'s behaviour under the `try:` fail-open** (`R-616 §5a`) — if the harness throws, no severity matters. **That path remains the desk's.**
+
+**COMMANDS RUN:** `python -m pytest src/engine/tests/test_invariant_harness.py -q -k "per_firm or PerFirm or dll_inflated or uncapped"` → **`3 passed, 64 deselected in 0.12s`.**
+**FILES MODIFIED: NONE** (this report only). **NEXT: `§6.2`, in this wave.**
+
+---
+
 ## AR-662 · 2026-08-03 · ✅ **START-RECEIPT — WORKER SEAT TAKEN ON `R-618`. TWO DEFECTS IN THE DISPATCH ITSELF, RAISED BEFORE I START (`worker-execution §5`: free now, costs the whole run at delivery).** ⚠️ **ONE IS A POINTER ERROR, ONE IS AN ORDERING CONTRADICTION BETWEEN `§6`'s MARKERS AND `§6`'s OWN TEXT — I HAVE MADE A REVERSIBLE CALL AND NAMED IT SO THE DESK CAN OVERRIDE AT ZERO COST.**
 
 **SEAT:** worker · tree `C:\Users\tonio\Projects\wt-h1-wave4-20260712` · branch `h1-wave4-sealed12-driver`.
