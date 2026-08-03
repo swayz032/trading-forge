@@ -4,6 +4,81 @@
 
 ---
 
+## AR-702 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-652 §5.2` — **STOP CONDITION `2` FIRES.** THE `INVALIDATE` ROW **CANNOT** BE MOVED TO `PASS` BY ANY BINDING CHANGE, AND I CAN PROVE IT AT THE EXECUTABLE LINE: `(ii)` IS A **DISJUNCTION** ANCHORED AT THE **FAMILY**, SO `INVALIDATE` FAILS `(ii)` **WHATEVER PRIMITIVE IT BINDS TO**. `[MEASURED HERE, LIVE AT HEAD, BOTH ARMS]`** 🛑🛑🛑★★★★★ **THE ONLY HONEST ROUTE IS `production_executed False → True` — WHICH MEANS WIRING THE SPEC'S INVALIDATION INTO THE **FRAMEWORK-OWNED EXIT PATH**. THAT IS A SHIPPED EXECUTION PATH. **IT IS YOURS TO RULE, NOT MINE TO MAKE.** I AM STOPPING AT `§5.2(c)` AND NOT BUILDING `(d)`.** ✅★★★★★ **AND THE GOOD NEWS IS LARGER THAN THE STOP: **AN EXACT DETECTOR FOR THE TAUGHT MECHANIC ALREADY EXISTS AND IS COMMITTED** — `indicators/core.py:467 compute_opening_range_breakout`, `09:30 ET`-anchored, parameterised on `range_minutes`, emitting `orh`/`orl`/`or_range`. **SEVENTH `dormant-activation`.**
+
+**TASK:** `R-652 §5.2` as re-affirmed by `R-653 §5`. 🛑 **READ-ONLY — no source file changed. `§5.3` NOT started.** **Within the `≤ 45 min` ETA.** ⚠️ **ONE SIDE EFFECT DECLARED: re-running the committed sweep wrote two UNTRACKED files (`family-meta-reachability-sweep-latest.json`, `…-sweep.log`) into `docs/replay-results/h1-battery/`. `[MEASURED — `git status`]` NO TRACKED ARTIFACT MODIFIED. Not committed. Say if you want them removed.**
+
+### ✅★★★★★ §1 — `(a)` THE SOURCE MEANING, VERBATIM, AND YOUR `§5.2a` INDEPENDENTLY CONFIRMED
+`[MEASURED HERE — `phase_b/st5e-YJRfKc__s0.json`, read at its keys]`
+> `.strategies[0].stop.description` → *"there would be something called a **half range stop**. And that's **a stop below this halfrange mark**."*
+✅ **`§5.2a` CONFIRMED BY ME INDEPENDENTLY, AND I CHECKED IT BEFORE I READ YOUR ARITHMETIC:** the half range is *"half of that opening range"* (`confluences[3]`); the FULL range is a separate, explicitly-named object used for the **target**, not the stop (`targets[1]`: *"Same thing for the full range except now we're using the full dollar three"*). ★★★ **THE SOURCE DISTINGUISHES HALF FROM FULL IN TERMS AND ASSIGNS THE STOP TO HALF. THE RELAY'S *"opposite side of the range"* IS `2×`. Refutation stands on my read too.**
+🛑🛑★★★★★ **AND I AM RAISING YOUR STOP CONDITION `3` RISK, NOT LOWERING IT: *"a stop **below** this halfrange mark"* FIXES THE LEVEL AND NOT THE OFFSET. The source never states how far below. `[UNRESOLVED_SOURCE_AMBIGUITY — CANDIDATE]` — I am flagging it now rather than at `§5.3`, because whichever way you rule on stop `2`, this ambiguity is still there underneath and it is not mine to invent.**
+
+### 🛑🛑🛑★★★★★ §2 — `(b)` REACHABILITY, ANSWERED BY CONSTRUCTION: THE CALL SITE IS REAL AND IT TERMINATES IN A **FILE**
+`[MEASURED HERE — `src/engine/spec_condition_compiler.py`, read at the executable lines]`
+🛑 **THE ONLY SPEC-PATH CALL SITE IS `:1377`, AND IT LIVES INSIDE `_build_trace_records`. THE FUNCTION'S OWN DOCSTRING (`:1311-1314`) SETTLES THE QUESTION WITHOUT A COUNTER:**
+> *"Build one trace record per entry-signal bar… **File-only additive output — zero effect on entry/exit columns** (see byte-identity test)."*
+🛑 **AND THE INLINE COMMENT AT `:1319-1323` SAYS IT AGAIN, UNPROMPTED:**
+> *"Real (not merely documented) reuse of the `INVALIDATE` primitive: for every firing bar, compute the structural stop `compute_structural_stop` **WOULD** place… **This is trace/provenance ONLY — the value is recorded, never used to gate entries or drive the actual exit (framework-owned).**"*
+✅★★★★★ **SO `WHAT SITS BETWEEN THE PRIMITIVE AND AN OUTPUT` IS ANSWERED EXACTLY: a `dict` key `structural_stop_price`, appended to `invalidations_recorded`, serialised into a trace record. **THAT IS THE WHOLE PATH. THERE IS NO EDGE FROM IT TO `entry_long`, `entry_short`, OR ANY EXIT COLUMN.** The primitive is not weakly connected — **it is connected to a sink.**
+✅ **AND IT IS DOUBLE-GATED BEFORE EVEN REACHING THE SINK `[MEASURED — `:1339`, `:1375`]`: (1) `trace=True`, which is `False` by default (`from_compiled_spec(… trace: bool = False)`), and (2) `atr_arr is not None and not isnan(atr[i]) and atr[i] > 0`.**
+✅ **THE PRIMITIVE ITSELF IS NOT DEAD CODE — I CHECKED THE NEIGHBOURING CLAIM RATHER THAN ASSUMING IT:** `compute_structural_stop` has **three non-test callers** (`backtester.py:438`, `context_runner.py:231`, `spec_condition_compiler.py:1377`). ★★★★★ **THE DISTINCTION THAT MATTERS: THE ENGINE'S OWN STOP LOGIC USES IT FOR REAL. THE **SPEC'S `INVALIDATE` CONDITION** IS THE THING WIRED TO NOTHING. `A PRIMITIVE CAN BE BUSY AND THE BINDING TO IT STILL BE INERT` — and reporting "0 calls" without that split would have been the neighbouring-object error.**
+
+### 🛑🛑★★★★★ §3 — THE `0`/`495` MEASUREMENT AT HEAD: **IT DOES NOT REPRODUCE, AND I AM NOT RESOLVING IT BY GUESSING**
+🛑 **YOU ORDERED ME TO REUSE `spec_family_bindings.py:684-690`'s number and say whether it holds. I re-ran the COMMITTED instrument (`family_meta_reachability_sweep.py`) at HEAD. `[MEASURED HERE]`**
+```
+trace=False compute_structural_stop=0  entry_long=1 (n=2000)  trace_records=0
+trace=True  compute_structural_stop=0  entry_long=1 (n=2000)  trace_records=1
+```
+🛑 **THE COMMENT RECORDS `0` / `495` OFF AND **`492`** ON. AT HEAD THE ON-ARM IS **`0`**, NOT `492`.**
+🛑 **INSTRUMENT AUDIT BEFORE ANY CONCLUSION — AND THE SCRIPT'S OWN HEADER WARNS ABOUT EXACTLY THIS:** *"KNOWN TRAP (cost a false NOT-REACHABLE once): an exemplar that is not BINDABLE never enters dispatch, so its counter reads `0` for a reason that has nothing to do with reachability."*
+✅ **DISPATCH IS CONFIRMED HERE, SO THE TRAP IS NOT THE EXPLANATION: `trace_records=1` (the record WAS built) and the sweep's own row reads `binding = [{'bindable': True, … 'executed': True, 'role': 'spine'}]`.**
+🛑🛑 **BUT THE DENOMINATORS ARE NOT THE SAME OBJECT AND I WILL NOT PRETEND THEY ARE: this exemplar fires on **`1`** bar; the comment's figure is over **`495`**. `THIS IS NOT A REFUTATION OF THE 492 — IT IS A FAILURE TO REPRODUCE IT, ON A DIFFERENT EXEMPLAR.`**
+⚠️★★★ **`[HYPOTHESIS — UNPROVEN, NAMED SO IT IS NOT INHERITED AS FACT]` the single firing bar falls inside the ATR warmup, so `:1375`'s `not isnan(atr[i])` guard skips the call. **I did not measure the ATR at that bar.** The competing reading — a genuine regression since `2026-07-21` — is NOT excluded.** 🛑 **`UNRESOLVED. THE PACKET'S HEADLINE NUMBER IS NOT REPRODUCIBLE BY ITS OWN COMMITTED INSTRUMENT AT HEAD, AND THAT IS TRUE WHICHEVER READING IS RIGHT.` I am not opening it — `R-648`'s admission test says it neither blocks the slice from compiling nor invalidates this report's verdict, which rests on `§2`'s construction proof and `§5`'s live disjunction, not on this counter.**
+
+### 🛑🛑🛑★★★★★ §4 — `(c)` SEMANTIC CLASSIFICATION: **TWO AXES, AND THE ANSWER DIFFERS ON EACH**
+🛑 **WIRING AXIS → your fifth category, `REAL-BUT-UNWIRED`. `§2` is the proof.**
+🛑🛑 **SEMANTIC AXIS → NOT *"overbroad proxy"*. **`WRONG FAMILY`.** `[MEASURED — `context/structural_stops.py:194-288`, read at the implementation]` `compute_structural_stop` places the stop at the nearest **market-structure** level below entry — priority `sweep_wick > order_block > FVG > swing_low`, minus a per-symbol tick buffer, with a `1.5 × ATR` fallback.** ★★★★★ **IT HAS NO OPENING-RANGE INPUT. NOT A PARAMETER, NOT A CANDIDATE, NOT A FALLBACK. IT CANNOT COMPUTE THE TAUGHT RULE EVEN IN PRINCIPLE — the taught stop is ARITHMETIC ON A SESSION RANGE and this is a SEARCH OVER SWING STRUCTURE.** 🛑 **`YOUR §4.2 CAUTION WAS RIGHT AND STRONGER THAN STATED: THIS IS NOT A LOOSE VERSION OF THE SAME RULE. IT IS A DIFFERENT RULE.`**
+✅★★★★★ **AND THE FOURTH CATEGORY — `EXISTING EXACT DETECTOR` — IS **ALSO LIVE**, WHICH IS THE FINDING OF THIS REPORT `[MEASURED — `src/engine/indicators/core.py:467-487`]`:**
+```
+def compute_opening_range_breakout(df, range_minutes: int = 15, session_start_et: str = "09:30")
+    -> (orh_series, orl_series, or_range_series)
+    "Range LOCKS at session_start_et + range_minutes"  ·  "Values BEFORE the lock are None (no
+     lookahead)"  ·  "Resets each trading day"  ·  "09:30 ET start aligns with NYSE/CME RTH open"
+```
+★★★★★ **THAT IS THE EDUCATOR'S MECHANIC, FIELD FOR FIELD: `09:30 ET` anchor · `range_minutes` parameterises his `5`/`15`/`30` variants exactly · `orh`/`orl` are his range high/low · `or_range` is his *"range value"* — and the taught half range is `or_range / 2`. **NO LOOKAHEAD AND A DAILY RESET, WHICH IS HIS *"relative for every single trading day."*** 🛑🛑 **SO THE SLICE'S EXIT IS NOT BLOCKED FOR WANT OF A DETECTOR. THE DETECTOR IS BUILT, COMMITTED, AND CORRECT — AND `INVALIDATE` IS BOUND TO A DIFFERENT ONE.** **SEVENTH `dormant-activation` CONVICTION.** ⚠️ **`[NOT MEASURED]` whether `compute_opening_range_breakout` has non-test callers, and whether it is exposed as a bindable primitive to `compile_binding_plan`. That is the first question of `§5.3` and I did not walk into it.**
+
+### 🛑🛑🛑★★★★★ §5 — WHY STOP CONDITION `2` FIRES: `(ii)` IS A **DISJUNCTION**, AND THE FAMILY TERM ALONE CONVICTS
+`[MEASURED HERE — `src/engine/forensics/compile_fidelity.py:503-532`, read at the return statement, then re-derived LIVE at HEAD]`
+```python
+def _honest_approximation(binding) -> bool:
+    meta = FAMILY_META.get(binding.type)
+    if meta is None: return bool(binding.approximation)
+    return meta.enforced_honest_approximation() or bool(binding.approximation)   # ← DISJUNCTION
+```
+**LIVE AT HEAD, `INVALIDATE`:** `enforced_honest_approximation() = True` · `effective_approximation() = False` · `production_executed = False`. **POSITIVE CONTROL: `WAIT_STRUCTURE` reads `True / True` — the columns agree there, so the split is specific, not an artefact of my read.**
+🛑🛑🛑★★★★★ **THE CONSEQUENCE, ENUMERATED OVER BOTH ARMS SO NOTHING IS INFERRED:**
+| `binding.approximation` | `honest_approx` | `(ii)` |
+|---|---|---|
+| `False` (a perfect, exact, source-faithful primitive) | `True` | 🛑 **FAIL** |
+| `True` | `True` | 🛑 **FAIL** |
+★★★★★ **I COULD BIND THIS ROW TO A FLAWLESS HALF-RANGE-STOP DETECTOR BUILT ON `compute_opening_range_breakout` AND `(ii)` WOULD STILL FAIL. `THE FAMILY ANCHOR CONVICTS INVALIDATE INDEPENDENTLY OF ITS BINDING — SO NO BINDING-LEVEL REPAIR CAN REACH `§5.3`'s FIRST ACCEPTANCE CRITERION.`**
+🛑 **THEREFORE THE ONLY ROUTES ARE:** **(A)** set `FAMILY_META['INVALIDATE'].enforced_approximation = False` **without** earning it — 🛑 **that is *"weakening `FAMILY_META`"*, FORBIDDEN in terms by `R-652 §5` and `R-653 §5`, and it is the fidelity lie re-told.** **(B)** earn it: `production_executed → True` by wiring the spec's invalidation into the **actual exit**, which `spec_condition_compiler.py:1323` states is **framework-owned**. 🛑🛑 **THAT TOUCHES SHIPPED EXECUTION PATHS.**
+🛑🛑🛑★★★★★ **`R-652 §5` STOP CONDITION `2` IS MET ON ITS OWN TERMS — *"the primitive proves UNREACHABLE and the wiring repair is not bounded (touches shipped execution paths) → STOP and report; that is a production change and it is mine to rule, not yours to make."* **I AM STOPPING. `§5.2(d)` NOT BUILT AND `§5.3` NOT STARTED.**
+
+### ✅ §6 — WHAT I DID **NOT** DO, AND WHY
+🛑 **`(d)` THE DISCRIMINATING FIXTURE — NOT BUILT, AND YOUR OWN ORDERING FORBIDS IT: `R-652 §4.2` says a fixture against a detector whose output is byte-identical *"discriminates everywhere and teaches nothing."* `§2` proves the path terminates in a file. **A fixture built now would measure the sink, and it would read as a semantic verdict.** Reachability is NOT established in the output-affecting sense, so `(d)` is not yet executable. **This is the ordering working, not a gap.**
+⚠️ **`[UNENUMERATED]`** the ATR-warmup vs regression question (`§3`) · whether `compute_opening_range_breakout` is reachable from `compile_binding_plan` (`§4`) · the exact offset below the half-range mark (`§1`) · whether `ENABLE_ENTRY`/`ENTER` — the other two disagreeing families — have the same `(ii)` structural block on their rows.
+⚠️ **INCIDENTAL, REPORTED NOT INVESTIGATED (`R-648`: the duty to report never lapses, the lane stays closed):** `context_runner.py:86` and `:178` set `opening_range=(htf.prev_day_high, htf.prev_day_low)` — **PREVIOUS-DAY high/low assigned to a field named `opening_range`**, while `session_context.py:298` sets the same field from a real `(or_high, or_low)`. **Two producers, one field name, different quantities. `[NOT MEASURED]` which consumer reads which, and whether `location_score.py:151`'s `session.opening_range` is affected.** ★★★ **Flagged because the golden slice's whole mechanic is an opening range and a mislabelled field is exactly how the right-looking number arrives from the wrong quantity. NOT PULLED.**
+
+### ✅ §7 — WHAT I ASK YOU TO RULE
+1. 🛑 **STOP `2`: is the wiring of the spec `INVALIDATE` into the framework-owned exit authorized, and bounded to what?** **It is a production-path change and I have not touched it.**
+2. ⚠️ **IF NOT — then `§5.3`'s acceptance (`ii_passed False→True`) is UNREACHABLE ON THIS ROW BY ANY PERMITTED MEANS, and the `R-648` attempt budget should not be spent discovering that twice. `§5` is the root-cause proof; a second attempt would be the same attempt renamed.**
+3. ✅ **AND A CHEAPER TARGET EXISTS IF YOU WANT ONE THIS WAVE `[UNVERIFIED — I have not checked its `(ii)` status]`: the `9` `WAIT_STRUCTURE` rows sit on a family whose two columns AGREE at `True` (`§5` control), so they carry NO family-level structural block. **They may be repairable by binding where `INVALIDATE` is not.** That is a suggestion, not a lane I have opened.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `a7f538aa` at read. No source file modified; two untracked sweep outputs declared in the header. `R-652 §5` fan-in `2 / 3` (`§5.1` closed, `§5.2` closed-with-stop, `§5.3` blocked on your ruling). NOT handing off — I hold the seat and resume the moment you rule.**
+
+---
+
 ## AR-701 · 2026-08-03 · 🛑🛑🛑★★★★★ **CORRECTION TO `AR-700 §4`, OPERATOR-ORDERED, POSTED WITHIN MINUTES SO NO RULING IS SPENT ON A QUESTION HE CLOSED ON `2026-05-27`. MY *"NOT MEASURED FUTURES-APPROPRIATE"* RESIDUAL IS **WITHDRAWN**: IT RE-OPENED, AS AN OPEN QUESTION, A PRINCIPLE THIS CAMPAIGN ALREADY HOLDS AS STANDING LAW — `A STRATEGY IS A MECHANIC, NOT AN INSTRUMENT.`** ✅★★★★★ **THE STOP CONDITION ITSELF IS **WELL-FORMED AND AGREES WITH HIM** — IT ASKS WHETHER THE MECHANIC IS *"GENUINELY EQUITIES-SPECIFIC"*, WHICH **IS** HIS DISCRIMINATOR. **THE DEFECT WAS ENTIRELY IN MY RESIDUAL, WHICH KEPT THE INSTRUMENT LABEL ALIVE AFTER THE MECHANIC TEST HAD ALREADY PASSED IT.**
 
 **TASK:** correction to `AR-700` (`R-652 §5.1`). 🛑 **Read-only, no code, no re-measurement — every figure in `AR-700 §1–§3` STANDS UNCHANGED. This corrects an INFERENCE I drew from them, not a number.** ✅ **`§5.2` is NOT blocked by this and I am proceeding to it.**
