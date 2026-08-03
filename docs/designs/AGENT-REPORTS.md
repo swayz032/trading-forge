@@ -4,6 +4,53 @@
 
 ---
 
+## AR-670 · 2026-08-03 · ✅★★★★★ **`R-620 §4.3` — THE OVERLAP MEASURED: **SAME IDENTITY, DIFFERENT WITNESS.** BOTH CHECK `balance ≈ starting + total_return`; `INV-13`'s WITNESS IS REAL, `INV-1`'s IS ABSENT AND DEFAULTS TO THE EXPECTATION IT IS COMPARED AGAINST.** 🛑🛑★★★★★ **AND A CORRECTION THAT MATTERS TO THE DISPOSITION: `INV-1` IS **NOT INHERENTLY INCAPABLE OF FAILING** — GIVEN A TOP-LEVEL `ending_balance` IT FIRES CORRECTLY (`diff = 53249.0000`). **IT IS STARVED, NOT MALFORMED**, AND THAT DISTINGUISHES *"RETIRE IT"* FROM *"FEED IT".*** ⚠️ **NEITHER CHECK COVERS THE `prop_compliance`-ABSENT CASE — A REAL HOLE THAT RETIRING `INV-1` DOES NOT WIDEN.** 🛑 **PROPOSAL ONLY.**
+
+**TASK:** `R-620 §4.3` / `R-624 §5.2`. **Nothing modified. This closes every queued worker item.**
+
+### ✅ THE THREE CASES `[MEASURED HERE — real `simulate_all_firms` output, both checks run side by side]`
+
+| | `INV-1` (`CRITICAL`, gates) | `INV-13` (`WARNING`, gates nothing) |
+|---|---|---|
+| **1. realistic** (`prop_compliance` present, no top-level `ending_balance`) | `passed=True` · `ending_balance = 46750.00, diff = 0.0000` 🛑 **a number the engine NEVER WROTE — it is the default `starting + total_return`** | `passed=True` on **real per-firm data** |
+| **2. `prop_compliance` ABSENT** | `passed=True`, same tautology | `passed=True` — **`"prop_compliance is empty — check skipped"`** |
+| **3. corrupted witness planted in BOTH** | 🛑 **`passed=False`, `diff = 53249.0000`** | `passed=False`, `2 / 2 firms failed` |
+
+### 🛑★★★★★ THE ANSWER: SAME GROUND, AND `INV-13` COVERS IT — WITH ONE NAMED EXCEPTION
+
+**Both compute the SAME expected value — `starting_balance + total_return`.** They differ only in the witness they compare it against:
+- **`INV-1` → `result["ending_balance"]` at TOP LEVEL.** `[MEASURED, `core.py:173`]` its default when absent is **literally `starting + total_return`** — the same expression as `expected_ending` at `:175`. **The engine never writes that key at top level (`AR-660`: `0/90`; `prop_sim.py:465` writes it one level down), so on every real result the default fires and `diff` is exactly `0.0000`.**
+- **`INV-13` → `prop_compliance[firm]["ending_balance_uncapped"]`.** `[MEASURED]` **really produced, at `prop_sim.py:466`.**
+
+✅ **SO WHEREVER `prop_compliance` EXISTS, `INV-13` CHECKS EXACTLY WHAT `INV-1` INTENDED, WITH A WITNESS THAT EXISTS.** ★★★ **And `AR-669` closed the last reason to prefer `ending_balance`: it is not a capped artifact, it equals the uncapped figure on every path.**
+
+### 🛑🛑★★★★★ THE CORRECTION I OWE — `INV-1` IS STARVED, NOT MALFORMED
+
+⚠️ **CASE 3 REFUTES THE STRONGEST READING OF *"`INV-1` CANNOT FAIL".** Handed a top-level `ending_balance` of `99999.0`, **`INV-1` FAILS CORRECTLY and reports `diff = 53249.0000`.** **Its arithmetic is sound. It has no input.**
+★★★ **THIS IS THE DISTINCTION `R-620 §4.3` NEEDS AND I WANT IT ON THE RECORD BEFORE THE DISPOSITION:** *"tautological on every reachable input"* (true, and `R-618 §2`'s framing) and *"structurally incapable of ever failing"* (**false**) lead to different remedies — **RETIRE** versus **FEED**. ⚠️ **`R-616` was convicted for adopting the "starved" framing and `R-618 §2` corrected it to "tautological". Both are right about different things: it is TAUTOLOGICAL ON REAL DATA **because** it is STARVED. I am not re-litigating that — I am naming which half the disposition turns on.**
+
+### ⚠️ THE HOLE NEITHER CHECK COVERS
+
+`[MEASURED — CASE 2]` **with no `prop_compliance`: `INV-13` SKIPS (`passed=True`, "check skipped") and `INV-1` is tautological (`passed=True`).** 🛑 **A run with a genuinely wrong account balance and no prop simulation is caught by NOTHING.**
+✅ **BUT RETIRING `INV-1` DOES NOT WIDEN THIS HOLE — `INV-1` contributes nothing there either.** ★★★ **`INV-13`'s skip is also a `WARNING`-tier vacuous pass, which is the `absence-from-a-list-is-not-a-pass` shape: "check skipped" and "check passed" are the same boolean to the caller.**
+
+### 📋 PROPOSAL — NOT APPLIED, THE CONTRACT IS THE DESK'S
+
+1. **`INV-13` → `CRITICAL`.** ✅ **Its DLL-cap false-positive hazard is measured ZERO (`AR-669`); it bites on a planted discrepancy and names the amount; blast radius today is zero (nothing promotes).** ⚠️ **The `_aggregate_metric`-default hazard (`AR-663`) remains UNTESTED and is the one thing I would still measure first.**
+2. **`INV-1` → RETIRE** rather than occupy a `CRITICAL` slot it cannot earn — **on the evidence that `INV-13` covers its ground wherever a witness exists, and it contributes nothing where one does not.** ⚠️ **The ALTERNATIVE is FEED it: have the engine emit a top-level `ending_balance`. CASE 3 shows the check would then work. That is a larger change and an engine-behaviour decision, not an invariant one.**
+3. ⚠️ **EITHER WAY, `INV-13`'s empty-`prop_compliance` SKIP should return something distinguishable from a pass** — otherwise promoting it to `CRITICAL` buys a gate that silently abstains on exactly the runs with no prop data.
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Whether any caller supplies a top-level `ending_balance`** — `AR-660` measured `0/90` at runtime; I did not re-enumerate. **`[RELAYED, not re-measured this run.]`**
+2. **Whether `prop_compliance` is ever absent on a REAL production result** — CASE 2 is my constructed dict, not an observed shape. **This is the load-bearing unknown for proposal item 3.**
+3. **The `_aggregate_metric` false-positive shape** — still open, third report running.
+4. **No severity changed, no file modified.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED.** ✅ **All queued worker items are now closed: `R-623 §7.1` (landed `28a95a9a`), `§7.2` (`98dfa126`), `R-620 §4.1` (`AR-669`), `§4.3` (this).** **The `INV-1`/`INV-13`/`WARNING`-tier contract decisions are the desk's and I have not pre-empted them.**
+
+---
+
 ## AR-669 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-620 §4.1` — ARM B PASSES AND ARM A IS **UNANSWERABLE AS POSED**, BECAUSE **THERE IS NO SUCH THING AS A DLL-CAPPED RUN IN THIS CODE.** THE CAP WAS **REMOVED** BY THE `PHASE21-PART3` FIX. `dll_capped_losses_total` IS STRUCTURALLY ALWAYS `0.0` AND `ending_balance` **ALWAYS EQUALS** `ending_balance_uncapped`.** 🛑🛑★★★★★ **SO `R-618 §3`'s FIRST REASON FOR WITHDRAWING THE `INV-1` REMEDY — *"WOULD FIRE ON CORRECT BEHAVIOUR every time the DLL cap engaged"* — IS **REFUTED**. IT WAS BUILT FROM `prop_sim.py:96-100`, A **COMMENT**, WHICH DESCRIBES BEHAVIOUR THAT NO LONGER EXISTS.** ⚠️ **THE WITHDRAWAL ITSELF STILL STANDS ON ITS SECOND REASON — I AM NOT RE-OPENING IT.** ✅ **`INV-13` BITES: PLANTED `+$7000` → FIRES AND NAMES THE EXACT AMOUNT.** 🛑 **NO SEVERITY CHANGED.**
 
 **TASK:** `R-620 §4.1` / `R-624 §5.2`. **`core.py`, `prop_sim.py` NOT modified.**
