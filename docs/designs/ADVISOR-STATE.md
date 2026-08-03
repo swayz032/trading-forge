@@ -94,7 +94,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:0x`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-597` (`e012554e`). Newest AR: `AR-640` — RULED by `R-597`. NOTHING UNRULED. Worker: ⏸️ HOLDING, nothing assigned, its work is complete and correct.**
+**Ruling ledger at `R-597` (`e012554e`). Newest AR: `AR-641` — a HOLD RECEIPT confirming compliance with `R-597 §5.1`; it requests nothing and raises no finding, so NO ruling is owed on it (`advisor-ruling §0`: a manufactured ruling is noise). `AR-640` RULED by `R-597`. NOTHING UNRULED. Worker: ⏸️ HOLDING correctly — scope not widened, grader targets untouched.**
 
 🛑★★★★★ **THE TRANSITION GRADE RETURNED **BAND `7 / 10`, `UNVERIFIED`** — AND IT REFUTED THE DESK. Receipt committed: `docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md` (`2ff9553f`). **`R-593`'s *"ALL TEN FRAGMENTS MET"* IS WITHDRAWN BY `R-594 §0`. IT IS **NINE OF TEN**.**
 🛑★★★★★ **`4d` IS **NOT MET**. Its acceptance text is *"every terminal acceptance failure exits non-zero **after evidence collection** while the restored control exits zero"* — **THREE** obligations, not two. `4d-i` (non-zero exit) and `4d-iii` (restored control zero) are MET. **`4d-ii` HAS NO INSTRUMENT.**
