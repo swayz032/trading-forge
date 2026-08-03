@@ -4,6 +4,47 @@
 
 ---
 
+## AR-671 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-626 §5.1` — **STOPPED UNDER ITS OWN HONEST-PARTIAL CLAUSE. I DID NOT WRITE THE FIX.** ABSENCE **IS** LEGITIMATE ON A REAL RUN CLASS: `walk_forward.py:2225`/`:3006` SET `prop_compliance = None` UNLESS `all_oos_pnl_records and all_oos_trades`.** 🛑🛑★★★★★ **SO CLOSING THE FAIL-OPEN *AND* PROMOTING TO `CRITICAL` WOULD **BLOCK EVERY ZERO-TRADE WALK-FORWARD RUN AT THE `TESTING → PAPER` GATE.**** 🛑🛑🛑★★★★★ **AND THAT IS NOT AN EDGE CASE — IT IS THIS CAMPAIGN'S **MODAL** RUN RIGHT NOW: `backtests = 0`, ALL-`CANDIDATE`, AND THE POLARITY BUG PRODUCED ZERO-ENTRY RUNS BY CONSTRUCTION.** ✅ **A DISCRIMINATOR EXISTS AND I AM NAMING IT WITHOUT IMPLEMENTING IT — THE CLAUSE SAYS DO NOT GUESS.**
+
+**TASK:** `R-626 §5.1`. 🛑 **`core.py` NOT MODIFIED. NO SEVERITY CHANGED. NOTHING WRITTEN.**
+
+### 🛑 THE CLAUSE, AND WHY IT FIRED
+
+**`R-626 §5.1`: *"HONEST-PARTIAL: if absence turns out to be legitimate on some real run class, STOP and report — do not guess a discriminator."*** **It is legitimate. Here is the measurement.**
+
+| producer | `prop_compliance` emission | absence legitimate? |
+|---|---|---|
+| `backtester.py:5784` (`run_backtest`, DSL) | **UNCONDITIONAL** — plain dict key from `simulate_all_firms(:5659)` | ❌ no |
+| `backtester.py:7944` (`run_class_backtest`) | **UNCONDITIONAL** — from `simulate_all_firms(:7817)` | ❌ no |
+| **`walk_forward.py:2329`** | 🛑 **`prop_compliance = None` at `:2224`, set ONLY `if all_oos_pnl_records and all_oos_trades` (`:2225`)** | ✅ **YES** |
+| **`walk_forward.py:3039`** | 🛑 **identical shape at `:3005`/`:3006`** | ✅ **YES** |
+
+✅ **POSITIVE CONTROL — the field is genuinely populated on a real run** `[MEASURED HERE, live `run_backtest` via the revived fixture]`: `prop_compliance` present, `dict`, truthy, firms `['topstep_50k','mffu_50k']`, `ending_balance_uncapped = 49947.56` on both. **So this is not a "the key never exists" artifact — it exists and is real on the paths that emit it.**
+
+### 🛑🛑★★★★★ WHY I STOPPED RATHER THAN SHIPPING
+
+**`R-626 §5.1` orders the fail-open closed AND the severity flipped to `CRITICAL` IN THE SAME CHANGE. Composed, on a walk-forward run with no OOS trades, that produces:**
+`prop_compliance = None` → **not a passing verdict (by the new property)** → `CRITICAL` failure → `overall_passed = False` → **`lifecycle-service.ts:1689` HARD-BLOCKS `TESTING → PAPER`.**
+🛑🛑🛑★★★★★ **A STRATEGY THAT LEGITIMATELY TOOK NO TRADES IN ITS OOS WINDOWS WOULD BE BLOCKED BY A BALANCE-ARITHMETIC INVARIANT THAT HAD NO BALANCES TO CHECK.** ★★★★★ **THIS IS `R-618 §3` AND `R-620 §3` ARRIVING A THIRD TIME BY A THIRD ROUTE: *a guard that fires on correct behaviour, at a hard gate.* The desk withdrew it once, caught it once at `§3`, and it re-entered through the fail-open remedy itself.**
+🛑 **AND THE FREQUENCY ARGUMENT MAKES IT WORSE, NOT BETTER:** `[MEASURED, campaign state]` `backtests = 0`, all-`CANDIDATE`, Phase-1 `0/16` — and `R-618 §4`'s `76.89%` suppression means DSL runs have been producing few-or-no entries by construction. **The zero-OOS-trade walk-forward run is the case this campaign produces MOST OFTEN today.**
+
+### ✅ THE DISCRIMINATOR I AM **NAMING BUT NOT IMPLEMENTING**
+
+`[MEASURED, `core.py:750` and `:782`]` **`INV-13` has TWO separate pass-on-absence returns, and they are NOT the same case:**
+1. **`:750 if not prop_compliance:`** → **this is the one walk-forward legitimately hits.** `None`/`{}` because no OOS trades ran.
+2. **`:782 if firms_checked == 0:`** → `prop_compliance` EXISTS but no firm carried `ending_balance_uncapped`. ⚠️ **`prop_sim.py:466` writes that key unconditionally for every firm it simulates, so a populated `prop_compliance` missing it is `[HYPOTHESIS]` a genuine malformation — not a legitimate shape.**
+★★★ **SO THE CANDIDATE SPLIT IS: `:782` becomes a real failure; `:750` becomes a distinct NOT-APPLICABLE state that does not satisfy `overall_passed` but also does not fail it.** 🛑 **I HAVE NOT BUILT IT.** ⚠️ **It needs a third verdict state — `INvariantCheck` currently carries only `passed: bool`, so "not applicable" has nowhere to live without a schema change, and `InvariantHarness.verify` (`:939`) reduces everything to `len(critical_failures) == 0`.** **That is a contract/schema decision, and `§5.1` explicitly forbids me guessing it.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. **Whether any walk-forward run in the real record actually hit the `None` branch** — I proved the branch is REACHABLE by reading its condition, not that it HAS been taken. `[The DB that would answer it is the one `AR-664` could not reach.]`
+2. **Whether `oos_metrics`-nested results reach `INV-13` at all** — `_aggregate_metric` handles both layouts for `total_return`, but `prop_compliance` is read with a plain `result.get()` at `core.py:748`, **with no `oos_metrics` fallback.** ⚠️ **That is a second, independent absence path I noticed and did NOT chase.**
+3. **`ARM (a)` re-run** — `§5.1` requires the planted `+$7000` re-measured on the changed instrument. **Not run, because I made no change.** ✅ **It was measured GREEN this session on the unchanged instrument (`AR-669`).**
+
+🛑 **RECOMMENDATION: BLOCKED — DESK DECISION REQUIRED.** **Three ways forward, none of which I may pick:** **(a)** third verdict state (schema change to `InvariantCheck`); **(b)** fail only on `:782`, leave `:750` passing, and accept that absence still gates nothing; **(c)** promote `INV-13` to `CRITICAL` WITHOUT closing `:750`, accepting the fail-open on truly-absent data as the lesser evil. ★★★ **My reading: (a) is correct and (c) is what `R-626 §4` was trying to avoid — but this is the contract decision the ruling reserved, and `R-620 §4.4`'s `WARNING`-tier question is entangled with it.**
+
+---
+
 ## AR-670 · 2026-08-03 · ✅★★★★★ **`R-620 §4.3` — THE OVERLAP MEASURED: **SAME IDENTITY, DIFFERENT WITNESS.** BOTH CHECK `balance ≈ starting + total_return`; `INV-13`'s WITNESS IS REAL, `INV-1`'s IS ABSENT AND DEFAULTS TO THE EXPECTATION IT IS COMPARED AGAINST.** 🛑🛑★★★★★ **AND A CORRECTION THAT MATTERS TO THE DISPOSITION: `INV-1` IS **NOT INHERENTLY INCAPABLE OF FAILING** — GIVEN A TOP-LEVEL `ending_balance` IT FIRES CORRECTLY (`diff = 53249.0000`). **IT IS STARVED, NOT MALFORMED**, AND THAT DISTINGUISHES *"RETIRE IT"* FROM *"FEED IT".*** ⚠️ **NEITHER CHECK COVERS THE `prop_compliance`-ABSENT CASE — A REAL HOLE THAT RETIRING `INV-1` DOES NOT WIDEN.** 🛑 **PROPOSAL ONLY.**
 
 **TASK:** `R-620 §4.3` / `R-624 §5.2`. **Nothing modified. This closes every queued worker item.**
