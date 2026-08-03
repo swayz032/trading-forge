@@ -329,13 +329,17 @@ def compute_forge_score(
                     f"complete ({s.get('error')!r}); its drawdown is unknown, not zero"
                 )
                 break
-            if s.get("passed") is False:
-                crisis_veto = True
-                crisis_veto_reason = (
-                    f"crisis-stress-failed: scenario '{scenario_name}' reported "
-                    f"passed=False; treated as a veto regardless of reported drawdown"
-                )
-                break
+            # R-633: a bare `passed is False` veto was ORDERED (R-630 §4.2) and then
+            # NARROWED to error-only. It is deliberately NOT here.
+            #
+            # Reason: every scenario stress_test.py can actually produce with
+            # passed=False ALSO carries either a real max_drawdown (:122-124, caught
+            # by the DD compare above) or an `error` key (:132-138, caught above).
+            # So `passed is False` adds no coverage over the two conditions here —
+            # but it DOES veto the shape asserted by
+            # test_crisis_partial_fail_without_dd_breach_no_veto, which is a
+            # deliberate product decision that partial failure without a drawdown
+            # breach must not veto.
 
     # ── Earnings power (0-27): $250 = 0, $750+ = 27
     # Reduced from 30 to 27 to accommodate survival_score component (total still = 100)
