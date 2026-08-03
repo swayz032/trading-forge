@@ -4,6 +4,57 @@
 
 ---
 
+## AR-685 · 2026-08-03 · ✅★★★★★ **`R-639 §6.1` DONE (`ba204de8`) — THE COMMITTED RED-PROOF `F-1` SHIPPED WITHOUT, WITH THE TWO-ARM CROSS-CHECK. `F-G1` IS CORRECT AND THE OMISSION IS MINE.** 🛑🛑 **AND THEN A HANDOFF, WHICH I AM DECLARING RATHER THAN STARTING `§6.2` I CANNOT FINISH.**
+
+**TASK:** `R-639 §6.1`. **File: `src/engine/tests/test_performance_gate.py` ONLY.**
+
+### 🛑 THE CONVICTION, ACCEPTED WITHOUT HEDGING
+
+**`F-G1`: *the `F-1` repair has no path to RED — delete it entirely and the population is byte-identical.*** ✅ **TRUE.** I proved `F-1` with a **throwaway scratch probe** (`AR-677`'s three arms) and **landed no test that would notice the repair's removal.** ★★★★★ **`A REPAIR VERIFIED ONLY BY A PROBE THAT IS NOT COMMITTED IS A REPAIR WITH NO GUARD.` My arms were real measurements and they were also disposable — the moment the probe left the scratchpad, the repair was unprotected. `green-check`: a STOP CONDITION owes a DISCRIMINATES fixture, and I owed one to the tree, not to my terminal.**
+
+### ✅ WHAT LANDED
+
+**`test_crisis_veto_triggers_on_unevaluated_scenario`** — asserts the CRASHED shape verbatim from `stress_test.py:132-138` (`{"passed": False, "max_drawdown": 0, "error": …}`) yields **`crisis_veto is True`, `score == 0.0`, `passed is False`**, plus that the reason names it **`unevaluated`** rather than a breach — so the two veto causes stay distinguishable in the record.
+
+### ✅★★★★★ THE TWO-ARM RED-PROOF, BY DELETION IN MATERIALISED SCRATCH COPIES
+
+| deletion (`git archive HEAD` → scratch) | FAILS | STAYS GREEN |
+|---|---|---|
+| the `"error" in s` arm | ✅ **`test_crisis_veto_triggers_on_unevaluated_scenario`** | `…on_dd_breach` |
+| the DD-compare arm | `…on_dd_breach` | ✅ **`test_crisis_veto_triggers_on_unevaluated_scenario`** |
+
+```
+python -m pytest src/engine/tests/test_performance_gate.py -q     [each scratch copy]
+  → 2 failed, 29 passed        (one is test_tier1_passes, pre-existing, unchanged in BOTH arms)
+  → with fix, campaign tree: 1 failed, 30 passed
+```
+★★★ **Each deletion convicts ONLY its own guard (`R-637 §1`). Neither tree was mutated; both arms are `git archive` copies.**
+⚠️ **PROCESS: this commit failed twice — once on a transient `index.lock` from the desk committing concurrently (I did NOT remove the lock; I verified no `git` process held it and it had already cleared), once on `2` PRE-EXISTING ruff errors (identical on `git show HEAD:`). Safe fixes only.**
+
+---
+
+## 🛑🛑🛑★★★★★ HANDOFF — I AM AT GENUINE EXHAUSTION. THIS IS NOT A LANE BOUNDARY.
+
+**FAN-IN: `§6.1` = `1 / 1` DONE. `§6.2` = `0 / 3` NOT STARTED. Sweep `5 / 7` (`F-7`, `F-3` remain, PAUSED by `R-639`).**
+🛑 **I am declaring this because `§6.2` is a `ratify-packet` instrument change with THREE members, each owing its own committed test and deletion-red-proof, plus a comment correction — and starting it now is exactly the *"partial result that reads as complete"* this campaign convicts most often. `worker-execution §10`: do not start what you cannot finish.**
+
+### WHAT THE NEXT SEAT NEEDS — SO NOTHING IS RE-DERIVED
+
+**IMMEDIATE TASK: `R-639 §6.2` — ONE ratify-packet for the crisis-fail-closed CLASS** (`fix-pattern`, not three tickets). **CLASS PROPERTY:** *a crisis evaluation that did not happen, or was compared against the wrong limit, must never score as clean.* **Members, in the ruling's own order:**
+1. **`F-1b` THREADING — DO THIS FIRST INSIDE THE PACKET** (`R-639 §6.2.1`): `backtester.py:8410` → pass `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)`, **the identical expression already present at `:8396`.** ★★★ **It is first because it is what makes the comment I shipped at `performance_gate.py:331-341` TRUE — until it lands that comment is a false instruction.**
+2. **`F-G3` VETO SENTINEL** (`§6.2.2`): `backtester.py:8432` must emit `crisis_results = {"scenarios": [{"name": "stress_suite", "passed": False, "max_drawdown": 0, "error": str(e)}]}` instead of `None` — **reusing the arm that now works and is now guarded by `ba204de8`.** 🛑 **AND the second hop: the crisis-aware rescore must not be skipped when the stress test raises.**
+3. **`F-G4` SCHEMA** (`§6.2.3`): `performance_gate.py:296-298` — missing / `None` / non-finite `max_drawdown` routes to `crisis-stress-unevaluated`; a non-empty `crisis_results` with no usable `scenarios` is **unevaluated, not absent.**
+🛑 **EVERY member ships a COMMITTED test, red-proofed BY DELETION IN A MATERIALISED SCRATCH COPY (`git archive <sha> | tar -x -C <scratch>`). `never-flag` — no feature flag; the OFF branch would be the defect.** 🛑 **THEN correct the comment at `performance_gate.py:331-341` in the same packet.**
+
+**THEN, when the desk un-pauses the sweep:** `F-7` (`tests/python/test_validate_scaling_schedule.py:604` — unlink the report before the subprocess and assert on `returncode`; its own name promises *"exits_nonzero"*) and `F-3` (five sizing-parity tests dead behind a false caption — `test_paper_backtest_sizing_parity.py:262-292` fixture needs `exit` added and `take_profit.type` corrected from `'fixed_r'`; and `:299/316/327/341/353` must stop converting an arbitrary `Exception` into a skip). **Plus `R-638 §5.2`'s authorized `F-6` fixture, which owes its own red-proof.**
+
+### STATE
+**Branch `h1-wave4-sealed12-driver`, my last commit `ba204de8`.** **Isolated worktree `wt-eventmask-fix-20260803` is now redundant** — every fix it carried is landed; its `backtester.py`/test files hold scratch state from red-proof arms and it should be treated as disposable, not as a source.
+🛑 **KNOWN-RED, ALL DELIBERATE AND ALL REPORTED:** `test_pnl_accuracy` ×1, `test_firm_config` ×2, `test_pine_compiler` ×1, `test_quantum_mc` ×1 — **do NOT "fix" these by tuning fixtures or deleting asserts; `R-638` ratified leaving them red.** Plus pre-existing `test_tier1_passes` and the `track3` `40`.
+✅ **NO dispatched sub-agent is outstanding — I dispatched none all session.** ✅ **My ruling ear (`b3ukzmyrv`, 2s poll) dies with this session; the next seat must arm its own and backfill from `R-639`.**
+
+---
+
 ## AR-684 · 2026-08-03 · ✅★★★★★ **`F-8` + `F-9` CLOSED (`af2d8073`) — AND EACH ONE, ONCE UNBLINDED, EXPOSED A **REAL DEFECT UNDERNEATH**, NOT JUST A WEAK TEST.** 🛑🛑★★★★★ **`F-9` IS THE WORSE ONE: THE TEST HAS BEEN CALLING A **SIGNATURE THAT DOES NOT EXIST** — `TypeError: compute_mc_confidence_intervals() got an unexpected keyword argument 'daily_returns'` — AND `except Exception → pytest.skip` REPORTED THAT AS A CLEAN ENVIRONMENTAL SKIP.** **FAN-IN `5 / 7`.**
 
 **TASK:** `R-638 §5.1`, findings `F-8`, `F-9`. **Files: `test_pine_compiler.py`, `test_quantum_mc.py`.**
