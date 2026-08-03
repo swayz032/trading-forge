@@ -8069,6 +8069,84 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
     return cls()
 
 
+# ─── Crisis fail-closed helpers (R-639 §6.2 packet) ───────────────
+# These two exist as named functions rather than inline CLI code for one
+# reason: the inline versions had NO path to a committed test. R-639 §1
+# (finding F-G1) convicted exactly that shape — a repair verified only by a
+# throwaway probe is a repair with no guard.
+
+
+def _unevaluated_crisis_sentinel(exc: BaseException) -> dict:
+    """F-G3: a stress run that RAISED is UNEVALUATED, not absent.
+
+    stress_test.py:129 catches only (ValueError, IndexError, KeyError); every
+    other exception propagates out of run_stress_test(). The previous handler
+    set crisis_results = None, and performance_gate.py:295 is
+    `if crisis_results is not None:` — so the veto loop never ran and a crisis
+    test that BLEW UP scored as a clean pass.
+
+    The returned shape is the CRASHED scenario stress_test.py:131-139 already
+    emits, so it is caught by the `"error" in s` veto arm that
+    test_crisis_veto_triggers_on_unevaluated_scenario guards. `passed` and
+    `failed_scenarios` mirror run_stress_test's own envelope (:181-186) because
+    backtest-service.ts:1127-1129 persists both; without them a crashed run
+    would be recorded with failedScenarios: [].
+    """
+    return {
+        "passed": False,
+        "scenarios": [
+            {
+                "name": "stress_suite",
+                "passed": False,
+                "max_drawdown": 0,
+                "error": str(exc),
+            }
+        ],
+        "failed_scenarios": ["stress_suite"],
+    }
+
+
+def _rescore_with_crisis(result: dict, crisis: dict | None, config: dict) -> dict:
+    """Recompute forge_score with crisis inputs. Mutates `result` in place.
+
+    F-1b: firm_max_dd is threaded from the SAME expression that built the
+    stress request (config.get("prop_firm_max_dd", 2000.0)). Without it this
+    call fell back to compute_forge_score's 2000.0 signature default, so the
+    two halves of one rule compared against different numbers: a firm
+    configured at $1500 would have its $1800 crisis drawdown FAIL the stress
+    test and PASS the gate.
+
+    Called from BOTH the success path and the crash path, so a stress test that
+    raises still gets the crisis-aware rescore instead of silently retaining
+    the crisis-BLIND forge_score computed at :5592-5609.
+    """
+    from src.engine.performance_gate import (
+        compute_forge_score as full_forge_score,
+    )
+    oos = result.get("oos_metrics", result)
+    mc = result.get("mc_results") or result.get("monte_carlo")
+    # P0-1 fix: full_forge_score returns a DICT. Storing it directly in
+    # result["forge_score"] caused the TS bridge to serialize it as
+    # "[object Object]" and persist garbage to the DB. Store the scalar
+    # float in forge_score and the full dict in forge_score_components.
+    _stress_forge_result = full_forge_score(
+        {
+            "avg_daily_pnl": oos.get("avg_daily_pnl", 0),
+            "winning_days": oos.get("winning_days", 0),
+            "total_trading_days": max(oos.get("total_trading_days", 1), 1),
+            "max_drawdown": abs(oos.get("max_drawdown", 0)),  # Already in dollars
+            "sharpe_ratio": oos.get("sharpe_ratio", 0),
+            "profit_factor": oos.get("profit_factor", 0),
+        },
+        mc_results=mc,
+        crisis_results=crisis,
+        firm_max_dd=config.get("prop_firm_max_dd", 2000.0),
+    )
+    result["forge_score"] = float(_stress_forge_result["score"])
+    result["forge_score_components"] = _stress_forge_result
+    return _stress_forge_result
+
+
 # ─── CLI Entry Point ──────────────────────────────────────────────
 
 @click.command()
@@ -8397,30 +8475,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             )
             crisis = run_stress_test(stress_req)
             result["crisis_results"] = crisis
-            # Recalculate Forge Score with crisis bonus using full formula
-            from src.engine.performance_gate import (
-                compute_forge_score as full_forge_score,
-            )
-            oos = result.get("oos_metrics", result)
-            mc = result.get("mc_results") or result.get("monte_carlo")
-            # P0-1 fix: full_forge_score returns a DICT. Storing it directly in
-            # result["forge_score"] caused the TS bridge to serialize it as
-            # "[object Object]" and persist garbage to the DB. Store the scalar
-            # float in forge_score and the full dict in forge_score_components.
-            _stress_forge_result = full_forge_score(
-                {
-                    "avg_daily_pnl": oos.get("avg_daily_pnl", 0),
-                    "winning_days": oos.get("winning_days", 0),
-                    "total_trading_days": max(oos.get("total_trading_days", 1), 1),
-                    "max_drawdown": abs(oos.get("max_drawdown", 0)),  # Already in dollars
-                    "sharpe_ratio": oos.get("sharpe_ratio", 0),
-                    "profit_factor": oos.get("profit_factor", 0),
-                },
-                mc_results=mc,
-                crisis_results=crisis,
-            )
-            result["forge_score"] = float(_stress_forge_result["score"])
-            result["forge_score_components"] = _stress_forge_result
+            # Recalculate Forge Score with crisis bonus using full formula.
+            # R-639 §6.2 member 1 (F-1b): the rescore now lives in
+            # _rescore_with_crisis() so firm_max_dd is threaded from the same
+            # expression as the stress request above, and so this path has a
+            # committed test.
+            _rescore_with_crisis(result, crisis, config)
             _t_stress_end = time.perf_counter()
             print(
                 f"[timing] stress_test={_t_stress_end - _t_stress_start:.2f}s "
@@ -8430,8 +8490,18 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 file=sys.stderr,
             )
         except Exception as e:
-            print(f"Stress test skipped: {e}", file=sys.stderr)
-            result["crisis_results"] = None
+            # R-639 §6.2 member 2 (F-G3). This handler used to set
+            # crisis_results = None, which performance_gate.py:295 reads as
+            # "no crisis input" and skips the veto loop entirely — so a stress
+            # run that RAISED scored as a clean pass. It also skipped the
+            # crisis-aware rescore below, leaving result["forge_score"] at the
+            # crisis-BLIND value from :5592-5609 with one stderr line as the
+            # only trace. Both halves are closed here: emit the UNEVALUATED
+            # sentinel, then rescore on it.
+            print(f"Stress test failed (recorded as unevaluated): {e}", file=sys.stderr)
+            crisis = _unevaluated_crisis_sentinel(e)
+            result["crisis_results"] = crisis
+            _rescore_with_crisis(result, crisis, config)
 
     if backtest_id:
         result["backtest_id"] = backtest_id

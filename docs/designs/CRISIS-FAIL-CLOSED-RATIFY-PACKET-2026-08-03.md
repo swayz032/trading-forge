@@ -91,7 +91,7 @@ All three fixtures use scenario dicts **with no `max_drawdown` key at all** (`{"
 
 ## 5 — ROLLBACK
 
-**Each member is a separate commit** on `h1-wave4-sealed12-driver`, so `git revert <sha>` restores the prior behaviour cleanly, member by member. **No flag, no env var, no migration, no schema change, no data written by this work.** Member 2's only persistence effect is a row that would not otherwise exist; reverting stops new ones and leaves the old records untouched.
+⚠️ **CORRECTED AT DELIVERY — THIS PLANNED "one commit per member" DID NOT SURVIVE CONTACT, AND I AM NOT LEAVING THE PLAN STANDING AS IF IT HAD.** Members 1 and 2 share one enabling change (the two extracted helpers), so splitting them would have meant staging partial hunks inside one function — more risk than the granularity buys. **The packet ships as ONE commit** on `h1-wave4-sealed12-driver`; `git revert <sha>` restores the prior behaviour for the whole class, which is the unit `R-639 §6.2` ordered anyway (`fix-pattern`, one concept). **No flag, no env var, no migration, no schema change, no data written by this work.** Member 2's only persistence effect is a row that would not otherwise exist; reverting stops new ones and leaves the old records untouched.
 
 ---
 

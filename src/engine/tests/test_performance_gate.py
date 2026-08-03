@@ -253,12 +253,23 @@ class TestForgeScore:
         """
         stats = _tier1_stats()
         mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
-        crisis_all_pass = {"passed": True, "scenarios": [{"passed": True}] * 8}
+        # R-644 §3: every scenario carries an EXPLICIT under-limit max_drawdown.
+        # These fixtures used to omit the key entirely, which F-G4 now routes to
+        # crisis-stress-unevaluated — absence is an unknown, not a passing value,
+        # and stress_test.py's two producers always emit the key anyway.
+        crisis_all_pass = {
+            "passed": True,
+            "scenarios": [{"passed": True, "max_drawdown": 400.0}] * 8,
+        }
         result_with_crisis = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_all_pass)
         result_no_crisis = compute_forge_score(stats, mc_results=mc, crisis_results=None)
         assert result_with_crisis["score"] == result_no_crisis["score"]
         assert result_with_crisis["crisis_veto"] is False
         assert result_no_crisis["crisis_veto"] is False
+        # R-644 §4 positive witness: two vetoed runs would ALSO be equal at 0.0.
+        # Equality is only evidence of "crisis changes nothing" if the score is
+        # non-degenerate.
+        assert result_with_crisis["score"] > 0
 
     def test_crisis_veto_triggers_on_dd_breach(self):
         """Crisis scenario that breaches firm_max_dd sets crisis_veto=True and score=0."""
@@ -313,17 +324,105 @@ class TestForgeScore:
             f"{result['crisis_veto_reason']!r}"
         )
 
-    def test_crisis_partial_fail_without_dd_breach_no_veto(self):
-        """Partial failure (scenarios passed=False but no max_drawdown key) does not veto."""
+    def test_crisis_veto_triggers_on_missing_max_drawdown(self):
+        """R-639 §6.2.3 (F-G4): an ABSENT drawdown is unknown, not zero.
+
+        `s.get("max_drawdown", 0.0)` defaulted a missing key to 0.0 and
+        `0.0 > firm_max_dd` is False, so a scenario whose drawdown was never
+        recorded scored as a clean pass. Deleting the usable-value check in
+        performance_gate.py must turn THIS test red.
+        """
         stats = _tier1_stats()
         mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
-        # Scenarios have passed=False but no max_drawdown field — no veto should fire
+        crisis_missing = {
+            "passed": True,
+            "scenarios": [
+                {"passed": True, "max_drawdown": 400.0, "name": "covid_crash"},
+                {"passed": True, "name": "gfc_2008"},  # key absent entirely
+            ],
+        }
+        result = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_missing)
+        assert result["crisis_veto"] is True, (
+            "a scenario with no max_drawdown key did not veto — an unmeasured "
+            "drawdown is being scored as a passing one"
+        )
+        assert result["score"] == 0.0
+        assert result["passed"] is False
+        assert "unevaluated" in result["crisis_veto_reason"]
+        assert "gfc_2008" in result["crisis_veto_reason"], (
+            "the reason must name the scenario that was not evaluated"
+        )
+
+    def test_crisis_veto_triggers_on_non_finite_max_drawdown(self):
+        """R-639 §6.2.3 (F-G4): NaN is the same hole in a different shape.
+
+        `float('nan') > 2000.0` is False, so a NaN drawdown passed the DD
+        compare silently. Infinity is checked too — it is not a measurement
+        either.
+        """
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        for bad in (float("nan"), float("inf"), None, "9999"):
+            crisis_bad = {
+                "passed": True,
+                "scenarios": [{"passed": True, "max_drawdown": bad, "name": "gfc_2008"}],
+            }
+            result = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_bad)
+            assert result["crisis_veto"] is True, f"{bad!r} did not veto"
+            assert result["score"] == 0.0, f"{bad!r} did not zero the score"
+            assert "unevaluated" in result["crisis_veto_reason"]
+
+    def test_crisis_veto_triggers_on_empty_scenarios(self):
+        """R-639 §6.2.3 (F-G4): attempted-but-produced-nothing is unevaluated.
+
+        `crisis_results={}` yielded `scenarios=[]`, the veto loop ran zero
+        times, and the strategy scored as if all eight crisis scenarios had
+        passed. `crisis_results is not None` means the evaluation was
+        ATTEMPTED — an attempt that produced no measurement must fail closed.
+        """
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        for empty in ({}, {"passed": True, "scenarios": []}):
+            result = compute_forge_score(stats, mc_results=mc, crisis_results=empty)
+            assert result["crisis_veto"] is True, f"{empty!r} did not veto"
+            assert result["score"] == 0.0
+            assert "unevaluated" in result["crisis_veto_reason"]
+        # DISCRIMINATOR: crisis_results=None means "no crisis stage ran at all",
+        # which is a different state and must NOT veto — otherwise this guard
+        # would veto every backtest that never reached the stress test.
+        result_none = compute_forge_score(stats, mc_results=mc, crisis_results=None)
+        assert result_none["crisis_veto"] is False
+        assert result_none["score"] > 0
+
+    def test_crisis_partial_fail_without_dd_breach_no_veto(self):
+        """Partial failure with a REAL drawdown UNDER the firm limit does not veto.
+
+        R-644 §2/§3 — this fixture used to give the failing scenario NO
+        max_drawdown key at all, and its comment named that absence as the
+        tested condition. That was not a test of the product decision; it was
+        the fail-open written down as an expectation. The product decision is
+        narrower and survives intact: a scenario that FAILED but whose drawdown
+        was measured and came in UNDER firm_max_dd must not veto.
+
+        The value is deliberately 500.0 and NOT 0 — 0 is what the old
+        `s.get("max_drawdown", 0.0)` default returned for a missing key, so a 0
+        here would re-create the same shorthand in a new costume and the test
+        would still not distinguish "evaluated and safe" from "never evaluated".
+        """
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
         crisis_partial = {
             "passed": False,
-            "scenarios": [{"passed": True}] * 7 + [{"passed": False}],
+            "scenarios": (
+                [{"passed": True, "max_drawdown": 400.0}] * 7
+                + [{"passed": False, "max_drawdown": 500.0, "name": "flash_crash"}]
+            ),
         }
         result = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_partial)
-        assert result["crisis_veto"] is False
+        assert result["crisis_veto"] is False, (
+            f"a failed scenario whose measured drawdown ($500) is UNDER the firm "
+            f"limit must not veto, got: {result['crisis_veto_reason']!r}"
+        )
         assert result["score"] > 0
 
     def test_score_capped_at_100(self):
@@ -335,6 +434,19 @@ class TestForgeScore:
         stats["sharpe_ratio"] = 4.0
         stats["profit_factor"] = 5.0
         mc = {"probability_of_ruin": 0.001, "sharpe_distribution": {"p5": 3.0, "p95": 3.2}}
-        crisis = {"passed": True, "scenarios": [{"passed": True}] * 8}
-        score = compute_forge_score(stats, mc_results=mc, crisis_results=crisis)["score"]
-        assert score <= 100
+        crisis = {
+            "passed": True,
+            "scenarios": [{"passed": True, "max_drawdown": 300.0}] * 8,
+        }
+        result = compute_forge_score(stats, mc_results=mc, crisis_results=crisis)
+        # R-644 §4 — POSITIVE WITNESS THAT THE CAP PATH ACTUALLY RAN.
+        # `assert score <= 100` alone is satisfied by 0.0, so any change that
+        # vetoes this fixture would leave this test GREEN while it stopped
+        # testing the cap entirely. A failure-set diff cannot see that; these
+        # two assertions can.
+        assert result["crisis_veto"] is False, (
+            f"fixture vetoed — the cap is no longer being exercised: "
+            f"{result['crisis_veto_reason']!r}"
+        )
+        assert result["score"] > 0, "score collapsed to 0; the cap path did not run"
+        assert result["score"] <= 100

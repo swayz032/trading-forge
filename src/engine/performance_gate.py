@@ -294,9 +294,45 @@ def compute_forge_score(
     crisis_veto_reason = ""
     if crisis_results is not None:
         scenarios = crisis_results.get("scenarios", [])
+        # R-639 §6.2.3 (grader finding F-G4) / R-644 — A CRISIS RESULT THAT
+        # CARRIES NO USABLE SCENARIOS IS UNEVALUATED, NOT ABSENT.
+        # crisis_results={} previously yielded scenarios=[], the loop below ran
+        # zero times, and the strategy scored as if every crisis scenario had
+        # passed. `crisis_results is not None` means a crisis evaluation was
+        # ATTEMPTED; if it produced nothing usable, that is a failure to
+        # measure, and the safe direction for a hard veto is to fail closed.
+        if not scenarios:
+            crisis_veto = True
+            crisis_veto_reason = (
+                "crisis-stress-unevaluated: crisis_results carried no usable "
+                "scenarios; the stress suite produced no measurement, which is "
+                "not the same as producing a passing one"
+            )
         for s in scenarios:
-            scenario_dd = s.get("max_drawdown", 0.0)
             scenario_name = s.get("name", "unknown")
+            # R-639 §4 (F-G4) / R-644 §3 — AN ABSENT MEASUREMENT IS NOT A
+            # PASSING ONE. The previous `s.get("max_drawdown", 0.0)` defaulted a
+            # missing key to 0.0, and `0.0 > firm_max_dd` is False, so a
+            # scenario whose drawdown was never recorded scored as clean. NaN is
+            # the same hole with a different shape: `nan > 2000.0` is also False.
+            # This check runs BEFORE the DD compare because an unusable value
+            # cannot be compared at all — and it leaves the breach path below
+            # byte-for-byte unchanged for scenarios that DO carry a number.
+            _raw_dd = s.get("max_drawdown", None)
+            _dd_usable = False
+            if isinstance(_raw_dd, (int, float)) and not isinstance(_raw_dd, bool):
+                _f = float(_raw_dd)
+                # finite check without importing math: inf - inf and nan - nan
+                # are both nan, so only a finite value satisfies this.
+                _dd_usable = (_f - _f) == 0.0
+            if not _dd_usable:
+                crisis_veto = True
+                crisis_veto_reason = (
+                    f"crisis-stress-unevaluated: scenario '{scenario_name}' carries no "
+                    f"usable max_drawdown ({_raw_dd!r}); its drawdown is unknown, not zero"
+                )
+                break
+            scenario_dd = float(_raw_dd)
             # R-630 §4.2 (grader finding F-1) — A SCENARIO THAT DID NOT COMPUTE
             # MUST NOT SCORE AS A CLEAN PASS.
             #
@@ -332,14 +368,35 @@ def compute_forge_score(
             # R-633: a bare `passed is False` veto was ORDERED (R-630 §4.2) and then
             # NARROWED to error-only. It is deliberately NOT here.
             #
-            # Reason: every scenario stress_test.py can actually produce with
-            # passed=False ALSO carries either a real max_drawdown (:122-124, caught
-            # by the DD compare above) or an `error` key (:132-138, caught above).
-            # So `passed is False` adds no coverage over the two conditions here —
-            # but it DOES veto the shape asserted by
-            # test_crisis_partial_fail_without_dd_breach_no_veto, which is a
-            # deliberate product decision that partial failure without a drawdown
-            # breach must not veto.
+            # CORRECTED 2026-08-03 (R-639 §2 / R-644, packet member 1). The earlier
+            # wording of this comment claimed every passed=False scenario is "already
+            # caught by the DD compare above" and that claim was FALSE BY CONSTRUCTION
+            # when it was written: the caller did not thread firm_max_dd, so the DD
+            # compare ran against this signature's 2000.0 default while the stress
+            # test had already failed the scenario against the firm's real (possibly
+            # tighter) limit. The two halves of one rule compared against different
+            # numbers, and a $1800 drawdown under a $1500 firm limit failed the stress
+            # test and passed the gate.
+            #
+            # What is true NOW, with the mechanism stated rather than asserted:
+            #   1. backtester.py's _rescore_with_crisis() threads
+            #      firm_max_dd=config.get("prop_firm_max_dd", 2000.0) — the SAME
+            #      expression that built the StressTestRequest — so the DD compare
+            #      above uses the firm's real limit.
+            #   2. stress_test.py has exactly two scenario producers and both always
+            #      emit max_drawdown (:121-128 success, :131-139 crashed), so the
+            #      usable-value check above cannot be reached by a real scenario that
+            #      simply "did not record" a drawdown; absence means a producer this
+            #      consumer has never seen, and it fails closed.
+            #   3. Anything crashed carries an `error` key (:131-139), caught above.
+            # So `passed is False` adds no coverage the three conditions above do not
+            # already have — and the product decision it would break is real and
+            # narrower than it looks: a scenario that FAILED with a REAL drawdown
+            # UNDER the firm limit must not veto. That is what
+            # test_crisis_partial_fail_without_dd_breach_no_veto now asserts, with an
+            # explicit under-limit max_drawdown rather than an absent one (R-644 §3 —
+            # absence had been used as shorthand for "under the limit", and those are
+            # different things).
 
     # ── Earnings power (0-27): $250 = 0, $750+ = 27
     # Reduced from 30 to 27 to accommodate survival_score component (total still = 100)
