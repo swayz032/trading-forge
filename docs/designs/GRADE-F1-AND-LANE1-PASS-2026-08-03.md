@@ -63,3 +63,75 @@
 ---
 
 *(findings follow — this file is committed incrementally)*
+
+---
+
+## 1. INTERIM RECEIPT — headline results (committed before the remaining probes)
+
+**All measurements below are MEASURED HERE unless labelled otherwise.**
+
+### 1.1 Blob join keys (the thing I measured IS the thing the claims name)
+
+| File | at `c067a652` | at `HEAD` (`07e7a151`) | in worktree |
+|---|---|---|---|
+| `src/engine/spec_family_bindings.py` | `bb1d23ca` | `bb1d23ca` | `bb1d23ca` |
+| `src/engine/session_windows.py` | `fcfcd2c3` | `fcfcd2c3` | `fcfcd2c3` |
+
+Both clean in `git status --porcelain`. Measurements taken in the live worktree therefore describe the pin.
+
+Three blobs used for the merge, **all verified against their git object ids**:
+
+- `7c9e69a1` — the file at `e460c88d` **AND** at `c067a652^`. F-1 and Lane A share an identical base file.
+- `bb1d23ca` — F-1 applied (`c067a652`).
+- `2bcfbc76` — Lane A applied. **VERIFIED**: `git apply` of the committed `docs/designs/lane-a-exact-clock-route-2026-08-03.patch` onto `7c9e69a1` produces byte-exactly `2bcfbc760d8b11562224126b5db418c0711abd07`.
+
+`git diff --stat e460c88d c067a652 -- src/` = **only** `spec_family_bindings.py` (+160) and its test file (+125). No other runtime module differs between the two bases.
+
+### 1.2 CLAIM 2 — the combined tree the worker called `[UNMEASURED — STRUCTURALLY]` NOW EXISTS AND IS MEASURED
+
+`git merge-file` over (F-1, base, Lane A) yields **6 conflicts** — reproducing the worker's "6 conflict hunks". All 6 are the overlapping insert of `resolve_exact_clock_span`, which BOTH changes define. I resolved it the two honest ways and built both.
+
+Population: the 16 `shakedown_specs/*.spec.json`, **161 taught conditions** (independently counted). Run mode: **direct harness driving `run_leg_a_phase1`, NOT pytest.** Flags at default (`TF_SESSION_ROLE_RESOLVER_ENABLED` unset, `TF_FAMILY_META_ENFORCED` unset).
+
+| arm | module blob | rows | PASS | description |
+|---|---|---|---|---|
+| A0_base | `7c9e69a1` | 161 | **0** | neither change |
+| A_F1only | `bb1d23ca` | 161 | **0** | `c067a652` (F-1 only) |
+| B_laneAonly | `2bcfbc76` | 161 | **1** | base + committed Lane A patch — **the worker's arm** |
+| C_both_F1parser | `321021ed` | 161 | **1** | **F-1 + Lane A**, keeping F-1's tier1-OR-tier2 parser |
+| D_both_laneAparser | `6891429e` | 161 | **1** | **F-1 + Lane A**, keeping Lane A's tier1-ONLY parser |
+
+Row-level diff, **join key = (spec_file, condition_id)**, union = 161 keys, every arm carries all 161:
+
+- `A0_base → A_F1only` : **0 rows move** (F-1 alone moves nothing on this population)
+- `A_F1only → B_laneAonly` : **1 row moves** — the subject row, `BLOCK/['ii']` → `PASS/[]`
+- `A_F1only → C_both_F1parser` : **1 row moves** — the same row
+- `B_laneAonly → C_both_F1parser` : **0 rows move**
+- `C_both_F1parser → D_both_laneAparser` : **0 rows move**
+
+Subject row in every Lane-A-bearing arm: `bindable=True, approximation=False, executed=True, fail_codes=[], row_verdict=PASS`, `primitive='src.engine.indicators.core.compute_opening_range_breakout'`, `session_zone=None`.
+
+**ANSWER TO THE OPEN QUESTION: the PASS SURVIVES in a tree containing BOTH F-1 and Lane A, under BOTH conflict resolutions, and adding F-1 to the Lane A tree moves ZERO of the 161 rows.**
+
+**MECHANISM (measured, not reasoned):** the row's object text is
+
+> `"marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session"`
+
+- `resolve_session_keyword(obj)` = **None** → the row never takes the keyword route → **F-1's fidelity term never fires on it.**
+- TIER-1 market context IS present (`New York Stock Exchange`, span 103–126) → F-1's tier1-OR-tier2 parser and Lane A's tier1-only parser return the **same** span `(570, 585)`. The one declared difference between the parsers is immaterial to this row.
+
+### 1.3 ROW pass != SPEC pass — CONFIRMED
+
+`automated_verdict = BLOCK` for **all 16 specs in all 5 arms**, sole leg-level failure code `vi_cert`. `kFyD3H6I1I8__s0` carries 20 rows, of which 1 passes. Nothing here is a spec-level or Phase-1 pass.
+
+### 1.4 The `172` denominator — PARTIALLY UNVERIFIED
+
+`161` from 16 files: **CONFIRMED** (per-file counts recorded). The `+11 golden-slice rows`: **I could not reproduce them.** Sweeping every JSON under `docs/` through `_spec_body` + `_taught_conditions`, **exactly one** artifact yields 11 taught conditions — `shakedown_specs/CLDEIsNpVRc__s0.spec.json`, which is already inside the 161. No `st5e-YJRfKc*` artifact in this tree yields any taught conditions (all return 0). So `172` is not reconstructible here; `161` is.
+
+### 1.5 CLAIM 1 — headline
+
+- **Target 4 (is the comparison real?) — CONFIRMED, by interception.** Replacing `session_windows.is_in_killzone` with a liar evaluating `[500,505)` made `_derive_session_zone_window_by_execution("ny_am")` return `((500,505),)` while the local mirror `_REAL_ZONE_INTERVALS["ny_am"]` stayed `((420,600),)`. It genuinely EXECUTES the primitive; it does not restate the constant.
+- **Target 3 (fail-closed) — CONFIRMED at every reachable boundary**: broken import, raising primitive, `_to_et_minutes_of_day` returning None, unknown/None/empty zone, unparseable clock, 3 clock tokens, reversed span — **all resolve to `approximation=True`**.
+- **Target 2 (corpus impact `0`) — CONFIRMED** by an independent shape-agnostic walk with live positive controls (details in §2).
+- **Target 1 (tier-2 asymmetry) — the safety argument is REFUTED** (details in §2).
+
