@@ -4,6 +4,64 @@
 
 ---
 
+## AR-727 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-669 §5` DELIVERED — AND `(d)` REFUTES `R-669 §2`, WHICH IS A CONCLUSION **I HELPED PRODUCE**. **A FOURTH EXECUTION PATH EXISTS AND IT IS ALREADY WIRED TO THE SPEC COMPILER: `backtester.py:8309`, "BAND C — COMPILED-SPEC CONDITION-FAMILY DISPATCH".** `config["compiled_spec"]` → `from_compiled_spec()` → `SpecConditionStrategy` → **"the same `run_class_backtest()` path every archetype strategy uses"** — plus `run_walk_forward_class` for walkforward.** ✅★★★★★ **SO `R-648` STAGE `4` (EXECUTE) **IS REACHABLE FROM A COMPILED SPEC TODAY.** 🛑 **STAGE `5` (TRADE-BY-TRADE COMPARE) STILL IS NOT — `run_parity_diff` remains `2`-archetype-only, and `0` OF `11` TIER-A SPECS MAP ONTO IT WITHOUT A DERIVATION THE EDUCATOR DID NOT MAKE.**
+
+**TASK:** `R-669 §5` `(a)`–`(d)`. **RUN MODE: READ-ONLY STATIC SOURCE READS AT HEAD `aded71b4`. NO pytest, NO producer, NO backtest, NO harness run.** **NOTHING under `src/` modified. NO ADAPTER, SHIM OR WIRING WRITTEN.** **NOT GRAPH-SCHEDULED.**
+
+### 🛑🛑🛑★★★★★ §1 — `(d)` FIRST, AS RECEIPTED, AND IT IS THE FINDING: **THERE IS A FOURTH PATH**
+`[MEASURED HERE — `grep` for non-test importers of `spec_condition_compiler`, run as its own statement]` **EXACTLY ONE non-test importer: `src/engine/backtester.py:8318`.** ✅ **POSITIVE CONTROL, RUN UNCHAINED (`R-669 §7.5`): the same finder returns `8` non-test import hits for `spec_family_bindings` — **the finder fires, so the `1` is a measurement and not a dead grep.**
+**THE CALL SITE, QUOTED** `[MEASURED — `backtester.py:8309-8340`]`:
+```python
+elif isinstance(config, dict) and config.get("compiled_spec"):
+    # ─── Band C: compiled-spec condition-family dispatch ──────────────
+    # Onboarded specs that did NOT match a named archetype (Band B) but
+    # DID clear the Band C binding-plan coverage threshold are executed
+    # here via SpecConditionStrategy — the same run_class_backtest() path
+    # every archetype strategy uses.
+    from src.engine.spec_condition_compiler import from_compiled_spec
+    strategy = from_compiled_spec(
+        config["compiled_spec"],
+        symbol=_strategy_cfg_for_spec.get("symbol", "MES"),
+        timeframe=_strategy_cfg_for_spec.get("timeframe", "5m"), …)
+    if mode == "walkforward":
+        from src.engine.walk_forward import run_walk_forward_class
+```
+✅★★★★★ **AND THE FEED IS A REAL JOIN, NOT A COINCIDENCE OF NAMES `[MEASURED — `src/server/services/spec-onboarding-service.ts:666`]`: `compiled_spec` is built as `{ video, spec_hash, graph_canonical_hash, ledger_d, spec, … }` — **THE PRODUCER'S OWN FIELD SET.** Its in-line comment confirms the Python side re-derives rather than trusting the stamp: *"the Python engine recomputes the full plan itself at backtest time via `spec_family_bindings.compile_binding_plan`."*
+⚠️🛑★★★★ **AND A DEFAULT WORTH YOUR ATTENTION, GIVEN `R-669 §3`: `from_compiled_spec` DEFAULTS `symbol="MES"`, `timeframe="5m"`. **A SPEC WHOSE EDUCATOR SAID *"every currency pair"* WOULD EXECUTE ON `MES` BY DEFAULT, SILENTLY, IF NO SYMBOL WERE SET IN ITS CONFIG.** `[MEASURED — the default arguments at `spec_condition_compiler.py:1410-1411`]`. **REPORTED, NOT ACTED ON.**
+
+### 🛑★★★★★ §2 — MY OWN OVERREACH, CORRECTED PLAINLY
+🛑 **`AR-725 §2` (mine) wrote: *"`R-648`'s STAGE `4` (EXECUTE) AND STAGE `5` (TRADE-BY-TRADE COMPARE) HAVE NO PATH FROM `produce_spec_artifact` TODAY."* **THAT SENTENCE WAS BROADER THAN MY EVIDENCE. I had measured `run_parity_diff` ONLY, and I generalised it to "no path".**
+✅ **WHAT WAS CORRECTLY SCOPED AND STILL STANDS: there is no path from `produce_spec_artifact` **INTO `run_parity_diff`** — that is re-confirmed in `§5` below.** 🛑 **WHAT WAS WRONG: extending it to stage `4` in general. `R-669 §2` then adopted my sentence as *"NO PATH… FOR ANY SPEC ON ANY INSTRUMENT"*, so the overreach propagated into a ruling.**
+★★★★★ **THE ONE THING I DID RIGHT IS WHAT CAUGHT IT: `AR-725 §4` explicitly recorded *"`[UNENUMERATED]`: I did NOT check whether any OTHER execution path exists"* — **and `R-669 §5(d)` ordered exactly that sweep.** `A NAMED [UNENUMERATED] IS THE ONLY REASON THIS WAS FOUND IN ONE RULING RATHER THAN SIX.` **The gap in my evidence was written down, so it could be closed.**
+
+### ✅ §3 — `(a)` WHAT `run_parity_diff` REQUIRES
+`[MEASURED — `diff_harness.py:458-480`]` **`run_parity_diff(fixture_name: str, dsl: dict, df_pd: pd.DataFrame, slippage_arr: Optional[np.ndarray], commission_per_side: float = 0.62, point_value: float = 5.0, contracts: int = 1) -> ParityResult`**, with `df_pd` = *"OHLCV DataFrame, DatetimeIndex, cols [open, high, low, close, volume]"*.
+**THE `dsl` CONTRACT** `[MEASURED — `shadow_runner.py:66-96`]`: `{entry_indicator, entry_params, direction, stop_loss_atr_multiple, take_profit_atr_multiple}` — and its docstring states *"**Everything else is ignored** by the parity runners."*
+🛑 **THE ARCHETYPE CONTRACT, ENFORCED IN THREE PLACES:** `SUPPORTED_INDICATORS = {"ema_crossover", "atr_breakout"}` (`backtrader_adapter.py:71`, `raise` at `:76-78`) · `_SUPPORTED_ENTRY_INDICATORS` (`shadow_runner.py:40`, gate `parity_supported()` at `:61`) · `raise NotImplementedError(f"No vectorbt runner for indicator '{ind}'")` (`diff_harness.py:496`).
+
+### ✅ §4 — `(b)` WHAT `produce_spec_artifact` EMITS
+`[MEASURED — its EMITTED ARTIFACTS on disk (the `16` `shakedown_specs/*.spec.json` and the tier-A provenance set), which is its output rather than a reading of its `return`]`:
+**TOP LEVEL:** `video` · `spec_hash` · `graph_canonical_hash` · `ledger_d` · `transcript_chars` · `spec` · `approximation_metrics`.
+**`spec` BODY:** `direction` · `entry_conditions` · `and_groups` · `or_branches` · `invalidations` · `entry_trigger_id` · `framework_overlay`.
+**`entry_conditions[]` ROW:** `condition_id` · `type` (family) · `role` · `object` (the taught text) · `load_bearing` · `type_confidence`.
+`[MEASURED — signature at `spec_producer.py:535-541`]` `produce_spec_artifact(strategy_extraction, *, video, certificate=None, transcript_chars=0)`.
+
+### 🛑🛑★★★★★ §5 — `(c)` THE GAP, ENUMERATED — **AND IT IS TWO DIFFERENT GAPS**
+**GAP `1` — PRODUCER → `run_parity_diff`: TOTAL. `[MEASURED]` **THE TWO FIELD SETS SHARE ZERO FIELDS.** The artifact has no `entry_indicator`, no `entry_params`, no `stop_loss_atr_multiple`, no `take_profit_atr_multiple`. **It carries TAUGHT CONDITIONS (`type` + `object` prose); the harness wants a NAMED ARCHETYPE plus ATR multiples.** These are not the same kind of object, and nothing in the repo converts one to the other `[MEASURED — `_reconstruct_dsl` reads a `StrategyConfig`, never an artifact]`.
+**HOW MANY OF THE `11` MAP ONTO THE `2` ARCHETYPES WITHOUT A DERIVATION THE EDUCATOR DID NOT MAKE: `0`.** `[MEASURED — the `11` strategy names from `AR-723 §3`]` none is an `ema_crossover` or an `atr_breakout`. 🛑 **THE NEAR MISS IS INSTRUCTIVE AND IS STILL A `0`: `ExB66jcyKxg__s0` is `sma14_strong_close_crossover` — an **SMA** crossover, not an **EMA** one, and `R-662 §5.2` already measured that the binder has **NO `SMA` PRIMITIVE AT ALL** (`sma`/`vwap`/`ema` appear only inside recognition regexes). **Mapping it to `ema_crossover` would substitute a different indicator for the taught one — a derivation, and `R-669 §3`/`§5` forbid exactly that substitution.**
+✅ **GAP `2` — PRODUCER → BACKTESTER (BAND C): **NONE. IT IS ALREADY WIRED.** `[MEASURED, §1]` the fields match, the dispatch branch exists, and the Python side recomputes the binding plan itself.
+🛑🛑★★★★★ **SO THE CORRECTED PICTURE: **STAGE `4` (EXECUTE) HAS A PATH. STAGE `5` (COMPARE AGAINST A SECOND ENGINE) DOES NOT, AND CLOSING IT WOULD REQUIRE EITHER A THIRD ENGINE-RUNNER FOR EACH TAUGHT ARCHETYPE OR A SPEC→DSL CONVERTER THAT DOES NOT EXIST.** ⚠️ **I AM NOT SCOPING THE COST OF BUILDING EITHER — that is a build question and `§5` says REPORT ONLY.**
+
+### ⚠️ §6 — WHAT I DID **NOT** MEASURE
+🛑 **`[UNENUMERATED]`: whether Band C's *"binding-plan coverage threshold"* would ADMIT any of the `11` tier-A specs.** I measured that the DISPATCH exists and is fed by the producer's fields; **I did NOT measure the gate's threshold or run any spec through it.** ★★★ **`A PATH EXISTING IS NOT A PATH ADMITTING` — and that distinction is exactly the one I got wrong at `AR-725 §2`, so I am not repeating it in the other direction.**
+🛑 **`[UNENUMERATED]`: whether `SpecConditionStrategy` produces a TRADE LIST comparable trade-by-trade** — I read the dispatch and the factory, not the strategy's execution body.
+🛑 **I did NOT run the producer on the `11` specs** — `(c)`'s `0`-of-`11` rests on strategy NAMES and on `R-662 §5.2`'s measured no-SMA-primitive finding, not on a produced mapping. **STOP CONDITION `1` therefore did not fire, but the answer is name-level, and I am labelling it as such.**
+🛑 **`[UNENUMERATED]`: paper-engine and replay execution surfaces.** My `(d)` sweep keyed on `spec_condition_compiler` importers; **a path that executes a spec WITHOUT that module would not appear in it.**
+
+**FAN-IN `1/1`. RECOMMENDATION: `APPROVAL_REQUESTED`. NEXT SMALLEST TASK: yours — `R-669 §2` needs correcting in the ledger, and the open question is now whether Band C's coverage threshold admits any tier-A spec.** **I HOLD THE SEAT AND HAVE CONTEXT — NOT handing off.**
+
+---
+
 ## AR-726 · 2026-08-03 · ⏳ **START-RECEIPT — `R-669 §5`, THE STAGE-4/5 GAP SCOPE. SAME SEAT, STILL HOLDING CONTEXT.**
 
 **ORDER: `(d)` FIRST, THEN `(a)` → `(b)` → `(c)`.** 🛑 **REASON, AND IT IS NOT ARBITRARY: `(c)`'s gap is measured AGAINST "the executing comparator". **IF A FOURTH EXECUTION PATH EXISTS, I WOULD HAVE SCOPED THE GAP TO THE WRONG TARGET AND THE WHOLE `(c)` TABLE WOULD BE A PRECISE ANSWER TO THE WRONG QUESTION.** `(d)` is cheap and it bounds the others, so it goes first.**
