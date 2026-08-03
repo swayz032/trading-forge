@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3566` at THIS commit, 2026-08-02 20:15 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3564` at THIS commit, 2026-08-02 20:25 [MEASURED HERE, `wc -l` + `date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3566` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3564` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -94,7 +94,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 ---
 
 ## ★★★★★ SEAT (2026-08-02 `20:0x`, ADVISOR `claude.exe 13916`, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-596` (`8dc6bef7`). Newest AR: `AR-639` — RULED by `R-596`. NOTHING UNRULED. Worker: ✅ ACTIVE building the `4d-ii` two-column fixture, ETA `~20`–`30` min.**
+**Ruling ledger at `R-597` (`e012554e`). Newest AR: `AR-640` — RULED by `R-597`. NOTHING UNRULED. Worker: ⏸️ HOLDING, nothing assigned, its work is complete and correct.**
 
 🛑★★★★★ **THE TRANSITION GRADE RETURNED **BAND `7 / 10`, `UNVERIFIED`** — AND IT REFUTED THE DESK. Receipt committed: `docs/designs/GRADE-P0PC-TRANSITION-2026-08-02.md` (`2ff9553f`). **`R-593`'s *"ALL TEN FRAGMENTS MET"* IS WITHDRAWN BY `R-594 §0`. IT IS **NINE OF TEN**.**
 🛑★★★★★ **`4d` IS **NOT MET**. Its acceptance text is *"every terminal acceptance failure exits non-zero **after evidence collection** while the restored control exits zero"* — **THREE** obligations, not two. `4d-i` (non-zero exit) and `4d-iii` (restored control zero) are MET. **`4d-ii` HAS NO INSTRUMENT.**
@@ -105,14 +105,12 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 🛑★★★ **`R-594 §6` WAS WITHDRAWN BY `R-595` WITHIN THE HOUR — the worker refused a standing order of mine and was RIGHT.** I ordered the worker's ruling-ear retired on `AR-637 §2`'s *"alive but deaf"*; the ear then **delivered `R-594` into the worker's window**. ★★★★★ **`AN HONEST EVIDENCE GRADE ON A PREMISE DOES NOT TRAVEL INTO THE ORDER BUILT ON IT` — I graded it `[CORROBORATED — the worker's measurement, not mine]` and issued an executable order anyway. **Second occurrence in three rulings** (`R-593 §0` was the first). Write orders from RELAYED premises as CONDITIONAL, or wait.**
 ✅ **What survives from the grade, and it is most of it: NINE fragments held under adversarial attack, including two injections of the grader's own design (`49(a)`/TS2345, `49(b)`/TS7017) that the doer had declared undone. `1d` GENERALIZES — four witnesses, two populations, four TS codes, plus a single-assignment-site mechanism (`run.mjs:289`/`:294`).**
 
-## ★★★★★ AUTHORIZED NOW — **`R-596 §7`** (2026-08-02, `8dc6bef7`)
-**WORKER — BUILD THE `4d-ii` TWO-COLUMN READING-NEUTRAL FIXTURE (`AR-639 §4`s own design).** For each of the `25` declared classes emit **two independent columns: (i) does the terminating run print its OWN finding? (ii) does it print the FULL evidence body?** Expected `(B)` → col (i) `25/25` GREEN; `(A)` → col (ii) `23` GREEN / **`2` RED**. **RED path proven by construction — the `22`-throw class scores `0` on BOTH columns.** ETA `~20`–`30` min.
-★★★★★ **THE FIXTURE MUST NEVER PICK A READING.** `AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — a one-column fixture would silently settle the desk's open `(A)`/`(B)` question in code. **A one-column fixture → STOP.**
-**`prototypes/` OPEN FOR THIS FIXTURE ONLY.** Acceptance: six scripts `EXIT 0` clean, `stderr` 0 bytes · `sha256` of all `11` `.mjs` before/after · `git status --porcelain -- prototypes/` EMPTY at rest · both columns emitted for all `25` · **the RED path DEMONSTRATED, not asserted.**
-**HONEST-PARTIAL:** if a class cannot be scored on one column without choosing a reading, **leave that cell `UNKNOWN` and say so** — an honest hole beats a fabricated column.
-⚖️ **THE DESK's PROVISIONAL READING IS `(B)` (`R-596 §3`), PRE-REGISTERED AND NOT RULED** — all three of its arguments favour the conclusion that unblocks this desk, so it is ruled only after the fixture exists AND an independent grader has been briefed to REFUTE it. 🛑 **`(A)`/`(B)` ruled by anyone before then → STOP, including by me.**
-✅ **THE EAR: DO NOTHING.** `R-595 §1` withdrew the retire order; the worker's refusal is ratified.
-⏸️ **`R-590` Surface-`B` corpus-identity STILL DEFERRED to `RERANK`, nine hard hops away — deferred, NOT cancelled; measurements banked in `AR-634`.**
+## ★★★★★ AUTHORIZED NOW — **`R-597 §5`** (2026-08-02, `e012554e`)
+🛑★★★★★ **THE ONE OPEN ITEM IS AN INDEPENDENT GRADE THAT IS **OWED AND UNPAID**.  IS NOT RULED.**  now HAS an instrument (, ): **col (i)  · col (ii)  ·  UNKNOWN · RED witness /.** ✅ **Verified read-only at this desk: both columns are STRUCTURAL predicates, the SAME predicates score the witness, knobs are LIVE-PARSED, and the exit code reads NO column-(ii) term — the fixture does not enact a reading.**
+🛑★★★★★ **UNDER THIS DESK's OWN PROVISIONAL READING , COLUMN (i)'s  WOULD MAKE  MET AND  TEN-OF-TEN — WHICH IS EXACTLY WHY 's PRE-REGISTERED CONSTRAINT BINDS NOW.** All three arguments for  were authored by the desk that benefits from . ****
+⚠️★★★ **WHY IT IS UNPAID: this seat is instructed not to spawn grader agents absent the operator's explicit request.** It is recorded as a DEBT, not dropped and not substituted with the desk's own reading. ** carries the brief VERBATIM — claim, pinned object , five named attack targets, honest-null clause, receipt path . IT FIRES ON ONE WORD.**
+**WORKER — HOLD.** Nothing assigned;  discharged its contract completely and the block is not about its work. 🛑 **Do NOT widen scope while holding** — no hardening, no  clean-up, and do NOT touch the named grader targets (especially the -vs- caption, which the grader must read AS IS).
+⏸️ ** Surface- corpus-identity STILL DEFERRED to , nine hard hops away — deferred, NOT cancelled.**
 
 ## NOT AUTHORIZED
 Merge · worktree update · production write · service restart · spend · any `runtime-production` touch · **`P0PC` node transition (nine of ten; the grade says `UNVERIFIED`)** · **any `prototypes/` edit outside `4d-ii`'s instrument** · **altering `run.mjs:138`'s early exit to "fix" `4d-ii`** · **reflex-fixing `F-2`/`F-3`** · **retiring `bash.exe 6164`** · `docs/advisor-rulings/` (EXTERNAL) · **the desk running `red-proof.mjs` / `emitted-freeze.mjs` / any `simulate*` path (`R-576 §5`, ABSOLUTE)**.
