@@ -297,6 +297,24 @@ def compute_forge_score(
         for s in scenarios:
             scenario_dd = s.get("max_drawdown", 0.0)
             scenario_name = s.get("name", "unknown")
+            # R-630 §4.2 (grader finding F-1) — A SCENARIO THAT DID NOT COMPUTE
+            # MUST NOT SCORE AS A CLEAN PASS.
+            #
+            # stress_test.py:132-138 emits a CRASHED scenario as
+            # {"passed": False, "max_drawdown": 0, "error": "..."}. The DD compare
+            # alone then reads 0 > firm_max_dd -> False -> no veto, so a crisis
+            # test that blew up was indistinguishable from one that survived.
+            # stress_test.py:171-174 already distinguishes these cases; this
+            # consumer was discarding that distinction.
+            #
+            # Absence of a computed drawdown is NOT evidence of survival, and the
+            # safe direction for a hard veto is to fail closed.
+            # ORDER MATTERS AND IS DELIBERATE: the DD compare stays FIRST so a
+            # genuine breach keeps its original, more specific reason string
+            # byte-for-byte. The two new conditions only catch cases the DD
+            # compare CANNOT see. This keeps the behavioural delta confined to
+            # scenarios that did not compute, which is exactly the blast radius
+            # this change was scoped to.
             if scenario_dd > firm_max_dd:
                 crisis_veto = True
                 crisis_veto_reason = (
@@ -304,6 +322,20 @@ def compute_forge_score(
                     f"${scenario_dd:.0f} exceeds firm_max_dd ${firm_max_dd:.0f}"
                 )
                 break  # First breach is sufficient — no need to scan all
+            if "error" in s:
+                crisis_veto = True
+                crisis_veto_reason = (
+                    f"crisis-stress-unevaluated: scenario '{scenario_name}' did not "
+                    f"complete ({s.get('error')!r}); its drawdown is unknown, not zero"
+                )
+                break
+            if s.get("passed") is False:
+                crisis_veto = True
+                crisis_veto_reason = (
+                    f"crisis-stress-failed: scenario '{scenario_name}' reported "
+                    f"passed=False; treated as a veto regardless of reported drawdown"
+                )
+                break
 
     # ── Earnings power (0-27): $250 = 0, $750+ = 27
     # Reduced from 30 to 27 to accommodate survival_score component (total still = 100)
