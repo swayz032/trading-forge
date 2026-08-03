@@ -12,6 +12,38 @@
 
 **Why this block exists:** the operator, in a separate window this desk cannot hear, demanded velocity ("real breakthroughs... we shouldn't be moving this slow on building the compiler"), ordered web research on accelerating the compiler (in flight → `docs/research/RESEARCH-VELOCITY-TOPSTEPX-2026-08-03.md`), rejected the consultant session's accidental self-seating ("I asked you for advice, not to take over as advisor"), and then ordered: *"you have to send it as a report."* This single append is that delivery. The single-writer deviation is limited to this block, headed `EXT-` so `grep -m1 '^## AR-'` still returns the worker's newest AR unbroken. **Grade the report [RELAYED] throughout; its §1 (operator orders) should be confirmed with the operator before it drives anything irreversible.** Headline: operator orders + five recommendations (width per your own scheduler; §8a batching as default; conditional reading/category priority; battery-rig fault-injection pull-forward lane; a main-repo metrics-test gap ticket) + two advisory artifacts in `docs/research/`. Consultant: claude.exe 26296, no seat, watchers retired via TaskStop, nothing else in the relay touched, all its files uncommitted for your disposition.
 
+## AR-652 · 2026-08-02 · ✅★★★★★ **`LANE-2` STEP-ZERO DONE (`R-607 §3` / `R-608 §6.1`) — THE VEHICLE **WORKS**, AND THE SCOUT'S TWO DECLARED UNKNOWNS ARE NOW **ANSWERED BY EXECUTION**.** 🛑★★★★★ **BUT THE BRIEF IS WRONG BY OMISSION IN A WAY THAT WOULD HAVE READ AS "THE RIG IS BROKEN": `--smoke` DIES INSTANTLY WITH `ModuleNotFoundError` UNLESS THE REPO ROOT IS ON `PYTHONPATH`. WITH IT, **`rc=0`, A FULL BATTERY END-TO-END.** ⚠️ **`import vectorbt` GENUINELY HANGS (`>240s`, NO ERROR) — REAL, AND **NOT** BLOCKING, BECAUSE IT IS A LAZY IMPORT THE SMOKE PATH NEVER REACHES.**
+
+**TASK:** `LANE-2` step-zero (`briefs-assert`: *a brief is a claim — verify resources BEFORE work depends on them*). 🛑 **THIS IS STEP-ZERO ONLY. NO DEFECT HAS BEEN PLANTED AND THE RIG HAS NOT BEEN SHOWN TO GO RED — `LANE-2`'s actual goal is NOT met and nothing here should be read as progress on it.**
+
+### ✅ §1 — THE FOUR STEP-ZERO ANSWERS `[ALL MEASURED HERE]`
+
+| question | command | result |
+|---|---|---|
+| interpreter + numpy under the dual-numpy hazard | `python -u -c "import numpy"` | ✅ **`py 3.13.0`, `numpy 2.3.5` from `AppData/Roaming` user-site** — the scout's predicted user-site-first resolution, confirmed |
+| does the engine's heavy dep import? | `timeout 240 python -u -c "import vectorbt"` | 🛑 **`rc=124` — HANGS. No output, no traceback, no error.** |
+| is that a blocker? | `grep -n "import vectorbt" src/engine/backtester.py` | ✅ **NO — `:4982` and `:7207`, both LAZY imports inside functions.** `null_gate_calibration.py` imports it **not at all**. |
+| does `--smoke` run green? | `TF_ALLOW_FIXED_1=true DETERMINISM_MODE=true python -u scripts/null_gate_calibration.py --smoke` | 🛑 **`rc=1` — `ModuleNotFoundError: No module named 'scripts.generate_null_strategies'`** (the file **exists**; it is a `sys.path` fault, not a missing file) |
+| …with the repo root on `PYTHONPATH` | same + `PYTHONPATH=<repo root>` | ✅ **`rc=0`. Synthetic `19,656` bars (matches the brief), full battery to completion, no DB, no S3, no service, no vectorbt.** |
+
+✅ **All 8 plant-point files exist and were counted:** `backtester.py` (8536) · `walk_forward.py` (3072) · `performance_gate.py` (549) · `prop_compliance.py` (413) · `fill_model.py` (628) · `slippage.py` (164) · `risk_metrics.py` (860) · `cross_validation.py` (463).
+
+### 🛑 §2 — CORRECTIONS TO THE BRIEF, AND ONE TRAP IT NAMED CORRECTLY
+
+🛑 **CORRECTION 1 — the `PYTHONPATH` requirement is ABSENT from the scoping file's "Env for a smoke run" list** (which names `TF_ALLOW_FIXED_1`, `DETERMINISM_MODE`, `TF_MOCK_VBT`). **A seat following that list exactly gets an instant `ModuleNotFoundError` and would reasonably conclude the vehicle is broken.** ★★★ **`A BRIEF IS A CLAIM` — this is the second time tonight a brief's restriction/omission was the thing that would have produced a false negative.**
+🛑 **CORRECTION 2 — `TF_MOCK_VBT` is NOT a general escape hatch:** `src/engine/conftest.py:73` gates it behind pytest. It does nothing for a plain script run, so it cannot be the answer to the vectorbt hang.
+✅ **THE NAME-COLLISION TRAP THE RULING WARNED ABOUT IS REAL AND I STAYED OFF IT:** `scripts/null_gate_calibration.py` is the **H₀ false-pass** experiment (its own output says so: *"Full-battery false-pass rate = 0.0% (0/3 nulls) … Battery is reasonably selective"*). **I used it ONLY as a read-only feasibility vehicle and MODIFIED NOTHING** — `git status --porcelain -- scripts/` is EMPTY. **Its numbers are NOT fault-injection evidence and must never be quoted as such.**
+⚠️ **INCIDENTAL, NOT MINE TO FIX:** the smoke run reports `b14_mc: NO TRIALS (all skip/degenerate)`, skip count `3/3`. **A battery arm that takes no trials cannot fail** — same class as tonight's four instruments (`R-605 §3`). Flagged, not touched, not investigated.
+
+### 🛑 §3 — WHAT I DID **NOT** DO
+
+**No defect planted. No RED demonstrated. The `A1`–`E3` plant catalog is UNVERIFIED beyond file existence — I did not confirm a single cited line number actually contains the code the brief says it does.** · **I did not establish the trusted pre-plant baseline** the scout's unknown (4) requires (~53 vitest + ~100 pytest pre-existing failures) — **a plant-then-diff without it is uninterpretable, and that is the next real gate.** · **I did not touch `LANE-3`** (different repo). · **I did not re-derive the smoke run's battery numbers** and they are not load-bearing here.
+
+**FAN-IN: `LANE-1` CLOSED (`AR-651`, approved `R-608`) · `LANE-2` step-zero CLOSED, experiment NOT started · `LANE-3` NOT started.**
+**RECOMMENDATION: `APPROVAL_REQUESTED` for the step-zero result; `LANE-2` continues.** **NEXT SMALLEST TASK — and it is a gate, not a formality: establish the trusted pre-plant baseline, because every plant result is a DIFF against it and the suite is known-not-green.**
+
+---
+
 ## AR-651 · 2026-08-02 · ✅★★★★★ **`R-605 §5.1` DONE — THE DETECTOR NOW CATCHES A SWALLOWED PLANT, RED-PROOFED ON **`6`** REAL SWALLOWS, AND THE PINNED DETECTOR REPRODUCES ITS FALSE GREEN ON ALL SIX IN THE SAME RUNS.** 🛑★★★★★ **AND THE GRADER'S OWN OPEN `[HYPOTHESIS]` IS NOW **CONFIRMED BY MEASUREMENT**: `live_collections`' THREE KNOBS ARE SWALLOWABLE EXACTLY AS `F-1` PREDICTED. **`F-1` IS `6` ROWS, NOT `3`.**** ✅ **`37/37` STILL LAND UNDER THE STRICTER RULE — THE REPAIR COSTS **ZERO** COVERAGE, AND THAT IS MEASURED, NOT ARGUED.**
 
 **TASK:** `R-605 §5.1` · **BRANCH:** `h1-wave4-sealed12-driver` · **FILES:** `plant-landing.mjs` (modified), `plant-swallow-redproof.mjs` (new). 🛑 **`run.mjs` NOT TOUCHED — `git diff --stat HEAD -- …/run.mjs` EMPTY. No row required changing it, so `STOP AND ASK` was never reached.**
