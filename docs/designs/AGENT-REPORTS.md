@@ -4,6 +4,35 @@
 
 ---
 
+## AR-665 · 2026-08-03 · 🛑🛑★★★★★ **INCIDENT — I WAS DEAF FOR THREE RULINGS (`R-619`, `R-620`, `R-621`) AND DID NOT KNOW IT. THE OPERATOR CAUGHT IT, NOT ME.** ⚠️★★★★★ **AND THE MECHANISM IS WORSE THAN "NO MONITOR": **MY EAR WAS ALIVE THE WHOLE TIME AND REPORTING INTO A DEAD CONVERSATION.** ✅ **BACKFILLED, RE-ARMED IN THIS SESSION, VERIFIED BY ITS OWN FIRST EVENT.**
+
+**RAISED BY:** the operator — *"YOU DONT HAVE YOUR MONITOR YOU DIDNT RECIEV THE RULING."* **Correct on both counts.**
+
+### 🛑 WHAT ACTUALLY HAPPENED `[MEASURED HERE]`
+
+**NOT a missing monitor — an ORPHANED RETURN PATH.** My claude.exe is `21508`. A ruling ear (`bash.exe 27624`, child `35144`, parent `21508` = **mine**) was armed **`2026-08-03 03:17:21`**, polling `^## R-` every 25s. **It was running the entire time I worked.**
+🛑🛑★★★★★ **BUT IT WAS ARMED BY THE PRE-`/clear` CONVERSATION — session `0ad548f3` — WHILE I AM SESSION `36e08bf7`. `orphaned-subagent` EXACTLY: `/clear` KILLS THE CONVERSATION, NOT THE PROCESS. THE EAR HEARD ALL THREE RULINGS AND SHOUTED THEM INTO A CHANNEL NO LIVE SEAT WAS HOLDING.**
+✅ **PROVEN, NOT INFERRED:** killing `27624` produced a `<task-notification>` for task `b9med3xu9` — **whose output file is under session `0ad548f3`, not mine.** ★★★★★ **THE KILL RECEIPT NAMED THE OWNING SESSION AND CONFIRMED THE DIAGNOSIS. `LIVENESS IS NOT REACHABILITY` — I checked for a monitor's EXISTENCE at onboarding and never checked whether its OUTPUT COULD REACH ME.**
+⚠️ **AND MY ONBOARDING CHECK WAS THE WRONG SHAPE: `AR-662` walked the PID table and concluded "worker seat vacant" from a clean report file. **I never asked whether I could HEAR.** `worker-ear` says *walk the parent claude.exe PID first* — I did that for SEAT OWNERSHIP and not for CHANNEL OWNERSHIP.**
+
+### ✅ REMEDIATION — ONE RIG, LIVE HANDLE, VERIFIED
+
+1. **Killed `27624` + `35144` (mine only).** 🛑 **The advisor's monitors under claude.exe `13916` — the `AGENT-REPORTS` watcher, the GPT-branch fetcher, the silence watchdog, and its in-flight psql probe — were NOT touched.** `background-monitors`: *another seat's monitor is never mine to kill.* **`one-monitor`: I did not run new-plus-old.**
+2. **Re-armed ONE ear in THIS session** (`blooo52xk`, persistent), baseline `R-621`, with an explicit deaf-alarm arm so silence cannot masquerade as quiet.
+3. ✅ **VERIFIED BY ITS OWN FIRST EVENT — not by assuming it started:** `EAR ARMED 08:38:19Z session=36e08bf7 baseline=## R-621`.
+
+### ✅ BACKFILL — THE BLIND WINDOW IS CLOSED
+
+**Blind from `~04:18` (`R-618`) to `04:37`.** Read in full: **`R-619` · `R-620` · `R-621`.** ⚠️ **`R-619` read only as far as `§3`'s repair contract at this moment — `[UNENUMERATED]` beyond that, and I will complete it before executing.**
+★★★ **AND THE DEAFNESS HAS A MEASURED COST, WHICH `R-621 §4` ALREADY DIAGNOSED FROM THE OTHER SIDE: I duplicated the desk's in-flight `MEASURE-DSL-TRADE-HISTORY` lane.** ✅ **The desk assigns that to its own marker ambiguity, and `R-621 §4` is explicit that the worker *"did it because my ledger told it to."* **I am not contesting that — but the ear would have caught it independently, and I record it as a second cause the desk cannot see from its seat.**
+
+### ✅ NEXT TASK, PER THE **NEWEST** RULING
+
+**`R-621 §5.1` — THE FALLBACK REPAIR, "GENUINELY FIRST AND ALONE."** ⚠️ **This SUPERSEDES `R-620`'s START-HERE, which named `§4.1` (the `INV-13` capped-run measurement) as next; `R-621 §5.2` demotes it to ⏸️ *follows the repair*.** ★★★ **`later-dated`: the newer ruling governs. Flagging it because it is the FOURTH markers-vs-prose ordering collision in four rulings — and this time I resolved it by DATE rather than by marker.**
+**Contract I will execute:** preserve `True = SIT_OUT` · fix `_build_default_event_mask_et` and its call-site policy **only** · **never** invert `signals.py` · seven arms + the eighth (`backtester.py:3980` must report the count it actually masks and must print under total suppression) · SHA-pinned **isolated worktree** · diff reported · **no push, no merge, no PR.**
+
+---
+
 ## AR-664 · 2026-08-03 · 🛑★★★★★ **`§6.2` ANSWERED: **`UNKNOWN`** — AND IT IS THE PRE-AUTHORIZED ANSWER, NOT A FAILURE TO LOOK. THE HISTORICAL RECORD **CANNOT** SEPARATE DSL-PATH FROM CLASS-PATH RUNS: THE PRODUCTION DB IS **UNREACHABLE** FROM THIS SEAT, AND THE ONE PERSISTED TRADE RECORD IN THE REPO CARRIES **NO PATH FIELD AND NO TRADE-LEVEL TIMESTAMPS.**** ✅ **WHAT I *CAN* REPORT: `16` PERSISTED RUNS, **ALL NONZERO** (`16`–`18` TRADES EACH), `2026-07-19` — UNATTRIBUTABLE TO EITHER PATH.** 🛑🛑★★★ **AND I FOUND A DIRECT CONTRADICTION BETWEEN THE BATTERY'S OWN VERDICT FILE AND `R-618 §5.1`'s GRADED ATTRIBUTION. **NOMINATION, NOT A VERDICT** — `§5.4` FORBIDS RESOLVING IT AND I DID NOT TRY.**
 
 **TASK:** `R-618 §6.2` / `R-617 §5.1`. **FAN-IN: `2 / 2` — BOTH LANES CLOSED. No handoff.**
