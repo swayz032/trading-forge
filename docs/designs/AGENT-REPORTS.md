@@ -4,6 +4,69 @@
 
 ---
 
+## AR-689 · 2026-08-03 · ✅★★★★★ **`R-639 §6.2` IS COMPLETE — ALL THREE MEMBERS LANDED IN ONE COMMIT (`eac48f29`) WITH ELEVEN COMMITTED TESTS AND A FOUR-ARM DELETION RED-PROOF IN WHICH **EVERY ARM CONVICTS ONLY ITS OWN GUARD**.** ✅ **`R-644`'s OPTION A TOOK EFFECT INSIDE THE SAME WAVE — THE `:323` FIXTURE CARRIES A REAL `500.0`, NOT `0`, AND `test_score_capped_at_100` HAS ITS POSITIVE WITNESS.** **FAN-IN `3 / 3`.**
+
+**TASK:** `R-639 §6.2` (+ `R-643 §5`, `R-644 §3`/`§4`). **BRANCH** `h1-wave4-sealed12-driver`. **WORK COMMIT `eac48f29`.** **PACKET** `docs/designs/CRISIS-FAIL-CLOSED-RATIFY-PACKET-2026-08-03.md` (`1c9c5ecf`, amended in `eac48f29`).
+**GRAPH: not a graph-scheduled node** — `R-643`/`R-644` both record NO node transition; this is ruling-authorized work on the adopted graph's tree.
+
+### WHAT CHANGED, BY MEMBER `[ALL LINES MEASURED HERE, POST-COMMIT]`
+**1 · `F-1b` THREADING.** The rescore call now passes `firm_max_dd=config.get("prop_firm_max_dd", 2000.0)` — **the identical expression that built the `StressTestRequest`.** The two halves of one rule finally compare against the same number.
+**2 · `F-G3` SENTINEL + THE SECOND HOP.** The stress-test `except` no longer sets `crisis_results = None`; it emits the UNEVALUATED sentinel **and rescores on it**, so a crashed stress suite can no longer keep the crisis-BLIND `forge_score` computed at `:5592-5609`.
+**3 · `F-G4` SCHEMA.** Missing / `None` / non-finite `max_drawdown` → `crisis-stress-unevaluated`; an attempted-but-empty `scenarios` list is unevaluated, not absent. **`crisis_results=None` still means "no crisis stage ran" and still does NOT veto — that discriminator is asserted, not assumed.**
+**+ THE COMMENT AT `performance_gate.py:331-341` IS CORRECTED**, and it now states its mechanism with the evidence in the same place rather than asserting it (`R-392`).
+
+### 🛑 THREE DEVIATIONS FROM THE PACKET'S LITERAL SHAPE — DECLARED, NOT ABSORBED
+1. ★★★ **I EXTRACTED TWO NAMED HELPERS (`_unevaluated_crisis_sentinel`, `_rescore_with_crisis`) INSTEAD OF EDITING TWO INLINE LINES.** **Reason: the inline block lives inside `main()`, a click-decorated CLI entry, and had NO reachable seam — a fix there could only ever be red-proofed by a throwaway probe, which is precisely the `F-G1` shape `R-639 §1` convicted.** The extraction moved the rescore body verbatim (the `P0-1` comment travelled with it). **This is a bigger diff than the packet declared and it is the one thing here most worth a second pair of eyes.**
+2. **THE SENTINEL IS A SUPERSET OF THE RULING'S SHAPE** — it adds `"passed": False` and `"failed_scenarios": ["stress_suite"]`, because `backtest-service.ts:1127-1129` reads both and a crashed run would otherwise persist with `failedScenarios: []`. **Flagged in `AR-688` before building; the veto does not depend on it.**
+3. **ONE COMMIT, NOT ONE PER MEMBER** — members 1 and 2 share the helper block, so splitting meant staging partial hunks inside one function. **The packet's `§5` was corrected in the same commit rather than left standing as a plan that did not happen.**
+⚠️ **AND ONE SMALL TEXT CHANGE:** the crash stderr line reads *"Stress test failed (recorded as unevaluated)"* instead of *"Stress test skipped"*, because the old wording described the bug. `[MEASURED HERE: zero non-doc consumers of the old string across `*.py`/`*.ts`/`*.json`.]`
+
+### ✅★★★★★ THE RED-PROOF — RE-RUN FROM THE SHIPPED COMMIT, NOT FROM THE TREE I BUILT IN
+**`git archive eac48f29 | tar -x -C <scratch>`; one deletion per arm; both suites run per arm. `[MEASURED HERE]`**
+
+| arm | deletion | CONVICTED |
+|---|---|---|
+| **CONTROL** | none | **NONE** (only pre-existing `test_tier1_passes`) |
+| **1** | the `firm_max_dd=` kwarg | `test_rescore_threads_configured_firm_max_dd` |
+| **2** | `except` reverted to `crisis_results = None` | `test_stress_crash_handler_emits_sentinel_and_rescores` · `test_no_except_handler_sets_crisis_results_to_none` |
+| **3** | the usable-`max_drawdown` check | `test_crisis_veto_triggers_on_missing_max_drawdown` · `…_on_non_finite_max_drawdown` |
+| **4** | the empty-`scenarios` veto | `test_crisis_veto_triggers_on_empty_scenarios` |
+
+★★★ **THE CONTROL IS WHAT MAKES THE OTHER FOUR MEAN ANYTHING — it proves the harness is not simply always red.** ★★★ **No arm bleeds into another's guard.** 🛑 **Every arm ran in a materialised scratch copy; THE SHARED TREE WAS NEVER MUTATED.**
+★★★★★ **AND A DISCRIMINATOR I ADDED BECAUSE THE RULING'S OWN LOGIC DEMANDED IT:** `test_default_limit_still_applies_when_config_is_silent` — the SAME `$1800` scenario under the `2000.0` default must NOT veto. **Without it, "reads the configured limit" and "vetoes everything" are indistinguishable.**
+
+### COMMANDS AND RESULTS, VERBATIM
+```
+python -m pytest src/engine/tests/test_performance_gate.py src/engine/tests/test_crisis_fail_closed.py -q
+  → 1 failed, 41 passed        (the failure is test_tier1_passes, pre-existing)
+  baseline before this work:   1 failed, 30 passed  [test_performance_gate.py alone]
+
+REGRESSION POPULATION — every test file naming forge_score / crisis_results / run_stress_test (7 files):
+  clean HEAD (git archive, scratch):  4 failed, 119 passed
+  after this commit:                  4 failed, 130 passed
+  → SAME FOUR FAILURES, NAME FOR NAME: test_no_double_deduction_same_rate ·
+    test_1min_bars_is_globex · test_walk_forward_mode · test_tier1_passes
+  → +11 passed = exactly the 11 tests this commit adds. NO test changed verdict.
+
+python -m ruff check <the 3 pre-existing files>   HEAD: 71 errors   after: 71 errors  (identical)
+python -m ruff check src/engine/tests/test_crisis_fail_closed.py   All checks passed!
+pre-commit on the commit itself: ruff lint Passed · metric snapshot Passed
+```
+✅ **THE `R-639 §6.2` STOP CONDITION IS DISCHARGED: member 1's threading changed NO existing test's verdict** — measured, not assumed, against a clean-HEAD run of the same population.
+✅ **`R-644 §4`'s STANDING ORDER APPLIED:** every fixture this change touched was re-read for degeneracy. **It caught a third one the ruling did not name — `test_crisis_veto_all_pass_no_score_change` asserts two scores are EQUAL, and two vetoed runs are also equal at `0.0`; it now asserts `score > 0` as well.**
+
+### REMAINING UNCERTAINTY — WHAT I DID **NOT** PROVE
+🛑 **THE WIRING TESTS ARE STRUCTURAL, NOT BEHAVIOURAL.** `TestMember2Wiring` parses `backtester.py`'s AST and asserts main's `except` handler calls both helpers and does not re-assign `crisis_results = None`. **It would not catch a rewrite that keeps the call names and changes their meaning. I chose it over driving the whole click CLI with a canned backtest, and that is a trade, not a proof.**
+🛑 **`main()` ITSELF IS STILL NOT EXERCISED END-TO-END BY ANY TEST** — that gap predates this packet and this packet narrows it without closing it.
+⚠️ **`[UNENUMERATED, CARRIED FROM `R-639 §2` AND `R-644 §1`]`: nobody has queried Postgres for JSONB-persisted configs carrying a non-`2000.0` `prop_firm_max_dd`.** **The remedy does not change either way — `F-1b` is fixed for every branch of that question — but it is still not closed by silence.**
+⚠️ **`[NOT MEASURED]` the `TF_STRESS_TEST_MODE=pipeline` skip still sets `crisis_results = None` deliberately.** Left alone on purpose: a declared skip is not a failed measurement. **Naming it so the next reader does not think I missed it.**
+
+### GRADE + NEXT
+🛑 **I DO NOT GRADE THIS.** **The independent grade is owed and the grader is one dispatch away: the `accuracy-validator` agent, pinned commit `eac48f29`, recipe `python -m pytest src/engine/tests/test_performance_gate.py src/engine/tests/test_crisis_fail_closed.py -q`, with an explicit NOVEL false-green hunt and a DURABLE RECEIPT committed to `docs/designs/GRADE-*.md`.** ★★★ **Ask it specifically whether the helper extraction changed the success path's behaviour, since that is the deviation with the widest blast radius.**
+**NEXT, per `R-643 §5`'s queue depth — no round-trip needed: `SWEEP-F7` (`tests/python/test_validate_scaling_schedule.py:604`), then `SWEEP-F3`, then `SWEEP-F6`'s fixture with its red-proof, then `SWEEP-F5`'s two-branch measurement.** **I am starting `SWEEP-F7` now. Recommendation on this item: APPROVAL_REQUESTED.**
+
+---
+
 ## AR-688 · 2026-08-03 · ✅ **PACKET LANDED (`1c9c5ecf`) — `R-639 §6.2` STAGED BEFORE ANY CODE, AS ORDERED.** 🛑🛑★★★★★ **AND IT HIT YOUR OWN STOP CONDITION ON MEMBER 3: `F-G4` IMPLEMENTED **EXACTLY AS `§6.2.3` WORDS IT** TURNS TWO EXISTING TESTS RED — ONE OF WHICH `performance_gate.py:332-342` CALLS *"a deliberate product decision"*. THIS AR IS THAT REPORT. MEMBERS 1 AND 2 ARE UNCONFLICTED AND I AM PROCEEDING ON THEM NOW.**
 
 **ARTIFACT:** `docs/designs/CRISIS-FAIL-CLOSED-RATIFY-PACKET-2026-08-03.md` (`1c9c5ecf`). **Five parts + the collision block at the top. Read that block first; everything else is standard.**
