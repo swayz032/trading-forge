@@ -12,6 +12,87 @@
 
 ---
 
+## R-613 · 2026-08-02 · 🛑★★★★★ **OPERATOR-ORDERED PLAN-COMPLIANCE AUDIT — AND THE ANSWER IS **NO, ON ONE MEASURED COUNT, AND IT IS MY FAILURE**: `R-607 §3` ADOPTED §8a BATCHING AS THE DEFAULT AND I THEN RAN **ONE LANE AT A TIME FOR EVERY LANE SINCE.** `[MEASURED HERE]` `AR-644`→`AR-656` ARE STRICTLY SEQUENTIAL. **`LANE-3` — WHICH THE NEW PLAN PUTS *IN PARALLEL* — HAS NEVER STARTED, AND THE FILE IT TARGETS IS UNTOUCHED.** `QUEUING IS NOT WIDTH.`** ✅★★★★★ **`AR-656` APPROVED, AND IT CORRECTED ITS OWN PUBLISHED NUMBER: `9` OF `14` BLIND, NOT `13` — CAUGHT BY `R-612 §4.2`'s REFUSAL TO ACCEPT A SOURCE-READ DENOMINATOR.** **DECISION: `LANE-3` STARTS IN PARALLEL NOW · SCOPE WIDENED TO **BOTH TREES** · `AR-656` APPROVED · NO NODE TRANSITION.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-656` approved, and `§1` is the reason it is the best report of the night: you were asked for a checkable table, and instead of producing a prettier source-read you built an INSTRUMENT THAT INDUCES THE CONDITION — hand each invariant a result with `total_trades: 10` and **no metrics at all**, record the verdict. **It then convicted your own published `13`.** `A SOURCE-READ IS A CLAIM; AN INDUCED CONDITION IS A MEASUREMENT.`** ✅ **`§4.2` — YOU NOW RUN TWO LANES AT ONCE.** `LANE-6` continues; **`LANE-3` starts in parallel as a subagent lane**, and its scope is WIDER than I first wrote it.
+
+**RULING ID:** R-613 · **TASK ID:** `AR-656` + the operator's plan-compliance order · **DECISION: APPROVE · CORRECT MY OWN COMPLIANCE · PARALLELIZE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-656`** `[MEASURED HERE]` — read through `§1`'s corrected table. ⚠️ **`[UNENUMERATED — I have not read `§2` onward]`.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-FIRST time.**
+
+---
+
+### 🛑★★★★★ §1 — THE AUDIT THE OPERATOR ORDERED, ANSWERED AGAINST EVIDENCE
+
+**THE NEW PLAN (`EXT-CONSULT-2 §3`, `[RELAYED]`), item by item, with my compliance measured:**
+
+| plan item | status | evidence |
+|---|---|---|
+| worker closes `R-605 §5.1` | ✅ **DONE** | `AR-651`, ruled `R-608` |
+| desk disposes of the width/batch recommendations | ✅ **DONE** | `R-607 §3` adopted R1/R2 |
+| battery-rig fault-injection lane | ✅ **DONE, and it found the rig blind `4`/`4`** | `AR-654`, ruled `R-611` |
+| **main-repo metrics-test lane, IN PARALLEL** | 🛑 **NEVER STARTED** | `[MEASURED HERE]` `LANE-3` appears `6×` in `AGENT-REPORTS` (control: `LANE-2` `10×`) but the target file's `git status --porcelain` is **EMPTY** in both trees and its last two commits are unrelated older work |
+| oracle evaluated at design closure | ✅ **DONE EARLY** | `R-610`, adopted in direction, gated on two blockers |
+| no date promised · weekly measured velocity | ✅ **HELD** | `R-607 §5` |
+| purchase lever surfaced, reserved to operator | ✅ **HELD** | `R-607 §5` |
+
+🛑★★★★★ **AND THE ONE FAILURE IS THE ONE THE PLAN EXISTED TO FIX. `[MEASURED HERE — lane attribution of every AR from `AR-644` to `AR-656`]`: F-4 emitter → `LANE-1` → `LANE-1` → `LANE-2` → `LANE-2` → `LANE-2` → `LANE-5` → `LANE-6`. **STRICTLY SEQUENTIAL. NEVER TWO LANES AT ONCE.** I adopted *"batch 2–4 independent contracts per ruling"* at `R-607 §3` and then **queued** lanes instead of **running** them.**
+★★★★★ **`QUEUING IS NOT WIDTH.` A queued lane removes a round-trip; it does not add a worker. `EXT-CONSULT-1`'s R1/R2 asked for concurrency and I delivered ordering — **which is the cheaper thing that looks the same in a ruling and different in a clock.****
+⚠️ **AGGRAVATING, AND HONEST: unplanned emergent work jumped the planned lane TWICE** — `LANE-5` (`R-611 §5.2`) and `LANE-6` (`R-612 §4.1`) both went ahead of `LANE-3`. **Each jump was individually correct — a live blind guard on a money metric outranks a queued ticket — but the cumulative effect is that the ONE PLANNED PARALLEL LANE WAS STARVED FOR THE ENTIRE SESSION.** ★★★ **`EACH PREEMPTION WAS JUSTIFIED AND THE SUM OF THEM WAS NOT.` Justify the SEQUENCE, not only each step in it.**
+
+### ✅★★★★★ §2 — `AR-656` APPROVED, AND IT CONVICTED ITS OWN NUMBER
+
+**`R-612 §4.2` refused `13`/`14` because I could not re-derive it and said so. `AR-656 §1` answers by BUILDING AN INSTRUMENT rather than re-reading source: hand each invariant a `result` declaring `total_trades: 10` and **no metrics at all**, then record the verdict.**
+
+| | `AR-655` claimed (source-read) | **MEASURED** |
+|---|---|---|
+| blind before `LANE-6` | `12` | 🛑 **`11`** |
+| blind after `LANE-6` | — | **`9`** |
+| guarded | `2` | **`5`** |
+
+★★★★★ **`A SOURCE-READ IS A CLAIM; AN INDUCED CONDITION IS A MEASUREMENT.` The published `13` was read off predicates and misclassified `INV-14`. **The doer shipped the instrument that convicted it, in the same report** — `scripts/invariant_absence_sweep.py`.**
+✅ **AND THE RED-PROOF DISCRIMINATES: `P4` fires `INV-10` `60×`, `P3` fires `INV-9` `60×`, **each plant tripping ONLY ITS OWN invariant**, control `0×`** — on `AR-654`'s **UNCHANGED** plants. `A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT`, third consecutive lane.
+🛑 **TRUE CURRENT STATE, superseding `R-612 §2`: `9` of `14` invariants remain blind, `5` are guarded.** `R-612 §4.3`'s STOP stands — **no invariant-harness green may be cited until the `9` are closed or enumerated as unclosable.**
+✅ **`backtester.py` NOT MODIFIED `[MEASURED BY DOER, `git diff --name-only` empty]`.**
+
+### ✅★★★★★ §3 — `LANE-3`'s SCOPE WAS WRONG AND IS WIDENED: **BOTH TREES**
+
+`[MEASURED HERE]` **`src/engine/tests/test_metric_snapshot.py` exists in BOTH trees, IDENTICAL on every marker I checked: `693` lines each · the `"copied from test_golden_fixtures"` comment `1×` each · a local `def _pf` `1×` each.** And **the CAMPAIGN tree references it `3×` in `package.json`**, so the campaign tree RUNS it.
+🛑★★★★★ **SO FIXING ONLY THE MAIN REPO — WHICH IS WHAT `R-607 §3` AUTHORIZED — WOULD HAVE LEFT THE COPY THAT ACTUALLY RUNS HERE STILL BLIND.** ★★★ **`fix-pattern`: the class, not the instance — and "the class" here is *the same file in two trees*, which is a shape `tree-divergence` warns about and I did not check when I wrote the contract.**
+⚠️ **AND A REAL HAZARD MEASURED BEFORE AUTHORIZING WORK THERE `[MEASURED HERE]`: the main repo is on `hardening/phase-0` with **`18` MODIFIED TRACKED FILES** — it is NOT clean. **A direct write there would mix this change into somebody's uncommitted work.** `briefs-assert`: I verified the target tree's state before ordering a write into it, which is the check I skipped on `LANE-2`'s `PYTHONPATH`.**
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS · **TWO LANES, CONCURRENTLY**
+
+**FAKE-EDGE TEST, per `§8a`, run and recorded:** does `LANE-3` consume `LANE-6`'s output? **No.** Shared file, table, or rate-limited resource? **No — `LANE-6` owns `src/engine/invariant_harness/` in the CAMPAIGN tree; `LANE-3` owns a test file in an ISOLATED worktree off the MAIN repo.** ⚠️ **They share a CONCEPT (a check that cannot detect the defect it names) and `R-591 §1.2` is explicit that population overlap is not scheduling dependency.** **Fake edge ⇒ genuinely parallel.**
+
+1. ✅ **`LANE-6` CONTINUES — close or enumerate the remaining `9`.** Unchanged from `R-612 §4.1`: sweep at the ACCESSOR, red-proof + green control per fixed invariant, honest enumeration of any that cannot be given an existence witness.
+2. ✅★★★★★ **`LANE-3` STARTS **NOW, IN PARALLEL**, AS A SUBAGENT LANE (`§8a`: you remain one seat, you integrate, you sign one report).**
+   - **THE DEFECT, confirmed by me at the executable line: `test_metric_snapshot.py:50-52` states it outright — *"Metric helpers (copied from `test_golden_fixtures`…) … must stay self-contained so the pre-commit hook can run them without importing the full engine"* — and `:54` defines its own `_pf`. **The test compares the engine against a copy of its own math, so an engine-side PF/Sharpe/max-DD defect passes it.****
+   - **THE PROPERTY: the metric test must FAIL when the ENGINE's metric computation is wrong.** Whether that means importing the engine's implementation, or a golden-value corpus generated by the engine and pinned, **is yours** — `[HYPOTHESIS, both are my sketches; three prescribed mechanisms have been wrong tonight]`. ⚠️ **The comment names a real constraint (heavy `vectorbt` deps in the pre-commit path) and `AR-652` measured that `import vectorbt` HANGS — so "just import the engine" may be unavailable. **If it is, say so and propose the alternative; that is a complete result.****
+   - 🛑 **BOTH TREES, or the fix is half a fix (`§3`).** State which trees you changed and prove the other is not left blind.
+   - 🛑 **ISOLATED WORKTREE, PINNED TO A SHA, NEVER A BRANCH NAME** — the main repo has `18` modified tracked files and **must not be written directly.** ★★★ **Use the `wt-lane2-plant-20260802` pattern you already proved tonight.** **No push, no merge, no PR — report the diff and I will rule on landing it.**
+   - **RED-PROOF: plant an engine-side metric error; the test must go RED and name the metric; un-plant → GREEN. Plus a green control.** **`runtime-production` NOT touched.**
+3. ⏸️ **`LANE-4` (determinism precondition) remains queued** — and it is now the ONLY queued lane rather than one of three, which is the point of `§4`.
+4. 🛑 **CARRIED, UNADJUDICATED, unchanged from `R-612 §4.6`**, plus the `AR-654 §3+` / `AR-655 §4+` / `AR-656 §2+` / `SCOUT §PART 4` reads I still owe.
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; ownership guard with `exit` before each write. ✅ **`R-576 §5` HELD — I ran nothing; `§1`/`§3` are `git`, `Select-String` and file reads.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-612 §5` plus:** ★★★★★ **the MAIN repo written directly by `LANE-3` → STOP; `18` modified tracked files, isolated worktree only.** · ★★★★★ **`LANE-3` landed in one tree only → STOP (`§3`).** · ★★★★★ **any `LANE-3` push, merge or PR → STOP; report the diff, the desk rules on landing.** · ★★★ **`9`-of-`14` cited as `13` → STOP; `AR-655 §4`'s figure is withdrawn by `§2`.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`QUEUING IS NOT WIDTH.` I adopted batching and delivered ordering for eight consecutive lanes. **A queued lane removes a round-trip; it does not add a worker** — and the two look identical in a ruling and different on a clock. **Check compliance by attributing every report to a lane and looking for overlap**, which is how this was caught.**
+★★★★★ **`EACH PREEMPTION WAS JUSTIFIED AND THE SUM OF THEM WAS NOT.` Two emergent lanes jumped the one planned parallel lane, each for a good reason, and the planned lane starved all session. **Justify the SEQUENCE, not only each step in it.****
+★★★★★ **`A SOURCE-READ IS A CLAIM; AN INDUCED CONDITION IS A MEASUREMENT.` `13`/`14` was read off predicates and was wrong by two in one direction and three in the other. **Handing each guard the exact condition and recording the verdict is what made it checkable — and it convicted the doer's own published number.****
+★★★ **`THE SAME FILE IN TWO TREES IS A CLASS, NOT AN INSTANCE.` `test_metric_snapshot.py` is byte-comparable in both trees and the CAMPAIGN copy is the one the battery runs. **My original one-tree contract would have fixed the copy that matters least.****
+★★★ **`VERIFY THE TARGET TREE'S STATE BEFORE ORDERING A WRITE INTO IT.` The main repo has `18` modified tracked files. **I skipped this check on `LANE-2` and its `PYTHONPATH` omission nearly read as "the rig is broken."****
+
+---
+
 ## R-612 · 2026-08-02 · ✅★★★★★ **`AR-655` APPROVED — `INV-7` IS FIXED AT THE ROOT (A `_MISSING` SENTINEL REPLACES THE AMBIGUOUS `0.0` DEFAULT, SO "ABSENT" AND "ZERO" ARE NO LONGER THE SAME NUMBER), RED-PROOFED ON THE **UNCHANGED CONVICTING PLANT**: `60` CRITICAL FIRINGS WHERE THE PINNED CHECK GAVE `[]` × `90`.** 🛑🛑★★★★★ **AND THE CLASS SWEEP I ORDERED CAME BACK WORSE THAN THE INSTANCE: **`13` OF THE `14` INVARIANTS HAVE A PREDICATE SATISFIABLE BY THE METRIC BEING ABSENT, ZERO OR UNSET — AND TWO OF THE REMAINING `12` ARE ALREADY MEASURED BLIND BY `AR-654`'s OWN PLANTS.** **THE INVARIANT HARNESS IS NOT A GUARD; IT IS A GUARD-SHAPED OBJECT.** **DECISION: APPROVE · CLASS SWEEP BECOMES THE PRIORITY LANE · NO INVARIANT GREEN MAY BE CITED UNTIL SWEPT.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **Approved, and four things by name.** **(1) You fixed it at the ROOT, not the predicate** — `_aggregate_metric_raw(..., _MISSING)` makes "absent" distinguishable from `0.0`, which is what made the old check unfixable by threshold alone. **(2) Arm (3) is ARITHMETIC, not a threshold you picked**, and you evidenced the "genuine zero-DD winner is untouched" claim with the **pre-existing `test_passes_on_zero_dd` still passing UNMODIFIED** rather than with your assurance. **(3) You BORROWED the file's own `INV-3` idiom instead of inventing a new one** — `fix-pattern` in the right direction. **(4) The red-proof used `AR-654`'s UNCHANGED plant, the instrument that convicted the old check.** ✅ **NEXT: `§4.1`, the remaining `12`. Your own sweep is what makes it the priority.**
