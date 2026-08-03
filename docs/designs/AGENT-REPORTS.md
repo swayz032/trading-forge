@@ -4,6 +4,57 @@
 
 ---
 
+## AR-713 · 2026-08-03 · ✅★★★★★ **`R-660 §5` LANE B — THE PRODUCER SPEC. **SPEC ONLY, NOTHING BUILT, NOTHING LANDED.** `STOP CONDITION 3` DOES **NOT** FIRE: THERE IS A DESIGN THAT PRESERVES THE THREE TAUGHT WINDOWS WITHOUT FABRICATING RUNNABLE STRUCTURE — **AND IT DOES IT BY NOT SPLITTING THE ROW AT ALL.**** 🛑🛑🛑★★★★★ **BUT THE HEADLINE IS THE PART YOU WILL LIKE LEAST, AND I AM LEADING WITH IT: **THIS DESIGN DOES NOT PRODUCE A `BLOCK → PASS` FOR THE GOLDEN SLICE, AND I DO NOT BELIEVE ANY HONEST DESIGN CAN.** THE ROW IS AMBIGUOUS **AT THE SOURCE**; A REPRESENTATION CANNOT REMOVE AN AMBIGUITY THE EDUCATOR TAUGHT.** ✅★★★★★ **WHAT IT BUYS INSTEAD IS REAL: **AN HONEST REFUSAL REPLACING A FALSE ONE**, AND **EVERY DENOMINATOR THIS CAMPAIGN HOLDS SURVIVES INTACT** — `260`, `99`, `161`, `31`, `0`-pass ALL UNCHANGED, because no row is split.**
+
+**TASK:** `R-660 §5` Lane B, SPEC ONLY (numbering flagged at `AR-711`). 🛑 **NOT LANDED, NOT BUILT, `spec_producer.py` UNTOUCHED — your `§4.7` re-baseline rule is honoured, and `§5` is that impact statement.**
+
+### ✅★★★★ §1 — THE HETEROGENEITY CONSTRAINT, **MEASURED RATHER THAN INHERITED**
+`[MEASURED HERE — all `13` `phase_b` strategies]` **`13` strategies · `3` carry `variants[]` · `8` variants total.**
+| variant description shape | n | which |
+|---|---|---|
+| **exactly `2` clock tokens (one span)** | **`3`** | 🛑 **all three are the golden slice's `5`/`15`/`30`** |
+| no clock token at all | `5` | *"5m single rejection scalp"* · *"double-bottom second-rejection reversal"* · *"Aggressive — buy limit at upper wick"* … |
+✅ **SO `spec_producer.py:614-624`'s REFUSAL IS CORROBORATED, NOT OVERTURNED: `variants[]` really is a mixed field — `5` of `8` are not window parameterisations at all.** ★★★ **BUT THE WINDOW-PARAMETERISATION SUBCLASS IS **MECHANICALLY SEPARABLE**, and in this corpus it is exactly `3` variants of one strategy.**
+⚠️🛑 **SCOPE, STATED BEFORE IT IS USED: I MEASURED `13` STRATEGIES / `8` VARIANTS. The producer's heterogeneity argument was made over the **DESIGN-POOL `22`**, a DIFFERENT AND LARGER POPULATION I DID NOT OPEN. `[UNENUMERATED THERE]` — **my rule is validated on `8` variants, and that is a small number to build a producer contract on.**
+
+### ✅★★★★★ §2 — THE JOIN KEY, MEASURED, WITH A NEGATIVE CONTROL
+`[MEASURED HERE]` **each of the three `variant.description` strings is an EXACT SUBSTRING of the `entry_sequence` step that produced the `WAIT_SESSION` row — `3 / 3`.**
+✅ **NEGATIVE CONTROL: variants from a DIFFERENT strategy (`LD1FEbwXU4o__s0`) do NOT join to that step — `False`, `False`.** ★★★ **So the variant→row join is exact and falsifiable, not a positional guess. `A JOIN KEY IS THE CLAIM` — this one has a control on both arms.**
+
+### ✅★★★★★ §3 — THE SPEC. **THE ROW IS NOT SPLIT; IT IS MADE HONEST ABOUT ITS OWN AMBIGUITY**
+🛑 **REJECTED — `or_branches`:** forbidden by you, and the producer's own anti-fabrication argument stands and is corroborated by `§1`. **Three windows are not three runnable ENTRY ALTERNATIVES; they are three values of ONE parameter.**
+🛑 **REJECTED — emit one row per variant:** that manufactures three conditions where the educator taught one mechanic, and the `and_groups` conjunction would then require all three windows simultaneously — **a semantic corruption, not a repair.**
+🛑 **REJECTED — pick one (the worked `30`, or the default `15`):** `R-655 §7`, and `R-660 §4` adopted the relay's *"do not guess a range, choose the first range, or silently default to 15 minutes."*
+✅★★★★★ **PROPOSED — ONE ROW, CARRYING ITS PARAMETER DOMAIN EXPLICITLY:**
+> the row keeps its single `id`, `type`, `object` and `evidence` **unchanged**, and gains one field derived mechanically from the joined variants: **`taught_parameter_domain`** — an ORDERED list of the spans each qualifying variant teaches, each with the `variant_label` it came from and the exact substring that produced it. **For the golden slice: `[570,575) "5-minute opening range"`, `[570,585) "15-minute"`, `[570,600) "30-minute"`.**
+**DERIVATION RULE — mechanical, no judgment, publishable:** a variant qualifies iff **(a)** its `description` is an exact substring of the step that produced the row (`§2`), **and (b)** that description carries **exactly `2` clock tokens forming one ordered span** — the same tokenizer and the same span test Lane A already uses. ★★★ **Everything else in `variants[]` is untouched and unread. `or_branches` STAYS PINNED EMPTY.**
+✅ **WHAT THE BINDER THEN DOES — AND THIS IS THE ACTUAL GAIN:** a row carrying a `taught_parameter_domain` of size `> 1` is refused with a **NEW, TRUE reason** — *"parameterised family: `N` taught values, no selection taught"* — **instead of today's `no_recognized_session_keyword`, which is FALSE: the row is nothing but session teaching.** ★★★★★ **`THE CURRENT REFUSAL IS RIGHT FOR THE WRONG REASON, AND A REASON IS A CLAIM.` A domain of size `1` is exactly Lane A's case and needs no new machinery.**
+
+### 🛑🛑🛑★★★★★ §4 — THE HONEST CONSEQUENCE, LED WITH RATHER THAN BURIED
+🛑 **THIS DOES NOT MOVE THE GOLDEN SLICE'S ROW TO `PASS`, AND `R-660 §4`'s ACCEPTANCE CONJUNCT — *"one real golden-strategy row changes from `BLOCK` to concrete `PASS`"* — **REMAINS UNREACHED EVEN IF LANE B LANDS.**
+★★★★★ **AND THE REASON IS NOT A GAP IN THE DESIGN, IT IS A PROPERTY OF THE SOURCE: `THE EDUCATOR TAUGHT THREE WINDOWS AND NEVER SAID WHICH ONE IS THE MECHANIC. NO REPRESENTATION CAN REMOVE AN AMBIGUITY THAT EXISTS IN THE TEACHING.` Any design that makes this row PASS has selected a window on the campaign's behalf and called it the educator's — which is the fidelity lie, wearing a producer-repair costume.**
+✅ **SO THE SPEC'S OWN VERDICT ON ITSELF: `UNRESOLVED_SOURCE_AMBIGUITY` at the row level, and that is the correct terminal answer for this row.** ⚠️ **The path to a golden-slice `PASS` is therefore NOT Lane B. It would require either a source-level disambiguation this transcript does not contain, or a spec-level concept of a PARAMETERISED MECHANIC that Phase-1's `(ii)` gate does not currently have — and the second is an architecture question, yours.**
+
+### 🛑🛑★★★★★ §5 — RE-BASELINE IMPACT (`§4.7`), NAMED LINE BY LINE
+✅★★★★★ **THE DESIGN WAS CHOSEN PARTLY FOR THIS: **BECAUSE NO ROW IS SPLIT, EVERY POPULATION COUNT SURVIVES.**
+| measurement | fate |
+|---|---|
+| `260` rows · tier-A `99` · shakedown `161` · `31` `WAIT_SESSION` | ✅ **UNCHANGED — no row added, removed or split** |
+| `AR-705`'s `0 of 260` pass · `(ii)` counts | ✅ **UNCHANGED — nothing newly passes** |
+| `AR-707`/`AR-710` exposure census (`23`/`15`/`197`) | ✅ **UNAFFECTED — engine symbols, not spec rows** |
+| every `bindable`/`primitive`/`approximation` verdict | ✅ **UNCHANGED except the affected rows' `reason`** |
+| 🛑 **every tier-A `spec_hash`** | 🛑 **RETIRED — `produce_spec_artifact` emits a new field, so the hash of every produced artifact moves** |
+| 🛑 **the affected rows' refusal `reason`** | 🛑 **RETIRED — any receipt quoting `no_recognized_session_keyword` for those rows, incl. `AR-705 §2`'s shape table** |
+| 🛑 **any test pinning a `spec_hash` or the producer's emitted key set** | 🛑 **RETIRED — and this is the concrete landing risk, the SAME CLASS that blocked Lane A `[NOT ENUMERATED — I did not sweep for hash pins]`** |
+🛑 **THEREFORE, AND I AM NOT ASKING FOR AN EXCEPTION: LANDING THIS NEEDS THE RULING `§4.7` REQUIRES, EXPLICITLY RETIRING THE `spec_hash` BASELINE AND NAMING WHAT IS RE-MEASURED.**
+
+### ⚠️ §6 — WHAT I DID NOT MEASURE
+⚠️ **`[NOT MEASURED]`** the design-pool `22` where the producer's heterogeneity argument was actually made (`§1`) · how many tests pin a `spec_hash` or the producer's key set · whether any shakedown spec carries `variants[]` (I measured `phase_b` only, and shakedown specs are already-compiled) · whether `(ii)` has a representation for a parameterised mechanic · signal-level impact.
+🛑 **NOT DONE: `spec_producer.py` untouched, `or_branches` untouched, nothing built, nothing landed, no new family created, golden slice not re-selected.**
+**Position: `h1-wave4-sealed12-driver`, HEAD `e460c88d` (`AR-712`) at write. Lanes: Lane A BUILT+BLOCKED (`AR-712`) · Lane B SPEC DELIVERED (this) — **fan-in `2 / 2`, both lanes closed, nothing unstarted.** NOT handing off.**
+
+---
+
 ## AR-712 · 2026-08-03 · ✅🛑🛑★★★★★ **`R-660 §5` LANE A — **THE ROUTE IS BUILT AND EVERY ACCEPTANCE CRITERION IS MET.** THE TARGET ROW GOES `BLOCK → BIND`, `approximation=False` **EARNED BY COMPARISON**, `1` ROW CHANGED OUT OF `260`, RED-PROVEN BY ABLATION WITH THE ROUTE STILL CONSULTED IN THE RED ARM.** 🛑🛑🛑★★★★★ **AND IT **CANNOT LAND**: IT TURNS **TWO EXISTING GUARDS RED**, AND THEY ARE **CORRECT**. `test_m3_s7_flag_off_is_byte_identical_to_the_parent_commit` PINS FLAG-OFF BINDING OUTPUT BYTE-IDENTICAL TO `ee49fdca~1` OVER A `26`-ROW POPULATION **THAT CONTAINS MY TARGET ROW.** ★★★★★ **`LANE A'S WHOLE POINT IS TO BIND AT DEFAULT FLAGS. THAT GUARD'S WHOLE POINT IS THAT DEFAULT-FLAG OUTPUT NEVER MOVES. BOTH CANNOT HOLD.`** ✅ **I DID NOT WEAKEN THEM, DID NOT LAND A RED BRANCH, AND PRESERVED THE WORK AS A COMMITTED PATCH.**
 
 **TASK:** `R-660 §5` Lane A. **DELIVERED AS `AR-712`** (numbering flagged at `AR-711`). 🛑 **`ATTEMPT BUDGET UNTOUCHED — `0/2`. This is not a failed attempt; the build succeeded and a protected boundary blocks the landing.**
