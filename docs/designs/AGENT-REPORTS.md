@@ -4,6 +4,62 @@
 
 ---
 
+## AR-639 · 2026-08-02 · ✅★★★★★ **`R-594 §9` STEPS `1`–`2` DONE, ZERO EDITS.** ✅★★★★★ **THE FALSIFIER IS A **CLEAN NEGATIVE** AND IT IS DECISIVE, NOT A SHRUG: `PINNED_MODULE_COLLECTIONS` COVERS **SIX FILES, ALL INSTRUMENT** — **`corpus.mjs`, THE OBJECT UNDER TEST, IS NOT AMONG THEM.** THE DESK'S `§3` CATEGORY BOUNDARY HOLDS.** 🛑★★★★★ **AND IT DOES NOT RESCUE `4d-ii`, WHICH IS THE POINT: THE TWO ROWS THAT TRUNCATE **WERE NEVER INSTRUMENT-FAULT THROWS.** THEY ARE DECLARED `FAILURE_CLASSES` — INSIDE THE ACCEPTANCE POPULATION — HITTING `run.mjs:138`. **THE BOUNDARY QUESTION AND THE `4d-ii` QUESTION TURN OUT TO BE DISJOINT.**** 🛑 **STEP `3` NOT BUILT: ITS ACCEPTANCE PREDICATE IS THE `§2` READING QUESTION THE DESK RESERVED, AND I WILL NOT ENCODE A READING. DESIGN SPECIFIED BELOW.**
+
+**RULING ID:** `R-594 §9` (steps `1`–`2`) · **TASK ID:** AR-639 · **PRIOR:** AR-638 · **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED.**
+
+### ✅ §1 — THE ENUMERATION (step 1), BY CONSEQUENCE NOT CAPTION
+
+`[MEASURED HERE — `node run.mjs` per row, no pipe between `node` and `$?`, captures to session scratchpad]` **All `25` declared injection classes run. `25/25` EXIT `1`. `stderr` `0` bytes on every row including the control.**
+
+| population | n | exit | stdout | reading |
+|---|---|---|---|---|
+| **CONTROL** (no injection) | 1 | **0** | **225** lines | `4d-iii` restored-control ✅ |
+| acceptance classes, full body | **23** | 1 | **226–232** lines | evidence collected THEN exit ✅ |
+| **`module_collection_add` / `_delete`** | **2** | 1 | **5** lines | 🛑 **truncated at `run.mjs:138`** |
+| **`INSTRUMENT FAULT` throws** | **22** | 1 | **0** lines (stderr only) | 🛑 emits NOTHING on stdout |
+
+✅ **`4d-i` — terminal acceptance failure exits non-zero: `25/25`, MET, and now measured across the WHOLE declared population rather than inferred from red-proof's 43 rows.**
+✅ **The `5`-line rows are not silent — they print their own finding:** `GATE: FAIL (1 class(es))` · `*** module_collections: run.mjs: NEW UNPINNED module-level collection 'ROGUE_UNPINNED_TABLE' …` · `INJECTION:` · `EFFECT-DIGEST:`. **So they satisfy reading (B) and fail reading (A). `A GATE VERDICT IS NOT A SUMMARY OF THE RUN` — I read the four lines rather than the exit code this time.**
+
+**MY COUNTS vs THE GRADE'S `~22`, reconciled rather than asserted `[MEASURED HERE]`:** raw `grep "throw"` gives `run.mjs 5 · membership.mjs 11 · module-collections.mjs 10` — **the grade's `11` for membership counts a COMMENT line (`:117`), and its `6` for module-collections UNDER-counts: there are `9` executable throws (`:165 :169 :174 :177 :184 :292 :315 :342 :343`).** ⚠️ **So `~22` is the right order of magnitude and the wrong number on both ends; the enumeration above is by executable line. `red-proof.mjs:183` and `source-admission.mjs:55,:57` are three further throw sites the grade's list omits entirely.**
+★★★ **AND MY OWN INSTRUMENT LIED FIRST, DISCLOSED: my first pass used `grep -cE "^\s*throw "` and returned `run.mjs 2 · membership 10 · module-collections 7` — the line-start anchor drops every `if (…) throw …`. **The disagreement with the grade is what caught it; I accused my regex before the grade and the regex was guilty.**
+
+### ✅★★★★★ §2 — THE FALSIFIER (step 2): CLEAN NEGATIVE, STATED AS A POSITIVE RESULT
+
+**`R-594 §3` pre-registered: *if ANY of those ~22 sites is reachable by a mutation of the OBJECT UNDER TEST rather than of the INSTRUMENT, the boundary is refuted.***
+`[MEASURED HERE — `PINNED_MODULE_COLLECTIONS` enumerated by importing the module and reading its keys, not by grepping the source]`
+
+```
+PINNED files: run.mjs, red-proof.mjs, type-value-proof.mjs, source-admission.mjs,
+              runtime-admission.mjs, membership.mjs          <- SIX, ALL INSTRUMENT
+corpus.mjs (THE OBJECT UNDER TEST)                           <- NOT COVERED
+```
+✅ **`module_collection_add`/`_delete` perturb `PINNED_MODULE_COLLECTIONS`'s LIVE-side reading — a set that by measurement contains no object file. The `22` throws are pin-integrity, table-magnitude and parser-agreement assertions over instrument surfaces.** 🛑 **NO object-under-test mutation reaches an `INSTRUMENT FAULT` site. THE BOUNDARY HOLDS.**
+✅ **POSITIVE CONTROL, because a clean negative owes one:** the object-mutating rows (`fixture_invalid`, `surface_invalid_rows`, `parse`, `ownership`, `own_extra_*`, `type_invalid_unclassified` …) DO fire — `226–232` lines, exit `1`, through the designed findings path. **The route from an object mutation to a termination is live and observed; it simply never lands on a throw.**
+✅ **AND THE THROW CLASS'S EMISSION PROFILE, MEASURED NOT ASSUMED `[MEASURED HERE — `assertParserAgreesWithRuntime` called directly with disagreeing arguments, execute-only, no file touched]`: `exit=1 · stdout_lines=0 · stderr=98 bytes`. **Zero stdout is what an `INSTRUMENT FAULT` looks like, and that is the discriminator `4d-ii` has been missing.**
+
+### 🛑★★★★★ §3 — THE FINDING THE DESK RESERVED TO ITSELF (`§8`), HANDED UP NOT PATCHED
+
+**`R-594 §2` held that reading (B) makes `4d-ii` *"satisfied by construction and never measured … unfalsifiable"*.** 🛑 **THAT IS REFUTED `[MEASURED HERE, `§2` above]`: the `22`-throw class terminates non-zero emitting **zero stdout**. So *"every termination prints its own finding first"* **has a live path to RED** — it is falsifiable, it is simply TRUE on the acceptance population and FALSE outside it.** ★★★★★ **`A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK` — reading (B) now HAS one, so the ground for calling it unfalsifiable is gone. Whether that changes `4d`'s verdict is the desk's, not mine.**
+🛑 **AND THE `(A)` VIOLATION SURVIVES THE FALSIFIER INTACT, which is the operative point: `module_collection_add`/`_delete` are **declared `FAILURE_CLASSES`** — members of the acceptance population — and they exit with `5` lines instead of the `225`-line body. **`§3`'s boundary was never what protected them, because they are not instrument-fault throws.** The clean negative and the `4d-ii` gap are DISJOINT questions, and answering the first does not touch the second.**
+✅ **`run.mjs:138` NOT ALTERED, NOT PROPOSED FOR ALTERATION (`§8`).**
+
+### ⏸️ §4 — STEP 3: SPECIFIED, DELIBERATELY NOT BUILT
+
+**`§9.3` makes step `3` conditional on `1`–`2` showing an instrument is needed. IT IS — but its acceptance predicate IS the `(A)`/`(B)` choice `§2` reserved to the desk, and a fixture that asserts *"full evidence body"* silently enacts `(A)` while one that asserts *"own finding printed"* silently enacts `(B)`.** ★★★★★ **`AN INSTRUMENT THAT PICKS AN INTERPRETATION RULES ON IT` — building either one would settle the desk's open question by writing code, which is the quietest way this campaign has ever moved a boundary.**
+✅ **THE READING-NEUTRAL DESIGN, ready to build on one word:** for each of the `25` classes emit two independent columns — **(i) does the terminating run print its OWN finding?** and **(ii) does it print the FULL evidence body?** **Under `(B)` the verdict is column (i) → `25/25` GREEN. Under `(A)` it is column (ii) → `23` GREEN / **`2` RED**.** **RED path proven by construction: the `22`-throw class scores `0` on BOTH columns.** **The desk reads its answer off whichever column its reading selects, and the fixture never picks.**
+**ETA once authorized: `~20–30` min.**
+
+### ⚠️ §5 — SCOPE, INVARIANTS, AND WHAT I DID NOT DO
+
+**ZERO EDITS. `[MEASURED HERE]` `sha256` of all `11` `.mjs` BEFORE == AFTER; `git status --porcelain -- prototypes/` returns `0` lines.** `runtime-production` NOT touched, NOT read. No runtime, trading, capital or broker surface. No merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured. ✅ **No monitor armed, retired or killed — `6164` untouched per `R-595 §5`.**
+🛑 **WHAT I DID NOT DO:** **I did not fire a real top-level import-time throw** — every one requires editing a pin or a shipped file; `§2`'s throw witness was raised by calling the function directly with disagreeing arguments, **which proves the emission profile, NOT that the top-level guards are individually reachable** `[UNENUMERATED — 22 sites, 1 exercised]`. · **I did not classify `red-proof.mjs:183` or `source-admission.mjs:55/:57`** beyond noting the grade omits them. · **I did not re-run `red-proof.mjs`'s 43 rows** — the `25`-class sweep is a different population and I am not joining them (`43` bears on `4d` only, `R-592 §3`). · **I make no claim that the `25` injection knobs exhaust the ways these classes can fire.**
+**RECOMMENDATION: `APPROVAL_REQUESTED` on steps `1`–`2`, and a one-word ruling on `§4`'s reading-neutral design — or the desk's answer to `(A)` vs `(B)`, either of which unblocks step `3` immediately.**
+**NEXT SMALLEST TASK: build `§4`'s two-column fixture on the desk's word.**
+
+---
+
 ## AR-638 · 2026-08-02 · ⏳ **START-RECEIPT (`R-594 §9`) — TAKING THE `4d-ii` LANE.** 🛑★★★★★ **AND FIRST, BECAUSE `R-594 §6` AND `§10` ARE BUILT ON IT: **MY OWN `AR-637 §2` IS REFUTED BY MEASUREMENT. THE EAR IS NOT DEAF.** IT DELIVERED `R-594` INTO THIS WINDOW ~2 MINUTES AGO. **I AM NOT RETIRING IT AND I AM HANDING THE ORDER BACK.****
 
 **RULING ID:** `R-594 §9` + `§6` · **TASK ID:** AR-638 · **PRIOR:** AR-637 · **GRAPH NODE: `P0PC` — no transition proposed, nothing touched yet.**
