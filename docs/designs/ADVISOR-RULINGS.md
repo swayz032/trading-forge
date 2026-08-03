@@ -12,6 +12,90 @@
 
 ---
 
+## R-624 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-667` APPROVED — AND IT CONVICTS THE RULING THAT ORDERED IT. `R-623 §7.2` TOLD THE WORKER TO *"ADD THE MISSING `start_date`/`end_date`"*, AND THAT FIX **ALONE WOULD HAVE TURNED THREE OF THE FOUR TESTS GREEN OFF A CRASH HANDLER.** THE FIXTURE HAD **FOUR** BLOCKERS; I MEASURED THE FIRST AND PRESCRIBED FOR ALL FOUR.** ✅★★★★★ **THE END-TO-END PROOF NOW EXISTS AND I RE-RAN IT MYSELF: `4 passed in 5.01s`, ASSERTION COUNT `59 → 59`, AND THE TRADE-LEVEL DISCRIMINATOR IS REAL — `total_trades` `0 → 1`, WINDOW-MASKED SIGNALS `0 → 10`, ON `63`/`64`-KEY RESULT DICTS THAT ARE **NOT** THE STUB.** 🛑🛑★★★★★ **AND THE STRUCTURAL FINDING OUTRANKS THE REPAIR: THE `except` RETURNED `{"engine_audit": {"skipped_outside_window_count": 0}}` AND **THREE OF THE FOUR TESTS ASSERT EXACTLY THAT** — SO THEY HAVE BEEN **PASSING GREEN OFF THEIR OWN EXCEPTION PATH.** NINTH GUARD-SHAPED OBJECT OF THE SESSION, AND THE FIRST THAT WAS *REPORTING GREEN* RATHER THAN MERELY DEAD.** 🛑★★★★★ **AND ONE THING I MUST SAY PLAINLY: THE INDEPENDENT GRADE ON THIS IS **OWED AND I CANNOT FIRE IT** — THIS SEAT'S HARNESS FORBIDS `AgentTool`. I AM NOT RULING AROUND THAT; I AM NAMING IT (`§6`).** **DECISION: APPROVE · COMMIT AUTHORIZED · MY OWN REMEDY CORRECTED ON THE RECORD · GRADE ROUTED, NOT SKIPPED.**
+
+**★ WORKER — START HERE:** ✅ **`AR-667` APPROVED. COMMIT THE FIXTURE** (`§5.1`) — it is currently uncommitted and it is the only carrier of the revived guard. ✅ **Your refusal to take the `TF_ALLOW_FIXED_1=true` bypass, choosing `fixed_contracts=6` (the value the guard's own message names) instead, is RATIFIED and is the single best judgment call in this task — `NEVER ROUTE AROUND A GUARD THAT BLOCKED YOU` was live and you honoured it when a one-line env var was right there.** ✅ **Then `R-620 §4.1` as you propose.**
+
+**RULING ID:** R-624 · **TASK ID:** `AR-667` (`R-623 §7.1` land + `§7.2` revive) · **DECISION: APPROVE.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-667`** `[MEASURED HERE — newest `## AR-` on disk at write time]`. It **is** this ruling's subject. `AR-666` ruled at `R-623`.
+
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived at `R-623`; not modified since]`.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a FORTY-SECOND time.**
+
+---
+
+### 🛑🛑🛑★★★★★ §1 — MY OWN REMEDY WAS ONE LEVEL SHORT, AND THIS IS THE THIRD CONVICTION
+
+**`R-623 §2` measured a `pydantic ValidationError` and I published:** *"the four … die at request construction … and have never executed a line of mask logic."* **`R-623 §7.2` then ordered the matching one-line remedy: *"add the missing `start_date`/`end_date` to `_make_minimal_backtest_result`."***
+
+`[RELAYED — `AR-667 §7.2`, and the mechanism is checkable at the named lines]` **THERE WERE FOUR BLOCKERS, AND ONLY THE FIRST WAS VISIBLE:**
+
+| # | blocker | why it was invisible to my measurement |
+|---|---|---|
+| 1 | missing REQUIRED `start_date`/`end_date` | construction sits **OUTSIDE** the `try` — **the only one that could surface** |
+| 2 | `entry_short=""` → `signals.py:157` `Cannot parse expression: ''` | **inside** the `try` → swallowed → stub returned |
+| 3 | `type="risk_derived_pyramid"` with only `base_contracts` → `compute_position_sizes` (`backtester.py:4326`) `TypeError` | swallowed |
+| 4 | validator rejects `fixed_contracts=1` as probable misconfiguration | swallowed |
+
+🛑🛑🛑★★★★★ **SO HAD THE WORKER OBEYED MY RULING LITERALLY, BLOCKERS 2–4 WOULD HAVE BEEN SWALLOWED, THE STUB WOULD HAVE RETURNED `skipped_outside_window_count: 0`, AND `test_empty_windows_no_skipped`, `test_no_windows_field_no_skipped` AND `test_engine_audit_key_present` — WHICH ASSERT EXACTLY THAT VALUE OR MERELY THE KEY'S PRESENCE — WOULD HAVE GONE **GREEN**. MY REMEDY WOULD HAVE MANUFACTURED THREE FALSE GREENS IN THE VERY GUARD I WAS REVIVING.**
+★★★★★ **`MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT.` Third conviction. The shape is identical every time: I measure the FIRST failure on a path, and prescribe as though it were the ONLY one. ★★★ **THE FIX FOR THE PATTERN IS NOT MORE CARE, IT IS AN ORDERING RULE — `WHEN THE OBSERVED FAILURE IS THE FIRST ON A PATH, ORDER THE PROPERTY ("these four reach a real verdict") AND NEVER THE MECHANISM ("add these two fields"). A MECHANISM INHERITS EVERY GAP IN MY MODEL OF THE FAILURE`** — `advisor-ruling §4` says exactly this and I wrote a mechanism anyway.**
+✅★★★★★ **WHAT SAVED IT WAS THE **ACCEPTANCE CLAUSE**, NOT THE PRESCRIPTION: `§7.2` also demanded *"the four reach a REAL VERDICT"* and RED-on-base/GREEN-on-fix with the base re-measured. **The worker tested the RESULT DICT (`63`/`64` keys — not the stub) rather than the exit status, and that is the only reason the three vacuous passes were caught.** `A PROPERTY-SHAPED ACCEPTANCE CLAUSE CAN RESCUE A MECHANISM-SHAPED ORDER — WRITE BOTH, AND MAKE THE ACCEPTANCE THE BINDING ONE.**
+
+### 🛑🛑★★★★★ §2 — THE FINDING THAT OUTRANKS THE REPAIR: A GUARD REPORTING GREEN OFF ITS OWN CRASH HANDLER
+
+**The fixture's `except` returned `{"engine_audit": {"skipped_outside_window_count": 0}}`. Three of the four tests assert `skipped == 0` or merely that the key exists. `A STUB THAT RETURNS THE ASSERTED VALUE CONVERTS A CRASH INTO A PASS.`**
+🛑★★★★★ **THIS SHARPENS `R-623 §2` AND I AM CORRECTING MY OWN SEVERITY IN THE RIGHT DIRECTION: I said the four were DEAD. **THREE OF THEM LOOKED ALIVE WHILE DEAD** — which is strictly worse, because a red test invites diagnosis and a green one forecloses it. **The only test that ever failed was the only one demanding a NONZERO number.****
+★★★★★ **`AN ASSERTION SATISFIED BY A FAILURE-PATH DEFAULT IS NOT AN ASSERTION.` Ninth guard-shaped object this session and the first found GREEN. **The generalisation is the dangerous part: any `except` returning a zero/empty/default shape will satisfy every "expect nothing happened" assertion downstream of it.****
+✅ **REMEDIATED IN-FIXTURE:** the `except` now prints the exception and full traceback to stderr, prefixed *"`run_backtest` RAISED — returning STUB, NOT a measurement"*. ✅ **RATIFIED — a swallowed failure can no longer read as a measurement.**
+
+### ✅★★★★★ §3 — WHAT I VERIFIED MYSELF, NOT ON REPORT
+
+`[MEASURED HERE — campaign tree `wt-h1-wave4-20260712` at `f48bcced`+working, TREE NAMED per `R-413`]`
+
+| claim | command | result |
+|---|---|---|
+| the four now pass on the landed fix | `pytest ...::TestBacktesterWindowMask -q` | **`4 passed in 5.01s`** ✅ |
+| **no assertion touched** | `git show HEAD:…` vs working, `grep -c 'assert '` | **`59` → `59`** ✅ |
+| the landed engine fix is in scope | `git show --stat 28a95a9a` | **`1 file changed, +42 −10`, `backtester.py` ALONE** ✅ |
+| **`signals.py` never touched** | `git log 69204523..HEAD -- src/engine/signals.py` | **`0` commits** ✅ |
+
+⚠️★★★ **ONE CORRECTION TO `AR-667`, MINOR BUT IT IS A MEASUREMENT CLAIM:** it states *"`git status` = `M src/engine/tests/test_entry_windows.py` only."* `[MEASURED HERE]` **the tree also carries ` M src/engine/tests/test_synthetic_market_simulator.py`.** ✅ **NOT the worker's doing and NOT a scope violation — that file was ALREADY ` M` in this desk's `04:41` session-start snapshot, and its `05:06` mtime is the pre-commit stash/restore cycle (`[INFO] Restored changes from …patch…` appears in both of my commits). `[CORROBORATED, mechanism named]`** ★★★ **The lesson is `NAME THE SCOPE OF A `git status` CLAIM` — "only, for my change" and "only, in the tree" are different sentences, and a shared tree makes the second one almost always false.**
+
+### ✅★★★★★ §4 — THE CEILING IS BROKEN, AND THE EIGHTH ARM IS NOW WITNESSED LIVE
+
+**`AR-666` named its own honest ceiling: *"NO END-TO-END BACKTEST — arms 6/7 prove behaviour at the MASK level, not by running `run_backtest` and counting real trades."* `[RELAYED, and consistent with my `4 passed`]` THAT CEILING IS NOW BROKEN: `total_trades` `0 → 1` and window-masked signals `0 → 10`, through the real engine, same unchanged fixture, base re-measured this run.**
+✅★★★★★ **AND `R-618 §4`'s TELEMETRY FINDING IS REPRODUCED END-TO-END RATHER THAN IN A HARNESS: on the base the default-blackout log **PRINTED NOTHING AT ALL** while suppressing every entry; after the fix it prints `masking 0/20 bars` unconditionally. **THE SILENCE WAS THE BUG AND THE SILENCE IS GONE.** `A GUARD WHOSE OUTPUT IS CONDITIONAL ON A NONZERO COUNT IS SILENT EXACTLY WHEN IT MATTERS MOST.`**
+🛑★★★ **BUT THE SCOPE OF THE `1` TRADE IS NARROW AND THE WORKER SAID SO FIRST: a SYNTHETIC `20`-bar fixture, S3 unreachable, `htf_passthrough_engaged`, and `Performance gate REJECTED: only 19 OOS trading days` in BOTH arms. **It proves the POLARITY end-to-end. It establishes NOTHING about real-data trade counts** — and no ruling, summary or operator message may let it.**
+
+### 🛑 §5 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — COMMIT THE FIXTURE.** `commit -o src/engine/tests/test_entry_windows.py` (shared tree). **It is currently UNCOMMITTED and is the sole carrier of the revived guard — an uncommitted guard is one `git checkout` from never having existed.** 🛑 **That file ALONE — `test_synthetic_market_simulator.py` is inherited dirt (`§3`) and is NOT yours to commit.**
+2. ✅ **THEN `R-620 §4.1`** (`INV-13` discriminates on a capped run?), as you proposed, then `INV-1`'s overlap.
+3. 🛑 **DESK — THE SWALLOW-WITHOUT-TRACEBACK CLASS SWEEP IS OWED AND IS MINE, NOT YOURS.** `AR-667` fixed one instance and explicitly declined the sweep as outside a fixture-only contract — **correct.** `fix-pattern`: the class is swept in the same wave or it is not swept. **Scoped here, dispatched when `§6` is resolved.**
+4. ⏸️ **DESK — `PositionSizeConfig(type="risk_derived_pyramid")` IS CONSTRUCTIBLE BUT NOT RUNNABLE** (`config.py:369-375` make `tier_increment` / `tier_threshold_dollars` / `max_risk_pct_per_trade` `Optional = None`; `compute_position_sizes` then raises `TypeError`). 🛑 **`[HYPOTHESIS — NOT MINE, NOT VERIFIED: whether any PRODUCTION path can build one is UNENUMERATED. The worker said so explicitly and I am not upgrading its grade by repeating it.]`** A validator at construction is the candidate fix; it is an instrument change and owes a `ratify-packet`.
+5. 🛑 **CARRIED, unchanged: `R-623 §7.4`** (the no-opt-out blackout, still a NAMED PHASE-2 ENTRY BLOCKER) **and `§7.5`** (the `WARNING`-tier decision and `INV-1` disposition, now aged six rulings).
+
+### 🛑🛑★★★★★ §6 — THE GRADE IS OWED AND THIS SEAT CANNOT FIRE IT
+
+**`advisor-ruling` is unambiguous: a green report is the `accuracy-validator` trigger, and `YOU CANNOT GRADE WHAT YOU DESIGNED`. I designed `§7.2`. I therefore cannot be this result's grader — and `§1` proves the point empirically, because the thing that needed catching was a defect in MY OWN ORDER.**
+🛑★★★★★ **`[MEASURED HERE]` THIS SEAT'S HARNESS CARRIES THE STANDING INSTRUCTION *"Do not call the AgentTool unless the user requested it."* **SO THE DESK CANNOT DISPATCH `accuracy-validator` EITHER.** ★★★★★ **THIS IS THE EXACT SHAPE OF `R-614 §2`, ONE SEAT HIGHER: there I found the WORKER could not fan out and ruled that width must come from the desk. **NOW THE DESK CANNOT EITHER — SO THE INDEPENDENT-GRADE CAPABILITY CURRENTLY EXISTS NOWHERE ON THIS CAMPAIGN.****
+🛑 **I AM NOT RULING AROUND IT AND I AM NOT PARKING THE GRADE ON A FUTURE SEAT (`§0.5` bans that).** **DISPOSITION: `AR-667` is APPROVED on THIS DESK'S OWN RE-EXECUTION (`§3`), which is a genuine second run but is NOT independence — the grade stands OWED and UNPAID, recorded here as a debt rather than quietly skipped.** ✅ **SURFACED TO THE OPERATOR as a capability question, which is the one thing only he can resolve.**
+
+### §7 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** ✅ Single-writer honoured. ✅ Graph read, not modified. ✅ No spend. `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET.
+🛑 **STILL LIVE, all of `R-623 §8` plus:** ★★★★★ **the `1` synthetic trade cited as evidence about REAL-DATA trade counts → STOP (`§4`).** · ★★★★★ **any assertion in `test_entry_windows.py` edited → STOP; the contract was and remains fixture-only, and `59 → 59` is the standing check.** · ★★★★★ **`AR-667` described as INDEPENDENTLY GRADED → STOP; `§6` records the grade as OWED AND UNPAID.** · ★★★ **a swallowed exception anywhere in this campaign's fixtures returning a default that satisfies an assertion → STOP and report (`§2`).** · ★★★ **`test_synthetic_market_simulator.py` committed by the worker → STOP; inherited dirt, not this task's.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`WHEN THE OBSERVED FAILURE IS THE FIRST ON A PATH, ORDER THE PROPERTY AND NEVER THE MECHANISM.`** I measured blocker 1 and prescribed a two-field fix for a four-blocker path; three of the four remaining failures would have been swallowed into green. **A mechanism inherits every gap in your model of the failure — and the gap here was invisible BY CONSTRUCTION, because the `try` hid it.**
+★★★★★ **`AN ASSERTION SATISFIED BY A FAILURE-PATH DEFAULT IS NOT AN ASSERTION.`** An `except` returning `{count: 0}` satisfies every *"expect nothing happened"* test downstream. **Three guards passed green off a crash handler; the ONLY one that ever failed was the one demanding a NONZERO number. `ASSERT A POSITIVE WITNESS, NOT AN ABSENCE` — the absence is what the failure path also produces.**
+★★★★★ **`A PROPERTY-SHAPED ACCEPTANCE CLAUSE CAN RESCUE A MECHANISM-SHAPED ORDER.`** My prescription was wrong and my acceptance clause (*"reach a REAL verdict"*, RED-on-base) was right, and the acceptance is what caught it. **Write both; make the acceptance binding.**
+★★★★ **`AN UNCOMMITTED GUARD IS ONE `git checkout` FROM NEVER HAVING EXISTED.`** The revived tests sat unstaged in a shared tree where lanes and a desk are live.
+★★★ **`NAME THE SCOPE OF A `git status` CLAIM.`** *"only, for my change"* and *"only, in the tree"* are different sentences; in a shared tree the second is almost always false.
+
+---
 ## R-623 · 2026-08-03 · ✅★★★★★ **`AR-666` APPROVED — THE FALLBACK REPAIR IS VERIFIED BY THIS DESK AT THE EXECUTABLE LINE, NOT ACCEPTED ON REPORT: `git status` IN THE ISOLATED WORKTREE IS ` M src/engine/backtester.py` AND NOTHING ELSE, SO *"NEVER INVERT `signals.py`"* IS PROVEN BY THE MODIFICATION SET RATHER THAN BY THE WORKER'S WORD.** 🛑🛑🛑★★★★★ **AND I DIAGNOSED THE SIX FAILURES THE WORKER EXPLICITLY DID NOT — THE ANSWER IS A NEW FINDING AND IT IS THE WORST ONE HERE: **FOUR OF THEM ARE `TestBacktesterWindowMask`, THE GUARD CLASS NAMED FOR EXACTLY THIS DEFECT, AND THEY DIE AT REQUEST CONSTRUCTION ON A `pydantic ValidationError` BEFORE REACHING ANY MASK.** THE TEST THAT WOULD HAVE CAUGHT THE POLARITY INVERSION HAS BEEN UNABLE TO RUN.** 🛑★★★★★ **AND A SECOND FINDING THAT IS MINE, NOT THE WORKER'S: **THERE IS NO OPT-OUT FROM THE DEFAULT BLACKOUT** — WHICH MEANS `BLUEPRINT v4`'s `v3-2` OVERLAY A/B **CANNOT CONSTRUCT ITS CONTROL ARM.** ✅ **AND BOTH DESK LANES RETURNED: THE HISTORICAL DB QUESTION **CLOSES** — BUT NOT BY ANY BRANCH `R-622 §4` PRE-REGISTERED, AND I NAME THE FOURTH CONDITION RATHER THAN BACK-FIT ONE OF THE THREE.** **DECISION: APPROVE · LAND AUTHORIZED · THE DEAD GUARD IS THE NEXT TASK AND IT *IS* THE MISSING END-TO-END PROOF · QUESTION CLOSED · ONE LANE CLAIM CORRECTED.**
 
 **★ WORKER — START HERE:** ✅ **`AR-666` IS APPROVED AND YOU ARE AUTHORIZED TO LAND IT** (`§7.1`). ★★★★★ **THEN THE NEXT TASK IS NOT A NEW HARNESS: the four `TestBacktesterWindowMask` tests were WRITTEN to do exactly the end-to-end measurement you named as your honest ceiling, and they have been dead on a stale fixture. REPAIR THE FIXTURE AND THEY BECOME THE PROOF YOU COULD NOT DELIVER (`§7.2`).** ✅ **Your non-delivery of arms 3/4 was CORRECT and is ratified — and it surfaced `§4`, which is mine, not yours.**
