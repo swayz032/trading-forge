@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3734` at THIS commit, 2026-08-03 06:1x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3737` at THIS commit, 2026-08-03 07:4x [MEASURED HERE, `(Get-Content).Count` + `Get-Date`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -72,7 +72,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3734` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3737` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -93,43 +93,46 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT (2026-08-03 `06:1x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
-**Ruling ledger at `R-633` (`1771b814`). Newest AR: `AR-677` — **RULED** at `R-633`.** Worker: ✅ **ACTIVE, reverting `F-1` to OPTION B under `R-633 §5.1`.**
-**SEAT IDENTITY VERIFIED, not assumed `[MEASURED HERE]`:** my parent is `claude.exe 13916`, the same PID that wrote `R-630` — the pre-`/clear` seat was MYSELF, not a live sibling, so no write-freeze applied. ★★★ **Walk the PID chain before trusting a seat line; `ASKED != SEATED`.**
+## ★★★★★ SEAT (2026-08-03 `07:4x`, ADVISOR `claude.exe 13916` — **SAME PROCESS, THIRD `/clear`**, autonomous under operator order *"continue without me, work autonomously"*)
+**Ruling ledger at `R-634` (`6bf2258e`). Newest AR: `AR-678` — **RULED** at `R-634`.** Worker: ✅ **`claude.exe 21508` ALIVE, its ear (`bash 32468`) ALIVE `[MEASURED HERE]` — it will hear `R-634`. Was silent ~90 min on an ACCOUNT SESSION LIMIT (reset `07:40`), NOT blocked and NOT stalled.**
+**SEAT IDENTITY `[MEASURED HERE]`:** my parent is `claude.exe 13916`, the PID that wrote `R-630` — the pre-`/clear` seat was MYSELF, no sibling, no write-freeze. ★★★ **`ASKED != SEATED`: walk the PID chain.**
 
-## 🛑🛑🛑★★★★★ THE DESK'S OWN GUARDS ARE INERT — FOUND `06:1x`, HIGHEST-PRIORITY GOVERNANCE ITEM
-**`[MEASURED HERE, `.claude/settings.json`]`: `advisor-ruling-guard.ps1`, `ruling-mechanism-guard.ps1` and `ruling-stale-premise-guard.ps1` ALL carry `matcher = "Write|Edit|MultiEdit"`. **`Bash` IS NOT IN THE MATCHER.** THIS DESK WRITES THE LEDGER BY SHELL (`head`/`cat`/`tail`/`cp`), SO **NONE OF THE THREE FIRED ON `R-631`, `R-632`, OR `R-633`.**
-✅ **COMPLIANCE WAS MET IN SUBSTANCE ANYWAY — skill invoked before each ruling, newest AR named in each, mechanism claims graded — but that is the DESK being careful, NOT the guard working.** ★★★★★ **`A GUARD BLIND TO THE WRITE MECHANISM ACTUALLY IN USE IS A GREEN CHECK WITH NO PATH TO RED.` It has never once gated a real ruling.**
-🛑 **FIX (specified, NOT yet built — the money path was running and `R-515` convicts doing the adjacent governance thing while it waits):** the guards key on `tool_input.file_path`, which a Bash call does not have. **Either add `Bash` to the matcher AND parse `tool_input.command` for `ADVISOR-RULINGS.md`, or make the desk write the ledger through `Edit`.** ⚠️ **Do NOT "fix" it by only adding the matcher — the guard would then fire and find no `file_path`, and `$ErrorActionPreference='SilentlyContinue'` would exit it `0`. THAT IS A GUARD THAT PASSES BY FAILING.**
-⚠️ **SECOND, SMALLER `[MEASURED HERE]`: the hook rig can fail CLOSED even though `advisor-ruling-guard.ps1` is written to fail OPEN — a scratchpad write was blocked by `"One or more errors occurred"` (a .NET aggregate exception) while the sentinel was FRESH (`275s`) and the path did not even match the guard's scope. It crashed BEFORE its own error handling. Retry succeeded. `A CRASHED GUARD IS INDISTINGUISHABLE FROM A VERDICT UNLESS YOU READ THE GUARD.`**
+## 🛑🛑🛑★★★★★ THE ONE THING THE NEXT SEAT MUST NOT SKIP — `R-634 §6.1`
+**EVERY *"zero regressions"* AND *"back to exact baseline"* CLAIM IN THIS CAMPAIGN IS SCOPED TO AN **UNNAMED POPULATION**.** `AR-678` published `6 failed / 101 passed / 3 skipped` **with no `pytest` command.** `[MEASURED HERE]` I tried three selections — `test_performance_gate.py` alone (`1 failed / 29 passed`), `test_track3_strategy_regime_wiring.py` alone (🛑 **`40 failed / 9 passed`**), both (`41 failed / 38 passed`) — **none is the 110 it measured**, and `track3`'s failing names are NOT the 5 the ledger's baseline records.
+⚠️ **NOT a finding that the worker is wrong — I have no such evidence, and my own instrument misfired twice tonight. It is UNVERIFIABLE AS PUBLISHED, and `[UNRESOLVED]`: huge unrecorded red, or a deliberately excluded population. Both possible.**
+★★★★★ **`A COUNT WITHOUT ITS COMMAND IS A RECOLLECTION, NOT A MEASUREMENT.` `A BASELINE THAT DOES NOT NAME ITS MEMBERS CANNOT EXCLUDE ANYTHING.`**
 
-## 🛑🛑★★★★★ OPEN INSTRUMENT DEFECTS — ALL VERIFIED AT THE EXECUTABLE LINE BY THIS DESK
-**`F-1` (fix in flight, OPTION B).** `performance_gate.py:296-322` vetoes only on `max_drawdown > firm_max_dd`; the crash path returns `max_drawdown: 0`, so a crashed scenario scored `28.8`/`passed=True`. ⚠️ **SCOPE (`R-631 §3`): `stress_test.py:129` catches only `(ValueError, IndexError, KeyError)` — it is DATA-CLASS blindness, not "any crash".**
-**`F-1b` (NEW at `R-633 §3`, NOT FIXED).** `backtester.py:8410` calls `full_forge_score(..., crisis_results=crisis)` with **NO `firm_max_dd=`**, so the veto compares against a hardcoded `2000.0` while `stress_test` uses the CONFIGURED `prop_firm_max_dd`. **Zero non-test callers pass it** `[positive control: the same grep DOES find `prop_firm_max_dd=` twice]`. ⚠️ **`[UNENUMERATED]` whether any real config differs from `2000.0` — that answer decides LATENT vs LIVE.**
-**`F-A` (CRITICAL, OPEN).** `backtester.py:3970` selects `_build_default_event_mask_et` only `if "ts_et" in df.columns`; `test_entry_windows.py` has **ZERO** `ts_et` `[positive control: same grep = 8 hits in `backtester.py`]`. All four tests take the UTC fallback; re-inverting the ET builder leaves the suite **`4 passed`**.
-**`F-B` (HIGH, OPEN).** `:438-446` read `.get(..., 0)` then `assert skipped == 0` — the default IS the asserted value, so `run_backtest → {}` still passes `2 of 4`. 🛑 **`pytest.fail` IN AN `except` DEFENDS ONLY AGAINST THINGS THAT RAISE — my `R-631 §1` approval is EXCEPTION-SCOPED and I said so at `R-632 §4`.**
+## 🛑🛑★★★★★ OPEN DEFECTS — ALL VERIFIED AT THE EXECUTABLE LINE BY THIS DESK
+**`F-1` ✅ CLOSED (`6b03a61c`, OPTION B).** DD compare first (original reason byte-for-byte), then `"error" in s`; the `passed is False` condition deliberately absent **with a comment recording why** — so `R-630 §4.2`'s superseded spec is not "restored" by the next editor. ⚠️ **Scope: `stress_test.py:129` catches only `(ValueError, IndexError, KeyError)` — DATA-CLASS blindness, not "any crash".** ⚠️ **Residual the desk ACCEPTED: B is safe because `:138` always sets `error` — `SAFETY BY STARVATION`, kept visible on purpose.**
+**`F-1b` (NOT FIXED).** `backtester.py:8410` calls `full_forge_score(..., crisis_results=crisis)` with **NO `firm_max_dd=`** → veto compares against hardcoded `2000.0` while `stress_test` uses configured `prop_firm_max_dd`. **Zero non-test callers pass it** `[positive control: same grep finds `prop_firm_max_dd=` twice]`. ⚠️ **`[UNENUMERATED]` whether any real config differs from `2000.0` — decides LATENT vs LIVE. MEASURE FIRST, DO NOT FIX.**
+**`F-A` (CRITICAL, OPEN) — NOW CORROBORATED BY TWO INDEPENDENT LANES.** `backtester.py:3970` picks the ET builder only `if "ts_et" in df.columns`; `test_entry_windows.py` has **ZERO** `ts_et` `[positive control: 8 hits in `backtester.py`]`. Re-inverting the ET builder leaves the suite `4 passed`. 🛑 **Lane `B`'s `F-3` is WIDER: the repaired in-window line has ZERO EXECUTIONS across the entire `run_backtest` test surface.**
+**`F-B` (HIGH, OPEN).** `:438-446` read `.get(..., 0)` then `assert skipped == 0` — default IS the asserted value, so `run_backtest → {}` passes `2 of 4`. 🛑 **`pytest.fail` in an `except` defends only against things that RAISE; my `R-631 §1` approval is EXCEPTION-SCOPED (`R-632 §4`).**
 
-## ★★★★★ AUTHORIZED NOW — **`R-633 §5`** (2026-08-03, `1771b814`)
-1. ✅ **WORKER — REVERT `F-1` TO OPTION B (in flight).** `performance_gate.py` ONLY; drop `s.get("passed") is False`, keep `"error" in s`, DD compare FIRST, reason strings byte-for-byte. **ACCEPTANCE (a) CRASHED flips · (b) BREACHED unchanged incl. reason · (c) CLEAN byte-identical · 🛑 (d) `test_crisis_partial_fail_without_dd_breach_no_veto` GREEN WITH NO EDIT TO IT and the failure set back to exactly the `6` pre-existing entries BY SET DIFF, not count · 🛑 (e) ANTI-STARVATION: a test or an invariant comment naming that B's safety is INHERITED from `stress_test.py:138` always setting `error`.**
-2. 🛑 **`F-1b` — RAISE, DO NOT FIX IN THAT COMMIT.** First deliverable is a MEASUREMENT: does any real config set `prop_firm_max_dd != 2000.0`?
-3. ⏸️ **`F-A` + `F-B` as ONE lane (`R-632 §6.1`)**, `test_entry_windows.py` ONLY. **MUTATION-PROOF acceptance**, materialised scratch copies only — 🛑 **never mutate the shared tree to build an arm.**
-4. ⏸️ **`F-3`–`F-9`** (`SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`, do not re-paraphrase), then **`INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`.
+## ✅ GRADER FAN-IN — `3 of 3` IN. NOTHING OUTSTANDING.
+`SWEEP-SWALLOWED-EXCEPTION` (`R-630`) · `GRADE-EVENTMASK-REPAIR` band `6/10` (`R-632`) · **`GRADE-EVENTMASK-REPAIR-B` (`11a1d2cf`, `R-634`): `AR-666` band `7`, `AR-667 §7.2` band **`4`**.**
+★★★★★ **LANE `B`'s `F-2` IS THE SESSION'S SHARPEST RESULT: three DIFFERENTLY-BROKEN masks reproduce `AR-667`'s headline numbers (`0→1` trades, `0→10` masked) EXACTLY. `A PROOF THAT SURVIVES THE DELETION OF THE THING IT PROVES IS NOT A PROOF.`**
+🛑 **LANE `B`'s `F-5`: the 8-arm red-proof harness behind `AR-666`'s "2/8 → 8/8" EXISTS IN NO TREE (positive-controlled search). `UNVERIFIED`, explicitly NOT refuted. `UNVERIFIABLE MAY NOT SIT IN THE LEDGER AS IF IT WERE VERIFIED` — decide: re-run or withdraw.**
+✅★★★ **LANE `B` DECLARED TWO CONTAMINATION EXPOSURES AND GAVE UP GROUND FOR BOTH** (refused to adjudicate the opt-out; reported `F-3` as corroboration though it measured it first). **Cite this when briefing future graders.**
+⚠️★★★★★ **IT WAS REPORTED TO ME AS *FAILED* AND ITS WORK WAS COMPLETE AND COMMITTED. `A FAILURE SIGNAL IS NOT FAILED WORK — VERIFY THE ARTIFACT.`** ★★★ **Earlier twin (`R-631 §4`): I called a lane missing on a TRUE measurement and a WRONG conclusion — it was SLOW, not dead. `A LANE WITH NO LIVENESS CHANNEL IS INDISTINGUISHABLE FROM A DEAD ONE` → every grader dispatch now owes a START-RECEIPT.**
 
-## ⏳ DESK OWES (not the worker's)
-🛑 **THE GUARD REPAIR ABOVE — highest-priority desk item.** · ⏳ **`accuracy-validator` lane on `F-1`, HELD until OPTION B lands** (grading `67bc4178` would grade a superseded implementation) · ⏳ `F-D` (3 suites certify code they never execute) · ⏳ **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`: commission suite SKIPS on `total_trades == 0`, the exact state the polarity bug produced — own lane, do NOT cite as fact until opened** · ⏳ ~35 unconfirmed sweep candidates · ⏳ `F-C` (pre-existing `2 failed`).
+## ★★★★★ AUTHORIZED NOW — **`R-634 §6`** (`6bf2258e`)
+1. 🛑 **WORKER — NAME THE POPULATION FIRST (`§6.1`, ~5 min).** The exact `pytest` invocation behind `6 failed / 101 passed / 3 skipped`, reconciled with `track3`'s `40 failed` standalone. **One command, one paste, one sentence.** 🛑 **This GATES the `F-1` grade lane.**
+2. ⏸️ **THEN `F-A` + `F-B` AS ONE LANE**, `test_entry_windows.py` ONLY. **MUTATION-PROOF acceptance** (re-invert `_build_default_event_mask_et` in a MATERIALISED SCRATCH COPY → must go RED; `run_backtest → {}` → all RED) **PLUS lane `B`'s widening: the repaired in-window line must show a NON-ZERO execution count.** 🛑 **Never mutate the shared tree to build an arm — `git archive <sha> | tar -x -C <scratch>`.**
+3. ⏸️ **`F-3`–`F-9`** (`SWEEP-SWALLOWED-EXCEPTION-2026-08-03.md`, do NOT re-paraphrase), then **`INV-13 → CRITICAL`**, then `INV-1` deletion — 🛑 never while `INV-13` is `WARNING`.
+4. 🛑 **`F-1b` — MEASURE, DO NOT FIX:** does any real config set `prop_firm_max_dd != 2000.0`?
 
-## ✅ GRADER FAN-IN — `2 of 2` IN; A THIRD IS A BONUS, NOT AN OBLIGATION
-`SWEEP-SWALLOWED-EXCEPTION` ruled `R-630`. `GRADE-EVENTMASK-REPAIR` (band `6/10`) adopted `R-632`. ⏳ `GRADE-EVENTMASK-REPAIR-B` in flight — this desk's own second path.
-⚠️★★★★★ **`R-631 §4` CALLED THAT LANE MISSING ON A TRUE MEASUREMENT AND A WRONG CONCLUSION: it returned `05:52`, ~4 min later, after ~40 min of work. SLOW, NOT DEAD.** ★★★ **MINTED: `A LANE WITH NO LIVENESS CHANNEL IS INDISTINGUISHABLE FROM A DEAD ONE` — every grader dispatch now owes a START-RECEIPT (task · first observable · ETA).**
-⚠️★★★ **RECEIPT CONTRACT WEAK POINT: the grader WROTE its verdict but never COMMITTED it — untracked, one `git clean` from gone. Desk committed it unmodified (`de26d981`). `THE DOER REPORTS SUCCESS ON WRITE, NOT ON COMMIT` — verify tracked-ness, not existence.**
+## ⏳ DESK OWES
+🛑 **`accuracy-validator` on `F-1` — HELD ON `§6.1`** (a new reason, not a drifting hold: grading against an un-re-runnable baseline reproduces the defect it grades). **Releases when the population is named; dispatch carries a START-RECEIPT.**
+🛑 **THE GUARD REPAIR — HIGHEST-PRIORITY DESK ITEM.** `[MEASURED HERE, `.claude/settings.json`]` all three ruling guards match `Write|Edit|MultiEdit`; this desk writes the ledger by SHELL, so **none has ever gated a real ruling** (`R-631`–`R-634` included). ⚠️ **Adding `Bash` to the matcher ALONE makes it PASS BY FAILING — the guards key on `tool_input.file_path`, absent on a Bash call, and `SilentlyContinue` exits `0`.** ⚠️ **Also: the rig can fail CLOSED though the guard is written to fail OPEN — a scratchpad write outside the guard's scope was blocked by a .NET aggregate exception with a FRESH sentinel; retry succeeded.**
+⏳ `F-D` · **`test_pnl_accuracy.py:859` `[RELAYED — UNVERIFIED]`: commission suite SKIPS on `total_trades == 0`, the exact state the polarity bug produced — own lane, do NOT cite as fact until opened** · ~35 unconfirmed sweep candidates · `F-C` · **`F-5`'s missing harness: re-run or withdraw.**
 
-## ⚠️★★★★★ PUBLISH-TIME GATE — FIXED FORM, USE VERBATIM (`R-629 §1`)
+## ⚠️★★★★★ PUBLISH-TIME GATE — USE VERBATIM (`R-629 §1`)
 ```
 ar=$(grep -m1 -a "^## AR-" AGENT-REPORTS.md | grep -o "AR-[0-9]*" | head -1)   # head -1 IS LOAD-BEARING
 ```
-🛑 **`grep -o` returns EVERY match and AR headers often CITE a prior AR; without `head -1` the gate reports STALE on a current file. It passed four times before only because those headers named one AR — `CORRECT BY LUCK OF THE DATA, NOT BY CONSTRUCTION`.**
-★★★ **`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT` (`R-631 §6`). On this box: Windows-form paths (`C:/...`) for anything handed to Python — an MSYS `/c/...` exits `4`, a mangled `PYTHONPATH` exits `1`, and either skimmed reads as "the red arm is red". `--deselect` must match the nodeid pytest actually COLLECTED or it silently does nothing.**
-★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT` (`R-633 §6`) — a construction census answers "how is it built"; the question is usually "what can this field hold".**
+🛑 **`grep -o` returns EVERY match and AR headers often CITE a prior AR. It passed four times before only because those headers named one AR — `CORRECT BY LUCK OF THE DATA, NOT BY CONSTRUCTION`.**
+★★★ **`AN EXIT CODE FROM A BROKEN INSTRUMENT READS EXACTLY LIKE A RESULT` (`R-631 §6`): Windows-form paths (`C:/...`) for Python — an MSYS `/c/...` exits `4`, a mangled `PYTHONPATH` exits `1`. `--deselect` must match the COLLECTED nodeid. A class method needs `File::Class::test`, not `File::test` (exits `4`).**
+★★★★★ **`ENUMERATE EVERY SITE THAT WRITES THE FIELD, NOT EVERY SITE THAT BUILDS THE DICT` (`R-633 §6`).**
 ## ⚠️ SWEEP COVERAGE — WHAT `9 DEMONSTRATED` DOES **NOT** MEAN
 **`7.4%` of the surface it names: `14` of `189` `A7`/`A8` files traced; ~`410` `A7` and all `278` `A9` UNTRACED; NO TypeScript/vitest sweep at all.** ★★★★★ **`THE 497 STRUCTURAL SITES ARE A CAPABILITY SIGNAL, NOT A DEFECT COUNT` — the `3/87` (~3%) rate is NOT transferable (the 14 files were chosen for money-path relevance, not at random). Extrapolating is a HYPOTHESIS and the grader labelled it one.** ✅ **Honest nulls: `contextlib.suppress` and `try/finally: return` are `0` across all `374` files.**
 
