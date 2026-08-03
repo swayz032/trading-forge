@@ -4,6 +4,15 @@
 
 ---
 
+## AR-724 · 2026-08-03 · ⏳ **START-RECEIPT — `R-668 §5`, `(i)` THEN `(ii)`. SAME SEAT, STILL HOLDING CONTEXT.**
+
+**ORDER: `(i)` FIRST — WHAT THE COMPARISON COMPARES AGAINST.** **REASON: `§4` makes it the DECIDING question — *"if the former, reading `B` is dead on arrival"*. `(ii)` only matters if `(i)` survives, so measuring `(i)` first is the cheapest path to a real answer, including the answer that closes the lane.**
+✅ **ACKNOWLEDGED AND HELD: running this lane is **NOT** adoption of reading `B` (`§4`). I am gathering evidence for a ruling that has not been made, and I will not name, rank or prefer a candidate in either branch.** 🛑 **`R-648` REUSE LAW HELD: I will READ `run_parity_diff` and the compile-fidelity execute/compare surface. **I WILL NOT AUTHOR AN ORACLE**, and I will not RUN the harness — if `(i)` needs a run to answer, that is the stop condition and I report it.**
+⚠️ **ONE THING I EXPECT TO HIT AND AM NAMING IN ADVANCE: `(ii)` asks for TAUGHT TEXT, and `AR-723 §0` measured that these extractions carry `rationale: None` / `instruments_mentioned: None`. **If the thresholds' taught text is not in the extraction, `§5`'s second stop applies and I will say plainly that the TRANSCRIPT is what would be needed** — rather than paraphrasing a threshold I cannot quote.**
+**FIRST OBSERVABLE: `(i)`'s verdict — reference side `(1)`, `(2)` or `(3)` — quoted at the executable line. ETA ~25 min for both.**
+
+---
+
 ## AR-723 · 2026-08-03 · ✅★★★★★ **`R-667 §5` DELIVERED — THE `11` TIER-A SPECS ENUMERATED FROM A VERIFIED MANIFEST (`13/13` SHA256 RE-COMPUTED BY ME, `11/11` JOINED).** 🛑🛑🛑★★★★★ **HEADLINE: **NOT ONE OF THE `11` NAMES AN INSTRUMENT THIS REPO HAS DATA FOR.** `forex` `3` · `equities` `3` · `stocks` `1` · `index` `1` · `None` `3`. **UNDER CRITERION `1` AS LITERALLY WRITTEN, THE ANSWER IS `NONE` — `§4.5`'s PRE-REGISTERED OUTCOME.** 🛑🛑★★★★★ **BUT CRITERION `1` HAS A SECOND READING I WILL NOT DECIDE FOR YOU: the census's `disposition=compilable-futures` (`5` specs) means **"compiles + PORTABLE MECHANIC"** `[MEASURED — `spec_producer.py:748`]`, **NOT** "this strategy is about futures". **PORTABILITY IS A DIFFERENT QUESTION FROM WHAT THE EDUCATOR TAUGHT ON, AND WHICH ONE CRITERION `1` MEANS IS YOURS.** ⚠️🛑 **AND I CONVICTED MY OWN INSTRUMENT TWICE BEFORE PUBLISHING — BOTH DISCLOSED BELOW.**
 
 **TASK:** `R-667 §5`. **RUN MODE: READ-ONLY `python` INSPECTION OF TWO FROZEN ARTIFACTS AT HEAD `157a227e`. NO pytest, NO producer run, NO `src/` modification, NO backtest.** **NOT GRAPH-SCHEDULED.**
