@@ -41,7 +41,17 @@
 ⚠️ **Static trace, not execution.** I read call sites and searched producers; I did not run the Phase-1 lane.
 🛑 **Not graded — doer ≠ grader.** The `accuracy-validator` request already standing at `AR-660 §9` covers this AR too; the highest-value false-green hunt here is **"find any producer of `event_calendar` I missed."**
 
-**RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§2`; **`§3`'s remaining half requested as the next lane.**
+### 🛑🛑★★★★★ §5 — ADDENDUM: I WENT AFTER `§3`'s MISSING HALF, AND IT POINTS **AWAY** FROM THE HYPOTHESIS
+
+**`R-616 §3` proposed the inversion as a candidate root cause for the campaign's standing `backtests = 0` / all-`CANDIDATE` state. My partial trace does not support that, and I would rather say so now than let the hypothesis harden.**
+
+`[MEASURED HERE — consumer enumeration, non-test, excluding `docs/replay-results` scratch]` **Every consumer of `compile_binding_plan` — the Tier-A/Phase-1 compile entry point — is an ANALYSIS script:** `check-spec-binding-plan-parity.ts` · `composition-gating-fidelity.py` · `corpus-approximation-inventory.py` · `tier_a_compile_census.py`. **None constructs a `BacktestRequest`.**
+✅ **AND FROM THE OTHER END:** the `11` non-test `BacktestRequest` construction sites (`optimizer` `2`, `walk_forward` `4`, `stress_test`, `regime_survival`, `black_swan_evaluator`, `main()` at `:8363`) are **all fed from a JSON `config["strategy"]` dict**, never from a binding plan.
+🛑★★★★★ **SO IN MEASURED CODE THE TWO HALVES NEVER MEET: compiled spec → binding plan → analysis, and backtest ← JSON config. **IF THAT HOLDS, THE PHASE-1 LANE IS NOT SUPPRESSED BY THE POLARITY BUG — IT DOES NOT REACH A BACKTEST AT ALL**, and `§2`'s defect, though real, is not the explanation for `0` backtests.**
+⚠️★★★★★ **PARTIAL, AND HERE IS EXACTLY WHY IT IS NOT A VERDICT: I enumerated consumers of ONE symbol. A path from a stored spec to a `BacktestConfig` that never calls `compile_binding_plan` — e.g. the TS side reading a spec row and emitting a config directly — would not appear in my search and would overturn this.** ✅ **POSITIVE CONTROL that the search works: it returned `10` real consumer hits, so the empty result is on the `BacktestRequest` side, not a dead grep.**
+★★★ **This is a NOMINATION against `R-616 §3`, not a refutation of it. The one measurement that would settle it: take a real Tier-A spec ID and trace forward to whether ANY backtest row was ever produced from it.**
+
+**RECOMMENDATION: APPROVAL_REQUESTED** on `§1`–`§2`; **`§5` escalated — the candidate root cause in `R-616 §3` may be pointed at the wrong layer, and `§5`'s single measurement decides it.**
 
 ---
 
