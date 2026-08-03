@@ -43,6 +43,7 @@ Coverage:
 from __future__ import annotations
 
 import datetime as dt
+import pathlib
 import sys
 
 import pytest
@@ -329,24 +330,57 @@ def _make_minimal_backtest_result(
         StrategyConfig,
     )
 
-    # Build a synthetic DataFrame with 20 bars.
-    # Bars alternate between 09:00 ET and 10:00 ET (winter, EST = UTC-5).
-    # 09:00 ET = 14:00 UTC (should be blocked by "09:45-12:00 ET" window)
-    # 10:00 ET = 15:00 UTC (should NOT be blocked)
-    n_bars = 20
+    # Build a synthetic DataFrame. Winter dates, so EST = UTC-5 throughout.
+    #
+    # R-635 §4.1 (grader findings F-A + F-B) — TWO DEFECTS IN THIS FIXTURE:
+    #
+    #   F-A: it emitted `ts_event` but NO `ts_et`, so backtester.py:3953
+    #        (`if "ts_et" in df.columns`) took the ELSE branch and these tests
+    #        exercised `_build_default_event_mask_utc` — the LEGACY FALLBACK —
+    #        and NEVER `_build_default_event_mask_et`, the production builder.
+    #        Re-inverting the ET builder's polarity left the suite 4/4 GREEN.
+    #        A `ts_et` column is now emitted so the production path is under test.
+    #
+    #   F-B: no bar fell inside either blackout window, so the ET builder's
+    #        `mask[i] = True` line NEVER EXECUTED. A fixture can be
+    #        mutation-sensitive and still never run the line it is guarding;
+    #        the 08:45 ET bars below exist to execute it.
+    #
+    # Per day, three bars:
+    #   08:45 ET (13:45 UTC) — INSIDE the 8:30-9:00 blackout → exercises the
+    #                          in-window branch of the ET builder (F-B)
+    #   09:00 ET (14:00 UTC) — outside the blackout (window end is exclusive),
+    #                          and outside "09:45-12:00 ET" → counted as skipped
+    #   10:00 ET (15:00 UTC) — outside the blackout, INSIDE "09:45-12:00 ET"
+    #
+    # 10 days x 1 bar at 09:00 ET = 10 skipped, so `assert skipped >= 10` holds
+    # on the 09:00 bars ALONE — deliberately not relying on the 08:45 bars,
+    # whose entries the blackout suppresses before the window mask counts them.
+    n_days = 10
+    et_times = [(8, 45), (9, 0), (10, 0)]
     timestamps_utc = []
-    for i in range(n_bars):
-        day = dt.date(2024, 1, 2 + i // 2)
-        # Alternate: even bars at 09:00 ET (14:00 UTC), odd bars at 10:00 ET (15:00 UTC)
-        utc_hour = 14 if i % 2 == 0 else 15
-        ts = dt.datetime(day.year, day.month, day.day, utc_hour, 0, 0,
-                         tzinfo=dt.timezone.utc)
-        timestamps_utc.append(ts.isoformat())
+    timestamps_et = []
+    for d in range(n_days):
+        day = dt.date(2024, 1, 2 + d)
+        for et_h, et_m in et_times:
+            utc = dt.datetime(day.year, day.month, day.day, et_h + 5, et_m, 0,
+                              tzinfo=dt.timezone.utc)
+            # ts_et must be OFFSET-AWARE, not naive: liquidity.py:55 casts this
+            # column to Datetime(time_zone="UTC") and a naive string fails that
+            # cast for every row. EST = UTC-5 for these January dates.
+            # isoformat() gives "2024-01-02T08:45:00-05:00", so the builder's
+            # ts_str[11:16] slice still reads "08:45" as ET local time.
+            et_aware = dt.datetime(day.year, day.month, day.day, et_h, et_m, 0,
+                                   tzinfo=dt.timezone(dt.timedelta(hours=-5)))
+            timestamps_utc.append(utc.isoformat())
+            timestamps_et.append(et_aware.isoformat())
+    n_bars = len(timestamps_utc)
 
     price = 5000.0
     data = pl.DataFrame({
         "timestamp": timestamps_utc,
         "ts_event": timestamps_utc,
+        "ts_et": timestamps_et,
         "open": [price] * n_bars,
         "high": [price + 5.0] * n_bars,
         "low": [price - 5.0] * n_bars,
@@ -437,13 +471,20 @@ class TestBacktesterWindowMask:
 
     def test_empty_windows_no_skipped(self):
         result = _make_minimal_backtest_result([])
-        skipped = result.get("engine_audit", {}).get("skipped_outside_window_count", 0)
-        assert skipped == 0
+        # R-635 §4.1 (ARM ii): index, never .get(...,0). The defaulting form is
+        # satisfied by an EMPTY result, so a run_backtest returning {} passed
+        # this test. Asserting the keys EXIST makes absence a failure.
+        assert "engine_audit" in result, "no engine_audit — nothing was measured"
+        assert "skipped_outside_window_count" in result["engine_audit"]
+        assert result["engine_audit"]["skipped_outside_window_count"] == 0
 
     def test_no_windows_field_no_skipped(self):
         result = _make_minimal_backtest_result(None)
-        skipped = result.get("engine_audit", {}).get("skipped_outside_window_count", 0)
-        assert skipped == 0
+        # R-635 §4.1 (ARM ii): see test_empty_windows_no_skipped — indexing
+        # rather than defaulting is what makes an empty result FAIL here.
+        assert "engine_audit" in result, "no engine_audit — nothing was measured"
+        assert "skipped_outside_window_count" in result["engine_audit"]
+        assert result["engine_audit"]["skipped_outside_window_count"] == 0
 
     def test_window_mask_reduces_entries(self):
         """With "09:45-12:00 ET" window, bars at 09:00 ET should be blocked.
@@ -460,3 +501,67 @@ class TestBacktesterWindowMask:
         result = _make_minimal_backtest_result(None)
         assert "engine_audit" in result
         assert "skipped_outside_window_count" in result["engine_audit"]
+
+
+class TestDefaultEventMaskPolarity:
+    """R-635 §4.1 (F-A): its own class ON PURPOSE.
+
+    This guard deliberately does NOT call run_backtest — it extracts the
+    builder's real source and executes it. Keeping it out of
+    TestBacktesterWindowMask preserves that class's property that a broken
+    run_backtest turns EVERY member RED.
+    """
+
+    def test_default_event_mask_et_polarity_is_sit_out(self):
+        """R-635 §4.1 (F-A): guard the ET builder's POLARITY directly.
+
+        WHY THIS TEST EXISTS, and why the other four cannot do its job:
+        they all assert on `skipped_outside_window_count`, which is the W23H.3
+        ALLOWED-ENTRY-WINDOW mask — a DIFFERENT mask from the event blackout.
+        Re-inverting `_build_default_event_mask_et` leaves all four GREEN
+        (measured), because the surviving entries land outside the allowed
+        window either way and the skip count stays >= 10. A fixture change
+        cannot fix that; only an assertion about the event mask can.
+
+        The builder is nested inside run_backtest and cannot be imported, so
+        its REAL source is extracted from backtester.py by AST and executed —
+        never a hand-copy, which would assert against a duplicate of the bug.
+        """
+        import ast
+
+        src_path = (
+            pathlib.Path(__file__).resolve().parents[1] / "backtester.py"
+        )
+        source = src_path.read_text(encoding="utf-8")
+        node = next(
+            (n for n in ast.walk(ast.parse(source))
+             if isinstance(n, ast.FunctionDef)
+             and n.name == "_build_default_event_mask_et"),
+            None,
+        )
+        assert node is not None, "could not extract _build_default_event_mask_et"
+
+        ns: dict = {}
+        exec(ast.unparse(node), ns)  # noqa: S102 — the real function under test
+        build_et = ns["_build_default_event_mask_et"]
+
+        in_window = ["2026-03-04T08:30:00-05:00", "2026-03-04T08:59:00-05:00",
+                     "2026-03-04T14:00:00-05:00", "2026-03-04T14:29:00-05:00"]
+        out_window = ["2026-03-04T08:29:00-05:00", "2026-03-04T09:00:00-05:00",
+                      "2026-03-04T10:00:00-05:00", "2026-03-04T14:30:00-05:00"]
+        mask = build_et(in_window + out_window)
+
+        # POSITIVE CONTROL: the extraction executed real code.
+        assert mask.dtype == bool and mask.shape == (8,)
+
+        # THE POLARITY CONTRACT: True = SIT_OUT. This is what signals.py:288
+        # consumes (`block = ~event_mask`, then `entry & block`), and what
+        # economic_calendar.generate_event_mask documents.
+        assert mask[:4].all(), (
+            "blackout-window bars must be True (SIT_OUT); got "
+            f"{mask[:4].tolist()} — the ET builder's polarity is INVERTED"
+        )
+        assert (~mask[4:]).all(), (
+            "non-window bars must be False (tradable); got "
+            f"{mask[4:].tolist()} — the ET builder's polarity is INVERTED"
+        )
