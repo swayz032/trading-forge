@@ -12,6 +12,80 @@
 
 ---
 
+## R-617 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-661` ANSWERS THE QUESTION WORTH EVERYTHING, AND THE ANSWER IS **NO**: `event_calendar` HAS **NO PRODUCER ANYWHERE IN THE REPOSITORY** — DECLARATION, READER, FOUR PROPAGATION-ONLY SITES, AND A NEVER-ASSIGNED TYPE DECLARATION. **SO `if request.event_calendar and …policies` IS UNREACHABLE IN PRODUCTION AND THE POLARITY-INVERTED `elif` FALLBACK IS THE ONLY BRANCH A DSL BACKTEST CAN TAKE.** ★★★★★ **THE OPERATOR'S PRE-REGISTERED DISPOSITION THEREFORE FIRES: PRIORITY ROOT-CAUSE REPAIR.** 🛑🛑 **AND ONE MEASUREMENT SEPARATES *CANDIDATE* ROOT CAUSE FROM *ROOT CAUSE*, WHICH I AM ORDERING BEFORE ANYONE SAYS THE LARGER SENTENCE: **DID DSL-PATH BACKTESTS HISTORICALLY REPORT ZERO TRADES?**** ✅ **THE OPERATOR'S SECOND RULING OF `2026-08-03` IS ADOPTED AS THE OPERATIVE TASK CONTRACT, WITH ITS ITEM 1 NOW DISCHARGED BY `AR-661` AND ITS ITEM 2's LABEL CORRECTED.** **DECISION: ADOPT · DISPOSITION FIRED · CONFIRMING MEASUREMENT ORDERED · STILL NO PATCHING.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **`AR-661` is the highest-value report of this campaign and its POSITIVE CONTROLS are why I can act on it: sibling fields of the SAME TypeScript interface populated `17`/`16`/`4` times while `event_calendar` is `0`, a camelCase control at `0`, an all-filetype sweep, and a FALSE FRIEND (`macro.ts:210`) identified and EXCLUDED rather than counted. **That is what an absence claim is supposed to look like and almost never does.**** 🛑 **`§5.1` is your next task and it is ONE measurement, not the repair — the repair is authorized but SECOND, because `§3` is the difference between a true sentence and an enormous one.**
+
+**RULING ID:** R-617 · **TASK ID:** `AR-661` (`LANE-8`) + the operator's second ruling of `2026-08-03` · **DECISION: ADOPT · FIRE THE DISPOSITION · ORDER THE CONFIRMING MEASUREMENT.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-661`** `[MEASURED HERE]` — read through `§2`. ⚠️ **`[UNENUMERATED — `§3` onward unread]`.** ★★★ **AND THE `ruling-stale-premise` HOOK IS WHY THIS RULING NAMES IT: my first draft of `R-617` ordered `AR-661`'s measurement as future work while the answer was already on disk. **The guard blocked the write. Third hook save tonight and the most consequential.****
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTY-FIFTH time.**
+
+---
+
+### 🛑🛑🛑★★★★★ §1 — THE ANSWER, AND WHY ITS CONTROLS MAKE IT ACTIONABLE
+
+`[MEASURED BY DOER, `AR-661 §1`, positive-controlled on the same surfaces]`
+| surface | occurrences | kind |
+|---|---|---|
+| `src/engine/config.py:638` | `1` | **DECLARATION** — `event_calendar: Optional[EventCalendarConfig] = None` |
+| `src/engine/backtester.py` | reader | the `if`/`elif` gate + `_build_default_event_mask_et` |
+| `src/engine/walk_forward.py` | `4` | **PROPAGATION ONLY** — all four `event_calendar=request.event_calendar` |
+| `src/server/services/backtest-service.ts:233` | `1` | **TYPE DECLARATION ONLY**, never assigned |
+| everything else | `0` | tests + docs only |
+
+✅★★★★★ **THE CONTROLS ARE WHAT MAKE THIS A MEASUREMENT AND NOT AN EMPTY GREP:** in the **same** TypeScript config interface, sibling fields are populated repeatedly — `max_trades_per_day` `17`, `commission_per_side` `16`, `walk_forward_splits` `4`. **The searcher finds config fields that ARE set; `event_calendar` is not one of them.** ✅ `grep -rIl` across every file type → no producer. ✅ camelCase control `eventCalendar` → `0`. ✅ **A FALSE FRIEND CHECKED AND EXCLUDED rather than counted: `macro.ts:210` is a Python import string for an unrelated `src.data.macro.event_calendar` module.**
+★★★★★ **`absence-claim`'s three requirements — POSITIVE CONTROL, ENUMERATED SURFACE, DYNAMIC REACH — are all satisfied, and the false-friend exclusion is the part this campaign has failed at repeatedly. **I am acting on this absence claim, which is not something I have been able to say tonight.****
+🛑🛑★★★★★ **THEREFORE: NO CALLER CAN SUPPLY POLICIES, SO THE `if` BRANCH IS UNREACHABLE IN PRODUCTION AND THE POLARITY-INVERTED `elif` FALLBACK IS THE ONLY BRANCH A DSL BACKTEST WITH A `ts_event` COLUMN CAN TAKE** — which, combined with `AR-659`'s three-arm control (all-`True` → `0`/`0` entries), means **every such backtest has run with 100% of its entry signals ANDed away.**
+
+### ✅★★★★★ §2 — THE PRE-REGISTERED DISPOSITION FIRES
+
+**The operator pre-registered both branches BEFORE the measurement existed (`R-617` draft `§1.2`, from his ruling): *"If it does not, the lane has never been capable of producing a trustworthy tradable result and this becomes a priority root-cause repair. If it does, retain the finding as a real but nonblocking path defect."***
+🛑★★★★★ **THE MEASUREMENT RETURNED `NO`. **THE PRIORITY ROOT-CAUSE REPAIR BRANCH IS NOW BINDING, NOT DISCRETIONARY.**** ★★★ **And this is the value of pre-registration: I do not get to weigh whether this is worth reprioritising, because the weighing was done before the answer was known. `auto-unblock`: a conditional authorization is judged by whoever benefits, and neither the operator nor I can re-open it now.**
+
+### 🛑🛑★★★★★ §3 — THE ONE MEASUREMENT BETWEEN A TRUE SENTENCE AND AN ENORMOUS ONE
+
+**The enormous sentence available here is: *"this is why nothing has ever graduated"* — `backtests = 0`, all-`CANDIDATE`, Phase-1 `0/16`, the battery rig never firing. ⚠️ **I AM NOT SAYING IT AND NOBODY ELSE MAY EITHER.**
+**WHAT IS MEASURED:** no producer · the `if` unreachable · the fallback the only DSL branch · the fallback zeroes entries.
+**WHAT IS NOT MEASURED `[HYPOTHESIS]`:** that this EXPLAINS the campaign's zero-graduation history. ★★★★★ **THAT REQUIRES A CONFIRMING OBSERVATION I DO NOT HAVE: **did DSL-path backtests historically REPORT ZERO TRADES?** If the historical record shows DSL backtests WITH trades, then something else supplied entries and the inference is wrong — and `AR-654`'s `60`/`90` proves at least one population traded, on the class path.**
+🛑 **SO `§5.1` ORDERS THAT MEASUREMENT FIRST.** ★★★ **`two-true-facts-do-not-make-a-true-link` — the defect is real and the zero-graduation history is real, and the LINK between them is a third claim that owes its own evidence. **This is the exact shape that has convicted this desk six times tonight, on the one finding where it would matter most.****
+
+### ✅ §4 — THE OPERATOR'S RULING, ADOPTED, WITH TWO ITEMS AMENDED BY MEASUREMENT
+
+1. ✅ **SCOPE MEASURED, NOT REPOSITORY-WIDE** — DSL/default-fallback proven; class path unaffected. **Do not generalise.**
+2. ✅ **ITEM 1 (Phase-1 exposure) IS DISCHARGED BY `AR-661`** — answer `NO`, disposition fired (`§2`).
+3. ⚠️★★★ **ITEM 2's LABEL CORRECTED BY MEASUREMENT: there is NO walk-forward `run_invariants` call site.** `[MEASURED HERE — `Select-String` + enclosing-`def` walk]` the two sites are `backtester.py:5941` and `:8418`, and **`:8418` is inside `def main(...)` at `:8063`.** **The intended measurement stands; only the name was wrong.** 🛑★★★ **AND THE CORRECTION CONTAINS A FINDING: `[MEASURED HERE, read at `:8412-8413`]` the comment records that production `resultExtras` had NO `invariants`/`parity_shadow` keys and that relocating the call into `main()` is what makes both paths emit them — **a repair by POSITION.** `[HYPOTHESIS — other truthiness blocks not enumerated]` that moving a call changes WHERE it runs without changing WHETHER it can be skipped, so any throwing path re-opens the hole; the grade's fail-open (`R-616 §5a`) is one instance, not a proof of the general shape.**
+4. 🛑★★★★★ **PROCEDURAL ORDER, BINDING ON ME: do NOT escalate ordinary investigation, grading, or bounded evidence collection; escalate only for product-policy, live-money risk, destructive changes, or requirements unanswerable from the repository. AND report measurements to the advisor, not the user.** ✅ **This closes the failure convicted three times tonight — the desk now fires graders without asking, and `R-614 §5` recorded that the worker cannot.**
+5. ✅ **`INV-1` FIX SPEC SUPERSEDES MINE: construct the witness independently from starting balance + the canonical trade ledger + fees + commissions + realized adjustments, and compare it AGAINST the engine's reported ending balance.** **The reported value is the SUBJECT, not a source — the oracle pattern at invariant scale.**
+6. ✅ **`$7,000` WITHDRAWN AS EVIDENCE and removed from the acceptance criterion.** Negative control = **inject a controlled discrepancy you therefore know, and require the gate to name the exact amount.**
+7. ✅ **DRAWDOWN TEST MATRIX WIDENED to four populations: profitable · losing · zero-execution · mixed.** *"A fix that only catches losing runs does not close the invariant."* — **and it corrects my `R-612` approval, which took the arithmetic arm at face value.**
+8. ✅ **INDEPENDENT GRADING APPROVED, STANDING.** Receipt carries **grader identity · inputs · negative controls · failures · disposition.** ✅ **ALREADY FIRED** over `AR-659` + `AR-660` **plus my own blast-radius inference as claim 3, briefed *"attack it hardest"*** — a code comment is documentation, not behaviour, and I am not independent of my own reading. **It is also briefed to test whether the `60`/`90`-vs-`100%` reconciliation is real or merely convenient.** Receipt: `docs/designs/GRADE-POLARITY-STARVATION-2026-08-03.md`.
+9. ✅ **BREAKTHROUGH CRITERION UNCHANGED AND ADOPTED AS THE STANDING DEFINITION OF DONE: a planted defect must be DETECTED, PROPAGATED, and PREVENT ACCEPTANCE. *"A green result without a proven negative control is not a breakthrough."***
+
+### ✅ §5 — AUTHORIZED NEXT ACTIONS
+
+1. 🛑🛑🛑★★★★★ **WORKER — ONE MEASUREMENT FIRST (`§3`): DID DSL-PATH BACKTESTS HISTORICALLY REPORT ZERO TRADES?** Look at persisted results — `backtest_trades`, stored result JSON, run receipts — and separate **DSL-path** runs from **class-path** runs before counting. **Report the answer and nothing else.** ★★★★★ **This decides whether the campaign's zero-graduation history has a root cause or merely a coincident defect, and it must not be answered by inference from the code.** ⚠️ **`UNKNOWN` is a complete answer if the record cannot distinguish the two paths — say so rather than guessing.**
+2. ✅ **THEN THE FALLBACK REPAIR, to the operator's spec** (`§4.1`, `R-616 §6.2`): preserve `True = SIT_OUT`, fix `_build_default_event_mask_et` and its call-site policy ONLY, **never invert `signals.py`**, with the operator's seven-arm proof matrix as the acceptance contract. ✅ **Write access GRANTED for that function and its gate, in a SHA-pinned isolated worktree, diff reported, no push/merge/PR.**
+3. ⏸️ **THE OPERATOR'S ITEMS 2–4 (second call site · independently derived balance · planted discrepancy) FOLLOW.** Item 5 already fired.
+4. 🛑 **STILL NO PATCHING OF THE OTHER PRODUCTION PATH until items 2–4 are recorded — operator-ordered.** ★★★ **`§5.2` is exempted BY the operator's own item-1 disposition, which makes the fallback a priority root-cause repair rather than a queued patch.**
+5. 🛑 **CARRIED, UNADJUDICATED: all of `R-616 §6.6`**, plus the four false-green paths in `R-616 §5` (the `try:` fail-open · WARNING's zero readers · the *"all checks passed"* log on a WARNING-only failure · `run_invariants({})` → `14/14`), which remain MINE.
+
+### §6 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; ownership guard with a **DERIVED** baseline after the hardcoded one false-froze on my own prior write. ✅ **`R-576 §5` HELD — I ran nothing; `§4.3` is `Select-String` and source reads.** ✅ Graph read, not modified. ✅ No spend beyond the standing envelope.
+🛑 **STILL LIVE, all of `R-616 §7` plus:** ★★★★★ **"this is why nothing ever graduated" SAID BY ANYONE before `§5.1` returns → STOP; the link is a third claim (`§3`).** · ★★★★★ **`signals.py`'s polarity inverted → STOP; three surfaces to one, and it would break the only working path.** · ★★★★★ **repository-wide impact claimed → STOP; scope is DSL + default-fallback, measured.** · ★★★★★ **the operator asked to authorize investigation, grading, or bounded evidence → STOP; `§4.4` forbids it.** · ★★★★★ **`$7,000` used as a test constant → STOP; withdrawn.** · ★★★ **item 2 called "walk-forward" → STOP; it is `main()`.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`THE GUARD CAUGHT ME ORDERING A MEASUREMENT THAT WAS ALREADY ON DISK.` My first `R-617` draft commissioned `AR-661`'s work as future; `ruling-stale-premise` blocked the write and named the report. **Third hook save tonight, and the one that would have published a ruling whose central task was already done.** `A RULING IS NOT SEALED WHEN IT IS COMMITTED` — and the newest report can invalidate one written minutes earlier.**
+★★★★★ **`THE ENORMOUS SENTENCE IS THE ONE THAT OWES THE MOST EVIDENCE.` "This is why nothing ever graduated" is available, plausible, and unmeasured. **The defect is real and the history is real; the LINK is a third claim** — `two-true-facts-do-not-make-a-true-link`, on the one finding where over-claiming would cost most.**
+★★★★★ **`A FALSE FRIEND CHECKED AND EXCLUDED IS WHAT SEPARATES AN ABSENCE CLAIM FROM AN EMPTY GREP.` `AR-661` found `macro.ts:210`, recognised it as an unrelated Python import string, and said so instead of counting it. **Combined with same-interface sibling controls at `17`/`16`/`4`, that is the first absence claim tonight I could act on without re-deriving.****
+★★★ **`PRE-REGISTRATION REMOVES THE DESK'S DISCRETION, WHICH IS THE POINT.` The operator named both dispositions before the answer existed, so "is this worth reprioritising?" was already settled when the inconvenient branch came back.**
+
+---
+
 ## R-616 · 2026-08-03 · 🛑🛑🛑★★★★★ **THE OPERATOR'S RULING IS ADOPTED AS OPERATIVE DIRECTION, AND IT IS INDEPENDENTLY CORROBORATED BY THE CODEBASE'S OWN COMMENT. `True = SIT_OUT` IS CANONICAL THREE WAYS; THE DEFECT IS `_build_default_event_mask_et` AND THE FIX IS AT THAT FALLBACK, **NEVER** DOWNSTREAM.** 🛑🛑★★★★★ **BLAST RADIUS **BOUNDED BY MEASUREMENT, NOT BY CAUTION** (`backtester.py:6835-6837`): THE CLASS PATH **DELIBERATELY DOES NOT MIRROR** THE DEFECTIVE BRANCH AND APPLIES **NO** MASK WITHOUT POLICIES — SO THIS IS **DSL-PATH + DEFAULT-FALLBACK ONLY**, WHICH IS WHY `60`/`90` BATTERY BACKTESTS TOOK TRADES.** 🛑🛑🛑 **AND THE COMMENT CALLS IT *"A REGISTERED POLARITY-INVERSION BUG"* — **IT WAS ALREADY KNOWN, WORKED AROUND ON ANOTHER PATH, AND LEFT LIVE.** ✅ **`AR-659` + `AR-660` APPROVED. `INV-1` IS **STARVED, NOT BROKEN** — A LEVEL MISMATCH.** **DECISION: ADOPT · FIX AT THE FALLBACK · ONE MEASUREMENT OUTRANKS EVERYTHING.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **`§6.1` IS ONE MEASUREMENT AND IT OUTRANKS EVERY QUEUED LANE. Do it before you fix anything.** ✅ **`AR-659`'s three-arm control and `AR-660`'s monkey-patched execution witness are both exemplary — you proved a polarity by VARYING it rather than by reading two docstrings, and you proved starvation at the real call site without modifying the repo.** ✅★★★ **And you corrected me twice and were right both times (`§5`). Keep doing that.**
