@@ -369,18 +369,23 @@ class TestBcaCaCapHonored:
 
         # Tiny sample — n_effective should be the full n_sims (no cap needed)
         daily_returns = np.random.default_rng(42).normal(0.01, 0.05, 100).tolist()
+        # F-9 (R-630 sweep): the assertions used to live INSIDE this try, under
+        # `except Exception -> pytest.skip`, so a FAILING assert became a SKIP
+        # rather than a failure. The try now covers only the call, and only the
+        # genuinely environmental error (missing scipy) converts to a skip.
         try:
             result = compute_mc_confidence_intervals(
                 daily_returns=daily_returns,
                 n_simulations=100,
                 n_years=1,
             )
-            if "n_effective" in result:
-                assert result["n_effective"] <= 5000
-                # For 100 sims < 5000 cap, n_effective should equal 100
-                assert result["n_effective"] <= 100
-        except Exception:
-            pytest.skip("compute_mc_confidence_intervals raised unexpected error — env may lack scipy")
+        except ImportError:
+            pytest.skip("compute_mc_confidence_intervals unavailable — env lacks scipy")
+
+        if "n_effective" in result:
+            assert result["n_effective"] <= 5000
+            # For 100 sims < 5000 cap, n_effective should equal 100
+            assert result["n_effective"] <= 100
 
     def test_bca_n_effective_above_cap_is_capped(self):
         """When n_sims > BCA_MAX_SAMPLE, n_effective must be ≤ BCA_MAX_SAMPLE."""

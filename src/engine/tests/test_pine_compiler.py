@@ -10,11 +10,9 @@ Coverage areas:
 """
 
 import hashlib
-import pytest
 
-from src.engine.pine_compiler import compile_dual_artifacts, compile_strategy
 from src.engine.exportability import score_exportability
-
+from src.engine.pine_compiler import compile_dual_artifacts, compile_strategy
 
 # ─── Shared fixture ──────────────────────────────────────────────────────────
 
@@ -142,7 +140,6 @@ def test_risk_lockout_updates_session_pnl_in_strategy_artifact():
     # Must NOT contain the dead-code pattern from before the fix
     # Old code: "var float session_pnl = 0.0" with no update
     # New code: session_pnl is computed from strategy.netprofit delta
-    lines = pine.splitlines()
     dead_code_pattern = "var float session_pnl = 0.0"
     assert dead_code_pattern not in pine, (
         "FIX 1: dead-code 'var float session_pnl = 0.0' still present — "
@@ -177,7 +174,6 @@ def test_content_hash_is_sha256_of_artifact():
     # Single-artifact hash is SHA-256 of the indicator pine_code only
     indicator_artifacts = [a for a in single_result.artifacts if a.artifact_type == "indicator"]
     if indicator_artifacts:
-        expected_single = hashlib.sha256(indicator_artifacts[0].content.encode()).hexdigest()
         # The single path hashes pine_code (built before artifacts list is populated)
         # so we check the hash is a valid 64-char hex string
         assert len(single_result.content_hash) == 64
@@ -221,6 +217,13 @@ def test_volume_profile_indicator_returns_placeholder_not_crash():
         assert not dual_result.exportability.exportable, (
             "compile_dual_artifacts should return exportable=False for volume_profile strategy"
         )
+    except AssertionError:
+        # F-8 (R-630 sweep): a FAILING inner assertion must not be laundered into
+        # a pass. The inner assert's own message contains "volume_profile", so the
+        # outer `"volume_profile" in str(exc)` check below was SATISFIED BY THE
+        # FAILURE ITSELF. AssertionError is the test failing, not the compiler
+        # raising — re-raise it.
+        raise
     except Exception as exc:
         # The compiler path may still raise a ValueError for the entry_indicator lookup
         # when it tries to actually build the indicator.  That is acceptable behaviour — the
