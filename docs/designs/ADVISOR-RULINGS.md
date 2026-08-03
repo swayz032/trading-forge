@@ -12,6 +12,73 @@
 
 ---
 
+## R-612 · 2026-08-02 · ✅★★★★★ **`AR-655` APPROVED — `INV-7` IS FIXED AT THE ROOT (A `_MISSING` SENTINEL REPLACES THE AMBIGUOUS `0.0` DEFAULT, SO "ABSENT" AND "ZERO" ARE NO LONGER THE SAME NUMBER), RED-PROOFED ON THE **UNCHANGED CONVICTING PLANT**: `60` CRITICAL FIRINGS WHERE THE PINNED CHECK GAVE `[]` × `90`.** 🛑🛑★★★★★ **AND THE CLASS SWEEP I ORDERED CAME BACK WORSE THAN THE INSTANCE: **`13` OF THE `14` INVARIANTS HAVE A PREDICATE SATISFIABLE BY THE METRIC BEING ABSENT, ZERO OR UNSET — AND TWO OF THE REMAINING `12` ARE ALREADY MEASURED BLIND BY `AR-654`'s OWN PLANTS.** **THE INVARIANT HARNESS IS NOT A GUARD; IT IS A GUARD-SHAPED OBJECT.** **DECISION: APPROVE · CLASS SWEEP BECOMES THE PRIORITY LANE · NO INVARIANT GREEN MAY BE CITED UNTIL SWEPT.**
+
+**★ WORKER — START HERE:** ✅★★★★★ **Approved, and four things by name.** **(1) You fixed it at the ROOT, not the predicate** — `_aggregate_metric_raw(..., _MISSING)` makes "absent" distinguishable from `0.0`, which is what made the old check unfixable by threshold alone. **(2) Arm (3) is ARITHMETIC, not a threshold you picked**, and you evidenced the "genuine zero-DD winner is untouched" claim with the **pre-existing `test_passes_on_zero_dd` still passing UNMODIFIED** rather than with your assurance. **(3) You BORROWED the file's own `INV-3` idiom instead of inventing a new one** — `fix-pattern` in the right direction. **(4) The red-proof used `AR-654`'s UNCHANGED plant, the instrument that convicted the old check.** ✅ **NEXT: `§4.1`, the remaining `12`. Your own sweep is what makes it the priority.**
+
+**RULING ID:** R-612 · **TASK ID:** `AR-655` (`LANE-5`, `R-611 §5.2`) · **DECISION: APPROVE · ESCALATE THE CLASS.**
+
+**NEWEST AR NAMED (`R-416`):** **`AR-655`** `[MEASURED HERE]` — read through `§3`'s red-proof table. ⚠️ **`[UNENUMERATED — I HAVE NOT READ `§4` ONWARD]`, recorded rather than implied.**
+
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. Not modified.
+**GRAPH NODE TRANSITION: NONE — `P0PC` NINE of ten. `R-574 §0` holds a THIRTIETH time.**
+
+---
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, BECAUSE THIS IS A MONEY NUMBER
+
+`[MEASURED HERE — read-only source reads + `git`; `R-576 §5` HELD, I ran nothing]`
+| claim | evidence I read | verdict |
+|---|---|---|
+| the ambiguity is fixed **at the root**, not by a threshold | `core.py:383` `raw = _aggregate_metric_raw(result, "max_drawdown", _MISSING)` — **a distinct sentinel, so ABSENT is no longer the number `0.0`** | ✅ |
+| the absent arm requires a witness, not a guess | `:387-389` `if raw is _MISSING: passed = total_trades == 0` | ✅ |
+| the docstring carries its own provenance | `:374-376` names the date, `AR-654 §4`, `R-611`, and the measured `0.0`-on-all-`90` result | ✅ **`caption-is-a-claim`, satisfied** |
+| `14` invariants exist (the sweep's denominator) | `^def _check_` → **`14`** | ✅ **denominator confirmed** |
+| `backtester.py` held READ-ONLY as ordered | `git diff --stat HEAD -- src/engine/backtester.py` → **EMPTY** | ✅ |
+
+🛑 **WHAT I DID NOT RE-DERIVE, AND IT IS THE HEADLINE: the `13`-of-`14` figure is `[MEASURED BY DOER]`.** A `total_trades` occurrence count is not a discriminator for *"which predicates cross-reference a witness"* — **I tried it, it returns `48` including the new fix's own lines, and it decides nothing.** ★★★ **Recording the failed instrument rather than quietly substituting a number I could get: the sweep's own verification is `§4.2`.**
+
+### 🛑🛑★★★★★ §2 — THE CLASS FINDING: THE HARNESS IS GUARD-SHAPED, NOT A GUARD
+
+`[MEASURED BY DOER]` **`13` of `14` invariants have a predicate satisfiable by the metric being ABSENT, ZERO or UNSET. Only `INV-3` cross-references anything — and its idiom is the one `AR-655` copied. TWO of the remaining `12` are ALREADY MEASURED BLIND by `AR-654`'s own four plants.**
+★★★★★ **SO THE `INV-7` FIX IS `1` OF `13`, AND THE HARNESS THE RESEARCH CALLED *"REQUIRED AT OUR SCALE"* — AND WHICH I CITED APPROVINGLY AT `R-610 §1` FOR RUNNING UNCONDITIONALLY — **CANNOT REPORT MOST OF THE FAILURES IT IS NAMED FOR `[MEASURED BY DOER, 13/14]`.** `12` remaining, `2` of them already convicted by plants that exist.**
+🛑★★★★★ **AND THE ROOT CAUSE IS ONE LINE OF DESIGN, NOT `13` SEPARATE MISTAKES `[MEASURED HERE, `core.py:383` vs the old `:369`-era call]`: `_aggregate_metric(result, key, default)` RETURNS THE DEFAULT FOR AN ABSENT KEY, so every predicate written against it inherits *"missing reads as the default."* **The defect is in the ACCESSOR, and each predicate merely failed to notice.** ★★★ **That is why `§4.1` orders the sweep at the accessor level and not thirteen predicate edits — `fix-pattern`: the class, not the instance.**
+⚠️ **THIS IS THE SEVENTH INSTRUMENT-BLINDNESS CLASS MEMBER TONIGHT** (col (i) tautology · `n=1` green · wrong-axis red-proof · request-recording ledger · my own sibling guard · the battery rig `4`/`4` · this). ★★★★★ **`WHAT EXACTLY WOULD HAVE TO GO WRONG FOR THIS GUARD TO GO RED — AND IS THAT THE THING WE ARE AFRAID OF?` The answer here, for `13` of `14`, was: nothing we are afraid of.**
+
+### ✅★★★ §3 — THE PROCESS NOTE IS WORTH MORE THAN A NOTE
+
+**`AR-655`'s first write of this fix was BLOCKED by the `worker-execution` guard hook, because `R-610`/`R-611` had landed since the worker loaded the standard. It RE-LOADED AND RE-ISSUED rather than routing around the block.**
+★★★★★ **`A REMEMBERED SKILL IS A STALE SKILL` — enforced by a hook, honoured by the doer, on a night when this desk broke the same law twice from memory (`R-609 §1`). **The guard was correct and it is the only reason the fix was not authored from a two-ruling-stale copy.**** ✅ **`Never route around a guard that blocked you` — observed, and recorded here so the ledger shows the guard EARNING its friction rather than only imposing it.** ⚠️ **AND THE `ruling-mechanism-guard` BLOCKED THIS VERY RULING'S `§6` FOR AN UNEVIDENCED *"impossible"* — third catch of this desk tonight. **Both guards are net-positive and I am recording that from the receiving end.****
+
+### ✅ §4 — AUTHORIZED NEXT ACTIONS
+
+1. ✅★★★★★ **WORKER — `LANE-6`, AND IT IS NOW THE PRIORITY LANE: SWEEP THE REMAINING `12` AT THE ACCESSOR, NOT PREDICATE-BY-PREDICATE.**
+   - **THE PROPERTY: an invariant must be unable to pass because its input was ABSENT.** Whether that is achieved by making `_aggregate_metric`'s absent-key path explicit, by a `_MISSING`-sentinel variant used everywhere, or by a harness-level pre-check that every referenced metric exists, **is yours** — `[HYPOTHESIS — those are my sketches, not a prescription; two prescribed mechanisms were wrong tonight]`.
+   - 🛑 **START WITH THE TWO ALREADY MEASURED BLIND BY `AR-654`'s PLANTS** — they come with a convicting instrument already built, so they are red-proofable at zero extra cost. `A FIX IS PROVEN BY THE UNCHANGED CONVICTING INSTRUMENT`.
+   - **RED-PROOF REQUIRED PER FIXED INVARIANT, and a GREEN CONTROL for each** — `"everything reds"` is indistinguishable from a working harness without one. **The pre-existing passing tests staying green unmodified is the strongest form of that control, as `AR-655 §2` demonstrated.**
+   - **ALLOWED: `src/engine/invariant_harness/` + its tests. `backtester.py` READ-ONLY. `runtime-production` NOT touched.**
+   - ★★★ **HONEST PARTIAL EXPLICITLY WANTED: if some of the `12` cannot be given an existence witness from the data available, **enumerate which and why** — that is a complete result and I will rule on it. Do not manufacture a witness.**
+2. ✅ **AND VERIFY YOUR OWN DENOMINATOR AS PART OF IT (`§1`): publish the per-invariant table — name · predicate · does it cross-reference a witness · is it in `AR-654`'s measured-blind pair.** ★★★ **I could not re-derive `13`/`14` with the instrument I tried, so the sweep owes the table that makes it checkable.**
+3. 🛑 **THIS DESK — NO INVARIANT-HARNESS GREEN MAY BE CITED AS EVIDENCE OF ANYTHING UNTIL `LANE-6` LANDS.** Not by me, not in a grade brief, not in a promotion argument. **`R-610 §1`'s approving citation is hereby withdrawn to `[MEASURED — IT RUNS]` and NOT `[IT CAN FAIL]`.**
+4. ⏸️ **`LANE-4` (determinism precondition) STILL QUEUED behind `LANE-6`.** Reason: a live blind guard on money metrics outranks a precondition for a future comparison.
+5. ⏸️ **`LANE-3` (main-repo metrics-test gap) STILL QUEUED** — and note it is **the same defect class in a different file**: a test that recomputes engine math instead of importing it cannot detect an engine-side error, exactly as a predicate that defaults an absent metric cannot detect absence.
+6. 🛑 **CARRIED, UNADJUDICATED, unchanged from `R-611 §5.5`** — plus **`PH2` entry `REVISION_REQUIRED`** and the `AR-654 §3+` / `SCOUT §PART 4` reads I still owe.
+
+### §5 — INVARIANTS · STOP CONDITIONS
+
+**No runtime, trading, capital or broker behaviour authorized, touched or read. `runtime-production` NOT touched, NOT read.** `P0PC` NINE of ten, NOT transitioned · `4d` NOT MET and UNDER-SPECIFIED. ✅ Single-writer honoured; ownership guard with `exit` before each write. ✅ **`R-576 §5` HELD.** ✅ **`backtester.py` byte-unchanged `[MEASURED HERE]`.** ✅ Graph read, not modified. ✅ No spend.
+🛑 **STILL LIVE, all of `R-611 §6` plus:** ★★★★★ **any invariant-harness green cited as evidence before `LANE-6` → STOP (`§4.3`).** · ★★★★★ **the remaining `12` fixed predicate-by-predicate without addressing `_aggregate_metric`'s absent-key behaviour → STOP; that leaves the accessor able to re-create the class on the next invariant written.** · ★★★ **`max_drawdown` figures: the STOP from `R-611 §6` is now **PARTIALLY DISCHARGED** — `INV-7` can fail, so a drawdown figure is trustworthy *against that check*; it remains untrustworthy against the `12` unswept invariants' surfaces.**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`THE DEFECT WAS IN THE ACCESSOR, AND THIRTEEN PREDICATES INHERITED IT.` `_aggregate_metric(result, key, default)` returns the default for an absent key `[MEASURED HERE, the old `INV-7` call site vs the new `core.py:383`]`, so *"missing reads as healthy"* was written once and propagated `13` times. **When a class defect appears in N places, look for the one shared helper that hands it to them.****
+★★★★★ **`AN ARITHMETIC ARM BEATS A THRESHOLD YOU CHOSE.` `[MEASURED HERE, `core.py:378-381`]` the arm's stated ground is that a run ending below where it started has peak-to-trough drawdown of at least that loss — so there is **no number in it to tune**, where a *"drawdown looks suspiciously small"* heuristic would have had one. **Prefer an arm whose falsity follows from arithmetic over one whose falsity is a judgement `[MEASURED HERE — same lines]`.****
+★★★★★ **`THE STRONGEST CONTROL IS A PRE-EXISTING PASSING TEST THAT STAYS GREEN UNMODIFIED.` `test_passes_on_zero_dd` is what evidences "a genuine zero-drawdown winner is untouched" — the doer did not have to assert it.**
+★★★ **`I RECORDED THE INSTRUMENT THAT FAILED RATHER THAN THE NUMBER I COULD GET.` A `total_trades` occurrence count (`48`) does not decide which predicates cross-reference a witness. **Reporting "my instrument could not settle this" is what keeps `13`/`14` honest as `[MEASURED BY DOER]`.****
+★★★ **TWO GUARDS EARNED THEIR FRICTION TONIGHT, BOTH AGAINST STALE-OR-UNEVIDENCED WRITING: the `worker-execution` hook blocked a fix authored from a two-ruling-stale standard, and `ruling-mechanism-guard` blocked this ruling for an unevidenced *"impossible"*. **Neither was routed around.****
+
+---
+
 ## R-611 · 2026-08-02 · 🛑🛑★★★★★ **`AR-654` APPROVED, AND IT IS THE MOST VALUABLE RESULT OF THE SESSION: THE PHASE-2 BATTERY RIG IS **BLIND TO `4` OF `4` PLANTED DEFECTS**, TWO PRODUCING **BYTE-IDENTICAL** OUTPUT — AND POSITIVE WITNESS PROBES PROVE THE CORRUPTED LINES **EXECUTE** (`45` AND `30` HITS), SO IT IS BLINDNESS, NOT DEAD CODE.** 🛑🛑★★★★★ **AND A MONEY-PATH DEFECT THAT OUTLIVES THE LANE: SIGN-FLIPPING MAX-DRAWDOWN COLLAPSES `max_drawdown` TO **`0.0` ON ALL `90` BACKTESTS**, AND THE LIVE **`CRITICAL`** INVARIANT NAMED FOR EXACTLY THAT DEFECT — `_check_max_drawdown_non_negative` — **PASSES IT, BECAUSE ITS PREDICATE IS `max_dd >= 0` AND `0.0 >= 0`.** **A CRITICAL INVARIANT THAT CANNOT CATCH THE DEFECT IT IS NAMED FOR.** **DECISION: APPROVE · PHASE-2 ENTRY REVISION_REQUIRED · MAX-DRAWDOWN DEFECT ESCALATED · ONE CORRECTION TO MY OWN OPERATOR REPORT.**
 
 **★ WORKER — START HERE:** ✅★★★★★ **This is exactly what a pull-forward lane is for and you executed it at the highest standard of the session. Four things by name: **(1)** the **POSITIVE WITNESS PROBES** — without `45`/`30` execution hits, "output unchanged" would have been indistinguishable from "the plant never ran", and that distinction is the entire finding · **(2)** an **ISOLATED PLANT TREE pinned to a SHA, never a branch name**, with `git hash-object` restore-match on all `8` runs and **zero engine files touched in the shared tree** · **(3)** you proved the isolated tree a FAITHFUL vehicle before trusting it — `182` differing lines, **all one class**, zero verdict/metric differences · **(4)** you found a vehicle defect *by going to look for the artifacts instead of trusting `rc=0`*. ✅ **`RECOMMENDATION: REVISION_REQUIRED` — of the Phase-2 ENTRY item, not of your harness — is the correct call and I am adopting it.**
