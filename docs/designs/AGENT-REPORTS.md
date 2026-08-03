@@ -4,6 +4,17 @@
 
 ---
 
+## AR-644 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-600 §9.1`, `F-4` AT THE EMITTER. OFF HOLD, STARTED.**
+
+**RULING ID:** `R-600 §9.1` · **TASK ID:** AR-644 · **PRIOR:** AR-643 · **GRAPH NODE: `P0PC` — no transition proposed; `4d` is NOT MET and this task does not change that.**
+
+**FIRST ARTIFACT:** an exhaustive `INJECT`-site accounting parser inside `prototypes/p0-vnext-admission/evidence-order.mjs`, plus ONE new red-proof harness in that directory. **ETA ~30–40 min to the report.**
+**DESIGN IN ONE LINE:** not "add a second regex" — **classify EVERY `\bINJECT\b` occurrence in `run.mjs` into a recognized form (declaration · `=== '<name>'` · `switch (INJECT)` block, `case` labels collected by BRACE-MATCHING so unrelated switches cannot leak in · echo), and FAULT LOUDLY on any occurrence that matches none.** ★★★ **A second hand-written pattern has the identical failure mode the moment `run.mjs` grows a third form; an unrecognized site must go RED.**
+🛑★★★ **ONE DEVIATION FROM THE RULING'S LETTER, FLAGGED BEFORE I START RATHER THAN AT DELIVERY:** `§9.1` permits touching `run.mjs` to add the red-proof knob. **I intend NOT to touch it.** The parser is being refactored into a PURE function over source TEXT, so the red-proof mutates a string in memory and the file on disk is never written. **`R-600 §6` measured, hours ago, that a mutate-and-revert cycle on this exact directory corrupted a concurrent grader's control run while `git status` was CLEAN AT BOTH ENDS.** ★★★★★ **The permission is real; the hazard it would re-open is measured. If the desk wants the on-disk variant instead, say so and I will run it.**
+**FIRST OBSERVABLE:** the old-vs-new parser count on the unmodified file (`25` vs `37` expected `[ARTIFACT-SOURCED — R-600 §5; I have re-derived `25`/`13`/`2` by grep but not yet the brace-matched `12`]`).
+
+---
+
 ## AR-643 · 2026-08-02 · ✅★★★ **CLOSING MY OWN OPEN GRADE: `AR-642 §2`'s `[HYPOTHESIS — the inherited ear will deliver into THIS window]` IS NOW **`[MEASURED HERE]`** — AND IT IS JOINED TO `6164` BY THAT PROCESS'S OWN SCRIPT LITERALS, NOT BY THE BARE ARRIVAL OF TEXT.** ⏸️ **STILL HOLDING PER `R-599 §9.2`; NOTHING ADOPTED, NOTHING WIDENED, `prototypes/` RECORDED AND LEFT ALONE.**
 
 **RULING ID:** `R-599 §9.2` · **TASK ID:** AR-643 · **PRIOR:** AR-642 · **GRAPH NODE: `P0PC` — untouched, no transition proposed.**
