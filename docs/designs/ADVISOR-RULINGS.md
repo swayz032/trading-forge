@@ -12,6 +12,60 @@
 
 ---
 
+## R-646 · 2026-08-03 · ✅★★★★★ **`SWEEP-F7` ACCEPTED — THE `2×2` IS THE RIGHT INSTRUMENT AND THE TOP-RIGHT CELL (OLD TEST **PASSES** ON A CLI MUTATED TO EXIT `0`) IS THE FINDING PROVEN RATHER THAN ARGUED.** 🛑🛑★★★★★ **AND I SIZED THE ADJACENT FINDING `AR-690` FLAGGED, BECAUSE SIZING A CLASS IS THE DESK'S JOB, NOT THE LANE'S: IT IS **NOT** ONE FILE OVER. `[MEASURED HERE]` **SEVEN TRACKED FILES ARE DIRTY IN THE SHARED TREE AND FOUR HAVE AN IDENTIFIED PROGRAM WRITER.**** 🛑🛑🛑★★★★★ **BUT THE OBVIOUS SWEEP WOULD BREAK WORKING SOFTWARE, AND THAT IS THE WHOLE RULING: **TWO OF THE FOUR ARE REPORT GENERATORS WHOSE PURPOSE IS TO WRITE A TRACKED ARTIFACT.** ★★★★★ `A TEST THAT WRITES A TRACKED FILE IS USING THE REPOSITORY AS SCRATCH; A GENERATOR THAT WRITES A TRACKED FILE IS DOING ITS JOB. SAME `git status` LINE, OPPOSITE DISPOSITIONS.`**
+
+**★ WORKER — START HERE:** ✅ **`SWEEP-F7` CLOSED AND ACCEPTED — no rework.** ✅ **STAY ON `SWEEP-F3`; do not switch.** 🛑 **THEN take `SWEEP-F10` (`§3`), and it is SCOPED: `test_audit_a12.py` and `test_validate_scaling_schedule.py::test_cli_report_file_created` ONLY.** 🛑🛑 **DO NOT TOUCH `scripts/wave25_exit_engine_ab_report.py` OR `scripts/h1_designpool_support.py` — writing a tracked artifact is their PURPOSE. Sweeping them would be `fix-pattern` applied one level too wide, which is the mirror of the error it exists to prevent.**
+
+**RULING ID:** R-646 · **TASK ID:** `AR-690` (`SWEEP-F7`) + class-sizing of its adjacent finding · **DECISION: ACCEPT · ADOPT + SIZE THE CLASS · SCOPE IT · QUEUE IT.**
+**NEWEST AR NAMED (`R-416`):** **`AR-690`** `[MEASURED HERE, `| head -1`]` — this ruling's subject. `AR-689` ruled at `R-645`.
+**GRAPH: ADOPTED · `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json` · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE — re-derived]` · NOT MODIFIED · NO node transition.**
+
+---
+
+### ✅★★★★★ §1 — WHY `SWEEP-F7`'s PROOF IS THE STANDARD, NOT MERELY ADEQUATE
+**The `2×2` asserts BOTH halves** — `tripwire-test` law: a known-broken state owes a demonstration that the OLD instrument fails to notice AND that the NEW one does. **The top-right cell (OLD test PASSES against a CLI mutated to `sys.exit(0)`) is the vacuity as an OBSERVATION.** ★★★ **Either half alone is a claim; together they are a proof.**
+✅★★★★★ **AND THE POSITIVE WITNESS IS THE PART I WANT ON THE RECORD: `assert "UNSAFE" in result.stdout` alongside `returncode != 0`.** **Non-zero is ALSO what an `ImportError` or a bad flag returns — without the witness, the repaired test would accept a CRASH as proof of scaling safety.** ★★★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH ACTUALLY RAN` — the worker applied `R-644 §4` to a lane the ruling never mentioned, which is what a law is for.**
+✅ **`A CAVEAT THAT WOULD DISSOLVE ON ONE MEASUREMENT IS NOT A REASON, IT IS AN UNCHECKED WORRY.`** The old comment feared "a lucky seed"; the seed is pinned at `42` and the run is deterministic `rc=1` at `100.00%` breach against a `5%` gate. **An unchecked worry bought a permanently vacuous assertion.**
+✅ **Self-audit ratified:** suspecting `0.39s` was too fast for a 500-simulation CLI, then **timing the CLI directly instead of reasoning about it** (`0.41s`, genuine). ★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST` — and the resolution must be a measurement, not an argument.**
+
+### 🛑🛑★★★★★ §2 — I SIZED THE CLASS, AND THE SIZING CHANGED THE REMEDY
+`[MEASURED HERE, `git status --porcelain -uno` + `git grep -l` for each path across `*.py`/`*.ts`/`*.mjs`]`
+| dirty tracked file | writer | disposition |
+|---|---|---|
+| `docs/scaling-validation/cli-report-existence-test.md` | `tests/python/test_validate_scaling_schedule.py` | 🛑 **TEST — IN SCOPE** |
+| `docs/A12-AUDIT-REPORT.md` | `src/engine/tests/test_audit_a12.py` | 🛑 **TEST — IN SCOPE** |
+| `docs/wave25-exit-engine-ab-report.md` | `scripts/wave25_exit_engine_ab_report.py` | ✅ **GENERATOR — OUT, this is its purpose** |
+| `docs/replay-results/.../_support_cache.json` | `scripts/h1_designpool_support.py` | ✅ **GENERATOR/CACHE — OUT** |
+| `docs/replay-results/.../enum-consistency-22.json` | **none found by literal grep** | ⚠️ **`[UNENUMERATED]` — see below** |
+| `AGENT-LOGS.md`, `src/engine/tests/test_synthetic_market_simulator.py` | hand-edited, not program-written | ✅ OUT |
+★★★★★ **THE DISCRIMINATOR IS INTENT, AND IT IS CHECKABLE: does the program EXIST IN ORDER TO PRODUCE THAT FILE?** A generator does; a test does not — a test wants a temp file and grabbed a committed one. 🛑 **`I MEASURED THE NEIGHBOURING OBJECT` would have been the error here: "dirty tracked file with a program writer" is the SYMPTOM, and it is shared by a defect and by correct behaviour.**
+⚠️ **HONEST RESIDUAL, NOT A CLEAN SWEEP:** `enum-consistency-22.json` has **no literal-string writer** in `*.py`/`*.ts`/`*.mjs`. **It may be written via a composed path (`Path(dir) / f"{name}.json"`), which a literal grep cannot see — the exact blindness `R-600 §12` convicted (a parser that missed 12 of 37 knobs).** `[UNENUMERATED — OPEN. My sweep bounds the class at "≥2 test instances", NOT at "exactly 2".]`
+
+### 🛑★★★★ §3 — WHY THIS IS A REAL DEFECT AND NOT HOUSEKEEPING
+**It is not tidiness — it degrades an INSTRUMENT this campaign leans on constantly.**
+1. 🛑 **`git status` IS A LOAD-BEARING INSTRUMENT HERE** — `R-599 §6` (*a clean tree rules out exactly one thing*), grader/worker coordination, the pre-commit stash/restore cycle, and this desk's own `[MEASURED HERE]` tree checks. **A tree permanently dirty from test runs trains every seat to skim past dirty files, and that is how a real uncommitted change gets missed.** ★★★★★ **`A GUARD EVERYONE LEARNS TO IGNORE IS WORSE THAN NO GUARD` — the same shape as `R-641 §3`.**
+2. 🛑 **`git commit -a` WOULD SWEEP TEST OUTPUT INTO A COMMIT** — and `R-641 §3` already named `commit -a` as the evasion path around the ledger guard. **Two independent hazards meeting on one habit.**
+3. **It is the SAME vacuity mechanism as `F-7` itself:** `report.exists()` satisfied by a copy that is in the repository. **Instance #2 is `test_cli_report_file_created`, in the very file just repaired.**
+
+---
+
+### ★★★★★ §4 — AUTHORIZED (queue position, NOT an interrupt)
+✅ **CONTINUE `SWEEP-F3` — unchanged, do not switch tasks for this.**
+🛑 **THEN `SWEEP-F10` (new ID, `R-643 §5` namespacing law): TESTS MUST NOT USE TRACKED ARTIFACTS AS SCRATCH.** **SCOPE — EXACTLY TWO SITES:** `src/engine/tests/test_audit_a12.py` · `tests/python/test_validate_scaling_schedule.py::test_cli_report_file_created`. **PATTERN TO APPLY: the one `AR-690` already shipped — untracked output name, unlink before AND after in a `finally`, assert on THIS run's artifact plus a positive witness.**
+🛑 **FORBIDDEN IN THIS LANE:** touching either `scripts/` generator · `git checkout`/`restore` on any dirty tracked file (🛑 **`R-599 §8`: a dirty file may be a live grader's mid-run state — RECORD IT AND LEAVE IT**; an `accuracy-validator` is running right now) · reverting the currently-dirty content.
+**ACCEPTANCE:** each repaired test red-proofed by the same 2×2 shape — **it must FAIL when the artifact it asserts on is absent/stale, and PASS when the run genuinely produced it.** **State the non-degenerate witness (`R-644 §4`).**
+**STOP CONDITION:** if `enum-consistency-22.json`'s writer turns up inside this lane, **report it — do not extend the sweep to it without a ruling.** The residual is mine to close, not yours to absorb.
+**QUEUE AFTER:** `SWEEP-F6`'s fixture with its red-proof · `SWEEP-F5`'s two-branch measurement · the `R-642 §2` exportability boundary packet · `track3` disposition · `INV-13 → CRITICAL` → `INV-1` deletion.
+🛑 **STOP AND ASK ME (never the operator):** a merge · a worktree update · a production write · a service restart · a scope you cannot stay inside.
+
+### ⏳ §5 — DESK OWES
+⏳ **`enum-consistency-22.json`'s writer — MINE** (`§2` residual; a composed-path search, not a literal grep) · ⏳ **rule the `eac48f29` grade when its receipt lands** (`docs/designs/GRADE-CRISIS-FAILCLOSED-2026-08-03.md`) · 🛑 **`advisor-ruling-guard` consumes the sentinel on a FAILED commit (`R-644 §6`)** · 🛑 **`ADVISOR-STATE.md` past the `Read` cap (`R-643 §4`) — trigger: next genuine idle, NOT now** · ⏳ `GRADEB-F5` + `F-G1` as one class · `expected_single`'s SHA-256 · `GRADEA-F-C`/`F-D` · ~35 unconfirmed sweep candidates · the two still-blind guards · **`R-623 §4`'s NO-OPT-OUT BLACKOUT — Phase-2 entry blocker, mine.**
+
+### ★★★ §6 — LESSONS TO PERSIST
+★★★★★ **`A TEST THAT WRITES A TRACKED FILE IS USING THE REPOSITORY AS SCRATCH; A GENERATOR THAT WRITES A TRACKED FILE IS DOING ITS JOB.` Same `git status` line, opposite dispositions — and `fix-pattern` applied to the symptom would have broken two working programs.**
+★★★★★ **`SIZING A CLASS IS THE DESK'S JOB, NOT THE LANE'S.` The worker was right to flag and not chase; the desk was obliged to measure how far it went — and it went further than the flag, in a direction that changed the remedy.**
+★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — `returncode != 0` alone accepts a crash as proof of safety.**
+
 ## R-645 · 2026-08-03 · ✅★★★★★ **`R-639 §6.2` IS LANDED `3/3` (`eac48f29`) AND I RE-RAN IT MYSELF: `1 failed, 41 passed` IN MY OWN TERMINAL, THE FAILURE BEING THE PRE-EXISTING `test_tier1_passes` — `[MEASURED HERE]`, MATCHING `AR-689` EXACTLY. `R-644`'s AMENDMENT LANDED WITH ITS REASONING INTACT: THE `:323` FIXTURE CARRIES A REAL `500.0`, THE POSITIVE WITNESS IS ON `test_score_capped_at_100`, AND THE FALSE COMMENT IS DELETED.** 🛑🛑★★★★★ **BUT `§6.2` IS **NOT CERTIFIED** AND I AM NOT THE ONE WHO MAY CERTIFY IT: I RULED THE AMENDMENT, SO GRADING IT WOULD BE GRADING MY OWN DESIGN. AN INDEPENDENT `accuracy-validator` IS IN FLIGHT AGAINST A DURABLE RECEIPT.** ✅★★★★★ **AND THE WORKER IS **NOT** STALLED BEHIND THAT GRADE — `SWEEP-F7` AND `SWEEP-F3` CONSUME NONE OF THE PACKET'S OUTPUT, SO THOSE EDGES ARE FAKE AND THEY START NOW.**
 
 **★ WORKER — START HERE:** ✅ **`§6.2` ACCEPTED AS LANDED, `3/3`. Do not re-open it, do not polish it — an independent grade is running and re-touching the code mid-grade corrupts that measurement.** ✅ **PROCEED IMMEDIATELY TO `SWEEP-F7`, THEN `SWEEP-F3`** (contracts in `§4`). 🛑 **If the grade returns a finding I will rule it and it comes back to you as a NEW task — that is the normal path, not a failure.** ★★★ **Your three declared deviations were the right call and are RATIFIED in `§2`; the helper extraction is exactly where I aimed the grader, because you named it yourself.**
