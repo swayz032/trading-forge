@@ -4,6 +4,17 @@
 
 ---
 
+## AR-650 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-605 §5.1`, MAKE THE LANDING DETECTOR CATCH A *SWALLOWED* PLANT. OFF HOLD, STARTED.**
+
+**TASK READ AS:** the detector must distinguish **"requested AND had an effect"** from **"requested AND swallowed at the consumer"**, and go **RED on a swallow, NAMING the row**. ✅ **PROPERTY, NOT MECHANISM — `R-605 §5.1` says so explicitly and gives the reason (two prescribed mechanisms were wrong tonight). I will not treat the `red-proof.mjs` exit-code lead as an instruction.**
+**DELIVERABLE:** a per-row table over all **`37`** — `DISTINGUISHABLE (red-proofed on a swallow)` / `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` / `REQUIRES run.mjs CHANGE (stopped and asked)` — with the swallow red-proof demonstrated on **at least the three rows the grader swallowed**, `emitted_module` among them.
+🛑 **CONSTRAINTS I AM WORKING UNDER, NAMED UP FRONT BECAUSE `R-605 §3` IS ABOUT EXACTLY THIS:** `run.mjs` **READ-ONLY**; allowed files `plant-landing.mjs` + harnesses in `prototypes/p0-vnext-admission/`. ★★★★★ **`A RESTRICTION IN THE BRIEF IS A HOLE IN THE RESULT` — so I will state, per row, WHICH claim the read-only constraint makes uncheckable rather than reporting coverage I do not have. `INDISTINGUISHABLE-ON-AVAILABLE-OBSERVABLES` is a COMPLETE answer per `§5.1` and I will use it without padding.** 🛑 **If a row needs `run.mjs` changed I STOP AND ASK — it is the object under test.**
+🛑 **WHAT I WILL NOT DO:** not pin more digests as the fix (`emitted_module`'s digest is byte-identical landed vs swallowed `[MEASURED BY GRADED INSTRUMENT]` — a tighter pin there is a guard that cannot fire) · not touch `run.mjs` · not re-litigate `4d`, column (i), or the `(A)`/`(B)`/`(C)` mapping · not report `37/37` as refuted (`R-605 §4`: **the claim about the world and the claim about the instrument are separate verdicts** — the plants very likely DO land; what failed is the instrument's ability to establish it).
+**GRADE OF THE INPUT I AM ACTING ON:** the `5/10` refutation and the three swallowed rows are `[MEASURED BY GRADED INSTRUMENT]`, not measured by me. **My first act is to re-derive which three rows those are from the committed receipt (`c602c5c5`) rather than from the ruling's prose.**
+**FIRST OBSERVABLE:** this receipt. **NEXT:** the per-row disposition, then the red-proof. **ETA:** substantive report this session; I will report an honest partial rather than run to exhaustion.
+
+---
+
 ## AR-649 · 2026-08-02 · ✅ **ONE-LINE CORRECTION TO MY OWN `AR-648`: THE EAR CHANNEL IS **MEASURED LIVE**, NOT UNPROVEN. `R-604` READ; IT ASSIGNS ME NOTHING AND I REMAIN ON `R-603 §5.1` HOLD.**
 
 **`AR-648` published `[HYPOTHESIS — UNPROVEN] that the inherited ear's stdout still routes into this post-`/clear` conversation`, with a standing instruction to assume the channel dead if I went quiet.** ✅ **RESOLVED BY THE EVENT IT PREDICTED `[MEASURED HERE]`: `R-604` landed and the ear delivered it to this seat unprompted — `NEW RULING: ## R-604 · (was ## R-603 ·)`. The channel works; the contingency in `AR-648` is spent and should not be acted on.** ★★★ **This is the `wait for one expected signal` resolution, not a re-probe — `background-monitors` records four false `ear dead` calls made by re-probing instead of waiting.**
