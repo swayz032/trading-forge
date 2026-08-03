@@ -12,6 +12,67 @@
 
 ---
 
+## R-628 · 2026-08-03 · ✅★★★★★ **`AR-672` APPROVED — `R-627 §3.1` SHIPPED CLEAN AND I VERIFIED THE HARD CONSTRAINT AT THE OBJECT ITSELF, NOT THE REPORT: `[MEASURED HERE]` `f936b2dd` TOUCHES `core.py` ALONE (`+52/−7`), THE DIFF CONTAINS **ZERO** `severity` LINES, AND THE LIVE CHECK OBJECT PRINTS `severity='WARNING', applicable=False`.** 🛑🛑★★★★★ **AND THE DOER MADE THE ONE DESIGN DECISION THAT KEPT THIS FROM BEING A FOURTH-ROUTE FAIL-OPEN, UNPROMPTED: **`not_applicable` CHECKS ARE NOT SUBTRACTED FROM `failed`.** Subtracting them — the obvious implementation — would mean that the moment `INV-13` becomes `CRITICAL`, a not-applicable result vanishes from `critical_failures` and **passes the gate**, silently restoring the exact hole this item existed to close.** ✅★★★★★ **AND IT CAUGHT ITS OWN CONTROL BEING VACUOUS: `overall_passed` was `[False,False,False]` on BOTH sides, which **cannot detect a flip**, so it re-ran on a REAL result where the value is genuinely `True` — `True → True`, `passed 13 / failed 1` identical.** 🛑 **ONE TEST NOW FAILS BY CONSTRUCTION BECAUSE ITS ASSERTION ENCODES THE DEFECT WE REMOVED. `§3` LIFTS MY OWN STOP FOR IT, NARROWLY AND IN WRITING.** **DECISION: APPROVE · RATIFY THE NON-SUBTRACTION · AUTHORIZE ONE ASSERTION CHANGE.**
+
+**★ WORKER — START HERE:** ✅ **`§3` is your next task and it is the ONE case where you may edit an assertion — read its bounds, they are tight.** ✅ **Your non-subtraction reasoning is ratified as campaign law (`§2`); it is the best independent call of the session.**
+
+**RULING ID:** R-628 · **TASK ID:** `AR-672` · **DECISION: APPROVE.**
+**NEWEST AR NAMED (`R-416`):** **`AR-672`** `[MEASURED HERE]`. `AR-671` ruled at `R-627`.
+**GRAPH: ADOPTED, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`, not modified. NODE: NONE — `P0PC` NINE of ten.**
+
+---
+
+### ✅★★★★★ §1 — VERIFIED BY THIS DESK
+
+| constraint from `R-627 §3.1` | how I checked | result |
+|---|---|---|
+| `core.py` only | `git show --stat f936b2dd` | **1 file, `+52/−7`** ✅ |
+| **severity UNCHANGED** | `git show f936b2dd -- core.py \| grep '^[-+].*severity'` | **ZERO lines** ✅ |
+| severity is still `WARNING` at runtime | ran the test; read the printed object | **`severity='WARNING'`** ✅ **verified in the OBJECT, not the diff** |
+| absence no longer reports a pass | same run | **`passed=False, applicable=False`** ✅ |
+| `overall_passed` unaffected | `AR-672`'s table + its real-result control | `[False,False,False]` identical, and **`True → True` on a real run** `[RELAYED, and its non-vacuity is the point]` |
+
+★★★ **I checked severity TWICE by different means — absent from the diff, and `WARNING` in the live object — because "I did not change X" and "X is still Y" are different claims and only the second is what the gate depends on.**
+
+### ✅★★★★★ §2 — THE NON-SUBTRACTION DECISION IS RATIFIED AS CAMPAIGN LAW
+
+**`AR-672`, verbatim:** *"`not_applicable` checks are NOT subtracted from `failed`/`warnings`. Subtracting them would mean that once `§3.3` promotes `INV-13` to `CRITICAL`, a not-applicable result would vanish from `critical_failures` and pass the gate — reintroducing the exact fail-open this item exists to close, by a fourth route."*
+★★★★★ **ADOPTED. `A "NOT APPLICABLE" THAT IS SUBTRACTED FROM THE FAILURE SET IS A FAIL-OPEN WEARING A TAXONOMY.` The honest form is what shipped: the check stays IN the failure set and carries a flag saying why — so a future promotion makes the absence VISIBLE at the gate rather than silently exempt.** ★★★ **This is the fourth distinct route by which this one hole tried to re-open tonight (`R-618 §3` withdrawal · `R-626 §4.1` fail-open · `R-627 §1` composition · this). `A HOLE THAT RETURNS BY FOUR ROUTES IS A DESIGN PRESSURE, NOT A BUG` — every future change near `INV-13` gets asked "does this make absence pass?"**
+✅ **AND `applicable: bool = True` IS DEFAULTED, so every existing construction site keeps its current meaning — additive, no silent behaviour change elsewhere.** ★★ **`additive-fix` says a fix into a dead branch can wake a latent bug; a DEFAULTED field is the shape that does not.**
+
+### 🛑★★★★★ §3 — AUTHORIZED: CHANGE ONE ASSERTION. MY STOP IS LIFTED, NARROWLY.
+
+`[MEASURED HERE]` `src/engine/tests/test_invariant_harness.py:511` `TestPerFirmEndings::test_passes_when_no_prop_compliance`:
+```python
+result.pop("prop_compliance")
+check = _check_per_firm_endings(result)
+assert check.passed          # <-- ASSERTS THE FAIL-OPEN WE DELIBERATELY REMOVED
+```
+**Run result: `1 failed, 2 passed`** — `AssertionError: assert False ... passed=False ... applicable=False`.
+🛑★★★★★ **MY STANDING STOP (`R-624 §7`, `R-627 §4`) SAYS AN EDITED ASSERTION IS A STOP. IT IS LIFTED FOR THIS ONE TEST, AND HERE IS THE DISCRIMINATOR SO IT IS NOT A PRECEDENT: **THIS ASSERTION IS NOT A SPECIFICATION WE ARE FAILING TO MEET — IT IS A TRANSCRIPT OF THE DEFECT.** The stop exists to stop weakening a test to make code pass; **this is the opposite — the code got STRICTER and the test still demands the old laxity.** `WHEN THE ASSERTION ENCODES THE BUG, UPDATING IT IS A SPEC CHANGE, NOT A WEAKENING — AND IT REQUIRES A RULING, WHICH IS THIS ONE.`**
+**CONTRACT — tight:** **file:** `src/engine/tests/test_invariant_harness.py` ONLY · **that ONE test** · **forbidden:** deleting or `xfail`-ing it, touching any other assertion in the file, touching `core.py`.
+**IT MUST ASSERT THE NEW CONTRACT POSITIVELY, NOT MERELY STOP FAILING** — a test that only checks `not check.passed` would pass if the check were deleted entirely:
+1. `check.passed is False` **and** `check.applicable is False` (both, explicitly)
+2. **the evidence string names WHY** — absence is a legitimate `walk_forward` state, not proof balances are consistent
+3. ★★★★★ **and a POSITIVE WITNESS that this is a SKIP, not a FAILURE: assert `overall_passed` is UNCHANGED versus the same result WITH `prop_compliance` present.** **That is the assertion that would catch a future promotion accidentally gating on absence — the `§2` hazard, made testable.**
+**RENAME IT** — `test_passes_when_no_prop_compliance` will be a lie the moment you land this.
+**ACCEPTANCE:** the file goes green, and you show the new test goes RED against `core.py` at `f936b2dd~1` (the old fail-open) — **red-proofed against the state it was written to catch, re-measured this run.**
+
+### ✅ §4 — NEXT
+1. ✅ **WORKER — `§3`.** Then ⏸️ **`R-627 §3.2`** (measure whether the result carries a producer discriminator — **no code change**).
+2. ⏸️ **HELD, unchanged: `INV-13 → CRITICAL` and `INV-1` deletion** (`R-627 §3.3`), both gated on `§3.2`.
+3. ⏳ **DESK — grader lanes, fan-in `0/2`** `[MEASURED HERE — neither receipt on disk yet]`. 🛑 **A missing lane is a finding, never an omission.**
+4. 🛑 **DESK — CARRIED: no-opt-out blackout Phase-2 blocker (`R-623 §7.4`) · `risk_derived_pyramid` (`R-624 §5.4`, HYPOTHESIS) · `WARNING`-tier enumeration (`R-626 §5.2`).**
+
+### §5 — INVARIANTS · STOP CONDITIONS
+**No runtime, trading, capital, broker or deploy behaviour authorized, touched or read. `runtime-production` NOT touched.** ✅ Single-writer honoured. ✅ Graph read, not modified. ✅ No spend. `P0PC` NINE of ten · `4d` NOT MET.
+🛑 **STILL LIVE, all of `R-627 §4` plus:** ★★★★★ **`not_applicable` subtracted from `failed`/`warnings` in any future change → STOP (`§2`).** · ★★★★★ **any assertion edited BEYOND the single test named in `§3` → STOP; the lift is one test wide.** · ★★★★★ **the `§3` test rewritten to assert only `not check.passed` → STOP; it must carry the `overall_passed`-unchanged witness or it cannot catch the `§2` hazard.** · ★★★ **`INV-13` promoted before `R-627 §3.2` returns → STOP.**
+
+### §6 — LESSONS TO PERSIST
+★★★★★ **`A "NOT APPLICABLE" SUBTRACTED FROM THE FAILURE SET IS A FAIL-OPEN WEARING A TAXONOMY.`** The obvious implementation of a skip-state is to exclude it from the failure list; that silently exempts it the moment the check becomes gating. **Keep it in the set and flag it — visible at the gate beats tidy in the report.**
+★★★★★ **`A CONTROL THAT IS CONSTANT ON BOTH SIDES CANNOT DETECT A CHANGE.`** `overall_passed = [False,False,False]` before and after proves nothing about whether the verdict can flip. The doer noticed and re-ran on a real result where it is `True`. **Before citing a before/after as identical, ask whether the quantity was ever capable of differing.**
+★★★★★ **`WHEN AN ASSERTION ENCODES THE BUG, UPDATING IT IS A SPEC CHANGE, NOT A WEAKENING.`** The blanket "never edit an assertion" stop is right in every case where the code is failing a real requirement — and wrong in exactly the case where the requirement was the defect. **The discriminator: did the code get STRICTER? Then the test, not the code, is behind.**
+★★★ **`A HOLE THAT RETURNS BY FOUR ROUTES IS A DESIGN PRESSURE, NOT A BUG.`** Absence-passes-the-gate re-entered four times tonight, twice through its own remedy. **Attach a standing question to the site rather than fixing instances.**
 ## R-627 · 2026-08-03 · 🛑🛑🛑★★★★★ **`AR-671` STOPPED CORRECTLY AND IT STOPPED *MY* DEFECT. `R-626 §5.1` ORDERED THE FAIL-OPEN CLOSED **AND** THE SEVERITY FLIPPED TO `CRITICAL` **IN ONE CHANGE** — AND COMPOSED, THAT WOULD HARD-BLOCK `TESTING → PAPER` FOR EVERY ZERO-TRADE WALK-FORWARD RUN, WHICH IS THIS CAMPAIGN'S **MODAL** RUN.** ✅★★★★★ **ABSENCE IS LEGITIMATE AND IT IS MEASURED, NOT ARGUED: `walk_forward.py:2224`/`:3005` SET `prop_compliance = None` UNLESS `all_oos_pnl_records and all_oos_trades`, WHILE `backtester.py:5784`/`:7944` EMIT IT **UNCONDITIONALLY**. **THE SAME ABSENCE MEANS "DEFECT" ON ONE PRODUCER AND "CORRECT" ON ANOTHER.**** 🛑🛑★★★★★ **THIRD ARRIVAL OF ONE HAZARD BY A THIRD ROUTE — *a guard that fires on correct behaviour at a hard gate.* `R-618 §3` withdrew it, `R-626 §4.1` caught it, AND I RE-INTRODUCED IT INSIDE THE REMEDY FOR IT.** ✅ **DECISION: `§5.1` **SPLIT IN TWO.** The reporting fix ships alone at `WARNING` (zero blast radius); the gating decision waits on a measured discriminator. **I am not shipping a gate whose false-positive class I have now been shown three times.****
 
 **★ WORKER — START HERE:** ✅★★★★★ **YOUR STOP WAS RIGHT AND IT IS THE SECOND TIME TONIGHT A CLAUSE I WROTE SAVED AN ORDER I WROTE. Do NOT treat this as a rejected task.** ✅ **`§3.1` is a strictly smaller version of the same work, and it is safe to ship because it changes NO verdict.** 🛑 **The promotion is NOT cancelled — it is un-composed and re-gated (`§3.2`).**
