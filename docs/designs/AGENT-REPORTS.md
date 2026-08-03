@@ -4,6 +4,61 @@
 
 ---
 
+## AR-647 · 2026-08-02 · ✅★★★★★ **`R-602 §4.1` DONE — ALL **`37`** PLANTS ARE PROVEN TO LAND, EACH ATTRIBUTABLE TO ITS OWN INJECTION, AND **`0` ARE UNPROVABLE.**** 🛑★★★★★ **BUT THE RULING'S PREMISE WAS WRONG AND THAT IS THE FIRST FINDING: `PLANT_WITNESS` COVERS **`2` OF `37`** — `own_extra_inside_anchor` AND `substituted_diagnostic`, BOTH INSIDE THE `34(d-u)` ANCHOR WORK. **READING IT WOULD HAVE CERTIFIED `2` AND SAID NOTHING ABOUT `35`.**** ✅★★★★★ **THE PROOF COMES FROM A CHANNEL THAT REACHES EVERY ROW INCLUDING THE TWO THAT TRUNCATE: `EFFECT-DIGEST`, EMITTED FROM `run.mjs`'s `process.on('exit')` HOOK. **`37` RUNS, `37` DISTINCT DIGESTS, `0` COLLISIONS, `0` SHARING THE CONTROL'S.****
+
+**RULING ID:** `R-602 §4.1` · **TASK ID:** AR-647 · **PRIOR:** AR-646 · **ARTIFACT: `prototypes/p0-vnext-admission/plant-landing.mjs` (ships in THIS commit, `ar-ships`).** **GRAPH NODE: `P0PC` — measured, **NO TRANSITION PROPOSED.****
+
+### 🛑★★★★★ §1 — THE RULING'S `[HYPOTHESIS]` IS REFUTED, AND IT MATTERED
+
+**`R-602 §4.1` said *"a witness channel already exists; determine whether it covers all 37 or only some"*, graded `[HYPOTHESIS — I have read three lines of `PLANT_WITNESS` and not its consumers]`.** ✅ **That grade was right and the hypothesis was wrong.**
+`[MEASURED HERE, `grep -n PLANT_WITNESS run.mjs` — FOUR sites, all of them]` `:348` declares · `:673` prints · **pushes ONLY at `:398` and `:413`, both inside the `34(d-u)` anchor work.** ★★★ **COVERAGE `2/37`. Had I read the witness and reported it as the answer, I would have certified two knobs and left `35` exactly as unproven as they were — while the report read as complete. `A PARTIAL RESULT THAT READS AS COMPLETE` is this campaign's most-convicted shape, and the ruling's own honest grade on its premise is what stopped it here.**
+
+### ✅★★★★★ §2 — THE CHANNEL THAT DOES COVER ALL `37`, AND WHY IT REACHES THE TRUNCATED ROWS
+
+`[MEASURED HERE]` **`run.mjs:95-103` emits `EFFECT-DIGEST` from a `process.on('exit')` hook — deliberately, and the file says why: *"because the collection gate below EXITS EARLY … a fingerprint missing exactly when a class fires would be blind to the classes that matter most."*** ✅★★★ **So the `5`-line `module_collection_add` run — the row that truncates — still prints a digest (`67ba9827…`). **The one design decision `R-596 §3` argued about is the reason this task was possible at all.****
+
+### ✅ §3 — THE TABLE `[MEASURED HERE — `node plant-landing.mjs`, exit 0]`
+
+```
+C0 control x3 : digests=1 distinct  exit=0,0,0  stderr_bytes=0,0,0
+C0 control digest: c5eb7df2c8c4d6ccffdc993e15b1e55b3978641112aa44be2cb21a4a8c0c51f4
+
+POPULATION: 37 pinned knobs
+LANDED     : 37/37   {"digest≠control": 35, "PLANT_WITNESS": 2}
+UNPROVABLE : 0
+UNMEASURED : 0
+distinct digests across the 37: 37 | collisions: 0 | sharing the CONTROL digest: 0
+PLANT_WITNESS coverage: 2/37 (own_extra_inside_anchor, substituted_diagnostic)
+```
+✅★★★ **`C0` IS THE ROW THAT MAKES THE OTHER `37` MEAN ANYTHING: the control was run THREE times and yielded ONE digest. **Comparing digests is not an instrument until the control's own digest is shown not to wander** — and one repeat would have proved nothing. ⚠️ **This is EVIDENCE of determinism, not PROOF: `R-600 §10` leaves genuine harness nondeterminism open and I am NOT closing it.**
+✅★★★★★ **THE ATTRIBUTION ARGUMENT, STATED SO IT CAN BE ATTACKED: between the control run and a knob's run, **the environment variable is the only thing that changed** — `run.mjs` is byte-identical across all `40` runs (`§6`). So a digest that differs is attributable to that injection. **`37` distinct digests with `0` collisions means no two knobs produced the same effect ledger, which is stronger than each merely differing from the control.**
+
+### ✅★★★★★ §4 — RED-PROOF IN TWO STAGES, BECAUSE THE FIRST ONE IS NOT THE CLAIM
+
+**`run.mjs` is READ-ONLY under `§4.1`, so a plant is disabled the only way left: a knob NAME with no implementation. Nothing in `run.mjs` matches it, so nothing is planted — precisely the state a silently-no-opping knob would be in.**
+- **STAGE 1 — the CLASSIFIER discriminates.** `partition_overlap_DISABLED` · `twin_DISABLED` · `zzz_no_such_knob_at_all` → **all three `exit=0`, digest `==` control, stdout `==` control → `UNPROVABLE`, `3/3` caught and NAMED.** ★★★ **They exit `0`, not `1` — a disabled plant does not even reach the gate, which is exactly why an exit code alone cannot certify an injection.**
+- **STAGE 2 — the GUARD FAILS THE COMMAND.** ★★★★★ **Stage 1 proves the classifier's return value; it does NOT prove the process reddens. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT`.** So the instrument SPAWNS ITSELF over a doctored population `[emitted_module, fixture_invalid, twin_DISABLED]` → **`exit=1`**, output **NAMES `twin_DISABLED`**, and ✅ **the two real knobs in that same population still pass — so the red is discrimination, not a blanket failure.**
+- ✅ **The guard used by the red-proof is the SAME `faultsFor()` the real run uses** — one rule, not a test-only copy.
+- ✅ **IN-MEMORY / NO-DISK-MUTATION PATTERN KEPT per `§4.1`:** nothing is written anywhere; the doctored population is an argv list, and `--population` is an explicit argv mode rather than an env switch **so it can never silently redirect a real measurement.**
+
+### ✅ §5 — WHAT THIS BUYS `4d-i`, PRECISELY AND NO FURTHER
+
+✅ **`R-602 §5`'s new STOP — *"`4d-i`'s band 8 cited as unqualified before `§4.1` lands"* — is now answerable: the `37` exits are no longer bare exit codes. **Each is joined to a measured, unique effect-ledger change caused by its own injection.****
+🛑 **AND IT CHANGES NOTHING ABOUT `4d-ii` OR THE READING.** `R-600 §2`'s refutation stands untouched: column (i) is a tautology by construction, `37`-wide. **Proving the plants land makes `4d-i` mean what it says; it does not make column (i) mean anything.**
+
+### ⚠️ §6 — INVARIANTS AND WHAT I DID **NOT** MEASURE
+
+✅ `[MEASURED HERE]` **`run.mjs` NOT touched — no witness added to it — and all `11` pre-existing `.mjs` are `sha256`-identical to the baseline captured before any of tonight's runs.** ✅ `git status --porcelain -- prototypes/` shows exactly one line, this new file. ✅ `runtime-production` NOT touched, NOT read. ✅ No monitor armed, retired or killed. ✅ No merge, worktree update, production write, restart, credential or spend. ✅ Single-writer honoured. ✅ **`R-602`'s forbidden list untouched: `run.mjs:138` · column-(ii) exit code · the `:108`/`:746` caption · `F-1`/`F-2`/`F-3`.**
+- 🛑 **"LANDED" MEANS *the injection changed the recorded effect ledger*. It does NOT mean the plant landed WHERE ITS AUTHOR INTENDED, or that it exercises the class it names.** A knob that mutated the wrong row would still show a distinct digest. **That is a per-knob semantic claim, `37` of them, and I did not make it.**
+- 🛑 **The knob→class mapping is still NOT derived** (`AR-645 §8`, unchanged) — this table is over KNOBS.
+- 🛑 **`UNPROVABLE` was defined but never observed on a real knob**, so that branch's behaviour on a REAL population is `[UNENUMERATED]` — it is exercised only by the three synthetic disabled names.
+- 🛑 **Determinism is evidence, not proof** (`§3`) · **every row is single-knob; combinatorial injections NOT measured** · **`red-proof.mjs`'s `43` denominator NOT re-derived** · **the `20`-of-`23` unexercised `INSTRUMENT FAULT` throws NOT touched.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED`. ★ Two instruments now stand behind `4d-i` and I built both — `THE DOER DOES NOT GRADE HIS OWN INSTRUMENT`. The natural claim to brief an `accuracy-validator` to REFUTE is: *"all 37 plants land, and a plant that does not land cannot be scored as one."***
+**NEXT SMALLEST TASK: none held.**
+
+---
+
 ## AR-646 · 2026-08-02 · ⏱️ **START-RECEIPT — `R-602 §4.1`, PROVE EACH INJECTION LANDS.** 🛑★★★★★ **AND THE RULING'S OWN `[HYPOTHESIS]` IS ALREADY REFUTED, WHICH CHANGES THE DELIVERABLE: `PLANT_WITNESS` COVERS **`2` OF `37`**, NOT `37`.**
 
 **RULING ID:** `R-602 §4.1` · **TASK ID:** AR-646 · **PRIOR:** AR-645 · **GRAPH NODE: `P0PC` — no transition proposed.**
