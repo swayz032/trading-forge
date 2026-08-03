@@ -4,7 +4,71 @@
 
 ---
 
-## AR-665 · 2026-08-03 · 🛑🛑★★★★★ **INCIDENT — I WAS DEAF FOR THREE RULINGS (`R-619`, `R-620`, `R-621`) AND DID NOT KNOW IT. THE OPERATOR CAUGHT IT, NOT ME.** ⚠️★★★★★ **AND THE MECHANISM IS WORSE THAN "NO MONITOR": **MY EAR WAS ALIVE THE WHOLE TIME AND REPORTING INTO A DEAD CONVERSATION.** ✅ **BACKFILLED, RE-ARMED IN THIS SESSION, VERIFIED BY ITS OWN FIRST EVENT.**
+## AR-666 · 2026-08-03 · ✅★★★★★ **`R-621 §5.1` — THE FALLBACK REPAIR IS BUILT AND RED-PROOFED. `2/8` ARMS ON THE UNFIXED BASE → `8/8` ON THE FIX, SAME UNCHANGED HARNESS.** ✅★★★★★ **AND THE RED ARM INDEPENDENTLY REPRODUCED `R-618 §4`'s FINDING WITHOUT BEING BUILT TO LOOK FOR IT: on the base, `kept out-window = 0/8` and `kept in-window = 5/5` — **THE ENGINE KEEPS ONLY MACRO-WINDOW ENTRIES.**** 🛑 **ZERO REGRESSIONS — the same `6` tests fail identically before and after, MEASURED on the same tree.** 🛑 **ARMS 3 AND 4 ARE NOT DELIVERABLE: THE MODES THEY NAME DO NOT EXIST IN THE CODE. Reported, not faked.** **DIFF ONLY — no push, no merge, no PR.**
+
+**TASK:** `R-621 §5.1` (contract `R-619 §3`, arms `R-616 §6.2` + eighth `R-618 §6.3`). **Re-confirmed by `R-622`'s START-HERE.**
+**TREE:** isolated worktree `C:\Users\tonio\Projects\wt-eventmask-fix-20260803`, **SHA-PINNED, detached at `e42da76b`** (campaign HEAD at spawn). **The campaign tree was NOT modified.**
+**ARTIFACT:** `docs/designs/EVENTMASK-POLARITY-REPAIR-2026-08-03.patch` (`5236` bytes). **`1` file, `+42 / −10`.**
+⚠️ **`worker-execution` RE-INVOKED MID-TASK — the guard BLOCKED my first write because four rulings had landed since I loaded it. It was right and the block was correct.**
+
+### ✅ THE DEFECT, CONFIRMED THREE WAYS BEFORE I TOUCHED ANYTHING `[MEASURED HERE]`
+
+| surface | polarity | evidence |
+|---|---|---|
+| canonical producer `economic_calendar.py:1236` | **True = SIT_OUT** | *"True = bar is within an event window (SIT_OUT)"* · *"True where entries should be blocked"* |
+| consumer `signals.py:288` | **expects True = SIT_OUT** | `block = ~event_mask`, then `entry & block` — with True=SIT_OUT this correctly keeps non-window entries |
+| **defective fallback** `backtester.py:3916` | 🛑 **True = ALLOW** | *"Return a bool mask: True = ALLOW trade"*, `mask = ones(...)  # True = allow` |
+
+★★★ **The consumer's variable is NAMED `block` but holds the ALLOWED mask. It is a misnomer, NOT a bug — and it is exactly the kind of name that invites the wrong fix. `signals.py` was NOT touched.**
+
+### ✅ THE CHANGE — POLARITY ONLY, BOTH BUILDERS
+
+**`_build_default_event_mask_et`:** `ones` → `zeros`, `mask[i] = False` → `mask[i] = True`, docstring inverted and given the reason.
+**`_build_default_event_mask_utc` (legacy):** ⚠️ **carried the IDENTICAL inversion and would have been left live by a single-function fix.** `fix-pattern`: same class, same wave.
+**Telemetry (eighth arm), `:3980`:** `(~event_mask).sum()` → `event_mask.sum()`, now `masked/total`, **the `> 0` guard REMOVED so silence can never mean "nothing masked"**, plus an explicit `WARNING` line when **all** bars are masked.
+✅ **PARSE-FAILURE BEHAVIOUR DELIBERATELY PRESERVED:** an unparseable timestamp still leaves the bar TRADABLE (initial was `True`=allow, now `False`=tradable — same effect). **Changing it to fail-closed would be correct-looking scope creep and is NOT in this contract. Flagged for the desk, not done.**
+
+### ✅ ARMS — RED/GREEN ON THE SAME UNCHANGED HARNESS
+
+**INSTRUMENT:** the arms harness **extracts the two builders' REAL source out of `backtester.py` by AST** and executes it. ★★★★★ **It is NOT a hand-copy — `hardcoded-test` says a hand-copied expected value is a fabricated safety claim, and these functions are nested inside `run_backtest` so they cannot be imported.** ✅ **POSITIVE CONTROL that the extraction ran real code: returns a real `ndarray`, `dtype=bool`.**
+
+| arm | UNFIXED base `e42da76b` | FIXED |
+|---|---|---|
+| 1 window bars marked SIT_OUT | 🛑 FAIL `[F,F,F,F,F]` | ✅ PASS |
+| 2 non-window bars tradable | 🛑 FAIL `[T×8]` | ✅ PASS |
+| 5 exits unaffected (mask is the sole return) | ✅ PASS | ✅ PASS |
+| 6 entries INSIDE windows suppressed | 🛑 FAIL `kept 5/5` | ✅ PASS `0/5` |
+| 7 entries OUTSIDE windows survive | 🛑 FAIL `kept 0/8` | ✅ PASS `8/8` |
+| 8 masked count == true blocked count | 🛑 FAIL `reported 8, actual 5` | ✅ PASS `5 = 5` |
+| 1b legacy UTC builder same polarity | 🛑 FAIL `[F,F,T]` | ✅ PASS `[T,T,F]` |
+| CONTROL extraction real | ✅ PASS | ✅ PASS |
+| | **`2/8` — exit 1** | **`8/8` — exit 0** |
+
+🛑🛑★★★★★ **THE RED ARM CORROBORATES `R-618 §4` INDEPENDENTLY: on the base, `kept in-window = 5/5` and `kept out-window = 0/8`. **Entries survive ONLY inside the 8:30/14:00 windows.** I built this fixture to test polarity, not to reproduce the desk's finding, and it reproduced it anyway.**
+
+### 🛑 ARMS 3 AND 4 — NOT DELIVERABLE, AND THE REASON IS A FINDING
+
+`[MEASURED HERE, positive-controlled]` **ARM 3 (*"optional no-calendar mode leaves entries unchanged"*) and ARM 4 (*"required-calendar mode hard-fails"*) NAME MODES THAT DO NOT EXIST.**
+- `event_blackout_default` → **`1` occurrence repo-wide, and it is `backtester.py:3909`'s own comment saying *"not yet a field"*.**
+- `require_event_calendar` / `calendar_required` / `REQUIRE_CALENDAR` → **`0` occurrences.**
+- `EventCalendarConfig` (`config.py:516-518`) carries **only** `policies` and `calendar_source`.
+🛑★★★ **AND THE CONSEQUENCE IS WORTH RULING ON: THERE IS NO OPT-OUT FROM THE DEFAULT BLACKOUT.** The gate at `:3899` needs `request.event_calendar` **with** policies; empty policies fall through to the `elif` and get the default mask anyway. **So the blackout is unconditional on any DSL run with a `ts_event` column.** ✅ **Building those modes is NEW BEHAVIOUR, outside *"fix the fallback and its call-site policy only"* — I did not build them.**
+
+### ✅ REGRESSIONS — NONE, MEASURED NOT ASSUMED
+
+`python -m pytest src/engine/tests/ -q -k "event or mask or signal or blackout"`
+- **FIXED: `6 failed, 438 passed, 6 skipped`**
+- **UNFIXED BASE: `6 failed, 438 passed, 6 skipped` — the SAME six tests, by name.**
+★★★ **Baseline taken in the SAME worktree by reverting only `backtester.py`, so the trees differ in exactly one file. `red-path-decay`: I did not carry a remembered baseline — I re-measured it this run.** The six (`test_entry_windows` ×4, `test_skip_engine` ×2) are **PRE-EXISTING and untouched by this change.** ⚠️ **I did NOT diagnose them; they are named here so the desk can decide whether they are already owed.**
+
+### ⚠️ WHAT I DID **NOT** MEASURE
+
+1. 🛑 **NO END-TO-END BACKTEST.** Arms 6/7 prove the effective behaviour **through the consumer's expression** (`entry & ~mask`), evaluated in the harness — **not by running `run_backtest` and counting real trades.** ★★★★★ **This is the honest ceiling of this delivery: `AR-658` recorded that no fixture it could build makes the engine emit an entry signal, and I did not solve that. The `32 → 0` reproduction named in arm 6 is therefore proven at the MASK level, not from a live run.**
+2. **The `76.89%` / `30`-survivor figures were NOT re-derived** — those are the graded instrument's on real `--smoke` data.
+3. **No verification that the repaired path produces trades on real data** — that is the next question and it needs data I did not run.
+4. **`runtime-production` NOT read, NOT touched.** No push, no merge, no PR, no commit in the isolated worktree.
+
+**RECOMMENDATION: APPROVAL_REQUESTED** on the diff. **NEXT SMALLEST TASK:** the desk's call — either a live run to convert arm 6/7 from mask-level to trade-level, or `R-620 §4.1` (`INV-13` on a capped run), which is queued behind this. — I WAS DEAF FOR THREE RULINGS (`R-619`, `R-620`, `R-621`) AND DID NOT KNOW IT. THE OPERATOR CAUGHT IT, NOT ME.** ⚠️★★★★★ **AND THE MECHANISM IS WORSE THAN "NO MONITOR": **MY EAR WAS ALIVE THE WHOLE TIME AND REPORTING INTO A DEAD CONVERSATION.** ✅ **BACKFILLED, RE-ARMED IN THIS SESSION, VERIFIED BY ITS OWN FIRST EVENT.**
 
 **RAISED BY:** the operator — *"YOU DONT HAVE YOUR MONITOR YOU DIDNT RECIEV THE RULING."* **Correct on both counts.**
 

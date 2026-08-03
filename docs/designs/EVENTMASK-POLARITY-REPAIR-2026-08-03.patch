@@ -1,0 +1,98 @@
+diff --git a/src/engine/backtester.py b/src/engine/backtester.py
+index 177ec9e1..e04c9ab8 100644
+--- a/src/engine/backtester.py
++++ b/src/engine/backtester.py
+@@ -3913,15 +3913,32 @@ def run_backtest(
+         _ts_series = df["ts_event"]
+ 
+         def _build_default_event_mask_et(ts_et_series: "pl.Series") -> "np.ndarray":
+-            """Return a bool mask: True = ALLOW trade, False = SIT_OUT.
++            """Return a bool mask: True = SIT_OUT (blocked), False = tradable.
+ 
+             Blocks bars falling in 8:30-9:00 ET and 14:00-14:30 ET windows.
+             M3 FIX: Uses ts_et directly (Eastern Time) — zero DST ambiguity.
+             8:30 ET is ALWAYS 08:30 in the ts_et string regardless of EST/EDT season.
++
++            POLARITY (R-621 §5.1 repair): True = SIT_OUT. This matches the
++            canonical producer economic_calendar.generate_event_mask
++            ("True = bar is within an event window (SIT_OUT)") and what
++            signals.generate_signals consumes at signals.py:288
++            (`block = ~event_mask`, then `entry & block` — so a True here
++            correctly removes that bar's entry).
++
++            BEFORE THIS FIX this builder returned True = ALLOW, the exact
++            inverse of both. That made `~mask` True OUTSIDE the windows, so
++            entries were kept ONLY inside the 8:30/14:00 windows and removed
++            everywhere else — a perfect inversion of intent.
++
++            PARSE FAILURE: a None/unparseable timestamp leaves the bar at its
++            initial value, which is now False = tradable. That preserves the
++            prior effective behaviour (initial was True = allow). Deliberately
++            unchanged — this repair is scoped to polarity only.
+             """
+             import numpy as _np_ev
+             n = len(ts_et_series)
+-            mask = _np_ev.ones(n, dtype=bool)  # True = allow
++            mask = _np_ev.zeros(n, dtype=bool)  # False = tradable, True = SIT_OUT
+ 
+             for i in range(n):
+                 ts_val = ts_et_series[i]
+@@ -3944,7 +3961,7 @@ def run_backtest(
+                     in_fomc_window = (14 * 60 + 0) <= total_min < (14 * 60 + 30)
+ 
+                     if in_morning_window or in_fomc_window:
+-                        mask[i] = False
++                        mask[i] = True  # True = SIT_OUT
+                 except Exception:
+                     continue
+             return mask
+@@ -3955,9 +3972,12 @@ def run_backtest(
+         else:
+             # Legacy fallback — ts_et not available (should be rare post-data-loader fix)
+             def _build_default_event_mask_utc(ts_series: "pl.Series") -> "np.ndarray":
++                """Same polarity contract as _build_default_event_mask_et:
++                True = SIT_OUT (blocked), False = tradable. Carried the
++                identical inversion before the R-621 §5.1 repair."""
+                 import numpy as _np_ev
+                 n = len(ts_series)
+-                mask = _np_ev.ones(n, dtype=bool)
++                mask = _np_ev.zeros(n, dtype=bool)  # False = tradable, True = SIT_OUT
+                 for i in range(n):
+                     ts_val = ts_series[i]
+                     if ts_val is None:
+@@ -3972,17 +3992,29 @@ def run_backtest(
+                         in_morning_window = (12 * 60 + 30) <= total_min < (14 * 60 + 0)
+                         in_fomc_window = (18 * 60 + 0) <= total_min < (19 * 60 + 30)
+                         if in_morning_window or in_fomc_window:
+-                            mask[i] = False
++                            mask[i] = True  # True = SIT_OUT
+                     except Exception:
+                         continue
+                 return mask
+             event_mask = _build_default_event_mask_utc(_ts_series)
+-        _masked_bars = int((~event_mask).sum())
+-        if _masked_bars > 0:
++        # ── Eighth arm (R-618 §4 / R-621 §5.1): report the count ACTUALLY masked.
++        # Before the repair this read `(~event_mask).sum()` — the COMPLEMENT of
++        # what it blocked — so it announced 30 while suppressing 370, and the
++        # `> 0` guard meant TOTAL suppression printed NOTHING AT ALL.
++        # With True = SIT_OUT the blocked count is event_mask.sum(), and the
++        # line is unconditional so silence can never mean "nothing masked".
++        _total_bars = int(event_mask.size)
++        _masked_bars = int(event_mask.sum())
++        print(
++            f"Default event blackout: masking {_masked_bars}/{_total_bars} bars "
++            f"(8:30-9:00 ET + 14:00-14:30 ET windows — FOMC/CPI/NFP SIT_OUT). "
++            f"Pass event_calendar with explicit policies to override.",
++            file=sys.stderr,
++        )
++        if _total_bars > 0 and _masked_bars == _total_bars:
+             print(
+-                f"Default event blackout: masking {_masked_bars} bars "
+-                f"(8:30-9:00 ET + 14:00-14:30 ET windows — FOMC/CPI/NFP SIT_OUT). "
+-                f"Pass event_calendar with explicit policies to override.",
++                "WARNING: default event blackout masked ALL "
++                f"{_total_bars} bars — every entry signal will be suppressed.",
+                 file=sys.stderr,
+             )
+ 
