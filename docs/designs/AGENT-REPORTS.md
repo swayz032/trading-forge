@@ -4,6 +4,36 @@
 
 ---
 
+## AR-792 · 2026-08-04 · ⚡ **PRE-LANE-32 READ (permitted, still held). TWO RESULTS: `AR-787`'s `288` IS CORROBORATED BY A SECOND, DIFFERENT INSTRUMENT — AND THE POPULATION GENERATOR JOINS ON A MODULE'S *TAIL NAME*, WHICH IS A STABILITY QUESTION `R-709 §5`'s STOP CONDITION ASKS ABOUT.** 🛑 **FILED BEFORE THE CONTRACT IS WRITTEN, NOT AFTER.**
+
+**TASK:** reading only (`R-708 §3`). **Nothing built, nothing proposed, both held surfaces untouched.** **Lane 32 is authorized to me and still BLOCKED; this is preparation, not execution.**
+
+### ✅ §1 — `AR-787`'s `288` CORROBORATED BY AN INDEPENDENT PATH
+`AR-787 §4` reported `[CENSUS] root=<repo>/src files=288` from an **AST walk**. `[MEASURED HERE, a plain directory census — a different instrument, not a re-run of theirs]`
+```
+all .py under src/ (minus __pycache__)          628
+  under src/**/tests/                           340
+  NOT under tests/                              288   <- reconciles AR-787's figure EXACTLY
+```
+✅ **`288` is `RELAYED` no longer at this seat — it is `CORROBORATED`, by a census that shares no code with the one that produced it.** ⚠️ **I did NOT reconcile the `14` `ConditionBinding` constructions, only the file count. Different claim, still `RELAYED`, still the grader's.**
+★ **And it is worth naming why the two totals differ at all: `628` vs `288` is a TEST/NON-TEST membership rule, not a disagreement.** `A DIFFERENT TOTAL IS A DIFFERENT POPULATION UNTIL PROVEN OTHERWISE` — proven here, in the cheap direction.
+
+### ⚠️★★★★ §2 — THE GENERATOR JOINS ON A TAIL NAME, AND THAT IS WHAT `R-709 §5`'s STOP CONDITION IS ABOUT
+`[MEASURED, executable lines, `test_flag_off_parameterized_refusal.py:512-523`]` `_regression_population`'s reachability walk contains:
+```python
+for other, tail in tails.items():
+    if tail == parts[-1] and other != mod and reaches(other, seen):
+```
+⇒ **a dependency is resolved to ANY module in the tree whose LAST path segment matches.** `[executable line :510]` `tails = {m: m.rsplit(".", 1)[-1] ...}`. **Two unrelated modules sharing a basename are the same node to this walk.**
+✅ **THE GOOD NEWS, MEASURED FIRST BECAUSE IT BOUNDS THE PROBLEM:** `[MEASURED HERE]` both `_CLOSURE_TARGETS` are **basename-unique in the tree** — `spec_condition_compiler.py` ×1, `spec_family_bindings.py` ×1. **So no direct target is conflated, and the population is not wrong for that reason.**
+⚠️ **THE PART I DID NOT SETTLE:** exactly **three** basenames repeat under `src/` — `__init__.py` ×30 (structural), **`core.py` ×2**, **`liquidity.py` ×2**. 🛑 **Whether either `core.py` or `liquidity.py` sits on a transitive path to a target is `[UNMEASURED]`** — settling it means running the closure, which is Lane-32 work I am not authorized to start. **If one does, the population silently includes files that reach the OTHER module of that name.**
+★★★★★ **WHY THIS BELONGS IN THE CONTRACT AND NOT IN THE DELIVERY: `R-709 §5`'s stop condition is *"if pinning the manifest reddens any existing test, STOP — the population is then not stable and the manifest would embalm an accident."* A tail-name join is precisely a mechanism by which the members can move without the RULE changing.** ⚖️ **I am not proposing a fix and not calling the generator defective — `basename-unique targets` may well be the intended invariant. `A MANIFEST PINS THE ANSWER; IT DOES NOT MAKE THE ANSWER RIGHT.`**
+
+### 🛑 §3 — POSITION
+**HOLD HOLDS; the desk lifts it (`R-709 §11.2`).** Receipt on disk and **untracked**, desk-owed. **I have not opened its verdict.** **Nothing claimed: Gate 2 open · golden strategy `[UNSELECTED]` · `PHASE-1 EXIT 0 of 3` · `runtime-production` `[UNMEASURED]` · no TS parity claim.**
+
+---
+
 ## AR-791 · 2026-08-04 · ✅ **`R-709 §11.1` DISCHARGED — `AR-789` + `AR-790` COMMITTED, GATE RUN AT THE INSTANT OF ACTING.** 🛑★★★★★ **PLUS TWO MECHANICAL FINDINGS I DID NOT GO LOOKING FOR: `R-708`'s HEADER LINE IS GONE FROM THE LEDGER (BODY INTACT, ONE LINE, RECOVERABLE), AND THE GRADE RECEIPT LANDED `59` SECONDS AFTER THE SUPPLEMENT ORDERING IT TO RE-DERIVE IN ISOLATION WAS COMMITTED.**
 
 **TASK:** `R-709 §11.1`. **Still on the `R-708 §3` HOLD** — both source surfaces untouched. **I do not interpret the grade; `R-709 §11.2` makes the verdict the desk's.**
