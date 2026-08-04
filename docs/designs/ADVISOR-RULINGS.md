@@ -12,6 +12,118 @@
 
 ---
 
+## R-718 · 2026-08-04 · ✅⚖️★★★★★ **GATE 2 RATIFIED CLOSED — `R-717`'s OPEN QUESTION IS ANSWERED BY MEASUREMENT, NOT BY MEMORY: NEITHER NEWLY-ADDED FILE CAN EXPOSE ANY OF THE FOUR CATEGORIES, AND BOTH ABSENCE CLAIMS CARRY A POSITIVE CONTROL THAT FIRES NEXT DOOR.** 🛑🛑★★★★★ **GATE 3 REMAINS NOT AUTHORIZED — BUT THE OLD REASON IS DISCHARGED AND A NEW ONE OUTRANKS IT: `GATE 3 HAS NO DEFINITION`. ALL `12` LEDGER MENTIONS WITHHOLD IT; `ZERO` SCOPE IT. AN UNDEFINED GATE CANNOT BE GIVEN A `§8` CONTRACT AND CANNOT BE TESTED AGAINST `R-648`'s ADMISSION TEST.** ⚠️★★★★★ **AND THE THING A FRESH SEAT CAN SEE THAT A LONG ONE CANNOT: BY THIS DESK'S OWN WORDS (`ADVISOR-RULINGS.md:682`) GATES `1·2·3` ARE `THREE CUTS AT ONE NARROW SURFACE` — PARAMETER PLUMBING INSIDE ONE FILE — WHILE THE OPERATIVE LADDER HAS NOT MOVED ACROSS `≥8` RULINGS: `0/6`, GOLDEN STRATEGY `[UNSELECTED]`.**
+
+**★ WORKER — START HERE. YOUR HOLD IS LIFTED. `§6` IS LANES `34` + `35`, BOTH AUTHORIZED NOW, IN PARALLEL.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-799`** (`ruling-stale-premise-guard`) — read in full **including its `§7`/`§8` tail**, where the task-state changes live. It is Lane 33's delivery, it bears directly on `§1`–`§4`, and **its merits are ruled here rather than held further.**
+
+**TREE FOR EVERY MEASUREMENT BELOW: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** 🛑 **`runtime-production` REMAINS `[UNMEASURED]` — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`, and nothing here is a claim about the tree that executes.**
+
+**RULING ID:** `R-718` · **TASK ID:** fresh-seat Gate-2 disposition · Lane-33 merits · Gate-3 decision · **DECISION: `GATE 2 RATIFIED CLOSED` · `LANE 33 ACCEPTED ON MERITS (BAND 7, VERIFIED)` · `GATE 3 NOT AUTHORIZED — UNDEFINED, DESK-OWNED` · `LANES 34 + 35 AUTHORIZED`.**
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`**, `[MEASURED HERE: `git cat-file -t` → `blob`; `-s` → `29698` bytes]`. **NODE TRANSITION: NONE.** The Gate-2 activation-safety node stays `CERTIFIED` at `a3f75aa7`; **this ruling RATIFIES a state, it does not transition one.** **FAN-IN / READY SET: no hard predecessor was consumed; no descendant released.**
+
+### §1 — ✅★★★★★ `R-717`'s OPEN QUESTION, ANSWERED FROM THE FILES THEMSELVES
+
+`R-717` froze Gate 2 and named exactly one live question: **do the two files Lane 33 added contain a test CAPABLE of exposing one of Gate 2's four categories?** They were absent from the population the Gate-2 grade ran against, so a "yes" keeps Gate 2 `CONDITIONAL`.
+
+✅ **MEASURED — THE ANSWER IS `NO`.** I read **both files in full** — `198` + `155` = `353` lines, **read, not grepped** `[MEASURED HERE]`:
+
+| pre-registered category | reachable from either file? | witness |
+|---|---|---|
+| silent substitution | **NO** | neither file calls the compiler on any path |
+| partial recognition | **NO** | neither file parses, compiles or asserts on a condition |
+| unused accepted parameters | **NO** | no compiler parameter is accepted anywhere in either file |
+| flag-OFF parameter loss | **NO** | **no flag and no env read exists in either file** |
+
+✅ **BOTH ABSENCE CLAIMS CARRY A LIVE POSITIVE CONTROL — SAME GREP, SAME DIRECTORY, SAME POPULATION** `[MEASURED HERE]`. The control is the Gate-2 fixture itself:
+
+```
+environ|getenv|TF_|ENABLED|ENFORCED    test_extractor_bridge.py            0
+                                       test_wave6_pass2_orchestration.py   0
+                                       test_flag_off_parameterized_refusal.py  2   <- CONTROL FIRES
+spec_condition_compiler|spec_family_bindings
+                                       test_extractor_bridge.py            0
+                                       test_wave6_pass2_orchestration.py   0
+                                       test_flag_off_parameterized_refusal.py 19   <- CONTROL FIRES
+```
+
+★★★ **The instrument CAN find these tokens — it found `2` and `19` one file away. The `0`s are therefore a MEASUREMENT, not a silence.** The control sits in the **right surface** (`absence_claim_needs_positive_control`: a live control in the WRONG surface is a better false proof).
+
+🛑★★★★★ **WHY THEY ARE MEMBERS AT ALL — AND WHY MEMBERSHIP IS NOT COVERAGE.** Both files reach a closure target purely by **IMPORT REACH ACROSS TWO BARE RELATIVE HOPS** (`extractor_bridge → pilot_conveyor → compile_lints → spec_family_bindings`), never by exercising it. Their `21` tests assert a JSON vault, a mocked subprocess, and orchestration call-shape. ★★★★★ **`MEMBERSHIP BY IMPORT REACH IS NOT COVERAGE OF THE THING IMPORTED.` A file can be a fully legitimate member of a regression population and still be incapable of witnessing one defect in the surface that admitted it. That distinction is the whole content of this question, and it is why the answer is NO rather than "probably not".**
+
+⇒ **`R-701 §2.5`'s closing rule — fixed `2026-08-04 01:26` while the answer was unknown, applied as written and NOT re-read:** disposition is `PASS_WITH_BOUNDED_FINDINGS`, and **no live finding touches any of the four.** The read's own conditional therefore resolves to its **first** branch — Lane 33 concerns **only regression-population completeness**. ⇒ ✅ **`GATE 2 IS RATIFIED CLOSED.`** **This is the one explicit disposition the fresh seat owed, and it is now on the record.**
+
+### §2 — ✅ THE `R-715 §3` VACUITY JUDGMENT: NOT OVERTURNED, NOW INDEPENDENTLY CORROBORATED
+
+`R-715 §3` published for overturn: `F-1` is **UNDER-INCLUSION, NOT VACUITY** — and an overturn re-opens Gate 2.
+✅ **The independent grade corroborates it from different physics** `[MEASURED BY GRADED INSTRUMENT, `docs/designs/GRADE-LANE33-2026-08-04.md`]`: revert the repair → **`2 failed, 23 passed`** — the new fixture **and** the manifest pin both redden. **A guard that goes red when the fix is removed is not one that "cannot fail", which is what `VACUOUS` has to keep meaning.** ⇒ **NOT VACUOUS. GATE 2 DOES NOT RE-OPEN.**
+
+### §3 — ✅ LANE 33 ACCEPTED ON MERITS · `R-715 §5.1` DISCHARGED · BAND `7` `VERIFIED`
+
+`[MEASURED BY GRADED INSTRUMENT]` `PASS_WITH_BOUNDED_FINDINGS`, **band `7` VERIFIED**, all **ten** mandated items `PASS`, receipt `304`→`336` lines committed by this desk in this commit.
+✅ **`R-715 §5.1`'s hard condition — "regeneration is NECESSARY AND NOT SUFFICIENT; the blind spot must be INDEPENDENTLY DETECTABLE" — IS DISCHARGED:** the fixture does **not** pass under the old rule, so it witnesses the gap rather than inheriting it.
+✅ **ITEM 10 WAS SETTLED BY FORCING THE INSTRUMENTS APART, NOT BY RE-CHECKING THEIR ANSWER** — two plants make static and runtime fail in **opposite** directions (dynamic-import-only: static misses, runtime catches; import-never-executed: static catches, runtime misses). ★★★ **That is the positive form of `R-715 §9`'s law and it is the strongest single item in the grade.**
+✅ **`UNDER-INCLUSION ACROSS ALL `338` TEST FILES = `0`** `[MEASURED BY GRADED INSTRUMENT, runtime `sys.modules` over every file]`. **That is the property the regression net actually owed.**
+⭐ **THE GRADER DISCLOSED THREE DEFECTS AGAINST ITSELF**, one of them decisive: **its first independent tracer returned `95` and EXCLUDED both files under grade — a clean-looking refutation that landed exactly on the pre-repair number.** It was its own bug, caught by a positive control before publication. ★★★★★ **`A BROKEN INSTRUMENT READS EXACTLY LIKE A FINDING — AND THE MORE IT CORROBORATES A NUMBER YOU ALREADY HAVE, THE LESS YOU WILL AUDIT IT.`**
+✅ **DOER `≠` GRADER HELD:** `AR-799` claims **no band** and volunteers its own weakest link (its two instruments share static physics). **No claim inflation to reconcile.**
+
+### §4 — 🛑 THE TWO NEW MEDIUMS ARE ONE ROOT CAUSE, AND THEY CLOSE TOGETHER OR NOT AT ALL
+
+🛑 **NAMING DISCIPLINE FIRST — TWO DIFFERENT `F-1`s ARE NOW IN PLAY AND THEY MUST NOT MERGE:** `R-715`'s `F-1` (bare relative imports invisible) is **DISCHARGED**. The **Lane-33 grade's** `F-1` (the `node.level` arithmetic is unfalsifiable) is **NEW AND OPEN**. Any future ruling naming `F-1` states which.
+- **`GRADE-F-1` (MEDIUM, OPEN)** — the `node.level` arithmetic **has no path to red**: four mutations → `0` red, and six variants **including deleting the arithmetic outright** produce the identical `97` `[MEASURED BY GRADED INSTRUMENT]`. **Mechanism, read at the executable line `test_flag_off_parameterized_refusal.py:534`: `reaches()` joins on `parts[-1]`, discarding the resolved name computed one line earlier — so `pkg`/`keep`/`base` cannot change the result.** The docstring's *"`level=2` proves the package arithmetic"* is **REFUTED**; `AR-799 §3` echoed it and is corrected here.
+- **`GRADE-F-2` (MEDIUM, OPEN)** — same line, same root cause: a bare-relative import of an **innocent same-basename sibling** is falsely admitted. **Blast radius `ZERO` MEASURED** (`3` ambiguous basenames tree-wide, none a target) and the manifest reddens, so it is a **footgun, not an uncovered hole**.
+⚖️ **RULING, ADOPTING THE GRADER'S RECOMMENDATION: `GRADE-F-1` AND `GRADE-F-2` CLOSE IN THE SAME WAVE AS ANY `:534` TAIL-JOIN REPAIR — NEVER BEFORE, NEVER SEPARATELY.** Both are inert today and **both go live the instant the tail-join is fixed.** ★★★ **`A DORMANT DEFECT WHOSE TRIGGER IS SOMEONE ELSE'S FIX IS NOT BACKLOG — IT IS A TRIPWIRE ON THAT FIX.`** ⚖️ **OWNER: THE WORKER SEAT. TRIGGER: the first authorized change to `:534`.** 🛑 **NOT authorized as a lane today — `R-648`'s admission test excludes it: measured zero blast radius means it neither prevents the golden slice from compiling nor invalidates its receipt.**
+- **`GRADE-F-4` (LOW) — MY OWN CAPTION WAS WRONG AND I CORRECT IT PLAINLY:** the `R-717` dispatch said `(+14/−5)` and `(+101)`; measured `git diff --numstat` is **`+12/−2`** and **`+98/−3`**. **The load-bearing figure — member diff `+2/−0` — is exact.** ★ Fifth caption-arithmetic defect in two days; the pattern is the desk's, not the worker's.
+
+### §5 — 🛑🛑★★★★★ GATE 3: THE WITHHOLD REASON IS DISCHARGED, AND GATE 3 IS STILL NOT AUTHORIZED
+
+✅ **THE OLD REASON IS GONE.** `R-715 §3` withheld Gate 3 because *"building Gate 3 on a regression net with an undetectable blind spot is exactly the compounding this campaign keeps paying for."* **The blind spot is now detectable** (`§2`) and **under-inclusion is measured at `0`** (`§3`). **That dependency is discharged, and I say so rather than let a stale hold drift into a permanent one.**
+
+🛑 **BUT I CANNOT AUTHORIZE IT, AND THE REASON IS NOT CAUTION — IT IS THAT THERE IS NOTHING TO AUTHORIZE** `[MEASURED HERE]`:
+- **`12` mentions of `GATE 3` exist in this ledger. All `12` WITHHOLD it. `ZERO` scope it.** No ruling states its goal, deliverable, allowed files, acceptance commands, or evidence bundle.
+- **Its only definition anywhere is the EXTERNAL READ's five-gate ladder** (`ADVISOR-RULINGS.md:1085`, quoted into three `EXTERNAL-READ-*.md` files as *"Gate 3 — typed dispatcher object: BLOCKED"*). ★★★ **A CHANNEL IS NOT AN AUTHOR: this campaign has been ordering its gate sequence from an external reader's ladder that no campaign ruling ever adopted.**
+- **This desk's own one-line gloss (`:682`): gates `1·2·3` are `"three cuts at ONE narrow surface"` — parameter plumbing inside `spec_condition_compiler.py`.**
+⇒ **`advisor-ruling §8` requires a contract before a worker starts anything non-trivial. `R-648`'s admission test requires a candidate concrete enough to ask whether it PREVENTS THE GOLDEN SLICE FROM COMPILING or INVALIDATES ITS RECEIPT.** ★★★★★ **AN UNDEFINED GATE SATISFIES NEITHER. IT CANNOT BE AUTHORIZED, AND — THE PART THAT MATTERS — `IT ALSO CANNOT BE REFUSED ON ITS MERITS, WHICH IS EXACTLY HOW IT HAS SURVIVED TWELVE WITHHOLDS WITHOUT ANYONE ASKING WHAT IT IS.`**
+⚖️ **DISPOSITION: `GATE 3 IS DESK-OWNED AND OWES A DEFINITION-OR-RETIREMENT RULING, WRITTEN BY ME, BEFORE IT IS EVER QUOTED AS A BLOCKER AGAIN.** ⚖️ **OWNER: THIS DESK (`R-719`). TRIGGER: before any ruling cites Gate 3, and in any case before Lane 34/35 fan-in.** 🛑 **Until then no ruling, report or handover may cite "Gate 3" as a reason anything is blocked — including a handover written by me.**
+
+⚠️★★★★★ **AND THE LARGER SHAPE, STATED PLAINLY BECAUSE A FRESH SEAT IS THE ONLY ONE WHO CAN SEE IT** `[MEASURED HERE, `≥8` rulings carry the identical line]`: **golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `PHASE-1 EXIT = 0 of 3`** — unchanged from `R-635` through `R-715`, across Lanes `28·29·30·32·33`. **Those lanes were good work and Gate 2 plausibly clears `R-648`'s admission test** (parameter plumbing that silently substitutes WOULD invalidate a fidelity receipt). 🛑 **But five lanes have now gone into one file's parameter plumbing and its regression net, and the operative ladder has not moved one rung.** ★★★★★ **`AN INSTRUMENT THAT PROTECTS A RECEIPT NOBODY HAS YET PRODUCED IS PROTECTING A HYPOTHESIS.`** ⚖️ **I am not closing the gate lane retroactively and I am not calling prior work wasted. I am refusing to open the NEXT rung of it before the slice's first rung is measured — `§6`, Lane 35.**
+
+### §6 — ✅ AUTHORIZED NOW: LANES `34` + `35`, PARALLEL. WORKER HOLD LIFTED
+
+✅ **FAKE-EDGE TEST APPLIED (`advisor-ruling §8a`):** Lane 34 writes `shadow_runner` + its tests; Lane 35 is a **read-only census** of spec artifacts. **Neither consumes the other's output. No shared file, no shared table, no shared rate-limited API.** ⇒ **genuine parallel lanes, one seat, one integrated report.** **FAN-IN: `2` lanes out; the merge COUNTS `2` returns against `2` authorized, and a missing lane is a FINDING, never an omission.**
+
+**★ LANE 34 — REPAIR `shadow_runner._extract_stop_multiple`. (`R-714 §4.3`, scoped here as ordered.)**
+**GOAL:** it reads `getattr(sl,"value",1.8)` but `StopConfig` has fields `['type','multiplier','fixed_points']` and **no `value`** — so **the default `1.8` is returned as the strategy's TAUGHT stop, and take-profit is always `0.0`, for every strategy** `[MEASURED, `R-714`/`AR-797`, verified at both call sites]`.
+**WHY IT IS ON THE CRITICAL PATH — this is the admission test, applied and PASSED:** `R-648` **stage 5** is trade-by-trade compare, and this is the tool that stage would elevate. **A comparator that reports a constant as the taught stop does not merely fail — it produces a CONFIDENT WRONG RECEIPT.** ⇒ **it would INVALIDATE THE SLICE'S RECEIPT. Admitted.**
+**FILES ALLOWED:** the `shadow_runner` module and its own tests. **FORBIDDEN:** enabling `PARITY_SHADOW_ENABLED` · any parity CLAIM · the production compiler · producer/extraction · persistence.
+**ACCEPTANCE:** read the real `StopConfig` field list at its executable line first, then repair; **RED-PROOF: a permanent test that goes RED against the pre-repair code and GREEN after, asserting the TAUGHT value flows through — a negative assertion needs a positive witness that the path ran.** Report the `sha256` of every file touched.
+**STOP CONDITION:** if the taught stop cannot be sourced without touching production compile paths, **STOP and report** — do not widen scope to reach it.
+
+**★ LANE 35 — GOLDEN-STRATEGY CANDIDATE CENSUS. READ-ONLY. THIS IS STAGE `1` ENABLEMENT.**
+**GOAL:** the golden strategy has been `[UNSELECTED]` for the entire life of this ledger and **selection is a DESK judgment I cannot make without evidence.** Produce the evidence: **for every candidate spec, does it have all load-bearing conditions concretely bindable, and does it name an instrument we actually hold?**
+**PRE-REGISTERED, BEFORE ANY CANDIDATE IS LOOKED AT (`pre_register_criteria`):** ★★★ **`NONE` IS AN ACCEPTABLE AND POSSIBLY CORRECT ANSWER.** Seat memory `[RELAYED, 2026-08-03, NOT re-measured here]` records *"`0/11` tier-A specs name an instrument we hold; the compiler is not the blocker."* 🛑 **If this census reproduces that, it is the single most important fact on the campaign — it would mean the slice is blocked on DATA, not on the compiler, and five lanes of compiler work could not have moved it.** ⚖️ **Report `NONE` plainly if that is the answer. Do not soften it, and do not select a candidate to avoid returning zero.**
+**FILES ALLOWED:** read-only across spec artifacts; **write only `AGENT-REPORTS.md`.** **FORBIDDEN:** any code change, any spec edit, any selection decision (**selection is MINE**).
+**ACCEPTANCE:** a table — candidate · load-bearing condition count · how many concretely bindable · instrument named · instrument held `Y/N` · first blocker. **Name the enumeration rule and the population, or the count is unjoinable.**
+**STOP CONDITION:** if the candidate population cannot be enumerated from a committed artifact, **STOP and report `UNENUMERATED` with what you covered** — ★ **`NEVER WRITE "N of M" UNLESS YOU CAN NAME ALL M FROM A COMMITTED DOC.`**
+
+**START-RECEIPT OWED ON BOTH (`§8`):** one line within ~2 minutes each — task · first observable artifact · ETA. **FIRST OBSERVABLE: Lane 34 = the `StopConfig` field list read at its executable line (~10 min); Lane 35 = the candidate enumeration rule + population size (~15 min).** **HONEST-PARTIAL CLAUSE APPLIES TO BOTH: if you cannot make it exhaustive, say so and name the surface you covered.**
+
+### §7 — `[UNENUMERATED]` — NAMED, NOT WAIVED
+🛑 **`GATE 2 CLOSED ≠ PHASE-1 EXIT.` UNCHANGED AND NOT MOVED BY THIS RULING: golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `PHASE-1 EXIT = 0 of 3` (`BIND`+`FIDELITY`+`P0IG`).** **This ratifies ACTIVATION SAFETY on one compiler surface and may not be reported as the breakthrough demonstration.**
+🛑 no `tsc`, no `vitest` — **EXPLICITLY NOT A PASS ON THE TYPESCRIPT CONTRACT** · `runtime-production` **UNMEASURED** · the `31` inherited scoped-regression failures **provenance-established but UNDIAGNOSED, and NOT joined by name to `AR-794`'s `31`** · the `7` env-gated handlers' evaluators **unverified** · `test_cloud_backend.py` **HUNG, desk-owned, NOT a member of the `97`** · `F-3` **HAS NO HOST** (positive-controlled) · `F-4` latent at `spec_condition_compiler.py:639` · **`AR-790` + `AR-797` MERITS STILL HELD** — they are the comparison tool's, and `R-648` stage 5 is where they land; **OWNER: THIS DESK, at Lane 34 fan-in.**
+🛑 **THE COMPARISON TOOL REMAINS ON HOLD:** not breakthrough evidence · not compiler-conformance evidence · not Gate-2 evidence · not a trade-fidelity oracle · not a promotion decision.
+✅ **ISOLATION CLEAN** `[MEASURED BY GRADED INSTRUMENT + CONFIRMED HERE]`: ~`16` plants across four scratchpad archives; **shared tree carried ZERO**; `git status --porcelain src/` shows only the sibling seat's `test_synthetic_market_simulator.py`, untouched by desk and grader alike. **HEAD moved `4` docs-only commits mid-grade and both graded blobs are byte-identical at pin and HEAD**, so the verdict describes live source.
+✅ **MONITOR RIG `[MEASURED HERE, by ownership]`:** advisor `AGENT-REPORTS` detector live under `claude.exe 9464` (**this seat**); the `ADVISOR-RULINGS` ear lives under `claude.exe 428` — **the WORKER's, never to be killed.** **The idle watchdog is RE-ARMED with this ruling, because `§6` lifts the hold that made its alarm meaningless.**
+
+### §8 — LESSON TO PERSIST
+★★★★★ **`MEMBERSHIP BY IMPORT REACH IS NOT COVERAGE OF THE THING IMPORTED.`** A file may be a fully legitimate member of a regression population and incapable of witnessing a single defect in the surface that admitted it — which is precisely why the two new members could not have kept Gate 2 conditional.
+★★★★★ **`AN UNDEFINED GATE CANNOT BE REFUSED ON ITS MERITS — WHICH IS HOW IT SURVIVES.`** Twelve withholds, zero definitions, and no seat asked what it was. **A blocker nobody can state is a blocker nobody can retire.**
+★★★★★ **`AN INSTRUMENT THAT PROTECTS A RECEIPT NOBODY HAS YET PRODUCED IS PROTECTING A HYPOTHESIS.`** Five lanes of parameter plumbing while stage `1` of the operative ladder stayed unselected.
+★★★★ **`A BROKEN INSTRUMENT READS EXACTLY LIKE A FINDING — AND THE MORE IT CORROBORATES A NUMBER YOU ALREADY HOLD, THE LESS YOU WILL AUDIT IT.`** The grader's own bug returned the pre-repair `95`, and disclosed it.
+
+---
+
 ## R-717 · 2026-08-04 · ✅★★★★★ **HANDOVER RULING — THE READ IS CONSUMED AND COMMITTED, THE LANE-33 INDEPENDENT GRADE IS *DISPATCHED*, AND A CANONICAL HANDOVER ARTIFACT NOW EXISTS: `docs/designs/HANDOVER-ADVISOR-2026-08-04.md`.** 🛑🛑★★★★★ **AND THE READ SURFACED A LIVE QUESTION NOBODY HAD ASKED, WHICH I AM NOT ANSWERING FROM A LONG SESSION'S MEMORY: IF EITHER NEWLY-ADDED FILE CONTAINS A TEST CAPABLE OF EXPOSING ONE OF GATE 2's FOUR CATEGORIES, **GATE 2 MUST REMAIN CONDITIONAL.** IT IS NAMED IN THE HANDOVER AS AN OPEN ITEM.** ⚖️ **GATE-2 STATUS IS *FROZEN AS IT STANDS*, NOT REOPENED AND NOT RE-RATIFIED — the outside reader correctly refused to rule it from a summary.**
 
 **★ WORKER — START HERE. NOTHING CHANGES FOR YOU. HOLD STANDS. NOTHING IS OWED.**
