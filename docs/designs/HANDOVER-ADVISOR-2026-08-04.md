@@ -1,203 +1,169 @@
 # CANONICAL ADVISOR HANDOVER — 2026-08-04
 
-> **READ THIS FIRST, THEN THE LEDGER'S NEWEST 2–3 RULINGS.** **`ADVISOR-STATE.md` is `3,986` lines /
-> `630 KB` and past the `Read` tool's `256 KB` cap — this file is the cold-start artifact.**
-> Adopted at `R-717`, refreshed at `R-718`.
+> **READ THIS FIRST, THEN THE LEDGER'S NEWEST 2–3 RULINGS.** `ADVISOR-STATE.md` is `3,986` lines and
+> past the `Read` tool's cap — **this file is the cold-start artifact.** Adopted `R-717`, current at `R-720`.
 >
-> 🛑 **RULE FROM COMMITTED EVIDENCE, NOT FROM THIS SUMMARY.** Every claim below names its
-> artifact. Open the artifact before you rule on it.
+> 🛑 **RULE FROM COMMITTED EVIDENCE, NOT FROM THIS SUMMARY.** Every claim names its artifact.
+> ★★★★★ **AND THE LESSON THAT COST THE MOST TODAY: `THE LINE YOU ARE MOST LIKELY TO REPEAT WITHOUT
+> CHECKING IS THE ONE YOU HAVE READ THE MOST TIMES.` This file is a carrier; carriers go stale.**
 
 **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712` · branch `h1-wave4-sealed12-driver`
-**NOT** the primary cwd (`trading-forge`), which is a container of ~90 worktrees.
+**NOT** the primary cwd (`trading-forge`), a container of ~90 worktrees.
 
 ---
 
-## 1. GATE STATES
+## 1. THE POSITION, IN ONE PARAGRAPH
+
+**A golden slice IS selected** — `st5e-YJRfKc__s0` (`opening_range_breakout`), `11` load-bearing
+conditions — **and re-selection is FORBIDDEN (`R-665 §2.4`).** 🛑 **`0` of `11` candidate specs
+compile with their conditions bound: `0` of `99` strict rows, `0` of `53` spine rows — the committed
+census's OWN `eligibility` fields.** ★★★★★ **THE BLOCKER WAS NEVER SELECTION. THE SELECTED SLICE DOES
+NOT BIND.** The cause is **`[RELAYED]` and UNDER GRADE** — do **not** rule it from the `52`/`43`/`4`
+taxonomy, which is exactly the joint the grader was asked to break first.
+
+---
+
+## 2. GATE STATES
 
 | gate | state | authority |
 |---|---|---|
-| **Gate 2 — activation safety** | ✅ **RATIFIED CLOSED** | `R-718 §1`, by a fresh seat, from the files themselves |
-| **Gate 3 — "typed dispatcher object"** | 🛑 **NOT AUTHORIZED — `UNDEFINED`. DESK-OWNED.** | `R-718 §5` |
-| **Phase-1 exit** | **`0 of 3`** (`BIND` + `FIDELITY` + `P0IG`) | `R-706`, unmoved |
+| **Gate 2 — activation safety** | ✅ **RATIFIED CLOSED** | `R-718 §1` |
+| **Gate 3 — "typed dispatcher"** | ⚖️ **RETIRED AS A BLOCKER** — re-entry pre-registered | `R-720 §4` |
+| **Phase-1 exit** | **`0 of 3`** · stages `0/6` · harness `NOT BUILT` | `R-706`, unmoved |
 
-✅ **THE DISPOSITION `R-717` OWED IS MADE AND IS ON THE RECORD — do not re-open it silently.**
-`R-717`'s live question was whether either newly-added file could expose one of Gate 2's four
-categories. **`R-718 §1` answered `NO` by reading both files in full (`353` lines)**: zero compiler
-calls, zero condition parsing, **zero flag or env reads** — with a **positive control that fires one
-file away** (`test_flag_off_parameterized_refusal.py` returns `2` and `19` where these return `0`
-and `0`), so the zeros are a measurement, not a silence. They are members by **import reach across
-two bare relative hops**, never by exercising the surface that admitted them.
-★★★★★ **`MEMBERSHIP BY IMPORT REACH IS NOT COVERAGE OF THE THING IMPORTED.`**
-
-🛑 **GATE 3 IS THE LIVE GOVERNANCE PROBLEM.** `[MEASURED, R-718 §5]` **all `12` ledger mentions
-WITHHOLD it; `ZERO` scope it.** Its only definition anywhere is an **external reader's five-gate
-ladder** (`ADVISOR-RULINGS.md:1085`) that **no campaign ruling ever adopted**. It cannot be given a
-`§8` contract, cannot be tested against `R-648`'s admission test, **and cannot be refused on its
-merits — which is how it survived twelve withholds.** ⚖️ **OWNER: THE DESK. `R-719` owes a
-definition-or-retirement ruling. Until then NO ruling, report or handover may cite "Gate 3" as a
-reason anything is blocked.**
+★★★★★ **GATE 3, THE REASONING — `A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS.`** All `12` ledger
+mentions withheld it; **none scoped it**; its only definition was an external reader's five-gate
+ladder (`:1085`) **no campaign ruling adopted**. In `12` withholds across five lanes **no measurement
+ever showed it obstructing anything.** ⇒ **`A GATE NEVER OBSERVED TO STOP ANYTHING IS A HABIT, NOT A GATE.`**
+🛑 **PRE-REGISTERED RE-ENTRY (fixed while the answer was unknown — do NOT re-read it):** *if the
+**GRADED** blocker taxonomy names "no typed dispatcher object" among the causes of the `0/99`, Gate 3
+re-enters immediately with an evidence-derived definition and a `§8` contract. If it does not, Gate 3
+is **CLOSED PERMANENTLY** and struck from every carrier.*
 
 ---
 
-## 2. PINNED COMMITS
+## 3. NEWEST IDs · PINNED COMMITS
+
+- **Newest ruling `R-720`** (`09bf641e`). **Newest AR `AR-802`** — ruled at `R-720`, nothing unruled.
+- **Worker: HOLD**, nothing owed, dependency NAMED = the Lanes-34/35 grade.
 
 | what | sha |
 |---|---|
-| Lane 28 / 29 / 30 | `556122b7` · `d9684c64` · `b8321dc9` |
+| **Lanes 34+35 (current, under grade)** | **`81a48b7604b38e1a5daddfef0c6e478a7a3d4165`** |
+| Lane 33 | `1163f36657773fef4dec52daa09c2207cf85b839` |
 | Lane 32 (Gate-2 grade pin) | `a3f75aa7efff54b3d555ea660dda51e7fa3ce50e` |
-| **Lane 33 (graded, accepted)** | **`1163f36657773fef4dec52daa09c2207cf85b839`** |
-| **`R-718` (this handover's ruling)** | **`d1a3b1a72a5fcdb33af66ccab4d4f5b9240738eb`** |
-| V4 execution graph blob | `876c3a230d51815f49f98c36ea4109fe0b236b97` — **ADOPTED; `[MEASURED]` `blob`, `29698` B; no node transition at `R-718`** |
-| production compiler `sha256` | `621302a56987f19b` — **byte-identical across Lanes 29/30/32/33** |
-| manifest `sha256` | pre `26975e6838c938e9` (95) → post `8852cff1c179958e` (97) |
-| Lane-33 grade receipt blob | `10305f5be3ed8fd7bbbb6292b3767f9f4ca5b827` (`22,095` B, **tracked**) |
+| V4 graph blob | `876c3a230d51815f49f98c36ea4109fe0b236b97` — ADOPTED, no node transition |
+| production compiler `sha256` | `621302a56987f19b` — byte-identical Lanes 29→34 |
+| regression manifest | `8852cff1c179958e` (97 members) |
 
 ---
 
-## 3. NEWEST IDs
+## 4. 🔴 GRADE IN FLIGHT
 
-- **Newest ruling:** `R-718` (`d1a3b1a7`). Prior: `R-717` (handover), `R-716` (Lane 33 durable).
-- **Newest AR:** `AR-799` — Lane 33 delivered. **RULED IN FULL at `R-718 §3`; merits no longer held.**
-- **Worker:** **HOLD LIFTED at `R-718 §6`** — Lanes `34` + `35` authorized in parallel.
-
----
-
-## 4. ✅ LANE-33 GRADE — COMPLETE, ACCEPTED, DURABLE
-
-- **`PASS_WITH_BOUNDED_FINDINGS` · VERIFIED band `7`.** All **ten** mandated items `PASS`.
-- **Receipt COMMITTED:** `docs/designs/GRADE-LANE33-2026-08-04.md` (`336` lines) — no longer untracked.
-- **The central claim holds:** revert the repair → **`2 failed, 23 passed`**; the new fixture **and**
-  the manifest pin both redden. **The self-certification is genuinely broken.**
-- **Under-inclusion across all `338` test files = `0`** — the property the regression net owed.
-- **Item 10 settled by forcing the instruments APART** (dynamic-import-only vs import-never-executed
-  make static and runtime fail in *opposite* directions). **They are not one instrument in two hats.**
-
-🛑 **TWO `F-1`s ARE NOW IN PLAY — NEVER MERGE THEM.** `R-715`'s `F-1` (bare relative imports
-invisible) is **DISCHARGED**. The **grade's** `F-1` (the `node.level` arithmetic is unfalsifiable —
-four mutations → `0` red, deleting it outright gives the identical `97`) is **NEW AND OPEN**.
-
-⚖️ **`GRADE-F-1` + `GRADE-F-2` CLOSE IN THE SAME WAVE AS ANY `:534` TAIL-JOIN REPAIR — NEVER BEFORE,
-NEVER SEPARATELY.** Both are inert today (blast radius `ZERO` measured) and **both go live the
-instant the tail-join is fixed.** ★ **`A DORMANT DEFECT WHOSE TRIGGER IS SOMEONE ELSE'S FIX IS NOT
-BACKLOG — IT IS A TRIPWIRE ON THAT FIX.`** **OWNER: worker seat. TRIGGER: first authorized `:534` change.**
+```
+RUNNER      accuracy-validator, background      PIN 81a48b76   BASELINE 600ff606
+RECEIPT     docs/designs/GRADE-LANES34-35-2026-08-04.md   (grader writes, DESK commits)
+DISPATCHED  ~19:52Z          LIVENESS CHECK OWED ~21:20Z
+```
+🛑 **IF THE RECEIPT IS ABSENT AND >90 MIN HAVE PASSED IT IS A DESK DEFECT, NOT A WORKER ONE. Chase it.**
+**Brief's first attack surface** (named by the doer against its own interest): the `[RELAYED]`
+`52`/`43`/`4` taxonomy · `instrument_classification` strings · whether subagent figures were genuinely
+re-derived (`R-665`) · the `640`-combination flag sweep covered **only** `st5e-YJRfKc__s0`, so *"zero
+under all flags"* is **NOT** established for the other `10` · Lane 35's `st5e` row is an **ECHO**, not
+a second path.
 
 ---
 
-## 5. QUEUED DECISIONS — STATUS AFTER `R-718`
-
-1. ✅ **`F-1` discharged?** **YES** — `R-715 §5.1`'s "necessary AND NOT sufficient" condition is met.
-2. 🛑 **`AR-790`** — the trade-comparison tool answers a different question than the plan assumes. **STILL HELD.**
-3. 🛑 **`AR-797`** — its five-item follow-up incl. a MEASURED divergence. **STILL HELD.**
-   ⚖️ **OWNER for both: THE DESK, at Lane-34 fan-in.** They are the comparison tool's, and `R-648`
-   stage 5 is where they land.
-4. ✅ **The `R-715 §3` VACUITY JUDGMENT — NOT OVERTURNED**, and now independently corroborated:
-   revert → two permanent tests redden, so the guard does not "cannot fail". **Gate 2 does not re-open.**
-5. 🆕 **`R-719` — Gate 3 definition-or-retirement. DESK-OWNED, OPEN.**
-
-**Reconcile `AR-790` and `AR-797` by inputs, computation and outputs — NOT by which report reads better.**
+## 5. WHAT THE NEXT RULING (`R-721`) OWES — TRIGGER: the grade receipt
+1. **The cause of the `0/99`** — ruled from the GRADED taxonomy, never the relayed one.
+2. **Gate-3 re-entry or permanent closure** per §2's pre-registered condition.
+3. **`R-648` stage 5's missing comparator** — `[MEASURED, AR-790]` **nothing in `src/engine` compares
+   executed trades to an external reference.** `run_parity_diff` compares two ENGINES on the SAME DSL.
+4. **Strike `[UNSELECTED]` from every carrier** (this file did; the `ADVISOR-STATE` dashboard has not).
 
 ---
 
-## 6. AUTHORIZED NOW (`R-718 §6`) — worker hold LIFTED, two parallel lanes
+## 6. CLOSED THIS SESSION — do not re-open
+- ✅ **Gate 2 ratified** — neither Lane-33 file can expose any of the four categories (both read in
+  full; positive control fires one file away: `2`/`19` vs `0`/`0`). **Members by IMPORT REACH, not coverage.**
+- ✅ **Lane 33 graded band `7`**, receipt `GRADE-LANE33-2026-08-04.md`. `R-715 §3` vacuity judgment
+  **NOT overturned** — revert reddens two permanent tests.
+- ✅ **`AR-790` + `AR-797` DISCHARGED** (`R-719 §2`). **They never conflicted:** `AR-790` measured the
+  comparator, `AR-797` measured its input; `AR-797` is `AR-790 §4` one hop further. ★ **The tool asks
+  the wrong question on an input that has already discarded the answer.** ✅ **`parity_supported()`
+  fails closed ⇒ a BLOCKED slice, NOT a false receipt.**
+- ✅ **Lane 34**: taught stop now reaches the parity DSL; red-proof predicted `6` observed `6`; class
+  guard names no field so any future nonexistent-field read reddens it; `31` unchanged, `+8` = the 8 new tests.
 
-Fake-edge test applied: **neither lane consumes the other's output; no shared file or table.**
-**FAN-IN: `2` out — the merge COUNTS `2` returns against `2` authorized; a missing lane is a FINDING.**
-
-- **LANE 34 — repair `shadow_runner._extract_stop_multiple`.** It reads `getattr(sl,"value",1.8)` but
-  `StopConfig` has `['type','multiplier','fixed_points']` and **no `value`**, so **`1.8` is returned as
-  the taught stop and take-profit is always `0.0`, for every strategy.** **PASSES `R-648`'s admission
-  test** — at stage 5 it would produce a **confident wrong receipt**. Red-proof required; **do NOT enable
-  `PARITY_SHADOW_ENABLED`; make no parity claim.**
-- **LANE 35 — golden-strategy candidate census. READ-ONLY.** ★★★ **`NONE` IS PRE-REGISTERED AS AN
-  ACCEPTABLE ANSWER.** Seat memory `[RELAYED, 2026-08-03]` records *"`0/11` tier-A specs name an
-  instrument we hold; the compiler is not the blocker."* **If the census reproduces that, it is the
-  single most important fact on the campaign.** **Selection itself is the DESK's, not the worker's.**
-
-**COMPARISON TOOL: STILL ON HOLD** — 🛑 not breakthrough evidence · not compiler-conformance evidence ·
-not Gate-2 evidence · not a trade-fidelity oracle · not a promotion decision.
-
----
-
-## 7. FORBIDDEN WORK
-
-`src/engine/tests/test_synthetic_market_simulator.py` — **a SIBLING SEAT owns it; legitimately dirty;
-`git commit -o <named paths>` only** · producer / transcript extraction · persistence gateway ·
-strategy insert sites · deleting TS mirrors · **ENABLING `TF_FAMILY_META_ENFORCED`** · any parity
-claim · claiming sealed-spec preservation or end-to-end compilation · **claiming Gate 2 closed as
-Phase-1 exit** · **citing "Gate 3" as a blocker until `R-719` defines it.**
+## 7. OPEN, WITH OWNERS — nothing assigned to nobody
+- 🛑 **`GRADE-F-1` + `GRADE-F-2`** — one root cause at `test_flag_off_parameterized_refusal.py:534`
+  (`reaches()` joins on `parts[-1]`). **Inert today, blast radius `ZERO` measured.** ⚖️ **CLOSE IN THE
+  SAME WAVE AS ANY `:534` REPAIR — never before, never separately. `A DORMANT DEFECT WHOSE TRIGGER IS
+  SOMEONE ELSE'S FIX IS A TRIPWIRE ON THAT FIX.` OWNER: worker. TRIGGER: first `:534` change.**
+- 🛑 **fixed-point stop returns sentinel `1.8`, indistinguishable from a genuine taught `1.8`.**
+  ⚖️ **DESK-OWNED — it is a RETURN-CONTRACT decision. Pinned by a `RECORDED, NOT ENDORSED` test.
+  TRIGGER: any stage-5 elevation.**
+- ⚠️ **The shadow report is PERSISTED to a JSONB DB column, not merely printed** (`backtester.py:6162`
+  → `result_extras`). **No consumer reads it, so "gates nothing" survives.** ★ `A DEFECT THAT ONLY
+  PRINTS IS A BAD LOG LINE; A DEFECT THAT PERSISTS IS A FUTURE CITATION.`
+- 🛑 `F-3` **HAS NO HOST** (positive-controlled) · `F-4` latent at `spec_condition_compiler.py:639`.
 
 ---
 
-## 8. KNOWN HUNG / UNMEASURED SURFACES
+## 8. FORBIDDEN
+Gate 3 work · producer · sealed-spec · parity **elevation** · comparison-tool integration · any
+`:534` change · **re-selecting the golden slice (`R-665 §2.4`)** · enabling `TF_FAMILY_META_ENFORCED`
+or `PARITY_SHADOW_ENABLED` · any parity claim · **`src/engine/tests/test_synthetic_market_simulator.py`
+(a SIBLING SEAT owns it; legitimately dirty — `git commit -o <named paths>` always)** · reporting
+Gate 2 as Phase-1 exit.
 
-- 🛑 **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` ·
-  planted-defect harness `NOT BUILT`** — **unchanged across `≥8` rulings, `R-635`→`R-718`.**
-  ★★★★★ **`AN INSTRUMENT THAT PROTECTS A RECEIPT NOBODY HAS YET PRODUCED IS PROTECTING A HYPOTHESIS.`**
-- 🛑 `src/engine/tests/test_cloud_backend.py` — **MEASURED HUNG**, desk-owned. **NOT a member of the
-  canonical population** — never write *"the population minus test_cloud_backend.py"*; it is a no-op
-  for the closure population.
-- 🛑 **no `tsc`, no `vitest` — EXPLICITLY NOT A PASS ON THE TYPESCRIPT CONTRACT.**
-- 🛑 `runtime-production` tree **UNMEASURED** — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.
-- 🛑 `31` inherited scoped-regression failures — provenance established (`0` introduced, `31/31`
-  identical vs pre-lane `9484c161`, `4` repaired) but **UNDIAGNOSED, and NOT joined by name to `AR-794`'s `31`.**
-- 🛑 The `7` env-gated handlers' evaluators **unverified** · census evasion beyond the `6` enumerated
-  constructor forms **unmeasured**.
-- 🛑 **`F-3` HAS NO HOST** (positive-controlled): no component in the repo resolves a test-path list
-  and launches pytest. Desk backlog; **do not invent a host mid-lane.**
-- ⚠️ **`F-4` LATENT:** `cache_key = b.parameters` survives at `spec_condition_compiler.py:639`,
-  defanged upstream only. **Record, do not chase.**
-- ⚠️ **`ADVISOR-STATE.md` IS `3,986` LINES against the skill's `~40`-line target.** It is append-drift
-  and is **NOT the entry point** — this file is. **Desk item; do not rewrite it blind.**
+## 9. UNMEASURED — named, not waived
+no `tsc`/`vitest` (**NOT a TypeScript pass**) · `runtime-production` **UNMEASURED** · the `31`
+inherited failures undiagnosed and **NOT joined by name** to `AR-794`'s `31` · `test_cloud_backend.py`
+**HUNG**, desk-owned, **NOT a member of the 97** · the `7` env-gated handlers · **whether we physically
+hold `MES`/`MNQ`/`MCL` bar data is `[UNCOMMITTED]`** — "instrument held" was answered on the NAMING
+reading only · `ADVISOR-STATE.md` append-drift (`3,986` lines vs a `~40`-line target) — **do not
+rewrite it blind.**
 
 ---
 
-## 9. STANDING LAWS (do not re-derive)
+## 10. LAWS MINTED TODAY (do not re-derive)
+- `MEMBERSHIP BY IMPORT REACH IS NOT COVERAGE OF THE THING IMPORTED.`
+- `A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS` · `A GATE NEVER OBSERVED TO STOP ANYTHING IS A HABIT.`
+- `A VERIFICATION THAT CANNOT DISTINGUISH THE TWO STATES YOU CARE ABOUT IS NOT A VERIFICATION OF
+  EITHER.` **Durability joins on `HEAD` + `git status`, NEVER on content hash** — the desk hashed
+  content to support a commit-state claim and was blind to the commit it was asserting about.
+- `AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT` *(worker's)* — a second seat reading mid-edit joins
+  to values that never shipped; no annotation reaches a reader who read first.
+- `A FIXTURE THAT CANNOT EXPRESS THE DEFECT CANNOT WITNESS THE FIX` — `SimpleNamespace` grows whatever
+  attribute it is asked for, so eight test classes were structurally incapable of catching a constant.
+- `THE COST OF "I CANNOT REPRODUCE THIS" IS ONE SENTENCE; THE COST OF "THIS IS WRONG" IS A RETRACTION.`
+- `A CORRECT RULING REACHED WITHOUT ITS AUTHORITY IS INDISTINGUISHABLE, FROM THE LEDGER, FROM ONE
+  REACHED WITH IT` — why the read-the-source rule is procedural and "it came out right" is no defence.
+- `A HOLD IS A CLAIM ABOUT A DEPENDENCY, AND IT DECAYS LIKE ANY OTHER.`
+- `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION` — **seven instances on 2026-08-04.**
+- ⚠️ **CRUDE SUBSTRING SEARCHES: FOUR false results in two days** (a `MES` hit inside "ti**mes**"; a
+  sha256 substring matching a bare number). **Positive-control every grep. `| head -N` is not a census.**
 
-- `MEMBERSHIP BY IMPORT REACH IS NOT COVERAGE OF THE THING IMPORTED.` *(R-718)*
-- `AN UNDEFINED GATE CANNOT BE REFUSED ON ITS MERITS — WHICH IS HOW IT SURVIVES.` *(R-718)*
-- `AN INSTRUMENT THAT PROTECTS A RECEIPT NOBODY HAS YET PRODUCED IS PROTECTING A HYPOTHESIS.` *(R-718)*
-- `A BROKEN INSTRUMENT READS EXACTLY LIKE A FINDING — AND THE MORE IT CORROBORATES A NUMBER YOU
-  ALREADY HOLD, THE LESS YOU WILL AUDIT IT.` *(the grader's own tracer returned the pre-repair `95`)*
-- `A GRADE OF CONTENT IS NOT A GRADE OF DURABILITY` — name the SHA and clean status, or say you did not look.
-- `RE-MEASURE AT THE INSTANT OF ACTING` — six dirty-tree readings flipped within seconds on 08-04.
-- `A COMMITTED GENERATOR REPRODUCES THE RULE, NOT THE ANSWER` — pin populations BY MEMBER.
-- `A SECOND STATIC INSTRUMENT THAT SHARES A BLIND SPOT WITH THE FIRST IS NOT A SECOND PATH` — proved
-  negatively AND positively on the same finding, hours apart.
-- `PATH-SCOPING A COMMIT DOES NOT PATH-SCOPE ITS HOOKS` — pre-commit stashes the whole tree; **gate any
-  commit made while a grader is live.**
-- `NEVER ANCHOR A LEDGER INSERT ON A NEIGHBOURING RULING'S HEADER` — anchor on the preamble's closing
-  `---`, then assert `grep -c '^## R-<prev>' == 1` **before** committing. *(Held green at `R-718`.)*
-- ⚠️ **CRUDE SUBSTRING SEARCHES FAILED THREE TIMES ON 08-04.** Scope a guard's search to the field's own
-  phrasing. **And a truncated search (`| head -N`) is not a census — `R-718 §5` re-ran its Gate-3 count
-  unbounded before ruling on it.**
+## 11. MONITOR RIG · PROTOCOL
+`[MEASURED BY OWNERSHIP]` **Advisor `AGENT-REPORTS` 2s detector under `claude.exe 9464` (this seat).**
+⚠️ **The `ADVISOR-RULINGS` ear runs under `claude.exe 428` — THE WORKER'S. NEVER KILL IT.**
+**Idle watchdog ARMED** (both channels, reports silence not a diagnosis). 🛑 **Two monitors, never
+more; census by ownership first.** ⚠️ **Your own commits trip your own AR-detector** (pre-commit stamps
+mtime); **the tell is an UNCHANGED `## AR-` header.** ⚠️ **A held worker and a dead worker are
+identical at the watchdog's bar — LIVENESS IS THE PROCESS TABLE.**
 
----
-
-## 10. MONITOR RIG
-
-`[MEASURED HERE, BY OWNERSHIP — `R-718`]`
-- **Advisor `AGENT-REPORTS.md` 2s mtime detector — LIVE under `claude.exe 9464` (THE ADVISOR SEAT).**
-- ⚠️ **The `ADVISOR-RULINGS.md` ear runs under `claude.exe 428` — THE WORKER'S. It is how the worker
-  hears rulings. NEVER KILL IT.**
-- **Idle watchdog: RE-ARMED at `R-718`**, because `§6` lifted the hold that made its alarm meaningless.
-  🛑 **Two monitors, never more. Census by ownership before arming anything.**
-
-⚠️ **YOUR OWN COMMITS TRIP YOUR OWN AR-DETECTOR** (pre-commit stamps the file's mtime). **The tell: the
-emitted `## AR-` header is UNCHANGED and `git status --porcelain` on the file is BLANK.**
-⚠️ **A held worker and a dead worker are identical at the watchdog's bar. LIVENESS IS THE PROCESS TABLE.**
-
----
-
-## 11. PROTOCOL
-
-- **SINGLE WRITER:** the advisor writes `ADVISOR-RULINGS.md` + `ADVISOR-STATE.md` and **never** edits
-  `AGENT-REPORTS.md`.
-- **SHARED TREE:** never `checkout` / `reset` / amend another seat's commit; `git commit -o <named paths>` always.
-- **SIBLING-SEAT FREEZE:** re-read the ledger HEAD sha immediately before writing. **If it moved
-  mid-turn, a live sibling is writing — FREEZE.** *(Checked twice at `R-718`; unchanged at `07c8bf0b`.)*
-- **WAIT ON THE GPT READ before ruling on an AR that owes a ruling** — or state in the ruling that you
-  chose not to wait, and why. **Bounded:** a receipt owes no wait · a BLOCKED worker outranks it · the
-  grade DISPATCH does not wait, the ruling on its VERDICT does. 🛑 **Reads arrive as OPERATOR-RELAYED
-  CHAT; the `origin/external-advisor/gpt-rulings` branch is stale — a quiet branch is not evidence.**
-- **INVOKE `advisor-ruling` BEFORE EVERY RULING.** The sentinel is consumed per ruling, and the skill
-  file mutates.
+- **SINGLE WRITER:** advisor writes `ADVISOR-RULINGS`/`ADVISOR-STATE`, **never** `AGENT-REPORTS`.
+- **SHARED TREE:** never `checkout`/`reset`/amend another seat's commit; `git commit -o` always.
+  ⚠️ **Path-scoping a commit does NOT path-scope its hooks** — pre-commit stashes the whole tree.
+- **SIBLING FREEZE:** re-read the ledger HEAD sha immediately before writing; if it moved mid-turn a
+  live sibling is writing — **FREEZE.**
+- **LEDGER INSERTS:** anchor on the preamble's closing `---`, **never** a neighbouring ruling's header;
+  then assert `grep -c '^## R-<prev>' == 1` **before** committing.
+- **WAIT ON THE GPT READ before ruling on an AR that owes a ruling** — or say in the ruling that you
+  chose not to, and why. 🛑 **Reads arrive as OPERATOR-RELAYED CHAT and are committed to
+  `docs/designs/EXTERNAL-READ-*.md`. `origin/external-advisor/gpt-rulings` is STALE — a quiet branch is
+  not evidence.** ★★★★★ **OPEN THE COMMITTED READ ITSELF. `R-718` was ruled from this file's paraphrase
+  of one and had to be corrected at `R-719`.**
+- **INVOKE `advisor-ruling` BEFORE EVERY RULING** — the sentinel is per-ruling and the skill mutates.
+  ✅ **Both ledger guards fired correctly on this seat today; do not route around them.**
