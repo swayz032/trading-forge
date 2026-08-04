@@ -4,6 +4,39 @@
 
 ---
 
+## AR-802 · 2026-08-04 · ✅ **`R-719 §5.1` DISCHARGED — AND IT WAS ALREADY DISCHARGED WHEN IT WAS WRITTEN. LANES 34+35 ARE DURABLE AT `81a48b76`.** ⭐ **THE DURABILITY REFUSAL RESTED ON A SNAPSHOT TAKEN `12` SECONDS BEFORE MY COMMIT — THE DESK'S OWN `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION`, SEVENTH INSTANCE TODAY.** ✅ **AND IT RESOLVES `R-719 §3`'s sha256 NON-JOIN: THE DESK READ MY `AR` MID-EDIT.**
+
+**TASK:** `R-719 §5.1`, the only authorized action. **NOTHING ELSE DONE — no new lane, no grade, no cleanup, as ordered.**
+
+### ✅ §1 — THE FIELDS `R-719 §5.1` ASKED FOR, EXACTLY
+```
+CLOSING SHA (Lanes 34+35)   81a48b76         committed 2026-08-04T15:45:35-04:00
+CURRENT HEAD                fe422c64         <- the desk's R-719, sitting ON TOP of mine
+COMMITTED-BLOB sha256 (content at HEAD, `git show HEAD:<path> | sha256sum`)
+  8d7f28cdbac14d51   src/engine/parity_engine/shadow_runner.py
+  1d6f3bec770b7fef   src/engine/tests/test_shadow_runner.py
+GIT BLOB IDS
+  e13157534b0fba5e475d7a1cd7b858e66c72361b   shadow_runner.py
+  d02203155168b4dedba704d8b073d75d0a8688d9   test_shadow_runner.py
+DRIFT CHECK   git status --porcelain on all THREE files -> BLANK. No working-tree divergence.
+```
+✅ **`git show --stat 81a48b76` = `3` files, `+312/−26`:** `shadow_runner.py` · `test_shadow_runner.py` · `AGENT-REPORTS.md`. **The sibling's `test_synthetic_market_simulator.py` is NOT in it — thirty-eighth consecutive report.**
+
+### ⭐ §2 — WHY THE DESK SAW UNCOMMITTED FILES, AND WHY IT WAS RIGHT TO REFUSE ON WHAT IT SAW
+`[MEASURED HERE]` **`R-719 §3` measured `HEAD = 600ff606` with all three files ` M` at `19:45:23Z`. I committed at `19:45:35Z` — `12` seconds later.** 🛑 **The desk's reading was TRUE WHEN TAKEN.** ★★★★★ **This is the desk's own law firing against the desk for the seventh time today: `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION`, and it re-measured three times over four minutes without the window ever containing my commit.**
+⚖️ **NO FAULT ASSIGNED AND NONE ACCEPTED — the refusal was correct on its evidence, and the remedy it ordered was the right one. I record the timing only so the ledger does not carry `LANES 34+35 NOT DURABLE` as a standing fact.**
+
+### ✅ §3 — `R-719 §3`'s sha256 NON-JOIN, RESOLVED — THE DESK READ A FILE I WAS STILL WRITING
+`R-719 §3` reports it could not reproduce `AR-801`'s `ace81464…`/`51189a8c…` against either the working tree or `HEAD`, and correctly declined to call them wrong.
+✅ **THE EXPLANATION IS MECHANICAL AND THE DESK'S INSTRUMENTS WERE FINE:** those two hashes were measured **BEFORE** the `§5.1` lint pass rewrote both files. **When the hook blocked my commit I re-measured and edited the `AR` in place** — so for a window, the on-disk `AR` carried hashes that no longer described the on-disk files, **and that is the version the desk read.**
+✅ **THE COMMITTED `AR-801` CARRIES THE CORRECTION EXPLICITLY** `[MEASURED HERE, `git show 81a48b76:docs/designs/AGENT-REPORTS.md`]` — line `11` reads *"RE-TAKEN after the `§5.1` lint pass; the earlier pair `ace81464…`/`51189a8c…` is SUPERSEDED and must not be quoted"*, and lines `13`–`14` carry `8d7f28cd…`/`1d6f3bec…`, **which match the committed blobs above exactly.** ⇒ **THE JOIN NOW CLOSES ON A COMMITTED OBJECT, WHICH IS WHAT `R-719 §3` PREDICTED THE COMMIT WOULD FIX.**
+★★★★★ **THE LESSON IS MINE, NOT THE DESK'S: `AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT, AND A SECOND SEAT READING IT MID-EDIT WILL JOIN TO VALUES THAT NEVER SHIPPED.` A superseded-value annotation cannot help a reader who read before I wrote it. **The fix is not a better annotation — it is a shorter window between measuring and committing.**
+
+### 🛑 §4 — POSITION
+✅ **`R-719 §5.1` COMPLETE. Fan-in `2 / 2` and DURABLE. Nothing in flight, no subagent owed. I am seated, ear live. NO HANDOFF.**
+🛑 **HOLDING FOR `R-719 §5.2`** — the `accuracy-validator` dispatch is the DESK's and is gated on this SHA, which now exists. **I am the doer and claim no band.** ★ **The brief the desk names is the right one: attack the `[RELAYED]` blocker taxonomy and `instrument_classification` strings FIRST — I asked for that against my own interest and I repeat it here.**
+🛑 **NOT AUTHORIZED AND NOT TOUCHED:** Gate 3 · producer · sealed-spec · parity elevation · comparison-tool integration · any `:534` change · re-selecting the slice. **`PHASE-1 EXIT = 0 of 3` · compiler stages `0/6` · `runtime-production` `[UNMEASURED]` · flag OFF.**
+
 ## AR-801 · 2026-08-04 · ✅🛑★★★★★ **LANES `34` + `35` BOTH DELIVERED — FAN-IN `2 / 2`.** ⭐ **LANE 34: THE TAUGHT STOP NOW REACHES THE PARITY DSL; RED-PROOF PREDICTED `6` AND OBSERVED EXACTLY `6`, NO UNPREDICTED MEMBER — THIRD CONSECUTIVE EXACT MATCH.** 🛑🛑★★★★★ **LANE 35 ANSWERS `NONE`, AND THE COMMITTED CENSUS ALREADY SAID SO IN ITS OWN FIELDS: `n_eligible_strict = 0` AND `n_eligible_spine_only = 0`. ZERO OF `11` CANDIDATES, ZERO OF `99` LOAD-BEARING ROWS, ZERO NAMING AN INSTRUMENT WE HOLD.** 🛑🛑🛑★★★★★ **AND A RULING-PREMISE DEFECT I MUST REPORT BEFORE ANYTHING ELSE: THE GOLDEN SLICE IS *NOT* `[UNSELECTED]`. IT WAS RATIFIED AS `st5e-YJRfKc__s0` AND RE-SELECTION IS FORBIDDEN BY `R-665 §2.4`.**
 
 **TASK:** `R-718 §6` Lanes `34` + `35`. **`HEAD d2497c31` at start** (moved to `600ff606` → `d1a3b1a7` lineage mid-lane by the desk seat; docs-only, my measured surfaces byte-identical). **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **NOT GRAPH-SCHEDULED.**
