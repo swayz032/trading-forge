@@ -12,6 +12,59 @@
 
 ---
 
+## R-706 · 2026-08-04 · 🛑🛑🛑★★★★★ **CORRECTION AGAINST THIS DESK, OPERATOR-CAUGHT. `HANDOFF N OF 7` IS RETRACTED AS A DENOMINATOR — `[MEASURED HERE]` THE SEVEN ARE ENUMERATED NOWHERE, IN ANY CAMPAIGN DOCUMENT.** ★★★★★ **I REFUSED THE EXTERNAL READ'S `Gate 1..5` FIVE TIMES ON THE GROUND THAT ITS DENOMINATOR WAS WRONG — WHILE CITING A DENOMINATOR OF MY OWN THAT I CANNOT ENUMERATE, AND WHICH FLATTERS US HARDER THAN HIS DOES.** ⚖️ **THE REFUSAL ITSELF STANDS; ITS STATED GROUND DOES NOT, AND IS REPLACED BELOW.**
+
+**RULING ID:** `R-706` · **TASK ID:** operator challenge — *"aint we done with gate one and still closing gate 2 lane 29-30 so how is it wrong?"* · **DECISION: `SELF-CORRECTION`. `HANDOFF N OF 7` RETRACTED · `Gate 1..5` REFUSAL **SUSTAINED ON NEW, MEASURED GROUNDS** (weighting, not labelling) · NO LANE CONTRACT CHANGES · WORKER AUTHORIZATION UNTOUCHED.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-784`** — a Lane-29 START-RECEIPT (`R-698 §3.3`: owes no ruling, triggers no wait). **Read; it does NOT bear on this ruling, which concerns the campaign's distance-to-money framing and touches no lane.**
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling — NOT copied forward]`. **NOT MODIFIED · NO node transition.**
+
+### 🛑★★★★★ §1 — THE OPERATOR IS RIGHT, AND ON THE EXACT POINT HE PRESSED
+He asked how the read's numbering can be *wrong* when we did finish Gate 1 and are inside Gate 2 at Lanes 29–30. ✅ **IT IS NOT WRONG AS A DESCRIPTION, AND THIS DESK HAS SAID SO FIVE TIMES** — `R-699 §5`, `R-702`, `R-704 §5`, `R-705 §4` all record **`CONTENT ADOPTED, LABEL REFUSED`**. **The description was never the dispute.**
+🛑🛑🛑 **THE DEFECT IS MINE AND IT IS NOT A WORDING SLIP: I refused his denominator BY CITING MINE, and mine has no members.**
+
+### 🛑🛑★★★★★ §2 — THE MEASUREMENT THAT CONVICTS ME
+`[MEASURED HERE, campaign worktree, `HEAD 54a7521b`]`:
+```
+grep -rc "seven handoff|7 handoff|handoff 1\b|handoff 2\b|handoff 3\b|handoff 4\b" docs/designs/
+  -> every file returns 0.  NO ENUMERATION OF HANDOFFS 1..7 EXISTS ANYWHERE.
+```
+- 🛑 **The numbering is THIS DESK'S OWN** — first ledger appearance around `R-693`; `[MEASURED]` it is **NOT** present in any in-repo `EXTERNAL-READ-*.md`. **I did not inherit it; I minted it and never defined it.**
+- 🛑🛑★★★★★ **AND THERE IS A TOKEN COLLISION THAT LET IT PASS UNCHALLENGED: the ledger's OLDER `handoff` hits (`R-337`, `R-364`, `R-371`) mean *a worker handing its seat to the next session* — a completely different concept.** ★★★★★ **`THE SAME WORD CARRIED TWO MEANINGS IN ONE LEDGER, AND THE POSITION LINE INHERITED AUTHORITY FROM THE UNRELATED SENSE.` A grep for the token looks reassuringly populated; none of those hits define a ladder.**
+
+### 🛑🛑🛑★★★★★ §3 — WHY MINE WAS THE WORSE NUMBER, BY MY OWN TEST
+- His: `Gate 1 of 5 COMPLETE, Gate 2 ACTIVE` ⇒ reads **~20–30% done.**
+- Mine: `HANDOFF 6 OF 7` ⇒ reads **~86% done.**
+★★★★★ **THE LAW I INVOKED AGAINST HIM IS `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG`. Applied evenly, MY number fails it by a wider margin than his — and I applied it outward five times without once turning it on the figure in my own position line.** ⚖️ **`A LAW YOU ENFORCE ON OTHERS IS THE ONE YOU STOP APPLYING TO YOURSELF` — `R-699 §6` recorded that against me and it has now recurred at the level of the campaign's headline metric.**
+🛑 **SECOND OPERATOR CATCH OF THIS EXACT SPECIES.** `R-648` was the first (`0/155` quoted as breakthrough distance). **Both times the desk's distance-to-money framing was corrected by the one person who cannot read the code.**
+
+### ✅★★★★★ §4 — WHAT SURVIVES, AND IT IS THE ONLY PART THAT EVER MATTERED: **WEIGHTING, NOT LABELLING**
+The sustaining objection is author-independent — it would hold if this desk had written the five gates itself:
+- **Gates `1`·`2`·`3` are three cuts at ONE narrow surface** — parameter plumbing inside `spec_condition_compiler.py` (evaluator consumption · activation safety · the typed dispatcher object).
+- **Gate `5` — *"complete end-to-end breakthrough"* — is ONE LINE holding the campaign's ENTIRE remaining demonstration.**
+- `[MEASURED, `ADVISOR-STATE` dashboard, `R-648 §3`; re-read this ruling, and NO ruling in `R-690..R-705` moves it]`: golden strategy **`[UNSELECTED]`** · compiler stages passed (spec · binding · emit · execute · compare · planted-defect) **`0 / 6`** · planted-defect propagation **`NOT BUILT`** · **`PHASE-1 EXIT = 0 of 3 hard gates`** (`BIND` · `FIDELITY` · `P0IG`).
+⇒ ★★★★★ **HIS GATE `5` CONTAINS THAT ENTIRE DASHBOARD. FIVE ITEMS ARE NOT FIVE COMPARABLE STEPS, AND FINISHING THE FIRST IS REAL WORK THAT IS NOT ONE-FIFTH OF THE DISTANCE.** **THIS is the refusal's ground from now on. The word "denominator" is retired from it.**
+
+### ✅ §5 — THE OPERATIVE SCALE FROM NOW ON, AND WHAT MAY NO LONGER BE SAID
+1. 🛑 **`HANDOFF N OF 7` MAY NOT BE QUOTED — BY ANY SEAT, INCLUDING THIS ONE, INCLUDING IN `ADVISOR-STATE`'s POSITION LINE.** ★ **If a handoff ladder is wanted, ENUMERATE THE SEVEN FIRST, in a committed document, with named members. `AN UNENUMERATED LADDER IS NOT A DENOMINATOR.`**
+2. ✅ **THE ENUMERABLE, MEASURED SCALE IS THE `R-648` DASHBOARD** (4 rows above) **PLUS `PHASE-1 EXIT = 0 of 3`.** Every one of those has named members and a stated instrument.
+3. ✅ **BLUEPRINT v4's PHASES REMAIN THE LADDER** (Phase 1 SPEC COMPILATION → 2 BATTERY/WAVE → 3 CONVEYOR → 3.5 FIRST THIRTY FUNDED DAYS). **We have not exited Phase 1.**
+4. 🛑 **UNCHANGED AND RE-ASSERTED: never report Lane 28, Gate 1, or any handoff as the BREAKTHROUGH DEMONSTRATION or as PHASE-1 EXIT.**
+
+### ⚖️ §6 — CORRECTIONS OWED TO LANDED ARTIFACTS (`ledger header §4`: corrections are visible, never silent)
+- **`ADVISOR-STATE`'s `CURRENT POSITION` line carries `HANDOFF 6 OF 7`** → **corrected in the same commit as this ruling.**
+- **`R-699 §5` · `R-704 §5` · `R-705 §4` cite it as the refusal's ground** → **annotated, not rewritten**; the refusals stand on `§4` above. **The mistake stays on the record as audit trail.**
+
+### ✅ §7 — AUTHORIZED NOW
+✅ **NOTHING CHANGES FOR THE WORKER. Lane 29 → Lane 30 stand exactly as `R-705 §5` specifies, including the two restored Lane-30 clauses.** **This ruling touches framing, not engineering, and no lane contract is reopened.** 🛑 **No new work is authorized by it and none is withdrawn.**
+**STOP CONDITION:** none — this ruling orders no execution.
+
+### ★★★★★ §8 — LESSON TO PERSIST
+★★★★★ **`I REFUSED HIS DENOMINATOR USING MINE, AND NEVER ENUMERATED MINE.`**
+★★★★★ **`AN UNENUMERATED LADDER IS NOT A DENOMINATOR — IT IS A FEELING WITH A FRACTION PRINTED ON IT.`** A fraction is the most trusted shape in a status line: it *looks* like it was counted. **Before any seat writes `N of M`, it must be able to name all `M` members from a committed document.**
+★★★ **AND THE DETECTION LESSON: THE CHALLENGE CAME FROM THE PERSON WITH THE LEAST ACCESS TO THE EVIDENCE.** He could not check the grep; he checked the *story* for coherence and found it didn't cohere. **`A READER WHO CANNOT VERIFY YOUR EVIDENCE CAN STILL AUDIT YOUR ARITHMETIC` — and twice now that has been the instrument that caught this desk's framing.**
+
+---
+
 ## R-705 · 2026-08-04 · ✅★★★★★ **`AR-783` APPROVED — LANE 28 CLOSES `11/11`, AND I RE-RAN IT MYSELF AT THE LANDED COMMIT: `556122b7`, `79 passed`, `PYTEST_EXIT=0`, BRACKETED, ALL THREE LANE FILES CLEAN AT `HEAD`.** 🛑🛑★★★★★ **DRAFTED AGAINST A DEFECT THAT WAS REAL WHEN MEASURED AND IS NOW DISCHARGED — AND THE DISCHARGE MAKES IT WORSE READING, NOT BETTER: AT `03:49:56` LANE 28 EXISTED IN **NO COMMIT ANYWHERE**, AND IT STAYED THAT WAY **~`6.5` HOURS, THROUGH THE DEATH OF *BOTH* SEATS** (advisor `22684`, worker `7820`; both replaced `09:31`). **IT SURVIVED ON LUCK.** The fresh worker committed it at `09:33:56`, unprompted, before this order could reach it.** ★★★★★ **`A LANE THAT EXISTS ONLY IN A DIRTY WORKING TREE IS NOT CLOSED — IT IS UNSAVED.` NEITHER THE WORKER NOR THE EXTERNAL READ ASKED WHETHER THE CLOSED LANE EXISTED IN ANY COMMIT. BOTH GRADED THE CONTENT OF `AR-783`; NOBODY GRADED ITS DURABILITY — AND A `6.5`-HOUR WINDOW SPANNING TWO SEAT DEATHS IS WHY THAT IS NOT PEDANTRY.**
 
 **RULING ID:** `R-705` · **TASK ID:** `AR-783` — Lane 28 closure · **DECISION: LANE 28 CLOSURE `APPROVED` (`11/11`, lane-affected green INDEPENDENTLY RE-RUN BY THIS DESK **AT THE LANDED COMMIT**) · THE ONE `REQUIRED CORRECTION` (COMMIT LANE 28 + `AR-783` ATOMICALLY) IS **`DISCHARGED AT `556122b7`, VERIFIED HERE — IT WAS SATISFIED BEFORE IT COULD BE ISSUED`** · LANES 29 AND 30 REMAIN AUTHORIZED, CONTRACTS ENUMERATED BELOW.**
@@ -87,6 +140,8 @@ git status --porcelain <the 3 lane paths>  -> (zero rows)
 
 ✅ **ADOPTED:** the closure of the eleven · the four re-homings and the reasoning that the old `..._changes_the_shared_value` test was internally contradictory · deletion of `parameter_aware_engine` · re-ratification of `parameter_supplied_to_non_consuming_route` · the prediction miss as a **MISS, not a proof failure** (`3` declared, `4` observed; named expected-GREEN set held at `0/4` moved — this is exactly what `R-681 §1`'s advance declaration exists to surface) · the hang disposition **and its prohibition on ever calling `test_cloud_backend.py` green** · the byte-mode rule for mutation scripts · the scoped whole-suite claim · **its own denominator warning that `171` must never be compared to `AR-779`'s `31`** — which `AR-783 §3` stated FIRST, unprompted.
 ✅ **APPROVED INVARIANT, ADOPTED VERBATIM:** *"A parameterized route may retain parameter-sensitive cache identity only when its real semantic evaluator consumes those parameters. Every other route must refuse before evaluation, cache creation, or state mutation."*
+
+> ⚠️🛑 **ANNOTATION ADDED BY `R-706` (2026-08-04, operator-caught): THE REFUSAL BELOW STANDS, BUT ITS STATED GROUND — *"the denominator is … HANDOFF `6` OF `7`"* — IS **RETRACTED**. `[MEASURED, `R-706 §2`]` the seven handoffs are enumerated in NO campaign document, and `6/7` flattered us harder than the scale it refused. **Read `R-706 §4` for the sustaining ground: WEIGHTING, not labelling.**
 
 🛑🛑🛑★★★★★ **REFUSED — `Gate 1..5` RENUMBERING, FOR THE FIFTH TIME** (`R-699 §5` first, `R-704 §5` fourth). **CONTENT ADOPTED, LABEL REFUSED.** The read's closing block asserts *"Gate 1 — evaluator parameter consumption: COMPLETE"*. **THE DENOMINATOR IS BLUEPRINT v4's PHASES. WE ARE AT HANDOFF `6` OF `7`.** Phase-1 exit still needs `BIND` + `FIDELITY` + `P0IG`. ★★★★★ `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG` — and a private gate-numbering adopted by drift would silently re-baseline the campaign's whole distance-to-money. **A COMPLETION CLAIM ON A PRIVATE SCALE IS THE MOST EXPENSIVE KIND.**
 
@@ -168,6 +223,8 @@ git status --porcelain <the 3 lane paths>  -> (zero rows)
 🛑 **(C) EVERY RE-HOMED TEST OWES A RED-PROOF ON ITS NEW ROUTE.** The read requires each still "witness its stated property" but names no method. ⇒ **plant-and-remove on `_h_wait_bias`, `sha256` PRE == POST, per `R-681 §3` (same test + command SHAPE, smallest declared delta) and `R-681 §1` (name the expected-GREEN set in advance).** ★★★★★ **`A GUARD MUST ASSERT IT LOOKED, NOT ONLY THAT IT FOUND NOTHING` — and a re-homed guard has never looked anywhere yet.**
 
 ### 🛑 §5 — DECLINED, FOR THE FOURTH TIME, AND ONE RATIFICATION THE READ DID NOT ADDRESS
+> ⚠️🛑 **ANNOTATION ADDED BY `R-706`: the decline STANDS; its ground *"HANDOFF `6` OF `7`"* is **RETRACTED AS UNENUMERATED** — see `R-706 §2`/`§4`.**
+
 🛑🛑★★★★★ **THE `Gate 1..5` NUMBERING IS DECLINED AGAIN (`R-699 §5` declined it; this is the fourth offer). CONTENT ADOPTED, LABEL REFUSED.** **The denominator is BLUEPRINT v4's phases: we are at **HANDOFF `6` OF `7`**, Phase-1 exit still needs `BIND` + `FIDELITY` + `P0IG`.** ★★★★★ **`A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG` — and a private gate-numbering adopted by drift would silently re-baseline the whole campaign's distance-to-money.**
 ✅★★★★ **RATIFIED, UNADDRESSED BY THE READ (`AR-782 §6`): THE WORKER DID NOT REPRODUCE THE GRADE'S `22/200` AND ASSERTED THE PROPERTY INSTEAD — ITS FIXTURE YIELDS `10/200`.** **That is CORRECT and is campaign law: the grade receipt does not publish its armA/armB values, so `22` is not reproducible from the artifact, and `A HARDCODED EXPECTED VALUE COPIED FROM ANOTHER FIXTURE IS A FABRICATED SAFETY CLAIM.` **ASSERT NON-ZERO + INDEPENDENTLY-CACHED. NEVER COPY THE `22`.**
 ✅★★★ **AND THE INSTRUMENT ERROR IN `AR-782 §5` IS RATIFIED AS DISCLOSED-NOT-HIDDEN:** `read_text`/`write_text` rewrote all `1,844` line endings `LF`→`CRLF` and the script's OWN byte-identity check caught it; repaired in binary mode, `sha256` restored. ★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — banked for Python alongside `ps-counting-encoding` for PowerShell.**
@@ -516,6 +573,8 @@ python -m pytest test_bias_parameter_transmission.py test_parameter_collision.py
 🛑★★★★ **(2) `R-697 §5.10`'s FIVE ACTIVATION CONDITIONS ARE NOT SUPERSEDED — THEY ARE EXTENDED BY ONE.** The read's Gate-2 list drops *"the flag-ON path refuses rather than defaults"* as a standalone item (it survives inside Lane 27's required behaviour) and adds Lane 27. ✅ **OPERATIVE SET = `R-697 §5.10`'s FIVE, INTACT, PLUS `LANE 27 PASSES` = SIX.** ★★★★★ **`COUNT OBLIGATIONS, NOT SENTENCES` — a re-worded list is where a dropped clause hides, and this desk has lost a clause to a paraphrase twice.**
 
 ### 🛑★★★★ §5 — DECLINED: THE `GATE 2` RENUMBERING. **CONTENT YES, LABEL NO**
+> ⚠️🛑 **ANNOTATION ADDED BY `R-706` (operator-caught): this is the FIRST of five refusals and the origin of the retracted ground. The refusal STANDS; *"HANDOFF `6` OF `7`"* is **RETRACTED AS UNENUMERATED** (`R-706 §2`). The sustaining ground is WEIGHTING (`R-706 §4`).**
+
 The read introduces *"the project remains on Gate 2: ACTIVATION SAFETY"*. ✅ **Its CONTENT is adopted as the activation condition set (`§4.2`).** 🛑 **Its NUMBERING is NOT adopted.** The campaign's ladder is **BLUEPRINT v4's phases**, and the slice is at **HANDOFF `6` OF `7`, PHASE-1 EXIT STILL NEEDING `BIND`+`FIDELITY`+`P0IG`.** ★★★★★ **`A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG` (`R-648`, operator-adopted). A seat that later reports *"we are on Gate 2 of 2"* would be describing a ladder this campaign does not run.** **Use v4's phases; `ACTIVATION SAFETY` is a named condition set, not a rung.**
 
 ### ✅★★★★★ §6 — THE READ'S ITEM `8` ALREADY HAS AN ANSWER IN THE TREE, AND I AM UPGRADING WHAT IT ASKS FOR
