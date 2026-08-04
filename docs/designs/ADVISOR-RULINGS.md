@@ -12,6 +12,63 @@
 
 ---
 
+## R-708 · 2026-08-04 · ⚖️★★★★★ **NOT THE MERITS RULING ON `AR-787` — THAT ONE WAITS FOR THE GPT READ, AND I AM SAYING SO RATHER THAN LETTING THE WAIT LOOK LIKE FORGETFULNESS.** ✅ **THIS RULING DOES THREE THINGS THE WAIT DOES NOT COVER: PUBLISHES THE DISPATCHED RE-GRADE (`R-707 §9`'s UNPAID DUTY), CONFIRMS LANE 30's DURABILITY AT THIS DESK, AND PUTS THE WORKER ON A **MEASURED** HOLD SO IT DOES NOT CORRUPT THE GRADE IT IS WAITING FOR.**
+
+**★ WORKER — START HERE. §3 IS A HOLD, NOT A STALL. IT HAS A REASON, A DURATION, AND A NAMED PARTY WHO LIFTS IT.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-787`** (`ruling-stale-premise-guard`) — read in full, §1–§8. **Its merits are NOT adjudicated here.**
+
+**RULING ID:** `R-708` · **TASK ID:** post-Lane-30 grade window · **DECISION: `HOLD` (worker) + `DISPATCHED` (grade). MERITS OF `AR-787`: `DEFERRED` pending the external read.**
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling — NOT copied forward]`. **NOT MODIFIED · NO node transition.**
+**GRAPH FAN-IN / READY SET:** lanes 28·29·30 — **`3/3` RETURNED, THE BATCH IS CLOSED.** **No node becomes ready until the grade receipt exists**; `R-707 §8` fixed Gate 2's closure on it.
+
+### §1 — 🛑 THE WAIT, EXERCISED EXPLICITLY (operator-asserted a THIRD time, 2026-08-04)
+`AR-787` is a DELIVERY and owes a merits ruling. **I am not writing that ruling yet.** The external read has not arrived; `origin/external-advisor/gpt-rulings` is stale at `953a907c` (`08-02`) and reads now arrive as operator chat, so **quiet is not evidence** `[MEASURED, `R-698`]`.
+★★★★★ **`AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE` — the `R-694`..`R-697` drift happened because the "say you didn't wait, and why" clause was used ZERO times. So this is the clause used in the other direction: I AM waiting, and here is the record of it.**
+✅ **WHAT DOES *NOT* WAIT, PER THE PROTOCOL'S OWN BOUNDED LIST:** the **grade DISPATCH** (evidence-gathering under `doer ≠ grader`) — dispatched, §2. A **receipt** owes no ruling. A **BLOCKED WORKER** outranks the wait — and the worker IS blocked, which is why §3 answers it now instead of leaving it silent.
+🛑 **`"TIME-CRITICAL" IS NOT ON THAT LIST.`** I nearly used it at `R-707` and the urgency was measured FALSE. **Recorded so the next seat does not re-derive the excuse.**
+
+### §2 — ✅ THE RE-GRADE IS DISPATCHED. `R-707 §9`'s PUBLICATION DUTY, DISCHARGED HERE
+| field | value |
+|---|---|
+| **PINNED COMMIT** | `b8321dc95454bdc469df5953f809694f78ed7902` (Lane 30 close) |
+| **RUNNER IDENTITY** | `accuracy-validator` (v2), background agent, dispatched by THIS desk |
+| **START** | `2026-08-04 ~14:40Z` |
+| **EXPECTED WINDOW** | `60`–`90` min. ⚠️ **I published `20`–`45` once before and it ran `~75` — this figure is the corrected one.** |
+| **DURABLE RECEIPT** | `docs/designs/GRADE-LANES-28-30-2026-08-04.md` — **grader writes, THIS DESK commits.** `A VERDICT LIVING ONLY IN CHAT IS SINGLE-SOURCE` and already forced one full re-run. |
+| **GATE RULE** | `R-701 §2.5`, fixed `01:26` while the answer was unknown, **NOT re-read now.** |
+✅ **THE BRIEF CARRIES THE HONEST-NULL REQUEST** — *"no refutation found, here is what I covered and what I could not"* is a complete answer, and **a grader that manufactures a finding to look useful is worse than none.**
+⭐ **AND IT WAS HANDED THE SHARPEST LEAD THIS DESK HOLDS: the worker's declared RED set has now been UNDER-specified TWICE IN THE SAME DIRECTION** (Lane 29 predicted `7`, true absence reddens `8`; Lane 30 predicted `11`, the plant produced `13`). **Both were recorded against interest by the worker itself.** ★★★★★ **The direction is the finding: `A PLANT THAT PROVES LESS THAN ITS GUARD CLAIMS LEAVES THE DIFFERENCE UNTESTED`, so the grader is asked whether each guard discriminates the property it NAMES.**
+🛑 **THE ONLY RESTRICTION IN THE BRIEF IS A SAFETY ONE, NOT A COVERAGE ONE** (`A RESTRICTION IN THE GRADER'S BRIEF IS A HOLE IN THE RESULT`): do not disturb the shared tree, bracket every plant by `sha256` PRE/POST, never touch the sibling seat's `test_synthetic_market_simulator.py`. **Mutation planting is REQUIRED, not restricted.**
+
+### §3 — 🛑🛑★★★★★ WORKER HOLD — AND THE REASON IS A COLLISION, MEASURED, NOT "NOTHING TO DO"
+**HOLD: no writes to `src/engine/spec_condition_compiler.py` or anything under `src/engine/tests/` until the grade receipt lands.**
+**WHY, CONCRETELY:** the grader is authorized to PLANT MUTATIONS into those exact paths and to prove restoration by comparing `sha256` before and after `[the dispatch brief requires bracketing; the worker's own Lane-29/30 restores used the same technique, `621302a56987f19b` PRE==POST]`. **A concurrent write by the worker inside that window has two bad outcomes and no good one: the grader's restore check fails on a file the worker legitimately changed, or the worker's edit is silently folded into a file the grader then certifies as "restored".** ★★★★★ **`A SHARED RESOURCE IS A HIDDEN EDGE` — the desk has applied that law to lanes all night and would have missed it between a lane and its own grader.**
+✅ **PERMITTED DURING THE HOLD:** reading · planning Lane 31 · answering questions · **`AGENT-REPORTS.md` is yours and is not held.**
+⚖️ **WHO LIFTS IT: THIS DESK, ON THE RECEIPT — not a future seat, not the worker's judgement.** **Expected `60`–`90` min from `~14:40Z`.** 🛑 **If the receipt has not landed by `~16:15Z`, that is a DESK defect, not a worker one — report the silence and I will chase it.**
+🛑 **THIS IS NOT A CONTEXT-EXHAUSTION HANDOFF.** `AR-787 §8` states the worker is seated with a live ear. **The seat stays authorized; only the two write surfaces are held.**
+
+### §4 — CLAIMS I VERIFIED MYSELF `[MEASURED HERE, campaign worktree `wt-h1-wave4-20260712`]`
+1. ✅ **DURABILITY — `R-707 §4`'s BINDING, DISCHARGED.** Lane 30 is committed at **`b8321dc9`** (`10:37:26 -04:00`); `git status --porcelain` on both lane test files and `AGENT-REPORTS.md` returns **EMPTY**. **Three files, `560` insertions / `41` deletions, and the sibling's `test_synthetic_market_simulator.py` is NOT among them.**
+⚠️★★★★★ **AND THE RE-MEASURE LAW PAID FOR ITSELF A SECOND TIME IN ONE SESSION:** at `14:37:14Z` I read those paths **DIRTY**; at `14:37:36Z` — **22 seconds later** — they were clean at `b8321dc9`. **Had I ruled on the first reading I would have published a false durability finding against a worker that had already committed.** `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION.`
+2. ✅★★★★ **LANE 30 IS TEST-ONLY — CONFIRMED INDEPENDENTLY, NOT RELAYED.** `[MEASURED HERE]` `git diff --stat d9684c64 b8321dc9 -- src/engine/spec_condition_compiler.py` returns **EMPTY** ⇒ production is byte-identical across the whole lane. **This is the fact that bounds every Lane-30 claim, so I re-derived it rather than accepting `AR-787 §0`'s statement of it.**
+3. ✅ **The `93`→`108` lane surface and the `95`-file canonical population are `AR-787`'s figures and are `RELAYED` — I did NOT re-run them.** They are the grader's job this round, and re-running them here while the grader plants into the same files is the collision §3 exists to prevent.
+
+### §5 — FAILED OR UNPROVEN / `[UNENUMERATED]`
+🛑 **MERITS OF `AR-787` — UNADJUDICATED BY DESIGN**, incl. the `80`-vs-`81` stop condition, the new `95`-file canonical population, and the second under-predicted red set. **All three go to the read and then to a merits ruling.**
+🛑 **CARRIED UNCHANGED:** `test_cloud_backend.py` **HUNG / `[UNENUMERATED]`**, excluded from every population, **desk-owned** · no `tsc`, no `vitest` — **no TS parity claim** · `TF_FAMILY_META_ENFORCED` **OFF**; activation still needs `R-697 §5.10`'s five conditions **+ Lane 27** = **six** · producer untouched · **`runtime-production` UNMEASURED** (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`) · historical `80`/`81` **unreconstructable, NOT explained.**
+🛑 **GATE 2 DOES NOT CLOSE HERE, AND `FAN-IN 3/3` IS NOT PHASE-1 EXIT.** The operative scale stays `R-706`'s: golden strategy **`[UNSELECTED]`** · compiler stages **`0/6`** · planted-defect harness **`NOT BUILT`** · **`PHASE-1 EXIT = 0 of 3`.**
+
+### §6 — AUTHORIZED NEXT ACTION (§0.5)
+1. **WORKER: HOLD per §3** — reason, duration and the party who lifts it are all named above. **Not a stall, not a handoff.**
+2. **DESK (me): on the receipt** — commit it, rule its verdict against `R-701 §2.5`'s four categories, **and rule the merits of `AR-787` together with the external read.** 🛑 **The ruling on the grade's VERDICT waits for the read; the dispatch did not.**
+3. **DESK (me): if `~16:15Z` passes with no receipt** — chase the grader, and say so plainly rather than letting the window quietly extend.
+
+### §7 — LESSON TO PERSIST
+★★★★★ **`THE DESK APPLIED THE SHARED-RESOURCE LAW TO EVERY PAIR OF LANES ALL NIGHT AND ALMOST MISSED IT BETWEEN A LANE AND ITS OWN GRADER.` A verification instrument that PLANTS is a WRITER, and it contends for the same files as the seat it is grading. **Schedule the grader like a lane: name its write surface and hold every other writer off it.**
+
+---
+
 ## R-707 · 2026-08-04 · ✅★★★★★ **`AR-785` APPROVED — LANE 29 CLOSED `6/6`, AND I RE-RAN IT MYSELF AT THE LANDED COMMIT `d9684c64` ON A POPULATION I RE-DERIVED RATHER THAN COPIED: `93 passed`, `PYTEST_EXIT=0`, BRACKETED.** 🛑🛑★★★★★ **AND THE FINDING THAT OUTLIVES THIS LANE IS ABOUT THE *GRADERS*, NOT THE WORKER: `R-705` MINTED `A LANE THAT EXISTS ONLY IN A DIRTY WORKING TREE IS NOT CLOSED` **TWENTY-FIVE MINUTES** BEFORE `AR-785`, AND THE EXTERNAL READ CERTIFIED *"LANE 29 CLOSED"* WITHOUT ASKING WHETHER IT EXISTED IN ANY COMMIT — **THE IDENTICAL OMISSION, BY THE SAME READER, ONE LANE LATER.** ✅ **THE WORKER DID NOT REPEAT IT: `AR-785` SHIPPED *INSIDE* `d9684c64` WITH THE CODE.**
 
 **★ WORKER — START HERE. §6 IS YOUR LANE-30 CONTRACT; IT IS WIDENED AND EVERY ADDITION IS ENUMERATED VERBATIM.**
