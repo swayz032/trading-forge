@@ -4,6 +4,93 @@
 
 ---
 
+## AR-741 · 2026-08-03 · 🛑★★★★★ **`R-678 §5 LANE 3` — **STOP CONDITION FIRED, EXACTLY AS PRE-REGISTERED IN `AR-740 §2`.** STEP `(1)` **CANNOT BE MADE RED WITHOUT ADDING A PARAMETER FIELD**, SO STEP `(2)` IS NOT AUTHORIZED AND I DID NOT DO IT. **STEP `(3)` IS DELIVERED AND VERIFIED.**** ⚠️🛑★★★★★ **AND I AM REFUSING THE WORD THE RULING OFFERED ME: `§5` SAID A NON-RED RESULT *"REFUTES `§2` AND THE CACHE LEAK IS DOWNGRADED FROM HYPOTHESIS TO **DISPROVED**"*. **IT IS NOT DISPROVED. IT IS UNREACHABLE.** THE MECHANISM IS INTACT AND CORRECT; IT SIMPLY HAS NO INPUT THAT VARIES YET. **`5` HANDLERS BECOME LEAK SITES THE INSTANT A PARAMETER EXISTS.** `AN UNREACHABLE DEFECT IS A LOADED TRAP, NOT AN ABSENT ONE — AND TAKING THE OFFERED "DISPROVED" WOULD HAVE DISARMED IT ON PAPER ONLY.**
+
+**TASK:** `R-678 §5` steps `(1)`,`(2)`,`(3)`. **RUN MODE: AST enumeration + hand audit + one comment-only source edit + `pytest`.** **Files touched: `src/engine/spec_family_bindings.py` (module docstring ONLY) and `AGENT-REPORTS.md`. NO test file written (step `1` did not reach red). NO cache re-key (step `2` gated).** 🛑 **The sibling's dirty `test_synthetic_market_simulator.py` remains untouched by me.**
+
+### 🛑★★★★★ §1 — STEP (1): THE DISCRIMINATOR, DECLARED BEFORE THE MEASUREMENT
+✅ **`AR-740 §2` pre-registered the whole experiment: *"a cache leak needs BOTH (i) a single-slot cache AND (ii) an input that legitimately VARIES per condition"*, and named the deciding read: **`WHICH SIDE OF THE CACHE DOES THE PER-CONDITION SELECTION HAPPEN ON?`** ★★★ **The answer came back on the side I predicted, and I am flagging that BECAUSE it is the weakest position to be in — a confirmed prediction is when to audit the instrument hardest, not to relax.**
+🛑🛑★★★★★ **THE OPERATIVE TEST, AND IT IS THE ONE THAT MATTERS: `A CACHE DEFECT EXISTS ONLY IF REMOVING THE CACHE WOULD CHANGE A RESULT.` Where the evaluator never receives the binding at all, the cache is **INERT** — deleting it changes nothing, so no test written against it can go red.**
+
+### ✅ §2 — STEP (1) RESULT: ALL `14` HANDLERS, ENUMERATED BY AST, BOTH CONTROLS LIVE
+```
+HANDLERS FOUND: 14      POSITIVE CONTROL: parser found 14 (non-zero) -- LIVE
+NEGATIVE CONTROL: planted a deliberately-leaking handler
+    (ctx['slot'] = self._eval(b.object) under an unkeyed slot)
+    -> detector reported feeds_cache=True    (must be True)  -- LIVE
+```
+| Class | n | Meaning |
+|---|---|---|
+| **INERT** — handler never reads `b` | **5** | `_h_session` · `_h_structure` · `_h_retest` · `_h_fvg` · `_h_levelzone`. **Evaluator takes no per-condition argument, so the cache cannot leak: two conditions of these families SHOULD evaluate identically today.** |
+| **SAFE** — reads `b`, selects AFTER the cache | **7** | `_h_wait_bias` (keyed on `want_bearish`) · `_h_confirmation` (two slots, one per direction) · `_h_non_gating` · and the `4` natives — **which cache the FULL `Result` object and call `_select_directional(result, b.object)` afterwards.** |
+| **Flagged, then CLEARED by hand** | **1** | `_h_levelzone_resolver` — see `§3`. |
+| No cache | **1** | `_h_never_executed` (raises by design). |
+🛑 **LIVE LEAK SITES TODAY: `0`, under a live negative control.**
+
+### ⚠️★★★★★ §3 — THE ONE CANDIDATE MY DETECTOR FLAGGED, AND WHY I DID NOT TRUST MY DETECTOR
+⚠️ **My AST detector reported `_h_levelzone_resolver` as a LIVE leak candidate — a `b.object` read feeding a cache fill.** 🛑 **I AUDITED THE INSTRUMENT BEFORE BELIEVING IT, AND THE INSTRUMENT WAS TOO CRUDE: it cannot distinguish *"the per-condition value feeds the **KEY**"* (correct) from *"it feeds the **VALUE** while the key ignores it"* (leak). **`_h_levelzone_resolver` is the FORMER — it is the one handler already doing it right.**
+✅ **CLEARED, BY READING THE EXECUTABLE LINES:** `cache_key = (kind, bullish)`, both derived from `b.object` (`:583-584`). Inside `_eval_population_a_level`, **`object_text` is used EXACTLY ONCE — `:994`, `bullish = population_a_bullish_leaning(kind, object_text)` — and `bullish` is ALREADY IN THE KEY.** The value is a pure function of `(kind, bullish)` plus shared market data. **The key is complete.**
+✅ **AND IT IS DOUBLE-GATED ANYWAY:** `TF_LEVELZONE_ROUTING_ENABLED` and `TF_LEVELZONE_RESOLVER_ENABLED`, **both defaulting to `"false"`** (`spec_family_bindings.py:145`, `:280`).
+★★★ **`A DETECTOR THAT FLAGS THE ONE CORRECT IMPLEMENTATION IS A DETECTOR THAT WOULD HAVE MISSED THE REAL THING TOO` — I report the flag and its clearance rather than silently dropping the row, because the row is what shows the detector's blind spot.**
+
+### 🛑🛑★★★★★ §4 — WHY "DISPROVED" IS THE WRONG WORD, AND WHAT IS ACTUALLY TRUE
+🛑 **`R-678 §5` offered: *"it refutes `§2` and the cache leak is downgraded from hypothesis to DISPROVED."*** **I DECLINE THAT WORD. THE HONEST GRADE IS `[MECHANISM INTACT — CURRENTLY UNREACHABLE]`.**
+✅ **WHAT IS DISPROVED:** *"the cache leak is a LIVE defect today."* **It is not. `0` live sites.**
+🛑 **WHAT IS NOT DISPROVED, AND IS THE WHOLE POINT: `R-678 §2`'s mechanism claim — *"a cache keyed by family becomes a parameter-losing channel THE MOMENT PARAMETERS EXIST"* — is **UNTOUCHED BY THIS RESULT.** It was never a claim about today. **The `5` INERT handlers are inert ONLY because condition (ii) does not exist yet; every one of them becomes a leak site on the first day a period is expressible.**
+★★★★★ **`THE REASON IT WILL NOT GO RED IS THE REASON IT IS DANGEROUS: THE INPUT THAT WOULD EXPOSE IT IS THE SAME INPUT THE BUILD IS ABOUT TO ADD.`**
+
+### 🛑★★★★ §5 — THE ORDERING CONSEQUENCE `§5` ASKED ME TO NAME (this is the deliverable, not a footnote)
+🛑 **`§5`'s stop clause: *"it would mean the defect is unreachable until the channel exists, which is itself the answer and changes the ordering."* **IT DOES, AND `R-678 §4c` ALREADY SPOTTED THE CIRCULARITY — THIS CONFIRMS IT BY MEASUREMENT: `TASK 1`'s required proof (*"`SMA(20)` and `SMA(200)` produce distinct cached values"*) IS UNCONSTRUCTIBLE BEFORE `TASK 2` MAKES PERIODS EXPRESSIBLE.**
+🛑 **AND THE TRAP IN THE OBVIOUS WORKAROUND: re-keying the `9` caches NOW would be a fix with **NO RED PROOF AVAILABLE AT ITS BIRTH** — every test would be green before AND after. **`red-proof at birth` forbids exactly that, and a green-to-green refactor of `9` cache sites on the critical path is how a silent regression ships.**
+✅ **MY RECOMMENDATION, AND IT IS ONE ITEM: **RE-KEY THE CACHES IN THE SAME COMMIT AS THE FIRST PARAMETER, TEST FIRST.** The two-same-family-conditions test is written against the new field, goes RED on the un-re-keyed cache, GREEN after — **the red proof `R-678 §3` demands exists only in that ordering.** **The cache work is not BEFORE the connect task; it is INSIDE it, and it gates that task's acceptance.**
+
+### ⚠️★★★★ §6 — A NEAR-MISS I FOUND WHILE LOOKING FOR SOMETHING ELSE (reported, NOT pulled)
+⚠️ **`_h_fvg` CACHES AN ALREADY-REDUCED ARRAY WHILE ITS `4` SIBLING NATIVES CACHE THE FULL `Result`.** `[MEASURED]` `_eval_fvg` returns `result.any_active`; `_h_bias_native`/`_h_confirmation_native`/`_h_sweep_native`/`_h_mss_native` cache `compute_*_signal(...)` whole and select afterwards.
+🛑 **CONSEQUENCE TODAY: two FVG conditions taught with OPPOSITE directions evaluate IDENTICALLY.** ✅ **BUT IT IS NOT A CACHE DEFECT AND I WILL NOT MISLABEL IT: the cause is `_eval_fvg` never receiving `b` at all — its own docstring declares directional selection out of scope. **Removing the cache would change nothing.** It is a declared FIDELITY limitation.**
+★★★ **WHY IT STILL MATTERS: it is the `1` of the `5` INERT handlers that is inert for a DIFFERENT reason from the others — not "nothing varies" but "the varying thing is deliberately ignored". **It is the first site that turns into a real leak when direction or parameters start mattering, and it will not look like the other four when it does.**
+🛑 **NOT PULLED** — `R-678 §3`'s own rule: one lane, one failure mode. **Recorded for the desk.**
+
+### ✅ §7 — STEP (3): DELIVERED AND VERIFIED
+✅ **`spec_family_bindings.py:18-25` REPLACED.** The false claim is **quoted and struck in place** (preserve-and-strike) rather than deleted, so a future reader sees what it said and why it was wrong. The new text states the `4` things that ARE true: no cross-language parity test exists · the mirror is PARTIAL and carries no object router or native · what pin (a) actually enforces (Python-internal) · and the `0`-drift measurement, explicitly labelled *"do not read that as a guarantee"*.
+```
+python -c "ast.parse(...)"                                  -> AST PARSE: OK; docstring present, len 5216
+python -c "from src.engine.spec_family_bindings import ..."  -> FAMILY_META families: 14
+                                                                bundle router callable: fvg_native.compute_fvg_signal
+python -m pytest src/engine/tests/test_family_meta_enforcement.py -q   -> 70 passed in 0.87s
+```
+⚠️ **HONEST NOTE ON MY OWN EDIT: a grep for `parity-tested` STILL HITS this file — because my correction QUOTES the old sentence. Intentional, but it means a future keyword sweep will surface it; the line immediately above it says `PARITY IS A CONVENTION HERE, NOT AN ENFORCED PROPERTY`.**
+
+### ⚠️ §8 — WHAT I DID NOT MEASURE, AND THE SURFACE MY COUNTS CANNOT SEE
+- 🛑 **SURFACE BLINDNESS:** my `14`-handler enumeration is **STATIC over `spec_condition_compiler.py` at HEAD**. **A cache living in another module, or one reached through the composition bundle with several natives active at once, is outside it** — `R-678 §6` already carries the bundle case as `[UNENUMERATED]` and I did **not** close it.
+- `[UNENUMERATED]` whether `ctx` slots are re-initialised per SPEC or per RUN — **I did not find the `ctx` construction site.** If a `ctx` outlives one spec, the leak's blast radius is larger than one strategy. **This is the single most valuable thing I did not check.**
+- `[UNENUMERATED]` the `5` INERT handlers under flags other than default.
+- ✅ **NO parameter field added · NO schema/`FAMILY_META`/`ConditionBinding` edit · NO grammar designed · NO candidate spec nominated · NO text→number parser, SMA/EMA selector or range table authored** (`R-678 §5` forbids all three — `indicator-params.ts`, `param-ranges.ts`, `pattern_library.py` already exist).
+- ⚠️ **PROCESS NOTE, ONE LINE: my first attempt at step `(3)` was BLOCKED BY THE `worker-execution` PRE-WRITE HOOK** — two rulings had landed since I last loaded the standard. **I re-loaded and re-issued. The guard fired correctly on a live seat; that is the `remembered-skill-is-a-stale-skill` law working in code rather than in prose.**
+
+### ★★★★★ §9 — RECOMMENDATION
+**`BLOCKED` on steps `(1)`/`(2)` — by the ruling's own pre-registered stop condition, not by an obstacle.** **`APPROVAL_REQUESTED` on step `(3)` and on this measurement.**
+**NEXT SMALLEST TASK (ONE):** **find where `ctx` is constructed and confirm its lifetime is ONE spec** (`§8`). It is cheap, it is read-only, it bounds the blast radius of a defect the desk is about to sequence work around — **and if `ctx` outlives a spec, the cache re-key changes from "inside the connect task" to "urgent on its own."**
+
+---
+
+## AR-740 · 2026-08-03 · ⏳ **START-RECEIPT — `R-678 §5 LANE 3`, RED-PROOF THE CACHE HYPOTHESIS. SAME SEAT. FIRST LANE THIS SEAT THAT WRITES CODE.**
+
+**TASK:** `R-678 §5` **(1)** a test with two same-family conditions carrying different parameters that goes **RED today** · **(2)** only if RED, re-key the `9` caches on the `population_a_level_cache` composite pattern and show GREEN from the **same unchanged command** · **(3)** correct the false parity docstring at `spec_family_bindings.py:22-23`.
+**RUN MODE:** new test file under `src/engine/tests/` · `spec_condition_compiler.py` **cache keys only** · one docstring. 🛑 **I will not touch the sibling's dirty `test_synthetic_market_simulator.py`.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~40 min.**
+
+### ✅ §1 — I ACCEPT THE GRADE AGAINST MY OWN HEADLINE, WITHOUT QUALIFICATION
+🛑 **`AR-737 §5`'s *"a numeric parameter channel that does not exist AT ANY LAYER"* WAS OVER-GENERALIZED AND THE GRADER IS RIGHT.** `indicator-params.ts` is live, is imported and persisted, and **recovers the taught number from the very sentences I quoted as proof of absence.** ✅ **What I measured — the spec-condition binding pipeline — was measured correctly (`bands 7`/`8`). What I WROTE was a claim about the system. `THE TELL IS THE PHRASE "AT ANY LAYER"` and it is mine to carry.** ★★★ **`R-678 §7.8` is the part I want to keep: I tested for the channel's ABSENCE by reading schemas; the grader tested for its PRESENCE by EXECUTING the module on my own quoted text. `A SECOND PATH THAT RUNS THE CODE BEATS A SECOND PATH THAT RE-READS THE FILE.`**
+
+### 🛑🛑★★★★★ §2 — THE STOP CONDITION IS THE LIKELY OUTCOME, AND I AM SAYING SO BEFORE I MEASURE
+🛑 **`§5`'s stop: *"if step (1) cannot be made red WITHOUT adding a parameter field, STOP AND REPORT THAT."*** ★★★★★ **I EXPECT TO HIT IT, AND HERE IS THE REASONING PRE-REGISTERED SO IT CANNOT BE FITTED TO WHATEVER I FIND:**
+**A cache leak needs BOTH (i) a single-slot cache AND (ii) an input that legitimately VARIES per condition. Today `(ii)` may not exist for any of the `9`** — `_eval_wait_retest(close, high, low, n)` and `_eval_wait_structure(n, df)` take **no per-condition argument at all**, so two conditions of those families **SHOULD** evaluate identically today. **Caching something that cannot vary is correct, not defective.**
+⚠️ **AND THE ONE PLACE `(ii)` MIGHT ALREADY HOLD IS `_select_directional(result, object_text)`, which picks bullish/bearish/any FROM THE OBJECT TEXT.** **IF that selection happens AFTER the cache read, the natives are safe (the cached `Result` carries all three sub-signals). IF it happens BEFORE, the leak is LIVE TODAY and step `(1)` goes red with no parameter field at all.**
+✅ **THAT IS THE WHOLE EXPERIMENT, AND IT IS A READ: `WHICH SIDE OF THE CACHE DOES THE PER-CONDITION SELECTION HAPPEN ON?`** **I am measuring it before writing a line of test code, because it decides whether this lane delivers a RED test or a stop-report.**
+🛑 **EITHER OUTCOME IS A RESULT AND I WILL NOT DRESS ONE AS THE OTHER.** `R-678 §5` says a refuted leak is *"REAL and WELCOME"*; **it also means the `9` caches are a LATENT trap that arms the moment the channel connects — which is a different finding from a live defect, and I will label it as such.**
+
+---
+
 ## AR-739 · 2026-08-03 · ✅🛑★★★★★ **`R-677 §6 LANE 1` DELIVERED — THE CHANNEL IS **CHEAPER AT THE BOTTOM AND MORE DANGEROUS IN THE MIDDLE** THAN THE RULING ASSUMED.** ✅ **`(a)` SETTLED BY MEASUREMENT, NOT ARGUMENT: an optional `parameters` field is **HASH-NEUTRAL — `0` of `18` sealed artifacts change — BUT ONLY IF IT IS OMITTED WHEN EMPTY. EMITTED AS `null` OR `{}` IT RE-SEALS ALL `18`.** My `_spec_hash` reimplementation reproduces all `18` sealed hashes (positive control `18/18`); a `1`-char text edit moves the hash (negative control LIVE).** ✅★★★★★ **AND LAYER `3`'s WIRE ALREADY EXISTS: `_dispatch_enforced(b: ConditionBinding, ctx)` ALREADY HANDS THE BINDING TO THE HANDLER, AND `_h_wait_bias` ALREADY READS A PER-CONDITION VALUE OUT OF IT (`b.object` → direction). `16` sites take a `ConditionBinding`. **THE PIPE IS LAID; IT CARRIES A BOOLEAN AND NOT A NUMBER.**** 🛑🛑🛑★★★★★ **TWO THINGS NOBODY HAD SIZED, AND BOTH ARE FINDINGS, NOT ESTIMATES: **(1) THE TS MIRROR DOES NOT CONTAIN THE OBJECT ROUTER AT ALL** — `resolveBundlePrimitive` `0`, `fvg_native` `0`, `sweep` `0`, `mss` `0`, `bundle` `0` (control: `resolveSessionKeyword` `2` in the same file). **"MIRRORED BYTE-FOR-BYTE" IS ALREADY FALSE FOR THE ENTIRE LAYER THE MA PRIMITIVE WOULD LIVE IN.** **(2) THE PER-FAMILY CACHES ARE KEYED BY FAMILY, NOT BY PARAMETERS — `9` SINGLE-SLOT `ctx[...] is None` CACHES PLUS `wait_bias_cache` KEYED ON A LONE BOOLEAN. **ADD A PERIOD WITHOUT RE-KEYING THEM AND EVERY CONDITION IN A FAMILY SILENTLY RECEIVES THE FIRST CONDITION'S PARAMETERS.**
 
 **TASK:** `R-677 §6 LANE 1` (a)–(f). **RUN MODE: READ-ONLY at HEAD + `3` scratchpad scripts. NO code, NO schema edit, NO `FAMILY_META` edit. I wrote nothing under `src/`** *(and per `AR-737 §6` I do NOT claim `src/` is clean — the sibling's dirty `test_synthetic_market_simulator.py` is still there and I did not touch it)*.

@@ -17,12 +17,41 @@ needs_archetype — same honesty contract as Band B's archetype matcher.
 
 PURITY CONTRACT (Ledger E parity surface, C2): this module does ZERO I/O, no
 DataFrame access, no DB reads — it is pure string/dict logic over the spec's
-condition list. This is deliberate: it is mirrored byte-for-byte in
+condition list. This is deliberate: a PARTIAL mirror lives in
 src/server/lib/spec-family-bindings.ts so the SAME spec produces the SAME
-binding plan on both sides of the stack (parity-tested in
-tests/test_spec_family_bindings_parity.py). Any change here MUST be mirrored
-there in the same commit — same convention as firm_rules_version.py /
-firm-rules-version.ts.
+binding plan on both sides of the stack. Any change to a MIRRORED surface MUST
+be mirrored there in the same commit — same convention as firm_rules_version.py
+/ firm-rules-version.ts.
+
+*** PARITY IS A CONVENTION HERE, NOT AN ENFORCED PROPERTY. READ THIS BEFORE
+    RELYING ON THE MIRROR. *** (corrected 2026-08-03, R-678 §5 step 3; the
+previous text claimed "mirrored byte-for-byte ... (parity-tested in
+tests/test_spec_family_bindings_parity.py)" and BOTH HALVES WERE FALSE. It was
+read as evidence by a worker and then repeated into a ruling before anyone
+opened the files it named — see AR-739 §0 / R-678 §1.)
+
+  1. NO CROSS-LANGUAGE PARITY TEST EXISTS. `tests/test_spec_family_bindings_
+     parity.py` is not in the tree (positive control: the same search locates
+     src/engine/tests/test_family_meta_enforcement.py). The TS-side file
+     src/server/lib/__tests__/spec-family-bindings.test.ts is 168 lines of
+     unit tests that never cross the process boundary — it tests TypeScript
+     against TypeScript, not against this module.
+  2. THE MIRROR IS PARTIAL, NOT BYTE-FOR-BYTE. It carries FAMILY_META, the
+     session-keyword table and the generic bindCondition path. It does NOT
+     carry the object router or any native primitive: resolveBundlePrimitive,
+     fvg_native, sweep, mss and bundle are all ABSENT from the .ts file
+     (control: resolveSessionKeyword is present there). The 5 native
+     primitives are Python-only by decision (R-678 §4), registered via
+     family_meta_enforcement.EXPERIMENT_PRIMITIVES.
+  3. WHAT IS ACTUALLY ENFORCED, at load time, is family_meta_enforcement's
+     pin (a) — verify_dispatch_coverage()'s both-directions set equality
+     between FAMILY_META's declarations and the executable dispatch, plus
+     gates<->handler agreement. That is a PYTHON-INTERNAL check. It says
+     nothing about the TS side.
+  4. MEASURED 2026-08-03: the two FAMILY_META tables had NOT drifted — 14
+     families each, 0 only-in-Python, 0 only-in-TS, 0 primitive
+     disagreements. Discipline held where enforcement did not. Do not read
+     that as a guarantee; nothing re-checks it.
 
 FAMILY -> PRIMITIVE TABLE (see docs/spec-execution-semantics.md for the full
 decision record with citations):
