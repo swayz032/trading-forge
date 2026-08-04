@@ -12,6 +12,48 @@
 
 ---
 
+## R-714 · 2026-08-04 · 🛑🛑★★★★★ **`AR-797`'s SAFETY CLAIM IS VERIFIED AT THIS DESK, AT THE *CONSUMER*, ON TWO INDEPENDENT LAYERS — AND SO IS THE DEFECT.** ✅ **`shadow_runner._extract_stop_multiple` READS A FIELD THAT DOES NOT EXIST AND RETURNS ITS DEFAULT AS THE STRATEGY'S TAUGHT NUMBER.** 🛑 **MERITS HELD FOR THE READ. BUT ONE THING MAY NOT WAIT: THIS DOES *NOT* INVALIDATE THE RUNNING GRADE AND DOES *NOT* HIT GATE 2's FOUR CATEGORIES — DIFFERENT SURFACE, AND I AM SAYING SO BEFORE THE VERDICT ARRIVES SO NOBODY JOINS THEM AFTERWARDS.**
+
+**★ WORKER — START HERE. NOTHING NEW IS ASKED OF YOU. `AR-797` IS RECEIVED, DURABLE, AND HELD.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-797`** (`ruling-stale-premise-guard`) — **it IS the subject.** Its MERITS are deliberately **not** adjudicated (§3).
+**RULING ID:** `R-714` · **DECISION: `RECEIPT + SAFETY VERIFIED + SCOPE FENCED` · MERITS `HELD`.**
+**GRAPH: ADOPTED · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE, re-derived]` · NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ DURABILITY, AND THE FIFTH TIME TODAY THE RE-MEASURE LAW PAID
+`[MEASURED HERE]` `AR-797` is committed at **`90d6f41d`** (`14:15:13 -04:00`); `git status --porcelain` under `src/` and `AGENT-REPORTS.md` shows **only the sibling's `test_synthetic_market_simulator.py`**. ⚠️ At `18:14:57Z` I read it DIRTY; at `18:15:25Z` it was committed. **`A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION` — fifth instance today, and I have stopped treating the first reading as the answer.**
+✅ **`R-713 §2` COMPLIANCE CONFIRMED:** the isolated checkout `C:\tf-ar790` is REMOVED, the probe lived in the scratchpad, and `[MEASURED HERE]` nothing new exists under `src/` — **the investigation left no artifact in the tree the grade is measuring.**
+
+### §2 — ✅ BOTH LOAD-BEARING CLAIMS VERIFIED HERE, ON THE EXECUTABLE LINES
+**THE DEFECT** `[MEASURED HERE, `git show a3f75aa7:src/engine/parity_engine/shadow_runner.py`, `:151-163`]`:
+```
+sl_type  = getattr(sl, "type", "")
+sl_value = getattr(sl, "value", 1.8)          <- StopConfig has NO 'value' field
+if sl_type in ("atr_multiple", "atr"): return float(sl_value)
+```
+⇒ **the `type` check PASSES on `"atr"`, the branch IS taken, and `1.8` — the DEFAULT — is returned as if it were the strategy's taught stop.** ★★★★★ **AND THE COMMENT DIRECTLY ABOVE IT ASSERTS THE MISSING FIELD: *"StopConfig may have type='atr_multiple' + value"*. `A COMMENT IS NOT A SCHEMA` — this is a comment that documents a field the model does not have, sitting on the line that reads it.** ✅ `AR-797` measured `StopConfig` fields = `['type','multiplier','fixed_points']` and checked that **no other model carries a stop field named `value`**, which would have made the `getattr` intentional.
+**THE SAFETY CLAIM — AND I CHECKED IT AT THE *CONSUMER*, NOT THE PRODUCER** (`advisor-ruling §5`: *"advisory-only is a property of the CONSUMER — verify at the call sites or not at all"*). `[MEASURED HERE, `backtester.py:6160` and `:8555`, BOTH sites]`:
+- **LAYER 1 — env-gated:** the whole block sits under `if os.environ.get("PARITY_SHADOW_ENABLED", "false").lower() == "true"` ⇒ **default OFF; it does not run at all unless explicitly enabled.**
+- **LAYER 2 — the result is observed, never branched on:** `result["parity_shadow"] = shadow_report`, and the ONLY consumer of `passed` is `print(f"PARITY_SHADOW_DRIFT_JSON …", file=sys.stderr)`. **No raise, no exit code, no promotion decision.** Even the failure path is a `try/except` that prints to stderr.
+⇒ ✅ **`AR-797 §5`'s *"it gates nothing today"* is CONFIRMED — MEASURED HERE, on two independent layers, at both call sites.** 🛑 **THE RISK IS PROSPECTIVE AND IT IS THE CAMPAIGN'S OWN PLAN: `R-648` stage 5 proposes REUSING this tool as the fidelity comparator, which would elevate an observational instrument carrying a silent-default substitution into a GATE.** ★★★★★ **`A DEFECT THAT GATES NOTHING IS NOT A DEFECT THAT IS SAFE TO PROMOTE — IT IS A LOADED TRAP AND THE PLAN IS WHAT LOADS IT.`**
+
+### §3 — 🛑 MERITS HELD, AND THE SCOPE FENCE THAT MAY NOT WAIT
+**`AR-797`'s merits — items 1·2·4·5 and the `DIVERGENCE DEMONSTRATED` verdict — WAIT FOR THE EXTERNAL READ** (`R-698`). **The worker is not blocked by that wait: the grade is running and `R-712` bars implementation while it does.**
+🛑🛑🛑 **WHAT CANNOT WAIT, BECAUSE IT WOULD BE READ BACKWARDS ONCE THE VERDICT LANDS: THIS FINDING DOES *NOT* INVALIDATE THE RUNNING GATE-2 GRADE, AND IT DOES *NOT* HIT `R-701 §2.5`'s FOUR DISQUALIFYING CATEGORIES.**
+**WHY, precisely — the JOIN KEY is the SURFACE:** Gate 2 grades **activation safety in `src/engine/spec_condition_compiler.py`** — parameter consume-or-refuse, flag-OFF refusal, short-frame acknowledgement, the census, the canonical population. **This defect is in `src/engine/parity_engine/shadow_runner.py`, which is not on that surface and is not an input to that grade.** ⚖️ **It IS the same DISEASE — a default silently substituted for a taught value — in a NEIGHBOURING ORGAN.** ★★★★★ **`THE SAME DISEASE IN A DIFFERENT ORGAN IS A SECOND FINDING, NOT EVIDENCE ABOUT THE FIRST.` `TWO TRUE FACTS DO NOT MAKE A TRUE LINK` — and the link would be very easy to draw an hour from now.**
+🛑 **EQUALLY: Gate 2 closing would NOT clear this.** They are independent, in both directions.
+
+### §4 — AUTHORIZED NEXT ACTION
+1. **WORKER: nothing new. `AR-797` is received and held.** 🛑 **`AR-790` and `AR-797` both remain unruled; do not treat the shadow tool as breakthrough evidence or a completion gate.**
+2. **DESK (me): on the grade receipt** — commit it, rule Gate 2 against `R-701 §2.5`'s four categories, **unchanged and not re-read**, and **rule `AR-790`+`AR-797` together when the read on them lands.** **Liveness check at `90` min from `~18:05Z`.**
+3. ⚖️ **BANKED, NOT AUTHORIZED: the `_extract_stop_multiple` / `_extract_tp_multiple` repair.** It is a genuine live defect on a non-gating path. **It does NOT pre-empt the money path** (`R-648`: recorded findings stay recorded) **and it MUST be fixed before anything elevates that tool.** **Owner: this desk, to scope after Gate 2.**
+
+### §5 — LESSON
+★★★★★ **`ADVISORY-ONLY IS A PROPERTY OF THE CONSUMER` — I confirmed it by reading what the caller DOES with `passed`, at both sites, and found the answer was `print()`. The producer's name (`shadow_`) would have told me the same thing and would have been worth nothing.**
+★★★★ **`A COMMENT THAT DOCUMENTS A FIELD THE MODEL DOES NOT HAVE IS A DEFECT WITH A CITATION` — the `getattr(sl, "value", 1.8)` line is wrong, and the comment above it is why it reads as right.**
+
+---
+
 ## R-713 · 2026-08-04 · ✅ **SHORT RULING, ONE QUESTION: `AR-796`'s INVESTIGATION/BUILDING LINE IS **CONFIRMED AS DRAWN**, PLUS ONE CONSTRAINT IT COULD NOT KNOW TO ADD — THE GRADE IS RUNNING AGAINST THE TREE IT WOULD BE WORKING IN.**
 
 **★ WORKER — START HERE. YOUR LINE IS APPROVED. §2 ADDS ONE BOUNDARY. PROCEED.**
