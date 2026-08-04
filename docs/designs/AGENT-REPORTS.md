@@ -4,6 +4,99 @@
 
 ---
 
+## AR-739 · 2026-08-03 · ✅🛑★★★★★ **`R-677 §6 LANE 1` DELIVERED — THE CHANNEL IS **CHEAPER AT THE BOTTOM AND MORE DANGEROUS IN THE MIDDLE** THAN THE RULING ASSUMED.** ✅ **`(a)` SETTLED BY MEASUREMENT, NOT ARGUMENT: an optional `parameters` field is **HASH-NEUTRAL — `0` of `18` sealed artifacts change — BUT ONLY IF IT IS OMITTED WHEN EMPTY. EMITTED AS `null` OR `{}` IT RE-SEALS ALL `18`.** My `_spec_hash` reimplementation reproduces all `18` sealed hashes (positive control `18/18`); a `1`-char text edit moves the hash (negative control LIVE).** ✅★★★★★ **AND LAYER `3`'s WIRE ALREADY EXISTS: `_dispatch_enforced(b: ConditionBinding, ctx)` ALREADY HANDS THE BINDING TO THE HANDLER, AND `_h_wait_bias` ALREADY READS A PER-CONDITION VALUE OUT OF IT (`b.object` → direction). `16` sites take a `ConditionBinding`. **THE PIPE IS LAID; IT CARRIES A BOOLEAN AND NOT A NUMBER.**** 🛑🛑🛑★★★★★ **TWO THINGS NOBODY HAD SIZED, AND BOTH ARE FINDINGS, NOT ESTIMATES: **(1) THE TS MIRROR DOES NOT CONTAIN THE OBJECT ROUTER AT ALL** — `resolveBundlePrimitive` `0`, `fvg_native` `0`, `sweep` `0`, `mss` `0`, `bundle` `0` (control: `resolveSessionKeyword` `2` in the same file). **"MIRRORED BYTE-FOR-BYTE" IS ALREADY FALSE FOR THE ENTIRE LAYER THE MA PRIMITIVE WOULD LIVE IN.** **(2) THE PER-FAMILY CACHES ARE KEYED BY FAMILY, NOT BY PARAMETERS — `9` SINGLE-SLOT `ctx[...] is None` CACHES PLUS `wait_bias_cache` KEYED ON A LONE BOOLEAN. **ADD A PERIOD WITHOUT RE-KEYING THEM AND EVERY CONDITION IN A FAMILY SILENTLY RECEIVES THE FIRST CONDITION'S PARAMETERS.**
+
+**TASK:** `R-677 §6 LANE 1` (a)–(f). **RUN MODE: READ-ONLY at HEAD + `3` scratchpad scripts. NO code, NO schema edit, NO `FAMILY_META` edit. I wrote nothing under `src/`** *(and per `AR-737 §6` I do NOT claim `src/` is clean — the sibling's dirty `test_synthetic_market_simulator.py` is still there and I did not touch it)*.
+
+### 🛑★★★★★ §0 — A CORRECTION TO MY OWN `AR-737`, FIRST, BECAUSE THE DESK BUILT ON IT
+🛑🛑 **`AR-737 §3` ROW `5` SAID THE TS MIRROR WAS *"parity-tested both sides (`tests/test_spec_family_bindings_parity.py`, `src/server/lib/__tests__/spec-family-bindings.test.ts`)"*. **THAT WAS WRONG AND IT WAS MY ERROR.** `[MEASURED HERE]`**
+- 🛑 **`tests/test_spec_family_bindings_parity.py` DOES NOT EXIST ANYWHERE IN THE TREE.** `find . -name "test_spec_family_bindings_parity*"` → **nothing**. **POSITIVE CONTROL: the same `find` for `test_family_meta_enforcement.py` → `./src/engine/tests/test_family_meta_enforcement.py`. The finder works; the file is absent.**
+- 🛑 **THE TS TEST IS NOT A PARITY TEST.** `168` lines, and `grep -n "python|\.py|spawn|exec|fixture|golden"` → **`0` process-boundary hits.** Its own header says *"Unit tests for the TS mirror"*. **It tests TypeScript against TypeScript.**
+🛑🛑🛑★★★★★ **THEREFORE: `THERE IS NO EXECUTABLE CROSS-LANGUAGE PARITY CHECK. THE "BYTE-FOR-BYTE MIRROR" IS GUARDED BY A COMMENT ASKING HUMANS TO REMEMBER.`**
+⚠️ **HOW I GOT IT WRONG, NAMED SO IT IS NOT REPEATED: I READ THE MODULE DOCSTRING (`spec_family_bindings.py:22-23`) AND REPORTED ITS CLAIM AS A MEASURED SURFACE. **I NEVER OPENED THE FILE IT NAMED.** That is `a grep matching only comments is not a verification` — the exact law in `worker-onboarding §3` — and `R-677 §1` then repeated my sentence into the ledger. **THE DESK'S COPY INHERITED MY ERROR; THIS IS ME RETRACTING IT AT THE SOURCE.**
+✅ **THE GOOD NEWS, MEASURED RATHER THAN HOPED: THE MIRROR HAS NOT ACTUALLY DRIFTED ON `FAMILY_META`.** Python `14` families / TS `14`; `0` only-in-Python, `0` only-in-TS, **`0` primitive disagreements on all `14` shared families.** POSITIVE CONTROL: the TS parser extracted `14` (non-zero). NEGATIVE CONTROL: corrupting one TS entry → `1` disagreement detected. **Discipline has held for `FAMILY_META` — it is simply not enforced by anything that can fail.**
+
+### ✅★★★★★ §1 — (a) LAYER 1: THE ADDITIVE FIELD IS HASH-NEUTRAL, UNDER ONE STRICT CONDITION
+**INSTRUMENT: `_spec_hash` reimplemented VERBATIM from `spec_producer.py:648-650` (`sha256` over `json.dumps(sort_keys=True, separators=(",",":"), ensure_ascii=False)`).**
+```
+POSITIVE CONTROL -- sealed hash reproduced: 18/18   (mismatch=0, no-hash=0)   -> INSTRUMENT IS THE REAL ONE
+NEGATIVE CONTROL -- object text +1 char: hash moves                            -> LIVE
+
+A  parameters ABSENT (omitted when empty)  -> hash UNCHANGED   ->  0 / 18 artifacts re-seal
+B  parameters PRESENT as null              -> hash CHANGED     -> 18 / 18 artifacts re-seal
+C  parameters PRESENT as {}                -> hash CHANGED     -> 18 / 18 artifacts re-seal
+D  parameters {"period": 20} on ONE cond   -> hash CHANGED     -> that artifact only
+```
+✅★★★★★ **`R-677 §2.2`'s ADDITIVE CLAIM IS **CONFIRMED BY MEASUREMENT** — and it comes with a hard constraint the ruling did not state: **`OMIT-WHEN-EMPTY` IS NOT A STYLE CHOICE, IT IS THE ENTIRE DIFFERENCE BETWEEN `0` AND `18` RE-SEALS.** A producer that emits `"parameters": null` for parameterless conditions destroys the `R-401` baseline **while looking like the additive design.**
+✅ **AND THE BLAST RADIUS IS CONTAINED AT LAYER 1:** `[MEASURED]` the sealed artifact's top-level keys across all `18` are `approximation_metrics · graph_canonical_hash · ledger_d · spec · spec_hash · transcript_chars · video` — **it carries NO bindings.** So a Layer-2 `to_dict` change **cannot** move `spec_hash`. **The two layers are hash-independent.**
+⚠️ **RE-VALIDATION FORCED: `compile_fidelity.py:616` RECOMPUTES `_spec_hash` as provenance check `(vi)`.** Under variant A that check is untouched; under B/C **it fails on every sealed artifact simultaneously.**
+
+### ✅ §2 — (b) LAYER 2: THE SMALLEST OF THE THREE
+`ConditionBinding` (`spec_family_bindings.py:762-777`): `10` fields, `10` keys in `to_dict`. **`14` non-test construction sites; `2` `to_dict` consumers (`:2906-2907`).**
+✅ **A new field WITH A DEFAULT does not touch the `14` construction sites** (frozen dataclass, defaulted) — **only the sites that POPULATE it change.** ✅ **`to_dict`'s extra key reaches the binding-plan dict only, which is not sealed (§1).**
+
+### ✅★★★★★ §3 — (c) LAYER 3: **THE PIPE IS ALREADY LAID**
+`[MEASURED]` `_dispatch_enforced(self, b: ConditionBinding, ctx: dict)` (`:618`) routes on `b.primitive` **and holds the whole binding.** `_h_wait_bias(self, b: ConditionBinding, ctx)` (`:519`) **already extracts a per-condition value from it** — `want_bearish = self._resolve_wait_bias_bearish(b.object)`. `_eval_wait_session(self, binding: ConditionBinding, …)` takes the binding outright. **`16` sites in the file accept a `ConditionBinding`.**
+✅★★★★★ **SO LAYER 3 IS NOT *"build a channel"* — IT IS *"read a field that will exist, instead of a module constant."* `THE ENGINE ALREADY PERSONALISES A CONDITION FROM ITS BINDING; IT PERSONALISES A BOOLEAN AND NOT A NUMBER.`** **The `BIAS_EMA_FAST/SLOW` constants (`:140-141`) are consumed inside `_eval_wait_bias`, which is the one function in the chain that does NOT receive `b` — that omission is the whole of Layer 3's delta for this family.**
+
+### 🛑🛑★★★★★ §4 — THE HAZARD NOBODY ORDERED ME TO LOOK FOR, AND IT WOULD HAVE BITTEN ON FIXTURE `1`
+🛑 **`[MEASURED]` THE PER-CONDITION EVALUATION CACHES ARE KEYED BY **FAMILY**, NOT BY PARAMETERS:**
+```
+9 single-slot caches, filled once per SPEC and reused by every condition of that family:
+  ctx["wait_structure"] · ["wait_retest"] · ["fvg_signal"] · ["wait_structure_levelzone"]
+  ["population_a_atr"] · ["bias_result"] · ["confirmation_result"] · ["sweep_result"] · ["mss_result"]
+        pattern:  if ctx["X"] is None:  ctx["X"] = self._eval_X(...)      <- no key at all
+  plus  wait_bias_cache[want_bearish]                                      <- keyed on ONE bool
+```
+🛑🛑🛑★★★★★ **CONSEQUENCE, AND IT IS SILENT: A SPEC TEACHING *"the 20 SMA"* AND *"the 200 SMA"* WOULD COMPUTE THE FIRST AND HAND IT TO THE SECOND. **NO ERROR, NO WARNING — THE SECOND CONDITION SIMPLY EVALUATES THE FIRST CONDITION'S INDICATOR.** `A CACHE KEYED BY FAMILY BECOMES A PARAMETER-LOSING CHANNEL THE MOMENT PARAMETERS EXIST.`**
+⚠️★★★★★ **AND IT COMPOUNDS `R-677 §3`'s COINCIDENT-DEFAULT TRAP RATHER THAN DUPLICATING IT: §3's trap makes a WRONG value look right; this one makes a SECOND value never arrive. **A `10/200` fixture — the very one `§3` mandates to run FIRST — would exercise BOTH at once**, and if it passed, it would do so for two independent wrong reasons.**
+✅ **THE PRECEDENT FOR DOING IT RIGHT ALREADY EXISTS IN THE SAME FILE: `population_a_level_cache[cache_key]` (`:1181-1184`) is the ONE cache that keys on a composite. It is the shape the other ten need.**
+
+### ✅ §5 — (d) THE TS-MIRROR COST: **MEASURED, AND IT IS NOT WHAT THE RULING EXPECTED**
+```
+TS mirror (403 lines) contains:   resolveBundlePrimitive 0 · fvg_native 0 · FVG_NATIVE 0
+                                  sweep 0 · mss 0 · bundle 0 · EXPERIMENT 0
+                CONTROL:          resolveSessionKeyword 2   (grep works on this file)
+Python equivalent counts:         resolve_bundle_primitive 3 · fvg_native 3 · sweep 19 · mss 8 · bundle 15
+```
+🛑★★★★★ **THE OBJECT ROUTER — THE LAYER `R-677 §2.1.3` ADOPTED AS THE CORRECT SHAPE — **DOES NOT EXIST IN TYPESCRIPT AT ALL**, AND NEITHER DO ANY OF THE `5` NATIVE PRIMITIVES.** **THE MIRROR COVERS `FAMILY_META` + SESSION KEYWORDS + THE GENERIC `bindCondition` PATH ONLY.**
+✅ **SO THE HONEST SIZING IS A FORK, AND IT IS THE DESK'S TO PICK, NOT MINE:**
+- **Follow the `5`-native precedent (Python-only, env-gated):** TS-mirror cost ≈ **ZERO** — *because the mirror is already accepted as partial for this whole layer.* **Price: the TS side cannot reproduce the binding, and the parity contract in the docstring becomes further from true.**
+- **Restore true parity:** cost is **the router + the natives + a real cross-language check that does not exist today** — categorically larger than *"mirror `403` lines"*.
+⚠️ **`[UNENUMERATED]` I compared `FAMILY_META`'s `primitive` field only. I did NOT diff `SESSION_KEYWORDS`, `MIN_SPINE_BOUND_RATIO`, the approximation flags, or `bindCondition`'s body. **A `0`-drift result on one field is not a `0`-drift result on the module** — and with no executable check, nothing else has ever verified them.**
+
+### ✅ §6 — (f) WHAT PIN (a) DEMANDS OF A PARAMETRIC PRIMITIVE
+`[MEASURED — `family_meta_enforcement.py:446-497`]` `verify_dispatch_coverage` enforces **set equality in BOTH directions** between `FAMILY_META`'s declarations and the executable dispatch, **plus `gates`↔handler agreement in both directions**:
+1. **declared-but-unrouted** → violation.
+2. **routed-but-undeclared** → violation **UNLESS the key is in `EXPERIMENT_PRIMITIVES`** — *"a second router is a second truth"*. ★★★ **THIS IS THE ESCAPE HATCH ALL `5` NATIVES USE, and it is why they need no `FAMILY_META` family.**
+3. `resolve_primitive` **RAISES** on an unregistered name — it never stubs — so a `PRIMITIVE_RESOLVERS` entry is **mandatory**, not optional.
+4. A real evaluator must agree with `gates`.
+✅ **NET: pin (a) is INDIFFERENT to parameters. It polices NAMES and GATING, not arguments. It adds no cost to a parametric primitive beyond the registration every primitive already owes.**
+
+### 🛑 §7 — (e) **STOPPED AT THE LINE I DECLARED IN `AR-738 §2`**
+🛑 **`(e)` asked where `TAUGHT`/`ASSUMED`/`REFUSED` and the chart timeframe LIVE IN THE OBJECT. **THAT IS THE GRAMMAR, AND `§6`'s STOP CONDITION RESERVES IT FOR THE DESK. I AM NOT ANSWERING IT.** I declared this boundary in my start-receipt BEFORE measuring, so it is not a retreat from an inconvenient answer.**
+✅ **WHAT I CAN GIVE WITHOUT CROSSING IT — THE CONSTRAINTS ANY PLACEMENT MUST SATISFY, ALL MEASURED ABOVE:**
+1. **Omitted entirely when empty**, or `18/18` artifacts re-seal (§1).
+2. **Reachable from `ConditionBinding`**, because that is the only object the handler receives (§3).
+3. **Part of the cache key**, or the second condition of a family silently gets the first's values (§4).
+4. **`approximation=False` unavailable if any load-bearing argument is `ASSUMED`** — `R-677 §2.4.2`; and `AR-737 §4` measured two live assumptions (input series; chart timeframe).
+5. **No `FAMILY_META` family required** if it registers as an experiment primitive (§6).
+**→ `UNRESOLVED_SOURCE_AMBIGUITY` on the grammar itself. The desk designs it; these five are the walls it must fit between.**
+
+### ⚠️ §8 — WHAT I DID NOT MEASURE, AND WHAT EACH COUNT CANNOT SEE
+- 🛑 **THE SURFACE MY COUNTS CANNOT SEE (`§6` acceptance term):** every count here is **STATIC over this worktree at HEAD**. **A hand-authored spec JSON, a DB-resident spec, or an API-supplied condition never appears in my `18`-file population** — the same reachable-vs-enumerable gap `R-674 §2` minted. **`0/18 re-seals` is a statement about the `18` artifacts ON DISK IN THIS TREE, not about every spec that exists.**
+- `[UNENUMERATED]` the TS mirror beyond `FAMILY_META.primitive` (§5).
+- `[UNENUMERATED]` whether any DB/migration/JSON-schema surface pins the `7`-key condition shape — **I checked the sealed artifacts and the Python/TS code, NOT the database.** *(This is the surface Lane 2's grader is best placed to hit, and I deliberately did not pre-empt it.)*
+- `[UNENUMERATED]` the `9` caches' behaviour under the composition bundle, where several natives can be active at once.
+- ✅ **NO CANDIDATE SPEC NOMINATED** (`§6` forbids; population join key still open per `R-677 §4`).
+- 🛑 **I have not read Lane 2's verdict and will not interpret it — I am the doer of the claim it grades.**
+
+### ★★★★★ §9 — RECOMMENDATION
+**`APPROVAL_REQUESTED`** on the sizing. **`REVISION_REQUIRED` on two inherited sentences:** *"parity-tested both sides"* (mine, §0 — no such test exists) and *"mirror the `403` lines"* (§5 — the layer in question is not mirrored at all).
+**NEXT SMALLEST TASK (ONE):** **re-key the `9` single-slot caches before any parameter exists** — it is a pure, testable refactor with a live precedent (`population_a_level_cache`), it is RED-provable today with two same-family conditions, and **it is the one item that silently corrupts the first fixture if it is done second instead of first.**
+
+---
+
 ## AR-738 · 2026-08-03 · ⏳ **START-RECEIPT — `R-677 §6 LANE 1`, SIZE THE NUMERIC PARAMETER CHANNEL. SAME SEAT AS `AR-737` (context held, no cold start).**
 
 **TASK:** `R-677 §6 LANE 1` **(a)**–**(f)**: the end-to-end cost of carrying ONE taught integer from object text to a primitive argument. **RUN MODE: READ-ONLY at HEAD + scratchpad scripts. NO code. NO schema edit. NO `FAMILY_META` edit. NOTHING under `src/`.**
