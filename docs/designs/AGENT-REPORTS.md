@@ -4,6 +4,28 @@
 
 ---
 
+## AR-781 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — `R-702 §6` LANE 28 (`F-A`: the parameter-acceptance guard must cover EVERY handler and must not vanish when the flag turns ON). ETA to the red/green pair ~45 min.** ✅★★★★★ **FAN-IN TARGET `3/3` — LANES 28·29·30 ARE ONE BATCH AND I WILL NOT HAND OFF AT A LANE SEAM** (`worker-execution §10`). 🛑★★★★ **AND ONE PREDICTED STOP-CONDITION TRIGGER, NAMED BEFORE I START BECAUSE IT COSTS NOTHING NOW AND THE WHOLE RUN LATER — `§3`.**
+
+**TASK:** `R-702 §6` Lane 28, then 29, then 30. **HOLD RELEASED** — `R-701 §6`'s hold was correctly assigned and is now discharged by `R-702`.
+
+### ✅ §1 — THE SERIAL ORDER IS **NOT** A FAKE EDGE, AND I CHECKED RATHER THAN ASSUMED
+`worker-execution §5c` obliges me to say so in this receipt if a ruling forces serial order on items with no data dependency. **It does not here.** `R-702 §6` names the reason and it is MEASURED, not asserted: **all three lanes write `src/engine/spec_condition_compiler.py`.** ✅ **A shared write target is a real edge (`R-699 §8`), so serial is correct and I am not requesting parallel lanes.**
+
+### ✅ §2 — WHAT I READ, AND WHAT I HAVE **NOT** RE-DERIVED
+✅ Read in full: `R-702` `§1`–`§8`. **Re-invoked `worker-execution` before touching anything** — `a remembered skill is a stale skill`, and it had in fact changed.
+🛑 **`[RELAYED, NOT MEASURED BY ME]`** every number in `R-702 §1`–`§5`: the `0/200` identical arms across the five routes, `WAIT_BIAS`'s `22/200`, the `M5` and `M3` mutation results, the `21,663`-binding runtime census, the `80` vs `81` discrepancy. **I have opened none of them this session.** ✅ **My first act in Lane 28 is to reproduce the grader's five-route table MYSELF — a repair aimed at a table I never ran is a repair aimed at a claim.**
+
+### 🛑★★★★★ §3 — A PREDICTED STOP-CONDITION TRIGGER, RAISED BEFORE THE FIRST EDIT
+🛑 **`R-702 §6`'s STOP CONDITION: *"if the Lane 28 refusal reddens any EXISTING suite, STOP AND REPORT — that red is a live caller and it OUTRANKS the lane."***
+⚠️ **I EXPECT ONE, AND THE RULING ITSELF SUPPLIES THE TELL** (`R-702 §1`, the corroborating note): **`test_parameter_collision.py`'s fixture MONKEYPATCHES THE CONSUMPTION IN.** A guard that refuses *accepted-but-unconsumed* parameters may fire on precisely the handlers that fixture patches.
+⚖️ **MY COMMITMENT, PRE-REGISTERED SO IT CANNOT BE RE-READ LATER (`pre-register-criteria`): IF THAT SUITE REDDENS I STOP AND REPORT. I WILL NOT EDIT, WEAKEN, SKIP OR RE-SCOPE IT TO GET MY LANE GREEN**, and I will not decide on my own authority that "it is only a test, not a live caller" — **that judgment is the desk's, and making it myself is how a stop condition gets talked out of firing.**
+
+### ✅ §4 — SCOPE I AM HOLDING MYSELF TO
+✅ **FILES:** `spec_condition_compiler.py` · `family_meta_enforcement.py` · `src/engine/tests/`. 🛑 **FORBIDDEN, RE-READ THIS TURN AND UNCHANGED:** the source producer · the sealed spec · the TS gateway · **ENABLING THE FLAG** · `produce_spec_artifact`/transcript extraction · `test_synthetic_market_simulator.py` (SIBLING SEAT — `git commit -o` named paths only) · **ANY PARITY CLAIM.**
+✅ **PROPERTY, NOT MECHANISM:** `R-702 §6` deliberately does not say where the check goes. **I will locate the narrowest correct site and justify it, as Lane 26 did — and I will not invent a period argument for `_eval_wait_structure(n, df)`, which takes none.**
+
+---
+
 ## AR-780 · 2026-08-04 · ⏳★★★★ **SEAT RECEIPT — FRESH WORKER SEAT AFTER `/clear`, READ ORDER COMPLETE, AND I HOLD **NO AUTHORIZED LANE**. NOTHING IS HALF-DONE; NO SUB-AGENT IS OWED.** ✅★★★★★ **AND ONE IDENTITY FACT MEASURED RATHER THAN ASSUMED: THIS IS NOT A NEW PROCESS. `[MEASURED HERE]` my shell's parent is `claude.exe 7820` — **the very PID `ADVISOR-STATE`'s CURRENT POSITION block names as `WORKER`.** THE SEAT WAS CLEARED, NOT REPLACED.** 🛑 **THIS IS A RECEIPT: UNDER `R-698 §3.3` IT OWES NO RULING AND TRIGGERS NO WAIT.**
 
 **TASK:** none held. **FILES CHANGED:** this file only. **Sibling's `test_synthetic_market_simulator.py` untouched — twenty-seventh consecutive report.**
