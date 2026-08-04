@@ -4,6 +4,60 @@
 
 ---
 
+## AR-766 · 2026-08-04 · ✅★★★★★ **`R-690 §5 LANE 19` DELIVERED — **THE LEAF EXISTS, IT IS PROVEN TO BE ONE, AND ITS GUARD SHIPPED IN THE SAME COMMIT.** **STOP CONDITION DID NOT FIRE: importing the leaf from the graduator creates NO cycle.**** ✅★★★★★ **AND THE PROOF IS STRONGER THAN A PASSING LOAD, BECAUSE IT IS A GRAPH FACT RATHER THAN AN OBSERVATION: `[MEASURED]` **THE CONTRACT MODULE'S OUT-DEGREE IS `0`.** A node with no out-edges **cannot participate in any cycle**, so importing it from anywhere is cycle-free by construction — not merely cycle-free on the three modules I tried.** ✅ **BUT I RAN THE REAL LOADER ANYWAY, ON THE THREE THAT MATTER: with live edges from `direct-bucket-graduator` · `spec-onboarding-service` (a mirror) · `agent-service`, **`37` tests across `3` files PASS — including the graduator's own suite.** No TDZ, no crash. **Then I removed the probe edges and the same command returned `37` again.**** ✅★★★★ **GUARD RED-PROOFED AT BIRTH: with a `logger` import planted, the guard fails AND NAMES THE EDGE — `took 1 import edge(s): ["import { logger } from \""]`. Plant removed → `13 passed` from the identical command.**
+
+**TASK:** `R-690 §5` `(1)`–`(4)`. **FILES: `src/server/services/executable-parameter-contract.ts` (NEW) + `executable-parameter-contract.test.ts` (NEW). `[MEASURED]` `git status --porcelain src/` shows exactly those two plus the sibling's untouched `test_synthetic_market_simulator.py` — eighteenth consecutive report. **NO insert site migrated · NO gateway built · NO mirror deleted · NO production caller added.**
+
+### ✅★★★★★ §1 — STEP (2): THE GUARD, RED THEN GREEN, SAME COMMAND
+```
+# RED — forbidden import planted at line 1 of the contract module
+AssertionError: executable-parameter-contract.ts took 1 import edge(s):
+  ["import { logger } from \""]. It must import nothing — the direct-bucket graduator
+  sits in a static cycle through index.ts (AR-764 §1) and can only reach a boundary
+  that has no closure of its own.
+Test Files  1 failed (1)
+
+# GREEN — plant removed, identical command
+Test Files  1 passed (1)      Tests  13 passed (13)
+```
+✅★★★★ **THE GUARD SHIPS WITH ITS OWN POSITIVE CONTROL, and it is the one that matters: a second test runs the SAME matcher against `dsl-sanitizer.ts` and requires `> 0` edges. **Without it a broken regex would report `0` for every file and the guard would pass forever while the leaf quietly grew a dependency.** `R-681 §2`'s law applied at birth rather than retrofitted.
+★★★ **`R-690 §3` ordered the guard at step `1` of `11` because this repo holds three stated-but-unenforced architectural rules and has violated all three. **The rule is now enforced by a test rather than by a comment**, which is the entire difference.**
+
+### ✅★★★★★ §2 — STEP (3): THE CYCLE PROOF, TWO WAYS
+**(a) STRUCTURAL, and it generalises:** `[MEASURED]` `grep -cE "^[ \t]*import |await import\(|require\("` over the contract → **`0`**. **Out-degree `0` ⇒ the node cannot be on any cycle, for ANY importer — not just the three I tested.**
+**(b) BEHAVIOURAL, on the real loader:** probe edges added to `direct-bucket-graduator.ts`, `spec-onboarding-service.ts` and `agent-service.ts`, then:
+```
+scanner: files 440 -> 441 ; agent-service static out-edges 18 -> 19   <- the new edge IS seen
+CONTROL 1 (>0): 19  ·  CONTROL 2 (type): true,true  ·  CONTROL 3 (dynamic): true,true
+CONTROL 4 (not miscounted as static): false,false                      <- all four PASS
+vitest agent-service.test.ts + wave12-graduator-no-silent-leak.test.ts + contract.test.ts
+  -> Test Files 3 passed · Tests 37 passed
+probe edges REVERTED -> same command -> Tests 37 passed
+```
+★★★ **THE `18 → 19` DELTA IS THE POINT OF THAT LINE: it proves the instrument REGISTERED the edge I added. A cycle proof from a scanner that silently ignored the new import would be worthless.**
+🛑 **THE PROBE EDGES ARE **NOT SHIPPED**, AND I AM STATING WHY RATHER THAN LEAVING IT TO INFERENCE: `R-690 §5` says *"import it, do NOT call it"*, and an unused import in three production modules is dead code that lint and review will fight, with no caller to justify it. **The edge is proven possible; installing it belongs with the migration that gives it a caller.** 🛑 **If the desk wants them landed now as a standing tripwire, say so — it is one line each and I did not take that decision myself.**
+
+### ✅★★★★ §3 — STEPS (1) AND (4): THE CONTRACT AND ITS `8` REFUSALS
+✅ **`resolveExecutableParameters(spec, supplied)` returns parameters **or a named refusal**. `[MEASURED]` no fill path exists in the module: no midpoint, no default table, no clamp, no rounding.**
+✅ **`8` PROHIBITED SUBSTITUTIONS, ONE FIXTURE EACH, EVERY ONE ASSERTING A REFUSAL WHERE THE SHIPPED PATH INVENTS:** midpoint (asserts the result does not contain `110`, the value `dsl-sanitizer.ts:121-125` would have filled) · engine default (the graduator's `{50,200}`) · compiler fallback (`num(p.fast_period, 9)` — asserts no `9`) · **silent clamp (a taught `2`/`400` survives UNCHANGED and is only REPORTED out-of-range)** · missing · conflicting · unknown key · provenance absent.
+✅ **`5` POSITIVE CONTROLS SO IT IS NOT AN ALWAYS-REFUSER: a fully taught set resolves to the taught values · an `inferred` value never overwrites `exact_source` **and is not treated as a conflict** · an inferred value IS accepted when nothing stronger exists · the range reporter returns `false` for an in-range value · the guard's matcher finds edges elsewhere.**
+🛑 **THE CLAMP FIXTURE IS THE ONE I WOULD DEFEND HARDEST: it asserts a taught value that is OUT of the advisory range comes back **unchanged**, with the range violation reported separately. `AR-753` measured `clampToRange` silently moving such a value to a boundary. **A taught number outside a range is a finding about the range or the lesson; it is never the contract's business to edit it.**
+```
+Test Files  1 passed (1)      Tests  13 passed (13)
+```
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE
+- 🛑 **`[UNENUMERATED]` the expected-GREEN set beyond the three files above.** `AR-765` pre-registered *"the new module's own test file + the test files of every module I add an import edge to"* — **`agent-service.test.ts` and the graduator suite are measured (`37`); `spec-onboarding-service` has no test file I could find, so that third leg is EMPTY, not green.** ★★★ **Naming an empty leg rather than counting it as satisfied.**
+- 🛑 **`[UNENUMERATED]` no full TypeScript suite or `tsc` run.** The two new files compile under vitest's transform; **that is not the same as passing the repo's type-check gate**, and I did not run it.
+- ⚠️ **`[UNENUMERATED]` whether the block-code vocabulary matches what a real producer will need.** `unresolved_source_ambiguity` is DECLARED in the type union and **no fixture exercises it** — the contract has no ambiguity detector yet because ambiguity is a property of the SOURCE, which nothing here reads. **A declared code with no path to it is a promise, and I am flagging it rather than faking a fixture.**
+- ⚠️ **Campaign worktree only; `runtime-production` not checked.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. FAN-IN `1/1`. Nine lanes closed in this seat (10, 11, 12, 14, 15, 16, 17, 18, 19), no handoff.**
+**NEXT SMALLEST TASK (ONE):** **give `unresolved_source_ambiguity` a path or remove it from the union (`§4.3`)** — it is the only declared behaviour in the contract that nothing can reach, and a leaf module is the worst possible place to leave a dead promise.
+
+---
+
 ## AR-765 · 2026-08-04 · ⏳ **START-RECEIPT — `R-690 §5 LANE 19`, BUILD THE LEAF AND PROVE IT IS ONE. FIRST BUILD LANE OF THIS THREAD.**
 
 **TASK:** `R-690 §5` `(1)`–`(4)`. **NEW FILE `src/server/services/executable-parameter-contract.ts` (types + refusal only, no persistence, no production caller) · the import-closure guard SHIPPED IN THE SAME COMMIT, RED-first · import-only edges from one mirror + the graduator + one `agent-service` writer with a real module-loader cycle proof · RED-first fixtures for all `8` prohibited substitutions.** **Runner: `vitest` `[MEASURED — package.json:15]`. ETA ~45 min.**
