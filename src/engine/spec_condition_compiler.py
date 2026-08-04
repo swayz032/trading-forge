@@ -532,13 +532,74 @@ class SpecConditionStrategy(BaseStrategy):
         return cache[cache_key]
 
     def _h_wait_bias(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        # COMPOSITE KEY + PARAMETERIZED CALL (R-691 §5 Lane 21, refined by R-692 §3).
+        #
+        # BOTH HALVES SHIP TOGETHER, DELIBERATELY. R-692 §3 lists "reading the period ONLY
+        # to alter the cache key while the calculation stays hardcoded" as a PROHIBITED
+        # implementation, because that is the shape this campaign already shipped once
+        # (R-684 §1: "the cache is re-keyed; the channel remains severed at the evaluator").
+        # Re-keying alone would separate the slots and then fill them with the SAME
+        # hardcoded EMA(20/50) answer -- two cache entries, one computation's worth of
+        # meaning, and a green test. So the key changes AND `_eval_wait_bias` receives the
+        # taught periods; neither is useful without the other.
+        #
+        # DIRECTION STAYS IN THE KEY: `want_bearish` is derived from the condition's OBJECT
+        # text, not from its parameters, so two conditions with identical periods and
+        # opposite directions must still not share a slot.
+        #
+        # BEHAVIOUR IS UNCHANGED FOR EVERY BINDING IN THIS REPO TODAY: nothing populates
+        # ConditionBinding.parameters in production, so every binding keys to
+        # (want_bearish, None), resolves to the engine defaults, and is shared exactly as
+        # before -- the same argument `_h_structure` above makes, and the same one that
+        # makes this safe to land ahead of a producer.
         want_bearish = self._resolve_wait_bias_bearish(b.object)
-        cache = ctx["wait_bias_cache"]
-        if want_bearish not in cache:
-            cache[want_bearish] = self._eval_wait_bias(
-                ctx["close"], ctx["n"], want_bearish=want_bearish, htf_trend=ctx["htf_trend"]
+        fast_period, slow_period = self._resolve_bias_periods(b)
+        cache_key = (want_bearish, b.parameters)
+        cache = ctx["wait_bias_param_cache"]
+        if cache_key not in cache:
+            cache[cache_key] = self._eval_wait_bias(
+                ctx["close"],
+                ctx["n"],
+                want_bearish=want_bearish,
+                htf_trend=ctx["htf_trend"],
+                fast_period=fast_period,
+                slow_period=slow_period,
             )
-        return cache[want_bearish]
+        return cache[cache_key]
+
+    def _resolve_bias_periods(self, b: ConditionBinding) -> tuple[int, int]:
+        """Read this condition's taught EMA periods, or fall back to the engine defaults.
+
+        REFUSES RATHER THAN SUBSTITUTES. An absent parameter is a legitimate "not taught"
+        and takes the documented default. A parameter that is PRESENT but unusable
+        (non-integer, zero, negative, fast >= slow) raises, naming the key -- it is never
+        quietly replaced by a default. That distinction is the whole subject of the
+        campaign's parameter-invention repair: a silent fallback is how a taught number
+        becomes an engine number without leaving a trace (R-684 §1, R-690 §4).
+        """
+        params = dict(b.parameters or ())
+        resolved: dict[str, int] = {}
+        for key, default in (("fast_period", BIAS_EMA_FAST), ("slow_period", BIAS_EMA_SLOW)):
+            if key not in params:
+                resolved[key] = default
+                continue
+            value = params[key]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ValueError(
+                    f"condition {b.condition_id!r} carries {key}={value!r}, which is not a "
+                    f"usable EMA period. A present-but-unusable parameter is refused here "
+                    f"rather than replaced by the engine default {default} -- a silent "
+                    f"substitution is exactly the parameter-loss channel this path repairs."
+                )
+            resolved[key] = value
+        if resolved["fast_period"] >= resolved["slow_period"]:
+            raise ValueError(
+                f"condition {b.condition_id!r} carries fast_period="
+                f"{resolved['fast_period']} >= slow_period={resolved['slow_period']}. A "
+                f"fast/slow crossover with a fast leg no shorter than its slow leg is not "
+                f"the taught mechanism; refused rather than silently reordered."
+            )
+        return resolved["fast_period"], resolved["slow_period"]
 
     def _h_retest(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
         if ctx["wait_retest"] is None:
@@ -702,6 +763,8 @@ class SpecConditionStrategy(BaseStrategy):
         n: int,
         want_bearish: bool = False,
         htf_trend: list | None = None,
+        fast_period: int | None = None,
+        slow_period: int | None = None,
     ) -> np.ndarray:
         """Directional bias.
 
@@ -738,11 +801,25 @@ class SpecConditionStrategy(BaseStrategy):
                 return out                     # fully wired — no proxy needed
 
         # ── PROXY FALLBACK (unwired bars only; approximation=True)
-        if n < BIAS_EMA_SLOW + 2:
+        #
+        # THE TAUGHT PERIODS ARE CONSUMED HERE — this is the line the campaign's parameter
+        # channel was severed at (R-684 §1: `_eval_wait_bias` took no binding, so both the
+        # 20 and the 50 were engine constants no lesson could move). `None` means "this
+        # condition taught nothing", which keeps every existing caller byte-identical;
+        # a supplied value is used AS TAUGHT and is never clamped, rounded or re-ranged.
+        #
+        # THE WARM-UP FLOOR MOVES WITH THE SLOW LEG. It was `BIAS_EMA_SLOW + 2`; a taught
+        # slow period longer than 50 would otherwise compute on too few bars and return an
+        # all-False array — which is INDISTINGUISHABLE from "the parameter did not
+        # transmit", and fails in the direction that looks like the hypothesis (R-692 §4).
+        eff_fast = BIAS_EMA_FAST if fast_period is None else fast_period
+        eff_slow = BIAS_EMA_SLOW if slow_period is None else slow_period
+        self._last_bias_periods = (eff_fast, eff_slow)
+        if n < eff_slow + 2:
             return out
         s = pl.Series(close)
-        fast = compute_ema(s, BIAS_EMA_FAST).to_numpy()
-        slow = compute_ema(s, BIAS_EMA_SLOW).to_numpy()
+        fast = compute_ema(s, eff_fast).to_numpy()
+        slow = compute_ema(s, eff_slow).to_numpy()
         for i in range(n):
             if htf_trend is not None and i < len(htf_trend) and htf_trend[i] is not None:
                 continue                       # already decided by the real signal
@@ -1149,6 +1226,14 @@ class SpecConditionStrategy(BaseStrategy):
             "wait_structure_levelzone": wait_structure_levelzone,
             "wait_retest": wait_retest,
             "wait_bias_cache": wait_bias_cache,
+            # ENFORCED-PATH cache, composite-keyed by (want_bearish, parameters).
+            # SEPARATE DICT ON PURPOSE, mirroring "wait_structure_cache" above: the legacy
+            # inline ladder keys `wait_bias_cache` by the bare `want_bearish` bool and is
+            # retained verbatim so flag-OFF output stays byte-identical (this file's own
+            # standing convention, and what the AR-747 structure repair did). Two key
+            # SHAPES in one dict would be a trap for whoever deletes the ladder.
+            # LIMIT, STATED NOT HIDDEN: the ladder therefore remains parameter-blind.
+            "wait_bias_param_cache": {},
             "fvg_signal": fvg_signal,
             "population_a_level_cache": population_a_level_cache,
             "population_a_swings_cache": population_a_swings_cache,
