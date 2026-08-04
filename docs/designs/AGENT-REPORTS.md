@@ -4,6 +4,69 @@
 
 ---
 
+## AR-761 · 2026-08-03 · ✅★★★★★ **`R-687 §5` LANES 14 AND 15 DELIVERED. **FAN-IN `2/2`, NO HANDOFF.** LANE 14: the `F-4`/`F-5` guards now have a PERMANENT WITNESS — `5` tests, `2` mutation controls, **BOTH HITTING THE PRE-REGISTERED FAILURE SET EXACTLY** (`MUT-A` → `2 failed / 8 passed`, `MUT-B` → `1 failed / 9 passed`, both named BEFORE planting).** 🛑🛑★★★★★ **LANE 15 CORRECTS MY OWN `AR-760` MECHANISM ATTRIBUTION, AND THE CORRECTION MAKES THE EXPOSURE WIDER, NOT NARROWER: **THE SANITIZER IS NOT ON THE GRADUATOR'S INSERT PATH AT ALL.** `[MEASURED]` `sanitizeDsl` has **EXACTLY `2` non-test call sites, BOTH in `agent-service.ts`** (`:930`, `:2107`) — **NONE in `direct-bucket-graduator.ts`.** ★★★★★ **SO THERE ARE **TWO INDEPENDENT WRITERS** OF EXECUTABLE CONFIG AND **EACH INVENTS A NUMBER BY A DIFFERENT MECHANISM**: `agent-service` → sanitizer MIDPOINT → `strategies` insert at `:1142` · `direct-bucket-graduator` → its own name-derived defaults table + `dsl-compiler`'s silent `num(p.fast_period, 9)` fallbacks → `strategies` insert at `:2781`. **`AR-760` named one road; there are two.**** ✅★★★★ **AND `(c)` FINALLY MAKES THE EXPOSURE COUNTABLE: `4` indicator families lose EVERY taught key, `1` loses HALF, `4` are SAFE — it is not uniform and nobody had listed it.**
+
+**TASK:** `R-687 §5` Lanes 14 + 15. **FILES: `src/engine/tests/test_parameter_collision.py` ONLY (Lane 14). Lane 15 read-only.** 🛑 **`[MEASURED]` `git status --porcelain src/` → that file plus the sibling's untouched `test_synthetic_market_simulator.py`; fifteenth consecutive report.**
+
+### ✅★★★★★ §1 — LANE 14: THE WITNESS, AND ITS PRE-REGISTERED MUTATION SET
+✅ **`5` tests appended: unhashable refused at construction · the refusal NAMES the key · **positive control** (hashable still constructs AND hashes) · `()` serialises identically to absent · **positive control** (populated still serialises).**
+🛑★★★★ **THE ORACLE ASSERTS OBSERVABLE BEHAVIOUR ONLY — does construction raise, is the key present — and never restates production's rule. `R-687 §5` forbade duplicating production logic in the oracle, and the reason is sharper than tidiness: **a test that reimplements the rule it checks agrees with itself, not with the code.**
+✅★★★★★ **EXPECTED-FAILURE SETS NAMED BEFORE PLANTING (`R-681 §1`), AND BOTH HIT EXACTLY:**
+```
+PRE-REGISTERED: MUT-A -> 2 failed / 8 passed (the two F-4 refusal tests)
+                MUT-B -> 1 failed / 9 passed (the F-5 empty-tuple test)
+
+UNMUTATED                                        10 passed
+[MUTATION A PLANTED] __post_init__ bypassed       2 failed, 8 passed
+   FAILED ::test_f4_unhashable_parameter_is_refused_at_construction
+   FAILED ::test_f4_the_refusal_names_the_offending_key
+[MUTATION B PLANTED] to_dict reverted to omit-when-NONE
+                                                  1 failed, 9 passed
+   FAILED ::test_f5_empty_tuple_serialises_identically_to_absent
+```
+✅ **PLANTED WHERE THE REPAIR CANNOT UNDO THE PLANT (`AR-750 §4`): both mutations are class-attribute rebinds executed at PLUGIN-LOAD time — before collection, outside every fixture. **Nothing in the code under test can restore them mid-run**, which is the failure that made my first Lane-7 mutation useless.**
+🛑 **INVARIANT `8` HELD: neither mutation edits `src/`. The plugins live in the scratchpad and delegate to the real `to_dict` rather than reimplementing it.**
+✅ **REGRESSION, derived set unchanged (`AR-749 §3`): `797 passed, 2 xfailed` — exactly `792 + 5`. Additive, measured.**
+
+### 🛑🛑★★★★★ §2 — LANE 15(a): THE SANITIZER IS NOT WHERE I SAID THE DAMAGE COMES FROM
+`[MEASURED]` **`sanitizeDsl` non-test call sites: `agent-service.ts:930` (inside `runStrategyFromDSL`, `:844`) and `:2107` (inside `drainScoutedIdeas`, `:1906`). `0` in `direct-bucket-graduator.ts`.** **POSITIVE CONTROL: `ENTRY_PATTERN_ALLOWLIST` from the same file returns `15` references elsewhere, so the matcher does see cross-file uses of this module.**
+🛑 **SO THE ANSWER TO `R-687 §5(a)` IS: **NOT UNCONDITIONAL.** The sanitizer runs on the `agent-service` compile paths and **not** on the graduator's own insert.**
+✅ **BUT BOTH ROADS STILL END IN A PERSISTED `strategies` ROW, AND BOTH STILL INVENT:**
+1. **`runStrategyFromDSL`:** `sanitizeDsl` (`:930`) → drop taught key → **MIDPOINT backfill** → Python compile → **`.insert(strategies)` at `:1142`.** `drainScoutedIdeas` reaches the same function at `:2261` after its own sanitize at `:2107`.
+2. **`direct-bucket-graduator`:** no sanitizer → `deriveEntryParams` name-guesses + its defaults table (`:1003-1017`, e.g. `sma_crossover {50,200}`) → `compileDslToEngine` where **`num(p.fast_period, 9)` silently substitutes on a missing key** → `.insert(strategies)` at `:2781`.
+★★★★★ **`AR-760` SAID *"a midpoint that reaches `indicators[]` is not an annotation — it is the strategy."* **THAT REMAINS TRUE AND IT WAS ONE ROAD.** The graduator's road substitutes an ENGINE DEFAULT instead of a midpoint — **still a number no lesson supplied, arriving by a mechanism I had not measured when I wrote that sentence.** `A MECHANISM CLAIM PROVEN ON ONE PATH IS NOT A CLAIM ABOUT THE OTHER PATH, EVEN WHEN BOTH END AT THE SAME TABLE.`**
+
+### ✅★★★★ §3 — LANE 15(c): THE EXPOSURE IS PER-INDICATOR, AND HERE IS THE LIST
+**Scanner emits `{fast · slow · signal · period · stddev · multiplier · overbought · oversold}`. Sanitizer `required` keys read at `dsl-sanitizer.ts:40-57`.**
+| indicator | required keys | taught keys survive? |
+|---|---|---|
+| `sma_crossover` · `ema_crossover` | `fast_period, slow_period` | 🛑 **NONE — both dropped, both midpoint-filled** |
+| `macd_crossover` | `fast_period, slow_period, signal_period` | 🛑 **NONE — all three dropped** |
+| `keltner_squeeze` | `bb_period, kc_period, kc_multiplier` | 🛑 **NONE — scanner emits `period`/`stddev`** |
+| `bollinger_breakout` | `period, std_dev` | ⚠️ **HALF — `period` survives, `stddev`→`std_dev` dropped** |
+| `rsi_reversal` · `connors_rsi2` | `period, oversold, overbought` | ✅ **ALL — names match exactly** |
+| `atr_breakout` | `period, multiplier` | ✅ **ALL** |
+| `donchian_breakout` | `period` | ✅ **ALL** |
+🛑 **AND A SECOND SUBSTITUTION THE SURVIVORS DO NOT ESCAPE: `dsl-sanitizer.ts:113-118` CLAMPS an out-of-range value to the nearest boundary with only a warning string. **A taught value that survives by name can still be silently changed by range.** `[MEASURED]` — not chased, not in my lane.**
+
+### ✅ §4 — LANE 15(b): DASHBOARDS DO NOT DISPLAY IT — **AND MY FIRST MEASUREMENT WAS A DEAD CONTROL**
+🛑🛑 **DISCLOSED BECAUSE IT IS THE EXACT TRAP THIS CAMPAIGN LEGISLATES AGAINST: my first run searched `Trading_forge_frontend/src` and `src/dashboard` and returned `0` for `entry_params` — **and `0` for the control token `strategy` as well.** `Trading_forge_frontend/src` does not exist (the real path is `Trading_forge_frontend/amber-vision-main`). **A zero over a surface that does not exist is not a measurement, and only the control caught it.**
+✅ **RE-RUN ON THE REAL PATHS: `entry_params|param_source` → **`0`** · CONTROLS `strategy` → **`523`**, `indicators` → **`13`**. **A live surface, a real zero.** The dashboards do not surface these fields, so the false-witness surface is the paper AUDIT EVENT (`AR-760 §2`), not the UI.**
+
+### ⚠️ §5 — SURFACES I CANNOT SEE
+- 🛑 **`[UNENUMERATED — DB DOWN]` STILL THE COUNT.** `R-687 §4` puts it to the operator and nothing here changes that. **`§2` makes it WORSE as a question: there are two writers, so a count must cover both insert sites, not one.**
+- ⚠️ **`[UNENUMERATED]` whether `runStrategyFromDSL`'s Python-compiled config and the graduator's `compiled` object can BOTH write the same strategy, and which wins.** Two writers into one table is a precedence question I did not measure.
+- ⚠️ **`[UNENUMERATED]` the `13` `indicators` references in the dashboard tree — I measured that they are not `entry_params`; I did not read what they do.**
+- ⚠️ **Campaign worktree only; `runtime-production` not checked.**
+- 🛑 **No full-suite green run or quoted (`R-683 §4` bar stands).**
+
+### ★★★★★ §6 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. FAN-IN `2/2` — Lanes 14 and 15 closed in this seat; with Lanes 10, 11 and 12 that is `5/5` for this seat tonight, no handoff, and the seat still has room.**
+🛑 **ONE CORRECTION THE DESK SHOULD CARRY INTO ANY REPAIR CONTRACT: `R-686 §6.2`/`R-687 §6.2` describe the fix as a TS CANONICAL BOUNDARY at the sanitizer. `[MEASURED, §2]` **a boundary placed only at the sanitizer would not cover the graduator's insert path at all** — that path never calls it. **The canonicalizer has to sit where BOTH writers pass, or it must be installed twice and nobody will notice the second one is missing.**
+**NEXT SMALLEST TASK (ONE):** **measure the precedence between the two writers (`§5.2`)** — read-only, ~15 min, and it decides whether one canonical boundary can serve both.
+
+---
+
 ## AR-760 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-686 §5 LANE 12` — **STOP CONDITION FIRES. IT REACHES EXECUTION.** THE ORDERING DECISION RETURNS TO THE DESK AND I HAVE STARTED NO REPAIR.** 🛑🛑★★★★★ **BUT THE ANSWER IS NOT THE ONE THE QUESTION EXPECTED, AND THE DIFFERENCE IS THE WHOLE FINDING: `entry_params` IS **NOT** READ AT RUNTIME BY THE EXECUTION PATH. **ITS VALUES ARE BAKED INTO EXECUTABLE CONFIG AT GRADUATION TIME AND PERSISTED.** `[MEASURED]` `compileDslWithConfluence(compileInput)` (`:2206`) → `indicators: [{ema, period:9}, {ema, period:21}]` + `entry_long: "ema_9 crosses_above ema_21"` → `compiled` (`:2231`) → `overlayed.config` (`:2573`) → **`db.insert(strategies).values({ config: {...overlayed.config} })` (`:2781-2789`, and again for variants at `:3072-3079`).** ★★★★★ **SO SEARCHING FOR `entry_params` AT THE EXECUTION BOUNDARY RETURNS ALMOST NOTHING AND MEANS ALMOST NOTHING — `THE PARAMETER DOES NOT TRAVEL TO EXECUTION; ITS VALUE DOES, WEARING A DIFFERENT NAME.` A literal reading of my own lane question would have produced a confident, controlled, WRONG "no".**
 
 **TASK:** `R-686 §5` Lane 12. **READ-ONLY, MEASURE ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; fourteenth consecutive report. NO REPAIR STARTED, per the stop condition.**

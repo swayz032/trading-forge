@@ -46,7 +46,7 @@ import pytest
 
 from src.engine.indicators.core import compute_sma
 from src.engine.spec_condition_compiler import SpecConditionStrategy
-from src.engine.spec_family_bindings import compile_binding_plan
+from src.engine.spec_family_bindings import ConditionBinding, compile_binding_plan
 
 FAST_PERIOD = 10
 SLOW_PERIOD = 200
@@ -238,3 +238,71 @@ def test_reversing_condition_order_changes_the_shared_value(parameter_aware_engi
         "second. Its own taught period did not change — only its position did, which means "
         "it is receiving whatever the first-evaluated sibling computed."
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# R-687 §5 Lane 14 — PERMANENT WITNESS for the F-4 / F-5 repairs (AR-758).
+#
+# These guards were red-proofed once, in a scratchpad, and R-687 §2 named that
+# this desk's own scoping defect: "WHEN YOU SCOPE A REPAIR'S FILES, SCOPE ITS
+# PROOF'S FILES WITH IT — OTHERWISE YOU HAVE ORDERED A GUARD AND FORBIDDEN ITS
+# WITNESS." A red path proven only in a transcript decays unwitnessed (R-681 §2).
+#
+# The oracle here asserts OBSERVABLE BEHAVIOUR (does construction raise? is the
+# key present?) and deliberately does NOT restate production's logic — a test
+# that reimplements the rule it checks agrees with itself, not with the code.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _binding(**overrides) -> ConditionBinding:
+    base = dict(
+        condition_id="c0", type="WAIT_STRUCTURE", role="entry", object="bos",
+        bindable=True, primitive="structure", approximation=False, executed=True,
+    )
+    base.update(overrides)
+    return ConditionBinding(**base)
+
+
+def test_f4_unhashable_parameter_is_refused_at_construction():
+    """F-4: `object` admitted list/dict/set. Construction succeeded and the
+    TypeError surfaced deep inside compute(), far from the caller who chose the
+    value. The refusal must happen at the boundary."""
+    with pytest.raises(TypeError):
+        _binding(parameters=(("levels", [1, 2]),))
+
+
+def test_f4_the_refusal_names_the_offending_key():
+    """A refusal that does not say WHICH key is a refusal the caller cannot act
+    on — the whole cost of the deferred failure was that it named nothing."""
+    with pytest.raises(TypeError) as exc:
+        _binding(parameters=(("levels", [1, 2]), ("period", 20)))
+    assert "levels" in str(exc.value), (
+        f"the error must name the unhashable key; got: {exc.value!r}"
+    )
+
+
+def test_f4_positive_control_hashable_parameters_still_construct_and_hash():
+    """Discriminates 'refuses unhashable' from 'refuses everything'. Without
+    this, deleting the field entirely would pass the two tests above."""
+    b = _binding(parameters=(("period", 20), ("source", "close")))
+    hash(b)  # frozen dataclass must stay hashable — this is the invariant F-4 protects
+    assert b.parameters == (("period", 20), ("source", "close"))
+
+
+def test_f5_empty_tuple_serialises_identically_to_absent():
+    """F-5: the caption said OMIT-WHEN-EMPTY, the predicate said `is not None`.
+    `()` — the natural encoding for "the producer looked and found none" — added
+    a key to every binding, which is AR-739 §1's 0-vs-18 re-seal hazard."""
+    empty = _binding(parameters=()).to_dict()
+    absent = _binding(parameters=None).to_dict()
+    assert empty == absent, (
+        f"parameters=() emitted {empty.get('parameters')!r}; an empty parameter set "
+        "must serialise byte-identically to a binding that predates the field"
+    )
+    assert "parameters" not in empty
+
+
+def test_f5_positive_control_populated_parameters_still_serialise():
+    """Discriminates 'omits when empty' from 'omits always' — the mutation that
+    would satisfy the test above by deleting the branch."""
+    out = _binding(parameters=(("period", 20),)).to_dict()
+    assert out["parameters"] == {"period": 20}
