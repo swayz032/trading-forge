@@ -4,6 +4,33 @@
 
 ---
 
+## AR-768 · 2026-08-04 · ⏳★★★★★ **START-RECEIPT — `R-691 §5`, **TWO PARALLEL LANES, FAN-IN TARGET `2/2`, ONE REPORT.** LANE 20 = close the contract's semantics (TypeScript). **LANE 21 = ★ THE SLICE — make one evaluator consume a taught number (Python).**
+
+**TASK:** `R-691 §5` Lanes 20 + 21. **Runners: `npx vitest run` (TS) · `pytest` (Python).** **ETA: Lane 20 ~40 min · Lane 21 ~60 min. FIRST OBSERVABLE: this receipt.**
+✅ **I ACCEPT THE PARALLEL AUTHORIZATION AND AGREE THE EDGE IS FAKE, ON MY OWN CHECK, NOT ON THE DESK'S:** the two lanes touch different languages, different runners, different directories, and `[MEASURED, `AR-767 §2`]` **this repo's `tsconfig.json` EXCLUDES `src/engine`** — so `tsc` cannot even see Lane 21's surface. **Neither lane consumes the other's output. SHARED RESOURCE: `AGENT-REPORTS.md` only, which I own as single writer.**
+🛑 **ORDER I AM CHOOSING, AND WHY IT IS NOT A RE-SEQUENCING OF THE RULING: LANE 21 STEP `0` RUNS FIRST — before any edit in either lane — because it is the only step in either contract that can INVALIDATE ITS OWN LANE'S PREMISE.** `R-691 §5` marks the red baseline `[ARTIFACT-SOURCED, NOT re-measured by the desk]` and warns `RED PATHS DECAY`. **Measuring the thing that could cancel the work is cheaper before the work than after it.**
+
+### 🛑 STOP CONDITIONS, HELD IN ADVANCE (both quoted from `R-691 §5`, not paraphrased)
+- **LANE 21:** *"if the red baseline does NOT reproduce, STOP AND REPORT — the premise moved and this lane is aimed at the wrong link."* ★★★ **I will print the baseline numbers BEFORE editing, and if two differently-parameterized evaluations already differ, I stop rather than build a fixture that proves a thing already true.**
+- **LANE 20:** *"if `source_fidelity` cannot be expressed without the leaf importing something, STOP AND REPORT."*
+
+### ✅ EXPECTED-GREEN SETS, PRE-REGISTERED WITH DERIVATION (`R-682 §4.2`)
+- **LANE 20 — `src/server/services/executable-parameter-contract.test.ts`, AND NOTHING ELSE. DERIVATION, not a guess:** the only files I may edit are the contract module and its test; `[MEASURED, `AR-766 §2` + `R-691 §1`, two seats]` the module's **out-degree is `0`** and `R-690 §5`/`R-691 §4b` forbid a production caller, so **no other test file can reach it.** ✅ **PLUS a whole-program regression check that does NOT depend on that reasoning: `NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit` must stay `0`.**
+- **LANE 21 — `[TO BE NAMED IN STEP 0, WITH ITS DERIVATION, BEFORE THE FIRST EDIT.]`** ★★★ **I am NOT pre-registering a Python set I have not yet measured.** The derivation rule is fixed now and I will apply it, not revise it: **every test file that imports the module(s) I edit, computed from the import graph rather than from filename similarity.** **I will print the measured BASELINE for that set before the first edit and the post-state after; if the counts do not reconcile I report the discrepancy rather than restating the expectation.**
+
+### 🛑 BINDING TRAPS I AM CARRYING INTO LANE 21 (`R-691 §5`)
+- **`20` AND `50` ARE HARDCODED ENGINE DEFAULTS** (`spec_condition_compiler.py:140-141`,`:143`). **A fixture whose taught parameters coincide with a default CANNOT witness parameter transmission — OFF-DEFAULT VALUES ON BOTH ARMS.**
+- **`ONE FIXTURE THAT CAN FAIL FOR TWO REASONS IS NOT A CONTROL FOR EITHER` — parameter-transmission and cache-collision stay SEPARATE fixtures.**
+- ⚠️ **`R-691 §5` WARNS LANE 20 WILL REFUSE ALMOST EVERYTHING because `produce_spec_artifact` has no numeric channel yet. **I will not read that wall of refusals as a bug, and I will not soften the mode to make it look healthier.** `A MODE THAT REFUSES EVERYTHING BECAUSE ITS PRODUCER DOES NOT EXIST YET IS CORRECT AND LOOKS BROKEN.`**
+
+### ⚠️ ONE THING I AM FLAGGING BEFORE I START, PER `worker-execution §5`
+⚠️ **`R-691 §5` LANE 21 ORDERS A *PROPERTY* (*"measurably different evaluator output … attributable to the taught numbers"*), NOT A METRIC — so there is NO grading act hidden in it and I do not need the `accuracy-validator` to close it.** ✅ **I am stating that explicitly because the same lane WOULD need a grader if it asked me whether the different output was CORRECT. It does not: `MEASURABLY DIFFERENT` and `ATTRIBUTABLE` are both mechanical.** 🛑 **If that turns out to be wrong mid-lane, the grade is one ask away and I will ask for it rather than self-issue it.**
+
+**NOT DOING (both lanes):** create the gateway · migrate any insert site · delete a mirror · add a production caller · ship the probe edges (`R-691 §4b`) · touch `ADVISOR-RULINGS.md` · re-open the slice's selection.
+⚠️ **A SIBLING SEAT IS LIVE IN THIS SHARED TREE** — the advisor wrote `R-691` three minutes ago. **I will commit with explicit paths (`git commit -o`) and will not run any index-wide operation.**
+
+---
+
 ## AR-767 · 2026-08-04 · ⏳★★★★ **FRESH WORKER SEATED. POSITION: `R-690 §5` LANE 19 IS CLOSED (`AR-766`, fan-in `1/1`) AND **THERE IS NO OPEN WORKER LANE** — the next move is a DESK ruling, not a worker act.** 🛑★★★★ **PROTOCOL DEFECT REPORTED PER `worker-onboarding §1`: `R-690` CARRIES NO `★ WORKER — START HERE` BLOCK.** `[MEASURED HERE]` `grep -n "WORKER — START HERE"` over `ADVISOR-RULINGS.md` returns its newest hit at `:1497`, which belongs to an `R-662`-era ruling — **`R-690`'s dispatch lives only in `§5 AUTHORIZED NOW`.** ★★★ **IT COST NOTHING HERE because `§5` is unambiguous and already discharged; it would have cost a cold seat with an OPEN lane a scan. Reporting it so the desk fixes it, exactly as `worker-onboarding §1` instructs.** ✅★★★★★ **AND I CLOSED ONE OF `AR-766 §4`'s OWN UNMEASURED FLAGS WITHOUT TAKING NEW SCOPE — **THE REPO'S TYPE-CHECK GATE NOW ACTUALLY RAN, AND IT IS RED-PROOFED:** `npx tsc --noEmit` → **`0` errors, exit `0`** · a planted type error → **exit `2`, naming the file** · plant removed, identical command → **exit `0`.**
 
 **TASK:** cold-start seating + position report. **NO CODE CHANGED.** `[MEASURED]` `git status --porcelain src/` → **only the sibling session's `test_synthetic_market_simulator.py`** — nineteenth consecutive report.
