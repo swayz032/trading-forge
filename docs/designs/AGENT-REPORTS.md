@@ -4,6 +4,130 @@
 
 ---
 
+## AR-791 · 2026-08-04 · ✅ **`R-709 §11.1` DISCHARGED — `AR-789` + `AR-790` COMMITTED, GATE RUN AT THE INSTANT OF ACTING.** 🛑★★★★★ **PLUS TWO MECHANICAL FINDINGS I DID NOT GO LOOKING FOR: `R-708`'s HEADER LINE IS GONE FROM THE LEDGER (BODY INTACT, ONE LINE, RECOVERABLE), AND THE GRADE RECEIPT LANDED `59` SECONDS AFTER THE SUPPLEMENT ORDERING IT TO RE-DERIVE IN ISOLATION WAS COMMITTED.**
+
+**TASK:** `R-709 §11.1`. **Still on the `R-708 §3` HOLD** — both source surfaces untouched. **I do not interpret the grade; `R-709 §11.2` makes the verdict the desk's.**
+
+### ✅ §1 — THE GATE, RUN TWICE, AND WHAT IT WOULD HAVE CAUGHT
+`R-709 §7` requires `git status --porcelain -- src/engine/tests/` immediately before committing, abort on anything unexpected. `[MEASURED HERE, immediately before the commit]`
+```
+ M src/engine/tests/test_synthetic_market_simulator.py     <- the known sibling file
+UNEXPECTED_DIRTY_COUNT = 0   -> GATE=PASS
+```
+✅ **The gate's discriminator is the SIBLING EXCLUSION, and that is what makes it a gate rather than a formality:** a resident grader plant under `src/engine/tests/` would appear as a SECOND dirty path and abort me. **It did not appear** — consistent with `R-709 §7`'s order moving all mutation work into an isolated `git archive` checkout, though **I measured the tree, not the grader's compliance, and those are different claims.**
+
+### 🛑★★★★ §2 — `R-708`'s HEADER LINE IS MISSING FROM THE LEDGER. **BODY INTACT. ONE LINE. FULLY RECOVERABLE.**
+⚠️★★★★★ **I NEARLY REPORTED THIS AS *"`R-708` IS GONE"*. IT IS NOT, AND THE MEASUREMENT IS THE ONLY REASON I DID NOT SAY SO.** `[MEASURED HERE]`
+```
+git diff --numstat 3ed50267 HEAD -- docs/designs/ADVISOR-RULINGS.md
+  -> 89 insertions, 1 DELETION
+the single deleted line = "## R-708 · 2026-08-04 · ..."   (the header, nothing else)
+grep -c '^## R-708' : 3ed50267 -> 1     HEAD -> 0
+R-708's body        : INTACT and in place, currently at L104-L147
+R-708 body verbatim : recoverable at `git show 3ed50267:docs/designs/ADVISOR-RULINGS.md`
+```
+**WHAT IT LOOKS LIKE:** `R-709`'s insert consumed `R-708`'s header line; the tail of that header is now spliced onto the end of `R-709 §12` item 5 (`L103`, ending *"— THAT ONE WAITS FOR THE GPT READ..."*).
+🛑 **WHY IT MATTERS, AND IT IS NOT COSMETIC:** the ledger **references `R-708` twelve times** at HEAD, including `R-709`'s own `§11.1`. **A reader scanning `^## R-` now reads `R-708`'s body — INCLUDING ITS `§3` HOLD ORDER AND ITS `§2` GRADE-DISPATCH TABLE — as part of `R-709`.** ★★★★★ **`A SECTION THAT LOSES ITS HEADER DOES NOT GO MISSING — IT GETS ABSORBED BY ITS NEIGHBOUR, AND AN ABSORBED ORDER READS AS THE NEIGHBOUR'S ORDER.` That is worse than deletion, because deletion is visible and this is not.**
+🛑 **I DID NOT AND WILL NOT REPAIR IT.** `ADVISOR-RULINGS.md` is single-writer and it is not mine. **One line, at `L15`, restorable verbatim from `3ed50267`.**
+
+### ⚠️★★★★★ §3 — THE GRADE RECEIPT EXISTS. I REPORT ITS ARRIVAL, NOT ITS CONTENT.
+`[MEASURED HERE]`
+```
+docs/designs/GRADE-LANES-28-30-2026-08-04.md
+  mtime 15:00:12Z   size 31,966 B   sha256 4ccedaae9c8e6f7c
+  git status -> ?? UNTRACKED        (R-708 s2: "grader writes, THIS DESK commits" - owed)
+R-709 (the mid-run supplement) committed 14:59:13Z
+  => GAP BETWEEN THE ORDER AND THE RECEIPT: 59 SECONDS.
+dispatch ~14:40Z, published window 60-90 min => receipt at ~+20 min, roughly a THIRD of the low bound
+```
+🛑 **THE QUESTION THIS RAISES IS THE DESK'S, AND I AM DELIBERATELY NOT ANSWERING IT.** `R-709 §6` supplemented the running grader with the manifest finding, `12` mandatory novel attacks and a `15`-item scope; `R-709 §7` ordered it into an isolated checkout **and to RE-DERIVE any result obtained while a plant was resident in the shared tree.** **A `59`-second gap is a mechanical fact about file timestamps. Whether a re-derivation could have occurred inside it is a judgement about the grade, and `doer ≠ grader` puts that judgement with the desk, not with the seat being graded.**
+⚠️ **I ALSO NOTE THE DESK'S OWN PRE-REGISTRATION AGAINST ITSELF:** `R-708 §2` published `60`–`90` min **specifically because a previous `20`–`45` estimate ran `~75`.** **`A RESULT THAT ARRIVES FASTER THAN ITS OWN CORRECTED FLOOR IS A REASON TO LOOK, NOT A REASON TO CELEBRATE`** — and looking is the desk's act. **I have not opened the receipt's verdict and will not.**
+✅ **THE `16:15Z` SILENCE REPORT IS THEREFORE MOOT AND I AM RETIRING IT** rather than letting a discharged obligation sit open. **`AR-788 §1`'s deadline is discharged by arrival, not by expiry.**
+
+### ✅ §4 — POSITION
+**HOLD HOLDS.** `R-709 §11.2` gives the desk the lift, and the receipt landing is **not** the lift. **`R-709 §5`'s Lane 32 (pin the members + a population cwd-independence test) is authorized to THIS SEAT and stays BLOCKED until the desk lifts.** ✅ **I am seated, ear live, nothing in flight, no subagent owed.**
+🛑 **UNCHANGED AND NOT CLAIMED:** Gate 2 does not close here · golden strategy **`[UNSELECTED]`** · compiler stages **`0/6`** · **`PHASE-1 EXIT 0 of 3`** · `runtime-production` **`[UNMEASURED]`** · no `tsc`/`vitest`, **no TS parity claim** · flag **OFF** · `test_cloud_backend.py` **HUNG / `[UNENUMERATED]`** · `AR-790` **UNRULED by design** (`R-709 §8`).
+
+---
+
+## AR-790 · 2026-08-04 · 🛑🛑★★★★★ **LANE-31 READ, DELIVERED: ALL THREE INSTRUMENTS `R-648` NAMES EXIST AND RUN — BUT THE ONE ASSIGNED TO `COMPARE` ANSWERS A DIFFERENT QUESTION THAN THE SLICE ASKS.** ✅ **`run_parity_diff` COMPARES TWO ENGINES ON THE SAME DSL. `R-648` STAGE 5 ASKS WHETHER THE COMPILED STRATEGY MATCHES THE **REFERENCE** TRADE-BY-TRADE. `[MEASURED]` NOTHING IN `src/engine` DOES THE SECOND.** ⚠️ **REPORTED, NOT ACTED ON — I PROPOSE NO CONTRACT AND I BUILT NOTHING.**
+
+**TASK:** the read-only Lane-31 groundwork pre-registered in `AR-788 §3`. **Still under `R-708 §3` HOLD; zero writes to either held surface.** **Method: executable lines and call sites only — I ran none of the three.**
+
+### ✅ §1 — ALL THREE EXIST AT `HEAD`, AND THE LINE COUNT IS NOT THE ONE `R-648` PUBLISHED
+`[MEASURED HERE, `git ls-files` + line counts, worktree `HEAD 1f5fd513`]`
+```
+src/engine/forensics/compile_fidelity.py      915   run_leg_a_phase1     :332
+src/engine/forensics/calibration_battery.py   304   run_calibration      :215
+src/engine/parity_engine/diff_harness.py      561   run_parity_diff      :458
+                                            -----
+                                             1780
+```
+⚠️ **`R-648` records `~1,476` for the same three files. I measure `1,780`.** **I am NOT relitigating it** — a count taken at another commit is another population, not a discrepancy (`R-707 §10.3`). **I record my denominator so the next reader can join to it.** `NAME THE JOIN KEY.`
+
+### ✅ §2 — WHAT EACH ONE ACTUALLY DOES, FROM EXECUTABLE LINES
+1. **`run_leg_a_phase1` — STATIC compile-fidelity seal, and a good one.** `artifact: dict` → `compile_binding_plan(spec)` re-derived **LIVE at `:359`** → per-condition verdicts → content-hashed `Phase1Seal`. **Fail-closed by construction:** no spec body / zero taught conditions / a compiler raise are each a recorded `BLOCK`, *"never an exception-as-pass and never a skip"* `[docstring :337-339, and the three early returns implement it]`. ★ **A caller CANNOT inject a binding plan — the parameter was removed outright (`:354-357`), and `test_compile_fidelity_leg_a.py:411` red-proves the injection attempt raises.** **It executes nothing and produces no trades.** **Non-test callers: ONE, internal (`:868`).**
+2. **`run_calibration` — the `m1..m7` seven-slot mutation battery, WITH anti-vacuity built in.** A slot is OK **iff every case is CONVICTED *and* DISTINGUISHED** by its companion (`:250-257`), the clean spec must pass whole (`:225-229`), and an unfilled slot self-labels *"UNFILLED — awaiting independent grader's mutation"* (`:244`) rather than defaulting green. ★★★ **This is a real planted-defect instrument that already refuses to be vacuous.** 🛑 **BUT IT PLANTS INTO THE *INPUTS OF THE STATIC CHECKER*, NOT INTO AN EXECUTED STRATEGY** — so it is not, on its own, `R-648` stage 6. **Non-test callers: ZERO.**
+3. **`run_parity_diff` — a CROSS-ENGINE comparator.** It runs **vectorbt** and **backtrader** on the **same** `dsl` + the same bars and diffs PnL / trade count / Sharpe against tolerances (`:486-517`). **Non-test caller: `shadow_runner.py:415`.**
+
+### 🛑🛑★★★★★ §3 — THE FINDING: TWO DIFFERENT COMPARISONS WEARING ONE NAME
+- **What `run_parity_diff` answers:** *"do my two execution engines agree with each other on this DSL?"*
+- **What `R-648` stage 5 asks:** *"does the compiled golden strategy match **the reference** trade-by-trade?"*
+★★★★★ **THESE ARE NOT THE SAME OBJECT. Engine-A-vs-engine-B can agree PERFECTLY on a strategy that no longer means what the educator taught — both engines would be faithfully executing the same wrong thing.** `[MEASURED, targeted search across `src/engine/**.py` for a reference/expected trade list]` **the only `trade-by-trade` hits are `diff_harness.py:16`'s own cross-engine dump and a diagnostic print in `test_cross_engine_parity.py:385`.** **I found no instrument comparing executed trades against an external reference.**
+🛑 **THIS IS NOT ME ASKING TO BUILD ONE.** `R-648` is explicit that a new checker mid-slice is scope creep wearing a safety costume, and I agree with the rule. **It is the desk's call whether stage 5 means the cross-engine check, something else, or something not yet held.** ⚠️ **I flag it now because it is cheaper as a question than as a delivery.**
+
+### 🛑★★★★ §4 — THE SECOND CONSTRAINT: THE `COMPARE` PATH IS LOSSY BY CONSTRUCTION, AND IT SAYS SO ITSELF
+`shadow_runner._reconstruct_dsl` (`:66-96`) reduces a whole `StrategyConfig` to **FIVE fields** — `entry_indicator` · `entry_params` · `direction` · `stop_loss_atr_multiple` · `take_profit_atr_multiple` — under the verbatim docstring ***"Everything else is ignored by the parity runners."*** And `run_parity_diff` **`raise NotImplementedError`** (`:496`) for any indicator outside **`{ema_crossover, atr_breakout}`** (`shadow_runner:40`).
+🛑★★★★★ **SO A TAUGHT SPEC WHOSE MEANING IS A *SEQUENCE* — `state → event → trigger`, the exact thing `worker-execution §4` forbids flattening — CANNOT SURVIVE THIS REDUCTION. It arrives as one indicator, its params, a direction and two ATR multiples.** **A comparator downstream of that reduction can report perfect parity while the educator's meaning was destroyed upstream of it.**
+✅★★★★ **AND THE EXISTING CODE IS HONEST ABOUT THIS, WHICH CHANGES THE RISK CLASS ENTIRELY.** `parity_supported()` (`:50-61`) gates on the two-indicator set and its docstring instructs callers: *"False for any other archetype — caller must set `ran=False`, not `passed=True`."* ⇒ **the failure mode here is a BLOCKED slice, NOT a false receipt.** **I checked for the false-green shape specifically and did not find it. That is a credit to whoever wrote this, and it is the difference between a scheduling problem and a correctness one.**
+
+### 🛑 §5 — WHAT I DID NOT MEASURE
+- 🛑 **I RAN NONE OF THE THREE.** Every claim above is from executable lines and call sites. **`A READ IS NOT AN EXECUTION`**, and `calibration_battery` having **zero** non-test callers means *nobody has run it outside a test either* — I did not test whether it runs green today.
+- 🛑 **I did not measure the TS side at all** — no `tsc`, no `vitest`, **no parity claim.** `entry_indicator` also appears across `src/server/**`; whether the TS DSL and the Python `dsl` dict are the same contract is **`[UNENUMERATED]`** and I did not open it.
+- 🛑 **`runtime-production` `[UNMEASURED]`** — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.
+- 🛑 **I did not select or nominate a golden strategy.** Golden strategy stays **`[UNSELECTED]`**, compiler stages **`0/6`**, **`PHASE-1 EXIT 0 of 3`**. **Gate 2 does not close here and this read closes nothing.**
+
+### ⚖️ §6 — POSITION
+**Still on HOLD, still seated, ear live.** `[MEASURED, 15:05Z]` **`GRADE-LANES-28-30-2026-08-04.md` still absent.** **Silence report owed at `~16:15Z` and I will file it.**
+🛑 **NOTHING HERE IS A PROPOSAL.** `AR-789`'s stash hazard and this read are both **inputs to the desk's Lane-31 contract**, not a draft of one. **Uncommitted for `AR-789 §3`'s stated reason; I commit both the moment the hold lifts.**
+
+---
+
+## AR-789 · 2026-08-04 · 🛑🛑★★★★★ **HAZARD IN THE GRADE WINDOW, FOUND BY DOING THE SAFEST THING I DID ALL SESSION: `EVERY COMMIT IN THIS TREE STASHES AND RESTORES UNSTAGED FILES — INCLUDING, IF ONE IS RESIDENT, THE GRADER'S PLANT.`** ⚠️ **DELIBERATELY UNCOMMITTED WHILE THE HOLD RUNS — REASON STATED IN §3, AND IT IS A TRADE-OFF, NOT AN OVERSIGHT.**
+
+**TASK:** still `R-708 §3` (HOLD). **No lane, no grade interpretation.** This is a hazard report on the window itself.
+
+### §1 — WHAT I MEASURED, AND HOW I CAME TO SEE IT
+Committing `AR-788` (path-scoped, `git commit -o docs/designs/AGENT-REPORTS.md`) printed this, `[MEASURED HERE, verbatim from the commit's own output]`:
+```
+[WARNING] Unstaged files detected.
+[INFO] Stashing unstaged files to C:\Users\tonio\.cache\pre-commit\patch1785855157-17228.
+ruff lint ... Skipped   |   metric snapshot (fast subset) ... Skipped
+[INFO] Restored changes from C:\Users\tonio\.cache\pre-commit\patch1785855157-17228.
+```
+✅ **NO DAMAGE THIS TIME, AND I CHECKED RATHER THAN ASSUMING:** the sibling's `test_synthetic_market_simulator.py` reads `sha256` **`20b5795d7b62b3d7` PRE == POST, byte-identical**; the compiler reads **`621302a56987f19b`**, unchanged; `git status --porcelain -- src/` shows the sibling still `M` and nothing else. **The stash restored cleanly.**
+🛑 **BUT THE WINDOW IS REAL AND IT IS NOT MINE ALONE.** `commit -o` scopes what gets COMMITTED; **it does not scope what the pre-commit framework STASHES.** For the duration of every commit by any seat, unstaged files across the tree — **including everything under `src/engine/tests/`** — are reverted to their `HEAD` state and then restored from a patch file under `~/.cache/pre-commit/`.
+
+### §2 — WHY THIS LANDS ON THE GRADE, SPECIFICALLY
+`[MEASURED]` the mechanism above. **`[HYPOTHESIS — UNPROVEN, one inferential step]`** a grader plant is an **unstaged edit under `src/engine/tests/`**, which is the exact class the hook stashes. If so:
+1. **A commit by ANY seat while a plant is resident transiently REMOVES the plant, then restores it.** A grader sampling `sha256` or running `pytest` inside that window measures the UNMUTATED tree and would read a live plant as *"already restored"* — **a false GREEN on the restore check, and a false GREEN on the mutation itself.**
+2. 🛑 **THE COMMIT MOST LIKELY TO LAND INSIDE THE WINDOW IS THE DESK'S OWN COMMIT OF THE GRADE RECEIPT** (`R-708 §2`: *"grader writes, THIS DESK commits"*). **The act that closes the grade is the act that can corrupt it.**
+3. **If a restore ever fails**, the plant does not vanish — it is orphaned in `~/.cache/pre-commit/patch<epoch>-<pid>`, **outside the repository and outside every `sha256` bracket either of us takes.**
+★★★★★ **`A SHARED RESOURCE IS A HIDDEN EDGE` — `R-708 §7` drew it between a lane and its grader. This is one level below that: the edge is not a FILE, it is the COMMIT OPERATION, and it reaches every unstaged file in the tree regardless of path scoping. `PATH-SCOPING A COMMIT DOES NOT PATH-SCOPE ITS HOOKS.`**
+
+### §3 — WHAT I DID ABOUT IT, INCLUDING THE PART I CHOSE NOT TO DO
+🛑 **THIS AR IS UNCOMMITTED ON PURPOSE.** Committing it would open a second stash window inside the grader's run to warn about stash windows. **The desk's ear polls this file's mtime at `2s`, so the warning is delivered either way.** ⚠️ **I am recording this as a knowing trade-off against `R-707 §4`'s durability law, not a lapse: I am seated, and I commit this the moment the hold lifts.** **If the desk prefers durability over the window, say so and I commit immediately.**
+🛑 **I DID NOT** use `--no-verify` — routing around a hook that blocked nothing, to fix a problem the hook did not cause, is not mine to do and was never authorized.
+🛑 **I DID NOT** touch, inspect or clean `~/.cache/pre-commit/`. **`git stash`, `git checkout` and index operations on a shared tree remain forbidden to me and this is exactly the moment that rule exists for.**
+⚖️ **THE DECISION IS THE DESK'S**, and I can see three shapes without recommending among them beyond the obvious: **(a)** hold ALL commits — desk and worker — until the grader's receipt lands; **(b)** have the grader bracket per-file and re-verify its plant is resident immediately before each measurement; **(c)** accept the risk as measured-small because the window is sub-second. **My own evidence supports (c) being survivable ONCE — a single clean restore is not a distribution.**
+
+### §4 — WHAT IS NOT MEASURED
+- 🛑 **I did NOT verify the grader plants as an unstaged working-tree edit** rather than, say, into a temp copy. **That is the single load-bearing assumption in §2 and it is the desk's to confirm — it holds the grader's brief and I do not.** If the grader plants outside the working tree, **this entire report is a non-issue and I would rather be wrong loudly than right silently.**
+- 🛑 **I did not measure the window's duration**, only that one restore succeeded. **`ONE CLEAN RESTORE IS NOT A SAFETY MARGIN.`**
+- 🛑 Unchanged and not claimed: **Gate 2 does not close here** · `PHASE-1 EXIT 0 of 3` · `runtime-production` `[UNMEASURED]` · no TS parity claim · `test_cloud_backend.py` **HUNG / `[UNENUMERATED]`**.
+
+---
+
 ## AR-788 · 2026-08-04 · ⚡ **START-RECEIPT — WORKER RE-SEATED, `R-708 §3` HOLD ACKNOWLEDGED AND ACCEPTED. NO WRITES TO EITHER HELD SURFACE. READ-ONLY UNTIL THE DESK LIFTS IT.** ⚠️ **THREE MEASUREMENTS TAKEN NOW THAT THE GRADE WINDOW DEPENDS ON — ONE OF THEM IS A CONFOUND THE DISPATCH DID NOT NAME.**
 
 **TASK:** `R-708 §3` (HOLD). **No lane is open and none is claimed.**
