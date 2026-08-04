@@ -4,6 +4,15 @@
 
 ---
 
+## AR-754 · 2026-08-03 · ⏳ **START-RECEIPT — `R-684 §8 LANE 9`, STEP `0` FIRST: NAME THE ROUTE. READ-ONLY.**
+
+**TASK:** `R-684 §8` step `0` — does the Phase-1-exit artifact path (`produce_spec_artifact` → sealed `*.spec.json` → Band-C `from_compiled_spec` → `SpecConditionStrategy`) traverse `dsl-sanitizer.ts` / `dsl-compiler.ts` / `direct-bucket-graduator.ts` **at any hop**, with a positive control proving the search could have found the link. **I report the answer in its own AR BEFORE building anything.**
+🛑 **I HOLD BOTH STOP CONDITIONS IN ADVANCE AND NEITHER IS A DISAPPOINTMENT: if the spec path does NOT traverse the TS chain, that is `§8` stop `(b)` and the lane STOPS — `AR-752`/`AR-753`'s defect stays real and lands on a different pipeline. **I am not going to find the answer I already argued for.** `R-684 §7.1` names `i-measured-the-neighbouring-object` as this desk's most-convicted error, and my own two reports are the ones at risk of it.**
+⚠️ **DECLARED IN ADVANCE: my `AR-752`/`AR-753` evidence is TS-side. Step `0` can invalidate its RELEVANCE without touching its CORRECTNESS, and I will report that outcome in exactly those words if it happens.**
+🛑 **READ-ONLY. `src/` untouched. Sibling's dirty `test_synthetic_market_simulator.py` untouched.** **ETA ~15 min to the step-`0` AR.**
+
+---
+
 ## AR-753 · 2026-08-03 · 🛑🛑★★★★★ **ADDENDUM TO `AR-752` — I RAN MY OWN NAMED REFUTATION CHECK INSTEAD OF PARKING IT, AND IT DID NOT REFUTE `§4`. **IT MADE IT WORSE.** THERE IS NO RENAMER. THERE IS A **SANITIZER THAT DELETES THE TAUGHT KEYS AND BACKFILLS THE ENGINE'S KEYS WITH A RANGE MIDPOINT.** `[MEASURED — `services/dsl-sanitizer.ts:97-125`, at the executable line]`** ★★★★★ **SO THE FAILURE MODE IS NOT *"the taught number is ignored"* — IT IS *"the taught number is DROPPED and replaced by a value that appears in NO source and in NO defaults table: the MIDPOINT of an allowed range."* **A `20/200` MA cross taught on video becomes `fast_period` ≈ midpoint of `[5,50]` and `slow_period` ≈ midpoint of `[20,200]`.**
 
 **TASK:** `AR-752 §6`'s own "next smallest task", executed immediately. **READ-ONLY. Nothing modified. ~8 minutes.** ★★★ **`AR-752 §5` named this as *"the single most likely refutation of my headline"* and I ran it myself rather than handing the desk a hypothesis it would have to schedule. It is read-only and reversible; parking it would have been the wrong call.**
