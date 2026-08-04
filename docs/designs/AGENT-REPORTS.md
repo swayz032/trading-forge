@@ -4,6 +4,55 @@
 
 ---
 
+## AR-784 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 29. `R-705 §5` STEP 0 IS DISCHARGED (`556122b7`) AND RE-VERIFIED BY ME AT THE LANDED COMMIT, NOT INHERITED FROM THE DESK'S RUN ON THE DIRTY TREE.** ✅ **THE EAR IS RE-ARMED — AND IT WAS ARMED `~4` MINUTES BEFORE `R-705`'s ORDER TO RE-ARM IT LANDED, WHICH I ONLY KNOW BECAUSE THE EAR ITSELF REPORTED THE REWRITE.**
+
+**TASK:** `R-705 §5` Lane 29 — parameter acknowledgement above every short-frame early return. **FRESH SEAT** (`claude.exe 428`, the desk's own identification). **FILES SO FAR — ONE:** `src/engine/spec_condition_compiler.py`. **Sibling's `test_synthetic_market_simulator.py` dirty in the tree and NOT mine — thirtieth consecutive report.**
+
+### ✅ §1 — STEP 0, DISCHARGED AND INDEPENDENTLY RE-MEASURED
+```
+git commit -o docs/designs/AGENT-REPORTS.md src/engine/spec_condition_compiler.py \
+              src/engine/tests/test_parameter_collision.py
+  -> 556122b7  "Lane 28 (R-702 s6 / R-703 s1 / R-704 s3-s4) ... With AR-783."
+     3 files changed, 333 insertions(+), 173 deletions(-)   <- EXACTLY the three, nothing swept
+lane-affected surface RE-RUN BY ME AT 556122b7 -> 79 passed, PYTEST_EXIT=0
+  bracket: src/ diff identical before and after (only the sibling file), HEAD unmoved
+```
+⚠️ **ONE DEPARTURE FROM `R-705 §2`'s LITERAL COMMAND, DISCLOSED RATHER THAN SILENT:** the ruling's `-m` text carries `§`; I committed with `s6`/`s1`/`s3-s4` in ASCII, matching this branch's own existing subjects (`29ba8bb5`, `43a0492a`). **Content identical, encoding deliberate** — `ops_powershell_counting_and_encoding_lie_about_artifacts`.
+⚠️ **AND ONE FIGURE OF THE DESK'S I COULD NOT REPRODUCE, REPORTED BECAUSE IT IS ITS OWN JOIN KEY:** `R-705 §2` records `git log --all -- test_parameter_collision.py -> f73d2726 (AR-747)`. `[MEASURED HERE]` the same command returns **`0d714589` (AR-761)**. **The CONCLUSION is unaffected and I re-derived it independently — no commit on any ref contained Lane 28** — but the two do not agree and I am not letting that pass silently.
+
+### ✅ §2 — THE EAR, AND ITS BLIND WINDOW, STATED AS A JOIN KEY
+🛑 **I SEATED WITHOUT ONE. That is the miss, and the operator caught it, not me.** `[MEASURED]` armed **`13:36:43Z`**, persistent, `20s` poll: `sha256(ADVISOR-RULINGS.md)` **and** `git rev-parse HEAD`, each emitting on change.
+✅ **BLIND WINDOW BACKFILLED, NOT ASSUMED:** the arming line prints the top ruling header — `R-705` at arm time, i.e. **nothing landed between seating and arming.** `AN EAR ARMED AFTER THE SIGNAL NEVER HEARS IT`, so the arming timestamp is published as the join key rather than a claim of continuous coverage.
+✅★★★ **IT HAS ALREADY EARNED ITSELF: it fired `8` times between `13:39:04Z` and `13:41:05Z` on the desk REWRITING `R-705` in place** — a re-issue against the landed commit that carries no new ruling number. **A seat polling for "a ruling newer than R-705" would have seen none and been wrong about the world.** ⚖️ **I re-read the rewritten `§5` before encoding anything: the Lane 29 contract is UNCHANGED — same six rows, same direct-execution-witness rule, same stop condition, same forbidden list.**
+
+### ✅ §3 — ROOT CAUSE, LOCATED BEFORE ANY EDIT (`worker-execution §2`)
+`[MEASURED HERE, executable lines at `556122b7`]` the entire parameter-acknowledgement block — Lane 27's flag-OFF refusal AND Lane 28's flag-ON refusal — sat at **`:1417–:1509`**, while `compute()`'s warm-up floor returns at **`:1346`**. **~70 lines ABOVE it.** ⇒ a frame with `n < MIN_BARS_REQUIRED` (`=30`) returned four all-False columns and **never reached either refusal.**
+★★★ **AND THE FINDING THAT GENERALISES, WHICH IS NOT IN THE RULING:** `test_bias_refusal_surface.py`'s **F-3** refusal (`supplied_parameter_cannot_fall_back_to_default`) — a taught slow leg longer than the frame — fires INSIDE `_h_wait_bias`, also below that floor. **So below `30` bars F-3 is itself unreachable.** Row 6 is therefore **not a new invented behaviour**; it is an existing refusal that an early return had been hiding. `A REFUSAL THAT LIVES BELOW AN EARLY RETURN IS NOT A REFUSAL ON THE SHORT PATH.`
+✅ **ENUMERATED, NOT ASSUMED: `compute()` has EXACTLY ONE early return** (`:1350`) — `awk` over the whole method body. "Every short-frame early return" resolves to one site, and I checked rather than presuming one.
+
+### ✅ §4 — WHAT IS IN THE TREE RIGHT NOW (UNCOMMITTED), AND HOW THE MOVE WAS PROVEN A MOVE
+The block is **hoisted into `_acknowledge_parameters(n, enforced)`, called as the FIRST statement of `compute()`.** `[MEASURED]` ordering now `:1497` call → `:1498` early return → `:1517` `candle_confirmation_check` → `:1577` `ctx`/cache construction.
+🛑 **I DID NOT RETYPE THE ~90 LINES OF CAMPAIGN COMMENT — I SPLICED THEM IN BINARY AND HASHED THEM** (`AR-782 §5`: `read_text`/`write_text` silently rewrote `1,844` line endings and only a byte check caught it):
+```
+moved bytes sha256 5749293314529d3a  PRE == POST   verbatim-present-in-new-file: True
+line endings CRLF 0 -> 0   LF 1852 -> 1918        occurrences of `enforced = ...`: 1
+lane-affected surface after the hoist -> 79 passed   (unchanged: n>=30 behaviour identical)
+```
+⚖️ **ONE BEHAVIOUR DELTA I AM DECLARING RATHER THAN BURYING:** the refusals now fire **before** `self.last_population_a_level = {}` and `self.last_non_gating_conditions = {}`, which previously ran first. ⇒ **a refusal now mutates NOTHING on `self`.** I believe that is strictly more correct under `A REFUSAL THAT FIRES AFTER A MUTATION IS A PARTIAL RUN WEARING AN EXCEPTION` — **but it is a change the ruling did not ask for, so the desk should see it named.**
+
+### 🛑 §5 — SELF-MINTED IDENTIFIER, DISCLOSED FOR RATIFICATION (`AR-782 §6` precedent)
+Row 6 needs a refusal code and no ruling names one. **I minted `taught_parameters_require_a_sufficient_frame`**; the message names condition ids, taught keys, `n`, and `MIN_BARS_REQUIRED`. **The three existing codes do not fit:** `parameterized_binding_requires_enforced_dispatch` is flag-state, `parameter_supplied_to_non_consuming_route` is route-capability, `supplied_parameter_cannot_fall_back_to_default` is a period-longer-than-frame test that a short frame with a short taught period does not trip. ⚖️ **Rename it and I will.**
+
+### 🛑 §6 — STOP CONDITION, PRE-REGISTERED BEFORE THE FIRST TEST IS WRITTEN
+**TRIGGER (`R-705 §5`):** the hoist reddens an existing production-derived test, or reveals a production-created parameterized binding. **THE RATIONALISATION I REFUSE IN ADVANCE:** *"it is only a short-frame fixture, widen row 5."* **Row 5 — untaught short frame keeps the legacy all-False — is the boundary this lane does not own.**
+`[MEASURED, survey before editing]` **no existing test pairs a frame `<30` bars with a parameterized binding.** The five parameter-setting files use `n=200`/`n=40`; `test_composition_bundle_dispatch.py` uses `n=15` and sets no parameters. **PREDICTED EXPECTED-RED SET: EMPTY.** ★ Declared in advance so a non-empty result is a MISS on the record, not a back-fill.
+🛑 **NOT MEASURED YET, AND NOT CLAIMED:** the six-row matrix · the red-proof · the by-name inherited population · anything outside the lane-affected surface. **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM. FLAG NOT ENABLED. `test_cloud_backend.py` UNTOUCHED (desk-owned backlog, `R-705 §5`).**
+
+### ⚡ §7 — FIRST OBSERVABLE + ETA
+**NEXT:** the six-row matrix as a permanent test file with direct execution witnesses (spies on `candle_confirmation_check` and the real evaluator, each with a positive control proving the same witness records `>0` on a path that runs), plus a sentinel proving `last_per_condition_bool` is never published under refusal — **never a post-run field.** Then plant-and-remove with `sha256` PRE≡POST. **ETA ~40 minutes to the red/green pair, committed at the lane boundary per `R-705 §5`.** **FAN-IN `1/3`. NO HANDOFF.**
+
+---
+
 ## AR-783 · 2026-08-04 · ✅★★★★★ **`R-704` DISCHARGED — LANE 28 CLOSES AGAINST ALL ELEVEN CONDITIONS, THE FOUR ARE RECONCILED ONTO THE CONSUMING ROUTE, AND THE INHERITED POPULATION IS IDENTICAL BY FULL NODE ID WITH A WORKING BREAK-CONTROL.** ✅★★★★★ **WHOLE-SUITE RED-PROOF, NOT JUST A FILE-LOCAL ONE: `[MEASURED]` guard shipped → `171 failed / 8218 passed`; guard planted OFF → `181 failed / 8208 passed`; **the `10` extra are ALL MINE and the `171` inherited are BYTE-FOR-BYTE THE SAME SET.**** 🛑🛑★★★★★ **AND I LOCALISED THE HANG THE GRADE COULD ONLY CALL `UNVERIFIABLE`: IT IS `src/engine/tests/test_cloud_backend.py`, MEASURED HUNG — `0.016s` CPU IN `20s` WALL AFTER `15.6` MINUTES — AND IT IS PRE-EXISTING, NOT MINE.** ⚠️ **ONE PREDICTION OF MINE WAS WRONG AND `§4` SAYS SO.**
 
 **TASK:** `R-704 §3`/`§4` — Lane 28 completion. **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` (refusal message only) · `src/engine/tests/test_parameter_collision.py` (reconciled). **Sibling's `test_synthetic_market_simulator.py` is dirty in the tree and NOT in this commit — twenty-ninth consecutive report.**
