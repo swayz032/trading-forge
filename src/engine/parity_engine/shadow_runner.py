@@ -148,30 +148,53 @@ def _extract_entry_params(config: Any, entry_indicator: str) -> dict:
     return params
 
 
+# The ATR-multiple-bearing stop types. `StopConfig.type` is a Literal declared at
+# src/engine/config.py:350 as ("atr", "fixed", "trailing_atr"); both ATR forms carry
+# their magnitude in `multiplier`. "atr_multiple" is NOT a legal StopConfig value and
+# is retained only for dict-shaped callers, since these helpers accept `Any`.
+_ATR_STOP_TYPES: tuple[str, ...] = ("atr_multiple", "atr", "trailing_atr")
+
+# Returned when no ATR multiple can be sourced (no stop, or a fixed-point stop that
+# is not expressible as an ATR multiple). See _extract_stop_multiple's docstring.
+_STOP_MULTIPLE_UNAVAILABLE = 1.8
+_TP_MULTIPLE_UNAVAILABLE = 0.0
+
+
 def _extract_stop_multiple(config: Any) -> float:
-    """Extract stop loss ATR multiple from StrategyConfig."""
+    """Extract the TAUGHT stop-loss ATR multiple from StrategyConfig.
+
+    The magnitude lives in `StopConfig.multiplier`. It does NOT live in a field
+    named `value` — no such field exists on the model, and pydantic drops the
+    keyword silently, so `getattr(sl, "value", 1.8)` returned the default `1.8`
+    for every strategy ever passed here.
+
+    Fixed-point stops have no ATR multiple; they return
+    `_STOP_MULTIPLE_UNAVAILABLE` and that value is NOT a taught quantity.
+    """
     sl = config.stop_loss
     if sl is None:
-        return 1.8
-    # StopConfig may have type="atr_multiple" + value, or fixed points
+        return _STOP_MULTIPLE_UNAVAILABLE
     sl_type = getattr(sl, "type", "")
-    sl_value = getattr(sl, "value", 1.8)
-    if sl_type in ("atr_multiple", "atr"):
-        return float(sl_value)
+    if sl_type in _ATR_STOP_TYPES:
+        return float(getattr(sl, "multiplier", _STOP_MULTIPLE_UNAVAILABLE))
     # Fixed point stop — don't try to compare; return sentinel that marks unsupported
-    return 1.8
+    return _STOP_MULTIPLE_UNAVAILABLE
 
 
 def _extract_tp_multiple(config: Any) -> float:
-    """Extract take profit ATR multiple from StrategyConfig."""
+    """Extract the TAUGHT take-profit ATR multiple from StrategyConfig.
+
+    `take_profit` is an Optional[StopConfig] (config.py:449) — the SAME model as
+    the stop, so the magnitude is `multiplier` here too and the `value` defect was
+    identical: this returned `0.0` for every strategy.
+    """
     tp = getattr(config, "take_profit", None)
     if tp is None:
-        return 0.0
+        return _TP_MULTIPLE_UNAVAILABLE
     tp_type = getattr(tp, "type", "")
-    tp_value = getattr(tp, "value", 0.0)
-    if tp_type in ("atr_multiple", "atr"):
-        return float(tp_value)
-    return 0.0
+    if tp_type in _ATR_STOP_TYPES:
+        return float(getattr(tp, "multiplier", _TP_MULTIPLE_UNAVAILABLE))
+    return _TP_MULTIPLE_UNAVAILABLE
 
 
 def _detect_direction(config: Any) -> str:
@@ -363,7 +386,11 @@ def run_parity_shadow(
         # Gate 2: reconstruct DSL and check archetype support
         dsl = _reconstruct_dsl(request)
         if not parity_supported(dsl):
-            indicator = dsl.get("entry_indicator", "unknown")
+            # NOTE: the unsupported archetype name is deliberately NOT surfaced here.
+            # A dead `indicator = dsl.get("entry_indicator", "unknown")` sat on this
+            # line and was never passed to the report — the evident intent was to name
+            # the offending archetype. Changing the report payload is out of scope for
+            # this lane, so the dead assignment is removed and the gap is recorded.
             return _skipped_report(
                 reason="strategy_archetype_not_supported_by_parity_engine",
                 enabled=True,
@@ -395,15 +422,11 @@ def run_parity_shadow(
         contracts = 1
 
         # Gate 6: run the parity diff
-        from src.engine.parity_engine.diff_harness import (
-            PNL_TOLERANCE_PCT,
-            SHARPE_TOLERANCE,
-            TRADE_COUNT_TOLERANCE,
-            run_parity_diff,
-        )
-
         # Override harness tolerances via env if provided
         import src.engine.parity_engine.diff_harness as _dh
+        from src.engine.parity_engine.diff_harness import (
+            run_parity_diff,
+        )
         orig_pnl_tol = _dh.PNL_TOLERANCE_PCT
         orig_trade_tol = _dh.TRADE_COUNT_TOLERANCE
         orig_sharpe_tol = _dh.SHARPE_TOLERANCE

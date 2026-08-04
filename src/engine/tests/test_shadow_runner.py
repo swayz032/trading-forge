@@ -17,21 +17,23 @@ cover the actual diff_harness logic.
 from __future__ import annotations
 
 import json
-import os
-from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from src.engine.config import StopConfig
 from src.engine.parity_engine.shadow_runner import (
     _disabled_report,
     _error_report,
-    _skipped_report,
+    _extract_stop_multiple,
+    _extract_tp_multiple,
     _load_tolerances,
+    _reconstruct_dsl,
+    _skipped_report,
     parity_supported,
     run_parity_shadow,
 )
@@ -385,8 +387,7 @@ class TestEndToEnd:
         """When parity passes, report has ran=True, passed=True."""
         monkeypatch.setenv("PARITY_SHADOW_ENABLED", "true")
 
-        from src.engine.parity_engine.diff_harness import ParityResult, VBTTrade
-        from src.engine.parity_engine.backtrader_adapter import BTTrade
+        from src.engine.parity_engine.diff_harness import ParityResult
 
         fake_parity_result = ParityResult(
             fixture_name="shadow:test_strategy_ema_crossover",
@@ -506,3 +507,132 @@ class TestImportChain:
         """The backtester.py integration edit must not break the import chain."""
         import src.engine.backtester
         assert callable(src.engine.backtester.run_backtest)
+
+
+# ─── Tests: the TAUGHT stop / take-profit must reach the parity DSL ───
+#
+# R-718 §6 Lane 34. Root cause: `_extract_stop_multiple` read
+# `getattr(sl, "value", 1.8)`, but StopConfig has NO `value` field — its fields
+# are ('type', 'multiplier', 'fixed_points'). So the DEFAULT was returned as the
+# strategy's taught stop for every strategy, and take-profit was always 0.0.
+#
+# ★ WHY THIS SURVIVED EIGHT EXISTING TEST CLASSES, AND THE RULE IT BUYS:
+#   a SimpleNamespace(type="atr", value=3.7) fixture HAS a `value` attribute, so
+#   it passes against the broken code and proves nothing. THESE TESTS USE THE
+#   REAL `StopConfig` MODEL ON PURPOSE. A fixture that cannot express the
+#   defect cannot witness the fix.
+
+class TestTaughtStopAndTakeProfitReachTheDSL:
+    """Every test here uses the REAL StopConfig — never a stand-in with a `value`."""
+
+    @staticmethod
+    def _config(stop_loss, take_profit=None):
+        """Minimal StrategyConfig stand-in; the stop/TP objects are REAL models."""
+        return SimpleNamespace(
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            indicators=[SimpleNamespace(type="ema", period=9),
+                        SimpleNamespace(type="ema", period=21)],
+            entry_long="ema_9 > ema_21",
+            entry_short="high < low",
+        )
+
+    # ── the taught value itself ──────────────────────────────────────
+
+    def test_stop_multiple_carries_the_taught_atr_value(self):
+        """A taught 3.7 ATR stop must arrive as 3.7, not as the 1.8 default."""
+        cfg = self._config(StopConfig(type="atr", multiplier=3.7))
+        assert _extract_stop_multiple(cfg) == pytest.approx(3.7)
+
+    def test_trailing_atr_stop_carries_the_taught_value(self):
+        """trailing_atr is an ATR-multiple stop too — it must not fall through."""
+        cfg = self._config(StopConfig(type="trailing_atr", multiplier=3.3))
+        assert _extract_stop_multiple(cfg) == pytest.approx(3.3)
+
+    def test_take_profit_multiple_carries_the_taught_value(self):
+        """take_profit is the SAME StopConfig model — same field, same defect."""
+        cfg = self._config(
+            StopConfig(type="atr", multiplier=2.0),
+            take_profit=StopConfig(type="atr", multiplier=4.5),
+        )
+        assert _extract_tp_multiple(cfg) == pytest.approx(4.5)
+
+    # ── THE CLASS GUARD: a constant is the shape of this whole bug ────
+
+    def test_stop_multiple_is_not_a_constant(self):
+        """Vary the taught value; the output MUST vary with it.
+
+        This is the class guard. ANY future `getattr(sl, "<field-that-does-not-
+        exist>", <default>)` collapses this function to a constant again, and
+        this test reddens immediately without naming the field.
+        """
+        taught = [0.5, 1.0, 1.8, 2.5, 3.7, 5.0, 9.9]
+        got = [_extract_stop_multiple(self._config(StopConfig(type="atr", multiplier=m)))
+               for m in taught]
+        # positive witness that the path RAN: it returned the taught values, in order
+        assert got == pytest.approx(taught)
+        assert len(set(got)) == len(taught), (
+            f"output collapsed to {set(got)} across {len(taught)} distinct taught "
+            "multipliers — the extractor is returning a default, not the taught stop"
+        )
+
+    def test_take_profit_multiple_is_not_a_constant(self):
+        """Same class guard on the take-profit side."""
+        taught = [0.5, 1.5, 3.0, 4.5, 6.0]
+        got = [
+            _extract_tp_multiple(
+                self._config(StopConfig(type="atr", multiplier=2.0),
+                             take_profit=StopConfig(type="atr", multiplier=m))
+            )
+            for m in taught
+        ]
+        assert got == pytest.approx(taught)
+        assert len(set(got)) == len(taught), (
+            f"take-profit collapsed to {set(got)} across {len(taught)} distinct "
+            "taught multipliers"
+        )
+
+    # ── the real consumer, end to end ────────────────────────────────
+
+    def test_reconstructed_dsl_carries_taught_stop_and_tp(self):
+        """The DSL handed to the parity engine must carry the TAUGHT values.
+
+        _reconstruct_dsl is the only caller of both extractors, so this is the
+        assertion that matters: the repair has to reach the dict the comparator
+        actually reads, not just the helper.
+        """
+        request = SimpleNamespace(
+            strategy=self._config(
+                StopConfig(type="atr", multiplier=2.75),
+                take_profit=StopConfig(type="atr", multiplier=5.5),
+            )
+        )
+        dsl = _reconstruct_dsl(request)
+        # positive witness the path ran and produced a real DSL, not an empty dict
+        assert dsl["entry_indicator"] == "ema_crossover"
+        assert dsl["stop_loss_atr_multiple"] == pytest.approx(2.75)
+        assert dsl["take_profit_atr_multiple"] == pytest.approx(5.5)
+
+    # ── root-cause pins: GREEN on BOTH sides, NOT red-proofs ─────────
+
+    def test_stopconfig_has_no_value_field(self):
+        """Pins the root cause so the `value` assumption cannot be reintroduced.
+
+        NOTE: this passes against the broken code too — it documents WHY the bug
+        existed and is deliberately NOT counted as evidence the repair works.
+        """
+        assert "value" not in StopConfig.model_fields
+        assert set(StopConfig.model_fields) == {"type", "multiplier", "fixed_points"}
+        # and pydantic drops the bogus keyword silently — the reason it went unseen
+        assert getattr(StopConfig(type="atr", multiplier=2.0), "value", None) is None
+
+    def test_fixed_point_stop_returns_documented_sentinel(self):
+        """A fixed-point stop has no ATR multiple; it returns the sentinel.
+
+        RECORDED, NOT ENDORSED: the sentinel 1.8 is indistinguishable from a
+        genuine taught 1.8 ATR stop. That is a SEPARATE defect from the one this
+        lane repairs and is reported to the desk rather than fixed here, because
+        resolving it changes this function's return contract.
+        """
+        cfg = self._config(StopConfig(type="fixed", multiplier=3.3, fixed_points=42.0))
+        assert _extract_stop_multiple(cfg) == pytest.approx(1.8)

@@ -4,6 +4,139 @@
 
 ---
 
+## AR-801 · 2026-08-04 · ✅🛑★★★★★ **LANES `34` + `35` BOTH DELIVERED — FAN-IN `2 / 2`.** ⭐ **LANE 34: THE TAUGHT STOP NOW REACHES THE PARITY DSL; RED-PROOF PREDICTED `6` AND OBSERVED EXACTLY `6`, NO UNPREDICTED MEMBER — THIRD CONSECUTIVE EXACT MATCH.** 🛑🛑★★★★★ **LANE 35 ANSWERS `NONE`, AND THE COMMITTED CENSUS ALREADY SAID SO IN ITS OWN FIELDS: `n_eligible_strict = 0` AND `n_eligible_spine_only = 0`. ZERO OF `11` CANDIDATES, ZERO OF `99` LOAD-BEARING ROWS, ZERO NAMING AN INSTRUMENT WE HOLD.** 🛑🛑🛑★★★★★ **AND A RULING-PREMISE DEFECT I MUST REPORT BEFORE ANYTHING ELSE: THE GOLDEN SLICE IS *NOT* `[UNSELECTED]`. IT WAS RATIFIED AS `st5e-YJRfKc__s0` AND RE-SELECTION IS FORBIDDEN BY `R-665 §2.4`.**
+
+**TASK:** `R-718 §6` Lanes `34` + `35`. **`HEAD d2497c31` at start** (moved to `600ff606` → `d1a3b1a7` lineage mid-lane by the desk seat; docs-only, my measured surfaces byte-identical). **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **NOT GRAPH-SCHEDULED.**
+**FAN-IN: `2` authorized ⇒ `2` returned. Nothing absorbed, nothing missing.**
+**FILES CHANGED — TWO, BOTH IN LANE 34's ALLOWED SET.** `[MEASURED HERE, sha256 of every file touched, as ordered — RE-TAKEN after the `§5.1` lint pass; the earlier pair `ace81464…`/`51189a8c…` is SUPERSEDED and must not be quoted]`
+```
+8d7f28cdbac14d51  src/engine/parity_engine/shadow_runner.py   (+43/-20)
+1d6f3bec770b7fef  src/engine/tests/test_shadow_runner.py      (+136/-6)
+```
+✅ **LANE 35 WROTE NOTHING** — read-only as contracted. **Sibling's `test_synthetic_market_simulator.py` dirty and NOT in this commit — thirty-seventh consecutive report.**
+
+### 🛑🛑🛑★★★★★ §0 — THE RULING'S PREMISE IS FALSE, AND IT IS LOAD-BEARING FOR LANE 35
+
+`R-718 §6` states: *"the golden strategy has been `[UNSELECTED]` for the entire life of this ledger and selection is a DESK judgment I cannot make without evidence."* **`§7` and the `R-648 §3` dashboard repeat `golden strategy [UNSELECTED]`.**
+🛑 **`[MEASURED HERE, in the ledger itself]` THAT IS NOT THE LEDGER'S STATE:**
+```
+ADVISOR-RULINGS.md:3355  "the ratified golden slice is 9x WAIT_STRUCTURE + 1x INVALIDATE + 1x WAIT_SESSION"
+ADVISOR-RULINGS.md:3218  FORBIDDEN: "re-selecting or proposing a different golden slice (R-665 §2.4)"
+ADVISOR-RULINGS.md:3504  FORBIDDEN: "re-select the golden slice"
+GRADE-GOLDEN-SLICE-ZERO-PASSABLE-ROWS-2026-08-03.md:9  claim under grade names
+                         "The ratified golden slice st5e-YJRfKc__s0 (opening_range_breakout)"
+```
+⇒ **THE SLICE IS SELECTED: `st5e-YJRfKc__s0` / `opening_range_breakout`, `11` load-bearing conditions — and `R-665 §2.4` FORBIDS re-selection except on grounds INDEPENDENT of passability, written BEFORE any candidate is named.** ★★★★★ **THE `[UNSELECTED]` CARRIER IS STALE, AND IT IS THE EXACT DEFECT CLASS THIS DESK CONVICTED IN ITS OWN INDEX TODAY — `A SELF-DESCRIPTION IS STALE THE INSTANT THE NEXT WRITE LANDS`.**
+⚖️ **WHY I REPORT IT RATHER THAN ACT ON IT:** the correction is the desk's — I may not select, de-select, or ratify. 🛑 **BUT `R-665 §2.4` ALSO MEANS LANE 35'S RESULT MUST NOT BE READ AS A SHOPPING LIST: choosing a different spec BECAUSE it scores better is the PROXY TRAP the desk already forbade by name.** ✅ **Lane 35 is still worth exactly what it measured — see `§4`: there is no better spec, so the question does not arise.**
+
+### ✅⭐★★★★★ §1 — LANE 34: ROOT CAUSE, READ AT THE EXECUTABLE LINE BEFORE ANY EDIT
+
+**FIRST OBSERVABLE, AS PROMISED — THE REAL FIELD LIST** `[MEASURED HERE, `StopConfig.model_fields`, and the declaration at `src/engine/config.py:349-352`]`:
+```
+StopConfig fields = ['fixed_points', 'multiplier', 'type']      <- there is NO `value`
+type: Literal["atr", "fixed", "trailing_atr"]                    <- "atr_multiple" is NOT legal
+StrategyConfig.stop_loss   : StopConfig            (config.py:448, REQUIRED)
+StrategyConfig.take_profit : Optional[StopConfig]  (config.py:449, THE SAME MODEL)
+```
+🛑 **THE DEFECT, DEMONSTRATED BY CALLING THE COMMITTED FUNCTION — NOT BY READING IT** `[MEASURED HERE, throwaway process, `R-713` investigation]`:
+```
+taught multiplier=1.0 -> _extract_stop_multiple = 1.8   | taught tp=2.0  -> _extract_tp_multiple = 0.0
+taught multiplier=2.5 -> _extract_stop_multiple = 1.8   | taught tp=5.0  -> _extract_tp_multiple = 0.0
+taught multiplier=3.7 -> _extract_stop_multiple = 1.8   | taught tp=7.4  -> _extract_tp_multiple = 0.0
+taught multiplier=9.9 -> _extract_stop_multiple = 1.8   | taught tp=19.8 -> _extract_tp_multiple = 0.0
+CONTROL: distinct outputs across 7 different taught multipliers = {1.8}   <- A CONSTANT
+```
+⭐ **AND THE MECHANISM IS WORSE THAN "READS THE WRONG FIELD":** `StopConfig(type="atr", value=3.7)` **CONSTRUCTS SUCCESSFULLY** and silently drops the keyword — pydantic ignores it — yielding `multiplier=2.0`. ★★★★★ **`A MODEL THAT ACCEPTS A KEYWORD IT DOES NOT STORE MAKES THE WRONG FIELD NAME UNFALSIFIABLE AT THE CALL SITE.`**
+🛑 **THIRD FINDING, NOT IN `R-714`'s account:** `trailing_atr` — one of only three legal stop types — was **never matched by the type tuple at all** and fell through to the same `1.8`. **The named defect covered the whole type space, not just the `atr` branch.**
+
+### ✅ §2 — LANE 34: THE REPAIR, AND WHY IT IS THIS SMALL
+`_ATR_STOP_TYPES = ("atr_multiple", "atr", "trailing_atr")`; both extractors now read **`multiplier`**, the field that exists. `"atr_multiple"` retained ONLY because these helpers accept `Any` and may see dict-shaped callers; **the `node.module`-style truthy branch equivalent — the `fixed` path — is UNCHANGED.**
+🛑 **DELIBERATELY NOT FIXED, AND SAID OUT LOUD — A SECOND DEFECT ON THIS SURFACE:** a **fixed-point** stop still returns the sentinel `1.8`, which is **indistinguishable from a genuine taught `1.8` ATR stop.** ⚖️ **OUT OF SCOPE: resolving it changes the function's RETURN CONTRACT (sentinel vs `None` vs the module's existing `ran=False` unsupported path), and that is an architecture decision the desk owns.** ✅ **It is now PINNED BY A TEST so it cannot be mistaken for correct behaviour** (`test_fixed_point_stop_returns_documented_sentinel`, docstring reads `RECORDED, NOT ENDORSED`). **Reported, not chased.**
+
+### ✅⭐★★★★★ §3 — LANE 34: THE RED-PROOF. PREDICTED `6`, OBSERVED `6`, BY NAME
+**PRE-REGISTERED BEFORE THE PLANT** (`R-709 §6` format; `MINIMUM_EXPECTED_RED_SET` is a LOWER BOUND per `R-712 §4.4`):
+```
+MINIMUM_EXPECTED_RED_SET 6   EXPECTED_GREEN 2 (root-cause pins, green on BOTH sides)
+PLANT: the PRE-REPAIR shadow_runner.py in an isolated `git archive HEAD` checkout at C:\tf34
+       blob-verified BOTH ways: old code present (getattr(sl,"value") present, _ATR_STOP_TYPES absent)
+                                MY new tests present (identical sha256 both sides)
+       RUN TWICE: once before the §5.1 lint pass, once after it rewrote the test file
+       (sha256 1d6f3bec770b7fef, the shipped one). SAME 6, BY NAME, BOTH TIMES.
+
+OBSERVED_RED_SET = 6 failed, 29 passed      <- 29 = 27 pre-existing + the 2 pins
+  RED  test_stop_multiple_carries_the_taught_atr_value          <- predicted
+  RED  test_trailing_atr_stop_carries_the_taught_value          <- predicted
+  RED  test_take_profit_multiple_carries_the_taught_value       <- predicted
+  RED  test_stop_multiple_is_not_a_constant                     <- predicted  (CLASS GUARD)
+  RED  test_take_profit_multiple_is_not_a_constant              <- predicted  (CLASS GUARD)
+  RED  test_reconstructed_dsl_carries_taught_stop_and_tp        <- predicted  (REAL CONSUMER)
+```
+⭐ **`OBSERVED == MINIMUM_EXPECTED`, EXACTLY — no unpredicted member. Third consecutive lane.** ⚠️ **STILL A LOWER BOUND. Three exact matches do not erase Lanes 29/30's under-predictions and I am not treating it as a licence.**
+★★★★★ **§3.1 — WHY EIGHT EXISTING TEST CLASSES MISSED THIS, WHICH IS THE PART WORTH KEEPING:** `[MEASURED HERE]` **not one of the `27` pre-existing tests calls either extractor.** But the deeper reason is that they could not have caught it if they had: the file's established idiom is `SimpleNamespace`, and **`SimpleNamespace(type="atr", value=3.7)` HAS a `value` attribute, so it passes against the broken code.** ⇒ **MY TESTS USE THE REAL `StopConfig` MODEL ON PURPOSE, and that choice — not the assertions — is what makes them bite.** ★★★★★ **`A FIXTURE THAT CANNOT EXPRESS THE DEFECT CANNOT WITNESS THE FIX` — and a hand-built stand-in is the most comfortable place for a defect to hide.**
+✅ **THE CLASS GUARD IS THE DELIVERABLE I CARE ABOUT MOST:** `test_stop_multiple_is_not_a_constant` asserts the output **VARIES WITH THE TAUGHT VALUE** across `7` distinct multipliers. **It names no field, so ANY future `getattr(sl, "<nonexistent>", <default>)` collapses the function to a constant and reddens it immediately.** ✅ **POSITIVE WITNESS THAT THE PATH RAN, not merely a non-failure: it asserts the returned list EQUALS the taught list in order, and `_reconstruct_dsl` additionally asserts `entry_indicator == "ema_crossover"` so an empty dict cannot pass.**
+
+### ✅ §4 — LANE 35: THE ANSWER IS `NONE`, AND I RE-MEASURED THE LOAD-BEARING NUMBERS MYSELF
+🛑★★★★★ **EVIDENCE-GRADE DISCLOSURE FIRST, AGAINST MY OWN INTEREST: I RAN LANE 35 AS A SUBAGENT.** `R-665` records a prior seat DECLINING subagent lanes on the grounds that *"a number a subagent hands me is `[RELAYED]`"* — **and the desk RATIFIED that reading.** ✅ **SO I RE-DERIVED EVERY LOAD-BEARING FIGURE MYSELF FROM THE COMMITTED ARTIFACT BEFORE SIGNING** `[MEASURED HERE]`:
+```
+docs/replay-results/h1-battery/tier-a-compile-census.json
+  len(specs)                = 11     <- ALL 11 NAMEABLE from the committed doc (strategy_name)
+  sum(n_conditions_total)   = 99     <- the STRICT load-bearing denominator
+  sum(n_spine_or_trigger)   = 53     <- the SPINE reading
+  eligibility.n_eligible_strict      = 0
+  eligibility.n_eligible_spine_only  = 0
+```
+★★★★★ **THE COMMITTED CENSUS ALREADY CARRIES THE ANSWER IN ITS OWN FIELDS: `0` ELIGIBLE ON *BOTH* CRITERIA. This is not my subagent's arithmetic and not my re-run — it is the artifact's own recorded verdict, and it is the strongest single line in this report.**
+⇒ **`0` of `11` candidates · `0` of `99` load-bearing rows concretely bindable · `0` naming an instrument we hold. I report `NONE` plainly and I select nothing.**
+⭐ **AND IT CORRECTS A NUMBER THIS CAMPAIGN HAS BEEN CARRYING:** the `[RELAYED]` seat memory *"~`53` load-bearing conditions"* is the **SPINE** reading, not the strict one. **Under the frozen forensics `§0` default the denominator is `99`.** ✅ **BOTH criteria are committed side-by-side in the census `eligibility` block and BOTH return zero — so the correction changes the denominator, NOT the conclusion.** ★★★ **`THE PRIOR'S DIRECTION WAS RIGHT AND ITS NUMBER WAS THE WRONG DENOMINATOR` — precisely the shape `R-648` convicted with `0/155`.**
+**INSTRUMENT UNIVERSE — COMMITTED, AND I READ THE EXECUTABLE LINES** `[MEASURED HERE]`: `src/engine/config.py:130-142` `CONTRACT_SPECS` = **`MES`, `MNQ`, `MCL`** (+ `ES`/`NQ`/`CL` as S3 aliases mapping to **the same micros**), comment: *"Micro contracts only — user trades MES/MNQ/MCL exclusively"*; corroborated on a second surface by `src/data/loaders/duckdb-service.ts:14` `ALLOWED_SYMBOLS`. ⇒ **`3` distinct instruments.**
+**`[RELAYED — subagent, NOT re-measured by me]`, flagged as such:** the per-spec `instrument_classification` strings · the `52`/`43`/`4` blocker taxonomy · the `ARM 2`/`ARM 3` in-memory approximation-clearing controls (`52` rows flip to PASS then back to exactly `0`) · the `11/11` sha256 extraction joins. ⚠️ **THESE ARE THE PARTS OF THE TABLE A GRADER SHOULD ATTACK FIRST, AND I SAY SO RATHER THAN LET THEM INHERIT THE AUTHORITY OF THE FIGURES I DID RE-DERIVE.**
+⭐ **ONE SUBAGENT SELF-CATCH WORTH PRESERVING, BECAUSE IT IS THIS CAMPAIGN'S OWN CONVICTED SHAPE:** its first instrument reported `MES` in `6` specs; audited, **every hit was a substring of "ti`mes`"/"so`mes`"/"co`mes`" and every `CL` was "`cl`ean"/"`cl`ose".** Re-run case-sensitive with word boundaries → **`0` across all `11`**, with the identical regex fired against a file that DOES contain the tokens (`MES:3, MNQ:3, MCL:3`) as a positive control. ★★★★★ **FOURTH CRUDE-SEARCH FAILURE IN TWO DAYS, AND THE FIRST ONE CAUGHT BY ITS OWN AUTHOR BEFORE PUBLICATION.**
+
+### ✅ §5 — REGRESSION, AND THE ARITHMETIC RECONCILES EXACTLY
+`test_shadow_runner.py` **IS a member of the canonical `97`** `[MEASURED HERE, manifest line 100]`, so my change lands inside the graded population and owes the scoped run.
+```
+EDITED FILE   pytest test_shadow_runner.py -q                     -> 35 passed   1.09s
+RED-PROOF     pre-repair code + new tests, isolated C:\tf34       ->  6 failed / 29 passed
+ADJACENT      pytest test_cross_engine_parity.py -q               -> 35 passed   2.96s
+SCOPED REGR.  canonical population (97 files, via subprocess)     -> 31 failed, 2234 passed,
+                                                                     3 skipped, 2 xfailed  103.3s
+SCOPED REGR.  RE-RUN after the §5.1 lint pass, same 97 files      -> 31 failed, 2234 passed,
+                                                                     3 skipped, 2 xfailed  105.7s
+```
+⭐ **THE RE-RUN IS BIT-FOR-BIT THE SAME VERDICT LINE, WHICH IS THE POINT: the lint pass moved nothing.** ★ **`A NUMBER CARRIED ACROSS A FIX IS STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH` — so I re-took it rather than reasoning that imports cannot matter.**
+⭐ **`AR-799`'s baseline was `31 failed / 2226 passed` over `97`. Now `31 failed / 2234 passed` over `97`. `+8` = EXACTLY my `8` new tests. `31` UNCHANGED ⇒ `0` new failures and `0` attributable to my change.**
+✅ **`R-712 §4.1` OBEYED IN MY OWN HARNESS:** the runner asserts the resolved path list is **non-empty AND equal to the manifest count** before invoking pytest (`MANIFEST MEMBERS = 97`, `RESOLVED PATHS = 97`, `MISSING = 0`) and drives pytest by `subprocess` from inside python — **no shell seam**, because `A PYTEST INVOCATION WITH NO PATHS DOES NOT ERROR, IT RUNS EVERYTHING`.
+✅ **LINT: I INTRODUCED ZERO NEW ERRORS, AND I CHECKED IT BY SET AND NOT BY COUNT.** `ruff` reported `15` at the pre-repair baseline and `15` after my repair — **but equal integers joined by nothing is the shape this campaign convicts**, so I diffed the normalised rule sets: **IDENTICAL**. All were pre-existing.
+
+### 🛑★★★★★ §5.1 — THE COMMIT WAS BLOCKED BY THE PRE-COMMIT HOOK, AND I REPORT IT RATHER THAN SHOW A CLEAN LOG
+⚠️ **MY FIRST COMMIT ATTEMPT FAILED.** `ruff-lint` rejected it on **`13` errors under the hook's own `--select=E,F,W,I`** — **every one PRE-EXISTING, none introduced by me** (proved by the identical-set diff above, run before the attempt).
+🛑 **TWO EXITS WERE AVAILABLE AND I REFUSED BOTH:** `--no-verify` is **routing around a guard that blocked me**, and leaving the lane undeliverable would have been a stall dressed as compliance.
+✅ **WHAT I DID:** ran **exactly the hook's own rule set and flags** — `ruff check --select=E,F,W,I --ignore=E501,E741,E722 --fix` — on the two files **already inside Lane 34's `FILES ALLOWED`. `12` auto-fixed; `1` (`F841`) fixed by hand.** 🛑 **I fixed NOTHING the hook did not demand** — the repo-wide run also flags `UP037`, which is outside the hook's select and which I left alone.
+✅ **PROVED BEHAVIOUR-NEUTRAL, NOT ASSUMED:** `70 passed` across `test_shadow_runner.py` + `test_cross_engine_parity.py` **both before and after** the lint pass — same suites, same count.
+⭐ **AND THE RED-PROOF WAS RE-RUN FROM SCRATCH BECAUSE THE INSTRUMENT CHANGED** (`red-path-decay`: a red path measured against a since-edited test file is stale). **Fresh `git archive` checkout, test file blob-verified identical at `1d6f3bec770b7fef` both sides ⇒ `6 failed, 29 passed`, THE SAME `6` BY NAME.** ★ **The proof survives its own instrument being rewritten.**
+🛑 **THE ONE MANUAL FIX, AND WHAT IT REVEALED:** `F841` was a dead `indicator = dsl.get("entry_indicator", "unknown")` at the unsupported-archetype branch — **assigned and never passed to the report. The evident intent was to NAME the offending archetype in the skip reason, and that intent is unfulfilled in shipped code.** ✅ **I removed the dead assignment and RECORDED the gap in a comment; changing the report payload is outside this lane.**
+⚖️★★★★ **ROOT CAUSE OF THE BLOCK, WHICH IS NOT MINE AND WILL HIT THE NEXT SEAT TOO:** `R-644 §6` repaired the pre-commit hook on `2026-08-03` (its `INSTALL_PYTHON` pointed at a `0`-byte Windows Store alias that failed or hung). ⇒ **files committed while the hook was inert carry lint debt, and the FIRST seat to touch such a file inherits a blocked commit for defects it did not create.** 🛑 **`A REPAIRED GUARD RETROACTIVELY INDICTS EVERYTHING THAT LANDED WHILE IT WAS BROKEN` — desk-owned; I fixed only my two files and did not sweep.**
+
+### 🛑 §6 — A SAFETY CLAIM I REFINED RATHER THAN REPEATED
+`R-714` established this tool *"gates nothing today"* on two layers. ✅ **I RE-VERIFIED BOTH MYSELF at the current HEAD rather than relaying** `[MEASURED HERE, `backtester.py:6158` and `:8553`]`: both call sites are env-gated on `PARITY_SHADOW_ENABLED` default `"false"`, and the only consumer of `passed` is a `print(..., file=sys.stderr)` — **no raise, no exit code, no promotion decision. THE CONCLUSION HOLDS.**
+🛑★★★★ **BUT THE ACCOUNT WAS INCOMPLETE, AND THE MISSING PIECE CUTS TOWARD RISK:** `[MEASURED HERE]` `backtester.py:6162` does `result["parity_shadow"] = shadow_report`, and `:6301` folds it into `result["result_extras"]` via the `BacktestResultExtras` JSONB contract — **and `result_extras` is a REAL PERSISTED DB COLUMN** (`src/server/db/migrations/schema.ts:653`, `resultExtras: jsonb("result_extras")`), read elsewhere by `lifecycle-service.ts` and `slumhouse/recipe-data.ts` on *other* sub-keys.
+⇒ ⚠️ **WITH THE FLAG ON, THE SHADOW REPORT IS NOT MERELY PRINTED — IT IS WRITTEN TO THE DATABASE.** ✅ **`[MEASURED HERE, positive-controlled grep]` NO consumer reads `result_extras.parity_shadow`, so it still DECIDES nothing — the "gates nothing" verdict survives.** 🛑 **But pre-repair, flipping that flag would have PERSISTED a parity record built on a constant `1.8` stop for every strategy. `A DEFECT THAT ONLY PRINTS IS A BAD LOG LINE; A DEFECT THAT PERSISTS IS A FUTURE CITATION.`** ⚖️ **This strengthens `R-718 §6`'s admission test rather than weakening it, and the desk should hold it against `AR-790`/`AR-797` at fan-in.**
+
+### 🛑 §7 — NOT MEASURED, NOT CLAIMED
+- 🛑 **I CLAIM NO BAND ON EITHER LANE. I am the doer.** ★ **The independent re-grade is owed and `accuracy-validator` is one authorization away — say the word and it runs against this closing SHA.**
+- 🛑 **LANE 35's LARGEST HOLE, NAMED BY ITS OWN RUN:** the `640`-combination FLAG SWEEP was run **only** for `st5e-YJRfKc__s0` and is `[RELAYED]` from the GRADE artifact. **My `0/99` is at DEFAULT FLAGS ONLY.** ⇒ 🛑 **`"zero under all flag combinations"` IS NOT ESTABLISHED FOR THE OTHER `10` AND I DO NOT CLAIM IT.**
+- 🛑 **WHETHER WE PHYSICALLY HOLD `MES`/`MNQ`/`MCL` BAR DATA IS `[UNCOMMITTED]`** — the tradeable universe is committed, the data holdings are not (S3/DuckDB/Databento, unverifiable read-only from this tree). **"Instrument held" is answered on the NAMING reading only.**
+- 🛑 **`0` of the `11` names a futures contract. `[RELAYED]` at most `3` name an *underlying* (S&P 500 / Nasdaq) that a DESK judgment could map to `MES`/`MNQ` — and one spec says `"not futures"` explicitly.** ⚖️ **That mapping exists in NO artifact; I did not make it and it is not mine to make.**
+- 🛑 **The `2` specs excluded by the census selection rule (`SeqVUNanFeY__s0`, `XbRI0sfcXU4__s0`) were NOT evaluated** — outside the committed population, named rather than silently dropped.
+- 🛑 **Lane 35's `st5e-YJRfKc__s0` row REPRODUCES the GRADE artifact (same instrument, same method) — an ECHO, not a second path.** ✅ **The other `10` rows are NEW measurement: that artifact explicitly disclaimed them as `HYPOTHESIS`.** ★ **I state the split rather than claiming corroboration across the whole table.**
+- 🛑 **`GRADE-F-1`/`GRADE-F-2` UNTOUCHED** (`R-718 §4` tripwire; no `:534` work authorized) · **`F-4` latent at `spec_condition_compiler.py:639`** · **the `31` inherited failures NOT diagnosed and NOT joined by name to `AR-794`'s `31`** — same integer, and joining populations by a matching integer is the shape this campaign convicts.
+- 🛑 **UNCHANGED AND NOT MOVED BY EITHER LANE:** **compiler stages `0/6` · planted-defect harness `NOT BUILT` · `PHASE-1 EXIT = 0 of 3`** · `runtime-production` `[UNMEASURED]` · no `tsc`/`vitest`, **NO TS PARITY CLAIM** · `PARITY_SHADOW_ENABLED` still OFF and untouched · production compiler untouched · **the comparison tool remains on HOLD and Lane 34 is NOT an elevation of it.**
+
+### ★★★★ §8 — POSITION
+✅ **BOTH LANES CLOSED. FAN-IN `2 / 2`. Nothing half-done, nothing in flight, no subagent still owed** `[MEASURED — Lane 35 returned and its result is integrated above]`. **I am seated, ear live. NO HANDOFF.**
+🛑 **THREE ITEMS ROUTED TO THE DESK, NONE ACTIONABLE BY ME:** **(1)** the `[UNSELECTED]` carrier is stale — the slice is `st5e-YJRfKc__s0` (`§0`) · **(2)** the `fixed`-stop sentinel collides with a genuine taught `1.8` (`§2`) · **(3)** the shadow report is PERSISTED, not merely printed (`§6`).
+★★★★★ **AND THE ONE SENTENCE THE DESK ASKED FOR IN ADVANCE: `R-718 §6` PRE-REGISTERED THAT `NONE` MIGHT BE THE CORRECT ANSWER AND THAT IT WOULD BE THE MOST IMPORTANT FACT ON THE CAMPAIGN. IT IS `NONE` — AND THE COMMITTED CENSUS HAD ALREADY RECORDED IT AS `0` ON BOTH CRITERIA BEFORE THIS LANE RAN.**
+
 ## AR-800 · 2026-08-04 · ⚡ **START-RECEIPT — LANES `34` + `35` ACCEPTED (`R-718 §6`), BOTH LIVE, RUN IN PARALLEL BY ONE SEAT.** ★★★ **FRESH WORKER CONTEXT IN THE SAME PROCESS — `claude.exe 428`, `/clear`ED AT `~18:52Z`. THE SEAT ADDRESS IS UNCHANGED AND THE `ADVISOR-RULINGS` EAR SURVIVED THE CLEAR (it delivered `R-717` and `R-718` to this context).**
 
 **TASK:** `R-718 §6` Lanes `34` + `35`. **`HEAD d1a3b1a7` at start.** **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **NOT GRAPH-SCHEDULED** — `R-718` records `NODE TRANSITION: NONE` and releases no descendant; these lanes consume no hard predecessor.
