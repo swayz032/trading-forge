@@ -4,6 +4,77 @@
 
 ---
 
+## AR-782 · 2026-08-04 · 🛑🛑🛑★★★★★ **`R-703 §1`'s STOP CONDITION HAS FIRED. LANE 28 IS BUILT AND RED-PROVEN, AND I AM STOPPING BEFORE IT IS FINISHED BECAUSE IT REDDENS `4` EXISTING TESTS.** ✅★★★★★ **IT IS THE EXACT TRIGGER I PRE-REGISTERED IN `AR-781 §3` BEFORE THE FIRST EDIT — `test_parameter_collision.py`, named in advance, for the reason named in advance.** 🛑🛑★★★★★ **AND THE ANSWER TO *"IS THIS A LIVE PARAMETERIZED CALLER?"* IS **NO, MEASURED** — BUT THE REAL FINDING IS WORSE AND IT IS NOT A LIVE-CALLER QUESTION AT ALL: **THAT TEST INSTITUTIONALISES THE `F-A` SHAPE. IT EXISTS TO ASSERT THAT `_h_structure` CACHE-SEPARATES DISTINCT PERIODS — WHICH IS PRECISELY *"A PARAMETER THAT ONLY MOVES THE CACHE KEY"*, THE THING `R-703 §1` DEFINED AS NOT-CONSUMPTION.** ⚖️ **TWO CAMPAIGN REPAIRS ARE IN DIRECT CONTRADICTION AND ONLY THE DESK MAY PICK.**
+
+**TASK:** `R-702 §6` Lane 28, widened by `R-703 §1`. **STATUS: STOPPED AT THE STOP CONDITION, NOT COMPLETE.** **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` · **NEW** `src/engine/tests/test_parameter_acceptance_guard.py`. **Sibling's file untouched — twenty-eighth consecutive report.**
+🛑 **THE BRANCH CURRENTLY CARRIES `4` RED TESTS. THAT IS DISCLOSED, NOT OVERLOOKED** — `§3` says why I did not repair them and `§7` gives the one-command revert.
+
+### 🛑🛑🛑★★★★★ §1 — THE STOP CONDITION, REPORTED IN THE THREE FIELDS `R-703 §1` DEMANDS
+**EXACT CALLER —** `src/engine/tests/test_parameter_collision.py`, **`4` of `10` tests:**
+```
+test_both_conditions_are_actually_dispatched
+test_two_same_family_conditions_with_different_periods_must_evaluate_differently
+test_identical_periods_still_share_one_computation
+test_reversing_condition_order_changes_the_shared_value
+                                             -> 4 failed, 6 passed (the 6 never call compute())
+```
+**EXACT BINDINGS —** condition_ids **`'fast'`** and **`'slow'`**, both `type=WAIT_STRUCTURE`, both bound to primitive **`structure_engine.compute_structure_state`** ⇒ handler **`_h_structure`**.
+**EXACT PARAMETERS —** `(("period", 10),)` and `(("period", 200),)` `[MEASURED: FAST_PERIOD=10, SLOW_PERIOD=200 at :51-52]`. ⚠️ **NOTE THE KEY IS `period`, NOT the canonical `fast_period`/`slow_period`** — it is a third key name, in a third shape, and it is the one an existing test relies on.
+**THE REFUSAL THEY HIT, VERBATIM FROM THE RUN:** `condition(s) 'fast' (primitive 'structure_engine.compute_structure_state'), 'slow' (…) carry parameters, but the route each is dispatched to does not consume them. REFUSAL parameter_supplied_to_non_consuming_route`.
+
+### ✅★★★★★ §2 — IS IT A **LIVE** PARAMETERIZED CALLER? **NO — AND HERE IS THE EVIDENCE, NOT THE OPINION**
+`[MEASURED HERE — I opened the file]`
+1. **The spec is hand-built inside the test** (`_spec(first_period, second_period)`), not produced by any spec JSON or by `compile_binding_plan` from a corpus artifact. **It is not production-derived.**
+2. **The construction site declares itself test-only, in its own docstring:** `_plan_with_periods` — *"Populate ConditionBinding.parameters — **ONLY here, never in production code**."*
+3. ★★★★★ **THE CONSUMPTION IS FABRICATED BY THE FIXTURE.** `parameter_aware_engine` monkeypatches **`_eval_wait_structure`** into a period-sensitive `_ma_gate(df, period)` and wraps `_h_structure`. **The production evaluator it replaces takes `(n, df)` and no period.** ⇒ **the test demonstrates a consumption production does not perform** — which is `R-702 §1`'s own corroborating tell, now confirmed first-hand at the executable line.
+✅ **CONSISTENT WITH LANE 27's CENSUS AND `R-702 §5`'s RUNTIME RE-DERIVATION** (`21,663` real bindings, `0` parameterized). **No production caller is affected, so nothing shipped changes behaviour.**
+
+### 🛑🛑🛑★★★★★ §3 — THE FINDING THAT ACTUALLY MATTERS, AND WHY I WILL NOT RESOLVE IT MYSELF
+🛑 **THE `4` REDS ARE NOT COLLATERAL. THEY ARE THE TEST'S SUBJECT.** Those tests assert that two `WAIT_STRUCTURE` conditions with different taught periods get **separate cache slots and different answers**. **Lane 28 says `_h_structure` may not accept a parameter at all**, because `_eval_wait_structure` cannot consume one.
+★★★★★ **SO THE CACHE-SEPARATION PROPERTY AND THE CONSUME-OR-REFUSE INVARIANT CANNOT BOTH HOLD FOR `_h_structure`** — and `R-703 §1` is the sentence that decides it if it is applied literally: **`A PARAMETER IS NOT CONSUMED MERELY BECAUSE IT CHANGES THE CACHE KEY.`** **The collision test asserts exactly the behaviour that sentence disqualifies.**
+⚖️ **THE HISTORY MAKES THIS A DESK QUESTION, NOT MINE:** that cache key was itself an authorized repair (`R-681 §5(5)`, red-proofed at `R-679 §2`) for a real collision defect. **One campaign repair now forbids what another campaign repair requires.** 🛑 **`R-703 §1` ALSO FORBIDS THE OTHER EXIT: `DO NOT INVENT PARAMETER SEMANTICS` — so I may not give `_eval_wait_structure` a period to make the collision test honest.**
+🛑🛑 **I HAVE NOT EDITED, SKIPPED, XFAILED, RE-SCOPED OR RE-AIMED A SINGLE ONE OF THOSE `4` TESTS**, exactly as I pre-committed in `AR-781 §3`. **I am also not exercising the judgment that they are "only tests" — `AR-781 §3` says that call is the desk's, and making it myself is how a stop condition gets talked out of firing.**
+⚖️ **RECOMMENDATION, OFFERED NOT TAKEN:** the collision test's PROPERTY is still valuable — but it is a property of a **CONSUMING** route, and `_h_wait_bias` is the one that exists. **Re-aiming it there would preserve the anti-collision guarantee on a route that can actually honour it, and delete it from one that cannot.** ★ **That is a test change inside a certified surface and I will not make it without a ruling.**
+
+### ✅★★★★★ §4 — WHAT IS BUILT AND RED-PROVEN (so the desk rules on a finished object, not a sketch)
+✅ **THE MANDATORY `4`-CATEGORY TAXONOMY, EXECUTABLE RATHER THAN PROSE** (`HANDLER_PARAMETER_CLASSIFICATION`), **all `14` handlers reachable from the enforced dispatcher classified, none unclassified**, asserted in BOTH directions against `ENFORCED_DISPATCH.values()` so a new handler goes RED rather than defaulting silently:
+```
+CONSUMES_SUPPORTED_PARAMETERS (1)  _h_wait_bias
+REFUSES_ALL_PARAMETERS        (5)  _h_structure _h_retest _h_confirmation _h_non_gating _h_session
+PARAMETERLESS_BY_CONTRACT     (1)  _h_never_executed
+ENVIRONMENT_GATED_UNVERIFIED  (7)  _h_fvg _h_levelzone _h_levelzone_resolver _h_bias_native
+                                   _h_confirmation_native _h_sweep_native _h_mss_native
+```
+✅ **THE RESIDUAL IS USED HONESTLY:** the `7` env-gated handlers have their **GUARD behaviour VERIFIED** (they refuse, exercised member-by-member) while **whether their evaluators COULD consume is `[UNENUMERATED]`** — reaching them end-to-end needs experiment flags this lane is not authorized to exercise. **They sit in the refusing half, which is the fail-closed direction.**
+✅ **THE DEFECT REPRODUCED FIRST, ON MY OWN INSTRUMENT, BEFORE ANY EDIT** — flag ON, two arms differing only in `parameters`: `WAIT_STRUCTURE`/`WAIT_RETEST`/`WAIT_CONFIRMATION`/`VERIFY_STRUCTURE`/`FILTER` **all `0/200` identical**, `WAIT_BIAS` **`10/200` consumed**.
+✅ **`_h_session` AND THE ENV-GATED SET — WHICH THE GRADE LEFT UNPROBED — ARE NOW EXERCISED**, by overriding the primitive directly: the guard is a pure function of `(parameters, primitive)` and runs before `ctx` exists, so no market data has to reach a handler for its refusal to be decidable.
+✅ **INVALIDATION BINDINGS COVERED** (`R-703 §1`'s catch, absent from `R-702 §6`) — the guard iterates `(*bindings, *invalidation_bindings)` and a parameterized invalidation refuses, naming `v1`.
+✅ **RED-PROOF BY PLANT-AND-REMOVE, THE MUTATION `R-703 §1` REQUIRED** (restore one accept-and-discard handler whose parameters move only the cache key ⇒ the permanent suite must FAIL):
+```
+PLANTED  (_h_structure reclassified CONSUMES_SUPPORTED_PARAMETERS)  -> 5 failed, 20 passed
+PLANT REMOVED                                                      -> 25 passed
+sha256 PRE == POST  977438afc2af7e08d1b3d172dfc0b0d8d09498422398408691243e3387a15c9f  BYTE-IDENTICAL
+plant residue: 0 occurrences
+```
+✅ **THE WIDENED POSITIVE CONTROLS BOTH HOLD:** `WAIT_BIAS` still consumes (**non-zero differing output**), **AND distinct parameters remain independently cached** — `armA(7,90)` vs `armB(12,30)` in ONE plan produce **different arrays**. ★★★★★ **That second control is the one `R-703 §1` added and it is aimed at the plausible bad fix — *"stop keying caches on `b.parameters`"* — which my repair avoids by construction: it refuses ENTRY and edits no cache key anywhere.**
+
+### 🛑★★★★★ §5 — AN INSTRUMENT ERROR OF MY OWN, DISCLOSED RATHER THAN QUIETLY FIXED
+🛑 **MY FIRST PLANT SCRIPT CORRUPTED THE PRODUCTION FILE'S LINE ENDINGS AND ITS OWN BYTE-IDENTITY CHECK CAUGHT IT.** `pathlib.read_text`/`write_text` round-tripped `spec_condition_compiler.py` through Windows text mode and rewrote **all `1,844` line endings `LF`→`CRLF`** `[MEASURED: CRLF 1844, bare LF 0; the committed copy is LF-only]`. **The red-proof numbers were fine; the `BYTE-IDENTICAL False` was the SCRIPT, not the code.**
+✅ **REPAIRED AND VERIFIED BY HASH, NOT BY EYE:** converted back in binary mode, `sha256` now **equals the pre-plant hash exactly**, and the proof re-run entirely in binary mode. ★★★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — and `ps-counting-encoding` is banked for PowerShell; this is the same species in Python and I am naming it so the next seat does not re-learn it.**
+
+### 🛑 §6 — WHAT IS NOT MEASURED
+- ⏳ **THE BROAD `src/engine/tests/` SWEEP IS STILL RUNNING** (backgrounded after `600s`; the grade's own `336`-file superset run HUNG and returned `UNVERIFIABLE`, so I expect this to be slow rather than broken). **BLAST RADIUS BEYOND THE LANE-AFFECTED SURFACE IS THEREFORE `[UNENUMERATED]` AS I WRITE THIS**, and I will report it as a follow-up rather than let it hold the stop-condition report. ✅ **What IS measured: the lane-affected surface = `4 failed, 79 passed`, and every one of the `4` is in `test_parameter_collision.py`.**
+- 🛑 **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM — TS/Python parity `[UNENUMERATED]`; no `vitest`, no `tsc`. FLAG NOT ENABLED. PRODUCER UNTOUCHED.**
+- ⚠️ **I DID NOT REPRODUCE THE GRADE'S `22/200`.** The receipt does not publish its armA/armB values, so that magnitude is **not reproducible from the artifact**; my fixture yields `10/200`. **I assert the PROPERTY (non-zero + independently cached), never a copied `22`** — `a hardcoded expected value copied from another fixture is a fabricated safety claim`.
+- ⚠️ **I MINTED A REFUSAL CODE THAT NO RULING ORDERED: `parameter_supplied_to_non_consuming_route`.** `R-697 §5.4`'s two codes did not fit this shape. ⚖️ **Flagged for ratification or renaming; it is one string in one raise.**
+
+### ★★★★★ §7 — POSITION
+🛑 **STOPPED ON LANE 28 AT ITS STOP CONDITION. FAN-IN `0/3` CLOSED — LANES 29 AND 30 ARE UNSTARTED AND I HAVE NOT TOUCHED THEM**, because all three write the same file and `R-702 §6` made them serial for exactly that reason. 🛑 **THIS IS NOT A HANDOFF. I am seated, my ear is live, and I am waiting on one ruling — not on a fresh session.**
+⚖️ **WHAT I NEED FROM THE DESK — ONE DECISION:** does the consume-or-refuse invariant apply to `_h_structure`, retiring or re-aiming `test_parameter_collision.py`'s four cache-separation tests? **On YES I finish Lane 28 and continue to 29 and 30 without further authorization. On NO, `_h_structure` needs an exemption and I will implement whichever form you rule.**
+✅ **REVERT IS ONE COMMAND** if you want the branch green while you decide: the two files are a single commit and nothing else depends on them.
+
+---
+
 ## AR-781 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — `R-702 §6` LANE 28 (`F-A`: the parameter-acceptance guard must cover EVERY handler and must not vanish when the flag turns ON). ETA to the red/green pair ~45 min.** ✅★★★★★ **FAN-IN TARGET `3/3` — LANES 28·29·30 ARE ONE BATCH AND I WILL NOT HAND OFF AT A LANE SEAM** (`worker-execution §10`). 🛑★★★★ **AND ONE PREDICTED STOP-CONDITION TRIGGER, NAMED BEFORE I START BECAUSE IT COSTS NOTHING NOW AND THE WHOLE RUN LATER — `§3`.**
 
 **TASK:** `R-702 §6` Lane 28, then 29, then 30. **HOLD RELEASED** — `R-701 §6`'s hold was correctly assigned and is now discharged by `R-702`.

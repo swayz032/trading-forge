@@ -123,6 +123,77 @@ ENFORCED_DISPATCH: dict[str, str] = {
     SWEEP_PRIMITIVE_NAME: "_h_sweep_native",
     MSS_PRIMITIVE_NAME: "_h_mss_native",
 }
+# ─── LANE 28 (R-702 §6, taxonomy adopted verbatim at R-703 §1) ───────────────────────
+# EVERY HANDLER THE ENFORCED DISPATCHER CAN REACH IS CLASSIFIED HERE, BY NAME, INTO
+# EXACTLY ONE CATEGORY. `NO HANDLER MAY REMAIN IN AN UNCLASSIFIED STATE.`
+#
+# THE INVARIANT THIS SERVES, VERBATIM (R-703 §1): "In either flag state, every non-empty
+# ConditionBinding.parameters object is either consumed by the real semantic evaluator or
+# refused before evaluator/cache/state mutation."
+#
+# AND THE FINDING THAT GENERALISES, ALSO VERBATIM: "A parameter is not consumed merely
+# because it changes the cache key. A route that accepts a parameter must pass it into the
+# real semantic computation or refuse it before execution."
+#
+# WHY THIS TABLE EXISTS AT ALL. Before Lane 28 the only guard covering the non-bias routes
+# was Lane 27's, and Lane 27's fires ONLY when the flag is OFF -- so turning enforcement ON,
+# the entire point of activation safety, REMOVED the last guard on five of six routes. That
+# is the exact inversion of this file's own law at the flag-OFF check below
+# (`A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION`), and an
+# activation gate whose activation step deletes the guard is not a gate.
+#
+# CLASSIFICATION IS OPT-IN AND THEREFORE FAILS CLOSED: a handler added tomorrow and not
+# listed here is absent from PARAMETER_CONSUMING_HANDLERS below, so it REFUSES. Forgetting
+# this table is loud; the previous default was silent.
+CONSUMES_SUPPORTED_PARAMETERS = "CONSUMES_SUPPORTED_PARAMETERS"
+REFUSES_ALL_PARAMETERS = "REFUSES_ALL_PARAMETERS"
+PARAMETERLESS_BY_CONTRACT = "PARAMETERLESS_BY_CONTRACT"
+ENVIRONMENT_GATED_UNVERIFIED = "ENVIRONMENT_GATED_UNVERIFIED"
+
+HANDLER_PARAMETER_CLASSIFICATION: dict[str, str] = {
+    # The one route that passes taught periods into the real semantic computation
+    # (`_eval_wait_bias` receives them; certified Lane 21, re-proven by differing output).
+    "_h_wait_bias": CONSUMES_SUPPORTED_PARAMETERS,
+    # Evaluators that CANNOT accept a period. `_eval_wait_structure(n, df)`,
+    # `retest_touch_check`, `candle_confirmation_check` and the non-gating constant take
+    # none, so refusal is the correct repair: `DO NOT INVENT PARAMETER SEMANTICS` (R-703 §1).
+    # `_h_structure` is the sharpest of them -- it reads `b.parameters` as a CACHE KEY and
+    # then calls an evaluator that cannot honour it, so the taught numbers visibly move
+    # cache occupancy while changing no answer.
+    "_h_structure": REFUSES_ALL_PARAMETERS,
+    "_h_retest": REFUSES_ALL_PARAMETERS,
+    "_h_confirmation": REFUSES_ALL_PARAMETERS,
+    "_h_non_gating": REFUSES_ALL_PARAMETERS,
+    "_h_session": REFUSES_ALL_PARAMETERS,
+    # EXIT_HINT's provenance_only route asserts its own unreachability and raises before it
+    # could read anything. It takes no parameters because it takes no execution.
+    "_h_never_executed": PARAMETERLESS_BY_CONTRACT,
+    # THE RESIDUAL, AND IT IS AN HONEST ONE (R-703 §1 adopted it precisely so "I could not
+    # reach this one" is a REPORTABLE STATE rather than a silent omission). These are the
+    # env-gated experiment primitives. Their GUARD behaviour is verified -- they refuse, like
+    # every other non-consuming route -- but whether their evaluators COULD consume a
+    # parameter is [UNENUMERATED]: reaching them end-to-end needs experiment flags this lane
+    # is not authorized to exercise. They sit in the refusing half until someone verifies
+    # otherwise, which is the fail-closed direction.
+    "_h_fvg": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_levelzone": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_levelzone_resolver": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_bias_native": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_confirmation_native": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_sweep_native": ENVIRONMENT_GATED_UNVERIFIED,
+    "_h_mss_native": ENVIRONMENT_GATED_UNVERIFIED,
+}
+
+# DERIVED, NEVER MAINTAINED IN PARALLEL. Two hand-kept lists drift; one derived from the
+# other cannot. Membership here is a CLAIM that the handler passes parameters into its real
+# evaluator, and test_parameter_acceptance_guard.py makes that claim pay for itself with a
+# differing-output witness.
+PARAMETER_CONSUMING_HANDLERS: frozenset[str] = frozenset(
+    handler
+    for handler, classification in HANDLER_PARAMETER_CLASSIFICATION.items()
+    if classification == CONSUMES_SUPPORTED_PARAMETERS
+)
+
 BUNDLE_BEARISH_KEYWORDS: tuple[str, ...] = ("bearish", "short", "down", "sell")
 BUNDLE_BULLISH_KEYWORDS: tuple[str, ...] = ("bullish", "long", "up ", "buy")
 """Binding-plan primitive marker used by spec_family_bindings.bind_condition() when
@@ -1382,6 +1453,51 @@ class SpecConditionStrategy(BaseStrategy):
                     f"strategy that supplied no parameters at all. A silent drop is the "
                     f"parameter-invention defect wearing a feature flag. Refused rather "
                     f"than dropped -- this does NOT authorize enabling the flag."
+                )
+        else:
+            # LANE 28 (R-702 §6 / R-703 §1): THE SAME HONESTY ON THE PATH THE FLAG TURNS ON.
+            #
+            # Lane 27 above closed the OFF state. It could not close this one, and the
+            # asymmetry was the defect: the enforced dispatcher routes WAIT_STRUCTURE,
+            # WAIT_RETEST, WAIT_CONFIRMATION, VERIFY_STRUCTURE and FILTER to handlers whose
+            # evaluators take no period, so a taught parameter was accepted and discarded
+            # with no error -- measured, two arms differing only in `parameters`, IDENTICAL
+            # output on all five (grade F-A; reproduced independently before this repair).
+            #
+            # IT SITS BESIDE LANE 27's CHECK, NOT INSIDE THE DISPATCH LOOP, FOR THE REASON
+            # LANE 27 GIVES: this is before `ctx` exists and before any evaluator, cache or
+            # condition-state write, so a plan whose SECOND condition is the offender still
+            # refuses with nothing computed. `A REFUSAL THAT FIRES AFTER A MUTATION IS A
+            # PARTIAL RUN WEARING AN EXCEPTION.`
+            #
+            # IT DELIBERATELY DOES NOT TOUCH ANY CACHE KEY. The naive repair -- "stop keying
+            # caches on b.parameters" -- would fix F-A and silently collapse `_h_wait_bias`'s
+            # legitimate per-parameter caching into one slot, returning one arm's answer for
+            # both. That is a new silent-substitution defect introduced by the fix for a
+            # silent-substitution defect (R-703 §1), and the guard avoids it by refusing
+            # ENTRY rather than by editing how anything caches.
+            #
+            # INVALIDATION BINDINGS ARE INCLUDED (R-703 §1): they share this dispatcher and
+            # Lane 27's guard already iterates them, so they can carry parameters too.
+            unconsumed = sorted(
+                (b.condition_id, b.primitive)
+                for b in (*self.binding_plan.bindings, *self.binding_plan.invalidation_bindings)
+                if b.parameters
+                and ENFORCED_DISPATCH.get(b.primitive or "") not in PARAMETER_CONSUMING_HANDLERS
+            )
+            if unconsumed:
+                detail = ", ".join(f"{cid!r} (primitive {prim!r})" for cid, prim in unconsumed)
+                raise ValueError(
+                    f"condition(s) {detail} carry parameters, but the route each is "
+                    f"dispatched to does not consume them. REFUSAL "
+                    f"parameter_supplied_to_non_consuming_route: a parameter is not "
+                    f"consumed merely because it changes a cache key -- a route that "
+                    f"accepts one must pass it into the real semantic computation or "
+                    f"refuse it before execution. Running would evaluate these conditions "
+                    f"as though they taught nothing, producing engine-default answers "
+                    f"indistinguishable from a strategy that supplied no parameters at "
+                    f"all. Refused rather than dropped; no parameter semantics were "
+                    f"invented for an evaluator that cannot accept one."
                 )
 
         ctx: dict = {
