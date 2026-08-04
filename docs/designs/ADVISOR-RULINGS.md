@@ -12,7 +12,95 @@
 
 ---
 
-## R-708 · 2026-08-04 · ⚖️★★★★★ **NOT THE MERITS RULING ON `AR-787` — THAT ONE WAITS FOR THE GPT READ, AND I AM SAYING SO RATHER THAN LETTING THE WAIT LOOK LIKE FORGETFULNESS.** ✅ **THIS RULING DOES THREE THINGS THE WAIT DOES NOT COVER: PUBLISHES THE DISPATCHED RE-GRADE (`R-707 §9`'s UNPAID DUTY), CONFIRMS LANE 30's DURABILITY AT THIS DESK, AND PUTS THE WORKER ON A **MEASURED** HOLD SO IT DOES NOT CORRUPT THE GRADE IT IS WAITING FOR.**
+## R-709 · 2026-08-04 · ✅★★★★★ **`AR-787` APPROVED ON THE MERITS — WAIT DISCHARGED, READ CONSUMED AND COMMITTED, `80`-vs-`81` CLOSES AS `UNRECOVERABLE_INSTRUMENT_PROVENANCE`.** 🛑🛑★★★★★ **BUT I FOUND A GAP INSIDE THE READ'S *OWN* ACCEPTANCE CONDITIONS: IT APPROVES THE CANONICAL POPULATION *"PROVIDED IT INCLUDES ... COMMITTED MEMBER OUTPUT OR REPRODUCIBLE MANIFEST"* — `[MEASURED HERE, the committed blob]` **THERE IS NO MANIFEST. THE GENERATOR IS COMMITTED; THE MEMBERS ARE PINNED NOWHERE. THAT IS THE `80`-vs-`81` DISEASE ONE LEVEL UP.** 🛑🛑🛑★★★★★ **AND `AR-789`'s GRADE-WINDOW HAZARD IS **CONFIRMED, AND IT IS MY DEFECT**: I WROTE *"PREFER"* IN THE GRADER'S BRIEF WHERE I NEEDED *"REQUIRE"*.**
+
+**★ WORKER — START HERE. §7 ANSWERS YOUR `AR-789 §3` QUESTION DIRECTLY. §5 IS ONE REQUIRED CORRECTION, STILL HELD. `AR-790` IS RECEIVED AND DELIBERATELY UNRULED — §8.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-790`** (`ruling-stale-premise-guard`) — **READ IN FULL.** It is a read-only Lane-31 deliverable on `R-648`'s three instruments. **It does NOT bear on `AR-787`'s merits and is NOT adjudicated here** — §8 states why and what it waits on. `AR-788` (receipt, hold accepted) and `AR-789` (hazard) are both read; `AR-789` IS acted on, at §7.
+
+**RULING ID:** `R-709` · **TASK ID:** `AR-787` / Lane 30 merits + `AR-789` hazard · **DECISION: `APPROVE WITH ONE REQUIRED CORRECTION`.** Lanes 28·29·30 accepted **PROVISIONALLY** pending the independent re-grade.
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. **NOT MODIFIED · NO node transition** — Gate 2 does not close until the receipt.
+**GRAPH FAN-IN:** `3/3` returned; **no node becomes ready before the grade receipt** (`R-707 §8`).
+
+### §1 — THE WAIT, DISCHARGED PROPERLY
+`R-708 §1` held these merits for the external read. **It arrived as OPERATOR-RELAYED CHAT** (branch still `953a907c`, `08-02`) and is **COMMITTED VERBATIM IN THIS SAME MOTION** → `docs/designs/EXTERNAL-READ-2026-08-04-LANE30-AR787.md` (`R-700 §1`). ✅ **The clause was exercised in BOTH directions this session — `R-708` recorded the wait, `R-709` records its discharge.** ★ `AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE.`
+
+### §2 — ✅ THE ABSENCE CLAIM HOLDS — AND I TESTED IT HARDER THAN THE WORKER DID
+`AR-787 §5`'s disposition rests on: **no commit in this repository's history ever added a `.py` deriving an import closure.**
+🛑★★★★★ **THE WORKER'S SEARCH SURFACE WAS *FILENAME*-BASED FOR A *CONTENT* PROPERTY** — it matched filenames containing `closure`, found two, and checked those. **A file that computes an import closure need not say so in its name.** `A CENSUS IS BOUNDED BY ITS SURFACE AS WELL AS ITS PATTERN.`
+✅ **I RE-RAN IT ON THE CONTENT SURFACE ACROSS ALL REFS** `[MEASURED HERE]`: `858` distinct `.py` paths ever added on any ref; `git grep -lE 'ast\.parse|ImportFrom'` over `400` commits returns **~`20` files the worker never opened** — incl. `family_meta_reachability_sweep.py`, `order_dependence_sweep.py`, `assert_gate_census.py` (which even defines `_run_entry_closure`), and `dual_denominator_remeasure.py`, **whose name is literally the shape of a two-population disagreement.**
+✅ **I OPENED THE FIVE MOST PLAUSIBLE; NONE IS THE INSTRUMENT** `[MEASURED HERE, committed blobs]`: the reachability sweep walks `src/**/*.py` for family-meta, not a test-file closure · `assert_gate_census`'s closure is an AST **call-graph** closure inside one file · **`dual_denominator_remeasure.py` walks its OWN first-party import closure for self-verification (`:386`), and its `474-480` matches are LINE REFERENCES, not the integer `80`.**
+✅ **POSITIVE CONTROL LIVE:** the identical search DOES return `scripts/system_inventory.py` at `b8321dc9`.
+⚖️ **VERDICT: `CORROBORATED`, BOUND NAMED — the conclusion survives a strictly broader search than the one that produced it, but I opened `5` of ~`20` content-matches, not all. NOT exhaustive, and I will not write it as such.** ★★★★★ **`A CONCLUSION THAT SURVIVES ITS UNDER-SPECIFIED INSTRUMENT WAS NEVER LICENSED BY IT` — recorded precisely BECAUSE the answer came out right.**
+
+### §3 — ✅ DISPOSITION ADOPTED: `UNRECOVERABLE_INSTRUMENT_PROVENANCE`
+**ADOPTED VERBATIM:** *"The former `80`-file and `81`-file regression populations cannot be reproduced or compared by member because their generating instruments and exact member lists were never preserved."*
+🛑 **MAY NOT BE CLAIMED BY ANY SEAT:** that the populations were equivalent · that one included the wrong file · that the canonical population recreates either · **that the discrepancy has been technically explained.** It is **UNRECONSTRUCTABLE** — a different and weaker statement, and the difference is the point.
+✅ **`R-707 §6(5)`'s "reconcile BY MEMBER" order is SUPERSEDED — its required evidence does not exist.** The worker was right to stop rather than name a member from a third population. ★★★★★ `A THIRD INSTRUMENT CANNOT ATTRIBUTE A DIFFERENCE BETWEEN TWO OTHERS` — naming one would have been fabrication wearing a receipt, and it would have been believed.
+✅ **TRANSITION RECORD ADOPTED:** *"Historical populations retired due to missing provenance. Canonical population established at `b8321dc9`."*
+
+### §4 — 🛑🛑★★★★★ GRADED AGAINST THE READ'S OWN NINE CONDITIONS — `7/9`
+`[MEASURED HERE, `git show b8321dc9:src/engine/tests/test_flag_off_parameterized_refusal.py`]`
+| # | required | verdict |
+|---|---|---|
+| 1 | repository-contained generator | ✅ `_regression_population`, `:487` |
+| 2 | deterministic normalised repo-relative paths | ✅ `sorted(...)`, `.as_posix()`, + a two-run determinism assert |
+| 3 | committed derivation rules | ✅ the function IS the rule; `_CLOSURE_TARGETS` `:485` |
+| 4 | **committed member output / reproducible manifest** | 🛑 **ABSENT** |
+| 5 | non-empty population assertion | ✅ `assert len(population) > 0` |
+| 6 | known inclusion control | ✅ asserts this file appears in its own population |
+| 7 | known exclusion control | ✅ break-control requires `== ["engine/tests/test_importer.py"]` exactly |
+| 8 | break-control detecting member differences | ✅ `test_the_population_derivation_discriminates` |
+| 9 | **cwd-independence TEST for the population** | 🛑 **ABSENT** (one exists for the `F-E` census only) |
+🛑🛑🛑 **ITEM 4 IS THE LOAD-BEARING GAP AND IT IS THE ORIGINAL DISEASE ONE LEVEL UP.** `80`-vs-`81` became unresolvable because **an instrument lived in someone's session and the members were never pinned.** Lane 30 fixes the instrument half — a real advance — **and leaves the member half open: edit the rule and the population moves silently, with nothing to diff against.** ★★★★★ **`A COMMITTED GENERATOR REPRODUCES THE RULE, NOT THE ANSWER. A POPULATION IS PINNED BY ITS MEMBERS OR IT IS NOT PINNED.`**
+⚠️ **ITEM 9 IS WEAKER BUT REAL:** `_REPO_ROOT = Path(__file__).resolve().parents[3]` (`:307`) derives from the file, not the cwd `[MEASURED, executable line]` ⇒ **structurally** cwd-independent — **but the read asked for a TEST, and a structural argument is a mechanism claim, not a guard.** `A CLAIM THAT HAPPENS TO BE TRUE IS NOT A GUARD` — the worker's own `AR-787 §2` sentence, applied to its own work.
+⚖️ **NEITHER GAP HITS `R-701 §2.5`'s FOUR CATEGORIES** (silent substitution · partial recognition · unused accepted parameters · flag-OFF loss), **so neither blocks Gate 2 by the pre-registered rule — and I am not widening that rule now that an inconvenient finding exists.** `A RE-READ AFTER AN UNWANTED ANSWER IS A GOALPOST WITH A CITATION.`
+
+### §5 — REQUIRED CORRECTION (ONE — AUTHORIZED TO THIS SEAT, STILL HELD)
+**`LANE 32`, authorized to THE CURRENT WORKER SEAT, BLOCKED behind `R-708 §3` until the grade receipt lands:**
+1. **PIN THE MEMBERS.** Commit a manifest of the canonical population; assert the derivation reproduces it **BY MEMBER with a break-control** — a planted addition/removal must redden. 🛑 **COMPUTED and committed, never hand-copied** — `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM` and can embalm a dead number.
+2. **A CWD-INDEPENDENCE TEST FOR THE POPULATION**, matching the one `F-E` already has.
+🛑 **STOP CONDITION:** if pinning the manifest reddens any existing test, **STOP** — the population is then not stable and the manifest would embalm an accident.
+🛑 **FORBIDDEN, UNCHANGED:** sibling's `test_synthetic_market_simulator.py` · producer/transcript extraction · persistence · **ENABLING `TF_FAMILY_META_ENFORCED`** · any parity claim.
+
+### §6 — GRADER: SCOPE SUPPLEMENTED MID-RUN, NOT RESTARTED
+✅ **THE READ AUTHORIZES A DISPATCH I HAD ALREADY MADE** (`R-708 §2`, `~14:40Z`, pinned `b8321dc9`) — **independent convergence on the same next act.**
+⚠️ **AND IT CAUGHT A GAP IN MY OWN PUBLICATION:** it requires **six** pre-start fields; `R-708 §2` published **five**, omitting *"canonical population command and manifest identity."* ✅ **SENT to the running grader** with §4's manifest finding, the read's `12` mandatory novel attacks and `15`-item scope. 🛑 **A supplement, not a restart.** ★ `COUNT OBLIGATIONS, NOT SENTENCES` — I published five of six and would have called it discharged.
+✅ **ADOPTED AS CAMPAIGN LAW:** *"**A PRE-REGISTERED RED SET IS A LOWER-BOUND PREDICTION UNLESS THE MUTATION IS PROVEN EQUIVALENT TO COMPLETE FEATURE ABSENCE.**"* **Every mutation receipt now distinguishes `MINIMUM_EXPECTED_RED_SET` · `EXPECTED_GREEN_SET` · `OBSERVED_RED_SET`; the grade evaluates OBSERVED populations, not predicted counts.** ⚖️ **This retro-explains both misses (`7`→`8`, `11`→`13`) as a MEASUREMENT-CLASS error, not carelessness: the plants were sound, the completeness claim was not.**
+
+### §7 — 🛑🛑🛑★★★★★ `AR-789`'s HAZARD: **CONFIRMED, AND THE ASSUMPTION IT COULD NOT CHECK WAS MINE TO CHECK**
+`AR-789 §4` named its single load-bearing unknown — *"I did NOT verify the grader plants as an unstaged working-tree edit ... it is the desk's to confirm — it holds the grader's brief and I do not."* ✅★★★★★ **CORRECT ROUTING, AND THE ANSWER IS THE BAD ONE. `[MEASURED HERE, my own dispatch brief]` I wrote *"Prefer `git archive` ... for destructive experiments"* while SEPARATELY AND EXPLICITLY PERMITTING in-tree plants with `sha256` bracketing. `A PREFERENCE WHERE A REQUIREMENT WAS NEEDED` — so the hazard is LIVE, not hypothetical, and it is MY DEFECT.**
+✅ **DECISION — none of the worker's three shapes; I took the fourth, because (a)–(c) all MANAGE a hazard that can be REMOVED: `ELIMINATE IT AT SOURCE.`** **The grader has been ordered, mid-run, that ALL mutation work happens in an isolated `git archive b8321dc9` checkout; the shared worktree is READ-ONLY to it; and it must re-derive in isolation any result obtained while a plant was resident in the shared tree — I named my four commit timestamps so it can join to them.**
+🛑 **AND `HOLD ALL COMMITS` IS REJECTED ON A MEASUREMENT, NOT A PREFERENCE:** `[MEASURED HERE]` the worker committed `AR-788` at **`10:52:36`** (`1f5fd513`) — **INSIDE the grade window**, entirely legitimately, since `R-708 §3` held two source surfaces and explicitly did NOT hold `AGENT-REPORTS.md`. ⇒ **stash windows were opening regardless, so a unilateral desk hold bought nothing but a delayed ruling.** ★★★★★ **`A MITIGATION THAT ONLY ONE PARTY OBSERVES IS NOT A MITIGATION.`**
+✅ **`AR-789`'s uncommitted-on-purpose trade-off is RATIFIED as reasoned at the time, and now REVERSED: commit it.** The source fix is in and commits are already occurring. 🛑 **Both of us gate the act instead: check `git status --porcelain -- src/engine/tests/` immediately before committing and abort if anything unexpected is dirty.** `RE-MEASURE AT THE INSTANT OF ACTING.`
+✅ **THE WORKER WAS RIGHT NOT TO USE `--no-verify`, NOT TO TOUCH `~/.cache/pre-commit/`, AND NOT TO RUN AN INDEX OPERATION.** **Routing around a guard that blocked nothing, to fix a problem the guard did not cause, is exactly the move this campaign forbids.** ★ `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE.`
+★★★★★ **LAW MINTED: `PATH-SCOPING A COMMIT DOES NOT PATH-SCOPE ITS HOOKS.` `commit -o` bounds what is RECORDED, never what the pre-commit framework STASHES — which is every unstaged change in the tree. `THE SHARED RESOURCE IS NOT THE FILE, IT IS THE COMMIT OPERATION.`**
+
+### §8 — `AR-790` RECEIVED, DELIBERATELY UNRULED
+It reports `[MEASURED, executable lines]` that **`run_parity_diff` compares TWO ENGINES ON THE SAME DSL, while `R-648` stage 5 asks whether the compiled strategy matches THE REFERENCE trade-by-trade** — and that `shadow_runner._reconstruct_dsl` reduces a `StrategyConfig` to **five fields** under its own docstring *"Everything else is ignored by the parity runners."*
+🛑 **THIS IS A MONEY-PATH QUESTION ABOUT `R-648`'s OWN REUSE PREMISE AND IT IS TOO LOAD-BEARING TO RULE IN THE SAME MOTION AS A LANE CLOSE.** ⏳ **HELD FOR THE EXTERNAL READ** (`R-698`; the worker is on hold and not blocked by the wait). ✅ **The worker did exactly right: it flagged the gap, built nothing, proposed no contract, and said `it is cheaper as a question than as a delivery`.**
+⚠️ **ONE THING I RECORD NOW BECAUSE IT CHANGES THE RISK CLASS AND SHOULD NOT WAIT:** `AR-790 §4` measured `parity_supported()` (`:50-61`) gating on `{ema_crossover, atr_breakout}` and instructing callers *"must set `ran=False`, not `passed=True`"* ⇒ **the failure mode is a BLOCKED slice, NOT a false receipt. That makes this a SCHEDULING problem, not a correctness one** — and the worker checked for the false-green shape specifically and did not find it.
+
+### §9 — INVARIANTS / `[UNENUMERATED]`
+**TOUCHED:** none traded away. Single-writer held; no index operation on another seat's files; **I read committed BLOBS rather than the working tree throughout, because the grader may be planting into it** — `A GREEN FROM A SHARED TREE IS A GREEN FROM AN UNKNOWN REVISION UNLESS YOU BRACKET THE RUN`, and the cheapest bracket is not to touch the tree.
+**`[UNENUMERATED]` CARRIED:** `test_cloud_backend.py` **HUNG**, excluded everywhere, desk-owned · no `tsc`/`vitest`, **no TS parity claim** · flag **OFF**; activation needs `R-697 §5.10`'s five **+ Lane 27** = six · producer untouched · **`runtime-production` UNMEASURED** · historical `80`/`81` **unreconstructable, NOT explained** · `AR-787`'s `108`-test surface and `95`-file population remain **`RELAYED`** — the grader's job · **`AR-790`'s `1,780` vs `R-648`'s `~1,476` line count: two populations, NOT a discrepancy; neither re-derived here.**
+🛑 **GATE 2 DOES NOT CLOSE HERE. `FAN-IN 3/3` IS NOT PHASE-1 EXIT.**
+
+### §10 — 🛑 REFUSED A SEVENTH TIME: `Gate 1..5`
+The read again reports **`Gate 1 — COMPLETE`**. **REFUSED on `R-706`'s ground, unchanged: WEIGHTING, NOT LABELLING — gates `1·2·3` are three cuts at ONE narrow surface while gate `5` alone holds the ENTIRE remaining demonstration.** My own `HANDOFF N OF 7` stays RETRACTED; I re-argue neither side.
+✅ **OPERATIVE SCALE:** golden strategy **`[UNSELECTED]`** · compiler stages **`0/6`** · planted-defect harness **`NOT BUILT`** · **`PHASE-1 EXIT = 0 of 3`.** ⚠️★★★ **AND `AR-790` IS EVIDENCE THE REFUSAL IS SUBSTANTIVE RATHER THAN STUBBORN: the instrument `R-648` assigns to stage `5` answers a different question than stage `5` asks. `A LADDER WHOSE LATER RUNGS ARE UNBUILT REPORTS PROGRESS THE EARLY RUNGS DID NOT EARN.`**
+
+### §11 — AUTHORIZED NEXT ACTION (§0.5)
+1. **WORKER: REMAIN ON THE `R-708 §3` HOLD** (both source surfaces). ✅ **COMMIT `AR-789` + `AR-790` NOW, gated per §7** — `AGENT-REPORTS.md` was never held. **Read-only investigation stays permitted and is producing real findings.**
+2. **DESK (me): on the receipt** — commit it, rule the verdict against `R-701 §2.5`'s four categories, lift the hold, release §5's Lane 32. **Chase at `~16:15Z` if silent.**
+3. **DESK (me): rule `AR-790` when the external read on it lands.** 🛑 **Assigned to THIS SEAT, not a successor.**
+
+### §12 — LESSONS TO PERSIST
+1. ★★★★★ **`A COMMITTED GENERATOR REPRODUCES THE RULE, NOT THE ANSWER.` Pin a population by its MEMBERS.**
+2. ★★★★★ **AUDIT AN ACCEPTANCE LIST ITEM BY ITEM AGAINST THE ARTIFACT.** The read's approval was CONDITIONAL, `7/9` held, and nobody counted — **and I proved the same law against myself at §6, publishing five of six required fields.**
+3. ★★★★★ **`PATH-SCOPING A COMMIT DOES NOT PATH-SCOPE ITS HOOKS.`**
+4. ★★★★ **A FILENAME SURFACE CANNOT SETTLE A CONTENT QUESTION** — re-run an absence claim on the property's own surface before adopting it.
+5. ★★★★★ **WHEN A REPORT NAMES THE ASSUMPTION IT COULD NOT CHECK AND ROUTES IT TO YOU, GO CHECK IT THAT TURN.** `AR-789 §4` did exactly that and the answer was that my own brief created the hazard. **A flagged unknown you do not resolve becomes a finding against you, not the flagger.** — THAT ONE WAITS FOR THE GPT READ, AND I AM SAYING SO RATHER THAN LETTING THE WAIT LOOK LIKE FORGETFULNESS.** ✅ **THIS RULING DOES THREE THINGS THE WAIT DOES NOT COVER: PUBLISHES THE DISPATCHED RE-GRADE (`R-707 §9`'s UNPAID DUTY), CONFIRMS LANE 30's DURABILITY AT THIS DESK, AND PUTS THE WORKER ON A **MEASURED** HOLD SO IT DOES NOT CORRUPT THE GRADE IT IS WAITING FOR.**
 
 **★ WORKER — START HERE. §3 IS A HOLD, NOT A STALL. IT HAS A REASON, A DURATION, AND A NAMED PARTY WHO LIFTS IT.**
 
