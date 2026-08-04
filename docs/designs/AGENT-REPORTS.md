@@ -4,6 +4,15 @@
 
 ---
 
+## AR-759 · 2026-08-03 · ⏳ **START-RECEIPT — `R-686 §5 LANE 12`, BOUND THE PRODUCT BLAST RADIUS. READ-ONLY, MEASURE ONLY.** ⚠️ **SEQUENCING NOTE: `R-686` was written with `FAN-IN 1/2 — Lane 11 still in this seat`. **LANE 11 HAS LANDED** (`6d026222`, `AR-758`), so its *"Lane 12 START-RECEIPT ~2 min after it lands"* trigger has fired. **Naming the stale premise rather than acting silently on a ruling that describes my work as in-flight.**
+
+**TASK:** `R-686 §5` Lane 12 — does the scout/graduation route's `entry_params` reach **live or paper strategy execution** (paper engine, deployed strategies, dashboards)? **Enumerate consumers; positive control on every zero.** **ETA ~20 min.**
+🛑 **STOP CONDITION HELD IN ADVANCE: if it DOES reach execution, I STOP AND REPORT. No repair, and the ordering decision returns to the desk.**
+🛑🛑 **AND THE BIAS I AM CARRYING INTO THIS ONE IS THE OPPOSITE OF LANE 10'S, SO I AM NAMING IT: `AR-757 §4.2` — my own words — said the live product consuming this is *"almost certainly yes."* **A prediction I published two ARs ago is exactly the thing that makes a confirming reading feel like a measurement.** I will publish the consumer list and its controls whichever way it falls.**
+🛑 **READ-ONLY. Lane 10 NOT reopened; frozen-file provenance NOT traced (`R-686 §5`, direction 10 adopted).**
+
+---
+
 ## AR-758 · 2026-08-03 · ✅★★★★★ **`R-685 §5 LANE 11` DELIVERED — `F-4`, `F-5`, `F-3` ALL REPAIRED. **FAN-IN `2/2`, BATCH CLOSED, NO HANDOFF.** RED `2 failed, 2 passed` → GREEN `4 passed` from the **same command**, both positive controls green in BOTH states.** ✅ **EXPECTED-GREEN SET `792 passed, 2 xfailed` — **BYTE-FOR-BYTE THE `AR-750` BASELINE**, so the change is additive and measured to be.** 🛑🛑★★★★★ **AND `F-3` — a one-line COMMENT fix — CONVICTED ITSELF TWICE WHILE I WAS WRITING IT: the desk's correct `:1237` became `:1239` the moment my comment landed, then `:1244` when I expanded it. **A LINE-NUMBER CITATION INSIDE THE FILE YOU ARE EDITING IS STALE BEFORE YOU COMMIT IT.** I fixed it by citing the CONSTRUCT as well as the line and verifying `sed -n '1244p'` holds exactly that construct.** ⚠️🛑★★★★ **ONE THING I COULD NOT DO AND WILL NOT PAPER OVER: `R-685 §5` scopes Lane 11's files to the two `src/` modules, so **THE RED-PROOF LIVES IN A SCRATCHPAD FILE AND DIES WITH THIS SESSION.** By `R-681 §2`'s own minted law that is a red path that will decay unwitnessed.**
 
 **TASK:** `R-685 §5` Lane 11 `(1)`–`(3)`. **FILES: `src/engine/spec_family_bindings.py` (`+37/-2`) · `src/engine/spec_condition_compiler.py` (`+9/-1`). `[MEASURED]` `git status --porcelain src/` shows those two plus the sibling's `test_synthetic_market_simulator.py`, untouched — thirteenth consecutive report.**
