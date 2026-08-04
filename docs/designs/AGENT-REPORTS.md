@@ -4,6 +4,22 @@
 
 ---
 
+## AR-744 · 2026-08-03 · ⏳ **START-RECEIPT — `R-680 §4 LANE 5`, CONVERT THE STRUCTURAL PROOF INTO A BEHAVIOURAL ONE. SAME SEAT.**
+
+**TASK:** `R-680 §4` — a test calling `compute()` twice on ONE instance with different data, asserting the second carries nothing from the first · **(a)** RED under a deliberate cache hoist, demonstrated in a **scratchpad copy** · **(b)** GREEN on unmodified code · **(c)** which of `AR-743`'s claims it converts, and which it does not reach.
+**RUN MODE:** ONE new test file under `src/engine/tests/`. **The hoist is monkeypatched in the scratchpad — `src/` is NOT edited for the RED.** **ETA ~35 min.**
+
+### ✅★★★★ §1 — ONE ADDITION TO THE CONTRACT, DECLARED NOW SO IT IS NOT A SURPRISE AT DELIVERY
+✅ **`§4(a)` asks for a scratchpad RED that I then revert. **I WILL DELIVER THAT AS ORDERED — AND ALSO SHIP A PERMANENT POSITIVE-CONTROL TEST IN THE SAME FILE**, which applies the hoist via `monkeypatch` and asserts the leak **IS** observed under it.**
+★★★ **WHY, AND IT IS NOT SCOPE CREEP: a scratchpad RED proves sensitivity ONCE, on my machine, tonight — and then it is gone. **`red-path-decay` says red paths DECAY.** A committed control re-proves the guard's sensitivity on every future run, which is the difference between *"this test could fail in August"* and *"this test can fail."* **Same file, no new surface, no `src/` change beyond the one authorized test file.**
+🛑 **IF THE DESK WANTS ONLY THE ORDERED FORM, IT IS ONE DELETION — I am flagging it before writing, not defending it after.**
+
+### 🛑 §2 — TWO THINGS I WILL NOT CLAIM
+1. 🛑 **THIS IS NOT THE CACHE-LEAK RED-PROOF** (`§4` forbids reporting it as one; `R-679 §1` keeps the leak `UNREACHABLE`). **It tests a WEAKER, currently-provable property: that per-call state does not survive a second `compute()`.**
+2. ⚠️ **"THE SAME UNCHANGED COMMAND" — I EXPECT TO HAVE TO QUALIFY THIS.** The RED needs the hoist applied and the GREEN needs it absent, so **something must differ between the two runs.** ✅ **I will make the difference as small and as visible as possible and STATE IT EXACTLY, rather than reporting two runs as identical when they are not.** `AR-741 §7` had to make the same disclosure about its own grep; **an acceptance term I cannot meet literally gets named, not quietly satisfied.**
+
+---
+
 ## AR-743 · 2026-08-03 · ✅★★★★★ **`R-679 §5 LANE 4` DELIVERED — **THE BLAST RADIUS IS THE SMALL ONE, AND IT IS PROVEN BY TWO NON-OVERLAPPING PATHS.** `ctx` HAS **EXACTLY ONE** CONSTRUCTION SITE (`:1115`, inside `compute()`), IS A FUNCTION **LOCAL**, AND IS NEVER CLEARED **BECAUSE IT NEVER NEEDS TO BE** — IT DIES WHEN `compute()` RETURNS. **LIFETIME = ONE `compute()` CALL.**** ✅ **PATH 1 = AST over the file. PATH 2 = the RUNTIME CODE OBJECT (`compute.__code__`): `ctx in co_varnames` **True**, `ctx in co_names` **False** — it is a local, not a global or attribute lookup. Controls both ways (`symbol` not a local: False · `n` a local: True).** ✅★★★★★ **THEREFORE `(c)` IS **NO** AND `(d)` IS **NO**: `ctx` CANNOT OUTLIVE ONE SPEC, AND THE `MES`/`MNQ`/`MCL` FAN-OUT CANNOT SHARE ONE. **`strategy/spec identity` AND `symbol` ARE NOT REQUIRED IN THE CACHE KEY ON THIS SURFACE — `R-678 §4c`'s CLAUSE IS CONDITIONAL AND ITS CONDITION DOES NOT FIRE.**** ⚠️🛑 **BUT I FOUND THE SHAPE THAT WOULD BREAK IT, LIVE IN THE REPO — `black_swan_evaluator.py:368-370` SETS `.symbol`/`.timeframe` ON AN INSTANCE **AFTER** CONSTRUCTION. **AUDITED AND CLEARED FOR TODAY** (fresh instance per call; archetype classes only, never `SpecConditionStrategy`) — **but "symbol is fixed at construction" is TRUE OF THIS CLASS AND FALSE OF THE CODEBASE, and that distinction is the whole of the residual risk.**
 
 **TASK:** `R-679 §5` (a)–(d). **RUN MODE: READ-ONLY — AST, runtime code-object inspection, `grep`. NO code, NO cache edit, NO parameter field. NOTHING under `src/` modified.**
