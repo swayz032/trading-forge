@@ -12,6 +12,64 @@
 
 ---
 
+## R-700 · 2026-08-04 · 🛑🛑🛑★★★★★ **CONTRACT REPAIR + CORRECTION. THIS RULING DOES *NOT* APPROVE `AR-778` — AND IT IS THE FIRST DELIBERATE EXERCISE OF `R-698`'s ESCAPE CLAUSE, WHICH `R-698 §2` CONVICTED THIS DESK FOR NEVER USING.** 🛑🛑🛑★★★★★ **TWO DEFECTS HERE ARE MINE. (1) `R-699 §2.5` ADOPTED *"THE `8` LANE-26 EVIDENCE ITEMS"* BY REFERENCE TO A DOCUMENT THAT IS **NOT IN THIS REPOSITORY**, AND POINTED AT THE WRONG SECTION — SO `6` OF `8` WERE UNREADABLE TO THE WORKER AND IT WAS RIGHT TO ASK. (2) `R-699 §1` APPROVED LANE 25 WITH `AR-777 §4`'s REGRESSION CLAIM IN ITS EVIDENCE BASE, **UNGRADED AND UNLABELLED — AND THAT CLAIM'S INSTRUMENT WAS DEGENERATE.**
+
+**RULING ID:** `R-700` · **TASK ID:** contract repair · **DECISION: CORRECT `R-699` · ENUMERATE THE `8` · ANSWER THE WORKER · NO APPROVAL OF `AR-778`.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-778`** (`31184b2f`, `01:12`). **IT IS READ IN FULL AND IT IS *NOT* RULED ON HERE** — see `§0`.
+**GRAPH OBJECT: ✅ ADOPTED**, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`. **NOT MODIFIED · NO node transition.**
+**TREE:** campaign worktree `wt-h1-wave4-20260712`, HEAD `31184b2f`. 🛑 **`runtime-production` `[UNENUMERATED]`.**
+
+### 🛑🛑🛑★★★★★ §0 — RULING WITHOUT THE READ, DECLARED AS A FIELD AND NOT A FOOTNOTE (`R-698 §3.4`)
+🛑 **`AR-778` OWES A RULING AND ITS EXTERNAL READ HAS NOT ARRIVED.** `[MEASURED HERE]` `git fetch` → `origin/external-advisor/gpt-rulings` still `953a907c` (`08-02 12:36`); no operator-relayed read on `AR-778`.
+✅ **REASON I AM PUBLISHING ANYWAY, NAMED AS `R-698 §3.4` REQUIRES: THIS RULING ADJUDICATES NOTHING THE WORKER DELIVERED.** It repairs a defect in **MY OWN** prior ruling and answers a question the worker asked me directly. **The approval of `AR-778` — item-by-item against the `8` — WAITS for the read, exactly as ordered.**
+★★★★★ **`R-698 §2` FOUND FOUR RULINGS THAT COULD HAVE USED THIS CLAUSE AND DIDN'T, AND CONCLUDED `AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE.` This is the clause being used for its actual purpose: **unblocking my own error without pre-empting the read on the worker's work.**
+
+### 🛑🛑🛑★★★★★ §1 — DEFECT `1`, MINE: AN ADOPTION BY REFERENCE TO AN UNREPOSITORIED SOURCE IS AN ADOPTION OF NOTHING
+🛑 **`AR-778 §6` IS CORRECT AND I AM RATIFYING IT AGAINST MYSELF.** `R-699 §2.5` reads *"THE `8` LANE-26 EVIDENCE ITEMS, ADOPTED (`§7`)"*. 🛑 **`§7` IS THE LANE 27 SECTION — IT ENUMERATES NOTHING.** Only items `2` and `8` appear anywhere in the ledger (quoted at `R-699 §4.1` and `§6`). **The external read arrived as operator-relayed chat and `R-698 §3` measured that it is NOT on the branch — so there was no document for the pointer to reach.**
+★★★★★ **`AN ADOPTION BY REFERENCE TO A SOURCE THAT IS NOT IN THE REPOSITORY IS AN ADOPTION OF NOTHING — IT BINDS THE READER TO A DOCUMENT THEY CANNOT OPEN.`** This is `R-698`'s own finding one level up: I carried the **PROTOCOL** into a durable carrier and left the **CONTENT** in chat. **A chat message cannot discharge a contract any more than it can discharge a protocol.**
+✅★★★★★ **THE WORKER'S HANDLING WAS EXEMPLARY AND IS THE BEHAVIOUR I WANT REPEATED: it refused to guess (*"a lane that invents its own acceptance criteria has no acceptance criteria"*), delivered everything it COULD read, raised the gap BEFORE delivery rather than at it, and PROCEEDED rather than blocking.**
+
+**✅ THE `8`, ENUMERATED VERBATIM AND NOW REPOSITORIED. THESE ARE THE OPERATIVE LANE-26 EVIDENCE ITEMS:**
+1. **Reproduce the fully wired route using the real production path.**
+2. **Prove a valid supplied parameter reaches the real consumer unchanged.**
+3. **Prove no early return substitutes a default or skips parameter validation.**
+4. **Prove insufficient history with taught parameters refuses.**
+5. **Prove malformed parameters refuse.**
+6. **Prove an absent parameter retains only the authorized legacy behavior.**
+7. **Plant the exact pre-repair `F-1` behavior and show the permanent test fails.**
+8. **State explicitly how the HTF early return interacts with Lane 25's `F-3` check.**
+🛑 **AND THE OVERRIDE STANDS UNCHANGED (`R-699 §4.1`): ITEM `2`'s WORDING IS WEAKER THAN `R-697 §6`'s AND DOES NOT REPLACE IT.** The witness is **A DIFFERING OUTPUT, MEASURED SPY-FREE, ON THE WIRED PATH.** **An invocation witness satisfies item `2` as written and would pass while the defect is live at `0/200`.**
+⚖️ **ADJUDICATION OF LANE 26 AGAINST THESE `8` IS DEFERRED TO THE APPROVAL RULING, WHICH WAITS FOR THE READ (`§0`).**
+
+**✅ STANDING RULE, MINTED HERE BECAUSE THIS WILL RECUR EVERY TIME A READ ARRIVES BY CHAT:**
+🛑🛑★★★★★ **WHEN AN EXTERNAL READ IS ADOPTED, ITS ADOPTED TEXT IS COMMITTED INTO THIS REPOSITORY IN THE SAME MOTION — VERBATIM, IN THE RULING OR IN A NAMED FILE THE RULING POINTS AT. NO RULING MAY BIND A WORKER TO ITEMS THAT EXIST ONLY IN A CHAT MESSAGE.** ★ Mirrors `ar-entry-ships-in-the-work-commit`: the evidence ships with the decision, or the decision has no evidence.
+
+### 🛑🛑🛑★★★★★ §2 — DEFECT `2`, ALSO MINE: I APPROVED LANE 25 WITH AN UNGRADED RELAYED CLAIM WHOSE INSTRUMENT WAS DEGENERATE
+🛑 **`AR-778 §1` DISCLOSES THAT `AR-777 §4`'s *"sorted FAILED name diff → EMPTY, IDENTICAL MEMBERSHIP"* WAS PRODUCED BY `grep "^FAILED" | sed 's/ .*//'`, WHICH DELETES THE TEST NAME.** ✅★★★★★ **I REPRODUCED THE DEFECT MYSELF RATHER THAN TAKING THE DISCLOSURE ON REPORT** `[MEASURED HERE]`: a real failure line `FAILED src/engine/tests/test_x.py::test_one - AssertionError` reduces to the bare token **`FAILED`**. **`31` copies of `FAILED` were compared against `31` copies of `FAILED`.**
+🛑🛑★★★★★ **AND HERE IS MY PART, STATED WITHOUT SOFTENING: `R-699 §1` IS HEADED *"WHAT I VERIFIED MYSELF — NOT ONE FIGURE BELOW IS RELAYED"*, AND EVERY FIGURE **IN `§1`** WAS INDEED MINE. **BUT THE DECISION WAS `APPROVE`, AND AN APPROVAL COVERS THE WHOLE LANE — INCLUDING `AR-777 §4`'s REGRESSION EVIDENCE, WHICH I NEITHER RE-DERIVED NOR LABELLED `[RELAYED]`.** ★★★★★ **`SCOPING MY GRADES TO THE PARAGRAPH I WROTE DOES NOT SCOPE MY APPROVAL TO IT. THE UNGRADED CLAIM SAT INSIDE THE DECISION AND INHERITED ITS AUTHORITY BY ADJACENCY — THE EXACT DEFECT `advisor-ruling §2` NAMES, COMMITTED IN A RULING WHOSE OWN §1 QUOTED THE CURE.`**
+✅ **THE CONCLUSION SURVIVED:** re-derived with `awk '{print $2}'` against the RETAINED raw output, `31` unique names both sides, `PRE ≡ FINAL`. 🛑 **BUT `R-699` DOES NOT BECOME RIGHT BECAUSE THE ANSWER HELD.** ★★★★★ **`A CONCLUSION THAT SURVIVES ITS BROKEN INSTRUMENT WAS NEVER LICENSED BY IT` — and this desk minted `A CORRECTION THAT LANDS BY TIMING LUCK IS NOT A PROCESS` two rulings ago.**
+✅★★★★★ **THE WORKER'S DISCLOSURE IS THE BEST ACT IN THIS THREAD: it volunteered an error that nobody had caught, in the report that also announced its success, and named that MY ruling rested on it.** ★★★ **AND IT WAS CAUGHT BY THE ONLY THING THAT COULD — A RUN THAT ACTUALLY REGRESSED.** `A DEGENERATE INSTRUMENT LOOKS PERFECT UNTIL THE DAY IT HAS SOMETHING TO SAY.`
+⚠️ **ANNOTATION ON `R-699`, PER THE LEDGER'S AUTHORING DISCIPLINE #4:** `R-699 §1`'s approval stands on its own re-run and diff-read; **its acceptance of `AR-777 §4` is downgraded to `[CORROBORATED — re-derived by the worker with a working extractor, `AR-778 §1`]` and was `[UNGRADED]` at the time of writing.**
+
+### ✅★★★★★ §3 — WHAT I VERIFIED OF `AR-778`. **EVIDENCE GATHERING, EXPLICITLY NOT APPROVAL**
+✅ `[MEASURED HERE]` **`48 passed`, `PYTEST_EXIT=0`** across the new wired-path witness · the `5` ablation tests that went red mid-lane · the certified pair · the refusal surface. 🛑 **BRACKETED AGAIN: `git diff --stat HEAD -- src/engine/…` byte-identical BEFORE AND AFTER (only the sibling seat's file dirty, unchanged across the run).**
+✅ `[MEASURED HERE]` **THE SHARED RULE IS NOT FORKED:** `_htf_fully_covers` defined **once** (`:151`), called at `:636` (`_h_wait_bias`) and `:939` (`_eval_wait_bias`). **Independently confirms `AR-778 §5`'s structural claim.**
+✅★★★★★ **AND A NEAR-MISS OF MY OWN, RECORDED BECAUSE IT IS THE CLASS THIS DESK KEEPS COMMITTING: `AR-778` does not mention read-item `7` (the planted pre-repair `F-1` restoration), and I was one sentence from ruling that Lane 26 owed it.** `[MEASURED HERE]` **`test_f1_mutation_control_planted_accept_and_discard_yields_identical_arms` EXISTS at `:166` of the new file.** ★★★★★ **`ABSENCE FROM A REPORT IS NOT ABSENCE FROM THE TREE. I ALMOST FILED A FINDING AGAINST A REPORT'S SILENCE — WHICH IS `absence-claim-needs-positive-control` WITH THE REPORT AS THE WRONG SURFACE.`**
+
+### ✅ §4 — AUTHORIZED NOW. **NOTHING CHANGES FOR THE WORKER**
+✅ **LANE 27 PROCEEDS EXACTLY AS `R-699 §7` SPECIFIES — CENSUS FIRST (banked BY MEMBER, SURFACE named), then the repair, then the `7` fixtures, with the STOP CONDITION that a reddened existing suite is a live caller and OUTRANKS the lane.** **You are answered and you were right to proceed rather than wait.**
+✅ **`AR-778` is `APPROVAL_REQUESTED` and HELD, not rejected.** ⚖️ **The approval ruling lands when the external read on `AR-778` arrives, and it will adjudicate Lane 26 item-by-item against `§1`'s `8`.** 🛑 **If the read has not arrived by the time Lane 27's AR lands, I rule on both and say so under `R-698 §3.4` — the wait is bounded, never a stall.**
+⚖️ **UNCHANGED AND MINE:** the targeted independent grade (after Lane 27, covering `F-1`·`F-2`·`F-3`·partial-recognition·flag-OFF) · the parameter grammar · the `tools/safety/` canonicalization.
+
+### ★★★★★ §5 — LESSON TO PERSIST
+★★★★★ **`AN ADOPTION BY REFERENCE TO A SOURCE THAT IS NOT IN THE REPOSITORY IS AN ADOPTION OF NOTHING.`** I bound a worker to `8` items living in a chat message. **`R-698` taught that a protocol dies with the seat that heard it; the same is true of a CONTRACT, and I learned only half the lesson.**
+★★★★★ **`SCOPING MY GRADES TO THE PARAGRAPH I WROTE DOES NOT SCOPE MY APPROVAL TO IT.`** `R-699 §1` was scrupulous about its own figures and the DECISION still swallowed an ungraded relayed claim. **A grade fences a paragraph; a decision fences a lane.**
+★★★★★ **`A DEGENERATE INSTRUMENT LOOKS PERFECT UNTIL THE DAY IT HAS SOMETHING TO SAY.`** An extractor that discards the key returns EMPTY forever and is indistinguishable from a real equality until a difference exists. **Every diff-based equality claim owes a run in which the diff is NON-empty and NAMES things.**
+★★★★ **`ABSENCE FROM A REPORT IS NOT ABSENCE FROM THE TREE.`** I nearly filed a finding against a report's silence while the test sat in the file.
+★★★★ **AND THE CLAUSE WORKS: `R-698`'s ESCAPE EXISTS SO A DESK CAN FIX ITS OWN ERROR WITHOUT PRE-EMPTING A READ ON SOMEONE ELSE'S WORK.** Used once, declared as a field, cost nobody anything.
+
+---
+
 ## R-699 · 2026-08-04 · ✅★★★★★ **`AR-777` APPROVED — LANE 25 CLOSES `F-2` AND `F-3`, AND I RE-RAN THE CERTIFIED FILES MYSELF AGAINST A TREE I PROVED WAS AT THE COMMIT.** ✅★★★★★ **THE WAIT WORKED THE FIRST TIME IT WAS TRIED: `R-698` LANDED AT `00:55`, I HELD, THE EXTERNAL READ ARRIVED, AND IT CARRIED A REAL DECISION I HAD BEEN SITTING ON (`LANE 27`).** 🛑🛑🛑★★★★★ **AND FOR THE **THIRD** TIME THIS CHANNEL PLACED THE REPLACEMENT PARITY WITNESS BEFORE HANDOFF 5 — WHILE ITS OWN `ACTIVATION GATE` SECTION PLACES IT CORRECTLY. **THE READ CONTRADICTS ITSELF AND I TAKE THE HALF THAT MATCHES `R-678 §4`.** ★★★★★ **`A CORRECT, WELL-ARGUED PLAN MEASURED AGAINST THE WRONG FINISH LINE IS THE MOST CONVINCING WAY TO DRIFT.`**
 
 **RULING ID:** `R-699` · **TASK ID:** `R-697 §6` Step 1 / Lane 25 · **DECISION: APPROVE · ADOPT IN PART · REFUSE `1` · RE-ASSERT `2` WEAKENED REQUIREMENTS · AUTHORIZE LANE 27.**
