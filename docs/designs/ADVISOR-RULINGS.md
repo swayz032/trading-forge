@@ -12,6 +12,62 @@
 
 ---
 
+## R-693 · 2026-08-04 · ✅★★★★★ **`AR-769` APPROVED **PROVISIONALLY**, PINNED AT `dd2371af`, PENDING AN INDEPENDENT GRADE THAT IS **DISPATCHED WITH A COMMITTED START-RECEIPT** (`c972172d`). ★ THE SLICE MOVED — HANDOFF `6` OF `7`, AND ONLY THAT ONE.** `[MEASURED HERE, my terminal]` **`16 passed`** (Lane 21) · **`22 passed`** (Lane 20, was `13`) · **fixture periods `7 · 31 · 90 · 120`, NONE in the measured forbidden set `{5,10,14,20,30,50,250}`.** 🛑🛑🛑★★★★★ **AND THE WORKER FOUND THE DEFECT `R-692 §3` FORBADE IT TO SHIP — BY FINDING IT IN THE CODE RATHER THAN AVOIDING IT IN THE FIX: `_h_wait_bias` KEYED ON `want_bearish` **ALONE**, so the real evaluator ran **ONCE** for two distinct parameter sets. **RE-KEYING ALONE WOULD HAVE PRODUCED TWO CACHE SLOTS HOLDING THE SAME HARDCODED ANSWER AND A GREEN TEST.** ★★★★★ **`R-692 §3` PREDICTED THE EXACT SHAPE AND THE LANE THEN FOUND IT LIVE. A PROHIBITION THAT NAMES A REAL DEFECT IS WORTH MORE THAN A PROHIBITION THAT NAMES A HYPOTHETICAL ONE.**
+
+**RULING ID:** R-693 · **TASK ID:** `R-691 §5` Lanes 20+21 delivery (`AR-769`) + external ruling-shaped read #3 · **DECISION: APPROVE PROVISIONALLY · DISPATCH the independent grade (DONE, `c972172d`) · ADOPT the claim scoping and the grader brief · CONTRACT handoff `5` GATED ON THE GRADE · AUTHORIZE Lane 22, which does not depend on the grade's outcome.**
+**NEWEST AR NAMED (`R-416`):** **`AR-769`** `[MEASURED HERE — read in full `§1`–`§6`, including its `§4` self-downgrade of its own red-proof and its `§6` NOT-CLAIMED list.]`
+**TREE NAMED (`R-413`):** campaign worktree `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, HEAD `dd2371af` at grade time. **`runtime-production` NOT checked.**
+**ARCHITECTURE INVARIANTS TOUCHED:** none traded. **Invariant 1 respected — no backtest result was used to justify altering extracted logic.**
+
+### ★ WORKER — START HERE
+**LANE 22 ONLY (`§5`): TRIAGE THE `30` INHERITED TEST FAILURES — READ-ONLY, NO FIXES.** 🛑 **HANDOFF `5` IS CONTRACTED BUT NOT AUTHORIZED until the independent grade returns.** ✅ **Lane 22 was chosen precisely because its answer does not change with the grade's outcome.**
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AT THE EXECUTABLE LINE
+✅ **`16 passed` · `22 passed`** — both rerun in my own terminal, matching `AR-769`. `[MEASURED HERE]`
+✅ **THE PRODUCTION DIFF IS A REAL PARAMETERIZATION, NOT A CACHE-KEY COSMETIC** — `[MEASURED HERE, `git show dd2371af -- src/engine/spec_condition_compiler.py`, read at the executable line]`: `_eval_wait_bias(...)` now **RECEIVES `fast_period=fast_period, slow_period=slow_period`**, and the key became `cache_key = (want_bearish, b.parameters)`. **BOTH HALVES ARE IN THE SAME DIFF.**
+✅ **`_resolve_bias_periods` REFUSES RATHER THAN SUBSTITUTES** — `[MEASURED HERE, at the line]` an ABSENT key takes the documented default; a PRESENT-but-unusable value (`bool`, non-`int`, `< 1`) **RAISES naming the condition.** ★★★ **That distinction is the campaign's whole subject: `A SILENT FALLBACK IS HOW A TAUGHT NUMBER BECOMES AN ENGINE NUMBER WITHOUT LEAVING A TRACE.`**
+✅ **FIXTURE VALUES CLEAR THE FULL DEFAULT SET** `[MEASURED HERE]` — `7 · 31 · 90 · 120` against `{5,10,14,20,30,50,250}`. **`R-692 §1`'s widened enumeration is what makes this checkable; `R-691`'s two-value version would have admitted `14` or `250`.**
+✅★★★★ **AND THE WORKER DOWNGRADED ITS OWN RED-PROOF UNASKED (`AR-769 §4`): the `11` isolated-tree failures throw `TypeError: unexpected keyword argument`, which proves a SIGNATURE IS ABSENT, not that values collide. **It said so, called it weak, and supplied the strong red (`0`/`200`) in the same isolated tree.** `A DOER THAT GRADES ITS OWN INSTRUMENT DOWNWARD IS THE STRONGEST SIGNAL AVAILABLE SHORT OF AN INDEPENDENT GRADE` — it does not replace one.**
+
+### ✅★★★★★ §2 — THE JUDGMENT CALL I AM RATIFYING, BECAUSE IT PRESERVED MEANING
+🛑 **`R-684 §1`'s standing quote points at `_eval_wait_structure`; the worker used `_eval_wait_bias` INSTEAD and said so.** `[MEASURED by the worker at the executable line, and the reasoning is checkable]` `_eval_wait_structure` is a **BOS/CHoCH/MSS activity check with no period and no moving average** — **forcing a `period` into it would INVENT SEMANTICS**, which invariant 2 forbids. `_eval_wait_bias` **IS** a fast/slow EMA crossover whose constants are the very `BIAS_EMA_FAST=20`/`BIAS_EMA_SLOW=50` this desk named as the defaults to avoid.
+✅★★★★★ **RATIFIED. `THE TAUGHT MA PERIOD LANDING IN THE MA CALCULATION IS SEMANTIC PRESERVATION; FORCING IT INTO A STRUCTURE DETECTOR WOULD HAVE BEEN COMPLIANCE WITH A CITATION AT THE COST OF MEANING.` **A worker that departs from a ruling's named function and states why is doing the job; one that obeys the citation into nonsense is not.**
+
+### ✅★★★★ §3 — EXTERNAL READ #3, AUDITED: ADOPTED ESSENTIALLY IN FULL
+✅ **ITS CLAIM SCOPING IS ADOPTED VERBATIM** and matches `R-692 §5`, which the worker had already honoured in `AR-769 §6` **before this read arrived** — three independent statements of the same boundary.
+✅ **ITS `15` GRADER QUESTIONS AND `8` NOVEL FALSE-GREEN MUTATIONS ARE ADOPTED AND WERE PLACED IN THE DISPATCH BRIEF VERBATIM.** ★★★ **They are exactly the attacks that matter: *"could the tests pass if ONLY the cache key changes but the primitive stays hardcoded?"* is the convicted defect, and *"is the mutation control the ACTUAL pre-repair shape or a weaker imitation?"* is the question a self-grade cannot ask itself honestly.**
+✅ **ITS ADDITION TO THE NOT-CLAIMED LIST IS ACCEPTED AND IS THE ONE I VALUE: *"the `30` inherited regression failures are harmless."* NOBODY HAS OPENED THEM.** **That is what Lane 22 is for.**
+⚠️ **ONE NOTE, NOT A CORRECTION: it says *"Dispatch the independent accuracy-validator now."* **MY OWN PRE-REGISTERED TRIGGER HAD ALREADY FIRED** — `R-692 §6` bound the grade to *"if and only if a lane reaches the cache handoff,"* and `AR-769 §3`'s Fixture B IS that handoff. **The dispatch is owed by this desk's own condition, not by the read's authority.** `A PRE-REGISTERED TRIGGER THAT FIRES ON SCHEDULE IS WORTH MORE THAN AN INSTRUCTION THAT ARRIVES AT THE SAME MOMENT.`**
+
+### ✅★★★★★ §4 — THE GRADE, AND THE `R-682` DEFECT CLASS IS CLOSED BY CONSTRUCTION OF THE RECEIPT
+✅ **DISPATCHED to `accuracy-validator`, adversarial, pinned `dd2371af`, with the working access recipe (not a prohibition), the `15` questions, the `8` mutations, explicit authorisation to invent further attacks, and an explicit invitation to return the HONEST NULL.**
+✅★★★★★ **THE RECEIPT FILE WAS COMMITTED **BEFORE** THE DISPATCH — `docs/designs/GRADE-LANE21-PARAMETER-TRANSMISSION-2026-08-04.md` at `c972172d`.** `[MEASURED HERE]` **`R-682`'s grade recorded a receipt path that never existed and its conversation was `/clear`ed, and `TaskList` was measured BLIND in the same minute a background event arrived — so silence proved nothing either way.** ★★★★★ **NOW IT DOES: `IF NO VERDICT IS EVER APPENDED TO THAT FILE, THE DISPATCH DIED AND THE GRADE IS UNSATISFIED — VISIBLE ON DISK, NOT INFERABLE FROM SILENCE.`**
+🛑 **UNTIL THE VERDICT LANDS, `AR-769` IS `[MEASURED BY THE DOER, RE-RUN BY THIS DESK]` AND **NOT** `[MEASURED BY GRADED INSTRUMENT]`. Do not upgrade the grade in any summary before the file says so.**
+
+### ✅★★★★ §5 — AUTHORIZED NOW — LANE 22 (and why this one and not handoff 5)
+**LANE 22 — TRIAGE THE `30` INHERITED FAILURES. READ-ONLY. NO FIXES. ETA ~35 min.**
+**PROPERTY ORDERED:** **do any of the `30` pre-existing failures touch the spec/condition/evaluator path the golden slice depends on?** ✅ **THAT IS THE `R-648` ADMISSION TEST APPLIED TO A KNOWN UNKNOWN — a failure on the slice's own path would INVALIDATE THE SLICE'S RECEIPT, which is precisely the clause that admits work to the critical path.**
+**(1)** Enumerate all `30` by NAME (`AR-769 §4` compared name-sets, so the list exists). **(2)** For each, classify: **ON the slice's import closure · OFF it · UNDETERMINED.** **(3)** For any ON, state what it asserts and whether it bears on parameter transmission, binding, or dispatch. **(4)** Name the surface you could not see.
+🛑 **DO NOT FIX ANY OF THEM.** A repair is a separate contract with its own red-proof; a triage that turns into a fix wave is how a bounded lane becomes a sweep.
+🛑 **STOP CONDITION: if ANY of the `30` asserts something about parameter transmission or condition binding, STOP AND REPORT IMMEDIATELY — that is a live contradiction with `AR-769` and it outranks the rest of the triage.**
+🛑 **DO NOT START HANDOFF `5` — it is contracted in `§6` and gated on the grade.**
+**FIRST OBSERVABLE + ETA:** START-RECEIPT ~2 min; triage ~35 min.
+
+### 🛑 §6 — CONTRACTED, NOT AUTHORIZED (gated on the grade) · OPERATOR
+1. **HANDOFF `5` — ONE TYPED PARAMETER OBJECT REPLACING THE TWO THREADED SCALARS**, routed by the enforced dispatcher as ONE semantic instruction, never reconstructed from scattered scalars or family-name defaults. **Fields:** primitive id · primitive version · fast type · fast period · slow type · slow period · price source · crossing relation · direction · provenance · source-resolution status. **PROOF OWED:** object reaches handler AND evaluator · changing one field changes the semantic cache key · missing required fields hard-BLOCK · unknown fields hard-BLOCK · parameterless legacy bindings unchanged · **the flag-OFF path REFUSES parameterized bindings rather than dropping them** (`parameterized_binding_requires_enforced_dispatch`). **RUNS ONLY ON `PASS` or `PASS_WITH_BOUNDED_FINDINGS`.**
+2. 🛑 **DO NOT BEGIN THE SEALED-SPEC PRODUCER WORK until the typed dispatcher object exists as a stable destination** — adopted; it is the same ordering `R-684 §1` ruled (the evaluator outranks the grammar), applied one handoff further up.
+3. **THE PERSISTENCE GATEWAY + `11`-STEP MIGRATION** — still contracted, still failing `R-648`'s admission test, still after the slice.
+4. ⚖️ **OPERATOR — ROTATE THE RAILWAY PROJECT TOKEN.** `[RELAYED]` Unchanged, not lapsed, and the only item on their list.
+
+### ★★★★★ §7 — LESSONS
+1. 🛑★★★★★ **`A PROHIBITION THAT NAMES A REAL DEFECT IS WORTH MORE THAN ONE THAT NAMES A HYPOTHETICAL ONE.`** `R-692 §3` forbade the cache-key-only shape; the lane then found that exact shape live in `_h_wait_bias`.
+2. ★★★★★ **`A DOER THAT GRADES ITS OWN INSTRUMENT DOWNWARD IS THE STRONGEST SIGNAL SHORT OF AN INDEPENDENT GRADE — AND IT DOES NOT REPLACE ONE.`**
+3. ★★★★★ **`OBEYING A CITATION INTO NONSENSE IS NOT COMPLIANCE.`** The worker left `_eval_wait_structure` because forcing a period into a structure detector would have invented semantics.
+4. ★★★★ **`A START-RECEIPT COMMITTED BEFORE A DISPATCH CONVERTS SILENCE FROM AMBIGUOUS INTO DIAGNOSTIC.`**
+5. ★★★★ **A PRE-REGISTERED TRIGGER THAT FIRES ON ITS OWN SCHEDULE OUTRANKS AN INSTRUCTION ARRIVING AT THE SAME MOMENT** — the grade was owed by `R-692 §6`, not by the read that also asked for it.
+
+---
+
 ## R-692 · 2026-08-04 · ✅★★★★★ **`AR-768` ACCEPTED · EXTERNAL READ #2 ADOPTED ON MERIT — IT IS THE BETTER-SCOPED OF THE TWO AND IT SHARPENS MY OWN LANE CONTRACTS.** 🛑🛑🛑★★★★★ **ITS SINGLE MOST VALUABLE LINE FORBIDS THE EXACT DEFECT THIS CAMPAIGN ALREADY COMMITTED ONCE: *"reading the period only to alter the cache key while the calculation remains hardcoded."* **THAT IS `R-684 §1`'s CONVICTED SHAPE — `THE CACHE IS RE-KEYED; THE CHANNEL REMAINS SEVERED AT THE EVALUATOR.` `A REPEAT OF A CONVICTED DEFECT WOULD ARRIVE WEARING A PASSING TEST.`** ✅★★★★ **AND I VERIFIED ITS TWO CHECKABLE ARTIFACTS BEFORE RELAYING THEM, BECAUSE THIS CHANNEL HAS FABRICATED ARTIFACT NAMES BEFORE — `[MEASURED HERE]` **`test_parameter_collision.py` IS REAL** and **`SMA(7)`/`SMA(31)` ARE GENUINELY OFF-DEFAULT.**
 
 **RULING ID:** R-692 · **TASK ID:** `AR-768` start-receipt + external ruling-shaped read #2 · **DECISION: ACCEPT · ADOPT the lane refinements · ADD three measured constraints the read did not have · CORRECT one path and one grade-disposition of my own. LANES 20 AND 21 CONTINUE — this REFINES, it does not re-authorize.**
