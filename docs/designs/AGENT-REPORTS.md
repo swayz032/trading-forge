@@ -4,6 +4,23 @@
 
 ---
 
+## AR-738 · 2026-08-03 · ⏳ **START-RECEIPT — `R-677 §6 LANE 1`, SIZE THE NUMERIC PARAMETER CHANNEL. SAME SEAT AS `AR-737` (context held, no cold start).**
+
+**TASK:** `R-677 §6 LANE 1` **(a)**–**(f)**: the end-to-end cost of carrying ONE taught integer from object text to a primitive argument. **RUN MODE: READ-ONLY at HEAD + scratchpad scripts. NO code. NO schema edit. NO `FAMILY_META` edit. NOTHING under `src/`.**
+**FAN-IN CONTEXT:** Lane 1 of `2`. **Lane 2 (`accuracy-validator`, adversarial refutation of my own `AR-737 §5`) is the desk's to run — I neither dispatch nor interpret it, and I will not read its verdict into my own result.** ✅ **CORRECT: I am the doer of the claim under grade.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~35 min.**
+
+### ✅ §1 — SEAT IDENTITY, CHECKED RATHER THAN ACCEPTED
+⚠️ **`§6` addresses Lane 1 to `claude.exe 21508`.** ★★★ **`identity-address-decay` says PIDs decay, so I did not accept the label: I am the seat that authored and committed `AR-737` (`16252a30`) and its `§6` correction (`fea64db3`) this session — **that provenance, not the PID, is what makes this lane mine.** If `21508` is a different live process, the desk should know the binding is by AUTHORSHIP, not by number.**
+⚠️ **No `★ WORKER — START HERE` block in `R-677` either (second consecutive ruling).** **NOT A BLOCKER — `§6 LANE 1` carries the full contract.** Reported once more for the desk's `R-659` law; I will stop repeating it after this.
+
+### 🛑 §2 — WHERE I EXPECT TO HIT THE STOP CONDITION, DECLARED BEFORE I START
+🛑 **`§6`'s stop: *"if `(a)` cannot be sized without CHOOSING the parameter grammar, STOP."*** ⚠️★★★ **AND `(e)` — *"where `TAUGHT`/`ASSUMED`/`REFUSED` and the chart timeframe LIVE IN THE OBJECT"* — IS THE SUB-QUESTION MOST LIKELY TO CROSS THAT LINE, because "where a field lives in the object" IS the grammar.**
+✅ **MY LINE, FIXED NOW SO IT CANNOT MOVE AFTER I SEE THE ANSWER (`pre-register-criteria`): I will report the CONSTRAINTS any placement must satisfy — which surfaces must carry the value, which validators would reject it, what the hash/parity suites force — and I will NOT pick field names, nesting, or types.** **If `(e)` cannot be answered inside that boundary, it returns `UNRESOLVED_SOURCE_AMBIGUITY` and the desk designs it.**
+✅ **THE LOAD-BEARING QUESTION I EXPECT TO DECIDE `(a)`: does adding an OPTIONAL field change `spec_hash`/`graph_canonical_hash` when it is ABSENT?** **If absent-field ⇒ byte-identical hash, `§2.2`'s additive claim holds and NO re-seal is forced. If not, the baseline `R-401` depends on it and the cost is categorically larger.** **I will measure the hash function, not reason about it.**
+
+---
+
 ## AR-737 · 2026-08-03 · 🛑🛑★★★★★ **`R-676 §6` DELIVERED — AND IT REFUTES THE RULING'S CENTRAL ESTIMATE, IN THE DIRECTION THAT COSTS MORE. **THE PICK DOES *NOT* FAIL BY ONE MISSING TABLE ENTRY. IT FAILS BECAUSE NO NUMERIC PARAMETER CAN REACH A PRIMITIVE AT ALL — THERE IS NO CHANNEL, AT ANY OF THREE LAYERS.**** `[MEASURED HERE]` **`183/183` sealed conditions carry EXACTLY `7` KEYS — `id·type·object·role·span·evidence·type_confidence` — and `0` are parameter-like (control: `object` present `183`). `ConditionBinding` carries `10` fields; the only structured value is `session_zone`, a KEYWORD, not a number.** ★★★★★ **AND THE SECOND REFUTATION IS SHARPER: A MOVING AVERAGE IS NOT A FAMILY — IT IS AN *OBJECT*, AND IT ALREADY ARRIVES UNDER **THREE DIFFERENT FAMILIES** (`WAIT_STRUCTURE` `4` · `WAIT_CONFIRMATION` `3` · `WAIT_SESSION` `1`). **A `FAMILY_META` ENTRY IS THE WRONG SHAPE FOR IT.**** ✅★★★★★ **AND THE BEST NEWS IS ONE THE RULING DID NOT HAVE: **THE BINDER ALREADY EXECUTES A MOVING-AVERAGE CROSSOVER TODAY** — `_eval_wait_bias` computes `EMA(20)/EMA(50)` on close at `spec_condition_compiler.py:729-730`, bound to `WAIT_BIAS`/`CONFIRM_DIRECTION`. **THE PERIODS ARE HARDCODED MODULE CONSTANTS (`:140-141`), AND THAT — NOT A MISSING CAPABILITY — IS THE `approximation=True`.**
 
 **TASK:** `R-676 §6` (a)(b)(c). **RUN MODE: READ-ONLY at HEAD `226f17ec` + two scratchpad scripts. NO code. NO `FAMILY_META` EDIT. `git status` on `src/` clean — NOTHING under `src/` modified.**
