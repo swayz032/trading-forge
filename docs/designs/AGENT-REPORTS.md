@@ -4,6 +4,43 @@
 
 ---
 
+## AR-748 · 2026-08-03 · ⏳🛑 **SEAT RECEIPT — FRESH WORKER SESSION SEATED, AND IT HAS **NO AUTHORIZED TASK**. `R-681 §5 LANE 6` IS **DELIVERED AND COMMITTED** (`f73d2726`) AND `AR-747` STANDS AT `APPROVAL_REQUESTED`; **THERE IS NO RULING AFTER `R-681` ON DISK.** ⚠️ **AND I AM DISCHARGING THE `worker-onboarding §1` DUTY IN THE FIRST REPORT, AS IT ORDERS: `R-681` CARRIES **NO `★ WORKER — START HERE` BLOCK.** I fell back to its `§5 AUTHORIZED NOW` and found it already discharged nine lines below in `AR-747`.** 🛑 **I AM NOT SELF-ASSIGNING A LANE. `R-681 §6`'s four open items name **THIS DESK** as owner on all four.**
+
+**TASK:** none authorized. **THIS IS A READ-ONLY RECEIPT — no files under `src/` touched, no measurement re-run, no scope opened.**
+
+### ✅ §1 — SEAT AND TREE, MEASURED
+`[MEASURED HERE]` tree `C:/Users/tonio/Projects/wt-h1-wave4-20260712` · branch `h1-wave4-sealed12-driver` · **HEAD `f73d2726bcd7b01b44840e0d7033fed8e1c7c55b`** (`AR-747`), **re-read at the end of this receipt and UNMOVED — no live sibling is committing to this branch right now.**
+`[MEASURED HERE]` **the seat `R-681 §5` addressed — `claude.exe 21508` — is NOT alive.** Live `claude.exe`: **`7820`** and **`22684`**, both started `21:20`. `[UNENUMERATED]` **which of the two is me** — I did not walk my own parent chain, and the receipt does not depend on it.
+🛑 **NEW SEAT, NOT A CONTINUATION OF CONTEXT: the conversation was cleared.** The prior seat's ledger position is reconstructed from `R-681` + `AR-746`/`AR-747` on disk, not from memory.
+🛑 **The sibling's dirty `src/engine/tests/test_synthetic_market_simulator.py` is still ` M` and still untouched — eighth consecutive report.**
+
+### ✅ §2 — POSITION, FROM DISK
+`[MEASURED HERE]` newest ruling = **`R-681`** (`ADVISOR-RULINGS.md:15`, mtime `21:25`). Newest report = **`AR-747`** (`AGENT-REPORTS.md:7`, mtime `21:40`). **The report POSTDATES the ruling, and it discharges that ruling's only worker lane.**
+✅ **`R-681 §5` steps `(1)`–`(5)` are all reported complete in `AR-747`, including the `§5(5)` conditional — the red named exactly one carrier and the fix matched the pre-authorized `population_a_level_cache` template, which is the ONLY branch under which `AR-747` was permitted to apply a repair.**
+✅ **PHASE, per `ADVISOR-STATE ## THE PLAN:3337` — `Phase 1 — SPEC COMPILATION (WE ARE HERE)`.** Exit remains **`≥1 tier-A spec`** compiling with all load-bearing conditions concretely bound, per `R-648`'s admission test. **Lane 6 removed one measured obstruction on that path; it did not move the exit.**
+
+### 🛑★★★ §3 — THE READ-ORDER DEFECT, REPORTED BECAUSE THE SKILL SAYS TO REPORT IT
+🛑 **`R-681` has no `★ WORKER — START HERE` block.** `worker-onboarding §1` says a cold seat that finds none must fall back to the most recent `AUTHORIZED NOW` **and say so in its first report, so the desk fixes it.** This is that sentence.
+⚠️ **THE COST WAS REAL BUT SMALL HERE, AND IT IS WORTH NAMING PRECISELY: the fallback path led me to `R-681 §5`, which reads as live work. It is NOT live — it was discharged 14 minutes after the ruling was written. **A cold seat that stopped reading at the ruling would have re-run Lane 6.** The thing that saved it was read-order step `3` (my own last ARs), not the ruling.**
+★★★ **`AN AUTHORIZATION BLOCK WITH NO DISCHARGE MARKER READS AS LIVE WORK FOREVER.` The ruling cannot know it was discharged — but a `START HERE` block is the place a desk can say "as of this writing, the live lane is X".**
+
+### ✅ §4 — RULING EAR: ARMED, AND ITS BLIND WINDOW IS STATED
+✅ **ARMED at receipt time** — a background poll on the first `^## R-` header of `ADVISOR-RULINGS.md`, baselined at **`## R-681`**, which fires when a newer ruling number lands.
+✅ **BLIND WINDOW = NONE.** The baseline is the newest ruling on disk and **I read `R-681` in full before arming**, so there is no gap between "last ruling I have read" and "first ruling the ear can hear." `[MEASURED HERE]` no pre-existing ear was found running — the six live `bash.exe` are the transient shells of this session's own tool calls (parents `7820`/`22684`).
+🛑 **ONE RIG, per `one-monitor`. If the desk believes another ear is already armed on this file, say so and I will stop mine rather than run two.**
+
+### ⚠️ §5 — WHAT IS OWED, AND BY WHOM (I am claiming none of it)
+1. ⏳ **THE INDEPENDENT GRADE — `R-681 §6.1`, OWNER: THE DESK.** It now covers Lane 5's `[RELAYED]` numbers **and** the `ConditionBinding` change, and `AR-747` added a third surface: **a `src/` behaviour change on `spec_condition_compiler.py`, which is instrument code under `ratify-packet`.** 🛑 **`doer ≠ grader` — I wrote it, so I cannot grade it. The grader (`accuracy-validator`) is one authorization away and this seat will not dispatch it unasked.**
+2. **The flag-OFF twin at `spec_condition_compiler.py:1215-1217`** (`AR-747 §5`) — **a desk ordering decision, explicitly not a worker fix, because no red proof is available for it today.**
+3. **The env-leak in `test_session_role_adversarial_fence.py:823`/`:858`** (`AR-747 §6.2`) — **REPORTED, NOT PULLED.** It fails `R-648`'s admission test. **But it means any whole-suite green in this repo is order-dependent, and that is worth more than the three tests it breaks.**
+4. **The parameter grammar · the parity-gate red-proof contract · `F-5`'s `vwap` · the `_wire1_*` stale counters · the `7`-carrier hardening queue** — **all four/five named `THIS DESK` in `R-681 §6`. Untouched.**
+
+### 🛑 §6 — STANDING, AND WHY I AM NOT INVENTING WORK
+🛑 **`R-648`'s admission test bars me from picking any of the above up on my own initiative: none of them PREVENTS THE GOLDEN SLICE FROM COMPILING or INVALIDATES ITS RECEIPT today, and `R-681 §4` just convicted both the desk and the prior seat for defaulting to "close the hole we just named."** ✅ **`CLOSING THE HOLE YOU JUST NAMED IS NOT AUTOMATICALLY THE NEXT TASK.` I am holding.**
+**AWAITING:** a ruling on `AR-747`, or a new lane. **The ear is armed; this seat is live and has working room.**
+
+---
+
 ## AR-747 · 2026-08-03 · ✅🛑★★★★★ **`R-681 §5 LANE 6` DELIVERED — **THE PARAMETER COLLISION IS REAL, REPRODUCED, AND FIXED.** THE DEFECT THAT HAS BEEN `UNREACHABLE` SINCE LANE 3 IS NOW **OBSERVED**: two `WAIT_STRUCTURE` conditions taught `SMA(10)` and `SMA(200)` **RECEIVED IDENTICAL ARRAYS**, and **REVERSING THEIR DECLARATION ORDER CHANGED WHICH VALUE BOTH GOT.**** ✅★★★★★ **RED `2 failed, 2 passed` → FIX → GREEN `5 passed`, AND THIS TIME *"THE SAME UNCHANGED COMMAND"* IS LITERALLY TRUE — the repair is in `src/`, not behind a plugin flag, so the identical `pytest` line produced both.** ✅ **ALL THREE CONTROLS PRINTED THEIR VALUES: `SMA(10)` vs `SMA(200)` differ on **`100`/`200`** bars · the handler received periods **`[10, 200]`** (positive execution witness — *"both got the same array"* is otherwise also satisfied by *"neither ever ran"*) · and after the fix, two IDENTICAL periods still trigger **`1`** evaluation, not `2`.** 🛑🛑★★★★★ **AND I HAVE TO CONVICT MY OWN PRE-REGISTRATION: **THE EXPECTED-GREEN SET I NAMED IN `AR-746 §2` OMITTED `test_spec_family_bindings.py` — THE TEST FILE FOR THE MODULE I EDITED.** It stayed `307 → 307` green and told me nothing. **I FOUND THE GAP ONLY BECAUSE I RAN THE WIDER BLAST RADIUS ANYWAY.** `A PINNED SET THAT OMITS THE OBVIOUS FILE IS A GREEN THAT MEANS LESS THAN IT LOOKS.`**
 
 **TASK:** `R-681 §5` steps `(1)`–`(5)`. **FILES CHANGED: `src/engine/spec_family_bindings.py` (one field + `to_dict`), `src/engine/spec_condition_compiler.py` (one handler + one `ctx` slot), NEW `src/engine/tests/test_parameter_collision.py`.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — seventh consecutive report.**
