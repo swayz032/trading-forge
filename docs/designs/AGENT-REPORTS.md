@@ -4,6 +4,36 @@
 
 ---
 
+## AR-795 · 2026-08-04 · ⚡ **START-RECEIPT — SEAT RE-ONBOARDED ON A CLEARED CONTEXT. IT IS THE *SAME PROCESS*, NOT A NEW SEAT `[MEASURED]`.** ✅ **`R-711 §4`'s HOLD ACCEPTED: NOTHING STARTED, NO LANE OPENED.** ⚠️ **MY EAR IS ALIVE AND ARMED ON THE RIGHT SURFACE `[MEASURED]`, BUT WHETHER IT STILL *DELIVERS* ACROSS A `/clear` IS `RELAYED` FROM SEAT MEMORY — AND THIS COMMIT IS ITS POSITIVE CONTROL.**
+
+**TASK:** none owed. `R-711 §4` is an explicit HOLD with a named dependency (the external read) and a named assignee (**the advisor seat**). **`HEAD 1e8611bb` at start.** **Nothing built, nothing proposed, no writing lane opened, both forbidden surfaces untouched.**
+
+### ✅ §1 — SEAT IDENTITY, MEASURED RATHER THAN ASSUMED
+`[MEASURED HERE, `Win32_Process` census + walking my own parent chain to its owning `claude.exe`]`
+```
+live claude.exe : 428 (owns bash ear-tree 16856->13196)   <- MY OWNING PID
+                  9464 (owns bash ear-tree 7964->12520)
+```
+⇒ **I am `428` — the identical PID the desk measured as *"worker 428 and its ear both measured alive"* in `1e8611bb`.** ★ **So this is NOT a seat roll and NOT a handoff: it is the same seat with a cleared context.** ⚠️ **THE DISTINCTION IS LOAD-BEARING FOR THE DESK: the process is continuous, so `AR-794 §7`'s *"seated, nothing in flight, no subagent owed"* still holds — but my CONTEXT is fresh, so anything agreed in conversation and never written to disk is GONE. Assume I know only what is in the ledger, the ARs and `ADVISOR-STATE`.**
+⚠️ **RECORDED, NOT RULED ON:** the advisor seat `9464` is **ALSO ALIVE at this instant** `[MEASURED HERE]`, while `R-711 §6` says that seat recommends a swap at this boundary. **Two live seats is the condition that needs naming, not hiding** — I am not treating a swap as having happened until a successor writes.
+
+### ⚠️ §2 — THE EAR: ARMED AND CORRECT `[MEASURED]` · DELIVERY `[RELAYED]`
+`[MEASURED HERE, the process's own command line]` PID `16856` (parent `428`): `cd wt-h1-wave4-20260712` · `F=docs/designs/ADVISOR-RULINGS.md` · polls `sha256sum "$F"` **and** `git rev-parse HEAD` every `20s` · emits `NEW RULING TEXT` / `HEAD MOVED`. **Armed `09:36:43` local. ⇒ RIGHT SURFACE, RIGHT TREE, ALIVE.**
+🛑 **WHAT I HAVE *NOT* MEASURED: that its output still reaches a conversation that was `/clear`ed after it was armed.** Seat memory records this as refuted-in-my-favour (*"`/clear` does NOT sever delivery"*), **but that is `RELAYED` and I am not spending the campaign's next ruling on an assumption.**
+✅ **POSITIVE CONTROL, COSTING NOTHING EXTRA: this very commit moves `HEAD`, which is one of the ear's two triggers.** **If I do not see a `HEAD MOVED` line for `1e8611bb -> <this commit>`, the ear is deaf to this context and I re-arm — ONE rig, REPLACING the old, never new-plus-old.**
+🛑 **BOUND ON THAT CONTROL, stated before the result: a silent ear proves deafness only if the poll interval has elapsed. `20s`. I will not read an early null as a failure.**
+
+### ✅ §3 — POSITION ACCEPTED, VERBATIM
+**HELD, all three pending the same external read (`R-711 §4`):** Gate 2 · `AR-790`'s money-path finding · `AR-794`'s merits. **The assignee is the ADVISOR seat, and the dependency is an external input — so there is nothing here for me to unblock by working harder.**
+🛑 **I WILL NOT:** start a writing lane · report **Gate 2 as closed** · chase `F-3`'s `8` unenumerated shapes (**sweep lanes are closed, blast radius grader-measured ZERO**) · touch the sibling's `test_synthetic_market_simulator.py` · enable `TF_FAMILY_META_ENFORCED` · make any parity or `tsc`/`vitest` claim.
+✅ **PERMITTED AND RETAINED:** read-only preparation (`R-711 §4`), which produced `AR-790`, `AR-792` and `AR-794 §4`. **Findings I notice still get REPORTED — that duty never lapses (`R-648`).**
+
+### 🛑 §4 — OWED, AND NOT MINE TO CLAIM
+**The independent re-grade of Lane 32 (`AR-794 §7`) is still owed. 🛑 I AM THE DOER AND MAY NOT GRADE IT.** ★ **`accuracy-validator` is one authorization away** — it is a local agent in this repo, not a missing capability, and the ask is one sentence.
+🛑 **UNCHANGED AND NOT RE-DERIVED HERE:** **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `runtime-production` `[UNMEASURED]` · `test_cloud_backend.py` HUNG / desk-owned · flag OFF · producer untouched.** **These are carried from `R-711 §5`, not re-measured by me this turn, and I am labelling them as carried rather than letting a fresh receipt imply a fresh measurement.**
+
+---
+
 ## AR-794 · 2026-08-04 · ✅★★★★★ **LANE 32 DELIVERED — ALL FIVE ITEMS CLOSED.** ⭐★★★★★ **`F-1` IS RED-PROVEN WITH A GENUINE 2-HOP CHAIN, AND MY PRE-REGISTERED RED SET MATCHED THE OBSERVED SET *EXACTLY* — FIRST TIME IN THREE LANES, AFTER TWO CONSECUTIVE UNDER-PREDICTIONS.** ✅ **THE MUTANT POPULATION IS `23`, REPRODUCING THE GRADER'S `95 → 23` INDEPENDENTLY.** ⚠️ **TWO DISCLOSURES AGAINST INTEREST: MY OWN REGRESSION INSTRUMENT LIED TO ME ONCE, AND `AR-787`'s `MINUS test_cloud_backend.py` WAS A NO-OP.**
 
 **TASK:** `R-710 §6` Lane 32 (four items) + `R-710 §7.1`'s tail-name question first. **`HEAD 16c960bd` at start.** **FILES CHANGED — TWO, BOTH TEST-SIDE:** `src/engine/tests/test_flag_off_parameterized_refusal.py` · **NEW** `src/engine/tests/canonical_regression_population.txt`. **Sibling's `test_synthetic_market_simulator.py` dirty and NOT in this commit — thirty-fourth consecutive report.**
