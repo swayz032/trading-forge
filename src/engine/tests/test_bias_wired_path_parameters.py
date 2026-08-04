@@ -196,6 +196,40 @@ def test_f1_mutation_control_planted_accept_and_discard_yields_identical_arms():
     )
 
 
+# ══ ITEM 3 — THE EARLY RETURN SUBSTITUTES NO DEFAULT AND SKIPS NO VALIDATION ══════════
+
+@pytest.mark.parametrize(
+    "params, expected_refusal, why",
+    [
+        ({"fast_period": 0, "slow_period": 90}, "not a usable EMA period", "malformed value"),
+        ({"fast_period": 90, "slow_period": 7}, "not the taught mechanism", "fast >= slow"),
+        ({"period": 7}, "does not recognise", "unrecognised key"),
+    ],
+)
+def test_the_wired_early_return_does_not_skip_parameter_validation(params, expected_refusal, why):
+    """READ ITEM 3 (R-700 §1), AND IT IS A REAL ORDERING PROPERTY RATHER THAN A RESTATEMENT.
+
+    A fully-wired frame is exactly where validation is easiest to lose: the periods are
+    about to be discarded anyway, so an implementation that checked coverage FIRST and
+    returned early would never look at them. A malformed or unrecognised parameter would
+    then pass silently on wired frames and refuse on unwired ones — the same input
+    accepted or rejected depending on how much HTF data happened to be present, which is
+    the worst possible shape for a validation surface.
+
+    The refusals asserted here are LANE 25's, not F-1's. That is the point: resolution
+    and validation run BEFORE the coverage check, so the verdict does not depend on the
+    market data.
+    """
+    with pytest.raises(ValueError) as exc:
+        _run(_wired(_df()), {"armA": params})
+    message = " ".join(str(exc.value).split())
+    print(f"\n[ITEM 3] fully wired + {why}: {message[:100]}...")
+    assert expected_refusal in message, (
+        f"a fully-wired frame produced the wrong refusal for {why}: validation appears to "
+        f"have been skipped, or the coverage check ran first. Got: {message}"
+    )
+
+
 # ══ THE SHARED COVERAGE RULE CANNOT BE FORKED OR DROPPED ══════════════════════════════
 #
 # R-699 §6 UPGRADED THIS FROM A STATEMENT TO AN EXECUTABLE WITNESS, and the upgrade is

@@ -42,6 +42,7 @@ import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
 from src.engine.family_meta_enforcement import (
+    FLAG_ENV,
     FamilyMetaEnforcementError,
     ensure_enforced,
     family_meta_enforced,
@@ -1343,6 +1344,46 @@ class SpecConditionStrategy(BaseStrategy):
         # only under enforcement; empty dict otherwise, so flag-OFF introspection is unchanged.
         self.last_non_gating_conditions: dict[str, dict] = {}
         enforced = family_meta_enforced()
+
+        # LANE 27 (R-699 §7): MAKE THE FLAG-OFF STATE HONEST.
+        #
+        # With TF_FAMILY_META_ENFORCED OFF -- the PRODUCTION DEFAULT -- the `elif b.type`
+        # ladder below runs instead of the enforced dispatcher. That ladder never calls
+        # `_h_wait_bias`, so `b.parameters` is not read by anything: a binding carrying
+        # taught periods was evaluated as though it taught nothing, with no error and no
+        # trace. Measured (AR-776 §3): a parameterized binding under the default flag
+        # produced the EMA(20,50) answer, byte-identical to teaching nothing at all.
+        #
+        # THE FAILURE DIRECTION IS THE DANGEROUS ONE. Lane 25's refusals only fire on the
+        # ENFORCED path, so before this check the safer-looking configuration -- the
+        # default one -- was the only one that could still lose a taught number silently.
+        # `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION.`
+        #
+        # IT IS HERE, AND NOT IN THE DISPATCH LOOP, ON PURPOSE: this is before `ctx` is
+        # built and before any evaluator or cache is touched, so the refusal cannot land
+        # half-way through a frame with some conditions already computed and cached.
+        # `A REFUSAL THAT FIRES AFTER A MUTATION IS A PARTIAL RUN WEARING AN EXCEPTION.`
+        #
+        # IT DOES NOT ENABLE ANYTHING (R-697 §5.10 activation prohibition stands). It makes
+        # the OFF state REFUSE rather than DROP; turning the flag on remains unauthorized.
+        if not enforced:
+            parameterized = sorted(
+                b.condition_id
+                for b in (*self.binding_plan.bindings, *self.binding_plan.invalidation_bindings)
+                if b.parameters
+            )
+            if parameterized:
+                raise ValueError(
+                    f"binding(s) {parameterized!r} carry parameters, but "
+                    f"{FLAG_ENV} is OFF and the flag-OFF dispatch ladder never reads "
+                    f"them. REFUSAL parameterized_binding_requires_enforced_dispatch: "
+                    f"running would evaluate these conditions as though they taught "
+                    f"nothing, producing engine-default answers indistinguishable from a "
+                    f"strategy that supplied no parameters at all. A silent drop is the "
+                    f"parameter-invention defect wearing a feature flag. Refused rather "
+                    f"than dropped -- this does NOT authorize enabling the flag."
+                )
+
         ctx: dict = {
             "n": n, "df": df, "ts_list": ts_list,
             "open_": open_, "high": high, "low": low, "close": close,
