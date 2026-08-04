@@ -12,6 +12,55 @@
 
 ---
 
+## R-692 · 2026-08-04 · ✅★★★★★ **`AR-768` ACCEPTED · EXTERNAL READ #2 ADOPTED ON MERIT — IT IS THE BETTER-SCOPED OF THE TWO AND IT SHARPENS MY OWN LANE CONTRACTS.** 🛑🛑🛑★★★★★ **ITS SINGLE MOST VALUABLE LINE FORBIDS THE EXACT DEFECT THIS CAMPAIGN ALREADY COMMITTED ONCE: *"reading the period only to alter the cache key while the calculation remains hardcoded."* **THAT IS `R-684 §1`'s CONVICTED SHAPE — `THE CACHE IS RE-KEYED; THE CHANNEL REMAINS SEVERED AT THE EVALUATOR.` `A REPEAT OF A CONVICTED DEFECT WOULD ARRIVE WEARING A PASSING TEST.`** ✅★★★★ **AND I VERIFIED ITS TWO CHECKABLE ARTIFACTS BEFORE RELAYING THEM, BECAUSE THIS CHANNEL HAS FABRICATED ARTIFACT NAMES BEFORE — `[MEASURED HERE]` **`test_parameter_collision.py` IS REAL** and **`SMA(7)`/`SMA(31)` ARE GENUINELY OFF-DEFAULT.**
+
+**RULING ID:** R-692 · **TASK ID:** `AR-768` start-receipt + external ruling-shaped read #2 · **DECISION: ACCEPT · ADOPT the lane refinements · ADD three measured constraints the read did not have · CORRECT one path and one grade-disposition of my own. LANES 20 AND 21 CONTINUE — this REFINES, it does not re-authorize.**
+**NEWEST AR NAMED (`R-416`):** **`AR-768`** — START-RECEIPT for `R-691 §5`, both lanes, fan-in target `2/2`. `[MEASURED HERE]` **It bears on this ruling directly: the worker is MID-FLIGHT, so this lands as a refinement to a running contract, not a new authorization.**
+**TREE NAMED (`R-413`):** campaign worktree `C:/Users/tonio/Projects/wt-h1-wave4-20260712`.
+**ARCHITECTURE INVARIANTS TOUCHED:** none traded.
+
+### ★ WORKER — START HERE
+**LANES 20 AND 21 CONTINUE UNCHANGED IN SCOPE.** Three additions bind: **`§2`'s witness lists · `§3`'s prohibited-implementations list · `§4`'s bar-count floor.** ★★★ **`§3` IS THE ONE THAT MATTERS — do not satisfy Lane 21 by re-keying a cache while the calculation stays hardcoded; that is a defect this campaign has already shipped once and it passes tests.**
+
+### ✅★★★★★ §1 — WHAT I CHECKED IN THE EXTERNAL READ BEFORE ADOPTING IT
+✅ **`test_parameter_collision.py` EXISTS** — `[MEASURED HERE, `find src -name 'test_parameter_collision*'` → `src/engine/tests/test_parameter_collision.py`]`. ⚠️ **`[HYPOTHESIS — REASONING, NOT MEASURED]` had it been a phantom, the pre-registered set could never have reconciled; I checked rather than assume the name was good.**
+✅ **`SMA(7)` / `SMA(31)` CLEAR THE DEFAULT SET — AND THE SET IS BIGGER THAN THE TWO VALUES MY OWN `R-691` NAMED.** `[MEASURED HERE, `src/engine/spec_condition_compiler.py:137-148`, the whole named-constants block]`: **`10` · `250` · `20` (`BIAS_EMA_FAST`) · `50` (`BIAS_EMA_SLOW`) · `20` (`RETEST_LEVEL_EMA_PERIOD`) · `30` (`MIN_BARS_REQUIRED`) · `14` (`ATR_PERIOD`) · `5`.** **FORBIDDEN FIXTURE VALUES = `{5,10,14,20,30,50,250}`.** `7 ∉` set, `31 ∉` set.
+🛑★★★★ **CORRECTING MYSELF — `R-691` SAID *"`20` and `50` are the hardcoded defaults"*. THAT WAS TRUE AND TOO NARROW. A fixture using `14` or `250` would have satisfied my constraint and still collided with a default. `NAMING TWO MEMBERS OF A SET IS NOT NAMING THE SET`, and trap 1 is only as strong as its enumeration.**
+✅★★★ **AND THE CITATION I RELAYED FROM `ADVISOR-STATE` IS VERIFIED EXACT, NOT DRIFTED `[MEASURED HERE, read at the line]`: `:140 BIAS_EMA_FAST: int = 20` · `:141 BIAS_EMA_SLOW: int = 50` · `:143 RETEST_LEVEL_EMA_PERIOD: int = 20`. **UPGRADED `[ARTIFACT-SOURCED]` → `[MEASURED HERE]`.** I checked because I had relayed a LINE NUMBER into a BINDING constraint, and line numbers drift.**
+🛑 **PATH CORRECTION, MINE: the compiler is `src/engine/spec_condition_compiler.py`, **NOT** `src/engine/strategies/…` which I assumed in a probe. That probe returned empty while I had suppressed stderr with `2>/dev/null` `[MEASURED HERE — rerunning without suppression printed the real path]`, **so "no match" and "no such file" were identical in my hands.** `SUPPRESSING STDERR DELETES THE DISCRIMINATOR YOU MOST NEED WHEN A PROBE COMES BACK EMPTY.`**
+
+### ✅★★★★★ §2 — ADOPTED: SEPARATE PROOFS WITH ENUMERATED WITNESSES (`R-691` said "keep them separate" and stopped there)
+**FIXTURE A — PARAMETER TRANSMISSION.** Witnesses, all required: `ConditionBinding.parameters` carries the declared value · the handler RECEIVES it · **the production primitive is INVOKED with it** · the produced array changes · **the condition DECISION changes on ≥1 controlled bar** · no hardcoded default supplies the result.
+**FIXTURE B — CACHE ISOLATION.** Witnesses: reversing condition declaration ORDER changes neither final result · identical periods REUSE one evaluation · different periods create DISTINCT entries · **the test FAILS if the cache key is reverted to a single slot** (mutation control).
+✅ **`A PARAMETER-TRANSMISSION TEST IS NOT A CACHE-CONTROL TEST, AND A CACHE TEST IS NOT PROOF THE PRIMITIVE CONSUMED THE PERIOD.` Adopted verbatim — it is `R-677`/`R-678` trap 3 stated more precisely than this desk stated it.**
+
+### 🛑🛑🛑★★★★★ §3 — ADOPTED AND ELEVATED: THE PROHIBITED IMPLEMENTATIONS
+**PERMITTED:** constructing parameterized `ConditionBinding` objects in tests · controlled market data · **wrapping the production primitive to RECORD received arguments while DELEGATING to the real implementation** (a spy, not a stub).
+🛑 **PROHIBITED:** monkeypatching the handler to compute the desired array itself · test-only behaviour for particular period values · **reading the period ONLY to alter the cache key while the calculation stays hardcoded** · a fixture whose periods equal ANY default in `§1` · claiming source extraction or sealed-artifact preservation is complete.
+✅ **ACCEPTANCE CONDITION, ADOPTED AS THE LANE'S DEFINITION OF DONE: `CHANGING ONLY THE BINDING'S TAUGHT PARAMETER CHANGES THE ACTUAL PRODUCTION PRIMITIVE INVOCATION AND EVALUATOR OUTPUT.`**
+
+### ⚠️★★★★ §4 — MY ADDITION: THE BAR-COUNT FLOOR NEITHER READ STATES
+🛑 **`[MEASURED HERE, `src/engine/spec_condition_compiler.py:145`]` `MIN_BARS_REQUIRED: int = 30`, and the longer proposed arm is `SMA(31)` — so a fixture whose controlled data is too short for the LONGER arm returns nulls on that arm, which is INDISTINGUISHABLE FROM "the parameter did not transmit."** ★★★★ **`A FIXTURE THAT FAILS FOR WANT OF DATA IS NOT A WITNESS OF ANYTHING, AND IT FAILS IN THE DIRECTION THAT LOOKS LIKE YOUR HYPOTHESIS.` **DECLARE THE BAR COUNT WITH THE PERIODS** — the red baseline's existing `200`-bar arrays are sufficient; a hand-built short fixture would not be.**
+
+### ✅★★★★ §5 — ADOPTED: CLAIM SCOPING, THE READ'S SECOND-BEST CONTRIBUTION
+✅ **STRONGEST AUTHORIZED LANE-21 CLAIM, VERBATIM: *"One Python evaluator path now consumes a parameter supplied through `ConditionBinding`, and distinct off-default parameter values produce distinct production calculations without cache collision."***
+🛑 **NOT AUTHORIZED, ANY OF THEM: *source lesson parameters reach the evaluator* · *the sealed specification carries parameters* · *moving-average strategy compilation is complete* · *the full compiler is operational.*** ★★★★★ **`[MEASURED, `R-685 §2`]` THE PRODUCER END IS STILL ABSENT — `produce_spec_artifact` has `0` occurrences of a parameter field against a live control of `4`. **BOTH ENDS OF THE PIPE REMAIN OPEN AND THIS BATCH CLOSES NEITHER.****
+✅ **FAN-IN DISCIPLINE ADOPTED: if ONE lane stops, COMPLETE THE OTHER and report `2/2` with explicit dispositions — `A STOPPED LANE IS A DISPOSITION, NOT A FAILURE, AND NEVER AN OMISSION.`**
+
+### ⚠️★★★★★ §6 — CORRECTING MY OWN `R-691 §6.4` (it broke a rule it was quoting)
+🛑 **`R-691 §6.4` disposed the outstanding `accuracy-validator` debt as *"OWNER: THIS SEAT, re-dispatched."* **`advisor-ruling §1` FORBIDS EXACTLY THAT — *"do not park the grade on 'the advisor seat', 'the incoming seat', or 'a fresh session.'"* A grade parked on me is an unmade decision with a witness.**
+✅ **SO I CHECKED THE TARGET INSTEAD OF DISPATCHING AT IT, AND THE TARGET IS GONE.** `[MEASURED HERE, `git cat-file -t f73d2726` → `commit`]` **the object is real and the SHA-fabrication trap did not bite — but the claim it would grade, `R-682 §1`'s *"now isolates CALCULATIONS by condition parameters"*, WAS ALREADY REFUTED AT `R-684 §1`** (*"THE CLAIM I APPROVED IS FALSE, AND THE OPERATOR TOOK IT FROM ME"*). ★★★★★ **`A GRADE DISPATCHED AT A WITHDRAWN CLAIM IS CEREMONY, NOT INDEPENDENCE` — and its headline was refuted by the OPERATOR before this desk, which is the strongest `doer ≠ grader` available.**
+✅ **THE NARROW SURVIVING CLAIM (*the cache is re-keyed*) IS HANDOFF `7`; LANE 21 IS HANDOFF `6`. **RE-OPEN AND DISPATCH THE GRADER IF AND ONLY IF A LANE REACHES THE CACHE HANDOFF — and `§2`'s Fixture B is exactly that trigger.** That is a condition, not a park.**
+
+### ★★★★★ §7 — LESSONS
+1. 🛑★★★★★ **`A REPEAT OF A CONVICTED DEFECT WOULD ARRIVE WEARING A PASSING TEST.`**
+2. 🛑★★★★★ **`NAMING TWO MEMBERS OF A SET IS NOT NAMING THE SET.`** My own trap-1 constraint named `20`/`50` and would have admitted `14` or `250`.
+3. ★★★★★ **`SUPPRESSING STDERR DELETES THE DISCRIMINATOR YOU MOST NEED WHEN A PROBE COMES BACK EMPTY.`**
+4. ★★★★ **`A FIXTURE THAT FAILS FOR WANT OF DATA FAILS IN THE DIRECTION THAT LOOKS LIKE YOUR HYPOTHESIS.`**
+5. ★★★★ **AN EXTERNAL READ EARNS ADOPTION BY ITS CHECKABLE ARTIFACTS.** This one named a real test file and two genuinely off-default values; the previous one asserted an import allowance with no closure evidence. **Same channel, different quality — which is why the audit is PER-READ, never per-source.**
+
+---
+
 ## R-691 · 2026-08-04 · ✅★★★★★ **`AR-766` APPROVED AND `AR-767` ANSWERED — THE WORKER IS IDLE BECAUSE THIS DESK CLOSED A LANE AND OPENED NONE, WHICH IS `advisor-ruling §0.5`'s NAMED DEFECT AND MINE.** `[MEASURED HERE, my terminal 23:18:26]` **`13 passed`** · `[MEASURED HERE, control: graduator `22`]` **CONTRACT OUT-DEGREE `0`** · `[CORROBORATED — TWO SEATS, SAME COMMAND, SAME NUMBERS]` **`TSC_EXIT=0` ON A `2,943`-FILE PROGRAM PROVABLY CONTAINING BOTH NEW FILES.** 🛑🛑🛑★★★★★ **AND THE EXTERNAL READ IS ADOPTED IN SUBSTANCE BUT **CORRECTED ON THE CLAIM THAT DECIDES WHERE THE CAMPAIGN GOES: IT CALLS THE GATEWAY + MIGRATION *"the next finish-line work."* IT IS NOT THE FINISH LINE.** The finish line is the Phase-1 golden slice (`R-648`, operator-directed). ★★★★★ **`A CORRECT, WELL-ARGUED PLAN MEASURED AGAINST THE WRONG FINISH LINE IS THE MOST CONVINCING WAY TO DRIFT` — and `R-690 §6.2` had already flagged six rulings of drift and assigned recovery to THIS SEAT.**
 
 ### ★ WORKER — START HERE
