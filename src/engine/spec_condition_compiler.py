@@ -1136,7 +1136,14 @@ class SpecConditionStrategy(BaseStrategy):
             # Parameter-keyed cache for the ENFORCED dispatch path's _h_structure (R-681
             # §5(5)). Separate from the `wait_structure` slot above, which the flag-OFF
             # inline ladder still uses via its own local -- that path never receives the
-            # binding (see :1215-1217), so a parameter cannot reach it and it is left
+            # binding -- see the inline ladder's own `wait_structure = self.
+            # _eval_wait_structure(n, df)` under `elif b.type in ("WAIT_STRUCTURE",
+            # "VERIFY_STRUCTURE")`, currently :1244. Corrected from ":1215-1217" per
+            # R-684 §3: that block is WAIT_BIAS/_select_directional, a different defect in
+            # a different family. Cited by construct as well as by line, because a line
+            # number in a file under edit is stale before it is committed (this very
+            # comment moved the call from :1237 to :1239). So a parameter cannot reach it
+            # and it is left
             # untouched by this repair. Rebuilt per compute() call like every other slot.
             "wait_structure_cache": {},
             "wait_structure_levelzone": wait_structure_levelzone,

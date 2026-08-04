@@ -74,6 +74,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Hashable
 from dataclasses import dataclass, field, replace
 from itertools import pairwise
 
@@ -791,7 +792,7 @@ class ConditionBinding:
     executed: bool
     reason: str | None = None
     session_zone: str | None = None
-    parameters: tuple[tuple[str, object], ...] | None = None
+    parameters: tuple[tuple[str, Hashable], ...] | None = None
     """OPTIONAL per-condition parameter carrier — Layer 2 of the numeric parameter channel
     (R-681 §5(2)). Defaults to None, and NOTHING in this repo populates it as of this
     commit; the only writer is a test.
@@ -817,6 +818,32 @@ class ConditionBinding:
     this field cannot move spec_hash.
     """
 
+    def __post_init__(self) -> None:
+        """Refuse an unhashable parameter value AT CONSTRUCTION, naming the key.
+
+        F-4 (accuracy-validator grade, R-684 §4.1). The annotation alone is not a
+        guard: `object` admitted list/dict/set, construction succeeded, and the
+        TypeError surfaced deep inside compute() at spec_condition_compiler.py:530
+        with no indication of which parameter caused it. `A LAW INVOKED IS NOT A LAW
+        DISCHARGED` -- the docstring below cites R-679 §1's loaded-trap law to justify
+        frozen=True, and then left the trap one level up in the annotation.
+
+        Cost is one early return for every binding this repo actually builds
+        (parameters is None for all of them at this commit).
+        """
+        if self.parameters is None:
+            return
+        for key, value in self.parameters:
+            try:
+                hash(value)
+            except TypeError as exc:
+                raise TypeError(
+                    f"ConditionBinding parameter {key!r} has an unhashable value "
+                    f"{value!r} of type {type(value).__name__}. ConditionBinding is "
+                    f"frozen=True, so it must stay hashable -- pass an immutable value "
+                    f"(tuple, not list/dict/set). Original error: {exc}"
+                ) from exc
+
     def to_dict(self) -> dict:
         out = {
             "condition_id": self.condition_id,
@@ -834,7 +861,13 @@ class ConditionBinding:
         # before this field existed. Emitting "parameters": null instead would change every
         # consumer's payload for zero information -- the same discipline AR-739 §1 measured
         # at Layer 1 as the whole difference between 0 and 18 re-seals.
-        if self.parameters is not None:
+        #
+        # F-5 (R-684 §4.2): this said `is not None`, i.e. omit-when-NONE, while the caption
+        # said omit-when-EMPTY. An empty tuple -- the natural encoding for "the producer
+        # looked and found no parameters" -- emitted "parameters": {} on every binding and
+        # walked straight into the re-seal hazard the caption exists to prevent. A truthiness
+        # test makes the code mean what the caption always claimed.
+        if self.parameters:
             out["parameters"] = dict(self.parameters)
         return out
 

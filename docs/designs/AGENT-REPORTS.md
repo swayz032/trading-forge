@@ -4,6 +4,70 @@
 
 ---
 
+## AR-758 · 2026-08-03 · ✅★★★★★ **`R-685 §5 LANE 11` DELIVERED — `F-4`, `F-5`, `F-3` ALL REPAIRED. **FAN-IN `2/2`, BATCH CLOSED, NO HANDOFF.** RED `2 failed, 2 passed` → GREEN `4 passed` from the **same command**, both positive controls green in BOTH states.** ✅ **EXPECTED-GREEN SET `792 passed, 2 xfailed` — **BYTE-FOR-BYTE THE `AR-750` BASELINE**, so the change is additive and measured to be.** 🛑🛑★★★★★ **AND `F-3` — a one-line COMMENT fix — CONVICTED ITSELF TWICE WHILE I WAS WRITING IT: the desk's correct `:1237` became `:1239` the moment my comment landed, then `:1244` when I expanded it. **A LINE-NUMBER CITATION INSIDE THE FILE YOU ARE EDITING IS STALE BEFORE YOU COMMIT IT.** I fixed it by citing the CONSTRUCT as well as the line and verifying `sed -n '1244p'` holds exactly that construct.** ⚠️🛑★★★★ **ONE THING I COULD NOT DO AND WILL NOT PAPER OVER: `R-685 §5` scopes Lane 11's files to the two `src/` modules, so **THE RED-PROOF LIVES IN A SCRATCHPAD FILE AND DIES WITH THIS SESSION.** By `R-681 §2`'s own minted law that is a red path that will decay unwitnessed.**
+
+**TASK:** `R-685 §5` Lane 11 `(1)`–`(3)`. **FILES: `src/engine/spec_family_bindings.py` (`+37/-2`) · `src/engine/spec_condition_compiler.py` (`+9/-1`). `[MEASURED]` `git status --porcelain src/` shows those two plus the sibling's `test_synthetic_market_simulator.py`, untouched — thirteenth consecutive report.**
+
+### 🛑🛑★★★★★ §1 — THE RED, VERBATIM, BEFORE ANY FIX
+```
+PYTHONPATH=. python -m pytest <scratchpad>/test_lane11_redproof.py -q -s -p no:cacheprovider
+
+FAILED ...::test_f4_unhashable_parameter_fails_at_construction_naming_the_key
+FAILED ...::test_f5_empty_tuple_serialises_byte_identically_to_absent
+2 failed, 2 passed in 3.27s
+```
+✅★★★★ **THE EXPECTED-GREEN SET WAS NAMED IN ADVANCE AND HELD (`R-681 §1`): the `2` that passed under the RED are the two POSITIVE CONTROLS — a hashable parameter still constructs, and the `None`/populated `to_dict` cases are unchanged. **If all `4` had gone red I would have been measuring "does anything survive", not "does the guard bite".**
+🛑 **`F-5`'s RED PRINTED THE DEFECT'S VALUE, NOT ITS EXISTENCE: `parameters=() emitted {}` — `11` keys where absent gives `10`.**
+
+### ✅★★★★★ §2 — `F-4`: THE ANNOTATION WAS NEVER THE GUARD
+✅ **`tuple[tuple[str, object], ...]` → `tuple[tuple[str, Hashable], ...]` (+ `from collections.abc import Hashable`), AND a `__post_init__` that hashes every value and raises NAMING THE KEY.**
+```
+[F-4 GREEN] construction refused: ConditionBinding parameter 'levels' has an unhashable
+value [1, 2] of type list. ConditionBinding is frozen=True, so it must stay hashable --
+pass an immutable value (tuple, not list/dict/set). Original error: unhashable type: 'list'
+```
+🛑 **WHY THE ANNOTATION ALONE WOULD HAVE BEEN A FAKE FIX, AND THIS IS THE WHOLE OF `F-4`: Python does not enforce annotations at runtime. Changing `object` to `Hashable` documents the intent and changes **nothing** about what constructs. **The `__post_init__` is the repair; the annotation is the caption.** Shipping only the annotation would have closed a grade finding without changing one observable behaviour.**
+★★★★ **AND THE GRADER'S FRAMING IS THE ONE THAT STINGS, SO I AM QUOTING IT AGAINST MYSELF: `A LAW INVOKED IS NOT A LAW DISCHARGED.` `AR-747 §2` cited `R-679 §1`'s loaded-trap law to justify `frozen=True` — and then left a loaded trap one level up, in the annotation it chose in the same breath.**
+✅ **COST MEASURED, NOT ASSUMED: `parameters` is `None` for every binding this repo builds today, so `__post_init__` is one `if` and a `return`. The `792`-test set is unchanged in count and in runtime (`3.40s` vs `3.45s` baseline).**
+
+### ✅★★★★ §3 — `F-5`: THE CAPTION WAS RIGHT AND THE CODE WAS WRONG, SO I CHANGED THE CODE
+🛑 **`R-685 §5` PRE-REGISTERED A FORK: *"if you conclude the CAPTION should change instead of the code, STOP AND REPORT."* **I concluded the code, and here is the ground rather than the preference.**
+✅ **`if self.parameters is not None:` → `if self.parameters:`.** **`()` is the natural encoding for *"the producer looked and found no parameters"* — a producer hits it on day one — and under the old test EVERY such binding gained a `"parameters": {}` key. `[ARTIFACT-SOURCED, `AR-739 §1`]` that is the exact discipline measured as the whole difference between `0` and `18` re-seals. **The caption promised the protection; the predicate did not deliver it.**
+```
+[F-5] to_dict() keys with parameters=()   : 10  has_key=False
+[F-5 POSITIVE CONTROL] None -> 10 keys, populated -> {'period': 20}
+```
+✅ **BOTH NON-EMPTY BEHAVIOURS EXPLICITLY UNCHANGED — that is what the second control is for.**
+
+### 🛑🛑★★★★★ §4 — `F-3`: A COMMENT FIX THAT REPRODUCED THE DEFECT IT WAS FIXING, TWICE
+🛑 **`[MEASURED]` `R-684 §3` correctly named the flag-OFF call site `:1237` — verified against `git show HEAD:` — and **my comment edit at `:1139` pushed it to `:1239`; expanding the comment pushed it again to `:1244`.** **The number I was writing was invalidated by the act of writing it.**
+✅ **REPAIR: cite the CONSTRUCT first and the line second — `` `wait_structure = self._eval_wait_structure(n, df)` under `elif b.type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE")`, currently :1244 `` — and then VERIFY: `sed -n '1244p'` returns exactly that line.**
+★★★★★ **MINTED, AND IT GENERALISES `R-684 §3`'s law: `A CORRECT FINDING WITH A STALE ADDRESS SENDS THE FIX TO THE WRONG PLACE` — and `THE MOST RELIABLE WAY TO CREATE A STALE ADDRESS IS TO EDIT THE FILE IT POINTS INTO. CITE THE CONSTRUCT; THE LINE IS A CONVENIENCE, NOT THE REFERENT.`**
+
+### ✅ §5 — REGRESSION: THE PRE-REGISTERED SET, WITH ITS DERIVATION
+**Derivation unchanged from `AR-749 §3` and it still holds: the modules touched are the same two, so the union of (a) test files importing any `src` module in their import closure and (b) files referencing the leaked variable is the same `14` files — and it contains `test_spec_family_bindings.py` and `test_spec_condition_compiler.py`, the test files of BOTH modules I edited (`R-682 §4.2`).**
+```
+BASELINE (AR-750, post-Lane-7):  792 passed, 2 xfailed
+POST-LANE-11 measured         :  792 passed, 2 xfailed      <- identical
+```
+🛑 **NO FULL-SUITE GREEN QUOTED OR RUN — `R-683 §4`'s bar stands until a repository order-independence measurement exists.**
+
+### ⚠️🛑★★★★ §6 — WHAT I COULD NOT DO, AND IT IS A REAL LOSS
+🛑🛑 **THE RED-PROOF IS NOT PERMANENT. `R-685 §5` scopes Lane 11 to two `src/` modules and says `git commit -o` those paths, so no test file could land. **The RED lives only in this report and in a scratchpad file that dies with the session.**
+★★★★★ **BY `R-681 §2`'s OWN MINTED LAW — the one this desk wrote after `AR-745` — THAT IS PRECISELY THE FAILURE MODE: `IT IS THE DIFFERENCE BETWEEN "THIS GUARD COULD FAIL IN AUGUST" AND "THIS GUARD CAN FAIL."` **`__post_init__` and the truthiness test are now unguarded: a future refactor can delete either and every test in this repo stays green.**
+✅ **I DID NOT ROUTE AROUND THE SCOPE. The four tests are ~40 lines and would drop into the existing `src/engine/tests/test_parameter_collision.py` unchanged. 🛑 **ONE LINE FROM THE DESK RELEASES IT; I am not taking that decision myself, because "my proof needs a file" is exactly the reasoning that turns a file scope into a suggestion.**
+
+### ⚠️ §7 — SURFACES I CANNOT SEE
+- ⚠️ **`[UNENUMERATED]` whether any code path constructs `ConditionBinding` with a NON-`None` `parameters` outside a test.** `[MEASURED at `AR-747`]` nothing did then; I did not re-census it now. **The `__post_init__` is therefore proven on the empty population plus my fixtures.**
+- ⚠️ **`[UNENUMERATED]` consumers of `to_dict()` that might BRANCH on `"parameters" in payload`.** `()` now behaves like `None` to them; **if some consumer needed to distinguish "looked and found none" from "never looked", that distinction is gone. `[MEASURED]` nothing populates the field today, so nothing can observe it — but it is a semantic I removed, not one that was never there.**
+- ⚠️ **Campaign worktree only; `runtime-production` not checked.**
+
+### ★★★★★ §8 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. FAN-IN `2/2` — Lanes 10 and 11 both closed in this seat, no handoff, and the seat has working room.**
+**NEXT SMALLEST TASK (ONE):** **release ~40 lines into `src/engine/tests/test_parameter_collision.py` so `F-4`/`F-5` have a permanent red-proof (`§6`).** **It is the cheapest item on the board and it is the difference between a fix and a guarded fix.**
+
+---
+
 ## AR-757 · 2026-08-03 · ✅★★★★★ **`R-685 §5 LANE 10` ANSWERED — **`FEEDS NOTHING`.** THE SCOUT/GRADUATION PIPELINE FEEDS **NO** CAMPAIGN ARTIFACT. **THE STOP CONDITION DOES NOT FIRE AND THE TS MIDPOINT DEFECT DOES NOT RE-ENTER THE CRITICAL PATH.** ✅★★★★★ **THE MEASUREMENT THAT DECIDES IT IS THE INPUT, NOT THE OUTPUT: `[MEASURED HERE]` the campaign's spec census reads **SEALED EXTRACTION FILES ON DISK** — `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/phase_b/<stub>.json`, `doc["strategies"][0]` — and **ALL `13` OF THEM CARRY `0` `entry_params` (CONTROL: `44` `entry_sequence`).** **The defect's carrier is not in the campaign's input at all.** 🛑🛑★★★★ **AND I FOUND A NAME COLLISION THAT WOULD HAVE FAKED THE OPPOSITE ANSWER: THE CENSUS READS `doc["strategies"]` — A JSON KEY IN A FILE — WHILE THE GRADUATION PIPELINE WRITES A POSTGRES TABLE ALSO CALLED `strategies`. **THE TWO ARE UNRELATED AND THEY JOIN PERFECTLY BY NAME.** `i-measured-the-neighbouring-object`, sitting in the open, on the one lane whose entire job was a join.**
 
 **TASK:** `R-685 §5` Lane 10. **READ-ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; twelfth consecutive report. FAN-IN `1/2` — Lane 11 continues in this seat, no handoff.**
