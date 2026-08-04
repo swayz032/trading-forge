@@ -4,7 +4,89 @@
 
 ---
 
-## AR-796 · 2026-08-04 · ⚡ **START-RECEIPT — `R-712 §6` ACCEPTED: THE `AR-790` FIVE-ITEM REPORT, READ-ONLY, DURING THE GRADE WINDOW.** ★★★ **THE DECISION RULE FOR ITEM 3 IS PRE-REGISTERED *BELOW*, BEFORE I HAVE LOOKED FOR A SINGLE CANDIDATE — INCLUDING THE OUTCOME THAT ENDS IN `UNRESOLVED_SOURCE_AMBIGUITY` AND NO DELIVERABLE.**
+## AR-797 · 2026-08-04 · ✅🛑★★★★★ **`R-712 §6` DELIVERED — ALL FIVE ITEMS. `DIVERGENCE DEMONSTRATED`, AND IT IS MEASURED, NOT ARGUED: TWO STRATEGIES THAT TRADE DIFFERENTLY REDUCE TO A *BYTE-IDENTICAL* PARITY INPUT, WITH A CONTROL THAT DISCRIMINATES.** 🛑🛑★★★★★ **AND THE PROBE FOUND SOMETHING SHARPER THAN THE DROPPED FIELD I WENT LOOKING FOR: `stop_loss_atr_multiple` IS **ALWAYS `1.8`** AND `take_profit_atr_multiple` **ALWAYS `0.0`**, FOR EVERY STRATEGY — TWO OF THE FIVE dsl FIELDS ARE CONSTANTS THAT NEVER READ THE STRATEGY.** ✅ **TODAY IT CANNOT PRODUCE A FALSE RECEIPT — IT GATES NOTHING (§5). THE RISK IS ENTIRELY PROSPECTIVE, AND IT IS EXACTLY THE ELEVATION `R-648` STAGE 5 WOULD PERFORM.**
+
+**TASK:** `R-712 §6`'s five items, READ-ONLY, under `R-713 §1`'s confirmed line and `R-713 §2`'s isolation constraint. **`HEAD cda560d7` at start.**
+**JOIN KEY:** everything below is measured at pin **`a3f75aa7`** (the commit under grade). `[MEASURED HERE]` `shadow_runner.py` = `e60d3005…` and `diff_harness.py` = `79af1e4d…` at **BOTH** `HEAD` and `a3f75aa7` ⇒ **byte-identical, so this report joins to the graded pin and to the live tree simultaneously.**
+✅ **`R-713 §2` COMPLIANCE, MEASURED AT THE END OF THE RUN, NOT ASSUMED:** all work ran in an isolated `git archive a3f75aa7` checkout at `C:\tf-ar790`, **now REMOVED**; the probe script lives in the session scratchpad, never in the tree; `PYTHONDONTWRITEBYTECODE=1`. `[MEASURED]` `git status --porcelain` under `src/` shows **only the sibling's `test_synthetic_market_simulator.py`** — thirty-fifth consecutive report — and **zero** new `.pyc` under `src/engine/parity_engine/__pycache__`.
+
+### ✅ §1 — ITEM 1: THE QUESTION THE PLAN EXPECTS IT TO ANSWER
+`R-648` stage 5, verbatim in shape: ***"does the compiled golden strategy match THE REFERENCE, trade-by-trade?"*** — a comparison between **what we compiled** and **an external ground truth** (the educator's taught strategy as executed by the reference). **It is a FIDELITY question, and its authority comes from the reference being independent of us.**
+
+### ✅ §2 — ITEM 2: THE QUESTION IT ACTUALLY COMPUTES
+`run_parity_diff` asks: ***"do MY TWO EXECUTION ENGINES (vectorbt and backtrader) agree with each other, on the same `dsl` and the same bars, within PnL / trade-count / Sharpe tolerances?"*** — an **INTERNAL CONSISTENCY** question with **no external ground truth anywhere in it.**
+🛑 **THE STRUCTURAL POINT, AND IT DOES NOT DEPEND ON ANY DEFECT:** `[MEASURED, `shadow_runner.py:415-423`]` the call passes `fixture_name · dsl · df_pd · slippage_arr · commission_per_side · point_value · contracts`. **`df_pd` is the production OHLCV frame** (`_extract_production_data`, `:374`) — **the BARS, not the production TRADES.** ⇒ **`run_parity_diff` RE-RUNS both engines from the `dsl` and compares them to EACH OTHER. The production backtest's own executed trades are never an input to the comparison, so the tool does not verify the production run at all — it runs a fresh A/B beside it.** ★★★★★ **`TWO ENGINES CAN AGREE PERFECTLY ON A STRATEGY THAT MEANS SOMETHING THE EDUCATOR NEVER TAUGHT — BOTH WOULD BE FAITHFULLY EXECUTING THE SAME WRONG THING.`**
+
+### ⭐🛑★★★★★ §3 — ITEM 3: THE CONTROLLED CASE. **MEASURED.**
+**Method: the REAL committed `_reconstruct_dsl` and `parity_supported`, called on inputs I supplied** (`R-713 §1`'s confirmed line). **Nothing re-implemented — a re-derivation would be a third instrument answering a different question.**
+```
+cd /c/tf-ar790 && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH='C:/tf-ar790' python <scratchpad>/probe_ar790.py
+
+CASE 1  allowed_entry_windows: None  vs  ['09:45-12:00 ET']
+  A {"direction":"long","entry_indicator":"ema_crossover","entry_params":{"confirmation_bars":2,"fast_period":9,"slow_period":21},"stop_loss_atr_multiple":1.8,"take_profit_atr_multiple":0.0}
+  B  ... IDENTICAL, byte for byte ...
+  => IDENTICAL   parity_supported: A=True B=True
+
+CASE 2  stop_loss.multiplier 2.0 vs 5.0 ; take_profit.multiplier 3.0 vs 9.0
+  => IDENTICAL   parity_supported: A=True B=True
+
+CONTROL indicator periods 9/21 vs 5/50   (feeds entry_params, IS carried by the dsl)
+  A ... "fast_period":9,"slow_period":21 ...
+  B ... "fast_period":5,"slow_period":50 ...
+  => DIFFERENT   <- THE COMPARATOR DISCRIMINATES
+```
+✅ **THE CONTROL IS THE PART THAT MAKES THE TWO `IDENTICAL`s MEAN ANYTHING.** `A CONTROL MUST DISCRIMINATE` — without it, "identical" is equally well explained by a broken comparator.
+**AGAINST `AR-796 §2`'s PRE-REGISTERED RULE, ITEM BY ITEM:** **(a)** `allowed_entry_windows` is dropped — the reduction returns exactly `5` keys and it is not among them (`:90-96`) ✅ · **(b)** LOAD-BEARING ON EXECUTABLE LINES, not a comment: `backtester.py:4039-4128` parses the windows and **masks entry signals to bars inside them**, counting the dropped signals at `:4092`/`:4103` ✅ · **(c)** byte-identical `dsl` from the real reduction ✅ · **(d)** `parity_supported()` returns **`True`**, so the tool RUNS rather than refusing ✅.
+⇒ 🛑 **`DIVERGENCE DEMONSTRATED`.** Two strategies — one trading all session, one trading only `09:45–12:00 ET` — are the **same object** to this tool. **The difference is not merely un-compared; it is ABSENT FROM EVERY ARGUMENT the comparison receives**, so no property of `run_parity_diff` (determinism included) can rescue it. ★ **I did NOT need to run the engines to establish this, and I did not: a verdict cannot be a function of a difference that never entered its inputs.**
+
+### 🛑🛑★★★★★ §4 — THE FINDING I DID *NOT* GO LOOKING FOR, AND IT IS WORSE THAN CASE 1
+**`CASE 2` was supposed to be my *negative* case — stop/TP ARE two of the five dsl fields, so they should have SURVIVED. They do not.**
+```
+multiplier=2.0   -> _extract_stop_multiple=1.8   _extract_tp_multiple=0.0
+multiplier=5.0   -> _extract_stop_multiple=1.8   _extract_tp_multiple=0.0
+multiplier=12.5  -> _extract_stop_multiple=1.8   _extract_tp_multiple=0.0
+
+POSITIVE WITNESS FOR THE ROOT CAUSE:
+  getattr(StopConfig, "value", 1.8) = 1.8   <- the DEFAULT fires; there is no such field
+  getattr(StopConfig, "multiplier") = 5.0   <- the real field, never read
+  StopConfig fields = ['type', 'multiplier', 'fixed_points']
+```
+🛑 **ROOT CAUSE, NAMED AND PROVEN:** `_extract_stop_multiple` (`:151-163`) reads `sl_value = getattr(sl, "value", 1.8)` and `_extract_tp_multiple` (`:166-175`) reads `getattr(tp, "value", 0.0)`. **`StopConfig` HAS NO `value` FIELD** — its field is `multiplier`. The `type` check (`"atr"`) PASSES, so the branch is taken and the **default is returned as if it were the strategy's number.** ✅ **I checked whether some other model carries a stop field named `value`, which would make the `getattr` intentional: `[MEASURED]` none does.**
+⇒ 🛑🛑 **THE PARITY ENGINE RUNS EVERY STRATEGY WITH A `1.8` ATR STOP AND NO TAKE-PROFIT** (`diff_harness:158`/`:330` treat `0.0` as absent). **So the object it compares is: the production strategy's entry indicator/params/direction, with its stop REPLACED, its take-profit REMOVED, and its session constraints DROPPED.** ★★★★★ **`A FIELD PRESENT IN THE PAYLOAD IS NOT A FIELD READ FROM THE SOURCE` — `CASE 1` is a lossy INPUT; `CASE 2` is a CONSTANT WEARING THE STRATEGY'S FIELD NAME, and the second is harder to see precisely because the key is right there.**
+⚠️ **RESEMBLANCE FLAGGED, NOT CLAIMED:** this has the shape of `R-701 §2.5`'s **silent substitution** category. 🛑 **I am NOT claiming it touches Gate 2. Gate 2's population is the compiler surface; `parity_engine/` is not in it, and reading a resemblance as a hit is exactly the join-key error this campaign keeps convicting.** **It is the desk's call whether the category is defined by SHAPE or by SURFACE.**
+⚠️ **ONE LATENT ASYMMETRY, RECORDED AND BOUNDED — IT DOES NOT FIRE TODAY:** `[MEASURED]` `diff_harness:157` defaults `stop_mult` to **`1.8`** and `:329` defaults it to **`1.2`** — **the two engines disagree by construction if the key is ever ABSENT.** `_reconstruct_dsl` always supplies it, **so on this path it cannot fire.** 🛑 **Any other caller passing a `dsl` without that key would get a built-in divergence. I did not enumerate other callers.**
+
+### ✅ §5 — ITEM 4: THE EXACT PRODUCTION CONSUMER
+`[MEASURED, executable lines, non-test callers enumerated across `.py`/`.ts`]`
+```
+run_parity_shadow()  <- backtester.py:6161   and   backtester.py:8556
+   BOTH inside:  if os.environ.get("PARITY_SHADOW_ENABLED", "false") == "true"   <- DEFAULT FALSE
+   result["parity_shadow"] = report            (:6162 / :8557)
+   passed==False -> stderr sentinel PARITY_SHADOW_DRIFT_JSON only  (:6165 / :8565)
+        -> python-runner.ts:235 parses it -> backtest-service.ts:1247 stores it
+        -> lifecycle-service.ts:1712-1733  TESTING->PAPER promotion:
+             if (parityShadow && parityShadow.passed === false)  -> logger.warn + audit row
+             status: "success",  // advisory — not blocking      <- PROMOTION CONTINUES
+```
+🛑 **THE ONE PLACE IT REACHES A DECISION IS THE `TESTING → PAPER` PROMOTION GATE, AND IT IS EXPLICITLY ADVISORY.** Its sibling in the same block — `invariants.overall_passed=false` — **BLOCKS** (`:1709` `return {success:false}`); parity shadow only warns. ⚠️ **`.env.example:573` ships `PARITY_SHADOW_ENABLED=false`, and `[UNMEASURED]` whether `runtime-production` sets it — there is no such tree on this box.**
+
+### 🛑 §6 — ITEM 5: FALSE PASS OR FALSE FAILURE?
+**AS DEPLOYED TODAY: NEITHER, AND THE REASON IS STRUCTURAL RATHER THAN LUCKY.** The verdict gates nothing — `passed=false` warns and the promotion proceeds; **`passed=true` and a missing report are handled identically, i.e. no signal at all.** ⇒ **it cannot manufacture a receipt because it does not issue one.** ✅ **The same honesty holds that `AR-790 §4` credited: `parity_supported()` instructs callers to set `ran=False`, NOT `passed=True`, for unsupported archetypes.**
+🛑🛑 **IF IT IS ELEVATED TO `R-648` STAGE 5, THE CLASS IS **FALSE PASS**, AND IT IS THE DANGEROUS DIRECTION.** A strategy whose taught meaning is *"only trade `09:45–12:00`, `5×` ATR stop, `9×` ATR target"* would be certified by a clean run of *"trade all session, `1.8×` ATR stop, no target"* — **both engines agreeing perfectly on the substitute.** `PARITY PASSED` would be read as `THE COMPILED STRATEGY MATCHES THE REFERENCE`, and **the fields most likely to be silently wrong are the risk fields.**
+⚠️ **FALSE FAILURE IS POSSIBLE TOO AND I AM NOT HIDING IT** — the substituted strategy (no take-profit ⇒ longer holds) could diverge between engines where the real one would not. **It is the cheaper error: today it costs one advisory warning.**
+🛑 **AND THE HONEST BOUND ON ALL OF §6: `R-648` stage 5's assignment of this tool is a PREMISE I am reporting on, not a decision I hold.** ★ **The tool is NOT broken at its own job — it answers "do my engines agree" correctly, and that is a real question worth asking. The defect is in the ASSIGNMENT, plus the two constants at §4 which are a genuine bug on any reading.**
+
+### 🛑 §7 — WHAT I DID NOT MEASURE
+- 🛑 **I NEVER RAN `run_parity_diff`, vectorbt or backtrader.** No bars, no engines, no trades. **§3's conclusion deliberately does not need it** (the difference is absent from the inputs), **but no claim here rests on observed engine behaviour, and I am not implying one does.**
+- 🛑 **`_detect_entry_indicator`'s fallback path and `_detect_direction` were exercised only incidentally** by my configs; I did not enumerate their failure modes. **The `"unsupported"` return and the `high < low` short sentinel are read from executable lines, not probed.**
+- 🛑 **NOT ENUMERATED:** other callers passing a `dsl` to `diff_harness` (the `1.8`/`1.2` asymmetry at §4) · the TS DSL contract vs the Python `dsl` · whether `runtime-production` enables the flag. **No `tsc`, no `vitest`, NO TS PARITY CLAIM** — the `.ts` above is read as text, not type-checked or executed.
+- 🛑 **I BUILT NOTHING AND I PROPOSE NOTHING.** `R-648`: a new checker mid-slice is scope creep wearing a safety costume. **Whether stage 5 needs a different instrument is the desk's ruling, and I have deliberately not designed one.**
+- 🛑 **UNCHANGED:** **Gate 2 implementation COMPLETE / CERTIFICATION PENDING — NOT closed** · **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `runtime-production` `[UNMEASURED]` · flag OFF · producer untouched.**
+
+### ★★★★ §8 — POSITION
+✅ **`R-712 §6` DELIVERED `5/5`. Item 3 did NOT need the `UNRESOLVED_SOURCE_AMBIGUITY` branch, and I record that the branch was real and pre-committed rather than decorative.**
+**I am seated, ear live, nothing in flight, no subagent owed. NO HANDOFF.** ⚠️ **The Gate-2 grade is still running (`R-712 §1`, `~18:05Z`, `60`–`90` min); I am the doer and take no part in it.**
+🛑 **`AR-790` and this follow-up are both still HELD and UNRULED — that is the desk's, and §4 is the part I would most want a second pair of eyes on, because I found it by accident while building a case I expected to fail.** — `R-712 §6` ACCEPTED: THE `AR-790` FIVE-ITEM REPORT, READ-ONLY, DURING THE GRADE WINDOW.** ★★★ **THE DECISION RULE FOR ITEM 3 IS PRE-REGISTERED *BELOW*, BEFORE I HAVE LOOKED FOR A SINGLE CANDIDATE — INCLUDING THE OUTCOME THAT ENDS IN `UNRESOLVED_SOURCE_AMBIGUITY` AND NO DELIVERABLE.**
 
 **TASK:** `R-712 §6`, authorized to this seat, READ-ONLY. **`HEAD 7e166a46` at start.** **ETA to first observable: the five-item report itself; I will file a position line if the grade window closes before I do.**
 ✅ **HOLD STATUS UNDERSTOOD CORRECTLY, I BELIEVE: `R-711 §4`'s hold is not "lifted into implementation" — `R-712 §6` converts it into EVIDENCE. `AR-790` itself stays HELD and unruled, and the read's reason is better than the desk's original one: my packet carried no executable call path, so there was nothing to rule ON.** ★ **`A FINDING REPORTED IN PROSE IS NOT AN ARTIFACT A RULING CAN BIND TO` — that is a fair hit on my own report and I am fixing it, not defending it.**
