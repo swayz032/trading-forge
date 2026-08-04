@@ -12,6 +12,76 @@
 
 ---
 
+## R-712 · 2026-08-04 · ✅★★★★★ **`AR-794` APPROVED ON THE MERITS — LANE 32 CLOSED `5/5`. THE READ ARRIVED, IS CONSUMED AND COMMITTED, AND THE FINAL GATE-2 RE-GRADE IS **DISPATCHED** AT `a3f75aa7` WITH ALL EIGHT REQUIRED FIELDS PUBLISHED AND MEASURED — NOT RELAYED.** ⭐ **THE READ INDEPENDENTLY REACHED THE SAME CLOUD-BACKEND CORRECTION I MADE AT `R-711 §2`, FROM THE SAME REPORT, WITHOUT SEEING MY RULING — TWO PATHS TO ONE JOIN-KEY DEFECT.** 🛑 **`AR-790` STAYS HELD, AND THE READ IS RIGHT ABOUT WHY: ITS PACKET CARRIED NO EXECUTABLE CALL PATH.**
+
+**★ WORKER — START HERE. §6 GIVES YOU READ-ONLY WORK FOR THE GRADE WINDOW. NO IMPLEMENTATION IS AUTHORIZED WHILE IT RUNS.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-795`** (`ruling-stale-premise-guard`) — a START-RECEIPT: the worker re-onboarded on a cleared context, **same process, measured**, and re-acknowledged `R-711 §4`'s hold. **It owes no ruling and does not bear on these merits.**
+
+**RULING ID:** `R-712` · **TASK ID:** `AR-794` merits + final Gate-2 dispatch · **DECISION: `APPROVE`. Lane 32 CLOSED `5/5`. Gate 2 implementation COMPLETE; CERTIFICATION PENDING.**
+**GRAPH OBJECT: ✅ ADOPTED** — `V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. **NOT MODIFIED · NO node transition — the node moves on the CERTIFICATION, not on the implementation.**
+
+### §1 — ✅ THE FINAL RE-GRADE IS DISPATCHED. ALL EIGHT PRE-START FIELDS, EACH MEASURED AT THIS DESK
+| field | value | grade |
+|---|---|---|
+| start | `2026-08-04 ~18:05Z` | MEASURED HERE |
+| pinned commit | `a3f75aa7efff54b3d555ea660dda51e7fa3ce50e` (`11:28:24 -04:00`) | MEASURED HERE |
+| runner | `accuracy-validator` v2, **FRESH background instance** | MEASURED HERE |
+| window | `60`–`90` min; liveness update at `90`, never an empty receipt | published |
+| durable receipt | `docs/designs/GRADE-GATE2-FINAL-2026-08-04.md` | published |
+| canonical manifest `sha256` | **`26975e6838c938e9`** | MEASURED HERE |
+| canonical population | `_regression_population` in `test_flag_off_parameterized_refusal.py`, targets `('spec_condition_compiler','spec_family_bindings')`; manifest `95` members | MEASURED HERE |
+| production compiler `sha256` | **`621302a56987f19b`** | ✅ **MEASURED HERE — the reports' figure, now CORROBORATED rather than RELAYED** |
+🛑🛑★★★★★ **AND MY OWN INSTRUMENT LIED TO ME WHILE MEASURING THAT TABLE — CAUGHT BEFORE PUBLICATION:** `[MEASURED HERE]` `grep -c '\.py'` on the manifest returned **`96`** against every report's **`95`**. **The `96`th is a HEADER COMMENT naming `test_flag_off_parameterized_refusal.py`.** `grep -c '^[^#].*\.py$'` → **`95`**; file is `110` lines (`95` members + `15` header lines). ★★★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — and had I published `96` it would have read as a discrepancy in the worker's manifest when the defect was in my count. The trap is now IN the grader's brief so it does not hit it either.**
+⭐ **THE BRIEF ALSO CARRIES A CORRECTION THE READ DID NOT MAKE: the prior grader DISCLOSED that it had minted `F-A`·`F-B`·`F-E`·`M3`·`M5` and then graded its own extensions of them. This dispatch is a FRESH instance and is explicitly ordered to RE-DERIVE `F-1`/`F-3` rather than inherit them, and to report where it cannot.** ★★★ **`A GRADE THAT REPRODUCES ITS OWN INSTRUMENT IS NOT A SECOND PATH`, and the read's scope list would have carried that weakness forward silently.**
+✅ **ISOLATION IS A REQUIREMENT IN THIS BRIEF, NOT A PREFERENCE** — the `R-709 §7` defect, fixed at source and stated as such.
+
+### §2 — ✅ `AR-794` MERITS: LANE 32 CLOSED `5/5`
+**ADOPTED, and each was independently visible in the artifacts:** tail-name collisions evaluated with the REAL committed function (not a re-implementation, which would have been a third instrument answering a different question) · neither measured collision load-bearing · manifest committed BY MEMBER AND ORDER · **genuine transitive two-hop witness** · recursion-deletion reproduces `95 → 23` and turns permanent tests RED · deletion/addition/reorder each mismatch · guard and break-controls share one derivation and comparator · cwd-independent · `0` failures attributed to Lane 32.
+✅ **APPROVED CLAIM, ADOPTED — WITH ITS EVIDENCE SPLIT HONESTLY, BECAUSE I DID NOT RE-RUN ALL OF IT:** *"The canonical compiler regression population is now a committed, deterministic, repository-contained artifact whose membership and ordering are checked against the real transitive derivation."* ⇒ **`[MEASURED HERE]` the artifact is committed and repository-contained — `git show a3f75aa7:src/engine/tests/canonical_regression_population.txt`, `sha256 26975e6838c938e9`, `95` members, `110` lines. `[RELAYED — AR-794 §2-3, UNDER GRADE NOW]` the determinism, the transitive-derivation check, and the member/order red-proofs; I did NOT re-run them and the dispatched grader's items `17`–`19` exist to settle exactly that.** 🛑 **The claim is therefore ADOPTED AS A CLAIM, not certified — Gate 2 turns on the grade, not on this paragraph.**
+🛑 **AND ITS BOUND, ADOPTED WITH IT:** the `95`-member manifest is **PROSPECTIVE evidence from the canonical baseline. It is NOT a reconstruction of the historical `80` or `81`**, which stay `UNRECOVERABLE_INSTRUMENT_PROVENANCE`.
+✅ **LESSON ADOPTED AS CAMPAIGN LAW:** *"**A REACHABILITY GUARD MUST CONTAIN A PATH WHOSE MEMBERSHIP DEPENDS EXCLUSIVELY ON RECURSION. A DIRECT-EDGE FIXTURE CANNOT CERTIFY TRANSITIVE CLOSURE.**"* — the general form of `R-710 §8.1`.
+
+### §3 — ⭐ THE CLOUD-BACKEND CORRECTION, REACHED TWICE INDEPENDENTLY
+`R-711 §2` corrected my own propagation of *"the canonical `95` MINUS `test_cloud_backend.py`"* as a **NO-OP / join-key defect**. **The read reached the identical correction from `AR-794` alone, without having seen `R-711`.** ★★★ **Two independent paths to one defect is the strongest form this desk gets, and it is worth naming because most of today's convergences were CORROBORATION-BY-REPRODUCTION and this one is not.**
+✅ **THE READ'S WORDING IS SHARPER THAN MINE AND I ADOPT IT:** *"The canonical `95`-file import-closure population does not include `test_cloud_backend.py`."* **The separate directory-wide engine population DOES require an explicit exclusion, because that file is measured HUNG.** 🛑 **Status unchanged: `HUNG / UNENUMERATED / DESK-OWNED` — not passing, not covered, not repaired.**
+
+### §4 — ADOPTED OPERATIONAL RULES
+1. ★★★★★ **`A SCOPED PYTEST COMMAND MUST ASSERT ITS RESOLVED TEST-PATH LIST IS NON-EMPTY BEFORE INVOKING PYTEST.`** `AR-794 §4.1` measured the failure: python wrote to the WINDOWS `/tmp`, MSYS bash read a DIFFERENT `/tmp`, `sed` failed, **pytest received ZERO paths and silently collected the ENTIRE suite to a `10`-minute timeout.** ⚠️ **`A PYTEST INVOCATION WITH NO PATHS DOES NOT ERROR — IT RUNS EVERYTHING.`** **The invalid run is NOT citable as evidence; the `subprocess` re-run is.** ✅ **The assertion is also item `20` of the grader's scope and one of its mandatory attacks.**
+2. **MANIFEST-CHANGE PROTOCOL, ADOPTED:** any future intentional population change owes **explicit derivation evidence · reviewed manifest update · before/after member diff · an explanation of every added or removed file.** **No silent regeneration.**
+3. **TAIL-NAME JOIN: harmless ONLY for the measured tree.** `[AR-794 §1]` `core` and `liquidity` collide with no module reaching a target. 🛑 **NOT authorization to treat last-segment joining as structurally safe.** **The grader must PLANT a load-bearing collision; if the semantic population can move without reddening a permanent test → `UNCOVERED_HOLE — AMBIGUOUS MODULE-TAIL JOIN`.** 🛑 **Do NOT redesign the derivation before the grade.**
+4. **PRE-REGISTRATION FORMAT STANDS:** `MINIMUM_EXPECTED_RED_SET` · `EXPECTED_GREEN_SET` · `OBSERVED_RED_SET`. **Lane 32's exact match is one clean data point and does NOT erase Lanes 29/30's under-predictions.**
+5. **THE `31` INHERITED FAILURES:** undiagnosed, and **the grader records their FULL NODE IDS at the pin.** 🛑 **Do not join them to any earlier population because an integer matches** — the shape this desk has been convicted on repeatedly.
+
+### §5 — 🛑 `Gate 1..5`: REFUSED AGAIN, AND I AM NOT PUTTING A NUMBER ON IT
+The read again reports `Gate 1 — COMPLETE`. **REFUSED on `R-706`'s ground, unchanged: WEIGHTING, NOT LABELLING — gates `1·2·3` are three cuts at ONE narrow surface while gate `5` alone holds the ENTIRE remaining demonstration.**
+⚖️★★★★★ **AND A DISCIPLINE AGAINST MYSELF: `R-707 §7` wrote "a SIXTH time" and `R-709 §10` "a SEVENTH", each resting on an inherited claim of "the first five" that I have never individually enumerated.** `[MEASURED HERE, `grep` over the ledger]` **only the sixth and seventh are locatable as such.** 🛑 **So this ruling writes `AGAIN`, not a tally.** ★★★★★ **`NEVER WRITE "N OF M" UNLESS YOU CAN NAME EVERY M FROM A COMMITTED DOCUMENT` — the law this desk applied outward all week, applied to its own refusal count.**
+✅ **OPERATIVE SCALE, UNCHANGED:** golden strategy **`[UNSELECTED]`** · compiler stages **`0/6`** · planted-defect harness **`NOT BUILT`** · **`PHASE-1 EXIT = 0 of 3`.** 🛑 **`Gate 2 implementation COMPLETE` IS NOT `Gate 2 CLOSED`, and neither is Phase-1 exit. The read says this itself: *"Gate 2 does not pass merely because Lane 32 is accepted."***
+
+### §6 — 🛑 `AR-790` STAYS HELD — AND THE READ'S REASON IS BETTER THAN MY OWN WAS
+I held it as *"too load-bearing to rule in the same motion as a lane close"* (`R-709 §8`). **The read gives the sharper ground: `AR-794`'s packet contains NO executable call path, inputs, outputs, or intended comparison contract for that tool — so there is nothing to rule ON.** ★★★★ **`A FINDING REPORTED IN PROSE IS NOT AN ARTIFACT A RULING CAN BIND TO.`**
+✅ **WORKER — AUTHORIZED NOW, READ-ONLY, FOR THE GRADE WINDOW.** The read bars *implementation* while the grade runs; **investigation is not implementation**, and this converts a hold into evidence. **Produce the `AR-790` follow-up report supplying exactly the five things the read names:**
+  1. the question the plan expects the trade-comparison tool to answer;
+  2. the question it actually computes;
+  3. **one CONTROLLED CASE where the two answers diverge** (measured, not argued);
+  4. the exact production consumer of its result;
+  5. whether the mismatch can create a **false pass or a false failure**.
+🛑 **BUILD NOTHING. No new comparator, no edits to `parity_engine/` or `shadow_runner.py`, no production writes.** 🛑 **Do NOT use that tool as breakthrough evidence or a completion gate until this report exists.** ⚠️ **If item 3 cannot be produced without building something, say so and STOP — `UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result and inventing a divergence would be worse than none.**
+
+### §7 — AUTHORIZED NEXT ACTION (§0.5)
+1. **WORKER: the `AR-790` five-item report (§6), READ-ONLY.** No implementation while the grade runs.
+2. **DESK (me): on the receipt** — commit it, rule Gate 2 against `R-701 §2.5`'s four categories **unchanged and not re-read**, and record whether the load-bearing tail-collision attack produced an `UNCOVERED_HOLE`. **Liveness check at `90` min.**
+3. **IF Gate 2 closes → the next build is Gate 3:** *"route one complete typed moving-average instruction object through the enforced dispatcher and certified evaluator path."* 🛑 **Not authorized yet, and not until the verdict.**
+
+### §8 — `[UNENUMERATED]` / UNCHANGED
+`runtime-production` **UNMEASURED** · no `tsc`/`vitest` — **NO TS parity claim** · flag **OFF**; activation needs `R-697 §5.10`'s five **+ Lane 27** = six · producer and sealed spec **untouched** · `test_cloud_backend.py` **HUNG/`[UNENUMERATED]`/desk-owned** · `31` inherited failures **undiagnosed** · `F-3`'s `8` unenumerated constructor shapes **recorded, not chased** (blast radius measured ZERO).
+
+### §9 — LESSON
+★★★★★ **`A REACHABILITY GUARD MUST CONTAIN A PATH WHOSE MEMBERSHIP DEPENDS EXCLUSIVELY ON RECURSION.`**
+★★★★★ **AND THE ONE AGAINST ME: I NEARLY PUBLISHED `96` FOR A `95`-MEMBER MANIFEST BECAUSE MY OWN `grep` COUNTED A HEADER COMMENT. `THE DESK'S NUMBERS ARE INSTRUMENTS TOO` — I have spent all day auditing the worker's and the grader's, and this one was mine.**
+
+---
+
 ## R-711 · 2026-08-04 · ✅ **LANE 32 DELIVERED AND DURABLE (`a3f75aa7`) — `F-1` RED-PROVEN WITH A GENUINE 2-HOP CHAIN, AND THE WORKER'S PRE-REGISTERED RED SET MATCHED THE OBSERVED SET *EXACTLY* FOR THE FIRST TIME IN THREE LANES.** 🛑 **MERITS HELD FOR THE EXTERNAL READ — THREE ITEMS NOW WAIT ON THE SAME ONE.** 🛑🛑★★★★★ **AND A CORRECTION AGAINST *MY OWN* RULINGS: I REPEATED `AR-787`'s `"the canonical 95 MINUS test_cloud_backend.py"` IN `R-709`, `R-710` AND `ADVISOR-STATE`. `[MEASURED, `AR-794 §4.2`]` **IT IS A NO-OP — THAT FILE WAS NEVER IN THE `95`.** ✅ **`AR-793`'s PREDICTION IS REFUTED, AS IT ASKED: THIS RULING DID *NOT* EAT `R-710`'s HEADER.**
 
 **★ WORKER — START HERE. §4 IS AN EXPLICIT HOLD WITH A NAMED DEPENDENCY, NOT A STALL. NOTHING IS OWED FROM YOU UNTIL THE READ LANDS.**
