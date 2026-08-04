@@ -4,6 +4,79 @@
 
 ---
 
+## AR-783 · 2026-08-04 · ✅★★★★★ **`R-704` DISCHARGED — LANE 28 CLOSES AGAINST ALL ELEVEN CONDITIONS, THE FOUR ARE RECONCILED ONTO THE CONSUMING ROUTE, AND THE INHERITED POPULATION IS IDENTICAL BY FULL NODE ID WITH A WORKING BREAK-CONTROL.** ✅★★★★★ **WHOLE-SUITE RED-PROOF, NOT JUST A FILE-LOCAL ONE: `[MEASURED]` guard shipped → `171 failed / 8218 passed`; guard planted OFF → `181 failed / 8208 passed`; **the `10` extra are ALL MINE and the `171` inherited are BYTE-FOR-BYTE THE SAME SET.**** 🛑🛑★★★★★ **AND I LOCALISED THE HANG THE GRADE COULD ONLY CALL `UNVERIFIABLE`: IT IS `src/engine/tests/test_cloud_backend.py`, MEASURED HUNG — `0.016s` CPU IN `20s` WALL AFTER `15.6` MINUTES — AND IT IS PRE-EXISTING, NOT MINE.** ⚠️ **ONE PREDICTION OF MINE WAS WRONG AND `§4` SAYS SO.**
+
+**TASK:** `R-704 §3`/`§4` — Lane 28 completion. **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` (refusal message only) · `src/engine/tests/test_parameter_collision.py` (reconciled). **Sibling's `test_synthetic_market_simulator.py` is dirty in the tree and NOT in this commit — twenty-ninth consecutive report.**
+
+### ✅★★★★★ §1 — THE ELEVEN CLOSURE CONDITIONS, ONE ROW EACH. **COUNTED AS OBLIGATIONS, NOT SUMMARISED AS A SENTENCE**
+| # | condition (`R-704 §3`) | witness | ✓ |
+|---|---|---|---|
+| 1 | all `14` enforced handlers remain classified | `test_every_reachable_handler_is_classified_exactly_once` — set equality BOTH directions vs `ENFORCED_DISPATCH.values()` | ✅ |
+| 2 | every handler covered by consume-or-refuse | `test_census_every_non_consuming_handler_actually_refuses` — each of the `16` routed primitives EXERCISED, not declared | ✅ |
+| 3 | `_h_structure` refuses parameterized bindings | `test_h_structure_refuses_parameters_before_evaluation_and_cache_mutation` | ✅ |
+| 4 | all `7` env-gated handlers fail closed, consumption capability unverified | classified `ENVIRONMENT_GATED_UNVERIFIED`, all `7` exercised as refusing | ✅ |
+| 5 | `_h_session` refuses parameters | in the census, reached by primitive override (`session_windows.is_in_killzone`) | ✅ |
+| 6 | `WAIT_BIAS` still consumes distinct **off-default** values | `ARM_A(7,90)` / `ARM_B(12,30)`, off-default asserted at module import against `BIAS_EMA_FAST/SLOW` | ✅ |
+| 7 | different `WAIT_BIAS` parameters remain cache-isolated | `test_distinct_parameters_remain_independently_cached` + the re-homed collision test | ✅ |
+| 8 | identical `WAIT_BIAS` parameters still reuse computation | `test_identical_periods_still_share_one_computation` — `1` real `_eval_wait_bias` invocation | ✅ |
+| 9 | declaration order cannot contaminate results | `test_reversing_declaration_order_does_not_change_either_result` — **BOTH arms** | ✅ |
+| 10 | the old accept-and-discard plant fails a permanent test | plant `_h_structure`→`CONSUMES` ⇒ **`5 failed`**; removed ⇒ `25 passed`; `sha256` PRE≡POST | ✅ |
+| 11 | affected suite green apart from the unchanged inherited population | `§3` — by full node id, with break-control | ✅ |
+**FINAL GREEN, LANE-AFFECTED SURFACE:** `79 passed`, **`PYTEST_EXIT=0`** (collision · acceptance-guard · refusal-surface · wired-path · flag-OFF · transmission).
+
+### ✅★★★★★ §2 — THE FOUR, RECONCILED. **OLD PROPERTY → NEW PROPERTY, WRITTEN BEFORE ANY TEST WAS EDITED** (`R-704 §3`)
+The table is committed in the file's own docstring, not only here. Per test:
+1. **dispatch witness** → re-homed to `WAIT_BIAS` and **strengthened**: each arm is pinned to an INDEPENDENT `_ema_cross` recomputation of **its own** taught periods, **and** asserted to differ from the engine default. **SPY-FREE.** ★ *"They got the same array" is also satisfied by "neither was ever evaluated" — matching two different independent recomputations is not.*
+2. **different periods must evaluate differently** → two OFF-DEFAULT canonical objects, and `R-704 §3.2`'s caveat is the assertion: differing **AND** each equal to its own recomputation, so the result differs because the evaluator **CONSUMED**, not because a key changed.
+3. **identical periods share one computation** → counted on the **REAL** `_eval_wait_bias` by a counter that **DELEGATES and computes nothing.**
+4. **reversing order** → **INVERTED per `R-704 §3.4`.** ⚠️ **AND THE OLD TEST WAS INTERNALLY INCONSISTENT, WHICH I AM REPORTING RATHER THAN QUIETLY FIXING:** it was named `..._changes_the_shared_value` while its assertion checked the **OPPOSITE** (invariance) — **and it checked only ONE of the two arms.** Now both.
+✅ **`parameter_aware_engine` IS DELETED.** Nothing fabricates period semantics for `_eval_wait_structure` any more.
+⚖️ **ONE READING I AM FLAGGING RATHER THAN ASSUMING:** `R-704 §3` says the file *"must no longer monkeypatch fake period semantics into `_eval_wait_structure`."* **I retained a DELEGATING CALL COUNTER on it** — it records that production ran and returns production's own value, injecting no semantics. **If the desk reads the prohibition as covering any patch at all, say so and I will re-derive the ordering witness structurally instead.** ✅ **A structural witness already exists independently: `§4` below.**
+
+### ✅★★★★★ §3 — `R-704 §4(B)`: MEMBERSHIP BY FULL NODE ID, WITH THE BREAK-CONTROL
+```
+POPULATION (declared by member): src/engine/tests/  MINUS  test_cloud_backend.py
+ARM A  guard shipped     171 failed, 8218 passed, 39 skipped, 3 xfailed   (238.7s)
+ARM B  guard planted OFF 181 failed, 8208 passed, 39 skipped, 3 xfailed   (228.4s)
+
+INHERITED (failures in neither lane file):  171  vs  171
+  only_in_shipped   []        only_in_guard_off []      IDENTICAL BY NAME: true
+LANE-FILE failures: shipped []  ·  guard_off 10 (all mine, named in the receipt)
+break_control_can_report_a_difference: true     file byte-identical after restore: true
+```
+✅★★★★★ **THE `10` ARE THE WHOLE-SUITE RED-PROOF:** with the guard off, `9` acceptance-guard tests and the mandatory `_h_structure` negative test go red **inside a full-suite run**, so the guard is proven to bite at suite scale and not only in its own file.
+🛑🛑★★★★★ **DENOMINATOR WARNING, STATED BEFORE ANYONE QUOTES ME: THESE `171` ARE **NOT** `AR-779`'s `31`.** That was an **`81`-file scoped population** (`1854` passed); this is **all of `src/engine/tests/`** (`8218` passed). **DIFFERENT POPULATIONS, DIFFERENT DENOMINATORS — the two numbers must never be compared.** ★ `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG.`
+✅★★★★ **I AUDITED MY OWN EXTRACTOR BEFORE BELIEVING IT** (`R-704 §4(B)` exists because a `sed` extractor once compared `31` copies of the word `FAILED`): `^FAILED (\S+)` **truncates node ids at a space**, and `6`/`11` ids in the two arms contain one. **`[MEASURED]` raw `FAILED` lines `171`/`181` == unique extracted ids `171`/`181` ⇒ NO two members collapsed.** ★ **The defect exists in the instrument and provably did not fire; that is a different claim from "the instrument is clean", and it is the honest one.**
+
+### ✅★★★★ §4 — `R-704 §4(C)`: RED-PROOF OF THE RE-HOMED TESTS. **MY DECLARED SET WAS WRONG BY ONE**
+```
+PLANT (smallest delta): _h_wait_bias cache_key = (want_bearish,)   # parameters dropped
+PLANTED  -> 4 failed, 33 passed        REMOVED -> 37 passed
+sha256 PRE == POST 1eafaf1c008bd45a2…  BYTE-IDENTICAL   plant residue: 0
+```
+⚠️★★★★★ **I DECLARED `3` EXPECTED REDS IN ADVANCE AND GOT `4`.** The extra is **`test_distinct_parameters_remain_independently_cached`** — in the OTHER file, and it *should* redden on a cache-collision plant. **My declaration was UNDER-SPECIFIED, not falsified: my named expected-GREEN set held completely (`0` of `4` moved).** ★★★ **`R-681 §1` asks for the expected set NAMED IN ADVANCE precisely so this shows up as a miss instead of being back-filled from the output — so I am recording it as a miss rather than editing the prediction to match.**
+✅ **AND THE MISS IS CORROBORATION:** the guard's own cache-independence control bit on a plant aimed at a different file, which is exactly the cross-check `R-703 §1` added it for.
+
+### ✅ §5 — `R-704 §4(A)` AND THE ORDERING WITNESS
+✅ **THE REFUSAL NOW NAMES THE UNSUPPORTED KEYS.** `[MEASURED]` `condition 's1' (primitive 'structure_engine.compute_structure_state', unsupported key(s) ['fast_period', 'slow_period'])` — and the test asserts **all three**: condition id (`R-701 §3`), route, and keys.
+✅★★★★ **"BEFORE EVALUATION AND CACHE MUTATION" HAS **TWO INDEPENDENT WITNESSES**, one behavioural and one structural:** the delegating counter records **`0`** real `_eval_wait_structure` invocations under refusal **with a POSITIVE CONTROL proving the same counter records `>0` on the parameterless path** — and structurally `[MEASURED]` the raise is at **`:1501`** while `ctx` is constructed at **`:1511`** and `wait_structure_cache` at **`:1529`**, so **the cache dict does not yet exist when the refusal fires.** ★ `A POST-RUN PUBLICATION FIELD CANNOT PROVE WHEN AN EVENT OCCURRED DURING THE RUN` — neither of these is one.
+
+### 🛑★★★★★ §6 — THE BROAD SWEEP, REPORTED IN `R-704 §3`'s OWN CATEGORIES: **`HUNG`**
+🛑 **VERDICT: `HUNG`, AND NOW LOCALISED.** `[MEASURED HERE]` `src/engine/tests/test_cloud_backend.py` — solo run `exit 124` after `150s` having executed `53` tests then stalled; in the full sweep, **`0.016s` CPU consumed in `20s` wall after `15.6` minutes elapsed** (`22.91s`→`22.92s` total CPU). **That is a hang, not slowness, and the discriminator is CPU progress rather than wall time.**
+✅ **PRE-EXISTING AND NOT MINE:** the independent grade hit the same wall on the pinned commit **before Lane 28 existed** and could only record `UNVERIFIABLE`. ✅ **Excluding that one file, the suite completes in `~4` minutes** — which is why `§3` was possible at all.
+⚖️ **REPORTED, NOT REPAIRED** (`R-648`: findings are still reported, sweep lanes stay closed). **The name suggests network I/O; I did not open it.** 🛑 **I killed only PID `20296`, identified by its exact command line, after confirming the other `6` live `python.exe` were `elevenlabs-mcp` and not test runs — `LIVENESS IS NOT OWNERSHIP`.**
+
+### 🛑 §7 — WHAT IS NOT MEASURED
+- 🛑 **`test_cloud_backend.py` `[UNENUMERATED]`** — excluded from the population by the hang above. **Any inherited failure inside it is outside my comparison and I do not claim otherwise.**
+- 🛑 **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM — TS/Python parity `[UNENUMERATED]`; no `vitest`, no `tsc`. FLAG NOT ENABLED. PRODUCER UNTOUCHED. GATE 2 NOT CLOSED.**
+- 🛑 **The `7` env-gated handlers' CONSUMPTION CAPABILITY remains `[UNENUMERATED]`** — verified only that they REFUSE. That is the residual category doing its job, not an omission.
+
+### ★★★★★ §8 — POSITION
+✅ **LANE 28 CLOSED, `11/11`.** ✅ **PROCEEDING TO LANE 29 IMMEDIATELY AND WITHOUT RETURNING TO THE DESK, per `R-704 §3`'s "AFTER GREEN" clause — the four no longer redden anything.** **FAN-IN `1/3`. NO HANDOFF: I am seated, the ear is live, and `worker-execution §10` says a lane boundary is not a context limit.**
+**NEXT:** Lane 29 — the six-row short-frame matrix (`R-703 §2`), refusal above `compute()`'s `n < MIN_BARS_REQUIRED` early return.
+
+---
+
 ## AR-782 · 2026-08-04 · 🛑🛑🛑★★★★★ **`R-703 §1`'s STOP CONDITION HAS FIRED. LANE 28 IS BUILT AND RED-PROVEN, AND I AM STOPPING BEFORE IT IS FINISHED BECAUSE IT REDDENS `4` EXISTING TESTS.** ✅★★★★★ **IT IS THE EXACT TRIGGER I PRE-REGISTERED IN `AR-781 §3` BEFORE THE FIRST EDIT — `test_parameter_collision.py`, named in advance, for the reason named in advance.** 🛑🛑★★★★★ **AND THE ANSWER TO *"IS THIS A LIVE PARAMETERIZED CALLER?"* IS **NO, MEASURED** — BUT THE REAL FINDING IS WORSE AND IT IS NOT A LIVE-CALLER QUESTION AT ALL: **THAT TEST INSTITUTIONALISES THE `F-A` SHAPE. IT EXISTS TO ASSERT THAT `_h_structure` CACHE-SEPARATES DISTINCT PERIODS — WHICH IS PRECISELY *"A PARAMETER THAT ONLY MOVES THE CACHE KEY"*, THE THING `R-703 §1` DEFINED AS NOT-CONSUMPTION.** ⚖️ **TWO CAMPAIGN REPAIRS ARE IN DIRECT CONTRADICTION AND ONLY THE DESK MAY PICK.**
 
 **TASK:** `R-702 §6` Lane 28, widened by `R-703 §1`. **STATUS: STOPPED AT THE STOP CONDITION, NOT COMPLETE.** **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` · **NEW** `src/engine/tests/test_parameter_acceptance_guard.py`. **Sibling's file untouched — twenty-eighth consecutive report.**

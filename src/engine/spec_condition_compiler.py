@@ -1480,13 +1480,21 @@ class SpecConditionStrategy(BaseStrategy):
             # INVALIDATION BINDINGS ARE INCLUDED (R-703 §1): they share this dispatcher and
             # Lane 27's guard already iterates them, so they can carry parameters too.
             unconsumed = sorted(
-                (b.condition_id, b.primitive)
+                (b.condition_id, b.primitive, tuple(k for k, _ in (b.parameters or ())))
                 for b in (*self.binding_plan.bindings, *self.binding_plan.invalidation_bindings)
                 if b.parameters
                 and ENFORCED_DISPATCH.get(b.primitive or "") not in PARAMETER_CONSUMING_HANDLERS
             )
             if unconsumed:
-                detail = ", ".join(f"{cid!r} (primitive {prim!r})" for cid, prim in unconsumed)
+                # R-704 §4(A): NAME THE KEYS, NOT JUST THE CONDITION. A refusal that says
+                # "this condition carries parameters" tells a reader to go and look; one that
+                # says WHICH keys could not be honoured tells them what to change. The
+                # condition id and the route were already named (R-701 §3 / R-697 §5.3
+                # campaign law); the keys were the piece the message was missing.
+                detail = ", ".join(
+                    f"{cid!r} (primitive {prim!r}, unsupported key(s) {list(keys)!r})"
+                    for cid, prim, keys in unconsumed
+                )
                 raise ValueError(
                     f"condition(s) {detail} carry parameters, but the route each is "
                     f"dispatched to does not consume them. REFUSAL "
