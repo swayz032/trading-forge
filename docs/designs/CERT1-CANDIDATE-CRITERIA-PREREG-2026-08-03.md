@@ -121,3 +121,51 @@ pass. **None is a passability proxy in disguise.**
 
 It does **not** name a candidate. It does **not** name a population. It does
 **not** authorize a build. Those are `R-677`'s, written after `AR-737` is read.
+
+---
+
+# CORRECTION — appended after reading `AR-737` (same day, `R-677`)
+
+**The criteria C1–C6 above are UNCHANGED. Two of my measurements are not.**
+Both of my "discrepancy" notes were **my instrument, not the ruling's error.**
+
+### 1. The call-site counts — `R-676` was right, I measured the neighbouring object
+`AR-737 §1` reproduces `5` and `14` **exactly**, under the rule **call syntax,
+non-test, non-`def`**: `grep -rn "compute_sma(" …`. **I grepped `compute_sma`
+without the parenthesis**, so I counted mentions — imports and references — not
+calls. `R-676 §2`'s figures stand; my `6`/`15` and `8`/`20` were never measuring
+call sites at all. *(`feedback_i_measured_the_neighbouring_object` — the JOIN KEY
+is the claim.)*
+
+### 2. The `12`-value vocabulary — my "independent reproduction" was not independent
+I wrote that my `12` *"reproduces `R-676 §2` item-for-item — two independent runs,
+one result."* **That claim is withdrawn.** `[MEASURED, `AR-737 §1`, AST]` the
+resolvable-primitive universe is **`18`**, not `12`: `FAMILY_META` `11` distinct ·
+`PRIMITIVE_RESOLVERS` `13` · `EXPERIMENT_PRIMITIVES` `7` · `MECHANISMS` `3`. The
+`12` is `FAMILY_META` **plus `fvg_native` only** — a PARTIAL denominator.
+
+★★★★★ **I reproduced `R-676`'s POPULATION CHOICE, not its result.** I read the
+same block (`spec_family_bindings.py:608–750`) the ruling read, got the same
+number, and called it corroboration. **`A GRADE REPRODUCING ITS INSTRUMENT IS NOT
+A SECOND PATH` (`audit-population`) — and I quoted that very law two sections
+above while breaking it.** One path run twice is not two paths.
+
+✅ **THE CONCLUSION SURVIVES, and the worker checked rather than assumed:** over
+the full `18`, moving-average matches `= 0`, under a positive control of `2`
+(two planted names). **`NOT ONE IS A MOVING AVERAGE` stands on the correct
+denominator.**
+
+### 3. Tier-A `11` vs `13` — still unresolved, still not to be quoted
+`AR-737` did not touch it. Its own sweep population is **`18` spec files /
+`183` conditions**, a different set again. **Three populations are now in play
+(`11`, `13`, `18`) and none has been reconciled to another.** Unchanged status:
+`[UNENUMERATED]`.
+
+### 4. What this does to C1–C6 — nothing, and one criterion earned its place
+**No criterion is amended.** `AR-737` and the operator's direction both land on a
+false-success hazard (an engine hardcoded at `EMA(20)/EMA(50)` matching a spec
+that teaches `20/50` **for the wrong reason**). **`C6` disqualifies it** — it
+requires *every* planted defect, including the period mutation, to be **capable
+of moving the trace**, and a period that never travels cannot move anything.
+★★★ **C6 was written before either input arrived. It is the criterion that
+catches the trap, and that is the argument for pre-registration, not for me.**
