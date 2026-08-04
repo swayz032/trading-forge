@@ -12,6 +12,49 @@
 
 ---
 
+## R-711 · 2026-08-04 · ✅ **LANE 32 DELIVERED AND DURABLE (`a3f75aa7`) — `F-1` RED-PROVEN WITH A GENUINE 2-HOP CHAIN, AND THE WORKER'S PRE-REGISTERED RED SET MATCHED THE OBSERVED SET *EXACTLY* FOR THE FIRST TIME IN THREE LANES.** 🛑 **MERITS HELD FOR THE EXTERNAL READ — THREE ITEMS NOW WAIT ON THE SAME ONE.** 🛑🛑★★★★★ **AND A CORRECTION AGAINST *MY OWN* RULINGS: I REPEATED `AR-787`'s `"the canonical 95 MINUS test_cloud_backend.py"` IN `R-709`, `R-710` AND `ADVISOR-STATE`. `[MEASURED, `AR-794 §4.2`]` **IT IS A NO-OP — THAT FILE WAS NEVER IN THE `95`.** ✅ **`AR-793`'s PREDICTION IS REFUTED, AS IT ASKED: THIS RULING DID *NOT* EAT `R-710`'s HEADER.**
+
+**★ WORKER — START HERE. §4 IS AN EXPLICIT HOLD WITH A NAMED DEPENDENCY, NOT A STALL. NOTHING IS OWED FROM YOU UNTIL THE READ LANDS.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-794`** (`ruling-stale-premise-guard`) — read in full; **it IS the subject of this ruling, and its merits are deliberately NOT adjudicated (§4).**
+
+**RULING ID:** `R-711` · **TASK ID:** Lane 32 delivery · **DECISION: `DELIVERY ACKNOWLEDGED + DURABILITY CONFIRMED` · `MERITS HELD` · `WORKER ON EXPLICIT HOLD`.**
+**GRAPH OBJECT: ✅ ADOPTED** — `V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived]`. **NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ DURABILITY, DISCHARGED (`R-707 §4`'s binding on this desk)
+`[MEASURED HERE]` Lane 32 is committed at **`a3f75aa7`** (`11:28:24 -04:00`); `git status --porcelain -- src/engine/tests/ docs/designs/AGENT-REPORTS.md` returns **only the sibling's `test_synthetic_market_simulator.py`**.
+⚠️★★★★★ **AND THE RE-MEASURE LAW PAID FOR ITSELF A *FOURTH* TIME TODAY:** at `15:27:46Z` I read the lane files DIRTY and the manifest UNTRACKED; at `15:28:04Z` the manifest was **STAGED** (`A `); at `15:28:28Z` HEAD was `a3f75aa7` and all clean. **Three readings, ~40 seconds, three different true answers.** `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION.`
+
+### §2 — 🛑🛑★★★★★ CORRECTION AGAINST THIS DESK — THE `MINUS test_cloud_backend.py` SENTENCE IS A NO-OP AND I PROPAGATED IT
+`[MEASURED, `AR-794 §4.2`, disclosed by the worker against its own interest]` **`test_cloud_backend.py` imports neither closure target, so it was NEVER a member of the canonical `95`.** `95` files ran before and after — which is why `2200 + 4 = 2204` reconciles.
+🛑 **I CARRIED THAT SENTENCE INTO `R-709 §5`/`§9`, `R-710 §4`/`§6` AND `ADVISOR-STATE`.** ⚖️ **IT IS NOT A NUMBERS DEFECT — IT IS A JOIN-KEY DEFECT, AND THAT IS THE PART WORTH KEEPING: the exclusion IS load-bearing for the `src/engine/tests/` DIRECTORY population (`R-707 §5`, `AR-783`/`AR-785`'s whole-suite arms) and is a NO-OP for the CLOSURE-DERIVED one. **Two populations, one sentence — and the sentence implied a member had been dropped when none had.**
+★★★★★ **`THE SAME EXCLUSION IS LOAD-BEARING IN ONE POPULATION AND VACUOUS IN ANOTHER; NAMING THE POPULATION IS NOT OPTIONAL DECORATION, IT IS THE CLAIM.`** ✅ **`test_cloud_backend.py` remains HUNG / `[UNENUMERATED]` and desk-owned either way — that status is untouched by this correction.**
+⚠️ **STANDING: any future "population MINUS x" sentence NAMES WHICH POPULATION, or it is not written.**
+
+### §3 — ✅ `AR-793`'s PRE-REGISTERED PREDICTION: **REFUTED**, AND IT ASKED TO BE TOLD
+`AR-793 §1` predicted, falsifiably: *"the next ruling (`R-711`) will consume `R-710`'s header the same way unless the insert method changes."* ✅ **THE METHOD CHANGED (`R-710 §9`): this ruling anchors on the PREAMBLE'S CLOSING `---`, above every ruling and owned by none, instead of on the neighbour's header.** ⇒ **`R-710`'s header is intact and the prediction is REFUTED — reported here because a prediction only earns its keep if the disconfirming outcome gets published too.**
+⚖️ **THE WORKER'S HYPOTHESIS WAS CORRECT ON MECHANISM** (*"the insert anchors on the previous ruling's header line and REPLACES it"*) — **independently reached, matching `R-710 §9`'s own root-cause.** ★ **Two paths to one mechanism; that is what made the fix trustworthy rather than a guess.** 🛑 **THE `grep -c` GATE STAYS REGARDLESS** — it is the detector, and the anchor change is the cause-removal. **Belt and braces, because every semantic guard we run passed both bad writes.**
+
+### §4 — 🛑 EXPLICIT HOLD — THREE ITEMS, ONE DEPENDENCY (§0.5: this is a HOLD, and here is its assignee)
+**HELD, ALL PENDING THE SAME EXTERNAL READ (`R-698`, operator-asserted three times):**
+1. **GATE 2** — closes or does not close against `R-701 §2.5`'s four categories, **fixed `01:26` while the answer was unknown and NOT being re-read.**
+2. **`AR-790`** — `run_parity_diff` compares two ENGINES on the same DSL; `R-648` stage 5 asks whether the compiled strategy matches **THE REFERENCE** trade-by-trade. **A money-path question about `R-648`'s own reuse premise.**
+3. **`AR-794` MERITS** — Lane 32's five items, incl. whether the manifest + 2-hop red-proof discharge `F-1`/`F-2` and whether the tail-name resolution is sound.
+⚖️ **ASSIGNEE FOR THE LIFT: THE ADVISOR SEAT** (this session or its successor — `ADVISOR-STATE` carries all three). **Not a hypothetical future worker; the dependency is an external input, not an unmade decision.**
+✅ **WORKER: NOTHING IS OWED FROM YOU.** You are seated with a live ear; **read-only preparation remains permitted and has produced three real findings today (`AR-790`, `AR-792`, `AR-794 §4`).** 🛑 **DO NOT start a new writing lane, and DO NOT report Gate 2 as closed.**
+
+### §5 — RECORDED, NOT RULED (so the read has them, and so a successor does not rediscover them as news)
+✅ **`F-1` RED-PROVEN PROPERLY:** plant = delete the recursive branch of `reaches()`, run in an **isolated `git archive` checkout at `C:\tf32`, never the shared tree** — **the worker applied `R-710 §2`'s grader-discipline to itself, unprompted.** **Mutant population `23`, reproducing the grader's `95 → 23` INDEPENDENTLY** — a second path to `F-1`'s severity.
+⭐★★★★★ **`MINIMUM_EXPECTED_RED_SET` MATCHED `OBSERVED` EXACTLY — first time in three lanes, after two consecutive under-predictions in the same direction. `R-709 §6`'s lower-bound law is doing its job**, and the worker correctly notes matching a lower bound *"is not a licence — it is one clean data point."*
+✅ **TAIL-NAME QUESTION RESOLVED BEFORE PINNING** (`R-710 §6`'s stop condition, not fired): decision rule pre-registered before the probe; probe validated against the REAL function (`real=95 mine=95`); `2` colliding tails, both HARMLESS; **and an exclusion the worker had made by judgement (`__init__`, ×`30`) was GONE BACK AND MEASURED — `0`/`1,751` dependency strings end in `__init__`, with a positive control.** ★ `AN EXCLUSION ACCEPTED ON PLAUSIBILITY IS AN UNMEASURED POPULATION BOUNDARY.`
+🛑★★★★★ **INSTRUMENT FAILURE DISCLOSED:** the worker's first regression run wrote the population from python to the WINDOWS `/tmp` and read it back from MSYS bash's **different** `/tmp`; `sed` failed; **pytest received ZERO path arguments and silently collected the ENTIRE suite to a `10`-minute timeout.** ⚠️ **`A PYTEST INVOCATION WITH NO PATHS DOES NOT ERROR — IT RUNS EVERYTHING.`** ✅ Re-run via `subprocess` from inside python, shell seam removed. **The trap was already banked in seat memory and was walked into anyway** — `PREFER THE FORM WITH THE FEWEST LAYERS BETWEEN YOU AND THE THING.`
+🛑 **UNCHANGED:** production byte-identical (`sha256 621302a56987f19b`) — **test-only lane** · `F-3`'s `8` shapes RECORDED not chased (blast radius measured ZERO; sweep lanes closed) · no `tsc`/`vitest` · flag OFF · `runtime-production` UNMEASURED · **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT`.**
+
+### §6 — SEAT
+⚠️ **THIS SESSION IS LONG AND HAS MADE TWO MECHANICAL ERRORS IN AN HOUR, BOTH CAUGHT BY A COUNTER RATHER THAN BY ITS OWN READING.** `advisor-onboarding §4.5`: **swap at a natural boundary while context remains, never at exhaustion.** ✅ **This is that boundary — ledger current, `ADVISOR-STATE` current, receipt committed, worker held with a named dependency, nothing in flight.** **A successor reads `ADVISOR-STATE` and lifts §4 when the read lands.**
+
+---
+
 ## R-710 · 2026-08-04 · ✅★★★★★ **THE GRADE LANDED: `PASS_WITH_BOUNDED_FINDINGS`, VERIFIED BAND `7`, ALL FOUR GATE-DISQUALIFYING CATEGORIES CLEAR, ALL TEN MANDATED MUTATIONS RE-RUN AND CAUGHT.** 🛑 **I AM *NOT* RULING GATE 2 HERE — THAT VERDICT WAITS FOR THE READ (`R-698`), AND THE GRADER HANDED ME A LINEAGE PROBLEM THAT IS EXACTLY WHAT A SECOND PAIR OF EYES IS FOR.** ✅ **WHAT I *AM* DOING NOW, BECAUSE THE WORKER IS BLOCKED AND THAT OUTRANKS THE WAIT: COMMIT THE RECEIPT, LIFT THE HOLD, RELEASE LANE 32 — WIDENED, BECAUSE `F-1` IS MY OWN MANIFEST FINDING AND IT IS WORSE THAN I FRAMED IT.**
 
 **★ WORKER — START HERE. THE HOLD IS LIFTED (§5). LANE 32 IS LIVE AND WIDENED (§6). GATE 2 IS NOT YET RULED AND YOU MAY NOT REPORT IT AS CLOSED.**
