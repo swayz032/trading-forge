@@ -4,6 +4,35 @@
 
 ---
 
+## AR-776 · 2026-08-04 · ⏳★★★★★ **RE-SCOPING RECEIPT — `AR-775` NARROWED TO `R-697 §6` **STEP 1 / LANE 25 (`F-2` ONLY)**, ACCEPTED WITHOUT LOSS. `F-1` IS OUT OF MY LANE AND I HAVE NOT TOUCHED IT.** ✅★★★★★ **THE RED-PROOF IS ALREADY MEASURED AND IT WENT RED — BUT THE PART WORTH READING IS THAT **MY OWN POSITIVE CONTROL CAUGHT MY OWN FIXTURE FIRST**: the first run produced `4` reds that looked exactly like `F-2`, from a fixture that **never reached `_resolve_bias_periods` at all.** 🛑🛑★★★★★ **AND THE CAUSE IS A SECOND, SEPARATE DEFECT I AM REPORTING NOT REPAIRING: `[MEASURED HERE]` **WITH `TF_FAMILY_META_ENFORCED` OFF — THE PRODUCTION DEFAULT — A PARAMETERIZED BINDING'S PARAMETERS ARE SILENTLY DROPPED AND THE CONDITION RETURNS THE `EMA(20,50)` ANSWER.** That is `parameterized_binding_requires_enforced_dispatch` (`R-697 §5.4`), live, on the default-configured path.**
+
+**TASK:** `R-697 §6` **STEP 1 = LANE 25**. **ETA to the red/green pair: ~40 min** (the red half is done; see `§2`).
+
+### ✅ §1 — SCOPE ACCEPTED AS NARROWED, AND WHAT I HAD ALREADY BUILT FITS INSIDE IT
+✅ **`R-697 §6` is right that nothing is lost: `F-2` was item `1` of `AR-775 §3` and it is the only implementation work I had started.** **`F-1` HAS NOT BEEN TOUCHED** — no edit to `_eval_wait_bias`, no wired-path fixture. **Lane 25 owes `F-2` + `F-3`'s floor + the banked-by-member regression population + an executable witness for every comment safety-claim in my blast radius (`:573-578`).**
+🛑 **CARRIED AS BINDING:** refusal code **`supplied_parameter_cannot_fall_back_to_default`**, under — **not renaming** — the `unknown_parameter_key` family (`R-697 §5.4`). Both strings will be greppable in the refusal, because the STOP CONDITION is written against one and the BUILD order against the other.
+
+### ✅★★★★★ §2 — RED MEASURED BEFORE THE REPAIR, WITH THE DEFECT'S POSITIVE WITNESS AND A LIVE DISCRIMINATOR
+```
+CONTROL   EMA(20,50) vs EMA(7,90) differ on 10/200 bars   <- the discriminator is alive
+{'period': 7}                    -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'fast': 7, 'slow': 90}          -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'ema_fast': 7, 'ema_slow': 90}  -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'fast_period': 7, 'slow': 90}   -> NO REFUSAL; differs from EMA(20,50) on  16/200 bars
+```
+✅ **THE GRADER'S THREE SHAPES REPRODUCE EXACTLY AS `R-695 §4` PUBLISHED THEM** — `0/200`, i.e. **byte-identical to the engine-default answer**, against a control proving those two period sets genuinely differ.
+🛑🛑★★★★★ **AND A FOURTH SHAPE THE REGISTER DID NOT CARRY, WHICH IS WORSE THAN THE THREE BECAUSE IT LOOKS LIKE IT WORKED: `[MEASURED]` `{'fast_period': 7, 'slow': 90}` PRODUCES AN ARRAY THAT IS `array_equal` TO **`EMA(7, 50)`** — the taught FAST honoured, the taught SLOW silently replaced by the engine default.** ★★★★★ **`A HALF-HONOURED PARAMETER SET IS THE ONE SHAPE THAT PASSES A "DID IT MOVE?" TEST AND STILL LOST A TAUGHT NUMBER.` A repair written as a key-COUNT check would let it through, so it is now a permanent fixture in its own right.**
+
+### 🛑🛑★★★★★ §3 — THE SECOND DEFECT, REPORTED AND **NOT** REPAIRED, BECAUSE `§6` SAYS *"NOTHING ELSE"*
+`[MEASURED HERE]` my first run of the new file had **no** `TF_FAMILY_META_ENFORCED` fixture. All four refusal assertions went RED **and so did the positive control**, which reported the taught arm differing from the engine default on **`0/200`** bars. ★★★★★ **FOUR REDS THAT PERFECTLY IMPERSONATED THE DEFECT, PRODUCED BY A FIXTURE THAT COULD NOT REACH IT. `A RED FROM A FIXTURE THAT COULD NOT HAVE REACHED THE DEFECT IS NOT A RED-PROOF` — and the ONLY thing that told me apart from a genuine `F-2` red was the control `R-681 §1` requires.**
+🛑 **THE UNDERLYING FACT IS A REAL FINDING, NOT A TEST BUG:** with the flag OFF — **the production default (`R-695 §6.2`)** — the legacy `b.type` ladder runs, `_h_wait_bias` is never called, and **a binding carrying taught periods is evaluated as though it taught nothing, with no error and no trace.** **That is exactly `R-697 §5.4`'s `parameterized_binding_requires_enforced_dispatch` and design-doc `§6(5)`'s *"flag-OFF must REFUSE, not drop."***
+🛑 **I AM NOT BUILDING IT IN LANE 25.** `R-697 §6` says **`F-2` ONLY, NOTHING ELSE**, and a refusal on the flag-OFF path changes behaviour on the **default-configured** route — a materially wider blast radius than this lane's, and the kind of scope only the desk sets. ⚖️ **It is the desk's call whether this becomes Lane 27 or rides with the typed object at Step 3.** ✅ **`R-697 §6`'s prohibition is on WIDENING, never on REPORTING — the duty to report does not lapse (`R-648`).**
+
+### ✅ §4 — WHAT LANE 25 STILL OWES BEFORE I REPORT IT DONE
+`supplied_parameter_cannot_fall_back_to_default` as a real BRANCH · **the planted restoration of the silent default failing a PERMANENT test** (`R-697 §6`) · `F-3`'s floor refusing instead of returning all-False · the scoped regression population **banked BY MEMBER** PRE and POST with a sorted-name diff · and the `:573-578` docstring's *"refuses rather than substitutes"* claim made **executable** rather than merely corrected — `R-697 §5.9`: a comment is not safety evidence.
+
+---
+
 ## AR-775 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — HANDOFF `5` (the typed MA primitive object), on the `2/2` fan-in `AR-774` declared. ETA to first observable ~45 min.** 🛑★★★★★ **AND ONE DEFECT IN THE DISPATCH ITSELF, RAISED BEFORE I START BECAUSE IT COSTS NOTHING NOW: `R-696` CARRIES NO `★ WORKER — START HERE` BLOCK.** `worker-onboarding §1` makes that block the cold-start-complete contract, and `R-694 §7` had every field of it (files-allowed · forbidden · first-observable + ETA · acceptance · stop condition · honest-partial clause). **`R-696 §7` has none of them.** ✅ **I RECONSTRUCTED THE CONTRACT FROM `R-695 §7` + `TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md §6` AND I AM NOT BLOCKED — but a cold seat that had not read `R-695` would have started handoff `5` with no forbidden list.**
 
 **TASK:** handoff `5`, authorized by `R-696 §7` (*"ON `2/2` FAN-IN: HANDOFF 5, per `R-695 §7`"*) as amended by `R-695 §7`'s six mandatory items.
