@@ -139,6 +139,13 @@ STRUCTURE_RECOMPUTE_CADENCE_BARS: int = 10   # perf: structure state is slow-cha
 STRUCTURE_WINDOW_BARS: int = 250             # trailing window fed to compute_structure_state
 BIAS_EMA_FAST: int = 20
 BIAS_EMA_SLOW: int = 50
+
+# THE RESIDUAL CATEGORY THE TAXONOMY WAS MISSING (R-697 §6 Step 1, root-caused R-695 §4).
+# `_resolve_bias_periods` asked `key not in params`, which files an UNRECOGNISED key under
+# ABSENT and hands it the engine default. This set is what makes `present under another
+# name` expressible at all, so it is a correctness surface, not a convenience list.
+# Adding a member here is adding a supported taught parameter -- it is not a typo fix.
+RECOGNISED_BIAS_PARAMETER_KEYS: frozenset[str] = frozenset({"fast_period", "slow_period"})
 RETEST_PROXIMITY_ATR_MULT: float = 1.0
 RETEST_LEVEL_EMA_PERIOD: int = 20
 CANDLE_WICK_RATIO_THRESHOLD: float = 0.4
@@ -554,6 +561,40 @@ class SpecConditionStrategy(BaseStrategy):
         # makes this safe to land ahead of a producer.
         want_bearish = self._resolve_wait_bias_bearish(b.object)
         fast_period, slow_period = self._resolve_bias_periods(b)
+
+        # F-3 (R-697 §6, graded MEDIUM at R-695 §5): A MOVING FLOOR REFUSES NOTHING.
+        # `_eval_wait_bias` returns an all-False array when `n < eff_slow + 2`. All-False is
+        # INDISTINGUISHABLE from "the taught period never reached the evaluator", so a frame
+        # too short for a taught slow leg fails in the direction that looks like the
+        # hypothesis (R-692 §4): it manufactures the exact symptom of the defect this
+        # channel exists to detect, and a lane can spend its whole attempt budget chasing a
+        # transmission bug that is really a bar-count shortfall.
+        #
+        # THE REFUSAL IS SCOPED TO TAUGHT PERIODS, AND THAT SCOPE IS THE POINT. With no
+        # recognised key supplied there is no hypothesis to confuse, and the all-False
+        # return is the documented legacy behaviour for the genuinely-absent case -- the
+        # only case permitted to take a default at all (R-697 §6's three-way taxonomy).
+        # Refusing there would change the DEFAULT-CONFIGURED path and redden every short
+        # frame in the suite: a wider blast radius than this lane owns.
+        #
+        # IT IS DELIBERATELY HERE AND NOT INSIDE `_eval_wait_bias`. That evaluator is shared
+        # and takes no binding, so the check would need a new argument, and adding one would
+        # move the certified invocation witnesses in test_bias_parameter_transmission.py.
+        # `VERIFY THE TREE YOU SHIP` cuts both ways: the narrowest correct site is the
+        # handler, which already holds both the resolved periods and `ctx["n"]`.
+        supplied = sorted(set(dict(b.parameters or ())) & RECOGNISED_BIAS_PARAMETER_KEYS)
+        if supplied and ctx["n"] < slow_period + 2:
+            raise ValueError(
+                f"condition {b.condition_id!r} teaches {supplied!r} requiring a slow leg of "
+                f"{slow_period} bars, but only {ctx['n']} bars are available "
+                f"({slow_period + 2} needed). "
+                f"REFUSAL supplied_parameter_cannot_fall_back_to_default "
+                f"(unknown_parameter_key family, R-684 §7.2): the legacy behaviour here is "
+                f"an all-False array, which cannot be told apart from 'the taught period "
+                f"never reached the evaluator'. A taught parameter that would silently "
+                f"produce the symptom of its own failure is refused instead."
+            )
+
         cache_key = (want_bearish, b.parameters)
         cache = ctx["wait_bias_param_cache"]
         if cache_key not in cache:
@@ -570,14 +611,48 @@ class SpecConditionStrategy(BaseStrategy):
     def _resolve_bias_periods(self, b: ConditionBinding) -> tuple[int, int]:
         """Read this condition's taught EMA periods, or fall back to the engine defaults.
 
-        REFUSES RATHER THAN SUBSTITUTES. An absent parameter is a legitimate "not taught"
-        and takes the documented default. A parameter that is PRESENT but unusable
-        (non-integer, zero, negative, fast >= slow) raises, naming the key -- it is never
-        quietly replaced by a default. That distinction is the whole subject of the
-        campaign's parameter-invention repair: a silent fallback is how a taught number
-        becomes an engine number without leaving a trace (R-684 §1, R-690 §4).
+        THE TAXONOMY IS THREE-WAY AND EXHAUSTIVE (R-697 §6 Step 1, R-695 §4):
+          - GENUINELY ABSENT      -> the documented legacy default, and ONLY this case may
+                                     take a default at all.
+          - PRESENT AND VALID     -> reaches the real consumer unchanged, never clamped,
+                                     rounded or re-ranged.
+          - PRESENT BUT UNUSABLE, *OR PRESENT UNDER A NAME THIS PRIMITIVE DOES NOT
+            RECOGNISE*            -> HARD REFUSE, naming the key AND the condition.
+
+        WHAT WAS BROKEN HERE UNTIL R-697, AND WHY THIS DOCSTRING WAS PART OF THE DEFECT.
+        The loop below iterated only the two canonical keys and asked `key not in params`,
+        which treats UNRECOGNISED exactly like ABSENT. `PRESENT UNDER ANOTHER NAME` had no
+        category, so it mis-filed as `absent` and took the engine default. The independent
+        grade measured {'period': 7}, {'fast': 7, 'slow': 90} and {'ema_fast': 7,
+        'ema_slow': 90} all yielding (20, 50) with no refusal, no error and no trace --
+        inside the function whose docstring already claimed it never substitutes. The
+        prose was true of the branches that existed and false of the function.
+        `A BLOCK CODE IN A RULING IS NOT A BRANCH IN THE ENGINE` (R-695 §4): R-684 §7.2
+        minted `unknown_parameter_key` and the evaluator never implemented it.
+
+        THE CLAIM ABOVE IS NOT SELF-CERTIFYING. R-697 §5.9: a comment is not safety
+        evidence. Its executable witness is tests/test_bias_refusal_surface.py, which
+        carries the grader's three shapes as a permanent regression corpus, a planted
+        restoration of the silent default that must fail, and both positive controls
+        (absent still defaults; valid still reaches the consumer).
         """
         params = dict(b.parameters or ())
+        unrecognised = sorted(k for k in params if k not in RECOGNISED_BIAS_PARAMETER_KEYS)
+        if unrecognised:
+            raise ValueError(
+                f"condition {b.condition_id!r} carries parameter key(s) {unrecognised!r} "
+                f"that this primitive does not recognise. "
+                f"REFUSAL supplied_parameter_cannot_fall_back_to_default "
+                f"(unknown_parameter_key family, R-684 §7.2): a supplied parameter is "
+                f"never silently replaced by an engine default, because that is how a "
+                f"taught number becomes an engine number without leaving a trace. "
+                f"Recognised by this primitive: "
+                f"{sorted(RECOGNISED_BIAS_PARAMETER_KEYS)!r}. "
+                f"Unrecognised names are NOT aliased onto canonical ones -- the parameter "
+                f"grammar is reserved to the advisor desk (R-678 §6), and guessing that "
+                f"'slow' means 'slow_period' would be the parameter invention this path "
+                f"exists to refuse."
+            )
         resolved: dict[str, int] = {}
         for key, default in (("fast_period", BIAS_EMA_FAST), ("slow_period", BIAS_EMA_SLOW)):
             if key not in params:

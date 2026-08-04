@@ -4,6 +4,73 @@
 
 ---
 
+## AR-777 · 2026-08-04 · ✅★★★★★ **`R-697 §6` STEP 1 / LANE 25 DELIVERED — `F-2` AND `F-3`. RED FIRST, GREEN AFTER, AND THE STOP CONDITION DID NOT FIRE.** 🛑🛑🛑★★★★★ **AND THE RED-PROOF FOUND A **FOURTH** SHAPE THE FINDING REGISTER DOES NOT CARRY, WHICH IS WORSE THAN THE GRADER'S THREE BECAUSE IT *LOOKS LIKE IT WORKED*: `[MEASURED]` `{'fast_period': 7, 'slow': 90}` PRODUCED AN ARRAY `array_equal` TO **`EMA(7, 50)`** — THE TAUGHT FAST HONOURED, THE TAUGHT SLOW SILENTLY REPLACED BY THE ENGINE DEFAULT.** ★★★★★ **`A HALF-HONOURED PARAMETER SET IS THE ONE SHAPE THAT PASSES A "DID IT MOVE?" TEST AND STILL LOST A TAUGHT NUMBER.`** ✅ **`6` EXECUTABLE LINES ADDED TO PRODUCTION. FAN-IN `1/2` — LANE 26 IS MINE AND I AM STARTING IT NEXT; NO HANDOFF.**
+
+**TASK:** `R-697 §6` Step 1 (Lane 25). **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` (**`+6` executable lines**, the rest docstring/comment) · **NEW** `src/engine/tests/test_bias_refusal_surface.py`. `[MEASURED]` `git status --porcelain src/` also shows the sibling seat's `test_synthetic_market_simulator.py`, **which I never touched** — twenty-fourth consecutive report; committed with `-o` on named paths only.
+
+### ✅★★★★★ §1 — THE RED, MEASURED BEFORE THE REPAIR, WITH A LIVE DISCRIMINATOR
+```
+CONTROL   EMA(20,50) vs EMA(7,90) differ on 10/200 bars   <- the discriminator is alive
+{'period': 7}                    -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'fast': 7, 'slow': 90}          -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'ema_fast': 7, 'ema_slow': 90}  -> NO REFUSAL; differs from EMA(20,50) on   0/200 bars
+{'fast_period': 7, 'slow': 90}   -> NO REFUSAL; == EMA(7,50) EXACTLY        (16/200 bars)
+```
+✅ **THE GRADER'S THREE SHAPES REPRODUCE EXACTLY AS `R-695 §4` PUBLISHED THEM** — `0/200`, byte-identical to the engine-default answer, against a control proving those two period sets genuinely differ.
+✅ **PYTEST, SAME FILE, BEFORE AND AFTER THE REPAIR:**
+```
+BEFORE:  4 failed, 2 passed     <- the 4 refusal assertions RED; BOTH positive controls GREEN
+AFTER:  10 passed               <- + the F-3 pair and the planted-default mutation control
+```
+
+### 🛑🛑★★★★★ §2 — THE FOURTH SHAPE, AND WHY IT IS THE DANGEROUS ONE
+`[MEASURED]` `{'fast_period': 7, 'slow': 90}` → `array_equal(produced, EMA(7,50)) == True`; **not** `EMA(7,90)`, **not** `EMA(20,50)`. **One recognised key honoured, one unrecognised key silently dropped to the default.**
+🛑 **IT DEFEATS THE OBVIOUS REPAIR.** A fix written as a key-COUNT check (`len(params) != 2 → refuse`) passes the grader's three shapes and lets this one through — and because the output DOES move away from the engine default, a *"did the parameter transmit?"* test goes **GREEN on a set that lost half its taught numbers.** ✅ **It is now a permanent fixture (`test_f2_partial_recognition_still_refuses`), asserting the refusal names `['slow']` and not the whole set.**
+
+### ✅★★★★★ §3 — THE REPAIR: `6` EXECUTABLE LINES, AND THE TAXONOMY NOW HAS ITS RESIDUAL
+```
+:142  RECOGNISED_BIAS_PARAMETER_KEYS: frozenset[str] = frozenset({"fast_period","slow_period"})
+:606  unrecognised = sorted(k for k in params if k not in RECOGNISED_BIAS_PARAMETER_KEYS)
+:607  if unrecognised:  raise ValueError(... supplied_parameter_cannot_fall_back_to_default ...)
+:569  supplied = sorted(set(dict(b.parameters or ())) & RECOGNISED_BIAS_PARAMETER_KEYS)
+:570  if supplied and ctx["n"] < slow_period + 2:  raise ValueError(... same code ...)
+```
+✅ **THREE-WAY AND EXHAUSTIVE, AS `R-697 §6` ORDERED:** genuinely absent → documented legacy default (**the only case permitted a default at all**) · present-and-valid → reaches the real consumer unchanged · present-but-unusable **or unrecognised** → **HARD REFUSE naming the key AND the condition.**
+✅ **BOTH REFUSAL STRINGS ARE GREPPABLE:** `supplied_parameter_cannot_fall_back_to_default` **and** the `unknown_parameter_key` family it sits under — because `R-697`'s BUILD order names the first and its STOP CONDITION names the second, and a code that answers only one of them is half-wired.
+🛑★★★★ **AND IT DELIBERATELY DOES NOT ALIAS.** `'slow'` is **not** mapped to `'slow_period'`. **The parameter grammar is reserved to the advisor desk (`R-678 §6`), and guessing that two names mean the same thing IS the parameter invention this path exists to refuse.** The refusal message says so, so the next reader does not "helpfully" add the alias.
+✅ **`F-3` IS IN THE HANDLER, NOT THE EVALUATOR, AND THAT SITE IS THE POINT:** `_eval_wait_bias` is shared and takes no binding, so a check there needs a new argument — **which would have moved the certified invocation witnesses in `test_bias_parameter_transmission.py`.** The handler already holds both the resolved periods and `ctx["n"]`. **The narrowest correct site, chosen so the certified file did not have to change.**
+✅ **`F-3` REFUSES ONLY WHEN A PERIOD WAS TAUGHT.** With nothing taught there is no hypothesis to confuse and the all-False return is the authorized legacy behaviour; refusing there would change the **default-configured** path. ✅ **Proven by a positive control: `40` bars + nothing taught → no refusal, legacy all-False preserved.**
+
+### ✅★★★★★ §4 — THE STOP CONDITION DID NOT FIRE, AND THE POPULATION IS BANKED BY MEMBER
+**EXPECTED-GREEN SET DECLARED BEFORE THE REPAIR** (`R-681 §1`), by AST reverse-import closure of the module I touched ∩ tests — **not a grep**, because this repo's modules are heavily commented about each other. **`81` files** (the `82`nd is my own new file, excluded from the PRE/POST pair because it did not exist before).
+```
+PRE  (before any edit):  31 failed, 1854 passed, 3 skipped, 2 xfailed
+POST (after the repair): 31 failed, 1854 passed, 3 skipped, 2 xfailed
+diff of the sorted FAILED name lists -> EMPTY.  IDENTICAL MEMBERSHIP.
+```
+✅ **AND THE DIFF INSTRUMENT WAS CONTROLLED:** `diff <(echo x) post_failed.txt` → `1c1,31`. **The empty diff is a real equality from a tool that demonstrably reports differences**, not a silent instrument.
+🛑★★★★ **DO NOT JOIN MY `31` TO `AR-773`'s `31`.** Its population was `91` files (closure of `spec_family_bindings` ∪ `family_meta_enforcement`); mine is `81` (closure of `spec_condition_compiler` ∪ `spec_family_bindings`). **Same integer, different population — `i-measured-the-neighbouring-object` is this desk's most-convicted error and the join key here is the FILE SET, not the count.**
+✅ **THE TWO CERTIFIED FILES, BY NAME, UNCHANGED AT THEIR PUBLISHED NUMBERS:** `test_bias_parameter_transmission.py` → **`16 passed`** · `test_parameter_collision.py` → **`10 passed`** — exactly the figures `R-694 §3` re-ran in the advisor's own terminal. **All three files together: `36 passed`, `PYTEST_EXIT=0`.**
+
+### ✅★★★★★ §5 — THE PLANTED RESTORATION, AND THE INSTRUMENT ERROR THAT CAUGHT ITSELF
+✅ **`R-697 §6`'s PLANTED SILENT DEFAULT IS PERMANENT** (`test_f2_mutation_control_planted_silent_default_fails_this_file`). The planted body is the **VERBATIM** pre-repair resolver, not a strawman. **Under the plant: no refusal fires and the output is byte-identical to `EMA(20,50)`** — i.e. the four refusal tests above go RED, which is exactly what the pre-repair run measured. ✅ **The control also asserts the plant SAW `{'period': 7}`, so a fixture that stopped reaching the changed code fails loudly instead of passing vacuously.**
+🛑🛑★★★★★ **AND MY OWN FIRST FIXTURE WAS WRONG IN THE MOST CONVINCING POSSIBLE DIRECTION — IT PRODUCED FOUR PERFECT-LOOKING REDS FROM CODE IT NEVER REACHED.** I omitted `TF_FAMILY_META_ENFORCED`, which is **default OFF**, so the legacy `b.type` ladder ran and `_resolve_bias_periods` was never called. **The four refusal assertions went RED and looked precisely like `F-2`.** ✅ **THE ONLY THING THAT TOLD ME APART FROM A GENUINE RED WAS THE POSITIVE CONTROL** — it reported the taught arm differing from the engine default on `0/200` bars, which the repair could not have caused. ★★★★★ **`A RED FROM A FIXTURE THAT COULD NOT HAVE REACHED THE DEFECT IS NOT A RED-PROOF, AND IT IS INDISTINGUISHABLE FROM A REAL ONE WITHOUT A CONTROL THAT CANNOT MOVE.` The sequence is kept in the fixture's docstring rather than tidied away.**
+
+### 🛑 §6 — WHAT I DID **NOT** DO, AND WHAT IS NOT MEASURED
+- 🛑 **`F-1` UNTOUCHED — it is Lane 26.** No edit to `_eval_wait_bias`, no wired-HTF fixture. **Separate RED/GREEN so a regression names which path broke.**
+- 🛑 **`parameterized_binding_requires_enforced_dispatch` NOT BUILT** — the flag-OFF silent parameter drop measured in `AR-776 §3`. It is live on the **default-configured** path, and `R-697 §6` says *"`F-2` ONLY, NOTHING ELSE."* ⚖️ **The desk's call whether it becomes a lane or rides with the typed object at Step 3.**
+- 🛑 **NO PARITY CLAIM OF ANY KIND.** **TS/Python parity is `[UNENUMERATED]`** — I ran no `vitest`, no `tsc`.
+- 🛑 **`runtime-production` `[UNENUMERATED]`** for every figure above. Campaign worktree only.
+- 🛑 **FLAG NOT ENABLED · PRODUCER NOT TOUCHED · NO SEALED-SPEC OR END-TO-END CLAIM.** `RECEIVES`, never `EXTRACTS`.
+- ⚠️ **`[UNENUMERATED]` — WHETHER ANY OTHER PRIMITIVE'S PARAMETER RESOLVER CARRIES THE SAME RESIDUAL-LESS TAXONOMY.** `_resolve_bias_periods` is the only one this lane owns; **the defect is a CLASS and I checked `1` member.** I did not widen (`R-648` closes sweeps) — **naming it rather than leaving it unsaid** (`worker-execution §12`).
+- ⚠️ **`F-3`'s floor refusal is proven on the PROXY path.** On the fully-wired HTF path the early return at `:801` means the floor is never reached — **that is `F-1`'s territory and Lane 26 will have to state how the two interact.**
+
+### ★★★★★ §7 — RECOMMENDATION
+**`APPROVAL_REQUESTED` for Lane 25. FAN-IN `1/2` on `R-697 §6`'s two authorized lanes. NO HANDOFF — Lane 26 (`F-1`) is mine and I am starting it now**, per `R-698 §4`: queue depth is exactly what lets the desk hold for the external read without blocking me.
+🛑 **ONE THING IS THE DESK'S, NOT MINE:** whether the flag-OFF silent drop (`AR-776 §3`) gets a lane.
+
+---
+
 ## AR-776 · 2026-08-04 · ⏳★★★★★ **RE-SCOPING RECEIPT — `AR-775` NARROWED TO `R-697 §6` **STEP 1 / LANE 25 (`F-2` ONLY)**, ACCEPTED WITHOUT LOSS. `F-1` IS OUT OF MY LANE AND I HAVE NOT TOUCHED IT.** ✅★★★★★ **THE RED-PROOF IS ALREADY MEASURED AND IT WENT RED — BUT THE PART WORTH READING IS THAT **MY OWN POSITIVE CONTROL CAUGHT MY OWN FIXTURE FIRST**: the first run produced `4` reds that looked exactly like `F-2`, from a fixture that **never reached `_resolve_bias_periods` at all.** 🛑🛑★★★★★ **AND THE CAUSE IS A SECOND, SEPARATE DEFECT I AM REPORTING NOT REPAIRING: `[MEASURED HERE]` **WITH `TF_FAMILY_META_ENFORCED` OFF — THE PRODUCTION DEFAULT — A PARAMETERIZED BINDING'S PARAMETERS ARE SILENTLY DROPPED AND THE CONDITION RETURNS THE `EMA(20,50)` ANSWER.** That is `parameterized_binding_requires_enforced_dispatch` (`R-697 §5.4`), live, on the default-configured path.**
 
 **TASK:** `R-697 §6` **STEP 1 = LANE 25**. **ETA to the red/green pair: ~40 min** (the red half is done; see `§2`).
