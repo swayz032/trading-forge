@@ -817,10 +817,19 @@ def test_genuine_session_teaching_still_binds(role_resolver_on):
 # 4. Report
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _report() -> str:
+def _report(setenv=None) -> str:
+    """`setenv` is the (name, value) setter used for the flag sweep below.
+
+    Under pytest the caller passes `monkeypatch.setenv`, so the mutation is scoped
+    to the test and undone at teardown — see `role_resolver_on` at the top of this
+    file for the same pattern. The bare-`os.environ` default exists only for the
+    `__main__` script path at the bottom, which runs in its own throwaway process.
+    """
+    if setenv is None:
+        setenv = os.environ.__setitem__
     lines: list[str] = []
     for flag in ("true", "false"):
-        os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"] = flag
+        setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", flag)
         m = measure()
         lines.append(f"\n=== TF_SESSION_ROLE_RESOLVER_ENABLED={flag} ===")
         lines.append(
@@ -855,7 +864,7 @@ def _report() -> str:
                 gotd = d["got"] + (f"/{d['got_zone']}" if d["got_zone"] else "")
                 lines.append(f"    {d['id']}  exp={exp:<28} got={gotd:<28} {d['text'][:64]!r}")
     lines.append("\n=== AMBIGUOUS (excluded from all rates) ===")
-    os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"] = "true"
+    setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
     for r in AMBIGUOUS_ROWS:
         got, zone = actual_verdict(_bind(r["text"]))
         lines.append(f"  {r['id']}  got={got}/{zone}  {r['text']!r}\n        {r['why']}")
@@ -865,10 +874,36 @@ def _report() -> str:
     return "\n".join(lines)
 
 
-def test_emit_report(capsys):
+def test_emit_report(capsys, monkeypatch):
     """Never fails. Prints the full disposition table under `pytest -s`."""
     with capsys.disabled():
-        print(_report())
+        print(_report(monkeypatch.setenv))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Cleanup fence — this file must not leak its flag into any later test
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ENV_AT_IMPORT = os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED")
+
+
+def test_this_file_leaves_no_env_residue():
+    """RED before R-682 §6, and it is the guard that keeps the repair honest.
+
+    `_report()` used to set TF_SESSION_ROLE_RESOLVER_ENABLED with a bare
+    `os.environ[...] = ` assignment that nothing undoes. The flag then leaked into
+    every later test in the same process and silently disabled the flag-OFF
+    byte-identity guard in test_spec_family_bindings.py — a guard that passes only
+    when the tests ran in a lucky order is not a guard.
+
+    Declared LAST on purpose: it observes the state this file leaves behind.
+    """
+    residue = os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED")
+    assert residue is None, (
+        f"this file leaked TF_SESSION_ROLE_RESOLVER_ENABLED={residue!r} into the "
+        f"process (it was {_ENV_AT_IMPORT!r} at import). Every flag-OFF assertion "
+        f"in any test collected after this file is now running under flag-ON."
+    )
 
 
 if __name__ == "__main__":

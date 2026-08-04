@@ -4,6 +4,92 @@
 
 ---
 
+## AR-750 · 2026-08-03 · ✅★★★★★ **`R-682 §6 LANE 7` DELIVERED — **THE LEAK IS DEAD AND THE BYTE-IDENTITY GUARD IS OFF LIFE SUPPORT.** RED `3 failed, 425 passed` → fix → GREEN `429 passed` from the **literally identical command**.** ✅★★★★★ **AND THE PRE-REGISTERED NUMBER WAS HIT EXACTLY, WHICH IS THE POINT OF PRE-REGISTERING IT: `AR-749 §3` committed to `0 failed / 792 passed / 2 xfailed` on the derived `14`-file set BEFORE the fix existed. **MEASURED: `792 passed, 2 xfailed`.** No count was revised after seeing a result.** 🛑🛑★★★★★ **THE FINDING I MOST WANT ON THE RECORD IS A FAILED MUTATION, NOT THE GREEN: **MY FIRST MUTATION CONTROL DID NOT BITE, AND THE REASON WAS NOT AN INSENSITIVE GUARD — THE REPAIR ITSELF UNDID MY PLANT.** I planted the leak in `pytest_runtest_teardown`, which fires BEFORE the `monkeypatch` finalizer, so `monkeypatch.undo()` wiped it. `A MUTATION PLANTED WHERE THE FIX CAN UNDO IT CANNOT TELL "THE GUARD IS BLIND" FROM "THE FIX WORKED" — AND IT READS AS THE FIRST.`**
+
+**TASK:** `R-682 §6` steps `(1)`–`(4)`. **FILES CHANGED: `src/engine/tests/test_session_role_adversarial_fence.py` ONLY (`40 insertions, 5 deletions`).** 🛑 **`spec_condition_compiler.py` and `spec_family_bindings.py` NOT TOUCHED — `[MEASURED]` `git status --porcelain src/` shows only my file and the sibling's. The graded subjects at `f73d2726` are intact.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — ninth consecutive report.**
+
+### ✅ §1 — ROOT CAUSE, AND WHICH LAYER IT WAS
+🛑 **`[MEASURED]` the two bare assignments are inside `def _report()` (`:820`) — a REPORT-FORMATTING HELPER, not a test.** That is why no fixture ever undid them: **`monkeypatch` is a test-scoped fixture and the mutation was happening in code that has no test scope at all.** ✅ **The layer is `test-harness hygiene`, not product code — nothing under `src/engine/*.py` (non-test) was implicated, and I verified that rather than assuming it.**
+★★★ **`AR-747 §6.2`'s diagnosis was correct AND its framing was slightly off: it called this "an inconsistency inside one file." **It is narrower and more instructive than that — the correct pattern was unavailable at the site, because the site is not a test.** The fix is not "use the convention"; it is "give the helper a way to reach the convention."**
+
+### ✅★★★★ §2 — STEP (1): THE FIX, AND THE RULING'S LITERAL FORM COULD NOT BE USED
+🛑 **`R-682 §6(1)` said replace `:823`/`:858` with `monkeypatch.setenv`. `AR-749 §2` flagged before starting that this raises `NameError` on the `__main__` path (`:874-875`). ADAPTATION, as declared in advance:**
+```python
+def _report(setenv=None) -> str:
+    if setenv is None:
+        setenv = os.environ.__setitem__      # __main__ script path only
+    ...
+        setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", flag)     # was os.environ[...] = flag
+
+def test_emit_report(capsys, monkeypatch):
+    print(_report(monkeypatch.setenv))       # <- scoped, undone at teardown
+```
+✅ **UNDER PYTEST THE MUTATION IS NOW `monkeypatch.setenv` — the file's own pattern from `:696`/`:748`, exactly as `§6(1)` required. The default exists ONLY for the standalone script path.**
+✅★★★★ **AND I MEASURED THE DEFAULT RATHER THAN ASSUMING IT, WITH A CONTROL BOTH WAYS:** `PYTHONPATH=. python src/engine/tests/test_session_role_adversarial_fence.py` prints the full disposition table **after my change** · and **bare `python <file>` fails identically on the COMMITTED pre-change version** (`ModuleNotFoundError: No module named 'src.engine'`, from `git show HEAD:<file>`), **so that failure is PRE-EXISTING and not mine.** 🛑 **Without that second run I would have reported a breakage I did not cause, or missed one I did.**
+
+### 🛑🛑★★★★★ §3 — STEPS (2)–(3): RED, GREEN, AND THE CLEANUP GUARD
+**RED — before the fix, `[MEASURED, AR-749 §1]`:**
+```
+ENV PRE-STATE: [<unset>]        <- positive control: not set in my shell
+python -m pytest src/engine/tests/test_session_role_adversarial_fence.py \
+                 src/engine/tests/test_spec_family_bindings.py -q
+E       AssertionError: assert 'true' is None
+FAILED ...::test_wait_session_binds_on_recognized_keyword
+FAILED ...::test_s1_flag_off_is_the_null_hypothesis_at_the_same_production_boundary
+FAILED ...::test_s7_flag_off_byte_identity_over_the_full_26_row_population
+3 failed, 425 passed, 2 xfailed in 1.68s
+```
+**GREEN — SAME COMMAND, byte-identical, no flag, no `PYTHONPATH`:**
+```
+429 passed, 2 xfailed in 1.60s
+```
+✅ **`429 = 425 + 3 repaired + 1 new guard.` The arithmetic closes with no unexplained remainder.**
+✅ **STEP (3), THE CLEANUP PROOF, SHIPS AS A PERMANENT TEST — `test_this_file_leaves_no_env_residue`, declared LAST in the file so it observes what the file leaves behind:**
+```python
+residue = os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED")
+assert residue is None, (... f"it was {_ENV_AT_IMPORT!r} at import" ...)
+```
+★★★ **`R-681 §2`'s standing instruction applied: a guard ships with its own mutation control wherever one can be written — here the control is external (`§4`) because the guard's subject is process-global state, but the GUARD itself is now permanent and re-proves the cleanup on every run.**
+
+### 🛑🛑★★★★★ §4 — THE MUTATION CONTROL, INCLUDING THE ATTEMPT THAT FAILED
+🛑 **ATTEMPT 1 — `pytest_runtest_teardown` plant: `90 passed, 2 xfailed`. IDENTICAL TO THE UNMUTATED RUN. The guard did not fire.**
+★★★★★ **THE DIAGNOSIS, AND IT IS THE LESSON: `pytest_runtest_teardown` fires BEFORE the `monkeypatch` fixture finalizer, so `monkeypatch.undo()` DELETED my planted value. **The repair under test destroyed the evidence that was supposed to test it.** A green from that run is uninterpretable — it is equally consistent with "the guard is blind" and with "the fix is so good it cleaned up my sabotage too", and **the first reading is the dangerous one and the one a hurried seat would not even reach.**
+✅ **ATTEMPT 2 — plant moved to `pytest_runtest_logfinish`, which runs AFTER all teardown: the un-undoable position the ORIGINAL bare assignment occupied. THE GUARD BITES:**
+```
+PYTHONPATH=<scratchpad> python -m pytest <fence file> -q -p leak_plugin
+
+[MUTATION PLANTED] TF_SESSION_ROLE_RESOLVER_ENABLED='true' after ...::test_emit_report
+E  AssertionError: this file leaked TF_SESSION_ROLE_RESOLVER_ENABLED='true' into the
+   process (it was None at import). Every flag-OFF assertion in any test collected
+   after this file is now running under flag-ON.
+FAILED ...::test_this_file_leaves_no_env_residue
+1 failed, 89 passed, 2 xfailed in 0.32s          <- MUTATED
+90 passed,  2 xfailed in 0.30s                   <- UNMUTATED CONTROL, same command minus `-p`
+```
+✅★★★★ **`R-681 §1` OBSERVED — THE EXPECTED-GREEN SET HELD UNDER THE PLANT: **EXACTLY `1` test failed, and `89` stayed green.** A plant that had flipped the whole file would have proven only that something survives it.**
+🛑 **Invariant `8` observed for an eighth consecutive report: the RED was produced by a scratchpad plugin, never by editing `src/`.**
+
+### ✅★★★★ §5 — STEP (4): THE EXPECTED-GREEN SET, PRE-REGISTERED WITH DERIVATION, AND THE RESULT
+**Derivation (stated in `AR-749 §3` BEFORE the fix): union of (a) every non-`__pycache__` test file importing any `src` module in the touched file's import closure — closure = the single module `src.engine.spec_family_bindings` — and (b) every non-`__pycache__` file referencing the leaked variable. `= 14` test files.**
+```
+PRE-FIX  baseline (pre-registered): 3 failed, 788 passed, 2 xfailed
+PRE-REGISTERED expectation        : 0 failed, 792 passed, 2 xfailed   (788 + 3 + 1)
+POST-FIX measured                 : 792 passed, 2 xfailed             <- exact
+```
+✅ **The file I edited is itself a test file and is IN the set, so `R-682 §4.2`'s amendment is satisfied by construction — which is precisely why I published the DERIVATION rather than resting on that coincidence.**
+
+### 🛑 §6 — WHAT I DID NOT MEASURE / SURFACES MY EVIDENCE CANNOT SEE
+- 🛑 **NO FULL-SUITE GREEN IS QUOTED AND NONE WAS RUN.** `R-682 §3` bars it as acceptance evidence until this lands, and I am not exempting my own lane from the rule it exists to fix. **My claim is scoped to the derived `14`-file set and to the `2`-file ordered pair, and it says so.**
+- ⚠️ **`[UNENUMERATED]` I proved this file no longer leaks. I did NOT prove the repository is order-independent.** Those are different claims and only a full ordered/shuffled sweep could support the second. **`R-682 §3`'s evidentiary bar should stay in force until someone measures the wider question.**
+- ⚠️ **`[UNENUMERATED]` other environment variables mutated the same way elsewhere in the repo.** The class is real; `R-682 §6` scoped me to one file and I did not sweep. **Reported, not pulled** — `R-681 §4`: closing the hole you just named is not automatically the next task.
+- 🛑 **`[UNENUMERATED]` whether the `3` repaired tests were passing for the RIGHT reason before the leak existed.** I restored them to green; I did not audit their assertions. **They are `test_spec_family_bindings.py`'s, and that file is adjacent to the surface now under independent grade.**
+
+### ★★★★★ §7 — RECOMMENDATION
+**`APPROVAL_REQUESTED`.** Leak root-caused to a non-test helper, fixed with the file's own pattern, RED→GREEN from the identical command, cleanup guard shipped and independently shown to bite, pre-registered count hit exactly, blast radius derived not hand-listed.
+**NEXT SMALLEST TASK (ONE):** **`R-682 §7.1` — the flag-OFF hard-block**, which the desk holds until the grade at `f73d2726` returns. **I am not starting it and I am not asking to; it edits a file under active grade.**
+
+---
+
 ## AR-749 · 2026-08-03 · ⏳ **START-RECEIPT — `R-682 §6 LANE 7`, KILL THE TEST-POLLUTION LEAK. ✅ THE RED IS ALREADY REPRODUCED VERBATIM (`3 failed, 425 passed`), SO THE `§6` STOP CONDITION IS CLEARED BEFORE THE FIX IS WRITTEN.** 🛑 **AND I AM RAISING A MECHANISM DEFECT IN THE RULING BEFORE STARTING, NOT AT DELIVERY: `§6(1)`'s "replace `:823`/`:858` with `monkeypatch.setenv`" IS NOT DIRECTLY APPLICABLE — BOTH LINES ARE INSIDE `_report()`, A PLAIN HELPER THAT IS ALSO CALLED FROM `__main__` AT `:875`, WHERE NO `monkeypatch` FIXTURE EXISTS.** ⚠️ **PLUS A CORRECTION AGAINST MY OWN `AR-748 §4`: A PRE-EXISTING RULING EAR **DID** EXIST. I CLAIMED NONE WAS FOUND, FROM A `220`-CHARACTER-TRUNCATED COMMAND-LINE FIELD.**
 
 **TASK:** `R-682 §6` steps `(1)`–`(4)`. **FILE: `src/engine/tests/test_session_role_adversarial_fence.py` ONLY.** 🛑 **`spec_condition_compiler.py` and `spec_family_bindings.py` NOT TOUCHED — they are the subjects of the running grade at `f73d2726`.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — eighth consecutive report.** **ETA ~25 min.**
