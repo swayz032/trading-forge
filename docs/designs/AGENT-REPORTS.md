@@ -4,6 +4,62 @@
 
 ---
 
+## AR-771 · 2026-08-04 · ✅★★★★★ **`R-693 §5` LANE 22 DELIVERED. FAN-IN `1/1`, NO HANDOFF. **STOP CONDITION DID NOT FIRE.**** ✅★★★★★ **THE ANSWER: **`0` OF THE `30` TOUCH THE SLICE'S EVALUATOR PATH**, and the zero carries a live positive control — `spec_condition_compiler` appears **`0`** times across the entire `30`-failure output while `backtester` appears **`150`** times in the same file from the same command.** 🛑🛑🛑★★★★★ **AND THE FINDING THAT MATTERS MOST IS WHY THE STOP CONDITION *ALMOST* FIRED: **THREE OF THE `30` CARRY THE WORD `PARAMETER` OR `SOURCE` IN THEIR NAMES AND ALL THREE ARE FALSE JOINS** — `parameter_jitter_battery` is strategy-parameter ROBUSTNESS (`SDR`/`PSI`/`RWS`), `ClassifierErrorSourceContract` asserts on `inspect.getsource()` **PYTHON SOURCE TEXT**, and `ParamStabilityStatus` is the walk-forward parameter-DRIFT gate. **`A STOP CONDITION EVALUATED ON NAMES WOULD HAVE FIRED THREE TIMES AND BEEN WRONG THREE TIMES.`** 🛑🛑★★★★★ **SEPARATE AND UNASKED-FOR: `18` OF THE `30` ARE ONE TEST FILE ASSERTING AGAINST A PRODUCTION API THAT **HAS NEVER EXISTED IN THIS REPOSITORY.**
+
+**TASK:** `R-693 §5` Lane 22 — triage the `30` inherited failures, READ-ONLY. **NO FILES CHANGED IN `src/`.** `[MEASURED]` `git status --porcelain src/` unchanged from seat entry — **the only sibling-seat file (`test_synthetic_market_simulator.py`) is untouched by me, twenty-first consecutive report.** **Instruments live in the scratchpad, not the repo.**
+
+### ✅★★★★★ §1 — THE `30`, BY NAME. **PUBLISHED FOR THE FIRST TIME** (`AR-770 §1` — the list had never been banked)
+**COMMAND:** `python -m pytest <70 closure files> -q --no-header -p no:cacheprovider` → **`30 failed, 1263 passed, 3 skipped` in `105.29s`.**
+| # | file | failures | what the failing assertions are about |
+|---|---|---|---|
+| 1 | `test_a_plus_gate_parity.py` | **18** | `ImportError` ×`16` for `_apply_a_plus_confluence_gate` (`13`) / `_compute_rolling_volume_mean` (`3`); `AttributeError` ×`2`: `StrategyConfig` has no `entry_quality` |
+| 2 | `test_parameter_jitter_battery.py` | `3` | `compute_rws` rolling-window Sharpe std-dev; `run_b15_battery` blocking |
+| 3 | `test_production_hardening_g2a_g2b.py` | `2` | `inspect.getsource(run_walk_forward)` text: handler must emit `classifier_error` / `_rc_confidence = None` |
+| 4 | `test_accuracy_fixes.py` | `2` | double-commission deduction; `BARS_PER_DAY["1min"]` — got `860`, expected `1380` (Globex) |
+| 5 | `test_apply_trade_management_branching.py` | `1` | `trail_stop` must reach break-even after TP1 — got `3991.0`, expected `≥4000.0` |
+| 6 | `test_backtester.py` | `1` | zero-trade backtest must not crash — `IndexError: list index out of range` |
+| 7 | `test_e2e_backtest.py` | `1` | walk-forward mode must return `oos_metrics` |
+| 8 | `test_pnl_accuracy.py` | `1` | no signals ⇒ zero metrics |
+| 9 | `test_wave_b_intrabar_stops.py` | `1` | intrabar TP must fire on bar HIGH, not close |
+✅ **COUNT RECONCILES WITH `AR-769` EXACTLY (`30`), FROM AN INDEPENDENTLY-DERIVED FILE SET** — I did not reuse its list, I rebuilt the import graph (`784` modules, `1353` intra-repo edges, `0` parse failures). ⚠️ **`70` files vs its `68`, and `1263` passed vs `1203`** — my derivation is repo-wide, and `4` further closure files fall outside `pytest`'s `testpaths`. 🛑 **THE `2`-FILE GAP IS UNRECONCILED AND UNRECONCILABLE: `AR-769` published no member list, so I can join on COUNT ONLY. `A COUNT IS NOT A PIN` — I am not claiming these are the same `30`, only that both instruments return `30`.**
+
+### ✅★★★★★ §2 — CLASSIFICATION: `30` OFF · `0` ON · `0` UNDETERMINED. **THE FILE-LEVEL TEST IS VACUOUS AND I DID NOT USE IT**
+🛑★★★★★ **`R-693 §5(2)` ORDERS `ON the slice's import closure · OFF it · UNDETERMINED`. `[MEASURED]` **APPLIED AT FILE LEVEL THAT QUESTION HAS ONLY ONE ANSWER: all `30` are `ON`, BY CONSTRUCTION**, because the set I ran *is* the closure. **The closure is dominated by ONE hub edge — `src.engine.backtester` is a direct importer of the compiler, and nearly every engine test imports the backtester.** ★★★★★ **`A CLASSIFICATION WHOSE ANSWER IS FIXED BY HOW THE POPULATION WAS SELECTED IS NOT A MEASUREMENT.` I report it rather than publishing a `30/30 ON` that would read as alarming and mean nothing.**
+✅ **SO I USED TWO DISCRIMINATORS THAT CAN COME BACK EITHER WAY:**
+**(a) DOES THE EVALUATOR APPEAR IN THE FAILURE OUTPUT?** `[MEASURED]` `spec_condition_compiler` → **`0`** occurrences in the whole `105s` / `30`-failure log. **POSITIVE CONTROL, same file, same command: `backtester` → `150`.**
+**(b) DOES THE FAILING FILE CARRY SLICE TOKENS?** (`ConditionBinding|spec_condition_compiler|condition_id|primitive`) `[MEASURED, all 9 files]` → **`0`, except `1` in `test_wave_b_intrabar_stops.py`.** **POSITIVE CONTROL, identical command on `test_bias_parameter_transmission.py`: `15` tokens + `1` direct import.**
+✅ **AND THE SINGLE HIT IS A COMMENT** `[MEASURED, read at the line `:339`]`: *"and that close is NOT the detection primitive."* **English prose. `A GREP MATCHING ONLY COMMENTS IS NOT A VERIFICATION` — it is not a verification of PRESENCE either.**
+✅ **`0` of the `9` files import the compiler directly.** Every one reaches it only through `backtester`.
+
+### 🛑🛑🛑★★★★★ §3 — THE STOP CONDITION, AND THE THREE FALSE JOINS THAT WOULD HAVE TRIPPED IT
+**`R-693 §5`'s stop fires if any of the `30` *"asserts something about parameter transmission or condition binding."* IT DID NOT FIRE.** ✅ **I evaluated it on measured membership BEFORE reading assertions, exactly as `AR-770` pre-committed — and that ordering is what saved it:**
+1. 🛑 **`test_parameter_jitter_battery.py` (`3`)** — `[MEASURED, docstring + bodies at the line]` *"B15 Parameter Robustness Battery (Wave 25 Item 5)"*: jitter a strategy's numeric params, measure `SDR`/`PSI`/`RWS` stability. The `3` failures are `compute_rws` window arithmetic and the orchestrator's blocking behaviour. **`PARAMETER` HERE MEANS A STRATEGY KNOB BEING PERTURBED, NOT A TAUGHT VALUE BEING TRANSMITTED.**
+2. 🛑 **`TestG2bClassifierErrorSourceContract` (`2`)** — `[MEASURED, at the line]` both call `inspect.getsource(wf_module.run_walk_forward)` and assert on the **TEXT OF THE PYTHON FILE**. **`SOURCE` HERE IS SOURCE CODE, NOT A TEACHING SOURCE** — and `SourceContract` reads almost exactly like Lane 20's source-fidelity contract, which is the collision that matters.
+3. 🛑 **`TestC1ParamStabilityStatus`** (out-of-testpath, `§5`) — `param_stability_status` is the walk-forward parameter-**DRIFT** gate key. `[MEASURED]` `0` slice tokens in that file, control `31`.
+★★★★★ **`THE THREE MOST RELEVANT-SOUNDING NAMES IN THE SET ARE THE THREE THAT MEAN SOMETHING ELSE.` This is the campaign's own most-convicted shape — a join that balances because the names agree (`R-686`) — and it was sitting in the exact population a name-based triage would have scanned first.**
+
+### 🛑🛑🛑★★★★★ §4 — UNASKED-FOR FINDING: `18` OF `30` TEST AN API THAT HAS NEVER EXISTED
+🛑 **`[MEASURED, repo-wide grep]` `_apply_a_plus_confluence_gate` and `_compute_rolling_volume_mean` occur in **EXACTLY ONE FILE — the test file that imports them.** `0` definitions anywhere in the repository.**
+🛑 **`[MEASURED]` `git log -S"_apply_a_plus_confluence_gate" -- src/engine/backtester.py` → **EMPTY**. **CONTROL, same query form on the same path: `git log -S"def run_backtest" -- src/engine/backtester.py` → `1` commit.** **THE SYMBOL WAS NEVER IN THAT MODULE.**
+🛑 **`[MEASURED]` repo-wide, BOTH symbols enter in exactly `1` commit: `410b75cf` — *"recovery: restore 86 null-byte-corrupted files."*** ⚠️ **`[HYPOTHESIS — REASONING, NOT MEASURED, AND I AM NOT PURSUING IT]` the implementation may have been lost in that corruption event while its test survived the restore; the alternative is that the test was always written against a planned API. **I CANNOT DISTINGUISH THESE FROM WHAT I MEASURED**, and doing so is off the slice's path — `R-648`'s admission test excludes it.**
+✅ **PLUS THE OTHER `2`: `StrategyConfig` has no `entry_quality`.** `[MEASURED]` `entry_quality` has `14` non-test occurrences — **none in `backtester.py`, none on `StrategyConfig`** (`config.py:440`). ★★★ **And this repository ALREADY DOCUMENTS the species, in prose, in `family_meta_enforcement.py:294`: *"at `entry_quality.confluence_factor_presence`, a module that does not exist."*** ★★★★★ **`A TEST SUITE CAN BE GREEN-ADJACENT FOR MONTHS WHILE ASSERTING AGAINST A SURFACE NOBODY EVER BUILT — IT FAILS LOUDLY AND IS READ AS INHERITED NOISE.` `60%` of the inherited failure count is one dead test file.**
+🛑 **REPORTED, NOT REPAIRED (`R-693 §5`: *"DO NOT FIX ANY OF THEM"*). The disposition is the desk's.**
+
+### ⚠️★★★★ §5 — WHAT I COULD NOT SEE (`R-693 §5(4)`)
+- 🛑 **`4` closure files fall OUTSIDE `pytest`'s `testpaths` (`src/engine/tests`, `tests/python`) and are therefore NOT in the inherited `30`.** ✅ **`2` RAN:** `tests/test_deepscan_fixwave_2026_06_29.py` → **`3 failed, 73 passed`** (all OFF, `§3.3`), `tests/test_engine_fixes_p0_p1.py` clean. 🛑 **`2` CANNOT BE DETERMINED AT ALL: `test_accuracy.py` and `test_e2e.py` fail at COLLECTION — `DataLoadConfigError: S3 read` — they need external market data this box does not have. **UNDETERMINED, and named rather than counted as clean.**
+- 🛑 **`[UNENUMERATED]` `runtime-production`.** Campaign worktree only.
+- 🛑 **MEMBERSHIP JOIN TO `AR-769`'s `30` IS IMPOSSIBLE** — `§1`. Counts agree; identity is unproven.
+- ⚠️★★★ **THE NEAREST NEIGHBOUR, NAMED SO A FLAT "OFF" DOES NOT BURY IT:** `test_pnl_accuracy.py::test_no_trades_returns_zero_metrics` constructs `IndicatorConfig(type="sma", period=5)` — **a numeric period.** `[MEASURED]` that is `StrategyConfig.indicators`, **the OTHER parameter channel — the one `R-687` traced to `db.insert(strategies).values({config})`** — not `ConditionBinding.parameters`. **It uses a period as fixture setup and asserts nothing about its transmission.** ★★★ **I am naming it because `i-measured-the-neighbouring-object` is this seat's most-convicted error and the neighbour is genuinely in the room.**
+- ⚠️ **ONE ERROR OF MINE, CORRECTED BEFORE IT REACHED A CLAIM:** I read my own closure instrument's direct-importer control as listing `test_backtester`, called it a false edge, and audited it. **It listed `src.engine.backtester`. The instrument was right and my read was wrong** — the audit is in the scratchpad and cost one command.
+
+### ★★★★★ §6 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. FAN-IN `1/1`. No lane stopped, no handoff — I have context remaining.**
+✅ **THE PROPERTY `R-693 §5` ORDERED IS ANSWERED: NONE of the `30` bear on parameter transmission, binding, or dispatch. `AR-769`'s receipt is NOT invalidated by them, and by `R-648`'s admission test none of the `30` belong on the critical path.**
+🛑 **STILL NOT MINE AND STILL OPEN: the Lane-21 grade. `[MEASURED HERE, just now]` the `## VERDICT` section of `GRADE-LANE21-PARAMETER-TRANSMISSION-2026-08-04.md` is **STILL EMPTY**. Per that file's own terms the grade is UNSATISFIED. `R-693 §6` gates handoff `5` on it, so I am NOT starting handoff `5`.**
+**NEXT SMALLEST TASK (ONE):** **a desk disposition on `§4`** — `18` of the `30` are one test file asserting against a surface that never existed. **Deleting it, `xfail`ing it, or building the API are three different decisions and none of them are mine.** ★★★ **It is NOT on the golden slice's path and I am explicitly NOT proposing it as a lane; I am reporting it because `R-648` says findings are still reported when lanes are closed.**
+
+---
+
 ## AR-770 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — `R-693 §5` LANE 22, TRIAGE THE `30` INHERITED FAILURES. READ-ONLY, NO FIXES. FAN-IN TARGET `1/1`, NO HANDOFF.** 🛑★★★★★ **AND A LIVE GUARD DEFECT FOUND BY BEING BLOCKED BY IT — `§4`.**
 
 **TASK:** `R-693 §5` Lane 22. **FIRST OBSERVABLE: this receipt. ETA ~35 min.** **Runner: `pytest` over the `68`-file import closure `AR-769 §4` derived.** **NOT DOING:** fix any failure · start handoff `5` (`R-693 §6`, gated on the grade) · edit the ruling ledger · pull a `SWEEP-*` item.
