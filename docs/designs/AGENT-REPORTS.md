@@ -4,6 +4,27 @@
 
 ---
 
+## AR-751 · 2026-08-03 · ⏳ **START-RECEIPT — `R-683 §5 LANE 8`, MEASURE THE SHAPE THE GRAMMAR MUST RECEIVE. READ-ONLY, NOTHING MODIFIED ANYWHERE.** 🛑🛑★★★★★ **AND I AM LEADING WITH SOMETHING THAT IS NOT MY LANE, BECAUSE IT CHANGES A RELEASE CONDITION THE DESK IS HOLDING: **THE GRADE RECEIPT HAS LANDED.** `[MEASURED HERE]` `docs/designs/GRADE-PARAMETER-COLLISION-FIX-2026-08-03.md` — **`27,432` bytes, mtime `21:57`, UNTRACKED (`??`).** `R-683 §4a` measured it ABSENT at `21:52`. **IT ARRIVED IN THE FIVE MINUTES BETWEEN THAT MEASUREMENT AND THIS ONE.**
+
+**TASK:** `R-683 §5` steps `(1)`–`(4)`. **READ-ONLY.** 🛑 **`spec_condition_compiler.py` / `spec_family_bindings.py` NOT TOUCHED — under grade at `f73d2726`, and this lane does not need them.** **ETA ~30 min. First observable: this receipt.**
+
+### 🛑🛑★★★★★ §1 — THE GRADE RECEIPT EXISTS. I HAVE NOT READ IT AND I WILL NOT.
+✅ **REPORTED AS A FACT ABOUT THE FILE, NOT ABOUT ITS CONTENTS: it exists, it is `27,432` bytes, its header line reads `# GRADE — AR-747 …` and names `accuracy-validator (independent; doer != grader)`. `[MEASURED — `ls -la`, `git status --porcelain`, `head -3`]`.**
+🛑🛑 **I READ THREE LINES AND STOPPED AT THE PROVENANCE LINE. I DID NOT READ THE VERDICT.** ★★★★★ **`worker-execution §5a`: *"you never interpret the grade you asked for"* — **and `AR-747` is MY OWN delivery, so I am the single least admissible reader of it in this campaign.** Reporting that a file arrived is a liveness fact; forming a view on what it says would contaminate the one independent read the desk paid for.**
+✅ **CONSEQUENCE FOR THE DESK, STATED PLAINLY BECAUSE IT IS TIME-SENSITIVE: `R-683 §6.2` holds the flag-OFF hard-block with release *"when the grade RETURNS, whatever it says (`§3.1`)."* **THAT CONDITION IS NOW MET ON ITS FACE.** The desk reads and rules; I am continuing Lane 8 and will not touch the held item.**
+⚠️ **IT IS UNTRACKED. `[MEASURED]` `??`.** 🛑 **A `27KB` verdict living only in an uncommitted working file is exactly the single-source shape `worker-execution §5b` convicted (`F-2`, 2026-07-30).** **I am not committing it — it is not my artifact and the grade's own receipt discipline belongs to its dispatcher. Flagged, owner: the desk.**
+★★★ **AND IT VINDICATES `R-683 §4a`'s REFUSAL TO CALL IT DEAD: the desk had `0` grader processes, `0` files and `0` receipts, and correctly wrote *"that is not proof of death."* **It was mid-inference. Five minutes later it delivered.** `A SUBAGENT MID-INFERENCE IS INDISTINGUISHABLE FROM A DEAD ONE ON EVERY SURFACE A SIBLING SEAT HOLDS` — measured true, twice, in one night.**
+
+### ✅ §2 — WHAT LANE 8 WILL PRODUCE
+**(1)** `indicator-params.ts` emitted shape at the executable line — `[MEASURED]` the file exists, `223` lines, `11,138` bytes. **The `source`/`confidence` vocabularies pinned to their DECLARATION site, not sampled from observed values.**
+**(2)** Landing + persistence: `routes/agent.ts` `:18`/`:1621`, `:1886-1887` → `entry_params`/`param_source`. **Table and column named; ONE really-persisted row shown, or a ZERO published with a live positive control that proves the query could have found one.**
+**(3)** Non-test READERS of `entry_params` — existence is not wiring; grep with a control.
+**(4)** Field-by-field mismatch against `ConditionBinding.parameters: tuple[tuple[str, object], ...] | None`, **including anything on the TS side with nowhere to go.**
+🛑 **I AM NOT DESIGNING THE GRAMMAR (`R-683 §5` FORBIDDEN, reserved to the desk at `§6.1`). If I find myself proposing a mapping rather than measuring a mismatch, that is the line and I stop at it.**
+⚠️ **PRE-DECLARED RISK ON STEP (2): the persisted row needs a live database. If I cannot reach one, I will report `CANNOT MEASURE` with the connection attempt shown — NOT a zero. `R-675 §1`: a control that returns zero has not passed, it has not run.**
+
+---
+
 ## AR-750 · 2026-08-03 · ✅★★★★★ **`R-682 §6 LANE 7` DELIVERED — **THE LEAK IS DEAD AND THE BYTE-IDENTITY GUARD IS OFF LIFE SUPPORT.** RED `3 failed, 425 passed` → fix → GREEN `429 passed` from the **literally identical command**.** ✅★★★★★ **AND THE PRE-REGISTERED NUMBER WAS HIT EXACTLY, WHICH IS THE POINT OF PRE-REGISTERING IT: `AR-749 §3` committed to `0 failed / 792 passed / 2 xfailed` on the derived `14`-file set BEFORE the fix existed. **MEASURED: `792 passed, 2 xfailed`.** No count was revised after seeing a result.** 🛑🛑★★★★★ **THE FINDING I MOST WANT ON THE RECORD IS A FAILED MUTATION, NOT THE GREEN: **MY FIRST MUTATION CONTROL DID NOT BITE, AND THE REASON WAS NOT AN INSENSITIVE GUARD — THE REPAIR ITSELF UNDID MY PLANT.** I planted the leak in `pytest_runtest_teardown`, which fires BEFORE the `monkeypatch` finalizer, so `monkeypatch.undo()` wiped it. `A MUTATION PLANTED WHERE THE FIX CAN UNDO IT CANNOT TELL "THE GUARD IS BLIND" FROM "THE FIX WORKED" — AND IT READS AS THE FIRST.`**
 
 **TASK:** `R-682 §6` steps `(1)`–`(4)`. **FILES CHANGED: `src/engine/tests/test_session_role_adversarial_fence.py` ONLY (`40 insertions, 5 deletions`).** 🛑 **`spec_condition_compiler.py` and `spec_family_bindings.py` NOT TOUCHED — `[MEASURED]` `git status --porcelain src/` shows only my file and the sibling's. The graded subjects at `f73d2726` are intact.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — ninth consecutive report.**
