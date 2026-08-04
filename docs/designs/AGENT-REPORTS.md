@@ -4,6 +4,26 @@
 
 ---
 
+## AR-800 · 2026-08-04 · ⚡ **START-RECEIPT — LANES `34` + `35` ACCEPTED (`R-718 §6`), BOTH LIVE, RUN IN PARALLEL BY ONE SEAT.** ★★★ **FRESH WORKER CONTEXT IN THE SAME PROCESS — `claude.exe 428`, `/clear`ED AT `~18:52Z`. THE SEAT ADDRESS IS UNCHANGED AND THE `ADVISOR-RULINGS` EAR SURVIVED THE CLEAR (it delivered `R-717` and `R-718` to this context).**
+
+**TASK:** `R-718 §6` Lanes `34` + `35`. **`HEAD d1a3b1a7` at start.** **TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **NOT GRAPH-SCHEDULED** — `R-718` records `NODE TRANSITION: NONE` and releases no descendant; these lanes consume no hard predecessor.
+**FAN-IN CONTRACT: `2` authorized ⇒ `2` returns counted at delivery. A missing lane is a FINDING, never an omission.**
+
+### ✅ §1 — FIRST OBSERVABLES AND ETAs, AS ORDERED
+- **LANE 34** (`shadow_runner._extract_stop_multiple`) — **first observable: the real `StopConfig` field list read at its executable line.** `[MEASURED HERE, located]` the class is at **`src/engine/config.py:349`**; the consumer is **`src/engine/parity_engine/shadow_runner.py`**; its tests are **`src/engine/tests/test_shadow_runner.py`**. **ETA ~10 min.** **I execute this lane MYSELF** — it writes code and owes a red-proof, and §5c keeps the code-writing and the mutation in the integrator's hands.
+- **LANE 35** (golden-strategy candidate census, READ-ONLY) — **first observable: the enumeration rule + population size, named from a COMMITTED artifact.** **ETA ~15 min.**
+
+### 🛑 §2 — TWO THINGS I AM FLAGGING BEFORE I START, NOT AT DELIVERY (`worker-execution §5`, `§9`)
+1. ★★★ **LANE 35's `"how many concretely bindable"` COLUMN WILL BE COMPUTED BY THE COMMITTED INSTRUMENT, NOT BY MY JUDGMENT.** `_check_concretely_bound` already exists in `src/engine/forensics/compile_fidelity.py` `[MEASURED HERE, file present, `48,881` bytes]`. **If I eyeballed bindability I would be scoring, and I am the doer.** 🛑 **If that function cannot be driven read-only over the candidate population, I report the column as `[UNMEASURED — no committed instrument reaches it]` rather than substituting my own reading.** ★ **`R-648` also forbids authoring a second checker, so a hand-rolled bindability judgment would breach the ruling twice over.**
+2. ⚠️ **A COMMITTED ARTIFACT MAY ALREADY BEAR ON LANE 35 AND I WILL NOT RE-DERIVE BLIND AROUND IT:** `docs/designs/GRADE-GOLDEN-SLICE-ZERO-PASSABLE-ROWS-2026-08-03.md`. **I read it FIRST and state explicitly whether my census CORROBORATES it by a different path or merely REPRODUCES it.** ★★★★★ **`R-718 §8`'s own lesson binds me here: a result that agrees with a number I already hold is the one I will audit least.**
+
+### ✅ §3 — PRE-COMMITTED, BEFORE ANY CANDIDATE IS LOOKED AT (`R-718 §6`, adopted verbatim)
+🛑 **`NONE` IS AN ACCEPTABLE AND POSSIBLY CORRECT ANSWER, AND I WILL REPORT IT PLAINLY.** Seat memory `[RELAYED, 2026-08-03, NOT re-measured]` says *"`0/11` tier-A specs name an instrument we hold."* **If the census reproduces that, I report `0` and do not select a candidate to avoid returning zero.** ⚖️ **SELECTION IS THE DESK'S; I produce the table only.**
+🛑 **`N of M` IS FORBIDDEN UNLESS I CAN NAME ALL `M` FROM A COMMITTED DOC** — otherwise `UNENUMERATED` + the surface I covered. **This is the exact defect the desk's own index was convicted of today.**
+🛑 **LANE 34 STOP CONDITION ACCEPTED AS WRITTEN:** if the taught stop cannot be sourced without touching production compile paths, **I STOP and report — I do not widen scope to reach it.**
+🛑 **FORBIDDEN, RESTATED SO IT BINDS ME:** enabling `PARITY_SHADOW_ENABLED` · any parity CLAIM · the production compiler · producer/extraction · persistence · any spec edit · any selection decision · **any `GRADE-F-1`/`GRADE-F-2` work** (`R-718 §4`: they are a TRIPWIRE on a `:534` tail-join repair that is NOT authorized today) · **citing "Gate 3" as a blocker** (`R-718 §5` forbids it to every seat until the definition-or-retirement ruling lands).
+🛑 **I CLAIM NO BAND ON EITHER LANE. `runtime-production` stays `[UNMEASURED]`; no `tsc`/`vitest`; `PHASE-1 EXIT = 0 of 3` and Lane 35 does not move it — it produces the evidence for a selection the desk makes.**
+
 ## AR-799 · 2026-08-04 · ✅★★★★★ **LANE 33 DELIVERED — `F-1` REPAIRED AND THE SELF-CERTIFICATION *BROKEN*.** ⭐ **THE POPULATION MOVED `95 → 97`, `+2 / −0`, MATCHING THE PREDICTION I PRE-REGISTERED BEFORE TOUCHING THE CODE — AND NAMING THE SAME TWO FILES THE GRADER FOUND VIA A RUNTIME PATH.** ⭐ **THE NEW FIXTURE IS RED-PROVEN: DELETE THE FIX AND EXACTLY MY `2` PREDICTED TESTS GO RED, NO UNPREDICTED MEMBER — SECOND CONSECUTIVE EXACT MATCH.**
 
 **TASK:** `R-715 §5` Lane 33. **`HEAD 8824bc3e` at start.** **FILES CHANGED — TWO, BOTH TEST-SIDE:** `src/engine/tests/test_flag_off_parameterized_refusal.py` · `src/engine/tests/canonical_regression_population.txt`. **Sibling's `test_synthetic_market_simulator.py` dirty and NOT in this commit — thirty-sixth consecutive report.**
