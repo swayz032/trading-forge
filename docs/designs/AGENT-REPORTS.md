@@ -4,6 +4,36 @@
 
 ---
 
+## AR-746 · 2026-08-03 · ⏳ **START-RECEIPT — `R-681 §5 LANE 6`, MAKE THE PARAMETER COLLISION REACHABLE. ⚠️ NEW SEAT-STATE: THE OPERATOR RESTARTED THE SESSION; MY RULING EAR DIED WITH IT AND `R-681` WAS MISSED.**
+
+### ⚠️🛑★★★★★ §0 — MONITOR STATE, DISCLOSED FIRST BECAUSE IT IS A GAP IN MY OWN COVERAGE
+🛑 **THE EAR WAS DEAD AND I DID NOT NOTICE — THE OPERATOR DID.** `[MEASURED HERE]` `Get-CimInstance Win32_Process -Filter "Name='bash.exe'"` → **`0` processes.** **The session restart killed it; `R-681` landed into a blind window.**
+✅ **BLIND WINDOW BACKFILLED BEFORE RE-ARMING (`monitor-backfill`: arming time is the join key):** `git log f849bbf9..HEAD -- docs/designs/ADVISOR-RULINGS.md` → **exactly `1` missed commit, `f146a1db` = `R-681`. Read in full before starting.**
+✅ **RE-ARMED, ONE RIG (`one-monitor`): baseline pinned at `f146a1db` so `R-681` is not re-emitted. Confirmed live — it echoed `ruling ear ARMED at f146a1db…`.** ★★★ **`0` live monitors measured BEFORE arming, so this is a replacement, not a duplicate — and no other seat's rig was touched (`LIVENESS != OWNERSHIP`).**
+
+### 🛑★★★★★ §1 — `§5(1)` IS ALREADY DISCHARGED, AND THE RULING'S `[MEASURED HERE]` IS STALE
+🛑 **`R-681 §5(1)` orders me to commit `test_compute_call_isolation.py`, citing `[MEASURED HERE: ?? src/engine/tests/test_compute_call_isolation.py, untracked]`. **IT IS TRACKED AND CLEAN.**
+```
+git log --oneline -1 -- src/engine/tests/test_compute_call_isolation.py -> 5e56dbaa (AR-745)
+git status --porcelain <same path>                                       -> (empty: tracked, clean)
+commit 5e56dbaa  2026-08-03 21:17:24 -0400   <- my commit
+commit f146a1db  2026-08-03 21:26:07 -0400   <- R-681, written NINE MINUTES LATER
+```
+✅ **SO THE FILE WAS COMMITTED BEFORE THE RULING THAT ASKS FOR IT.** **`§5(1)` IS CLOSED — I AM NOT RE-DOING IT, AND I AM NOT SILENTLY SKIPPING IT EITHER** (`count-obligations`: a discharged clause and a dropped clause look identical unless named). ⚠️ **The desk's status read was stale, most likely cached before my commit landed. Flagged because `R-416` says premises keep moving under a ruling — this one moved between measurement and publication.**
+
+### ✅★★★★★ §2 — THE EXPECTED-GREEN SET, NAMED IN ADVANCE (`§1`'s new doctrine) AND BASELINED BEFORE I EDIT
+**Adding a DEFAULTED field to a frozen dataclass should move NOTHING. I am pinning the set that must stay green, and measuring it green FIRST, so an after-the-fact green cannot be mistaken for an unchanged one:**
+`test_compute_call_isolation.py` · `test_spec_condition_compiler.py` · `test_composition_bundle_dispatch.py` · `test_family_meta_enforcement.py` · `test_levelzone_routing.py` · `test_levelzone_population_a_resolver.py` · `test_fvg_identity_dispatch.py` · `test_or_branches_honoring.py` · `test_role_demotion.py` · `test_spec_producer.py`
+🛑 **PRE-COMMITMENT: if ANY member of that set changes state, the field is not additive and I STOP — that is a finding, not a nuisance to route around.**
+
+### 🛑 §3 — HOW I INTEND TO REACH THE RED, AND THE LINE I WILL NOT CROSS
+✅ **`§5(2)` authorizes the field in `src/`. `§5` FORBIDS *"editing `src/` to produce a red"*. **THOSE ARE COMPATIBLE ONLY ONE WAY, AND I AM STATING MY READING BEFORE I ACT:** the FIELD lands in `src/`; the CONSUMPTION of it — an evaluator that actually reads a period — is supplied by the **scratchpad plugin**, never by an `src/` edit.**
+★★★★★ **THAT IS PRECISELY WHAT MAKES THE RED HONEST: the monkeypatch supplies only the missing ingredient Lane 3 measured absent — *an input that varies per condition* — while **THE CACHE THAT COLLIDES IS REAL, UNPATCHED PRODUCTION CODE.** If the red appears, it is the cache's defect, not my patch's.**
+🛑 **AND THE STOP CONDITION IS THE POINT OF THE LANE: if the old implementation does NOT fail under a valid two-different-parameter fixture, I report `HYPOTHESIS REFUTED` or `UNREACHABLE` — **never `SAFE`** — and I do NOT manufacture a repair.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~45 min.**
+
+---
+
 ## AR-745 · 2026-08-03 · ✅★★★★★ **`R-680 §4 LANE 5` DELIVERED — **RED FIRST, THEN GREEN, AND THE GUARD SHIPS WITH ITS OWN MUTATION CONTROL SO ITS RED PATH CANNOT DECAY.** `[MEASURED HERE]` **WITH ONE CACHE SLOT HOISTED TO INSTANCE LEVEL: `3 failed, 2 passed`. WITHOUT IT: `5 passed`. REGRESSION: `103 passed` across the three spec-compiler suites.**** ✅★★★★ **BOTH CONTROLS FIRED WITH THEIR VALUES PRINTED, NOT MERELY DECLARED: POSITIVE CONTROL — the two fixtures differ on **`7`** bar-slots, so nothing passes vacuously · MUTATION CONTROL — the hoist is observable on **`5`** bar-slots.** 🛑 **AND THE THING I MOST WANT ON THE RECORD IS A LIMIT, NOT A RESULT: **THE TEST EXERCISES `2` OF THE `10` CACHE CARRIERS.** `7` single-slot caches are NEVER TOUCHED BY IT. **A GREEN HERE IS A STATEMENT ABOUT `wait_structure` AND `wait_bias_cache`, AND ABOUT NOTHING ELSE** — the `AR-737 §5` over-generalisation is exactly the mistake available to me here, and I am declining it in advance.**
 
 **TASK:** `R-680 §4` (a) RED under a deliberate hoist · (b) GREEN on unmodified code · (c) what it converts and what it does not reach.
