@@ -4,6 +4,32 @@
 
 ---
 
+## AR-775 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — HANDOFF `5` (the typed MA primitive object), on the `2/2` fan-in `AR-774` declared. ETA to first observable ~45 min.** 🛑★★★★★ **AND ONE DEFECT IN THE DISPATCH ITSELF, RAISED BEFORE I START BECAUSE IT COSTS NOTHING NOW: `R-696` CARRIES NO `★ WORKER — START HERE` BLOCK.** `worker-onboarding §1` makes that block the cold-start-complete contract, and `R-694 §7` had every field of it (files-allowed · forbidden · first-observable + ETA · acceptance · stop condition · honest-partial clause). **`R-696 §7` has none of them.** ✅ **I RECONSTRUCTED THE CONTRACT FROM `R-695 §7` + `TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md §6` AND I AM NOT BLOCKED — but a cold seat that had not read `R-695` would have started handoff `5` with no forbidden list.**
+
+**TASK:** handoff `5`, authorized by `R-696 §7` (*"ON `2/2` FAN-IN: HANDOFF 5, per `R-695 §7`"*) as amended by `R-695 §7`'s six mandatory items.
+
+### ⚠️ §1 — SEAT STATUS, MEASURED, BECAUSE `AR-774` SAID *"NO HANDOFF"* ONE MINUTE BEFORE I EXISTED
+`[MEASURED HERE]` `AR-774` committed **`b2a05e17`, `00:43`**; this seat cold-started **`00:44`** through `/worker-onboarding`. **THIS IS A RE-SEAT OF THE WORKER WINDOW, NOT A SECOND LIVE WORKER** — `AR-774` filed no handoff because it did not need one; the window was cleared under it.
+🛑 **A LIVE *ADVISOR* SIBLING IS MEASURED, HOWEVER** `[MEASURED HERE, `git log --date=format`]` — `R-695` `00:26`, `ADVISOR-STATE` `00:27`, `R-696` `00:36`, `ADVISOR-STATE` `00:37`. **THEREFORE: `git commit -o <named paths>` ONLY, never an index-wide operation**, and `src/engine/tests/test_synthetic_market_simulator.py` (the sibling's, dirty in the shared tree for twenty-three consecutive reports) **stays untouched.**
+
+### 🛑 §2 — THE AUTHORIZATION IS CONDITIONAL AND I AM NAMING THE CONDITION I AM RELYING ON
+**No ruling has landed on `AR-774`.** `R-696 §7` does not gate handoff `5` on an approval of `AR-774` — it gates it on **`2/2` FAN-IN**, which `AR-774 §7` declares. **I am proceeding on that pre-registered condition, not on a desk approval that does not exist yet, and I am saying so rather than letting the two read as one.** 🛑 **If the desk intended its own ruling on `AR-774` as an additional gate, say so and I stop where I am.**
+
+### ✅ §3 — ORDER OF WORK, AND IT IS THE RULING'S ORDER NOT MINE
+1. **`F-2` FIRST — `unknown_parameter_key` in `_resolve_bias_periods`** (`R-695 §7(1)`; it is the gate on any future producer). Red-proof with the grader's three key shapes `{'period':7}` · `{'fast':7,'slow':90}` · `{'ema_fast':7,'ema_slow':90}`.
+2. **`F-1` — the wired-HTF early return must consume or REFUSE**, with a witness that is a **DIFFERING OUTPUT, SPY-FREE, ON THE WIRED PATH** (`R-695 §8`: an invocation witness is not a consumption witness).
+3. **`F-3` — the warm-up floor must REFUSE, not return all-False.**
+4. **`F-4`/`F-5`/`F-6` where they touch the typed object's key**; `F-5` owes a mutation that reddens the direction half.
+Built to `TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md`, whose `§6` red-proof obligations I carry in full — **including `OMIT-WHEN-EMPTY` (`0/18` vs `18/18` re-seals), which is not optional.**
+
+### 🛑 §4 — WHAT I CARRY FORWARD AS BINDING
+- **STOP CONDITION (`R-695 §7`), unchanged:** if `unknown_parameter_key` reddens an existing suite, **that red is a live caller relying on the silent default and it OUTRANKS this lane.** I stop and report it.
+- **THE PRODUCER REMAINS FORBIDDEN** (`R-694 §7`, design doc `§7`): `RECEIVES`, never `EXTRACTS`.
+- 🛑 **NO PARITY CLAIM OF ANY KIND** (`R-696 §4`). **TypeScript/Python parity is `[UNENUMERATED]` and I will say it that way.**
+- **FIRST OBSERVABLE:** the `F-2` red-proof pair (three key shapes measured returning engine defaults BEFORE, refusing-by-name AFTER), with its expected-green set declared in advance.
+
+---
+
 ## AR-774 · 2026-08-04 · ✅★★★★★ **`R-694 §5` LANE 24 DELIVERED. **FAN-IN `2/2` ON THE BATCH, NO HANDOFF.** RED-PROOF FIRST, THEN A BOUNDED REPAIR, THEN THE SAME INSTRUMENT RE-RUN AGAINST THE FILES THE DESK ACTUALLY RUNS.** 🛑🛑🛑★★★★★ **AND THE RED-PROOF FOUND A THIRD DEFECT THE RULING DID NOT NAME, WITH THE **DANGEROUS** FAILURE DIRECTION: `[MEASURED, fixture B3]` **A WORKER `git commit` WHOSE MESSAGE MERELY QUOTES THE LEDGER FILENAME SILENTLY *CONSUMED* THE ADVISOR'S SENTINEL.** Mechanism A over-blocks and says so; **THIS ONE DISARMS THE DESK'S PER-RULING GATE AND EMITS NOTHING.** ★★★★★ **`THE SAME BAD MATCHER SITS IN BOTH HOOKS, AND IN THE SECOND ONE IT FAILS SILENTLY AND OPEN.`** ✅ **FIXED, AND IT IS THE HALF THAT MATTERED.** 🛑 **`2` OF `8` FIXTURES REMAIN RED **BY DECISION, NOT BY OVERSIGHT** — both fail SAFE, and `§4` says why I did not chase them.**
 
 **TASK:** `R-694 §5` Lane 24. **FILES CHANGED — TWO, BOTH HOOKS, IN A DIRECTORY THAT IS NOT UNDER GIT (`§5`):** `.claude/hooks/advisor-ruling-guard.ps1` · `.claude/hooks/advisor-ruling-receipt.ps1`. **PLUS `5` NEW FILES BANKED IN THE CAMPAIGN REPO** under `scripts/hook-guards/` — the harness and BOTH versions of BOTH hooks. `[MEASURED]` `git status --porcelain src/` still shows only the sibling seat's file; **I touched no `src/`.**
