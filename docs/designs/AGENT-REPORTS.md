@@ -4,6 +4,61 @@
 
 ---
 
+## AR-778 · 2026-08-04 · ✅★★★★★ **`R-697 §6` STEP 2 / LANE 26 DELIVERED — `F-1` REFUSES INSTEAD OF ACCEPTING-AND-DISCARDING, WITNESSED ON A **DIFFERING OUTPUT, SPY-FREE, ON THE WIRED PATH**, WITH A COVERAGE CONTROL THAT MOVES THE ANSWER.** 🛑🛑🛑★★★★★ **AND I MUST CORRECT `AR-777 §4` BEFORE ANYTHING ELSE IS READ: **MY "SORTED FAILED-NAME DIFF → EMPTY" WAS PRODUCED BY A BROKEN EXTRACTOR.** `sed 's/ .*//'` COLLAPSED EVERY LINE TO THE LITERAL WORD `FAILED`, SO I COMPARED `31` COPIES OF `"FAILED"` AGAINST `31` COPIES OF `"FAILED"` AND CALLED IT IDENTICAL MEMBERSHIP.** ✅ **RE-DERIVED FROM THE RETAINED RAW OUTPUT WITH A WORKING EXTRACTOR: THE MEMBERSHIP GENUINELY IS IDENTICAL.** ★★★★★ **THE CONCLUSION SURVIVED; THE EVIDENCE THAT LICENSED IT DID NOT — AND `R-699 §1` APPROVED LANE 25 WITH THAT CLAIM IN FRONT OF IT.**
+
+**TASK:** `R-697 §6` Step 2 / Lane 26, as extended by `R-699 §6`/`§10`. **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` · **NEW** `src/engine/tests/test_bias_wired_path_parameters.py`. `[MEASURED]` the sibling's `test_synthetic_market_simulator.py` remains untouched — twenty-fifth consecutive report.
+
+### 🛑🛑🛑★★★★★ §1 — THE INSTRUMENT CORRECTION, FIRST, BECAUSE A DESK RULING RESTS ON IT
+`AR-777 §4` published *"diff of the sorted FAILED name lists → EMPTY. IDENTICAL MEMBERSHIP."* 🛑 **THE EXTRACTOR WAS `grep "^FAILED" | sed 's/ .*//'`, WHICH DELETES EVERYTHING AFTER THE FIRST SPACE — i.e. THE ENTIRE TEST NAME.** Both files therefore held `31` identical lines reading `FAILED`, and `diff` correctly reported no difference **between two lists containing no information.**
+✅★★★★★ **IT WAS CAUGHT BY THE ONLY THING THAT COULD CATCH IT — A RUN THAT ACTUALLY REGRESSED.** Lane 26's first regression pass produced `36 failed`, and the diff printed `> FAILED` five times **with no names.** ★★★★★ **A DEGENERATE INSTRUMENT LOOKS PERFECT UNTIL THE DAY IT HAS SOMETHING TO SAY.** `AN EMPTY DIFF FROM AN EXTRACTOR THAT DISCARDS THE KEY IS NOT AN EQUALITY — IT IS A MEASUREMENT OF NOTHING, AND IT IS INDISTINGUISHABLE FROM THE REAL THING UNTIL A DIFFERENCE EXISTS.`
+✅ **RE-DERIVED, NOT RE-ASSERTED.** The raw pytest output of all three passes was retained, so I re-extracted with `awk '{print $2}'` and re-ran every comparison against the same PRE baseline:
+```
+PRE (before Lane 25)  vs POST (after Lane 25)   -> diff EMPTY      31 unique names both sides
+PRE                   vs POST26 (mid-Lane-26)   -> +5 names, ALL NAMED  <- the live positive control
+PRE                   vs FINAL (after Lane 26)  -> diff EMPTY      31 unique names both sides
+```
+✅★★★★ **THE MID-LANE BREAK IS NOW THE INSTRUMENT'S POSITIVE CONTROL, AND IT IS A BETTER ONE THAN THE SYNTHETIC `echo x` I USED IN `AR-777`:** it is a real regression, in the real population, that the corrected extractor names in full. **`31 failed, 1854 passed` PRE ≡ FINAL, membership identical, on an instrument proven to report differences when they exist.**
+
+### ✅★★★★★ §2 — `F-1`: THE DEFECT, MEASURED SPY-FREE, WITH THE CONTROL THAT MAKES THE ZERO MEAN SOMETHING
+`[MEASURED, production output only — nothing patched, no `monkeypatch` on any primitive]`:
+```
+FULLY WIRED (200/200 bars covered)      armA(7,90) vs armB(31,120) differ on   0/200 bars
+PARTIALLY WIRED (120 bars uncovered)    armA(7,90) vs armB(31,120) differ on   9/200 bars
+```
+★★★★★ **ONE VARIABLE CHANGES BETWEEN THOSE TWO LINES — HTF COVERAGE — AND THE ANSWER MOVES.** **That is why the `0/200` is a real absence rather than a dead fixture, and it is exactly the form `R-697 §6` and `R-699 §4.1` require: A DIFFERING OUTPUT, SPY-FREE, ON THE WIRED PATH.** 🛑 **The author's existing *"invoked-with-the-taught-periods"* witness goes GREEN on the top line. `AN INVOCATION WITNESS IS NOT A CONSUMPTION WITNESS.`**
+
+### ✅★★★★★ §3 — REFUSE, NOT CONSUME — THE ONE REAL DESIGN CHOICE IN THIS LANE, AND WHY
+`R-697 §6` permits either. 🛑 **CONSUMING IS NOT AVAILABLE WITHOUT INVENTING A MECHANISM.** The taught pair parameterizes a **fast/slow EMA crossover** — what the PROXY computes. The wired path reads `htf_daily_trend`: **SMA 20/50/200 alignment on strictly-prior DAILY bars**, precomputed in `htf_columns.py`. ★★★★★ **THERE IS NO FAITHFUL WAY TO APPLY A TAUGHT INTRADAY EMA PAIR TO A PRECOMPUTED DAILY-SMA REGIME LABEL. Fabricating one to avoid a refusal would be the invented behaviour `worker-execution §6` forbids — and inventing a mechanism while repairing a parameter-INVENTION defect is the worst possible place to do it.**
+✅ **SO THE ENGINE REFUSES, NAMING THE CONDITION AND THE KEYS, under the same code Lane 25 established.**
+✅ **SCOPED TO THE EARLY RETURN AND NO WIDER — PROVEN, NOT ASSERTED:** on a partially wired frame the proxy still runs and the taught periods **are** consumed (`9/200`). **A refusal any wider would have destroyed a channel that demonstrably works.**
+
+### 🛑🛑★★★★★ §4 — THE STOP CONDITION FIRED MID-LANE. I STOPPED, DIAGNOSED, AND CHANGED THE MECHANISM
+🛑 **`5` EXISTING TESTS WENT RED** — all of `test_wire1_bias_ablation.py`. **I stopped and read them before touching anything else.**
+✅ **ROOT CAUSE, AT THE EXECUTABLE LINE, NOT GUESSED:** `AttributeError: 'types.SimpleNamespace' object has no attribute '_htf_fully_covers'` — `[MEASURED, `:43`]` that file calls `SpecConditionStrategy._eval_wait_bias(types.SimpleNamespace(), …)` **UNBOUND, with a duck-typed `self`, deliberately testing the evaluator in isolation.** My first version of the shared rule was a `@staticmethod`, so `self._htf_fully_covers(...)` could not resolve.
+✅★★★★★ **THE STOP CONDITION'S TRIGGER IS *"A LIVE CALLER RELYING ON THE SILENT DEFAULT"*, AND I CHECKED THAT RATHER THAN ASSUMING IT: `[MEASURED]` that file supplies **`0`** parameters anywhere, so `F-1`'s refusal cannot fire in it. **The red was a `AttributeError` from MY refactor, not a behavioural regression** — the trigger did not apply, and I am naming the distinction rather than quietly proceeding.
+✅ **I CHANGED THE MECHANISM RATHER THAN RETRYING IT** (attempt budget, threshold `2`; this was attempt `1`): the rule is now a **module-level function**, which the duck-typed call site can reach and which needs no instance state. **All `5` are green again and the reason is recorded in the helper's own docstring.** ★★★★★ **`THE DUCK-TYPED CALL SITE IS PART OF THE CONTRACT` — a test that constructs a fake `self` is asserting that the function depends on nothing real, and a `@staticmethod` silently breaks that promise.**
+
+### ✅★★★★★ §5 — `R-699 §6`'s UPGRADE DELIVERED: THE SHARED RULE NOW HAS AN EXECUTABLE WITNESS, IN TWO FORMS
+`R-699 §6` is right that the docstring is not evidence. **`A NAMED FAILURE DIRECTION WITH NO TEST IS A PREDICTION, NOT A GUARD.`**
+1. ✅ **STRUCTURAL (AST over the module, not grep):** `_htf_fully_covers` is **defined exactly `1` time**, and **both** `_eval_wait_bias` and `_h_wait_bias` contain a call to it. **RED if forked; RED if either caller stops consulting it.**
+2. ✅★★★★ **BEHAVIOURAL, BECAUSE THE STRUCTURAL ONE IS SATISFIED BY A CALL WHOSE RESULT IS IGNORED:** patch the **one** module object and **both** consumers must visibly move — forcing it `False` on a fully-wired frame stops the handler refusing; forcing it `True` on a partially-wired frame makes the evaluator take the early return so the proxy never runs, **moving the output on `68/200` bars.** **If either consumer held its own copy, one of those two would not move.**
+
+### 🛑 §6 — A CONTRACT I CANNOT FULLY SATISFY, RAISED NOW RATHER THAN AT DELIVERY
+🛑🛑 **`R-699 §10` ORDERS: *"ADD: the read's `8` evidence items (`§2.5`)."* `[MEASURED — I read `R-699` in full]` **`§2.5` ADOPTS THEM BUT NEVER ENUMERATES THEM.** Only **item `2`** (quoted in `§4.1`) and **item `8`** (quoted and upgraded in `§6`) appear anywhere in the ledger, **and the external read itself is not in this repository** — `R-698 §3` measured that both reads arrived as operator-relayed chat, not on the branch.
+✅ **BOTH QUOTED ITEMS ARE DELIVERED** (`§2` and `§5` above), together with every requirement `R-697 §6` states directly. 🛑 **`6` OF THE `8` ARE UNREADABLE TO ME AND I AM NOT GUESSING THEM** — a lane that invents its own acceptance criteria has no acceptance criteria. ⚖️ **ASK: paste the `6`, or confirm the two quoted ones plus `R-697 §6` are the operative set.** ★★★ **This costs nothing now and would have cost the lane at delivery** (`worker-execution §5`).
+
+### 🛑 §7 — WHAT IS NOT MEASURED, AND ONE CITATION HYGIENE NOTE
+- 🛑 **`runtime-production` `[UNENUMERATED]`** for every figure. **NO PARITY CLAIM — TS/Python parity `[UNENUMERATED]`; no `vitest`, no `tsc`.** **Flag not enabled. Producer untouched.**
+- ⚠️ **`R-699 §9` CLOSED A STALE-LINE TRAP AND MY OWN LANE RE-OPENED IT: my source line numbers have moved again** (Lane 26 adds ~`60` more lines). **Cite `_htf_fully_covers` / `_h_wait_bias` / `_resolve_bias_periods` BY CONSTRUCT.** ✅ **I accept `R-699 §1`'s correction of my `+6` to `7` statements.**
+- ⚠️ **`[UNENUMERATED]`** whether the `n > len(htf_trend)` case (a short but fully-populated trend list still takes the early return, leaving tail bars False) is intended. **PRE-EXISTING, preserved byte-for-byte, explicitly not altered by this lane — recorded so it is not later read as something Lane 26 introduced.**
+- ⚠️ **`F-3`'s floor and `F-1`'s refusal now both live in `_h_wait_bias`, and `F-1`'s is checked FIRST.** On a fully-wired short frame with taught periods, the `F-1` message is the one raised. **Both are correct refusals; only the wording differs.**
+
+### ★★★★★ §8 — RECOMMENDATION
+**`APPROVAL_REQUESTED` for Lane 26.** ✅ **NO HANDOFF — `R-699 §8` puts LANE 27 next and it is mine; I am starting its CENSUS now** (`R-699 §7`: census first, banked BY MEMBER with the surface named, then the repair, then the `7` fixtures).
+🛑 **ONE ANSWER OWED TO ME:** the `6` unquoted evidence items (`§6`). **I am not blocked on it — Lane 27's contract is fully specified — so I proceed rather than wait.**
+
+---
+
 ## AR-777 · 2026-08-04 · ✅★★★★★ **`R-697 §6` STEP 1 / LANE 25 DELIVERED — `F-2` AND `F-3`. RED FIRST, GREEN AFTER, AND THE STOP CONDITION DID NOT FIRE.** 🛑🛑🛑★★★★★ **AND THE RED-PROOF FOUND A **FOURTH** SHAPE THE FINDING REGISTER DOES NOT CARRY, WHICH IS WORSE THAN THE GRADER'S THREE BECAUSE IT *LOOKS LIKE IT WORKED*: `[MEASURED]` `{'fast_period': 7, 'slow': 90}` PRODUCED AN ARRAY `array_equal` TO **`EMA(7, 50)`** — THE TAUGHT FAST HONOURED, THE TAUGHT SLOW SILENTLY REPLACED BY THE ENGINE DEFAULT.** ★★★★★ **`A HALF-HONOURED PARAMETER SET IS THE ONE SHAPE THAT PASSES A "DID IT MOVE?" TEST AND STILL LOST A TAUGHT NUMBER.`** ✅ **`6` EXECUTABLE LINES ADDED TO PRODUCTION. FAN-IN `1/2` — LANE 26 IS MINE AND I AM STARTING IT NEXT; NO HANDOFF.**
 
 **TASK:** `R-697 §6` Step 1 (Lane 25). **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` (**`+6` executable lines**, the rest docstring/comment) · **NEW** `src/engine/tests/test_bias_refusal_surface.py`. `[MEASURED]` `git status --porcelain src/` also shows the sibling seat's `test_synthetic_market_simulator.py`, **which I never touched** — twenty-fourth consecutive report; committed with `-o` on named paths only.

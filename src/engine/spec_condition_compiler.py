@@ -146,6 +146,38 @@ BIAS_EMA_SLOW: int = 50
 # name` expressible at all, so it is a correctness surface, not a convenience list.
 # Adding a member here is adding a supported taught parameter -- it is not a typo fix.
 RECOGNISED_BIAS_PARAMETER_KEYS: frozenset[str] = frozenset({"fast_period", "slow_period"})
+
+
+def _htf_fully_covers(htf_trend: list | None, n: int) -> bool:
+    """Does the real HTF signal decide EVERY bar the bias evaluator will look at?
+
+    ONE RULE, TWO CALLERS, DELIBERATELY. `_eval_wait_bias` uses it to take its early
+    return, and `_h_wait_bias` uses it to decide whether taught periods can possibly be
+    honoured (F-1, R-697 §6 Step 2). Those two questions must never be able to disagree:
+    a handler that refused on a frame the evaluator would have proxied would reject
+    working parameters, and the reverse would restore the accept-and-discard defect
+    silently. This campaign has already convicted `one rule, three copies` (AR-762), so
+    the rule is written once.
+
+    IT IS MODULE-LEVEL, NOT A METHOD, AND THAT IS A MEASURED REQUIREMENT RATHER THAN A
+    STYLE CHOICE. `test_wire1_bias_ablation.py:43` calls the evaluator UNBOUND with a
+    `types.SimpleNamespace()` standing in for `self`, deliberately testing it in
+    isolation from the strategy. A first version of this helper was a `@staticmethod`,
+    and calling it as `self._htf_fully_covers(...)` turned all five of that file's tests
+    into AttributeErrors -- a red that had nothing to do with the behaviour under repair.
+    The coverage question depends on no instance state, so it does not belong on the
+    instance. `THE DUCK-TYPED CALL SITE IS PART OF THE CONTRACT.`
+
+    EXACTLY EQUIVALENT to the inline condition it replaced (`wired_bars == min(n,
+    len(htf_trend)) and wired_bars > 0`): every entry in the examined span is non-null,
+    and the span is non-empty. The `n > len(htf_trend)` case is preserved unchanged -- a
+    short trend list that is fully populated still takes the early return, leaving the
+    tail bars False. That is pre-existing behaviour and this lane does not alter it.
+    """
+    if htf_trend is None:
+        return False
+    span = min(n, len(htf_trend))
+    return span > 0 and all(t is not None for t in htf_trend[:span])
 RETEST_PROXIMITY_ATR_MULT: float = 1.0
 RETEST_LEVEL_EMA_PERIOD: int = 20
 CANDLE_WICK_RATIO_THRESHOLD: float = 0.4
@@ -583,6 +615,38 @@ class SpecConditionStrategy(BaseStrategy):
         # `VERIFY THE TREE YOU SHIP` cuts both ways: the narrowest correct site is the
         # handler, which already holds both the resolved periods and `ctx["n"]`.
         supplied = sorted(set(dict(b.parameters or ())) & RECOGNISED_BIAS_PARAMETER_KEYS)
+
+        # F-1 (R-697 §6 Step 2, graded HIGH at R-695 §3): ACCEPT-AND-DISCARD IS FORBIDDEN.
+        # When the real HTF signal decides every bar, `_eval_wait_bias` returns before
+        # `eff_fast`/`eff_slow` exist -- the taught periods are received and never read,
+        # and NOTHING in the output reveals it. Two conditions taught (7,90) and (31,120)
+        # produce arrays differing on 0/200 bars on such a frame, while the same arms
+        # differ on 9/200 the moment any bar is uncovered.
+        #
+        # WHY REFUSE RATHER THAN CONSUME, WHICH R-697 §6 LEAVES OPEN. The taught pair
+        # describes a fast/slow EMA crossover -- what the PROXY computes. The wired path
+        # reads `htf_daily_trend`: SMA 20/50/200 alignment on strictly-prior DAILY bars,
+        # precomputed in htf_columns.py. Applying a taught intraday EMA pair to a daily-SMA
+        # regime label is not a translation, it is an invented mechanism, and inventing one
+        # to avoid a refusal is the defect this whole channel exists to prevent.
+        #
+        # SCOPED TO THE EARLY RETURN AND NO WIDER. On a PARTIALLY wired frame the proxy
+        # still runs for the uncovered bars and the taught periods are genuinely consumed
+        # -- measured. Refusing there would destroy a channel that demonstrably works.
+        if supplied and _htf_fully_covers(ctx["htf_trend"], ctx["n"]):
+            raise ValueError(
+                f"condition {b.condition_id!r} teaches {supplied!r}, but the real HTF "
+                f"signal covers every bar of this frame, so the fast/slow EMA proxy those "
+                f"periods parameterize never runs. "
+                f"REFUSAL supplied_parameter_cannot_fall_back_to_default "
+                f"(unknown_parameter_key family, R-684 §7.2): accepting periods this "
+                f"branch cannot honour would discard a taught number silently and leave "
+                f"no trace in the output. The wired path evaluates a precomputed daily "
+                f"SMA-alignment regime, not an intraday EMA crossover -- there is no "
+                f"faithful way to apply {supplied!r} to it, so it is refused rather than "
+                f"invented."
+            )
+
         if supplied and ctx["n"] < slow_period + 2:
             raise ValueError(
                 f"condition {b.condition_id!r} teaches {supplied!r} requiring a slow leg of "
@@ -872,7 +936,7 @@ class SpecConditionStrategy(BaseStrategy):
                 wired_bars += 1
                 out[i] = (t == want)          # "neutral" => False: a real refusal
             self._wire1_bias_bars = wired_bars
-            if wired_bars == min(n, len(htf_trend)) and wired_bars > 0:
+            if _htf_fully_covers(htf_trend, n):
                 return out                     # fully wired — no proxy needed
 
         # ── PROXY FALLBACK (unwired bars only; approximation=True)
