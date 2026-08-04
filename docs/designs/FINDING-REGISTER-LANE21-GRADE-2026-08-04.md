@@ -38,6 +38,7 @@ that was measured.** 🛑 **That is why both are `BLOCKS_NEXT_HANDOFF` and neith
 |---|---|---|---|---|---|---|
 | **FINDING-1** | **HIGH** | `spec_condition_compiler.py` · `_eval_wait_bias` wired-HTF branch, `:800-801` return vs `:815-816` | 🛑 **NO** | 🛑🛑 **YES — measured** | ❌ No (branch not taken) | **`BLOCKS_NEXT_HANDOFF`** → Lane 26 |
 | **FINDING-2** | **HIGH** | `spec_condition_compiler.py` · `_resolve_bias_periods:582-585` | 🛑 **NO** | 🛑🛑 **YES** | ❌ No (canonical keys used) | **`BLOCKS_NEXT_HANDOFF`** → Lane 25 |
+| **FINDING-2D** | **HIGH** | `spec_condition_compiler.py` · `_resolve_bias_periods` · **PARTIAL** recognition | 🛑🛑 **NO — and it defeats the OBVIOUS repair** | 🛑🛑🛑 **YES — the WORST kind: the output MOVES** | ❌ No (canonical keys used) | **`BLOCKS_NEXT_HANDOFF`** → **CLOSED by Lane 25** |
 | **FINDING-3** | MEDIUM | `spec_condition_compiler.py` · warm-up floor `:818` vs its own `:811-814` | 🛑 NO | ⚠️ YES — indirectly | ❌ No | **REPAIR** — both lanes owe it |
 | **FINDING-4** | MEDIUM | `spec_condition_compiler.py` · `direction="both"` legacy cache `:1388-1392` | 🛑 NO | ⚠️ YES | ❌ No (`both` not exercised) | **REPAIR** in typed-object step |
 | **FINDING-5** | MEDIUM | the composite cache key · its **direction** component | 🛑 **NO — it IS the defect** | 🛑 **YES by definition** | ❌ No (correct today) | **REPAIR** — owes a RED mutation |
@@ -92,6 +93,32 @@ unrecognised** (**HARD REFUSE, naming the key and the condition**). Code:
 **`supplied_parameter_cannot_fall_back_to_default`.** **The three shapes above are now a
 permanent regression corpus, plus a planted restoration of the silent default that must FAIL a
 permanent test.**
+
+### 🛑🛑🛑 FINDING-2D · HIGH · `BLOCKS_NEXT_HANDOFF` — **ADDED POST-GRADE `2026-08-04` BY `R-699 §2.2`**
+🛑 **PROVENANCE, STATED BECAUSE THIS ROW WAS NOT PART OF THE LANE-21 GRADE:** discovered by the
+WORKER's own red-proof while repairing `FINDING-2` (`AR-776 §2`, re-measured `AR-777 §2`), named
+as a distinct shape by the external read, **entered here by `R-699 §2.2`.** ★ **It is NOT
+`[MEASURED BY GRADED INSTRUMENT]` — the Lane-21 grader never saw it.**
+**CONSTRUCT.** A parameter set in which **SOME** keys are recognised and some are not. The
+pre-repair resolver filed each unrecognised key under ABSENT **independently, per field**, so a
+partially-recognised set was honoured in part and defaulted in part.
+**REPRODUCTION.** `[MEASURED, `AR-777 §2`]` `{'fast_period': 7, 'slow': 90}` →
+`array_equal(produced, EMA(7, 50)) == True`. **Not `EMA(7,90)` (the taught set), not `EMA(20,50)`
+(the engine set): the taught FAST honoured, the taught SLOW silently replaced by the default.**
+**FALSE GREEN.** 🛑🛑🛑 **THE MOST DANGEROUS IN THIS REGISTER, AND THE REASON IS ITS DIRECTION:
+the output DOES move away from the engine default, so a *"did the parameters affect the
+result?"* test goes GREEN on a set that lost half its taught numbers.**
+★★★★★ **`A HALF-HONOURED PARAMETER SET IS THE ONE SHAPE THAT PASSES A "DID IT MOVE?" TEST AND
+STILL LOST A TAUGHT NUMBER.`**
+🛑 **IT DEFEATS THE OBVIOUS REPAIR.** A key-COUNT check (`len(params) != 2 → refuse`) passes the
+grader's three shapes and lets this one through. ★★★★★ **`NO KEY-COUNT TEST IS SUFFICIENT;
+VALIDATION MUST IDENTIFY RECOGNISED AND UNRECOGNISED KEYS INDIVIDUALLY.`**
+✅★★★★★ **THE LAW THIS MINTS, ADOPTED VERBATIM AT `R-699 §2.2`:** **`A PARAMETER SET IS NOT
+FAITHFULLY TRANSMITTED MERELY BECAUSE AT LEAST ONE SUPPLIED VALUE CHANGES THE RESULT. EVERY
+REQUIRED TAUGHT KEY MUST BE RECOGNISED AND CONSUMED, OR THE COMPLETE INSTRUCTION MUST REFUSE.`**
+✅ **DISPOSITION: CLOSED BY LANE 25** (`AR-777`, commit `44b8fc4f`). Permanent fixture
+`test_f2_partial_recognition_still_refuses` asserts the refusal names **`['slow']` only**, not
+the whole set. `[MEASURED HERE, `R-699 §1`]` desk re-ran the file: **`36 passed`, exit `0`.**
 
 ### FINDING-3 · MEDIUM · REPAIR (both lanes owe it)
 `[MEASURED BY GRADED INSTRUMENT]` `slow_period >= n-1` **silently returns all-False**
