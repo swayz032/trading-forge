@@ -4,6 +4,70 @@
 
 ---
 
+## AR-773 · 2026-08-04 · ✅★★★★★ **`R-694 §7` LANE 23 DELIVERED. **THE GATE DISCRIMINATES — RED ON A PLANT, NAMING THE PRIMITIVE, GREEN AGAIN BYTE-IDENTICALLY.** STOP CONDITION DID NOT FIRE.** 🛑🛑🛑★★★★★ **AND THEN I RAN THE SECOND PLANT THE CONTRACT'S OWN WORDING REQUIRED, AND IT INVERTED THE ANSWER FOR THE ROUTE HANDOFF 5 WILL ACTUALLY USE: `[MEASURED]` **THE SAME PYTHON-ONLY PRIMITIVE, THE SAME COMMAND — `exit 1` WITH THE FLAG SET IN MY SHELL, `exit 0` AND *"PASS: full parity"* WITH IT UNSET. ONLY THE AMBIENT ENVIRONMENT DIFFERED.** ★★★★★ **`[MEASURED]` PYTHON READS `9` `TF_*` FLAGS; THE GATE DECLARES EXACTLY `1` AND INHERITS THE OTHER `8` FROM `{...process.env}`. **IN A CLEAN CI SHELL THE GATE WOULD REPORT FULL PARITY WHILE THE DIVERGENCE IS LIVE IN THE TREE.**
+
+**TASK:** `R-694 §7` Lane 23. **FAN-IN `1/2` — LANE 24 (`R-694 §5`) IS MINE AND I AM STARTING IT NEXT; NO HANDOFF.** **FILES CHANGED: NONE.** `[MEASURED]` `git diff --stat HEAD -- src/` shows **only the sibling seat's `test_synthetic_market_simulator.py`, which I never touched** — twenty-second consecutive report. **Both plants removed; `ma_native|TF_MA_NATIVE` → `0` occurrences.**
+
+### ✅★★★★★ §1 — THE THREE ORDERED RUNS, VERBATIM
+```
+BASELINE   npx tsx scripts/check-spec-binding-plan-parity.ts          -> EXIT 0
+  PASS 1 (flag=false): Checked 41 sample specs. PASS: full parity.
+  PASS 2 (flag=true):  Checked 41 sample specs. 87 known/expected primitive divergence(s), 0 unexpected.
+
+PLANTED A  (identical command)                                        -> EXIT 1
+  PASS 1: Checked 41 sample specs at flag=false. FAIL: 35 spec(s) drifted.
+  PASS 2: 87 known/expected divergence(s), 252 unexpected mismatch(es).
+  FAIL: binding-plan parity gate failed — see DRIFT/UNEXPECTED entries above.
+
+RESTORED   (identical command)                                        -> EXIT 0
+  diff(baseline_output, restored_output) -> EMPTY. BYTE-IDENTICAL.
+```
+✅★★★★ **AND THE RED NAMES THE OFFENDER, WHICH `R-694 §7(2)` REQUIRED AND WHICH AN EXIT CODE WOULD NOT HAVE GIVEN** `[MEASURED, `504` occurrences in the output]`:
+```
+binding[6].primitive (type="WAIT_BIAS"): ts="bias_engine.classify_institutional_regime"
+                                         py="ma_native.compute_ma_crossover"
+```
+✅★★★★★ **AN INDEPENDENT CROSS-CHECK I DID NOT PLAN AND WILL NOT WASTE: `252` unexpected mismatches EQUALS the `252` `WAIT_BIAS` conditions I counted in the corpus **BEFORE** planting, by a different instrument (`json.load` over the `41` specs). ★★★ **The gate's arithmetic and mine agree on a number neither derived from the other** — and `35` drifted specs vs my `36` files-containing-`WAIT_BIAS`-or-`CONFIRM_DIRECTION` reconciles exactly, because I planted on `WAIT_BIAS` ONLY.**
+
+### ✅★★★★ §2 — PRECONDITION AND EXPECTED-GREEN SET, BOTH PRE-DECLARED (`AR-772 §2`)
+✅ **I PROVED THE PLANT *COULD* FIRE BEFORE PLANTING IT** `[MEASURED]` — `252` `WAIT_BIAS` conditions across `36` of `41` corpus files. ★★★★★ **Without that, a green would have been indistinguishable from a blind gate and I would have tripped the stop condition on a plant that simply had nothing to bite.** `A NEGATIVE RESULT FROM A PROBE THAT COULD NOT HAVE FIRED IS NOT A FINDING.`
+✅ **EXPECTED-GREEN SET, DERIVED BY THE RULE I FIXED IN ADVANCE, NOT REVISED AFTER:** union import closure of BOTH modules I could touch (`spec_family_bindings` `95`, `family_meta_enforcement` `95`) ∩ testpaths = **`91` files.**
+```
+PRE  (before any plant):  31 failed, 2183 passed, 3 skipped, 2 xfailed
+POST (after restore):     31 failed, 2183 passed, 3 skipped, 2 xfailed
+diff of the sorted FAILED name lists -> EMPTY. IDENTICAL MEMBERSHIP.
+```
+★★★ **BANKED BY MEMBER, NOT BY COUNT — `R-694 §1.7` records that `AR-769`'s `30` are now permanently unjoinable because only the comparison was published. `A COUNT IS NOT A PIN`, and I am not repeating that.**
+
+### 🛑🛑🛑★★★★★ §3 — THE SECOND PLANT, AND WHY IT WAS OBLIGATORY RATHER THAN EXTRA SCOPE
+🛑 **`R-694 §7(2)` says *"plant a minimal Python-only parameterized primitive **via `EXPERIMENT_PRIMITIVES`**."* **PLANT A DID NOT USE THAT ROUTE** — it edited the static `FAMILY_META` table. **I noticed the gap in my own delivery before writing it up, and it is not cosmetic:** `[MEASURED, `family_meta_enforcement.py:276-278`, the registry's own docstring]` those primitives are *"produced only by an **env-gated experiment override** inside `bind_condition()`."* ★★★★★ **SO THE ROUTE THE RULING NAMED IS ENV-GATED, AND PLANT A'S ROUTE IS NOT. TESTING THE WRONG ONE AND REPORTING `THE GATE DISCRIMINATES` WOULD HAVE BEEN A TRUE SENTENCE ABOUT THE WRONG MECHANISM.**
+✅ **PLANT B — same primitive name, same family, one difference: it appears only when `TF_MA_NATIVE_ENABLED=true`, mirroring `levelzone_routing_enabled()`'s live-read contract at `:171-175`. A DISCRIMINATING PAIR, IDENTICAL COMMAND BOTH TIMES:**
+```
+B1  plant present, flag UNSET   (== CI's state)  -> EXIT 0   "PASS: full parity."   <- BLIND
+B2  SAME plant, flag SET in shell               -> EXIT 1   35 specs drifted, 504 named occurrences
+```
+🛑🛑🛑★★★★★ **THE GATE'S VERDICT IS DECIDED BY THE CALLER'S AMBIENT ENVIRONMENT, NOT BY THE TREE.** `[MEASURED]` Python's `spec_family_bindings.py` reads **`9`** distinct `TF_*` flags (`COMPOSITION_BUNDLE` · `CONFLUENCE_OVERLAY_DISABLED` · `FAMILY_META_ENFORCED` · `FVG_IDENTITY` · `LEVELZONE_RESOLVER` · `LEVELZONE_ROUTING` · `OR_BRANCHES` · `ROLE_DEMOTION_MODE` · `SESSION_ROLE_RESOLVER`). **THE GATE DECLARES EXACTLY ONE** (`:101`, `env: { ...process.env, TF_LEVELZONE_ROUTING_ENABLED: levelzoneFlag }`). **THE OTHER `8` RIDE IN ON THE SPREAD.**
+🛑🛑★★★★★ **AND THIS IS THE GATE'S OWN ALREADY-FIXED DEFECT, FIXED ONCE AND LEFT STANDING EIGHT TIMES.** `[MEASURED, its module docstring `:25-32`]` `AR-083` Finding 2: *"the Python driver used to spawn without ever setting `TF_LEVELZONE_ROUTING_ENABLED`, relying on whatever the CALLING shell's ambient env happened to hold … if a concurrent shell/CI runner happened to export the flag, the comparison would silently run under an undeclared state instead of failing loud."* ★★★★★ **`THE REPAIR WAS APPLIED TO THE INSTANCE THAT WAS FOUND, AND THE OTHER EIGHT MEMBERS OF THE CLASS STILL CARRY IT — INCLUDING IN THE VERY FILE THAT DOCUMENTS THE LESSON.` That is `fix-the-pattern-class-not-the-instance`, convicted again, in the fix itself.**
+🛑 **CONSEQUENCE FOR HANDOFF 5, STATED PLAINLY:** the typed MA primitive `R-694 §7` calls this lane a prerequisite for is **Python-first and `EXPERIMENT_PRIMITIVES`-registered — i.e. env-gated by construction.** **In CI, with a clean environment, this gate would print `PASS: full parity` while that primitive diverges on every `WAIT_BIAS` condition in the corpus.** ★★★★★ **THAT IS A `gate-artifact` — BLUEPRINT v4 `v3-1`'s fourth attribution bin, the MODAL real failure — and it is the exact question `R-679 §6.1` re-opened.**
+
+### 🛑★★★★ §4 — `R-694 §7(5)`: THE `0`-CI-REFERENCE FINDING, RE-MEASURED BY ME AND **WORSE THAN RELAYED**
+✅ **CONFIRMED:** `[MEASURED HERE]` `grep -rn` for the script or its npm alias across `.github/` → **`0`.** **POSITIVE CONTROL: `2` workflow files exist and `1` references `npm run`/`npx`** — so the zero comes from a search that demonstrably finds such references.
+🛑🛑★★★★★ **AND THE REASON IT IS NOT MERELY UNWIRED — IT IS NOT WIRE-ABLE AS WRITTEN:** `[MEASURED, `:72-73`, read at the executable line]` `SAMPLES_DIR` is a **HARDCODED ABSOLUTE WINDOWS PATH TO A DIRECTORY OUTSIDE THIS REPOSITORY** — `…/trading-forge/trading-forge/.claude/worktrees/extraction-100/tmp/generalization` — **inside a DIFFERENT worktree, under `tmp/`.** `[MEASURED]` **`0` of its `41` `.spec.json` files are git-tracked in this repo.** ★★★★★ **`THE GATE'S ENTIRE INPUT CORPUS IS AN UNTRACKED, MACHINE-LOCAL TEMP DIRECTORY ON ONE OPERATOR'S BOX.` It passes here because that box is this box. **On a CI runner `readdirSync` throws before the first comparison.**
+🛑 **REPORTED, NOT REPAIRED** (`R-694 §7(5)`: wiring it into CI is the desk's decision). ⚠️ **But the decision is now bigger than a workflow line: wiring it requires relocating or vendoring the corpus first, and that is a scope the desk has not seen.**
+
+### ⚠️ §5 — WHAT I DID NOT MEASURE
+- 🛑 **`[UNENUMERATED]`** whether the other `8` flags produce divergences **in today's corpus** — I proved the gate is BLIND to a flag it does not declare; I did **not** enumerate which real primitives each flag would expose. **That is the natural next measurement and I am not taking it unasked.**
+- 🛑 **`[UNENUMERATED]`** `runtime-production`. Campaign worktree only.
+- ⚠️ **PLANT B ALTERED THE `FAMILY_META` TABLE'S value expression, not `bind_condition()`'s override branch.** ★★★ **It reproduces the ENV-GATING faithfully (live read, per-spawn) but NOT the override's placement.** **What it does and does not resemble, stated per `R-694 §7`'s honest-partial clause: it proves the gate cannot see a flag it does not declare; it does not prove `bind_condition()`'s specific branch behaves identically.**
+- ✅ **NOTHING WAS LEFT PLANTED.** Verified three ways: token grep `0`, `git diff --stat HEAD -- src/` clean, and a final gate run **byte-identical to the original baseline**.
+
+### ★★★★★ §6 — RECOMMENDATION
+**`APPROVAL_REQUESTED` for Lane 23. FAN-IN `1/2` — proceeding to Lane 24 now, no handoff.**
+✅ **THE ORDERED PROPERTY IS ANSWERED, AND THE ANSWER IS CONDITIONAL, WHICH IS THE POINT:** **the gate DOES go red — and names the primitive — for a Python-only primitive that diverges in the DECLARED state. It is BLIND to one gated behind any of the `8` flags it does not declare, which is the route handoff 5 will take.**
+**NEXT SMALLEST TASK (ONE):** **Lane 24 as already assigned** (`R-694 §5`, the two guard mechanisms, separate fixtures). 🛑 **I am NOT proposing the gate's env-declaration repair as a lane — it is the desk's call, and `R-648`'s admission test is a real question for it: a gate that cannot see handoff 5's divergence arguably DOES invalidate the slice's receipt, but that is a ruling, not my determination.**
+
+---
+
 ## AR-772 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — `R-694 §7` LANE 23 (red-proof the cross-language parity gate). ETA ~40 min.** ✅★★★★★ **AND I AM READING THIS AS A **TWO-LANE BATCH, NOT ONE LANE**: `R-694 §5` assigns **LANE 24** (the guard defect) to **THE WORKER SEAT, on Lane 23's completion.** **FAN-IN TARGET `2/2`. I WILL NOT HAND OFF AT THE LANE-23 SEAM** — `worker-execution §10`: a lane boundary is not a context limit.
 
 **TASK:** `R-694 §7` Lane 23, then `R-694 §5` Lane 24. **FIRST OBSERVABLE: this receipt.**
