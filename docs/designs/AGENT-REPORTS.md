@@ -4,6 +4,101 @@
 
 ---
 
+## AR-737 · 2026-08-03 · 🛑🛑★★★★★ **`R-676 §6` DELIVERED — AND IT REFUTES THE RULING'S CENTRAL ESTIMATE, IN THE DIRECTION THAT COSTS MORE. **THE PICK DOES *NOT* FAIL BY ONE MISSING TABLE ENTRY. IT FAILS BECAUSE NO NUMERIC PARAMETER CAN REACH A PRIMITIVE AT ALL — THERE IS NO CHANNEL, AT ANY OF THREE LAYERS.**** `[MEASURED HERE]` **`183/183` sealed conditions carry EXACTLY `7` KEYS — `id·type·object·role·span·evidence·type_confidence` — and `0` are parameter-like (control: `object` present `183`). `ConditionBinding` carries `10` fields; the only structured value is `session_zone`, a KEYWORD, not a number.** ★★★★★ **AND THE SECOND REFUTATION IS SHARPER: A MOVING AVERAGE IS NOT A FAMILY — IT IS AN *OBJECT*, AND IT ALREADY ARRIVES UNDER **THREE DIFFERENT FAMILIES** (`WAIT_STRUCTURE` `4` · `WAIT_CONFIRMATION` `3` · `WAIT_SESSION` `1`). **A `FAMILY_META` ENTRY IS THE WRONG SHAPE FOR IT.**** ✅★★★★★ **AND THE BEST NEWS IS ONE THE RULING DID NOT HAVE: **THE BINDER ALREADY EXECUTES A MOVING-AVERAGE CROSSOVER TODAY** — `_eval_wait_bias` computes `EMA(20)/EMA(50)` on close at `spec_condition_compiler.py:729-730`, bound to `WAIT_BIAS`/`CONFIRM_DIRECTION`. **THE PERIODS ARE HARDCODED MODULE CONSTANTS (`:140-141`), AND THAT — NOT A MISSING CAPABILITY — IS THE `approximation=True`.**
+
+**TASK:** `R-676 §6` (a)(b)(c). **RUN MODE: READ-ONLY at HEAD `226f17ec` + two scratchpad scripts. NO code. NO `FAMILY_META` EDIT. `git status` on `src/` clean — NOTHING under `src/` modified.**
+**RULING ACCEPTANCE HONOURED:** verbatim commands below · run mode declared · **a positive control for every zero** · `[UNENUMERATED]` where I did not reach.
+
+### ✅ §1 — WHAT I RE-MEASURED OF THE RULING'S OWN FIGURES (relay is not evidence)
+✅ **`R-676 §2`'s CALL-SITE COUNTS REPRODUCE EXACTLY.** Rule that reproduces them: **call syntax, non-test, non-`def`.**
+```
+grep -rn "compute_sma(" --include=*.py src/ | grep -v "^src/engine/tests/" | grep -v "def compute_sma(" | wc -l   -> 5
+grep -rn "compute_ema(" --include=*.py src/ | grep -v "^src/engine/tests/" | grep -v "def compute_ema(" | wc -l   -> 14
+grep -rn "compute_atr(" ... (POSITIVE CONTROL, must be large)                                                     -> 43
+grep -rn "compute_hull_ma(" --include=*.py src/ | wc -l   (NEGATIVE CONTROL, must be 0)                           -> 0
+```
+⚠️ **ONE FIGURE I COULD NOT REPRODUCE:** `§2` states its control was *"calibrated at `compute_indicators` = `5`"*; **I measure `7`** under the identical rule. **NOT LOAD-BEARING** (it was the ruling's control, not a claim about the door) and I did not chase it — **but a control whose value does not reproduce is worth one line, per `R-675 §1`.**
+🛑 **`§2`'s VOCABULARY DENOMINATOR IS PARTIAL — `12` IS NOT THE VOCABULARY.** `[MEASURED HERE, AST, no import so no env flag can move it]`: `FAMILY_META` declares **`14` families / `11` distinct primitives**; `PRIMITIVE_RESOLVERS` holds **`13`**; `EXPERIMENT_PRIMITIVES` **`7`**; `MECHANISMS` **`3`**. **UNION OF RESOLVABLE PRIMITIVES = `18`, not `12`.** The `12` appears to be the `FAMILY_META` set plus `fvg_native` only.
+✅★★★ **THE RULING'S CONCLUSION SURVIVES ITS OWN DENOMINATOR, AND I CHECKED RATHER THAN ASSUMED: over the FULL `18`, moving-average matches = `0`. POSITIVE CONTROL — same regex over the same universe plus two planted names (`indicators.core.compute_sma`, `…compute_ema`) = `2`.** **`0` under a live control. `NOT ONE IS A MOVING AVERAGE` STANDS.**
+
+### 🛑🛑★★★★★ §2 — THE FINDING THAT CHANGES THE ESTIMATE: **THE BINDER ALREADY RUNS ONE**
+`[MEASURED — `src/engine/spec_condition_compiler.py`]`
+```
+:140  BIAS_EMA_FAST: int = 20
+:141  BIAS_EMA_SLOW: int = 50
+:143  RETEST_LEVEL_EMA_PERIOD: int = 20
+:729  fast = compute_ema(s, BIAS_EMA_FAST).to_numpy()
+:730  slow = compute_ema(s, BIAS_EMA_SLOW).to_numpy()
+:914  level = compute_ema(pl.Series(close), RETEST_LEVEL_EMA_PERIOD).to_numpy()
+```
+✅ **`_eval_wait_bias`'s PROXY FALLBACK **IS AN EMA CROSSOVER** — `bullish_lean = fast[i] > slow[i]` — and it is the ENFORCED primitive of `WAIT_BIAS`/`CONFIRM_DIRECTION` (`spec_condition_compiler.wait_bias_directional_proxy`). `WAIT_RETEST`'s level is a second hardcoded EMA.**
+🛑🛑★★★★★ **SO THE FRAME *"the engine has it, the binder does not"* IS WRONG BY ONE STEP. **THE BINDER HAS IT, USES IT, AND SHIPS IT — WITH PERIODS THE ENGINE CHOSE, NOT THE EDUCATOR.** `THE approximation=True ON WAIT_BIAS IS NOT MISSING MATH — IT IS A HARDCODED PARAMETER WEARING A MATH COSTUME.`**
+⚖️ **THIS CUTS BOTH WAYS AND I AM NOT SELLING IT AS ONLY GOOD NEWS: it PROVES the call path (`pl.Series` → `compute_ema` → `np` gate) already works end-to-end inside a bound family — **and it proves the campaign has already shipped a moving average whose numbers no educator taught.**
+
+### 🛑★★★★★ §3 — (a) THE SITE SET, AND THE SHAPE IS **NOT** A `FAMILY_META` ENTRY
+🛑 **MEASURED, AND IT IS THE STRUCTURAL ANSWER: A MOVING AVERAGE IS AN *OBJECT*, NOT A *FAMILY*.** Sweep of every sealed spec on disk (`docs/**/*.spec.json`):
+```
+SPEC FILES SWEPT: 18   TOTAL conditions read: 183
+POSITIVE CONTROL (session/london/ny/open/9:30 text): 23 hits -> CONTROL LIVE
+MOVING-AVERAGE OBJECT HITS: 8
+  families they landed in: WAIT_STRUCTURE 4 · WAIT_CONFIRMATION 3 · WAIT_SESSION 1
+```
+🛑 **`FAMILY_META` IS KEYED BY CONDITION `type`. MA TEXT ARRIVES UNDER AT LEAST `3` TYPES. **THEREFORE A NEW `FAMILY_META` FAMILY CANNOT CARRY IT** — it would have to hijack a type that already means something else.**
+✅★★★★★ **THE CORRECT PRECEDENT EXISTS AND IS LIVE: `resolve_bundle_primitive(cond_type, object_text)` (`spec_family_bindings.py:433-462`) dispatches on **(type, object)** and already routes `5` native primitives (`fvg` · `bias` · `confirmation` · `sweep` · `mss`). **THE DOOR IS AN OBJECT ROUTER ENTRY, NOT A TABLE ROW — AND THERE ARE FIVE WORKED EXAMPLES OF EXACTLY THAT WORK.**
+**THE END-TO-END SITE SET `[MEASURED by tracing `mss_native`/`sweep_native`, the two most recent natives]`:**
+| # | Surface | What must change |
+|---|---|---|
+| 1 | `spec_family_bindings.py` | object-keyword table + `*_PRIMITIVE` const + `resolve_bundle_primitive` branch + `bind_condition()` return |
+| 2 | `family_meta_enforcement.py` | `PRIMITIVE_RESOLVERS` entry (**mandatory** — `resolve_primitive` RAISES, never stubs) + `EXPERIMENT_PRIMITIVES` if env-gated |
+| 3 | `spec_condition_compiler.py` | the `_eval_*` evaluator + its dispatch entry + import |
+| 4 | `indicators/` | **possibly NONE — `compute_sma`/`compute_ema` already exist** (this is the one surface the door may skip) |
+| 5 | `src/server/lib/spec-family-bindings.ts` | **`403`-line BYTE-FOR-BYTE TS MIRROR, parity-tested both sides** (`tests/test_spec_family_bindings_parity.py`, `src/server/lib/__tests__/spec-family-bindings.test.ts`) |
+🛑 **PIN (a) BINDS: `verify_dispatch_coverage` checks declaration↔router agreement IN BOTH DIRECTIONS. A primitive with no handler, or a handler nothing declares, is a startup violation.**
+🛑 **AND `§4`'s `approximation` COLUMN IS NOT OPTIONAL — `FamilyMeta` carries a legacy AND an enforced column under a two-commit law; a new entry owes an honest value in the enforced one.**
+
+### ✅ §4 — (b) CAN `compute_sma`/`compute_ema` TAKE **TAUGHT** PARAMETERS?
+✅ **THE SIGNATURE IS ALREADY PARAMETRIC AND TRIVIAL:** `compute_sma(series: pl.Series, period: int)` (`indicators/core.py:22`), `compute_ema` (`:27`). **`period` is a bare int — a taught `"20 SMA"` maps to `period=20` with ZERO derivation.**
+✅ **AND THE TAUGHT TEXT CARRIES THE NUMBER EXPLICITLY** `[MEASURED, verbatim from the sweep]`: *"closes over the **20 SMA** and vwap"* · *"once we close over this **20 period moving average**"* · *"this **13 EMA** operated as a initial support"*. **THE PERIOD IS TAUGHT, NOT INFERRED.**
+✅★★★ **SMA-vs-EMA IS ALSO TAUGHT, AND ONE EDUCATOR SAYS IT OUT LOUD:** *"that's the 20 SMA … **it's not the smooth moving average it's not the exponenti[al]**"* — **a spec that explicitly REFUSES the EMA. A binder that silently bound that to `compute_ema` would invert the teaching.**
+🛑 **TWO DERIVATIONS THE EDUCATOR DID *NOT* MAKE, AND BOTH MUST BE DECLARED, NOT ASSUMED:**
+1. ⚠️ **THE INPUT SERIES.** All `5` `compute_sma` call sites pass **close** (`df["close"]`/`closes`). No educator in the swept corpus states what the MA is computed ON. **Close is the near-universal convention — but a convention is an ASSUMPTION, and `absence-means-maximum-scope` says an absent constraint widens scope.**
+2. ⚠️ **THE MA'S CHART TIMEFRAME.** *"the first **two-minute** candle … closes over the 20 SMA"* — **the `20` is in bars of SOME timeframe, and if the spec's timeframe ≠ the timeframe the MA was drawn on, `period=20` is a DIFFERENT INDICATOR.** `[UNENUMERATED]` whether any spec pins both.
+
+### 🛑🛑★★★★★ §5 — (c) WHAT AN **EXACT** BINDING REQUIRES — AND WHY IT IS **NOT** ONE TABLE ENTRY
+🛑 **THE BLOCKER, MEASURED AT THREE LAYERS, EACH WITH A CONTROL:**
+```
+LAYER 1  spec condition schema: 183/183 conditions carry EXACTLY 7 keys
+         id · type · object · role · span · evidence · type_confidence
+         PARAMETER-LIKE KEYS: 0        CONTROL: key "object" present 183/183  -> LIVE
+LAYER 2  ConditionBinding (spec_family_bindings.py:762-777): 10 fields
+         condition_id·type·role·object·bindable·primitive·approximation·executed·reason·session_zone
+         -> the ONLY structured value is session_zone, a KEYWORD from a closed table. NO number.
+LAYER 3  primitive call: compute_ema(s, BIAS_EMA_FAST) -- period is a MODULE CONSTANT, :140
+```
+🛑🛑🛑★★★★★ **THEREFORE: `A TAUGHT NUMBER HAS NOWHERE TO TRAVEL.` The extractor does not capture it, the binding cannot carry it, and the primitive is called with a constant. **AN EXACT MA BINDING REQUIRES A NUMERIC PARAMETER CHANNEL THAT DOES NOT EXIST AT ANY LAYER** — and that is a strictly larger object than `R-676 §2`'s *"one vocabulary entry"*.**
+⚠️★★★ **THE ONE NUMERIC-EXTRACTION PRECEDENT, AND IT IS NARROWER THAN IT LOOKS:** the binder DOES parse numbers from object text — but **only clock times** (`spec_family_bindings.py:963-980`, `:1013`, `int(et_min)` `:2426`), feeding **session windows**. **It produces a ZONE, not a free parameter. It is a precedent for "text → structured value", NOT for "text → primitive argument".**
+✅ **WHAT AN EXACT (`approximation=False`) BINDING WOULD HAVE TO SATISFY — REQUIREMENTS, NOT A DESIGN:**
+1. The taught **period** reaches `compute_*`'s `period` argument unmodified.
+2. The taught **MA type** (SMA vs EMA) selects the function — **and honours an explicit refusal** (§4).
+3. The **input series** and the **MA's timeframe** are either taught or declared as assumptions; **if either is assumed, `approximation=False` is not available.**
+4. Both the Python binder and the **TS mirror** produce the identical binding (parity test).
+5. Pin (a) both-directions dispatch agrees.
+🛑 **AND I STOP HERE, AS `§6` ORDERS.** Choosing the parameter grammar, the router's shape, the regex, or the `type` family **IS THE DESIGN, AND IT IS THE FRESH SEAT'S.** I have reported what is absent and what an exact binding must satisfy; I have not designed the channel.
+🛑 **I DO NOT QUOTE THIS AS SMALL** — `R-676 §2` forbade that until measured, and what I measured makes it **BIGGER** than the ruling's estimate, not smaller.
+
+### ⚠️ §6 — WHAT I DID NOT MEASURE, AND ONE THING I WAS FORBIDDEN TO DO
+- `[UNENUMERATED]` **the `120`-spec / POP-120 corpus.** My sweep population is **`18` spec files / `183` conditions — every `*.spec.json` under `docs/`.** **The `8` MA hits are `8`-of-`183`-of-that-population ONLY, and MUST NOT be read as a corpus-wide rate.**
+- `[UNENUMERATED]` whether any spec pins BOTH the MA period and the chart timeframe (`§4.2`).
+- `[UNENUMERATED]` the size of adding a parameter field to the TS mirror + its parity test.
+- 🛑 **I AM NOT NOMINATING A CANDIDATE SPEC.** `§6`/`§3.4` forbid it and `R-665 §2.4`'s proxy ban applies. **Three files in the swept set carry MA text; I report that as POPULATION, not as a nomination, and the fresh seat writes criteria before any of them is named.**
+- ✅ **NO CODE WRITTEN. NO `FAMILY_META` EDIT. `src/` UNTOUCHED.**
+
+### ★★★★★ §7 — RECOMMENDATION
+**`APPROVAL_REQUESTED`** on the measurement. **`REVISION_REQUIRED` on `R-676 §2`'s estimate** — *"fails by one missing table entry"* is refuted; it fails by a missing parameter channel, and the correct shape is an object router, not a `FAMILY_META` family.
+**NEXT SMALLEST TASK (ONE, not a roadmap):** *"size the numeric parameter channel"* — what it costs to carry ONE taught integer from object text to a primitive argument across the extractor, `ConditionBinding`, and the TS mirror. **That is the real door, and it is the fresh seat's to authorize.**
+
+---
+
 ## AR-736 · 2026-08-03 · ⏳ **START-RECEIPT — `R-676 §6`, SIZE THE MOVING-AVERAGE DOOR. FRESH WORKER SEAT, COLD-STARTED THIS TURN.**
 
 **TASK:** `R-676 §6` — size what it would take to add a moving-average primitive to the binder's `12`-entry vocabulary. **(a)** every site that must change end-to-end · **(b)** whether `compute_sma`/`compute_ema` take taught parameters without an educator-absent derivation · **(c)** what an EXACT binding would require.
