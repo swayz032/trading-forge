@@ -4,6 +4,47 @@
 
 ---
 
+## AR-764 · 2026-08-04 · 🛑🛑🛑★★★★★ **`R-689 §4` LANES 17 AND 18 DELIVERED. FAN-IN `2/2`, NO HANDOFF.** 🛑🛑🛑★★★★★ **LANE 17 **REFUTES THE HYPOTHESIS I AUTHORED** — AND CONFIRMS IT FOR A MODULE I NEVER APPLIED IT TO. `[MEASURED — actual module graph, `440` files, `4` live controls]` **THERE IS NO CYCLE BEHIND THE TWO MIRRORS: `agent-service.ts` HAS **NO STATIC PATH BACK** TO EITHER, SO A STATIC `import { assertCrossValidatedSource }` FROM EITHER WOULD CLOSE **NOTHING**.** ✅★★★★★ **BUT THE GRADUATOR — THE UNGUARDED WRITER — **IS** IN A REAL CYCLE, AND THE SCANNER PRINTED IT: `agent-service → backtest-service → paper-trading-stream → index.ts → routes/agent.ts → direct-bucket-graduator`. **`[MEASURED]` its edge back to `agent-service` is `dynamic=true`, `static=false`.** ★★★★★ **SO `AR-762 §3`'s HYPOTHESIS WAS RIGHT ABOUT THE MECHANISM AND WRONG ABOUT THE MODULES — I ATTACHED IT TO THE TWO MIRRORS AND IT BELONGS TO THE GRADUATOR.** 🛑🛑★★★★ **AND THE MEASURED REASON THE MIRRORS EXIST IS SOMETHING NOBODY PROPOSED: `[MEASURED]` **BOTH ARE IMPORTED BY NOTHING INSIDE `src/server` — static in-degree `0`, dynamic in-degree `0`.** THEIR ONLY IMPORTERS ARE **CLI SCRIPTS** (`scripts/fade-the-losers.ts:32`, `scripts/onboard-compiled-specs.ts:52`).** ✅ **LANE 18: all `10` insert sites are **PLAIN inserts, `0` `onConflict`**, and **`0` of the `12` `update(strategies)` sites rewrite `config`** — **executable config is WRITE-ONCE AT INSERT and no writer overwrites another's.**
+
+**TASK:** `R-689 §4` Lanes 17 + 18. **READ-ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; seventeenth consecutive report.**
+
+### ✅★★★★★ §1 — LANE 17: THE CONTROLS FIRST, BECAUSE THE ANSWER IS A SET OF ZEROS
+```
+files scanned: 440
+[CONTROL 1] agent-service static out-edges: 18            (must be > 0)      -> PASS
+[CONTROL 2] type-only edge mirror->agent-service as TYPE : true, true        -> PASS
+[CONTROL 3] dynamic  edge mirror->agent-service as DYNAMIC: true, true       -> PASS
+[CONTROL 4] the SAME edge NOT miscounted as static       : false, false      -> PASS
+```
+★★★★ **CONTROLS `2`–`4` are the ones that matter: they prove the scanner **sees** the mirror→`agent-service` edge and **classifies** it correctly as type-only + dynamic rather than missing it. A scanner that simply failed to parse those lines would produce the same headline "no static edge" for the wrong reason.**
+🛑 **RESULT:** `REVERSE static path agent-service → mirror : NONE` for **both** · `FORWARD static path mirror → agent-service : NONE` for **both** · therefore **`WOULD A STATIC IMPORT CLOSE A CYCLE? NO`** for both.
+✅ **AND THE DISCRIMINATING POSITIVE: the same query against the graduator returns a `6`-hop reverse path, so `NONE` is a real absence from an instrument that demonstrably finds paths when they exist.**
+
+### 🛑🛑★★★★★ §2 — LANE 17: THE MEASURED REASON, WHICH IS NOT THE ONE I GUESSED
+`[MEASURED]` **static in-degree `0` and dynamic in-degree `0`** for both mirror modules across all of `src/server`. **POSITIVE CONTROL, same matcher: `agent-service` `static=5 dynamic=5` · `direct-bucket-graduator` `static=1 dynamic=3` · `dsl-sanitizer` `static=0 dynamic=2`.**
+`[MEASURED]` their only importers repo-wide are **`scripts/fade-the-losers.ts:32`** and **`scripts/onboard-compiled-specs.ts:52`** — **CLI entry points, not server code.**
+⚠️ **`[HYPOTHESIS — UNPROVEN, AND I AM LABELLING IT BECAUSE I JUST GOT BURNED FOR THE LAST ONE]` the mirrors likely exist so a CLI process need not drag the entire server import graph in for one guard. **I measured REACHABILITY; I did not measure INTENT**, and `R-689 §4` said not to assume one. `spec-onboarding-service.ts:106` calls the shared function *"the canonical, single"* guard and then defines its own at `:134` — **the file states the intent and contradicts it in the same breath, so its comments are not evidence either.**
+★★★★★ **MINTED AGAINST MYSELF: `A MECHANISM THAT REALLY EXISTS SOMEWHERE IN THE GRAPH IS THE MOST CONVINCING WRONG EXPLANATION AVAILABLE — THE CYCLE WAS REAL, AND I ATTACHED IT TO THE TWO MODULES THAT DO NOT HAVE IT.`**
+
+### ✅★★★★ §3 — LANE 18: WRITER PRECEDENCE
+✅ **`[MEASURED]` ALL `10` `db.insert(strategies)` SITES ARE **PLAIN INSERTS** — `0` carry `onConflict`/`onConflictDoUpdate` within `40` lines. **No writer can silently overwrite another's row on insert.**
+✅ **`[MEASURED]` `12` `db.update(strategies)` sites exist; **`0` of them set `config`** within the `15` lines following the call. **Executable config is written once, at insert, by whichever writer got there.** 🛑 **LIMIT OF THIS MEASUREMENT STATED: it is a `15`-line window, not a data-flow proof. A `config:` assignment built further away would be invisible to it.**
+🛑★★★★ **AND THE SCHEMA SUPPLIES THE PRECEDENCE RULE NOBODY NAMED: `[ARTIFACT-SOURCED, `schema.ts:193`]` `strategies_active_config_uniq` over `(symbol, timeframe, config->'entry_indicator', config->'entry_params')` for non-archived rows. **With plain inserts and no `onConflict`, two writers producing the SAME tuple do not race — the second one THROWS.** ★★★ **So the failure mode between writers is a hard error, not a silent overwrite — which is the good kind, and it is measured rather than hoped.**
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE
+- 🛑 **`[UNENUMERATED]` whether one strategy can pass through more than one writer end-to-end.** I measured that no writer can overwrite another's `config`; **I did not trace a single strategy across two writers.**
+- ⚠️ **`[UNENUMERATED]` the `15`/`40`-line windows above are the instrument's reach, not the code's structure (`§3`).**
+- ⚠️ **`[UNENUMERATED]` INTENT behind the mirrors (`§2`) — reachability only.**
+- ⚠️ **`[UNENUMERATED]` `runtime-production` delta; campaign worktree only.**
+- 🛑🛑 **AND AN INSTRUMENT THAT LIED TWICE BEFORE IT WORKED, BOTH CAUGHT BY CONTROLS: (1) a heredoc silently ate the backslashes in my scanner's regex — I rewrote the file with a tool that writes bytes literally; (2) a `grep -E` in-degree count used a PCRE lookahead this build does not support and returned `0` for **all four** modules including `agent-service`. **The all-zeros row is what exposed it — a dead control looks exactly like a clean result until one of its rows must not be zero.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. FAN-IN `2/2` — eight lanes closed in this seat (10, 11, 12, 14, 15, 16, 17, 18), no handoff, and the seat still has room.**
+🛑 **THE CONSEQUENCE FOR THE MIGRATION CONTRACT, STATED AS THE FORK IT IS:** **the two mirrors CAN be migrated to the shared guard today — no cycle blocks them** (`§1`). **The graduator CANNOT be migrated by a static import — it is in a real cycle through `index.ts`** (`§1`), so its boundary must be a **dependency-LEAF module** that neither `agent-service` nor `index.ts` reaches. ★★★ **`R-689 §4`'s own question — "whether a dependency-leaf module breaks it" — is answered YES and it is the only shape that works for all three.**
+**NEXT SMALLEST TASK (ONE):** **name the leaf** — identify or specify the module the executable-parameter boundary must live in, such that all `10` insert sites can import it statically without closing a cycle. **That is a desk design act (`R-689 §3`), and it is now fully specified by measurement.**
+
+---
+
 ## AR-763 · 2026-08-04 · ⏳ **START-RECEIPT — `R-689 §4`, LANES 17 AND 18. BOTH READ-ONLY. FAN-IN TARGET `2/2`, NO HANDOFF AT THE SEAM.**
 
 **TASK:** Lane 17 — test the ESM circular-import `[HYPOTHESIS]` **that I authored in `AR-762 §3`**, from the ACTUAL module graph, not from comments. Lane 18 — writer precedence (still owed from `R-688 §5`). **ETA ~30 min each.**
