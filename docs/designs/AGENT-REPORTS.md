@@ -4,6 +4,45 @@
 
 ---
 
+## AR-757 · 2026-08-03 · ✅★★★★★ **`R-685 §5 LANE 10` ANSWERED — **`FEEDS NOTHING`.** THE SCOUT/GRADUATION PIPELINE FEEDS **NO** CAMPAIGN ARTIFACT. **THE STOP CONDITION DOES NOT FIRE AND THE TS MIDPOINT DEFECT DOES NOT RE-ENTER THE CRITICAL PATH.** ✅★★★★★ **THE MEASUREMENT THAT DECIDES IT IS THE INPUT, NOT THE OUTPUT: `[MEASURED HERE]` the campaign's spec census reads **SEALED EXTRACTION FILES ON DISK** — `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/phase_b/<stub>.json`, `doc["strategies"][0]` — and **ALL `13` OF THEM CARRY `0` `entry_params` (CONTROL: `44` `entry_sequence`).** **The defect's carrier is not in the campaign's input at all.** 🛑🛑★★★★ **AND I FOUND A NAME COLLISION THAT WOULD HAVE FAKED THE OPPOSITE ANSWER: THE CENSUS READS `doc["strategies"]` — A JSON KEY IN A FILE — WHILE THE GRADUATION PIPELINE WRITES A POSTGRES TABLE ALSO CALLED `strategies`. **THE TWO ARE UNRELATED AND THEY JOIN PERFECTLY BY NAME.** `i-measured-the-neighbouring-object`, sitting in the open, on the one lane whose entire job was a join.**
+
+**TASK:** `R-685 §5` Lane 10. **READ-ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; twelfth consecutive report. FAN-IN `1/2` — Lane 11 continues in this seat, no handoff.**
+
+### ✅★★★★★ §1 — THE MEASUREMENTS, EVERY ZERO WITH A LIVE CONTROL
+| # | question | measured | POSITIVE CONTROL (same command, same surface) |
+|---|---|---|---|
+| 1 | campaign scripts referencing `entry_params`/`param_source`/`strategies_active_config`/`DATABASE_URL`/`psycopg` | **0 files** | `49` `.py` files under `docs/replay-results/` match `spec` |
+| 2 | `entry_params` in the `13` sealed `phase_b` extraction inputs | **0** | `entry_sequence` → **44** |
+| 3 | non-test callers of `produce_spec_artifact` **inside `src/`** | **0** | the definition is found by the same search (`spec_producer.py:535`) |
+| 4 | what the sealed `.spec.json` files carry (`AR-755`) | **0** `entry_params` in all `18` | `condition` → `2` in every file |
+✅ **ROW `3` IS CORROBORATED BY AN ARTIFACT I DID NOT PRODUCE: `docs/designs/SYSTEM-INVENTORY.md:1779` independently records `produce_spec_artifact` as *"no non-test reference outside its own definition."* **A second path I did not author and did not run.**
+
+### ✅★★★★★ §2 — WHAT ACTUALLY DRIVES THE CAMPAIGN'S SPEC PRODUCTION
+🛑 **`[MEASURED — `docs/replay-results/h1-battery/tier_a_compile_census.py:271-287`]` the driver is a CAMPAIGN SCRIPT, not a service:**
+```python
+path = os.path.join(PHASE_B, f"{stub}.json")      # PHASE_B = .../h1-sealed-read-frozen/SEALED-READ/phase_b
+doc  = json.load(open(path, encoding="utf-8"))
+strategies = doc.get("strategies") or []
+strat = strategies[0]
+art  = produce_spec_artifact(strat, video=stub, certificate=None, transcript_chars=0)
+```
+✅ **SO THE CHAIN IS: FROZEN EXTRACTION JSON ON DISK → `produce_spec_artifact` → `.spec.json` → forensics/battery. `[MEASURED]` `compile_fidelity.py`'s own CLI takes `<artifact.spec.json>` — a FILE PATH. **No database, no `strategies` table, no graduation output anywhere in it.**
+🛑🛑★★★★★ **THE COLLISION, STATED AS THE TRAP IT IS: `doc["strategies"]` is a KEY IN A FROZEN JSON FILE. The graduation pipeline writes ROWS IN A POSTGRES TABLE NAMED `strategies`. **Same word, different artifacts, and `strategies_active_config_uniq` (the index I cited in `AR-752 §2`) belongs to the TABLE.** ★★★ **`A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY` — the campaign's own join-key law, and this is the shape it warns about: a join that BALANCES because the names agree.**
+
+### ✅ §3 — DISPOSITION
+✅ **`R-685 §4`'s RE-ADMISSION CONDITION IS **NOT** MET: the scout/graduation pipeline feeds no artifact the campaign's gates, batteries or receipts consume. `AR-753`'s midpoint defect stays RECORDED, SEVERE, and OFF the Phase-1 critical path.**
+✅ **`R-685 §5(3)` INVITED `FEEDS NOTHING` AS A COMPLETE ANSWER AND THAT IS THE ANSWER. `AR-756` pre-declared that the failure mode available to me was *"finding a feed that is not there"* — I did not find one, and I am not manufacturing a hop out of the table-name collision that would have handed me one.**
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE
+- 🛑 **`[UNENUMERATED]` the PROVENANCE of the `13` sealed `phase_b` files themselves.** I measured their CONTENT (`0` `entry_params`) and the code that reads them. **I did not trace who wrote them or whether any earlier generation of them passed through a TS service.** ★★★ **It does not change the answer — a file with no `entry_params` cannot carry a midpoint — but "the input is clean" is a weaker claim than "the input never touched that code", and only the first is measured.**
+- ⚠️ **`[UNENUMERATED]` whether the LIVE product (dashboards, paper engine, deployed strategies) consumes graduation output.** **Almost certainly yes — that is what the pipeline is FOR.** 🛑 **`FEEDS NOTHING` IS SCOPED TO CAMPAIGN ARTIFACTS AND MUST NEVER BE QUOTED AS "the defect is harmless."** **It is off the PHASE-1 path; it is not off the PRODUCT.**
+- ⚠️ **Campaign worktree only; `runtime-production` not checked.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`APPROVAL_REQUESTED` for Lane 10.** Stop condition did not fire. **FAN-IN `1/2` — proceeding directly to Lane 11 in this seat.**
+
+---
+
 ## AR-756 · 2026-08-03 · ⏳ **START-RECEIPT — `R-685 §5`, A TWO-LANE BATCH. LANE 10 (read-only, does the graduation pipeline feed any campaign artifact?) THEN LANE 11 (`F-4`/`F-5`/`F-3`) — **I RUN BOTH; the unit of work is the batch, not the lane.**
 
 **TASK:** `R-685 §5` Lanes `10` and `11`. **FAN-IN TARGET `2/2`. I will state it as `N/M` in the final report and I am not handing off at the lane seam** (`worker-execution §10`: the seat that exists finishes). **ETA ~20 min then ~35 min.**
