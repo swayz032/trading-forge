@@ -4,6 +4,83 @@
 
 ---
 
+## AR-785 · 2026-08-04 · ✅★★★★★ **LANE 29 CLOSED — THE SIX-ROW MATRIX IS GREEN AND THE STOP CONDITION DID NOT FIRE, PROVEN BY NAME AND NOT BY COUNT: TWO WHOLE-SUITE ARMS, `ONLY_IN_A = 0`.** ✅★★★★★ **AND THE FINDING THAT GENERALISES BEYOND THE RULING: ROW 6 IS NOT A NEW BEHAVIOUR — IT IS `F-3`'s EXISTING REFUSAL, WHICH THE EARLY RETURN HAD MADE UNREACHABLE.** ⚠️★★★★★ **ONE PRE-REGISTRATION MISS, AND IT IS THE INFORMATIVE KIND: MY PLANT WAS STRICTLY WEAKER THAN TRUE ABSENCE, SO IT REDDENED `7` WHERE ABSENCE REDDENS `8`.**
+
+**TASK:** `R-705 §5` Lane 29 (contract re-confirmed UNCHANGED by `R-706 §7`). **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` · **NEW** `src/engine/tests/test_short_frame_parameter_acknowledgement.py`. **Sibling's `test_synthetic_market_simulator.py` dirty in the tree and NOT in this commit — thirtieth consecutive report.**
+
+### ✅★★★★★ §1 — ROOT CAUSE, AND THE PART THE RULING DOES NOT SAY
+`[MEASURED HERE, executable lines at `556122b7`]` Lane 27's flag-OFF refusal AND Lane 28's flag-ON refusal both sat at **`:1417–:1509`**; `compute()`'s only early return is at **`:1346`**. **~70 lines above them.** ⇒ any frame with `n < 30` returned four all-False columns and reached **neither**.
+★★★★★ **AND `F-3` IS IN THE SAME TRAP: `test_bias_refusal_surface`'s `supplied_parameter_cannot_fall_back_to_default` fires INSIDE `_h_wait_bias`, also below the floor — so below `30` bars THAT refusal is itself unreachable.** ⇒ **Row 6 is an existing refusal an early return was hiding, not an invented behaviour.** `A REFUSAL THAT LIVES BELOW AN EARLY RETURN IS NOT A REFUSAL ON THE SHORT PATH.`
+✅ **ENUMERATED RATHER THAN PRESUMED:** `compute()` has **exactly one** early return (`awk` over the whole method body), and **`compute()` is the SOLE entry to the dispatcher** — `_dispatch_enforced` is called only at `:1634` and `ctx` is built only at `:1577`, both inside it. The two production callers (`archetype_evaluator.py:317`, `backtester.py:6759`) therefore all pass the guard. **"Precedes enforced or legacy dispatch" is structural here, not asserted.**
+
+### ✅ §2 — THE CHANGE, AND WHY THE MOVE IS PROVABLY A MOVE
+The block is hoisted verbatim into **`_acknowledge_parameters(n, enforced)`**, called as the FIRST statement of `compute()`. `[MEASURED]` ordering: **`:1497` guard → `:1498` early return → `:1517` `candle_confirmation_check` → `:1577` `ctx`/cache construction.**
+🛑 **I DID NOT RETYPE THE ~90 LINES OF CAMPAIGN COMMENT — SPLICED IN BINARY AND HASHED** (`AR-782 §5`'s LF→CRLF instrument failure):
+```
+moved bytes sha256 5749293314529d3a  PRE == POST   verbatim-present-in-new-file: True
+line endings  CRLF 0 -> 0   LF 1852 -> 1918        `enforced = family_meta_enforced()` occurrences: 1
+```
+⚖️ **BEHAVIOUR DELTA I AM DECLARING RATHER THAN BURYING:** refusals now fire **before** `self.last_population_a_level = {}` and `self.last_non_gating_conditions = {}`, which previously ran first ⇒ **a refusal now mutates NOTHING on `self`.** More correct under `A REFUSAL THAT FIRES AFTER A MUTATION IS A PARTIAL RUN WEARING AN EXCEPTION` — **but the ruling did not ask for it, so the desk should see it named.**
+
+### ✅★★★★★ §3 — THE SIX ROWS, ONE ROW EACH, WITH THE WITNESS THAT TIMES IT
+| row | condition | refusal / outcome | ✓ |
+|---|---|---|---|
+| 1–2 | `n=20`,`n=29` · flag OFF · parameterized | `parameterized_binding_requires_enforced_dispatch` | ✅ |
+| 3–4 | `n=20`,`n=29` · flag ON · unsupported route | `parameter_supplied_to_non_consuming_route`, naming route | ✅ |
+| 5 | short frame · parameterless · **both flag states** | legacy all-False UNCHANGED, no refusal | ✅ |
+| 6 | short frame · valid parameterized `WAIT_BIAS` | `taught_parameters_require_a_sufficient_frame`, naming keys+`n`+floor | ✅ |
+**FINAL GREEN, LANE-AFFECTED SURFACE: `93 passed`** (`79` Lane-28 surface + `14` new), `PYTEST_EXIT=0`.
+✅★★★★ **THE WITNESS IS A TWO-WAY DISCRIMINATOR BUILT FROM ONE INSTRUMENT, AND THAT IS THE POINT.** A sentinel is seeded onto `last_per_condition_bool` **before** the call; the short-frame branch's first act overwrites it with `{}`. **Rows 1–4 and 6 assert it SURVIVED** (the refusal fired above that branch); **row 5 asserts it was CLEARED** (the legacy branch really ran). ★★★★★ **Without row 5's direction, "the sentinel survived" would also be satisfied by a `compute()` that never ran at all** — `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN.`
+✅ **ORDERING IS MEASURED ON A `200`-BAR FRAME ON PURPOSE:** on a short frame the counters read zero even with no guard at all, so a short-frame ordering claim proves nothing. Delegating counters (`R-705 §3`-ratified: they observe, inject nothing) on `candle_confirmation_check` and the real `_eval_wait_bias` read **`0` under refusal** and **`>0` on the parameterless control**.
+✅ **THE BOUNDARY PAIR — the sharpest test in the file:** identical route, flag and taught periods (`3`/`8`, **shorter than either frame**, so `F-3` cannot be what fires); the ONLY variable is one bar. **`n=29` refuses · `n=30` computes.** ★ This is what stops row 6 being satisfied by an always-raise, and what proves it is not `F-3` in disguise.
+
+### ⚠️★★★★★ §4 — RED-PROOF, AND THE PRE-REGISTRATION MISS
+**PRE-REGISTERED BEFORE PLANTING (`R-681 §1`), `7` RED BY NAME + `7` GREEN BY NAME.** Plant = the defect itself, smallest declared delta: gate the hoisted call on `n >= MIN_BARS_REQUIRED`, reproducing exactly the pre-lane reachability.
+```
+PLANTED  -> 7 failed, 86 passed     <- the 7 named in advance, EXACTLY; expected-GREEN 7/7 held, 0 moved
+                                       (86 = the 79 Lane-28 surface, unmoved, + my 7 predicted greens)
+RESTORED -> sha256 621302a56987f19b  PRE == POST   BYTE-IDENTICAL   plant residue: 0
+GREEN    -> 93 passed
+```
+⚠️★★★★★ **THE MISS: ARM B (Lane 29 ABSENT ENTIRELY) REDDENS `8` OF MINE, NOT `7`.** The eighth is **`test_refusal_precedes_confirmation_evaluator_and_cache_on_a_full_frame`**. **MY PLANT COULD NOT REDDEN IT, BECAUSE THE PLANT PRESERVED THE HOISTED POSITION FOR `n >= 30`** — it removed REACHABILITY but not the POSITION. **Two different mutations testing two different properties, and I only pre-registered against the weaker one.** ★★★★★ **I am recording this as a MISS rather than editing the prediction to match, and it is the informative direction: `A PLANT WEAKER THAN TRUE ABSENCE OVER-REPORTS YOUR GUARD'S PRECISION.` The six-row matrix discriminates reachability; the ordering test discriminates position; a single plant proved only the first.**
+
+### ✅★★★★★ §5 — THE STOP CONDITION, ANSWERED BY NAME AND NOT BY COUNT
+```
+POPULATION: src/engine/tests/  MINUS  test_cloud_backend.py        (AR-783's population)
+ARM A  Lane 29 SHIPPED   172 failed, 8231 passed, 39 skipped, 3 xfailed  (305s)
+ARM B  Lane 29 ABSENT    180 failed, 8223 passed, 39 skipped, 3 xfailed  (285s)
+  INHERITED (in both), IDENTICAL BY FULL NODE ID:      172
+  ONLY_IN_A  (reddened BY the change):                   0     <- THE STOP CONDITION DID NOT FIRE
+  ONLY_IN_B  (red WITHOUT the change):                    8     <- ALL 8 ARE MINE, none inherited
+  break_control_can_report_a_difference: True     file restored: sha PRE == POST verified
+```
+✅★★★★ **AND I AUDITED THE INSTRUMENT BEFORE BELIEVING IT, BECAUSE A COUNT WOULD HAVE LIED HERE:** `[MEASURED]` re-running arm A's `172` as a SUBSET gives **`166 failed, 6 passed`** ⇒ **`6` members of that population are ORDER-DEPENDENT.** ★★★★★ **A count comparison across two runs of a population containing `6` order-dependent members is not an instrument. The by-name symmetric difference is, and it is what `ONLY_IN_A = 0` rests on.**
+⚠️ **DISCLOSED WINDOW:** arm B required `HEAD`'s version of `spec_condition_compiler.py` in the working tree for **`4m45s`**. Restore is verified by hash in the same command (`621302a56987f19b`). **I did not plant into any file I do not own, and the sibling's file was never touched.**
+⚠️★★★★★ **A DENOMINATOR DISAGREEMENT I AM REPORTING RATHER THAN RECONCILING AWAY: I MEASURE `172` INHERITED WHERE `AR-783` REPORTED `171`, AT THE SAME PRODUCTION CODE STATE.** `AR-783`'s figure is **`RELAYED` to me** — `R-705 §1` records that the desk did **not** re-run those arms. **`ONLY_IN_A = 0` proves Lane 29 did not cause it.**
+⚖️★★★★★ **AND MY OWN EXPLANATION FOR IT WAS WRONG, WHICH I RAN A CONTROL FOR RATHER THAN LEAVING AS A PLAUSIBLE STORY.** `[HYPOTHESIS — REFUTED BY MY OWN CONTROL]` I predicted the extra failure came from my NEW TEST FILE shifting collection order and flipping one of the `6` order-dependent members. **ARM C — the identical population with my test file ENTIRELY ABSENT — returns `172 failed, 8217 passed`.** ⇒ **dead: the inherited population is `172` with or without my file.**
+```
+ARM A (Lane 29 shipped)          inherited 172
+ARM B (Lane 29 absent)           inherited 172   (its extra 8 are all mine)
+ARM C (shipped, my file absent)  inherited 172
+A == B_inherited == C  BY FULL NODE ID   symmetric difference 0 in BOTH directions
+```
+★★★★★ **THREE ARMS, ONE SET, NO DISAGREEMENT — so the discrepancy is with `AR-783`'s RELAYED `171` alone, and nothing in this lane produced it.** 🛑 **Not chased further: it predates this lane and `R-648` keeps sweep lanes closed. Recorded as a finding the desk owns, not repaired.**
+
+### 🛑 §6 — WHAT IS NOT MEASURED
+- 🛑 **`test_cloud_backend.py` `[UNENUMERATED]`** — excluded from every population here, per `AR-783 §6`'s measured hang and `R-705 §5`'s desk-owned backlog. **NOT green, NOT covered. Untouched.**
+- 🛑 **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM — no `tsc`, no `vitest`. FLAG NOT ENABLED. PRODUCER UNTOUCHED. GATE 2 NOT CLOSED. This is not Phase-1 exit and not the breakthrough demonstration** (`R-706 §5.4`).
+- 🛑 **The self-minted `taught_parameters_require_a_sufficient_frame` is STILL AWAITING RATIFICATION** (disclosed `AR-784 §5`). **Rename it and I will.**
+
+### ✅ §7 — CARRIED FORWARD INTO LANE 30, NOT ACTED ON HERE
+⚖️ **`F-F` MAY ALREADY BE DISCHARGED AS A SIDE EFFECT, AND I AM FLAGGING IT RATHER THAN CLAIMING IT.** `R-702 §6(4)` offers *"move the refusal above `candle_confirmation_check` OR correct the comment"*. `[MEASURED]` the guard is now at `:1497` and `candle_confirmation_check` at `:1517` ⇒ **the first option is satisfied and the comment's claim is now TRUE.** 🛑 **I will verify and pin it INSIDE Lane 30 where it belongs, with a guard that keeps it true — not claim it here.**
+`[MEASURED, Lane 30 recon]` `M5`'s fixture is `test_the_refusal_fires_before_any_evaluator_or_cache_mutation` (`test_flag_off_parameterized_refusal.py:129`), reading `last_per_condition_bool` at `:146`; the `F-E` census guard's relative `os.walk("src")` is at `:200`; `_last_bias_periods` is set at `spec_condition_compiler.py:1028`.
+
+### ★★★★★ §8 — POSITION
+✅ **LANE 29 CLOSED.** ✅ **PROCEEDING TO LANE 30 WITHOUT RETURNING TO THE DESK** (`R-705 §5`: no further authorization needed between 29 and 30; committed at the lane boundary). **FAN-IN `2/3`. NO HANDOFF — I am seated, the ear is live, and the remaining lane is UNSTARTED, not blocked.**
+**NEXT:** Lane 30 — `M5` re-pointed at `_last_bias_periods` · `M3` mirror partial recognition · `F-E` repo-anchored non-vacuous census (**must ASSERT IT LOOKED**) · six named constructor forms · `F-F` · **`80` vs `81` reconciled BY MEMBER with a break-control.**
+
+---
+
 ## AR-784 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 29. `R-705 §5` STEP 0 IS DISCHARGED (`556122b7`) AND RE-VERIFIED BY ME AT THE LANDED COMMIT, NOT INHERITED FROM THE DESK'S RUN ON THE DIRTY TREE.** ✅ **THE EAR IS RE-ARMED — AND IT WAS ARMED `~4` MINUTES BEFORE `R-705`'s ORDER TO RE-ARM IT LANDED, WHICH I ONLY KNOW BECAUSE THE EAR ITSELF REPORTED THE REWRITE.**
 
 **TASK:** `R-705 §5` Lane 29 — parameter acknowledgement above every short-frame early return. **FRESH SEAT** (`claude.exe 428`, the desk's own identification). **FILES SO FAR — ONE:** `src/engine/spec_condition_compiler.py`. **Sibling's `test_synthetic_market_simulator.py` dirty in the tree and NOT mine — thirtieth consecutive report.**

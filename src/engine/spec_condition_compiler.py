@@ -1339,83 +1339,22 @@ class SpecConditionStrategy(BaseStrategy):
         # a matching branch here.
         return np.full(n, np.nan, dtype=np.float64)
 
-    # ─── Core compute ───────────────────────────────────────────────────────
-    def compute(self, df: pl.DataFrame) -> pl.DataFrame:
-        n = len(df)
-        false_col = pl.lit(False)
-        if n < MIN_BARS_REQUIRED:
-            self.last_trace = []
-            self.last_per_condition_bool = {}
-            self.last_population_a_level = {}
-            return df.with_columns(
-                [
-                    false_col.alias("entry_long"),
-                    false_col.alias("entry_short"),
-                    false_col.alias("exit_long"),
-                    false_col.alias("exit_short"),
-                ]
-            )
+    def _acknowledge_parameters(self, n: int, enforced: bool) -> None:
+        """LANE 29 (R-705 §5): EVERY PARAMETER REFUSAL, HOISTED ABOVE EVERY EARLY RETURN.
 
-        close = df["close"].to_numpy().astype(np.float64)
-        high = df["high"].to_numpy().astype(np.float64)
-        low = df["low"].to_numpy().astype(np.float64)
-        open_ = df["open"].to_numpy().astype(np.float64)
-        ts_list = _bars_to_ts_list(df)
+        These checks are UNCHANGED IN CONTENT and MOVED IN POSITION. They used to sit
+        inline in `compute()` BELOW its `n < MIN_BARS_REQUIRED` warm-up floor, so a frame
+        shorter than the floor returned four all-False columns and never reached them: the
+        taught binding was discarded in silence by the one path no guard was watching.
+        `A GUARD BELOW AN EARLY RETURN IS A GUARD THE SHORT PATH NEVER MEETS.`
 
-        bullish_confirm, bearish_confirm = candle_confirmation_check(open_, high, low, close)
-        # BUG FIX 1 cache: want_bearish is now resolved PER-BINDING (object text + spec.direction
-        # fallback, see _resolve_wait_bias_bearish) rather than hard-coded False — different
-        # WAIT_BIAS/CONFIRM_DIRECTION bindings on the same spec can therefore legitimately need
-        # different directions, so this caches the EMA-slope proxy array per want_bearish value
-        # (at most 2 entries: True and False) instead of the single `wait_bias_bull` variable the
-        # pre-fix code relied on.
-        # WIRE-1 seam: the REAL HTF trend column, materialized upstream of compute()
-        # by backtester.run_class_backtest from the prior-completed-period cache
-        # (R-066 §2 causality). Absent => every bias bar falls back to the proxy and
-        # behavior is byte-identical to pre-wire.
-        _htf_trend = (
-            df["htf_daily_trend"].to_list() if "htf_daily_trend" in df.columns else None
-        )
-        wait_bias_cache: dict[bool, np.ndarray] = {}
-        wait_structure = None
-        wait_structure_levelzone = None
-        wait_retest = None
-        fvg_signal = None
-        # Population-A Level Resolver caches — level_cache keyed by (kind, bullish) so
-        # conditions that resolve to the SAME kind+polarity share one computed series
-        # (mirrors wait_structure_levelzone's single-shared-array caching), while
-        # different (kind, bullish) pairs — and therefore different Population-A
-        # conditions naming different levels — get DISTINCT arrays (packet R2).
-        # swings_cache and atr are computed at most once per compute() call regardless
-        # of how many Population-A conditions this spec has.
-        population_a_level_cache: dict[tuple[str, bool], np.ndarray] = {}
-        population_a_swings_cache: dict[str, pl.DataFrame] = {}
-        population_a_atr: np.ndarray | None = None
-        # Per-condition-id level series, exposed for introspection (proves R1/R2: the
-        # production path's own object text drives a DIFFERENT array per condition_id,
-        # not just a shared per-kind array). Reset every compute() call — replay-
-        # deterministic, never carries state across instances or calls.
-        self.last_population_a_level: dict[str, np.ndarray] = {}
-        # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
-        # call, mirroring fvg_signal's caching above) — separate cache per family so a spec with
-        # e.g. both a restored WAIT_BIAS and a restored WAIT_CONFIRMATION condition evaluates each
-        # native primitive exactly once and shares its result ONLY across conditions bound to that
-        # SAME primitive (never across families).
-        bias_result = None
-        confirmation_result = None
-        sweep_result = None
-        mss_result = None
-
-        spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
-        per_condition_bool: dict[str, np.ndarray] = {}
-
-        # pin (a) ledger: which conditions are DECLARED non-gating this run (FAMILY_META
-        # gates=False). Reset every compute() call — replay-deterministic, never carries state
-        # across instances or calls, same contract as last_population_a_level above. Populated
-        # only under enforcement; empty dict otherwise, so flag-OFF introspection is unchanged.
-        self.last_non_gating_conditions: dict[str, dict] = {}
-        enforced = family_meta_enforced()
-
+        Called as the FIRST statement of `compute()`, so it precedes all six surfaces
+        R-705 §5 enumerates: `candle_confirmation_check`, enforced-or-legacy dispatch,
+        evaluator invocation, cache construction or mutation, per-condition state
+        publication, and the short-frame return itself. Nothing on `self` is reset before
+        it runs, so a refusal leaves no half-updated introspection state behind either --
+        `A REFUSAL THAT FIRES AFTER A MUTATION IS A PARTIAL RUN WEARING AN EXCEPTION.`
+        """
         # LANE 27 (R-699 §7): MAKE THE FLAG-OFF STATE HONEST.
         #
         # With TF_FAMILY_META_ENFORCED OFF -- the PRODUCTION DEFAULT -- the `elif b.type`
@@ -1508,6 +1447,133 @@ class SpecConditionStrategy(BaseStrategy):
                     f"invented for an evaluator that cannot accept one."
                 )
 
+        # LANE 29 (R-705 §5, ROW 6): A FRAME TOO SHORT TO EVALUATE MUST REFUSE A TAUGHT
+        # PARAMETER, NEVER RETURN A SILENT ALL-FALSE.
+        #
+        # Reaching here means the two checks above already passed: the flag is ON and every
+        # parameterized binding is on a route that genuinely consumes parameters. The
+        # remaining hole is the frame itself. `compute()`'s warm-up floor returns all-False
+        # and publishes an empty per-condition map WITHOUT EVALUATING ANYTHING, so a taught
+        # period is dropped and the observable is byte-identical to the signature of "the
+        # parameter never transmitted" -- the manufactured symptom R-692 §4 named.
+        #
+        # F-3 (`test_bias_refusal_surface`) already refuses a taught slow leg longer than
+        # the frame, but it fires INSIDE `_h_wait_bias`, below this floor. Below
+        # MIN_BARS_REQUIRED bars that refusal is itself unreachable, which is why this one
+        # is not a duplicate of it. `A REFUSAL THAT LIVES BELOW AN EARLY RETURN IS NOT A
+        # REFUSAL ON THE SHORT PATH.`
+        #
+        # THE UNTAUGHT SHORT FRAME IS DELIBERATELY UNTOUCHED (R-705 §5 row 5): with nothing
+        # taught there is nothing to drop, and refusing there would change the
+        # DEFAULT-configured path and every short frame in the suite -- blast radius this
+        # lane does not own, and the same boundary `test_f3_control_untaught_short_frame_
+        # keeps_the_legacy_all_false` already pins.
+        if n < MIN_BARS_REQUIRED:
+            taught = sorted(
+                (b.condition_id, tuple(k for k, _ in (b.parameters or ())))
+                for b in (*self.binding_plan.bindings, *self.binding_plan.invalidation_bindings)
+                if b.parameters
+            )
+            if taught:
+                detail = ", ".join(
+                    f"{cid!r} (taught key(s) {list(keys)!r})" for cid, keys in taught
+                )
+                raise ValueError(
+                    f"condition(s) {detail} carry taught parameters, but this frame has "
+                    f"{n} bars and the warm-up floor is {MIN_BARS_REQUIRED}. REFUSAL "
+                    f"taught_parameters_require_a_sufficient_frame: the short-frame path "
+                    f"returns an all-False array without evaluating anything, so the "
+                    f"taught numbers would be dropped and the output would be "
+                    f"indistinguishable from a strategy that supplied no parameters at "
+                    f"all. Refused rather than dropped; the UNTAUGHT short-frame path is "
+                    f"unchanged."
+                )
+
+    # ─── Core compute ───────────────────────────────────────────────────────
+    def compute(self, df: pl.DataFrame) -> pl.DataFrame:
+        n = len(df)
+        false_col = pl.lit(False)
+        enforced = family_meta_enforced()
+        self._acknowledge_parameters(n, enforced)
+        if n < MIN_BARS_REQUIRED:
+            self.last_trace = []
+            self.last_per_condition_bool = {}
+            self.last_population_a_level = {}
+            return df.with_columns(
+                [
+                    false_col.alias("entry_long"),
+                    false_col.alias("entry_short"),
+                    false_col.alias("exit_long"),
+                    false_col.alias("exit_short"),
+                ]
+            )
+
+        close = df["close"].to_numpy().astype(np.float64)
+        high = df["high"].to_numpy().astype(np.float64)
+        low = df["low"].to_numpy().astype(np.float64)
+        open_ = df["open"].to_numpy().astype(np.float64)
+        ts_list = _bars_to_ts_list(df)
+
+        bullish_confirm, bearish_confirm = candle_confirmation_check(open_, high, low, close)
+        # BUG FIX 1 cache: want_bearish is now resolved PER-BINDING (object text + spec.direction
+        # fallback, see _resolve_wait_bias_bearish) rather than hard-coded False — different
+        # WAIT_BIAS/CONFIRM_DIRECTION bindings on the same spec can therefore legitimately need
+        # different directions, so this caches the EMA-slope proxy array per want_bearish value
+        # (at most 2 entries: True and False) instead of the single `wait_bias_bull` variable the
+        # pre-fix code relied on.
+        # WIRE-1 seam: the REAL HTF trend column, materialized upstream of compute()
+        # by backtester.run_class_backtest from the prior-completed-period cache
+        # (R-066 §2 causality). Absent => every bias bar falls back to the proxy and
+        # behavior is byte-identical to pre-wire.
+        _htf_trend = (
+            df["htf_daily_trend"].to_list() if "htf_daily_trend" in df.columns else None
+        )
+        wait_bias_cache: dict[bool, np.ndarray] = {}
+        wait_structure = None
+        wait_structure_levelzone = None
+        wait_retest = None
+        fvg_signal = None
+        # Population-A Level Resolver caches — level_cache keyed by (kind, bullish) so
+        # conditions that resolve to the SAME kind+polarity share one computed series
+        # (mirrors wait_structure_levelzone's single-shared-array caching), while
+        # different (kind, bullish) pairs — and therefore different Population-A
+        # conditions naming different levels — get DISTINCT arrays (packet R2).
+        # swings_cache and atr are computed at most once per compute() call regardless
+        # of how many Population-A conditions this spec has.
+        population_a_level_cache: dict[tuple[str, bool], np.ndarray] = {}
+        population_a_swings_cache: dict[str, pl.DataFrame] = {}
+        population_a_atr: np.ndarray | None = None
+        # Per-condition-id level series, exposed for introspection (proves R1/R2: the
+        # production path's own object text drives a DIFFERENT array per condition_id,
+        # not just a shared per-kind array). Reset every compute() call — replay-
+        # deterministic, never carries state across instances or calls.
+        self.last_population_a_level: dict[str, np.ndarray] = {}
+        # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
+        # call, mirroring fvg_signal's caching above) — separate cache per family so a spec with
+        # e.g. both a restored WAIT_BIAS and a restored WAIT_CONFIRMATION condition evaluates each
+        # native primitive exactly once and shares its result ONLY across conditions bound to that
+        # SAME primitive (never across families).
+        bias_result = None
+        confirmation_result = None
+        sweep_result = None
+        mss_result = None
+
+        spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
+        per_condition_bool: dict[str, np.ndarray] = {}
+
+        # pin (a) ledger: which conditions are DECLARED non-gating this run (FAMILY_META
+        # gates=False). Reset every compute() call — replay-deterministic, never carries state
+        # across instances or calls, same contract as last_population_a_level above. Populated
+        # only under enforcement; empty dict otherwise, so flag-OFF introspection is unchanged.
+        self.last_non_gating_conditions: dict[str, dict] = {}
+
+        # LANE 29 (R-705 §5): `enforced` is now resolved at the TOP of `compute()` and the
+        # parameter-acknowledgement refusals fire there, in `_acknowledge_parameters`.
+        # THEY USED TO SIT HERE -- which is BELOW the `n < MIN_BARS_REQUIRED` early return,
+        # so a frame shorter than the warm-up floor discarded a taught binding in silence
+        # without ever reaching either refusal. The checks themselves are unchanged; only
+        # their POSITION moved. `A GUARD BELOW AN EARLY RETURN IS A GUARD THE SHORT PATH
+        # NEVER MEETS.`
         ctx: dict = {
             "n": n, "df": df, "ts_list": ts_list,
             "open_": open_, "high": high, "low": low, "close": close,
