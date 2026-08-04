@@ -4,6 +4,53 @@
 
 ---
 
+## AR-749 · 2026-08-03 · ⏳ **START-RECEIPT — `R-682 §6 LANE 7`, KILL THE TEST-POLLUTION LEAK. ✅ THE RED IS ALREADY REPRODUCED VERBATIM (`3 failed, 425 passed`), SO THE `§6` STOP CONDITION IS CLEARED BEFORE THE FIX IS WRITTEN.** 🛑 **AND I AM RAISING A MECHANISM DEFECT IN THE RULING BEFORE STARTING, NOT AT DELIVERY: `§6(1)`'s "replace `:823`/`:858` with `monkeypatch.setenv`" IS NOT DIRECTLY APPLICABLE — BOTH LINES ARE INSIDE `_report()`, A PLAIN HELPER THAT IS ALSO CALLED FROM `__main__` AT `:875`, WHERE NO `monkeypatch` FIXTURE EXISTS.** ⚠️ **PLUS A CORRECTION AGAINST MY OWN `AR-748 §4`: A PRE-EXISTING RULING EAR **DID** EXIST. I CLAIMED NONE WAS FOUND, FROM A `220`-CHARACTER-TRUNCATED COMMAND-LINE FIELD.**
+
+**TASK:** `R-682 §6` steps `(1)`–`(4)`. **FILE: `src/engine/tests/test_session_role_adversarial_fence.py` ONLY.** 🛑 **`spec_condition_compiler.py` and `spec_family_bindings.py` NOT TOUCHED — they are the subjects of the running grade at `f73d2726`.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — eighth consecutive report.** **ETA ~25 min.**
+
+### ✅🛑 §1 — THE RED, REPRODUCED FIRST, VERBATIM
+```
+ENV PRE-STATE: [<unset>]        <- positive control: the variable is NOT set in my shell,
+                                   so anything observed below is produced by the run itself
+python -m pytest src/engine/tests/test_session_role_adversarial_fence.py \
+                 src/engine/tests/test_spec_family_bindings.py -q
+
+>       assert os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED") is None
+E       AssertionError: assert 'true' is None
+FAILED ...test_spec_family_bindings.py::test_wait_session_binds_on_recognized_keyword
+FAILED ...test_spec_family_bindings.py::test_s1_flag_off_is_the_null_hypothesis_at_the_same_production_boundary
+FAILED ...test_spec_family_bindings.py::test_s7_flag_off_byte_identity_over_the_full_26_row_population
+3 failed, 425 passed, 2 xfailed in 1.68s
+```
+✅ **`R-682 §6`'s STOP CONDITION IS CLEARED: the `3` failures DO reproduce in the ordered run, and they are the `3` named — including `test_s7_flag_off_byte_identity_over_the_full_26_row_population`, the byte-identity guard.** ✅ **THE DIAGNOSIS IS CONFIRMED BY THE ASSERTION TEXT ITSELF: the victim test asserts the variable `is None` and receives `'true'` — it is not an incidental failure, it is the leak, named.**
+
+### 🛑★★★★ §2 — MECHANISM DEFECT IN `§6(1)`, RAISED BEFORE I START (`worker-execution §9`)
+🛑 **`[MEASURED HERE]` `:823` and `:858` are NOT in a test function. They are inside `def _report()` (`:820`), which is called by `test_emit_report` (`:868`) **AND** by `if __name__ == "__main__": print(_report())` (`:874-875`).** **A literal `monkeypatch.setenv` at those lines would raise `NameError` on the `__main__` path — so the ruling's instruction cannot be applied as written.**
+✅ **MINIMAL ADAPTATION I INTEND, AND IT KEEPS THE RULING'S ACTUAL REQUIREMENT (scoped, auto-restoring, using the file's own pattern):** `_report()` takes an optional `setenv` callable defaulting to the plain `os.environ` setter; `test_emit_report` gains the `monkeypatch` fixture and passes `monkeypatch.setenv`. **Under pytest the mutation is scoped and undone at teardown; the `__main__` script path keeps working in its own throwaway process.** 🛑 **If the desk wants a different shape, say so — I am naming the substitution rather than making it silently.**
+★★ **`§6(1)` ALSO SAYS "match the file's own existing pattern, do not invent one." `monkeypatch.setenv` at `:696`/`:748` IS that pattern; what I am adding is only the plumbing to reach a non-test helper with it.**
+
+### ✅★★★★ §3 — PRE-REGISTERED EXPECTED-GREEN SET, **WITH ITS DERIVATION** (`R-682 §4.2`)
+🛑 **DERIVED, NOT HAND-LISTED — and stated before the fix exists, so it cannot be fitted to the result.** **Rule: `union of (a) every non-`__pycache__` test file importing any `src` module in the touched file's import closure, and (b) every non-`__pycache__` file referencing the leaked variable.`**
+- `[MEASURED]` **closure of the touched file = ONE `src` module: `src.engine.spec_family_bindings`** (its only non-stdlib, non-pytest import, `:109-110`).
+- `[MEASURED]` **(a) → `13` test files · (b) → `4` files, `3` of them already in (a) plus `spec_family_bindings.py` itself (not a test). UNION = `14` test files.**
+`test_compile_fidelity_leg_a · test_compile_lints · test_composition_bundle_dispatch · test_family_meta_enforcement · test_fvg_identity_dispatch · test_levelzone_population_a_resolver · test_levelzone_routing · test_parameter_collision · test_session_name_route_founding_fixtures · test_session_role_adversarial_fence · test_session_windows · test_spec_condition_compiler · test_spec_family_bindings · test_spec_producer`
+✅ **THE FILE I AM EDITING IS ITSELF A TEST FILE AND IT IS IN THE SET — the `R-682 §4.2` amendment ("include the test file of every module touched") is satisfied by construction here, which is exactly why I am stating the DERIVATION and not leaning on that.**
+```
+BASELINE, this 14-file set, ONE process, PRE-FIX:   3 failed, 788 passed, 2 xfailed
+```
+🛑★★★ **PRE-COMMITTED PASS CRITERION, AND ITS FAILURE FORM: I expect `0 failed`, `792 passed` (`788` + the `3` repaired + `1` new cleanup guard), `2 xfailed`. **IF THE NUMBER IS ANYTHING ELSE I REPORT THE DISCREPANCY — I DO NOT RESTATE THE EXPECTATION.** A count I revise after seeing the result is not a pre-registration.**
+
+### ⚠️🛑 §4 — CORRECTION AGAINST `AR-748 §4`, ONE COMMIT OLD
+🛑 **`AR-748 §4` claimed `[MEASURED HERE] no pre-existing ear was found running`. THAT IS WRONG.** A ruling ear from the pre-`/clear` seat **was** live and it **fired on `R-682`** (`NEW RULING COMMIT a8a76837`), independently of the one I armed.
+🛑 **HOW I GOT IT WRONG, because the shape matters more than the error: I read six `bash.exe` command lines TRUNCATED AT `220` CHARACTERS — every one of which showed only the identical shell-snapshot preamble — and read "no watcher visible" as "no watcher exists." `absence-claim`: I had no positive control, and a field that cannot display the distinguishing text cannot witness its absence.**
+✅ **NO DOUBLE-RIG TODAY: my own ear was an `until`-loop that EXITED when it fired, so exactly one ear is live now (the inherited one). `one-monitor` is satisfied by accident, not by design, and I am recording it as such.**
+
+### ⚠️ §5 — SURFACES THIS RECEIPT CANNOT SEE
+- `[UNENUMERATED]` **whether other files in this repo leak OTHER environment variables the same way.** `R-682 §6` scopes me to one file and I am not sweeping — but the class is real and this receipt names it.
+- 🛑 **NO FULL-SUITE GREEN WILL BE QUOTED, per `R-682 §3`, which binds until this lands.** My evidence is the derived `14`-file set and it will be labelled as scoped.
+
+---
+
 ## AR-748 · 2026-08-03 · ⏳🛑 **SEAT RECEIPT — FRESH WORKER SESSION SEATED, AND IT HAS **NO AUTHORIZED TASK**. `R-681 §5 LANE 6` IS **DELIVERED AND COMMITTED** (`f73d2726`) AND `AR-747` STANDS AT `APPROVAL_REQUESTED`; **THERE IS NO RULING AFTER `R-681` ON DISK.** ⚠️ **AND I AM DISCHARGING THE `worker-onboarding §1` DUTY IN THE FIRST REPORT, AS IT ORDERS: `R-681` CARRIES **NO `★ WORKER — START HERE` BLOCK.** I fell back to its `§5 AUTHORIZED NOW` and found it already discharged nine lines below in `AR-747`.** 🛑 **I AM NOT SELF-ASSIGNING A LANE. `R-681 §6`'s four open items name **THIS DESK** as owner on all four.**
 
 **TASK:** none authorized. **THIS IS A READ-ONLY RECEIPT — no files under `src/` touched, no measurement re-run, no scope opened.**
