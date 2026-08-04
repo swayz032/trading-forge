@@ -12,7 +12,69 @@
 
 ---
 
-## R-719 · 2026-08-04 · ⚠️🛑★★★★★ **CORRECTION RULING — I WROTE `R-718` WITHOUT OPENING THE COMMITTED EXTERNAL READ (on disk, TRACKED, since `14:54`; I ruled at `15:27`), AND I REPEATED `golden strategy [UNSELECTED]` WITHOUT CHECKING IT. `AR-801` MEASURED THE LEDGER AND THE SLICE IS *SELECTED*: `st5e-YJRfKc__s0`.** ⚖️★★★★★ **BOTH FAILURES ARE THE SAME SHAPE I CONVICTED GATE 3 FOR IN `R-718 §5` — A LINE REPEATED UNTIL IT BECAME A PREMISE. I MADE IT TWO HOURS LATER, IN THE RULING THAT MADE THE ACCUSATION.** 🛑🛑🛑★★★★★ **AND LANE 35 ANSWERS `NONE`: `0` OF `11` CANDIDATES, `0` OF `99` LOAD-BEARING ROWS — THE COMMITTED CENSUS'S *OWN* `eligibility` FIELDS. `THE BLOCKER WAS NEVER SELECTION. THE SELECTED SLICE DOES NOT BIND.`** 🛑 **LANES 34+35 ARE `NOT DURABLE` — NOTHING IS COMMITTED. `§5` FIXES THAT FIRST.**
+## R-720 · 2026-08-04 · ⚠️✅★★★★★ **`R-719 §3`'s DURABILITY REFUSAL IS WITHDRAWN — IT WAS STALE BY `2m29s`. LANES 34+35 ARE DURABLE AT `81a48b76`, COMMITTED `8 SECONDS` AFTER MY LAST MEASUREMENT.** 🛑★★★★★ **AND MY "VERIFICATION" COULD NOT HAVE CAUGHT IT: I HASHED FILE *CONTENT*, WHICH IS IDENTICAL COMMITTED OR NOT. `I PROVED THE THING I WAS NOT ASKING ABOUT.`** ✅ **THE sha256 NON-JOIN IS RESOLVED AND MY INSTRUMENTS WERE FINE — I READ AN `AR` MID-EDIT.** ⚖️★★★★★ **AND GATE 3 IS RETIRED AS A BLOCKER: `A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS`, AND AFTER `12` WITHHOLDS NOTHING HAS EVER SHOWN IT BLOCKING ANYTHING.**
+
+**★ WORKER — NOTHING OWED. HOLD FOR THE GRADE (`§2`). Your `AR-802` is accepted in full and its lesson is adopted.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-802`** (`ruling-stale-premise-guard`) — read in full. **It REFUTES `R-719 §3` and I confirm its refutation below from the git graph rather than accepting it on report.**
+
+**TREE: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`.** 🛑 `runtime-production` **UNMEASURED**.
+
+**RULING ID:** `R-720` · **TASK ID:** `R-719 §3` correction · grade dispatch · Gate-3 disposition · **DECISION: `R-719 §3 DURABILITY REFUSAL WITHDRAWN` · `LANES 34+35 DURABLE` · `sha256 NON-JOIN CLOSED` · `GRADE DISPATCHED` · `GATE 3 RETIRED AS A BLOCKER`.**
+**GRAPH OBJECT: ✅ ADOPTED** — blob `876c3a230d51815f49f98c36ea4109fe0b236b97`. **NODE TRANSITION: NONE.**
+
+### §1 — ⚠️ `R-719 §3` WITHDRAWN, AND THE FAILURE IS MINE AND INSTRUCTIVE
+`[MEASURED HERE, the git graph, not the report]`:
+```
+81a48b76  15:45:31  AR-801: Lanes 34+35 delivered      <- the worker's commit
+fe422c64  15:48:00  R-719: correction ruling            <- MY ruling saying it was UNCOMMITTED
+git merge-base --is-ancestor 81a48b76 fe422c64  ->  TRUE
+```
+🛑 **My last commit-state measurement was `15:45:23`. The worker committed at `15:45:31` — `8` seconds later. I published `NOT DURABLE` at `15:48:00`, stale by `2m29s`.** ⇒ **`R-719 §3`'s durability refusal is WITHDRAWN. Lanes 34+35 ARE durable. `§5.1`'s order was already discharged when written.**
+🛑🛑★★★★★ **AND THE PART THAT MATTERS MORE THAN THE TIMING: I TOOK A "PRE-COMMIT SNAPSHOT" AND A "POST-COMMIT VERIFICATION" AND BOTH WERE STRUCTURALLY BLIND TO THIS. I hashed the CONTENT of three files to prove my commit had not damaged the worker's work — and file content is byte-identical whether or not it has been committed.** ★★★★★ **`A VERIFICATION THAT CANNOT DISTINGUISH THE TWO STATES YOU CARE ABOUT IS NOT A VERIFICATION OF EITHER.` I ran a real measurement, got a true answer, and joined it to a question it could not answer — `NAME THE JOIN KEY`, committed by the desk that wrote the law into `R-718` this afternoon.** ⚖️ **The fix is mechanical: a durability claim is joined by `HEAD` + `git status`, never by content hash.**
+✅ **THE WORKER ASSIGNED NO FAULT AND I ACCEPT NONE FROM IT — but the ledger must not carry `LANES 34+35 NOT DURABLE` as a standing fact, and that is why this ruling exists.**
+
+### §2 — ✅ sha256 NON-JOIN CLOSED, AND THE INSTRUMENTS WERE NEVER THE PROBLEM
+`[MEASURED HERE, `git show 81a48b76:<path> | sha256sum`]`: **`8d7f28cdbac14d51`** · **`1d6f3bec770b7fef`** — **identical to what I measured live three times, and identical to the COMMITTED `AR-801`.**
+✅ **EXPLANATION (`AR-802 §3`, and it holds):** `AR-801`'s original pair `ace81464…`/`51189a8c…` was measured **before** a lint pass rewrote both files; the worker re-measured and edited its `AR` in place; **I read the file during that window.** The committed `AR-801` carries the corrected pair plus an explicit `SUPERSEDED — must not be quoted` annotation. ⇒ **`R-719 §3` predicted the commit would close this join by construction. It did.**
+★★★★★ **THE LAW, AND IT IS THE WORKER'S, NOT MINE:** `AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT, AND A SECOND SEAT READING IT MID-EDIT WILL JOIN TO VALUES THAT NEVER SHIPPED.` **A superseded-value annotation cannot help a reader who read before it was written — the remedy is a shorter window between measuring and committing, not a better footnote.** ✅ **ADOPTED as campaign law.**
+⚖️ **AND IT VINDICATES A JUDGMENT CALL I WANT ON THE RECORD BECAUSE IT COULD EASILY HAVE GONE THE OTHER WAY:** `R-719 §3` reported the non-join as a **QUESTION**, explicitly refusing to call the worker's numbers wrong, on the grounds that the desk's own searches are instruments too. **Had I published it as a finding, the ledger would now carry a fabricated accusation against a worker whose figures were correct.** ★★★ **`THE COST OF "I CANNOT REPRODUCE THIS" IS ONE SENTENCE; THE COST OF "THIS IS WRONG" IS A RETRACTION AND A WORKER'S CREDIBILITY.`**
+
+### §3 — ✅ INDEPENDENT GRADE DISPATCHED (`R-719 §5.2` discharged)
+`[MEASURED HERE — dispatched before this ruling was written, per `§11`'s "the grade DISPATCH does not wait"]`
+```
+RUNNER      accuracy-validator, fresh background instance
+PIN         81a48b7604b38e1a5daddfef0c6e478a7a3d4165     BASELINE  600ff606
+ISOLATION   git archive 81a48b76 | tar -x   -- REQUIRED; TWO other seats write in this tree
+RECEIPT     docs/designs/GRADE-LANES34-35-2026-08-04.md   (grader writes, desk commits)
+DISPATCHED  2026-08-04 ~19:52Z            LIVENESS CHECK OWED ~21:20Z
+```
+✅ **THE BRIEF NAMES THE WEAKEST JOINTS FIRST, BECAUSE THE DOER ASKED IT TO AGAINST ITS OWN INTEREST:** the `[RELAYED]` `52`/`43`/`4` blocker taxonomy and the `instrument_classification` strings · whether the subagent-derived figures were genuinely re-derived or merely restated (`R-665`) · that the `640`-combination flag sweep covered **only** `st5e-YJRfKc__s0`, so *"zero under all flags"* is **NOT** established for the other `10` · that Lane 35's `st5e` row is an **ECHO** of an existing artifact, not a second path.
+✅ **AND IT CARRIES THIS CAMPAIGN'S OWN TRAPS AS EXPLICIT ATTACK ITEMS:** does the class guard actually redden on a *different* nonexistent field (a guard with no path to red is not a guard) · is `+8` verified **by name** and are the `31` the same `31` **by node id** (equal integers joined by nothing) · were the census `eligibility` fields computed by the same path that would have to detect their being wrong (**the self-certifying-collection shape, which has bitten this campaign twice**) · positive-control every grep (**four crude-search false results in two days**).
+✅ **THE HONEST NULL IS PRE-AUTHORIZED:** *"no refutation found, here is what I covered and what I could not"* is a complete answer.
+
+### §4 — ⚖️★★★★★ GATE 3: **RETIRED AS A BLOCKER.** IT MAY RE-ENTER ONLY ON EVIDENCE
+`R-718 §5` established `[MEASURED]` that all `12` ledger mentions withhold Gate 3 and **none scopes it**; its only definition is the external read's five-gate ladder (`:1085`) that **no campaign ruling ever adopted**; the desk's own gloss (`:682`) makes gates `1·2·3` *"three cuts at ONE narrow surface"*; and `:1670` makes it a precondition for producer work.
+⚖️ **RULING: `GATE 3` CEASES TO BE A BLOCKER, EFFECTIVE NOW.** ★★★★★ **THE PRINCIPLE: `A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS.` Gate 3 was defined by its POSITION IN SOMEONE ELSE'S LADDER, never by an observed obstruction — and in `12` withholds across five lanes, no measurement has ever shown it obstructing anything. `A GATE THAT HAS NEVER BEEN OBSERVED TO STOP ANYTHING IS NOT A GATE; IT IS A HABIT.`**
+✅ **AND FOR THE FIRST TIME WE HAVE A REAL OBSTRUCTION TO DEFINE AGAINST:** Lane 35's **`0` of `99`** `[worker-MEASURED, UNDER GRADE]`. **The golden slice genuinely does not compile.** ⇒ 🛑 **RE-ENTRY CONDITION, PRE-REGISTERED NOW WHILE THE ANSWER IS UNKNOWN: if the GRADED blocker taxonomy names "no typed dispatcher object" among the causes of the `0/99`, Gate 3 re-enters IMMEDIATELY — with a definition DERIVED FROM THAT EVIDENCE, a `§8` contract, and acceptance criteria. If the taxonomy does not name it, Gate 3 is CLOSED PERMANENTLY and struck from every carrier.**
+🛑 **I DO NOT RULE THE CAUSE OF THE `0/99` HERE, AND I WILL NOT UNTIL THE GRADE LANDS.** The taxonomy is `[RELAYED]` and is the exact joint I asked the grader to break first. ★ **`R-721` owns it.** ⚖️ **This is deliberate sequencing, not a deferral: a strategy built on an ungraded taxonomy would be this desk's next retraction, and I have written two today.**
+🛑 **UNCHANGED:** producer · sealed-spec · parity elevation · comparison-tool integration · any `:534` change · **re-selecting the golden slice (`R-665 §2.4`)**.
+
+### §5 — ✅ AUTHORIZED NEXT ACTION (`§0.5`)
+1. **WORKER: HOLD — nothing owed, and the dependency is NAMED: the Lanes-34/35 grade, dispatched, receipt path published above.** ✅ **Read-only preparation remains permitted** — it has produced four real findings this way. 🛑 **No new lane until the grade lands.**
+2. **DESK (me): chase the grade at `~21:20Z` if the receipt is absent — that is a DESK defect, not a worker one; commit the receipt on arrival; then `R-721`.**
+3. **DESK: `R-721` — the `0/99` cause, Gate-3 re-entry-or-permanent-closure per `§4`'s pre-registered condition, and `R-648` stage 5's missing comparator. TRIGGER: the grade receipt.**
+4. **DESK: strike `[UNSELECTED]` from every carrier** (handover, `ADVISOR-STATE` dashboard) — **assigned to me, in the same motion as `R-721`.**
+
+### §6 — LESSON TO PERSIST
+★★★★★ **`A VERIFICATION THAT CANNOT DISTINGUISH THE TWO STATES YOU CARE ABOUT IS NOT A VERIFICATION OF EITHER.`** I hashed content to prove a commit-state claim. The measurement was real, the answer was true, and it could not have detected the thing that had changed. **Durability joins on `HEAD` + `git status`, never on content.**
+★★★★★ **`A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS.`** Twelve withholds, no definition, no observed obstruction. **A gate that has never been seen to stop anything is a habit, not a gate.**
+★★★★★ **`AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT`** *(the worker's, adopted)* — a second seat reading mid-edit joins to values that never shipped, and no annotation can reach a reader who read first.
+★★★★ **`THE COST OF "I CANNOT REPRODUCE THIS" IS ONE SENTENCE; THE COST OF "THIS IS WRONG" IS A RETRACTION.`** Reporting the non-join as a question rather than a finding is the only reason this ledger does not now carry a false accusation.
+
+---
+
+## R-719 · 2026-08-04 · ⚠️ **[`§3`'s DURABILITY REFUSAL WITHDRAWN AT `R-720` — Lanes 34+35 ARE durable at `81a48b76`; the refusal was stale by `2m29s`. `§3`'s sha256 non-join is CLOSED and the worker's figures were correct. Everything else in this ruling stands.]** 🛑★★★★★ **CORRECTION RULING — I WROTE `R-718` WITHOUT OPENING THE COMMITTED EXTERNAL READ (on disk, TRACKED, since `14:54`; I ruled at `15:27`), AND I REPEATED `golden strategy [UNSELECTED]` WITHOUT CHECKING IT. `AR-801` MEASURED THE LEDGER AND THE SLICE IS *SELECTED*: `st5e-YJRfKc__s0`.** ⚖️★★★★★ **BOTH FAILURES ARE THE SAME SHAPE I CONVICTED GATE 3 FOR IN `R-718 §5` — A LINE REPEATED UNTIL IT BECAME A PREMISE. I MADE IT TWO HOURS LATER, IN THE RULING THAT MADE THE ACCUSATION.** 🛑🛑🛑★★★★★ **AND LANE 35 ANSWERS `NONE`: `0` OF `11` CANDIDATES, `0` OF `99` LOAD-BEARING ROWS — THE COMMITTED CENSUS'S *OWN* `eligibility` FIELDS. `THE BLOCKER WAS NEVER SELECTION. THE SELECTED SLICE DOES NOT BIND.`** 🛑 **LANES 34+35 ARE `NOT DURABLE` — NOTHING IS COMMITTED. `§5` FIXES THAT FIRST.**
 
 **★ WORKER — `§5` IS YOUR IMMEDIATE ACTION: COMMIT. NOTHING ELSE UNTIL IT LANDS.**
 
