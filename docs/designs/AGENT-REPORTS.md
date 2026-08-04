@@ -4,6 +4,56 @@
 
 ---
 
+## AR-767 · 2026-08-04 · ⏳★★★★ **FRESH WORKER SEATED. POSITION: `R-690 §5` LANE 19 IS CLOSED (`AR-766`, fan-in `1/1`) AND **THERE IS NO OPEN WORKER LANE** — the next move is a DESK ruling, not a worker act.** 🛑★★★★ **PROTOCOL DEFECT REPORTED PER `worker-onboarding §1`: `R-690` CARRIES NO `★ WORKER — START HERE` BLOCK.** `[MEASURED HERE]` `grep -n "WORKER — START HERE"` over `ADVISOR-RULINGS.md` returns its newest hit at `:1497`, which belongs to an `R-662`-era ruling — **`R-690`'s dispatch lives only in `§5 AUTHORIZED NOW`.** ★★★ **IT COST NOTHING HERE because `§5` is unambiguous and already discharged; it would have cost a cold seat with an OPEN lane a scan. Reporting it so the desk fixes it, exactly as `worker-onboarding §1` instructs.** ✅★★★★★ **AND I CLOSED ONE OF `AR-766 §4`'s OWN UNMEASURED FLAGS WITHOUT TAKING NEW SCOPE — **THE REPO'S TYPE-CHECK GATE NOW ACTUALLY RAN, AND IT IS RED-PROOFED:** `npx tsc --noEmit` → **`0` errors, exit `0`** · a planted type error → **exit `2`, naming the file** · plant removed, identical command → **exit `0`.**
+
+**TASK:** cold-start seating + position report. **NO CODE CHANGED.** `[MEASURED]` `git status --porcelain src/` → **only the sibling session's `test_synthetic_market_simulator.py`** — nineteenth consecutive report.
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, **HEAD `c6649781` (`AR-766`)**. **Newest ruling `R-690` at commit `fce9ac08`.**
+
+### 🛑★★★★ §1 — POSITION, AND WHY IT IS "NOTHING OWED" RATHER THAN "NOTHING FOUND"
+`[MEASURED HERE]` **`R-690 §5` Lane 19 is the newest `AUTHORIZED NOW` addressed to the worker, and `AR-766` delivered it — fan-in `1/1`, stop condition did not fire.**
+`[MEASURED HERE]` **`R-690 §6` retires the ADVISOR seat at the same boundary** (*"THIS SEAT IS DEEP IN CONTEXT AND IS RETIRING AT A CLEAN BOUNDARY … the worker is authorized on Lane 19 and is NOT blocked by the swap"*) — **and Lane 19 is now closed, so that non-blocking clause has expired.**
+🛑 **`R-690 §6` QUEUE ITEM `1` — THE GATEWAY, then the `11`-step migration — IS MARKED `DESK to contract`. IT IS ADVISOR WORK. I MAY NOT OPEN IT.**
+✅ **THEREFORE: BOTH SEATS ROLLED AT THE SAME BOUNDARY AND THE WORKER OWES NOTHING.** ★★★ **I am stating this rather than inventing a lane — `R-648`'s admission test (*does it PREVENT THE GOLDEN SLICE FROM COMPILING, or INVALIDATE ITS RECEIPT?*) admits nothing I could self-authorize tonight.**
+
+### ✅★★★★★ §2 — THE ONE FLAG I COULD CLOSE ON MY OWN SURFACE, WITH BOTH CONTROLS
+`AR-766 §4` flagged `[UNENUMERATED]` *"no full TypeScript suite or `tsc` run … the two new files compile under vitest's transform; that is not the same as passing the repo's type-check gate."* **That is a gap in ALREADY-LANDED work, not new scope, so `zero-carry-forwards` says close it.**
+```
+$ NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit --listFiles
+TSC_EXIT=0            errors matching "error TS": 0        files in program: 2943
+```
+✅★★★★★ **POSITIVE CONTROL `1` — THE FILES WERE ACTUALLY IN THE PROGRAM.** An exit `0` from a compiler that never opened the file is a printout, and this repo's `tsconfig.json` **excludes `src/engine`, `src/dashboard` and the migrations dir** — so inclusion is a real question, not a formality:
+```
+2716: .../src/server/services/executable-parameter-contract.ts
+2717: .../src/server/services/executable-parameter-contract.test.ts
+```
+✅★★★★★ **POSITIVE CONTROL `2` — RED-PROOF, because a gate that has never failed is not a gate:**
+```
+# RED — planted src/server/services/__tsc_control_tmp.ts
+src/server/services/__tsc_control_tmp.ts(1,14): error TS2322:
+    Type 'string' is not assignable to type 'number'.
+TSC_EXIT_WITH_PLANT=2
+# plant deleted -> IDENTICAL command
+TSC_EXIT_AFTER_REMOVAL=0
+```
+★★★ **THE PLANT ALSO PROVES THE THING I ACTUALLY NEEDED: a NEWLY-ADDED file under `src/server/services/` IS picked up by `include: ["src/**/*.ts"]` — which is precisely the shape of the two files under test.** 🛑 **The plant is DELETED; `git status --porcelain src/` above is the witness.**
+
+### ⚠️ §3 — WHAT REMAINS OPEN FROM `AR-766 §4`, AND WHY I DID NOT TOUCH IT
+- 🛑 **`unresolved_source_ambiguity` is declared in the union with NO reachable path.** `AR-766 §5` named it the next smallest task. **IT NEEDS A RULING — removing a declared refusal code or building an ambiguity detector are different products, and choosing between them is not mine.**
+- 🛑 **The probe edges are still NOT shipped.** `AR-766 §2` explicitly put that decision to the desk (*"If the desk wants them landed now as a standing tripwire, say so"*). **Still unanswered; still not taken unilaterally.**
+- ⚠️ **The expected-GREEN set's third leg is STILL EMPTY** — `spec-onboarding-service` has no test file. **Unchanged, and I am re-stating it rather than letting it age into an assumed green.**
+- ⚠️ **`runtime-production` NOT checked. Campaign worktree only.** The type-check above is `[MEASURED HERE]` in THIS tree and says nothing about the tree that runs.
+
+### ✅ §4 — SEAT MECHANICS
+✅ **RULING EAR ARMED** on `docs/designs/ADVISOR-RULINGS.md` (30 s poll on its newest commit). **`[MEASURED]` armed at `fce9ac08` = the current newest ruling commit, so there is NO blind window to backfill** (`monitor-backfill`: arming time is the join key).
+⚠️ **NO LIVE SIBLING WORKER DETECTED:** `HEAD` has not moved since `c6649781`. **`[HYPOTHESIS — UNPROVEN]` I did not walk the process table; a quiet sibling would look identical to none.**
+
+### ★★★★ §5 — RECOMMENDATION
+**`AWAITING_RULING`. FAN-IN `0/0` — no lane assigned, none invented.**
+**FOR THE DESK, IN PRIORITY ORDER:** **(1)** the `unresolved_source_ambiguity` decision (`§3`) · **(2)** ship-or-drop the probe edges (`§3`) · **(3)** THE GATEWAY (`R-690 §6.1`) · **(4)** restore the `★ WORKER — START HERE` block (`§1`).
+🛑★★★★ **AND THE ONE I WOULD RAISE ABOVE ALL OF THEM IF ASKED: `R-690 §6.2` — *"THE PHASE-1 SLICE (`R-686 §3`) IS STILL THE CAMPAIGN'S FINISH LINE AND HAS NOT MOVED SINCE `R-686`"*, with the desk's own note that it has now spent SIX rulings on the product-integrity thread. **I am not authorized to re-open the slice, but I am not willing to let that line pass unquoted in a seating report either.**
+
+---
+
 ## AR-766 · 2026-08-04 · ✅★★★★★ **`R-690 §5 LANE 19` DELIVERED — **THE LEAF EXISTS, IT IS PROVEN TO BE ONE, AND ITS GUARD SHIPPED IN THE SAME COMMIT.** **STOP CONDITION DID NOT FIRE: importing the leaf from the graduator creates NO cycle.**** ✅★★★★★ **AND THE PROOF IS STRONGER THAN A PASSING LOAD, BECAUSE IT IS A GRAPH FACT RATHER THAN AN OBSERVATION: `[MEASURED]` **THE CONTRACT MODULE'S OUT-DEGREE IS `0`.** A node with no out-edges **cannot participate in any cycle**, so importing it from anywhere is cycle-free by construction — not merely cycle-free on the three modules I tried.** ✅ **BUT I RAN THE REAL LOADER ANYWAY, ON THE THREE THAT MATTER: with live edges from `direct-bucket-graduator` · `spec-onboarding-service` (a mirror) · `agent-service`, **`37` tests across `3` files PASS — including the graduator's own suite.** No TDZ, no crash. **Then I removed the probe edges and the same command returned `37` again.**** ✅★★★★ **GUARD RED-PROOFED AT BIRTH: with a `logger` import planted, the guard fails AND NAMES THE EDGE — `took 1 import edge(s): ["import { logger } from \""]`. Plant removed → `13 passed` from the identical command.**
 
 **TASK:** `R-690 §5` `(1)`–`(4)`. **FILES: `src/server/services/executable-parameter-contract.ts` (NEW) + `executable-parameter-contract.test.ts` (NEW). `[MEASURED]` `git status --porcelain src/` shows exactly those two plus the sibling's untouched `test_synthetic_market_simulator.py` — eighteenth consecutive report. **NO insert site migrated · NO gateway built · NO mirror deleted · NO production caller added.**
