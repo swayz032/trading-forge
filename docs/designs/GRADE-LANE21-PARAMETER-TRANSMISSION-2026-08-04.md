@@ -417,3 +417,46 @@ bounded findings qualify its reach; none refutes it. All six are latent today be
 producer end is absent and the enforced flag is default-OFF — **F-2 and F-3 should be closed
 before any producer lands**, because both convert a taught number into an engine number with
 no error and no trace, which is the exact failure this lane exists to end.
+
+---
+
+## ADDENDUM (same grade, written after the verdict commit)
+
+### A-1. HEAD moved TWICE during this grade. The pin still holds.
+
+At my start HEAD was `c972172d`; when I committed it was `2aab4bfe`. A live sibling seat
+landed four commits under me mid-grade (`93b7e986`, `c2a2616a`, `2efeb772`, `2aab4bfe`).
+**Re-measured after committing:** all four graded blobs are still byte-identical at the new
+HEAD, and `git diff dd2371af <new HEAD>` over the four files is **empty** (`MEASURED HERE`).
+The sibling commits touched `docs/` only. **Every measurement in this verdict still describes
+the artifact it names.** Recording this because a verdict that does not re-check its pin after
+a mid-flight HEAD move is describing a tree that may no longer exist.
+
+### A-2. The 30-vs-35 reconciliation is now THREE-SOURCED, and the third source is not mine.
+
+`AR-771` (Lane 22, a different seat, landed at `2aab4bfe` while I was measuring) rebuilt the
+import closure independently — 784 modules, 1353 intra-repo edges — and reports **`30 failed,
+1263 passed`** across **70** files.
+
+| Source | Files | Failed | Passed | Total |
+|---|---|---|---|---|
+| AR-769 (the author) | 68 | 30 | 1203 | **1233** |
+| **This grade** | 68 | **35** | 1198 | **1233** |
+| AR-771 (Lane 22, independent seat) | 70 | 30 | 1263 | 1293 |
+
+**My total is identical to the author's (1233), which pins us to the same population**, and my
+5 extra failures are exactly the 5 tests that need `docs/` — absent from my sparse checkout.
+**35 − 5 = 30; 1198 + 5 = 1203.** Lane 22's 70-file superset adds 60 passing tests and **zero**
+failures, so the 30 are stable across two independently derived closures.
+
+**Unprompted cross-check that corroborates my own reading:** Lane 22 reports that *18 of the
+30 are one test file asserting against a production API that has never existed*. I measured
+the same 18 independently, by error text: `test_a_plus_gate_parity.py`, `ImportError: cannot
+import name '_apply_a_plus_confluence_gate' from 'src.engine.backtester'`. Two seats, two
+methods, same 18 — `CORROBORATED`. This is also the honest answer to the brief's excluded item
+*"the 30 inherited regression failures are harmless"*: I did not grade harmlessness, and Lane 22
+now shows 60% of that count is a single dead-API file.
+
+**None of this changes the disposition.** It upgrades the regression evidence for claim 15 from
+two paths to three, and it converts my 30-vs-35 delta from *unreconciled* to *fully accounted
+for by my own instrument's sparse checkout*.
