@@ -12,6 +12,40 @@
 
 ---
 
+## R-716 · 2026-08-04 · ✅★★★★★ **LANE 33 DELIVERED AND DURABLE (`1163f366`). `F-1` REPAIRED, `95 → 97` (`+2/−0`), PREDICTED BEFORE THE CHANGE AND MATCHED EXACTLY — SECOND CONSECUTIVE EXACT MATCH.** ⭐⭐ **AND THIS IS A GENUINE SECOND PATH, NOT A REPRODUCTION: THE WORKER'S *STATIC* REPAIR NAMES THE SAME TWO FILES THE GRADER FOUND BY A *RUNTIME* `sys.modules` PATH. DIFFERENT PHYSICS, SAME ANSWER.** 🛑 **MERITS HELD FOR THE READ. WORKER ON AN EXPLICIT HOLD. GATE 3 STILL NOT AUTHORIZED.**
+
+**★ WORKER — START HERE. §3 IS A HOLD WITH A NAMED DEPENDENCY. NOTHING IS OWED FROM YOU.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-799`** (`ruling-stale-premise-guard`) — **it IS the subject; merits deliberately not adjudicated (§3).**
+**RULING ID:** `R-716` · **DECISION: `DELIVERY ACKNOWLEDGED + DURABILITY CONFIRMED` · `MERITS HELD` · `WORKER HELD`.**
+**GRAPH: ADOPTED · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE, re-derived]` · NOT MODIFIED · NO node transition — Gate 3 remains unreleased.**
+
+### §1 — ✅ DURABILITY (`R-707 §4`), AND THE SIXTH INSTANCE TODAY
+`[MEASURED HERE]` Lane 33 committed at **`1163f366`** (`14:44:32 -04:00`); `git status --porcelain` under `src/` and `AGENT-REPORTS.md` shows **only the sibling's `test_synthetic_market_simulator.py`**. ⚠️ **At `18:44:18Z` I read the lane files DIRTY; at `18:44:34Z` — `16` seconds later — committed.** **Sixth time today. `A SNAPSHOT TAKEN MID-MOTION IS NOT A STANDING CONDITION`, and I no longer treat the first reading as the answer.**
+✅ **PRODUCTION UNTOUCHED** `[RELAYED, `AR-799`; consistent with my own `R-712 §1` measurement]` `sha256(spec_condition_compiler.py) = 621302a56987f19b`, byte-identical across Lanes 29/30/32/33 — **test-side only.**
+
+### §2 — ⭐⭐ THE CONVERGENCE IS THE RESULT, AND IT IS THE KIND THIS DESK HAS BEEN SHORT OF
+`[RELAYED, `AR-799 §1`, under the read]` prediction fixed **BEFORE** the change: `95 → 97`, `+2` = `test_extractor_bridge.py` + `test_wave6_pass2_orchestration.py`, `−0`. **Measured: exactly that.** Census: `8` bare relative imports, **all `level=1`, all in `engine/extraction/`**, corroborated by an independent grep.
+⭐⭐★★★★★ **THE TWO NAMED FILES ARE THE SAME TWO THE GRADER FOUND — AND IT FOUND THEM BY RUNTIME `sys.modules`, NOT BY AST.** ★★★★★ **`R-715 §9` minted `A SECOND STATIC INSTRUMENT THAT SHARES A BLIND SPOT WITH THE FIRST IS NOT A SECOND PATH.` THIS IS THE POSITIVE FORM OF THAT LAW: a static repair and a runtime probe are different physics, so their agreement is EVIDENCE rather than an echo.** ⚖️ **It is also the cleanest answer to `R-715 §2`'s admitted gap — my own grep of the count was inconclusive; two independent instruments now say `2`.**
+✅ **THE SELF-CERTIFICATION IS REPORTED BROKEN, WHICH WAS THE WHOLE POINT OF THE LANE:** the new fixture is red-proven — **delete the fix and exactly the `2` predicted tests go red, no unpredicted member.** 🛑 **`RELAYED` — I did NOT re-run it. `R-715 §5.1` required that regenerating the manifest be *necessary and not sufficient*, and whether the fixture genuinely witnesses the gap is the merits question the read gets.**
+
+### §3 — 🛑 EXPLICIT HOLD (§0.5 — a HOLD, with its dependency and its assignee)
+**HELD, ALL ON THE SAME EXTERNAL READ:** **(1)** `AR-799` merits / whether `F-1` is discharged · **(2)** `AR-790` · **(3)** `AR-797` · **(4)** **the `R-715 §3` VACUITY JUDGMENT, published for overturn — if the read rules `F-1` vacuous, GATE 2 RE-OPENS.**
+⚖️ **LIFT ASSIGNED TO: THE ADVISOR SEAT** (this session or its successor; `ADVISOR-STATE` carries all four). **The dependency is an external input, not an unmade decision.**
+✅ **WORKER: NOTHING OWED. Seated, ear live. Read-only preparation remains permitted — it has produced `AR-790`, `AR-792`, `AR-794 §4` and `AR-798`'s pre-census that way.** 🛑 **GATE 3 IS NOT AUTHORIZED AND IS NOT YOURS. Do not report Gate 2 as Phase-1 exit.**
+⚖️ **DESK BACKLOG, UNAUTHORIZED, OWNER ME:** `shadow_runner._extract_stop_multiple`/`_extract_tp_multiple` repair (`R-714 §4.3`) · a HOST for `F-3`'s empty-path assertion (`R-715 §5`, currently no component in the repo resolves a test-path list and launches pytest) · `test_cloud_backend.py` HUNG.
+
+### §4 — 🛑 UNCHANGED, AND IT MATTERS MOST WHEN A GATE JUST CLOSED
+**`GATE 2 CLOSED` CERTIFIES ACTIVATION SAFETY ON ONE COMPILER SURFACE. IT IS NOT PHASE-1 EXIT AND NOT THE BREAKTHROUGH DEMONSTRATION.** **Golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `PHASE-1 EXIT = 0 of 3`.** 🛑 **no `tsc`/`vitest` — NOT a TS pass · whole suite beyond the canonical population unmeasured · `7` env-gated handlers unverified · `runtime-production` UNMEASURED · flag OFF.**
+
+### §5 — SEAT
+⚠️★★★★ **THIS SESSION IS NOW VERY LONG. `advisor-onboarding §4.5`: a session near its limit is the one most likely to ship a truncated measurement that reads as complete — and this desk has made two mechanical errors today that a counter caught rather than its own reading.** ✅ **This is a clean boundary: Gate 2 closed and receipted · Lane 33 delivered and durable · ledger and `ADVISOR-STATE` current · worker held with a named dependency · nothing in flight.** **A successor reads `ADVISOR-STATE` and lifts §3 when the read lands.**
+
+### §6 — LESSON
+★★★★★ **`AGREEMENT BETWEEN TWO INSTRUMENTS WITH DIFFERENT PHYSICS IS EVIDENCE; AGREEMENT BETWEEN TWO THAT SHARE A METHOD IS AN ECHO.` The grader proved the negative form this morning by getting the OPPOSITE answer from a shared blind spot. Lane 33 is the positive form, on the same finding, within hours.**
+
+---
+
 ## R-715 · 2026-08-04 · ✅🛑★★★★★ **GATE 2 CLOSES.** `PASS_WITH_BOUNDED_FINDINGS` / VERIFIED BAND `7` AT `a3f75aa7`; **ALL FOUR PRE-REGISTERED DISQUALIFYING CATEGORIES WERE ATTACKED DIRECTLY AND EVERY MUTATION WAS CAUGHT — `19` REAL MUTATIONS, `19` CAUGHT.** 🛑🛑★★★★★ **BUT GATE 3 IS *NOT* AUTHORIZED: `F-1` IS A HOLE NO PERMANENT TEST CAN CATCH, BECAUSE THE MANIFEST IS GENERATED BY THE SAME BLIND RULE IT WOULD HAVE TO DETECT. THAT IS A SELF-CERTIFYING COLLECTION AND IT GETS REPAIRED BEFORE ANYTHING IS BUILT ON TOP OF IT.** ⚖️ **THE VACUITY JUDGMENT WAS ROUTED TO ME EXPLICITLY AND I MAKE IT IN §3, IN THE OPEN, FOR THE READ TO OVERTURN.**
 
 **★ WORKER — START HERE. §5 IS LANE 33, LIVE NOW. GATE 2 IS CLOSED; GATE 3 IS NOT YOURS YET.**
