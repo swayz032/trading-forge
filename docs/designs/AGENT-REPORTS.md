@@ -4,6 +4,27 @@
 
 ---
 
+## AR-798 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 33 ACCEPTED (`R-715 §5`).** ★★★ **I AM MEASURING THE BARE-RELATIVE-IMPORT POPULATION *BEFORE* I TOUCH THE DERIVATION, SO THE STOP CONDITION HAS A PREDICTION TO FIRE AGAINST — A DIFF COMPARED TO NO EXPECTATION CANNOT SURPRISE ANYONE.** ✅ **AND THIS INSERT IS ANCHORED ON THE PREAMBLE, NOT ON `AR-797`'s HEADER — THE MECHANICAL FIX FOR THE DEFECT I COMMITTED ONE ENTRY AGO.**
+
+**TASK:** `R-715 §5` Lane 33, authorized to this seat, live. **`HEAD eea335c1` at start.** **ETA to first observable: the bare-relative-import census, before any edit.**
+✅ **GATE 2 IS CLOSED** (`R-715`) — **and I may not report that as Phase-1 exit: `PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT`. It certifies ACTIVATION SAFETY on one compiler surface.** 🛑 **GATE 3 IS NOT MINE UNTIL THIS LANE CLOSES.**
+
+### ✅ §1 — ORDER OF WORK, AND WHY THE CENSUS COMES FIRST
+`R-715 §5`'s STOP CONDITION: *"if the corrected derivation changes the population by more than the bare-relative-import class predicts, STOP and report the diff by member."* 🛑 **THAT CLAUSE IS UNUSABLE UNLESS THE PREDICTION EXISTS BEFORE THE CHANGE.** ★★★★★ **`A STOP CONDITION EVALUATED AFTER THE FACT IS A RATIONALISATION` — and this campaign has convicted the re-read-after-an-unwanted-answer shape by name.**
+1. **CENSUS FIRST, READ-ONLY:** enumerate every `from . import X` / `from .. import X` in the scan root, resolve each to what the corrected rule *would* record, and **pre-register the predicted ADDITIONS by member.**
+2. **REPAIR the derivation** — record `ImportFrom` when `node.module is None`, resolving via `node.level` + the module's own package. 🛑 **MINIMAL: I am NOT touching the `node.module` truthy branch.** The `from .sub import X` form currently records the bare `"sub"` rather than an absolute path — **arguably also lossy, and OUT OF SCOPE**, because changing two things at once is exactly what makes a population swing unattributable and would trip the stop condition for the wrong reason.
+3. **THE FIXTURE, WHICH IS THE PART THAT MATTERS** (`R-715 §5.1`): a permanent test module whose membership depends **EXCLUSIVELY** on a bare relative import, so **the OLD rule reddens it.** ★★★★★ **`REGENERATING THE MANIFEST UNDER A FIXED RULE IS NECESSARY AND NOT SUFFICIENT — A MANIFEST MINTED BY THE SAME FAMILY OF RULE CANNOT WITNESS ITS OWN GAP.` This is the `self-certifying collection` break, and it is the only item here that makes the blind spot independently detectable.**
+4. **RE-PIN** with the `R-712 §4.2` protocol: before/after member diff, **every added or removed file explained by name.**
+5. **`F-2` HEADER WARNING** — regeneration FORBIDDEN without a member-diff review. `[grader-measured]` one planted import into `invariant_harness/core.py` swings `95 → 159` via the tail-name join; **the manifest DOES redden, so this is a footgun, not an uncovered hole.**
+
+### ✅ §2 — PRE-COMMITTED, BEFORE ANY MEASUREMENT
+✅ **`R-709 §6`'s FORMAT ON EVERY PLANT:** `MINIMUM_EXPECTED_RED_SET` (a LOWER BOUND) · `EXPECTED_GREEN_SET` · `OBSERVED_RED_SET`. **Lane 32 matched exactly once; `R-712 §4.4` says that does not erase two prior under-predictions and I am not treating it as a licence.**
+🛑 **THE RATIONALISATION I REFUSE IN ADVANCE:** *"the manifest regenerated cleanly under the new rule, so the blind spot is closed"* — **that is precisely the self-certification `F-1` names.** **The fixture, not the regeneration, is the evidence.**
+🛑 **STOP MEANS STOP:** if the diff exceeds the predicted class, I report by member and **do not** widen the prediction to cover it.
+🛑 **`F-4` RECORDED, NOT CHASED** (`cache_key = b.parameters` still physically present at `spec_condition_compiler.py:639`, defanged upstream) · **`F-3` has NO HOST in the repo and I will not invent one mid-lane** — desk-owned backlog, and inventing a host is the scope-creep-in-a-safety-costume shape `R-648` names.
+🛑 **FORBIDDEN, UNCHANGED:** sibling's `test_synthetic_market_simulator.py` · **production compiler** · producer/transcript extraction · persistence · **ENABLING `TF_FAMILY_META_ENFORCED`** · any parity claim · no `tsc`/`vitest`.
+⚠️ **`AR-790` and `AR-797` remain HELD and UNRULED; I do not treat the shadow tool as evidence of anything here.**
+
 ## AR-797 · 2026-08-04 · ✅🛑★★★★★ **`R-712 §6` DELIVERED — ALL FIVE ITEMS. `DIVERGENCE DEMONSTRATED`, AND IT IS MEASURED, NOT ARGUED: TWO STRATEGIES THAT TRADE DIFFERENTLY REDUCE TO A *BYTE-IDENTICAL* PARITY INPUT, WITH A CONTROL THAT DISCRIMINATES.** 🛑🛑★★★★★ **AND THE PROBE FOUND SOMETHING SHARPER THAN THE DROPPED FIELD I WENT LOOKING FOR: `stop_loss_atr_multiple` IS **ALWAYS `1.8`** AND `take_profit_atr_multiple` **ALWAYS `0.0`**, FOR EVERY STRATEGY — TWO OF THE FIVE dsl FIELDS ARE CONSTANTS THAT NEVER READ THE STRATEGY.** ✅ **TODAY IT CANNOT PRODUCE A FALSE RECEIPT — IT GATES NOTHING (§5). THE RISK IS ENTIRELY PROSPECTIVE, AND IT IS EXACTLY THE ELEVATION `R-648` STAGE 5 WOULD PERFORM.**
 
 **TASK:** `R-712 §6`'s five items, READ-ONLY, under `R-713 §1`'s confirmed line and `R-713 §2`'s isolation constraint. **`HEAD cda560d7` at start.**
