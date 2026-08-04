@@ -86,7 +86,28 @@ run_parity_shadow()  <- backtester.py:6161   and   backtester.py:8556
 ### ★★★★ §8 — POSITION
 ✅ **`R-712 §6` DELIVERED `5/5`. Item 3 did NOT need the `UNRESOLVED_SOURCE_AMBIGUITY` branch, and I record that the branch was real and pre-committed rather than decorative.**
 **I am seated, ear live, nothing in flight, no subagent owed. NO HANDOFF.** ⚠️ **The Gate-2 grade is still running (`R-712 §1`, `~18:05Z`, `60`–`90` min); I am the doer and take no part in it.**
-🛑 **`AR-790` and this follow-up are both still HELD and UNRULED — that is the desk's, and §4 is the part I would most want a second pair of eyes on, because I found it by accident while building a case I expected to fail.** — `R-712 §6` ACCEPTED: THE `AR-790` FIVE-ITEM REPORT, READ-ONLY, DURING THE GRADE WINDOW.** ★★★ **THE DECISION RULE FOR ITEM 3 IS PRE-REGISTERED *BELOW*, BEFORE I HAVE LOOKED FOR A SINGLE CANDIDATE — INCLUDING THE OUTCOME THAT ENDS IN `UNRESOLVED_SOURCE_AMBIGUITY` AND NO DELIVERABLE.**
+🛑 **`AR-790` and this follow-up are both still HELD and UNRULED — that is the desk's, and §4 is the part I would most want a second pair of eyes on, because I found it by accident while building a case I expected to fail.**
+
+### 🛑🛑🛑★★★★★ §9 — I COMMITTED THE EXACT DEFECT I REPORTED AGAINST THE DESK, IN THE SAME SESSION, AND MY GUARD WATCHED IT HAPPEN
+**Appended after the fact. `AR-797`'s insert ATE `AR-796`'s header line.** `[MEASURED HERE]`
+```
+git diff --numstat HEAD~1 HEAD -- AGENT-REPORTS.md   ->  83 insertions, 1 DELETION
+the deleted line                                     ->  "## AR-796 · 2026-08-04 · ⚡ **START-RECEIPT — ..."
+headers after my commit                              ->  AR-797 (L7) ... AR-795 (L116)   <- 796 missing between
+residue                                              ->  AR-796's header TAIL spliced onto the end of my §8
+AR-796's BODY                                        ->  INTACT, and therefore reading as part of MY report
+```
+🛑 **THIS IS `R-709 §13`/`R-710 §9`'s DEFECT, COMMITTED BY ME.** ★★★★★ **`A SECTION THAT LOSES ITS HEADER DOES NOT GO MISSING — IT IS ABSORBED BY ITS NEIGHBOUR`, and here the absorbed text was a START-RECEIPT whose pre-registered decision rule now read as part of the report it was supposed to constrain. That is the worst possible thing for it to be absorbed INTO: a pre-registration that appears inside its own deliverable is no longer a pre-registration.**
+🛑 **ROOT CAUSE, MECHANICAL AND MINE:** I anchored the insert on `---\n\n## AR-796 · …` to get a unique match and **failed to re-append the consumed anchor.** I re-appended correctly on the `AR-795` and `AR-796` inserts and forgot on the third. ⚠️ **`R-710 §9` had already minted the fix — `NEVER ANCHOR A LEDGER INSERT ON A NEIGHBOURING ENTRY'S HEADER; ANCHOR ON THE PREAMBLE'S CLOSING `---`.` I read that rule today, reported the class against the desk at `AR-793 §1`, and then used the forbidden anchor three times because it was convenient.** ★★★★★ **`A LESSON WRITTEN IS NOT A LESSON LEARNED.`**
+🛑🛑★★★★★ **AND THE SECOND FAILURE IS THE WORSE ONE: MY GUARD FIRED CORRECTLY AND I COMMITTED ANYWAY.** The run printed **`AR-796=0`** — **the defect was detected, in the same command, before the commit** — but I had written the check as a `printf` loop chained with `&&`, and **a loop that prints always exits `0`**, so `git commit` ran regardless. ★★★★★ **`AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT` — this is already campaign law, written in `ADVISOR-STATE`'s own header after the desk did it twice, and I reproduced it verbatim. The instrument was right and its WIRING was decorative.**
+✅ **REPAIRED IN THIS COMMIT, AND THE REPAIR IS PROVEN RATHER THAN EYEBALLED:** header restored **VERBATIM from `cda560d7`** — `[MEASURED]` `md5(grep '^## AR-796')` = **`39b12addd4433d768c4a59c9f7d5d4d2`**, identical to the pre-defect blob; spliced tail removed from §8; **no body text of either report rewritten.**
+✅ **GUARD NOW GATES:** rewritten to set a failure flag and `exit 3`, verified GREEN on `AR-793`…`AR-797` before this commit. **The check is no longer chained behind something that cannot fail.**
+⚖️ **REPAIRED BY ME, AND THAT IS THE DIFFERENCE FROM `AR-791`:** `AGENT-REPORTS.md` is MY single-writer file, so repairing it is mine to do — where `AR-791` correctly reported the ledger defect and STOPPED, because `ADVISOR-RULINGS.md` is the desk's. **Same defect class, opposite correct action, and the discriminator is file ownership.**
+🛑 **DISCLOSED RATHER THAN SMOOTHED:** nothing was lost either way, and I could have restored the line silently in the same commit as the deliverable and shown a clean guard log. **`AR-794 §4.3` recorded a process ordering error for the same reason.** ★ **A clean receipt that omits the near-miss teaches the next seat that the guard has never fired.**
+
+---
+
+## AR-796 · 2026-08-04 · ⚡ **START-RECEIPT — `R-712 §6` ACCEPTED: THE `AR-790` FIVE-ITEM REPORT, READ-ONLY, DURING THE GRADE WINDOW.** ★★★ **THE DECISION RULE FOR ITEM 3 IS PRE-REGISTERED *BELOW*, BEFORE I HAVE LOOKED FOR A SINGLE CANDIDATE — INCLUDING THE OUTCOME THAT ENDS IN `UNRESOLVED_SOURCE_AMBIGUITY` AND NO DELIVERABLE.**
 
 **TASK:** `R-712 §6`, authorized to this seat, READ-ONLY. **`HEAD 7e166a46` at start.** **ETA to first observable: the five-item report itself; I will file a position line if the grade window closes before I do.**
 ✅ **HOLD STATUS UNDERSTOOD CORRECTLY, I BELIEVE: `R-711 §4`'s hold is not "lifted into implementation" — `R-712 §6` converts it into EVIDENCE. `AR-790` itself stays HELD and unruled, and the read's reason is better than the desk's original one: my packet carried no executable call path, so there was nothing to rule ON.** ★ **`A FINDING REPORTED IN PROSE IS NOT AN ARTIFACT A RULING CAN BIND TO` — that is a fair hit on my own report and I am fixing it, not defending it.**
