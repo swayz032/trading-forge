@@ -12,6 +12,73 @@
 
 ---
 
+## R-696 · 2026-08-04 · ✅★★★★★ **`AR-773` APPROVED — LANE 23 ANSWERED THE ORDERED PROPERTY *AND THEN CORRECTED ITS OWN DELIVERY BEFORE PUBLISHING IT*, WHICH IS THE BEST ACT IN THIS THREAD.** 🛑🛑🛑★★★★★ **THE TWO DETERMINATIONS THE WORKER CORRECTLY REFUSED TO MAKE FOR ITSELF, MADE HERE: **(1) THE SLICE'S RECEIPT IS *NOT* INVALIDATED — THE PARITY GATE WAS NEVER ONE OF ITS INPUTS. (2) THE GATE IS *DE-QUALIFIED* AS A HANDOFF-5 SAFETY INSTRUMENT AND WILL *NOT* BE WIRED INTO CI.** ★★★★★ **`A FALSE GREEN IS WORSE THAN NO GATE, SO WIRING THIS ONE IN WOULD HAVE MANUFACTURED THE VERY `gate-artifact` BIN IT WAS MEANT TO GUARD.`**
+
+**RULING ID:** `R-696` · **TASK ID:** `R-694 §7` Lane 23 · **DECISION: APPROVE · DE-QUALIFY THE INSTRUMENT · DO NOT WIRE.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-773`** (`147a9f4b`, `00:33`) — it IS the subject of this ruling, read in full at the line.
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, re-derived this ruling]`. **NOT MODIFIED · NO node transition.**
+**TREE:** campaign worktree `wt-h1-wave4-20260712`. 🛑 **`runtime-production` `[UNENUMERATED]`.**
+
+### ✅★★★★★ §1 — WHAT LANE 23 PROVED, AND THE PART I RE-VERIFIED MYSELF
+✅ **THE GATE DISCRIMINATES IN THE DECLARED STATE** `[RELAYED — three runs, `AR-773 §1`]`: baseline `EXIT 0` → planted `EXIT 1`, **naming the offender** (`binding[6].primitive … py="ma_native.compute_ma_crossover"`) → restored `EXIT 0` **byte-identical to baseline.** ✅ **STOP CONDITION DID NOT FIRE.**
+✅★★★★★ **AND THE PRECONDITION WAS PROVEN BEFORE THE PLANT, WHICH IS WHAT MAKES THE RED MEAN ANYTHING:** `252` `WAIT_BIAS` conditions across `36`/`41` corpus files, counted by a DIFFERENT instrument (`json.load`) — **and the gate independently reported `252` unexpected mismatches.** ★★★ **Two instruments, neither derived from the other, agreeing on `252`.** `A NEGATIVE RESULT FROM A PROBE THAT COULD NOT HAVE FIRED IS NOT A FINDING` — the lane refused to hand me one.
+✅ **REGRESSION BANKED BY MEMBER, NOT COUNT** (`91`-file expected-green set, `31 failed / 2183 passed` PRE ≡ POST, **sorted failed-name diff EMPTY**). ★★★ **It explicitly did not repeat `AR-769`'s unjoinable-`30` mistake that `R-694 §1.7` recorded.**
+🛑 **I RE-VERIFIED THE TWO DECISIVE FACTS AT THE EXECUTABLE LINE — they are `[MEASURED HERE]`, not relayed:**
+```
+:72-73  const SAMPLES_DIR = "C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\
+                             worktrees\extraction-100\tmp\generalization";
+:101    env: { ...process.env, TF_LEVELZONE_ROUTING_ENABLED: levelzoneFlag },
+```
+
+### 🛑🛑🛑★★★★★ §2 — DETERMINATION 1: **THE SLICE'S RECEIPT IS NOT INVALIDATED.** THE JOIN KEY IS *WHICH INSTRUMENTS PRODUCED IT*
+`AR-773 §6` puts the question honestly and declines to answer it: *"a gate that cannot see handoff 5's divergence arguably DOES invalidate the slice's receipt, but that is a ruling, not my determination."* ✅ **Correct escalation. Here is the ruling.**
+✅★★★★★ **IT DOES NOT. `[MEASURED — the Lane-21 grade's own mandatory coverage section, `GRADE-LANE21-PARAMETER-TRANSMISSION-2026-08-04.md`]` THE PATHS THAT PRODUCED THAT RECEIPT ARE: a SPY-FREE run of the core property · an EMA written from first principles that never imports `compute_ema` · `12` mutations · an independent AST module-graph derivation of the closure. **THE PARITY GATE IS NOT AMONG THEM. IT CONTRIBUTED NOTHING TO THE RECEIPT.**
+★★★★★ **NAME THE JOIN KEY AND THE ANSWER FALLS OUT: `AN INSTRUMENT THAT WAS NEVER AN INPUT TO A RECEIPT CANNOT INVALIDATE IT.` The tempting error is `both are about parameter transmission, therefore they bear on each other` — which is `two-true-facts-do-not-make-a-true-link`, this desk's own convicted shape. **The gate bears on FUTURE reliance, not on a past measurement.**
+🛑 **WHAT *IS* TRUE AND MUST NOT BE SOFTENED: WE BELIEVED WE HAD A CROSS-LANGUAGE SAFETY NET FOR HANDOFF 5 AND WE DO NOT.** ★★★ **`REMOVING AN ASSUMED SAFETY NET SILENTLY IS WORSE THAN NEVER HAVING HAD ONE` — so `§4` names what the net actually is now.**
+
+### 🛑🛑🛑★★★★★ §3 — DETERMINATION 2: **THE GATE IS DE-QUALIFIED, AND IT WILL NOT BE WIRED INTO CI.** TWO INDEPENDENT GROUNDS, EACH SUFFICIENT
+`R-694 §7(5)` reserved this decision to me. **I am making it: `NOT WIRED`.**
+1. 🛑🛑 **IT IS BLIND ON EXACTLY THE ROUTE HANDOFF 5 TAKES.** `[RELAYED — the discriminating pair, `AR-773 §3`]` **same plant, same command: flag UNSET (`== CI's state`) → `EXIT 0`, *"PASS: full parity"* · flag SET → `EXIT 1`, `35` specs drifted.** `[MEASURED HERE, `:101`]` the gate declares **ONE** flag and spreads the other **EIGHT** in from `process.env`; Python reads **NINE**. **Handoff 5's primitive is `EXPERIMENT_PRIMITIVES`-registered, i.e. ENV-GATED BY CONSTRUCTION** (`family_meta_enforcement.py:276-278`: *"produced only by an env-gated experiment override"*). ★★★★★ **SO IN A CLEAN CI SHELL THIS GATE WOULD PRINT `PASS: full parity` WHILE OUR NEW PRIMITIVE DIVERGED ON EVERY `WAIT_BIAS` CONDITION IN THE CORPUS. THAT IS A `gate-artifact` — BLUEPRINT v4 `v3-1`'s FOURTH ATTRIBUTION BIN AND THE MODAL REAL-WORLD FAILURE.**
+2. 🛑🛑 **IT CANNOT RUN ON CI AT ALL.** `[MEASURED HERE, `:72-73`]` `SAMPLES_DIR` is a **HARDCODED ABSOLUTE WINDOWS PATH INTO A DIFFERENT WORKTREE, UNDER `tmp/`, OUTSIDE THIS REPOSITORY**, and `[RELAYED, `AR-773 §4`]` **`0` of its `41` `.spec.json` inputs are git-tracked here.** ★★★★★ **`THE GATE'S ENTIRE INPUT CORPUS IS AN UNTRACKED MACHINE-LOCAL TEMP DIRECTORY ON ONE BOX. IT PASSES HERE BECAUSE THIS IS THAT BOX.` On a runner `readdirSync` throws before the first comparison.** ✅ **This is `ci-machine-bound` again, in its purest form.**
+✅ **`R-694 §7(5)` ASKED FOR THE `0`-CI-REFERENCE FINDING AND GOT SOMETHING STRICTLY WORSE, WITH A CONTROL:** `0` references, **positive control `2` workflow files of which `1` references `npm run`/`npx`.** **The gate is not merely UNWIRED — IT IS NOT WIRE-ABLE AS WRITTEN.**
+⚖️ **DISPOSITION: `SWEEP-PARITY-GATE`, BACKLOG, OWNER = THIS DESK. TRIGGER: any proposal to rely on cross-language parity, or Phase-2 entry.** **Repair requires TWO things before a workflow line is even meaningful: declare all `9` flags explicitly and FAIL CLOSED on an undeclared one · relocate or vendor the corpus into the repo.** 🛑 **NOT AUTHORIZED TODAY — `AR-773 §4` is right that this is a scope the desk had not seen, and `R-648` excludes it: the slice compiles without it and its receipt does not depend on it.**
+
+### ✅★★★★★ §4 — SO WHAT *IS* THE SAFETY NET FOR HANDOFF 5? NAMED, NOT ASSUMED
+✅ **NOTHING IN THE PLAN CHANGES — `R-678 §4` ALREADY MADE TS PARITY A LATER *PROMOTION* REQUIREMENT, NOT A FIRST-PROOF ONE.** **Handoff 5 was never licensed by this gate's green, and it is not blocked by its absence.** 🛑 **But it now proceeds with the net stated OUT LOUD instead of presumed:**
+- **The Python-side red-proof obligations in `docs/designs/TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md §6`** (red-first hard gate · no fixture value in `{5,10,14,20,30,50,250}` · the convicted re-key-without-consuming shape forbidden by name · **a POSITIVE WITNESS THAT THE PRODUCTION PRIMITIVE RAN WITH THE TAUGHT VALUES** · flag-OFF must REFUSE not drop · expected-green set pre-declared · two fixtures not one).
+- **`R-695 §7`'s `F-1`/`F-2`/`F-3` as MANDATORY**, `F-2` first and gating any producer.
+- ★★★★★ **AND `R-695 §8`'s LAW IS THE OPERATIVE ONE: `AN INVOCATION WITNESS IS NOT A CONSUMPTION WITNESS.` THE PROOF MUST BE A DIFFERING OUTPUT, MEASURED SPY-FREE.**
+🛑 **WHAT WE MAY NOT CLAIM AT HANDOFF 5: any form of TypeScript/Python parity. `[MEASURED]` the only executable cross-language instrument we hold is de-qualified above, and the Lane-21 grade explicitly did **not** run `vitest` or `tsc`. **TS PARITY IS `[UNENUMERATED]` AND MUST BE SAID THAT WAY.**
+
+### 🛑🛑★★★★★ §5 — THE CLASS DEFECT, AND THE THIRD INSTANCE TONIGHT OF ITS DISGUISE
+🛑 **`{...process.env}` MEANS THE VERDICT IS DECIDED BY THE CALLER'S SHELL, NOT BY THE TREE.** `[MEASURED HERE, `:101`]` `1` declared, `8` inherited, `9` read by Python.
+🛑🛑★★★★★ **AND THIS IS THE GATE'S *OWN ALREADY-FIXED* DEFECT, FIXED ONCE AND LEFT STANDING EIGHT TIMES** `[RELAYED, its module docstring `:25-32`, `AR-083` Finding 2 — the file DOCUMENTS the lesson]`. ★★★★★ **`fix-the-pattern-class-not-the-instance`, CONVICTED AGAIN, INSIDE THE FIX ITSELF.**
+🛑🛑🛑★★★★★ **AND THE SHAPE THAT MADE IT INVISIBLE — THIRD INSTANCE IN ONE NIGHT, ALL THREE `[MEASURED HERE]`:**
+| # | site | the comment claims | the adjacent code does |
+|---|---|---|---|
+| 1 | `spec_condition_compiler.py:805` | *"THE TAUGHT PERIODS ARE CONSUMED HERE"* | `:801` returned already on the wired path |
+| 2 | `spec_condition_compiler.py:573-578` | *"REFUSES RATHER THAN SUBSTITUTES … never quietly replaced by a default"* | `:583` defaults any unrecognised key |
+| 3 | `check-spec-binding-plan-parity.ts:96-100` | *"Explicit, never inherited-by-accident … this is the fix"* | `:101` spreads `...process.env` |
+★★★★★ **MINTED: `A COMMENT THAT SAYS "THIS IS THE FIX" IS THE MOST DANGEROUS PLACE FOR A PARTIAL FIX, BECAUSE IT RETIRES THE QUESTION.` `R-690 §2` established that every architectural rule here is a comment; **this is the sharper form — the comment does not merely fail to be enforced, it asserts the property is ALREADY SECURED, so nobody re-opens it.** THEREFORE: WHEN A COMMENT NAMES ITSELF AS A FIX, ENUMERATE THE FULL CLASS IT CLAIMS TO CLOSE.**
+🛑 **`[UNENUMERATED]` — WHICH REAL PRIMITIVES EACH OF THE OTHER `8` FLAGS WOULD EXPOSE IN TODAY'S CORPUS.** ✅★★★ **`AR-773 §5` NAMED THIS AS THE NATURAL NEXT MEASUREMENT AND DID NOT TAKE IT UNASKED. That restraint is correct and I am not converting it into scope tonight.** ⚖️ **QUEUED TO `SWEEP-PARITY-GATE`, same owner and trigger.**
+⚠️ **HONEST LIMIT OF PLANT B, CARRIED FORWARD FROM `AR-773 §5`: it altered the `FAMILY_META` value expression, not `bind_condition()`'s override branch. **It proves the gate cannot see a flag it does not declare; it does NOT prove that branch behaves identically.** The de-qualification rests on the `[MEASURED HERE]` `:101` spread, which does not depend on the plant's placement.**
+
+### ✅ §6 — SCOPE, TESTS, INVARIANTS
+**FILES CHANGED BY LANE 23: NONE** `[RELAYED + corroborated: `git diff --stat HEAD -- src/` shows only the sibling's `test_synthetic_market_simulator.py`, which my own `R-694` commit also excluded]`. **Both plants removed, verified three ways incl. a byte-identical final gate run.** **ARCHITECTURE INVARIANTS TOUCHED: NONE.**
+✅★★★★ **AND THE LANE CORRECTED ITS OWN DELIVERY BEFORE PUBLISHING — THE ACT I MOST WANT REPEATED:** it noticed Plant A edited the static `FAMILY_META` table while `R-694 §7(2)` had said *"via `EXPERIMENT_PRIMITIVES`"*, and ran Plant B rather than reporting a true sentence about the wrong mechanism. ★★★★★ **`TESTING THE ROUTE YOU BUILT INSTEAD OF THE ROUTE THE CONTRACT NAMED PRODUCES A TRUE SENTENCE ABOUT THE WRONG MECHANISM` — and the whole finding exists only because it re-read my wording against its own work.**
+
+### ✅ §7 — AUTHORIZED NOW (no change of course; the worker is mid-batch and I am not interrupting it)
+✅ **LANE 24 IS ALREADY THE WORKER'S** (`R-694 §5`; `AR-772`/`AR-773` fan-in `1/2`, no handoff). **It stands exactly as contracted: separate fixtures for mechanism A (quotation vs action) and mechanism B (a FAILED write must not consume the sentinel), and the real protection must still bite at the end.**
+✅ **ON `2/2` FAN-IN: HANDOFF 5, per `R-695 §7`** — build to `TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md`, `F-2` first, `F-1`/`F-3` mandatory, producer still forbidden. 🛑 **AND NOW ALSO: MAKE NO PARITY CLAIM. `§4` is binding.**
+🛑 **STOP CONDITION UNCHANGED FOR LANE 24; for handoff 5, `R-695 §7`'s stop stands** (if `unknown_parameter_key` reddens an existing suite, that red is a live caller relying on the silent default and outranks the lane).
+
+### ★★★★★ §8 — LESSON TO PERSIST
+★★★★★ **`AN INSTRUMENT THAT WAS NEVER AN INPUT TO A RECEIPT CANNOT INVALIDATE IT — NAME THE JOIN KEY BEFORE YOU RETRACT ANYTHING.`** The intuitive move was to treat a blind parity gate as damage to the handoff-6 grade. **The grade's own coverage section names its paths, and the gate is not one of them.** Two facts about the same subject are not a link.
+★★★★★ **`A FALSE GREEN IS WORSE THAN NO GATE.`** The instinct on finding an unwired real gate is to wire it. **Wiring this one would have produced `PASS: full parity` on a CI runner while our new primitive diverged everywhere — manufacturing the exact `gate-artifact` bin the blueprint keeps warning about.** **De-qualifying an instrument is a legitimate, complete outcome for a verification lane.**
+★★★★★ **`A COMMENT THAT SAYS "THIS IS THE FIX" IS THE MOST DANGEROUS PLACE FOR A PARTIAL FIX, BECAUSE IT RETIRES THE QUESTION.`** Three instances measured tonight in two files. **When a comment names itself a fix, enumerate the class it claims to close.**
+★★★★ **`REMOVING AN ASSUMED SAFETY NET SILENTLY IS WORSE THAN NEVER HAVING HAD ONE.`** Handoff 5's plan does not change — but the net is now written down (`§4`) instead of presumed.
+
+---
 ## R-695 · 2026-08-04 · ✅★★★★★ **THE INDEPENDENT GRADE LANDED: `PASS_WITH_BOUNDED_FINDINGS`, VERIFIED BAND `7`. HANDOFF `6` IS NOW `[MEASURED BY GRADED INSTRUMENT]` AND `R-693 §6`'s GATE LIFTS BY ITS OWN PRE-REGISTERED TERMS.** 🛑🛑🛑★★★★★ **AND THE GRADER EARNED ITS KEEP TWICE OVER — I RE-VERIFIED BOTH `HIGH` FINDINGS AT THE EXECUTABLE LINE AND **BOTH ARE REAL**: `F-1` THE WIRED-HTF PATH **ACCEPTS THE TAUGHT PERIODS AND RETURNS BEFORE READING THEM**, WITH THE AUTHOR'S OWN WITNESS GOING **GREEN** WHILE THE ARMS DIFFERED `0/200` · `F-2` AN **UNRECOGNISED PARAMETER KEY IS SILENTLY REPLACED BY THE ENGINE DEFAULT** — inside the very function whose docstring says it never does that.** ★★★★★ **`THE ARGUMENT THAT ARRIVED IS NOT THE ARGUMENT THAT WAS READ.`**
 
 **RULING ID:** `R-695` · **TASK ID:** Lane 21 independent grade @ `dd2371af` · **DECISION: APPROVE THE GRADE · LIFT THE GATE · AMEND THE HANDOFF-5 CONTRACT.**
