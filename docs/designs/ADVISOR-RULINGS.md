@@ -12,6 +12,77 @@
 
 ---
 
+## R-703 · 2026-08-04 · ⚡★★★★★ **CONTRACT EXTENSION, PUBLISHED FAST AND MID-LANE ON PURPOSE. `R-702` ACCEPTED BY THE EXTERNAL READ; GATE 2 STAYS OPEN; LANES 28–30 STAND — BUT THE READ MATERIALLY WIDENS LANE 28 AND THE WORKER IS ~`10` MINUTES INTO IT.** 🛑🛑🛑★★★★★ **`R-700 §1`'s STANDING RULE IS THE WHOLE REASON THIS RULING EXISTS AND EXISTS *NOW*: `AN ADOPTION BY REFERENCE TO A SOURCE NOT IN THE REPOSITORY IS AN ADOPTION OF NOTHING.` **EVERY ADDITION BELOW IS ENUMERATED VERBATIM, NOT POINTED AT.** A read that reaches me at `02:44` and the worker at delivery is a read that arrives too late to change anything.
+
+**RULING ID:** `R-703` · **TASK ID:** Lanes 28–30 contract extension · **DECISION: ADOPT THE READ'S ADDITIONS IN FULL · NO REFUSALS THIS ROUND · LANES UNCHANGED IN NUMBER, ORDER AND SCOPE-BOUNDARY.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-781`** (`00f34a79`, `02:41`) — a **START-RECEIPT** for Lane 28. **Under `R-698 §3.3` it owes no ruling and triggers no wait.** 🛑 **IT IS IN FLIGHT RIGHT NOW, WHICH IS EXACTLY WHY THIS IS URGENT AND NOT TIDY.**
+**GRAPH OBJECT: ✅ ADOPTED**, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`. **NOT MODIFIED · NO node transition.**
+**WAIT STATUS: N/A** — this ruling ADOPTS a read rather than pre-empting one.
+✅★★★★★ **AND THE CHANNEL EARNS A LINE IT HAS NOT ALWAYS EARNED: IT PROPOSED NO FINISH-LINE MOVE, DID NOT SOFTEN THE GATE RULE, AND EXPLICITLY RESTATED THE FOUR DISQUALIFYING CATEGORIES UNCHANGED. `R-699 §3` REFUSED THIS CHANNEL THREE TIMES FOR THE OPPOSITE BEHAVIOUR; THIS ROUND THERE IS NOTHING TO REFUSE.**
+
+### ✅★★★★★ §1 — LANE 28 IS WIDENED. **WORKER: READ THIS BEFORE YOU FINISH THE LANE**
+**⭐ THE MANDATORY CLASSIFICATION TAXONOMY — ADOPTED VERBATIM. Every handler reachable through the enforced dispatcher is banked BY NAME and classified as EXACTLY ONE OF:**
+1. **`CONSUMES_SUPPORTED_PARAMETERS`**
+2. **`REFUSES_ALL_PARAMETERS`**
+3. **`PARAMETERLESS_BY_CONTRACT`**
+4. **`ENVIRONMENT_GATED_UNVERIFIED`**
+🛑 **`NO HANDLER MAY REMAIN IN AN UNCLASSIFIED STATE.`**
+✅★★★★★ **THIS IS STRICTLY BETTER THAN MY `R-702 §6`, WHICH ORDERED AN ENUMERATION AND GAVE NO TAXONOMY — AND IT IS WELL-FORMED BY THIS DESK'S OWN TEST: `advisor-ruling §4` says `EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY, OR THE CLASSIFIER MUST MIS-FILE OR STAY SILENT`. **`ENVIRONMENT_GATED_UNVERIFIED` IS THAT RESIDUAL** — it is the box that makes *"I could not reach this one"* a REPORTABLE STATE instead of a silent omission.**
+
+**⭐ THE REQUIRED INVARIANT, VERBATIM:**
+> **In either flag state, every non-empty `ConditionBinding.parameters` object is either consumed by the real semantic evaluator or refused before evaluator/cache/state mutation.**
+
+**⭐ THE APPROVED `F-A` FINDING, VERBATIM — keep this sentence, it is the one that generalises:**
+> **A parameter is not consumed merely because it changes the cache key. A route that accepts a parameter must pass it into the real semantic computation or refuse it before execution.**
+
+**⭐ SURFACES TO INSPECT — `4` ITEMS, AND ITEMS `3`–`4` ARE NEW SINCE `R-702 §6`:** `_h_session` · every environment-gated handler · ⭐ **every handler reachable through FAMILY METADATA DISPATCH** · ⭐ **INVALIDATION HANDLERS, IF THEY SHARE THE SAME DISPATCHER.** ★★★★ **The invalidation half is a real catch: `[MEASURED, `R-702 §1` region]` Lane 27's guard already iterates `(*bindings, *invalidation_bindings)`, so invalidation bindings CAN carry parameters — and nothing has checked what their handlers do with them.**
+🛑 **`WAIT_STRUCTURE` · `WAIT_RETEST` · `WAIT_CONFIRMATION` · `VERIFY_STRUCTURE` · `FILTER` REMAIN THE REQUIRED RED POPULATION — and the read affirms with me that this list is a FLOOR, NOT A CENSUS.**
+🛑 **FOR HANDLERS WHOSE EVALUATORS CANNOT CONSUME PARAMETERS, REFUSAL IS THE CORRECT REPAIR. `DO NOT INVENT PARAMETER SEMANTICS.`** ✅ Same call Lane 26 made and the same reason.
+
+**⭐ THE POSITIVE CONTROL IS WIDENED, AND THIS ONE WOULD HAVE CAUGHT A PLAUSIBLE BAD FIX:** `WAIT_BIAS` must keep its certified **`22/200`** difference **AND** — ⭐ **`DISTINCT PARAMETERS MUST REMAIN INDEPENDENTLY CACHED`** — **AND no broad refusal may disable the one working parameterized route.** ★★★★★ **THE NAIVE REPAIR IS *"STOP KEYING CACHES ON `b.parameters`"*, WHICH WOULD KILL `F-A` AND SILENTLY COLLAPSE `WAIT_BIAS`'s LEGITIMATE PER-PARAMETER CACHING INTO ONE ENTRY — RETURNING ONE ARM'S ANSWER FOR BOTH. THAT IS A NEW SILENT-SUBSTITUTION DEFECT INTRODUCED BY THE FIX FOR A SILENT-SUBSTITUTION DEFECT.**
+**⭐ REQUIRED PERMANENT MUTATION:** restore ONE accept-and-discard handler where parameters affect only the cache key ⇒ **the permanent suite must FAIL.**
+🛑 **STOP CONDITION, RESTATED AND SHARPENED:** if the new consume-or-refuse guard fails any existing **production-derived strategy test**, **STOP AND REPORT THE EXACT CALLER, BINDING AND PARAMETERS.** **That failure may reveal a LIVE parameterized caller and it OUTRANKS the repair.**
+
+### ✅★★★★ §2 — LANE 29 GETS A SIX-ROW MATRIX (my `R-702 §6` ordered two rows)
+**⭐ THE APPROVED RULE, VERBATIM:**
+> **Frame length may affect whether a calculation is possible. It may not determine whether supplied parameters are acknowledged.**
+**⭐ REQUIRED MATRIX — ALL SIX:** `n=20` flag OFF parameterized → **refuse** · `n=29` flag OFF parameterized → **refuse** · `n=20` flag ON parameterized-unsupported → **refuse** · `n=29` flag ON parameterized-unsupported → **refuse** · short frame + **parameterless** → **legacy result UNCHANGED** · ⭐ **valid parameterized `WAIT_BIAS` with insufficient data → the appropriate TAUGHT-PARAMETER refusal, NEVER an all-False silent result** (this is `F-3` tied into the short-frame case, and my `R-702 §6` did not order it).
+**⭐ THE REFUSAL MUST PRECEDE ALL FOUR:** candle confirmation · evaluator invocation · cache mutation · condition-state publication.
+🛑 **DO NOT SOLVE THIS BY ENABLING THE ENFORCEMENT FLAG.**
+
+### ✅★★★★★ §3 — LANE 30's CENSUS GUARD GETS THE `6` FORMS NAMED, AND ONE LANE-OVERLAP I AM RESOLVING
+**⭐ THE AST MATCHER MUST COVER AT LEAST THESE `6` CONSTRUCTION FORMS — this is the grade's *"1 of 6"* made actionable:** keyword `parameters=` · **positional constructor argument** · **aliased `ConditionBinding`** · **module-qualified constructor** · `dataclasses.replace` · **imported `replace` alias.**
+**⭐ THE GUARD MUST REQUIRE:** scan root anchored to **the test file or repo root, NOT the process cwd** · **scanned file count `> 0`** · target production module **discovered** · a **known positive construction found in a controlled fixture** · all supported forms detected. **⭐ A PLANTED PRODUCTION PARAMETER WRITER IN *ANY* SUPPORTED FORM MUST TURN THE GUARD RED.**
+★★★★★ **`A GUARD MUST ASSERT IT LOOKED, NOT ONLY THAT IT FOUND NOTHING.` The file-count assertion is the whole repair for a vacuous green.**
+**⭐ MIRROR PARTIAL RECOGNITION — BOTH DIRECTIONS MUST REFUSE:** taught fast + default slow **AND** default fast + taught slow.
+**⭐ ORDERING WITNESS:** plant the refusal inside the dispatch loop after the first condition executes; **the permanent test must FAIL *and IDENTIFY the observed mutation*.** ✅ Approved lesson, verbatim: **`A post-run publication field cannot prove when an event occurred during the run.`**
+**⭐ `F-F` PREFERENCE ORDER (my `R-702 §6` offered a bare either/or):** **PREFERRED — move the refusal above `candle_confirmation_check` if that preserves legitimate parameterless behaviour.** Otherwise correct the comment to state the ACTUAL boundary precisely. 🛑 **`DO NOT RETAIN THE FALSE CLAIM THAT REFUSAL OCCURS BEFORE EVERY EVALUATOR IF AN EVALUATOR RUNS FIRST.`**
+⚖️★★★★ **LANE-OVERLAP RESOLVED, BECAUSE THESE TWO LANES EDIT THE SAME REGION OF THE SAME FILE AND I WILL NOT HAVE THEM FIGHT: `§2`'s requirement (refusal precedes candle confirmation) SUBSUMES `F-F`'s preferred repair. ⇒ **LANE 29 OWNS THE MOVE. LANE 30's ITEM `4` REDUCES TO VERIFYING THE COMMENT NOW STATES THE TRUE BOUNDARY.** If Lane 29 cannot move it without breaking parameterless behaviour, SAY SO, and Lane 30 corrects the comment instead.**
+**⭐ REGRESSION RECONCILIATION:** recompute BOTH import-closure populations; **name the exact member present in the `81`-set and absent from the `80`-set, or prove one derivation wrongly included/excluded it.** 🛑 **`DO NOT JOIN REGRESSION RESULTS BY COUNT ALONE`** — this desk's most-convicted error, arriving from outside for once.
+
+### ✅★★★★ §4 — THE COMBINED REGRESSION RECEIPT, AND THE RE-GRADE'S NEW SELF-REPORTING DUTY
+**⭐ AFTER LANE 30:** run the derived affected population · capture **FULL pytest NODE IDs** · compare failed membership before/after · ⭐ **include a BREAK-CONTROL proving the comparison reports a difference** · **report every inherited failure WITHOUT reclassifying it.** 🛑 **THE `336`-FILE HANGING RUN REMAINS `UNVERIFIABLE`. DO NOT CALL IT GREEN.**
+✅★★★★★ **AND THE ITEM THAT REPAIRS *MY* CALIBRATION FAILURE RATHER THAN A CODE DEFECT — ADOPTED GRATEFULLY:** the re-grade's expected duration is **`60`–`90` min** (matching `R-702 §7`) **AND ⭐ `THE GRADE RECEIPT MUST INCLUDE A PROGRESS UPDATE BY THE 90-MINUTE BOUND IF UNFINISHED.`** ★★★★★ **`R-702 §7` had me promising to *report at the bound*; this makes the INSTRUMENT report instead of relying on my memory. **A DUTY I DISCHARGE FROM MEMORY IS A DUTY THAT FAILED ONCE ALREADY TONIGHT — a monitor surfaced the overrun, not me.** I will build it into the dispatch brief.**
+✅ **RE-GRADE SCOPE, ADOPTED:** `F-A` · `F-B` · `F-2` · **`F-2D` BOTH DIRECTIONS** · `F-3` · flag-OFF · pre-execution ordering · **census-guard PORTABILITY and MATCHER COVERAGE** · **all `10` mutations.**
+🛑🛑★★★★★ **AND THE CLAUSE THAT MAKES THE RE-GRADE MEAN SOMETHING, VERBATIM: `NO MUTATION MAY BE COUNTED AS PASSED MERELY BECAUSE PRODUCTION CODE IS CURRENTLY CORRECT.`** **That is precisely the `M3`/`M5` lesson: shipped code was RIGHT and the guards could not tell. `A GUARD THAT CANNOT FAIL IS NOT EVIDENCE THAT THE CODE IS RIGHT — IT IS THE ABSENCE OF EVIDENCE EITHER WAY.`**
+✅ **GATE-2 CLOSING RULE RESTATED UNCHANGED BY THE READ — same four categories. `R-702 §7` STANDS VERBATIM.**
+
+### ✅ §5 — AUTHORIZED NOW. **NOTHING IS WITHDRAWN; LANE 28 IS WIDER THAN WHEN YOU STARTED IT**
+★ **WORKER — YOU ARE MID-LANE-28 AND NOT BLOCKED. CONTINUE.** **`R-702 §6` stands in full; `§1`–`§3` above ADD to it.** ✅ **Nothing you have built is wasted: the `5`-handler RED population, the property, and the `WAIT_BIAS` control were all already in your contract.**
+🛑 **WHAT IS GENUINELY NEW FOR YOU, IN ONE LINE EACH:** the **`4`-way classification with `ENVIRONMENT_GATED_UNVERIFIED` as the residual, no handler unclassified** · **family-metadata-dispatch handlers AND invalidation handlers** in the inspection set · **`distinct parameters remain independently cached`** as a second positive control · the **required permanent accept-and-discard mutation** · and Lane 29 now owns the `candle_confirmation_check` move (`§3`).
+⚠️ **HONEST-PARTIAL CLAUSE APPLIES AND I MEAN IT HERE: if the classification cannot be completed for some handler, `ENVIRONMENT_GATED_UNVERIFIED` IS THE ANSWER — it is a complete result, not a failure.** **`UNRESOLVED_*` remains a complete result.**
+🛑 **FORBIDDEN, UNCHANGED AND RE-ASSERTED BY THE READ (it adds `runtime-production` explicitly):** the source producer · the sealed specification · transcript extraction · the TypeScript persistence gateway · **the activation flag** · **`runtime-production`** · the sibling-owned `test_synthetic_market_simulator.py`.
+**FIRST OBSERVABLE:** unchanged — Lane 28's red/green pair, ETA from your own `AR-781`. **If absorbing `§1` pushes it out, say so in a one-line update; a moved ETA reported is fine, a silent one is not.**
+
+### ★★★★★ §6 — LESSON TO PERSIST
+★★★★★ **`A READ THAT REACHES THE DESK IN TIME AND THE WORKER TOO LATE HAS NOT ARRIVED.`** `R-700 §1` minted the rule about un-repositoried adoptions; this is its first live test — an extension landing mid-lane, enumerated verbatim, because the worker is `10` minutes into the lane it widens. **The rule's value is measured in minutes, not in prose.**
+★★★★★ **`THE NAIVE FIX FOR ACCEPT-AND-DISCARD IS A NEW SILENT SUBSTITUTION.`** Stop keying caches on `b.parameters` and `F-A` dies — along with `WAIT_BIAS`'s legitimate per-parameter caching, which would collapse two arms into one cache entry and serve one arm's answer for both. **The read's second positive control exists to catch the repair, not the defect.**
+★★★★ **`A TAXONOMY WITH A RESIDUAL BOX TURNS "I COULDN'T CHECK" INTO A REPORTABLE STATE.`** `ENVIRONMENT_GATED_UNVERIFIED` is why *"no handler may remain unclassified"* is enforceable rather than aspirational.
+★★★★ **`A DUTY I DISCHARGE FROM MEMORY IS A DUTY THAT ALREADY FAILED ONCE TONIGHT.`** I promised to report the grade overrun at the bound and a monitor beat me to it. **The re-grade's own receipt will now carry the progress update — move the duty into the instrument.**
+★★★ **AND THE CHANNEL, FAIRLY: THREE REFUSALS ARE ON THE RECORD FOR FINISH-LINE MOVES, SO ONE ROUND WITH NOTHING TO REFUSE BELONGS ON IT TOO.** **`AUDIT ON MERIT` HAS TO BE ABLE TO RETURN "ALL OF IT" OR IT IS NOT AN AUDIT.**
+
+---
+
 ## R-702 · 2026-08-04 · 🛑🛑🛑★★★★★ **GRADE LANDED `PASS_WITH_BOUNDED_FINDINGS` / BAND `7` — AND **GATE 2 DOES NOT CLOSE.** MY OWN PRE-REGISTERED RULE (`R-701 §2.5`) NAMES FOUR DISQUALIFYING CATEGORIES AND THE GRADE HITS **TWO**: `UNUSED ACCEPTED PARAMETERS` (`F-A`) AND `FLAG-OFF PARAMETER LOSS` (`F-B`).** 🛑🛑🛑★★★★★ **I AM NOT RE-READING THAT RULE. IT WAS FIXED AT `01:26` WHILE THE ANSWER WAS UNKNOWN, PRECISELY SO THIS MOMENT COULD NOT BE ARGUED.** ★★★★★ **`A RE-READ AFTER AN UNWANTED ANSWER IS A GOALPOST WITH A CITATION.`** 🛑🛑★★★★★ **AND THE SHARPEST FINDING IS AN INVERSION THE CODE ITSELF PREDICTED: `spec_condition_compiler.py:1360` WRITES `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION` — AND LANE 27's GUARD IS ITS MIRROR IMAGE. **IT ONLY WATCHES THE PATH YOU TURNED *OFF*. TURNING ENFORCEMENT ON — THE WHOLE POINT OF ACTIVATION SAFETY — REMOVES THE ONLY GUARD COVERING FIVE OF SIX ROUTES.**
 
 **RULING ID:** `R-702` · **TASK ID:** the targeted independent grade (`R-701 §5`) · **DECISION: GATE 2 HELD SHUT · APPROVALS OF LANES 25–27 STAND · THREE REPAIR LANES AUTHORIZED · TYPED OBJECT REMAINS BLOCKED.**
