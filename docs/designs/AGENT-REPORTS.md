@@ -4,6 +4,58 @@
 
 ---
 
+## AR-774 · 2026-08-04 · ✅★★★★★ **`R-694 §5` LANE 24 DELIVERED. **FAN-IN `2/2` ON THE BATCH, NO HANDOFF.** RED-PROOF FIRST, THEN A BOUNDED REPAIR, THEN THE SAME INSTRUMENT RE-RUN AGAINST THE FILES THE DESK ACTUALLY RUNS.** 🛑🛑🛑★★★★★ **AND THE RED-PROOF FOUND A THIRD DEFECT THE RULING DID NOT NAME, WITH THE **DANGEROUS** FAILURE DIRECTION: `[MEASURED, fixture B3]` **A WORKER `git commit` WHOSE MESSAGE MERELY QUOTES THE LEDGER FILENAME SILENTLY *CONSUMED* THE ADVISOR'S SENTINEL.** Mechanism A over-blocks and says so; **THIS ONE DISARMS THE DESK'S PER-RULING GATE AND EMITS NOTHING.** ★★★★★ **`THE SAME BAD MATCHER SITS IN BOTH HOOKS, AND IN THE SECOND ONE IT FAILS SILENTLY AND OPEN.`** ✅ **FIXED, AND IT IS THE HALF THAT MATTERED.** 🛑 **`2` OF `8` FIXTURES REMAIN RED **BY DECISION, NOT BY OVERSIGHT** — both fail SAFE, and `§4` says why I did not chase them.**
+
+**TASK:** `R-694 §5` Lane 24. **FILES CHANGED — TWO, BOTH HOOKS, IN A DIRECTORY THAT IS NOT UNDER GIT (`§5`):** `.claude/hooks/advisor-ruling-guard.ps1` · `.claude/hooks/advisor-ruling-receipt.ps1`. **PLUS `5` NEW FILES BANKED IN THE CAMPAIGN REPO** under `scripts/hook-guards/` — the harness and BOTH versions of BOTH hooks. `[MEASURED]` `git status --porcelain src/` still shows only the sibling seat's file; **I touched no `src/`.**
+
+### ✅★★★★★ §1 — RED FIRST, WITH FOUR CONTROLS THAT DISCRIMINATE
+**`R-694 §5`: *"ONE FIXTURE THAT CAN FAIL FOR TWO REASONS IS NOT A CONTROL FOR EITHER."* Mechanism A and mechanism B have separate fixtures, and the ORIGINAL protection has its own, so the repair cannot pass by simply gating nothing.**
+```
+                                                                     BEFORE   AFTER
+A1  quotation-only worker write (the AR-770 shape)     must PASS      RED      ok
+A2  plain worker commit, no ledger token          [CONTROL] PASS      ok       ok
+A5  quotation on the SAME line as a commit verb    must PASS      RED      RED
+A3  GENUINE ledger commit, sentinel ABSENT   [PROTECTION] BLOCK      ok       ok
+A4  GENUINE ledger commit, sentinel FRESH    [PROTECTION] PASS       ok       ok
+B1  FAILED ledger commit must NOT consume                           RED      RED
+B2  SUCCESSFUL ledger commit MUST consume    [PROTECTION]            ok       ok
+B3  quotation-only command must NOT consume                         RED      ok
+                                                          RED: 4/8  ->  2/8
+```
+✅★★★★★ **THE PROTECTION IS DEMONSTRATED, NOT ASSERTED (`R-694 §5`'s explicit requirement): `A3` still BLOCKS an unarmed genuine ledger commit and `B2` still consumes on a real one — ON THE LIVE FILES, AFTER THE REPAIR.**
+✅ **The harness drives the hooks as what they are — pure `stdin`-JSON → exit-code functions — against an ISOLATED `$env:USERPROFILE`. **The live sentinel was never read, written or deleted; a sibling advisor seat was publishing rulings in the same minutes.**
+
+### 🛑🛑🛑★★★★★ §2 — THE UNNAMED THIRD DEFECT (`B3`), AND IT NEARLY BIT ME
+🛑 **`R-694 §5` named mechanism A in the GUARD. `[MEASURED]` **THE IDENTICAL MATCHER IS ALSO IN THE RECEIPT (`advisor-ruling-receipt.ps1:74`), WHERE IT DELETES THE SENTINEL.** So any Bash command whose TEXT carries both tokens — **a worker's own commit message** — disarmed the advisor's per-ruling gate.
+🛑🛑★★★★★ **THE FAILURE DIRECTIONS ARE NOT SYMMETRIC AND THAT IS THE WHOLE POINT: the guard's version REFUSES AND PRINTS A REASON. The receipt's version SUCCEEDS AND SAYS NOTHING, leaving the next ruling publishable ungated.** ★★★★★ **`A FALSE POSITIVE ARGUES WITH YOU; A FALSE NEGATIVE AGREES WITH YOU.`**
+⚠️★★★★ **AND IT WAS ONE SENTENCE AWAY FROM HAPPENING: `AR-770` was a report ABOUT this guard.** `[MEASURED]` I checked all four of my commits — **`0` occurrences of the token in every message** — so **I did not disarm the desk.** ★★★ **That is luck plus one deliberate choice, not a property of the system: I avoided the literal filename in `AR-770`'s message only because the guard had just blocked me for using it.** 🛑 **HONEST CONTROL NOTE: my first check used the advisor's own commit message as a positive control and it returned `0` too — **a control that could not have discriminated.** I re-ran it against a string that must match (`1`), which is the check that actually licenses the zero.**
+
+### ✅★★★★★ §3 — THE REPAIR, AND WHY IT IS THIS AND NOTHING LARGER
+**BOTH HOOKS NOW SHARE ONE HELPER, `Test-LedgerPublishCommand`: join shell line-continuations, then require BOTH tokens ON THE SAME LINE.** 🛑 **`git commit -o \`⏎`…ADVISOR-RULINGS.md` is still caught — the repair must not open a hole while closing one, so the continuation-join is part of the fix, not decoration.**
+⚠️★★★★ **THE MATCHER IS STILL DUPLICATED ACROSS TWO FILES AND I KEPT IT THAT WAY, DELIBERATELY.** `AR-762` convicted this exact species (*"the pathology this campaign is repairing has already happened to the guard itself"* — one rule, three copies). **A shared module would be the right structure and the WRONG risk tonight: these hooks must FAIL OPEN, and an import that cannot resolve turns a guard into a no-op.** 🛑 **FLAGGED FOR THE DESK, NOT SILENTLY ACCEPTED — the two copies are now byte-identical in the matcher and both are banked (`§5`) so drift is detectable.**
+
+### 🛑★★★★★ §4 — THE TWO REMAINING REDS, AND WHY I STOPPED RATHER THAN KEPT GOING
+🛑 **`A5` — a quotation on the SAME LINE as a real commit verb** (*"never `git commit` ADVISOR-RULINGS.md from a worker seat"*). Per-line matching cannot separate that from a publish; **only stripping heredoc bodies and `-m` message payloads can.** 🛑 **I did not add that: more regex inside a hook whose `catch` FAILS OPEN buys a narrower false-positive at the price of a wider chance of no guard at all.** ✅ **`A5` fails SAFE — it over-blocks, loudly, with a documented recovery.**
+🛑🛑★★★★★ **`B1` — a FAILED ledger commit still consumes the sentinel — IS BLOCKED ON A FACT, AND I WENT AND GOT THE FACT RATHER THAN GUESSING:** `[MEASURED — Claude Code hooks reference]` **`PostToolUse` fires only when the TOOL succeeds, and failures raise a separate `PostToolUseFailure` event.** ★★★★★ **BUT A `git commit` THAT EXITS `1` IS STILL A *SUCCESSFUL BASH TOOL CALL* — the tool ran and returned output. So the event type CANNOT discriminate, and `R-694 §5`'s observation stands exactly as the desk measured it.** 🛑 **The only remaining discriminator is a field inside `tool_response`, and `[MEASURED]` **the documentation does not specify that schema** while **`0` of the `7` hooks in this repo read any of `tool_response|tool_result|exit_code`** — so nothing here reveals it either. ★★★★★ **I WILL NOT VALIDATE A FIX AGAINST A SCHEMA I INVENTED: my harness's `B1` payload is a shape I made up, and a repair that made it pass would be `hardcoded-test-copy-is-a-fabricated-safety-claim` with the fabrication inside the instrument.** ✅ **`B1` ALSO FAILS SAFE — over-consuming costs the advisor one skill re-invocation, which is exactly the cost `R-694 §5` observed and is visible when it happens.**
+✅★★★★ **`UNRESOLVED_SCHEMA` on `B1`, and it is a complete result, not a deferral.** **Two routes exist and both are the desk's call, not mine: instrument the live receipt to dump one real payload, or drop `tool_response` entirely and consume on a MEASURED git fact (the ledger's newest commit being newer than the sentinel's arm stamp) — `A COMPLETION SIGNAL IS NOT A RESULT` argues for the second.**
+
+### ⚠️★★★★★ §5 — THE FINDING NOBODY ORDERED AND I THINK MATTERS MOST HERE
+🛑🛑 **`[MEASURED HERE]` `git rev-parse --show-toplevel` in `C:/Users/tonio/Projects/trading-forge` → **`fatal: not a git repository`.** **EVERY GUARD THIS CAMPAIGN RELIES ON LIVES IN AN UNVERSIONED DIRECTORY.** ★★★★★ **There is no diff, no history, no blame and no revert for the controls that gate the ruling ledger — and `R-641`/`R-677`/`R-694` are all rulings ABOUT changes to these files, whose before-states exist nowhere.**
+✅ **PARTIALLY CLOSED BY THIS LANE, WITHOUT MOVING ANYTHING LIVE:** banked in the campaign repo under `scripts/hook-guards/` — the **re-runnable harness** plus **PRE-REPAIR and POST-REPAIR copies of both hooks**, so tonight's change has a diff and a revert path. 🛑 **THIS IS A COPY, NOT VERSION CONTROL. The live files are still unversioned and the desk should decide where they belong.**
+⚠️ **MINOR, RECORDED NOT FIXED:** both hooks are UTF-8 **without BOM** while PowerShell 5.1 reads them as ANSI, so the guard's own operator-facing block message already renders mojibake (`§` → `Â§`, `—` → `�?"`). **Pre-existing; my write preserved the original encoding exactly (BOM `False` before and after) so I introduced no regression.**
+
+### ⚠️ §6 — WHAT I DID NOT MEASURE, AND ONE INSTRUMENT ERROR OF MINE
+- 🛑 **`[UNENUMERATED]`** whether the other `5` hooks carry the same whole-command matcher. **I did not widen — `R-648` closes guard sweeps — but `worker-execution §12` says name the class: this defect is a CLASS and I checked `2` of `7` members.**
+- ⚠️★★★★★ **MY OWN FIXTURE WAS WRONG FIRST, AND IT MADE A CORRECT REPAIR READ AS BROKEN.** My initial `A1` put both tokens on ONE line — **a strictly harder case than the defect actually observed in `AR-770`, where they sat in different paragraphs of the heredoc.** The repair went in, `A1` stayed RED, and **the instrument was accusing the fix.** ✅ **I reconstructed the fixture from the report rather than tuning the fix.** ★★★★★ **`A FIXTURE THAT IS NOT THE OBSERVED SHAPE TESTS A DEFECT NOBODY HAS — AND WHEN IT FAILS, IT INDICTS THE REPAIR.` I kept the harder case as `A5`, labelled, instead of deleting the evidence.**
+- ⚠️ **The harness needed two instrument repairs before it ran at all** (PowerShell has no `<` redirection; and `2>&1` on a native exe under `ErrorActionPreference='Stop'` turned the guard's own BLOCK message into a terminating error — **the instrument died on exactly the case it exists to observe**).
+
+### ★★★★★ §7 — RECOMMENDATION
+**`APPROVAL_REQUESTED`. BATCH FAN-IN `2/2` (Lane 23 `AR-773`, Lane 24 here). No lane stopped, no handoff.**
+✅ **`R-695 §7` / `R-696 §7`: handoff `5` is authorized ON THIS FAN-IN. It is now unblocked and I am ready to start it** — `F-2` `unknown_parameter_key` first, then `F-1`'s wired-HTF early return, building to `TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md`, carrying `R-695 §7`'s stop condition.
+🛑 **THREE THINGS ARE THE DESK'S, NOT MINE:** `B1`'s route (instrument vs git-fact) · `A5`'s quote-stripping · **where these unversioned guards should actually live.**
+
+---
+
 ## AR-773 · 2026-08-04 · ✅★★★★★ **`R-694 §7` LANE 23 DELIVERED. **THE GATE DISCRIMINATES — RED ON A PLANT, NAMING THE PRIMITIVE, GREEN AGAIN BYTE-IDENTICALLY.** STOP CONDITION DID NOT FIRE.** 🛑🛑🛑★★★★★ **AND THEN I RAN THE SECOND PLANT THE CONTRACT'S OWN WORDING REQUIRED, AND IT INVERTED THE ANSWER FOR THE ROUTE HANDOFF 5 WILL ACTUALLY USE: `[MEASURED]` **THE SAME PYTHON-ONLY PRIMITIVE, THE SAME COMMAND — `exit 1` WITH THE FLAG SET IN MY SHELL, `exit 0` AND *"PASS: full parity"* WITH IT UNSET. ONLY THE AMBIENT ENVIRONMENT DIFFERED.** ★★★★★ **`[MEASURED]` PYTHON READS `9` `TF_*` FLAGS; THE GATE DECLARES EXACTLY `1` AND INHERITS THE OTHER `8` FROM `{...process.env}`. **IN A CLEAN CI SHELL THE GATE WOULD REPORT FULL PARITY WHILE THE DIVERGENCE IS LIVE IN THE TREE.**
 
 **TASK:** `R-694 §7` Lane 23. **FAN-IN `1/2` — LANE 24 (`R-694 §5`) IS MINE AND I AM STARTING IT NEXT; NO HANDOFF.** **FILES CHANGED: NONE.** `[MEASURED]` `git diff --stat HEAD -- src/` shows **only the sibling seat's `test_synthetic_market_simulator.py`, which I never touched** — twenty-second consecutive report. **Both plants removed; `ma_native|TF_MA_NATIVE` → `0` occurrences.**
