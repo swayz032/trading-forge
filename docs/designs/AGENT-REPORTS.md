@@ -4,6 +4,47 @@
 
 ---
 
+## AR-762 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-688 §5 LANE 16` — **STOP CONDITION FIRES ON ITS SECOND BRANCH: THERE IS NO SHARED PRE-PERSISTENCE FUNCTION THAT RECEIVES BOTH WRITERS.** `[MEASURED]` **THE GRADUATOR'S TWO INSERTS CALL NO GUARD AT ALL** — `0` guard references in the `80` lines before `:2781`, and `0` anywhere in that module. **A canonicalizer installed at `agent-service.ts:468` would not see them.** 🛑🛑🛑★★★★★ **AND THE INSERT POPULATION IS BIGGER THAN ANY RULING HAS NAMED: **`10` `db.insert(strategies)` SITES, NOT `5`.** `R-688 §5(b)` named `5`. `[MEASURED]` the other `5` are `routes/strategies.ts:537` · `critic-optimizer-service.ts:2038` · `evolution-service.ts:626` · `fade-the-losers-service.ts:659` · `spec-onboarding-service.ts:762`.** 🛑🛑★★★★★ **AND THE GUARD THAT `R-688 §4` HOPED WAS THE READY-MADE BOUNDARY **ALREADY EXISTS IN THREE IMPLEMENTATIONS**: the canonical `assertCrossValidatedSource` plus **TWO LOCAL MIRRORS** (`fade-the-losers-service.ts:89`, `spec-onboarding-service.ts:134`), each with its own copy of the rule. **THE PATHOLOGY THIS CAMPAIGN IS REPAIRING HAS ALREADY HAPPENED TO THE GUARD ITSELF.**
+
+**TASK:** `R-688 §5` Lane 16. **READ-ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; sixteenth consecutive report. NO REPAIR, per the stop condition.**
+
+### 🛑🛑★★★★★ §1 — THE TEN INSERT SITES AND WHAT GUARDS THEM
+| # | insert site | guard before it |
+|---|---|---|
+| 1 | `routes/strategies.ts:537` | ✅ canonical, `:533` |
+| 2 | `agent-service.ts:717` | ✅ canonical, `:715` |
+| 3 | `agent-service.ts:1142` | ✅ canonical, `:1101` |
+| 4 | `agent-service.ts:1272` | ✅ canonical, `:1270` |
+| 5 | `critic-optimizer-service.ts:2038` | ⚠️ canonical at `:2010` but **CONDITIONAL** — `:2006` *"only meaningful when the parent IS…"* |
+| 6 | `evolution-service.ts:626` | ✅ canonical, `:598` |
+| 7 | `fade-the-losers-service.ts:659` | ⚠️ **LOCAL MIRROR** `assertCrossValidatedSourceLocal`, `:649` (defined `:89`) |
+| 8 | `spec-onboarding-service.ts:762` | ⚠️ **LOCAL MIRROR**, `:747` (defined `:134`) |
+| 9 | **`direct-bucket-graduator.ts:2781`** | 🛑 **NONE** |
+| 10 | **`direct-bucket-graduator.ts:3072`** | 🛑 **NONE** |
+✅ **POSITIVE CONTROL ON THE ZERO: the same search returns `29` `assertCrossValidatedSource` references across `8` files, so the matcher demonstrably finds this symbol across module boundaries — the graduator's `0` is a real absence, not a dead query.**
+🛑🛑★★★★★ **SO `agent-service.ts:456`'s *"This function MUST be called immediately before every `db.insert(strategies)`"* IS **FALSE AS WRITTEN**, and has been for at least the two graduator sites. ★★★★★ **`A COMMENT THAT SAYS "MUST" IS A WISH UNLESS SOMETHING COUNTS THE CALL SITES.` The instruction is correct as intent, unenforced as fact, and it is the exact shape `R-687 §2` minted about ordering a guard and forbidding its witness — here the guard exists and nothing witnesses its coverage.**
+
+### ✅★★★★ §2 — CAN A REFUSAL AT THE CANDIDATE BOUNDARY ACTUALLY TAKE EFFECT? (`R-688 §5`, owed by every candidate)
+✅ **YES at all three `agent-service` sites, measured rather than assumed:** `:715` and `:1101` are **NOT inside any `try`** (nearest `try/catch` pairs close before them — `:630/:657` and `:1057/:1091`). `:1270` **IS** inside a `try` opened at `:1257` — **but its `catch` at `:1352` ends with `throw err` at `:1368` after a DLQ capture, so the refusal PROPAGATES.**
+🛑 **THE ANSWER IS MOOT FOR THE WRITER THAT MATTERS: a refusal cannot take effect at a boundary the graduator never reaches.**
+
+### 🛑🛑🛑★★★★★ §3 — THE STOP CONDITION, AND THE ANSWER IT FORCES
+🛑 **`R-688 §5` STOP CONDITION, second branch: *"No shared boundary → STOP, report that both writers need migration into one executable-parameter service."* **THAT IS THE MEASURED ANSWER.**
+🛑 **AND `DO NOT INSTALL TWO INDEPENDENT CANONICALIZERS` IS NOT A HYPOTHETICAL RISK HERE — `[MEASURED]` **THIS CODEBASE HAS ALREADY DONE IT TWICE WITH THIS VERY GUARD.** `fade-the-losers-service.ts:74` describes its own copy as *"A mirror of agent-service.ts's exported `assertCrossValidatedSource` — same [rule]"*, and `spec-onboarding-service.ts:106` calls the canonical one *"the canonical, single [guard]"* **in the file that then defines its own local version at `:134`.** ★★★★★ **`A FILE THAT NAMES THE CANONICAL IMPLEMENTATION AND THEN DEFINES ITS OWN IS THE CLEAREST POSSIBLE EVIDENCE THAT "JUST CALL THE SHARED FUNCTION" DOES NOT SURVIVE CONTACT WITH THIS IMPORT GRAPH.`** ⚠️ **`[HYPOTHESIS — UNPROVEN]` the mirrors exist to avoid the ESM circular-import problem `spec-onboarding-service.ts:59-68` documents against the graduator. **I did not test that**, and if it is the cause, any repair that requires all `10` sites to import one module inherits the same obstacle.**
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE, AND ONE INSTRUMENT THAT LIED TO ME
+- 🛑 **`[UNENUMERATED]` direction 13's precedence questions — can one strategy pass through BOTH writers, can both target the SAME row, which uniqueness key wins, can one overwrite the other's `config`.** **The stop condition fired on the boundary question and `R-688 §5` says STOP, so I stopped with these open.** ★★★ **They are the questions that decide whether a single boundary is even sufficient, and they are now the obvious next lane.**
+- ⚠️ **`[UNENUMERATED]` `dsl-sanitizer.ts:64`'s NaN→midpoint (lead `(c)`) — not reached before the stop condition.**
+- ⚠️ **`[UNENUMERATED]` `runtime-production` delta.**
+- 🛑🛑 **MY OWN INSTRUMENT FAILED FIRST, AND I AM REPORTING IT: I extracted the guard's name mechanically and my pattern captured the word `MUST` from the comment above it instead of `assertCrossValidatedSource` from the declaration below. The resulting repo-wide search for `MUST` returned ~`170` comment lines and nothing usable. **I caught it because the output was obviously prose, not call sites** — a louder failure than a subtly-wrong symbol would have been. ★★★ **`AUDIT THE INSTRUMENT BEFORE BELIEVING IT` — and note the luck: a name-extraction that had grabbed a REAL but WRONG symbol would have returned a clean, plausible, wrong coverage table.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`BLOCKED` by design — stop condition fired; the architecture call is the desk's.** **FAN-IN `1/1`. Six lanes closed in this seat tonight (10, 11, 12, 14, 15, 16), no handoff.**
+🛑 **THE ONE THING I WOULD PUT IN FRONT OF ANY REPAIR CONTRACT: the repair is not *"add a canonicalizer at the boundary"* — `[MEASURED]` **there is no boundary.** It is *"route `10` insert sites through one service"*, and `§3` measures that two teams have already declined to route through one function and written mirrors instead. **A contract that does not name the import-graph obstacle will produce a third mirror.**
+**NEXT SMALLEST TASK (ONE):** **test the `[HYPOTHESIS]` in `§3` — is the ESM circular import the reason for the mirrors?** Read-only, ~15 min. **If yes, the repair needs a leaf module and that is a design constraint, not a detail.**
+
+---
+
 ## AR-761 · 2026-08-03 · ✅★★★★★ **`R-687 §5` LANES 14 AND 15 DELIVERED. **FAN-IN `2/2`, NO HANDOFF.** LANE 14: the `F-4`/`F-5` guards now have a PERMANENT WITNESS — `5` tests, `2` mutation controls, **BOTH HITTING THE PRE-REGISTERED FAILURE SET EXACTLY** (`MUT-A` → `2 failed / 8 passed`, `MUT-B` → `1 failed / 9 passed`, both named BEFORE planting).** 🛑🛑★★★★★ **LANE 15 CORRECTS MY OWN `AR-760` MECHANISM ATTRIBUTION, AND THE CORRECTION MAKES THE EXPOSURE WIDER, NOT NARROWER: **THE SANITIZER IS NOT ON THE GRADUATOR'S INSERT PATH AT ALL.** `[MEASURED]` `sanitizeDsl` has **EXACTLY `2` non-test call sites, BOTH in `agent-service.ts`** (`:930`, `:2107`) — **NONE in `direct-bucket-graduator.ts`.** ★★★★★ **SO THERE ARE **TWO INDEPENDENT WRITERS** OF EXECUTABLE CONFIG AND **EACH INVENTS A NUMBER BY A DIFFERENT MECHANISM**: `agent-service` → sanitizer MIDPOINT → `strategies` insert at `:1142` · `direct-bucket-graduator` → its own name-derived defaults table + `dsl-compiler`'s silent `num(p.fast_period, 9)` fallbacks → `strategies` insert at `:2781`. **`AR-760` named one road; there are two.**** ✅★★★★ **AND `(c)` FINALLY MAKES THE EXPOSURE COUNTABLE: `4` indicator families lose EVERY taught key, `1` loses HALF, `4` are SAFE — it is not uniform and nobody had listed it.**
 
 **TASK:** `R-687 §5` Lanes 14 + 15. **FILES: `src/engine/tests/test_parameter_collision.py` ONLY (Lane 14). Lane 15 read-only.** 🛑 **`[MEASURED]` `git status --porcelain src/` → that file plus the sibling's untouched `test_synthetic_market_simulator.py`; fifteenth consecutive report.**
