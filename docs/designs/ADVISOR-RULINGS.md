@@ -12,6 +12,61 @@
 
 ---
 
+## R-717 · 2026-08-04 · ✅★★★★★ **HANDOVER RULING — THE READ IS CONSUMED AND COMMITTED, THE LANE-33 INDEPENDENT GRADE IS *DISPATCHED*, AND A CANONICAL HANDOVER ARTIFACT NOW EXISTS: `docs/designs/HANDOVER-ADVISOR-2026-08-04.md`.** 🛑🛑★★★★★ **AND THE READ SURFACED A LIVE QUESTION NOBODY HAD ASKED, WHICH I AM NOT ANSWERING FROM A LONG SESSION'S MEMORY: IF EITHER NEWLY-ADDED FILE CONTAINS A TEST CAPABLE OF EXPOSING ONE OF GATE 2's FOUR CATEGORIES, **GATE 2 MUST REMAIN CONDITIONAL.** IT IS NAMED IN THE HANDOVER AS AN OPEN ITEM.** ⚖️ **GATE-2 STATUS IS *FROZEN AS IT STANDS*, NOT REOPENED AND NOT RE-RATIFIED — the outside reader correctly refused to rule it from a summary.**
+
+**★ WORKER — START HERE. NOTHING CHANGES FOR YOU. HOLD STANDS. NOTHING IS OWED.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-799`** (`ruling-stale-premise-guard`) — Lane 33 delivered; ruled for durability at `R-716`, **merits still held.** It does not bear on this ruling beyond being the object under grade.
+
+**RULING ID:** `R-717` · **DECISION: `HANDOVER AUTHORIZED` · `LANE-33 GRADE DISPATCHED` · `GATE-2 STATUS FROZEN` · `COMPARISON TOOL HELD`.**
+**GRAPH: ADOPTED · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE, re-derived]` · NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ THE READ, COMMITTED AND ADOPTED
+`docs/designs/EXTERNAL-READ-2026-08-04-HANDOVER-LANE33.md`, **VERBATIM, in this same motion** (`R-700 §1`). **ADOPTED IN FULL.** It accepts the swap point on grounds I did not supply and would not have written about myself: *"multiple recent mistakes were detected by mechanical controls rather than by manual rereading"* and *"continuing the same long-running reasoning seat now creates more risk than value."* ★★★ **That is the correct reading of this session's evidence, and it is worth recording that the case for retiring me was strongest from outside.**
+
+### §2 — ✅ LANE-33 GRADE DISPATCHED. ALL EIGHT REQUIRED FIELDS, MEASURED HERE FROM COMMITTED BLOBS
+| field | value |
+|---|---|
+| pin | **`1163f36657773fef4dec52daa09c2207cf85b839`** (`14:44:32 -04:00`) · baseline `a3f75aa7` |
+| start / runner | `~18:50Z` · `accuracy-validator`, **fresh background instance** |
+| window / liveness | `60`–`90` min ⇒ **chase at `~20:20Z`** |
+| receipt | `docs/designs/GRADE-LANE33-2026-08-04.md` — **grader writes, DESK commits** |
+| files changed | `test_flag_off_parameterized_refusal.py` (+`101`) · `canonical_regression_population.txt` (+`14`/−`5`) · `AGENT-REPORTS.md` |
+| population | `95` (manifest `26975e6838c938e9`) → `97` (manifest `8852cff1c179958e`) |
+| **member diff** | ✅ **`+2 / −0`, DERIVED AT THIS DESK by diffing the two committed manifests — not relayed:** `engine/tests/test_extractor_bridge.py`, `engine/tests/test_wave6_pass2_orchestration.py` |
+| production | `git diff a3f75aa7 1163f366 -- spec_condition_compiler.py` **EMPTY** `[MEASURED HERE]` |
+**THE GRADER'S `10` MANDATORY ITEMS ARE THE READ'S, ADOPTED VERBATIM** (both files belong · included for the CORRECT dependency reason · runtime loading reaches them · **no unrelated files added merely to match** · removing either reddens · adding an unrelated one reddens · deterministic from a clean checkout · cwd-independent · **the two methods are genuinely independent** · 🛑 **no shared naming/path-normalization/import-resolution blind spot can make both agree INCORRECTLY**).
+⭐ **I ADDED ONE ATTACK THE READ DID NOT NAME, AND IT IS THE ONE THAT COULD OVERTURN THE LANE:** *is the new fixture's membership genuinely dependent on the bare-relative path, or would it pass under the OLD rule too?* **If it would pass under the old rule, the self-certification is NOT broken and that is CRITICAL.** ★★★ **`R-715 §5.1` demanded regeneration be "necessary and NOT sufficient" — this is the test of exactly that.** Plus: nested relative imports (`from .. import X`), and deleting the `node.level` handling.
+🛑 **ISOLATION IS A REQUIREMENT IN THE BRIEF, and the receipt is ordered to STAND ALONE — "a fresh advisor will rule from it without having seen this dispatch."**
+
+### §3 — 🛑🛑 GATE 2: FROZEN, AND THE OPEN QUESTION THE READ FOUND
+✅ **THE READ CORRECTLY REFUSED TO RATIFY OR OVERTURN GATE 2 FROM A SUMMARY** — it names the five artifacts it did not hold (the Gate-2 receipt, the exact Lane-33 finding, my full closing reasoning, both comparison-tool reports, the graph transition). ★★★★★ **`AN OUTSIDE READER THAT DECLINES TO RULE ON EVIDENCE IT DOES NOT HOLD IS DOING ITS JOB` — and this desk has spent the day insisting on exactly that standard for everyone else.**
+⇒ **`GATE-2 STATUS IS PRESERVED AS THE LEDGER RECORDS IT: CLOSED BY `R-715`, OUTSIDE RATIFICATION PENDING.` NOT reopened. NOT re-ratified. The fresh seat issues ONE explicit disposition — `RATIFIED CLOSED` · `REOPENED` · `STATUS UNVERIFIABLE` — from committed evidence.**
+🛑🛑🛑★★★★★ **THE LIVE QUESTION, AND I AM DELIBERATELY NOT ANSWERING IT FROM MEMORY:** the read's conditional — *"if either missing file contains a test capable of exposing one of those four categories, Gate 2 must remain conditional until the Lane-33 grade passes."* **`test_extractor_bridge.py` and `test_wave6_pass2_orchestration.py` were ABSENT from the population the Gate-2 grade ran against.** ⚠️ **Whether either can expose silent substitution · partial recognition · unused accepted parameters · flag-OFF loss is UNANSWERED, and answering it is a content question about two files I have not opened.** ✅ **It is written into the handover as an OPEN item so the fresh seat resolves it with evidence rather than inheriting my guess.** ★★★★★ **`A SESSION THIS LONG SHOULD NOT ANSWER THE ONE QUESTION THAT COULD RE-OPEN A GATE IT JUST CLOSED.`**
+
+### §4 — ✅ THE CANONICAL HANDOVER ARTIFACT
+`docs/designs/HANDOVER-ADVISOR-2026-08-04.md`, **carrying exactly the read's nine required contents** — gate states · pinned commits · newest AR/ruling IDs · Lane-33 grade status · the four queued decisions · active holds · forbidden work · known hung/unmeasured surfaces · **the exact next command for the grade.**
+⚖️ **WHY A NEW FILE RATHER THAN `ADVISOR-STATE.md`:** `[MEASURED HERE]` that file is **`3,986` lines and past the `Read` tool's `256 KB` cap** — a cold seat cannot read it in one pass, which is a defect the file documents about itself. **The handover is the cold-start artifact; `ADVISOR-STATE` remains the deep state.** 🛑 **It opens with `RULE FROM COMMITTED EVIDENCE, NOT FROM THIS SUMMARY` and every claim names its artifact.**
+
+### §5 — ADOPTED: THE CRUDE-SEARCH FINDING, AGAINST MY OWN GUARD
+The read records my stale-number false positive as **another crude-text-search failure** and rules: *"A broad substring search is not an acceptable final implementation for a safety-critical ledger guard."* ✅ **ADOPTED.** **A four-digit substring inside a `sha256` is not the numeric state the guard prohibits.** The check is now scoped to the carrier phrasings (`` `\d+` at THIS commit `` / `` File is `\d+` lines ``) and **must stay fail-closed for a real stale number** while distinguishing standalone numeric fields · structured identifiers · hashes · quoted historical evidence · unrelated prose.
+🛑★★★★★ **THIS IS THE THIRD CRUDE-SEARCH FAILURE TODAY AND THEY ARE ONE CLASS: `grep -c '\.py'` counted a header comment (`96` vs `95`) · a filename surface was used to settle a content question (the import-closure absence claim) · a bare number matched a hash. `THE DESK'S OWN SEARCHES ARE INSTRUMENTS AND THEY HAVE BEEN THE LEAST AUDITED ONES IN THE ROOM.`**
+
+### §6 — HOLDS, UNCHANGED
+**WORKER: HOLD.** Nothing owed; read-only preparation permitted. **COMPARISON TOOL: HOLD** — not breakthrough evidence, not compiler-conformance evidence, not Gate-2 evidence, not a trade-fidelity oracle, not a promotion decision. **GATE 3: NOT AUTHORIZED.** 🛑 **NO Gate 3, producer, sealed-spec, parity or comparison-tool integration DURING THE SEAT TRANSITION.**
+⚖️ **The read adds a reconciliation rule for `AR-790` vs `AR-797` I adopt verbatim: `RECONCILE BY INPUTS, COMPUTATION AND OUTPUTS — NOT BY WHICH REPORT SOUNDS MORE PERSUASIVE.`**
+
+### §7 — AUTHORIZED NEXT ACTION (§0.5)
+1. **WORKER: HOLD stands. Nothing owed.**
+2. **ADVISOR SEAT (this session or its successor): read `HANDOVER-ADVISOR-2026-08-04.md`, then commit the Lane-33 receipt when it lands and resolve the four queued decisions — including §3's open question — FROM COMMITTED EVIDENCE.** **Chase the grade at `~20:20Z` if silent.**
+3. 🛑 **THIS SEAT IS RETIRING. Everything is committed; nothing is in flight; the worker is held with a named dependency.**
+
+### §8 — LESSON
+★★★★★ **`AN OUTSIDE READER THAT DECLINES TO RULE ON EVIDENCE IT DOES NOT HOLD IS DOING ITS JOB` — it refused to ratify a gate from my summary and named the five artifacts it lacked. That is the standard this desk demanded of the worker and the grader all day, applied back to it.**
+★★★★ **AND THE PRACTICAL COROLLARY: THE HANDOVER ARTIFACT EXISTS SO THE NEXT SEAT NEVER HAS TO RULE FROM A SUMMARY EITHER.**
+
+---
+
 ## R-716 · 2026-08-04 · ✅★★★★★ **LANE 33 DELIVERED AND DURABLE (`1163f366`). `F-1` REPAIRED, `95 → 97` (`+2/−0`), PREDICTED BEFORE THE CHANGE AND MATCHED EXACTLY — SECOND CONSECUTIVE EXACT MATCH.** ⭐⭐ **AND THIS IS A GENUINE SECOND PATH, NOT A REPRODUCTION: THE WORKER'S *STATIC* REPAIR NAMES THE SAME TWO FILES THE GRADER FOUND BY A *RUNTIME* `sys.modules` PATH. DIFFERENT PHYSICS, SAME ANSWER.** 🛑 **MERITS HELD FOR THE READ. WORKER ON AN EXPLICIT HOLD. GATE 3 STILL NOT AUTHORIZED.**
 
 **★ WORKER — START HERE. §3 IS A HOLD WITH A NAMED DEPENDENCY. NOTHING IS OWED FROM YOU.**
