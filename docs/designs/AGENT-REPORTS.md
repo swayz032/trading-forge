@@ -4,6 +4,29 @@
 
 ---
 
+## AR-772 · 2026-08-04 · ⏳★★★★ **START-RECEIPT — `R-694 §7` LANE 23 (red-proof the cross-language parity gate). ETA ~40 min.** ✅★★★★★ **AND I AM READING THIS AS A **TWO-LANE BATCH, NOT ONE LANE**: `R-694 §5` assigns **LANE 24** (the guard defect) to **THE WORKER SEAT, on Lane 23's completion.** **FAN-IN TARGET `2/2`. I WILL NOT HAND OFF AT THE LANE-23 SEAM** — `worker-execution §10`: a lane boundary is not a context limit.
+
+**TASK:** `R-694 §7` Lane 23, then `R-694 §5` Lane 24. **FIRST OBSERVABLE: this receipt.**
+**NOT DOING (quoted from `R-694 §7`'s forbidden list, not paraphrased):** editing `check-spec-binding-plan-parity.ts` to make it pass · touching `.github/` · any handoff-5 production change · `src/engine/tests/test_synthetic_market_simulator.py` (**sibling seat owns it**). ✅ **`git commit -o <named paths>` only; no index-wide operation.**
+
+### ✅★★★★★ §1 — THE ORDER I AM RUNNING, AND WHY STEP `1` IS NOT THE ANSWER
+✅ **`R-694 §7` ALREADY DISARMS THE TRAP I WOULD OTHERWISE WALK INTO, AND I AM RESTATING IT SO I CANNOT FORGET IT MID-LANE:** *"A GATE THAT PASSES ON A TREE CONTAINING NO INSTANCE OF THE DEFECT HAS NOT BEEN TESTED — IT HAS BEEN RUN."* 🛑 **SO A GREEN BASELINE IS A RECORDED FACT, NEVER EVIDENCE THE GATE WORKS.** The lane's whole product is the **planted RED** and the **restored GREEN from the identical command**.
+✅ **AND THE RED MUST DO MORE THAN FAIL: `R-694 §7(2)` requires it to NAME the primitive.** ★★★ **`A RED THAT DOES NOT IDENTIFY THE OFFENDER IS A RED YOU CANNOT ACT ON`** — I will publish the gate's actual output text, not the exit code alone.
+
+### ✅★★★★ §2 — EXPECTED-GREEN SET: THE DERIVATION RULE IS FIXED NOW, THE MEMBERS AFTER THE BASELINE
+🛑 **`R-694 §7(4)` orders the set named IN ADVANCE. I am pre-registering the RULE now and the MEMBERS after step `1`, before the first plant — the same discipline `AR-769` used for Lane 21, and for the same reason: I will not pre-register a set I have not yet measured.**
+**RULE, FIXED AND NOT REVISABLE:** the expected-green set is **whatever the unmodified gate reports at baseline**, plus any test file that imports the primitive registry I plant into — **computed from the import graph, never from filename similarity** (`compute-the-closure`). ★★★ **`A MUTATION THAT BREAKS YOUR CONTROLS AS WELL AS YOUR ASSERTIONS HAS NOT TESTED YOUR ASSERTIONS` — so the restored-GREEN run must reproduce the baseline set EXACTLY, member-by-member and not by count.** 🛑 **`A COUNT IS NOT A PIN` — `AR-769` compared `30`-name sets and published only the verdict, and `R-694 §1.7` records that the membership is now permanently unrecoverable. I will BANK THE MEMBERS, not the comparison.**
+
+### ✅★★★★ §3 — WHAT I HAVE NOT YET VERIFIED, AND WILL BEFORE I CONTRACT ON IT
+⚠️ **`R-694 §7` states the artifact exists (`280` lines, `spawnSync` at `:92`, `package.json:28`, `0` CI references against a control of `2` workflow files) `[MEASURED BY THE DESK — not by me]`.** ✅ **I will re-read it at the executable line before planting anything, because the plant's shape depends on how the gate actually enumerates primitives, and a plant aimed at the wrong enumeration would produce a green that means nothing.** 🛑 **If my read disagrees with the desk's figures I report the disagreement rather than proceeding on either.**
+⚠️ **`[UNMEASURED BY ME]` whether `EXPERIMENT_PRIMITIVES` is the registry the gate actually consults.** ★★★ **That is the load-bearing join of this lane: if I plant into a registry the gate does not read, the gate stays green and I would have manufactured the exact `gate-artifact` finding the stop condition is watching for — a FALSE one.** ✅ **I will prove the join before I read any green or red as meaningful.**
+
+### 🛑 STOP CONDITION, QUOTED NOT PARAPHRASED (`R-694 §7`)
+- *"if the planted primitive does NOT turn the gate red, **STOP AND REPORT** — do not strengthen the plant until it fires."* ★★★★★ **AND I NOTE WHY STRENGTHENING WOULD BE THE TEMPTING ERROR: each strengthening makes the plant LESS representative of the real defect, so a red bought that way certifies a gate that would still miss the genuine case. `A PLANT TUNED UNTIL IT FIRES IS A TEST OF THE PLANT, NOT OF THE GATE.`**
+- ✅ **HONEST-PARTIAL CLAUSE ACCEPTED (`R-694 §7`): if I cannot make the plant representative I will name exactly what it did and did not resemble. `UNRESOLVED` is a complete result here.**
+
+---
+
 ## AR-771 · 2026-08-04 · ✅★★★★★ **`R-693 §5` LANE 22 DELIVERED. FAN-IN `1/1`, NO HANDOFF. **STOP CONDITION DID NOT FIRE.**** ✅★★★★★ **THE ANSWER: **`0` OF THE `30` TOUCH THE SLICE'S EVALUATOR PATH**, and the zero carries a live positive control — `spec_condition_compiler` appears **`0`** times across the entire `30`-failure output while `backtester` appears **`150`** times in the same file from the same command.** 🛑🛑🛑★★★★★ **AND THE FINDING THAT MATTERS MOST IS WHY THE STOP CONDITION *ALMOST* FIRED: **THREE OF THE `30` CARRY THE WORD `PARAMETER` OR `SOURCE` IN THEIR NAMES AND ALL THREE ARE FALSE JOINS** — `parameter_jitter_battery` is strategy-parameter ROBUSTNESS (`SDR`/`PSI`/`RWS`), `ClassifierErrorSourceContract` asserts on `inspect.getsource()` **PYTHON SOURCE TEXT**, and `ParamStabilityStatus` is the walk-forward parameter-DRIFT gate. **`A STOP CONDITION EVALUATED ON NAMES WOULD HAVE FIRED THREE TIMES AND BEEN WRONG THREE TIMES.`** 🛑🛑★★★★★ **SEPARATE AND UNASKED-FOR: `18` OF THE `30` ARE ONE TEST FILE ASSERTING AGAINST A PRODUCTION API THAT **HAS NEVER EXISTED IN THIS REPOSITORY.**
 
 **TASK:** `R-693 §5` Lane 22 — triage the `30` inherited failures, READ-ONLY. **NO FILES CHANGED IN `src/`.** `[MEASURED]` `git status --porcelain src/` unchanged from seat entry — **the only sibling-seat file (`test_synthetic_market_simulator.py`) is untouched by me, twenty-first consecutive report.** **Instruments live in the scratchpad, not the repo.**
