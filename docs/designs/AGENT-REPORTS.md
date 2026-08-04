@@ -4,6 +4,33 @@
 
 ---
 
+## AR-796 · 2026-08-04 · ⚡ **START-RECEIPT — `R-712 §6` ACCEPTED: THE `AR-790` FIVE-ITEM REPORT, READ-ONLY, DURING THE GRADE WINDOW.** ★★★ **THE DECISION RULE FOR ITEM 3 IS PRE-REGISTERED *BELOW*, BEFORE I HAVE LOOKED FOR A SINGLE CANDIDATE — INCLUDING THE OUTCOME THAT ENDS IN `UNRESOLVED_SOURCE_AMBIGUITY` AND NO DELIVERABLE.**
+
+**TASK:** `R-712 §6`, authorized to this seat, READ-ONLY. **`HEAD 7e166a46` at start.** **ETA to first observable: the five-item report itself; I will file a position line if the grade window closes before I do.**
+✅ **HOLD STATUS UNDERSTOOD CORRECTLY, I BELIEVE: `R-711 §4`'s hold is not "lifted into implementation" — `R-712 §6` converts it into EVIDENCE. `AR-790` itself stays HELD and unruled, and the read's reason is better than the desk's original one: my packet carried no executable call path, so there was nothing to rule ON.** ★ **`A FINDING REPORTED IN PROSE IS NOT AN ARTIFACT A RULING CAN BIND TO` — that is a fair hit on my own report and I am fixing it, not defending it.**
+
+### ✅ §1 — WHAT I AM PRODUCING (`R-712 §6`'s five, verbatim, not paraphrased)
+1. the question the plan expects the trade-comparison tool to answer · 2. the question it actually computes · 3. **one CONTROLLED CASE where the two answers diverge — MEASURED, not argued** · 4. the exact production consumer of its result · 5. whether the mismatch can create a **false pass or a false failure**.
+🛑 **BUILD NOTHING, and I am reading that strictly: no new comparator · no edits to `parity_engine/` or `shadow_runner.py` · no production writes · nothing added to the tree.** ⚖️ **WHERE I DRAW THE LINE, STATED IN ADVANCE SO THE DESK CAN OVERRULE IT BEFORE I ACT, NOT AFTER: calling an ALREADY-COMMITTED function on inputs I hand it, inside a throwaway process, is INVESTIGATION. Authoring a comparator, a fixture file, or a re-implementation is BUILDING.** ★ **This is the same line `AR-794 §1` was approved on — *"answered with the REAL committed function, not a re-implementation, because a re-derivation would be a third instrument."***
+
+### ★★★★★ §2 — ITEM 3's DECISION RULE, PRE-REGISTERED BEFORE ANY CANDIDATE IS SOUGHT
+**The two questions diverge iff I can measure a case where the tool's answer is INSENSITIVE to a difference the plan's question is SENSITIVE to.** The concrete, falsifiable form:
+> **`DIVERGENCE DEMONSTRATED`** iff **(a)** a field of `StrategyConfig` is dropped by the reduction into the parity `dsl`, **and (b)** that field is LOAD-BEARING for executed trades (it can change entries, exits, or trade count), **and (c)** two configs differing ONLY in that field produce a **byte-identical** `dsl` when passed to the **real committed** reduction, **and (d)** `parity_supported()` returns **True** for them, so the tool actually runs rather than refusing.
+> **`NO DIVERGENCE DEMONSTRABLE READ-ONLY`** if every dropped field is inert for execution, **or** if `parity_supported()` refuses every config that would exhibit it — in which case the honest answer is that the tool REFUSES rather than lies.
+🛑 **PRE-COMMITTED TO THE NULL:** if `(c)` needs me to author a fixture or a reference trade list, **item 3 is NOT PRODUCIBLE READ-ONLY, I say so, and I STOP** — `R-712 §6` names that outcome explicitly and **`UNRESOLVED_SOURCE_AMBIGUITY` IS A VALID EXPERT RESULT.** ★★★★★ **`INVENTING A DIVERGENCE WOULD BE WORSE THAN REPORTING NONE`, and I am recording that here so a later "I found one" can be checked against the rule that was fixed before the search.**
+⚠️ **AND THE RATIONALISATION I REFUSE IN ADVANCE:** *"the docstring already says everything else is ignored, so the collapse is proven"* — **a docstring is a CLAIM about the code, not a measurement of it.** `AR-790 §4` rested on exactly that and it is why the finding was unbindable. **Item 3 gets executed evidence or it gets a null.**
+
+### 🛑 §3 — WHAT THIS REPORT WILL NOT DO
+🛑 **NOT a proposal, NOT a contract, NOT a nomination of a replacement instrument.** `R-648`: **a new checker proposed mid-slice is scope creep wearing a safety costume.** **If the answer is "the held instrument cannot answer stage 5", that is a finding for the DESK to rule on, and I will not follow it with a design.**
+🛑 **NOT CLAIMED:** Gate 2 is **implementation COMPLETE, CERTIFICATION PENDING** and I may not call it closed (`R-712 §5`) · **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `runtime-production` `[UNMEASURED]` · no `tsc`/`vitest`, NO TS parity claim · flag OFF.**
+⚠️ **GRADE WINDOW IS LIVE** (`R-712 §1`, fresh `accuracy-validator` at `a3f75aa7`, `~18:05Z`, `60`–`90` min). **I am the doer and take no part in it.** ★ **AND I HOLD A HAZARD ABOUT THIS EXACT WINDOW (`AR-789`): every commit in this tree stashes and restores unstaged files. My work here writes nothing to the tree, so my only commit is this file — but I will re-check `git status --porcelain -- src/engine/tests/` at the instant of each commit, per `R-709 §7`.**
+
+### ✅ §4 — TWO SMALL THINGS RECORDED IN PASSING
+1. ✅ **`AR-795 §2`'s POSITIVE CONTROL FIRED AND PASSED, SO THE EAR IS PROVEN — NOT ASSUMED.** `[MEASURED HERE]` the ear emitted `HEAD MOVED 18:03:43Z 1e8611bb -> e1f73e46`, then `NEW RULING TEXT 18:06:24Z` for `R-712`, then `HEAD MOVED 18:06:44Z -> 7e166a46`. ⇒ **delivery across a `/clear` is upgraded `RELAYED` → `MEASURED`; I am NOT re-arming, and one rig stays one rig.**
+2. ✅ **THE LEDGER-HEADER DEFECT DID NOT RECUR:** `[MEASURED HERE]` `R-711`'s header survives `R-712`'s insert. **`AR-793 §1`'s prediction is now refuted twice running, and the desk's preamble-anchor fix is holding.** ★ **I applied the same guard to my own file after this insert.**
+
+---
+
 ## AR-795 · 2026-08-04 · ⚡ **START-RECEIPT — SEAT RE-ONBOARDED ON A CLEARED CONTEXT. IT IS THE *SAME PROCESS*, NOT A NEW SEAT `[MEASURED]`.** ✅ **`R-711 §4`'s HOLD ACCEPTED: NOTHING STARTED, NO LANE OPENED.** ⚠️ **MY EAR IS ALIVE AND ARMED ON THE RIGHT SURFACE `[MEASURED]`, BUT WHETHER IT STILL *DELIVERS* ACROSS A `/clear` IS `RELAYED` FROM SEAT MEMORY — AND THIS COMMIT IS ITS POSITIVE CONTROL.**
 
 **TASK:** none owed. `R-711 §4` is an explicit HOLD with a named dependency (the external read) and a named assignee (**the advisor seat**). **`HEAD 1e8611bb` at start.** **Nothing built, nothing proposed, no writing lane opened, both forbidden surfaces untouched.**
