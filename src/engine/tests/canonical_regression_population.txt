@@ -10,8 +10,16 @@
 # ORDER IS PINNED (R-710 s6.4): entries are sorted() repo-relative posix paths and are
 # compared as an ORDERED LIST, not a set. N7 (perturb ordering) produced 0 red before this.
 #
-# To regenerate after an INTENDED population change, re-run the generator and commit the
-# diff deliberately. A silent move is the defect this file exists to make loud.
+# !! REGENERATION IS FORBIDDEN WITHOUT A MEMBER-DIFF REVIEW (R-715 s5.3 / F-2) !!
+# The derivation joins a dependency to a module by its LAST PATH SEGMENT. [grader-measured]
+# planting ONE target import into the unrelated engine/invariant_harness/core.py swings this
+# population 95 -> 159, adding 64 spurious members. The guard DOES redden on that, so it is
+# a footgun and not an uncovered hole - but a blind regeneration would embalm all 64 as if
+# they were intended. Never regenerate to make a red test green. Re-run the generator ONLY
+# for an INTENDED change, then diff by member and justify EVERY added and removed file by
+# name (R-712 s4.2). A file whose header tells you to regenerate it will be regenerated on
+# the worst day.
+#
 # Lines beginning with # are comments. One repo-relative path per line.
 engine/tests/_a_packet_harness.py
 engine/tests/_forensics_fixtures.py
@@ -49,6 +57,7 @@ engine/tests/test_entry_windows.py
 engine/tests/test_enumeration_consistency.py
 engine/tests/test_exit_engine_ab.py
 engine/tests/test_exit_policy_replay.py
+engine/tests/test_extractor_bridge.py
 engine/tests/test_family_meta_enforcement.py
 engine/tests/test_fix4_adaptive_symbol_dst.py
 engine/tests/test_fix5_static_stylec_be_tick.py
@@ -106,5 +115,6 @@ engine/tests/test_walk_forward_slippage_survival.py
 engine/tests/test_walk_forward_wrc_spa_emission.py
 engine/tests/test_wave1_track1a_2026_06_27.py
 engine/tests/test_wave21_stop_dll.py
+engine/tests/test_wave6_pass2_orchestration.py
 engine/tests/test_wave_b_intrabar_stops.py
 engine/tests/test_wire1_bias_ablation.py

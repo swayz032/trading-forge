@@ -4,6 +4,80 @@
 
 ---
 
+## AR-799 · 2026-08-04 · ✅★★★★★ **LANE 33 DELIVERED — `F-1` REPAIRED AND THE SELF-CERTIFICATION *BROKEN*.** ⭐ **THE POPULATION MOVED `95 → 97`, `+2 / −0`, MATCHING THE PREDICTION I PRE-REGISTERED BEFORE TOUCHING THE CODE — AND NAMING THE SAME TWO FILES THE GRADER FOUND VIA A RUNTIME PATH.** ⭐ **THE NEW FIXTURE IS RED-PROVEN: DELETE THE FIX AND EXACTLY MY `2` PREDICTED TESTS GO RED, NO UNPREDICTED MEMBER — SECOND CONSECUTIVE EXACT MATCH.**
+
+**TASK:** `R-715 §5` Lane 33. **`HEAD 8824bc3e` at start.** **FILES CHANGED — TWO, BOTH TEST-SIDE:** `src/engine/tests/test_flag_off_parameterized_refusal.py` · `src/engine/tests/canonical_regression_population.txt`. **Sibling's `test_synthetic_market_simulator.py` dirty and NOT in this commit — thirty-sixth consecutive report.**
+✅ **PRODUCTION UNTOUCHED, MEASURED:** `sha256(spec_condition_compiler.py)` = **`621302a56987f19b`**, byte-identical to Lane 29/30/32. **No production behaviour changed.**
+
+### ⭐★★★★★ §1 — THE PREDICTION CAME FIRST, AND THE STOP CONDITION HAD SOMETHING TO FIRE AGAINST
+`R-715 §5`'s stop condition is unusable unless a prediction exists **before** the change, so I censused first (`AR-798 §1`).
+```
+AST CENSUS      8 bare relative imports, ALL level=1, ALL in engine/extraction/
+                (independent grep gave the same 8 -> corroborates the grader's "all 8")
+PREDICTED       95 -> 97 : +2 = test_extractor_bridge.py, test_wave6_pass2_orchestration.py ; -0
+MEASURED        95 -> 97 : +2 = test_extractor_bridge.py, test_wave6_pass2_orchestration.py ; -0
+                                                        <- REAL repaired function vs committed manifest
+STOP CONDITION  DOES NOT FIRE — diff is exactly the bare-relative class, nothing else moved
+```
+⭐★★★ **THREE INSTRUMENTS NOW AGREE ON `97` AND ON THE SAME TWO MEMBERS:** the grader's corrected AST + its **runtime `sys.modules`** third path (published in `R-715 §2` **before** I ran anything), my pre-registration re-implementation, and the repaired committed function. 🛑 **I state the weakness anyway: my predictor and the real function are both static AST and SHARE physics — `R-715 §9`'s law. The genuinely independent leg is the grader's runtime path, and it is not mine.**
+
+### ✅ §2 — ITEM 1a: THE REPAIR (minimal, one branch)
+`elif isinstance(node, ast.ImportFrom) and node.module:` **skipped bare relative imports outright** (`node.module is None`). Now the `node.module` truthy branch is **unchanged** and an `elif node.level:` branch resolves against the importing module's own package — `level 1` = that package, `level 2` = its parent.
+🛑 **DELIBERATELY NOT FIXED, AND SAID OUT LOUD:** `from .sub import X` still records the bare `"sub"` rather than an absolute path. **Arguably also lossy. OUT OF SCOPE** — two changes at once make a population swing unattributable and would have tripped the stop condition for the wrong reason. **Banked, not chased.**
+
+### ✅★★★★★ §3 — ITEM 1b: THE FIXTURE. THIS IS THE PART THAT BREAKS THE SELF-CERTIFICATION
+**`test_the_population_derivation_sees_bare_relative_imports`** — a synthetic tree (same idiom as Lane 32's two-hop control, built in `tmp_path`, **not** permanent files polluting the real population):
+```
+PRE-REGISTERED BEFORE THE PLANT:  MINIMUM_EXPECTED_RED_SET 2 (lower bound, R-709 §6) · EXPECTED_GREEN 4
+PLANT: revert the derivation to the pre-Lane-33 rule, in an ISOLATED `git archive` checkout at C:\tf33
+       (blob-verified: the isolated copy carries MY repaired files, a0e7a480 / 99a9404f)
+
+OBSERVED_RED_SET = 2 failed, 5 passed
+  RED  test_the_population_derivation_sees_bare_relative_imports              <- predicted
+  RED  test_the_canonical_population_matches_its_committed_manifest_by_member <- predicted
+  diagnostic under the old rule: population = ['sibling_hop.py', 'test_one_hop.py']
+                                  <- BOTH bare-relative importers absent. That is the blind spot, visible.
+```
+⭐ **`OBSERVED == MINIMUM_EXPECTED`, EXACTLY — no unpredicted member, second lane running.** ⚠️ **Still a LOWER BOUND (`R-712 §4.4`): two exact matches do not erase Lanes 29/30's under-predictions and I am not treating it as a licence.**
+✅ **BOTH RELATIVE FORMS COVERED ON PURPOSE:** `level=1` is the form that actually occurs (all `8`); `level=2` **proves the package arithmetic instead of assuming it.** ✅ **Carries a positive control (an ordinary absolute import must still resolve) and a 0-hop bystander that must stay out** — without them, "the file is present" proves nothing.
+★★★★★ **AND THIS IS THE WHOLE POINT: `REGENERATING THE MANIFEST UNDER THE FIXED RULE IS NECESSARY AND NOT SUFFICIENT.` The manifest and the checker shared the blind spot, so the by-member comparison was green *by construction* for this class. The fixture is the only thing here that can witness the gap, and it reddens under the old rule.**
+
+### ✅ §4 — ITEM 2: RE-PIN, AND EVERY ADDITION EXPLAINED BY NAME (`R-712 §4.2`)
+**`97` members, COMPUTED by running the repaired derivation and writing its output** — never hand-typed. `[MEASURED]` non-comment lines `97`, `sorted+unique == True`.
+**WHY EACH ADDED FILE QUALIFIES — TRACED, NOT ASSERTED** `[MEASURED HERE, per-file AST dependency dump]`:
+```
+test_extractor_bridge.py         -> engine.extraction.extractor_bridge
+test_wave6_pass2_orchestration.py-> engine.extraction.extractor_bridge
+   extractor_bridge  --BARE `from . import pilot_conveyor`-->  pilot_conveyor
+   pilot_conveyor    --BARE `from . import compile_lints`-->   compile_lints
+   compile_lints     --> src.engine.spec_family_bindings        <- TARGET
+```
+⇒ **both are GENUINE members reaching a closure target through TWO bare relative hops** — the same conclusion the grader reached by watching `sys.modules` at runtime. **REMOVED: none.**
+🛑 **BOUND, ADOPTED FROM `R-712 §4.2`:** this is a PROSPECTIVE population from the canonical baseline. **It is NOT a reconstruction of the historical `80`/`81`, which remain `UNRECOVERABLE_INSTRUMENT_PROVENANCE`.**
+
+### ✅ §5 — ITEM 3 (`F-2`): THE HEADER THAT WAS THE TRAP
+The old header said *"To regenerate after an INTENDED population change, re-run the generator and commit the diff deliberately."* **Replaced with an explicit FORBIDDEN-without-member-diff-review block** naming the measured hazard: `[grader-measured]` one target import planted into the unrelated `invariant_harness/core.py` swings the population **`95 → 159` (+`64` spurious)** via the tail-name join; **the guard DOES redden, so this is a footgun, not an uncovered hole** — but a blind regeneration would embalm all `64`. ★ **`NEVER REGENERATE TO MAKE A RED TEST GREEN`** is now written where the data lives.
+
+### ✅ §6 — COMMANDS AND RESULTS `[ALL MEASURED HERE]`
+```
+EDITED FILE      pytest test_flag_off_parameterized_refusal.py -q   -> 25 passed   EXIT=0  12.25s
+RED-PROOF        old rule, isolated C:\tf33                         ->  2 failed / 5 passed
+SCOPED REGR.     canonical population (97 files, via subprocess)    -> 31 failed, 2226 passed, 3 skipped, 2 xfailed  101.8s
+THE TWO NEW MEMBERS, run alone                                      -> 21 passed  EXIT=0
+```
+⭐ **THE ARITHMETIC RECONCILES EXACTLY, WHICH IS THE CHECK I WOULD WANT FROM SOMEONE ELSE:** `AR-794`'s baseline was `31 failed / 2204 passed` over `95` files. Now `31 failed / 2226 passed` over `97`. **`+22` = `21` (the two added files, measured alone) + `1` (my new fixture test). `31` unchanged ⇒ `0` new failures, and `0` attributable to my change.**
+✅ **`R-712 §4.1`'s NEW LAW OBEYED IN MY OWN HARNESS:** the runner **asserts the resolved test-path list is non-empty before invoking pytest** (`RESOLVED PATHS = 97`) and runs via `subprocess` from inside python — **no shell seam, because `A PYTEST INVOCATION WITH NO PATHS DOES NOT ERROR, IT RUNS EVERYTHING`, and that is the trap that ate my Lane 32 first run.**
+
+### 🛑 §7 — NOT MEASURED, NOT CLAIMED
+- 🛑 **`F-4` RECORDED, NOT CHASED** (`cache_key = b.parameters`, `spec_condition_compiler.py:639`, defanged upstream). **`F-3` has NO HOST in the repo — I did not invent one**; desk-owned backlog.
+- 🛑 **THE `31` INHERITED FAILURES ARE NOT MINE AND NOT DIAGNOSED.** I checked only that the two files I added pass alone and that the count did not move. **I did NOT join them by name to `AR-794`'s `31`** — same integer, and joining populations by a matching integer is the shape this campaign convicts.
+- ⚠️ **PROCESS DISCLOSURE:** the `worker-execution` guard **BLOCKED my first code write** — three rulings had landed since I loaded the standard. **The guard was right, I re-loaded and re-issued.** ★ **Recording it because a clean log would imply the gate never fired.**
+- 🛑 **UNCHANGED:** **GATE 3 IS NOT MINE AND I DO NOT CLAIM IT** · **`PHASE-1 EXIT = 0 of 3` · golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `runtime-production` `[UNMEASURED]` · no `tsc`/`vitest`, NO TS PARITY CLAIM · flag OFF · producer untouched · `AR-790`/`AR-797` HELD.**
+
+### ★★★★ §8 — POSITION
+✅ **LANE 33 DELIVERED — items `1·2·3` done, item `4` recorded as ordered.** **I am seated, ear live, nothing in flight, no subagent owed. NO HANDOFF.**
+**OWED TO THE DESK, NOT CLAIMED BY ME:** the independent re-grade of this lane. 🛑 **I am the doer.** ★ **`accuracy-validator` is one authorization away — say the word and it runs against the closing SHA.**
+
 ## AR-798 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 33 ACCEPTED (`R-715 §5`).** ★★★ **I AM MEASURING THE BARE-RELATIVE-IMPORT POPULATION *BEFORE* I TOUCH THE DERIVATION, SO THE STOP CONDITION HAS A PREDICTION TO FIRE AGAINST — A DIFF COMPARED TO NO EXPECTATION CANNOT SURPRISE ANYONE.** ✅ **AND THIS INSERT IS ANCHORED ON THE PREAMBLE, NOT ON `AR-797`'s HEADER — THE MECHANICAL FIX FOR THE DEFECT I COMMITTED ONE ENTRY AGO.**
 
 **TASK:** `R-715 §5` Lane 33, authorized to this seat, live. **`HEAD eea335c1` at start.** **ETA to first observable: the bare-relative-import census, before any edit.**

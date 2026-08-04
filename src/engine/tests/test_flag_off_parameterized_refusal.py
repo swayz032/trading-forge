@@ -503,9 +503,23 @@ def _regression_population(src_root: Path, targets: tuple[str, ...]) -> list[str
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 deps.update(a.name for a in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                deps.add(node.module)
-                deps.update(f"{node.module}.{a.name}" for a in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                if node.module:
+                    deps.add(node.module)
+                    deps.update(f"{node.module}.{a.name}" for a in node.names)
+                elif node.level:
+                    # `R-715 §5.1` / `F-1`: a BARE relative import (`from . import X`,
+                    # `from .. import X`) has node.module is None. The previous rule
+                    # skipped it outright, so those edges were invisible and any member
+                    # reachable ONLY through one was silently absent — a blind spot
+                    # SHARED by the manifest this same function mints, which is exactly
+                    # why no permanent test could catch it. Resolve against the importing
+                    # module's own package: level 1 = that package, level 2 = its parent.
+                    pkg = mod.split(".")[:-1]
+                    keep = max(0, len(pkg) - (node.level - 1))
+                    base = ".".join(pkg[:keep])
+                    for a in node.names:
+                        deps.add(f"{base}.{a.name}" if base else a.name)
         forward[mod] = deps
     tails = {m: m.rsplit(".", 1)[-1] for m in paths}
 
@@ -699,6 +713,87 @@ def test_the_population_derivation_follows_a_two_hop_chain(tmp_path):
     assert population == ["engine/tests/test_one_hop.py", "engine/tests/test_two_hop.py"], (
         f"unexpected membership {population} — exactly the one-hop and two-hop files, in "
         f"sorted order, and nothing else."
+    )
+
+
+def test_the_population_derivation_sees_bare_relative_imports(tmp_path):
+    """`R-715 §5.1` / the NEW `F-1` — BREAK THE SELF-CERTIFICATION.
+
+    🛑 The previous rule was `isinstance(node, ast.ImportFrom) and node.module`, which
+    SKIPS `from . import X` outright, because a bare relative import has
+    `node.module is None`. Any member reachable only through such an edge was silently
+    absent — and `[grader-measured, via a THIRD path: runtime sys.modules]` two real
+    test files that genuinely load `spec_family_bindings` were missing from the pinned
+    `95` for exactly this reason.
+
+    ★★★★★ THIS IS THE FIXTURE THAT MAKES THAT CLASS DETECTABLE AT ALL.
+    `A PINNED POPULATION IS NOT A CHECKED POPULATION WHEN THE PIN IS MINTED BY THE
+    THING IT CHECKS.` Regenerating the manifest under the corrected rule is necessary
+    and NOT sufficient: the manifest and the checker shared the blind spot, so the
+    comparison was green by construction. Only a fixture whose membership depends
+    EXCLUSIVELY on a bare relative import can witness the gap — and this one reddens
+    under the old rule.
+
+    Both relative forms are covered on purpose: `level=1` is the form that actually
+    occurs in the tree (all 8 occurrences), `level=2` proves the package arithmetic
+    rather than assuming it.
+    """
+    src = tmp_path / "src" / "engine"
+    (src / "tests").mkdir(parents=True)
+    (src / "spec_condition_compiler.py").write_text("X = 1\n", encoding="utf-8")
+
+    # level=2 hop: lives OUTSIDE tests/, so it is a carrier and not itself a member
+    (src / "relative_hop.py").write_text(
+        "from src.engine.spec_condition_compiler import X\n", encoding="utf-8"
+    )
+    # level=1 hop: a sibling INSIDE tests/, so it is legitimately a member itself
+    (src / "tests" / "sibling_hop.py").write_text(
+        "from src.engine.spec_condition_compiler import X\n", encoding="utf-8"
+    )
+    # `from . import` — never names the target; only route in is the bare relative edge
+    (src / "tests" / "test_bare_relative_level1.py").write_text(
+        "from . import sibling_hop\n", encoding="utf-8"
+    )
+    # `from .. import` — same, one package higher
+    (src / "tests" / "test_bare_relative_level2.py").write_text(
+        "from .. import relative_hop\n", encoding="utf-8"
+    )
+    # positive control: the ordinary absolute form must still work
+    (src / "tests" / "test_one_hop.py").write_text(
+        "from src.engine.spec_condition_compiler import X\n", encoding="utf-8"
+    )
+    # discriminator: if this appears, the walk includes everything and proves nothing
+    (src / "tests" / "test_bystander.py").write_text("import json\n", encoding="utf-8")
+
+    population = _regression_population(tmp_path / "src", _CLOSURE_TARGETS)
+    print(f"\n[BARE-RELATIVE CONTROL] population over the planted tree = {population}")
+
+    assert "engine/tests/test_bare_relative_level1.py" in population, (
+        "the `from . import X` file is MISSING. It never names the target, so its only "
+        "route into the population is the bare relative edge. Its absence is the F-1 "
+        "blind spot — and because the manifest is minted by this same function, nothing "
+        "else in this suite can see it."
+    )
+    assert "engine/tests/test_bare_relative_level2.py" in population, (
+        "the `from .. import X` file is MISSING: node.level is not being resolved "
+        "against the importing module's package, so multi-level relatives stay invisible."
+    )
+    assert "engine/tests/test_one_hop.py" in population, (
+        "the ordinary absolute import stopped resolving — the walk is broken outright "
+        "and the two assertions above cannot be trusted to mean what they say."
+    )
+    assert "engine/tests/test_bystander.py" not in population, (
+        "the 0-hop bystander was included: the derivation is not discriminating, so the "
+        "presence of the bare-relative files proves nothing."
+    )
+    assert population == [
+        "engine/tests/sibling_hop.py",
+        "engine/tests/test_bare_relative_level1.py",
+        "engine/tests/test_bare_relative_level2.py",
+        "engine/tests/test_one_hop.py",
+    ], (
+        f"unexpected membership {population} — exactly the level-1 carrier, both bare "
+        f"relative importers and the absolute control, in sorted order, and nothing else."
     )
 
 
