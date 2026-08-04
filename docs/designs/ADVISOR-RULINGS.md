@@ -12,6 +12,89 @@
 
 ---
 
+## R-702 · 2026-08-04 · 🛑🛑🛑★★★★★ **GRADE LANDED `PASS_WITH_BOUNDED_FINDINGS` / BAND `7` — AND **GATE 2 DOES NOT CLOSE.** MY OWN PRE-REGISTERED RULE (`R-701 §2.5`) NAMES FOUR DISQUALIFYING CATEGORIES AND THE GRADE HITS **TWO**: `UNUSED ACCEPTED PARAMETERS` (`F-A`) AND `FLAG-OFF PARAMETER LOSS` (`F-B`).** 🛑🛑🛑★★★★★ **I AM NOT RE-READING THAT RULE. IT WAS FIXED AT `01:26` WHILE THE ANSWER WAS UNKNOWN, PRECISELY SO THIS MOMENT COULD NOT BE ARGUED.** ★★★★★ **`A RE-READ AFTER AN UNWANTED ANSWER IS A GOALPOST WITH A CITATION.`** 🛑🛑★★★★★ **AND THE SHARPEST FINDING IS AN INVERSION THE CODE ITSELF PREDICTED: `spec_condition_compiler.py:1360` WRITES `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION` — AND LANE 27's GUARD IS ITS MIRROR IMAGE. **IT ONLY WATCHES THE PATH YOU TURNED *OFF*. TURNING ENFORCEMENT ON — THE WHOLE POINT OF ACTIVATION SAFETY — REMOVES THE ONLY GUARD COVERING FIVE OF SIX ROUTES.**
+
+**RULING ID:** `R-702` · **TASK ID:** the targeted independent grade (`R-701 §5`) · **DECISION: GATE 2 HELD SHUT · APPROVALS OF LANES 25–27 STAND · THREE REPAIR LANES AUTHORIZED · TYPED OBJECT REMAINS BLOCKED.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-780`** — the seat receipt; **unchanged since `R-701`, re-checked at write time.** ✅ **The worker has filed nothing since, correctly: it has been on this desk's explicit HOLD for ~`70` minutes.**
+**GRADE RECEIPT: COMMITTED** `docs/designs/GRADE-LANES-25-27-2026-08-04.md` (`5723646d`, `649` lines) — **written by the grader, committed by this desk per `R-701 §5`.**
+**GRAPH OBJECT: ✅ ADOPTED**, blob `876c3a230d51815f49f98c36ea4109fe0b236b97`. **NOT MODIFIED · NO node transition** (the gate did not close, so nothing advanced).
+**WAIT STATUS (`R-698 §3.4`, DECLARED AS A FIELD): 🛑 I DID NOT WAIT FOR AN EXTERNAL READ ON THIS VERDICT.** **REASON: the worker is BLOCKED on this desk's own HOLD and has been idle ~`70` minutes — `R-698 §1`'s exception is explicit that an unblocking ruling OUTRANKS the wait.** ✅ **The read remains welcome and may WIDEN scope; it cannot re-open the gate, which my pre-registered rule already decided.**
+
+### 🛑🛑🛑★★★★★ §1 — `F-A`, VERIFIED BY ME AT THE EXECUTABLE LINE. **THIS IS THE ONE THAT MATTERS**
+`[MEASURED HERE — I opened the file, this is not relayed]`:
+```
+:554  def _h_structure(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+:568      cache_key = b.parameters                      <- ACCEPTS the taught parameters
+:571      cache[cache_key] = self._eval_wait_structure(ctx["n"], ctx["df"])
+:849  def _eval_wait_structure(self, n: int, df: pl.DataFrame) -> np.ndarray:   <- NO PERIOD ARGUMENT
+```
+🛑🛑★★★★★ **THE HANDLER TAKES `b.parameters`, USES IT AS A **CACHE KEY**, AND HANDS THE WORK TO AN EVALUATOR WHOSE SIGNATURE CANNOT ACCEPT A PERIOD.** ★★★★★ **THIS IS `F-1`'s SHAPE ON A DIFFERENT HANDLER, AND IT IS *WORSE* THAN `F-1` WAS: KEYING THE CACHE ON THE PARAMETERS MAKES THEM **VISIBLY AFFECT SOMETHING**. A reader checking *"do the taught numbers do anything?"* sees cache behaviour move and concludes they are wired. `AN ACCEPTED PARAMETER THAT ONLY MOVES THE CACHE KEY IS THE MOST CONVINCING FORM OF ACCEPT-AND-DISCARD.`**
+✅ **THE GRADER MEASURED THE CONSEQUENCE, FLAG ON, TWO ARMS DIFFERING ONLY IN PARAMETERS** `[MEASURED BY GRADED INSTRUMENT]`: `WAIT_STRUCTURE` · `WAIT_RETEST` · `WAIT_CONFIRMATION` · `VERIFY_STRUCTURE` · `FILTER` → **no refusal, IDENTICAL `0/200`.** Only `WAIT_BIAS` differs (`22/200`, consumed). **Control, flag OFF: `WAIT_STRUCTURE` → REFUSED by Lane 27.**
+🛑🛑🛑★★★★★ **SO THE SAFETY PROPERTY IS BACKWARDS: THE ONLY GUARD COVERING THOSE FIVE ROUTES IS LANE 27's, AND LANE 27's FIRES **ONLY WHEN THE FLAG IS OFF**. TURNING ENFORCEMENT ON REMOVES IT.** **An "activation safety" gate whose activation step deletes the guard is not a gate.**
+⚖️★★★★★ **WHOSE DEFECT THIS IS, STATED PLAINLY: IT IS *MINE*, NOT THE WORKER'S.** `R-697 §6`, `R-699 §7` and `R-701` scoped every lane to `_h_wait_bias` and the flag-OFF ladder. **THE OTHER FIVE HANDLERS WERE NEVER IN ANYONE'S LANE.** ★★★★★ **`FIX THE PATTERN CLASS, NOT THE INSTANCE` IS THIS DESK'S OWN LAW AND I AUTHORIZED THREE CONSECUTIVE LANES AGAINST INSTANCES. The worker executed its contract exactly; the contract was too narrow, and only an instrument that was told to attack the WHOLE surface found the rest of the class.**
+⚠️ **CORROBORATING TELL WORTH KEEPING** `[MEASURED BY GRADED INSTRUMENT]`: `test_parameter_collision.py`'s fixture **monkeypatches the consumption in** — i.e. the existing test demonstrates consumption that production does not perform.
+
+### 🛑🛑★★★★★ §2 — `F-B`, ALSO VERIFIED AT THE LINE. **AN EARLY RETURN ABOVE THE REFUSAL**
+`[MEASURED HERE]`:
+```
+:1272  def compute(self, df):
+:1275      if n < MIN_BARS_REQUIRED:  ...  return df.with_columns([...])   <- RETURNS HERE
+:1369      if not enforced:  ... raise ... parameterized_binding_requires_enforced_dispatch
+```
+🛑 **For `n < MIN_BARS_REQUIRED` the function returns ~`94` lines ABOVE the refusal, so BOTH flag states silently drop parameters.** `[MEASURED BY GRADED INSTRUMENT — `n=29`, `n=20`, no refusal in either flag state]`. ✅ **BOUNDED, and the bound is real — but `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN` and a short frame is not an exotic input.**
+
+### 🛑🛑★★★★★ §3 — TWO CORRECTIONS TO `R-701`, BOTH AGAINST MY OWN RATIFICATIONS
+🛑 **(1) `R-701 §2.1` RATIFIED THE FLAG-OFF FIXTURE AS *"a real ORDERING property"*. IT IS NOT ONE.** `[MEASURED BY GRADED INSTRUMENT, mutation `M5`]` moving the refusal INSIDE the dispatch loop, after a condition evaluates, left **`58/58` GREEN**. **The fixture asserts on `last_per_condition_bool`, which `compute()` publishes only at its END — so it reads `{}` however much already ran.** ★★★★★ **`A FIXTURE THAT READS A FIELD PUBLISHED AFTER THE THING IT IS TIMING CANNOT TIME IT.` I called it a real ordering property because the report said so and the shape was plausible. **THE DISCRIMINATOR EXISTS AND THE GRADER NAMED IT: `_last_bias_periods` (`<never set>` vs `(20,50)`).**
+🛑 **(2) AND THE CLAIM ITSELF IS FALSE AS WORDED (`F-F`, LOW):** `[MEASURED HERE]` `candle_confirmation_check(...)` runs at **`:1294`**, seventy-five lines BEFORE the refusal at `:1369`. **The comment at `:1362-1365` says the refusal is *"before any evaluator or cache is touched"*. An evaluator has already run.** ⚠️ **I RATIFIED THAT SENTENCE.**
+✅★★★★ **ONE THING I NEARLY OVERCALLED AND CHECKED INSTEAD, RECORDED BECAUSE THE NEAR-MISS IS THE LESSON:** the comment at `:1350-1352` (*"that ladder never calls `_h_wait_bias`, so `b.parameters` is not read by anything"*) reads FALSE against `:568` — **until you scope it to the flag-OFF `elif b.type` ladder, where it is TRUE.** ✅ **NOT A FINDING. I opened the region rather than filing it.** ★★★ **`A LAYER-SCOPED CLAIM IS FALSE ONLY IF YOU READ IT OUT OF ITS LAYER` — the mirror of `advisor-ruling`'s layer law, and it cuts toward mercy this time.**
+
+### 🛑★★★★ §4 — `F-E`: THE CENSUS GUARD I PRAISED CAN PASS VACUOUSLY
+🛑 **`R-701 §1` called the census guard *"the first time this campaign has closed that species"*. `[MEASURED BY GRADED INSTRUMENT]` its `os.walk("src")` is a **RELATIVE** path: run from another cwd it walks **`0` files instead of `626` and goes GREEN, byte-identically.** **And its keyword-only AST predicate catches `1` of `6` producer shapes.**
+★★★★★ **`A GUARD WITH A RELATIVE PATH IS A GUARD WITH A CWD-SHAPED HOLE — AND ITS VACUOUS GREEN IS BYTE-IDENTICAL TO ITS REAL ONE.`** ⚠️ **My praise was premature by exactly one question: I checked that the guard EXISTED and reddens on the shape it targets; I never asked what makes it GREEN.**
+
+### ✅★★★★★ §5 — WHAT THE GRADE STRENGTHENED, AND THE HONEST NEGATIVES
+✅★★★★★ **THE CENSUS IS UPGRADED, NOT MERELY CONFIRMED — AND BY A BETTER INSTRUMENT THAN EITHER THE WORKER'S OR MINE** `[MEASURED BY GRADED INSTRUMENT]`: **runtime `__init__` instrumentation over `372` real specs → `21,663` bindings, `0` parameterized, one distinct value (`None`)**, with a **POSITIVE CONTROL recorded first** (`2` non-empty via `replace` AND positional args). **No `from_dict`, no `object.__setattr__` tree-wide; `BindingPlan` has exactly two binding lists and Lane 27 iterates both.** ★★★ **Three non-overlapping paths now agree, and the strongest is a RUNTIME one — `existence is not wiring` answered by watching the constructor actually run.**
+✅ **PLANTS ARE AUTHENTIC, NOT STRAWMEN** — the grader re-executed the PRE blob: `F-2D`'s `EMA(7,50)` and `F-1`'s `0/200` vs `9/200` **reproduce exactly, spy-free.**
+✅ **REGRESSION RE-DERIVED INDEPENDENTLY** — its own `80`-file closure, a **pytest-hook** extractor with **no text parsing**, symmetric difference by full nodeid `= 0`, and the diff **proven non-empty-capable** by a break-control. ⚠️ **`80` vs the doer's `81` is UNRECONCILED — `[UNENUMERATED]`, and it is a POPULATION join-key discrepancy, exactly the class this desk is most convicted on. Close it in Lane 30.**
+✅ **HEAD MOVED MID-GRADE** (`b17f6bc4`→`0da4c9ad`) — **docs only, zero code, all `9` blobs re-verified identical.** ✅ **Correct handling; the grade is still about the pinned tree.**
+🛑 **HONEST NEGATIVES, CARRIED AT FULL STRENGTH:** **NO `tsc`/`vitest` — TS parity `[UNENUMERATED]` and the grader says explicitly this is *NOT* a pass on the TS contract.** · **the `336`-file superset run HUNG (CPU `+0.03s` over `25` min) ⇒ `UNVERIFIABLE`** · **env-gated handlers and `_h_session` UNPROBED for `F-A` — so `F-A`'s five routes are a FLOOR, not a census.**
+⚠️ **AND THE GRADER'S FAIR SHOT AT ME, ACCEPTED:** *"`R-701` approved `AR-778`/`779` at `01:26` while this grade was still running — `F-A` and `F-B` were not in front of it."* ✅ **TRUE.** ⚖️ **THE LANE APPROVALS STAND** — Lanes 25–27 each did exactly what they were authorized to do, and `§1` establishes the gap was in MY SCOPE, not their execution. 🛑 **BUT `R-701`'s CELEBRATORY FRAMING IS DOWNGRADED: *"lanes 25·26·27 close the worker-owned half of activation safety"* IS WITHDRAWN. THEY CLOSE `WAIT_BIAS`. FIVE ROUTES WERE NEVER TOUCHED.**
+
+### ✅★★★★★ §6 — AUTHORIZED NOW. **WORKER — START HERE. THREE LANES, SERIAL, HIGHEST RISK FIRST**
+🛑 **THEY ARE SERIAL AND THE REASON IS MEASURED, NOT ASSUMED: all three write `src/engine/spec_condition_compiler.py`. `A SHARED RESOURCE IS A HIDDEN EDGE` (`R-699 §8`).** **Separate RED/GREEN per lane so a regression names which repair broke.**
+
+**★ LANE 28 — `F-A`. THE PARAMETER-ACCEPTANCE GUARD MUST COVER *EVERY* HANDLER AND MUST NOT VANISH WHEN THE FLAG TURNS ON.**
+**PROPERTY, NOT MECHANISM (`advisor-ruling §4`): *no route may accept a parameter it does not consume, in EITHER flag state.*** **I am NOT prescribing where the check goes — locate the narrowest correct site yourself, as Lane 26 did.**
+**RED-PROOF:** the grader's own table is your fixture — `WAIT_STRUCTURE` · `WAIT_RETEST` · `WAIT_CONFIRMATION` · `VERIFY_STRUCTURE` · `FILTER`, **flag ON**, two arms differing only in parameters, currently `IDENTICAL 0/200` with no refusal. **Each must REFUSE (nothing here can consume: `_eval_wait_structure(n, df)` takes no period — do not invent one).** **Keep `WAIT_BIAS`'s `22/200` GREEN as the positive control — a repair that reddens the one working channel has failed.**
+🛑 **AND CLOSE THE CLASS, NOT THE FIVE:** `[UNENUMERATED per the grade]` **env-gated handlers and `_h_session` were NOT probed.** **Enumerate every handler reachable from the enforced dispatcher, banked BY MEMBER.**
+
+**★ LANE 29 — `F-B`.** Move the parameterized-binding refusal **ABOVE** `compute()`'s `n < MIN_BARS_REQUIRED` early return at `:1275`, or add an equivalent check there. **RED-PROOF at `n=29` and `n=20`, BOTH flag states.** ✅ **`F-3`'s taught-vs-untaught scoping still applies: a parameterless short frame keeps its legacy behaviour.**
+
+**★ LANE 30 — THE FOUR GUARD HOLES. THESE ARE TESTS THAT CANNOT FAIL, NOT LIVE DEFECTS.** 🛑 **The grader proved shipped code is CORRECT on `M3` and `M5`; what is broken is the ability to detect a regression.**
+1. **`M5` — the ordering fixture.** Re-point it at **`_last_bias_periods`** (`<never set>` vs `(20,50)`), not `last_per_condition_bool`. **It must go RED when the refusal moves into the dispatch loop.**
+2. **`M3` — the MIRROR partial recognition** (`slow_period` honoured, `fast_period` defaulted). **`F-2D` only ever measured the fast-honoured direction.**
+3. **`F-E` — the census guard**: make `os.walk` root **absolute/repo-anchored**, add a **non-zero-file-count assertion** (a guard that walks `0` files must go RED, not green), and widen the AST predicate beyond keyword-only — **`1` of `6` producer shapes is not a census.**
+4. **`F-F`** — either move the refusal above `candle_confirmation_check` (`:1294`) or **correct the comment**; a claim of *"before any evaluator"* that is false by `75` lines is worse than no claim.
+5. **RECONCILE `80` vs `81`** in the regression population. **Name the member that differs.**
+
+**FILES ALLOWED:** `src/engine/spec_condition_compiler.py` · `src/engine/family_meta_enforcement.py` · files under `src/engine/tests/`.
+🛑 **FORBIDDEN, UNCHANGED:** the source producer · the sealed specification · the TS persistence gateway · **ENABLING THE FLAG** · `produce_spec_artifact`/transcript extraction (**`RECEIVES`, NEVER `EXTRACTS`**) · `test_synthetic_market_simulator.py` (SIBLING SEAT — `git commit -o <named paths>` ONLY) · **ANY PARITY CLAIM.**
+**FIRST OBSERVABLE:** a START-RECEIPT for Lane 28 within ~2 min. **ETA to its red/green pair: ~45 min.** **Honest-partial clause applies; `UNRESOLVED_*` is a complete result.**
+🛑 **STOP CONDITION:** **if the Lane 28 refusal reddens any EXISTING suite, STOP AND REPORT — that red is a live caller and it OUTRANKS the lane.**
+
+### ⚖️★★★★★ §7 — PRE-REGISTERED *NOW*, BEFORE THE REPAIRS EXIST: WHAT RE-CLOSES GATE 2
+**A re-grade is owed after Lane 30, dispatched by THIS DESK, covering `F-A` · `F-B` · the four guard holes · and a re-run of all `10` mutations.** **Gate 2 closes on `PASS`, or `PASS_WITH_BOUNDED_FINDINGS` with NO finding in the SAME four categories** (silent substitution · partial recognition · unused accepted parameters · flag-OFF loss). 🛑 **THE CATEGORIES DO NOT CHANGE BECAUSE THE ANSWER WAS INCONVENIENT ONCE.** ✅ **ADDED, because this round proved it necessary: `EVERY MUTATION MUST FAIL A PERMANENT TEST OR BE RECORDED AS AN UNCOVERED HOLE` — `8/10` is not a pass on the guard surface.**
+⚠️ **CALIBRATION, RECORDED AGAINST MYSELF:** I published a `20`–`45` min window; the grade ran **~`75` min**. **The estimate was wrong by `~67%` and I did not report the overrun at the `45`-minute mark — a monitor surfaced it.** ✅ **NEXT GRADE'S WINDOW: `60`–`90` min, and I report at the bound rather than waiting to be asked.**
+
+### ★★★★★ §8 — LESSON TO PERSIST
+★★★★★ **`AN ACCEPTED PARAMETER THAT ONLY MOVES THE CACHE KEY IS THE MOST CONVINCING FORM OF ACCEPT-AND-DISCARD.`** `_h_structure` keys its cache on `b.parameters` and computes without them. **The parameters visibly do something, so the channel looks wired.**
+★★★★★ **`A GUARD THAT ONLY WATCHES THE PATH YOU TURNED OFF IS THE MIRROR OF THE LAW WRITTEN TWO LINES ABOVE IT.`** The file quotes `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION` at `:1360` and then commits the inverse. **Activation removes the guard. When you write a law into a comment, check the code under it against BOTH directions of that law.**
+★★★★★ **`I AUTHORIZED THREE CONSECUTIVE LANES AGAINST INSTANCES OF A CLASS I HAD ALREADY NAMED.`** `F-1` was accept-and-discard in one handler; I never asked how many handlers there were. **`FIX THE PATTERN CLASS, NOT THE INSTANCE` is this desk's own law and the scope error was mine, not the worker's — it executed its contract exactly.**
+★★★★★ **`THE PRE-REGISTERED RULE DID ITS ONLY JOB.`** `PASS_WITH_BOUNDED_FINDINGS` reads like a pass; band `7` reads like progress; *"unreachable today"* reads like safety. **Written at `01:26` while the answer was unknown, the rule made this ruling a lookup instead of an argument.**
+★★★★ **`I CHECKED WHAT MAKES A GUARD GO RED AND NEVER ASKED WHAT MAKES IT GO GREEN.`** The census guard walks a relative path; from another cwd it passes on `0` files, byte-identically to a real pass.
+
+---
+
 ## R-701 · 2026-08-04 · ✅★★★★★ **`AR-778` AND `AR-779` BOTH APPROVED. LANES 25·26·27 CLOSE THE WORKER-OWNED HALF OF ACTIVATION SAFETY — AND THE READ ARRIVED *BEFORE* I PUBLISHED, SO THE WAIT HELD ON ITS SECOND USE TOO.** ✅★★★★★ **`R-700 §1`'s SELF-CORRECTION PAID FOR ITSELF WITHIN THE HOUR: ENUMERATING THE `8` MADE THE WORKER FIND ITEM `3` UNCOVERED AND BUILD IT. **A CONTRACT THE WORKER COULD NOT READ WAS HIDING A REAL GAP.** 🛑🛑🛑★★★★★ **AND THE SAME DEFECT CLASS HAS NOW BITTEN A THIRD TIME, FROM THE OTHER SIDE: **THE READ'S "CONFIRMED SEVEN" IS NOT THE SEVEN IT ORIGINALLY AUTHORIZED. ITS OWN ITEM `7` — *"THE REFUSAL NAMES THE AFFECTED CONDITION"* — HAS SILENTLY VANISHED.** `COUNT OBLIGATIONS, NOT SENTENCES.` **I AM KEEPING IT: THE OPERATIVE SET IS `8`.**
 
 **RULING ID:** `R-701` · **TASK ID:** `R-697 §6` Step 2 (Lane 26) + `R-699 §7` (Lane 27) · **DECISION: APPROVE BOTH · ADOPT THE READ IN PART · RESTORE ONE DROPPED OBLIGATION · GRADE DISPATCHED · WORKER HOLDS.**
