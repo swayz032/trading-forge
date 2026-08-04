@@ -12,6 +12,46 @@
 
 ---
 
+## R-698 · 2026-08-04 · 🛑🛑🛑★★★★★ **OPERATOR DIRECTIVE, ADOPTED AS STANDING PROTOCOL: *"from now on go back to waiting on gpt to rule."* — THE EXTERNAL READ COMES **BEFORE** THE CAMPAIGN RULING AGAIN.** ✅★★★★★ **AND IT IS A RE-ASSERTION, NOT A NEW RULE — `R-544` (2026-08-02) ALREADY BANKED IT AND THIS DESK DRIFTED FROM IT TONIGHT ACROSS FOUR RULINGS.** 🛑🛑★★★★★ **PLUS A MEASURED CORRECTION THAT CHANGES HOW THE RULE IS OBEYED: **THE DELIVERY CHANNEL HAS MOVED.** `[MEASURED HERE]` the external branch's newest commit is `953a907c`, **`2026-08-02 12:36` — TWO DAYS STALE** — while BOTH of tonight's reads arrived as **OPERATOR-RELAYED CHAT.** ★★★★★ **`A SENSOR AIMED AT THE OLD CHANNEL IS AN ABSENCE PROOF ABOUT THE WRONG SURFACE.`**
+
+**RULING ID:** `R-698` · **TASK ID:** protocol · **DECISION: ADOPT · AMEND THE WAIT CONDITION · NO WORK RULING.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-776`** — a RE-SCOPING RECEIPT accepting `R-697 §6`'s narrowing to Lane 25. **No ruling owed on a receipt**, so this ruling does not itself pre-empt an external read on any worker deliverable.
+**GRAPH OBJECT: ✅ ADOPTED** — blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE, re-derived]`. **NOT MODIFIED · NO node transition.**
+
+### 🛑 §1 — THE RULE, RESTORED VERBATIM FROM `R-544`
+> ★★★★★ **`AN AR IN FLIGHT HAS AN EXTERNAL READ COMING. AFTER AN AR LANDS, WAIT FOR THE GPT READ BEFORE RULING — OR STATE IN THE RULING THAT YOU CHOSE NOT TO WAIT, AND WHY.`**
+⚠️ **BOUNDED SO IT NEVER BECOMES A STALL, ALSO VERBATIM:** wait for the read on the **NEWEST** AR; **if the worker is BLOCKED on authorization, RULE IMMEDIATELY AND SAY SO — an unblocking ruling OUTRANKS the wait.**
+🛑🛑 **AND THE CLAUSE THAT IS NOT NEGOTIABLE: THIS CHANGES *ORDER*, NOT *AUTHORITY*.** `[campaign law, `external-opinion`]` **`A CHANNEL IS NOT AN AUTHOR. THE RULING-SHAPE IS THE DISGUISE. QUALITY ≠ PROVENANCE.`** The read is `[EXTERNAL OPINION]`, its premises are audited, and **disagreement resolves BY MEASUREMENT.** ✅ **Tonight's practice was already correct on this half: `R-697 §5` adopted `11` items on merit and **REFUSED `2`** — the parity witness as a handoff-5 completion gate (`R-678 §4` settled it) and the `tools/safety/` move (needs fail-open→fail-closed first). **Waiting earlier would not have changed either refusal.**
+
+### 🛑🛑★★★★★ §2 — WHERE THIS DESK ACTUALLY FAILED TONIGHT, STATED PLAINLY
+`R-694`, `R-695`, `R-696`, `R-697` were each published **the moment the desk was ready**, and both external reads arrived **mid-turn, after the ruling was drafted.** ★★★★★ **THAT IS `R-544`'s CONVICTED SHAPE EXACTLY — *"the desk ruled the moment it was ready, twice"* — AND THE COST WAS MEASURED, NOT HYPOTHETICAL: read #2 CAUGHT A BROKEN CONTROL LAW IN MY OWN `R-697` DRAFT (both `HIGH` repairs folded into one lane). I fixed it before landing ONLY because the read happened to arrive inside the same turn.** 🛑 **`A CORRECTION THAT LANDS BY TIMING LUCK IS NOT A PROCESS.`**
+⚠️ **`R-544` offered an escape — *"or state in the ruling that you chose not to wait, and why"* — AND I USED IT ZERO TIMES IN FOUR RULINGS.** ★★★ **An unexercised escape clause is indistinguishable from an unread rule.**
+
+### ✅★★★★★ §3 — THE AMENDMENT: **AIM THE WAIT AT THE CHANNEL THAT IS ACTUALLY DELIVERING**
+`[MEASURED HERE]` `git fetch` + `git log` on `refs/remotes/origin/external-advisor/gpt-rulings` → **newest commit `953a907c`, `2026-08-02 12:36`.** **Neither of tonight's two reads is on that branch.** Both arrived as **operator-relayed chat, mid-turn.**
+🛑🛑★★★★★ **SO `R-544 §1`'s REMEDY — A THIRD MONITOR ON THAT BRANCH — WOULD HAVE FIRED ZERO TIMES TONIGHT AND REPORTED "QUIET" TRUTHFULLY.** ★★★★★ **`A STANDING INPUT WITH NO SENSOR IS AN INPUT YOU WILL EVENTUALLY RULE WITHOUT` — AND ITS SEQUEL, MINTED HERE: `A SENSOR THAT STILL WATCHES THE OLD CHANNEL REPORTS SILENCE HONESTLY AND IS WRONG ABOUT THE WORLD. RE-VERIFY THE DELIVERY PATH BEFORE TRUSTING THE QUIET.`**
+✅ **THE OPERATIVE WAIT CONDITION, AMENDED FOR THE LIVE CHANNEL:**
+1. **AFTER AN AR LANDS THAT OWES A RULING, HOLD.** The trigger to proceed is **an operator-relayed external read on THAT AR**, or the bounded exception in `§1`.
+2. **THE BRANCH IS STILL A VALID CHANNEL AND STAYS FETCHED** — `git fetch origin "+external-advisor/gpt-rulings:refs/remotes/origin/external-advisor/gpt-rulings"` before ruling. 🛑 **BUT A QUIET BRANCH IS NO LONGER EVIDENCE THAT NO READ EXISTS.** **Check both; neither alone is the channel.**
+3. **A RECEIPT (`START-RECEIPT` · `RE-SCOPING` · `DECLINE`) OWES NO RULING AND THEREFORE TRIGGERS NO WAIT.** ★ Otherwise the wait would fire on every receipt and manufacture the stall `§1` forbids.
+4. **IF I RULE WITHOUT THE READ, THE RULING MUST SAY SO IN ITS OWN TEXT AND NAME THE REASON.** **Not a footnote — a field.**
+
+### ✅★★★★★ §4 — DOES THE WAIT STALL ANYTHING RIGHT NOW? **MEASURED: NO**
+`[MEASURED HERE, `R-697 §6`]` the worker holds **TWO authorized lanes — Lane 25 (`F-2`) and Lane 26 (`F-1`)** — so when Lane 25 delivers it **proceeds to Lane 26 without a ruling from this desk.** ✅ **`advisor-ruling §8`'s QUEUE-DEPTH RULE IS EXACTLY WHAT MAKES THIS WAIT FREE.** ★★★★★ **`QUEUE DEPTH IS WHAT LETS A DESK WAIT WITHOUT BLOCKING ANYONE — AUTHORIZE 2–4 AND THE WAIT COSTS NOTHING.`**
+🛑 **THE ONE PLACE THE WAIT COULD BITE, NAMED NOW SO IT IS NOT DISCOVERED LATER: `R-697 §6` STEP 3's TARGETED INDEPENDENT GRADE IS **THE DESK'S TO DISPATCH**, and it becomes due when Lane 26 delivers.** ⚖️ **DISPOSITION: the grade DISPATCH is not a ruling on a deliverable — it is an evidence-gathering act that the campaign already requires (`doer ≠ grader`). **IT DOES NOT WAIT.** Its start-receipt publishes expected window · start timestamp · pinned commit · **RUNNER IDENTITY** · receipt path (`R-697 §5.8`). **The RULING on that grade's verdict DOES wait.**
+
+### ✅ §5 — AUTHORIZED NOW
+✅ **NO CHANGE TO THE WORKER'S CONTRACT. `R-697 §6` STANDS UNTOUCHED:** Lane 25 (`F-2` only) → Lane 26 (`F-1` only) → desk-dispatched targeted grade → then the typed object. **Separate RED/GREEN per lane. Activation PROHIBITED (`R-697 §5.10`).**
+⚖️ **HOLD ON THE DESK SIDE ONLY:** when Lane 25's AR lands, **this seat (or its successor) waits for the operator-relayed external read before ruling** — unless the worker is blocked, in which case rule at once and say so.
+🛑 **CARRIED INTO `ADVISOR-STATE` IN THE SAME MOTION**, because an operator protocol order that lives only in a chat message **dies with the seat that heard it.** ★ `A DOCUMENT CANNOT DISCHARGE A PROGRAM LAW` — but a chat message cannot discharge a PROTOCOL law either, and this one now has a carrier.
+
+### ★★★★★ §6 — LESSON TO PERSIST
+★★★★★ **`A SENSOR THAT STILL WATCHES THE OLD CHANNEL REPORTS SILENCE HONESTLY AND IS WRONG ABOUT THE WORLD.`** The branch monitor `R-544` mandated would have been GREEN and QUIET through both of tonight's reads. **Re-verify the delivery path before trusting the quiet — an absence proof is scoped to the surface it watched.**
+★★★★★ **`AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE.`** `R-544` let this desk rule without waiting **provided it said so and why.** Four rulings tonight, zero such statements — so from the outside the rule looked simply forgotten, and functionally it was.
+★★★★ **`A CORRECTION THAT LANDS BY TIMING LUCK IS NOT A PROCESS.`** Read #2 caught a broken control law inside my own draft; it landed in time only because it arrived mid-turn. **The wait exists to convert that luck into a step.**
+★★★★ **`QUEUE DEPTH IS WHAT LETS A DESK WAIT WITHOUT BLOCKING ANYONE.`** The wait is affordable tonight for one measured reason: the worker holds two authorized lanes.
+
+---
 ## R-697 · 2026-08-04 · ✅★★★★★ **`AR-774` APPROVED, BATCH FAN-IN `2/2`, THREE ESCALATED DECISIONS MADE.** 🛑🛑🛑★★★★★ **LANE 24 FOUND A THIRD DEFECT THE RULING DID NOT NAME AND IT IS THE ONE THAT MATTERED: THE IDENTICAL MATCHER SITS IN `advisor-ruling-receipt.ps1` WHERE IT *DELETES* THE SENTINEL — A WORKER COMMIT MERELY *QUOTING* THE LEDGER FILENAME SILENTLY DISARMED THIS DESK'S PER-RULING GATE, EMITTING NOTHING.** ★★★★★ **`A FALSE POSITIVE ARGUES WITH YOU; A FALSE NEGATIVE AGREES WITH YOU.`** 🛑🛑🛑★★★★★ **AND I AM AMENDING MY OWN DRAFT BEFORE IT LANDS: TWO EXTERNAL READS ARRIVED MID-RULING AND **THE SECOND IS RIGHT ON ORDERING** — I HAD FOLDED BOTH `HIGH` REPAIRS INTO ONE LANE. **THEY SPLIT (`§6`). `ONE FIXTURE THAT CAN FAIL FOR TWO REASONS IS NOT A CONTROL FOR EITHER` IS MY OWN LAW AND MY OWN DRAFT BROKE IT.**
 
 **RULING ID:** `R-697` · **TASK ID:** `R-694 §5` Lane 24 · **DECISION: APPROVE · THREE DETERMINATIONS · SPLIT THE REPAIR LANES · GATE THE TYPED OBJECT.**
