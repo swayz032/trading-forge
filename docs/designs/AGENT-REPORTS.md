@@ -4,6 +4,61 @@
 
 ---
 
+## AR-745 · 2026-08-03 · ✅★★★★★ **`R-680 §4 LANE 5` DELIVERED — **RED FIRST, THEN GREEN, AND THE GUARD SHIPS WITH ITS OWN MUTATION CONTROL SO ITS RED PATH CANNOT DECAY.** `[MEASURED HERE]` **WITH ONE CACHE SLOT HOISTED TO INSTANCE LEVEL: `3 failed, 2 passed`. WITHOUT IT: `5 passed`. REGRESSION: `103 passed` across the three spec-compiler suites.**** ✅★★★★ **BOTH CONTROLS FIRED WITH THEIR VALUES PRINTED, NOT MERELY DECLARED: POSITIVE CONTROL — the two fixtures differ on **`7`** bar-slots, so nothing passes vacuously · MUTATION CONTROL — the hoist is observable on **`5`** bar-slots.** 🛑 **AND THE THING I MOST WANT ON THE RECORD IS A LIMIT, NOT A RESULT: **THE TEST EXERCISES `2` OF THE `10` CACHE CARRIERS.** `7` single-slot caches are NEVER TOUCHED BY IT. **A GREEN HERE IS A STATEMENT ABOUT `wait_structure` AND `wait_bias_cache`, AND ABOUT NOTHING ELSE** — the `AR-737 §5` over-generalisation is exactly the mistake available to me here, and I am declining it in advance.**
+
+**TASK:** `R-680 §4` (a) RED under a deliberate hoist · (b) GREEN on unmodified code · (c) what it converts and what it does not reach.
+**FILES:** **ONE new test file — `src/engine/tests/test_compute_call_isolation.py`.** 🛑 **`src/` WAS NOT EDITED TO PRODUCE THE RED** — the hoist lives in a scratchpad pytest plugin. The sibling's dirty `test_synthetic_market_simulator.py` remains untouched by me, sixth consecutive report.
+
+### 🛑 §1 — (a) THE RED, VERBATIM
+**Hoist applied globally via a scratchpad plugin (`-p hoist_plugin`) that monkeypatches `_eval_wait_structure` to memoise on `self` instead of in the per-call `ctx` — the exact defect shape `R-679 §2` describes.**
+```
+$env:PYTHONPATH="<scratchpad>;$env:PYTHONPATH"
+python -m pytest src/engine/tests/test_compute_call_isolation.py -q -p hoist_plugin
+
+E   AssertionError: entry_long: the result for seed=99 depends on what was computed before it
+FAILED ...::test_second_compute_on_a_reused_instance_matches_a_fresh_instance
+FAILED ...::test_reused_instance_introspection_reflects_the_second_call_not_the_first
+FAILED ...::test_call_order_does_not_change_the_answer
+3 failed, 2 passed in 0.68s
+```
+✅★★★ **THE `2` THAT PASSED UNDER THE HOIST ARE THE TWO THAT SHOULD: the positive control (the fixtures still differ — the hoist cannot change that) and the mutation control (which ASSERTS the leak is visible, so the hoist makes it MORE true). **A mutation that flipped all five would have meant my controls were measuring the mutation rather than the property.**
+
+### ✅ §2 — (b) THE GREEN, AND THE HONESTY I PRE-FLAGGED IN `AR-744 §2`
+```
+python -m pytest src/engine/tests/test_compute_call_isolation.py -q
+    [POSITIVE CONTROL] fresh-instance signals differ on 7 bar-slots across ('entry_long','entry_short')
+    [MUTATION CONTROL] with wait_structure hoisted to instance level, the second compute()
+                       disagrees with a fresh instance on 5 bar-slots
+    5 passed in 0.90s
+
+python -m pytest test_spec_condition_compiler.py test_composition_bundle_dispatch.py \
+                 test_family_meta_enforcement.py -q          ->  103 passed in 1.01s
+```
+⚠️ **ACCEPTANCE TERM I CANNOT MEET LITERALLY, NAMED RATHER THAN QUIETLY SATISFIED:** `§4` asked for *"the RED then the GREEN from the **same unchanged command**."* **THEY ARE NOT THE SAME COMMAND — they differ by `-p hoist_plugin` and by `PYTHONPATH`.** ✅ **That is unavoidable: the hoist must be present for one run and absent for the other, so SOMETHING must differ. I made the difference as small and as visible as I could — one flag, reverted by deleting it — and I am stating it rather than reporting two runs as identical.** ★★★ **`AN ACCEPTANCE TERM I CANNOT MEET GETS NAMED, NOT SILENTLY DISCHARGED` — `count-obligations`.**
+
+### ✅★★★★ §3 — THE ADDITION I DECLARED BEFORE WRITING (`AR-744 §1`), NOW SHIPPED
+✅ **`test_isolation_guard_detects_a_hoisted_cache` is a PERMANENT mutation control in the same file:** it applies the hoist under `monkeypatch` and asserts the leak **IS** observed, failing loudly if hoisting a cache ever stops being detectable.
+★★★★★ **WHY IT EARNS ITS PLACE: `§4(a)`'s scratchpad RED proves sensitivity ONCE, tonight, on this machine — and then it is gone. `red-path-decay` says red paths decay. **This makes the sensitivity proof re-run on every future invocation.** It is the difference between *"this guard could fail in August"* and *"this guard can fail."*
+🛑 **STILL ONE DELETION IF THE DESK WANTS ONLY THE ORDERED FORM.** I flagged it before writing, not after.
+
+### 🛑🛑★★★★★ §4 — (c) WHAT THIS CONVERTS, AND WHAT IT DOES **NOT** REACH
+✅ **CONVERTED FROM STRUCTURAL TO BEHAVIOURAL:**
+1. `AR-743 §1`'s *"`ctx` lifetime = ONE `compute()` call"* — **now demonstrated by behaviour**: a second `compute()` on a reused instance returns what a FRESH instance returns for the same data. **The oracle is a fresh instance, never a stored array** (`hardcoded-test-copy`).
+2. `AR-743 §2`'s *"`4` instance attributes are reset inside `compute()`"* — **behaviourally demonstrated for `last_per_condition_bool`.**
+3. **Order-independence**, which `R-679 §4` named as the classic signature of a state-carrying defect, is now asserted rather than argued.
+🛑 **WHAT IT DOES *NOT* REACH — and the first item is the one the ruling forbade me to blur:**
+1. 🛑 **IT IS **NOT** THE CACHE-LEAK RED-PROOF, AND I DO NOT REPORT IT AS ONE.** `R-679 §1` stands: that defect is **UNREACHABLE** until a real varying parameter exists. **This tests a weaker property that happens to be provable today.**
+2. 🛑🛑 **COVERAGE — `2` OF `10` CARRIERS.** The spec exercises `wait_structure` and `wait_bias_cache`. **`fvg_signal` · `wait_retest` · `wait_structure_levelzone` · `population_a_atr` · `population_a_level_cache` · `bias_result` · `confirmation_result` · `sweep_result` · `mss_result` are NOT exercised.** **The guard would not notice a hoist in any of them.**
+3. ⚠️ **THE `_wire1_*` COUNTERS WOULD FAIL A TEST LIKE THIS, AND I DID NOT WRITE ONE.** `AR-743 §4` measured that `_wire1_bias_bars`/`_wire1_structure_bars` are **not** reset in `compute()`. **My file asserts nothing about them — deliberately, because `R-680 §4` forbids touching them.** 🛑 **SO A GREEN FILE HERE COEXISTS WITH A KNOWN UNRESET ATTRIBUTE. Saying that plainly is the point: the green is scoped, not clean.**
+4. `[UNENUMERATED]` the **enforced** dispatch path (`TF_FAMILY_META_ENFORCED`) and the **composition bundle** — the test runs the default flag-OFF path only.
+5. `[UNENUMERATED]` synthetic data, `n=200`, one symbol, one timeframe. **The surface my counts cannot see: any state carrier outside `SpecConditionStrategy` — the backtester, the walk-forward loop, or module-level globals in the indicator layer.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`APPROVAL_REQUESTED`.** `(a)` RED and `(b)` GREEN delivered; `(c)` stated with its limits.
+**NEXT SMALLEST TASK (ONE):** **extend the fixture spec to cover the remaining `7` cache carriers** — same file, same pattern, one spec per family, each with its own hoist mutation. It closes `§4.2`, which is the largest hole in what I just shipped, and it needs no parameter field.
+
+---
+
 ## AR-744 · 2026-08-03 · ⏳ **START-RECEIPT — `R-680 §4 LANE 5`, CONVERT THE STRUCTURAL PROOF INTO A BEHAVIOURAL ONE. SAME SEAT.**
 
 **TASK:** `R-680 §4` — a test calling `compute()` twice on ONE instance with different data, asserting the second carries nothing from the first · **(a)** RED under a deliberate cache hoist, demonstrated in a **scratchpad copy** · **(b)** GREEN on unmodified code · **(c)** which of `AR-743`'s claims it converts, and which it does not reach.
