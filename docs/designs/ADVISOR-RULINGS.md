@@ -12,6 +12,85 @@
 
 ---
 
+## R-695 · 2026-08-04 · ✅★★★★★ **THE INDEPENDENT GRADE LANDED: `PASS_WITH_BOUNDED_FINDINGS`, VERIFIED BAND `7`. HANDOFF `6` IS NOW `[MEASURED BY GRADED INSTRUMENT]` AND `R-693 §6`'s GATE LIFTS BY ITS OWN PRE-REGISTERED TERMS.** 🛑🛑🛑★★★★★ **AND THE GRADER EARNED ITS KEEP TWICE OVER — I RE-VERIFIED BOTH `HIGH` FINDINGS AT THE EXECUTABLE LINE AND **BOTH ARE REAL**: `F-1` THE WIRED-HTF PATH **ACCEPTS THE TAUGHT PERIODS AND RETURNS BEFORE READING THEM**, WITH THE AUTHOR'S OWN WITNESS GOING **GREEN** WHILE THE ARMS DIFFERED `0/200` · `F-2` AN **UNRECOGNISED PARAMETER KEY IS SILENTLY REPLACED BY THE ENGINE DEFAULT** — inside the very function whose docstring says it never does that.** ★★★★★ **`THE ARGUMENT THAT ARRIVED IS NOT THE ARGUMENT THAT WAS READ.`**
+
+**RULING ID:** `R-695` · **TASK ID:** Lane 21 independent grade @ `dd2371af` · **DECISION: APPROVE THE GRADE · LIFT THE GATE · AMEND THE HANDOFF-5 CONTRACT.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-772`** (`7693d721`, `00:22`) — a START-RECEIPT for `R-694 §7` Lane 23, which the worker has batched with Lane 24 (fan-in target `2/2`). **It does not bear on this ruling and no ruling is owed on it.**
+**GRAPH OBJECT: ✅ ADOPTED** — `V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling]`. **NOT MODIFIED · NO node transition** (`R-648`'s vertical slice is the active scheduler, per `R-694`).
+**TREE:** campaign worktree `wt-h1-wave4-20260712`. 🛑 **`runtime-production` `[UNENUMERATED]`.**
+
+### ✅★★★★★ §1 — THE ARTIFACT, NOT THE COMPLETION SIGNAL
+`[MEASURED HERE]` receipt `docs/designs/GRADE-LANE21-PARAMETER-TRANSMISSION-2026-08-04.md` — **`32,189` B (was `2,051`), `## VERDICT` POPULATED, `DISPOSITION: PASS_WITH_BOUNDED_FINDINGS`, `VERIFIED band 7`, plus an ADDENDUM written after the verdict commit.** Commits **`eee02504`** and **`e8d90c48`** — `git cat-file -t` → **`commit`** for both. ✅ **`A COMPLETION SIGNAL IS NOT A RESULT` — I opened the file rather than trusting the agent's summary.**
+✅ **BAND `7`, NOT `8`, AND THE GRADER SAID WHY** — the refusal surface is incomplete. **That is the honest band and I am not rounding it up.**
+
+### ✅★★★★★ §2 — THE GATE LIFTS, AND I AM HONOURING MY OWN PRE-REGISTRATION IN THE DIRECTION THAT HAPPENS TO SUIT ME
+`R-693 §6` gated handoff `5` implementation on **`PASS` or `PASS_WITH_BOUNDED_FINDINGS`**. **The verdict is `PASS_WITH_BOUNDED_FINDINGS`. THE GATE LIFTS.**
+★★★★★ **AND THE DISCIPLINE POINT, BECAUSE IT CUTS BOTH WAYS: `pre-register-criteria` is usually invoked to stop a desk LOOSENING a bar after an inconvenient answer. **THE MIRROR-IMAGE FAILURE IS TIGHTENING ONE AFTER A CONVENIENT ANSWER** — inventing a new condition now, because `6` findings arrived, would be exactly the goalpost-with-a-citation the law forbids. **The findings are folded into the NEXT contract (`§7`), NOT retro-fitted into the gate they did not gate.**
+✅ **HANDOFF `6` IS UPGRADED: `[MEASURED BY THE DOER, RE-RUN BY THIS DESK]` → `[MEASURED BY GRADED INSTRUMENT]`.** **`AR-769` IS NOW INDEPENDENTLY CERTIFIED** at band `7`, scoped to the claim in the receipt and no wider.
+🛑 **THE SLICE IS STILL AT HANDOFF `6` OF `7`. A CERTIFIED HANDOFF `6` IS NOT A COMPILED STRATEGY.** The producer end remains ABSENT; `PHASE-1 EXIT` still needs `BIND` + `FIDELITY` + `P0IG`. **Never report this grade as the breakthrough demonstration, and never as Phase-1 exit.**
+
+### 🛑🛑🛑★★★★★ §3 — `F-1` (`HIGH`) **CONFIRMED BY THIS DESK AT THE EXECUTABLE LINE**
+`[MEASURED HERE, `spec_condition_compiler.py`, read at the line]`:
+```
+790  wired_bars = 0
+791  if htf_trend is not None:
+...
+800      if wired_bars == min(n, len(htf_trend)) and wired_bars > 0:
+801          return out                     # fully wired — no proxy needed
+...
+805  # THE TAUGHT PERIODS ARE CONSUMED HERE — this is the line the campaign's parameter
+815  eff_fast = BIAS_EMA_FAST if fast_period is None else fast_period
+816  eff_slow = BIAS_EMA_SLOW if slow_period is None else slow_period
+```
+🛑🛑 **WHEN HTF IS FULLY WIRED, `:801` RETURNS **BEFORE** `eff_fast`/`eff_slow` EXIST. THE TAUGHT PERIODS ARE RECEIVED AS ARGUMENTS AND NEVER READ.**
+🛑🛑★★★★★ **AND THE COMMENT THAT SAYS OTHERWISE IS **BELOW THE EARLY RETURN**: `:805`'s *"THE TAUGHT PERIODS ARE CONSUMED HERE"* is true of the PROXY FALLBACK ONLY. **A READER WHO GREPS THAT COMMENT LEARNS THE OPPOSITE OF THE WIRED PATH'S BEHAVIOUR.** This is `R-690 §2`'s species again — **every architectural rule in this codebase is a comment** — and this time the comment is not merely unenforced, it is **actively misleading about the branch above it.**
+✅ **LIVENESS CONFIRMED INDEPENDENTLY:** `[MEASURED HERE]` `attach_htf_columns` is called by the real backtester at **`backtester.py:6736`** (`:6735` imports it); non-test callers = **that one site plus the definition**. **THE WIRED PATH IS LIVE, NOT HYPOTHETICAL.**
+🛑🛑🛑★★★★★ **THE PART THAT MATTERS MOST FOR HOW WE TEST: `[MEASURED BY GRADED INSTRUMENT]` the author's *"invoked-with-the-taught-periods"* witness goes **GREEN** on this path while the two arms differ on **`0/200`** bars and both arrays are all-True. **A WITNESS THAT ASSERTS THE CALL RECEIVED THE ARGUMENT CANNOT SEE THAT THE CALLEE DISCARDED IT.** ★★★★★ **MINTED: `THE ARGUMENT THAT ARRIVED IS NOT THE ARGUMENT THAT WAS READ. AN INVOCATION WITNESS IS NOT A CONSUMPTION WITNESS — ONLY A DIFFERING OUTPUT IS.`** ✅ **This is why the grader ran the property SPY-FREE and why that was the decisive act: every assertion in the author's file ran under a `monkeypatch` spy, so the question was unanswerable from inside it.**
+✅★★★★ **AND IT FOUND THE HOP NOBODY MEASURED: `entry_long` DIFFERS ON `4/200` BARS (`ARM_A` fires `4` entries, `ARM_B` `2`). THAT — not the `22/200` condition array — IS WHAT MAKES THE WORD *DECISIONS* DEFENSIBLE IN THE GRADED CLAIM.**
+
+### 🛑🛑🛑★★★★★ §4 — `F-2` (`HIGH`) **CONFIRMED BY THIS DESK. THE CAMPAIGN MINTED THE BLOCK CODE AND NEVER IMPLEMENTED IT**
+`[MEASURED HERE, `_resolve_bias_periods`, read at the line]`:
+```
+582  for key, default in (("fast_period", BIAS_EMA_FAST), ("slow_period", BIAS_EMA_SLOW)):
+583      if key not in params:
+584          resolved[key] = default
+585          continue
+```
+🛑🛑 **THE LOOP ITERATES ONLY THE TWO CANONICAL KEYS, AND `key not in params` TREATS **UNRECOGNISED** EXACTLY LIKE **ABSENT**.** So `{'period': 7}` — or `{'fast': 7, 'slow': 90}`, or `{'ema_fast': 7}` — yields **`(20, 50)`: THE ENGINE DEFAULTS, NO REFUSAL, NO ERROR, NO TRACE.** `[MEASURED BY GRADED INSTRUMENT]` all three key-shapes reproduce it, `0/200` bars differing.
+🛑🛑★★★★★ **AND THE DOCSTRING DIRECTLY ABOVE IT (`:573-578`) CLAIMS THE OPPOSITE:** *"REFUSES RATHER THAN SUBSTITUTES… it is never quietly replaced by a default. That distinction is the whole subject of the campaign's parameter-invention repair."* **THE FUNCTION WRITTEN TO STOP SILENT SUBSTITUTION PERFORMS SILENT SUBSTITUTION FOR ANY KEY IT DOES NOT RECOGNISE.**
+★★★★★ **THE ROOT CAUSE IS A TAXONOMY WITH NO RESIDUAL — MY OWN `advisor-ruling §4` LAW, VIOLATED IN CODE:** its categories are `{absent → default · present-and-usable → use · present-and-unusable → raise}`. **`PRESENT UNDER ANOTHER NAME` HAS NO CATEGORY, SO IT MIS-FILES AS `absent`.** 🛑🛑 **`R-684 §7.2` MINTED EXACTLY THE MISSING CODE — `unknown_parameter_key` (*"a key that cannot be canonicalized safely"*) — AND THE EVALUATOR DOES NOT IMPLEMENT IT.** ★★★ **`A BLOCK CODE IN A RULING IS NOT A BRANCH IN THE ENGINE.` The campaign has now made this exact class of error at BOTH ends: `battery/passage_ledger.py` called a built instrument *"not-yet-built"*, and here a ruling declared a refusal the code never learned.**
+🛑 **AND IT IS UNBOUNDED PRECISELY BECAUSE THE PRODUCER IS ABSENT: with no producer, THE KEY VOCABULARY IS UNFIXED. The first producer to emit `period` instead of `fast_period` gets engine defaults and a green test.** ✅ **THAT is why `F-2` must close BEFORE any producer lands, and the grader's recommendation is ADOPTED.**
+
+### ✅ §5 — `F-3`..`F-6`, RECORDED AT THE GRADER'S SEVERITIES, NOT RE-GRADED BY ME
+- **`F-3` MEDIUM** `[MEASURED BY GRADED INSTRUMENT]` `slow_period >= n-1` silently returns all-False — **the exact outcome `:811-814` says it exists to avoid.** `A MOVING FLOOR REFUSES NOTHING.` **Folded into `§7` as mandatory.**
+- **`F-4` MEDIUM** `direction="both"` gates the long/short split with hardcoded `EMA(20/50)` via a legacy cache the enforced path never populates (`:1388-1392`).
+- **`F-5` MEDIUM** **the direction half of the composite cache key has NO PATH TO RED** — the grader's `M11` mutation stayed green across `26` tests and all `11` `WAIT_BIAS` closure files (`275` tests). **Correct today, unguarded.** ★★★ **`A GREEN CHECK WITH NO PATH TO RED` is this campaign's own named defect and the grader found one inside our newest guard.**
+- **`F-6` LOW** identical-period reuse depends on tuple ordering nothing enforces; **the harness supplied the canonical `tuple(sorted(...))` that production does not.** ⚠️ **A FIXTURE THAT SUPPLIES CANONICAL FORM PRODUCTION DOES NOT IS TESTING A SHAPE THE ENGINE NEVER SEES.**
+
+### 🛑🛑★★★★★ §6 — SCOPE LIMITS ON THIS `PASS`. **NEVER QUOTE IT WIDER**
+1. 🛑🛑 **IT IS NOT A PASS ON THE TYPESCRIPT CONTRACT.** `[MEASURED BY GRADED INSTRUMENT — its own coverage section]` **no `vitest`, no `tsc`** — its sparse worktrees had no `node_modules`, and it **correctly declined to install into the shared tree with a live sibling present.** The Lane-20/TS numbers are **static-only or `[RELAYED]`.** ✅ **This hole is EXPECTED, not new: `R-678 §4` already made TS parity a later PROMOTION requirement, not a first-proof one. Recording it so nobody discovers it later and reads it as a concealed gap.**
+2. ✅★★★★ **DEFAULT-CONFIG BLAST RADIUS IS ZERO** — `[MEASURED BY GRADED INSTRUMENT]` **`TF_FAMILY_META_ENFORCED` IS DEFAULT `OFF`**, so *"enforced"* in the graded claim is accurate **and load-bearing**. **The `F-1`/`F-2` defects are on a path that a default-configured run does not take.** 🛑 **THAT IS NOT "HARMLESS" — `AN UNREACHABLE DEFECT IS A LOADED TRAP, NOT AN ABSENT ONE`, and the flag is what we are about to turn on.**
+3. ✅ **CAPTION RECONCILED, THREE-SOURCED:** the grader measured `35 failed / 1198 passed` where `AR-769` published `30 / 1203` (**same `1233` total**). `[MEASURED BY GRADED INSTRUMENT]` cause isolated — **exactly `5` tests require `docs/`, absent from its sparse checkout; `35 − 5 = 30`.** ✅ **And `AR-771` independently returned `30` on a `70`-file SUPERSET, and its `18` dead-API failures match the grader's. **THREE INSTRUMENTS, THREE DERIVATIONS, ONE NUMBER** — plus my own `Grep` confirmation of the `0` definitions makes the dead-API finding four-pathed.**
+4. ✅ **PIN INTEGRITY UNDER A MOVING HEAD:** `[MEASURED BY GRADED INSTRUMENT]` HEAD moved twice mid-grade (`c972172d` → `2aab4bfe`, four sibling commits including my `R-694`); it re-checked and **all four graded blobs are byte-identical at the pin.** ✅ **Shared tree never checked out or reset; mutation work ran in two private worktrees, since removed.** ★★★ **`A LIVE SIBLING MAKES EVERY MEASUREMENT PERISHABLE — THE FIX IS A RE-CHECK AGAINST THE PIN, NOT A FROZEN TREE.`**
+
+### ✅★★★★★ §7 — HANDOFF `5` CONTRACT AMENDED. **QUEUED, NOT INTERRUPTING**
+🛑 **THE WORKER IS MID-BATCH ON `R-694 §7` LANES 23+24 (`AR-772`, fan-in `2/2`). I AM NOT INTERRUPTING IT** — and Lane 23 is a genuine PREREQUISITE to handoff `5` (`R-679 §6.1`), so the ordering is already correct.
+**ON LANE 23/24 FAN-IN, HANDOFF `5` IS AUTHORIZED WITH THESE ADDED AS *MANDATORY*, NOT ADVISORY:**
+1. 🛑🛑 **`F-2` FIRST, AND IT IS THE GATE ON THE PRODUCER: IMPLEMENT `unknown_parameter_key`.** Any key in `b.parameters` that is not canonically recognised **REFUSES, NAMING THE KEY** — never silently defaults. **`engine defaults may NEVER substitute` (`R-684 §7.2`) becomes a BRANCH, not a docstring.** ✅ **Red-proof with `{'period':7}`, `{'fast':7,'slow':90}`, `{'ema_fast':7,'ema_slow':90}` — the grader's three shapes, which are now a regression corpus.**
+2. 🛑🛑 **`F-1`: THE WIRED-HTF EARLY RETURN MUST NOT SWALLOW SUPPLIED PERIODS.** Either consume them on that branch or **REFUSE**; a silent accept-and-discard is forbidden. 🛑 **AND THE WITNESS MUST BE ABLE TO SEE IT — `AN INVOCATION WITNESS IS NOT A CONSUMPTION WITNESS`. Assert on a DIFFERING OUTPUT, spy-free, on the wired path specifically.**
+3. 🛑 **`F-3`: the warm-up floor must REFUSE, not return all-False.** All-False is indistinguishable from *"the parameter did not transmit"* — **it fails in the direction that looks like the hypothesis**, which `R-692 §4` already named.
+4. ✅ **`F-4`/`F-5`/`F-6` are IN SCOPE for the same change** where they touch the typed object's key; `F-5` specifically owes **a mutation that makes the direction half of the key go RED.**
+5. ✅ **THE OBJECT IS ALREADY DESIGNED — build to `docs/designs/TYPED-MA-PRIMITIVE-OBJECT-2026-08-04.md`** (`R-694 §7`), whose `§6` red-proof obligations all still stand. 🛑 **`OMIT-WHEN-EMPTY` IS NOT OPTIONAL: `0/18` vs `18/18` re-seals.**
+6. 🛑 **STILL FORBIDDEN: modifying the sealed-spec producer.** `RECEIVES`, never `EXTRACTS`.
+🛑 **STOP CONDITION:** if implementing `unknown_parameter_key` turns any EXISTING suite red, **STOP AND REPORT** — that red is a live caller relying on the silent default, and it is a finding that outranks the lane.
+
+### ★★★★★ §8 — LESSON TO PERSIST
+★★★★★ **`AN INVOCATION WITNESS IS NOT A CONSUMPTION WITNESS. THE ARGUMENT THAT ARRIVED IS NOT THE ARGUMENT THAT WAS READ.`** Our own `R-692` witness set required proof that the production primitive *was invoked with* the taught periods — and on the wired path that assertion is **GREEN while the periods are discarded and both arms compute identically.** **Only a DIFFERING OUTPUT witnesses consumption. Every future transmission proof must include one, spy-free.**
+★★★★★ **`A TAXONOMY WITHOUT A RESIDUAL MIS-FILES IN CODE EXACTLY AS IT DOES IN A RULING.`** `_resolve_bias_periods` has no category for *present-under-another-name*, so an unknown key mis-files as absent and becomes an engine default. **This desk minted that residual (`unknown_parameter_key`, `R-684 §7.2`) and never checked that the engine grew the branch. `A BLOCK CODE IN A RULING IS NOT A BRANCH IN THE ENGINE.`**
+★★★★ **`A SPY-INSTRUMENTED SUITE CANNOT ANSWER WHETHER THE REAL PATH COMPUTES DIFFERENTLY.`** Every assertion in the author's file ran under `monkeypatch`; the grade's decisive act was running the property **without** it. **When a fixture mediates every observation, the fixture is the thing you measured.**
+★★★★ **AND THE GRADE ITSELF IS THE ARGUMENT FOR `doer ≠ grader`:** the author was careful, the desk re-ran the suites, and **both of us missed two live `HIGH` defects that a disinterested reader found by asking a differently-scoped question.** `INDEPENDENCE IS NOT A SECOND LOOK AT YOUR QUESTION; IT IS SOMEONE ELSE'S QUESTION.`
+
+---
 ## R-694 · 2026-08-04 · ✅★★★★★ **`AR-771` APPROVED — LANE 22 ANSWERED THE ORDERED PROPERTY AND ITS ZERO CARRIES A LIVE POSITIVE CONTROL. I RE-VERIFIED THE LOAD-BEARING HALF MYSELF ON AN INDEPENDENT INSTRUMENT.** 🛑🛑🛑★★★★★ **AND THE EXTERNAL READ RELAYED BY THE OPERATOR IS ADOPTED ON MERIT WITH **THREE MEASURED CORRECTIONS** — ITS TYPED-OBJECT FIELD LIST OMITS THE CHART TIMEFRAME, WHICH `[MEASURED, `AR-737 §4`]` IS ONE OF EXACTLY TWO LIVE `ASSUMED` ARGUMENTS AND THEREFORE **CAPS `approximation=False` FOREVER, INVISIBLY.** ★★★★★ **`A FIELD LIST IS THE FORM IN WHICH A SERIALIZATION LAW GETS DROPPED, BECAUSE THE LAW IS NOT A FIELD.`**
 
 **RULING ID:** `R-694` · **TASK ID:** `R-693 §5` Lane 22 · **DECISION: APPROVE.**
