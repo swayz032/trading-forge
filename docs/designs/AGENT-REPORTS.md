@@ -4,6 +4,31 @@
 
 ---
 
+## AR-786 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 30, THE FINAL LANE OF THE BATCH. FIVE ITEMS, `R-707 §6`'s WIDENED CONTRACT, PLAN AND FIRST TWO MEASUREMENTS BELOW.**
+
+**TASK:** `R-705 §5` Lane 30 as widened by `R-707 §6`. **FAN-IN `2/3` → closing the third. NO HANDOFF.** **Sibling's `test_synthetic_market_simulator.py` dirty and not mine — thirty-second consecutive report.**
+✅ **`R-707` READ IN FULL. Refusal code `taught_parameters_require_a_sufficient_frame` RATIFIED, name kept — debt from `AR-784 §5` is PAID and I am not re-opening it.**
+
+### ✅ §1 — TWO MEASUREMENTS TAKEN BEFORE PLANNING, BOTH LOAD-BEARING
+1. ✅ **`M5`'s DISCRIMINATOR IS VIABLE, AND I CHECKED RATHER THAN TRUSTING THE RULING.** `[MEASURED HERE, executable lines]` `_last_bias_periods` is written at **`:1028` only**, inside `_eval_wait_bias`; the flag-OFF legacy ladder **does** reach that evaluator (`:1704`, `:1759`). ★ **And it is never initialised anywhere in the class or the tests** ⇒ `getattr(strat, "_last_bias_periods", <sentinel>)` is a REAL untouched-state sentinel, not a value that merely looks unset. **That is what makes `<never set>` vs `(20,50)` a direct execution witness.**
+2. ✅ **THE `80`/`81` DERIVATION RULES ARE BOTH ON DISK — THE RECONCILIATION IS NOT A GUESSING GAME.** `[MEASURED, `AGENT-REPORTS.md:487`, `:494`]` the doer's **`81`** = **AST REVERSE-IMPORT CLOSURE** of `spec_condition_compiler` ∪ `spec_family_bindings`, ∩ test files (its own new file excluded as the `82`nd). `[ARTIFACT-SOURCED, `R-702 §4`]` the grader's **`80`** = a **RUNTIME pytest-hook** extractor with **no text parsing**.
+⇒ ⚖️ **`[HYPOTHESIS — UNPROVEN, AND I WILL NOT REPORT IT AS THE ANSWER]` the two rules differ in KIND (static reachability vs observed runtime import), and a file that hangs or never collects cannot appear in a runtime census. `test_cloud_backend.py` is measured HUNG. **That is a candidate, not a finding** — I will derive both sets and name the member, per `R-707 §6.5`.**
+
+### ⚡ §2 — ORDER OF WORK, CHEAPEST DISCRIMINATOR FIRST
+1. **`F-F`** — pin the order permanently (refusal fires · confirmation-evaluator count `0` · same instrument `>0` on a parameterless control), then keep only comments matching the MEASURED order. ★ Lane 29 already ships this shape for the flag-ON route; the flag-OFF comment is the one `R-702 §6(4)` convicted, so that arm is what I add.
+2. **`M5`** — re-point `test_the_refusal_fires_before_any_evaluator_or_cache_mutation` (`test_flag_off_parameterized_refusal.py:129`, reading `:146`) at `_last_bias_periods`, with the required planted defect (defer the refusal until one real condition has evaluated) **and** a positive control proving the witness moves when evaluation legitimately occurs.
+3. **`M3`** — the mirror hybrid: canonical `slow_period` + fast under an unrecognised key. **BOTH directions must permanently refuse, and the refusal must name ONLY the offending key.**
+4. **`F-E`** — repo-anchored census: root from the test file's own location, **six** constructor forms each with a controlled positive fixture, and all **five** non-vacuity controls including *different CWD yields the same census* and *an empty forced root turns it RED*.
+5. **`80` vs `81`** — reconstruct BOTH from their original rules, normalised repo-relative, diff BY MEMBER with a break-control, name one canonical population. 🛑 **No member deleted to equalise counts.**
+
+### 🛑 §3 — STOP CONDITION, PRE-REGISTERED (`R-707 §6`), AND THE RATIONALISATION I REFUSE IN ADVANCE
+**TRIGGERS:** the anchored census finds a REAL production parameter writer · a newly supported constructor form reveals a production-populated `ConditionBinding.parameters` · the ordering repair changes legitimate PARAMETERLESS behaviour · `M3`'s mirror is already accepted by an intended canonical alias layer · the canonical regression population cannot be derived deterministically.
+🛑 **REFUSED IN ADVANCE: *"the sixth constructor form finds a hit, so narrow the matcher."*** A form that finds a production writer is the census WORKING. **I will stop and report it, not tune the predicate until it is quiet.**
+🛑 **NOT CLAIMED AND NOT MEASURED YET:** every item above. **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM. FLAG NOT ENABLED. GATE 2 DOES NOT CLOSE HERE** (`R-707 §8` — it closes on the post-Lane-30 independent re-grade). **`test_cloud_backend.py` remains HUNG/UNENUMERATED and desk-owned.**
+**FIRST OBSERVABLE:** the `F-F` + `M5` red/green pair. **ETA ~50 minutes to the closing commit; a moved ETA reported, never a silent one.**
+
+---
+
 ## AR-785 · 2026-08-04 · ✅★★★★★ **LANE 29 CLOSED — THE SIX-ROW MATRIX IS GREEN AND THE STOP CONDITION DID NOT FIRE, PROVEN BY NAME AND NOT BY COUNT: TWO WHOLE-SUITE ARMS, `ONLY_IN_A = 0`.** ✅★★★★★ **AND THE FINDING THAT GENERALISES BEYOND THE RULING: ROW 6 IS NOT A NEW BEHAVIOUR — IT IS `F-3`'s EXISTING REFUSAL, WHICH THE EARLY RETURN HAD MADE UNREACHABLE.** ⚠️★★★★★ **ONE PRE-REGISTRATION MISS, AND IT IS THE INFORMATIVE KIND: MY PLANT WAS STRICTLY WEAKER THAN TRUE ABSENCE, SO IT REDDENED `7` WHERE ABSENCE REDDENS `8`.**
 
 **TASK:** `R-705 §5` Lane 29 (contract re-confirmed UNCHANGED by `R-706 §7`). **FILES CHANGED — TWO:** `src/engine/spec_condition_compiler.py` · **NEW** `src/engine/tests/test_short_frame_parameter_acknowledgement.py`. **Sibling's `test_synthetic_market_simulator.py` dirty in the tree and NOT in this commit — thirtieth consecutive report.**
