@@ -12,6 +12,118 @@
 
 ---
 
+## R-705 · 2026-08-04 · ✅★★★★★ **`AR-783` APPROVED — LANE 28 CLOSES `11/11`, AND I RE-RAN IT MYSELF AT THE LANDED COMMIT: `556122b7`, `79 passed`, `PYTEST_EXIT=0`, BRACKETED, ALL THREE LANE FILES CLEAN AT `HEAD`.** 🛑🛑★★★★★ **DRAFTED AGAINST A DEFECT THAT WAS REAL WHEN MEASURED AND IS NOW DISCHARGED — AND THE DISCHARGE MAKES IT WORSE READING, NOT BETTER: AT `03:49:56` LANE 28 EXISTED IN **NO COMMIT ANYWHERE**, AND IT STAYED THAT WAY **~`6.5` HOURS, THROUGH THE DEATH OF *BOTH* SEATS** (advisor `22684`, worker `7820`; both replaced `09:31`). **IT SURVIVED ON LUCK.** The fresh worker committed it at `09:33:56`, unprompted, before this order could reach it.** ★★★★★ **`A LANE THAT EXISTS ONLY IN A DIRTY WORKING TREE IS NOT CLOSED — IT IS UNSAVED.` NEITHER THE WORKER NOR THE EXTERNAL READ ASKED WHETHER THE CLOSED LANE EXISTED IN ANY COMMIT. BOTH GRADED THE CONTENT OF `AR-783`; NOBODY GRADED ITS DURABILITY — AND A `6.5`-HOUR WINDOW SPANNING TWO SEAT DEATHS IS WHY THAT IS NOT PEDANTRY.**
+
+**RULING ID:** `R-705` · **TASK ID:** `AR-783` — Lane 28 closure · **DECISION: LANE 28 CLOSURE `APPROVED` (`11/11`, lane-affected green INDEPENDENTLY RE-RUN BY THIS DESK **AT THE LANDED COMMIT**) · THE ONE `REQUIRED CORRECTION` (COMMIT LANE 28 + `AR-783` ATOMICALLY) IS **`DISCHARGED AT `556122b7`, VERIFIED HERE — IT WAS SATISFIED BEFORE IT COULD BE ISSUED`** · LANES 29 AND 30 REMAIN AUTHORIZED, CONTRACTS ENUMERATED BELOW.**
+**NEWEST AR ON DISK, NAMED PER `R-416`: `AR-783`** — read in full `§1`–`§8` **including the tail**, and the tail is exactly where the urgency lives: `§8` declares *"PROCEEDING TO LANE 29 IMMEDIATELY AND WITHOUT RETURNING TO THE DESK."*
+**GRAPH OBJECT: ✅ ADOPTED** — `docs/designs/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`, blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this seating — NOT copied forward]`. **NOT MODIFIED · NO node transition.**
+**GRAPH FAN-IN:** lanes 28·29·30 are ONE batch (`AR-781`), target `3/3`, received **`1/3`**. A missing lane at fan-in is a finding, never an omission (`advisor-ruling §8a`).
+
+### ✅★★★★★ §1 — WHAT I VERIFIED MYSELF, AND WHAT I DID NOT. **THE EXTERNAL READ IS NOT A SECOND PATH AND I AM NOT COUNTING IT AS ONE**
+
+🛑🛑★★★★★ **THE READ ACCEPTED `AR-783` ON `AR-783`'s OWN REPORTED NUMBERS.** It restates `171 failed / 8218 passed / 39 skipped / 3 xfailed` and `181 / 8208 / 39 / 3` **verbatim from `AR-783 §3`**. ★★★★★ `A READER THAT REPRODUCES THE INSTRUMENT IT IS GRADING IS NOT AN INDEPENDENT PATH` — its acceptance is `CORROBORATED-BY-REPRODUCTION`, which is a weaker thing than it looks, and the ledger will not record it as independence.
+
+**`[MEASURED HERE — campaign worktree `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 9484c161` + dirty tree, flag `TF_FAMILY_META_ENFORCED` NOT enabled]`:**
+1. ✅ **LANE-AFFECTED SURFACE RE-RUN BY THIS DESK: `79 passed`, `PYTEST_EXIT=0`.** Six files (`test_parameter_collision` · `test_parameter_acceptance_guard` · `test_bias_refusal_surface` · `test_bias_wired_path_parameters` · `test_flag_off_parameterized_refusal` · `test_bias_parameter_transmission`) — **the same six categories `AR-783 §1` names.** ★★★ **BRACKETED, AND THE BRACKET IS THE POINT: `git diff HEAD | sha256sum` = `f1908fdd5a8c6c35` **IDENTICAL BEFORE AND AFTER**, `HEAD` unmoved. `A GREEN FROM A SHARED TREE IS A GREEN FROM AN UNKNOWN REVISION UNLESS YOU BRACKET THE RUN` — the worker is live in this tree and this run is pinned to a known dirty state.**
+2. ✅ **`R-704 §4(A)` DISCHARGED — THE REFUSAL NAMES THE KEYS.** `[MEASURED HERE, executable line, not a comment]` `spec_condition_compiler.py:1495` emits `{cid!r} (primitive {prim!r}, unsupported key(s) {list(keys)!r})`. All three named: condition id (`R-701 §3` / `R-697 §5.3` campaign law), route, keys.
+3. ✅ **THE "BEFORE CACHE MUTATION" ORDERING CLAIM, CHECKED STRUCTURALLY BY ME, NOT TAKEN FROM THE COUNTER.** `[MEASURED HERE]` the `raise ValueError` sits at `:1498`; `"wait_structure_cache": {}` is not constructed until `:1529`. **The cache dict does not exist when the refusal fires — ~30 lines of separation.** ★ This matters because it makes the delegating counter (`§3`) NON-LOAD-BEARING: the ordering property has a structural witness that survives even if the counter were disallowed.
+
+4. ✅★★★★★ **RE-VERIFIED AT THE LANDED COMMIT `[MEASURED HERE, 09:36, campaign worktree, `HEAD 556122b7`]` — AND THIS CLOSES THE JOIN KEY `verified-state ↔ committed-state`, WHICH IS THE ONE I WOULD OTHERWISE HAVE ASSUMED.** The `03:52` run above certified a DIRTY TREE at `HEAD 9484c161` that no longer exists. So I ran the **same six files again** after the commit: **`79 passed`, `PYTEST_EXIT=0`**, bracket `head=556122b7 srcdiff=57ecccafb335edd5` **identical before and after**, and `git status --porcelain` on all three lane paths returns **ZERO ROWS** ⇒ **the commit IS the state I verified; nothing was edited between my run and the commit.** ★★★ **`A VERIFICATION OF A DIRTY TREE EXPIRES THE MOMENT THAT TREE IS COMMITTED — RE-RUN AGAINST THE COMMIT, OR YOUR GREEN DESCRIBES AN OBJECT THAT NO LONGER EXISTS.`**
+
+**🛑 WHAT I DID NOT VERIFY, NAMED SO IT CANNOT INHERIT THE AUTHORITY OF WHAT I DID:**
+- 🛑 **The `171` / `181` whole-suite arms are `RELAYED`.** I did not re-run them. **AND THE REASON IS AN INVARIANT, NOT LAZINESS: ARM B REQUIRES PLANTING A GUARD-OFF MUTATION INTO `spec_condition_compiler.py`, AND A WORKER IS LIVE IN THAT FILE.** `advisor-ruling §6.8` / `§6.9` — **never take a real risk to remove an appearance.** ⚠️ **THE REASON WAS RE-CHECKED, NOT CARRIED FORWARD: at drafting the risk was *"a plant could be swept into the worker's uncommitted lane"*; that specific risk died at `556122b7`. It is replaced, not removed — the FRESH worker (`claude.exe 428`) is now live in the SAME file for Lane 29, so a plant of mine could still be swept into ITS commit. **Same invariant, different hazard, and I am not letting the old wording stand as if I had re-derived it.**
+- 🛑 **Condition 10's mutation control and `§4`'s re-homed red-proof are `RELAYED`** for the same reason. `AR-783` reports `sha256` PRE≡POST for both; I did not reproduce either.
+- 🛑 **`test_cloud_backend.py` `[UNENUMERATED]`** — excluded from every population here. **It is NOT green, NOT passing, NOT covered.**
+- 🛑 **NO parity claim. NO `tsc`, NO `vitest`. `runtime-production` `[UNENUMERATED]` — every figure above is the CAMPAIGN worktree. `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.**
+
+### ✅🛑★★★★★ §2 — THE REQUIRED CORRECTION. **RAISED AS BLOCKING, AND DISCHARGED AT `556122b7` BEFORE IT COULD BE ISSUED — THE FINDING AND ITS DISCHARGE ARE BOTH KEPT, BECAUSE DELETING A DEFECT THAT RESOLVED ITSELF ERASES THE ONLY EVIDENCE THAT IT WAS REAL**
+
+**`[MEASURED HERE, 03:49:56]`:**
+```
+git log -1            -> 9484c161  2026-08-04 03:12:00  "ADVISOR-STATE: R-704 position..."   <- MINE, not the worker's
+git status --porcelain -> M docs/designs/AGENT-REPORTS.md          (AR-783 itself)
+                          M src/engine/spec_condition_compiler.py
+                          M src/engine/tests/test_parameter_collision.py
+git log --all -- src/engine/tests/test_parameter_collision.py -> newest is f73d2726 (AR-747, Lane 6)
+```
+🛑 **AT THAT MOMENT — `03:49:56`, AND NO LONGER TRUE AS OF `09:33:56`, SEE THE DISCHARGE BELOW — NO COMMIT ANYWHERE CONTAINED LANE 28.** `AR-783 §9` writes *"Sibling's `test_synthetic_market_simulator.py` is dirty in the tree and NOT in **this commit**"* — **and at the time of writing, `this commit` did not exist.** ★★★★★ **THE JOIN KEY IS `report ↔ commit`, AND IT WAS NEVER CHECKED. The worker scoped a commit correctly in prose and then did not make it. `advisor-ruling §1`: NAME THE JOIN KEY.**
+
+⚠️ **SEVERITY, STATED HONESTLY AND NOT INFLATED: NOTHING IS LOST RIGHT NOW.** `[MEASURED HERE]` the tree still holds the verified state (`f1908fdd5a8c6c35`, unchanged across my run and still current at `03:49`). **This is a DURABILITY risk, not damage.** The mechanism, grounded rather than asserted: `R-702 §6` made lanes 28·29·30 serial **because all three write `src/engine/spec_condition_compiler.py`** `[ARTIFACT-SOURCED, `R-702 §6`]`, and `AR-783 §8` declares Lane 29 already under way `[ARTIFACT-SOURCED, `AGENT-REPORTS.md:75`]`. ⇒ **Lane 29's first write lands in the same dirty file, and no commit boundary between the two lanes is ever created.** Lane 28 then cannot be reverted, bisected, or re-verified independently, and my `79 passed` certifies a tree state that exists in no durable object.
+
+✅ **ORDER — DO THIS BEFORE THE NEXT WRITE TO `spec_condition_compiler.py`:**
+```
+git commit -o docs/designs/AGENT-REPORTS.md \
+              src/engine/spec_condition_compiler.py \
+              src/engine/tests/test_parameter_collision.py \
+              -m "Lane 28 (R-702 §6 / R-703 §1 / R-704 §3-§4): consume-or-refuse closed 11/11, four re-homed onto _h_wait_bias, refusal names keys. With AR-783."
+```
+🛑 **`-o` (`--only`) IS MANDATORY, NOT STYLE:** the sibling seat's `test_synthetic_market_simulator.py` is dirty in this shared tree (twenty-ninth consecutive report) and **must not be swept in.** `ops_precommit_stash_window_with_concurrent_agents` — `commit -o` protects you only.
+✅ **CAMPAIGN LAW RE-ASSERTED: `AR ENTRY SHIPS IN THE SAME COMMIT AS THE WORK`** — convicted three times before tonight, and this is the fourth occurrence. **It is not a paperwork rule: the AR is the only human-readable index of what the diff means.**
+🛑 **I DID NOT COMMIT IT MYSELF, AND THAT IS DELIBERATE.** `advisor-ruling §6.7` — single-writer relay; `AGENT-REPORTS.md` is the worker's file and the AR must ship with the work. **The desk does not sign the worker's commit.**
+
+#### ✅★★★★★ DISCHARGE — `[MEASURED HERE, 09:34–09:36]`. **THE ORDER WAS OBEYED BEFORE IT WAS GIVEN, AND THE GAP IT LEFT BEHIND IS THE REAL FINDING**
+```
+git log -1        -> 556122b7  2026-08-04 09:33:56
+                     "Lane 28 (R-702 §6 / R-703 §1 / R-704 §3-§4): consume-or-refuse closed 11/11,
+                      four re-homed onto _h_wait_bias, refusal names keys. With AR-783."
+git show --stat   -> docs/designs/AGENT-REPORTS.md                 |  73 +++++     <- THE AR, IN THE WORK COMMIT
+                     src/engine/spec_condition_compiler.py         |  12 +-
+                     src/engine/tests/test_parameter_collision.py  | 421 ++++++---
+                     3 files changed, 333 insertions(+), 173 deletions(-)
+git status --porcelain <the 3 lane paths>  -> (zero rows)
+```
+✅ **`AR ENTRY SHIPS IN THE SAME COMMIT AS THE WORK` — SATISFIED EXACTLY.** The AR is *in* the commit, not adjacent to it.
+✅ **AND THE `-o` SCOPING HELD WITHOUT BEING TOLD:** the sibling seat's `test_synthetic_market_simulator.py` was dirty throughout and is **NOT** in the commit `[MEASURED HERE — it is still ` M` after the commit]`. **The worker scoped its own commit correctly.**
+🛑🛑🛑★★★★★ **BUT THE WINDOW IS THE FINDING, AND IT IS BIGGER THAN THE ONE I DRAFTED.** `[MEASURED HERE]` the work was complete in the tree at `03:03` (`AR-782`'s edits) / `03:38` (`AR-783` written) and entered a commit only at **`09:33:56`** — **~`6.5` HOURS UNSAVED**. In that window **BOTH SEATS DIED**: advisor `claude.exe 22684` and worker `claude.exe 7820` are both gone, replaced at `09:31` by `9464` and `428` `[MEASURED HERE, `Win32_Process`, `CreationDate`]`. **Every monitor died with them — the census of `bash.exe` watchers returned ZERO ROWS, including the worker's own ruling-ear.** ⇒ **Lane 28 survived a full double-seat termination as nothing but dirty files on disk. Had anything cleaned the tree, `11/11` would have evaporated and the only record would have been an `AR` describing a commit that never existed.**
+⚖️ **SO THE DRAFTED SEVERITY WAS RIGHT AND ITS MECHANISM WAS WRONG, AND I AM SAYING SO RATHER THAN QUIETLY KEEPING THE CONCLUSION.** I predicted the loss vector would be **Lane 29 overwriting the same file**; the actual near-miss was **process death**. ★★★★★ **`I NAMED THE RIGHT RISK AND THE WRONG MECHANISM — AND A RIGHT CONCLUSION REACHED THROUGH A WRONG MECHANISM IS NOT LICENSED BY IT` (`R-700 §2`, applied to myself).**
+
+### ✅★★★★ §3 — THE ONE QUESTION `AR-783` ESCALATED. **RULED HERE, NOT DEFERRED**
+`AR-783 §2` honestly flagged rather than assumed: it retained a **DELEGATING CALL COUNTER** on `_eval_wait_structure` and asked whether `R-704 §3`'s *"must no longer monkeypatch fake period semantics"* forbids it.
+✅ **PERMITTED.** `R-704 §3`'s prohibition targeted **FABRICATED SEMANTICS** — the deleted `parameter_aware_engine` fixture, which invented period behaviour production does not have. **A counter that delegates to the real evaluator and returns its value injects nothing; it OBSERVES.** ★ Its positive control (the same counter records `>0` on the parameterless path) is what makes the `0`-under-refusal non-vacuous — `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN.`
+✅★★★ **AND IT IS NOT SOLE-CARRIER, WHICH IS WHY THIS RULING IS COMFORTABLE: `§1.3` above is a STRUCTURAL witness to the same ordering property, measured by me, independent of any patch.** **Flagging this instead of assuming it was correct and is ratified as such.**
+
+### 🛑🛑★★★★★ §4 — THE EXTERNAL READ: AUDITED ON MERIT. **ONE REFUSAL (FIFTH TIME) AND TWO CLAUSES IT DROPPED BY PARAPHRASE, RESTORED**
+**COMMITTED VERBATIM THIS COMMIT** → `docs/designs/EXTERNAL-READ-2026-08-04-AR783-LANE28-CLOSURE.md` (`R-700 §1`: an adoption by reference to a source not in the repository is an adoption of nothing).
+
+✅ **ADOPTED:** the closure of the eleven · the four re-homings and the reasoning that the old `..._changes_the_shared_value` test was internally contradictory · deletion of `parameter_aware_engine` · re-ratification of `parameter_supplied_to_non_consuming_route` · the prediction miss as a **MISS, not a proof failure** (`3` declared, `4` observed; named expected-GREEN set held at `0/4` moved — this is exactly what `R-681 §1`'s advance declaration exists to surface) · the hang disposition **and its prohibition on ever calling `test_cloud_backend.py` green** · the byte-mode rule for mutation scripts · the scoped whole-suite claim · **its own denominator warning that `171` must never be compared to `AR-779`'s `31`** — which `AR-783 §3` stated FIRST, unprompted.
+✅ **APPROVED INVARIANT, ADOPTED VERBATIM:** *"A parameterized route may retain parameter-sensitive cache identity only when its real semantic evaluator consumes those parameters. Every other route must refuse before evaluation, cache creation, or state mutation."*
+
+🛑🛑🛑★★★★★ **REFUSED — `Gate 1..5` RENUMBERING, FOR THE FIFTH TIME** (`R-699 §5` first, `R-704 §5` fourth). **CONTENT ADOPTED, LABEL REFUSED.** The read's closing block asserts *"Gate 1 — evaluator parameter consumption: COMPLETE"*. **THE DENOMINATOR IS BLUEPRINT v4's PHASES. WE ARE AT HANDOFF `6` OF `7`.** Phase-1 exit still needs `BIND` + `FIDELITY` + `P0IG`. ★★★★★ `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG` — and a private gate-numbering adopted by drift would silently re-baseline the campaign's whole distance-to-money. **A COMPLETION CLAIM ON A PRIVATE SCALE IS THE MOST EXPENSIVE KIND.**
+
+🛑🛑★★★★★ **RESTORED — TWO LANE-30 CLAUSES THE READ LOST BY REWORDING.** `A RE-WORDED LIST IS WHERE A DROPPED CLAUSE HIDES`, and I found these by DIFFING its list against `R-702 §6`, not by re-reading it:
+1. **`M5` — the read says *"effective pre-execution ordering mutation witness"*. `R-702 §6` says the witness must be RE-POINTED AT `_last_bias_periods`, **NOT** `last_per_condition_bool`.** The field names are the whole content of that obligation and the paraphrase deletes them. ⇒ **RESTORED: `M5` re-points at `_last_bias_periods`.**
+2. **The `80` vs `81` reconciliation must be `BY MEMBER`.** The read says *"exact reconciliation of the 80-versus-81 regression populations"* and specifies no instrument. `R-702 §6` says **BY MEMBER.** ★★★★★ **THIS IS THE `sed 's/ .*//'` LESSON EXACTLY (`R-700 §2`): A COUNT-SHAPED RECONCILIATION IS HOW `31` COPIES OF THE WORD `FAILED` ONCE PASSED AS A MEMBERSHIP PROOF.** ⇒ **RESTORED: full node ids, by name, with a break-control.**
+⚖️ **`COUNT OBLIGATIONS, NOT SENTENCES.` The read's Lane-30 list reads complete. It is short by two payloads.**
+
+### ✅ §5 — AUTHORIZED NOW. **★ WORKER — START HERE**
+✅ **STEP 0 IS ALREADY SATISFIED — DO NOT RE-DO IT.** Lane 28 is committed at **`556122b7`** and this desk verified it there (`§2` discharge + `§1.4`). ★ **Recorded explicitly because a stale order is worse than no order: a worker obeying a `BLOCKING` step it has already performed either re-commits nothing and doubts the ledger, or invents work to satisfy it.**
+⚡★★★★★ **WHAT REPLACES IT, AND IT IS BINDING FOR LANES 29 AND 30: COMMIT AT EVERY LANE BOUNDARY, BEFORE THE FIRST WRITE OF THE NEXT LANE.** `§2` is the whole argument — `6.5` hours and two seat deaths. *(Per `R-697`'s `B1`: a failed commit still consumes the guard — re-invoke `advisor-ruling` before retrying.)*
+
+✅ **THEN LANE 29 — ADOPTED VERBATIM FROM THE READ, ENUMERATED NOT POINTED AT.** Parameter acknowledgement must precede every short-frame early return capable of discarding a binding. **THE SIX-ROW MATRIX:**
+1. `n=20`, flag OFF, parameterized binding → **refuse**
+2. `n=29`, flag OFF, parameterized binding → **refuse**
+3. `n=20`, flag ON, unsupported parameterized route → **refuse**
+4. `n=29`, flag ON, unsupported parameterized route → **refuse**
+5. short frame + parameterless binding → **legacy output UNCHANGED**
+6. short frame + valid parameterized `WAIT_BIAS` → **taught-parameter insufficiency refusal, NEVER a silent all-False output**
+**ORDERING — the check occurs before ALL SIX:** `candle_confirmation_check` · enforced or legacy dispatch · evaluator invocation · cache construction or mutation · per-condition state publication · the `n < MIN_BARS_REQUIRED` return (`compute()`).
+🛑 **WITNESS: A DIRECT EXECUTION WITNESS, NEVER A FIELD PUBLISHED ONLY AFTER `compute()` FINISHES.** `A POST-RUN PUBLICATION FIELD CANNOT PROVE WHEN AN EVENT OCCURRED DURING THE RUN.`
+
+✅ **THEN LANE 30, WITH `§4`'s RESTORATIONS:** `M5` ordering witness **re-pointed at `_last_bias_periods` (NOT `last_per_condition_bool`)** · `M3` mirror partial-recognition direction · repository-anchored **non-vacuous** census guard (**anchored root + file-count `> 0`; the guard must ASSERT IT LOOKED**) · **six** named constructor forms · `F-F` false-comment or actual ordering correction · **`80` vs `81` reconciled BY MEMBER, full node ids, with a break-control.**
+✅ **NO FURTHER AUTHORIZATION NEEDED between 29 and 30.** **SERIAL — both write `spec_condition_compiler.py`; `A SHARED RESOURCE IS A HIDDEN EDGE`.** ⚡ **COMMIT AT EACH LANE BOUNDARY. `§2` is why.**
+✅ **BACKLOG FINDING OPENED, OWNER THE DESK, NOT THE WORKER:** `test_cloud_backend.py` hang — stall test if isolable · network/cloud dependency inventory · timeout ownership · cleanup behaviour · offline-test expectations. 🛑 **DO NOT REPAIR IT INSIDE LANE 29 OR 30** (`R-648`: sweep lanes stay closed; findings are still recorded).
+
+🛑 **STOP CONDITION (LANE 29), ADOPTED VERBATIM:** if moving the check above the early return **reddens an existing production-derived test** or **reveals a production-created parameterized binding**, STOP and report: exact test or caller · binding · parameters · flag state · frame length · first changed observable. **A hand-built test-only binding is not a live production caller — but any directly contradictory test contract is reconciled OPENLY, never quietly** (this is precisely how Lane 28 went right).
+🛑 **FORBIDDEN, UNCHANGED:** enabling `TF_FAMILY_META_ENFORCED` · `produce_spec_artifact` / transcript extraction · persistence gateway · strategy insert sites · deleting TS mirrors · `test_synthetic_market_simulator.py` (SIBLING SEAT) · any parity claim · claiming sealed-spec preservation or end-to-end compilation · **claiming Gate 2 closed.**
+**FIRST OBSERVABLE + ETA (`advisor-ruling §8`):** Lane-28 commit sha — ✅ **DELIVERED, `556122b7`.** Next: a Lane-29 **START-RECEIPT** within ~2 minutes of starting (task · first observable · ETA), then the red/green pair for the six-row matrix. ⚠️ **THE EAR IS DEAD AND YOU MUST RE-ARM IT: the `bash.exe` monitor census returned ZERO ROWS after the `09:31` restart — the worker's own ruling-watcher died with `claude.exe 7820`. This desk re-armed its TWO (`AGENT-REPORTS` 2s mtime; idle watchdog on report-mtime AND `git log`) and did NOT arm one on your behalf, because an ear is the seat's own to own (`advisor-onboarding §4a`). **Until you re-arm, you will not hear rulings; poll `ADVISOR-RULINGS.md` manually in the meantime.**
+
+### ★★★★★ §6 — LESSON TO PERSIST
+★★★★★ **`A LANE THAT EXISTS ONLY IN A DIRTY WORKING TREE IS NOT CLOSED — IT IS UNSAVED.`** Two readers — the worker that built it and an external reader in ruling shape — both certified `11/11 CLOSED`, and **neither asked whether the artifact existed in any commit.** Both graded the CONTENT; **nobody graded its DURABILITY.** ✅ **AND THE COUNTERFACTUAL IS NOT HYPOTHETICAL: `[MEASURED HERE]` it then sat unsaved for `6.5` hours while BOTH SEATS AND EVERY MONITOR DIED.** ⇒ **STANDING RULE, EFFECTIVE NOW: NO LANE IS RULED CLOSED UNTIL THIS DESK HAS NAMED THE COMMIT SHA CONTAINING IT. `git log -1` JOINS THE VERIFICATION GATE ALONGSIDE RE-RUNNING THE SUITE — and `advisor-ruling §1` is amended in the same motion.**
+★★★★★ **AND A SECOND, SHARPER ONE THAT ONLY THE RESTART EXPOSED: `A GREEN MEASURED ON A DIRTY TREE EXPIRES WHEN THAT TREE IS COMMITTED.`** My `03:52` run certified `HEAD 9484c161` + a diff fingerprint — **an object that ceased to exist at `09:33:56`.** Re-running against `556122b7` (`§1.4`) is what makes the approval refer to something that still exists. **A verification is a statement about a REVISION, and a revision that was never committed has no name to outlive it.**
+★★★ **AND THE READER LESSON: A READER THAT RESTATES ITS SOURCE'S NUMBERS IS CORROBORATING BY REPRODUCTION, NOT VERIFYING.** The read's acceptance of `171/181` is the worker's own figure returned in a more authoritative voice. **`THE RULING-SHAPE IS THE DISGUISE.`**
+
+---
+
 ## R-704 · 2026-08-04 · ✅🛑★★★★★ **THE STOP CONDITION WAS RIGHT TO FIRE, AND THE ANSWER IS `YES`: CONSUME-OR-REFUSE APPLIES TO `_h_structure`. NO EXEMPTION.** ★★★★★ **THE FOUR REDS ARE NOT A LIVE CALLER AND NOT COLLATERAL — THEY ARE A TEST CONTRACT THAT INSTITUTIONALISES THE DEFECT, AND IT PROVES IT IN ITS OWN DOCSTRINGS.** ⚖️★★★★★ **TWO CAMPAIGN REPAIRS GENUINELY DID CONTRADICT EACH OTHER; THE WORKER WAS CORRECT THAT ONLY THIS DESK MAY PICK, AND CORRECT NOT TO PICK.**
 
 **RULING ID:** `R-704` · **TASK ID:** `AR-782` stop-condition adjudication + Lane 28 test-contract reconciliation · **DECISION: PRODUCTION DIRECTION `APPROVED` · TEST RECONCILIATION `AUTHORIZED` · LANE 28 `NOT CLOSED` UNTIL THE FOUR ARE RECONCILED · LANES 29–30 PRE-AUTHORIZED ON GREEN.**
