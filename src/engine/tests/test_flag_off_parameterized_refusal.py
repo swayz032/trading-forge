@@ -569,6 +569,162 @@ def test_the_population_derivation_discriminates(tmp_path):
     )
 
 
+_MANIFEST_PATH = Path(__file__).parent / "canonical_regression_population.txt"
+
+
+def _read_manifest() -> list[str]:
+    """The committed member list, in file order. Comments stripped, order PRESERVED."""
+    lines = _MANIFEST_PATH.read_text(encoding="utf-8").splitlines()
+    return [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
+
+
+def _manifest_mismatch(population: list[str], manifest: list[str]) -> str:
+    """Compare BY MEMBER **and by order**. Returns '' when identical, else a readable diff.
+
+    Shared by the pin and its break-control on purpose: a control that exercises a different
+    comparator than the guard proves nothing about the guard.
+    """
+    if population == manifest:
+        return ""
+    missing = [m for m in manifest if m not in population]
+    extra = [m for m in population if m not in manifest]
+    if missing or extra:
+        return f"members differ — in manifest only: {missing}; in derivation only: {extra}"
+    return "same members, DIFFERENT ORDER — the manifest pins order and the derivation moved"
+
+
+def test_the_canonical_population_matches_its_committed_manifest_by_member():
+    """`R-710 §6.1` — PIN THE MEMBERS.
+
+    🛑 A COMMITTED GENERATOR REPRODUCES THE RULE, NOT THE ANSWER. The `80`-vs-`81`
+    populations became unreconcilable because their members were never pinned — edit the
+    rule and the population moves with nothing to diff against. This closes that half.
+
+    The manifest is COMPUTED and committed, never hand-copied: a hand-copied expected value
+    is a fabricated safety claim that can embalm a dead number.
+    """
+    manifest = _read_manifest()
+    assert len(manifest) > 0, (
+        "the committed manifest is empty — it would agree with any derivation, including a "
+        "broken one. A pin that cannot disagree is not a pin."
+    )
+    population = _regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)
+    print(f"\n[MANIFEST] committed={len(manifest)} derived={len(population)}")
+    mismatch = _manifest_mismatch(population, manifest)
+    assert not mismatch, (
+        f"the canonical population no longer matches its committed manifest: {mismatch}\n"
+        f"If the change is INTENDED, regenerate the manifest and commit the diff deliberately. "
+        f"A silent move is exactly the failure this file exists to make loud."
+    )
+
+
+def test_the_manifest_comparison_discriminates_a_planted_difference():
+    """THE BREAK-CONTROL FOR THE PIN — and it must catch an ORDER change too (`R-710 §6.4`).
+
+    `N7` (perturb ordering) produced `0` red before this test existed: the path FORM was
+    pinned while the ORDER was not. A comparison that cannot report a difference cannot
+    protect a population; it just agrees with whatever it is handed.
+    """
+    manifest = _read_manifest()
+    assert len(manifest) >= 2, "need at least two members to perturb order meaningfully"
+
+    dropped = manifest[1:]
+    added = manifest + ["engine/tests/test_a_file_that_does_not_exist.py"]
+    reordered = [manifest[1], manifest[0]] + manifest[2:]
+
+    for label, perturbed in (
+        ("DROPPED a member", dropped),
+        ("ADDED a member", added),
+        ("REORDERED two members", reordered),
+    ):
+        mismatch = _manifest_mismatch(perturbed, manifest)
+        print(f"\n[BREAK CONTROL / MANIFEST] {label} -> {mismatch[:90]}")
+        assert mismatch, (
+            f"the comparison did NOT report a difference after we {label}. It cannot "
+            f"discriminate, so the passing pin above proves nothing."
+        )
+
+    assert not _manifest_mismatch(manifest, manifest), (
+        "the unmutated control FAILED — the comparator reports a difference against an "
+        "identical list, so it is always-red and its convictions above are meaningless."
+    )
+
+
+def test_the_population_derivation_follows_a_two_hop_chain(tmp_path):
+    """`R-710 §6.3` / `F-1` — RED-PROOF THE **TRANSITIVE** PROPERTY.
+
+    🛑 The existing break-control plants a 1-hop importer and a 0-hop bystander, so it
+    exercises only the BASE CASE. `[grader-measured]` deleting the recursion drops the
+    population `95` → `23` — `76%` of members silently dropped — with `0` new red.
+
+    ★ A CONTROL THAT ONLY TESTS THE BASE CASE HAS NOT TESTED THE RECURSION.
+
+    Here `test_two_hop.py` never names the target. It can only enter the population by
+    walking test → intermediate → target, so removing the recursion turns this RED.
+    """
+    src = tmp_path / "src" / "engine"
+    (src / "tests").mkdir(parents=True)
+    (src / "spec_condition_compiler.py").write_text("X = 1\n", encoding="utf-8")
+    # the intermediate hop — imports the target, is NOT itself a test file
+    (src / "intermediate_hop.py").write_text(
+        "from src.engine.spec_condition_compiler import X\n", encoding="utf-8"
+    )
+    # 2 hops, and it never mentions the target: reachable ONLY through the recursion
+    (src / "tests" / "test_two_hop.py").write_text(
+        "from src.engine.intermediate_hop import X\n", encoding="utf-8"
+    )
+    # 1 hop — the base case, proving the walk still works at depth 1
+    (src / "tests" / "test_one_hop.py").write_text(
+        "from src.engine.spec_condition_compiler import X\n", encoding="utf-8"
+    )
+    # 0 hops — the discriminator; if this appears the walk includes everything
+    (src / "tests" / "test_bystander.py").write_text("import json\n", encoding="utf-8")
+
+    population = _regression_population(tmp_path / "src", _CLOSURE_TARGETS)
+    print(f"\n[TWO-HOP CONTROL] population over the planted tree = {population}")
+
+    assert "engine/tests/test_two_hop.py" in population, (
+        "the 2-HOP file is MISSING. It never names the target, so its only route into the "
+        "population is test -> intermediate -> target. Its absence means the derivation is "
+        "not transitive — the exact F-1 defect, where 76% of members vanish silently."
+    )
+    assert "engine/tests/test_one_hop.py" in population, (
+        "the 1-hop base case is missing — the walk is broken outright, and the 2-hop "
+        "assertion above cannot be trusted to mean what it says."
+    )
+    assert "engine/tests/test_bystander.py" not in population, (
+        "the 0-hop bystander was included: the derivation is not discriminating, so the "
+        "presence of the 2-hop file proves nothing about transitivity."
+    )
+    assert population == ["engine/tests/test_one_hop.py", "engine/tests/test_two_hop.py"], (
+        f"unexpected membership {population} — exactly the one-hop and two-hop files, in "
+        f"sorted order, and nothing else."
+    )
+
+
+def test_the_population_derivation_is_cwd_independent(monkeypatch, tmp_path):
+    """`R-710 §6.2` — the population needs its OWN cwd control, matching the census's.
+
+    `_SCAN_ROOT` derives from `__file__`, so this is structurally true `[executable line
+    :307-308]`. ★ But A CLAIM THAT HAPPENS TO BE TRUE IS NOT A GUARD — a future edit to a
+    relative path would be caught by nothing.
+    """
+    here = _regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)
+    assert len(here) > 0, "the baseline derivation is empty — nothing below discriminates"
+
+    monkeypatch.chdir(tmp_path)
+    assert Path.cwd() != _MANIFEST_PATH.parent, (
+        "the positive control FAILED: cwd did not actually move, so the assertion below "
+        "would pass without testing anything."
+    )
+    elsewhere = _regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)
+    print(f"\n[CWD CONTROL / POPULATION] cwd={Path.cwd()} -> {len(here)} -> {len(elsewhere)}")
+    assert elsewhere == here, (
+        "the population changed when the process working directory changed — the derivation "
+        "is reading a cwd-relative path somewhere and its members are not reproducible."
+    )
+
+
 def test_fe_census_goes_red_on_an_empty_surface(tmp_path):
     """THE VACUITY CHECK MUST ITSELF BE ABLE TO FAIL.
 
