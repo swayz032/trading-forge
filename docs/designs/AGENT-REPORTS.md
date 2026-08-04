@@ -4,6 +4,79 @@
 
 ---
 
+## AR-787 · 2026-08-04 · ✅★★★★★ **LANE 30 DELIVERED — FOUR OF FIVE ITEMS CLOSED, AND THE FIFTH STOPPED AT ITS OWN PRE-REGISTERED STOP CONDITION WITH THE REASON MEASURED, NOT GUESSED.** 🛑🛑★★★★★ **`80` vs `81` IS UNRECONCILABLE BY MEMBER AND I CAN PROVE WHY: NEITHER DERIVATION WAS EVER COMMITTED — `[MEASURED]` NO `.py` IMPLEMENTING AN IMPORT CLOSURE EXISTS IN ANY COMMIT IN THIS REPOSITORY'S HISTORY, WITH A POSITIVE CONTROL ON THE SEARCH.** ✅★★★★★ **SO I SHIPPED THE PART THAT ENDS THE RECURRENCE: ONE CANONICAL POPULATION, COMMITTED, DETERMINISTIC, WITH A BREAK-CONTROL.** ⚠️ **ONE PREDICTION MISS, RECORDED AGAINST INTEREST: I NAMED `11` REDS AND THE PLANT PRODUCED `13`.**
+
+**TASK:** `R-705 §5` Lane 30 as widened by `R-707 §6`. **FAN-IN `3/3` — the batch is closed.** **FILES CHANGED — TWO, BOTH TESTS:** `src/engine/tests/test_flag_off_parameterized_refusal.py` · `src/engine/tests/test_bias_refusal_surface.py`. **Sibling's `test_synthetic_market_simulator.py` dirty and NOT in this commit — thirty-second consecutive report.**
+✅★★★★ **LANE 30 IS TEST-ONLY, AND THAT IS MEASURED, NOT ASSERTED:** `[MEASURED]` `git diff --stat HEAD -- src/engine/spec_condition_compiler.py` is **EMPTY** and the file's `sha256` is `621302a56987f19b` — byte-identical to the Lane 29 committed state. **No production behaviour changed in this lane**, which is what bounds everything claimed below.
+**FINAL GREEN, LANE SURFACE: `108 passed`** (`93` at Lane 29 close + `15` new).
+
+### ✅★★★★★ §1 — `M5`: THE FIXTURE THAT COULD NOT FAIL, RE-POINTED AND RED-PROVEN
+`[MEASURED HERE, before writing the repair]` `_last_bias_periods` is written at **exactly one place** — `:1028`, inside `_eval_wait_bias` — and **initialised nowhere in the class or the tests**, so `absent` cannot be confused with `present-but-falsy`. **And the flag-OFF ladder DOES reach that evaluator (`:1704`, `:1759`)** — checked, because a witness unreachable on the tested path is the same vacuous green in a new costume.
+✅ **Old assertion on `last_per_condition_bool` REPLACED**, not supplemented. ✅ **Positive control added** (`R-707 §6(1)`): the same witness must read `(20,50)` on a run that legitimately evaluates — otherwise `never set` is satisfied by a field nothing ever writes.
+
+### ✅★★★★ §2 — `F-F`: THE FALSE COMMENT, AND WHY IT IS NOW A GUARD RATHER THAN A SENTENCE
+`R-702 §3(2)` convicted the claim *"before any evaluator or cache is touched"* — `candle_confirmation_check` ran `75` lines earlier. **Lane 29's hoist made the sentence true; `AR-785 §7` flagged that and correctly refused to claim it.** ✅ **NOW PINNED:** refusal fires · confirmation-evaluator invocations **`0`** · **the same instrument records `>0` on a parameterless control.** ★ `A CLAIM THAT HAPPENS TO BE TRUE IS NOT A GUARD` — if anyone lowers the refusal back below that evaluator, this reddens instead of the comment quietly becoming a lie again.
+
+### ⚠️★★★★★ §3 — THE RED-PROOF FOR `M5` + `F-F`, AND THE PREDICTION MISS
+**PLANT (`R-707 §6(1)`'s required mutation):** defer `_acknowledge_parameters` until **after the spine dispatch loop** — anchored at `:1726` so it bites on **both** flag paths, not just the enforced one.
+**PRE-REGISTERED BY NAME: `11` RED.** `[MEASURED]` **`13 failed, 83 passed`.**
+```
+ALL 11 PREDICTED REDDENED.  Two I did NOT name also reddened:
+  test_parameter_acceptance_guard.py::test_census_every_non_consuming_handler_actually_refuses
+  test_parameter_acceptance_guard.py::test_an_unrouted_primitive_also_refuses
+RESTORE -> sha256 621302a56987f19b PRE == POST, BYTE-IDENTICAL, plant residue 0 -> 96 passed
+```
+⚠️★★★★★ **THAT IS A MISS OF MY EXPECTED-GREEN SET AND I AM RECORDING IT RATHER THAN WIDENING THE PREDICTION AFTER THE FACT.** Both are Lane-28 census tests that EXERCISE every routed primitive; deferring the refusal past the loop lets a handler run first, so they were always going to move and I did not think it through. **Second consecutive lane where my declared red set was UNDER-specified in the same direction** — `R-707 §5` recorded the first. ★★★ **The direction is the informative part: I under-predict what a mutation touches, which means my plants prove LESS than I claim unless the observed set is published. It is published.**
+
+### ✅★★★★★ §4 — `M3` AND `F-E`
+**`M3` — THE MIRROR, AND IT IS A COVERAGE HOLE, NOT A LIVE DEFECT.** `[MEASURED HERE BEFORE WRITING THE TEST]` shipped code **already** refuses `{"fast": 7, "slow_period": 90}` and already names exactly `key(s) ['fast']`. `R-702 §6` said it in one line — *"THESE ARE TESTS THAT CANNOT FAIL, NOT LIVE DEFECTS"*. **Both directions now refuse permanently, each naming ONLY the offending key.**
+✅★★★★ **ITS MUTATION CONTROL PINS THE EXACT WRONG ARRAY, WHICH IS WHAT MAKES IT A CONTROL:** under the verbatim pre-repair resolver the input yields `EMA(20,90)` — fast DEFAULTED, slow HONOURED — and the test asserts that hybrid **differs from BOTH** the engine default `EMA(20,50)` **and** the fully-taught `EMA(7,90)`. ★ *"The output changed"* is also satisfied by noise; *"it equals the default"* is satisfied by a resolver that drops both legs. **Neither would have caught this.**
+**`F-E` — THE CENSUS THAT COULD PASS ON ZERO FILES.** ✅ Root is now derived from **this test file's own location** (`parents[3]`), never the process cwd.
+```
+[CENSUS] root=<repo>/src  files=288  ConditionBinding constructions=14  offenders=[]
+[CWD CONTROL] run from an unrelated tmp dir -> files 288 -> 288, offenders identical
+[EMPTY SURFACE] forced at an empty root -> the non-vacuity assertion RAISES (red, not green)
+```
+✅ **The `14` reproduces the original by-member census exactly** (`14` production sites, all in `spec_family_bindings.py`, none passing `parameters`) — an independent path to the same fact.
+✅ **ALL FIVE non-vacuity controls present** (files `>0` · target module reached · `≥1` known constructor · cwd-independence · empty-root-goes-RED), and **the positional matcher's index is DERIVED FROM THE DATACLASS AT RUNTIME** (`parameters` is field `10` of `11`) rather than hardcoded, so it cannot rot silently when a field is added ahead of it.
+✅ **ALL SIX producer shapes get their own controlled positive fixture**, each planted into a tmp tree and run through the WHOLE pipeline (walk + parse + alias resolution + match). ★★★ **And each asserts guard FAILURE through the guard's own extracted verdict function — so "a planted constructor fails the guard" is MEASURED, not inferred from reading the guard's source.**
+
+### 🛑🛑★★★★★ §5 — `80` vs `81`: STOPPED AT `R-707 §6`'s OWN STOP CONDITION, WITH THE REASON MEASURED
+🛑 **`[MEASURED HERE, with a POSITIVE CONTROL on the search]` NO COMMIT IN THIS REPOSITORY'S HISTORY EVER ADDED A `.py` THAT DERIVES AN IMPORT CLOSURE.** Search surface: all `868` `.py` files ever added on any ref. The two filename matches (`..._b2_closure.py`, `..._mode_disclosure.py`) contain **`0`** occurrences of `ast.parse`/`ImportFrom` — they are about other subjects. ✅ **POSITIVE CONTROL: the identical search DOES return `scripts/system_inventory.py`, so the instrument works and the absence is real.**
+⇒ **Both populations were produced by throwaway instruments described only in PROSE** (`AGENT-REPORTS.md:487`, `:494` for the `81`; `R-702 §4` for the grader's `80`).
+✅ **I RECONSTRUCTED AT THE ORIGINAL TREE STATE ANYWAY, RATHER THAN ASSERTING IT WAS IMPOSSIBLE** — `git archive b17f6bc4` into a temp dir, no risk to the shared tree:
+```
+b17f6bc4 holds 626 .py files  <- EXACTLY the grader's own "626" (R-702 s4). Same surface, corroborated.
+my independent closure rule there -> 93        today -> 95
+NEITHER 80 NOR 81.
+```
+🛑★★★★★ **SO I AM A THIRD INSTRUMENT, AND A THIRD INSTRUMENT CANNOT ATTRIBUTE A DIFFERENCE BETWEEN TWO OTHERS.** Naming "the member that differs" from MY set would be fabrication wearing a receipt — it would name a member of a population neither the doer nor the grader ever computed. **`R-707 §6`'s fifth stop condition is exactly this: *the canonical regression population cannot be derived deterministically*. It fired, and I am reporting rather than manufacturing an answer.**
+✅★★★★★ **WHAT I SHIPPED INSTEAD, BECAUSE IT IS THE PART THAT ENDS THE RECURRENCE:** `R-707 §6(5)`'s *"one canonical derived population for the final re-grade"* — **committed, deterministic, normalised repo-relative, with a break-control** proving it can EXCLUDE (a planted bystander that imports nothing is left out while the importer is kept). **`95` test files today.** ★★★★★ **`A POPULATION WHOSE INSTRUMENT WAS NEVER COMMITTED CANNOT BE RECONCILED — ONLY RE-DERIVED, WHICH ANSWERS A DIFFERENT QUESTION.` The next disagreement is resolvable because the instrument is now in the repository.**
+🛑 **DO NOT JOIN MY `31` SCOPED FAILURES TO `AR-779`'s `31`.** Same integer, different populations (`95` files vs `81`). **The join key is the FILE SET, not the count** — `i-measured-the-neighbouring-object`, refused pre-emptively.
+
+### ✅ §6 — SCOPED REGRESSION, BY NAME, WITH A WORKING BREAK-CONTROL
+```
+POPULATION: the canonical 95 files MINUS test_cloud_backend.py (HUNG / UNENUMERATED)
+Lane 30 shipped     -> 31 failed, 2200 passed, 3 skipped, 2 xfailed  (93s)
+BASELINE (Lane 30 absent, measured by me at AR-785 arm A)            -> 172 whole-suite failures
+  population failures NOT in the baseline -> 0      <- NO LANE-30 REGRESSION
+  population failures that ARE inherited  -> 31/31
+  break_control_can_report_a_difference: True
+```
+✅ **AND THE BLAST RADIUS IS BOUNDED BY A MEASURED FACT, NOT BY CONFIDENCE:** production is byte-identical, and `[MEASURED]` `test_bias_refusal_surface.py` — the module the other lane files IMPORT — changed by **`85` additions and `0` deletions**, so no shared helper moved under its importers.
+
+### 🛑 §7 — WHAT IS NOT MEASURED
+- 🛑 **The historical `80` and `81` remain `[UNENUMERATED]`.** I did not reproduce either and do not claim to. **The difference is NOT explained** — it is shown to be unreconstructable.
+- 🛑 **`test_cloud_backend.py` HUNG / `[UNENUMERATED]`** — excluded from every population, desk-owned backlog, untouched.
+- 🛑 **`runtime-production` `[UNENUMERATED]`. NO PARITY CLAIM — no `tsc`, no `vitest`. FLAG NOT ENABLED. PRODUCER UNTOUCHED.**
+- 🛑 **GATE 2 DOES NOT CLOSE HERE** (`R-707 §8` — it closes on the post-Lane-30 independent re-grade against the four disqualifying categories). **This is not Phase-1 exit and not the breakthrough demonstration; the operative scale stays `R-706`'s: golden strategy `[UNSELECTED]` · compiler stages `0/6` · planted-defect harness `NOT BUILT` · `PHASE-1 EXIT 0 of 3`.**
+
+### ★★★★★ §8 — POSITION
+✅ **LANE 30 DELIVERED. FAN-IN `3/3` — LANES 28 · 29 · 30 ARE ALL CLOSED AND COMMITTED.** **NO HANDOFF: I am seated and the ear is live.**
+**OWED TO THE DESK, NOT CLAIMED BY ME:** the post-Lane-30 **independent re-grade** (`R-702 §6`, `R-707 §8`) — `F-A` · `F-B` · the four guard holes · a re-run of all `10` mutations. 🛑 **I am the doer; I do not grade this.** ★ **The grader is `accuracy-validator` and it is one authorization away — say the word and it runs against `<closing sha>`.**
+
+---
+
 ## AR-786 · 2026-08-04 · ⚡ **START-RECEIPT — LANE 30, THE FINAL LANE OF THE BATCH. FIVE ITEMS, `R-707 §6`'s WIDENED CONTRACT, PLAN AND FIRST TWO MEASUREMENTS BELOW.**
 
 **TASK:** `R-705 §5` Lane 30 as widened by `R-707 §6`. **FAN-IN `2/3` → closing the third. NO HANDOFF.** **Sibling's `test_synthetic_market_simulator.py` dirty and not mine — thirty-second consecutive report.**

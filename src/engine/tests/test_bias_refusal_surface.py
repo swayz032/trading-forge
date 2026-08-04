@@ -238,6 +238,91 @@ def test_f2_partial_recognition_still_refuses():
     )
 
 
+def test_f2_mirror_partial_recognition_still_refuses():
+    """LANE 30 / `M3` (`R-702 §6(2)`, widened by `R-707 §6(2)`) — THE OTHER HALF OF THE
+    HYBRID, WHICH NOTHING HAD EVER MEASURED.
+
+    `F-2D` and the test above only ever exercised ONE direction: canonical `fast_period`
+    honoured while `slow` was dropped. The mirror -- canonical `slow_period` honoured while
+    the FAST leg arrives under an unrecognised key -- was never asserted, so a regression
+    that reopened the parameter-loss channel on the fast side would have shipped green.
+
+    🛑 **THIS IS A COVERAGE HOLE, NOT A LIVE DEFECT, AND THE DISTINCTION IS THE RULING'S:**
+    `[MEASURED HERE before writing this test]` shipped code ALREADY refuses this input and
+    already names exactly `['fast']`. `R-702 §6` says it in one line -- *"THESE ARE TESTS
+    THAT CANNOT FAIL, NOT LIVE DEFECTS"*. What was missing was the ability to DETECT a
+    regression, and that is what this adds.
+
+    BOTH DIRECTIONS NOW REFUSE PERMANENTLY, and each names ONLY the offending key.
+    """
+    with pytest.raises(ValueError, match="supplied_parameter_cannot_fall_back_to_default") as exc:
+        _run(_spec(("armA",)), {"armA": {"fast": 7, "slow_period": 90}}, _df())
+    message = str(exc.value)
+    print(f"\n[M3 MIRROR] canonical slow_period + unrecognised fast: {message}")
+    assert "key(s) ['fast']" in message, (
+        f"the refusal must name EXACTLY the unrecognised key responsible for the hybrid. "
+        f"Naming the whole set, or the canonical key alongside it, tells a reader to go "
+        f"looking instead of telling them what to change: {message}"
+    )
+
+
+def test_f2_mirror_mutation_control_the_hybrid_answer_is_real_and_distinguishable():
+    """THE MIRROR'S OWN MUTATION CONTROL — and it pins the EXACT wrong array.
+
+    Under the verbatim pre-repair resolver this input does not error: it honours the taught
+    `slow_period=90` and silently defaults the fast leg to `BIAS_EMA_FAST`. That produces
+    `EMA(20, 90)` — an answer that is NEITHER the engine default `EMA(20,50)` NOR the
+    fully-taught `EMA(7,90)`.
+
+    ★ Asserting the hybrid EQUALS `EMA(20,90)` and DIFFERS from both neighbours is what
+    makes this a control rather than a restatement: *"the output changed"* is also
+    satisfied by noise, and *"it equals the default"* would be satisfied by a resolver that
+    dropped BOTH legs. `A CONTROL MUST DISCRIMINATE.`
+    """
+    reverted_calls: list[dict] = []
+
+    def reverted_resolver(inner, b):
+        params = dict(b.parameters or ())
+        reverted_calls.append(params)
+        resolved = {}
+        for key, default in (("fast_period", BIAS_EMA_FAST), ("slow_period", BIAS_EMA_SLOW)):
+            resolved[key] = params.get(key, default)
+        return resolved["fast_period"], resolved["slow_period"]
+
+    df = _df()
+    original = SpecConditionStrategy._resolve_bias_periods
+    try:
+        SpecConditionStrategy._resolve_bias_periods = reverted_resolver
+        strat = _run(_spec(("armA",)), {"armA": {"fast": 7, "slow_period": 90}}, df)
+        produced = strat.last_per_condition_bool["armA"]
+    finally:
+        SpecConditionStrategy._resolve_bias_periods = original
+
+    hybrid = _ema_cross(df, BIAS_EMA_FAST, 90)          # fast DEFAULTED, slow HONOURED
+    engine_default = _ema_cross(df, BIAS_EMA_FAST, BIAS_EMA_SLOW)
+    fully_taught = _ema_cross(df, 7, 90)
+    print(
+        f"\n[M3 MIRROR CONTROL] reverted resolver saw {reverted_calls}; produced "
+        f"EMA({BIAS_EMA_FAST},90) — differs from engine default on "
+        f"{int(np.sum(produced != engine_default))}/{N_BARS} bars and from the fully-taught "
+        f"answer on {int(np.sum(produced != fully_taught))}/{N_BARS} bars"
+    )
+    assert reverted_calls == [{"fast": 7, "slow_period": 90}], (
+        "MUTATION CONTROL DEAD: the reverted resolver never saw the hybrid key set, so "
+        "this fixture is not reaching the code the repair changed."
+    )
+    assert np.array_equal(produced, hybrid), (
+        "MUTATION CONTROL DEAD: the silent-default resolver did not produce the "
+        "fast-defaulted/slow-honoured hybrid, so the mirror refusal above could pass "
+        "against unrepaired code and prove nothing."
+    )
+    assert not np.array_equal(hybrid, engine_default) and not np.array_equal(hybrid, fully_taught), (
+        "THE CONTROL CANNOT DISCRIMINATE: the hybrid answer is indistinguishable from the "
+        "engine default or from the fully-taught answer on this fixture, so equality with "
+        "it proves nothing. Choose periods that separate all three."
+    )
+
+
 def test_f2_mutation_control_planted_silent_default_fails_this_file():
     """THE PLANTED RESTORATION OF THE SILENT DEFAULT, WHICH R-697 §6 REQUIRES TO FAIL A
     PERMANENT TEST.
