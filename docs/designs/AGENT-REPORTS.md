@@ -4,6 +4,18 @@
 
 ---
 
+## AR-742 · 2026-08-03 · ⏳ **START-RECEIPT — `R-679 §5 LANE 4`, MEASURE THE `ctx` LIFETIME. SAME SEAT.**
+
+**TASK:** `R-679 §5` (a) where `ctx` is constructed and cleared · (b) every construction/clear site with a control · (c) whether it CAN outlive one spec · (d) whether the `MES`/`MNQ`/`MCL` fan-out reuses one `ctx`. **RUN MODE: READ-ONLY at HEAD + scratchpad. NOTHING under `src/` modified.**
+✅ **THIS IS THE TASK `AR-741 §9` RECOMMENDED — I am not marking that as agreement in my favour; the desk reached it from direction `4` independently and its framing (`blast radius`) is sharper than my *"bounds the blast radius"*.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~25 min.**
+
+### 🛑 §1 — THE STOP CONDITION IS THE ONE I AM MOST LIKELY TO MISHANDLE, SO I AM PINNING IT FIRST
+🛑 **`§5`: *"if the lifetime is not statically determinable, SAY SO and name what would settle it — and `NOT DETERMINABLE` is not `PER-CONDITION`. Do not resolve an unknown into the convenient answer."*** ★★★★★ **THE CONVENIENT ANSWER HERE IS THE NARROW ONE.** A local dict inside one method LOOKS per-call at a glance, **and "per-call" only bounds the blast radius if I also prove how much work one call does.** ✅ **SO I AM SPLITTING THE QUESTION IN TWO, BEFORE MEASURING: (1) what is `ctx`'s SCOPE in the language sense · (2) HOW MANY SPECS / INSTRUMENTS / RUNS PASS THROUGH ONE INVOCATION OF THAT SCOPE. **(1) ALONE IS NOT AN ANSWER TO (c) OR (d), and reporting it as one is exactly the shortcut `§1` forbids.**
+⚠️ **AND A SECOND SURFACE I WILL NOT LET THE `ctx` FRAME HIDE: `ctx` IS NOT THE ONLY CACHE. `[SEEN WHILE READING, NOT YET MEASURED]` `self.last_population_a_level` and `self._wire1_bias_bars` are **INSTANCE** attributes — they outlive any local dict by construction. **A lifetime answer scoped to `ctx` alone would be true and misleading**, which is the `AR-737 §5` shape I was convicted for. **I will enumerate instance-level state too, or say I did not.**
+
+---
+
 ## AR-741 · 2026-08-03 · 🛑★★★★★ **`R-678 §5 LANE 3` — **STOP CONDITION FIRED, EXACTLY AS PRE-REGISTERED IN `AR-740 §2`.** STEP `(1)` **CANNOT BE MADE RED WITHOUT ADDING A PARAMETER FIELD**, SO STEP `(2)` IS NOT AUTHORIZED AND I DID NOT DO IT. **STEP `(3)` IS DELIVERED AND VERIFIED.**** ⚠️🛑★★★★★ **AND I AM REFUSING THE WORD THE RULING OFFERED ME: `§5` SAID A NON-RED RESULT *"REFUTES `§2` AND THE CACHE LEAK IS DOWNGRADED FROM HYPOTHESIS TO **DISPROVED**"*. **IT IS NOT DISPROVED. IT IS UNREACHABLE.** THE MECHANISM IS INTACT AND CORRECT; IT SIMPLY HAS NO INPUT THAT VARIES YET. **`5` HANDLERS BECOME LEAK SITES THE INSTANT A PARAMETER EXISTS.** `AN UNREACHABLE DEFECT IS A LOADED TRAP, NOT AN ABSENT ONE — AND TAKING THE OFFERED "DISPROVED" WOULD HAVE DISARMED IT ON PAPER ONLY.**
 
 **TASK:** `R-678 §5` steps `(1)`,`(2)`,`(3)`. **RUN MODE: AST enumeration + hand audit + one comment-only source edit + `pytest`.** **Files touched: `src/engine/spec_family_bindings.py` (module docstring ONLY) and `AGENT-REPORTS.md`. NO test file written (step `1` did not reach red). NO cache re-key (step `2` gated).** 🛑 **The sibling's dirty `test_synthetic_market_simulator.py` remains untouched by me.**
