@@ -4,6 +4,43 @@
 
 ---
 
+## AR-760 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-686 §5 LANE 12` — **STOP CONDITION FIRES. IT REACHES EXECUTION.** THE ORDERING DECISION RETURNS TO THE DESK AND I HAVE STARTED NO REPAIR.** 🛑🛑★★★★★ **BUT THE ANSWER IS NOT THE ONE THE QUESTION EXPECTED, AND THE DIFFERENCE IS THE WHOLE FINDING: `entry_params` IS **NOT** READ AT RUNTIME BY THE EXECUTION PATH. **ITS VALUES ARE BAKED INTO EXECUTABLE CONFIG AT GRADUATION TIME AND PERSISTED.** `[MEASURED]` `compileDslWithConfluence(compileInput)` (`:2206`) → `indicators: [{ema, period:9}, {ema, period:21}]` + `entry_long: "ema_9 crosses_above ema_21"` → `compiled` (`:2231`) → `overlayed.config` (`:2573`) → **`db.insert(strategies).values({ config: {...overlayed.config} })` (`:2781-2789`, and again for variants at `:3072-3079`).** ★★★★★ **SO SEARCHING FOR `entry_params` AT THE EXECUTION BOUNDARY RETURNS ALMOST NOTHING AND MEANS ALMOST NOTHING — `THE PARAMETER DOES NOT TRAVEL TO EXECUTION; ITS VALUE DOES, WEARING A DIFFERENT NAME.` A literal reading of my own lane question would have produced a confident, controlled, WRONG "no".**
+
+**TASK:** `R-686 §5` Lane 12. **READ-ONLY, MEASURE ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; fourteenth consecutive report. NO REPAIR STARTED, per the stop condition.**
+
+### 🛑🛑★★★★★ §1 — THE CHAIN, AT THE EXECUTABLE LINE
+| hop | evidence |
+|---|---|
+| params compiled | `direct-bucket-graduator.ts:2206` `compileDslWithConfluence(compileInput)` — `dsl-compiler.ts:273` reads `p.fast_period`/`p.slow_period`/`p.std_dev` and emits `indicators[]` + `entry_long` |
+| baked into config | `:2231` `const compiled = {...}` carrying `indicators`, `strategy.entry_long/entry_short` |
+| overlaid | `:2573` `config: overlayed.config` |
+| **PERSISTED** | `:2781` `await db.insert(strategies).values({ ..., config: { ...(overlayed.config), ... } })` · **second writer `:3072-3079` for variants** |
+✅ **DOCUMENTED BY THE CODE ITSELF, `:2043-2058`, and it is the clearest statement of the mechanism: *"the previous code wrote `indicators: [{type: "ema_crossover"}]` into config… the Python engine's `compute_indicators()` only handles primitive types… Result: NO indicator columns ever computed → `0` graduated strategies have ever backtested. Now: `compileDslToEngine()` translates `{indicator: "ema_crossover", params: {fast:9,slow:21}}` into `indicators: [{ema, period:9}, {ema, period:21}]`, `entry_long: "ema_9 crosses_above ema_21"`."* **The whole point of that translation is to make the numbers EXECUTABLE.**
+🛑🛑★★★★★ **THEREFORE `AR-753`'s MIDPOINT IS NOT A REPORTING DEFECT. `[MEASURED, `dsl-sanitizer.ts:121-125`]` a dropped taught key is backfilled with the validator's RANGE MIDPOINT before that compile — so `sma_crossover` with a taught `20/200` is persisted as `indicators:[{sma, period:27.5},{sma, period:110}]`-shaped config and **that is the number the engine runs.** `A MIDPOINT THAT REACHES `indicators[]` IS NOT AN ANNOTATION — IT IS THE STRATEGY.`**
+
+### ✅★★★★ §2 — WHAT THE PAPER ENGINE ACTUALLY DOES WITH `entry_params` (the narrow, honest answer)
+✅ **`[MEASURED]` `paper-signal-service.ts` references `entry_params` **exactly ONCE**, at `:5850` (positive control, same file: `signal` `285` · `position` `146`, so the file is fully readable by this matcher).**
+✅ **IT IS AN AUDIT HOOK, NOT AN EXECUTION INPUT: `:5840-5845` — *"Fire-and-forget — never blocks the entry path"*, fires only **after** `riskGatePassed === true`, and feeds `emitBounceOffLevelSignal` / `emitIctBiasAlignedContinuationSignal`.** **It does not gate, size, or price anything.**
+🛑🛑★★★★ **BUT IT IS A FALSE-WITNESS SURFACE AND THAT IS WORTH MORE THAN THE NEGATIVE: `:5863` `ma_period: typeof entryParamsForAudit.ma_period === "number" ? entryParamsForAudit.ma_period : 200`. **The audit record publishes whatever `entry_params` holds — and if that value is a midpoint, the OBSERVABILITY RECORD reports a parameter as if it were taught.** `A PROVENANCE TAG THAT OUTLIVES THE VALUE IT DESCRIBES IS A FALSE WITNESS` (`R-684 §6`) — here the tag is an audit event, and it is the surface a human would check first.**
+⚠️ **AND THE `: 200` FALLBACK IS THE SAME SPECIES AS THE MIDPOINT, ONE LAYER OUT: when the field is absent the audit emits `200` — a number no lesson supplied — with nothing marking it as a substitute. `[MEASURED]`, not repaired, not in my lane.**
+
+### 🛑 §3 — DISPOSITION
+🛑🛑 **`R-686 §2`'s RE-ENTRY CONDITION `scout_graduation_parameter_output_reaches_live_paper_or_campaign_strategy_execution` IS **MET** — on the `live/paper execution` limb, by persistence into `strategies.config`. `[MEASURED]` It remains **NOT MET** on the campaign limb (`AR-757`, unchanged: the campaign reads frozen `phase_b` JSON).**
+🛑 **I AM STOPPING HERE. `R-686 §5`: *"MEASURE ONLY. NO REPAIR. If it DOES reach execution, STOP AND REPORT — the ordering decision returns to me."* **No file under `src/` touched, no fix proposed as a change, no TS boundary designed.**
+
+### ⚠️ §4 — WHAT I DID NOT MEASURE (and one of these matters a lot)
+- 🛑🛑 **`[UNENUMERATED — THE BIGGEST GAP, AND IT BOUNDS THE SEVERITY]` HOW MANY LIVE OR PAPER STRATEGIES ACTUALLY CARRY A MIDPOINT-INVENTED VALUE TODAY. That is a DB question and the DB is unreachable (`ECONNRESET`, `R-686 §6.4`). **I have proven the MECHANISM reaches execution; I have NOT counted the affected rows. `0` and `all of them` are both consistent with everything I measured.**
+- ⚠️ **`[UNENUMERATED]` whether the sanitizer runs on every graduation path or only some.** I measured `dsl-sanitizer.ts:183` replacing the field and the graduator compiling from it; **I did not enumerate the call sites of `sanitizeStrategyDsl` to prove it is unconditional.**
+- ⚠️ **`[UNENUMERATED]` dashboards. `R-686 §5` named them; I measured the paper engine and the persistence path and ran out of lane. **Not claimed either way.**
+- ⚠️ **Campaign worktree only — and `R-686`'s own NOT-APPROVED list already bars quoting this for `runtime-production`.**
+- ✅ **BIAS DISCLOSURE DISCHARGED: `AR-759` warned that I had already published *"almost certainly yes."* **I did find yes — so the warning did not save me, and the reader should weight this report accordingly.** What I can say is that the mechanism is four measured hops with the code's own comment describing the intent, and it did NOT arrive by the route my prediction assumed (runtime read of `entry_params`) — it arrived by a route my prediction would have missed.**
+
+### ★★★★★ §5 — RECOMMENDATION
+**`BLOCKED` by design — stop condition fired; the ordering call is the desk's.** **FAN-IN `3/3` for this seat's authorized lanes (10, 11, 12). No handoff; the seat has room.**
+**THE ONE MEASUREMENT THAT WOULD SIZE THIS, if the desk wants it:** **count live/paper strategies whose persisted `config.indicators[].period` matches a `CANONICAL_PARAM_RANGES` midpoint** — it converts *"the mechanism reaches execution"* into *"`N` strategies are trading an invented number." 🛑 **It needs the database, which is down (`R-686 §6.4`), so it is an infrastructure ask before it is a lane.**
+
+---
+
 ## AR-759 · 2026-08-03 · ⏳ **START-RECEIPT — `R-686 §5 LANE 12`, BOUND THE PRODUCT BLAST RADIUS. READ-ONLY, MEASURE ONLY.** ⚠️ **SEQUENCING NOTE: `R-686` was written with `FAN-IN 1/2 — Lane 11 still in this seat`. **LANE 11 HAS LANDED** (`6d026222`, `AR-758`), so its *"Lane 12 START-RECEIPT ~2 min after it lands"* trigger has fired. **Naming the stale premise rather than acting silently on a ruling that describes my work as in-flight.**
 
 **TASK:** `R-686 §5` Lane 12 — does the scout/graduation route's `entry_params` reach **live or paper strategy execution** (paper engine, deployed strategies, dashboards)? **Enumerate consumers; positive control on every zero.** **ETA ~20 min.**
