@@ -4,6 +4,15 @@
 
 ---
 
+## AR-763 · 2026-08-04 · ⏳ **START-RECEIPT — `R-689 §4`, LANES 17 AND 18. BOTH READ-ONLY. FAN-IN TARGET `2/2`, NO HANDOFF AT THE SEAM.**
+
+**TASK:** Lane 17 — test the ESM circular-import `[HYPOTHESIS]` **that I authored in `AR-762 §3`**, from the ACTUAL module graph, not from comments. Lane 18 — writer precedence (still owed from `R-688 §5`). **ETA ~30 min each.**
+🛑🛑★★★★★ **THE BIAS IS MINE AGAIN AND IT IS SHARPER THIS TIME: **LANE 17 EXISTS BECAUSE I PROPOSED IT, AND `R-689 §4` EXPLICITLY ORDERS *"if NO cycle exists, report the measured reason the mirrors exist — do not assume one."*** **A confirming answer flatters my own guess; a refuting one costs me nothing but the guess. I will publish the graph either way and I will build a POSITIVE CONTROL that proves my scanner can see a known edge before I trust any zero it reports.**
+⚠️ **AND I OWE A CORRECTION ON THE DB, WHICH `R-689` RESOLVED WITHOUT ME: I reported `ECONNRESET` and offered `[HYPOTHESIS — UNTESTED]` *"rotated proxy endpoint or credential."* `[MEASURED BY THE DESK]` **the real cause was a RETIRED RAILWAY PROJECT — the campaign `.env` points at a Postgres that stopped on 2026-07-23.** My hypothesis was labelled and wrong, and the discriminating probe I never thought to run was **the one that sends no credentials at all.**
+✅ **AND THE CENSUS ANSWER IS THE ONE THE OPERATOR MOST NEEDED AND I COULD NOT GET: `[MEASURED, R-689 §1]` **ZERO persisted exposure in the active database**, both sweeps, live controls. **The exposure I escalated is PROSPECTIVE, not historical** — I will say exactly that to him and not hedge it into sounding worse than it measured.**
+
+---
+
 ## AR-762 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-688 §5 LANE 16` — **STOP CONDITION FIRES ON ITS SECOND BRANCH: THERE IS NO SHARED PRE-PERSISTENCE FUNCTION THAT RECEIVES BOTH WRITERS.** `[MEASURED]` **THE GRADUATOR'S TWO INSERTS CALL NO GUARD AT ALL** — `0` guard references in the `80` lines before `:2781`, and `0` anywhere in that module. **A canonicalizer installed at `agent-service.ts:468` would not see them.** 🛑🛑🛑★★★★★ **AND THE INSERT POPULATION IS BIGGER THAN ANY RULING HAS NAMED: **`10` `db.insert(strategies)` SITES, NOT `5`.** `R-688 §5(b)` named `5`. `[MEASURED]` the other `5` are `routes/strategies.ts:537` · `critic-optimizer-service.ts:2038` · `evolution-service.ts:626` · `fade-the-losers-service.ts:659` · `spec-onboarding-service.ts:762`.** 🛑🛑★★★★★ **AND THE GUARD THAT `R-688 §4` HOPED WAS THE READY-MADE BOUNDARY **ALREADY EXISTS IN THREE IMPLEMENTATIONS**: the canonical `assertCrossValidatedSource` plus **TWO LOCAL MIRRORS** (`fade-the-losers-service.ts:89`, `spec-onboarding-service.ts:134`), each with its own copy of the rule. **THE PATHOLOGY THIS CAMPAIGN IS REPAIRING HAS ALREADY HAPPENED TO THE GUARD ITSELF.**
 
 **TASK:** `R-688 §5` Lane 16. **READ-ONLY. `[MEASURED]` `git status --porcelain src/` → only the sibling's file; sixteenth consecutive report. NO REPAIR, per the stop condition.**
