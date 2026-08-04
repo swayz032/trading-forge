@@ -4,6 +4,83 @@
 
 ---
 
+## AR-747 · 2026-08-03 · ✅🛑★★★★★ **`R-681 §5 LANE 6` DELIVERED — **THE PARAMETER COLLISION IS REAL, REPRODUCED, AND FIXED.** THE DEFECT THAT HAS BEEN `UNREACHABLE` SINCE LANE 3 IS NOW **OBSERVED**: two `WAIT_STRUCTURE` conditions taught `SMA(10)` and `SMA(200)` **RECEIVED IDENTICAL ARRAYS**, and **REVERSING THEIR DECLARATION ORDER CHANGED WHICH VALUE BOTH GOT.**** ✅★★★★★ **RED `2 failed, 2 passed` → FIX → GREEN `5 passed`, AND THIS TIME *"THE SAME UNCHANGED COMMAND"* IS LITERALLY TRUE — the repair is in `src/`, not behind a plugin flag, so the identical `pytest` line produced both.** ✅ **ALL THREE CONTROLS PRINTED THEIR VALUES: `SMA(10)` vs `SMA(200)` differ on **`100`/`200`** bars · the handler received periods **`[10, 200]`** (positive execution witness — *"both got the same array"* is otherwise also satisfied by *"neither ever ran"*) · and after the fix, two IDENTICAL periods still trigger **`1`** evaluation, not `2`.** 🛑🛑★★★★★ **AND I HAVE TO CONVICT MY OWN PRE-REGISTRATION: **THE EXPECTED-GREEN SET I NAMED IN `AR-746 §2` OMITTED `test_spec_family_bindings.py` — THE TEST FILE FOR THE MODULE I EDITED.** It stayed `307 → 307` green and told me nothing. **I FOUND THE GAP ONLY BECAUSE I RAN THE WIDER BLAST RADIUS ANYWAY.** `A PINNED SET THAT OMITS THE OBVIOUS FILE IS A GREEN THAT MEANS LESS THAN IT LOOKS.`**
+
+**TASK:** `R-681 §5` steps `(1)`–`(5)`. **FILES CHANGED: `src/engine/spec_family_bindings.py` (one field + `to_dict`), `src/engine/spec_condition_compiler.py` (one handler + one `ctx` slot), NEW `src/engine/tests/test_parameter_collision.py`.** 🛑 **Sibling's dirty `test_synthetic_market_simulator.py` untouched — seventh consecutive report.**
+
+### ✅ §1 — STEP (1): ALREADY DISCHARGED (see `AR-746 §1`)
+✅ **`test_compute_call_isolation.py` was committed at `5e56dbaa`, `21:17:24` — nine minutes BEFORE `R-681` was written at `21:26:07`.** The ruling's `[MEASURED HERE: ?? untracked]` was stale. **Named, not silently skipped.**
+
+### ✅★★★★ §2 — STEP (2): THE FIELD, AND WHY IT IS A TUPLE
+✅ **`ConditionBinding.parameters: tuple[tuple[str, object], ...] | None = None`.**
+```
+expected-GREEN set BEFORE the field : 307 passed
+expected-GREEN set AFTER  the field : 307 passed        <- additive, measured not assumed
+hash(binding) with parameters=None  : ok        hash(binding) WITH parameters set : ok
+to_dict OMITS the key when None     : True  (10 keys, unchanged)
+to_dict INCLUDES it when set        : {'period': 20}
+```
+★★★★★ **WHY A TUPLE OF PAIRS AND NOT A `dict`, STATED BECAUSE IT IS THE INTERESTING DECISION: the dataclass is `frozen=True`, so Python derives `__hash__` from its fields and a `dict` field makes every `ConditionBinding` unhashable. **`[MEASURED]` nothing under `src/` hashes one today — so a `dict` would have broken NOTHING.** 🛑 **THAT IS EXACTLY THE REASONING `R-679 §1` REJECTED: `an unreachable defect is a loaded trap, not an absent one`. I kept the invariant instead of spending it.**
+✅ **`OMIT-WHEN-EMPTY` HONOURED AT LAYER 2 TOO** — a parameterless binding serialises byte-identically to before the field existed (`AR-739 §1`'s law, applied one layer up).
+🛑 **IT IS NOT THE GRAMMAR, AND THE SOURCE SAYS SO IN ITS OWN DOCSTRING.** `R-678 §6` reserves the grammar to the desk, and it must eventually RECEIVE `indicator-params.ts`'s shape, not this one.
+
+### 🛑🛑★★★★★ §3 — STEPS (3)–(4): THE RED, VERBATIM
+```
+python -m pytest src/engine/tests/test_parameter_collision.py -q -s
+
+[POSITIVE CONTROL]   SMA(10) vs SMA(200) gates differ on 100 of 200 bars
+[EXECUTION WITNESS]  _h_structure received periods: [10, 200]
+FAILED ...::test_two_same_family_conditions_with_different_periods_must_evaluate_differently
+FAILED ...::test_reversing_condition_order_changes_the_shared_value
+2 failed, 2 passed in 0.50s
+```
+✅ **BOTH PROOF FORMS `R-681 §5(4)` ASKED FOR, NOT ONE:** *"both conditions receive the same computed value"* **AND** *"reversing their order changes which value both receive."*
+🛑 **THE FAILING CARRIER, BY NAME: the single-slot `wait_structure` cache at `spec_condition_compiler.py:515-517`** — `if ctx["wait_structure"] is None: ctx["wait_structure"] = self._eval_wait_structure(...)`, on the ENFORCED dispatch path.
+✅★★★★★ **AND THE RED IS THE ENGINE'S, NOT MY PATCH'S — this is the design point of the fixture: my monkeypatch **WRAPS** `_h_structure` and **DELEGATES TO THE ORIGINAL**, so the caching decision under test is production's, unmodified. The patch supplies ONLY the ingredient Lane 3 measured absent — an input that varies per condition. **`THE CACHE THAT COLLIDES IS REAL, UNPATCHED PRODUCTION CODE.`**
+⚠️ **WHY THE TEST RUNS UNDER `TF_FAMILY_META_ENFORCED=true`, AND IT IS ITSELF A FINDING (`§5`): that is the ONLY path where the binding reaches the handler.**
+
+### ✅★★★★★ §4 — STEP (5): THE FIX, AND WHY I WAS AUTHORIZED TO APPLY IT
+✅ **`§5(5)`'s BOTH CONDITIONS MET: the red names EXACTLY ONE carrier, and its fix IS the `population_a_level_cache[cache_key]` composite template (`:1181-1184`) — the one cache in that file already keyed by what varies.**
+```python
+cache_key = b.parameters                       # None for every binding in this repo today
+cache = ctx["wait_structure_cache"]
+if cache_key not in cache:
+    cache[cache_key] = self._eval_wait_structure(ctx["n"], ctx["df"])
+return cache[cache_key]
+```
+```
+python -m pytest src/engine/tests/test_parameter_collision.py -q -s     <- SAME COMMAND
+[POSITIVE CONTROL] SMA(10) vs SMA(200) gates differ on 100 of 200 bars
+[EXECUTION WITNESS] _h_structure received periods: [10, 200]
+[REUSE GUARD] evaluator invocations for two identical SMA(10) conditions: [10]
+5 passed in 0.38s
+```
+✅★★★★★ **THE REUSE GUARD IS THE ONE `R-679 §4c` CALLED NON-OPTIONAL, AND IT EARNED ITS PLACE: two conditions teaching the SAME period trigger **`1`** evaluation, not `2`. **Without it, `delete the cache` passes every other assertion in the file and ships a performance regression wearing a correctness fix's clothes.**
+✅ **BEHAVIOUR IS UNCHANGED FOR EVERY BINDING THAT EXISTS TODAY** — nothing populates `parameters` in production, so every binding keys to `None`, one entry is computed, and it is shared exactly as before.
+
+### 🛑🛑★★★★★ §5 — THE REPAIR IS ONE PATH SHORT, **BY MEASUREMENT AND ON PURPOSE**
+🛑 **`[MEASURED]` THE DEFAULT (flag-OFF) INLINE LADDER CANNOT CARRY A PARAMETER AT ALL: `spec_condition_compiler.py:1215-1217` calls `self._eval_wait_structure(n, df)` — **WITHOUT THE BINDING.** So on the path that actually ships today, a taught number cannot reach the evaluator even with the field present.**
+⚠️ **THEREFORE: the identical single-slot cache shape STILL EXISTS on the default path, and I did NOT fix it.** ✅ **THAT IS DELIBERATE AND I WILL DEFEND IT: fixing it would require changing the CALL SITE to pass `b` — which is *"editing `src/` to produce a red"* in reverse, a change with **no red proof available**, on the path `R-681` did not authorize. **`AR-741 §5` argued exactly this and the desk agreed: a green-to-green refactor on the critical path is how a silent regression ships.**
+★★★★ **SO THE HONEST STATUS LINE: `THE CARRIER THE RED NAMED IS FIXED. ITS TWIN ON THE FLAG-OFF PATH IS UNREACHABLE-NOT-FIXED, AND IT IS A LOADED TRAP BY THE SAME LAW THAT NAMED THIS ONE.` **It arms the moment anyone passes the binding at `:1215-1217`.** Owner: the desk.
+
+### 🛑🛑★★★★★ §6 — TWO THINGS THAT CONVICT MY OWN METHOD, DISCLOSED BEFORE THE GREEN
+1. 🛑🛑 **MY PINNED EXPECTED-GREEN SET HAD A HOLE, AND IT WAS THE OBVIOUS ONE.** `AR-746 §2` named `10` files and **omitted `test_spec_family_bindings.py` — the test file for the very module I added the field to** (`339` tests). It went `307 → 307` and would have let me report a clean additive change on a set that could not see the most relevant file. ★★★ **`R-681 §1`'s new doctrine — name the expected-GREEN set in advance — is correct, and its failure mode is now demonstrated: `THE SET IS ONLY AS GOOD AS THE FILE YOU FORGOT TO PUT IN IT.` I caught it only by running the wider blast radius anyway.**
+2. ⚠️🛑 **A PRE-EXISTING TEST POLLUTION, FOUND WHILE CLEARING MYSELF — REPORTED, **NOT FIXED**.** The `18`-file blast radius returns **`3 failed, 849 passed`**. **NOT MINE, PROVEN THREE WAYS:** the same `3` fail with **my test files removed** (`839 passed`) · `test_spec_family_bindings.py` **ALONE passes `339`** with all my changes in place · my file plus it = **`344` passed**.
+   🛑 **ROOT CAUSE, BISECTED TO ONE FILE:** `test_session_role_adversarial_fence.py:823` and `:858` set **`os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"] = "true"` DIRECTLY — no `monkeypatch`, no cleanup** — so the flag leaks into every later test in the process and breaks three **flag-OFF** assertions in `test_spec_family_bindings.py` (including `test_s7_flag_off_byte_identity_over_the_full_26_row_population`). **The same file uses `monkeypatch.setenv` correctly at `:696`/`:748`, so this is an inconsistency inside one file, not a missing convention.**
+   🛑 **NOT PULLED** — `R-681` forbids scope creep and this fails the admission test. **But it means any whole-suite green in this repo is order-dependent, which is worth more than the three tests.**
+
+### ⚠️ §7 — WHAT I DID NOT MEASURE / SURFACES MY COUNTS CANNOT SEE
+- 🛑 **I did NOT run the full `src/engine/tests/` suite, deliberately: a sibling seat is still mutating `test_synthetic_market_simulator.py`, and `R-679` bars a green-suite claim while a test file is in flight. **My regression evidence is the `18`-file import-closure blast radius, minus that one file** — a scoped claim, not a suite claim.
+- `[UNENUMERATED]` the other `8` cache carriers under parameters — **`R-681 §4` explicitly de-authorized extending this; I did not touch them.** They are in the same `UNREACHABLE-not-absent` state `wait_structure` was in this morning.
+- `[UNENUMERATED]` whether `ctx["wait_structure"]` (the now-unused slot the enforced path no longer reads) has any other consumer. `[MEASURED]` `grep` shows none — **but I left the key in place rather than remove it, because deleting it is unrelated cleanup.**
+- `[UNENUMERATED]` the composition bundle interaction, carried forward from `R-678 §6` and still open.
+
+### ★★★★★ §8 — RECOMMENDATION
+**`APPROVAL_REQUESTED`.** Red reproduced, carrier named, fix applied from the authorized template, green from the same command, reuse guard green, `307` pinned regression unchanged.
+**NEXT SMALLEST TASK (ONE):** **decide the flag-OFF twin at `:1215-1217` (`§5`)** — it is the same defect on the path that actually ships, and it is unreachable only because a call site drops the binding. **That is a desk decision about ordering, not a worker fix, because it has no red proof available today.**
+
+---
+
 ## AR-746 · 2026-08-03 · ⏳ **START-RECEIPT — `R-681 §5 LANE 6`, MAKE THE PARAMETER COLLISION REACHABLE. ⚠️ NEW SEAT-STATE: THE OPERATOR RESTARTED THE SESSION; MY RULING EAR DIED WITH IT AND `R-681` WAS MISSED.**
 
 ### ⚠️🛑★★★★★ §0 — MONITOR STATE, DISCLOSED FIRST BECAUSE IT IS A GAP IN MY OWN COVERAGE

@@ -791,9 +791,34 @@ class ConditionBinding:
     executed: bool
     reason: str | None = None
     session_zone: str | None = None
+    parameters: tuple[tuple[str, object], ...] | None = None
+    """OPTIONAL per-condition parameter carrier — Layer 2 of the numeric parameter channel
+    (R-681 §5(2)). Defaults to None, and NOTHING in this repo populates it as of this
+    commit; the only writer is a test.
+
+    *** THIS IS NOT THE PARAMETER GRAMMAR. *** The grammar is reserved to the advisor desk
+    (R-678 §6), and when it lands it must RECEIVE the shape src/server/lib/
+    indicator-params.ts already emits ({indicator, params, confidence, source} ->
+    entry_params/param_source) rather than this. This field exists for ONE reason: so the
+    parameter-COLLISION defect can be made reachable and red-proofed BEFORE the grammar is
+    designed. R-679 §2's law -- `a cache keyed by family becomes a parameter-losing channel
+    the moment parameters exist` -- was untestable while no parameter could reach an
+    evaluator at all (Lane 3's stop condition, AR-741).
+
+    WHY A TUPLE OF PAIRS AND NOT A dict: this dataclass is frozen=True, so Python derives
+    __hash__ from its fields, and a dict field would make every ConditionBinding
+    unhashable. MEASURED at this commit: nothing under src/ hashes a ConditionBinding or
+    puts one in a set, so a dict would break nothing TODAY. That is precisely the reasoning
+    R-679 §1 rejected -- `an unreachable defect is a loaded trap, not an absent one`. The
+    immutable shape keeps the invariant instead of spending it.
+
+    IT CANNOT REACH A SEALED ARTIFACT. Binding plans are not persisted into *.spec.json
+    (measured: all 18 sealed artifacts carry exactly 7 top-level keys, none a binding), so
+    this field cannot move spec_hash.
+    """
 
     def to_dict(self) -> dict:
-        return {
+        out = {
             "condition_id": self.condition_id,
             "type": self.type,
             "role": self.role,
@@ -805,6 +830,13 @@ class ConditionBinding:
             "reason": self.reason,
             "session_zone": self.session_zone,
         }
+        # OMIT-WHEN-EMPTY. A binding with no parameters serialises byte-identically to
+        # before this field existed. Emitting "parameters": null instead would change every
+        # consumer's payload for zero information -- the same discipline AR-739 §1 measured
+        # at Layer 1 as the whole difference between 0 and 18 re-seals.
+        if self.parameters is not None:
+            out["parameters"] = dict(self.parameters)
+        return out
 
 
 def _session_phrase_hit(object_text: str, keywords: tuple[str, ...]) -> bool:

@@ -512,9 +512,24 @@ class SpecConditionStrategy(BaseStrategy):
         return self._eval_wait_session(b, ctx["ts_list"], ctx["n"])
 
     def _h_structure(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
-        if ctx["wait_structure"] is None:
-            ctx["wait_structure"] = self._eval_wait_structure(ctx["n"], ctx["df"])
-        return ctx["wait_structure"]
+        # COMPOSITE KEY (R-681 §5(5)), mirroring _h_levelzone_resolver's
+        # population_a_level_cache below — the one cache in this file that was already keyed
+        # by what varies per condition, and therefore the template for this repair.
+        #
+        # WHY: the previous single-slot form (`if ctx["wait_structure"] is None`) handed the
+        # SECOND condition of this family the FIRST condition's array. Harmless while nothing
+        # varied per condition; a silent parameter-loss channel the moment one did
+        # (R-679 §2). Red-proofed in test_parameter_collision.py before this line changed.
+        #
+        # BEHAVIOUR IS UNCHANGED FOR EVERY BINDING IN THIS REPO TODAY: nothing populates
+        # ConditionBinding.parameters in production, so every binding keys to None, one entry
+        # is computed, and it is shared exactly as before. Two conditions teaching the SAME
+        # period also share one entry -- the cache still caches (R-679 §4c).
+        cache_key = b.parameters
+        cache = ctx["wait_structure_cache"]
+        if cache_key not in cache:
+            cache[cache_key] = self._eval_wait_structure(ctx["n"], ctx["df"])
+        return cache[cache_key]
 
     def _h_wait_bias(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
         want_bearish = self._resolve_wait_bias_bearish(b.object)
@@ -1118,6 +1133,12 @@ class SpecConditionStrategy(BaseStrategy):
             "bullish_confirm": bullish_confirm, "bearish_confirm": bearish_confirm,
             "htf_trend": _htf_trend,
             "wait_structure": wait_structure,
+            # Parameter-keyed cache for the ENFORCED dispatch path's _h_structure (R-681
+            # §5(5)). Separate from the `wait_structure` slot above, which the flag-OFF
+            # inline ladder still uses via its own local -- that path never receives the
+            # binding (see :1215-1217), so a parameter cannot reach it and it is left
+            # untouched by this repair. Rebuilt per compute() call like every other slot.
+            "wait_structure_cache": {},
             "wait_structure_levelzone": wait_structure_levelzone,
             "wait_retest": wait_retest,
             "wait_bias_cache": wait_bias_cache,
