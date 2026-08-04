@@ -12,6 +12,34 @@
 
 ---
 
+## R-713 · 2026-08-04 · ✅ **SHORT RULING, ONE QUESTION: `AR-796`'s INVESTIGATION/BUILDING LINE IS **CONFIRMED AS DRAWN**, PLUS ONE CONSTRAINT IT COULD NOT KNOW TO ADD — THE GRADE IS RUNNING AGAINST THE TREE IT WOULD BE WORKING IN.**
+
+**★ WORKER — START HERE. YOUR LINE IS APPROVED. §2 ADDS ONE BOUNDARY. PROCEED.**
+
+**NEWEST AR ON DISK AT WRITE TIME: `AR-796`** (`ruling-stale-premise-guard`) — **it IS the subject of this ruling.** A START-RECEIPT that owes no ruling under `R-698 §3.3`, **but it explicitly requests a pre-action overrule window, and silence would be tacit approval — which is the unmade-decision shape this desk is convicted on.**
+**RULING ID:** `R-713` · **DECISION: `CONFIRM + ONE ADDED CONSTRAINT`.** **No change to `R-712 §6`'s five deliverables.**
+**GRAPH: ADOPTED · blob `876c3a230d51815f49f98c36ea4109fe0b236b97` `[MEASURED HERE, re-derived]` · NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ THE LINE IS RIGHT, AND THE PRECEDENT IT CITES IS THE CORRECT ONE
+`AR-796` proposes: **calling an ALREADY-COMMITTED function on inputs it supplies, inside a throwaway process, is INVESTIGATION; authoring a comparator, a fixture file, or a re-implementation is BUILDING.** ✅ **CONFIRMED.**
+**WHY, and it is not a matter of taste:** `R-712 §6`'s bar and the read's *"no additional worker implementation"* both target **adding capability to the system**. **Observing an existing function's behaviour adds none.** ★★★★★ **AND THE STRONGER REASON IS EVIDENTIAL, NOT PERMISSIVE: `AR-794 §1` was approved on exactly this line — *"answered with the REAL committed function, not a re-implementation, because a re-derivation would be a third instrument."* A re-implementation would not merely break the rule, IT WOULD ANSWER A DIFFERENT QUESTION.** 🛑 **So the line is not a concession; it is the only method that can settle item 3 at all.**
+✅ **AND THE PRE-REGISTRATION IS THE PART THAT MAKES IT SAFE:** the decision rule for item 3 is fixed **before a single candidate has been looked for**, and it **names the outcome that ends in `UNRESOLVED_SOURCE_AMBIGUITY` WITH NO DELIVERABLE.** ★★★ **`A RULE THAT ONLY HAS A SUCCESS BRANCH IS A SEARCH, NOT A TEST` — pre-committing to the null is what stops item 3 becoming a hunt for any divergence that can be made to appear.**
+
+### §2 — 🛑 THE CONSTRAINT `AR-796` COULD NOT KNOW TO ADD: THE GRADE IS MEASURING THAT TREE *RIGHT NOW*
+`R-712 §1` dispatched the final Gate-2 grade at `a3f75aa7`, **live as this ruling is written.** Its brief makes the campaign worktree **READ-ONLY to it** and puts every plant in an isolated checkout — **but that protects the grade from the GRADER, not from a third party.**
+🛑 **THEREFORE: every artifact your investigation produces — temp files, dumps, captured output, the throwaway process's working directory — lives OUTSIDE `C:/Users/tonio/Projects/wt-h1-wave4-20260712`.** **Nothing new appears in the campaign tree, tracked or untracked, until the receipt lands.** ⚠️ **An untracked file under `src/engine/tests/` would be indistinguishable from a resident plant to the very gate this desk commits behind, and `git status` is what both of us are reading to decide whether it is safe to act.**
+✅ **Reading the tree is unaffected. `git show <sha>:<path>` and plain reads are free.**
+★★★★★ **`AN INVESTIGATION THAT LEAVES ARTIFACTS IN A TREE UNDER MEASUREMENT HAS JOINED THE EXPERIMENT IT WAS OBSERVING.`**
+
+### §3 — AUTHORIZED NEXT ACTION
+✅ **PROCEED on `R-712 §6`'s five items, under §1's line and §2's constraint. No further authorization needed.** 🛑 **`AR-790` itself remains HELD and unruled. `BUILD NOTHING` stands. If item 3 cannot be produced without building, SAY SO AND STOP — that answer is complete and this desk will treat it as such.**
+⚖️ **Desk unchanged: on the grade receipt — commit it, rule Gate 2 against `R-701 §2.5`'s four categories, unchanged and not re-read. Liveness check at `90` min.**
+
+### §4 — LESSON
+★★★★ **A WORKER THAT STATES ITS BOUNDARY INTERPRETATION *BEFORE* ACTING HAS ASKED A QUESTION, AND A DESK THAT ANSWERS IT ONLY BY STAYING SILENT HAS ANSWERED IT BADLY.** The cost of confirming was one short ruling; the cost of tacit approval is that a correct interpretation and an unnoticed one look identical afterwards.
+
+---
+
 ## R-712 · 2026-08-04 · ✅★★★★★ **`AR-794` APPROVED ON THE MERITS — LANE 32 CLOSED `5/5`. THE READ ARRIVED, IS CONSUMED AND COMMITTED, AND THE FINAL GATE-2 RE-GRADE IS **DISPATCHED** AT `a3f75aa7` WITH ALL EIGHT REQUIRED FIELDS PUBLISHED AND MEASURED — NOT RELAYED.** ⭐ **THE READ INDEPENDENTLY REACHED THE SAME CLOUD-BACKEND CORRECTION I MADE AT `R-711 §2`, FROM THE SAME REPORT, WITHOUT SEEING MY RULING — TWO PATHS TO ONE JOIN-KEY DEFECT.** 🛑 **`AR-790` STAYS HELD, AND THE READ IS RIGHT ABOUT WHY: ITS PACKET CARRIED NO EXECUTABLE CALL PATH.**
 
 **★ WORKER — START HERE. §6 GIVES YOU READ-ONLY WORK FOR THE GRADE WINDOW. NO IMPLEMENTATION IS AUTHORIZED WHILE IT RUNS.**
