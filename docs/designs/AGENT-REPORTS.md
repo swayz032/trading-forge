@@ -4,6 +4,64 @@
 
 ---
 
+## AR-743 · 2026-08-03 · ✅★★★★★ **`R-679 §5 LANE 4` DELIVERED — **THE BLAST RADIUS IS THE SMALL ONE, AND IT IS PROVEN BY TWO NON-OVERLAPPING PATHS.** `ctx` HAS **EXACTLY ONE** CONSTRUCTION SITE (`:1115`, inside `compute()`), IS A FUNCTION **LOCAL**, AND IS NEVER CLEARED **BECAUSE IT NEVER NEEDS TO BE** — IT DIES WHEN `compute()` RETURNS. **LIFETIME = ONE `compute()` CALL.**** ✅ **PATH 1 = AST over the file. PATH 2 = the RUNTIME CODE OBJECT (`compute.__code__`): `ctx in co_varnames` **True**, `ctx in co_names` **False** — it is a local, not a global or attribute lookup. Controls both ways (`symbol` not a local: False · `n` a local: True).** ✅★★★★★ **THEREFORE `(c)` IS **NO** AND `(d)` IS **NO**: `ctx` CANNOT OUTLIVE ONE SPEC, AND THE `MES`/`MNQ`/`MCL` FAN-OUT CANNOT SHARE ONE. **`strategy/spec identity` AND `symbol` ARE NOT REQUIRED IN THE CACHE KEY ON THIS SURFACE — `R-678 §4c`'s CLAUSE IS CONDITIONAL AND ITS CONDITION DOES NOT FIRE.**** ⚠️🛑 **BUT I FOUND THE SHAPE THAT WOULD BREAK IT, LIVE IN THE REPO — `black_swan_evaluator.py:368-370` SETS `.symbol`/`.timeframe` ON AN INSTANCE **AFTER** CONSTRUCTION. **AUDITED AND CLEARED FOR TODAY** (fresh instance per call; archetype classes only, never `SpecConditionStrategy`) — **but "symbol is fixed at construction" is TRUE OF THIS CLASS AND FALSE OF THE CODEBASE, and that distinction is the whole of the residual risk.**
+
+**TASK:** `R-679 §5` (a)–(d). **RUN MODE: READ-ONLY — AST, runtime code-object inspection, `grep`. NO code, NO cache edit, NO parameter field. NOTHING under `src/` modified.**
+
+### ✅ §1 — (a)/(b) CONSTRUCTION AND CLEAR SITES, WITH CONTROLS
+```
+=== ctx CONSTRUCTION SITES IN THE WHOLE FILE: 1 ===
+   line 1115: AnnAssign  ctx: dict = {...}   inside method: ['compute']
+   NEGATIVE CONTROL 'ctx_global' assignments: 0 (must be 0)
+
+=== RUNTIME PATH (compute.__code__, not AST) ===
+   ctx in co_varnames (a LOCAL of compute):        True
+   ctx in co_names    (a global/attribute lookup): False
+   cache-like LOCALS of compute:                   14
+   CONTROL  self.symbol must NOT be a local:       False
+   CONTROL  'n' must be a local:                   True
+```
+✅ **CLEAR SITES: `0`, AND THAT IS CORRECT RATHER THAN MISSING.** `ctx` and all `14` cache slots are **function locals rebuilt at the top of every `compute()`** (`population_a_level_cache = {}`, `bias_result = None`, …). **There is nothing to clear; the frame is discarded.** ★★★ **I checked this rather than inferring it, because `0 clear sites` and `0 clear sites BUT IT NEEDS ONE` print identically.**
+✅ **AND THE SOURCE SAYS THE SAME THING IN ITS OWN WORDS (`:1110-1113`), which is corroboration, not evidence:** *"Reset every compute() call — replay-deterministic, never carries state across instances or calls."*
+
+### ✅★★★★★ §2 — THE SECOND SURFACE I PROMISED IN `AR-742 §1`: INSTANCE-LEVEL STATE
+🛑 **A lifetime answer scoped to `ctx` alone would have been TRUE AND MISLEADING — the `AR-737 §5` shape I was convicted for. So I enumerated every instance attribute: `24` total, `34` methods parsed (control LIVE).**
+| Class | n | Verdict |
+|---|---|---|
+| **Reset inside `compute()`** | **`4`** | `last_trace` · `last_per_condition_bool` · `last_population_a_level` · `last_non_gating_conditions`. **Per-call. Cannot outlive `ctx`.** |
+| **`__init__`-only → persists for the instance** | **`18`** | **ALL CONFIGURATION, NOT CACHES:** `spec` · `spec_hash` · `compiled_spec` · `binding_plan` · `symbol` · `timeframe` · `name` · `approximation` · `htf_tf` · `itf_tf` · `trace_enabled` · `role_demotion_mode` · `restore_condition_ids` · `5` demotion/or-branch maps derived from the spec. |
+| **Assigned in evaluators** | **`2`** | `_wire1_bias_bars` · `_wire1_structure_bars` — see `§4`. |
+⚠️ **KEYWORD-FILTER HONESTY: my cache-name filter flagged `2` of the `18` (`restore_condition_ids`, `trace_enabled`). **BOTH ARE FALSE POSITIVES** — a set of ids from config and a bool. **POSITIVE CONTROL: the same filter over the `compute()`-reset set returned `4`, so the filter fires.** I read the `18` individually rather than trusting the filter.
+
+### ✅★★★★★ §3 — (c) AND (d), AND WHAT THEY DO TO THE CACHE KEY
+✅ **(c) `ctx` CANNOT OUTLIVE ONE SPEC.** `self.spec`, `self.spec_hash`, `self.compiled_spec` and `self.binding_plan` are **`__init__`-only**, so **one instance = one spec**; `ctx` is strictly narrower still — **one call.** 🛑 **`R-679 §4` adopted `strategy/spec identity` in the key *"when `ctx` can outlive one spec."* **MEASURED: IT CANNOT. THE CONDITION DOES NOT FIRE, so that clause adds nothing on this surface** — and I am reporting the antecedent as false rather than quietly dropping the clause (`count-obligations`).
+✅ **(d) THE FAN-OUT CANNOT SHARE A `ctx`.** `self.symbol` and `self.timeframe` are **assigned ONLY in `__init__`** for this class, measured across all `34` methods — **nothing reassigns them.** A different instrument therefore requires a **new instance → new `compute()` → new `ctx`.** **Three instruments = three independent contexts.**
+✅★★★ **NET EFFECT ON `R-678 §4c`'s KEY, STATED AS A NARROWING FOR THE DESK TO RULE, NOT AS MY DECISION: on the `ctx` surface, `symbol/instrument` and `spec identity` are **NOT REQUIRED** — the surface is already partitioned by them. **The key still owes `primitive id · primitive version · canonical typed parameters · input-series identity · chart timeframe · session context · data revision`, because those DO vary within a single `compute()` call.**
+
+### ⚠️🛑★★★★★ §4 — TWO THINGS THAT DO **NOT** RESET, AND ONE LIVE PATTERN THAT WOULD BREAK ALL OF THE ABOVE
+⚠️ **`self._wire1_bias_bars` and `self._wire1_structure_bars` ARE WRITTEN INSIDE EVALUATORS AND ARE **NOT** RE-INITIALISED IN `compute()`.** They persist across calls on a reused instance. ✅ **THEY ARE DIAGNOSTIC COUNTERS, NOT CACHES — they cannot change a signal.** 🛑 **BUT THEY CAN MAKE INTROSPECTION LIE: after a second `compute()` that never entered the WIRE-1 branch, the counter still reports the FIRST call's value.** **Not pulled — `R-679` forbids code changes here. Recorded.**
+🛑🛑★★★★★ **AND THE FINDING THAT MATTERS MOST FOR THE BUILD AHEAD: `black_swan_evaluator.py:368-370` DOES THIS —**
+```
+archetype_strategy_instance = _load_strategy_class(class_path)
+if hasattr(archetype_strategy_instance, "symbol"):    archetype_strategy_instance.symbol   = regime.symbol
+if hasattr(archetype_strategy_instance, "timeframe"): archetype_strategy_instance.timeframe = regime.timeframe
+```
+✅ **AUDITED AND CLEARED FOR TODAY, ON TWO MEASURED GROUNDS:** `_load_strategy_class` ends `return cls()` — **a FRESH instance every call, no caching** (`backtester.py:8060-8069`); and `_ARCHETYPE_TO_CLASS_PATH` contains **only named archetype classes**, never `SpecConditionStrategy`. **So it is construction-then-configure, not shared-instance mutation, and it does not reach this surface.**
+🛑★★★★★ **WHY I AM REPORTING IT ANYWAY: IT PROVES `"symbol IS FIXED AT CONSTRUCTION"` IS A PROPERTY OF **THIS CLASS**, NOT OF **THIS CODEBASE.** `§3`'s `(d)` answer rests on a per-class fact, and a live caller one module away already does the thing that would falsify it. **`A PER-CLASS INVARIANT READ AS A CODEBASE INVARIANT IS THE UNIVERSAL-QUANTIFIER ERROR AGAIN` — `R-679 §7.3` named it twice tonight and I am not committing it a third time.** **If any cache is ever hoisted to instance level, this pattern is the site that breaks it.**
+
+### ⚠️ §5 — WHAT I DID NOT MEASURE, AND THE SURFACE MY COUNTS CANNOT SEE
+- 🛑 **SURFACE BLINDNESS:** every count is **STATIC/INTROSPECTIVE over `spec_condition_compiler.py` at HEAD**. **I did not RUN two `compute()` calls on one instance with different data and diff the outputs.** ★★★ **THAT IS THE RESIDUAL GAP AND I NAME IT PLAINLY: I proved `ctx` is rebuilt STRUCTURALLY (two paths), not BEHAVIOURALLY.** A dynamic probe is what would close it, and `R-679 §7`'s own lesson — *"a second path that RUNS the code beats one that re-reads the file"* — says that probe is worth more than either path I ran.
+- `[UNENUMERATED]` instance-level caches in OTHER strategy classes — out of this lane's scope, and `§4` shows the pattern exists there.
+- `[UNENUMERATED]` the `9` caches under the composition bundle with several natives active at once — **carried forward from `R-678 §6`, still open, still not closed by me.**
+- `[UNENUMERATED]` whether `compute()` is ever called twice on ONE `SpecConditionStrategy` instance in production (walk-forward folds). **Structurally it would be safe; I did not confirm the call pattern.**
+- ✅ **NOTHING under `src/` modified this lane.** The sibling's dirty `test_synthetic_market_simulator.py` remains untouched by me — fifth consecutive report.
+
+### ★★★★★ §6 — RECOMMENDATION
+**`APPROVAL_REQUESTED`.** **The blast radius is one `compute()` call. The cache repair does not need `symbol` or `spec identity`, and `R-678 §4c`'s key can be narrowed accordingly — the desk's call.**
+**NEXT SMALLEST TASK (ONE):** **the dynamic probe from `§5`** — call `compute()` twice on one instance with deliberately different data and assert the second result does not carry the first's. It converts my structural proof into a behavioural one, it is the exact shape that would ALSO serve as the regression guard for the cache re-key, and it can be written **before** any parameter exists.
+
+---
+
 ## AR-742 · 2026-08-03 · ⏳ **START-RECEIPT — `R-679 §5 LANE 4`, MEASURE THE `ctx` LIFETIME. SAME SEAT.**
 
 **TASK:** `R-679 §5` (a) where `ctx` is constructed and cleared · (b) every construction/clear site with a control · (c) whether it CAN outlive one spec · (d) whether the `MES`/`MNQ`/`MCL` fan-out reuses one `ctx`. **RUN MODE: READ-ONLY at HEAD + scratchpad. NOTHING under `src/` modified.**
