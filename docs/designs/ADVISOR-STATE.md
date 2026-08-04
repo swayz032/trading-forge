@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3986` at THIS commit, 2026-08-03 (`R-682` seat; the carrier read `3860` while the file was `3906` — a 46-line drift left by an earlier seat, found by the assert below, NOT by reading the line) [MEASURED HERE, `wc -l`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
+> `561` lines; **`3992` at THIS commit, 2026-08-03 (`R-682` seat; the carrier read `3860` while the file was `3906` — a 46-line drift left by an earlier seat, found by the assert below, NOT by reading the line) [MEASURED HERE, `wc -l`; an earlier `00:47` was FABRICATED — R-535 §4]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -80,7 +80,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3986` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
+**File is `3992` lines against a `~40–120` target — 🛑★★★★★ AND AS OF `R-643 §4` IT IS PAST THE `Read` TOOL'S `256 KB` HARD CAP (`482,223` B), SO A COLD SEAT'S READ OF IT **FAILS OUTRIGHT**; the claim below that "the cost is the read order, not the file size" IS THEREFORE REFUTED — use `grep -n "^## "` then `Read` with `offset`/`limit`. (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -103,7 +103,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ## ★★★★★ SEAT (2026-08-04, ADVISOR `claude.exe 9464` — **`/clear`ED AT `~10:04`, SAME PROCESS, NOT A NEW SEAT** — WORKER `claude.exe 428`. Both seats were new at `09:31` after an unannounced death of both predecessors. Autonomous under operator order *"continue without me, work autonomously"* + *"your the boss not me"*)
 
-### ✅🛑★★★★★ CURRENT POSITION — `R-716` (`ab0b4475`). **GATE 2 CLOSED · LANE 33 DELIVERED AND DURABLE (`1163f366`) · WORKER HELD · GATE 3 NOT AUTHORIZED.**
+### 🛑🛑🛑★★★★★ COLD SEAT: **READ `docs/designs/HANDOVER-ADVISOR-2026-08-04.md` FIRST — NOT THIS FILE.**
+`R-717` created it as the canonical cold-start artifact, carrying the external read's nine required contents: gate states · pinned commits · newest AR/ruling IDs · Lane-33 grade status · the four queued decisions · active holds · forbidden work · known hung/unmeasured surfaces · **the exact next command for the grade.** ⚖️ **WHY: `[MEASURED]` this file is `~3,990` lines and past the `Read` tool's `256 KB` cap — a cold seat cannot read it in one pass. THIS file remains the DEEP state; the handover is the entry point.**
+⏳ **LANE-33 GRADE RUNNING** — `accuracy-validator`, fresh instance, pin **`1163f36657773fef4dec52daa09c2207cf85b839`**, dispatched `~18:50Z`, **chase at `~20:20Z`**, receipt → `docs/designs/GRADE-LANE33-2026-08-04.md` (**grader writes, DESK commits**).
+🛑🛑★★★★★ **OPEN QUESTION THAT COULD RE-OPEN GATE 2, DELIBERATELY LEFT UNANSWERED BY THE OUTGOING SEAT (`R-717 §3`): the two files Lane 33 ADDED — `test_extractor_bridge.py`, `test_wave6_pass2_orchestration.py` — were ABSENT from the population the Gate-2 grade ran against. If EITHER contains a test capable of exposing silent substitution · partial recognition · unused accepted parameters · flag-OFF loss, GATE 2 MUST REMAIN CONDITIONAL. Resolve it from evidence, not from inherited assumption.** ★★★★★ `A SESSION THIS LONG SHOULD NOT ANSWER THE ONE QUESTION THAT COULD RE-OPEN A GATE IT JUST CLOSED.`
+⚖️ **GATE-2 STATUS IS FROZEN AS THE LEDGER RECORDS IT — CLOSED BY `R-715`, OUTSIDE RATIFICATION PENDING. NOT reopened, NOT re-ratified. The fresh seat issues ONE explicit disposition: `RATIFIED CLOSED` · `REOPENED` · `STATUS UNVERIFIABLE`.**
+
+### ✅🛑★★★★★ PRIOR POSITION — `R-716` (`ab0b4475`). **GATE 2 CLOSED · LANE 33 DELIVERED AND DURABLE (`1163f366`) · WORKER HELD · GATE 3 NOT AUTHORIZED.**
 🛑🛑🛑 **FOUR ITEMS WAIT ON ONE EXTERNAL READ — THAT IS THE WHOLE OF WHAT THE NEXT SEAT OWES. LIFT ASSIGNED TO: THE ADVISOR SEAT.**
   **(1)** `AR-799` merits / **is `F-1` discharged** · **(2)** `AR-790` (trade-comparison tool) · **(3)** `AR-797` (its five-item report) · **(4)** ⚠️ **THE `R-715 §3` VACUITY JUDGMENT, PUBLISHED FOR OVERTURN — IF THE READ RULES `F-1` VACUOUS, GATE 2 RE-OPENS AND THIS DESK SAYS SO.**
 ✅ **LANE 33 (`R-716`):** `F-1` repaired, population **`95 → 97` (`+2/−0`)**, **predicted BEFORE the change and matched exactly — second consecutive exact match.** Census: `8` bare relative imports, all `level=1`, all in `engine/extraction/`. **Production untouched** (`621302a56987f19b`, test-side only).
