@@ -4,6 +4,22 @@
 
 ---
 
+## AR-736 · 2026-08-03 · ⏳ **START-RECEIPT — `R-676 §6`, SIZE THE MOVING-AVERAGE DOOR. FRESH WORKER SEAT, COLD-STARTED THIS TURN.**
+
+**TASK:** `R-676 §6` — size what it would take to add a moving-average primitive to the binder's `12`-entry vocabulary. **(a)** every site that must change end-to-end · **(b)** whether `compute_sma`/`compute_ema` take taught parameters without an educator-absent derivation · **(c)** what an EXACT binding would require.
+**RUN MODE: READ-ONLY at HEAD + scratchpad script. NO code. NO `FAMILY_META` EDIT. NOTHING under `src/` modified.**
+**SEAT:** fresh worker, `/worker-onboarding` this turn. Cold read done: `R-675` (hold) → `R-676` (un-hold) → `AR-735` → `ADVISOR-STATE ## THE PLAN`. **HEAD at receipt: `226f17ec`.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~30 min** to the delivery AR.
+
+### ⚠️ §1 — TWO RULING OBSERVATIONS, RAISED BEFORE I START (both cost nothing now, both cost the run at delivery)
+1. ⚠️ **NO `★ WORKER — START HERE` BLOCK IN `R-676`** — `worker-onboarding §1` says to say so. **NOT A BLOCKER AND I AM NOT TREATING IT AS ONE:** `§6` carries the full contract (goal · scope · forbidden · acceptance · ETA · stop condition), and `§6`'s first line un-holds the worker explicitly. **Reported for the desk's own `R-659` law, not as an obstacle.**
+2. ✅ **NO METRIC-MIX DEFECT (`worker-execution §5`):** `(a)`/`(b)` are MECHANICAL — sites, call signatures, parameter names. `(c)` is a SCOPING question, not a graded one. **I am not being asked to grade anything, and I will not score my own output.**
+
+### ✅ §2 — HOW I READ THE STOP CONDITION, DECLARED UP FRONT
+🛑 **`§6`'s stop: *"if `(c)` cannot be answered without designing the binding, STOP."*** ✅ **MY LINE: I may report WHAT AN EXACT BINDING WOULD HAVE TO SATISFY (a requirements list, derived from what existing family terms measurably do). I may NOT choose the entry's shape, its regex, its parameter grammar, or its `type` family — that is a DESIGN and `§3.4`/`§6` reserve it for the fresh advisor seat.** **If `(c)` cannot be answered without crossing that line, I stop and say so — per `R-648`, `UNRESOLVED` is a valid result.**
+
+---
+
 ## AR-735 · 2026-08-03 · ✅★★★★★ **`R-674 §3` DELIVERED — BOTH CARRY-FORWARDS CLOSED. **`timeframe` IS PROTECTED *BETTER* THAN `symbol`, NOT WORSE** — onboarding carries an explicit in-source principle *"never silently default a timeframe to `5m`"* and **QUARANTINES** a spec whose timeframe cannot be recovered. **DYNAMIC-CONFIG SWEEP: `0`, UNDER A LIVE CONTROL.**** ⚠️🛑★★★★★ **AND MY FIRST CONTROL WAS **DEAD** AND I CAUGHT IT: it returned `0`, which would have made my `0` meaningless. **THE REGEX WAS `[a-z_]*` AND THE ONLY MATCHING LINE IN THE PROBE FILE WAS `env["PYTHONPATH"]` — UPPERCASE.** Corrected to `[A-Za-z_]*`, control returned `1`, **and only then did I accept the zero.**
 
 **TASK:** `R-674 §3`, the wave's last lane. **RUN MODE: READ-ONLY `grep` + file reads at HEAD. NO code change, NO run.** **NOTHING under `src/` modified.**
