@@ -4,6 +4,52 @@
 
 ---
 
+## AR-755 · 2026-08-03 · 🛑🛑🛑★★★★★ **`R-684 §8` STEP `0` ANSWERED — **STOP CONDITION `(b)` FIRES. THE SPEC PATH DOES NOT TRAVERSE THE TS DSL PARAMETER CHAIN AT ANY HOP.** I AM STOPPING, NOT BUILDING THE HARNESS.** 🛑🛑★★★★★ **AND THIS IS THE OUTCOME I PRE-DECLARED IN `AR-754` AND IT LANDS AGAINST MY OWN TWO REPORTS, SO I AM SAYING IT IN THE EXACT WORDS I PROMISED: **`AR-752`/`AR-753`'s DEFECT IS CORRECT AND ITS RELEVANCE TO THE GOLDEN SLICE IS NOT ESTABLISHED.** The midpoint-invention is real, measured, and on the **SCOUT/GRADUATION** pipeline. **The Phase-1-exit artifact never goes near it.**** ✅★★★★★ **`[MEASURED HERE — SEVEN INDEPENDENT SURFACES, EVERY ZERO CARRYING A LIVE POSITIVE CONTROL FROM THE SAME COMMAND ON THE SAME FILE]`. `R-684 §7.1` called this join `the load-bearing gap` and named `i-measured-the-neighbouring-object` as the risk. **The join is measured now, and it says the desk was right to demand it before the test.**
+
+**TASK:** `R-684 §8` step `0` only. **READ-ONLY — `[MEASURED]` `git status --porcelain src/` shows only the sibling's `test_synthetic_market_simulator.py`; eleventh consecutive report.** 🛑 **STEPS `1`–`3` NOT STARTED, per stop condition `(b)`.**
+
+### 🛑🛑★★★★★ §1 — THE SEVEN MEASUREMENTS, EACH WITH ITS OWN CONTROL
+| # | surface | `entry_params`/`param_source` | POSITIVE CONTROL, same command, same file |
+|---|---|---|---|
+| 1 | `extraction/spec_producer.py` (`produce_spec_artifact`) | **0** | `entry_sequence`/`condition` → **47** |
+| 2 | `spec_condition_compiler.py` (`from_compiled_spec`, `SpecConditionStrategy`) | **0** | `ConditionBinding` → **19** |
+| 3 | all **18** sealed `*.spec.json` | **0 in every file** | `condition` → **2 in every file** |
+| 4 | `services/spec-onboarding-service.ts` | **0** (also `sanitizeEntryParams` **0** · `dsl-sanitizer` **0** · `dsl-compiler` **0** · `compileDslToEngine` **0** · `scanIndicatorParams` **0**) | `compiled_spec` → **2** · `config` → **9** |
+✅ **EVERY ZERO ABOVE IS A ZERO OVER A SURFACE THE MATCHER DEMONSTRABLY READS. `R-675 §1`: a control that returns zero has not passed, it has not run — none of these did that.**
+
+### ✅★★★★★ §2 — WHAT THE SPEC PATH ACTUALLY CONSUMES: **TEXT, NOT PARAMETERS**
+🛑 **`[MEASURED — `spec_producer.py:535-575`, at the executable line]` `produce_spec_artifact(strategy_extraction: dict, *, video, certificate, transcript_chars)` iterates `strategy_extraction["entry_sequence"]` and `["confluences"]`, takes `_condition_text(step)`, and builds conditions from **PROSE**. **There is no numeric-parameter field anywhere in its input contract.**
+✅ **`[MEASURED — `backtester.py:8309-8336`]` Band C dispatches on `config["compiled_spec"]` and passes `compiled_spec`, `symbol`, `timeframe`, `trace`, `strategy_name`. **No parameter object crosses that boundary.**
+★★★★★ **SO THE TWO PIPELINES ARE NOT MERELY SEPARATE, THEY ARE DIFFERENT IN KIND: the DSL/graduation chain carries a NUMERIC PARAM OBJECT (`entry_params`) that the sanitizer can drop and midpoint-fill; the spec chain carries CONDITION TEXT that is later bound by family. **A defect in numeric-param canonicalization has nothing to bite on in the spec chain, because the spec chain never holds a numeric param at all.** That is also, precisely, why `R-684 §9.2(b)` is right that the EVALUATOR outranks the grammar.**
+
+### 🛑★★★★ §3 — THE ONE REAL EDGE BETWEEN THE TWO HOUSES, ENUMERATED RATHER THAN ASSUMED
+🛑 **`spec-onboarding-service.ts` DOES load the graduator at runtime — and I checked it instead of resting on the `0`s above.** `[MEASURED]` `:83` a **type-only** static import; `:90` a **dynamic** `await import("./direct-bucket-graduator.js")`, cached.
+✅ **EVERY CONSUMPTION SITE ENUMERATED — there are exactly `2`:** `:562` `const { auditBidirectionalCompleteness } = await getGraduatorModule()` · `:649` `const { classifyFactorSources } = await getGraduatorModule()`. **Direction/archetype completeness and confluence-factor classification. NEITHER IS A PARAMETER PATH.**
+🛑🛑 **AND THE PARAMETER FUNCTION IS NOT REACHABLE ACROSS THAT EDGE AT ALL: `[MEASURED]` `deriveEntryParams` is declared `function deriveEntryParams(...)` at `:1025` — **NOT EXPORTED** — with **exactly ONE caller repo-wide, `:1399`, inside its own module.** ★★★ **`existence is not wiring`, run in the direction that clears rather than convicts: the edge exists, and the thing I feared crosses it does not.**
+
+### 🛑★★★★ §4 — THE PYTHON "REFERENCES" TO THE TS CHAIN ARE ALL COMMENTS
+`[MEASURED — line text read, not counted]` `5` Python files name the three TS modules: `archetype_evaluator.py:68,90,92` · `compiler/pattern_library.py:57` · `config.py:468` · `indicators/mtf_join.py:24` · `pine_compiler.py:228`. **Every one is a `#` comment or a docstring line. `0` are executable.** ★★★ **`worker-execution §3`: a grep matching only comments is not a verification — so I read them, and they document a HAND-MAINTAINED MIRROR, not a data hop.**
+⚠️🛑★★★★ **ONE OF THEM IS A FINDING AND I AM REPORTING IT WITHOUT CHASING IT: `pattern_library.py:57` — *"Must stay in lockstep with PARAM_RANGES in direct-bucket-graduator.ts."* **THE VALIDATOR RANGE TABLE THAT SUPPLIES `AR-753`'s MIDPOINTS HAS A HAND-SYNCHRONIZED PYTHON TWIN.** `[HYPOTHESIS — UNPROVEN, NOT MEASURED]` whether the Python side also BACKFILLS from those ranges (`validate_entry_params` at `:195` reads as a validator, not a filler — I did not open it). 🛑 **Stop condition `(b)` fired; I am not opening it. Recorded for the desk.**
+
+### 🛑🛑★★★★★ §5 — WHAT THIS DOES TO MY OWN PRIOR REPORTS
+✅ **`AR-752`/`AR-753` ARE NOT WITHDRAWN AND NOTHING IN THEM IS RETRACTED. Every measurement stands; `R-684 §6` re-verified them independently.**
+🛑 **WHAT CHANGES IS THE ADDRESS, AND IT IS THE SAME SPECIES OF ERROR `R-684 §3` JUST CONVICTED IN A RULING: `A CORRECT FINDING WITH A STALE ADDRESS SENDS THE FIX TO THE WRONG PLACE.` Mine was not stale — it was **UNJOINED**. I measured a pipeline and did not measure whether the campaign's exit runs on it.**
+★★★★★ **AND I WANT THE UNCOMFORTABLE VERSION ON THE RECORD BECAUSE IT IS THE USEFUL ONE: `AR-752 §6` recommended the desk settle the sanitizer question **"before the grammar, not after"** — advice that would have spent the campaign's next act on a pipeline the golden slice does not use. **The desk's step `0` caught that, not me.** `AN URGENCY CLAIM IS A JOIN CLAIM IN DISGUISE — IT ASSERTS THE FINDING IS ON THE PATH.`**
+
+### ⚠️ §6 — WHAT I DID NOT MEASURE
+- 🛑 **`[UNENUMERATED]` whether the SCOUT/GRADUATION pipeline (where the defect lives) feeds ANY campaign artifact at all.** I proved it does not feed the SPEC path. **I did not prove it feeds nothing — that is a different question and it decides how much the defect matters.**
+- 🛑 **`[HYPOTHESIS]` the Python `PARAM_RANGES` twin (`§4`). Not opened.**
+- ⚠️ **`[UNENUMERATED]` the `strategies.config` row that Band C reads — `config["compiled_spec"]` is written by `spec-onboarding-service.ts`, and I verified that WRITER; I could not inspect a real persisted row (DB `ECONNRESET`, `R-684 §9.5`). **My claim is about the code that writes and reads, not about a row I saw.**
+- ⚠️ **Campaign worktree only; `runtime-production` not checked (`tree-divergence`).**
+- 🛑 **No test suite run in this lane. `R-683 §4`'s full-suite bar untouched.**
+
+### ★★★★★ §7 — RECOMMENDATION
+**`BLOCKED` — by design, on `R-684 §8` stop condition `(b)`, which reserves the ordering call to the desk.** ✅ **Step `0` acceptance met: answer given, seven surfaces, every zero controlled.**
+**THE DESK'S DECISION, STATED AS THE FORK IT IS AND WITHOUT MY THUMB ON IT:** **(a)** the canonicalization repair is on the **scout/graduation** pipeline and is a real defect on a route the golden slice does not use · **(b)** `R-684 §9.2(b)`'s evaluator work is on the spec path and is the one the Phase-1 exit actually runs through. 🛑 **I am not recommending between them — `R-684 §8(b)` says that is a desk ordering decision, not mine.**
+**NEXT SMALLEST TASK (ONE), if the desk wants the fork closed cheaply:** **measure whether the scout/graduation pipeline feeds anything the campaign consumes** (`§6.1`) — read-only, ~15 min, and it converts the fork from a judgement call into a measurement.
+
+---
+
 ## AR-754 · 2026-08-03 · ⏳ **START-RECEIPT — `R-684 §8 LANE 9`, STEP `0` FIRST: NAME THE ROUTE. READ-ONLY.**
 
 **TASK:** `R-684 §8` step `0` — does the Phase-1-exit artifact path (`produce_spec_artifact` → sealed `*.spec.json` → Band-C `from_compiled_spec` → `SpecConditionStrategy`) traverse `dsl-sanitizer.ts` / `dsl-compiler.ts` / `direct-bucket-graduator.ts` **at any hop**, with a positive control proving the search could have found the link. **I report the answer in its own AR BEFORE building anything.**
