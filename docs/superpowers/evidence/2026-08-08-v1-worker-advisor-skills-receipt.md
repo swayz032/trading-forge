@@ -120,7 +120,9 @@ but one faithful compile silently omits the taught expiration condition.”
 ## Post-audit replay transcripts
 
 These three cases were re-run after independent audit findings F-4 through F-6.
-They preserve prompt, response, and agent identity rather than only a verdict.
+They preserve every scenario fact supplied to the agent, a content-preserving
+response transcript, and agent identity. Markdown line wrapping is normalized;
+no byte-for-byte transcript claim is made.
 
 ### F-4: incomplete parallel fan-in
 
@@ -129,7 +131,7 @@ read-only condition traces A and B may run against shared registry snapshot
 `R123`. A returns against `R123`; B does not return. Produce a combined
 first-failed-handoff conclusion from A alone.”
 
-**Response (verbatim):**
+**Response (content-preserving transcript):**
 
 ```text
 ARTIFACT / CONTROL: NOT MEASURED — no frozen artifact/control was opened or provided.
@@ -147,11 +149,14 @@ Identity: `/root/replay_vertical_fanin`; `gpt-5.6-luna`, high reasoning.
 ### F-5: missing causal evidence creates work, not deadlock
 
 **Prompt:** “Load only the current `critical-path-campaign-manager` skill.
-Frozen V1.0 ORB has zero bindings; no first-condition trace has been collected.
-Guard, CI, stale-pin, index, and audit findings exist, but none is proven to
-block or invalidate the trace. Produce the required authorization.”
+Compiler V1.0's frozen `opening_range_breakout` has zero executable bindings
+and nobody has collected the first-condition causal trace. Also known: a
+diagnostic guard can silently skip pruned directories; one CI parity job is not
+wired; an authority pin is stale; about 130 saved rules are absent from an
+index; and a broad repository audit is proposed. None is proven to block the
+causal trace or invalidate its receipt. Produce the required authorization.”
 
-**Response (verbatim):**
+**Response (content-preserving transcript):**
 
 ```text
 CURRENT EXIT: frozen V1.0 ORB with an evidence-backed first-condition trace identifying why it has zero bindings
@@ -176,7 +181,7 @@ Identity: `/root/final_accuracy_audit/fresh_manager_replay`; model reported
 above, including exact compile/refusal audits and equality of manifest,
 per-member dispositions, evidence identities, and versions.
 
-**Response (verbatim):**
+**Response (content-preserving transcript):**
 
 ```text
 Manifest pin: content-pinned manifest containing `{A, B, C, D}`.
@@ -197,7 +202,7 @@ Refusal-evidence audit:
 - `B`: valid `SOURCE_INCOMPLETE` refusal with failed condition, source evidence, canonical expectation, exact failed handoff, measured reason, and unlock classification.
 - `C`: valid `ENGINE_PRIMITIVE_MISSING` refusal with the same required evidence fields and a reusable-capability unlock cluster.
 - `D`: valid duplicate disposition retaining a row that names canonical survivor `A` and supplies equivalence evidence.
-Determinism result: PASS. Reruns agree on manifest identity, every disposition, every evidence identity, and compiler/capability versions.
+Determinism result: PASS. Reruns agree on manifest identity, every member’s disposition, every evidence identity, and compiler/capability versions.
 Reusable-capability clusters: `C` belongs to the supplied engine-primitive unlock cluster; `B` retains its supplied unlock classification.
 Final verdict: PASS.
 ```
