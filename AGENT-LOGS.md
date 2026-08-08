@@ -16110,6 +16110,6 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - Campaign ranking held five boundaries: frozen ORB first, exact-instrument blocker, unrelated P0 deferral, production-incident preemption, and V1.1 reconciliation.
 - Conformance refused a profitable hand-built substitute and a shared-lineage reference, while passing a complete negative-P&L packet.
 - Batch integrity quarantined count-only closure and identity-perfect semantic loss, while passing a complete mixed compile/refusal batch.
-- Initial task review returned specification PASS and quality APPROVED for all four skills; later accuracy audits exposed and drove additional vertical/manager hardening. The receipt marks the superseded reviews explicitly. Current post-audit bytes are not claimed independently approved until the final re-audit completes.
+- Initial task review returned specification PASS and quality APPROVED for all four skills; later accuracy audits exposed and drove additional vertical/manager hardening. The receipt marks the superseded reviews explicitly. Fresh independent audit `/root/final_publication_audit_retry` returned `SOUND-TO-PUBLISH` on `31c53532f0fb40914b38cc042b21a9f1ac5b7813`; this log-only closeout does not change the audited skill bytes.
 
 **Scope:** Documentation and agent-process hardening only. No compiler, engine, evaluator, database, n8n workflow, grader, or trading behavior changed.

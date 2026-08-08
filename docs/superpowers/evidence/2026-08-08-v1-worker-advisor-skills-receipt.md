@@ -393,6 +393,18 @@ skill, its task brief/report, commit scope, and runtime hashes. Results:
 | `38b26983` | conformance | PASS | APPROVED | none |
 | `3cb4db9b` | batch integrity | PASS | APPROVED | none |
 
+## Final publication audit
+
+Fresh independent validator `/root/final_publication_audit_retry` audited commit
+`31c53532f0fb40914b38cc042b21a9f1ac5b7813` without editing files and returned
+`SOUND-TO-PUBLISH`. It independently verified the exact nine-path scope, all
+four skill validators and word bounds, receipt pins against canonical and both
+runtime mirrors, all four local role-pair hashes, the tracked-versus-local
+integration boundary, and the X/Y authority-resolution replay. Its novel
+false-green attacks changed evidence bytes behind the same evidence ID and
+duplicated manifest membership; both were quarantined. This receipt-only
+closeout records that verdict and does not change the audited skill bytes.
+
 ## Runtime integration boundary
 
 The branch publishes canonical skills plus `CLAUDE.md` project triggers. Role
