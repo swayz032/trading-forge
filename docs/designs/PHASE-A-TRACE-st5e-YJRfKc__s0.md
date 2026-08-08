@@ -303,9 +303,91 @@ tooling log would imply the rig worked first time and it did not.**
 
 ---
 
-## ROW 2 — FIRST LOAD-BEARING CONDITION — 🛑 NOT STARTED
-Ordered second by `R-722 §5-2`. Target: `WAIT_STRUCTURE:...#0` (`role=spine`, `bind_status=APPROXIMATED`,
-`binds_to=structure_engine.compute_structure_state`). **No cell measured. Nothing claimed.**
+## ROW 2 — FIRST LOAD-BEARING CONDITION — ✅ TRACED
+
+**CONDITION:** `WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0`
+**Census verdict being explained:** `bind_status=APPROXIMATED` · `bindable=True` · **`executed=True`** ·
+`binds_to="structure_engine.compute_structure_state"` · `approximation=True` · `unbound_reason=None` ·
+`role="spine"` · `load_bearing_spine=true` · `tf_class="EXEC_TAUGHT"`.
+🛑 **THIS ROW IS THE DANGEROUS SHAPE AND ROW 1 WAS NOT: ROW 1 REFUSED LOUDLY. THIS ONE REPORTS
+`bindable=True, executed=True` AND FEEDS A BACKTEST.**
+
+### Field 1 — SOURCE EVIDENCE — ⚠️ ARTIFACT-SIDE ONLY (same ceiling as ROW 1)
+> *"once you take the price that's established in the first 5, 15, and the 30 minute ranges, you have
+> what we call the 5,5 and the 30 minute OB"*
+(`strategies[0].entry_sequence[0].action`, frozen artifact `7868524b…`.) **Timestamp / chart evidence:
+`UNMEASURED` — no frozen source lesson in this tree.**
+⚠️ **AND A SOURCE-SIDE AMBIGUITY I AM NOT RESOLVING:** the artifact says **`"the 5,5 and the 30 minute
+OB"`** where the surrounding teaching says `5 / 15 / 30`. **Either the teacher misspoke or the extractor
+mis-transcribed, and I CANNOT TELL WHICH FROM THE ARTIFACT ALONE.** ★ **This is exactly what PROBE A
+exists to settle, and it is the second concrete cost of the missing transcript.**
+
+### Field 2 — EXTRACTED REPRESENTATION — ✅ MEASURED
+`{"action": "<the sentence above>"}` — **prose only, no parameters**, identical in shape to ROW 1.
+The taught content is a **range CONSTRUCTION rule** (take the high/low established across the first
+5/15/30 minutes and call it the OB), carrying **no typed window, no price-level field, no ordering.**
+
+### Field 3 — CANONICAL INTERPRETATION — ✅ MEASURED
+- **Intended canonical concept:** construct and **retain** a price level pair (range high, range low)
+  from a taught clock window, as a **persistent reference** later conditions test against.
+- **Assigned canonical family:** `WAIT_STRUCTURE`.
+- 🛑 **NO FAMILY IN THE `14`-VALUE VOCABULARY MEANS "CONSTRUCT AND RETAIN A PRICE LEVEL FROM A CLOCK
+  WINDOW"** — the same vocabulary gap ROW 1 hit, reached from a different direction.
+
+### Field 4 — BINDING RESULT — ✅ MEASURED
+**Bound, no refusal:** `primitive=structure_engine.compute_structure_state`, `approximation=True`,
+`executed=True`, `reason=None`.
+🛑 **AND PROBE B ALREADY EXPLAINS WHY IT BOUND: THE TEXT WAS NEVER CONSULTED.** `WAIT_STRUCTURE` binds
+to the structure engine **by family label**; the same paragraph typed `WAIT_BIAS` would have bound to
+the regime classifier instead. **The bind is a dispatch, not a match.**
+
+### Field 5 — ENGINE CAPABILITY — ✅ MEASURED AT THE DECLARED CONTRACT
+`[MEASURED HERE, `src/engine/context/structure_engine.py:210-215`]`
+```python
+def compute_structure_state(exec_bars, htf_bars, htf_bias=None, lookback_swings=20) -> StructureState | None
+```
+**No session parameter. No clock parameter. No range-window parameter.**
+`[MEASURED HERE, the `StructureState` dataclass, `:94-115` — every field enumerated]`:
+`bos_recent · bos_direction · choch_recent · choch_direction · mss_recent · mss_direction ·
+mss_displacement_atr_mult · displacement_active · premium_discount_zone · htf_bias_aligned ·
+last_break_direction · last_break_age_bars · swing_high · swing_low · computed_at_bar_idx`.
+🛑🛑 **NOT ONE FIELD IS AN OPENING RANGE.** The primitive detects **break-of-structure / change-of-
+character / market-structure-shift on swing pivots.**
+🛑 **THE NEAREST NEIGHBOUR IS THE TRAP THE FRAMEWORK NAMES BY NAME:** `swing_high` / `swing_low` are
+*"most-recent confirmed swing high/low price"* — **derived from pivot detection over `lookback_swings`
+bars, not from a clock window.** They are a plausible-looking stand-in for *"opening range high/low"*
+that is **constructed from different inputs and means a different thing.** Framework, verbatim:
+*"If a neighboring detector responds but computes different semantics, classify it as identity failure,
+not support."*
+⚠️ **SCOPE: measured at the DECLARED CONTRACT (signature + dataclass fields), not by executing it on
+candles.** *What execution would add:* observed values. *What it would not change:* **there is no field
+for the primitive to put an opening range in.** ★ **A missing output field is a stronger absence than a
+zero-valued one.**
+
+### Field 6 — FINAL CAUSAL CLASSIFICATION — ⚠️ **PRODUCED, NOT CERTIFIED** (`R-723 §2`)
+- **PRIMARY BLOCKER (proposed): `ENGINE_PRIMITIVE_WRONG_IDENTITY`.** A range-construction rule is
+  dispatched to a swing-structure detector that has no opening-range output, and the result is recorded
+  as `bindable=True, executed=True`.
+- **SECONDARIES:** `CANONICAL_TERM_UNRESOLVED` (no family carries the concept) ·
+  `PARAMETER_SCHEMA_MISMATCH` (prose in, no typed window) · `TEMPORAL_MODEL_COLLAPSED` (the taught
+  *retain-and-test-later* reference has no carrier).
+- 🛑 **THE POINT OF THIS ROW, AND IT IS WORSE THAN ROW 1'S:** ROW 1 is a **refusal** — visible, counted
+  as `UNBOUND`, safe. **ROW 2 is a SILENT SUBSTITUTION** — it passes every mechanical check, is counted
+  as executed, and the only signal that anything is wrong is the `approximation=True` flag, **which does
+  not say WHICH concept was substituted or how far off it is.**
+  ★★★★★ **`AN UNBOUND CONDITION COSTS YOU A STRATEGY. A WRONGLY-BOUND ONE COSTS YOU A BACKTEST YOU
+  BELIEVE.`**
+- ✅ **AND THIS MEASURES THE HYPOTHESIS `AR-806 §2` REFUSED TO ASSERT** — for **this one row**, the
+  type-dispatch mechanism is confirmed as the reason a semantically unrelated primitive was bound.
+  🛑 **STILL NOT GENERALISED: `1` of the `9` `APPROXIMATED` rows is now traced. The other `8` are
+  UNTRACED and I do not claim them.**
+
+### ROW 2 — PROBE STATUS
+| probe | status |
+|---|---|
+| **A — extraction** | ⚠️ **ARTIFACT-SIDE ONLY** — and it now has a concrete unresolved cost: the `"5,5"` vs `5/15/30` discrepancy |
+| **B — binder** | ✅ **DISCHARGED BY ROW 1's RUN** — the 14-family enumeration already covers this text and this family |
+| **C — engine** | ✅ **RUN AT THE DECLARED CONTRACT** — signature + full field enumeration; execution-on-candles not run and stated as such |
 
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.

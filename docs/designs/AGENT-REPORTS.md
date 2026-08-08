@@ -4,6 +4,31 @@
 
 ---
 
+## AR-807 · 2026-08-08 · 🛑🛑🛑★★★★★ **ROW 2 TRACED — AND IT IS THE DANGEROUS ONE. THE LOAD-BEARING CONDITION THAT *DEFINES THE OPENING RANGE* IS BOUND TO A SWING-STRUCTURE DETECTOR WHOSE `15` OUTPUT FIELDS CONTAIN NO OPENING RANGE — AND IT IS RECORDED `bindable=True, executed=True`.** ★★★★★ **`AN UNBOUND CONDITION COSTS YOU A STRATEGY. A WRONGLY-BOUND ONE COSTS YOU A BACKTEST YOU BELIEVE.`** ✅ **`R-722 §9`'s ORDERED PAIR IS NOW DELIVERED: CALIBRATION ROW + FIRST LOAD-BEARING ROW.**
+
+**ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — **ROW 2 complete, six fields, one primary, three secondaries.** 🛑 **NOT CERTIFIED** (`R-723 §2`); **`UNVERIFIABLE` stands; no repair.**
+
+### §1 — 🛑 WHAT ROW 2 MEASURES
+`[MEASURED HERE, `structure_engine.py:210-215` signature and `:94-115` dataclass, every field enumerated]` `compute_structure_state(exec_bars, htf_bars, htf_bias, lookback_swings)` returns `bos_recent · bos_direction · choch_recent · choch_direction · mss_recent · mss_direction · mss_displacement_atr_mult · displacement_active · premium_discount_zone · htf_bias_aligned · last_break_direction · last_break_age_bars · swing_high · swing_low · computed_at_bar_idx`.
+🛑 **NO SESSION PARAMETER, NO CLOCK PARAMETER, NO RANGE-WINDOW PARAMETER, AND NOT ONE OUTPUT FIELD THAT IS AN OPENING RANGE.**
+🛑 **THE NEAREST NEIGHBOUR IS THE TRAP THE FRAMEWORK NAMES:** `swing_high`/`swing_low` are *"most-recent confirmed swing high/low price"* from **pivot detection over `lookback_swings` bars** — a plausible-looking stand-in for *opening range high/low*, **built from different inputs, meaning a different thing.** Framework verbatim: *"a neighboring detector … computes different semantics → identity failure, not support."*
+⇒ **PROPOSED PRIMARY: `ENGINE_PRIMITIVE_WRONG_IDENTITY`.**
+
+### §2 — ⚖️ WHY THIS ROW IS WORSE THAN THE ONE THAT REFUSED
+**ROW 1 refused loudly and was counted `UNBOUND` — visible and safe. ROW 2 passes every mechanical check**, is counted **executed**, and its only distress signal is `approximation=True` — **a flag that does not say WHICH concept was substituted or how far off it is.** ★★★ **A single boolean is carrying the entire difference between "slightly loose" and "computing an unrelated quantity."**
+
+### §3 — ✅ A HYPOTHESIS I REFUSED TO ASSERT LAST ENTRY IS NOW MEASURED — FOR EXACTLY ONE ROW
+`AR-806 §2` labelled *"type dispatch explains the `9` `APPROXIMATED` rows"* a HYPOTHESIS. **It is now CONFIRMED for this row and this row only.** 🛑 **`1` of `9` traced. The other `8` are UNTRACED and I claim nothing about them** — the shape fits, and *the shape fitting* is what made it a hypothesis in the first place.
+
+### §4 — ⚠️ THE MISSING TRANSCRIPT NOW HAS A CONCRETE PRICE, AND THIS IS MY THIRD ASK
+`[MEASURED HERE, frozen artifact]` the extracted text reads **`"you have what we call the 5,5 and the 30 minute OB"`** while the surrounding teaching says **`5 / 15 / 30`**. **Either the teacher misspoke or the extractor mis-transcribed, and THE ARTIFACT CANNOT TELL ME WHICH.**
+🛑 **THAT IS NO LONGER an abstract ceiling — it is an unresolvable discrepancy sitting inside a load-bearing row.** ★ **DESK: a frozen transcript for `st5e-YJRfKc` resolves it in one read. Absent one, every row in this trace inherits `SOURCE_ITSELF_INCOMPLETE` as an un-excludable alternative, and I will keep saying so rather than let it fade.**
+
+### §5 — STATE
+✅ **`R-722 §9`'s ORDERED PAIR IS DELIVERED** — calibration row, then the first load-bearing row, in the order the desk set. **Probes: B `1/2` · C `1/2` · A `0/2` (blocked, not failed).**
+🛑 **NOT DONE, AND NOT CLAIMED:** `9` of the spec's `11` conditions untraced · the `8` other `APPROXIMATED` rows untraced · execution-on-candles not run for ROW 2 (declared contract only, stated in the row) · **PROBE A blocked** · **no repair, Phase A is diagnosis.**
+**NEXT:** remaining conditions, unless the desk redirects. **I am not out of context and I am not handing off.**
+
 ## AR-806 · 2026-08-08 · ✅ **ROW 1 IS COMPLETE — PROBE B RUN, BOTH CONTROLS FIRED, AND THE CALIBRATION ROW HAS DONE ITS JOB.** 🛑🛑🛑★★★★★ **AND IT RETURNED A FINDING WIDER THAN THE ROW: THE SAME UNCHANGED PARAGRAPH ABOUT `9:30`-TO-`9:35` CLOCK TIMES BINDS "SUCCESSFULLY", `reason=None`, UNDER `11` OF THE `14` FAMILY TYPES — TO `8` DIFFERENT ENGINE PRIMITIVES. `BINDING ON THIS SURFACE IS TYPE DISPATCH, NOT MEANING MATCHING.`** ⚖️ **CLASSIFICATION REVISED ON EVIDENCE: `CANONICAL_TERM_UNRESOLVED` PROMOTED TO CO-PRIMARY, BECAUSE THE TWO BLOCKERS ARE INDEPENDENT AND FIXING EITHER ALONE CHANGES NOTHING.**
 
 **ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — ROW 1 now carries **PROBE B and PROBE C run, all six fields evidenced, instrument disclosures, and the anti-monocause reading.** **Probe budget: B `1/2` · C `1/2` · A `0/2`.**
