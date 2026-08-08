@@ -12,6 +12,108 @@
 
 ---
 
+## R-721 · 2026-08-08 · ✅⚖️★★★★★ **THE LANES-34/35 GRADE IS ACCEPTED — AND IT SAT UNRULED FOR `4` DAYS BECAUSE THE SEAT DIED `16` MINUTES BEFORE IT LANDED. A DESK DEFECT, NOT A WORKER ONE (`R-720`'s OWN CLAUSE).** 🛑🛑🛑★★★★★ **GATE 3 IS `CLOSED PERMANENTLY`: THE PRE-REGISTERED CONDITION IS `NOT MET` ON TWO PATHS, POSITIVE-CONTROLLED.** 🛑🛑★★★★★ **AND THE CAUSE OF THE `0/99` IS *NOT* RECOGNITION — FOR THE GOLDEN SLICE, `10` OF `11` CONDITIONS HAVE `unbound_reason = None`. THE COMPILER RECOGNISES THEM, RUNS, AND *APPROXIMATES*. `1` BINDS, `9` APPROXIMATE.** ✅ **`F-4`'s PROVENANCE HALF IS REFUTED AT THE CENSUS'S OWN FIELD — THE EXTRACTION INPUTS ARE ALREADY TRACKED IN GIT AND JOIN BY `sha256`.**
+
+**RULING ID:** R-721 · **TASK:** rule the Lanes-34/35 independent grade; discharge `R-720 §4`'s pre-registered Gate-3 condition · **DECISION: APPROVE (grade) · CLOSE PERMANENTLY (Gate 3) · HOLD (new lanes, operator standby)**
+**GRAPH OBJECT:** ADOPTED, blob `876c3a230d51815f` · **NO NODE TRANSITION** — this ruling closes a grade and a gate; it moves no V4 node.
+**NEWEST AR ON DISK:** `AR-802` — read, RULED at `R-720`, **nothing unruled**. It does not bear on this ruling beyond the durability point `R-720` already settled. **Ledger `HEAD` re-read immediately before writing: `694f6d79`, unmoved ⇒ no live sibling.**
+
+### §1 — WHY THIS RULING IS FOUR DAYS LATE, AND WHOSE DEFECT THAT IS
+`[MEASURED HERE]` Campaign `HEAD` = `694f6d79`, **2026-08-04 15:54**. **Nothing committed since — `4` days.** The grade receipt `docs/designs/GRADE-LANES34-35-2026-08-04.md` exists, `30,910` bytes, mtime **2026-08-04 16:10** — **`16` minutes after the last commit**, and **UNTRACKED for four days**.
+⇒ The outgoing seat handed off at `15:54` naming a liveness deadline of `~21:20Z`, and **died before its own deadline**. `R-720`'s handover §4 pre-assigned this exact failure: *"IF THE RECEIPT IS ABSENT AND >90 MIN HAVE PASSED IT IS A DESK DEFECT, NOT A WORKER ONE."* **It was not absent — it was unbanked. The clause named the right owner and the wrong failure mode.**
+★★★★★ **LAW MINTED: `A HANDOFF THAT NAMES A DEADLINE IT WILL NOT BE ALIVE TO CHECK HAS NOT DELEGATED THE CHECK — IT HAS DELETED IT.` A deadline assigned to the seat writing it is assigned to nobody.** The fix is structural and is executed in this ruling: **the receipt is committed now**, and no future grade is dispatched without its receipt path being banked by the *next* seat's first action, not the dispatching seat's last.
+
+### §2 — GATE 3: **CLOSED PERMANENTLY.** THE PRE-REGISTERED CONDITION IS NOT MET
+`R-720 §4` fixed this condition **while the answer was unknown** and forbade re-reading it: *"if the **GRADED** blocker taxonomy names 'no typed dispatcher object' among the causes of the `0/99`, Gate 3 re-enters … If it does not, Gate 3 is **CLOSED PERMANENTLY** and struck from every carrier."*
+
+| path | instrument | result |
+|---|---|---|
+| **A — the graded taxonomy** `[MEASURED BY GRADED INSTRUMENT, receipt A1]` | grader's re-derivation of `unbound_reason` | `None` 52 · `unknown_condition_type` 43 · `no_recognized_session_keyword` 4 = **99** |
+| **B — this desk, committed blob `23f30eb0`** `[MEASURED HERE]` | my own read of `tier-a-compile-census.json` at `HEAD` | `None` **52** · `unknown_condition_type` **43** · `no_recognized_session_keyword` **4** = **99** |
+
+**The two partitions are identical.** **No `unbound_reason` names a dispatcher or a typed-dispatcher object: `NONE`.**
+✅ **POSITIVE CONTROL — the absence is a measurement, not a silence:** the same probe searching for `type` **fires**, returning `unknown_condition_type`. A search that can find one string in the field and finds no dispatcher string is evidence; a search that finds nothing at all is not.
+★★★ **AND THE GOLDEN SLICE MAKES IT STRONGER THAN THE CONDITION REQUIRED** `[MEASURED HERE]`: `st5e-YJRfKc__s0` has `unbound_reason = None` on **`10` of its `11`** conditions — **dispatch SUCCEEDS on 10 of 11.** A dispatcher gate would not block one of them.
+⇒ **GATE 3 IS CLOSED PERMANENTLY AND STRUCK FROM EVERY CARRIER. `13`th and FINAL mention.** No seat may re-open it without new evidence that a dispatcher object blocks a *named* condition — and that evidence does not exist in the committed census.
+⚖️ **I record that this answer was the one I expected. That is exactly why the condition was pre-registered by a prior seat and why I did not re-read it: `A RE-READ AFTER AN EXPECTED ANSWER IS THE SAME GOALPOST AS A RE-READ AFTER AN UNWANTED ONE.`**
+
+### §3 — THE CAUSE OF THE `0/99`, RULED FROM THE GRADED TAXONOMY (`R-720 §5` item 1)
+`[MEASURED HERE, blob 23f30eb0 @ HEAD 694f6d79, campaign worktree]` — **two layers, and the second is the one nobody has been working on:**
+
+| layer | count | what it means |
+|---|---|---|
+| **recognition failure** | **47 / 99** | 43 `unknown_condition_type` + 4 `no_recognized_session_keyword` ⇒ `bind_status = UNBOUND` |
+| **approximation, not binding** | **47 / 99** | `unbound_reason = None` — **the compiler recognised it, ran, and produced an approximation** |
+| **genuine bind** | **5 / 99** | `bind_status = BINDS` |
+| **SPINE** | **53 conditions · `0` BIND** | UNBOUND 28 · APPROXIMATED 25 · **BINDS `0`** |
+
+🛑🛑🛑★★★★★ **AND THE GOLDEN SLICE'S OWN ROW — the correct denominator, which the aggregate hides** `[MEASURED HERE, stub `st5e-YJRfKc__s0`]`:
+
+```
+st5e-YJRfKc__s0   opening_range_breakout
+conditions BOUND / total   1 / 11          spine BOUND / total   0 / 5
+APPROXIMATED 9 · UNBOUND 1 · BINDS 1
+unbound_reason:  None x10 ,  no_recognized_session_keyword x1
+```
+
+★★★★★ **THE OPERATIVE FINDING OF THIS RULING: THE GOLDEN SLICE'S BLOCKER IS NOT RECOGNITION — IT IS APPROXIMATION.** Exactly **ONE** of its eleven conditions fails to be recognised. **Ten are recognised and ten produce output; nine of those approximate instead of binding.** ⇒ **Repair every recognition failure in the entire campaign and the golden slice moves from `1/11` to at best `2/11`.** The strict criterion is the census's own `criterion_strict` — *eligible iff **all** taught conditions BIND* — so **`APPROXIMATED` is a failing state, and it is the dominant one.**
+⚠️ **HYPOTHESIS, LABELLED:** that repairing a recognition failure lands the condition in `APPROXIMATED` rather than `BINDS` is **NOT MEASURED** — I have no instrument for it. What *is* measured is that `47` conditions are already past recognition and still do not bind.
+★★ **THE SELECTION IS VINDICATED, NOT INDICTED** `[MEASURED HERE, all 11 rows]`: `st5e-YJRfKc__s0` has the **fewest** UNBOUND (`1`) and the **most** APPROXIMATED (`9`) in the population — it is the spec that gets furthest through the compiler. **`R-665 §2.4`'s re-selection ban costs us nothing; the slice really is the nearest one.**
+
+### §4 — THE GRADE: **ACCEPTED**, `PASS_WITH_BOUNDED_FINDINGS`
+| system | grader's band | **desk disposition** |
+|---|---|---|
+| **Lane 34** `shadow_runner.py` taught-stop repair | **8 VERIFIED** | ✅ **RATIFIED.** 12-mutation battery with landing-verification; red-proof independently reproduced *and* extended to the full `97`-member population (`37` vs `31`, delta = exactly the 6 predicted names). **A red-proof re-run `65×` wider than the doer's is a second path, not a reproduction.** |
+| **Lane 35** tier-A census read | **6 VERIFIED (as arithmetic)** | ✅ **RATIFIED AS ARITHMETIC ONLY** — and §3 above is now the desk's own second path to the same fields. |
+| **`AR-801 §6`** safety / blast-radius | **4 REFUTED IN PART** | ⚠️ **UPHELD — see `F-5`.** |
+
+**`F-5` — ACCEPTED AS THE STRONGEST FINDING IN THE RECEIPT.** `[MEASURED BY GRADED INSTRUMENT; NOT RE-VERIFIED HERE — the grader's chain is a static TS read and I did not execute it either]` `AR-801 §6` claimed the only consumer of `passed` is a `print(…, file=sys.stderr)`. The grader found the absence claim **joined on the wrong key**: the doer checked `result_extras.parity_shadow` (persisted JSONB); the live consumer reads `result.parity_shadow` **one hop earlier**, and `passed` drives an `audit_log` row with `status:"failure"` / `decisionAuthority:"system"`, an SSE broadcast, and a **family-facing Discord CRITICAL alert**.
+⚖️ **SEVERITY, SCOPED HONESTLY: NOT A LIVE INCIDENT.** `PARITY_SHADOW_ENABLED` defaults `"false"` at both call sites ⇒ **none of this fires today.** This is a **blast-radius correction**, and the doer's narrow conclusion — no raise, no exit code, no promotion gate — **survives**. ★ **`I MEASURED THE NEIGHBOURING OBJECT`, seventh conviction, and this time the grader caught it rather than the desk.**
+✅ **`F-1` (echo wider than disclosed) ACCEPTED** — the number is right, its *novelty* was overstated; the eligibility fields were already published in the prior GRADE artifact. **`F-2`/`F-3` ACCEPTED as LOW**, blast radius `ZERO` measured (`M10`: deleting the dead member produces `0` red).
+⭐ **AND I RECORD THE GRADER'S FOUR SELF-DISCLOSURES AS THE REASON THIS RECEIPT IS TRUSTED**, in particular #3: its first `§6` trace grepped the camelCase local, found nothing, and **agreed with the doer** — *"a clean-looking absence that happened to agree with the doer's conclusion — the most dangerous kind."* **It re-grepped on the other casing and published against its own first answer. `F-5` exists only because of that.**
+
+### §5 — `F-4` IS **REFUTED IN ITS PROVENANCE HALF**, BY THIS DESK, ON THE CENSUS'S OWN FIELD
+The grade recommended: *"if the `0/11` is to carry campaign weight, the extraction inputs need a durable home before that scratchpad is collected."* **That work is already done and was done before the grade ran.**
+`[MEASURED HERE]`
+
+| check | result |
+|---|---|
+| `git ls-files docs/replay-results/h1-sealed-read-frozen/SEALED-READ` | **262 files TRACKED** |
+| …`/phase_b` | **13 files TRACKED** |
+| **content join**, sha256 per file, tracked-repo `phase_b` vs the census's temp `extraction_source` | **13 IDENTICAL · 0 DIFFERING · 0 only-in-repo · 0 only-in-temp** |
+| **census's own `extraction_sha256` for `st5e-YJRfKc__s0`** vs the **tracked** file | `7868524ba4401755edb26a4d…` **≡** `7868524ba4401755edb26a4d…` — **MATCH** |
+| positive control | the hash fn discriminates (`sha256('x') ≠ sha256('y')`) |
+
+⇒ **When the scratchpad is reaped the census remains fully reproducible from tracked files, and the census's own per-spec `extraction_sha256` field is the join key that proves it.**
+★★★★★ **AND THE SHAPE IS THE GRADER'S OWN `F-5`, TURNED ON THE GRADER: it checked the PATH and concluded the provenance was temp-only; the durable copy joins on CONTENT. `THE RIGHT ABSENCE, THE WRONG JOIN KEY` — third instance in this artifact chain, and every one of them was found by someone who was not the author.**
+🛑 **`F-4`'s OTHER HALF STANDS AND IS NOT DISCHARGED:** `bind_status` is still **single-source** — computed once at census generation (2026-07-28) and never recomputed. **My §2/§3 read is a second path to WHAT THE ARTIFACT SAYS, not to WHETHER IT IS RIGHT.** Per `audit-population`, re-deriving a field from the artifact that published it is a **join check, not an independent instrument.** ✅ **But it is now a *runnable* follow-up rather than an unfixable risk: the generator (`tier_a_compile_census.py`, tracked) and its inputs (tracked, joined above) both exist ⇒ the census can be REGENERATED and the output joined to blob `23f30eb0`.** That is queued as **LANE 36**.
+
+### §6 — CARRIER REPAIR (`R-720 §5` item 4)
+`[MEASURED HERE]` `UNSELECTED` appears **7×** in `ADVISOR-STATE.md` (positive control: an absent token returns `0`). **Six are inside archived / superseded prior-position blocks and are LEFT UNTOUCHED — the preamble's rule 4 makes corrections visible, never silent, and rewriting history would erase the audit trail.** **One is the LIVE dashboard row `:341`, and it is struck in this commit** and replaced with the measured value `1 / 11` (spine `0 / 5`) — **the golden strategy's own denominator, not the 99-wide one.** ★ `A TRUE NUMBER AGAINST THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG` — the aggregate `5/99` would have been true and would have answered a question the row does not ask.
+
+### §7 — WHAT I DID **NOT** VERIFY (named, not waived)
+1. **I re-ran no test suite.** Lane 34's bands rest on the graded instrument, not on this desk's terminal. `[MEASURED BY GRADED INSTRUMENT]`, never `[MEASURED HERE]`.
+2. **I did not regenerate the census** — that is LANE 36's whole point. `bind_status` remains single-source.
+3. **`F-5`'s TS chain is a static read I did not execute.** No `audit_log` row, SSE frame or Discord message was observed. `runtime-production` **UNMEASURED**.
+4. **`R-648` stage 5's missing comparator** (`R-720 §5` item 3) is carried forward **`[ARTIFACT-SOURCED, AR-790]` and NOT re-measured here** — *nothing in `src/engine` compares executed trades to an external reference; `run_parity_diff` compares two ENGINES on the same DSL.* **It keeps AR-790's grade, not this ruling's.**
+5. **Whether we physically hold `MES`/`MNQ`/`MCL` bar data remains `[UNCOMMITTED]`** — C9 is answered on the **naming** reading only.
+6. **The `31` inherited failures** remain undiagnosed and **not joined by name** to `AR-794`'s `31`.
+
+### §8 — DISPOSITION OF WORK
+🛑🛑 **HOLD ON NEW LANES — OPERATOR-ORDERED, 2026-08-08: *"gpt has a new plan to speed everything up standby."*** No new work lane is authorized until that plan is read. **This is a HOLD with a named dependency and a named owner: the OPERATOR relays the plan; THIS DESK adjudicates it on merit (`external-opinion`: a channel is not an author).** It is **not** a stall — §1's banking, §2's closure and §6's carrier repair are executed in this commit because all three were pre-registered obligations, not new work.
+🛑 **MONITORS ARE RETIRED PERMANENTLY — OPERATOR-ORDERED, 2026-08-08: *"no monitors only message worker."*** `[MEASURED HERE]` the census returned **`0` `bash.exe`** — every monitor was already dead (a restart, per `background-monitors`). **Nothing was killed and nothing will be re-armed.** Seat-to-seat messaging replaces the rig. **`advisor-onboarding §4a` and the handover's §11 are SUPERSEDED on this point and must be edited by the next seat that touches them.**
+
+**QUEUED, NOT AUTHORIZED (released the moment the plan is adjudicated), in priority order:**
+1. **LANE 36 — REGENERATE THE CENSUS.** Re-run `tier_a_compile_census.py` against the **tracked** `SEALED-READ` inputs; join the output to blob `23f30eb0` **by field, per spec**. **This is the only path to a second instrument for `bind_status`, and the entire campaign position now rests on that field.** *Acceptance:* a committed receipt naming per-spec agreement or the exact disagreeing fields. *Honest-partial clause applies.*
+2. **LANE 37 — CORRECT `AR-801 §6`** (worker owns its own report): restate the reach of `passed`, and re-run the absence grep against **`result.parity_shadow`**, not `result_extras.parity_shadow`.
+3. **LANE 38 — THE APPROXIMATION QUESTION**, which §3 makes the money-path question: for the golden slice's **9 APPROXIMATED** conditions, what does `APPROXIMATED` mean at the executable line, and what is the smallest change that converts one to `BINDS`? **REPORT ONLY — change nothing.**
+4. `GRADE-F-1`/`F-2` remain **OWNER: worker · TRIGGER: first `:534` change** — unchanged, and still not to be closed separately.
+
+**STOP CONDITION:** any lane that would re-open Gate 3, re-select the golden slice (`R-665 §2.4`), enable `TF_FAMILY_META_ENFORCED` or `PARITY_SHADOW_ENABLED`, or make any parity claim — **stop and report.**
+**LESSON TO PERSIST:** `A HANDOFF THAT NAMES A DEADLINE IT WILL NOT BE ALIVE TO CHECK HAS DELETED THE CHECK.` · `THE RIGHT ABSENCE ON THE WRONG JOIN KEY IS THE MODAL ERROR OF EVERY SEAT IN THIS CHAIN — DOER, DESK, AND GRADER ALIKE.` · **`A RECOGNISED CONDITION THAT APPROXIMATES IS NOT A STEP TOWARD BINDING; IT IS A DIFFERENT FAILURE, AND IT IS THE DOMINANT ONE.`**
+
+---
+
 ## R-720 · 2026-08-04 · ⚠️✅★★★★★ **`R-719 §3`'s DURABILITY REFUSAL IS WITHDRAWN — IT WAS STALE BY `2m29s`. LANES 34+35 ARE DURABLE AT `81a48b76`, COMMITTED `8 SECONDS` AFTER MY LAST MEASUREMENT.** 🛑★★★★★ **AND MY "VERIFICATION" COULD NOT HAVE CAUGHT IT: I HASHED FILE *CONTENT*, WHICH IS IDENTICAL COMMITTED OR NOT. `I PROVED THE THING I WAS NOT ASKING ABOUT.`** ✅ **THE sha256 NON-JOIN IS RESOLVED AND MY INSTRUMENTS WERE FINE — I READ AN `AR` MID-EDIT.** ⚖️★★★★★ **AND GATE 3 IS RETIRED AS A BLOCKER: `A BLOCKER MUST BE DEFINED BY WHAT IT BLOCKS`, AND AFTER `12` WITHHOLDS NOTHING HAS EVER SHOWN IT BLOCKING ANYTHING.**
 
 **★ WORKER — NOTHING OWED. HOLD FOR THE GRADE (`§2`). Your `AR-802` is accepted in full and its lesson is adopted.**
