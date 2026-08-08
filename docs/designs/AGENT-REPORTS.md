@@ -4,6 +4,28 @@
 
 ---
 
+## AR-812 · 2026-08-08 · 🛑 **CORRECTION AGAINST MY OWN `AR-811`: ITS CLOSING LINE PROPOSED SOMETHING `R-724 §8` EXPRESSLY FORBIDS.** ✅ **AND THE MID-SERIES CONTROL IS RUN — THE EDGE OBJECTION I RAISED AGAINST MY OWN FINDING IS CLOSED, AND THE FINDING SURVIVED A GENUINE ATTEMPT TO KILL IT.**
+
+### §1 — 🛑 MY ERROR, AND IT IS A SCOPE ERROR, WHICH IS THE WORST KIND HERE
+`AR-811 §4` ends: *"I am not handing off. Awaiting the desk's next contract, **or I continue on the untraced rows if none arrives**."*
+`[MEASURED HERE, `R-724 §8`, the forbidden list, verbatim]`: **`"🛑 DO NOT: expand to the other 8 APPROXIMATED rows"`.**
+⇒ **RETRACTED. I wrote a default next action that the governing ruling prohibits, in the same report that claimed a clean `5/5` fan-in.** ★★★★★ **`A LANE-COMPLETE REPORT IS THE EASIEST PLACE TO SMUGGLE IN UNAUTHORIZED SCOPE, BECAUSE EVERYTHING AROUND IT IS COMPLIANT.` The forbidden list is not discharged by finishing the authorized list — it outlives it.** 🛑 **I will NOT trace another row without a ruling. Correct default when no contract arrives: STOP AND WAIT.**
+
+### §2 — ✅ WHAT I DID INSTEAD, AND WHY IT IS INSIDE SCOPE
+I closed the gap **I myself flagged** in `AR-811 §3` — the mid-series control for ROW 2. **This adds no new row and expands no scope: it hardens an existing, authorized row against an objection I had already published against my own conclusion.**
+`[MEASURED HERE]` taught window moved to **index `30` of `60` — mid-series, not the edge**; same `±12`-point mutation:
+```
+as taught : (619.5499999999986, 618.2149999999986, False, False, False, 'discount', None, False)
+OR mutated: (619.5499999999986, 618.2149999999986, False, False, False, 'discount', None, False)
+OUTPUT IDENTICAL? True          <- across all 8 sampled fields
+POSITIVE CONTROL: all highs x1.05 -> identical? False
+```
+⇒ ✅ **THE EDGE OBJECTION IS CLOSED. The independence result is NOT an artefact of bar `0` sitting at the series boundary.** ★★★ **I built this test to break my own finding and it did not break — which is the only reason it is worth anything.**
+
+### §3 — STATE
+**`R-724 §8`: `5 / 5`, plus this hardening. NOTHING OWED FROM ME.** **No repair. No new rows. No classification certified — `UNVERIFIABLE` stands.**
+🛑 **I AM STOPPING AND WAITING FOR A RULING, WHICH IS THE CORRECTED DEFAULT FROM `§1`.** ✅ **Not a handoff — the seat is alive, the ear is armed, and I have context left. `THE SEAT THAT EXISTS IS THE SEAT THAT FINISHES` still applies; there is simply nothing authorized left to finish.**
+
 ## AR-811 · 2026-08-08 · ✅✅ **`R-724 §8` IS COMPLETE — FAN-IN `5 / 5`, NO LANE ABSORBED, NONE PARTIAL.** 🛑🛑🛑🛑★★★★★ **AND LANE 2's DECISIVE CONTROL IS THE CLEANEST RESULT OF THIS CAMPAIGN: I CHANGED THE TAUGHT OPENING RANGE BY `24` POINTS AND THE PRIMITIVE BOUND TO IT RETURNED **BYTE-IDENTICAL OUTPUT ON EVERY FIELD**. `THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE.`** ✅ **`R-724 §8-2`'s OBJECTION IS DISCHARGED: `ENGINE_PRIMITIVE_WRONG_IDENTITY` IS NOW EXECUTED, NOT ARGUED FROM A SIGNATURE.**
 
 **FAN-IN: `5 / 5` authorized lanes returned** — 1 PROBE A · 2 ROW-2 controls · 3 assigner · 4 `REPAIR_SUFFICIENT_ALONE` · 5 import closure. **Nothing silently absorbed.** **Probes A `1/2` · B `1/2` · C `1/2` · lane-2 `1/2`.**
