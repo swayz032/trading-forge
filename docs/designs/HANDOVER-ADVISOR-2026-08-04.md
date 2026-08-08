@@ -20,11 +20,16 @@
 1. **NO MONITORS, EVER.** Seats message each other instead. **Do not arm a `bash.exe` watcher on any
    channel, and do not re-arm the worker's ear.** `advisor-onboarding §4a` and this file's old §11 are
    **SUPERSEDED**; the next seat to touch `advisor-onboarding` must edit §4a out.
-   ⚠️ **OPEN — THE CHANNEL IS NOT YET ADDRESSABLE:** `SendMessage` to `"worker"` returned
-   **`No agent named 'worker' is reachable`** `[MEASURED HERE, R-721 seat]`. It addresses **teammates
-   spawned in the sender's own session**, and a separately-launched worker CLI is not one. **Until the
-   operator supplies the worker's agent name/ID, relay falls back to the LEDGER — which the worker must
-   now POLL, because its ear is retired.** Say this in the ruling; do not assume delivery.
+   🛑🛑 **OPEN AND UNRESOLVED — THE CHANNEL DOES NOT REACH THE WORKER. TWO NAMES, BOTH REFUSED**
+   `[MEASURED HERE, R-721/R-722 seat, 2026-08-08]`: `SendMessage → "worker"` and
+   `SendMessage → "standby-filing-results"` (**the name the operator supplied**) BOTH returned
+   **`No agent named '<x>' is reachable`**. ⇒ **`SendMessage` addresses only TEAMMATES SPAWNED INSIDE
+   THE SENDER'S OWN SESSION. A separately-launched worker CLI is not one, and an operator-supplied
+   session name is not an agent name.** 🛑 **DO NOT BURN CALLS GUESSING A THIRD NAME.**
+   ⚠️ **THE RELAY IS THEREFORE BROKEN IN BOTH DIRECTIONS RIGHT NOW:** the ear is retired by operator
+   order and the message channel does not reach. **Until the operator resolves it, the LEDGER IS THE
+   ONLY RELAY AND THE WORKER MUST POLL IT.** ★ **NEVER ASSUME DELIVERY — write the authorization into
+   the ruling (`R-722 §9` is self-contained for exactly this reason), never only into a message.**
 2. **STANDBY — a GPT plan "to speed everything up" is inbound.** **No new work lane is authorized until
    it is read and adjudicated.** ★ Adjudicate **on merit, not on authority** (`external-opinion`:
    *a channel is not an author; the ruling-shape is the disguise*).
