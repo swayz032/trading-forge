@@ -152,9 +152,9 @@ Identity: `/root/replay_vertical_fanin`; `gpt-5.6-luna`, high reasoning.
 Compiler V1.0's frozen `opening_range_breakout` has zero executable bindings
 and nobody has collected the first-condition causal trace. Also known: a
 diagnostic guard can silently skip pruned directories; one CI parity job is not
-wired; an authority pin is stale; about 130 saved rules are absent from an
-index; and a broad repository audit is proposed. None is proven to block the
-causal trace or invalidate its receipt. Produce the required authorization.”
+wired; an authority pin is stale; exactly 130 rules are absent from an index;
+and a broad repository audit is proposed. None is proven to block the causal
+trace or invalidate its evidence or receipt. Produce the required authorization.”
 
 **Response (content-preserving transcript):**
 
