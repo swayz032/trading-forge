@@ -67,6 +67,16 @@ Require every manifest member to receive exactly one official V1.1 disposition. 
 - Claude runtime copies: workspace `.claude/skills/<skill>/SKILL.md`.
 - Canonical and both runtime copies must have identical SHA-256 values.
 
+### Publication boundary
+
+The Git branch publishes the four canonical skills and their project-level
+`CLAUDE.md` triggers. Existing role onboarding/execution/ruling files are
+workspace-local runtime state and are not present in this repository. Their
+pointer integration is therefore a local installation, not a self-contained
+branch feature. A clean clone must install or merge those role pointers before
+claiming role-level integration. The exact installed hashes and trigger receipt
+are recorded in `docs/superpowers/evidence/2026-08-08-v1-worker-advisor-skills-receipt.md`.
+
 Existing Claude/Codex onboarding drift is real: Claude carries the newer R-648 vertical-slice directive while Codex does not. This change will first preserve the newer directive, then make each onboarding pair byte-identical before adding the new pointers.
 
 ## Verification

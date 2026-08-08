@@ -116,6 +116,7 @@
 
 **Files:**
 - Modify: `AGENT-LOGS.md`
+- Create: `docs/superpowers/evidence/2026-08-08-v1-worker-advisor-skills-receipt.md`
 - Verify: all canonical/runtime skills, onboarding pairs, `CLAUDE.md`, design, and plan
 
 **Interfaces:**
@@ -127,4 +128,5 @@
 - [ ] Verify onboarding pair hashes and all required trigger strings.
 - [ ] Run `git diff --check`, placeholder scan, and expected-path membership check.
 - [ ] Append the required session log with baseline and forward-test evidence.
+- [ ] Publish the exact pressure scenarios, observed invariants, static review receipts, and local-only role-integration boundary.
 - [ ] Commit explicit paths, push `docs/role-skills-20260808`, and confirm local/remote SHA equality.
