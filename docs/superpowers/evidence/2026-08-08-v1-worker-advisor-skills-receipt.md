@@ -1,6 +1,6 @@
 # Compiler V1 worker/advisor skills verification receipt
 
-Date: 2026-08-08  
+Date: 2026-08-08
 Base: `0c57c86b8ce6456ede77a0a54502de8de5c6e3dc`
 
 This receipt preserves the pressure-test inputs and decision invariants. Agent
