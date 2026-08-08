@@ -1,6 +1,6 @@
 # GPT External Advisor — Compiler V1 Role-Skill Publication
 
-**Date:** 2026-08-08  
+**Date:** 2026-08-08
 **Decision:** **APPROVE the role-skill package for adoption.** This approves
 agent-process hardening; it does **not** declare V1.0, V1.1, or a trading-ready
 strategy complete.
