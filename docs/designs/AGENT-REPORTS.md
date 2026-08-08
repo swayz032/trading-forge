@@ -4,6 +4,34 @@
 
 ---
 
+## AR-806 · 2026-08-08 · ✅ **ROW 1 IS COMPLETE — PROBE B RUN, BOTH CONTROLS FIRED, AND THE CALIBRATION ROW HAS DONE ITS JOB.** 🛑🛑🛑★★★★★ **AND IT RETURNED A FINDING WIDER THAN THE ROW: THE SAME UNCHANGED PARAGRAPH ABOUT `9:30`-TO-`9:35` CLOCK TIMES BINDS "SUCCESSFULLY", `reason=None`, UNDER `11` OF THE `14` FAMILY TYPES — TO `8` DIFFERENT ENGINE PRIMITIVES. `BINDING ON THIS SURFACE IS TYPE DISPATCH, NOT MEANING MATCHING.`** ⚖️ **CLASSIFICATION REVISED ON EVIDENCE: `CANONICAL_TERM_UNRESOLVED` PROMOTED TO CO-PRIMARY, BECAUSE THE TWO BLOCKERS ARE INDEPENDENT AND FIXING EITHER ALONE CHANGES NOTHING.**
+
+**ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — ROW 1 now carries **PROBE B and PROBE C run, all six fields evidenced, instrument disclosures, and the anti-monocause reading.** **Probe budget: B `1/2` · C `1/2` · A `0/2`.**
+🛑 **STILL NOT CERTIFIED** (`R-723 §2`). **`UNVERIFIABLE` STANDS.** **NO REPAIR MADE OR PROPOSED.**
+
+### §1 — ✅ PROBE B, AND ITS CONTROLS ARE THE POINT
+`[MEASURED HERE, the real production entry `bind_condition()` at `spec_family_bindings.py:2952`; expected values COMPUTED out of census blob `23f30eb0` at runtime, never typed in]`
+- ✅ **CONTROL 1 — HARNESS REPRODUCES THE CENSUS EXACTLY:** `bindable=False`, `reason=no_recognized_session_keyword`. ★ **Had this disagreed, the finding would have been against MY RIG, not the compiler — that is the whole reason it runs first.**
+- ✅ **CONTROL 2 — POSITIVE:** `"we enter during the ny open"` → **`bindable=True, primitive=session_windows, zone=ny_am`.** ⇒ **the refusal is a property of the INPUT MEANING, not a dead path.**
+- 🛑 **RESULT: `11` of `14` families bind the taught text, to `8` distinct primitives, and NONE is the opening-range constructor.** Absence positive-controlled by the same enumeration returning those `8`.
+
+### §2 — 🛑🛑 THE WIDER FINDING, AND I BOUND ITS SCOPE MYSELF
+**Typed `WAIT_STRUCTURE` the paragraph binds to the structure engine; typed `WAIT_BIAS` to the institutional regime classifier; typed `INVALIDATE` to the structural-stop computer — all `reason=None`, no refusal, no approximation flag. The teacher's words are never consulted; the FAMILY LABEL decides which primitive runs.**
+⚠️ **WHAT IS ESTABLISHED:** `11` families accepted a semantically unrelated paragraph without complaint. ⚠️ **WHAT IS NOT:** that *no* family validates text anywhere — `WAIT_SESSION` demonstrably does, which is the entire refusal. **I measured one text across 14 families, not 14 families across their own corpora.**
+⚠️ **AND IT IS A HYPOTHESIS — LABELLED, NOT SMUGGLED — THAT THIS EXPLAINS THE SPEC'S `9` `APPROXIMATED` ROWS.** They are all typed `WAIT_STRUCTURE` and all bind to `structure_engine.compute_structure_state`. **The shape fits and I have not traced them. ROW 2 measures it or it stays a hypothesis.**
+
+### §3 — ⚖️ WHY I MOVED THE CLASSIFICATION, STATED AS A MECHANISM AND NOT A RANKING
+**The two blockers are INDEPENDENT:** a perfectly typed parameter object has **no family to be typed as** (`14` families, none means *"construct a price range over a taught clock window"*); a perfect canonical term has **no route to the engine** (no family declares the OR constructor). ⇒ **Repairing either alone leaves this condition exactly as unbound as it is today.**
+★★★★★ **`THE EARLIEST BROKEN HANDOFF IS NOT AUTOMATICALLY THE ONE WORTH REPAIRING — NAME WHETHER FIXING IT ALONE WOULD CHANGE THE OUTCOME.` Here it would not, and that is `R-722 §3`'s anti-monocause clause applied to my own row rather than to someone else's.**
+
+### §4 — ⚠️ MY TOOLING BROKE TWICE AND I AM NOT HIDING IT
+`ModuleNotFoundError` (wrong import root) and `TypeError` (`role` is read off the condition dict, not a kwarg). **Both crashed loudly; neither returned a plausible wrong answer.** I do **not** count them against the `R-648` budget — that budget governs failed **hypotheses**, and these produced no result — ★★★ **`AN INSTRUMENT THAT CRASHES HAS NOT LIED TO YOU.`** **Recorded because a clean tooling log would imply the rig worked first time.**
+
+### §5 — STATE, AND THE ONE THING I STILL NEED
+✅ **ROW 1 CLOSED at the mechanical bar** (`R-723 §2`): six fields, one primary — now co-primary with a stated mechanism — secondaries separate, every cell an opened location or a command and its output.
+🛑 **PROBE A IS STILL ARTIFACT-SIDE AND THIS IS THE SECOND TIME I AM ASKING:** is there a frozen transcript for `st5e-YJRfKc` in any tree or artifact the desk holds? **Without it `SOURCE_ITSELF_INCOMPLETE` cannot be excluded by measurement for THIS row or any later one, and that ceiling applies to the whole trace.**
+**NEXT:** ROW 2 — `WAIT_STRUCTURE#0`, the first load-bearing condition, where the `APPROXIMATED` hypothesis in `§2` gets measured. **Still diagnosis; still no repair.**
+
 ## AR-805 · 2026-08-08 · 🛑🛑🛑★★★★★ **PROBE C RUN — AND IT REFUTED MY OWN SECONDARY BLOCKER WITHIN THE HOUR. `ENGINE_PRIMITIVE_MISSING` IS STRUCK: `compute_opening_range_breakout(df, range_minutes, session_start_et)` EXISTS, IS PARAMETERISED *EXACTLY* AS TAUGHT, AND IS LIVE IN PRODUCTION.** ★★★★★ **`THE ENGINE ALREADY COMPUTES THE TAUGHT CONCEPT, AND THE SPEC-BINDING SURFACE HAS NO ROUTE TO IT.`** ⚠️ **AND IT CAUGHT A WRONG NUMBER I COMMITTED: `30×` SHOULD BE `36.0×`.**
 
 **ARTIFACT UPDATED:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — ROW 1 fields 5 and 6 revised on measurement; the struck secondary is **preserved and struck, not deleted**. **Probe budget: C `1/2` (succeeded first try) · A `0/2` · B `0/2`.**

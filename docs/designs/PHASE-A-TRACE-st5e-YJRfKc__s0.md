@@ -191,6 +191,45 @@ def compute_opening_range_breakout(
   `compute_opening_range_breakout` **does** construct and lock the range. **`UNMEASURED`: whether the
   breakout-and-retest half has a carrier.** *What would measure it:* trace ROW 2 (`WAIT_STRUCTURE#0`).
 
+### Field 4b — PROBE B (BINDER) — ✅ RUN, DIAGNOSIS-ONLY (`R-722 §5-1`), AND IT FOUND MORE THAN IT WAS SENT FOR
+**Method:** feed condition objects to the **real production entry point** `bind_condition()`
+(`spec_family_bindings.py:2952`). **Expected values COMPUTED from the committed census, never typed
+in** (`hardcoded-test`): the control asserts against `cond["bindable"]` / `cond["unbound_reason"]`
+read out of blob `23f30eb0` at runtime.
+
+- ✅ **CONTROL 1 — THE HARNESS REPRODUCES THE CENSUS:** `WAIT_SESSION` + the taught text →
+  `bindable=False`, `reason=no_recognized_session_keyword`, `zone=None`. **Census agreement: `True`.**
+  ★ *If this had disagreed, the finding would have been against my rig, not the compiler.*
+- ✅ **CONTROL 2 — POSITIVE, THE BINDER IS LIVE:** `WAIT_SESSION` + `"we enter during the ny open"` →
+  **`bindable=True`, `primitive=session_windows`, `zone=ny_am`.** ⇒ **The refusal above is a property of
+  the INPUT MEANING, not a dead code path.**
+- 🛑 **THE ANSWER — all `14` canonical families × the taught text:** **`11` bind, to `8` distinct
+  primitives, and `NONE` is the opening-range constructor.** Reachable set:
+  `bias_engine.classify_institutional_regime · entry_quality.confluence_factor_presence ·
+  provenance_only · spec_condition_compiler.candle_confirmation_check ·
+  spec_condition_compiler.retest_touch_check · spine_completion_trigger ·
+  structural_stops.compute_structural_stop · structure_engine.compute_structure_state`.
+  Only `WAIT_SESSION` (`no_recognized_session_keyword`), `RESET` and `EXCEPTION`
+  (`control_flow_*_unsupported`) refuse. **Positive control for that absence: the same enumeration
+  returned 8 non-empty primitives, so it demonstrably can return results.**
+
+🛑🛑🛑★★★★★ **AND HERE IS THE FINDING I WAS NOT SENT TO GET, WHICH IS WHY IT MATTERS:
+THE SAME UNCHANGED SENTENCE — a paragraph about 9:30-to-9:35 clock windows — BINDS "SUCCESSFULLY",
+`reason=None`, UNDER `11` DIFFERENT FAMILY TYPES, EACH TO A DIFFERENT PRIMITIVE.** Typed
+`WAIT_STRUCTURE` it binds to the structure engine; typed `WAIT_BIAS` it binds to the institutional
+regime classifier; typed `INVALIDATE` it binds to the structural-stop computer. **The text is never
+consulted.**
+★★★★★ **`BINDING ON THIS SURFACE IS TYPE DISPATCH, NOT MEANING MATCHING. THE FAMILY LABEL CHOSEN BY
+THE EXTRACTOR — NOT THE TEACHER'S WORDS — DECIDES WHICH ENGINE PRIMITIVE RUNS, AND A MISTYPED
+CONDITION BINDS CONFIDENTLY TO THE WRONG ONE WITH NO REFUSAL AND NO APPROXIMATION FLAG.`**
+⚠️ **SCOPE, HONESTLY: this is measured for THIS text across `14` families. I have NOT measured whether
+some families consult their text in other paths** (`WAIT_SESSION` demonstrably does — that is the whole
+refusal). **What is established is that `11` families accepted a semantically unrelated paragraph
+without complaint. What is NOT established is that no family anywhere validates text.**
+⚠️ **AND IT IS A HYPOTHESIS, NOT A FINDING, THAT THIS EXPLAINS THE SPEC'S `9` `APPROXIMATED` ROWS** —
+those are all typed `WAIT_STRUCTURE` and all bind to `structure_engine.compute_structure_state`. **The
+shape fits. I have not traced them, and ROW 2 is where that gets measured rather than assumed.**
+
 ### Field 6 — FINAL CAUSAL CLASSIFICATION — ⚠️ **PRODUCED, NOT CERTIFIED** (`R-723 §2`)
 - **PRIMARY BLOCKER (proposed):** **`PARAMETER_SCHEMA_MISMATCH`**
   — the earliest measured divergence. The teacher's rule left the source **fully specified** (three exact
@@ -219,19 +258,48 @@ def compute_opening_range_breakout(
   missing** — `9:30 a.m. Eastern to 9:35 a.m. Eastern` is present verbatim in the artifact. **What is
   missing is its TYPE, not its CONTENT**, and those are different enum values. ★ **`INFORMATION THAT
   SURVIVES AS PROSE HAS BEEN PRESERVED AND NOT DELIVERED.`**
-- 🛑 **WHY THIS ROW CANNOT YET DISCRIMINATE, STATED PLAINLY:** the framework's decision table requires
-  PROBE B (*does a correct canonical object bind?*) and PROBE C (*can the engine compute it?*) to
-  separate a canonicalization defect from an engine defect. **NEITHER HAS BEEN RUN.** Until they are,
-  the ordering of my primary and secondaries is an **argued reading of static evidence, not a measured
-  discrimination**, and `R-722 §4`'s `UNVERIFIABLE` stands.
+- ✅ **BOTH PROBES ARE NOW RUN, AND THE ORDERING ABOVE IS REVISED ON THEIR EVIDENCE:**
+  **`CANONICAL_TERM_UNRESOLVED` IS PROMOTED TO CO-PRIMARY WITH `PARAMETER_SCHEMA_MISMATCH`** — and I
+  state the reason rather than just the rank: **the two blockers are INDEPENDENT, and repairing either
+  one alone leaves this condition exactly as unbound as it is today.**
+  - Even a **perfectly typed** parameter object (`start=09:30, end=09:35, tz=America/New_York`) has
+    **no canonical family to be typed AS** — the vocabulary is `14` families and none of them means
+    *"construct a price range over a taught clock window"* `[MEASURED HERE, `FAMILY_META` keys]`.
+  - Even a **perfect canonical term** has no route to the engine — **no family declares the OR
+    constructor** (field 5), so the term would bind to nothing.
+  ⇒ **The framework's decision-table row that fits is `Canonical object cannot bind although exact
+  engine primitive exists → binding-schema or registry defect`.**
+- ⚠️ **AND I APPLY `R-722 §3`'s ANTI-MONOCAUSE CLAUSE TO MY OWN ROW:** this is **not** one explanation.
+  **Two independent handoffs are broken, and the earliest (extraction → canonical) is NOT SUFFICIENT to
+  explain the failure**, because the next one would block regardless. ★★★ **`THE EARLIEST BROKEN
+  HANDOFF IS NOT AUTOMATICALLY THE ONE WORTH REPAIRING — NAME WHETHER FIXING IT ALONE WOULD CHANGE THE
+  OUTCOME.` Here it would not.**
+- 🛑 **WHAT STILL CANNOT BE RULED FROM THIS ROW:** **PROBE A remains artifact-side** (no frozen source
+  lesson in this tree), so `SOURCE_ITSELF_INCOMPLETE` cannot be excluded by measurement — only by the
+  observation that the artifact already carries exact times, which is evidence about the artifact, not
+  about the lesson. **`R-722 §4`'s `UNVERIFIABLE` stands until the independent grade lands.**
 
 ### ROW 1 — PROBE STATUS
 | probe | status | note |
 |---|---|---|
 | **A — extraction** | ⚠️ **ARTIFACT-SIDE ONLY** | the frozen source lesson is not in this tree; I compared the artifact against itself and the census, never against the lesson |
-| **B — binder** | 🛑 **NOT RUN** | next action: build a test-only canonical `WAIT_SESSION` object carrying an explicit window and feed it to the real binder. **Diagnosis-only (`R-722 §5-1`); expected values COMPUTED, never hand-copied** |
+| **B — binder** | ✅ **RUN, DIAGNOSIS-ONLY, BOTH CONTROLS FIRED** | real `bind_condition()`; harness reproduces the census; positive control binds `ny_am`; `11/14` families bind the taught text to `8` primitives, **none the OR constructor**. Attempts used: `1 / 2` |
 | **C — engine** | ✅ **RUN, PASSED ITS OWN CONTROLS, AND CHANGED THE ANSWER** | `1440`-minute enumeration × 5 zones + positive and negative controls ⇒ no zone expresses any taught window (`36×`/`12×`/`6×` too wide). **Then found the real constructor: the engine CAN compute the taught concept and no family routes to it.** Attempts used: `1 / 2` |
-| **attempt budget** | A `0/2` · **B `0/2`** · **C `1/2` (succeeded first try)** | `R-648`, per-probe |
+| **attempt budget** | A `0/2` · **B `1/2`** · **C `1/2`** — both succeeded on their first *substantive* run | `R-648`, per-probe |
+
+### INSTRUMENT DISCLOSURES — MY OWN TOOLING BROKE TWICE, BOTH LOUDLY
+1. **Import shape.** `sys.path.insert(0,"src")` + `from engine...` works for `session_windows` (no
+   intra-package imports) and **fails** for `spec_family_bindings`, which imports `src.engine.…`
+   absolutely. `ModuleNotFoundError`, fixed by putting the repo root on the path.
+2. **Signature shape.** I called `bind_condition(cond, role="spine")`; the public entry point takes
+   `(condition, restore, demoted_role, force_unexecuted)` and reads `role` **off the condition dict**.
+   `TypeError`, fixed by moving `role` into the dict.
+✅ **NEITHER IS COUNTED AGAINST THE `R-648` PROBE BUDGET, AND I SAY WHY RATHER THAN JUST ASSERTING IT:**
+the budget governs **failed attempts at a hypothesis** — *"a renamed hypothesis is the same attempt."*
+These were **harness-construction errors that never produced a result**, and both **failed loudly with a
+stack trace** rather than returning a plausible wrong answer. ★★★ **`AN INSTRUMENT THAT CRASHES HAS NOT
+LIED TO YOU; THE BUDGET EXISTS FOR INSTRUMENTS THAT ANSWER.`** ⚠️ **Recorded anyway, because a clean
+tooling log would imply the rig worked first time and it did not.**
 
 ---
 
