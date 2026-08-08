@@ -579,6 +579,10 @@ The graduation hot-path gained 4 new audit-action namespaces. Future agents shou
 | `migration-author` | Creating/editing/reviewing any SQL migration or `_journal.json` entry — BEFORE the file lands. (BOM crashloop, 0175 type mismatch, dup-`when`.) |
 | `worktree-session` | Starting/landing any worktree, dispatching `isolation:"worktree"` agents, or verifying inside a worktree. (846-line moving-HEAD revert, troll `npx tsc` false-clean.) |
 | `transcript-audit` | After EVERY gemma probe, before any mass (re-)extraction, and when grading extraction quality or intake rejects. Probe-green ≠ extraction quality. |
+| `vertical-slice-breakthrough` | A frozen real strategy has zero or partial bindings. Trace the first failed source-to-engine handoff before broadening. |
+| `critical-path-campaign-manager` | Competing findings need ranking against the current V1.0/V1.1 exit. Preserve deferrals; require dependency proof for precedence. |
+| `source-to-engine-conformance` | Proving or ruling on V1.0 source fidelity, production execution, independent bar comparison, or mutation evidence. |
+| `batch-disposition-integrity` | Running or ruling on V1.1 library batches, intake recompiles, or any faithful-compile/measured-refusal census. |
 
 ### Subagent assignments (4-pass execution pattern)
 | Subagent | Charter |

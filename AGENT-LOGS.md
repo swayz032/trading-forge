@@ -16094,3 +16094,22 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - `npx tsc --noEmit` passed.
 
 **Known-facts updates:** Paper-engine validation must be grounded in the custom engine's API-driven execution path; Topstep fills are not a prerequisite. No strategies, backtests, or paper/live execution were started during this hardening pass.
+
+### Session Log — 2026-08-08 Compiler V1 worker/advisor skill hardening
+
+**Mission:** Convert the approved Compiler V1 fast-path doctrine into reusable worker and advisor controls without changing compiler or trading behavior.
+
+**Work completed:**
+- Added `vertical-slice-breakthrough`, `critical-path-campaign-manager`, `source-to-engine-conformance`, and `batch-disposition-integrity` as canonical project skills.
+- Installed exact-byte Claude/Codex runtime mirrors and added pointer-only invocation rules to worker/advisor onboarding and execution/ruling skills.
+- Preserved the newer R-648 vertical-slice directives while repairing onboarding-copy drift.
+- Added the four triggers to `CLAUDE.md`; procedural contracts remain in the skills rather than being duplicated into onboarding.
+
+**Behavioral verification:**
+- The vertical trace refused invented evidence in 5/5 fresh missing-artifact tests and allowed genuinely independent read-only lanes.
+- Campaign ranking held five boundaries: frozen ORB first, exact-instrument blocker, unrelated P0 deferral, production-incident preemption, and V1.1 reconciliation.
+- Conformance refused a profitable hand-built substitute and a shared-lineage reference, while passing a complete negative-P&L packet.
+- Batch integrity quarantined count-only closure and identity-perfect semantic loss, while passing a complete mixed compile/refusal batch.
+- Independent task review returned specification PASS and quality APPROVED for all four skills.
+
+**Scope:** Documentation and agent-process hardening only. No compiler, engine, evaluator, database, n8n workflow, grader, or trading behavior changed.
