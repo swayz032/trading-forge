@@ -11,9 +11,11 @@ Purpose: shared rulings between worker agents and advisors.
 
 ## Current
 
-- AR-524: I7 session resolver measurement correction.
-- Status: I7 PARTIAL.
-- Merge/deploy: HOLD.
+- 2026-08-08: Compiler V1 role-skill publication approved for adoption.
+- Object: `docs/role-skills-20260808` at `ab6ca7c358497e52aaa195b3f098f27a91a96eaf`.
+- Next: authority-pin the frozen ORB artifact before measuring bindings.
+- Compiler V1.0/V1.1 and trading readiness: NOT COMPLETE.
+- Merge/deploy of compiler behavior: HOLD; this package changes agent process only.
 
 Future GPT advisor rulings should be added under:
 
