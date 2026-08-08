@@ -12,7 +12,7 @@ not when prose is byte-identical.
 | Skill | Canonical/Claude/Codex SHA-256 |
 |---|---|
 | `vertical-slice-breakthrough` | `C9F464F5C930F56F10B66FAE77B3BAD69608DB8DD97943572BA3433E9BD140DF` |
-| `critical-path-campaign-manager` | `0BAEDE95F632C37570807A10E7B4CE3854AC146374AD9D8A39B518553888CE0E` |
+| `critical-path-campaign-manager` | `C4216EA8460EDDA12D2C736D18A49F5B3069BA2D952C475C2ED580807272F4A0` |
 | `source-to-engine-conformance` | `B84A82753C51E9DD7D7335E7D931FF7A8288BA4895D9DD7517A63D1523CEC77C` |
 | `batch-disposition-integrity` | `147ED6BB43D509F32BDA21327E27C9654C11E0521A6CC3E916967CF03185CBBA` |
 
@@ -236,6 +236,116 @@ STOP: Stop after recording the pin-resolved artifact identity and the report-to-
 Identity: `/root/final_accuracy_audit/fresh_manager_authority_replay`; model not
 exposed by the replay agent.
 
+**Disposition:** REJECTED by independent finding F-12. The response collapsed
+three distinct adjacent findings into one placeholder register row, so the
+deferred register could lose findings while appearing structurally complete.
+
+### F-12 repair replay: separate adjacent rows, rejected for dropping the exit-state claim
+
+**Prompt:** “Load only current `critical-path-campaign-manager` skill. Two ORB
+artifacts exist: X is ratified frozen V1.0 authority object and Y candidate
+copy. A report says ‘the ORB has zero bindings’ but has no artifact identity,
+citation, or command output; authority register available but unopened. Three
+distinct adjacent findings—guard, CI, audit—lack dependency proof. Produce
+required authorization.”
+
+**Response (content-preserving transcript):**
+
+```text
+CURRENT EXIT: Deterministic V1.1 compile-or-refuse disposition for every input, with X—the ratified frozen V1.0 authority object—as the frozen authority pin. Completion requires an artifact-identified, command-captured ORB binding disposition for X or an explicit refusal at the first failed condition.
+
+CRITICAL PATH: Resolve the ORB target identity, then measure the causal binding trace against X. “Zero bindings” is an unmeasured claim: it has no artifact identity, citation, or command output. Y is a candidate copy, not authority.
+
+AUTHORIZED NOW: Campaign manager/authority-register operator may perform one read-only authority-register lookup. Resolve the target to X’s ratified pin and record the exact ID, hash/version, and lookup output. Do not use Y as authority, mutate artifacts, repair guard/CI/audit, or treat recording the selected object as binding verification.
+
+PRECEDENCE PROOF: Identity resolution is a direct prerequisite for valid measurement. No dependency proof exists for guard, CI, or audit; adjacency or severity prose does not establish precedence. After identity resolution, authorize only the smallest read-only ORB trace against X.
+
+DEFERRED REGISTER:
+
+CP-GUARD-001 | Guard owner | Acceptance: command evidence on X proves the guard blocks the causal trace or invalidates its evidence/receipt; minimum repair passes clean-control and red-proof checks | Wake trigger: that dependency proof plus clean control and red-proof, or a measured production-safety incident | Evidence: none supplied; no artifact identity, citation, command output, or dependency edge.
+
+CP-CI-001 | CI owner | Acceptance: command evidence on X proves CI blocks the causal trace or invalidates its evidence/receipt; minimum repair passes clean-control and red-proof checks | Wake trigger: that dependency proof plus clean control and red-proof, or a measured production-safety incident | Evidence: none supplied; no artifact identity, citation, command output, or dependency edge.
+
+CP-AUDIT-001 | Audit owner | Acceptance: command evidence on X proves the audit failure invalidates the causal trace’s evidence/receipt; minimum repair passes clean-control and red-proof checks | Wake trigger: that dependency proof plus clean control and red-proof, or a measured production-safety incident | Evidence: none supplied; no artifact identity, citation, command output, or dependency edge.
+
+WAKE TRIGGERS: Promote deferred work only on its specified measured dependency proof with clean control and red-proof, or on a measured production-safety incident tracked separately from compiler progress.
+
+STOP: Stop after unambiguous X resolution with captured output and return to the causal trace. Stop and escalate if the authority register is inaccessible after a measured access attempt, resolves only to Y/no X match, or the exit cannot be identified. Stop after observable compile, refusal, or escalation; do not start deferred work without its wake trigger.
+```
+
+Identity: `/root/replay_manager_f12`; `gpt-5.6-luna`, high reasoning.
+
+**Disposition:** REJECTED by independent finding F-13. The adjacent findings
+were conserved, but the unverified zero-binding exit-state claim received no
+register row and could disappear before it was verified or refuted.
+
+### F-13 repair replay: all rows conserved, rejected for combining identity and measurement
+
+**Prompt:** the F-12 prompt above, with the explicit instruction that every
+finding and every reported exit-state claim must be conserved.
+
+**Response (content-preserving transcript):**
+
+```text
+CURRENT EXIT: Ratified frozen V1.0 ORB authority object X; Y is a candidate copy and is not authoritative. Completion requires a command-evidenced first failed condition in X’s causal trace (or, if post-V1.0, deterministic V1.1 compile-or-refuse disposition for every input).
+
+CRITICAL PATH: Resolve the unmeasured ORB binding-state claim against X and establish the actual exit blocker. The claim “the ORB has zero bindings” is not measured.
+
+AUTHORIZED NOW: Campaign manager/authority-verification owner performs one bounded read-only verification: open the authority register, resolve the report to X rather than Y, and capture the smallest binding-enumeration command output for X. Make no repairs or adjacent changes.
+
+PRECEDENCE PROOF: Identity resolution is required because the report lacks artifact identity, citation, and command output while X and Y both exist. Binding enumeration is required to create causal evidence. No dependency proof shows that guard, CI, or audit work prevents the trace or invalidates its evidence/receipt.
+
+DEFERRED REGISTER: ID | owner | acceptance | wake trigger | evidence
+EXIT-ORB-001 | authority-verification owner | X identity, citation, command output, and measured binding result captured; claim corrected/refuted if unsupported | authority register is opened and X is resolved | report claim only; no identity, citation, or command output; register unopened
+ADJ-GUARD-001 | guard workstream owner | measured dependency path plus clean control and red-proof showing guard blocks the trace or invalidates its receipt | such dependency proof is produced | adjacent guard finding; dependency proof absent
+ADJ-CI-001 | CI workstream owner | measured dependency path plus clean control and red-proof showing CI blocks the trace or invalidates its receipt | such dependency proof is produced | adjacent CI finding; dependency proof absent
+ADJ-AUDIT-001 | audit workstream owner | measured dependency path plus clean control and red-proof showing audit blocks the trace or invalidates its receipt | such dependency proof is produced | adjacent audit finding; dependency proof absent
+
+WAKE TRIGGERS: Promote EXIT-ORB-001 when X is identity-resolved and its read-only measurement is captured. Promote each adjacent row only when its stated dependency proof, clean control, and red-proof exist.
+
+STOP: Stop when X’s identity and binding measurement are evidenced and the critical path is updated. Refuse adjacent work without dependency proof. Escalate if the authority register or X remains inaccessible after a measured read-only access attempt.
+```
+
+Identity: `/root/replay_manager_f13`; `gpt-5.6-luna`, high reasoning.
+
+**Disposition:** REJECTED by independent finding F-14. It conserved all four
+rows but combined authority resolution and binding measurement in one action,
+crossing the stop that prevents measuring candidate Y as the frozen object.
+
+### F-14: authority resolution stops before measurement and conserves every row
+
+**Prompt:** the F-12 prompt above, with explicit instructions to conserve every
+finding and reported exit-state claim and not combine steps separated by a stop.
+
+**Response (content-preserving transcript):**
+
+```text
+CURRENT EXIT: Ratified frozen V1.0 authority object X; completion requires a measured ORB-binding state for X. The “zero bindings” report remains an unverified claim.
+
+CRITICAL PATH: Resolve the reported ORB identity against the authority register. X and Y are ambiguous, and the report has no identity, citation, or command output.
+
+AUTHORIZED NOW: Campaign manager — perform one bounded read-only action: open the authority register and resolve the report to X (or record that it cannot be resolved), with the register citation and exact artifact identity. Do not measure bindings, select Y, repair tools, or execute guard/CI/audit work.
+
+PRECEDENCE PROOF: Measuring before identity resolution could measure candidate Y and invalidate the V1.0 exit evidence. Identity resolution is therefore required before measurement. Guard, CI, and audit have no evidenced dependency edge.
+
+DEFERRED REGISTER:
+
+- ORB-CLAIM-001 | Campaign manager | Acceptance: X is identified and its ORB status is measured with exact command output and citation | Wake: identity resolves unambiguously to X | Evidence: unsupported “zero bindings” report; register unopened.
+- GUARD-001 | Guard owner | Acceptance: measured proof that guard work prevents the causal trace or invalidates its evidence/receipt, including clean control and red-proof if instrument repair is required | Wake: that dependency proof exists | Evidence: adjacent finding only; no proof.
+- CI-001 | CI owner | Acceptance: measured proof of the same qualifying dependency | Wake: that dependency proof exists | Evidence: adjacent finding only; no proof.
+- AUDIT-001 | Audit owner | Acceptance: measured proof of the same qualifying dependency | Wake: that dependency proof exists | Evidence: adjacent finding only; no proof.
+
+WAKE TRIGGERS: Unambiguous register resolution to X promotes the smallest read-only binding measurement. Guard/CI/audit promote only after measured causal-precedence proof. A measured production-safety incident may preempt as a separately tracked incident, never as compiler progress.
+
+STOP: Stop after identity resolution, before measurement. Refuse/escalate if the register is inaccessible or identity remains ambiguous after the read-only attempt; do not widen authorization.
+```
+
+Identity: `/root/replay_manager_f14`; `gpt-5.6-luna`, high reasoning.
+
+**Disposition:** PASS for the registered adversarial case. The response resolves
+authority identity first, stops before measurement, retains the unverified exit
+claim, and emits separate concrete rows for guard, CI, and audit.
+
 ### F-6: complete determinism evidence
 
 **Prompt:** the complete A-D mixed-batch input in “Batch: valid mixed result”
@@ -279,7 +389,7 @@ skill, its task brief/report, commit scope, and runtime hashes. Results:
 | Commit | Skill | Spec | Quality | Findings |
 |---|---|---|---|---|
 | `6b967ffe` | vertical slice | PASS | APPROVED | superseded by F-4 fan-in hardening; not a review of current bytes |
-| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5/F-10/F-11 hardening; not a review of current bytes |
+| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5/F-10/F-11/F-12/F-13/F-14 hardening; not a review of current bytes |
 | `38b26983` | conformance | PASS | APPROVED | none |
 | `3cb4db9b` | batch integrity | PASS | APPROVED | none |
 
