@@ -135,18 +135,61 @@ def is_in_killzone(timestamp_utc: datetime, zone: str) -> bool:
 ```
 - **Required inputs:** a UTC timestamp and a **zone NAME** drawn from
   `_ZONE_CHECKS = {london, ny_am, ny_pm, silver_bullet, macro_window}` (`:146-152`).
-- 🛑 **DOES IT COMPUTE THE TAUGHT CONCEPT? NO.** The signature admits **no start/end parameters**. There
-  is **no arbitrary-window constructor and no opening-range constructor** on this surface.
-- 🛑 **AND THE NEAREST NEIGHBOUR IS A WRONG-IDENTITY TRAP, MEASURED:** `NY_AM_START_MIN = 7*60`,
-  `NY_AM_END_MIN = 10*60` (`:59-60`) ⇒ **`ny_am` = `07:00–10:00` ET.** It **contains** all three taught
-  windows and **equals none of them** — it is `30×` the width of the `09:30–09:35` variant. Binding this
-  condition to `ny_am` would return `True` for two and a half hours the teacher never included.
-- **State machine required?** **YES, and it is a second gap:** the taught rule is *form the range over a
-  fixed window → project its high/low → wait for a breakout*, an ordered sequence. `is_in_killzone` is a
-  stateless per-bar boolean and constructs no range object. **`UNMEASURED`: whether any other engine
-  surface constructs an opening range.** *What would measure it:* an import-closure search for a
-  range-constructor primitive; **not yet run, and I will not assert its absence without one** — an empty
-  grep is not an absence.
+- 🛑 **DOES *THIS* PRIMITIVE COMPUTE THE TAUGHT CONCEPT? NO.** The signature admits **no start/end
+  parameters** — it takes a zone NAME from a closed enum.
+- ✅ **PROBE C RUN. TRUE-SETS MEASURED BY EXECUTION, NOT BY READING CONSTANTS** — every minute of a fixed
+  EDT day (`2026-06-15`), 1-minute granularity, `1440` calls per zone:
+
+| zone | measured TRUE-SET | minutes |
+|---|---|---|
+| `london` | `02:00–05:00` | 180 |
+| `ny_am` | `07:00–10:00` | 180 |
+| `ny_pm` | `13:30–16:00` | 150 |
+| `silver_bullet` | `03:00–04:00, 10:00–11:00, 14:00–15:00` | 180 |
+| `macro_window` | `02:33–03:00, 04:03–04:30, 09:50–10:10` | 74 |
+
+  - **POSITIVE CONTROL:** `764` TRUE minutes across all zones ⇒ **the rig is live and CAN return True.**
+  - **NEGATIVE CONTROL:** unknown zone `"zzz_zone_not_present"` ⇒ `0` TRUE minutes.
+  - **RESULT — EXACT MATCH AGAINST EACH TAUGHT WINDOW: `NONE`, all three.** The only superset is `ny_am`:
+    **`36.0×` wider than the 5m window** (`+175` min), `12.0×` the 15m (`+165`), `6.0×` the 30m (`+150`).
+  - ⚠️ **CORRECTION TO THIS FILE'S FIRST VERSION (committed `d181fcd7`): I wrote `30×`. MEASURED IT IS
+    `36.0×` (`180/5`). My figure was an unmeasured mental estimate sitting in a cell that demands a
+    measurement, and PROBE C is what caught it.** ★ **`AN ESTIMATE INSIDE AN EVIDENCE CELL WEARS THE
+    CELL'S AUTHORITY.`**
+- 🛑🛑★★★★★ **AND PROBE C REFUTED MY OWN SECONDARY. THE ENGINE *CAN* COMPUTE THE TAUGHT CONCEPT —
+  IT IS THE COMPILER THAT CANNOT ASK IT TO** `[MEASURED HERE, `src/engine/indicators/core.py:467-487`]`:
+```python
+def compute_opening_range_breakout(
+    df: pl.DataFrame,
+    range_minutes: int = 15,
+    session_start_et: str = "09:30",
+) -> tuple[pl.Series, pl.Series, pl.Series]:
+    """...  Range LOCKS at session_start_et + range_minutes (e.g. 09:45 ET for 15-min OR)
+             Values BEFORE the lock time are None (no lookahead) ... Resets each trading day
+             09:30 ET start aligns with NYSE/CME RTH open"""
+```
+  **`range_minutes` and `session_start_et` are parameters.** ⇒ **ALL THREE taught variants are exactly
+  expressible: `(5, "09:30")`, `(15, "09:30")`, `(30, "09:30")`.** It even locks the range and forbids
+  lookahead, which is the taught semantics.
+  - **IT IS LIVE, NOT DEAD CODE** `[MEASURED HERE, non-test callers]`: invoked at
+    `indicators/core.py:649` and `:760` by the indicator dispatcher.
+  - 🛑 **BUT NO BINDING FAMILY CAN REACH IT** `[MEASURED HERE, `spec_family_bindings.py`, every
+    `primitive="…"` literal enumerated]`: the declared set is
+    `bias_engine.classify_institutional_regime · entry_quality.confluence_factor_presence ·
+    fvg_native.compute_fvg_signal · provenance_only · session_windows · session_windows.is_in_killzone ·
+    spec_condition_compiler.candle_confirmation_check · spec_condition_compiler.retest_touch_check ·
+    spec_condition_compiler.wait_bias_directional_proxy · spine_completion_trigger ·
+    structural_stops.compute_structural_stop · structure_engine.compute_structure_state`.
+    **`compute_opening_range_breakout` is not among them, and no family declares it.**
+    (The enumeration IS the positive control: the same command that returned nothing for the OR
+    constructor returned all twelve of these.)
+- ★★★★★ **THE SENTENCE THIS ROW EXISTS TO PRODUCE: `THE ENGINE ALREADY COMPUTES THE TAUGHT CONCEPT,
+  PARAMETERISED EXACTLY AS TAUGHT, AND THE SPEC-BINDING SURFACE HAS NO ROUTE TO IT.` The condition is
+  instead routed at `WAIT_SESSION` to a killzone-membership boolean, which is a different concept.**
+- **State machine required?** **YES** — *form the range → lock it → project high/low → wait for a
+  breakout* is ordered. `is_in_killzone` is a stateless per-bar boolean constructing no range object;
+  `compute_opening_range_breakout` **does** construct and lock the range. **`UNMEASURED`: whether the
+  breakout-and-retest half has a carrier.** *What would measure it:* trace ROW 2 (`WAIT_STRUCTURE#0`).
 
 ### Field 6 — FINAL CAUSAL CLASSIFICATION — ⚠️ **PRODUCED, NOT CERTIFIED** (`R-723 §2`)
 - **PRIMARY BLOCKER (proposed):** **`PARAMETER_SCHEMA_MISMATCH`**
@@ -156,8 +199,20 @@ def is_in_killzone(timestamp_utc: datetime, zone: str) -> bool:
 - **SECONDARIES (listed separately, deliberately not merged):**
   1. **`CANONICAL_TERM_UNRESOLVED`** — even a correctly typed clock window has no canonical form; the
      vocabulary is a closed enum of five *named* zones (field 3).
-  2. **`ENGINE_PRIMITIVE_MISSING`** — `is_in_killzone` takes no window parameters; no opening-range
-     constructor was found on this surface (field 5).
+  2. ~~**`ENGINE_PRIMITIVE_MISSING`** — `is_in_killzone` takes no window parameters; no opening-range
+     constructor was found on this surface (field 5).~~ 🛑 **STRUCK — REFUTED BY MY OWN PROBE C.**
+     `compute_opening_range_breakout(df, range_minutes, session_start_et)` **exists, is parameterised
+     exactly as taught, and is live in production.** **The engine primitive is NOT missing.**
+     ★★★ **PRESERVED RATHER THAN DELETED: I proposed this secondary while its evidence cell said
+     `UNMEASURED`, and the measurement killed it within the hour. That is the honest-partial clause
+     working as designed — and it is the argument for never letting an `UNMEASURED` cell license a
+     ranked blocker.**
+  2b. **`ENGINE_PRIMITIVE_WRONG_IDENTITY` — REPLACES IT, and it is a stronger claim, not a weaker one.**
+     The condition is routed to `session_windows.is_in_killzone` (killzone MEMBERSHIP) while the concept
+     it teaches is an opening RANGE, and the correct constructor exists unreferenced by any family.
+     ⇒ **The registry, not the engine, is where the taught concept dies.** Per the framework's own
+     decision table: *"Canonical object cannot bind although exact engine primitive exists → binding-
+     schema or registry defect."*
   3. **`TEMPORAL_MODEL_COLLAPSED`** — *(weakest of the three; flagged, not argued)* the ordered
      range→breakout sequence has no carrier in the extracted representation.
 - 🛑 **WHY I AM NOT NAMING `EXTRACTION_MISSING_REQUIRED_INFORMATION`:** the information is **not
@@ -175,8 +230,8 @@ def is_in_killzone(timestamp_utc: datetime, zone: str) -> bool:
 |---|---|---|
 | **A — extraction** | ⚠️ **ARTIFACT-SIDE ONLY** | the frozen source lesson is not in this tree; I compared the artifact against itself and the census, never against the lesson |
 | **B — binder** | 🛑 **NOT RUN** | next action: build a test-only canonical `WAIT_SESSION` object carrying an explicit window and feed it to the real binder. **Diagnosis-only (`R-722 §5-1`); expected values COMPUTED, never hand-copied** |
-| **C — engine** | 🛑 **NOT RUN** | next action: call `is_in_killzone` on deterministic timestamps inside/outside `09:30–09:35` ET and record what it can and cannot express |
-| **attempt budget** | `0 / 2` on every probe | `R-648`, per-probe |
+| **C — engine** | ✅ **RUN, PASSED ITS OWN CONTROLS, AND CHANGED THE ANSWER** | `1440`-minute enumeration × 5 zones + positive and negative controls ⇒ no zone expresses any taught window (`36×`/`12×`/`6×` too wide). **Then found the real constructor: the engine CAN compute the taught concept and no family routes to it.** Attempts used: `1 / 2` |
+| **attempt budget** | A `0/2` · **B `0/2`** · **C `1/2` (succeeded first try)** | `R-648`, per-probe |
 
 ---
 

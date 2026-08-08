@@ -4,6 +4,32 @@
 
 ---
 
+## AR-805 · 2026-08-08 · 🛑🛑🛑★★★★★ **PROBE C RUN — AND IT REFUTED MY OWN SECONDARY BLOCKER WITHIN THE HOUR. `ENGINE_PRIMITIVE_MISSING` IS STRUCK: `compute_opening_range_breakout(df, range_minutes, session_start_et)` EXISTS, IS PARAMETERISED *EXACTLY* AS TAUGHT, AND IS LIVE IN PRODUCTION.** ★★★★★ **`THE ENGINE ALREADY COMPUTES THE TAUGHT CONCEPT, AND THE SPEC-BINDING SURFACE HAS NO ROUTE TO IT.`** ⚠️ **AND IT CAUGHT A WRONG NUMBER I COMMITTED: `30×` SHOULD BE `36.0×`.**
+
+**ARTIFACT UPDATED:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — ROW 1 fields 5 and 6 revised on measurement; the struck secondary is **preserved and struck, not deleted**. **Probe budget: C `1/2` (succeeded first try) · A `0/2` · B `0/2`.**
+🛑 **STILL NOT CERTIFIED, AND THE REVISION DOES NOT CHANGE THAT** (`R-723 §2`). **`UNVERIFIABLE` STANDS.**
+
+### §1 — ✅ WHAT PROBE C MEASURED, WITH BOTH CONTROLS
+`[MEASURED HERE, execution not constant-reading: every minute of `2026-06-15` EDT, `1440` calls × `5` zones]` — `london 02:00–05:00` · `ny_am 07:00–10:00` · `ny_pm 13:30–16:00` · `silver_bullet 03:00–04:00, 10:00–11:00, 14:00–15:00` · `macro_window 02:33–03:00, 04:03–04:30, 09:50–10:10`.
+✅ **POSITIVE CONTROL `764` TRUE minutes ⇒ the rig can return True.** ✅ **NEGATIVE CONTROL: unknown zone ⇒ `0`.**
+🛑 **EXACT MATCH TO ANY TAUGHT WINDOW: `NONE`, all three.** Only superset `ny_am`: **`36.0×`** the 5m, `12.0×` the 15m, `6.0×` the 30m.
+
+### §2 — 🛑🛑 THE FINDING THAT MOVES THE CAMPAIGN, AND IT IS THE OPPOSITE OF WHAT I FILED AN HOUR AGO
+`[MEASURED HERE, `src/engine/indicators/core.py:467-487`]` `compute_opening_range_breakout(df, range_minutes: int = 15, session_start_et: str = "09:30")` — **both taught degrees of freedom are PARAMETERS.** All three variants are exactly expressible as `(5,"09:30")`, `(15,"09:30")`, `(30,"09:30")`; the docstring's own invariants are the taught semantics (*"Range LOCKS at session_start_et + range_minutes"*, *"Values BEFORE the lock time are None (no lookahead)"*, *"Resets each trading day"*).
+✅ **LIVE, NOT DEAD** `[non-test callers]`: `core.py:649`, `:760`.
+🛑 **AND UNREACHABLE FROM THE BINDER** `[MEASURED HERE, every `primitive="…"` literal in `spec_family_bindings.py` enumerated — the enumeration IS the positive control, since the same command returned all `12` declared primitives and none of them is this one]`.
+⇒ ⚖️ **SECONDARY REVISED: `ENGINE_PRIMITIVE_MISSING` STRUCK → `ENGINE_PRIMITIVE_WRONG_IDENTITY`.** The condition routes to `is_in_killzone` (killzone MEMBERSHIP) while the taught concept is an opening RANGE. **Per the framework's OWN decision table this is the `binding-schema or registry defect` row — not an engine gap.**
+
+### §3 — ⚠️ TWO ERRORS OF MINE, BOTH CAUGHT BY MY OWN PROBE, BOTH RECORDED
+1. **`30×` → `36.0×`** (`180/5`). It was a mental estimate sitting in an evidence cell. ★★★ **`AN ESTIMATE INSIDE AN EVIDENCE CELL WEARS THE CELL'S AUTHORITY.`**
+2. **I ranked `ENGINE_PRIMITIVE_MISSING` as a secondary while its own evidence cell read `UNMEASURED`.** ★★★★★ **THAT IS THE REAL LESSON AND IT IS BIGGER THAN THE ROW: `AN UNMEASURED CELL MUST NOT LICENSE A RANKED BLOCKER.` I labelled the gap honestly and ranked it anyway, and the measurement killed it inside the hour. Had the desk ruled on ROW 1 v1, it would have ruled toward an engine build that is NOT needed.** ⇒ 🛑 **DESK: `AR-804`'s secondary list is SUPERSEDED — do not quote it.**
+
+### §4 — WHAT IS STILL NOT MEASURED
+1. **PROBE B NOT RUN** — a canonical object fed to the real binder. It is now the decisive one: the decision table separates *registry defect* from *canonicalization defect* on exactly that result.
+2. **PROBE A STILL ARTIFACT-SIDE** — the frozen source lesson is not in this tree. **The `st5e-YJRfKc` transcript ask from `AR-804 §5` stands and is unanswered.**
+3. **The breakout/retest half has no traced carrier yet** — that is ROW 2, not claimed here.
+4. **Nothing about the other 10 conditions or the other 10 specs**, and **no repair** — Phase A is diagnosis.
+
 ## AR-804 · 2026-08-08 · ✅ **PHASE A FIRST OBSERVABLE DELIVERED — THE CALIBRATION ROW EXISTS AND THE RIG PRODUCES ROWS.** 🛑🛑★★★★★ **AND IT LANDED A FINDING I DID NOT EXPECT: THE TEACHER LEFT NOTHING OUT. `9:30 a.m. Eastern to 9:35 a.m. Eastern` IS IN THE FROZEN ARTIFACT *VERBATIM* — AS AN ENGLISH SENTENCE IN A FIELD CALLED `action`, WITH NO PARAMETERS, NO TIMEFRAME, NO TIMEZONE, NO ORDERING.** ⭐ **`INFORMATION THAT SURVIVES AS PROSE HAS BEEN PRESERVED AND NOT DELIVERED.`** ✅ **CORRECTION ACCEPTED: `R-723 §3` IS RIGHT, THE GRADE RECEIPT WAS TRACKED AT `19:12:52` AND MY `AR-803 §4-2` WAS `16` MINUTES STALE.**
 
 **ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — **ROW 1 (calibration) MECHANICALLY COMPLETE**, all six fields populated or explicitly `UNMEASURED` with what would measure them, exactly one primary blocker, three secondaries listed separately.
