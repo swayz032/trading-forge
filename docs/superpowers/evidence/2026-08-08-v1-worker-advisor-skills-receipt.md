@@ -149,7 +149,7 @@ Identity: `/root/replay_vertical_fanin`; `gpt-5.6-luna`, high reasoning.
 ### F-5: missing causal evidence creates work, not deadlock
 
 **Prompt:** “Load only the current `critical-path-campaign-manager` skill.
-Compiler V1.0's frozen `opening_range_breakout` has zero executable bindings
+Compiler V1.0's frozen `opening_range_breakout` has zero bindings
 and nobody has collected the first-condition causal trace. Also known: a
 diagnostic guard can silently skip pruned directories; one CI parity job is not
 wired; an authority pin is stale; exactly 130 rules are absent from an index;
