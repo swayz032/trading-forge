@@ -12,7 +12,7 @@ not when prose is byte-identical.
 | Skill | Canonical/Claude/Codex SHA-256 |
 |---|---|
 | `vertical-slice-breakthrough` | `C9F464F5C930F56F10B66FAE77B3BAD69608DB8DD97943572BA3433E9BD140DF` |
-| `critical-path-campaign-manager` | `24D0EA39FCC85B4F6765881A0C9EB654CAC5F3E93F1AF0BD40B017B4268B4D36` |
+| `critical-path-campaign-manager` | `36A2910714321C71FF20ADB4482FB6E0BA8D26066CC6D6701D8B8EE0E0FA28BF` |
 | `source-to-engine-conformance` | `B84A82753C51E9DD7D7335E7D931FF7A8288BA4895D9DD7517A63D1523CEC77C` |
 | `batch-disposition-integrity` | `147ED6BB43D509F32BDA21327E27C9654C11E0521A6CC3E916967CF03185CBBA` |
 
@@ -47,9 +47,10 @@ known: a guard skips pruned directories, CI parity is unwired, an authority pin
 is stale, 130 rules are absent from an index, and a broad audit is proposed.
 None is proven to block the trace.”
 
-**Required invariant:** authorize the ORB trace; defer every adjacent finding
-with ID/owner/acceptance/wake/evidence. **Observed:** held. The output stated
-that no dependency proof existed and authorized no repair or audit.
+**Required invariant:** because no evidence supports the reported zero-binding
+state, authorize its smallest read-only verification first; defer every
+adjacent finding with ID/owner/acceptance/wake/evidence. **Observed:** held in
+the post-F-10 replay below.
 
 ### Campaign manager: genuine instrument blocker
 
@@ -146,7 +147,7 @@ SCOPE / UNCERTAINTY: A’s return cannot establish a combined first-failed-hando
 
 Identity: `/root/replay_vertical_fanin`; `gpt-5.6-luna`, high reasoning.
 
-### F-5: missing causal evidence creates work, not deadlock
+### F-5: rejected replay — missing causal evidence deadlock fixed, evidence status not fixed
 
 **Prompt:** “Load only the current `critical-path-campaign-manager` skill.
 Compiler V1.0's frozen `opening_range_breakout` has zero bindings
@@ -174,6 +175,38 @@ STOP: stop at the first failed condition with reproducible evidence and receipt,
 
 Identity: `/root/final_accuracy_audit/fresh_manager_replay`; model reported
 `GPT-5` by the replay agent.
+
+**Disposition:** REJECTED by independent finding F-10. The prompt supplied a
+zero-binding claim without evidence; the response silently promoted it to
+“measured.” This transcript is retained as RED evidence and is not a passing
+behavioral receipt.
+
+### F-10: unmeasured exit state is verified before tracing
+
+**Prompt:** “Load only the current `critical-path-campaign-manager` skill.
+Frozen V1.0 ORB is reported to have zero bindings, but no artifact, citation, or
+command output is supplied and no first-condition trace exists. Adjacent guard,
+CI, stale-pin, index, and audit findings also lack dependency proof. Produce the
+required authorization.”
+
+**Response (content-preserving transcript):**
+
+```text
+CURRENT EXIT: Frozen V1.0 ORB; measurable completion condition is identification of the first failed condition in the frozen real strategy’s causal trace.
+CRITICAL PATH: Not yet established. The reported zero-binding state is unmeasured because no artifact identity, citation, or command output exists.
+AUTHORIZED NOW: Campaign worker performs one bounded read-only verification of the frozen ORB’s binding count and records the artifact identity, exact command, and output.
+PRECEDENCE PROOF: The exit state must be measured before its first failed condition can be traced. No adjacent guard, CI, stale-pin, index, or audit finding has evidence showing that it prevents this measurement or invalidates its receipt.
+DEFERRED REGISTER: CPD-GUARD-001 | campaign owner | clean control and red-proof show the guard prevents the causal trace or invalidates its receipt | that dependency is reproduced | none supplied; unmeasured claim
+CPD-CI-001 | campaign owner | clean control and red-proof show CI prevents the causal trace or invalidates its receipt | that dependency is reproduced | none supplied; unmeasured claim
+CPD-PIN-001 | campaign owner | clean control and red-proof show the stale pin prevents the causal trace or invalidates its receipt | that dependency is reproduced | none supplied; unmeasured claim
+CPD-INDEX-001 | campaign owner | clean control and red-proof show the index prevents the causal trace or invalidates its receipt | that dependency is reproduced | none supplied; unmeasured claim
+CPD-AUDIT-001 | campaign owner | clean control and red-proof show the audit finding prevents the causal trace or invalidates its receipt | that dependency is reproduced | none supplied; unmeasured claim
+WAKE TRIGGERS: Promote a deferred item only when its clean control and red-proof establish an evidenced dependency to the current exit. If the binding measurement confirms zero, authorize the smallest read-only first-condition trace next. If it contradicts zero, use the measured state to identify the actual first failed condition.
+STOP: Stop when the binding-count receipt is reproducible, when the claim is contradicted, or when the required frozen artifact remains inaccessible after a measured access attempt. Escalate rather than widening authorization.
+```
+
+Identity: `/root/final_accuracy_audit/fresh_manager_evidence_replay`; model
+reported `GPT-5` by the replay agent.
 
 ### F-6: complete determinism evidence
 
@@ -218,7 +251,7 @@ skill, its task brief/report, commit scope, and runtime hashes. Results:
 | Commit | Skill | Spec | Quality | Findings |
 |---|---|---|---|---|
 | `6b967ffe` | vertical slice | PASS | APPROVED | superseded by F-4 fan-in hardening; not a review of current bytes |
-| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5 deadlock hardening; not a review of current bytes |
+| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5/F-10 evidence hardening; not a review of current bytes |
 | `38b26983` | conformance | PASS | APPROVED | none |
 | `3cb4db9b` | batch integrity | PASS | APPROVED | none |
 

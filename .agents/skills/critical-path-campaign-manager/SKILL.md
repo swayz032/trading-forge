@@ -1,6 +1,6 @@
 ---
 name: critical-path-campaign-manager
-description: Use when a compiler campaign has a frozen release exit, multiple defects, audits, or tooling requests compete for attention, and work must be ranked without losing valid findings.
+description: Use when a compiler campaign has a frozen release exit, multiple defects, audits, or tooling requests compete for attention, and work must be ranked without losing findings.
 ---
 
 # Critical Path Campaign Manager
@@ -14,7 +14,9 @@ Protect the release exit, not the loudest defect. A real defect has no precedenc
 3. **Separate emergencies.** A measured production-safety incident may preempt the campaign. Track it as an incident; never count that repair as compiler progress.
 4. **Defer without losing.** Every other valid finding gets a stable ID, owner, acceptance test, wake trigger, and evidence reference.
 
-Read-only independent traces may run in parallel only when they share no hidden mutable resource. This skill ranks measured work; it does not invent findings or authorize broad implementation.
+Parallel read-only traces require no hidden shared mutable resource. This skill ranks measured work; it does not invent findings or authorize broad implementation.
+
+Treat report or scenario statements as claims without artifact or command evidence. If the exit state is unmeasured, authorize its smallest read-only verification before the causal trace; never promote a claim to `measured`.
 
 ## Required authorization
 
