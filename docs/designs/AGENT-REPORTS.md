@@ -4,6 +4,27 @@
 
 ---
 
+## AR-810 · 2026-08-08 · 🛑🛑🛑★★★★★ **LANES `3` AND `5` DONE — AND BETWEEN THEM THEY GIVE PHASE A ITS CAUSAL SENTENCE. THE CLASSIFIER'S REASONING IS *CORRECT* AND ITS DESTINATION IS *WRONG*: `"opening range"` IS AN EXPLICIT `WAIT_STRUCTURE` STEM, ADDED DELIBERATELY, ON THE STATED GROUND THAT IT IS `"a level construct, not a clock window"` — WHICH IS TRUE — AND THAT FAMILY'S ONE PRIMITIVE COMPUTES MARKET-STRUCTURE *EVENTS*, NOT LEVEL *CONSTRUCTION*.** ⭐⭐ **AND LANE 5 FOUND A SECOND COMPILATION SURFACE I DID NOT KNOW EXISTED: THE OPENING RANGE IS ALREADY ADDRESSABLE BY NAME AS `orh_5m` / `orl_5m`.** ⚠️ **I ALSO AMEND MY OWN `AR-806 §2`.**
+
+**LANES: `4 / 5` of `R-724 §8` closed** (1 · 3 · 4 · 5). **REMAINING: lane 2 — ROW 2's five ordered controls, including execution on deterministic inputs. Not handing off.**
+
+### §1 — ✅ LANE 3: THE TRUST BOUNDARY IS **NOT** THE DEFECT, AND I SAY SO AGAINST MY OWN EARLIER FRAMING
+`[MEASURED HERE, `spec_producer.py:135-141` and its justification comment `:129-134`]` **`"opening range"` is an EXPLICIT `WAIT_STRUCTURE` stem**, added as a *"DERIVED ADDITION (pin iii)"* with reasoning recorded in the source: *"'opening range' is a named PRICE RANGE — two levels, a high and a low … **It is a level construct, not a clock window, so it belongs here.** As a 2-token span it also outranks and SUPPRESSES WAIT_SESSION's 1-token 'opening'."*
+⇒ 🛑 **THE ASSIGNER EXAMINES MEANING, VALIDATES, AND SEALS. Per the `AR-806` read's own decision rule, that makes type dispatch at the binder LEGITIMATE.**
+★★★★★ **SO THE CAUSAL STATEMENT IS SHARPER THAN "TYPE DISPATCH IS UNSAFE": `THE TAXONOMY CONFLATES "A STRUCTURAL LEVEL" WITH "A MARKET-STRUCTURE EVENT", AND THE ONE PRIMITIVE BOLTED TO THAT FAMILY IMPLEMENTS ONLY THE SECOND.`** The family's own comment (`:126-128`) says it covers *"levels, BOS, FVG, order block, S/R, liquidity"* — **two computational kinds, one primitive.**
+⚠️ **THIS AMENDS `AR-806 §2`.** I wrote *"the text is never consulted."* **At the BINDER that is true. At the CLASSIFIER it is false.** ★ **The text is consulted ONCE, CORRECTLY, and the answer is then discarded by a mapping that cannot express it.** ⭐ **It also explains ROW 1 vs ROW 2: the clock sentence kept `WAIT_SESSION` and refused; the level sentences were correctly routed away from it and silently substituted. Both behaviours now have one cause.**
+✅ **AND A PRIOR SEAT ALREADY KILLED THE WORSE VERSION** `[`:172-179`]`: `WAIT_STRUCTURE` was the `_UNMATCHED_DEFAULT_FAMILY` sink — *"35 of tier-A's 50 WAIT_STRUCTURE rows"* — which *"silently promoted a no-evidence condition into a family with a real primitive … an np.ones pass-through, i.e. UNGATED and LOOSER than taught."* Replaced by `UNTYPED`. ★★★ **ROW 2 is the residue that fix could not reach, because ROW 2's label is EARNED, not defaulted.**
+
+### §2 — ⭐⭐ LANE 5: A SECOND COMPILATION SURFACE, AND THE OPENING RANGE IS ALREADY ADDRESSABLE ON IT
+🛑 **NOT reachable from the spec-binding path** `[`spec_condition_compiler.py:50-58`]`: the compiler imports **only `compute_atr, compute_ema`** from `indicators.core`.
+✅ **BUT** `[MEASURED HERE]` `config.py:304-306` — *"Emits `orh_{range_minutes}m`, `orl_{range_minutes}m`, `or_range_{range_minutes}m` columns"* · `topology_producer.py:78` — *"or `"close >= orh_15m"`"* · `compile_lints.py:131` — `comparator … e.g. "close>orh_15m"`.
+⇒ ★★★★★ **TWO SURFACES: prose→family→primitive CANNOT reach the opening range; a comparator/topology surface addresses it DIRECTLY BY COLUMN NAME.**
+🛑 **AND I AM HOLDING THIS WELL SHORT OF A REPAIR PROPOSAL, DELIBERATELY.** `[UNMEASURED]`: whether the golden slice can be routed onto that surface · whether `topology_producer` runs for tier-A specs at all · whether those comparator strings are ever produced from prose. ★★★ **`THE ADDRESS EXISTING IS A VERY LONG WAY FROM THE ROUTE WORKING`, and that gap is where this campaign has been burned before. Phase A is diagnosis (`R-724 §8`); I am not proposing the fix.**
+✅ **Both absence claims positive-controlled** — the import search returned `9` real `indicators.*` imports; the tree-wide shape returned real `compute_atr` sites in `anti_setups/miner.py` and `archetypes/classifier.py`.
+
+### §3 — NEXT
+**Lane 2 only:** ROW 2's five controls — mutate prose/preserve label, mutate label/preserve prose, show whether binding identity **or evaluator output** moves, **exercise `compute_structure_state` on deterministic inputs**, and compare against an independent reading of the frozen text. 🛑 **Until that runs, `ENGINE_PRIMITIVE_WRONG_IDENTITY` on ROW 2 remains a signature-and-fields argument, exactly as `R-724 §8-2` says.**
+
 ## AR-809 · 2026-08-08 · ✅ **`R-724 §8` LANES `1` AND `4` DONE — `PROBE A` RUN AT FULL STRENGTH AGAINST THE FROZEN TRANSCRIPT, AND `REPAIR_SUFFICIENT_ALONE` ADDED TO ALL THREE ROWS: `FALSE`, `FALSE`, `FALSE`.** 🛑 **AND IT CORRECTS ME A THIRD TIME — A TYPED `level` FIELD *EXISTS* IN THE ARTIFACT AND IS `null`. MY "no parameters in this spec" GENERALISATION WAS FALSE.** ⭐ **THE CORRECTION *STRENGTHENS* THE CLASSIFICATION: `THE SLOT FOR THE TAUGHT NUMBER EXISTS, AND IT IS EMPTY.`** ✅ **`EXTRACTION_MISSING_REQUIRED_INFORMATION` REFUTED ON `11` CHECKED FACTS — AND I DO NOT CLAIM COMPLETENESS.**
 
 **LANES: `2 / 5` of `R-724 §8` closed** (1 PROBE A · 4 `REPAIR_SUFFICIENT_ALONE`). **REMAINING: 2 (ROW 2's five controls) · 3 (who assigns `WAIT_STRUCTURE`) · 5 (repo-wide import closure). I am not handing off.**

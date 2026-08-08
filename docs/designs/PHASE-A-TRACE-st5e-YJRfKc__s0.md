@@ -545,6 +545,74 @@ desk; not mine to rule.**
 **Nowhere in this trace would it.** ★ **I proposed this as a co-primary ranking and the desk was right
 that it is not one — it is a second question, and it now has its own field.**
 
+## LANE 3 — WHO ASSIGNS `WAIT_STRUCTURE`, AND DOES IT EXAMINE MEANING? — ✅ ANSWERED
+
+**ASSIGNER:** `src/engine/extraction/spec_producer.py`, `_classify_family` + its keyword/stem table.
+🛑 **ANSWER: IT *DOES* EXAMINE MEANING. IT VALIDATES AND SEALS. ⇒ TYPE DISPATCH AT THE BINDER IS
+LEGITIMATE, AND THE `AR-806` TRUST-BOUNDARY HYPOTHESIS IS *NOT* WHAT IS WRONG HERE.**
+`[MEASURED HERE, `spec_producer.py:135-141`]` — **`"opening range"` is an EXPLICIT `WAIT_STRUCTURE`
+stem**, sitting beside `"range" · "level" · "high of the" · "low of the" · "swing high" · "order block"`.
+`[MEASURED HERE, `:129-134`, the code's own justification]`:
+> *"★ DERIVED ADDITION (pin iii, disambiguated by construction): "opening range" is a named PRICE RANGE
+> — two levels, a high and a low — and the family definition ALREADY carries "range", "level", "high of
+> the", "low of the". **It is a level construct, not a clock window, so it belongs here.** As a 2-token
+> span it also outranks and SUPPRESSES WAIT_SESSION's 1-token "opening"."*
+
+★★★★★ **AND THIS IS THE PRECISE CAUSAL STATEMENT PHASE A EXISTS TO PRODUCE — THE CLASSIFIER'S REASONING
+IS *CORRECT* AND ITS DESTINATION IS *WRONG*:**
+- ✅ **The semantic judgment is right.** An opening range **is** a level construct (a high and a low), not
+  a clock window. The deliberate suppression of `WAIT_SESSION` was **the right call** — and it is *why*
+  ROW 1's `WAIT_SESSION` row is the only one that refused: the clock sentence kept the session family,
+  the level sentences were correctly routed away from it.
+- 🛑 **The destination is wrong.** `WAIT_STRUCTURE`'s attached primitive is
+  `structure_engine.compute_structure_state`, which computes **market-structure EVENTS** (BOS / CHoCH /
+  MSS / swing pivots) — **not level CONSTRUCTION from a window.** The family's own comment (`:126-128`)
+  says it covers *"levels, BOS, FVG, order block, S/R, liquidity"* — **one family, two different
+  computational kinds, one primitive.**
+⇒ ★★★★★ **`THE DEFECT IS NOT A MISSING TRUST BOUNDARY. THE TAXONOMY CONFLATES "A STRUCTURAL LEVEL" WITH
+"A MARKET-STRUCTURE EVENT", AND THE ONE PRIMITIVE BOLTED TO THAT FAMILY IMPLEMENTS ONLY THE SECOND.` The
+classifier hands over an honest label; the label cannot carry the distinction that matters.**
+⚠️ **THIS AMENDS MY OWN `AR-806 §2` READING** — I framed it as *"the text is never consulted."* **At the
+BINDER that is true; at the CLASSIFIER it is false.** ★ **The text is consulted once, correctly, and
+then the answer is thrown away by a mapping that cannot express it.**
+✅ **AND THE WORSE VERSION WAS ALREADY FIXED** `[MEASURED HERE, `:172-179`]`: `WAIT_STRUCTURE` used to be
+the `_UNMATCHED_DEFAULT_FAMILY` sink — *"35 of tier-A's 50 WAIT_STRUCTURE rows — 70% of that"* family —
+and the comment records why it was worse: it *"silently promoted a no-evidence condition into a family
+with a real primitive, where it bound with approximation=True — an np.ones pass-through, i.e. UNGATED
+and LOOSER than taught."* **Replaced by `UNTYPED`.** ★★★ **A previous seat already fought this exact
+species and won; ROW 2 is the residue that a sink-removal could not reach, because ROW 2's label is
+EARNED, not defaulted.**
+
+## LANE 5 — REPOSITORY-WIDE REACHABILITY OF AN OPENING-RANGE CONSTRUCTOR — ✅ MEASURED, AND IT CHANGES THE PICTURE
+
+🛑 **NOT REACHABLE FROM THE SPEC-BINDING PATH** `[MEASURED HERE, `spec_condition_compiler.py:50-58`]`:
+the compiler imports from `indicators.core` — **but only `compute_atr, compute_ema`** (`:52`).
+**`compute_opening_range_breakout` is not imported, and no `FAMILY_META` primitive names it.**
+✅🛑 **BUT IT IS REACHABLE FROM A *DIFFERENT* COMPILATION SURFACE, AND I DID NOT KNOW THIS SURFACE
+EXISTED** `[MEASURED HERE]`:
+- `config.py:304-306` — *"Phase 9: opening_range_breakout shipped atomically with
+  `compute_opening_range_breakout()` … **Emits `orh_{range_minutes}m`, `orl_{range_minutes}m`,
+  `or_range_{range_minutes}m` columns.**"*
+- `extraction/topology_producer.py:78` — *"or `"close >= orh_15m"`. Prose conditions ("buy the pullback",
+  "close above the …"*
+- `extraction/compile_lints.py:131` — `comparator: Optional[str] = None  # raw comparator text, e.g.
+  "close>orh_15m"`
+⇒ ★★★★★ **THERE ARE TWO COMPILATION SURFACES. THE FAMILY-BINDING SURFACE SPEAKS IN PROSE → FAMILY →
+PRIMITIVE AND CANNOT REACH THE OPENING RANGE. A COMPARATOR/TOPOLOGY SURFACE SPEAKS IN INDICATOR COLUMN
+NAMES AND *CAN* ADDRESS IT DIRECTLY AS `orh_5m` / `orl_5m` / `or_range_5m`.** **The taught concept is
+not merely computable — it is ALREADY ADDRESSABLE, by name, on a surface this trace had not looked at.**
+⚠️ **SCOPE, AND IT IS TIGHT:** `[MEASURED]` the column names and the comparator form exist in those three
+files. 🛑 **`UNMEASURED`: whether the golden slice's conditions can be routed onto that surface, whether
+the topology producer runs for tier-A specs at all, and whether those comparator strings are ever
+produced from prose.** *What would measure it:* trace `topology_producer` on this spec. **NOT DONE, and
+I am not claiming a route exists — only that the ADDRESS does.**
+🛑 **AND I AM NOT PROPOSING THIS AS THE REPAIR. Phase A is diagnosis** (`R-724 §8`), and *"the address
+exists"* is a very long way from *"the route works"* — that gap is exactly where this campaign has been
+burned before.
+**POSITIVE CONTROLS FOR BOTH ABSENCE CLAIMS:** the import search returned `9` real
+`src.engine.indicators.*` imports for the spec compiler; the tree-wide search shape returned real
+`compute_atr` call sites in `anti_setups/miner.py` and `archetypes/classifier.py`.
+
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
 2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.
