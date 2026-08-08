@@ -458,6 +458,93 @@ i.e. **swing pivots, exactly the substitution ROW 2 found, reappearing here.**
 - 🛑 **`3 / 11` conditions traced overall.** The `8` remaining `APPROXIMATED` rows are **untraced** and I
   claim nothing about them.
 
+## PROBE A — ✅ RUN AT FULL STRENGTH (unblocked by `R-724 §2`)
+
+**FROZEN BASELINE, IDENTITY VERIFIED BY ME rather than accepted from the ruling:**
+`docs/replay-results/h1-sealed-read-frozen/SEALED-READ/transcripts/st5e-YJRfKc.txt` ·
+`sha256 eaf5425387556414ffae88c9446d3e80f244e2414ee129098bc892125190d5c4` · blob `d36e688d` · **tracked** ·
+`1722` words. **Matches `R-724 §2` on all three joins. Nothing fetched.**
+
+### A-1 — ⚠️ **A CORRECTION TO MY OWN ROWS 1–3, AND IT MATTERS TO THE CLASSIFICATION**
+I wrote, in ROW 1 field 2, that the extracted representation carries *"no parameters … for this condition
+**or any other in the spec**."* 🛑 **THE SECOND HALF IS WRONG.** `[MEASURED HERE, frozen artifact]` the
+schema **does** carry typed slots outside `entry_sequence`:
+```
+stop     = {"description": "...half range stop...",  "level": null}
+targets  = [{"description": "...", "level": null}, {"description": "...", "level": null}]
+variants = [{"description": "...9:30 a.m. Eastern to 9:35...", "variant_label": "5-minute opening range"}, ...]
+```
+⇒ **`level` EXISTS AS A TYPED FIELD AND IS `null`. `variant_label` EXISTS AND IS POPULATED.**
+★★★★★ **THIS STRENGTHENS `PARAMETER_SCHEMA_MISMATCH` RATHER THAN WEAKENING IT, AND FOR A SHARPER REASON
+THAN I ORIGINALLY GAVE: THE SLOT FOR THE TAUGHT NUMBER EXISTS, AND IT IS EMPTY. THE PIPELINE IS NOT
+MISSING A PLACE TO PUT THE VALUE — IT HAS ONE AND DID NOT FILL IT.**
+⚠️ **`entry_sequence` and `confluences` remain prose-only (`{action}` / `{description}`), which is what
+ROWS 1–3 actually traced — so their evidence stands. Only my generalisation to "any other" was false.**
+
+### A-2 — ✅ **WHY `level` IS `null` IS DEFENSIBLE, AND THIS IS THE EXTRACTOR BEHAVING WELL**
+`[MEASURED HERE, transcript verbatim]` the lesson's numbers are **garbled in the source audio**: the range
+`617.64 − 616.61 = 1.03` is spoken as **`"a dollar3"`** and again as **`"a$13 divided by two, which would
+be about 52 cents"`**. **`52` cents is arithmetically consistent with `1.03`, so the TRUE value is
+recoverable by inference — and the extractor did not infer it.** ⇒ **`level: null` is a REFUSAL TO INVENT
+A NUMBER, not a dropped field.** ★★★ **`AN EMPTY TYPED SLOT BESIDE A GARBLED SOURCE IS THE COMPILER
+DOING ITS JOB.`**
+
+### A-3 — ✅ **WHAT THE EXTRACTOR PRESERVED — MEASURED SOURCE-SIDE, NOT ASSUMED**
+| taught fact (transcript) | in artifact? |
+|---|---|
+| market opens `9:30 a.m. Eastern` | ✅ `entry_sequence[1]` verbatim |
+| three OR variants `9:30–9:35 / 9:30–9:45 / 9:30–10:00` | ✅ `entry_sequence[1]` **and** `variants[]` with labels |
+| OR high/low taken between those periods | ✅ `entry_sequence[2]` |
+| range value `= high − low` | ✅ `confluences[2]` |
+| half range `=` half the OR | ✅ `confluences[3]` |
+| half-range **stop** below the half-range mark | ✅ `stop` |
+| half-range **target** `= OR high + half range` | ✅ `targets[0]` |
+| full-range target projected on the flip side | ✅ `targets[1]` |
+| breakout direction `=` initial directional conviction | ✅ `entry_sequence[3]`, `[4]` |
+| OR is a daily decision point, recomputed each day | ✅ `confluences[4]` |
+| **the pullback permutation** (`pullback level = OR high − half range`, enter back toward the mark) | ✅ **extracted as a SEPARATE strategy `st5e-YJRfKc__s1` = `opening_range_pullback`** |
+✅ **`"the 5,5 and the 30 minute OB"` IS THE TEACHER'S OWN WORDING** — artifact and transcript agree
+character-for-character (`R-724 §3`, and I confirm it from the transcript myself). **The extractor is
+exonerated for that string; the garble is upstream of extraction.**
+⇒ 🛑 **`EXTRACTION_MISSING_REQUIRED_INFORMATION` IS REFUTED FOR EVERY FACT I CHECKED.** ⚠️ **AND
+`R-724 §4`'s LIMIT IS BINDING ON ME: `ONE PRESERVED FACT IS NOT A PRESERVATION PROPERTY.` I checked the
+`11` facts above; I did **not** prove the artifact is complete with respect to the whole lesson.**
+
+### A-4 — 🛑 **WHAT THE *SOURCE ITSELF* NEVER SPECIFIES** (measured against the framework's own
+OPENING-RANGE-BREAKOUT REQUIREMENTS list)
+| required field | in the lesson? |
+|---|---|
+| breakout by **wick, touch, or close** | 🛑 **ABSENT** — *"when price breaks above the range high"*, no confirmation rule anywhere |
+| **which** OR variant to trade (5 / 15 / 30) | 🛑 **ABSENT** — all three are taught as *"three different time periods to study market behavior"*; no selection rule |
+| entry **expiration** | 🛑 **ABSENT** |
+| immediate entry **vs** retest entry | ⚠️ **SPLIT DELIBERATELY** — breakout and pullback are taught as two setups, and the extractor split them into two strategies accordingly |
+| **market scope** | ⚠️ **IMPLICITLY DEMONSTRATED ON ONE MARKET** — *"thousands of stocks"*, worked example on the S&P 500 at `616–617`. **Never says futures. Never declares itself market-agnostic.** |
+| timezone | ✅ **PRESENT** — `Eastern`, with the chart example in Pacific and both stated |
+| long/short symmetry | ✅ **PRESENT** — *"Do we see a breakout above or below? Whichever direction"* |
+⇒ 🛑 **`UNRESOLVED_SOURCE_AMBIGUITY` IS THE CORRECT AND FINAL ANSWER FOR THE BREAKOUT-CONFIRMATION RULE
+AND THE VARIANT-SELECTION RULE. The compiler must refuse them, and `R-722 §9`'s forbidden list already
+names inventing defaults.** ★ **These are not compiler defects. A compiler that filled them in would be
+the defect.**
+⇒ ⚠️ **MARKET QUESTION (`R-722 §9`, desk-owned) — TRIGGER FIRED: this source classifies as
+`IMPLICITLY DEMONSTRATED ON ONE MARKET`, and that market is EQUITIES, not futures.** **Routed to the
+desk; not mine to rule.**
+
+### A-5 — PROBE A BUDGET: `1 / 2`, succeeded first run.
+
+---
+
+## `REPAIR_SUFFICIENT_ALONE` — MANDATORY FIELD, ADDED RETROACTIVELY (`R-724 §5`, `§8-4`)
+
+| row | primary blocker | `REPAIR_SUFFICIENT_ALONE` | measured reason |
+|---|---|---|---|
+| **ROW 1** (`WAIT_SESSION#1`) | `PARAMETER_SCHEMA_MISMATCH` | **`FALSE`** | Even a correctly typed clock window has **no canonical family to be typed as** (`14` families, none constructs a range over a taught window) **and no route to the engine** (no family declares `compute_opening_range_breakout`). Both measured. |
+| **ROW 2** (`WAIT_STRUCTURE#0`) | `ENGINE_PRIMITIVE_WRONG_IDENTITY` | **`FALSE`** | Pointing this condition at a correct primitive still leaves it with **no typed window to pass** — `entry_sequence` is prose-only, measured. |
+| **ROW 3** (`INVALIDATE#10`) | `ENGINE_PRIMITIVE_WRONG_IDENTITY` | **`FALSE`** | Two independent reasons: the stop ladder has **no half-range parameter**, and the handler is **`_h_non_gating`** — so even a correct level would not drive an exit. |
+🛑 **ALL THREE ARE `FALSE`, AND THAT IS THE POINT OF THE FIELD `R-724 §5` MINTED:** `primary` names the
+**earliest broken handoff**; this column names whether **fixing it alone would change the outcome.**
+**Nowhere in this trace would it.** ★ **I proposed this as a co-primary ranking and the desk was right
+that it is not one — it is a second question, and it now has its own field.**
+
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
 2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.

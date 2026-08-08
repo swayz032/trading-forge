@@ -4,6 +4,34 @@
 
 ---
 
+## AR-809 · 2026-08-08 · ✅ **`R-724 §8` LANES `1` AND `4` DONE — `PROBE A` RUN AT FULL STRENGTH AGAINST THE FROZEN TRANSCRIPT, AND `REPAIR_SUFFICIENT_ALONE` ADDED TO ALL THREE ROWS: `FALSE`, `FALSE`, `FALSE`.** 🛑 **AND IT CORRECTS ME A THIRD TIME — A TYPED `level` FIELD *EXISTS* IN THE ARTIFACT AND IS `null`. MY "no parameters in this spec" GENERALISATION WAS FALSE.** ⭐ **THE CORRECTION *STRENGTHENS* THE CLASSIFICATION: `THE SLOT FOR THE TAUGHT NUMBER EXISTS, AND IT IS EMPTY.`** ✅ **`EXTRACTION_MISSING_REQUIRED_INFORMATION` REFUTED ON `11` CHECKED FACTS — AND I DO NOT CLAIM COMPLETENESS.**
+
+**LANES: `2 / 5` of `R-724 §8` closed** (1 PROBE A · 4 `REPAIR_SUFFICIENT_ALONE`). **REMAINING: 2 (ROW 2's five controls) · 3 (who assigns `WAIT_STRUCTURE`) · 5 (repo-wide import closure). I am not handing off.**
+✅ **TRANSCRIPT IDENTITY VERIFIED BY ME, NOT ACCEPTED FROM THE RULING:** `sha256 eaf54253…`, blob `d36e688d`, tracked — **all three joins match `R-724 §2`.**
+
+### §1 — 🛑 MY THIRD SELF-CORRECTION, AND IT IS THE MOST USEFUL ONE
+ROW 1 said the extraction carries *"no parameters … for this condition **or any other in the spec**."* `[MEASURED HERE]` **false:** `stop = {description, level: null}` · `targets[] = {description, level: null}` · `variants[] = {description, variant_label: "5-minute opening range"}`.
+⇒ ⭐★★★★★ **THE CLASSIFICATION GETS STRONGER, NOT WEAKER: the pipeline is not missing a place to put the taught number — IT HAS ONE AND DID NOT FILL IT.** ✅ **`entry_sequence`/`confluences` really are prose-only, so ROWS 1–3's actual evidence stands; only the generalisation was wrong.** ★ **`THE OVERCLAIM WAS IN THE WORD "ANY", AND "ANY" IS WHERE MY LAST THREE ERRORS HAVE ALL LIVED.`**
+
+### §2 — ✅ AND `level: null` IS THE EXTRACTOR BEHAVING **WELL**
+`[MEASURED HERE, transcript verbatim]` the taught range `617.64 − 616.61 = 1.03` is **garbled in the source audio** — spoken as *"a dollar3"* and *"a$13 divided by two, which would be about 52 cents"*. **`52¢` is arithmetically consistent with `1.03`, so the true value was INFERABLE — and the extractor did not infer it.** ⇒ **`level: null` is a REFUSAL TO INVENT, not a dropped field.** ★★★ **`AN EMPTY TYPED SLOT BESIDE A GARBLED SOURCE IS THE COMPILER DOING ITS JOB.`**
+
+### §3 — ✅ PROBE A RESULT: `11` TAUGHT FACTS CHECKED, `11` PRESERVED — INCLUDING ONE I DID NOT EXPECT
+Every load-bearing fact of the OR definition survives into the artifact (times, variants + labels, high/low construction, range value, half range, half-range stop, half-range target, full-range target, breakout direction, daily recomputation). ⭐ **AND THE PULLBACK PERMUTATION WAS NOT DROPPED — it was extracted as a SEPARATE strategy, `st5e-YJRfKc__s1 = opening_range_pullback`, carrying `pullback level = OR high − half range`.** ✅ **The `"5,5"` string is the TEACHER'S OWN WORDING — I confirm `R-724 §3` from the transcript myself.**
+⚠️ **BOUND, PER `R-724 §4`:** `EXTRACTION_MISSING_REQUIRED_INFORMATION` is **refuted for the `11` facts I checked**. **I did NOT prove the artifact complete against the whole lesson. `ONE PRESERVED FACT IS NOT A PRESERVATION PROPERTY` — and neither are eleven.**
+
+### §4 — 🛑 WHAT THE **SOURCE ITSELF** NEVER SPECIFIES, AND WHY THAT IS NOT A COMPILER DEFECT
+**ABSENT FROM THE LESSON:** breakout by **wick / touch / close** (*"when price breaks above the range high"*, no confirmation rule anywhere) · **which** of the `5/15/30` variants to trade · entry expiration.
+⇒ **`UNRESOLVED_SOURCE_AMBIGUITY` is the correct and FINAL answer for those two rules.** ★★★ **A COMPILER THAT FILLED THEM IN WOULD BE THE DEFECT — and `R-722 §9` already forbids invented defaults.**
+⚠️ **MARKET QUESTION — TRIGGER FIRED (`R-722 §9`, DESK-OWNED, NOT MINE TO RULE):** the lesson is **`IMPLICITLY DEMONSTRATED ON ONE MARKET`** — *"thousands of stocks"*, worked example on the S&P 500 at `616–617`. **It never says futures and never declares itself market-agnostic.** 🛑 **Routed to the desk.**
+
+### §5 — ✅ LANE 4: `REPAIR_SUFFICIENT_ALONE` ON ALL THREE ROWS
+**ROW 1 `FALSE`** (a typed window still has no family to be typed as, and no route to the engine) · **ROW 2 `FALSE`** (a correct primitive still has no typed window to receive) · **ROW 3 `FALSE`** (no half-range parameter **and** `_h_non_gating`).
+★ **The desk was right that this is not a `primary` ranking — it is a second question, and with its own field all three rows answer it `FALSE` without distorting `primary`.**
+
+### §6 — NEXT
+**Lane 2** (ROW 2's five ordered controls, including exercising `compute_structure_state` on deterministic inputs — my `ENGINE_PRIMITIVE_WRONG_IDENTITY` is a signature-and-fields argument until then, as `R-724 §8-2` correctly says) · **lane 3** (who assigns `WAIT_STRUCTURE`, and does it examine meaning) · **lane 5** (repo-wide reachable import closure). **Probes: A `1/2` · B `1/2` · C `1/2`. No repair.**
+
 ## AR-808 · 2026-08-08 · 🛑🛑🛑🛑★★★★★ **ROW 3 — I TRACED THE GOLDEN SLICE'S *ONLY* `BINDS` CONDITION, AND IT IS BOTH A DIFFERENT CONCEPT AND NON-GATING. THE TAUGHT `HALF RANGE STOP` IS BOUND TO A STRUCTURAL-LEVEL SELECTOR (sweep wick › OB › FVG › swing low) THAT HAS NO PARAMETER FOR A HALF-RANGE LEVEL — AND BY THE IMPLEMENTATION'S OWN COMMENT THE VALUE IS `"trace/provenance ONLY … never used to gate entries or drive the actual exit"`.** ★★★★★ **`THE NUMBER WAS NEVER WRONG; IT WAS NEVER A MEASURE OF WHAT ANYONE READ IT AS.`** ⚠️ **AND IT IS THE ONE ROW FLAGGED `approximation=False` — AN EXACTNESS CLAIM.**
 
 **ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — **ROW 3 complete.** **`1 / 1` `BINDS` rows traced — that category is COMPLETE for this spec.** **`3 / 11` conditions overall.**
