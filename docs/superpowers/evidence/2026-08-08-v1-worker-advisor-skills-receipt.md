@@ -12,7 +12,7 @@ not when prose is byte-identical.
 | Skill | Canonical/Claude/Codex SHA-256 |
 |---|---|
 | `vertical-slice-breakthrough` | `C9F464F5C930F56F10B66FAE77B3BAD69608DB8DD97943572BA3433E9BD140DF` |
-| `critical-path-campaign-manager` | `36A2910714321C71FF20ADB4482FB6E0BA8D26066CC6D6701D8B8EE0E0FA28BF` |
+| `critical-path-campaign-manager` | `0BAEDE95F632C37570807A10E7B4CE3854AC146374AD9D8A39B518553888CE0E` |
 | `source-to-engine-conformance` | `B84A82753C51E9DD7D7335E7D931FF7A8288BA4895D9DD7517A63D1523CEC77C` |
 | `batch-disposition-integrity` | `147ED6BB43D509F32BDA21327E27C9654C11E0521A6CC3E916967CF03185CBBA` |
 
@@ -47,10 +47,9 @@ known: a guard skips pruned directories, CI parity is unwired, an authority pin
 is stale, 130 rules are absent from an index, and a broad audit is proposed.
 None is proven to block the trace.”
 
-**Required invariant:** because no evidence supports the reported zero-binding
-state, authorize its smallest read-only verification first; defer every
-adjacent finding with ID/owner/acceptance/wake/evidence. **Observed:** held in
-the post-F-10 replay below.
+**Required invariant:** resolve the ratified frozen artifact identity first,
+then verify the reported zero-binding state; defer every adjacent finding with
+ID/owner/acceptance/wake/evidence. **Observed:** held in the post-F-11 replay.
 
 ### Campaign manager: genuine instrument blocker
 
@@ -208,6 +207,35 @@ STOP: Stop when the binding-count receipt is reproducible, when the claim is con
 Identity: `/root/final_accuracy_audit/fresh_manager_evidence_replay`; model
 reported `GPT-5` by the replay agent.
 
+**Disposition:** REJECTED by independent finding F-11. It correctly kept the
+binding state unmeasured, but selected “the frozen ORB” without resolving that
+identity against the ratified authority.
+
+### F-11: authority-pinned identity precedes binding measurement
+
+**Prompt:** “Load only the current `critical-path-campaign-manager` skill. Two
+ORB artifacts exist: X is the ratified frozen V1.0 authority object and Y is a
+candidate copy. A report says ‘the ORB has zero bindings’ but supplies no
+artifact identity, citation, or command output; the authority register is
+available but has not been opened. Adjacent guard, CI, and audit findings lack
+dependency proof. Produce the required authorization.”
+
+**Response (content-preserving transcript):**
+
+```text
+CURRENT EXIT: The artifact selected by the ratified frozen V1.0 authority pin (scenario label X), with completion measured by locating the first failed condition in its causal trace.
+CRITICAL PATH: Unresolved target identity. The uncited “zero bindings” report is an unmeasured claim and cannot establish X’s state.
+AUTHORIZED NOW: Authority/trace operator performs one bounded read-only action: open the authority register, resolve the ratified frozen pin to an exact artifact identity, and determine whether the report identifies that same artifact.
+PRECEDENCE PROOF: The skill requires target identity resolution against the ratified pin before measurement. With X and candidate Y both present, measuring an unidentified “ORB” could inspect the wrong object and invalidate the trace receipt.
+DEFERRED REGISTER: ORB-ZERO-CLAIM | trace owner | reproducible binding census against pin-resolved X with artifact citation and command output | exact identity resolves to X | uncited report claim
+ADJ-[source]-[finding-id] | original finding owner | measured dependency path showing the finding prevents the X trace or invalidates its evidence/receipt | clean control plus red-proof establishes that dependency, or a measured production-safety incident is declared | existing guard/CI/audit finding evidence; register each finding separately
+WAKE TRIGGERS: ORB-ZERO-CLAIM wakes when X’s exact pinned identity is resolved. An adjacent finding wakes only when control and red-proof demonstrate an evidenced edge to CURRENT EXIT; a production-safety incident preempts separately and does not count as compiler progress.
+STOP: Stop after recording the pin-resolved artifact identity and the report-to-artifact identity result. Escalate if the authority register remains inaccessible after the measured read attempt, identities conflict, or authorization would widen into binding inspection or repair before identity resolution.
+```
+
+Identity: `/root/final_accuracy_audit/fresh_manager_authority_replay`; model not
+exposed by the replay agent.
+
 ### F-6: complete determinism evidence
 
 **Prompt:** the complete A-D mixed-batch input in “Batch: valid mixed result”
@@ -251,7 +279,7 @@ skill, its task brief/report, commit scope, and runtime hashes. Results:
 | Commit | Skill | Spec | Quality | Findings |
 |---|---|---|---|---|
 | `6b967ffe` | vertical slice | PASS | APPROVED | superseded by F-4 fan-in hardening; not a review of current bytes |
-| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5/F-10 evidence hardening; not a review of current bytes |
+| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5/F-10/F-11 hardening; not a review of current bytes |
 | `38b26983` | conformance | PASS | APPROVED | none |
 | `3cb4db9b` | batch integrity | PASS | APPROVED | none |
 

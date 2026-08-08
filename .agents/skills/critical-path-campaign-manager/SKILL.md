@@ -5,18 +5,20 @@ description: Use when a compiler campaign has a frozen release exit, multiple de
 
 # Critical Path Campaign Manager
 
-Protect the release exit, not the loudest defect. A real defect has no precedence until evidence gives it a dependency path to the current exit.
+Protect the release exit; precedence requires an evidenced dependency to it.
 
 ## Admission rule
 
-1. **Name the exit.** Before V1.0, the critical path is the first failed condition in the frozen real strategy. After V1.0, it is deterministic V1.1 batch disposition: faithful compile or exact evidence-backed refusal for every submitted strategy.
+1. **Name the exit.** Before V1.0: first failed condition in the frozen real strategy. After: deterministic V1.1 compile-or-refuse disposition for every input.
 2. **Demand precedence proof.** Adjacent work may run first only when measured evidence shows it prevents the causal trace or makes the trace's evidence or receipt invalid. Valid examples: the exact required instrument is unreadable, fabricates its receipt, or cannot enumerate its intended surface. Require a clean control and a red-proof, authorize only the minimum repair, then return immediately to the trace.
 3. **Separate emergencies.** A measured production-safety incident may preempt the campaign. Track it as an incident; never count that repair as compiler progress.
 4. **Defer without losing.** Every other valid finding gets a stable ID, owner, acceptance test, wake trigger, and evidence reference.
 
-Parallel read-only traces require no hidden shared mutable resource. This skill ranks measured work; it does not invent findings or authorize broad implementation.
+Parallel traces require no shared mutable resource. Rank measured work; never invent findings or authorize broad implementation.
 
 Treat report or scenario statements as claims without artifact or command evidence. If the exit state is unmeasured, authorize its smallest read-only verification before the causal trace; never promote a claim to `measured`.
+
+Before measuring, resolve the target identity against the ratified frozen authority pin. If identity is missing or ambiguous, authorize that read-only resolution first; recording a selected object is not verification.
 
 ## Required authorization
 
