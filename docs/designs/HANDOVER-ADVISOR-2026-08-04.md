@@ -20,12 +20,21 @@
 1. **NO MONITORS, EVER.** Seats message each other instead. **Do not arm a `bash.exe` watcher on any
    channel, and do not re-arm the worker's ear.** `advisor-onboarding §4a` and this file's old §11 are
    **SUPERSEDED**; the next seat to touch `advisor-onboarding` must edit §4a out.
-   🛑🛑 **OPEN AND UNRESOLVED — THE CHANNEL DOES NOT REACH THE WORKER. TWO NAMES, BOTH REFUSED**
-   `[MEASURED HERE, R-721/R-722 seat, 2026-08-08]`: `SendMessage → "worker"` and
-   `SendMessage → "standby-filing-results"` (**the name the operator supplied**) BOTH returned
-   **`No agent named '<x>' is reachable`**. ⇒ **`SendMessage` addresses only TEAMMATES SPAWNED INSIDE
-   THE SENDER'S OWN SESSION. A separately-launched worker CLI is not one, and an operator-supplied
-   session name is not an agent name.** 🛑 **DO NOT BURN CALLS GUESSING A THIRD NAME.**
+   🛑🛑🛑 **ROOT CAUSE MEASURED — CROSS-SESSION MESSAGING DOES NOT EXIST ON THIS MACHINE. IT IS THE
+   PLATFORM, NOT THE ADDRESS. DO NOT DEBUG THE NAME.** `[MEASURED HERE, R-722 seat, 2026-08-08]`
+   Anthropic's doc: *"Claude Code **doesn't offer cross-session messaging on native Windows**"* —
+   macOS / Linux / **Linux inside WSL 2** only. **Version `2.1.226` ≥ the required `2.1.224` ✅ · all
+   four feature-flag-killing env vars empty ✅ · OS `Win32NT` 🛑 THE BLOCKER · `ListAgents` (the
+   discovery tool) ABSENT from the session 🛑 confirming symptom.**
+   ⚠️ **THE TRAP: `SendMessage` IS PRESENT AND FAILS WITH A *NAMING* ERROR** — it exists because the
+   same tool serves **subagents/teammates inside one session**, which works everywhere. `worker` and
+   `standby-filing-results` (**the operator's own supplied name**) both returned
+   `No agent named '<x>' is reachable` — **a message that reads like a typo and is actually a platform
+   gap.** ★★★★★ **`AN ERROR THAT NAMES THE WRONG LAYER WILL BE DEBUGGED AT THAT LAYER FOREVER` — the
+   real signal is the ABSENT DISCOVERY TOOL (`ListAgents`), not the send tool's complaint.**
+   ✅ **WSL 2 `Ubuntu-22.04` IS INSTALLED — the one supported path here. 🛑 OPERATOR'S DECISION:**
+   ~90 worktrees live on the Windows filesystem, so cross-filesystem WSL brings performance, path and
+   line-ending hazards this desk cannot bound. **Do not migrate on the desk's own authority.**
    ⚠️ **THE RELAY IS THEREFORE BROKEN IN BOTH DIRECTIONS RIGHT NOW:** the ear is retired by operator
    order and the message channel does not reach. **Until the operator resolves it, the LEDGER IS THE
    ONLY RELAY AND THE WORKER MUST POLL IT.** ★ **NEVER ASSUME DELIVERY — write the authorization into
