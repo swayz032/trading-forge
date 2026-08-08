@@ -389,6 +389,75 @@ zero-valued one.**
 | **B — binder** | ✅ **DISCHARGED BY ROW 1's RUN** — the 14-family enumeration already covers this text and this family |
 | **C — engine** | ✅ **RUN AT THE DECLARED CONTRACT** — signature + full field enumeration; execution-on-candles not run and stated as such |
 
+## ROW 3 — 🛑🛑🛑 **THE ONLY `BINDS` CONDITION IN THE ENTIRE GOLDEN SLICE** — ✅ TRACED
+
+**CONDITION:** `INVALIDATE:so-you-ll-see-there-would-be-something-c#10`
+**Census verdict:** **`bind_status=BINDS`** · `bindable=True` · `executed=True` · **`approximation=False`** ·
+`binds_to="structural_stops.compute_structural_stop"` · `role="invalidation"` · `unbound_reason=None`.
+★ **WHY THIS ROW WAS WORTH JUMPING TO:** the census records `n_taught_binds = 1` for this spec. **This is
+that 1.** It is the campaign's entire concrete binding on the golden slice, and it is the only row
+carrying `approximation=False` — **an explicit EXACTNESS claim.** **`1` of `1` `BINDS` rows now traced.**
+
+### Field 1 — SOURCE — ⚠️ artifact-side only
+> *"So, you'll see there would be something called a half range stop. And that's a stop below this
+> halfrange mark."*
+**Taught concept:** the stop sits at the **midpoint of the opening range** — a level derived
+arithmetically from the OR high/low (the spec's own confluence steps define range value and half range).
+
+### Field 2 — EXTRACTED — ✅ prose only, as everywhere else (`strategies[0].stop`).
+
+### Field 3 — CANONICAL — ✅ family `INVALIDATE`; intended concept = **a stop at a taught, arithmetically
+derived price level.**
+
+### Field 4 — BINDING — ✅ bound, `approximation=False`, no refusal.
+
+### Field 5 — ENGINE CAPABILITY — 🛑🛑 **MEASURED, AND IT IS A DOUBLE FAILURE**
+**(a) IT COMPUTES A DIFFERENT LEVEL** `[MEASURED HERE, `structural_stops.py:194-219`]`:
+```python
+def compute_structural_stop(direction, entry_price, point_value, atr, tick_size, symbol="MES",
+                            nearest_ob_below=None, nearest_ob_above=None,
+                            nearest_fvg_below=None, nearest_fvg_above=None,
+                            nearest_swing_low=None, nearest_swing_high=None,
+                            sweep_wick_low=None, sweep_wick_high=None, ...)
+    """For LONGS: stop goes BELOW structure (sweep wick > OB bottom > FVG bottom > swing low) ..."""
+```
+**The stop is chosen from a priority ladder of ICT structural levels plus a tick buffer. There is NO
+parameter that can carry a half-range level, and no arithmetic on any taught range.**
+**(b) AND THE VALUE IS NEVER USED** `[MEASURED HERE, `spec_condition_compiler.py:1802-1806`, the
+implementation's own comment]`:
+> *"Real (not merely documented) reuse of the INVALIDATE primitive: for every firing bar, compute the
+> structural stop `compute_structural_stop` WOULD place, using the nearest confirmed swing low/high
+> before that bar. **This is trace/provenance ONLY — the value is recorded, never used to gate entries
+> or drive the actual exit (framework-owned).**"*
+Corroborated by the dispatch table `[`:115`]`: `"structural_stops.compute_structural_stop": "_h_non_gating",  # INVALIDATE`
+and by the inputs actually supplied `[`:1811-1827`]` — `detect_swings(...)` → `_nearest_swing_before(...)`,
+i.e. **swing pivots, exactly the substitution ROW 2 found, reappearing here.**
+
+### Field 6 — CLASSIFICATION — ⚠️ **PRODUCED, NOT CERTIFIED** (`R-723 §2`)
+- **PRIMARY (proposed): `ENGINE_PRIMITIVE_WRONG_IDENTITY`** — a taught arithmetic level is bound to a
+  structural-level selector that cannot express it.
+- **SECONDARY: `PARAMETER_SCHEMA_MISMATCH`** — the half-range level has no parameter to travel in.
+- 🛑🛑🛑★★★★★ **AND THE FINDING THAT OUTRANKS THE CLASSIFICATION: `THE GOLDEN SLICE'S ONLY BINDING IS
+  BOTH A DIFFERENT CONCEPT AND NON-GATING.` It computes a swing-based stop rather than the taught
+  half-range stop, and by the implementation's own words the number it produces is written to a trace
+  file and never drives an exit.**
+- ⚠️ **WHAT THIS DOES AND DOES NOT DO TO `n_taught_binds = 1`:** the count is **arithmetically correct**
+  — one condition has `bind_status == BINDS`. **What is now measured is what that `1` IS.** ★★★★★
+  **`THE NUMBER WAS NEVER WRONG; IT WAS NEVER A MEASURE OF WHAT ANYONE READ IT AS.`**
+- ⚠️ **AND `approximation=False` IS THE PART THAT SHOULD ALARM A READER MOST:** the one row claiming
+  **exactness** is the one substituting both the concept and its effect. `[`spec_family_bindings.py:67`]`
+  justifies it as *"direct reuse of the audited stop-placement primitive"* — **true about the CALL, and
+  silent about the SEMANTICS and the GATING.** ★★★ **`REUSING AN AUDITED PRIMITIVE IS NOT THE SAME AS
+  COMPUTING THE AUDITED CONCEPT.`**
+
+### ROW 3 — SCOPE AND LIMITS
+- **MEASURED at the declared contract and the implementation's own executable comment; NOT executed on
+  candles.** *What execution would add:* the specific recorded value. *What it would not change:* the
+  ladder has no half-range input, and `_h_non_gating` is the dispatch entry.
+- ✅ **`1 / 1` `BINDS` rows traced — this category is COMPLETE for the golden slice.**
+- 🛑 **`3 / 11` conditions traced overall.** The `8` remaining `APPROXIMATED` rows are **untraced** and I
+  claim nothing about them.
+
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
 2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.

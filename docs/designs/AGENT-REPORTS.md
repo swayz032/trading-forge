@@ -4,6 +4,27 @@
 
 ---
 
+## AR-808 · 2026-08-08 · 🛑🛑🛑🛑★★★★★ **ROW 3 — I TRACED THE GOLDEN SLICE'S *ONLY* `BINDS` CONDITION, AND IT IS BOTH A DIFFERENT CONCEPT AND NON-GATING. THE TAUGHT `HALF RANGE STOP` IS BOUND TO A STRUCTURAL-LEVEL SELECTOR (sweep wick › OB › FVG › swing low) THAT HAS NO PARAMETER FOR A HALF-RANGE LEVEL — AND BY THE IMPLEMENTATION'S OWN COMMENT THE VALUE IS `"trace/provenance ONLY … never used to gate entries or drive the actual exit"`.** ★★★★★ **`THE NUMBER WAS NEVER WRONG; IT WAS NEVER A MEASURE OF WHAT ANYONE READ IT AS.`** ⚠️ **AND IT IS THE ONE ROW FLAGGED `approximation=False` — AN EXACTNESS CLAIM.**
+
+**ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — **ROW 3 complete.** **`1 / 1` `BINDS` rows traced — that category is COMPLETE for this spec.** **`3 / 11` conditions overall.**
+🛑 **NOT CERTIFIED** (`R-723 §2`). **`UNVERIFIABLE` stands. NO REPAIR.**
+
+### §1 — WHY I JUMPED TO THIS ROW INSTEAD OF THE NEXT `APPROXIMATED` ONE
+The census records **`n_taught_binds = 1`** for the golden slice. **This row is that `1`** — the campaign's entire concrete binding on the frozen slice, and the only row claiming exactness. ★ **Tracing it costs one row and tests whether the slice's single success is real. It is not.**
+
+### §2 — 🛑 THE DOUBLE FAILURE, BOTH MEASURED
+**(a) DIFFERENT CONCEPT** `[MEASURED HERE, `structural_stops.py:194-219`]` — the stop is selected from *"sweep wick > OB bottom > FVG bottom > swing low"* plus a tick buffer. **No parameter can carry a half-range level; no arithmetic on any taught range appears in the signature.** The teacher taught the **midpoint of the opening range**.
+**(b) NON-GATING** `[MEASURED HERE, `spec_condition_compiler.py:1802-1806`, the implementation's own words]` — *"This is trace/provenance ONLY — the value is recorded, never used to gate entries or drive the actual exit (framework-owned)."* Corroborated at `:115` — `"structural_stops.compute_structural_stop": "_h_non_gating",  # INVALIDATE` — and by the inputs supplied at `:1811-1827`: `detect_swings(...)` → nearest swing before the bar. **The same swing substitution ROW 2 found, reappearing in the row that claims exactness.**
+
+### §3 — ⚠️ WHAT THIS DOES AND DOES NOT DO TO THE CAMPAIGN'S NUMBERS — I AM BEING PRECISE BECAUSE THIS IS EXACTLY WHERE A SEAT OVERREACHES
+✅ **`n_taught_binds = 1` IS ARITHMETICALLY CORRECT AND I AM NOT DISPUTING IT** — one condition has `bind_status == BINDS`. **Nothing in `R-721`/`R-722`'s figures is refuted.**
+🛑 **WHAT IS NEW IS WHAT THAT `1` IS:** a different concept, computed from different inputs, whose output drives nothing. ⇒ **For the `3` rows traced, ZERO both compute the taught concept and affect execution.** ⚠️ **SCOPED HONESTLY: `3 / 11`. I do NOT claim that of the whole spec — the `8` untraced `APPROXIMATED` rows could contain a real one, and saying otherwise would be the unenumerated-denominator error this desk has already been caught on.**
+⚠️ **AND THE `approximation=False` JUSTIFICATION IS A MECHANISM CLAIM WORTH NAMING:** `[`spec_family_bindings.py:67`]` calls it *"direct reuse of the audited stop-placement primitive"* — **true about the CALL, silent about the SEMANTICS and the GATING.** ★★★ **`REUSING AN AUDITED PRIMITIVE IS NOT THE SAME AS COMPUTING THE AUDITED CONCEPT.`**
+
+### §4 — LIMITS
+**Declared contract + the implementation's own executable comment; NOT executed on candles.** *What execution adds:* the recorded value. *What it cannot change:* the ladder has no half-range input and `_h_non_gating` is the dispatch entry. **`8 / 11` conditions untraced. PROBE A still blocked — fourth standing ask for a `st5e-YJRfKc` transcript.**
+**NEXT:** the remaining `APPROXIMATED` rows, unless the desk redirects. **Not out of context, not handing off.**
+
 ## AR-807 · 2026-08-08 · 🛑🛑🛑★★★★★ **ROW 2 TRACED — AND IT IS THE DANGEROUS ONE. THE LOAD-BEARING CONDITION THAT *DEFINES THE OPENING RANGE* IS BOUND TO A SWING-STRUCTURE DETECTOR WHOSE `15` OUTPUT FIELDS CONTAIN NO OPENING RANGE — AND IT IS RECORDED `bindable=True, executed=True`.** ★★★★★ **`AN UNBOUND CONDITION COSTS YOU A STRATEGY. A WRONGLY-BOUND ONE COSTS YOU A BACKTEST YOU BELIEVE.`** ✅ **`R-722 §9`'s ORDERED PAIR IS NOW DELIVERED: CALIBRATION ROW + FIRST LOAD-BEARING ROW.**
 
 **ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` — **ROW 2 complete, six fields, one primary, three secondaries.** 🛑 **NOT CERTIFIED** (`R-723 §2`); **`UNVERIFIABLE` stands; no repair.**
