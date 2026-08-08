@@ -24,7 +24,7 @@ Populate every trace cell only with a citation to an opened artifact location or
 
 Admit adjacent tooling only when it blocks this trace or invalidates its evidence or receipt. Give every other finding a stable ID and defer it. Stop broadening once the divergence is identified. Repeat the proven method condition-by-condition only after the first condition binds.
 
-Fan out independent read-only traces only when they share no mutable resource. Widen scope only when corpus-wide evidence invalidation is real and recorded.
+Fan out independent read-only traces only when they share no mutable resource. Pin every shared read-only artifact and version before fan-out. At fan-in, reconcile expected lane IDs against returned lane IDs; forbid a combined conclusion for any missing, duplicate, or stale lane. Widen scope only when corpus-wide evidence invalidation is real and recorded.
 
 ## Required output
 
@@ -35,6 +35,7 @@ FIRST FAILED HANDOFF: only after all upstream cells are evidenced
 RED / GREEN / NEGATIVE CONTROL:
 REPAIR:
 DEFERRED: ID — finding
+PARALLEL LANES: expected/returned IDs and shared pins, or NOT USED
 SCOPE / UNCERTAINTY:
 ```
 

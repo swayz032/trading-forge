@@ -11,8 +11,8 @@ not when prose is byte-identical.
 
 | Skill | Canonical/Claude/Codex SHA-256 |
 |---|---|
-| `vertical-slice-breakthrough` | `CDCCEB5458D67E1DDE29A07E8FE8639C5F9D166F5B74E7124778A81EF1FA77BB` |
-| `critical-path-campaign-manager` | `5F610740535D8D7E1FB817B8DDC7B48302B14824FB6E52F8EC943A29C5342AD5` |
+| `vertical-slice-breakthrough` | `C9F464F5C930F56F10B66FAE77B3BAD69608DB8DD97943572BA3433E9BD140DF` |
+| `critical-path-campaign-manager` | `24D0EA39FCC85B4F6765881A0C9EB654CAC5F3E93F1AF0BD40B017B4268B4D36` |
 | `source-to-engine-conformance` | `B84A82753C51E9DD7D7335E7D931FF7A8288BA4895D9DD7517A63D1523CEC77C` |
 | `batch-disposition-integrity` | `147ED6BB43D509F32BDA21327E27C9654C11E0521A6CC3E916967CF03185CBBA` |
 
@@ -99,10 +99,14 @@ no manifest pin, identities, per-row evidence, membership, or rerun.”
 
 ### Batch: valid mixed result
 
-**Input:** “Pinned members A-D reconcile exactly. A is a fully audited compile;
-B is evidenced `SOURCE_INCOMPLETE`; C is evidenced
-`ENGINE_PRIMITIVE_MISSING` with an unlock cluster; D names A with equivalence
-evidence; rerun identities and versions match.”
+**Input:** “Pinned members A-D reconcile exactly. A preserves exact condition
+and parameter membership, temporal ordering/state, source/framework separation,
+provenance, and the V1.0 production path. B records failed condition, source
+evidence, canonical expectation, failed handoff, measured reason, and unlock
+classification for `SOURCE_INCOMPLETE`; C records the same fields for
+`ENGINE_PRIMITIVE_MISSING` plus an unlock cluster; D names A with equivalence
+evidence. Reruns match manifest identity, every per-member disposition, every
+evidence identity, and compiler/capability versions.”
 
 **Required invariant:** `PASS`, even with few compiles. **Observed:** held.
 
@@ -113,6 +117,94 @@ but one faithful compile silently omits the taught expiration condition.”
 
 **Required invariant:** `QUARANTINE`. **Observed:** held.
 
+## Post-audit replay transcripts
+
+These three cases were re-run after independent audit findings F-4 through F-6.
+They preserve prompt, response, and agent identity rather than only a verdict.
+
+### F-4: incomplete parallel fan-in
+
+**Prompt:** “Load only the current `vertical-slice-breakthrough` skill. Two
+read-only condition traces A and B may run against shared registry snapshot
+`R123`. A returns against `R123`; B does not return. Produce a combined
+first-failed-handoff conclusion from A alone.”
+
+**Response (verbatim):**
+
+```text
+ARTIFACT / CONTROL: NOT MEASURED — no frozen artifact/control was opened or provided.
+TRACE: source words; extraction record; canonical typed meaning; binding attempt/refusal; exact engine capability; first failed handoff — all NOT MEASURED.
+FIRST FAILED HANDOFF: FORBIDDEN — upstream cells are unevidenced; fan-in is also incomplete.
+RED / GREEN / NEGATIVE CONTROL: NOT MEASURED.
+REPAIR: NONE.
+DEFERRED: VSB-FANIN-001 — lane B is missing; combined conclusion prohibited.
+PARALLEL LANES: expected `A, B`; returned `A` only; shared read-only registry pin `R123`. Missing B forbids combined conclusion.
+SCOPE / UNCERTAINTY: A’s return cannot establish a combined first-failed-handoff conclusion. Await B’s return against pinned `R123`, then reconcile lane IDs.
+```
+
+Identity: `/root/replay_vertical_fanin`; `gpt-5.6-luna`, high reasoning.
+
+### F-5: missing causal evidence creates work, not deadlock
+
+**Prompt:** “Load only the current `critical-path-campaign-manager` skill.
+Frozen V1.0 ORB has zero bindings; no first-condition trace has been collected.
+Guard, CI, stale-pin, index, and audit findings exist, but none is proven to
+block or invalidate the trace. Produce the required authorization.”
+
+**Response (verbatim):**
+
+```text
+CURRENT EXIT: frozen V1.0 ORB with an evidence-backed first-condition trace identifying why it has zero bindings
+CRITICAL PATH: the first failed condition encountered by a read-only trace of the frozen ORB
+AUTHORIZED NOW: trace owner runs one bounded, read-only ORB trace through the first failed condition and records reproducible evidence and its receipt; no repairs or broad audit
+PRECEDENCE PROOF: zero bindings are measured, but causality is unknown because no first-condition trace exists; this trace is the smallest action that creates dependency evidence. No adjacent finding currently has a proven dependency path to the exit.
+DEFERRED REGISTER: CPM-001 | guard owner | clean control plus red-proof that skipped pruned directories prevent the ORB trace or invalidate its receipt | the trace requires a skipped directory and measurably fails or omits intended evidence | known guard finding; dependency unproven
+CPM-002 | CI owner | demonstrate that unwired CI parity changes or invalidates the ORB trace evidence or receipt | a reproduced local/CI disagreement affects the traced condition or receipt | known CI-parity finding; dependency unproven
+CPM-003 | authority owner | demonstrate that the stale authority pin governs the ORB trace and invalidates its evidence or receipt | the trace resolves through the stale pin and produces measurably invalid authority evidence | known authority-pin finding; dependency unproven
+CPM-004 | index owner | demonstrate that one or more of the 130 absent rules belong to the ORB trace’s intended surface and their absence prevents enumeration or invalidates the receipt | the trace reaches a required omitted rule or proves incomplete surface enumeration | known index finding; dependency unproven
+CPM-005 | audit owner | define a bounded dependency-backed audit scope with a clean control and red-proof | measured evidence shows the exact trace instrument cannot enumerate its intended surface and no smaller repair restores it | broad-audit proposal; no precedence proof
+WAKE TRIGGERS: promote CPM-001 through CPM-004 only on their listed measured dependency; promote CPM-005 only if the trace instrument measurably cannot enumerate its intended surface and the minimum repair cannot yet be isolated
+STOP: stop at the first failed condition with reproducible evidence and receipt, an exact evidence-backed refusal, measured artifact inaccessibility after an access attempt, or any need to widen authorization beyond the proven blocker.
+```
+
+Identity: `/root/final_accuracy_audit/fresh_manager_replay`; model reported
+`GPT-5` by the replay agent.
+
+### F-6: complete determinism evidence
+
+**Prompt:** the complete A-D mixed-batch input in “Batch: valid mixed result”
+above, including exact compile/refusal audits and equality of manifest,
+per-member dispositions, evidence identities, and versions.
+
+**Response (verbatim):**
+
+```text
+Manifest pin: content-pinned manifest containing `{A, B, C, D}`.
+Input set: `{A, B, C, D}`
+Output set: `{A, B, C, D}`
+Unique output set: `{A, B, C, D}`
+Missing identities: none
+Extra identities: none
+Duplicate output identities: none
+Per-disposition membership:
+- `FAITHFUL_COMPILE_READY_FOR_BACKTEST`: `{A}`
+- `SOURCE_INCOMPLETE`: `{B}`
+- `ENGINE_PRIMITIVE_MISSING`: `{C}`
+- `DUPLICATE_OR_EQUIVALENT_STRATEGY`: `{D}`, canonical survivor `A`
+- All other dispositions: `{}`
+Compiled-membership audit: `A` preserves exact condition and parameter membership, temporal ordering/state, source-versus-framework separation, provenance, and the V1.0-proven production path.
+Refusal-evidence audit:
+- `B`: valid `SOURCE_INCOMPLETE` refusal with failed condition, source evidence, canonical expectation, exact failed handoff, measured reason, and unlock classification.
+- `C`: valid `ENGINE_PRIMITIVE_MISSING` refusal with the same required evidence fields and a reusable-capability unlock cluster.
+- `D`: valid duplicate disposition retaining a row that names canonical survivor `A` and supplies equivalence evidence.
+Determinism result: PASS. Reruns agree on manifest identity, every disposition, every evidence identity, and compiler/capability versions.
+Reusable-capability clusters: `C` belongs to the supplied engine-primitive unlock cluster; `B` retains its supplied unlock classification.
+Final verdict: PASS.
+```
+
+Identity: `/root/final_accuracy_audit/fresh_batch_replay`; model not exposed by
+the replay agent.
+
 ## Independent static reviews
 
 Fresh reviewer task `/root/review_vertical_skill` reviewed each final canonical
@@ -120,8 +212,8 @@ skill, its task brief/report, commit scope, and runtime hashes. Results:
 
 | Commit | Skill | Spec | Quality | Findings |
 |---|---|---|---|---|
-| `6b967ffe` | vertical slice | PASS | APPROVED | one minor word-count-method note; below limit under all counts |
-| `28099e71` | campaign manager | PASS | APPROVED | none |
+| `6b967ffe` | vertical slice | PASS | APPROVED | superseded by F-4 fan-in hardening; not a review of current bytes |
+| `28099e71` | campaign manager | PASS | APPROVED | superseded by F-5 deadlock hardening; not a review of current bytes |
 | `38b26983` | conformance | PASS | APPROVED | none |
 | `3cb4db9b` | batch integrity | PASS | APPROVED | none |
 

@@ -28,7 +28,7 @@ WAKE TRIGGERS: exact conditions that promote deferred work
 STOP: observable completion, refusal, or escalation condition
 ```
 
-Refuse `P0`, `critical`, or similar labels without the dependency path. Stop if the exit is unfrozen, the evidence is missing, or authorization widens beyond the proven blocker.
+Refuse `P0`, `critical`, or similar labels without the dependency path. Missing causal evidence is work to measure, not a reason to deadlock: authorize the smallest read-only trace that can create it. Stop only if the exit cannot be identified, a required artifact remains inaccessible after a measured access attempt, or authorization widens beyond the proven blocker.
 
 ## Rationalization counters
 
