@@ -613,6 +613,50 @@ burned before.
 `src.engine.indicators.*` imports for the spec compiler; the tree-wide search shape returned real
 `compute_atr` call sites in `anti_setups/miner.py` and `archetypes/classifier.py`.
 
+## LANE 2 — ROW 2's FIVE ORDERED CONTROLS — ✅ ALL RUN. **`ENGINE_PRIMITIVE_WRONG_IDENTITY` IS NO LONGER A SIGNATURE ARGUMENT; IT IS EXECUTED.**
+
+### C1–C3 — does binding identity move with the PROSE or with the LABEL?
+| input | primitive returned | bindable | approx |
+|---|---|---|---|
+| label `WAIT_STRUCTURE` · **taught prose** | `structure_engine.compute_structure_state` | `True` | `True` |
+| label `WAIT_STRUCTURE` · **unrelated trading prose** (*"bearish order block after a liquidity sweep"*) | `structure_engine.compute_structure_state` | `True` | `True` |
+| label `WAIT_STRUCTURE` · 🛑 **NOT ABOUT TRADING AT ALL** (*"the capital of France is Paris and rainfall is seasonal"*) | `structure_engine.compute_structure_state` | **`True`** | `True` |
+| **label `WAIT_BIAS`** · taught prose unchanged | `bias_engine.classify_institutional_regime` | `True` | `True` |
+⇒ **identity moved with PROSE: `False` · with NON-TRADING PROSE: `False` · with LABEL: `True`.**
+🛑 **A sentence about French geography binds `bindable=True` to the market-structure engine.**
+
+### C4–C5 — 🛑🛑🛑 **THE DECISIVE ONE: MUTATE THE TAUGHT OPENING RANGE AND THE BOUND PRIMITIVE DOES NOT MOVE**
+Deterministic candles, no randomness. **Bar 0 IS the taught window, built to the lesson's OWN worked
+numbers** (`OR high 617.64` / `OR low 616.61`), then 59 zig-zag bars so the swing detector has real
+pivots. **Independent reading of the taught rule** (computed outside any engine code): OR high/low = the
+high/low established in the first window.
+
+| run | independent OR reading | primitive `swing_high` / `swing_low` | other outputs | reports the taught OR? |
+|---|---|---|---|---|
+| **as taught** | `617.64` / `616.61` | `619.4999999999986` / `618.1649999999986` | `bos=False choch=False mss=False zone=discount last_break=None` | **`False`** |
+| 🛑 **OR MUTATED `±12` pts** (`629.64` / `604.61`, a **`24`-point wider** opening range) | `629.64` / `604.61` | **`619.4999999999986` / `618.1649999999986` — BYTE-IDENTICAL** | **every field identical** | **`False`** |
+
+✅ **POSITIVE CONTROL — THE PRIMITIVE IS ALIVE AND ITS OUTPUT CAN MOVE:** scaling **all** highs by `1.05`
+changes `swing_high` `619.50 → 650.47`. ⇒ **The null above is a measurement, not a dead rig.**
+
+★★★★★ **`THE TAUGHT QUANTITY CAN BE CHANGED BY 24 POINTS AND THE PRIMITIVE BOUND TO IT RETURNS THE SAME
+ANSWER TO EVERY FIELD. THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE.`** ⇒ **ROW 2's
+`ENGINE_PRIMITIVE_WRONG_IDENTITY` is now supported by EXECUTION, discharging `R-724 §8-2`'s objection
+that it rested on a signature-and-fields reading.**
+
+⚠️ **THE HONEST ALTERNATIVE READING, STATED BECAUSE A SKEPTIC WOULD RAISE IT AND IT DESERVES AN ANSWER:**
+bar `0` sits at the series edge, and a swing detector may structurally never designate an edge bar a
+pivot — so *"swing_high ≠ OR high"* could be an artefact of my construction rather than of the concept.
+**Two things answer it.** (1) **The taught rule does not care whether the OR high is a pivot** — it is
+*the high of the first window*, by definition, so a primitive that can only report pivots cannot express
+it regardless of position. (2) **The mutation control does not depend on the edge argument at all:**
+widening the range by `24` points changed **no field**, including `premium_discount_zone`, which is a
+whole-series quantity. ⚠️ **`UNMEASURED`: the same experiment with the OR window placed mid-series.**
+*What it would add:* closes the edge objection completely. **Not run; the classification does not rest on
+it, and I would rather name it than have it found.**
+
+### LANE 2 — BUDGET: `1 / 2`, succeeded first run. **DIAGNOSIS ONLY — no production path, no repair.**
+
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
 2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.

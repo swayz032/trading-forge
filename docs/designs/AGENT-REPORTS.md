@@ -4,6 +4,33 @@
 
 ---
 
+## AR-811 · 2026-08-08 · ✅✅ **`R-724 §8` IS COMPLETE — FAN-IN `5 / 5`, NO LANE ABSORBED, NONE PARTIAL.** 🛑🛑🛑🛑★★★★★ **AND LANE 2's DECISIVE CONTROL IS THE CLEANEST RESULT OF THIS CAMPAIGN: I CHANGED THE TAUGHT OPENING RANGE BY `24` POINTS AND THE PRIMITIVE BOUND TO IT RETURNED **BYTE-IDENTICAL OUTPUT ON EVERY FIELD**. `THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE.`** ✅ **`R-724 §8-2`'s OBJECTION IS DISCHARGED: `ENGINE_PRIMITIVE_WRONG_IDENTITY` IS NOW EXECUTED, NOT ARGUED FROM A SIGNATURE.**
+
+**FAN-IN: `5 / 5` authorized lanes returned** — 1 PROBE A · 2 ROW-2 controls · 3 assigner · 4 `REPAIR_SUFFICIENT_ALONE` · 5 import closure. **Nothing silently absorbed.** **Probes A `1/2` · B `1/2` · C `1/2` · lane-2 `1/2`.**
+
+### §1 — 🛑 C1–C3: BINDING IDENTITY MOVES WITH THE LABEL, NEVER WITH THE WORDS
+`[MEASURED HERE, real `bind_condition()`]` — taught prose → `structure_engine.compute_structure_state`; **unrelated** trading prose → **same**; 🛑 **`"the capital of France is Paris and rainfall is seasonal"` → SAME primitive, `bindable=True`, `approximation=True`**; label changed to `WAIT_BIAS` → `bias_engine.classify_institutional_regime`.
+⇒ **prose-sensitivity `False`. label-sensitivity `True`.** ★ **A sentence about French geography binds successfully to the market-structure engine.**
+
+### §2 — 🛑🛑🛑 C4–C5: THE MUTATION CONTROL, AND IT IS UNAMBIGUOUS
+Deterministic candles, **bar 0 built to the lesson's OWN worked numbers** (`617.64` / `616.61`), 59 further zig-zag bars, **no randomness**. Independent reading of the taught rule computed **outside any engine code**.
+| run | independent OR | primitive `swing_high`/`swing_low` | reports taught OR? |
+|---|---|---|---|
+| as taught | `617.64` / `616.61` | `619.4999999999986` / `618.1649999999986` | **`False`** |
+| **OR widened by `24` pts** | `629.64` / `604.61` | **IDENTICAL — every field, including `premium_discount_zone`** | **`False`** |
+✅ **POSITIVE CONTROL:** scaling all highs `×1.05` moves `swing_high` `619.50 → 650.47` ⇒ **the null is a measurement, not a dead rig.**
+
+### §3 — ⚠️ THE OBJECTION A SKEPTIC WOULD RAISE, AND MY ANSWER — I RAISE IT MYSELF
+Bar `0` sits at the series edge; a swing detector may never designate an edge bar a pivot, so *"swing_high ≠ OR high"* **could** be an artefact of my construction.
+**(1)** The taught rule **does not care whether the OR high is a pivot** — it is *the high of the first window* by definition, so a pivot-only primitive cannot express it at any position. **(2)** **The mutation control does not depend on the edge argument at all** — a `24`-point change moved **no field**, including a whole-series quantity.
+🛑 **`UNMEASURED`: the same experiment with the OR window mid-series.** *What it would add:* closes the edge objection outright. **Not run. The classification does not rest on it, and I would rather name it than have the grader find it.**
+
+### §4 — WHERE PHASE A NOW STANDS, STATED WITHOUT INFLATION
+✅ **`3 / 11` conditions traced, all six fields, `REPAIR_SUFFICIENT_ALONE` on each** · **`1 / 1` `BINDS` rows** · **PROBE A/B/C all run** · **the assigner's behaviour measured and my own earlier framing of it corrected** · **a second compilation surface found where the taught concept is already addressable by name.**
+🛑 **NOT ESTABLISHED:** the `8` remaining `APPROXIMATED` rows · artifact completeness against the whole lesson · whether the comparator surface is routable · the mid-series control · **and NO CLASSIFICATION IS CERTIFIED — `R-722 §4`'s `UNVERIFIABLE` stands until the independent grade lands.**
+🛑 **NO REPAIR MADE OR PROPOSED.** ★ **I hold that line hardest now, because for the first time I can see what a repair would look like — and `R-724 §8`'s forbidden list, the two-surface gap, and `THE ADDRESS EXISTING IS NOT THE ROUTE WORKING` all say that is Phase B's call and the desk's, not mine.**
+**I am not handing off. Awaiting the desk's next contract, or I continue on the untraced rows if none arrives.**
+
 ## AR-810 · 2026-08-08 · 🛑🛑🛑★★★★★ **LANES `3` AND `5` DONE — AND BETWEEN THEM THEY GIVE PHASE A ITS CAUSAL SENTENCE. THE CLASSIFIER'S REASONING IS *CORRECT* AND ITS DESTINATION IS *WRONG*: `"opening range"` IS AN EXPLICIT `WAIT_STRUCTURE` STEM, ADDED DELIBERATELY, ON THE STATED GROUND THAT IT IS `"a level construct, not a clock window"` — WHICH IS TRUE — AND THAT FAMILY'S ONE PRIMITIVE COMPUTES MARKET-STRUCTURE *EVENTS*, NOT LEVEL *CONSTRUCTION*.** ⭐⭐ **AND LANE 5 FOUND A SECOND COMPILATION SURFACE I DID NOT KNOW EXISTED: THE OPENING RANGE IS ALREADY ADDRESSABLE BY NAME AS `orh_5m` / `orl_5m`.** ⚠️ **I ALSO AMEND MY OWN `AR-806 §2`.**
 
 **LANES: `4 / 5` of `R-724 §8` closed** (1 · 3 · 4 · 5). **REMAINING: lane 2 — ROW 2's five ordered controls, including execution on deterministic inputs. Not handing off.**
