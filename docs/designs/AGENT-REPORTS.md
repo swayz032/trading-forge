@@ -4,6 +4,94 @@
 
 ---
 
+## AR-887 · 2026-08-09 · ✅ **LANE `B` (`F-7`) DELIVERED — `766fb381`. ONE SHARED MAPPER; A REFUSAL IS NO LONGER FILED AS `failed` WITH A REASON NOBODY MEASURED.** ⚡ **RED PUBLISHED FIRST ON ALL THREE PRODUCTION CALLERS, AND A SIX-ARM BATTERY ISOLATES EACH OUTCOME SEPARATELY — INCLUDING THE CALLER-DISCONNECT ARM `R-767 §5` NAMES.** 🛑 **AND I DECLARE ONE CONTROL I COULD NOT DELIVER BEHAVIOURALLY, RATHER THAN LETTING A VACUOUS GREEN STAND IN FOR IT.**
+
+**SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `766fb381`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `F-7` `1 / 2`.** 🛑 **NO FAN-IN CLAIM — `R-767 §2` / `R-768 §7`: the desk evaluates the predicate.**
+**BOTH MY LANES ARE NOW CLOSED: `2 / 2` this seat** (`N-5` `AR-886` · `F-7` here). **No handoff was taken at the seam.**
+
+### §1 — ✅ THE CONTRACT, INCLUDING `R-768 §7` AMENDMENT 1
+```
+[MEASURED HERE — agent-service.ts @ 766fb381]
+ONE shared mapper, all callers    mapAgentOutcome() — ONE definition; the 3 direct
+                                  runBacktest callers + the drain consume it.        ✅
+NOT a second classifier           imports isExecutionRefused/refusalEvidence from
+                                  ../lib/backtest-refusal.js; `grep 'status === "refused"'
+                                  executable -> 0 restated literals.                 ✅
+7 `===` + 3 `!==` sites cleared    executable `=== "completed" ?` -> 0
+                                  executable `!== "completed" ?` -> 0
+                                  (the RED listed 775 791 1224 1234 1322 1337 2274 —
+                                   ALL TEN, including the three `!==` fabrication
+                                   sites R-768 §3 warned a `===` sweep would miss)    ✅
+refused  -> journal `refused` / audit `refused`, errorMessage ABSENT                  ✅
+completed-> `tested` / `success`   ·  skipped -> `skipped` / `skipped`                ✅
+genuine failure -> `failed` / `failure` carrying the ACTUAL error;
+                   the generic fallback is reachable ONLY after failure is established ✅
+drain: `drained`, NEVER `failed`; refusal evidence carried on the 3 public returns    ✅ (see §3)
+NO schema change                  system_journal.status is free text (R-767 §3)       ✅
+```
+⭐ **ORDER IS LOAD-BEARING AND IS WHY THE MAPPER TESTS REFUSAL FIRST: a refusal is not `completed`, so any check asking *"completed?"* first has already decided wrongly by the time refusal is considered.**
+
+### §2 — ⚡ THE BATTERY — SIX ARMS, EACH ISOLATING ONE OUTCOME
+```
+G0  UNMUTATED CONTROL          10 passed (10)   <- not always-red
+G1  refusal treated as failure REDDENS F-7.1 .2 .3 .10  — the four REFUSAL controls
+    (the R-767 §5 mutation)    GREEN:  F-7.4 .5 .6 .7   — every positive control
+G2  refusal carries a generic  REDDENS F-7.1 .2 .3 .8 .10
+    errorMessage again
+G3  `skipped` collapses to     REDDENS **only** F-7.7
+    `failed`
+G4  generic fallback applied   REDDENS **only** F-7.5 — the real engine error survives
+    BEFORE failure established
+G5  DISCONNECT one production  REDDENS F-7.3 (that caller's behaviour) + F-7.8 (the
+    caller from the mapper     exact-call-site guard) — AND NOTHING ELSE
+EVERY ARM RESTORED `git diff --exit-code` CLEAN. Post-battery working tree: 0 changes to the file.
+```
+⭐⭐ **`G3` AND `G4` EACH REDDEN EXACTLY ONE CONTROL.** That is the property `[baseline-allowlist]` and `A CONTROL MUST DISCRIMINATE` are about: a battery where every arm reddens everything cannot tell *"catches breakage"* from *"always red"*.
+⭐⭐⭐ **`G5` IS THE ARM `R-767 §5` ASKED FOR BY NAME** — *"disconnecting any production caller reddens the exact-call-site guard"*. It reddens ONE behavioural control and the source guard, and leaves the other two callers green. ⇒ **the three callers are independently proven, not proven as a group.**
+
+### §3 — 🛑 THE CONTROL I DID **NOT** DELIVER BEHAVIOURALLY, DECLARED RATHER THAN DRESSED UP
+**`R-767 §5` requires *"drain refusal ⇒ `refused` + `drained`"*. I did NOT drive `drainScoutedIdeas` end-to-end.**
+⚠️ **AND MY FIRST ATTEMPT AT IT WAS A FALSE GREEN I CAUGHT MYSELF:** I called the real drain with an empty stub `select()` and asserted `out.failed === 0`. `[MEASURED HERE]` **the drain returns `{scanned:0, drained:0, failed:0}` immediately when no rows are scouted `(:1944)` — so that assertion PASSED AGAINST THE UNFIXED CODE and could never have failed.** ★★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — and this one was wearing the name of the control the ruling asked for, which is the dangerous version.**
+⚖️ **WHY I STOPPED RATHER THAN BUILDING IT:** reaching the drain's stamp requires the **LLM proposer path** (`:2048` parses a generated DSL) plus output validation — four further boundary stubs. **A fixture built to satisfy four stubs measures the stubs.** ⇒ **`F-7.10` is now two things that CAN fail: the mapper fed the drain's EXACT input shape, plus a positive witness that `drainScoutedIdeas` runs and returns its counter shape.** **The drain's site is additionally covered by `F-7.8`, whose RED listed `:2274` among the surviving ternaries.**
+🛑 **STATED PLAINLY: `[UNPROVEN — BEHAVIOURAL]` that a refusal traverses the live drain and lands as `refused` + `analystNotes`. The CODE PATH is measured; the END-TO-END DRAIN is not.**
+
+### §4 — 🛑 INSTRUMENT DEFECTS THIS LANE — FOUR MORE, ALL MINE
+**(1) A TABLE IDENTITY COMPARISON DIED AT THE MODULE-REGISTRY RESET.** My recorder keyed on `table === schema.systemJournal`. `vi.resetModules()` hands every test a FRESH `db/schema.js`, so the identity held for **test 1 only** and matched nothing after. **Six controls read an EMPTY journal and looked exactly like six production defects.** Fixed with drizzle's `getTableName`. ★★★★★ **`AN IDENTITY COMPARISON ACROSS A MODULE-REGISTRY RESET SILENTLY BECOMES `false`, AND A RECORDER THAT CAPTURES NOTHING READS EXACTLY LIKE A PRODUCTION PATH THAT WROTE NOTHING.`**
+**(2) A 6-SPACE PATTERN MATCHED A 14-SPACE LINE AS A SUBSTRING.** My wiring script asserted `count == 3` and found `4`: the drain's deeper-indented line at `:2341` contains the 6-space pattern as a SUBSTRING, so an unanchored replace would have silently rewritten the drain site too. ✅ **THE ASSERTION IS THE ONLY REASON I KNOW — I wrote the count expectation before running it.** ★★★★★ **`AN UNANCHORED INDENTATION PATTERN IS A SUBSTRING MATCH; PIN IT TO A LINE START, AND STATE THE COUNT YOU EXPECT BEFORE YOU RUN THE REPLACE.`**
+**(3) A GATE IN FRONT OF THE SUBJECT REPORTED ITS OWN VERDICT.** `runStrategyFromDSL` returned `audit_rejected` (`B3_FIXED_POINT_STOP`, `B4_TIME_STOP_MISSING`, `POSITION_SIZE_TYPE_WRONG`, `E1_REGIME_GATE_DISABLED`) and never reached the mapping. **I probed the actual return value rather than guessing at the fixture** — the graduated auditor is stubbed to accept, as the sibling `d10-n3` suite does, and the dependency is documented in-file. ★★★ **`A FIXTURE THAT CANNOT REACH THE BRANCH UNDER TEST MEASURES THE GATE IN FRONT OF IT AND REPORTS THE GATE'S VERDICT AS THOUGH IT WERE THE BRANCH'S.`**
+**(4) AN INSERTED TEST BLOCK LANDED OUTSIDE ITS `describe` and vitest reported `no tests` — at EXIT 1 but with a summary that says nothing failed.** Caught because I read the summary line rather than the exit code. ★ `[gate-verdict]`: an exit code is not what the run printed.
+
+### §5 — ✅ ACCEPTANCE EVIDENCE, POPULATION ENUMERATED AND SIZE-ASSERTED FIRST
+```
+[MEASURED HERE] population from DISK, size asserted BEFORE running
+  (`[instrument-truncation-cluster]` (6): a typo'd member in a mixed vitest list is
+   silently dropped at exit 0, so a bare list is not a population)
+find src -name 'd10-*.test.ts' -> 6   (5 prior + the new d10-f7)  each -f checked OK
++ shadow-rerun-service.test.ts        -> 7 members, matching R-768 §2's membership
+npx vitest run <the 7>   -> Test Files 7 passed (7) · Tests 124 passed (124) · EXIT 0
+npx tsc --noEmit         -> TSC_EXIT=0
+```
+★ **I read the WHOLE summary and did not `| tail` it** — the npm upgrade notice prints AFTER the result at exit `0`.
+
+### §6 — ⚖️ WHAT REMAINS UNPROVEN — CARRIED FORWARD UNCHANGED
+🛑 **NO PRODUCTION DATA. Nothing here shows a refusal has EVER traversed any agent path in live data** — mechanism only, exactly as `R-767 §8` and `R-768 §9` carry it. ★★★ **`D-10` REMOVES WAYS THE SYSTEM COULD MISREPORT A REFUSAL; IT DOES NOT DEMONSTRATE THAT ONE EVER OCCURRED.`**
+🛑 **`system_journal.status` CONSUMERS REMAIN `[UNENUMERATED — OPEN]`** (`R-768 §9`). **A new distinct value `"refused"` now flows into that column. The free-text finding removed the SCHEMA risk; it did NOT answer who reads the column.** ⚠️ **I flag this as the one place `F-7` could surprise a downstream reader, and I did NOT sweep it — that sweep is outside the named files and `R-768 §8`'s STOP list forbids me widening scope to take it.**
+🛑 **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`: campaign worktree, not `runtime-production`.**
+🛑 **The drain gap in `§3`.**
+
+### §7 — 📍 STATE
+```
+F-8 ✅ F-9 ✅ N-1 ✅ N-3 ✅ N-2 ✅ F-10 ✅ N-4 ✅   N-5 delivered AR-886 · F-7 delivered HERE
+N-6  DEFERRED, unassigned — wake trigger includes "D-10 at 9/9", which the desk may now be at.
+OPS-1 / OPS-2  THE DESK'S, not mine.
+```
+**MY FAN-IN: `2 / 2`. NOTHING HALF-BUILT · NO MUTATION LEFT PLANTED** — eleven were run across both lanes (`M0`–`M4`, `G0`–`G5`) and every one restored `git diff --exit-code` clean · **`[MEASURED]` `git status --porcelain src/` → only the sibling's `test_synthetic_market_simulator.py`, which I never touched** · 🛑 **NO SUB-AGENT WAS DISPATCHED BY THIS SEAT, so nothing is owed back to it.**
+**THE EAR IS STILL ARMED AND DELIVERING** — it carried `R-768` DRAFT→COMMITTED mid-lane and I acted on the COMMITTED transition, which is how `R-768 §7`'s amendments reached this work without an operator relay.
+⚖️ **I AM NOT HANDING OFF. Both contracted lanes are closed and I have context remaining; if the desk contracts more, this seat takes it.**
+
+---
+
+
 ## AR-886 · 2026-08-09 · ✅ **LANE `C` (`N-5`) DELIVERED — `26484e5c`. AN UNMEASURED PARENT BASELINE NOW STOPS THE RUN ON BOTH PATHS, BEFORE THE ENGINE.** ⚡ **RED PUBLISHED FIRST (`e94a8dd7`), AND A FIVE-ARM MUTATION BATTERY DISCRIMINATES PER-PATH AND IN BOTH DIRECTIONS.** 🛑 **AND I REPORT THREE INSTRUMENT DEFECTS I INTRODUCED MYSELF — ONE OF WHICH DESTROYED MY OWN UNCOMMITTED FIX.**
 
 **SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `26484e5c`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `N-5` `1 / 2`** — one attempt, one mechanism, no failed hypothesis. 🛑 **I MAKE NO FAN-IN CLAIM** (`R-767 §2`: an auto-release is a predicate and THIS DESK evaluates it; `R-768 §7` restates it).
