@@ -4,6 +4,77 @@
 
 ---
 
+## AR-880 · 2026-08-09 · ✅ **`R-766 §4` LANE 2 — `N-4` COMPLETE. THE REFUSAL IS NAMED, THE DETERMINISTIC RE-REQUEST IS STOPPED, AND THE REPLICA IS GONE WITH ITS COVERAGE RE-ESTABLISHED AGAINST PRODUCTION.** ⚡ **FAN-IN `7 / 9` under the auto-release.** 🛑 **AND I REPAIRED ONE OF MY OWN FIXTURES MID-LANE — DISCLOSED IN `§4`, BECAUSE A FIXTURE REPAIR THAT ISN'T DECLARED IS INDISTINGUISHABLE FROM WEAKENING A TEST.**
+
+**SEAT `claude.exe 23640`.** **COMMITS: `5fc2ee6d` (seam) · `6d8cfd41` (wiring guard) · `34e75367` (semantic repair) · `67f99900` (replica removal).** **ATTEMPT BUDGET `1 / 2`.**
+
+### §1 — ✅ THE DEFECT, AND WHY IT WAS A CLASSIFICATION ERROR RATHER THAN A TYPO
+```
+BEFORE:  status: btResult.status === "skipped" ? "skipped" : "success"
+```
+🛑 **A BINARY TERNARY OVER A THREE-STATE OUTCOME.** `completed` · `skipped` · **`refused`** — and the third state had no arm, so it fell to `: "success"`. ⇒ **The 90-day audit trail recorded `success` for a run the engine DECLINED TO EXECUTE.** ★★★ **`A TERNARY IS AN EXHAUSTIVENESS CLAIM. IT IS ONLY TRUE WHILE THE DOMAIN HAS TWO MEMBERS, AND NOTHING RE-CHECKS IT WHEN A THIRD ARRIVES.`**
+**AFTER:** classify with the shared `isExecutionRefused`/`refusalEvidence` (`lib/backtest-refusal.js`) **before any status is derived** — **NO new classifier, no restated literal.** A refusal writes its OWN row: action `lifecycle.evidence_auto_backtest_refused`, status `"refused"`, `result.refusal_evidence` from the shared helper. **Never `success`, never `skipped`, never `failure`** (it is not a fault). **`completed` still records `success`; pipeline-paused still records `skipped`.**
+
+### §2 — ✅ THE CAP — THE DESIGN DECISION IN THIS LANE, STATED AS A DECISION
+🛑 **The old cap counted `enqueued` audit rows in a 24h window. It cannot bound a DETERMINISTIC refusal:** the strategy is re-asked every day forever and the engine returns the same answer every time. ★★★★★ **`A TIME WINDOW THROTTLES A REPEATED REQUEST; IT CANNOT STOP A REQUEST WHOSE ANSWER IS ALREADY KNOWN AND WILL NEVER CHANGE.`** (`R-764 §1`, adopted.)
+**MY DESIGN, AND ITS BOUNDARIES:**
+```
+requestIdentity = sha256(JSON{ strategyId, strategyName, symbol, timeframe:"5m", mode:"walkforward" })
+  - NO wall-clock, NO randomness, NO attempt counter          <- R-766 §4's explicit prohibition
+  - the remaining backtest config (indicators/entries/exit/stop_loss/position_size)
+    is a COMPILE-TIME CONSTANT at this call site ⇒ it cannot vary between two calls,
+    so it is EXCLUDED rather than hashed for appearance.
+suppression: a prior `…_refused` row for this strategy with the SAME identity ⇒ do not re-ask.
+             NOT time-bounded — that is the whole point.
+retry:       a materially changed request yields a different identity ⇒ retried automatically.
+```
+⚠️ **THE HONEST LIMIT OF THAT EXCLUSION, since it is the part that could rot:** *if* a future edit makes any of those constant fields caller-varying, they must enter the hash or the guard will suppress a genuinely different question. **`[UNGUARDED — no test asserts the config block is still constant]`. I did not add that guard: it is a new decision, not this lane's.** ⇒ **Reported, not built.**
+⚖️ **One query, not two:** the 24h-cap lookup was widened with `or(…)` to return both row kinds and production separates them in JS — required anyway, since the two have different time bounds. **`or` added to the `drizzle-orm` import.** **Both action names are now exported CONSTANTS** (`EVIDENCE_AUTO_BACKTEST_{ENQUEUED,REFUSED}_ACTION`) — **the suppression guard JOINS on them, and a typo on one side would silently disable it while every test still passed.**
+
+### §3 — ✅ RED FIRST, THEN THE MUTATION TABLE — FAMILY vs ISOLATION
+**RED published against provably-unmodified production** (`git status` clean on the service at RED time): **`3 failed | 8 passed`.** ★ **The 8 greens included the four POSITIVE controls, which is what proved the harness DRIVES production rather than a fixture — the reds were about the decision, not the scaffold.**
+| # | mutation | RED | GREEN | verdict |
+|---|---|---|---|---|
+| **M3** | disconnect the production call site | the 1 invocation guard | the other 3 §A guards | ✅ ISOLATION |
+| **M4** | bypass classification (refusal → `"success"`) | **exactly the 3 named-refusal controls** | all 4 positives · both identity controls · determinism | ✅ ISOLATION |
+| **M5** | disable identity suppression | **exactly the 1 repeat-refusal control** | the changed-identity DISCRIMINATOR + all others | ✅ ISOLATION |
+✅ **RESTORE after each: `git diff --exit-code` → `0`, byte-identical.** ⚖️ **`M5`'s discriminator matters more than `M5` itself: a suppression that blocked EVERYTHING would satisfy "does not re-enqueue". The changed-identity control is what forbids that, and it stayed GREEN under `M5`.**
+
+### §4 — 🛑 I REPAIRED A FIXTURE MID-LANE. DISCLOSED, NOT ABSORBED.
+**After the repair, `POSITIVE: the 24h cap still blocks a second enqueue` went RED.** ⚖️ **DIAGNOSIS: MY FIXTURE, NOT THE CODE.** It seeded `[{ id: "prior-row" }]` — a row with **no `action` field**. The query's projection now returns `{id, action, input}` and production separates the two row kinds in JS, **so a row without an `action` is a shape the real query cannot produce.** ⇒ **I gave the fixture the `action` the SQL filtered on and it blocked correctly.**
+★★★ **I state this because the alternative reading is the dangerous one: `A FIXTURE REPAIR AND A WEAKENED TEST LOOK IDENTICAL IN A GREEN RUN — ONLY THE DECLARATION SEPARATES THEM.` The assertion was NOT relaxed: it still demands `runBacktest` not called and zero audit rows.** (Same species as `AR-873`'s `MUT-N2-3` conviction, and I repaired the fixture rather than the claim.)
+
+### §5 — ✅ THE REPLICA — REMOVED, AND THE COVERAGE PROVEN TO HAVE MOVED FIRST
+🛑 **`runFix3Logic()` re-implemented production logic INCLUDING ITS DEFECT** (`:310`, spelled `result.status === …`, **not** `btResult.status === …` — **a grep written for the production spelling MISSES it**, and I only found it because `R-766 §2` named the line). **Deleting production would have reddened none of its five tests.**
+✅ **ORDER MATTERED AND I KEPT IT: the four positive controls were GREEN against the real helper BEFORE the deletion.** ⇒ **`completed→success` · `paused→skipped` · `actor=automated`+`mode=walkforward` · the 24h cap are all still asserted, now against production.** ★★★★★ **`THE REPAIR FOR A REPLICA IS AN IMPORT, NOT A DELETION` — the coverage was imported first and the copy deleted second.**
+✅ **`:727` PRESERVED** (`R-766 §2`) — **the deletion script ASSERTED it lay outside both deleted ranges before writing**, rather than trusting my line arithmetic.
+```
+grep -rn '<the binary ternary>' src/   (comments excluded)  -> EXACTLY 1, production only
+test-count arithmetic over the enumerated 13-file population: 183 -> 178, delta = 5
+   ⇒ exactly the five replica tests, nothing else silently lost
+```
+
+### §6 — 📋 ACCEPTANCE, RE-TAKEN AFTER THE LAST CHANGE
+```
+population enumerated from disk (ls), 13 files: 6 real-LifecycleService suites +
+   auto-recovery-debt1-4 + all 5 d10-* + shadow-rerun-service
+npx vitest run <the 13>   ->  Tests 1 failed | 177 passed (178)
+   the 1 = deepscan-wiring-fixes / kill-switch.ts, PROVEN pre-existing by control
+           (AR-879 §2: identical red with my change absent) — untouched by this lane
+npx tsc --noEmit          ->  exit 0
+d10-n4 suite alone        ->  14 passed
+git status --porcelain src/ -> only the sibling's test_synthetic_market_simulator.py
+```
+✅ **`N-4` CLOSES AT `7 / 9`** (F-8 · F-9 · N-1 · N-3 · N-2 · F-10 · N-4).
+
+### §7 — ⚠️ NOT PROVEN · ⚡ NEXT
+🛑 **`[UNPROVEN]`:** that a refusal has traversed this path in live data — **no query, no incident claimed, mechanism only.** 🛑 **The call site itself is `[MEASURED — STRUCTURAL]`, not executed** (Option `A` refused by `R-764 §3`, not re-opened). 🛑 **The config-constancy assumption in `§2` is UNGUARDED and reported.**
+✅ **PUSH STATE — CORRECTED MID-WRITE, AND MEASURED RATHER THAN RELAYED.** **`AR-879 §5` said nothing was pushed; that was TRUE when written and is now FALSE** — the block cleared while I was drafting this report (`ADVISOR-STATE` `acf0e9e9`). 🛑 **I did not take the desk's word for it:** `[MEASURED HERE]` `git rev-parse HEAD` == `git rev-parse @{u}` == `acf0e9e9`, and **`git log @{u}..HEAD` is EMPTY** ⇒ **all seven of this seat's commits are off-machine on `origin/h1-wave4-sealed12-driver`.** ★★★ **`A PUSH-STATE CLAIM DECAYS FASTER THAN THE REPORT THAT CARRIES IT — RE-MEASURE IT AT WRITE TIME, NOT AT WORK TIME.`**
+⚡ **NEXT, per `R-766 §4`'s order with no desk wait: `F-7` → `N-5` → final `D-10` acceptance.** **`F-7`: the agent lane's three direct `runBacktest` paths plus the drain branch at `agent-service.ts:2274`; `[MEASURED THIS SEAT]` `agent-service.ts` carries the SAME binary shape at `:775`/`:791`/`:793`, `:1224`/`:1234`/`:1236`, `:1322`/`:1337`/`:1339` and `:2274` — `result.status === "completed" ? … : "failed"`, i.e. a refusal becomes `failed`.** **`N-5`: `Number(strat.forgeScore ?? 0)` at the two survivor-gate baselines.** 🛑 **I have NOT started either; the `F-7` line list above is a locate, not a finding.**
+⚖️ **I am NOT handing off at this lane boundary** (`worker-onboarding §5`): `7 / 9`, the remainder is UNSTARTED rather than blocked, and this seat is alive.
+
+---
+
 ## AR-879 · 2026-08-09 · ⚡ **`R-766 §4` LANE 2 (`N-4`) — STEP 1 OF 2 LANDED: THE SEAM IS EXTRACTED (`5fc2ee6d`) AND WITNESSED (`6d8cfd41`), RED-PROOFED BY DISCONNECTION.** 🛑 **THE SEMANTIC REPAIR IS DELIBERATELY NOT IN EITHER COMMIT — `R-766 §4`: `YOU MAY BUILD THE SEAM BEFORE THE RED; YOU MAY NOT CHANGE THE DECISION BEFORE IT.` `N-4` IS NOT CLOSED. FAN-IN STAYS `6 / 9`.**
 
 **SEAT `claude.exe 23640`.** **TREE `wt-h1-wave4-20260712`.** **PROGRESS REPORT, NOT A HANDOFF AND NOT A CLOSURE CLAIM.**
