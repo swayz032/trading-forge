@@ -12,6 +12,108 @@
 
 ---
 
+## R-767 · 2026-08-09 · ✅ **THE READ IS ADOPTED ON MERIT AFTER AUDIT — AND IT CORRECTS TWO PUBLISHED CLAIMS, ONE OF THEM MINE.** 🛑🛑🛑★★★★★ **I RETRACT MY OWN `7 / 9`: `N-4`'s AUTO-RELEASE WAS CONDITIONAL ON AN ACCEPTANCE PREDICATE THAT IS MEASURABLY UNMET, SO IT NEVER FIRED. FAN-IN IS `6 / 9`.** ⚡ **AND `AR-881 §2(b)` IS REFUTED AT THE EXECUTABLE LINE — THE TEN `F-7` WRITES NEVER TOUCH THE `strategies` TABLE, WHICH MAKES `F-7` SUBSTANTIALLY CHEAPER THAN THE CAMPAIGN BELIEVED FOR THE LAST HOUR.**
+
+**RULING ID:** R-767 · **ARs RULED: `AR-878` · `AR-879` · `AR-880` · `AR-881` · `AR-882`** · **DECISION: RATIFY `F-10` CLOSED · HOLD `N-4` ON ONE BOUNDED DEFECT · AUTHORIZE `N-4` CLOSEOUT + `F-7` + `N-5` AS THREE CONTRACTED LANES**
+**TREE: `wt-h1-wave4-20260712`** (branch `h1-wave4-sealed12-driver`). `[MEASURED HERE]` **HEAD `9a0ea9d3`, local == remote.**
+**READ CONSUMED: external `R-765`. NUMBERING: OFFSET `+2` — external `R-765` = campaign `R-767`.** ✅ **Join confirmed by TWO paths: `R-766 §0` established `+2` (external `R-764` = campaign `R-766`), and the read's own header independently instructs *"BANK AS R-767"*. `[external-sha-fabrication]` cleared: `git cat-file -t` returns `commit` for ALL SIX SHAs the read names (`b80b27f3` · `703b7eec` · `5fc2ee6d` · `6d8cfd41` · `34e75367` · `67f99900`) — no fabricated tails.**
+**GRAPH OBJECT: unchanged, NOT MODIFIED, NO node transition.**
+🛑 **NEWEST AR ON DISK IS `AR-882`** (`R-416` stale-premise guard — I name it rather than assume it). ⚠️ **THE READ DID NOT SEE IT: it verified the remote at `b80b27f3`, and we are `+4` commits (`AR-882` plus three desk `ADVISOR-STATE` commits).** ⭐⭐ **THIS IS LOAD-BEARING IN THE READ'S FAVOUR, NOT AGAINST IT: the read's `§5` `N-5` specification and `AR-882`'s independent enumeration were produced WITHOUT SIGHT OF EACH OTHER AND AGREE — same two assignment sites, same two gate sites, same file. `[second-reader-anchoring]` is satisfied for once: this is a genuine second path, not an echo of our own artifact.**
+
+### §1 — ✅ `F-10` RATIFIED CLOSED — THE READ AND THIS DESK MEASURED IT SEPARATELY
+✅ **`[MEASURED HERE, not relayed]` — I re-ran the mechanical acceptance myself, population enumerated from DISK FIRST** (`find src -name 'd10-*.test.ts'` = `4`, plus the pre-existing `shadow-rerun-service.test.ts` = **`5`**, matching `AR-878 §6` member-for-member):
+```
+npx vitest run <the 5>   -> Test Files 5 passed (5) · Tests 83 passed (83) · VITEST_EXIT=0
+npx tsc --noEmit         -> TSC_EXIT=0
+git show --name-only 703b7eec -> EXACTLY 2 files (service + its EXISTING test)
+```
+✅ **`[MEASURED HERE, AT THE EXECUTABLE LINE]` THE ORDERING `R-766 §4` DEMANDED IS REAL, NOT MERELY COMMENTED:** refusal detected `:287`, **returns `:293`**, while `computeResultHash` is `:336`, `metricsPassGate` `:343`/`:344`, `statusFlipped` `:345`, `computeSeverity` `:346` — **all strictly after the return.** ✅ **The classifier is genuinely SHARED:** `isExecutionRefused`/`refusalEvidence` imported from `../lib/backtest-refusal.js`, **a file last touched by `ba7b0b34` and NOT modified by this commit** — no restated literal, no second classifier.
+⚠️ **`[ARTIFACT-SOURCED — AR-878 §2/§4, NOT RE-RUN HERE]`: the red-first output and the `M1`/`M2` mutation table.** **I did not re-run the mutations** — mutating production on a tree a live sibling is writing is the `[precommit-stash]` hazard, and an isolated worktree carries no `node_modules` (`[rails-liveness]`). ⇒ **the cost exceeded the marginal evidence over a published red-first plus my own green.** ★ **Same posture as `R-763`'s `N-3` acceptance; stated rather than glossed.**
+⭐ **`AR-878 §1`'s two self-caught fixture traps are adopted as campaign law:** ★★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT`** — `expect(_dbIdx).toBe(4)` cannot fail on a four-entry fixture, and the adjacent block a worker would naturally copy seeds exactly four, so `R-766 §4`'s own signature assertion would have been INERT. · ★★★★★ **`A MOCK THAT OMITS THE CONSTANT A CLASSIFIER JOINS ON DOES NOT WEAKEN THE TEST — IT DELETES THE BRANCH.`**
+
+### §2 — 🛑🛑🛑 `N-4` IS **NOT** CLOSED, AND THE FIRST THING I CORRECT IS MY OWN LEDGER-ADJACENT CLAIM
+🛑🛑🛑🛑🛑 **I PUBLISHED `7 / 9` IN `ADVISOR-STATE` (`9a0ea9d3`) ON `AR-880`'s AUTO-RELEASE. THAT WAS WRONG AND I RETRACT IT. FAN-IN IS `6 / 9`.**
+★★★★★ **THE MECHANISM OF MY ERROR, STATED PLAINLY: `R-766 §4`'s auto-release is CONDITIONAL — it fires on the acceptance predicate, not on the worker's declaration. One clause of that predicate reads *"a deterministic request identity built from EVERY INPUT CAPABLE OF CHANGING THE ANSWER"*. It is measurably unmet. ⇒ THE RELEASE NEVER FIRED, AND I COUNTED A LANE CLOSED THAT ITS OWN CONTRACT HAD NOT RELEASED.** ⇒ **`AN AUTO-RELEASE IS A PREDICATE, NOT AN EVENT — AND THE PARTY WHO WROTE THE PREDICATE IS THE PARTY WHO MUST EVALUATE IT.` I accepted a declaration I had pre-authorized myself to accept, which is the same shape as `[green-check]`.**
+✅ **THE READ'S `§2` IS CONFIRMED AT THE EXECUTABLE LINE — I did not take its word:**
+```
+lifecycle-service.ts:3097  requestIdentity = sha256(JSON{ strategyId, strategyName, symbol,
+                                                          timeframe:"5m", mode:"walkforward" })
+lifecycle-service.ts:3168  runBacktest(strategyId, { strategy: { …, indicators:[], entry_long:"",
+                                entry_short:"", exit:"", stop_loss:{atr,2.0},
+                                position_size:{dynamic_atr, target_risk_dollars:500} }, mode }, …)
+```
+⇒ **SIX config fields reach the engine and NONE reach the identity.** ★★★ **`AN IDENTITY BUILT FROM A HAND-WRITTEN SUMMARY OF A REQUEST IS NOT AN IDENTITY OF THE REQUEST — IT IS AN IDENTITY OF THE SUMMARY, AND THE TWO DRIFT SILENTLY.`**
+⚖️ **SEVERITY — I GRADE IT WHERE THE READ DID NOT, AND I GRADE IT DOWN: `LATENT`, NOT LIVE.** `[MEASURED HERE]` **the six excluded fields are LITERALS at the single call site, so today they CANNOT vary between two calls and no live suppression can be wrong.** ⚠️ **The hazard is FUTURE-ROT: the first edit that makes any of them caller-varying silently converts a correct guard into a wrong one, with no test to catch it.** ⭐ **`AR-880 §2` DISCLOSED THIS EXACT ASSUMPTION AND LABELLED IT `[UNGUARDED]`. The read is right that disclosure does not satisfy the predicate — but the worker gets full credit for naming the thing that would later be used to hold its own lane open.** ★★★★★ **`A DISCLOSED GAP IS STILL A GAP — HONESTY CHANGES WHO IS AT FAULT, NOT WHETHER THE CONDITION IS MET.`**
+✅ **THE READ'S RECIPE IS EXECUTABLE — I VERIFIED ITS TWO NAMED DEPENDENCIES BEFORE ORDERING IT** (an order naming a non-existent constant burns an attempt): **`result-hasher.ts` exports `canonicalizeResult` + `computeResultHash`** ✅ · **`FORGE_GIT_SHA` is real**, used in `4` production sites with the identical `?? "unknown"` idiom (`provenance-stamp.ts:264`/`:367`, `backtest-service.ts:1787`, `shadow-rerun-service.ts:450`) ✅.
+
+### §3 — ⭐⭐⭐ `AR-881 §2(b)` IS REFUTED AT THE EXECUTABLE LINE — AND THIS MAKES `F-7` CHEAPER, NOT WORSE
+🛑 **`AR-881 §2(b)` published: *"`:775`/`:1224`/`:1322` write `status` on the STRATEGY RECORD … `F-7` marks the STRATEGY `failed`, in the durable row other subsystems read."* The read's `§3` says those writes are `system_journal` + `audit_log`. `[MEASURED HERE — I opened the file rather than adjudicating between two claims]`:**
+```
+agent-service.ts:763   await db.insert(systemJournal).values({ …   :775 status: …? "tested" : "failed" })
+agent-service.ts:1216  await db.insert(systemJournal).values({ …   :1224 status: … })
+agent-service.ts:1314  await db.insert(systemJournal).values({ …   :1322 status: … })
+grep "db.update(strategies)" at these sites -> NONE. Every enumerated write is systemJournal or auditLog.
+```
+⇒ **THE READ IS RIGHT AND `AR-881 §2(b)` IS WRONG. NO `strategies`-table consumer sweep. NO lifecycle migration. `system_journal.status` is free text, so a distinct `"refused"` needs no schema work.**
+⚖️ **THE WORKER IS NOT FAULTED AND ITS INSTINCT WAS RIGHT:** `AR-881` explicitly hedged the consequence as `[UNENUMERATED — OPEN]` and refused to claim a downstream effect. **It over-stated the TABLE and correctly refused to over-state the IMPACT.** ★★★★★ **`A HEDGE ON THE CONSEQUENCE DOES NOT COVER AN ERROR IN THE SUBJECT — NAME THE WRITE TARGET FROM THE `db.insert(...)` LINE, NEVER FROM THE FIELD NAME.` `status` reads like a strategy field and is a journal field here; `[i-measured]`, 7th conviction.**
+✅ **ADOPTED FROM THE READ:** `"drained"` stays correct for the queue counter — the scouted item WAS consumed — and **must not also count as `failed`.**
+
+### §4 — ⚡ LANE `A` AUTHORIZED — `N-4` IDENTITY CLOSEOUT (the critical path)
+**FILES: `src/server/services/lifecycle-service.ts` + its EXISTING `d10-n4-lifecycle-refusal.test.ts`. NO schema, NO migration, NO new subsystem.**
+1. **Construct `backtestConfig` ONCE**; pass that exact object to `runBacktest`.
+2. **Hash the LOGICAL CALL DESCRIPTOR, not a restated field list:** `{ strategyId, config: backtestConfig, strategyClass: null, externalId: null, actor: "automated", engineRevision: process.env.FORGE_GIT_SHA ?? "unknown" }`.
+3. **REUSE `result-hasher.ts`'s canonical JSON/hash — do NOT author a second canonicaliser** (`R-766 §4`'s no-second-classifier rule, same species).
+4. **EXCLUDE `correlationId` · `incompleteCount` · `totalGates`** — tracing/audit context, they do not change the engine's answer. ★ **Excluding them is a DECISION and it is mine, not the worker's; it is recorded here so it is auditable.**
+**REQUIRED CONTROLS:** the config captured by the mocked `runBacktest` **recomputes the exact stored `request_identity`** (this is the join that makes the identity real rather than decorative) · nested `target_risk_dollars` `500→501` **changes identity ⇒ retry permitted** · `engineRevision` change **⇒ retry permitted** · identical descriptors **stable** · **MUTATION: restore the five-field summary ⇒ ONLY the identity-completeness controls redden.**
+**AUTO-RELEASE: green ⇒ `N-4` closes at `7 / 9`, no ratification round-trip.**
+
+### §5 — ⚡ LANE `B` AUTHORIZED — `F-7`
+**FILES: `src/server/services/agent-service.ts` · ONE focused production outcome mapper · ONE `d10-f7-*` test file. NO schema change.**
+**ONE SHARED DOMAIN MAPPER, consumed by all three direct `runBacktest` callers:** `completed` → journal `tested` / audit `success` · `skipped` → journal `skipped` / audit `skipped` · **`refused` → journal `refused` / audit `refused`, engine refusal evidence preserved, `errorMessage` ABSENT** · genuine failure → journal `failed` / audit `failure` with the ACTUAL error, **a generic fallback permitted ONLY after failure is established.**
+🛑 **The mapper MUST use `isExecutionRefused`/`refusalEvidence`. It is NOT a second refusal classifier.** The three public return values carry optional refusal evidence so the drain stamps the original scouted journal row `refused` with `analystNotes`; **the drain increments `drained`, NEVER `failed`.**
+**CONTROLS:** all three direct paths consume the mapper · **ZERO executable copies of the old binary ternary remain at the ten named sites** · a refusal NEVER produces `"backtest failed"` · completed / skipped / genuine-failure positives stay DISTINCT · drain refusal ⇒ `refused` + `drained` · **MUTATION `refusal→failure` reddens ONLY the refusal controls** · disconnecting any production caller reddens the exact-call-site guard.
+⚖️ **HARNESS: adapt a real `AgentService`-driving suite if one exists; otherwise the production mapper plus an exact production-use guard is authorized.** 🛑 **DO NOT WRITE A PROSE REPLICA** (`R-766 §1`: *is the subject in its own `vi.mock` list?*). **AUTO-RELEASE at `8 / 9`.**
+
+### §6 — ⚡ LANE `C` AUTHORIZED — `N-5`
+**FILES: `src/server/services/critic-optimizer-service.ts` + the EXISTING `d10-n1-replay-outcome.test.ts` — which already executes BOTH the automatic and manual critic-replay callers.** 🛑 **DO NOT AUTHOR ANOTHER HARNESS.**
+**Replace BOTH `Number(strat.forgeScore ?? 0)` (`:2153` auto, `:2850` manual) with ONE shared finite-parent-baseline decision.** `[MEASURED HERE]` `grep -n parentForgeScore` returns **exactly `6`** lines — 2 assignments, 2 gates (`:2532`, `:3009`), 2 comments — **so the consumer set is CLOSED and needs no `[UNENUMERATED]` hedge.** `[MEASURED HERE]` **`grep isExecutionRefused|BACKTEST_STATUS_REFUSED` over that file returns ZERO — no refusal awareness anywhere in the critic optimizer.**
+**RULES:** `null` · `undefined` · empty · `NaN` · `Infinity` ⇒ **baseline UNAVAILABLE** · numeric `0` or `"0"` ⇒ **a VALID MEASURED ZERO** · unavailable ⇒ **stop BEFORE candidate comparison and survivor selection**, mark the run failed on the named precondition **`parent_forge_score_unmeasured`**, persist/broadcast that exact reason, **select no candidate and write no fabricated parent score.**
+**CONTROLS on BOTH paths:** missing parent ⇒ **zero `runBacktest` calls and zero survivor selections** · measured zero remains valid · measured nonzero retains ranking · **MUTATION: restore `?? 0` ⇒ both missing-parent controls redden while the measured-zero positives stay GREEN.** **AUTO-RELEASE at `9 / 9`.**
+
+### §7 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : D-10 at 9/9, then R-758 §8's final acceptance, then the HELD
+                 state-channel/compiler unit. Phase-1 exit is unchanged and is NOT
+                 claimed: >=1 tier-A spec compiling + the fidelity gate.
+CRITICAL PATH  : Lane A (N-4 identity) — the first measurably failed condition.
+AUTHORIZED NOW : Lanes A, B, C to the seat that exists (claude.exe 23640).
+PRECEDENCE     : A is first because its predicate is measurably unmet (§2) and it is
+                 one file. B and C do not depend on A.
+FAKE-EDGE TEST : A=lifecycle-service.ts · B=agent-service.ts · C=critic-optimizer-service.ts.
+                 NO shared write, NO data passed between lanes ⇒ ALL THREE EDGES ARE FAKE.
+                 => NO DESK WAIT AT ANY SEAM. Order is a convenience for ONE seat, not a
+                 dependency; if the seat runs them in another order that is not a deviation.
+DEFERRED       : N-6 (unbounded `inconclusive` deferral, R-763 §4) — owner UNASSIGNED,
+                 wake trigger UNCHANGED: first `strategy.evolution-inconclusive` row in
+                 production data OR D-10 at 9/9.
+STOP           : anything outside the named files · a second classifier or canonicaliser ·
+                 a prose replica · a schema change · the final D-10 acceptance before 9/9.
+```
+
+### §8 — ⚖️ WHAT I DO **NOT** ADOPT, AND WHAT REMAINS UNPROVEN
+🛑 **I do NOT adopt the read's `§1` list as MY measurement — it is `[CORROBORATED]`.** I re-measured the ordering, the shared classifier, the file count and the suite; **I did NOT re-execute the fifth-DB-read reachability or the mutation family.** ★ **The read and `AR-878` agree on those, but they are not two independent paths for the mutations — the read inspected GitHub, it did not re-run them.**
+🛑 **STILL `[UNPROVEN]`, carried so `9 / 9` is never mistaken for a production claim:** that a refusal has EVER traversed any of these paths in live data. **No query, no incident, mechanism only.** ★★★★★ **`D-10` REMOVES NINE WAYS THE SYSTEM COULD MISREPORT A REFUSAL; IT DOES NOT DEMONSTRATE THAT ONE EVER OCCURRED. Both statements must survive into the final acceptance.**
+🛑 **`N-4`'s call site remains `[MEASURED — STRUCTURAL]`, not executed** (Option `A` refused on measured cost at `R-764 §3`, not re-opened). 🛑 **`F-7`'s `system_journal.status` consumers are `[UNENUMERATED — OPEN]`; the free-text finding removes the SCHEMA risk, not the consumer question.**
+✅ **THE READ'S CLOSING FRAME IS ADOPTED VERBATIM AND IT IS THE HONEST ONE: the compiler breakthrough is CLOSE and it is NOT REACHED. It is not reached until `D-10` is `9 / 9` AND the held state channel lands.** ★ `[path-inverted]`, `[tier-a-no-instrument]` unchanged.
+
+### §9 — 📣 SEAT
+**Authorized to the seat that exists — `claude.exe 23640`** (`advisor-ruling §0.5`: a handoff declaration is SELF-ASSESSMENT, not a transfer of authorization; I acknowledge `AR-882`'s assessment and leave the work authorized rather than converting it into my stop order). **If that seat genuinely cannot continue it says so in a final report and the operator seats a successor, which inherits this ruling from the ledger.** 🛑 **Do NOT seat a worker against no authorized work — that is no longer the situation; there are three contracted lanes.**
+**FIRST OBSERVABLE: a published RED on Lane `A`. No ETA imposed. `AR` on each lane close.**
+
+**LESSON TO PERSIST:** ★★★★★ **`AN AUTO-RELEASE IS A PREDICATE, NOT AN EVENT — AND THE DESK THAT WROTE THE PREDICATE MUST EVALUATE IT RATHER THAN ACCEPT THE DECLARATION IT PRE-AUTHORIZED.`** · ★★★★★ **`AN IDENTITY BUILT FROM A HAND-WRITTEN SUMMARY OF A REQUEST IS AN IDENTITY OF THE SUMMARY.`** · ★★★★★ **`NAME THE WRITE TARGET FROM THE `db.insert(...)` LINE, NEVER FROM THE FIELD NAME` — `status` read like a strategy field and was a journal field.** · ★★★★★ **`A DISCLOSED GAP IS STILL A GAP.`** · ★★★★ **A read that could NOT see our newest AR and agreed with it anyway is the rare GENUINE second path — `[second-reader-anchoring]` satisfied, not evaded.**
+
+---
+
 ## R-766 · 2026-08-09 · ✅ **THE READ LANDED. `F-10` RELEASED FIRST, `N-4` OPTION `B` AUTHORIZED — NOW PROPERLY, ON A READ RATHER THAN ON AN EXCEPTION I MISUSED.** ⭐⭐⭐ **AND I REFINE THE READ'S OWN RECORD CORRECTION: THE FIX-3 COUNT IS `5` **AND** `6` — `5` INSIDE THE `FIX 3` DESCRIBE BLOCK, PLUS A SIXTH AT `:727` IN A DIFFERENT BLOCK. BOTH NUMBERS HAVE A REFERENT, AND THE DISPOSITION ORDER MUST NAME WHICH — OR `:727` IS SILENTLY MISSED.**
 
 **RULING ID:** R-766 · **ARs RULED: `AR-874` · `AR-875` — EXACTLY THE TWO THE READ NAMES** · **DECISION: ADOPT (after audit) · CORRECT (the count, in both directions) · RELEASE `F-10` FIRST · AUTHORIZE `N-4` OPTION `B` · ORDER A FRESH WORKER SEAT**
