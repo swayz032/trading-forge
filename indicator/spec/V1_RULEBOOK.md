@@ -175,7 +175,9 @@ The exact zone penetration fraction must be learned from real data and pass stab
 
 ## 7. Deterministic candidate tie-breakers
 
-When two proof-level or target candidates have equal calibrated score, use this fixed tie order:
+Each candidate receives a frozen, versioned `selection_score` from the calibration layer. Highest score wins.
+
+Only when two proof-level or target candidates have equal calibrated score, use this fixed tie order:
 
 1. higher originating timeframe (4h > 15m > 5m);
 2. stronger objective reaction evidence;
