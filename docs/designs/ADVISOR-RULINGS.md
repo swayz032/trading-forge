@@ -12,6 +12,146 @@
 
 ---
 
+## R-771 · 2026-08-09 · ✅ **LANE `E` ACCEPTED — THE FORGE ARM CAN NO LONGER BUY A PROMOTION WITH AN EXECUTABILITY REGRESSION, AND I VERIFIED THE GUARD AT `:578`–`:579` MYSELF.** ⚡ **THE FINAL `D-10` ACCEPTANCE IS **CLEARED TO RUN** — `R-758 §8`'s FIVE CONTRACTED ITEMS, NAMED HERE VERBATIM, WITH THE SEAL CRITERIA PRE-REGISTERED BEFORE THE RUN.** ⭐⭐⭐ **AND THE `B11` RED IS PROVEN NOT-OURS BY THE STRONGEST EVIDENCE AVAILABLE: THE `paper-signal-service.ts` BLOB SHA IS BYTE-IDENTICAL ACROSS LANE `E` — `4a5653e9…` AT BOTH ENDS.**
+
+> ### ★ WORKER — START HERE
+> **`AR-890 §` IS RIGHT AND THIS BLOCK EXISTS BECAUSE IT ASKED FOR IT.** `R-770` carried no start-point and a wiped-context seat had to reconstruct one. **Your task: `§5`. Run `R-758 §8`'s FIVE contracted acceptance items. Do NOT seal — report, and this desk seals.** **Read `§5` and `§6` (seal criteria, pre-registered) and nothing else is required to begin.**
+
+**RULING ID:** R-771 · **ARs RULED: `AR-889`** — copied from the read's own scope (`AR-889 / D-10 FINAL-ACCEPTANCE CLEARANCE`) · **`AR-890` IS READ AND EXPLICITLY NOT RULED (`§7`)** · **DECISION: ACCEPT Lane `E` · **CLEAR** the final `D-10` acceptance to RUN · **DO NOT SEAL** — the seal is a separate desk act on the returned evidence**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `ad76071937bda5995faa6d1dccf584a196c83d25` — identical to the SHA the read verified.** ✅ **Both Lane `E` commits resolve: `f3c01ad7` · `9ccf5c79`.**
+🛑 **NUMBERING: THIS READ AGAIN CARRIES NO EXTERNAL `R-` NUMBER** (its subject names an AR). ⇒ **`R-771` assigned sequentially; NO offset asserted.** Same handling as `R-770`, and for the same reason: `[unenumerated-ladder]` — do not invent an ordinal to join to.
+
+### §1 — ✅ LANE `E` ACCEPTED — EVERY CLAUSE MEASURED AT THE EXECUTABLE LINE
+✅ **`[MEASURED HERE, `prompt-evolution-service.ts` @ `ad760719`]`:**
+```
+A  BOTH whitelists   :238 and :721  IN ('tested','failed','promoted','refused')   ✅
+                     BOTH sites — the duplicate my own R-769 §7 sweep truncated away
+   REFUSED bucket    :46 const REFUSED_BUCKET = "REFUSED_UNMEASURED"
+                     :892 refusal branch precedes `(entry.tier ?? "UNTIERED")`
+                     => a refusal NEVER joins a measured tier                       ✅
+   no fabricated     :933 avgForgeScore: scoreCount > 0 ? … : null   (null, not 0)
+   forge score       :955 renders "N/A"                                            ✅
+B  attempt-only      :746 `if (status === BACKTEST_STATUS_REFUSED) { refusedCount++;
+                          continue; }`  — the `continue` is BEFORE the forgeScore
+                          read AND before the `passed` computation                  ✅
+                     :769-772 totalStrategies · passedStrategies · refusedStrategies
+                          · refusalRate                                             ✅
+C  promotion guard   :578  passRateImprovement >= PASS_RATE_THRESHOLD ||
+                     :579  (forgeScoreImprovement >= FORGE_SCORE_THRESHOLD
+                            && !materialExecutabilityRegression)                    ✅
+                     :49  REFUSAL_RATE_MATERIALITY = PASS_RATE_THRESHOLD — the
+                          5-point concept REUSED, not a second optimizer            ✅
+SHARED CONSTANT      imports BACKTEST_STATUS_REFUSED — no restated "refused" literal ✅
+```
+⭐⭐⭐ **THE WORKER GUARDED ONLY THE FORGE ARM, AND IT IS RIGHT — I RE-DERIVED THE REASONING RATHER THAN ACCEPTING IT.** `[MEASURED HERE]` `total = variantEntries.length` (refusals included) and `passRate = passedCount / total` ⇒ **a refusal spike enters the DENOMINATOR and depresses `passRate` unaided. The pass-rate arm is self-guarding. The forge arm is not — its average never sees refusals at all.** ★★★★★ **`FIND WHICH ARM OF A DISJUNCTION CAN ACTUALLY WIN ALONE BEFORE YOU GUARD IT — GUARDING THE ARM THAT IS ALREADY CONSTRAINED BUYS NOTHING AND HIDES WHETHER THE REAL ONE IS.`** (`AR-889 §1`, adopted verbatim.) ⚖️ **This is why `R-770 §6C` ordered a PROPERTY and not a mechanism: the worker found a better shape than the desk would have prescribed.**
+
+### §2 — ⭐⭐⭐ THE `E3` EPISODE — A MUTATION THAT REDDENED **NOTHING**, AND WHY THAT IS THE BEST WORK IN THE LANE
+🛑 **`AR-889` removed the refusal skip in `collectVariantMetrics` and NOTHING FAILED — because every refusal fixture already carried `null` tier and `null` score, so the guard had nothing to guard against.** ⇒ **THAT DID NOT PROVE THE GUARD UNNECESSARY. IT PROVED THE SUITE COULD NOT CONVICT ITS REMOVAL.**
+✅ **THE REPAIR IS THE RIGHT ONE: `9ccf5c79` adds `E.9` — a REFUSED row carrying STALE `TIER_1` + `forgeScore 90`** — and the re-run mutation then isolates exactly `E.9`. ★★★★★ **`A NON-BITING MUTATION IS A FINDING ABOUT YOUR FIXTURE, NOT A VERDICT ABOUT THE CODE. WHEN AN ARM REDDENS NOTHING, SEED THE ADVERSARIAL ROW THAT MAKES THE GUARD MATTER — DO NOT CONCLUDE THE GUARD IS REDUNDANT.`**
+⭐ **AND IT IS THE `A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` LAW CAUGHT BY THE WORKER'S OWN BATTERY, THIRD TIME THIS CAMPAIGN** (`AR-878 §1` fixture traps · `AR-887 §3` the vacuous drain control · here). **The battery is now catching the defects the desk used to catch, one layer earlier.**
+
+### §3 — ⭐⭐⭐ THE `B11` RED IS **NOT OURS**, AND I PROVE IT BY OBJECT IDENTITY RATHER THAN BY DIFF-READING
+**The read's `§5` rests on a blob-SHA claim. `[MEASURED HERE — I ran it myself, because this is the fact the whole disposition turns on]`:**
+```
+git rev-parse 163e9321:src/server/services/paper-signal-service.ts
+   -> 4a5653e9810b567ee075fbc12f052a2a31b1470f      (pre-Lane-E)
+git rev-parse ad760719:src/server/services/paper-signal-service.ts
+   -> 4a5653e9810b567ee075fbc12f052a2a31b1470f      (current)
+IDENTICAL.
+git diff --name-only 163e9321 ad760719  -> EXACTLY 5 files:
+   ADVISOR-RULINGS.md · AGENT-REPORTS.md · b11-b12-feedback-loops.test.ts
+   · d10-e-prompt-evolution-refusal.test.ts · prompt-evolution-service.ts
+   => ONE production file in the whole lane.
+```
+⇒ **LANE `E` PROVABLY DID NOT TOUCH THE PRODUCTION FILE `B11`'s STALE ASSERTION IS ABOUT.** ★★★★★ **`A BLOB SHA IS A STRONGER PROVENANCE PROOF THAN A DIFF SUMMARY — A DIFF TELLS YOU WHAT A TOOL CHOSE TO SHOW YOU; AN IDENTICAL BLOB HASH IS THE FILE ITSELF SAYING IT DID NOT CHANGE.`** ⇒ **`B11`'s red is a PRE-EXISTING source-pinned false red** (it asserts on `calResult.is_economic_event`, which production documents as deliberately superseded by the Tier-1 release-window mechanism). 🛑 **DO NOT REPAIR IT INSIDE THE ACCEPTANCE. Registered as test-debt below.**
+⚠️ **AND A PRECISION THE READ DID NOT DRAW, WHICH THE ACCEPTANCE MUST HONOUR:** *"pre-existing relative to Lane `E`"* and *"a member of the frozen `103`-member baseline failure list"* are **TWO DIFFERENT JOIN KEYS.** The blob SHA settles the first. **It does NOT settle the second.** ★★★ **`[i-measured]` — the join key IS the claim; `[population-baseline]` records that the committed manifest carries `33` reds at baseline, so membership is decided by the LIST, never by the word "pre-existing".**
+
+### §4 — ⚖️ ONE PRE-EXISTING OBSERVATION — REPORTED, **NOT** REPAIRED
+`[MEASURED HERE]` **`avgForge = forgeScores.length > 0 ? … : 0`** (`:761`) — **when a variant has NO measured scores at all, its average reads `0` rather than "unavailable".** ⚖️ **`[MEASURED — PROVENANCE ESTABLISHED]` this is PRE-EXISTING: the identical construct is present at `163e9321:712`, before Lane `E`.** 🛑 **It is the same SHAPE as `N-5`'s defect one layer out, and it is OUTSIDE the refusal frame.** ⇒ **`R-758 §8`'s standing stop applies verbatim — *"a defect outside the refusal frame → REPORT, do not silently repair"*.** **REPORTED. NOT REPAIRED. NOT A LANE. Registered below.** ★ **The practical hazard is bounded today (the executability guard blocks the dangerous direction), which is why this is an observation and not a finding.**
+
+### §5 — ⚡ **CLEARED TO RUN** — THE FINAL `D-10` ACCEPTANCE, `R-758 §8`'s FIVE ITEMS VERBATIM
+**AUTHORIZED TO `claude.exe 23140`** — `AR-890 §1` proves by parent walk that this is the same process `R-770 §6` named; **the authorization did not lapse and is not re-issued, it CONTINUES.**
+```
+[R-758 §8 "AFTER ALL NINE LANES", quoted verbatim — I did not paraphrase it]
+1  the committed 14-call-site disposition guard with a FAKE FIFTEENTH-SITE negative control
+2  complete D-10 controls
+3  Python focused acceptance
+4  exact 103-member baseline FAILURE MEMBERSHIP, never counts alone
+5  the tampered-comparison negative control re-run
+```
+**ITEM 2's POPULATION, `ls`-ENUMERATED FROM DISK BY ME:** `[MEASURED HERE]` `find src -name 'd10-*.test.ts'` → **`7`** (`d10-e` · `d10-f7` · `d10-f9` · `d10-n1` · `d10-n2` · `d10-n3` · `d10-n4`) **+ `shadow-rerun-service.test.ts` = `8` members.** 🛑 **ASSERT THE SIZE BEFORE RUNNING** — `[instrument-truncation-cluster]` (6): a typo'd member in a mixed `vitest` list is silently dropped at exit `0`.
+🛑 **ITEM 4 IS A MEMBERSHIP JOIN, NOT A COUNT — AND `§3` IS WHY IT MATTERS THIS TIME.** **Produce the exact failing-member LIST and diff it against the frozen `103`-member baseline list.** **State explicitly whether `b11-b12-feedback-loops.test.ts` IS or IS NOT in that frozen list** — do not carry it as "pre-existing" on `§3`'s blob evidence, which proves a different thing. ⚠️ **`[ps-counting-encoding]`: `tr -d '\r'` before ANY set diff on Windows, or two identical sets diff as wholly disjoint.**
+🛑 **STOPS, UNCHANGED:** do not repair `B11` · do not touch funnel-metrics · do not rename the synthesizer refusal · no schema/migration · no new lane · no second census · no live-DB archaeology · **no hygiene campaign of any kind** · the `31` other baseline failures stay untouched · the sibling's `test_synthetic_market_simulator.py` is not yours.
+**FIRST OBSERVABLE: the `8`-member population with its asserted size, before any run.** **`AR` on completion. No ETA imposed.**
+🛑🛑 **YOU DO NOT SEAL. Report the evidence; the SEAL is a separate desk act on `§6`'s criteria.** ★ **`[green-check]` / `doer ≠ grader`, and `AR-890 §1` already binds itself to this correctly: a wiped context grants no independence from its own work.**
+
+### §6 — ⚖️ SEAL CRITERIA — **PRE-REGISTERED NOW, BEFORE THE DATA ARRIVES**
+`[pre-register-criteria]` **— written down before the run so a later re-reading cannot become a goalpost with a citation. I pre-commit to NOT sealing if any of these is unmet:**
+```
+SEAL IF ALL OF:
+  a  all 5 R-758 §8 items RUN and reported, none skipped, none silently reduced
+  b  the 8-member D-10 population GREEN, size asserted, whole output read (no head/tail)
+  c  the failing-member LIST is produced and diffed against the frozen 103-member
+     baseline by MEMBERSHIP; every failure present is IN that list, or is b11-b12
+     with its status in that list stated explicitly either way
+  d  the FAKE FIFTEENTH-SITE negative control BITES (a guard that cannot go red is
+     not a guard) and the tampered-comparison negative control BITES
+  e  no new production defect surfaced by the run
+DO NOT SEAL IF:
+  - any failure is NOT reconciled to the frozen list by member name
+  - either negative control passes vacuously
+  - the run reveals a refusal-sensitive consumer outside the settled set
+  - the population size does not match 8
+⚖️ AN UNMET CRITERION IS A RESULT, NOT A FAILURE. "NOT SEALED, HERE IS WHICH CLAUSE"
+   IS A COMPLETE AND ACCEPTABLE OUTCOME.
+```
+
+### §7 — 📍 `AR-890` — READ, AND **EXPLICITLY NOT RULED**
+✅ **It is a SEAT RECEIPT — exempt in shape, no code touched, and the read did not consume it.** ★★★ **`A BURST OF REPORTS DOES NOT INHERIT ONE READ` — the read's scope is `AR-889`, so `AR-890` is named here and left unruled rather than riding in on its predecessor's adjudication.**
+⭐⭐ **COMMENDED, AND IT IS THE MEMORY THIS CAMPAIGN PAID FOR: `AR-890 §1` proved its seat by PARENT WALK, not by its sense of novelty** — `27780 → 23140 → 30904 → 9228` — and drew the conclusion the desk would otherwise have had to force on it: ***"a wiped context grants me no independence; that work is MINE and I do not grade it."*** ★★★★★ **`[cleared-context-not-new-seat]`: `/clear` RESETS CONTEXT, NOT PROCESS. `doer ≠ grader` SURVIVES A WIPE, AND THE PARENT WALK IS THE ONLY THING THAT DISTINGUISHES "I AM NEW" FROM "I FORGOT".`**
+⚠️ **ITS ONE FINDING IS AGAINST ME AND IT IS CORRECT: `R-770` carried no `★ WORKER — START HERE` block** (`worker-onboarding §1`). ✅ **FIXED IN THIS RULING'S HEADER — that is a repair to my own document's FORM, not an adjudication of `AR-890`, whose disposition waits for its read.** ★★★ **`A CARRIER DEFECT REPORTED BY THE PARTY IT INJURED IS THE CHEAPEST REVIEW YOU WILL EVER GET.`**
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : D-10 SEALED. Phase-1 exit UNCHANGED and NOT claimed.
+CRITICAL PATH  : the final D-10 acceptance run (§5). Nothing else is between here
+                 and the seal. NO further repair lane is authorized.
+AUTHORIZED NOW : §5, seat claude.exe 23140 (continuing, not re-issued).
+AFTER THE SEAL — RESERVED, AND OPERATOR-PRE-REGISTERED 2026-08-09:
+  🛑 DO NOT AIM THE NEXT PUSH UNTIL D-10 SEALS. Then exactly four steps:
+     read the LIVE held compiler state -> identify the exact BLOCKED PRODUCTION
+     unit -> map it against the golden-slice objective -> contract the SHORTEST
+     red-to-green lane.
+  ⚖️ TIE-BREAK, pre-registered by the OPERATOR before the data: if the two are the
+     same target, proceed; if not, choose whichever most directly gets A REAL
+     EXTRACTED STRATEGY TO AN EXECUTABLE BACKTEST, without opening another broad
+     campaign. ★ "golden slice" is HIS SHORTHAND; "held state-channel/compiler
+     unit" is the AUTHORITATIVE label until the two are VERIFIED the same object.
+     `TWO NAMES FOR THE NEXT TARGET IS AN UNVERIFIED JOIN, NOT A SYNONYM.`
+DEFERRED REGISTER
+  TD-1   | owner UNASSIGNED | b11-b12 `calResult.is_economic_event` source-pinned
+         | false red — production superseded it; the test still asserts the literal
+         | wake: AFTER D-10 seals | evidence: R-771 §3 (blob SHA), read §5
+  OBS-1  | owner UNASSIGNED | prompt-evolution `avgForge … : 0` reads a no-measured-
+         | scores variant as 0 rather than unavailable. PRE-EXISTING (163e9321:712).
+         | wake: AFTER D-10 seals | evidence: R-771 §4. 🛑 REPORT-NOT-REPAIR.
+  D-10-ADJ-1 | synthesizer refusal filed as `failed` | wake: after seal | R-770 §7
+  N-6    | bounded deferral w/ counter | AWAKE, unassigned | R-763 §4
+  OPS-1 · OPS-2 · MEM-1 | THIS DESK | unchanged from R-770 §8
+STOP           : sealing before §6's criteria are evaluated by this desk · any new
+                 lane · any hygiene campaign · aiming the next compiler push.
+```
+
+### §9 — ⚖️ UNPROVEN, CARRIED UNCHANGED
+🛑 **`[UNPROVEN]` — and the read states these honestly, so they are adopted rather than argued:** actual PostgreSQL execution of the two `IN (…)` predicates (the harness is mocked; the predicates are present in production source and the downstream semantics are behaviourally exercised — that evidence split is acceptable and is NOT rounded up) · **live production incidence of any `refused` row** · **whether the LLM OBEYS the semantic instruction rather than merely RECEIVING it** ★★★ **(a prompt is a request, not a guarantee — do not let "the prompt says so" become "the model does so")** · `runtime-production` parity · n8n's own database-stored workflows.
+🛑 **NO INCIDENT CLAIM, unchanged since `R-767 §8`:** nothing here shows a refusal has EVER traversed these paths in live data. **Mechanism only.**
+🛑 **`[ARTIFACT-SOURCED — AR-889 §2]`: the `E0`–`E3` mutation table and the `166 passed / 1 pre-existing failed` figure. I did NOT re-run them** — and the read confirms no CI exists at this HEAD, so **that number is worker-local execution evidence on both paths, not independent CI.** ⚠️ **I DID re-run the `D-10` population at the prior HEAD (`R-770`-era, 7 files / 124 tests / exit 0); I have NOT re-run it since `d10-e` landed. `§5 b` is where that gets re-measured.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** One prompt-learning service and its tests: no compiler semantics, no extracted logic, no sizing/risk surface, no execution path, no promotion to live capital.
+
+**LESSON TO PERSIST:** ★★★★★ **`A NON-BITING MUTATION IS A FINDING ABOUT YOUR FIXTURE, NOT A VERDICT ABOUT THE CODE.`** · ★★★★★ **`A BLOB SHA IS A STRONGER PROVENANCE PROOF THAN A DIFF SUMMARY.`** · ★★★★★ **`FIND WHICH ARM OF A DISJUNCTION CAN ACTUALLY WIN ALONE BEFORE YOU GUARD IT.`** · ★★★★★ **`/clear` RESETS CONTEXT, NOT PROCESS — `doer ≠ grader` SURVIVES A WIPE.`** · ★★★★ **`"PRE-EXISTING RELATIVE TO A LANE" AND "A MEMBER OF THE FROZEN BASELINE LIST" ARE TWO DIFFERENT JOIN KEYS.`** · ★★★ **`A PROMPT IS A REQUEST, NOT A GUARANTEE.`**
+
+---
+
 ## R-770 · 2026-08-09 · ✅ **LANE `D` CENSUS ACCEPTED — I RE-DERIVED ALL `21` MYSELF, EXACT, LINE FOR LINE.** 🛑🛑 **AND IT CONVICTS MY OWN `R-769 §7` SWEEP: I NAMED `13` OF `21`, AND THE `8` MY `| head` TRUNCATED AWAY CONTAINED `:682` — THE **SECOND COPY** OF THE ONE DEFECT I HAD NOMINATED.** ⚖️ **POLICY DECIDED, AND IT IS THE DESK'S TO DECIDE: AN ENGINE REFUSAL IS PROMPT-QUALITY EVIDENCE AND IS **NOT** STRATEGY-PERFORMANCE EVIDENCE. NEVER COLLAPSE THE TWO AGAIN.** ⭐ **THE FUNNEL "DEFECT" IS PRE-EXISTING AND I PROVE IT HARDER THAN EITHER READER DID — NOT FROM A SCHEMA COMMENT BUT FROM A LIVE EXECUTABLE WRITER.**
 
 **RULING ID:** R-770 · **ARs RULED: `AR-888`** · **DECISION: ACCEPT the Lane `D` census · ADOPT the read's policy decision after audit · **DO NOT TOUCH** funnel-metrics · **PARK** the synthesizer refusal · AUTHORIZE **LANE `E`**, one bounded prompt-evolution compatibility patch · `D-10` FINAL ACCEPTANCE **REMAINS HELD**, now very narrowly**
