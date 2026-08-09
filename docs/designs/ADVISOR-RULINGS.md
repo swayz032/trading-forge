@@ -12,6 +12,54 @@
 
 ---
 
+## R-728 · 2026-08-09 · 🛑🛑★★★★★ **THE PERMANENT RED STARTS ONE LAYER TOO LATE — IT ENTERS AT THE CENSUS, WHICH IS ALREADY CLASSIFIED, SO IT BEGINS *AFTER* THE HANDOFF `B1` EXISTS TO REPAIR.** 🛑🛑 **AND I RE-RAN THAT TEST MYSELF, CONFIRMED IT FAILED FOR THE STATED REASON, INSPECTED ITS SKIP, AND ENDORSED IT TO THE OPERATOR — `I VERIFIED THE ASSERTION AND NEVER ASKED WHERE IT STARTED.`** ⚖️ **`STEP 2` PARTIAL ACCEPT · `STEP 3` PRODUCTION CODE **HELD** · `STEP 1` accepted pending push.**
+
+**RULING ID:** R-728 · **AR RULED:** `AR-821` · **DECISION: ACCEPT-IN-PART (STEP 2) · HOLD (STEP 3) · ADOPT (corrections verbatim) · SELF-CORRECT (my own verification) · PUBLISH (push, on the operator's standing decision)**
+**NEWEST AR ON DISK:** **`AR-821`** — read in full, ruled here. **Ledger `HEAD` re-read before writing: `1dbac9ec`, moved only by the worker's own commits.**
+**READ CONSUMED AND BANKED:** `EXTERNAL-READ-2026-08-09-STEP2-STARTS-TOO-LATE.md`.
+✅ `[MEASURED HERE]` **NO PRODUCTION CODE HAS BEEN TOUCHED** — `git diff --name-only 8c25b5e0..HEAD` excluding `docs/` and tests returns **NONE**. **The `STEP 3` hold is not late.**
+
+### §1 — MY OWN DEFECT FIRST, BECAUSE IT IS THE INSTRUCTIVE ONE
+I did the thing `advisor-ruling §1` demands — **I re-ran the suite myself** rather than accepting the worker's report. `[MEASURED HERE]` `1 failed · 1 passed · 1 skipped`; the RED fires naming `structure_engine.compute_structure_state` and `fields produced: (none)`; I then went further and audited the **skip**, confirming its body raises so it cannot silently become a pass. **All of that was true, and I reported it to the operator as sound.**
+🛑 **I never asked WHERE THE TEST ENTERS.** It reads the condition out of **census blob `23f30eb0`** — an artifact that **already contains `WAIT_STRUCTURE`, the role assignment, the condition identity and the binding result.** ⇒ **The RED proves the binder misroutes an ALREADY-CLASSIFIED condition. It does not prove production CREATES the wrong classification — which is the entire handoff `B1` exists to repair.**
+★★★★★ **`VERIFYING THAT A TEST FAILS FOR THE RIGHT REASON IS NOT VERIFYING THAT IT STARTS IN THE RIGHT PLACE.` The failure message was so exactly right that it never occurred to me to ask what produced its input** — `i-measured-the-neighbouring-object`, committed **inside the verification step that exists to catch it.**
+⚠️ **AND I ENDORSED THE SECOND DEFECT TOO:** I read the worker's *"deliberately generous — if a repair exposes the fields by EITHER route the RED turns GREEN honestly"* **approvingly.** The read is right that it is a hole: **adding opening-range-shaped fields to `StructureState` would satisfy the field list cosmetically while leaving the semantic-identity defect untouched.** ⇒ **`GENEROSITY IN A CONFORMANCE TEST IS A PATH TO A FALSE GREEN, AND I CALLED IT HONEST.`**
+
+### §2 — ⚖️ `STEP 2`: PARTIAL ACCEPT. THE CORRECTION IS ADOPTED VERBATIM
+✅ **WHAT STANDS:** it is **not** a hand-built `ConditionBinding`; it drives the real `bind_condition()`; its passing test is a genuine positive control; field/output identity is the load-bearing proof; and it correctly refuses to assert numerical invariance (`R-726 §1`).
+🛑 **REQUIRED CORRECTION, ADOPTED — the RED must begin one level earlier:**
+```
+frozen extraction JSON  (tier-a-extraction-provenance/st5e-YJRfKc__s0.json, hash verified)
+   -> produce_spec_artifact()        [src/engine/extraction/spec_producer.py]
+   -> produced condition graph
+   -> compile_binding_plan()
+   -> selected primitive + output contract
+```
+**It must prove that PRODUCTION ITSELF turns preserved opening-range prose into `WAIT_STRUCTURE` and routes it to `compute_structure_state`.** 🛑 **THE CENSUS IS DEMOTED TO A COMPARISON ORACLE — it may verify the reproduced result agrees with history; it may NOT be the production input.**
+🛑 **THE GENEROSITY IS REMOVED. The RED must require BOTH:** (1) the correct typed opening-range contract exists **AND** (2) the selected primitive **is not** `structure_engine.compute_structure_state`. **Current production must fail on BOTH route identity and output contract.** ✅ **After repair, routing back to the structure primitive then fails automatically — which is why no separate skipped test is needed to protect that invariant.**
+
+### §3 — ✅ THE SKIP RULING, AND IT SHARPENS WHAT I TOLD THE OPERATOR
+I said the skip *"cannot silently become a pass, which is the failure mode that matters."* **True — and insufficient.** The read: *"A skipped test with a named dependency is honest documentation, but it is not an armed control. Do not count it as path-to-red evidence."*
+⇒ **ADOPTED, WITH THE PREFERRED REMEDY: fold the wrong-route assertion into the MAIN RED now**, so the invariant is enforced by a test that actually runs. If the placeholder is kept at all it is labelled **`PLACEHOLDER_NOT_YET_EVIDENCE`**. ★★★ **`AN HONEST SKIP IS BETTER THAN A DISHONEST PASS AND IS STILL NOT EVIDENCE. A PARKED CONTROL PROTECTS NOTHING WHILE IT IS PARKED.`**
+
+### §4 — ✅ SIX PASSING CONTROLS AND THE FAILURE MEMBERSHIP, ADOPTED VERBATIM
+Controls: extraction hash matches the frozen artifact · the intended strategy is selected · `produce_spec_artifact()` **actually runs** · the expected opening-range prose **reaches** the produced condition graph · the historical census **agrees** with the newly produced baseline · **an unrelated genuine structure condition still routes to the structure primitive.**
+★★★★★ **THAT LAST CONTROL IS THE ONE I WOULD NOT HAVE THOUGHT OF AND IT IS THE MOST IMPORTANT: it protects against "repairing" opening range by BREAKING LEGITIMATE STRUCTURE BEHAVIOUR — a fix that turns the target green by disabling a neighbour is the classic false repair, and nothing else in this contract would have caught it.**
+⚖️ **`EXACT TEST COUNT IS NOT IMPORTANT; EXACT FAILURE MEMBERSHIP IS`** — adopted, and it is this campaign's own `join by member, never by count` law arriving from outside.
+
+### §5 — ✅ PUBLICATION, ON THE OPERATOR'S STANDING DECISION
+The reader cannot confirm `STEP 1`'s documentation-only scope until it is pushed. **The operator has already decided this branch publishes to a PUBLIC GitHub repo, made with the blast radius measured and presented (`R-727` preamble).** ⇒ **Subsequent fast-forward pushes of the same class of material (campaign docs + tests, no credentials) are a CONTINUATION of that decision, not a new one — I push and report, rather than re-asking per increment.** 🛑 **The moment anything changes class — a credential, a new repo, a force-push, a history rewrite — it returns to him.** ★ `A STANDING DECISION COVERS THE CLASS IT WAS MADE OVER AND NOT ONE STEP WIDER.`
+
+### §6 — ★ WORKER — START HERE
+🛑🛑 **`STEP 3` PRODUCTION IMPLEMENTATION IS HELD.** Do not begin it until the corrected RED is committed **and pushed**.
+**AUTHORIZED NOW, and it is the whole list:** rebuild the permanent RED to enter at the **frozen extraction JSON** and run the real `produce_spec_artifact()` → `compile_binding_plan()` chain (`§2`) · **remove the generosity** — fail on route identity **and** output contract · **fold the wrong-route assertion into the live RED** and retire or relabel the skip (`§3`) · add the **six passing controls** (`§4`) · commit · **then I push.**
+**EXECUTE FROM THE BANKED READ**, `EXTERNAL-READ-2026-08-09-STEP2-STARTS-TOO-LATE.md` — **not from this ruling's summary of it.**
+**UNCHANGED:** `EXPLICITLY OUT` list · per-step attempt budget `2` · the LOCALITY RULE on every null · `INCOMPLETE_OPENING_WINDOW` remains a `B1` pass term · **the breakout trigger stays `UNRESOLVED_SOURCE_AMBIGUITY` and `B1` may not settle it.**
+⚠️ **AND THE HONEST NOTE ON YOUR OWN POSITION (`AR-820 §2`) IS RATIFIED, NOT OVERRIDDEN:** you flagged that you would state your position at the `STEP 1` boundary rather than open a production edit silently at the tail of a long session. **`STEP 3` is now held for an independent reason, which retires the question for tonight.** ★ **`advisor-ruling`: a worker's self-assessment is not a transfer of authorization — the task stays with the seat that exists.**
+**LESSON TO PERSIST:** `VERIFYING THAT A TEST FAILS FOR THE RIGHT REASON IS NOT VERIFYING THAT IT STARTS IN THE RIGHT PLACE.` · `GENEROSITY IN A CONFORMANCE TEST IS A PATH TO A FALSE GREEN.` · `A PARKED CONTROL PROTECTS NOTHING WHILE IT IS PARKED.` · ★★★★★ **`A FIX THAT TURNS THE TARGET GREEN BY BREAKING A NEIGHBOUR IS THE CLASSIC FALSE REPAIR — CONTROL FOR THE NEIGHBOUR, NOT ONLY THE TARGET.`**
+
+---
+
 ## R-727 · 2026-08-09 · ✅✅★★★★★ **`B1` IS AUTHORIZED. THE PRODUCTION-REPAIR HOLD IS LIFTED — THE FIRST TIME THIS CAMPAIGN HAS AUTHORIZED A REPAIR ON THE GOLDEN PATH.** ⭐⭐ **AND THE READ WAS MADE FROM THE PRIMARY ARTIFACT, NOT A RELAY: the reader inspected commit `d26f8615…` on GitHub directly and confirmed `53,393` B · `F-1…F-10` · `C1…C10` · `275/275`.** 🛑 **`REUSE_WITH_TYPED_ADAPTER` RATIFIED — WITH `AR-819`'s COMPLETENESS CLAUSE, BECAUSE A PARTIAL WINDOW DOES NOT REFUSE: IT SILENTLY RETURNS A NARROWER RANGE.**
 
 **RULING ID:** R-727 · **ARs RULED:** `AR-818` (receipt) · **`AR-819`** · **DECISION: ACCEPT (Phase A, B0 closeout) · RATIFY (`REUSE_WITH_TYPED_ADAPTER`) · AUTHORIZE (`B1`, autonomous class under independent grade) · ADOPT (F-1…F-10 binding, B1 STEPS 1–8 verbatim by reference)**
