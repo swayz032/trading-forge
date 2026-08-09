@@ -151,6 +151,17 @@ export const strategies = pgTable("strategies", {
 );
 
 // ─── Backtests ───────────────────────────────────────────────
+/**
+ * The persisted backtest status for a strategy that was REFUSED before execution.
+ *
+ * R-752 §5 (D-8) amendment 1: this MUST be referenced as a named constant, never
+ * written as a bare `"refused"` at a call site. `R-752 §3` proved this exact drift
+ * class already defeated the Python envelope guard — `_PYTHON_ENVELOPE_KNOWN_SUCCESS`
+ * keys on `status` while a refusal emits `execution_status`, so
+ * `A GUARD KEYED ON ONE FIELD NAME CANNOT CATCH A NEW FIELD NAME.`
+ */
+export const BACKTEST_STATUS_REFUSED = "refused" as const;
+
 export const backtests = pgTable(
   "backtests",
   {
@@ -164,7 +175,19 @@ export const backtests = pgTable(
     // ratio-adjusted continuous data must be TZ-aware.
     startDate: timestamp("start_date", { withTimezone: true }).notNull(),
     endDate: timestamp("end_date", { withTimezone: true }).notNull(),
-    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    // pending | running | completed | failed | refused
+    //
+    // R-752 §5 (D-8), 2026-08-09: `refused` added. It is NOT a failure and NOT a
+    // completion — the strategy was REFUSED before any backtest ran (Python emits
+    // `execution_status: "REFUSED"`), so there are no metrics to report, and reporting
+    // zeroed ones would present a refusal as a flat result.
+    //
+    // Free-text column, so no migration is required. Adding the value is SAFE because
+    // [MEASURED, AR-855] every production consumer of this column is an ALLOWLIST
+    // (`eq(backtests.status, "completed")`) — there are ZERO `ne` / `notInArray` / `!=`
+    // predicates on it anywhere under `src/`, so a new value cannot silently widen an
+    // existing query. Use `BACKTEST_STATUS_REFUSED`, never a bare literal.
+    status: text("status").notNull().default("pending"),
     totalReturn: numeric("total_return"),
     sharpeRatio: numeric("sharpe_ratio"),
     maxDrawdown: numeric("max_drawdown"),

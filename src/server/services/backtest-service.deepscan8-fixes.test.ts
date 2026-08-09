@@ -30,6 +30,7 @@ const {
   circuitBreakerCallMock,
   broadcastSSEMock,
   loggerMock,
+  backtestRunsLabelsMock,
 } = vi.hoisted(() => {
   // ── db.insert chain mock ────────────────────────────────────────────────────
   // Returns [{ id: "bt-test-id" }] for the initial backtests insert.
@@ -78,6 +79,15 @@ const {
   const insertAuditRowSafeSpy = vi.fn().mockResolvedValue(true);
   const insertAuditRowSpy = vi.fn().mockResolvedValue(undefined);
 
+  // R-752 §5 (D-8): the completed-run counter needs a STABLE handle so a test can
+  // assert it was NOT incremented. The previous inline `vi.fn(() => ({ inc: vi.fn() }))`
+  // minted a fresh `inc` on every call, so "inc was not called" was unobservable —
+  // it would have passed whether or not the counter fired. Assert on `labels`, which
+  // carries the {status} label the refusal must never claim.
+  const backtestRunsLabelsMock = vi.fn(
+    (_labels?: { status?: string; mode?: string; tier?: string }) => ({ inc: vi.fn() }),
+  );
+
   return {
     insertAuditRowSafeSpy,
     insertAuditRowSpy,
@@ -91,6 +101,7 @@ const {
     circuitBreakerCallMock,
     broadcastSSEMock,
     loggerMock,
+    backtestRunsLabelsMock,
   };
 });
 
@@ -106,6 +117,11 @@ vi.mock("../db/index.js", () => ({
 }));
 
 vi.mock("../db/schema.js", () => ({
+  // R-752 §5 (D-8): the persisted-status constant is a real export of the schema
+  // module, so this hand-written mock must carry it too. It is deliberately the
+  // SAME literal as production rather than a stand-in — a mock that invents its own
+  // value would let a production rename pass green here.
+  BACKTEST_STATUS_REFUSED: "refused",
   backtests: { name: "backtests" },
   backtestTrades: {},
   stressTestRuns: {},
@@ -147,7 +163,7 @@ vi.mock("../lib/tracing.js", () => ({
 }));
 vi.mock("./pipeline-control-service.js", () => ({ isActive: isPipelineActiveMock }));
 vi.mock("../lib/metrics-registry.js", () => ({
-  backtestRuns: { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  backtestRuns: { labels: backtestRunsLabelsMock },
   backtestScoredTotal: { labels: vi.fn(() => ({ inc: vi.fn() })) },
   rlTrainingEpochsTotal: { labels: vi.fn(() => ({ inc: vi.fn() })) },
 }));
@@ -612,5 +628,222 @@ describe("FIX 3 — IIFE .catch() prevents unhandled rejection (pattern)", () =>
 
     expect(errors).toHaveLength(1);
     expect((errors[0] as Error).message).toBe("VOIDED_CATCH_TEST");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// R-752 §5 (D-8) — THE PYTHON→TYPESCRIPT REFUSAL HANDOFF
+//
+// R-752 §3, verified three ways by the desk and re-measured independently by AR-855:
+// NO production TypeScript reads `execution_status`. The envelope gate at :809 tests
+// `result.error` (a refusal carries none) and top-level `result.status` (a refusal emits
+// `execution_status`, a DIFFERENT KEY) — so both disjuncts are false, control falls
+// through to the normal success path, and :979 writes `completed`.
+//
+//     Python:     execution_status = REFUSED
+//     TypeScript: backtest status  = completed
+//
+// Both cannot be true. `A REFUSAL THAT BECOMES "COMPLETED" AT THE NEXT SERVICE BOUNDARY
+// IS NOT TERMINAL — IT IS TERMINAL ONLY INSIDE ONE PROCESS.`
+//
+// FIXTURE PROVENANCE — this envelope is EXECUTION-DERIVED, not hand-typed. It was dumped
+// from the committed Python test's own `_golden_spec()` + `_run()` helpers by calling
+// `strategy.execution_refusal()`, which is available BEFORE compute() and WITHOUT bars by
+// its own docstring (spec_condition_compiler.py:666). Top-level shape read at the
+// executable line, backtester.py:8398-8417 plus :8710 `analysis_omitted`.
+// `A HAND-BUILT FIXTURE THAT DOES NOT MATCH PRODUCTION IS AN INSTRUMENT THAT LIES WHILE
+// THE CODE IS FINE.`
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const REAL_PYTHON_REFUSAL_ENVELOPE = {
+  execution_status: "REFUSED",
+  compiled: false,
+  entry_eligible: false,
+  refusal: {
+    execution_status: "REFUSED",
+    compiled: false,
+    entry_eligible: false,
+    condition_id: "WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4",
+    disposition: "SOURCE_AMBIGUOUS",
+    reason: "opening_range_breakout_confirmation_unresolved_from_source",
+    ambiguity: "breakout_confirmation_semantics",
+    source_prose:
+      "When price breaks above the range high, for example, so a bullish breakout, which is what we saw an example of, that is where buyers have overcome that initial resistance.",
+  },
+  metrics_omitted: [
+    "pnl",
+    "total_return",
+    "sharpe",
+    "profit_factor",
+    "win_rate",
+    "max_drawdown",
+    "trades",
+    "equity_curve",
+  ],
+  metrics_omitted_reason:
+    "execution was REFUSED before any backtest ran; publishing zeroed performance metrics would present a refusal as a flat result",
+  governance_labels: {
+    approximation: true,
+    spec_condition_compiled: true,
+    spec_hash: "trigger-safety",
+    execution_refused: true,
+  },
+  analysis_omitted: [
+    "forge_score",
+    "forge_score_components",
+    "invariants",
+    "parity_shadow",
+    "b15_battery",
+    "crisis_results",
+    "expected_signals",
+  ],
+  analysis_omitted_reason:
+    "execution was REFUSED before any backtest ran; these are ANALYTICAL products derived from trades that do not exist",
+};
+
+describe("R-752 §5 (D-8) — a Python REFUSAL survives the TypeScript boundary", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    isPipelineActiveMock.mockResolvedValue(true);
+    dbInsertMock.mockImplementation(() => ({
+      values: vi.fn(() => ({
+        returning: vi
+          .fn()
+          .mockResolvedValue([{ id: "bt-refusal-id", strategyId: "strat-refusal" }]),
+      })),
+    }));
+    dbUpdateMock.mockImplementation(() => ({
+      set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+    }));
+    dbSelectMock.mockImplementation(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({ limit: vi.fn().mockRejectedValue(new Error("NO_TRIAL_TABLE")) })),
+      })),
+    }));
+  });
+
+  // Every `set(...)` payload written to the backtests row, in call order.
+  function allUpdateSetPayloads(): Record<string, unknown>[] {
+    return dbUpdateMock.mock.results.flatMap((r) => {
+      const set = (r.value as { set: MockInstance }).set;
+      return set.mock.calls.map((c) => c[0] as Record<string, unknown>);
+    });
+  }
+
+  it("CONTROL A — persists and returns `refused`, never `completed`", async () => {
+    runPythonModuleMock.mockResolvedValue({ ...REAL_PYTHON_REFUSAL_ENVELOPE });
+
+    const result = await runBacktest(
+      "strat-refusal",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-refusal-001",
+    );
+
+    expect(result.status).toBe("refused");
+    // A refusal is NOT a crash — no error channel, in either direction (R-752 §6-2).
+    expect((result as { error?: unknown }).error).toBeUndefined();
+
+    const payloads = allUpdateSetPayloads();
+    expect(payloads.some((p) => p["status"] === "refused")).toBe(true);
+    expect(payloads.some((p) => p["status"] === "completed")).toBe(false);
+    expect(payloads.some((p) => p["status"] === "failed")).toBe(false);
+    // The refusal reason must NOT be laundered through errorMessage (R-752 §6-4).
+    expect(payloads.some((p) => p["errorMessage"] != null)).toBe(false);
+  });
+
+  it("CONTROL A — persists the refusal EVIDENCE, not merely the status", async () => {
+    runPythonModuleMock.mockResolvedValue({ ...REAL_PYTHON_REFUSAL_ENVELOPE });
+
+    await runBacktest(
+      "strat-refusal",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-refusal-002",
+    );
+
+    const refusalWrite = allUpdateSetPayloads().find((p) => p["status"] === "refused");
+    expect(refusalWrite).toBeDefined();
+    const extras = refusalWrite!["resultExtras"] as Record<string, unknown>;
+    expect(extras).toBeDefined();
+
+    // R-752 §6-4's enumerated evidence set. A status with no evidence is a label.
+    expect(extras["execution_status"]).toBe("REFUSED");
+    expect(extras["entry_eligible"]).toBe(false);
+    expect(extras["condition_id"]).toBe(
+      "WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4",
+    );
+    expect(extras["disposition"]).toBe("SOURCE_AMBIGUOUS");
+    expect(extras["reason"]).toBe("opening_range_breakout_confirmation_unresolved_from_source");
+    expect(extras["ambiguity"]).toBe("breakout_confirmation_semantics");
+    expect(extras["metrics_omitted"]).toEqual(REAL_PYTHON_REFUSAL_ENVELOPE.metrics_omitted);
+    expect(extras["analysis_omitted"]).toEqual(REAL_PYTHON_REFUSAL_ENVELOPE.analysis_omitted);
+    expect(extras["governance_labels"]).toEqual(REAL_PYTHON_REFUSAL_ENVELOPE.governance_labels);
+  });
+
+  it("CONTROL A — reaches NO analytical, scoring or promotion consumer", async () => {
+    runPythonModuleMock.mockResolvedValue({ ...REAL_PYTHON_REFUSAL_ENVELOPE });
+
+    await runBacktest(
+      "strat-refusal",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-refusal-003",
+    );
+
+    // Metric columns stay NULL — absent, never 0.0 (R-751 §8-5, carried across the border).
+    const refusalWrite = allUpdateSetPayloads().find((p) => p["status"] === "refused")!;
+    for (const col of [
+      "totalReturn",
+      "sharpeRatio",
+      "maxDrawdown",
+      "winRate",
+      "profitFactor",
+      "totalTrades",
+    ]) {
+      expect(refusalWrite[col] ?? null).toBeNull();
+    }
+
+    // No completed-run counter (R-752 §6-7 / §7-A).
+    const labelArgs = backtestRunsLabelsMock.mock.calls.map((c) => c[0] as { status?: string });
+    expect(labelArgs.some((a) => a?.status === "completed")).toBe(false);
+
+    // No completed-result transaction ⇒ no trades, no completed provenance.
+    expect(dbTransactionMock).not.toHaveBeenCalled();
+
+    // A refusal may emit its own audit/SSE event, but never a success one (R-752 §6-6).
+    const sseEvents = broadcastSSEMock.mock.calls.map((c) => c[0] as string);
+    expect(sseEvents).not.toContain("backtest:completed");
+    expect(sseEvents).not.toContain("backtest:scored");
+    expect(sseEvents).not.toContain("strategy:promoted");
+    // POSITIVE WITNESS that the refusal path actually RAN — without it every assertion
+    // above is satisfied by a function that returned early for any unrelated reason.
+    // `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH EXECUTED.`
+    expect(sseEvents).toContain("backtest:refused");
+  });
+
+  it("CONTROL B — POSITIVE CONTROL: an eligible neighbour still completes", async () => {
+    // An engine that marks everything refused is not a repair (R-752 §7-B).
+    runPythonModuleMock.mockResolvedValue({
+      total_return: 0.12,
+      sharpe_ratio: 1.4,
+      total_trades: 7,
+      tier: "TIER_2",
+    });
+
+    const result = await runBacktest(
+      "strat-neighbour",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-neighbour-001",
+    );
+
+    expect(result.status).not.toBe("refused");
+    const payloads = allUpdateSetPayloads();
+    expect(payloads.some((p) => p["status"] === "refused")).toBe(false);
   });
 });

@@ -8,7 +8,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance, researchTrialCounter } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance, researchTrialCounter, BACKTEST_STATUS_REFUSED } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
@@ -430,6 +430,33 @@ interface RlTrainingResult {
 // killing runs that are genuinely completing.
 const BACKTEST_TIMEOUT_MS = 30 * 60 * 1000;
 
+/**
+ * The value Python's `spec_condition_compiler.EXECUTION_STATUS_REFUSED` emits.
+ *
+ * R-752 §5 amendment 1: a NAMED SHARED CONSTANT, never a bare literal at the call
+ * site. This is the Python-side envelope value; `BACKTEST_STATUS_REFUSED` is the
+ * separate value we persist. They are deliberately distinct names because they are
+ * two different vocabularies meeting at a border, and collapsing them is how a
+ * rename on one side silently stops matching the other.
+ */
+export const PYTHON_EXECUTION_STATUS_REFUSED = "REFUSED" as const;
+
+/**
+ * Did this result come from a strategy-level REFUSAL rather than a run?
+ *
+ * The TypeScript twin of `backtester.py:_execution_was_refused` (:6258), and it uses
+ * the SAME join key for the same reason: `"error" not in result` answers *"did this
+ * blow up?"*, which is a different question. A refusal carries no `error`.
+ */
+function _executionWasRefused(result: unknown): boolean {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    (result as { execution_status?: unknown }).execution_status ===
+      PYTHON_EXECUTION_STATUS_REFUSED
+  );
+}
+
 export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated", idempotencyKey?: string) {
   // FIX 4 (deepscan8): synthesize correlationId when caller omits it so every
   // audit row and trace span is attributable even for fire-and-forget callers.
@@ -826,6 +853,104 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       backtestRuns.labels({ status: "failed", mode, tier: "none" }).inc();
       broadcastSSE("backtest:failed", { backtestId, strategyId, error: errorMsg });
       return { id: backtestId, status: "failed", error: errorMsg };
+    }
+
+    // ═══ R-752 §5 (D-8): THE REFUSAL CROSSES THE PYTHON→TYPESCRIPT BORDER ═════
+    //
+    // Placed HERE deliberately: immediately after the crash/envelope validation above
+    // and BEFORE `const metrics = result.oos_metrics ?? result`, because everything
+    // downstream of that line treats `result` as a measured run.
+    //
+    // WHY THE ENVELOPE GATE ABOVE DOES NOT CATCH THIS (R-752 §3, measured three ways):
+    // it tests `result.error` — a deliberate refusal carries none, it is not a crash —
+    // and top-level `result.status`. A refusal emits `execution_status`, a DIFFERENT
+    // KEY, so `_pythonEnvelopeStatus` is `undefined`, both disjuncts are false, and
+    // control fell through to the success path, where :979 wrote `completed`.
+    // The gate's own comment claims it catches "any future Python module that emits a
+    // new top-level status value" — and it does: it catches new VALUES of `status`.
+    // `A GUARD KEYED ON ONE FIELD NAME CANNOT CATCH A NEW FIELD NAME.`
+    //
+    // Before this branch existed the cross-language result said, in effect:
+    //     Python:     execution_status = REFUSED
+    //     TypeScript: backtest status  = completed
+    // Both cannot be true. `A REFUSAL THAT BECOMES "COMPLETED" AT THE NEXT SERVICE
+    // BOUNDARY IS NOT TERMINAL — IT IS TERMINAL ONLY INSIDE ONE PROCESS.`
+    //
+    // 🛑 The refusal is NOT laundered into `error`, `failed`, `completed`, `REJECTED`
+    // or a zero-trade result (R-752 §6-2). Overloading the crash channel would make
+    // every downstream consumer read a deliberate refusal as a malformed request —
+    // a different lie, not a fix.
+    if (_executionWasRefused(result)) {
+      const refusal = ((result as { refusal?: unknown }).refusal ?? {}) as Record<string, unknown>;
+
+      // R-752 §6-4: persist the EVIDENCE, not merely the status. A status with no
+      // evidence is a label, and a reader could not get back to the source video.
+      // The reason goes in the evidence carrier, NEVER in `errorMessage`.
+      const refusalExtras: Record<string, unknown> = {
+        execution_status: (result as { execution_status?: unknown }).execution_status,
+        entry_eligible: (result as { entry_eligible?: unknown }).entry_eligible ?? false,
+        condition_id: refusal["condition_id"] ?? null,
+        disposition: refusal["disposition"] ?? null,
+        reason: refusal["reason"] ?? null,
+        ambiguity: refusal["ambiguity"] ?? null,
+        source_prose: refusal["source_prose"] ?? null,
+        metrics_omitted: (result as { metrics_omitted?: unknown }).metrics_omitted ?? null,
+        metrics_omitted_reason:
+          (result as { metrics_omitted_reason?: unknown }).metrics_omitted_reason ?? null,
+        analysis_omitted: (result as { analysis_omitted?: unknown }).analysis_omitted ?? null,
+        analysis_omitted_reason:
+          (result as { analysis_omitted_reason?: unknown }).analysis_omitted_reason ?? null,
+        governance_labels: (result as { governance_labels?: unknown }).governance_labels ?? null,
+      };
+      // Flag-gated on the Python side, so it is genuinely absent on most runs. Only
+      // carry the key when it exists — a `null` here would claim an empty trace.
+      const specTrace = (result as { spec_trace?: unknown }).spec_trace;
+      if (specTrace !== undefined) refusalExtras["spec_trace"] = specTrace;
+
+      // Every metric column is left untouched ⇒ stays NULL. `A KEY PRESENT AS 0.0 IS A
+      // MEASUREMENT; A KEY ABSENT WITH A STATED REASON IS A REFUSAL.` (R-751 §8-5)
+      await db
+        .update(backtests)
+        .set({
+          status: BACKTEST_STATUS_REFUSED,
+          resultExtras: refusalExtras,
+          executionTimeMs: result.execution_time_ms,
+        })
+        .where(eq(backtests.id, backtestId));
+
+      void insertAuditRowSafe({
+        action: "backtest.execution_refused",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        input: { strategyId, backtestId, mode },
+        result: {
+          condition_id: refusal["condition_id"] ?? null,
+          disposition: refusal["disposition"] ?? null,
+          reason: refusal["reason"] ?? null,
+        },
+        correlationId,
+        decisionAuthority: "system",
+      });
+
+      backtestSpan.setAttribute("status", BACKTEST_STATUS_REFUSED);
+      backtestSpan.setAttribute("executionRefused", true);
+      backtestSpan.end();
+      // Counted under its own label — never `completed`, which would put a refusal
+      // into the completed-run rate every dashboard reads.
+      backtestRuns.labels({ status: BACKTEST_STATUS_REFUSED, mode, tier: "none" }).inc();
+      // A refusal-specific event. It must NOT be `backtest:completed` or
+      // `backtest:scored` (R-752 §6-6) — a successfully ENFORCED refusal is a success
+      // of the guard, not of the backtest.
+      broadcastSSE("backtest:refused", {
+        backtestId,
+        strategyId,
+        conditionId: refusal["condition_id"] ?? null,
+        disposition: refusal["disposition"] ?? null,
+        reason: refusal["reason"] ?? null,
+      });
+
+      return { id: backtestId, status: BACKTEST_STATUS_REFUSED, ...result };
     }
 
     // Walk-forward returns metrics nested under oos_metrics — unwrap for DB storage

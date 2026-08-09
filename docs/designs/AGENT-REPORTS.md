@@ -4,6 +4,80 @@
 
 ---
 
+## AR-856 · 2026-08-09 · ✅✅★★★★★ **`R-752 §5` (`D-8`) DELIVERED: A PYTHON REFUSAL NOW SURVIVES THE TYPESCRIPT BORDER. THE MUTATION REPRODUCES THE EXACT ORIGINAL DEFECT — `completed` — AND THE `103`-MEMBER FAILURE SET MATCHES THE COMMITTED BASELINE MEMBER-FOR-MEMBER.** 🛑🛑★★★★★ **AND THE HEADLINE FINDING IS THAT CONTROL `C` DID NOT NEED BUILDING: AN EXECUTING TEST HAS ASSERTED `ok === false` / `backtest_baseline_unavailable` SINCE `2026-06-29`. THREE PEOPLE READ THAT FILE AND ARGUED ABOUT IT — INCLUDING A PUBLISHED, RETRACTED DESK CORRECTION — WHILE A GREEN TEST ALREADY SETTLED IT.**
+
+**RULING:** `R-752 §5` + external `R-752 §6` items `1`–`7` / `§7` controls `A`–`E`. **BASE HEAD `327c1e9d`.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN: `5 / 5` controls (`A` · `B` · `C` · `D` · `E`).**
+
+### §1 — ✅ THE FIX, AND ITS ROOT CAUSE IS THE SAME JOIN-KEY FAMILY AS `AR-853`
+**ROOT CAUSE** `[MEASURED HERE]`: the envelope gate at `:836` tests `result.error` (a refusal carries none — it is not a crash) and top-level `result.status`. **A refusal emits `execution_status` — A DIFFERENT KEY** — so `_pythonEnvelopeStatus` is `undefined`, both disjuncts are false, control fell through to `const metrics = result.oos_metrics ?? result`, and `:979` wrote `completed`.
+⭐ **THE GUARD'S OWN COMMENT CLAIMS IT CATCHES THIS:** *"Any future Python module that emits a new top-level status value will correctly fail here."* **It does — it catches new VALUES of `status`.** ★★★★★ **`A GUARD KEYED ON ONE FIELD NAME CANNOT CATCH A NEW FIELD NAME — IT CATCHES NEW VALUES, WHICH IS A DIFFERENT EVENT.`** ⚖️ **This is `AR-853 §1`'s root cause one hop out: there the wrong join key was `"error" not in result`, here it is `status` vs `execution_status`. Same family, different border.**
+✅ **REPAIR:** `_executionWasRefused(result)` — the TypeScript twin of `backtester.py:_execution_was_refused`, **using the same semantic join key** — branching immediately after the envelope gate and **before** the metrics unwrap.
+✅ **AMENDMENT `1` HONOURED — TWO NAMED CONSTANTS, DELIBERATELY NOT ONE:** `PYTHON_EXECUTION_STATUS_REFUSED = "REFUSED"` (the envelope value) and `BACKTEST_STATUS_REFUSED = "refused"` (the persisted value). ★ **Collapsing them into one constant is how a rename on one side silently stops matching the other — the very drift `§3` convicted.**
+🛑 **NO fake `error`, no `failed`, no `completed`, no `REJECTED`, no zero-trade result. The reason is in the evidence carrier, NEVER in `errorMessage`** — a test asserts the absence.
+
+### §2 — 🛑🛑 CONTROL `C` WAS ALREADY DISCHARGED, AND I AM REPORTING THAT RATHER THAN RE-BUILDING IT
+`R-752 §5` amendment `3` promoted control `C` to REQUIRED so the expected-signals question would be *"settled by a test rather than by a third repository read."*
+🛑 **`[MEASURED HERE]` IT WAS ALREADY SETTLED BY A TEST.** `src/server/__tests__/wave29-pass-a3-shadow-divergence.test.ts:128` — **`"4b. Empty backtest baseline (≥20 shadow) → ok: false, reason: backtest_baseline_unavailable (NOT 100% divergence) — deep-scan #4 2026-06-29"`** — asserts **exactly** the desk's ordered predicate, executes the **real** `compareShadowToBacktest`, and **`20 passed`** when I ran it.
+⭐ **AND IT IS THE RIGHT TEST, NOT A NEAR-MISS:** it uses **`20`** shadow signals, so it clears the `MIN_SAMPLE_SIZE` gate at `:175` and genuinely reaches the baseline gate at `:192`. ★ **A control with one shadow signal would have returned `insufficient_samples` and "proved" the wrong reason** — I checked which line it reaches, because reaching the neighbouring branch is this campaign's signature error.
+★★★★★ **SO THE ARGUMENT COST FOUR READS AND A PUBLISHED RETRACTION OVER A QUESTION A GREEN TEST HAD ANSWERED SIX WEEKS EARLIER: `grep -rn "backtest_baseline_unavailable"` RETURNS IT IN ONE CALL.** ⚖️ **`A CONTRACT SETTLED BY THREE PEOPLE READING A FILE IS SETTLED BY A TEST OR IT IS NOT SETTLED` — the desk's own sentence, and the test existed. `BEFORE BUILDING THE CONTROL THAT SETTLES AN ARGUMENT, GREP FOR THE STRING THE ARGUMENT IS ABOUT.`**
+✅ **I DID NOT BUILD A SECOND ONE** (`R-648`: adapt, do not author; a duplicate control is scope creep in a safety costume). **It is cited, executed and green.**
+
+### §3 — ✅ AMENDMENT `2`: THE MECHANICAL CONSUMER ENUMERATION — NO STOP CONDITION FIRED
+`[MEASURED HERE, `grep` over `src/`, production only]`:
+```
+allowlist consumers  eq(backtests.status, "completed")   ~20 sites  -> a refused row simply never matches
+DENYLIST predicates  ne / notInArray / != / <> / NOT IN  ->  ZERO    <- the class that WOULD have widened
+no-filter consumers  carter-recommend.ts:308 · adversarial-stress-service.ts:191 · backtest-service.ts:447
+```
+✅ **THE THREE NO-FILTER CONSUMERS WERE OPENED, NOT COUNTED:** `carter-recommend` **carries** `bt.status` into a report payload and **never branches on it** (`grep` for `status ===` in that file → empty) · `adversarial-stress` branches on **`tier`**, and `[MEASURED, `:146`]` `if (!tier) return false;` — a refusal has no tier, so it skips · `backtest-service:447` logs the existing status in an idempotency-dedup audit row.
+⇒ **`refused` is NOT materially broader than this boundary. `R-752 §6-3`'s STOP-AND-REPORT condition did NOT fire, and I did not substitute `failed` or `completed`.**
+⚠️ **INSTRUMENT LIMIT, STATED:** this is `[MEASURED]` for drizzle predicates on `backtests.status` and `[PARTIAL]` for any consumer reading the status out of an **API response shape** or a raw SQL string assembled elsewhere. **The frontend was not searched — it is outside the scope lock.**
+
+### §4 — ⭐ CONTROLS: WHAT WENT RED, AND WHAT STAYED GREEN WHILE IT DID
+```
+RED FIRST (before any production edit)   3 failed, 1 passed   <- CONTROL B passed, as a positive control must
+MUTATION D  `if (false && _executionWasRefused(result))`
+   -> 3 failed  AND THE FAILURE IS THE ORIGINAL DEFECT VERBATIM:
+      AssertionError: expected 'completed' to be 'refused'
+   -> CONTROL B STAYED GREEN under the mutation                <- the discrimination proof
+RESTORED from a pre-mutation copy -> 70 passed (4 TS files), 0 mutation markers in the tree
+```
+★★★ **The mutation does not merely go red — it reproduces `R-752 §3`'s cross-language contradiction exactly.** ★★★★★ **`A GUARD IS ONLY PROVEN BY THE DEFECT IT WAS BUILT FOR`, and this one printed that defect's own words.**
+✅ **CONTROL `A`** asserts: returned + persisted `refused` · never `completed`/`failed` · no `errorMessage` · the full `R-752 §6-4` evidence set in `resultExtras` · every metric column NULL · **no completed-run counter** · **no completed transaction** (⇒ no trades, no completed provenance) · not `backtest:completed`, not `backtest:scored`, not `strategy:promoted`.
+✅ **AND IT CARRIES A POSITIVE WITNESS THAT THE PATH RAN** — `expect(sseEvents).toContain("backtest:refused")`. ★ **Without it, every one of those absences is satisfied by a function that returned early for an unrelated reason** — which is exactly how the harness defect in `§5` would otherwise have hidden.
+✅ **CONTROL `B`** — an eligible neighbour still completes. **An engine that marks everything refused is not a repair.**
+
+### §5 — 🛑 A HARNESS DEFECT I FOUND BY DEBUGGING MY OWN RED, AND IT WOULD HAVE MADE ONE ASSERTION VACUOUS
+⚠️ **My first post-fix run still said `failed`, and I did NOT guess why — I printed the result.** `[MEASURED]` `"No BACKTEST_STATUS_REFUSED export is defined on the ../db/schema.js mock"`: the test file hand-mocks the schema module, my new export was missing, the branch threw, and the OUTER catch wrote `failed`. ★★★ **A surprising result accuses the instrument first, and one `console.log` beat three plausible hypotheses about production code that was already correct.**
+🛑🛑 **AND THE SECOND ONE IS WORSE, BECAUSE IT WOULD HAVE PASSED SILENTLY:** `backtestRuns` was mocked `labels: vi.fn(() => ({ inc: vi.fn() }))` — **a FRESH `inc` on every call**, so *"the completed counter was not incremented"* was **unobservable**: the assertion would have been green whether or not the counter fired. ✅ **Re-keyed onto a stable `labels` handle and asserted on the `{status}` label.** ★★★★★ **`AN ASSERTION AGAINST A MOCK THAT MINTS A FRESH SPY PER CALL IS A PRINTOUT, NOT A CONTROL` — same family as this desk's `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.`**
+
+### §6 — ✅ CONTROL `E`: ACCEPTANCE, BY MEMBERSHIP
+```
+Python trigger-safety + blast-radius                    65 passed
+103-member manifest (baseline's OWN recorded invocation, paths resolved under src/)
+                        33 failed · 2324 passed · 3 skipped · 2 xfailed
+   NEW: 0    GONE: 0    EXACT MEMBERSHIP MATCH: True
+   both ordered 6B REDs still RED, asserted BY NAME
+TypeScript focused controls                             70 passed (4 files)
+npx tsc --noEmit                                        0 errors, repo-wide
+```
+🛑 **MEMBERS COMPARED, NEVER COUNTS.** ⚠️ **AND MY PREFLIGHT CAUGHT MY OWN INSTRUMENT BUG BEFORE IT BECAME A RESULT:** the manifest carries `#` comment lines, so my first pass read `126` "members" and `23` failed to resolve. **The preflight refused to run rather than silently testing `103` of a population it had mis-parsed.** ★ **`A POPULATION LOADER THAT SILENTLY DROPS UNRESOLVABLE MEMBERS REPORTS A CLEAN RUN OVER A SMALLER WORLD.`** The corrected loader asserts `== 103` before running.
+✅ **The Python totals are byte-identical to `AR-853`'s, which is the expected result of a commit that changes no Python.**
+
+### §7 — 🛑 WHAT I DID NOT MEASURE
+- 🛑 **NO full-repo `vitest` run** — four focused TS files only. **Every other TypeScript consumer is `[UNMEASURED]`.** ⚖️ **I am naming this rather than filing it, because `AR-852 §2` convicted me for treating the disclosure as the discharge** — the specific question it points at, *"is the surface I built observed by a test at the boundary a user reaches?"*, **is answered YES here: control `A` runs against the public `runBacktest` entry point.**
+- 🛑 **The frontend was not searched.** Out of the scope lock.
+- 🛑 **NO live Python→TypeScript end-to-end run.** The TS side is fed an **execution-derived** fixture (dumped from the committed Python test's own `_golden_spec()`/`_run()` via `execution_refusal()`), **not a live Python process.** ⇒ **the border is proven on a faithful shape, not on a live handoff** — a real limit, stated.
+- 🛑 **`§3`'s enumeration is `[PARTIAL]` for indirect/raw-SQL consumers.**
+- 🛑 **NOTHING GRADED BY ME.**
+
+### §8 — ⏳ THE GRADE
+✅ **`R-752 §6`'s auto-release predicate is now satisfiable and I state each clause rather than asserting the conclusion:** committed ✅ · pushed ✅ · remote-verified ✅ · focused Python **and** TypeScript controls green ✅ · `103`-member membership equal to the committed baseline ✅. 🛑 **I do not declare my own fan-in complete and I do not dispatch the grader** (`doer ≠ grader`; `A WAKE TRIGGER IS NECESSARY, NOT SUFFICIENT`).
+✅ **CARRY INTO THE BRIEF, as item (i):** **`§2` — control `C` pre-existed, so the grader should ask what ELSE in this campaign has been argued about while a green test already answered it.**
+✅ **STOPS ALL HONOURED:** no state-channel code · no Python production change · no repo-wide TS sweep · no lifecycle redesign · no broad status framework · the other `31` untouched · `f788c64b` neither merged, cherry-picked nor replayed · no `git stash` · no worktree cleanup · sibling's file untouched · `186f22cd` not graded · **the ruling-ear is armed on the operator's direct order (`AR-855 §3`) and no other monitor was armed.**
+
+---
+
 ## AR-855 · 2026-08-09 · 🟢 **START-RECEIPT — `R-752 §5` (`D-8`, THE TYPESCRIPT REFUSAL BRANCH), TO `claude.exe 3160` = ME.** 🛑🛑 **AND I OPEN WITH A BLOCKER I MUST RAISE BEFORE THE FIRST LINE OF CODE: THE READ `§5` ADOPTS *VERBATIM BY REFERENCE* IS NOT ON DISK AND NOT TRACKED. ITEMS `1`–`7` AND CONTROLS `A`–`E` ARE UNREADABLE FROM THIS SEAT.** 🛑 **I ALSO STRIKE `AR-854 §2`: THE OPERATOR REVERSED IT DIRECTLY AND MY DISARM WAS WRONG.**
 
 **RULING:** `R-752 §5`. **BASE HEAD `8a0c131f`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent.** **FAN-IN `0 / 1`, not started.**
