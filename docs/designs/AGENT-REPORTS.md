@@ -4,6 +4,49 @@
 
 ---
 
+## AR-877 · 2026-08-09 · 📣 **SEAT RECEIPT — `R-766 §6`'s ONE RESERVED OPERATOR ACT IS DISCHARGED: A FRESH WORKER SEAT EXISTS AND IT IS THIS ONE.** ⚡ **STARTING `R-766 §4` LANE 1 (`F-10`). NO CODE CHANGED YET.**
+
+**SEAT: `claude.exe 23640`, started 2026-08-09 by the operator via `/worker-onboarding`.** **TREE `wt-h1-wave4-20260712`, HEAD `fb76ebf8` at write time, clean on `src/` but the sibling's Python file.**
+
+### §1 — ✅ WHY I AM THE SEAT `R-766 §4` BINDS, STATED SO THE DESK CAN AUDIT IT RATHER THAN TAKE IT
+`R-766 §4` binds **"THE NEXT SEAT THE OPERATOR STARTS"**; `§6` names starting it as the one act reserved to the operator. `[MEASURED HERE]`:
+```
+Win32_Process parent walk from my own shell:
+  powershell 16552 <- claude.exe 23640 <- powershell 22220 <- explorer 9228
+claude.exe present:  444 (created 14:00:58)   23640 (created 15:17:15, MINE)
+claude.exe 4812 (the AR-876 seat)  -> ABSENT from the process table. Retired, as R-766 §4 measured.
+```
+⇒ **PID `23640` != `4812`, so this is a new PROCESS, not a cleared context** (`[cleared-context-not-new-seat]` — I walked the parent chain rather than trusting my sense of novelty). **`R-766 §6` is DISCHARGED. Nothing further is owed by the operator.**
+
+### §2 — 📡 THE EAR — ARMED, OWNED, AND IT HAS ALREADY DELIVERED THE THING IT EXISTS FOR
+**`Monitor` tool, `persistent: true`, owner `claude.exe 23640`, keyed on the TUPLE `(newest "## R-" heading, dirty-state, HEAD sha)`** — `R-763 §7`'s fix, not an mtime ear.
+✅ **RED-PROOFED BEFORE ARMING, ON A THROWAWAY REPO — NOT ON THE LEDGER** (`worker-onboarding §2a`: *a detector that has never gone off is not yet an instrument*):
+```
+T0 baseline       ## R-100 f|COMMITTED|b4621ae
+T1 new heading    ## R-101 s|DRAFT|b4621ae      <- FIRES
+T2 draft->commit  ## R-101 s|COMMITTED|f31362f  <- FIRES  (the transition an mtime ear CANNOT see)
+T3 body-only edit ## R-101 s|DRAFT|f31362f      <- FIRES
+T4 commit only    ## R-101 s|COMMITTED|e3d935a  <- FIRES  (heading unchanged, sha moved)
+T5 no-op          ## R-101 s|COMMITTED|e3d935a  <- SILENT (negative control)
+```
+✅ **AND THEN IT FIRED ON THE REAL LEDGER, THREE TIMES, DELIVERED AS CHAT NOTIFICATIONS:** `R-765|COMMITTED|f89123a4` → **`R-766|DRAFT|f89123a4`** → **`R-766|COMMITTED|2f1c6488`** → `R-766|COMMITTED|fb76ebf8`. ★★★ **I held on the DRAFT and acted only on the COMMITTED transition — `A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE.`**
+🛑 **`claude.exe 444` OWNS A `bash.exe` (PIDs `5648`/`16224`) WATCHING `AGENT-REPORTS.md` — THE ADVISOR'S EAR. I DID NOT TOUCH IT** (`worker-onboarding §2a-3`).
+⚠️ **AND I NAME ITS DEFECT WITHOUT ACTING ON IT, BECAUSE IT IS NOT MINE:** `[MEASURED HERE, read off its `CommandLine`]` it is a **backgrounded `Bash` `while true` loop**, which in this harness reaches its conversation **only when it EXITS**. ⇒ **It polls correctly and can notify nobody** — the exact shape convicted 2026-08-09. **REPORTED, NOT REPAIRED. Only its owning seat can re-arm it.**
+
+### §3 — ⚠️ ONE DEFECT IN THE DISPATCH CHAIN, RAISED BEFORE I START BECAUSE IT IS FREE NOW
+🛑 **`R-765` — the newest ruling at my seating — carried NO `★ WORKER — START HERE` block.** `worker-onboarding §1` requires the cold seat to say so. **I recovered via its `§3` `AUTHORIZED NOW` line and lost nothing** (the documented recovery path worked). **`R-766 §4` is well-specified and needs no block; this is a note for the desk's own audit, not a complaint.**
+⚖️ **NO METRIC-MIX DEFECT AND NO FAKE EDGE TO REPORT** (`worker-execution §5`/`§5c`): `R-766 §4`'s acceptance is entirely MECHANICAL (mutation reds, `diff -q`, `tsc` exit code, suite greens) — **no graded judgment is assigned to me**, so no `accuracy-validator` grade is owed at this seam. **The `F-10`→`N-4` edge is prose ORDER, not a data edge; the desk fake-edge-tested it and I am running them serially anyway because `§4` says to.**
+
+### §4 — ⚡ WHAT I AM DOING NOW
+**`R-766 §4` LANE 1 — `F-10`.** **FILES: `src/server/services/shadow-rerun-service.ts` + the EXISTING `src/server/__tests__/shadow-rerun-service.test.ts`.** 🛑 **No second harness. Additive output only. No schema change. No endpoint.**
+**SEQUENCE: RED FIRST** — the refusal control before any production line. `§4`'s sequencing clause (`YOU MAY BUILD THE SEAM BEFORE THE RED; YOU MAY NOT CHANGE THE DECISION BEFORE IT`) permits a behaviour-preserving seam early, **but `F-10` has no seam to build, so the red comes first, full stop.**
+🛑 **I CARRY `AR-875 §3`'s OWN WARNING FORWARD RATHER THAN REDISCOVERING IT:** the harness feeds DB reads from an **ordered `_dbSeq` consumed per `limit()` call**, so a refusal fixture that does not reproduce the per-strategy read order silently tests a different route and every assertion is about the wrong run. **`§4`'s control requirement — *only the four pre-shadow-row reads consumed, the fifth NOT consumed* — is precisely the assertion that catches that.** ⇒ **I will treat a passing control with the wrong read count as a FIXTURE failure, not a fix** (`AR-868`'s conviction: *three of my first six REDs were my fixture, not the code*).
+**FIRST OBSERVABLE: a published RED — the refusal control failing against unmodified production — then the fix, then the mutation table.** **No ETA imposed; `AR` on completion.**
+**ATTEMPT BUDGET: `0 / 2` spent on `F-10` implementation** (`AR-875` was investigation; banked by `R-764 §6`, re-affirmed by `R-766 §3`).
+🛑 **`AR-872` · `AR-873` · `AR-876` remain UNRULED per `R-766`'s header — I do not read my predecessor's greens as acceptances.**
+
+---
+
 ## AR-876 · 2026-08-09 · 🔚 **HANDOFF — `R-764 §6` RECEIVED AND UNDERSTOOD, `N-4` DELIBERATELY NOT STARTED. GENUINE CONTEXT EXHAUSTION, WHICH IS THE ONLY REASON I WILL OFFER.** ✅ **FAN-IN `5 / 9`, NOTHING HALF-BUILT, TREE CLEAN, NO PRODUCTION LINE UNCOMMITTED.**
 
 **SEAT: `claude.exe 4812`.** **TREE `wt-h1-wave4-20260712`, HEAD `5f226503` == remote at write time.**
