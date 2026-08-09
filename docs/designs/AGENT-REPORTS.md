@@ -4,6 +4,74 @@
 
 ---
 
+## AR-873 · 2026-08-09 · ✅ **`N-2` CLOSED — A SOURCE-LEVEL REFUSAL NOW TERMINATES THE MATRIX INSTEAD OF PUBLISHING A RECOMMENDATION BUILT FROM ZEROES.** ⭐⭐⭐ **THE RED-FIRST RUN PRINTED THE `bestCombo` THE OPERATOR WOULD HAVE BEEN HANDED: `{"symbol":"MES","timeframe":"30min","forgeScore":0,…,"backtestId":"bt-refused"}` — A SPECIFIC INSTRUMENT AND TIMEFRAME TO TRADE, ON A RUN MARKED `completed`, FOR A STRATEGY THE ENGINE NEVER EXECUTED ONCE.** 🛑🛑 **AND I CONVICTED MY OWN CONTROL SET MID-LANE: `MUT-N2-3` REDDENED **NOTHING**, PROVING THE SHARED-FLAG GUARD I HAD JUST WRITTEN WAS UNWITNESSED. I FIXED THE FIXTURE, NOT THE CLAIM.** **FAN-IN `5 / 9`.**
+
+**RULING: `R-763 §99`** (*"Then proceed directly to `N-2`"*, no desk wait) **+ the `D-10` lane table (`R-758 §5`).** **ATTEMPT BUDGET `1 / 2`.** **TREE `wt-h1-wave4-20260712`, parent `ecae071d`.** **FILES: `matrix-backtest-service.ts` + the new `d10-n2-matrix-refusal.test.ts`.**
+
+### §1 — ⭐ RED FIRST, PUBLISHED, AGAINST UNMODIFIED `ecae071d`
+```
+7 tests | 5 failed | 1 passed | (N-2.7 added after this run — see §3)
+  × N-2.1  persists NO fabricated cell        expected 0 cells, got 156
+  × N-2.2  remaining combos do not run        12 of 12 tier-1 combos ran
+  × N-2.3  terminal status 'refused'          expected 'refused', got 'completed'
+  × N-2.4  no matrix-completed SSE            'backtest:matrix-completed' WAS broadcast
+  × N-2.5  no best-combo / no correlations    bestCombo was defined
+  ✓ N-2.6  POSITIVE: a measured matrix still completes and ranks
+```
+**THE RECOMMENDATION, VERBATIM FROM THE RED RUN'S OWN OUTPUT:**
+```json
+{"symbol":"MES","timeframe":"30min","forgeScore":0,"sharpe":0,"totalTrades":0,
+ "winRate":0,"profitFactor":0,"avgDailyPnl":0,"maxDrawdown":0,
+ "tier":"REJECTED","backtestId":"bt-refused","executionTimeMs":0}
+```
+🛑🛑🛑★★★★★ **SEVERITY — AND IT IS A DIFFERENT KIND OF HARM FROM `N-3`, NOT A SMALLER ONE: `N-3` DESTROYED AN ASSET SILENTLY. `N-2` **PUBLISHES A VERDICT**. A ranking over fabricated zeroes still has a winner, and the winner is whichever combination refused first — so the matrix hands back a specific symbol and timeframe to trade, on a run stamped `completed`, for a strategy that never executed. The word `bt-refused` is sitting inside the recommendation.** ★★★★★ **`A RANKING OVER FABRICATED ZEROES STILL HAS A WINNER, AND A REDUCE() NEVER RETURNS "I DON'T KNOW".`**
+
+### §2 — ✅ THE FIX
+**Four changes, all inside the refusal frame:** (1) a refusal gate immediately after `runBacktest()` that records the engine's own evidence and returns **before any `?? 0` is evaluated** · (2) a shared `RefusalBox` so one worker's refusal stops the others pulling new combinations · (3) a `terminateRefused()` terminal path — status `refused`, evidence persisted, `backtest:matrix-refused` SSE — reached after each of the three tiers · (4) **no cell, no best-combo, no correlations, no ranking, no `matrix-completed`.**
+✅ **ADAPTED, NOT AUTHORED:** `isExecutionRefused` / `refusalEvidence` from the existing `backtest-refusal.ts`. **No new classifier, no new comparator** (`R-648`). ⭐ **That module's header names this exact consumer — *"one central exception cannot decide whether … the matrix should terminate"* — so the domain action it deliberately left to the caller is what this commit supplies.**
+⚖️ **WHY TERMINATE RATHER THAN SKIP:** a refusal means the SOURCE could not be compiled deterministically. It is not a property of a symbol or a timeframe, so **every remaining combination would refuse identically** — continuing spends the tower's time to manufacture more zeroes.
+
+### §3 — 🛑🛑 I CONVICTED MY OWN CONTROL, AND THIS IS THE PART I RATE HIGHEST
+**`MUT-N2-3` (delete the shared-flag guard from the worker loop) REDDENED NOTHING — exit `0`, all controls GREEN.** ⇒ **the guard I had just written was DEAD CODE under my own fixture, and I would have shipped an unproven guard behind a green suite.**
+**ROOT CAUSE, MEASURED:** my `N-2.7` fixture refused on call `3` **and every call after it**. So each worker hit its own refusal and returned; **no worker ever needed to be stopped by another worker's flag.** ★★★★★ **`A CONTROL THAT PASSES FOR A WEAKER REASON THAN THE ONE IT CLAIMS IS A CONTROL YOU HAVE NOT TESTED — AND THE ONLY THING THAT EXPOSES IT IS DELETING THE CODE IT CLAIMS TO GUARD.`**
+✅ **REPAIR: the fixture now refuses on EXACTLY ONE call, so every later combination WOULD have measured.** Only the shared flag can stop them. `MUT-N2-3` now reddens `N-2.7` and nothing else.
+⚠️ **AND ONE HONEST BOUND I DECLARE RATHER THAN ROUND OFF: termination is not instantaneous and cannot be.** `[MEASURED]` the run stops at **`8` of `12`** tier-1 combos, not `6`: workers that resolve first loop again **before** the refusing worker's promise has settled, so at the instant they pull, the flag does not yet exist. **Work already dispatched cannot be retracted.** ⇒ **the property is *"no combination is pulled after the refusal is OBSERVED"*, which is the strongest claim a worker pool can make, and `N-2.7` asserts exactly that (`< 12`) rather than a number that would overstate it.**
+
+### §4 — ⭐ MUTATION TABLE — FAMILY VS ISOLATION DECLARED
+```
+CONTROL (unmutated)                      RED: none · exit 0   ★ the suite is not "always red"
+BASELINE (ecae071d, no fix)              RED: 1,2,3,4,5,7     <- the defect itself
+MUT-N2-1  refusal gate deleted           RED: 1,2,3,4,5,7  FAMILY (one gate, six consequences)
+MUT-N2-2  gate fires, terminal path off  RED: 3,7          ISOLATED to terminateRefused()
+MUT-N2-3  shared flag ignored by loop    RED: 7            ISOLATED  ★ see §3
+MUT-N2-4  EVERY result treated refused   RED: 6            ISOLATED  ★ the discriminator
+RESTORED                                 7 passed · diff -q IDENTICAL · git diff EMPTY
+```
+★★★ **`MUT-N2-4` IS THE ONE THAT KEEPS THE FIX HONEST:** a "repair" that simply never completed the matrix would pass **every** refusal control while destroying the feature. **`N-2.6` reddens under exactly that mutation and under nothing else.**
+**INSTRUMENT DISCIPLINE:** mutations applied by a Python script with `newline=""`, each **refusing to apply unless its pattern matches an expected count** (`1x`, `3x`, `1x`, `1x` — all asserted). ⚠️ **AND ONE INSTRUMENT FAILURE OF MY OWN, REPORTED NOT HIDDEN: my first mutation-table run used a `grep` that did not account for the reporter's ANSI codes and produced EMPTY output for all four mutations. An empty extraction reads exactly like "no failures". I discarded that entire run and re-ran with ANSI stripped and an unmutated CONTROL row added** (`[instrument-truncation-cluster]`).
+
+### §5 — ✅ EVIDENCE
+```
+d10-n2-matrix-refusal.test.ts (NEW)                       7 passed
+d10-n2 + d10-n3 + d10-n1                       3 files · 39 passed · RUNNER_EXIT=0
+regression: every other suite importing the matrix service
+  (carter x14, backtest-wave6, deepscan15 correlation-id, deepscan8)
+                                              20 files · 271 passed · RUNNER_EXIT=0
+npx tsc --noEmit -p tsconfig.json                         TSC_EXIT=0 · 0 errors
+```
+🛑 **NOT RUN, NOT CLAIMED:** the full `103`-member baseline · Python `65` · the 14-call-site disposition guard · any live-data query. ⚖️ **I claim a MECHANISM repair, not an incident — I have NOT shown a refusal has traversed this path in production data.**
+
+### §6 — 🛑 TWO ITEMS FOR RULING — ONE JUDGMENT CALL, ONE DEFECT I DID NOT REPAIR
+**(1) JUDGMENT CALL — WHERE THE EVIDENCE IS PERSISTED.** `[MEASURED HERE]` **`backtestMatrix` has NO refusal column**, and `schema.ts` is forbidden to this lane (`R-763 §85`). **I persisted the refusal detail into `tierStatus` — a status descriptor — and deliberately NOT into `results`/`bestCombo`/`correlations`, which are measurement columns a downstream consumer would read as findings.** ⚖️ **The alternative was to persist only `status:"refused"` and let the REASON exist nowhere durable, which fails the contract's *"with evidence"*. If the desk prefers a schema column, that is a one-line `.set()` change once `schema.ts` is in scope.**
+**(2) A DEFECT OUTSIDE THE REFUSAL FRAME — REPORTED, NOT REPAIRED, per the standing stop.** `[MEASURED HERE, `matrix-backtest-service.ts` `catch` block]` **when a combo THROWS, the service fabricates the identical all-zero `REJECTED` cell** (`forgeScore: 0, sharpe: 0, … tier: "REJECTED"`) **and pushes it into `allResults`, where it is ranked exactly like a real measurement.** ⇒ **the `?? 0` class this wave exists to remove has a TWIN on the error path, and `N-2`'s fix does not touch it.** 🛑 **I did not repair it: it is an error path, not a refusal path, and `R-763 §85` forbids widening. Raising it, not fixing it.**
+
+### §7 — 📍 FAN-IN · NEXT · STOPS
+**FAN-IN `5 / 9`** (`F-8` ✅ · `F-9` ✅ · `N-1` ✅ · `N-3` ✅ · `N-2` ✅) · **`N-4` · `F-10` · `F-7` · `N-5` UNSTARTED. NEXT: `N-4`, no desk wait** (`R-763 §99` order).
+📡 **EAR: still armed and owned by this seat (`claude.exe 4812`), tuple-keyed.** It delivered `ecae071d` (the advisor's `ADVISOR-STATE` commit) mid-lane; **no new ruling has landed since `R-763`.**
+🛑 **STOPS HELD:** `N-5` untouched · `F-8`/`F-9`/`N-1`/`N-3` not reopened · `schema.ts` not widened · no new classifier or comparator · the error-path twin REPORTED not repaired · the sibling's `test_synthetic_market_simulator.py` untouched · no `git stash` · the `21` untracked `docs/designs/` files left alone · **`N-6` not started.**
+
+---
+
 ## AR-872 · 2026-08-09 · ✅ **`N-3` CLOSEOUT DELIVERED — THE PUBLIC RETURN VALUE IS NOW WITNESSED ON BOTH ARMS. `MUT-N3-5` REDDENS `N-3.10` **ONLY**, AND `N-3.11` STAYED GREEN UNDER IT.** ⭐⭐⭐ **AND I ADDED A WITNESS THE CONTRACT DID NOT ASK FOR, BECAUSE `N-3.11` HAD A FALSE-GREEN ROUTE: `evolveStrategy()` ALSO RETURNS `status:"retired"` FROM AN **EARLY EXIT** AT THE MAX-GENERATIONS GUARD (`:161`) THAT NEVER RUNS A BACKTEST AND NEVER PROMOTES ANYTHING — SO A BARE `toBe("retired")` COULD HAVE PASSED WITHOUT THE TERMINAL PATH EVER EXECUTING.** **FAN-IN `4 / 9`.**
 
 **RULING: `R-763 §7`.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-onboarding` + `worker-execution` INVOKED THIS SEAT (fresh cold start).** **TREE `wt-h1-wave4-20260712`, parent `469c10d9`.** **FILES: `src/server/__tests__/d10-n3-evolution-refusal.test.ts` ONLY** (+ this report).

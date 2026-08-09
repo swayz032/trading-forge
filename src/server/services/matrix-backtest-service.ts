@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { backtestMatrix, backtests, strategies } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
+import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 
@@ -52,6 +53,17 @@ interface MatrixResult {
 }
 
 /**
+ * D-10 N-2: the first execution REFUSAL seen by any worker, shared across the whole
+ * matrix run. A refusal is a property of the STRATEGY SOURCE — it means the engine
+ * could not compile the strategy deterministically — so it is not specific to a
+ * symbol or a timeframe and every remaining combination would refuse identically.
+ * Once set, workers stop pulling and the run takes its `refused` terminal path.
+ */
+interface RefusalBox {
+  hit: { symbol: string; timeframe: string; evidence: Record<string, unknown> } | null;
+}
+
+/**
  * Run combos with a concurrency limit using Promise pool pattern.
  */
 async function runWithConcurrency(
@@ -61,6 +73,7 @@ async function runWithConcurrency(
   concurrency: number,
   matrixId: string,
   onComplete: (result: MatrixResult) => void,
+  refusal: RefusalBox,
 ): Promise<MatrixResult[]> {
   const results: MatrixResult[] = [];
   // Atomic index: each worker grabs-and-increments before awaiting,
@@ -69,7 +82,8 @@ async function runWithConcurrency(
   let nextIdx = 0;
 
   async function runNext(): Promise<void> {
-    while (nextIdx < combos.length) {
+    // D-10 N-2: stop pulling new combinations once any worker has seen a refusal.
+    while (nextIdx < combos.length && refusal.hit === null) {
       const myIdx = nextIdx++;
       const combo = combos[myIdx];
       try {
@@ -88,6 +102,21 @@ async function runWithConcurrency(
         // arg at all, so every matrix-triggered backtest was untraceable back to its
         // matrix run). matrixId is stable across all combos in this matrix run.
         const result = await runBacktest(strategyId, config as any, undefined, undefined, matrixId) as any;
+
+        // D-10 N-2: a refusal carries NO metrics by construction (R-751 §8-5). Every
+        // `?? 0` below would turn "never measured" into "measured, and it was zero" —
+        // and those zeroes go on to be RANKED, so the matrix would publish a best
+        // symbol/timeframe recommendation for a strategy that never executed once.
+        // Record the engine's own evidence and terminate; build no cell at all.
+        if (isExecutionRefused(result)) {
+          refusal.hit ??= {
+            symbol: combo.symbol,
+            timeframe: combo.timeframe,
+            evidence: refusalEvidence(result),
+          };
+          return;
+        }
+
         const matrixResult: MatrixResult = {
           symbol: combo.symbol,
           timeframe: combo.timeframe,
@@ -300,6 +329,52 @@ export async function runMatrix(strategyId: string) {
     });
   };
 
+  const refusal: RefusalBox = { hit: null };
+
+  /**
+   * D-10 N-2 terminal path. The engine refused to compile this strategy, so the run
+   * has measured nothing and is entitled to no verdict: no cell, no best-combo, no
+   * correlation, no ranking, and NO `matrix-completed` announcement.
+   *
+   * The evidence is persisted into `tierStatus` — a status descriptor — and NOT into
+   * `results`/`bestCombo`/`correlations`, which are measurement columns a downstream
+   * consumer would read as findings. Adding a column was not an option here:
+   * `schema.ts` is outside this lane's scope.
+   */
+  const terminateRefused = async () => {
+    const hit = refusal.hit as NonNullable<RefusalBox["hit"]>;
+    const elapsedMs = Date.now() - startTime;
+    const detail = { symbol: hit.symbol, timeframe: hit.timeframe, ...hit.evidence };
+
+    await db.update(backtestMatrix).set({
+      status: "refused",
+      completedCombos,
+      tierStatus: { tier1: "refused", tier2: "skipped", tier3: "skipped", refusal: detail },
+      executionTimeMs: elapsedMs,
+    }).where(eq(backtestMatrix.id, matrixId));
+
+    broadcastSSE("backtest:matrix-refused", {
+      matrixId,
+      strategyId,
+      refusal: detail,
+      completedCombos,
+      executionTimeMs: elapsedMs,
+    });
+
+    logger.warn(
+      { matrixId, strategyId, refusal: detail, completedCombos },
+      "Matrix REFUSED — the engine could not compile this strategy; remaining combinations were not run",
+    );
+
+    return {
+      id: matrixId,
+      status: "refused" as const,
+      refusal: detail,
+      completedCombos,
+      executionTimeMs: elapsedMs,
+    };
+  };
+
   try {
     // ─── Tier 1: Fast scan ─────────────────────────────────
     logger.info({ matrixId, combos: tier1Combos.length }, "Matrix Tier 1 starting");
@@ -308,7 +383,9 @@ export async function runMatrix(strategyId: string) {
       tier1Combos, strategyId, strategyConfig,
       TIER1_CONCURRENCY, matrixId,
       (r) => updateProgress(r, "tier1"),
+      refusal,
     );
+    if (refusal.hit) return await terminateRefused();
 
     // Filter: symbols that scored > cutoff in ANY timeframe
     const survivingSymbols = new Set<string>();
@@ -348,7 +425,9 @@ export async function runMatrix(strategyId: string) {
         tier2Combos, strategyId, strategyConfig,
         TIER2_CONCURRENCY, matrixId,
         (r) => updateProgress(r, "tier2"),
+        refusal,
       );
+      if (refusal.hit) return await terminateRefused();
     }
 
     await db.update(backtestMatrix).set({
@@ -390,7 +469,9 @@ export async function runMatrix(strategyId: string) {
         tier3Combos, strategyId, strategyConfig,
         TIER3_CONCURRENCY, matrixId,
         (r) => updateProgress(r, "tier3"),
+        refusal,
       );
+      if (refusal.hit) return await terminateRefused();
     }
 
     // ─── Finalize ──────────────────────────────────────────
