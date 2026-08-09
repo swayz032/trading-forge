@@ -4,6 +4,56 @@
 
 ---
 
+## AR-875 · 2026-08-09 · ✅ **`F-10` REACHABILITY SETTLED — `R-754 §3`'s `[HYPOTHESIS]` IS DISCHARGED: THE PATH IS REACHABLE AND THE DEFECT IS MEASURED AT EVERY HOP.** 🛑🛑🛑★★★★★ **AND `F-10` IS NOT A `?? 0` DEFECT AT ALL — THE NULLS ARE PRESERVED CORRECTLY, AND THAT IS EXACTLY WHAT MAKES IT WORSE: `metricsPassGate(null,null,null)` RETURNS `false` BY ITS OWN FIRST LINE, SO A REFUSAL MAKES A PREVIOUSLY-PASSING STRATEGY READ AS `newPassed=false` ⇒ `statusFlipped=true` ⇒ **SEVERITY `critical`**. THE DRIFT DETECTOR RAISES A CRITICAL REGRESSION ALERT FOR A MEASUREMENT IT NEVER TOOK.** ⚡ **NO CODE CHANGED. `F-10` FIX UNSTARTED. FAN-IN UNCHANGED AT `5 / 9`.**
+
+**RULING: `R-763 §99`** (order: `N-4` → **`F-10`**) **+ the `D-10` lane table** (*"RED-PROOF REACHABILITY FIRST … an unreachable path is a FINDING, not a failure"*). ⚖️ **Taken because `N-4` is parked on `AR-874`'s scope question and `F-10` has NO data dependency on it** (`[batch-lanes]` fake-edge test). 🛑 **I did not reorder anything: `F-10` is simply the next lane in the desk's own sequence.**
+
+### §1 — ✅ REACHABILITY — AND I GRADE MY OWN PROOF PRECISELY
+`[MEASURED HERE, the mounted call chain]`:
+```
+src/server/index.ts:86    import { shadowRerunRoutes } from "./routes/shadow-rerun.js";
+src/server/index.ts:617   app.use("/api/shadow-rerun", strictRateLimit, shadowRerunRoutes);
+routes/shadow-rerun.ts:64 const report = await runShadowRerun(reason, strategyIds);
+shadow-rerun-service.ts:213  shadowResult = await runBacktest(strategyId, config, …);
+```
+⇒ **The route is MOUNTED, the handler calls the exported entry, and the entry reaches `runBacktest`. `grep` for non-test importers of the service returns EXACTLY ONE — that route.**
+⚠️★★★ **GRADE, STATED HONESTLY BECAUSE THE CONTRACT SAID *RED-PROOF*: this is `[MEASURED — CALL CHAIN, statically at the executable line]`, NOT `[MEASURED — EXECUTED]`. I did not issue an HTTP request and I did not run the path.** ⇒ **`R-754 §3`'s `[HYPOTHESIS]` is discharged as to WIRING — the code is not orphaned and `AR-863`/`AR-864` were right to leave it alone rather than delete it — but "an operator can actually trigger this in production today" is `[UNPROVEN]` and I do not assert it.** ★★★ **`A MOUNTED ROUTE PROVES THE CODE IS NOT DEAD; IT DOES NOT PROVE ANYONE CALLS IT.`**
+
+### §2 — 🛑🛑🛑 THE DEFECT — A DIFFERENT SHAPE FROM EVERY OTHER `D-10` LANE
+`[MEASURED HERE, `shadow-rerun-service.ts`]`:
+```
+:240  if (shadowResult.status === "skipped") { … return null; }   <- "skipped" IS handled
+                                                                     REFUSED is NOT
+:250  const [shadowBacktest] = await db.select()…                 <- reads the refusal row
+:282  const newPf     = shadowBacktest.profitFactor !== null ? Number(…) : null;
+:283  const newSharpe = shadowBacktest.sharpeRatio  !== null ? Number(…) : null;
+:284  const newMaxDd  = shadowBacktest.maxDrawdown  !== null ? Number(…) : null;
+:287  const oldPassed = metricsPassGate(oldPf, oldSharpe, oldMaxDd);
+:288  const newPassed = metricsPassGate(newPf, newSharpe, newMaxDd);
+:289  const statusFlipped = oldPassed !== newPassed;
+:290  const severity = computeSeverity(oldResultHash, newResultHash, statusFlipped);
+
+metricsPassGate:  if (pf === null || sharpe === null || maxDd === null) return false;
+computeSeverity:  if (oldResultHash === newResultHash) return "info";
+                  if (statusFlipped) return "critical";
+```
+⇒ **THE CHAIN, END TO END:** engine REFUSES → metrics NULL by construction (`R-751 §8-5`) → `:282-284` **correctly** keep them `null` → `metricsPassGate` returns `false` **because they are null, not because anything failed** → a previously-PASSING strategy yields `oldPassed=true, newPassed=false` → `statusFlipped=true` → **`severity="critical"`**.
+🛑🛑 **SO THE FINDING PERSISTED SAYS: *"this strategy's results changed and it NO LONGER PASSES THE GATE"* — about a run in which the engine declined to execute and measured nothing.**
+★★★★★ **AND THE LESSON IS THE INVERSE OF THIS WHOLE WAVE'S: `EVERY OTHER D-10 LANE FABRICATED A ZERO. THIS ONE PRESERVES THE NULL PERFECTLY AND IS STILL WRONG, BECAUSE A GATE THAT TREATS "ABSENT" AS "FAILED" MANUFACTURES THE VERDICT ONE LAYER LATER. REMOVING `?? 0` IS NOT THE INVARIANT — THE INVARIANT IS THAT AN UNMEASURED RUN MUST NOT PRODUCE A COMPARISON AT ALL.`** ⚖️ **A seat that grepped this wave for `?? 0` would have marked `F-10` clean.**
+⚠️ **`[UNPROVEN]`: no live query; I claim a mechanism, not an incident.**
+
+### §3 — ✅ THE HARNESS, ASSESSED — AND IT IS THE OPPOSITE OF `AR-874`'s
+`[MEASURED HERE]` **`src/server/__tests__/shadow-rerun-service.test.ts` (`458` lines, `34` tests) IMPORTS THE REAL SERVICE** — `:107-111` `import { runShadowRerun, … } from "../services/shadow-rerun-service.js"` — with proper mocks for `backtest-service`, `db`, `result-hasher`, `drizzle-orm`. ⇒ **a genuine production-driving harness. `F-10`'s controls belong in it — ADAPT, DO NOT AUTHOR — and a second fixture here would be the drift hazard `AR-874` just convicted.**
+🛑 **WHY I STOPPED SHORT OF WRITING THEM, SAID PLAINLY:** the harness feeds DB reads from an **ordered sequence (`_dbSeq`, consumed per `limit()` call)**, so the refusal fixture must reproduce the exact read order of the per-strategy path or it silently takes a different route and every assertion is about the wrong run. ⚠️ **That is precisely the trap `AR-868` paid for — *"my first RED was 6 failures and THREE of them were my fixture, not the code"*.** ⚖️ **I judged I did not have the context budget left to build that fixture AND verify it was not lying, and a fixture I cannot audit is worse than none.** ★★★ **`THE SEAT THAT KNOWS IT CANNOT AUDIT ITS OWN FIXTURE SHOULD NOT SHIP THE FIXTURE.`**
+
+### §4 — 📍 STATE · NEXT UNIT, FULLY SPECIFIED SO NOTHING IS RE-DERIVED
+**FAN-IN `5 / 9`, UNCHANGED** (`F-8` · `F-9` · `N-1` · `N-3` · `N-2`). **`N-4` INVESTIGATED + PARKED on `AR-874`'s scope ruling · `F-10` INVESTIGATED, FIX UNSTARTED · `F-7` · `N-5` UNSTARTED.**
+**THE `F-10` UNIT, READY TO EXECUTE:** add a refusal arm to the EXISTING `shadow-rerun-service.test.ts` — drive `_runBacktestResult` to a `BACKTEST_STATUS_REFUSED` result, seed `_dbSeq` for the per-strategy path, and assert **(a)** no finding is persisted with `severity:"critical"`, **(b)** `statusFlipped` is not asserted from null metrics, **(c)** POSITIVE DISCRIMINATOR: a real measured regression STILL produces `critical` — without (c) a fix that suppressed all findings would pass. **THE FIX SHAPE:** a refusal must return early like `:240`'s `"skipped"` branch does, or produce an explicitly NAMED non-comparable outcome — **never a gate comparison.**
+🛑 **NOTHING CHANGED IN PRODUCTION IN THIS COMMIT OR THE LAST** — this report only.
+📡 **EAR: armed, owned by this seat (`claude.exe 4812`), tuple-keyed. Newest ruling on disk is still `R-763`; `AR-874`'s scope question is unanswered as of this write.**
+
+---
+
 ## AR-874 · 2026-08-09 · 🛑 **`N-4` INVESTIGATION COMPLETE — DEFECT MEASURED AND FIX DESIGNED, BUT I AM STOPPING BEFORE THE PRODUCTION EDIT AND ASKING FOR ONE SCOPE RULING.** 🛑🛑🛑★★★★★ **THE ONLY TESTS THAT EXIST FOR THIS BLOCK ARE A **REPLICA**: `auto-recovery-debt1-4.test.ts` RE-IMPLEMENTS THE PRODUCTION LOGIC IN THE TEST FILE — ITS OWN COMMENT SAYS *"Mirrors FIX 3 logic"* — AND **CARRIES THE IDENTICAL DEFECT AT ITS OWN LINE `310`. THE FILE HAS EXACTLY ONE `import` (vitest) AND ZERO REFERENCES TO `lifecycle-service.ts`. SIX GREEN TESTS PROVE NOTHING ABOUT PRODUCTION.** ⚡ **NO PRODUCTION LINE CHANGED IN THIS COMMIT. FAN-IN UNCHANGED AT `5 / 9`.**
 
 **RULING: `R-763 §99`** (order `N-2` → **`N-4`** → `F-10` → `F-7` → `N-5`) **+ the `D-10` lane table.** **ATTEMPT BUDGET `1 / 2` — this spends nothing; it is an enumeration result, not a failed attempt** (`R-758 §570`: *finding more than the contract named is the contract working*).
