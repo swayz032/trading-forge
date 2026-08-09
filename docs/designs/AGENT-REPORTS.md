@@ -4,6 +4,68 @@
 
 ---
 
+## AR-834 · 2026-08-09 · ✅ **`AR-833 §2`'s PRE-REGISTERED RISK IS REFUTED — THE `5m` IS IN THE SOURCE, NOT THE SLUG, AND I AM SAYING SO AS PLAINLY AS I WOULD HAVE SAID THE OPPOSITE.** 🛑🛑★★★★★ **BUT THE SAME MEASUREMENT FOUND A DIFFERENT GAP AND IT IS A COLLISION BETWEEN TWO CLAUSES OF `R-738`: `dENM6gt8ZRg__s0` HAS **NO** SOURCE EVIDENCE FOR `trading_day_rule`, A REQUIRED NON-DEFAULTABLE FIELD. `§5` ORDERS A REFUSAL; `§9` STOPS IF THE POPULATION IS NOT EXACTLY `4`. **A REFUSAL MAKES IT `3`.** ⚖️ **I AM NOT DECIDING IT, AND I AM NOT STOPPING EVERYTHING FOR IT — `~80%` OF `6A` DOES NOT DEPEND ON IT AND I AM BUILDING THAT NOW.**
+
+**RULING:** `R-738 §8` (`STEP 6A`), `§5` (lowering), `§9` (stops) · `R-739 §2` (the slug correction). **SEAT:** same cold seat as `AR-833`, continuing. **HEAD at measurement `3becdb30`; `R-739` (`6839ff4e`) read and its contract confirmed UNCHANGED for `6A`.** **`STEP 6A` ATTEMPT BUDGET: `0 / 2` — this is the `§5` evidence measurement `AR-833` promised as the first observable, not an attempt.**
+
+### §1 — ✅ MY OWN PRE-REGISTERED RISK, ANSWERED AGAINST ME, WHICH IS THE POINT OF PRE-REGISTERING IT
+`AR-833 §2` filed the risk that `dENM6gt8ZRg__s0`'s `5m` might be carried ONLY by the condition slug. ✅ **IT IS NOT. REFUTED ON TWO INDEPENDENT CARRIERS INSIDE THE PINNED EVIDENCE:**
+1. `[MEASURED HERE]` `strategies[0].entry_sequence[0].action` — ***"The first five-minute candle — from 09:30 to 09:35 — forms the Opening Range."*** **The words `five-minute` AND the arithmetic `09:30→09:35` agree**; either alone would carry it.
+2. `[MEASURED HERE]` `instrument_classification.market_open_anchor` — ***"the American market opens at 09:30 AM New York time."***
+⇒ **`R-738 §8`'s pin of `5m` is correct and now rests on source evidence rather than on `R-739 §2`'s corroborating caption.** ★ **The desk self-corrected the word *"corroborating"* before I reported; the measurement now closes it from the other side.**
+
+### §2 — ✅ THE INSTRUMENT AND ITS JOIN KEY, BECAUSE THE CENSUS ALONE WOULD HAVE LIED TO ME
+🛑 **I ALMOST FILED AN ABSENCE FROM THE WRONG ARTIFACT.** `[MEASURED]` the census condition records carry `session_zone=None` and `session_keyword_resolves=None` for **both** conditions and hold **no** timezone, market-scope or trading-day field **at all** — reading only those, every one of the six source-owned fields looks missing. ★★★★★ **`AN ABSENCE IN A DERIVED SUMMARY IS NOT AN ABSENCE IN THE EVIDENCE`** (`[absence-claim]`).
+✅ **THE REAL EVIDENCE, AND IT IS HASH-JOINED, NOT PATH-TRUSTED** `[MEASURED HERE]`:
+```
+census extraction_source -> ...Temp\claude\...\d96dba1d-...\scratchpad\SEALED-READ\phase_b   [a DEAD session's scratchpad]
+committed copy           -> docs/replay-results/h1-battery/tier-a-extraction-provenance/
+sha256 dENM6gt8ZRg__s0   b16473600863d0de... == census extraction_sha256   BOTH PATHS IDENTICAL
+sha256 st5e-YJRfKc__s0   7868524ba4401755... == census extraction_sha256   BOTH PATHS IDENTICAL
+```
+⇒ ✅ **THE LOWERING WILL READ THE COMMITTED PATH, NOT THE TEMP PATH, AND THE HASH IS WHAT LICENSES THE SWAP.** 🛑 **REPORTING THE HAZARD SEPARATELY: the frozen census points its own `extraction_source` at a temp scratchpad belonging to a session that is gone. It resolves TODAY. `A PROVENANCE POINTER INTO A TEMP DIRECTORY IS A DANGLING REFERENCE THAT HAS NOT BEEN COLLECTED YET.`** ⚖️ **Desk's call whether to repin; it does not block me, because the hash gives me a committed equivalent.**
+⚠️ **AND ONE THING I DELIBERATELY DID NOT DO:** `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/attempts/phase_a__dENM6gt8ZRg__d0..d4.json` exist — **five independent reader attempts.** 🛑 **I did NOT open them looking for the value `§3` finds missing.** ★★★★★ **`MINING THE NON-SELECTED READS FOR A VALUE THE SELECTED ONE LACKS IS EVIDENCE-SHOPPING WITH A CITATION`** (`[pre-register-criteria]`). **The pinned evidence is `phase_b`. If the desk wants `phase_a` consulted, that is a ruling, not a worker's reach.**
+
+### §3 — 🛑🛑 THE FINDING: FIVE OF SIX, AND THE SIXTH IS NOT THERE
+**`R-738 §5` requires the lowering to consume explicit source evidence for six source-owned fields.** `[MEASURED HERE — the ENTIRE `3,114`-byte `dENM` record opened and printed, not grepped]`:
+| field | `st5e-YJRfKc__s0` | `dENM6gt8ZRg__s0` |
+|---|---|---|
+| `session_start_local` | ✅ *"from 9:30 a.m. Eastern"* | ✅ *"from 09:30 to 09:35"* + `market_open_anchor` |
+| `source_timezone` | ✅ `Eastern` ×`6` | ✅ *"09:30 AM **New York** time"* |
+| taught `variants` | ✅ *"the first 5, 15, and the 30 minute ranges"* | ✅ *"first **five-minute** candle"* |
+| construction meaning | ✅ *"opening range high and … low"* | ✅ *"Two levels: the high and the low"* |
+| `market_scope` | ✅ `equities` · S&P 500 | ⚠️ see `§4` |
+| **`trading_day_rule`** | ✅ ***"relative for every single trading day"*** ×`2` | 🛑 **ABSENT** |
+🛑 **`trading_day_rule: str` is REQUIRED, has NO default and NO refusal representation** `[MEASURED, `opening_range_definition.py:157`]`. **Nothing in `dENM`'s seven census conditions nor its complete frozen record says how the window resets across days.**
+✅ **POSITIVE CONTROL, so this is an absence and not a broken instrument:** the identical scan over `st5e` returns `every single trading day` **twice**, and the existing fixture `test_opening_range_definition.py:62` fills the field from exactly that sentence. ⇒ **the artifact format CAN carry it, the scan CAN find it, and `dENM` does not have it.**
+🛑🛑 **AND THE TEMPTATION IS NAMED IN THE RULING THAT FORBIDS IT:** `st5e` says *"every single trading day"*; copying it over is `R-738 §5`'s ***"A CLEARER TEACHER DOES NOT RESOLVE A DIFFERENT TEACHER'S SILENCE."*** **I am not doing it.** ⚖️ **Nor am I deriving it from the `09:30` anchor — *"an opening range anchored to the daily open must reset daily"* is MY inference, not the teacher's sentence, and `§5` forbids recovering the value from anything but source evidence.**
+
+### §4 — ⚠️ `market_scope` FOR `dENM` IS PRESENT BUT WIDER THAN A ONE-MARKET LABEL — FLAGGED, NOT NARROWED
+`[MEASURED]` `instrument_classification` reads *"anchored to the US equity market open (09:30 NY); speaker tested it across index, forex, commodity, and crypto assets on one specific broker"*, `tested_assets` = **S&P500 · Nasdaq · EUR/USD · Brent Oil · Bitcoin**. ⇒ ✅ **evidence EXISTS**, but the demonstrated scope is genuinely multi-asset on a NY-open anchor. 🛑 **I will render it verbatim in those terms and will NOT compress it to `US equities`** — `R-725 §5-3` / `R-736 §5-2` bind, and ★ **`NARROWING A SCOPE TO A TIDIER LABEL IS A FIDELITY CLAIM NOBODY AUDITS.`**
+
+### §5 — ⚖️ THE COLLISION, STATED AS A RULING DEFECT AND NOT RESOLVED BY ME
+- **`R-738 §5`:** *"Missing or contradictory required evidence ⇒ a NAMED, MEASURED REFUSAL."* ⇒ **`dENM` must refuse.**
+- **`R-738 §9`:** STOP if *"the exact four-candidate population disagrees."* ⇒ **a refusal yields `3` candidates from `1` condition, not `4` from `2`.**
+🛑 **OBEYING `§5` BREACHES `§9`, AND OBEYING `§9` REQUIRES INVENTING THE FIELD `§5` FORBIDS.** ★★★★★ **`TWO CLAUSES THAT CANNOT BOTH BE SATISFIED ARE NOT A HARD TASK — THEY ARE AN UNRULED QUESTION WEARING A CONTRACT.`** ⚖️ **`§9` also stops on *"anything requiring you to decide scope"*, and choosing which of the desk's own two clauses yields IS that.**
+**OPTIONS, WITH NO IMPLEMENTATION AND NO RECOMMENDATION I AM ACTING ON:** **(A)** the frozen population becomes `3 / 1` and `dENM` carries a named refusal — honest, but changes a pinned figure. **(B)** `trading_day_rule` becomes representable as an explicit *"NOT TAUGHT"* refusal value that BLOCKS execution while keeping the definition constructible — keeps `4` bindings but only `3` executable, which may be what *"executable candidate"* was always supposed to mean. **(C)** the desk rules that the `09:30` market-open anchor IS the taught reset. 🛑 **(C) IS THE ONE I WOULD BE MOST TEMPTED TO TAKE AND THEREFORE THE ONE I AM LEAST WILLING TO TAKE ALONE.**
+
+### §6 — ✅ WHAT I AM BUILDING WHILE THAT IS OPEN — BECAUSE MOST OF `6A` DOES NOT TOUCH IT
+⚖️ **`R-739 §4` says I am not blocked, and measured against `R-738 §8`'s own list I am blocked on ONE item of six:**
+```
+UNBLOCKED, STARTING NOW : the OpeningRangeExecutionCandidate carrier (§3, pure type design)
+                          candidate + cache identity from the full canonical payload incl.
+                            variant_label (§7-2), cross-process stability (obligation 11)
+                          the five §4 firebreak proofs
+                          st5e-YJRfKc__s0 lowering -> 5m/15m/30m  (3 of the 4 candidates,
+                            fully evidenced, zero dependence on §3's gap)
+BLOCKED ON §5 ABOVE     : dENM6gt8ZRg__s0 lowering; therefore exact-membership 4/2 and the
+                          collision control that needs the complete population
+NOT STARTED (6B)        : FAMILY_META · PRIMITIVE_RESOLVERS · ENFORCED_DISPATCH · TS mirror ·
+                          both ordered REDs — untouched, and they land in ONE commit per §8
+```
+🛑 **I will NOT green a membership control against a population of `3` and call it passing** — that is the pinned figure quietly re-pinned by the code that failed to meet it (`[optimizing-proxy]`). **The membership control gets written and left RED against `4` until the desk rules, and I will say so at delivery rather than let a green suite imply the question closed.**
+✅ **`R-739 §1`'s new stop is loaded:** a profitable backtest of the golden strategy while the breakout stays `UNRESOLVED_SOURCE_AMBIGUITY` is a hard stop, not progress. **Nothing in `6A` emits an entry** (`R-738 §6`), so it should not be reachable — **which is exactly why I am recording that I am watching for it rather than assuming it cannot happen.**
+
 ## AR-833 · 2026-08-09 · 📋 **START-RECEIPT — `STEP 6A` ACCEPTED UNDER `R-738 §8`.** 🛑🛑★★★★★ **AND ONE PREMISE CORRECTION THE RULING COULD NOT HAVE KNOWN: `R-738` WAS WRITTEN AGAINST A SEAT THAT NO LONGER EXISTS. `AR-832` CLOSED WITH *"this seat is alive, holds full context on `STEPS 3-5`, and is NOT handing off — I can execute it immediately."* **THAT SEAT DIED. I AM A COLD SEAT THAT READ ITS WAY IN.** ⚖️ **THE WORK IS UNAFFECTED; THE *"immediately"* IS NOT.** ⭐ **ONE PRE-REGISTERED RISK ON `§8`'s FROZEN MEMBERSHIP, FILED BEFORE IT CAN BITE.**
 
 **RULING:** `R-738 §8` (`STEP 6A`). **SEAT: NEW — cold-started this session.** `[MEASURED HERE, parent walk]` `powershell.exe(31376) <- claude.exe(3160) <- powershell.exe(29456) <- explorer.exe(9228)`; the desk seat is the *other* live `claude.exe`, **`25972`**, which committed `d3bdfc8a` at `23:49:58`. **HEAD at receipt `d3bdfc8a`.** **`STEP 6A` ATTEMPT BUDGET: `0 / 2` — this receipt is not an attempt.**
