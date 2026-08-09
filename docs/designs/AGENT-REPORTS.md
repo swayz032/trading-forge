@@ -4,6 +4,53 @@
 
 ---
 
+## AR-858 · 2026-08-09 · 🔴 **RETIREMENT RECEIPT — `R-753 §6` ORDERS THIS SEAT (`claude.exe 3160`) TO RETIRE, AND THESE ARE THE FOUR ACTS IT ALLOWS, IN ORDER, WITH NOTHING ADDED.** ✅ **NOTHING OF MINE IS DIRTY OR UNPUSHED.** ⏳ **GRADE TARGET `16224ef5`, RECEIPT NOT YET ON DISK.** 🛑 **FAN-IN `0 / 0` — AND I DO NOT INTERPRET THE GRADE.**
+
+**RULING:** `R-753 §6`. **HEAD at write time `019caab2` (the `R-753` commit), local == remote `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent by this seat.**
+
+### §1 — ✅ ACT ONE: NOTHING DIRTY, NOTHING UNPUSHED, FROM MY WORK
+```
+git log origin/h1-wave4-sealed12-driver..HEAD        EMPTY        <- nothing unpushed
+git status --porcelain src/                          M src/engine/tests/test_synthetic_market_simulator.py
+                                                                  <- the SIBLING'S, present before I seated, untouched
+git status --porcelain docs/designs/  ->  21 untracked GRADE-*/HANDOFF-*/MEASURE-*/SEE-IT-LIVE/SWEEP-* docs
+                                                                  <- NEWEST mtime 2026-08-03 16:18, SIX DAYS before this seat
+```
+✅ **MY OWN SURFACE IS EMPTY:** the only files this seat wrote are `AGENT-REPORTS.md` (`AR-857`, `AR-858`) and one memory file outside the repo. **`AR-857` is landed and pushed at `7f8ad807`.**
+⚠️ **STATED SO THE NEXT SEAT DOES NOT RE-DERIVE IT: the 21 untracked docs are NOT mine and NOT new.** `[MEASURED HERE, `stat` on all 21]` **the NEWEST was last written `2026-08-03 16:18` — six days before this seat opened.** **Do not attribute them to `D-8` or to this seat.**
+> ⚖️ **AND I CORRECTED THIS LINE BEFORE IT SHIPPED:** my draft said *"all present in my FIRST status of the session"* — **but that status was piped through `head -20` and showed only `12` of the `21`.** ★★★ **`A CLAIM ABOUT A SET I ONLY SAW TRUNCATED IS A CLAIM ABOUT THE PIPE, NOT THE SET` — the desk's own `ADVISOR-STATE` warning against `| head`/`| tail` on a result you intend to rely on, one seat later. Re-measured by mtime, which is the property the claim actually needed.**
+
+### §2 — ✅ ACT TWO: THE IMMUTABLE GRADE TARGET AND ITS RECEIPT PATH
+```
+GRADE TARGET   16224ef5cf8bc03ed47f3fd524a18e32a0d25004   <- D-8, immutable, pushed
+RECEIPT PATH   docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md
+RECEIPT STATE  NOT ON DISK as of this write  [MEASURED HERE, ls -> No such file]
+ISOLATION      wt-grade-d8         detached @ 16224ef5   <- the graded SHA, as ordered
+               wt-grade-d8-parent  detached @ f7aefaa6
+ITEMS          (A)-(K)   -- (I)(J)(K) added by R-753 §2 to the RUNNING agent
+```
+⚠️⚠️ **ONE MECHANICAL OBSERVATION I RECORD WITHOUT ADJUDICATING IT, BECAUSE `doer ≠ grader` BARS ME FROM AUDITING THIS GRADE — IT IS FOR THE NEXT DESK SEAT, NOT FOR ME:** `[MEASURED HERE, `git rev-parse 16224ef5^` → `bfe92035`]` **the parent of the graded SHA is `bfe92035`, and the differential worktree is pinned to `f7aefaa6`** — `R-751 §7`'s baseline SHA, **six commits earlier.** ⚠️ **I very nearly wrote `327c1e9d` here from `AR-856`'s *"BASE HEAD"* line without running the command; `bfe92035` (the `HANDOVER` commit) landed in between. ★★★ `A "BASE HEAD" IN A REPORT IS WHERE A SEAT STARTED, NOT THE COMMIT'S PARENT — AND ON A SHARED BRANCH THOSE DIVERGE THE MOMENT A SIBLING COMMITS.`** ⚖️ **THAT MAY BE ENTIRELY CORRECT** — `f7aefaa6` is the SHA the committed `33`-member baseline was taken at, so a *baseline* arm belongs there while a *before/after* arm would belong at `327c1e9d`. ★ **I state the join and NOT a verdict: `A DIFFERENTIAL'S "BEFORE" ARM IS A JOIN KEY, AND THE RIGHT ONE DEPENDS ON WHICH QUESTION THE ARM ANSWERS.` The desk holds the brief; I do not.**
+
+### §3 — ✅ ACT THREE: THE FAN-IN
+**`0 / 0`. THIS SEAT HOLDS NO AUTHORIZED TASK AND LEAVES NOTHING HALF-BUILT.**
+- **`D-8` = `5 / 5`, delivered (`AR-856`), accepted by `R-753 §1` on the desk's OWN re-run of all four release predicates.**
+- **`D-9`** (the three weak controls `R-753 §2` found in my own `D-8` commit) — **owner: the NEXT worker seat; wake trigger: the receipt lands.** 🛑 **NOT STARTED BY ME AND CORRECTLY SO: editing the graded SHA's controls mid-grade destroys the grade** (`R-753 §2` stop).
+- **`D-3`** `6B` state channel — **next worker seat, after the grade; RECONCILE `f788c64b`, never replay.** **NOT BEGUN** (`R-753 §6` forbids it to me explicitly).
+- **Nothing dispatched by this seat is owed back** — it dispatched no subagent. **The grade is the desk's dispatch, running under `claude.exe 25972`.**
+⚖️ **I ACCEPT `R-753 §2`'s THREE FINDINGS AGAINST MY OWN COMMIT WITHOUT ARGUMENT, AND I NOTE THE ONE THAT STINGS MOST IS THE ONE I SHOULD HAVE CAUGHT:** `CONTROL B`'s title says *"an eligible neighbour still completes"* and its body only asserts `not.toBe("refused")`. ★★★★★ **`AR-856 §4` LISTED CONTROL `B` UNDER "THE DISCRIMINATION PROOF" ON THE STRENGTH OF ITS NAME — I WROTE THE CAPTION AND THEN READ IT BACK AS EVIDENCE.** ⚖️ **The desk relayed the same caption to the operator (`R-753 §3`) — it originated here.**
+
+### §4 — 📡 THE EAR, HANDED OVER RATHER THAN LEFT TO BE GUESSED AT
+✅ **`EAR v4` IS STILL ARMED AND STILL DELIVERING** — `bash.exe 19352`, parent `claude.exe 3160`, armed `07:31:46Z`. It caught `84f986b3`, my own two commits, and `R-753` itself, each within ~30s `[MEASURED HERE, its own emissions this seat]`.
+🛑 **`R-753 §5`: ONE ear stands, authorized UNTIL THE GRADE RECEIPT LANDS, then DISARMED. The receipt is NOT on disk, so the ear STAYS ARMED. I am not disarming it on my way out.**
+⚠️⚠️ **AND THE THING THE NEXT SEAT MUST MEASURE RATHER THAN ASSUME:** this ear is a child of **PID `3160`**. `[background-monitors]` — **a `/clear` keeps the process and the ear survives; a RESTART kills it and the next seat goes blind without knowing.** ⇒ **NEXT SEAT: walk your own parent chain FIRST (`Win32_Process`), and only arm if no `bash.exe` under YOUR `claude.exe` PID is watching `ADVISOR-RULINGS.md`.** 🛑 **DO NOT DISARM ONE YOU DID NOT ARM — that is `AR-854`'s convicted error, reversed by the operator in his own words.**
+
+### §5 — ⏹️ ACT FOUR: STOP
+🛑 **NO production edit · NO state-channel work · NO test "cleanup" · NO `D-9` · NO grade interpretation · NO monitor armed or disarmed · NO `git stash` · NO worktree cleanup · sibling's file untouched.**
+✅ **The one correction this seat owed is already in the ledger:** `AR-857 §4` is **struck in place** — I claimed the `pre-commit` hook does not stash on the strength of a `grep` over `.git/hooks/pre-commit`, which is a **framework SHIM**; the very next commit printed `Stashing unstaged files`. **The sibling's work was re-measured intact after both cycles (`18` insertions / `3` deletions).** ★★★★★ **`AN ABSENCE FOUND IN A WRAPPER IS NOT AN ABSENCE IN THE BEHAVIOUR` — and this campaign's memory ALREADY carried that exact sentence, measured hours earlier by another seat. I did not consult it. `A LAW BANKED WHERE RECALL CANNOT REACH IT IS A LAW YOU WILL RE-LEARN AT FULL PRICE`; the memory's headline is corrected so the next recall surfaces the trap, not just the stash.**
+⏹️ **SEAT RETIRED. A fresh worker session is needed, and its first task is `D-9` — but ONLY once the grade receipt lands at the `§2` path.**
+
+---
+
 ## AR-857 · 2026-08-09 · 🟢 **SEAT-RECEIPT — AND THE FIRST THING I OWE IS A DISCLOSURE, NOT A MEASUREMENT: I AM NOT A FRESH SEAT. I AM `claude.exe 3160`, THE SAME PROCESS THAT FILED `AR-855` AND `AR-856`. `/clear` RESET MY CONTEXT, NOT MY PROCESS.** ⇒ **I AM THE DOER OF `D-8` AND MAY NOT CERTIFY IT.** ✅ **MY EAR IS LIVE AND PROVED IT BY DELIVERING THE DESK'S `84f986b3` THIRTY SECONDS INTO THIS SEAT.** 🛑 **FAN-IN `0 / 0` — NO AUTHORIZED TASK OUTSTANDING.**
 
 **RULING IN FORCE:** `R-752`. **HEAD `84f986b3`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent by this receipt.** **FAN-IN `0 / 0`.**
