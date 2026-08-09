@@ -11,6 +11,9 @@ from math import isfinite
 from typing import Optional, List, Tuple, Any, Dict
 
 
+SNAPSHOT_SCHEMA_VERSION = 1
+
+
 class Side(str, Enum):
     LONG = "LONG"
     SHORT = "SHORT"
@@ -30,6 +33,19 @@ class MomentumConfig:
     min_push: float
     max_recoil: float
     max_push_seconds: float
+
+    def __post_init__(self) -> None:
+        vals = (self.min_break, self.min_push, self.max_recoil, self.max_push_seconds)
+        if not all(isfinite(v) for v in vals):
+            raise ValueError("momentum config values must be finite")
+        if self.min_break <= 0:
+            raise ValueError("min_break must be > 0")
+        if self.min_push <= 0:
+            raise ValueError("min_push must be > 0")
+        if self.max_recoil < 0:
+            raise ValueError("max_recoil must be >= 0")
+        if self.max_push_seconds <= 0:
+            raise ValueError("max_push_seconds must be > 0")
 
 
 @dataclass(frozen=True)
@@ -57,6 +73,7 @@ class MomentumEngine:
     - stale/duplicate/out-of-order events fail closed
     - new bar promotes prior completed extreme to reference and resets live chain
     - a single giant price jump cannot manufacture multiple confirmations
+    - invalid/tampered snapshots are rejected instead of guessed through
     """
 
     def __init__(self, side: Side, config: MomentumConfig):
@@ -86,6 +103,8 @@ class MomentumEngine:
     def arm_reference(self, reference_price: float, bar_id: int, symbol: str) -> None:
         if not isfinite(reference_price) or reference_price <= 0:
             raise ValueError("reference_price must be finite and positive")
+        if not symbol:
+            raise ValueError("symbol required")
         self.reference = reference_price
         self.anchor = reference_price
         self.bar_id = bar_id
@@ -99,6 +118,8 @@ class MomentumEngine:
         self.transitions.append(Transition("REFERENCE_ARMED", bar_id, None, reference_price))
 
     def on_symbol_change(self, symbol: str) -> None:
+        if not symbol:
+            raise ValueError("symbol required")
         if self.symbol is not None and symbol == self.symbol:
             return
         self.symbol = symbol
@@ -128,6 +149,12 @@ class MomentumEngine:
     def on_tick(self, event: TickEvent) -> Optional[str]:
         if not isfinite(event.price) or event.price <= 0:
             self.errors.append(("BAD_PRICE", event.event_id))
+            return None
+        if not isfinite(event.event_time):
+            self.errors.append(("BAD_TIME", event.event_id))
+            return None
+        if not isinstance(event.event_id, int) or not isinstance(event.bar_id, int):
+            self.errors.append(("BAD_EVENT_ID", event.event_id if isinstance(event.event_id, int) else None))
             return None
 
         if self.bar_id is None:
@@ -222,6 +249,7 @@ class MomentumEngine:
 
     def snapshot(self) -> Dict[str, Any]:
         return {
+            "schema_version": SNAPSHOT_SCHEMA_VERSION,
             "side": self.side.value,
             "config": asdict(self.config),
             "stage": self.stage.value,
@@ -241,6 +269,8 @@ class MomentumEngine:
 
     @classmethod
     def restore(cls, payload: Dict[str, Any]) -> "MomentumEngine":
+        if payload.get("schema_version") != SNAPSHOT_SCHEMA_VERSION:
+            raise ValueError("UNSUPPORTED_OR_MISSING_SNAPSHOT_SCHEMA")
         engine = cls(Side(payload["side"]), MomentumConfig(**payload["config"]))
         engine.stage = Stage(payload["stage"])
         engine.bar_id = payload["bar_id"]
