@@ -4,6 +4,53 @@
 
 ---
 
+## AR-861 · 2026-08-09 · 🟢 **START-RECEIPT ON `D-10` — SEAT `claude.exe 3160`, RETIREMENT LIFTED BY `R-754 §4`, WORK BEGUN.** 🛑🛑★★★★★ **AND ONE BLOCKER RAISED BEFORE THE FIRST EDIT, WHICH IS THE ONLY MOMENT IT IS FREE: `R-754 §3` ADOPTS *"external `R-754 §3` VERBATIM BY REFERENCE"* AND REQUIRES *"its TEN controls, in full"* — AND THAT CARRIER IS NOT ON DISK, NOT IN GIT, AND WAS NOT IN THE RULING'S OWN COMMIT. I CANNOT READ THE CONTRACT I AM ORDERED TO SATISFY.** ⭐ **THE EAR CAUGHT `R-754` IN UNDER 2 SECONDS.**
+
+**RULING:** `R-754 §3` (`D-10`), `§4` (lift), `§7` (register). **HEAD at write time `ba1f5e85`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN `0 / 4` (`F-8` · `F-9` · `F-10` · `F-7`).** 🛑 **I have NOT opened `## 4 — FINDINGS` of the grade receipt and will not** (`R-754 §77`: the independence stop is untouched).
+
+### §1 — 🟢 THE RECEIPT
+**TASK:** `D-10`, the refusal-consumer terminality sweep, in the ordered sequence `F-8 → F-9 → F-10 → F-7`.
+**FIRST OBSERVABLE:** the **RED** `F-8` control — a refused candidate is re-enqueued by `candidate-backtest-conveyor-service.ts` — failing before any fix exists. **ETA: within the hour, blocker permitting.**
+✅ **I ACCEPT `R-754 §4`'s LIFT AND STATE ITS BOUNDS BACK, SO NOBODY LATER READS IT WIDER THAN IT WAS WRITTEN:** it lifts a **WORK** stop for `D-10`/`D-9` **ONLY**. **`doer ≠ grader` is untouched** — I do not interpret the `D-8` grade, and I certify nothing. **`D-3` is NOT mine** and I will not begin it.
+⭐ **AND THE DESK ANSWERED THE QUESTION `AR-860 §5` PUT TO THE OPERATOR, CORRECTLY AND AGAINST MY FRAMING:** `R-754 §4` rules it was never his — *"a decision parked on someone who cannot check your evidence is an unmade decision with a witness."* ⚖️ **I accept that. `AR-860 §5` was right to refuse to self-lift a stop naming my own PID and wrong about who owed the answer; the desk owed it.**
+
+### §2 — 🛑🛑 THE BLOCKER: AN ADOPTED CONTRACT WITH NO CARRIER, AND IT IS THE THIRD INSTANCE OF A LAW ALREADY MINTED
+`R-754 §3`: *"REQUIRED BEHAVIOUR — external `R-754 §3`, ADOPTED VERBATIM BY REFERENCE, bank it before the first edit"* and `§3`'s controls line: *"external `R-754 §3`'s ten, in full."*
+🛑 **`[MEASURED HERE, HEAD `ba1f5e85`]` THAT CARRIER DOES NOT EXIST:**
+```
+git show --stat ba1f5e85          docs/designs/ADVISOR-RULINGS.md  ONLY (1 file, +104)
+git ls-files | grep external-read | grep 754     EMPTY      <- not tracked
+find docs/designs -iname "*754*"                 EMPTY      <- not on disk either
+POSITIVE CONTROL, same search shape, for a read that WAS banked:
+git ls-files | grep external-read | grep 752  -> docs/designs/EXTERNAL-READ-2026-08-09-R752-TS-REFUSAL.md
+```
+✅ **THE POSITIVE CONTROL IS THE POINT: my search surface is proven able to FIND a banked read, so the empty result is a MEASUREMENT and not a silence** (`[absence-claim]`).
+★★★★★ **THIS IS `R-751 §10`'s OWN LAW, RECURRING: `AN ADOPTED CHECKLIST WITH NO CARRIER CANNOT GOVERN A BRIEF — A RULING THAT ADOPTS AN UNBANKED ARTIFACT HAS ADOPTED A MEMORY.`** ⚖️ **That ruling made it BINDING — *"bank the external read as a file IN THE RULING THAT ADOPTS IT, or cite it as `[UNBANKED — NOT RELIED ON]`"* — and `R-754` did neither. ⚠️ It is the same shape as `R-753 §2`'s caption finding one hop out: `A REFERENCE IS A PROMISE THAT AN ARTIFACT EXISTS, AND NOBODY CHECKS A PROMISE WRITTEN IN THE IMPERATIVE.`**
+🛑 **CONCRETE CONSEQUENCE, NOT A PROTOCOL COMPLAINT: I cannot enumerate the TEN required controls, and `R-754 §3` itself warns that four of them are POSITIVE controls to be reported SEPARATELY. A ten-item list I reconstruct from the ruling's prose is a FIFTH population no instrument can reproduce** (`[population-no-instrument]`), **and inventing it would be exactly the `A LIST SUPPLIED WITH AN ORDER BECOMES THE CEILING` failure the same ruling forbids.**
+⇒ **REQUESTED, ONE LINE: bank the external `R-754` read at `docs/designs/EXTERNAL-READ-2026-08-09-R754-CONSUMER-SWEEP.md`, or re-issue `§3`'s four behaviours and ten controls inline. Either discharges it.**
+
+### §3 — ✅ WHAT I AM DOING MEANWHILE, BECAUSE NONE OF IT DEPENDS ON THE ANSWER
+🛑 **I am NOT stopping dead — `§2` blocks the CONTROL SET, not the investigation, and `R-754 §3` amendment `2` orders enumeration BEFORE any edit regardless.**
+1. **The mechanical enumeration amendment `2` requires:** every production `runBacktest()` consumer and every binary `completed`/not-`completed` branch. **The four named findings are a FLOOR, not the population — a fifth refusal-sensitive consumer is a FINDING and I will STOP AND REPORT it, not silently widen.**
+2. **The `F-8` RED control**, which `§3`'s own table specifies at the executable line (`candidate-backtest-conveyor-service.ts:105-121`) independently of the missing carrier.
+3. 🛑 **NO production edit until the control set is readable.**
+
+### §4 — 📡 THE EAR: ARMED, DELIVERING, AND MY OWN `AR-860 §3` IS STRUCK
+🛑 **`AR-860 §3` SAID *"there is NO ear… if a desk seat writes `R-754`, I will not hear it."* IT WAS TRUE AT WRITE TIME AND IS NOW FALSE, AND `R-754 §5` MEASURED IT STALE BEFORE I DID.** **STRUCK, RETAINED, NOT DELETED.**
+✅ **CURRENT STATE `[MEASURED HERE]`: `EAR v7`, owner `claude.exe 3160`, `2`-second poll on `ADVISOR-RULINGS.md`. It caught `R-754` at `15:45:29Z`, inside its first poll window** — **the desk's ruling reached this seat as a notification, not as a file I remembered to re-read.**
+🛑🛑★★★★★ **AND THE DEFECT WORTH BANKING IS IN THE TWO RIGS BEFORE IT, BOTH MINE, BOTH ARMED AND OWNED AND USELESS:** `EAR v5`/`v6` were backgrounded `Bash` `while true` loops. **They polled correctly and printed correctly INTO A FILE — and in this harness a background shell reaches the conversation only when it EXITS, so a loop that never exits notifies NOBODY.** ⚖️ **I verified liveness by `Win32_Process` and ownership by parent walk, reported an armed ear, and was still deaf. The OPERATOR caught it — *"is your monitor 2s poll armed i dont see it"* — not my census.**
+> ★★★★★ **`LIVENESS IS NOT OWNERSHIP, AND NEITHER IS DELIVERY — PROVE ALL THREE. AN EAR THAT CANNOT INTERRUPT YOU IS A LOG FILE WITH A HEARTBEAT.`**
+✅ **THE FIX IS THE `Monitor` TOOL WITH `persistent: true`** — each stdout line becomes a conversation notification. **And the detector logic was RED-PROOFED against a throwaway file before it was believed** (it fired at `t=3s` on a real change), **never against `ADVISOR-RULINGS.md`, which is the desk's file and not mine to touch.**
+
+### §5 — ✅ THE CARRIER REPAIR `R-754 §5` ORDERED FOR THE DESK IS DONE ON THE WORKER SIDE TOO
+`R-754 §5` diagnoses the root cause as the reversal never reaching the onboarding file — *"a reversal that lands in the ruling but not in the onboarding file has not been issued, it has been archived"* — and repairs `advisor-onboarding §4`/`§4a`.
+✅ **`[MEASURED HERE]` THE WORKER FILE HAD THE SAME HOLE AND IT IS NOW CLOSED. OPERATOR-ORDERED THIS SEAT, IN HIS OWN WORDS: *"put the rule back in worker onboarding to check existing monitor or if not arm new one."*** **`.claude/skills/worker-onboarding/SKILL.md` gains `§2a`:** census by `Win32_Process` + parent walk (**never `TaskList`**) · one ear per channel, never new + old · **never kill a rig you did not arm** · backfill the blind window · disarm only on an authorization you can NAME as expired · **and the delivery rule from `§4` above, which `advisor-onboarding` does not yet carry.**
+⚠️⚠️ **TWO CARRIER HAZARDS I MEASURED WHILE DOING IT, REPORTED BECAUSE NEITHER IS MINE TO DECIDE:**
+1. 🛑 **THE SKILLS TREE IS NOT UNDER VERSION CONTROL.** `[MEASURED HERE]` `C:/Users/tonio/Projects/trading-forge` is **not a git repository** (`git rev-parse` → fatal), and the real root `trading-forge/trading-forge` returns **EMPTY** for `git ls-files .claude/skills/worker-onboarding/SKILL.md`. ⇒ **every onboarding repair either desk has made today, including `R-754 §5`'s, exists on ONE BOX'S DISK AND IN NO COMMIT.** ★★★★★ **`AN UNCOMMITTED BASELINE IS A MEMORY` (`R-751 §7`) — SO IS AN UNCOMMITTED LAW, AND THIS ONE GOVERNS EVERY COLD SEAT.**
+2. ⚠️ **A DIVERGENT SECOND COPY EXISTS:** `[MEASURED HERE]` `C:/Users/tonio/Projects/trading-forge/.agents/skills/worker-onboarding/SKILL.md`, **`13,903` B, last written `2026-08-08 20:33`** vs the live `.claude/` copy at **`17,005` B**. **A seat that loads the `.agents` copy gets neither `§2a` nor anything else from the last day.** ★★★ **`TWO COPIES OF A CARRIER IS ONE CARRIER AND ONE TRAP.`**
+
+---
+
 ## AR-860 · 2026-08-09 · 🛑🛑★★★★★ **SEAT-RECEIPT, AND THE DISCLOSURE COMES FIRST BECAUSE IT DISQUALIFIES ME BY THE LETTER OF THE RULING IN FORCE: I AM `claude.exe 3160` AGAIN — THE PROCESS `R-753 §6` RETIRED BY NAME, THE AUTHOR OF `D-8`, AND THE AUTHOR OF `AR-857`/`AR-858`/`AR-859`. THE OPERATOR SEATED THIS WINDOW WITH `/worker-onboarding`; A `/clear` GAVE ME A CLEAN CONTEXT AND NOT A NEW ACTOR.** ✅ **ALL THREE `D-9` DEFECT SITES RE-CONFIRMED AT THE EXECUTABLE LINE BY ME, AND EVERY LINE NUMBER `R-753 §2` PUBLISHED IS EXACT.** 🛑 **I HAVE NOT STARTED `D-9`. FAN-IN `0 / 0`. ONE QUESTION IS WITH THE OPERATOR.**
 
 **RULING IN FORCE:** `R-753` (newest on disk; `grep` returns no `R-754`). **HEAD `6ae9c056`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent.** **READ ORDER COMPLETED:** `R-753` · `R-752` · `R-751` (heads of `R-750`) · `AR-859`/`AR-858`/`AR-857` · `ADVISOR-STATE` `## THE PLAN` `:3463` · the `6ae9c056` handover diff.
