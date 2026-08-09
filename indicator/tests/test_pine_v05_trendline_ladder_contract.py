@@ -19,6 +19,20 @@ class PineV05TrendlineLadderContractTests(unittest.TestCase):
         self.assertIn('bool showPdl = dayValuesValid', self.src)
         self.assertNotIn('dwVisibleCount', self.src)
 
+    def test_daily_weekly_price_lines_span_full_chart(self):
+        for token in (
+            'var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)',
+            'var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)',
+            'var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)',
+            'var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)',
+            'line.set_extend(id, fullSpan ? extend.both : extend.right)',
+        ):
+            self.assertIn(token, self.src)
+        self.assertIn('f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, 2, true)', self.src)
+        self.assertIn('f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, 2, true)', self.src)
+        self.assertIn('f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, 2, true)', self.src)
+        self.assertIn('f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, 2, true)', self.src)
+
     def test_weekly_levels_use_adaptive_visual_near_rule(self):
         self.assertIn('bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near"', self.src)
         self.assertIn('float dailyVisualEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na', self.src)
@@ -47,6 +61,12 @@ class PineV05TrendlineLadderContractTests(unittest.TestCase):
             self.assertIn(f'float {prefix}P2 = input.price(', self.src)
         self.assertIn('xloc = xloc.bar_time, extend = extend.right', self.src)
 
+    def test_unconfigured_trendlines_are_explained_not_faked(self):
+        self.assertIn('string trendlineLoadText = activeTlCount == 0 ? "NO TRENDLINES — SET A/B"', self.src)
+        self.assertIn('Trendlines DO NOT auto-appear', self.src)
+        self.assertIn('active = dGreenOn', self.src)
+        self.assertIn('active = dRedOn', self.src)
+
     def test_invalid_or_hidden_price_geometry_is_na_not_zero(self):
         self.assertIn('line.set_xy1(id, na, na)', self.src)
         self.assertIn('line.set_xy2(id, na, na)', self.src)
@@ -61,7 +81,6 @@ class PineV05TrendlineLadderContractTests(unittest.TestCase):
         self.assertIn('if planSide == "LONG"', self.src)
         self.assertIn('if dRedValid and dRedNow > close', self.src)
         self.assertIn('if h4RedValid and h4RedNow > close', self.src)
-        self.assertIn('if planSide == "LONG"', self.src)
         self.assertIn('if dGreenValid and dGreenNow < close', self.src)
         self.assertIn('if h4GreenValid and h4GreenNow < close', self.src)
         self.assertIn('string nextWallText = na(nextWallPrice) ? nextWallName', self.src)
