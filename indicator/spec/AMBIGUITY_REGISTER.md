@@ -30,7 +30,7 @@ Rule: if a term below has no approved measurable definition, it is **NOT CODE-RE
 | Big-candle intermediate zone | CALIBRATION_REQUIRED | Need objective displacement definition | Define normalized displacement and internal reaction-zone eligibility |
 | Stale trendline | CALIBRATION_REQUIRED | Old line may still matter or may be obsolete | Define age, intervening structure, intersection/invalidation and lineage rules |
 | Overall trend reversal | OUT_OF_SCOPE_V1 | User does not use trendline break alone | Keep separate; no automatic flip from a trendline cross |
-| Market closed | CALIBRATION_REQUIRED | Weekend/holiday/no-new-bar states can look stale without being faulty | Explicit session/calendar/feed-state rules and golden cases |
+| Market closed | ENGINEERING_DEFINED_NORMAL_GAP / HOLIDAY_UNRESOLVED | Normal weekend/maintenance can be bounded, but holiday/no-new-bar states need separate proof | v0.4 permits a 72-hour normal closed-gap bridge only when current HTF time_close is already past; longer gaps fail closed pending holiday golden cases |
 | Platform-native daily/weekly candle mismatch | EXTERNAL_VARIANCE_NEEDS_PROOF | Feeds/session construction can differ and Sunday pre-open semantics are tricky | Use platform-local candle only after Friday->Sunday pre-open->reopen and holiday parity tests; log discrepancies |
 | Feed realtime | PARTIAL | Pine cannot prove every entitlement state by itself | Operator/platform attestation + freshness/runtime guard where observable |
 | Chart sync 100% | DEFINED_CONTRACT | Literal market/future certainty is impossible; observable parity is testable | Must satisfy `PLATFORM_SYNC_CERTIFICATION.md` exactly |
