@@ -4,6 +4,63 @@
 
 ---
 
+## AR-862 · 2026-08-09 · 🛑🛑🛑★★★★★ **`R-754 §3` AMENDMENT `2`'s STOP CONDITION HAS FIRED, AND NOT BY ONE: THE MECHANICAL ENUMERATION FINDS *THREE* REFUSAL-SENSITIVE CONSUMERS THE RULING DOES NOT NAME, ACROSS SIX MORE CALL SITES. ONE OF THEM WRITES THE LITERAL STRING `"completed"` INTO A CANDIDATE ROW FOR A REFUSED REPLAY AND STAMPS IT WITH A FABRICATED SCORE OF `0`.** ✅ **THE FOUR NAMED FINDINGS ARE A FLOOR, EXACTLY AS THE RULING WARNED.** 🛑 **NO PRODUCTION EDIT MADE. I AM REPORTING, NOT WIDENING.**
+
+**RULING:** `R-754 §3` amendment `2` (*"a fifth refusal-sensitive consumer is a FINDING — STOP AND REPORT; do not silently widen"*). **HEAD at write time `4f3496e8`, local == `git ls-remote` `[MEASURED HERE]`.** **FAN-IN `0 / 4`.** **ATTEMPT BUDGET `1 / 2` — this is an enumeration result, not a failed attempt.**
+
+### §1 — ✅ THE INSTRUMENT, AND ITS POSITIVE CONTROL, BEFORE ANY FINDING
+`[MEASURED HERE]` `grep -rn "runBacktest(" --include=*.ts src/`, **production only** (`.test.ts` and `__tests__` excluded) ⇒ **`13` call sites across `10` files**, plus the definition at `backtest-service.ts:460` and two comment-only hits, which I excluded **by reading them, not by pattern.**
+✅ **AND THE NULL IS POSITIVE-CONTROLLED, WHICH IS THE ONLY REASON IT IS QUOTABLE:**
+```
+                                        'refused'   'completed'
+candidate-backtest-conveyor-service.ts      0            3
+routes/critic-optimizer.ts                  0            2
+shadow-rerun-service.ts                     0            5
+matrix-backtest-service.ts                  0           19
+critic-optimizer-service.ts                 0           50
+lifecycle-service.ts                        0           64
+```
+**Same grep, same tree, same call ⇒ the zeros are a MEASUREMENT, not a silence** (`[absence-claim]`).
+⭐⭐ **AND I CHECKED THE TWO NON-ZERO COUNTS RATHER THAN LETTING THEM READ AS EXISTING REFUSAL HANDLING** — `agent-service.ts` has `5` and `evolution-service.ts` has `1`. `[MEASURED HERE, `grep -n refused`]` **every one belongs to a DIFFERENT FEATURE: `scout.synthesizer_refused` (`:2058`–`:2089`) and a promotion-gate refusal note (`:711`). NONE is backtest-execution refusal.** ★★★ **`A TOKEN MATCHING YOUR REGEX IS NOT A MEMBER OF YOUR POPULATION` (`[i-measured]`) — a bare count of `refused` would have scored two of the most exposed files as already handled.**
+
+### §2 — 🛑 THE THREE UNNAMED REFUSAL-SENSITIVE CONSUMERS, EACH AT THE EXECUTABLE LINE
+**All three are `F-9`'s class — an ABSENT metric becomes a MEASURED value — which `R-754 §3` itself calls the class that *"manufactures evidence."***
+
+| # | site | `[MEASURED HERE, executable line]` | why it is refusal-sensitive |
+|---|---|---|---|
+| **`N-1`** | `critic-optimizer-service.ts:2390` (**+ `:2575`, `:2849`, `:3051`**) | `replayTier = rr?.tier ?? "REJECTED"` · `replayForgeScore = rr?.forgeScore ?? 0` · then `.set({ replayStatus: "completed", replayTier, replayForgeScore: String(replayForgeScore) })` | 🛑🛑 **WORST OF THE THREE: `replayStatus: "completed"` is an UNCONDITIONAL LITERAL — a refused replay is recorded as a completed one, carrying a fabricated `0` score and a `REJECTED` tier it never earned.** ⇒ **the critic loop then ranks a refusal against real candidates.** |
+| **`N-2`** | `matrix-backtest-service.ts:90-102` | `forgeScore ?? 0` · `sharpe ?? 0` · `totalTrades ?? 0` · `winRate ?? 0` · `profitFactor ?? 0` · `avgDailyPnl ?? 0` · `maxDrawdown ?? 0` · `tier ?? "REJECTED"` | 🛑 **SEVEN fabricated metrics in one object literal.** A refusal becomes a complete, well-formed matrix cell **indistinguishable from a genuinely flat strategy.** |
+| **`N-3`** | `evolution-service.ts:435-441` | `mutSharpe = result.sharpe_ratio ?? 0`, then `improvement = (mutSharpe - parentSharpe)/parentSharpe`, then `results.push({ sharpe: mutSharpe, improvement })` | 🛑 **The fabricated zero is not merely stored — it is COMPUTED WITH.** A refused mutation is scored as a real regression against its parent. |
+
+★★★★★ **THIS IS THE CAMPAIGN'S DEFINING FAILURE MODE, `?? 0`, REPEATED ELEVEN TIMES IN THREE FILES NOBODY LISTED: `A KEY PRESENT AS 0.0 IS A MEASUREMENT; A KEY ABSENT WITH A STATED REASON IS A REFUSAL` — the same sentence `R-751 §8-5` minted for the Python boundary and `AR-856` carried across the TypeScript one, defeated three more times downstream of both.**
+
+### §3 — ✅ THE FOUR NAMED FINDINGS, AS I MEASURE THEM
+- ✅ **`F-8` CONFIRMED** `[MEASURED HERE, `candidate-backtest-conveyor-service.ts:105-121`]` — three chained `NOT EXISTS` on `b.status = 'completed'` / `'running'` / `'failed' AND recent`. **`refused` matches none ⇒ the candidate stays eligible and is re-enqueued every tick.**
+- ✅ **`F-9` CONFIRMED** `[MEASURED HERE, `routes/critic-optimizer.ts:51-58`]` — `.orderBy(desc(backtests.createdAt)).limit(1)` with **no status predicate at all**; the only guard is `if (!latest)`, which a refused row satisfies.
+- ✅ **`F-7` CONFIRMED, and it is a MISLABEL rather than a fabrication** `[MEASURED HERE, `agent-service.ts:775`]` — `status: result.status === "completed" ? "tested" : "failed"` ⇒ **a refusal is journalled as `failed`.** ⭐ **Its `tier`/`forge_score` use `"x" in result` guards and correctly go `null`** — so this site fabricates nothing and only mis-names. **Lower severity than `N-1`–`N-3`, and I say so rather than levelling them.**
+- ⏳ **`F-10` NOT YET RE-DERIVED BY ME.** `R-754 §3` grades its reachability `[HYPOTHESIS — NOT EXECUTED]` and orders me to red-proof it FIRST. **Untouched so far; I will not inherit its confirmation from its neighbours.**
+
+### §4 — ✅ THE CONSUMERS I CHECKED AND AM *NOT* REPORTING AS FINDINGS
+🛑 **Stated explicitly, because an enumeration that lists only hits cannot be audited for over-reach.**
+- `carter-actions.ts:182` — branches only on `"skipped"`, then **returns `result.status` through unchanged.** A refusal propagates honestly. **NOT a finding.**
+- `routes/backtests.ts:255` — fire-and-forget; the result is bound to `_result` and **discarded.** **NOT a finding.**
+- `lifecycle-service.ts:6975` — writes the **true** `btResult.status` into the audit row's `result` field and branches only on `"skipped"`. ⚠️ **ONE BLEMISH, REPORTED NOT RANKED: the audit row's own `status` column reads `"success"` for a refusal.** **No fabricated metric; LOW.**
+
+### §5 — ⚖️ THE ARCHITECTURE QUESTION THIS RAISES, WHICH IS THE DESK'S AND NOT MINE
+🛑 **`7` refusal-sensitive call sites across `7` files now, and the population was `4` an hour ago.** **Every one fails the same way: `runBacktest()` returns an object whose absent metrics are silently coercible by `??`.**
+⇒ **I can implement either, and I am NOT choosing:**
+- **OPTION A — LOCAL (as ordered):** patch each consumer to test `BACKTEST_STATUS_REFUSED` before reading metrics. **Faithful to the ruling; `7` edits; and the eighth consumer written next month repeats the defect.**
+- **OPTION B — CENTRAL:** make a refusal **non-coercible at the source** so `?? 0` cannot silently succeed, and let each consumer fail loudly until it handles it. **Fixes the CLASS** (`worker-execution §12`: add the thing that makes this class of error harder to introduce) **but its blast radius is every caller at once, which is exactly the scope `R-754 §3` fenced off with *"NO repo-wide TS sweep."***
+⚖️ **MY RECOMMENDATION, WITH ITS COST STATED: `OPTION A` for `D-10` as authorized, PLUS one guard that makes `OPTION B` cheap later. I do not adopt it on my own signature — a fence I would be crossing is the ruling's, and `R-745` says the desk amends explicitly or not at all.**
+
+### §6 — 🛑 STATE: STOPPED AT THE CONTRACT, NOT AT THE WORK
+- 🛑 **NO production file edited. NO test edited. NO `git stash`. NO worktree cleanup. `f788c64b` untouched. Sibling's file untouched (`18` insertions / `3` deletions, re-verified after my commit).**
+- 🛑 **TWO ITEMS ARE NOW WITH THE DESK:** `AR-861 §2` (**the ten required controls have no carrier on disk**) and **`§5` above** (scope: `4` named vs `7` measured).
+- ✅ **PROCEEDING MEANWHILE ON WHAT NEITHER BLOCKS:** the `F-8` RED control, whose site `R-754 §3` confirmed itself and whose scope no answer above can shrink.
+- ⚠️ **I have NOT opened `## 4 — FINDINGS` of the grade receipt** (`R-754 §77`), so `[UNMEASURED BY ME]`: whether the grade already named `N-1`–`N-3` and the ruling's `§2-3` undercount (*"three follow-ups"* struck, **ten findings**) is where they went missing. ★★★ **If so, this report is a re-derivation of known findings and the desk should say so — `A FINDING FOUND TWICE BY TWO BLIND PATHS IS CORROBORATION; A FINDING RE-DERIVED BECAUSE NOBODY RELAYED IT IS WASTE.`**
+
+---
+
 ## AR-861 · 2026-08-09 · 🟢 **START-RECEIPT ON `D-10` — SEAT `claude.exe 3160`, RETIREMENT LIFTED BY `R-754 §4`, WORK BEGUN.** 🛑🛑★★★★★ **AND ONE BLOCKER RAISED BEFORE THE FIRST EDIT, WHICH IS THE ONLY MOMENT IT IS FREE: `R-754 §3` ADOPTS *"external `R-754 §3` VERBATIM BY REFERENCE"* AND REQUIRES *"its TEN controls, in full"* — AND THAT CARRIER IS NOT ON DISK, NOT IN GIT, AND WAS NOT IN THE RULING'S OWN COMMIT. I CANNOT READ THE CONTRACT I AM ORDERED TO SATISFY.** ⭐ **THE EAR CAUGHT `R-754` IN UNDER 2 SECONDS.**
 
 **RULING:** `R-754 §3` (`D-10`), `§4` (lift), `§7` (register). **HEAD at write time `ba1f5e85`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN `0 / 4` (`F-8` · `F-9` · `F-10` · `F-7`).** 🛑 **I have NOT opened `## 4 — FINDINGS` of the grade receipt and will not** (`R-754 §77`: the independence stop is untouched).
