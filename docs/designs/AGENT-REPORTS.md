@@ -4,6 +4,23 @@
 
 ---
 
+## AR-813 · 2026-08-09 · ⚡ **START-RECEIPT — `R-725 §8` PHASE B0 ACCEPTED. READ-ONLY, NO PRODUCTION EDIT.**
+
+**TASK:** determine whether the existing `orh_{n}m` / `orl_{n}m` / `or_range_{n}m` surface is exact enough to REUSE — **before** anyone writes new engine capability. **One table, 13 rows, every cell `EXACT` | `MISMATCH` | `UNMEASURED`. Exactly one disposition returned.**
+**FIRST OBSERVABLE:** a `## PHASE B0` section in `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md` carrying the table with the deterministic-comparison rows populated.
+**ETA:** ~`40` min. 🛑 **Status line rather than silence past ~`70`.**
+**WRITE SCOPE:** that file and this one. **NOTHING ELSE. No adapter, no production edit, no routing of the frozen artifact.**
+
+### §1 — THE CONTROLS I AM BINDING MYSELF TO BEFORE I START
+Run the real OR producer on deterministic candles · compute expected OR high/low/width **outside any engine code** · mutate OR high **and** low · mutate **duration** · mutate the **day boundary** · **and prove the instrument can detect disagreement.** ★★★ **That last one is the whole receipt: after `R-724 §8-2` I will not publish another agreement I have not shown my rig capable of contradicting.**
+
+### §2 — TWO THINGS I AM FLAGGING BEFORE THEY COST ANYTHING
+1. ⚠️ **`§8`'s stop list includes *"if the OR producer cannot be invoked without mutation, STOP at static compatibility"*. `[MEASURED, `AR-810`]` `compute_opening_range_breakout` is NOT imported by the spec compiler — it is reached through the indicator dispatcher (`core.py:649`, `:760`). **If invoking it standalone requires me to touch production wiring, I stop and say so** rather than making it callable.
+2. ⚠️ **`§8` also says *"if the grade rejects Phase A, STOP and repair the evidence first"*, and the `§9` next-receipt asks me to report GRADE STATUS. `[MEASURED HERE, `git status` + `ls`, re-run at commit time]` **no Phase-A grade receipt exists on disk yet.** ⇒ **I proceed on the desk's explicit authorization and record that the grade is IN FLIGHT, not passed.** ★ **B0 is read-only, so a later rejection costs a report and no code.**
+
+### §3 — WHAT I AM NOT DOING
+🛑 No adapter · no production edit · no routing · **no adoption of `close >= orh_*`** (construction and confirmation are separate semantics, and the ruling is right that conflating them is how a breakout rule gets invented) · none of the other `8` conditions · no topology census · **no Phase B1 patch — I will name its smallest boundary and write nothing.**
+
 ## AR-812 · 2026-08-08 · 🛑 **CORRECTION AGAINST MY OWN `AR-811`: ITS CLOSING LINE PROPOSED SOMETHING `R-724 §8` EXPRESSLY FORBIDS.** ✅ **AND THE MID-SERIES CONTROL IS RUN — THE EDGE OBJECTION I RAISED AGAINST MY OWN FINDING IS CLOSED, AND THE FINDING SURVIVED A GENUINE ATTEMPT TO KILL IT.**
 
 ### §1 — 🛑 MY ERROR, AND IT IS A SCOPE ERROR, WHICH IS THE WORST KIND HERE
