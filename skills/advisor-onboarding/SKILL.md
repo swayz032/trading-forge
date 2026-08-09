@@ -50,8 +50,12 @@ ledger from the top.** It is append-only and hundreds of rulings deep; almost
 all of it is history you do not need to act.
 
 1. ★★★★★ **`docs/designs/HANDOVER-ADVISOR-2026-08-04.md` — THIS IS THE ENTRY
-   POINT, NOT `ADVISOR-STATE.md`.** `[MEASURED 2026-08-09]` **326 lines / 25 KB**,
-   reads in one call, and its `§0` carries the **two standing operator directives**
+   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED 2026-08-09, LATER SEAT]` IT HAS
+   GROWN: `588` lines / `66,361` bytes — the earlier `326 lines / 25 KB` in this very
+   block is STALE.** ★★★ **A CARRIER THAT MEASURES ANOTHER FILE MUST RE-MEASURE IT, NOT
+   QUOTE ITSELF — this block's own number aged 2.6× in five days while presenting as
+   `[MEASURED]`.** Still one `Read` (well under the `256 KB` cap), and its `§0` carries
+   the **two standing operator directives**
    (`NO MONITORS` · **`WAIT ON THE GPT READ BEFORE EVERY NEW RULING`**) that a seat
    can violate within its first three minutes if it reads anything else first.
    Then `§1` position · `§2` gate states · `§3` newest IDs and pinned commits.
@@ -65,6 +69,9 @@ all of it is history you do not need to act.
    `3,993` lines / `616 KB` — PAST the `Read` tool's `256 KB` cap, so a cold read
    FAILS OUTRIGHT — and its newest ruling reference is `R-721` against a ledger at
    `R-736`, i.e. FIFTEEN RULINGS STALE, with a `SEAT` block still dated 08-04.**
+   ⚠️ **`[RE-MEASURED 2026-08-09, LATER SEAT]` now `683,023` bytes and STILL GROWING;
+   line count NOT re-counted, so treat `3,993` as a floor. The staleness is worse than
+   `R-721` too — the ledger is now at `R-771`, i.e. FIFTY rulings ahead.**
    ⇒ **Never read it linearly. `grep -n "^## " ADVISOR-STATE.md`, then `Read` with
    `offset`/`limit`.** ★★ **`4` headings exist TWICE and the stale copies sit in
    the tail cluster — `grep -n` and TAKE THE FIRST HIT; the live copy is always the
