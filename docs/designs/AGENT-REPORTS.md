@@ -4,6 +4,95 @@
 
 ---
 
+## AR-889 · 2026-08-09 · ✅ **LANE `E` DELIVERED — `f3c01ad7` + `9ccf5c79`. REFUSALS ARE NOW VISIBLE TO PROMPT LEARNING AS `REFUSED_UNMEASURED`, AND THE FORGE ARM CAN NO LONGER BUY A PROMOTION WITH AN EXECUTABILITY REGRESSION.** ⚡ **RED PUBLISHED FIRST ON ALL FOUR CONTRACT BEHAVIOURS.** 🛑 **AND A MUTATION CAUGHT A GAP IN MY OWN CONTROLS BEFORE THE DESK DID: ONE GUARD'S REMOVAL REDDENED **NOTHING**, BECAUSE EVERY FIXTURE ROW WAS ALREADY HARMLESS.** ⚠️ **PLUS ONE PRE-EXISTING FAILURE IN `b11-b12` THAT IS **NOT** MINE, PROVEN NOT ASSERTED.**
+
+**SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `9ccf5c79`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `Lane E` `1 / 2`.**
+
+### §1 — ✅ THE CONTRACT, CLAUSE BY CLAUSE
+```
+[MEASURED HERE — prompt-evolution-service.ts @ 9ccf5c79]
+A  weekly corpus   both whitelists now `IN ('tested','failed','promoted','refused')`  ✅
+                   analyzeTiers buckets `status === BACKTEST_STATUS_REFUSED` to
+                   REFUSED_UNMEASURED — a refusal NEVER joins a measured tier        ✅
+                   the generated prompt STATES: "NOT BACKTESTED, no forge score
+                   exists" · "DO NOT infer trading performance" · "use ONLY for
+                   proposer / executability / groundability patterns"                ✅
+                   NO fabricated forge score for that bucket (avg reads N/A)         ✅
+B  A/B metrics     refusals ENTER totalStrategies (attempts)                          ✅
+                   a refusal is NOT a pass · contributes NOTHING to forgeScores
+                   — 🛑 explicitly NOT a zero                                         ✅
+                   refusedStrategies + refusalRate ADDED (operator-facing)            ✅
+C  promotion guard `forgeScoreImprovement >= T && !materialExecutabilityRegression`   ✅
+                   materiality = PASS_RATE_THRESHOLD (5 pts) REUSED, not reinvented   ✅
+NO schema · NO migration · NO agent-service change · NO funnel edit · NO new service  ✅
+SHARED CLASSIFIER: imports BACKTEST_STATUS_REFUSED from db/schema.js — no restated
+                   `"refused"` literal in the service                                 ✅
+```
+⭐ **ON `C`, THE PART WORTH THE DESK'S EYE — I GUARDED ONLY THE FORGE ARM, AND `§5`'s OWN LOGIC IS WHY:** `[MEASURED]` **once refusals enter `totalStrategies`, the PASS-RATE arm is SELF-guarding** — a refusal spike lands in the denominator and depresses `passRate` unaided. **The FORGE arm is not: its average never sees refusals at all.** ⇒ **guarding both would have been redundant on one arm and would have made the mirror control `E.8` harder to satisfy honestly.** ★★★ **`FIND WHICH ARM OF A DISJUNCTION CAN ACTUALLY WIN ALONE BEFORE YOU GUARD IT — GUARDING THE ARM THAT IS ALREADY CONSTRAINED BUYS NOTHING AND HIDES WHETHER THE REAL ONE IS.`**
+
+### §2 — ⚡ RED FIRST, THEN THE BATTERY
+```
+RED (pre-fix)   E.1 E.2 E.3 E.7 FAILED · E.4 E.5 E.6 E.8 passed   4 failed | 4 passed
+   E.7's red is R-770 §5's hazard LIVE: variant B won on forge score alone
+   despite a 0.00 -> 0.20 refusal-rate regression.
+GREEN           9 passed (9) · TSC_EXIT=0
+
+MUTATIONS (all restore `git diff --exit-code` clean)
+E0  UNMUTATED CONTROL              9 passed (9)          <- not always-red
+E1  revert the bucket split        REDDENS E.1 E.2 E.3   — and nothing else
+    (the R-770 §6 required one)    GREEN: every positive, incl. E.4
+E2  drop the executability guard   REDDENS **only** E.7
+E3  drop the refusal skip in       REDDENS **only** E.9  (after the §3 repair)
+    collectVariantMetrics
+```
+
+### §3 — 🛑🛑 THE GAP A MUTATION FOUND IN MY OWN CONTROLS, AND THE FIXTURE THAT CLOSED IT
+**On its first run, `E3` — deleting the `continue` that skips refusals in `collectVariantMetrics` — REDDENED NOTHING. `9 passed`.**
+⚖️ **THE MECHANISM, AND IT IS NOT THAT THE CODE WAS WRONG: every refusal in my fixtures had `forgeScore: null` and `tier: null`, so it COULD NOT contribute a score or a pass even with the guard deleted.** ⇒ **the guard's removal was INVISIBLE, and `E.5`'s forge-sample assertion was, against that mutation, unfailable.**
+✅ **REPAIR — and it is the shape `D-10 N-1` is literally about:** a new fixture `refusedWithStaleMetrics` (`status='refused'` **carrying** `tier: "TIER_1"`, `forgeScore: "90"`) — the drizzle *"omitting a column from `.set()` leaves the existing value"* case where a candidate that COMPLETED and was LATER refused retains stale metrics. **`N-1` fixed the WRITER; `E.9` makes the READER's guard falsifiable.** ⇒ **`E3` now reddens exactly `E.9`.**
+★★★★★ **`A GUARD IS ONLY PROVEN BY AN INPUT THAT COULD DEFEAT IT. IF EVERY FIXTURE ROW IS ALREADY HARMLESS, THE GUARD'S REMOVAL IS INVISIBLE — AND THE MUTATION THAT "PASSES" IS REPORTING ON YOUR FIXTURE, NOT YOUR CODE.`** ⭐ **This is the mutation battery earning its keep in the direction that matters: a NON-biting arm is a finding about the CONTROLS, not a clean bill of health for the code. I nearly filed `E3` as "the guard is defensive, no observable effect" — which would have been true and useless.**
+
+### §4 — ⚠️ A PRE-EXISTING FAILURE IN `b11-b12` — NOT MINE, AND I PROVE IT RATHER THAN ASSERT IT
+**`B11 > "bypass only skips economic event block — holidays still block even with bypass"` FAILS: `expected -1 to be greater than 95408`.**
+`[MEASURED HERE — three independent ways, because "not mine" is exactly the claim a reader cannot check]`:
+```
+1. THE SUBJECT IS NOT IN MY DIFF   the test reads `paper-signal-service.ts`;
+                                   `git status --porcelain` on it -> EMPTY (clean)
+2. MY DIFF IS DISJOINT             I modified prompt-evolution-service.ts + 2 test files
+3. THE CAUSE IS A REAL SOURCE DRIFT
+   grep -c 'calResult.is_economic_event === true' paper-signal-service.ts -> 0
+   the token the test does `indexOf` on is GENUINELY ABSENT => indexOf returns -1
+   last commits to that file: 189f5eaa / 8f8ff35f / d1036977 — none mine
+```
+⇒ **`B11` is a STALE SOURCE-PINNED ASSERTION that went red when the paper-signal source drifted, with no behaviour change.** 🛑 **I did NOT fix it — outside Lane `E`'s named files and outside `R-770 §6`'s scope.** ⭐⭐ **AND IT IS THE SECOND INSTANCE OF THIS LANE'S OWN LESSON, IN THE SAME FILE: `A TEST THAT PINS A LITERAL GUARDS THE SPELLING, NOT THE MEANING` — here the spelling changed while the meaning did not, so it produced a FALSE RED; at `:234` the meaning changed while the spelling did not, producing a FALSE GREEN. **The same defect class fires in both directions.** Registered for the desk.**
+
+### §5 — 🛑 THE `:234` WIRING GUARD — UPDATED IN THE SAME CHANGE, AS ORDERED
+✅ **It reddened by construction, exactly as `R-770 §6` predicted, and I updated it rather than deleting it.** **It now pins `IN ('tested', 'failed', 'promoted', 'refused')` plus the four individual literals, and CARRIES AN IN-FILE NOTE that it is a WIRING guard and NOT the acceptance proof, pointing at `d10-e-prompt-evolution-refusal.test.ts`.** ⚖️ **Its former comment — *"the full critic feedback surface"* — was false as a behavioural statement the moment `'refused'` existed; corrected in place.**
+
+### §6 — ⚖️ WHAT I DID **NOT** MEASURE — THE BOUNDARY IS IN THE TEST FILE'S OWN HEADER, NOT ONLY HERE
+🛑 **THE SQL PREDICATES ARE NOT BEHAVIOURALLY PROVEN, AND THEY CANNOT BE BY THIS HARNESS.** `IN (...)` is evaluated by POSTGRES; a mocked `db` cannot enforce it, and **a fixture that re-implemented the filter would be measuring my own mock.** ⇒ **the predicate TEXT is covered by the `:234` source guard (spelling only); everything DOWNSTREAM of the fetch is behavioural.** ★★★ **`A CONTROL THAT ENCODES THE PREDICATE IT IS TESTING MEASURES ITS OWN MOCK.` Stated in the suite header so a later reader cannot mistake the split.**
+🛑 **NO PRODUCTION DATA. No live query, no evidence a `'refused'` journal row exists.** Mechanism only — the same `[UNPROVEN]` `R-767 §8` / `R-768 §9` / `R-770` all carry.
+🛑 **THE LLM's ACTUAL RESPONSE TO THE NEW BUCKET IS UNTESTED.** I prove the prompt CONTAINS the annotation; **I do not and cannot prove the model obeys it.** ⚠️ **That is a real residual: the whole `A` half of this lane rests on a model reading an instruction.**
+🛑 **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`** — campaign worktree, not `runtime-production`.
+
+### §7 — ✅ ACCEPTANCE EVIDENCE
+```
+[MEASURED HERE] population enumerated from DISK, SIZE ASSERTED before running, whole
+output read (never `| tail` — the npm notice prints after the summary at exit 0)
+  find src -name 'd10-*.test.ts' -> 7  (+ shadow-rerun-service + b11-b12) = 9   ASSERTED
+  npx vitest run <the 9> -> Test Files 8 passed | 1 failed (9)
+                            Tests 166 passed | 1 failed (167)
+  THE SINGLE FAILURE IS §4's PRE-EXISTING B11. Every D-10 member is GREEN.
+  npx tsc --noEmit -> TSC_EXIT=0
+```
+**FAN-IN: `Lane E` `1 / 1`. MY SEAT TOTAL: `4 / 4` lanes (`C` `N-5` · `B` `F-7` · `D` census · `E`).**
+**NOTHING HALF-BUILT · NO MUTATION LEFT PLANTED** — fourteen run across the seat (`M0`–`M4`, `G0`–`G5`, `E0`–`E3`), every one restored clean. **`[MEASURED]` `git status --porcelain src/` → only the sibling's `test_synthetic_market_simulator.py`.** 🛑 **NO SUB-AGENT DISPATCHED — nothing owed back.**
+🛑 **I did NOT run the `R-758 §8` final `D-10` acceptance.** `R-770 §6` authorizes it only AFTER Lane `E`, and **returning Lane `E` is not the same as being cleared to run it** — that clearance is the desk's to give.
+⚖️ **NOT HANDING OFF.**
+
+---
+
+
 ## AR-888 · 2026-08-09 · ✅ **LANE `D` DELIVERED — THE `system_journal.status` CONSUMER CENSUS IS COMPLETE AND READ-ONLY. `21` EXECUTABLE CONSUMERS, ENUMERATED WITHOUT `head`/`tail` AND COUNT-ASSERTED BEFORE CLASSIFICATION.** 🛑 **ONE CONCRETE BEHAVIOUR CHANGE FOUND — `prompt-evolution-service` DROPS REFUSED RUNS FROM THE PROMPT-LEARNING CORPUS, AND IT IS PINNED BY A TEST. I REPORT AND DO NOT CHOOSE, EXACTLY AS `R-769 §7` PRE-REGISTERED.** ⭐ **AND THE DESK'S TWO NAMED CANDIDATES SPLIT: ONE IS THE REAL FINDING, THE OTHER IS A PRE-EXISTING GAP `F-7` WIDENS RATHER THAN CREATES.**
 
 **SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `877d03f7` at read time.** **ATTEMPT BUDGET: `Lane D` `1 / 2`.** 🛑 **NO EDIT MADE — `git status --porcelain src/` unchanged by this lane. The census is read-only, as contracted.**
