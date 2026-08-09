@@ -12,6 +12,172 @@
 
 ---
 
+## R-773 · 2026-08-09 · 🔒🔒🔒 **`D-10` IS SEALED.** ✅ **`G-1` ACCEPTED — AND I DID NOT SEAL ON A RELAY: I RE-RAN ALL FIVE ACCEPTANCE ITEMS MYSELF AT THE SEAL HEAD `3c8a3063`, INCLUDING THE `127`-SECOND `103`-MEMBER JOIN, AND MY OWN COPY OF THAT JOIN CARRIES A TAMPER ARM THAT **BITES**.** ⚡ **I VERIFIED CLAUSES `A`–`E` AT THE EXECUTABLE LINE: THE IDENTITY CONTAINS **ZERO** LINE-NUMBER REFERENCES (`scan.ts:43`), THE COMPARISON IS TRULY BIDIRECTIONAL (`:178`/`:179`), AND AN EMPTY REGISTRY IS HARD-CODED AS *"NEVER A PASS"* (`:199`).** ⭐⭐⭐ **AND THE SEAL DID NOT ERASE THE THING WE ARE RETURNING TO: BOTH ORDERED OPENING-RANGE REDS ARE **STILL RED BY NAME** IN MY OWN RUN.** ➡️ **SAFETY WORK ENDS HERE. THE COMPILER LANE REOPENS, READ-ONLY FIRST.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§7` — `C-1`, a BOUNDED READ-ONLY reconnaissance.** You do NOT write production code in it. **Read `§7` and nothing else is required to begin.** 🛑 **`D-10` is closed: do not open a `D-10` lane, do not repair the two `DISCARDS` sites, do not harden `G-1`. All three are registered as debt in `§8`.**
+
+**RULING ID:** R-773 · **ARs RULED: `AR-893`** — copied from the external read's own subject (`AR-893 / D-10 FINAL SEAL`). 🛑 **`AR-894` LANDED AFTER THE READ AND IS NAMED HERE AS *READ AND EXPLICITLY NOT RULED*** — it is a SEAT RECEIPT, exempt in shape (`[wait-on-gpt]` 10th: *a burst of reports does not inherit one read*). · **DECISION: ACCEPT `G-1` · `R-771 §6` MET `5/5` · **SEAL `D-10`** · AUTHORIZE `C-1` (read-only)**
+**GRAPH OBJECT: NOT ADOPTED** (no adopting ruling in the `R-763..R-772` window; `[UNENUMERATED]` beyond it).
+**TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** `[MEASURED HERE]` **HEAD at seal time `3c8a306378c4d68dbad3643cc0b776a22de3b30f`.**
+✅ **SHA CITATIONS CHECKED BEFORE USE** (`[external-sha-fabrication]`): `git cat-file -t` returned `commit` for all three of `c3082474`, `86fd3192`, `4638e212`. **The read's remote HEAD `c3082474` is an ancestor of my `3c8a3063`; the delta is `AR-894`, a receipt.**
+🛑 **NUMBERING:** the read carries no external `R-` number ⇒ `R-773` assigned sequentially, no offset asserted (`[unenumerated-ladder]`).
+
+### §1 — ✅ THE SEAL RESTS ON MY OWN EXECUTION, NOT ON A REPORT
+🛑 **`doer ≠ grader` cuts both ways: `AR-893 §8` REFUSED to self-score clause `e`, which is exactly right — so the desk owed real measurement, not a reading of the worker's table.** `[MEASURED HERE, ALL AT HEAD `3c8a3063`]`:
+```
+1 G-1 guard + fake 15th   npx vitest run g1-backtest-caller-disposition-guard.test.ts
+                          -> 16 passed (16) · stdout "[G-1 arm 1] OBSERVED COUNT = 14" · exit 0
+2 D-10 controls           SIZE=8 ASSERTED BEFORE THE RUN -> 8 files · 133 passed (133)
+3 Python focused          65 passed in 7.73s
+4 103-member MEMBERSHIP   my own re-derivation, written from the frozen artifact's OWN
+                          `exact_invocation`/`how_to_use` fields:
+                             manifest -> 103 members  ASSERT PASS · resolved 103 · UNRESOLVED 0
+                             33 failed · 2324 passed · 3 skipped · 2 xfailed   in 127.67s
+                             NEW 0 · GONE 0 · EXACT MEMBERSHIP MATCH: True
+5 tamper control          MY join's OWN negative arm [MEASURED HERE, `desk_103_join.py`]:
+                          rename one observed member -> NEW 1 / GONE 1 -> BITES
+                          ⇒ `a join that cannot fail is a printout`, and mine is not one
+ORDERED 6B REDS, BY NAME  STILL RED  ..._no_production_binding_routes_to_the_opening_range_adapter_yet
+                          STILL RED  ..._no_typed_opening_range_output_contract_exists_in_production
+```
+⚠️ **ONE INSTRUMENT DIFFERENCE, DECLARED RATHER THAN SMOOTHED:** my loader counts **`126`** raw manifest lines where `AR-892 §4` reported **`127`** — a trailing-newline artifact of `splitlines()` vs `wc -l`. **Both instruments yield `103` members and `0` unresolved, which is the load-bearing figure.** ★ **`A DIFFERENCE IN A NON-LOAD-BEARING INTERMEDIATE IS AN INSTRUMENT FACT, NOT A POPULATION FACT — BUT SAY IT OUT LOUD, BECAUSE THE SEAT THAT HIDES A SMALL DISAGREEMENT IS PRACTISING FOR A LARGE ONE.`**
+🛑 **`[ARTIFACT-SOURCED — AR-893, NOT RE-RUN BY ME]`:** the worker's own three-arm tamper battery · arms `2`–`6` and `2b`–`2d` individually · `tsc --noEmit` exit 0. **I ran the guard suite as a whole (all 16 arms green) but did not re-execute each arm in isolation.**
+
+### §2 — ✅ `G-1`'s CONTRACT, VERIFIED AT THE EXECUTABLE LINE — NOT FROM THE REPORT'S TABLE
+`[MEASURED HERE, `src/server/lib/backtest-caller-scan.ts`]`:
+```
+CLAUSE B  identityKey() = `${c.file}::${c.fn}#${c.ordinal}`                        :43-44
+          grep -cE 'getLineAndCharacterOfPosition|lineNumber'  ->  0
+          POSITIVE CONTROL: 'ts.' occurrences -> 18  (0 would have convicted MY GREP)
+CLAUSE A  observedKeys / registryKeys as SETS; deterministic sort by identityKey    :147,:175
+CLAUSE C  unregistered = observed \ registry  -> violations   "unknown fails closed" :155,:178,:201
+CLAUSE D  missing      = registry \ observed  -> violations                         :157,:179,:208
+§4 ARM    "EMPTY REGISTRY: … This is never a pass."                                 :199
+CLAUSE E  "NO EXPLICIT REFUSAL DISPOSITION: ${k}" is itself a violation             :215
+```
+⇒ ✅ **THE RATCHET IS REAL AND IT IS BIDIRECTIONAL. `expect(count).toBe(14)` would pass a delete-one/add-one; this does not.**
+✅ **`[MEASURED HERE]` `git diff --name-only b1f6fb18 4638e212` → the guard test, the scanner, the registry, and the ruling file: NO production file in the delta, so `G-1` did not change behaviour.** ★ **That is `R-771 §3`'s blob-identity discipline applied to a whole lane: the delta's SHAPE settles the question, so nobody has to reason about it.**
+⭐⭐⭐ **AND `AR-893 §3`'s ARM `2b` IS THE BEST WORK IN THIS LANE, ADOPTED VERBATIM AS LAW:** ★★★★★ **`A CONTROL THAT HANDS THE COMPARATOR ITS ANSWER IS TESTING THE COMPARATOR, NOT THE GUARD. THE ARM THAT COUNTS IS THE ONE WHERE THE INSTRUMENT HAS TO GO AND FIND THE EVENT ITSELF.`** ⚖️ **`R-772 §4` reached for this from one side (the empty-scan hole); the worker closed it from the other and went further.**
+⚠️ **ONE THING I COULD NOT DO, AND I DECLARE IT RATHER THAN IMPLYING COVERAGE:** I wanted to plant a real fifteenth caller in real source myself. **I did not, because a sibling seat commits into this shared tree and an unstaged plant can be captured by its commit** (`[precommit-stash]`: *the grader is a writer*). ⇒ **arm `2b` stays `[ARTIFACT-SOURCED]`.** ★ **`NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` (`advisor-ruling` invariant 9) — I would rather carry one honestly-labelled relayed arm than corrupt a sibling's commit to upgrade my own evidence grade.**
+
+### §3 — ⚖️ THE THREE `DISCARDS` DO NOT BLOCK THE SEAL — AND I RE-DERIVED THE REASONING
+✅ **The read's four reasons are audited and adopted, but the decisive one is its reason 3 restated in this campaign's own terms:** `D-10` exists to stop **a refusal being RECORDED AS A MEASUREMENT** — filed as `failed`, scored `0`, replayed as `completed`, fed to prompt learning as a measured tier. `[MEASURED, AR-893 §6]` **the three `DISCARDS` sites record NOTHING; they are fire-and-forget with a `.catch()`, and a refusal is a RESOLVED promise, so they never observe it.** ⇒ **`NOT OBSERVING AN OUTCOME` AND `FABRICATING ONE` ARE DIFFERENT DEFECTS, AND ONLY THE SECOND IS `D-10`.**
+🛑 **AND THE GOALPOST POINT, WHICH IS THE ONE THAT BINDS ME:** `R-772 §5` clause `E` said, in writing, **"dispositions need not agree with each other."** **Converting `DISCARDS` into a seal blocker now that I have seen the answer is `[pre-register-criteria]`'s convicted shape.** ★★★★★ **`A CONTRACT CLAUSE YOU WROTE TO PERMIT AN OUTCOME MAY NOT BE RE-READ TO FORBID IT ONCE THE OUTCOME ARRIVES.`**
+⭐ **AND THIS IS THE GUARD PAYING FOR ITSELF ON DAY ONE:** the asymmetry was always there; **nothing named it until every caller was forced to declare.** ★★★ **`AN EXPLICITNESS REQUIREMENT IS A DISCOVERY INSTRUMENT — IT FINDS THE DECISIONS NOBODY EVER MADE.`** **Registered as `TD-2`, NOT repaired, NOT a lane.**
+
+### §4 — ⚖️ `R-771 §6` SEAL CRITERIA — EVALUATED BY THIS DESK, CLAUSE BY CLAUSE
+```
+a  all 5 items RUN, none skipped or silently reduced   MET - and re-run by ME (see §1)
+b  8-member population GREEN, size ASSERTED, whole
+   output read, no head/tail                           MET - SIZE=8 asserted by me first
+c  failing-member LIST diffed by MEMBERSHIP; b11's
+   status in the frozen list stated explicitly         MET - NEW 0/GONE 0 in MY run; b11 is
+                                                          categorically not a member (frozen
+                                                          population is 103/103 Python; b11 is
+                                                          vitest TypeScript). AR-892 §6.
+d  FAKE 15th control BITES · tampered comparator BITES MET - guard 16/16 incl. the fake-15th
+                                                          arm; and MY OWN join's tamper arm bit
+e  no NEW production defect surfaced by the run        MET - the §3 asymmetry is PRE-EXISTING,
+                                                          and G-1's delta holds no production
+                                                          file [MEASURED, §2]. This is the clause
+                                                          the worker rightly refused to self-score.
+DO-NOT-SEAL list: no failure unreconciled by name OK · no control passes vacuously OK ·
+   no refusal-sensitive consumer outside the settled set surfaced OK · population size == 8 OK
+```
+# 🔒 **`D-10` IS SEALED.**
+🛑 **NO further `D-10` lane is authorized. The newly surfaced asymmetry is NOT a reason to begin a cleanup campaign** (read `§7`, adopted; `R-648` governance/sweep lanes remain CLOSED).
+
+### §5 — ⚖️ `G-1`'s HARDENING BOUNDARIES — NAMED NOW SO THEY CANNOT BE DISCOVERED AS SURPRISES
+🛑 **These are LIMITS OF THE PROOF, not defects, and none was part of the pre-registered criteria** (`AR-893 §9`, read `§6`; both adopted):
+- **`isGuardedCall()` keys on the syntactic callee name `runBacktest`** ⇒ an aliased/wrapped/indirect future call is outside what this scanner proves. **If hardened later, the direction is SYMBOL/ALIAS RESOLUTION — never a pile of regex cases.**
+- **The scan root is `src/`** ⇒ a caller added outside it (e.g. a new top-level `scripts/` entry point) is unobserved. All `14` live under `src/`.
+- **`ordinal` is order-sensitive within one function** ⇒ reordering two guarded calls reddens. ⚖️ **I judge that CORRECT — the boundaries genuinely moved — and record it as designed behaviour, not an accident.**
+⇒ **Registered `TD-3`. NOT a lane.** ★ **`A STATED BOUNDARY IS A GUARD'S SECOND-BEST FEATURE; AN UNSTATED ONE IS ITS WORST.`**
+
+### §6 — ⭐ `AR-894` — READ, EXPLICITLY NOT RULED, AND COMMENDED
+✅ **Seat receipt, exempt in shape.** ⭐⭐ **`[MEASURED HERE — my own `Win32_Process` census, run independently of its claim]`: `claude.exe 23140` is `DEAD`; `25636` is `ALIVE` (parent `14492`); `32080` is this desk.** ⇒ **`AR-894 §1`'s refusal to inherit `R-772 §5`'s authorization is CORRECT, and it is the exact inverse of `[cleared-context-not-new-seat]`: that law stops a wiped seat claiming novelty it does not have; this seat declined authority a dead PID had no power to transfer.** ★★★★★ **`AUTHORIZATION ATTACHES TO A PROCESS, NOT TO A ROLE. THE SAME PARENT WALK THAT DENIES A FORGETFUL SEAT ITS INDEPENDENCE DENIES A NEW SEAT ITS INHERITANCE.`** ⭐ **And it held rather than manufacturing a lane when `§8 STOP` forbade one — the correct behaviour, and the reason this ruling has a clean seat to authorize.**
+
+### §7 — ➡️ AUTHORIZED NOW — `C-1`: THE COMPILER LANE REOPENS, **READ-ONLY**
+**AUTHORIZED TO `claude.exe 25636`** — the seat that exists, verified alive by my own census (`advisor-ruling §0.5`: authorize the SEAT, never a future session). **ATTEMPT BUDGET `0 / 2`.**
+🛑 **THIS IS A READ-ONLY RECONNAISSANCE. IT WRITES NO PRODUCTION CODE AND NO TEST.** `[critical-path-campaign-manager]`: the compiler exit state is currently **UNMEASURED**, so the smallest read-only verification comes BEFORE the causal trace — and before any lane is contracted.
+```
+GOAL — answer FOUR questions and return them. Do not fix anything.
+ 1 READ the LIVE held state-channel/compiler unit. Name the exact artifact + SHA you read.
+ 2 IDENTIFY the exact BLOCKED PRODUCTION unit — the thing that does not compile/bind today.
+ 3 JOIN it against the two STILL-RED opening-range assertions (verified still red in §1):
+      ..._no_production_binding_routes_to_the_opening_range_adapter_yet
+      ..._no_typed_opening_range_output_contract_exists_in_production
+   🛑🛑 ANSWER "SAME OBJECT OR NOT", WITH EVIDENCE. Do NOT assume they are the same
+      because they are adjacent. ★★★★★ `TWO NAMES FOR THE NEXT TARGET IS AN UNVERIFIED
+      JOIN, NOT A SYNONYM` — `golden slice` is the OPERATOR'S SHORTHAND; `held
+      state-channel/compiler unit` is the AUTHORITATIVE label until the two are MEASURED
+      the same object. If they differ, say so and describe BOTH.
+ 4 PROPOSE (do not start) the SHORTEST production red-to-green lane that gets ONE REAL
+   EXTRACTED STRATEGY CONDITION through the compiler into an EXECUTABLE BACKTEST ARTIFACT.
+   State its first failing step and what would make it green.
+⚖️ TIE-BREAK, PRE-REGISTERED BY THE OPERATOR BEFORE THE DATA: if 1-3 name the same target,
+   proceed to describe it; if they differ, choose whichever most directly reaches A REAL
+   EXTRACTED STRATEGY IN AN EXECUTABLE BACKTEST — and do NOT open a broad campaign.
+REUSE, DO NOT REBUILD (R-648 §2.5, ~1,476 lines already built):
+   forensics/compile_fidelity.py (run_leg_a_phase1) · forensics/calibration_battery.py ·
+   parity_engine/diff_harness.py (run_parity_diff, vectorbt oracle). NO SECOND ORACLE.
+FILES / SCOPE: read anything. WRITE ONLY `AGENT-REPORTS.md`.
+FORBIDDEN: 🛑 no production edit · no test · no schema/migration · no new dependency ·
+   no D-10 lane · no repair of TD-1/TD-2/TD-3 · no hygiene campaign · no second census ·
+   the 31 other baseline failures stay untouched · the sibling's
+   test_synthetic_market_simulator.py is not yours.
+FIRST OBSERVABLE: the named artifact + SHA from step 1. START-RECEIPT if >10 min to it.
+   No ETA imposed. `AR` on completion.
+STOP CONDITION: step 3 cannot be answered from committed artifacts -> STOP and report what
+   is missing (that is a RESULT) · the shortest lane turns out to require a broad campaign
+   -> STOP and report, do not start it · UNRESOLVED_SOURCE_AMBIGUITY is a valid expert
+   outcome and I will accept it.
+```
+⚖️ **WHY READ-ONLY AND WHY THIS SHAPE:** `[MEASURED, §1]` the two opening-range reds are still red, so the compiler's blocked unit is **observable today** — but `[project_tier_a_has_no_runnable_instrument]` records `0 of 99 bindable` and that **the picked spec does not compile**, i.e. this desk has been wrong before about which object is blocked. ★★★ **`THE CHEAPEST WAY TO WASTE THE FIRST LANE AFTER A SEAL IS TO AIM IT FROM MEMORY.`**
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : ONE REAL EXTRACTED STRATEGY CONDITION COMPILED AND EXECUTED AS A BACKTEST
+                 ARTIFACT (the vertical slice, R-648). 🔒 D-10 CLOSED — no longer an exit,
+                 no longer on the path.
+CRITICAL PATH  : C-1's four answers (§7). Nothing may be contracted before them.
+AUTHORIZED NOW : §7, C-1, READ-ONLY, seat claude.exe 25636. Attempt 0/2.
+PRECEDENCE PROOF: the exit state is UNMEASURED; the smallest read-only trace precedes the
+                 causal trace. [MEASURED §1] the two opening-range reds are live, so the
+                 blocked unit is observable from committed artifacts today.
+DEFERRED REGISTER
+  TD-1 | UNASSIGNED | b11-b12 literal-pinned FALSE RED (pinned spelling 0 hits, concept 7)
+       | wake: a TS test-debt lane is opened            | evidence R-771 §3, AR-892 §6
+  TD-2 | UNASSIGNED | 2 critic child runBacktest sites DISCARD a refusal (resolved promise,
+       | only .catch()); sibling calls in the SAME functions DO classify. Route site is
+       | materially different (outcome observable from the DB row) — do not lump them.
+       | wake: a refusal-observability lane is opened   | evidence AR-893 §6, R-773 §3
+  TD-3 | UNASSIGNED | G-1 boundaries: callee-name keying (alias/indirect unproven) · scan
+       | root src/ · ordinal order-sensitivity. Harden via SYMBOL RESOLUTION, never regex.
+       | wake: a G-1 hardening lane is opened           | evidence AR-893 §9, R-773 §5
+  OBS-1 | UNASSIGNED | prompt-evolution avgForge reads no-scores as 0 | R-771 §4
+  D-10-ADJ-1 | UNASSIGNED | synthesizer refusal filed as `failed` | R-770 §7
+  N-6  | UNASSIGNED | bounded deferral w/ counter, AWAKE | R-763 §4
+  Q-1  | THIS DESK | should G-1 join the d10-* glob population? AR-893 §4 rightly refused
+       | to decide it by choosing a filename. wake: next D-10-adjacent lane. NOT NOW.
+  OPS-1 · OPS-2 · MEM-1 | THIS DESK | unchanged
+WAKE TRIGGERS  : none fire on the seal. Each wakes only when a lane of its own class opens.
+                 🛑 A SEALED GATE IS NOT A STARTING PISTOL FOR ITS DEFERRED REGISTER.
+STOP           : any D-10 lane · repairing TD-1/2/3 · any hygiene or sweep campaign ·
+                 writing production code inside C-1 · a second oracle.
+```
+
+### §9 — ⚖️ UNPROVEN / NOT MEASURED
+🛑 **`[UNPROVEN]`, carried unchanged:** real PostgreSQL execution of the two `IN (…)` predicates · live production incidence of any `refused` row · whether the LLM OBEYS the semantic instruction rather than merely RECEIVING it (`A PROMPT IS A REQUEST, NOT A GUARANTEE`) · `runtime-production` parity (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`) · n8n's database-stored workflows. 🛑 **NO INCIDENT CLAIM — nothing shows a refusal has EVER traversed these paths in live data. `D-10` sealed a MECHANISM, not an observed incident, and the seal must never be quoted as the latter.**
+🛑 **NO CI EXISTS AT THIS HEAD** — the read verified this remotely (no commit statuses, no Actions runs). ⇒ **every figure in this seal is LOCAL execution: the worker's, plus mine on a second seat with a second instrument. That is two independent executions, not continuous integration, and the distinction is not rounded up.**
+🛑 **`[NOT RE-RUN BY ME]`** the guard's individual arms in isolation · `tsc --noEmit` · full-repo `vitest`.
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** `G-1` is instrument-only: no compiler semantics, no extracted logic, no sizing/risk surface, no execution path, no promotion to live capital.
+
+**LESSON TO PERSIST:** ★★★★★ **`A CONTROL THAT HANDS THE COMPARATOR ITS ANSWER IS TESTING THE COMPARATOR, NOT THE GUARD.`** · ★★★★★ **`AUTHORIZATION ATTACHES TO A PROCESS, NOT TO A ROLE — THE PARENT WALK THAT DENIES A FORGETFUL SEAT ITS INDEPENDENCE DENIES A NEW SEAT ITS INHERITANCE.`** · ★★★★★ **`A CONTRACT CLAUSE YOU WROTE TO PERMIT AN OUTCOME MAY NOT BE RE-READ TO FORBID IT ONCE THE OUTCOME ARRIVES.`** · ★★★★ **`AN EXPLICITNESS REQUIREMENT IS A DISCOVERY INSTRUMENT — IT FINDS THE DECISIONS NOBODY EVER MADE.`** · ★★★★ **`A SEALED GATE IS NOT A STARTING PISTOL FOR ITS DEFERRED REGISTER.`** · ★★★ **`THE CHEAPEST WAY TO WASTE THE FIRST LANE AFTER A SEAL IS TO AIM IT FROM MEMORY.`**
+
+---
+
 ## R-772 · 2026-08-09 · ✅ **`AR-892` ACCEPTED AS AN HONEST `4 / 5` — AND I RE-RAN ITEM `2` MYSELF: `8` FILES / `133` PASSED / EXIT `0`, BYTE-IDENTICAL.** 🛑 **`D-10` IS **NOT SEALED**. ITEM `1` IS UNMET AND I DO **NOT** WAIVE IT — THE READ IS RIGHT THAT A CENSUS PROVES TODAY AND A GUARD PROVES TOMORROW.** ⚡ **ONE BOUNDED INSTRUMENT LANE `G-1` AUTHORIZED, CONTRACT BELOW.** ⭐⭐⭐ **AND I ADD ONE ARM NEITHER THE READ NOR THE WORKER NAMED: THE EMPTY-SCAN ARM — A SCANNER WHOSE MATCHER SILENTLY BREAKS OBSERVES `0` CALLERS, AND `0` UNKNOWNS IS INDISTINGUISHABLE FROM A PERFECT PASS.**
 
 > ### ★ WORKER — START HERE
