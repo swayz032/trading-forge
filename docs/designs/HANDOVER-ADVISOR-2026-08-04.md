@@ -1,4 +1,14 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-748`, 2026-08-09**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-750`, 2026-08-09**
+
+> 🛑🛑🛑★★★★★ **READ THIS BLOCK FIRST — IT SUPERSEDES THE `R-748` POSITION BLOCK BELOW, WHICH IS NOW TWO RULINGS STALE.**
+> ✅ **POSITION: newest ruling `R-750` (`f8273f41`, pushed, remote tip verified equal by me) · newest AR `AR-849`, RULED. NOTHING UNRULED.**
+> 🛑🛑 **THE WORKER SEAT IS EMPTY — `AR-849` was a CONTEXT-EXHAUSTION HANDOFF, verified clean (`R-750 §4`): nothing stranded, `git status --porcelain src/` returns ONLY the sibling's `test_synthetic_market_simulator.py`. A FRESH WORKER SEAT MUST BE SEATED; it INHERITS `R-749 §6` per `protocol §12` and needs NO new authorization.**
+> ⚡ **WORK REMAINING — `R-749 §4` is `1 / 4` CLOSED.** Three closeouts + one red-proof, all specified in `R-749 §4` and `R-750 §5`/`§7`: **trace refusal payload · executed backtester spies (report as a REGRESSION GUARD, not a repair) · rich corpus artifact (re-derive mechanically) · confirmed-trigger pass-through red-proof.**
+> ✅ **WHAT LANDED AND IS PROVEN:** the golden strategy's seven phantom shorts are **`0`** in both flag states, the neighbour still trades (`6`, nonconstant), and **the CLEARER-TEACHER INVERSION IS CLOSED** — `[MEASURED, R-750 §1, desk's own probe re-run UNCHANGED]` all four confirmed-trigger cases return `primitive=None · ENGINE_PRIMITIVE_MISSING`; `compute_structure_state` appears nowhere.
+> ⚖️ **ATTEMPT BUDGET `1 / 2`** (`R-749 §5` — conceded to the reads after finding the ambiguity is in `R-648`, which counts FAILURES in one clause and TRIES in its only worked example). ★ **Only a FAILED delivery spends attempt `2`; an honest partial does NOT — pre-registered so a truthful report cannot burn the budget.**
+> 🛑🛑🛑 **THE EXTERNAL READS HAVE NOW MIS-CITED OUR LEDGER THREE RULINGS RUNNING** (`R-748 §2`, `R-749`, `R-750 §2`). Latest: both reads asserted the closeouts came from *"`R-752`"* — **campaign `R-752` DOES NOT EXIST**, `grep` returns `0`, and one of them built a whole fresh-seat start contract on that join. **Its start SHA (`cace8ead`) was stale too.** ⇒ ★★★★★ **`grep`-CHECK EVERY EXTERNAL REFERENCE TO OUR ARTIFACTS BEFORE ENTERING IT, AND NEVER PIN A CONTRACT TO A SHA LITERAL — JOIN `git rev-parse HEAD` TO `git ls-remote` INSTEAD.**
+> ⏳ **GRADE STAGED, NOT DISPATCHED.** Wake trigger: the three closeouts land, pushed + remote-verified → then `accuracy-validator` adversarially against that immutable SHA, receipt `GRADE-TRIGGER-SAFETY-2026-08-09.md`. **`doer ≠ grader`.** 🛑 **DO NOT merge, cherry-pick OR REPLAY the WIP checkpoint `f788c64b` — it PREDATES the eligibility boundary now on production and must be RECONCILED, not replayed (`R-750 §5-4`).**
+> ⚠️ **NUMBERING OFFSET IS NOW FOUR:** external `R-750`+`751`+`752` → campaign `R-749`; external `R-753`+`754` → campaign `R-750`. **Next external `R-755` → campaign `R-751`. NAME THE CARRIER.**
 
 > ★★★★★ **THIS FILE IS READ #1 FOR A COLD ADVISOR SEAT — `advisor-onboarding §1` was corrected at
 > `R-737 §9` to say so.** It had named `ADVISOR-STATE.md` instead, which `[MEASURED, R-737]` is
