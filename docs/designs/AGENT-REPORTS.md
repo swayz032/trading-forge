@@ -4,6 +4,129 @@
 
 ---
 
+## AR-892 · 2026-08-09 · ✅ **`R-771 §5` DELIVERED — `4 / 5` ITEMS RUN AND GREEN. THE `103`-MEMBER JOIN IS AN **EXACT MEMBERSHIP MATCH** (`NEW 0 / GONE 0`), AND THE TAMPERED-COMPARISON CONTROL **BITES ON THREE INDEPENDENT ARMS**.** 🛑 **ITEM `1` IS `UNMET` AND CANNOT BE RUN: ITS GUARD DOES NOT EXIST.** ⚖️ **SO BY `R-771 §6`'s OWN PRE-REGISTERED CRITERIA, `(a)` AND HALF OF `(d)` ARE UNMET — I REPORT THAT AS A RESULT, I DO NOT SEAL, AND I DO NOT SHADE IT.** ⭐ **`b11-b12`'s MEMBERSHIP QUESTION IS ANSWERED BY MEASUREMENT AND THE ANSWER IS CATEGORICAL: IT **CANNOT** BE A MEMBER — THE FROZEN POPULATION IS `103 / 103` PYTHON.**
+
+**TASK `R-771 §5`. SEAT `claude.exe 23140`. TREE `wt-h1-wave4-20260712`, HEAD `a7bbbf2d`.** **ATTEMPT BUDGET `0 / 2`, UNSPENT.** **FAN-IN `4 / 5` RUN — and the fifth is BLOCKED, not unstarted (`worker-onboarding §5`), so this is a delivery and NOT a handoff.** 🛑 **I DO NOT SEAL. `R-771 §5`: the seal is a separate desk act.**
+
+### §1 — ✅ THE FIVE ITEMS, ONE LINE EACH, VERDICT FIRST
+```
+1  14-call-site disposition guard + FAKE 15th        🛑 UNMET — THE GUARD DOES NOT EXIST
+                                                        (AR-891 §2; census itself re-derived
+                                                         14/9 UNCHANGED, no 15th caller)
+2  complete D-10 controls (8 members)                ✅ 8 files | 133 tests | exit 0
+3  Python focused acceptance                         ✅ 65 passed | exit 0
+4  103-member baseline FAILURE MEMBERSHIP            ✅ NEW 0 / GONE 0 — EXACT MATCH
+5  tampered-comparison negative control              ✅ BITES on 3 arms; positive joins
+```
+
+### §2 — ✅ ITEM `2` — THE `8` D-10 MEMBERS
+```
+[MEASURED HERE] population size ASSERTED == 8 and every member resolved BEFORE the run
+                (AR-891 §1), then:
+npx vitest run <the 8>   ->  Test Files 8 passed (8) · Tests 133 passed (133) · exit 0
+   d10-e 9 · d10-f7 10 · d10-f9 6 · d10-n1 34 · d10-n2 7 · d10-n3 11 · d10-n4 18
+   · shadow-rerun 38
+```
+★ **WHOLE OUTPUT READ, AND IT MATTERED AGAIN:** `[MEASURED HERE]` **the `npm notice` block printed AFTER the summary at exit `0`** — the exact shape that once hid a full vitest summary behind it (`[instrument-truncation-cluster]` 1). **No `| tail` was used anywhere in this acceptance.**
+
+### §3 — ✅ ITEM `3` — PYTHON FOCUSED ACCEPTANCE
+```
+[MEASURED HERE] python -m pytest test_trigger_safety_refusal.py test_trigger_safety_blast_radius.py
+                -q --no-header -p no:cacheprovider   ->  65 passed in 10.06s · exit 0
+```
+✅ **`65` is byte-identical to the contracted figure** (`trigger-safety 56` + `blast-radius 9`, `AR-853`).
+
+### §4 — ✅ ITEM `4` — THE MEMBERSHIP JOIN, WITH ITS LOADER AUDITED FIRST
+🛑 **THE PREFLIGHT IS PART OF THE RESULT, because a loader that silently drops members reports a clean run over a smaller world:**
+```
+[MEASURED HERE]
+manifest raw lines                  127
+members after '#'/blank strip       103      ASSERT PASS (== 103)
+resolved under <repo>/src           103      ASSERT PASS (resolved == members; UNRESOLVED 0)
+   ^ paths resolve under <repo>/src, NOT the repo root — joining to the root resolves 0
+     paths, and a PATHLESS pytest runs EVERYTHING (baseline artifact's own warning)
+
+python -m pytest <the 103> -q --no-header -p no:cacheprovider -rf --tb=no
+   ->  33 failed · 2324 passed · 3 skipped · 2 xfailed   in 128.59s
+   ^ BYTE-IDENTICAL totals to the frozen baseline's `totals_at_baseline`
+
+MEMBERSHIP (members compared, NEVER counts):
+   frozen failures 33   observed failures 33
+   NEW  (here, not frozen)  0
+   GONE (frozen, not here)  0        EXACT MEMBERSHIP MATCH: True
+ORDERED 6B REDS, ASSERTED BY NAME:
+   STILL RED  test_opening_range_conformance.py::test_no_production_binding_routes_to_the_opening_range_adapter_yet
+   STILL RED  test_opening_range_conformance.py::test_no_typed_opening_range_output_contract_exists_in_production
+```
+⚠️ **ONE DECLARED DEVIATION, AND I DECLARE IT RATHER THAN LETTING IT PASS AS THE BASELINE INVOCATION:** I added **`-rf --tb=no`** to the artifact's `exact_invocation`. **It is REPORTING-ONLY — it changes which lines are PRINTED, not which tests run or how they resolve** — and I need node IDs because the contract demands MEMBERS. **The totals independently corroborate that nothing else moved.**
+✅ **THE `CRLF` TRAP IS NOT MERELY AVOIDED, IT IS UNREACHABLE HERE:** the comparison runs **in memory in one process**, with `\r` stripped on both sides; **no intermediate file, so no `comm`, so no set-diff to corrupt** (`[ps-counting-encoding]`: two identical `33`-member sets once diffed as `33 NEW + 33 GONE`).
+
+### §5 — ✅ ITEM `5` — THE TAMPERED-COMPARISON CONTROL, THREE ARMS, ALL BITING
+🛑 **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — so the comparator is tested in both directions before its verdict is trusted:**
+```
+[MEASURED HERE]
+POSITIVE CONTROL   the set joined to itself      -> NEW 0 / GONE 0   PASS (it CAN join)
+NEGATIVE ARM 1     rename one observed member    -> NEW 1 / GONE 1   BITES
+NEGATIVE ARM 2     drop one observed member      -> NEW 0 / GONE 1   BITES
+NEGATIVE ARM 3     inject a phantom failure      -> NEW 1 / GONE 0   BITES
+```
+⭐ **THREE ARMS RATHER THAN ONE ON PURPOSE: substitution, deletion and addition are DIFFERENT failure modes of a set comparison, and a comparator can be blind to one while catching another.** ★★★★★ **`A POSITIVE CONTROL NO MUTATION CAN REDDEN IS A PRINTOUT — GIVE IT AN ARM THAT KILLS IT`, and give it every arm the data structure can actually suffer.**
+
+### §6 — ⭐ THE `b11-b12` MEMBERSHIP QUESTION — ANSWERED CATEGORICALLY, NOT ARGUED
+**`R-771 §5` demanded I state whether `b11-b12` IS or IS NOT in the frozen list, and `§3` warned that `"pre-existing"` and `"a member of the frozen 103"` are TWO DIFFERENT JOIN KEYS. `[MEASURED HERE]`:**
+```
+manifest members matching 'b11'                    0
+frozen failure entries that are TypeScript files   0
+manifest members that are .py                    103 / 103
+```
+⇒ 🛑 **`b11-b12-feedback-loops.test.ts` IS NOT A MEMBER OF THE FROZEN `103`-MEMBER LIST, AND CANNOT BE: the population is a `pytest` Python import-closure and `b11-b12` is a `vitest` TypeScript file.** ★★★ **`THE TWO POPULATIONS DO NOT INTERSECT, SO THIS IS NOT A CLOSE CALL THAT WENT MY WAY — IT IS A CATEGORY ANSWER.` And it is the right answer to the RIGHT question: the desk's blob-SHA proof settles causation, this settles membership, and neither substitutes for the other.**
+✅ **AND I MEASURED ITS STATUS TODAY RATHER THAN CARRYING `AR-889`'s:** `[MEASURED HERE, run SEPARATELY so the 8-member population stays exactly 8]` **`1 failed | 33 passed (34)`** — the same single stale assertion.
+```
+grep -c 'calResult.is_economic_event === true'  paper-signal-service.ts  ->  0   (the pinned SPELLING is gone)
+POSITIVE CONTROL  grep -c 'is_economic_event'   paper-signal-service.ts  ->  7   (the CONCEPT is still there)
+```
+⇒ ✅ **This independently corroborates `R-771 §3`'s disposition from the other side: a literal-pinned assertion producing a FALSE RED.** 🛑 **NOT REPAIRED — `R-771 §5` forbids it and it is registered as `TD-1`.**
+
+### §7 — ⚖️ AGAINST `R-771 §6`'s PRE-REGISTERED SEAL CRITERIA — SCORED HONESTLY, INCLUDING AGAINST MYSELF
+```
+a  all 5 items RUN, none skipped/silently reduced   🛑 UNMET — item 1 has no instrument (4/5)
+b  8-member population GREEN, size asserted,
+   whole output read                                ✅ MET
+c  failing-member LIST diffed by MEMBERSHIP;
+   b11-b12's status stated explicitly either way    ✅ MET (§4, §6)
+d  FAKE FIFTEENTH-SITE control BITES                🛑 UNMET — no guard exists to red-proof
+   tampered-comparison control BITES                ✅ MET (3 arms, §5)
+e  no new production defect surfaced by the run     ✅ MET — nothing new; the only red is
+                                                       the pre-existing b11, outside both
+                                                       populations
+DO-NOT-SEAL LIST:
+   a failure not reconciled by member name          ✅ none — all 33 reconciled by name
+   a negative control passing VACUOUSLY             ✅ none — and the distinction matters:
+                                                       the 15th-site control is ABSENT,
+                                                       which is NOT the same as vacuous
+   a refusal-sensitive consumer outside the set     ✅ none surfaced
+   population size != 8                             ✅ size == 8, asserted pre-run
+```
+⚖️ **BOTH UNMET CRITERIA HAVE THE SAME SINGLE CAUSE: `R-755 §4-2`'s guard was ordered and never built.** ✅ **`R-771 §6` pre-registered this outcome: *"AN UNMET CRITERION IS A RESULT, NOT A FAILURE. 'NOT SEALED, HERE IS WHICH CLAUSE' IS A COMPLETE AND ACCEPTABLE OUTCOME."*** ★★★★★ **AND I NOTE WHAT THE PRE-REGISTRATION BOUGHT: criteria written BEFORE the data meant I had nothing to gain by softening item `1` — `[pre-register-criteria]` did its job on a run that was otherwise entirely green.**
+
+### §8 — 🛑 CORRECTION TO `AR-890 §2`, AND IT IS AGAINST ME
+**`AR-890 §2` said the orphaned rigs *"provably lack delivery"* and filed their ownership `[UNPROVEN]`. `[MEASURED HERE]` THAT IS REFUTED:** **task `bhnkbs0gr` — the `PID 30480` rig — FIRED INTO THIS CONVERSATION twice** (the `R-771` draft, then its commit). ⇒ **it was armed through the `Monitor` TOOL by a PRIOR CONTEXT OF MY OWN PROCESS, so delivery survived the wipe and OWNERSHIP IS NOW PROVEN — by the only evidence that could prove it.**
+★★★★★ **MY ERROR WAS A CATEGORY SLIP: I reasoned *"a `while true` bash loop cannot deliver"* from the SCRIPT'S SHAPE, when delivery is a property of HOW IT WAS LAUNCHED. Under `Monitor`, every stdout line is a notification and the loop never needing to exit is exactly the point.** ⇒ **`ASK HOW A PROCESS WAS LAUNCHED, NOT WHAT ITS SOURCE LOOKS LIKE — THE SAME SCRIPT IS AN EAR OR A LOG FILE DEPENDING ON ITS LAUNCHER.`**
+✅ **ACTION TAKEN, WITH THE CLAUSE NAMED:** two rigs were then measurably delivering on ONE channel, which `[one-monitor]` forbids (*"ONE rig/channel, never new + old"*). **I stopped `bhnkbs0gr` — MINE, ownership proven above — and kept the ear I red-proofed this session (`bc410znbu`), which fired correctly on BOTH the draft and the commit.** 🛑 **The advisor's `AGENT-REPORTS` rig was NOT touched: different channel, and not mine.**
+
+### §9 — ⚖️ WHAT I DID NOT MEASURE
+🛑 **NO `tsc` run this seat** — not contracted by `R-771 §5`; `AR-889`'s `TSC_EXIT=0` is **`[RELAYED]`, not re-taken by me.**
+🛑 **NO full-repo `vitest`.** The `8` contracted members plus `b11-b12` separately. **Every other TypeScript consumer is `[UNMEASURED]`.**
+🛑 **NO live database query, NO production data.** `[UNPROVEN]` that a `refused` row has ever existed in live data — mechanism only, carried unchanged from `R-767 §8` / `R-768 §9` / `R-770 §9`.
+🛑 **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`** — campaign worktree, never `runtime-production`.
+🛑 **NOTHING GRADED BY ME**, and `AR-890 §1`'s binding still holds: Lane `E` is my own work and a wiped context grants me no independence from it.
+✅ **NO sub-agent dispatched — nothing owed back. NO mutation left planted** (the tamper arms are pure in-memory set operations; no file was ever modified). `[MEASURED]` `git status --porcelain src/` → **only the sibling's `test_synthetic_market_simulator.py`.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` on items `2`–`5`; `BLOCKED` on item `1` pending the desk's choice between (a) authorize building the `R-755 §4-2` guard, or (b) record it `UNMET` and seal or hold on `§6`.** **NEXT SMALLEST TASK: whichever of those two the desk names. I am not choosing it and I am not sealing.**
+
+---
+
+
 ## AR-891 · 2026-08-09 · 🟢 **START-RECEIPT — `R-771 §5` TAKEN. FIRST OBSERVABLE DELIVERED IN THIS RECEIPT: THE `8`-MEMBER POPULATION, SIZE ASSERTED, EVERY MEMBER RESOLVED ON DISK, BEFORE ANY RUN.** 🛑🛑 **AND I OPEN WITH A BLOCKER ON ITEM `1`, BECAUSE RAISING IT NOW IS FREE AND RAISING IT AT DELIVERY COSTS THE WHOLE RUN: THE "COMMITTED 14-CALL-SITE DISPOSITION GUARD" IS **NOT ON DISK AND NEVER HAS BEEN.** IT WAS ORDERED AT `R-755 §4-2` AND NEVER BUILT.** ⭐ **THE CENSUS IT WOULD GUARD IS STILL EXACTLY `14 / 9` — I RE-DERIVED IT — SO NO STOP CONDITION FIRES; WHAT IS MISSING IS THE GUARD, NOT THE FACT.**
 
 **TASK: `R-771 §5`** — the five `R-758 §8` acceptance items. **SEAT `claude.exe 23140`** (continuing, per `R-771 §5`: *"the authorization did not lapse and is not re-issued"*). **TREE `wt-h1-wave4-20260712`, HEAD `7d236187`** — the `R-771` commit itself. **ATTEMPT BUDGET `0 / 2`.** **FAN-IN `0 / 5`, starting now.** 🛑 **I DO NOT SEAL — `R-771 §5` reserves that act to the desk and `AR-890 §1` already bound me to it.**
