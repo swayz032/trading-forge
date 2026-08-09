@@ -7,12 +7,33 @@
 > the same trap one level down.** ★ `ADVISOR-STATE.md` remains the **sole carrier of `## THE PLAN`**
 > and of unruled `[FACT, MEASURED HERE, NOT RULED]` blocks — **grep its headings, never read it whole.**
 
-> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-743`
+> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-744`
 > **`HEAD 1bbfea2c` — and it MOVED TWICE while this block was being written; the ruling commit is
 > `155afcc3` (pushed, remote tip verified equal at that moment). ★ A HEAD sha here is a timestamp, not
-> a standing condition: `git rev-parse HEAD` yourself.** · newest ruling `R-743` · newest AR `AR-838`
-> (a PURE START-RECEIPT — no ruling owed). Worker ACTIVE on `6B`, attempt `0 / 2`, first observable
-> = the `R-743 §6-2` positive control landing green ALONE, ETA ~20 min from `00:56` local.**
+> a standing condition: `git rev-parse HEAD` yourself.** · **newest ruling `R-744` (`0379e179`, pushed)
+> · newest AR `AR-840` — a START-RECEIPT, unruled BY CHOICE (worker not blocked ⇒ the GPT wait applies;
+> it will be folded into the `6B` delivery ruling rather than spending a ruling of its own).**
+> **Worker ACTIVE on the single `6B` commit, attempt `0 / 2`. ETA ~60–75 min from `01:07` local, with
+> an interim AR at ~45 min if it slips.** ⚠️ **THE WORKER SEAT ROLLED AT `AR-840` — `AR-838`/`AR-839`
+> were written by a context that no longer exists; the current seat re-measured position rather than
+> inheriting it.**
+> ✅ **`STEP 2` IS LANDED AND GREEN** (`0214903e`, `5 passed`): the pre-change witness that the
+> neighbouring boolean route really executes — route identity, then **NOT CONSTANT**. `R-744 §5`
+> ordered it **NOT deleted** when the channel lands: retire ONLY the channel-absence assertion, keep
+> route-identity + nonconstant, add the separation assertions, **all visible in the `6B` diff.**
+> 🛑🛑★★★★★ **AND THE MEASUREMENT A COLD SEAT MUST NOT RE-DERIVE WRONG (`R-744 §2`): the golden
+> opening-range binding carries `executed=False`, so it takes `spec_condition_compiler.py:1618`'s
+> `continue` and IS ALREADY ABSENT from `per_condition_bool` TODAY.** ⇒ **`6B` does NOT change
+> `spine_satisfied` at all — only the CAUSE of the absence changes** (adapter-not-implemented → state
+> producer by design). ★★★★★ **`AN ABSENCE THAT ALREADY EXISTS IS NOT AN ABSENCE THE CHANGE CREATED —
+> THE JOIN KEY IS CAUSE, NOT PRESENCE.` Do not let a later seat read this as a `6B` regression, and do
+> NOT charge the eligibility-accounting work to `6B`'s attempt budget: it is pre-existing debt.**
+> 🛑 **DUAL-RAIL CONTROL IS `2` DISCRIMINATING OF `4` (`R-744 §3`):** "OR condition absent from
+> `per_condition_bool`" and "neighbour present in it" **BOTH PASS ON UNCHANGED CODE.** Only "OR
+> condition **present** in typed state outputs" can go red for the change; "neighbour absent from state
+> outputs" is a post-change cross-check, vacuous today. **Build all four — the pairing is the point —
+> but NEVER report `4/4 green`.** ★★★★★ **`A CONTROL THAT PASSES ON THE UNCHANGED CODE IS A POSITIVE
+> CONTROL, NOT EVIDENCE OF THE CHANGE.` Third instance in three rulings.**
 > 🛑★★★★★ **`6B` ACCEPTANCE IS A CONJUNCTION AND THE CONFORMANCE GROUP IS NOT THE DISCRIMINATOR.**
 > The two ordered REDs going green is **NECESSARY AND NOT SUFFICIENT** — `RED #2`
 > (`test_no_typed_opening_range_output_contract_exists_in_production`) **reads a RETURN ANNOTATION and
@@ -218,7 +239,9 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-743`** (`155afcc3`, 2026-08-09 — **`R-742` + `R-743` banked in ONE commit of one
+- **Newest ruling `R-744`** (`0379e179`, pushed). **Newest AR `AR-840`** — start-receipt, **unruled by
+  choice** (see the ⚡ block). **`AR-836`→`R-742` · `AR-837`→`R-743` · `AR-839`→`R-744`.**
+- **Previously: `R-743`** (`155afcc3`, 2026-08-09 — **`R-742` + `R-743` banked in ONE commit of one
   file, deliberately, to halve pre-commit stash exposure on a shared tree; pushed, remote tip verified
   equal to local HEAD**). **Newest AR `AR-838`** — **a PURE START-RECEIPT: no decisions, no findings,
   so no ruling is owed and no GPT wait is triggered.** ★ **`AR-836` ruled by `R-742`, `AR-837` by
@@ -399,6 +422,14 @@ reading only · **no seat has re-run the census generator.**
   enumerate keys instead of guessing them. `| head -N` is not a census.**
 
 ## 12. PROTOCOL
+- 🛑★★★★★ **THE `AUTHORIZED TO THE SEAT THAT EXISTS` CLAUSE DOES *NOT* VOID A SEAT ROLLOVER — IT HAS
+  NOW BEEN MISREAD-AS-REVOCATION TWICE** (`AR-833` vs `R-738`; `AR-840` vs `R-743 §8`). **Its purpose
+  (`advisor-ruling §0.5`, `[authorize-seat]`) is to stop THE DESK deferring work to a hypothetical
+  future session — *"the next seat implements it"* is the banned disposition.** ⇒ **A worker seat that
+  dies and is replaced mid-task INHERITS the authorization; it does not need a new one.** ✅ **What the
+  successor owes instead: say so in its receipt BEFORE the first line, and RE-MEASURE rather than
+  inherit the dead seat's numbers.** ★★★ **`A CLAUSE THAT CONSTRAINS THE DESK'S DISPOSITIONS IS NOT A
+  REVOCATION THAT FIRES ON THE WORKER` — writing it as a bare prohibition is what made it ambiguous.**
 - **SINGLE WRITER:** advisor writes `ADVISOR-RULINGS`/`ADVISOR-STATE`, **never** `AGENT-REPORTS`.
 - **SHARED TREE:** never `checkout`/`reset`/amend another seat's commit; `git commit -o` always.
   ⚠️ **Path-scoping a commit does NOT path-scope its hooks** — pre-commit stashes the whole tree.
