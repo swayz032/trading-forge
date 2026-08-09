@@ -153,6 +153,24 @@ function refused(versionId: string, n: number) {
   };
 }
 
+/**
+ * 🛑 A REFUSAL THAT CARRIES STALE METRICS — the shape D-10 `N-1` defect 1 was about.
+ *
+ * In drizzle, OMITTING a column from `.set()` means LEAVE THE EXISTING VALUE, so a
+ * candidate that COMPLETED and was LATER refused can retain a tier and a forge score
+ * beside `status='refused'`. `N-1` fixed the writer; this fixture makes the READER's
+ * guard falsifiable.
+ *
+ * MEASURED — this fixture exists because a mutation proved a gap: deleting the
+ * `continue` that skips refusals in `collectVariantMetrics` reddened NOTHING, because
+ * every refusal in this file had a null score and so COULD NOT contribute one.
+ *   `A GUARD IS ONLY PROVEN BY AN INPUT THAT COULD DEFEAT IT. IF EVERY FIXTURE ROW
+ *    IS ALREADY HARMLESS, THE GUARD'S REMOVAL IS INVISIBLE.`
+ */
+function refusedWithStaleMetrics(versionId: string, n: number) {
+  return { ...refused(versionId, n), id: `rs-${versionId}-${n}`, forgeScore: "90", tier: "TIER_1" };
+}
+
 function manyMeasured(versionId: string, count: number, forge: number) {
   return Array.from({ length: count }, (_, i) => ({
     ...measured(versionId, forge),
@@ -251,6 +269,28 @@ describe("D-10 E — A/B attempt accounting (R-770 §6 B)", () => {
     // THE CORE INVARIANT: a refusal contributes NOTHING to the forge average.
     expect(m.forgeScores.length, "a refusal contributed a forge score").toBe(4);
     expect(m.avgForgeScore, "the forge average was diluted by unmeasured rows").toBe(60);
+  });
+
+it("E.9 a refusal carrying STALE metrics still contributes NOTHING — status decides, not the columns", async () => {
+    // 4 genuinely measured @60, plus 2 refusals that wrongly retained tier TIER_1 and
+    // a forge score of 90. If status is not what decides, the average jumps toward 90
+    // and the refusals are counted as passes.
+    rec.selectQueue = [[
+      ...manyMeasured(V_B, 4, 60),
+      refusedWithStaleMetrics(V_B, 1),
+      refusedWithStaleMetrics(V_B, 2),
+    ]];
+    const mod = await svc();
+    const m = await mod.__collectVariantMetricsForTest(V_B, new Date("2026-07-01"));
+
+    expect(m.totalStrategies, "the refusals were not counted as attempts").toBe(6);
+    expect(m.refusedStrategies).toBe(2);
+    expect(
+      m.forgeScores.length,
+      "a stale forge score on a REFUSED row entered the sample — status must decide, not the column",
+    ).toBe(4);
+    expect(m.avgForgeScore, "the forge average was contaminated by stale refusal metrics").toBe(60);
+    expect(m.passedStrategies, "a refusal with a stale tier was counted as a pass").toBe(4);
   });
 
   it("E.6 POSITIVE CONTROL — with no refusals present, every number is unchanged", async () => {
