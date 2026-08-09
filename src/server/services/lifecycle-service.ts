@@ -3048,6 +3048,107 @@ export class LifecycleService {
   }
 
   /**
+   * FIX 3 (DEBT-3): auto-enqueue a backtest when the promotion gate blocks for lack
+   * of institutional-grade backtest evidence, so a strategy does not stall for an
+   * entire vacation.
+   *
+   * @internal — EXTRACTED VERBATIM from the inline fire-and-forget block inside
+   * `checkAutoPromotions()` (D-10 N-4, R-766 §4 lane 2). This extraction is
+   * BEHAVIOUR-PRESERVING: no logic moved, no caller changed, the same single
+   * fire-and-forget invocation at the same point. Its only purpose is to make the
+   * decision witnessable by a test that executes PRODUCTION code — the block's only
+   * previous coverage was a re-implementation in `auto-recovery-debt1-4.test.ts`
+   * that `vi.mock`ed this very module (R-766 §1: *the one-grep test for a real
+   * harness — is the subject in its own mock list?*).
+   *
+   * Cap: 1 auto-enqueue per strategy per 24h (audit_log count, mirrors heartbeat).
+   * Actor is "automated" so it respects pipeline pause.
+   * Discord INFO (not CRITICAL) — research pipeline, no live capital involved.
+   */
+  async runEvidenceAutoBacktestEnqueue(params: {
+    strategyId: string;
+    strategyName: string;
+    symbol: string | null;
+    incompleteCount: number;
+    totalGates: number;
+    correlationId: string | null;
+  }): Promise<void> {
+    const { strategyId, strategyName, symbol, incompleteCount, totalGates, correlationId } = params;
+    try {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentAutoEnqueues = await db
+        .select({ id: auditLog.id })
+        .from(auditLog)
+        .where(
+          and(
+            eq(auditLog.action, "lifecycle.evidence_auto_backtest_enqueued"),
+            eq(auditLog.entityId, strategyId),
+            gte(auditLog.createdAt, twentyFourHoursAgo),
+          ),
+        );
+
+      if (recentAutoEnqueues.length >= 1) {
+        logger.debug(
+          { strategyId, recentCount: recentAutoEnqueues.length },
+          "FIX-3: lifecycle evidence-incomplete: auto-backtest-enqueue cap reached today, skipping",
+        );
+        return;
+      }
+
+      logger.info(
+        { strategyId, strategyName, incompleteCount, correlationId },
+        "FIX-3: auto-enqueuing backtest for evidence-incomplete strategy",
+      );
+
+      const { runBacktest } = await import("./backtest-service.js");
+      const btResult = await runBacktest(
+        strategyId,
+        {
+          strategy: {
+            name: strategyName,
+            symbol: symbol ?? "MES",
+            timeframe: "5m",
+            indicators: [],
+            entry_long: "",
+            entry_short: "",
+            exit: "",
+            stop_loss: { type: "atr", multiplier: 2.0 },
+            position_size: { type: "dynamic_atr", target_risk_dollars: 500 },
+          },
+          mode: "walkforward",
+        },
+        undefined,
+        undefined,
+        correlationId ?? undefined,
+        "automated",
+      );
+
+      await db.insert(auditLog).values({
+        action: "lifecycle.evidence_auto_backtest_enqueued",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: btResult.status === "skipped" ? "skipped" : "success",
+        decisionAuthority: "lifecycle_service",
+        input: { strategyName, incompleteCount, totalGates },
+        result: { backtest_id: btResult.id, backtest_status: btResult.status },
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, strategyId }, "FIX-3: lifecycle.evidence_auto_backtest_enqueued audit write failed");
+      });
+
+      logger.info(
+        { strategyId, backtestId: btResult.id, backtestStatus: btResult.status },
+        "FIX-3: auto-backtest enqueued for evidence-incomplete strategy",
+      );
+    } catch (enqueueErr) {
+      logger.error(
+        { strategyId, strategyName, err: enqueueErr },
+        "FIX-3: auto-backtest enqueue threw unexpectedly (non-blocking, lifecycle continues)",
+      );
+    }
+  }
+
+  /**
    * Check for auto-promotions across all lifecycle gates:
    *   1. CANDIDATE → TESTING  (backtest + WF + tier + forgeScore)
    *   2. TESTING → PAPER      (MC survival + tier)
@@ -6944,80 +7045,19 @@ export class LifecycleService {
             // Actor is "automated" so it respects pipeline pause.
             // Fire-and-forget (no await) — lifecycle cycle must not block on backtest duration.
             // Discord INFO (not CRITICAL) — research pipeline, no live capital involved.
-            void (async () => {
-              try {
-                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-                const recentAutoEnqueues = await db
-                  .select({ id: auditLog.id })
-                  .from(auditLog)
-                  .where(
-                    and(
-                      eq(auditLog.action, "lifecycle.evidence_auto_backtest_enqueued"),
-                      eq(auditLog.entityId, s.id),
-                      gte(auditLog.createdAt, twentyFourHoursAgo),
-                    ),
-                  );
-
-                if (recentAutoEnqueues.length >= 1) {
-                  logger.debug(
-                    { strategyId: s.id, recentCount: recentAutoEnqueues.length },
-                    "FIX-3: lifecycle evidence-incomplete: auto-backtest-enqueue cap reached today, skipping",
-                  );
-                  return;
-                }
-
-                logger.info(
-                  { strategyId: s.id, strategyName: s.name, incompleteCount, correlationId },
-                  "FIX-3: auto-enqueuing backtest for evidence-incomplete strategy",
-                );
-
-                const { runBacktest } = await import("./backtest-service.js");
-                const btResult = await runBacktest(
-                  s.id,
-                  {
-                    strategy: {
-                      name: s.name,
-                      symbol: s.symbol ?? "MES",
-                      timeframe: "5m",
-                      indicators: [],
-                      entry_long: "",
-                      entry_short: "",
-                      exit: "",
-                      stop_loss: { type: "atr", multiplier: 2.0 },
-                      position_size: { type: "dynamic_atr", target_risk_dollars: 500 },
-                    },
-                    mode: "walkforward",
-                  },
-                  undefined,
-                  undefined,
-                  correlationId ?? undefined,
-                  "automated",
-                );
-
-                await db.insert(auditLog).values({
-                  action: "lifecycle.evidence_auto_backtest_enqueued",
-                  entityType: "strategy",
-                  entityId: s.id,
-                  status: btResult.status === "skipped" ? "skipped" : "success",
-                  decisionAuthority: "lifecycle_service",
-                  input: { strategyName: s.name, incompleteCount, totalGates: gateEvidenceStatuses.length },
-                  result: { backtest_id: btResult.id, backtest_status: btResult.status },
-                  correlationId: correlationId ?? null,
-                }).catch((auditErr: unknown) => {
-                  logger.warn({ err: auditErr, strategyId: s.id }, "FIX-3: lifecycle.evidence_auto_backtest_enqueued audit write failed");
-                });
-
-                logger.info(
-                  { strategyId: s.id, backtestId: btResult.id, backtestStatus: btResult.status },
-                  "FIX-3: auto-backtest enqueued for evidence-incomplete strategy",
-                );
-              } catch (enqueueErr) {
-                logger.error(
-                  { strategyId: s.id, strategyName: s.name, err: enqueueErr },
-                  "FIX-3: auto-backtest enqueue threw unexpectedly (non-blocking, lifecycle continues)",
-                );
-              }
-            })();
+            //
+            // D-10 N-4 (R-766 §4): the body was EXTRACTED VERBATIM to
+            // `runEvidenceAutoBacktestEnqueue()` so a test can execute the real
+            // decision instead of a re-implementation. Still ONE invocation, at this
+            // same point, still fire-and-forget. No behaviour change.
+            void this.runEvidenceAutoBacktestEnqueue({
+              strategyId: s.id,
+              strategyName: s.name,
+              symbol: s.symbol ?? null,
+              incompleteCount,
+              totalGates: gateEvidenceStatuses.length,
+              correlationId,
+            });
             // ─── End FIX 3 ────────────────────────────────────────────
 
             continue;
