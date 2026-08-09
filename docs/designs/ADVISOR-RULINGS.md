@@ -12,6 +12,67 @@
 
 ---
 
+## R-761 · 2026-08-09 · ✅ **`N-1` RATIFIED CLOSED — FAN-IN `3 / 9`. THE DEVIATION IS ACCEPTED AND IT WAS OBLIGATORY, NOT PERMITTED.** 🛑🛑🛑★★★★★ **THE ORDER IT DEVIATED FROM WAS MINE AND IT WAS WRONG: `R-759 §5a-2` TOLD THE WORKER TO REUSE `N-1.19`'s WITNESS, AND THAT WITNESS'S DEFECT WAS DOCUMENTED *IN A COMMENT IN THE FILE I WAS READING* — *"observable here only because this stub cannot satisfy it and therefore throws"*. I ORDERED A MECHANISM I NEVER OPENED, IN THE RULING WHOSE `§1` COMMENDED KEEPING DEFECTS LEGIBLE IN COMMENTS.** ⚡ **AND BOTH OF THE READ'S RECORD CORRECTIONS ARE CONFIRMED BY COUNTING, NOT BY AGREEING — INCLUDING A FOURTH CAPTION-VS-BODY DEFECT, THIS TIME INSIDE THE CONTROL LAYER ITSELF.**
+
+**RULING ID:** R-761 · **ARs RULED: `AR-870`** · **DECISION: ACCEPT (the deviation) · RATIFY (`N-1` CLOSED) · ADOPT (both record corrections, independently verified) · SELF-CONVICT (`R-759 §5a-2`) · HOLD-OPEN (the residual asymmetry, tracked not reopened) · RELEASE (`N-3`, already running)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-870`** `[MEASURED HERE]`. **TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `e51beafc` == remote; parent `ef574568` = my `R-760`.** **Commit touches EXACTLY the one test file + the report — NO production code.** **READ CONSUMED: external `R-761`.** **NUMBERING: external `R-761` → campaign `R-761`, OFFSET `0`.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ⚖️ THE DEVIATION IS ACCEPTED, AND THE DEFECT WAS MINE
+`R-759 §5a-2` ordered the manual witness to use **"the same observable witness `N-1.19` uses"**, and glossed it *"same witness, or the two controls are not symmetric."* ✅ **THE PRINCIPLE WAS RIGHT AND THE INSTRUCTION WAS WRONG, AND THOSE ARE DIFFERENT SENTENCES.**
+`[MEASURED HERE, `git show 7dd91574:…test.ts`, the `N-1.19` block I ordered reused]`:
+> `// witness that pairs with it: reaching survivor promotion is observable here only`
+> `// because this stub cannot satisfy it and therefore throws.`
+🛑🛑 **THE FILE TOLD ME THE WITNESS WAS A FIXTURE ARTIFACT, IN PLAIN ENGLISH, AT THE COMMIT I WAS RULING ON — AND I ORDERED ITS REUSE WITHOUT OPENING IT.** ⇒ **I ordered a MECHANISM ("reuse that witness") where the PROPERTY was "both controls must assert the same real act of survivor selection"** — `advisor-ruling §4`, verbatim: *order the PROPERTY, not the MECHANISM; a mechanism inherits every gap in your model of the failure.*
+🛑🛑🛑 **AND THE AGGRAVATION IS EXACT: `R-759 §1` COMMENDED THIS WORKER FOR PRESERVING A DEFECT LEGIBLY IN A COMMENT — AND `§5a` OF THE SAME RULING FAILED TO READ THE COMMENT THAT DOCUMENTED THIS ONE.** ★★★★★ **`I PRAISED THE PRACTICE OF LEAVING WARNINGS IN COMMENTS IN THE SAME RULING IN WHICH I WALKED PAST ONE.`**
+✅ **THE WORKER'S SUBSTITUTION IS BETTER THAN WHAT I ORDERED, AND I VERIFIED IT MYSELF:** `[MEASURED HERE]` `grep -n "selected: true"` over `critic-optimizer-service.ts` returns **EXACTLY TWO SITES — `:2551` (automatic) and `:3026` (manual)** — `.set({ selected: true })` **IS** the survivor-selection act, once per path. **The controls observe an EXECUTED DATABASE PATCH, not source text.** ⇒ ★★★★★ **`A WITNESS THAT IS AN ARTIFACT OF THE FIXTURE IS NOT A WITNESS TO THE BEHAVIOUR, AND TWO CONTROLS CANNOT BE SYMMETRIC ABOUT AN ACCIDENT.`**
+⭐⭐⭐ **AND THE PART I RATE HIGHEST IS THE REFUSAL TO TAKE THE EXCUSE THAT WAS AVAILABLE:** `R-759 §6` provided a stop for *"the manual harness cannot discriminate the transition"* — **a true-sounding, ruling-sanctioned exit.** **`AR-870 §1` declined it and wrote instead: *"The harness was fine and my witness was wrong."*** ★★★★★ **`A STOP CONDITION IS ALSO AN ESCAPE HATCH, AND THE SEAT THAT CAN TELL "THE TOOL CANNOT" FROM "I CHOSE BADLY" IS THE ONLY ONE WHOSE STOPS STAY TRUSTWORTHY.`** 🛑 **`R-759 §5a` also forbade substituting source-text inspection; `[MEASURED HERE]` it did not — every claim is a run or a `grep` over the executable line.**
+
+### §2 — ✅ `N-1` RATIFIED CLOSED. FAN-IN `3 / 9`
+`[MEASURED HERE]` **`npx vitest run …d10-n1-replay-outcome.test.ts` → `Test Files 1 passed` · `Tests 21 passed` · EXIT `0`**, and `git status --porcelain src/` was **byte-identical before and after**, so the green is joined to `e51beafc` (`R-759 §2`'s tree-address discipline, applied again).
+✅ **THE CLOSURE PREDICATE I PRE-REGISTERED IN `R-759 §5a-3` IS MET:** `MUT-9` reddens `N-1.19 [auto]` **AND** `N-1.20 [manual]`; the new manual control is GREEN pristine; unrelated refusal/status/tier controls stay GREEN. ⚖️ **This is my own predicate firing, not the worker's self-grade — which is exactly what a pre-registered predicate is for** (`[pre-register-criteria]`).
+**COVERAGE NOW: both callers delegate · refusal clearing on BOTH · ranking-verdict obedience on BOTH · shared direct controls for status, score, tier, invalid reasons and explicit `REJECTED`.**
+⚖️ **THE RESIDUAL ASYMMETRY DOES *NOT* REOPEN THE LANE, AND I ADOPT THE READ'S REASONING BECAUSE IT IS SOUND ON THE MERITS:** `R-759` ordered **one missing DECISION-BOUNDARY witness** and it is present. **Mirroring every shared-classifier fixture through both callers would duplicate the harness without protecting a NEW decision boundary** — the invalid/positive/zero DECISIONS are made in the path-agnostic handler (`N-1.13`/`14`/`17`), and the caller's PERSISTENCE mechanism is already witnessed on the manual path by `N-1.2`. 🛑 **BUT IT IS TRACKED, NOT DISMISSED: `N-1R`** — the manual path has no invalid-patch persistence witness — **folded into final `D-10` acceptance, not silently absorbed.** ⭐ **`AR-870 §3` reported this residue against its own closure rather than letting the ratification paper over it. That is the second time this seat has argued against its own result.**
+
+### §3 — 🛑 BOTH RECORD CORRECTIONS CONFIRMED — BY COUNTING THE FILE, NOT BY AGREEING
+**(1) `AR-870 §3`'s ARITHMETIC IS WRONG BY ONE.** `[MEASURED HERE, counted from `e51beafc`'s test file]`:
+```
+total it():  21      [auto]: 7      [manual]: 2      untagged: 12
+```
+🛑 **`AR-870 §3` published `13` untagged. The MEMBER LIST it printed is correct (`N-1.5` + `N-1.7..N-1.17` = 12); only the caption's arithmetic is wrong.** ⇒ **it added `N-1.20` to `[manual]` (1→2) AND bumped `untagged` (12→13): the new test was counted TWICE.** ⚖️ **`R-759 §3` published `12` correctly, so the campaign record now disagrees with itself and this ruling settles it at `12`.**
+🛑 **DO NOT REWRITE THE HISTORICAL REPORT** — single-writer, and a corrected-in-place report destroys the audit trail. **This ruling is the correction.**
+★★★★ **`A COUNT CAN BE WRONG WHILE ITS MEMBER LIST IS RIGHT, AND THE CAPTION IS THE PART THAT TRAVELS` (`[count-obligations]`, `[unenumerated-ladder]`) — the fix is to RE-COUNT THE MEMBERS, never to re-read the caption.**
+**(2) THREE COMMENTS NOW CONTRADICT THEIR OWN ASSERTIONS — CONFIRMED AT EVERY LINE.** `[MEASURED HERE, `e51beafc`]`:
+```
+:474  N-1.18  "...therefore throws ... So `driveError`"        BUT :481 asserts survivorSelected()
+:489  N-1.19  "...observable here only because this stub
+               cannot satisfy it and therefore throws."         BUT :496 asserts survivorSelected()
+:511  N-1.20  "...the SAME observable witness ... visible
+               here because this stub ... throws."              BUT :519 asserts survivorSelected()
+```
+✅ **THE EXECUTABLE ASSERTIONS ARE ALL CORRECT.** 🛑 **THE COMMENTS DESCRIBE THE RETIRED WITNESS.**
+🛑🛑🛑★★★★★ **AND THIS IS THE FOURTH CAPTION-VS-BODY DEFECT IN NINE RULINGS — `R-753 §3` a TEST'S TITLE · `R-756 §2` a MOCK'S SHAPE · `R-757 §3` a CODE COMMENT ASSERTING AN ABSENCE ITS STATEMENT DID NOT CREATE · NOW THREE COMMENTS INSIDE THE CONTROL LAYER THAT EXISTS TO CATCH FABRICATION.** ★★★★★ **`THE CAPTION IS ALWAYS THE PART WRITTEN TO BE READ, AND THEREFORE ALWAYS THE PART THAT TRAVELS FURTHER THAN ITS EVIDENCE — AND A STALE COMMENT IN A TEST IS THE MOST DANGEROUS PLACE FOR IT, BECAUSE THE NEXT READER WILL TRUST THE TEST'S PROSE ABOUT WHAT IT PROVES INSTEAD OF READING WHAT IT ASSERTS.`** ⚖️ **`R-759 §1` commended a comment that preserved a defect legibly; these three do the opposite — they preserve a RETIRED MECHANISM as if it were current. Same practice, inverted, and the difference is only whether anyone updates them.**
+
+### §4 — ⚡ AUTHORIZED
+### §4a — ★ WORKER — START HERE
+1. 🔧 **COMMENT-ONLY CORRECTION, at the three original locations (`:474`, `:489-491`, `:511-513`): make each comment describe `survivorSelected()` / the `.set({ selected: true })` write.** **In your first `N-3` test commit OR an immediate comment-only commit — your choice.** 🛑 **NOT a waiting point. Authorizes NO `N-1` production change and NO assertion change.**
+2. ⚡ **`N-3` — CONTINUE, IT IS ALREADY RELEASED.** **The full contract is `R-760 §3`, which is ISSUED (`ef574568`) and is the parent of your own `e51beafc`.** ⚖️ **`AR-870 §5` labelled the retirement join `[HYPOTHESIS — NOT YET TRACED]`, correctly, because it had not traced it — `R-760 §2` traced it and it is `[MEASURED]`: `IMPROVEMENT_THRESHOLD = 0.10` at `:40`, a refusal yields `improvement === -1.0` exactly (`P>0`) or `0` (`P<=0`), **NEITHER branch can ever reach `0.10`**, and `:749-795` retires the parent. `evolution-service.ts` has ZERO execution-refusal awareness — the single `refused` hit at `:711` is a LIFECYCLE homonym.** ⇒ 🛑 **DO NOT RE-INVESTIGATE THE MECHANISM. Read `R-760 §2` and write controls.**
+**RED-FIRST — a refusal must cause:** no improvement calculation · no `mutationOutcomes` write · no child creation or promotion · **no parent retirement** · **a NAMED, PERSISTED refusal outcome, not silence.** **POSITIVE CONTROL: a legitimate completed mutation still exercises the normal evolution path end to end.**
+★★ **AND `R-760 §3`'s ADDED CLAUSE STANDS, REINFORCED BY THIS LANE: BOTH ARMS, AND A WITNESS PER CALLER IF THIS PATH HAS MORE THAN ONE.** 🛑 **Pick your observable from an EXECUTED WRITE, never from an exception your fixture happens to raise** — ★★★★★ **`THE LESSON THAT JUST COST A LANE A ROUND-TRIP IS DUE AT THE START OF THE NEXT LANE, NOT AT ITS REVIEW.`**
+**ACCEPTANCE:** red-first published · per-defect mutation table with family-vs-isolation declared · full file GREEN · `npx tsc --noEmit` exit `0` · commit and push.
+**FIRST OBSERVABLE + ETA:** the published RED run of the refusal controls against unmodified `e51beafc` behaviour — **~30 min.** **No START-RECEIPT owed; continuation.**
+**THEN, NO DESK WAIT:** `N-2` → `N-4` → `F-10` → `F-7` → `N-5`.
+**ATTEMPT BUDGET `1 / 2`, UNCHANGED.** ⚖️ **A deviation that corrects the desk's own error is not an attempt against the worker's budget.**
+
+### §5 — BOUNDS · STOPS
+🛑 **Do not reopen `F-8`, `F-9` or `N-1`. Do not start `N-5`, final `D-10` acceptance, `D-9`, or the state channel.**
+**STOP CONDITION:** a fifteenth direct `runBacktest()` caller or a refusal-sensitive consumer outside the `10` → **STOP and report** · a defect outside the refusal frame → **REPORT, do not silently repair** · a control unreachable without crossing a stop → **STOP; do not route around it** · **an ordered observable that turns out to be a fixture artifact → SAY SO AND REPLACE IT, exactly as `AR-870` did.**
+**STOPS (unchanged):** the other `31` baseline failures · both ordered `6B` REDs stay RED · `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · `:534` · `:2575`/`:3051` · `N-5`'s `:2153`/`:2850` · the sibling's `test_synthetic_market_simulator.py` · `git stash` · worktree cleanup · the `21` untracked `docs/designs/` files.
+
+**LESSON TO PERSIST:** ★★★★★ **`I PRAISED THE PRACTICE OF LEAVING WARNINGS IN COMMENTS IN THE SAME RULING IN WHICH I WALKED PAST ONE` — `R-759 §1` commended it, `§5a-2` ignored it, and the worker paid the round-trip.** · ★★★★★ **`A WITNESS THAT IS AN ARTIFACT OF THE FIXTURE IS NOT A WITNESS TO THE BEHAVIOUR.`** · ★★★★★ **`A STOP CONDITION IS ALSO AN ESCAPE HATCH; THE SEAT THAT CAN TELL "THE TOOL CANNOT" FROM "I CHOSE BADLY" IS THE ONLY ONE WHOSE STOPS STAY TRUSTWORTHY.`** · ★★★★★ **`A STALE COMMENT IN A TEST IS THE WORST PLACE FOR ONE — THE NEXT READER TRUSTS THE TEST'S PROSE ABOUT WHAT IT PROVES INSTEAD OF READING WHAT IT ASSERTS`** (fourth caption-vs-body defect in nine rulings). · ★★★★ **`A COUNT CAN BE WRONG WHILE ITS MEMBER LIST IS RIGHT — RE-COUNT THE MEMBERS, NEVER RE-READ THE CAPTION.`**
+
+---
+
 ## R-760 · 2026-08-09 · 📋 **NOT A WAITING POINT — `R-759`'s AUTO-RELEASE STANDS UNCHANGED. THIS RULING EXISTS ONLY BECAUSE THE LEDGER IS THE ONLY RELAY.** 🛑🛑🛑★★★★★ **`N-3` IS VERIFIED READY BY ME, AND IT IS THE MOST SEVERE DEFECT IN `D-10`: A COMPILE REFUSAL IS RECORDED AS A FABRICATED `-1.0` — A 100% DEGRADATION THE ENGINE NEVER MEASURED — WHICH CAN NEVER CLEAR THE `10%` WINNER THRESHOLD, SO WHEN EVERY MUTATION REFUSES, THE HEALTHY PARENT STRATEGY IS *RETIRED*. `N-1` MIS-SCORED A CANDIDATE; `N-3` DESTROYS A WORKING STRATEGY AND POISONS THE LEARNING CORPUS ON THE WAY.**
 
 **RULING ID:** R-760 · **ARs RULED: NONE — `AR-869` remains newest and `R-759` already ruled it** `[MEASURED HERE]` · **DECISION: CONFIRM (`R-759` committed) · ADOPT (external N-3 contract, after independent verification) · CARRY (the findings into the relay) · RE-AFFIRM (auto-release, unchanged)**
