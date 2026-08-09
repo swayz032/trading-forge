@@ -4,6 +4,37 @@
 
 ---
 
+## AR-864 · 2026-08-09 · ✅✅ **`D-10` `F-9` DELIVERED — BOTH EVIDENCE-RESOLUTION PATHS NOW REQUIRE `completed`, AND A REFUSAL GETS ITS OWN NAMED OUTCOME INSTEAD OF BEING ANALYSED.** ⭐⭐ **THE SECOND MUTATION IS THE INTERESTING ONE: LEAVING THE GENERIC GUARD IN PLACE AND REMOVING ONLY THE REFUSAL-SPECIFIC NAMING LEAVES `F-9.1` GREEN AND TURNS ONLY `F-9.2` RED — SO THE TWO CONTROLS PROVABLY COVER DIFFERENT FAILURES RATHER THAN THE SAME ONE TWICE.** **FAN-IN `2 / 4`.**
+
+**RULING:** `R-754 §3` (`F-9`). **ATTEMPT BUDGET `1 / 2`.**
+
+### §1 — 🛑 THE DEFECT: TWO PATHS IN, NEITHER GUARDED
+`[MEASURED HERE, `routes/critic-optimizer.ts`]` — **implicit** resolution was `orderBy(desc(createdAt)).limit(1)` with **no status predicate**, and **explicit** `body.backtest_id` was **passed through with no lookup at all**. ⇒ **a refusal — whose metric columns are NULL by construction — reaches the critic and reads as a measured flat result.**
+✅ **REPAIR, IN TWO LAYERS ON PURPOSE:** the implicit query narrows to `completed`, **AND** the resolved row's status is validated at a **single point covering BOTH paths**. ★ **The second layer is the load-bearing one: a later edit to the query cannot silently re-admit a refusal past it.**
+✅ **THE REFUSAL GETS ITS OWN OUTCOME — `422 refused_backtest_no_evidence`** — separate from `backtest_not_completed` and from `backtest_not_found`. ⚖️ **A deliberate refusal and a crashed run are different events; collapsing them is the same laundering `R-752 §6-2` forbade at the Python border, one layer out.** **Constant used, never a literal** (amendment `1`).
+
+### §2 — ⭐ THE MUTATION TABLE, AND WHAT `MUT-B` PROVES
+```
+BASELINE                                                          3 passed
+MUT-A  both status guards disabled (= the ORIGINAL defect)   F-9.1 RED · F-9.2 RED · F-9.3 ✓
+MUT-B  only the refusal-specific naming removed              F-9.1 ✓   · F-9.2 RED · F-9.3 ✓
+RESTORED from pristine copy                                       3 passed · 0 markers
+```
+★★★★★ **`MUT-B` IS THE ONE WORTH BANKING: with the generic `!== "completed"` guard still in place the request is still blocked, so `F-9.1` — which only asks *"was the critic kept away from it"* — STAYS GREEN. Only `F-9.2` notices that the refusal has lost its name.** ⇒ **`A CONTROL SUITE THAT GOES RED TOGETHER MAY BE ONE CONTROL WEARING N NAMES; THE PROOF THAT THEY ARE DIFFERENT IS A MUTATION THAT MOVES ONE AND NOT THE OTHER.`**
+
+### §3 — ⚠️ WHAT IS *NOT* PROVEN BY EXECUTION, STATED PLAINLY
+🛑 **THE QUERY-LEVEL `completed` FILTER IS `[MEASURED AT THE EXECUTABLE LINE, NOT EXECUTED BY A CONTROL]`.** The stub `db` chain ignores predicates, so no test in this file can distinguish a filtered query from an unfiltered one. **The executed, mutation-proved guard is the resolved-status validation.** ★ **I am naming this rather than letting `3 passed` imply both layers were exercised** — `F-8.1` got a real query-level control only because that file's `drizzle` mock could be made to capture SQL; this route's cannot without mocking drizzle, and **a hand-written drizzle mock takes the real `schema.ts` down** (`§4`).
+
+### §4 — ⭐ AN INSTRUMENT DECISION THAT MADE THE TEST STRICTER
+My first harness mocked **both** `../db/schema.js` and `drizzle-orm` and **died at import**: `[MEASURED HERE]` *"No `sql` export is defined on the `drizzle-orm` mock"* — **the real `schema.ts:64` needs it.** ✅ **I dropped BOTH mocks rather than hand-rolling a wider fake.** ⇒ **the test now loads the REAL schema, so `BACKTEST_STATUS_REFUSED` is the production constant itself and a rename turns this file RED** — `D-9 F-3`'s requirement, satisfied here in advance rather than planted again. ★★★ **`THE MOCK I COULD NOT WRITE WAS THE ONE I SHOULD NOT HAVE WANTED.`**
+✅ **NO COLLATERAL DAMAGE MEASURED, NOT ASSUMED:** the pre-existing route suite `pipeline-pause-gates.test.ts` re-run alongside — **`14 passed` across both files.**
+
+### §5 — ⏳ STATE
+**`F-8` ✅ · `F-9` ✅ · `F-10` `F-7` UNSTARTED, NOT BLOCKED.** **Controls closed of the ten:** *completed critic evidence still works* ✅ (**POSITIVE, counted in its own class**) · *refused critic evidence carries no fabricated metrics* ✅ · red-first ✅ · mutation-red ✅.
+⚠️ **`AR-862 §5`'s scope question now BITES: `N-1` (`critic-optimizer-service.ts:2390` +3 more, `replayStatus: "completed"` written unconditionally with a fabricated `0` score) is in the SAME SUBSYSTEM I just touched and is NOT in my authorized four.** 🛑 **I have not touched it. Still the desk's call.**
+
+---
+
 ## AR-863 · 2026-08-09 · ✅✅ **`D-10` `F-8` DELIVERED AND MUTATION-PROVED: EACH DEFECT RESTORED TURNS *ONLY ITS OWN* CONTROL RED, AND THE POSITIVE CONTROL SURVIVES BOTH.** 🛑🛑★★★★★ **AND THE HEADLINE IS AN INSTRUMENT FINDING, NOT A CODE ONE: TWO OF THIS FILE'S FIVE EXISTING TESTS WERE *ALREADY RED AT HEAD* AND HAD BEEN SILENTLY SO — THE CONVEYOR'S HAPPY PATH WAS THROWING INSIDE ITS OWN `try/catch` AND EVERY TEST OF IT WAS VACUOUS.** ⚖️ **I CAUGHT THAT ONLY BECAUSE I RAN THE UNTOUCHED `HEAD` COPY AS A PROBE INSTEAD OF ASSUMING I HAD BROKEN THEM.** **FAN-IN `1 / 4`.**
 
 **RULING:** `R-754 §3` (`F-8`), carrier `docs/designs/EXTERNAL-READ-2026-08-09-R754-CONSUMER-SWEEP.md` (banked at `42ca8d71` — **my `AR-861 §2` blocker is DISCHARGED and I confirm it: the ten controls are readable at `§3 REQUIRED CONTROLS`**). **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` RE-INVOKED after `R-754` landed — the pre-write guard BLOCKED my first edit for exactly that reason and it was right.**

@@ -10,9 +10,9 @@
 
 import { Router } from "express";
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, criticOptimizationRuns } from "../db/schema.js";
+import { backtests, criticOptimizationRuns, BACKTEST_STATUS_REFUSED } from "../db/schema.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { broadcastSSE } from "./sse.js";
 import { logger } from "../index.js";
@@ -45,21 +45,68 @@ criticOptimizerRoutes.post("/analyze", idempotencyMiddleware, async (req, res) =
   try {
     const body = analyzeSchema.parse(req.body);
 
-    // Resolve backtest_id: use provided value or fetch latest for the strategy
+    // ─── D-10 F-9 (R-754 §3): a REFUSED backtest is not critic evidence ───────
+    //
+    // Both resolution paths previously admitted a refusal:
+    //   implicit — "latest backtest" had NO status predicate, so the most recent
+    //              row won even when the engine refused to execute it;
+    //   explicit — `backtest_id` was passed straight through with no lookup.
+    //
+    // A refusal's metric columns are NULL by construction (R-751 §8-5), so the
+    // critic would read absent measurements as a measured flat result. That is the
+    // "manufactures evidence" class, and it is why this finding is on the wave.
+    //
+    // The guard is deliberately in TWO layers: the query narrows to `completed`,
+    // AND the resolved row's status is validated for BOTH paths at a single point
+    // below. The second layer is the load-bearing one — a future edit to the query
+    // cannot silently re-admit a refusal past it.
     let backtestId = body.backtest_id ?? null;
+    let resolvedStatus: string | null = null;
     if (!backtestId) {
       const [latest] = await db
-        .select({ id: backtests.id })
+        .select({ id: backtests.id, status: backtests.status })
         .from(backtests)
-        .where(eq(backtests.strategyId, body.strategy_id))
+        .where(and(eq(backtests.strategyId, body.strategy_id), eq(backtests.status, "completed")))
         .orderBy(desc(backtests.createdAt))
         .limit(1);
       if (!latest) {
         return res.status(400).json({
-          error: "No backtest found for this strategy. Provide backtest_id or run a backtest first.",
+          error: "no_completed_backtest_evidence",
+          message: "No COMPLETED backtest found for this strategy. Provide backtest_id or run a backtest first.",
         });
       }
       backtestId = latest.id;
+      resolvedStatus = latest.status;
+    } else {
+      const [row] = await db
+        .select({ id: backtests.id, status: backtests.status })
+        .from(backtests)
+        .where(eq(backtests.id, backtestId))
+        .limit(1);
+      if (!row) {
+        return res.status(404).json({ error: "backtest_not_found", backtest_id: backtestId });
+      }
+      resolvedStatus = row.status;
+    }
+
+    // SINGLE validation point for both paths. A refusal gets its OWN named outcome
+    // rather than being folded into a generic failure — a deliberate refusal and a
+    // crashed run are different events and downstream must be able to tell them
+    // apart (the same separation R-754 §3 requires of F-7).
+    if (resolvedStatus === BACKTEST_STATUS_REFUSED) {
+      return res.status(422).json({
+        error: "refused_backtest_no_evidence",
+        backtest_id: backtestId,
+        message:
+          "This backtest was REFUSED before execution: it carries no metrics, so there is nothing for the critic to analyse. Re-extract the strategy rather than re-running it.",
+      });
+    }
+    if (resolvedStatus !== "completed") {
+      return res.status(422).json({
+        error: "backtest_not_completed",
+        backtest_id: backtestId,
+        status: resolvedStatus,
+      });
     }
 
     const result = await triggerCriticOptimizer(
