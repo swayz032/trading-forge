@@ -4,6 +4,158 @@
 
 ---
 
+## AR-896 · 2026-08-09 · ✅ **`C-1` DELIVERED — ALL FOUR QUESTIONS ANSWERED, `4 / 4`, READ-ONLY, NOT ONE PRODUCTION BYTE WRITTEN.** ⭐⭐⭐ **AND THE HEADLINE IS A RETRACTION OF A BLOCKER THIS CAMPAIGN HAS BEEN CARRYING: THE RECORDED REASON THE OPENING RANGE CANNOT BE WIRED — *"WIRING REQUIRES NAMING A DURATION THE TEACHER DID NOT NAME"* — IS **MEASURED FALSE TODAY**. THE TEACHER NAMED ALL THREE DURATIONS, WITH A VERBATIM QUOTE EACH, AND THE LIVE LOWERING RETURNS `READY`.** ✅ **`Q1`–`Q3` NAME THE **SAME OBJECT**, PROVEN BY A STRING-IDENTITY JOIN AND NOT BY ADJACENCY ⇒ THE OPERATOR'S PRE-REGISTERED TIE-BREAK SELECTS "PROCEED".** 🛑 **AND ONE DECISION IS NOT MINE AND I DO NOT TAKE IT: THREE TAUGHT WINDOWS ⇒ THREE EXECUTION CANDIDATES, AND NOTHING TELLS A PER-BAR HANDLER WHICH ONE IT IS COMPUTING.**
+
+**TASK `R-773 §7` (`C-1`). SEAT `claude.exe 25636` (the authorized PID). TREE `wt-h1-wave4-20260712`, HEAD `61bd6979` at write time. ATTEMPT BUDGET `0 / 2` — UNSPENT. FAN-IN `4 / 4`.** 🛑 **I PROPOSE A LANE; I DO NOT START ONE.**
+
+### §0 — 🛑 STALENESS CHECK, RUN BECAUSE HEAD MOVED UNDER ME MID-LANE
+`[MEASURED HERE]` **My measurements were taken at `ed074e72`; HEAD is now `61bd6979` — a SIBLING SEAT committed while I was reading** (`[two-operator-windows]`: a ledger HEAD that moves mid-turn is a live sibling, not a hiccup).
+```
+git log --oneline ed074e72..HEAD   -> 61bd6979 ADVISOR-STATE: surgical SEAT update to R-773
+git diff --name-only ed074e72..HEAD -> docs/designs/ADVISOR-STATE.md   (ONE file)
+git diff --name-only ed074e72..HEAD -- src/engine/ <provenance dir>  -> EMPTY
+git diff --name-only ed074e72..HEAD -- docs/designs/AGENT-REPORTS.md -> EMPTY
+```
+⇒ ✅ **NOT ONE ARTIFACT I MEASURED CHANGED IN THAT WINDOW, and my single-writer file was untouched.** ★ **I checked instead of assuming, because a number carried across someone else's commit is stale even when the words around it are fresh.**
+
+### §1 — `Q1` ✅ THE LIVE HELD UNIT IS **`B1 STEP 6`**, AND I READ THE EXECUTABLE SURFACE, NOT A SUMMARY
+🛑 **`project_next_compiler_target` is explicit that the campaign's own carriers — `ADVISOR-STATE.md`, the onboarding golden-slice block, `R-648` — are SUMMARIES THAT LAG.** ⇒ **I treated NONE of them as authoritative and read the code and the frozen corpus instead.** **ARTIFACTS + BLOB SHAs, all at HEAD, all clean in the working tree:**
+```
+8a8dfae7d4a0afd053144a1e6453743d3f1bb576  src/engine/spec_family_bindings.py       <- THE HELD UNIT
+bf3b0a32c74b4ca937eb82892d974ca4993e800c  src/engine/tests/test_opening_range_conformance.py
+ba76778abf47034b3ac5927b6e8ef115ce4a3943  src/engine/opening_range_adapter.py      (STEP 4)
+fb6fffdfcec33b1fa4e3ad93613f9ce31a60dd18  src/engine/opening_range_lowering.py     (STEP 6A)
+a9be12e7500791adb78633e414e47cedd343c869  src/engine/opening_range_candidate.py    (STEP 6A)
+139f5fd5ab2378881f94d408ffb668b80dd232e2  src/engine/opening_range_definition.py   (STEP 3)
+1d3c173fc2a7fa2bebfcdc16bef35244a94bab92  src/engine/family_meta_enforcement.py
+5ebb113053fe04226843c0e60649aa00463d9934  docs/replay-results/h1-battery/tier-a-extraction-provenance/st5e-YJRfKc__s0.json
+```
+**THE UNIT'S OWN LABEL, read off the code:** `B1` is a numbered step ladder and every step writes its number into its module docstring. `[MEASURED HERE]` **STEPS `3`, `4`, `6A`, `6B` have LANDED modules; the two ordered REDs both say `PERMANENT RED (expected until B1 STEP 6)`.** ⇒ **`STEP 6` — the PRODUCTION REGISTRATION — is the held unit, and it is the only one of the ladder with no landed artifact.**
+
+### §2 — `Q2` ✅ THE EXACT BLOCKED PRODUCTION UNIT — FIVE LINES, NAMED AND CITED
+```
+[MEASURED HERE, src/engine/spec_family_bindings.py:678-682]
+    "OPENING_RANGE_DEFINITION": FamilyMeta(
+        primitive=None,
+        unsupported=True,
+        unbound_reason="opening_range_adapter_not_implemented",
+    ),
+```
+⇒ **THE BLOCKED UNIT IS THE PRODUCTION REGISTRATION OF THE OPENING-RANGE PRIMITIVE. It is not a missing computation — the computation exists and is green.**
+✅ **THE ORPHANING, PROVEN WITH A POSITIVE CONTROL** (`[absence-claim]`: a broken grep reads exactly like a missing feature):
+```
+grep -rn 'opening_range_adapter' --include=*.py src/  | grep -v /tests/
+   -> 1 hit, and it is the unbound_reason STRING at :681. NOTHING IMPORTS OR CALLS IT.
+grep for production callers of `opening_range_candidate`   -> 0 files
+POSITIVE CONTROL  bias_native.compute_bias_signal is routed at
+                  family_meta_enforcement.py:251 -> the grep form finds a real route.
+                  (0 here would have convicted MY GREP, not the wiring.)
+```
+✅ **AND THE UPSTREAM IS BUILT AND GREEN — the gap is wiring, not capability:** `[MEASURED HERE]` `pytest test_opening_range_adapter.py test_opening_range_lowering.py test_opening_range_candidate.py test_opening_range_definition.py -q` → **`83 passed in 0.63s`**.
+★★★★★ **`349 LINES OF CORRECT, TESTED ARITHMETIC WITH ZERO CALLERS IS NOT A HALF-BUILT FEATURE — IT IS A BUILT FEATURE WITH AN UNPLUGGED CABLE, AND THE TWO NEED COMPLETELY DIFFERENT LANES.`** (`[dormant-activation]`, 5th instance.)
+
+### §3 — `Q3` ✅ **SAME OBJECT** — AND I PROVE IT BY IDENTITY, NOT BY ADJACENCY
+🛑 **`R-773 §7` warned in capitals: do NOT assume they are the same because they are adjacent.** **So here is the join key, and it is a byte-for-byte string identity, not a resemblance.** `[MEASURED HERE, the reds' own failure output]`:
+```
+RED 1  test_no_production_binding_routes_to_the_opening_range_adapter_yet
+   condition : OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0
+   bindable  : False
+   primitive : None                              <- IS spec_family_bindings.py:679
+   reason    : opening_range_adapter_not_implemented
+                                                 <- IS the :681 literal, byte-identical
+RED 2  test_no_typed_opening_range_output_contract_exists_in_production
+   bound primitive : None                        <- the SAME :679 field
+   fields missing  : all 6 REQUIRED_OR_FIELDS
+BOTH RED [MEASURED HERE] at ed074e72:  "2 failed in 0.24s"
+```
+⇒ ✅ **THE TWO ORDERED REDS DO NOT MERELY *DESCRIBE* THE BLOCKED UNIT — THEIR FAILING VALUES **ARE ITS FIELDS**. `Q2` AND `Q3` ARE ONE OBJECT.** ★★★★★ **`AN IDENTITY JOIN IS A STRING YOU CAN POINT AT IN BOTH FILES. EVERYTHING ELSE IS TWO THINGS THAT LOOK ALIKE.`**
+✅ **AND SO IS THE OPERATOR'S SHORTHAND:** the `golden slice` is stub **`st5e-YJRfKc__s0`** (`GOLDEN_STUB`, conformance suite `:90`), and the condition the held unit fails to bind is **that stub's own `OPENING_RANGE_DEFINITION` condition** (id above). ⇒ **`golden slice` and `held state-channel/compiler unit` ARE NOW MEASURED THE SAME TARGET — the join the operator refused to assert is made, and it holds.** ⚖️ **His pre-registered tie-break therefore selects `PROCEED`, not `CHOOSE`.**
+⚠️ **`[gate-verdict]` — ONE INSTRUMENT NOTE AGAINST MYSELF:** my first pytest invocation printed `EXIT=0` because the exit code belonged to `tail`, not to `pytest`. **The load-bearing signal is the `2 failed` line, and I say so rather than letting a `0` I published stand as a pass.**
+
+### §4 — ⭐⭐⭐ THE FINDING THAT CHANGES THE PICTURE: THE RECORDED BLOCKER IS **DISCHARGED**
+🛑 **`opening_range_adapter.py:34-53` records the reason it was never wired, and it is a desk-reserved STOP:** *"Wiring this module to production requires naming a duration the teacher did not name… the golden slice's binding carries `parameters=None`, and its taught prose names THREE windows."*
+✅ **`[MEASURED HERE]` I RAN THE LIVE LOWERING AGAINST THE COMMITTED FROZEN RECORD. IT DOES NOT REFUSE:**
+```
+lower_opening_range_definition(st5e-YJRfKc__s0)  ->  disposition: READY
+  session_start_local : '09:30'          source_timezone : 'America/New_York'
+  trading_day_rule    : "…It's based on the day. So it becomes relative for every
+                         single trading day."                        <- TAUGHT, not inferred
+  variants (3), EACH WITH ITS OWN VERBATIM SOURCE QUOTE:
+    5m  'The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern.'
+    15m 'The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45.'
+    30m 'And the 30 minute is from 9:30 to 10 a.m. Eastern.'
+NEGATIVE CONTROL, SAME PATH, SAME CALL, the other frozen member:
+  hcHuDfxdywI__s0 -> SOURCE_INCOMPLETE · missing_fields ('variants',)
+                     failure_kind 'UNREADABLE'
+  ⇒ the instrument DISCRIMINATES. `READY` is not what it always says.
+AND expand_execution_candidates (opening_range_candidate.py:170-191) expands
+  "one candidate per taught variant, IN TAUGHT ORDER, choosing none of them."
+```
+⇒ ⭐⭐⭐ **NO DURATION HAS TO BE INVENTED. The teacher named three; the lowering reads three with provenance; the expansion carries three and selects none.** **`THE SCOPE STOP THAT HAS HELD THIS UNIT SINCE STEP 4 WAS DISSOLVED BY STEP 6A AND NOBODY RE-READ THE DOCSTRING.`**
+⚖️ **AND I WILL NOT CALL THAT DOCSTRING A LIE — IT WAS TRUE WHEN WRITTEN.** `opening_range_lowering.py` did not exist at STEP 4. ★★★★★ **`A CAPTION IS A CLAIM, AND A CLAIM DECAYS. THE MOST EXPENSIVE STALE CLAIM IS THE ONE THAT RECORDS WHY SOMETHING IS IMPOSSIBLE, BECAUSE NOBODY RE-TESTS AN IMPOSSIBILITY.`** ⚠️ **Registered as a DOC-DEBT observation for the desk — I did NOT edit it (`R-773 §7`: no production edit, and a docstring in a production module is a production edit).**
+
+### §5 — `Q4` ⚖️ THE SHORTEST RED-TO-GREEN LANE — **PROPOSED, NOT STARTED**
+**FIRST FAILING STEP:** `FAMILY_META["OPENING_RANGE_DEFINITION"].primitive is None` (`:679`). **Everything the reds want hangs off that one field.**
+```
+WHAT WOULD MAKE IT GREEN — four moves, in this order:
+ 1 DECLARE  primitive = "opening_range_adapter.compute_opening_range_state",
+            drop unsupported=True.        [MEASURED] that fn exists, adapter.py:237
+ 2 ROUTE    add the matching entry to the enforced dispatch map. NOT optional:
+            verify_dispatch_coverage() (family_meta_enforcement.py:446) proves SET
+            EQUALITY IN BOTH DIRECTIONS — "declared but unrouted" is a violation and
+            "routed but undeclared" is a SECOND ROUTER.
+ 3 RED 2 THEN GOES GREEN LEGITIMATELY, NOT COSMETICALLY. [MEASURED HERE] it reads the
+            bound primitive's RETURN ANNOTATION, which is `OpeningRangeState`, and that
+            dataclass ALREADY carries all six REQUIRED_OR_FIELDS verbatim
+            (opening_range_definition.py:201-206). Nothing has to be added to satisfy it.
+ 4 RED 1 IS THE REAL ONE. Its docstring (R-736 §1) demands STEP 6 prove "the golden
+            candidates ACTUALLY CALL the adapter" — a stub that registers and annotates
+            was explicitly ruled insufficient. So the lane's acceptance is EXECUTABLE:
+            the expansion must reach compute_opening_range_state on the golden record.
+```
+🛑🛑 **AND HERE IS THE DECISION I AM NOT TAKING, BECAUSE IT IS THE DESK'S AND BECAUSE TAKING IT QUIETLY IS THE OLD TRAP IN A NEW COSTUME:**
+`[MEASURED HERE, red 1's own output]` **the binding carries `parameters=None`.** **Three taught windows expand to THREE execution candidates, and a per-bar dispatch handler must know WHICH ONE IT IS COMPUTING.** Two shapes, and they are different architectures:
+```
+ A  the binding carries the CANDIDATE SET; the compiler emits THREE executable
+    strategies (one per taught window), each with its own identity and receipt.
+ B  ONE strategy parameterised by candidate identity, chosen downstream.
+```
+⚖️ **I recommend `A` on fidelity grounds — the teacher taught three ranges and `A` is the only shape that never picks one — but this is an ARCHITECTURE choice with a downstream backtest-identity consequence, it is the `R-732` reserved class, and `R-773 §7` told me to PROPOSE.** ★★★★★ **`PICKING ONE OF THE THREE TO GET A GREEN IS EXACTLY THE FIDELITY DEFECT THE STEP-4 SEAT REFUSED TO COMMIT — THE FACT THAT THE SOURCE TURNED OUT TO BE COMPLETE DOES NOT MAKE THE CHOICE MINE.`**
+✅ **NOT `UNRESOLVED_SOURCE_AMBIGUITY`, and I say so explicitly since `R-773 §7` pre-accepted it:** the SOURCE is complete and measured complete. **What remains is an ENGINE-SIDE decision about carrying three candidates — a different class, and a smaller one.**
+
+### §6 — 📐 `vertical-slice-breakthrough` REQUIRED OUTPUT
+```
+ARTIFACT / CONTROL : st5e-YJRfKc__s0 (golden) · hcHuDfxdywI__s0 (same-path neighbour)
+TRACE
+ 1 source words          MEASURED  provenance json blob 5ebb1130, strategies[0]
+                                   entry_sequence[0].action + the 3 window quotes
+ 2 extraction record     MEASURED  same blob; lowering consumes it directly
+ 3 canonical typed mean. MEASURED  OpeningRangeDefinition, disposition READY, 3 variants
+ 4 binding attempt       MEASURED  bindable=False · primitive=None ·
+                                   reason='opening_range_adapter_not_implemented'
+ 5 engine capability     MEASURED  compute_opening_range_state -> OpeningRangeState,
+                                   all 6 required fields present; 83 tests green
+ 6 first failed handoff  MEASURED  stage 3 -> stage 4. The typed meaning EXISTS and the
+                                   engine capability EXISTS; the REGISTRATION between
+                                   them does not. FAMILY_META :678-682.
+RED / GREEN / NEG CONTROL : reds RED here (2 failed) · built suites GREEN (83 passed) ·
+   NEGATIVE CONTROL = neighbour stub SOURCE_INCOMPLETE on the identical call · grep
+   POSITIVE CONTROL = bias_native route found by the same grep form
+REPAIR              : NONE MADE. C-1 is read-only. Lane proposed in §5.
+DEFERRED            : DOC-1 adapter docstring records a discharged blocker (§4)
+PARALLEL LANES      : NOT USED — Q1->Q2->Q3->Q4 is a real data-dependency chain (AR-895 §1)
+SCOPE / UNCERTAINTY : §7
+```
+
+### §7 — 🛑 WHAT I DID **NOT** MEASURE — AND ONE INSTRUMENT ERROR I CAUGHT ON MYSELF
+🛑 **NOT MEASURED, no claim made:** the full `103`-member baseline (**I ran 6 tests and 4 suites, nothing else — I assert NOTHING about the other 31 reds**) · `runtime-production` (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`) · the TypeScript side (`src/server/lib/spec-family-bindings.ts` carries a STEP 3 twin at `:141`; **I did not check TS/Python parity**) · the adapter executed on REAL market data (its 83 greens are fixture-based) · whether `FAMILY_META` has OTHER `unsupported=True` families in the same shape (**that would be a second census — `R-773 §7` forbids it**) · `construction_meaning`, which appears in `REQUIRED_SOURCE_FIELDS` but is not a field on the definition dataclass — **I noticed it and did not chase it.**
+✅ **NO SECOND ORACLE AUTHORED OR RUN.** `compile_fidelity.py` / `calibration_battery.py` / `diff_harness.py` were **not needed for a recon and were not touched.**
+⚠️ **AN INSTRUMENT ERROR I CONVICTED MYSELF OF, BEFORE IT BECAME A CLAIM:** my first probe printed `construction_meaning: '<no attr>'` and `reason: '<no attr>'`. **That was MY `getattr` default guessing field names — the module was fine.** I re-ran enumerating `dataclasses.fields()` instead of guessing, and every value in §4 comes from the corrected probe. ★★★★★ **`[i-measured]` AGAIN: I READ THE NEIGHBOURING OBJECT — A NAME I INVENTED — AND IT ANSWERED WITH SILENCE THAT LOOKED EXACTLY LIKE A MISSING FIELD.` A probe's `<no attr>` accuses the probe first.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** **FILES WRITTEN: `AGENT-REPORTS.md` only.** Two probe scripts live in the session scratchpad, **outside the repo, uncommitted by design.** `git status` for `src/` shows only the sibling's `test_synthetic_market_simulator.py`, which is not mine and which I did not touch.
+**RECOMMENDATION: APPROVAL_REQUESTED** — for a `STEP 6` wiring lane on shape `A`, with the `A`-vs-`B` choice ruled by the desk first. **NEXT SMALLEST TASK: the desk rules `A` or `B`; I do not start until it does.**
+
+---
+
 ## AR-895 · 2026-08-09 · 🟢 **START-RECEIPT — `R-773 §7` LANE `C-1` ACCEPTED AND STARTED. READ-ONLY RECONNAISSANCE, FOUR QUESTIONS, NO PRODUCTION WRITE.** ✅ **AUTHORIZATION JOIN VERIFIED BY ME, NOT ASSUMED: `R-773 §7` NAMES `claude.exe 25636`, AND `[MEASURED HERE]` THAT IS MY OWN `claude.exe` — SAME PARENT WALK I PUBLISHED IN `AR-894 §2`.** ⚖️ **NO DEFECT FOUND IN THE RULING — I CHECKED FOR THE TWO I AM OBLIGED TO RAISE BEFORE STARTING, AND NEITHER IS PRESENT.**
 
 **TASK `R-773 §7` (`C-1`). SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`, HEAD `3c8a3063`. ATTEMPT BUDGET `0 / 2`. FAN-IN `0 / 4` questions.**
