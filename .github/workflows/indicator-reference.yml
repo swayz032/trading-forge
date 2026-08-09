@@ -15,10 +15,42 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: indicator-reference-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  reference-engine:
+  reference-unit-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+        hashseed: ['0', '42']
+    env:
+      PYTHONHASHSEED: ${{ matrix.hashseed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile reference and tests
+        run: python -m compileall -q indicator/reference indicator/tests
+
+      - name: Unit and property tests
+        run: python -m unittest discover -s indicator/tests -p 'test_*.py' -v
+
+  reference-stress:
+    needs: reference-unit-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: '0'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,9 +59,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Unit and property tests
-        run: python -m unittest discover -s indicator/tests -p 'test_*.py' -v
 
       - name: Randomized invariant stress
         run: python -m indicator.tests.stress_reference_engine
