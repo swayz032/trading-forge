@@ -47,6 +47,10 @@ from src.engine.opening_range_definition import (
     CANONICAL_TYPE as OPENING_RANGE_DEFINITION,
 )
 from src.engine.opening_range_definition import classify_opening_range_definition
+from src.engine.opening_range_lowering import (
+    OpeningRangeLoweringResult,
+    lower_opening_range_definition,
+)
 from src.engine.spec_family_bindings import compile_binding_plan
 
 # --------------------------------------------------------------------------- #
@@ -809,3 +813,116 @@ def dispose_inventory(strategy_extraction: dict, instrument_classification: Opti
             spec_body, [c.get("type_confidence", CONF_CONFIDENT) for c in spec_body.get("entry_conditions", [])]
         ),
     }
+
+
+# ── B1 STEP 6 / lane S6-1 STEP 2 — THE FULL-RECORD PRODUCTION COMPILE BOUNDARY ──
+#
+# AUTHORITY: R-776 §4.
+#
+# WHY THIS EXISTS AT ALL (R-774 §4-4, measured):
+# `produce_spec_artifact()` receives ONE strategy — `record["strategies"][i]` — so every
+# RECORD-LEVEL fact is discarded before the compile. `instrument_classification` is one of
+# them, and `lower_opening_range_definition()` reads `market_scope` out of it. No amount of
+# work downstream of the old boundary could produce a source-complete opening-range
+# definition, because the evidence was already gone.
+#
+# WHY A WRAPPER RATHER THAN A NEW PARAMETER (R-776 §3 left the choice open):
+# adding a full-record parameter to `produce_spec_artifact()` would give one function two
+# input contracts — a strategy AND the record that contains it — and every existing caller
+# would have to be trusted to pass a consistent pair. A wrapper cannot be handed an
+# inconsistent pair: it derives the strategy FROM the record it was given.
+#
+# 🛑 WHAT THIS IS NOT (R-776 §4, verbatim scope):
+# not family registration · not resolver/dispatch · not the TS mirror · not candidate
+# transport · not backtesting · not breakout semantics. It carries the LOWERED DEFINITION
+# and stops. Expanding that definition into candidates is STEP 3 and is deliberately absent.
+#
+# 🛑 ONE LOWERER: this calls `lower_opening_range_definition()` and nothing else. There is no
+# second interpretation of the taught prose here — not a regex, not a fallback, not a
+# hand-built `OpeningRangeDefinition`. [MEASURED, R-776 prior-art check] this is the FIRST
+# production caller of that function; it does not compete with an existing one.
+SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY: str = "opening_range_lowering"
+
+_LOWERING_POSITIVE_CONTROL: str = (
+    "the same locators run over every certified record at this boundary, and the corpus "
+    "contains records in which each required field IS located — so a field missing here is "
+    "a property of THIS record, not of the reader"
+)
+
+
+def produce_spec_artifact_from_record(
+    record: dict,
+    *,
+    video: str,
+    certificate: Optional[dict] = None,
+    transcript_chars: int = 0,
+    strategy_index: int = 0,
+) -> dict:
+    """The public production compile boundary that receives the FULL certified record.
+
+    Produces the spec artifact for one strategy and attaches the authoritative
+    opening-range lowering, which needs record-level evidence the per-strategy
+    boundary cannot see.
+
+    The lowering is attempted for EVERY record, not only for records that carry an
+    `OPENING_RANGE_DEFINITION` condition. That is deliberate: `SOURCE_INCOMPLETE`
+    with named missing fields is a real, useful answer for a record that never
+    taught an opening range, whereas skipping the call would make "not taught" and
+    "not attempted" indistinguishable downstream.
+
+        `AN ABSENT RESULT AND A REFUSAL ARE DIFFERENT FACTS, AND ONLY ONE OF THEM
+         NAMES WHAT WAS MISSING.`
+
+    No stub id, no video id and no duration appears in this function's logic — it
+    reads the record it is handed (R-776 §4 stop conditions).
+    """
+    strategies = record.get("strategies") or []
+    if not strategies:
+        raise ValueError(
+            f"{video}: the certified record carries no strategies; there is nothing to "
+            "compile, and inventing one is not available here"
+        )
+    if not 0 <= strategy_index < len(strategies):
+        raise IndexError(
+            f"{video}: strategy_index {strategy_index} is outside the record's "
+            f"{len(strategies)} strategies"
+        )
+
+    artifact = produce_spec_artifact(
+        strategies[strategy_index],
+        video=video,
+        certificate=certificate,
+        transcript_chars=transcript_chars,
+    )
+
+    artifact[SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY] = lower_opening_range_definition(
+        source_spec_id=video,
+        source_condition_id=_opening_range_condition_id(artifact),
+        record=record,
+        positive_control=_LOWERING_POSITIVE_CONTROL,
+    )
+    return artifact
+
+
+def _opening_range_condition_id(artifact: dict) -> str:
+    """The produced condition that carries the taught opening range, selected BY TYPE.
+
+    Returns `""` when the record taught none — the lowering still runs and still
+    refuses by name, which is what keeps "not taught" legible downstream.
+    """
+    spec_body = artifact.get("spec") or {}
+    for condition in spec_body.get("entry_conditions") or ():
+        if str(condition.get("type", "")) == "OPENING_RANGE_DEFINITION":
+            return str(condition.get("id", ""))
+    return ""
+
+
+def opening_range_lowering_of(artifact: dict) -> Optional[OpeningRangeLoweringResult]:
+    """Read the attached lowering, or `None` if the artifact came from the
+    per-strategy boundary that cannot produce one.
+
+    Downstream code asks through this accessor rather than indexing the key, so
+    "this artifact predates the full-record boundary" stays distinguishable from
+    "the lowering refused".
+    """
+    return artifact.get(SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY)

@@ -52,7 +52,11 @@ import pathlib
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from src.engine.extraction.spec_producer import produce_spec_artifact
+from src.engine.extraction.spec_producer import (
+    opening_range_lowering_of,
+    produce_spec_artifact,
+    produce_spec_artifact_from_record,
+)
 from src.engine.family_meta_enforcement import PRIMITIVE_RESOLVERS
 from src.engine.opening_range_adapter import OpeningRangeBar, compute_opening_range_state
 from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
@@ -254,30 +258,43 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
     `THE TEST NAMES THE GAP BEFORE THE CODE FILLS IT.` So stage 1 asserts the
     boundary exists; only stage 2 asserts what it must carry.
     """
-    # ── STAGE 1 — is there a PUBLIC production compile boundary that receives the
-    # full certified record? Measured off the signature, not off a docstring.
-    params = set(inspect.signature(produce_spec_artifact).parameters)
-    full_record_params = params & {"record", "extraction_record", "instrument_classification"}
-    assert full_record_params, (
-        "RED (expected until B1 STEP 6) — STAGE 1, THE NAMED GAP: no public production "
-        "compile boundary accepts the full certified record.\n"
-        f"  produce_spec_artifact parameters : {sorted(params)}\n"
-        "  it receives ONE strategy (strategies[0]); instrument_classification and every "
-        "other record-level fact are discarded before the compile.\n"
-        "  lower_opening_range_definition() REQUIRES that evidence (market_scope is read "
-        "from instrument_classification), so no amount of work downstream of this boundary "
-        "can produce a source-complete definition.\n"
-        "  ⇒ THIS ABSENCE IS THE FIRST RED. R-775 §7-1: name it here, build it in STEP 2."
+    # ── STAGE 1 — a PUBLIC production compile boundary that receives the FULL record.
+    # 🛑 R-776 §3: this must EXERCISE the real boundary, not inspect a function NAME.
+    # `A TEST PINNED TO A FUNCTION NAME GUARDS THE NAME, NOT THE BOUNDARY` — so the
+    # assertion below is that the boundary's OUTPUT carries source-complete evidence,
+    # which no rename can satisfy and no stub can fake.
+    params = set(inspect.signature(produce_spec_artifact_from_record).parameters)
+    assert "record" in params, (
+        "RED — STAGE 1: the full-record boundary does not take a record.\n"
+        f"  parameters : {sorted(params)}"
     )
 
-    # ── STAGE 2 — unreachable until stage 1 passes. Membership, taught order, no default.
-    _, _artifact, plan = _produce(GOLDEN_STUB)
+    artifact = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    lowering = opening_range_lowering_of(artifact)
+    assert lowering is not None and lowering.definition is not None, (
+        "RED — STAGE 1: the full-record boundary exists but does not carry an authoritative "
+        "opening-range lowering for the golden record.\n"
+        f"  lowering : {lowering}\n"
+        "  record-level instrument_classification is what makes market_scope locatable; if "
+        "this is None the boundary is still entering at the lossy per-strategy seam."
+    )
+    assert tuple(v.duration_minutes for v in lowering.definition.variants) == TAUGHT_DURATIONS, (
+        "RED — STAGE 1: the boundary lowered a definition whose taught variants are not the "
+        f"three taught windows in taught order: "
+        f"{tuple(v.duration_minutes for v in lowering.definition.variants)}"
+    )
+
+    # ── STAGE 2 — candidate transport. STILL RED until STEP 3; R-776 §5 pre-registered
+    # that reaching this stage IS the STEP 2 success signal.
+    plan = compile_binding_plan(artifact["spec"])
     candidates = _find_candidates(plan)
     durations = tuple(c.variant.duration_minutes for c in candidates)
     assert durations == TAUGHT_DURATIONS, (
-        "RED — STAGE 2: the full-record boundary exists but does not transport exactly the "
-        f"three taught candidates.\n  expected : {TAUGHT_DURATIONS}\n  found    : "
-        f"{durations or '(none)'}"
+        "RED — STAGE 2 (expected until B1 STEP 6 / STEP 3): the full-record boundary now "
+        "lowers a source-complete definition with all three taught windows, but the compiled "
+        "plan does not yet TRANSPORT them as execution candidates.\n"
+        f"  expected : {TAUGHT_DURATIONS}\n  found    : {durations or '(none)'}\n"
+        "  ⇒ STAGE 1 is repaired; this is the next handoff, and it is STEP 3's."
     )
 
 
@@ -359,7 +376,20 @@ def test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter
         "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
     )
 
-    _, _artifact, plan = _produce(NEIGHBOUR_STUB)
+    # R-776 §4 REQUIRED BEHAVIOUR, the refusal arm — measured THROUGH the full-record
+    # boundary, so it guards the boundary rather than the lowerer in isolation.
+    artifact = produce_spec_artifact_from_record(_record(NEIGHBOUR_STUB), video=NEIGHBOUR_STUB)
+    lowering = opening_range_lowering_of(artifact)
+    assert lowering is not None and lowering.definition is None, (
+        "the full-record boundary produced a definition for the SOURCE_INCOMPLETE neighbour; "
+        f"a refusal was turned into a READY.\n  lowering : {lowering}"
+    )
+    assert lowering.refusal is not None and lowering.refusal.missing_fields, (
+        "the neighbour refused without naming a missing field — an unnamed refusal is "
+        "indistinguishable from a crash"
+    )
+
+    plan = compile_binding_plan(artifact["spec"])
     assert _find_candidates(plan) == [], (
         "a SOURCE_INCOMPLETE record produced execution candidates — the refusal is not "
         "being preserved through the compile"
