@@ -1,4 +1,11 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-725`, 2026-08-09 00:10Z**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-737`, 2026-08-09**
+
+> ★★★★★ **THIS FILE IS READ #1 FOR A COLD ADVISOR SEAT — `advisor-onboarding §1` was corrected at
+> `R-737 §9` to say so.** It had named `ADVISOR-STATE.md` instead, which `[MEASURED, R-737]` is
+> `3,993` lines / `631,216` B — **past the `Read` tool's `256 KB` cap, so a cold read FAILS OUTRIGHT** —
+> and was **fifteen rulings stale.** ⚠️ **Keep THIS file's header ruling number current, or you rebuild
+> the same trap one level down.** ★ `ADVISOR-STATE.md` remains the **sole carrier of `## THE PLAN`**
+> and of unruled `[FACT, MEASURED HERE, NOT RULED]` blocks — **grep its headings, never read it whole.**
 
 > ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
 > **`HEAD 1baa7a6a` · newest ruling `R-729` · newest AR `AR-823` (ruled). Worker STOPPED, nothing owed.**
@@ -183,13 +190,24 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-721`** (`55b56c32`, 2026-08-08). **Newest AR `AR-802`** — ruled, **nothing unruled.**
-- **Worker: HOLD.** Nothing owed. **Dependency NAMED = the inbound GPT plan** (operator standby).
+- **Newest ruling `R-737`** (`0613cb52`, 2026-08-09, **pushed — remote tip verified equal to local HEAD**).
+  **Newest AR `AR-830`** — **ruled by `R-737`; nothing unruled.**
+- ✅ **WORKER: AUTHORIZED AND NOT BLOCKED.** `R-737 §10`: **(1)** two `STEP 5` controls — **non-finite
+  market data must refuse, and the misdeclared-bar-interval property becomes two fixtures** · **(2)**
+  then **`STEP 6` PROCEEDS WITH NO FURTHER RULING** (deterministic `5`/`15`/`30` expansion + production
+  routing, the read's ten proof obligations **plus** `R-737 §8`'s requirement `11`, cache-identity
+  stability across processes). 🛑 **TS parity contract must be MEASURED before the mirror is written.**
 - ✅ **NO GRADE IN FLIGHT.** The Lanes-34/35 grade is **complete, accepted, and BANKED** (see §4).
+- ⭐ **`B1` STEP LADDER:** `STEP 3` ✅ clean-room verified (`R-735`) · **`STEP 4` ✅ CLOSED (`R-737`,
+  desk-re-measured)** · `STEP 5` 🛑 two controls from closed · `STEP 6` ⏳ released on their green.
 
 | what | sha |
 |---|---|
-| **`R-721` (current HEAD)** | `55b56c32` |
+| **`R-737` (current HEAD)** | `0613cb52` |
+| `AR-830` (STEP 4 closeout) | `cd92ecb2` |
+| opening-range adapter blob | `cdab9577b8a4ff365c23b5349e4ddb1c0e5fe724` |
+| adapter test blob | `e0cdf37f8c63be6d173da196214191da48049ccd` |
+| `R-721` (superseded pin) | `55b56c32` |
 | Lanes 34+35 (graded pin) | `81a48b7604b38e1a5daddfef0c6e478a7a3d4165` |
 | Lane 33 | `1163f36657773fef4dec52daa09c2207cf85b839` |
 | Lane 32 (Gate-2 grade pin) | `a3f75aa7efff54b3d555ea660dda51e7fa3ce50e` |
