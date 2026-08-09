@@ -26,7 +26,7 @@
  * The system NEVER auto-deploys to TradingView.
  */
 
-import { randomUUID, createHash } from "crypto";
+import { randomUUID } from "crypto";
 import { eq, and, or, desc, gte, sql, count } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets, pilotSessions } from "../db/schema.js";
@@ -40,6 +40,7 @@ import { getLatestFrankensteinRun } from "./frankenstein-service.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
+import { computeResultHash } from "../lib/result-hasher.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
 import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/sse.js";
@@ -3092,19 +3093,48 @@ export class LifecycleService {
       // with the same identity are the same question, so a refusal of one is a refusal
       // of the other, permanently.
       //
-      // The rest of the backtest config below is a compile-time constant, so it cannot
-      // vary between two calls and is deliberately excluded rather than hashed for show.
-      const requestIdentity = createHash("sha256")
-        .update(
-          JSON.stringify({
-            strategyId,
-            strategyName,
-            symbol: symbol ?? "MES",
-            timeframe: "5m",
-            mode: "walkforward",
-          }),
-        )
-        .digest("hex");
+      // ⚠️ CORRECTED (R-767 §2). The first version hashed a HAND-WRITTEN SUMMARY of five
+      // fields while SIX further config fields reached the engine unhashed. Latent, not
+      // live — they are literals at this single call site — but the first edit making one
+      // of them caller-varying would have silently converted a correct suppression guard
+      // into a wrong one, with no test able to catch it.
+      //
+      //   `AN IDENTITY BUILT FROM A HAND-WRITTEN SUMMARY OF A REQUEST IS NOT AN IDENTITY
+      //    OF THE REQUEST — IT IS AN IDENTITY OF THE SUMMARY, AND THE TWO DRIFT SILENTLY.`
+      //
+      // So the config object is now built ONCE, the SAME object is both hashed and sent,
+      // and the hash covers the whole logical call descriptor. A new field added to the
+      // config below is inside the identity automatically — there is no list to update.
+      const backtestConfig = {
+        strategy: {
+          name: strategyName,
+          symbol: symbol ?? "MES",
+          timeframe: "5m",
+          indicators: [],
+          entry_long: "",
+          entry_short: "",
+          exit: "",
+          stop_loss: { type: "atr", multiplier: 2.0 },
+          position_size: { type: "dynamic_atr", target_risk_dollars: 500 },
+        },
+        mode: "walkforward",
+      } as Parameters<typeof import("./backtest-service.js").runBacktest>[1];
+
+      // EXCLUDED, and the exclusion is a decision (R-767 §4): `correlationId`,
+      // `incompleteCount` and `totalGates` are tracing/audit context. They cannot change
+      // the engine's answer, so including them would defeat suppression entirely by
+      // making every request unique.
+      //
+      // `engineRevision` IS included: a new engine is a new question, and a refusal by
+      // yesterday's build must not silence today's.
+      const requestIdentity = computeResultHash({
+        strategyId,
+        config: backtestConfig,
+        strategyClass: null,
+        externalId: null,
+        actor: "automated",
+        engineRevision: process.env.FORGE_GIT_SHA ?? "unknown",
+      });
 
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const priorRows = await db
@@ -3165,22 +3195,12 @@ export class LifecycleService {
       );
 
       const { runBacktest } = await import("./backtest-service.js");
+      // THE SAME OBJECT THAT WAS HASHED IS THE OBJECT THAT IS SENT. If these were two
+      // separate literals they could drift apart silently, which is exactly the defect
+      // R-767 §2 held this lane open for.
       const btResult = await runBacktest(
         strategyId,
-        {
-          strategy: {
-            name: strategyName,
-            symbol: symbol ?? "MES",
-            timeframe: "5m",
-            indicators: [],
-            entry_long: "",
-            entry_short: "",
-            exit: "",
-            stop_loss: { type: "atr", multiplier: 2.0 },
-            position_size: { type: "dynamic_atr", target_risk_dollars: 500 },
-          },
-          mode: "walkforward",
-        },
+        backtestConfig,
         undefined,
         undefined,
         correlationId ?? undefined,

@@ -31,7 +31,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { createHash } from "node:crypto";
+import { computeResultHash } from "../lib/result-hasher.js";
 
 // ── Mock state ───────────────────────────────────────────────────────────────
 
@@ -375,28 +375,35 @@ describe("§B D-10 N-4: what the audit trail records for the auto-backtest enque
   // The 24h cap counts only *enqueued* rows, so before this guard a deterministically
   // refused strategy was re-asked every day forever and refused every time.
 
-  /** The identity production derives for the default `params()` request. */
-  function identityFor(p: { strategyId: string; strategyName: string; symbol: string | null }) {
-    return createHash("sha256")
-      .update(
-        JSON.stringify({
-          strategyId: p.strategyId,
-          strategyName: p.strategyName,
-          symbol: p.symbol ?? "MES",
-          timeframe: "5m",
-          mode: "walkforward",
-        }),
-      )
-      .digest("hex");
+  /**
+   * The identity production ACTUALLY STORED for a request — obtained by running the real
+   * helper once and reading the value back, NOT by restating its hashing rule here.
+   *
+   * ★ A test that re-implements production's identity formula is the SAME defect this
+   *   lane exists to remove, one layer out: it would keep passing while production and
+   *   the test drifted together into agreement about the wrong thing.
+   *   `THE REPAIR FOR A REPLICA IS AN IMPORT.`
+   */
+  async function identityProductionStoredFor(p = params()): Promise<string> {
+    seedPriorAuditRows([]);
+    mockRunBacktest.mockResolvedValue({ id: "bt-probe", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(p);
+    const id = (auditRows[auditRows.length - 1].input as Record<string, unknown>).request_identity;
+    // reset so the caller's own run starts from a clean slate
+    auditRows = [];
+    vi.clearAllMocks();
+    mockInsertFn.mockReturnValue({
+      values: (row: Record<string, unknown>) => { auditRows.push(row); return Promise.resolve(undefined); },
+    });
+    return id as string;
   }
 
   it("does NOT re-enqueue when the SAME request was already refused", async () => {
+    // Round-trip: production STORES the identity, then production READS IT BACK and
+    // suppresses on it. Neither side is a restatement.
+    const identity = await identityProductionStoredFor();
     seedPriorAuditRows([
-      {
-        id: "prior-refusal",
-        action: REFUSED_ACTION,
-        input: { request_identity: identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }) },
-      },
+      { id: "prior-refusal", action: REFUSED_ACTION, input: { request_identity: identity } },
     ]);
     mockRunBacktest.mockResolvedValue(REFUSED_RESULT);
     await service.runEvidenceAutoBacktestEnqueue(params());
@@ -407,18 +414,102 @@ describe("§B D-10 N-4: what the audit trail records for the auto-backtest enque
   it("DISCRIMINATOR: a MATERIALLY CHANGED request is retried despite the prior refusal", async () => {
     // Same strategy, different symbol ⇒ different question ⇒ different identity.
     // Without this, a suppression that simply blocked everything would pass above.
+    const identity = await identityProductionStoredFor();
     seedPriorAuditRows([
-      {
-        id: "prior-refusal",
-        action: REFUSED_ACTION,
-        input: { request_identity: identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }) },
-      },
+      { id: "prior-refusal", action: REFUSED_ACTION, input: { request_identity: identity } },
     ]);
     mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
     await service.runEvidenceAutoBacktestEnqueue(params({ symbol: "MNQ" }));
     expect(mockRunBacktest).toHaveBeenCalledOnce();
     expect(auditRows).toHaveLength(1);
     expect(auditRows[0].status).toBe("success");
+  });
+
+  // ── §C IDENTITY COMPLETENESS (R-767 §4) ────────────────────────────────────
+  //
+  // `AN IDENTITY BUILT FROM A HAND-WRITTEN SUMMARY OF A REQUEST IS NOT AN IDENTITY OF
+  //  THE REQUEST — IT IS AN IDENTITY OF THE SUMMARY, AND THE TWO DRIFT SILENTLY.`
+  //
+  // The first identity hashed five hand-listed fields while SIX config fields reached
+  // the engine unhashed. Latent, not live — they are literals at the single call site —
+  // but the first edit that makes one caller-varying converts a correct suppression
+  // guard into a wrong one, with nothing to catch it.
+  //
+  // These controls join the STORED identity to the config the engine ACTUALLY received,
+  // captured off the mocked `runBacktest`. That join is the whole point: it is what
+  // makes the identity an identity OF THE REQUEST rather than of a restatement.
+
+  /** The logical call descriptor R-767 §4 specifies. Hashed with the SHARED canonicaliser. */
+  function descriptorFor(config: unknown, engineRevision = process.env.FORGE_GIT_SHA ?? "unknown") {
+    return {
+      strategyId: "strat-abc",
+      config,
+      strategyClass: null,
+      externalId: null,
+      actor: "automated",
+      engineRevision,
+    };
+  }
+
+  /** The config the engine actually received on the most recent call. */
+  function configSentToEngine(): Record<string, unknown> {
+    return mockRunBacktest.mock.calls[0][1] as Record<string, unknown>;
+  }
+
+  it("the stored identity is the identity OF THE CONFIG THE ENGINE RECEIVED", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const stored = (auditRows[0].input as Record<string, unknown>).request_identity;
+    // THE JOIN. Recomputed from the captured config, not from a restated field list.
+    expect(stored).toBe(computeResultHash(descriptorFor(configSentToEngine())));
+  });
+
+  it("a NESTED config field changing (target_risk_dollars 500→501) changes the identity", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const stored = (auditRows[0].input as Record<string, unknown>).request_identity;
+
+    const sent = configSentToEngine();
+    const mutated = JSON.parse(JSON.stringify(sent)) as any;
+    expect(mutated.strategy.position_size.target_risk_dollars).toBe(500); // fixture witness
+    mutated.strategy.position_size.target_risk_dollars = 501;
+
+    // materially different question ⇒ different identity ⇒ retry permitted
+    expect(stored).not.toBe(computeResultHash(descriptorFor(mutated)));
+    // and the unmutated join still holds, so the inequality above means something
+    expect(stored).toBe(computeResultHash(descriptorFor(sent)));
+  });
+
+  it("a different engine revision changes the identity — a new engine is a new question", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const stored = (auditRows[0].input as Record<string, unknown>).request_identity;
+    // Anchor the inequality to the join, or it passes trivially whenever the identity is
+    // wrong in ANY way — an assertion that a broken implementation also satisfies is not
+    // a control.
+    expect(stored).toBe(computeResultHash(descriptorFor(configSentToEngine())));
+    expect(stored).not.toBe(computeResultHash(descriptorFor(configSentToEngine(), "some-other-sha")));
+  });
+
+  it("NEGATIVE CONTROL: tracing context is EXCLUDED — correlationId does not change the identity", async () => {
+    // R-767 §4 excludes correlationId / incompleteCount / totalGates: they are audit
+    // context and cannot change the engine's answer. Without this, an identity that
+    // hashed everything would pass the three controls above and suppress nothing.
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params({ correlationId: "corr-A", incompleteCount: 3 }));
+    const a = (auditRows[0].input as Record<string, unknown>).request_identity;
+
+    auditRows = [];
+    vi.clearAllMocks();
+    seedPriorAuditRows([]);
+    mockInsertFn.mockReturnValue({
+      values: (row: Record<string, unknown>) => { auditRows.push(row); return Promise.resolve(undefined); },
+    });
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params({ correlationId: "corr-B", incompleteCount: 7 }));
+    const b = (auditRows[0].input as Record<string, unknown>).request_identity;
+
+    expect(a).toBe(b);
   });
 
   it("the identity is DETERMINISTIC — no wall-clock, no randomness", async () => {
@@ -437,7 +528,8 @@ describe("§B D-10 N-4: what the audit trail records for the auto-backtest enque
     const second = (auditRows[0].input as Record<string, unknown>).request_identity;
 
     expect(first).toBe(second);
-    // and it is the identity production is expected to derive, not merely stable
-    expect(first).toBe(identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }));
+    // Stability alone is satisfied by a constant. Join it to the actual request so the
+    // assertion means "deterministic AND correct", not merely "unchanging".
+    expect(first).toBe(computeResultHash(descriptorFor(configSentToEngine())));
   });
 });
