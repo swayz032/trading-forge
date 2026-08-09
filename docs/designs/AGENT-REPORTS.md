@@ -4,6 +4,83 @@
 
 ---
 
+## AR-898 · 2026-08-09 · ✅ **`S6-1` STEP 1 DELIVERED — THE PRE-REGISTERED REDS ARE PUBLISHED **RED**, BEFORE ANY WIRING, EXACTLY AS `R-774 §6` MADE NON-NEGOTIABLE. `2 failed, 2 passed`.** ⭐ **BOTH REDS SHIP WITH A GREEN POSITIVE CONTROL IN THE SAME FILE, SO NEITHER CAN LATER BE SATISFIED BY AN INSTRUMENT THAT NEVER RAN.** 🛑🛑 **AND I STOPPED ON A COLLISION I FOUND *BEFORE* WRITING THE FILE AND THEN MEASURED EXACTLY: MY NEW TEST FILE MOVES THE FROZEN CANONICAL POPULATION `103 → 104` AND REDDENS ITS PIN. THAT IS A PRE-REGISTERED ACCEPTANCE NUMBER AND I HAVE NOT TOUCHED IT.**
+
+**TASK `R-774 §6` step 1. SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`. ATTEMPT `0 / 2` — UNSPENT. FAN-IN `1 / 8` STEPS.** 🛑 **STEPS 2–8 ARE UNSTARTED, NOT ABANDONED — see `§5` for why one desk answer gates the acceptance arithmetic for all of them.**
+
+### §1 — ✅ THE FIRST OBSERVABLE, PUBLISHED RED
+```
+[MEASURED HERE] pytest src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+                -q --no-header -p no:cacheprovider      ->  2 failed, 2 passed in 0.37s
+
+RED 1  test_production_compile_transports_exactly_the_three_taught_candidates
+       expected durations (taught order) : (5, 15, 30)
+       candidates found in compiled plan : (none)
+RED 2  test_the_declared_primitive_executes_the_adapter_once_per_taught_candidate
+       primitive : None · unsupported : True
+       unbound_reason : opening_range_adapter_not_implemented
+       -> fails at the FIRST unmet stage and NAMES it, so a later reader can tell
+          "never declared" from "declared but never executed"
+GREEN  test_the_golden_record_still_lowers_ready_with_three_taught_variants
+GREEN  test_positive_witness_the_execution_spy_can_observe_a_real_adapter_call
+```
+⇒ ✅ **THE GUARD EXISTS BEFORE THE FIX, WHICH IS THE ONLY ORDER IN WHICH IT PROVES ANYTHING.**
+
+### §2 — ⭐ WHY EACH RED CARRIES A GREEN COMPANION — `[main-spy-both-arms]`, APPLIED AT BIRTH
+🛑 **A spy reads `0` when the gate refuses AND when the spy was never wired, and the second looks like a perfect gate.** So:
+- **`test_positive_witness_…` calls the adapter THROUGH the same spy and asserts the spy recorded it.** ⇒ **RED 2's `observed calls: ()` can only mean *production never reached the adapter*.** Without it, that empty tuple would be worth nothing.
+- **`test_the_golden_record_still_lowers_ready_…` proves the SOURCE side is complete** — three taught variants in taught order — **and carries its own NEGATIVE CONTROL on the identical call** (`hcHuDfxdywI__s0` → no definition). ⇒ **RED 1's failure is attributable to TRANSPORT, not to a record that quietly stopped lowering.**
+★★★★★ **`A RED THAT SHIPS WITHOUT A POSITIVE WITNESS IS A CLAIM THAT SOMETHING IS ABSENT, MADE BY AN INSTRUMENT NOBODY PROVED WAS PRESENT.`**
+
+### §3 — ⚙️ ONE DESIGN CHOICE, MADE TO AVOID SHAPING THE GUARD AROUND THE FIX
+**RED 1 searches the compiled plan for `OpeningRangeExecutionCandidate` INSTANCES BY TYPE — recursively, through dataclasses/sequences/mappings — never by a field name.**
+⚖️ **Reason, and it is `R-774 §4-1`:** the variant may NOT be smuggled through `ConditionBinding.parameters`, and **this lane has not yet chosen a carrier.** A guard that named one would be prescribing the repair. ⭐ **A typed candidate is findable wherever it is attached; a string in a `parameters` dict is NOT findable by this search — so the same asymmetry that keeps the guard mechanism-agnostic also makes it refuse the forbidden shortcut.** ⇒ **this doubles as control `K` and I did not have to write a second test to get it.**
+
+### §4 — 🛑🛑 THE COLLISION — MEASURED, NOT IMPROVISED AROUND
+⚠️ **`AR-897 §3` flagged this trap BEFORE the file existed. It is real, and here it is exactly:**
+```
+[MEASURED HERE]
+POSITIVE CONTROL, before my file existed:
+   pytest ...::test_the_canonical_population_matches_its_committed_manifest_by_member
+   -> 1 passed          (so the pin was GREEN and this is a change I caused)
+_regression_population() selects TEST FILES UNDER src/ THAT TRANSITIVELY IMPORT
+   spec_condition_compiler OR spec_family_bindings  (AST-derived, not a name match)
+   -> my reds MUST import the production compile boundary, so joining is not
+      avoidable by style; it is what makes them production tests at all
+AFTER my file:
+   committed manifest : 103
+   derived now        : 104
+   IN DERIVATION ONLY : ['engine/tests/test_s6_candidate_transport_and_adapter_execution.py']
+   IN MANIFEST ONLY   : []          <- nothing was displaced; it is a pure addition
+   pin test           : FAILED   "[MANIFEST] committed=103 derived=104"
+```
+🛑 **I DID NOT REGENERATE THE MANIFEST, ALTHOUGH THE PIN'S OWN MESSAGE SANCTIONS IT** (*"If the change is INTENDED, regenerate the manifest and commit the diff deliberately"*). **Because `103` is not merely a file's contents — it is a PRE-REGISTERED ACCEPTANCE NUMBER** in `acceptance-baseline-2026-08-09.json` (`population_members: 103`, `n_failed: 33`, `how_to_use: COMPARE MEMBERS, NEVER COUNTS`), **and the desk runs that join itself as its own instrument** (`R-773 §1`).
+★★★★★ **`A DOCSTRING MAY AUTHORIZE A FILE EDIT; IT CANNOT AUTHORIZE MOVING A NUMBER ANOTHER PARTY PRE-REGISTERED AS AN ACCEPTANCE CRITERION.`** ⚖️ **`[pre-register-criteria]`: regenerating a frozen population mid-lane, in the one lane whose acceptance depends on it, is the convicted shape even when the tooling invites it.**
+
+### §5 — ⚖️ WHAT I NEED FROM THE DESK — ONE RULING, AND IT GATES THE ACCEPTANCE ARITHMETIC OF EVERY REMAINING STEP
+**At the END of `S6-1` the two reds are supposed to be GREEN, so the steady state is a population of `104` with `NEW 0 / GONE 0`.** **But between step 1 and step 8 the failure set legitimately contains my two reds, and right now it also contains the pin.** ⇒ **the desk's `103`-member join will read `NEW 3` at this commit, and every one of the three is INTENDED.**
+```
+MY RECOMMENDATION (I do not act on it):
+  1 REGENERATE the manifest to 104 as a deliberate, separate commit — the pin's own
+    sanctioned path — so the pin is GREEN and the ONLY reds are the two lane reds.
+  2 RE-BASELINE acceptance-baseline-2026-08-09.json at the END of S6-1, not now, so the
+    frozen artifact keeps recording a PRE-CHANGE state rather than a mid-lane one.
+  3 EXPECTED failure delta for the desk's join at THIS commit, stated in advance so it
+    cannot be read as a regression:
+       NEW: test_s6_...::transports_exactly_the_three_taught_candidates      (intended RED)
+            test_s6_...::executes_the_adapter_once_per_taught_candidate      (intended RED)
+            test_flag_off_...::canonical_population_matches_its_committed_manifest
+       GONE: none.  The 33 baseline failures and both ordered 6B reds are UNTOUCHED by me.
+```
+🛑 **I did NOT verify claim 3's last sentence by re-running the full 103 join** — see `§6`. **It is a PREDICTION, labelled as one.**
+
+### §6 — 🛑 WHAT I DID **NOT** MEASURE, AND ONE INSTRUMENT NOTE
+🛑 **I did NOT re-run the `103`-member membership join** (~127 s) at this commit — **so my `§5-3` delta is `[HYPOTHESIS]`, derived from what I changed, not from the join's output.** I did not run the other built suites (`§7-M`) — **step 8's job, not step 1's.** I did not touch `FAMILY_META`, `PRIMITIVE_RESOLVERS`, `ENFORCED_DISPATCH`, the TS mirror, the compile boundary, or any handler — **steps 2-7, all unstarted.** No production file was edited in this step; the only new file is a test.
+⚠️ **INSTRUMENT NOTE:** my first draft asserted the lowering disposition via `str(...).endswith("READY")` — **a string test on an enum, which would also pass on a hypothetical `SOURCE_NOT_READY`.** I replaced it with `result.definition is not None`, which is the thing the red actually depends on. **Caught while writing, before it could carry a claim.**
+**RECOMMENDATION: REVISION_REQUIRED — not of my work, of the ruling's acceptance arithmetic (`§5`).** **NEXT SMALLEST TASK: `R-774 §6` step 2 (wire FULL-RECORD lowering into a production compile boundary, ONE LOWERER) — which I can start without the `§5` answer, since it does not depend on it.**
+
+---
+
 ## AR-897 · 2026-08-09 · 🟢 **START-RECEIPT — `R-774 §6` LANE `S6-1` (`B1 STEP 6`) ACCEPTED AND STARTED.** ✅ **AND I TAKE THE `§3` CORRECTION WITHOUT ARGUMENT: SHAPE `A` WAS SETTLED AT `R-736`, NOT OPEN, AND I SHOULD HAVE GREPPED THE LEDGER BEFORE SPENDING A DECISION ON IT.**
 
 **TASK `R-774 §6`. SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`, HEAD `113e10d8`. ATTEMPT `0 / 2`. FAN-IN `0 / 8` steps, `0 / 13` controls.**
