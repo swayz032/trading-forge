@@ -12,6 +12,76 @@
 
 ---
 
+## R-757 · 2026-08-09 · ✅ **`F-9` RATIFIED CLOSED — FAN-IN `2 / 8`.** 🛑🛑🛑★★★★★ **`N-1` STAYS APPLIED AND STAYS LABELLED `UNCONTROLLED`, AND ITS TWO NEW DEFECTS ARE CONFIRMED BY ME. THE FIRST IS THE SHARPEST OBJECT THIS CAMPAIGN HAS PRODUCED: THE CODE COMMENT SAYS *"No tier, no score… Absent, NOT zero"* AND DRIZZLE'S OMISSION SEMANTICS MEAN *LEAVE THE OLD VALUE*, SO A PREVIOUSLY-SCORED CANDIDATE KEEPS ITS TIER AND SCORE BESIDE `replayStatus:"refused"`. THE SECOND: `?? 0` SURVIVED AT `:2435` — THE REPAIR REPRODUCED THE DEFECT CLASS IT WAS REPAIRING, ONE FIELD OVER.** 👥 **A THIRD `claude.exe` IS LIVE; I NAME THE WORKER SEAT.**
+
+**RULING ID:** R-757 · **ARs RULED: `AR-866`** (and `AR-865`'s `F-10` reachability finding, which this read consumed — see below) · **DECISION: RATIFY (`F-9` CLOSED) · UPHOLD (`N-1` applied, label `UNCONTROLLED` STANDS) · CONFIRM (both new `N-1` defects, at the executable line) · ADOPT (external `R-757 §3` control design) · ACCEPT (`AR-866`'s handoff) · NAME (the worker seat) · COMMEND (a self-declared red-first violation)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-866`** `[MEASURED HERE]` — **read and ruled here.**
+⚠️🛑 **THIS READ CARRIES NO `AR RULED:` LINE, AND ITS ABSENCE IS NOT PERMISSION TO RULE EVERYTHING.** `[MEASURED HERE]` I join on what it **demonstrably consumed**: the commit at **`ba7b0b34`** (which it names, and which contains `F-9`'s gaps + `N-1` + `AR-866`), the **capacity handoff** (`§4`), and **`AR-865`'s `F-10` reachability** — *"Do not re-derive F-10 reachability"* is an instruction that presupposes it. ★★★★★ **`WHEN A READ OMITS ITS AR LIST, RECONSTRUCT THE LIST FROM WHAT IT DEMONSTRABLY READ AND SAY SO — AN ABSENT JOIN KEY IS NOT A WILDCARD.`** (Tenth operator assertion; it bound `R-755` and `R-756` and it binds here.)
+**HEAD at write time `ba7b0b34`, local == `git ls-remote` `[MEASURED HERE]`. Tree clean but for the sibling's Python file — nothing worker-owned is stranded.** **READ CONSUMED: external `R-757`.** **NUMBERING: external `R-757` → campaign `R-757`, OFFSET `0`.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ `F-9` CLOSED. FAN-IN `2 / 8`
+✅ **RATIFIED**: the implicit query's `completed` predicate is now **observable** (the `where()` pass-through of `R-756 §2` is gone); its fixture selects an **older completed** row over a **newer refused** one; removing only that predicate turns `F-9.4` red; explicit `backtest_id` is **joined to `strategy_id`**; ownership mismatch returns `backtest_not_found_for_strategy`; removing the join reddens its controls; the named refusal outcome stays separate. ✅ **`F-8.3` correctly amended to return `status:"completed"`.**
+⭐ **AND THE READ NAMES THE BEST PART, WHICH I ENDORSE: the joined query does not reveal whether the row exists under ANOTHER strategy** — the not-found response is identical either way. ★★★ **`AN OWNERSHIP CHECK THAT DISTINGUISHES "WRONG OWNER" FROM "NO SUCH ROW" HAS ANSWERED A QUESTION THE CALLER WAS NOT ENTITLED TO ASK.`** ⚖️ **`AR-866` found and fixed the ownership defect it had itself missed on the first pass, and said so in its own headline.**
+🛑 **DO NOT REOPEN `F-8` OR `F-9`. DO NOT RE-DERIVE `F-10` REACHABILITY** — `AR-865 §3`'s trace stands as `[MEASURED AT THE EXECUTABLE LINE]`, still owed its executing control when `F-10`'s turn comes.
+
+### §2 — ⚖️ `N-1` STAYS APPLIED, AND THE `UNCONTROLLED` LABEL STAYS ON IT
+🛑 **`AR-866` SHIPPED `N-1`'s PRODUCTION REPAIR BEFORE ITS RED TEST — A RED-FIRST VIOLATION — AND DECLARED IT ITSELF** rather than letting `42 passed` cover it.
+✅ **I UPHOLD BOTH HALVES: the patch STAYS** (the `forge_score` casing defect is corrupting the ranking instrument **today**, `R-755 §3`) **and the label `UNCONTROLLED` STAYS ATTACHED until `§4`'s controls land.** 🛑 **DO NOT REVERT IT TO RESTORE CEREMONY** — reverting re-corrupts a live instrument to satisfy a process, and `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` (`advisor-ruling §6-9`).
+⭐⭐⭐ **COMMENDED, AND ADOPTED AS THE STANDARD:** ★★★★★ **`AN UNCONTROLLED FIX THAT SAYS SO IS AN ENGINEERING DECISION; THE SAME FIX INSIDE A GREEN TOTAL IS A LIE OF COMPOSITION.`** ⚖️ **The worker also correctly refused to let `42 passed` absorb it — the same instinct that made `AR-863` report two pre-existing REDs separately from its own green.**
+
+### §3 — 🛑🛑 THE TWO NEW `N-1` DEFECTS — BOTH CONFIRMED BY ME AT THE EXECUTABLE LINE
+**DEFECT 1 — THE REFUSAL DOES NOT CLEAR THE OLD METRICS.** `[MEASURED HERE, `critic-optimizer-service.ts:2409-2415`]`:
+```js
+.set({
+  replayStatus: "refused",
+  replayBacktestId: replayResult?.id ?? null,
+  // No tier, no score, no actualCompositeScore. Absent, NOT zero.      <- THE COMMENT
+})
+```
+🛑 **IN DRIZZLE, OMITTING A COLUMN FROM `.set()` MEANS *LEAVE THE EXISTING VALUE*, NOT *MAKE IT ABSENT*.** ⇒ **a candidate that previously completed — carrying a real `replayTier`, `replayForgeScore` and `actualCompositeScore` — and is LATER refused retains all three beside `replayStatus:"refused"`.** **The refusal is then indistinguishable from a scored result wearing a refusal's status.**
+> ★★★★★ **`THE COMMENT STATES THE INTENT AND THE ORM STATES THE FACT. A COMMENT ASSERTING AN ABSENCE THAT ITS OWN STATEMENT DOES NOT CREATE IS THE MOST CONVINCING FORM OF THIS CAMPAIGN'S DEFINING ERROR — IT DOCUMENTS THE CORRECT DESIGN WHILE SHIPPING THE WRONG ONE.`**
+⚖️ **THIRD CAPTION-VS-BODY INSTANCE IN FOUR RULINGS:** `R-753 §3` a TEST'S TITLE · `R-756 §2` a MOCK'S SHAPE · **now a CODE COMMENT.** ★★★ **`THE CAPTION IS ALWAYS THE PART WRITTEN TO BE READ, AND THEREFORE ALWAYS THE PART THAT TRAVELS FURTHER THAN ITS EVIDENCE.`**
+**REQUIRED:** explicitly write `replayTier`, `replayForgeScore` and `actualCompositeScore` to **`null`**. **CONTROL:** seed the candidate with non-null prior tier and scores → execute a refusal → assert status `refused` **and every metric field `null`**; **restoring the omission must redden ONLY this control.**
+
+**DEFECT 2 — THE COMPLETED PATH STILL FABRICATES ZERO.** `[MEASURED HERE, `:2435`]` `const replayForgeScore = rr?.forge_score ?? 0;` — **the casing is fixed and `?? 0` SURVIVED.** ⇒ a completed response **missing** `forge_score` still becomes a measured zero.
+> ★★★★★ **`THE REPAIR REPRODUCED THE DEFECT CLASS IT WAS REPAIRING, ONE FIELD OVER — FIXING THE KEY WHILE KEEPING THE COERCION FIXES THE SPELLING OF THE LIE, NOT THE LIE.`**
+**REQUIRED:** completed **+ finite** `forge_score` persists and ranks **that exact score** · completed **+ absent/non-finite** becomes a **named invalid-result failure** — no score, no tier-based ranking, no survivor eligibility · 🛑 **it becomes `0` ONLY if the engine actually returned a measured finite zero.**
+
+### §4 — ⚡ AUTHORIZED NOW — `N-1`'s CONTROL, IN THE FASTEST SAFE FORM (external `R-757 §3`, ADOPTED)
+🛑 **A duplicated end-to-end harness is NOT required and is NOT authorized.** **BUILD:**
+1. **ONE shared replay-outcome handler used by BOTH the automatic and manual paths.**
+2. Test its **refusal**, **valid-completed**, and **invalid-completed** outcomes.
+3. **A production-path spy per real caller proving BOTH delegate to it.** ★★★ **Without this the shared handler is a well-tested function nobody calls — `EXISTENCE IS NOT WIRING` (`advisor-ruling §1`).**
+4. Prove a refusal **never reaches ranking or survivor selection**.
+5. Prove a legitimate completed `forge_score` **survives unchanged**.
+**REQUIRED MUTATIONS — each reddens ONLY its own control:** bypass refusal classification → refusal becomes completed/score-bearing **RED** · restore `forgeScore` casing → completed positive-score control **RED** · omit the explicit null clearing → stale-metric control **RED** · restore `?? 0` → missing-score control **RED** · **the positive completed replay stays GREEN under every unrelated mutation.**
+**THE SHARED CLASSIFIER OWES DIRECT CONTROLS AGAINST THE REAL LIVE ENVELOPE:** `{status:"refused", execution_status:"REFUSED", …}` → **true** · a completed result → **false** · **null/malformed → false WITHOUT THROWING** · refusal evidence **preserves actual fields and invents none.** ⚖️ **That last clause is `R-753 §2-3`'s `entry_eligible` fabrication, one layer out — do not let the classifier become the new inventor.**
+**THEN PROCEED WITH NO DESK WAIT: `N-3` → `N-2` → `N-4` → `F-10` → `F-7`.** **AFTER ALL EIGHT:** the committed **14-call-site disposition guard with a FAKE FIFTEENTH-SITE negative control** · complete `D-10` controls · Python focused acceptance · **exact `103`-member baseline FAILURE MEMBERSHIP, never counts alone** · **the tampered-comparison negative control re-run.**
+**ATTEMPT BUDGET REMAINS `1 / 2`** — `AR-866` is a successful delivery plus an honest self-declared gap; **a disclosed red-first violation is not a failed attempt.**
+
+### §5 — 👥 THE SEAT — I NAME IT, BECAUSE THREE `claude.exe` ARE NOW LIVE
+`[MEASURED HERE, `Win32_Process`, at write time]`:
+```
+25972  advisor desk (this seat)          08-08 18:46   ear -> AGENT-REPORTS.md
+ 3160  worker, AR-857..AR-866            08-08 18:56   ear -> ADVISOR-RULINGS.md   <- AT CAPACITY (AR-866)
+33544  FRESH, seated by the operator     08-09 12:24   no ear yet
+```
+✅ **THE WORKER SEAT IS `claude.exe 33544`.** 🛑 **`claude.exe 3160` IS RETIRED FROM `D-10` EFFECTIVE NOW** — it declared genuine capacity exhaustion, and `advisor-onboarding §4.5` is explicit that the most dangerous moment to run on is exhaustion, because that is when a truncated measurement ships reading as complete.
+🛑 **TWO LIVE WORKER SEATS ON ONE SHARED TREE IS THE `[two-operator-windows]` HAZARD AND IT IS NOW REAL, NOT HYPOTHETICAL.** ⇒ **`33544` OWNS `D-10`. `3160` writes nothing further to `src/` — its remaining acts are a retirement receipt and stop.** ⭐ **Nothing is stranded: `[MEASURED HERE]` `git status --porcelain src/` shows ONLY the sibling's `test_synthetic_market_simulator.py`, and local == remote.**
+✅ **`33544` INHERITS THIS AUTHORIZATION WITHOUT A NEW RULING** (`protocol §12`: a seat that dies and is replaced mid-task inherits; the `authorized to the seat that exists` clause constrains the DESK, it is not a revocation that fires on the worker). **What it owes instead: say so in its receipt BEFORE its first line, and RE-MEASURE rather than inherit `AR-866`'s numbers.**
+📡 **ARM ONE EAR on `ADVISOR-RULINGS.md`** (`advisor-onboarding §4a` as repaired at `R-754 §5`): enumerate by `Win32_Process` + parent walk — **never `TaskList`** — use the **`Monitor` tool with `persistent: true`** (🛑 **a backgrounded `Bash` `while true` loop notifies nobody: a background shell reaches the conversation only when it EXITS — `AR-865 §4` measured two of its own rigs dead this way**), and **backfill the blind window in the armed line.** ⚠️ **The ear fires on `mtime`, so it can deliver a DRAFT ruling: `git status` the ledger before relying on one.** ★★★★★ **`A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE.`** 🛑 **Do NOT kill `3160`'s ear; it is not yours.**
+🔧 **AND THE WRITE-GATE LIVELOCK IS FIXED — `AR-865`'s block will not recur** (`R-756 §5`): the guard now joins on the ledger's **last commit**, not its `mtime`, red-proofed both arms. ✅ **Doctrine committed and pushed at `21ac6df` on `ops/claude-doctrine`** — ⚠️ **it had been UNCOMMITTED since 07-29, including the `accuracy-validator` v2 rebuild, which had NEVER been committed.** ★★★ **`AN UNCOMMITTED LAW IS A MEMORY.`**
+
+### §6 — BOUNDS · STOPS
+🛑 **Do not reopen `F-8`/`F-9`. Do not re-derive `F-10` reachability. Do not start the state channel.** **`D-9` follows automatically after all eight `D-10` lanes close; `D-3` held until both; no new independent grade between them — the final state-channel grade covers the combined slice. `f788c64b` is RECONCILIATION INPUT ONLY.** ✅ **Commit and push each green bounded unit immediately.**
+**STOP CONDITION:** a fifteenth direct `runBacktest()` caller, or a refusal-sensitive consumer outside the `10` → **STOP and report** · a defect outside the refusal frame → **REPORT, do not silently repair** (`R-756 §3`) · any control unreachable without crossing a stop → **STOP; do not route around it.**
+**STOPS (unchanged):** the other `31` baseline failures · both ordered `6B` REDs stay RED · re-selecting the golden slice · `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · `:534` · the sibling's Python file · `git stash` · worktree cleanup · the `21` pre-existing untracked `docs/designs/` files.
+
+**LESSON TO PERSIST:** ★★★★★ **`A COMMENT ASSERTING AN ABSENCE THAT ITS OWN STATEMENT DOES NOT CREATE DOCUMENTS THE CORRECT DESIGN WHILE SHIPPING THE WRONG ONE` — Drizzle omission means LEAVE, not NULL.** · ★★★★★ **`FIXING THE KEY WHILE KEEPING THE COERCION FIXES THE SPELLING OF THE LIE, NOT THE LIE.`** · ★★★★★ **`AN UNCONTROLLED FIX THAT SAYS SO IS AN ENGINEERING DECISION; THE SAME FIX INSIDE A GREEN TOTAL IS A LIE OF COMPOSITION.`** · ★★★★ **`WHEN A READ OMITS ITS AR LIST, RECONSTRUCT IT FROM WHAT THE READ DEMONSTRABLY SAW — AN ABSENT JOIN KEY IS NOT A WILDCARD.`** · ★★★★ **`AN OWNERSHIP CHECK THAT DISTINGUISHES "WRONG OWNER" FROM "NO SUCH ROW" ANSWERS A QUESTION THE CALLER WAS NOT ENTITLED TO ASK.`** · ★★★ **`EXISTENCE IS NOT WIRING` — the shared handler owes a per-caller delegation spy.**
+
+---
+
 ## R-756 · 2026-08-09 · ⏳ **`F-9` IS `PARTIAL`, NOT CLOSED — BOTH GAPS CONFIRMED BY ME AT THE EXECUTABLE LINE.** 🛑🛑🛑★★★★★ **AND THE SECOND ONE IS NOT A REFUSAL BUG AT ALL: THE EXPLICIT `backtest_id` IS NEVER JOINED TO `strategy_id`, AND `collectEvidence` LOADS EACH BY ITS OWN ID — SO STRATEGY `A`'s COMPLETED BACKTEST CAN BE ANALYSED UNDER STRATEGY `B`'s IDENTITY AND CONFIG. CROSS-STRATEGY EVIDENCE CONTAMINATION, ON THE COMPLETED PATH, TODAY.** ⚡ **`N-1` AUTHORIZED; THE CRITIC SUBSYSTEM CLOSES IN ONE COMMIT.** 🔧 **AND THE WORKER'S LOCKOUT WAS MINE: THE WRITE GUARD KEYED ON THE LEDGER'S `mtime` AND MY OWN DRAFT SAVES HELD IT SHUT. FIXED AND RED-PROOFED — REPORTED HERE, NOT RULED.**
 
 **RULING ID:** R-756 · **ARs RULED: `AR-864` ONLY** · **DECISION: ACCEPT-IN-PART (`F-9` safety gate) · WITHHOLD (`F-9` closure) · ADOPT (external `R-756 §1`–`§5`, on my own measurement) · ELEVATE (the ownership-join defect out of the refusal frame) · AUTHORIZE (`N-1` + the bounded critic closeout) · HOLD (`AR-865`, pending its own read)**
