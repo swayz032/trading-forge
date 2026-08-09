@@ -12,6 +12,141 @@
 
 ---
 
+## R-743 · 2026-08-09 · ✅✅★★★★★ **`AR-837` ACCEPTED — THE STOP WAS CORRECT, I RE-MEASURED THE WALL MYSELF, AND `OPTION A` IS AUTHORIZED.** 🛑🛑★★★★★ **BUT THE READ'S ORDER-OF-WORK ITEM 1 ORDERS A RED THAT ALREADY EXISTS — AND THAT RED IS SATISFIABLE BY A STUB *BY ITS OWN DOCSTRING'S ADMISSION*. THE READ HAS RE-CREATED THE EXACT FINISH LINE `R-736 §1` WITHDREW.** ⚠️ **AND THE SAME TEST CARRIES TWO DIFFERENT STAGE CLAIMS: `R-736 §3` FIXED THE DOCSTRING AND LEFT THE ASSERTION STRING CITABLE.**
+
+**RULING ID:** R-743 · **AR RULED:** **`AR-837`** · **DECISION: ACCEPT (the stop) · ADOPT-WITH-TWO-CORRECTIONS (external read `R-743`) · DECIDE (`OPTION A`) · AUTHORIZE (`6B` under an amended contract) · STAGE (`ratify-packet` + independent grade)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-837`** `[MEASURED HERE]` — **it is ruled here; none newer.** **HEAD at write time: `e52a8ecb`** `[MEASURED HERE]`, equal to `git ls-remote origin h1-wave4-sealed12-driver`.
+**READ CONSUMED:** `GPT EXTERNAL ADVISOR RULING — R-743 — TEMPORAL_STATE_CHANNEL_MISSING IS CONFIRMED; BUILD THE SMALLEST TYPED STATE LANE` (operator-relayed chat, 2026-08-09). **ADOPTED ON MERIT, NOT AUTHORITY** — two corrections below.
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+**WAIT DISCHARGED HONESTLY:** the operator asserted the GPT wait a **SIXTH** time at 2026-08-09 ~00:31, pre-emptively, to this cold seat. `AR-837` left the worker **BLOCKED** — normally the one exception that outranks the wait. **I did not invoke it.** I held, measured the block myself, and **told the operator the wait had begun to cost worker-idle time so HE could decide whether to hurry the read.** He supplied both reads. ★★★★★ **`STATE THE PRICE; DO NOT QUIETLY REFUSE TO PAY IT` — and this is the FIRST time in six assertions the clause was exercised rather than merely surviving on paper.**
+
+### §1 — ✅ THE STOP IS REAL. I RE-MEASURED IT RATHER THAN RELAYING IT
+`[MEASURED HERE, campaign tree `wt-h1-wave4-20260712`, HEAD `e52a8ecb`]`:
+```
+spec_condition_compiler.py:552   self.last_population_a_level: dict[str, np.ndarray] = {}
+spec_condition_compiler.py:574   self.last_per_condition_bool:  dict[str, np.ndarray] = {}
+spec_condition_compiler.py:592   # ─── Per-family evaluators (each returns a bool np.ndarray of len n) ───
+spec_condition_compiler.py:905   def _dispatch_enforced(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+```
+✅ **All four lines are verbatim as `AR-837 §1` reported them.** ⇒ **the per-condition executable contract is ONE BOOLEAN PER BAR, and `OpeningRangeState` carries six fields, four numeric. There is no channel that preserves it.**
+✅ **THE ABSENCE IS CORROBORATED BY MY OWN SCAN WITH A WORKING POSITIVE CONTROL** `[MEASURED HERE]` — `grep -rn "last_per_condition_bool\|last_population_a_level" --include=*.py src/`, excluding the compiler and tests: **EMPTY.** The **identical grep shape** on the sibling field `last_trace` returns **`src/engine/backtester.py:8387`**. ★★★ **The scan reaches consumers when they exist** (`[absence-claim]`) — so the empty result is a measurement, not a blind scan. ⚖️ **SCOPE NAMED AND NOT WAIVED: `src/**/*.py` only. Neither the worker nor I scanned TypeScript or n8n** — and that gap does not rescue the claim, because the state must reach a Python consumer before it can reach any other.
+⭐ **THE WORKER REFUSED THREE DODGES IT NAMED ITSELF, EACH OF WHICH TURNS BOTH ORDERED REDS GREEN WHILE COMPUTING NOTHING A CONSUMER CAN READ.** ★★★★★ **`A STOP IS ONLY WORTH ANYTHING WHEN HONOURING IT IS EXPENSIVE` — this one cost the slice's last step.** **ATTEMPT BUDGET: `6B` STAYS `0 / 2`.** A pre-registered stop is not an attempt (`R-736 §7` precedent, applied consistently).
+
+### §2 — 🛑🛑★★★★★ CORRECTION 1 TO THE READ: ORDER-OF-WORK ITEM 1 ORDERS A RED THAT ALREADY EXISTS
+The read orders: *"Add a permanent RED proving the typed state channel is currently absent."*
+🛑 **IT IS ALREADY BUILT.** `[MEASURED HERE]` it is ordered `RED #2`:
+```
+src/engine/tests/test_opening_range_conformance.py
+  test_no_typed_opening_range_output_contract_exists_in_production
+  -> AssertionError: no typed opening-range output contract is reachable from the
+     production binding.  bound primitive: None  fields produced: (none)
+     fields missing: opening_range_high/low/width/midpoint/complete/window_status
+```
+⇒ **Building a second one is the THIRD-INSTRUMENT problem** (`[population-no-instrument]`: *"a re-derivation is a THIRD instrument; it cannot attribute a diff between two others"*). **DO NOT ADD IT. The existing RED #2 IS the absence proof, and `6B` turns it green.**
+
+### §3 — 🛑🛑🛑★★★★★ AND THAT RED IS STUB-SATISFIABLE — BY ITS OWN DOCSTRING. THE READ'S PROOF `10` IS NECESSARY BUT NOT SUFFICIENT
+`[MEASURED HERE, `test_opening_range_conformance.py` docstring of `RED #2`, verbatim]`:
+> *"this test reads a RETURN ANNOTATION and never invokes the primitive, so a module that returns `refused_state()` unconditionally would turn it green."*
+
+🛑 **THE READ'S PROOF `10` — *"the two ordered conformance RED predicates turn green without being weakened"* — CAN THEREFORE BE SATISFIED WITHOUT A WORKING STATE CHANNEL.** ★★★★★ **THIS IS THE SAME FINISH LINE `AR-828 §2` FOUND AND `R-736 §1` WITHDREW — *"both ordered REDs can be turned green by a stub"* — RE-CREATED BY A DIFFERENT AUTHOR FOUR RULINGS LATER.** ⚖️ **`A WITHDRAWN FINISH LINE STAYS WITHDRAWN ONLY IF THE REASON TRAVELS WITH IT; A LATER AUTHOR WHO NEVER SAW THE WITHDRAWAL WILL REBUILD IT IN GOOD FAITH.`**
+✅ **BINDING AMENDMENT — `6B` ACCEPTANCE IS THE CONJUNCTION, AND THE DISCRIMINATOR IS NAMED:** the two REDs turning green is **NECESSARY AND NOT SUFFICIENT.** **The discriminating control is the read's own proof `3`: deterministic candles must make the three candidates produce DELIBERATELY DIFFERENT `high` / `low` / `width` / `midpoint`.** ★ **A stub returning `refused_state()` cannot produce three different numeric triples. Proof 3 is what proof 10 cannot do, and neither substitutes for the other.**
+
+### §4 — ⚠️ CORRECTION 2: THE SAME TEST CARRIES TWO DIFFERENT STAGE CLAIMS
+`[MEASURED HERE]` `RED #2`'s **docstring** says `"expected until B1 STEP 6"`; its **assertion message**, which is the string a failing run actually prints, says `"expected until B1 STEPS 3-4"`. **`R-736 §3` corrected the docstring — *"DOCSTRING ONLY, ASSERTION UNCHANGED"* — and the stale claim survives in the carrier the reader sees.**
+★★★★★ **`A CORRECTION THAT FIXES THE DOCUMENTATION AND LEAVES THE PRINTED STRING HAS FIXED THE CARRIER NOBODY READS.` The failing-test output IS the primary carrier — it is what a cold seat sees first.** ✅ **ORDERED: correct the assertion string at its own location in the `6B` commit. Same law as `STEP 1`: never append.**
+
+### §5 — ⚖️ THE DECISION: `OPTION A`, AUTHORIZED, NARROW
+✅ **`OPTION A` — build a dedicated typed state-producer channel.** **I adopt the read's rejection of B and C, and I have independent measured grounds for rejecting B that the read did not name:** `RED #2` exists precisely to catch "routed but unreadable", and **`§3` proves it can be fooled** ⇒ **Option B would produce a green-looking half-wire that our own instrument could not convict.** 🛑 **`OPTION C` rejected as a permanent answer; the compiler genuinely needs stateful components.**
+✅ **EXECUTION MODEL ADOPTED VERBATIM:** two execution kinds — **`GATE`** (one boolean per bar) and **`STATE_PRODUCER`**. **`OPENING_RANGE_DEFINITION` is `STATE_PRODUCER` and must NEVER enter the boolean AND, the trigger mask, or the entry-decision population.**
+🛑 **DELIBERATELY NARROW:** this is **not** permission to redesign every evaluator or build a universal indicator framework.
+🛑🛑 **INSTRUMENT-LAYER CLASS — AND THE READ DID NOT NAME THIS.** Changing the compiler's output contract is an **INSTRUMENT** change under `ratify-packet`. Per `R-727 §3` it is **AUTONOMOUS, pre-live — the operator is NOT the gate, an INDEPENDENT GRADE is.** ✅ **`ratify-packet` STAGED HERE. On `6B` delivery I dispatch `accuracy-validator` adversarially against the delivered lane, with a DURABLE RECEIPT at `docs/designs/GRADE-6B-STATE-CHANNEL-2026-08-09.md`.** ★ **`doer ≠ grader`: neither the worker nor I may certify this.**
+
+### §6 — ✅ `6B` CONTRACT — THE READ'S PROOFS, AMENDED
+✅ **ADOPTED VERBATIM:** the read's required state shape (candidate ID · cache identity · duration/variant · session start · timezone · trading-day rule · source condition ID · provenance · high · low · width · midpoint · completion · window status) · **typed, never a free-form dict** · **no accidental boolean conversion or boolean-array participation** · the production output surface must be **PUBLIC** — *"writing values into an internal cache that no public production consumer can read does not satisfy this contract"* (★ this is `EXISTENCE IS NOT WIRING` stated correctly, and it is the read's strongest clause).
+✅ **PROOFS `1`–`12` ADOPTED**, with **`10` amended by `§3`** and **`1` DELETED from the order-of-work per `§2`**.
+✅ **ORDER OF WORK, AMENDED:** **(1) ~~add a permanent RED~~ — ALREADY EXISTS, see `§2`** · **(2) FIRST, land the positive control** proving the existing boolean channel still executes a genuine neighbouring structure condition — **it must be GREEN BEFORE the change so its pre-state is on the record** (`[absence-claim]`: a negative assertion needs a positive witness that the path ran) · then **(3)** implement the channel · **(4)** dispatch `OPENING_RANGE_DEFINITION` to the state-producer route, **not** the boolean route · **(5)** wire the golden candidates through the real adapter · **(6)** expose typed state through the public surface · **(7)** remaining `6B` controls.
+✅ **SAME-COMMIT:** production declaration · resolver · dispatch · Python execution path · TypeScript declaration mirror **land together** (read `R-742` item 7). **The `§6-2` positive control may land first, alone, green.**
+🛑 **TS BOUNDARY, UNCHANGED FROM `R-741 §6`:** TypeScript **mirrors declarations only** — it must never re-run lowering, re-parse prose, expand candidates, or compute an opening range.
+🛑 **HARD NO-TRADE BOUNDARY, ADOPTED AND RE-STATED:** no long entry · no short entry · no direction · no trade · no backtest-ready status · **no profitable backtest.** The breakout trigger remains `UNRESOLVED_SOURCE_AMBIGUITY`. ★★★★★ **A PROFITABLE GOLDEN BACKTEST BEFORE THAT AMBIGUITY IS RESOLVED FROM SOURCE IS A HARD-STOP FIDELITY DEFECT — IT WOULD PROVE INVENTION, NOT EDGE** (`R-739 §1`).
+🛑 **`ConditionBinding.parameters` STAYS `None`.** `6B` must not become the first production writer of that reserved field (`R-738`).
+
+### §7 — 🛑 STOP CONDITIONS (adopted verbatim, and they are real stops)
+Stop and report if: the implementation requires converting state into a boolean · state producers enter the gate conjunction · the change requires broadly rewriting existing family evaluators · **a numeric field is silently dropped** · only metadata, not executable output, claims the state exists · the golden strategy becomes tradable · the neighbouring structure route changes · `ConditionBinding.parameters` gains a production writer.
+★★ **`DO NOT FIT A STATE PRODUCER INTO THE WRONG INTERFACE TO TURN THE ORDERED REDS GREEN.`**
+
+### §8 — ✅ AUTHORIZED NOW, TO THIS SEAT
+✅ **`6B` IS AUTHORIZED under `§5`–`§7`. ATTEMPT BUDGET `0 / 2`.** **Authorized to the SEAT THAT EXISTS** — not to a successor.
+**START-RECEIPT REQUIRED** (`advisor-ruling §8`): one line within ~2 minutes. **FIRST OBSERVABLE: the `§6-2` positive control landing green. ETA to it: ~20 minutes.** **Silence beyond that without a receipt is unreadable and is itself a finding.**
+**ACCEPTANCE COMMANDS — ALL UNPIPED:**
+```
+python -m pytest src/engine/tests/test_opening_range_conformance.py \
+  src/engine/tests/test_opening_range_definition.py \
+  src/engine/tests/test_opening_range_family_parity.py \
+  src/engine/tests/test_family_meta_enforcement.py -q
+     -> the two ordered REDs must be GREEN; acceptance is by EXACT FAILURE
+        MEMBERSHIP, NEVER the total (R-741 §5). DO NOT re-quote 96 as a target.
++ the five opening-range suites · the eight-control discrimination instrument
++ production guards · the real `tsx` binary in the SHARED tree
+```
+🛑 **AND THE DISCRIMINATOR (`§3`): three candidates, deterministic candles, DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`. Without it the group's green means nothing.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A WITHDRAWN FINISH LINE STAYS WITHDRAWN ONLY IF THE REASON TRAVELS WITH IT` — `R-736 §1` withdrew a stub-crossable finish line, and an external author in good faith rebuilt the same one four rulings later.** · ★★★★★ **`A CORRECTION THAT FIXES THE DOCSTRING AND LEAVES THE PRINTED ASSERTION HAS FIXED THE CARRIER NOBODY READS.`** · ★★★★ **`ORDERING A GUARD THAT ALREADY EXISTS BUILDS A SECOND INSTRUMENT AND DESTROYS THE JOIN.`** · ★★★★★ **`STATE THE PRICE; DO NOT QUIETLY REFUSE TO PAY IT` — first exercise of the wait's escape clause in six assertions, and it cost nothing but a sentence.**
+
+---
+
+## R-742 · 2026-08-09 · ✅✅ **`AR-836` ACCEPTED — `STEP 6A` CLOSEOUT PASSES. I RE-RAN THE PINNED GROUP MYSELF: `2 failed, 96 passed`, MEMBERSHIP EXACT.** ⭐⭐⭐ **THE WORKER FOUND A THIRD DEFECT ITS ORDERED CONTROL WAS NOT LOOKING FOR, AND REPORTED A CONTROL OF ITS OWN THAT PASSED BY LUCK RATHER THAN QUIETLY FIXING IT.** 🛑🛑★★★★★ **AND I FOUND A FOURTH THAT NEITHER THE WORKER NOR THE READ CAUGHT: THE CONTRADICTION PATH RETURNS `SOURCE_INCOMPLETE` AND FILES PRESENT-BUT-CONFLICTING FIELDS UNDER `missing_fields` — WHICH MAKES THE READ'S OWN V1.1 MAPPING UNSATISFIABLE FROM `disposition`.**
+
+**RULING ID:** R-742 · **AR RULED:** **`AR-836`** · **DECISION: ACCEPT · ADOPT-IN-FULL (external read `R-742`, V1.1 mapping) · FIND (one latent defect, mine) · CARRY (its repair into `6B`)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-837`** `[MEASURED HERE]` — **newer than the AR ruled here; it is ruled separately at `R-743` above, and its content does not disturb this ruling** (`ruling-stale-premise-guard`). **HEAD at write time: `e52a8ecb`.**
+**READ CONSUMED:** `GPT EXTERNAL ADVISOR RULING — R-742 — STEP 6A CLOSEOUT PASSES; STEP 6B RELEASE IS RATIFIED`. ✅ **ITS ONE SHA CITATION IS REAL AND I CHECKED IT FIRST** (`[external-sha-fabrication]`): `git cat-file -t b3045800` → `commit`, and `git branch -r --contains b3045800` → `origin/h1-wave4-sealed12-driver`. **The read's *"I verified commit b3045800 on the remote"* is TRUE.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ THE PINNED GROUP, RE-RUN BY ME, NOT ACCEPTED FROM THE SEAT THAT WROTE IT
+`[MEASURED HERE, campaign tree, HEAD `e52a8ecb`, UNPIPED, exit `1`]`:
+```
+python -m pytest src/engine/tests/test_opening_range_conformance.py \
+  src/engine/tests/test_opening_range_definition.py \
+  src/engine/tests/test_opening_range_family_parity.py \
+  src/engine/tests/test_family_meta_enforcement.py -q
+  -> 2 failed, 96 passed in 1.17s
+FAILED ...::test_no_production_binding_routes_to_the_opening_range_adapter_yet
+FAILED ...::test_no_typed_opening_range_output_contract_exists_in_production
+```
+✅ **EXACT FAILURE MEMBERSHIP = the two ordered REDs. NO THIRD.** ✅ **Reproduces the historical figure and `AR-836 §4`'s claim independently.** ★ **I quote the membership, not the total** (`R-741 §5`).
+
+### §2 — ✅ BOTH REPAIRS CONFIRMED AT THE EXECUTABLE LINE, AT THE COMMITTED BLOB
+`[MEASURED HERE, `git show b3045800:src/engine/opening_range_lowering.py`]`:
+- **CLOSEOUT 1:** the parent `a00ddfca` carries `continue` at `:192` — **the defect site.** The closeout blob carries, at that position, `# NO \`continue\`. R-741 §2: a loop that continues past what it…`, and its surviving `continue`s are at `:271`/`:274`/`:419` — **different sites.** ⇒ **the silent skip is GONE.**
+- **THE THIRD DEFECT:** the committed regex is `r"\b(?:(\d{1,3})|(…))[\s‐-―-]*minutes?\b"` — **`minutes?`, the plural handled**, with the old `minute\b` form preserved only in an explanatory comment. ⚠️ **INSTRUMENT NOTE AGAINST MYSELF: my first check was a `grep -c` for the broken form and it returned `5`. That count was meaningless — the hits were a comment, two uses of a `minute` local, and two prose strings. I did not conclude from it; I opened the file.** ★★★ **`A SURPRISING COUNT ACCUSES THE INSTRUMENT FIRST` — the seventh crude-substring near-miss in six days.**
+⭐ **`AR-836 §3` IS THE REPORT'S BEST MOMENT:** a control of the worker's own **passed under the restored defect** because its fixture happened to scan a good span first; it said so, rewrote it, re-mutated, and it now bites. ★★★★★ **`A CONTROL THAT PASSES BY LUCK IS NOT A CONTROL, AND THE MUTATION IS THE ONLY THING THAT TELLS YOU WHICH KIND YOU WROTE.`**
+
+### §3 — ✅ V1.1 REFUSAL MAPPING — ADOPTED AS RULED
+**`ABSENT` → `SOURCE_INCOMPLETE`** · **`CONTRADICTORY` → `SOURCE_AMBIGUOUS`** · **`UNREADABLE` → `EXTRACTION_MISSING_REQUIRED_INFORMATION`** · **`READY` → continue into candidate execution.** 🛑 **Consumers read the structured `failure_kind`. NEVER parse `internal_reason`** — a downstream mapper that parses prose is a second parser waiting to disagree.
+
+### §4 — 🛑🛑★★★★★ THE FOURTH DEFECT — MINE, AND IT MAKES `§3` UNSATISFIABLE FROM `disposition`
+`[MEASURED HERE, `opening_range_lowering.py:458-491`]`:
+```python
+conflict_fields = ("session_start_local", "source_timezone")   # :478  (or ("variants",) :474)
+named = conflict_fields or missing                             # :486
+return OpeningRangeLoweringResult(
+    disposition=OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE,   # :488  UNCONDITIONAL
+    refusal=OpeningRangeSourceRefusal(missing_fields=named, …),      # :491
+```
+🛑 **TWO CONSEQUENCES, BOTH REAL:**
+1. **`disposition` IS HARDCODED `SOURCE_INCOMPLETE` EVEN WHEN `failure_kind == CONTRADICTORY`.** ⇒ **`§3`'s ruled mapping cannot be satisfied by a consumer reading `disposition`; only `failure_kind` distinguishes them, and the two structured fields DISAGREE.** ★★★★★ **`TWO STRUCTURED FIELDS THAT CONTRADICT EACH OTHER ARE WORSE THAN ONE, BECAUSE EACH LOOKS AUTHORITATIVE ALONE.`**
+2. **`missing_fields` IS POPULATED WITH `conflict_fields` ON THE CONTRADICTION PATH** — fields that are **PRESENT AND CONFLICTING, NOT MISSING** — and the genuinely-missing ones are **DROPPED from the named list** (recoverable only via `evidence_found`). ★★★ **`R-741 §2` ORDERED TWO DIFFERENT SILENCES BE GIVEN TWO DIFFERENT NAMES; `failure_kind` DOES THAT AND `missing_fields` COLLAPSES THEM AGAIN ONE FIELD LATER.** ⚠️ **The `__post_init__` guard even says *"a SOURCE_INCOMPLETE refusal must name at least one missing field"* — it enforces the invariant of ONE failure kind against ALL THREE.**
+⚖️ **SEVERITY: LATENT, BLAST RADIUS ZERO TODAY, AND I MEASURED THAT RATHER THAN ASSUMING IT.** The frozen population produces **no** contradiction refusal: the golden slice is `READY`, and `dENM6gt8ZRg__s0` is `ABSENT` (`trading_day_rule`), for which `SOURCE_INCOMPLETE` is **correct**. **The contradiction paths are exercised only by the new controls.** 🛑 **IT GOES LIVE THE MOMENT V1.1 RUNS THE LIBRARY BATCH — which is exactly when `§3`'s mapping grammar is consumed.**
+✅ **ORDERED, IN THE `6B` COMMIT, NOT SEPARATELY:** a **distinct disposition for the contradiction path** so `disposition` and `failure_kind` cannot disagree · **`missing_fields` names only genuinely-absent fields**, with conflicting fields carried in **their own field** · **one control per branch, red-proofed by restoring the collapse.** ★ Batched into `6B` under `[fix-pattern]` (whole class, same wave) and `[zero-carry]`; it is **not** a new attempt against any budget.
+
+### §5 — ✅ STATE
+✅ **`STEP 6A` COMPLETE**, closeouts landed `b3045800`, `AR-836` at `e365b058`, **remote tip `e52a8ecb` equals local HEAD** `[MEASURED HERE]`. **CLOSEOUT BUDGET CLOSED AT `1 / 2`.**
+✅ **`6B` IS AUTHORIZED — SEE `R-743 §8` ABOVE, WHICH IS THE OPERATIVE AUTHORIZATION.** Nothing in this ruling holds the worker.
+⚖️ **BOTH RULINGS BANK IN ONE COMMIT OF ONE FILE.** *"Commit after every ruling"* exists so rulings do not sit unbanked; committing both atomically satisfies it **and halves the pre-commit stash exposure on a shared tree with a live sibling's dirty files** (`R-734`, `[precommit-stash]`). **Stated, not silently done.**
+
+**LESSON TO PERSIST:** ★★★★★ **`TWO STRUCTURED FIELDS THAT CONTRADICT EACH OTHER ARE WORSE THAN ONE.`** · ★★★★ **`A GUARD THAT ENFORCES ONE FAILURE KIND'S INVARIANT AGAINST ALL THREE RE-COLLAPSES THE DISTINCTION IT WAS BUILT TO PROTECT.`** · ★★★ **`A SURPRISING COUNT ACCUSES THE INSTRUMENT FIRST` — my own `grep -c` returned a meaningless 5 and I opened the file instead of quoting it.**
+
+---
+
 ## R-741 · 2026-08-09 · ✅ **`AR-835` ACCEPTED AS `PASS WITH THREE BOUNDED CLOSEOUTS`. `6B` HELD.** 🛑🛑★★★★★ **AND ALL THREE ARE REAL — I CONFIRMED EACH AT THE EXECUTABLE LINE, NOT FROM THE READ'S DESCRIPTION. TWO OF THEM SILENTLY RETURN A PLAUSIBLE WRONG ANSWER, WHICH IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE.** ⚠️ **AND I WAS WRONG ABOUT THE CONFORMANCE GROUP: I CALLED IT UNRECOVERABLE WHILE HOLDING THE FOUR NUMBERS THAT RECOVER IT.** ⭐⭐⭐ **THE `hash()` MUTATION IS RATIFIED AS THE STRONGEST EVIDENCE THIS SLICE HAS PRODUCED.**
 
 **RULING ID:** R-741 · **AR RULED:** **`AR-835`** · **DECISION: ACCEPT-WITH-CLOSEOUTS · ADOPT-IN-FULL (read) · PIN (the conformance group) · SELF-CORRECT (mine, twice) · HOLD (`6B` until the three closeouts pass, then auto-release)**
