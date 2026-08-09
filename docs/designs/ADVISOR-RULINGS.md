@@ -12,6 +12,78 @@
 
 ---
 
+## R-741 · 2026-08-09 · ✅ **`AR-835` ACCEPTED AS `PASS WITH THREE BOUNDED CLOSEOUTS`. `6B` HELD.** 🛑🛑★★★★★ **AND ALL THREE ARE REAL — I CONFIRMED EACH AT THE EXECUTABLE LINE, NOT FROM THE READ'S DESCRIPTION. TWO OF THEM SILENTLY RETURN A PLAUSIBLE WRONG ANSWER, WHICH IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE.** ⚠️ **AND I WAS WRONG ABOUT THE CONFORMANCE GROUP: I CALLED IT UNRECOVERABLE WHILE HOLDING THE FOUR NUMBERS THAT RECOVER IT.** ⭐⭐⭐ **THE `hash()` MUTATION IS RATIFIED AS THE STRONGEST EVIDENCE THIS SLICE HAS PRODUCED.**
+
+**RULING ID:** R-741 · **AR RULED:** **`AR-835`** · **DECISION: ACCEPT-WITH-CLOSEOUTS · ADOPT-IN-FULL (read) · PIN (the conformance group) · SELF-CORRECT (mine, twice) · HOLD (`6B` until the three closeouts pass, then auto-release)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-835`** `[MEASURED HERE]` — **ruled here; none newer.** **HEAD at write time: `82ae75c9`.**
+**READ CONSUMED:** `GPT EXTERNAL ADVISOR RULING — R-741 — STEP 6A CORE PASSES, BUT THREE FAIL-CLOSED CONTROLS MUST LAND BEFORE 6B`. ⚠️ **PROVENANCE NOTE: the relay carried a TRUNCATED first pass (cut mid-sentence inside `CLOSEOUT 3`) immediately followed by a COMPLETE re-send. I ruled against the COMPLETE second pass and discarded the fragment.** ★ **Recorded because `A PARTIAL DOCUMENT THAT READS AS WHOLE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE`, and the two passes differ — the fragment's `CLOSEOUT 2` (contradictory evidence) is FOLDED INTO `CLOSEOUT 1` in the final, and its `CLOSEOUT 3` became `CLOSEOUT 2`. **Anyone citing "`R-741` closeout 2" must say which pass.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ⭐⭐⭐ THE `hash()` MUTATION IS THE STRONGEST EVIDENCE THIS SLICE HAS PRODUCED, AND IT SETTLES A LAW I ONLY ASSERTED
+`R-737 §8` minted **`A UNIQUENESS TEST AND A SENSITIVITY TEST ARE BOTH SATISFIED BY RANDOMNESS; ONLY A STABILITY TEST EXCLUDES IT`** as **reasoning**. `[RELAYED, `AR-835 §1`, and I did not re-run the mutation]` the worker planted `sha256 → hash()` and measured **`3 failed, 13 passed`** — **the three being ONLY the cross-process stability controls.**
+🛑 **THE THIRTEEN THAT PASSED INCLUDE THE COLLISION CONTROL (obligation 6), THE DURATION-SENSITIVITY CONTROL (obligation 4), AND THE `variant_label`-vs-duration JOIN-KEY CONTROL (`R-738 §7-2`).**
+⇒ ★★★★★ **A RANDOM IDENTITY SATISFIES EVERY OBLIGATION ON THE LIST EXCEPT `11`. My addition was not belt-and-braces; it was the ONLY thing between this slice and a cache that never hits and never collides.** ⭐ **The law is now MEASURED, not argued** — and the external read independently reached the same verdict (*"Obligation 11 was necessary"*). ⭐ **The stability control also carries its own positive control** — a sibling test asks the child process for a deliberately DIFFERENT set and requires the harness to report disagreement, **because "the two agree" is also what a harness that cannot see a difference reports.**
+
+### §2 — 🛑🛑 CLOSEOUT 1 CONFIRMED AT THE EXECUTABLE LINE — SILENT VARIANT LOSS
+`[MEASURED HERE, `src/engine/opening_range_lowering.py:188-192`]`:
+```python
+label   = entry.get("variant_label")
+span    = entry.get("description") or ""
+minutes = _duration_minutes(label or "") or _duration_minutes(span)
+if label is None or minutes is None:
+    continue                      # <-- the defect, verbatim
+out.append(...)
+```
+🛑 **A malformed member is SKIPPED and the survivors are RETURNED.** ⇒ **three taught variants + one bad extraction row = TWO executable candidates AND NO REFUSAL.** ★★★★★ **`A LOOP THAT CONTINUES PAST WHAT IT CANNOT READ IS A COMPILER QUIETLY EDITING THE TEACHER` — and it is invisible, because two well-formed candidates look exactly like a strategy that taught two.**
+🛑 **AND THE SAME LINE CARRIES THE SECOND HALF:** `_duration_minutes(label or "") or _duration_minutes(span)` **short-circuits.** ⇒ **label `5m` beside a description saying `15-minute opening range` lowers as `5m` and NEVER REPORTS THE CONTRADICTION.** ★★★ **`AN "or" BETWEEN TWO EVIDENCE SOURCES IS A PRECEDENCE RULE NOBODY DECIDED TO WRITE.`**
+✅ **REPAIR ORDERED, ADOPTED VERBATIM:** if a structured `variants` collection exists, **EVERY member must lower** · **one unlowerable member REFUSES THE ENTIRE DEFINITION** · **no partial candidate set may survive** · **exact taught ORDERING preserved** · **label and description durations parsed INDEPENDENTLY, and disagreement REFUSES rather than choosing whichever was checked first.**
+✅ **THREE REQUIRED CONTROLS:** **(1)** one malformed member among three ⇒ **no definition, zero candidates** · **(2)** label `5m` beside description `15 minutes` ⇒ **REFUSE** · **(3)** the unchanged golden collection still yields **exactly `5m`/`15m`/`30m`** *(the positive witness — without it, (1) and (2) are satisfied by a lowering that refuses everything)*.
+🛑 **The reason must DISTINGUISH CONTRADICTION FROM ABSENCE**, so V1.1 can later map it to `SOURCE_AMBIGUOUS` rather than to `SOURCE_INCOMPLETE`. ★ **`TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES` — one means the teacher never said, the other means the teacher said two things.**
+
+### §3 — 🛑🛑 CLOSEOUT 2 CONFIRMED AT THE EXECUTABLE LINE — A CLOCK MARRIED TO THE WRONG TIMEZONE
+`[MEASURED HERE, `opening_range_lowering.py:325,326,329`]`:
+```
+325:  found.setdefault("session_start_local", (clock, span))   # clock+zone branch
+326:  found.setdefault("source_timezone",     (zones[0], span))
+329:  found.setdefault("session_start_local", (clock, span))   # CLOCK-ONLY branch <-- reserves the slot
+```
+🛑 **`:329` lets a CLOCK-ONLY span claim `session_start_local`. A later COMPLETE clock+zone span then finds `:325` already satisfied and contributes only `:326`'s timezone.** ⇒ ★★★★★ **THE CLOCK COMES FROM ONE SENTENCE AND THE ZONE FROM ANOTHER, AND THE SAME-SPAN RULE IS DOCUMENTED WHILE THE CODE VIOLATES IT.** ⚖️ **`A DOCUMENTED INVARIANT THAT THE IMPLEMENTATION CAN BREAK IS A COMMENT, NOT AN INVARIANT` (`[document-vs-program]`) — and this one produces a plausible, wrong session start, which computes a plausible, wrong opening range on every bar.**
+✅ **REPAIR ORDERED:** **commit clock and timezone as ONE ATOMIC PAIR** · **a clock-only span must NOT reserve the clock slot** · **two COMPLETE clock-zone spans that disagree must REFUSE** · **never assemble a pair from different spans.**
+✅ **FOUR REQUIRED CONTROLS:** **(1)** earlier `09:15` with no zone + later `09:30 Eastern` ⇒ resolves to the complete same-span pair **`09:30 / America/New_York`** · **(2)** clock-only span + zone-only span ⇒ **REFUSE** · **(3)** two complete DISAGREEING pairs ⇒ **REFUSE** · **(4)** **the golden Pacific-chart sentence remains present and CANNOT override `09:30 Eastern`.** ⭐ **Control (4) is the one that matters most and is easiest to omit: it proves the fix did not simply become "take the last span."**
+
+### §4 — ✅ CLOSEOUT 3 — THE `dENM` NO-CALL PROOF IS NOT WHAT WE HAVE
+**The current test calls the adapter with `None` and expects an exception.** ⇒ ✅ **that proves a refusal CANNOT MANUFACTURE A VALID DEFINITION — a real property, keep the test.** 🛑 **IT DOES NOT PROVE PRODUCTION PREVENTS `dENM` FROM REACHING THE ADAPTER.** ★★★★★ **`A CRASH FROM INVALID ARGUMENTS IS NOT A NO-ROUTE PROOF` — it demonstrates what happens IF the call is made, which is the opposite of demonstrating the call is not made.** ⚖️ **`R-740 §5`'s negative control is therefore NOT YET DISCHARGED, and I am not counting it.**
+✅ **IN `6B`, A PRODUCTION-PATH SPY MUST PROVE:** processing `dENM` yields **the exact source refusal** · **adapter call count is ZERO** · processing the golden candidates calls the adapter **exactly three times** · **the calls carry `5m`, `15m` and `30m`.** ★ **Same shape as `AR-830`'s delegation spy, which is the control that has already earned its keep once: `EXISTENCE IS NOT WIRING`, and now `REFUSAL IS NOT NON-ROUTING`.**
+
+### §5 — ✅ THE CONFORMANCE GROUP IS PINNED — AND I WAS WRONG ABOUT IT
+🛑 **MY ERROR, PLAINLY:** I measured per-file counts, then told the operator and this ledger that the historical group was **"genuinely unrecoverable"** and proposed a replacement. **The four numbers that recover it were ON MY OWN SCREEN when I said that: `12 + 12 + 4 + 70 = 98`.** ★★★★★ **`I HAD EVERY TERM OF THE SUM AND DECLARED THE SUM UNKNOWABLE.` I stopped at "no single selector I tried matched" and never tried ADDING — the instrument I was missing was arithmetic.**
+✅ **PINNED, CANONICAL, VERIFIED BY ME `[MEASURED HERE — exactly the historical figure]`:**
+```
+python -m pytest \
+  src/engine/tests/test_opening_range_conformance.py \
+  src/engine/tests/test_opening_range_definition.py \
+  src/engine/tests/test_opening_range_family_parity.py \
+  src/engine/tests/test_family_meta_enforcement.py -q
+  -> 2 failed, 96 passed in 1.19s
+     membership = the two ordered REDs. NO THIRD.
+```
+🛑 **MY `115`-TEST `test_opening_range_*.py` GLOB IS WITHDRAWN.** It was a reasonable instrument and it is now the WRONG one: **a second population competing with the historical one is exactly the third instrument `[population-no-instrument]` warns about** — *"a re-derivation is a THIRD instrument; it cannot attribute a diff between two others."* ★ **One group, joinable to every prior figure in this ledger.**
+✅ **ACCEPTANCE RULE, ADOPTED:** before `6B` the only failures are the two ordered REDs; after `6B` **those predicates turn GREEN.** ★★ **New tests may raise the passing count, so acceptance is by EXACT FAILURE MEMBERSHIP, NEVER AN EMBALMED TOTAL** — which is also why `96` must never be re-quoted as a target (`[hardcoded-test]`).
+
+### §6 — ★ WORKER — **THREE CLOSEOUTS, THEN `6B` AUTO-RELEASES.**
+✅ **AUTHORIZED NOW:** `§2`'s repair + its three controls · `§3`'s repair + its four controls · `§4`'s structural test retained (the production spy is `6B` work, **not** now).
+✅ **THEN `6B` BEGINS WITH NO FURTHER RULING**, landing as **ONE commit**: canonical lowering disposition on the produced spec · Python family declaration · primitive resolver · enforced dispatch · production candidate execution · **the `§4` production-path spy** · TypeScript declaration mirror · focused parity fixture · **both ordered RED transitions.**
+✅ **TS BOUNDARY:** Python serializes the canonical disposition (**`READY`** or **`SOURCE_INCOMPLETE` + exact reason**); TypeScript **consumes** it to mirror `bindable` / primitive / reason. 🛑 **TypeScript must NEVER re-run lowering, re-parse prose, or decide for itself whether the teacher supplied a trading-day rule.** ★ **This is what gives per-condition refusal parity WITHOUT a second semantic parser.**
+🛑 **STATE-PRODUCER BOUNDARY, UNCHANGED:** `6B` may expose high · low · width · midpoint · completion · window status. **It may NOT emit long entry · short entry · breakout confirmation · direction · a trade.** **The golden strategy remains ineligible for backtesting while its breakout trigger is unresolved, and a profitable golden backtest is a HARD-STOP FIDELITY DEFECT** (`R-739 §1`).
+🛑 **`TEMPORAL_STATE_CHANNEL_MISSING` STANDS:** if the evaluator can carry only boolean gates and the implementation would flatten the state into an always-true or one-bar boolean, **STOP AND REPORT.** ★★ **`DO NOT FIT A STATE PRODUCER INTO THE WRONG INTERFACE TO TURN THE ORDERED REDS GREEN.`**
+**ATTEMPT BUDGET:** `6A` stays at **`1 / 2`**; **the three closeouts open at `0 / 2` as CORRECTIONS TO A DELIVERED CAPABILITY, not re-attempts at a failure** — the `R-736 §7` precedent, applied consistently. **`6B` opens at `0 / 2`.**
+**ACCEPTANCE:** adapter suite · candidate/identity/lowering/firebreak suites · the eight-control discrimination instrument · production guards · **the `§5` PINNED conformance group** · **the real `tsx` binary in the SHARED tree.** **ALL UNPIPED.**
+🛑 **UNTOUCHED:** breakout trigger · close-vs-wick · stops/targets/sizing · the other eight golden conditions · the second teacher's breakout/retest rules · futures portability · `test_cloud_backend.py` · the `7` quarantined files · the `phase_a` alternate reads (**FORBIDDEN, `R-740 §6-1`**).
+
+**LESSON TO PERSIST:** ★★★★★ **`I HAD EVERY TERM OF THE SUM AND DECLARED THE SUM UNKNOWABLE` — I searched for a selector and never tried adding the four numbers already on my screen.** · ★★★★★ **`A LOOP THAT CONTINUES PAST WHAT IT CANNOT READ IS A COMPILER QUIETLY EDITING THE TEACHER.`** · ★★★★★ **`A CRASH FROM INVALID ARGUMENTS IS NOT A NO-ROUTE PROOF.`** · ★★★★ **`AN "or" BETWEEN TWO EVIDENCE SOURCES IS A PRECEDENCE RULE NOBODY DECIDED TO WRITE.`** · ★★★★ **`A DOCUMENTED INVARIANT THE IMPLEMENTATION CAN BREAK IS A COMMENT` — the same-span rule was written down and violated three lines later.** · ★★★ **`TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES` — absent ≠ contradictory.**
+
+---
+
 ## R-740 · 2026-08-09 · 🛑🛑★★★★★ **I AMEND MY OWN FROZEN POPULATION: `4` EXECUTABLE CANDIDATES BECOMES `3` PLUS ONE EXACT SOURCE REFUSAL — AND THE DEFECT IS MINE, NOT THE WORKER'S.** ⭐⭐⭐ **`AR-834` ACCEPTED: THE MISSING `trading_day_rule` IS CONFIRMED ABSENT AT THIS DESK ON AN INDEPENDENT SCAN WITH ITS OWN POSITIVE CONTROL.** ⭐⭐ **AND THE WORKER REFUSED THREE SEPARATE INVITATIONS TO INVENT THE VALUE, INCLUDING THE ONE IT SAID IT WAS MOST TEMPTED BY.** ✅ **`STEP 6A` CONTINUES WITHOUT WAITING.**
 
 **RULING ID:** R-740 · **AR RULED:** **`AR-834`** · **DECISION: ACCEPT · AMEND (`R-738 §8`'s pinned population — MINE) · ADOPT-IN-FULL (read) · DECIDE (three open items the worker routed up) · CONTINUE (`STEP 6A`, no re-authorization needed)**
