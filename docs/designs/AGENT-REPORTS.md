@@ -4,6 +4,55 @@
 
 ---
 
+## AR-885 · 2026-08-09 · 📍 **SEAT RECEIPT — FRESH WORKER SEATED, EAR ARMED AND PROVEN TO DELIVER, BOTH REMAINING LANES TAKEN AS ONE BATCH.** ⚡ **I TAKE `C` (`N-5`) FIRST TO SPEND `AR-884 §2`'s BANKED RECON WHILE IT IS STILL FRESH, THEN `B` (`F-7`) — AND I MAKE NO HANDOFF CLAIM: THE UNIT OF WORK IS BOTH LANES.**
+
+**SEAT `claude.exe 23140`** (predecessor `23640` is GONE — `[MEASURED HERE]` `Win32_Process` lists exactly two live `claude.exe`: `23140` mine, `13416` the sibling). **TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, HEAD `aa5e7970`.**
+**AUTHORIZATION INHERITED FROM THE LEDGER, exactly as `R-767 §9` provides:** *"If that seat genuinely cannot continue it says so in a final report and the operator seats a successor, which inherits this ruling from the ledger."* **`AR-884` is that final report.** 🛑 **I self-certify nothing beyond seating; the lanes' contracts are `R-767 §5`/`§6` unchanged.**
+
+### §1 — 📡 THE EAR — ARMED, OWNED, AND **MEASURED TO DELIVER** (`worker-onboarding §2a`)
+✅ **CENSUS BY OWNERSHIP FIRST, `Win32_Process` + parent walk from my own shell — never `TaskList`.** My chain: `powershell 8780 → claude.exe 23140 → powershell 30904 → explorer 9228`.
+✅ **TWO `bash.exe` rigs exist and I ARMED NEITHER — and both are ORPHANS:** `33504` (parent `7752`) and `23392` (parent `11704`); `[MEASURED HERE]` **both parent PIDs are ABSENT from the process table.** 🛑 **I DID NOT KILL EITHER.** `AR-884 §5` names one as the advisor's, and `NEVER KILL AN EAR YOU DID NOT ARM` does not acquire an exception because the owner looks dead — the discriminator is authorization, not liveness.
+✅ **ARMED MY OWN: `Monitor`, `persistent: true`, tuple-keyed.** **It delivered its ARMED line into my conversation as a notification — so liveness, ownership AND delivery are all three proven, not two.**
+⚡ **AND I RED-PROOFED THE DETECTOR BEFORE TRUSTING IT — on a THROWAWAY repo, never the real file:**
+```
+ARMED  :: ## R-100 first | CLEAN | file-sha=8c2361f
+FIRED  :: ## R-101 draft | DIRTY | file-sha=8c2361f   <- draft write (dirty-state)
+FIRED  :: ## R-101 draft | CLEAN | file-sha=1677269   <- git commit; MTIME NEVER MOVED
+(negative control: an UNRELATED commit produced NO event)   events=3
+```
+⭐ **THE FIRST DRAFT OF MY OWN EAR KEYED ON `HEAD` AND FAILED THAT NEGATIVE CONTROL — it fired on the sibling seat's unrelated commits.** **Re-keyed to `git log -1 -- <file>`, re-proved.** ★★★★★ **`A DETECTOR THAT FIRES ON EVERYTHING IS AS DEAF AS ONE THAT FIRES ON NOTHING — RED-PROOF THE NEGATIVE CONTROL, NOT ONLY THE POSITIVE.`**
+✅ **BLIND-WINDOW BACKFILL (arming time is the join key): newest ruling on disk read BY HAND at seating = `R-767`**, and I read the ledger state past it — `AR-883`/`3cca10d3` (lane `A` delivered), desk evaluation `532ab1bc` (`N-4` predicate MET, `7 / 9`), `AR-884` (handoff), `aa5e7970`.
+
+### §2 — 📐 FAN-IN AND WHAT I AM TAKING
+```
+FAN-IN INHERITED : 7 / 9   [desk-evaluated at 532ab1bc — NOT my claim, and NOT AR-884's]
+MINE THIS SEAT   : 0 / 2  (Lane C = N-5 · Lane B = F-7)
+ATTEMPT BUDGET   : F-7 0/2 · N-5 0/2   (both untouched — AR-884 measured NOTHING started)
+ORDER            : C then B. R-767 §7 measures all three edges FAKE, so order is a
+                   convenience; I take C first only to spend AR-884 §2's harness recon
+                   before it goes stale. NOT a dependency claim.
+```
+🛑 **I DO NOT PLAN A HANDOFF AT THE `C`/`B` SEAM.** `worker-execution §10`: the unit of work is the whole batch, and unstarted is the reason to stay.
+
+### §3 — ✅ SITES RE-MEASURED ON DISK BEFORE STARTING (I inherit no line number)
+```
+N-5  critic-optimizer-service.ts:2153  const parentForgeScore = Number(strat.forgeScore ?? 0);   [auto]
+     critic-optimizer-service.ts:2850  const parentForgeScore = Number(strat.forgeScore ?? 0);   [manual]
+     gates :2532 / :3009  — grep parentForgeScore returns EXACTLY 6 lines (2 assign, 2 gate,
+                            2 comment), matching R-767 §6's closed consumer set.
+F-7  agent-service.ts  "tested":"failed"  -> :775 :1224 :1322 :2274
+                       "success":"failure" -> :791 :1234 :1337
+```
+⚠️ **ONE THING I FLAG BEFORE STARTING, PER `worker-execution §5` (free now, expensive at delivery): `R-767 §5` says *"the ten named sites"* and *"all three direct `runBacktest` callers"*, but my disk grep finds a FOURTH `"tested" : "failed"` site at `:2274`.** 🛑 **I do NOT assume it is in scope and I do NOT assume it is out.** **I will enumerate it against `AR-881`'s ten before touching anything and report which it is — if `:2274` is a fourth direct caller the contract's "three" is a ruling defect; if it is a different actor it is `A HOMONYM READS EXACTLY LIKE COVERAGE` and stays untouched.**
+
+### §4 — ⚖️ NO METRIC-MIX DEFECT IN THIS CONTRACT
+✅ **I checked `R-767 §5`/`§6`'s control lists for the `worker-execution §5` failure shape and they are CLEAN: every control is MECHANICAL** (a suite goes green, a named mutation reddens an enumerated control set, a call counter reads zero, a witness row is absent). **None requires GROUND TRUTH, so no `accuracy-validator` grade is owed for lane acceptance itself.** ★ **Stated so the desk can hold me to it: if I later need a judgment about whether something is CORRECT rather than whether a control FIRED, I owe the grader ask in the same breath — I do not get to notice that at delivery.**
+
+**FIRST OBSERVABLE: a published RED on Lane `C` (`N-5`), per `R-767`'s standing first-observable.** **No ETA claimed. An `AR` per lane close.**
+
+---
+
+
 ## AR-884 · 2026-08-09 · 🔚 **HANDOFF — GENUINE CONTEXT EXHAUSTION, WHICH IS THE ONLY REASON I OFFER.** ✅ **LANE `A` DELIVERED AND PUSHED (`3cca10d3` / `AR-883`). LANES `B` AND `C` UNSTARTED — NOT half-started: `[MEASURED]` I changed NOTHING in `agent-service.ts` or `critic-optimizer-service.ts`.** ⚡ **AND I BANK LANE `C`'s HARNESS RECONNAISSANCE BELOW SO THE NEXT SEAT INHERITS IT INSTEAD OF RE-DERIVING IT.**
 
 **SEAT `claude.exe 23640`.** **TREE `wt-h1-wave4-20260712`, HEAD `1fa05ccf` at write time, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY — everything off-machine.**
