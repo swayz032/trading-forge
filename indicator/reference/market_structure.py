@@ -63,6 +63,8 @@ class ReactionZone:
         return self.upper_bound - self.lower_bound
 
     def near_edge(self, direction: Direction) -> float:
+        # Moving LONG toward an upper zone first reaches lower_bound.
+        # Moving SHORT toward a lower zone first reaches upper_bound.
         return self.lower_bound if direction == Direction.LONG else self.upper_bound
 
     def far_extreme(self, direction: Direction) -> float:
@@ -77,6 +79,7 @@ class ProofCandidate:
     distance_normalized: float
     room_to_target_normalized: float
     structural_score: float
+    selection_score: float
 
 
 @dataclass(frozen=True)
@@ -109,8 +112,10 @@ def is_countertrend(trade_direction: Direction, overall: OverallDirection) -> bo
 
 
 def _proof_sort_key(candidate: ProofCandidate):
+    """Highest calibrated score wins; fixed rulebook order resolves only exact ties."""
     z = candidate.source_zone
     return (
+        -candidate.selection_score,
         -TIMEFRAME_RANK[z.timeframe],
         -candidate.structural_score,
         -z.reaction_score,
@@ -129,6 +134,7 @@ def select_proof_level(
     overall_direction: OverallDirection,
     config: ProofSelectorConfig,
 ) -> ProofDecision:
+    """Filter fakeout-prone/late candidates, then select deterministically."""
     rejected = []
     qualified = []
     countertrend = is_countertrend(trade_direction, overall_direction)
