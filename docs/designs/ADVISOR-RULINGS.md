@@ -12,6 +12,110 @@
 
 ---
 
+## R-751 · 2026-08-09 · 🛑🛑🛑★★★★★ **`AR-851` IS `3 / 4`, NOT `4 / 4` — AND THE MISSING ONE IS GREEN AT THE WRONG LAYER. THE REFUSAL TRACE IS BUILT AT `:8378` AND OVERWRITTEN WITH `[]` AT `:8431`, WHICH I CONFIRMED MYSELF AT THE EXECUTABLE LINE BEFORE ADOPTING IT.** ⭐⭐⭐ **THE EXTERNAL READ FOUND IT, AND THIS IS THE FIRST READ IN FOUR THAT MIS-CITED NOTHING — I SAY SO BECAUSE I REJECTED THE LAST THREE.** ⚖️ **AND THE CONTRACT DEFECT IS MINE AGAIN, THE SAME SHAPE AS `R-749 §2`: I SPECIFIED THE PAYLOAD AND NEVER SPECIFIED THE SURFACE THAT MUST CARRY IT.** 🛑 **I ALSO REVERSE MY OWN GRADE DISPATCH, MADE ~20 MINUTES AGO ON A TRIGGER THAT HAD GENUINELY FIRED.**
+
+**RULING ID:** R-751 · **AR RULED: `AR-851`** (and `AR-850`, which `R-750` never saw) · **DECISION: ACCEPT (3 of 4 deliverables) · REVISE (`§4-1` is NOT closed) · ADOPT (external `R-755`, on my own measurement) · CORRECT (acceptance population — `AR-850` was right) · REVERSE (my own grade dispatch) · AUTHORIZE (one bounded terminality commit)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-851`** `[MEASURED HERE]` — **ruled here; none newer. `AR-850` is also ruled here: it raised a defect `R-750` could not have seen, and leaving it unanswered twice would make it a dropped clause** (`[count-obligations]`). **HEAD at write time: `ad0ffb4b`, local == `git ls-remote` == verified by me.** **READ CONSUMED: external `R-755`.**
+⚠️ **NUMBERING — OFFSET REMAINS FOUR:** external `R-755` → campaign **`R-751` (this one)**. Next external `R-756` → campaign `R-752`. **NAME THE CARRIER.**
+✅ **GPT WAIT HONOURED — AND IT PAID FOR ITSELF THIS TIME, WHICH IT HAS NOT ALWAYS DONE.** `AR-851` sat unruled until external `R-755` arrived. **The worker was never blocked on a ruling** (it had delivered and was idle by its own choice, not by a missing authorization). ★★★★★ **THE WAIT IS WHAT CAUGHT THIS: had I ruled `AR-851` on its own evidence I would have accepted `4 / 4` and dispatched a grade against a leaking refusal.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — 🛑🛑🛑 THE DEFECT, CONFIRMED BY ME AT THE EXECUTABLE LINE BEFORE I ADOPTED IT
+External `R-755` claims the refusal trace is built and then overwritten. **I did not take it on report.** `[MEASURED HERE, tree `wt-h1-wave4-20260712`, HEAD `ad0ffb4b`, `src/engine/backtester.py`]` — four independent readings, each stated with what it rests on:
+
+| # | reading | evidence |
+|---|---|---|
+| 1 | `:8377-8380` writes the refusal summary **inside** the refusal branch | 12-space indent, under `if _spec_refusal is not None:` |
+| 2 | `:8420` `if "error" not in result:` is at **8-space indent — the SAME level as the `if`/`elif`/`else` chain** | ⇒ it executes **after whichever branch ran**, not inside one |
+| 3 | **no `return` or `raise` anywhere between `:8378` and `:8431`** | `awk 'NR>=8378 && NR<=8431 && /^[[:space:]]*(return\|raise)\b/'` → **empty** |
+| 4 | the refusal `result` dict carries **no `error` key** | `grep error` over `:8336-8372` → **empty**; corroborated by `AR-851 §7`, which measured the identical predicate TRUE at `:8498` on a live run |
+
+⇒ **`:8431` `result["spec_trace"] = strategy.last_trace` FIRES ON THE REFUSAL PATH**, and `[MEASURED HERE, `spec_condition_compiler.py:610`]` `self.last_trace: list[dict] = []` is still its initialiser because a refused strategy never runs `compute()`.
+🛑 **THE PUBLIC `main()` PATH THEREFORE RETURNS `spec_trace = []` FOR A REFUSAL — the exact "absence standing in for a refusal" that `R-749 §4-1` was written to abolish, restored one layer above the fix.** ★★★★★ **`A GUARD THAT WRITES ITS EVIDENCE INTO A FIELD A LATER COMMON BLOCK UNCONDITIONALLY REASSIGNS HAS NOT WRITTEN EVIDENCE — IT HAS WRITTEN A DRAFT.`**
+⚖️ **SEVERITY: `LATENT`, NOT AN INCIDENT** (`§3`): `TF_SPEC_TRACE` is OFF by default, no capital is at risk, nothing is live. 🛑 **It is still BLOCKING, because it falsifies the acceptance of `§4-1` itself.**
+
+### §2 — ⭐⭐⭐ THE READ WAS RIGHT, AND I OWE IT THIS SENTENCE
+I rejected the external reads' ledger corrections **three rulings running** (`R-748 §2`, `R-749`, `R-750 §2`) — each time correctly, each time because they cited their own numbering as ours. **This read cites `ad0ffb4be262…`, `f7aefaa6`, "one commit ahead", and a branch tip — and `[MEASURED HERE]` EVERY ONE OF THOSE IS CORRECT.** It also correctly reports **no CI statuses on GitHub**, which is the honest limit: **the pytest totals remain worker-measured until independently re-run.**
+★★★★★ **`A READER WHOSE LAST THREE CORRECTIONS WERE WRONG IS NOT THEREBY WRONG ON THE FOURTH — PROVENANCE IS NOT QUALITY, IN EITHER DIRECTION.`** ⚠️ **The standing rule that saved us three times (`grep`-check every external reference) is the SAME rule that validated this one. Keep the rule; drop the prior.** (`[external-opinion]`: audit on merit, adopt nothing on authority — including nothing REJECTED on authority.)
+
+### §3 — ⚖️ THE CONTRACT DEFECT IS MINE, AND IT IS THE SECOND INSTANCE OF ONE SHAPE
+🛑 **NOT THE WORKER'S.** `R-749 §4-1` enumerated the payload — `execution_status · condition_id · source evidence · disposition · reason · ambiguity · trigger_bound=False · entry_eligible=False` — **and never named the SURFACE on which a reader must observe it.** The worker built the field set, built the production emission at `:8377`, red-proofed it, and witnessed it **on the strategy object**, which is where the contract pointed.
+★★★★★ **THIS IS `R-749 §2` AGAIN, ONE HOP OUT:** there I specified the refusal by its *ambiguity branch* and not its *final binding*; here I specified the payload and not its *observation point*. **Both times the worker satisfied the contract exactly and the defect lived in the hop I did not name.**
+> ★★★★★ **`A CONTRACT THAT NAMES A PAYLOAD BUT NOT ITS OBSERVATION POINT WILL BE SATISFIED AT WHICHEVER LAYER IS EASIEST TO REACH — AND THAT IS NEVER THE PUBLIC ONE.`**
+⇒ **BINDING ON THIS DESK, EFFECTIVE NOW:** every acceptance criterion I write names **the surface a reader observes it on** — public entry point, module boundary, or object — **in the same sentence as the property.** ⚠️ **And `[i-measured]` is the family: the desk's most-convicted error is measuring the neighbouring object. This is its seventh instance and the first where the DESK caused it in the WORKER by writing the contract that way.**
+
+### §4 — ✅ WHAT `AR-851` GENUINELY DELIVERED — `3 / 4`, AND IT IS GOOD WORK
+- ✅ **`§4-2` EXECUTED SPIES — ACCEPTED**, and accepted **as the regression guard it honestly calls itself**, not as evidence of a repair. ⭐ **`AR-851 §3` disclosed that its first probe counted `0` on BOTH arms because `bt.main` is a `click` command raising `MissingParameter` — three zeros that would have read as a perfect refusal. It was caught ONLY because the positive control was written and run FIRST.** ★★★★★ **`A REFUSAL TEST WITH NO POSITIVE CONTROL CANNOT DISTINGUISH A WORKING GATE FROM AN UNWIRED HARNESS.`**
+- ✅ **`§4-3` RICH ARTIFACT — ACCEPTED.** Accounting closes (`1 + 93 = 94`, `NOT_MEASURED 0`), blob `23f30eb0` asserted before regeneration and unchanged, and `prior_primitive` is **measured via the same production `compile_binding_plan` called twice**, not reconstructed — the right call, and it avoids minting a fourth population no instrument can reproduce (`[population-no-instrument]`).
+- ✅ **`R-750 §5-1` PASS-THROUGH RED-PROOF — ACCEPTED, AND IT IS THE STRONGEST EVIDENCE IN THE COMMIT.** `8 failed`, all confirmed-trigger, **observing the non-`None` primitive as ordered**, with the mutation-reached control passing FIRST. ⭐ **And the honest negative is worth more than the eight: `test_a_confirmed_trigger_is_not_mislabelled_source_ambiguous` did NOT go red, and `AR-851` says so rather than counting it.** ★★★ **`NAMING THE CONTROL THAT DID NOT DISCRIMINATE IS WORTH MORE THAN THE ONES THAT DID.`**
+- 🛑 **`§4-1` — NOT CLOSED.** Built at the strategy layer, **dead at the public boundary** (`§1`). **Fan-in is `3 / 4`.**
+- ⭐⭐ **`§6`'s SELF-INFLICTED REGRESSION IS ACCEPTED AS REPORTED, AND THE REPORTING IS THE POINT.** The worker broke six trace readers by adding a record kind — **the exact law `R-750 §1` had minted one ruling earlier** — found it with a pre-registered baseline diff, repaired by **re-keying rather than weakening**, and disclosed both a skip-guard that silently stopped firing and a test it renamed. ★★★★★ **`A LAW YOU CAN QUOTE IS NOT A LAW YOU HAVE APPLIED` — its own words, and I am entering them as campaign law.**
+
+### §5 — ⚖️ ATTEMPT BUDGET STAYS `1 / 2`. NO ATTEMPT IS SPENT HERE.
+`R-749 §5` pre-registered that **only a FAILED delivery spends attempt `2`; an honest partial does not.** ⚖️ **`AR-851` is an honest partial that missed a layer, not a failure**: it named its own uncovered surfaces in `§9` (`no full-repo pytest` · `no TypeScript check` · `any trace consumer outside the 103 is [UNMEASURED]`), disclosed its own instrument failure, and reported a defect it chose not to fix. 🛑 **Charging attempt `2` here would punish exactly the behaviour that made this defect findable.** ★★★★ **`A BUDGET THAT PUNISHES HONEST PARTIAL REPORTING BUYS SILENCE, NOT SAFETY` — re-affirmed, second invocation.**
+⚠️ **AND THE MISS IS PARTLY CHARGED TO ME (`§3`), so charging it fully to the worker would be arithmetic I do not believe.**
+
+### §6 — 🛑 I REVERSE MY OWN GRADE DISPATCH, AND I STATE WHY RATHER THAN LETTING IT LAPSE
+`[MEASURED HERE]` **~20 minutes before this ruling I dispatched `accuracy-validator` against `ad0ffb4b`.** The wake trigger in `R-750 §7` — *"the three closeouts land, are pushed and remote-verified"* — **had genuinely fired, and I verified it.** ⇒ **The dispatch was authorized. It was also wrong**, and both are true.
+🛑 **REVERSED.** External `R-755` is right that grading `ad0ffb4b` would knowingly certify a leaking refusal and force a second grade. **I stopped the agent.**
+> ★★★★★ **`A WAKE TRIGGER IS NECESSARY, NOT SUFFICIENT. "THE CLOSEOUTS LANDED" IS A CONDITION ON DELIVERY, NOT A FINDING THAT THE DELIVERY IS COMPLETE — AND A TRIGGER PHRASED AS AN EVENT WILL FIRE ON THE EVENT REGARDLESS OF WHETHER THE THING IT STANDS FOR IS TRUE.`**
+⇒ **ALL FUTURE GRADE TRIGGERS IN THIS CAMPAIGN CARRY A DELIVERY PREDICATE, NOT ONLY AN EVENT:** *"landed AND pushed AND remote-verified AND the desk has ruled the fan-in complete."*
+⭐⭐⭐ **AND THE STOPPED AGENT LEFT ONE FINDING THAT I AM BANKING BECAUSE IT IS A THIRD INDEPENDENT PATH TO `§1`:** `[MEASURED BY GRADED INSTRUMENT — **PARTIAL**, agent killed mid-run, so this is its last emitted line and NOT a completed grade]` — **`TF_SPEC_TRACE` appears in NO test file anywhere in `src/`; it exists only in the two production modules. The backtester's trace emission is entirely UNTESTED.** ★★★★★ **THAT IS THE MECHANISM BEHIND `§1`: the defect did not slip past a weak test, it slipped past NO TEST. `AN UNTESTED SURFACE DOES NOT PRODUCE A FAILING TEST, IT PRODUCES A CONFIDENT REPORT.`** ⚖️ **THREE INDEPENDENT PATHS NOW AGREE** — the read's code reasoning, my executable-line read, and the grader's coverage census — **and they are genuinely non-overlapping: one reasoned, one read control flow, one counted tests.**
+
+### §7 — ✅ ACCEPTANCE POPULATION — `AR-850` WAS RIGHT AND IT WENT UNANSWERED FOR ONE RULING
+🛑 **I CORRECT `R-750 §7`'s *"NO THIRD FAILURE PERMITTED"*. It was unsatisfiable.** `[MEASURED, `AR-850 §2`, re-measured identically by `AR-851 §8`, deterministic on re-run]` the campaign's own committed `103`-member `canonical_regression_population.txt` returns **`33 failed` at baseline before any edit**, of which exactly `2` are the ordered `6B` REDs. **My contract named a subgroup this ledger has never enumerated** — `[unenumerated-ladder]`, the desk's own most-cited law, applied against the desk.
+✅ **THE CORRECTED RULE, ADOPTED FROM EXTERNAL `R-755` AND BINDING FROM HERE:**
+1. **Focused trigger-safety group** — **no unexpected failures.**
+2. **Pinned state-channel group** — **exactly the two ordered REDs**, unchanged.
+3. **Full `103`-member manifest** — **failure node-ID MEMBERSHIP equals the immutable baseline exactly. COMPARE MEMBERS, NEVER COUNTS** (`R-741 §5`).
+🛑🛑 **AND A DURABILITY DEFECT I MEASURED THAT NEITHER THE WORKER NOR THE READ CAUGHT:** `[MEASURED HERE, `git ls-files`]` **the `33`-member baseline list is NOT COMMITTED ANYWHERE.** `AR-851 §8` says it was *"frozen to disk"* — **disk is not git.** ⇒ **the entire acceptance argument rests on a file that no seat can re-read and that dies with the worker's scratch space.** ★★★ **`AN UNCOMMITTED BASELINE IS NOT A BASELINE, IT IS A MEMORY` (`AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT`, same family).** **REQUIRED in the next commit: commit the baseline member list at the parent SHA `f7aefaa6`, as a file, with the exact invocation that produced it.**
+
+### §8 — ✅ AUTHORIZED NOW — ONE BOUNDED "REFUSAL TERMINALITY" COMMIT, TO THE SEAT THAT EXISTS
+**GOAL:** a refusal is TERMINAL and SELF-DECLARING at the **public `main()` boundary**. **WHY IT IS MONEY-PATH:** a refused strategy that publishes a score and erases its own refusal notice is indistinguishable from a measured result, and that is the single confusion this entire trigger-safety lane exists to prevent.
+**REQUIRED BEHAVIOUR:**
+1. **Gate on an EXPLICIT SEMANTIC PREDICATE** — `execution_status == REFUSED`. 🛑 **DO NOT add a fake `error` key: a deliberate refusal is not a crash, and overloading the crash channel would make every downstream consumer read a refusal as a malformed request.** ⚖️ **This is the root cause of BOTH defects — `"error" not in result` is the wrong join key for "did this produce a result", and it is used at `:8420`, `:8498` and `:8560`.**
+2. **PRESERVE the refusal summary** — the common governance block must not overwrite `spec_trace` with `strategy.last_trace` on a refused result (`§1`).
+3. **A refused result reaches NO analytical surface.** 🛑 **ENUMERATE THEM MECHANICALLY FROM THE CODE — do not work from my list or the read's.** Known members `[ARTIFACT-SOURCED, external `R-755` + `AR-851 §7`]`: crisis/stress processing · crisis rescoring · `forge_score` + `forge_score_components` · invariants · parity shadow · B15 battery. ★ **If your enumeration finds a surface not on that list, that is a FINDING, not an omission — report it.**
+4. **Harmless output work MAY remain:** governance labels · the refusal payload · backtest id · schema validation · JSON emission.
+5. **NAME the omitted downstream products explicitly**, the way `metrics_omitted` already names the omitted metrics — **absent keys, NOT `None` and NOT `0.0`.** ★ **`A KEY PRESENT AS 0.0 IS A MEASUREMENT; A KEY ABSENT WITH A STATED REASON IS A REFUSAL.`**
+6. **COMMIT THE `33`-MEMBER BASELINE** at `f7aefaa6` with its exact invocation (`§7`).
+**REQUIRED CONTROLS — each owes a red-proof:**
+- **Public `main.callback` with `TF_SPEC_TRACE=true` returns ONE `EXECUTION_REFUSED` summary for the golden strategy — NOT `[]`.** 🛑 **This is the assertion whose absence caused `§1`; it must be observed at the PUBLIC boundary, not on the strategy object.**
+- Refused execution reaches **zero** stress / rescore / invariant / parity / B15 consumers, **counted by execution**, with an eligible neighbour as positive control reaching them normally.
+- Forbidden output keys **ABSENT**, not `None`/`0.0`.
+- **Both single AND walk-forward refusal paths; pipeline AND full stress modes.**
+- **MUTATION:** restoring `"error" not in result` → tests RED. **MUTATION:** restoring the `spec_trace` overwrite → the public-trace test RED. **Restore and re-run green — red paths decay** (`[red-path-decay]`).
+- Existing trigger-safety + blast-radius suites stay green; the two ordered state-channel REDs stay RED.
+**FILES/SCOPE:** `src/engine/backtester.py` + the refusal/trace tests + the committed baseline artifact. 🛑 **NO state-channel code in this commit.**
+**HONEST-PARTIAL CLAUSE:** if any control cannot be built as specified, **say so and name the surface you covered** — it does not spend attempt `2` (`§5`).
+**START-RECEIPT:** one line within ~2 minutes — task · first observable · ETA. **FIRST OBSERVABLE: the failing public-boundary trace test, RED before the fix.**
+
+### §9 — 🛑 STOPS (unchanged from `R-750 §7`, plus two)
+state channel · carrier · adapter routing · the WIP branch `f788c64b` (**neither merge, cherry-pick NOR replay — it predates the eligibility boundary**) · the sibling's `test_synthetic_market_simulator.py` · `:534` · re-selecting the golden slice · enabling `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · **arming any monitor** · no video/strategy/condition id in production classification code · **NO `git stash`** · **do not clean up `wt-pre6b` or `wt-6b-wip`.**
+🛑 **NEW, FROM THE READ, ADOPTED:** do **NOT** fix the other `31` baseline failures · do **NOT** start a repository-wide trace census · do **NOT** audit frontend consumers now · do **NOT** invent the breakout rule · do **NOT** run edge qualification.
+⚠️ **`AR-851 §9`'s TypeScript exposure is REGISTERED, NOT ACTIONED:** if a TS consumer parses `spec_trace` as one-record-per-entry it now meets a record it has never seen. **Flag-gated OFF ⇒ real but not live. `D-8`, desk-owned, AFTER the grade.**
+
+### §10 — ⏳ THE GRADE — RE-STAGED, ONE DISPATCH, AGAINST THE FINAL SHA
+🛑 **`accuracy-validator` is NOT authorized now.** **WAKE TRIGGER, WITH ITS PREDICATE (`§6`): the terminality commit is landed, pushed, remote-verified, AND this desk has ruled the fan-in complete.** **THEN one adversarial dispatch against that immutable SHA**, durable receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md`. **`doer ≠ grader` — neither the worker nor this desk may certify it.**
+✅ **CARRIED INTO THAT BRIEF, SO IT IS NOT LOST WITH THE AGENT I STOPPED:** **(a)** did the six `§6` test repairs **narrow** what they assert — a `record_kind == entry_bar` filter is the classic silent-coverage-loss shape · **(b)** did the skip guard that stopped firing turn those tests from skipped-to-running or running-to-vacuous · **(c)** re-derive the `103` population with the instrument's OWN derivation and compare **members** · **(d)** re-run every red-proof rather than trusting a reported one · **(e)** confirm the spies' self-limiting "regression guard, not a catch" claim is TRUE · **(f)** the `TF_SPEC_TRACE` coverage census (`§6`) re-run to completion.
+🛑 **AND A GAP THE BRIEF MUST DISCLOSE RATHER THAN PAPER OVER:** `R-750 §7` adopted *"`R-754`'s eleven-point grader checklist"*, and `[MEASURED HERE]` **that read is banked NOWHERE on disk** — `docs/designs/EXTERNAL-READ-*` does not contain it. ★★★★★ **`AN ADOPTED CHECKLIST WITH NO CARRIER CANNOT GOVERN A BRIEF — AND A RULING THAT ADOPTS AN UNBANKED ARTIFACT HAS ADOPTED A MEMORY.`** ⇒ **BINDING: bank the external read as a file IN THE RULING THAT ADOPTS IT, or cite it as `[UNBANKED — NOT RELIED ON]`.**
+
+### §11 — DEFERRED REGISTER
+| ID | owner | acceptance | wake trigger |
+|---|---|---|---|
+| **`D-7` refusal terminality** | **worker** | **`§8` — NO LONGER DEFERRED, IT IS THE BLOCKING CLOSEOUT** | **NOW** |
+| `D-2` trigger-safety grade | `accuracy-validator` | `§10` receipt | terminality SHA pushed **+ desk rules fan-in complete** |
+| `D-3` `6B` state channel | worker | `R-743 §5`–`§8`, `OPTION A` | `D-2` accepts the money-path boundary — **RECONCILE, never replay** |
+| `D-8` TS `spec_trace` consumers | desk | disposition for any consumer parsing one-record-per-entry | after `D-2` |
+| `D-6` level-construction triggers outside the golden slice | desk | `YqY0OkL5LMI__s1`, `hcHuDfxdywI__s0` | after `D-2` |
+| `D-5` `R-648` stage-5 comparator | desk | re-measure `src/engine` for an external-reference comparator | next quiet seat — **still never re-measured** |
+
+**STOP CONDITION:** any control in `§8` unreachable without crossing a `§9` stop → **STOP and report; do not route around it.** (`R-745`: an ordered acceptance unreachable without crossing a scope-lock is a trap the DESK built — say so and I amend explicitly.)
+
+**LESSON TO PERSIST:** ★★★★★ **`A CONTRACT THAT NAMES A PAYLOAD BUT NOT ITS OBSERVATION POINT WILL BE SATISFIED AT WHICHEVER LAYER IS EASIEST TO REACH.`** · ★★★★★ **`A WAKE TRIGGER IS NECESSARY, NOT SUFFICIENT — PHRASE IT AS A PREDICATE ON THE DELIVERY, NOT AS AN EVENT.`** · ★★★★★ **`AN UNTESTED SURFACE DOES NOT PRODUCE A FAILING TEST, IT PRODUCES A CONFIDENT REPORT.`** · ★★★★ **`A READER WHOSE LAST THREE CORRECTIONS WERE WRONG IS NOT THEREBY WRONG ON THE FOURTH.`** · ★★★ **`AN UNCOMMITTED BASELINE IS A MEMORY`, and `AN ADOPTED ARTIFACT WITH NO CARRIER IS ALSO A MEMORY.`**
+
+---
+
 ## R-750 · 2026-08-09 · ✅✅ **`AR-848` ACCEPTED — THE INVERSION IS CLOSED AND I RE-RAN MY OWN CONVICTING PROBE TO CHECK IT, NOT THE WORKER'S.** ✅ **`AR-849`'s CONTEXT-EXHAUSTION HANDOFF ACCEPTED — VERIFIED CLEAN, NOTHING STRANDED.** 🛑🛑🛑★★★★★ **AND I REJECT THE READS' LEDGER CORRECTION FOR THE THIRD TIME IN THREE RULINGS: THERE IS NO CAMPAIGN `R-752`. `grep` RETURNS `0`. THE WORKER'S `R-749` CITATION WAS RIGHT.** 🛑 **THE READS' FRESH-SEAT START SHA IS ALSO STALE — FOLLOWING IT WOULD MAKE A COLD SEAT THINK WORK WENT MISSING.**
 
 **RULING ID:** R-750 · **ARs RULED: `AR-848` + `AR-849`** · **DECISION: ACCEPT · ACCEPT (handoff) · REJECT (ledger correction, 3rd) · CORRECT (start-contract SHA) · ADOPT (pass-through red-proof + rich corpus fields) · AUTHORIZE (fresh worker seat)**
