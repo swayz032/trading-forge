@@ -150,15 +150,49 @@ const CANDIDATE = {
 const STRATEGY_ROW = { id: STRAT_ID, config: {}, forgeScore: "50" };
 
 /**
+ * `drive()`'s parent-baseline override sentinel (D-10 `N-5`, R-767 §6).
+ *
+ * ★ It is a SYMBOL and not `undefined` for a load-bearing reason: `undefined` is
+ *   itself one of the unavailable-baseline cases `N-5` must exercise, so a default
+ *   of `undefined` would make "override with undefined" and "do not override"
+ *   indistinguishable — and the control for the `undefined` case would silently
+ *   become a re-run of the `"50"` case.
+ */
+const NO_PARENT_OVERRIDE = Symbol("no-parent-override");
+
+/**
  * Drive the AUTOMATIC path (`replayCandidatesAsync`) or the MANUAL path
  * (`manualReplayCandidates`) against a given `runBacktest` result.
  *
  * Both are real production entrypoints: the automatic one is called at `:810` and
  * `:1246`; the manual one is the exported handler behind the replay route.
  */
-async function drive(path: "auto" | "manual", result: unknown): Promise<void> {
+async function drive(
+  path: "auto" | "manual",
+  result: unknown,
+  parentForgeScore: unknown = NO_PARENT_OVERRIDE,
+): Promise<void> {
   btResult.value = result;
   const { db } = await import("../db/index.js");
+
+  // ─── THE ENGINE CALL COUNTER IS CUMULATIVE — CLEAR IT PER DRIVE ────────────
+  // MEASURED, not assumed: `vi.resetModules()` in `beforeEach` does NOT re-run the
+  // `vi.mock` factory, so `runBacktest` is ONE `vi.fn()` shared by every test in this
+  // file. The first N-5 red run read SIX calls where one drive had happened — the
+  // count was every prior test's, not this one's.
+  //   `A CUMULATIVE COUNTER MAKES `toBe(0)` A STATEMENT ABOUT TEST ORDER, NOT ABOUT
+  //    PRODUCTION. IT PASSES FOR WHICHEVER CONTROL RUNS FIRST AND CONVICTS THE REST.`
+  // Clearing here makes every count strictly "calls made by THIS drive".
+  const btMod = await import("../services/backtest-service.js");
+  (btMod.runBacktest as unknown as { mockClear?: () => void }).mockClear?.();
+
+  // D-10 `N-5`: the parent baseline is the value under test for the N-5 controls.
+  // Default is byte-identical to the pre-N-5 fixture, so every N-1 control above is
+  // driven with exactly the row it was written and observed red against.
+  const strategyRow =
+    parentForgeScore === NO_PARENT_OVERRIDE
+      ? STRATEGY_ROW
+      : { ...STRATEGY_ROW, forgeScore: parentForgeScore };
 
   // ─── SELECT ORDER IS PER-PATH, AND THEY ARE NOT THE SAME ──────────────────
   // The automatic path reads strategy → candidates → evidence packet (`:2109`,
@@ -174,8 +208,8 @@ async function drive(path: "auto" | "manual", result: unknown): Promise<void> {
   // leaving a live async run that corrupts the NEXT test's recorded writes.
   const MC_SATISFIED = [{ probabilityOfRuin: "0.01" }];
   const queue: unknown[][] = path === "auto"
-    ? [[STRATEGY_ROW], [CANDIDATE], [], MC_SATISFIED]
-    : [[CANDIDATE], [STRATEGY_ROW], [], MC_SATISFIED];
+    ? [[strategyRow], [CANDIDATE], [], MC_SATISFIED]
+    : [[CANDIDATE], [strategyRow], [], MC_SATISFIED];
   let call = 0;
   (db as unknown as { select: unknown }).select = () => {
     const rows = queue[Math.min(call++, queue.length - 1)] ?? [];
@@ -222,6 +256,32 @@ async function drive(path: "auto" | "manual", result: unknown): Promise<void> {
 function survivorSelected(): boolean {
   return rec.updates.some((u) => u.selected === true);
 }
+
+/**
+ * How many times production actually reached the ENGINE (D-10 `N-5`, R-767 §6).
+ *
+ * `runBacktest` is a `vi.fn()` in this file's `backtest-service.js` mock, so the call
+ * record already exists — `AR-884 §2` left this as the one unmeasured item and it
+ * needed no new machinery.
+ *
+ * 🛑 IT MUST BE READ AFTER `drive()` AND BEFORE THE NEXT `vi.resetModules()`, or the
+ *   import returns a FRESH module instance whose counter is a permanent `0` — which
+ *   would make every "zero calls" assertion pass without production doing anything.
+ *   `N-5.7`/`N-5.9` are the positive controls that prove this counter can be non-zero;
+ *   without them `A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` applies exactly here.
+ */
+async function backtestCalls(): Promise<number> {
+  const bt = await import("../services/backtest-service.js");
+  return (bt.runBacktest as unknown as { mock: { calls: unknown[] } }).mock.calls.length;
+}
+
+/** Every `critic:run-failed` SSE frame emitted during the drive. */
+function runFailedFrames(): Array<Record<string, unknown>> {
+  return rec.sse.filter((f) => f.event === "critic:run-failed").map((f) => f.data);
+}
+
+/** The named precondition R-767 §6 requires when the parent baseline is unmeasured. */
+const UNMEASURED = "parent_forge_score_unmeasured";
 
 /** Every `.set()` patch that carried a `replayStatus` — i.e. the outcome writes. */
 function outcomeWrites(): Array<Record<string, unknown>> {
@@ -526,5 +586,137 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
     expect(w.replayStatus).toBe("completed");
     expect(w.replayTier).toBe("TIER_2");
     expect(survivorSelected(), "[manual] a ranking-eligible candidate was never selected as survivor").toBe(true);
+  });
+});
+
+/**
+ * ═══ D-10 `N-5` — THE PARENT FORGE-SCORE BASELINE (R-767 §6) ═══════════════════
+ *
+ * THE DEFECT: `const parentForgeScore = Number(strat.forgeScore ?? 0)` at
+ * `critic-optimizer-service.ts:2153` (automatic) and `:2850` (manual).
+ *
+ * `?? 0` coerces an ABSENT baseline into a MEASURED ZERO, and the gate at `:2532` /
+ * `:3009` is `bestCandidate.compositeScore > parentForgeScore`. A strategy whose
+ * forge score was never measured therefore presents the EASIEST POSSIBLE BAR — any
+ * candidate scoring above zero is promoted as a survivor against a parent nobody
+ * ever scored.
+ *   `AN ABSENT BASELINE COERCED TO ZERO DOES NOT FAIL THE COMPARISON — IT WINS IT.
+ *    A MISSING NUMBER BECOMES THE MOST PERMISSIVE NUMBER IN THE RANGE.`
+ *
+ * ★ AND `?? 0` IS NOT EVEN THE WHOLE OF IT: `??` only catches `null`/`undefined`,
+ *   so `Number("")` → `0` and `Number([])` → `0` slip past the operator entirely and
+ *   land on the same permissive bar. Fixing only the `??` cases is one level short.
+ *
+ * ─── WHAT EACH CONTROL IS FOR ─────────────────────────────────────────────────
+ *   N-5.1 / N-5.2   unavailable baseline STOPS the run — one per production caller
+ *   N-5.3..N-5.6    the four non-`??` unavailable shapes (empty, NaN, Infinity, undefined)
+ *   N-5.7 / N-5.8   POSITIVE CONTROL — a MEASURED ZERO is a real number and proceeds
+ *   N-5.9           POSITIVE CONTROL — a measured NON-zero still ranks, unchanged
+ *   N-5.10          the named reason is both PERSISTED and BROADCAST, on both paths
+ *
+ * ★ N-5.7/N-5.8/N-5.9 are the controls that must stay GREEN under the `?? 0`
+ *   mutation. They are also what proves `backtestCalls()` can read non-zero at all:
+ *   without them, every "zero calls" assertion in this block would be unfailable.
+ */
+describe("D-10 N-5 — an unmeasured parent baseline stops the run (R-767 §6)", () => {
+  // ─── THE DEFECT, ONE CONTROL PER PRODUCTION CALLER ─────────────────────────
+  it("N-5.1 [auto] a NULL parent forge score runs NO backtest and selects NO survivor", async () => {
+    await drive("auto", COMPLETED_SCORED, null);
+
+    expect(await backtestCalls(), "engine was reached despite an unmeasured parent baseline").toBe(0);
+    expect(survivorSelected(), "a survivor was selected against a parent nobody scored").toBe(false);
+  });
+
+  it("N-5.2 [manual] the manual caller stops too — one path fixed is not the defect fixed", async () => {
+    await drive("manual", COMPLETED_SCORED, null);
+
+    expect(await backtestCalls(), "[manual] engine was reached despite an unmeasured parent baseline").toBe(0);
+    expect(survivorSelected(), "[manual] a survivor was selected against a parent nobody scored").toBe(false);
+  });
+
+  // ─── THE SHAPES `??` DOES NOT CATCH ───────────────────────────────────────
+  it("N-5.3 [auto] an EMPTY STRING is not a measured zero — `??` never sees it and `Number('')` is 0", async () => {
+    await drive("auto", COMPLETED_SCORED, "");
+
+    expect(await backtestCalls()).toBe(0);
+    expect(survivorSelected()).toBe(false);
+  });
+
+  it("N-5.4 [auto] a NON-NUMERIC string is unavailable, not a baseline of NaN", async () => {
+    await drive("auto", COMPLETED_SCORED, "not-a-number");
+
+    expect(await backtestCalls()).toBe(0);
+    expect(survivorSelected()).toBe(false);
+  });
+
+  it("N-5.5 [auto] INFINITY is not a usable baseline — an unbeatable bar is as wrong as a free one", async () => {
+    await drive("auto", COMPLETED_SCORED, Infinity);
+
+    expect(await backtestCalls()).toBe(0);
+    expect(survivorSelected()).toBe(false);
+  });
+
+  it("N-5.6 [auto] UNDEFINED — the case the override sentinel exists to keep distinguishable", async () => {
+    await drive("auto", COMPLETED_SCORED, undefined);
+
+    expect(await backtestCalls()).toBe(0);
+    expect(survivorSelected()).toBe(false);
+  });
+
+  // ─── POSITIVE CONTROLS — THE MEASURED ZERO MUST SURVIVE THE REPAIR ─────────
+  it("N-5.7 [auto] POSITIVE CONTROL — a measured `\"0\"` is a REAL score and the run proceeds", async () => {
+    await drive("auto", COMPLETED_SCORED, "0");
+
+    // The discriminator: this is the same input shape as N-5.1/N-5.3 and it must
+    // behave the OPPOSITE way. A repair that stops on "0" has swallowed a real
+    // measurement, which is the mirror-image defect of the one under repair.
+    expect(await backtestCalls(), "a MEASURED zero was treated as unmeasured").toBeGreaterThan(0);
+    expect(
+      runFailedFrames().some((d) => d.errorCode === UNMEASURED),
+      "a measured zero was reported as an unmeasured baseline",
+    ).toBe(false);
+  });
+
+  it("N-5.8 [manual] POSITIVE CONTROL — the measured zero survives on the manual path too", async () => {
+    await drive("manual", COMPLETED_SCORED, "0");
+
+    expect(await backtestCalls(), "[manual] a MEASURED zero was treated as unmeasured").toBeGreaterThan(0);
+    expect(runFailedFrames().some((d) => d.errorCode === UNMEASURED)).toBe(false);
+  });
+
+  it("N-5.9 [auto] POSITIVE CONTROL — a measured NON-zero baseline still ranks, exactly as before", async () => {
+    await drive("auto", COMPLETED_SCORED, "50");
+
+    expect(await backtestCalls()).toBeGreaterThan(0);
+    expect(runFailedFrames().some((d) => d.errorCode === UNMEASURED)).toBe(false);
+    // Unchanged behaviour witness: 73.5 > 50, so this candidate still wins.
+    expect(survivorSelected(), "the ordinary ranking path regressed").toBe(true);
+  });
+
+  // ─── THE REASON MUST BE PERSISTED **AND** BROADCAST, ON BOTH PATHS ─────────
+  it("N-5.10 [auto] the run is marked failed and the NAMED precondition is persisted AND broadcast", async () => {
+    await drive("auto", COMPLETED_SCORED, null);
+
+    const failedWrite = rec.updates.find((u) => u.status === "failed");
+    expect(failedWrite, "the run was left un-terminal — a stuck `replaying` row is not a stop").toBeDefined();
+
+    const frames = runFailedFrames();
+    expect(
+      frames.some((d) => d.errorCode === UNMEASURED),
+      `expected a critic:run-failed frame carrying ${UNMEASURED}, got: ${JSON.stringify(frames)}`,
+    ).toBe(true);
+  });
+
+  it("N-5.11 [manual] the manual path reports the same named reason — silence is not a stop", async () => {
+    await drive("manual", COMPLETED_SCORED, null);
+
+    const failedWrite = rec.updates.find((u) => u.status === "failed");
+    expect(failedWrite, "[manual] the run was left un-terminal").toBeDefined();
+
+    const frames = runFailedFrames();
+    expect(
+      frames.some((d) => d.errorCode === UNMEASURED),
+      `[manual] expected a critic:run-failed frame carrying ${UNMEASURED}, got: ${JSON.stringify(frames)}`,
+    ).toBe(true);
   });
 });
