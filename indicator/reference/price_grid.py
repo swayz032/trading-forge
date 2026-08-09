@@ -79,6 +79,25 @@ def snap_to_grid(price: float | str | Decimal, grid: InstrumentPriceGrid) -> Dec
     return round_to_grid(price, grid, GridRounding.HALF_EVEN)
 
 
+def proof_level_to_grid(
+    price: float | str | Decimal,
+    grid: InstrumentPriceGrid,
+    *,
+    trade_side: str,
+) -> Decimal:
+    """Round a proof level conservatively against fakeouts.
+
+    LONG proof sits above current price -> ceil so rounding does not weaken proof.
+    SHORT proof sits below current price -> floor so rounding does not weaken proof.
+    """
+    side = trade_side.upper()
+    if side == "LONG":
+        return round_to_grid(price, grid, GridRounding.CEILING)
+    if side == "SHORT":
+        return round_to_grid(price, grid, GridRounding.FLOOR)
+    raise ValueError("trade_side must be LONG or SHORT")
+
+
 def conservative_target_to_grid(
     price: float | str | Decimal,
     grid: InstrumentPriceGrid,
