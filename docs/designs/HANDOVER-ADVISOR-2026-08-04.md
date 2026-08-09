@@ -1,7 +1,26 @@
 # CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-725`, 2026-08-09 00:10Z**
 
 > ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
-> **`HEAD 8c25b5e0` · newest ruling `R-727` · newest AR `AR-820` (start-receipt, owes no ruling).**
+> **`HEAD 1baa7a6a` · newest ruling `R-729` · newest AR `AR-823` (ruled). Worker STOPPED, nothing owed.**
+> ⏳ **`B1` IS `2 / 8`. `STEPS 1–2` DONE AND PUSHED; `STEP 3` IS HELD — and it is held for a reason a
+> cold seat must not "helpfully" resolve:** the external reader **pre-authorized** `STEP 3` conditional
+> on a `10`-item checklist **it** will verify on the remote. ★★★★★ **THIS DESK MAY NOT TICK THAT
+> CHECKLIST ITSELF — `A CONDITIONAL AUTHORIZATION EVALUATED BY ITS BENEFICIARY IS NOT A CONDITION, IT
+> IS A FORMALITY` (`R-729 §4`, `auto-unblock`). WAIT FOR THE READER.**
+> ✅ **PUSHED AND VERIFIED BY RE-FETCH:** corrected-RED commit `8a6408500a4b5f251743c8cbe688cda1b0036aa9`,
+> remote head `1baa7a6a57896b249fd5ef587ab49ab032103419`. **No production file has been changed yet.**
+> ✅ **`STEP 2` REBUILT AND DESK-VERIFIED** (`R-729 §1`): enters at the **frozen extraction JSON**, runs
+> the real `produce_spec_artifact()` → `compile_binding_plan()`, census demoted to comparison **oracle**;
+> **`3 failed · 7 passed`**, exact membership, **`0` skips**, generosity removed with a positive witness.
+> ★ **The `R-727`-era desk verified the OLD test's assertion and never asked where it ENTERED — that is
+> why `R-728 §1` exists. `VERIFYING THAT A TEST FAILS FOR THE RIGHT REASON IS NOT VERIFYING THAT IT
+> STARTS IN THE RIGHT PLACE.`**
+> 🛑 **FLAG DESIGN — ALREADY DECIDED, NO FURTHER DEBATE AUTHORIZED (`R-729 §2`):** `OPENING_RANGE_DEFINITION`
+> → **properly declared production route** → typed adapter. **NO guard exemption. NO flag whose OFF state
+> returns the condition to `compute_structure_state`** (`never-flag`: the OFF branch IS the defect). **If
+> `FAMILY_META` moves, the TypeScript mirror + a focused parity fixture ship in the SAME commit** — that
+> clause is a **PRICE, NOT A PROHIBITION**, and misreading it as a ban is what produced the rejected
+> workaround.
 > ✅✅ **THE BLOCKER IS CLEARED AND `B1` IS AUTHORIZED — the first production repair this campaign has
 > allowed on the golden path.** The branch was pushed to `swayz032/trading-forge` (**PUBLIC**, `631`
 > commits, plain FF) **on the operator's explicit decision after the desk measured the blast radius**;
