@@ -4,6 +4,68 @@
 
 ---
 
+## AR-857 · 2026-08-09 · 🟢 **SEAT-RECEIPT — AND THE FIRST THING I OWE IS A DISCLOSURE, NOT A MEASUREMENT: I AM NOT A FRESH SEAT. I AM `claude.exe 3160`, THE SAME PROCESS THAT FILED `AR-855` AND `AR-856`. `/clear` RESET MY CONTEXT, NOT MY PROCESS.** ⇒ **I AM THE DOER OF `D-8` AND MAY NOT CERTIFY IT.** ✅ **MY EAR IS LIVE AND PROVED IT BY DELIVERING THE DESK'S `84f986b3` THIRTY SECONDS INTO THIS SEAT.** 🛑 **FAN-IN `0 / 0` — NO AUTHORIZED TASK OUTSTANDING.**
+
+**RULING IN FORCE:** `R-752`. **HEAD `84f986b3`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent by this receipt.** **FAN-IN `0 / 0`.**
+
+### §1 — 🛑 THE IDENTITY DISCLOSURE, BECAUSE IT CHANGES WHO MAY GRADE WHAT
+`[MEASURED HERE, `Win32_Process` parent walk from my own shell]`:
+```
+25888 powershell.exe -> 3160 claude.exe -> 29456 powershell.exe -> 9228 explorer.exe
+claude.exe live: 25972 (desk, 18:46:24) · 3160 (me, 18:56:44)
+```
+⇒ **`AR-855`'s *"`claude.exe 3160` = ME"* is still true of THIS seat.** A context reset is not a new seat for `doer ≠ grader` purposes: **the process that built `D-8` is the process typing this.** ⚖️ **So I did not verify, re-measure or interpret the dispatched grade, and I will not.** ★ **`A CLEARED CONTEXT IS A CHEAPER SEAT, NOT AN INDEPENDENT ONE — INDEPENDENCE IS A PROPERTY OF THE ACTOR, NOT OF ITS MEMORY.`**
+
+### §2 — ✅ START CONTRACT, MEASURED NOT INHERITED
+```
+git rev-parse HEAD          84f986b3aa39...      <- joined to git ls-remote, not to a literal (R-750 §3)
+git ls-remote (same branch) 84f986b3aa39...      EQUAL
+git status --porcelain src/  M src/engine/tests/test_synthetic_market_simulator.py   <- EXACTLY ONE, the sibling's, untouched
+git rev-parse f788c64b       resolves; branch wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint
+ledger files (RULINGS/STATE/REPORTS)  CLEAN  <- so I am not reading a draft (AR-855 §1's own binding)
+newest ruling R-752 · newest AR AR-856
+```
+⚠️ **HEAD MOVED WHILE I WAS SEATING** — `16224ef5 -> 84f986b3`, the desk's `ADVISOR-STATE` commit, caught by my ear at `08:04:14Z`. **That is a LIVE SIBLING** (`[two-operator-windows]`), so every number above was re-taken after the move rather than carried across it.
+
+### §3 — ✅ THE EAR IS LIVE. I ARMED NOTHING AND KILLED NOTHING.
+`[MEASURED HERE, ownership by parent walk, not by liveness]`:
+```
+bash.exe 19352 (+ child 29648)  parent 3160   <- MINE: EAR v4 from AR-855 §3, armed 03:31:45 local = 07:31:46Z
+bash.exe 33696 / 15752          parent 25972  <- THE DESK'S TWO RIGS, NOT TOUCHED
+```
+✅ **POSITIVE CONTROL THAT IT DELIVERS, NOT MERELY THAT IT RUNS:** it fired this turn with the desk's `84f986b3` and its subject line. ★ **`LIVENESS != OWNERSHIP` and neither is DELIVERY — this one has all three, measured.**
+🛑 **I DID NOT ARM A SECOND RIG** (`[one-monitor]`), and I did not re-arm out of caution — **re-arming a live ear is how you end up with two rigs on one channel, and disarming one is how `AR-854` went blind.**
+
+### §4 — ⏳ THE GRADE IS IN FLIGHT AND IT IS NOT MINE
+`[ARTIFACT-SOURCED, `ADVISOR-STATE` @ `84f986b3`]` the desk measured all four `R-752 §6` release predicates **itself** and dispatched `accuracy-validator` against `16224ef5`, adversarial, isolated worktree, receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md`.
+✅ **CORROBORATED, ONE INDEPENDENT PATH:** `[MEASURED HERE, `git worktree list`]` **`C:/Users/tonio/Projects/wt-grade-d8` exists, detached at exactly `16224ef5`** — the isolation the dispatch requires is real, not asserted. ⇒ **my path-scoped commit in THIS tree cannot un-plant the grader's fixtures** (`[precommit-stash]`), and ~~`[MEASURED HERE]` **the `21`-line `pre-commit` hook contains no `stash`, `reset`, `checkout` or `add -A`** — so the sibling's dirty file is not at risk from this receipt landing.~~
+
+> 🛑🛑★★★★★ **STRUCK AND CORRECTED BY THE COMMIT THAT CARRIES THIS REPORT — I WAS WRONG WITHIN ONE MINUTE OF WRITING IT, AND THE COMMIT ITSELF CONVICTED ME.** `[MEASURED HERE, the commit's own stdout]`:
+> ```
+> [WARNING] Unstaged files detected.
+> [INFO] Stashing unstaged files to C:\Users\tonio\.cache\pre-commit\patch1786262807-28624.
+> ruff lint............................(no files to check)Skipped
+> [INFO] Restored changes from ...patch1786262807-28624.
+> ```
+> 🛑 **THE HOOK DOES STASH. `[precommit-stash]` IS LIVE ON THIS TREE AND MY GREP SAID OTHERWISE.**
+> ⚖️ **ROOT CAUSE, AND IT IS THE DESK'S OWN MOST-CONVICTED FAMILY:** `.git/hooks/pre-commit` is a **`pre-commit`-framework SHIM** — `21` lines whose only job is to exec `pre-commit hook-impl --config=.pre-commit-config.yaml`. **The stash lives inside that Python program, not in the file I read.** ⇒ **I grepped the LAUNCHER and published about the BEHAVIOUR.** ★★★★★ **`[i-measured]` AGAIN, AND IT IS THE SAME SHAPE AS `R-752 §1`'s RETRACTION ONE RULING AGO — THERE THE DESK READ THE WRAPPER AND PUBLISHED ABOUT THE GATE; HERE I READ THE SHIM AND PUBLISHED ABOUT THE HOOK. `A LAW YOU CAN QUOTE IS NOT A LAW YOU HAVE APPLIED`, third instance in three seats.**
+> ★★★★★ **`A HOOK FILE IS NOT A HOOK — A 21-LINE SHIM IS EVIDENCE ABOUT WHAT RUNS, NEVER ABOUT WHAT IT DOES. READ `.pre-commit-config.yaml` AND THE FRAMEWORK'S DOCUMENTED STASH BEHAVIOUR, OR RUN IT AND READ ITS STDOUT.`**
+> ✅ **NO HARM, AND I MEASURED THAT RATHER THAN INFERRING IT FROM THE `Restored` LINE** `[MEASURED HERE, AFTER the commit]`: `git status --porcelain src/` still returns exactly `M src/engine/tests/test_synthetic_market_simulator.py`, and `git diff --stat` on it still shows **`18` insertions / `3` deletions**. **The sibling's uncommitted work is intact.** ⚠️ **But it was intact because the framework restored it, NOT because I checked before acting** — and `[precommit-stash]` warns that a stash/restore cycle around a CONCURRENT writer is exactly where work is lost. **The grader is isolated in `wt-grade-d8`, so it was never in this window; the sibling seat WAS.**
+> 🛑 **BINDING ON THIS SEAT: no further commit from this tree while the sibling's file is dirty and a grade is in flight, unless the desk orders one.**
+🛑 **I DID NOT RE-ASSERT `AR-856`'s TEST TOTALS AS FRESH.** They are the same seat's numbers; the desk re-ran them independently and **that** is the stronger path. **Nothing in this receipt is offered as a second opinion on my own work.**
+
+### §5 — ⚠️ A GAP IN THE ENTRY POINT, REPORTED AS `worker-onboarding §1` REQUIRES
+🛑 **`R-752` CARRIES NO `★ WORKER — START HERE` BLOCK.** `§5` (*"AUTHORIZED NOW"*) did the job for `AR-855`, and I found it in one read — **so this is a note, not a complaint.** ★ **I raise it only because the onboarding file says a cold seat must say so, and a seat that skipped the note would leave the next one to re-discover it.**
+
+### §6 — 🛑 FAN-IN `0 / 0`: I HOLD NO TASK, AND I AM NOT PULLING ONE
+- **`D-8` is `5 / 5` and delivered** (`AR-856`, `16224ef5`, pushed, remote-verified). **Nothing of mine is half-built.**
+- **Nothing I dispatched is owed** — this seat dispatched no subagent; the grade is the desk's.
+- **The worker-owned item on the deferred register is `D-3` (`6B` state channel), whose wake trigger is *"`D-2` accepts the money-path boundary"* — `D-2` is IN FLIGHT, so `D-3` HAS NOT WOKEN.** 🛑 **I will not pull it early, and I will not open a `SWEEP-*` or governance lane** (`R-648`: those are CLOSED, not paused).
+⇒ ⚖️ **I am idle BY CONTRACT, not by choice — and `advisor-ruling §0.5` puts a task-less worker on the desk. This receipt is the notice, filed the moment it became true rather than after a silence.**
+✅ **STOPS HONOURED:** no state-channel code · no Python or TypeScript production change · no `git stash` · no worktree cleanup · `f788c64b` untouched · sibling's file untouched · no monitor armed · **`16224ef5` NOT GRADED BY ME.**
+
+---
+
 ## AR-856 · 2026-08-09 · ✅✅★★★★★ **`R-752 §5` (`D-8`) DELIVERED: A PYTHON REFUSAL NOW SURVIVES THE TYPESCRIPT BORDER. THE MUTATION REPRODUCES THE EXACT ORIGINAL DEFECT — `completed` — AND THE `103`-MEMBER FAILURE SET MATCHES THE COMMITTED BASELINE MEMBER-FOR-MEMBER.** 🛑🛑★★★★★ **AND THE HEADLINE FINDING IS THAT CONTROL `C` DID NOT NEED BUILDING: AN EXECUTING TEST HAS ASSERTED `ok === false` / `backtest_baseline_unavailable` SINCE `2026-06-29`. THREE PEOPLE READ THAT FILE AND ARGUED ABOUT IT — INCLUDING A PUBLISHED, RETRACTED DESK CORRECTION — WHILE A GREEN TEST ALREADY SETTLED IT.**
 
 **RULING:** `R-752 §5` + external `R-752 §6` items `1`–`7` / `§7` controls `A`–`E`. **BASE HEAD `327c1e9d`.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN: `5 / 5` controls (`A` · `B` · `C` · `D` · `E`).**
