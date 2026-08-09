@@ -4,6 +4,22 @@
 
 ---
 
+## AR-838 · 2026-08-09 · 📋 **START-RECEIPT — `6B` ACCEPTED UNDER `R-743 §8`, `OPTION A`, ATTEMPT `0 / 2`.** ✅ **`R-742 §4`'s FOURTH DEFECT IS MINE AND IS ACCEPTED WITHOUT ARGUMENT — IT RIDES IN THE `6B` COMMIT AS ORDERED.**
+
+**RULING:** `R-743 §5`–`§8` (`6B`, Option A) · `R-742 §4` (the disposition/`missing_fields` repair, carried in). **SEAT:** same cold seat, continuing — the seat `R-743 §8` authorizes. **HEAD at receipt `e52a8ecb`.**
+**FIRST OBSERVABLE:** the `§6-2` positive control — the existing boolean channel still executes a genuine neighbouring structure condition — **landing GREEN and ALONE, so its pre-change state is on the record before the channel exists.** **ETA ~20 min.**
+
+### §1 — ✅ `R-742 §4` ACCEPTED, NO DEFENCE OFFERED
+**The desk is right and the line is mine:** `named = conflict_fields or missing` files **present-but-conflicting** fields under `missing_fields` and drops the genuinely-absent ones, while `disposition` stays hardcoded `SOURCE_INCOMPLETE` even when `failure_kind == CONTRADICTORY`. ⇒ **`R-742 §3`'s ruled V1.1 mapping is unsatisfiable from `disposition`, and the two structured fields disagree.**
+★★★★★ **`R-741 §2` ORDERED TWO SILENCES BE GIVEN TWO NAMES; I GAVE THEM TWO NAMES IN `failure_kind` AND COLLAPSED THEM AGAIN ONE FIELD LATER.** ⚖️ **I introduced `failure_kind` in the same commit that defeated it — the distinction and its erasure shipped together, which is why neither review caught it from the diff.**
+
+### §2 — ⭐ THE AMENDMENT I AM CARRYING FORWARD MOST CAREFULLY
+`R-743 §3`: the two ordered REDs going green is **NECESSARY AND NOT SUFFICIENT** — `RED #2` reads a RETURN ANNOTATION and, **by its own docstring**, a module returning `refused_state()` unconditionally turns it green. ⇒ **the discriminator is the read's proof `3`: three candidates over deterministic candles producing DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`.** ★ **A stub cannot produce three different numeric triples. I will not report `6B` green on the conformance group alone.**
+
+### §3 — 🛑 WHAT I AM NOT DOING
+🛑 **No second absence-RED** (`§2`: it exists; a re-derivation is a third instrument that destroys the join). 🛑 **No universal indicator framework** — `§5`'s narrowness is a boundary, not a style note. 🛑 **`ConditionBinding.parameters` stays `None`.** 🛑 **No entry, direction, trade or backtest-ready status.**
+⚖️ **AND `R-743 §5` STAGES A `ratify-packet` GRADE ON DELIVERY:** the desk dispatches `accuracy-validator` with a durable receipt. **I am the doer and take no part in it.**
+
 ## AR-837 · 2026-08-09 · 🛑🛑★★★★★ **`TEMPORAL_STATE_CHANNEL_MISSING` — THE STOP `R-740 §6` PRE-REGISTERED HAS FIRED, AT `6B`'s FIRST INPUT AND BEFORE ANY CODE.** ⭐ **THE EXECUTABLE LAYER'S PER-CONDITION CONTRACT IS `bool np.ndarray` — ONE BOOLEAN PER BAR — AND `OpeningRangeState` HAS SIX FIELDS, FOUR OF THEM NUMERIC. THERE IS NO CHANNEL THAT PRESERVES IT.** ✅ **MEASURED AT THE EXECUTABLE LINE, WITH A POSITIVE CONTROL FOR THE ABSENCE.** ⚖️ **I WROTE NO `6B` CODE.**
 
 **RULING:** `R-741 §6` (`6B` auto-released) — **stopped under `R-740 §6` / `R-741 §6`'s named stop.** **SEAT:** same cold seat, continuing. **HEAD at measurement `e365b058`.** **`6B` ATTEMPT BUDGET: `0 / 2` — this is a STOP, not an attempt.**
