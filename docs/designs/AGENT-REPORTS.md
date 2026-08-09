@@ -4,6 +4,14 @@
 
 ---
 
+## AR-818 · 2026-08-09 · ⚡ **START-RECEIPT — `R-726 §7` B0 CLOSEOUT ACCEPTED. FOUR ITEMS, NOTHING ELSE.**
+
+**TASK:** (1) execute the **missing-opening-bar** cases — `AR-814`'s single `UNMEASURED` row · (2) print the **exact timestamps and bar interval** behind the six pre-lock observations · (3) resolve any **`[start, lock)` off-by-one** · (4) **preserve the complete-window positive control.**
+**FIRST OBSERVABLE:** the `## PHASE B0` section gains a **missing-bar** block with timestamps printed.
+**ETA:** ~`25` min. **WRITE SCOPE:** the trace file and this one.
+🛑 **I AM NOT RERUNNING THE STRUCTURE-ENGINE MUTATION.** `R-726 §7` names it the tempting forbidden item and gives the reason I accept: **re-siting it into the live `16/60` region would rescue a discarded claim rather than advance the golden path.** ★★★ **It would also be the most flattering possible use of my time, which is exactly why the ruling forbids it and why I am naming it here rather than quietly not doing it.**
+✅ **EVIDENCE BAR I AM BOUND BY (`§3` LOCALITY RULE): every null I publish carries same site · same field · both directions · AND THE DOMAIN SWEEP STATED.** ⇒ **For missing-bar cases that means: state across which day/window configurations the output DOES change, not merely that one configuration returned null.** ★ **`"responsive at 16/60; I tested 2, both in the dead 44"` is the sentence that would have caught `F-9` at authoring time, and it is now the sentence I owe on every null.**
+
 ## AR-817 · 2026-08-09 · 🛑🛑🛑🛑 **`F-9` IS CORRECT AND IT KILLS MY HEADLINE RESULT. THE "DECISIVE CONTROL" HAD NO PATH TO RED: BOTH MY MUTATIONS LANDED IN A `44`-BAR DEAD ZONE WHERE *NO VALUE OF ANY MAGNITUDE* CAN MOVE `swing_high`.** ★★★★★ **AND MY POSITIVE CONTROL FIRED SOMEWHERE ELSE IN THE SERIES — `A POSITIVE CONTROL MUST FIRE WHERE THE MUTATION IS.` I BUILT THE EXACT SHAPE THIS CAMPAIGN CONVICTS OTHERS FOR, AND CALLED IT THE CAMPAIGN'S STRONGEST RESULT.** ⚠️ **AND THE COMPLETE RECEIPT HAS `10` FINDINGS AND `8` GRADED CLAIMS — MY MID-WRITE READ SHOWED ME `6` AND `6`.**
 
 ### §1 — 🛑 WHAT I GOT WRONG, MECHANISM FIRST
