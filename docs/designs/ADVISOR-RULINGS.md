@@ -12,6 +12,99 @@
 
 ---
 
+## R-763 · 2026-08-09 · ✅ **`N-3` PRODUCTION MECHANISM ACCEPTED AND THE MIXED-CASE JUDGMENT RATIFIED — BUT `N-3` IS **NOT** CLOSED: THE RETURN VALUE THIS COMMIT CHANGED IS UNCONTROLLED BY ANY TEST.** 🛑🛑★★★★★ **CONFIRMED BY COUNTING, NOT BY AGREEING: `grep -c "inconclusive"` OVER THE NEW SUITE RETURNS `0`, AND ALL `9` `evolveStrategy()` CALLS DISCARD THEIR RETURN VALUE. THE COMMIT MESSAGE'S THIRD BULLET — *"status no longer reports retired"* — IS TRUE IN THE CODE AND UNWITNESSED IN THE SUITE.** ⚡ **AND I CARRY A DEFECT NEITHER THE WORKER NOR THE EXTERNAL READ NAMED: THE NEW `inconclusive` BRANCH IS AN UNBOUNDED DEFERRAL WITH NO COUNTER AND NO ESCALATION.**
+
+**RULING ID:** R-763 · **AR RULED: `AR-871`** · **DECISION: ACCEPT (production mechanism) · RATIFY (mixed-case policy) · HOLD (formal `N-3` closure, one test-only control) · REGISTER (`N-6`, deferred, not on the path) · AUTO-RELEASE (`N-2`)**
+**TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** `[MEASURED HERE]` **HEAD `4fb7a51b0711b735f0c47ec7c0551a5c82cfe8d4`, working tree clean on the relay files.** **NEWEST AR ON DISK AT WRITE TIME: `AR-871` — read in full, it is the AR ruled here (`R-416`).** **READ CONSUMED: external `R-763`.** **NUMBERING: OFFSET `0`.**
+**GRAPH OBJECT: ADOPTED, blob `876c3a23…` `[ARTIFACT-SOURCED, carried from `R-762`, NOT re-verified this ruling]` · NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ CLAIMS VERIFIED, AND HOW — I RE-RAN RATHER THAN READ
+`[MEASURED HERE]`:
+```
+git cat-file -t 4fb7a51b0711…          -> commit          (SHA is REAL, not a fabricated tail; [external-sha-fabrication])
+git rev-parse HEAD                     -> 4fb7a51b        (the read's branch head is THIS tree's head)
+git show --stat --format="" 4fb7a51b   -> exactly 4 paths (AGENT-REPORTS.md · d10-n1 test · d10-n3 test · evolution-service.ts)
+npx vitest run …d10-n3-evolution-refusal.test.ts -> 9 passed · EXIT 0   ★ exit code printed via ${PIPESTATUS[0]}, NOT read off a tail
+```
+⚠️★★★ **INSTRUMENT DISCIPLINE, DECLARED: I printed `${PIPESTATUS[0]}` because `npm notice` lines have hidden a whole vitest summary behind `tail` on this desk before (`[instrument-truncation-cluster]`). The exit code I report is the RUNNER's, not the pipeline's.**
+✅ **`§2` OF THE READ IS INDEPENDENTLY CONFIRMED BY READING THE EXECUTABLE LINES, not the commit message:** the refusal gate at `:446` `continue`s **before** `mutSharpe`/`mutPf`/`mutDd` are derived (`[MEASURED HERE]`, the `?? 0` coercions sit strictly below it); `refusals[]` is a separate array from `results[]`; the `winners.length > 0` arm is untouched, so a real winner still evolves; the new `else if (refusals.length > 0)` arm sits **between** the winner arm and the retire arm, so retirement is reachable **only** when a run measured everything and lost. **That is the correct safety boundary and I accept it.**
+
+### §2 — 🛑 THE FAILED CONDITION — CONFIRMED BY MEMBER, NOT ADOPTED ON AUTHORITY
+🛑 **I do not adopt an external finding because it is well-argued** (`[external-opinion]`: a channel is not an author). **I counted it.** `[MEASURED HERE, over the committed `d10-n3-evolution-refusal.test.ts`]`:
+```
+grep -c "inconclusive"                          -> 0        <- the new status string appears NOWHERE in the suite
+grep -c "await evolveStrategy"                  -> 9        <- nine invocations
+grep -n "= await evolveStrategy"                -> (none)   <- ZERO captured return values
+grep -n "status"                                -> :185 :196 :197 :206 — all FIXTURE SETUP (backtest rows), no assertion
+```
+⇒ **The commit changed `evolveStrategy()`'s PUBLIC RETURN from `"retired"` to `"inconclusive"` on this path, and no control observes the return value at all.** ★★★★★ **`A SUITE THAT NEVER CAPTURES THE RETURN VALUE CANNOT WITNESS A CHANGE TO THE RETURN VALUE, HOWEVER MANY SIDE-EFFECTS IT PROVES.` The nine controls are all DB-write and audit-row assertions — genuinely strong ones — and they are blind to the one field the caller actually receives.**
+⚖️ **THIS IS A HOLD, NOT A REJECTION. `N-3` IS MONEY-PATH SAFE ON DISK TODAY** — `[MEASURED HERE]` the parent is not retired on a refusal, no `-1.0` is persisted, and `N-3.7` proves an all-measured loser still retires. **What is missing is the guard that keeps the status honest tomorrow.** ⚠️ **Reported as `4/9` in `AR-871 §6`; by this ruling the fan-in is `3/9` until the control lands. `N-1`, `F-8`, `F-9` are unaffected.**
+
+### §3 — ✅ THE MIXED CASE — RATIFIED, AND ON MY OWN REASONING
+**`AR-871 §3` declared the judgment rather than burying it in a green. That is the behaviour this desk wants and I say so before I rule on the substance.**
+⚖️ **RATIFIED: ANY refusal in a run blocks retirement.** **`retire` is IRREVERSIBLE; `inconclusive` costs one scheduler cycle.** A run that could not evaluate part of its own search space has not earned the claim *"no mutation beat the parent"* — that claim is scoped to MEASURED mutations, and the code now says so at the layer that makes the decision (`[layer-scoped-proof]`: the property is asserted where it is consumed, not one layer up). **`N-3.9` STANDS. Do not change it.**
+🛑 **AND THE WORKER'S OWN `§2` NAMES WHY THE NARROWER FIX WOULD HAVE FAILED — I verified it on the executable line:** with refusals merely skipped, `results` is empty ⇒ `winners` is empty ⇒ control reaches the same retire arm and the parent dies anyway. ★★★★★ **`REMOVING THE FABRICATED NUMBER DOES NOT REMOVE THE DECISION THE FABRICATED NUMBER WAS DRIVING — AN ABSENCE OF EVIDENCE ARRIVES AT THE LOSER BRANCH LOOKING EXACTLY LIKE EVIDENCE OF LOSS.` Adopted as campaign law.**
+
+### §4 — ⚡ MY OWN FINDING — NEITHER THE WORKER NOR THE READ NAMED IT
+`[MEASURED HERE, reading the new branch]` **the `inconclusive` arm writes one audit row and returns. There is NO attempt counter, NO consecutive-inconclusive bound, NO escalation, and NO alert beyond a `logger.warn`.**
+🛑 **HYPOTHESIS, EXPLICITLY UNPROVEN — I have NOT measured whether engine refusals are transient or systematic for a given strategy:** *if* a strategy's mutations refuse **systematically** (a config that cannot compile at all, not a flaky run), then **every** future evolution run takes this arm and the parent is **never** retired. **The fix would then have converted "wrongly retired" into "never retired", i.e. a permanent resident of the pool that no longer earns its place.**
+⚖️ **THIS DOES NOT PREEMPT AND I AM NOT RANKING IT ONTO THE PATH.** It has **no evidenced edge to the current exit**, and the post-fix state is **strictly safer** than the pre-fix state it replaced — a strategy that lingers is recoverable; a healthy strategy retired on a fabricated `-1.0` is not. **Registered in `§6`, deferred, with a wake trigger. `[MEASURED HERE]` a `grep` for a bound over `evolution-service.ts` / `lifecycle-service.ts` / `schema.ts` returned one `attemptCount` at `schema.ts:2992` whose owning table I did NOT open ⇒ whether a bound exists ELSEWHERE is `[UNENUMERATED — OPEN]`, and I do not claim there is none.**
+
+### §5 — ✅ THE HOOKS CLAIM — CONFIRMED, AND IT IS A REAL MECHANISM
+`[MEASURED HERE]` — the read's `§4` mechanism is correct and I verified it rather than relaying it:
+```
+git config --show-origin --get core.hooksPath
+  -> file:C:/Users/tonio/Projects/trading-forge/trading-forge/.git/config
+     C:\Users\tonio\Projects\trading-forge\trading-forge\.git\hooks
+git rev-parse --git-common-dir  -> C:/Users/tonio/Projects/trading-forge/trading-forge/.git
+ls <common-dir>/hooks (non-.sample)  -> pre-commit          <- A HOOK EXISTS AND IS REACHABLE FROM THIS WORKTREE
+```
+⇒ **A worktree does NOT get its own hooks: `core.hooksPath` resolves through the COMMON git dir, so the primary repo's `pre-commit` runs on commits made from here.** ★★★ **`A WORKTREE ISOLATES THE WORKING TREE, NOT THE HOOK PATH` — and this is the mechanism behind `[precommit-stash]`'s shared-tree hazard, now measured rather than assumed.** ✅ **`[MEASURED HERE]` the commit itself is clean regardless — `git show --stat` shows exactly the 4 intended paths and none of the 21 untracked `docs/designs/` files or the sibling's Python edits.**
+
+### §6 — 📋 REQUIRED AUTHORIZATION
+```
+CURRENT EXIT      D-10 defect set closed: all 9 defects fixed, each with a control that
+                  reddens without the fix and greens with it.
+CRITICAL PATH     N-3's changed PUBLIC RETURN VALUE is uncontrolled (§2, measured).
+AUTHORIZED NOW    Worker (this seat). TEST-ONLY closeout of N-3. See contract below.
+PRECEDENCE PROOF  Direct: this IS the current node's own acceptance predicate. The
+                  production mechanism is already accepted (§1); only its witness is absent.
+DEFERRED REGISTER N-6 | owner: UNASSIGNED (registered, not authorized) |
+                  acceptance: a consecutive-inconclusive bound with an escalation path,
+                  OR a measured demonstration that engine refusals are transient so no
+                  bound is owed | wake trigger: the FIRST `strategy.evolution-inconclusive`
+                  audit row observed in production data, OR D-10 reaching 9/9 |
+                  evidence: R-763 §4 [MEASURED: no counter in the branch;
+                  HYPOTHESIS: systematic refusal ⇒ never retired].
+WAKE TRIGGERS     N-6 promotes on either condition above. Nothing else promotes.
+STOP              §7 below.
+```
+
+### §7 — ⚡ AUTHORIZED NOW — `N-3` CLOSEOUT, TEST-ONLY, THEN `N-2` WITH NO DESK WAIT
+**GOAL: make the public status change witnessed.** **WHY IT MATTERS TO THE MONEY PATH: `status` is what the two upstream callers log and what any future consumer would branch on; a silent regression to `"retired"` would re-assert a terminal state that never happened, in the exact audit trail the operator would read after a strategy vanished.**
+**FILES ALLOWED: `src/server/__tests__/d10-n3-evolution-refusal.test.ts` ONLY.** 🛑 **FORBIDDEN: any production edit · any redesign · a second caller harness (`R-762 §2` — one implementation, one control set) · any new investigation · reopening `F-8`/`F-9`/`N-1` · `schema.ts` · the sibling's Python files · `git stash` · the 21 untracked `docs/designs/` files.**
+**REQUIRED CONTROLS — capture the return value, which the suite currently never does:**
+1. **`N-3.10` REFUSAL ARM:** `const r = await evolveStrategy(…)` on the all-refused fixture ⇒ assert `r.status === "inconclusive"`.
+2. **`N-3.11` POSITIVE DISCRIMINATOR:** same capture on the **all-measured-loser** fixture ⇒ assert `r.status === "retired"`. ★★ **This one is the point. Without it a suite that simply never expects `"retired"` passes, and `N-3` would close on a control that cannot tell the fix from the feature being dead — the exact `MUT-N3-4` shape `AR-871 §4` already understood.**
+**ACCEPTANCE (pre-registered, all four conjunctively):**
+```
+(a) PRISTINE                                        11 passed · exit 0
+(b) MUT-N3-5 = restore `status: evolvedIds.length > 0 ? "evolved" : "retired"`
+                                                    RED: N-3.10 ONLY   ★ N-3.11 MUST STAY GREEN
+(c) every pre-existing N-3.1..N-3.9 control          unchanged under (b)
+(d) RESTORED from the pre-mutation backup            11 passed · `diff -q` IDENTICAL
+```
+⚠️ **`(b)`'s "`N-3.11` must stay GREEN" is the negative control on the CONTROL — a mutation that reddens both would prove the pair is one assertion wearing two names.** **Mutation applied with `newline=""` and asserted to match exactly once, as in `AR-871 §4`.**
+**EVIDENCE BUNDLE: the four blocks above verbatim, plus the mutation's exact patch text.** **HONEST-PARTIAL CLAUSE: if `N-3.11` cannot be built without touching production, STOP and report — do not widen scope to make it fit.**
+⚡ **ON PASS, `N-3` IS CLOSED AT `4/9` AUTOMATICALLY — NO DESK WAIT, NO RATIFICATION ROUND-TRIP.** **Then proceed directly to `N-2`.** **ORDER UNCHANGED: `N-2` → `N-4` → `F-10` → `F-7` → `N-5`.**
+**START-RECEIPT: not required — first observable is the test file itself, ETA < 20 min.**
+**STOP CONDITIONS: (1)** `N-3.11` cannot be written test-only ⇒ report, do not widen. **(2)** `MUT-N3-5` reddens `N-3.11` as well as `N-3.10` ⇒ the pair is not discriminating; report before repairing. **(3)** the restore diff is not identical ⇒ instrument failure, stop and say so. **(4)** anything that would require a production line.
+📡 **EAR — AND A FIX FOR THE GAP `AR-871 §63` REPORTED HONESTLY:** the worker's ear fires on **mtime**, so it can say a ruling APPEARED but never that a draft BECAME ISSUED. **`[MEASURED HERE]` MY first ear had the identical blind spot and I hit it live — it delivered `AR-871` as a DRAFT, and the worker committed it seconds later with NO further event.** ⇒ **THE FIX, USE IT: key the watch on the TUPLE `(newest-heading, dirty-state, HEAD-sha)`, not on the file's mtime. `git commit` does not change mtime but it ALWAYS moves `HEAD`, so the tuple catches issuance that mtime structurally cannot.** ★★★★★ **`AN EAR KEYED ON MTIME CAN ONLY REPORT THAT SOMETHING WAS WRITTEN — ISSUANCE IS A GIT EVENT, SO WATCH GIT.`**
+
+**LESSON TO PERSIST:** ★★★★★ **`A SUITE THAT NEVER CAPTURES THE RETURN VALUE CANNOT WITNESS A CHANGE TO THE RETURN VALUE` — nine strong side-effect controls were blind to the one field the caller receives.** · ★★★★★ **`REMOVING THE FABRICATED NUMBER DOES NOT REMOVE THE DECISION THE FABRICATED NUMBER WAS DRIVING.`** · ★★★★ **`AN EAR KEYED ON MTIME CANNOT SEE ISSUANCE; WATCH GIT.`** · ★★★★ **`A WORKTREE ISOLATES THE WORKING TREE, NOT THE HOOK PATH.`** · ★★★ **A fix that trades an irreversible harm for a reversible one is the right trade AND still owes a bound on the reversible one — `N-6` is registered, not ranked.**
+
+---
+
 ## R-762 · 2026-08-09 · 📋 **CLARIFICATION, NOT AN ADJUDICATION — AND IT NARROWS MY OWN CLAUSE, WHICH WAS IMPRECISELY WORDED.** 🛑🛑★★★★★ **`R-760 §3` SAID "IF THIS PATH HAS MORE THAN ONE CALLER, EACH GETS ITS OWN WITNESS." THAT IS THE WRONG NOUN. THE `N-1` HAZARD WAS TWO INDEPENDENTLY TRANSCRIBED *IMPLEMENTATIONS* THAT COULD DRIFT APART — NOT TWO TRIGGERS. `N-3` HAS **ONE** IMPLEMENTATION AND **ONE** `runBacktest()`, SO A PER-TRIGGER SUITE WOULD TEST THE SAME CODE TWICE AND PROTECT NOTHING.** ✅ **CENSUS SETTLED BY MEMBER, AND IT CAUGHT THE COMMENT TRAP AGAIN.**
 
 **RULING ID:** R-762 · **ARs RULED: NONE — `AR-870` is still newest and `R-761` ruled it** `[MEASURED HERE]` · **DECISION: ACCEPT (the caller census, independently verified) · CLARIFY (`R-760 §3`'s per-caller clause) · SELF-CORRECT (my own wording) · PROCEED (`N-3`, already released)**
