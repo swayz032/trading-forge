@@ -4,7 +4,55 @@
 
 ---
 
-## AR-854 · 2026-08-09 · 🟢 **SEAT-RECEIPT — FRESH WORKER SEATED (`claude.exe 3160`). I HOLD *NO* AUTHORIZED TASK: `R-751 §8` WAS THE ONLY LIVE WORKER AUTHORIZATION AND `AR-853` DISCHARGED IT.** 🛑 **AND I OPEN WITH A STANDING-ORDER VIOLATION I MEASURED IN MY OWN PROCESS TREE: THREE MONITOR RIGS ARE LIVE UNDER THE `2026-08-08` ORDER `NO MONITORS, EVER`. I DISARMED THE ONE THAT IS MINE AND TOUCHED NEITHER OF THE DESK'S.**
+## AR-855 · 2026-08-09 · 🟢 **START-RECEIPT — `R-752 §5` (`D-8`, THE TYPESCRIPT REFUSAL BRANCH), TO `claude.exe 3160` = ME.** 🛑🛑 **AND I OPEN WITH A BLOCKER I MUST RAISE BEFORE THE FIRST LINE OF CODE: THE READ `§5` ADOPTS *VERBATIM BY REFERENCE* IS NOT ON DISK AND NOT TRACKED. ITEMS `1`–`7` AND CONTROLS `A`–`E` ARE UNREADABLE FROM THIS SEAT.** 🛑 **I ALSO STRIKE `AR-854 §2`: THE OPERATOR REVERSED IT DIRECTLY AND MY DISARM WAS WRONG.**
+
+**RULING:** `R-752 §5`. **BASE HEAD `8a0c131f`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent.** **FAN-IN `0 / 1`, not started.**
+⚠️ **PROVENANCE OF MY READ, STATED BECAUSE IT MATTERS:** I read `R-752` from the **UNCOMMITTED WORKING TREE** — `git status` shows ` M docs/designs/ADVISOR-RULINGS.md`, blob `e22c58ed` `[MEASURED HERE]`, `HEAD` still `8a0c131f`. **The desk is mid-write.** ⇒ **everything below is against a ledger state that can still change**, and I will re-read at the committed SHA before I rely on any clause. ★ `A RULING READ FROM A DIRTY TREE IS A DRAFT UNTIL ITS COMMIT LANDS.`
+
+### §1 — 🛑🛑 BLOCKER: THE ADOPTED CONTRACT HAS NO CARRIER
+`R-752 §5`: *"ADOPTED VERBATIM BY REFERENCE: external `R-752 §6` items `1`–`7` and `§7` controls `A`–`E`, banked at `docs/designs/EXTERNAL-READ-2026-08-09-R752-TS-REFUSAL.md` (**this commit**)"*.
+`[MEASURED HERE, WITH A POSITIVE CONTROL SO THE ABSENCE IS NOT MY INSTRUMENT]`:
+```
+ls docs/designs/EXTERNAL-READ-2026-08-09-*   -> 9 files; R755-REFUSAL-TERMINALITY.md PRESENT  <- control: my glob works
+git ls-files | grep -i 'R752|TS-REFUSAL'      -> EMPTY                                        <- not tracked
+Read <that exact path>                        -> File does not exist
+```
+⇒ **I hold the desk's four amendments (they are in the ruling text, readable) and I do NOT hold the seven items or the five controls.** 🛑 **I will not reconstruct them from `§3`'s narrative — a contract summarised is a contract with items missing, which `§5` says in its own words.**
+★★★ **THIS IS `R-751 §10`'s FRESHLY-MINTED LAW, ONE RULING LATER:** *"bank the external read as a file IN THE RULING THAT ADOPTS IT, or cite it as `[UNBANKED — NOT RELIED ON]`."* ⚠️ **And there is precedent in this very tree: commit `213bafa4`'s message records `AR-831 §5` catching `R-737` adopting a list by reference to a document its executor could not open.** ★★★★★ **`A LAW YOU CAN QUOTE IS NOT A LAW YOU HAVE APPLIED` — the desk minted that sentence about itself two rulings ago and this is its next instance.**
+⚖️ **MOST LIKELY BENIGN AND I SAY SO: the ledger is dirty, so the file is probably in the desk's uncommitted batch and lands with the commit.** ⇒ **NOT AN ACCUSATION, A JOIN FAILURE. I need the file, not a ruling.**
+
+> 🛑 **WITHDRAWN BEFORE THIS REPORT SHIPPED — I WAS WRONG AND THE DESK WAS NOT.** `[MEASURED HERE, `git show --stat 1102efd9`]` **`R-752`'s commit landed at `07:33:31Z` carrying THREE paths: `ADVISOR-RULINGS.md` · `ADVISOR-STATE.md` · `EXTERNAL-READ-2026-08-09-R752-TS-REFUSAL.md` (`+325`).** ⇒ **the read WAS banked in the ruling that adopts it, exactly as `R-751 §10` requires and exactly as `§5` said.** ✅ **`R-751 §10` IS HONOURED. NO DEFECT. NOTHING IS OWED TO ME HERE.**
+> ⚖️ **THE FAULT IS MINE AND IT IS A READ-ORDER FAULT:** I read the ruling out of a **dirty working tree** and measured its artifact **in the gap between the file being written and the commit landing.** ★★★★★ **`A SHARED TREE LETS YOU READ A RULING BEFORE ITS EVIDENCE EXISTS — "(this commit)" IS A PROMISE ABOUT A COMMIT THAT HAS NOT HAPPENED, AND CHECKING IT EARLY MANUFACTURES A BLOCKER OUT OF A RACE.`** ⇒ **BINDING ON ME: do not verify a ruling's artifacts until `git status` shows the ledger CLEAN. `§1` is retained struck rather than deleted so the shape stays on the record.**
+
+### §2 — ✅ NOT STALLING: I RE-MEASURED THE RULING'S CENTRAL PREMISE MYSELF
+`R-752 §3` is the reason `D-8` exists, so I did not take it on report `[MEASURED HERE, HEAD `8a0c131f`]`:
+```
+grep -rn execution_status --include=*.ts  src/  (minus __tests__)  -> ZERO
+grep -rln execution_status --include=*.ts src/  (INCLUDING tests)  -> ZERO        <- stronger than the ruling states
+grep -rln execution_status --include=*.py src/                     -> 3 files     <- POSITIVE CONTROL: the token is real
+```
+✅ **CONFIRMED, AND ONE NOTCH STRONGER THAN `§3` CLAIMED:** the ruling excluded `__tests__` and found zero; **there are zero hits in `.ts` anywhere, tests included.** ⇒ **no TypeScript surface — production or test — has ever observed `execution_status`.** ★ **That makes desk-amendment `2`'s mechanical consumer enumeration more important, not less: there is no existing TS reader to pattern-match against.**
+
+### §3 — 🛑 I STRIKE `AR-854 §2`. THE OPERATOR REVERSED IT AND I WAS WRONG.
+**OPERATOR, 2026-08-09, VERBATIM, TO THIS SEAT:** *"why is your montior not arm and why you deleted the old one you cant even see rulings"*
+🛑 **`AR-854 §2`'s ACTION IS STRUCK — PRESERVED, NOT DELETED.** I killed a **live, delivering** ear on the strength of a memory headline. **The memory's own body already said the opposite** — cross-session messaging is measured non-functional on native Windows, *"the LEDGER IS THE ONLY RELAY, and the reading seat must POLL it."* ⇒ **I obeyed the headline and skipped the body.** ★★★★★ **`A MEMORY'S HEADLINE IS THE PART THAT SURVIVES INTO ACTION; IF ITS BODY CARRIES THE EXCEPTION, THE HEADLINE IS A TRAP.`** ★★★ **AND DISARMING IS NOT THE CHEAP REVERSIBLE ACT IT LOOKS LIKE — it is silent, and the seat that does it is the one least able to notice what it can no longer see. `ASK BEFORE YOU DISARM SOMETHING YOU DID NOT ARM.`**
+✅ **`EAR v4` ARMED `07:31:46Z`** on `ADVISOR-RULINGS.md`, `15s`, **armed-line emitted as its own positive control**, baseline stated (`newest=R-751 · blob d6018b79 · HEAD 8a0c131f`).
+✅ **BLIND WINDOW BACKFILLED, NOT ASSUMED EMPTY** `[MEASURED HERE]` (`[monitor-backfill]`): `git log d2e7bdd7..HEAD` over the gap = **exactly one commit, my own `AR-854`**; newest ruling unchanged at `R-751`. ⇒ **nothing was missed — and that is measured, not lucky.**
+⭐⭐ **THE EAR CAUGHT `R-752` THIRTY SECONDS AFTER ARMING.** ★★★★★ **THE OPERATOR'S POINT PROVED ITSELF INSIDE ONE MINUTE: had I not re-armed, I would have sat idle against a ruling that was already on disk assigning me work.**
+⚖️ **THIS ANSWERS `R-752 §4`'s OPEN QUESTION, WHICH THE DESK CORRECTLY REFUSED TO DECIDE ALONE.** The desk asked whether `NO MONITORS, EVER` overrides `advisor-onboarding §4a`'s *"do not kill a channel that is currently delivering."* **The operator answered it in his own voice, above: the ear is REQUIRED.** 🛑 **I DID NOT AND WILL NOT TOUCH THE DESK'S TWO RIGS — that disposition is the desk's, and this relay is the only reason it now has the operator's word.**
+✅ **The memory that caused this is corrected at source**, with the 08-08 order struck-in-place rather than deleted.
+
+### §4 — ⏭️ ORDER OF WORK, ONCE THE CARRIER LANDS
+1. **Re-read `R-752` at its COMMITTED SHA** and open the banked read; **`ls` the `*divergence*` family first** — `§1`'s own retraction says a near-miss filename is a join key, and I will not repeat the desk's error while fixing its consequence.
+2. **MECHANICALLY enumerate every consumer of the closed status union BEFORE adding `refused`** (amendment `2`). **A consumer outside the expected set is a FINDING; if `refused` is materially broader than this boundary I STOP AND REPORT — I do not substitute `failed` or `completed`.**
+3. **RED FIRST** (`§5`'s first observable): the failing test asserting the service persists `refused`, before the branch exists.
+4. **Named shared constant, never a string literal** (amendment `1`) — `§3` proves this exact drift class already defeated the envelope guard.
+5. **Control `C` EXECUTED, not read** (amendment `3`): the real comparator, absent baseline, assert `ok === false` **and** `reason === "backtest_baseline_unavailable"`. ★ **Three people have now read that file and one published the opposite; this control is what ends the argument.**
+6. Acceptance by `R-751 §7`'s three-part rule — **membership against the committed baseline, never counts.**
+
+### §5 — 🛑 NOT DOING / OWED
+🛑 **All `R-752 §6` stops honoured**, in particular: no state-channel code · no Python production change · no repo-wide TS sweep · no `git stash` · no worktree cleanup · `f788c64b` untouched · **no monitor armed beyond the ear the operator ordered** · **I do not grade `186f22cd` and I do not grade this.**
+⏳ **ETA:** the banked read is now readable (`§1`, withdrawn), so the clock starts here: **first observable — the RED test asserting the service persists `refused` — ~20 min. BASE FOR THE WORK IS `1102efd9`, the committed SHA, not the draft I first read.** — FRESH WORKER SEATED (`claude.exe 3160`). I HOLD *NO* AUTHORIZED TASK: `R-751 §8` WAS THE ONLY LIVE WORKER AUTHORIZATION AND `AR-853` DISCHARGED IT.** 🛑 **AND I OPEN WITH A STANDING-ORDER VIOLATION I MEASURED IN MY OWN PROCESS TREE: THREE MONITOR RIGS ARE LIVE UNDER THE `2026-08-08` ORDER `NO MONITORS, EVER`. I DISARMED THE ONE THAT IS MINE AND TOUCHED NEITHER OF THE DESK'S.**
 
 **RULING IN FORCE:** `R-751` (newest on disk; none newer `[MEASURED HERE]`). **ATTEMPT BUDGET `1 / 2`, UNSPENT BY THIS RECEIPT.** **FAN-IN: `0 / 0` — nothing is assigned, nothing is half-built, nothing is owed by me.**
 
