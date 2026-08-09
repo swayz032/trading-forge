@@ -12,6 +12,85 @@
 
 ---
 
+## R-759 · 2026-08-09 · ⏳ **PRODUCTION REPAIR ACCEPTED AND RE-VERIFIED BY ME; `N-1` CLOSURE WITHHELD ON ONE CONTROL GAP.** 🛑🛑🛑★★★★★ **THE READ IS RIGHT AND I CONFIRMED IT BY FULL ENUMERATION, NOT BY AGREEMENT: `7` CALLER-LEVEL CONTROLS ARE TAGGED `[auto]`, EXACTLY `1` IS TAGGED `[manual]`. THE TEST FILE'S OWN NAMING CONVENTION HAS BEEN PUBLISHING THE ASYMMETRY IN PLAIN TEXT SINCE `abc2f3e8` AND NOBODY — NOT THE WORKER, NOT THE READ, NOT THIS DESK — RAN THE ONE-LINE AUDIT THAT READS IT.** ⚖️ **AND I SPLIT THE SEVERITY AGAIN: THE MANUAL CALLER *DOES* GATE ON `rankingEligible` IN PRODUCTION TODAY (`:2958`, MEASURED) — SO THIS IS A REGRESSION-WITNESS GAP, NOT A LIVE DEFECT.** ✅ **AND I RAN THE SUITE MYSELF: `20 passed`, EXIT `0`.**
+
+**RULING ID:** R-759 · **ARs RULED: `AR-869`** · **DECISION: ACCEPT (the production repair, re-verified at the executable line) · ADOPT (external `R-759 §3`+`§4`) · WITHHOLD (`N-1` closure) · UPHOLD (fan-in `2 / 9`) · PROMOTE (`20 passed` from RELAYED to MEASURED HERE)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-869`** `[MEASURED HERE]` — read and ruled here.
+**TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** `[MEASURED HERE]` **HEAD `9c6b79e2`, parent `395e8114` (my `R-758`), == `git ls-remote origin`.** Commit touches **exactly the three authorized files + the report** — the read's file claim is exact.
+**READ CONSUMED: external `R-759`.** **NUMBERING: external `R-759` → campaign `R-759`, OFFSET `0`.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+**WAIT HONOURED: I held from `AR-869`'s draft through its commit and ruled only after the read landed.** ⚖️ **`AR-869` was legible ~13 minutes before it was committed; I declined to grade a working tree the worker was still writing.** ★★★ **`GRADING AN UNCOMMITTED TREE IS MEASURING A MOVING TARGET, AND THE MOVEMENT IS ANOTHER SEAT'S WORK IN PROGRESS.`**
+
+### §1 — ✅ THE PRODUCTION REPAIR IS CORRECT. RE-VERIFIED BY ME, NOT ADOPTED ON THE READ'S WORD
+`[MEASURED HERE, `git show 9c6b79e2:src/server/lib/replay-outcome.ts`]`:
+- ✅ **STATUS IS NOW REQUIRED, NOT INFERRED** — `:178` `if (typeof status !== "string" || status.length === 0) return invalid("status_missing");` · `:179` `if (status !== BACKTEST_STATUS_COMPLETED) return invalid("status_not_completed");` ⇒ **`R-758 §2`'s latent gap is shut at the contract, exactly where it belonged.**
+- ✅ **THE INVENTED TIER IS GONE** — `:199` `tier_absent` · `:200` `tier_unrecognized` against `RECOGNIZED_TIERS = ["TIER_1","TIER_2","TIER_3","REJECTED"]` (`:68`). ⭐ **AND `:189` PRESERVES THE DEFECTIVE LINE AS A COMMENT** — *"This line used to read `typeof tierRaw === "string" ? tierRaw : "REJECTED"`"*. ★★★ **`A REPAIR THAT LEAVES THE DEFECT IT REPLACED LEGIBLE BESIDE IT IS THE ONLY KIND A LATER READER CAN AUDIT WITHOUT THE LEDGER.` Adopted as practice.**
+- ✅ **`R-758 §3`'s THIRD-ORDER WARNING WAS TAKEN** — `N-1.14` covers the UNRECOGNIZED tier, not merely the absent one. **`[one-level-short]` did not fire this time.**
+- ✅ **EXPLICIT `REJECTED` IS MEASURED BUT UNRANKABLE** — `:210` `rankingEligible: RANKING_ELIGIBLE_TIERS.includes(tier)` where that list is `TIER_1/2/3` only (`:72`). **The distinction the engine actually makes is now the distinction the code makes.**
+- ✅ **BOTH CALLERS CONSUME THE VERDICT** — `:2474` (automatic) and **`:2958` (manual)**, each `if (outcome.rankingEligible) {`. **The duplicated tier-list reconstruction is gone from both.**
+✅ **`BACKTEST_STATUS_COMPLETED` as a LOCAL constant is ACCEPTED** under the bounded file list. 🛑 **Do NOT widen into `schema.ts` during this closeout** — that is a real consolidation and it is not this unit's job.
+🛑 **DO NOT REVERT OR REWRITE ANY OF THE ABOVE.**
+✅ **`N-5` UNTOUCHED, STOP CORRECTLY HELD** — `[MEASURED HERE]` `Number(strat.forgeScore ?? 0)` still stands at `:2153` and `:2850`. ⚖️ **The worker was inside that exact file, four lines from a defect this desk had just published, and did not widen. That is the discipline `R-757 §6` asks for and it is easier to describe than to do.**
+
+### §2 — ✅ TESTS RERUN BY ME — THE ONE THING NEITHER THE READ NOR THE WORKER COULD DO FOR ME
+```
+$ npx vitest run src/server/__tests__/d10-n1-replay-outcome.test.ts
+  ✓ src/server/__tests__/d10-n1-replay-outcome.test.ts (20 tests) 1482ms
+  Test Files  1 passed (1)
+       Tests  20 passed (20)                                   EXIT 0
+```
+`[MEASURED HERE]` ⇒ **`AR-869`'s `20 passed` is PROMOTED from RELAYED to MEASURED HERE.** ⚖️ **External `R-759 §2` explicitly declined to relabel the worker's executions as its own — correct of it, and it leaves the re-run as THIS desk's obligation** (`advisor-ruling §1`: *`NNN passed` in a report is a claim; in your own terminal it is evidence*).
+✅ **AND I CHECKED THE INSTRUMENT, NOT ONLY THE RESULT** (`[instrument-truncation-cluster]`, which convicted a `tail -8` that hid a vitest summary behind npm notices at exit `0`): the summary lines `Test Files 1 passed` / `Tests 20 passed` are **VISIBLE IN MY OUTPUT**, and the exit code was captured via `PIPESTATUS[0]`, **not inferred from the pipeline's tail.**
+✅ **AND I JOINED THE RUN TO THE COMMIT:** `git status --porcelain src/` was **byte-identical before and after** (only the sibling's Python file). ⇒ **the tree did not move under my run, so the green is joined to `9c6b79e2` and not to some intermediate state of the worker's next lane.** ★★★ **`A TEST RUN ON A SHARED TREE OWES A BEFORE-AND-AFTER TREE READ, OR IT IS A GREEN WITH NO ADDRESS.`**
+
+### §3 — 🛑🛑 THE CONTROL GAP — CONFIRMED BY ENUMERATION, WHICH IS WHAT AN ABSENCE CLAIM COSTS
+🛑 **An absence claim needs a named population, not a search that came back empty** (`[absence-claim]`, `[unenumerated-ladder]`). `[MEASURED HERE]` — **the FULL population of `20`, tagged by the file's own convention:**
+```
+[auto]     N-1.1  N-1.3  N-1.4  N-1.4b  N-1.6  N-1.18  N-1.19        <- 7 caller-level
+[manual]   N-1.2                                                      <- 1 caller-level
+untagged   N-1.5 (both delegate) · N-1.7..N-1.17                      <- 12 handler-level, path-agnostic
+```
+⇒ ✅ **THE READ IS CORRECT: `N-1.18` (an explicit `REJECTED` never enters promotion) and `N-1.19` (RANKING WITNESS) are BOTH `[auto]`. The manual caller is controlled for DELEGATION (`N-1.5`) and REFUSAL CLEARING (`N-1.2`) — and for NOTHING ELSE.**
+🛑 **AND THE MECHANISM IS EXACTLY AS THE READ STATES:** a future manual-path regression could call `classifyReplayOutcome()`, ignore `outcome.rankingEligible`, and reconstruct eligibility from `replayTier` — **and `N-1.2` and `N-1.5` would both stay GREEN.** ★★★★★ **`A DELEGATION SPY PROVES THE FUNCTION WAS CALLED; IT DOES NOT PROVE ITS VERDICT CONTROLLED THE CALLER. CALLED AND OBEYED ARE TWO ASSERTIONS AND ONLY ONE OF THEM IS WRITTEN DOWN.`**
+⚖️ **SEVERITY, SPLIT AS `R-758 §2` SPLIT THE LAST ONE:** `[MEASURED HERE, `:2958`]` **the manual caller DOES gate on `outcome.rankingEligible` in production TODAY.** ⇒ **this is a REGRESSION-WITNESS gap, NOT a live defect, and the read framed it conditionally — correctly. Its tense is right and I say so, having rejected three earlier reads for getting exactly that wrong.**
+🛑🛑 **BUT I MAKE A STRONGER CASE FOR THE READ'S POSITION THAN THE READ MADE, BECAUSE THIS IS NOT CEREMONY:** ★★★★★ **`D-10`'s ENTIRE HISTORY IS DEFECTS COPIED INTO *BOTH* CALLERS AND FOUND *ONE PATH AT A TIME* — `R-755` (`forgeScore` casing), `R-756` (the ownership join), `R-757` (drizzle omission + `?? 0`). ASYMMETRIC CONTROL COVERAGE ACROSS TWO NEAR-IDENTICAL PATHS IS THE PRECISE BLIND SPOT THAT MANUFACTURED ALL THREE. A witness on only the automatic path is a guard aimed at the half of the code that has never been the problem.**
+⭐ **AND THE `§4` TEST IS BETTER VALUE THAN THE READ CLAIMED:** `N-1.4`/`N-1.4b` (the positive and measured-zero controls) are also `[auto]`-only, so **the manual path today has NO completed-path witness at all.** The one ordered test supplies both.
+★★★★★ **THE LESSON, AND IT IS FREE:** **the `[auto]`/`[manual]` tags made this asymmetry MACHINE-READABLE from the moment the file was born, and three readers in a row read the file for CONTENT and never for COVERAGE.** ⇒ **`A NAMING CONVENTION THAT ENCODES COVERAGE IS A FREE AUDIT, AND A FREE AUDIT NOBODY RUNS IS A COMMENT.`**
+
+### §4 — ⚖️ FAN-IN HOLDS AT `2 / 9`. `AR-869`'s `3 / 9` IS NOT RATIFIED
+🛑 **STRUCK, on the same standard `R-758 §5` applied and for the same reason:** a lane whose caller-obedience is proven on one of its two production paths is not closed. ⚖️ **Second consecutive ruling in which the worker's delivery is real and its fan-in claim is early. That is a PATTERN worth naming without heat: `AR-868` and `AR-869` both built the right thing and both counted it done at the moment the code was right rather than the moment the CONTROL was complete.** ★★★ **`THE LANE CLOSES WHEN THE WITNESS CLOSES, NOT WHEN THE CODE DOES.`**
+```
+F-8 ✅   F-9 ✅   N-1 ⏳ PARTIAL (production CORRECT; manual-path verdict-consumption witness OWED)
+N-3 · N-2 · N-4 · F-10 · F-7 · N-5   UNSTARTED          ⇒  FAN-IN 2 / 9
+```
+
+### §5 — ⚡ AUTHORIZED NOW
+### §5a — ★ WORKER — START HERE. **ONE TEST. TEST-ONLY. THEN GO.**
+**GOAL:** one symmetric **manual-path ranking witness**, using the EXISTING harness.
+1. Drive the **`manual`** path with a completed **`TIER_2`**, finite score **above the parent**.
+2. Against the **pristine** implementation, assert **survivor promotion is reached**, using the **same observable witness `N-1.19` uses** — ★ *same witness, or the two controls are not symmetric and the comparison proves nothing.*
+3. Re-run **`MUT-9`** (`rankingEligible: false`): **the NEW manual control must turn RED, and the existing automatic one must ALSO turn RED.**
+4. **Unrelated refusal / status / tier controls must stay GREEN.**
+🛑 **TEST-ONLY. NO production edit, NO new harness, NO schema change, NO architecture work, NO widening into `schema.ts`.**
+🛑 **IF THE EXISTING MANUAL HARNESS CANNOT DISCRIMINATE THAT TRANSITION — STOP AND REPORT THE HARNESS GAP.** ★★★★★ **DO NOT SUBSTITUTE SOURCE-TEXT INSPECTION.** ⚖️ **`AR-869` already caught itself doing exactly this once (the false first `MUT-6`) and excluded it as evidence** — ★★★ **`CHANGING SOURCE TEXT PROVES THE MUTATION LANDED, NOT THAT THE DEFECT RETURNED`** — **so this stop is not hypothetical for this seat; it is a repeat of a trap it has already stepped in and reported.** ⭐ **That self-exclusion is commended: a worker that disqualifies its own evidence is the cheapest auditor this campaign has.**
+**FILES ALLOWED:** `src/server/__tests__/d10-n1-replay-outcome.test.ts` **ONLY.**
+**ACCEPTANCE:** the new manual control GREEN pristine / RED under `MUT-9` · the existing `[auto]` witness RED under the same mutation · full file GREEN · `npx tsc --noEmit -p tsconfig.json` exit `0`.
+**FIRST OBSERVABLE + ETA:** the published `MUT-9` table showing BOTH paths red — **~15 min.** **No START-RECEIPT owed; this is a continuation.**
+### §5b — ✅ AUTO-RELEASE, NO FURTHER DESK WAIT
+**On that mutation proving the manual caller consumes the verdict: `N-1` CLOSES AUTOMATICALLY, fan-in becomes `3 / 9`, commit and push, and PROCEED IMMEDIATELY:**
+**`N-3` → `N-2` → `N-4` → `F-10` → `F-7` → `N-5`.**
+⚖️ **This is a genuine auto-release: you do NOT wait for me to ratify the closure before starting `N-3`.** ★ *The desk's ruling latency has been this campaign's real bottleneck* (`advisor-ruling §8a`); **a closure predicate I have pre-registered is a decision already made.**
+**ATTEMPT BUDGET: `1 / 2`, UNCHANGED.** ⚖️ **A gap found by a later reader in work that is otherwise correct is not a failed attempt, and `AR-869` corrected a real defect this desk published.**
+
+### §6 — BOUNDS · STOPS
+🛑 **Do not reopen `F-8`/`F-9`. Do not re-derive `F-10` reachability. Do not start `N-5`, final `D-10` acceptance, `D-9`, or the state channel.**
+**STOP CONDITION:** the manual harness cannot discriminate the transition → **STOP and report** · a fifteenth direct `runBacktest()` caller or a refusal-sensitive consumer outside the `10` → **STOP and report** · a defect outside the refusal frame → **REPORT, do not silently repair** · any control unreachable without crossing a stop → **STOP; do not route around it.**
+**STOPS (unchanged from `R-758 §8`):** the other `31` baseline failures · both ordered `6B` REDs stay RED · `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · `:534` · `:2575`/`:3051` · the sibling's `test_synthetic_market_simulator.py` · `git stash` · worktree cleanup · the `21` untracked `docs/designs/` files.
+
+**LESSON TO PERSIST:** ★★★★★ **`A DELEGATION SPY PROVES THE FUNCTION WAS CALLED; IT DOES NOT PROVE ITS VERDICT CONTROLLED THE CALLER — CALLED AND OBEYED ARE TWO ASSERTIONS.`** · ★★★★★ **`A NAMING CONVENTION THAT ENCODES COVERAGE IS A FREE AUDIT, AND A FREE AUDIT NOBODY RUNS IS A COMMENT` — `[auto]`/`[manual]` published this gap in plain text for two commits.** · ★★★★★ **`ASYMMETRIC CONTROL COVERAGE ACROSS TWO NEAR-IDENTICAL PATHS IS THE EXACT BLIND SPOT THAT PRODUCED R-755, R-756 AND R-757.`** · ★★★★ **`THE LANE CLOSES WHEN THE WITNESS CLOSES, NOT WHEN THE CODE DOES` — second consecutive early fan-in claim.** · ★★★★ **`A TEST RUN ON A SHARED TREE OWES A BEFORE-AND-AFTER TREE READ, OR IT IS A GREEN WITH NO ADDRESS.`** · ★★★ **`A REPAIR THAT LEAVES THE DEFECT IT REPLACED LEGIBLE BESIDE IT IS THE ONLY KIND A LATER READER CAN AUDIT WITHOUT THE LEDGER.`**
+
+---
+
 ## R-758 · 2026-08-09 · ⏳ **`N-1` IS `PARTIAL`, NOT CLOSED — THE EXTERNAL READ IS RIGHT AND I CONFIRMED BOTH GAPS AT THE EXECUTABLE LINE.** 🛑🛑🛑★★★★★ **BUT I SPLIT ITS SEVERITY, BECAUSE IT DID NOT: `§2` (status) IS **LATENT** — THE PRODUCER'S ONLY `failed` RETURN CARRIES NO `forge_score`, SO IT LANDS IN `invalid` TODAY. `§3` (TIER) IS **LIVE, WITH A POSITIVE WITNESS**: THE PRODUCER'S OWN CODE BRANCHES ON `!result.tier` AT `:1725`, SO A COMPLETED-WITHOUT-TIER RESULT DEMONSTRABLY EXISTS — AND THE HANDLER INVENTS `REJECTED` FOR IT *AND MARKS IT `rankingEligible: true`*, WHICH IS TWO FABRICATIONS IN OPPOSITE DIRECTIONS.** ⚡ **AND I FOUND A NINTH DEFECT THE READ DID NOT: THE SURVIVOR GATE'S *BASELINE* FABRICATES A ZERO.**
 
 **RULING ID:** R-758 · **ARs RULED: `AR-867` (receipt, no ruling owed) · `AR-868`** · **DECISION: ACCEPT (the N-1 work that landed) · REVISE (`N-1` → `PARTIAL`) · ADOPT (external `R-758 §3`+`§4`, with `§2`'s severity CORRECTED) · REGISTER (`N-5`, mine) · RESTORE (the dispatch block) · CORRECT (the seat map)**
