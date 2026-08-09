@@ -29,7 +29,7 @@ jobs:
           python-version: '3.11'
 
       - name: Unit and property tests
-        run: python -m unittest indicator.tests.test_momentum_engine -v
+        run: python -m unittest discover -s indicator/tests -p 'test_*.py' -v
 
       - name: Randomized invariant stress
         run: python -m indicator.tests.stress_reference_engine
