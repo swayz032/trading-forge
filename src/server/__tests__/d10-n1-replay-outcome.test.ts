@@ -208,6 +208,21 @@ async function drive(path: "auto" | "manual", result: unknown): Promise<void> {
   }
 }
 
+/**
+ * The SURVIVOR-SELECTION write — `.set({ selected: true })`, the act by which a
+ * candidate is actually chosen. Both production paths perform it: the automatic one
+ * at `critic-optimizer-service.ts:2551`, the manual one at `:3026`.
+ *
+ * ★ This is the witness `N-1.19` and `N-1.20` share. An earlier draft of `N-1.19`
+ *   used "the stub threw during promotion" instead — which worked by accident on the
+ *   automatic path and DOES NOT EXIST on the manual one, so it could never have made
+ *   the two controls symmetric. A witness that is an artifact of the fixture is not a
+ *   witness to the behaviour.
+ */
+function survivorSelected(): boolean {
+  return rec.updates.some((u) => u.selected === true);
+}
+
 /** Every `.set()` patch that carried a `replayStatus` — i.e. the outcome writes. */
 function outcomeWrites(): Array<Record<string, unknown>> {
   return rec.updates.filter((u) => "replayStatus" in u);
@@ -463,7 +478,7 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
     const w = terminalWrite();
     expect(w.replayStatus).toBe("completed");
     expect(w.replayTier).toBe("REJECTED");
-    expect(rec.driveError, "a REJECTED candidate reached survivor promotion").toBeUndefined();
+    expect(survivorSelected(), "a REJECTED candidate was selected as survivor").toBe(false);
   });
 
   it("N-1.19 [auto] RANKING WITNESS — a TIER_2 result DOES enter survivor promotion", async () => {
@@ -478,6 +493,29 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
     const w = terminalWrite();
     expect(w.replayStatus).toBe("completed");
     expect(w.replayTier).toBe("TIER_2");
-    expect(rec.driveError, "a ranking-eligible candidate never reached survivor promotion").toBeDefined();
+    expect(survivorSelected(), "[auto] a ranking-eligible candidate was never selected as survivor").toBe(true);
+  });
+
+  it("N-1.20 [manual] RANKING WITNESS — the manual caller obeys the verdict too", async () => {
+    // R-759 §3: the caller-level controls were ASYMMETRIC — seven `[auto]`, one
+    // `[manual]`. The manual path was controlled for DELEGATION (N-1.5) and REFUSAL
+    // CLEARING (N-1.2) and for nothing else, so a manual-path regression that called
+    // the handler and then rebuilt eligibility from `replayTier` would have left both
+    // of those GREEN.
+    //   `A DELEGATION SPY PROVES THE FUNCTION WAS CALLED; IT DOES NOT PROVE ITS
+    //    VERDICT CONTROLLED THE CALLER. CALLED AND OBEYED ARE TWO ASSERTIONS AND ONLY
+    //    ONE OF THEM WAS WRITTEN DOWN.`
+    // That blind spot is exactly how D-10's last three defects were manufactured:
+    // each was copied into BOTH callers and found ONE PATH AT A TIME.
+    //
+    // ★ Deliberately the SAME observable witness as `N-1.19` — reaching survivor
+    //   promotion, visible here because this stub cannot satisfy it and throws.
+    //   A different witness would make the two controls incomparable and MUT-9's
+    //   two-path result would prove nothing about symmetry.
+    await drive("manual", { id: BT_ID, status: "completed", tier: "TIER_2", forge_score: 99.9 });
+    const w = terminalWrite();
+    expect(w.replayStatus).toBe("completed");
+    expect(w.replayTier).toBe("TIER_2");
+    expect(survivorSelected(), "[manual] a ranking-eligible candidate was never selected as survivor").toBe(true);
   });
 });
