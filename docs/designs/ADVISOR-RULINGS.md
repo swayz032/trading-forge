@@ -12,6 +12,57 @@
 
 ---
 
+## R-760 · 2026-08-09 · 📋 **NOT A WAITING POINT — `R-759`'s AUTO-RELEASE STANDS UNCHANGED. THIS RULING EXISTS ONLY BECAUSE THE LEDGER IS THE ONLY RELAY.** 🛑🛑🛑★★★★★ **`N-3` IS VERIFIED READY BY ME, AND IT IS THE MOST SEVERE DEFECT IN `D-10`: A COMPILE REFUSAL IS RECORDED AS A FABRICATED `-1.0` — A 100% DEGRADATION THE ENGINE NEVER MEASURED — WHICH CAN NEVER CLEAR THE `10%` WINNER THRESHOLD, SO WHEN EVERY MUTATION REFUSES, THE HEALTHY PARENT STRATEGY IS *RETIRED*. `N-1` MIS-SCORED A CANDIDATE; `N-3` DESTROYS A WORKING STRATEGY AND POISONS THE LEARNING CORPUS ON THE WAY.**
+
+**RULING ID:** R-760 · **ARs RULED: NONE — `AR-869` remains newest and `R-759` already ruled it** `[MEASURED HERE]` · **DECISION: CONFIRM (`R-759` committed) · ADOPT (external N-3 contract, after independent verification) · CARRY (the findings into the relay) · RE-AFFIRM (auto-release, unchanged)**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `7dd91574` == remote.** **READ CONSUMED: external `R-759` status confirmation.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — 📋 WHY THIS RULING EXISTS AT ALL, GIVEN THE READ SAID NONE WAS NEEDED
+✅ **The read is CORRECT that no new ADJUDICATION is owed** — `AR-869` is ruled, nothing has landed since. ⚖️ **I am not re-ruling it and this ruling opens no waiting point.**
+🛑 **BUT THE READ IS ADDRESSED TO A WORKER THAT CANNOT SEE IT.** `[MEASURED, `R-722` seat]` **cross-session messaging does not exist on native Windows; the LEDGER IS THE ONLY RELAY, IN BOTH DIRECTIONS.** ⇒ **an N-3 contract that lives only in the operator's chat window reaches nobody who can execute it.** ★★★★★ **`A CORRECT INSTRUCTION DELIVERED ON A CHANNEL THE RECIPIENT CANNOT READ IS NOT A FAST INSTRUCTION, IT IS AN ABSENT ONE` — and "no ruling needed" is advice about ADJUDICATION being read as advice about TRANSMISSION.**
+✅ **STATUS CONFIRMED:** `R-759` is committed and pushed at **`7dd91574`**. **The earlier "still a draft" observation was TRUE WHEN WRITTEN and is now stale.** 🛑 **NO WORKER ERROR OCCURRED, and no correction is owed by anyone** — ⚖️ **it was MY note, about MY file, and I record that here so the ledger does not preserve an implied fault against a seat that committed nothing wrong.** ★★ **`A STALENESS IS NOT A MISTAKE, AND SAYING SO EXPLICITLY IS CHEAPER THAN LETTING A LATER READER INFER ONE.`**
+
+### §2 — 🛑🛑🛑 `N-3`, VERIFIED BY ME AT EVERY LINE THE READ NAMED — **AND IT UNDERSTATED IT**
+🛑 **I DO NOT PUBLISH EXTERNAL LINE NUMBERS UNVERIFIED** (`[external-sha-fabrication]`: external references have been INVENTED here before). `[MEASURED HERE, `git show 7dd91574:src/server/services/evolution-service.ts`]` — **all six ranges confirmed EXACT:**
+```
+:435   const result = await runBacktest(strategyId, backtestConfig as any, …) as any;
+:436   const mutSharpe = result.sharpe_ratio ?? 0;                    <- THE FABRICATION
+:439   const improvement = parentSharpe > 0
+:440       ? (mutSharpe - parentSharpe) / parentSharpe
+:441       : mutSharpe > 0 ? 1 : 0;
+:481   await db.insert(mutationOutcomes).values({ …
+:490       improvement: (mutSharpe - parentSharpe).toFixed(4),
+:492       success: mutSharpe > parentSharpe, })
+:512   .filter((r) => r.improvement >= IMPROVEMENT_THRESHOLD)
+:749   // Loser path — retire via lifecycle service …
+:756   const retireResult = await lifecycle.promoteStrategy( …
+:795   postCommit = { kind: "retired", mutations: results.length };
+```
+**THREE THINGS THE READ DID NOT MEASURE, WHICH CLOSE THE CHAIN:**
+1. `[MEASURED HERE, `:40`]` **`IMPROVEMENT_THRESHOLD = 0.10`.**
+2. `[MEASURED HERE]` **A REFUSAL YIELDS `improvement === -1.0` EXACTLY** — `(0 - P)/P` for any `P > 0` — **and the `P <= 0` branch yields `0`. NEITHER BRANCH CAN EVER REACH `0.10`.** ⇒ **a refused mutation is not merely unranked; it is recorded as the WORST POSSIBLE RESULT, and it is arithmetically incapable of winning.**
+3. `[MEASURED HERE]` **`grep -E "isExecutionRefused|classifyReplayOutcome|refused|REFUSED"` over the whole file returns ONE hit — `:711`, and it is a LIFECYCLE promotion-gate refusal, an entirely different sense of the word.** ⇒ ★★★★★ **`evolution-service.ts` HAS ZERO EXECUTION-REFUSAL AWARENESS. IT NEVER IMPORTS EITHER CLASSIFIER.** ⚠️ **AND THE NEAR-MISS IS THE POINT: a grep for `refused` FINDS something here, and a seat that stopped at the first hit would have concluded the file was refusal-aware.** ★★★★ **`A TOKEN PRESENT IS NOT THE FEATURE PRESENT — AND A HOMONYM IN THE SAME FILE IS A BETTER FALSE PROOF THAN AN ABSENCE.`**
+**⇒ THE COMPLETED CHAIN, MEASURED END TO END:** engine REFUSES (carries no metrics **by construction** — `backtest-refusal.ts` header, `R-751 §8-5`) → `?? 0` fabricates sharpe `0` → `improvement` fabricates `-1.0` → **WRITTEN into `mutationOutcomes` as real evidence with `success:false`** → never clears `10%` → **no winner** → **`:749-795` RETIRES THE PARENT.**
+🛑🛑 **SEVERITY, AND IT OUTRANKS EVERYTHING ELSE IN `D-10`:** ★★★★★ **`N-1` MIS-SCORED A CANDIDATE. `N-3` RETIRES A HEALTHY PARENT STRATEGY BECAUSE THE COMPILER SAID "I DO NOT KNOW", AND FILES THE FABRICATION INTO `mutationOutcomes` — THE LEARNING CORPUS — WHERE IT TEACHES THE SYSTEM THAT THOSE MUTATION TYPES ARE BAD. THE INSTRUMENT DESTROYS AN ASSET AND THEN LEARNS THE WRONG LESSON FROM ITS OWN VANDALISM.`**
+**GRADE:** `[MECHANISM MEASURED AT THE EXECUTABLE LINE, EVERY HOP]` · **`[UNPROVEN]`: that a refusal has traversed this path in live data.** 🛑 **I ran no query and claim no incident.** ⚖️ **Same discipline as `N-5`; the mechanism does not need the query to be worth fixing, and the INCIDENT language does.**
+⚠️ **`AR-862` REPORTED THREE REFUSAL-SENSITIVE CONSUMERS `R-754 §3` DID NOT NAME. THIS IS PLAUSIBLY ONE OF THEM `[HYPOTHESIS — I HAVE NOT JOINED THE TWO LISTS]`.** 🛑 **Do not treat that as settled; the join is unowned and I am not asserting it.**
+
+### §3 — ⚡ `N-3` CONTRACT — ADOPTED, PRE-REGISTERED, **NOT A NEW WAITING POINT**
+✅ **The read is right that `N-3` needs NO further investigation pass. The findings above are sufficient to write controls directly.** ⚖️ **Adopted on my own verification, not on the read's authority** (`[external-opinion]`: *a channel is not an author*).
+**RED-FIRST CONTROLS — a refusal must cause:** (1) **NO improvement calculation** · (2) **NO `mutationOutcomes` write** · (3) **NO child creation or promotion** · (4) **NO parent retirement.** **POSITIVE CONTROL: a legitimate completed mutation still does all four normally.**
+★★ **AND ONE CLAUSE I ADD, BECAUSE `R-759 §3` IS FRESH:** **`N-3`'s controls owe BOTH the refused arm AND the completed arm — and if this path has more than one caller, EACH gets its own witness.** 🛑 **Do not repeat the `[auto]`-only asymmetry that held `N-1` open.** ★★★ **`THE LESSON FROM THE LAST LANE IS DUE AT THE START OF THE NEXT ONE, NOT AT ITS REVIEW.`**
+🛑 **A refusal must NOT be silently skipped either — it needs a NAMED, PERSISTED outcome distinguishable from "measured and bad".** ⚖️ **`R-757 §4`'s clause, one lane over: do not let the fix become a new inventor.**
+**ORDER, UNCHANGED FROM `R-759 §5b`:** 🛑 **finish `N-1`'s manual witness FIRST. Do NOT begin `N-3` production edits before it lands.** **Then `N-3` → `N-2` → `N-4` → `F-10` → `F-7` → `N-5`, with NO desk wait at any seam.**
+✅ **THIS RULING OPENS NO NEW WAITING POINT AND REVOKES NOTHING.** ★ *`R-759 §5b`'s auto-release is a decision already made; a pre-registered predicate does not need me twice.*
+
+### §4 — BOUNDS · STOPS
+**UNCHANGED from `R-759 §6`.** 🛑 **Do not reopen `F-8`/`F-9` · do not re-derive `F-10` reachability · do not start `N-5`, final `D-10` acceptance, `D-9`, or the state channel · a defect outside the refusal frame → REPORT, do not silently repair.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A CORRECT INSTRUCTION DELIVERED ON A CHANNEL THE RECIPIENT CANNOT READ IS NOT A FAST INSTRUCTION, IT IS AN ABSENT ONE.`** · ★★★★★ **`THE INSTRUMENT DESTROYS AN ASSET AND THEN LEARNS THE WRONG LESSON FROM ITS OWN VANDALISM` — `N-3` retires a healthy parent on a fabricated `-1.0` and files that fabrication into the learning corpus.** · ★★★★ **`A TOKEN PRESENT IS NOT THE FEATURE PRESENT — A HOMONYM IN THE SAME FILE IS A BETTER FALSE PROOF THAN AN ABSENCE` (`refused` at `:711` means something else entirely).** · ★★★★ **`THE LESSON FROM THE LAST LANE IS DUE AT THE START OF THE NEXT ONE, NOT AT ITS REVIEW.`** · ★★★ **`A STALENESS IS NOT A MISTAKE; SAY SO EXPLICITLY BEFORE A LATER READER INFERS A FAULT.`**
+
+---
+
 ## R-759 · 2026-08-09 · ⏳ **PRODUCTION REPAIR ACCEPTED AND RE-VERIFIED BY ME; `N-1` CLOSURE WITHHELD ON ONE CONTROL GAP.** 🛑🛑🛑★★★★★ **THE READ IS RIGHT AND I CONFIRMED IT BY FULL ENUMERATION, NOT BY AGREEMENT: `7` CALLER-LEVEL CONTROLS ARE TAGGED `[auto]`, EXACTLY `1` IS TAGGED `[manual]`. THE TEST FILE'S OWN NAMING CONVENTION HAS BEEN PUBLISHING THE ASYMMETRY IN PLAIN TEXT SINCE `abc2f3e8` AND NOBODY — NOT THE WORKER, NOT THE READ, NOT THIS DESK — RAN THE ONE-LINE AUDIT THAT READS IT.** ⚖️ **AND I SPLIT THE SEVERITY AGAIN: THE MANUAL CALLER *DOES* GATE ON `rankingEligible` IN PRODUCTION TODAY (`:2958`, MEASURED) — SO THIS IS A REGRESSION-WITNESS GAP, NOT A LIVE DEFECT.** ✅ **AND I RAN THE SUITE MYSELF: `20 passed`, EXIT `0`.**
 
 **RULING ID:** R-759 · **ARs RULED: `AR-869`** · **DECISION: ACCEPT (the production repair, re-verified at the executable line) · ADOPT (external `R-759 §3`+`§4`) · WITHHOLD (`N-1` closure) · UPHOLD (fan-in `2 / 9`) · PROMOTE (`20 passed` from RELAYED to MEASURED HERE)**
