@@ -4,6 +4,62 @@
 
 ---
 
+## AR-874 · 2026-08-09 · 🛑 **`N-4` INVESTIGATION COMPLETE — DEFECT MEASURED AND FIX DESIGNED, BUT I AM STOPPING BEFORE THE PRODUCTION EDIT AND ASKING FOR ONE SCOPE RULING.** 🛑🛑🛑★★★★★ **THE ONLY TESTS THAT EXIST FOR THIS BLOCK ARE A **REPLICA**: `auto-recovery-debt1-4.test.ts` RE-IMPLEMENTS THE PRODUCTION LOGIC IN THE TEST FILE — ITS OWN COMMENT SAYS *"Mirrors FIX 3 logic"* — AND **CARRIES THE IDENTICAL DEFECT AT ITS OWN LINE `310`. THE FILE HAS EXACTLY ONE `import` (vitest) AND ZERO REFERENCES TO `lifecycle-service.ts`. SIX GREEN TESTS PROVE NOTHING ABOUT PRODUCTION.** ⚡ **NO PRODUCTION LINE CHANGED IN THIS COMMIT. FAN-IN UNCHANGED AT `5 / 9`.**
+
+**RULING: `R-763 §99`** (order `N-2` → **`N-4`** → `F-10` → `F-7` → `N-5`) **+ the `D-10` lane table.** **ATTEMPT BUDGET `1 / 2` — this spends nothing; it is an enumeration result, not a failed attempt** (`R-758 §570`: *finding more than the contract named is the contract working*).
+
+### §1 — 🛑 THE DEFECT, MEASURED AT THE EXECUTABLE LINE
+`[MEASURED HERE, `lifecycle-service.ts`]`:
+```
+:6975  const btResult = await runBacktest(s.id, {...}, ..., "automated");
+:7001  status: btResult.status === "skipped" ? "skipped" : "success",     <- THE LIE
+```
+⇒ **a REFUSAL is not `"skipped"`, so it falls into the `: "success"` branch and the audit trail records `status: "success"` for a run the engine declined to execute.** ⚖️ **This is the `D-10` table's first `N-4` clause exactly — *"named audit outcome, never generic `success`"* — and it is one line.
+**AND THE SECOND CLAUSE, ALSO MEASURED** — *"the 24h eligibility cap must NOT re-request the same refusal for an UNCHANGED strategy/config identity"*: `[MEASURED HERE, `:6949-6967`]` the cap counts `lifecycle.evidence_auto_backtest_enqueued` rows **inside a rolling 24h window only**. **A refusal is DETERMINISTIC — the source cannot be compiled — so once the window rolls, the same strategy is re-submitted, refuses again, and writes another `"success"` row.** ⇒ ★★★ **`A TIME-WINDOW CAP THROTTLES A REPEATED REQUEST; IT CANNOT STOP A REQUEST WHOSE ANSWER IS ALREADY KNOWN AND WILL NEVER CHANGE.`** ⚠️ **`[UNPROVEN]`: I ran no live query and claim no incident — mechanism only.**
+
+### §2 — 🛑🛑🛑 THE FINDING THAT STOPPED ME: THE EXISTING COVERAGE IS A REPLICA
+`[MEASURED HERE]`:
+```
+grep -c "lifecycle-service"  auto-recovery-debt1-4.test.ts      -> 1   (a comment, not an import)
+grep -n "^import"            auto-recovery-debt1-4.test.ts      -> :28 vitest — THE ONLY IMPORT
+:272  /** Mirrors FIX 3 logic: auto-enqueue backtest when evidence incomplete */
+:274  async function runFix3Logic(strategyId, strategyName, recentAutoEnqueueCount, deps)
+:283    if (recentAutoEnqueueCount >= 1) return;              <- the cap, re-typed
+:310    result.status === "skipped" ? "skipped" : "success",  <- THE DEFECT, RE-TYPED
+```
+**AND THE JOIN THAT SETTLES IT** — `grep` for the defect string across `src/`, tests included, returns **EXACTLY TWO SITES**: `lifecycle-service.ts:7001` and `auto-recovery-debt1-4.test.ts:310`.
+🛑 **SO `FIX 3 (DEBT-3)`'s six green tests exercise a COPY of the logic that lives in the test file. They would stay green if `lifecycle-service.ts` were deleted.**
+★★★★★ **`A TEST THAT RE-IMPLEMENTS THE CODE IT IS NAMED AFTER IS NOT A WEAK TEST, IT IS A SECOND COPY OF THE DEFECT WEARING THE COSTUME OF ITS GUARD — AND IT IS WORSE THAN NO TEST, BECAUSE THE GREEN IS WHAT STOPS ANYONE LOOKING.`**
+⚖️ **THIS IS `R-762 §41`'s HAZARD, VERBATIM AND UNPROMPTED: *"a witness is owed per INDEPENDENT IMPLEMENTATION of the decision"* — here are two independent transcriptions of one refusal-sensitive decision, and they are ALREADY IDENTICAL, so a production-only repair makes them DRIFT while the suite stays green.** ⇒ **Repairing `:7001` alone would leave `:310` asserting the old behaviour and passing.**
+
+### §3 — 🛑 WHY I DID NOT JUST BUILD THE REAL CONTROL: A MEASURED REACHABILITY OBSTACLE
+`[MEASURED HERE]` the block is a **fire-and-forget `void (async () => {…})()`** with **no export and no seam**, sitting **~`3,880` lines inside `checkAutoPromotions()`** (method opens `:3058`, block at `:6940`), behind the full `PAPER → DEPLOY_READY` gate chain plus an `incompleteCount >= 3` evidence condition.
+⇒ **Driving the REAL decision requires either (A) an end-to-end fixture that satisfies that whole gate chain, or (B) extracting the block into a testable unit.** 🛑 **(B) IS A PRODUCTION STRUCTURE CHANGE, and `R-763 §85` forbids "any redesign"; the `N-4` contract authorises a refusal repair, not a refactor.** ⚖️ **I am not deciding that on my own authority** (`worker-execution §9`: *the work crosses a protected boundary · multiple valid fixes imply different architectures*).
+
+### §4 — ⚡ THE RULING I AM ASKING FOR — PRE-REGISTERED, CRITERIA BEFORE CANDIDATES
+**The one-line repair at `:7001` is trivial and I can land it in minutes. What I will not do is land it behind a green replica and call `N-4` closed.** Options, with my recommendation stated but not acted on:
+```
+OPTION A  End-to-end fixture driving checkAutoPromotions() to the evidence-incomplete
+          branch. Zero production structure change. COST: the heaviest harness in D-10
+          so far; RISK: a fixture that drifts from the gate chain rots silently.
+OPTION B  Extract the enqueue block into a private method, then drive THAT.  <- RECOMMENDED
+          Mechanical, reversible, no behaviour change, and it is the smallest change
+          that makes the refusal decision witnessable at all. COST: it is a production
+          structure edit, which §85 forbids without your word.
+OPTION C  Repair :7001 + the cap now, delete or re-point the replica, accept NO
+          production-driven witness. 🛑 I do not recommend this: it closes N-4 on the
+          same kind of evidence that produced this finding.
+```
+🛑 **AND WHICHEVER YOU PICK, THE REPLICA IS A SEPARATE DISPOSITION I WILL NOT MAKE ALONE:** deleting it removes six green tests; leaving it preserves a false-green. **It is also outside the refusal frame, so under the standing stop I report it rather than repair it.**
+
+### §5 — 📍 STATE
+**FAN-IN `5 / 9`, UNCHANGED** (`F-8` · `F-9` · `N-1` · `N-3` · `N-2`) · **`N-4` INVESTIGATED, NOT STARTED · `F-10` · `F-7` · `N-5` UNSTARTED.**
+🛑 **NOTHING CHANGED IN PRODUCTION THIS COMMIT** — `git diff --stat` covers this report only.
+📡 **EAR: armed and owned by this seat (`claude.exe 4812`), tuple-keyed on `(heading, dirty-state, HEAD)`.** Newest ruling on disk remains **`R-763`**; it has delivered every HEAD move since, including the advisor's `ecae071d`.
+⚖️ **I am NOT blocked on anything else: `F-10` and `F-7` are downstream of `N-4` in the ruling's order, so I hold rather than reorder the desk's queue on my own authority.**
+
+---
+
 ## AR-873 · 2026-08-09 · ✅ **`N-2` CLOSED — A SOURCE-LEVEL REFUSAL NOW TERMINATES THE MATRIX INSTEAD OF PUBLISHING A RECOMMENDATION BUILT FROM ZEROES.** ⭐⭐⭐ **THE RED-FIRST RUN PRINTED THE `bestCombo` THE OPERATOR WOULD HAVE BEEN HANDED: `{"symbol":"MES","timeframe":"30min","forgeScore":0,…,"backtestId":"bt-refused"}` — A SPECIFIC INSTRUMENT AND TIMEFRAME TO TRADE, ON A RUN MARKED `completed`, FOR A STRATEGY THE ENGINE NEVER EXECUTED ONCE.** 🛑🛑 **AND I CONVICTED MY OWN CONTROL SET MID-LANE: `MUT-N2-3` REDDENED **NOTHING**, PROVING THE SHARED-FLAG GUARD I HAD JUST WRITTEN WAS UNWITNESSED. I FIXED THE FIXTURE, NOT THE CLAIM.** **FAN-IN `5 / 9`.**
 
 **RULING: `R-763 §99`** (*"Then proceed directly to `N-2`"*, no desk wait) **+ the `D-10` lane table (`R-758 §5`).** **ATTEMPT BUDGET `1 / 2`.** **TREE `wt-h1-wave4-20260712`, parent `ecae071d`.** **FILES: `matrix-backtest-service.ts` + the new `d10-n2-matrix-refusal.test.ts`.**
