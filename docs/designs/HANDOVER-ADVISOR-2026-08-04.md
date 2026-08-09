@@ -1,4 +1,36 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-721`, 2026-08-08**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-725`, 2026-08-09 00:10Z**
+
+> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
+> **`HEAD 24c6077d` · newest ruling `R-725` · newest AR `AR-813` (start-receipt, owes no ruling).**
+> ✅ **PHASE A IS CLOSED. THE CAUSAL QUESTION IS ANSWERED AND MEASURED.** The failure is **neither the
+> extractor nor a missing engine — it is the vocabulary between them.**
+> - **PRIMARY** `CANONICAL_TERM_UNRESOLVED — OPENING_RANGE_COLLAPSED_INTO_COARSE_WAIT_STRUCTURE`
+> - **SECONDARY** `ENGINE_PRIMITIVE_WRONG_IDENTITY — STRUCTURE_EVENT_EVALUATOR_SELECTED_FOR_LEVEL_CONSTRUCTION`
+> - **GAP** `EXISTING_OPENING_RANGE_CAPABILITY_NOT_REACHABLE_FROM_SPEC_BINDING_PATH`
+> **THE CLOSING MEASUREMENT:** the taught opening range was mutated `24` points and
+> `compute_structure_state` returned **byte-identical output on every field — at the series edge AND
+> mid-series** — while its positive control (`×1.05` on highs) **did** move. Unrelated prose ("the
+> capital of France is Paris") binds to the same primitive `bindable=True`.
+> 🛑 **NOTHING IS CERTIFIED.** `accuracy-validator` grade **IN FLIGHT** → receipt
+> `docs/designs/GRADE-PHASE-A-ROWS-1-3-2026-08-08.md`. `UNVERIFIABLE` stands (`R-722 §4`, `R-723 §2`).
+> ⚡ **ONLY AUTHORIZED WORK: `PHASE B0`** (`R-725 §8`) — **read-only** bridge-eligibility on
+> `orh_{n}m`/`orl_{n}m`/`or_range_{n}m`; one 13-row table; one disposition of
+> `REUSE_EXACT` | `REUSE_WITH_TYPED_ADAPTER` | `REJECT_SEMANTIC_MISMATCH`. **No production edit. No patch.**
+> 🛑 **`PHASE B1` NOT AUTHORIZED** — `ratify-packet` staged at `R-725 §9`; moves only on a passing grade.
+> **Pre-live ⇒ AUTONOMOUS class under independent grade, NOT operator-reserved.**
+> 🛑 **`R-665 §2.4` RE-SELECTION BAN STANDS.** The read's release condition requires a **visual-source
+> check that is NOT RUNNABLE** — `[MEASURED, R-725 §4]` no video/frame/timed-caption exists for
+> `st5e-YJRfKc` (positive control: 24 media files tracked elsewhere). **A conditional authorization
+> whose condition cannot be evaluated is not an authorization.**
+> ★★★★★ **MONEY-FACING LAW, NEW:** the lesson is taught on **stocks** ("thousands of stocks", S&P 500
+> worked example). **Futures = `MARKET_OR_TIMEFRAME_UNRESOLVED`. NEVER label a futures backtest the
+> source-faithful result without portability evidence.** `PROFITABILITY ON FUTURES CANNOT RETROACTIVELY
+> PROVE THE TEACHER TAUGHT IT FOR FUTURES.`
+> 🛑 **`0.52` MUST NEVER BE WRITTEN INTO `level`.** The taught rule is a FORMULA
+> (`midpoint = (ORH+ORL)/2`); the worked `52¢` is example arithmetic. **Filling the empty slot with the
+> example's answer would hardcode one day's arithmetic as the strategy.**
+> ✅ **`5/15/30` IS NOT A BLOCKER:** compile **three source-sanctioned children** `OR-5`/`OR-15`/`OR-30`.
+> **Enumerating alternatives is fidelity; choosing one is invention.**
 
 > ⚠️ **THE FILENAME IS THIS FILE'S BIRTH DATE, NOT ITS CURRENCY.** It is referenced by `R-717` and by
 > `ADVISOR-STATE.md`, so it is updated IN PLACE rather than re-dated — **one carrier beats two.**
