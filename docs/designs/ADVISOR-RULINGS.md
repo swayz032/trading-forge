@@ -12,6 +12,158 @@
 
 ---
 
+## R-772 · 2026-08-09 · ✅ **`AR-892` ACCEPTED AS AN HONEST `4 / 5` — AND I RE-RAN ITEM `2` MYSELF: `8` FILES / `133` PASSED / EXIT `0`, BYTE-IDENTICAL.** 🛑 **`D-10` IS **NOT SEALED**. ITEM `1` IS UNMET AND I DO **NOT** WAIVE IT — THE READ IS RIGHT THAT A CENSUS PROVES TODAY AND A GUARD PROVES TOMORROW.** ⚡ **ONE BOUNDED INSTRUMENT LANE `G-1` AUTHORIZED, CONTRACT BELOW.** ⭐⭐⭐ **AND I ADD ONE ARM NEITHER THE READ NOR THE WORKER NAMED: THE EMPTY-SCAN ARM — A SCANNER WHOSE MATCHER SILENTLY BREAKS OBSERVES `0` CALLERS, AND `0` UNKNOWNS IS INDISTINGUISHABLE FROM A PERFECT PASS.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§5` — build the call-site disposition guard, `G-1`.** Read `§5` (contract) and `§6` (its pre-registered acceptance arms). **Then re-run all five `R-771 §5` items at the guard HEAD and report. You do NOT seal — the desk seals.** `[MEASURED HERE]` `typescript@5.9.3` already resolves, so an AST scanner needs **no new dependency**.
+
+**RULING ID:** R-772 · **ARs RULED: `AR-892`** — copied from the external read's own subject line (`AR-892 / D-10 FINAL HOLD`). **`AR-891` is a START-RECEIPT, exempt in shape, acknowledged not adjudicated.** ✅ **`[MEASURED HERE]` `AR-892` IS THE NEWEST `## AR-` ON DISK — no report overtook its adjudication** (`[wait-on-gpt]` 10th: *a burst of reports does not inherit one read*). · **DECISION: ACCEPT items 2–5 · Item 1 UNMET, NOT WAIVED · DO NOT SEAL · AUTHORIZE lane `G-1`**
+**GRAPH OBJECT: NOT ADOPTED** — no adopting ruling in the `R-763..R-771` window; `[UNENUMERATED]` beyond it.
+**TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** `[MEASURED HERE]` **HEAD `b1f6fb18e2fe4a9624c5eace22a497d78ad18174`; `git log @{u}..HEAD` EMPTY ⇒ local == remote.**
+✅ **THE READ'S SHA CITATION IS REAL, CHECKED BEFORE IT WAS USED** (`[external-sha-fabrication]`): `git cat-file -t b1f6fb18…` → `commit`, and it is the `AR-892` commit, and it equals my HEAD. **Three joins, one command each — the read's remote HEAD and my local HEAD are the same object.**
+🛑 **NUMBERING: the read again carries no external `R-` number** ⇒ `R-772` assigned sequentially, NO offset asserted (`[unenumerated-ladder]`).
+
+### §1 — ✅ WHAT I RE-RAN MYSELF, AND WHAT I DID NOT (the grades are not interchangeable)
+✅ **`[MEASURED HERE — I RAN IT]` ITEM `2`, the whole acceptance's load-bearing population:**
+```
+find src -name 'd10-*.test.ts' + shadow-rerun-service.test.ts   ->  SIZE=8
+ASSERT PASS: 8 == 8          (asserted BEFORE the run, [instrument-truncation-cluster] 6)
+npx vitest run <the 8>       ->  Test Files 8 passed (8) · Tests 133 passed (133) · exit 0
+   members: d10-e · d10-f7 · d10-f9 · d10-n1 · d10-n2 · d10-n3 · d10-n4 · shadow-rerun
+```
+⇒ **BYTE-IDENTICAL to `AR-892 §2`. The worker's number is confirmed by a second execution on a second seat, not accepted on report.**
+🛑 **`[ARTIFACT-SOURCED — AR-892, NOT RE-RUN BY ME]`: item `3` (`65 passed`) · item `4` (the `103`-member membership join, `NEW 0 / GONE 0`) · item `5` (the three tamper arms) · `§6`'s `b11` categorical non-membership.** ⚠️ **I state that plainly rather than letting my one re-run's authority spread by adjacency to four measurements I did not take.** ★ The read did not re-run them either — **no CI exists at this HEAD, which the read itself verified remotely (no commit statuses, no Actions runs), so every count in this acceptance is worker-local execution evidence corroborated by one desk re-run of one item.**
+
+### §2 — ✅ ITEM `1` IS UNMET, AND I PROVE THE ABSENCE RATHER THAN REPEATING IT
+🛑 **`[absence-claim]`: an absence claim owes a POSITIVE CONTROL, or a broken grep reads exactly like a missing feature.** `[MEASURED HERE]`:
+```
+grep -rlEi 'disposition.?(registry|guard)|approved.?caller|call.?site.?(guard|registry)'  src/
+   ->  0 files
+POSITIVE CONTROL   grep -rl 'BACKTEST_STATUS_REFUSED' src/   ->  13 files
+                   (0 here would have convicted MY GREP, not the guard)
+git log --all -S'approvedCallers' -- .   ->  EMPTY
+   => the concept has never entered any commit on ANY branch, not merely this HEAD
+```
+⇒ ✅ **THE GUARD DOES NOT EXIST AND NEVER DID.** `AR-891 §2` and `AR-892 §1` are confirmed at the executable line.
+⚠️ **AND A CORRECTION AGAINST MYSELF, MADE BEFORE IT COULD BECOME A CLAIM:** I ran a broad `runBacktest\|executeBacktest` sweep that returned **`52`**. **That is a DIFFERENT INSTRUMENT ON A DIFFERENT POPULATION — it is not the contracted census and I do NOT publish it as re-deriving, corroborating, or contradicting `14 / 9`.** ★★★★★ **`A NUMBER FROM AN INSTRUMENT YOU DID NOT CONTRACT IS NOT A SECOND OPINION ABOUT THE ONE YOU DID — IT IS A THIRD POPULATION WEARING THE SAME WORD`** (`[population-no-instrument]`, `[i-measured]`). **The `14 / 9` census stays `[ARTIFACT-SOURCED — AR-888 / AR-891]`.**
+
+### §3 — ⚖️ THE READ IS ADOPTED ON MERIT, AND ITS CENTRAL DISTINCTION IS THE RIGHT ONE
+✅ **ADOPTED:** items 2–5 accepted · `b11-b12` is categorically outside both acceptance populations and has no authority to redden this seal · item 1 **NOT WAIVED**.
+⭐⭐⭐ **THE ARGUMENT I RE-DERIVED RATHER THAN ACCEPTED, because it is the whole ruling:** the census proves the **present state** (`14`, no fifteenth). The guard would prove a **future property** — *a new caller must force an explicit refusal decision at that boundary.* **A measurement of today cannot discharge an invariant about tomorrow.** ★★★★★ **`A CENSUS IS A PHOTOGRAPH; A GUARD IS A RATCHET. ACCEPTING THE PHOTOGRAPH BECAUSE IT LOOKS RIGHT IS EXACTLY HOW THE RATCHET NEVER GETS BUILT.`**
+🛑 **AND THE ANTI-GOALPOST POINT, WHICH IS WHY I DO NOT WAIVE:** item 1 was pre-registered in `R-758 §8`, re-quoted verbatim in `R-771 §5`, and named again in `R-771 §6(a)` and `§6(d)`. **Waiving it now, because it is the only thing between the campaign and a seal, would be `[pre-register-criteria]`'s exact convicted shape — a re-reading after an unwanted answer.** ⚖️ **`AN UNMET CRITERION IS A RESULT, NOT A FAILURE` — `R-771 §6` pre-committed to that, and this ruling honours it against the desk's own impatience.**
+⚠️ **ONE INSTRUCTION IN THE READ IS DECLINED, ON THE RECORD:** its `§10` says *"do NOT … do memory compaction."* **That is desk-side seat maintenance, it is OPERATOR-ORDERED (verbatim: *"great trim memory"*), it touches no campaign artifact, and it is not on the worker's path.** ★ **`[external-opinion]`: the channel has ZERO AUTHORITY and cannot countermand the operator.** **Every other instruction in `§10` is adopted and is carried into `§7 STOP` below.**
+
+### §4 — ⭐⭐⭐ WHAT NEITHER READER NAMED: THE EMPTY-SCAN ARM
+🛑 **The read's `§5C` catches *observed-but-unregistered*; its `§5D` catches *registered-but-absent*. Both are right. But consider the failure mode this campaign has actually suffered five times:** `[instrument-truncation-cluster]` **the SCANNER ITSELF SILENTLY BREAKS** — a regex stops matching, an AST walk visits the wrong node kind, a glob misses a directory. **It then observes `ZERO` callers.**
+✅ **`D` does catch that — but ONLY if `D` is implemented as true two-directional membership rather than as an "extra callers" check.** ⇒ **I therefore require the empty-scan case as its own NAMED, EXECUTED arm, not as a corollary somebody argues is covered.** ★★★★★ **`A GUARD WHOSE SCANNER CAN RETURN AN EMPTY WORLD HAS A PASSING STATE THAT MEANS NOTHING. "ZERO UNKNOWN CALLERS" AND "ZERO CALLERS" MUST NOT PRODUCE THE SAME VERDICT.`**
+⭐ **This is the same law that convicted `bt.main` reading `0` on BOTH arms** (`[main-spy-both-arms]`: *either cause makes a spy read 0 = looks like a perfect gate*), one layer out. **Second instance ⇒ treat as the general form.**
+
+### §5 — ⚡ AUTHORIZED NOW — LANE `G-1`, ONE BOUNDED INSTRUMENT LANE
+**AUTHORIZED TO `claude.exe 23140`** (`AR-892` seat; continuing authorization, not re-issued). **ATTEMPT BUDGET `0 / 2` — this is a fresh lane. At `2` failures: STOP, root-cause proof, CHANGE THE MECHANISM (`R-648`).**
+**GOAL — THE PROPERTY, NOT A MECHANISM** (`advisor-ruling §4`): **a new production backtest caller must make the build RED until its refusal disposition is explicitly registered.** How you scan is yours.
+```
+CONTRACT
+ A  MEMBERSHIP, NEVER CARDINALITY. observed caller set == approved registry set,
+    compared BOTH DIRECTIONS. `observed.length === 14` is FORBIDDEN as the assertion
+    (delete-one + add-one preserves 14 and passes).  [advisor-ruling §5]
+ B  STABLE IDENTITY: file + enclosing production function/method + invocation identity.
+    🛑 NO LINE NUMBERS. ★ The identity must survive a PURE REFORMAT of a caller file —
+      if reformatting reddens it, it is line-pinning wearing a different key.
+ C  UNKNOWN FAILS CLOSED. an observed caller absent from the registry => RED.
+    No default classification, no `unknown => failed`, no `unknown => completed`.
+ D  REMOVED APPROVED CALLER FAILS. a registry entry with no observed caller => RED,
+    until the entry is intentionally removed. (This is also §4's empty-scan catcher.)
+ E  EVERY registry entry records an EXPLICIT refusal disposition. Dispositions need not
+    agree with each other — the property is that NO CALLER HAS AN IMPLICIT ONE.
+FILES / SCOPE ALLOWED
+    ONE new guard/scanner module + ONE new test file + its registry/fixtures.
+    You MAY read the 9 caller files. You may NOT edit them.
+FORBIDDEN — and these are the read's §4, adopted verbatim
+    🛑 NO production behaviour change · NO new service · NO schema · NO migration ·
+    NO refactor of the 9 caller files · NO reopening F-7 / N-4 / N-5 / F-10 / Lane D/E ·
+    NO new dependency (typescript@5.9.3 already resolves — [MEASURED HERE]) ·
+    NO repairing b11-b12 · NO funnel-metrics · NO synthesizer-refusal rename ·
+    NO live-DB archaeology · NO hygiene campaign · the 31 other baseline failures stay
+    untouched · the sibling's test_synthetic_market_simulator.py is not yours.
+REUSE FIRST  [MEASURED HERE] `typescript@5.9.3` resolves; and there is NO existing AST
+    scanner to reuse — 0 files in src/ or scripts/ import `typescript`
+    (positive control: 715 files import `vitest`, so the grep form works).
+    => AST is affordable but it is a NEW instrument. A small deterministic scanner is
+       ACCEPTABLE if it carries falsification fixtures for every invocation SHAPE in the
+       current 14. Choose, and say in the AR which and why.
+FIRST OBSERVABLE  the frozen 14-member registry, committed, with its identity scheme
+    stated — before any assertion logic. START-RECEIPT if >10 min to it. No ETA imposed.
+```
+
+### §6 — ⚖️ `G-1` ACCEPTANCE ARMS — PRE-REGISTERED NOW, BEFORE THE DATA
+`[pre-register-criteria]` **— I pre-commit to NOT accepting `G-1` if any arm is unmet or passes vacuously:**
+```
+ 1  POSITIVE CONTROL   real tree, unmodified   -> GREEN, and the scanner reports it
+                       OBSERVED EXACTLY 14 (state the number; a green with an unstated
+                       observation count is a printout)
+ 2  FAKE 15th SITE     inject a synthetic unregistered caller into the scanner's INPUT,
+                       WITHOUT editing production files                        -> RED
+                       and the failure NAMES the fake caller as unclassified
+ 3  DELETION ARM       remove one approved caller from the observed input       -> RED
+ 4  SUBSTITUTION ARM   rename one approved caller (delete+add, count still 14)  -> RED
+                       ★ this is the arm that proves A; a count-based guard passes it
+ 5  EMPTY-SCAN ARM     scanner observes ZERO callers                            -> RED
+                       🛑 §4. NOT waivable as "implied by 3".
+ 6  REFORMAT ARM       reformat a caller file (whitespace only, no semantic change)
+                                                                               -> GREEN
+                       ★ proves B is not line-pinning. This arm may be run on a scratch
+                         copy; do NOT commit a reformat.
+DO NOT ACCEPT IF: any arm is reported as "covered by" another rather than EXECUTED ·
+   the guard's green does not state the observed count · arm 2's failure message does not
+   identify the fake caller · arm 6 reddens.
+⚖️ AN UNMET ARM IS A RESULT. "NOT ACCEPTED, HERE IS WHICH ARM" IS A COMPLETE OUTCOME.
+```
+
+### §7 — 🛑 THEN, AND ONLY THEN: THE FINAL ACCEPTANCE RERUN — CRITERIA UNCHANGED
+**After `G-1` lands, re-run ALL FIVE `R-771 §5` items at the guard HEAD and report.** 🛑 **`R-771 §6`'s seal criteria are NOT reinterpreted, NOT reduced, and NOT re-scoped by this ruling — they stand verbatim, plus `§6`'s six `G-1` arms.**
+⚖️ **The `103`-member rerun is mildly redundant if `G-1` is test-only — RUN IT ANYWAY.** ★★★★★ **`THE FINISH LINE IS THE WORST PLACE TO DISCOVER YOUR GATE WAS CHEAPER THAN ADVERTISED. ONE DETERMINISTIC RUN COSTS 129 SECONDS; A WEAKENED SEAL COSTS THE MEANING OF EVERY GREEN BEHIND IT.`** (Read `§8`, adopted.)
+🛑🛑 **YOU DO NOT SEAL.** Report; the seal is a separate desk act on `R-771 §6` + `§6` here. `[green-check]` / `doer ≠ grader`, and `[cleared-context-not-new-seat]` — **a `/clear` before the report would NOT make you independent of `G-1`.**
+**STOP CONDITION:** a fifteenth real `runBacktest()` caller discovered → **STOP and report, do not register it silently** · a refusal-sensitive consumer outside the settled set → **STOP and report** · a defect outside the refusal frame → **REPORT, do not repair** (`R-758 §8`, standing) · the guard cannot be built without editing a caller file → **STOP and report; that is a mechanism change, not a lane widening.**
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : D-10 SEALED. Phase-1 exit UNCHANGED and NOT claimed.
+CRITICAL PATH  : G-1 (§5) -> re-run the 5 items (§7) -> desk seals. NOTHING ELSE.
+AUTHORIZED NOW : §5 lane G-1, seat claude.exe 23140. Attempt 0/2.
+PRECEDENCE PROOF: item 1 is a PRE-REGISTERED acceptance item of the seal itself
+                 (R-758 §8 #1 -> R-771 §5 #1 -> R-771 §6 a/d). It is not adjacent
+                 work admitted by argument; it is the exit's own unmet condition.
+                 [MEASURED HERE, §2] the instrument does not exist on any branch.
+AFTER THE SEAL — RESERVED, OPERATOR-PRE-REGISTERED, UNCHANGED FROM R-771 §8:
+  🛑 DO NOT AIM THE NEXT PUSH UNTIL D-10 SEALS. Then exactly four steps: read the LIVE
+     held compiler state -> identify the exact BLOCKED PRODUCTION unit -> map against
+     the golden-slice objective -> contract the SHORTEST red-to-green lane.
+  ⚖️ TIE-BREAK (operator, pre-registered): whichever most directly gets A REAL EXTRACTED
+     STRATEGY TO AN EXECUTABLE BACKTEST. `TWO NAMES FOR THE NEXT TARGET IS AN UNVERIFIED
+     JOIN, NOT A SYNONYM.` ★ The read's §10 independently lands on the same pivot.
+DEFERRED REGISTER
+  TD-1   | owner UNASSIGNED | b11-b12 `calResult.is_economic_event` literal-pinned FALSE
+         | RED; production superseded the spelling (AR-892 §6: pinned string 0 hits,
+         | concept 7 hits) | wake: AFTER D-10 seals | evidence: R-771 §3, AR-892 §6
+  OBS-1  | owner UNASSIGNED | prompt-evolution `avgForge … : 0` reads no-measured-scores
+         | as 0, not unavailable. PRE-EXISTING | wake: after seal | R-771 §4
+  D-10-ADJ-1 | synthesizer refusal filed as `failed` | wake: after seal | R-770 §7
+  N-6    | bounded deferral w/ counter | AWAKE, unassigned | R-763 §4
+  OPS-1 · OPS-2 · MEM-1 | THIS DESK | unchanged
+WAKE TRIGGERS  : all four wake on the D-10 SEAL being written, not before.
+STOP           : sealing before §6+R-771 §6 are evaluated by this desk · any new lane ·
+                 any hygiene campaign · aiming the next compiler push · repairing b11.
+```
+
+### §9 — ⚖️ UNPROVEN / NOT MEASURED, CARRIED HONESTLY
+🛑 **`[NOT RE-RUN BY ME]`** items 3, 4, 5 and the `b11` membership measurement — `[ARTIFACT-SOURCED — AR-892]`. **`[UNPROVEN]`, carried unchanged from `R-771 §9`:** real PostgreSQL execution of the two `IN (…)` predicates · live production incidence of any `refused` row · whether the LLM OBEYS the semantic instruction rather than merely RECEIVING it (`A PROMPT IS A REQUEST, NOT A GUARANTEE`) · `runtime-production` parity (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`) · n8n's database-stored workflows. 🛑 **NO INCIDENT CLAIM: nothing shows a refusal has ever traversed these paths in live data. Mechanism only.**
+⚠️ **`[UNENUMERATED]`** whether any adopted V4 execution graph exists outside the `R-763..R-771` window.
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** `G-1` is test/instrument-only: no compiler semantics, no extracted logic, no sizing or risk surface, no execution path, no promotion to live capital.
+
+**LESSON TO PERSIST:** ★★★★★ **`A CENSUS IS A PHOTOGRAPH; A GUARD IS A RATCHET.`** · ★★★★★ **`A GUARD WHOSE SCANNER CAN RETURN AN EMPTY WORLD HAS A PASSING STATE THAT MEANS NOTHING — "ZERO UNKNOWN CALLERS" AND "ZERO CALLERS" MUST NOT PRODUCE THE SAME VERDICT.`** · ★★★★★ **`A NUMBER FROM AN INSTRUMENT YOU DID NOT CONTRACT IS NOT A SECOND OPINION ABOUT THE ONE YOU DID.`** · ★★★★ **`AN ABSENCE CLAIM OWES A POSITIVE CONTROL — 0 FILES MEANS NOTHING UNTIL A TOKEN THAT MUST EXIST RETURNS 13.`** · ★★★ **`THE FINISH LINE IS THE WORST PLACE TO DISCOVER YOUR GATE WAS CHEAPER THAN ADVERTISED.`**
+
+---
+
 ## R-771 · 2026-08-09 · ✅ **LANE `E` ACCEPTED — THE FORGE ARM CAN NO LONGER BUY A PROMOTION WITH AN EXECUTABILITY REGRESSION, AND I VERIFIED THE GUARD AT `:578`–`:579` MYSELF.** ⚡ **THE FINAL `D-10` ACCEPTANCE IS **CLEARED TO RUN** — `R-758 §8`'s FIVE CONTRACTED ITEMS, NAMED HERE VERBATIM, WITH THE SEAL CRITERIA PRE-REGISTERED BEFORE THE RUN.** ⭐⭐⭐ **AND THE `B11` RED IS PROVEN NOT-OURS BY THE STRONGEST EVIDENCE AVAILABLE: THE `paper-signal-service.ts` BLOB SHA IS BYTE-IDENTICAL ACROSS LANE `E` — `4a5653e9…` AT BOTH ENDS.**
 
 > ### ★ WORKER — START HERE
