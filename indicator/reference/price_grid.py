@@ -10,7 +10,7 @@ entry logic; this module is about price validity, not P&L.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_EVEN
 from enum import Enum
 from math import isfinite
 
@@ -18,6 +18,12 @@ from math import isfinite
 class GridPolicy(str, Enum):
     REJECT = "REJECT"
     SNAP_HALF_EVEN = "SNAP_HALF_EVEN"
+
+
+class GridRounding(str, Enum):
+    FLOOR = "FLOOR"
+    CEILING = "CEILING"
+    HALF_EVEN = "HALF_EVEN"
 
 
 @dataclass(frozen=True)
@@ -54,10 +60,42 @@ def is_on_grid(price: float | str | Decimal, grid: InstrumentPriceGrid) -> bool:
     return ticks == ticks.to_integral_value()
 
 
-def snap_to_grid(price: float | str | Decimal, grid: InstrumentPriceGrid) -> Decimal:
+def round_to_grid(
+    price: float | str | Decimal,
+    grid: InstrumentPriceGrid,
+    rounding: GridRounding,
+) -> Decimal:
     p = _d(price)
-    ticks = (p / grid.tick_size).quantize(Decimal("1"), rounding=ROUND_HALF_EVEN)
+    mode = {
+        GridRounding.FLOOR: ROUND_FLOOR,
+        GridRounding.CEILING: ROUND_CEILING,
+        GridRounding.HALF_EVEN: ROUND_HALF_EVEN,
+    }[GridRounding(rounding)]
+    ticks = (p / grid.tick_size).quantize(Decimal("1"), rounding=mode)
     return ticks * grid.tick_size
+
+
+def snap_to_grid(price: float | str | Decimal, grid: InstrumentPriceGrid) -> Decimal:
+    return round_to_grid(price, grid, GridRounding.HALF_EVEN)
+
+
+def conservative_target_to_grid(
+    price: float | str | Decimal,
+    grid: InstrumentPriceGrid,
+    *,
+    trade_side: str,
+) -> Decimal:
+    """Round a TP toward the approaching trade, never deeper into the target pool.
+
+    LONG approaches an upper pool from below -> floor target.
+    SHORT approaches a lower pool from above -> ceil target.
+    """
+    side = trade_side.upper()
+    if side == "LONG":
+        return round_to_grid(price, grid, GridRounding.FLOOR)
+    if side == "SHORT":
+        return round_to_grid(price, grid, GridRounding.CEILING)
+    raise ValueError("trade_side must be LONG or SHORT")
 
 
 def normalize_price(
