@@ -15,6 +15,8 @@ class PineBeginnerVisualContractTests(unittest.TestCase):
         self.assertIn('const bool LIVE_DECISION_SUPPORT_APPROVED = false', self.src)
 
     def test_beginner_panel_is_large_and_plain_english(self):
+        # Lock the actual user-visible numbered coach strings rather than searching
+        # for an unnumbered quoted substring that is not a literal in the script.
         for token in (
             '"BIG beginner coach panel"',
             '"SLUMDAWG"',
@@ -22,8 +24,8 @@ class PineBeginnerVisualContractTests(unittest.TestCase):
             '"OVERALL"',
             '"YELLOW ENTRY"',
             '"NOW"',
-            '"WAIT FOR A CANDLE PAST YELLOW"',
-            '"PUSH 1 — NOW WATCH PUSH 2"',
+            '"1  WAIT FOR A CANDLE PAST YELLOW"',
+            '"4  PUSH 1 — NOW WATCH PUSH 2"',
         ):
             self.assertIn(token, self.src)
         self.assertIn('text_size = 20', self.src)
