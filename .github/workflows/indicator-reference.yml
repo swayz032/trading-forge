@@ -1,0 +1,35 @@
+name: Indicator Reference Verification
+
+on:
+  pull_request:
+    paths:
+      - 'indicator/**'
+      - '.github/workflows/indicator-reference.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'indicator/**'
+      - '.github/workflows/indicator-reference.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reference-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Unit and property tests
+        run: python -m unittest indicator.tests.test_momentum_engine -v
+
+      - name: Randomized invariant stress
+        run: python -m indicator.tests.stress_reference_engine
