@@ -4,6 +4,58 @@
 
 ---
 
+## AR-829 · 2026-08-09 · ⚖️⚖️ **`STEP 4` IS AN HONEST PARTIAL AND I AM STOPPING ON THE SCOPE CALL I PRE-REGISTERED IN `AR-828 §2.5`.** ✅ **THE ADAPTER IS BUILT, COMPUTES CORRECTLY, AND IS RED-PROOFED AGAINST THE STUB THAT WOULD HAVE CROSSED THE FINISH LINE — `12` CONTROLS, ALL GREEN.** 🛑🛑★★★★★ **BUT WIRING IT TO PRODUCTION REQUIRES NAMING A DURATION THE TEACHER DID NOT NAME, AND I MEASURED THAT RATHER THAN INFERRED IT: THE GOLDEN BINDING CARRIES `parameters=None` AND ITS TAUGHT PROSE NAMES *THREE* WINDOWS.** ⇒ **THE TWO ORDERED REDS ARE STILL RED, ON PURPOSE, AND I AM NOT CLAIMING `STEP 4`.**
+
+**RULING:** `R-735 §6`. **SEAT:** same worker seat as `AR-828`, continuing — **this is NOT a handoff.** **HEAD at work start `cc2152d5`.** **ATTEMPT BUDGET: `STEP 4` `1 / 2`.**
+
+### §1 — ✅ WHAT IS BUILT AND PROVEN
+**`src/engine/opening_range_adapter.py`** — the executable arithmetic STEP 3 refused to guess at. **`src/engine/tests/test_opening_range_adapter.py`** — the `12` controls pre-registered at `AR-828 §2.4` **before the adapter existed.** `[MEASURED HERE]` `pytest src/engine/tests/test_opening_range_adapter.py -q` → **`12 passed in 0.11s`, exit `0` (verified UNPIPED — `R-735 §4.1` was bitten by a piped exit code and I re-ran without the pipe rather than trusting mine).**
+**WHAT THE CONTROLS ACTUALLY DISCRIMINATE, not merely assert:**
+- **COMPLETE** computes `high 100.50 / low 99.75`, and **width + midpoint are DERIVED** via `from_levels` — there is no code path that accepts them as inputs.
+- 🛑 **THE MISSING-BAR CONTROL ASSERTS THE NUMBERS, NOT THE STATUS.** Dropping the bar that carries both extremes is exactly the case where a silent implementation returns `high 100.20 / low 99.90` — **narrower, plausible, wrong.** The test asserts that tighter range is **specifically absent**, and then supplies a **POSITIVE WITNESS** that the same fixture WITH the bar restored DOES compute — so the refusal is caused by the missing observation, not by an unusable fixture.
+- **Duplicated bar · off-grid timestamp · window not expressible in whole bars** → each refuses with `INCOMPLETE_OPENING_WINDOW`. **The status is asserted by IDENTITY, so a refusal that moved stage would fail** — a bare `complete is False` would not.
+- **`FORMING` before the lock**, with **all four numeric fields `None`** — lookahead is prevented by the SHAPE, not a convention.
+- **The bar stamped AT the lock instant is EXCLUDED** (half-open `[start, lock)`); including it would widen every range by one bar while looking reasonable.
+- ⭐ **THE DST CONTROL IS LOAD-BEARING AND IT DISCRIMINATES:** bars at the TRUE `09:30 EDT` instant compute; bars an hour later — **where a fixed `-05:00` offset would have looked** — return `INCOMPLETE`. **A fixed offset is wrong for half the year and the error is SILENT**, so the IANA zone is proven to be doing work rather than merely being present.
+- 🛑 **INVARIANT 2 SURVIVES `STEP 4`:** `selected_duration_minutes` **still raises and the adapter never calls it**; `variant` is a required parameter, and an untaught variant is refused by name.
+✅ **RED-PROOFED AT BIRTH (`test_a_refusing_stub_cannot_satisfy_this_suite`):** the always-refuse stub — **the exact shape that satisfies both ordered REDs** — is run through the same positive control and **FAILS it.** ★ **Without that, this suite would be assertions with no demonstrated power to reject the thing it was built to reject.**
+
+### §2 — 🛑🛑 THE STOP, WITH THE MEASUREMENT CHAIN THAT FORCED IT
+**I did not reason my way to this blocker; I walked the chain and each link is a command or an executable line.**
+1. `[MEASURED, `test_opening_range_conformance.py:479`/`:503`]` the two ordered REDs require **`bindable=True` + `primitive is not None`**, and a primitive whose **return annotation** carries the six fields.
+2. `[MEASURED, `family_meta_enforcement.py:446`]` **`verify_dispatch_coverage()` proves SET EQUALITY IN BOTH DIRECTIONS** between `FAMILY_META`'s declarations and `spec_condition_compiler.ENFORCED_DISPATCH`. `[MEASURED, `spec_condition_compiler.py:98-105`]` its own comment: *"a declared name with no key here is an unroutable pointer."* ⇒ **declaring the primitive OBLIGES a dispatch handler.**
+3. A dispatch handler **evaluates per bar**, so it must know **WHICH taught window** it is computing.
+4. 🛑 `[MEASURED HERE, production chain, mirroring `_produce` exactly — same public entry points, flags off]` the golden slice's condition `OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0` binds with **`parameters: None`**, `primitive: None`, `bindable: False`. **Its taught object is verbatim:** *"once you take the price that's established in the **first 5, 15, and the 30 minute ranges**…"*
+⇒ ★★★★★ **THERE IS NO TAUGHT DURATION ON THE BINDING AND THERE ARE THREE IN THE PROSE. WIRING THE HANDLER MEANS CHOOSING ONE.** **That is the scope class `R-732 §2` reserved to the desk, it is the STOP I pre-registered at `AR-828 §2.5` before I knew whether I would hit it, and I am honouring it rather than discovering a convenient reading now that it costs me the step.** ★ **`A STOP IS ONLY WORTH ANYTHING WHEN HONOURING IT IS EXPENSIVE.`**
+🛑 **AND I REJECTED THE AVAILABLE DODGE, BY NAME.** A handler could be registered that refuses unless a variant is supplied — that turns **both ordered REDs GREEN** while the condition still computes nothing. **That is `AR-828 §2.4`'s stub with extra machinery, and it would be me crossing the turnstile I reported.** ⚖️ **It is also the `[never-flag]` shape: green on one branch, defective on the one production takes.**
+
+### §3 — ⚖️ THE OPTIONS, WITH A RECOMMENDATION — DESK'S CALL, NOT MINE
+- **(A) THE FRAMEWORK NAMES THE WINDOW, THE COMPILER CARRIES ALL THREE.** The definition keeps every taught variant; the RUNTIME supplies the variant as configuration, exactly as it supplies instrument and bar interval. ⭐ **RECOMMENDED** — it keeps the choice OUT of the compiler, where it would be invention, and puts it in the framework layer, where duration is a configuration fact. **It is also the split `opening_range_definition.py` already established in writing** (source-owned vs framework/data-contract), so it adds no new concept.
+- **(B) EMIT ONE STATE PER TAUGHT VARIANT.** Maximal fidelity — nothing is chosen. 🛑 **But it changes binding CARDINALITY**, which touches the census, the parity gate and the binding-plan contract. **Materially larger blast radius.**
+- **(C) LEAVE IT UNBOUND.** The adapter ships as a proven library; the two REDs stay red. 🛑 **Contradicts `R-735 §6`'s stated acceptance target**, so it is only honest as an explicit deferral, not as a completion.
+⚖️ **I am not implementing any of them. `A RECOMMENDATION IS NOT A DECISION`, and `AR-828 §2.5` said this exact call would go up.**
+
+### §4 — ✅ ACCEPTANCE: ALL FOUR COMMANDS, NO REGRESSION, RE-MEASURED AFTER THE CHANGE
+```
+1. discrimination instrument -> ALL 8 CONTROLS PASS; blast radius EXACTLY the two
+                                authorized members; exit 0
+2. guards                    -> 72 passed in 13.44s; exit 0
+3. conformance group         -> 2 failed, 96 passed; exit 1
+                                membership = the TWO ORDERED REDs, unchanged. NO THIRD RED.
+3b. adapter suite (NEW)      -> 12 passed in 0.11s; exit 0
+4. TS parity (real binary,   -> flag=false FULL PARITY over 41 specs;
+   NOT npx, in the SHARED       flag=true 87 known/expected, 0 unexpected; exit 0
+   tree per R-735 §2)
+```
+✅ **EVERY FIGURE MATCHES `R-735 §2`'s DESK-RUN CLEAN-ROOM BASELINE EXACTLY** ⇒ **adding the adapter module and its suite regressed nothing.** ★ **Command 4 was run with `node node_modules/tsx/dist/cli.mjs`, NOT `npx` — `R-735 §2` recorded that `npx tsx` in a dep-less tree is a troll stub printing exit `0` regardless. I am in the shared tree WITH `node_modules`, so `npx` would probably have been fine; "probably fine" is not why anyone runs a gate.**
+🛑 **THE TWO REDS ARE STILL RED, AND THAT IS THE HONEST RESULT, NOT A FAILURE:** they are the acceptance target for a `STEP 4` that cannot honestly complete until §2 is ruled. **I did not turn them green, and I could have.**
+
+### §5 — WHAT I DID NOT MEASURE, AND WHAT I DID NOT TOUCH
+🛑 **`UNMEASURED`:** the adapter against REAL market bars — **every control uses constructed fixtures, and I am labelling that plainly rather than implying live-data validation** · whether option (A) or (B) has downstream effects on the census, backtester or Pine export — **not traced, because the option is not chosen** · the other `97` conditions, the other nine specs, futures portability, `test_cloud_backend.py` (desk-owned).
+✅ **NOT TOUCHED:** `FAMILY_META` and `PRIMITIVE_RESOLVERS` **unchanged** · `ENFORCED_DISPATCH` **unchanged** · the TS mirror **unchanged** · **neither ordered RED edited** · no video or strategy id in production code · breakout trigger still **`UNRESOLVED_SOURCE_AMBIGUITY`** · `orb_5m_retest` breakout/retest **NOT compiled** · the `7` quarantined files **untouched, re-fingerprinted `ed382c44a07ce6a7` before this commit** · nothing in the desk backlog.
+⚠️ **A DORMANT MODULE IS A KNOWN SPECIES HERE (`[dormant-activation]`), SO I AM DECLARING IT RATHER THAN LEAVING IT TO A SWEEP:** `opening_range_adapter.py` has **zero production callers by design** until §2 is ruled, and **the module's own docstring says so at the top** — the reason lives with the code, not only in this ledger.
+⚖️ **Fan-in `1 / 2` on `R-735 §6`:** the adapter is delivered and proven; the production binding is **BLOCKED on a scope ruling, not unstarted.** **This seat continues and is not handing off.**
+
 ## AR-828 · 2026-08-09 · ✅ **THE `R-735 §5` DOCUMENTATION CORRECTION IS MADE VERBATIM, AND THIS IS THE `STEP 4` START-RECEIPT WITH THE ADAPTER DESIGN IN OUTLINE.** 🛑🛑★★★★★ **AND THE DESIGN CARRIES A FINDING I WOULD RATHER STATE NOW THAN AT DELIVERY: *BOTH ORDERED REDS CAN BE TURNED GREEN BY A STUB.* NEITHER TEST EXECUTES THE ADAPTER — ONE READS `bindable`/`primitive`, THE OTHER READS A RETURN ANNOTATION. `R-735 §6` DEMANDS THEY GO GREEN BY THE ADAPTER *WORKING*, AND AS WRITTEN THEY CANNOT TELL.** ⚠️ **PLUS TWO MEASURED CORRECTIONS TO `AR-827` AND ONE TO `R-735 §6`.**
 
 **RULING:** `R-735 §5` (correction) + `R-735 §6` (`STEP 4` conditional release). **SEAT:** fresh worker, cold-started after `/clear`; predecessor wrote `AR-827`. **HEAD at work start `916435a9`; campaign HEAD now `e2cecaf4`** (the desk's `R-735` commit, which landed mid-session and which I did not touch).
