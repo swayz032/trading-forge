@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from math import isfinite
 from typing import Iterable, Optional, Tuple
 
 
@@ -39,6 +40,17 @@ TIMEFRAME_RANK = {
 }
 
 
+def _finite(name: str, value: float) -> None:
+    if not isfinite(value):
+        raise ValueError(f"{name} must be finite")
+
+
+def _unit_interval(name: str, value: float) -> None:
+    _finite(name, value)
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(f"{name} must be within [0, 1]")
+
+
 @dataclass(frozen=True)
 class ReactionZone:
     zone_id: str
@@ -53,8 +65,13 @@ class ReactionZone:
     def __post_init__(self):
         if not self.zone_id:
             raise ValueError("zone_id required")
+        _finite("lower_bound", self.lower_bound)
+        _finite("upper_bound", self.upper_bound)
+        if self.lower_bound <= 0 or self.upper_bound <= 0:
+            raise ValueError("zone prices must be positive")
         if self.lower_bound >= self.upper_bound:
             raise ValueError("lower_bound must be < upper_bound")
+        _unit_interval("reaction_score", self.reaction_score)
         if self.reaction_count < 0 or self.confluence_count < 0 or self.age_bars < 0:
             raise ValueError("counts/age must be non-negative")
 
@@ -81,6 +98,19 @@ class ProofCandidate:
     structural_score: float
     selection_score: float
 
+    def __post_init__(self):
+        if not self.candidate_id:
+            raise ValueError("candidate_id required")
+        _finite("level_price", self.level_price)
+        if self.level_price <= 0:
+            raise ValueError("level_price must be positive")
+        _finite("distance_normalized", self.distance_normalized)
+        _finite("room_to_target_normalized", self.room_to_target_normalized)
+        if self.distance_normalized < 0 or self.room_to_target_normalized < 0:
+            raise ValueError("normalized distances must be non-negative")
+        _unit_interval("structural_score", self.structural_score)
+        _unit_interval("selection_score", self.selection_score)
+
 
 @dataclass(frozen=True)
 class ProofSelectorConfig:
@@ -91,8 +121,16 @@ class ProofSelectorConfig:
     min_withtrend_structural_score: float
 
     def __post_init__(self):
-        if self.min_distance_normalized < 0:
-            raise ValueError("min distance must be >= 0")
+        for name, value in (
+            ("min_distance_normalized", self.min_distance_normalized),
+            ("max_distance_normalized", self.max_distance_normalized),
+            ("min_room_to_target_normalized", self.min_room_to_target_normalized),
+        ):
+            _finite(name, value)
+            if value < 0:
+                raise ValueError(f"{name} must be >= 0")
+        _unit_interval("min_countertrend_structural_score", self.min_countertrend_structural_score)
+        _unit_interval("min_withtrend_structural_score", self.min_withtrend_structural_score)
         if self.max_distance_normalized <= self.min_distance_normalized:
             raise ValueError("max distance must exceed min distance")
 
@@ -180,16 +218,23 @@ class TargetSelectorConfig:
     strong_momentum_threshold: float
 
     def __post_init__(self):
-        if not 0.0 <= self.conservative_penetration_fraction <= 1.0:
-            raise ValueError("penetration fraction must be within [0, 1]")
+        _unit_interval("conservative_penetration_fraction", self.conservative_penetration_fraction)
+        _finite("close_distance_normalized", self.close_distance_normalized)
         if self.close_distance_normalized < 0:
             raise ValueError("close distance must be >= 0")
+        _unit_interval("major_zone_reaction_score", self.major_zone_reaction_score)
+        _unit_interval("strong_momentum_threshold", self.strong_momentum_threshold)
 
 
 @dataclass(frozen=True)
 class TargetCandidate:
     zone: ReactionZone
     distance_normalized: float
+
+    def __post_init__(self):
+        _finite("distance_normalized", self.distance_normalized)
+        if self.distance_normalized < 0:
+            raise ValueError("distance_normalized must be non-negative")
 
 
 @dataclass(frozen=True)
@@ -204,8 +249,7 @@ def conservative_target_price(
     direction: Direction,
     penetration_fraction: float,
 ) -> float:
-    if not 0.0 <= penetration_fraction <= 1.0:
-        raise ValueError("penetration_fraction must be within [0, 1]")
+    _unit_interval("penetration_fraction", penetration_fraction)
     if direction == Direction.LONG:
         return zone.lower_bound + zone.width * penetration_fraction
     return zone.upper_bound - zone.width * penetration_fraction
@@ -218,6 +262,7 @@ def select_target(
     momentum_score: float,
     config: TargetSelectorConfig,
 ) -> TargetDecision:
+    _unit_interval("momentum_score", momentum_score)
     ordered = sorted(candidates, key=lambda x: (x.distance_normalized, x.zone.zone_id))
     if not ordered:
         return TargetDecision(None, None, "NO_TARGET_ZONE")
