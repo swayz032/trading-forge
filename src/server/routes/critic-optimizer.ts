@@ -78,13 +78,32 @@ criticOptimizerRoutes.post("/analyze", idempotencyMiddleware, async (req, res) =
       backtestId = latest.id;
       resolvedStatus = latest.status;
     } else {
+      // ─── R-756 §3: THE OWNERSHIP JOIN. This is NOT a refusal defect ──────────
+      //
+      // This lookup previously matched `backtests.id` ALONE, and the two identifiers
+      // were then never compared anywhere on the path:
+      //   here                        triggerCriticOptimizer(backtestId, strategy_id)
+      //   critic-optimizer-service.ts :1305 loads the BACKTEST  by one id
+      //   critic-optimizer-service.ts :1316 loads the STRATEGY  by the other
+      //
+      // ⇒ a caller supplying strategy A's COMPLETED backtest_id together with
+      // strategy B's strategy_id produced an evidence packet holding A's
+      // MEASUREMENTS under B's IDENTITY AND CONFIG, and the critic ranked on it.
+      // It fires on the fully completed path and needs no refusal to exist.
+      //
+      // Joining inside the WHERE clause rather than fetching-then-comparing also
+      // means the response cannot distinguish "no such backtest" from "not yours".
       const [row] = await db
         .select({ id: backtests.id, status: backtests.status })
         .from(backtests)
-        .where(eq(backtests.id, backtestId))
+        .where(and(eq(backtests.id, backtestId), eq(backtests.strategyId, body.strategy_id)))
         .limit(1);
       if (!row) {
-        return res.status(404).json({ error: "backtest_not_found", backtest_id: backtestId });
+        return res.status(404).json({
+          error: "backtest_not_found_for_strategy",
+          backtest_id: backtestId,
+          strategy_id: body.strategy_id,
+        });
       }
       resolvedStatus = row.status;
     }

@@ -394,7 +394,17 @@ describe("D-10 F-8 — a refused backtest is terminal eligibility evidence", () 
   it("F-8.3 POSITIVE CONTROL — an ordinary candidate still enqueues, counts and announces", async () => {
     // R-754 §3: four of the ten controls are POSITIVE. A conveyor that enqueues
     // nothing would satisfy F-8.2 perfectly and is not a repair.
+    //
+    // R-755 §5 correction: this control previously inherited `status: "running"`
+    // from the shared beforeEach, while the contract requires "enqueues AND
+    // COMPLETES". A control that never sees a completed result cannot witness the
+    // completing path — so the status is now set explicitly here rather than
+    // borrowed. `A FIXTURE INHERITED FROM SETUP IS A FIXTURE NOBODY CHOSE.`
     setupSelectMock(0, [strategyFixture]);
+    backtestMocks.runBacktest.mockResolvedValue({
+      id: "bt-00000000-0000-0000-0000-000000000001",
+      status: "completed",
+    });
 
     await runCandidateBacktestConveyor();
 
