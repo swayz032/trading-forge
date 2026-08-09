@@ -12,6 +12,65 @@
 
 ---
 
+## R-744 · 2026-08-09 · ✅ **`AR-839` ACCEPTED — `STEP 2` IS GREEN, ALONE AND PRE-CHANGE, AND I CONFIRMED ITS `BY CONSTRUCTION` CLAIM AT THE EXECUTABLE LINE.** 🛑🛑★★★★★ **BUT I MEASURED SOMETHING BOTH THE WORKER AND THE READ MISSED: THE GOLDEN CONDITION CARRIES `executed=False` AND IS **ALREADY** ABSENT FROM THE BOOLEAN GATE — SO `6B` DOES NOT CHANGE `spine_satisfied` AT ALL, AND TWO OF THE READ'S FOUR DUAL-RAIL ASSERTIONS PASS ON UNCHANGED CODE.** ⚠️ **I ALSO REFUTE MY OWN HYPOTHESIS FROM THIS SEAT, WHICH GUESSED THE OTHER BRANCH.**
+
+**RULING ID:** R-744 · **AR RULED:** **`AR-839`** · **DECISION: ACCEPT · CONFIRM (the mechanism claim, independently) · ADOPT-WITH-TWO-CORRECTIONS (external read `R-744`) · REFUTE (a hypothesis of my own) · CONTINUE (`6B`, no re-authorization needed)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-839`** `[MEASURED HERE]` — **ruled here; none newer.** **HEAD at write time: `037f5e7a`.**
+**READ CONSUMED:** `GPT EXTERNAL ADVISOR RULING — R-744 — STEP 2 PASSES; CONTINUE 6B WITH SEPARATE STATE AND ELIGIBILITY ACCOUNTING` (operator-relayed chat, 2026-08-09). **ADOPTED ON MERIT** — two corrections below, and **one place where the read beat both the worker and this desk, stated as plainly as the corrections.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+**WAIT: HONOURED.** `AR-839` is **not** a pure receipt (it delivers an ordered artifact and makes findings), and **the worker was NOT blocked** — `R-743 §8` authorizes `6B` through to completion. ⇒ **no exception was available and none was invoked; the wait cost nothing.** ★ **I re-measured the urge to relay my `§1` finding early and it was the `URGENCY` disguise: it contradicted nothing and unblocked nothing.**
+
+### §1 — ✅ THE `BY CONSTRUCTION` CLAIM IS TRUE, AND I CHECKED IT BECAUSE IT IS A MECHANISM CLAIM
+`AR-839 §2` asserts membership in `per_condition_bool` **IS** membership in the boolean AND, so a state producer is excluded **by construction**. ★★ **`advisor-ruling §1`: "by construction" is a MECHANISM claim and this desk has been wrong about four in one session. I did not take it on report.**
+`[MEASURED HERE, `spec_condition_compiler.py`, HEAD `037f5e7a`]`:
+- **`_dispatch_enforced` has EXACTLY ONE call site** — definition `:905`, call `:1634`. **Enumerated, not sampled.**
+- **`per_condition_bool` is the SOLE input to `spine_satisfied` on BOTH branches** — the plain conjunction `:1739-1740` (`for arr in per_condition_bool.values(): spine_satisfied &= arr`) **and** `_combine_spine_or_branches` (`:1146`, `:1158`), which reads the same dict and nothing else.
+- **The precedent is real** `:1617-1622`: `if not b.executed: … continue`, commented *"MUST NOT enter the gating loop or the trace's `conditions` list at all, not even as a harmless always-True pass-through."*
+✅ **CONFIRMED. A binding that never writes that dict is excluded from the gate — and from `conditions[]` (`:1832`) — as a type-level property, not a remembered rule.** ⚖️ **SCOPE: the dispatch layer, which is all `AR-839` claimed. The other seven `R-743 §7` stops remain unmeasured and are NOT cleared.**
+
+### §2 — 🛑🛑★★★★★ THE MEASUREMENT THAT REFRAMES `AR-839 §3` — AND REFUTES A HYPOTHESIS OF MY OWN
+`AR-839 §3` flags that after `6B` the spine will be satisfied **without** the opening-range condition gating it, and that this *"will LOOK like a dropped condition."* **I formed a hypothesis that it currently enters at `:1628` as an always-true pass-through, so the change would be an AND-identity no-op. I measured it instead of publishing it.**
+`[MEASURED HERE, `test_no_production_binding_routes_to_the_opening_range_adapter_yet`, the binding's own repr]`:
+```
+ConditionBinding(condition_id='OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0',
+                 bindable=False, primitive=None, executed=False,
+                 reason='opening_range_adapter_not_implemented', parameters=None)
+```
+🛑 **`executed=False`** ⇒ it takes `:1618`'s `continue` and **NEVER REACHES `:1628`'s `np.ones` branch.** ★ **MY HYPOTHESIS IS REFUTED — wrong branch.**
+⇒ ★★★★★ **THE OPERATIVE CONSEQUENCE, WHICH IS STRONGER THAN WHAT EITHER `AR-839` OR THE READ CLAIMS: THE GOLDEN OPENING-RANGE CONDITION IS *ALREADY* ABSENT FROM `per_condition_bool` TODAY. `6B` DOES NOT CHANGE `spine_satisfied` AT ALL.** The absence is not new; only its CAUSE changes — from *"adapter not implemented"* to *"state producer by design."*
+⚖️ **THIS IS NOT A LICENCE TO SKIP THE ELIGIBILITY WORK — IT RE-DATES IT.** `spine_satisfied` is **already** as misleading as it will be after `6B`. ⇒ **the read's eligibility finding is CORRECT and it is PRE-EXISTING COMPILER DEBT, not debt `6B` creates.** 🛑 **DO NOT CHARGE IT TO `6B`'s ATTEMPT BUDGET, and do not let a later seat read it as a regression `6B` introduced** (`[i-measured]`: the join key here is *cause*, not *presence*).
+
+### §3 — 🛑🛑 CORRECTION 1 — THE DUAL-RAIL CONTROL IS `2` DISCRIMINATING OF `4`, AND MUST BE REPORTED THAT WAY
+The read requires one execution proving: **(1)** OR condition **absent** from `per_condition_bool` · **(2)** OR condition **present** in typed state outputs · **(3)** neighbour **present** in `per_condition_bool` · **(4)** neighbour **absent** from OR state outputs.
+🛑 **`[MEASURED HERE]` ASSERTIONS `1` AND `3` ALREADY PASS ON UNCHANGED CODE** — `1` by `§2` (`executed=False` ⇒ skipped), `3` by `AR-839 §1`'s delivered witness (`5 passed`, route-identity + nonconstant). ⇒ **they cannot go red for the change and prove nothing about it.**
+✅ **`2` IS THE ONLY ASSERTION THAT CANNOT PASS BEFORE THE CHANNEL EXISTS. `4` is a genuine post-change cross-check** (it fails only if the implementation wrongly files the neighbour into state outputs) **but is vacuous today, because no state-output surface exists.**
+✅ **BINDING: build all four — the pairing IS the point, and `1`+`3` are the positive controls that stop `2`+`4` being satisfied by a route that fired for the wrong reason.** 🛑 **BUT REPORT THEM BY DISCRIMINATING POWER, NEVER AS `4/4 GREEN`.** ★★★★★ **`A CONTROL THAT PASSES ON THE UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE — AND A REPORT THAT COUNTS BOTH KINDS IN ONE NUMERATOR HAS INFLATED ITS OWN EVIDENCE`** (`[green-check]`, `[unenumerated-ladder]`). ⚖️ **This is the same shape as `AR-836 §3`'s control that passed by luck and `RED #2`'s stub-satisfiability — third instance in three rulings.**
+
+### §4 — ⚖️ CORRECTION 2 — ORDER THE ELIGIBILITY *PROPERTY*, NOT THE READ'S FIVE FIELD NAMES
+The read names five trace distinctions (`boolean spine satisfied` · `required state producer bound` · `trigger bound` · `overall strategy compiled` · `entry eligible`). **The concern is right and money-facing: `spine_satisfied=True` must never imply the strategy is executable.**
+🛑 **BUT `R-743 §5` SCOPED `6B` DELIBERATELY NARROW, and five new trace fields on a commit already carrying the typed channel, dispatch, adapter wiring, public surface, dual-rail control, the `R-742 §4` repair, the production spy and the TS mirror is exactly how a narrow lane stops being narrow.** ★★ **`advisor-ruling §4`: ORDER THE PROPERTY, NOT THE MECHANISM — a mechanism inherits every gap in my model of the failure.**
+✅ **ORDERED, MINIMUM AND RED-PROOFABLE:** the production surface must make **`boolean spine satisfied`** and **`this strategy may enter`** **NON-EQUIVALENT AND SEPARATELY READABLE**, and must carry **the reason entry is refused** (`trigger UNRESOLVED_SOURCE_AMBIGUITY`). **Field names are the worker's.** **ONE control, and it must FAIL if a consumer can reach "tradable" from the boolean subtotal alone.**
+✅ **For the golden strategy the required observable end-state is unchanged and absolute:** OR state producer **bound** · boolean subtotal **may be satisfied** · trigger **NOT bound** · compiled-for-trading **false** · entry-eligible **false** · **trades ZERO.**
+
+### §5 — ⭐⭐⭐ WHERE THE READ BEAT BOTH THE WORKER AND ME: THE PRE-STATE WITNESS
+`AR-839 §4` planned to **retire** `test_this_file_predates_the_state_channel` in the `6B` commit *"never as a silent cleanup."* **I read that and accepted it as sufficient. It is not, and the read caught it.**
+🛑 **A witness that is DELETED when the thing it witnesses arrives leaves no standing proof of the separation it existed to establish.** ✅ **ADOPTED VERBATIM:** in the `6B` commit **retire ONLY the assertion that the state channel does not exist** · **PRESERVE the neighbour's route-identity assertion** · **PRESERVE its nonconstant-output assertion** · **ADD the post-state separation assertions** · **the transition must be explicit in the commit diff.**
+★★★★★ **`RETIRING A WITNESS IS NOT THE SAME ACT AS RETIRING THE ONE ASSERTION THAT EXPIRED — AND THE CHEAP VERSION DELETES THE EVIDENCE ALONG WITH THE EXPIRY.`** ⚖️ **Recorded against myself: I had the worker's sentence in front of me and passed it.**
+
+### §6 — ✅ REMAINING `6B` ACCEPTANCE — THE READ'S ELEVEN, ADOPTED
+**(1)** golden lowering ⇒ exactly `5m`/`15m`/`30m` · **(2)** real adapter called **exactly three times** · **(3)** the three typed state series **publicly observable** · **(4)** deterministic candles ⇒ **deliberately different `high`/`low`/`width`/`midpoint`** · **(5)** `dENM` ⇒ `SOURCE_INCOMPLETE` + `failure_kind=ABSENT` + `missing_fields=('trading_day_rule',)` + `primitive=None` + **zero adapter calls** · **(6)** disposition mapping from **structured fields** (`R-742 §3`, incl. `READY`→continue, which the read omits) · **(7)** `ConditionBinding.parameters` stays `None` · **(8)** routing back to `compute_structure_state` **fails** · **(9)** the neighbour stays green · **(10)** both ordered REDs green **without weakening** · **(11)** **no entry, direction, trade or profitable backtest.**
+🛑🛑 **`(10)` REMAINS NECESSARY AND NOT SUFFICIENT (`R-743 §3`) — `RED #2` is stub-satisfiable by its own docstring. `(4)` IS THE DISCRIMINATOR: a module returning `refused_state()` turns both REDs green and CANNOT produce three different numeric triples.** ★ **`(5)`'s `missing_fields=('trading_day_rule',)` is consistent with `R-742 §4`'s ordered repair — genuinely-absent fields only.**
+
+### §7 — ✅ AUTHORIZED NOW — CONTINUE, NO RE-AUTHORIZATION
+✅ **`6B` CONTINUES to this seat as ONE controlled production commit** under `R-743 §5`–`§7` **as amended by `§3`–`§6` here.** **ATTEMPT BUDGET `0 / 2`, UNCHANGED — `STEP 2` was an ordered deliverable and `§4`'s eligibility work is pre-existing debt, neither is an attempt.**
+🛑 **STOP CONDITIONS UNCHANGED (`R-743 §7`) — stop only if one ACTUALLY fires.** ★ **`AR-839` cleared exactly one of eight, at one layer; the other seven stand.**
+**ACCEPTANCE — ALL UNPIPED:** the `R-741 §5` pinned conformance group (**exact failure membership; NEVER re-quote `96`**) · the five opening-range suites · the eight-control discrimination instrument · the dual-rail control **reported by discriminating power per `§3`** · production guards · the real `tsx` binary in the SHARED tree.
+⏳ **ON DELIVERY THE DESK DISPATCHES `accuracy-validator` ADVERSARIALLY** (`ratify-packet` staged, `R-743 §5`) — receipt `docs/designs/GRADE-6B-STATE-CHANNEL-2026-08-09.md`. **`doer ≠ grader`; I take no part in grading what I scoped.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A CONTROL THAT PASSES ON THE UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE` — and counting both kinds in one numerator inflates the evidence. Third instance in three rulings.** · ★★★★★ **`AN ABSENCE THAT ALREADY EXISTS IS NOT AN ABSENCE THE CHANGE CREATED — THE JOIN KEY IS CAUSE, NOT PRESENCE.`** · ★★★★★ **`RETIRING A WITNESS IS NOT RETIRING THE ONE ASSERTION THAT EXPIRED.`** · ★★★★ **I formed a mechanism hypothesis, measured it, and it was WRONG — the value was in measuring before publishing, not in being right.**
+
+---
+
 ## R-743 · 2026-08-09 · ✅✅★★★★★ **`AR-837` ACCEPTED — THE STOP WAS CORRECT, I RE-MEASURED THE WALL MYSELF, AND `OPTION A` IS AUTHORIZED.** 🛑🛑★★★★★ **BUT THE READ'S ORDER-OF-WORK ITEM 1 ORDERS A RED THAT ALREADY EXISTS — AND THAT RED IS SATISFIABLE BY A STUB *BY ITS OWN DOCSTRING'S ADMISSION*. THE READ HAS RE-CREATED THE EXACT FINISH LINE `R-736 §1` WITHDREW.** ⚠️ **AND THE SAME TEST CARRIES TWO DIFFERENT STAGE CLAIMS: `R-736 §3` FIXED THE DOCSTRING AND LEFT THE ASSERTION STRING CITABLE.**
 
 **RULING ID:** R-743 · **AR RULED:** **`AR-837`** · **DECISION: ACCEPT (the stop) · ADOPT-WITH-TWO-CORRECTIONS (external read `R-743`) · DECIDE (`OPTION A`) · AUTHORIZE (`6B` under an amended contract) · STAGE (`ratify-packet` + independent grade)**
