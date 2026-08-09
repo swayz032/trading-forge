@@ -68,6 +68,25 @@ would leave a reader unable to tell what to go and look for in the video."""
 
 DISPOSITION_SOURCE_AMBIGUOUS: str = "SOURCE_AMBIGUOUS"
 
+DISPOSITION_ENGINE_PRIMITIVE_MISSING: str = "ENGINE_PRIMITIVE_MISSING"
+"""The teacher WAS precise and the engine has no evaluator for what they said.
+
+R-749 §4-4. This is the honest disposition for a CLEARER teacher, and it is a different
+finding from `SOURCE_AMBIGUOUS`: the source is complete, the ENGINE is short. It matches
+Phase A's own taxonomy -- the opening-range capability exists and is simply not reachable
+from the binding path, which is a MISSING EVALUATOR, not an ambiguous source."""
+
+REASON_NO_EXACT_OPENING_RANGE_TRIGGER_EVALUATOR: str = (
+    "opening_range_breakout_confirmation_specified_but_no_exact_trigger_evaluator"
+)
+
+MISSING_CAPABILITY_EXACT_BREAKOUT_TRIGGER: str = "exact_opening_range_breakout_trigger_evaluator"
+"""WHICH capability is missing. Named, so the gap is a build ticket rather than a shrug."""
+
+OUTCOME_ELIGIBLE: str = "ELIGIBLE"
+OUTCOME_AMBIGUOUS_CONFIRMATION: str = "AMBIGUOUS_CONFIRMATION"
+OUTCOME_CONFIRMED_BUT_UNIMPLEMENTED: str = "CONFIRMED_BUT_UNIMPLEMENTED"
+
 # ── (2) an already-constructed opening-range boundary ────────────────────────
 _BOUNDARY_RE = re.compile(
     r"\b(?:(?:opening[\s-]+)?range)\s+(?:high|low)\b"
@@ -110,11 +129,31 @@ class BreakoutAmbiguityVerdict:
     """
 
     ambiguous: bool
+    """Kept as the ambiguity-branch predicate. `outcome` is the complete answer."""
+
     reason: str | None
     ambiguity: str | None
+
     evidence: tuple[tuple[str, str], ...]
     """`(condition_name, matched_span)` for every condition that fired, and
     `(condition_name, "")` for the one that did not."""
+
+    outcome: str = OUTCOME_ELIGIBLE
+    """WHICH of the three answers this is.
+
+    ★★★★★ THE BOOLEAN ALONE WAS THE DEFECT (R-749 §1). `ambiguous=False` was read at the
+    call site as "leave this binding alone", and that stand-down branch was a PASS-THROUGH
+    TO THE DEFECT: a clearer teacher's trigger kept whatever primitive the normal path gave
+    it — `compute_structure_state`, which never reads the sentence.
+
+        `A REFUSAL RULE THAT ONLY FIRES ON VAGUENESS PROTECTS THE VAGUE TEACHER AND EXPOSES
+         THE PRECISE ONE.`
+
+    Two of the three outcomes must refuse. A two-valued answer could not express that, so
+    the boolean is no longer the carrier."""
+
+    missing_capability: str | None = None
+    """WHICH engine capability is absent, on the `CONFIRMED_BUT_UNIMPLEMENTED` outcome."""
 
 
 def classify_breakout_confirmation_ambiguity(
@@ -160,8 +199,21 @@ def classify_breakout_confirmation_ambiguity(
     # controls exercise hardest.
     confirmation = _CONFIRMATION_RE.search(text or "")
     if confirmation is not None:
+        # ★★★ THE TEACHER WAS PRECISE — AND THAT USED TO BE THE UNSAFE ANSWER.
+        # Conditions (1)-(3) all hold: this IS the entry trigger, it DOES reference an
+        # opening-range boundary, and it DOES express a crossing. The source specified the
+        # confirmation, so it is not ambiguous. But the engine has NO evaluator that reads
+        # "closes above the range high" — so returning "eligible" here handed the condition
+        # back to the normal binding path, which gave it `compute_structure_state`, which
+        # never reads the sentence. That is R-749 §1's inversion, and this branch is where
+        # it lived.
         return BreakoutAmbiguityVerdict(
-            False, None, None, (*evidence, ("confirmation_specified", confirmation.group(0)))
+            ambiguous=False,
+            reason=REASON_NO_EXACT_OPENING_RANGE_TRIGGER_EVALUATOR,
+            ambiguity=None,
+            evidence=(*evidence, ("confirmation_specified", confirmation.group(0))),
+            outcome=OUTCOME_CONFIRMED_BUT_UNIMPLEMENTED,
+            missing_capability=MISSING_CAPABILITY_EXACT_BREAKOUT_TRIGGER,
         )
     evidence.append(("confirmation_specified", ""))
 
@@ -170,4 +222,5 @@ def classify_breakout_confirmation_ambiguity(
         reason=REASON_BREAKOUT_CONFIRMATION_UNRESOLVED,
         ambiguity=AMBIGUITY_BREAKOUT_CONFIRMATION,
         evidence=tuple(evidence),
+        outcome=OUTCOME_AMBIGUOUS_CONFIRMATION,
     )

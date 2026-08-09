@@ -29,6 +29,7 @@ import json
 from pathlib import Path
 
 from src.engine.breakout_confirmation_ambiguity import (
+    OUTCOME_ELIGIBLE,
     classify_breakout_confirmation_ambiguity,
 )
 from src.engine.extraction.spec_producer import produce_spec_artifact
@@ -77,12 +78,18 @@ def _derive() -> list[dict]:
                 text=cond["object"],
                 opening_range_defined_in_spec=has_or,
             )
+            # KEYED ON `outcome`, NOT ON `ambiguous`. R-749 §1: two of the three outcomes
+            # REFUSE, so `ambiguous` stopped meaning "affected" the moment
+            # CONFIRMED_BUT_UNIMPLEMENTED existed. Reading the boolean here would file a
+            # refused clearer-teacher trigger as UNAFFECTED and under-report the blast
+            # radius -- an instrument that lies in the safe-looking direction.
+            affected = verdict.outcome != OUTCOME_ELIGIBLE
             rows.append(
                 {
                     "stub": stub,
                     "condition_id": cond["id"],
-                    "disposition": "AFFECTED" if verdict.ambiguous else "UNAFFECTED",
-                    "stood_down_at": None if verdict.ambiguous else verdict.evidence[-1][0],
+                    "disposition": "AFFECTED" if affected else "UNAFFECTED",
+                    "stood_down_at": None if affected else verdict.evidence[-1][0],
                 }
             )
     return rows

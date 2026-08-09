@@ -520,3 +520,107 @@ def test_classifier_verdict_is_frozen_and_carries_its_evidence():
         "crossing_relationship",
         "confirmation_specified",
     ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# 7. THE INVERSION (R-749 §4-4) — a CLEARER teacher must not compile onto a blind primitive
+# ═══════════════════════════════════════════════════════════════════════════════════════
+
+CONFIRMED_SUFFIXES = [
+    " and closes above it",
+    " with a wick through the level",
+    " and then retests it",
+    " on a 5 minute close",
+]
+
+
+def _golden_spec_with_trigger_suffix(suffix: str) -> dict:
+    import copy
+
+    spec = copy.deepcopy(_golden_spec())
+    for cond in spec["entry_conditions"]:
+        if cond["id"] == spec["entry_trigger_id"]:
+            cond["object"] = cond["object"] + suffix
+    return spec
+
+
+@pytest.mark.parametrize("suffix", CONFIRMED_SUFFIXES)
+def test_a_confirmed_trigger_refuses_with_engine_primitive_missing(suffix):
+    """R-749 §4-4, asserted on the FINAL BINDING — not on the classifier's branch.
+
+    ★★★★★ THE DEFECT THIS EXISTS TO STOP WAS AN INVERTED SAFETY PROPERTY. The first version
+    of this rule refused only VAGUENESS, so `if not verdict.ambiguous: return binding` handed
+    a PRECISE teacher's trigger back to the normal binding path — which gave it
+    `compute_structure_state`, a primitive that never reads the sentence.
+
+        `A REFUSAL RULE THAT ONLY FIRES ON VAGUENESS PROTECTS THE VAGUE TEACHER AND EXPOSES
+         THE PRECISE ONE — THE CLEARER THE TEACHING, THE MORE LIKELY IT COMPILES ONTO A
+         PRIMITIVE THAT NEVER READS IT.`
+
+    ⚠️ AND THE ASSERTION MUST BE ON THE PRIMITIVE. `AR-846 §3` strengthened these controls to
+    assert WHICH BRANCH decided, which is exactly ONE HOP SHORT of the consequence — and that
+    hop is where the defect lived. `A CONTROL THAT ASSERTS THE DECISION BUT NOT THE
+    CONSEQUENCE IS GREEN FOR THE WRONG REASON.`
+    """
+    spec = _golden_spec_with_trigger_suffix(suffix)
+    plan = compile_binding_plan(spec)
+    trigger = next(b for b in plan.bindings if b.condition_id == spec["entry_trigger_id"])
+
+    # POSITIVE CONTROL FIRST: the mutation actually reached the binding. R-749's own first
+    # probe truncated the text and made two different arms look identical.
+    assert trigger.object.endswith(suffix), "the mutation never reached the binding"
+
+    assert trigger.primitive is None, (
+        f"a trigger specifying its confirmation still bound to {trigger.primitive!r}; the "
+        "engine has no evaluator that reads it, so binding it to one that ignores it is the "
+        "founding defect under a new name"
+    )
+    assert trigger.primitive != "structure_engine.compute_structure_state"
+    assert trigger.bindable is False
+    assert trigger.executed is False
+    assert trigger.disposition == "ENGINE_PRIMITIVE_MISSING"
+    assert trigger.ambiguity == "exact_opening_range_breakout_trigger_evaluator"
+    # REFUSAL IS NOT ABSENCE.
+    assert trigger.role == "spine"
+    assert "range high" in trigger.object
+
+
+@pytest.mark.parametrize("suffix", CONFIRMED_SUFFIXES)
+def test_a_confirmed_trigger_is_not_mislabelled_source_ambiguous(suffix):
+    """The two refusals must stay DIFFERENT findings.
+
+    `SOURCE_AMBIGUOUS` sends a reader back to the VIDEO; `ENGINE_PRIMITIVE_MISSING` sends
+    them to build an EVALUATOR. Collapsing them would send half the work to the wrong place —
+    `TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES` (R-741 §2).
+    """
+    spec = _golden_spec_with_trigger_suffix(suffix)
+    trigger = next(
+        b for b in compile_binding_plan(spec).bindings
+        if b.condition_id == spec["entry_trigger_id"]
+    )
+    assert trigger.disposition != "SOURCE_AMBIGUOUS"
+    assert trigger.reason != REASON_BREAKOUT_CONFIRMATION_UNRESOLVED
+
+
+@pytest.mark.parametrize("suffix", CONFIRMED_SUFFIXES)
+def test_a_confirmed_trigger_also_blocks_execution(suffix):
+    """The refusal must reach the SAME strategy-level boundary, not merely relabel a binding."""
+    strategy, out = _run(_golden_spec_with_trigger_suffix(suffix))
+    assert strategy.execution_status == EXECUTION_STATUS_REFUSED
+    assert int(out["entry_long"].sum()) == 0
+    assert int(out["entry_short"].sum()) == 0
+    assert strategy.execution_refusal()["disposition"] == "ENGINE_PRIMITIVE_MISSING"
+
+
+def test_the_ordinary_structure_neighbour_still_binds_to_its_primitive():
+    """THE POSITIVE CONTROL FOR THE WHOLE RULE, at the primitive level.
+
+    If every trigger now refused, the assertions above would be satisfied by a rule that had
+    simply broken binding. This is the witness that ordinary conditions still reach real
+    evaluators.
+    """
+    spec = _neighbour_spec()
+    binding = next(b for b in compile_binding_plan(spec).bindings if b.condition_id == "s1")
+    assert binding.bindable is True
+    assert binding.primitive == "structure_engine.compute_structure_state"
+    assert binding.disposition is None

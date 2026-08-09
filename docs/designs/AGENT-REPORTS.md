@@ -4,6 +4,44 @@
 
 ---
 
+## AR-848 · 2026-08-09 · ✅✅★★★★★ **`R-749 §4-4` IS CLOSED: THE INVERSION IS GONE. ALL FOUR CLEARER-TEACHER CASES NOW REFUSE WITH `ENGINE_PRIMITIVE_MISSING` AND `primitive=None` — `compute_structure_state` APPEARS NOWHERE IN THE TABLE.** ⭐⭐ **THE DESK'S FINDING IS ACCEPTED WITHOUT ARGUMENT AND ITS DIAGNOSIS IS EXACT: MY STAND-DOWN BRANCH WAS A PASS-THROUGH TO THE DEFECT.** 🛑 **AND I FOUND A SECOND-ORDER DEFECT THE FIX CREATED IN MY OWN INSTRUMENT — THE BLAST-RADIUS DERIVATION KEYED ON `ambiguous`, WHICH HAD STOPPED MEANING "AFFECTED".** 🛑 **THREE `R-749 §4` CLOSEOUTS REMAIN AND I NAME THEM.**
+
+**RULING:** `R-749 §4-4` (closed here) · `§4-1`/`§4-2`/`§4-3` (owed). **HEAD `cb2d2b65` at write; this commit follows.** **ATTEMPT BUDGET `0 / 2`.**
+
+### §1 — ✅ THE FINDING IS REAL AND I ACCEPT IT WITHOUT DEFENCE
+`R-749 §1` measured, inside my own landed commit, that a trigger with an explicit confirmation still bound to `structure_engine.compute_structure_state` and traded. **The mechanism the desk names is exactly right and it was one line:**
+```python
+if not verdict.ambiguous:
+    return binding          # keeps whatever primitive the normal path gave it
+```
+★★★★★ **`A REFUSAL RULE THAT ONLY FIRES ON VAGUENESS PROTECTS THE VAGUE TEACHER AND EXPOSES THE PRECISE ONE.`** ⚖️ **I had NAMED this gap myself in `AR-847 §6` as `R-746 §4`'s unbuilt fourth discrimination — and then failed to see that it was not merely an unbuilt control but a LIVE HOLE IN THE SHIPPED SAFETY PROPERTY.** ★★★ **`AN UNBUILT CONTROL AND AN UNPROTECTED PATH LOOK IDENTICAL IN A REPORT, AND ONLY ONE OF THEM TRADES.`**
+
+### §2 — ✅ THE REPAIR, AND IT IS AT THE FINAL BINDING
+**The verdict is no longer a boolean.** A two-valued answer could not express that **TWO of three outcomes must refuse**, which is why the boolean was the defect rather than the site of it. `[MEASURED HERE, `R-749 §1`'s own probe reproduced, with its positive control]`:
+```
+trigger text                    bindable  primitive  disposition               mutation_reached
+golden, exactly as taught       False     None       SOURCE_AMBIGUOUS          True
+  + and closes above it         False     None       ENGINE_PRIMITIVE_MISSING  True
+  + with a wick through level   False     None       ENGINE_PRIMITIVE_MISSING  True
+  + and then retests it         False     None       ENGINE_PRIMITIVE_MISSING  True
+  + on a 5 minute close         False     None       ENGINE_PRIMITIVE_MISSING  True
+```
+★ **`mutation_reached` is asserted FIRST in every case** — `R-749`'s own first probe truncated the text and made two arms look identical, so the control against that trap is built in rather than remembered.
+✅ **THE TWO REFUSALS STAY DIFFERENT FINDINGS.** `SOURCE_AMBIGUOUS` sends a reader back to the **VIDEO**; `ENGINE_PRIMITIVE_MISSING` sends them to build an **EVALUATOR** (`missing_capability=exact_opening_range_breakout_trigger_evaluator`). **A test asserts a confirmed trigger is NOT mislabelled `SOURCE_AMBIGUOUS`** — collapsing them would send half the work to the wrong place.
+✅ **`REFUSAL IS NOT ABSENCE` holds for both:** role, prose and position preserved. ✅ **Both refusals reach the SAME strategy-level boundary — `entry_long=0 · entry_short=0 · execution_status=REFUSED`, asserted per case.**
+✅ **POSITIVE CONTROL AT THE PRIMITIVE LEVEL:** the ordinary structure neighbour **still binds to `compute_structure_state`** with `disposition=None`. ★★★ **Without it, every assertion above is satisfied by a rule that simply broke binding for everything.**
+
+### §3 — 🛑 THE SECOND-ORDER DEFECT MY OWN FIX CREATED, FOUND BEFORE COMMIT
+**Adding the third outcome silently invalidated my blast-radius instrument:** `_derive()` computed `AFFECTED` from **`verdict.ambiguous`**, which had just stopped meaning "affected". ⇒ **a refused clearer-teacher trigger would have been filed `UNAFFECTED`** — **an instrument that lies in the SAFE-LOOKING direction, under-reporting its own blast radius.** ✅ **Re-keyed on `outcome != ELIGIBLE`.** ⚖️ **Numerically the committed artifact is unchanged (`1 of 94`) because the pinned corpus contains no confirmed-teacher trigger — so this was latent today and would have bitten on the first one.** ★★★★★ **`A FIX THAT CHANGES WHAT A FIELD MEANS MUST BE SWEPT THROUGH EVERY READER OF THAT FIELD, INCLUDING THE TESTS THAT MEASURE THE FIX.`**
+
+### §4 — ✅ MEASURED
+`[MEASURED HERE, unpiped]` **trigger-safety suite `35 passed`.** **Full affected set, 15 suites: `2 failed, 334 passed`** — the two failures are the two ORDERED `6B` REDS, unchanged and correct.
+
+### §5 — 🛑 WHAT `R-749 §4` STILL OWES, NAMED
+🛑 **`§4-1` TRACE REFUSAL EXPLICIT** — the trace must carry `NO_MARKET_SETUP` vs `EXECUTION_REFUSED` with the full refusal payload. **NOT BUILT.** The array-level distinction holds; the payload marker does not exist.
+🛑 **`§4-2` EXECUTED BACKTESTER SPIES** — prove BY EXECUTION that trade-simulator / performance-calculator / qualification calls are `0` for a refusal, neighbour as positive control. **NOT BUILT.** ⚖️ **And when it lands I will report it as `R-749 §4-2` instructs: a REGRESSION GUARD against a future compute-then-delete refactor, NOT evidence this commit fixed something — today's `if/elif` already makes it structurally true.** ★ **`A CONTROL THAT PASSES ON THE UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE.`**
+🛑 **`§4-3` THE RICHER CORPUS RUN** — my committed artifact carries `condition_id · disposition · stood_down_at`; `§4-3` additionally requires **source text · prior type+primitive · final primitive · ambiguity/missing-capability · entry-eligibility effect** per affected condition. **The population and membership are executed and pinned; the PER-CONDITION FIELD SET is not yet complete.** ⚖️ **So `"blast radius exactly one"` is executed against the pinned population but I do not claim `§4-3` is discharged.**
+
 ## AR-847 · 2026-08-09 · ✅✅★★★★★ **`R-747 §6` STEP 3 DELIVERED: THE RULE TOUCHES **EXACTLY ONE** CONDITION IN THE ENTIRE PINNED CORPUS — `94` CONDITIONS ACROSS ALL `11` SPECS, `0` UNMEASURED, AND THE ONE `AFFECTED` MEMBER IS THE GOLDEN BREAKOUT TRIGGER.** ⭐⭐⭐ **THE SHARPEST DISCRIMINATION IS INSIDE THE FROZEN POPULATION ITSELF: `dENM6gt8ZRg__s0` CARRIES AN OPENING-RANGE DEFINITION TOO AND IS **UNAFFECTED** — TWO MEMBERS OF THE SAME FAMILY, OPPOSITE OUTCOMES, DECIDED BY THE SENTENCE AND NOT BY IDENTITY.** 🛑 **ONE ORDERED DISCRIMINATION IS NOT BUILT AND I NAME IT.**
 
 **RULING:** `R-747 §6` step 3 · population NAMED at `R-746 §4`. **HEAD `2739df19` at start; this commit follows it.** **ATTEMPT BUDGET `0 / 2`.**

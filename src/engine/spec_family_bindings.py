@@ -3076,7 +3076,10 @@ def _refuse_ambiguous_breakout_trigger(
         `A AND B`, and THE NEW MASK CANNOT BE STRICTER.
     """
     from src.engine.breakout_confirmation_ambiguity import (
+        DISPOSITION_ENGINE_PRIMITIVE_MISSING,
         DISPOSITION_SOURCE_AMBIGUOUS,
+        OUTCOME_AMBIGUOUS_CONFIRMATION,
+        OUTCOME_CONFIRMED_BUT_UNIMPLEMENTED,
         classify_breakout_confirmation_ambiguity,
     )
 
@@ -3085,18 +3088,47 @@ def _refuse_ambiguous_breakout_trigger(
         text=binding.object,
         opening_range_defined_in_spec=opening_range_defined,
     )
-    if not verdict.ambiguous:
-        return binding
-    return replace(
-        binding,
-        bindable=False,
-        primitive=None,
-        approximation=False,
-        executed=False,
-        reason=verdict.reason,
-        disposition=DISPOSITION_SOURCE_AMBIGUOUS,
-        ambiguity=verdict.ambiguity,
-    )
+
+    # ★★★★★ BRANCH ON THE OUTCOME, NEVER ON `ambiguous` ALONE (R-749 §1).
+    # `if not verdict.ambiguous: return binding` WAS THIS FUNCTION'S DEFECT. It read as
+    # "nothing to do here" and was in fact A PASS-THROUGH TO THE DEFECT: a trigger whose
+    # confirmation the teacher DID specify went back to the normal binding path and was
+    # handed `compute_structure_state`, which never reads the sentence.
+    #
+    #   `A REFUSAL RULE THAT ONLY FIRES ON VAGUENESS PROTECTS THE VAGUE TEACHER AND EXPOSES
+    #    THE PRECISE ONE -- THE CLEARER THE TEACHING, THE MORE LIKELY IT COMPILES ONTO A
+    #    PRIMITIVE THAT NEVER READS IT.`
+    #
+    # TWO of the three outcomes refuse, for two DIFFERENT reasons, and collapsing them would
+    # lose the distinction that tells a reader whether to go back to the VIDEO or to build an
+    # EVALUATOR (`TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES`).
+    if verdict.outcome == OUTCOME_AMBIGUOUS_CONFIRMATION:
+        return replace(
+            binding,
+            bindable=False,
+            primitive=None,
+            approximation=False,
+            executed=False,
+            reason=verdict.reason,
+            disposition=DISPOSITION_SOURCE_AMBIGUOUS,
+            ambiguity=verdict.ambiguity,
+        )
+    if verdict.outcome == OUTCOME_CONFIRMED_BUT_UNIMPLEMENTED:
+        # The SOURCE is complete; the ENGINE is short. The capability exists and is simply
+        # not reachable from the binding path, which is a MISSING EVALUATOR rather than an
+        # ambiguous teacher -- and `primitive=None` is what guarantees it can never fall back
+        # to `compute_structure_state` (R-749 §4-4).
+        return replace(
+            binding,
+            bindable=False,
+            primitive=None,
+            approximation=False,
+            executed=False,
+            reason=verdict.reason,
+            disposition=DISPOSITION_ENGINE_PRIMITIVE_MISSING,
+            ambiguity=verdict.missing_capability,
+        )
+    return binding
 
 
 def compile_binding_plan(
