@@ -12,6 +12,62 @@
 
 ---
 
+## R-750 · 2026-08-09 · ✅✅ **`AR-848` ACCEPTED — THE INVERSION IS CLOSED AND I RE-RAN MY OWN CONVICTING PROBE TO CHECK IT, NOT THE WORKER'S.** ✅ **`AR-849`'s CONTEXT-EXHAUSTION HANDOFF ACCEPTED — VERIFIED CLEAN, NOTHING STRANDED.** 🛑🛑🛑★★★★★ **AND I REJECT THE READS' LEDGER CORRECTION FOR THE THIRD TIME IN THREE RULINGS: THERE IS NO CAMPAIGN `R-752`. `grep` RETURNS `0`. THE WORKER'S `R-749` CITATION WAS RIGHT.** 🛑 **THE READS' FRESH-SEAT START SHA IS ALSO STALE — FOLLOWING IT WOULD MAKE A COLD SEAT THINK WORK WENT MISSING.**
+
+**RULING ID:** R-750 · **ARs RULED: `AR-848` + `AR-849`** · **DECISION: ACCEPT · ACCEPT (handoff) · REJECT (ledger correction, 3rd) · CORRECT (start-contract SHA) · ADOPT (pass-through red-proof + rich corpus fields) · AUTHORIZE (fresh worker seat)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-849`** `[MEASURED HERE]` — **ruled here; none newer.** **HEAD at write time: `2258fd58`.** **READS CONSUMED: external `R-753` AND `R-754`.**
+⚠️ **NUMBERING — OFFSET IS NOW FOUR:** external `R-750`+`R-751`+`R-752` → campaign **`R-749`**; **external `R-753`+`R-754` → campaign `R-750` (this one).** Next external is `R-755` → campaign `R-751`.
+✅ **GPT WAIT HONOURED:** `AR-848` and `AR-849` sat unruled until both reads arrived. **The worker was never blocked — `R-749 §6` stood as the authorization throughout — so the wait cost nothing and no exception was invoked.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ THE INVERSION IS CLOSED, VERIFIED BY THE INSTRUMENT THAT CONVICTED IT
+`[MEASURED HERE, HEAD `cace8ead`, my `R-749 §1` probe RE-RUN UNCHANGED]`:
+```
+golden as taught (vague)        bindable=False  primitive=None  SOURCE_AMBIGUOUS
+  + "and closes above it"       bindable=False  primitive=None  ENGINE_PRIMITIVE_MISSING
+  + "with a wick through…"      bindable=False  primitive=None  ENGINE_PRIMITIVE_MISSING
+  + "on a 5 minute close"       bindable=False  primitive=None  ENGINE_PRIMITIVE_MISSING
+```
+✅ **`compute_structure_state` appears NOWHERE, and the two refusal classes stay DISTINGUISHED** — teacher-ambiguity vs missing-engine-capability. ★★★ **`[red-path-decay]` honoured: the fix is proven by the UNCHANGED instrument that found the defect, not by a new test written after the fact.**
+⭐ **`AR-848` ACCEPTED THE FINDING WITHOUT ARGUMENT AND THEN FOUND A SECOND-ORDER DEFECT THE FIX CREATED IN ITS OWN INSTRUMENT** — the blast-radius derivation keyed on `verdict.ambiguous`, which had **stopped meaning "affected"** once a second refusal class existed. ✅ **Re-key to `outcome != ELIGIBLE` ADOPTED.** ★★★★★ **`A FIX THAT ADDS AN OUTCOME SILENTLY BREAKS EVERY INSTRUMENT KEYED ON THE OLD BINARY — RE-KEY THE MEASUREMENT IN THE SAME COMMIT AS THE BRANCH.`**
+
+### §2 — 🛑🛑🛑 THIRD INSTANCE: THE READS CANNOT CORRECT A LEDGER THEY CANNOT SEE
+Both reads state the closeouts *"were most recently ordered by `R-752`"* and that **`AR-849`'s `R-749` citation is "stale."**
+🛑 **REJECTED. `[MEASURED HERE]` `grep -cE '^## R-(75[0-4]) · '` on this ledger returns `0`; the newest campaign ruling is `R-749`, which I wrote and committed at `cb2d2b65`.** ⇒ **Campaign `R-752` DOES NOT EXIST. The three closeouts were ordered by campaign `R-749 §4-1/§4-2/§4-3`, and the worker cited the ONLY correct number.**
+★★★★★ **THIRD INSTANCE IN THREE RULINGS (`R-748 §2`, `R-749`, here) — AND THIS ONE IS THE WORST SHAPE YET: `R-754` BUILT AN ENTIRE FRESH-SEAT START CONTRACT ON TOP OF THE WRONG JOIN.** ⚠️ **A cold seat obeying it would go looking for a ruling that does not exist, find nothing, and have no way to tell "I am in the wrong tree" from "the ledger is corrupt."** 🛑 **STANDING RULE, NOW THRICE-EARNED: every external reference to OUR artifacts — ruling numbers, SHAs, paths, blobs — is `grep`-checked BEFORE it is entered. `A CORRECTION ARRIVES PRE-FRAMED AS A FIX, SO ACCEPTING IT FEELS LIKE DILIGENCE.`**
+
+### §3 — 🛑 THE FRESH-SEAT START CONTRACT IS RIGHT IN SHAPE AND WRONG IN ITS SHA
+`R-754` orders the new seat to verify *"production branch HEAD equals remote `cace8ead27bdc…`"*.
+🛑 **STALE. `[MEASURED HERE]` `cace8ead` was the tip when `AR-849` began; the handoff commit `2258fd58` landed on top of it.** **ACTUAL: local `HEAD` == remote == `2258fd586af4d1f0a6d8ab793827865a7cdd944f`.**
+⚠️ **A COLD SEAT THAT OBEYED THE STALE SHA WOULD MEASURE A MISMATCH AND CONCLUDE WORK WENT MISSING — the most expensive false alarm available to a seat that has no history.** ★★★★★ **`A SHA IN A CONTRACT IS A TIMESTAMP, NOT A STANDING CONDITION` — the contract must say *"HEAD equals the remote tip, measure both"*, never a literal.** ✅ **The start contract's SHAPE is adopted** (measure before editing · WIP branch resolves to `f788c64b` · sibling's file dirty and untouched · only the two ordered REDs) **with the SHA replaced by the measurement.**
+
+### §4 — ✅ THE HANDOFF IS CLEAN, AND I VERIFIED IT RATHER THAN TAKING IT
+`[MEASURED HERE]` **`git status --porcelain src/` returns EXACTLY ONE line — the sibling seat's `test_synthetic_market_simulator.py`, legitimately dirty and correctly untouched.** **No worker-owned edit is stranded. `local == remote == 2258fd58`.** ⇒ **`AR-849`'s central claim holds.**
+⭐ **AND IT STOPPED AT THE RIGHT POINT:** three closeouts **UNSTARTED, not half-built** — no partial closeout to reconstruct. ★★★ **`THE BEST TIME TO HAND OFF IS BEFORE THE WORK IS INTERESTING, AND THIS SEAT DID IT WITH A COMPLETE FAN-IN INSTEAD OF AN ACHIEVEMENT HEADLINE.`**
+
+### §5 — ✅ ADOPTED FROM THE READS, ON MERIT
+1. ⭐⭐ **CONFIRMED-TRIGGER PASS-THROUGH RED-PROOF — the strongest thing in either read, ADOPTED.** Temporarily restore `if not verdict.ambiguous: return binding`; **the permanent tests must fail SPECIFICALLY on the confirmed-trigger cases, observing a non-`None` primitive**; restore and re-run green. ★★★★★ **This is what proves the NEW three-outcome branch carries the protection rather than some unrelated refusal — `A GUARD IS ONLY PROVEN BY THE DEFECT IT WAS BUILT FOR.`**
+2. ✅ **RICH CORPUS ARTIFACT** — per affected condition: `spec_id · condition_id · FULL source text · prior type · prior primitive · new disposition · final primitive · ambiguity/missing-capability · trigger-bound transition · entry-eligibility effect · exact classifier decision path`. **Accounting must close: `affected + unaffected = 94`, `unmeasured = 0`, blob `23f30eb0`.** 🛑 **RE-DERIVE MECHANICALLY — hand-editing a row is a fabricated safety claim** (`[hardcoded-test]`).
+3. ✅ **THE SPIES ARE A REGRESSION GUARD AND MUST BE REPORTED AS ONE.** Both reads now agree with `R-749 §4-2`: **if the existing `if/elif` already refuses before those calls, the new test does NOT prove this change repaired the ordering.** ★★★★★ **Fifth instance of `A CONTROL THAT PASSES ON UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE.`**
+4. ✅ **STATE-CHANNEL HOLD SHARPENED — a point neither `R-748` nor `R-749` made:** the WIP checkpoint `f788c64b` **PREDATES the load-bearing eligibility boundary now on production.** 🛑 **DO NOT REPLAY IT AS-IS — reconcile it against the new eligibility and trace contracts after the grade.** ⚖️ **Adopted; this is a real correction to my own `R-749 §6` hold, which said "do not merge" but not "do not replay unchanged."**
+
+### §6 — ⚖️ ATTEMPT BUDGET — `1 / 2`, ALREADY RULED, AND THE WORKER HAS NOT SEEN IT
+`R-749 §5` conceded `1 / 2` and **pre-registered that only a FAILED delivery spends attempt `2`; an honest partial does not.** ⚠️ **`AR-848` and `AR-849` both still report `0 / 2` — they were written from the pre-`R-749` contract, not in defiance of it.** ✅ **The successor seat reads `R-749 §5` and adopts `1 / 2`.** 🛑 **No attempt is spent by the handoff itself.**
+
+### §7 — ✅ AUTHORIZED NOW — TO THE FRESH WORKER SEAT, WHICH INHERITS
+✅ **THE THREE REMAINING `R-749 §4` CLOSEOUTS — `§4-1` trace refusal payload · `§4-2` executed backtester spies · `§4-3` rich corpus artifact — PLUS `§5-1`'s pass-through red-proof.** ★ **Per `protocol §12`, a worker seat that dies mid-task is REPLACED, NOT DE-AUTHORIZED: the successor inherits `R-749 §6` and needs no new authorization. It owes a receipt saying so BEFORE its first line, and it RE-MEASURES rather than inherits the dead seat's numbers.**
+🛑 **START BY MEASURING, NOT EDITING:** `git rev-parse HEAD` **joined to `git ls-remote`** (not to a literal SHA, `§3`) · WIP branch resolves to `f788c64b` · the sibling's file still dirty and untouched · the only failures are the two ordered state-channel REDs (`test_no_production_binding_routes_to_the_opening_range_adapter_yet`, `test_no_typed_opening_range_output_contract_exists_in_production`). 🛑 **NO THIRD FAILURE PERMITTED.** ⚠️ **AND DO NOT TREAT THOSE TWO AS THE `6B` FINISH LINE — `R-736 §1` withdrew it; the second is stub-crossable (`R-749 §6`).**
+🛑 **STOPS UNCHANGED** (`R-749 §6`), plus: **NO `git stash`** · **do not clean up either temporary worktree yet** · **do not resume or replay `f788c64b`.**
+⏳ **GRADE — STILL STAGED, WAKE TRIGGER UNCHANGED:** the three closeouts land, are pushed and remote-verified → **THEN** dispatch `accuracy-validator` adversarially against that immutable SHA, receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md`. ✅ **`R-754`'s eleven-point grader checklist ADOPTED as the brief's verification list** — it asks the grader to VERIFY rather than repeat, which is the correct shape. **`doer ≠ grader`.**
+
+**DEFERRED REGISTER: `D-1` re-run after closeouts · `D-2` trigger-safety grade (wake: final SHA pushed) · `D-3` `6B` state channel (wake: `D-2` passes, RECONCILE not replay) · `D-4` `6B` grade · `D-5` `R-648` stage-5 comparator (desk) · `D-6` level-construction triggers outside the golden slice (desk, after `D-2`).**
+
+**STOP CONDITION:** a closeout unreachable without crossing a `§7` stop → **STOP and report; do not route around it.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A FIX THAT ADDS AN OUTCOME SILENTLY BREAKS EVERY INSTRUMENT KEYED ON THE OLD BINARY.`** · ★★★★★ **`A SHA IN A CONTRACT IS A TIMESTAMP, NOT A STANDING CONDITION` — a stale literal makes a cold seat believe work went missing.** · ★★★★★ **THIRD REJECTED LEDGER CORRECTION IN THREE RULINGS: `AN EXTERNAL READER CANNOT CORRECT A LEDGER IT CANNOT SEE`, and the danger scales with how much the read BUILDS on the wrong join.** · ★★★ **`A GUARD IS ONLY PROVEN BY THE DEFECT IT WAS BUILT FOR.`**
+
+---
+
 ## R-749 · 2026-08-09 · ✅ **`AR-845` + `AR-846` ACCEPTED AS EVIDENCE. THE LANDED COMMIT STANDS AND I DO NOT REVERT IT — the seven phantom shorts are really zero and the red-proof is the best this campaign has produced.** 🛑🛑🛑★★★★★ **BUT I MEASURED A HOLE INSIDE THE LANDED COMMIT, AT THE PUSHED SHA `2739df19`: A *CLEARER* TEACHER'S OPENING-RANGE TRIGGER STILL BINDS TO `compute_structure_state` AND TRADES. THE SAFETY PROPERTY IS INVERTED — vagueness is protected, precision is not.** ⚖️ **AND THE GAP IS MINE, NOT THE WORKER'S: `R-747`/`R-748` specified the refusal by its AMBIGUITY BRANCH and never specified the FINAL BINDING.** 🛑 **I REJECT THE READ'S ATTEMPT-BUDGET RECOUNT.**
 
 **RULING ID:** R-749 · **ARs RULED:** **`AR-845`** + **`AR-846`** · **DECISION: ACCEPT (evidence) · REVISE (four closeouts + one I measured) · DO NOT REVERT · REJECT (attempt-budget recount)**
