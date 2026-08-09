@@ -4,6 +4,25 @@
 
 ---
 
+## AR-820 · 2026-08-09 · ⚡ **START-RECEIPT — `R-727 §4` B1 ACCEPTED, EXECUTING FROM THE BANKED READ (`STEPS 1–8`), `STEP 1` FIRST.** ✅ **AND I ACCEPT THE `§1` CORRECTION AGAINST MY OWN BEST LINE — I RELAYED IT TO THE OPERATOR AS WELL, SO IT IS CORRECTED IN BOTH PLACES.** ⚠️ **PLUS AN HONEST CONTEXT POSITION, GIVEN THIS IS THE CAMPAIGN'S FIRST PRODUCTION EDIT.**
+
+**CONTRACT SOURCE:** `docs/designs/EXTERNAL-READ-2026-08-09-B1-AUTHORIZED.md` (tracked, `337` lines) — **`STEPS 1–8` + `B1 PASS CONDITION` + `EXPLICITLY OUT`, read at the file, not from the ruling's summary**, per `R-727 §4`'s explicit instruction and `count-obligations`.
+**TASK NOW — `STEP 1` ONLY:** *"amend the existing trace **at the original false claim locations**. Correct `F-1` through `F-10` where applicable. **Do not merely append another correction section.** … documentation-only … **no new instrumentation**."*
+**FIRST OBSERVABLE:** the trace's false lines amended **in place**, not below. **ETA ~`25` min.**
+
+### §1 — ✅ THE CORRECTION I OWE, ACCEPTED AND PROPAGATED
+`AR-819`'s *"a data gap … makes it trade more"* is an **OVERCLAIM**. **Amended to the read's wording: `A PARTIAL RANGE MOVES THRESHOLDS INWARD AND CAN CAUSE EARLIER OR ADDITIONAL BREAKOUT OPPORTUNITIES.`** Trade count depends on the **unresolved breakout rule**, later gates, price path and execution model — **none decided.** ★★★★★ **`A MEASURED DIRECTION DOES NOT LICENSE A PREDICTED OUTCOME THROUGH AN UNDECIDED MECHANISM.` I crossed the exact rule this campaign has refused to decide, in the sentence I was most pleased with — and `R-725 §4` had already told me the breakout trigger is `UNRESOLVED_SOURCE_AMBIGUITY`.**
+🛑 **I ALSO STATED IT TO THE OPERATOR IN THOSE WORDS** *("it would trade more, and earlier")*. **Corrected to him directly in the same motion — a money-facing overclaim relayed to the operator is not discharged by fixing the ledger alone.**
+✅ **THE UNDERLYING ALARM IS UNCHANGED AND STILL MONEY-FACING:** the range comes back **tighter, confident, unflagged.**
+
+### §2 — ⚠️ MY POSITION, STATED BEFORE I TOUCH PRODUCTION CODE RATHER THAN AFTER
+**This session has run long and `B1` is `8` steps ending in production routing and tests — the first production edit this campaign has authorized.** 🛑 **`STEP 1` is documentation-only, bounded, and squarely mine: I wrote the false lines and I know every location.** ⇒ **I am executing `STEP 1` in full.**
+⚖️ **I am NOT declaring a handoff** — nothing is in flight, nothing is half-done, every prior lane is closed and committed, and `AR-521`'s conviction stands: **a handoff you did not need is a stop order you wrote for yourself.** ✅ **But I will state my position honestly at the `STEP 1` boundary rather than open `STEP 2`'s production edit silently at the tail of a long session** — ★★★ **`A PARTIAL RESULT THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE, AND THE FIRST PRODUCTION REPAIR IS THE WORST PLACE TO PRODUCE ONE.`**
+
+### §3 — BOUNDS I AM HOLDING
+🛑 **`EXPLICITLY OUT`, read verbatim from the banked file:** disputed structure-engine rerun · the remaining `8` conditions · generalized `WAIT_STRUCTURE` rewrite · **breakout touch/wick/close choice** · half-range stop wiring · MES/MNQ/MCL portability · futures trading-day implementation · backtesting · profitability · full-library batch run.
+✅ **Per-step attempt budget `2` · every `B1` null carries the LOCALITY RULE · `UNRESOLVED_SOURCE_AMBIGUITY` stays available and `B1` may NOT quietly decide the breakout trigger.**
+
 ## AR-819 · 2026-08-09 · ✅ **B0 CLOSEOUT COMPLETE — ALL FOUR `R-726 §7` ITEMS EXECUTED, `4/4`.** 🛑🛑★★★★★ **AND THE `UNMEASURED` ROW CAME BACK WORSE THAN THE STATIC READ: A PARTIAL OPENING WINDOW DOES NOT REFUSE — IT SILENTLY RETURNS A *NARROWER* RANGE. `1.05 → 0.80` AS BARS DROP, MONOTONE, NEVER WIDER.** ★★★★★ **`THE FAILURE MODE OF A MISSING BAR IS NOT SILENCE — IT IS A CONFIDENT, TIGHTER, BUSIER STRATEGY.`** ✅ **NO OFF-BY-ONE. LOCALITY RULE SATISFIED ON EVERY CLAIM.**
 
 ### §1 — 🛑 ITEM 1, THE ONE THAT MATTERS, WITH THE DOMAIN SWEEP `R-726 §3` REQUIRES
