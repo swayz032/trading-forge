@@ -4,6 +4,74 @@
 
 ---
 
+## AR-883 · 2026-08-09 · ✅ **`R-767 §4` LANE `A` DELIVERED — THE IDENTITY NOW HASHES THE REQUEST, NOT A SUMMARY OF IT.** ⚡ **`3cca10d3`. RED PUBLISHED FIRST, `M6` REDDENS EXACTLY THE FOUR COMPLETENESS CONTROLS, RESTORE BYTE-IDENTICAL.** 🛑 **AND I FORMALLY CORRECT `AR-881 §2(b)`, WHICH WAS WRONG — plus I REMOVED A REPLICA I HAD INTRODUCED MYSELF IN THE PREVIOUS LANE.**
+
+**SEAT `claude.exe 23640`** (the seat `R-767 §9` authorized). **ATTEMPT BUDGET: `N-4` `2 / 2` — this lane's re-open consumed the second.** 🛑 **I do not claim a fan-in number; see `§6`.**
+
+### §0 — 🛑 CORRECTION TO `AR-881 §2(b)`, STATED BEFORE ANYTHING ELSE
+**I published: *"`:775`/`:1224`/`:1322` write `status` on the STRATEGY RECORD … `F-7` marks the STRATEGY `failed`, in the durable row other subsystems read."*** 🛑 **THAT IS WRONG.** `[MEASURED HERE, re-opened at the `db.insert` line rather than the field]`:
+```
+agent-service.ts:763 / :1216 / :1314   await db.insert(systemJournal).values({ … status: … })
+grep "db.update(strategies)" at those sites  ->  NONE
+```
+⇒ **Every one of the ten writes targets `system_journal` or `audit_log`. The `strategies` table is never touched.** ⚖️ **Consequence, and it runs in the campaign's favour: NO consumer sweep of `strategies`, NO lifecycle migration, and `system_journal.status` is free text ⇒ a distinct `"refused"` needs NO schema work. `F-7` is materially cheaper than I made it look.**
+★★★★★ **THE MECHANISM OF MY ERROR: I read the FIELD NAME and inferred the TABLE. `status` reads like a strategy field and is a journal field here.** ⇒ **`NAME THE WRITE TARGET FROM THE `db.insert(...)` LINE, NEVER FROM THE FIELD NAME` — `[i-measured]`, and I am the 7th conviction.** ✅ **`AR-881` did hedge the CONSEQUENCE as `[UNENUMERATED — OPEN]` and refused to claim a downstream effect — but `A HEDGE ON THE CONSEQUENCE DOES NOT COVER AN ERROR IN THE SUBJECT`, and the hedge is not a defence.**
+
+### §1 — ✅ THE DEFECT `R-767 §2` HELD THE LANE FOR, AND I ACCEPT THE HOLD WITHOUT ARGUMENT
+**My first identity hashed five hand-listed fields. `[MEASURED HERE]` SIX further config fields reached the engine unhashed** — `indicators` · `entry_long` · `entry_short` · `exit` · `stop_loss{type,multiplier}` · `position_size{type,target_risk_dollars}`.
+⚖️ **`AR-880 §2` DISCLOSED this exact assumption and labelled it `[UNGUARDED]`. The desk is right that this changes who is at fault and not whether the condition is met.** ★★★★★ **`A DISCLOSED GAP IS STILL A GAP.` Adopted, and it is the more useful half of the lesson.**
+
+### §2 — ✅ THE FIX — THE OBJECT THAT IS HASHED IS THE OBJECT THAT IS SENT
+**`backtestConfig` is now constructed ONCE and the SAME reference is both hashed and passed to `runBacktest`.** ⇒ **there is no longer a list to keep in sync: a field added to the config is inside the identity automatically.** ★★★ **`TWO LITERALS THAT MUST AGREE ARE A FUTURE DISAGREEMENT; ONE OBJECT USED TWICE CANNOT DRIFT.`**
+```
+requestIdentity = computeResultHash({ strategyId, config: backtestConfig, strategyClass: null,
+                                      externalId: null, actor: "automated",
+                                      engineRevision: process.env.FORGE_GIT_SHA ?? "unknown" })
+```
+✅ **SHARED CANONICALISER, NOT A SECOND ONE** (`R-767 §4.3`): `computeResultHash` from `../lib/result-hasher.js`, which wraps `canonicalizeResult`'s `normalizeValue` + stable-key JSON. 🛑 **`[MEASURED HERE]` `grep -n 'createHash\|computeResultHash'` over `lifecycle-service.ts` → **`2` hits, both the shared import and its one use**. The now-unused `createHash` import was REVERTED — I did not leave a second hasher in the file for someone to reach for.**
+✅ **EXCLUSIONS, AND THEY ARE THE DESK'S DECISION NOT MINE** (`R-767 §4.4`): `correlationId` · `incompleteCount` · `totalGates` — audit/tracing context that cannot change the engine's answer. 🛑 **Hashing them would make every request unique and defeat suppression entirely, so the exclusion needs its own control, and it has one** (`§3`, the negative control).
+
+### §3 — ✅ RED FIRST, AND ONE CONTROL I CAUGHT PASSING TRIVIALLY BEFORE I RELIED ON IT
+**RED against provably-unmodified production** (`git status` clean on the service at RED time): **`3 failed | 15 passed`.**
+🛑 **THEN I AUDITED MY OWN RED AND FOUND A WEAK CONTROL:** *"a different engine revision changes the identity"* was `expect(stored).not.toBe(…)` — **which passes trivially whenever the identity is wrong in ANY way.** ⇒ **I anchored it to the positive join (`expect(stored).toBe(f(actualConfig))`) BEFORE writing the fix.** ★★★★★ **`AN ASSERTION A BROKEN IMPLEMENTATION ALSO SATISFIES IS NOT A CONTROL. EVERY `not.toBe` OWES AN ADJACENT `toBe`.`**
+**THE CONTROLS, AND WHAT MAKES THEM REAL:**
+```
+JOIN            stored request_identity === computeResultHash(descriptor(CONFIG THE ENGINE RECEIVED))
+                  <- captured off mockRunBacktest.mock.calls[0][1]; the config is NOT restated
+NESTED FIELD    target_risk_dollars 500 -> 501 changes the identity   (+ the join still holds)
+ENGINE REVISION a different FORGE_GIT_SHA changes it                  (+ the join still holds)
+EXCLUSION (neg) correlationId corr-A -> corr-B, incompleteCount 3 -> 7  => IDENTITY UNCHANGED
+ROUND-TRIP      production STORES the identity; production READS IT BACK and suppresses on it
+```
+
+### §4 — ⭐ I REMOVED A REPLICA I HAD INTRODUCED MYSELF ONE LANE EARLIER
+🛑 **`AR-880`'s suite contained a local `identityFor()` that RE-IMPLEMENTED production's hashing rule.** ⇒ **It is the same defect this whole lane exists to remove, one layer out: production and the test could have drifted together into agreement about the wrong thing, and every test would have stayed green.** ⚠️ **It would also have had to be edited in lock-step with this fix — which is precisely how a test stops being independent evidence.**
+✅ **REPLACED by `identityProductionStoredFor()`: run the real helper once, READ BACK what it stored, and use that value as the prior row.** ⇒ **the suppression control is now a genuine round-trip with no restatement on either side.** ★★★★★ **`THE REPAIR FOR A REPLICA IS AN IMPORT` — and the ones you write yourself are the hardest to see, because you know they are correct TODAY.**
+
+### §5 — ✅ MUTATION `M6` (`R-767 §4`'s required one) — ISOLATION, AND RESTORE PROVEN
+| mutation | RED | GREEN | verdict |
+|---|---|---|---|
+| **`M6`** restore the five-field hand-written summary | **exactly the 4 completeness controls** — join · nested field · engine revision · determinism-with-join | **the suppression ROUND-TRIP · the changed-identity DISCRIMINATOR · the correlationId EXCLUSION · all 4 §B positives · all 4 §A wiring guards** | ✅ **ISOLATION** |
+⚖️ **The GREEN column is the informative one: the summary-hash still suppresses and still discriminates — which is exactly why the defect was invisible and why `R-767` had to catch it by reading the config, not by running the suite.** ★★★ **`A DEFECT THAT ONLY ROTS LATER LEAVES EVERY PRESENT-DAY CONTROL GREEN; ITS CONTROL MUST ASSERT COMPLETENESS, NOT BEHAVIOUR.`**
+✅ **RESTORE: `git checkout --` then `git diff --exit-code` → `0`, byte-identical. Unmutated re-run `18 passed`.**
+
+### §6 — 📋 ACCEPTANCE — AND I DO **NOT** DECLARE THE FAN-IN
+```
+d10-n4 suite                     ->  18 passed (18) · EXIT 0
+npx tsc --noEmit                 ->  exit 0
+13-file population (ls-enumerated, size asserted)
+                                 ->  1 failed | 181 passed (182)
+   the 1 = deepscan-wiring-fixes / kill-switch.ts, PROVEN pre-existing by control (AR-879 §2)
+git status --porcelain src/      ->  only the sibling's test_synthetic_market_simulator.py
+```
+🛑🛑 **I STATE THE EVIDENCE AND LEAVE THE PREDICATE TO THE DESK, DELIBERATELY.** `R-767 §2` retracted a `7 / 9` that was published on my declaration, and the lesson it minted is ★★★★★ **`AN AUTO-RELEASE IS A PREDICATE, NOT AN EVENT — AND THE PARTY WHO WROTE THE PREDICATE MUST EVALUATE IT.`** ⇒ **It would be absurd for me to answer that lesson by declaring `7 / 9` again on my own say-so.** **Every clause of `R-767 §4` is addressed above with its evidence; whether the predicate is MET is the desk's call, and I make no fan-in claim in this report.**
+
+### §7 — ⚠️ NOT PROVEN · ⚡ NEXT
+🛑 **`[UNPROVEN]`:** that any refusal has traversed this path in live data — mechanism only, no query, no incident. 🛑 **The call site remains `[MEASURED — STRUCTURAL]`, not executed** (Option `A` refused at `R-764 §3`). 🛑 **`engineRevision` is `[MEASURED — the env var is real and used identically at 4 production sites, per `R-767 §2`]`; I did NOT verify what it holds at runtime on the tower.**
+⚡ **PROCEEDING to `R-767 §5` LANE `B` (`F-7`) — `[MEASURED]` its edge to Lane `A` is fake (different file, no data passed), so no desk wait.** **Its cost is now known to be lower than `AR-881` implied (`§0`).** **Lane `C` (`N-5`) after it.**
+
+---
+
 ## AR-882 · 2026-08-09 · ✅ **`N-5` ENUMERATED, READ-ONLY — AND IT IS THE ONLY LANE IN `D-10` THAT GRANTS A FALSE *PERMISSION* RATHER THAN WRITING A FALSE *RECORD*.** 🛑🛑★★★★★ **A PARENT WHOSE FORGE SCORE WAS NEVER MEASURED BECOMES A BASELINE OF `0`, AND THE SURVIVOR GATE IS `candidate > parent` — SO **ANY** CANDIDATE SCORING ABOVE ZERO IS PROMOTED FOR BEATING A NUMBER NOBODY EVER MEASURED.** 🔚 **AND THIS IS MY HANDOFF: `7 / 9`, BOTH REMAINING LANES GENUINELY BLOCKED (no contract), NOTHING HALF-BUILT, TREE CLEAN, ALL COMMITS PUSHED.**
 
 **SEAT `claude.exe 23640`.** **AUTHORITY for this enumeration: `R-765 §3`'s standing read-only grant, never withdrawn, plus `R-766 §3`'s explicit *"the remaining lanes (`F-7`, `N-5`) should be searched for that shape FIRST"*.** ✅ **`[MEASURED HERE]` `git status --porcelain src/` → only the sibling's Python file. NO CODE CHANGED.**
