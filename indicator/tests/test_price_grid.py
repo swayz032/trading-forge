@@ -5,6 +5,7 @@ from indicator.reference.price_grid import (
     GridPolicy,
     MNQ_GRID,
     NQ_GRID,
+    conservative_target_to_grid,
     is_on_grid,
     normalize_price,
     snap_to_grid,
@@ -32,6 +33,20 @@ class PriceGridTests(unittest.TestCase):
             Decimal("19000.25"),
         )
         self.assertEqual(snap_to_grid("19000.12", MNQ_GRID), Decimal("19000.00"))
+
+    def test_long_conservative_tp_rounds_toward_current_price(self):
+        # Raw target 111.40 inside an upper pool -> LONG approaches from below.
+        self.assertEqual(conservative_target_to_grid("111.40", MNQ_GRID, trade_side="LONG"), Decimal("111.25"))
+
+    def test_short_conservative_tp_rounds_toward_current_price(self):
+        # Raw target 92.60 inside a lower pool -> SHORT approaches from above.
+        self.assertEqual(conservative_target_to_grid("92.60", MNQ_GRID, trade_side="SHORT"), Decimal("92.75"))
+
+    def test_directional_rounding_never_moves_deeper_into_pool(self):
+        raw = Decimal("111.40")
+        self.assertLessEqual(conservative_target_to_grid(raw, MNQ_GRID, trade_side="LONG"), raw)
+        raw_short = Decimal("92.60")
+        self.assertGreaterEqual(conservative_target_to_grid(raw_short, MNQ_GRID, trade_side="SHORT"), raw_short)
 
     def test_69_ticks_equals_17_25_index_points(self):
         self.assertEqual(ticks_between("19000.00", "19017.25", MNQ_GRID), 69)
