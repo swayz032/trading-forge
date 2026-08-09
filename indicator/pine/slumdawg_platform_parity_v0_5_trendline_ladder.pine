@@ -1,5 +1,5 @@
 //@version=6
-indicator("Slumdawg NQ/MNQ v0.5 — Trendline Ladder", shorttitle = "Slumdawg v0.5", overlay = true, behind_chart = true, max_labels_count = 160, max_lines_count = 160, max_boxes_count = 30)
+indicator("Slumdawg NQ/MNQ v0.5.1 — Trendline Ladder", shorttitle = "Slumdawg v0.5.1", overlay = true, behind_chart = true, max_labels_count = 160, max_lines_count = 160, max_boxes_count = 30)
 
 // =============================================================================
 // SAFETY / RELEASE CLASSIFICATION
@@ -10,10 +10,11 @@ const float EXPECTED_TICK = 0.25
 const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
 const float HUGE_DISTANCE = 1e12
 
-// v0.5 adds a script-owned GREEN/RED top-down trendline ladder.
+// v0.5.1 preserves the script-owned GREEN/RED top-down trendline ladder.
 // Trendlines remain CONTEXT / REACTION-WALL geometry only.
 // A trendline cross NEVER flips BIG DIRECTION and NEVER creates GO or READY.
 // Automatic GO LINE and SAFE TARGET selection remain uncertified.
+// PDH/PDL now span the full chart. Near PWH/PWL do the same when displayed.
 
 // =============================================================================
 // BEGINNER INPUTS
@@ -39,69 +40,70 @@ bool showDebugMarkers = input.bool(false, "Tiny parity markers", group = gView)
 
 // =============================================================================
 // SCRIPT-OWNED TOP-DOWN TRENDLINE LADDER
-// Each timeframe supports one current GREEN bullish ray and one RED bearish ray.
+// Trendlines DO NOT auto-appear: enable a line and provide valid A/B time+price
+// anchors. That keeps the user's discretionary top-down line placement authoritative.
 // Paired input.time + input.price values share inline/group IDs so TradingView can
 // expose each anchor as one interactive chart point.
 // =============================================================================
 string gDaily = "3A — DAILY TRENDLINES"
-bool dGreenOn = input.bool(false, "GREEN bullish", group = gDaily)
-int dGreenT1 = input.time(0, "A time", inline = "DG_A", group = gDaily)
-float dGreenP1 = input.price(0.0, "A price", inline = "DG_A", group = gDaily)
-int dGreenT2 = input.time(0, "B time", inline = "DG_B", group = gDaily)
-float dGreenP2 = input.price(0.0, "B price", inline = "DG_B", group = gDaily)
-bool dRedOn = input.bool(false, "RED bearish", group = gDaily)
-int dRedT1 = input.time(0, "A time", inline = "DR_A", group = gDaily)
-float dRedP1 = input.price(0.0, "A price", inline = "DR_A", group = gDaily)
-int dRedT2 = input.time(0, "B time", inline = "DR_B", group = gDaily)
-float dRedP2 = input.price(0.0, "B price", inline = "DR_B", group = gDaily)
+bool dGreenOn = input.bool(false, "GREEN bullish", group = gDaily, tooltip = "Enable this line, then set A/B anchors to the two Daily swing lows you choose.")
+int dGreenT1 = input.time(0, "A time", inline = "DG_A", group = gDaily, active = dGreenOn)
+float dGreenP1 = input.price(0.0, "A price", inline = "DG_A", group = gDaily, active = dGreenOn)
+int dGreenT2 = input.time(0, "B time", inline = "DG_B", group = gDaily, active = dGreenOn)
+float dGreenP2 = input.price(0.0, "B price", inline = "DG_B", group = gDaily, active = dGreenOn)
+bool dRedOn = input.bool(false, "RED bearish", group = gDaily, tooltip = "Enable this line, then set A/B anchors to the two Daily swing highs you choose.")
+int dRedT1 = input.time(0, "A time", inline = "DR_A", group = gDaily, active = dRedOn)
+float dRedP1 = input.price(0.0, "A price", inline = "DR_A", group = gDaily, active = dRedOn)
+int dRedT2 = input.time(0, "B time", inline = "DR_B", group = gDaily, active = dRedOn)
+float dRedP2 = input.price(0.0, "B price", inline = "DR_B", group = gDaily, active = dRedOn)
 
 string g4H = "3B — 4H TRENDLINES"
 bool h4GreenOn = input.bool(false, "GREEN bullish", group = g4H)
-int h4GreenT1 = input.time(0, "A time", inline = "4G_A", group = g4H)
-float h4GreenP1 = input.price(0.0, "A price", inline = "4G_A", group = g4H)
-int h4GreenT2 = input.time(0, "B time", inline = "4G_B", group = g4H)
-float h4GreenP2 = input.price(0.0, "B price", inline = "4G_B", group = g4H)
+int h4GreenT1 = input.time(0, "A time", inline = "4G_A", group = g4H, active = h4GreenOn)
+float h4GreenP1 = input.price(0.0, "A price", inline = "4G_A", group = g4H, active = h4GreenOn)
+int h4GreenT2 = input.time(0, "B time", inline = "4G_B", group = g4H, active = h4GreenOn)
+float h4GreenP2 = input.price(0.0, "B price", inline = "4G_B", group = g4H, active = h4GreenOn)
 bool h4RedOn = input.bool(false, "RED bearish", group = g4H)
-int h4RedT1 = input.time(0, "A time", inline = "4R_A", group = g4H)
-float h4RedP1 = input.price(0.0, "A price", inline = "4R_A", group = g4H)
-int h4RedT2 = input.time(0, "B time", inline = "4R_B", group = g4H)
-float h4RedP2 = input.price(0.0, "B price", inline = "4R_B", group = g4H)
+int h4RedT1 = input.time(0, "A time", inline = "4R_A", group = g4H, active = h4RedOn)
+float h4RedP1 = input.price(0.0, "A price", inline = "4R_A", group = g4H, active = h4RedOn)
+int h4RedT2 = input.time(0, "B time", inline = "4R_B", group = g4H, active = h4RedOn)
+float h4RedP2 = input.price(0.0, "B price", inline = "4R_B", group = g4H, active = h4RedOn)
 
 string g1H = "3C — 1H TRENDLINES"
 bool h1GreenOn = input.bool(false, "GREEN bullish", group = g1H)
-int h1GreenT1 = input.time(0, "A time", inline = "1G_A", group = g1H)
-float h1GreenP1 = input.price(0.0, "A price", inline = "1G_A", group = g1H)
-int h1GreenT2 = input.time(0, "B time", inline = "1G_B", group = g1H)
-float h1GreenP2 = input.price(0.0, "B price", inline = "1G_B", group = g1H)
+int h1GreenT1 = input.time(0, "A time", inline = "1G_A", group = g1H, active = h1GreenOn)
+float h1GreenP1 = input.price(0.0, "A price", inline = "1G_A", group = g1H, active = h1GreenOn)
+int h1GreenT2 = input.time(0, "B time", inline = "1G_B", group = g1H, active = h1GreenOn)
+float h1GreenP2 = input.price(0.0, "B price", inline = "1G_B", group = g1H, active = h1GreenOn)
 bool h1RedOn = input.bool(false, "RED bearish", group = g1H)
-int h1RedT1 = input.time(0, "A time", inline = "1R_A", group = g1H)
-float h1RedP1 = input.price(0.0, "A price", inline = "1R_A", group = g1H)
-int h1RedT2 = input.time(0, "B time", inline = "1R_B", group = g1H)
-float h1RedP2 = input.price(0.0, "B price", inline = "1R_B", group = g1H)
+int h1RedT1 = input.time(0, "A time", inline = "1R_A", group = g1H, active = h1RedOn)
+float h1RedP1 = input.price(0.0, "A price", inline = "1R_A", group = g1H, active = h1RedOn)
+int h1RedT2 = input.time(0, "B time", inline = "1R_B", group = g1H, active = h1RedOn)
+float h1RedP2 = input.price(0.0, "B price", inline = "1R_B", group = g1H, active = h1RedOn)
 
 string g15M = "3D — 15M TRENDLINES"
 bool m15GreenOn = input.bool(false, "GREEN bullish", group = g15M)
-int m15GreenT1 = input.time(0, "A time", inline = "15G_A", group = g15M)
-float m15GreenP1 = input.price(0.0, "A price", inline = "15G_A", group = g15M)
-int m15GreenT2 = input.time(0, "B time", inline = "15G_B", group = g15M)
-float m15GreenP2 = input.price(0.0, "B price", inline = "15G_B", group = g15M)
+int m15GreenT1 = input.time(0, "A time", inline = "15G_A", group = g15M, active = m15GreenOn)
+float m15GreenP1 = input.price(0.0, "A price", inline = "15G_A", group = g15M, active = m15GreenOn)
+int m15GreenT2 = input.time(0, "B time", inline = "15G_B", group = g15M, active = m15GreenOn)
+float m15GreenP2 = input.price(0.0, "B price", inline = "15G_B", group = g15M, active = m15GreenOn)
 bool m15RedOn = input.bool(false, "RED bearish", group = g15M)
-int m15RedT1 = input.time(0, "A time", inline = "15R_A", group = g15M)
-float m15RedP1 = input.price(0.0, "A price", inline = "15R_A", group = g15M)
-int m15RedT2 = input.time(0, "B time", inline = "15R_B", group = g15M)
-float m15RedP2 = input.price(0.0, "B price", inline = "15R_B", group = g15M)
+int m15RedT1 = input.time(0, "A time", inline = "15R_A", group = g15M, active = m15RedOn)
+float m15RedP1 = input.price(0.0, "A price", inline = "15R_A", group = g15M, active = m15RedOn)
+int m15RedT2 = input.time(0, "B time", inline = "15R_B", group = g15M, active = m15RedOn)
+float m15RedP2 = input.price(0.0, "B price", inline = "15R_B", group = g15M, active = m15RedOn)
 
 string g5M = "3E — 5M TRENDLINES"
 bool m5GreenOn = input.bool(false, "GREEN bullish", group = g5M)
-int m5GreenT1 = input.time(0, "A time", inline = "5G_A", group = g5M)
-float m5GreenP1 = input.price(0.0, "A price", inline = "5G_A", group = g5M)
-int m5GreenT2 = input.time(0, "B time", inline = "5G_B", group = g5M)
-float m5GreenP2 = input.price(0.0, "B price", inline = "5G_B", group = g5M)
+int m5GreenT1 = input.time(0, "A time", inline = "5G_A", group = g5M, active = m5GreenOn)
+float m5GreenP1 = input.price(0.0, "A price", inline = "5G_A", group = g5M, active = m5GreenOn)
+int m5GreenT2 = input.time(0, "B time", inline = "5G_B", group = g5M, active = m5GreenOn)
+float m5GreenP2 = input.price(0.0, "B price", inline = "5G_B", group = g5M, active = m5GreenOn)
 bool m5RedOn = input.bool(false, "RED bearish", group = g5M)
-int m5RedT1 = input.time(0, "A time", inline = "5R_A", group = g5M)
-float m5RedP1 = input.price(0.0, "A price", inline = "5R_A", group = g5M)
-int m5RedT2 = input.time(0, "B time", inline = "5R_B", group = g5M)
-float m5RedP2 = input.price(0.0, "B price", inline = "5R_B", group = g5M)
+int m5RedT1 = input.time(0, "A time", inline = "5R_A", group = g5M, active = m5RedOn)
+float m5RedP1 = input.price(0.0, "A price", inline = "5R_A", group = g5M, active = m5RedOn)
+int m5RedT2 = input.time(0, "B time", inline = "5R_B", group = g5M, active = m5RedOn)
+float m5RedP2 = input.price(0.0, "B price", inline = "5R_B", group = g5M, active = m5RedOn)
 
 // =============================================================================
 // TEST-ONLY RUNTIME / CALIBRATION — NOT APPROVED MARKET SETTINGS
@@ -223,6 +225,8 @@ float m15GreenNow = f_tl_project(m15GreenValid, m15GreenT1, m15GreenP1, m15Green
 float m15RedNow = f_tl_project(m15RedValid, m15RedT1, m15RedP1, m15RedT2, m15RedP2, projectionTime)
 float m5GreenNow = f_tl_project(m5GreenValid, m5GreenT1, m5GreenP1, m5GreenT2, m5GreenP2, projectionTime)
 float m5RedNow = f_tl_project(m5RedValid, m5RedT1, m5RedP1, m5RedT2, m5RedP2, projectionTime)
+
+int activeTlCount = (dGreenValid ? 1 : 0) + (dRedValid ? 1 : 0) + (h4GreenValid ? 1 : 0) + (h4RedValid ? 1 : 0) + (h1GreenValid ? 1 : 0) + (h1RedValid ? 1 : 0) + (m15GreenValid ? 1 : 0) + (m15RedValid ? 1 : 0) + (m5GreenValid ? 1 : 0) + (m5RedValid ? 1 : 0)
 
 array<float> tlDistances = array.from(
      dGreenValid ? math.abs(dGreenNow - close) : HUGE_DISTANCE,
@@ -352,11 +356,13 @@ f_tl_show(int idx) =>
 
 // =============================================================================
 // SCALE-SAFE PRICE DRAWINGS
+// Daily/weekly horizontal levels use extend.both so the visible level spans the
+// entire chart left and right. Inactive geometry remains NA to preserve reset view.
 // =============================================================================
-var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
-var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
-var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
-var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
 var line goDraw = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
 var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
 var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
@@ -366,12 +372,12 @@ var label goLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.pri
 var box targetBox = na
 var label targetLabel = na
 
-f_sync_level(line id, label lid, float price, string name, color c, bool visible, int width) =>
+f_sync_level(line id, label lid, float price, string name, color c, bool visible, int width, bool fullSpan) =>
     bool valid = visible and not na(price) and price > 0
     if valid
-        int leftBars = math.min(bar_index, 90)
-        line.set_xy1(id, bar_index - leftBars, price)
+        line.set_xy1(id, math.max(0, bar_index - 1), price)
         line.set_xy2(id, bar_index + 1, price)
+        line.set_extend(id, fullSpan ? extend.both : extend.right)
         line.set_color(id, c)
         line.set_width(id, width)
         label.set_xy(lid, bar_index + 3, price)
@@ -426,11 +432,11 @@ f_sync_trend(line id, label lid, bool valid, bool visible, int t1, float p1, int
         label.set_text(lid, "")
 
 if barstate.islast
-    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, 2)
-    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, 2)
-    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, 2)
-    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, 2)
-    f_sync_level(goDraw, goLabel, goLine, "GO LINE", YELLOW_GO, showGoLine and goSet and goOnGrid, 4)
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, 2, true)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, 2, true)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, 2, true)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, 2, true)
+    f_sync_level(goDraw, goLabel, goLine, "GO LINE", YELLOW_GO, showGoLine and goSet and goOnGrid, 4, false)
 
     f_sync_trend(dGreenLine, dGreenLabel, dGreenValid, f_tl_show(0), dGreenT1, dGreenP1, dGreenT2, dGreenP2, dGreenNow, "D GREEN", GREEN_UP)
     f_sync_trend(dRedLine, dRedLabel, dRedValid, f_tl_show(1), dRedT1, dRedP1, dRedT2, dRedP2, dRedNow, "D RED", RED_DOWN)
@@ -478,6 +484,7 @@ bool directionKnown = bigDirection != "NOT SET"
 bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
 string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
 string safeTargetText = targetSet and targetOnGrid ? str.tostring(safeTargetLow, format.mintick) + " – " + str.tostring(safeTargetHigh, format.mintick) : "NOT SET"
+string trendlineLoadText = activeTlCount == 0 ? "NO TRENDLINES — SET A/B" : "TRENDLINES " + str.tostring(activeTlCount) + " LOADED"
 
 // =============================================================================
 // RUNTIME GUARDS
@@ -645,7 +652,7 @@ if barstate.islast
         table.cell(coach, 0, 6, "NOW", text_color = color.white, text_size = 15)
         table.cell(coach, 1, 6, stageText, text_color = color.black, bgcolor = stageColor, text_size = 15)
         table.cell(coach, 0, 7, "SYSTEM", text_color = color.white, text_size = 14)
-        table.cell(coach, 1, 7, runtimeReason + " | " + chartStatus, text_color = runtimeReason == "TEST ENGINE RUNNING" ? color.lime : color.orange, text_size = 13)
+        table.cell(coach, 1, 7, trendlineLoadText + " | " + runtimeReason + " | " + chartStatus, text_color = activeTlCount == 0 ? color.orange : color.lime, text_size = 13)
     else
         for r = 0 to 7
             table.cell(coach, 0, r, "")
@@ -676,7 +683,6 @@ if barstate.islast
         table.cell(eng, 0, 8, "NEXT WALL")
         table.cell(eng, 1, 8, nextWallText)
         table.cell(eng, 0, 9, "ACTIVE TL COUNT")
-        int activeTlCount = (dGreenValid ? 1 : 0) + (dRedValid ? 1 : 0) + (h4GreenValid ? 1 : 0) + (h4RedValid ? 1 : 0) + (h1GreenValid ? 1 : 0) + (h1RedValid ? 1 : 0) + (m15GreenValid ? 1 : 0) + (m15RedValid ? 1 : 0) + (m5GreenValid ? 1 : 0) + (m5RedValid ? 1 : 0)
         table.cell(eng, 1, 9, str.tostring(activeTlCount))
         table.cell(eng, 0, 10, "REFERENCE")
         table.cell(eng, 1, 10, na(reference) ? "NA" : str.tostring(reference, format.mintick))
