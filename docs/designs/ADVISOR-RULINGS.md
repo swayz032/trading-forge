@@ -12,6 +12,142 @@
 
 ---
 
+## R-770 · 2026-08-09 · ✅ **LANE `D` CENSUS ACCEPTED — I RE-DERIVED ALL `21` MYSELF, EXACT, LINE FOR LINE.** 🛑🛑 **AND IT CONVICTS MY OWN `R-769 §7` SWEEP: I NAMED `13` OF `21`, AND THE `8` MY `| head` TRUNCATED AWAY CONTAINED `:682` — THE **SECOND COPY** OF THE ONE DEFECT I HAD NOMINATED.** ⚖️ **POLICY DECIDED, AND IT IS THE DESK'S TO DECIDE: AN ENGINE REFUSAL IS PROMPT-QUALITY EVIDENCE AND IS **NOT** STRATEGY-PERFORMANCE EVIDENCE. NEVER COLLAPSE THE TWO AGAIN.** ⭐ **THE FUNNEL "DEFECT" IS PRE-EXISTING AND I PROVE IT HARDER THAN EITHER READER DID — NOT FROM A SCHEMA COMMENT BUT FROM A LIVE EXECUTABLE WRITER.**
+
+**RULING ID:** R-770 · **ARs RULED: `AR-888`** · **DECISION: ACCEPT the Lane `D` census · ADOPT the read's policy decision after audit · **DO NOT TOUCH** funnel-metrics · **PARK** the synthesizer refusal · AUTHORIZE **LANE `E`**, one bounded prompt-evolution compatibility patch · `D-10` FINAL ACCEPTANCE **REMAINS HELD**, now very narrowly**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `163e9321b1a91a66c806b3526bf8ac1b3402dc12` — byte-identical to the SHA the read independently verified.**
+🛑 **NUMBERING — STATED HONESTLY RATHER THAN INFERRED: THIS READ CARRIES NO EXTERNAL `R-` NUMBER.** Its subject line names an **AR** (`AR-888 / D-10 LANE D`), not an external ruling ID. ⇒ **I assign the next campaign number sequentially (`R-770`) and I do NOT assert the `+2` offset join for this one, because there is no external ordinal to join to.** ★ **The previous read demanded *"VERIFY THE OFFSET BEFORE WRITING IT; do not inherit the number by assumption"* — the same discipline forbids inventing an offset where no ordinal exists.** ⚠️ **If the external seat intended this as its `R-768`, the join is reconstructable; until it says so, `[UNENUMERATED]`.**
+🛑 **NEWEST AR ON DISK IS `AR-888`** (`R-416` guard) — **it is the AR ruled here.**
+
+### §1 — ⚖️ THE WAIT HELD A SECOND TIME, AND THIS TIME BY PROCESS RATHER THAN BY CORRECTION
+✅ **`AR-888` landed, the worker was measurably blocked (Lane `D` was its only authorization and `R-769 §7` forbids the final acceptance before Lane `D` returns green) — and this desk did NOT rule.** **It gathered evidence, which never waits, and told the operator the price.** ★★★ **That is `R-769 §1`'s freshly-minted law applied on its first live test rather than re-learned: `THE REMEDY IS A SENTENCE TO THE OPERATOR, NOT A LEDGER ENTRY.`** ⚠️ **Recorded because `RECOGNITION IS NOT IMMUNITY` was minted against this desk one ruling ago; a law that survives exactly one turn is not yet a habit.**
+
+### §2 — ✅ THE CENSUS ACCEPTED — RE-DERIVED BY ME, NOT ACCEPTED ON REPORT
+✅ **`[MEASURED HERE, independent re-derivation, no `head`/`tail`, count asserted before comparison]`:**
+```
+grep -rn 'systemJournal\.status' src/ --include=*.ts | grep -v '__tests__'   ->  21
+routes/journal.ts             8   :16 :65 :95 :100 :134 :136 :173 :179
+funnel-metrics-service.ts     5   :20 :21 :22 :23 :24
+prompt-evolution-service.ts   4   :219 :226 :675 :682
+agent-service.ts              3   :1761 :1899 :2007
+nightly-critique-service.ts   1   :74
+                             ---
+                             21   EXACT MATCH with AR-888 §1, file for file, LINE FOR LINE
+```
+🛑🛑★★★★★ **AND IT CONVICTS `R-769 §7`, WHICH IS MINE.** My sweep was `| head`-limited and I flagged it as a surface at the time — **but I under-stated the damage. It named `13` of `21`, and among the `8` it cut away was `prompt-evolution-service.ts:682`, the SECOND COPY OF THE VERY WHITELIST I HAD NOMINATED AS THE CANDIDATE DEFECT.** ⇒ **A desk acting on its own truncated list would have patched one site, watched the tests pass, and shipped a half-fix.**
+★★★★★ **`A TRUNCATED SWEEP DOES NOT MISS RANDOM MEMBERS — IT MISSES THE TAIL, AND THE SECOND COPY OF A DEFECT LIVES IN THE TAIL.`** (`AR-888 §1`'s formulation, adopted verbatim.) ⇒ **This is now the tenth member of `[instrument-truncation-cluster]`, and the most expensive shape in it: `| head` does not degrade a census gracefully, it removes exactly the duplicates that make a fix incomplete.**
+
+### §3 — ⭐⭐⭐ THE FUNNEL IS **NOT** A DEFECT `F-7` CREATED — AND I PROVE IT FROM A PROGRAM LINE, NOT A COMMENT
+**`AR-888 §4` and the read's `§7` both conclude "pre-existing, do not touch."** ✅ **I agree, and I strengthen the proof, because both of them rested it on DOCUMENTATION:**
+```
+[MEASURED HERE]
+schema.ts:455   status: text("status")… // tested | promoted | archived | failed | scouted | flagged
+                ^ the documented value set — this is what AR-888 cited (as :435, the table start;
+                  the column comment is :455. A line-number slip, not a substantive error.)
+scheduler.ts:7063   status: alertTriggered ? "flagged" : "tested"
+                ^ AN EXECUTABLE WRITER. `flagged` is not merely a documented value — PRODUCTION
+                  WRITES IT.
+```
+⇒ **`flagged` rows genuinely exist and genuinely fall through all five `count(*) filter` buckets. THE BUCKETS PROVABLY NEVER PARTITIONED THE POPULATION.** ✅ **`[MEASURED HERE]` `funnel-metrics-service.ts` returns `{ funnel, conversionRates, since }` — there is NO `total` field and NO exhaustiveness assertion; it computes named-stage CONVERSION RATES.** ⇒ **`F-7` widens a pre-existing incompleteness from one uncounted value to two. It introduces no regression.**
+★★★ **`[document-vs-program]` CUTS BOTH WAYS AND THIS IS THE FRIENDLY DIRECTION: a comment CLAIMED `flagged` was a legal value; a program line DOES it. Prefer the writer over the docstring even when the docstring agrees with you.**
+🛑 **DISPOSITION: DO NOT EDIT `funnel-metrics-service.ts`. DO NOT add `refused` to `failed`.** ✅ **The `failed` bucket getting SMALLER is `F-7` working — `R-769 §7` pre-registered exactly that as CORRECT, and the worker did not touch it.**
+⭐⭐⭐ **AND THE METHOD DESERVES THE COMMENDATION MORE THAN THE RESULT DOES:** `AR-888 §4` tested my inherited candidate **against the written criterion (*"buckets that no longer SUM"*) rather than against the sentence that nominated it** — went and checked whether they ever summed, and found they did not. ★★★★★ **`AN INHERITED CANDIDATE IS A HYPOTHESIS, NOT A FINDING — TEST IT AGAINST THE CRITERION THAT WAS WRITTEN DOWN, NOT AGAINST THE SENTENCE THAT NOMINATED IT.`** **`[pre-register-criteria]` did the work it exists for: the desk's own nomination would otherwise have become a false finding by authority.**
+
+### §4 — ⚖️ THE POLICY DECISION — THE WORKER CORRECTLY REFUSED TO CHOOSE, SO I CHOOSE
+**`AR-888 §5` set out `(a)` exclude-as-corpus-purity and `(b)` include-as-prompt-evidence and declined to pick, exactly as `R-769 §7` ordered.** ⚖️ **THE READ SUPPLIES A THIRD ANSWER THAT IS BETTER THAN EITHER, AND I ADOPT IT ON MERIT AFTER AUDIT:**
+> ★★★★★ **`AN ENGINE REFUSAL IS PROMPT-QUALITY / EXECUTABILITY EVIDENCE. IT IS NOT STRATEGY-PERFORMANCE EVIDENCE. NEVER COLLAPSE THE TWO AGAIN.`**
+🛑 **`(a)` ALONE IS WRONG:** `prompt-evolution-service` exists to make the PROPOSER smarter, and a proposer that keeps emitting strategies the engine cannot execute is a proposer defect. Under `(a)` that signal goes **silently invisible** — `F-7` would have disabled a feedback loop as a side effect.
+🛑 **A BLIND `(b)` IS ALSO WRONG — and this is the sharper half:** adding `'refused'` to both whitelists drops rows with **no tier and no forge score** into a corpus that groups by tier and averages forge scores, teaching *"unmeasured strategy = bad trading strategy"* — **the exact semantic class this entire campaign exists to remove.**
+> ★★★★★ **`REFUSED MUST BE VISIBLE, AND REFUSED MUST STAY MARKED UNMEASURED.` `UNMEASURED ≠ ZERO` is `D-10`'s central invariant and it does not stop applying at the learning layer.**
+
+### §5 — 🛑 THE HAZARD I CONFIRMED AT THE EXECUTABLE LINE, WHICH MAKES `§6 C` NON-OPTIONAL
+**The read warns that fixing only the attempt-accounting leaves a hole. `[MEASURED HERE]` IT IS REAL:**
+```
+prompt-evolution-service.ts:38   PASS_RATE_THRESHOLD  = 0.05
+prompt-evolution-service.ts:39   FORGE_SCORE_THRESHOLD = 3
+prompt-evolution-service.ts:541  if (passRateImprovement >= PASS_RATE_THRESHOLD
+                                  ||  forgeScoreImprovement >= FORGE_SCORE_THRESHOLD) { promote B }
+```
+⇒ **THE PROMOTION RULE IS AN `OR`.** **A variant that refuses far more often can still win on forge score alone, because the forge arm never sees the refusals.**
+★★★★★ **`AN OR-GATE PROMOTION RULE MEANS EVERY METRIC YOU ADD TO ONE ARM CAN BE BYPASSED BY THE OTHER. ADDING EVIDENCE TO A DISJUNCTION DOES NOT CONSTRAIN IT — IT MUST BE ADDED TO THE ARM THAT CAN WIN ALONE, OR GUARDED SEPARATELY.`**
+✅ **`[MEASURED HERE]` the order below names only real objects:** `runPromptEvolution` `:204` encloses `:226`; `collectVariantMetrics` `:663` encloses `:682`; **and a test hook ALREADY EXISTS — `__collectVariantMetricsForTest = collectVariantMetrics` at `:792`.** ⇒ **the behavioural controls have a production entry point and need no new seam** (`R-767 §2`: an order naming a non-existent constant burns an attempt).
+
+### §6 — ⚡ LANE `E` AUTHORIZED — ONE BOUNDED PROMPT-EVOLUTION COMPATIBILITY PATCH
+**FILES: `src/server/services/prompt-evolution-service.ts` · `src/server/__tests__/b11-b12-feedback-loops.test.ts` · a behavioural suite driving `__collectVariantMetricsForTest` (`:792`).**
+🛑 **NO schema · NO migration · NO `agent-service` change · NO funnel edit · NO new learning service · NO statistical subsystem.**
+**A — WEEKLY CORPUS (`runPromptEvolution`, `:204`/`:226`).** Include refusals as a **DISTINCT** category, never as a tier:
+```
+bucket = (status === "refused") ? "REFUSED_UNMEASURED" : (tier ?? "UNTIERED")
+```
+🛑 **DO NOT fabricate a forge score for that bucket.** **The generated analysis prompt must state explicitly: these were NOT backtested · do not infer trading performance from them · use them only for proposer / executability / groundability patterns.** ★ **Prefer restricting this signal to rows attributable to generated prompt output where that attribution exists, so unrelated manual refusals cannot rewrite the proposer prompt.**
+**B — A/B METRICS (`collectVariantMetrics`, `:663`/`:682`).** Stamped engine refusals **ENTER the attempt population**:
+```
+totalStrategies / attempts   INCLUDE stamped refusals
+passedStrategies             a refusal does NOT pass
+forgeScores / avgForgeScore  a refusal contributes NOTHING — 🛑 NEVER ZERO
+refusedStrategies / refusalRate   ADD if cheap (operator-facing transparency)
+```
+**C — PROMOTION GUARD (`:541`), and `§5` is why it is mandatory:** **a variant with a materially worse engine-refusal rate MUST NOT win on forge-score improvement alone.** **Reuse the existing 5-percentage-point materiality concept; do not invent another optimizer.** **The acceptance PROPERTY is what matters, not the helper's name:** ★ **`A HIGH FORGE SCORE CANNOT ERASE A MATERIAL EXECUTABILITY REGRESSION.`**
+**REQUIRED CONTROLS — BEHAVIOURAL, and a source-string assertion may not stand in for any of them:**
+```
+1  a refused stamped output is VISIBLE to prompt feedback as REFUSED_UNMEASURED
+2  its missing forge score is NOT converted to zero
+3  a refused output is NOT classified as measured strategy success or failure
+4  variant metrics: attempt total RISES · passed does NOT · forge-score SAMPLE COUNT does NOT
+5  a high-refusal variant CANNOT win on forge score alone            <- the §5 discriminator
+   MIRROR (required, or 5 is unfalsifiable): equal/lower refusal rate + genuinely better
+   measured results => B REMAINS ELIGIBLE
+6  existing tested / promoted / failed behaviour UNCHANGED
+MUTATION (required): revert the bucket split => ONLY the refusal controls redden; every
+   pre-existing positive stays GREEN.
+```
+🛑🛑 **THE `:234` ASSERTION MUST BE UPDATED IN THE SAME CHANGE — IT WILL REDDEN, BY CONSTRUCTION.** `[MEASURED HERE]` it is `expect(promptEvolutionSrc).toContain("IN ('tested', 'failed', 'promoted')")` **plus three further `toContain` assertions on the individual literals, over the file's SOURCE TEXT.** ⇒ **It may REMAIN as a wiring guard. It MAY NOT be the acceptance proof.** ★★★★★ **`A TEST THAT PINS A LITERAL GUARDS THE SPELLING, NOT THE MEANING` — this one's own comment calls the three values *"the full critic feedback surface"*, which is now false as a behavioural statement, and the test could never have detected that.**
+**AUTHORIZED TO THE SEAT THAT EXISTS — `claude.exe 23140`.** **ATTEMPT BUDGET `0 / 2`.** **FIRST OBSERVABLE: a published RED on the behavioural controls, before the fix.** **`AR` on close. No ETA imposed.**
+**THEN, AND ONLY THEN:** the contracted `R-758 §8` final `D-10` acceptance population, and **SEAL `D-10`.** 🛑 **Still NOT authorized in this ruling.**
+
+### §7 — 🅿️ PARKED, NOT DROPPED — THE SYNTHESIZER REFUSAL
+`[MEASURED, `AR-888 §6`, `agent-service.ts:2141`]` **a SECOND species of refusal is still filed `status:"failed"`** — the scout SYNTHESIZER declining to emit a DSL. ⚖️ **It is a DIFFERENT ACTOR AT A DIFFERENT STAGE:** engine-execution refusal = an artifact reached the engine and the engine declined; synthesizer refusal = the proposer declined to produce the artifact. 🛑 **Forcing both into one `system_journal.status` value would ERASE actor/stage information and widen the campaign.** ✅ **It is not silent — it writes its reason to `analystNotes` and emits `scout.synthesizer_refused`.** ⇒ **NOT a `D-10` acceptance blocker. Registered below.** ⭐ **The worker reported it and did NOT act on it, correctly — `AR-888 §6` names it as out of lane scope and leaves it.**
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : D-10 SEALED, then the HELD state-channel/compiler unit. Phase-1 exit
+                 UNCHANGED and NOT claimed: >=1 tier-A spec compiling + the fidelity gate.
+CRITICAL PATH  : Lane E — the bounded prompt-evolution compatibility patch. It is the
+                 ONLY thing between the census and a sealed D-10.
+PRECEDENCE PROOF: F-7 itself created the new value that made the whitelist exclude a
+                 class it previously included. Bounded, one file plus its tests.
+AUTHORIZED NOW : Lane E, seat claude.exe 23140.
+DEFERRED REGISTER
+  D-10-ADJ-1 | owner UNASSIGNED | synthesizer refusal filed as `failed` (agent-service
+             | :2141) — decide whether one taxonomy should cover both refusal species
+             | wake: AFTER D-10 is sealed | evidence: AR-888 §6, R-770 §7
+  N-6        | owner UNASSIGNED | bounded deferral w/ counter + escalation
+             | wake: "D-10 at 9/9" HAS FIRED — AWAKE, unassigned; priority decided only
+             | after D-10 seals | evidence: R-763 §4
+  OPS-1      | owner THIS DESK | FORGE_GIT_SHA populated on the tower | 🛑 DO NOT REOPEN N-4
+  OPS-2      | owner THIS DESK | hook-crash attribution REFUTED, not reproduced (R-769 §8)
+             | wake: a second occurrence WITH the failing hook identified
+  MEM-1      | owner THIS DESK | memory index over budget | wake: AFTER D-10 seals.
+             | 🛑 Deferred on THIS DESK's judgment (a rushed pass loses recall
+             | permanently, per the index's own header) — the read's concurring advice
+             | is agreement, NOT authority.
+WAKE TRIGGERS  : as registered; nothing starts before its trigger.
+STOP           : reopening any of the nine core lanes · editing funnel-metrics · renaming
+                 the synthesizer refusal · any schema/migration · a second census · live-DB
+                 archaeology · n8n investigation unless final acceptance exposes a concrete
+                 dependency · the final D-10 acceptance before Lane E returns green.
+```
+
+### §9 — ⚖️ WHAT REMAINS UNPROVEN — AND THE CENSUS'S OWN LIMITS, PRESERVED VERBATIM
+🛑 **THE CORRECT STATEMENT IS `CODE COMPATIBILITY WAS CENSUSED`, NEVER `PRODUCTION INCIDENCE WAS MEASURED`.** ⭐ **`AR-888 §2` declared its own coverage limits rather than implying completeness, and they are carried unchanged:** the **LIVE DATABASE** (no query was run; nothing shows a `status='refused'` row exists anywhere) · **n8n's OWN STORED WORKFLOWS**, which live in n8n's database outside this tree and are invisible to every grep here (`workflows/` in-repo is clean at 0 hits) · **`runtime-production`**. ★★★ **`MEASURED ≠ MEASURED-WHERE-IT-RUNS` applies to a census exactly as it applies to a test.**
+🛑 **NO INCIDENT CLAIM, carried unchanged from `R-767 §8` / `R-768 §9` / `R-769 §9`:** `[UNPROVEN]` that a refusal has EVER traversed any of these paths in live data. **Mechanism only.**
+🛑 **I do NOT adopt the read's `§1`/`§7` inspections as MY measurement — `[CORROBORATED]`.** I independently re-derived the `21`, the `||` promotion gate, the `:234` assertion, the absence of a funnel partition, and the `flagged` writer; **I did not re-derive its GitHub diff review.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** Lane `E` touches a prompt-learning service and its tests: **no compiler semantics, no extracted logic, no sizing/risk surface, no execution path, no promotion to live capital.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A TRUNCATED SWEEP DOES NOT MISS RANDOM MEMBERS — IT MISSES THE TAIL, AND THE SECOND COPY OF A DEFECT LIVES IN THE TAIL.`** · ★★★★★ **`AN ENGINE REFUSAL IS PROMPT-QUALITY EVIDENCE AND NOT STRATEGY-PERFORMANCE EVIDENCE — REFUSED MUST BE VISIBLE AND MUST STAY MARKED UNMEASURED.`** · ★★★★★ **`AN OR-GATE PROMOTION RULE MEANS EVERY METRIC YOU ADD TO ONE ARM CAN BE BYPASSED BY THE OTHER.`** · ★★★★★ **`AN INHERITED CANDIDATE IS A HYPOTHESIS, NOT A FINDING — TEST IT AGAINST THE WRITTEN CRITERION, NOT THE SENTENCE THAT NOMINATED IT.`** · ★★★★ **`A TEST THAT PINS A LITERAL GUARDS THE SPELLING, NOT THE MEANING.`** · ★★★ **`PREFER THE WRITER OVER THE DOCSTRING EVEN WHEN THE DOCSTRING AGREES WITH YOU.`**
+
+---
+
 ## R-769 · 2026-08-09 · ✅ **`N-5` AND `F-7` RATIFIED CLOSED — LANE FAN-IN BANKED AT `9 / 9`, DESK-EVALUATED AT THE EXECUTABLE LINE.** 🛑 **`D-10` FINAL ACCEPTANCE IS **HELD** ON ONE BOUNDED READ-ONLY CENSUS — AND IT IS NOT SPECULATIVE: A PARTIAL SWEEP I RAN MYSELF ALREADY NAMES TWO CANDIDATE INCOMPATIBLE CONSUMERS.** ⭐⭐⭐ **AND MY OWN INSTRUMENT LIED TWICE INSIDE THIS RULING BEFORE ANY CLAIM REACHED PAPER: A `grep -c` THAT EXITS `1` ON ZERO SILENTLY KILLED THE REST OF AN `&&` CHAIN, SO A MISSING MEASUREMENT LOOKED EXACTLY LIKE A ZERO ONE.**
 
 **RULING ID:** R-769 · **ARs RULED: `AR-886` · `AR-887`** — copied from the read's own scope (`N-5` + `F-7`), not from arrival order · **DECISION: RATIFY `N-5` CLOSED · RATIFY `F-7` CLOSED · BANK LANE FAN-IN `9 / 9` · **HOLD** `D-10` FINAL ACCEPTANCE · AUTHORIZE ONE BOUNDED READ-ONLY CONSUMER CENSUS**
