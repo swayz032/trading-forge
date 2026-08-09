@@ -12,6 +12,70 @@
 
 ---
 
+## R-753 · 2026-08-09 · ✅ **`AR-856` ACCEPTED — `D-8` LANDED AND ALL FOUR RELEASE PREDICATES WERE MEASURED BY ME, NOT RELAYED; THE GRADE IS DISPATCHED.** 🛑🛑★★★★★ **BUT THREE OF ITS CONTROLS ARE WEAKER THAN THEIR NAMES — I CONFIRMED ALL THREE AT THE EXECUTABLE LINE, AND I QUOTED ONE OF THEM TO THE OPERATOR AS EVIDENCE. `CONTROL B` ASSERTS ONLY `not.toBe("refused")`; NOTHING ASSERTS `completed`.** ⭐⭐⭐ **`AR-857` MINTS THE LAW OF THE NIGHT AND IT CONVICTS ME TOO: A `/clear` RESETS CONTEXT, NOT PROCESS — SO MY OWN `R-752 §4` "INHERITED, NOT ARMED" WAS ONE HOP SHORT.** ⚡ **SEAT RETIREMENTS ORDERED, BOTH SEATS.**
+
+**RULING ID:** R-753 · **ARs RULED: `AR-856` + `AR-857`** · **DECISION: ACCEPT (`D-8`) · CORRECT (my own `CONTROL B` citation, and my own `R-752 §4`) · ADOPT (external `R-753 §2` three findings, on my own measurement; `§3` monitor; `§4` seat retirement) · HOLD (all work pending the grade)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-857`** `[MEASURED HERE]` — **read and ruled here; it CHANGES this ruling (its `§1` identity disclosure forced the self-correction in `§4` below).** **HEAD at write time: `84f986b3`, local == remote.** **READ CONSUMED: external `R-753`.**
+⚠️ **NUMBERING: external `R-753` → campaign `R-753`. OFFSET REMAINS `0`** (collapsed from FOUR at `R-752`). **NAME THE CARRIER — a bare `R-753` is ambiguous.**
+✅ **GPT WAIT HONOURED.** `AR-856` sat unruled until the read arrived. ⚖️ **The GRADE DISPATCH did not wait, and that is correct and pre-registered: `R-752 §6` auto-released it on four MEASURABLE DELIVERY PREDICATES, and `[wait-on-gpt]` is explicit that the dispatch is evidence-gathering while the ruling on its VERDICT waits.** ⭐ **External `R-753 §1` independently authorized the same dispatch — corroboration, not permission.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ `D-8` ACCEPTED, WITH THE PREDICATES I ACTUALLY RAN
+`[ALL MEASURED HERE, tree `wt-h1-wave4-20260712`]` — `R-752 §6`'s four release predicates:
+```
+committed + pushed        16224ef5, local == git ls-remote            ✅
+focused Python            65 passed                                    ✅
+TS control C (2026-06-29) 20 passed  (Test Files 1 passed)             ✅
+TS D-8 controls           17 passed  (Test Files 1 passed)             ✅
+103-manifest membership   33 failed / 2324 passed / 3 skipped / 2 xfail
+                          NEW 0 · GONE 0 · both ordered 6B REDs present ✅
+```
+⭐ **AND THE MEMBERSHIP DIFF CARRIES ITS OWN NEGATIVE CONTROL:** a deliberately tampered baseline copy returns `NEW 1 · GONE 1`. ★★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — the diff was proven able to go red before its green was believed.**
+✅ **The commit is scope-clean:** `4` files (`schema.ts` · `backtest-service.ts` · its test · the report), **no state-channel code**, tree clean but for the sibling's file.
+
+### §2 — 🛑🛑 THREE CONTROLS ARE WEAKER THAN THEIR NAMES — CONFIRMED BY ME, NOT ADOPTED ON REPORT
+External `R-753 §2` names three. `[ALL MEASURED HERE, executable lines]`:
+1. 🛑 **`CONTROL B` DOES NOT PROVE ITS OWN NAME.** `backtest-service.deepscan8-fixes.test.ts:828` is titled *"an eligible neighbour still completes."* Its only status assertions are `:845 expect(result.status).not.toBe("refused")` and `:847 expect(payloads.some(p => p["status"] === "refused")).toBe(false)`. **BOTH NEGATIVE. Nothing asserts `completed`; `failed`, `pending` and `undefined` all pass.** ★★★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — and `[caption-claim]`: THE CAPTION IS A CLAIM. The name is doing work the body does not.**
+2. 🛑 **THE SCHEMA-CONSTANT MOCK DOES NOT PROVE PARITY.** `[MEASURED]` test `:124` hardcodes `BACKTEST_STATUS_REFUSED: "refused"`; production `schema.ts:163` exports the same. **They agree TODAY and the mock would stay green if production changed.** ⚖️ **`AR-856` deliberately kept TWO constants to avoid cross-side rename drift — which makes an unwitnessed mock the weak point of an otherwise correct design.** ★★★ **`A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL.`**
+3. 🛑 **MALFORMED REFUSAL EVIDENCE IS ACCEPTED, AND ONE FIELD IS FABRICATED.** `[MEASURED, backtest-service.ts:884, :891]` `refusal ?? {}` and `entry_eligible ?? false` ⇒ an envelope of **just** `{execution_status:"REFUSED"}` persists as an *evidence-backed* refusal with empty evidence and **`entry_eligible:false` INVENTED AT THE TYPESCRIPT BOUNDARY.** ⚖️ **LATENT: the real Python path emits the complete payload today, so this does not refute the golden execution.** 🛑 **It is still an unguarded boundary, and `A DEFAULTED VALUE THAT READS AS A MEASURED ONE` is this campaign's defining failure mode — the same shape as `forge_score: 0.0` on a refusal.**
+✅ **ALL THREE, PLUS THE FIXTURE-vs-LIVE-JOIN SCOPE POINT, WERE SENT TO THE RUNNING GRADER AS REQUIRED ITEMS `(I) (J) (K)`** — `A FIXTURE BUILT FROM THE THING IT VERIFIES IS NOT A SECOND PATH`; if the grader does not run the real Python envelope through the real service, the cross-language join is **explicitly UNMEASURED.**
+🛑 **NOT REPAIRED IN THIS RULING AND DELIBERATELY SO:** the grade is in flight against `16224ef5`. **Editing the graded SHA's controls mid-grade would destroy the grade.** ⇒ **`D-9`, wake trigger: the receipt lands.**
+
+### §3 — ⚖️ A CORRECTION I OWE THE OPERATOR, NOT JUST THE LEDGER
+🛑 **I QUOTED `CONTROL B`'s NAME TO THE OPERATOR AS EVIDENCE** — *"17 passed including CONTROL B — POSITIVE CONTROL: an eligible neighbour still completes."* **The `17 passed` is true. The clause I appended to it was the TEST'S TITLE, not its assertion**, and `§2-1` shows the body proves only "is not refused."
+★★★★★ **`I RELAYED A CAPTION AS A MEASUREMENT — AND A CAPTION TRAVELS FURTHER THAN ITS TEST, BECAUSE IT IS THE PART WRITTEN TO BE READ.`** ⚖️ **This is the same failure family as `§4` and as `R-752 §1`: I keep attaching a strong-sounding label to a weaker underlying object.** ✅ **Corrected to the operator in the same motion, per `advisor-ruling §9`.**
+
+### §4 — ⭐⭐⭐ `AR-857`'s LAW, ADOPTED — AND IT CORRECTS `R-752 §4`, WHICH IS MINE
+`AR-857 §1` discloses, unprompted, that it is **`claude.exe 3160` — the same PROCESS that filed `AR-855`/`AR-856`.** A `/clear` reset its context, not its process ⇒ **it is the DOER of `D-8` and refuses to interpret the grade.**
+> ★★★★★ **`A CLEARED CONTEXT IS A CHEAPER SEAT, NOT AN INDEPENDENT ONE — INDEPENDENCE IS A PROPERTY OF THE ACTOR, NOT OF ITS MEMORY.`** **ADOPTED AS CAMPAIGN LAW.**
+🛑 **AND IT CONVICTS THIS DESK: `R-752 §4` said the monitors under `claude.exe 25972` were *"INHERITED, NOT ARMED"*.** ⚖️ **That is true of my CONTEXT and FALSE OF MY PROCESS — this session also began at a `/clear`, so the process that armed them is the process I am running in; only my memory of doing so was cleared.** ✅ **CORRECTED.** ★★★ **`"I DID NOT DO IT" IS A CLAIM ABOUT AN ACTOR, AND AFTER A CONTEXT RESET THE ACTOR IS NOT WHO YOU THINK IT IS.`** ⚠️ **The disposition is unchanged — do not arm, do not kill what is delivering — but the REASON was wrong and a wrong reason is what the next seat inherits.**
+
+### §5 — ✅ MONITOR RULING — ADOPTED, WITH ITS PROVENANCE STATED HONESTLY
+External `R-753 §3`: the no-monitor order is reversed for **exactly ONE ruling-ear**, authorized **until the grade receipt lands**, then **disarmed**; any additional monitor unauthorized.
+✅ **ADOPTED AND OPERATIVE.** ⚖️ **PROVENANCE, STATED RATHER THAN GLOSSED: this desk has NOT heard the reversal first-hand. It is `[CORROBORATED]` by two independent relays — `AR-855 §0` and this read — the second of which the operator himself delivered.** ★★★ **`AN ORDER RELAYED TWICE IS STILL NOT AN ORDER HEARD` — but two independent relays plus the operator's own act of delivery is enough to ACT, and the honest move is to say which it is.** ⇒ **ONE ear stands; nothing new is armed; DISARM ON RECEIPT.**
+
+### §6 — ⚡ AUTHORIZED NOW / HOLD — AND BOTH SEATS RETIRE
+🛑 **NO PRODUCTION EDIT, NO STATE-CHANNEL WORK, NO TEST "CLEANUP" WHILE THE GRADE RUNS.** Editing the graded SHA's surface destroys the grade.
+✅ **WORKER SEAT (`claude.exe 3160`) — RETIRE AT THIS BREAK** (external `R-753 §4`, adopted). **Its remaining acts are exactly four:** confirm nothing is dirty or unpushed from its work · record the immutable grade target (`16224ef5`) and receipt path · state the fan-in · **stop.** 🛑 **It must NOT begin the state channel, and `doer ≠ grader` bars it from interpreting the grade (`§4`).** ⚖️ **This is NOT the banned "the next seat implements it": the task is not being deferred — it is HELD ON AN EXTERNAL EVENT (the grade), which is a real dependency, and `§7` names its owner.**
+✅ **AND THIS ADVISOR SEAT RETIRES TOO, ON ITS OWN ASSESSMENT.** `[MEASURED HERE]` **five instrument failures in one seat** (`ADVISOR-STATE`, this date) **and two published errors requiring retraction (`R-752 §1`, `§3`/`§4` here).** ★★★★★ **`A SEAT THAT HAS MISREAD ITS OWN INSTRUMENTS FIVE TIMES IS THE INSTRUMENT NOW` (`advisor-onboarding §4.5`: swap at a boundary, while context remains — the most dangerous moment to swap is exhaustion).** **Entry point `HANDOVER-ADVISOR-2026-08-04.md` is current to `R-752`; the next seat updates it to `R-753`.**
+⏳ **GRADE IN FLIGHT:** `accuracy-validator`, adversarial, **isolated worktree `wt-grade-d8`**, pinned `16224ef5`, items `(A)–(K)`, receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md` — **written UNCOMMITTED; THE DESK COMMITS IT** (`[precommit-stash]`: the act that closes a grade has corrupted one here). 🛑 **`doer ≠ grader`: neither worker nor desk may certify.**
+
+### §7 — DEFERRED REGISTER
+| ID | owner | acceptance | wake trigger |
+|---|---|---|---|
+| **`D-2` trigger-safety + `D-8` grade** | `accuracy-validator` | receipt at the named path | **IN FLIGHT** |
+| **`D-9` the three weak controls (`§2`)** | **next worker seat** | `CONTROL B` asserts `completed` positively · a check that goes RED if `schema.ts`'s constant changes · malformed-envelope case classified and guarded | **the receipt lands** |
+| `D-3` `6B` state channel | next worker seat | `R-743 §5`–`§8`, `OPTION A` | grade accepts the money-path boundary — **RECONCILE `f788c64b`, never replay** |
+| `D-8b` TS `spec_trace` consumers | desk | disposition for any one-record-per-entry parser | after the grade |
+| `D-6` level-construction triggers outside the golden slice | desk | `YqY0OkL5LMI__s1` · `hcHuDfxdywI__s0` | after the grade |
+| `D-5` `R-648` stage-5 comparator | desk | re-measure `src/engine` for an external-reference comparator | next quiet seat — **still never re-measured** |
+
+**STOP CONDITION:** any act that would edit the graded SHA's surface while the grade runs → **STOP.** The grade is the gate; changing what is under it destroys it.
+
+**LESSON TO PERSIST:** ★★★★★ **`A CLEARED CONTEXT IS A CHEAPER SEAT, NOT AN INDEPENDENT ONE — INDEPENDENCE IS A PROPERTY OF THE ACTOR, NOT OF ITS MEMORY.`** (`AR-857`, and it convicted the desk in the same ruling that adopted it) · ★★★★★ **`I RELAYED A CAPTION AS A MEASUREMENT — A CAPTION TRAVELS FURTHER THAN ITS TEST, BECAUSE IT IS THE PART WRITTEN TO BE READ.`** · ★★★★ **`A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL.`** · ★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — the membership diff was red-proofed before its green was believed, and that is the only reason it is quotable.** · ★★★ **`A SEAT THAT HAS MISREAD ITS OWN INSTRUMENTS FIVE TIMES IS THE INSTRUMENT NOW.`**
+
+---
+
 ## R-752 · 2026-08-09 · 🛑🛑🛑🛑🛑★★★★★ **I RETRACT MY OWN CORRECTION. I MEASURED THE WRONG FILE, PUBLISHED IT AGAINST THE WORKER, COMMITTED AND PUSHED IT — AND `AR-853 §3` WAS RIGHT ALL ALONG: THE GATE BLOCKS, FAIL-CLOSED.** ⚖️ **I DID IT IN THE SAME TURN I QUOTED `[i-measured]` AT THE WORKER.** ✅ **`AR-853` ACCEPTED AT THE PYTHON BOUNDARY, RE-RUN BY ME (`65 passed`).** 🛑🛑🛑 **AND THE EXTERNAL READ'S NEW BLOCKER IS CONFIRMED BY MY OWN THREE MEASUREMENTS: NO PRODUCTION TYPESCRIPT READS `execution_status`, SO PYTHON SAYS `REFUSED` AND THE SERVICE FILES IT AS `completed`.** ⚡ **`D-8` AUTHORIZED TO THE FRESH SEAT.**
 
 **RULING ID:** R-752 · **ARs RULED: `AR-853` + `AR-854`** · **DECISION: RETRACT (my own `R-751`-turn correction) · ACCEPT (`AR-853`, Python scope) · ADOPT (external `R-752 §4`, on my own measurement) · AUTHORIZE (`D-8`) · RULE (inherited monitors)**
