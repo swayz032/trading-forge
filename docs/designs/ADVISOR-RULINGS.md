@@ -12,6 +12,110 @@
 
 ---
 
+## R-754 · 2026-08-09 · ✅ **GRADE RATIFIED AT BAND `6`, WITH THE CLAIM NARROWED: THE REFUSAL IS TERMINAL THROUGH `backtest-service.ts`, NOT END-TO-END.** 🛑🛑★★★★★ **I REJECT MY OWN PROCESS'S CORRECTION OF GRADE ITEM `(H)` — I MEASURED THE WRITER'S EARLY RETURN AT `:176` AND `:183` IS UNREACHABLE ON THAT PATH. THE PRIOR DESK READ A LINE AND PUBLISHED ABOUT A PATH.** ⚡ **`D-10` AUTHORIZED — AND `R-753 §6`'s RETIREMENT OF `claude.exe 3160` IS LIFTED FOR `D-10`/`D-9` ONLY, ON A CENSUS THAT BOUNDS THE TWO-WINDOW HAZARD.** 📡 **MONITORS: THE OPERATOR REVERSED THE NO-MONITOR ORDER; EXTERNAL `R-754 §7` IS OVERRULED ON MERIT BECAUSE IT ECHOED OUR OWN STALE FILE.**
+
+**RULING ID:** R-754 · **AR RULED: `AR-860`** · **DECISION: RATIFY (grade, band `6`) · REJECT (the handover's item-`(H)` correction — my own process's) · STRIKE (*"terminal end-to-end"*) · ADOPT (external `R-754 §1`–`§6`, on my own measurement) · OVERRULE (external `R-754 §7`, monitors) · AUTHORIZE (`D-10`) · LIFT (the `3160` retirement, narrowly)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-860`** `[MEASURED HERE]` — **read in full and ruled here; it CHANGES this ruling (its `§5` question is what `§4` below answers, and its `§3` premise is measured STALE in `§5`).** **HEAD at write time: `7eedbfd0`, local == `git ls-remote` `[MEASURED HERE]`.** **READ CONSUMED: external `R-754`.**
+⚠️ **NUMBERING: external `R-754` → campaign `R-754`. OFFSET REMAINS `0`. NAME THE CARRIER — a bare `R-754` is ambiguous between the read and this ruling, which OVERRULES it in one section.**
+✅ **GPT WAIT HONOURED, AND IT WAS FREE BY CONSTRUCTION.** `AR-860` and the banked grade verdict both sat unruled until the read arrived. ⭐ **`R-753 §6` had retired BOTH seats, so the `BLOCKED WORKER` exception could not fire — there was no worker to block. `AN EMPTY SEAT IS NOT A BLOCKED SEAT`, and a desk that conflates them has invented an exception out of its own idleness.** ★ **The operator asserted the wait an EIGHTH time, mid-onboarding, before this seat had ruled anything.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ THE GRADE IS RATIFIED, AND THE CLAIM IT SUPPORTS IS NARROWER THAN THE ONE WE PUBLISHED
+✅ **`PASS_WITH_BOUNDED_FINDINGS`, band `6`, RATIFIED.** 🛑 **NOBODY RE-RUNS THIS GRADE** (`b2c28e9d` stands; external `R-754 §1` concurs; `AR-859 §4` and `AR-860 §5` both carry it).
+🛑 **THE CORRECT CLAIM, AND EVERY PRIOR CARRIER OVERSTATED IT:**
+| claim | verdict | grade |
+|---|---|---|
+| Python refusal terminal | ✅ VERIFIED | `[MEASURED, R-752 §2, my own terminal, `65 passed`]` |
+| TypeScript `backtest-service.ts` refusal terminal | ✅ VERIFIED | `[MEASURED, R-753 §1, `17 passed` + `20 passed`]` |
+| no capital · no trades · no metrics · no promotion | ✅ VERIFIED | `[MEASURED BY GRADED INSTRUMENT]` |
+| **the surrounding pipeline is terminal** | 🛑 **REFUTED** | `[MEASURED HERE, §3]` |
+⇒ ★★★★★ **`THE SYSTEM IS SAFE FROM TRADING AN INVENTED RULE, AND NOT SAFE FROM MISREPORTING ONE.` A refused strategy is still scheduled forever and still presented downstream as a measured zero.**
+
+### §2 — 🛑🛑 THREE CARRIER CORRECTIONS, AND THE FIRST ONE IS MINE
+**1. THE ITEM-`(H)` CORRECTION IN `HANDOVER-ADVISOR-2026-08-04.md:9` IS WRONG AND IS STRUCK.** It asserts the grade is *"WRONG at the executable line"* because `shadow-divergence-writer.ts:183` *"calls the gate."*
+`[ALL MEASURED HERE, tree `wt-h1-wave4-20260712`, HEAD `7eedbfd0`, executable lines]`:
+```
+:143  const backtestExpected = await loadExpectedSignals(strategyId);
+:176  return { divergenceVsBacktest: null, updated: true, reason: "baseline_missing" };   <- EARLY RETURN
+:183  const result = compareShadowToBacktest(shadowSignals, backtestExpected);            <- UNREACHABLE ON THAT PATH
+```
+⇒ **`:183` is real and is never reached when the baseline is absent. The line is true; the conclusion drawn from it is false.**
+★★★★★ **`A LINE'S EXISTENCE IS NOT ITS REACHABILITY — I READ A CALL SITE AND PUBLISHED ABOUT A PATH.`** ⚖️ **AND THE PROCESS THAT PUBLISHED IT IS THE PROCESS WRITING THIS: `claude.exe 25972`. A `/clear` gave me a new context, not a new author** (`AR-857`'s law, `R-753 §4`). **This is the THIRD consecutive ruling in which this desk corrects its own published measurement of a `*divergence*` file, and the second time the fix is the SAME law: `ENUMERATE THE MATCHING FILES, THEN TRACE THE PATH, NOT THE LINE.`**
+✅ **THE GRADE'S ACTUAL STATEMENT THEREFORE STANDS, AND I RE-DERIVED ALL THREE HALVES:** checker surface **FAIL-CLOSED** (`shadow-signal-divergence-checker.ts:192-199`, `R-752 §1`) · writer's missing-baseline surface **FAIL-OPEN** (`:176` returns `updated: true` and blocks nothing) · **a refused row can never become a baseline** — `[MEASURED HERE, `shadow-signal-divergence-loader.ts:124`]` `eq(backtests.status, "completed")`, with `:132`/`:153`/`:176` all `return []`.
+**2. STRIKE *"the refusal is now terminal END-TO-END"*** wherever it appears in the handover. **It is terminal through `backtest-service.ts`. Nothing more.**
+**3. STRIKE *"three follow-ups"*.** **The grade carries TEN findings.** ★★★ **`A SUMMARY THAT UNDERCOUNTS A FINDING SET DELETES THE ONES IT OMITS` (`[count-obligations]`: a dropped clause once faked *"all ten MET"*, and nothing detects a missing row).**
+
+### §3 — ⚡ `D-10` — THE REFUSAL-CONSUMER TERMINALITY SWEEP, VERIFIED BY ME BEFORE AUTHORIZING IT
+🛑 **I DID NOT TAKE THE WAVE ON REPORT.** `[ALL MEASURED HERE, HEAD `7eedbfd0`]`:
+> ★★★★★ **THE ONE-LINE STATEMENT OF THE DEFECT, AND IT IS POSITIVE-CONTROLLED: the token `refused` appears in NONE of the three consumers, while `completed` appears in ALL THREE.** The same grep, same tree, same call — so the null is a measurement, not a silence.
+
+| F | site | `[MEASURED HERE]` | grade |
+|---|---|---|---|
+| **`F-8`** | `candidate-backtest-conveyor-service.ts:105-121` | three chained `NOT EXISTS` on `status = 'completed'` / `'running'` / `'failed' AND recent`. **`refused` matches NONE** ⇒ the candidate stays selected and is re-enqueued **every cycle, forever**, each time counted as a successful enqueue | ✅ **CONFIRMED at the executable line** |
+| **`F-9`** | `routes/critic-optimizer.ts:51-58` | implicit *"latest backtest"* = `orderBy(desc(createdAt)).limit(1)` with **no status predicate**. A refused row is selected as the evidence source | ✅ **CONFIRMED at the executable line** |
+| **`F-10`** | `shadow-rerun-service.ts` | `:239` branches on `status === "skipped"`; **there is NO sibling branch for a refusal** (token absent from the file). Control therefore reaches `:287-290` `metricsPassGate` → `statusFlipped` → `:139 if (statusFlipped) return "critical"` | ⚠️ **ABSENCE + MECHANISM `[MEASURED HERE]`; REACHABILITY `[HYPOTHESIS — NOT EXECUTED]`** |
+| **`F-7`** | latent agent caller | same binary `completed`/not-`completed` shape | `[MEASURED BY GRADED INSTRUMENT]` — **not re-derived by me** |
+⚠️ **I GRADE `F-10` HONESTLY RATHER THAN LETTING IT RIDE ON ITS NEIGHBOURS: I did not execute the path, and the grade's cited `:240` is not where the severity attribution lives at this HEAD.** ★★★ **`A FINDING THAT INHERITS ITS CONFIRMATION FROM THE FINDING NEXT TO IT HAS NOT BEEN CONFIRMED` — the worker red-proofs it FIRST, and if the path proves unreachable that is a FINDING, not a failure.**
+⚖️ **NOTED IN `F-10`'s FAVOUR AND AGAINST ITS BLAST RADIUS:** `[MEASURED HERE, `:463`]` the shadow-rerun ENTRY selection already filters `eq(backtests.status, "completed")`, so the exposure is the RE-RUN's own refusal, not the source row.
+
+**PRECEDENCE PROOF (`critical-path-campaign-manager`, admission rule 2 — this is NOT a severity ranking):** `D-10` is admitted because it **INVALIDATES THE RECEIPT**, not because it is severe. `F-9` presents a refusal's `NULL`s as a **measured zero-P&L series** — it manufactures evidence, which is the exact class the campaign exit depends on being trustworthy — and `F-8` makes the refusal **non-terminal in the scheduler**, which falsifies the terminality claim the grade was dispatched to test. ✅ **`F-7`/`F-10` ride the same wave because they share the binary-status root cause and the same files' semantics; splitting them would re-open the surface twice.**
+**ORDER (fake-edge tested, `advisor-ruling §8a`): `F-8` → `F-9` → `F-10` → `F-7`.** 🛑 **This edge is REAL, not prose adjacency: `F-8` is the only one that COMPOUNDS (every 45s), so it is first for a measured reason.**
+**REQUIRED BEHAVIOUR — external `R-754 §3`, ADOPTED VERBATIM BY REFERENCE, bank it before the first edit.** ★ **A 4-item contract summarised is a contract with items missing.** **DESK AMENDMENTS, THREE:**
+1. 🛑 **THE PREDICATE IS THE SHARED CONSTANT `BACKTEST_STATUS_REFUSED` FROM `src/server/db/schema.ts:163` — NEVER a string literal at a call site.** `R-752 §3` proved this exact drift class already defeated one guard. ⚠️ **`[MEASURED, AR-860 §4]` TWO `schema.ts` exist; the production one is `src/server/db/schema.ts`.**
+2. 🛑 **MECHANICALLY ENUMERATE every production `runBacktest()` consumer and every binary `completed`/not-`completed` branch BEFORE editing. A fifth refusal-sensitive consumer is a FINDING — STOP AND REPORT; do not silently widen.** ★★★★★ **`A LIST SUPPLIED WITH AN ORDER BECOMES THE CEILING OF WHAT IS FOUND UNLESS THE ORDER FORBIDS USING IT` (`R-752 §2`) — the four names above are a FLOOR, not the population.**
+3. ✅ **RED-FIRST PER FINDING, AND THE MUTATION TEST IS MANDATORY:** restoring each original defect must turn ITS control RED. ★★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — proven able to go red before its green is believed.**
+**REQUIRED CONTROLS:** external `R-754 §3`'s ten, in full. 🛑 **Note that four of them are POSITIVE controls (`completed` still works) — `A CONTROL THAT PASSES ON THE UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE`, so report the two classes SEPARATELY and never as one `10/10 green`.**
+**FILES/SCOPE:** the four named consumers · their focused tests · the shared status constant. 🛑 **NO state-channel code. NO Python production change. NO repo-wide TS sweep. NO test "cleanup".**
+**ACCEPTANCE:** focused TS controls green · Python `65 passed` unchanged · **`103`-manifest equality by MEMBERSHIP against `docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json` (`NEW 0 / GONE 0`), never by count, with the tampered-copy negative control re-run.**
+**FIRST OBSERVABLE + ETA:** the **RED** `F-8` test proving a refused candidate is re-enqueued, failing before the fix exists. **START-RECEIPT within ~2 minutes.**
+**HONEST-PARTIAL CLAUSE:** name any control you cannot build and the surface you covered — **it does not spend attempt `2`.** **ATTEMPT BUDGET REMAINS `1 / 2`.**
+
+### §4 — ⚖️ `AR-860 §5`'s QUESTION, ANSWERED BY THE DESK — THE RETIREMENT IS LIFTED, NARROWLY
+🛑 **`AR-860` PUT THIS TO THE OPERATOR. IT IS NOT HIS.** `advisor-ruling §0.0` reserves capital, spend, irreversible destruction, and unbounded blast radius. **"Which window is the worker" is none of those, and `A DECISION PARKED ON SOMEONE WHO CANNOT CHECK YOUR EVIDENCE IS AN UNMADE DECISION WITH A WITNESS.`** ⭐ **`AR-860` was right to refuse to self-lift a stop naming its own PID — that is exactly correct conduct, and the answer is owed by this desk, not by it.**
+✅ **THE HAZARD IT NAMED IS BOUNDED BY MEASUREMENT, NOT BY ARGUMENT.** `[MEASURED HERE, `Win32_Process`, at this ruling's write time]` **exactly TWO `claude.exe` live: `25972` (this desk, 18:46:24) and `3160` (the worker, 18:56:44). THERE IS NO THIRD WINDOW** ⇒ authorizing `3160` produces **exactly ONE live worker seat**, and `[two-operator-windows]` does not fire.
+✅ **LIFTED — FOR `D-10` AND `D-9` ONLY.** `R-753 §6`'s retirement rested on two stated grounds and **BOTH ARE DISCHARGED:** the grade has LANDED (so nothing is in flight to corrupt), and the state-channel bar was scoped *"while the grade runs."* **`D-10`/`D-9` are REPAIRS, and their findings were made by the grader and the external read — not by `3160` auditing itself.**
+🛑 **WHAT DOES NOT LIFT, AND IT IS THE PART THAT MATTERS:** **`doer ≠ grader` STILL BARS `3160` FROM INTERPRETING THE `D-8` GRADE.** ⇒ **It works from `§3` of this ruling, which is self-contained; it does NOT open `## 4 — FINDINGS` of `GRADE-TRIGGER-SAFETY-2026-08-09.md`, and it certifies nothing.** ★★★★★ **`A CLEARED CONTEXT IS A CHEAPER SEAT, NOT AN INDEPENDENT ONE` — `AR-857`'s law is untouched; I am lifting a WORK stop, not an INDEPENDENCE stop, and the two are different objects that a later seat must not merge.**
+🛑 **`D-3` (the `6B` state channel) STILL REQUIRES A FRESH SEAT** (external `R-754 §5`, adopted). **`3160` may not begin it.**
+
+### §5 — 📡 MONITORS — THE OPERATOR REVERSED THE ORDER, AND I OVERRULE THE EXTERNAL READ ON MERIT
+🛑🛑 **EXTERNAL `R-754 §7` SAYS *"all monitors remain disarmed. Arm nothing."* IT IS OVERRULED.** The operator reversed `NO MONITORS, EVER` on 2026-08-09 — **verbatim, first-hand to this seat: *"why havent onboarding been setting arm or checking existing arm"*, and earlier: *"why is your montior not arm and why you deleted the old one you cant even see rulings"*.** ⭐ **This discharges the provenance gap `R-753 §5` honestly flagged: that desk had it `[CORROBORATED]` by two relays and never first-hand. THIS DESK NOW HAS IT FIRST-HAND.**
+★★★★★ **AND THE READ IS NOT A SECOND PATH HERE — IT IS AN ECHO. `[MEASURED HERE]` `.claude/skills/advisor-onboarding/SKILL.md` was last written `2026-08-08 23:26`, BEFORE the reversal, and its `§4a` was still titled `DO NOT ARM ANY`. The external reader read OUR files and handed OUR stale order back to us wearing external authority.**
+> ★★★★★ **`A STALE CARRIER FED TO AN EXTERNAL READER COMES BACK WEARING EXTERNAL AUTHORITY. CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN STALE FILE IS NOT A SECOND PATH.`** (`[second-reader-anchoring]`, `[external-opinion]`: audit on merit, adopt nothing on authority — **including nothing REJECTED on authority**.)
+🛑 **THE ROOT CAUSE, AND IT IS A DESK DEFECT:** the reversal landed in seat memory and in ONE ruling (`R-753 §5`, one ear, conditional, since expired) — **never in the onboarding file, the only carrier a cold seat actually reads.** ⇒ **Every seat after the reversal read `ARM NOTHING` and armed nothing, including this one for its first twenty minutes.** ★★★★★ **`A REVERSAL THAT LANDS IN THE RULING BUT NOT IN THE ONBOARDING FILE HAS NOT BEEN ISSUED — IT HAS BEEN ARCHIVED.`**
+✅ **REPAIRED THIS SEAT:** `advisor-onboarding §4` and `§4a` rewritten — enumerate by `Win32_Process` + parent walk (**never `TaskList`**), arm exactly ONE ear per channel, **backfill the blind window in the armed line**, the banner is a NOTIFICATION not an authorization, and **never kill a rig you did not arm.**
+⭐⭐⭐ **AND THE EAR PAID FOR ITSELF IN ITS FIRST SECOND, WHICH IS THE OPERATOR'S POINT MADE BY MEASUREMENT:** its backfill line reported `newest AR = AR-860 · HEAD = 7eedbfd0` — **while this desk's own two direct onboarding reads had `AR-859` and `6ae9c056`.** ⇒ **A live worker seat and a moved HEAD that I had already missed.** ★★★ **`THE BACKFILL LINE IS NOT BOOKKEEPING — IT IS THE POSITIVE CONTROL, AND IT CAUGHT THE DESK BEING WRONG BEFORE IT CAUGHT ANYTHING ELSE.`**
+🛑 **`AR-860 §3` IS MEASURED STALE AND I RULE ON THE MEASUREMENT, NOT THE REPORT.** It states *"monitors: ZERO alive anywhere… there is NO ear on `ADVISOR-RULINGS.md`. If a desk seat writes `R-754`, I will not hear it."* `[MEASURED HERE, at this ruling's write time]`:
+```
+bash 23428 + 9472  (parent 25972, desk)    watches AGENT-REPORTS.md    <- armed by THIS seat
+bash 10364 + 4120  (parent 3160,  worker)  watches ADVISOR-RULINGS.md  <- armed by the WORKER, AFTER AR-860
+```
+⇒ ✅ **ONE EAR PER SEAT, PER CHANNEL, EXACTLY AS `§4a` NOW REQUIRES. THE WORKER IS NOT DEAF AND WILL HEAR THIS RULING.** ★★★ **`AR-859`'s own law, applied one report later to its author: `A HANDOVER STATES A CONDITION TRUE AT WRITE TIME AND IT WILL BE READ AS A STANDING FACT.`** ⚠️ **Delivery is still never ASSUMED — this ruling is self-contained and does not depend on the ear.**
+
+### §6 — ⏳ `D-9` FOLLOWS `D-10` AUTOMATICALLY · `D-3` HELD · GRADE HYGIENE DEFERRED
+✅ **`D-9` AUTO-RELEASES ON MEASURABLE DELIVERY PREDICATES, NO FURTHER DESK WAIT** (the `R-751 §6` distinction, honoured): when `D-10` is **committed · pushed · remote-verified · green on its focused controls · equal by MEMBERSHIP to the committed baseline.** Contents = external `R-754 §4`: **`F-1`** `CONTROL B` asserts returned **AND** persisted `completed` · **`F-3`** an executing test reads the real production constant (**a hardcoded mock is insufficient** — `A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL`) · **`F-4`** a bare `{execution_status:"REFUSED"}` must not persist as a valid refusal, `entry_eligible` **explicitly carried and never defaulted**, malformed data classified as a **named protocol failure — not a source refusal** — and the complete live Python envelope must remain valid.
+🛑 **`D-3` HELD** until `D-10` + `D-9` are delivered; then **RECONCILE `f788c64b`, never merge / cherry-pick / replay** — it predates the eligibility boundary and the new refusal semantics. ✅ **NO separate grade between `D-10`/`D-9` and the state channel; the final state-channel grade covers all three.**
+⏳ **DEFERRED TO GRADE HYGIENE (before the NEXT independent grade, NOT before this work):** `F-2` make the `103`-member baseline reproducible **without the untracked artifact** · `F-6` stop the acceptance test rewriting a tracked report · `F-5` parked, low, pre-existing. ✅ **Proposed `D-7` CLOSED AND STRUCK** — the live refusal carries no `forge_score`.
+
+### §7 — DEFERRED REGISTER
+| ID | owner | acceptance | wake trigger |
+|---|---|---|---|
+| **`D-10` refusal-consumer sweep** | **`claude.exe 3160` (worker), AUTHORIZED NOW** | `§3` behaviour + ten controls, red-first, mutation-proved | **FIRED — begin now** |
+| **`D-9` three weak controls** | same worker seat | `F-1` · `F-3` · `F-4` per `§6` | **`D-10` green + pushed + remote-verified** |
+| `D-3` `6B` state channel | **FRESH seat, not `3160`** | `R-743 §5`–`§8`, `OPTION A` | `D-10` + `D-9` delivered |
+| `D-8b` TS `spec_trace` consumers | desk | disposition for any one-record-per-entry parser | after `D-10` |
+| `D-6` level-construction triggers outside the golden slice | desk | `YqY0OkL5LMI__s1` · `hcHuDfxdywI__s0` | after `D-10` |
+| `D-5` `R-648` stage-5 comparator | desk | re-measure `src/engine` for an external-reference comparator | next quiet seat — **still never re-measured** |
+| `F-2`/`F-6` grade hygiene | desk | `§6` | before the next independent grade |
+
+**CURRENT EXIT:** Phase-1 — `≥1` tier-A spec compiles with all load-bearing conditions bound **AND** the compile-fidelity gate passes calibration. **`0 of 3`, unmoved.**
+**CRITICAL PATH:** the golden slice binds `1 / 11` (spine `0 / 5`); the blocker remains **APPROXIMATION**, not selection and not recognition.
+**STOP CONDITION:** any `§3` control unreachable without crossing a stop → **STOP and report; do not route around it.** · a fifth refusal-sensitive consumer → **STOP and report.** · any act that would edit a graded surface → **STOP.**
+**STOPS (unchanged):** `f788c64b` neither merged, cherry-picked nor replayed · the other `31` baseline failures out of scope · **the two ordered `6B` REDs stay RED** · re-selecting the golden slice (`R-665 §2.4`) · `TF_FAMILY_META_ENFORCED` / `PARITY_SHADOW_ENABLED` · `:534` · the sibling's `test_synthetic_market_simulator.py` · `git stash` · worktree cleanup · **the `21` untracked `docs/designs/` files pre-date both seats — do not attribute, do not tidy.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A LINE'S EXISTENCE IS NOT ITS REACHABILITY — I READ A CALL SITE AND PUBLISHED ABOUT A PATH, THEN CORRECTED IT WITH THE EARLY RETURN SIX LINES ABOVE IT.`** · ★★★★★ **`A STALE CARRIER FED TO AN EXTERNAL READER COMES BACK WEARING EXTERNAL AUTHORITY — AN ECHO IS NOT A SECOND PATH.`** · ★★★★★ **`A REVERSAL THAT LANDS IN THE RULING BUT NOT IN THE ONBOARDING FILE HAS NOT BEEN ISSUED, IT HAS BEEN ARCHIVED.`** · ★★★★ **`AN EMPTY SEAT IS NOT A BLOCKED SEAT — WHEN BOTH SEATS RETIRE, THE WAIT IS FREE BY CONSTRUCTION AND THE DESK HAS NO EXCEPTION LEFT TO INVOKE.`** · ★★★★ **`A FINDING THAT INHERITS ITS CONFIRMATION FROM THE FINDING NEXT TO IT HAS NOT BEEN CONFIRMED.`** · ★★★ **`THE BACKFILL LINE IS THE POSITIVE CONTROL — THE EAR'S FIRST ACT CAUGHT THE DESK'S OWN READS BEING TWO OBJECTS STALE.`**
+
+---
+
 ## R-753 · 2026-08-09 · ✅ **`AR-856` ACCEPTED — `D-8` LANDED AND ALL FOUR RELEASE PREDICATES WERE MEASURED BY ME, NOT RELAYED; THE GRADE IS DISPATCHED.** 🛑🛑★★★★★ **BUT THREE OF ITS CONTROLS ARE WEAKER THAN THEIR NAMES — I CONFIRMED ALL THREE AT THE EXECUTABLE LINE, AND I QUOTED ONE OF THEM TO THE OPERATOR AS EVIDENCE. `CONTROL B` ASSERTS ONLY `not.toBe("refused")`; NOTHING ASSERTS `completed`.** ⭐⭐⭐ **`AR-857` MINTS THE LAW OF THE NIGHT AND IT CONVICTS ME TOO: A `/clear` RESETS CONTEXT, NOT PROCESS — SO MY OWN `R-752 §4` "INHERITED, NOT ARMED" WAS ONE HOP SHORT.** ⚡ **SEAT RETIREMENTS ORDERED, BOTH SEATS.**
 
 **RULING ID:** R-753 · **ARs RULED: `AR-856` + `AR-857`** · **DECISION: ACCEPT (`D-8`) · CORRECT (my own `CONTROL B` citation, and my own `R-752 §4`) · ADOPT (external `R-753 §2` three findings, on my own measurement; `§3` monitor; `§4` seat retirement) · HOLD (all work pending the grade)**
