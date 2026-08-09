@@ -268,49 +268,22 @@ async function runFix2Logic(
   }
 }
 
-/**
- * Mirrors FIX 3 logic: auto-enqueue backtest when evidence incomplete
- */
-async function runFix3Logic(
-  strategyId: string,
-  strategyName: string,
-  recentAutoEnqueueCount: number,
-  deps: {
-    runBacktest: typeof mockRunBacktest;
-    writeAudit: (action: string, entityId: string, status: string, backtestId?: string) => Promise<void>;
-  },
-): Promise<void> {
-  if (recentAutoEnqueueCount >= 1) return;
-
-  const result = await deps.runBacktest(
-    strategyId,
-    {
-      strategy: {
-        name: strategyName,
-        symbol: "MES",
-        timeframe: "5m",
-        indicators: [],
-        entry_long: "",
-        entry_short: "",
-        exit: "",
-        stop_loss: { type: "atr", multiplier: 2.0 },
-        position_size: { type: "dynamic_atr", target_risk_dollars: 500 },
-      },
-      mode: "walkforward",
-    },
-    undefined,
-    undefined,
-    undefined,
-    "automated",
-  );
-
-  await deps.writeAudit(
-    "lifecycle.evidence_auto_backtest_enqueued",
-    strategyId,
-    result.status === "skipped" ? "skipped" : "success",
-    result.id,
-  );
-}
+// ─── D-10 N-4 (R-766 §4): the FIX-3 REPLICA WAS REMOVED FROM THIS FILE ───────
+//
+// `runFix3Logic()` re-implemented the production enqueue logic — including its
+// defect, a binary `"skipped" ? "skipped" : "success"` ternary over a THREE-state
+// outcome — in a file that `vi.mock`s `lifecycle-service.js`. Deleting production
+// would not have reddened any of its five tests.
+//
+// Their coverage was NOT dropped: completed→success, paused→skipped, actor
+// =automated + mode=walkforward, and the 24h cap are all asserted in
+// `d10-n4-lifecycle-refusal.test.ts` against the REAL
+// `LifecycleService.runEvidenceAutoBacktestEnqueue()`.
+//
+// `THE REPAIR FOR A REPLICA IS NOT DELETION — IT IS AN IMPORT.`
+// The "Audit action name contract" regression below is NOT part of the replica
+// (R-766 §2): it never called `runFix3Logic()`. It stays.
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test suites
@@ -540,75 +513,6 @@ describe("FIX 2 (DEBT-1): deployed pine artifact auto-recompile", () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("FIX 3 (DEBT-3): evidence-incomplete auto-backtest enqueue", () => {
-  const mockWriteAudit = vi.fn().mockResolvedValue(undefined);
-
-  const deps = {
-    runBacktest: mockRunBacktest,
-    writeAudit: mockWriteAudit,
-  };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockRunBacktest.mockResolvedValue({ id: "bt-xyz", status: "completed" });
-  });
-
-  it("enqueues backtest when no recent auto-enqueue today", async () => {
-    await runFix3Logic("strat-abc", "VWAPGang", 0, deps);
-
-    expect(mockRunBacktest).toHaveBeenCalledOnce();
-    expect(mockRunBacktest).toHaveBeenCalledWith(
-      "strat-abc",
-      expect.objectContaining({
-        strategy: expect.objectContaining({ symbol: "MES", timeframe: "5m" }),
-        mode: "walkforward",
-      }),
-      undefined,
-      undefined,
-      undefined,
-      "automated",
-    );
-    expect(mockWriteAudit).toHaveBeenCalledWith(
-      "lifecycle.evidence_auto_backtest_enqueued",
-      "strat-abc",
-      "success",
-      "bt-xyz",
-    );
-  });
-
-  it("does NOT enqueue when cap (1 per 24h) is already reached", async () => {
-    await runFix3Logic("strat-abc", "VWAPGang", 1, deps);
-
-    expect(mockRunBacktest).not.toHaveBeenCalled();
-    expect(mockWriteAudit).not.toHaveBeenCalled();
-  });
-
-  it("marks audit as skipped when runBacktest returns status=skipped (pipeline paused)", async () => {
-    mockRunBacktest.mockResolvedValueOnce({ id: "bt-skip", status: "skipped" });
-
-    await runFix3Logic("strat-abc", "VWAPGang", 0, deps);
-
-    expect(mockWriteAudit).toHaveBeenCalledWith(
-      "lifecycle.evidence_auto_backtest_enqueued",
-      "strat-abc",
-      "skipped",
-      "bt-skip",
-    );
-  });
-
-  it("uses actor=automated so pipeline pause is respected", async () => {
-    await runFix3Logic("strat-abc", "VWAPGang", 0, deps);
-
-    // 6th arg is actor
-    expect(mockRunBacktest.mock.calls[0][5]).toBe("automated");
-  });
-
-  it("uses walkforward mode for institutional-grade gate evidence", async () => {
-    await runFix3Logic("strat-abc", "VWAPGang", 0, deps);
-
-    expect(mockRunBacktest.mock.calls[0][1]).toMatchObject({ mode: "walkforward" });
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 
