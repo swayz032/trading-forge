@@ -101,7 +101,18 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **CURRENT: 2026-08-09, ADVISOR SEAT `claude.exe 33420` (FRESH, seated via `/advisor-onboarding`), LEDGER AT `R-766`, NEWEST AR `AR-877`, HEAD `0650fa5b` (pushed, remote tip verified EQUAL).** `[MEASURED HERE]`
+## ★★★★★ SEAT — **CURRENT: 2026-08-09, ADVISOR SEAT `claude.exe 33420` (FRESH, seated via `/advisor-onboarding`), LEDGER AT `R-766`, NEWEST AR `AR-878`.** `[MEASURED HERE]`
+🛑🛑🛑🛑🛑★★★★★ **PUSH IS BLOCKED AT GITHUB AND THE LOCAL BRANCH IS AHEAD OF THE REMOTE — OPERATOR-RESERVED, HE IS THE ONLY ONE WHO CAN CLEAR IT.** `[MEASURED HERE, `git push`, FULL OUTPUT, `PUSH_EXIT=128`]`:
+```
+ERROR: You must verify your email address.
+See https://github.com/settings/emails.
+fatal: Could not read from remote repository.
+Please make sure you have the correct access rights and the repository exists.
+```
+🛑 **UNPUSHED AND LOCAL-ONLY: `9c84d1d3` (`AR-878`) · `5fc2ee6d` (worker `N-4` step 1/2) · `e471b771` (this desk's `F-10` re-measure). Remote tip is STUCK AT `119c95ff`.** ⚠️ **Nothing is lost — all three are COMMITTED — but they exist on ONE DISK, and `CLAUDE.md §11a` exists because a disk event once wiped weeks of uncommitted work.**
+⏱️ **THE BLOCK IS NEW THIS SEAT: `0650fa5b` and `119c95ff` PUSHED SUCCESSFULLY minutes earlier, so the account state changed mid-session — do NOT diagnose this as a key, a remote, or a branch problem.**
+★★★★★ **`AN ERROR THAT NAMES THE WRONG LAYER WILL BE DEBUGGED AT THAT LAYER FOREVER` — the operative line is the FIRST one; the familiar *"correct access rights"* line is a generic second-layer echo that reads exactly like an SSH failure.** 🛑🛑 **AND THE DESK ONLY SAW IT BECAUSE IT RE-RAN WITHOUT `| tail -3`, WHICH HAD HIDDEN THE REAL CAUSE ONE LINE ABOVE THE CUT — the instrument-truncation class, convicted AGAIN, in the same seat that logged it.** ⇒ **`NEVER TRUNCATE A FAILURE YOU INTEND TO DIAGNOSE.`**
+⚡ **WORKER IMPACT: it will hit the same wall and it is NOT silent (`exit 128` + the message). Its `verify remote == local` habit will surface it. No ruling was written to tell it — `[wait-on-gpt]` holds, and the operator is present.**
 ✅✅ **THE WORKER SEAT IS LIVE AGAIN AND THE ONE RESERVED OPERATOR ACT IS DISCHARGED — `AR-877`, `claude.exe 23640`, ON `R-766 §4` LANE 1 (`F-10`), attempt `0 / 2`, NOT BLOCKED.** `[MEASURED HERE, `Win32_Process` parent walk]` **exactly TWO `claude.exe`: `23640` (worker) + `33420` (this desk) ⇒ one seat each, `[two-operator-windows]` does NOT fire.** ⚠️ **`git status --porcelain src/` shows the worker mid-edit on `shadow-rerun-service.ts` + its test — LIVE UNCOMMITTED WORK. Do not run a bare `git commit`, and do not let a `pre-commit` stash near it (`[precommit-stash]`).**
 📡 **DESK EAR ARMED — `Monitor`, `persistent`, on `AGENT-REPORTS.md`, keyed on the TUPLE `(newest "## AR-" heading, dirty-state, HEAD sha)` (`R-763 §7`), owner `claude.exe 33420`.** ✅ **RED-PROOFED `6/6` ON A THROWAWAY REPO BEFORE ARMING — fires on new-heading, draft→commit, body-edit, commit-only, and heading-vanishes; SILENT on the no-op negative control.** **Backfill/positive-control line: `## AR-877|COMMITTED|ca07a661`.** ⚠️ **Known cheap false positive: it also fires on the DESK's own commits (HEAD is in the tuple). Accepted — a missed AR is the expensive failure.**
 ⚠️ **ONE ORPHAN MONITOR, REPORTED AND DELIBERATELY NOT KILLED (`advisor-onboarding §4a`):** `bash.exe 33504` runs `ruling-ear.sh` out of **dead session `7c2d5bd0`**; the prior desk `claude.exe 444` is **ABSENT**, so it polls correctly and **can notify nobody.** **Not this desk's rig.**
