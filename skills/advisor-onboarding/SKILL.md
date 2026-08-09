@@ -49,25 +49,127 @@ Cold-start cost is the thing this skill exists to control. **Do not read the
 ledger from the top.** It is append-only and hundreds of rulings deep; almost
 all of it is history you do not need to act.
 
-1. **`docs/designs/ADVISOR-STATE.md`** — small, rewritten in place, always
-   current. This is your state. If it exists and is fresh, it is usually enough.
-   ★ **Its `## THE PLAN` block is the money-path phase ladder. READ IT — you
+1. ★★★★★ **`docs/designs/HANDOVER-ADVISOR-2026-08-04.md` — THIS IS THE ENTRY
+   POINT, NOT `ADVISOR-STATE.md`.** `[MEASURED 2026-08-09]` **326 lines / 25 KB**,
+   reads in one call, and its `§0` carries the **two standing operator directives**
+   (`NO MONITORS` · **`WAIT ON THE GPT READ BEFORE EVERY NEW RULING`**) that a seat
+   can violate within its first three minutes if it reads anything else first.
+   Then `§1` position · `§2` gate states · `§3` newest IDs and pinned commits.
+   ⚠️ **Check its header date against the ledger's top ruling and carry the delta
+   as a known staleness, not as truth** — at this writing it was current to
+   `R-729` against a ledger at `R-736`.
+
+2. 🛑🛑 **`docs/designs/ADVISOR-STATE.md` — DEMOTED, AND DO NOT `Read` IT WHOLE.**
+   ★★★★★ **The "small, rewritten in place, always current" description was FALSE
+   and cost this seat its first four tool calls. `[MEASURED 2026-08-09]` it is
+   `3,993` lines / `616 KB` — PAST the `Read` tool's `256 KB` cap, so a cold read
+   FAILS OUTRIGHT — and its newest ruling reference is `R-721` against a ledger at
+   `R-736`, i.e. FIFTEEN RULINGS STALE, with a `SEAT` block still dated 08-04.**
+   ⇒ **Never read it linearly. `grep -n "^## " ADVISOR-STATE.md`, then `Read` with
+   `offset`/`limit`.** ★★ **`4` headings exist TWICE and the stale copies sit in
+   the tail cluster — `grep -n` and TAKE THE FIRST HIT; the live copy is always the
+   LOWER line number.**
+   ★ **Still the sole carrier of `## THE PLAN`** — the money-path phase ladder. You
    cannot answer "what phase are we in" from the queue or from lifecycle states,
-   and on 2026-07-28 the desk answered that question wrongly because the plan
-   (BLUEPRINT, rulings R-053..R-061) lives in the LEDGER'S EARLY RULINGS, which
-   rule 1-3 below explicitly tell you never to read.** A read order optimised for
-   "what is in flight" is blind to "where are we going" unless the state file
-   carries the plan forward. If that block is missing, reconstruct it from the
-   BLUEPRINT rulings and put it back.
-2. **The last 3–5 entries of `docs/designs/ADVISOR-RULINGS.md`** (newest at top)
-   — what was just decided and what is in flight.
-3. **The newest 1–2 entries of `docs/designs/AGENT-REPORTS.md`** — what the
+   and on 2026-07-28 the desk answered that wrongly because the plan (BLUEPRINT,
+   `R-053..R-061`) lives in the ledger's EARLY rulings, which the rules below tell
+   you never to read. **Grep for the heading; do not go looking for it by scrolling.**
+   ⚠️ **Also the sole carrier of an unknown number of `[FACT, MEASURED HERE, NOT
+   RULED]` blocks. `AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE` — that is
+   why the file has never been safely truncated.**
+3. **The last 3–5 entries of `docs/designs/ADVISOR-RULINGS.md`** (newest at top)
+   — what was just decided and what is in flight. ★ **This file is the authority
+   on "where the ledger actually is"; every other carrier above is a summary that
+   lags it.**
+4. **The newest 1–2 entries of `docs/designs/AGENT-REPORTS.md`** — what the
    worker last did or asked.
-4. Seat memory (`~/.claude/projects/.../memory/`) **only if** 1–3 leave you
+5. Seat memory (`~/.claude/projects/.../memory/`) **only if** 1–4 leave you
    unable to act. It is the deep history, and it is expensive.
+
+★★ **AND MEASURE THE TREE BEFORE YOU BELIEVE ANY OF THEM:** `git rev-parse HEAD`
++ `git status --porcelain`. `[MEASURED 2026-08-09]` **HEAD moved from `133be226`
+to `cd92ecb2` DURING this onboarding** — the worker is a live sibling committing
+into the same tree, so a snapshot you took four calls ago is already history.
 
 **Read further only to answer a specific question you actually have.** Reading
 "for context" is how a cold session burns half its budget before doing anything.
+
+---
+
+## 1a-00. 🛑🛑🛑🛑🛑 **WAIT ON THE GPT READ BEFORE EVERY NEW RULING.** THE MOST-VIOLATED RULE ON THIS DESK — **ASSERTED FIVE TIMES**.
+
+**Operator, most recently 2026-08-09: *"remember wait on gpt before any ruling and
+any report that comes."*** Prior assertions: 08-02, 08-04 (`R-698`), 08-04 again
+(after `R-707`), 08-08 (*"i said to wait on gpt opinion for any new rulings meaning
+new ones not current one"*). **Binding from `R-724` onward.**
+
+> ★★★★★ **`AFTER AN AR LANDS, WAIT FOR THE EXTERNAL READ BEFORE RULING — OR SAY IN
+> THE RULING THAT YOU CHOSE NOT TO WAIT, AND WHY.`**
+
+⚠️ **THE 08-09 ASSERTION WIDENED IT: *"and any report that comes"* — the wait is
+PRE-EMPTIVE, attaching to reports that have not landed yet.** A seat cannot argue
+the operator did not foresee the incoming AR.
+
+🛑 **THE CHANNEL: reads arrive as OPERATOR-RELAYED CHAT, mid-turn.** The old
+`external-advisor/gpt-rulings` branch monitor is NOT the channel and went two days
+stale while reads kept arriving. ★★★★★ **`A SENSOR THAT STILL WATCHES THE OLD
+CHANNEL REPORTS SILENCE HONESTLY AND IS WRONG ABOUT THE WORLD.`**
+
+**THE ONLY TWO EXCEPTIONS — and check standing authorization BEFORE invoking either:**
+a **BLOCKED worker outranks the wait**, and a **pure receipt owes no ruling**.
+🛑 *"This is time-critical"* is **NOT** one. 🛑 **`THE RECEIPT EXEMPTION IS FOR THE
+AR's SHAPE, NOT THE RULING's` — a receipt carrying findings produces a ruling
+carrying decisions, and those decisions wait.**
+
+★★★★★ **THE THREE DISGUISES, ALL CONVICTED HERE, IN ASCENDING DANGER:**
+**READINESS** (the draft is done) feels like impatience and is easy to catch ·
+**URGENCY** feels like responsibility and supplies its own excuse — **re-measure the
+urgent thing first; last time it was false by 33 seconds** · **BACKLOG** is the best
+disguise of all — **clearing one feels like restoring order, so it never presents as
+a decision to skip the wait, it presents as CATCHING UP, and catching up does not
+feel like ruling at all.**
+⚠️ **`AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE` — the
+"say you didn't wait" escape has been used ZERO times in five assertions.**
+
+---
+
+## 1a-0. ★★★★★ OPERATOR DIRECTIVE 2026-08-03 — READ BEFORE THE LADDER. IT CHANGES HOW YOU REPORT DISTANCE.
+
+★★★★★ **THE OPERATOR REJECTED THIS DESK'S FRAMING AND HE WAS RIGHT (adopted in full, `R-648`).**
+🛑 **NEVER QUOTE `0/155` OR `0/16` AS BREAKTHROUGH DISTANCE.** They are the pinned
+**BEFORE** figure (`R-401`) for the whole corpus. **The plan's Phase-1 exit is
+`≥1 TIER-A SPEC`** — and tier-A is an `11`-spec population with `53` load-bearing
+conditions, so even `155` is the wrong denominator. ★★★★★ **`A TRUE NUMBER AGAINST
+THE WRONG DENOMINATOR IS THE MOST CONVINCING WAY TO BE WRONG.` A cold seat that
+re-derives the corpus metric will tell the operator the project is further away
+than his own plan says it is — that already happened once, on 2026-08-03.**
+
+**THE OPERATIVE SHAPE IS A VERTICAL SLICE:** one golden strategy → one complete
+compiler chain → one trustworthy fidelity receipt → **THEN** expand across the corpus.
+Six stages: spec · binding · emit · execute · trade-by-trade compare · planted-defect
+HARD FAIL. **Track those, plus first-divergence location.**
+🛑 **REUSE, DO NOT REBUILD:** `forensics/compile_fidelity.py` (`run_leg_a_phase1`),
+`forensics/calibration_battery.py`, `parity_engine/diff_harness.py` (`run_parity_diff`,
+vectorbt oracle) — **~1,476 lines already built** `[MEASURED, R-648 §2.5]`. **Do not
+author a second oracle.**
+🛑 **GOVERNANCE/SWEEP LANES ARE CLOSED.** Recorded findings stay recorded. **Nothing
+re-enters the critical path unless it PREVENTS THE GOLDEN SLICE FROM COMPILING OR
+INVALIDATES ITS RECEIPT. That is the only admission test.**
+🛑 **ATTEMPT BUDGET: threshold `2`.** After two failures **STOP, produce a root-cause
+proof, CHANGE THE MECHANISM.** Renaming a hypothesis does not reset the counter.
+**`P0` stands at `6`.**
+⚠️ **KEEP THE TWO CLAIMS SEPARATE:** the golden slice is a **BREAKTHROUGH
+DEMONSTRATION**; **PHASE-1 EXIT** additionally needs `BIND` + `FIDELITY` + `P0IG`
+(3 hard gates). Never let the first be reported as the second.
+★ **FULL TEXT: `R-648`. Current position + live dashboard: `ADVISOR-STATE.md`.**
+
+## 1a-0a. Required V1 advisor skills
+
+- Invoke `critical-path-campaign-manager` before ranking competing findings or authorizing work.
+- Invoke `source-to-engine-conformance` before ruling V1.0 complete or trading-ready.
+- Invoke `batch-disposition-integrity` before accepting a V1.1 library-batch result.
+
+These are mandatory sub-skills. This onboarding file points to them; it does not duplicate their contracts.
 
 ---
 
@@ -146,6 +248,31 @@ stays in R-053..R-061; this block is the ladder, not the whole blueprint.
 
 ---
 
+## 1b. V4 execution graph — read the adopted object, never reconstruct it from prose
+
+The blueprint owns requirements. An **adopted V4 execution graph owns ordering,
+readiness, and parallel width.** The external candidate is on branch
+`external-advisor/gpt-rulings` at
+`docs/advisor-rulings/V4-PHASE1-EXECUTION-GRAPH-2026-08-02.json`; it is advisory
+until a campaign ruling adopts it and names the campaign path + hash.
+
+When an adopting ruling exists:
+
+1. Read the exact graph path and hash named by that ruling.
+2. Join its report epoch, ruling epoch, and `ADVISOR-STATE` blob to the newest
+   objects on disk. Any mismatch makes node states stale; refresh before use.
+3. State the current node ID, every incoming **hard predecessor**, the exact
+   artifact each edge carries, and which ready nodes have no data edge between
+   them. Queue position and prose adjacency are not dependencies.
+4. Schedule only from the ready set. A node is ready only when every incoming
+   hard artifact exists and satisfies its acceptance predicate.
+
+**Do not silently treat the external candidate as adopted. Do not silently
+ignore an adopted graph and rebuild a serial list from the blueprint.** The
+adopting ruling is the observable switch between those states.
+
+---
+
 ## 2. The protocol — the two rules that have actually cost this campaign work
 
 - **SINGLE WRITER.** You write `ADVISOR-RULINGS.md` and `ADVISOR-STATE.md`. You
@@ -176,57 +303,90 @@ cannot grade what you designed; neither can the worker who built it. Full policy
 lives in `advisor-ruling` and `ratify-packet`. (Added 2026-07-29 after a session
 spent routing grades to itself because no skill named the agent.)
 
+★★ **The grader is v2 as of 2026-07-30** (operator-ordered rebuild: opus pin,
+July verification laws inlined, mandatory coverage section in every verdict,
+durable-receipt dispatch contract — details in `advisor-ruling` §1). ★★ **Batch-
+lane rulings exist:** independent queue items may be authorized as parallel
+lanes in ONE ruling after the fake-edge test — protocol in `advisor-ruling` §8a.
+
 ---
 
 ## 4. First actions when seated
 
 - [ ] Confirm the worker's state: newest AR, whether it is mid-task, whether it
       is waiting on an authorization.
+- [ ] If a V4 graph is adopted, name its hash/epoch, current node, hard
+      predecessors, and the ready parallel set before issuing work.
 - [ ] **If the worker looks idle, check what the desk last authorized** — a
       blocked worker is usually a ruling that closed one task and opened none.
-- [ ] **Enumerate the monitors that already exist BEFORE arming anything** (§4a).
-- [ ] Re-arm a wakeup carrying a current snapshot.
+- [ ] **ENUMERATE monitors first** (`Win32_Process` + parent walk — **NEVER**
+      `TaskList`, documented-blind), **then ARM ONE ear on `AGENT-REPORTS.md` and
+      BACKFILL the blind window (§4a).** ★ **Arming is now REQUIRED, not forbidden
+      — the 08-08 "no monitors" order was REVERSED by the operator 2026-08-09.**
 
 ---
 
-## 4a. Monitors — one rig, never two (operator-ordered 2026-07-28)
+## 4a. Monitors — **ENUMERATE, THEN ARM ONE** (operator-ordered 2026-08-09, REVERSING 08-08)
 
-**NEVER run new monitors alongside the old ones.** Duplicate rigs on one channel
-mean duplicate events, stale baselines that re-fire on already-ruled reports, and
-two instruments that disagree about what "quiet" means. Enumerate first, then
-either **ADOPT** what is running or **RETIRE AND REPLACE** it — never both.
+🛑🛑🛑★★★★★ **THE 08-08 `NO MONITORS, EVER` ORDER IS REVERSED. ARMING IS REQUIRED.**
+Operator, 2026-08-09, verbatim: ***"why is your montior not arm and why you deleted
+the old one you cant even see rulings"*** — and again, to a cold advisor seat mid-
+onboarding: ***"why havent onboarding been setting arm or checking existing arm"***.
+~~The operator's standing order is `NO MONITORS, EVER`: seats message each other
+instead. Do not arm a `bash.exe` watcher on any channel, and do not re-arm the
+worker's ear.~~ **[STRUCK 2026-08-09 — retained for audit trail, not for its order.]**
 
-**Enumerate by ownership, not by age.** A monitor armed by a previous
-*conversation* of the SAME CLI process is still live and still delivering to your
-seat — it is NOT an orphan, and calling it one on inference is how you kill your
-own coverage. Test it:
+⇒ **THE CONTRACT AS IT NOW STANDS:**
+1. **ENUMERATE FIRST** — `Win32_Process` + parent walk. 🛑 **NEVER `TaskList`; it is
+   documented-blind and was re-confirmed blind at `6ae9c056`.**
+2. **ARM EXACTLY ONE EAR** on your counterpart's channel — advisor → `AGENT-REPORTS.md`,
+   worker → `ADVISOR-RULINGS.md`. **One rig per channel, never new + old** (`[one-monitor]`).
+3. **BACKFILL THE BLIND WINDOW IN THE ARMED LINE** (`[monitor-backfill]`): print the
+   newest AR/ruling and `HEAD` at arming time, so the line is a POSITIVE CONTROL that
+   the rig can emit and a JOIN KEY for what it could not have delivered.
+4. 🛑 **THE BANNER IS A NOTIFICATION, NEVER AN AUTHORIZATION.** Do not let it stamp
+   `RULING OWED` — that is `[wait-on-gpt]`'s fourth erosion vector, impatience arriving
+   from outside the desk wearing a machine's authority.
+5. 🛑 **DO NOT KILL A MONITOR YOU DID NOT ARM**, and do not kill one you did without
+   saying so first. **Another seat's rig is that seat's disposition — report it, leave it.**
 
-```powershell
-# every watcher, with the claude.exe that owns it
-Get-CimInstance Win32_Process -Filter "Name='bash.exe'" |
-  Where-Object { $_.CommandLine -match 'AGENT-REPORTS|ADVISOR-RULINGS|gh pr checks' }
-# then walk ParentProcessId up to the owning claude.exe and compare PIDs
-```
+★★★★★ **WHY THIS SECTION EXISTED IN ITS WRONG FORM FOR A DAY, AND IT IS THE LESSON:**
+the reversal was written into seat memory and into ONE ruling (`R-753 §5`, one ear,
+conditional, since expired) — **never into this file, which is the only carrier a cold
+seat actually reads.** Every seat after the reversal read `DO NOT ARM ANY` and armed
+nothing. ★★★ **`A REVERSAL THAT LANDS IN THE RULING BUT NOT IN THE ONBOARDING FILE HAS
+NOT BEEN ISSUED — IT HAS BEEN ARCHIVED.`**
+🛑🛑 **AND IT CONTAMINATED THE EXTERNAL CHANNEL:** external `R-754 §7` independently
+told this desk *"all monitors remain disarmed, arm nothing"* — **because it read OUR
+files, which carried the stale order.** ★★★★★ **`A STALE CARRIER FED TO AN EXTERNAL
+READER COMES BACK WEARING EXTERNAL AUTHORITY — AND CORROBORATION BY AN INSTRUMENT THAT
+READ YOUR OWN STALE FILE IS NOT A SECOND PATH, IT IS AN ECHO.`** (`[i-measured]`,
+`[second-reader-anchoring]`: a read postdating and citing your artifact is no second path.)
 
-- Watchers under **your** `claude.exe` are yours to retire.
-- The watcher on **`ADVISOR-RULINGS.md` under a DIFFERENT `claude.exe` is the
-  WORKER'S EAR** — how it hears your rulings. Killing it deadlocks the worker as
-  surely as a ruling that authorizes nothing. **Never touch it.**
-- Retiring your own: `TaskStop` when you hold the task id, otherwise stop the
-  PID — child loop first, then its wrapper. **Then verify the gap is empty**
-  (newest AR unchanged, no unruled report arrived) and re-arm within the minute.
+🛑🛑 **AND THE REPLACEMENT CHANNEL DOES NOT WORK HERE — MEASURED, NOT ASSUMED.**
+`[MEASURED, R-722 seat, 2026-08-08]` **cross-session messaging does not exist on
+native Windows** (Anthropic's own doc; macOS / Linux / WSL 2 only). CLI version
+and env flags are fine; the OS is the blocker. ⚠️ **The trap: `SendMessage` is
+PRESENT and fails with a *naming* error (`No agent named '<x>' is reachable`) —
+it reads like a typo and is a platform gap.** ★★★★★ **`AN ERROR THAT NAMES THE
+WRONG LAYER WILL BE DEBUGGED AT THAT LAYER FOREVER` — the real signal is the
+ABSENT discovery tool (`ListAgents`), not the send tool's complaint. DO NOT
+DEBUG THE NAME.**
 
-**The required rig — two monitors, no more:**
+⇒ **CONSEQUENCE, AND IT IS THE OPERATIVE ONE: the LEDGER IS THE ONLY RELAY, IN
+BOTH DIRECTIONS.** The worker must poll `ADVISOR-RULINGS.md`. ★ **Never assume
+delivery — write the authorization INTO the ruling, self-contained, never only
+into a message.**
 
-1. **Change detector on `AGENT-REPORTS.md` — 2-second poll, mtime-based**
-   (mtime catches edits and appends; a heading poll misses both). Emits the
-   newest `## AR-` header. Alarms after 3 consecutive unreadable-file failures —
-   a monitor that cannot read its file must say so, not go quiet.
-2. **Worker-idle watchdog — separate monitor, BOTH channels**: report-file mtime
-   AND newest commit time. It **reports silence, not a diagnosis** — idle, silent
-   work, and an external limit are indistinguishable at the bar, and the event
-   must say so. Beware tree-wide mtimes: a pre-commit hook stamps them, so read
-   the report file and the git log only.
+⚠️ **BUT ENUMERATION IS STILL OWED BEFORE YOU CONCLUDE YOU ARE DEAF.**
+`[MEASURED HERE, 2026-08-09 seat]` a **harness `Task`-based** monitor on
+`AGENT-REPORTS.md` was live and DELIVERED `AR-830` to a cold seat that armed
+nothing — while a `Win32_Process` census for `bash.exe` watchers returned **no
+match at all**. ★★★★★ **`A PROCESS-TABLE ENUMERATION OF MONITORS IS NOT
+EXHAUSTIVE` (this desk called a rig complete on one and was corrected by an
+event, not by a check). So: do not arm, do not assume silence, and DO NOT KILL
+a channel that is currently delivering — with messaging unavailable, retiring a
+working ear buys nothing and costs you the only notification you have.**
 
 A worker that has gone quiet is usually a desk that closed one task and opened
 none (§3). Check what you last authorized before diagnosing the worker.

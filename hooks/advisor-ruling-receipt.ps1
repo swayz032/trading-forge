@@ -12,6 +12,22 @@
 
 $ErrorActionPreference = 'SilentlyContinue'
 
+function Test-LedgerPublishCommand([string]$cmd) {
+    # R-694 §5 / AR-774: the old test was `$cmd -match 'git\s+commit' -and $cmd -match
+    # 'ADVISOR-RULINGS\.md'` over the WHOLE command string, which cannot tell an ACTION
+    # from a QUOTATION of one -- a heredoc body or a commit message mentioning both
+    # tokens matched exactly like a real publish. Measured twice: it false-BLOCKED a
+    # worker report (AR-770), and it silently CONSUMED the advisor's sentinel (fixture
+    # B3). Both tokens must now appear on the SAME line.
+    if (-not $cmd) { return $false }
+    $joined = [regex]::Replace($cmd, "\\\s*\r?\n", " ")   # join shell line-continuations first
+    foreach ($line in ($joined -split "\r?\n")) {
+        if ($line -match 'git\s+commit' -and $line -match 'ADVISOR-RULINGS\.md') { return $true }
+    }
+    return $false
+}
+
+
 try {
     $raw = [Console]::In.ReadToEnd()
     if (-not $raw) { exit 0 }
@@ -37,9 +53,41 @@ try {
         exit 0
     }
 
+    # ── R-677 (2026-08-03): THIS BRANCH USED TO CONSUME, AND IT MADE THE NORMAL
+    # AUTHORING WORKFLOW IMPOSSIBLE TO SATISFY. ───────────────────────────────
+    # MEASURED at the desk, twice in one ruling: the guard gates BOTH the Edit and
+    # the `git commit`, while this hook consumed on BOTH. So a desk that splices the
+    # ledger with Edit and then publishes with `git commit -o` disarmed itself
+    # mid-ruling:
+    #     Skill(advisor-ruling) -> sentinel ARMED   (witness: age=7s)
+    #     Edit ADVISOR-RULINGS.md -> sentinel CONSUMED here
+    #     git commit -o ADVISOR-RULINGS.md -> guard BLOCKS, sentinel gone
+    # Re-invoking the skill did not help: the next Edit ate it again. R-677 was
+    # blocked twice on this before the cause was read out of these two files.
+    #
+    # R-641 added the Bash-commit consume below to fix a disarm that never fired.
+    # It did not REMOVE this one — leaving TWO disarms against ONE arm. That is the
+    # defect: a control is only correct if its arm and disarm are the same event.
+    #
+    # THE GUARD'S OWN STATED PHILOSOPHY DECIDES WHICH ONE SURVIVES:
+    #   "The COMMIT is the act that publishes a ruling; an uncommitted splice is
+    #    not a ruling."
+    # An uncommitted splice is therefore not the thing to consume on. The commit is.
+    # This branch now falls through WITHOUT consuming; the Bash branch below is the
+    # single disarm. The guard is unchanged and still blocks an unarmed write.
     if ($tool -match '^(Write|Edit|MultiEdit)$') {
-        $path = [string]$j.tool_input.file_path
-        if ($path -match 'ADVISOR-RULINGS\.md$' -and $path -notmatch 'ADVISOR-RULINGS-OPS\.md$') {
+        exit 0
+    }
+
+    # R-641: the desk writes the ledger by SHELL, so the Write/Edit branch above
+    # never fired for it and the sentinel was NEVER CONSUMED — making the gate
+    # "once per hour" (the 3600s cap) instead of "once per ruling". That is the
+    # same defect as the guard's, on the release side rather than the block side:
+    # a control whose ARM works and whose DISARM does not is still broken.
+    # Mirrors the guard's condition exactly — consume on the PUBLISHING act.
+    if ($tool -eq 'Bash') {
+        $cmd = [string]$j.tool_input.command
+        if (Test-LedgerPublishCommand $cmd) {
             Remove-Item $sentinel -Force -ErrorAction SilentlyContinue
         }
         exit 0

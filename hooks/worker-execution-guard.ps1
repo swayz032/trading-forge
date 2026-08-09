@@ -41,7 +41,27 @@ try {
     $ledger = 'C:/Users/tonio/Projects/wt-h1-wave4-20260712/docs/designs/ADVISOR-RULINGS.md'
     if (-not (Test-Path $ledger)) { exit 0 }   # no ledger visible -> not this campaign -> allow
 
-    $ledgerTime = (Get-Item $ledger).LastWriteTimeUtc
+    # JOIN KEY = THE COMMIT THAT ISSUED THE RULING, NOT THE FILE'S mtime.
+    # Fixed 2026-08-09 after AR-865: the desk re-saved an uncommitted R-755 draft six
+    # times in ~100s, so mtime advanced faster than the worker could re-load, and the
+    # gate re-closed before every write. Three attempts, three blocks, worker fully
+    # locked out while holding a partial edit it could neither finish nor revert.
+    #   A GUARD KEYED ON A FILE'S mtime CANNOT DISTINGUISH A RULING FROM A KEYSTROKE.
+    # A ruling is ISSUED when it is COMMITTED - this ledger's own single-writer
+    # protocol says so - so an uncommitted draft must not close the gate.
+    # NOT a weakening: a committed ruling still blocks a worker that has not re-loaded.
+    $ledgerTime = $null
+    try {
+        $epoch = & git -C (Split-Path $ledger -Parent) log -1 --format=%ct -- $ledger 2>$null
+        if ($LASTEXITCODE -eq 0 -and "$epoch".Trim() -match '^\d+$') {
+            $ledgerTime = [datetimeoffset]::FromUnixTimeSeconds([int64]"$epoch".Trim()).UtcDateTime
+        }
+    }
+    catch { }
+    # FAIL-SAFE, deliberately toward MORE guarding: if git is unavailable or the ledger
+    # is untracked, fall back to mtime rather than letting the gate silently open.
+    if ($null -eq $ledgerTime) { $ledgerTime = (Get-Item $ledger).LastWriteTimeUtc }
+
     $loadedTime = [datetime]::MinValue
     if (Test-Path $sentinel) { $loadedTime = (Get-Item $sentinel).LastWriteTimeUtc }
 

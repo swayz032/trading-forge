@@ -79,6 +79,14 @@ made · an authorization is requested · you found something yourself.
 output is a short status line and re-arm. A manufactured ruling is noise, and
 noise trains the reader to skim the ledger.
 
+### Required V1 sub-skills
+
+- Invoke `critical-path-campaign-manager` before ranking competing findings or authorizing the next work.
+- Invoke `source-to-engine-conformance` before a V1.0 completion or trading-readiness ruling.
+- Invoke `batch-disposition-integrity` before a V1.1 batch-completion ruling.
+
+Use those contracts directly; do not restate or weaken them in the ruling.
+
 ---
 
 ## 0.5 Every ruling ends with an authorized next action
@@ -148,6 +156,9 @@ operator updates the worktree.
 - [ ] **Ask what is ENTAILED or CONTRADICTED by results already in hand** before
       flagging something as unknown, and before ratifying anything. Evidence you
       already collected does not automatically reach the claim it bears on.
+- [ ] **If a V4 execution graph is adopted, verify its object before ruling:**
+      path + hash, report/ruling epoch, current node, expected-vs-received hard
+      predecessors, and exact output artifact. A graph caption is not readiness.
 
 **MECHANISM CLAIMS CARRY GRADES TOO (R-392).** "by construction", "cannot
 happen", "is excluded", "guaranteed" are claims about HOW something works, and
@@ -235,6 +246,18 @@ access recipe rather than a prohibition, and ask explicitly for the honest null:
 *"no refutation found, here is what I covered and what I could not"* is a
 complete answer, and a grader that manufactures a finding to look useful is worse
 than none.
+
+**★★ THE GRADER IS v2 (rebuilt 2026-07-30, operator-ordered).** Opus pin, the
+July verification laws inlined in its body, HUNT/GRADE modes, and a MANDATORY
+closing coverage section — paths used, positive-control witnesses, join keys,
+and what it did NOT verify. **A grade arriving without that section is a
+stale-definition symptom: run `node scripts/check-agent-parity.mjs` in the
+master repo before trusting the seat's copy.** Your dispatch brief owes it: the
+claim verbatim · the pinned hash · a working access recipe · the novel-hunt
+request · **and a DURABLE RECEIPT path — the grader writes its verdict to a
+committed file. A verdict living only in the dispatcher's chat is single-source;
+convicted 2026-07-30 (F-2: 0-byte transcripts under a "4/4" claim forced a full
+re-run).**
 
 ---
 
@@ -333,6 +356,9 @@ defect.** The weakest borrows the strongest's authority by adjacency.
 
 ```
 RULING ID / TASK ID / DECISION: APPROVE | REVISE | BLOCK | ESCALATE
+GRAPH OBJECT: NOT ADOPTED | path + hash + report/ruling epoch
+GRAPH NODE TRANSITION: node ID · prior→new state · output hash · invalidated descendants
+GRAPH FAN-IN / READY SET: expected vs received hard predecessors · newly ready node IDs
 CLAIMS VERIFIED (and how)
 EVIDENCE INDEPENDENTLY CHECKED
 TESTS RERUN (command + result)
@@ -349,6 +375,11 @@ Prose is allowed around it; the fields are not optional. **Distinguish PASS /
 FAIL / UNKNOWN / BLOCKED — never convert uncertainty into approval.**
 
 Commit the ledger after EVERY ruling: `git commit -o docs/designs/ADVISOR-RULINGS.md`.
+
+When a graph is adopted and the ruling changes a node state or artifact identity,
+update the graph in the **same commit** and run its validator. If the graph is
+stale, refresh its epoch before scheduling. Never change readiness by deleting a
+hard edge, shrinking `fan_in_contracts`, or carrying an old artifact hash.
 
 ---
 
@@ -393,6 +424,38 @@ of things it must stop and ask about — a merge, a worktree update, a productio
 write, a scope it cannot stay inside — and let everything else proceed. The only
 acceptable reasons for the worker to be idle are: its context is exhausted, or
 it is genuinely waiting on one of those named stops.
+
+---
+
+## 8a. Batch lanes — the fake-edge test (2026-07-30, operator-ordered)
+
+**The campaign's latency has been ruling-serialization, not compute.** Before
+serializing a queue, walk it item by item: **does item N consume item N-1's
+OUTPUT?** Something real must pass along the edge. A real edge keeps its order;
+no data passing = a FAKE edge, and every fake edge is waiting time given away.
+
+When a V4 graph is adopted, the batch is selected from its **ready-node set**,
+not reconstructed from prose. Verify each incoming hard artifact first; then run
+the same fake-edge/shared-resource test among ready nodes. The graph orders work
+but does not replace this ruling's authorization, file scope, tests, or stops.
+
+- **One ruling may authorize a BATCH of independent lanes** (start at ≤4 — this
+  extends §8's "queue depth" from *queued* 2–4 to *parallel* where the edges are
+  fake). Each lane carries its own full §8 contract — goal · files · forbidden ·
+  acceptance · evidence · honest-partial clause — plus its own fresh verifier.
+- **Declare the independence IN the ruling:** name why no lane consumes another
+  lane's output, and name any shared resource (same file, same DB table, same
+  rate-limited API). **A shared resource is a hidden edge** — those lanes get
+  isolated worktrees or stay serial. Two lanes writing one file need an edge,
+  not parallelism.
+- **Fan-in in the same ruling:** how many lanes went out, what merges them, and
+  the guard — the merge COUNTS returns vs authorized, and a missing lane is a
+  finding, never an omission. Never let a report synthesize on a partial set.
+- **What is NEVER parallelized:** rulings themselves · anchors and frozen refs ·
+  anything on the reserved/live-capital list. **Graphs buy width, not
+  judgment** — the serial parts are serial because judgment must be.
+- The worker remains ONE seat: lanes are its subagents, it integrates, it signs
+  one report (`worker-execution` §5c).
 
 ---
 
