@@ -12,6 +12,135 @@
 
 ---
 
+## R-768 · 2026-08-09 · ✅ **`N-4` RATIFIED CLOSED AT `7 / 9` — AND I EVALUATED THE PREDICATE MYSELF AT THE EXECUTABLE LINE, WHICH IS THE ENTIRE POINT OF `R-767 §2`'s LESSON.** ⭐⭐⭐ **THE READ'S `F-7` CORRECTION IS CONFIRMED BY MY OWN COUNT (`7` `===` + `3` `!==`) AND IT CONVICTS THE **FIFTH** CAPTION-VS-BODY DEFECT: `AR-881`'s SUMMARY SENTENCE CONTRADICTS `AR-881`'s OWN HEADLINE, AND A WORKER IMPLEMENTING FROM THE SUMMARY WOULD HAVE SILENTLY DROPPED THE EXACT THREE SITES THAT FABRICATE *"backtest failed"*.** 🛑🛑 **BUT THE READ'S `§1` IS REFUTED: NO CARRIER SAYS "FIVE", THE HANDOFF ENUMERATES **TWELVE**, AND ALL TWELVE ARE REAL COMMITS.**
+
+**RULING ID:** R-768 · **ARs RULED: `AR-883` · `AR-884` · `AR-885`** · **DECISION: RATIFY `N-4` CLOSED (`7 / 9`) · ADOPT read `§2`–`§8` after audit · **REFUTE** read `§1` · AMEND LANES `B` + `C`, WHICH ARE ALREADY IN FLIGHT**
+**TREE: `wt-h1-wave4-20260712`** (branch `h1-wave4-sealed12-driver`). `[MEASURED HERE]` **HEAD `72117a03`, `git log @{u}..HEAD` EMPTY ⇒ local == remote.**
+**READ CONSUMED: external `R-766`. NUMBERING: OFFSET `+2` HOLDS — external `R-766` = campaign `R-768`.** ✅ **Join confirmed TWO ways: the offset is unbroken across `R-766` (ext `764`) and `R-767` (ext `765`), and the read's own header independently states *"EXTERNAL R-766 / CAMPAIGN R-768"*.**
+✅ **`[external-sha-fabrication]` CLEARED IN BOTH DIRECTIONS — `git cat-file -t` on EVERY SHA in BOTH enumerations, not a sample:** the read's six (`703b7eec` `5fc2ee6d` `6d8cfd41` `34e75367` `67f99900` `3cca10d3`) **all resolve to `commit`**; `AR-884 §3`'s **twelve** (`ca07a661` `703b7eec` `9c84d1d3` `5fc2ee6d` `6d8cfd41` `34e75367` `67f99900` `ae4f940e` `b80b27f3` `1f01565e` `3cca10d3` `1fa05ccf`) **all resolve to `commit`.** **No fabricated tails on either side.**
+🛑 **NEWEST AR ON DISK IS `AR-885`** (`R-416` guard). **It landed WHILE I WAS DRAFTING, it bears on this ruling materially, and it is ruled in `§6`.** ⭐ **THE STALE-PREMISE GUARD BLOCKED MY FIRST WRITE AND IT WAS RIGHT: that draft said *"no worker seat exists, the operator must seat one"* — which `AR-885` had already falsified. `A RULING IS NOT SEALED WHEN IT IS COMMITTED` earned its keep here, as a live positive control rather than a maxim.**
+⭐⭐ **THE READ AUDITED HEAD `aa5e7970e6f3f175ea08d03ebd5b3d0a3cf285c1` — BYTE-FOR-BYTE THE HEAD I FIRST MEASURED.** ⚠️ **AND I FLAG THE COST, NOT ONLY THE BENEFIT: `aa5e7970` CONTAINS `532ab1bc` ("N-4 predicate MET, fan-in 7/9"), SO THE READ COULD HAVE READ OUR OWN CONCLUSION. ⇒ ITS `7 / 9` IS POTENTIALLY AN ECHO (`[second-reader-anchoring]`) AND I DO NOT COUNT IT AS A SECOND PATH ON THE NUMBER.** ✅ **Its `§3` MECHANISM reasoning is a different matter — it argues from the executable line — and my own re-measurement (`§2`) is the genuinely independent path.**
+
+### §1 — ✅ THE WAIT WAS SATISFIED BY AN ARRIVAL, NOT ARGUED AROUND — FOR THE FIRST TIME IN EIGHT ASSERTIONS
+**The external read landed as OPERATOR-RELAYED CHAT, mid-turn, during this seat's onboarding — the exact channel `advisor-onboarding §1a-00` names.** ⇒ **No exception was invoked. No escape clause was needed. I had drafted nothing when it arrived.**
+★★★ **Recorded because the rule's own audit trail says `AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE` — and the converse deserves one line: `A RULE THAT COST NOTHING THIS TIME IS STILL THE RULE THAT COST SEVEN RETRACTIONS BEFORE.` `R-765` withdrew an entire ruling on this point hours ago.**
+
+### §2 — ✅ `N-4` CLOSED AT `7 / 9` — THE PREDICATE EVALUATED BY THE PARTY THAT WROTE IT
+🛑 **`R-767 §2` minted `AN AUTO-RELEASE IS A PREDICATE, NOT AN EVENT — AND THE PARTY WHO WROTE THE PREDICATE MUST EVALUATE IT`, after retracting a `7 / 9` published on a worker declaration. ⇒ I evaluate `R-767 §4` CLAUSE BY CLAUSE at the executable line. `AR-883 §6` correctly refused to declare the fan-in and `AR-885 §2` correctly refused to inherit it as its own claim; this ruling is the desk discharging it.**
+```
+[MEASURED HERE — lifecycle-service.ts, executable lines, tree wt-h1-wave4-20260712 @ aa5e7970]
+§4.1 construct ONCE, send THAT object   :3108 const backtestConfig = { … }        <- one construction
+                                        :3203 runBacktest(strategyId, backtestConfig, …)
+                                              ^ the BARE IDENTIFIER, not a restated literal   ✅ MET
+§4.2 hash the LOGICAL CALL DESCRIPTOR   :3130 computeResultHash({ strategyId, config: backtestConfig,
+                                              strategyClass: null, externalId: null,
+                                              actor: "automated",
+                                              engineRevision: process.env.FORGE_GIT_SHA ?? "unknown" })
+                                              ^ field-for-field what §4.2 specified            ✅ MET
+§4.3 NO second canonicaliser            :43   import { computeResultHash } from "../lib/result-hasher.js"
+                                        grep createHash -> ZERO HITS in the file               ✅ MET
+§4.4 EXCLUDE correlationId/incomplete-  :3123-3126 excluded AND documented in-code as a DECISION ✅ MET
+     Count/totalGates
+```
+✅ **THE CLAUSE THAT WAS MEASURABLY UNMET IS NOW MET, AND I NAME IT PRECISELY:** `R-766 §4`'s predicate reads *"a deterministic request identity built from EVERY INPUT CAPABLE OF CHANGING THE ANSWER"*. `R-767 §2` measured **six** config fields reaching the engine and none reaching the identity. `[MEASURED HERE]` **all six now sit at `:3113`–`:3118` INSIDE `backtestConfig`** — `indicators` · `entry_long` · `entry_short` · `exit` · `stop_loss` · `position_size` — **and `backtestConfig` is the object that is hashed.** ⇒ **satisfied STRUCTURALLY, not by a longer hand-list: a field added to the config is inside the identity with no list to update.**
+✅ **`[MEASURED HERE]` TESTS I RAN MYSELF** — population `ls`-enumerated from disk and its size ASSERTED before running (`[instrument-truncation-cluster]` (6): a typo'd member in a mixed `vitest` list is silently dropped at exit `0`):
+```
+find src -name 'd10-*.test.ts' | sort        -> 5 members, + shadow-rerun-service.test.ts = 6
+POPULATION SIZE ASSERTED: 6                     each member test -f'd and printed OK
+npx vitest run <the 6>  -> Test Files 6 passed (6) · Tests 101 passed (101) · VITEST_EXIT=0
+                           d10-n4-lifecycle-refusal.test.ts = 18 tests  <- AR-883's claim CONFIRMED
+npx tsc --noEmit        -> TSC_EXIT=0
+```
+⚠️ **SCOPED TO ITS COMMIT, NOT TO NOW: that run is evidence about `aa5e7970`.** `[MEASURED HERE, at write time]` the worker has since made `d10-n1-replay-outcome.test.ts` DIRTY (Lane `C` in flight) — **so this green is a statement about the tree I measured, not a standing claim about the working tree.** ★ `MEASURED ≠ MEASURED-NOW`, the time-axis form of `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.
+★ **I read the WHOLE vitest output and did not `| tail` it** — `[instrument-truncation-cluster]` (1) is exactly this instrument: the npm upgrade notice prints AFTER the summary at exit `0`, so an eight-line tail shows the notice and hides the result.
+⚖️ **VERDICT: `N-4` CLOSED. FAN-IN `7 / 9`.** ⚠️ **GRADED HONESTLY: `[MEASURED HERE]` for the code shape, descriptor, shared hasher and suite. NOT a re-run of `AR-883`'s `M6` mutation — I did not re-mutate production on a tree a live sibling writes to (`[precommit-stash]`), same posture as `R-767 §1`. `M6` stays `[ARTIFACT-SOURCED — AR-883 §5]`.**
+
+### §3 — ⭐⭐⭐ THE READ'S `§4` CONFIRMED BY MY OWN COUNT — AND IT IS THE FIFTH CAPTION-VS-BODY DEFECT
+✅ **`[MEASURED HERE, `src/server/services/agent-service.ts`]` — I counted rather than adjudicating between two claims:**
+```
+grep -n '=== *"completed"'  -> 7   :775  :791  :1224  :1234  :1322  :1337  :2274
+grep -n '!== *"completed"'  -> 3   :793  :1236  :1339      <- ALL THREE are the errorMessage branches
+TOTAL completed-based conditionals -> 10
+```
+⇒ **THE READ IS EXACTLY RIGHT. `F-7` owns `10` completed-based binary mappings = `7` positive `===` + `3` negative `!==`. `AR-881`'s count of `10` and its `4`-cluster structure were both correct.**
+🛑🛑★★★★★ **BUT THE DEFECT IT CONVICTS IS SHARPER THAN A MISCOUNT, AND IT LIVES INSIDE ONE REPORT: `AR-881`'s `§1` MEMBER TABLE IS RIGHT — it prints `:793` as `!== "completed"` in plain text. ITS SUMMARY SENTENCE ONE LINE BELOW IS WRONG: *"Every one is `=== "completed" ? A : B`"*. THE BODY MEASURED IT; THE CAPTION GENERALISED IT AWAY.**
+⭐⭐⭐ **AND THE SUMMARY CONTRADICTS `AR-881`'s OWN HEADLINE, WHICH IS WHAT MAKES THIS LOAD-BEARING RATHER THAN COSMETIC.** That headline reads: **`F-7` FABRICATES A *REASON*, NOT A NUMBER: `errorMessage: … ?? "backtest failed"`.** ⇒ **The three `!==` sites ARE the fabrication sites. ⇒ A WORKER IMPLEMENTING FROM THE SUMMARY GREPS `=== "completed"`, FINDS SEVEN, AND SILENTLY DROPS THE EXACT THREE SITES THE FINDING EXISTS FOR.** ★★★★★ **`A CAPTION THAT OVER-GENERALISES ITS OWN TABLE DELETES THE MEMBERS THAT DIFFER — AND THE ONES THAT DIFFER ARE WHY THE FINDING EXISTS.`** **FIFTH caption-vs-body conviction on this campaign (`R-761` named the fourth). It is a species now, not an accident.**
+✅ **CARRIER CORRECTION, BINDING:** the enumeration language is **`10` mappings = `7` `===` + `3` `!==`**. **Do NOT call all ten `===`.** **Do NOT say "ten DB writes"** — they are ten conditional FIELD mappings distributed across `systemJournal` / `auditLog` inserts (`R-767 §3`, settled).
+
+### §4 — 🛑🛑 THE READ'S `§1` IS REFUTED — AND I DECLINE TO "CORRECT THE CARRIER"
+**The read's `§1`: *"The production handoff enumerates [six SHAs] … That is SIX commits, not five. Correct the carrier. Do not leave 'five' standing."*** `[MEASURED HERE]`:
+```
+grep "five commits|FIVE COMMITS|5 commits|COMMITS (5)|commits: 5"
+   over ADVISOR-RULINGS.md + AGENT-REPORTS.md + ADVISOR-STATE.md   -> NO SUCH CLAIM
+   (2 unrelated hits: a BLUEPRINT line about a different commit set, and a churn-analysis line)
+git log -25 --format='%h %s' | grep -i "five|5 commit"             -> NOTHING
+AR-884 §3 "COMMITS, ALL PUSHED"  -> TWELVE, and all twelve resolve to `commit`
+```
+⇒ **THERE IS NO "FIVE" TO CORRECT, AND THE READ'S OWN SIX IS A *SUBSET* OF THE HANDOFF'S TWELVE.** 🛑 **I will NOT amend the carrier to say "six": that replaces a correct enumeration of twelve with an incomplete one, on the authority of a correction whose subject I cannot locate.** ★ **`[external-opinion]`: a channel is not an author; the ruling-shape is the disguise. This section arrived in the same confident voice as `§4`, which was right.**
+⚠️ **SCOPED HONESTLY, BECAUSE A REFUTATION IS A CLAIM TOO: I searched the three campaign carriers and the last 25 commit subjects. If the read's subject is a surface I did not search — a PR body, a GitHub compare view, an earlier AR — it must NAME it and I will re-measure.**
+★★★★★ **LAW MINTED, DRAWN FROM THE GAP BETWEEN THIS READ'S BEST AND WORST SECTIONS: `A CORRECTION IS A JOIN CLAIM — IT MUST NAME THE CARRIER AND THE LINE, OR IT CANNOT BE CHECKED.` Its `§4` named the file and one grep confirmed it. Its `§1` named no carrier and no grep can confirm it. `[i-measured]` — the join key IS the claim.**
+
+### §5 — ✅ READ `§5` · `§6` · `§7` — TWO CORROBORATIONS, ONE REAL ADDITION, ONE NAMING DECISION THAT IS MINE
+- **`§5` (mapper location) — CORROBORATION, NOT A CORRECTION. NO CONTRACT CHANGE.** `[MEASURED HERE]` `src/server/lib/backtest-refusal.ts:17` — *"It CLASSIFIES. It does not act, and it NEVER THROWS (R-755 §4)"*; `:23` *"consumer still owns its own"*. **`R-767 §5` already contracts the mapper to `agent-service.ts`.** ⇒ **the read prevents a deviation nobody proposed, and the boundary is now measured rather than assumed.**
+- **`§6` (N-5 census) — A GENUINELY INDEPENDENT THIRD PATH.** It agrees with `AR-882` and with `R-767 §6`'s `grep -n parentForgeScore` = exactly `6` lines. **Unlike the `7 / 9` above, this was NOT anchored on our conclusion — it reasons from the two assignment sites and the two `compositeScore > parentForgeScore` gates.** ✅ **`AR-885 §3` re-measured both sites on disk (`:2153` auto, `:2850` manual) rather than inheriting the line numbers — correct, and it makes four paths on this census.**
+- **`§7` (fail-closed, finite) — AGREES WITH `R-767 §6` AND ADDS ONE THING WORTH ADOPTING.** `R-767 §6` already ruled `null`/`undefined`/empty/`NaN`/`Infinity` ⇒ unavailable, numeric `0`/`"0"` ⇒ a **VALID MEASURED ZERO**. ✅ **NEW AND ADOPTED — THE FORBIDDEN IDIOM, which `R-767 §6` stated as a rule without naming the trap: the implementation MUST NOT use `if (!parentForgeScore)`, because that collapses a legitimate measured zero straight back into absence and swaps one conflation for its mirror image.** ★★★ **`A RULE NAMES THE REQUIRED BEHAVIOUR; A FORBIDDEN IDIOM NAMES THE WRONG CODE SOMEONE WILL ACTUALLY WRITE. BOTH BELONG IN THE CONTRACT.`**
+- ⚖️ **NAMING — I KEEP `R-767 §6`'s NAME; THE DECISION IS MINE AND IS RECORDED SO IT IS AUDITABLE.** The read proposes `parent_baseline_unavailable`; `R-767 §6` contracted **`parent_forge_score_unmeasured`**. **Both are invented strings and neither needs schema work** (`system_journal.status` is free text — `R-767 §3`). **I keep `parent_forge_score_unmeasured`: already contracted, and it names the FIELD rather than an abstraction — which is what a person debugging a stalled optimization run actually needs.** ⇒ **ONE name. A rename buys nothing and costs a divergence between carriers.**
+- ✅ **`§8` (evidence posture) — ADOPTED AS WRITTEN, AND IT IS THE RIGHT GRADE.** The read states plainly that no GitHub CI run exists at HEAD, so its verification is **CODE SHAPE + EXECUTABLE ORDER + ENUMERATION**, and our vitest populations remain worker/desk execution evidence it did not re-run. ★ **An external reader that grades its own reach is worth more than one that does not.**
+
+### §6 — 📍 `AR-884` AND `AR-885` RULED · SEAT STATE · THE EAR, INCLUDING A DEFECT IN MY OWN
+✅ **`AR-884`'s HANDOFF JUDGMENT IS RATIFIED AND ITS REASONING WAS CORRECT.** It delivered `1 / 3`, declared `B` and `C` **UNSTARTED rather than blocked**, and refused the tempting middle — landing Lane `C`'s production change while leaving its controls — on `R-767 §4`'s own sequencing law. ★★★ **`THE COST OF STOPPING EARLY IS ONE COLD START; THE COST OF STOPPING MID-EDIT IS PAID BY WHOEVER TOUCHES THE FILE NEXT, AND THEY WILL NOT KNOW THEY ARE PAYING IT.` Adopted as campaign law.**
+⭐ **`AR-884 §2`'s BANKED RECON IS ACCEPTED AND IS LOAD-BEARING FOR LANE `C`** — the per-path SELECT queues differ (auto `[STRATEGY_ROW],[CANDIDATE]`; manual `[CANDIDATE],[STRATEGY_ROW]`), `survivorSelected()` `:222` is the shared witness, `MC_SATISFIED` `:175` is mandatory or the COMPLETED path blocks 60s and corrupts the next test. ✅ **Its dynamic-import discriminator is ADOPTED: `THE ONE-GREP REPLICA TEST MUST INCLUDE `await import(` — A FILE WHOSE ONLY STATIC IMPORT IS VITEST CAN STILL BE DRIVING PRODUCTION.`**
+✅ **`AR-885` RATIFIED — THE RELAY WORKED EXACTLY AS DESIGNED.** A fresh seat (`claude.exe 23140`) seated itself, **inherited authorization from the ledger** per `R-767 §9`, took **both** remaining lanes as one batch, and correctly refused to plan a handoff at the `C`/`B` seam. **Order `C` then `B` is explicitly NOT a dependency claim and is within `R-767 §7`'s fake-edge finding.** ⚠️ **`[MEASURED HERE]` MY OWN CENSUS, TAKEN BEFORE `AR-885` LANDED, READ `claude.exe 23640 NOT ALIVE · 444 NOT ALIVE · live: 23140, 13416`. I published nothing on it — the stale-premise guard caught the draft first. Both measurements were true of their moment; only the second is true now.**
+🛑 **TWO ORPHANED RIGS, AND NEITHER SEAT KILLED THEM — INDEPENDENTLY, WHICH IS THE POINT:** `bash.exe 33504` (parent `7752`) and `23392` (parent `11704`), both parents ABSENT from the process table. **`AR-885 §1` and this desk reached the same disposition separately.** ★★★ **`AR-885`'s formulation is better than mine and I adopt it: `THE DISCRIMINATOR IS AUTHORIZATION, NOT LIVENESS` — `NEVER KILL AN EAR YOU DID NOT ARM` does not acquire an exception because the owner looks dead.**
+🛑🛑 **AND I CORRECT A DEFECT IN MY OWN EAR, FOUND BY READING `AR-885` RATHER THAN BY TESTING:** I armed v1 keyed on `(AR heading, dirty-state, **HEAD sha**)`. **`AR-885 §1` red-proofed the identical key in its own first draft and MEASURED IT WRONG — a HEAD-keyed detector fires on the sibling seat's unrelated commits.** ✅ **v1 STOPPED, v2 ARMED, re-keyed to `git log -1 -- <file>`; one rig per channel, never new + old (`[one-monitor]`). Backfill delivered as a positive control: `## AR-885 … | CLEAN | file-commit=72117a03`.** ★★★★★ **`A DETECTOR THAT FIRES ON EVERYTHING IS AS DEAF AS ONE THAT FIRES ON NOTHING — RED-PROOF THE NEGATIVE CONTROL, NOT ONLY THE POSITIVE.`** ⭐ **The worker red-proofed its instrument and the desk did not; the desk's fix is inherited from the worker's receipt. Recorded plainly, because `THE GRADER IS A WRITER` cuts both ways and this desk was the one caught shipping an unproven instrument.**
+
+### §7 — ⚡ LANES `B` AND `C` — ALREADY IN FLIGHT, AMENDED HERE, NOT RE-ISSUED
+🛑 **I AM NOT RE-AUTHORIZING WORK THAT IS RUNNING.** **`R-767 §5`/`§6` authorize these lanes; `AR-885` inherited them from the ledger and Lane `C` is in flight** (`[MEASURED HERE]` `d10-n1-replay-outcome.test.ts` is dirty). **This ruling AMENDS two contract details and removes one stale premise. It does not re-open, re-issue, or re-assign.** ★ **`[no-monitors-msg-advisor]`: cross-session messaging is MEASURED DEAD on Windows ⇒ THE LEDGER IS THE ONLY RELAY, and it just carried an authorization across a seat death with no desk round-trip.**
+**AMENDMENT 1 — LANE `B` (`F-7`), from `§3`:** the target is **`7` `===` sites (`:775` `:791` `:1224` `:1234` `:1322` `:1337` `:2274`) + `3` `!==` sites (`:793` `:1236` `:1339`)**. 🛑 **The three `!==` sites write `"backtest failed"` about a run the engine declined to attempt — they ARE the finding, not an afterthought. A `grep '=== "completed"'` sweep MISSES them.** **Mapper in `agent-service.ts`, NOT in `lib/backtest-refusal.ts` (`§5`).**
+**AMENDMENT 2 — LANE `C` (`N-5`), from `§5`:** precondition name stays **`parent_forge_score_unmeasured`**; **`if (!parentForgeScore)` is FORBIDDEN** — it re-collapses measured zero into absence. **Both discriminators are required: (A) parent `null` + candidate `80` ⇒ candidate CANNOT win; (B) parent measured `"0"` + candidate `> 0` ⇒ comparison REMAINS LEGAL.**
+**UNCHANGED:** files · no schema change · no second classifier or canonicaliser · no prose replica · harness is the EXISTING `d10-n1-replay-outcome.test.ts`. **AUTO-RELEASE `8 / 9` (`F-7`) and `9 / 9` (`N-5`) — and per `R-767 §2`'s lesson THIS DESK evaluates those predicates; the worker publishes evidence and makes no fan-in claim.** **ATTEMPT BUDGET: `F-7` `0 / 2` · `N-5` `0 / 2`.**
+**FIRST OBSERVABLE: a published RED on Lane `C`. No ETA imposed. An `AR` on each lane close.** 🛑 **NOTHING IS RESERVED TO THE OPERATOR HERE. `R-766 §6`'s one reserved act — seating a fresh worker — is DISCHARGED and `AR-885` is its receipt.**
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : D-10 at 9/9, then R-758 §8's final acceptance, then the HELD
+                 state-channel/compiler unit. Phase-1 exit UNCHANGED and NOT claimed:
+                 >=1 tier-A spec compiling + the fidelity gate.
+CRITICAL PATH  : F-7 and N-5 — the only two remaining measured D-10 defects.
+AUTHORIZED NOW : Lanes C then B, in flight, seat claude.exe 23140.
+PRECEDENCE PROOF: N-4's predicate was the last measurably-unmet condition (R-767 §2).
+                 It is MET as of §2 above, measured at the executable line. Nothing
+                 else now stands between D-10 and 9/9.
+DEFERRED REGISTER
+  N-6   | owner UNASSIGNED | acceptance: bounded deferral w/ counter + escalation
+        | wake: first `strategy.evolution-inconclusive` row in production OR D-10 9/9
+        | evidence: R-763 §4
+  OPS-1 | owner THIS DESK  | acceptance: FORGE_GIT_SHA proven populated on the tower
+        | wake: any deploy-evidence pass OR a suppression anomaly in live data
+        | evidence: read §3 hardening note. 🛑 DO NOT REOPEN N-4 FOR THIS.
+  OPS-2 | owner THIS DESK  | acceptance: advisor-ruling-guard.ps1 stops crashing on
+        | worker SCRATCHPAD writes while still blocking real ledger writes
+        | wake: IMMEDIATE — taken in this seat
+        | evidence: AR-884 §6 (a crash, not a policy refusal; worker did NOT route
+        | around it). NOTE: the SISTER guard (ruling-stale-premise) fired CORRECTLY
+        | on this very ruling — the fault is specific, not general.
+WAKE TRIGGERS  : as registered; nothing starts before its trigger.
+STOP           : anything outside the named files · a second classifier or canonicaliser ·
+                 a prose replica · a schema change · the final D-10 acceptance before 9/9 ·
+                 any reopening of F-10 or N-4.
+```
+
+### §9 — ⚖️ WHAT I DO **NOT** ADOPT, AND WHAT REMAINS UNPROVEN
+🛑 **I do NOT adopt the read's `§2` `F-10` re-verification as MY measurement — `[CORROBORATED]`.** `R-767 §1` measured the ordering independently and the read agrees; **neither of us re-ran `AR-878`'s mutation family.**
+🛑 **STILL `[UNPROVEN]`, AND IT MUST SURVIVE INTO THE FINAL ACCEPTANCE:** that a refusal has EVER traversed any of these paths in live data. **No query, no incident, mechanism only.** ★★★★★ **`D-10` REMOVES NINE WAYS THE SYSTEM COULD MISREPORT A REFUSAL; IT DOES NOT DEMONSTRATE THAT ONE EVER OCCURRED.**
+🛑 **`N-4`'s call site remains `[MEASURED — STRUCTURAL]`, not executed** (Option `A` refused on measured cost, `R-764 §3`, not re-opened). 🛑 **`F-7`'s `system_journal.status` consumers remain `[UNENUMERATED — OPEN]`.** 🛑 **`engineRevision` is `[MEASURED — the env var is real and used at 4 production sites]`; what `FORGE_GIT_SHA` holds at runtime on the tower is `[UNVERIFIED]` — registered as `OPS-1`, NOT grounds to reopen `N-4`.**
+✅ **THE READ'S CLOSING FRAME IS ADOPTED AND IT IS THE HONEST ONE — the compiler breakthrough is CLOSE and it is NOT REACHED.** ★ `[path-inverted]`, `[tier-a-no-instrument]` unchanged. **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`: everything above is the campaign worktree, not `runtime-production`.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** No compiler semantics, no extracted logic, no sizing/risk surface, no promotion to live capital. `D-10` is reporting-integrity only.
+
+**LESSON TO PERSIST:** ★★★★★ **`A CAPTION THAT OVER-GENERALISES ITS OWN TABLE DELETES THE MEMBERS THAT DIFFER — AND THE ONES THAT DIFFER ARE WHY THE FINDING EXISTS.`** (fifth conviction) · ★★★★★ **`A CORRECTION IS A JOIN CLAIM — IT MUST NAME THE CARRIER AND THE LINE, OR IT CANNOT BE CHECKED.`** · ★★★★★ **`A DETECTOR THAT FIRES ON EVERYTHING IS AS DEAF AS ONE THAT FIRES ON NOTHING` — the desk shipped an unproven ear and inherited the fix from the worker's receipt.** · ★★★★ **`A RULE NAMES THE REQUIRED BEHAVIOUR; A FORBIDDEN IDIOM NAMES THE WRONG CODE SOMEONE WILL ACTUALLY WRITE.`** · ★★★★ **`AN EXTERNAL READ THAT AUDITS YOUR OWN HEAD MAY BE ECHOING YOUR CONCLUSION — SEPARATE ITS MECHANISM REASONING (INDEPENDENT) FROM ITS NUMBERS (POSSIBLY YOURS).`** · ★★★ **`THE DISCRIMINATOR IS AUTHORIZATION, NOT LIVENESS.`**
+
+---
+
 ## R-767 · 2026-08-09 · ✅ **THE READ IS ADOPTED ON MERIT AFTER AUDIT — AND IT CORRECTS TWO PUBLISHED CLAIMS, ONE OF THEM MINE.** 🛑🛑🛑★★★★★ **I RETRACT MY OWN `7 / 9`: `N-4`'s AUTO-RELEASE WAS CONDITIONAL ON AN ACCEPTANCE PREDICATE THAT IS MEASURABLY UNMET, SO IT NEVER FIRED. FAN-IN IS `6 / 9`.** ⚡ **AND `AR-881 §2(b)` IS REFUTED AT THE EXECUTABLE LINE — THE TEN `F-7` WRITES NEVER TOUCH THE `strategies` TABLE, WHICH MAKES `F-7` SUBSTANTIALLY CHEAPER THAN THE CAMPAIGN BELIEVED FOR THE LAST HOUR.**
 
 **RULING ID:** R-767 · **ARs RULED: `AR-878` · `AR-879` · `AR-880` · `AR-881` · `AR-882`** · **DECISION: RATIFY `F-10` CLOSED · HOLD `N-4` ON ONE BOUNDED DEFECT · AUTHORIZE `N-4` CLOSEOUT + `F-7` + `N-5` AS THREE CONTRACTED LANES**
