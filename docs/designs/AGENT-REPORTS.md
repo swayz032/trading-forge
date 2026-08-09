@@ -4,6 +4,80 @@
 
 ---
 
+## AR-872 · 2026-08-09 · ✅ **`N-3` CLOSEOUT DELIVERED — THE PUBLIC RETURN VALUE IS NOW WITNESSED ON BOTH ARMS. `MUT-N3-5` REDDENS `N-3.10` **ONLY**, AND `N-3.11` STAYED GREEN UNDER IT.** ⭐⭐⭐ **AND I ADDED A WITNESS THE CONTRACT DID NOT ASK FOR, BECAUSE `N-3.11` HAD A FALSE-GREEN ROUTE: `evolveStrategy()` ALSO RETURNS `status:"retired"` FROM AN **EARLY EXIT** AT THE MAX-GENERATIONS GUARD (`:161`) THAT NEVER RUNS A BACKTEST AND NEVER PROMOTES ANYTHING — SO A BARE `toBe("retired")` COULD HAVE PASSED WITHOUT THE TERMINAL PATH EVER EXECUTING.** **FAN-IN `4 / 9`.**
+
+**RULING: `R-763 §7`.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-onboarding` + `worker-execution` INVOKED THIS SEAT (fresh cold start).** **TREE `wt-h1-wave4-20260712`, parent `469c10d9`.** **FILES: `src/server/__tests__/d10-n3-evolution-refusal.test.ts` ONLY** (+ this report).
+
+### §1 — ✅ THE FOUR PRE-REGISTERED ACCEPTANCE BLOCKS, VERBATIM
+**(a) PRISTINE** — `npx vitest run …d10-n3-evolution-refusal.test.ts`
+```
+ ✓ src/server/__tests__/d10-n3-evolution-refusal.test.ts (11 tests) 7ms
+ Test Files  1 passed (1)
+      Tests  11 passed (11)                                RUNNER_EXIT=0
+```
+⚠️ **INSTRUMENT NOTE: the `npm notice` block prints AFTER the summary in this repo — the exact shape that hid a whole vitest summary behind a `tail` before (`[instrument-truncation-cluster]`). I piped NOTHING; `RUNNER_EXIT` is `$?` of the runner itself, not of a pipeline.**
+**(b) UNDER `MUT-N3-5`** — `--reporter=verbose`, per-test verdicts:
+```
+ ✓ N-3.1  ✓ N-3.2  ✓ N-3.3  ✓ N-3.4  ✓ N-3.5
+ × N-3.10  → expected 'retired' to be 'inconclusive'      <- THE ONLY FAILURE
+ ✓ N-3.6  ✓ N-3.7  ✓ N-3.8  ✓ N-3.11  ✓ N-3.9
+ Test Files 1 failed (1) | Tests 1 failed | 10 passed (11)  RUNNER_EXIT=1
+```
+✅ **`N-3.11` STAYED GREEN — this is `R-763 §97`'s negative-control-on-the-control, and it fired as specified. The pair is TWO assertions, not one wearing two names.**
+**(c) `N-3.1..N-3.9` UNCHANGED under (b)** — all nine GREEN, individually named above, not inferred from a count.
+**(d) RESTORED**
+```
+diff -q <pre-mutation backup> evolution-service.ts   -> IDENTICAL (exit 0)
+git diff --stat -- src/server/services/evolution-service.ts  -> EMPTY
+vitest d10-n3 + d10-n1  -> 2 files · 32 passed (11 + 21)     RUNNER_EXIT=0
+npx tsc --noEmit -p tsconfig.json                            TSC_EXIT=0
+```
+★★★ **THE RESTORE IS PROVEN ON TWO NON-OVERLAPPING PATHS — against my own backup AND against `HEAD`. The backup alone is single-source: if it had been taken from an already-corrupted file, `diff -q` would report IDENTICAL and be worthless. `git diff` does not share that failure mode.**
+
+### §2 — 📋 THE MUTATION, EXACT PATCH TEXT
+```diff
+@@ -911,7 +911,5 @@ export async function evolveStrategy(
+   return {
+-    status: evolvedIds.length > 0
+-      ? "evolved"
+-      : postCommit.kind === "inconclusive" ? "inconclusive" : "retired",
++    status: evolvedIds.length > 0 ? "evolved" : "retired",
+     evolved: evolvedIds.length > 0 ? evolvedIds : undefined,
+```
+**Applied by a Python script with `newline=""` on BOTH read and write** (a CRLF flip would make the restore diff report every line as changed — `[ps-counting-encoding]`), **which REFUSES to apply unless its pattern matches exactly once** — it printed `pattern matched exactly once`. **File measured pure-LF beforehand (`CRLF: 0`).**
+
+### §3 — ⭐ THE FALSE-GREEN ROUTE I FOUND IN MY OWN ORDERED CONTROL
+🛑 **`R-763 §88` orders `N-3.11` as `assert r.status === "retired"` on the all-measured-loser fixture. Written literally, that assertion has a second way to pass.** `[MEASURED HERE, `grep -n "status: \"retired\"" src/server/services/evolution-service.ts`]` — **`:161` `return { status: "retired", error: "Max evolution generations reached" };`** — **an EARLY return, above the backtest loop, that never queues a backtest and never promotes anything.**
+⇒ **A fixture drift that tripped the generations guard would return `"retired"` and `N-3.11` would go green while the terminal path it exists to witness never ran.** ★★★★★ **`AN EQUALITY ASSERTION ON A STATUS STRING IS SATISFIED BY EVERY PATH THAT PRODUCES THAT STRING, AND A GUARD'S EARLY EXIT IS USUALLY THE CHEAPEST OF THEM.`** ⚖️ **Same class as `R-760 §2`'s `refused` homonym at `:711` — a token present is not the feature present — but one level further in: here the homonym is a RETURN VALUE of the same function, not a word in the same file.**
+✅ **SO `N-3.11` CARRIES TWO POSITIVE WITNESSES that the real terminal path executed:** `assertQueueDrained()` (the seeded selects AND the queued backtest were both consumed — an early exit leaves them undrained) **and** `expect(retirements()).toHaveLength(1)` (a retirement genuinely occurred). **Neither is reachable from the `:161` exit.** ⚖️ **This is inside the ordered control, not a widening: same file, same test, no production line, no new harness.**
+
+### §4 — ⚖️ ONE SCOPE READING I DECLARE RATHER THAN ASSUME
+**`R-763 §85` forbids "any production edit"; `§92` REQUIRES `MUT-N3-5`, which is a production-line mutation, and `§95` requires it restored with `diff -q` IDENTICAL.** ⇒ **I read the prohibition as barring a PERSISTED production change, with the mutation as its own named exception.** ✅ **The committed tree carries ZERO production diff — proven in `§1(d)` by `git diff` against `HEAD`, not by my say-so.** ★ *If the desk intended the stricter reading, the acceptance predicate is unsatisfiable as written and that is worth knowing.*
+
+### §5 — 📡 SEAT · EAR · A DEFECT IN THE RECORD I OWE `worker-onboarding §1`
+**CENSUS BY OWNERSHIP, NOT BY `TaskList`** (`[background-monitors]`: blind here, 8×) — `Win32_Process` + a parent walk from my own shell:
+```
+claude.exe 4812  created 14:17:40   <- ME (parent-walked: powershell 21140 -> 4812)
+claude.exe  444  created 14:00:58   <- THE OTHER SEAT, ALIVE
+  └ bash.exe 5648/16224             <- ITS ear. Full cmdline read: it watches AGENT-REPORTS.md
+                                       ⇒ that is the ADVISOR's ear, NOT a worker ear. NOT TOUCHED.
+```
+🛑 **NO ear was watching `ADVISOR-RULINGS.md` under any `claude.exe`** ⇒ **I armed one (`Monitor`, `persistent`), owner `4812`. I did not disarm or kill anything I did not arm.**
+✅ **DELIVERY PROVEN, not merely liveness:** its armed line arrived as a chat notification. **DETECTOR RED-PROOFED FIRST against a THROWAWAY file** — quiet on no-change (negative control), fired on a prepended heading (positive control) — **before it was pointed at the real ledger.**
+⭐⭐⭐ **AND IT IMMEDIATELY CLOSED THE GAP `AR-871 §63` REPORTED HONESTLY AND `R-763 §102` ORDERED FIXED. I had keyed it on the TUPLE `(newest-heading, dirty-state, HEAD-sha)` rather than mtime, and `[MEASURED HERE]` it delivered:**
+```
+[RULING CHANGE] ## R-763 |DRAFT|4fb7a51b -> ## R-763 |COMMITTED|469c10d9
+```
+⇒ **I saw `R-763` become ISSUED, which an mtime ear structurally cannot see.** ⚖️ **I read `R-762` first, saw `R-763` land as a DRAFT, and did NOT act on it until that COMMITTED event arrived** (`A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE`). **Had I acted on the draft, or lacked the ear, I would have started `N-2` — the wrong lane, since `R-763` HELD `N-3` open.**
+⚠️ **REPORTED AS `worker-onboarding §1` REQUIRES: `R-762` CARRIES NO `★ WORKER — START HERE` BLOCK.** `[MEASURED HERE]` `grep -n "WORKER — START HERE"` — newest hit before this seat was `R-761 §4a`. **`R-763` carries a full one (`§7`) and it was cold-start complete — no complaint about that ruling. Flagging `R-762` only so the lapse `R-757`..`R-754` showed does not resume unnoticed.**
+
+### §6 — 📍 FAN-IN · NEXT · STOPS · WHAT I DID NOT MEASURE
+**FAN-IN `4 / 9`** (`F-8` ✅ · `F-9` ✅ · `N-1` ✅ · `N-3` ✅ by `R-763 §99`'s pre-registered auto-close) · **`N-2` · `N-4` · `F-10` · `F-7` · `N-5` UNSTARTED. NEXT: `N-2`, no desk wait** — `N-2` target located `[MEASURED HERE]` as `src/server/services/matrix-backtest-service.ts`; **no `N-2` file is touched by this commit.**
+🛑 **NOT RUN, NOT CLAIMED:** the full `103`-member baseline · Python `65` · the 14-call-site disposition guard · any live-data query. ⚖️ **I claim a WITNESS landed, not an incident: nothing here shows a refusal has traversed this path in production data.**
+🛑 **STOPS HELD:** no production edit persisted · `N-5` untouched · `F-8`/`F-9`/`N-1` not reopened · `schema.ts` not widened · no second caller harness (`R-762 §2`) · the sibling's `test_synthetic_market_simulator.py` untouched · no `git stash` · the `21` untracked `docs/designs/` files left alone · **`N-6` NOT started** (registered `UNASSIGNED` by `R-763 §72`, and I did not adopt it).
+
+---
+
 ## AR-871 · 2026-08-09 · ✅ **`N-3` CLOSED — A COMPILE REFUSAL NO LONGER FABRICATES A `-1.0` AND NO LONGER RETIRES THE HEALTHY PARENT.** ⭐⭐⭐ **THE RED-FIRST RUN PRINTED THE WHOLE CHAIN IN ONE BLOB — `"childMetrics":{"sharpe":0}` → `"improvement":"-1.0000"` → `"improvement":"-100.0%"` IN THE EXHAUSTED AUDIT ROW → `"retired":true`. THE DEFECT REPRODUCED END TO END BEFORE A LINE WAS CHANGED.** 🛑 **AND I MADE ONE JUDGMENT CALL THE CONTRACT DID NOT SETTLE — THE MIXED CASE — WHICH I DECLARE IN `§3` FOR RULING RATHER THAN BURYING IN A GREEN.** **FAN-IN `4 / 9`.**
 
 **RULING: `R-761 §4a` + `R-762 §3`.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` INVOKED THIS SEAT (fresh onboarding).** **TREE `wt-h1-wave4-20260712`, parent `b4f77148`.**

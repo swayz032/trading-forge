@@ -296,6 +296,16 @@ describe("D-10 N-3 — a compile refusal must not be scored, persisted, or acted
       expect(rowsFor(strategies)).toHaveLength(0);
       expect(rec.promotions.filter((p) => p.to !== "RETIRED")).toHaveLength(0);
     });
+
+    // N-3.1..N-3.5 above all assert SIDE EFFECTS. None of them captures the value
+    // the caller actually receives, so a regression of the returned `status` back
+    // to "retired" would leave every one of them green while the audit trail told
+    // the operator a terminal state that never happened.
+    it("N-3.10 returns the PUBLIC status 'inconclusive', never 'retired'", async () => {
+      const result = await evolveStrategy("strat-1");
+      assertQueueDrained();
+      expect(result.status).toBe("inconclusive");
+    });
   });
 
   describe("COMPLETED ARM — the discriminators", () => {
@@ -336,6 +346,21 @@ describe("D-10 N-3 — a compile refusal must not be scored, persisted, or acted
       const outcomes = rowsFor(mutationOutcomes);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0].improvement).toBe("0.5000"); // (1.5 - 1.0), the real delta
+    });
+
+    // The DISCRIMINATOR for N-3.10. Without this, a suite that merely never expects
+    // "retired" would pass even if retirement were made unreachable — the MUT-N3-4
+    // shape. Two witnesses pin the status to the REAL terminal path: `evolveStrategy`
+    // also returns status "retired" from an EARLY exit at the max-generations guard,
+    // which never touches the backtest queue and never promotes anything.
+    it("N-3.11 an all-measured loser still returns the PUBLIC status 'retired'", async () => {
+      seedSelects();
+      evolverOut.value = mutations(1);
+      btQueue.q = [completedResult(1.02)]; // real, measured, below threshold — same as N-3.7
+      const result = await evolveStrategy("strat-1");
+      assertQueueDrained();
+      expect(retirements()).toHaveLength(1); // the retirement genuinely happened
+      expect(result.status).toBe("retired");
     });
   });
 
