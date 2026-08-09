@@ -4,6 +4,124 @@
 
 ---
 
+## AR-888 · 2026-08-09 · ✅ **LANE `D` DELIVERED — THE `system_journal.status` CONSUMER CENSUS IS COMPLETE AND READ-ONLY. `21` EXECUTABLE CONSUMERS, ENUMERATED WITHOUT `head`/`tail` AND COUNT-ASSERTED BEFORE CLASSIFICATION.** 🛑 **ONE CONCRETE BEHAVIOUR CHANGE FOUND — `prompt-evolution-service` DROPS REFUSED RUNS FROM THE PROMPT-LEARNING CORPUS, AND IT IS PINNED BY A TEST. I REPORT AND DO NOT CHOOSE, EXACTLY AS `R-769 §7` PRE-REGISTERED.** ⭐ **AND THE DESK'S TWO NAMED CANDIDATES SPLIT: ONE IS THE REAL FINDING, THE OTHER IS A PRE-EXISTING GAP `F-7` WIDENS RATHER THAN CREATES.**
+
+**SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `877d03f7` at read time.** **ATTEMPT BUDGET: `Lane D` `1 / 2`.** 🛑 **NO EDIT MADE — `git status --porcelain src/` unchanged by this lane. The census is read-only, as contracted.**
+
+### §1 — ✅ FIRST OBSERVABLE, AS ORDERED: THE POPULATION AND ITS ASSERTED COUNT, BEFORE ANY CLASSIFICATION
+```
+[MEASURED HERE — no `head`, no `tail`, on any command in this lane]
+rg -n "systemJournal\.status" src/server  (excl. __tests__ and *.test.ts)
+   ASSERTED COUNT = 21   <- the classified population
+```
+**THE `21`, BY FILE:** `routes/journal.ts` **8** (`:16 :65 :95 :100 :134 :136 :173 :179`) · `funnel-metrics-service.ts` **5** (`:20`–`:24`) · `prompt-evolution-service.ts` **4** (`:219 :226 :675 :682`) · `agent-service.ts` **3** (`:1761 :1899 :2007`) · `nightly-critique-service.ts` **1** (`:74`).
+⭐ **THE DESK'S `§7` STARTING SET IS FULLY CONTAINED IN THIS POPULATION AND NOTHING IN IT WAS DROPPED** — its `| head`-limited sweep named 13 of these 21; the census adds the 8 it truncated away. **`prompt-evolution-service.ts:682` — the SECOND whitelist — is one of the eight the truncation hid, and it is a duplicate of the finding.** ★★★ **`A TRUNCATED SWEEP DOES NOT MISS RANDOM MEMBERS — IT MISSES THE TAIL, AND THE SECOND COPY OF A DEFECT LIVES IN THE TAIL.`**
+
+### §2 — 📐 SURFACES COVERED, AND THE ONES I COULD NOT COVER (honest-partial clause)
+```
+COVERED, ENUMERATED, COUNT-ASSERTED
+  Drizzle `systemJournal.status`      src/server, non-test .................. 21 ✅
+  raw SQL `system_journal` + status   whole repo, every file listed .......... 66 hits,
+      resolved to: src/server/services/agent-service.ts (entityType labels, NOT status
+      reads) · 2 MIGRATIONS (schema history, not consumers) · tmp-n8n/*.mjs ops scratch
+      (10 hits, classified §3) · docs/reports/AGENT-LOGS (prose) ............. ✅
+  FRONTEND  Trading_forge_frontend .... 2 hits, BOTH COMMENTS, and `Journal.tsx:4`
+      records the page was REPURPOSED OFF system_journal onto `paper_positions`
+      => the UI does not consume this column at all ........................... ✅
+  src/dashboard · src/discord · workflows (n8n JSON) · e2e · src/shared ... 0 hits ✅
+  scripts/ ... 9 files mention the journal, ZERO mention status ............. ✅
+  src/agents ... 2 hits, both AGENT PROMPT MARKDOWN, not code ............... ✅
+NOT COVERED — STATED, NOT IMPLIED
+  🛑 THE LIVE DATABASE. I ran no query. This census is over CODE; it does not show how
+     many rows hold any value, nor that a `refused` row exists anywhere.
+  🛑 THE n8n INSTANCE'S OWN STORED WORKFLOWS. `workflows/` in-repo is clean (0 hits),
+     but n8n keeps live workflow definitions in ITS OWN DB, outside this tree. A node
+     with a hand-written SQL filter there would be invisible to every grep above.
+     ⇒ `[MEASURED ≠ MEASURED-WHERE-IT-RUNS]` applies to this census too.
+  🛑 `runtime-production` TREE. Campaign worktree only.
+```
+
+### §3 — ⚖️ CLASSIFICATION — ALL `21`, AGAINST `R-769 §7`'s PRE-REGISTERED CRITERIA
+```
+A PASS-THROUGH / DISPLAY .......................................... 13 sites  COMPATIBLE
+  routes/journal.ts :95 :100 :134 :136 :173 :179  projections + GROUP BY status
+     => a GROUP BY surfaces a new value automatically; nothing enumerates buckets.
+  routes/journal.ts :16   filter on a CALLER-SUPPLIED status string
+     => `?status=refused` already works. No allowlist to add to.
+  agent-service.ts :1899  projection · nightly-critique-service.ts :74  projection
+  prompt-evolution-service.ts :219 :675  projections (their FILTERS are separate, below)
+  + tmp-n8n scratch: every query is `GROUP BY status` or `status='scouted'`; a refused
+    row surfaces naturally. NOT production (no caller references them anywhere).
+
+C TERMINAL-STATE — "can a refused row get STUCK or REQUEUED?" ....... 3 sites  COMPATIBLE
+  agent-service.ts :1761 :2007 · routes/journal.ts :65   all `status = 'scouted'`
+  [MEASURED] the drain stamps `status='refused'` AND sets `strategyId` in the SAME
+  `.set()`; both queue filters require `status='scouted'` (and the drain's also
+  `strategyId IS NULL`). ⇒ A REFUSED ROW IS NEITHER REQUEUED NOR STUCK — it is
+  terminal by construction, which is the correct outcome for a consumed item.
+
+D EXHAUSTIVE MAPPING ................................................ 5 sites  see §4
+  funnel-metrics-service.ts :20-24
+
+C WHITELIST — LEARNING CORPUS ....................................... 2 sites  see §5
+  prompt-evolution-service.ts :226 :682   IN ('tested','failed','promoted')
+```
+
+### §4 — ⚠️ `funnel-metrics-service` — I DO **NOT** CALL THIS A DEFECT `F-7` CREATED, AND THE REASON IS MEASURED
+**The five `count(*) filter` buckets are `scouted` · `tested` · `promoted` · `archived` · `failed`. A `refused` row falls through all five.** **That much is exactly as the desk's partial sweep said.**
+🛑 **BUT THE PRE-REGISTERED CRITERION IS *"buckets that no longer SUM to the population"*, AND `[MEASURED HERE]` THEY NEVER DID:** the column's own documented value set (`schema.ts:435`) is **`tested | promoted | archived | failed | scouted | flagged`** — and **`flagged` already falls through all five buckets, before `F-7` existed.** ⇒ **there was no summation invariant for `F-7` to break.** ✅ **There is also no `total` field and no assertion of exhaustiveness: the service computes named-bucket CONVERSION RATES (`tested/scouted`, `promoted/tested`), never a partition.**
+⚖️ **SO THE HONEST GRADE IS: a PRE-EXISTING incompleteness that `F-7` WIDENS from one uncounted value to two — NOT a regression `F-7` introduced.** ⭐ **And the part that IS correct by design: the `failed` bucket will now be SMALLER, because refusals no longer inflate it. `R-769 §7` pre-registered that exact case as *"CORRECT. That is `F-7`'s purpose. Do not fix it."* — and I did not.**
+🛑 **I MAKE NO RECOMMENDATION TO EDIT THIS FILE.** ★ **Had I only run the desk's own two-candidate list forward, I would have filed this as a fresh `F-7` defect. `[pre-register-criteria]` is what stopped me — the criterion said SUM, so I went and checked whether it ever summed.** ★★★★★ **`AN INHERITED CANDIDATE IS A HYPOTHESIS, NOT A FINDING — TEST IT AGAINST THE CRITERION THAT WAS WRITTEN DOWN, NOT AGAINST THE SENTENCE THAT NOMINATED IT.`**
+
+### §5 — 🛑🛑 THE CONCRETE FINDING — AND I REPORT IT WITHOUT CHOOSING, AS ORDERED
+**`prompt-evolution-service.ts:226` AND `:682`** — TWO sites, identical predicate:
+```
+[MEASURED HERE]
+  .where(and( gte(systemJournal.createdAt, cutoff),
+              sql`${systemJournal.status} IN ('tested', 'failed', 'promoted')` ))
+:219/:226  runPromptEvolution — the 7-day prompt-learning corpus
+:675/:682  the second consumer, which the desk's truncated sweep did not reach
+```
+⚖️ **THE BEHAVIOUR CHANGE, STATED PRECISELY: BEFORE `F-7`, an engine refusal was written `status='failed'` and was therefore **INSIDE** this corpus. AFTER `F-7` it is written `'refused'` and is **SILENTLY EXCLUDED**.** ⇒ **the prompt-evolution learner no longer sees the class of generated strategies the ENGINE DECLINED TO EXECUTE.**
+🛑 **THIS IS `R-769 §7`'s *"whitelist silently dropping refused from a LEARNING/eligibility corpus"* CASE, WHOSE PRE-REGISTERED DISPOSITION IS: *"a BEHAVIOUR CHANGE … NAMED and DECIDED by this desk, never silently kept or silently reverted. Report; do not choose."* ⇒ I REPORT IT AND I HAVE CHANGED NOTHING.**
+⭐⭐ **AND THE PART THAT MAKES THIS MORE THAN A ONE-LINE EDIT — IT IS PINNED BY A TEST:**
+```
+src/server/__tests__/b11-b12-feedback-loops.test.ts:234
+  expect(promptEvolutionSrc).toContain("IN ('tested', 'failed', 'promoted')");
+  // in-file comment: "Covers tested, failed, promoted — the full critic feedback surface"
+```
+⇒ **any decision to include `'refused'` reddens `b11-b12` and must update that assertion IN THE SAME CHANGE.** ★★★ **The test asserts a SOURCE STRING, so it pins the literal rather than the behaviour — it would not have caught the corpus silently shrinking, only an edit to the text.** **`A TEST THAT PINS A LITERAL GUARDS THE SPELLING, NOT THE MEANING.`**
+⚖️ **THE DECISION IS THE DESK'S. I set out the two options WITHOUT recommending one, because the criterion forbids me choosing:** **(a)** refusals are NOT strategy-quality evidence — the engine never ran the strategy, so excluding them is arguably an IMPROVEMENT in corpus purity; **(b)** refusals ARE prompt-quality evidence of exactly the kind this learner exists for — a prompt that keeps producing source-ambiguous strategies is a prompt defect, and it has just gone invisible. ⚠️ **Note the asymmetry the desk will want: under (a) the corpus gets cleaner; under (b) `F-7` has silently disabled a feedback loop. Both readings are consistent with everything I measured.**
+
+### §6 — ⭐ ONE ADJACENT FINDING, REPORTED BECAUSE THE DUTY NEVER LAPSES — AND **NOT** ACTED ON
+`[MEASURED HERE]` **`agent-service.ts:2141` — a SECOND species of refusal is still filed as `failed`:**
+```
+const errMsg = `Synthesizer refused: ${reason}; missing: ${missing.join(",")}`;
+db.update(systemJournal).set({ status: "failed", analystNotes: errMsg })
+```
+**This is the SCOUT SYNTHESIZER declining to emit a DSL — a different actor refusing a different thing** (the homonym already banked in `[instrument-truncation-cluster]` (8)). 🛑 **It is NOT an engine-execution refusal, NOT one of `F-7`'s ten sites, and it is a PRODUCER not a consumer ⇒ OUT OF THIS LANE'S SCOPE AND OUT OF `F-7`'s.** ⚖️ **I name it only so the desk can decide whether the campaign now has an inconsistency worth a separate item: one refusal species is `refused`, another is `failed`.** ★ **It already writes its reason to `analystNotes` and emits `scout.synthesizer_refused` to `audit_log`, so it is not silent — merely differently named.**
+
+### §7 — 📍 RESULT AGAINST THE PRE-REGISTERED LADDER
+```
+EXCLUDING a refusal from a FAILURE count      -> FOUND (funnel `failed`). CORRECT BY
+                                                 DESIGN. Not touched. §4
+Buckets that no longer SUM to the population  -> NOT MET. They never summed (`flagged`
+                                                 already fell through). §4
+Whitelist dropping refused from a LEARNING
+  corpus                                      -> FOUND, x2, PINNED BY A TEST.
+                                                 REPORTED, NOT CHOSEN. §5
+Pass-through / display                        -> 13 sites, COMPATIBLE. §3
+Terminal-state / requeue hazard               -> 3 sites, COMPATIBLE — measured, not
+                                                 assumed: refused is terminal. §3
+NONE incompatible                             -> NOT the outcome; one item needs a ruling.
+```
+**FAN-IN: `Lane D` `1 / 1`. NO EDIT. NO SCHEMA CHANGE. NO NEW SUBSYSTEM. NO TEST WEAKENED.** 🛑 **I did NOT run the `R-758 §8` final `D-10` acceptance — `R-769 §7` forbids it before Lane `D` returns, and returning it is not the same as being cleared to run it.**
+**THE EAR REMAINS ARMED AND DELIVERING** (it carried `R-769` DRAFT→COMMITTED; I acted only on the COMMITTED transition).
+⚖️ **I AM NOT HANDING OFF. Context remains; if the desk rules on `§5` and contracts the follow-up, this seat takes it.**
+
+---
+
+
 ## AR-887 · 2026-08-09 · ✅ **LANE `B` (`F-7`) DELIVERED — `766fb381`. ONE SHARED MAPPER; A REFUSAL IS NO LONGER FILED AS `failed` WITH A REASON NOBODY MEASURED.** ⚡ **RED PUBLISHED FIRST ON ALL THREE PRODUCTION CALLERS, AND A SIX-ARM BATTERY ISOLATES EACH OUTCOME SEPARATELY — INCLUDING THE CALLER-DISCONNECT ARM `R-767 §5` NAMES.** 🛑 **AND I DECLARE ONE CONTROL I COULD NOT DELIVER BEHAVIOURALLY, RATHER THAN LETTING A VACUOUS GREEN STAND IN FOR IT.**
 
 **SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `766fb381`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `F-7` `1 / 2`.** 🛑 **NO FAN-IN CLAIM — `R-767 §2` / `R-768 §7`: the desk evaluates the predicate.**
