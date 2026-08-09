@@ -4,6 +4,65 @@
 
 ---
 
+## AR-865 · 2026-08-09 · 🛑🛑🛑★★★★★ **I AM LOCKED OUT OF EVERY CODE WRITE AND I WILL NOT ROUTE AROUND THE GUARD THAT DID IT. THE `worker-execution` PRE-WRITE HOOK KEYS ON THE RULINGS FILE'S *mtime*, AND THE DESK IS RE-SAVING AN UNCOMMITTED `R-755` DRAFT EVERY ~15 SECONDS — SO THE GATE RE-CLOSES BEFORE I CAN ISSUE THE WRITE I JUST RE-LOADED THE STANDARD FOR. THREE ATTEMPTS, THREE BLOCKS.** ⚠️ **AND I AM HOLDING AN INCONSISTENT PARTIAL EDIT I CANNOT COMPLETE *OR* REVERT, BECAUSE BOTH ARE CODE WRITES.** ✅ **`F-10`'s REACHABILITY IS SETTLED — `[HYPOTHESIS]` → **CONFIRMED**, WITH THE FULL MECHANISM.**
+
+**RULING IN FORCE: `R-754`.** 🛑 **`R-755` IS NOT ISSUED — `[MEASURED HERE, sampled 3× over 12s and again after]` `git status --porcelain` returns ` M docs/designs/ADVISOR-RULINGS.md`, HEAD still `d16c40e0`.** **FAN-IN `2 / 4` on `R-754`'s contract.**
+
+### §1 — 🛑 THE LIVELOCK, STATED AS A MECHANISM SO IT CAN BE FIXED RATHER THAN WORKED AROUND
+`[MEASURED HERE]` the hook's own text: *"The gate compares your last load against the ruling ledger's mtime, so it opens again the moment you re-load."*
+🛑 **THAT PREMISE FAILS WHILE THE DESK IS DRAFTING.** The ledger's mtime advanced at `16:07:32 · 16:08:05 · 16:08:22 · 16:08:43 · 16:08:55 · 16:09:10` — **six writes in ~100 seconds, none of them a commit.** ⇒ **re-load, issue write, mtime has already moved, BLOCKED. Repeat.**
+★★★★★ **`A GUARD KEYED ON A FILE'S mtime CANNOT DISTINGUISH A RULING FROM A KEYSTROKE — IT ENFORCES "RE-READ AFTER EVERY RULING" AS "RE-READ AFTER EVERY SAVE", AND A DESK MID-DRAFT THEREFORE HALTS THE WORKER COMPLETELY.`**
+⚖️ **THE GUARD IS RIGHT IN PRINCIPLE AND I AM NOT ASKING FOR IT TO BE WEAKENED** — it caught me legitimately at `R-754` and I was working from a stale standard. **The join key is wrong, not the rule.** ⇒ **SUGGESTED FIX, DESK'S CALL: key it on the LAST COMMIT THAT TOUCHED the ledger (`git log -1 --format=%ct -- <file>`), not on `stat -c %Y`. A ruling is not issued until it is committed — this ledger's own single-writer protocol says so.**
+🛑 **I DID NOT REMOVE ITS `settings.json` ENTRY**, which the hook itself offers as recovery. **Routing around a guard that blocked me is the one move I will not make**, and the recovery text is written for a MISFIRE — **this is not a misfire, it is the guard working off the wrong key.**
+
+### §2 — 🛑 AND THE DRAFT HAZARD IS NOT HYPOTHETICAL: `R-755`'s HEADLINE MATERIALLY CHANGED WHILE I HELD IT
+🛑 **I READ `R-755` AND ITS DISPOSITION REVERSED UNDER ME** `[MEASURED HERE, my ear's own emissions]`:
+```
+16:07:32  "F-8 + F-9 ACCEPTED, BOTH MUTATION-PROVED PER-DEFECT."
+16:08:05  "F-8 ACCEPTED... AR-864 (F-9) IS READ AND DELIBERATELY **NOT** RULED"
+```
+⚖️ **I had already read the earlier text in full — including a release order, an 8-lane expansion and an architecture decision — and had begun re-planning around it.** ✅ **I caught it ONLY because my own status line said ` M` and I re-checked instead of trusting the echo I had written next to it.** ⚠️ **My first read printed a hardcoded `"^ empty = committed"` beside output that was NOT empty.** ★★★★★ **`A LABEL PRINTED NEXT TO A MEASUREMENT IS NOT PART OF THE MEASUREMENT — I WROTE THE CONCLUSION INTO THE COMMAND AND THE COMMAND HAD NO WAY TO CONTRADICT ME.` Same family as `[i-measured]`, and it is the second time today I have caught my own echo lying (`AR-863 §3` was the first).**
+🛑 **THEREFORE I AM RELYING ON NOTHING FROM THAT READ.** **`R-754` governs until `R-755` is committed.** ★ **`A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE.`**
+
+### §3 — ✅ `F-10`: REACHABILITY CONFIRMED, WHICH IS THE THING `R-754 §3` ACTUALLY ORDERED FIRST
+`R-754 §3` graded `F-10` **`ABSENCE + MECHANISM [MEASURED]`, `REACHABILITY [HYPOTHESIS — NOT EXECUTED]`** and ordered me to red-proof it first, adding that **an unreachable path is a FINDING, not a failure.**
+✅ **IT IS REACHABLE. `[ALL MEASURED HERE, executable lines, `shadow-rerun-service.ts`]`:**
+```
+:239  if (shadowResult.status === "skipped") return null;   <- "refused" does NOT match; falls through
+:256  if (!shadowBacktest) return null;                     <- does NOT fire: the refused row EXISTS
+                                                               (backtest-service persists it, AR-856)
+:136  metricsPassGate(null, null, null) -> FALSE            <- explicit null check; a refusal's metric
+                                                               columns are ALL NULL by construction
+      oldPassed -> TRUE                                     <- the caller's entry query (:463) filters
+                                                               `completed`, so the original HAS metrics
+      statusFlipped = (true !== false) -> TRUE
+:151  computeSeverity(hashes differ, flipped) -> "critical"
+```
+🛑 **⇒ A REFUSED SHADOW RE-RUN IS REPORTED TO THE OPERATOR AS A `critical` PERFORMANCE COLLAPSE OF A `PAPER+` STRATEGY — WHEN NOTHING WAS MEASURED AT ALL.** ★★★★★ **`THE GATE TREATS "NO MEASUREMENT" AND "MEASURED AND FAILED" AS THE SAME EVENT, AND THE ONLY REASON THAT IS INVISIBLE IS THAT THE NULL CHECK LOOKS LIKE PRUDENCE.`**
+⚠️ **GRADE, HONESTLY: this is `[MEASURED AT THE EXECUTABLE LINE]` — a complete control-flow trace with every branch's decision named — and NOT YET `[EXECUTED BY A CONTROL]`. The executing test is exactly what `§1` blocked me from writing.** 🛑 **I do not upgrade my own reading to a red-proof.**
+
+### §4 — ⚠️ THE TREE STATE I AM STUCK IN — DISCLOSED, NOT LEFT TO BE DISCOVERED
+`[MEASURED HERE]` `git status --porcelain src/` → **`M src/server/services/shadow-rerun-service.ts`** (mine) + the sibling's Python file (not mine, untouched).
+**My uncommitted `F-10` edit is THREE-QUARTERS APPLIED:**
+```
+APPLIED    import BACKTEST_STATUS_REFUSED
+APPLIED    ShadowRerunFinding.executionRefused?: boolean
+APPLIED    ShadowRerunReport.findings.refused: number   (+ all 3 initialisers)
+BLOCKED    the guard branch that SETS executionRefused
+BLOCKED    the tally that INCREMENTS refused
+```
+✅ **IT TYPECHECKS** `[MEASURED HERE, `npx tsc --noEmit -p tsconfig.json`, no diagnostic names this file]`.
+🛑 **BUT IT IS SEMANTICALLY INERT AND THAT IS THE HAZARD: a `refused` counter nothing increments and a field nothing sets read, to any later seat, as "refusals are handled here."** ★★★ **`AN INERT FIELD IS WORSE THAN A MISSING ONE — A MISSING FIELD PROMPTS A QUESTION AND AN INERT ONE ANSWERS IT WRONGLY.`**
+🛑 **I CANNOT COMPLETE IT AND I CANNOT REVERT IT — both are code writes, and `git checkout -- <path>` is a STANDING STOP** (`worker-onboarding §2`). **NOT COMMITTED.** ⇒ **It resolves the moment the gate opens; if a fresh seat takes over first, complete or revert it deliberately — do not inherit it silently.**
+
+### §5 — ⏳ WHAT I DO NEXT, WITH NO GUESSING
+1. **WAIT for `R-755` to be COMMITTED** — my ear polls at `2s` and will deliver it.
+2. **RE-READ it from the committed blob**, not from the draft I already have.
+3. **Re-invoke `worker-execution`, then finish `F-10` and take the remaining lanes in whatever order the ISSUED ruling sets.**
+🛑 **NO code write until then.** ✅ **This report is not blocked — the hook exempts `AGENT-REPORTS.md` and any `.md`, which is correct design: `A GUARD THAT CAN SILENCE THE ESCALATION CHANNEL CAN HIDE ITS OWN MISFIRE.`**
+
+---
+
 ## AR-864 · 2026-08-09 · ✅✅ **`D-10` `F-9` DELIVERED — BOTH EVIDENCE-RESOLUTION PATHS NOW REQUIRE `completed`, AND A REFUSAL GETS ITS OWN NAMED OUTCOME INSTEAD OF BEING ANALYSED.** ⭐⭐ **THE SECOND MUTATION IS THE INTERESTING ONE: LEAVING THE GENERIC GUARD IN PLACE AND REMOVING ONLY THE REFUSAL-SPECIFIC NAMING LEAVES `F-9.1` GREEN AND TURNS ONLY `F-9.2` RED — SO THE TWO CONTROLS PROVABLY COVER DIFFERENT FAILURES RATHER THAN THE SAME ONE TWICE.** **FAN-IN `2 / 4`.**
 
 **RULING:** `R-754 §3` (`F-9`). **ATTEMPT BUDGET `1 / 2`.**
