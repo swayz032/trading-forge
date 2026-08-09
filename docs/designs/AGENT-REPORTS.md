@@ -4,6 +4,84 @@
 
 ---
 
+## AR-827 · 2026-08-09 · ✅✅ **`STEP 3` CLOSEOUT LANDED. THE BOUNDARY-PAIR **CLASS** CLOSES THE SYNONYM SPLIT, THE TRIPWIRE IS CONVERTED WITH ITS TEETH INTACT, AND THE GUARDS ARE `72 passed` AGAINST A `2 failed, 70 passed` BASELINE I RE-PINNED MYSELF.** 🛑 **THE FULL SWEEP IS NOT A RESULT — IT IS HUNG, AND SO WAS THE ONE `R-733 §7` TOLD ME TO WAIT FOR: ITS ARTIFACT IS `0` BYTES.** ⚠️ **PLUS A LATE START-RECEIPT I OWN.**
+
+**RULING:** `R-733 §8` as added to by `R-734 §5`. **SEAT:** fresh worker, cold-started this session. **HEAD at work start `9e693122`.**
+
+### §0 — ⚠️ THE RECEIPT WAS LATE, AND `R-734 §5` CAUGHT IT BEFORE I FILED IT
+`R-733 §8` owed a start-receipt whose first observable was the remote SHA. **I performed the push and verified it, then kept working instead of filing.** ⚖️ **The observable existed; the receipt did not, and those are not the same thing** — `A COMPLIANT WORKER DOING WORK IS INDISTINGUISHABLE FROM A DEAD SESSION WITHOUT ONE`. Recorded as mine, not explained away.
+
+### §1 — ✅ ORDERED FIRST, DONE FIRST: THE PUSH (`R-733 §5`)
+`[MEASURED HERE]` `git push origin h1-wave4-sealed12-driver` → `581144c2..9e693122`. **`git branch -r --contains 13bf843c` → `origin/h1-wave4-sealed12-driver`.**
+🛑 **REPORTED PRECISELY BECAUSE IT IS NOT WHAT WAS ORDERED VERBATIM: the ordered SHA was `13bf843c`, but the branch tip had already moved to `9e693122` — the desk committed `R-733` into the shared tree while I was reading it. My push therefore carried the DESK'S commit as well as the ordered one.** ✅ **`13bf843c` IS on the remote, as an ancestor.** ★ **`THE COMMIT I WAS TOLD TO PUSH AND THE TIP I ACTUALLY PUSHED ARE TWO DIFFERENT SHAS, AND REPORTING ONLY THE FIRST WOULD HAVE HIDDEN A SHARED-TREE WRITE FROM THE RECORD.**
+
+### §2 — ✅ THE FIX IS A CLASS, NOT A LITERAL (`R-733 §3` ADDITION A)
+`_CONSTRUCTION` was a flat alternation carrying `high and the low` and missing `top and the bottom`. It is now `_CONSTRUCTION_CLASSES` — **`FORMATION` · `BOUNDARY_PAIR` · `CALCULATION`** — mirroring stage 1's shape, with `BOUNDARY_PAIR` composed from an `_UPPER_BOUND` set and a `_LOWER_BOUND` set rather than enumerated pairs. **`ceiling`/`floor` are covered by construction, which is the case `R-733 §3` named as the reason to demand a class.** `[MEASURED HERE]` `"the ceiling and the floor … 9:30 to 9:45"` → **`DEFINITION`**, `BOUNDARY_PAIR`.
+✅ **`[^.]` KEEPS THE PAIR INSIDE ONE SENTENCE:** `"the high is important. And the low matters too."` → **`REFUSED_NO_CONSTRUCTION_EVIDENCE`**. Two unrelated clauses cannot be welded into a false pair.
+✅ **A SINGLE BOUNDARY IS NOT A PAIR:** `"marking out the top of that range from 9:30 to 9:45"` → **`REFUSED_NO_CONSTRUCTION_EVIDENCE`**.
+
+### §3 — ⚖️ ADDITION B ANSWERED WITH A JUDGMENT, STATED NOT BURIED
+**REVERSE ORDER TYPES `DEFINITION`, AND I AM SAYING WHY RATHER THAN LEAVING IT MEASURED-AND-SILENT.** `[MEASURED HERE]` `"the low and the high … 9:30 to 9:45"` → `DEFINITION` · `"the bottom and the top …"` → `DEFINITION`.
+⚖️ **MY REASON: order is not load-bearing for a boundary pair.** *"The low and the high"* names the same two boundaries of the same window; a teacher saying them in the other order has taught the identical object. **Accepting only one order would be the SAME under-inclusiveness this fix exists to remove, one synonym axis over.** 🛑 **This is a judgment, not a measurement, and it is the desk's to overturn.**
+
+### §4 — ✅ THE CONTROL THE DESK SAID IT WOULD NOT HAVE SPECIFIED — AND IT IS THE ONE THAT MATTERS
+**Widening the construction limb makes trigger sentences MORE likely to carry construction evidence**, so the widening could have quietly reopened the breakout question `R-732 §4` closed. `[MEASURED HERE]`:
+```
+7 stage-1 precedence SURVIVES the widening -> REFUSED_STAGE_1_REFERENCE[CONSUMPTION+CROSSING]
+```
+✅ **The trigger sentence refuses at STAGE 1 even though `BOUNDARY_PAIR` MATCHED IT** (`classes={'BOUNDARY_PAIR': 'top and below the bottom'}`). ⇒ **precedence, not luck: the construction limb fired and stage 1 still won.**
+**INSTRUMENT NOW RUNS `8` CONTROLS** (`+7` precedence, `+8` reverse order). ⚠️ **Its closing caption said `ALL SIX CONTROLS PASS` while running eight — I made that stale caption in this same commit and fixed it before reporting; it is now derived from `len(CONTROLS)`.** ★ `A CAPTION IS A CLAIM.`
+
+### §5 — ✅ RED-PROOFED AGAINST THE PRE-FIX LIMB, AND THE PROOF DISCRIMINATES
+The pre-fix regex, pasted verbatim into a scratch instrument and run against the new rows `[MEASURED HERE]`:
+| row | PRE-FIX | POST-FIX |
+|---|---|---|
+| TWIN A `top and the bottom` | **NONE (refuses)** | `DEFINITION` |
+| control 8 `low and the high` | **NONE (refuses)** | `DEFINITION` |
+| `ceiling and the floor` | **NONE (refuses)** | `DEFINITION` |
+| TWIN B `high and the low` | `high and the low` | `DEFINITION` *(unchanged — never the broken one)* |
+| control 5 construction removed | **NONE** | **NONE** |
+★★★ **The last two rows are what make this a control rather than a celebration: one row is deliberately unchanged and one stays refused BOTH ways, so this cannot be "the fix made everything pass."**
+
+### §6 — ✅ THE TRIPWIRE IS CONVERTED, MEMBER BY MEMBER, WITH TEETH (`R-733 §4`)
+`test_TRIPWIRE_addendum_marked_range_loses_its_taught_object` → **`test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definitions`.**
+✅ **NOT a value swap:** `_TWIN_ADJUDICATION` carries a **per-member** expectation keyed by spec id, plus a drift assertion that the adjudication and the fixture hold the same member set — so a member cannot gain or lose an expectation without being re-read.
+✅ **OWNERSHIP MEANS REFUSING HONESTLY:** the guard asserts `FAMILY_META[OPENING_RANGE_DEFINITION]` is `unsupported=True` · `primitive is None` · `unbound_reason == "opening_range_adapter_not_implemented"`. **A family that claimed these rows and then bound them to the structure evaluator would be the original defect wearing a new type.**
+✅ **THE TEETH — `_MUST_STAY_REFUSED`, five rows each pinned to the STAGE that refuses it**, so a future widening that swallows a trigger sentence fails HERE. **The guard asserts the stage, not merely "not a definition"** — a refusal that moved stage means the reason the row is excluded is no longer the reason recorded.
+🛑 **NO OTHER GUARD'S EXPECTED VALUE MOVED** (`R-733 §4` stop condition): the full run is `72 passed`, so nothing else in those two files changed expectation.
+
+### §7 — ✅ ACCEPTANCE, ALL FOUR COMMANDS
+```
+python docs/replay-results/h1-battery/opening_range_definition_discrimination.py
+  -> 8/8 controls PASS; scanned 99 conditions across 11 specs; would re-type 2;
+     BOTH AUTHORIZED; exit 0
+pytest test_spec_producer.py test_flag_off_parameterized_refusal.py -q
+  -> 72 passed            [BASELINE I RE-PINNED AT 9e693122: 2 failed, 70 passed]
+pytest test_opening_range_conformance.py test_opening_range_definition.py \
+       test_opening_range_family_parity.py test_family_meta_enforcement.py -q
+  -> 2 failed, 96 passed  [the 2 = the ORDERED REDs: no adapter, no typed output
+                           contract. NO THIRD RED.]
+npx tsx scripts/check-spec-binding-plan-parity.ts
+  -> PASS: flag=false byte-identical parity; flag=true 87 known/expected
+     divergences, 0 unexpected. exit 0
+```
+✅ **BASELINE RE-PINNED BY ME, NOT CARRIED:** `R-733 §2.7` pinned `2 failed, 70 passed` at `13bf843c`; I re-took it at `9e693122` and got the same two named failures. ⇒ **an independent second path to the same baseline** (`[red-path-decay]`).
+✅ **FROZEN CENSUS BLAST RADIUS UNCHANGED AT EXACTLY TWO.** ⇒ **`R-733 §3`'s recorded prediction — that the synonym fix would produce no third member — is CONFIRMED, not falsified.** ★ **It was recorded BEFORE the change, which is the only reason confirming it means anything.**
+
+### §8 — 🛑🛑 THE FULL SWEEP IS NOT A RESULT. IT IS A HUNG INSTRUMENT, TWICE.
+🛑 **THE SWEEP `R-733 §7` TOLD ME TO LET FINISH HAS NO ARTIFACT.** `[MEASURED HERE]` its output file is **`0` bytes**, and the harness reported it **"completed, exit code 0."** ★★★★★ **`AN EXIT CODE OF 0 OVER AN EMPTY ARTIFACT IS THE `F-2` SHAPE BY NAME` — a 4/4 acceptance once pointed at 0-byte transcripts nobody could check. I did not report its membership because there is none to report; I re-ran it instead.**
+🛑 **MY OWN RE-RUN IS ALSO HUNG.** `[MEASURED HERE]` `python -m pytest src/engine/tests -q`, started `22:22:41`, **stalled at `10%` for ~50 minutes**; PID `26684` holds `636 MB` and has accumulated only **`22.8s` CPU** — **alive but not progressing.**
+🛑 **AND TWO OLDER PYTHON PROCESSES ARE STILL RESIDENT FROM EARLIER SESSIONS** — PIDs `17584` and `21892`, started `18:46` and `18:56`, **`0` CPU, `3.6 GB` working set each.** ⚖️ **NOT KILLED: they are not this seat's and killing another seat's processes is the same class of act as touching its files. REPORTED, NOT NORMALIZED** (`R-734 §5`).
+⚖️ **HYPOTHESIS, EXPLICITLY UNPROVEN:** near-zero CPU with growing memory reads as **blocked on I/O**, and `[db-moved-env-stale]` records that every `.env` points at a RETIRED database whose proxy still accepts TCP. **A test attempting that connection would block, not fail.** 🛑 **I have NOT measured which test is at the `10%` boundary and I am not claiming a cause.**
+⇒ **FULL-SWEEP MEMBERSHIP: `UNMEASURED`. `R-733 §8` item (5) is NOT discharged, and I am not implying it is** — an implied sweep is exactly what the honest-partial clause forbids.
+
+### §9 — WHAT I DID NOT MEASURE, AND THE QUARANTINE
+🛑 **`UNMEASURED`:** full `src/engine/tests` membership (`§8`) · the clean-worktree measurement at the exact commit (`R-734 §5` item 3) — **owed AFTER this lands, and deliberately not attempted while the shared file is dirty** · nothing about the other `97` conditions, the other nine specs, or futures portability.
+✅ **QUARANTINE HONOURED (`R-734 §3`):** the `7` files are **not committed, not reverted, not edited, not stashed, not relocated.** `[MEASURED]` staged member list inspected before the commit; it holds **only** the four paths this AR names.
+⚠️ **CORRECTION I OWE ON MY OWN WORDS:** early this session I described the quarantined `test_synthetic_market_simulator.py` edit as dating from **July 28**, taking the date from a comment INSIDE the file. `R-734 §3` measured that dating as **`RELAYED, UNCONFIRMED`** — the last commit to touch that path is `410b75cf`, **2026-05-19**. ★ **`A FILE'S SELF-DESCRIPTION IS NOT ITS PROVENANCE.`**
+🛑 **UNTOUCHED:** breakout trigger stays **`UNRESOLVED_SOURCE_AMBIGUITY`** · `orb_5m_retest`'s breakout/retest rules **NOT compiled** · no adapter, evaluator or calculation · no video or strategy id in production code · the known-wrong census not edited · `_apply_a_plus_confluence_gate` **not repaired** (desk-owned per `R-733 §7`).
+⚖️ **Closeout attempt budget `1 / 2`.** **Fan-in `4 / 5` on `R-733 §8`** — items (1)(2)(3)(4) delivered; item (5) blocked on a hung instrument, not unstarted. **NOT a handoff: this seat continues.**
+
 ## AR-826 · 2026-08-09 · ✅✅ **THE TWO-MEMBER CLASSIFICATION IS LANDED. BOTH DEFINITIONS NOW TYPE `OPENING_RANGE_DEFINITION`, REFUSE DELIBERATELY WITH `primitive=None`, AND NEITHER REACHES `compute_structure_state` — `10 passed · 2 failed`, and the `2` are the ordered `RED`-until-`STEP 4`.** 🛑🛑 **AND TWO EXISTING GUARDS FIRED. ONE IS A PRE-REGISTERED TRIPWIRE DOING EXACTLY ITS JOB; THE OTHER IS A REAL FINDING ABOUT **MY** RULE. I HAVE TOUCHED NEITHER TEST AND WIDENED NOTHING.**
 
 **RULING:** `R-732 §5`. **CONTRACT:** `EXTERNAL-READ-2026-08-09-WIDEN-TO-TWO-DEFINITIONS.md`, read at the file. **Resumed from the ratified stop in `AR-825`.**

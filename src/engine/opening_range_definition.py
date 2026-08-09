@@ -328,15 +328,49 @@ _EXPLICIT_CLOCK = re.compile(
     re.IGNORECASE,
 )
 
-# FORMATION / ESTABLISHMENT / CALCULATION / HIGH-LOW CONSTRUCTION / PRICE
-# CAPTURED DURING THE WINDOW (read, PART 2 item 2).
-_CONSTRUCTION = re.compile(
-    r"\b(?:forms?|forming|formed|establish(?:es|ed|ing)?|"
-    r"gives?\s+us|is\s+what\s+(?:forms|gives)|captur(?:e|ed|ing)|"
-    r"take\s+the\s+.{0,40}?high|high\s+and\s+the?\s*.{0,20}?low|"
-    r"difference\s+between\s+the\s+high)\b",
-    re.IGNORECASE,
+# CONSTRUCTION EVIDENCE -- expressed as CLASSES, exactly as stage 1 is (R-733 §3
+# addition A). The previous version was a flat alternation of literals, and it
+# carried `high and the low` while missing `top and the bottom` -- the same
+# teaching in different words. R-733 §2.2 measured that split and charged the
+# defect to the rule, not to the teacher.
+#
+# 🛑 THE FIX IS NOT A SECOND LITERAL. `THE CLASSES ARE THE RULE; THE PATTERNS ARE
+# EVIDENCE FOR THEM` (R-731 §2). Adding `top\s+and\s+the\s+bottom` beside the
+# existing branch would be a classifier fitted to one sentence, and the next
+# teacher who says "the ceiling and the floor" would bring us straight back here.
+# So the boundary pair is a CLASS: the window's UPPER bound named together with
+# its LOWER bound. Which nouns a teacher reaches for is evidence, not the rule.
+_UPPER_BOUND = r"(?:high|top|ceiling|upper\s+(?:bound|boundary|edge))"
+_LOWER_BOUND = r"(?:low|bottom|floor|lower\s+(?:bound|boundary|edge))"
+
+# ORDER IS NOT LOAD-BEARING, AND THAT IS A JUDGMENT I AM STATING RATHER THAN
+# BURYING (R-733 §3 addition B). "the low and the high" names the same two
+# boundaries of the same window as "the high and the low"; a teacher who says
+# them in the other order has taught the identical object. Accepting only one
+# order would be the SAME under-inclusiveness this fix exists to remove, one
+# synonym axis over. `[^.]` keeps the pair inside a single sentence so two
+# unrelated clauses cannot be welded into a false pair.
+_BOUNDARY_PAIR_SRC = (
+    rf"\b{_UPPER_BOUND}\b[^.]{{0,24}}?\band\b[^.]{{0,24}}?\b{_LOWER_BOUND}\b"
+    rf"|\b{_LOWER_BOUND}\b[^.]{{0,24}}?\band\b[^.]{{0,24}}?\b{_UPPER_BOUND}\b"
 )
+
+_CONSTRUCTION_CLASSES: dict[str, re.Pattern] = {
+    # The window is brought into existence by the sentence itself.
+    "FORMATION": re.compile(
+        r"\b(?:forms?|forming|formed|establish(?:es|ed|ing)?|"
+        r"gives?\s+us|is\s+what\s+(?:forms|gives)|captur(?:e|ed|ing))\b",
+        re.IGNORECASE,
+    ),
+    # BOTH boundaries of the window are named together -- the window is being
+    # BUILT out of its two extremes rather than referred to as already built.
+    "BOUNDARY_PAIR": re.compile(_BOUNDARY_PAIR_SRC, re.IGNORECASE),
+    # The window's extent is derived arithmetically from its own boundaries.
+    "CALCULATION": re.compile(
+        r"\b(?:difference\s+between\s+the\s+high|take\s+the\s+.{0,40}?high)\b",
+        re.IGNORECASE,
+    ),
+}
 
 # A window referred to by pronoun, carrying no typed duration. Matched only so
 # the refusal REASON can name stage 3 explicitly -- R-731 §4 requires refusals to
@@ -362,13 +396,24 @@ def classify_opening_range_definition(text: str) -> tuple[bool, str, dict]:
         if (match := pattern.search(text))
     }
     clock = _EXPLICIT_CLOCK.search(text)
-    construction = _CONSTRUCTION.search(text)
+    construction_hits = {
+        name: match.group(0)
+        for name, pattern in _CONSTRUCTION_CLASSES.items()
+        if (match := pattern.search(text))
+    }
     anaphoric = _ANAPHORIC_CLOCK.search(text)
 
     evidence = {
         "reference_classes": reference_hits,
         "explicit_clock": clock.group(0) if clock else None,
-        "construction": construction.group(0) if construction else None,
+        # WHICH construction class carried the sentence, not merely THAT one did.
+        # A future disagreement is then resolvable by reading the class name
+        # rather than re-deriving the rule -- the same reason stage 1 names its
+        # classes in the refusal reason.
+        "construction_classes": construction_hits,
+        # Retained: the matched substring, so existing readers and every prior
+        # measurement in the ledger stay comparable across this change.
+        "construction": next(iter(construction_hits.values()), None),
         "anaphoric_clock": anaphoric.group(0) if anaphoric else None,
     }
 
@@ -382,6 +427,6 @@ def classify_opening_range_definition(text: str) -> tuple[bool, str, dict]:
         reason = "REFUSED_STAGE_3_ANAPHORIC_CLOCK" if anaphoric else "REFUSED_NO_EXPLICIT_CLOCK"
         return False, reason, evidence
     # STAGE 2 -- both limbs required.
-    if construction is None:
+    if not construction_hits:
         return False, "REFUSED_NO_CONSTRUCTION_EVIDENCE", evidence
     return True, "DEFINITION", evidence

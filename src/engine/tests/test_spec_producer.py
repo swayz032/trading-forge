@@ -600,21 +600,100 @@ def test_TRIPWIRE_addendum_candle_completion_twins_still_split():
         "cause of the split is gone; re-adjudicate both rows and delete this test.")
 
 
-def test_TRIPWIRE_addendum_marked_range_loses_its_taught_object():
-    """★★ TRIPWIRE — the twins AGREE (above) but they agree on a type that
-    DISCARDS THE TEACHING, so the agreement must not be read as a clean pass.
+# ADJUDICATED MEMBER-BY-MEMBER (R-733 §4). The old tripwire asserted a single
+# family-wide expectation (`WAIT_SESSION`) across both rows. R-733 §4 forbids
+# resolving it by swapping that one value for another one-size answer, so each
+# row carries the expectation ADJUDICATED FOR IT. Both rows were re-read and
+# both satisfy the COMPLETE ordered rule -- explicit clock plus a named boundary
+# pair, with no reference/trigger evidence -- so both move. That is a measured
+# outcome per row, not a default applied to a group.
+_TWIN_ADJUDICATION: dict[str, str] = {
+    "kFyD3H6I1I8__s0": "OPENING_RANGE_DEFINITION",  # "the top and the bottom ... 9:30 to 9:45"
+    "WEhmadJArQo__s0": "OPENING_RANGE_DEFINITION",  # "the high and the low ... 9:30 to 9:35"
+}
 
-    The taught object in both rows is a LEVEL PAIR (the high and the low of the
-    opening candle). WAIT_SESSION compiles to a session-window gate and keeps
-    none of it. The correct family would be a LEVEL/ZONE family -- which does not
-    exist in FAMILY_META, exactly the R-210 §4 pre-registered gap. No classifier
-    change available to this packet can type these rows correctly.
+# THE TEETH (R-733 §4). A migration guard that only asserts the new happy state
+# has thrown away everything the tripwire was worth: it could no longer go RED
+# when the world changes under it. These rows are the ones that MUST STAY
+# REFUSED, each pinned to the STAGE that refuses it, so a future widening that
+# quietly swallows a trigger sentence fails HERE instead of shipping.
+_MUST_STAY_REFUSED: list[tuple[str, str, str]] = [
+    ("trigger + clock + boundary pair",
+     "we look for a breakout above the top and below the bottom of that 15 minute range "
+     "from 9:30 to 9:45",
+     "REFUSED_STAGE_1_REFERENCE"),
+    ("trigger + clock + reversed boundary pair",
+     "wait for price to close outside the low and the high of the 9:30 to 9:45 range, "
+     "then enter",
+     "REFUSED_STAGE_1_REFERENCE"),
+    ("boundary pair carrying NO explicit clock",
+     "marking out the top and the bottom of that range",
+     "REFUSED_STAGE_3_ANAPHORIC_CLOCK"),
+    ("only ONE boundary named -- not a pair",
+     "marking out the top of that range from 9:30 to 9:45",
+     "REFUSED_NO_CONSTRUCTION_EVIDENCE"),
+    ("boundaries in SEPARATE sentences -- not one taught object",
+     "the high is important. And the low matters too. This is the 9:30 to 9:45 window",
+     "REFUSED_NO_CONSTRUCTION_EVIDENCE"),
+]
 
-    Recorded so the ladder is not read as if these rows were solved."""
-    for _spec, _pre, text in TWIN_PAIR_MARK_THE_RANGE:
-        fam, _c = _classify_family(text)
-        assert fam == "WAIT_SESSION", (
-            f"TRIPWIRE FIRED: {fam} — if a LEVEL family landed, re-adjudicate these rows.")
+
+def test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definitions():
+    """★★ PERMANENT MIGRATION GUARD — converted from the tripwire it replaces
+    (R-733 §4), and it keeps that tripwire's teeth rather than inheriting only
+    its happy half.
+
+    THE TRIPWIRE'S ORIGINAL FINDING IS NOW RESOLVED, NOT DELETED. It recorded
+    that the taught object in both rows is a LEVEL PAIR, that `WAIT_SESSION`
+    compiles to a session-window gate keeping none of it, and that no LEVEL
+    family existed to type them correctly. That family now exists. Its own
+    failure message asked for exactly this: `if a LEVEL family landed,
+    re-adjudicate these rows`.
+
+    WHAT THIS GUARD PROVES, AND WHY BOTH HALVES ARE LOAD-BEARING:
+      (a) the level-construction family -- not WAIT_SESSION, not WAIT_STRUCTURE
+          -- owns genuine opening-range definitions, and owning them means
+          REFUSING them honestly: bindable False, NO primitive, and a named
+          unbound reason. A family that claimed them and then bound them to the
+          structure evaluator would be the original defect wearing a new type.
+      (b) the sentences that must NOT be definitions still are not, each at the
+          stage that refuses it. `A GUARD THAT ONLY ASSERTS THE NEW HAPPY STATE
+          CANNOT GO RED THE NEXT TIME A FAMILY LANDS.`"""
+    from src.engine.opening_range_definition import (
+        CANONICAL_TYPE,
+        classify_opening_range_definition,
+    )
+    from src.engine.spec_family_bindings import FAMILY_META
+
+    # (a) every adjudicated member, INDIVIDUALLY.
+    assert set(_TWIN_ADJUDICATION) == {s for s, _p, _t in TWIN_PAIR_MARK_THE_RANGE}, (
+        "adjudication and fixture have drifted apart — a member gained or lost an "
+        "expectation without being re-read")
+    for spec, _prior, text in TWIN_PAIR_MARK_THE_RANGE:
+        fam, _conf = _classify_family(text)
+        assert fam == _TWIN_ADJUDICATION[spec], (
+            f"{spec}: adjudicated {_TWIN_ADJUDICATION[spec]}, classified {fam}")
+
+    # ...and the family it landed in must REFUSE, not bind. This is the half that
+    # stops a future adapter silently routing these rows to the wrong evaluator.
+    meta = FAMILY_META[CANONICAL_TYPE]
+    assert meta.unsupported is True, f"{CANONICAL_TYPE} must be DECLARED unsupported"
+    assert meta.primitive is None, (
+        f"{CANONICAL_TYPE} must name NO primitive while its adapter is unbuilt; "
+        f"got {meta.primitive!r}")
+    assert meta.unbound_reason == "opening_range_adapter_not_implemented", (
+        f"unexpected unbound reason: {meta.unbound_reason!r}")
+
+    # (b) THE TEETH — the refusals stay refused, each at its named stage.
+    for label, text, expected_stage in _MUST_STAY_REFUSED:
+        is_def, reason, _ev = classify_opening_range_definition(text)
+        assert not is_def, (
+            f"MIGRATION GUARD FIRED: {label!r} is now typed as a definition. The "
+            f"construction limb has widened past taught-definition prose.")
+        assert reason.startswith(expected_stage), (
+            f"MIGRATION GUARD FIRED: {label!r} still refuses, but at {reason!r} "
+            f"instead of {expected_stage!r} — the refusal moved stage, so the "
+            "reason this row is excluded is no longer the reason recorded here.")
 
 
 def test_addendum_compound_representation_is_recorded_not_built():

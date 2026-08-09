@@ -121,6 +121,23 @@ GOLDEN_MINUS_DURATION = (
 )
 GOLDEN_MINUS_CONSTRUCTION = "the first 5, 15, and the 30 minute ranges"
 
+# ── R-733 §3: the boundary-pair CLASS, and the two controls it owes ──────────
+# Control 7 is the READ's fifth control, and R-733 §1 singles it out as the one
+# the desk would not have specified: it tests that STAGE 1 PRECEDENCE SURVIVES
+# THE WIDENING. Widening the construction limb makes trigger sentences MORE
+# likely to carry construction evidence, so without this control the widening
+# could quietly reopen the breakout question R-732 §4 closed. It is the
+# difference between widening a limb and reopening a ruling.
+PRECEDENCE_TEXT = (
+    "we look for a breakout above the top and below the bottom of that 15 minute range "
+    "from 9:30 to 9:45"
+)
+# Control 8 is R-733 §3 addition B. ORDER IS NOT LOAD-BEARING: "the low and the
+# high" names the same two boundaries of the same window. Refusing it would be
+# the SAME under-inclusiveness this fix removes, one synonym axis over — so it is
+# measured here rather than assumed either way.
+REVERSE_ORDER_TEXT = "marking out the low and the high of that range from 9:30 to 9:45"
+
 CONTROLS = [
     ("1 the real definition condition moves", GOLDEN_TEXT, True),
     ("2 the breakout sentence does NOT move", BREAKOUT_TEXT, False),
@@ -128,6 +145,8 @@ CONTROLS = [
     ("4 duration evidence removed -> blocked", GOLDEN_MINUS_DURATION, False),
     ("5 construction evidence removed -> blocked", GOLDEN_MINUS_CONSTRUCTION, False),
     ("6 genuine structure neighbour does NOT move", NEIGHBOUR_TEXT, False),
+    ("7 stage-1 precedence SURVIVES the widening", PRECEDENCE_TEXT, False),
+    ("8 reverse-order boundary pair moves", REVERSE_ORDER_TEXT, True),
 ]
 
 
@@ -135,7 +154,7 @@ def main() -> int:
     failures = 0
 
     print("=" * 78)
-    print("SIX REQUIRED CONTROLS (R-731 §3)")
+    print(f"REQUIRED CONTROLS: {len(CONTROLS)} (R-731 §3, +2 at R-733 §3)")
     print("=" * 78)
     for label, text, expected in CONTROLS:
         got, reason, _ = classify(text)
@@ -185,7 +204,8 @@ def main() -> int:
         print("The population is SHORT, which is a finding about the rule in the other")
         print("direction and is reported rather than shrugged at.")
         return 4
-    print("ALL SIX CONTROLS PASS and the blast radius is EXACTLY the two authorized members.")
+    print(f"ALL {len(CONTROLS)} CONTROLS PASS and the blast radius is EXACTLY the two "
+          "authorized members.")
     return 0
 
 
