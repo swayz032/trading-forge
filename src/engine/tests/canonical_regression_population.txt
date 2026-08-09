@@ -113,6 +113,7 @@ engine/tests/test_stress_test.py
 engine/tests/test_three_fixes.py
 engine/tests/test_time_stop_requires_ts_et.py
 engine/tests/test_topology_producer.py
+engine/tests/test_trigger_safety_refusal.py
 engine/tests/test_walk_forward.py
 engine/tests/test_walk_forward_cpcv.py
 engine/tests/test_walk_forward_slippage_survival.py

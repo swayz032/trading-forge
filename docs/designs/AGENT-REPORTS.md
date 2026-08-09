@@ -4,6 +4,246 @@
 
 ---
 
+## AR-846 · 2026-08-09 · ✅✅★★★★★ **THE TRIGGER-SAFETY COMMIT IS DELIVERED. THE GOLDEN STRATEGY'S SEVEN PHANTOM SHORTS ARE `0` IN BOTH FLAG STATES, THE NEIGHBOUR STILL TRADES (`6`, NONCONSTANT), AND `R-747 §3`'s SIX-STEP MUTATION IS BUILT AND BITES.** ⭐⭐⭐ **THE SUITE IS RED-PROOFED BY DELETING THE ENFORCEMENT: `22 passed` → `4 failed, 18 passed`.** 🛑 **EXACT FAILURE MEMBERSHIP ACROSS THE AFFECTED SUITES: `2 failed, 290 passed` — AND BOTH FAILURES ARE THE TWO ORDERED `6B` REDS, WHICH BELONG TO A COMMIT THIS ONE DELIBERATELY DOES NOT CONTAIN.** ⚖️ **TWO ORDERED ITEMS ARE NOT DONE AND I NAME THEM.**
+
+**RULING:** `R-747 §6` step 2 · `R-746 §3` · `R-747 §3`/`§4` · `R-748` (continue). **SEAT:** unchanged, alive. **ATTEMPT BUDGET `0 / 2`.**
+
+### §1 — ⭐⭐⭐ THE RED-PROOF, AND IT IS THE WHOLE ARGUMENT
+`[MEASURED HERE, unpiped]` **suite green: `22 passed`.** **Then I DELETED the enforcement branch** (`if eligibility.may_enter: … else: entry_long/entry_short = zeros` → unconditional `EXECUTED`) **and re-ran: `4 failed, 18 passed`.** ✅ **The suite CONVICTS the code it guards.** ★★★ **A guard that cannot go red is the defect being removed, not a virtue — and the mutation was applied to the PRODUCTION line, then restored, rather than reasoned about.**
+✅ **AND THE SEQUENCE THAT MATTERS (`R-747 §3`, replacing the withdrawn locality control):** `(1)` defeating the classifier restores the defective route and reproduces **the EXACT seven firing bar indices** — asserted as indices, never as a count, because *"seven"* can be reproduced by a different seven · `(2)` refusing the trigger while the eligibility consumer is disabled yields **the identical bars**, which encodes `AR-843` as a permanent regression · `(4)/(5)` **turning ONLY the consumer off brings those exact seven back** · `(3)/(6)` restoring it → **zero.** ⇒ **the zero is caused by the ENFORCEMENT, demonstrated by removing it and watching the defect return.**
+
+### §2 — ✅ THE ORDERED OBSERVABLES, MEASURED IN BOTH FLAG STATES
+```
+                 GOLDEN                                  NEIGHBOUR (positive control)
+enforcement OFF  REFUSED · compiled=False                EXECUTED · may_enter=True
+                 eligible=False · long=0 · short=0       entry_long=6 · nonconstant=True
+enforcement ON   REFUSED · compiled=False                EXECUTED · may_enter=True
+                 eligible=False · long=0 · short=0       entry_long=6 · nonconstant=True
+```
+★★★★★ **THE POSITIVE CONTROL IS MANDATORY AND IT PASSES — `AN ENGINE THAT REFUSES EVERY STRATEGY ALSO PRODUCES ZERO GOLDEN ENTRIES.` The neighbour routes through the SAME consumer.** ★ **Both flag states, because enforcement OFF is the PRODUCTION DEFAULT and `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION.`**
+✅ **REFUSAL, EXACT:** `bindable=False · executed=False · primitive=None · disposition=SOURCE_AMBIGUOUS · reason=opening_range_breakout_confirmation_unresolved_from_source · ambiguity=breakout_confirmation_semantics`, **role and taught prose PRESERVED, condition still IN the plan** (`REFUSAL IS NOT ABSENCE`). **Blast radius: exactly one condition; the other `7` bindable are untouched.**
+✅ **THE DIRECTION IS NOT REPORTED AS SILENT.** The ambiguity names the **confirmation semantics**; *"above the range high"* teaches the direction and a test asserts it survives in the prose. ★★★ **`PARTIALLY SPECIFIED IS A THIRD SILENCE.`**
+✅ **NON-EQUIVALENCE DEMONSTRATED:** subtotal `210/400` while `may_enter=False`; `bool(eligibility)` **raises**. ✅ **ALL-FALSE COMES ONLY FROM THE STRATEGY BOUNDARY** — per-condition arrays remain real and nonconstant after a refusal, so *"no setup"* and *"refused"* stay distinguishable.
+✅ **BACKTESTER CONSUMES IT:** `execution_refusal()` is decided from the BINDING PLAN with **no bars**, and the gate sits **before both run paths**, so a refused strategy never reaches the metrics surface. **The omitted keys are NAMED** (`pnl · sharpe · profit_factor · win_rate · max_drawdown · trades · equity_curve`) with a reason, because a missing key reads as zero. ★ **`A ZERO-TRADE BACKTEST THAT STILL REPORTS A SHARPE READS AS A RESULT, NOT A REFUSAL.`**
+
+### §3 — ⚠️ A CONTROL OF MINE THAT PASSED FOR THE WRONG REASON, AND THE ASSERTION SHAPE THAT CAUGHT IT
+**My first discrimination set passed `6/6` and proved less than it looked** (`AR-845 §4`): *"a candle closes above the range high"* stood down at `crossing_relationship`, not at `confirmation_specified`, so **condition (4) — the branch protecting a CLEARER TEACHER — was exercised by no passing case.** ✅ **The committed test now asserts WHICH BRANCH decided, not only the verdict.** ⚠️ **AND THAT ASSERTION IMMEDIATELY CONVICTED ME AGAIN:** I required a matched span on every stand-down, which is only true where standing down means something was FOUND. **The neighbour case failed correctly; the assertion is now split by branch.** ★★★★★ **`A CONTROL THAT PASSES BY LUCK IS NOT A CONTROL` — twice in one file, both found by asserting the mechanism rather than the outcome.**
+
+### §4 — ✅ THE MANIFEST GUARD FIRED AND IT WAS RIGHT
+`[MEASURED HERE]` the new test imports `spec_family_bindings` and so legitimately joined the canonical import closure. **Regenerated by the instrument's OWN derivation function (`_regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)`), NEVER hand-copied** (`[hardcoded-test]`). **Diff exactly `1` added, `0` removed; population `101 → 102`.** ✅ **Guards re-run green: `78 passed`.**
+
+### §5 — 🛑 EXACT FAILURE MEMBERSHIP, AND WHAT IS NOT DONE
+`[MEASURED HERE, unpiped, 13 suites]` **`2 failed, 290 passed`.** **The two failures are `test_no_production_binding_routes_to_the_opening_range_adapter_yet` and `test_no_typed_opening_range_output_contract_exists_in_production` — the two ORDERED `6B` REDS.** ✅ **CORRECT: they turn green only when the state channel lands, and `R-747 §6` forbids the state channel in this commit.** 🛑 **I quote the MEMBERSHIP, not the total, and I do not re-quote `96`** (`R-741 §5`).
+🛑 **NOT DONE, NAMED RATHER THAN IMPLIED:** **(a)** the **trace distinction** between *no market setup occurred* and *execution was refused* is enforced at the ARRAY level (per-condition arrays stay real) but **the trace payload itself does not yet carry an explicit refusal marker** · **(b)** the **pinned `11`-spec corpus run** (blob `23f30eb0`, `tier-a-compile-census.json`) with `AFFECTED`/`UNAFFECTED` per `condition_id` and the four discrimination controls — **`R-747 §6` step 3, not started.**
+⚖️ **SO THIS IS STEP 2 DELIVERED AND STEP 3 OWED. I am not calling `R-747 §6` complete.**
+
+### §6 — ⏭️ HOLD, AS `R-748 §3` ORDERS
+✅ **After this lands I HOLD** for the independent read of the money-path enforcement **before resuming the state channel.** 🛑 **The WIP branch (`f788c64b`) is NOT merged or cherry-picked because these tests pass.** ⏳ **`accuracy-validator` on this commit, receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md` — I am the doer and take no part in it. Say the word and I will dispatch it.**
+✅ **BOTH WORKTREES REMAIN:** `wt-pre6b` (detached `8a5e0085`) and `wt-6b-wip`. ★ **`wt-pre6b` is no longer load-bearing for THIS proof — the six-step mutation reproduces the defect from within the committed suite — so it can be removed once the desk accepts step 2.**
+
+## AR-845 · 2026-08-09 · ✅✅★★★★★ **THE MONEY-PATH REFUSAL IS ENFORCED AND MEASURED: THE GOLDEN STRATEGY'S SEVEN PHANTOM SHORTS ARE NOW `0`, IN BOTH FLAG STATES — AND THE NEIGHBOUR STILL TRADES (`entry_long = 6`, NONCONSTANT), SO THE ZERO IS SPECIFIC RATHER THAN AN ENGINE THAT REFUSES EVERYTHING.** ⭐⭐ **THE RED-PROOF IS ON THE RECORD IN THE PRODUCTION PATH, NOT SIMULATED: WITH THE TRIGGER FULLY REFUSED BUT ENFORCEMENT ABSENT, `entry_short` WAS STILL `7`.** 🛑 **PARTIAL — AND THE PARTS I HAVE NOT BUILT ARE NAMED, INCLUDING THE BACKTESTER CONSUMPTION AND EVERY PERMANENT TEST. NOTHING IS COMMITTED.**
+
+**RULING:** `R-747 §4` / `§6` step 2 · `R-746 §3` · `R-748` (continue, no re-authorization). **SEAT:** unchanged. **PRODUCTION BRANCH HEAD `45866ac7`; this work is UNCOMMITTED working tree.** **ATTEMPT BUDGET `0 / 2`.**
+
+### §1 — ⭐⭐ THE RED-PROOF, IN THE PRODUCTION PATH, IN THE RIGHT ORDER
+`[MEASURED HERE]` **with the trigger refused (`bindable=False · executed=False · primitive=None`) and the eligibility boundary NOT YET WIRED: `entry_long=0 · entry_short=7`.** ⇒ ★★★★★ **`R-747 §2` IS NOW DEMONSTRATED IN PRODUCTION CODE RATHER THAN BY `AR-843`'s SIMULATION: THE REFUSAL ALONE CHANGES NOTHING. `A REFUSAL THAT WORKS BY REMOVING A CONSTRAINT IS NOT A REFUSAL — IT IS A RELAXATION WEARING A REFUSAL'S NAME.`**
+`[MEASURED HERE]` **with the boundary wired: `entry_short 7 → 0`.** ★ **RED without the fix, GREEN with it, and the RED was taken on the same tree minutes earlier rather than recalled.**
+
+### §2 — ✅ THE BINDING REFUSAL IS EXACT, AND IT TOUCHES NOTHING ELSE
+`[MEASURED HERE]` golden trigger after `compile_binding_plan`:
+```
+bindable=False  executed=False  primitive=None
+disposition=SOURCE_AMBIGUOUS
+reason=opening_range_breakout_confirmation_unresolved_from_source
+ambiguity=breakout_confirmation_semantics
+role=spine (PRESERVED)   object="When price breaks above the range high, ..." (PRESERVED)
+plan.compiled=False
+other conditions: 7 of 10 still bindable — UNCHANGED
+```
+✅ **`REFUSAL IS NOT ABSENCE` (`R-747 §2`) honoured: the condition stays in the plan, in place, carrying its taught sentence. It is REFUSED, not deleted.**
+✅ **DIRECTION IS NOT REPORTED AS SILENT.** The ambiguity names **`breakout_confirmation_semantics`** — *"above the range high"* teaches the direction, and only WHICH CONFIRMATION (touch · wick · intrabar cross · candle close) is unresolved. ★★★ **Calling this ABSENT would erase what the teacher did say — `PARTIALLY SPECIFIED IS A THIRD SILENCE`.**
+
+### §3 — ✅ THE REQUIRED OBSERVABLES, BOTH FLAG STATES
+```
+                    GOLDEN                                     NEIGHBOUR (positive control)
+enforcement OFF     REFUSED  compiled=False  eligible=False    EXECUTED  eligible=True
+                    entry_long=0  entry_short=0                entry_long=6  nonconstant=True
+enforcement ON      REFUSED  compiled=False  eligible=False    EXECUTED  eligible=True
+                    entry_long=0  entry_short=0                entry_long=6  nonconstant=True
+```
+★★★★★ **THE POSITIVE CONTROL IS THE ONLY REASON THE ZEROES MEAN ANYTHING — `AN ENGINE THAT REFUSES EVERY STRATEGY ALSO PRODUCES ZERO GOLDEN ENTRIES` (`R-747 §4`). The neighbour routes through the SAME eligibility consumer and still produces nonconstant decisions.**
+✅ **NON-EQUIVALENCE DEMONSTRATED, NOT ASSERTED (`R-744 §4`):** the golden's **boolean subtotal is `210 / 400` while `may_enter=False`.** ⇒ **a consumer reading the subtotal alone would conclude "tradable" and be wrong; the surface makes the two separately readable and carries the refusal reason.**
+✅ **THE ALL-FALSE ARRAYS COME ONLY FROM THE STRATEGY-LEVEL BOUNDARY.** `[MEASURED HERE]` `last_per_condition_bool` still holds **2 real arrays** after a refusal — **no per-condition predicate was faked to false**, which `R-747 §4` forbids, and a diagnostic reader can still see what the market did.
+✅ **THE SOURCE REASON OUTRANKS THE ENGINE ONE:** `refusal_reason` reports `opening_range_breakout_confirmation_unresolved_from_source`, not the generic `trigger_not_bound` — the generic string would lose the only sentence telling a reader what to go back to the video for.
+
+### §4 — ⭐ THE CLASSIFIER, AND A CONTROL OF MINE THAT PASSED FOR THE WRONG REASON
+**Four semantic conditions, ALL required, NO video/strategy/condition id in the module** (`R-747 §6`). ⚠️ **MY FIRST DISCRIMINATION SET PASSED `6/6` AND PROVED LESS THAN IT LOOKED.** *"Enter when a candle closes above the range high"* stood down at **`crossing_relationship`**, not at `confirmation_specified` — my crossing vocabulary has no *"closes above"*, so **condition (4), the branch that protects a CLEARER TEACHER, was never exercised.** ★★★★★ **`A CONTROL THAT PASSES BY LUCK IS NOT A CONTROL` (`R-742 §2`) — same shape as `AR-836 §3`, and I found it by reading WHICH branch each case stood down at rather than only whether the verdict matched.**
+✅ **RE-MEASURED WITH CASES THAT ACTUALLY REACH (4):** *"breaks above the range high **and closes above it**"* → stands down at `confirmation_specified='closes'` · *"…with a **wick** through the level"* → `'wick'` · *"…and then **retests** it"* → `'retests'` · *"crosses the opening range high **on a 5 minute close**"* → `'on a 5 minute close'` · **and *"breaks above the range high"* with no confirmation → AMBIGUOUS.** ⇒ **the branch discriminates for the right reason.**
+
+### §5 — 🛑 WHAT IS **NOT** DONE. THIS IS A PARTIAL AND I AM LABELLING IT ONE
+🛑 **NOT BUILT:** the **BACKTESTER CONSUMPTION** — `R-747 §4`'s *"no P&L, Sharpe or profitability result"* and `R-748 §3`'s omit-list are **UNIMPLEMENTED**; today a refused strategy still reaches the backtester, which would report a flat result rather than a refusal · the **trace distinction** between *no market setup* and *execution refused* · **`R-747 §3`'s SIX-STEP mutation control** · **EVERY PERMANENT TEST — every number in this report is a live measurement, not a committed regression** · the **pinned `11`-spec corpus run** (blob `23f30eb0`) with `AFFECTED`/`UNAFFECTED` per condition and the four discriminations.
+🛑 **NOTHING IS COMMITTED.** The trigger-safety work is uncommitted working tree in the SHARED tree: `breakout_confirmation_ambiguity.py` + `entry_eligibility.py` (new), `spec_family_bindings.py` + `spec_condition_compiler.py` (modified). ⚖️ **The state-channel work remains safely at `f788c64b` and is NOT in this tree.**
+⚖️ **I AM NOT CLAIMING `R-747 §4`'s REQUIRED OUTCOME IS MET.** Its entry/eligibility/status clauses are measured met; **its no-metrics clause is not, and that clause is the one that stops a zero-trade run reading as a legitimate flat result.**
+
+## AR-844 · 2026-08-09 · ✅ **`R-747 §5`'s WIP CHECKPOINT IS LANDED AND PUSHED — SHA `f788c64b`, `9` FILES, `+1453 / −35`, ON `wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint`.** ⭐ **AND I PROVED THE SHARED TREE COULD BE CLEANED BEFORE I CLEANED IT: ALL `9` FILES HASH-IDENTICAL BETWEEN TREE AND PUSHED COMMIT, CHECKED BY `git hash-object` VS `git rev-parse <sha>:<path>` PER FILE.** ✅ **THE STATE-CHANNEL DIFF IS NO LONGER ON ONE DISK, AND THE PRODUCTION TREE IS NOW CLEAN FOR THE TRIGGER-SAFETY BUILD.**
+
+**RULING:** `R-747 §5` / `§6` step 1. **SEAT:** unchanged. **PRODUCTION BRANCH HEAD at receipt: `3f74b207`.** **ATTEMPT BUDGET `0 / 2`.**
+
+### §1 — ✅ THE CHECKPOINT, WITH EVERY CONSTRAINT `R-747 §5` NAMED
+**SHA `f788c64b6b4a8ebfaa2d0ce58481f2511126ea55`** · **branch `wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint`** — ★ **non-production status is in the BRANCH NAME and again in the commit subject (`INCOMPLETE, UNTESTED, DO NOT MERGE`), so it cannot be mistaken for a candidate by anyone who sees only one of the two.**
+✅ **SEPARATE WORKTREE, never a `checkout` in the shared tree** (`C:/Users/tonio/Projects/wt-6b-wip`), **created pinned to SHA `d242ef19`, not to a branch name** — a branch base tracks the moving shared HEAD (`worktree-session`).
+✅ **ONLY MY OWN FILES.** `git commit -o` naming all `9` paths explicitly. 🛑 **The sibling seat's dirty `src/engine/tests/test_synthetic_market_simulator.py` did NOT ride along** — I verified it is still modified-and-uncommitted in the shared tree after the whole operation. **No `git add -A` anywhere.**
+✅ **PUSHED AND REMOTE-VERIFIED:** `git ls-remote` returns `f788c64b…`, equal to local `HEAD`. ⚖️ **Repo is PUBLIC and this branch is now public; it adds no exposure the branch did not already have, and it is labelled so nobody reads it as a candidate.**
+✅ **DIFF-STAT TRIPWIRE (`worktree-session` LAND §1):** `+1453 / −35`. **The `35` deletions are accounted for** — the `OPENING_RANGE_DEFINITION` declaration replaced, `named = conflict_fields or missing` replaced, and `verify_dispatch_coverage` rewritten. **No unexplained mass deletion ⇒ no wrong-base revert.**
+
+### §2 — ⭐ THE STEP I DID NOT SKIP, AND IT IS THE ONE THAT MAKES THE CLEANUP SAFE
+🛑 **Restoring the shared tree DESTROYS the working copy. So I proved the copy was redundant FIRST, per file, not per commit:**
+```
+spec_producer.py 82b430aece | family_meta_enforcement.py 729c17b96e | opening_range_adapter.py 74031db379
+opening_range_lowering.py 8f6b0b1c26 | spec_condition_compiler.py 5cafbd5308 | spec_family_bindings.py 2065e19dff
+entry_eligibility.py 58282bda4b | opening_range_carrier.py bb26a0186c | opening_range_state_channel.py 199eb1fc8c
+                    ALL 9: tree blob == f788c64b:<path>  ->  MATCH
+```
+★★★ **`A COMMIT THAT EXISTS IS NOT A COMMIT THAT CONTAINS WHAT YOU THINK` — the join key is the per-file blob, not the commit subject.** ✅ **Only then: `git checkout --` on the six tracked paths and `rm` on the three new ones. NO `git stash` (`refs/stash` is shared across worktrees), NO `git reset`, NO branch switch.**
+✅ **RESULT: `git status --porcelain src/` in the shared tree now returns exactly one line — the sibling's file.** ⇒ **the trigger-safety build and its before/after entry counts run on a tree with none of my state-lane code in it, so the measurement cannot be contaminated by it.**
+
+### §3 — ⏭️ NEXT, AND IT IS `R-747 §6` STEP 2
+**The TRIGGER-SAFETY COMMIT, ALONE:** semantic refusal (`primitive=None · bindable=False · executed=False · trigger_bound=False · SOURCE_AMBIGUOUS` + the exact unresolved-confirmation reason, **direction preserved — *"above the range high"* TEACHES the direction; only the CONFIRMATION is unresolved**) · **a real PRODUCTION CONSUMER of eligibility** (`R-747 §4`: reporting it is not enforcing it) · strategy-level `REFUSED` with **no P&L / Sharpe emitted** · **`R-747 §3`'s SIX-STEP mutation, not the withdrawn `R-746 §3` locality control** · **`§4`'s neighbouring-strategy positive control** (`AN ENGINE THAT REFUSES EVERY STRATEGY ALSO PRODUCES ZERO GOLDEN ENTRIES`) · **both flag states** · then the pinned `11`-spec corpus run (blob `23f30eb0`).
+🛑 **NO state channel, NO carrier in that commit.** 🛑 **No video or strategy ID in production classification code.**
+✅ **BOTH WORKTREES STAY UP:** `wt-pre6b` (detached `8a5e0085`) is the before/after instrument `R-747 §5` orders kept until the committed regression reproduces the discrimination without it; `wt-6b-wip` holds the checkpoint.
+
+## AR-843 · 2026-08-09 · ✅✅★★★★★ **`R-746 §2`'s ORDERED MEASUREMENT IS DONE, IN A CLEAN DETACHED WORKTREE, AND THE DESK'S MECHANISM CLAIM IS CONFIRMED — SHARPER THAN PREDICTED.** 🛑🛑🛑 **UNBINDING THE GOLDEN TRIGGER DOES NOT ZERO ENTRIES: `entry_short` STAYS AT **7**, IDENTICAL, WHILE THE GATING SET DROPS `3 → 2`. THE SUBTRACTION REMEDY IS MEASURED INSUFFICIENT.** ⭐⭐ **AND THE FINDING UNDERNEATH IT IS WORSE THAN "UNFAITHFUL": ON THIS FIXTURE THE ENTRY TRIGGER IS NON-DISCRIMINATING — REMOVING IT CHANGES NOTHING ABOUT WHICH BARS FIRE.** ✅ **`entry_short = 7` IS NO LONGER RELAYED: IT IS MEASURED IN A TREE THAT CONTAINS NONE OF MY WORK.**
+
+**RULING:** `R-746 §2` (the ordered pre-build measurement) · `R-746 §5` (re-ordering accepted). **SEAT:** unchanged. **INSTRUMENT: detached worktree `C:/Users/tonio/Projects/wt-pre6b`, pinned to SHA `8a5e0085` — NOT to a branch name** (`worktree-session`: a branch-name base tracks the moving shared HEAD). **ATTEMPT BUDGET `0 / 2`.**
+
+### §1 — ✅ THE INSTRUMENT, AND WHY IT IS ONE
+**ONE fixture file, run UNCHANGED in both trees** (`scratchpad/trigger_entry_fixture.py`): golden extraction → real `produce_spec_artifact` → `compile_binding_plan` → `SpecConditionStrategy.compute`. **Deterministic: `seed=7`, `N=400`, `timeframe=5m`, fixed timestamps.** ★ **The worktree self-reports its own identity in the output — `state channel here: False` (pre) vs `True` (campaign)** — so the two runs cannot be confused for one another after the fact.
+⚖️ **ARM `(c)` SIMULATES THE ORDERED REMEDY WITHOUT WRITING PRODUCTION CODE:** the trigger condition is retyped to an `unsupported=True` family, which yields **exactly** the end state the read ordered — `bindable=False · executed=False · primitive=None` — while every other condition stays byte-identical. **That isolates the SUBTRACTION effect and nothing else.**
+
+### §2 — 🛑🛑🛑 THE NUMBERS. IDENTICAL IN BOTH TREES
+```
+PRE-CHANGE TREE (detached @ 8a5e0085, no 6B work present)
+  AS-IS            entry_long=0  entry_short=7   gating_members=3
+                   trigger bindable=True  executed=True  primitive=structure_engine.compute_structure_state
+  TRIGGER UNBOUND  entry_long=0  entry_short=7   gating_members=2
+                   trigger bindable=False executed=False primitive=None
+
+CAMPAIGN TREE (my uncommitted 6B state lane present)
+  AS-IS            entry_long=0  entry_short=7   gating_members=3
+  TRIGGER UNBOUND  entry_long=0  entry_short=7   gating_members=2
+```
+✅ **`R-746 §2` CONFIRMED:** the gating set **drops from `3` to `2`** — the term really is removed from the conjunction — **and `entry_short` does not move.** 🛑 **THE ORDERED `entry_short = 0` IS NOT ENTAILED BY THE ORDERED REPAIR.** ★★★★★ **`A REFUSAL THAT WORKS BY REMOVING A CONSTRAINT IS NOT A REFUSAL — IT IS A RELAXATION WEARING A REFUSAL'S NAME`, and here the relaxation is measured to be exactly neutral rather than merely theoretically unsafe.**
+⭐⭐ **AND THE SHARPER FINDING, WHICH I DID NOT EXPECT:** entries are **bar-for-bar identical** with the trigger present and absent ⇒ **on this fixture the entry trigger is NON-DISCRIMINATING. It is not merely bound to the wrong primitive — it does not affect WHICH BARS THE STRATEGY ENTERS ON AT ALL.** ⚖️ **Scope named, not waived: this is ONE fixture (`seed=7`, `N=400`, `5m`). I am NOT claiming the trigger is non-discriminating in general — only that it is on the deterministic fixture the ruling ordered, which is the fixture the acceptance uses.**
+
+### §3 — ✅ TWO CLAIMS UPGRADED, ONE OF THEM AGAINST MY OWN EARLIER GRADE
+✅ **`entry_short = 7` WAS `[RELAYED]` AT `R-746 §1` AND IS NOW `[MEASURED IN A CLEAN TREE]`.** ★ The desk declined to launder it and was right to; **it reproduces exactly, in a tree containing none of my work.**
+✅ **MY STATE LANE MOVES ENTRIES NOT AT ALL — MEASURED BEFORE/AFTER, NOT INFERRED.** `AR-842 §2` argued this by joining my membership measurement to `R-744 §2`'s; **it is now a direct two-tree comparison and the argument is retired in favour of the measurement.** ⇒ **`R-744 §2`'s *"`6B` does not change `spine_satisfied` at all"* holds at the OUTPUT, not just at the dict.**
+⚖️ **PROVENANCE CORRECTION ACCEPTED (`R-746 §1`):** the *"OBJECT text is not checked"* docstring is in the COMPILER's `_eval_wait_structure`, not `structure_engine.py`. **Mine to own; substance unaffected.**
+
+### §4 — ⏭️ WHAT THIS DECIDES ABOUT THE NEXT COMMIT
+🛑 **`R-746 §2`'s conditional has fired:** entries did not go to zero ⇒ **the refusal must be a NAMED, DELIBERATE NON-EXECUTABILITY MECHANISM, not an unbinding.** **Unbinding remains necessary** (the trigger must stop pointing at a primitive that never reads its sentence) **but it is now measured insufficient on its own**, and I will not ship it as if it were the whole repair.
+✅ **ORDER I AM FOLLOWING (`R-746 §5`):** **(1) this measurement — DONE** · **(2) the trigger refusal + the `11`-spec tier-A corpus run (blob `23f30eb0`) + the four discrimination controls + the LOCALITY mutation, AS ITS OWN COMMIT, entries measured before and after** · **(3) THEN the state-channel / carrier commit.**
+⚖️ **THE STATE-LANE WORK STAYS UNCOMMITTED MEANWHILE, AND I AM NAMING THE RISK RATHER THAN CARRYING IT SILENTLY:** it is a large working-tree-only change in a SHARED tree, and it has now survived five desk commits (`[precommit-stash]` hazard measured not firing each time). **If the desk would rather I land it behind the trigger commit than hold it, say so.**
+🛑 **THE DETACHED WORKTREE STAYS UP** — step (2) requires before/after entry counts and this is the instrument that produces them. **I will remove it at delivery, not before.**
+
+## AR-842 · 2026-08-09 · 🛑🛑🛑★★★★★ **THE GOLDEN STRATEGY EMITS ENTRY SIGNALS TODAY — `entry_short = 7` ON A 400-BAR FRAME, MEASURED, WITH NO `6B` STATE AND ENFORCEMENT OFF. `R-744 §6`'s REQUIRED END STATE — *"trigger NOT bound · entry-eligible false · trades ZERO"* — IS NOT THE CURRENT STATE, AND ITS ENTRY TRIGGER IS BOUND TO `compute_structure_state`, WHICH NEVER READS THE BREAKOUT SENTENCE.** ⚠️ **AND A DEFECT OF MY OWN, FOUND AND FIXED BEFORE IT LANDED: MY FIRST STATE-LANE CALL SITE WAS GATED ON `enforced`, WHICH SENDS THE STATE PRODUCER INTO `np.ones` — `R-743 §7` STOP `2`, IN THE DEFAULT FLAG STATE.** ✅ **`R-745` CONSUMED; ITS `§4` AMENDMENT IS EXACTLY THE DESIGN I BUILT.**
+
+**RULING:** `R-745` (consumed, scope amendment adopted) · `R-743 §5`–`§7` · `R-744 §3`–`§6`. **SEAT:** unchanged, alive, building. **HEAD `f1b11e62`; my `6B` work is uncommitted working tree.** **ATTEMPT BUDGET `0 / 2` — neither item below is a failed attempt: one is a defect caught pre-landing, the other is a measurement.**
+
+### §1 — ⚠️ MY OWN DEFECT, CAUGHT BY ASKING WHAT THE **DEFAULT** FLAG STATE DOES
+I first wrote the state-lane call site as **`if enforced and b.primitive in STATE_DISPATCH:`**. 🛑 **That is wrong, and it is wrong in the direction that matters.** `[MEASURED HERE]` with enforcement **OFF — the production default** — a bindable, executed binding falls through to the legacy `elif b.type == …` ladder, whose final branch is **`else: per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)`** `[spec_condition_compiler.py, the ladder tail]`.
+⇒ ★★★★★ **THE STATE PRODUCER WOULD HAVE ENTERED THE GATE CONJUNCTION AS A CONSTANT-TRUE PASS-THROUGH — `R-743 §7`'s SECOND STOP CONDITION, FIRING IN PRODUCTION, IN THE EXACT SHAPE THIS CODEBASE ALREADY DELETED ONCE (`FILTER`'s 390 conditions).**
+✅ **FIXED BY KEYING THE LANE ON THE FAMILY DECLARATION, WHICH IS FLAG-INDEPENDENT** — `if b.primitive in STATE_DISPATCH:` — so the exclusion holds in BOTH flag states.
+✅ **MEASURED AFTER THE FIX, ENFORCEMENT OFF:** the golden's OR condition is **NOT** in `per_condition_bool` (`False`), `per_condition_bool` has **3** members, and the channel carries the named reason `opening_range_candidates_not_carried_on_compiled_spec`. ★ **The named reason is the positive witness that the lane RAN and declined, rather than never executing** (`[absence-claim]`) — an empty channel alone could not tell those apart, which is why the channel records WHY.
+⚖️ **`A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING PRODUCTION` — this file's own law, and I nearly violated it twenty lines from where it is written.**
+
+### §2 — 🛑🛑🛑 THE FINDING THAT OUTRANKS EVERYTHING ELSE IN THIS REPORT
+`[MEASURED HERE]` the golden spec's **`entry_trigger_id` is `WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4`** — the breakout sentence — and its binding is:
+```
+spine  WAIT_STRUCTURE  bindable=True  executed=True
+       primitive=structure_engine.compute_structure_state  reason=None
+```
+🛑 **THE ENTRY TRIGGER IS BOUND, AND IT IS BOUND TO THE GENERIC STRUCTURE PROXY** — whose own docstring says *"the specific structural OBJECT text … is not checked — only generic BOS/CHoCH/MSS activity"* ⇒ **nothing in the executable path reads *"breaks above the range high"*. The taught breakout rule is not compiled; a coarse structure-activity signal stands in its place.**
+🛑 **AND IT PRODUCES SIGNALS.** `[MEASURED HERE, 400 deterministic bars, seed 7, enforcement OFF, no carrier attached]`: **`entry_long = 0`, `entry_short = 7`.**
+⇒ ★★★★★ **`R-744 §6`'s REQUIRED OBSERVABLE END STATE FOR THE GOLDEN STRATEGY — *"trigger NOT bound · compiled-for-trading false · entry-eligible false · trades ZERO"* — IS NOT SATISFIABLE AS AN OBSERVATION, BECAUSE IT IS NOT TRUE TODAY. I CANNOT DELIVER IT AS A MEASUREMENT, AND I WILL NOT DELIVER IT AS AN ASSERTION.**
+⚖️ **PROVENANCE, STATED HONESTLY:** this is **PRE-EXISTING, NOT CREATED BY `6B`**, and I am joining two sources rather than claiming a before/after run I did not do — **`R-744 §2` (the desk's own measurement) established the OR condition was ALREADY absent from `per_condition_bool` via `executed=False`**, and **`[MEASURED HERE]` it is still absent after my change** ⇒ **membership is unchanged, so `spine_satisfied` and the entries are unchanged.** 🛑 **I did NOT run the pre-change tree: a shared tree forbids `git stash` (`R-734`), and the clean instrument is a DETACHED WORKTREE at `f1b11e62`'s parent. Say the word and I will run it; until then this paragraph is CORROBORATED, not MEASURED BEFORE/AFTER.**
+🛑 **WHAT I WILL NOT DO:** hardcode `may_enter=False` so the ordered end state appears satisfied. **That would fabricate the required observation instead of measuring it** — and `R-739 §1` is explicit that a golden backtest produced through this trigger would prove **INVENTION, NOT EDGE**. **The eligibility surface reports what the engine actually does; if that reads as a failure of the ordered end state, the finding is the deliverable.**
+⚖️ **THE DECISION IS THE DESK'S AND I AM NOT TAKING IT:** the phrase *"trigger NOT bound"* has two readings — **MECHANICALLY bound** (true today, to an approximation) versus **FAITHFULLY bound** (false: no code reads the breakout sentence). **Demoting the breakout trigger is plainly outside `R-743 §5`'s "deliberately narrow", so I am not touching it.** `R-741 §6` reserves scope to the desk, and this is scope.
+
+### §3 — ✅ `R-745` CONSUMED — WHAT IT CHANGES FOR ME
+✅ **`§4`'s amendment authorises exactly what I built**: lowering + expansion called from `produce_spec_artifact`, carrier attached at the **artifact top level, outside the hashed `spec` body**. ⭐ **`§1` names the prohibition I missed — `R-705`/`R-707` forbid `produce_spec_artifact` BY SYMBOL — and the desk is right that I should have checked the FORBIDDEN list rather than reading the rulings' silence as a gap. Accepted without argument.**
+⭐⭐ **`HASH-NEUTRAL IS NOT IDENTITY-SAFE` (§5) is a correction I had not made and it is correct:** my carrier was hash-neutral **by construction** but nothing bound it to the artifact it belongs to. **The identity fields, the canonical carrier hash, the join refusals and the SWAP control are adopted in full** — the swap control is the sharpest because `A CORRECTLY SHAPED SIDECAR ATTACHED TO THE WRONG STRATEGY IS PLAUSIBLE.`
+✅ **`§6`'s call-site enumeration accepted as a DELIVERABLE, not a claim** — committed, `file:line`, each dispositioned, with a control that re-derives and fails on a new un-dispositioned site.
+🛑 **THE NEW STOP IS ARMED:** if the carrier cannot be attached without moving `spec_hash` for ANY spec, I stop. **The control asserts byte-identical `spec_hash` for the golden AND a non-golden spec, before and after.**
+
+### §4 — ⏭️ POSITION
+✅ **BUILT:** typed state channel (per-`(candidate, session)`, `__bool__` raising) · eligibility type (`may_enter` unconstructable without a bound trigger) · `EXECUTION_KIND` closed set + declaration · binding branch · resolver entry · pin (a) taught both tables (kind↔table agreement both directions, overlap is a violation) · `STATE_DISPATCH` + handler (no-lookahead: each session `as_of` its own LOCK instant, via a new PUBLIC `opening_range_window_bounds`) · flag-independent call site · public accessors.
+⏳ **NOT BUILT:** the producer-side carrier + its identity/join/swap contract (`R-745 §5`) · the call-site enumeration (`§6`) · `R-742 §4`'s disposition/`missing_fields` repair · the TS mirror · **every test.**
+🛑 **NOTHING IS GREEN. NOTHING IS CLAIMED.** ⚖️ **`R-745` roughly doubled the remaining unit; I am continuing, not handing off.**
+
+## AR-841 · 2026-08-09 · ⏳ **INTERIM — THE `6B` COMMIT SLIPPED ITS ETA AND THIS IS THE REPORT I PROMISED INSTEAD OF SILENCE.** 🛑🛑★★★★★ **AND THE REASON IS A FINDING NEITHER RULING HOLDS: `STEP 6A`'s LOWERING HAS **ZERO** PRODUCTION CALLERS, AND THE EXECUTABLE LAYER CANNOT REACH A DEFINITION — THERE IS NO CARRIER BETWEEN THEM, AND `R-743 §6`'s SAME-COMMIT LIST DOES NOT NAME ONE.** ✅ **I DID NOT STOP: I MEASURED THE ONE THING THAT WOULD HAVE MADE IT A STOP — FROZEN-HASH BLAST RADIUS — AND IT IS ZERO.**
+
+**RULING:** `R-743 §6-3`–`§6-7` · `R-744 §3`–`§6`. **SEAT:** the cold seat of `AR-840`, still alive, still building. **HEAD `c50fac3a`** (desk's; my work is uncommitted working tree). **ATTEMPT BUDGET `0 / 2` — nothing here is an attempt; no hypothesis was tried and abandoned.**
+
+### §1 — 🛑 THE CARRIER GAP, MEASURED WITH A POSITIVE CONTROL
+`[MEASURED HERE]` `grep -rn "lower_opening_range_definition\|expand_execution_candidates\|OpeningRangeExecutionCandidate" --include=*.py src/ | grep -v /tests/` returns **ONLY the definitions themselves** — `opening_range_lowering.py:367`, `opening_range_candidate.py:78/170/174/184`. **No caller. Anywhere.**
+★ **CONTROL-PROBED** (`[absence-claim]`): the identical grep shape on `compute_structure_state` returns real consumers (`bias_engine.py:1210`, `:1217`, `backtester.py:6738`). **The scan reaches consumers when they exist, so the empty result is a measurement, not a blind path.**
+⇒ ★★★★★ **`STEP 6A` BUILT THE LOWERING AND THE CANDIDATE EXPANSION AND WIRED THEM TO NOTHING. `EXISTENCE IS NOT WIRING` — and this is that law firing on our own most recent delivery, not on legacy code.**
+
+### §2 — 🛑 WHY IT BLOCKS `6B` SPECIFICALLY, AND WHY A PARTIAL DELIVERY IS NOT AVAILABLE
+`[MEASURED HERE]` the lowering reads the **extraction record's taught spans** (`_taught_spans`: `entry_sequence[].action` + `confluences[].description`). `[MEASURED HERE]` the executable layer receives **only the compiled spec** — I ran the real production chain and dumped the keys: **artifact `['approximation_metrics','graph_canonical_hash','ledger_d','spec','spec_hash','transcript_chars','video']`**, **spec `['and_groups','direction','entry_conditions','entry_trigger_id','framework_overlay','invalidations','or_branches']`**, **OR condition `['evidence','id','load_bearing','object','role','span','type','type_confidence']`.** ⇒ **the taught spans are NOT on the artifact; the compiler cannot lower and cannot be handed a definition.**
+🛑 **AND I CANNOT DEFER IT:** a channel that ships without the real definition returns `refused_state()` — which turns **both ordered REDs green while computing nothing** (`R-743 §3`) and **fails `R-744 §6(2)`'s "real adapter called exactly three times"**. ⇒ **the carrier is load-bearing for the ordered acceptance, not a nicety.**
+
+### §3 — ⚖️ THREE OPTIONS, TWO REFUTED BY MEASUREMENT, AND I DECIDED RATHER THAN ASKED
+**(A) PRODUCER-ATTACHED** — `produce_spec_artifact` lowers where the record already is, and attaches the candidates to the artifact. **(B) COMPILER-LOWERED** — hand the source record to `SpecConditionStrategy` and lower at execution. **(C) LOWER FROM THE CONDITION'S OWN TEXT.**
+🛑 **(C) IS REFUTED BY THE SOURCE ITSELF:** the golden definition's session start, timezone and market scope come from **different taught spans** than the opening-range sentence (`AR-835`: *"9:30 a.m. Eastern"* in the window sentence, five demonstrated assets). **Lowering from one condition's text would refuse — or invent.**
+🛑 **(B) PUTS A SECOND SOURCE READER IN THE EXECUTABLE LAYER**, the same shape `R-741 §6` forbids on the TypeScript side (*"never re-run lowering, re-parse prose, expand candidates"*). ✅ **(A) CHOSEN.**
+
+### §4 — ✅ THE MEASUREMENT THAT DECIDED IT WAS SAFE — AND IT IS THE ONE THAT WOULD HAVE MADE IT A STOP
+**The admission test is *"does it INVALIDATE ITS RECEIPT?"*, so I asked whether attaching anything changes a pinned identity.** `[MEASURED HERE]` **`_spec_hash` hashes the ENTIRE spec body** (`json.dumps(spec_body, sort_keys=True)`) ⇒ **any field added INSIDE `spec` changes `spec_hash` for every affected spec**, and `[MEASURED HERE]` **`spec_hash` values ARE pinned in frozen artifacts** (`passage-ledger.json`, `trial-counter.json`, `packet2-inventory-22.json`).
+✅ **BUT THE GOLDEN SPEC'S HASH IS NOT AMONG THEM.** `[MEASURED HERE]` golden `spec_hash = 6e5a994e3bdfef975b74f7f584302725ee9d704d0887fb4a9c1f687428768194`; a repo-wide grep for it returns **NOTHING**. ★ **POSITIVE CONTROL: the same grep for a hash that IS pinned (`b25f94bc…`) returns three files** — so the empty result is a measurement.
+✅✅ **AND I MADE IT HASH-NEUTRAL BY CONSTRUCTION ANYWAY: the carrier attaches at the ARTIFACT TOP LEVEL, OUTSIDE the hashed `spec` body.** ⇒ **`spec_hash` cannot move for ANY spec, golden or otherwise — a property, not a hope, and it gets its own control in the commit.** ⚖️ **This is why I did not stop: the stop-worthy risk was measured absent, and the design removes it structurally rather than relying on the measurement.**
+
+### §5 — ⏭️ WHAT IS BUILT, WHAT IS NOT, AS OF THIS LINE
+✅ **BUILT (uncommitted):** the typed state channel (`opening_range_state_channel.py` — per-`(candidate, session)` records, `__bool__` **raises** on both types so `R-743 §6`'s "no accidental boolean conversion" is enforced by the type rather than by review) · the eligibility surface (`entry_eligibility.py` — `may_enter` **cannot** be constructed from a satisfied subtotal; the constructor refuses `may_enter=True` without a bound trigger) · the `EXECUTION_KIND` declaration + closed set + `OPENING_RANGE_DEFINITION` moved off `unsupported` onto the state lane · the binding branch · the resolver entry · **pin (a) TAUGHT the second table** (both-directions kind↔table agreement, overlap is a violation, and an omitted `state_dispatch` reads the LIVE table rather than skipping — `None` would have re-created LYING MODE 2).
+⏳ **NOT BUILT YET:** the compiler's `STATE_DISPATCH` + handler + call-site branch · the public accessors · the producer-side carrier · `R-742 §4`'s disposition/`missing_fields` repair · the TS declaration mirror · **every test, including the four-assertion dual-rail control and the three-different-triples discriminator.**
+🛑 **NOTHING IS GREEN YET AND I AM CLAIMING NOTHING.** **REVISED ETA: ~60–75 min from this line.** ⚖️ **The slip is the carrier finding, not the typing.**
+
+## AR-840 · 2026-08-09 · 📋 **START-RECEIPT — THE REMAINING `6B` UNIT (`R-743 §6-3`–`§6-7`) IS ACCEPTED AND IN FLIGHT.** 🛑🛑★★★★★ **AND ONE PREMISE CORRECTION `R-743 §8` COULD NOT HAVE KNOWN: IT AUTHORIZED `6B` *"TO THE SEAT THAT EXISTS — NOT TO A SUCCESSOR"*, AND THAT SEAT IS GONE. `AR-838`/`AR-839` WERE WRITTEN BY A CONTEXT THAT NO LONGER EXISTS; I AM A COLD SEAT THAT READ ITS WAY IN.** ⚖️ **I AM CONTINUING ON THE `AR-833` PRECEDENT AND SAYING SO BEFORE THE FIRST LINE, NOT AT DELIVERY.**
+
+**RULING:** `R-743 §6-3`–`§6-7` + `§5`–`§7` (`6B`, Option A) · `R-742 §4` (disposition/`missing_fields` repair, carried in) · `R-741 §4` (production-path spy). **SEAT:** **NEW cold seat**, onboarded via `worker-onboarding` after `AR-839`. **HEAD at receipt `037f5e7a`** `[MEASURED HERE]`, **equal to `git ls-remote origin h1-wave4-sealed12-driver` — `AR-839`'s work is pushed, not stranded on one disk.** **`6B` ATTEMPT BUDGET: `0 / 2`, UNCHANGED** — step (2) was an ordered deliverable and a cold start is not an attempt.
+
+### §1 — 🛑 THE SEAT CLAUSE, STATED PLAINLY RATHER THAN QUIETLY INHERITED
+`R-743 §8` `[read here, verbatim]`: **"Authorized to the SEAT THAT EXISTS — not to a successor."** ⚖️ **I am the successor.** The clause exists to stop an authorization ageing into a blank cheque for an unbounded future session (`[authorize-seat]`), **not** to void a continuation minutes later with no intervening ruling — and `AR-833` hit this exact shape (`R-738` written against a seat that had died) , flagged it, continued, and the desk accepted the continuation without amending the authorization.
+✅ **SO I CONTINUE, AND THE DESK CAN OVERRULE ME CHEAPLY BECAUSE I SAID IT FIRST.** 🛑 **What I do NOT inherit is `AR-839`'s context — every number in this report is re-measured at this seat, not carried.**
+
+### §2 — ✅ POSITION RE-MEASURED AT THIS SEAT, NOT READ FROM `AR-839`
+`[MEASURED HERE]` `src/engine/tests/test_boolean_channel_pre_state.py` **exists on disk** — step (2)'s pre-change positive control is landed.
+`[MEASURED HERE]` `grep -rln "STATE_PRODUCER\|state_producer" --include=*.py src/` returns **that test file and nothing else** ⇒ **steps (3)–(7) are genuinely unstarted; no half-built channel is waiting for me.** ★ **The grep shape is control-probed** (`[absence-claim]`): the identical shape on `_dispatch_enforced` returns `src/engine/spec_condition_compiler.py`, so the empty production result is a measurement rather than a blind path.
+
+### §3 — 🛑 THE ACCEPTANCE I WILL NOT SHORTCUT, RESTATED IN MY OWN WORDS
+`R-743 §3`: the two ordered conformance REDs going green is **NECESSARY AND NOT SUFFICIENT** — `RED #2` reads a **return annotation** and never invokes the primitive, so a module returning `refused_state()` unconditionally turns it green. **The discriminator is three golden candidates over deterministic candles producing DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`.** ★ **A stub cannot produce three different numeric triples.** 🛑 **I will not report `6B` green on the conformance group alone, and I will not quote `96` as a target — acceptance is EXACT FAILURE MEMBERSHIP (`R-741 §5`).**
+
+### §4 — 🛑 WHAT I AM NOT DOING (unchanged from `AR-838 §3`, re-affirmed at this seat)
+🛑 **No second absence-RED** (`R-743 §2` — it exists; a re-derivation is a third instrument that destroys the join). 🛑 **No universal indicator framework.** 🛑 **`ConditionBinding.parameters` stays `None`.** 🛑 **No entry, direction, trade, backtest-ready status, or profitable golden backtest** — the breakout trigger remains `UNRESOLVED_SOURCE_AMBIGUITY` (`R-739 §1`). 🛑 **TypeScript mirrors declarations only.** ⚖️ **`R-743 §5` stages an independent `accuracy-validator` grade on delivery; I am the doer and take no part in it.**
+
+### §5 — ⏭️ FIRST OBSERVABLE AND ETA
+**FIRST OBSERVABLE: the single `6B` commit** — production declaration · resolver · state-producer dispatch · Python execution path · TS declaration mirror, **landing together as `R-743 §6` requires** — plus the `§4` assertion-string correction, `R-742 §4`'s repair, and the retirement of `test_this_file_predates_the_state_channel` **inside that commit's diff, never as a silent cleanup.**
+**ETA ~60–75 min.** ⚖️ **If it slips, an interim AR lands at ~45 min rather than silence** — a same-commit contract makes the quiet window long, and **an unexplained silence is itself a finding** (`R-743 §8`).
+
+### §6 — 🔄 AMENDED IN FLIGHT: `R-744` LANDED WHILE THIS RECEIPT WAS BEING WRITTEN, AND IT CORRECTS ME ON ONE THING BEFORE I BUILT IT
+**`R-744` appeared at HEAD `0379e179` between `§5` above and my first line of code** `[MEASURED HERE]`. ✅ **This AR is still an uncommitted working-tree edit and the desk's commit did NOT sweep it** (`[precommit-stash]` hazard measured NOT firing: `git show HEAD:…AGENT-REPORTS.md` has no `AR-840`; the disk copy does). **I am striking rather than rewriting, so the record shows what I had planned before the correction arrived.**
+
+**(a) 🛑 STRUCK — `§5` above said the pre-state witness would be *"retired … inside that commit's diff."*** ~~Retire `test_this_file_predates_the_state_channel`.~~ **`R-744 §5` corrects this and the correction is right:** a witness DELETED when the thing it witnesses arrives **leaves no standing proof of the separation it existed to establish.** ✅ **REPLACED BY: retire ONLY the expired assertion (that the channel does not exist) · PRESERVE the neighbour's route-identity assertion · PRESERVE its nonconstant-output assertion · ADD the post-state separation assertions · the transition explicit in the diff.** ⚖️ **The desk records that it read `AR-839`'s sentence and passed it; I record that I had carried the same cheap version into this receipt.**
+
+**(b) ✅ `R-744 §3` — the dual-rail control is `2` discriminating of `4`.** Assertions `1` (OR absent from `per_condition_bool`) and `3` (neighbour present) **already pass on unchanged code**. **I build all four — the pairing is the point — and I report them BY DISCRIMINATING POWER. I will not write `4/4 green`** (`[unenumerated-ladder]`, `[green-check]`).
+
+**(c) ✅ `R-744 §4` — I owe the eligibility PROPERTY, not five ordered field names:** the public surface must make **"boolean spine satisfied"** and **"this strategy may enter"** non-equivalent and separately readable, carrying **the refusal reason** (`trigger UNRESOLVED_SOURCE_AMBIGUITY`). **ONE control, and it must FAIL if a consumer can reach "tradable" from the boolean subtotal alone.** Field names are mine.
+
+**(d) ✅ `R-744 §2` RE-DATES `AR-839 §3` AND I ADOPT THE RE-DATING.** The golden condition carries `executed=False` and is **ALREADY** absent from `per_condition_bool` ⇒ **`6B` does not change `spine_satisfied` at all; only the CAUSE of the absence changes.** 🛑 **So I will not present it at delivery as something `6B` introduced, and the eligibility work is pre-existing compiler debt — NOT charged to the attempt budget** (`R-744 §7`; `[i-measured]`: the join key is *cause*, not *presence*).
+
+**(e) ⚖️ AND `§1`'s SEAT QUESTION IS ANSWERED WITHOUT ME ASKING IT:** `R-744` rules **"CONTINUE (`6B`, no re-authorization needed)"** and `§7` continues `6B` **"to this seat"**. ★ **I still flagged it before building rather than inheriting it silently, which is what made it free.** **ATTEMPT BUDGET `0 / 2`, unchanged.**
+
 ## AR-839 · 2026-08-09 · ✅ **`R-743 §6-2`'s FIRST OBSERVABLE IS DELIVERED — `0214903e`, GREEN, ALONE, INSIDE THE ETA.** ⭐⭐ **AND THE `§7` STOP MOST LIKELY TO FIRE MID-BUILD — *"requires broadly rewriting existing family evaluators"* — IS MEASURED **NOT** FIRING: THE STATE-PRODUCER ROUTE IS **ONE BRANCH AT ONE CALL SITE**, AND THE CODEBASE ALREADY CONTAINS THE PRECEDENT FOR A BINDING THAT LEGITIMATELY PRODUCES NO BOOLEAN.**
 
 **RULING:** `R-743 §6-2` (step 2, delivered) · `§6-3`–`§6-7` + `R-742 §4` (the remaining `6B` unit, in flight). **SEAT:** same cold seat. **HEAD `0214903e`, pushed.** **`6B` ATTEMPT BUDGET: `0 / 2` — step 2 is an ordered deliverable, not an attempt.**

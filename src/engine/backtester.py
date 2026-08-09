@@ -8334,7 +8334,42 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             trace=_spec_trace_enabled,
             strategy_name=_strategy_cfg_for_spec.get("name"),
         )
-        if mode == "walkforward":
+        # ═══ TRIGGER-SAFETY REFUSAL GATE (R-747 §4) ═══════════════════════
+        # THE BACKTESTER MUST CONSUME ELIGIBILITY, NOT MERELY BE TOLD ABOUT IT.
+        # `RECORDING IT IN TRACE METADATA DOES NOT SATISFY THE CONTRACT.`
+        #
+        # Placed BEFORE both run paths so a refused strategy never produces a
+        # performance surface at all. Returning zeroed metrics would be worse
+        # than useless: `A ZERO-TRADE BACKTEST THAT STILL REPORTS A SHARPE READS
+        # AS A RESULT, NOT A REFUSAL`, and a flat Sharpe on a refused strategy is
+        # exactly the shape that would let a fabricated trigger pass review.
+        #
+        # The omitted keys are NAMED rather than silently absent, so a consumer
+        # that expected them learns WHY they are gone instead of reading missing
+        # as zero.
+        _spec_refusal = strategy.execution_refusal()
+        if _spec_refusal is not None:
+            result = {
+                "execution_status": _spec_refusal["execution_status"],
+                "compiled": _spec_refusal["compiled"],
+                "entry_eligible": _spec_refusal["entry_eligible"],
+                "refusal": _spec_refusal,
+                "metrics_omitted": [
+                    "pnl", "total_return", "sharpe", "profit_factor", "win_rate",
+                    "max_drawdown", "trades", "equity_curve",
+                ],
+                "metrics_omitted_reason": (
+                    "execution was REFUSED before any backtest ran; publishing zeroed "
+                    "performance metrics would present a refusal as a flat result"
+                ),
+                "governance_labels": {
+                    "approximation": bool(strategy.approximation),
+                    "spec_condition_compiled": True,
+                    "spec_hash": strategy.spec_hash,
+                    "execution_refused": True,
+                },
+            }
+        elif mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward_class
 
             result = run_walk_forward_class(

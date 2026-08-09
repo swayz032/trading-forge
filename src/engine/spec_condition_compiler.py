@@ -41,6 +41,10 @@ import numpy as np
 import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
+from src.engine.entry_eligibility import (
+    REASON_NO_TRIGGER_BINDING,
+    EntryEligibility,
+)
 from src.engine.family_meta_enforcement import (
     FLAG_ENV,
     FamilyMetaEnforcementError,
@@ -67,6 +71,14 @@ from src.engine.spec_family_bindings import (
     role_demotion_mode,
 )
 from src.engine.strategy_base import BaseStrategy
+
+# ─── TRIGGER SAFETY: strategy-level execution status (R-747 §4) ──────────────────────────
+# A THIRD STATE, and it is the one this campaign was missing. "no entries" previously meant
+# only "no market setup occurred". It must now also be able to mean "execution was REFUSED",
+# and the two must be distinguishable -- a refusal that reads as a quiet flat day is exactly
+# how a fabricated trigger survives review.
+EXECUTION_STATUS_EXECUTED: str = "EXECUTED"
+EXECUTION_STATUS_REFUSED: str = "REFUSED"
 
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
 LEVELZONE_PRIMITIVE_NAME: str = "levelzone_routing.retest_touch_check"
@@ -572,6 +584,94 @@ class SpecConditionStrategy(BaseStrategy):
         # the smallest-AND-subset ("gating set") that reproduces the strategy's real entry bars,
         # BLIND to any before/after SDS comparison (Step 0 runs on baseline-mode compute() only).
         self.last_per_condition_bool: dict[str, np.ndarray] = {}
+        # TRIGGER SAFETY (R-747 §4). `None` / EXECUTED until compute() decides, and reset
+        # per call like every other store above -- a stale REFUSED carried into a later run
+        # would be a refusal nobody could account for.
+        self.last_entry_eligibility: EntryEligibility | None = None
+        self.execution_status: str = EXECUTION_STATUS_EXECUTED
+
+    # ─── TRIGGER SAFETY: eligibility, DERIVED then ENFORCED (R-747 §4) ─────
+    def _derive_entry_eligibility(self, spine_satisfied: np.ndarray, n: int) -> EntryEligibility:
+        """Build the eligibility record from the BINDING PLAN, never from the subtotal.
+
+        `trigger_bound` here means FAITHFULLY bound (R-746 §3): `compile_binding_plan` has
+        already refused a trigger whose taught confirmation the source never specified, so a
+        pointer to a semantically unrelated primitive no longer reaches this method as a bound
+        trigger. That refusal is what makes this field mean what its name says.
+
+        DELIBERATELY NOT DERIVED FROM `spine_satisfied`. A value computed from the subtotal
+        would BE the subtotal wearing a second name, and the whole property R-744 §4 ordered is
+        that a consumer cannot reach "tradable" from the boolean subtotal alone.
+        """
+        trigger_id = str(self.spec.get("entry_trigger_id") or "")
+        by_id = {
+            b.condition_id: b
+            for b in self.binding_plan.bindings + self.binding_plan.invalidation_bindings
+        }
+        trigger = by_id.get(trigger_id)
+        trigger_bound = bool(trigger is not None and trigger.bindable and trigger.executed)
+        reason: str | None = None
+        if not trigger_bound:
+            # The SOURCE reason outranks the generic engine one. "the teacher did not say which
+            # confirmation" and "nothing bound" are different findings, and reporting the second
+            # when the first is true would lose the only sentence that tells a reader what to go
+            # back to the video for.
+            reason = (trigger.reason if trigger is not None and trigger.reason else None) or (
+                REASON_NO_TRIGGER_BINDING
+            )
+        return EntryEligibility(
+            boolean_spine_satisfied_bars=int(np.count_nonzero(spine_satisfied)) if n else 0,
+            total_bars=n,
+            trigger_bound=trigger_bound,
+            may_enter=trigger_bound,
+            refusal_reason=reason,
+        )
+
+    def execution_refusal(self) -> dict | None:
+        """The strategy-level refusal record, or `None` if this strategy may execute.
+
+        AVAILABLE BEFORE `compute()` AND WITHOUT BARS, and that is the point. R-747 §4's
+        chain is `binding completeness -> faithful-trigger check -> entry eligibility ->
+        condition evaluation -> entry output`: the refusal is decided from the BINDING PLAN,
+        so a consumer can stop BEFORE running a backtest rather than running one and
+        discarding its numbers afterwards.
+
+            `A ZERO-TRADE BACKTEST THAT STILL REPORTS A SHARPE READS AS A RESULT, NOT A
+             REFUSAL.` (R-747)
+
+        Returns a record naming the condition, its disposition, WHICH question the source
+        left open, and the taught prose -- everything a reader needs to go back to the video,
+        and nothing that could be mistaken for a performance metric.
+        """
+        trigger_id = str(self.spec.get("entry_trigger_id") or "")
+        by_id = {
+            b.condition_id: b
+            for b in self.binding_plan.bindings + self.binding_plan.invalidation_bindings
+        }
+        trigger = by_id.get(trigger_id)
+        if trigger is not None and trigger.bindable and trigger.executed:
+            return None
+        return {
+            "execution_status": EXECUTION_STATUS_REFUSED,
+            "compiled": bool(self.binding_plan.compiled),
+            "entry_eligible": False,
+            "condition_id": trigger_id,
+            "disposition": (trigger.disposition if trigger is not None else None),
+            "reason": (
+                (trigger.reason if trigger is not None and trigger.reason else None)
+                or REASON_NO_TRIGGER_BINDING
+            ),
+            "ambiguity": (trigger.ambiguity if trigger is not None else None),
+            "source_prose": (trigger.object if trigger is not None else ""),
+        }
+
+    def entry_eligibility(self) -> EntryEligibility | None:
+        """Whether this strategy may enter — separately readable from the spine subtotal.
+
+        `None` before `compute()` has run: an honest "not measured yet" rather than a
+        fabricated permissive default.
+        """
+        return self.last_entry_eligibility
 
     # ─── BaseStrategy interface ────────────────────────────────────────────
     def get_params(self) -> dict:
@@ -1494,6 +1594,11 @@ class SpecConditionStrategy(BaseStrategy):
         n = len(df)
         false_col = pl.lit(False)
         enforced = family_meta_enforced()
+        # Reset ABOVE the short-frame early return. `A GUARD BELOW AN EARLY RETURN IS A
+        # GUARD THE SHORT PATH NEVER MEETS` -- this file's own law (LANE 29 moved the
+        # parameter refusals for exactly this reason).
+        self.last_entry_eligibility = None
+        self.execution_status = EXECUTION_STATUS_EXECUTED
         self._acknowledge_parameters(n, enforced)
         if n < MIN_BARS_REQUIRED:
             self.last_trace = []
@@ -1763,6 +1868,29 @@ class SpecConditionStrategy(BaseStrategy):
 
         exit_long = np.zeros(n, dtype=bool)   # framework-owned — NEVER set here
         exit_short = np.zeros(n, dtype=bool)  # framework-owned — NEVER set here
+
+        # ═══ THE STRATEGY-LEVEL REFUSAL BOUNDARY (R-747 §4) ══════════════════════════════
+        # THE WHOLE POINT OF THIS BLOCK, AND WHY IT IS NOT REDUNDANT WITH THE UNBINDING:
+        # AR-843 MEASURED that refusing the trigger by unbinding it leaves entries UNCHANGED
+        # at seven, because unbinding removes a term from a conjunction and
+        # `A REFUSAL THAT WORKS BY REMOVING A CONSTRAINT IS NOT A REFUSAL -- IT IS A
+        #  RELAXATION WEARING A REFUSAL'S NAME.`
+        # So eligibility is CONSUMED here, not merely reported. R-747 §4:
+        # `RECORDING IT IN TRACE METADATA DOES NOT SATISFY THE CONTRACT.`
+        #
+        # PLACED AFTER per-condition evaluation ON PURPOSE. The conditions still evaluate and
+        # `last_per_condition_bool` still holds their real arrays, so the refusal cannot be
+        # mistaken for "no setup occurred" and a diagnostic reader can still see what the
+        # market did. R-747 §4: all-false arrays are permitted ONLY as emitted by THIS
+        # explicit strategy-level boundary, never as a fake per-condition predicate.
+        eligibility = self._derive_entry_eligibility(spine_satisfied, n)
+        self.last_entry_eligibility = eligibility
+        if eligibility.may_enter:
+            self.execution_status = EXECUTION_STATUS_EXECUTED
+        else:
+            self.execution_status = EXECUTION_STATUS_REFUSED
+            entry_long = np.zeros(n, dtype=bool)
+            entry_short = np.zeros(n, dtype=bool)
 
         if self.trace_enabled:
             self.last_trace = self._build_trace(

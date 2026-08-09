@@ -816,6 +816,21 @@ class ConditionBinding:
     approximation: bool
     executed: bool
     reason: str | None = None
+    disposition: str | None = None
+    """The V1.1 disposition when this condition was REFUSED for a source reason rather than
+    an engine one. `SOURCE_AMBIGUOUS` means the teacher said something real that does not
+    determine a unique executable rule -- distinct from `SOURCE_INCOMPLETE` (the teacher never
+    said) and from an engine gap (no primitive exists). Carried STRUCTURALLY so a consumer
+    never parses `reason` prose (R-742 §3)."""
+
+    ambiguity: str | None = None
+    """WHICH question the source left open, when `disposition == SOURCE_AMBIGUOUS`.
+
+    Named rather than implied, because "the trigger is ambiguous" does not tell a reader what
+    to go back to the video and look for. R-746 §3: the direction IS taught ("above the range
+    high"); it is the CONFIRMATION semantics that are unresolved, and conflating those two
+    would erase what the teacher did say."""
+
     session_zone: str | None = None
     parameters: tuple[tuple[str, Hashable], ...] | None = None
     """OPTIONAL per-condition parameter carrier — Layer 2 of the numeric parameter channel
@@ -3036,6 +3051,54 @@ class BindingPlan:
         }
 
 
+def _refuse_ambiguous_breakout_trigger(
+    binding: ConditionBinding,
+    trigger_id: str,
+    opening_range_defined: bool,
+) -> ConditionBinding:
+    """Refuse an entry trigger whose breakout CONFIRMATION the source never specified.
+
+    Returns the binding UNCHANGED for every condition the four semantic conditions do not
+    all match -- which is every condition in the corpus except the shape this exists for.
+    `A CLASSIFIER THAT TOUCHES MORE THAN IT NAMES IS A MIGRATION WEARING A FIX'S NAME.`
+
+    The refusal is EXACT and it is source-owned, not engine-owned:
+      primitive=None · bindable=False · executed=False
+      disposition=SOURCE_AMBIGUOUS
+      reason=opening_range_breakout_confirmation_unresolved_from_source
+      ambiguity=breakout_confirmation_semantics
+
+    PROSE, PROVENANCE, ROLE AND ORDERING ARE PRESERVED (R-746 §3). The condition stays in the
+    plan, in place, carrying its taught sentence -- it is REFUSED, not deleted.
+
+        `REFUSAL IS NOT ABSENCE` (R-747 §2). A required condition that cannot compile must
+        remain visible as a blocking failure; if it vanishes, `A AND B AND broken` becomes
+        `A AND B`, and THE NEW MASK CANNOT BE STRICTER.
+    """
+    from src.engine.breakout_confirmation_ambiguity import (
+        DISPOSITION_SOURCE_AMBIGUOUS,
+        classify_breakout_confirmation_ambiguity,
+    )
+
+    verdict = classify_breakout_confirmation_ambiguity(
+        is_entry_trigger=bool(trigger_id) and binding.condition_id == trigger_id,
+        text=binding.object,
+        opening_range_defined_in_spec=opening_range_defined,
+    )
+    if not verdict.ambiguous:
+        return binding
+    return replace(
+        binding,
+        bindable=False,
+        primitive=None,
+        approximation=False,
+        executed=False,
+        reason=verdict.reason,
+        disposition=DISPOSITION_SOURCE_AMBIGUOUS,
+        ambiguity=verdict.ambiguity,
+    )
+
+
 def compile_binding_plan(
     spec: dict,
     restore_condition_ids: frozenset[str] | None = None,
@@ -3096,6 +3159,31 @@ def compile_binding_plan(
     invalidation_bindings = [
         bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c), force_unexecuted=_force_unexecuted(c))
         for c in invalidations
+    ]
+
+    # ── TRIGGER SAFETY (R-746 §3, R-747 §4/§6) ───────────────────────────────────────────
+    # A taught breakout whose CONFIRMATION the source never specifies must not be bound to a
+    # primitive that never reads its sentence. AR-842 measured exactly that: the entry trigger
+    # "when price breaks above the range high" was bound to structure_engine.compute_structure_
+    # state, whose handler docstring says the OBJECT text "is not checked -- only generic
+    # BOS/CHoCH/MSS activity". AR-843 then measured the trigger NON-DISCRIMINATING: present or
+    # absent, the same seven entries fire.
+    #
+    # `A POINTER TO A SEMANTICALLY UNRELATED PRIMITIVE IS NOT A BOUND TRIGGER.`
+    #
+    # WHY THE UNBINDING IS NOT THE WHOLE REPAIR, MEASURED (AR-843 §2). Unbinding alone drops a
+    # term from the conjunction (gating 3 -> 2) and leaves entries UNCHANGED at seven --
+    # `A REFUSAL THAT WORKS BY REMOVING A CONSTRAINT IS NOT A REFUSAL, IT IS A RELAXATION
+    # WEARING A REFUSAL'S NAME`. So this pass makes the trigger UNBOUND *and* records the
+    # disposition that the eligibility boundary in spec_condition_compiler.py then ENFORCES.
+    # NEITHER HALF IS SUFFICIENT ALONE, and this comment exists so a later reader does not
+    # delete the other one as redundant.
+    opening_range_defined = any(
+        str(c.get("type", "")) == "OPENING_RANGE_DEFINITION" for c in entry_conditions
+    )
+    bindings = [
+        _refuse_ambiguous_breakout_trigger(b, trigger_id, opening_range_defined)
+        for b in bindings
     ]
 
     spine = [b for b in bindings if b.role == "spine"]
