@@ -4,6 +4,71 @@
 
 ---
 
+## AR-891 · 2026-08-09 · 🟢 **START-RECEIPT — `R-771 §5` TAKEN. FIRST OBSERVABLE DELIVERED IN THIS RECEIPT: THE `8`-MEMBER POPULATION, SIZE ASSERTED, EVERY MEMBER RESOLVED ON DISK, BEFORE ANY RUN.** 🛑🛑 **AND I OPEN WITH A BLOCKER ON ITEM `1`, BECAUSE RAISING IT NOW IS FREE AND RAISING IT AT DELIVERY COSTS THE WHOLE RUN: THE "COMMITTED 14-CALL-SITE DISPOSITION GUARD" IS **NOT ON DISK AND NEVER HAS BEEN.** IT WAS ORDERED AT `R-755 §4-2` AND NEVER BUILT.** ⭐ **THE CENSUS IT WOULD GUARD IS STILL EXACTLY `14 / 9` — I RE-DERIVED IT — SO NO STOP CONDITION FIRES; WHAT IS MISSING IS THE GUARD, NOT THE FACT.**
+
+**TASK: `R-771 §5`** — the five `R-758 §8` acceptance items. **SEAT `claude.exe 23140`** (continuing, per `R-771 §5`: *"the authorization did not lapse and is not re-issued"*). **TREE `wt-h1-wave4-20260712`, HEAD `7d236187`** — the `R-771` commit itself. **ATTEMPT BUDGET `0 / 2`.** **FAN-IN `0 / 5`, starting now.** 🛑 **I DO NOT SEAL — `R-771 §5` reserves that act to the desk and `AR-890 §1` already bound me to it.**
+
+### §1 — ✅ FIRST OBSERVABLE, AS CONTRACTED: THE POPULATION *BEFORE* THE RUN
+```
+[MEASURED HERE] find src -name 'd10-*.test.ts' | sort  +  shadow-rerun-service.test.ts
+ 1 d10-e-prompt-evolution-refusal.test.ts     5 d10-n2-matrix-refusal.test.ts
+ 2 d10-f7-agent-outcome.test.ts               6 d10-n3-evolution-refusal.test.ts
+ 3 d10-f9-critic-evidence-refusal.test.ts     7 d10-n4-lifecycle-refusal.test.ts
+ 4 d10-n1-replay-outcome.test.ts              8 shadow-rerun-service.test.ts
+SIZE = 8                    ASSERT PASS (== 8, matches R-771 §5's own ls-enumeration)
+ALL 8 RESOLVE ON DISK       ASSERT PASS
+```
+★ **The size assert and the per-member existence check are separate on purpose** — `[instrument-truncation-cluster]` (6): **a typo'd member in a mixed `vitest` list is silently dropped at exit `0`, while a bogus path ALONE exits `1`.** ⇒ **only the mixed list is dangerous, which is exactly the shape this item requires.**
+
+### §2 — 🛑🛑 BLOCKER, ITEM `1`: THE GUARD DOES NOT EXIST. THE PREMISE "COMMITTED" IS FALSE
+**`R-758 §8-1` / `R-771 §5-1` say *"the **committed** 14-call-site disposition guard with a FAKE FIFTEENTH-SITE negative control"*. `[MEASURED HERE]` there is no such artifact:**
+```
+1  ITS OWN VOCABULARY IS ABSENT FROM ALL CODE
+   grep -rn 'PROPAGATES|HANDLES_REFUSAL|DISCARDS' src/ scripts/ forensics/  ->  1 hit,
+   and that one hit is a STALE .pyc (test_spec_producer.cpython-313.pyc), not a source file
+   POSITIVE CONTROL: BACKTEST_STATUS_REFUSED in the same paths -> 29 hits
+                     => the grep works; the feature is absent, not my instrument
+2  IT HAS NEVER ENTERED ANY COMMIT ON ANY BRANCH AS CODE
+   git log --all -S'HANDLES_REFUSAL' -- .   ->  exactly ONE commit: defa3c48
+                     and defa3c48 is "R-755: F-8 accepted..." — A RULING DOCUMENT.
+                     The string exists in the ORDER that demanded the guard, nowhere else.
+3  NO TEST DOES THE WORK UNDER ANOTHER NAME
+   every test scanning source AND naming runBacktest -> exactly 2, both different guards:
+     d10-f7 F-7.8/F-7.9  = the TEN named ternary sites (F-7's own guard)
+     d10-n4 §A           = the FIX-3 helper is declared/invoked once
+   no `toBe(14)`, no call-site enumeration, no file named for a census
+4  EVERY AR SINCE HAS LISTED IT AS NOT RUN
+   AR-880/882/884/886/887 "NOT RUN, NOT CLAIMED: ... the 14-call-site disposition guard"
+```
+⇒ **`R-755 §4-2` ORDERED it** (*"A MECHANICALLY RE-DERIVED CALL-SITE DISPOSITION GUARD over all 14 direct calls… A new direct caller with no disposition turns the guard RED"*) **and it was never built. The later rulings then referred to it as *committed*, which carried the assumption forward.** ★★★★★ **`AN INSTRUMENT NAMED IN A CONTRACT IS A CLAIM ABOUT THE DISK LIKE ANY OTHER — "THE COMMITTED X" IS NOT EVIDENCE THAT X WAS COMMITTED.`**
+
+### §3 — ⭐ WHAT I *CAN* SAY ABOUT ITEM `1` TODAY — AND THE LINE I WILL NOT BLUR
+✅ **I re-derived the census by hand `[MEASURED HERE]`, and it is UNCHANGED:**
+```
+git grep -n 'runBacktest(' -- 'src/**' | grep -v __tests__ | grep -v '\.test\.'  ->  21 raw
+  21 = 14 EXECUTABLE DIRECT CALLS + 6 comments + 1 definition (backtest-service.ts:460)
+carter 1 (:182) · routes/backtests 1 (:255) · agent 3 (:824 :1281 :1380) · conveyor 1 (:199)
+critic 4 (:2469 :2697 :2978 :3208) · evolution 1 (:445) · lifecycle 1 (:3201)
+matrix 1 (:104) · shadow 1 (:242)
+=> 14 DIRECT CALLS ACROSS 9 CALLER FILES — IDENTICAL to R-755's enumeration, file for file
+=> NO FIFTEENTH DIRECT CALLER. R-758 §8's STOP CONDITION DOES NOT FIRE.
+```
+🛑 **AND THIS IS NOT ITEM `1` AND I WILL NOT LET IT BE COUNTED AS ITEM `1`.** **A hand census is a MEASUREMENT; the contracted artifact is a GUARD — a committed test that re-derives this mechanically and goes RED when a fifteenth undispositioned caller appears.** ★★★★★ **`A MEASUREMENT TELLS YOU THE NUMBER TODAY; A GUARD IS WHAT MAKES IT STILL TRUE NEXT WEEK. MY CENSUS HAS NO RED PATH, AND A THING WITH NO RED PATH CANNOT SATISFY A CLAUSE WHOSE WHOLE POINT IS A FAKE FIFTEENTH SITE THAT BITES.`** ⇒ **item `1` is `UNMET`, and `R-771 §6` already pre-registered that as an acceptable outcome: *"AN UNMET CRITERION IS A RESULT, NOT A FAILURE."***
+
+### §4 — ⚖️ THE DECISION I AM **NOT** MAKING, AND WHY IT IS THE DESK'S
+**Building the guard is CONSTRUCTION, and `R-771 §8` says *"NO further repair lane is authorized"*; `§5` says no new lane.** ⚖️ **`R-755 §4-2`'s build order is arguably still standing and never discharged — but a standing order from six rulings ago is exactly the thing `[stated-price-not-prohibition]` and `[conditional-permission]` warn me not to resolve in my own favour while holding a deadline I want to clear.**
+> **THE QUESTION, ONE LINE: does item `1` become (a) BUILD the guard now under `R-755 §4-2`, or (b) record `UNMET` and let `§6` decide the seal?**
+🛑 **I proceed on (b) by default — it is the only branch that touches nothing.** ✅ **I do NOT stop the run over it:** items `2` `3` `4` `5` do not depend on the answer, so they run now (`worker-execution §9`).
+
+### §5 — ⏭️ WHAT RUNS NEXT, AND WHAT I HAVE PROMISED NOT TO DO
+**RUNNING NOW: item `2`** the 8 members above · **item `3`** Python focused acceptance · **item `4`** the `103`-member manifest by FAILURE MEMBERSHIP against `docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json` (`33` frozen failure node IDs), **`tr -d '\r'` before any set diff** (`[ps-counting-encoding]`: two identical sets diffed as `33+33` on Windows) · **item `5`** the tampered-comparison negative control.
+🛑 **ITEM `4` IS A MEMBERSHIP JOIN AND I WILL STATE `b11-b12`'s STATUS IN THAT FROZEN LIST EXPLICITLY, EITHER WAY** — `R-771 §3`'s blob-SHA proof settles *"not caused by Lane `E`"* and **does not settle *"is a member of the frozen 103"*. **Two different join keys** (`[i-measured]`).
+🛑 **STOPS HONOURED:** no `B11` repair · no funnel edit · no schema/migration · no second census · no live-DB query · no hygiene pass · the other `31` baseline failures untouched · the sibling's `test_synthetic_market_simulator.py` is not mine.
+**ETA: the four runnable items in one pass; `AR` on completion.**
+
+---
+
+
 ## AR-890 · 2026-08-09 · 📍 **SEAT RECEIPT — SAME PROCESS, WIPED CONTEXT. `claude.exe 23140` IS STILL ALIVE, SO `R-770 §6`'s NAMED ADDRESSEE DID NOT DIE; ONLY ITS MEMORY DID.** ⚡ **EAR RE-ARMED AND PROVEN TO *DELIVER* — RED-PROOFED ON A THROWAWAY REPO WITH A CONTROL AND TWO BITING MUTATION ARMS BEFORE IT WENT ANYWHERE NEAR THE REAL FILE.** 🛑 **NO OPEN AUTHORIZATION: LANE `E` IS RETURNED (`AR-889`) AND THE FINAL `D-10` ACCEPTANCE IS THE DESK'S TO CLEAR. I AM NOT STARTING IT.** ⚠️ **AND ONE RULING DEFECT REPORTED AS `worker-onboarding §1` ORDERS: `R-770` CARRIES NO `★ WORKER — START HERE` BLOCK.**
 
 **SEAT `claude.exe 23140`** — **the same PID `R-770 §6` and `§8` authorize by name.** **TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** **THIS IS A RECEIPT, NOT A DELIVERY — no code was touched.**
