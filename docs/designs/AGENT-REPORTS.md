@@ -4,6 +4,76 @@
 
 ---
 
+## AR-825 · 2026-08-09 · ✅ **`STEP 3`'s TYPED REPRESENTATION IS BUILT, DECLARED ON BOTH SIDES, AND FAILS CLOSED — `118 passed`, and the permanent RED still reds for the right three reasons.** 🛑🛑★★★★★ **AND I AM STOPPING ON THE CLASSIFICATION, NOT LANDING IT: ALL SIX CONTROLS PASS, AND THE CORPUS READ SHOWS THE RULE MOVING A **SECOND** CONDITION — A GENUINE OPENING-RANGE DEFINITION IN ANOTHER VIDEO. `R-731 §3` SAYS STOP, AND I HAVE NOT HARDCODED A VIDEO ID TO MAKE THE NUMBER ONE.** ⚠️ **PLUS A RED I FOUND THAT PRE-DATES THIS COMMIT AND IS MINE FROM AN EARLIER CONTEXT.**
+
+**RULING:** `R-730 §4` as amended by **`R-731 §2/§3/§4`**. **CONTRACT:** `EXTERNAL-READ-2026-08-09-STEP3-RELEASED.md` + `...-STEP3-DISCRIMINATION-TIGHTENED.md` **both parts, read at the files.** ✅ **The `worker-execution` guard BLOCKED my write mid-build when `R-731` landed — correctly, and it is why the ordered design got built instead of my conjunction+exclusion.**
+
+### §1 — 🛑🛑 THE STOP, AND IT IS THE HEADLINE
+`[MEASURED HERE]` **all six required controls PASS** under the ORDERED rule (`R-731 §2`), and the authorized corpus-wide read-only blast radius then returns **`2` conditions across `99` scanned in `11` specs**:
+```
+AUTHORIZED   st5e-YJRfKc__s0 (opening_range_breakout)
+             WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0
+*** BEYOND *** dENM6gt8ZRg__s0 (orb_5m_retest)
+             WAIT_STRUCTURE:the-first-five-minute-candle-from-09-30#0
+             "The first five-minute candle - from 09:30 to 09:35 - forms the Opening
+              Range. Two levels: the high and the low of that candle. And the midpoint..."
+```
+🛑 **I READ THE SECOND ONE BEFORE JUDGING IT, AND IT IS NOT A FALSE POSITIVE.** Explicit clock (`09:30 to 09:35`, `five-minute`) · explicit construction (`forms the Opening Range`, `the high and the low`) · **no reference/trigger evidence.** ⇒ **It is a textbook opening-range DEFINITION — arguably a cleaner one than the golden slice's.**
+★★★★★ **SO THE ONLY WAYS TO GET THE POPULATION TO `1` ARE: (a) hardcode the video/strategy id — `R-731 §3` forbids it BY NAME; or (b) tighten the rule until it rejects a true definition, which is fitting the classifier to one video and is the anti-fit violation `spec_producer.py`'s own contract exists to prevent.** ⇒ **I did neither. `NARROWING THE POPULATION UNTIL THE RULE LOOKS RIGHT IS NOT SCOPING, IT IS SUPPRESSING THE CONTROL.`**
+⚖️ **THIS IS THE DESK'S CALL AND I AM NOT TAKING IT.** My read: **the rule is correct and the finding is about the CORPUS, not the rule** — there are genuinely two taught opening-range definitions in it. **The decision — widen the authorization to both, or hold `STEP 3`'s classification — is scope, and scope is yours.** **The instrument is committed and reruns in one command; nothing needs re-deriving.**
+
+### §2 — ✅ THE ORDERED RULE, AND WHY IT IS NOT A `breakout` BLACKLIST
+`R-731 §2` refused my *"explicit trigger-exclusion"* phrasing and it was right to. **Stage 1 now tests a SEMANTIC RELATION with three closed classes**, each a way of positioning the range as **already constructed**: **`CROSSING`** (a directional relation between price and an existing boundary) · **`CONSUMPTION`** (an action taken with respect to an existing range) · **`POSTERIORITY`** (a time relation to the range's completion). ★★★ **The classes are the rule; the patterns are evidence FOR them. That is what makes a new phrasing a question about which class it belongs to, rather than a request to extend a list** — `GOVERN WITH A CLOSED RULE, NOT AN OPEN LIST`.
+**THE SIX CONTROLS `[MEASURED HERE]`:**
+| # | control | verdict |
+|---|---|---|
+| 1 | the real definition condition **moves** | PASS → `DEFINITION` |
+| 2 | the breakout sentence does **not** | PASS → `REFUSED_STAGE_1_REFERENCE[CONSUMPTION+CROSSING+POSTERIORITY]` |
+| 3 | the anaphoric sentence does **not** | PASS → `REFUSED_STAGE_3_ANAPHORIC_CLOCK` |
+| 4 | duration evidence removed ⇒ blocked | PASS → `REFUSED_NO_EXPLICIT_CLOCK` |
+| 5 | construction evidence removed ⇒ blocked | PASS → `REFUSED_NO_CONSTRUCTION_EVIDENCE` |
+| 6 | genuine structure neighbour does **not** move | PASS → `REFUSED_STAGE_1_REFERENCE[CROSSING]` |
+★★★ **`4` and `5` are `vary-deleted` applied to the rule's own two limbs — each half removed INDEPENDENTLY must block. That is what makes the conjunction a measurement instead of an assertion.**
+
+### §3 — ✅ WHAT DID LAND: THE TYPED REPRESENTATION, DECLARED PROPERLY
+**`src/engine/opening_range_definition.py`** — three invariants enforced BY CONSTRUCTION, each tested by attempting to violate it: **(1) no default duration anywhere** — and the definition carries no `duration_minutes` field at all, so one cannot hide on it later · **(2) no silent selection** — all three taught alternatives preserved, and `selected_duration_minutes` **RAISES**, naming them, because a property returning `variants[0]` is a silent choice three layers below where anyone would look · **(3) width/midpoint are DERIVED** — `from_levels()` is the only route to a usable state, and a second day gives a different answer as the witness that it is a formula and not the stored `52¢`.
+✅ **FAIL-CLOSED IN THE FORM `R-731 §4` REQUIRES, WHICH EXCLUDES THE EASY WIN:** the refusal is a **VALUE THE CODE MEANS** — a typed `ADAPTER_NOT_IMPLEMENTED` status on a state whose every numeric field is `None`. **It RETURNS; it does not raise.** ★★★ **`A CRASH, A MISSING DICTIONARY ENTRY OR AN ACCIDENTAL EXCEPTION IS NOT AN ACCEPTABLE REFUSAL` — so the tests assert the refusal is reachable and observable, not that something blew up.**
+✅ **DECLARED, NOT EXEMPTED** (`R-729 §2`): `FAMILY_META["OPENING_RANGE_DEFINITION"] = unsupported=True, primitive=None, unbound_reason="opening_range_adapter_not_implemented"`. `[MEASURED HERE]` **`unsupported=True` makes `enforced_declaration()` return `(None, None)`, so pin (a) adds no name to `declared` and needs no `ENFORCED_DISPATCH` key, and pin (b) skips at its own `if meta.unsupported: continue`.** ⇒ **The guard is SATISFIED by the declaration rather than told to ignore it — and there is no primitive to fall back to, which is the strongest form of "never returns to `compute_structure_state`."**
+✅ **THE MIRROR PRICE IS PAID IN THIS COMMIT:** `src/server/lib/spec-family-bindings.ts` carries the same entry + a **focused** parity fixture whose text parser has a **positive control** (it must find `WAIT_STRUCTURE` and must MISS a fabricated family, or the parity assertions are vacuous). **The broad gate also passes:** `npx tsx scripts/check-spec-binding-plan-parity.ts` → **`PASS: full parity` at flag=false, `0` unexpected mismatches at flag=true.**
+
+### §4 — ⚠️ A RED THAT PRE-DATES THIS COMMIT, AND IT IS MINE FROM AN EARLIER CONTEXT
+`[MEASURED HERE]` `test_flag_off_parameterized_refusal.py::test_the_canonical_population_matches_its_committed_manifest_by_member` was **already RED at `HEAD`** — `committed=97 derived=99`.
+🛑 **CAUSE, MEASURED NOT GUESSED:** the manifest was last written at `1163f366`; **`test_opening_range_conformance.py` entered the population at `1dbac9ec`** (the previous seat's `STEP 2` — **this same seat, before `/clear`**) **and the manifest was never regenerated.** ⇒ **The guard has been red since `1dbac9ec` and stayed red through `8a640850`.** ★★★ **The desk's independent verification of `8a640850` did not catch it because it ran only the conformance file — `A SUITE YOU DID NOT RUN IS NOT A SUITE THAT PASSED`, and I did not run it either until this commit put a second file into the same population.**
+✅ **REPAIRED THE WAY THE MANIFEST'S OWN HEADER DEMANDS:** regenerated **by the committed generator**, never hand-edited; header preserved verbatim; **member diff justified by name — `ADDED: test_opening_range_conformance.py` (B1 STEP 2's RED, imports `compile_binding_plan`), `test_opening_range_family_parity.py` (this commit's fixture, imports `FAMILY_META`); REMOVED: none.** ★ **`REMOVED: none` is the load-bearing half — the header warns that one stray import can swing this population `95 → 159` and embalm `64` spurious members. Zero removals and exactly two justified additions is the evidence that did not happen.**
+
+### §5 — ✅ RESULT, AND WHAT I DID NOT MEASURE
+```
+pytest test_flag_off_parameterized_refusal test_family_meta_enforcement
+       test_opening_range_definition test_opening_range_family_parity
+       test_opening_range_conformance          ->  3 failed, 118 passed
+```
+✅ **THE `3` FAILURES ARE THE UNCHANGED PERMANENT RED** — classification, route, output contract. **They are EXPECTED to still be red: the classification did not land (`§1`), and the adapter is `STEP 4`.** ★ **I re-took this measurement after the manifest repair rather than carrying the earlier number across it.**
+🛑 **NOT MEASURED, STATED RATHER THAN IMPLIED:** **no full-repo pytest** — I ran the affected suites plus the two enforcement guards, not everything · **no classifier landed, so `R-731 §4`'s expected test transition is UNTESTED and I claim nothing about it** · **the `no reachable fallback to compute_structure_state` claim is made at the DECLARATION (`primitive=None`), NOT at an executable line — `R-731 §4` requires that measured at the executable line and that is `STEP 4`'s to prove, so it stands as `UNMEASURED` here rather than asserted** · nothing about the other eight conditions, the other ten specs, or futures portability · **breakout trigger untouched: `UNRESOLVED_SOURCE_AMBIGUITY`.**
+⚖️ **Per-step budget: `1 / 2` on `STEP 3`. Fan-in `3 / 8`** (`STEP 3` typed representation delivered; its classification half is **STOPPED BY RULE**, not unstarted). **Not a handoff — this seat continues the moment the scope call lands.**
+
+## AR-824 · 2026-08-09 · ⚡ **START-RECEIPT — `R-730 §4` `STEP 3` ACCEPTED. THE FIRST PRODUCTION EDIT THIS CAMPAIGN HAS AUTHORIZED ON THE MONEY PATH.** 🛑 **AND I AM NAMING THE HARD PART BEFORE I BUILD IT: THE CONJUNCTION RULE HAS TO EXCLUDE THE BREAKOUT SENTENCE, WHICH CONTAINS BOTH HALVES.**
+
+**CONTRACT SOURCE:** `docs/designs/EXTERNAL-READ-2026-08-09-STEP3-RELEASED.md` — `STEP 3 CONTRACT` + `CENSUS CONTROL TRANSITION` + `ENVIRONMENT-FLAG RULING` + `STEP 3 PASS CONDITION`, **read at the file.** **Ruling `R-730 §4`.** **`ratify-packet` re-invoked** — pre-live AUTONOMOUS class, packet staged at `R-727 §3`, independent grade pre-registered with its trigger.
+**FIRST OBSERVABLE:** a new typed module + `OPENING_RANGE_DEFINITION` emitted by the real producer for exactly one condition. **ETA ~`60` min.**
+
+### §1 — 🛑 THE DISCRIMINATION PROBLEM, STATED BEFORE I BUILD RATHER THAN AFTER
+`R-730 §2` requires a definition to carry **BOTH** a clock/duration window **AND** level/range construction. `[MEASURED HERE]` `_FAMILY_KEYWORDS["WAIT_STRUCTURE"]` **already contains `"opening range"`, `"range"`, `"level"`, `"high of the"`, `"low of the"`** — so several conditions in this spec score the coarse family today, and a naive conjunction would move more than one.
+🛑 **THE ONE THAT WILL BITE:** condition `#3` — *"…after this **30 minute** range is over … we look for a **breakout**"* — carries an explicit duration **and** level language, so a naive conjunction captures it. **It is the BREAKOUT sentence.** `R-730 §2`: *"typing it as anything is forbidden this step. Leave it exactly where it is."* ⇒ **The rule needs an explicit trigger-exclusion, not just a conjunction.**
+⚠️ **AND ONE I MUST NOT OVER-CAPTURE EITHER:** condition `#2` — *"in between **these time periods**"* — its clock reference is **ANAPHORIC**, carrying no duration token of its own. **A rule requiring an EXPLICIT clock/duration excludes it correctly**; a rule that follows the pronoun would move a second condition.
+✅ **I WILL NOT ASSERT THE RULE IS TIGHT — I WILL MEASURE IT** across **every** condition of **all** census specs and report exactly which move, before the classification lands.
+
+### §2 — BOUNDS
+🛑 **SCOPE: the typed representation ONLY.** No adapter · no evaluator · no breakout decision · no default duration · **no silent choice among `5/15/30`** · no futures portability claim · no changes to the other eight conditions.
+✅ **FAILS CLOSED, AS RELEASED:** the new type **MAY REFUSE** because its adapter does not exist — `R-730 §4` calls that explicitly safe. 🛑 **It must NEVER fall back to `compute_structure_state`.**
+🛑 **FLAG DESIGN IS DECIDED AND NOT REOPENABLE:** properly declared route · **no guard exemption** · **if `FAMILY_META` moves, the TypeScript mirror (`src/server/lib/spec-family-bindings.ts`) + a focused parity fixture ship in the SAME commit.** `[MEASURED HERE]` that mirror exists and `scripts/check-spec-binding-plan-parity.ts` already guards it.
+🛑 **`R-730 §3` ORDER I AM HOLDING:** the byte-identity census control **must be converted to an exact-delta control IN THE SAME COMMIT that moves the classification — never after.** ★ **Converted afterwards it is indistinguishable from weakening a test that caught me.**
+⚖️ **Per-step budget `2`. LOCALITY RULE on every null. Breakout trigger stays `UNRESOLVED_SOURCE_AMBIGUITY`.**
+
 ## AR-823 · 2026-08-09 · ✅ **THE CORRECTED PERMANENT RED IS BUILT AND IT ENTERS AT THE FROZEN EXTRACTION JSON.** `3 failed · 7 passed` — **THE EXACT FAILURE MEMBERSHIP `R-728 §4` SPECIFIED.** ⭐⭐ **AND THE CENSUS JOIN CAME BACK DISAGREEING — I CHASED IT TO A NAMED COMMIT AND TURNED IT INTO A BYTE-IDENTICAL CONTROL RATHER THAN A COMPARISON I COULD HAVE QUIETLY WEAKENED.** ✅ **THE GENEROSITY IS GONE AND ITS REMOVAL IS ITSELF RED-PROOFED.** 🛑 **AND A DIRTY FILE IN THE SHARED TREE IS NOT MINE AND IS NOT IN THIS COMMIT.**
 
 **RULING:** `R-728 §6`. **CONTRACT SOURCE:** `EXTERNAL-READ-2026-08-09-STEP2-STARTS-TOO-LATE.md`, read at the file. **`STEP 3` REMAINS HELD — no production code touched** (`git diff --name-only 8c25b5e0..HEAD -- src/` returns **only** the test file).

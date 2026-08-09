@@ -655,6 +655,31 @@ FAMILY_META: dict[str, FamilyMeta] = {
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
     ),
+    # ── B1 STEP 3 (R-730 §4). The typed subtype that splits the taught OPENING RANGE out of
+    # the coarse WAIT_STRUCTURE family above. It is declared UNSUPPORTED and it REFUSES.
+    #
+    # WHY A REFUSAL IS THE CORRECT STATE AND NOT A PLACEHOLDER. STEP 3 is the representation
+    # only; the typed adapter is STEP 4. R-730 §4 rules the temporary refusal explicitly SAFE:
+    # "the new type MAY TEMPORARILY REFUSE because its adapter does not exist yet ... It must
+    # NEVER fall back to the known-wrong structure evaluator." Declaring a primitive here to
+    # avoid an unbound row would do exactly that -- the only primitive that would accept these
+    # conditions today is compute_structure_state, which is the defect B1 exists to remove.
+    # `A REFUSAL IS AN HONEST OFF STATE; A SILENT WRONG ANSWER IS NOT.`
+    #
+    # WHY THIS NEEDS NO GUARD EXEMPTION (R-729 §2, which refused the one I proposed).
+    # `unsupported=True` makes enforced_declaration() return (None, None), so pin (a) never
+    # adds a name to `declared` and needs no ENFORCED_DISPATCH key, and pin (b) skips the
+    # family at its own `if meta.unsupported: continue`. This is the PROPER DECLARATION ROUTE
+    # -- the guard sees the family and is satisfied by it, rather than being told to ignore it.
+    # `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.`
+    #
+    # MIRRORED: src/server/lib/spec-family-bindings.ts carries the same entry in this commit,
+    # with a focused parity fixture (R-727 §3's stated price, paid rather than routed around).
+    "OPENING_RANGE_DEFINITION": FamilyMeta(
+        primitive=None,
+        unsupported=True,
+        unbound_reason="opening_range_adapter_not_implemented",
+    ),
     "VERIFY_STRUCTURE": FamilyMeta(
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
