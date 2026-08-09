@@ -4,6 +4,83 @@
 
 ---
 
+## AR-900 · 2026-08-09 · ✅ **`STEP 2` DELIVERED (`ba0803b1`) — THE FULL-RECORD PRODUCTION COMPILE BOUNDARY EXISTS AND THE AUTHORITATIVE LOWERER RUNS INSIDE IT.** ⭐⭐⭐ **`RED 1` HAS **ADVANCED STAGE 1 → STAGE 2**, WHICH `R-776 §5` PRE-REGISTERED AS THE SUCCESS SIGNAL — AND I DID NOT CHASE IT GREEN.** ✅ **BOTH REQUIRED ARMS EXECUTABLE: GOLDEN → `READY` WITH `5/15/30`, NEIGHBOUR → `SOURCE_INCOMPLETE` WITH NAMED MISSING FIELDS.** ✅ **REGRESSION: `2 failed, 128 passed` — AND THE TWO ARE THE TWO ORDERED OPENING-RANGE REDS THAT MUST STAY RED.**
+
+**TASK `R-776 §4` (STEP 2). SEAT `claude.exe 25636`. ATTEMPT `0 / 2` — UNSPENT. HEAD `ba0803b1`. FAN-IN `1 / 1`.**
+
+### §1 — ⚙️ THE DESIGN CHOICE `R-776 §3` LEFT OPEN, AND WHY I CHOSE THE WRAPPER
+**`R-776 §3` authorized EITHER extending `produce_spec_artifact()` with a full-record input OR a thin public wrapper — *"whichever is the smaller clean change."* I chose the wrapper, `produce_spec_artifact_from_record(record, *, video, …)`.**
+⚖️ **The deciding argument is not size, it is what each shape makes IMPOSSIBLE:**
+```
+EXTEND THE EXISTING FN : one function then has TWO input contracts — a strategy AND the
+                         record containing it — and every caller must be TRUSTED to pass a
+                         CONSISTENT pair. Nothing structurally prevents strategy_A + record_B.
+WRAPPER                : cannot be handed an inconsistent pair. It DERIVES the strategy from
+                         the record it was given. The bug class is unconstructable.
+```
+★★★★★ **`PREFER THE SHAPE THAT MAKES THE MISTAKE UNCONSTRUCTABLE OVER THE SHAPE THAT MAKES IT DETECTABLE.`** ⭐ **It is also the smaller change by measurement: every existing `produce_spec_artifact` caller (the census scripts) is untouched — `[MEASURED]` `2 files changed, 168 insertions, 21 deletions`, and the deletions are all in the test.**
+
+### §2 — ✅ WHAT THE BOUNDARY DOES, AND THE FOUR THINGS IT REFUSES TO DO
+```
+produce_spec_artifact_from_record(record, *, video, certificate=None,
+                                  transcript_chars=0, strategy_index=0) -> dict
+  1 derives the strategy FROM the record          (no caller-supplied pair to mismatch)
+  2 calls produce_spec_artifact() unchanged        (the producer is not forked)
+  3 calls lower_opening_range_definition() ONCE    (the ONLY production caller — [MEASURED],
+                                                   prior-art check found zero others)
+  4 attaches the result under a named key, read through opening_range_lowering_of()
+🛑 NO stub id, NO video id, NO duration appears in the logic. It reads the record it is handed.
+🛑 NO candidate expansion — that is STEP 3 and is deliberately ABSENT, not forgotten.
+```
+⭐ **ONE JUDGMENT CALL I MADE AND WILL DEFEND: the lowering runs for EVERY record, not only for records carrying an `OPENING_RANGE_DEFINITION` condition.** **Gating it would make *"never taught an opening range"* and *"never attempted"* indistinguishable downstream.** ★★★ **`AN ABSENT RESULT AND A REFUSAL ARE DIFFERENT FACTS, AND ONLY ONE OF THEM NAMES WHAT WAS MISSING.`** ⚖️ **This is also what makes the neighbour arm executable at all: it has no opening-range condition, so a gated call would have returned nothing instead of the `SOURCE_INCOMPLETE` `R-776 §4` requires.**
+✅ **`opening_range_lowering_of()` exists so *"this artifact predates the boundary"* stays distinguishable from *"the lowering refused"* — the same distinction, one level up.**
+
+### §3 — ✅ `R-776 §3` OBEYED: THE GUARD MOVED WITH THE BOUNDARY
+🛑 **`R-776 §3`: `A TEST PINNED TO A FUNCTION NAME GUARDS THE NAME, NOT THE BOUNDARY.` My `RED 1` inspected `produce_spec_artifact`'s SIGNATURE — if I had left it there it would now be watching a door nothing uses.**
+✅ **`RED 1` now EXERCISES the real boundary and asserts on its OUTPUT** — that the artifact carries a lowering whose definition holds the three taught windows in taught order. **A rename cannot satisfy that, and a stub cannot fake it.**
+```
+[MEASURED HERE] BEFORE STEP 2 : "STAGE 1, THE NAMED GAP: no public production compile
+                                 boundary accepts the full certified record"
+                AFTER  STEP 2 : "STAGE 2 (expected until STEP 3): the full-record boundary
+                                 now lowers a source-complete definition with all three
+                                 taught windows, but the compiled plan does not yet
+                                 TRANSPORT them as execution candidates"
+```
+⇒ ⭐⭐⭐ **THE RED MOVED ONE HANDOFF DEEPER AND NAMED THE NEXT ONE. `R-776 §5` pre-registered exactly this as success, so I stopped here rather than reaching into STEP 3 to turn it green.** ★★★★★ **`A LANE THAT INSISTS ON FULL GREEN PER STEP WILL EITHER OVER-REACH ITS SCOPE OR WEAKEN ITS GUARD.`**
+
+### §4 — ✅ BOTH REQUIRED ARMS, MEASURED THROUGH THE BOUNDARY (not the lowerer in isolation)
+```
+[MEASURED HERE]
+GOLDEN    st5e-YJRfKc__s0  -> lowering.definition present, variants (5, 15, 30) taught order
+NEIGHBOUR hcHuDfxdywI__s0  -> lowering.definition is None
+                              refusal.missing_fields NON-EMPTY (asserted, not assumed:
+                              "an unnamed refusal is indistinguishable from a crash")
+                           -> zero candidates in the compiled plan, zero adapter calls
+```
+⚖️ **I moved the neighbour arm to run THROUGH `produce_spec_artifact_from_record` rather than calling the lowerer directly — otherwise it would guard the lowerer, which was never in doubt, instead of the boundary, which is what STEP 2 built.**
+
+### §5 — ✅ REGRESSION, AND THE `§7` STOPS I DID NOT TRIP
+```
+[MEASURED HERE] 8 suites: adapter · lowering · candidate · definition · conformance ·
+                family_parity · grammar_firebreak · flag_off_parameterized_refusal
+                -> 2 failed, 128 passed in 34.81s
+THE 2 = test_no_production_binding_routes_to_the_opening_range_adapter_yet
+        test_no_typed_opening_range_output_contract_exists_in_production
+        ^ THE TWO ORDERED 6B REDS. They MUST stay red until registration/dispatch land
+          (STEP 5-7). No NEW failure appeared.
+THE POPULATION PIN IS IN THAT RUN AND PASSED -> the 104 manifest did not move; I added
+   no test file this step.
+```
+🛑 **`R-776 §4` STOP CONDITIONS — none tripped, each checked:** no provenance file is read inside the compiler (the boundary is handed a `record`; the TEST does the file I/O) · no stub recognised in production · no duration chosen · `market_scope` is not reconstructed from spec prose — it comes from the record's `instrument_classification` via the lowerer · no parsing copied out of the lowerer · `ConditionBinding.parameters` untouched · no trading-day rule manufactured · the neighbour was not turned `READY`.
+
+### §6 — 🛑 WHAT I DID NOT MEASURE, AND ONE LIMITATION I AM NAMING RATHER THAN LEAVING TO BE FOUND
+🛑 **NOT RUN: the full `104`-member join · `tsc` · the TS mirror (STEP 5) · any backtest.** **NOT DONE, by scope: registration, resolver, dispatch, candidate transport — STEPS 3-7.**
+⚠️ **A LIMITATION I INTRODUCED AND AM DECLARING NOW:** the artifact returned by the new boundary carries a **DATACLASS** under its lowering key, so **that artifact is no longer plain-JSON-serialisable**. **No current caller serialises it — `[MEASURED]` the boundary has no production callers yet, and the census scripts call the OLD entry point, which is unchanged — but the first consumer that writes an artifact to disk will hit it.** ★ **I am not fixing it in STEP 2 (out of scope, and the right shape depends on what STEP 3 needs), but it should not be DISCOVERED later.** **Registered for the desk as `STEP2-LIM-1`.**
+⚠️ **Also honest:** the new boundary currently has **zero production callers** — it is the door STEP 3 will walk through. **By `system_inventory`'s vocabulary that makes it `BUILT-UNREACHABLE` today**, which is the exact class `MP-1` is about. **That is expected for a boundary built one step ahead of its consumer, and I flag it so it is not later re-discovered as a finding.**
+**RECOMMENDATION: APPROVAL_REQUESTED. NEXT SMALLEST TASK: `STEP 3` — fan out the lowered definition into the 5/15/30 execution candidates via the existing `expand_execution_candidates`, none primary, none default, so `RED 1` STAGE 2 goes green.**
+
+---
+
 ## AR-899 · 2026-08-09 · ✅ **`R-775 §7` REPAIR DELIVERED — BOTH GUARD DEFECTS FIXED AND REPUBLISHED **RED** FOR THE RIGHT REASONS. `2 failed, 3 passed`.** ⭐ **THE DECISIVE ONE IS GONE: NO TEST IN THIS FILE INVOKES THE SPY — THE SPY LIST CAN NOW ONLY BE FILLED BY `SpecConditionStrategy._dispatch_enforced`.** ✅ **AND `§5`'s DELIBERATE `103 → 104` IS DONE IN ITS OWN COMMIT: EXACTLY ONE ADDED LINE, REGENERATED BY THE COMMITTED GENERATOR BEHIND AN ASSERT-BEFORE-WRITE THAT WOULD HAVE REFUSED ANY OTHER DIFF.** 🛑 **I DID NOT START STEP 2 — `R-775 §7` FORBIDS IT IN THE SAME MOTION.**
 
 **TASK `R-775 §7`. SEAT `claude.exe 25636`. STEP 1 attempt `1 / 2` — SPENT ON THIS REPAIR, `1` REMAINING.** **HEAD `27edd639`. FAN-IN `6 / 6` sub-items of `§7` (`1`–`6`); item `7` (STEP 2) is explicitly NOT-IN-THIS-MOTION.**
