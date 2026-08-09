@@ -88,7 +88,12 @@ field goes MISSING and the lowering REFUSES — which is reportable. Extending
 this map to "cover more cases" would trade a visible refusal for a silent guess."""
 
 _DURATION_RE = re.compile(
-    r"\b(?:(\d{1,3})|(" + "|".join(_SPELLED_MINUTES) + r"))[\s‐-―-]*minute\b",
+    # `minutes?` — the PLURAL is not optional cosmetics. Written as `minute\b`
+    # this missed "the first 15 minutes" entirely, which made a contradictory
+    # record look merely one-sided and would have produced false refusals on any
+    # teacher who says "minutes". Found by R-741 §2's control 2, which is what
+    # the control was ordered for.
+    r"\b(?:(\d{1,3})|(" + "|".join(_SPELLED_MINUTES) + r"))[\s‐-―-]*minutes?\b",
     re.IGNORECASE,
 )
 _CLOCK_RE = re.compile(r"\b(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?", re.IGNORECASE)
@@ -170,8 +175,35 @@ def _taught_spans(strategy: dict) -> tuple[str, ...]:
     return tuple(spans)
 
 
-def _taught_variants(strategy: dict) -> tuple[tuple[OpeningRangeVariant, str], ...]:
+ABSENT: str = "ABSENT"
+CONTRADICTORY: str = "CONTRADICTORY"
+"""R-741 §2: `TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES.` ABSENT means
+the teacher never said; CONTRADICTORY means the teacher said two things. V1.1
+maps the first to `SOURCE_INCOMPLETE` and the second to `SOURCE_AMBIGUOUS`, so
+the distinction is carried STRUCTURALLY and not buried in a reason string."""
+
+UNREADABLE: str = "UNREADABLE"
+"""A structured member the lowering cannot read at all. Refuses like a
+contradiction — it is a defect in the record, not a silence in the source."""
+
+REASON_VARIANT_EVIDENCE_CONTRADICTORY: str = "opening_range_taught_variants_contradict"
+REASON_VARIANT_MEMBER_UNREADABLE: str = "opening_range_taught_variant_member_unlowerable"
+REASON_SESSION_ANCHOR_CONTRADICTORY: str = "opening_range_session_anchor_spans_disagree"
+
+
+@dataclass(frozen=True)
+class _VariantProblem:
+    kind: str
+    detail: str
+
+
+def _taught_variants(
+    strategy: dict,
+) -> tuple[tuple[tuple[OpeningRangeVariant, str], ...], _VariantProblem | None]:
     """The taught alternatives, each with the verbatim span it came from.
+
+    Returns `(variants, problem)`. A non-`None` problem means the WHOLE
+    definition refuses; it is never a partial set plus a warning.
 
     TWO SHAPES, both real and both present in the frozen population:
       1. a STRUCTURED `variants` array carrying `variant_label` + `description`;
@@ -180,16 +212,48 @@ def _taught_variants(strategy: dict) -> tuple[tuple[OpeningRangeVariant, str], .
     Shape 2 exists because a teacher who offers exactly one window has no
     alternatives to enumerate. Refusing shape 2 would report a teacher's
     completeness as incompleteness — a false refusal is still a wrong answer.
+
+    ALL-OR-NOTHING ON SHAPE 1 (R-741 §2). If a structured collection exists,
+    EVERY member must lower. One unlowerable member refuses everything, because
+    a shrunken taught set is indistinguishable from a smaller lesson.
     """
     structured = strategy.get("variants")
     if structured:
         out: list[tuple[OpeningRangeVariant, str]] = []
-        for entry in structured:
+        for index, entry in enumerate(structured):
             label = entry.get("variant_label")
             span = entry.get("description") or ""
-            minutes = _duration_minutes(label or "") or _duration_minutes(span)
+            # PARSED INDEPENDENTLY, never `a or b`. R-741 §2: an `or` between two
+            # evidence sources is a precedence rule nobody decided to write — it
+            # would resolve a 5m label beside a 15-minute description as 5m and
+            # never report that the record disagreed with itself.
+            from_label = _duration_minutes(label or "")
+            from_span = _duration_minutes(span)
+            if from_label is not None and from_span is not None and from_label != from_span:
+                return (), _VariantProblem(
+                    kind=CONTRADICTORY,
+                    detail=(
+                        f"taught variant #{index} ({label!r}) declares {from_label}m in its "
+                        f"label and {from_span}m in its description; the record disagrees "
+                        "with itself and the compiler may not choose whichever it read first"
+                    ),
+                )
+            minutes = from_label if from_label is not None else from_span
             if label is None or minutes is None:
-                continue
+                # NO `continue`. R-741 §2: a loop that continues past what it
+                # cannot read is a compiler quietly editing the teacher — three
+                # taught variants plus one bad row would yield two candidates and
+                # no refusal, and two well-formed candidates look exactly like a
+                # strategy that taught two.
+                return (), _VariantProblem(
+                    kind=UNREADABLE,
+                    detail=(
+                        f"taught variant #{index} cannot be lowered "
+                        f"(label={label!r}, duration_evidence={span!r}); one unlowerable "
+                        "member refuses the whole definition rather than shrinking the "
+                        "taught set in silence"
+                    ),
+                )
             out.append(
                 (
                     OpeningRangeVariant(
@@ -198,7 +262,9 @@ def _taught_variants(strategy: dict) -> tuple[tuple[OpeningRangeVariant, str], .
                     span,
                 )
             )
-        return tuple(out)
+        # Taught ORDER preserved: `structured` is iterated in record order and
+        # never sorted. The teacher's ordering is source-owned.
+        return tuple(out), None
 
     for span in _taught_spans(strategy):
         if not _CONSTRUCTION_RE.search(span):
@@ -208,15 +274,20 @@ def _taught_variants(strategy: dict) -> tuple[tuple[OpeningRangeVariant, str], .
             continue
         return (
             (
-                OpeningRangeVariant(
-                    variant_label=f"{minutes}-minute opening range",
-                    duration_minutes=minutes,
-                    source_quote=span,
+                (
+                    OpeningRangeVariant(
+                        variant_label=f"{minutes}-minute opening range",
+                        duration_minutes=minutes,
+                        source_quote=span,
+                    ),
+                    span,
                 ),
-                span,
             ),
+            None,
         )
-    return ()
+    # No structured collection and no inline window: the source is SILENT about
+    # its taught alternatives. That is ABSENCE, not a defect in the record.
+    return (), None
 
 
 # ── the refusal and result contracts (R-740 §4/§5) ───────────────────────────
@@ -244,8 +315,20 @@ class OpeningRangeSourceRefusal:
     evidence_found: tuple[tuple[str, str], ...]
     positive_control: str
     extraction_dropped_no_source_statement: bool
+    failure_kind: str
+    """`ABSENT` · `CONTRADICTORY` · `UNREADABLE` — R-741 §2 requires the reason to
+    DISTINGUISH contradiction from absence so V1.1 can map the first to
+    `SOURCE_AMBIGUOUS` and the second to `SOURCE_INCOMPLETE`. Carried as its own
+    REQUIRED field rather than encoded in a reason string, because a downstream
+    mapper that has to parse prose is a second parser waiting to disagree."""
 
     def __post_init__(self) -> None:
+        if self.failure_kind not in (ABSENT, CONTRADICTORY, UNREADABLE):
+            raise ValueError(
+                f"failure_kind must be one of {(ABSENT, CONTRADICTORY, UNREADABLE)}; "
+                f"got {self.failure_kind!r} — two different silences deserve two "
+                "different names, and an unnamed one collapses them again"
+            )
         if not self.missing_fields:
             raise ValueError(
                 "a SOURCE_INCOMPLETE refusal must name at least one missing field; "
@@ -301,7 +384,7 @@ def lower_opening_range_definition(
 
     found: dict[str, tuple[str, str]] = {}
 
-    variants = _taught_variants(strategy)
+    variants, variant_problem = _taught_variants(strategy)
     if variants:
         found["variants"] = (
             ", ".join(f"{v.variant_label}={v.duration_minutes}m" for v, _ in variants),
@@ -313,20 +396,40 @@ def lower_opening_range_definition(
     # "9:30 a.m. Eastern" in its window sentence and "the Pacific Standard chart"
     # in its breakout sentence, and those are the chart and the clock, not two
     # answers to one question.
+    #
+    # R-741 §3: the pair is committed ATOMICALLY. A clock-only span must never
+    # reserve `session_start_local`, because a later complete span would then
+    # contribute only its timezone and the two halves would come from different
+    # sentences — a plausible, wrong session start that computes a plausible,
+    # wrong opening range on every bar.
+    # `A DOCUMENTED INVARIANT THE IMPLEMENTATION CAN BREAK IS A COMMENT.`
     anchor_spans = [span for _, span in variants]
     anchor = classification.get("market_open_anchor")
     if anchor:
         anchor_spans.append(anchor)
     anchor_spans.extend(spans)
+
+    complete_pairs: list[tuple[str, str, str]] = []
     for span in anchor_spans:
         clock = _clock(span)
         zones = _timezone_in(span)
-        if clock is not None and len(zones) == 1:
-            found.setdefault("session_start_local", (clock, span))
-            found.setdefault("source_timezone", (zones[0], span))
-            break
-        if clock is not None:
-            found.setdefault("session_start_local", (clock, span))
+        if clock is None or len(zones) != 1:
+            # Includes the clock+two-zones case: one span naming two zones is
+            # contradictory on its face and may not supply either half.
+            continue
+        candidate = (clock, zones[0], span)
+        if candidate[:2] not in [p[:2] for p in complete_pairs]:
+            complete_pairs.append(candidate)
+
+    session_anchor_conflict: str | None = None
+    if len(complete_pairs) > 1:
+        session_anchor_conflict = "; ".join(
+            f"{clock} {zone} (from {span[:60]!r})" for clock, zone, span in complete_pairs
+        )
+    elif complete_pairs:
+        clock, zone, span = complete_pairs[0]
+        found["session_start_local"] = (clock, span)
+        found["source_timezone"] = (zone, span)
 
     for span in spans:
         if _CONSTRUCTION_RE.search(span):
@@ -353,12 +456,35 @@ def lower_opening_range_definition(
             break
 
     missing = tuple(field for field in REQUIRED_SOURCE_FIELDS if field not in found)
-    if missing:
+
+    # A CONTRADICTION outranks an absence. A record that disagrees with itself
+    # must not be reported as a teacher who stayed silent — those are two
+    # different findings with two different V1.1 dispositions, and the louder
+    # one is the one the reader needs.
+    failure_kind = ABSENT
+    reason: str | None = None
+    conflict_fields: tuple[str, ...] = ()
+    if variant_problem is not None:
+        failure_kind = variant_problem.kind
         reason = (
-            REASON_TRADING_DAY_RULE_MISSING
-            if missing == ("trading_day_rule",)
-            else "opening_range_source_fields_missing:" + ",".join(missing)
-        )
+            REASON_VARIANT_EVIDENCE_CONTRADICTORY
+            if variant_problem.kind == CONTRADICTORY
+            else REASON_VARIANT_MEMBER_UNREADABLE
+        ) + ": " + variant_problem.detail
+        conflict_fields = ("variants",)
+    elif session_anchor_conflict is not None:
+        failure_kind = CONTRADICTORY
+        reason = f"{REASON_SESSION_ANCHOR_CONTRADICTORY}: {session_anchor_conflict}"
+        conflict_fields = ("session_start_local", "source_timezone")
+
+    if reason is not None or missing:
+        if reason is None:
+            reason = (
+                REASON_TRADING_DAY_RULE_MISSING
+                if missing == ("trading_day_rule",)
+                else "opening_range_source_fields_missing:" + ",".join(missing)
+            )
+        named = conflict_fields or missing
         return OpeningRangeLoweringResult(
             disposition=OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE,
             source_spec_id=source_spec_id,
@@ -366,13 +492,14 @@ def lower_opening_range_definition(
             refusal=OpeningRangeSourceRefusal(
                 source_spec_id=source_spec_id,
                 source_condition_id=source_condition_id,
-                missing_fields=missing,
+                missing_fields=named,
                 internal_reason=reason,
                 evidence_found=tuple(
                     (field, span) for field, (_value, span) in sorted(found.items())
                 ),
                 positive_control=positive_control,
                 extraction_dropped_no_source_statement=True,
+                failure_kind=failure_kind,
             ),
         )
 

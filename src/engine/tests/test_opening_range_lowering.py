@@ -31,9 +31,12 @@ from src.engine.opening_range_definition import (
     OpeningRangeWindowStatus,
 )
 from src.engine.opening_range_lowering import (
+    ABSENT,
     COMMITTED_PROVENANCE_DIR,
+    CONTRADICTORY,
     REASON_TRADING_DAY_RULE_MISSING,
     REQUIRED_SOURCE_FIELDS,
+    UNREADABLE,
     OpeningRangeLoweringDisposition,
     OpeningRangeSourceRefusal,
     lower_opening_range_definition,
@@ -192,6 +195,7 @@ def test_a_refusal_cannot_be_constructed_without_naming_a_field():
             evidence_found=(),
             positive_control="p",
             extraction_dropped_no_source_statement=True,
+            failure_kind=ABSENT,
         )
 
 
@@ -205,6 +209,7 @@ def test_a_refusal_cannot_be_constructed_without_a_positive_control():
             evidence_found=(),
             positive_control="",
             extraction_dropped_no_source_statement=True,
+            failure_kind=ABSENT,
         )
 
 
@@ -220,6 +225,7 @@ def test_a_refusal_may_not_name_a_field_outside_the_required_population():
             evidence_found=(),
             positive_control="p",
             extraction_dropped_no_source_statement=True,
+            failure_kind=ABSENT,
         )
 
 
@@ -283,3 +289,197 @@ def test_positive_witness_the_ready_record_DOES_reach_the_adapter():
     assert isinstance(state, OpeningRangeState)
     assert state.opening_range_window_status is OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
     assert state.opening_range_high is None
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# R-741 CLOSEOUTS 1 AND 2 — the seven ordered controls.
+#
+# Both defects returned a PLAUSIBLE WRONG ANSWER rather than failing, which is
+# exactly why the STEP 6A suite missed them: a shrunken variant set looks like a
+# smaller lesson, and a mismatched clock/zone pair looks like a session that
+# starts fifteen minutes earlier.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_GOLDEN_CONSTRUCTION = "We take the opening range high and the opening range low in between these."
+_GOLDEN_DAY_RULE = "It becomes relative for every single trading day."
+_CLASSIFICATION = {"asset_class": "equities", "instruments_mentioned": ["S&P 500"]}
+
+_THREE_GOOD = [
+    {"variant_label": "5-minute opening range", "description": "from 9:30 a.m. Eastern to 9:35."},
+    {"variant_label": "15-minute opening range", "description": "the first 15 minutes."},
+    {"variant_label": "30-minute opening range", "description": "the 30 minute is to 10 a.m."},
+]
+
+
+def _synthetic(*, variants=None, entry_extra=()) -> dict:
+    """A minimal well-formed record, so each control isolates ONE variable.
+
+    Everything except the field under test is present and valid — a control that
+    failed because its fixture was incomplete would convict the wrong thing.
+    """
+    strategy: dict = {
+        "name": "synthetic",
+        "entry_sequence": [
+            {"action": "The 5m OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern."},
+            {"action": _GOLDEN_CONSTRUCTION},
+            *({"action": text} for text in entry_extra),
+        ],
+        "confluences": [{"description": _GOLDEN_DAY_RULE}],
+    }
+    if variants is not None:
+        strategy["variants"] = variants
+    return {"strategies": [strategy], "instrument_classification": _CLASSIFICATION}
+
+
+def _lower_record(record: dict):
+    return lower_opening_range_definition(
+        "synthetic__s0", "WAIT_STRUCTURE:synthetic#0", record, positive_control=POSITIVE_CONTROL
+    )
+
+
+# ── CLOSEOUT 1: no partial candidate set may survive ─────────────────────────
+
+
+def test_closeout1_control3_the_unchanged_collection_still_yields_all_three():
+    """THE POSITIVE WITNESS, STATED FIRST. Without it, the two controls below are
+    both satisfied by a lowering that refuses everything."""
+    result = _lower_record(_synthetic(variants=_THREE_GOOD))
+    assert result.disposition is OpeningRangeLoweringDisposition.READY
+    assert [v.duration_minutes for v in result.definition.variants] == [5, 15, 30]
+
+
+def test_closeout1_control1_one_unlowerable_member_refuses_the_whole_definition():
+    """`A LOOP THAT CONTINUES PAST WHAT IT CANNOT READ IS A COMPILER QUIETLY
+    EDITING THE TEACHER.` Three taught variants plus one bad row previously gave
+    TWO candidates and no refusal."""
+    broken = [
+        _THREE_GOOD[0],
+        {"variant_label": None, "description": "no duration stated here at all"},
+        _THREE_GOOD[2],
+    ]
+    result = _lower_record(_synthetic(variants=broken))
+    assert result.disposition is OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE
+    assert result.definition is None, "a partial candidate set survived"
+    assert result.refusal.failure_kind == UNREADABLE
+    assert "variants" in result.refusal.missing_fields
+
+
+def test_closeout1_control2_label_and_description_durations_that_disagree_refuse():
+    """`AN "or" BETWEEN TWO EVIDENCE SOURCES IS A PRECEDENCE RULE NOBODY DECIDED
+    TO WRITE.` The old code silently returned 5m."""
+    result = _lower_record(
+        _synthetic(
+            variants=[
+                {"variant_label": "5-minute opening range", "description": "the first 15 minutes."}
+            ]
+        )
+    )
+    assert result.disposition is OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE
+    assert result.definition is None
+    assert result.refusal.failure_kind == CONTRADICTORY, (
+        "a record disagreeing with itself was reported as a teacher who stayed silent"
+    )
+    assert "5" in result.refusal.internal_reason
+    assert "15" in result.refusal.internal_reason
+
+
+def test_closeout1_contradiction_and_absence_do_not_share_a_name():
+    """`TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES` — V1.1 maps one to
+    `SOURCE_AMBIGUOUS` and the other to `SOURCE_INCOMPLETE`."""
+    absent = _lower(REFUSING_SPEC, REFUSING_CONDITION).refusal
+    contradictory = _lower_record(
+        _synthetic(
+            variants=[{"variant_label": "5-minute", "description": "the first 15 minutes."}]
+        )
+    ).refusal
+    assert absent.failure_kind == ABSENT
+    assert contradictory.failure_kind == CONTRADICTORY
+    assert absent.internal_reason != contradictory.internal_reason
+
+
+# ── CLOSEOUT 2: the clock and the zone are ONE atomic pair ───────────────────
+
+
+def test_closeout2_control1_a_clock_only_span_never_reserves_the_clock_slot():
+    """THE DEFECT ITSELF. An earlier clock-only span used to claim
+    `session_start_local`, so a later complete span contributed only its zone —
+    clock from one sentence, zone from another."""
+    # ORDER IS THE WHOLE CONTROL: the clock-only span must be scanned BEFORE any
+    # complete pair, or a first-wins implementation passes by luck. Measured:
+    # with the defect restored this fixture yields 09:15 + America/New_York —
+    # halves from two different sentences — and the assertion below fails.
+    record = {
+        "strategies": [
+            {
+                "name": "synthetic",
+                "entry_sequence": [
+                    {"action": "Some traders start watching at 09:15 before the bell."},
+                    {
+                        "action": "The first 5-minute candle sets the opening range high "
+                        "and the opening range low."
+                    },
+                    {"action": "The window runs 9:30 a.m. Eastern to 9:35 a.m. Eastern."},
+                ],
+                "confluences": [{"description": _GOLDEN_DAY_RULE}],
+            }
+        ],
+        "instrument_classification": _CLASSIFICATION,
+    }
+    result = _lower_record(record)
+    assert result.disposition is OpeningRangeLoweringDisposition.READY
+    assert result.definition.session_start_local == "09:30", (
+        "the clock was taken from a span that carried no timezone"
+    )
+    assert result.definition.source_timezone == "America/New_York"
+
+
+def test_closeout2_control2_a_clock_and_a_zone_in_different_spans_refuse():
+    """Half the pair in one sentence and half in another is not evidence of a
+    session anchor. Refuse, never assemble."""
+    record = {
+        "strategies": [
+            {
+                "name": "synthetic",
+                "entry_sequence": [
+                    {"action": "The opening window begins at 09:30 sharp."},
+                    {"action": "All times on this chart are Eastern."},
+                    {"action": "The first 5-minute candle sets it."},
+                    {"action": _GOLDEN_CONSTRUCTION},
+                ],
+                "confluences": [{"description": _GOLDEN_DAY_RULE}],
+            }
+        ],
+        "instrument_classification": _CLASSIFICATION,
+    }
+    result = _lower_record(record)
+    assert result.disposition is OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE
+    assert {"session_start_local", "source_timezone"} <= set(result.refusal.missing_fields)
+
+
+def test_closeout2_control3_two_complete_but_disagreeing_pairs_refuse():
+    """Two well-formed anchors that disagree is a CONTRADICTION, and the compiler
+    may not pick whichever it read first."""
+    record = _synthetic(variants=_THREE_GOOD)
+    record["strategies"][0]["entry_sequence"].append(
+        {"action": "On the west coast session this begins at 06:30 Pacific instead."}
+    )
+    result = _lower_record(record)
+    assert result.disposition is OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE
+    assert result.refusal.failure_kind == CONTRADICTORY
+    assert "06:30" in result.refusal.internal_reason
+    assert "09:30" in result.refusal.internal_reason
+
+
+def test_closeout2_control4_the_golden_pacific_chart_still_cannot_override_eastern():
+    """THE ONE THAT MATTERS MOST AND IS EASIEST TO OMIT (R-741 §3): it proves the
+    repair did not simply become "take the last span".
+
+    The golden record's Pacific sentence is real and still present; it names a
+    zone but no `HH:MM` clock, so it forms no complete pair and cannot compete.
+    """
+    result = _lower(READY_SPEC, READY_CONDITION)
+    assert result.disposition is OpeningRangeLoweringDisposition.READY
+    assert result.definition.source_timezone == "America/New_York"
+    assert result.definition.session_start_local == "09:30"
+    raw = json.dumps(_record(READY_SPEC))
+    assert "Pacific" in raw, "the competing evidence is gone — this control is now dead"
