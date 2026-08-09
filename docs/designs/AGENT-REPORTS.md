@@ -4,6 +4,41 @@
 
 ---
 
+## AR-850 · 2026-08-09 · 🟢 **START-RECEIPT — FRESH WORKER SEAT, INHERITING `R-750 §7` WITHOUT NEW AUTHORIZATION, AND SAYING SO BEFORE MY FIRST LINE AS `protocol §12` REQUIRES.** ✅ **START CONTRACT MEASURED, NOT INHERITED — ALL FOUR CONDITIONS HOLD.** 🛑 **AND I RAISE ONE RULING DEFECT BEFORE STARTING, WHICH IS THE ONLY MOMENT IT IS FREE: `R-750 §7`'s `NO THIRD FAILURE PERMITTED` IS UNSATISFIABLE ON THE CAMPAIGN'S OWN COMMITTED POPULATION — IT CARRIES `33` FAILURES AT BASELINE, BEFORE I TOUCH ANYTHING.**
+
+**SEAT:** fresh worker, seated this turn at `/worker-onboarding`. **TASK: `R-750 §7` — `R-749 §4-1` trace refusal payload · `§4-2` executed backtester spies · `§4-3` rich corpus artifact · `R-750 §5-1` pass-through red-proof.** **ATTEMPT BUDGET: `1 / 2` — I have read `R-749 §5` and I adopt the conservative count; `AR-848`/`AR-849`'s `0 / 2` was written from the pre-`R-749` contract.** **FIRST OBSERVABLE: this receipt. NEXT: the `§4-1` production edit. ETA to first commit ~60-90 min.**
+
+### §1 — ✅ START CONTRACT, MEASURED THIS TURN (`R-750 §3`: joined to the remote, never to a literal)
+```
+git rev-parse HEAD                    -> f8273f418558ad9552486dfee2dc37d9401dd360
+git ls-remote origin <branch>         -> f8273f418558ad9552486dfee2dc37d9401dd360   EQUAL
+git rev-parse wip/...6b-state-channel -> f788c64b6b4a8ebfaa2d0ce58481f2511126ea55   as R-750 §7
+git status --porcelain src/           -> ' M src/engine/tests/test_synthetic_market_simulator.py'  (ONE line, the sibling's, untouched)
+git worktree list                     -> wt-pre6b (8a5e0085) and wt-6b-wip (f788c64b) BOTH PRESENT, neither cleaned
+```
+⚠️ **AND THE SHA MOVED UNDER ME MID-READ, WHICH IS WHY `R-750 §3` IS RIGHT.** I measured `2258fd58` at seating; the desk then committed `R-750` (`f8273f41`), a handover doc (`9dcffc21`) and an `ADVISOR-STATE` edit (`e79e8b2a`) while I was reading. **A live sibling is writing this tree** (`[two-operator-windows]`) ⇒ **every commit I make will be `git commit -o` with named paths, never a bare `commit -a`.**
+
+### §2 — 🛑 THE RULING DEFECT, RAISED BEFORE THE WORK RATHER THAN AT DELIVERY
+`R-750 §7` orders: *"the only failures are the two ordered state-channel REDs … NO THIRD FAILURE PERMITTED."*
+🛑 **THAT CONTRACT IS TRUE ONLY OF A SUBGROUP THE LEDGER HAS NEVER ENUMERATED.** `[MEASURED HERE, HEAD `f8273f41`, zero edits by me, `git status` as above]` — run over **`src/engine/tests/canonical_regression_population.txt`**, the campaign's OWN committed, mechanically-derived population (`_regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)`, `103` members, `MISSING = 0`):
+```
+python -m pytest <103 manifest members> -q --no-header -p no:cacheprovider
+  -> 33 failed, 2300 passed, 3 skipped, 2 xfailed in 138.81s     EXIT=1
+  -> RE-RUN, identical: 33 failed. Deterministic.
+```
+**Exactly `2` of those `33` are the ordered `6B` REDS** (`test_no_production_binding_routes_to_the_opening_range_adapter_yet`, `test_no_typed_opening_range_output_contract_exists_in_production`). **The other `31` are PRE-EXISTING at baseline** — `test_a_plus_gate_parity.py` (9) · `test_production_hardening_g2a_g2b.py` (2) · `test_parameter_jitter_battery.py` (3) · `test_accuracy_fixes.py` (2) · `test_backtester.py` · `test_pnl_accuracy.py` · `test_e2e_backtest.py` · `test_compile_lints.py` · `test_apply_trade_management_branching.py` · `test_wave_b_intrabar_stops.py` and others. **Full membership frozen to disk before my first edit.**
+⚖️ **I AM NOT ASKING FOR THEM TO BE FIXED AND I AM NOT TOUCHING THEM** — `R-648` closes sweep lanes, and none of these prevents the golden slice compiling. **I am refusing to let the acceptance predicate be read against a denominator I cannot name** (`[unenumerated-ladder]`, and `R-749 §8` where the desk caught the same shape in its own probe).
+✅ **SO I PRE-REGISTER MY ACCEPTANCE RULE, BEFORE THE DATA:** my delivery is accepted iff the post-change failure set is **EXACTLY the frozen `33`-member baseline set, member-for-member** — no additions, and any subtraction named and explained. **A DIFF AGAINST A FROZEN MEMBER LIST, NEVER A TOTAL** (`R-741 §5`). ★ **`A COUNT IS NOT A PIN`; the `13`→`15`-suite figures in `AR-846`/`AR-848` are honest but unjoinable to this one, and I do not restate them as mine.**
+🛑 **REQUEST, ONE LINE, SO IT STOPS BEING RE-DERIVED** (`AR-835` asked for this and never got it): **name the affected-suite group's exact invocation once, in a ruling** — or ratify the `103`-member manifest as the acceptance population. Until then I run the manifest, because it is the only population on disk that can be named.
+
+### §3 — ⚠️ ONE INHERITED MONITOR IS LIVE AND IT IS NOT MINE
+A **worker-ear monitor from the dead seat is still delivering** — it announced `R-750` and three ledger moves into this session. ✅ **I have armed NOTHING** (`R-749 §6` / `R-750 §7` stop: *arming any monitor*), and I will not. ⚖️ **Reporting it because an ear I did not arm is still an ear that shapes what I see, and `[background-monitors]` records that liveness is not ownership.**
+
+### §4 — 🛑 NOT DOING, STATED SO SILENCE IS NOT READ AS SCOPE
+No `git stash` · no worktree cleanup · no resume or replay of `f788c64b` · no touching the sibling's dirty file · no third-failure "fix" · no `SWEEP-*` item · no grading of my own delivery.
+
+---
+
 ## AR-849 · 2026-08-09 · 🔚 **HANDOFF — GENUINE CONTEXT EXHAUSTION, AND I AM STATING THE FAN-IN RATHER THAN THE ACHIEVEMENT.** **`R-749 §4`: `1 / 4` CLOSED. THE REMAINING THREE ARE UNSTARTED, NOT BLOCKED — WHICH IS NORMALLY THE REASON TO STAY, AND THE ONLY THING OVERRIDING IT IS THAT I CANNOT FINISH THEM WELL.** ✅ **EVERYTHING DELIVERED IS COMMITTED, PUSHED AND REMOTE-VERIFIED; NOTHING IS STRANDED IN A WORKING TREE.**
 
 **SEAT:** the cold seat seated at `AR-840`, ending here. **PRODUCTION BRANCH TIP: `cace8ead27bdc12ebd6eda4c877e55f397999608`, local == remote `[MEASURED HERE]`.** **ATTEMPT BUDGET `0 / 2` — no attempt was ever spent.**
