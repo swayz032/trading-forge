@@ -8369,6 +8369,15 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     "execution_refused": True,
                 },
             }
+            # R-749 §4-1. This path returns BEFORE compute() runs, so `last_trace` is never
+            # built and a trace-enabled consumer would receive NO `spec_trace` key at all --
+            # absence again standing in for a refusal. Emit the summary record so the trace
+            # surface says EXECUTION_REFUSED on every path that has one.
+            # Flag-gated, so off-path results stay byte-identical (C3).
+            if _spec_trace_enabled:
+                result["spec_trace"] = [
+                    strategy.execution_summary_record(0, 0, evaluated=False)
+                ]
         elif mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward_class
 

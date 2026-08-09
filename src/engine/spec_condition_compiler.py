@@ -80,6 +80,39 @@ from src.engine.strategy_base import BaseStrategy
 EXECUTION_STATUS_EXECUTED: str = "EXECUTED"
 EXECUTION_STATUS_REFUSED: str = "REFUSED"
 
+# ─── TRIGGER SAFETY: the trace says WHY there are no entries (R-749 §4-1) ─────────────────
+# `_build_trace` emits ONE RECORD PER ENTRY-SIGNAL BAR, so a refused strategy produced an
+# EMPTY LIST -- byte-identical to a strategy that ran fine and simply never saw a setup, and
+# byte-identical again to a frame too short to evaluate. Three different findings, one
+# indistinguishable artifact.
+#
+#   `A READER MUST NEVER HAVE TO INFER A REFUSAL FROM ZERO ENTRIES.` (R-749 §4-1)
+#
+# So the trace now ALWAYS opens with an `execution_summary` record naming the outcome, and
+# every per-bar record is tagged, so the two shapes can never be confused by a consumer that
+# iterates the list. THE EMPTY TRACE IS NOW UNREACHABLE WHEN TRACING IS ON, and that is the
+# property: an empty list was the ambiguity.
+TRACE_RECORD_EXECUTION_SUMMARY: str = "execution_summary"
+TRACE_RECORD_ENTRY_BAR: str = "entry_bar"
+
+TRACE_OUTCOME_ENTRIES_PRESENT: str = "ENTRIES_PRESENT"
+TRACE_OUTCOME_NO_MARKET_SETUP: str = "NO_MARKET_SETUP"
+"""The strategy WAS permitted to enter, ran over real bars, and the market never presented
+its setup. A genuine flat result -- and the ONLY one of these three that is."""
+
+TRACE_OUTCOME_EXECUTION_REFUSED: str = "EXECUTION_REFUSED"
+"""Entry was refused at the strategy-level boundary before any signal could stand. NOT a
+flat day: nothing about the market is being reported here."""
+
+TRACE_OUTCOME_INSUFFICIENT_BARS: str = "INSUFFICIENT_BARS"
+"""The frame was shorter than MIN_BARS_REQUIRED, so compute() returned before evaluating
+anything.
+
+NAMED SEPARATELY ON PURPOSE, THOUGH R-749 §4-1 ORDERED ONLY TWO. Filing this as
+`NO_MARKET_SETUP` would assert that the market was measured and offered nothing, which is a
+claim about the market that this path never made. `TWO DIFFERENT SILENCES DESERVE TWO
+DIFFERENT NAMES` (R-741 §2) -- and there are three silences here, not two."""
+
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
 LEVELZONE_PRIMITIVE_NAME: str = "levelzone_routing.retest_touch_check"
 # Level/Zone Routing Sub-Wire (docs/designs/packet-levelzone-subwire-2026-07-20.md, TF_LEVELZONE_
@@ -664,6 +697,76 @@ class SpecConditionStrategy(BaseStrategy):
             "ambiguity": (trigger.ambiguity if trigger is not None else None),
             "source_prose": (trigger.object if trigger is not None else ""),
         }
+
+    def execution_summary_record(self, entry_bars: int, total_bars: int, *, evaluated: bool) -> dict:
+        """The trace's opening record: WHY this run has the entry count it has.
+
+        R-749 §4-1. Reuses `execution_refusal()` rather than re-deriving the refusal, so the
+        trace and the backtester's refusal payload CANNOT DISAGREE -- two independently-built
+        refusal records would be two claims that drift, and the drift would be invisible until
+        a reader compared them.
+
+        `evaluated=False` is the short-frame path: nothing about the market was measured, so
+        this record must not imply that it was.
+        """
+        refusal = self.execution_refusal()
+        if refusal is not None:
+            outcome = TRACE_OUTCOME_EXECUTION_REFUSED
+        elif not evaluated:
+            outcome = TRACE_OUTCOME_INSUFFICIENT_BARS
+        elif entry_bars:
+            outcome = TRACE_OUTCOME_ENTRIES_PRESENT
+        else:
+            outcome = TRACE_OUTCOME_NO_MARKET_SETUP
+
+        record = {
+            "record_kind": TRACE_RECORD_EXECUTION_SUMMARY,
+            "trace_outcome": outcome,
+            "execution_status": (
+                EXECUTION_STATUS_REFUSED if refusal is not None else EXECUTION_STATUS_EXECUTED
+            ),
+            "spec_hash": self.spec_hash,
+            "entry_bars": int(entry_bars),
+            "total_bars": int(total_bars),
+            "bars_evaluated": bool(evaluated),
+            "entry_eligible": refusal is None,
+            "trigger_bound": refusal is None,
+            "condition_id": None,
+            "disposition": None,
+            "reason": None,
+            "ambiguity": None,
+            "source_prose": None,
+            "source_evidence": None,
+            "source_span": None,
+        }
+        if refusal is None:
+            return record
+
+        # THE REFUSAL PAYLOAD. Every field a reader needs to act without opening the engine:
+        # WHICH condition, WHAT the engine decided, WHY, and the teacher's own words to go
+        # back to. `entry_eligible`/`trigger_bound` are stated as literal False rather than
+        # left to be inferred from the outcome string.
+        record.update(
+            {
+                "entry_eligible": bool(refusal["entry_eligible"]),
+                "trigger_bound": False,
+                "condition_id": refusal["condition_id"],
+                "disposition": refusal["disposition"],
+                "reason": refusal["reason"],
+                "ambiguity": refusal["ambiguity"],
+                "source_prose": refusal["source_prose"],
+            }
+        )
+        # SOURCE EVIDENCE comes from the SPEC CONDITION, not the binding -- `ConditionBinding`
+        # carries prose but drops `span`/`evidence`, and R-749 §4-1 asks for the evidence, so
+        # it is read from the artifact that actually holds it. Absent keys stay None rather
+        # than becoming empty strings: `NOT RECORDED` and `RECORDED AS EMPTY` are different.
+        for cond in self.spec.get("entry_conditions", []) or []:
+            if isinstance(cond, dict) and cond.get("id") == refusal["condition_id"]:
+                record["source_evidence"] = cond.get("evidence")
+                record["source_span"] = cond.get("span")
+                break
+        return record
 
     def entry_eligibility(self) -> EntryEligibility | None:
         """Whether this strategy may enter — separately readable from the spine subtotal.
@@ -1601,7 +1704,11 @@ class SpecConditionStrategy(BaseStrategy):
         self.execution_status = EXECUTION_STATUS_EXECUTED
         self._acknowledge_parameters(n, enforced)
         if n < MIN_BARS_REQUIRED:
-            self.last_trace = []
+            # R-749 §4-1: even here the trace says WHY, rather than returning the empty list
+            # that a refusal and a flat day both used to produce.
+            self.last_trace = (
+                [self.execution_summary_record(0, n, evaluated=False)] if self.trace_enabled else []
+            )
             self.last_per_condition_bool = {}
             self.last_population_a_level = {}
             return df.with_columns(
@@ -1893,9 +2000,15 @@ class SpecConditionStrategy(BaseStrategy):
             entry_short = np.zeros(n, dtype=bool)
 
         if self.trace_enabled:
-            self.last_trace = self._build_trace(
+            # R-749 §4-1: the summary record leads, so a reader meets the outcome BEFORE the
+            # per-bar records rather than deducing it from how many there are.
+            _bar_records = self._build_trace(
                 entry_long, entry_short, per_condition_bool, ts_list, close, high, low
             )
+            self.last_trace = [
+                self.execution_summary_record(len(_bar_records), n, evaluated=True),
+                *_bar_records,
+            ]
         else:
             self.last_trace = []
 
@@ -2004,6 +2117,9 @@ class SpecConditionStrategy(BaseStrategy):
             ts = ts_list[i]
             records.append(
                 {
+                    # R-749 §4-1: tagged so a consumer iterating `last_trace` can never
+                    # mistake the leading summary record for an entry bar.
+                    "record_kind": TRACE_RECORD_ENTRY_BAR,
                     "bar_idx": int(i),
                     "ts": ts.isoformat() if ts else None,
                     "direction": direction,

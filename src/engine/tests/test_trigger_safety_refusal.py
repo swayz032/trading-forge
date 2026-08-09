@@ -55,6 +55,12 @@ from src.engine.extraction.spec_producer import produce_spec_artifact
 from src.engine.spec_condition_compiler import (
     EXECUTION_STATUS_EXECUTED,
     EXECUTION_STATUS_REFUSED,
+    TRACE_OUTCOME_ENTRIES_PRESENT,
+    TRACE_OUTCOME_EXECUTION_REFUSED,
+    TRACE_OUTCOME_INSUFFICIENT_BARS,
+    TRACE_OUTCOME_NO_MARKET_SETUP,
+    TRACE_RECORD_ENTRY_BAR,
+    TRACE_RECORD_EXECUTION_SUMMARY,
     SpecConditionStrategy,
 )
 from src.engine.spec_family_bindings import compile_binding_plan
@@ -624,3 +630,272 @@ def test_the_ordinary_structure_neighbour_still_binds_to_its_primitive():
     assert binding.bindable is True
     assert binding.primitive == "structure_engine.compute_structure_state"
     assert binding.disposition is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# 6. THE TRACE SAYS WHY THERE ARE NO ENTRIES (R-749 §4-1)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+#
+# `_build_trace` emits one record per ENTRY-SIGNAL BAR. So before this closeout, a REFUSED
+# strategy and a strategy that simply never saw its setup produced the SAME artifact: `[]`.
+#
+#   `A READER MUST NEVER HAVE TO INFER A REFUSAL FROM ZERO ENTRIES.` (R-749 §4-1)
+#
+# The discrimination below is the whole point: `test_refusal_and_no_setup_are_not_the_same
+# _artifact` puts the two side by side on the SAME code path, both with zero entries and
+# both with a one-record trace, and requires them to disagree.
+
+
+def _flat_tape(n: int = N_BARS) -> pl.DataFrame:
+    """A tape with no structure event in it, so an ELIGIBLE strategy still enters nothing.
+
+    This is the NO_MARKET_SETUP witness. Without it the refusal assertions are satisfied by
+    a trace that says EXECUTION_REFUSED for everything — `A NEGATIVE ASSERTION NEEDS A
+    POSITIVE WITNESS THAT THE PATH RAN.`
+    """
+    close = np.full(n, 100.0)
+    return pl.DataFrame(
+        {
+            "open": close,
+            "high": close + 0.25,
+            "low": close - 0.25,
+            "close": close,
+            "ts_event": [
+                datetime(2026, 1, 5, 14, 30, tzinfo=UTC) + timedelta(minutes=5 * i)
+                for i in range(n)
+            ],
+            "volume": [100] * n,
+        }
+    )
+
+
+def _traced(spec: dict, frame: pl.DataFrame) -> SpecConditionStrategy:
+    strategy = SpecConditionStrategy(
+        {"spec": spec, "spec_hash": "trigger-safety-trace"},
+        symbol="MES",
+        timeframe=TIMEFRAME,
+        trace=True,
+        binding_plan=compile_binding_plan(spec),
+    )
+    strategy.compute(frame)
+    return strategy
+
+
+def test_the_refused_trace_carries_the_full_refusal_payload():
+    """R-749 §4-1's field list, asserted field by field on the golden refusal."""
+    strategy = _traced(_golden_spec(), _frame())
+    assert strategy.last_trace, "a refused strategy produced an EMPTY trace — the defect"
+    head = strategy.last_trace[0]
+
+    assert head["record_kind"] == TRACE_RECORD_EXECUTION_SUMMARY
+    assert head["trace_outcome"] == TRACE_OUTCOME_EXECUTION_REFUSED
+    assert head["execution_status"] == EXECUTION_STATUS_REFUSED
+    # Stated as literal False, never left to be inferred from the outcome string.
+    assert head["trigger_bound"] is False
+    assert head["entry_eligible"] is False
+    assert head["condition_id"] == _golden_spec()["entry_trigger_id"]
+    assert head["disposition"] == "SOURCE_AMBIGUOUS"
+    assert head["reason"] == REASON_BREAKOUT_CONFIRMATION_UNRESOLVED
+    assert head["ambiguity"] == AMBIGUITY_BREAKOUT_CONFIRMATION
+    # REFUSAL IS NOT ABSENCE: the teacher's own words travel with the refusal.
+    assert "range high" in head["source_prose"]
+    assert head["source_evidence"], "the refusal record dropped the source evidence"
+
+
+def test_refusal_and_no_setup_are_not_the_same_artifact():
+    """THE DISCRIMINATION. Two runs, both zero entries, both a one-record trace.
+
+    Before R-749 §4-1 both produced `[]` and were literally indistinguishable. If this test
+    ever passes because the two records are equal, the closeout has been undone.
+    """
+    refused = _traced(_golden_spec(), _frame())
+    no_setup = _traced(_neighbour_spec(), _flat_tape())
+
+    # POSITIVE CONTROL: both really are zero-entry, one-record runs — otherwise the
+    # assertion below discriminates on entry count rather than on the marker.
+    assert len(refused.last_trace) == 1
+    assert len(no_setup.last_trace) == 1
+    assert refused.last_trace[0]["entry_bars"] == 0
+    assert no_setup.last_trace[0]["entry_bars"] == 0
+
+    assert refused.last_trace[0]["trace_outcome"] == TRACE_OUTCOME_EXECUTION_REFUSED
+    assert no_setup.last_trace[0]["trace_outcome"] == TRACE_OUTCOME_NO_MARKET_SETUP
+    assert refused.last_trace[0]["trace_outcome"] != no_setup.last_trace[0]["trace_outcome"]
+
+    # The no-setup run must NOT be dressed as a refusal — that would be the inverse lie.
+    assert no_setup.last_trace[0]["execution_status"] == EXECUTION_STATUS_EXECUTED
+    assert no_setup.last_trace[0]["trigger_bound"] is True
+    assert no_setup.last_trace[0]["disposition"] is None
+
+
+def test_a_short_frame_is_not_reported_as_a_flat_market():
+    """The THIRD silence. Nothing about the market was measured, so nothing may be claimed."""
+    strategy = _traced(_neighbour_spec(), _flat_tape(n=5))
+    head = strategy.last_trace[0]
+    assert head["trace_outcome"] == TRACE_OUTCOME_INSUFFICIENT_BARS
+    assert head["bars_evaluated"] is False
+    assert head["trace_outcome"] != TRACE_OUTCOME_NO_MARKET_SETUP
+
+
+def test_entry_bar_records_are_tagged_and_the_summary_leads():
+    """A consumer iterating the trace can never mistake the summary for an entry bar."""
+    strategy = _traced(_neighbour_spec(), _frame())
+    head, *bars = strategy.last_trace
+    assert head["record_kind"] == TRACE_RECORD_EXECUTION_SUMMARY
+    assert head["trace_outcome"] == TRACE_OUTCOME_ENTRIES_PRESENT
+    assert bars, "the ENTRIES_PRESENT witness produced no entry-bar records"
+    assert head["entry_bars"] == len(bars)
+    assert all(r["record_kind"] == TRACE_RECORD_ENTRY_BAR for r in bars)
+
+
+def test_the_refusal_does_not_cost_the_per_condition_arrays():
+    """R-749 §4-1: `Real per-condition arrays stay available for diagnostics.`
+
+    The refusal must not be implemented by suppressing evaluation — a diagnostic reader still
+    needs to see what the market actually did under a refused strategy.
+    """
+    strategy = _traced(_golden_spec(), _frame())
+    assert strategy.execution_status == EXECUTION_STATUS_REFUSED
+    assert strategy.last_per_condition_bool, (
+        "the refusal emptied last_per_condition_bool; the refusal is a strategy-level "
+        "boundary, NOT a suppression of condition evaluation"
+    )
+    assert any(arr.any() for arr in strategy.last_per_condition_bool.values()), (
+        "every per-condition array is all-False — the arrays are present but carry no "
+        "diagnostic signal, which is the same loss wearing a populated dict"
+    )
+
+
+def test_trace_disabled_still_emits_nothing():
+    """C3's additive law is unchanged: flag off ⇒ no trace at all, summary included."""
+    strategy, _ = _run(_golden_spec())
+    assert strategy.last_trace == []
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# 7. EXECUTED BACKTESTER SPIES (R-749 §4-2 / R-750 §5-3)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+#
+# 🛑 REPORT THIS AS A REGRESSION GUARD, NOT AS A CATCH. `R-749 §4-2` and both external reads
+# agree: today's `if _spec_refusal is not None: … elif mode == "walkforward": … else: …` in
+# `main()` ALREADY makes these zeros structurally true. This suite does NOT prove the
+# trigger-safety commit repaired an ordering defect. It guards against a FUTURE refactor that
+# computes-then-deletes — the shape where metrics are produced and then stripped, leaving the
+# consumers reached and the refusal cosmetic.
+#
+#   `A CONTROL THAT PASSES ON UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE
+#    CHANGE.` (fifth instance, R-750 §5-3)
+#
+# WHY THE DATA SOURCE IS FAKED AND THE CONSUMERS ARE NOT: this box has no market data
+# (`DataLoadConfigError: missing AWS_ACCESS_KEY_ID`), so without a frame the NEIGHBOUR arm
+# cannot reach any consumer either — and three zeros with no positive control is an absence,
+# not a proof. `load_ohlcv` is the DATA SOURCE; the three counted functions are the real
+# production callables, wrapped and not replaced.
+
+
+_SPY_NEIGHBOUR_MIN_CALLS = 1
+
+
+def _spy_run(monkeypatch, spec: dict) -> tuple[dict, dict]:
+    """Run the REAL `main()` dispatch with counting wrappers around the three consumers."""
+    import src.engine.backtester as bt
+    import src.engine.performance_gate as pg
+
+    calls = {"trade_simulator": 0, "qualification": 0, "performance_calculator": 0}
+
+    real_rcb = bt.run_class_backtest
+    real_gate = bt.apply_eligibility_gate
+    real_perf = pg.check_performance_gate
+
+    def spy_rcb(*a, **k):
+        calls["trade_simulator"] += 1
+        return real_rcb(*a, **k)
+
+    def spy_gate(*a, **k):
+        calls["qualification"] += 1
+        return real_gate(*a, **k)
+
+    def spy_perf(*a, **k):
+        calls["performance_calculator"] += 1
+        return real_perf(*a, **k)
+
+    monkeypatch.setattr(bt, "run_class_backtest", spy_rcb)
+    monkeypatch.setattr(bt, "apply_eligibility_gate", spy_gate)
+    monkeypatch.setattr(pg, "check_performance_gate", spy_perf)
+    monkeypatch.setattr(bt, "load_ohlcv", lambda *a, **k: _frame())
+    # Keep the 8-scenario crisis suite out of a unit test; it is not what is being measured.
+    monkeypatch.setenv("TF_STRESS_TEST_MODE", "pipeline")
+
+    config = {
+        "compiled_spec": {"spec": spec, "spec_hash": "trigger-safety-spy"},
+        "strategy": {"symbol": "MES", "timeframe": TIMEFRAME},
+        "start_date": "2026-01-05",
+        "end_date": "2026-01-10",
+    }
+    try:
+        bt.main.callback(json.dumps(config), None, "single", None)
+    except SystemExit:
+        pass
+    except Exception:  # noqa: BLE001 — the NEIGHBOUR arm may fail DOWNSTREAM of the
+        # consumers on a synthetic frame. That is fine: the question this asks is WHICH
+        # CONSUMERS WERE REACHED, and a wrapper increments before the real call runs.
+        pass
+    return calls, config
+
+
+def test_a_refused_strategy_reaches_none_of_the_three_consumers(monkeypatch):
+    """R-749 §4-2, measured BY EXECUTION rather than read off the `if/elif`."""
+    calls, _ = _spy_run(monkeypatch, _golden_spec())
+    assert calls["trade_simulator"] == 0
+    assert calls["performance_calculator"] == 0
+    assert calls["qualification"] == 0
+
+
+def test_the_neighbour_does_reach_them_positive_control(monkeypatch):
+    """THE CONTROL THAT MAKES THE THREE ZEROS MEAN SOMETHING.
+
+    Without this, `test_a_refused_strategy_reaches_none_of_the_three_consumers` is satisfied
+    by a harness that never wired the spies at all — which is exactly what my first probe
+    did: it counted `0` on BOTH arms because `main` is a click command and `main(...)` raised
+    `MissingParameter` before any dispatch. `A SURPRISING RESULT ACCUSES YOUR INSTRUMENT
+    FIRST`, and the only reason that was caught is that the control was written first.
+    """
+    calls, _ = _spy_run(monkeypatch, _neighbour_spec())
+    assert calls["trade_simulator"] >= _SPY_NEIGHBOUR_MIN_CALLS, (
+        "the eligible neighbour never reached the trade simulator; the spies are not wired "
+        "and the refused arm's zeros prove nothing"
+    )
+    assert calls["qualification"] >= _SPY_NEIGHBOUR_MIN_CALLS
+    assert calls["performance_calculator"] >= _SPY_NEIGHBOUR_MIN_CALLS
+
+
+def test_the_refusal_gate_precedes_both_run_paths_by_execution(monkeypatch):
+    """The refusal must beat BOTH `walkforward` and `single`, not just the one under test."""
+    import src.engine.backtester as bt
+
+    reached = {"walkforward": 0}
+    monkeypatch.setattr(bt, "load_ohlcv", lambda *a, **k: _frame())
+    monkeypatch.setenv("TF_STRESS_TEST_MODE", "pipeline")
+
+    import src.engine.walk_forward as wf
+
+    real_wf = wf.run_walk_forward_class
+
+    def spy_wf(*a, **k):
+        reached["walkforward"] += 1
+        return real_wf(*a, **k)
+
+    monkeypatch.setattr(wf, "run_walk_forward_class", spy_wf)
+    config = {
+        "compiled_spec": {"spec": _golden_spec(), "spec_hash": "trigger-safety-spy-wf"},
+        "strategy": {"symbol": "MES", "timeframe": TIMEFRAME},
+        "start_date": "2026-01-05",
+        "end_date": "2026-01-10",
+    }
+    try:
+        bt.main.callback(json.dumps(config), None, "walkforward", None)
+    except SystemExit:
+        pass
+    except Exception:  # noqa: BLE001
+        pass
+    assert reached["walkforward"] == 0

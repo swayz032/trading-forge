@@ -1,578 +1,615 @@
 {
-  "artifact": "trigger-safety blast radius over the PINNED tier-A census population",
-  "authority": "R-747 s6 step 3; population NAMED at R-746 s4",
-  "population_source": "docs/replay-results/h1-battery/tier-a-compile-census.json",
-  "population_blob": "23f30eb0c0fadef14ac0557910d7d6824e89eff6",
-  "n_specs": 11,
-  "n_conditions": 94,
-  "n_affected": 1,
-  "n_unaffected": 93,
-  "n_not_measured": 0,
-  "note": "EVERY condition is dispositioned. A population with no NOT_MEASURED row is a claim and this file is where it is auditable: re-derive with the committed test and the membership must match exactly.",
-  "conditions": [
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "UNTYPED:you-need-to-identify-the-direction-of-th#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "WAIT_STRUCTURE:you-can-only-place-buy-trade-when-the-ma#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "WAIT_STRUCTURE:you-can-only-place-sell-trade-when-the-m#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "UNTYPED:we-will-use-a-1-hour-time-frame-for-this#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "WAIT_STRUCTURE:we-will-use-a-fibonacci-retracement-indi#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "UNTYPED:you-can-t-trade-in-a-non-trending-market#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "0RBexa9JpIg__s0",
-      "condition_id": "UNTYPED:you-can-apply-this-strategy-on-every-cur#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:whenever-the-candle-crosses-the-moving-a#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "WAIT_CONFIRMATION:if-it-closes-above-the-line-you-buy-and#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "WAIT_CONFIRMATION:when-it-closes-below-the-line-you-take-a#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:you-will-need-to-select-simple-moving-av#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:we-will-be-trading-in-15-mins-time-frame#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:we-need-the-candle-to-close-strong-below#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:i-always-have-a-rule-to-never-take-any-i#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "ExB66jcyKxg__s0",
-      "condition_id": "UNTYPED:with-a-risk-to-reward-of-3-1#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "WAIT_STRUCTURE:mark-the-higher-time-frame-liquidity-zon#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:you-can-identify-areas-that-have-not-bee#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:drop-to-the-5minut-or-the-1-minute-chart#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:look-for-price-rapidly-approaching-a-zon#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "WAIT_CONFIRMATION:you-are-simply-waiting-for-one-of-these#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:avoid-entering-before-the-price-taps-the#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "WAIT_CONFIRMATION:you-re-looking-for-that-rejection-wick#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "WAIT_CONFIRMATION:look-for-exhaustion-candles-long-wicks-b#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:you-want-to-see-volume-spike-a-quick-tap#8",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:price-will-often-wick-above-resistance-p#9",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "WAIT_SESSION:use-session-times-like-the-london-or-new#10",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "LD1FEbwXU4o__s0",
-      "condition_id": "UNTYPED:do-not-chase-the-breakouts-wait-for-pric#11",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:we-will-enter-into-a-buy-position-whenev#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:for-a-sell-position-we-will-need-for-the#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:firstly-the-candlestick-will-need-to-be#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:secondly-the-price-must-break-above-the#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:thirdly-the-point-of-control-must-be-wit#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:firstly-the-candlesticks-will-need-to-be#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "WAIT_CONFIRMATION:secondly-the-candlestick-must-close-belo#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:lastly-we-will-need-to-make-sure-that-th#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "UNTYPED:we-will-be-using-this-indicator-to-deter#8",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "FILTER:the-point-of-control-must-be-within-the#9",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YGdFksLavKE__s0",
-      "condition_id": "WAIT_STRUCTURE:search-for-the-volume-profile-fixed-rang#10",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "UNTYPED:this-had-a-double-inside-bar-set-up-on-t#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "UNTYPED:it-gapped-up-a-bit-from-the-previous-day#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "UNTYPED:it-was-a-really-solid-setup-for-a-pushba#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "WAIT_SESSION:i-decided-to-take-a-starter-position-int#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "FILTER:from-there-i-was-hoping-to-see-volume-re#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s0",
-      "condition_id": "UNTYPED:it-briefly-broke-above-19-and-briefly-br#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:if-we-focus-on-the-pre-market-session-he#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:an-opening-range-breakout-level-which-is#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:a-few-minutes-later-it-starts-to-break-o#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:as-always-opening-range-breakout-levels#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:one-of-those-things-that-is-often-a-tell#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_SESSION:with-nuwe-over-here-it-rejects-v-web-imm#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:this-one-actually-never-got-above-its-op#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "YqY0OkL5LMI__s1",
-      "condition_id": "WAIT_STRUCTURE:we-can-see-very-quickly-it-breaks-only-s#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "OPENING_RANGE_DEFINITION:the-first-five-minute-candle-from-09-30#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "UNTYPED:then-we-wait-for-a-breakout-a-breakout-i#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "UNTYPED:after-the-breakout-we-wait-for-a-retest#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "WAIT_STRUCTURE:if-the-candle-closes-inside-the-range-th#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "UNTYPED:entry-is-on-the-open-of-the-next-candle#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "references_boundary"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "UNTYPED:every-decision-is-made-on-closed-candles#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "dENM6gt8ZRg__s0",
-      "condition_id": "UNTYPED:risk-per-trade-one-percent-of-the-deposi#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:a-bullish-trend-confirmed-by-price-break#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:a-bullish-order-block-is-typically-the-l#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:after-the-first-break-of-structure-price#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:price-retraces-downward-and-forms-a-chan#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "UNTYPED:the-change-of-character-acted-as-an-entr#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:in-a-bullish-order-block-a-buy-limit-ord#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:the-first-and-most-powerful-confirmation#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:the-second-key-confirmation-of-a-valid-o#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:if-no-imbalance-forms-above-this-candle#8",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "hcHuDfxdywI__s0",
-      "condition_id": "WAIT_STRUCTURE:the-third-and-final-confirmation-of-a-va#9",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "FILTER:you-want-to-see-heavy-volumes-traded-wit#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "UNTYPED:this-needs-to-be-followed-by-a-trend-act#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "UNTYPED:you-want-to-anchor-the-view-up-to-that-c#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "WAIT_RETEST:you-simply-need-to-see-the-price-go-away#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "WAIT_RETEST:you-trade-pullbacks-to-that-because-view#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "UNTYPED:that-means-short-from-here-short-from-he#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "WAIT_STRUCTURE:the-resistance-which-is-represented-by-t#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "UNTYPED:there-s-a-second-test-right-here-and-tha#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "FILTER:volume-profile-shows-where-the-big-volum#8",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "pKzXxB9Blts__s0",
-      "condition_id": "UNTYPED:as-there-s-this-rotation-you-don-t-reall#9",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_SESSION:the-5m-minute-ob-takes-place-from-9-30-a#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:we-take-the-opening-range-high-and-the-o#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:so-now-we-take-a-look-at-these-levels-pr#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4",
-      "disposition": "AFFECTED",
-      "stood_down_at": null
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:this-was-the-highest-level-that-buyers-w#5",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:this-is-the-opening-range-low-616-61-in#6",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:the-difference-between-the-high-and-the#7",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#8",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s0",
-      "condition_id": "WAIT_STRUCTURE:this-opening-range-acts-as-a-decision-po#9",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s1",
-      "condition_id": "UNTYPED:the-initial-breakout-took-place#0",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s1",
-      "condition_id": "UNTYPED:in-this-case-price-pulled-back#1",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s1",
-      "condition_id": "UNTYPED:then-we-re-looking-for-an-entry-back-tow#2",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "opening_range_defined_in_spec"
-    },
-    {
-      "stub": "st5e-YJRfKc__s1",
-      "condition_id": "WAIT_STRUCTURE:whatever-this-opening-range-high-is-subt#3",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
-    },
-    {
-      "stub": "st5e-YJRfKc__s1",
-      "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#4",
-      "disposition": "UNAFFECTED",
-      "stood_down_at": "is_entry_trigger"
+ "artifact": "trigger-safety blast radius over the PINNED tier-A census population",
+ "authority": "R-747 s6 step 3 (population, R-746 s4); rich per-condition fields R-750 s5-2",
+ "population_source": "docs/replay-results/h1-battery/tier-a-compile-census.json",
+ "population_blob": "23f30eb0c0fadef14ac0557910d7d6824e89eff6",
+ "n_specs": 11,
+ "n_conditions": 94,
+ "n_affected": 1,
+ "n_unaffected": 93,
+ "n_not_measured": 0,
+ "note": "EVERY condition is dispositioned. A population with no NOT_MEASURED row is a claim and this file is where it is auditable: re-derive with the committed test and the membership must match exactly.",
+ "conditions": [
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "UNTYPED:you-need-to-identify-the-direction-of-th#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "WAIT_STRUCTURE:you-can-only-place-buy-trade-when-the-ma#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "WAIT_STRUCTURE:you-can-only-place-sell-trade-when-the-m#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "UNTYPED:we-will-use-a-1-hour-time-frame-for-this#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "WAIT_STRUCTURE:we-will-use-a-fibonacci-retracement-indi#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "UNTYPED:you-can-t-trade-in-a-non-trending-market#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "0RBexa9JpIg__s0",
+   "condition_id": "UNTYPED:you-can-apply-this-strategy-on-every-cur#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:whenever-the-candle-crosses-the-moving-a#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "WAIT_CONFIRMATION:if-it-closes-above-the-line-you-buy-and#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "WAIT_CONFIRMATION:when-it-closes-below-the-line-you-take-a#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:you-will-need-to-select-simple-moving-av#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:we-will-be-trading-in-15-mins-time-frame#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:we-need-the-candle-to-close-strong-below#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:i-always-have-a-rule-to-never-take-any-i#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "ExB66jcyKxg__s0",
+   "condition_id": "UNTYPED:with-a-risk-to-reward-of-3-1#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "WAIT_STRUCTURE:mark-the-higher-time-frame-liquidity-zon#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:you-can-identify-areas-that-have-not-bee#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:drop-to-the-5minut-or-the-1-minute-chart#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:look-for-price-rapidly-approaching-a-zon#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "WAIT_CONFIRMATION:you-are-simply-waiting-for-one-of-these#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:avoid-entering-before-the-price-taps-the#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "WAIT_CONFIRMATION:you-re-looking-for-that-rejection-wick#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "WAIT_CONFIRMATION:look-for-exhaustion-candles-long-wicks-b#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:you-want-to-see-volume-spike-a-quick-tap#8",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:price-will-often-wick-above-resistance-p#9",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "WAIT_SESSION:use-session-times-like-the-london-or-new#10",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "LD1FEbwXU4o__s0",
+   "condition_id": "UNTYPED:do-not-chase-the-breakouts-wait-for-pric#11",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:we-will-enter-into-a-buy-position-whenev#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:for-a-sell-position-we-will-need-for-the#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:firstly-the-candlestick-will-need-to-be#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:secondly-the-price-must-break-above-the#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:thirdly-the-point-of-control-must-be-wit#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:firstly-the-candlesticks-will-need-to-be#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "WAIT_CONFIRMATION:secondly-the-candlestick-must-close-belo#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:lastly-we-will-need-to-make-sure-that-th#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "UNTYPED:we-will-be-using-this-indicator-to-deter#8",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "FILTER:the-point-of-control-must-be-within-the#9",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YGdFksLavKE__s0",
+   "condition_id": "WAIT_STRUCTURE:search-for-the-volume-profile-fixed-rang#10",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "UNTYPED:this-had-a-double-inside-bar-set-up-on-t#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "UNTYPED:it-gapped-up-a-bit-from-the-previous-day#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "UNTYPED:it-was-a-really-solid-setup-for-a-pushba#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "WAIT_SESSION:i-decided-to-take-a-starter-position-int#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "FILTER:from-there-i-was-hoping-to-see-volume-re#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s0",
+   "condition_id": "UNTYPED:it-briefly-broke-above-19-and-briefly-br#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:if-we-focus-on-the-pre-market-session-he#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:an-opening-range-breakout-level-which-is#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:a-few-minutes-later-it-starts-to-break-o#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:as-always-opening-range-breakout-levels#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:one-of-those-things-that-is-often-a-tell#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_SESSION:with-nuwe-over-here-it-rejects-v-web-imm#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:this-one-actually-never-got-above-its-op#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "YqY0OkL5LMI__s1",
+   "condition_id": "WAIT_STRUCTURE:we-can-see-very-quickly-it-breaks-only-s#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "OPENING_RANGE_DEFINITION:the-first-five-minute-candle-from-09-30#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "UNTYPED:then-we-wait-for-a-breakout-a-breakout-i#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "UNTYPED:after-the-breakout-we-wait-for-a-retest#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "WAIT_STRUCTURE:if-the-candle-closes-inside-the-range-th#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "UNTYPED:entry-is-on-the-open-of-the-next-candle#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "references_boundary"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "UNTYPED:every-decision-is-made-on-closed-candles#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "dENM6gt8ZRg__s0",
+   "condition_id": "UNTYPED:risk-per-trade-one-percent-of-the-deposi#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:a-bullish-trend-confirmed-by-price-break#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:a-bullish-order-block-is-typically-the-l#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:after-the-first-break-of-structure-price#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:price-retraces-downward-and-forms-a-chan#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "UNTYPED:the-change-of-character-acted-as-an-entr#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:in-a-bullish-order-block-a-buy-limit-ord#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:the-first-and-most-powerful-confirmation#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:the-second-key-confirmation-of-a-valid-o#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:if-no-imbalance-forms-above-this-candle#8",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "hcHuDfxdywI__s0",
+   "condition_id": "WAIT_STRUCTURE:the-third-and-final-confirmation-of-a-va#9",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "FILTER:you-want-to-see-heavy-volumes-traded-wit#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "UNTYPED:this-needs-to-be-followed-by-a-trend-act#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "UNTYPED:you-want-to-anchor-the-view-up-to-that-c#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "WAIT_RETEST:you-simply-need-to-see-the-price-go-away#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "WAIT_RETEST:you-trade-pullbacks-to-that-because-view#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "UNTYPED:that-means-short-from-here-short-from-he#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "WAIT_STRUCTURE:the-resistance-which-is-represented-by-t#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "UNTYPED:there-s-a-second-test-right-here-and-tha#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "FILTER:volume-profile-shows-where-the-big-volum#8",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "pKzXxB9Blts__s0",
+   "condition_id": "UNTYPED:as-there-s-this-rotation-you-don-t-reall#9",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_SESSION:the-5m-minute-ob-takes-place-from-9-30-a#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:we-take-the-opening-range-high-and-the-o#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:so-now-we-take-a-look-at-these-levels-pr#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4",
+   "disposition": "AFFECTED",
+   "stood_down_at": null,
+   "spec_id": "st5e-YJRfKc__s0",
+   "source_text": "When price breaks above the range high, for example, so a bullish breakout, which is what we saw an example of, that's where buyers have overcome that initial resistance.",
+   "prior_type": "WAIT_STRUCTURE",
+   "prior_primitive": "structure_engine.compute_structure_state",
+   "prior_bindable": true,
+   "new_disposition": "SOURCE_AMBIGUOUS",
+   "final_primitive": null,
+   "final_bindable": false,
+   "ambiguity_or_missing_capability": "breakout_confirmation_semantics",
+   "reason": "opening_range_breakout_confirmation_unresolved_from_source",
+   "is_entry_trigger": true,
+   "trigger_bound_before": true,
+   "trigger_bound_after": false,
+   "entry_eligibility_effect": "may_enter True -> False",
+   "classifier_decision_path": [
+    {
+     "condition": "is_entry_trigger",
+     "span": "yes"
+    },
+    {
+     "condition": "opening_range_defined_in_spec",
+     "span": "yes"
+    },
+    {
+     "condition": "references_boundary",
+     "span": "range high"
+    },
+    {
+     "condition": "crossing_relationship",
+     "span": "breaks"
+    },
+    {
+     "condition": "confirmation_specified",
+     "span": ""
     }
-  ]
+   ],
+   "classifier_outcome": "AMBIGUOUS_CONFIRMATION"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:this-was-the-highest-level-that-buyers-w#5",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:this-is-the-opening-range-low-616-61-in#6",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:the-difference-between-the-high-and-the#7",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#8",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s0",
+   "condition_id": "WAIT_STRUCTURE:this-opening-range-acts-as-a-decision-po#9",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s1",
+   "condition_id": "UNTYPED:the-initial-breakout-took-place#0",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s1",
+   "condition_id": "UNTYPED:in-this-case-price-pulled-back#1",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s1",
+   "condition_id": "UNTYPED:then-we-re-looking-for-an-entry-back-tow#2",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "opening_range_defined_in_spec"
+  },
+  {
+   "stub": "st5e-YJRfKc__s1",
+   "condition_id": "WAIT_STRUCTURE:whatever-this-opening-range-high-is-subt#3",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  },
+  {
+   "stub": "st5e-YJRfKc__s1",
+   "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#4",
+   "disposition": "UNAFFECTED",
+   "stood_down_at": "is_entry_trigger"
+  }
+ ]
 }

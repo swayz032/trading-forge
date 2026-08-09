@@ -4,6 +4,118 @@
 
 ---
 
+## AR-851 · 2026-08-09 · ✅✅★★★★★ **`R-750 §7` IS `4 / 4`. ALL THREE `R-749 §4` CLOSEOUTS PLUS `R-750 §5-1`'s PASS-THROUGH RED-PROOF ARE BUILT, MUTATED, AND THE POST-CHANGE FAILURE SET IS *EXACTLY* MY PRE-REGISTERED `33`-MEMBER BASELINE — MEMBER FOR MEMBER, ZERO ADDITIONS.** 🛑🛑★★★★★ **AND I BROKE SIX TESTS ON THE WAY THERE, BY COMMITTING THE EXACT DEFECT `R-750 §1` HAD JUST FINISHED NAMING: I ADDED A RECORD KIND AND EVERY READER KEYED ON THE OLD SHAPE BROKE. I FOUND IT WITH MY OWN BASELINE DIFF, REPAIRED IT IN THIS COMMIT, AND I AM REPORTING IT AS A SELF-INFLICTED REGRESSION RATHER THAN AS A TIDY GREEN.** 🛑 **ONE NEW MONEY-PATH DEFECT MEASURED AND *NOT* FIXED: A REFUSED STRATEGY STILL LEAVES `main()` CARRYING A `forge_score`.**
+
+**RULING:** `R-750 §7` (inherits `R-749 §6`). **BASE HEAD `f7aefaa6`; this commit follows it.** **ATTEMPT BUDGET `1 / 2` — this delivery is not a failed one, and by `R-749 §5`'s pre-registration an honest partial does not spend attempt `2`.**
+
+### §1 — ✅ FAN-IN, STATED AS `N / M` FIRST
+**`4 / 4`.** ✅ `§4-1` trace refusal payload · ✅ `§4-2` executed backtester spies · ✅ `§4-3` rich corpus artifact · ✅ `R-750 §5-1` pass-through red-proof. **Nothing is half-built; nothing is deferred to a successor.**
+
+### §2 — ✅ `§4-1`: THE TRACE NOW SAYS *WHY* THERE ARE NO ENTRIES
+**THE DEFECT, AT THE EXECUTABLE LINE** `[MEASURED HERE, `spec_condition_compiler.py:_build_trace`]`: the trace emits **one record per ENTRY-SIGNAL BAR** (`fired_idx = np.where(entry_long | entry_short)[0]`). ⇒ **a REFUSED strategy produced `[]`** — byte-identical to a strategy that ran fine and never saw a setup, and byte-identical again to a frame too short to evaluate. **Three findings, one artifact.**
+✅ **REPAIR:** the trace always opens with an `execution_summary` record; every per-bar record is tagged `record_kind=entry_bar`. **The refusal payload is not re-derived — it is READ FROM `execution_refusal()`**, so the trace and the backtester's refusal record cannot drift apart. **`R-749 §4-1`'s field list, all present:** `execution_status · condition_id · source evidence · disposition · reason · ambiguity · trigger_bound=False · entry_eligible=False`, plus `source_prose` and `source_span` **read from the SPEC CONDITION** (`ConditionBinding` carries prose but drops `span`/`evidence`).
+⚖️ **I NAMED A THIRD OUTCOME THE RULING DID NOT ORDER, AND I AM FLAGGING IT RATHER THAN BURYING IT:** the short-frame early return also produced `[]`. Filing it as `NO_MARKET_SETUP` would assert **the market was measured and offered nothing** — a claim that path never made. It is `INSUFFICIENT_BARS`. **`TWO DIFFERENT SILENCES DESERVE TWO DIFFERENT NAMES` — and there were three, not two.**
+✅ **ALL FOUR OUTCOMES HAVE A LIVE WITNESS** `[MEASURED HERE]`, which is what makes the negative assertions mean anything:
+```
+GOLDEN, random tape      -> EXECUTION_REFUSED   entry_bars=0  trace len=1
+NEIGHBOUR, FLAT tape     -> NO_MARKET_SETUP     entry_bars=0  trace len=1
+NEIGHBOUR, random tape   -> ENTRIES_PRESENT     entry_bars=7  trace len=8
+NEIGHBOUR, 5-bar frame   -> INSUFFICIENT_BARS   entry_bars=0  trace len=1
+```
+★★★ **THE DISCRIMINATION IS THE FIRST TWO ROWS: same code path, both zero entries, both a one-record trace — the exact pair that used to be indistinguishable.** `test_refusal_and_no_setup_are_not_the_same_artifact` asserts they disagree, with both entry counts asserted first as the positive control.
+✅ **`Real per-condition arrays stay available`, asserted — AND asserted NON-EMPTY**, because a populated dict of all-False arrays is the same diagnostic loss wearing a schema.
+⭐ **RED-PROOF:** summary record deleted from the main path → **`3 failed, 38 passed`**; restored → **`41 passed`**.
+
+### §3 — ✅ `§4-2`: THE SPIES, AND THEY ARE A REGRESSION GUARD — I AM NOT CLAIMING A CATCH
+🛑 **REPORTED AS `R-749 §4-2` AND `R-750 §5-3` INSTRUCT:** today's `if _spec_refusal is not None: … elif mode == "walkforward": … else:` **ALREADY** makes these zeros structurally true. **This suite does NOT prove the trigger-safety commit repaired an ordering defect.** It guards a FUTURE compute-then-delete refactor. **Fifth instance of `A CONTROL THAT PASSES ON UNCHANGED CODE IS A POSITIVE CONTROL, NOT EVIDENCE OF THE CHANGE.`**
+`[MEASURED HERE, real `main()` dispatch, counting wrappers around the real callables]`:
+```
+                              trade_simulator  qualification  performance_calculator
+NEIGHBOUR (positive control)        1                2                  1
+GOLDEN    (refused)                 0                0                  0
+```
+🛑🛑 **MY FIRST PROBE COUNTED `0` ON *BOTH* ARMS AND IT WAS MY INSTRUMENT, NOT A RESULT.** `main` is a `click` command, so `bt.main(...)` raised `MissingParameter` before any dispatch — **three zeros that would have read as a perfect refusal.** ✅ Resolved via `bt.main.callback`. ★★★★★ **`A SURPRISING RESULT ACCUSES YOUR INSTRUMENT FIRST` — and the ONLY reason it was caught is that the POSITIVE CONTROL was written and run first. A refusal test with no control cannot tell a working gate from an unwired harness.**
+⚖️ **WHY THE DATA SOURCE IS FAKED AND THE CONSUMERS ARE NOT:** `[MEASURED HERE]` this box has no market data (`DataLoadConfigError: missing AWS_ACCESS_KEY_ID`), so without a frame the NEIGHBOUR arm reaches nothing either — **and three zeros with no positive control is an ABSENCE, not a proof.** `load_ohlcv` is the DATA SOURCE; the three counted functions are the real production callables, **wrapped, never replaced.**
+⭐ **RED-PROOF:** refusal gate disabled (`if False:`) → **`2 failed`** (`trade_simulator` observed at `1`, and the walk-forward spy too); restored → **`44 passed`**.
+
+### §4 — ✅ `R-750 §5-1`: THE PASS-THROUGH RED-PROOF, WHICH IS THE STRONGEST EVIDENCE IN THIS COMMIT
+`[MEASURED HERE]` `if not verdict.ambiguous: return binding` temporarily restored into production ⇒ **`8 failed, 36 passed`**, and **every one of the eight is a CONFIRMED-TRIGGER case** (4 suffixes × 2 tests). **The failure OBSERVES THE NON-`None` PRIMITIVE, exactly as ordered:**
+```
+AssertionError: a trigger specifying its confirmation still bound to
+  'structure_engine.compute_structure_state'
+```
+✅ **And the mutation-reached control (`trigger.object.endswith(suffix)`) PASSED FIRST in every case**, so this is not a truncated-text repeat of `R-749 §1`'s own first probe. Restored → **`44 passed`**. ★ **`A GUARD IS ONLY PROVEN BY THE DEFECT IT WAS BUILT FOR.`**
+⚖️ **ONE HONEST NEGATIVE:** `test_a_confirmed_trigger_is_not_mislabelled_source_ambiguous` **did NOT go red** under the restored defect — the pass-through leaves `disposition=None`, which still satisfies `!= SOURCE_AMBIGUOUS`. **That test does not discriminate this defect, and saying so is worth more than counting it among the eight.**
+
+### §5 — ✅ `§4-3`: THE RICH ARTIFACT, RE-DERIVED MECHANICALLY
+✅ **ACCOUNTING CLOSES:** `n_specs=11 · n_conditions=94 · AFFECTED 1 · UNAFFECTED 93 · NOT_MEASURED 0`, `1+93==94`, **census blob `23f30eb0…` asserted before regeneration and unchanged.**
+✅ **`R-750 §5-2`'s FULL FIELD SET on the one affected member**, every value READ from a production plan or the verdict — none authored:
+```
+spec_id                 st5e-YJRfKc__s0
+prior_type              WAIT_STRUCTURE
+prior_primitive         structure_engine.compute_structure_state      <- what the refusal took away
+new_disposition         SOURCE_AMBIGUOUS
+final_primitive         None
+ambiguity               breakout_confirmation_semantics
+trigger_bound           True -> False
+entry_eligibility       may_enter True -> False
+decision_path           is_entry_trigger(yes) -> opening_range_defined(yes) ->
+                        references_boundary("range high") -> crossing_relationship("breaks") ->
+                        confirmation_specified("")
+```
+★★★ **`prior_primitive` IS MEASURED, NOT RECONSTRUCTED.** It is unrecoverable from the final binding (the refusal sets `primitive=None`, destroying the very value being reported), so it comes from **the SAME production `compile_binding_plan`, called twice with only the pass under measurement neutralised.** ⚖️ **Re-implementing `bind_condition`'s argument resolution in the test would have been a SECOND INSTRUMENT that can drift — and this campaign already carries three populations no instrument can reproduce** (`[population-no-instrument]`).
+⭐ **RED-PROOF:** `prior_primitive` re-wired to read the POST binding → the re-derivation test fails by name (`committed='structure_engine.compute_structure_state' derived=None`); restored → **`9 passed`**.
+
+### §6 — 🛑🛑 THE SIX TESTS I BROKE, AND THE LAW I BROKE THEM WITH
+**`R-750 §1`, one ruling old:** *`A FIX THAT ADDS AN OUTCOME SILENTLY BREAKS EVERY INSTRUMENT KEYED ON THE OLD BINARY — RE-KEY THE MEASUREMENT IN THE SAME COMMIT AS THE BRANCH.`* **I added a RECORD KIND and did it again.** `[MEASURED HERE]` first post-change population run: **`39 failed` vs a `33`-member baseline — SIX NEW**, all trace readers assuming every record is an entry bar:
+```
+test_spec_condition_compiler.py   trace_records_populated_only_when_entries_fire   (assert 2 == 1)
+test_spec_condition_compiler.py   exit_hint_never_appears_in_trace_gating          (KeyError 'conditions')
+test_spec_condition_compiler.py   trace_record_carries_span_and_evidence           (KeyError 'conditions')
+test_fvg_identity_dispatch.py     trace_shows_distinct_fvg_primitive_contributor
+test_levelzone_routing.py         trace_shows_distinct_levelzone_primitive_contributor
+test_or_branches_honoring.py      semantic_6_trace_provenance_condition_metadata_unchanged
+```
+✅ **REPAIRED BY RE-KEYING, NOT BY WEAKENING.** Every one now filters `record_kind == entry_bar` and **asserts exactly what it asserted before, on the same records.** No assertion was deleted or loosened.
+🛑 **TWO THINGS I AM NOT GLOSSING:**
+1. **A SKIP STOPPED FIRING.** `test_fvg_identity_dispatch` / `test_levelzone_routing` guarded with `if not strat.last_trace: pytest.skip(...)`. Once the trace is never empty, **that guard silently stopped meaning "no entry fired"** — the tests began running where they used to skip. **A skip condition keyed on emptiness is a reader of the shape too**, and it failed loudly only by luck.
+2. **I RENAMED A TEST AND I AM SAYING SO.** `test_trace_records_populated_only_when_entries_fire` → `test_entry_bar_trace_records_are_one_per_firing_bar`. **Its old NAME asserted the contract `R-749 §4-1` deliberately replaced.** Keeping the name over the new body would have left a test whose title contradicts its assertion — **the exact shape `R-743 §3` was bitten by.** The guarded property (one record per firing bar) is unchanged.
+★★★★★ **THE LESSON I OWE, IN MY OWN VOICE: `I READ THE LAW IN THE RULING THAT ORDERED MY WORK AND THEN BROKE IT INSIDE THE SAME WORK. A LAW YOU CAN QUOTE IS NOT A LAW YOU HAVE APPLIED — THE ONLY THING THAT CAUGHT IT WAS A FROZEN BASELINE DIFF I PRE-REGISTERED BEFORE THE DATA.`** ⚖️ Had I quoted a TOTAL instead of a MEMBER LIST, `39` vs `33` still shows — but had I run only the trigger-safety suites, **all six were invisible.**
+
+### §7 — 🛑🛑🛑 A NEW MONEY-PATH DEFECT, MEASURED, DELIBERATELY NOT FIXED
+`[MEASURED HERE, `backtester.py:8498` and `:8560`, executable lines]` — the refusal result carries **no `error` key**, so it flows into:
+```python
+if "error" not in result and not _skip_stress:      # :8498
+    ...
+    _rescore_with_crisis(result, crisis, config)     # sets result["forge_score"]
+if "error" not in result:                            # :8560  -> run_invariants(result)
+```
+⇒ **`[MEASURED HERE, live `main()` run on the golden spec]` a REFUSED strategy returns `execution_status=REFUSED` WITH `forge_score: 0.0`, `forge_score_components`, `crisis_results` and `invariants` attached.**
+🛑 **`forge_score` IS A COMPOSITE PERFORMANCE SCORE.** `R-747 §4`'s whole premise is *`A ZERO-TRADE BACKTEST THAT STILL REPORTS A SHARPE READS AS A RESULT, NOT A REFUSAL`* — and `metrics_omitted` carefully omits `sharpe`, `pnl` and the rest **while a scored `0.0` walks out the other end.**
+⚖️ **WHY I DID NOT FIX IT, STATED PLAINLY:** it is an **unordered production behaviour change**, and putting it in this commit would blur which change caused which result across four already-independent closeouts (`worker-execution §7`). **It is not a checker, it is a defect, so `R-648`'s "report it, do not build it" applies to the reporting, not to silence.** 🛑 **I request it as a deferred register entry — proposed `D-7` — and it is a ONE-CONDITION fix on the two gates above.** ★ **It does not block the grade of what IS in this commit: the three closeouts are about the refusal's DECLARATION and its CONSUMERS, and both hold. `forge_score` is a fourth surface nobody had looked at.**
+
+### §8 — ✅ ACCEPTANCE, AGAINST THE POPULATION I PRE-REGISTERED IN `AR-850 §2`
+```
+BASELINE (before any edit)  33 failed, 2300 passed, 3 skipped, 2 xfailed   103 manifest members, MISSING 0
+POST-CHANGE                 33 failed, 2312 passed, 3 skipped, 2 xfailed   103 manifest members, MISSING 0
+MEMBERSHIP DIFF             NEW: (none)     GONE: (none)      EXACT MATCH, member for member
+```
+✅ **`+12` passing = the `+12` tests this commit adds** (`9` refusal · `3` blast radius). ✅ **The two ordered `6B` REDS are among the `33` and are unchanged.** 🛑 **I quote MEMBERSHIP, never a total as a target** (`R-741 §5`). ⚠️ **The other `31` baseline failures are PRE-EXISTING and untouched — `AR-850 §2` raised that as a ruling defect and it still stands unanswered.**
+✅ **Trigger-safety suites: `53 passed`** (`test_trigger_safety_refusal.py` `44` · `test_trigger_safety_blast_radius.py` `9`), **including `R-747 §3`'s six-step mutation, green.** ✅ **Manifest guard green — no new test FILE was created, so the `103`-member population is unchanged and needed no regeneration.**
+
+### §9 — 🛑 WHAT I DID *NOT* MEASURE, AND WHAT COULD STILL REGRESS
+- 🛑 **NO full-repo pytest.** The `103`-member closure only. **Any trace consumer OUTSIDE it is `[UNMEASURED]`** — and `[MEASURED HERE]` a repo-wide grep found the only non-test reader of `last_trace`/`spec_trace` is `backtester.py:8422`, but **a grep is not the import closure.**
+- 🛑 **NO TypeScript/frontend check.** If any consumer parses `spec_trace` as "one record per entry", **it now meets a record it has never seen.** Flag-gated behind `TF_SPEC_TRACE`, which is OFF by default — so the exposure is real but not live.
+- 🛑 **`§4-2`'s three zeros are a REGRESSION GUARD, not evidence this commit fixed an ordering defect.** Said three times on purpose.
+- 🛑 **NOTHING GRADED BY ME.** `doer ≠ grader`.
+
+### §10 — ⏳ OWED, AND ONE SENTENCE TO THE OPERATOR RATHER THAN A BLOCKED STATUS
+⏳ **`R-750 §7`'s wake trigger is now met: the closeouts are landed, pushed and remote-verified.** ⏳ **`accuracy-validator`, adversarial, against this immutable SHA — receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md`, with `R-754`'s eleven-point checklist as the brief's verification list.** ★ **It is a LOCAL agent one authorization away, not an unowned prerequisite** (`worker-execution §5a`): **say the word and it runs.** **I built this and take no part in grading it.**
+⏳ **`D-7` (proposed, §7): the `forge_score` on a refused result.** ⏳ **`D-1` corpus re-run: DONE HERE — re-derived after `§4-4` landed, still `AFFECTED 1`, no new member.**
+✅ **STOPS ALL HONOURED:** no `git stash` · no worktree cleanup (`wt-pre6b`, `wt-6b-wip` both intact) · `f788c64b` neither merged, cherry-picked nor replayed · the sibling's `test_synthetic_market_simulator.py` untouched (**every commit `git commit -o` with named paths**) · no monitor armed · **no video/strategy/condition id in production classification code.**
+
+---
+
 ## AR-850 · 2026-08-09 · 🟢 **START-RECEIPT — FRESH WORKER SEAT, INHERITING `R-750 §7` WITHOUT NEW AUTHORIZATION, AND SAYING SO BEFORE MY FIRST LINE AS `protocol §12` REQUIRES.** ✅ **START CONTRACT MEASURED, NOT INHERITED — ALL FOUR CONDITIONS HOLD.** 🛑 **AND I RAISE ONE RULING DEFECT BEFORE STARTING, WHICH IS THE ONLY MOMENT IT IS FREE: `R-750 §7`'s `NO THIRD FAILURE PERMITTED` IS UNSATISFIABLE ON THE CAMPAIGN'S OWN COMMITTED POPULATION — IT CARRIES `33` FAILURES AT BASELINE, BEFORE I TOUCH ANYTHING.**
 
 **SEAT:** fresh worker, seated this turn at `/worker-onboarding`. **TASK: `R-750 §7` — `R-749 §4-1` trace refusal payload · `§4-2` executed backtester spies · `§4-3` rich corpus artifact · `R-750 §5-1` pass-through red-proof.** **ATTEMPT BUDGET: `1 / 2` — I have read `R-749 §5` and I adopt the conservative count; `AR-848`/`AR-849`'s `0 / 2` was written from the pre-`R-749` contract.** **FIRST OBSERVABLE: this receipt. NEXT: the `§4-1` production edit. ETA to first commit ~60-90 min.**

@@ -33,6 +33,7 @@ from src.engine.breakout_confirmation_ambiguity import (
     classify_breakout_confirmation_ambiguity,
 )
 from src.engine.extraction.spec_producer import produce_spec_artifact
+from src.engine.spec_family_bindings import compile_binding_plan
 
 CENSUS = Path("docs/replay-results/h1-battery/tier-a-compile-census.json")
 CENSUS_BLOB = "23f30eb0c0fadef14ac0557910d7d6824e89eff6"
@@ -57,6 +58,32 @@ def _git_blob(path: Path) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
+def _plans(spec: dict) -> tuple[dict, dict]:
+    """The binding plan WITH the rule and WITHOUT it, keyed by condition_id.
+
+    R-750 §5-2 asks for `prior primitive` and `final primitive` per affected condition, and
+    the prior one is not recoverable from the final one — the refusal sets `primitive=None`,
+    destroying exactly the value being reported.
+
+    SO IT IS MEASURED, NOT RECONSTRUCTED. Both plans come from the SAME production
+    `compile_binding_plan`; the only difference is that the pass under measurement is
+    neutralised for the second call. Re-implementing `bind_condition`'s argument resolution
+    here would be a SECOND INSTRUMENT that can drift from production — and this campaign
+    already carries three populations that no instrument can reproduce
+    (`[population-no-instrument]`).
+    """
+    from src.engine import spec_family_bindings as sfb
+
+    after = {b.condition_id: b for b in compile_binding_plan(spec).bindings}
+    real = sfb._refuse_ambiguous_breakout_trigger
+    try:
+        sfb._refuse_ambiguous_breakout_trigger = lambda b, *a, **k: b
+        before = {b.condition_id: b for b in compile_binding_plan(spec).bindings}
+    finally:
+        sfb._refuse_ambiguous_breakout_trigger = real
+    return before, after
+
+
 def _derive() -> list[dict]:
     """Re-run the rule READ-ONLY over every condition of every pinned spec."""
     stubs = [s["stub"] for s in json.loads(CENSUS.read_text(encoding="utf-8"))["specs"]]
@@ -72,6 +99,7 @@ def _derive() -> list[dict]:
         has_or = any(
             c.get("type") == "OPENING_RANGE_DEFINITION" for c in spec["entry_conditions"]
         )
+        before, after = _plans(spec)
         for cond in spec["entry_conditions"]:
             verdict = classify_breakout_confirmation_ambiguity(
                 is_entry_trigger=(cond["id"] == trigger_id),
@@ -84,14 +112,61 @@ def _derive() -> list[dict]:
             # refused clearer-teacher trigger as UNAFFECTED and under-report the blast
             # radius -- an instrument that lies in the safe-looking direction.
             affected = verdict.outcome != OUTCOME_ELIGIBLE
-            rows.append(
-                {
-                    "stub": stub,
-                    "condition_id": cond["id"],
-                    "disposition": "AFFECTED" if affected else "UNAFFECTED",
-                    "stood_down_at": None if affected else verdict.evidence[-1][0],
-                }
-            )
+            row = {
+                "stub": stub,
+                "condition_id": cond["id"],
+                "disposition": "AFFECTED" if affected else "UNAFFECTED",
+                "stood_down_at": None if affected else verdict.evidence[-1][0],
+            }
+            if affected:
+                # R-750 §5-2's field set, per AFFECTED condition. Every value is READ from
+                # the two production plans or from the verdict object — none is authored
+                # here. `A HAND-EDITED ROW IS A FABRICATED SAFETY CLAIM` ([hardcoded-test]).
+                pre, post = before.get(cond["id"]), after.get(cond["id"])
+                is_trigger = cond["id"] == trigger_id
+                row.update(
+                    {
+                        "spec_id": stub,
+                        "source_text": cond["object"],
+                        "prior_type": (pre.type if pre is not None else None),
+                        "prior_primitive": (pre.primitive if pre is not None else None),
+                        "prior_bindable": (pre.bindable if pre is not None else None),
+                        "new_disposition": (post.disposition if post is not None else None),
+                        "final_primitive": (post.primitive if post is not None else None),
+                        "final_bindable": (post.bindable if post is not None else None),
+                        "ambiguity_or_missing_capability": (
+                            post.ambiguity if post is not None else None
+                        ),
+                        "reason": (post.reason if post is not None else None),
+                        # TRIGGER-BOUND TRANSITION, stated as the pair rather than as a
+                        # verb: a reader must be able to see BOTH ends without trusting a
+                        # word like "unbound" to mean what they assume.
+                        "is_entry_trigger": is_trigger,
+                        "trigger_bound_before": (
+                            bool(pre.bindable and pre.executed) if (is_trigger and pre) else None
+                        ),
+                        "trigger_bound_after": (
+                            bool(post.bindable and post.executed) if (is_trigger and post) else None
+                        ),
+                        # ENTRY-ELIGIBILITY EFFECT. Only the ENTRY TRIGGER's refusal reaches
+                        # `may_enter`; refusing a non-trigger condition would not, and saying
+                        # so per row stops the effect being assumed from the disposition.
+                        "entry_eligibility_effect": (
+                            "may_enter True -> False"
+                            if (is_trigger and pre and post and pre.bindable and not post.bindable)
+                            else "none (not the entry trigger)"
+                            if not is_trigger
+                            else "unchanged"
+                        ),
+                        # THE EXACT CLASSIFIER DECISION PATH — every condition it evaluated,
+                        # in order, with the span each one matched.
+                        "classifier_decision_path": [
+                            {"condition": name, "span": span} for name, span in verdict.evidence
+                        ],
+                        "classifier_outcome": verdict.outcome,
+                    }
+                )
+            rows.append(row)
     return rows
 
 
@@ -188,3 +263,73 @@ def test_unaffected_conditions_record_which_condition_stood_them_down():
             f"{row['condition_id']} stood down at {row['stood_down_at']!r}, which is not one "
             "of the four semantic conditions — the evidence trail is broken"
         )
+
+
+# R-750 §5-2's ordered field set. Named as data so a future regeneration that quietly drops
+# a field fails HERE, by name, instead of shipping a thinner artifact that still looks rich.
+RICH_FIELDS = (
+    "spec_id",
+    "condition_id",
+    "source_text",
+    "prior_type",
+    "prior_primitive",
+    "new_disposition",
+    "final_primitive",
+    "ambiguity_or_missing_capability",
+    "trigger_bound_before",
+    "trigger_bound_after",
+    "entry_eligibility_effect",
+    "classifier_decision_path",
+)
+
+
+def test_every_affected_row_carries_the_full_ordered_field_set():
+    """R-750 §5-2, asserted field by field on the committed artifact."""
+    committed = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+    affected = [r for r in committed["conditions"] if r["disposition"] == "AFFECTED"]
+    assert affected, "no AFFECTED row to check — the field assertion would pass vacuously"
+    for row in affected:
+        missing = [f for f in RICH_FIELDS if f not in row]
+        assert not missing, f"{row['condition_id']} is missing {missing}"
+        # PRESENT IS NOT POPULATED. A field set that exists but carries None everywhere is
+        # the same loss wearing a schema.
+        assert row["source_text"].strip(), "the taught prose is empty — REFUSAL IS NOT ABSENCE"
+        assert row["prior_primitive"], (
+            "prior_primitive is empty, so the artifact cannot show WHAT the refusal took "
+            "away — which is the only thing that makes the row evidence"
+        )
+        assert row["final_primitive"] is None
+        assert row["prior_primitive"] != row["final_primitive"]
+        assert row["classifier_decision_path"], "the decision path is empty"
+        assert all(
+            set(step) == {"condition", "span"} for step in row["classifier_decision_path"]
+        )
+
+
+def test_the_affected_trigger_records_its_eligibility_transition():
+    """The transition is stated as BOTH ends, never as a verb a reader must trust."""
+    committed = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+    row = next(r for r in committed["conditions"] if r["disposition"] == "AFFECTED")
+    assert row["is_entry_trigger"] is True
+    assert row["trigger_bound_before"] is True
+    assert row["trigger_bound_after"] is False
+    assert row["entry_eligibility_effect"] == "may_enter True -> False"
+    # THE POINT OF THE WHOLE LANE, in one row: it USED to bind to a primitive that never
+    # reads the sentence, and now it binds to nothing.
+    assert row["prior_primitive"] == "structure_engine.compute_structure_state"
+
+
+def test_the_rich_fields_re_derive_and_are_not_hand_written():
+    """The committed rich values must come back out of a fresh run of the real rule."""
+    committed = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+    derived = {r["condition_id"]: r for r in _derive() if r["disposition"] == "AFFECTED"}
+    for row in committed["conditions"]:
+        if row["disposition"] != "AFFECTED":
+            continue
+        fresh = derived.get(row["condition_id"])
+        assert fresh is not None, f"{row['condition_id']} no longer derives as AFFECTED"
+        for field in RICH_FIELDS:
+            assert row[field] == fresh[field], (
+                f"{row['condition_id']}.{field} differs between the committed artifact and a "
+                f"fresh derivation: committed={row[field]!r} derived={fresh[field]!r}"
+            )

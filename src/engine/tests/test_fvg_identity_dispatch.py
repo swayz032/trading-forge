@@ -26,7 +26,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from src.engine.spec_condition_compiler import SpecConditionStrategy
+from src.engine.spec_condition_compiler import TRACE_RECORD_ENTRY_BAR, SpecConditionStrategy
 from src.engine.spec_family_bindings import bind_condition, compile_binding_plan
 
 
@@ -174,9 +174,13 @@ def test_trace_shows_distinct_fvg_primitive_contributor_when_enabled():
         strat = SpecConditionStrategy(compiled_spec, symbol="MES", timeframe="15m", trace=True)
         strat.compute(df)
 
-    if not strat.last_trace:
+    # Re-keyed on record_kind (R-749 §4-1). The trace now ALWAYS carries a leading
+    # `execution_summary` record, so `if not strat.last_trace` stopped being a
+    # "no entry fired" test and this skip silently stopped firing.
+    _bars = [r for r in strat.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
+    if not _bars:
         pytest.skip("no entry signal fired on this synthetic fixture/seed — nothing to inspect")
-    fired_primitives = {c["primitive"] for rec in strat.last_trace for c in rec["conditions"]}
+    fired_primitives = {c["primitive"] for rec in _bars for c in rec["conditions"]}
     assert "fvg_native.compute_fvg_signal" in fired_primitives
     assert "structure_engine.compute_structure_state" not in fired_primitives
 

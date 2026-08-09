@@ -28,7 +28,7 @@ from datetime import UTC, datetime, timedelta
 import numpy as np
 import polars as pl
 
-from src.engine.spec_condition_compiler import SpecConditionStrategy
+from src.engine.spec_condition_compiler import TRACE_RECORD_ENTRY_BAR, SpecConditionStrategy
 
 N_BARS = 300
 
@@ -425,11 +425,14 @@ def test_semantic_6_trace_provenance_condition_metadata_unchanged():
 
     # Every trace record's "conditions" entries must draw from the SAME condition_id set in both
     # modes (whichever bars actually fired), and per-condition fields must carry the full schema.
-    ids_off = {c["condition_id"] for rec in strat_off.last_trace for c in rec["conditions"]}
-    ids_on = {c["condition_id"] for rec in strat_on.last_trace for c in rec["conditions"]}
+    # Re-keyed on record_kind (R-749 §4-1): the leading summary record has no `conditions`.
+    _bars_off = [r for r in strat_off.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
+    _bars_on = [r for r in strat_on.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
+    ids_off = {c["condition_id"] for rec in _bars_off for c in rec["conditions"]}
+    ids_on = {c["condition_id"] for rec in _bars_on for c in rec["conditions"]}
     assert ids_off <= {"s1", "s2"}
     assert ids_on <= {"s1", "s2"}
-    for rec in strat_on.last_trace:
+    for rec in _bars_on:
         for c in rec["conditions"]:
             assert {"condition_id", "type", "object", "primitive", "approximation", "satisfied_at_bar"} <= c.keys()
 

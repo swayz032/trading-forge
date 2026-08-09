@@ -12,6 +12,8 @@ import numpy as np
 import polars as pl
 
 from src.engine.spec_condition_compiler import (
+    TRACE_RECORD_ENTRY_BAR,
+    TRACE_RECORD_EXECUTION_SUMMARY,
     SpecConditionStrategy,
     candle_confirmation_check,
     from_compiled_spec,
@@ -181,13 +183,30 @@ def test_trace_flag_off_produces_byte_identical_signal_columns_vs_trace_on():
     assert isinstance(strategy_on.last_trace, list)
 
 
-def test_trace_records_populated_only_when_entries_fire():
+def test_entry_bar_trace_records_are_one_per_firing_bar():
+    """One ENTRY-BAR record per firing bar — the original property, re-keyed.
+
+    RENAMED FROM `test_trace_records_populated_only_when_entries_fire` (R-749 §4-1). That
+    name asserted a contract this campaign DELIBERATELY REPLACED: the trace now always opens
+    with an `execution_summary` record, precisely so a refused strategy and a flat market stop
+    producing the identical empty list. Keeping the old name over the new body would leave a
+    test whose title contradicts its assertion — the shape R-743 §3 was bitten by.
+
+    The property being guarded is UNCHANGED: exactly one entry-bar record per firing bar.
+    """
     spec = _minimal_compiled_spec()
     df = _synthetic_df()
     strategy = SpecConditionStrategy(compiled_spec=spec, trace=True)
     out = strategy.compute(df)
     n_entries = sum(out["entry_long"].to_list())
-    assert len(strategy.last_trace) == n_entries
+    bars = [r for r in strategy.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
+    assert len(bars) == n_entries
+    # And the summary is there exactly once, leading.
+    summaries = [
+        r for r in strategy.last_trace if r["record_kind"] == TRACE_RECORD_EXECUTION_SUMMARY
+    ]
+    assert len(summaries) == 1
+    assert strategy.last_trace[0]["record_kind"] == TRACE_RECORD_EXECUTION_SUMMARY
 
 
 def test_exit_hint_never_appears_in_trace_gating_conditions():
@@ -208,7 +227,11 @@ def test_exit_hint_never_appears_in_trace_gating_conditions():
     df = _synthetic_df()
     strategy = SpecConditionStrategy(compiled_spec=spec, trace=True)
     strategy.compute(df)
+    # Re-keyed on record_kind (R-749 §4-1): the leading summary record carries no
+    # `conditions` list, and iterating it as if it did was a KeyError, not a finding.
     for rec in strategy.last_trace:
+        if rec["record_kind"] != TRACE_RECORD_ENTRY_BAR:
+            continue
         cond_ids = {c["condition_id"] for c in rec["conditions"]}
         assert "e1" not in cond_ids
 
@@ -218,8 +241,9 @@ def test_trace_record_carries_span_and_evidence_provenance():
     df = _synthetic_df()
     strategy = SpecConditionStrategy(compiled_spec=spec, trace=True)
     strategy.compute(df)
-    if strategy.last_trace:
-        rec = strategy.last_trace[0]
+    bars = [r for r in strategy.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
+    if bars:
+        rec = bars[0]
         assert "conditions" in rec
         assert "spec_hash" in rec
         for cond in rec["conditions"]:
