@@ -4,6 +4,55 @@
 
 ---
 
+## AR-881 · 2026-08-09 · ✅ **`F-7` ENUMERATED, READ-ONLY — `10` SITES IN `4` CLUSTERS, AND IT IS **NOT** THE SHAPE THE WAVE HAS BEEN HUNTING.** 🛑🛑★★★★★ **`F-7` FABRICATES A *REASON*, NOT A NUMBER: `errorMessage: … ?? "backtest failed"` WRITES THE WORDS *"backtest failed"* ABOUT A RUN THE ENGINE DECLINED TO ATTEMPT — AND `status: "failed"` LANDS ON THE **STRATEGY ROW ITSELF**, NOT MERELY AN AUDIT LINE.** ⚠️ **NO CODE CHANGED. `F-7` FIX UNSTARTED. FAN-IN UNCHANGED AT `7 / 9`.**
+
+**SEAT `claude.exe 23640`.** **AUTHORITY: `R-765 §3`'s standing READ-ONLY grant (*"`F-7` and `N-5` reachability/defect enumeration"*), which `R-766` re-ordered the lanes around but did not withdraw.** 🛑 **`R-766 §4` specifies FILES ALLOWED and acceptance for LANE 1 and LANE 2 ONLY. `F-7` and `N-5` appear in its ORDER line but carry NO lane contract, so I did not open one.** ★ **`AN ORDER OF WORK IS NOT A CONTRACT FOR IT.`**
+
+### §1 — 📍 THE TEN SITES, BY MEMBER
+`[MEASURED HERE, `src/server/services/agent-service.ts`]` — three near-identical entry paths plus the drain branch:
+```
+runStrategy            :775  strategy row  status: result.status === "completed" ? "tested" : "failed"
+                       :791  audit         status: … ? "success" : "failure"
+                       :793  audit  errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined
+runStrategyFromDSL     :1224 / :1234 / :1236    <- identical triple
+runClassStrategy       :1322 / :1337 / :1339    <- identical triple
+drain branch           :2274 systemJournal status: result.status === "completed" ? "tested" : "failed"
+```
+⇒ **Every one is `=== "completed" ? A : B` — a BINARY partition over a THREE-state outcome, the same exhaustiveness error `N-4` carried.** ★★★ **`A TERNARY IS AN EXHAUSTIVENESS CLAIM; NOTHING RE-CHECKS IT WHEN A THIRD STATE ARRIVES.`**
+
+### §2 — 🛑🛑 WHY THIS IS WORSE THAN `N-4`, AND IT IS TWO SEPARATE ESCALATIONS
+**(a) THE FABRICATED REASON.** `N-4` mislabelled a refusal as `success`. **`F-7` goes further: `?? "backtest failed"` INVENTS THE EXPLANATORY TEXT.** ⇒ **the record does not merely mis-state the outcome, it states a CAUSE that never occurred — for a run the engine declined to execute.** ★★★★★ **`A FABRICATED STATUS IS A WRONG ANSWER; A FABRICATED REASON IS A WRONG ANSWER THAT STOPS ANYONE ASKING THE QUESTION.`**
+**(b) IT IS NOT AN AUDIT LINE — IT IS THE STRATEGY'S OWN ROW.** `:775`/`:1224`/`:1322` write `status` on the **strategy record**; `:2274` writes `systemJournal.status`. ⇒ **`N-4`'s damage was confined to the 90-day audit trail. `F-7` marks the STRATEGY `failed`, in the durable row other subsystems read.** ⚠️ **`[UNENUMERATED — OPEN]`: I did NOT trace which consumers branch on that strategy `status`, so I claim a WRONG DURABLE VALUE, NOT a downstream consequence. Naming the consumers is the first thing a fix contract needs.**
+
+### §3 — ⭐⭐ THE `?? 0` GREP WOULD HAVE MARKED `F-7` CLEAN — AND SO WOULD A GREP FOR `"refused"`
+✅ **`[MEASURED HERE]` `F-7` IS NOT A METRIC FABRICATION. The metrics are handled CORRECTLY:**
+```
+:759-760 / :1212-1213 / :1310-1311   const tier = "tier" in result ? result.tier : null;
+                                     const forgeScore = "forge_score" in result ? result.forge_score : null;
+grep -n '?? 0' agent-service.ts  ->  ONE hit, :85, a rate-limiter timestamp. NOT a metric.
+```
+⇒ **absence is preserved as `null` at every metric site.** ★★★★★ **SECOND LANE IN A ROW WHERE THE NULLS ARE PERFECT AND THE CODE IS STILL WRONG (`F-10` was the first). `THE INVARIANT WAS NEVER "REMOVE `?? 0`" — IT IS THAT AN UNMEASURED RUN MUST NOT BE CLASSIFIED AS IF IT HAD BEEN MEASURED.`** (`R-766 §3`, confirmed by member on a second file.)
+🛑🛑 **AND A HOMONYM TRAP I WANT ON THE RECORD BEFORE ANYONE GREPS THIS FILE:** `grep -n 'refused' agent-service.ts` returns **`:2058` `:2063` `:2080` `:2088` `:2089`** — **all of them `scout.synthesizer_refused`, the SCOUT SYNTHESIZER declining to emit a DSL. That is a different actor refusing a different thing.** ⇒ **`[MEASURED HERE]` there is NO engine-refusal awareness in this file: `isExecutionRefused` and `BACKTEST_STATUS_REFUSED` appear ZERO times.** ★★★★★ **`A GREP FOR THE CONCEPT'S NAME FOUND FIVE HITS OF A DIFFERENT CONCEPT — A HOMONYM READS EXACTLY LIKE COVERAGE.`**
+
+### §4 — ⚠️ THE DRAIN BRANCH — MY ONE PARTIALLY-GRADED CLAIM
+`[MEASURED — CALL CHAIN, STATIC; NOT EXECUTED]` `runStrategyFromDSL` **always** returns `{ strategyId, … }` (`:1241`), and the strategy row is inserted **before** the backtest runs (`:1191`). ⇒ **on a refusal `result.strategyId` is truthy, so `:2269`'s `if (result.strategyId)` arm is taken:** the journal entry is stamped **`"failed"`** *and* **`drained++`**.
+🛑 **SO THE DRAIN REPORTS THE ITEM AS SUCCESSFULLY DRAINED WHILE MARKING IT FAILED.** ⚠️ **`[UNPROVEN]` — I did not execute this path; the `compile_failed` and `else` arms below it are NOT reached on a refusal, which is why the contradiction survives.**
+
+### §5 — ⚡ WHAT A FIX CONTRACT WOULD NEED (NOT A PROPOSAL I AM AUTHORIZED TO BUILD)
+**A refusal must be a THIRD named state at all ten sites** — not `tested`, not `failed`, and **`errorMessage` must carry the engine's `refusalEvidence()`, never the invented `"backtest failed"`.** **Use the shared `isExecutionRefused` (`lib/backtest-refusal.js`) — no new classifier** (`R-648`).
+🛑 **THE OPEN QUESTIONS A CONTRACT MUST SETTLE, WHICH I WILL NOT ANSWER ALONE** (`worker-execution §9`: multiple valid fixes imply different architectures):
+1. **Does the STRATEGY ROW gain a new `status` value, or does a refusal leave the row's prior status untouched?** A new enum value touches `schema.ts` and every consumer; leaving it untouched changes drain semantics. **These are different architectures.**
+2. **Does the drain count a refusal as `drained`, `failed`, or a new third counter?** `§4` shows it currently claims BOTH.
+3. **Three near-identical triples — one shared helper, or three local repairs?** `R-762 §2`'s *one implementation, one control set* argues for a helper; the three call sites differ in their audit action names.
+**HARNESS `[UNMEASURED]`:** I did **not** assess whether a real (non-replica) harness exists for `agent-service.ts`. **That is the first thing the next unit should measure** — `R-766 §1`'s one-grep test — **and it decides whether this lane costs a fixture or a rewrite.**
+
+### §6 — 📍 STATE
+**`7 / 9`** (`F-8` · `F-9` · `N-1` · `N-3` · `N-2` · `F-10` · `N-4`). **`F-7` ENUMERATED, FIX UNSTARTED AND UNAUTHORIZED. `N-5` UNSTARTED** (`Number(strat.forgeScore ?? 0)` at the two survivor-gate baselines — **untouched, stop correctly held**).
+✅ **`[MEASURED HERE]` `git status --porcelain src/` → only the sibling's `test_synthetic_market_simulator.py`. NOTHING CHANGED IN THIS REPORT'S SCOPE.** ✅ **All prior commits pushed; `git log @{u}..HEAD` empty at write time.**
+📡 **EAR: `Monitor` persistent, owner `claude.exe 23640`, tuple-keyed, delivering. Newest ruling on disk is `R-766`.**
+
+---
+
 ## AR-880 · 2026-08-09 · ✅ **`R-766 §4` LANE 2 — `N-4` COMPLETE. THE REFUSAL IS NAMED, THE DETERMINISTIC RE-REQUEST IS STOPPED, AND THE REPLICA IS GONE WITH ITS COVERAGE RE-ESTABLISHED AGAINST PRODUCTION.** ⚡ **FAN-IN `7 / 9` under the auto-release.** 🛑 **AND I REPAIRED ONE OF MY OWN FIXTURES MID-LANE — DISCLOSED IN `§4`, BECAUSE A FIXTURE REPAIR THAT ISN'T DECLARED IS INDISTINGUISHABLE FROM WEAKENING A TEST.**
 
 **SEAT `claude.exe 23640`.** **COMMITS: `5fc2ee6d` (seam) · `6d8cfd41` (wiring guard) · `34e75367` (semantic repair) · `67f99900` (replica removal).** **ATTEMPT BUDGET `1 / 2`.**
