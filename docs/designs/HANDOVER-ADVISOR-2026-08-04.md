@@ -1,4 +1,4 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-737`, 2026-08-09**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-743`, 2026-08-09**
 
 > ★★★★★ **THIS FILE IS READ #1 FOR A COLD ADVISOR SEAT — `advisor-onboarding §1` was corrected at
 > `R-737 §9` to say so.** It had named `ADVISOR-STATE.md` instead, which `[MEASURED, R-737]` is
@@ -7,8 +7,36 @@
 > the same trap one level down.** ★ `ADVISOR-STATE.md` remains the **sole carrier of `## THE PLAN`**
 > and of unruled `[FACT, MEASURED HERE, NOT RULED]` blocks — **grep its headings, never read it whole.**
 
-> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
-> **`HEAD 1baa7a6a` · newest ruling `R-729` · newest AR `AR-823` (ruled). Worker STOPPED, nothing owed.**
+> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-743`
+> **`HEAD 1bbfea2c` — and it MOVED TWICE while this block was being written; the ruling commit is
+> `155afcc3` (pushed, remote tip verified equal at that moment). ★ A HEAD sha here is a timestamp, not
+> a standing condition: `git rev-parse HEAD` yourself.** · newest ruling `R-743` · newest AR `AR-838`
+> (a PURE START-RECEIPT — no ruling owed). Worker ACTIVE on `6B`, attempt `0 / 2`, first observable
+> = the `R-743 §6-2` positive control landing green ALONE, ETA ~20 min from `00:56` local.**
+> 🛑★★★★★ **`6B` ACCEPTANCE IS A CONJUNCTION AND THE CONFORMANCE GROUP IS NOT THE DISCRIMINATOR.**
+> The two ordered REDs going green is **NECESSARY AND NOT SUFFICIENT** — `RED #2`
+> (`test_no_typed_opening_range_output_contract_exists_in_production`) **reads a RETURN ANNOTATION and
+> never invokes the primitive, so a module returning `refused_state()` unconditionally turns it green
+> — its OWN DOCSTRING says so.** ⇒ **the discriminator is three candidates over deterministic candles
+> producing DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`** (`R-743 §3`). **A stub cannot
+> produce three different numeric triples.**
+> ⚠️ **AND THAT IS THE SECOND TIME THIS FINISH LINE WAS BUILT:** `AR-828 §2` found it, `R-736 §1`
+> withdrew it, and the 2026-08-09 external read **rebuilt the same stub-crossable line in good faith**
+> four rulings later. ★★★★★ **`A WITHDRAWN FINISH LINE STAYS WITHDRAWN ONLY IF THE REASON TRAVELS
+> WITH IT.`**
+> ⏳ **ON `6B` DELIVERY THE DESK OWES A DISPATCH, NOT A RULING FIRST:** `ratify-packet` is STAGED
+> (`R-743 §5`) — instrument-layer change ⇒ **AUTONOMOUS, pre-live, the INDEPENDENT GRADE is the gate,
+> NOT the operator.** Dispatch `accuracy-validator` adversarially; durable receipt
+> `docs/designs/GRADE-6B-STATE-CHANNEL-2026-08-09.md`. **`doer ≠ grader` — neither the worker nor the
+> desk may certify it.**
+> 🛑 **CARRIED INTO THE `6B` COMMIT (`R-742 §4`, desk-found):** the contradiction path returns
+> `disposition=SOURCE_INCOMPLETE` unconditionally while `failure_kind` says `CONTRADICTORY`, and
+> `missing_fields` is filled with **present-but-conflicting** fields while the genuinely-absent ones
+> are dropped. **LATENT today — measured: the frozen population produces no contradiction refusal —
+> and LIVE the moment V1.1 batches**, which is exactly when the mapping grammar is consumed.
+> ✅ **V1.1 REFUSAL MAPPING IS RULED (`R-742 §3`):** `ABSENT`→`SOURCE_INCOMPLETE` ·
+> `CONTRADICTORY`→`SOURCE_AMBIGUOUS` · `UNREADABLE`→`EXTRACTION_MISSING_REQUIRED_INFORMATION` ·
+> `READY`→continue. **Read `failure_kind`; NEVER parse `internal_reason`.**
 > ⏳ **`B1` IS `2 / 8`. `STEPS 1–2` DONE AND PUSHED; `STEP 3` IS HELD — and it is held for a reason a
 > cold seat must not "helpfully" resolve:** the external reader **pre-authorized** `STEP 3` conditional
 > on a `10`-item checklist **it** will verify on the remote. ★★★★★ **THIS DESK MAY NOT TICK THAT
@@ -190,8 +218,16 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-741`** (`39224d8b`, 2026-08-09, **pushed — remote tip verified equal to local HEAD**).
-  **Newest AR `AR-835`** — **ruled by `R-741`; nothing unruled.**
+- **Newest ruling `R-743`** (`155afcc3`, 2026-08-09 — **`R-742` + `R-743` banked in ONE commit of one
+  file, deliberately, to halve pre-commit stash exposure on a shared tree; pushed, remote tip verified
+  equal to local HEAD**). **Newest AR `AR-838`** — **a PURE START-RECEIPT: no decisions, no findings,
+  so no ruling is owed and no GPT wait is triggered.** ★ **`AR-836` ruled by `R-742`, `AR-837` by
+  `R-743`; nothing unruled.**
+- ⚠️ **CITATION HAZARD — SAY WHICH `R-742`/`R-743` YOU MEAN.** The 2026-08-09 external reads TITLED
+  THEMSELVES `R-742` and `R-743` in anticipation. **They map 1:1 onto the campaign rulings of the same
+  number** (external `R-742`→campaign `R-742`→`AR-836`; external `R-743`→campaign `R-743`→`AR-837`),
+  **so the numbers are joinable — but a bare `R-743` is ambiguous between the read and the ruling that
+  CORRECTED it in two places.** Name the carrier.
 - 🛑★★★★★ **THE PINNED CONFORMANCE GROUP — USE THIS EXACT INVOCATION, DO NOT RE-DERIVE IT** (`R-741 §5`;
   a prior seat called it unrecoverable while holding the four counts that sum to it):
   ```
@@ -208,11 +244,35 @@ evidence does not exist in the committed census.
   stability across processes). 🛑 **TS parity contract must be MEASURED before the mirror is written.**
 - ✅ **NO GRADE IN FLIGHT.** The Lanes-34/35 grade is **complete, accepted, and BANKED** (see §4).
 - ⭐ **`B1` STEP LADDER:** `STEP 3` ✅ clean-room verified (`R-735`) · **`STEP 4` ✅ CLOSED (`R-737`,
-  desk-re-measured)** · `STEP 5` 🛑 two controls from closed · `STEP 6` ⏳ released on their green.
+  desk-re-measured)** · **`STEP 5` ✅ CLOSED (`R-738`)** · **`STEP 6A` ✅ COMPLETE — closeouts landed
+  `b3045800`, accepted `R-742`, closeout budget closed at `1 / 2`** · **`STEP 6B` 🔨 IN FLIGHT under
+  `R-743 §5`–`§8`, `OPTION A` (typed `STATE_PRODUCER` channel), attempt `0 / 2`.**
+- 🛑 **WHY `6B` IS AN ARCHITECTURE CHANGE AND NOT A WIRING JOB** (`AR-837`, desk-re-measured at
+  `R-743 §1`): the executable per-condition contract is **ONE BOOLEAN PER BAR**
+  (`spec_condition_compiler.py:592`, `:905`) and `OpeningRangeState` has **six fields, four numeric**.
+  **No channel preserves it.** ✅ **The absence is positive-controlled** — the identical grep shape
+  finds `last_trace` → `backtester.py:8387`, while `last_per_condition_bool` /
+  `last_population_a_level` have **no consumer outside the compiler.** ⚖️ **SCOPE NAMED: `src/**/*.py`
+  only — neither the worker nor the desk scanned TypeScript or n8n.**
+- 🛑 **`6B` STOPS (real, pre-registered):** state forced into a boolean · state producers entering the
+  gate conjunction · broad rewrites of existing family evaluators · **a numeric field silently
+  dropped** · metadata-not-output claiming the state exists · **the golden strategy becoming
+  tradable** · the neighbouring structure route changing · `ConditionBinding.parameters` gaining a
+  production writer.
+- ✅ **THE GPT WAIT WAS EXERCISED, NOT JUST SURVIVED — FIRST TIME IN SIX ASSERTIONS.** `AR-837` left
+  the worker **BLOCKED**, normally the one exception that outranks the wait. The desk **did not invoke
+  it**: it held, re-measured the block itself, and **told the operator the wait had begun to cost
+  worker-idle time so HE could decide.** He supplied both reads. ★★★★★ **`STATE THE PRICE; DO NOT
+  QUIETLY REFUSE TO PAY IT.`**
 
 | what | sha |
 |---|---|
-| **`R-737` (current HEAD)** | `0613cb52` |
+| **`R-742`+`R-743` (current HEAD, pushed)** | `155afcc3` |
+| `AR-838` (6B start-receipt) | `1bbfea2c` |
+| `AR-837` (the 6B stop) | `e52a8ecb` |
+| `AR-836` (6A closeout report) | `e365b058` |
+| **`R-741` closeouts 1+2 (the landed repair)** | `b3045800` |
+| `R-737` (superseded pin) | `0613cb52` |
 | `AR-830` (STEP 4 closeout) | `cd92ecb2` |
 | opening-range adapter blob | `cdab9577b8a4ff365c23b5349e4ddb1c0e5fe724` |
 | adapter test blob | `e0cdf37f8c63be6d173da196214191da48049ccd` |
