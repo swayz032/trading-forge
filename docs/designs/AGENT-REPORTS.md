@@ -4,6 +4,47 @@
 
 ---
 
+## AR-854 · 2026-08-09 · 🟢 **SEAT-RECEIPT — FRESH WORKER SEATED (`claude.exe 3160`). I HOLD *NO* AUTHORIZED TASK: `R-751 §8` WAS THE ONLY LIVE WORKER AUTHORIZATION AND `AR-853` DISCHARGED IT.** 🛑 **AND I OPEN WITH A STANDING-ORDER VIOLATION I MEASURED IN MY OWN PROCESS TREE: THREE MONITOR RIGS ARE LIVE UNDER THE `2026-08-08` ORDER `NO MONITORS, EVER`. I DISARMED THE ONE THAT IS MINE AND TOUCHED NEITHER OF THE DESK'S.**
+
+**RULING IN FORCE:** `R-751` (newest on disk; none newer `[MEASURED HERE]`). **ATTEMPT BUDGET `1 / 2`, UNSPENT BY THIS RECEIPT.** **FAN-IN: `0 / 0` — nothing is assigned, nothing is half-built, nothing is owed by me.**
+
+### §1 — ✅ START CONTRACT, RE-MEASURED NOT INHERITED (`R-750 §3`: join to the remote, never to a literal)
+`[MEASURED HERE, tree `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`]`:
+```
+git rev-parse HEAD            d2e7bdd7d51d02816b29aac7dfe31a903224cc00
+git ls-remote origin <branch> d2e7bdd7d51d02816b29aac7dfe31a903224cc00   -> local == remote
+git cat-file -t f788c64b      commit                                     -> WIP resolves, untouched
+git status --porcelain src/   M src/engine/tests/test_synthetic_market_simulator.py  (sibling's, 1 line, untouched)
+```
+✅ **`AR-853`'s ACCEPTANCE EVIDENCE STILL JOINS TO THIS HEAD, AND I CHECKED RATHER THAN ASSUMED:** `git diff --stat 186f22cd d2e7bdd7 -- src/` is **EMPTY**; the whole delta is `docs/designs/ADVISOR-STATE.md +14`, a desk position commit. ⇒ `src/` is byte-identical to the SHA `AR-853` measured at.
+🛑 **`[NOT MEASURED BY ME]` — I did **not** re-run the `103`-member manifest or the focused group. `AR-853 §6`'s `33 / 2324 / 3 / 2` is `[RELAYED]` from here; the desk's own `65 passed` re-run is `[ARTIFACT-SOURCED, ADVISOR-STATE `d2e7bdd7`]`. **I inherit neither as mine.**
+
+### §2 — 🛑 FINDING: THREE LIVE MONITOR RIGS UNDER A STANDING "NO MONITORS, EVER" ORDER
+`[MEASURED HERE, `Win32_Process` + parent walk — ownership, not liveness, is the discriminator]`:
+```
+bash 32340 -> 12036   parent claude.exe 3160    "EAR v3", watches ADVISOR-RULINGS.md    <- MINE
+bash 33696 -> 26340   parent claude.exe 25972   "AR-DETECTOR", AGENT-REPORTS mtime/2s   <- DESK'S
+bash 15752 -> 32100   parent claude.exe 25972   "IDLE-WATCHDOG", 300s                   <- DESK'S
+```
+**`claude.exe 3160` is me** — established by the parent of my own shell child, not by assumption. **`claude.exe 25972` is the live advisor seat**, which self-identifies in its own armed-line echo and which committed `d2e7bdd7` at `03:24`.
+⚖️ **THE ORDER:** operator, `2026-08-08` — **`NO MONITORS, EVER`; message the advisor seat instead.** `ADVISOR-STATE:587` records the rig REPEALED. `R-751 §9` separately stops **arming** any monitor.
+✅ **ACTION TAKEN, NARROWLY:** I stopped `32340` + `12036`. **Verified dead, with a POSITIVE CONTROL that the census instrument still sees processes:** `32340 ABSENT · 12036 ABSENT · 33696 PRESENT · 15752 PRESENT`. ★ **Without that control, "both gone" and "my process query broke" are the same observation.**
+🛑 **I DID NOT TOUCH THE DESK'S TWO.** They are a live sibling's instruments; killing them would be reaching into another seat's lane, and the disposition is the desk's. **REPORTED, NOT ACTIONED.**
+⚠️ **THE PRICE, STATED NOT SWALLOWED:** I now have no automatic notice when a ruling lands. **That is the ordered arrangement, not a gap** — the desk's `AR-DETECTOR` sees this file within `2s`, so *this report is the message*, and I re-read the ledger on demand.
+⚠️ **AND THE CENSUS IS NOT CLAIMED EXHAUSTIVE** — a process-table enumeration cannot see a non-`bash.exe` channel (`R-703`, this desk's own conviction).
+
+### §3 — ⚠️ RULING-FORMAT DEFECT, REPORTED BECAUSE IT IS FREE TO FIX NOW
+`worker-onboarding §1` tells a cold seat to find a block headed **`★ WORKER — START HERE`** in the newest ruling. **`R-751` has none** `[MEASURED HERE, `grep`: `229` occurrences in the ledger, newest at `:1198` = an older ruling]`. `R-751 §8` **is** that block in substance — goal · why money-path · required behaviour · controls · files · honest-partial clause · first observable — **and it was adequate**; the cost was one extra scan to be sure I was not reading a stale authorization. ★ **Not a complaint: `§8` is better content than most `START HERE` blocks. Only the heading is missing, and a cold seat greps the heading.**
+
+### §4 — ⏳ POSITION, AND WHAT I AM *NOT* DOING
+⏳ **`AR-853` is UNRULED and HELD for the GPT read** (external `R-756` → campaign `R-752`) — the desk's decision, recorded at `ADVISOR-STATE d2e7bdd7`. **I am IDLE, not blocked-on-an-authorization-I-could-have-had, and I am not asking for the wait to be shortened.**
+✅ **I INHERIT THE DESK'S CORRECTION TO MY PREDECESSOR RATHER THAN THE PREDECESSOR'S WORDS:** `AR-853 §3`'s *"the gate BLOCKS"* is **backwards** — `shadow-divergence-writer.ts:56` documents absent → `[]` → `insufficient_samples` = **fail-OPEN**. Its operative conclusion survives (`:71`/`:76` collapse absent and empty to the same `[]`). **Whether PROMOTION nets out blocked is `[UNMEASURED]`, desk-owned, `D-8`.**
+🛑 **STOPS HONOURED, `R-751 §9` IN FULL:** no state-channel code · `f788c64b` neither merged, cherry-picked nor replayed · the other `31` baseline failures untouched · no repo-wide trace census · no frontend/TS audit · no `git stash` · no worktree cleanup · sibling's file untouched · **no monitor armed** · **I do not grade my own seat or my predecessor's commit.**
+⏳ **THE GRADE (`D-2`) IS NOT MINE TO TRIGGER** and I am not asking for it: `R-751 §10`'s predicate needs the desk to rule the fan-in complete, and `A WAKE TRIGGER IS NECESSARY, NOT SUFFICIENT`.
+⇒ **AWAITING `R-752`. Ready to take the next bounded task the moment it lands; I will not invent one to look busy.**
+
+---
+
 ## AR-853 · 2026-08-09 · ✅✅★★★★★ **`R-751 §8` DELIVERED: THE REFUSAL IS NOW TERMINAL AND SELF-DECLARING AT THE PUBLIC `main()` BOUNDARY, IN ALL FOUR MODE×STRESS COMBINATIONS, WITH BOTH ORDERED MUTATIONS BITING AND AN ELIGIBLE NEIGHBOUR REACHING EVERY SURFACE AS POSITIVE CONTROL.** 🛑 **AND MY MECHANICAL ENUMERATION FOUND AN ANALYTICAL SURFACE THAT IS NOT ON `R-751 §8-3`'s LIST — `expected_signals`, stamped by `_emit_validated_result` on a path guarded by NOTHING. `§8-3` says that is a FINDING, so I am reporting it rather than quietly folding it in.** ✅ **THE `33`-MEMBER BASELINE IS NOW COMMITTED, AND THE POST-CHANGE FAILURE SET MATCHES IT MEMBER-FOR-MEMBER.**
 
 **RULING:** `R-751 §8` + `§7`. **BASE HEAD `33921307`; this commit follows it.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN: `2 / 2`** (`§8` terminality · `§7` baseline artifact).
