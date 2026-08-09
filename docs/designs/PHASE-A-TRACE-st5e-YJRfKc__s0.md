@@ -657,6 +657,68 @@ it, and I would rather name it than have it found.**
 
 ### LANE 2 — BUDGET: `1 / 2`, succeeded first run. **DIAGNOSIS ONLY — no production path, no repair.**
 
+## PHASE B0 — BRIDGE ELIGIBILITY OF THE EXISTING `orh` / `orl` / `or_range` SURFACE (`R-725 §8`)
+
+**READ-ONLY. No adapter built, no production code edited, no artifact routed, no breakout rule adopted.**
+**Producer under test:** `src/engine/indicators/core.py:467` `compute_opening_range_breakout(df, range_minutes=15, session_start_et="09:30")`.
+
+### THE TABLE
+| # | row | verdict | evidence |
+|---|---|---|---|
+| 1 | **calculation formula** | **`EXACT`** | `:533-536` `max(high)`/`min(low)` grouped per day; `:569` `or_range = orh − orl`. Taught: *"we take the opening range high and the opening range low in between these time periods"*, *"the difference between the high and the low … the range value."* |
+| 2 | **start-time source** | **`EXACT`** | `session_start_et` is a **parameter**, default `"09:30"` (`:470`), parsed at `:509-510`. Taught start = `9:30 a.m. Eastern`. |
+| 3 | **timezone source** | 🛑 **`MISMATCH`** | `:496-497` — *"Prefer `ts_et` (already ET wall-clock); **fall back to `ts_event` (treated as ET)**."* **There is no timezone source and no validation — ET is ASSUMED of the input.** A UTC-stamped `ts_event` silently shifts the window by the whole offset and still returns confident numbers. |
+| 4 | **duration source** | **`EXACT`** | `range_minutes` is a **parameter** (`:469`), used at `:511`. |
+| 5 | **high/low inclusion boundaries** | **`EXACT`** | `:523` `[start, start+dur)` — start-inclusive, end-exclusive. Matches the taught *"from 9:30 … to 9:35"* under the standard half-open reading, and matches `session_windows`' own documented convention. |
+| 6 | **completion timing (no lookahead)** | **`EXACT`** | `:560-567` null before lock, values at `>= lock`. **MEASURED B0-4:** pre-lock `6` bars / `0` non-null · post-lock `12` bars / `12` non-null. Taught: *"we take a look at these levels projected going out **after this 30 minute range is over**."* |
+| 7 | **trading-day reset** | 🛑 **`MISMATCH`** *(conditional, and I state the condition)* | `:533` groups on `ts.dt.date()` — **calendar date.** ✅ Correct for the taught **equities RTH** lesson. 🛑 **Wrong for futures**, where the trading day opens `18:00` ET the previous calendar day — and MES/MNQ/MCL are this system's instruments. **Marked MISMATCH because the reuse target is futures, not because the code is wrong for its own lesson.** |
+| 8 | **`5` / `15` / `30` support** | **`EXACT`** | **MEASURED B0-1..3:** all three durations agree with the independent reference on both days. |
+| 9 | **missing-bar behaviour** | ⚠️ **`UNMEASURED`** | **Static read:** `:527-530` all-null only when **no** day has in-range bars; a per-day miss yields a left-join null. 🛑 **No minimum-bar guard exists** — a day holding `1` of `6` window bars would compute an OR from partial data and report it as complete. **I did NOT execute a partial-window case.** *What would measure it:* delete bars inside one day's window and re-run. |
+| 10 | **actual production caller** | **`EXACT`** | `core.py:649`, `:760` — the indicator dispatcher, non-test. Live. |
+| 11 | **reachability from the frozen spec path** | 🛑 **`MISMATCH`** | `spec_condition_compiler.py:52` imports **only** `compute_atr, compute_ema` from `indicators.core`; **no `FAMILY_META` primitive names the OR constructor** (all `12` enumerated, `AR-810`). **The capability exists and the spec path cannot call it.** |
+| 12 | **agreement with an independent deterministic reference** | **`EXACT`** | **MEASURED B0-1..3:** `6/6` day×duration combinations agree exactly on high, low **and** width, against a reference computed **outside all engine code**. |
+| 13 | **hidden defaults / hardcoded assumptions** | 🛑 **`MISMATCH`** | `range_minutes=15` default · `session_start_et="09:30"` default · **`ts_event` assumed ET** (row 3) · **no partial-window guard** (row 9) · **calendar-date day grouping** (row 7). **Each is silent — none raises, none flags.** |
+
+### ★ THE DISCRIMINATION CONTROL — **THE INSTRUMENT CAN DETECT DISAGREEMENT** (B0-5)
+| mutation | `orh` | moved? | required |
+|---|---|---|---|
+| baseline | `617.75` | — | — |
+| **inside** the OR window `+9.00` | `626.75` | **`True`** | must be `True` ✅ |
+| **outside** the window (after lock) `+9.00` | `617.75` | **`False`** | must be `False` ✅ |
+★★★★★ **THIS IS THE EXACT TEST `compute_structure_state` FAILED IN PHASE A.** A `24`-point move of the
+taught window left that primitive byte-identical; a `9`-point move here moves this one, **and only when
+the change is inside the taught window.** ⇒ **`THE AGREEMENT IN ROW 12 IS WORTH SOMETHING PRECISELY
+BECAUSE THIS RIG WAS SHOWN CAPABLE OF DISAGREEING.`**
+
+### DISPOSITION — **`REUSE_WITH_TYPED_ADAPTER`** *(exactly one, as ordered)*
+**NOT `REUSE_EXACT`:** the surface is unreachable from the spec path (row 11) and carries three silent
+assumptions — timezone, trading-day boundary, partial windows (rows 3, 7, 9, 13).
+**NOT `REJECT_SEMANTIC_MISMATCH`:** the arithmetic **is** the taught concept, proven by `6/6` exact
+agreement against an outside-the-engine reference **and** by a discrimination control that fires
+correctly in both directions.
+⇒ **The gap is a typed boundary, not a capability gap.**
+
+### SMALLEST PHASE B1 PATCH BOUNDARY — **NAMED ONLY. NO PATCH WRITTEN.**
+A typed adapter that carries `(session_start_et, range_minutes, timezone, trading_day_rule)` **explicitly
+from the spec** to `compute_opening_range_breakout`, **fails closed** when any of the four is absent
+rather than defaulting, and touches **only the golden path**.
+🛑 **EXPLICITLY OUTSIDE IT:** any `WAIT_STRUCTURE` taxonomy rewrite · the other `8` conditions · every
+non-gating handler · **and any breakout/confirmation rule — `close >= orh_*` IS NOT PART OF THIS.
+CONSTRUCTION AND CONFIRMATION ARE SEPARATE SEMANTICS AND THE SOURCE NEVER SPECIFIES CONFIRMATION** (`A-4`).
+
+### INSTRUMENT DISCLOSURES — MY RIG WAS WRONG TWICE, AND ONE IS EMBARRASSING IN A USEFUL WAY
+1. 🛑 **I HIT THE EXACT OVERFLOW THE PRODUCTION FILE WARNS ABOUT.** My lock-check filter used
+   `dt.hour() * 60 + dt.minute()`; Polars returns **`i8`**, so `9*60 = 540` **wraps negative** and every
+   bar matched *"pre-lock"* — B0-4 first reported `18` pre-lock bars and **`0` post-lock**, which is
+   impossible on its face. `core.py:501-502` documents this trap verbatim. **Fixed with the same
+   `.cast(pl.Int32)` the production code uses.** ★★★★★ **`THE ENGINE WAS RIGHT AND MY RULER WAS WRONG —
+   AND THE ONLY REASON I CAUGHT IT IS THAT THE WRONG ANSWER WAS ABSURD RATHER THAN PLAUSIBLE.` Had my
+   filter been off by one bar instead of by everything, I would have published it.**
+2. **Windows `cp1252` stdout could not encode a `★`** — crashed the run mid-print. Non-ASCII stripped.
+   Loud, not silent.
+✅ **NEITHER COUNTS AGAINST THE PROBE BUDGET: both were harness faults that produced no result, and
+both failed loudly.** **B0 budget: `1 / 2`.**
+
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
 2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.

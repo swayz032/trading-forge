@@ -4,6 +4,33 @@
 
 ---
 
+## AR-814 · 2026-08-09 · ✅ **PHASE B0 DELIVERED — 13-ROW TABLE, ALL CONTROLS RUN, ONE DISPOSITION: `REUSE_WITH_TYPED_ADAPTER`.** ✅★★★★★ **AND THE DISCRIMINATION CONTROL PASSED IN BOTH DIRECTIONS — A `+9` MOVE *INSIDE* THE TAUGHT WINDOW MOVES `orh`; THE SAME MOVE *AFTER LOCK* DOES NOT. THIS IS THE EXACT TEST `compute_structure_state` FAILED.** 🛑 **`8` `EXACT` · `4` `MISMATCH` · `1` `UNMEASURED` — AND THE MISMATCHES ARE A TYPED BOUNDARY, NOT A CAPABILITY GAP.** 🛑 **NO PATCH WRITTEN. NO PRODUCTION EDIT.**
+
+**ARTIFACT:** `docs/designs/PHASE-A-TRACE-st5e-YJRfKc__s0.md`, `## PHASE B0`. **ETA held** (receipt `~40` min, delivered inside it). **B0 budget `1/2`.**
+
+### §1 — THE ANSWER
+**`EXACT` (8):** calculation formula · start-time source · duration source · inclusion boundaries `[start, lock)` · completion timing/no-lookahead (**measured: `6` pre-lock bars `0` non-null, `12` post-lock `12` non-null**) · `5/15/30` support · production caller · **agreement with an independent reference computed outside all engine code — `6/6` day×duration combinations exact on high, low AND width.**
+🛑 **`MISMATCH` (4), and every one is SILENT — none raises, none flags:**
+1. **TIMEZONE — there isn't one.** `:496-497` *"fall back to `ts_event` (**treated as ET**)"*. A UTC-stamped input shifts the whole window and still returns confident numbers.
+2. **TRADING-DAY RESET** — groups on **calendar date** (`:533`). ✅ Right for the taught equities RTH lesson; 🛑 **wrong for futures, whose day opens `18:00` ET the prior calendar date — and MES/MNQ/MCL are our instruments.** **Marked MISMATCH because of the reuse target, not because the code is wrong for its own lesson.**
+3. **REACHABILITY** — the spec compiler imports only `compute_atr`/`compute_ema`; no family names the OR constructor.
+4. **HIDDEN DEFAULTS** — `range_minutes=15`, `session_start_et="09:30"`, plus 1–3 and the missing partial-window guard.
+⚠️ **`UNMEASURED` (1): missing-bar behaviour.** Static read shows **no minimum-bar guard** — a day with `1` of `6` window bars would compute an OR from partial data and report it as complete. **I did not execute that case, and I will not report a static read as a run.**
+
+### §2 — ★ WHY THE AGREEMENT IS WORTH ANYTHING
+`[MEASURED HERE]` baseline `orh=617.75` · **`+9.00` INSIDE the window → `626.75` (moved)** · **`+9.00` AFTER lock → `617.75` (unmoved)**. ★★★★★ **`THE AGREEMENT IN ROW 12 IS WORTH SOMETHING PRECISELY BECAUSE THIS RIG WAS SHOWN CAPABLE OF DISAGREEING`** — and it is the same shape that convicted the Phase-A primitive, run in the opposite direction with the opposite result.
+
+### §3 — 🛑 MY RIG WAS WRONG TWICE, AND ONE IS WORTH THE DESK'S ATTENTION
+**I hit the EXACT overflow the production file documents.** My lock filter used `dt.hour()*60 + dt.minute()`; Polars returns **`i8`**, `9*60=540` **wraps negative**, so every bar matched *"pre-lock"* — B0-4 first printed `18` pre-lock and **`0` post-lock bars**, which is impossible. `core.py:501-502` warns about this in words. Fixed with the same `.cast(pl.Int32)` production uses.
+★★★★★ **`THE ENGINE WAS RIGHT AND MY RULER WAS WRONG — AND I ONLY CAUGHT IT BECAUSE THE WRONG ANSWER WAS ABSURD RATHER THAN PLAUSIBLE. HAD MY FILTER BEEN OFF BY ONE BAR INSTEAD OF BY EVERYTHING, I WOULD HAVE PUBLISHED IT.`** (Second: a `★` crashed Windows `cp1252` stdout. Loud, not silent.) **Neither counts against the budget — harness faults, no result produced, both failed loudly.**
+⚠️ **AND A THIRD, SMALLER ONE I OWE FROM `AR-813`:** my grade-status grep printed the caption *"(blank above = none)"* while the command had actually matched `GRADE-GOLDEN-SLICE-…-08-03.md`. **The substance holds — that file predates Phase A and is not a Phase-A grade — but the caption asserted something the command did not check. That is twice tonight.** ★★★ **`A CAPTION PRINTED UNCONDITIONALLY IS NOT A MEASUREMENT, IT IS A LABEL I CHOSE IN ADVANCE.`**
+
+### §4 — DISPOSITION AND THE B1 BOUNDARY (**NAMED, NOT BUILT**)
+**`REUSE_WITH_TYPED_ADAPTER`.** Not `REUSE_EXACT` (unreachable + three silent assumptions); not `REJECT_SEMANTIC_MISMATCH` (the arithmetic **is** the taught concept, proven two ways). **The gap is a typed boundary, not a capability gap.**
+**SMALLEST B1 BOUNDARY:** an adapter carrying `(session_start_et, range_minutes, timezone, trading_day_rule)` **explicitly from the spec**, **failing closed** when any is absent rather than defaulting, **golden path only.**
+🛑 **EXPLICITLY OUT:** taxonomy rewrite · the other `8` rows · non-gating handlers · **and any breakout/confirmation rule. `close >= orh_*` IS NOT PART OF THIS — construction and confirmation are separate semantics and the source never specifies confirmation (`A-4`).**
+🛑 **GRADE STATUS: no Phase-A grade receipt on disk** (re-measured at commit time). **B1 remains unauthorized; `UNVERIFIABLE` stands. Nothing owed from me — stopping and waiting, per my ratified default.**
+
 ## AR-813 · 2026-08-09 · ⚡ **START-RECEIPT — `R-725 §8` PHASE B0 ACCEPTED. READ-ONLY, NO PRODUCTION EDIT.**
 
 **TASK:** determine whether the existing `orh_{n}m` / `orl_{n}m` / `or_range_{n}m` surface is exact enough to REUSE — **before** anyone writes new engine capability. **One table, 13 rows, every cell `EXACT` | `MISMATCH` | `UNMEASURED`. Exactly one disposition returned.**
