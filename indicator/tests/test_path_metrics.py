@@ -15,37 +15,50 @@ class PathMetricTests(unittest.TestCase):
         self.assertEqual(stop_price_from_ticks(19000, TradeSide.LONG, 69), 18982.75)
         self.assertEqual(stop_price_from_ticks(19000, TradeSide.SHORT, 69), 19017.25)
 
-    def test_long_target_first(self):
+    def test_long_target_first_uses_pre_exit_mae_mfe(self):
         spec = TradePathSpec(TradeSide.LONG, 100, 95, 110)
         out = evaluate_ordered_path(spec, [100, 102, 99, 106, 110, 94])
         self.assertEqual(out.first_hit, FirstHit.TARGET_FIRST)
         self.assertEqual(out.first_hit_index, 4)
-        self.assertEqual(out.mae_points, 6)  # full observed path metric, independent of first hit
+        self.assertEqual(out.mae_points, 1)
         self.assertEqual(out.mfe_points, 10)
+        self.assertEqual(out.horizon_mae_points, 6)
+        self.assertEqual(out.horizon_mfe_points, 10)
 
     def test_long_stop_first(self):
         spec = TradePathSpec(TradeSide.LONG, 100, 95, 110)
         out = evaluate_ordered_path(spec, [100, 98, 95, 108, 111])
         self.assertEqual(out.first_hit, FirstHit.STOP_FIRST)
         self.assertEqual(out.first_hit_index, 2)
+        self.assertEqual(out.mae_points, 5)
+        self.assertEqual(out.mfe_points, 0)
+        self.assertEqual(out.horizon_mfe_points, 11)
 
     def test_short_target_first(self):
         spec = TradePathSpec(TradeSide.SHORT, 100, 105, 90)
         out = evaluate_ordered_path(spec, [100, 101, 97, 93, 90, 106])
         self.assertEqual(out.first_hit, FirstHit.TARGET_FIRST)
         self.assertEqual(out.first_hit_index, 4)
+        self.assertEqual(out.mae_points, 1)
+        self.assertEqual(out.mfe_points, 10)
+        self.assertEqual(out.horizon_mae_points, 6)
 
     def test_short_stop_first(self):
         spec = TradePathSpec(TradeSide.SHORT, 100, 105, 90)
         out = evaluate_ordered_path(spec, [100, 103, 105, 95, 89])
         self.assertEqual(out.first_hit, FirstHit.STOP_FIRST)
         self.assertEqual(out.first_hit_index, 2)
+        self.assertEqual(out.mae_points, 5)
+        self.assertEqual(out.mfe_points, 0)
+        self.assertEqual(out.horizon_mfe_points, 11)
 
     def test_neither(self):
         spec = TradePathSpec(TradeSide.SHORT, 100, 105, 90)
         out = evaluate_ordered_path(spec, [100, 101, 99, 98, 102])
         self.assertEqual(out.first_hit, FirstHit.NEITHER)
         self.assertIsNone(out.first_hit_index)
+        self.assertEqual(out.mae_points, out.horizon_mae_points)
+        self.assertEqual(out.mfe_points, out.horizon_mfe_points)
 
     def test_long_zone_penetration(self):
         self.assertAlmostEqual(zone_penetration_fraction(TradeSide.LONG, 110, 114, [108, 110, 111.4]), .35)
