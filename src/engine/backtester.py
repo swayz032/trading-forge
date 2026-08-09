@@ -6255,6 +6255,44 @@ def _build_expected_signals_from_trades(trades_list: list[dict], max_signals: in
     return signals
 
 
+def _execution_was_refused(result: object) -> bool:
+    """Did this result come from a strategy-level REFUSAL rather than a run?
+
+    R-751 §8-1. THE JOIN KEY IS THE SEMANTIC STATUS, NEVER `"error" not in result`.
+    A refusal is NOT a crash: it carries no `error` key, so every `if "error" not in
+    result:` block downstream treated it as a completed backtest and decorated it with
+    analytical products. That predicate answers *"did this blow up?"*; the question the
+    analytical blocks actually need answered is *"did this produce a result?"*, and those
+    are different questions with the same answer only by accident.
+
+        `A REFUSAL IS NOT AN ERROR, AND A GUARD THAT ASKS ONLY ABOUT ERRORS WILL
+         DECORATE A REFUSAL AS THOUGH IT WERE A MEASUREMENT.` (R-751)
+
+    ★ Deliberately NOT implemented by injecting a fake `error` key. Overloading the crash
+    channel would make every downstream consumer -- including the TS bridge -- read a
+    deliberate refusal as a malformed request (R-751 §8-1 forbids it explicitly).
+    """
+    from src.engine.spec_condition_compiler import EXECUTION_STATUS_REFUSED
+
+    return isinstance(result, dict) and result.get("execution_status") == EXECUTION_STATUS_REFUSED
+
+
+# The analytical products a REFUSED result must never carry. Named, so a reader learns WHY
+# they are gone instead of reading an absent key as a zero -- the same discipline
+# `metrics_omitted` already applies to the performance metrics (R-751 §8-5).
+#
+#   `A KEY PRESENT AS 0.0 IS A MEASUREMENT; A KEY ABSENT WITH A STATED REASON IS A REFUSAL.`
+_REFUSAL_OMITTED_ANALYSIS: tuple[str, ...] = (
+    "crisis_results",
+    "forge_score",
+    "forge_score_components",
+    "invariants",
+    "parity_shadow",
+    "b15_battery",
+    "expected_signals",
+)
+
+
 def _emit_validated_result(result: dict) -> None:
     """Stamp result_extras with Pydantic-validated JSONB contract and populate
     result["expected_signals"] for the SHADOW→PAPER divergence gate.
@@ -6286,7 +6324,15 @@ def _emit_validated_result(result: dict) -> None:
     # eligibility filters, and fill-model application. This is the CORRECT baseline
     # for the divergence gate: it represents what the strategy *actually* did in the
     # backtest period, not raw unfiltered signals.
-    if "expected_signals" not in result or result.get("expected_signals") is None:
+    # R-751 §8-3/§8-5: a REFUSED strategy has no trades, so this would stamp
+    # `expected_signals: []` -- and `[]` is a MEASUREMENT ("we expect zero signals"), not a
+    # refusal. Left ABSENT instead. FAIL-CLOSED IS PRESERVED AND THAT IS MEASURED, not
+    # assumed: this function's own docstring records that a missing field reaches the loader
+    # as null -> [] -> the SHADOW->PAPER gate BLOCKS. Absent and empty reach the same gate
+    # outcome, so removing it costs no safety and stops a refusal reading as a baseline.
+    if not _execution_was_refused(result) and (
+        "expected_signals" not in result or result.get("expected_signals") is None
+    ):
         trades_for_signals = result.get("trades") or []
         result["expected_signals"] = _build_expected_signals_from_trades(trades_for_signals)
 
@@ -8427,7 +8473,14 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             result["governance_labels"] = gov
             # C3: trace is strictly additive — absent entirely when the flag
             # is off, so off-path results stay byte-identical.
-            if _spec_trace_enabled:
+            # R-751 §1/§8-2: NEVER on a refusal. This common block runs AFTER whichever
+            # branch ran, so it used to overwrite the refusal summary written at the
+            # branch above with `strategy.last_trace` -- still `[]`, because a refused
+            # strategy never runs compute(). That restored "absence stands in for a
+            # refusal" one layer ABOVE the fix that abolished it.
+            #   `A GUARD THAT WRITES ITS EVIDENCE INTO A FIELD A LATER COMMON BLOCK
+            #    UNCONDITIONALLY REASSIGNS HAS NOT WRITTEN EVIDENCE, IT HAS WRITTEN A DRAFT.`
+            if _spec_trace_enabled and not _execution_was_refused(result):
                 result["spec_trace"] = strategy.last_trace
     else:
         # DSL expression-based strategy path (original)
@@ -8491,11 +8544,15 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # Use TF_STRESS_TEST_MODE=full (default) for promotion-gate evaluations.
     _stress_mode = os.environ.get("TF_STRESS_TEST_MODE", "full").lower()
     _skip_stress = _stress_mode == "pipeline"
-    if _skip_stress:
+    # R-751 §8-5: on a refusal this key stays ABSENT rather than `None` -- a stated
+    # absence is a refusal, a null is a measurement nobody took.
+    if _skip_stress and not _execution_was_refused(result):
         result["crisis_results"] = None
         print("Stress test: skipped (TF_STRESS_TEST_MODE=pipeline)", file=sys.stderr)
 
-    if "error" not in result and not _skip_stress:
+    # R-751 §8-3: `"error" not in result` is the WRONG JOIN KEY -- a refusal carries no
+    # error key, so it entered here and was rescored into a forge_score.
+    if "error" not in result and not _skip_stress and not _execution_was_refused(result):
         try:
             _t_stress_start = time.perf_counter()
             from src.engine.config import StrategyConfig, StressTestRequest
@@ -8557,7 +8614,8 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # run_backtest(). Default mode is walkforward → hooks never fired →
     # production resultExtras had no `invariants` / `parity_shadow` keys.
     # Moving to main() guarantees both code paths emit the truthiness blocks.
-    if "error" not in result:
+    # R-751 §8-3: gates BOTH the invariant harness and the parity shadow nested below it.
+    if "error" not in result and not _execution_was_refused(result):
         # Invariant harness — always runs (cheap pure computation).
         try:
             from src.engine.invariant_harness import run_invariants
@@ -8621,7 +8679,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # PARITY_SHADOW_DRIFT_JSON + INVARIANT_FAILURE_JSON pattern). The sentinel
     # is parsed by src/server/lib/python-runner.ts so the result lands in
     # backtests.b15_battery JSONB without altering stdout contract.
-    if run_b15_battery_flag and "error" not in result:
+    if run_b15_battery_flag and "error" not in result and not _execution_was_refused(result):
         try:
             from src.engine.parameter_jitter_battery import run_b15_battery
             # strategy_dsl is the original config dict (not re-parsed — use raw config)
@@ -8644,6 +8702,19 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 json.dumps({"event": "b15_battery.error", "error": str(_b15_err)[:300]}),
                 file=sys.stderr,
             )
+
+    # ═══ R-751 §8-5: NAME WHAT A REFUSAL DID NOT PRODUCE ═══════════════════
+    # Absent keys are only honest if something says they are absent ON PURPOSE. This
+    # mirrors `metrics_omitted`, which already does it for the performance metrics.
+    if _execution_was_refused(result):
+        result["analysis_omitted"] = [
+            k for k in _REFUSAL_OMITTED_ANALYSIS if k not in result
+        ]
+        result["analysis_omitted_reason"] = (
+            "execution was REFUSED before any backtest ran; these are ANALYTICAL products "
+            "derived from trades that do not exist. Publishing them as 0.0/None/[] would "
+            "present a refusal as a measured result"
+        )
 
     # C-1 FIX: Use shared _emit_validated_result() so main() and run_backtest()
     # both go through the same Pydantic validation path. The idempotency guard in

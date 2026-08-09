@@ -4,6 +4,85 @@
 
 ---
 
+## AR-853 · 2026-08-09 · ✅✅★★★★★ **`R-751 §8` DELIVERED: THE REFUSAL IS NOW TERMINAL AND SELF-DECLARING AT THE PUBLIC `main()` BOUNDARY, IN ALL FOUR MODE×STRESS COMBINATIONS, WITH BOTH ORDERED MUTATIONS BITING AND AN ELIGIBLE NEIGHBOUR REACHING EVERY SURFACE AS POSITIVE CONTROL.** 🛑 **AND MY MECHANICAL ENUMERATION FOUND AN ANALYTICAL SURFACE THAT IS NOT ON `R-751 §8-3`'s LIST — `expected_signals`, stamped by `_emit_validated_result` on a path guarded by NOTHING. `§8-3` says that is a FINDING, so I am reporting it rather than quietly folding it in.** ✅ **THE `33`-MEMBER BASELINE IS NOW COMMITTED, AND THE POST-CHANGE FAILURE SET MATCHES IT MEMBER-FOR-MEMBER.**
+
+**RULING:** `R-751 §8` + `§7`. **BASE HEAD `33921307`; this commit follows it.** **ATTEMPT BUDGET `1 / 2`.** **FAN-IN: `2 / 2`** (`§8` terminality · `§7` baseline artifact).
+
+### §1 — ✅ THE FIX, AND ITS ROOT CAUSE IS A JOIN KEY
+**ROOT CAUSE** `[MEASURED HERE]`: `"error" not in result` answers *"did this blow up?"*. A refusal carries **no `error` key**, so all three blocks using that predicate (`:8420`, `:8498`, `:8560`, plus B15) treated a refusal as a completed backtest. ✅ **REPLACED WITH AN EXPLICIT SEMANTIC PREDICATE**, `_execution_was_refused(result)` → `result["execution_status"] == EXECUTION_STATUS_REFUSED`.
+🛑 **NO FAKE `error` KEY** (`R-751 §8-1`). A test asserts it: `test_the_refusal_is_not_disguised_as_a_crash`. **Overloading the crash channel would make every downstream consumer — including the TS bridge — read a deliberate refusal as a malformed request. That is a different lie, not a fix.**
+✅ **`spec_trace` PRESERVED** — the common block no longer reassigns it from `strategy.last_trace` on a refusal.
+
+### §2 — ✅ MEASURED AT THE PUBLIC BOUNDARY, ALL FOUR COMBINATIONS
+`[MEASURED HERE, `bt.main.callback(...)`, `TF_SPEC_TRACE=true`, golden spec]`:
+```
+mode         stress    execution_status  trace_outcome      forbidden_keys_present  analysis_omitted
+single       pipeline  REFUSED           EXECUTION_REFUSED  NONE                    7
+single       full      REFUSED           EXECUTION_REFUSED  NONE                    7
+walkforward  pipeline  REFUSED           EXECUTION_REFUSED  NONE                    7
+walkforward  full      REFUSED           EXECUTION_REFUSED  NONE                    7
+```
+✅ **POSITIVE CONTROL — THE ELIGIBLE NEIGHBOUR REACHES THEM NORMALLY:** `invariants` PRESENT · `expected_signals` PRESENT · `result_extras` PRESENT · `crisis_results` PRESENT · `analysis_omitted` correctly ABSENT. ★★★★★ **WITHOUT THIS THE SEVEN ABSENCES ARE AN ABSENCE, NOT A PROOF** — and `AR-851 §3` was caught by exactly that shape, so it is not repeated.
+⚠️ **AND THE POSITIVE CONTROL DID NOT WORK ON THE FIRST TRY, WHICH IS THE POINT OF RUNNING IT:** the neighbour arm died in a downstream `StrategyConfig` build with `position_size.fixed_contracts=1`. **That is a REAL production guard**, and its own error message names `TF_ALLOW_FIXED_1=true` as the sanctioned unit-test escape. I set it **in the test only**; it gates a SIZING guard, nothing this commit measures. ⚖️ **Had I not needed a positive control I would never have discovered the neighbour arm was crashing, and I would have shipped seven absences that meant nothing.**
+
+### §3 — 🛑 THE SURFACE THAT IS NOT ON THE RULING'S LIST — REPORTED, NOT FOLDED IN
+`R-751 §8-3` ordered the enumeration done **mechanically from the code**, not from the desk's or the read's list, and said a surface found outside that list is a FINDING. **It is.**
+`[MEASURED HERE, AST walk of `main()`, every `result[...]` write plus every call receiving `result`]`:
+```
+line  writes                     guard
+8431  spec_trace                 'error' not in result AND _spec_trace_enabled     <- the R-751 §1 defect
+8495  crisis_results             _skip_stress
+8521  crisis_results             'error' not in result and not _skip_stress
+8547  crisis_results             <except> branch
+8575  invariants                 'error' not in result
+8601  parity_shadow              'error' not in result AND PARITY_SHADOW_ENABLED
+8630  b15_battery                run_b15_battery_flag and 'error' not in result
+8527/8548  _rescore_with_crisis(result, ...)  -> forge_score, forge_score_components  (INDIRECT)
+8651  _emit_validated_result(result) -> expected_signals, result_extras             (UNGUARDED)
+```
+🛑 **`expected_signals` IS THE ONE THE RULING'S LIST DOES NOT NAME.** It is derived from `result["trades"]`, which a refusal does not have ⇒ it stamped **`expected_signals: []`** on every refused result. **`[]` is a MEASUREMENT — "we expect zero signals" — and it is read by `shadow-signal-divergence-loader.ts` as the BASELINE for the SHADOW→PAPER gate.**
+✅ **REMOVED ON REFUSAL, AND THE FAIL-CLOSED PROPERTY IS PRESERVED — MEASURED, NOT ASSUMED:** `_emit_validated_result`'s **own docstring** records that a missing field reaches the loader as null → `[]` → **the gate BLOCKS**. **Absent and empty reach the same gate outcome**, so removing it costs no safety and stops a refusal reading as a baseline. ⚖️ **I checked that before deleting it, because "make it absent" would have been a silent gate change if the loader had treated absent as pass.**
+⚠️ **TWO INSTRUMENT LIMITS I AM STATING RATHER THAN LETTING THE TABLE IMPLY COMPLETENESS:** my AST scan catches `result[k] = ...` and calls **receiving** `result`; it would MISS a mutation inside a helper that receives the dict under another name, and it covers `main()` ONLY. **`_rescore_with_crisis` is in the table only because I chased it by hand.** ⇒ **the enumeration is `[MEASURED]` for direct writes and `[PARTIAL]` for indirect ones.**
+
+### §4 — ⭐ RED-PROOFS: BOTH ORDERED MUTATIONS BITE, AND THEY BITE DIFFERENT TESTS
+```
+MUTATION A  restore `if _spec_trace_enabled:` (drop the refusal check)
+  -> 4 failed  — ALL FOUR test_public_boundary_returns_the_refusal_trace_not_an_empty_list cases
+MUTATION B  revert all five gates to the `"error" not in result` join key
+  -> 6 failed  — the four test_a_refusal_reaches_no_analytical_surface cases
+                 + both test_omitted_analysis_is_named_and_absent_never_zero cases
+RESTORED    -> 65 passed (trigger-safety 56 + blast-radius 9), 0 mutation markers left in the tree
+```
+★★★ **The two mutations convict DISJOINT test sets**, which is what says they are two distinct defects rather than one guard tested twice.
+
+### §5 — ✅ `§7`: THE BASELINE IS NOW A COMMITTED ARTIFACT, AND I ACCEPT THE CORRECTION
+✅ **`docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json`** — all `33` failure node IDs, the exact invocation, the `103`-member manifest, the preflight assertions, and the `2` ordered `6B` REDs called out by name.
+⚖️ **`R-751 §7` IS RIGHT AND THE PHRASING WAS MINE:** `AR-851 §8` said the baseline was *"frozen to disk"*, and **disk is not git** — it lived in a scratch directory that dies with this seat. ★ **`AN UNCOMMITTED BASELINE IS NOT A BASELINE, IT IS A MEMORY.`**
+⚠️ **ONE HONEST DISCREPANCY, DISCLOSED RATHER THAN SMOOTHED:** `R-751 §7` says commit it *"at the parent SHA `f7aefaa6`"*. **I measured at `f8273f41`, which is EARLIER.** `[MEASURED HERE]` **`git diff --stat f8273f41 f7aefaa6 -- src/` is EMPTY** ⇒ `src/` is byte-identical across them and the baseline is valid for both. **Both SHAs and this proof are recorded IN the artifact.** ★ **A baseline attributed to a SHA it was not taken at is precisely the unjoinable figure this campaign keeps convicting** (`[i-measured]`).
+
+### §6 — ✅ ACCEPTANCE, AGAINST THE COMMITTED BASELINE
+```
+                     failed  passed  skipped  xfailed
+BASELINE (f8273f41)      33    2300        3        2
+POST-CHANGE              33    2324        3        2
+MEMBERSHIP DIFF     NEW: NONE      GONE: NONE      EXACT MATCH: True
+```
+✅ **`+24` passing = the `+12` of `AR-851` plus the `+12` this commit adds** (`4` public-trace × mode/stress · `4` no-analytical-surface · `2` omitted-named · `1` neighbour control · `1` not-a-crash). ✅ **`R-751 §7`'s three-part rule, all three:** focused trigger-safety group **`65 passed`, no unexpected failures** · the two ordered state-channel REDs **still RED, unchanged** · full `103` manifest **membership EQUAL to the committed baseline**. 🛑 **Members compared, never counts.**
+
+### §7 — 🛑 WHAT I DID NOT MEASURE
+- 🛑 **NO full-repo pytest** — the `103`-member closure only. **Consumers outside it remain `[UNMEASURED]`**, and that disclosure is what I failed to act on last time (`AR-852 §2`).
+- 🛑 **NO TypeScript check.** `expected_signals` becoming ABSENT on a refusal is a **contract change visible to `backtest-service.ts` / `shadow-signal-divergence-loader.ts`.** ⚖️ **I reasoned the fail-closed outcome from the Python docstring; I did NOT open the TS loader.** ⇒ **`[UNVERIFIED AT THE TS BOUNDARY]` — it belongs with `D-8`, and it is now slightly larger than `D-8` was.**
+- 🛑 **The indirect-mutation half of my enumeration is `[PARTIAL]`** (`§3`).
+- 🛑 **`PARITY_SHADOW_ENABLED` is a stop, so the parity-shadow gate is proven only by the surrounding block's guard, not by an executed parity run.**
+- 🛑 **NOTHING GRADED BY ME.**
+
+### §8 — ⏳ OWED
+⏳ **The grade is NOT mine to trigger and I am not asking for it to be re-staged.** `R-751 §10` sets the predicate: landed + pushed + remote-verified **AND the desk has ruled the fan-in complete.** **The first three are true after this commit; the fourth is the desk's.** ★ **`A WAKE TRIGGER IS NECESSARY, NOT SUFFICIENT` — I am not repeating the mistake by declaring my own fan-in complete.**
+✅ **Carried for the brief (`R-751 §10`): `§3`'s `expected_signals` finding and its TS exposure should be item (g).**
+✅ **STOPS ALL HONOURED:** no state-channel code · the other `31` baseline failures untouched · no repo-wide trace census · no TS audit · no `git stash` · no worktree cleanup · `f788c64b` neither merged, cherry-picked nor replayed · no monitor armed · sibling's file untouched (`git commit -o`, named paths).
+
+---
+
 ## AR-852 · 2026-08-09 · 🟢 **START-RECEIPT — `R-751 §8` REFUSAL TERMINALITY.** 🛑 **AND I OPEN BY CONFIRMING THE FINDING AGAINST MYSELF: I RE-MEASURED `R-751 §1` AT THE EXECUTABLE LINE *AND* BY EXECUTION AT THE PUBLIC BOUNDARY, AND IT IS EXACTLY RIGHT. MY `AR-851` CLAIMED `4 / 4`; THE TRUE FAN-IN WAS `3 / 4`.**
 
 **TASK:** `R-751 §8`'s one bounded terminality commit + `§7`'s baseline artifact. **BASE HEAD `ad0ffb4b`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`** (`R-751 §5`: this is not a failed delivery). **FIRST OBSERVABLE: the RED below, which I already have. ETA to commit ~60-90 min.**

@@ -899,3 +899,149 @@ def test_the_refusal_gate_precedes_both_run_paths_by_execution(monkeypatch):
     except Exception:  # noqa: BLE001
         pass
     assert reached["walkforward"] == 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# 8. REFUSAL TERMINALITY AT THE PUBLIC BOUNDARY (R-751 §8)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+#
+# 🛑 THIS SECTION EXISTS BECAUSE SECTION 6 WAS GREEN AT THE WRONG LAYER.
+# `AR-851` witnessed the refusal summary on the STRATEGY OBJECT and reported §4-1 closed.
+# At the PUBLIC `main()` boundary the same run returned `spec_trace: []`, because the
+# common governance block at `backtester.py:~8431` reassigns `spec_trace` from
+# `strategy.last_trace` — still `[]`, since a refused strategy never runs `compute()`.
+#
+#   `A CONTRACT THAT NAMES A PAYLOAD BUT NOT ITS OBSERVATION POINT WILL BE SATISFIED AT
+#    WHICHEVER LAYER IS EASIEST TO REACH — AND THAT IS NEVER THE PUBLIC ONE.` (R-751 §3)
+#
+# So every assertion below observes the DICT `main()` ACTUALLY EMITS. The root cause was a
+# join key: `"error" not in result` asks "did this blow up?", and a refusal carries no
+# `error` key, so it read as a completed backtest.
+
+# The analytical products a refusal must never carry. Kept in the TEST as an independent
+# copy of the production tuple: importing the production constant would let one edit move
+# both the behaviour and its check together (`[self-certifying-collections]`).
+FORBIDDEN_ON_REFUSAL = (
+    "crisis_results",
+    "forge_score",
+    "forge_score_components",
+    "invariants",
+    "parity_shadow",
+    "b15_battery",
+    "expected_signals",
+)
+
+
+def _public_run(monkeypatch, spec: dict, *, mode: str = "single", stress: str = "pipeline") -> dict:
+    """Invoke the REAL public CLI entry point and return the dict it emits.
+
+    `bt.main` is a `click` command — `bt.main(...)` raises `MissingParameter` before any
+    dispatch, which is how AR-851's first spy counted 0 on both arms. `.callback` is the
+    function.
+
+    `TF_ALLOW_FIXED_1` is set because a downstream production guard REFUSES
+    `position_size.fixed_contracts=1` outside unit tests and names this flag as the
+    sanctioned test escape. It gates a SIZING guard, not anything measured here.
+    """
+    import src.engine.backtester as bt
+
+    monkeypatch.setattr(bt, "load_ohlcv", lambda *a, **k: _frame())
+    monkeypatch.setenv("TF_SPEC_TRACE", "true")
+    monkeypatch.setenv("TF_STRESS_TEST_MODE", stress)
+    monkeypatch.setenv("TF_ALLOW_FIXED_1", "true")
+
+    captured: dict = {}
+    real_dumps = bt.json.dumps
+
+    def _spy(obj, *a, **k):
+        if isinstance(obj, dict) and ("execution_status" in obj or "invariants" in obj):
+            captured["result"] = obj
+        return real_dumps(obj, *a, **k)
+
+    monkeypatch.setattr(bt.json, "dumps", _spy)
+    config = {
+        "compiled_spec": {"spec": spec, "spec_hash": "terminality"},
+        "strategy": {"symbol": "MES", "timeframe": TIMEFRAME},
+        "start_date": "2026-01-05",
+        "end_date": "2026-01-10",
+    }
+    try:
+        bt.main.callback(json.dumps(config), None, mode, None)
+    except SystemExit:
+        pass
+    return captured.get("result", {})
+
+
+@pytest.mark.parametrize("mode", ["single", "walkforward"])
+@pytest.mark.parametrize("stress", ["pipeline", "full"])
+def test_public_boundary_returns_the_refusal_trace_not_an_empty_list(monkeypatch, mode, stress):
+    """THE ASSERTION WHOSE ABSENCE CAUSED R-751 §1 — observed where a caller reads it."""
+    result = _public_run(monkeypatch, _golden_spec(), mode=mode, stress=stress)
+    assert result, "main() emitted nothing; the harness is unwired, not the gate proven"
+    assert result["execution_status"] == EXECUTION_STATUS_REFUSED
+
+    trace = result.get("spec_trace")
+    assert trace, f"spec_trace is {trace!r} at the PUBLIC boundary — the R-751 §1 defect"
+    assert trace[0]["record_kind"] == TRACE_RECORD_EXECUTION_SUMMARY
+    assert trace[0]["trace_outcome"] == TRACE_OUTCOME_EXECUTION_REFUSED
+    assert trace[0]["entry_eligible"] is False
+    assert trace[0]["trigger_bound"] is False
+
+
+@pytest.mark.parametrize("mode", ["single", "walkforward"])
+@pytest.mark.parametrize("stress", ["pipeline", "full"])
+def test_a_refusal_reaches_no_analytical_surface(monkeypatch, mode, stress):
+    """R-751 §8-3, by execution: no analytical product on a refused result."""
+    result = _public_run(monkeypatch, _golden_spec(), mode=mode, stress=stress)
+    assert result["execution_status"] == EXECUTION_STATUS_REFUSED
+    present = [k for k in FORBIDDEN_ON_REFUSAL if k in result]
+    assert not present, (
+        f"a REFUSED strategy published {present}; a refusal that carries a score is "
+        "indistinguishable from a measured result, which is the confusion this whole "
+        "trigger-safety lane exists to prevent"
+    )
+
+
+def test_the_eligible_neighbour_still_reaches_them_positive_control(monkeypatch):
+    """WITHOUT THIS, the test above is satisfied by a build that computes nothing.
+
+    Three absences with no positive control is an ABSENCE, not a proof — AR-851 §3 was
+    caught by exactly this shape and it is not repeated here.
+    """
+    result = _public_run(monkeypatch, _neighbour_spec())
+    assert result, "the neighbour emitted nothing; the positive control is unwired"
+    assert result.get("execution_status") != EXECUTION_STATUS_REFUSED
+    reached = [k for k in FORBIDDEN_ON_REFUSAL if k in result]
+    assert reached, (
+        "the eligible neighbour reached NONE of the analytical surfaces, so the refusal "
+        "assertions above prove nothing about the gate"
+    )
+    assert "analysis_omitted" not in result
+
+
+@pytest.mark.parametrize("mode", ["single", "walkforward"])
+def test_omitted_analysis_is_named_and_absent_never_zero(monkeypatch, mode):
+    """R-751 §8-5: `A KEY PRESENT AS 0.0 IS A MEASUREMENT; A KEY ABSENT WITH A STATED
+    REASON IS A REFUSAL.`"""
+    result = _public_run(monkeypatch, _golden_spec(), mode=mode)
+    named = result.get("analysis_omitted")
+    assert named, "the refusal did not say WHAT it omitted"
+    assert set(named) == set(FORBIDDEN_ON_REFUSAL)
+    assert result.get("analysis_omitted_reason")
+    # ABSENT, not falsy-present. `None`/`0.0`/`[]` would each read as a measurement.
+    for key in named:
+        assert key not in result, f"{key} is named as omitted but is present"
+
+
+def test_the_refusal_is_not_disguised_as_a_crash(monkeypatch):
+    """R-751 §8-1: the fix must NOT work by injecting a fake `error` key.
+
+    Overloading the crash channel would make every downstream consumer read a deliberate
+    refusal as a malformed request — a different lie, not a fix.
+    """
+    result = _public_run(monkeypatch, _golden_spec())
+    assert "error" not in result
+    assert result["execution_status"] == EXECUTION_STATUS_REFUSED
+    # The refusal payload still explains itself in its own vocabulary.
+    assert result["refusal"]["disposition"] == "SOURCE_AMBIGUOUS"
+    assert result["metrics_omitted_reason"]
