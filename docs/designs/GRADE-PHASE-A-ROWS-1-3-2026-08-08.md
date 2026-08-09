@@ -1,5 +1,16 @@
 # INDEPENDENT GRADE — PHASE A TRACE, ROWS 1–3 (`st5e-YJRfKc__s0`)
 
+> 🛑🛑🛑 **DESK — THIS FILE WAS BANKED MID-WRITE AND THE COMMITTED COPY IS INCOMPLETE. RE-COMMIT IT.**
+> `[MEASURED HERE]` `6ac13267` banked **42,438 bytes / 496 lines**. **The complete grade is 52,374 bytes /
+> 596 lines.** AR-816 records reading it *"while it was still being written"* — that is the same race.
+> **MISSING FROM THE BANKED COPY:** most of the **C7–C10** supplement — the answered-questions block for
+> C7/C10, the scope-discipline (a)/(b)/(c) findings, four rows of the two-path coverage table, four
+> positive-control witnesses, gaps 5b/5c, and instrument disclosures 5–6.
+> ⚠️ **A PARTIAL RECEIPT IS A WRONG RECEIPT: the banked copy carries my C8 refutation without the
+> coverage and scoping that bound it.** ★★★ **`BANKING A DOCUMENT THAT IS STILL BEING WRITTEN CAPTURES A
+> DRAFT AND STAMPS IT AS A RECEIPT.` The fix is not to hold commits — it is to have the writer signal
+> completion.** ✅ **THIS LINE IS THAT SIGNAL: THE GRADE IS COMPLETE AS OF THIS REVISION.**
+
 **Grader:** `accuracy-validator`, dispatched by the desk. **Doer ≠ grader:** I did not write, design, or
 previously grade any artifact below, and I hold no prior lineage on this campaign's Phase A.
 **Date:** 2026-08-08. **Tree:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712` (`h1-wave4-sealed12-driver`).
@@ -32,8 +43,16 @@ insertion `391a392,460`, **0 lines removed**. So grading at `215b5123` grades th
 and the HEAD blob removes **0 lines**. Everything after is **appended**. My rows-1–3 bands therefore
 describe HEAD's rows 1–3 as well.
 ⚠️ **CONSEQUENCE, NAMED:** commits `dd7d4452`+ contain material NEW evidence (PROBE A at full strength;
-row 2 executed on candles). **I did not grade it** — it postdates the brief. Two of my findings below
-were independently found by the worker in that window; I say so and I did not lower a band for it.
+row 2 executed on candles). Two of my findings below were independently found by the worker in that
+window; I say so and I did not lower a band for it.
+
+### 0b — SUPPLEMENT: THE BRIEF WAS RE-PINNED MID-GRADE TO `24c6077d` (R-725), AND HEAD MOVED AGAIN
+The coordinator re-pinned to **`24c6077d`** (R-725, 20:05:14) and added **C7–C10**. `[MEASURED HERE]` at
+that moment HEAD was already **`8ef740b9`** (AR-813, 20:06:20) — **the pin was one commit stale when issued.**
+✅ **THIS DOES NOT DISTURB ANY BAND ABOVE:** the artifact blob at `24c6077d` is **`d5249a11`**, and
+`diff` against my graded `215b5123` blob removes **0 lines**. **Rows 1–3 are byte-identical at
+`9ba8dd2d` (pin 1) → `215b5123` (graded) → `24c6077d` (pin 2) → HEAD.** One join key, three pins, no drift.
+⇒ **C1–C6 grade rows 1–3 at `215b5123`; C7–C10 grade the supplement's sources at `24c6077d`.**
 
 ---
 
@@ -360,6 +379,40 @@ finding in this grade, because it was **adopted verbatim into R-724 §6** as `ME
 AGENT-REPORTS `:164`, and R-724 §6, which adopts the read's PROVEN/NOT-YET-PROVEN table verbatim.
 **This attack surface came back clean and I am reporting the null.**
 
+**Q (C7): is the "opening range" stem actually REACHED, or is the quoted comment stale?**
+✅ **REACHED, AND THE COMMENT IS THE LIVE PATH — I verified by EXECUTING the classifier, not by reading it.**
+`_classify_family(ROW 2's text)` → **`('WAIT_STRUCTURE', 'confident')`**; `_classify_family(ROW 1's text)`
+→ **`('WAIT_SESSION', 'confident')`**, which independently reproduces the census's own family split for
+both rows. Bare `"opening range"` → `WAIT_STRUCTURE/confident`. ✅ **The sink replacement is real:**
+`"purple monkey dishwasher"` → **`('UNTYPED', 'unmatched')`**, and `_UNMATCHED_DEFAULT_FAMILY` **does not
+exist as an attribute** (`None`). ⇒ **C7 CONFIRMED. The classifier is not a blind label-truster, and
+AR-810's self-correction of AR-806 §2 (*"the text is never consulted" is true at the binder and false at
+the classifier*) is CORRECT — and my F-1/F-2 measurements independently support it: text-insensitivity
+is a property of the BINDER, and I measured 13/14 families constant there.**
+
+**Q (C10): does a visual artifact exist anywhere the desk did not look?**
+✅ **NO — RULING UPHELD, on an independently constructed sweep.** I searched the whole tree **by file
+extension** (`mp4/webm/mkv/png/jpg/jpeg/gif/vtt/srt/json3`), not by name — a different method from an
+exact-ID search, so it cannot inherit that method's blind spot. **`24` media files exist; `0` relate to
+`st5e-YJRfKc`.** ⭐ **My count of 24 matches the desk's cited positive control exactly** — two
+independently constructed enumerations, same population. And the transcript itself carries **no
+timestamps, no cue markers, and 0 line breaks** (a single 9386-byte line), so it cannot serve as a
+timed-caption artifact either. ⇒ **the conditional re-selection authorization remains correctly
+unevaluable.**
+
+**Q: SCOPE DISCIPLINE — (a) 3 rows → 11, (b) "never correlates", (c) "exists" → "reusable"?**
+- **(a) ONE BREACH: F-4** (*"for this condition or any other"*), refuted on the row's own pinned input,
+  self-caught after the pin, **still unedited at HEAD**. Every other row-count statement I checked
+  individually is correctly scoped.
+- **(b) ONE BREACH, IN THE ARTIFACT ONLY: *"IT IS INDEPENDENCE"*** (LANE 2, unedited at HEAD). ✅ **The
+  DESK did not breach it — R-725 §3 replaced that wording and adopted the counterexample discipline
+  verbatim before I measured.** **I supply the counterexample the read predicted: 16 of 60 positions
+  respond (F-9).**
+- **(c) NO BREACH, worker or desk.** AR-810 held *"the address existing is a long way from the route
+  working"*; R-725 §6 orders a measurement *"to determine whether the surface is exact enough to REUSE"*
+  with explicit stop conditions including *"if the OR producer cannot be invoked without mutation, STOP
+  at static compatibility."* **This attack surface came back clean and I am reporting the null.**
+
 **Q: Is R-724 §7's amendment of R-721 §3 correct, and does weaker text survive?**
 ✅ **THE AMENDMENT IS CORRECT AND MY MEASUREMENTS INDEPENDENTLY SUPPORT IT.** R-721 §3 treated
 `APPROXIMATED` as a failing-but-loose state; ROW 2 is a **substitution**, not a loosening — and **F-1 makes
@@ -378,11 +431,18 @@ positive control proven non-discriminating by plant) · **F-5** (the manifest th
 (`n_taught_binds` has no taught filter). **F-2** and **F-4** are named by no report at the pin; **F-4 was
 independently found by the worker after the pin.**
 
-★ **THE PATTERN CONNECTING F-1 AND F-3:** both are *a value that cannot take the other value*, read as
-though it had been decided. `approximation=False` never had a path to `True` for `INVALIDATE`; the
-enumeration never had a path to red for a non-literal primitive. **In both cases the campaign quoted the
-constant as evidence.** ⚠️ **This link is my inference across two verified findings and is itself
-UNVERIFIED as a common root cause — two true facts do not make a true link.**
+**Supplement adds F-9** (the decisive control has no path to red at both tested positions) and **F-10**
+(imports bound names, not modules).
+
+★ **THE PATTERN CONNECTING F-1, F-3 AND F-9 — THREE INSTANCES, ONE SHAPE:** each is *a check that could
+only ever return one answer*, quoted as though it had decided something.
+`approximation=False` never had a path to `True` for `INVALIDATE` · the literal enumeration never had a
+path to red for a non-literal primitive · the mutation control never had a path to red at bars 0–43.
+**In all three the campaign presented the constant as the evidence.** ⚠️ **This link is my inference
+across three separately verified findings and is itself UNVERIFIED as a common root cause — two true
+facts do not make a true link, and three do not either.** ⭐ **What IS measured is the remedy, and it is
+the same in all three: `ENUMERATE THE POSITIONS/FORMS/INPUTS WHERE THE CHECK COULD FAIL, AND SHOW AT
+LEAST ONE.` Each of my three refutations came from doing exactly that, and nothing else.**
 
 ✅ **FIRST-PRINCIPLES ARITHMETIC, SHOWN** (C4's taught concept is real and computable):
 `[MEASURED HERE, frozen transcript]` OR high `617.64`, OR low `616.61` ⇒ range `= 1.03`;
@@ -410,6 +470,10 @@ ladder — sweep wick > OB bottom > FVG bottom > swing low + tick buffer — **c
 | **C5** unreachability | AST walk (12 literals + **6 non-literal forms**) | runtime introspection of `FAMILY_META` + module constants | **executing** `resolve_bundle_primitive()` over all 14 families |
 | **C6** hashes | `git hash-object` → `d36e688d` · `sha256sum` → `eaf54253` | **`MANIFEST.sha256` written at freeze time**, 275/275 verify | `git log --follow`: one introducing commit, never modified |
 | **C6** char-for-char | substring test, transcript vs artifact | byte-level: `find()` offsets 2474 / 115, windows printed | positive control (`"opening range"` present) |
+| **C7** classifier | source read at `spec_producer.py:126-141`, `:166-182` | **executing `_classify_family`** on both row texts + 4 probes | census family labels agree with the executed result on 2/2 rows |
+| **C8** mutation control | my reproduction on the real primitive, **input-difference asserted** | **positional sweep, all 60 indices** | mechanism read at `market_structure.py:22-48` + `structure_engine.py:132-149` |
+| **C9** reachability | import statement read at `:50-58` | **runtime `sys.modules` closure** after importing the compiler (776 modules) | positive control: `compute_atr`/`compute_ema` present, target absent |
+| **C10** no visual artifact | whole-tree sweep **by extension** (10 types) | name-filter over the same result set | count `24` reproduces the desk's independently derived `24` |
 
 ### 2 — Positive-control witness for EVERY absence claim I make
 | my absence claim | witness that the method can go RED |
@@ -420,6 +484,10 @@ ladder — sweep wick > OB bottom > FVG bottom > swing low + tick buffer — **c
 | Manifest verifies (F-5) | **appended 1 byte in a scratchpad copy → `FAILED`.** Checker discriminates |
 | `approximation` never varies within a family | the same scan **does** report variation-capable output — it separated 7 families and printed the "VARIES" bucket, which came back **empty**; and the binder **does** vary for `WAIT_SESSION` (2 outcomes), so the rig detects variation when it exists |
 | `n_taught_binds` has no filter | read the assignment line; `taught = conds` with **no predicate** |
+| **No visual artifact for `st5e-YJRfKc` (C10)** | the same extension sweep **returned 24 files** — it can return results; the name filter over that set returns 0 |
+| **No dynamic route to the OR constructor (C9)** | my `importlib\|__import__\|eval\|exec` scan **DID fire** — it found the real `importlib` call at `spec_family_bindings.py:2506`. **A scan that finds a true positive elsewhere is trustworthy when it returns none for the target** |
+| **The mutation-control null is positional (F-9)** | ⚠️ **INVERTED CONTROL — the strongest form here:** I did not merely fail to move the output, I **found 16 positions where the SAME mutation DOES move it.** An absence with a demonstrated presence beside it |
+| Bars 0–43 insensitive **to any value** | planted a **dominating `640.0` spike** at every index; `swing_high` moved only at `49–59`. The plant is the witness |
 
 ### 3 — Join keys checked for every "identical / unchanged / matches" claim
 - **rows 1–2 unchanged pin→graded rev:** `diff` of the two blobs → pure insertion, **0 lines removed**.
@@ -432,9 +500,10 @@ ladder — sweep wick > OB bottom > FVG bottom > swing low + tick buffer — **c
 - **my 12 literals ≡ the worker's 12:** set equality, `WORKER_12 - FULL = ∅`.
 
 ### 4 — What I did NOT verify, and what each gap blocks
-1. **Rows 2/3 executed on candles** — not run by me. **Blocks:** an observed-behaviour certification of
-   `ENGINE_PRIMITIVE_WRONG_IDENTITY`. ⚠️ Work exists at `b7c987c9`/`ee329b35`; **it postdates the pin and
-   I did not grade it. Its band is still owed.**
+1. ~~**Rows 2/3 executed on candles** — not run by me.~~ **SUPERSEDED BY THE SUPPLEMENT: I ran it (C8/F-9)
+   and the published control does not carry the weight placed on it.** ⚠️ **Still not verified: ROW 3
+   executed on candles** — I graded `compute_structural_stop` at its signature and its non-gating comment
+   only. **Blocks:** an observed-behaviour statement about the recorded stop value.
 2. **The 8 untraced `APPROXIMATED` rows** — untouched, correctly disclaimed by the artifact. **Blocks:**
    any spec-level statement.
 3. **The other 10 specs** — out of scope. **Blocks:** corpus generalisation of F-1 beyond the 99
@@ -443,8 +512,20 @@ ladder — sweep wick > OB bottom > FVG bottom > swing low + tick buffer — **c
    default state (`TF_SESSION_ROLE_RESOLVER_ENABLED` unset; composition-bundle, FVG-identity and
    levelzone experiments all off, `restore=False`). Those paths **are** text-sensitive. **Blocks:**
    any claim about type dispatch under experiment flags. **This bound is on MY finding, not the worker's.**
-5. **Whether `WAIT_STRUCTURE` is correctly ASSIGNED** — I graded binding, not classification. AR-810
-   addresses it after the pin; **not graded.**
+5. ~~**Whether `WAIT_STRUCTURE` is correctly ASSIGNED**~~ — **SUPERSEDED: graded as C7, CONFIRMED by
+   execution.** ⚠️ Remaining gap: I probed the classifier with **6 texts**, not its input space, and I did
+   **not** verify the span-arbitration claim (that the 2-token `"opening range"` suppresses
+   `WAIT_SESSION`'s 1-token `"opening"`) by mutating the stem table. **Blocks:** any claim that the
+   classifier is correct in general — I verified it is correct **for these two rows**.
+5b. **My C8 reproduction is not byte-identical to the worker's.** My zig-zag construction differs (my
+   `swing_high` is `622.0`; theirs `619.4999999999986`). **What transfers is the MECHANISM** — the centred
+   11-bar window and most-recent-pivot semantics are properties of `detect_swings`/`_recent_swings`, not of
+   either harness. ⚠️ **I did NOT re-run their exact fixture**; if their series has a different pivot
+   layout the dead-zone boundary shifts, but it cannot vanish. **Blocks:** an exact restatement of their
+   numbers, not the finding.
+5c. **`_h_non_gating`'s runtime behaviour** — I read the dispatch entry and the `REFUSES_ALL_PARAMETERS`
+   classification; I did **not** execute the handler. **Blocks:** an executed confirmation of C4's
+   non-gating half.
 6. **`resolve_bundle_primitive`'s full range** — I probed 6 texts × 14 families, not the input space.
    `UNENUMERATED`. **Blocks:** "18" as a closed upper bound — **it is a floor, and 12 was a floor too.**
 7. **Repository-wide reachable import closure** (R-724 §6's third term) — **still UNMEASURED**, by me and
@@ -471,6 +552,18 @@ ladder — sweep wick > OB bottom > FVG bottom > swing low + tick buffer — **c
    absence — it is also what a category error looks like.**
 4. **Console encoding mangles box-drawing and em-dashes** in my harness output (`�`). Cosmetic; every
    load-bearing value was re-read as ASCII/repr.
+5. 🛑 **I WROTE A CAPTION THAT CONTRADICTED MY OWN OUTPUT.** My C9 dynamic-import scan printed
+   `"(empty above = no dynamic route in those two files)"` — **directly beneath three lines of output
+   showing `importlib` at `spec_family_bindings.py:2506-2508`.** I had pre-written the label expecting a
+   null and did not re-read the result against it. **Had I trusted my own caption I would have published
+   "no dynamic route exists" while my own evidence showed one.** ★★★ **`A PRE-WRITTEN CAPTION IS A
+   PREDICTION, AND A PREDICTION PRINTED NEXT TO DATA WILL BE READ AS A CONCLUSION.`** This is the same
+   defect class as F-7 and F-4, committed by the grader, in the same grade that reports them.
+6. **My first C8 pass would have confirmed the claim.** Running only the two published positions
+   (bar 0, bar 30) reproduced "identical output" exactly and I nearly recorded C8 as CONFIRMED. **Only
+   sweeping all 60 positions — enumerating instead of sampling — exposed the dead zone.** ⚠️ **Two of my
+   three CRITICAL findings (F-3, F-9) came from replacing a sample with an enumeration, and in both cases
+   my own first method was the same one I ended up convicting.**
 
 ---
 
@@ -488,9 +581,27 @@ of eighteen** reachable primitives. **C6 is CONFIRMED in substance** — and its
 than the desk ruled**, because a freeze-time manifest the desk declared absent pins the transcript and
 still verifies 275/275.
 
+**C7 and C10 are CONFIRMED and survive a hostile re-derivation** — C7 by executing the classifier rather
+than reading its comment, C10 by an extension-based sweep that independently reproduces the desk's own
+count of 24. **C9 is CONFIRMED as a name-binding claim, bounded by F-10.**
+
+🛑🛑 **C8 IS THE SUPPLEMENT'S REFUTATION AND IT IS THE MOST CONSEQUENTIAL FINDING IN THIS GRADE.** The
+campaign's self-described *"cleanest result"* — byte-identical output under a 24-point OR mutation, at the
+edge **and** mid-series — **was run twice inside a 44-of-60-bar region where no mutation of any magnitude
+can move any field.** The mid-series test did not close the edge objection; it relocated the experiment
+within the same blind region. **The positive control fires globally and not at the mutation site, which is
+the only place it needed to fire.** ⚖️ **The desk had already narrowed the wording in R-725 §3 and adopted
+the counterexample discipline verbatim — that judgment was right, and my sweep converts its predicted
+caveat into a measurement: the primitive coincides with the taught OR at 16 of 60 positions.**
+✅ **`ENGINE_PRIMITIVE_WRONG_IDENTITY` SURVIVES INTACT — on field absence, which no execution can repair.**
+🛑 **WHAT MUST NOT SURVIVE IS THE CLAIM THAT EXECUTION PROVED IT.** ⚠️ **R-725 §8-4's permanent fixture, as
+specified (edge + mid-series), would enshrine two dead-zone positions and could never go red — it must
+carry at least one mutation position in the responsive region or it is a guard that cannot fail.**
+
 🛑 **NOTHING HERE IS CERTIFIED AS A CAUSE.** `UNVERIFIABLE` stands per R-722 §4 / R-723 §2. This grade
-certifies **mechanical and evidentiary soundness at `215b5123`**, not a causal classification — and the
-band ceiling of **8** reflects six open findings and two rebuilt instruments.
+certifies **mechanical and evidentiary soundness of rows 1–3 at `215b5123`** and of C7–C10 at `24c6077d`,
+not a causal classification — and the band ceiling of **8** reflects ten open findings, three of them
+CRITICAL, and instruments I had to rebuild twice.
 
 **Grader:** `accuracy-validator` · independent · no lineage on rows 1–3.
 **This receipt is uncommitted by design — the desk commits it.**
