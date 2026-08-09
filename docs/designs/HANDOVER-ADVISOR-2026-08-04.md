@@ -7,7 +7,45 @@
 > the same trap one level down.** ★ `ADVISOR-STATE.md` remains the **sole carrier of `## THE PLAN`**
 > and of unruled `[FACT, MEASURED HERE, NOT RULED]` blocks — **grep its headings, never read it whole.**
 
-> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-744`
+> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-747`
+> 🛑🛑🛑★★★★★ **THE HEADLINE, AND IT OUTRANKS `6B`: THE GOLDEN STRATEGY EMITS ENTRY SIGNALS TODAY FROM
+> A FABRICATED TRIGGER.** `[MEASURED, AR-843, in a CLEAN DETACHED WORKTREE at `8a5e0085`]`
+> `entry_long=0 · entry_short=7` on `seed=7 / N=400 / 5m`. Its `entry_trigger_id` is the breakout
+> sentence `WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4`, **bound and executed against
+> `compute_structure_state`** — and `[MEASURED HERE, `spec_condition_compiler.py:1156-1161`]` that
+> handler's own docstring says **"the specific structural OBJECT text … is not checked — only generic
+> BOS/CHoCH/MSS activity."** ⇒ **nothing in the executable path reads the taught sentence.**
+> 🛑🛑 **AND THE OBVIOUS FIX IS MEASURED WRONG. `[AR-843]` unbinding the trigger leaves `entry_short`
+> at **7**, bar-for-bar identical, while the gating set drops `3 → 2`.** ★★★★★ **`A REFUSAL THAT WORKS
+> BY REMOVING A CONSTRAINT IS A RELAXATION WEARING A REFUSAL'S NAME` — `old = A AND B AND broken`,
+> `new = A AND B`; the new mask CANNOT be stricter.** ⇒ **`REFUSAL IS NOT ABSENCE`: the refused trigger
+> must BLOCK, not vanish.** ⚠️ **And on this fixture the trigger is NON-DISCRIMINATING — present or
+> absent, the same bars fire. It is decorative.**
+> 🛑 **SO `EntryEligibility` MUST BECOME LOAD-BEARING.** `[MEASURED HERE]` it computes
+> `may_enter=trigger_bound` and **returns** it — **it gates nothing.** Required chain: binding
+> completeness → faithful-trigger check → **entry eligibility** → condition evaluation → entry output,
+> **with the BACKTESTER consuming it.** Required end state: `execution_status=REFUSED · compiled=False
+> · entry_long=0 · entry_short=0 · no trades · NO P&L/Sharpe.` ★ **A zero-trade backtest that still
+> reports a flat Sharpe reads as a result, not a refusal.**
+> ⚡ **ORDER OF WORK (`R-747 §6`), AND IT IS NOT THE ORDER `R-743` SET:** **(1)** WIP-checkpoint the
+> worker's large uncommitted state-channel diff to an isolated, clearly-marked non-production branch in
+> a SEPARATE worktree, pushed, SHA recorded, **NOT merged** · **(2)** the **TRIGGER-SAFETY COMMIT,
+> ALONE** (semantic refusal + load-bearing eligibility + backtester handling + the six-step mutation +
+> the neighbouring-strategy positive control + both flag states) · **(3)** corpus run against the
+> **pinned `11`-spec corpus, blob `23f30eb0`** · **(4)** ONLY THEN resume the state channel from the
+> checkpoint. 🛑 **Do not land the correct opening-range calculator while a fabricated trigger can
+> still trade it.**
+> 🛑🛑 **DO NOT BUILD `R-746 §3`'s LOCALITY CONTROL — WITHDRAWN AT `R-747 §3` AS MEASURED DEAD.** It
+> mutates the trigger, which `AR-843` proved cannot move the output. **Build external `R-748`'s
+> six-step sequence instead, which mutates the ELIGIBILITY CONSUMER — a thing that can actually move.**
+> ★★★★★ **THIRD INSTANCE OF `R-726 §1`: `A GLOBALLY RESPONSIVE SYSTEM DOES NOT VALIDATE A LOCALLY NULL
+> EXPERIMENT.` The desk adopted it from a read without asking whether its target could move the
+> output — `ADOPTING A CONTROL FROM A READ IS NOT REVIEWING IT.`**
+> ⚠️ **NUMBERING: external reads `R-747` AND `R-748` are both consumed by campaign `R-747`. THERE IS NO
+> CAMPAIGN `R-748`.** The 1:1 read↔ruling mapping held for `R-742`–`R-746` and STOPS HERE.
+> ✅ **TWO GRADES NOW OWED, NOT ONE:** `GRADE-TRIGGER-SAFETY-2026-08-09.md` (the trigger commit) and
+> `GRADE-6B-STATE-CHANNEL-2026-08-09.md` (the state work). **`accuracy-validator`, adversarial, `doer ≠
+> grader`.**
 > **`HEAD 1bbfea2c` — and it MOVED TWICE while this block was being written; the ruling commit is
 > `155afcc3` (pushed, remote tip verified equal at that moment). ★ A HEAD sha here is a timestamp, not
 > a standing condition: `git rev-parse HEAD` yourself.** · **newest ruling `R-744` (`0379e179`, pushed)
@@ -239,8 +277,14 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-744`** (`0379e179`, pushed). **Newest AR `AR-840`** — start-receipt, **unruled by
-  choice** (see the ⚡ block). **`AR-836`→`R-742` · `AR-837`→`R-743` · `AR-839`→`R-744`.**
+- **Newest ruling `R-747`** (`d242ef19`, pushed, remote tip verified equal). **Newest AR `AR-843`** —
+  **ruled by `R-747`; NOTHING UNRULED.** **`AR-836`→`R-742` · `AR-837`→`R-743` · `AR-839`→`R-744` ·
+  `AR-841`→`R-745` · `AR-842`→`R-746` · `AR-843`→`R-747`.** ★ `AR-838`/`AR-840` were pure
+  start-receipts, acknowledged in-ruling rather than spending one each.
+- ✅ **THE GPT WAIT WAS HONOURED ON EVERY ONE OF THESE SIX, WITH A BLOCKED WORKER ON THE TABLE ONCE**
+  (`AR-837`). **The escape clause was exercised for the first time in six assertions — HELD, and the
+  PRICE was stated to the operator so he could decide whether to hurry the read.** ★★★★★ **`STATE THE
+  PRICE; DO NOT QUIETLY REFUSE TO PAY IT.`**
 - **Previously: `R-743`** (`155afcc3`, 2026-08-09 — **`R-742` + `R-743` banked in ONE commit of one
   file, deliberately, to halve pre-commit stash exposure on a shared tree; pushed, remote tip verified
   equal to local HEAD**). **Newest AR `AR-838`** — **a PURE START-RECEIPT: no decisions, no findings,
@@ -385,6 +429,19 @@ so **none of it fires today**; the doer's narrow conclusion (no raise, no exit c
   struck at `R-721 §6`). **OWNER: desk. TRIGGER: next quiet seat.**
 
 ## 9. FORBIDDEN
+⚠️🛑 **READ THIS FIRST: `producer` BELOW IS A BARE NOUN AND IT IS AMBIGUOUS.** ★★★ **The rulings that
+make it enforceable name the SYMBOL: `R-705` and `R-707` forbid **`produce_spec_artifact`**/transcript
+extraction, and `[MEASURED]` that function lives at `src/engine/extraction/spec_producer.py:571`.**
+✅ **AMENDED AT `R-745 §4`, FOR `STEP 6B` ONLY, NARROWLY:** calling the `6A` lowering + candidate
+expansion from `produce_spec_artifact`, and attaching the typed carrier **at the ARTIFACT TOP LEVEL,
+OUTSIDE the hashed `spec` body** — **hash-neutrality is a required property with its own control.**
+**Everything else in that file, and transcript extraction, remain forbidden.**
+★★★★★ **AND THE REASON THE AMENDMENT EXISTS IS A DESK DEFECT WORTH NOT REPEATING: `R-743`/`R-744`
+ordered an acceptance (*"the real adapter called exactly three times"*) that was UNREACHABLE without
+crossing this very lock. `A CONTRACT THAT ORDERS AN ACCEPTANCE UNREACHABLE WITHOUT CROSSING ITS OWN
+SCOPE-LOCK IS A TRAP THE DESK BUILT.` Check every ordered acceptance against this list in the same
+motion that writes it.**
+
 **Gate 3 work (CLOSED — striking it is the only permitted edit)** · producer · sealed-spec · parity
 **elevation** · comparison-tool integration · any `:534` change · **re-selecting the golden slice
 (`R-665 §2.4`)** · enabling `TF_FAMILY_META_ENFORCED` or `PARITY_SHADOW_ENABLED` · any parity claim ·
