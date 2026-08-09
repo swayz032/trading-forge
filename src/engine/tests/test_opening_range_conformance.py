@@ -476,22 +476,35 @@ def test_both_definitions_refuse_deliberately_and_neither_reaches_the_structure_
 
 
 # ── PERMANENT RED — no executable adapter yet (expected until B1 STEP 4) ─────
-def test_no_executable_opening_range_adapter_exists_yet():
-    """PERMANENT RED (expected until B1 STEP 4).
+def test_no_production_binding_routes_to_the_opening_range_adapter_yet():
+    """PERMANENT RED (expected until B1 STEP 6).
 
     R-732 §3: `A TRANSITION RULING THAT LISTS ONLY WHAT TURNS GREEN IS A
     COMPLETION CLAIM IN DISGUISE.` STEP 3 typed the concept and made it refuse;
-    it did NOT make it computable. This test keeps that honest — it is red on
-    purpose, and STEP 4 is what turns it green.
+    it did NOT make it computable.
+
+    RENAMED at R-736 §3 (STEP 4 closeout) — NAME AND MESSAGE ONLY, THE ASSERTION
+    IS BYTE-UNCHANGED. The old name, `test_no_executable_opening_range_adapter_
+    exists_yet`, became FALSE the moment `src/engine/opening_range_adapter.py`
+    landed: the executable adapter DOES exist and is proven by 21 controls. What
+    is still absent is the PRODUCTION BINDING — `FAMILY_META` deliberately keeps
+    `unsupported=True` through STEPS 4-5, so nothing routes to the adapter yet.
+    `A CAPTION IS A CLAIM`, and a test whose name asserts something untrue is a
+    false claim that every future reader would trust.
+
+    ★ AND THE STAGE MOVED, NOT THE BAR: R-736 §1 WITHDREW STEP 4's claim on this
+    test, because a stub that registers and annotates would satisfy it while
+    computing nothing. It belongs to STEP 6, where deterministic variant
+    expansion must prove the golden candidates ACTUALLY CALL the adapter.
     """
     _, artifact, _, by_id = _produce(GOLDEN_STUB)
     condition = _opening_range_condition(artifact)
     binding = by_id[condition["id"]]
 
     assert binding.bindable is True and binding.primitive is not None, (
-        "PERMANENT RED (expected until B1 STEP 4): the opening-range definition is typed and "
-        "refuses correctly, but NO executable adapter binds it, so the golden slice still "
-        "cannot compute an opening range.\n"
+        "PERMANENT RED (expected until B1 STEP 6): the opening-range definition is typed, "
+        "refuses correctly, and an executable adapter now EXISTS — but no production binding "
+        "routes to it, so the golden slice still cannot compute an opening range.\n"
         f"  condition : {condition['id']}\n"
         f"  bindable  : {binding.bindable}\n"
         f"  primitive : {binding.primitive}\n"
@@ -501,12 +514,19 @@ def test_no_executable_opening_range_adapter_exists_yet():
 
 # ── PERMANENT RED 3 — the output contract ────────────────────────────────────
 def test_no_typed_opening_range_output_contract_exists_in_production():
-    """PERMANENT RED (expected until B1 STEPS 3-4).
+    """PERMANENT RED (expected until B1 STEP 6).
 
     Field/output identity is the load-bearing proof (read, STEP 2). Route
     identity is enforced FIRST inside `_typed_opening_range_fields`, so a
     cosmetic repair that adds opening-range-shaped fields to `StructureState`
     cannot turn this green.
+
+    STAGE CORRECTED at R-736 §3 — DOCSTRING ONLY, ASSERTION UNCHANGED. This read
+    "expected until B1 STEPS 3-4"; R-736 §1 withdrew STEP 4's claim on it, since
+    this test reads a RETURN ANNOTATION and never invokes the primitive, so a
+    module that returns `refused_state()` unconditionally would turn it green.
+    The name remains accurate — no typed output contract IS reachable from the
+    production binding — so only the stage reference moved.
     """
     _, artifact, _, by_id = _produce(GOLDEN_STUB)
     condition = _opening_range_condition(artifact)

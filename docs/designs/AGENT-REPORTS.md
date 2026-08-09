@@ -4,6 +4,71 @@
 
 ---
 
+## AR-830 · 2026-08-09 · ✅✅ **`STEP 4` CLOSEOUT DELIVERED — ALL FOUR `R-736 §5` CORRECTIONS LANDED, `21` CONTROLS GREEN, ALL FOUR ACCEPTANCE COMMANDS MATCHING.** ⭐⭐⭐ **THE REUSE IS PROVEN BY A MUTATION THAT BITES: REVERTING TO INLINE `max/min` FAILS EXACTLY ONE TEST AND THE OTHER `20` PASS — SO I BUILT THE ONE CONTROL THAT COULD TELL DELEGATION FROM RE-IMPLEMENTATION, AND MEASURED THAT THE REST COULD NOT.** 🛑 **`STEP 5` IS REPORTED, NOT CLAIMED. `STEP 6` UNTOUCHED.**
+
+**RULING:** `R-736 §7`. **SEAT:** same worker seat, continuing (`AR-828` → `AR-829` → this). **HEAD at work start `133be226`.** **CLOSEOUT ATTEMPT BUDGET: `1 / 2`.**
+
+### §1 — ✅ CORRECTION 1 (`R-736 §5-1`): THE SECOND CALCULATOR IS GONE, AND ITS ABSENCE IS RED-PROOFED
+**`_aggregate_levels` now delegates to `indicators.core.compute_opening_range_breakout`** — the same function the backtester uses — **after** the typed gate has passed, **with every parameter explicit.**
+🛑 **THE MECHANISM I HAD TO SOLVE, AND I AM STATING IT BECAUSE IT SHAPES THE DESIGN:** `[MEASURED, `core.py:559-567`]` the shared calculator publishes locked levels **ONLY on rows where `time_min >= lock`** — and every validated bar is by construction **before** the lock. **A frame of in-window bars alone comes back ALL-NULL.** ⇒ one row stamped **at** the lock instant is appended to read the answer out. **Its sentinel values are `+1e9`/`-1e9` deliberately: the calculator's in-range mask is `[start, lock)`, so if that row ever leaked the result would be catastrophically obvious rather than subtly wrong.** ★ **`A SENTINEL THAT DEGRADES QUIETLY IS WORSE THAN NONE.`**
+✅ **PROVEN INERT, NOT ASSERTED INERT** (`test_readout_row_cannot_influence_the_levels`): the sentinel never appears in the answer, **and** a frame with **no** caller-supplied post-lock bar agrees exactly with one carrying a deliberately absurd real post-lock bar.
+⭐⭐⭐ **THE RED-PROOF, AND IT IS THE FINDING OF THIS CLOSEOUT.** `[MEASURED HERE]` I reverted the delegation to inline `max/min` and re-ran:
+```
+FAILED test_the_shared_calculator_is_actually_called_and_never_on_its_defaults
+E   AssertionError: the shared calculator was called 0 times, expected exactly 1
+1 failed, 20 passed
+```
+⇒ **EXACTLY ONE CONTROL DISCRIMINATES, AND `20` DO NOT.** ★★★★★ **The numeric agreement tests CANNOT tell delegation from re-implementation, because `A SECOND CALCULATOR AGREES WITH THE FIRST UNTIL THE DAY IT DOES NOT` — agreeing today is precisely its symptom. `EXISTENCE IS NOT WIRING`, so I spied the CALL.** ✅ **Reverted and GREEN again — `21 passed` — so both halves of the red-proof are on the record.**
+✅ **THE SILENT-DEFAULT DEFECT IS ASSERTED ABSENT BY NAME:** the spy proves `range_minutes == 30` **and `!= 15`** for the 30-minute variant. ★ **`A DEFAULT ARGUMENT IS A SILENT DECISION`, and `range_minutes: int = 15` would have chosen for a teacher who declined to.**
+✅ **AND THE ORDERING IS A MECHANISM, NOT A CLAIM** (`test_a_refusal_never_reaches_the_shared_calculator`): on a gapped window the legacy function — which does **not** check completeness and would return a confident narrower range — **is never reached.** `calls == []`, with a positive witness that the refusal itself fired.
+✅ **LEGACY OUTPUT UNCHANGED, IN THE STRONGEST FORM AVAILABLE:** `[MEASURED]` `git status --porcelain -- src/engine/indicators/core.py` → **EMPTY. The file is not modified at all**, so there is no behaviour to re-prove. ✅ **Adapter and legacy agree on `5`/`15`/`30`, against a THIRD anchor** — the value each fixture's shape dictates — because comparing the adapter only to the function it delegates to would be close to circular.
+
+### §2 — ✅ CORRECTION 2 (`§5-2`): THE FALSE MARKET CLAIM IS REMOVED
+`market_scope` was **`"US equity index futures, as demonstrated"`** — a futures-portability claim this campaign has never source-established, and which `AR-829 §5` listed as `UNMEASURED` **in the same commit that asserted it.** ✅ **NOW `"US equities / S&P 500 example, regular-session opening"`**, with the reason recorded at the field. 🛑 **No `MES`/`MNQ`/`MCL` fidelity claim appears anywhere in this work.** ★ **`A FIXTURE'S DESCRIPTIVE FIELD IS A CLAIM` — and that one would have travelled into every later reader's assumptions.**
+
+### §3 — ✅ CORRECTION 3 (`§5-3`): THE LOCALITY PAIR, BOTH HALVES OF ONE MUTATION
+**The SAME price (`102.10`, `+2.00` over the fixture's true extreme) applied twice:**
+- **INSIDE the window** (offset `10`) ⇒ **computed high MOVES to `102.10`**, and the derived width follows rather than going stale.
+- **AFTER the lock** (offset `15`) ⇒ **computed high STAYS `100.50`.**
+★★ **Neither half is evidence alone:** "the high moved" cannot distinguish a correct window from one reading every bar it is given, and "the high did not move" is satisfied by a function that ignores its input entirely. **The pair answering DIFFERENTLY is the proof.**
+
+### §4 — ✅ CORRECTION 4 (`§5-4`): THE TRADING-DAY BOUNDARY IS EXPLICIT AND REFUSES
+`[MEASURED, `core.py:533`]` the shared calculator **groups by CALENDAR DATE**. For a `09:30` window that grouping is a no-op — **which is exactly why reuse is safe here, and I am stating the dependency rather than relying on it silently.** ✅ **A window crossing local midnight now RAISES**, naming the convention it will not inherit. ⚖️ **It RAISES rather than returning a refusal state because it is a CONFIGURATION the adapter does not support, not a condition of the market data** — the same split as the untaught-variant guard. ✅ **POSITIVE WITNESS that the guard is specific, not blanket:** an ordinary `09:30` window with no bars refuses on the **later, data** branch (`INCOMPLETE_OPENING_WINDOW`) instead.
+
+### §5 — ✅ THE TWO PRODUCTION REDS: NAMES CORRECTED, PREDICATES BYTE-UNCHANGED (`R-736 §3`)
+🛑 **`test_no_executable_opening_range_adapter_exists_yet` HAD BECOME FALSE.** The executable adapter **does** exist and is proven by `21` controls; what is absent is the production BINDING. ✅ **RENAMED `test_no_production_binding_routes_to_the_opening_range_adapter_yet`**, stage corrected to `STEP 6`, message rewritten to say what is actually missing. ✅ **The second RED's NAME is still accurate** — no typed output contract IS reachable from the production binding — **so only its stage reference moved.**
+✅ **PROOF THE ASSERTIONS ARE UNTOUCHED, NOT A PROMISE:** `[MEASURED HERE]` `git diff -U0 … | Select-String '^[+-].*assert '` → **EMPTY.** **Not one `assert` line is added or removed.** ★ **`TOUCH THE MESSAGE, NEVER THE PREDICATE` — and the diff is what makes that auditable instead of trusted.**
+
+### §6 — ⚖️ `STEP 5` REPORTED, NOT CLAIMED (`R-736 §7` item 3)
+**`R-736` said most of the mechanism already exists and to report it rather than re-build it. INVENTORY, each with its evidence:**
+| complete-window obligation | state | evidence |
+|---|---|---|
+| typed `INCOMPLETE_OPENING_WINDOW` status + refusal shape (all numeric fields `None`) | ✅ EXISTS (STEP 3) | `opening_range_definition.py:62,79,229-250` |
+| **missing** observation refuses, and does **not** return a narrower range | ✅ BUILT + CONTROLLED | asserts the NUMBERS, plus a restored-fixture positive witness |
+| **duplicated** observation refuses | ✅ BUILT + CONTROLLED | no silent winner chosen |
+| **off-grid** timestamp refuses | ✅ BUILT + CONTROLLED | |
+| window **not expressible in whole bars** refuses | ✅ BUILT + CONTROLLED | `5m` window on `3m` bars |
+| **the unchecked legacy path is unreachable on a refusal** | ✅ BUILT + CONTROLLED | `calls == []`, with a positive witness |
+🛑 **WHAT I AM NOT CLAIMING:** **no production caller exercises any of it** (dormant by design through `STEP 5`), so this is capability, not production enforcement. ⚖️ **AND ONE PROPERTY I DERIVED RATHER THAN FIXTURED, LABELLED AS SUCH:** a caller MIS-DECLARING the bar interval falls out of the count check as a REFUSAL in both directions (declare `5m` for a `1m` feed ⇒ observed `15` vs expected `1`; declare `1m` for a `5m` feed ⇒ observed `3` vs expected `15`). **`[DERIVED from the count check, NOT separately fixtured]` — I am not calling that measured.** ⇒ **Whether `STEP 5` CLOSES on this inventory is the desk's ruling, not my declaration.**
+
+### §7 — ✅ ACCEPTANCE — ALL FOUR, RE-MEASURED AFTER THE FINAL EDIT
+```
+adapter suite               -> 21 passed in 0.25s; exit 0   [12 -> 21, +9 this closeout]
+1. discrimination instrument-> ALL 8 CONTROLS PASS; blast radius EXACTLY two; exit 0
+2. guards                   -> 72 passed in 14.39s; exit 0
+3. conformance group        -> 2 failed, 96 passed; exit 1
+                               membership = the TWO ordered REDs (one renamed). NO THIRD RED.
+4. TS parity (real tsx      -> flag=false byte-identical parity over 41 specs;
+   binary, shared tree)        flag=true 87 known/expected, 0 unexpected; exit 0
+```
+✅ **`[MEASURED]` PRODUCTION SURFACES UNCHANGED, ALL SIX — `git status --porcelain` EMPTY for:** `spec_family_bindings.py` · `family_meta_enforcement.py` · `spec_condition_compiler.py` · `spec-family-bindings.ts` · `indicators/core.py` · **and no `PRIMITIVE_RESOLVERS` or `ENFORCED_DISPATCH` entry exists.** ⇒ **`R-736 §3`'s STEPS 4-5 boundary held mechanically, not by intention.**
+⇒ ⚖️ **I DECLARE `STEP 4` COMPLETE** per `R-736 §7` item 2 — the adapter and the reuse/parity controls all pass. 🛑 **`STEP 4` COMPLETE IS NOT `STEP 6` STARTED, AND THE TWO ORDERED REDS ARE STILL RED ON PURPOSE.**
+
+### §8 — WHAT I DID NOT MEASURE, AND WHAT I DID NOT TOUCH
+🛑 **`UNMEASURED`:** the adapter against **REAL market bars** — every control uses constructed fixtures, and I am labelling that plainly for the second report running · the mis-declared-interval property (§6, derived) · any `STEP 6` surface: deterministic `5`/`15`/`30` expansion, candidate IDs, cache identity, production routing — **designed nowhere, built nowhere** · whether `STEP 5` closes.
+✅ **UNTOUCHED:** breakout trigger **`UNRESOLVED_SOURCE_AMBIGUITY`** · close-vs-wick confirmation · the other eight golden conditions · the second teacher's breakout/retest rules · futures portability · `test_cloud_backend.py` (desk-owned) · the `7` quarantined files (**re-fingerprinted before and after this commit**) · no video or strategy id in production code · the known-wrong census.
+⚖️ **Fan-in `3 / 4` on `R-736 §7`:** items (1) and (2) delivered, item (3) reported as an inventory for the desk to rule on, item (4) `STEP 6` correctly **HELD**. **This seat continues and is not handing off.**
+
 ## AR-829 · 2026-08-09 · ⚖️⚖️ **`STEP 4` IS AN HONEST PARTIAL AND I AM STOPPING ON THE SCOPE CALL I PRE-REGISTERED IN `AR-828 §2.5`.** ✅ **THE ADAPTER IS BUILT, COMPUTES CORRECTLY, AND IS RED-PROOFED AGAINST THE STUB THAT WOULD HAVE CROSSED THE FINISH LINE — `12` CONTROLS, ALL GREEN.** 🛑🛑★★★★★ **BUT WIRING IT TO PRODUCTION REQUIRES NAMING A DURATION THE TEACHER DID NOT NAME, AND I MEASURED THAT RATHER THAN INFERRED IT: THE GOLDEN BINDING CARRIES `parameters=None` AND ITS TAUGHT PROSE NAMES *THREE* WINDOWS.** ⇒ **THE TWO ORDERED REDS ARE STILL RED, ON PURPOSE, AND I AM NOT CLAIMING `STEP 4`.**
 
 **RULING:** `R-735 §6`. **SEAT:** same worker seat as `AR-828`, continuing — **this is NOT a handoff.** **HEAD at work start `cc2152d5`.** **ATTEMPT BUDGET: `STEP 4` `1 / 2`.**

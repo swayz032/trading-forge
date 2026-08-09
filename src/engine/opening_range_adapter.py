@@ -80,6 +80,9 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import polars as pl
+
+from src.engine.indicators.core import compute_opening_range_breakout
 from src.engine.opening_range_definition import (
     OpeningRangeDefinition,
     OpeningRangeState,
@@ -137,7 +140,87 @@ def _window_bounds(
         int(minute_text),
         tzinfo=zone,
     )
-    return start, start + timedelta(minutes=variant.duration_minutes)
+    lock = start + timedelta(minutes=variant.duration_minutes)
+
+    # ── R-736 §5-4: THE TRADING-DAY BOUNDARY STAYS EXPLICIT ──────────────────
+    # The shared calculator groups by CALENDAR DATE. For a window that stays
+    # inside one local day that grouping is a no-op, which is why reuse is safe
+    # here. A window crossing local midnight is a DIFFERENT day convention, and
+    # the ruling is explicit: unsupported conventions must REFUSE, never
+    # silently inherit the legacy calendar-date behaviour.
+    #
+    # This raises rather than returning a refusal state because it is a
+    # CONFIGURATION the adapter does not support, not a condition of the market
+    # data — the same split as the untaught-variant guard below.
+    if lock.astimezone(zone).date() != start.astimezone(zone).date():
+        raise ValueError(
+            f"the taught window {definition.session_start_local}+{variant.duration_minutes}m "
+            f"crosses local midnight in {definition.source_timezone}. That is a trading-day "
+            "convention this adapter does not support, and inheriting the shared calculator's "
+            "calendar-date grouping would silently answer a different question."
+        )
+    return start, lock
+
+
+# The fail-loud READ-OUT row (see `_aggregate_levels`). Its values are chosen so
+# that IF it ever leaked past the shared calculator's in-range mask, the result
+# would be catastrophically, visibly wrong rather than subtly off. A sentinel
+# that degrades quietly is worse than none.
+_READOUT_HIGH = 1e9
+_READOUT_LOW = -1e9
+
+
+def _aggregate_levels(
+    definition: OpeningRangeDefinition,
+    variant: OpeningRangeVariant,
+    in_window: Sequence[OpeningRangeBar],
+    start: datetime,
+    lock: datetime,
+) -> tuple[float, float]:
+    """Delegate the max/min aggregation to the ONE production calculator.
+
+    R-736 §5-1: this module must not be a SECOND CALCULATOR. `A SECOND
+    CALCULATOR AGREES WITH THE FIRST UNTIL THE DAY IT DOES NOT.` So the levels
+    are produced by `indicators.core.compute_opening_range_breakout`, the same
+    function the backtester uses — called with EVERY parameter explicit, never
+    on its defaults (`range_minutes: int = 15` is a silent duration selection,
+    and choosing for a teacher who declined to is the defect B1 exists to stop).
+
+    IT IS CALLED ONLY AFTER THIS MODULE'S TYPED VALIDATION HAS PASSED. That
+    ordering is the whole safety argument: the legacy function does not check
+    completeness, so on a gapped window it returns a confident narrower range.
+    By the time it runs here, membership, grid alignment, duplication and count
+    have already been proven, and the timezone has been resolved through the
+    taught IANA zone rather than assumed.
+
+    THE READ-OUT ROW. The shared calculator publishes locked levels ONLY on rows
+    at or after the lock, and every validated bar is by construction BEFORE it —
+    so a frame of in-window bars alone would come back all-null. One row stamped
+    at the lock instant is appended to read the answer out. It cannot influence
+    the aggregate: the calculator's in-range mask is `[start, lock)` and this row
+    sits exactly at `lock`. `test_readout_row_cannot_influence_the_levels` proves
+    that rather than asserting it.
+    """
+    zone = ZoneInfo(definition.source_timezone)
+
+    # Wall-clock in the TAUGHT zone. The shared calculator reads hour/minute off
+    # the timestamp, so the zone conversion must happen here, where the typed
+    # definition says which zone is meant.
+    timestamps = [bar.timestamp.astimezone(zone).replace(tzinfo=None) for bar in in_window]
+    highs = [bar.high for bar in in_window]
+    lows = [bar.low for bar in in_window]
+
+    timestamps.append(lock.astimezone(zone).replace(tzinfo=None))
+    highs.append(_READOUT_HIGH)
+    lows.append(_READOUT_LOW)
+
+    frame = pl.DataFrame({"ts_et": timestamps, "high": highs, "low": lows})
+    orh, orl, _or_range = compute_opening_range_breakout(
+        frame,
+        range_minutes=variant.duration_minutes,
+        session_start_et=definition.session_start_local,
+    )
+    return float(orh[-1]), float(orl[-1])
 
 
 def compute_opening_range_state(
@@ -225,11 +308,10 @@ def compute_opening_range_state(
             OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
         )
 
-    # ── COMPLETE — levels aggregated, width and midpoint DERIVED ─────────────
-    # `from_levels` is the only constructor that yields a usable state, and it
-    # computes width and midpoint itself. There is deliberately no path here
-    # that could supply them.
-    return OpeningRangeState.from_levels(
-        high=max(bar.high for bar in in_window),
-        low=min(bar.low for bar in in_window),
-    )
+    # ── COMPLETE — levels from the SHARED calculator, width/midpoint DERIVED ─
+    # The aggregation is delegated, not re-implemented (R-736 §5-1). Width and
+    # midpoint are then computed by `from_levels`, the only constructor that
+    # yields a usable state — there is deliberately no path here that could
+    # supply them.
+    high, low = _aggregate_levels(definition, variant, in_window, start, lock)
+    return OpeningRangeState.from_levels(high=high, low=low)
