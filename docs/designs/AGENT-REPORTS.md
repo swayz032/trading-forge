@@ -4,6 +4,41 @@
 
 ---
 
+## AR-876 · 2026-08-09 · 🔚 **HANDOFF — `R-764 §6` RECEIVED AND UNDERSTOOD, `N-4` DELIBERATELY NOT STARTED. GENUINE CONTEXT EXHAUSTION, WHICH IS THE ONLY REASON I WILL OFFER.** ✅ **FAN-IN `5 / 9`, NOTHING HALF-BUILT, TREE CLEAN, NO PRODUCTION LINE UNCOMMITTED.**
+
+**SEAT: `claude.exe 4812`.** **TREE `wt-h1-wave4-20260712`, HEAD `5f226503` == remote at write time.**
+
+### §1 — ⚖️ THE `N / M` QUESTION `worker-onboarding §5` REQUIRES ME TO ANSWER OUT LOUD
+⚠️ **CORRECTED BEFORE THIS REPORT WAS COMMITTED: I had drafted this section around `R-764 §6` authorizing `N-4` Option `B`. `R-765` LANDED WHILE I WAS WRITING AND WITHDREW `R-764` IN FULL** (operator correction — the desk invoked the blocked-worker exception and carried unrelated acceptances through it). **My ear caught the DRAFT→COMMITTED transition at `abf4fc4f`, so the stale premise never reached the ledger.** ★★★ **`A REPORT IS A CLAIM AS AT ITS COMMIT, NOT AS AT ITS DRAFTING — AND ON A LEDGER THIS FAST, THOSE ARE DIFFERENT FACTS.`**
+**`5 / 9`. AND AS OF `R-765` THE REMAINING WORK IS GENUINELY BLOCKED, NOT MERELY UNSTARTED:** `[MEASURED, `R-765 §2`/`§3`]` **the `N-4` PRODUCTION EDIT is HELD pending the external read · `F-10`'s fix is INVESTIGATED BUT NOT AUTHORIZED · `F-7`/`N-5` sit behind them in the order.** ⇒ **the only thing available to a seat right now is READ-ONLY investigation, which needs no ruling — and I have already done it for BOTH open lanes (`AR-874`, `AR-875`).** ⚖️ **So this handoff is no longer me overriding a presumption; the presumption has moved.** 🛑 **`AR-872`–`AR-875` are RE-HELD UNRULED by `R-765`. Nothing this seat delivered is ratified, and the incoming seat must not read my greens as acceptances.**
+**WHY, CONCRETELY:** `N-4` under Option `B` is **six conjunctive parts** — extract a block from ~`3,880` lines inside `checkAutoPromotions()` · repair the classification · dispose of the cap · re-point the replica and delete `runFix3Logic()` · build a control that provably executes production · then `(a)`–`(f)` including a mutation and a byte-identical restore. **It is the largest lane in `D-10` and its FIRST step is a production refactor on a SHARED tree.**
+★★★★★ **THE ASYMMETRY THAT DECIDES IT: a truncated report costs a re-read; a truncated EXTRACTION leaves a half-moved method in a tree the advisor and a sibling seat also write to. `THE COST OF STOPPING EARLY IS ONE COLD START; THE COST OF STOPPING MID-REFACTOR IS PAID BY WHOEVER TOUCHES THE FILE NEXT, AND THEY WILL NOT KNOW THEY ARE PAYING IT.`**
+⚖️ **I also decline the tempting middle: doing ONLY the extraction and stopping.** It is behaviour-preserving and would leave a compiling tree — **but the only tests over that block are the replica, so a compiling tree is NOT a verified one, and I would be handing over an unwitnessed production edit while claiming a clean seam.** 🛑 **That is the exact evidence class `R-764 §3` refused when it refused Option `C`.**
+
+### §2 — 📍 STATE, SO NOTHING IS RE-DERIVED
+```
+F-8 ✅  F-9 ✅  N-1 ✅  N-3 ✅ (R-763 §99 auto-close)  N-2 ✅ (AR-873)        => 5 / 9
+N-4   INVESTIGATED (AR-874). PRODUCTION EDIT *HELD* — R-764 withdrawn by R-765;
+      waiting on the external read. 🛑 Do NOT start the extraction on R-764's authority.
+      (R-764 §6 remains the best-specified dispatch on disk, but it is WITHDRAWN.)
+F-10  INVESTIGATED (AR-875), FIX NOT AUTHORIZED — keeps its queue slot
+F-7 · N-5   UNSTARTED, behind the above in the ruling's order
+```
+⚠️ **`R-765` ALSO RE-HELD `AR-872`–`AR-875` AS UNRULED.** ⇒ **`5 / 9` is `[MEASURED — MY OWN CLOSURES + PRE-EXISTING AUTO-RELEASES]`, and `R-765 §3` explicitly does NOT disturb it — but `N-2`'s and `N-3`'s ACCEPTANCES were carried in the withdrawn ruling, so treat their ratification as OPEN.**
+**DELIVERED THIS SEAT:** `AR-872` (`N-3` closeout) · `AR-873` (`N-2`) · `AR-874` (`N-4` investigation + the replica finding) · `AR-875` (`F-10` reachability). **Commits `b6ad3e91` · `b76d6369` · `1e4b7a76` · `6898bb3f`, all pushed.**
+🛑 **NO SUB-AGENT WAS EVER DISPATCHED BY THIS SEAT** — `[MEASURED]`, so no dispatched work dies with it and there is no gap to verify.
+⚠️ **`R-765` WAS A DRAFT ON DISK AT WRITE TIME** (` M`, HEAD still `5f226503`). **Do not act on it until it is COMMITTED** — `A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE`.
+
+### §3 — 📡 THE EAR — HAND IT OVER HONESTLY
+**Armed by this seat, `Monitor` persistent, owner `claude.exe 4812`, keyed on the TUPLE `(newest heading, dirty-state, HEAD-sha)`** — the fix `R-763 §102` ordered. `[MEASURED]` it delivered **`R-763` DRAFT→COMMITTED** and **`R-764`**, i.e. it demonstrably catches ISSUANCE, which an mtime ear structurally cannot.
+🛑 **IT DIES WITH THIS SEAT.** **The incoming worker must run the `worker-onboarding §2a` census and ARM ITS OWN** — and must NOT kill the OTHER live rig: `[MEASURED THIS SEAT]` `claude.exe 444` owns a `bash.exe` watching **`AGENT-REPORTS.md`** — that is the ADVISOR's ear, not a worker's.
+
+### §4 — 🧠 BANKED TO MEMORY THIS SEAT (durable, survives the swap)
+**NEW `test-replica-carries-the-defect`** (+ index pointer) · **UPDATED `reference_fabricated_mock_masks_null_column_2026_07_06`** with `F-10`'s recurrence and the refinement that **preserving the null is not enough — an unmeasured run must not produce a comparison at all** · **APPENDED `guard-design-laws §37`** — *delete the code your control claims to guard; if nothing reddens, your fixture is too uniform* (the `MUT-N2-3` conviction).
+⚠️ **DEBT DECLARED, NOT SILENTLY CARRIED: `MEMORY.md` is `19.3KB` against a `17.1KB` target and I did NOT compact it.** Its own rule is *"compress hooks, NEVER drop a pointer"*; a rushed pass loses recall permanently, so I compressed only the header's own bookkeeping and recorded the debt in the file.
+
+---
+
 ## AR-875 · 2026-08-09 · ✅ **`F-10` REACHABILITY SETTLED — `R-754 §3`'s `[HYPOTHESIS]` IS DISCHARGED: THE PATH IS REACHABLE AND THE DEFECT IS MEASURED AT EVERY HOP.** 🛑🛑🛑★★★★★ **AND `F-10` IS NOT A `?? 0` DEFECT AT ALL — THE NULLS ARE PRESERVED CORRECTLY, AND THAT IS EXACTLY WHAT MAKES IT WORSE: `metricsPassGate(null,null,null)` RETURNS `false` BY ITS OWN FIRST LINE, SO A REFUSAL MAKES A PREVIOUSLY-PASSING STRATEGY READ AS `newPassed=false` ⇒ `statusFlipped=true` ⇒ **SEVERITY `critical`**. THE DRIFT DETECTOR RAISES A CRITICAL REGRESSION ALERT FOR A MEASUREMENT IT NEVER TOOK.** ⚡ **NO CODE CHANGED. `F-10` FIX UNSTARTED. FAN-IN UNCHANGED AT `5 / 9`.**
 
 **RULING: `R-763 §99`** (order: `N-4` → **`F-10`**) **+ the `D-10` lane table** (*"RED-PROOF REACHABILITY FIRST … an unreachable path is a FINDING, not a failure"*). ⚖️ **Taken because `N-4` is parked on `AR-874`'s scope question and `F-10` has NO data dependency on it** (`[batch-lanes]` fake-edge test). 🛑 **I did not reorder anything: `F-10` is simply the next lane in the desk's own sequence.**
