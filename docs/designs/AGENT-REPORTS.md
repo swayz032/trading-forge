@@ -4,6 +4,130 @@
 
 ---
 
+## AR-893 · 2026-08-09 · ✅ **LANE `G-1` DELIVERED — `86fd3192` + `4638e212`. THE RATCHET EXISTS: A NEW `runBacktest()` CALLER NOW REDDENS THE BUILD UNTIL ITS REFUSAL DISPOSITION IS REGISTERED.** ⚡ **ALL SIX `R-772 §6` ARMS EXECUTED — NONE "COVERED BY" ANOTHER — PLUS THREE I ADDED, INCLUDING THE ONE THAT MATTERS MOST: THE SCANNER FINDING A **REAL NEW CALL SITE IN REAL SOURCE**, NOT AN IDENTITY I HANDED THE COMPARATOR.** ✅ **AND ALL FIVE `R-771 §5` ITEMS RE-RUN AT THE GUARD HEAD — `5 / 5` NOW, ITEM `1` INCLUDED FOR THE FIRST TIME.** 🛑 **A MUTATION ARM CONVICTED MY OWN FIXTURE AGAIN — A `.replace()` THAT NEVER MATCHED — AND I REPORT IT RATHER THAN QUIETLY FIXING IT.** ⚠️ **I ALSO SURFACE, AND DO NOT REPAIR, THREE CALL SITES THAT DISCARD A REFUSAL.**
+
+**TASK `R-772 §5`. SEAT `claude.exe 23140`. TREE `wt-h1-wave4-20260712`, HEAD `4638e212`.** **ATTEMPT BUDGET `0 / 2` — UNSPENT** (the fixture defect in `§5` was caught by my own arm before any claim, not a failed attempt). **FAN-IN `1 / 1` lane + `5 / 5` acceptance items.** 🛑 **I DO NOT SEAL.**
+
+### §1 — ⚙️ THE MECHANISM I CHOSE, AND WHY — `R-772 §5` REQUIRED ME TO SAY WHICH AND WHY
+✅ **AST, via `typescript@5.9.3` — `[MEASURED HERE]` already resolved, NO new dependency, as the ruling itself verified.**
+⚖️ **The decision is forced by clause `B`, not by taste:** the identity must be **`file + enclosing production function + invocation identity` with NO LINE NUMBERS**, and must survive a pure reformat. **A regex cannot name the enclosing function** — it would have to key on an offset or a nearby line, **which is line-pinning wearing a different name, exactly what `B` forbids.**
+⭐ **AND THE AST REMOVES THREE FALSE POSITIVES BY CONSTRUCTION RATHER THAN BY FILTERING** — the `export async function runBacktest` DEFINITION (a declaration, not a call), the **6 doc-comment mentions**, and any occurrence inside a string literal. `[MEASURED, AR-891 §3]` **a text scan of the same tree returns `21` raw hits; the AST returns exactly the `14` calls.** ★★★ **`THE DIFFERENCE BETWEEN 21 AND 14 IS ENTIRELY COMMENTS AND A DECLARATION — A GREP-BASED GUARD WOULD HAVE HAD TO HAND-EXCLUDE SEVEN THINGS, AND EVERY HAND-EXCLUSION IS A FUTURE FALSE GREEN.`**
+
+### §2 — ✅ THE IDENTITY SCHEME AND THE FROZEN REGISTRY (`86fd3192`, the FIRST OBSERVABLE, committed before any assertion logic as ordered)
+```
+IDENTITY:  file :: enclosing-named-function # ordinal          🛑 NO LINE NUMBERS
+  fn       nearest ENCLOSING NAMED function/method. A callback inside a named
+           function is attributed to that function — the boundary a reviewer owns.
+           An anonymous handler at module scope is named by the registration that
+           installed it: `backtestRoutes.post(/)`, which beat `<module-scope>` for
+           both precision and stability (I changed the walker when I saw it).
+  ordinal  source-order index among guarded calls IN THAT SAME function. Only
+           critic-optimizer repeats (2 functions x 2 calls).
+THE 14, AS SCANNED:
+  carter-actions.ts::runBacktestHandler#0            routes/backtests.ts::backtestRoutes.post(/)#0
+  agent-service.ts::runStrategy#0                    agent-service.ts::runStrategyFromDSL#0
+  agent-service.ts::runClassStrategy#0               conveyor-service.ts::runCandidateBacktestConveyor#0
+  critic.ts::replayCandidatesAsync#0 / #1            critic.ts::manualReplayCandidates#0 / #1
+  evolution-service.ts::evolveStrategy#0             lifecycle-service.ts::runEvidenceAutoBacktestEnqueue#0
+  matrix-backtest-service.ts::runNext#0              shadow-rerun-service.ts::rerunOneStrategy#0
+DISPOSITIONS (clause E — every entry EXPLICIT, each with cited evidence):
+  HANDLES_REFUSAL 10 · DISCARDS 3 · PROPAGATES 1
+DETERMINISM: two scans of an unchanged tree are byte-identical [MEASURED HERE]
+```
+⭐⭐ **AN INDEPENDENT CROSS-CHECK I DID NOT ENGINEER, AND ITS EXACT LIMIT:** `[MEASURED HERE]` **`backtest-refusal.ts:9` — written weeks ago — states *"Ten of the fourteen production `runBacktest()` call sites consume the result"*. **I derived `10 HANDLES_REFUSAL` from the executable lines without reference to that comment.** ⇒ ✅ **the CARDINALITY agrees and the residual four have a coherent account** (1 propagates status only and never touches metrics; 3 are fire-and-forget). 🛑 **BUT THE COMMENT DOES NOT ENUMERATE ITS TEN, so `[UNPROVEN]` that its ten and my ten are the SAME ten members.** ★★★★★ **`[i-measured]`: TWO TENS AGREEING IS A CARDINALITY MATCH, NOT A MEMBERSHIP MATCH — AND THIS CAMPAIGN'S WHOLE ITEM `4` EXISTS BECAUSE THOSE ARE DIFFERENT CLAIMS. I will not upgrade my own evidence by borrowing a docstring's number.**
+
+### §3 — ⚡ THE ARMS — ALL SIX PRE-REGISTERED, EXECUTED SEPARATELY, PLUS THREE MORE
+```
+[MEASURED HERE] npx vitest run g1-backtest-caller-disposition-guard.test.ts -> 16 passed (16)
+                stdout: "[G-1 arm 1] OBSERVED COUNT = 14"     <- stated, not implied (§6-1)
+1 POSITIVE CONTROL   real tree, unmodified          GREEN · observed EXACTLY 14 · 0 violations
+                     + a positive witness that the scan root is real production source
+                     + clause E asserted: 0 undispositioned entries, every one has evidence
+2 FAKE 15th SITE     synthetic caller in the INPUT  RED · names it · "no default disposition"
+3 DELETION           drop one approved caller       RED · names the caller that vanished
+4 SUBSTITUTION       rename one, COUNT STILL 14     RED · asserted length===14 first, so the
+                     arm proves clause A: a cardinality guard passes this and mine does not
+5 EMPTY SCAN         zero observed                  RED, as its OWN named arm (§4)
+                     + the vacuity hole: EMPTY vs EMPTY "matches" -> still RED, both reasons
+                     + "zero unknown callers" and "zero callers" give DIFFERENT verdicts
+6 REFORMAT           40 blank lines + a blank after every `{`, on a SCRATCH COPY   GREEN
+                     + NEGATIVE CONTROL: renaming the enclosing function DOES redden
+--- three I added, because the six above share one blind spot ---
+2b END-TO-END        a REAL new .ts file with a REAL runBacktest call, written to a scratch
+                     tree and found BY THE SCANNER FROM SOURCE TEXT          RED · names it
+2c NEGATIVE CONTROL  a new file that does NOT call runBacktest      -> observed []
+2d NEGATIVE CONTROL  a doc-comment + string-literal mention only    -> observed []
+🛑 NO PRODUCTION FILE WAS EDITED BY ANY ARM. Scratch dirs only, removed in `finally`.
+[MEASURED] git status --porcelain src/ -> only the sibling's test_synthetic_market_simulator.py
+```
+⭐⭐⭐ **WHY `2b` EXISTS AND WHY I THINK IT IS THE MOST IMPORTANT ARM HERE:** arms `2`–`5` as pre-registered feed identities **into the comparator**. That proves the COMPARATOR. **It does not prove the SCANNER would ever SEE a real new caller** — and a scanner that silently stopped matching would make every one of those arms still pass. ★★★★★ **`A CONTROL THAT HANDS THE COMPARATOR ITS ANSWER IS TESTING THE COMPARATOR, NOT THE GUARD. THE ARM THAT COUNTS IS THE ONE WHERE THE INSTRUMENT HAS TO GO AND FIND THE EVENT ITSELF.`** ⚖️ **This is `[main-spy-both-arms]` one layer out, and `R-772 §4` was reaching for the same thing from the other side.**
+
+### §4 — 🛑 THE NAMING DECISION I MADE DELIBERATELY, BECAUSE IT WAS A TRAP
+**The guard is `g1-backtest-caller-disposition-guard.test.ts` — NOT `d10-g1-…`.** `[MEASURED HERE]` **the D-10 acceptance population is `find src -name 'd10-*.test.ts'` + shadow-rerun, and `R-771 §6` pre-registered *"DO NOT SEAL IF the population size does not match `8`"*.** ⇒ **a `d10-` prefix would have silently moved a pre-registered population from `8` to `9` and auto-failed the seal.**
+✅ `[MEASURED HERE, after the commit]` **population re-asserted: still `8`.**
+★★★★★ **`A NAMING CONVENTION THAT FEEDS A GLOB IS A POPULATION DEFINITION. RENAMING A FILE INTO A PRE-REGISTERED SET IS A GOALPOST MOVE EVEN WHEN NOBODY INTENDED ONE.`** ⚖️ **Whether `G-1` SHOULD join the D-10 population is a real question and it is the desk's, after the seal — I flag it rather than deciding it by choosing a filename.**
+
+### §5 — 🛑 A MUTATION ARM CONVICTED MY OWN FIXTURE, FOR THE SECOND TIME THIS CAMPAIGN
+**Arm `6`'s negative control first reported the scanner as broken: `expected [ 'runNext' ] to not include 'runNext'`.** ⚖️ **The scanner was fine. My mutation was `original.replace("async runNext(", …)` and the real declaration is `async function runNext(`** — **the search string never matched, `.replace()` silently returned the ORIGINAL text, and my "semantic change" was a no-op.**
+✅ **REPAIR, and it is the durable half:** the arm now **asserts `expect(mutated).not.toEqual(original)` BEFORE writing the file**, so an unapplied mutation can never again be mistaken for a guard that failed to notice.
+★★★★★ **`A MUTATION CONTROL OWES PROOF THAT IT MUTATED. AN UNAPPLIED `.replace()` AND A BLIND GUARD PRODUCE THE IDENTICAL RED, AND THE FIRST ONE ACCUSES INNOCENT CODE.`** ⭐ **`AR-889 §3` was the same law in the green direction (a non-biting mutation); this is it in the RED direction. Both are the fixture reporting on itself.** ⚠️ **A surprising result accuses the instrument first — one `grep -n 'runNext'` beat three hypotheses about the AST walker.**
+
+### §6 — ⚠️ WHAT THE REGISTRY MADE VISIBLE — REPORTED, **NOT** REPAIRED
+🛑 **THREE of the `14` do not observe a refusal at all, and clause `E` forced me to write that down instead of leaving it implicit:**
+```
+critic-optimizer-service.ts::replayCandidatesAsync#1   (:2697)  DISCARDS
+critic-optimizer-service.ts::manualReplayCandidates#1  (:3208)  DISCARDS
+routes/backtests.ts::backtestRoutes.post(/)#0          (:255)   DISCARDS
+```
+⚖️ **The two critic entries are the sharper ones: they launch CHILD backtests fire-and-forget with only a `.catch()`. A REFUSAL IS A RESOLVED PROMISE, NOT A REJECTION** ⇒ **a refused child run is invisible at those two sites, while their SIBLING calls in the very same two functions DO classify via `classifyReplayOutcome`.** ⚖️ **The route entry is materially different and I do not lump them: its outcome is observed later from the DB row via `GET /api/backtests/:id`, so "discarded here" is not "lost".**
+🛑 **NOT REPAIRED: `R-772 §5` forbids production change in this lane, and clause `E` explicitly says dispositions need not agree.** ⭐ **This is the guard earning its keep on day one: the asymmetry was always there and nothing named it until every caller was forced to declare.** **Registered for the desk.**
+
+### §7 — ✅ `R-772 §7` — ALL FIVE `R-771 §5` ITEMS RE-RUN AT THE GUARD HEAD `4638e212`
+```
+[MEASURED HERE, all of it, whole outputs read]
+1 disposition guard + fake 15th   ✅ 16 passed (16) · OBSERVED COUNT = 14      <- MET, first time
+2 D-10 controls, 8 members        ✅ size ASSERTED == 8 · 8 files · 133 passed · exit 0
+3 Python focused acceptance       ✅ 65 passed · exit 0
+4 103-member FAILURE MEMBERSHIP   ✅ preflight 103/103 resolved, 0 unresolved
+                                     33 failed · 2324 passed · 3 skipped · 2 xfailed
+                                     NEW 0 / GONE 0 · EXACT MEMBERSHIP MATCH: True
+                                     both ordered 6B REDs STILL RED, by name
+5 tampered-comparison control     ✅ positive joins · rename BITES · drop BITES · inject BITES
+npx tsc --noEmit                  ✅ TSC_EXIT=0 (exit code, not a truncated log, is the signal)
+```
+⚖️ **I re-ran item `4` even though `G-1` is test-only and the rerun is arguably redundant — `R-772 §7` ordered exactly that, and `129` seconds is the cheapest possible answer to *"was the gate weaker than advertised?"***
+
+### §8 — ⚖️ AGAINST `R-772 §6`'s "DO NOT ACCEPT IF" LIST, AND `R-771 §6`'s SEAL CRITERIA
+```
+R-772 §6 DO-NOT-ACCEPT:
+  an arm reported as "covered by" rather than EXECUTED   ✅ none — 6 pre-registered + 3 added,
+                                                            each its own executed test
+  the guard's green does not state the observed count    ✅ stated: OBSERVED COUNT = 14
+  arm 2's failure does not identify the fake caller      ✅ names it + "no default disposition"
+  arm 6 reddens                                          ✅ arm 6 is GREEN
+R-771 §6 SEAL CRITERIA (unchanged, as §7 insists):
+  a all 5 items RUN, none skipped/reduced                ✅ NOW MET — 5/5
+  b 8-member population GREEN, size asserted             ✅ MET
+  c failing members diffed by MEMBERSHIP, b11 stated     ✅ MET (AR-892 §6; unchanged here)
+  d FAKE 15th control BITES · tamper control BITES       ✅ BOTH MET — the first for the first time
+  e no new production defect surfaced by the run         ⚖️ NO NEW DEFECT. One PRE-EXISTING
+                                                            asymmetry SURFACED (§6) — it is not
+                                                            new, and I flag rather than score it
+```
+🛑 **I DO NOT DECLARE THE SEAL MET.** `[green-check]` / `doer ≠ grader`: **I built `G-1`, so I am the last party entitled to certify that it discharges item `1`.** ⚖️ **`§8-e` is the one clause I will not self-score, and I say so rather than quietly choosing the reading that seals.**
+
+### §9 — ⚖️ WHAT I DID NOT MEASURE
+🛑 **NO full-repo `vitest`** — the guard, the `8`, and `b11-b12` separately (`AR-892 §6`). Other TS consumers `[UNMEASURED]`.
+🛑 **THE SCANNER'S SCAN ROOT IS `src/`.** A caller added OUTSIDE `src/` (e.g. a new top-level `scripts/` entry point) would not be observed. **Stated as a real boundary, not hidden:** the `14` all live under `src/`, and widening the root is a change I was not authorized to make.
+🛑 **`ordinal` IS ORDER-SENSITIVE WITHIN A FUNCTION.** Reordering two guarded calls inside one function swaps their identities and reddens. **I judge that CORRECT (the boundaries genuinely moved) but it is a behaviour, not an accident, and a reviewer should know it.**
+🛑 **NO live DB, NO production data, NO `runtime-production`.** `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.
+🛑 **NOTHING GRADED BY ME.** ✅ **NO sub-agent dispatched — nothing owed back.** ✅ **NO mutation left planted; every arm cleans up in `finally`, verified by `git status`.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` on `G-1` and on the `5 / 5` rerun.** **NEXT SMALLEST TASK: the desk's seal decision on `R-771 §6` + `R-772 §6` — and, separately from the seal, whether the three `DISCARDS` sites in `§6` deserve a lane.** **I am not choosing either.**
+
+---
+
+
 ## AR-892 · 2026-08-09 · ✅ **`R-771 §5` DELIVERED — `4 / 5` ITEMS RUN AND GREEN. THE `103`-MEMBER JOIN IS AN **EXACT MEMBERSHIP MATCH** (`NEW 0 / GONE 0`), AND THE TAMPERED-COMPARISON CONTROL **BITES ON THREE INDEPENDENT ARMS**.** 🛑 **ITEM `1` IS `UNMET` AND CANNOT BE RUN: ITS GUARD DOES NOT EXIST.** ⚖️ **SO BY `R-771 §6`'s OWN PRE-REGISTERED CRITERIA, `(a)` AND HALF OF `(d)` ARE UNMET — I REPORT THAT AS A RESULT, I DO NOT SEAL, AND I DO NOT SHADE IT.** ⭐ **`b11-b12`'s MEMBERSHIP QUESTION IS ANSWERED BY MEASUREMENT AND THE ANSWER IS CATEGORICAL: IT **CANNOT** BE A MEMBER — THE FROZEN POPULATION IS `103 / 103` PYTHON.**
 
 **TASK `R-771 §5`. SEAT `claude.exe 23140`. TREE `wt-h1-wave4-20260712`, HEAD `a7bbbf2d`.** **ATTEMPT BUDGET `0 / 2`, UNSPENT.** **FAN-IN `4 / 5` RUN — and the fifth is BLOCKED, not unstarted (`worker-onboarding §5`), so this is a delivery and NOT a handoff.** 🛑 **I DO NOT SEAL. `R-771 §5`: the seal is a separate desk act.**
