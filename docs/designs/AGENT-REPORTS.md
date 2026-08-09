@@ -4,6 +4,40 @@
 
 ---
 
+## AR-849 · 2026-08-09 · 🔚 **HANDOFF — GENUINE CONTEXT EXHAUSTION, AND I AM STATING THE FAN-IN RATHER THAN THE ACHIEVEMENT.** **`R-749 §4`: `1 / 4` CLOSED. THE REMAINING THREE ARE UNSTARTED, NOT BLOCKED — WHICH IS NORMALLY THE REASON TO STAY, AND THE ONLY THING OVERRIDING IT IS THAT I CANNOT FINISH THEM WELL.** ✅ **EVERYTHING DELIVERED IS COMMITTED, PUSHED AND REMOTE-VERIFIED; NOTHING IS STRANDED IN A WORKING TREE.**
+
+**SEAT:** the cold seat seated at `AR-840`, ending here. **PRODUCTION BRANCH TIP: `cace8ead27bdc12ebd6eda4c877e55f397999608`, local == remote `[MEASURED HERE]`.** **ATTEMPT BUDGET `0 / 2` — no attempt was ever spent.**
+
+### §1 — ✅ POSITION: FOUR COMMITS, ALL PUSHED AND REMOTE-VERIFIED
+| SHA | what |
+|---|---|
+| `f788c64b` | **WIP CHECKPOINT**, branch `wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint` — the `6B` state channel + carrier, **NOT merged, NOT a candidate** |
+| `2739df19` | **TRIGGER SAFETY** — refusal + load-bearing eligibility + backtester gate; seven phantom shorts → `0` |
+| `36117eac` | **BLAST RADIUS** — pinned `11`-spec corpus, `94` conditions, `1` affected, `0` unmeasured |
+| `cace8ead` | **INVERSION CLOSED** (`R-749 §4-4`) — a clearer teacher no longer compiles onto a blind primitive |
+
+### §2 — 🛑 FAN-IN, STATED AS `N / M` AS THE PROTOCOL REQUIRES
+**`R-749 §4` = `1 / 4`.** ✅ `§4-4` closed (`cace8ead`). 🛑 **`§4-1` trace refusal payload · `§4-2` executed backtester spies · `§4-3` richer per-condition corpus fields — ALL UNSTARTED.**
+⚖️ **AND I AM NOT DRESSING THAT UP.** `worker-execution §10` is explicit that unstarted is the reason to STAY, and `AR-521` was overruled for handing off at `1 / 4` with its process alive. **The difference here is the one stated exception: I am out of context, not out of lanes.** ★ **Starting `§4-1` and being truncated mid-edit would leave a half-wired trace and a dirty shared tree — the partial that reads as complete, which is this campaign's most-convicted shape.**
+
+### §3 — ⏭️ WHAT THE NEXT SEAT PICKS UP, IN ORDER, WITHOUT RE-DERIVING ANYTHING
+1. **`R-749 §4-1`** — trace carries `NO_MARKET_SETUP` vs `EXECUTION_REFUSED` plus `execution_status · condition_id · source evidence · disposition · reason · ambiguity · trigger_bound=False · entry_eligible=False`. **Real per-condition arrays stay available.** The refusal record already exists: `SpecConditionStrategy.execution_refusal()`.
+2. **`R-749 §4-2`** — executed spies proving `trade simulator = 0 · performance calculator = 0 · qualification = 0` on a refusal, neighbour as positive control. 🛑 **REPORT IT AS A REGRESSION GUARD, NOT A CATCH** — today's `if/elif` in `backtester.py:~8350` already makes it structurally true (`R-749 §4-2` says so explicitly; fourth instance of that law).
+3. **`R-749 §4-3`** — extend `docs/replay-results/h1-battery/trigger-safety-blast-radius.json` with source text · prior type+primitive · final primitive · missing-capability · entry-eligibility effect. **Population and membership are already executed and pinned by blob `23f30eb0`; only the field set is short.**
+4. **THEN, and only after `R-748 §3`'s HOLD is lifted by the independent read:** resume the state channel from `f788c64b` and **reconcile it against the eligibility boundary that now exists** — it did not when that checkpoint was taken. 🛑 **Do not replay the checkpoint as-is.**
+
+### §4 — ⚠️ THINGS THAT WILL BITE THE NEXT SEAT IF NOBODY SAYS THEM
+- 🛑 **THE TWO `6B` REDS ARE SUPPOSED TO BE RED.** Every run reports `2 failed` — `test_no_production_binding_routes_to_the_opening_range_adapter_yet` and `test_no_typed_opening_range_output_contract_exists_in_production`. **They turn green only when the state channel lands. Do not "fix" them.**
+- ⚠️ **THE MANIFEST GUARD FIRES ON EVERY NEW TEST FILE that imports `spec_family_bindings`** (it fired twice on me, correctly). **Regenerate with `_regression_population(_SCAN_ROOT, _CLOSURE_TARGETS)` — the instrument's OWN derivation — never by hand.** Population is now `103`.
+- ⚠️ **A SIBLING SEAT'S `src/engine/tests/test_synthetic_market_simulator.py` IS DIRTY IN THE SHARED TREE AND IS NOT MINE.** **Every commit I made used `git commit -o` with named paths; it never rode along. Keep it that way.**
+- ⚠️ **TWO WORKTREES ARE LIVE:** `wt-pre6b` (detached `8a5e0085`, the before/after instrument) and `wt-6b-wip` (the checkpoint). ✅ **`wt-pre6b` is NO LONGER load-bearing** — the six-step mutation reproduces the defect from inside the committed suite — **so it can be removed.**
+- ⚠️ **`git stash` IS BANNED HERE** (`refs/stash` is shared across worktrees). Everything above was moved by file copy + `git hash-object` verification, never by stash.
+
+### §5 — ⏳ TWO THINGS OWED THAT ARE NOT MINE TO DO
+⏳ **`accuracy-validator`, adversarial, on the trigger-safety delivery** — receipt `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md`. **`doer ≠ grader`: I built it and I take no part in grading it.** ★ **It is a LOCAL agent one authorization away, not an unowned prerequisite** — the operator's word is the whole blocker.
+⏳ **`R-748 §3`'s HOLD** for the independent read of the money-path enforcement, before the state channel resumes.
+✅ **A fresh worker session is needed.**
+
 ## AR-848 · 2026-08-09 · ✅✅★★★★★ **`R-749 §4-4` IS CLOSED: THE INVERSION IS GONE. ALL FOUR CLEARER-TEACHER CASES NOW REFUSE WITH `ENGINE_PRIMITIVE_MISSING` AND `primitive=None` — `compute_structure_state` APPEARS NOWHERE IN THE TABLE.** ⭐⭐ **THE DESK'S FINDING IS ACCEPTED WITHOUT ARGUMENT AND ITS DIAGNOSIS IS EXACT: MY STAND-DOWN BRANCH WAS A PASS-THROUGH TO THE DEFECT.** 🛑 **AND I FOUND A SECOND-ORDER DEFECT THE FIX CREATED IN MY OWN INSTRUMENT — THE BLAST-RADIUS DERIVATION KEYED ON `ambiguous`, WHICH HAD STOPPED MEANING "AFFECTED".** 🛑 **THREE `R-749 §4` CLOSEOUTS REMAIN AND I NAME THEM.**
 
 **RULING:** `R-749 §4-4` (closed here) · `§4-1`/`§4-2`/`§4-3` (owed). **HEAD `cb2d2b65` at write; this commit follows.** **ATTEMPT BUDGET `0 / 2`.**
