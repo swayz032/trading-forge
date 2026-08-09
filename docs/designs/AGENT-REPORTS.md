@@ -4,6 +4,88 @@
 
 ---
 
+## AR-823 · 2026-08-09 · ✅ **THE CORRECTED PERMANENT RED IS BUILT AND IT ENTERS AT THE FROZEN EXTRACTION JSON.** `3 failed · 7 passed` — **THE EXACT FAILURE MEMBERSHIP `R-728 §4` SPECIFIED.** ⭐⭐ **AND THE CENSUS JOIN CAME BACK DISAGREEING — I CHASED IT TO A NAMED COMMIT AND TURNED IT INTO A BYTE-IDENTICAL CONTROL RATHER THAN A COMPARISON I COULD HAVE QUIETLY WEAKENED.** ✅ **THE GENEROSITY IS GONE AND ITS REMOVAL IS ITSELF RED-PROOFED.** 🛑 **AND A DIRTY FILE IN THE SHARED TREE IS NOT MINE AND IS NOT IN THIS COMMIT.**
+
+**RULING:** `R-728 §6`. **CONTRACT SOURCE:** `EXTERNAL-READ-2026-08-09-STEP2-STARTS-TOO-LATE.md`, read at the file. **`STEP 3` REMAINS HELD — no production code touched** (`git diff --name-only 8c25b5e0..HEAD -- src/` returns **only** the test file).
+
+### §1 — ✅ THE CHAIN NOW ENTERS ONE LEVEL EARLIER, AND IT IS THE PRODUCTION CHAIN
+`[MEASURED HERE]` the test drives, from the frozen extraction JSON:
+```
+tier-a-extraction-provenance/st5e-YJRfKc__s0.json   sha256 7868524b…
+  -> produce_spec_artifact(strat, video=stub, certificate=None, transcript_chars=0)
+  -> produced condition graph (10 entry + 1 invalidation)
+  -> compile_binding_plan(art["spec"])
+  -> WAIT_STRUCTURE  ·  structure_engine.compute_structure_state
+```
+★★★ **These are the SAME public entry points and the SAME arguments the census generator itself uses (`tier_a_compile_census.py:284-289`) — so this is the production path, not a private re-implementation of it.** ⇒ **The RED now proves production ITSELF turns preserved opening-range prose into the wrong binding.** ✅ **The census is demoted to a comparison oracle and is never the production input.**
+✅ **The opening-range condition is selected BY ITS TAUGHT PROSE, never by `type == WAIT_STRUCTURE` or a frozen condition id** — selecting it by type would assume the very classification this file exists to convict.
+
+### §2 — ⭐⭐ THE CENSUS DISAGREED, AND THAT IS THE PART WORTH READING
+`[MEASURED HERE]` the reproduced `spec_hash` is **`b109c7da…`**; the census records **`953105da…`**. **They do not match.**
+🛑 **I did not drop the hash join and compare fields instead** — that is the weakening available at exactly this moment. `git log be194136..HEAD -- src/engine/extraction/spec_producer.py` names **four** commits landing after the census froze, one of them **`1a9d1a1f`** — *"emit explicit §0 `load_bearing=True` on every produced condition"*.
+✅ **REMOVING THAT ONE FIELD REPRODUCES THE CENSUS HASH BYTE-FOR-BYTE: `953105dab1ff9a4a5e82364c4c64f8f92ea3d7eccb00b3db0a3a7602c53ea405`.** ⇒ **The divergence is fully explained by one named commit and by NOTHING ELSE, and the control is now a byte-identity join instead of a field comparison.**
+★★★★★ **`A DISAGREEMENT YOU EXPLAIN TO THE BYTE IS A STRONGER CONTROL THAN AN AGREEMENT YOU NEVER TESTED.`** ⚠️ **And it stays strong: if any OTHER producer change moves the spec, this control goes RED rather than shrugging.**
+
+### §3 — ✅ THE GENEROSITY IS REMOVED, AND ITS REMOVAL IS RED-PROOFED
+The helper now applies **two gates in order**: **(1) route identity** — `structure_engine.compute_structure_state` can never satisfy the contract, whatever fields are added to `StructureState`; **(2) output contract** — resolve the named primitive through the engine's own `resolve_primitive()` and read its RETURN annotation's fields. **An unregistered primitive is an ABSENT contract, not a pass.**
+✅ **`test_route_identity_gate_refuses_the_structure_primitive_whatever_fields_it_gains` proves gate (1) refuses — AND carries a POSITIVE WITNESS** (a resolvable primitive whose annotated return does yield fields), **because `== set()` is otherwise satisfied by a helper that never returns anything.**
+✅ **THE SKIP IS DELETED, NOT RELABELLED.** `R-728 §3`'s preferred remedy taken: the wrong-route assertion is a **live failing test**. After the repair, routing the opening-range type back to the structure primitive fails it automatically. ★ **`A PARKED CONTROL PROTECTS NOTHING WHILE IT IS PARKED.`**
+
+### §4 — ✅ RESULT, AND THE MUTATION EVIDENCE FOR THE TWO SUBTLE CONTROLS
+```
+python -m pytest src/engine/tests/test_opening_range_conformance.py -v
+3 failed, 7 passed in 0.28s
+FAIL  test_production_must_not_type_the_opening_range_definition_as_coarse_structure
+FAIL  test_production_must_not_route_the_opening_range_definition_to_the_structure_primitive
+FAIL  test_no_typed_opening_range_output_contract_exists_in_production
+PASS  test_frozen_extraction_identity                       (3 recorded sources agree)
+PASS  test_intended_strategy_is_selected_from_the_extraction
+PASS  test_produce_spec_artifact_actually_runs              (positive witness the chain RAN)
+PASS  test_opening_range_prose_reaches_the_produced_condition_graph
+PASS  test_historical_census_agrees_with_the_independently_produced_baseline
+PASS  test_unrelated_genuine_structure_condition_retains_the_structure_route
+PASS  test_route_identity_gate_refuses_the_structure_primitive_whatever_fields_it_gains
+```
+✅ **FAILURE MEMBERSHIP MATCHES `R-728 §4` ITEM FOR ITEM**, and all six ordered controls pass.
+✅ **BOTH SUBTLE CONTROLS MUTATION-TESTED, WITH THE UNMUTATED CONTROL SHOWN GREEN** (so the reds are mutation-caused, not always-red):
+| mutation | result |
+|---|---|
+| census join with the post-census subtraction **disabled** | **RED** — the hash join really is byte-tight |
+| neighbour control expecting a **different** primitive | **RED** — it can detect a lost structure route |
+| both restored | **GREEN** |
+★★★ **The neighbour control is the one `R-728 §4` called the most important and I agree: it is the only thing in this contract that catches a repair which turns the target green by breaking legitimate structure behaviour. It must stay GREEN through `STEPS 3-6`.**
+
+### §5 — 🛑 A DIRTY FILE IN THE SHARED TREE THAT IS NOT MINE
+`[MEASURED HERE]` `src/engine/tests/test_synthetic_market_simulator.py` was **already modified and uncommitted when I seated** (first `git status` of the session), alongside six other pre-existing dirty paths under `docs/`. **I did not touch it and it is NOT in this commit** — path-scoped commit, `AGENT-REPORTS.md` + `test_opening_range_conformance.py` only. ★ **Reported rather than tidied: `never run an index operation to tidy an appearance`, and an unexplained edit swept into someone else's commit is how this branch once lost ten commits.**
+
+### §6 — POSITION, AND WHAT I DID NOT MEASURE
+**`STEP 2` (corrected) complete. `STEP 3` HELD pending the desk's push** — `R-728 §6` reserves the push to the desk, so **I am not pushing.**
+🛑 **NOT MEASURED, STATED RATHER THAN IMPLIED:** I ran **only** this file — **no repo-wide regression**, because nothing outside it changed. **The other `8` conditions and the other `10` specs are untouched and unclaimed.** **The `15`/`30`-minute variants are preserved as source-sanctioned alternatives and nothing here selects among them.** **The breakout trigger remains `UNRESOLVED_SOURCE_AMBIGUITY`.**
+⚖️ **Per-step attempt budget: `1 / 2` used on the corrected `STEP 2`.** **Fan-in `2 / 8` on the B1 batch — `STEPS 3-8` are HELD by ruling, not unstarted by choice, so this is not a handoff.** ✅ **This seat stays and continues the moment the hold lifts.**
+
+## AR-822 · 2026-08-09 · ⚡ **START-RECEIPT — FRESH WORKER SEAT, CONTEXT CLEARED MID-B1. RESUMING AT `STEP 3` OF `8`; `STEPS 1-2` ARE COMMITTED (`5ed334eb`, `1dbac9ec`).** ✅ **NO LIVE WORKER SIBLING — MEASURED, NOT ASSUMED.** 🛑 **AND ONE DESIGN DECISION I AM FLAGGING BEFORE I MAKE IT, NOT AFTER: THE NEW ROUTE MUST NOT BE ENV-GATED, WHICH IS THE OPPOSITE OF EVERY EXISTING PER-CONDITION ROUTE IN THIS FILE.**
+
+**CONTRACT SOURCE:** `docs/designs/EXTERNAL-READ-2026-08-09-B1-AUTHORIZED.md` (tracked, `337` lines), **`STEPS 1-8` + `B1 PASS CONDITION` + `EXPLICITLY OUT`, read AT THE FILE**, per `R-727 §4`. **Ruling: `R-727 §4`.** **Branch `h1-wave4-sealed12-driver`, HEAD `1dbac9ec` re-read at seat time, unmoved.**
+**FAN-IN: `2 / 8`.** `STEPS 3-8` are **UNSTARTED, NOT BLOCKED** — `worker-execution §10` says that is the reason to stay. **This seat finishes the batch.**
+~~**TASK NOW — `STEP 3` FIRST:** the precise typed representation (`OPENING_RANGE_DEFINITION`), then `STEP 4` adapter, `STEP 5` complete-window contract, `STEP 6` production routing, `STEP 7` suite, `STEP 8` status honesty.~~
+~~**FIRST OBSERVABLE:** a new typed module + `test_opening_range_conformance.py`'s permanent RED turning GREEN **only** once routing lands. **ETA to `STEP 3-4` ~`60` min.**~~
+🛑 **STRUCK AND RETAINED, NOT DELETED — SUPERSEDED BY `R-728 §6` WHICH LANDED `~4` MINUTES AFTER I WROTE THE LINES ABOVE (ledger `1dbac9ec → 6c575396`).** **`STEP 3` IS HELD.** ✅ **CORRECTED TASK: rebuild the permanent RED to enter at the FROZEN EXTRACTION JSON, remove the generosity, fold the wrong-route assertion into the live RED, add the six passing controls. Delivered in `AR-823` below.** ★ **The receipt stays visible so the record shows what I was seated for and when it changed.**
+
+### §1 — ✅ SEAT HYGIENE, MEASURED
+`[MEASURED HERE]` two `claude.exe` are live — `3160` (mine, parent-PID walk from this shell) and `25972` (the **advisor** seat). ⇒ **The prior worker that wrote `AR-820`/`AR-821` was THIS process before `/clear`; there is no second worker and the ledger is mine to move.** ★ **`ASKED != SEATED` cuts both ways — I checked rather than inheriting the assumption that a fresh onboarding means a fresh process.**
+
+### §2 — 🛑 THE DESIGN DECISION I AM RAISING NOW, BECAUSE RAISING IT AT DELIVERY COSTS THE RUN
+`[MEASURED HERE]` **every** existing per-condition route in `spec_family_bindings.py` — FVG, level/zone, Population-A, bias/confirmation/sweep/MSS — is **env-gated behind an experiment flag**, and each is registered in `family_meta_enforcement.EXPERIMENT_PRIMITIVES` **precisely because** it only exists when a flag is on.
+🛑 **B1's route may not be built that way.** `STEP 6` says *"the opening-range condition must not use `_h_structure`"* — **unconditionally** — and campaign law `never-flag` is explicit: **the OFF branch IS the defect.** A flag-gated repair leaves production routing the taught opening range to a structure-event evaluator by default, which is the exact defect `B1` was authorized to fix.
+⇒ **CONSEQUENCE I AM NAMING RATHER THAN DISCOVERING LATER:** the new primitive is routed but declared by no `FAMILY_META` entry, so `verify_dispatch_coverage()` direction 2 will call it **"a second router"** at load. **I will NOT hide it in `EXPERIMENT_PRIMITIVES`** — it is not an experiment, and putting it there would be a false statement inside the guard that exists to catch false statements (`baseline-allowlist`: an allow-list once excused `24` kill-switch assertions). **I will add a narrow, separately-named allowance carrying exactly this one primitive, and red-proof that an UNKNOWN key still fails the load.**
+⚠️ **`R-727 §3` scope-lock honoured:** `FAMILY_META` itself is **not** edited, so no TypeScript mirror moves. **If that changes, the mirror + parity fixture ship in the same commit and I will say so.**
+
+### §3 — BOUNDS I AM HOLDING (unchanged from `AR-820 §3`)
+🛑 **`EXPLICITLY OUT`:** disputed structure-engine rerun · the remaining `8` conditions · generalized `WAIT_STRUCTURE` rewrite · **breakout touch/wick/close choice** · half-range stop wiring · MES/MNQ/MCL portability · futures trading-day implementation · backtesting · profitability · full-library batch run.
+🛑 **Modifying `compute_opening_range_breakout` for existing callers is a STOP CONDITION** (`R-727 §3`) — the adapter wraps it; if wrapping proves impossible I stop and report the caller blast radius **before** editing.
+✅ **Per-step attempt budget `2` · every null carries the LOCALITY RULE · `UNRESOLVED_SOURCE_AMBIGUITY` stays available and `B1` may NOT quietly decide the breakout trigger.**
+⚖️ **AND THE GRADE IS PRE-REGISTERED, NOT MINE TO CALL:** `R-727 §3` names `accuracy-validator`, desk-dispatched, receipt `docs/designs/GRADE-B1-OPENING-RANGE-2026-08-09.md`, trigger = `STEP 7` suite green **and** the `STEP 2` mutation proven RED. **I produce the input; I do not score it.**
+
 ## AR-821 · 2026-08-09 · ✅ **B1 `STEP 1` AND `STEP 2` DELIVERED.** ⭐ **`STEP 1`: `7` false claims amended AT THEIR ORIGINAL LOCATIONS, documentation-only.** ⭐ **`STEP 2`: THE PERMANENT RED EXISTS AND IS RED FOR THE RIGHT REASON — `1 failed · 1 passed · 1 skipped`, built FROM THE FROZEN ARTIFACT, WITH A PASSING POSITIVE CONTROL THAT PROVES THE HARNESS READS THE RIGHT CONDITION.** 🛑 **AND THE `worker-execution` GUARD BLOCKED MY FIRST WRITE — CORRECTLY. THREE RULINGS HAD LANDED SINCE I LOADED THE STANDARD.**
 
 ### §1 — ✅ `STEP 1`, evidence-correction commit `5ed334eb` (documentation-only, no instrumentation)
