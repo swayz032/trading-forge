@@ -511,6 +511,103 @@ def test_window_crossing_local_midnight_is_refused_not_silently_inherited():
     assert ordinary.opening_range_window_status is OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
 
 
+# ── STEP 5 CONTROL 1 (R-737 §6-1) — NON-FINITE MARKET DATA NEVER COMPLETES ──
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("field", ["high", "low"])
+def test_non_finite_observation_never_returns_complete(bad, field):
+    """`NaN`/`inf` in a window must refuse, not propagate into the levels.
+
+    WHY IT NEEDS ITS OWN CHECK: `NaN` compares False against everything, so the
+    bar's own `high < low` guard waves it through, and `max()`/`min()` would
+    carry it into a COMPLETE state whose levels are `nan`. `A RANGE OF nan IS
+    NOT A WRONG NUMBER — IT IS A NUMBER-SHAPED HOLE THAT EVERY DOWNSTREAM
+    COMPARISON SILENTLY ANSWERS False TO.`
+    """
+    corrupted = OpeningRangeBar(
+        timestamp=FULL_15M[1].timestamp,
+        high=bad if field == "high" else 100.50,
+        low=bad if field == "low" else 99.75,
+    )
+    bars = (FULL_15M[0], corrupted, FULL_15M[2])
+
+    state = compute_opening_range_state(
+        DEFINITION, FIFTEEN, bars,
+        session_date=SESSION, bar_interval_minutes=5, as_of=AFTER_LOCK,
+    )
+
+    assert state.opening_range_window_status is OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
+    assert state.opening_range_complete is False
+    # EVERY numeric field, not just the corrupted one — a refusal that leaked
+    # one finite level would still hand a consumer a usable-looking number.
+    assert state.opening_range_high is None
+    assert state.opening_range_low is None
+    assert state.opening_range_width is None
+    assert state.opening_range_midpoint is None
+
+
+def test_the_non_finite_guard_is_specific_not_a_blanket_refusal():
+    """POSITIVE WITNESS: the identical fixture with finite values COMPLETES.
+
+    Without this, every assertion above is satisfied by an adapter that refuses
+    everything, and the guard would be indistinguishable from a broken window.
+    """
+    state = compute_opening_range_state(
+        DEFINITION, FIFTEEN, FULL_15M,
+        session_date=SESSION, bar_interval_minutes=5, as_of=AFTER_LOCK,
+    )
+    assert state.opening_range_window_status is OpeningRangeWindowStatus.COMPLETE
+    assert state.opening_range_high == 100.50
+
+
+# ── STEP 5 CONTROL 2 (R-737 §6-2) — MISDECLARED BAR INTERVAL REFUSES ────────
+# AR-830 §6 derived this from the count check and explicitly declined to call it
+# measured. `A DERIVED PROPERTY IS A HYPOTHESIS WITH GOOD MANNERS` — here it is
+# converted into fixtures, in BOTH directions.
+def test_actual_1m_observations_declared_as_5m_refuses():
+    """Finer feed than declared. The window is full of bars the grid rejects."""
+    one_minute_bars = tuple(
+        _bar(offset, high=100.0 + offset * 0.01, low=100.0 - offset * 0.01)
+        for offset in range(0, 15)
+    )
+
+    state = compute_opening_range_state(
+        DEFINITION, FIFTEEN, one_minute_bars,
+        session_date=SESSION, bar_interval_minutes=5, as_of=AFTER_LOCK,
+    )
+
+    assert state.opening_range_window_status is OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
+    assert state.opening_range_high is None
+
+
+def test_actual_5m_observations_declared_as_1m_refuses():
+    """Coarser feed than declared. Three observations where fifteen are required.
+
+    This is the direction that matters most: every bar is grid-legal at 1m, so
+    only the COUNT catches it — and without the count check the adapter would
+    return a confident range built from a fifth of the window.
+    """
+    state = compute_opening_range_state(
+        DEFINITION, FIFTEEN, FULL_15M,
+        session_date=SESSION, bar_interval_minutes=1, as_of=AFTER_LOCK,
+    )
+
+    assert state.opening_range_window_status is OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
+    assert state.opening_range_high is None
+    # Specifically NOT the range it would have computed from the three bars.
+    assert state.opening_range_high != 100.50
+
+
+def test_correctly_declared_interval_is_the_positive_witness():
+    """The same bars, declared truthfully, COMPLETE — so the two refusals above
+    are caused by the misdeclaration and not by an unusable fixture."""
+    state = compute_opening_range_state(
+        DEFINITION, FIFTEEN, FULL_15M,
+        session_date=SESSION, bar_interval_minutes=5, as_of=AFTER_LOCK,
+    )
+    assert state.opening_range_window_status is OpeningRangeWindowStatus.COMPLETE
+    assert state.opening_range_high == 100.50
+
+
 # ── THE RED-PROOF — the stub that satisfies both ordered REDs fails HERE ─────
 def _always_refusing_stub(*_args, **_kwargs) -> OpeningRangeState:
     """The exact shape that turns both ordered REDs green while computing nothing.

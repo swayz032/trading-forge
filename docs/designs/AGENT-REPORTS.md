@@ -4,6 +4,54 @@
 
 ---
 
+## AR-831 · 2026-08-09 · ✅✅ **`STEP 5`'s TWO CONTROLS ARE GREEN — `31 passed`, exit `0` UNPIPED — SO I AM PROCEEDING TO `STEP 6` UNDER `R-737 §10`'s NO-WAIT CLAUSE.** ⭐⭐⭐ **AND THE `NaN` CONTROL FOUND A REAL DEFECT IN MY OWN GUARD ORDERING: THE INVERSION CHECK FIRED FIRST ON `high=-inf` AND `low=+inf` AND **RAISED**, CONVERTING BAD MARKET DATA INTO AN EXCEPTION — THE EXACT BRANCH `R-737 §6-1` SAYS IT MUST NOT TAKE.** ✅ **`R-737 §8`'s OPEN TS-PARITY QUESTION IS MEASURED AND ANSWERED: IT COMPARES **DECLARATIONS**, SO THE MIRROR MUST **NOT** EXPAND.** 🛑 **ONE GAP I WILL NOT PAPER OVER: I CAN NAME `4` OF THE `11` `STEP 6` OBLIGATIONS. THE READ IS NOT ON DISK.**
+
+**RULING:** `R-737 §6` (STEP 5) + `§8`/`§10` (STEP 6). **SEAT:** same worker seat, continuing. **HEAD at work start `0613cb52`.** **`STEP 5` ATTEMPT BUDGET: `1 / 2`.**
+
+### §1 — ⭐⭐⭐ THE FINDING: TWO GUARDS, AND THE ONE THAT RAN FIRST DECIDED WHICH DEFECT GOT REPORTED
+`[MEASURED HERE]` the first run of the new control returned **`2 failed, 29 passed`** — failing on exactly `[high--inf]` and `[low-inf]`.
+🛑 **CAUSE, at the executable line:** `OpeningRangeBar.__post_init__`'s inversion guard is `high < low`. **`-inf < 99.75` is `True`, and `100.50 < +inf` is `True`** — so those two corrupt bars are *genuinely* "inverted", the constructor **RAISED**, and the adapter never saw them. ⇒ **the refusal `R-737 §6-1` requires never happened.**
+✅ **REPAIR:** the inversion check is now guarded on **finiteness**, so a corrupt observation survives construction long enough for the adapter to refuse it in the refusal-state branch. ★★ **`AN INVERTED BAR AND A CORRUPT BAR ARE DIFFERENT DEFECTS, AND THE GUARD THAT RUNS FIRST DECIDES WHICH ONE THE SYSTEM REPORTS.`**
+🛑 **I NARROWED A GUARD, SO I PROVED IT STILL BITES** `[MEASURED HERE]`: a genuinely inverted **finite** bar (`high=1.0`, `low=2.0`) still raises `"opening-range bar has high 1.0 below low 2.0"`. ★ **Narrowing a guard without a positive control is how a guard quietly dies** — and this one I narrowed myself, which is exactly when nobody checks.
+⚖️ **CREDIT WHERE IT BELONGS: this defect was latent in `AR-829`, survived `AR-830` and both desk verifications, and was found only because `R-737 §6-1` ordered a control neither the desk nor I had thought of. The external read earned this one.**
+
+### §2 — ✅ `STEP 5` CONTROL 1: NON-FINITE DATA NEVER COMPLETES
+**`6` parametrized cases — `NaN` · `+inf` · `-inf`, each in `high` and in `low`.** Every one returns **`INCOMPLETE_OPENING_WINDOW`** with **all four numeric fields `None`** — asserted individually, because *a refusal that leaked one finite level would still hand a consumer a usable-looking number.*
+✅ **POSITIVE WITNESS, and it is load-bearing:** the identical fixture with finite values **COMPLETES at `100.50`**. **Without it, all six assertions are satisfied by an adapter that refuses everything**, and the guard would be indistinguishable from a broken window.
+★ **WHY IT NEEDED ITS OWN CHECK RATHER THAN FALLING OUT OF AN EXISTING ONE:** `NaN` compares `False` against everything, so `max()`/`min()` would have carried it into a `COMPLETE` state whose levels are `nan`. **`A RANGE OF nan IS NOT A WRONG NUMBER — IT IS A NUMBER-SHAPED HOLE THAT EVERY DOWNSTREAM COMPARISON SILENTLY ANSWERS `False` TO.`**
+
+### §3 — ✅ `STEP 5` CONTROL 2: THE DERIVED PROPERTY IS NOW FIXTURED, BOTH DIRECTIONS
+`AR-830 §6` labelled this `[DERIVED, NOT separately fixtured]` and declined to call it measured. **It is now measured:**
+- **actual `1m` observations declared `5m`** ⇒ `INCOMPLETE_OPENING_WINDOW` (the grid rejects the off-boundary bars).
+- **actual `5m` declared `1m`** ⇒ `INCOMPLETE_OPENING_WINDOW`. ★ **This is the direction that matters: every bar is grid-legal at `1m`, so ONLY THE COUNT catches it — without that check the adapter returns a confident range built from a fifth of the window.** Asserted specifically **not** to be the `100.50` it would have computed.
+- **correct declaration** ⇒ `COMPLETE`, the positive witness that both refusals come from the misdeclaration and not an unusable fixture.
+
+### §4 — ✅ `R-737 §8`'s `[UNMEASURED — MEASURE FIRST]` IS NOW MEASURED, BEFORE ANY MIRROR WAS WRITTEN
+**QUESTION:** does the parity gate compare **EXPANDED CANDIDATES** or **BINDING DECLARATIONS ONLY**?
+`[MEASURED HERE — `scripts/check-spec-binding-plan-parity.ts:109-133`, the executable lines]` `tsBindingPlanAsPyShape()` calls `compileBindingPlan(spec)` and maps **`plan.bindings`** to exactly ten per-binding fields:
+```
+condition_id · type · role · object · bindable · primitive
+approximation · executed · reason · session_zone
+```
+plus eight plan-level scalars (`trigger_bound`, `spine_total`, `spine_bound`, `confluence_*`, `approximation_used`, `compiled`, `trigger_condition_id`). **`:167-168` then diffs `tsPlan.bindings` against `pyPlan.bindings`.**
+🛑 **THERE IS NO CANDIDATE, VARIANT, DURATION OR EXPANSION FIELD ANYWHERE IN THE COMPARED SHAPE.**
+⇒ ✅ **ANSWER: IT COMPARES DECLARATIONS. THEREFORE, PER `R-737 §8`, THE TS MIRROR MUST *NOT* EXPAND** — it needs only the `FAMILY_META` declaration to match. **Deterministic expansion is a Python-side production concern the parity gate does not observe.** ★ **`A MIRROR BUILT AGAINST AN ASSUMED CONTRACT IS A SECOND CALCULATOR IN A DIFFERENT LANGUAGE` — so I read the contract instead of assuming the symmetrical answer, which would have had me expanding in two languages for a gate that inspects neither.**
+
+### §5 — 🛑🛑 THE GAP I AM REPORTING RATHER THAN ABSORBING: I CAN NAME `4` OF `11` OBLIGATIONS
+`R-737 §8` states **"THE READ'S TEN PROOF OBLIGATIONS ARE ADOPTED IN FULL"** and adds the desk's **(11)**. `[MEASURED HERE]` **the read is NOT on disk** — the newest `EXTERNAL-READ-*.md` in `docs/designs/` is `…WIDEN-TO-TWO-DEFINITIONS.md`, **mtime `21:54`**, while `R-737` was written ~`23:31`. It is cited as *"operator-relayed chat"* and was never banked.
+**WHAT I CAN NAME, because `R-737 §8` quotes them:** **(4)** changing a duration changes cache identity · **(6)** two variants must not collide · **(10)** an executable test — not primitive metadata — proves the adapter computed a `COMPLETE` state · **(11)** cache identity STABLE across runs, proven in **separate processes**.
+🛑 **OBLIGATIONS `1`, `2`, `3`, `5`, `7`, `8`, `9` ARE `UNENUMERATED` TO ME.** ⇒ ⚖️ **I WILL BUILD `STEP 6` AGAINST `§8`'s DESIGN AND THE FOUR NAMED OBLIGATIONS, AND I WILL NOT WRITE "the ten obligations are met" — I cannot name all ten from a document I hold** (`[unenumerated-ladder]`: never write `N of M` unless you can NAME all `M`; `[count-obligations]`: a dropped CLAUSE once faked *"all ten MET"* and nothing detects a missing row).
+✅ **REQUEST, and it is cheap: bank the read as `EXTERNAL-READ-…-STEP6.md`, or enumerate the seven in a ruling.** **This does NOT block me** — I am proceeding on the design, which `§8` states in full — **but it does bound what I may claim at delivery.**
+
+### §6 — ✅ ACCEPTANCE + PROCEEDING
+```
+adapter suite -> 31 passed in 0.26s ; UNPIPED EXIT 0      [21 -> 31, +10 this closeout]
+inversion guard positive control -> still RAISES on a finite inverted bar
+```
+🛑 **NOT re-run this commit** (no production surface touched — `FAMILY_META`, `PRIMITIVE_RESOLVERS`, `ENFORCED_DISPATCH`, the TS mirror and `indicators/core.py` are all still unmodified): the discrimination instrument, guards, conformance group and TS parity. **They ran green at `cd92ecb2` and this commit changes only the adapter and its own suite.** ⚖️ **Stated rather than implied — an unre-run gate is not a passing gate, and `STEP 6` will re-run all five.**
+⭐ **PROCEEDING TO `STEP 6` NOW UNDER `R-737 §10`, WHICH SAYS TO PROCEED WITHOUT WAITING AND TO SAY SO IN THIS REPORT.** ✅ **Saying so.** **`STEP 6` opens at `0 / 2`.**
+⚖️ **Fan-in `2 / 2` on `R-737 §6`.** **This seat continues.**
+
 ## AR-830 · 2026-08-09 · ✅✅ **`STEP 4` CLOSEOUT DELIVERED — ALL FOUR `R-736 §5` CORRECTIONS LANDED, `21` CONTROLS GREEN, ALL FOUR ACCEPTANCE COMMANDS MATCHING.** ⭐⭐⭐ **THE REUSE IS PROVEN BY A MUTATION THAT BITES: REVERTING TO INLINE `max/min` FAILS EXACTLY ONE TEST AND THE OTHER `20` PASS — SO I BUILT THE ONE CONTROL THAT COULD TELL DELEGATION FROM RE-IMPLEMENTATION, AND MEASURED THAT THE REST COULD NOT.** 🛑 **`STEP 5` IS REPORTED, NOT CLAIMED. `STEP 6` UNTOUCHED.**
 
 **RULING:** `R-736 §7`. **SEAT:** same worker seat, continuing (`AR-828` → `AR-829` → this). **HEAD at work start `133be226`.** **CLOSEOUT ATTEMPT BUDGET: `1 / 2`.**

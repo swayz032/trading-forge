@@ -75,6 +75,7 @@ new name (R-730 §4).
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -112,7 +113,17 @@ class OpeningRangeBar:
                 f"opening-range bar timestamp {self.timestamp!r} is timezone-naive; "
                 "supply an aware datetime so the session window is unambiguous"
             )
-        if self.high < self.low:
+        # ORDER MATTERS, AND A TEST CAUGHT IT (R-737 §6-1 closeout). The
+        # inversion check is guarded on FINITENESS because it otherwise fires
+        # first on `high=-inf` or `low=+inf` — both of which are genuinely
+        # "high < low" — and RAISES, converting bad market data into an
+        # exception. R-737 §6-1 is explicit that non-finite data takes the
+        # REFUSAL-STATE branch, not the raise branch, so a corrupt observation
+        # must survive construction long enough for the adapter to refuse it.
+        #
+        # `AN INVERTED BAR AND A CORRUPT BAR ARE DIFFERENT DEFECTS, AND THE
+        # GUARD THAT RUNS FIRST DECIDES WHICH ONE THE SYSTEM REPORTS.`
+        if math.isfinite(self.high) and math.isfinite(self.low) and self.high < self.low:
             raise ValueError(
                 f"opening-range bar has high {self.high!r} below low {self.low!r}; "
                 "the observation is inverted"
@@ -280,6 +291,27 @@ def compute_opening_range_state(
 
     # ── Membership, then grid alignment, then completeness ───────────────────
     in_window = [bar for bar in bars if start <= bar.timestamp < lock]
+
+    # ── NON-FINITE MARKET DATA — R-737 §6-1 ──────────────────────────────────
+    # `NaN` / `+inf` / `-inf` in an observation. This is BAD MARKET DATA, not an
+    # unsupported configuration, so it takes the REFUSAL-STATE branch rather
+    # than the raise branch the midnight guard takes — the same split this
+    # module already draws everywhere else.
+    #
+    # IT NEEDS ITS OWN CHECK AND CANNOT BE LEFT TO THE ONES BELOW: `NaN`
+    # compares False against everything, so `OpeningRangeBar`'s `high < low`
+    # guard waves it through, and `max()`/`min()` would then propagate it into a
+    # COMPLETE state whose levels are `nan`. A range of `nan` is not a wrong
+    # number — it is a number-shaped hole that every downstream comparison
+    # silently answers False to.
+    if any(
+        not math.isfinite(value)
+        for bar in in_window
+        for value in (bar.high, bar.low)
+    ):
+        return OpeningRangeState.refused(
+            OpeningRangeWindowStatus.INCOMPLETE_OPENING_WINDOW
+        )
 
     offsets: list[int] = []
     for bar in in_window:
