@@ -45,6 +45,8 @@ is deliberate (it is also control `K`).
 from __future__ import annotations
 
 import dataclasses
+import importlib
+import inspect
 import json
 import pathlib
 from datetime import date, datetime, timedelta
@@ -58,6 +60,7 @@ from src.engine.opening_range_lowering import (
     COMMITTED_PROVENANCE_DIR,
     lower_opening_range_definition,
 )
+from src.engine.spec_condition_compiler import SpecConditionStrategy
 from src.engine.spec_family_bindings import FAMILY_META, compile_binding_plan
 
 # The golden slice. Named here as TEST DATA, never in production code (R-774 §6
@@ -179,12 +182,23 @@ def test_the_golden_record_still_lowers_ready_with_three_taught_variants():
     )
 
 
-# ── POSITIVE CONTROL 2 — the execution spy can see a real call ────────────────
-def test_positive_witness_the_execution_spy_can_observe_a_real_adapter_call(monkeypatch):
-    """GREEN. RED 2's `0 calls` is worthless without this.
+# ── POSITIVE CONTROL 2 — the patch is attached AT THE SEAM PRODUCTION TRAVERSES ──
+def test_positive_witness_the_patch_is_visible_through_production_symbol_resolution(monkeypatch):
+    """GREEN. RED 2's `()` is worthless without this — but the OLD version of this
+    witness was worthless too, and R-775 §1 was right about why.
 
-    `[main-spy-both-arms]`: a spy reads 0 when the gate refuses AND when the spy
-    was never wired. This proves the second cause is excluded.
+    The previous version called `spy(...)` by hand and asserted `calls == [5]`.
+    That proves only that a function which appends to a list appends to a list.
+    It says NOTHING about whether the patch is attached where production looks.
+
+    So this witness resolves the symbol THE WAY PRODUCTION RESOLVES IT — dotted
+    `module:attr` lookup, the exact form `PRIMITIVE_RESOLVERS` stores — and
+    requires that resolution to yield the patched object. If the patch were
+    attached to a local alias instead of the module attribute, this fails and
+    RED 2's empty tuple is correctly accused of being a blind spy.
+
+    🛑 WHAT THIS DOES NOT CLAIM: that production CALLS it. That is RED 2's job,
+    and RED 2 must reach it without this test's help.
     """
     calls: list[int] = []
     real = compute_opening_range_state
@@ -197,75 +211,105 @@ def test_positive_witness_the_execution_spy_can_observe_a_real_adapter_call(monk
         "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
     )
 
+    module_name, _, attr = "src.engine.opening_range_adapter:compute_opening_range_state".partition(
+        ":"
+    )
+    resolved = getattr(importlib.import_module(module_name), attr)
+    assert resolved is spy, (
+        "the patch is NOT visible through module-attribute resolution — the seam a "
+        "PRIMITIVE_RESOLVERS entry traverses. Any '0 calls' elsewhere in this file would "
+        "therefore accuse production of something the instrument could never have seen."
+    )
+
+    # Invoked THROUGH the resolved symbol, not through the local name, so what is
+    # exercised is the attachment point rather than the closure.
     definition = _lower_golden().definition
     variant = definition.variants[0]
     zone = ZoneInfo(definition.source_timezone)
-    bars = _deterministic_bars(
-        date(2026, 8, 3), definition.source_timezone, variant.duration_minutes
-    )
-
-    spy(
+    resolved(
         definition,
         variant,
-        bars,
+        _deterministic_bars(date(2026, 8, 3), definition.source_timezone, variant.duration_minutes),
         session_date=date(2026, 8, 3),
         bar_interval_minutes=1,
         as_of=datetime(2026, 8, 3, 12, 0, tzinfo=zone),
     )
-
     assert calls == [variant.duration_minutes], (
-        "the spy did not record a call it made itself — the observation mechanism is broken, "
-        "so any '0 calls' result elsewhere in this file accuses the wrong thing"
+        "resolution returned the spy but invoking it recorded nothing — the observation "
+        "mechanism is broken"
     )
 
 
-# ── RED 1 — CANDIDATE TRANSPORT ───────────────────────────────────────────────
-def test_production_compile_transports_exactly_the_three_taught_candidates():
-    """PERMANENT RED until B1 STEP 6 wires the lowering into the compile boundary.
+# ── RED 1 — CANDIDATE TRANSPORT FROM A **FULL-RECORD** BOUNDARY ───────────────
+def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_candidates():
+    """PERMANENT RED until B1 STEP 6. Fails at the FIRST unmet stage and names it.
 
-    R-774 §7-B: EXACT membership {5m,15m,30m} from the committed golden record —
-    no fourth, none missing, no primary, no default. R-736: the teacher gave
-    three versions, so the factory makes three bots.
+    R-775 §7-1: entering at `strategies[0] -> produce_spec_artifact()` is entering
+    at a boundary that has ALREADY discarded record-level evidence
+    (`instrument_classification`), which is exactly what the lowerer needs. A test
+    that demanded three fully-sourced candidates from that input would be pressure
+    toward the forbidden repairs — file I/O in the compiler, a stub lookup, or
+    reconstruction from lossy prose.
+
+    `THE TEST NAMES THE GAP BEFORE THE CODE FILLS IT.` So stage 1 asserts the
+    boundary exists; only stage 2 asserts what it must carry.
     """
+    # ── STAGE 1 — is there a PUBLIC production compile boundary that receives the
+    # full certified record? Measured off the signature, not off a docstring.
+    params = set(inspect.signature(produce_spec_artifact).parameters)
+    full_record_params = params & {"record", "extraction_record", "instrument_classification"}
+    assert full_record_params, (
+        "RED (expected until B1 STEP 6) — STAGE 1, THE NAMED GAP: no public production "
+        "compile boundary accepts the full certified record.\n"
+        f"  produce_spec_artifact parameters : {sorted(params)}\n"
+        "  it receives ONE strategy (strategies[0]); instrument_classification and every "
+        "other record-level fact are discarded before the compile.\n"
+        "  lower_opening_range_definition() REQUIRES that evidence (market_scope is read "
+        "from instrument_classification), so no amount of work downstream of this boundary "
+        "can produce a source-complete definition.\n"
+        "  ⇒ THIS ABSENCE IS THE FIRST RED. R-775 §7-1: name it here, build it in STEP 2."
+    )
+
+    # ── STAGE 2 — unreachable until stage 1 passes. Membership, taught order, no default.
     _, _artifact, plan = _produce(GOLDEN_STUB)
     candidates = _find_candidates(plan)
     durations = tuple(c.variant.duration_minutes for c in candidates)
-
     assert durations == TAUGHT_DURATIONS, (
-        "RED (expected until B1 STEP 6): a production compile of the golden record does not "
-        "transport the taught opening-range execution candidates.\n"
-        f"  expected durations (taught order) : {TAUGHT_DURATIONS}\n"
-        f"  candidates found in compiled plan : {durations or '(none)'}\n"
-        "  the lowering returns a definition with all three variants (proven green in this "
-        "same file), so the missing handoff is TRANSPORT, not source evidence."
+        "RED — STAGE 2: the full-record boundary exists but does not transport exactly the "
+        f"three taught candidates.\n  expected : {TAUGHT_DURATIONS}\n  found    : "
+        f"{durations or '(none)'}"
     )
 
 
-# ── RED 2 — REAL ADAPTER EXECUTION THROUGH THE DECLARED PRIMITIVE ─────────────
-def test_the_declared_primitive_executes_the_adapter_once_per_taught_candidate(monkeypatch):
-    """PERMANENT RED until B1 STEP 6 declares AND routes the primitive.
+# ── RED 2 — PRODUCTION ITSELF MUST REACH THE ADAPTER ──────────────────────────
+def test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate(monkeypatch):
+    """PERMANENT RED until B1 STEP 6 declares, routes AND executes.
 
-    R-774 §6 step 7: the reds go green THROUGH ACTUAL ADAPTER EXECUTION, not
-    through registration. R-774 §7-C: three DISTINCT executions, 5m with the 5m
-    variant, 15m with 15m, 30m with 30m.
+    🛑 THIS TEST NEVER CALLS THE ADAPTER, AND NEVER CALLS THE SPY.
+    R-775 §1 defect 2: the previous version looped over candidates calling `spy(...)`
+    itself, so the `(5,15,30)` it asserted was a list the TEST appended. It would
+    have passed with candidates + a FAMILY_META string + a resolver entry and NO
+    EXECUTABLE DISPATCH ANYWHERE — a future false green on the one claim this whole
+    lane exists to make.
 
-    Fails at the FIRST unmet stage and names it, so a future reader can tell
-    "not declared" from "declared but never executed".
+    `A CONTROL THAT HANDS THE COMPARATOR ITS ANSWER IS TESTING THE COMPARATOR, NOT
+     THE GUARD.` — AR-893 §3, minted by this seat and then broken by it one lane later.
+
+    The spy list here can only be filled by `SpecConditionStrategy._dispatch_enforced`,
+    which routes `ENFORCED_DISPATCH[binding.primitive]` and RAISES on an unroutable
+    name rather than passing through.
     """
     meta = FAMILY_META[FAMILY]
     assert meta.primitive is not None and not meta.unsupported, (
-        "RED (expected until B1 STEP 6): production declares NO primitive for "
-        f"{FAMILY}, so nothing can route to the adapter.\n"
-        f"  primitive       : {meta.primitive}\n"
-        f"  unsupported     : {meta.unsupported}\n"
-        f"  unbound_reason  : {meta.unbound_reason}\n"
+        "RED (expected until B1 STEP 6) — STAGE 1: production declares NO primitive for "
+        f"{FAMILY}, so no dispatch can exist.\n"
+        f"  primitive : {meta.primitive} · unsupported : {meta.unsupported}\n"
+        f"  unbound_reason : {meta.unbound_reason}\n"
         "  (the executable adapter EXISTS and is green — this is a wiring gap)"
     )
-
     assert meta.primitive in PRIMITIVE_RESOLVERS, (
-        f"RED: {FAMILY} declares primitive {meta.primitive!r} but PRIMITIVE_RESOLVERS has no "
-        "entry for it — a declared name with no route is an unroutable pointer, and "
-        "verify_dispatch_coverage() proves set equality in BOTH directions"
+        f"RED — STAGE 2: {FAMILY} declares {meta.primitive!r} but PRIMITIVE_RESOLVERS has no "
+        "entry — a declared name with no route is an unroutable pointer"
     )
 
     calls: list[int] = []
@@ -279,29 +323,45 @@ def test_the_declared_primitive_executes_the_adapter_once_per_taught_candidate(m
         "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
     )
 
-    _, _artifact, plan = _produce(GOLDEN_STUB)
-    candidates = _find_candidates(plan)
-    assert candidates, "RED: no candidates to execute (see the transport red above)"
+    _, artifact, plan = _produce(GOLDEN_STUB)
+    binding = next(
+        (b for b in plan.bindings if b.type == FAMILY),
+        None,
+    )
+    assert binding is not None, f"RED — STAGE 3: no {FAMILY} binding in the compiled plan"
 
-    for candidate in candidates:
-        zone = ZoneInfo(candidate.definition.source_timezone)
-        bars = _deterministic_bars(
-            date(2026, 8, 3),
-            candidate.definition.source_timezone,
-            candidate.variant.duration_minutes,
-        )
-        spy(
-            candidate.definition,
-            candidate.variant,
-            bars,
-            session_date=date(2026, 8, 3),
-            bar_interval_minutes=1,
-            as_of=datetime(2026, 8, 3, 12, 0, tzinfo=zone),
-        )
+    strategy = SpecConditionStrategy(artifact, binding_plan=plan)
+
+    # PRODUCTION performs the dispatch. The test hands it a binding and a context and
+    # touches nothing else; if production does not reach the adapter, `calls` stays empty.
+    strategy._dispatch_enforced(binding, {})
 
     assert tuple(calls) == TAUGHT_DURATIONS, (
-        "RED (expected until B1 STEP 6): the adapter was not executed once per taught "
-        f"candidate.\n  expected calls : {TAUGHT_DURATIONS}\n  observed calls : {tuple(calls)}\n"
-        "  (the spy is proven able to record a call by the positive witness in this file, "
-        "so an empty list means production never reached the adapter)"
+        "RED — STAGE 4: the production dispatch path did not execute the adapter once per "
+        f"taught candidate.\n  expected calls : {TAUGHT_DURATIONS}\n  observed calls : "
+        f"{tuple(calls)}\n"
+        "  the patch IS attached at the resolution seam (proven by the positive witness in "
+        "this file), so an empty tuple means production never reached the adapter."
     )
+
+
+# ── PRESERVED (R-775 §7-4) — the refusing neighbour yields NOTHING ────────────
+def test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter_calls(monkeypatch):
+    """The refusal side of the contract, kept executable rather than asserted in prose."""
+    calls: list[int] = []
+    real = compute_opening_range_state
+
+    def spy(definition, variant, bars, **kw):
+        calls.append(variant.duration_minutes)
+        return real(definition, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    _, _artifact, plan = _produce(NEIGHBOUR_STUB)
+    assert _find_candidates(plan) == [], (
+        "a SOURCE_INCOMPLETE record produced execution candidates — the refusal is not "
+        "being preserved through the compile"
+    )
+    assert calls == [], "a SOURCE_INCOMPLETE record reached the adapter"
