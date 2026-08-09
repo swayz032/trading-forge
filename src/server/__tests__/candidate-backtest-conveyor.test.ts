@@ -32,6 +32,15 @@ const metricsMocks = vi.hoisted(() => ({
   inc: vi.fn(),
 }));
 
+// D-10 F-8: the drizzle `sql` mock was write-only (an opaque "__sql__" sentinel),
+// so the WHERE clause the conveyor actually builds was UNOBSERVABLE — no test could
+// tell whether a status predicate existed at all. Capturing the template text is
+// what lets the eligibility-query control go RED.
+// `A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — this one now can.
+const sqlMocks = vi.hoisted(() => ({
+  captured: [] as string[],
+}));
+
 // ── Module mocks ─────────────────────────────────────────────────────────────
 vi.mock("../services/pipeline-control-service.js", () => ({
   getMode: pipelineMocks.getMode,
@@ -68,11 +77,19 @@ vi.mock("../db/index.js", () => ({
 
 // Schema import is used only for type references in the WHERE clause builder;
 // the mock db never calls Drizzle internals, so an empty mock is fine.
-vi.mock("../db/schema.js", () => ({
-  strategies: {},
-  backtests: {},
-  auditLog: {},
-}));
+// D-10 F-8 / pre-empting D-9 F-3: `BACKTEST_STATUS_REFUSED` is pulled from the REAL
+// schema module via importActual rather than restated as a literal here.
+// `A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL` (R-753 §2)
+// — this way a rename or value change in production turns these tests RED.
+vi.mock("../db/schema.js", async () => {
+  const actual = await vi.importActual<typeof import("../db/schema.js")>("../db/schema.js");
+  return {
+    strategies: {},
+    backtests: {},
+    auditLog: {},
+    BACKTEST_STATUS_REFUSED: actual.BACKTEST_STATUS_REFUSED,
+  };
+});
 
 // drizzle-orm: the conveyor calls eq(), and(), sql`` from drizzle-orm.
 // These are used to BUILD the query object passed to the mocked db chain,
@@ -81,7 +98,34 @@ vi.mock("../db/schema.js", () => ({
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn(() => "__eq__"),
   and: vi.fn(() => "__and__"),
-  sql: new Proxy(() => "__sql__", { get: () => () => "__sql__" }),
+  // STALE-MOCK REPAIR (found while red-proofing D-10 F-8): the service's FIX-3 FIFO
+  // ordering calls `asc(strategies.createdAt)`, which this mock never exported. The
+  // resulting TypeError was swallowed by the service's own try/catch ("aborting
+  // tick"), so cases (a) and (c) had been RED at HEAD — measured, not assumed, by
+  // running the unmodified HEAD copy of this file as a probe.
+  asc: vi.fn(() => "__asc__"),
+  // Still returns the same opaque sentinel the mock db chain expects — the ONLY
+  // change is that the template text is recorded on the way through, so the
+  // eligibility predicate becomes observable (D-10 F-8).
+  sql: new Proxy(
+    (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const raw = (strings as unknown as { raw?: readonly string[] })?.raw;
+      if (Array.isArray(raw)) {
+        // Interpolate the VALUES, not a "?" placeholder: the refusal predicate is
+        // required to use the shared `BACKTEST_STATUS_REFUSED` constant rather than
+        // a bare literal (R-754 §3 amendment 1), so a placeholder-only capture
+        // would hide exactly the thing the control has to see.
+        sqlMocks.captured.push(
+          raw.reduce(
+            (acc, part, i) => acc + part + (i < values.length ? String(values[i]) : ""),
+            "",
+          ),
+        );
+      }
+      return "__sql__";
+    },
+    { get: () => () => "__sql__" },
+  ),
 }));
 
 // ── Strategy fixture ─────────────────────────────────────────────────────────
@@ -124,7 +168,11 @@ function setupSelectMock(runningCount: number, candidatesResult: unknown[]) {
     .mockReturnValueOnce({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(() => Promise.resolve(candidatesResult)),
+          // `.orderBy()` sits between `.where()` and `.limit()` in the real chain
+          // (FIX-3 FIFO). Its absence here is what made the tick throw.
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(() => Promise.resolve(candidatesResult)),
+          })),
         })),
       })),
     });
@@ -276,5 +324,83 @@ describe("candidate-backtest-conveyor", () => {
     expect(backtestMocks.runBacktest).not.toHaveBeenCalled();
     expect(sseMocks.broadcastSSE).not.toHaveBeenCalled();
     expect(metricsMocks.inc).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// D-10 `F-8` (R-754 §3) — a REFUSED backtest is TERMINAL eligibility evidence.
+//
+// Two distinct defects live in this one file and they need separate controls:
+//   (i)  the eligibility query tests only 'completed' / 'running' / 'failed', so a
+//        refused candidate stays eligible and is re-enqueued EVERY TICK, forever;
+//   (ii) the post-run branch returns early only on "skipped", so a REFUSAL falls
+//        through and is counted by candidateConveyorEnqueuedTotal + announced as
+//        factory:candidate_backtest_enqueued — a refusal booked as a success.
+//
+// `F-8` is ordered FIRST of the four because it is the only one that COMPOUNDS.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("D-10 F-8 — a refused backtest is terminal eligibility evidence", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sqlMocks.captured.length = 0;
+    delete process.env.MAX_CONCURRENT_BACKTESTS;
+    pipelineMocks.getMode.mockResolvedValue("ACTIVE");
+    backtestMocks.runBacktest.mockResolvedValue({
+      id: "bt-00000000-0000-0000-0000-000000000001",
+      status: "running",
+    });
+    setupInsertMock();
+  });
+
+  it("F-8.1 — the eligibility query excludes strategies whose backtest was REFUSED", async () => {
+    setupSelectMock(0, []);
+
+    await runCandidateBacktestConveyor();
+
+    const predicate = sqlMocks.captured.join("\n");
+
+    // POSITIVE CONTROL, ASSERTED FIRST: prove the capture instrument actually sees
+    // the real WHERE clause. Without this, a capture bug produces an empty string
+    // and the 'refused' assertion below would fail for the wrong reason — which
+    // would read as a defect in production code that is fine.
+    expect(predicate).toContain("b.status = 'completed'");
+    expect(predicate).toContain("b.status = 'running'");
+
+    // THE ASSERTION UNDER TEST — RED before the fix. Accepts the constant either
+    // quoted or interpolated, because amendment 1 requires the SHARED CONSTANT and
+    // the point of the control is the PREDICATE, not its quoting style.
+    expect(predicate).toMatch(/b\.status\s*=\s*'?refused'?/);
+  });
+
+  it("F-8.2 — a refused run is NOT counted or announced as a successful enqueue", async () => {
+    setupSelectMock(0, [strategyFixture]);
+    backtestMocks.runBacktest.mockResolvedValue({
+      id: "bt-refused-0000-0000-0000-000000000001",
+      status: "refused",
+    });
+
+    await runCandidateBacktestConveyor();
+
+    // POSITIVE WITNESS THAT THE PATH RAN. Every assertion below is an ABSENCE, and
+    // an absence is satisfied by a function that returned early for an unrelated
+    // reason. `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH EXECUTED.`
+    expect(backtestMocks.runBacktest).toHaveBeenCalledTimes(1);
+
+    expect(metricsMocks.inc).not.toHaveBeenCalled();
+    const events = sseMocks.broadcastSSE.mock.calls.map((c) => c[0] as string);
+    expect(events).not.toContain("factory:candidate_backtest_enqueued");
+  });
+
+  it("F-8.3 POSITIVE CONTROL — an ordinary candidate still enqueues, counts and announces", async () => {
+    // R-754 §3: four of the ten controls are POSITIVE. A conveyor that enqueues
+    // nothing would satisfy F-8.2 perfectly and is not a repair.
+    setupSelectMock(0, [strategyFixture]);
+
+    await runCandidateBacktestConveyor();
+
+    expect(backtestMocks.runBacktest).toHaveBeenCalledTimes(1);
+    expect(metricsMocks.inc).toHaveBeenCalledTimes(1);
+    const events = sseMocks.broadcastSSE.mock.calls.map((c) => c[0] as string);
+    expect(events).toContain("factory:candidate_backtest_enqueued");
   });
 });

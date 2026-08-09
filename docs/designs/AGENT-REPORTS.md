@@ -4,6 +4,49 @@
 
 ---
 
+## AR-863 · 2026-08-09 · ✅✅ **`D-10` `F-8` DELIVERED AND MUTATION-PROVED: EACH DEFECT RESTORED TURNS *ONLY ITS OWN* CONTROL RED, AND THE POSITIVE CONTROL SURVIVES BOTH.** 🛑🛑★★★★★ **AND THE HEADLINE IS AN INSTRUMENT FINDING, NOT A CODE ONE: TWO OF THIS FILE'S FIVE EXISTING TESTS WERE *ALREADY RED AT HEAD* AND HAD BEEN SILENTLY SO — THE CONVEYOR'S HAPPY PATH WAS THROWING INSIDE ITS OWN `try/catch` AND EVERY TEST OF IT WAS VACUOUS.** ⚖️ **I CAUGHT THAT ONLY BECAUSE I RAN THE UNTOUCHED `HEAD` COPY AS A PROBE INSTEAD OF ASSUMING I HAD BROKEN THEM.** **FAN-IN `1 / 4`.**
+
+**RULING:** `R-754 §3` (`F-8`), carrier `docs/designs/EXTERNAL-READ-2026-08-09-R754-CONSUMER-SWEEP.md` (banked at `42ca8d71` — **my `AR-861 §2` blocker is DISCHARGED and I confirm it: the ten controls are readable at `§3 REQUIRED CONTROLS`**). **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` RE-INVOKED after `R-754` landed — the pre-write guard BLOCKED my first edit for exactly that reason and it was right.**
+
+### §1 — 🛑🛑 THE INSTRUMENT FINDING, FIRST, BECAUSE IT INVALIDATES A PRIOR GREEN
+My first red run showed `5 failed`, **two of them pre-existing tests I had not touched.** 🛑 **I had no baseline for this file — I baselined the OTHER one. That is my gap, and a surprising result accuses the instrument first.**
+✅ **SO I MEASURED IT INSTEAD OF REASONING ABOUT IT** `[MEASURED HERE]`: `git show HEAD:<file> > zzz-baseline-probe.test.ts`, ran it, deleted it. **Result at untouched `HEAD`: `2 failed | 3 passed`.** ⇒ **`(a)` and `(c)` were ALREADY RED. My edit broke nothing.**
+🛑 **ROOT CAUSE, AT THE EXECUTABLE LINE:** the service's FIX-3 FIFO ordering calls `.orderBy(asc(strategies.createdAt))` between `.where()` and `.limit()`. **The test's `drizzle-orm` mock never exported `asc`, and its db chain went `where → limit` with NO `orderBy`.** ⇒ **`TypeError`, swallowed by the service's own `catch` (*"aborting tick"*), so `runBacktest` was called `0` times.**
+★★★★★ **THE CONSEQUENCE IS THE FINDING: EVERY TEST OF THIS CONVEYOR'S ENQUEUE PATH WAS VACUOUS — the tick died before reaching the code they claim to cover, and the two that asserted a POSITIVE outcome are the only two that noticed.** ⚖️ **This is `R-751 §6`'s law with a twist: `AN UNTESTED SURFACE PRODUCES A CONFIDENT REPORT` — and so does a surface whose tests all die upstream of it. `A MOCK THAT HAS DRIFTED BEHIND ITS SUBJECT DOES NOT FAIL LOUDLY; IT FAILS INTO THE SUBJECT'S OWN ERROR HANDLER.`**
+✅ **REPAIRED** (`asc` exported, `orderBy` in the chain) — **and I report it as a repair of two PRE-EXISTING REDS, not as part of my green.**
+
+### §2 — ✅ THE TWO DEFECTS, AND THEY ARE SEPARATE
+| | site | before |
+|---|---|---|
+| **query** | `:105-121` | three `NOT EXISTS` on `'completed'`/`'running'`/`'failed'`. **`refused` matched none ⇒ eligible EVERY TICK, FOREVER** |
+| **accounting** | `:190` | early-return only on `"skipped"` ⇒ a refusal fell through to `candidateConveyorEnqueuedTotal.inc()` + `factory:candidate_backtest_enqueued` |
+✅ **BOTH FIXED, PREDICATE VIA THE SHARED CONSTANT `BACKTEST_STATUS_REFUSED`** (amendment `1`), never a literal.
+⚖️ **ONE DESIGN CALL I MADE AND AM NAMING RATHER THAN BURYING: the refusal is NOT routed into the existing `"skipped"` branch.** A skip means *"not now"* and sets a `24`-hour cooldown; **a refusal is terminal — the source is ambiguous, and asking again tomorrow asks the same unanswerable question.** ⇒ **the `'failed'` clause keeps its 24h window; the `refused` clause deliberately has NONE.**
+✅ **POSITIVE WITNESS IN PRODUCTION, not only in the test:** a `conveyor.candidate_backtest_refused` audit row. **Without it, *"did not count / did not announce"* is equally satisfied by a conveyor that silently did nothing.**
+
+### §3 — ⭐⭐⭐ THE MUTATION PROOF, AND IT DISCRIMINATES PER-DEFECT
+```
+BASELINE (unmutated)                                        8 passed
+MUT-1  eligibility clause -> '__sentinel__'    F-8.1 RED  · F-8.2 ✓ · F-8.3 ✓   1 failed | 7 passed
+MUT-2  refusal branch -> if (false && ...)     F-8.1 ✓   · F-8.2 RED · F-8.3 ✓   1 failed | 7 passed
+RESTORED from pristine copy                                 8 passed · 0 markers in tree
+```
+★★★★★ **NEITHER MUTATION MOVED THE OTHER'S CONTROL, AND NEITHER MOVED THE POSITIVE CONTROL. `A MUTATION SUITE WITHOUT PER-DEFECT DISCRIMINATION CANNOT TELL "CATCHES BREAKAGE" FROM "ALWAYS RED"` — this one can name which defect it caught.**
+⚠️ **AND I NEARLY SHIPPED THIS PROOF UNREADABLE:** my first mutation run printed only `Failed Tests 1` because **my own `grep` filter discarded the test names.** **`Failed Tests 1` does not prove the RIGHT control went red.** ★★★ **`[instrument-truncation-cluster]`, sixth instance: I filtered away the evidence I was about to rely on. Re-run with the names visible, and the table above is the result.**
+
+### §4 — ✅ WHAT MADE THE CONTROLS POSSIBLE AT ALL
+🛑 **The `drizzle` `sql` mock was WRITE-ONLY — an opaque `"__sql__"` sentinel — so the WHERE clause was UNOBSERVABLE and no test could ever have detected a missing status predicate.** ✅ **Now captures the template text WITH interpolated values** (a `?` placeholder would have hidden the shared constant, which is the thing amendment `1` requires me to prove).
+⭐ **AND F-8.1 ASSERTS ITS OWN INSTRUMENT FIRST:** it requires `b.status = 'completed'` and `'running'` to be present **before** asserting `refused`. **A capture bug yields an empty string, which would fail the `refused` assertion for the wrong reason and read as a production defect that is not there.**
+⭐⭐ **AND I PRE-EMPTED `D-9 F-3` IN THIS FILE RATHER THAN PLANTING IT AGAIN:** the schema mock pulls `BACKTEST_STATUS_REFUSED` from the **real module via `vi.importActual`**, not a restated literal. **`A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL` — so a production rename turns THIS file red too.**
+
+### §5 — ⏳ STATE
+- **FAN-IN `1 / 4`** — `F-8` ✅ · `F-9` `F-10` `F-7` **UNSTARTED, NOT BLOCKED.** 🛑 **Unstarted is the reason to stay** (`worker-execution §10`), and I am staying.
+- **Controls closed, of the ten:** *red-first* ✅ · *mutation-red* ✅ · *candidate with no prior terminal row still enqueues* ✅ (`F-8.3`, **a POSITIVE control — reported in its own class, never folded into a green count**) · *refused candidate never receives a second successful enqueue* ✅ (`F-8.1`, the query).
+- 🛑 **NOT YET RUN, and not claimed:** full acceptance (Python `65`, `103`-manifest membership + tampered negative control). **That is a DELIVERY-time measurement and quoting it now would be stale by the time `F-7` lands.**
+- ⚠️ **`AR-862 §5`'s scope question (`4` named vs `7` measured refusal-sensitive consumers) is STILL WITH THE DESK.** `F-8` needed no answer; **`F-9` touches `critic-optimizer` where `N-1` also lives, so the answer starts to matter at the NEXT lane.**
+
+---
+
 ## AR-862 · 2026-08-09 · 🛑🛑🛑★★★★★ **`R-754 §3` AMENDMENT `2`'s STOP CONDITION HAS FIRED, AND NOT BY ONE: THE MECHANICAL ENUMERATION FINDS *THREE* REFUSAL-SENSITIVE CONSUMERS THE RULING DOES NOT NAME, ACROSS SIX MORE CALL SITES. ONE OF THEM WRITES THE LITERAL STRING `"completed"` INTO A CANDIDATE ROW FOR A REFUSED REPLAY AND STAMPS IT WITH A FABRICATED SCORE OF `0`.** ✅ **THE FOUR NAMED FINDINGS ARE A FLOOR, EXACTLY AS THE RULING WARNED.** 🛑 **NO PRODUCTION EDIT MADE. I AM REPORTING, NOT WIDENING.**
 
 **RULING:** `R-754 §3` amendment `2` (*"a fifth refusal-sensitive consumer is a FINDING — STOP AND REPORT; do not silently widen"*). **HEAD at write time `4f3496e8`, local == `git ls-remote` `[MEASURED HERE]`.** **FAN-IN `0 / 4`.** **ATTEMPT BUDGET `1 / 2` — this is an enumeration result, not a failed attempt.**

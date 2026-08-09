@@ -30,7 +30,7 @@
 import { randomUUID } from "crypto";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { auditLog, backtests, strategies } from "../db/schema.js";
+import { auditLog, backtests, strategies, BACKTEST_STATUS_REFUSED } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { candidateConveyorEnqueuedTotal, candidateConveyorRejectionsTotal } from "../lib/metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
@@ -118,6 +118,27 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
             WHERE b.strategy_id = ${strategies.id}
               AND b.status = 'failed'
               AND b.created_at >= now() - interval '24 hours'
+          )`,
+          // D-10 F-8 (R-754 §3): a REFUSAL is TERMINAL eligibility evidence.
+          //
+          // Without this clause a refused strategy matches none of the three
+          // predicates above, so it stays eligible and is re-enqueued on EVERY
+          // tick, forever — each time counted as a successful enqueue. This is the
+          // only one of the four D-10 findings that COMPOUNDS, which is why it is
+          // first.
+          //
+          // NOTE the deliberate asymmetry with 'failed': a failure gets a 24-hour
+          // cooldown because it MIGHT succeed on retry. A refusal has NO time
+          // window — the source is ambiguous, and asking again tomorrow asks the
+          // same unanswerable question. Only a new extraction can change it.
+          //
+          // The predicate uses the SHARED CONSTANT, never a bare literal
+          // (R-754 §3 amendment 1) — R-752 §3 proved a key/value drift of exactly
+          // this class already defeated one guard.
+          sql`NOT EXISTS (
+            SELECT 1 FROM backtests b
+            WHERE b.strategy_id = ${strategies.id}
+              AND b.status = ${BACKTEST_STATUS_REFUSED}
           )`,
         ),
       )
@@ -214,6 +235,48 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
             logger.warn(
               { auditErr, strategyId: s.id },
               "candidate-backtest-conveyor: conveyor.candidate_skip_cooldown audit write failed (non-blocking)",
+            );
+          });
+        return 0;
+      }
+
+      // D-10 F-8 (R-754 §3): a REFUSAL is not a successful enqueue.
+      //
+      // Before this branch existed, control fell straight through to
+      // `candidateConveyorEnqueuedTotal.inc()` and the enqueued SSE, so a strategy
+      // the engine had explicitly REFUSED to execute was counted and announced as
+      // work successfully dispatched. Combined with the eligibility-query defect
+      // above, that produced one fabricated successful enqueue per tick, forever.
+      //
+      // It is deliberately NOT routed into the "skipped" branch above: a skip means
+      // "not now, try later" and sets a 24-hour cooldown. A refusal is terminal.
+      if (result.status === BACKTEST_STATUS_REFUSED) {
+        logger.info(
+          { strategyId: s.id, strategyName: s.name, backtestId: result.id },
+          "candidate-backtest-conveyor: execution REFUSED — terminal, not re-enqueued and not counted",
+        );
+        // The audit row is the POSITIVE WITNESS that this path executed. Without it
+        // every "did not count / did not announce" assertion is equally satisfied by
+        // a conveyor that silently did nothing at all.
+        db.insert(auditLog)
+          .values({
+            action: "conveyor.candidate_backtest_refused",
+            entityType: "strategy",
+            entityId: s.id,
+            status: "info",
+            decisionAuthority: "scheduler",
+            input: { strategyName: s.name, symbol: s.symbol } as Record<string, unknown>,
+            result: {
+              backtest_id: result.id,
+              backtest_status: result.status,
+              terminal: true,
+            } as Record<string, unknown>,
+            correlationId,
+          })
+          .catch((auditErr: unknown) => {
+            logger.warn(
+              { auditErr, strategyId: s.id },
+              "candidate-backtest-conveyor: conveyor.candidate_backtest_refused audit write failed (non-blocking)",
             );
           });
         return 0;
