@@ -4,6 +4,48 @@
 
 ---
 
+## AR-879 · 2026-08-09 · ⚡ **`R-766 §4` LANE 2 (`N-4`) — STEP 1 OF 2 LANDED: THE SEAM IS EXTRACTED (`5fc2ee6d`) AND WITNESSED (`6d8cfd41`), RED-PROOFED BY DISCONNECTION.** 🛑 **THE SEMANTIC REPAIR IS DELIBERATELY NOT IN EITHER COMMIT — `R-766 §4`: `YOU MAY BUILD THE SEAM BEFORE THE RED; YOU MAY NOT CHANGE THE DECISION BEFORE IT.` `N-4` IS NOT CLOSED. FAN-IN STAYS `6 / 9`.**
+
+**SEAT `claude.exe 23640`.** **TREE `wt-h1-wave4-20260712`.** **PROGRESS REPORT, NOT A HANDOFF AND NOT A CLOSURE CLAIM.**
+
+### §1 — ✅ THE EXTRACTION — MECHANICAL, AND I PROVE IT MOVED NO LOGIC
+**`checkAutoPromotions()`'s inline fire-and-forget block → `LifecycleService.runEvidenceAutoBacktestEnqueue()`, `@internal`.** **Body copied VERBATIM; the only edits are the closure variables becoming named params (`s.id`→`strategyId`, `s.name`→`strategyName`, `s.symbol`→`symbol`, `gateEvidenceStatuses.length`→`totalGates`).** **Call site is still ONE line, at the SAME point, still `void`-prefixed fire-and-forget.**
+🛑 **THE DEFECT IS STILL PRESENT ON PURPOSE** — `[MEASURED HERE]` `grep -rn 'btResult.status === "skipped" ? "skipped" : "success"' src/` → **exactly 1 hit, `lifecycle-service.ts:3130`**, now inside the helper. **A refusal still takes the `: "success"` arm. That is the decision, and it does not move until its red exists.**
+
+### §2 — ✅ REGRESSION — AND THE ONE RED IS PROVEN PRE-EXISTING, NOT ASSUMED
+**Population enumerated, not remembered: all `6` suites that instantiate the REAL `LifecycleService` (`grep -l 'new LifecycleService'`, minus any that `vi.mock` the module) plus `auto-recovery-debt1-4`.**
+```
+npx vitest run <7 members>  ->  Tests 1 failed | 85 passed (86)
+FAIL deepscan-wiring-fixes.test.ts > kill-switch.ts uses _confirmedForceClose …
+```
+✅ **CONTROL RUN, because "it's probably baseline" is a claim:** copied my modified file aside, `git checkout --` the service, re-ran that suite with **my extraction absent** → **the IDENTICAL failure, `1 failed | 23 passed`**, then restored (`diff -q` IDENTICAL). ⇒ **`[MEASURED HERE]` the red is pre-existing and untouched by this lane** — one of the known baseline failures (`[population-baseline]`). 🛑 **I did NOT use `git stash`** (forbidden, shared tree). **`tsc --noEmit` exit `0`.**
+
+### §3 — ✅ THE WIRING GUARD — AND ITS OWN TWO CONTROLS
+**`src/server/__tests__/d10-n4-lifecycle-refusal.test.ts`.** Asserts over **EXECUTABLE lines only** (`//`, `*`, `/*` stripped): **exactly one declaration · exactly one invocation · that invocation is `void`-prefixed and NOT awaited.**
+✅ **POSITIVE CONTROL:** the source read is non-trivial (`>5000` lines, `>3000` executable) — **without it, every "exactly one" would also pass on an empty read.** ✅ **NEGATIVE CONTROL ON THE STRIPPER:** an executable token must still be present (`async checkAutoPromotions(`) **and** a prose-only token must be absent (`BEHAVIOUR-PRESERVING`) — **an over-aggressive filter would otherwise make the counts meaningless.**
+✅ **RED-PROOFED — MUTATION `M3` (`R-766 §4`'s "disconnect the production call site"):**
+```
+M3: void this.runEvidenceAutoBacktestEnqueue({  ->  disconnected (if (false) …)
+    RED: exactly 1 — "invokes it exactly once … fire-and-forget"
+    GREEN: the other 3 (declaration, positive control, negative control)   => ISOLATION
+    RESTORE: git diff --exit-code = 0, byte-identical
+```
+⚠️ **GRADE, STATED HONESTLY: this is `[MEASURED — STRUCTURAL]`. It proves the helper is WIRED and called once; it does NOT execute the call site.** **A behavioural fixture for that site is Option `A`, refused on measured cost by `R-764 §3` and not re-opened.** ★ **`A STRUCTURAL GUARD IS A REAL CONTROL AND A NARROW ONE — IT MUST SAY WHICH.`**
+
+### §4 — ⚡ WHAT REMAINS IN `N-4`, SPECIFIED SO NOTHING IS RE-DERIVED
+**THE HARNESS IS BUILDABLE AND THE RECIPE EXISTS — ADAPT, DO NOT AUTHOR.** `[MEASURED HERE]` **six suites already execute the real `LifecycleService` with a `31–33`-mock preamble; `deepscan18-graveyard-burial-sse.test.ts` lines `1–169` are the proven template** (`db` mocked as `{get select, get insert}`, `auditLog` columns enumerated in the schema mock, drizzle ops stubbed). **`LifecycleService` takes no constructor args; there is NO exported singleton — `new LifecycleService()`.**
+**REMAINING, ALL FOUR PARTS:**
+1. **RED** over the real helper: a refusal must get a **distinct named audit action + evidence**, never `success`/`skipped`/`failure`. Use `isExecutionRefused`/`refusalEvidence` from `../lib/backtest-refusal.js` — **NO new classifier.** ⚠️ **The schema mock MUST export `BACKTEST_STATUS_REFUSED`, or `isExecutionRefused()` compares against `undefined` and the branch is unreachable** (the trap `AR-878 §1` hit in `F-10`; it will recur verbatim here).
+2. **THE CAP / IDENTITY** — the one genuine DESIGN decision left: a **deterministic request identity from every input capable of changing the answer, NEVER wall-clock or randomness**; same identity ⇒ do not re-enqueue, materially changed identity ⇒ retry allowed. **Today's cap is `1 per strategy per 24h` counted off `audit_log`, which cannot stop a deterministic refusal from being re-requested forever.**
+3. **MUTATIONS STILL OWED (`M3` done):** restore refusal→`"success"` ⇒ **only** the named-refusal control RED · disable identity suppression ⇒ **only** the repeat-refusal control RED · completed/skipped/changed-identity positives stay GREEN.
+4. **THE REPLICA:** delete `runFix3Logic()` (`auto-recovery-debt1-4.test.ts:274–313`) and the **FIVE** tests in the `FIX 3` describe (`:543–611`), after their coverage is re-established against the real helper. 🛑 **`:727` IS NOT PART OF THE REPLICA — LEAVE IT** (`R-766 §2`). ⚠️ **Its copy of the defect is at `:310` and reads `result.status === …`, NOT `btResult.status === …` — a grep written for the production spelling will MISS it.**
+
+### §5 — ⚠️ TWO THINGS THE DESK SHOULD KNOW
+🛑 **NOTHING IS PUSHED.** `[MEASURED — the desk's own `ADVISOR-STATE` commit `b941086e` records a GitHub push block, operator-reserved]`. **`703b7eec` · `9c84d1d3` · `5fc2ee6d` · `6d8cfd41` · `ca07a661` are LOCAL to this worktree.** ★ **I state it because `AR-876` could truthfully write "all pushed" and I cannot.**
+⚖️ **ATTEMPT BUDGET: `N-4` at `1 / 2`** — one attempt, no re-tries, no failed hypothesis. **`F-10` closed at `1 / 2`.**
+
+---
+
 ## AR-878 · 2026-08-09 · ✅ **`R-766 §4` LANE 1 — `F-10` CLOSED. RED-FIRST PUBLISHED, FIX LANDED `703b7eec`, MUTATION TABLE COMPLETE, RESTORE BYTE-IDENTICAL.** ⚡ **AND THE DEFECT IS NOW `[MEASURED — EXECUTED]`, NOT STATIC: `AR-875` PROVED IT BY READING LINES; THIS RUN PROVES IT BY MAKING THE FIFTH DB READ HAPPEN — `expected 5 to be 4`.** 🛑🛑 **I ALSO CAUGHT TWO OF MY OWN INSTRUMENTS LYING BEFORE THEY REACHED A CLAIM. FAN-IN `6 / 9`.**
 
 **SEAT `claude.exe 23640`.** **TREE `wt-h1-wave4-20260712`, fix at `703b7eec`.** **RULING: `R-766 §4` LANE 1.** **ATTEMPT BUDGET: `1 / 2` — one attempt, no re-tries.**
