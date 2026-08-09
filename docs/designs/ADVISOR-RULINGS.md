@@ -12,6 +12,47 @@
 
 ---
 
+## R-748 · 2026-08-09 · ✅ **`AR-844` ACCEPTED — THE WIP CHECKPOINT IS VERIFIED AT THE REMOTE BY ME, NOT TAKEN ON REPORT.** 🛑🛑★★★★★ **AND I REJECT THE READ'S "LEDGER CORRECTION": IT CITES ITS OWN NUMBERING AS IF IT WERE THIS LEDGER. `AR-844`'s CITATION OF `R-747 §5` IS CORRECT; THERE IS NO CAMPAIGN `R-748` BEFORE THIS ONE.** ⚠️ **THE COLLISION I PRE-REGISTERED AT `R-747` FIRED WITHIN ONE RULING.**
+
+**RULING ID:** R-748 · **AR RULED:** **`AR-844`** · **DECISION: ACCEPT · REJECT (the read's ledger correction) · ADOPT (its backtest omit-list and checkpoint hold) · CONTINUE (step 2, no re-authorization)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-844`** `[MEASURED HERE]` — **ruled here; none newer.** **HEAD at write time: `3f74b207`.** **READ CONSUMED:** external `R-749`.
+⚠️ **MAPPING, RESTATED BECAUSE IT IS NOW PERMANENTLY OFF BY ONE:** external `R-747`+`R-748` → campaign **`R-747`**; external `R-749` → campaign **`R-748`** (this one). **A bare number is ambiguous; name the carrier.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ VERIFIED AT THE REMOTE, INDEPENDENTLY
+`[MEASURED HERE]`:
+```
+git ls-remote origin "refs/heads/wip/*"
+  f788c64b6b4a8ebfaa2d0ce58481f2511126ea55  refs/heads/wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint
+git show --stat f788c64b -> 9 files changed, 1453 insertions(+), 35 deletions(-)
+   subject: "NON-PRODUCTION WIP CHECKPOINT - INCOMPLETE, UNTESTED, DO NOT MERGE (R-747 s5)."
+git status --porcelain src/engine/ -> ONLY  M src/engine/tests/test_synthetic_market_simulator.py
+git rev-parse --short HEAD -> 3f74b207   (production branch UNMOVED)
+```
+✅ **Every figure in `AR-844` reproduces: the SHA, the `9` files, the `+1453 / −35`, the non-production label in BOTH branch name and subject, the clean production tree, and the sibling seat's file still dirty and untouched.** ⚖️ **The per-file blob comparison itself is `[RELAYED]` — I verified the RESULT (the commit's content and the tree's cleanliness), not the worker's nine `hash-object` invocations.**
+⭐⭐ **THE STEP THAT EARNED THIS ACCEPTANCE: it proved the pushed copy was byte-identical PER FILE *before* destroying the working copy.** ★★★★★ **`A COMMIT THAT EXISTS IS NOT A COMMIT THAT CONTAINS WHAT YOU THINK — THE JOIN KEY IS THE PER-FILE BLOB, NOT THE COMMIT SUBJECT.`** ✅ **`[MEASURED, AR-844 §2]` it used `git checkout --` on named paths, never `git stash` (`refs/stash` is shared across worktrees), never `reset`, never a branch switch.**
+
+### §2 — 🛑🛑 THE READ'S LEDGER CORRECTION IS ITSELF THE ERROR, AND I WILL NOT ENTER IT
+The read states: *"The WIP checkpoint authorization came from `R-748`'s state-work preservation decision. The report cites `R-747`. This is a citation correction only."*
+🛑 **REJECTED. `[MEASURED HERE]` `grep -c '^## R-748 · '` on this ledger returned `0` before this ruling was written.** **The WIP checkpoint authorization is campaign `R-747 §5`, which ADOPTED the proposal that arrived in external read `R-748`.** ⇒ **`AR-844` cited correctly; the read is describing its own numbering and calling it ours.**
+★★★★★ **AN EXTERNAL READER CANNOT CORRECT A LEDGER IT CANNOT SEE, AND A CORRECTION IS THE MOST DANGEROUS SHAPE FOR THIS ERROR TO TAKE — IT ARRIVES PRE-FRAMED AS A FIX, SO ACCEPTING IT FEELS LIKE DILIGENCE.** ⚖️ **Had I entered it, the ledger would carry a cross-reference to a ruling that did not exist, and the next seat's `grep` would return nothing — or would land on THIS ruling and mis-attribute.**
+★ **`R-747` pre-registered exactly this** (*"a bare number is ambiguous… name the carrier"*) **and it fired one ruling later. `[external-sha-fabrication]` generalises: external references to OUR artifacts — SHAs, ruling numbers, file paths — get checked before they are entered, every time.**
+
+### §3 — ✅ ADOPTED FROM THE READ
+✅ **BACKTEST CONTRACT, SHARPENED — the omit-list adopted verbatim:** a refused strategy's production result must **omit P&L · Sharpe · expectancy · drawdown · qualification status · edge claims**, and must carry the measured refusal. ★★★★★ **`ZERO ENTRIES PLUS ORDINARY PERFORMANCE OUTPUT IS STILL A DEFECT` — sharper than `R-747 §4`, because it names drawdown and qualification, which a zero-trade run would otherwise emit as legitimate-looking zeros.**
+✅ **EXACT BAR MEMBERSHIP, NOT COUNTS**, at every step of the five-step sequence. ★ Same law as the conformance group's exact-failure-membership rule.
+✅ **CHECKPOINT HOLD, ADOPTED:** after the trigger-safety commit is committed, pushed, remotely verified and reported with exact failure membership, **HOLD for the independent read of the money-path enforcement before resuming the state channel.** 🛑 **Do NOT merge or cherry-pick the WIP branch merely because the trigger tests pass locally.** ⚖️ **The desk's own gate stacks on top: `accuracy-validator` on the trigger commit, receipt `GRADE-TRIGGER-SAFETY-2026-08-09.md`.**
+✅ **KEEP the detached baseline worktree** until the permanent committed regression reproduces the full before/unbound/refused discrimination without depending on it — **`[UNPROVEN until that test exists; this is an ORDER, not a claim about what the test will manage]`.**
+✅ **EXCLUSIONS RESTATED:** the trigger commit must not contain the state channel · the carrier · adapter routing · the WIP commit · the sibling's file.
+
+### §4 — ✅ AUTHORIZED NOW
+✅ **STEP 2 CONTINUES — the TRIGGER-SAFETY COMMIT, alone, under `R-747 §4`/`§6` as sharpened by `§3` here. No re-authorization needed. ATTEMPT BUDGET `0 / 2`.**
+🛑 **STOPS UNCHANGED**, including `R-747 §4`'s positive control: **a faithfully eligible neighbouring strategy must still produce nonconstant decisions through the same consumer — an engine that refuses everything also produces zero golden entries.** **Both flag states.**
+
+**LESSON TO PERSIST:** ★★★★★ **`AN EXTERNAL READER CANNOT CORRECT A LEDGER IT CANNOT SEE — AND A WRONG CORRECTION IS MORE DANGEROUS THAN A WRONG CLAIM, BECAUSE IT ARRIVES PRE-FRAMED AS A FIX.`** · ★★★★ **`ZERO ENTRIES PLUS ORDINARY PERFORMANCE OUTPUT IS STILL A DEFECT.`** · ★★★ **A pre-registered ambiguity fired one ruling after registration — `PRE-REGISTRATION IS WHAT MAKES "I TOLD YOU SO" AN AUDIT RATHER THAN A MEMORY.`**
+
+---
+
 ## R-747 · 2026-08-09 · ✅✅★★★★★ **`AR-843` ACCEPTED — THE MEASUREMENT IS THE BEST INSTRUMENT THIS CAMPAIGN HAS BUILT, AND IT CONFIRMS `R-746 §2`: UNBINDING THE TRIGGER LEAVES `entry_short = 7` UNCHANGED WHILE THE GATING SET DROPS `3 → 2`.** 🛑🛑🛑★★★★★ **AND I WITHDRAW `R-746 §3`'s LOCALITY CONTROL AS MEASURED-DEAD: IT MUTATES THE ONE THING `AR-843` PROVED CANNOT MOVE THE OUTPUT. THIRD INSTANCE OF `R-726 §1`.** ⭐⭐ **THE READS FILL A GAP I CREATED: MY `R-746 §5` RE-ORDERING WOULD HAVE STRANDED A LARGE UNCOMMITTED DIFF, AND I DID NOT SAY SO.**
 
 **RULING ID:** R-747 · **AR RULED:** **`AR-843`** · **DECISION: ACCEPT · CONFIRM (my own `R-746 §2` mechanism, now measured) · WITHDRAW (`R-746 §3`'s locality control — mine, measured dead) · ADOPT-IN-FULL-ON-MERIT (both reads) · CONTINUE**
