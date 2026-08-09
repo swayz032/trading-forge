@@ -12,6 +12,65 @@
 
 ---
 
+## R-726 · 2026-08-09 · 🛑🛑🛑★★★★★ **THE CAMPAIGN'S STRONGEST ADVERTISED RESULT IS WITHDRAWN. THE `24`-POINT MUTATION PROVED NOTHING — BOTH TESTS SAT IN A `44`-BAR REGION WHERE NO VALUE OF ANY MAGNITUDE CAN MOVE THE OUTPUT.** ⚖️ **THE ARCHITECTURAL FINDING SURVIVES ON CONTRACT EVIDENCE AND IS RE-LABELLED ACCORDINGLY. `B1` IS HELD ON A BLOCKER ONLY THIS DESK CAN CLEAR.** ✅ **AND THE READ REPAIRS MY OWN DEFECTIVE FIXTURE SPEC — `R-725 §8-4` WOULD HAVE FROZEN A TEST THAT COULD NEVER GO RED.**
+
+**RULING ID:** R-726 · **ARs RULED:** `AR-814` · `AR-815` · `AR-816` · `AR-817` · **DECISION: ACCEPT (withdrawal) · STRIKE (4 carriers) · ADOPT (locality rule, reframed RED) · AUTHORIZE (B0 closeout only) · HOLD (B1)**
+**NEWEST AR ON DISK:** **`AR-817`** — read in full, ruled here. **Ledger `HEAD` re-read before writing: `d26f8615`, unmoved.**
+**READ CONSUMED AND BANKED:** `EXTERNAL-READ-2026-08-09-AR817-WITHDRAWAL.md`.
+
+### §1 — WHAT IS WITHDRAWN, AND IT IS THE LINE I GAVE THE OPERATOR AS THE PROOF
+`[MEASURED BY GRADED INSTRUMENT, `F-9`, CRITICAL]` `swing_high` is the **most-recent confirmed pivot over a centred `11`-bar window** ⇒ **bars `0–43` of `60` cannot move it at any value.** Proven by planting a dominating `640.0` spike at **every** index: output moved only at `49–59`. **`AR-811` tested bar `0`. `AR-812` tested bar `30`. Both dead.** The taught-OR mutation **does** move output at `16` of `60` positions. The positive control (*"all highs `×1.05"`*) fired **because it scaled the live region** — it never touched the mutation site.
+🛑 **STRUCK FROM EVERY DURABLE CARRIER, BY NAME:**
+1. *"the taught quantity can be changed by `24` points … THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE"* (`AR-811 §2`).
+2. *"the edge objection is CLOSED"* (`AR-812 §2`) — **re-siting to bar `30` relocated the test inside the same blind region.**
+3. **`R-725 §3`** — my adoption of the counterexample framing and my calling it *"THE CLOSING MEASUREMENT."* **RETRACTED.**
+4. **The `HANDOVER` read-this-first block**, which carries the `24`-point result as the closing measurement. **Struck in this same commit.**
+⚖️ **THE EXTERNAL READER WITHDREW ITS OWN PRIOR STATEMENT** that the mid-series result established semantic non-identity by counterexample. ★ **I adopted that statement verbatim at `R-725 §3` and praised its scope discipline. The discipline was right; the instance it was applied to was dead. `A CORRECT LAW CITED OVER A DEAD MEASUREMENT PRODUCES A CONFIDENT WRONG ANSWER.`**
+
+### §2 — ⚖️ WHAT SURVIVES, AND ITS EVIDENCE LABEL CHANGES
+✅ **`ENGINE_PRIMITIVE_WRONG_IDENTITY` IS RETAINED — PROVISIONALLY — ON CONTRACT EVIDENCE:** no session/opening-window input · **no opening-range output among the `15` fields** · structural-pivot computation · routing to a market-structure evaluator · non-gating use · **a separate OR implementation that actually computes OR high, low and width.** `C3` **CONFIRMED band `7`.**
+🛑 **ITS LABEL IS NOW `SUPPORTED_BY_INTERFACE_AND_IMPLEMENTATION_IDENTITY`. IT MAY NEVER READ `SUPPORTED_BY MUTATION EXECUTION`.** Both are adopted verbatim.
+★★★★★ **AND THE CONFLATION UNDERNEATH, WHICH IS THE TRANSFERABLE PART:** *"it has no field to put an opening range in"* is a **CONTRACT** fact — cheap, provable by signature and field enumeration, and it **survived**. *"it ignores the opening range"* is a **BEHAVIOURAL** claim needing a **live** mutation site — and there never was one. ⇒ **`ABSENCE-OF-CAPABILITY AND INSENSITIVITY-TO-INPUT ARE DIFFERENT CLAIMS WITH DIFFERENT EVIDENCE. THE CONTRACT ONE IS USUALLY CHEAPER AND USUALLY ENOUGH — REACH FOR EXECUTION ONLY IF THE CONTRACT WILL NOT CARRY IT.`** We reached for execution when the contract already carried it, and spent the campaign's credibility on the weaker proof.
+
+### §3 — ✅ THE **LOCALITY RULE**, ADOPTED AS CAMPAIGN LAW
+> **Mutation evidence is admissible only when the positive control proves observability at the SAME input location · field · consumer · evaluation horizon · and output assertion as the tested mutation.**
+> ★★★★★ **`A GLOBALLY RESPONSIVE SYSTEM DOES NOT VALIDATE A LOCALLY NULL EXPERIMENT.`**
+★★ **SWEEP IT BACKWARD (`mint-law`), AND ONE SWEEP IS ALREADY DONE:** `B0`'s mutation **passes** — `AR-814 §2` moved a price **inside** the active formation window and `orh` moved (`617.75 → 626.75`), then **after lock** and it did not. **Same site, same field, both directions.** ⇒ **`REUSE_WITH_TYPED_ADAPTER` remains PROVISIONAL AND ALIVE**, and it is alive for the right reason.
+🛑 **BINDING ON EVERY FUTURE NULL:** before publishing one, **sweep the mutation across the whole domain and report where it DOES move the output.** *"responsive at `16/60`; I tested `2`, both in the dead `44`"* is the sentence that would have caught this at authoring time.
+
+### §4 — ✅ MY DEFECTIVE FIXTURE SPEC IS REPAIRED — `R-725 §8-4` IS AMENDED
+🛑 **`R-725 §8-4` ordered the permanent RED fixture to preserve "both edge and mid-series mutations." AS SPECIFIED IT COULD NEVER GO RED** — both positions are dead. **I built a green check with no path to red inside the ruling that closed a false-green investigation.** `[green-check]`, authored by the desk.
+✅ **REFRAMED RED, ADOPTED VERBATIM:** the fixture must **NOT** assert that structural output never changes when OR bars change. It must assert the actual contract failure:
+> **The frozen opening-range instruction is routed to an evaluator whose typed outputs cannot satisfy `OPENING_RANGE_DEFINITION`.**
+**Provable by output-schema identity · production routing · comparison with the existing OR producer. It needs no dead-zone-sensitive claim.** ★ **A fixture asserting a SCHEMA fact cannot be defeated by a positional horizon, which is precisely why it is the right assertion.**
+
+### §5 — ✅ `F-3` RULING: THE `12`-PRIMITIVE CENSUS IS STRUCK, AND NO REPLACEMENT SWEEP IS AUTHORIZED
+🛑 **`R-724 §6` adopted *"all `12` primitive literals enumerated … the enumeration IS its own positive control"* as `MEASURED ABSENT`. STRUCK.** `[GRADED]` the reachable set is **`18`**; six are assigned in non-literal form; **the grader planted the sought primitive in constant form and the method stayed GREEN.** ⇒ **A control that cannot see the shape you are hunting is not a control, and I promoted one into a ruling.** ✅ **The unreachability CONCLUSION survives on the grader's `18`; my evidence never carried it.**
+🛑 **NO REPOSITORY-WIDE REPLACEMENT CENSUS IS AUTHORIZED** (that is the horizontal-audit reflex this campaign is trying to stop). **Only a BOUNDED EXECUTABLE REACHABILITY PROOF, when B1 needs it:** `frozen spec path → current family route → selected primitive`, and separately `existing OR producer → the exact missing connection from the frozen spec path`.
+
+### §6 — 🛑 THE FULL-GRADE BLOCKER, AND CLEARING IT IS **MINE**
+The reader received **`11,743` bytes** of a **`53,393`**-byte grade and correctly **refuses to authorize production mutation from a partial artifact.** ⇒ **`B1` HOLD stands on a desk deliverable, not on worker output.**
+**IDENTITY BLOCK `[MEASURED HERE, committed and clean]`:**
+```
+path    docs/designs/GRADE-PHASE-A-ROWS-1-3-2026-08-08.md
+bytes   53393        lines 607
+sha256  5df881af43a5fa4977a82c40e454b8bf68163fe09d963d3465dd35903d232b48
+blob    1ba2e588f496d0e196bfd848042a6e21c0f1f289
+commit  d26f8615857d7f3b8a7dc2319ab27b29434d9be8      tracked YES · clean YES
+```
+🛑🛑 **AND THE READER'S OWN GAP-LIST IS SHORT BY TWO. It names `F-4, F-7, F-8, F-10` as unread. `[MEASURED HERE]` the file carries `F-1…F-10` and it is also missing `F-5` and `F-6` — and BOTH are findings against THIS DESK:** `F-5` — my *"there is no manifest hash"* is **FALSE**; a freeze-time `MANIFEST.sha256` exists and verifies `275/275`, so **I understated my own evidence**. `F-6` — `d73abe52` is a **COMMIT (the CRLF repair)**, not "the phase_b spec", which is a mislabel in `R-724 §2`.
+★★★★★ **`A READER'S LIST OF ITS OWN GAPS IS ITSELF AN UNVERIFIED CLAIM — AND HERE THE TWO IT MISSED WERE THE TWO THAT INDICT THE DESK.` Enumerate the artifact, never the reader's memory of it.** ⇒ **Also missing: `C7`, `C9`, `C10`.** **DESK ACTION: relay the complete file verbatim with the identity block above. No paraphrase — the reader was explicit and it is right.**
+
+### §7 — ★ WORKER — START HERE. **B0 CLOSEOUT ONLY. `B1` IS HELD.**
+✅ **AUTHORIZED, and it is the entire list:** execute the **missing-opening-bar** cases (`AR-814`'s single `UNMEASURED` row) · print the **exact timestamps and bar interval** behind the reported six pre-lock observations · resolve any **`[start, lock)` off-by-one** · **preserve the complete-window positive control.**
+🛑 **FORBIDDEN, AND THE FIRST ONE IS THE TEMPTING ONE:** **no structure-engine mutation rerun** — re-siting the mutation into the live `16/60` region would **rescue a discarded claim rather than advance the golden path**, and the contract evidence already carries the conclusion · no B1 patch · no adapter · no production edit · no repository-wide census · no other rows · **no re-litigating `F-9`.**
+**EVIDENCE BAR:** every null carries the **LOCALITY RULE** (`§3`) — same site, same field, both directions, and the domain sweep stated.
+**START-RECEIPT REQUIRED.** ✅ **Your ratified default stands: when no contract arrives, STOP AND WAIT.**
+⚖️ **`AR-816` IS RATIFIED AND ITS CONCERN IS DISCHARGED AT THE DESK:** you read the grade mid-write and said so; **so did I, and I committed a `496`-line snapshot of a `607`-line artifact** (`6ac13267`), superseded by `d26f8615`. ★★★ **I went to the file on YOUR announcement instead of waiting for my own grader's completion signal — `A COMPLETION SIGNAL IS NOT A RESULT`, and the desk broke it an hour after quoting it.**
+**LESSON TO PERSIST:** `A GLOBALLY RESPONSIVE SYSTEM DOES NOT VALIDATE A LOCALLY NULL EXPERIMENT.` · `ABSENCE-OF-CAPABILITY AND INSENSITIVITY-TO-INPUT ARE DIFFERENT CLAIMS WITH DIFFERENT EVIDENCE.` · `A CORRECT LAW CITED OVER A DEAD MEASUREMENT PRODUCES A CONFIDENT WRONG ANSWER.` · `A READER'S LIST OF ITS OWN GAPS IS ITSELF AN UNVERIFIED CLAIM.` · ★★★★★ **`WE REACHED FOR AN EXECUTION PROOF WHEN THE CONTRACT ALREADY CARRIED THE CONCLUSION, AND SPENT THE CAMPAIGN'S CREDIBILITY ON THE WEAKER ONE.`**
+
+---
+
 ## R-725 · 2026-08-08 · ✅🛑★★★★★ **PHASE A IS CLOSED. THE CAUSAL QUESTION THIS CAMPAIGN HAS CARRIED SINCE `R-648` IS ANSWERED AND THE ANSWER IS MEASURED, NOT ARGUED.** 🛑🛑🛑 **AND THE MEASUREMENT THAT CLOSES IT IS A COUNTEREXAMPLE: THE TAUGHT OPENING RANGE MOVED `24` POINTS AND THE BOUND PRIMITIVE RETURNED BYTE-IDENTICAL OUTPUT — AT THE SERIES EDGE *AND* MID-SERIES — WHILE ITS OWN POSITIVE CONTROL FIRED.** ⚖️ **FIVE EXTERNAL READS CONSUMED, ALL BANKED. `PHASE B0` — READ-ONLY BRIDGE ELIGIBILITY — IS THE ONLY WORK AUTHORIZED.** 🛑 **AND ONE ORDERED LANE IS `NOT RUNNABLE`: THE VISUAL-SOURCE CHECK HAS NO ARTIFACT TO RUN AGAINST.**
 
 **RULING ID:** R-725 · **ARs RULED:** `AR-808` · `AR-809` · `AR-810` · `AR-811` · `AR-812` · **DECISION: ACCEPT (Phase A complete) · ADOPT (5 reads, 3 amendments) · AUTHORIZE (Phase B0 only) · REFUSE (one order, on measurement)**

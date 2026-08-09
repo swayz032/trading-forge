@@ -7,10 +7,22 @@
 > - **PRIMARY** `CANONICAL_TERM_UNRESOLVED — OPENING_RANGE_COLLAPSED_INTO_COARSE_WAIT_STRUCTURE`
 > - **SECONDARY** `ENGINE_PRIMITIVE_WRONG_IDENTITY — STRUCTURE_EVENT_EVALUATOR_SELECTED_FOR_LEVEL_CONSTRUCTION`
 > - **GAP** `EXISTING_OPENING_RANGE_CAPABILITY_NOT_REACHABLE_FROM_SPEC_BINDING_PATH`
-> **THE CLOSING MEASUREMENT:** the taught opening range was mutated `24` points and
-> `compute_structure_state` returned **byte-identical output on every field — at the series edge AND
-> mid-series** — while its positive control (`×1.05` on highs) **did** move. Unrelated prose ("the
-> capital of France is Paris") binds to the same primitive `bindable=True`.
+> 🛑🛑🛑 **~~THE CLOSING MEASUREMENT: the taught opening range was mutated `24` points and
+> `compute_structure_state` returned byte-identical output on every field — at the series edge AND
+> mid-series.~~ WITHDRAWN AT `R-726 §1`. DO NOT QUOTE IT.** `[GRADED, F-9, CRITICAL]` `swing_high` is
+> the **most-recent pivot over a centred `11`-bar window** ⇒ **bars `0–43` of `60` cannot move it at
+> ANY value.** Both tested positions (bar `0`, bar `30`) were **dead**; the mutation **does** move
+> output at `16` of `60`; the `×1.05` control fired **elsewhere in the series, not at the mutation
+> site.** ★★★★★ **`A GLOBALLY RESPONSIVE SYSTEM DOES NOT VALIDATE A LOCALLY NULL EXPERIMENT.`**
+>
+> ✅ **WHAT ACTUALLY CARRIES THE FINDING — CONTRACT EVIDENCE, `C3` CONFIRMED band `7`:**
+> `compute_structure_state` takes **no session, clock or range-window input** and **none of its `15`
+> output fields is an opening range**; it is routed to a market-structure evaluator; its value is
+> non-gating; and a **separate OR implementation** genuinely computes OR high/low/width.
+> 🛑 **LABEL IT `SUPPORTED_BY_INTERFACE_AND_IMPLEMENTATION_IDENTITY` — NEVER
+> `SUPPORTED_BY MUTATION EXECUTION`.** ★★★ **`ABSENCE-OF-CAPABILITY AND INSENSITIVITY-TO-INPUT ARE
+> DIFFERENT CLAIMS WITH DIFFERENT EVIDENCE.`** Unrelated prose ("the capital of France is Paris")
+> binding to the same primitive `bindable=True` **still stands** (`C2`, CONFIRMED band `8`).
 > 🛑 **NOTHING IS CERTIFIED.** `accuracy-validator` grade **IN FLIGHT** → receipt
 > `docs/designs/GRADE-PHASE-A-ROWS-1-3-2026-08-08.md`. `UNVERIFIABLE` stands (`R-722 §4`, `R-723 §2`).
 > ⚡ **ONLY AUTHORIZED WORK: `PHASE B0`** (`R-725 §8`) — **read-only** bridge-eligibility on
