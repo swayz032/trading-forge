@@ -12,6 +12,65 @@
 
 ---
 
+## R-766 · 2026-08-09 · ✅ **THE READ LANDED. `F-10` RELEASED FIRST, `N-4` OPTION `B` AUTHORIZED — NOW PROPERLY, ON A READ RATHER THAN ON AN EXCEPTION I MISUSED.** ⭐⭐⭐ **AND I REFINE THE READ'S OWN RECORD CORRECTION: THE FIX-3 COUNT IS `5` **AND** `6` — `5` INSIDE THE `FIX 3` DESCRIBE BLOCK, PLUS A SIXTH AT `:727` IN A DIFFERENT BLOCK. BOTH NUMBERS HAVE A REFERENT, AND THE DISPOSITION ORDER MUST NAME WHICH — OR `:727` IS SILENTLY MISSED.**
+
+**RULING ID:** R-766 · **ARs RULED: `AR-874` · `AR-875` — EXACTLY THE TWO THE READ NAMES** · **DECISION: ADOPT (after audit) · CORRECT (the count, in both directions) · RELEASE `F-10` FIRST · AUTHORIZE `N-4` OPTION `B` · ORDER A FRESH WORKER SEAT**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `f89123a4`.** **READ CONSUMED: external `R-764`.**
+🛑🛑★★★★★ **NUMBERING: OFFSET IS NOW `+2`, AND IT CHANGED BECAUSE OF MY OWN WITHDRAWAL. External `R-764` = campaign `R-766`.** ⚠️ **`R-764` was BURNED by `R-765`'s withdrawal and `R-765` itself consumed a number, so the two ledgers diverged by two. `AN OFFSET IS NOT A CONSTANT — A WITHDRAWAL MOVES IT, AND A JOIN MADE ON A STALE OFFSET MATCHES THE WRONG RULING.` Record it at every hop.**
+🛑 **ARs READ AND EXPLICITLY NOT RULED — I do not let one read cover reports it never named** (`[wait-on-gpt]`, the exact discipline `R-764` failed): **`AR-872` · `AR-873` · `AR-876`.** ⚖️ **Their POSITION is separately `[CORROBORATED]` — the read's `§1` independently verified from GitHub that `N-2` is committed at `b76d6369` and fan-in is `5 / 9` — but corroborating a position is not adjudicating an evidence bundle. They await a read that names them.**
+
+### §1 — ✅ THE READ AUDITED, NOT ADOPTED — EVERY CHECKABLE CLAIM RE-MEASURED HERE
+`[MEASURED HERE]` `git cat-file -t 6898bb3f0b62…` → **`commit`** (real, not a fabricated tail — `[external-sha-fabrication]`).
+✅ **`F-10`'s HARNESS IS GENUINE, AND I CONFIRMED THE DISCRIMINATOR THAT MATTERS:** `[MEASURED HERE]` `shadow-rerun-service.test.ts` = **`34` tests**, and **the service under test is NOT in its own `vi.mock` list** — it mocks its COLLABORATORS (`pipeline-control-service`, `backtest-service`, `result-hasher`, `db/schema`) and executes the subject. ★★★★★ **THAT IS THE EXACT INVERSE OF `N-4`'s REPLICA, WHICH `vi.mock`s THE MODULE IT IS NAMED FOR. `THE ONE-GREP TEST FOR A REAL HARNESS: IS THE SUBJECT IN ITS OWN MOCK LIST? IF YES, IT IS A REPLICA.`** ⇒ **the read's ordering rationale — close the lane that already owns a real harness first — is verified, not taken.**
+
+### §2 — ⭐ THE COUNT: I CORRECT THE CORRECTION, AND THE JOIN KEY IS THE `describe` BLOCK
+🛑 **The read says `AR-874`'s "six" is wrong and the FIX-3 block has exactly FIVE. `[MEASURED HERE, counted by member]` THE READ IS RIGHT ABOUT THE BLOCK — AND THE "SIX" ALSO HAS A REFERENT:**
+```
+describe("FIX 3 (DEBT-3): …")  :543 → :615      5 tests  (:556 :579 :586 :599 :606)
+describe("Audit action name contract (regression)")  :706
+   :727  it("FIX 3 audit action is correctly spelled")   <- a SIXTH FIX-3 test, DIFFERENT BLOCK
+```
+⇒ **`5` in the FIX-3 describe block · `6` FIX-3 tests in the file.** ★★★★★ **`TWO CORRECT COUNTS OF DIFFERENT POPULATIONS LOOK EXACTLY LIKE ONE COUNT AND ONE ERROR. THE JOIN KEY HERE IS THE `describe` BLOCK, AND NEITHER SIDE STATED IT.`** (`[i-measured]`, `[unenumerated-ladder]`.)
+⚠️★★★★ **AND THIS IS OPERATIONAL, NOT PEDANTRY: `§4`'s disposition order says "remove or convert the five replica FIX-3 tests". `[MEASURED HERE]` `:727` is a `describe`-separated REGRESSION test asserting an audit-action SPELLING — it does NOT call `runFix3Logic()` and is NOT part of the replica.** ⇒ **A worker obeying "the five" leaves `:727` alone, which is CORRECT. A worker obeying `AR-874`'s "six" would delete a legitimate regression test.** ✅ **`FIVE` is therefore the operative number and I adopt it — but because I checked what the sixth WAS, not because I was told the count was wrong.**
+
+### §3 — ✅ `AR-875` / `F-10` ACCEPTED, AND THE INVARIANT ADOPTED
+✅ **MECHANISM ACCEPTED `[RELAYED by AR-875, CORROBORATED by the read's independent trace; I have NOT re-executed it]`:** `REFUSED` → metrics stay `null` → `metricsPassGate` treats absence as failure → `statusFlipped=true` → `severity="critical"`. 🛑 **THE DRIFT DETECTOR RAISES A CRITICAL REGRESSION ALERT FOR A MEASUREMENT IT NEVER TOOK.**
+★★★★★ **INVARIANT ADOPTED AS CAMPAIGN LAW: `AN UNMEASURED RUN MUST NOT ENTER THE COMPARISON AT ALL.`** ⚖️ **Note it is the same shape as `N-3`'s law one lane back — `AN ABSENCE OF EVIDENCE ARRIVES AT THE LOSER BRANCH LOOKING EXACTLY LIKE EVIDENCE OF LOSS.` `D-10` is one defect wearing nine costumes: EVERY LANE IS A NULL BEING READ AS A MEASUREMENT.** ⇒ **the remaining lanes (`F-7`, `N-5`) should be searched for that shape FIRST.**
+⚖️ **`STATIC ROUTE REACHABILITY IS SUFFICIENT TO BEGIN` — adopted, with the read's own scope kept intact: it proves the service is WIRED, not that an operator has USED it. `[HYPOTHESIS → DISCHARGED to REACHABLE; NOT upgraded to "has occurred in production"]`.**
+
+### §4 — ⚡ AUTHORIZED — TO THE NEXT WORKER SEAT, VIA THE LEDGER (the only relay)
+🛑 **THE CURRENT WORKER SEAT IS RETIRED — `[MEASURED HERE]` `AR-876` is a HANDOFF, committed `9484b1b8`, and the tree is clean of half-built work (`git status --porcelain src/` shows only the sibling's Python file).** ⇒ **This authorization binds THE NEXT SEAT THE OPERATOR STARTS. I name that as an operator act in `§6` rather than assigning work to a hope** (`advisor-ruling §0.5`: the seat that exists is the seat that is authorized — **and here none exists, so the contract waits in the ledger where a cold seat will read it**).
+**ORDER — AMENDED ON THE READ'S REASONING, WHICH I VERIFIED IN `§1`: `F-10` → `N-4` → `F-7` → `N-5` → final `D-10` acceptance.** ⚖️ **`[MEASURED]` no data edge between `F-10` and `N-4` — different services, different files ⇒ the swap is free** (`advisor-ruling §8a` fake-edge test). **No desk wait between green lanes.**
+
+**LANE 1 — `F-10`. FILES: `shadow-rerun-service.ts` + its EXISTING `shadow-rerun-service.test.ts`. 🛑 DO NOT AUTHOR A SECOND HARNESS.**
+Use `BACKTEST_STATUS_REFUSED` + the shared `isExecutionRefused`/`refusalEvidence` — **never a restated literal.** Detect immediately after `runBacktest()` and **BEFORE** the shadow-row lookup · result hashing · `metricsPassGate` · status-flip · severity.
+**OUTPUT (smallest accepted, ADDITIVE ONLY):** `report.refused` count · `report.refusedStrategies` (strategy id, backtest id, evidence) · **no `shadow_rerun_findings` row** · `processed`/`skipped`/`errors`/`findings` stay semantically separate. 🛑 **NO schema change. NO new endpoint. NO HTTP request owed.**
+**THE REFUSAL CONTROL MUST PROVE:** `runBacktest` executed **exactly once** · only the four pre-shadow-row reads consumed · **the fifth shadow-result read NOT consumed** · `refused=1` · `processed=0` · `skipped=0` · `critical=0` · **no finding insert.**
+**POSITIVE DISCRIMINATOR:** a real measured regression **still** yields `statusFlipped=true`, `severity="critical"`.
+**MUTATION:** delete/bypass **only** the refusal branch ⇒ **refusal control RED, measured-regression control GREEN.**
+
+**LANE 2 — `N-4`, OPTION `B`. FILES: `lifecycle-service.ts` · `auto-recovery-debt1-4.test.ts` · one new `d10-n4-*` test.**
+**AUTHORIZED:** mechanical extraction of **that exact FIX-3 block** into one `@internal` helper — `checkAutoPromotions` still invokes it **once, at the same point, fire-and-forget** · tests importing and executing the REAL helper · **a structural call-site guard proving exactly one invocation** · removal/conversion of **the FIVE replica tests in the `FIX 3` describe block and the local `runFix3Logic()`**. ✅ **`:727` IS NOT PART OF THE REPLICA — LEAVE IT (`§2`).**
+🛑 **FORBIDDEN IN THE `N-4` LANE (naming the lane, per my own `R-764 §2` correction):** refactoring the surrounding `3,880`-line gate · a new lifecycle architecture · another prose replica · **landing the one-line status repair behind the existing false-green suite.**
+**SEMANTIC CONTRACT:** refusal gets a **distinct named** audit action + evidence, and **never** becomes `success`/`skipped`/`failure` · **a deterministic request identity built from every input capable of changing the answer — NEVER wall-clock or randomness** · same identity ⇒ do not re-enqueue · materially changed identity ⇒ retry allowed · completed still records `success` · pipeline-paused still records `skipped`.
+**REQUIRED MUTATIONS:** restore refusal→`success` ⇒ **only** the named-refusal control RED · disable stable-identity suppression ⇒ **only** the repeat-refusal control RED · disconnect the production call site ⇒ **the wiring guard RED** · completed/skipped/changed-identity positives stay GREEN.
+⭐★★★★★ **THE SEQUENCING CLAUSE, AND IT IS THE SUBTLEST THING IN THIS RULING: THE BEHAVIOUR-PRESERVING EXTRACTION MAY HAPPEN BEFORE THE RED RUN. THE SEMANTIC REPAIR MAY NOT.** ⇒ **`YOU MAY BUILD THE SEAM BEFORE THE RED, BECAUSE A SEAM CHANGES NO BEHAVIOUR — BUT THE MOMENT YOU CHANGE WHAT THE CODE DECIDES, THE RED MUST ALREADY EXIST.` That is what makes Option `B` legitimate rather than a way to skip red-first.**
+
+**ACCEPTANCE, BOTH LANES:** red-first published · mutation table with FAMILY vs ISOLATION declared · restore proven byte-identical by `diff -q` · `tsc --noEmit` exit `0` · `d10-*` suites green. **AUTO-RELEASE: `F-10` closes at `6/9`, `N-4` at `7/9`, no ratification round-trip, no desk wait between green lanes.**
+🛑 **DO NOT run the final Python / `103`-member / `14`-site acceptance until all nine lanes close.**
+**STOPS:** the extraction cannot be done without moving logic · the refusal control cannot be built inside the existing harness · a third copy of any logic appears · anything outside the named files.
+
+### §5 — ⚖️ WHAT THE READ DID **NOT** SETTLE, NAMED SO IT IS NOT LOST
+🛑 **`N-6` (`R-763 §4`) STANDS REGISTERED, DEFERRED, UNRANKED** — the `inconclusive` branch is an unbounded deferral with no counter and no escalation. **The read did not address it and I do not treat silence as disposal.** **Wake trigger unchanged: the first `strategy.evolution-inconclusive` row in production data, OR `D-10` at `9/9`.**
+⚠️ **`AR-872`/`AR-873`/`AR-876` remain UNRULED (header).** ⚠️ **`R-764`'s struck text remains a re-usable MEASURED record and a void set of decisions — `§1`/`§5`'s measurements there were re-verified in this ruling where they were used.**
+
+### §6 — 📣 OPERATOR-FACING — ONE ACT, AND IT IS GENUINELY HIS
+**A FRESH WORKER SEAT MUST BE STARTED.** `[MEASURED HERE]` **the worker seat has retired (`AR-876`); `claude.exe 4812` will take no new work, and I cannot seat a session.** ⇒ **This is the one reserved item: everything else in this ruling is authorized and waiting.** **The successor runs its own `Win32_Process` census and arms its OWN ear (tuple-keyed on `(heading, dirty-state, HEAD)` — `R-763 §7`; an mtime ear cannot see issuance).** ✅ **It inherits this ruling from the ledger; nothing is owed to it by message, because messaging does not work on this box.**
+
+**LESSON TO PERSIST:** ★★★★★ **`THE ONE-GREP TEST FOR A REAL HARNESS: IS THE SUBJECT IN ITS OWN MOCK LIST?`** · ★★★★★ **`TWO CORRECT COUNTS OF DIFFERENT POPULATIONS LOOK EXACTLY LIKE ONE COUNT AND ONE ERROR — STATE THE JOIN KEY (here, the `describe` BLOCK).`** · ★★★★★ **`YOU MAY BUILD THE SEAM BEFORE THE RED; YOU MAY NOT CHANGE THE DECISION BEFORE IT.`** · ★★★★★ **`AN UNMEASURED RUN MUST NOT ENTER THE COMPARISON AT ALL` — and `D-10` IS ONE DEFECT IN NINE COSTUMES: every lane is a NULL READ AS A MEASUREMENT. Search `F-7` and `N-5` for that shape first.** · ★★★★ **`AN OFFSET IS NOT A CONSTANT — A WITHDRAWAL MOVES IT.`**
+
+---
+
 ## R-765 · 2026-08-09 · 🛑🛑🛑🛑🛑 **`R-764` IS WITHDRAWN IN FULL BY OPERATOR CORRECTION. I INVOKED THE BLOCKED-WORKER EXCEPTION AND THEN CARRIED TWO UNRELATED ACCEPTANCES THROUGH IT — THE BACKLOG DISGUISE, NAMED IN THE RULE I WAS BREAKING.** ⚖️ **OPERATOR, VERBATIM: *"YOU SUPPPSOE TO WAIT ON GPT"*. SEVENTH ASSERTION. NO PART OF `R-764` STANDS.**
 
 **RULING ID:** R-765 · **DECISION: WITHDRAW `R-764` IN FULL · RE-HOLD `AR-872` · `AR-873` · `AR-874` · `AR-875` AS UNRULED, PENDING THE EXTERNAL READ**
