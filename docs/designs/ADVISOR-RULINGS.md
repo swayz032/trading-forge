@@ -12,6 +12,63 @@
 
 ---
 
+## R-735 · 2026-08-09 · ✅✅★★★★★ **`AR-827` ACCEPTED AND `STEP 3` IS CLEAN-ROOM VERIFIED — BY THE DESK, IN A DETACHED WORKTREE PROVEN EMPTY BEFORE AND AFTER, BECAUSE THE WORKER RE-RUNNING ITS OWN WORK IS THE DOER GRADING ITSELF.** ⭐⭐⭐ **ALL FOUR ACCEPTANCE COMMANDS RE-MEASURED INDEPENDENTLY; ALL FOUR MATCH.** 🛑🛑★★★★★ **AND THE HUNG SWEEP IS NAMED: `test_cloud_backend.py` — WHICH THIS DESK'S OWN BACKLOG HAS CARRIED AS `HUNG` SINCE BEFORE TONIGHT. `R-733 §8` ITEM (5) ORDERED THE WORKER TO WAIT ON AN INSTRUMENT I ALREADY KNEW WAS BROKEN.** ✅ **`STEP 4` CONDITIONALLY RELEASED.**
+
+**RULING ID:** R-735 · **AR RULED:** **`AR-827`** · **DECISION: ACCEPT · VERIFY-INDEPENDENTLY (clean room, desk-run) · ADOPT (read) · DISCHARGE (`R-733 §8` item 5, by naming the blocker) · SELF-CORRECT (two of mine) · CONDITIONAL RELEASE (`STEP 4`)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-827`** — the AR being ruled; none newer. **HEAD at write time: `916435a9`.** **READ CONSUMED AND BANKED:** `GPT EXTERNAL ADVISOR RULING — AR-827 CLOSEOUT VERIFIED REMOTELY; FULL-SUITE HANG IS SEPARATED FROM THE MONEY PATH` (operator-relayed chat, 2026-08-09).
+**GRAPH OBJECT: ✅ ADOPTED** — blob **`876c3a230d51815f49f98c36ea4109fe0b236b97`** `[MEASURED HERE, `git rev-parse HEAD:<path>`, re-derived this ruling — NOT copied forward]`. **NOT MODIFIED · NO node transition** (a step closeout inside `R-648`'s vertical slice moves no graph artifact).
+
+### §1 — ✅ THE READ'S SHA AND ITS FILE LIST BOTH VERIFY
+`[MEASURED HERE]` `git cat-file -t 916435a95c931e77d467d82936ff47deb03179e2` → **`commit`** · `git ls-remote origin h1-wave4-sealed12-driver` → **`916435a95c931e77d467d82936ff47deb03179e2`**, identical to local `HEAD`. ⇒ **the read's tip is real AND current** (`[external-sha-fabrication]` check run, passes).
+✅ **THE FOUR PATHS ARE EXACTLY AS REPORTED** `[MEASURED, `git show --stat`]`: `AGENT-REPORTS.md` (+78) · `opening_range_definition_discrimination.py` (+24) · `src/engine/opening_range_definition.py` (+67) · `src/engine/tests/test_spec_producer.py` (+109) — **4 files, 250 insertions, 28 deletions.** ✅ **AND NONE OF THE `7` QUARANTINED FILES IS AMONG THEM** — `R-734 §3` honoured, verified by me rather than accepted from `AR-827 §9`.
+
+### §2 — ⭐⭐⭐ THE CLEAN-ROOM MEASUREMENT, RUN BY THE DESK — `doer ≠ grader`
+🛑 **THE READ ASSIGNED THIS CONDITION WITHOUT NAMING WHO RUNS IT. I RAN IT, DELIBERATELY:** `advisor-ruling` — *"you cannot grade what you designed, and neither can the worker who built it."* **A clean-room re-run by the seat that wrote the code is a repeat, not a verification.**
+**RECIPE (recorded because I removed the worktree afterward — reproducible in one command):**
+```
+git worktree add --detach C:/Users/tonio/Projects/wt-step3-clean-verify 916435a95c93...
+```
+✅ **PRECONDITION `[MEASURED HERE]`: `git status --porcelain` → EMPTY.** ✅ **POSTCONDITION after all three runs: `git status --porcelain` → STILL EMPTY, `HEAD` still `916435a9`** — **the measurement mutated nothing**, which is the read's condition 4 and is also what makes the result re-derivable.
+| # | command | expected | **`[MEASURED HERE, CLEAN WORKTREE]`** | verdict |
+|---|---|---|---|---|
+| 1 | discrimination instrument | `8/8`, radius `2` | **exit `0` · `ALL 8 CONTROLS PASS` · `8` PASS-marked · `99` conditions / `11` specs · re-type `2`, BOTH AUTHORIZED** | ✅ |
+| 2 | guards | `72 passed` | **exit `0` · `72 passed` in `18.76s`** | ✅ |
+| 3 | conformance group | only the two ordered REDs | **exit `1` · `2 failed, 96 passed`; membership = `test_no_executable_opening_range_adapter_exists_yet` + `test_no_typed_opening_range_output_contract_exists_in_production`** | ✅ **NO THIRD RED** |
+| 4 | TS parity | `0` unexpected | **exit `0` · flag=false `full parity` over `41` specs · flag=true `87` known/expected, `0` unexpected** | ✅ |
+🛑🛑 **COMMAND 4 WAS **NOT** RUN IN THE CLEAN ROOM, AND REFUSING TO IS THE POINT.** `[MEASURED]` the detached worktree has **no `node_modules`**, and `worktree-session` / firewall `B4` record that `npx tsx` there runs a **TROLL STUB that prints exit `0` regardless**. ★★★★★ **A GREEN FROM THAT STUB WOULD HAVE BEEN A FABRICATED SAFETY CLAIM, AND IT WOULD HAVE LOOKED EXACTLY LIKE THE OTHER THREE.** ⇒ **Run in the SHARED tree at the same `HEAD` `916435a9`, after `[MEASURED]` proving no `.ts`/config input is dirty — none of the `7` quarantined files is a TypeScript or binding-plan input.** **TREE NAMED, EQUIVALENCE ARGUED, NOT ASSUMED** (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`).
+⇒ ✅ **`STEP 3` SEMANTIC VERDICT: PASS. The read's clean-environment condition is DISCHARGED HERE, by the desk, not deferred to the worker.**
+
+### §3 — 🛑🛑★★★★★ THE HANG IS NAMED — AND IT IS MY OWN BACKLOG ITEM
+**The read ordered a bounded hang-identification instrument. I ran it.** `[MEASURED HERE, all four steps]`:
+1. **Firewall `B3` (*"pytest hangs at collection via the vectorbt-JIT import"*) — REFUTED, not assumed:** `pytest src/engine/tests --collect-only -q` → **`8561 tests collected in 5.24s`, exit `0`.** ⇒ **collection is healthy; the stall is INSIDE a test.** ★ **The firewall's own protocol is `match → cheap-verify → not confirmed → fall back`; the row that matched the symptom is the row the measurement killed.**
+2. **THE BOUNDARY, WHICH `AR-827 §8` EXPLICITLY DID NOT MEASURE:** `10%` of `8561` = test **`#856`**; the ordered collection at `840–880` spans **`test_class_wf_eligibility_gate_toggle.py`** and **`test_cloud_backend.py`**.
+3. **ISOLATED, WITH A POSITIVE CONTROL:** `pytest src/engine/tests/test_cloud_backend.py` → **exit `124` (timeout-killed), `53` dots, and `0` summary lines** · neighbour `test_class_wf_eligibility_gate_toggle.py` → **`10 passed in 1.11s`.** ⇒ **`test_cloud_backend.py` HANGS ON ITS OWN.**
+4. 🛑🛑🛑 **AND IT IS ALREADY ON THIS DESK'S BOOKS** `[MEASURED — `grep`]`: **`ADVISOR-STATE.md:118`** and **`ADVISOR-RULINGS.md:1097`** both read *"DESK BACKLOG, UNAUTHORIZED, OWNER = THE SEAT … `test_cloud_backend.py` HUNG."*
+⚖️★★★★★ **THEREFORE `R-733 §7`/`§8` ITEM (5) WAS UNDISCHARGEABLE AS WRITTEN, AND THAT IS MY DEFECT, NOT THE WORKER'S.** I told it to *"let the full sweep finish and report exact failure membership"* **while my own state file recorded the blocker sitting at the 10% mark.** ⇒ **ITEM (5) IS DISCHARGED BY NAMING THE BLOCKER**, not by a membership list that could never have existed. ★★★★★ **`I ORDERED A MEASUREMENT MY OWN BACKLOG SAID WAS IMPOSSIBLE — A BACKLOG YOU DO NOT RE-READ IS A BACKLOG THAT ONLY COSTS OTHER PEOPLE TIME.`**
+✅ **ADOPTED FROM THE READ:** the `0`-byte artifact under *"completed, exit code 0"* and the second hang are **measured INFRASTRUCTURE failures, NOT `STEP 3` regressions**; the whole-repo sweep becomes **separate desk-owned debt and does NOT block the vertical compiler path.** 🛑 **Do not repair database, environment or unrelated tests inside `B1`.**
+
+### §4 — ⚠️ TWO CORRECTIONS OF MY OWN, PLAINLY
+1. **I read a piped exit code and it lied to me** — `... | tail -5; echo $?` reported `0` for a run that had actually been timeout-killed; the unpiped re-run returned **`124`**. ★ **Firewall `B4` names this exact trap in writing (*"NEVER through a pipe — tail's own 0 masks it"*), I had the firewall open, and I still did it.** **Corrected before it entered any claim.**
+2. **`R-733 §7` assigned `_apply_a_plus_confluence_gate` to the desk backlog — the same backlog I then failed to re-read in `§3`.** The list is now: `shadow_runner._extract_stop_multiple`/`_extract_tp_multiple` · a HOST for `F-3`'s empty-path assertion · **`test_cloud_backend.py` HUNG** · `_apply_a_plus_confluence_gate` `ImportError`. **All four are MINE.**
+
+### §5 — 📝 THE DOCUMENTATION CORRECTION — WORKER'S TO MAKE, BECAUSE I MAY NOT EDIT `AGENT-REPORTS.md`
+The read is right that `AR-827 §9`'s *"not stashed"* and `R-734`'s commit message disagree. **The single-writer invariant means I cannot fix it; you must.** ✅ **ADOPT THE READ'S WORDING VERBATIM:**
+> `The worker did not manually stash the quarantined files. Pre-commit machinery temporarily stashed and restored them; their content hashes were verified unchanged afterward.`
+⚖️ **THIS IS A DOCUMENTATION CORRECTION, NOT A PRODUCTION DEFECT** — and the underlying fact is already measured in `R-734 §4`: identical member list, identical content hash ignoring `index` lines. ★ **Note the asymmetry honestly: the machinery stash was triggered by MY ledger commit, and `R-734 §4` already changed my procedure so it will not recur on ledger-only writes.**
+
+### §6 — ✅ `STEP 4` IS CONDITIONALLY RELEASED — TWO OF THREE CONDITIONS ARE ALREADY MET
+The read authorizes `STEP 4` after **(a)** the documentation correction · **(b)** the clean-worktree affected-suite result matching expectation · **(c)** correction and evidence pushed.
+✅ **(b) IS DISCHARGED BY `§2` — measured by the desk, all four commands matching.** ⇒ **`STEP 4` BEGINS THE MOMENT (a) AND (c) LAND. NO FURTHER RULING IS REQUIRED** — the read says so and the measurements do not disagree. ★ **I am not making you wait for a ruling that would only restate a condition already met** (`0.5`: a ruling that closes work without authorizing the next is a stall order).
+**`STEP 4` CONTRACT — BOUNDED, AND A DESIGN RECEIPT COMES BEFORE CODE:**
+🛑 **START-RECEIPT FIRST, AND IT MUST CARRY THE ADAPTER'S DESIGN IN OUTLINE, NOT JUST "STARTED"** — first observable = the design statement; ETA yours. **I have not seen this design and I am not pre-approving one.**
+**UNCHANGED INVARIANTS, ALL OF THEM BINDING:** no video or strategy id in production code · frozen census stays **EXACTLY TWO** (a third member ⇒ **STOP**) · breakout trigger stays **`UNRESOLVED_SOURCE_AMBIGUITY`** · `orb_5m_retest`'s breakout/retest rules **NOT compiled** (`A CLEARER TEACHER DOES NOT RESOLVE A DIFFERENT TEACHER'S SILENCE`) · the `7` quarantined files stay untouched · per-step attempt budget `2`.
+**AND THE TWO ORDERED REDS ARE THE ACCEPTANCE TARGET:** `STEP 4` is what legitimately turns `test_no_executable_opening_range_adapter_exists_yet` and `test_no_typed_opening_range_output_contract_exists_in_production` GREEN. 🛑 **They must go green BY THE ADAPTER EXISTING AND WORKING — not by being edited.** ★ **`WEAKENING THE TEST THAT DEFINES THE FINISH LINE IS HOW A CAMPAIGN ARRIVES NOWHERE ON TIME.`**
+**PROCESS HYGIENE (read, adopted):** you may terminate **only your own** hung pytest, and only **after recording its final state** · **PIDs `17584` / `21892` are NOT yours — leave them; they are desk-owned until resolved** · `test_cloud_backend.py` is **mine**, not a `B1` repair.
+
+**LESSON TO PERSIST:** ★★★★★ **`I ORDERED A MEASUREMENT MY OWN BACKLOG SAID WAS IMPOSSIBLE.` A desk backlog is not an archive — it is a precondition list, and an order issued without re-reading it spends someone else's hours.** · ★★★★★ **`THE CLEAN ROOM HAD NO node_modules, SO ITS FOURTH GREEN WOULD HAVE BEEN A STUB'S` — the environment that makes three measurements trustworthy can make the fourth a fabrication, and they look identical.** · **`A CLEAN-ROOM RE-RUN BY THE AUTHOR IS A REPEAT, NOT A VERIFICATION.`** · ★★★ **`I HAD THE FIREWALL OPEN AND STILL READ A PIPED EXIT CODE.` Knowing a trap is not the same as not being in it; the discipline is the unpiped re-run, not the knowledge.**
+
+---
+
 ## R-734 · 2026-08-09 · ✅ **SECOND READ CONSUMED — ITS SHA IS REAL (`cat-file` FIRST) AND ITS MEASUREMENT FINDING IS ADOPTED.** ⭐⭐⭐ **BUT I SCOPE IT TIGHTER THAN IT WAS WRITTEN, BECAUSE I MEASURED WHICH RUNS ARE ACTUALLY DIRTY AND MOST OF THEM ARE NOT.** 🛑🛑★★★★★ **AND THE FINDING THAT MATTERS MOST IS AGAINST ME: THE READ ORDERS *"NEVER STASH ANOTHER SEAT'S FILES"* AND MY OWN `R-733` COMMIT DID EXACTLY THAT — `git commit -o` SCOPES THE COMMIT, NOT THE HOOK. MEASURED LOSSLESS, MEASURED ANYWAY.** ⚠️ **IT ALSO DESTROYED THE EVIDENCE THAT WOULD HAVE DATED THE QUARANTINED FILE.**
 
 **RULING ID:** R-734 · **AR RULED:** **NONE — no new AR.** `[MEASURED HERE]` **newest AR on disk is `AR-826`, ruled by `R-733`; this ruling is written because a load-bearing decision arrived and because I found something myself** (`advisor-ruling §0`). · **DECISION: ADOPT-WITH-SCOPE-CORRECTION (read) · RECORD (quarantine) · AMEND (my own commit procedure) · `R-733` OTHERWISE UNCHANGED**
