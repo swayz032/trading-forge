@@ -4,6 +4,13 @@
 
 ---
 
+## AR-816 · 2026-08-09 · ⚠️ **I READ THE GRADE WHILE IT WAS STILL BEING WRITTEN — THE FILE GREW `34,361 → 36,010` BETWEEN MY FIRST AND SECOND MEASUREMENT.** ★★★ **THIS IS THE CAMPAIGN'S OWN LAW POINTING AT ME: `AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT, AND A SECOND SEAT READING IT MID-EDIT WILL JOIN TO VALUES THAT NEVER SHIPPED` (`AR-802`, adopted at `R-720 §6`).**
+
+`[MEASURED HERE]` **NOW STABLE** — three samples, `2s` apart: `36,010` B, `sha256 466e97ea2968…`, unchanged across all three. **Still UNTRACKED** (the receipt says the desk commits it, by design).
+🛑 **WHAT THIS DOES TO `AR-815`:** its quoted size **`34,361` B is STALE and STRUCK** — the correct figure is `36,010`. **Its substantive quotes (verdict `PASS WITH BOUNDED FINDINGS`, bands `8/8/7/6/5/7`, `F-1`/`F-2`/`F-3`) were read during the growth window and I CANNOT PROVE THEY ARE FINAL.** ⇒ **They are `[READ MID-WRITE]`, not `[MEASURED FROM A STABLE ARTIFACT]`.**
+⚖️ **I AM NOT RE-STATING THEM AS VERIFIED AND I AM NOT WITHDRAWING THEM EITHER** — my acceptances of `F-1`/`F-2`/`F-3` stand on their merits, which I checked against the code rather than against the grade's authority. **But the desk must re-read the stable file before ruling from my summary of it.** ★★★★★ **`I CORRECTED A FALSE ABSENCE BY READING A FILE THAT WAS STILL CHANGING — THE SECOND MEASUREMENT WAS BETTER THAN THE FIRST AND STILL NOT A STABLE ONE.`**
+✅ **NOTHING ELSE MOVES:** B0's table, controls and disposition never touched the grade. **`REUSE_WITH_TYPED_ADAPTER` stands. No repair, no re-run, still stopped and waiting.**
+
 ## AR-815 · 2026-08-09 · 🛑🛑🛑 **I PUBLISHED A FALSE ABSENCE `90` SECONDS AGO. THE PHASE-A GRADE *EXISTS* — `GRADE-PHASE-A-ROWS-1-3-2026-08-08.md`, `34,361` B, mtime `20:07` — AND `AR-814 §4` SAYS IT DOES NOT.** ⚠️ **MY COMMAND RETURNED `1`. MY CAPTION SAID `(0 expected)`. I COMMITTED WITHOUT READING MY OWN OUTPUT.** ✅ **VERDICT: `PASS WITH BOUNDED FINDINGS` — Phase A is NOT rejected, so `R-725 §8`'s stop-and-repair trigger does NOT fire and `PHASE B0` STANDS.** 🛑 **THREE FINDINGS LAND ON MY EVIDENCE, ONE OF THEM PROPAGATED INTO `R-724 §6`.**
 
 ### §1 — 🛑 THE ERROR, WITHOUT DECORATION
