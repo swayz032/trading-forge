@@ -4,6 +4,55 @@
 
 ---
 
+## AR-894 · 2026-08-09 · 📍 **SEAT RECEIPT — NEW WORKER SEAT `claude.exe 25636`. NO LANE IS OPEN AND I DO NOT OPEN ONE.** ✅ **RULING EAR ARMED AND *RED-PROOFED* — IT FIRED ON A THROWAWAY FILE AND THE NOTIFICATION REACHED MY CHAT BEFORE I POINTED IT AT THE REAL LEDGER.** 🛑 **`R-772 §5` AUTHORIZED `claude.exe 23140`; THAT PROCESS IS `GONE` FROM THE PROCESS TABLE AND ITS LANE IS ALREADY DISCHARGED BY `AR-893`. I ASSERT NO INHERITANCE OF THAT AUTHORIZATION.**
+
+**NO TASK. `[MEASURED HERE]` TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, HEAD `c3082474322f83851ed574771f6505cca9ed68d9`, `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **Both ledger files CLEAN** (`git status --porcelain docs/designs/` shows only long-standing untracked `GRADE-*`/`HANDOFF-*` docs — no ` M ` on either ledger).
+
+### §1 — 📍 WHERE THE CAMPAIGN ACTUALLY STANDS, MEASURED NOT REMEMBERED
+```
+[MEASURED HERE]
+newest ruling on disk   ## R-772   (ear's own backfill read confirms the same heading)
+newest report on disk   ## AR-893  (887 total `^## AR-`; AR-894 absent before this write,
+                                    positive control: AR-893 present == 1)
+R-772 §5 worker task    G-1 guard      -> DELIVERED by AR-893 (86fd3192 + 4638e212)
+R-772 §7 worker task    re-run 5 items -> DONE by AR-893, 5/5 at the guard HEAD
+R-772 §7 verbatim       "YOU DO NOT SEAL. Report; the seal is a separate desk act."
+R-772 §8 STOP           "sealing before §6+R-771 §6 are evaluated by this desk · any new
+                         lane · any hygiene campaign · aiming the next compiler push"
+```
+⇒ ⚖️ **BOTH WORKER-SIDE OBLIGATIONS ON THE CRITICAL PATH ARE DISCHARGED. THE NEXT ACT ON `R-772 §8`'s CRITICAL PATH IS `desk seals` — A DESK ACT. THERE IS NO WORKER LANE OPEN, AND `§8 STOP` FORBIDS ME INVENTING ONE.** ★ I hold rather than manufacture work.
+
+### §2 — ✅ THE EAR — ARMED, OWNED, **AND PROVEN ABLE TO FIRE**
+🛑 **CENSUS BY OWNERSHIP (`Win32_Process` + parent walk from my own shell — `TaskList` NOT used, documented-blind 8×):**
+```
+[MEASURED HERE]  my ancestry: 4608 powershell -> 25636 claude.exe -> 14492 -> 9228 explorer
+live claude.exe: 25636 (MINE) · 32080 (NOT MINE — untouched)
+under 25636 before arming: 2 powershell tool shells, NO ear on any ledger  => ARM ONE
+```
+✅ **ARMED: `Monitor` tool, `persistent: true`, task `bg5dljxfh`, 20 s poll, on `docs/designs/ADVISOR-RULINGS.md`.** **KEY = `sha256` of FILE CONTENT — NOT mtime, and strictly stronger than a heading key.**
+⭐⭐⭐ **AND IT IS AN INSTRUMENT, NOT A LOG FILE WITH A HEARTBEAT — I RED-PROOFED IT BEFORE TRUSTING IT:** the identical script was first armed on a **throwaway** file; its `[EAR ARMED]` line arrived as a chat notification (**channel proven**), I then rewrote that file, and `[LEDGER CHANGED] sha 55fb487c1ec6 -> a3d512708873` arrived as a chat notification (**detector proven**). The throwaway monitor was then `TaskStop`ped and the real one armed. ★★★★★ **`A DETECTOR THAT HAS NEVER GONE OFF IS NOT YET AN INSTRUMENT — AND IN THIS HARNESS A BACKGROUNDED WHILE-LOOP REACHES NOBODY UNTIL IT EXITS.`**
+✅ **BACKFILL OF THE BLIND WINDOW (arming time is the join key):** newest ruling on disk at arm time = **`R-772`**, read by hand and echoed by the ear's own baseline line. Nothing landed before `T` that I have not read.
+
+### §3 — ⚠️ REPORTED, NOT ACTED ON — THREE ORPHANED EAR PROCESSES OF THE CONVICTED SHAPE
+```
+[MEASURED HERE]  bash.exe 30480  ruling-ear.sh          parent 23680  -> GONE
+                 bash.exe 17808  ruling-ear.sh          parent 21356  -> GONE
+                 bash.exe 32836  advisor-ear-agentreports.sh parent 3000 -> GONE
+                 (each in a DIFFERENT session's scratchpad UUID, none mine)
+```
+🛑 **I DID NOT KILL THEM.** `[no-monitors-msg-advisor]`: **never kill an ear you did not arm** — 2026-08-08 a seat did exactly that on a remembered headline and went blind. ⚖️ **Their owners are dead, so they cannot notify anyone; they are the `while true` shape that only ever speaks when it exits.** **OPS debt, registered for the desk, not repaired by me.**
+
+### §4 — ⚖️ WHAT I AM ASKING THE DESK FOR
+1. **The seal ruling on `AR-893`** against `R-772 §6` (six `G-1` arms) + `R-771 §6` (a–e). **`§8-e` is the clause `AR-893` explicitly refused to self-score — it is squarely the desk's.**
+2. ⭐ **AN OFFER, NOT A REQUEST TO PROCEED:** I am **`claude.exe 25636`, a genuinely different seat from `23140`**, so an independent re-execution of any of the five `R-771 §5` items — the same move the desk made itself for item `2` in `R-772 §1` — costs me minutes and would be second-seat evidence rather than self-report. **I will not run it unbidden; `doer ≠ grader` cuts both ways and an unasked re-run is still a lane I opened.**
+3. **`R-772 §8`'s post-seal four steps and the `TD-1 / OBS-1 / D-10-ADJ-1 / N-6` wake triggers all key on the seal being WRITTEN.** Until it is written they stay asleep and I do not touch them.
+
+### §5 — 🛑 WHAT I DID **NOT** MEASURE
+**I re-ran NOTHING of `AR-893`'s evidence.** Its `16 passed`, `133 passed`, `65 passed`, the `103`-member `NEW 0 / GONE 0`, the tamper arms and `TSC_EXIT=0` are **`[ARTIFACT-SOURCED — AR-893]`** in this report and carry no corroboration from me. I did not read the `G-1` guard source, the registry, or the three `DISCARDS` call sites. I did not check `runtime-production` (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`). I did not enumerate whether any V4 execution graph exists — **`[UNENUMERATED]`**, unchanged from `R-772 §9`.
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** No code, no test, no production file, no config was written by this seat. The only artifacts I created are a scratchpad script and this report.
+
+---
+
 ## AR-893 · 2026-08-09 · ✅ **LANE `G-1` DELIVERED — `86fd3192` + `4638e212`. THE RATCHET EXISTS: A NEW `runBacktest()` CALLER NOW REDDENS THE BUILD UNTIL ITS REFUSAL DISPOSITION IS REGISTERED.** ⚡ **ALL SIX `R-772 §6` ARMS EXECUTED — NONE "COVERED BY" ANOTHER — PLUS THREE I ADDED, INCLUDING THE ONE THAT MATTERS MOST: THE SCANNER FINDING A **REAL NEW CALL SITE IN REAL SOURCE**, NOT AN IDENTITY I HANDED THE COMPARATOR.** ✅ **AND ALL FIVE `R-771 §5` ITEMS RE-RUN AT THE GUARD HEAD — `5 / 5` NOW, ITEM `1` INCLUDED FOR THE FIRST TIME.** 🛑 **A MUTATION ARM CONVICTED MY OWN FIXTURE AGAIN — A `.replace()` THAT NEVER MATCHED — AND I REPORT IT RATHER THAN QUIETLY FIXING IT.** ⚠️ **I ALSO SURFACE, AND DO NOT REPAIR, THREE CALL SITES THAT DISCARD A REFUSAL.**
 
 **TASK `R-772 §5`. SEAT `claude.exe 23140`. TREE `wt-h1-wave4-20260712`, HEAD `4638e212`.** **ATTEMPT BUDGET `0 / 2` — UNSPENT** (the fixture defect in `§5` was caught by my own arm before any claim, not a failed attempt). **FAN-IN `1 / 1` lane + `5 / 5` acceptance items.** 🛑 **I DO NOT SEAL.**
