@@ -4,6 +4,55 @@
 
 ---
 
+## AR-836 · 2026-08-09 · ✅✅ **BOTH `R-741` CLOSEOUTS LANDED AT `b3045800`, EACH RED-PROOFED BY RESTORING ITS OWN DEFECT.** 🛑🛑★★★★★ **WRITING THE ORDERED CONTROLS FOUND A **THIRD** DEFECT NOBODY HAD NAMED: MY DURATION REGEX SAID `minute\b` AND SO NEVER MATCHED *"the first 15 minutes"* — IT WOULD HAVE FALSELY REFUSED ANY TEACHER WHO USES THE PLURAL.** ⚠️⚠️ **AND ONE OF MY OWN NEW CONTROLS DID NOT BITE — IT PASSED UNDER THE RESTORED DEFECT BECAUSE ITS FIXTURE SCANNED A GOOD SPAN FIRST. REWRITTEN, RE-MUTATED, NOW RED.** ✅ **THE `§5` PINNED CONFORMANCE GROUP REPRODUCES `2 failed, 96 passed` EXACTLY.**
+
+**RULING:** `R-741 §2` (closeout 1) · `§3` (closeout 2) · `§4` (closeout 3, retained) · `§5` (pinned group) · `§6`. **SEAT:** same cold seat, continuing. **HEAD `b3045800`, pushed; `ls-remote` = same.** **CLOSEOUT BUDGET: `1 / 2` — one attempt, both landed.**
+
+### §1 — ✅ THE TWO REPAIRS, EACH PROVEN BY RESTORING ITS OWN DEFECT
+```
+CLOSEOUT 1 defect restored (silent skip + `a or b`)  -> 3 failed, 21 passed
+   = control1 (unlowerable member) · control2 (label/description disagree) · the naming control
+CLOSEOUT 2 defect restored (clock-only reserves slot) -> 2 failed, 22 passed
+   = control1 (clock-only never reserves) · control2 (clock and zone in different spans)
+BOTH RESTORED FROM A PRISTINE COPY                     -> 24 passed, exit 0
+```
+✅ **`§2`'s repair:** one unlowerable member now refuses the WHOLE definition — **no `continue`, no partial set** — and label/description durations are parsed **INDEPENDENTLY**, so a disagreement refuses instead of resolving to whichever was read first. **Taught order preserved, never sorted.**
+✅ **`§3`'s repair:** clock and timezone are committed as **ONE ATOMIC PAIR** collected across all spans. **A clock-only span reserves nothing** · **two complete pairs that disagree REFUSE** · **a span naming two zones supplies neither half.**
+✅ **`§2`'s naming order honoured:** `failure_kind` is a **REQUIRED** field — `ABSENT` · `CONTRADICTORY` · `UNREADABLE` — **carried structurally, not encoded in a reason string.** ★ **A downstream V1.1 mapper that has to parse prose is a second parser waiting to disagree.** ⚖️ **A contradiction OUTRANKS an absence in the result, so a record disagreeing with itself is never reported as a teacher who stayed silent.**
+
+### §2 — 🛑🛑 THE THIRD DEFECT, FOUND BY THE CONTROL RATHER THAN BY THE RULING
+`[MEASURED HERE]` `closeout 1 control 2` **failed on its first run for the wrong reason**: my `_DURATION_RE` ended `minutes?`→ no, it ended **`minute\b`**, and `\b` after `minute` requires a non-word character. ⇒ **`"the first 15 minutes"` NEVER MATCHED.**
+🛑 **BLAST RADIUS, STATED RATHER THAN MINIMISED:** any taught span using the PLURAL was invisible to the duration locator. **On the two frozen members it happened not to bite** — every duration there appears as `5-minute` / `30 minute` / `five-minute` — **but the failure mode is a FALSE REFUSAL on a teacher who says "minutes", i.e. reporting our own regex as the teacher's silence.** ⇒ **fixed to `minutes?`; the frozen population is unchanged, re-measured.**
+★★★★★ **THIS IS THE ARGUMENT FOR ORDERING CONTROLS YOU THINK WILL PASS: `R-741 §2` control 2 was written to prove a repair, and it convicted a defect the repair had nothing to do with.** ⭐ **The desk found two defects by reading; the third only existed in the gap between what the code said and what the record says.**
+
+### §3 — ⚠️⚠️ A CONTROL OF MINE PASSED UNDER THE DEFECT, AND I AM REPORTING IT RATHER THAN QUIETLY FIXING IT
+`[MEASURED]` on the first mutation run, `closeout 2 control 1` **PASSED with the defect restored.** **CAUSE:** its fixture put the clock-only `09:15` span in `entry_sequence`, but `anchor_spans` scans **structured variants FIRST**, and `variants[0]` carried a complete `9:30 Eastern` pair — so a first-wins implementation reserved the RIGHT clock by accident.
+✅ **REWRITTEN so the clock-only span is scanned BEFORE any complete pair** (no structured variants; inline construction sentence carries the duration). ✅ **RE-MUTATED: it now FAILS with the defect and passes without it.**
+★★★★★ **`A CONTROL THAT PASSES BY LUCK IS NOT A CONTROL, AND THE MUTATION IS THE ONLY THING THAT TELLS YOU WHICH KIND YOU WROTE.`** ⚖️ **Had I run the mutation once and stopped at "closeout 2 caught it", I would have shipped one real control and one decoration, and reported both as proof.**
+
+### §4 — ✅ `R-741 §5`'s PINNED GROUP, RUN AS PINNED
+```
+python -m pytest test_opening_range_conformance.py test_opening_range_definition.py \
+                 test_opening_range_family_parity.py test_family_meta_enforcement.py -q
+  -> 2 failed, 96 passed        MEMBERSHIP = the two ordered REDs. NO THIRD.
+```
+✅ **Exactly the historical figure, joinable to every prior ledger entry.** ⚖️ **`AR-835 §6`'s gap is closed — and closed by the desk's arithmetic, not mine. I reported the group as unrecoverable from the ledger; the four addends were recoverable and I did not try adding them either.** ★ **Recording that on my own side of the record, because `AR-835` is where the wrong claim lives.**
+🛑 **ACCEPTANCE BY EXACT FAILURE MEMBERSHIP, NEVER THE TOTAL** (`R-741 §5`): I will not re-quote `96` as a target — my own new suites are already raising passing counts elsewhere.
+
+### §5 — ✅ FULL ACCEPTANCE, ALL UNPIPED
+```
+five opening-range suites -> 89 passed                                    EXIT 0
+pinned conformance group  -> 2 failed, 96 passed (the two ordered REDs)    EXIT 1 (correct)
+discrimination instrument -> 8/8, blast radius exactly the 2 authorized    EXIT 0
+guards (-k guard)         -> green                                         EXIT 0
+```
+✅ **Re-run AFTER the `ruff` autofix, not carried across it.** ✅ **Quarantine `51e10067bdb329e8` / `7` members, identical before and after the hook stash.**
+
+### §6 — ✅ CLOSEOUT 3, AND WHAT I AM NOT COUNTING
+✅ **`R-741 §4` ordered the structural test RETAINED and the production-path spy deferred to `6B`. Retained, unchanged. No code written for it now.**
+🛑 **`R-740 §5`'s negative control REMAINS UNDISCHARGED and I am not counting it** — `A CRASH FROM INVALID ARGUMENTS IS NOT A NO-ROUTE PROOF`, and the desk is right that the current test proves the opposite of what a no-route claim needs. **It closes in `6B` with the spy: `dENM` → exact refusal, adapter call count ZERO; golden → exactly three calls carrying `5m`/`15m`/`30m`.**
+✅ **`6B` AUTO-RELEASES on this green** (`R-741 §6`) and I am proceeding under that clause, landing it as **ONE commit** per the same-commit rule. 🛑 **`TEMPORAL_STATE_CHANNEL_MISSING` loaded: if the evaluator can carry only boolean gates, I STOP rather than flatten the state to turn the ordered REDs green.** 🛑 **State-producer boundary held: no entry, no direction, no trade.**
+
 ## AR-835 · 2026-08-09 · ✅✅ **`STEP 6A` IS DELIVERED — `dd4ec628`, PUSHED AND REMOTELY VERIFIED.** ⭐⭐⭐ **THE LOWERING REPRODUCES `R-740 §3`'s AMENDED POPULATION *WITHOUT KNOWING WHICH RECORD IS WHICH* — NO SPEC OR VIDEO ID IS IN THE MODULE AND A TEST ASSERTS IT — SO THE TWO FROZEN MEMBERS ARE DISCRIMINATING EVIDENCE RATHER THAN A LOOKUP.** ⭐⭐⭐ **AND THE IDENTITY MUTATION IS THE FINDING: PLANTING `hash()` PRODUCED `3 failed, 13 passed`, AND THE THREE WERE *ONLY* THE CROSS-PROCESS CONTROLS — THE UNIQUENESS AND SENSITIVITY TESTS BOTH PASSED WITH A RANDOMISED IDENTITY.** 🛑 **ONE GUARD FIRED ON ME AND IT WAS RIGHT. `6B` UNTOUCHED. TWO HONEST GAPS IN `§6`.**
 
 **RULING:** `R-738 §3`/`§4`/`§7-2`/`§8`(11) · `R-740 §3`–`§7` · `R-739 §1`. **SEAT:** same cold seat (`claude.exe 3160`), continuing — **no handoff.** **HEAD `dd4ec628`; `git ls-remote` = same.** **`STEP 6A` ATTEMPT BUDGET: `1 / 2`** — one attempt, delivered.
