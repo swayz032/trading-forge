@@ -354,3 +354,130 @@ describe("D-10 N-1 — shared classifier direct controls", () => {
     expect(out.evidence).not.toHaveProperty("metrics_omitted");
   });
 });
+
+// ─── R-758 §6a — THE STATUS/TIER TRUTH GAP ──────────────────────────────────
+//
+// `R-758` accepted the work above and then handed `N-1` back as PARTIAL, because the
+// handler removed the fabricated SCORE and left a fabricated TIER one field over —
+// the exact shape `R-757 §3` had just minted a law about, reproduced by the repair
+// that was citing it.
+//
+//   `A FABRICATED VALUE THAT IS ALSO TRUSTED DOWNSTREAM IS NOT ONE DEFECT, IT IS A
+//    FALSE MEASUREMENT PLUS A FALSE PERMISSION.`
+//
+// GAP 1 (R-758 §2, LATENT): nothing required `status:"completed"`. A `failed` or
+//   status-less result carrying a finite score would have classified as completed,
+//   scored, ranking-eligible evidence. It is LATENT only because the producer's one
+//   `failed` return happens to carry no `forge_score` — and
+//   `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN`.
+//
+// GAP 2 (R-758 §3, LIVE, with a positive witness): `typeof tierRaw === "string" ?
+//   tierRaw : "REJECTED"` invented a rejection the engine never issued AND left it
+//   `rankingEligible`. `backtest-service.ts:1725` branches on `!result.tier`, which
+//   is the producer's own witness that untiered completed results occur —
+//   `THE CHEAPEST REACHABILITY PROOF IN THE CODEBASE IS SOMEONE ELSE'S DEFENSIVE
+//    BRANCH.` Third-order: `typeof === "string"` admitted ANY string, so `"BANANA"`
+//   passed through as a tier.
+describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never inferred", () => {
+  async function classify(result: unknown) {
+    const { classifyReplayOutcome } = await import("../lib/replay-outcome.js");
+    return classifyReplayOutcome(result);
+  }
+
+  it("N-1.11 a `failed` result carrying a stale finite score is NOT completed", async () => {
+    const out = await classify({ id: BT_ID, status: "failed", tier: "TIER_1", forge_score: 91.2 });
+    expect(out.kind).toBe("invalid");
+    expect(out.rankingEligible).toBe(false);
+    expect(out.patch.replayTier).toBeNull();
+    expect(out.patch.replayForgeScore).toBeNull();
+    expect(out.patch.actualCompositeScore).toBeNull();
+  });
+
+  it("N-1.12 a result with NO status at all is NOT completed, however well-formed the rest looks", async () => {
+    const out = await classify({ id: BT_ID, tier: "TIER_1", forge_score: 91.2 });
+    expect(out.kind).toBe("invalid");
+    expect(out.rankingEligible).toBe(false);
+    expect(out.patch.replayTier).toBeNull();
+  });
+
+  it("N-1.13 completed with NO tier is invalid — the handler must NEVER invent `REJECTED`", async () => {
+    const out = await classify({ id: BT_ID, status: "completed", forge_score: 64.0 });
+    expect(out.kind).toBe("invalid");
+    // The whole defect: a rejection the engine never issued.
+    expect(out.patch.replayTier).toBeNull();
+    expect(out.patch.replayTier).not.toBe("REJECTED");
+    expect(out.rankingEligible).toBe(false);
+  });
+
+  it("N-1.14 completed with an UNRECOGNIZED tier is invalid — fixing only the ABSENT case is one level short", async () => {
+    const out = await classify({ id: BT_ID, status: "completed", tier: "BANANA", forge_score: 64.0 });
+    expect(out.kind).toBe("invalid");
+    expect(out.patch.replayTier).toBeNull();
+    expect(out.rankingEligible).toBe(false);
+  });
+
+  it("N-1.15 an EXPLICIT completed REJECTED is real measured evidence, but is NOT ranking-eligible", async () => {
+    const out = await classify({ id: BT_ID, status: "completed", tier: "REJECTED", forge_score: 12.5 });
+    // It was measured, so it is completed evidence and its numbers are preserved...
+    expect(out.kind).toBe("completed");
+    expect(out.patch.replayTier).toBe("REJECTED");
+    expect(String(out.patch.replayForgeScore)).toBe("12.5");
+    // ...but the engine rejected it, so it may never rank.
+    expect(out.rankingEligible).toBe(false);
+  });
+
+  it("N-1.16 POSITIVE CONTROL — explicit completed + recognized tier + finite score ranks, unchanged", async () => {
+    const out = await classify({ id: BT_ID, status: "completed", tier: "TIER_2", forge_score: 73.5 });
+    expect(out.kind).toBe("completed");
+    expect(out.patch.replayTier).toBe("TIER_2");
+    expect(String(out.patch.replayForgeScore)).toBe("73.5");
+    expect(String(out.patch.actualCompositeScore)).toBe("73.5");
+    expect(out.rankingEligible).toBe(true);
+  });
+
+  it("N-1.17 each invalid class carries its OWN reason string — one bucket cannot diagnose six causes", async () => {
+    const reasons = new Set<string>();
+    for (const r of [
+      { id: BT_ID, status: "failed", forge_score: 5 },
+      { id: BT_ID, forge_score: 5 },
+      { id: BT_ID, status: "completed", tier: "TIER_1" },
+      { id: BT_ID, status: "completed", tier: "TIER_1", forge_score: Number.NaN },
+      { id: BT_ID, status: "completed", forge_score: 5 },
+      { id: BT_ID, status: "completed", tier: "BANANA", forge_score: 5 },
+    ]) {
+      const out = await classify(r);
+      expect(out.kind).toBe("invalid");
+      if (out.kind === "invalid") reasons.add(out.reason);
+    }
+    expect(reasons.size, `expected six distinct reasons, got ${JSON.stringify([...reasons])}`).toBe(6);
+  });
+
+  it("N-1.18 [auto] the CALLER obeys rankingEligible — an explicit REJECTED never enters survivor promotion", async () => {
+    // Positive witness that the path RAN: the terminal write happened at all.
+    // Discriminator: a ranking-eligible candidate whose score beats the parent (50)
+    // proceeds into survivor promotion, which this stub cannot satisfy and which
+    // therefore throws. A non-ranking outcome returns cleanly. So `driveError`
+    // undefined + a completed REJECTED write == the caller consumed the verdict
+    // instead of reconstructing it from the tier string.
+    await drive("auto", { id: BT_ID, status: "completed", tier: "REJECTED", forge_score: 99.9 });
+    const w = terminalWrite();
+    expect(w.replayStatus).toBe("completed");
+    expect(w.replayTier).toBe("REJECTED");
+    expect(rec.driveError, "a REJECTED candidate reached survivor promotion").toBeUndefined();
+  });
+
+  it("N-1.19 [auto] RANKING WITNESS — a TIER_2 result DOES enter survivor promotion", async () => {
+    // The discriminating half of the consumption proof. `N-1.18` alone cannot prove
+    // the caller CONSUMES `rankingEligible`, because reconstruct-from-tier and
+    // consume-the-verdict AGREE on every valid input — measured: N-1.18 passed
+    // before the fix as well as after. They only disagree when the verdict is forced
+    // to contradict the tier, which is what MUT-8 does. This control is the positive
+    // witness that pairs with it: reaching survivor promotion is observable here only
+    // because this stub cannot satisfy it and therefore throws.
+    await drive("auto", { id: BT_ID, status: "completed", tier: "TIER_2", forge_score: 99.9 });
+    const w = terminalWrite();
+    expect(w.replayStatus).toBe("completed");
+    expect(w.replayTier).toBe("TIER_2");
+    expect(rec.driveError, "a ranking-eligible candidate never reached survivor promotion").toBeDefined();
+  });
+});

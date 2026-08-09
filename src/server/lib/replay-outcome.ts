@@ -51,6 +51,38 @@ export interface ReplayOutcomePatch {
   actualCompositeScore: string | null;
 }
 
+/**
+ * Why a result could not be accepted as a measurement. SIX distinct causes, each
+ * with its own string — `R-758 §6a`. One shared bucket cannot diagnose six faults,
+ * and the audit row is the only place this distinction survives.
+ */
+export type InvalidReason =
+  | "status_missing"
+  | "status_not_completed"
+  | "forge_score_absent"
+  | "forge_score_non_finite"
+  | "tier_absent"
+  | "tier_unrecognized";
+
+/** The only tiers the engine may issue. Anything else is not a tier. */
+export const RECOGNIZED_TIERS = ["TIER_1", "TIER_2", "TIER_3", "REJECTED"] as const;
+export type RecognizedTier = (typeof RECOGNIZED_TIERS)[number];
+
+/** Of those, the only ones that may enter survivor ranking. */
+export const RANKING_ELIGIBLE_TIERS = ["TIER_1", "TIER_2", "TIER_3"] as const;
+export type RankingEligibleTier = (typeof RANKING_ELIGIBLE_TIERS)[number];
+
+/**
+ * The status a genuine measurement carries.
+ *
+ * ⚠️ Declared LOCALLY on purpose. `schema.ts` exports `BACKTEST_STATUS_REFUSED` and
+ * has no `..._COMPLETED` counterpart, and `R-758 §6a`'s FILES ALLOWED list does not
+ * include `schema.ts`. Promoting this to a schema-level constant beside its sibling
+ * is the better home and is REPORTED rather than done — widening a bounded closeout
+ * by my own decree is the thing the stop list exists to prevent.
+ */
+export const BACKTEST_STATUS_COMPLETED = "completed" as const;
+
 export type ReplayOutcome =
   | {
       kind: "refused";
@@ -63,19 +95,25 @@ export type ReplayOutcome =
       kind: "invalid";
       patch: ReplayOutcomePatch;
       /** Machine-readable cause, for the audit trail. */
-      reason: "forge_score_absent" | "forge_score_non_finite";
+      reason: InvalidReason;
       rankingEligible: false;
     }
   | {
       kind: "completed";
       patch: ReplayOutcomePatch;
-      tier: string;
+      /** Always one the engine actually issued. NEVER inferred, NEVER defaulted. */
+      tier: RecognizedTier;
       /** The measured score, unchanged. A finite 0 stays 0. */
       forgeScore: number;
-      rankingEligible: true;
+      /**
+       * `false` for an explicitly returned `REJECTED`: real measured evidence that
+       * may never rank. Callers MUST consume this rather than re-deriving it from
+       * the tier string — two copies of a rule are two places for it to drift.
+       */
+      rankingEligible: boolean;
     };
 
-/** The status string a completed-but-unscoreable replay is filed under. */
+/** The status string an unusable replay result is filed under. */
 export const REPLAY_STATUS_INVALID = "invalid_result";
 
 function backtestIdOf(result: unknown): string | null {
@@ -111,52 +149,67 @@ export function classifyReplayOutcome(result: unknown): ReplayOutcome {
     };
   }
 
-  const raw = (typeof result === "object" && result !== null)
-    ? (result as Record<string, unknown>).forge_score
-    : undefined;
+  const invalid = (reason: InvalidReason): ReplayOutcome => ({
+    kind: "invalid",
+    reason,
+    rankingEligible: false,
+    patch: {
+      replayStatus: REPLAY_STATUS_INVALID,
+      replayBacktestId,
+      // Every invalid class clears all three metric columns EXPLICITLY.
+      replayTier: null,
+      replayForgeScore: null,
+      actualCompositeScore: null,
+    },
+  });
 
-  if (raw === undefined || raw === null) {
-    return {
-      kind: "invalid",
-      reason: "forge_score_absent",
-      rankingEligible: false,
-      patch: {
-        replayStatus: REPLAY_STATUS_INVALID,
-        replayBacktestId,
-        replayTier: null,
-        replayForgeScore: null,
-        actualCompositeScore: null,
-      },
-    };
-  }
+  const obj = (typeof result === "object" && result !== null)
+    ? (result as Record<string, unknown>)
+    : {};
+
+  // ─── STATUS MUST BE EXPLICIT (R-758 §2) ───────────────────────────────────
+  // Nothing here previously tested `status` at all, so a `failed` or status-less
+  // result carrying a finite score classified as completed, scored, RANKING-ELIGIBLE
+  // evidence. That was LATENT only because the producer's single `failed` return
+  // (`backtest-service.ts:855`) happens to carry no `forge_score` — a coincidence of
+  // today's code, not a guarantee.
+  //   `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN.`
+  const status = obj.status;
+  if (typeof status !== "string" || status.length === 0) return invalid("status_missing");
+  if (status !== BACKTEST_STATUS_COMPLETED) return invalid("status_not_completed");
+
+  const raw = obj.forge_score;
+  if (raw === undefined || raw === null) return invalid("forge_score_absent");
 
   // `Number("")` is 0 and `Number([])` is 0 — both are coercions, not measurements,
   // so anything not already a number is rejected rather than converted.
-  if (typeof raw !== "number" || !Number.isFinite(raw)) {
-    return {
-      kind: "invalid",
-      reason: "forge_score_non_finite",
-      rankingEligible: false,
-      patch: {
-        replayStatus: REPLAY_STATUS_INVALID,
-        replayBacktestId,
-        replayTier: null,
-        replayForgeScore: null,
-        actualCompositeScore: null,
-      },
-    };
-  }
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return invalid("forge_score_non_finite");
 
-  const tierRaw = (result as Record<string, unknown>).tier;
-  const tier = typeof tierRaw === "string" ? tierRaw : "REJECTED";
+  // ─── TIER MUST BE EXPLICIT AND RECOGNIZED (R-758 §3) ──────────────────────
+  // This line used to read `typeof tierRaw === "string" ? tierRaw : "REJECTED"`,
+  // which did two opposite things at once: it INVENTED a rejection the engine never
+  // issued, and it left that invention `rankingEligible`.
+  //   `A FABRICATED VALUE THAT IS ALSO TRUSTED DOWNSTREAM IS NOT ONE DEFECT, IT IS A
+  //    FALSE MEASUREMENT PLUS A FALSE PERMISSION.`
+  // `backtest-service.ts:1725` branches on `!result.tier`, which is the PRODUCER'S
+  // OWN witness that untiered completed results occur.
+  // The `typeof === "string"` test also admitted ANY string, so `"BANANA"` passed
+  // through as a tier — handling only the ABSENT case would have been one level short.
+  const tierRaw = obj.tier;
+  if (typeof tierRaw !== "string" || tierRaw.length === 0) return invalid("tier_absent");
+  if (!(RECOGNIZED_TIERS as readonly string[]).includes(tierRaw)) return invalid("tier_unrecognized");
+
+  const tier = tierRaw as RecognizedTier;
 
   return {
     kind: "completed",
     tier,
     forgeScore: raw,
-    rankingEligible: true,
+    // An EXPLICITLY returned `REJECTED` is real measured evidence and its numbers are
+    // preserved — but the engine rejected it, so it may never rank.
+    rankingEligible: (RANKING_ELIGIBLE_TIERS as readonly string[]).includes(tier),
     patch: {
-      replayStatus: "completed",
+      replayStatus: BACKTEST_STATUS_COMPLETED,
       replayBacktestId,
       replayTier: tier,
       replayForgeScore: String(raw),

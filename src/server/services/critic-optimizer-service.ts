@@ -2464,8 +2464,14 @@ export async function replayCandidatesAsync(
 
         broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, tier: replayTier });
 
-        // Gate 1: prop compliance — tier must not be REJECTED
-        if (replayTier && ["TIER_1", "TIER_2", "TIER_3"].includes(replayTier)) {
+        // Gate 1: prop compliance — the HANDLER'S verdict, not a second copy of the
+        // rule. R-758 §6a: both callers consume `rankingEligible` rather than
+        // re-deriving it from the tier string. Two copies of one rule are two places
+        // for it to drift, and a handler whose verdict nobody obeys is a well-tested
+        // function that changes nothing (`EXISTENCE IS NOT WIRING`).
+        // An explicitly returned `REJECTED` is real measured evidence that may never
+        // rank; an invented one no longer exists to be ranked or libelled.
+        if (outcome.rankingEligible) {
           // Y2 fix: track raw forge score (0-100) — same scale as parentForgeScore.
           if (!bestCandidate || replayForgeScore > bestCandidate.compositeScore) {
             bestCandidate = { id: candidate.id, compositeScore: replayForgeScore, backtestId: replayResult?.id ?? "" };
@@ -2942,8 +2948,14 @@ export async function manualReplayCandidates(
 
         broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, tier: replayTier });
 
-        // Gate 1: prop compliance — tier must not be REJECTED
-        if (replayTier && ["TIER_1", "TIER_2", "TIER_3"].includes(replayTier)) {
+        // Gate 1: prop compliance — the HANDLER'S verdict, not a second copy of the
+        // rule. R-758 §6a: both callers consume `rankingEligible` rather than
+        // re-deriving it from the tier string. Two copies of one rule are two places
+        // for it to drift, and a handler whose verdict nobody obeys is a well-tested
+        // function that changes nothing (`EXISTENCE IS NOT WIRING`).
+        // An explicitly returned `REJECTED` is real measured evidence that may never
+        // rank; an invented one no longer exists to be ranked or libelled.
+        if (outcome.rankingEligible) {
           // Y2 fix: track raw forge score (0-100) — same scale as parentForgeScore.
           if (!bestCandidate || replayForgeScore > bestCandidate.compositeScore) {
             bestCandidate = { id: candidate.id, compositeScore: replayForgeScore, backtestId: replayResult?.id ?? "" };

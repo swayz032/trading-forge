@@ -4,6 +4,68 @@
 
 ---
 
+## AR-869 · 2026-08-09 · ✅✅ **`N-1`'s STATUS/TIER TRUTH GAP CLOSED — AND `R-758` WAS RIGHT ABOUT ME: I REMOVED THE FABRICATED SCORE AND LEFT A FABRICATED *TIER* ONE FIELD OVER, WHICH IS THE EXACT LAW `R-757 §3` HAD JUST MINTED.** ⭐⭐⭐ **`MUT-9` IS THE ONE THAT MATTERS: FORCING `rankingEligible:false` REDDENS `N-1.19` — WHICH CAN ONLY HAPPEN IF THE *CALLER* READS THE VERDICT. RECONSTRUCT-FROM-TIER WOULD HAVE IGNORED IT.** 🛑🛑★★★★★ **AND I REPORT A MUTATION THAT LIED: MY FIRST `MUT-6` CHANGED THE SOURCE, PASSED ITS OWN "DID IT BITE" GUARD, AND **DID NOT REPRODUCE THE DEFECT** — SO ITS RESULT WAS NOT EVIDENCE.** **FAN-IN `3 / 9`.**
+
+**RULING: `R-758 §6a`.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` RE-INVOKED — the pre-write guard blocked my first code write because `R-758` had landed since my last load. It was correct, I re-loaded, I did not route around it.**
+
+### §1 — ✅ THE CONTRACT, IMPLEMENTED AS WRITTEN
+`classifyReplayOutcome` now admits a measurement **only** on an explicit `status:"completed"` **and** a finite numeric `forge_score` **and** an explicitly RECOGNIZED tier. Six named invalid reasons, one per cause: `status_missing` · `status_not_completed` · `forge_score_absent` · `forge_score_non_finite` · `tier_absent` · `tier_unrecognized`. **Every invalid class clears all three metric columns explicitly.**
+✅ **`REJECTED` IS NEVER INVENTED.** An **explicitly returned** `REJECTED` stays completed evidence with its real numbers preserved and is **NOT ranking-eligible**; an **absent or unrecognized** tier is now invalid. ⚖️ **`"BANANA"` no longer passes as a tier** — the old `typeof === "string"` test admitted any string, and fixing only the ABSENT case would have been `[one-level-short]` for the fourth time.
+✅ **BOTH CALLERS NOW CONSUME `outcome.rankingEligible`** — the two `["TIER_1","TIER_2","TIER_3"].includes(replayTier)` reconstructions are gone. **Two copies of one rule are two places for it to drift.**
+⚠️ **ONE THING I DID NOT DO, AND WHY:** `BACKTEST_STATUS_COMPLETED` is declared **locally** in `replay-outcome.ts`. `schema.ts:163` exports `BACKTEST_STATUS_REFUSED` and has **no `..._COMPLETED` sibling**, and `schema.ts` is **not on `R-758 §6a`'s FILES ALLOWED list.** **The better home is beside its sibling; I am REPORTING that rather than widening a bounded closeout by my own decree.**
+
+### §2 — ⭐ RED FIRST, PUBLISHED, AGAINST `abc2f3e8`
+```
+BEFORE (RED-758.txt)                                  6 failed | 13 passed
+  × N-1.11  failed + stale finite score      expected 'completed' to be 'invalid'
+  × N-1.12  no status + finite score         expected 'completed' to be 'invalid'
+  × N-1.13  completed, no tier               expected 'completed' to be 'invalid'   <- invented REJECTED
+  × N-1.14  completed, tier "BANANA"         expected 'completed' to be 'invalid'
+  × N-1.15  explicit REJECTED                expected true to be false              <- false PERMISSION
+  × N-1.17  six distinct reasons             expected 'completed' to be 'invalid'
+  ✓ N-1.16  POSITIVE CONTROL                 GREEN BEFORE THE FIX
+AFTER                                                 20 passed
+```
+
+### §3 — ⭐⭐ MUTATION TABLE, WITH FAMILY-VS-ISOLATION DECLARED (`R-758 §6a`)
+```
+PRISTINE                                          20 passed · exit 0
+MUT-5  remove the completed-status gate      RED: 11, 12, 17      ★ controls (1)+(2), as ordered
+MUT-6  restore the invented `REJECTED`       RED: 13, 14, 17      ★ control (3) — see the correction below
+MUT-7  bypass tier validation                RED: 14, 17          ★ control (4), ISOLATED
+MUT-8  force EVERY tier ranking-eligible     RED: 15, 18          ★ control (5), as ordered
+MUT-9  force NO tier ranking-eligible        RED: 16, 19          ★ the CALLER-CONSUMPTION proof
+RESTORED from pristine                            20 passed · diff -q IDENTICAL
+```
+**FAMILY, NOT ISOLATION, DECLARED:** `N-1.17` (six distinct reasons) reddens under **every** classifier mutation **by construction** — it is an aggregate over the whole reason set, so it is COVERAGE, not a co-located defect. `MUT-6` moves `N-1.14` as well as `N-1.13` because **the single line it restores did both jobs**: it invented `REJECTED` for an absent tier *and* let any string through. `MUT-5` moves two because it deletes two branches. **`MUT-7` is the only clean one-to-one.**
+✅ **`N-1.16`, the positive control, stays GREEN under `MUT-5`, `MUT-6`, `MUT-7` and `MUT-8`.** It reddens only under `MUT-9`, which directly attacks the `rankingEligible: true` it asserts — **not an unrelated mutation.**
+
+### §4 — 🛑🛑 TWO INSTRUMENT FINDINGS AGAINST MY OWN CONTROLS
+1. ★★★★★ **A MUTATION THAT BIT THE SOURCE AND STILL PROVED NOTHING.** My first `MUT-6` neutered the `tier_absent` guard but left the RECOGNIZED-tier check reading the **original** `tierRaw`, so an absent tier still fell through to `tier_unrecognized` — **still invalid, just for a different reason.** Result: only `N-1.17` reddened, and `N-1.13` — the control the mutation exists to exercise — **stayed green.** My scripted `MUTATION DID NOT BITE` guard compares source text and **passed it**, because the text genuinely changed. ⇒ **`A MUTATION GUARD THAT COMPARES SOURCE TEXT PROVES THE EDIT LANDED, NOT THAT THE DEFECT RETURNED. THE ONLY GUARD THAT WORKS IS: THE TARGET CONTROL MUST GO RED — AND IF IT DOES NOT, THE MUTATION IS THE SUSPECT, NOT THE FIX.`** Corrected by restoring the **exact original line** verbatim; it then reddened `N-1.13` as designed. **Both runs are on disk; I report the false one rather than only the corrected one.**
+2. 🛑 **`N-1.18` CANNOT DISCRIMINATE ALONE AND I SAY SO.** It asserts an explicit `REJECTED` never enters survivor promotion — and it **passed BEFORE the fix as well as after**, because reconstruct-from-tier and consume-the-verdict **agree on every valid input.** They disagree only when the verdict is forced to contradict the tier. ⇒ **`N-1.19` + `MUT-9` are the real consumption proof**, and `N-1.18` is retained as the paired negative witness. ★★★ **`A CONTROL THAT PASSES BEFORE AND AFTER THE FIX IS NOT PROOF OF THE FIX; IT IS PROOF THE TWO IMPLEMENTATIONS AGREE ON THAT INPUT.`**
+
+### §5 — 🛑 SCOPE: WHAT IS STILL NOT PROVEN
+- **`R-758 §2` is closed as DEFENCE-IN-DEPTH, and I do not upgrade the desk's grade.** The status gate is real, but the producer path that would exercise it is `[LATENT]` per `R-758 §2` — I ran **no** query and observed **no** live `failed`-with-score result.
+- **Survivor promotion is still not exercised end-to-end.** `N-1.19` witnesses ranking only *indirectly*: reaching promotion is observable because this stub cannot satisfy it and therefore throws. **That is a witness that the path ran, not a test of promotion.**
+- **No database round-trip. No Python.**
+
+### §6 — ✅ EVIDENCE
+```
+d10-n1-replay-outcome.test.ts                        20 passed  (was 11; +9 controls)
++ d10-f9 · conveyor · deepscan8 · pipeline-pause · critic-optimizer.governance
+                                          6 files · 84 passed · exit 0   (was 75)
+npx tsc --noEmit -p tsconfig.json         EXIT 0 · 0 errors project-wide
+```
+🛑 **NOT RUN, NOT CLAIMED:** Python `65` · the `103`-member baseline FAILURE MEMBERSHIP · the 14-call-site disposition guard with its fake fifteenth site · the tampered-comparison negative control. **`R-758 §8` places all four AFTER ALL NINE LANES.**
+
+### §7 — 📍 FAN-IN · NEXT
+**FAN-IN: `3 / 9`** (`F-8` ✅ · `F-9` ✅ · `N-1` ✅ **now including the status/tier truth gap**) · **`N-3` · `N-2` · `N-4` · `F-10` · `F-7` · `N-5` UNSTARTED.**
+⚖️ **The remaining six are UNSTARTED, not blocked — this seat continues. No handoff.** **NEXT: `N-3`, no desk wait, per `R-758 §6a`.** 🛑 **`N-5` NOT STARTED** — queued after `F-7` by ruling, and I am not pulling it forward.
+📡 **EAR: alive, delivered `R-758` within seconds of the desk's write, and its `dirty=` flag reported `1` (DRAFT) on arrival.** ⭐ **I did not act on it — I re-measured with `git status` + `git show HEAD`, found it committed at `395e8114`, and only then read it.** ★★★ **`A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE` — the mtime race is real and the flag is what caught it.**
+🛑 **STOPS HELD:** `schema.ts` NOT touched (not on the allowed list) · files changed are exactly the three `R-758 §6a` permits · the sibling's `test_synthetic_market_simulator.py` still untouched · no `git stash` · `F-8`/`F-9` not reopened · `F-10` reachability not re-derived · `N-5`/`D-9`/state channel not started · no final `D-10` acceptance run.
+
+---
+
 ## AR-868 · 2026-08-09 · ✅✅ **`N-1` IS CLOSED AND THE `UNCONTROLLED` LABEL COMES OFF — RED-FIRST THIS TIME, AND I HAVE THE RED TO SHOW.** ⭐⭐ **`MUT-3` REDDENS ONLY `N-1.1`+`N-1.2` AND `MUT-4` REDDENS ONLY `N-1.3` — THE TWO `R-757 §3` DEFECTS ISOLATE ONE-TO-ONE, AND THE POSITIVE CONTROL SURVIVES EVERY MUTATION EXCEPT ITS OWN.** 🛑🛑★★★★★ **AND THE HEADLINE IS AN INSTRUMENT FINDING: MY FIRST RED WAS `6` FAILURES AND **THREE OF THEM WERE MY FIXTURE, NOT THE CODE.** THE MANUAL PATH'S SELECT ORDER IS NOT THE AUTOMATIC PATH'S, AND FEEDING IT THE WRONG ORDER PRODUCES `replayStatus:"failed"` — WHICH READS EXACTLY LIKE A PRODUCTION REFUSAL DEFECT.** **FAN-IN `3 / 8`.**
 
 **RULING: `R-757 §4`** (inherited per `§5`, declared in `AR-867 §1`). **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` re-invoked at seating, before the first code line.**
