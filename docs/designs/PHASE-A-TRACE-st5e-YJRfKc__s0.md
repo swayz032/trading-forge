@@ -63,8 +63,14 @@ entry_sequence[2] = {"action": "We take the opening range high and the opening r
 entry_sequence[3] = {"action": "So now we take a look at these levels projected going out after this 30 minute range is over. ..."}
 entry_sequence[4] = {"action": "When price breaks above the range high, ..."}
 ```
-🛑🛑 **THE EXTRACTED REPRESENTATION CARRIES NO PARAMETERS, NO TIMEFRAME FIELD, NO TIMEZONE FIELD, NO
-DIRECTION FIELD, NO ORDERING FIELD, AND NO AMBIGUITY FIELD — FOR THIS CONDITION OR ANY OTHER.** The
+🛑 **AMENDED IN PLACE — `STEP 1`, `F-4`.** ~~*"…for this condition **or any other in the spec**"*~~ is
+**FALSE**: `stop` and `targets[]` carry a typed **`level`** field (`null` here), and `variants[]` carry
+**`variant_label`**, populated. ⚖️ **THE CORRECTED CLAIM IS NARROWER AND STRONGER: `entry_sequence` and
+`confluences` are prose-only — which is what ROWS 1–3 actually traced — and where a typed slot DOES
+exist it is EMPTY.** ★★★ **`THE PIPELINE IS NOT MISSING A PLACE TO PUT THE TAUGHT NUMBER; IT HAS ONE AND
+DID NOT FILL IT.`** ★ **The overclaim lived entirely in the word "any" — see `A-1`.**
+🛑 **For THIS condition** (`entry_sequence[1]`) the representation carries **no parameters, no timeframe,
+no timezone, no direction, no ordering and no ambiguity field.** The
 framework's field-2 checklist (*extracted condition · parameters · timeframe · direction · ordering ·
 provenance · ambiguity status*) is satisfied **only** by `extracted condition`, and only as prose.
 ✅ **CORROBORATED INDEPENDENTLY BY THE CENSUS, WHICH JOINS ON A DIFFERENT PATH:** `concepts=[]` and
@@ -181,8 +187,20 @@ def compute_opening_range_breakout(
     spec_condition_compiler.wait_bias_directional_proxy · spine_completion_trigger ·
     structural_stops.compute_structural_stop · structure_engine.compute_structure_state`.
     **`compute_opening_range_breakout` is not among them, and no family declares it.**
-    (The enumeration IS the positive control: the same command that returned nothing for the OR
-    constructor returned all twelve of these.)
+    🛑 **AMENDED IN PLACE — `STEP 1`, `F-3` (CRITICAL) + `F-10`.** ~~*"(The enumeration IS the positive
+    control: the same command that returned nothing for the OR constructor returned all twelve of
+    these.)"*~~ **FALSE — AND THIS SENTENCE WAS ADOPTED VERBATIM INTO `R-724 §6`.**
+    `[MEASURED BY GRADED INSTRUMENT, `F-3`, AST walk + runtime introspection]` **the LITERAL set really is
+    those `12` — but the REACHABLE set is `18`.** Six primitives are assigned through **non-literal**
+    `primitive=` forms a literal grep is structurally blind to (`primitive=bundle_primitive`,
+    `=LEVELZONE_RESOLVER_PRIMITIVE`, `=LEVELZONE_NATIVE_PRIMITIVE`, `=SESSION_NAME_ROUTE_PRIMITIVE`), and
+    `spec_condition_compiler.py:117` **documents that population in a comment I did not read.**
+    🛑 **THE GRADER PLANTED THE SOUGHT PRIMITIVE IN NON-LITERAL FORM AND MY METHOD STAYED GREEN.**
+    ★★★★★ **`A CONTROL THAT CANNOT SEE THE SHAPE YOU ARE HUNTING IS NOT A CONTROL — AND I CALLED IT ONE
+    IN A LINE THAT BECAME A RULING.`** ⚠️ **`F-10`: an import list bounds NAMES, not MODULES, and a
+    dynamic-import idiom already exists in this tree — so "not imported" is a weaker bound than I gave it.**
+    ✅ **THE CONCLUSION SURVIVES ON THE GRADER'S `18`, NOT ON MY `12`:** no binding family reaches the
+    opening-range constructor.
 - ★★★★★ **THE SENTENCE THIS ROW EXISTS TO PRODUCE: `THE ENGINE ALREADY COMPUTES THE TAUGHT CONCEPT,
   PARAMETERISED EXACTLY AS TAUGHT, AND THE SPEC-BINDING SURFACE HAS NO ROUTE TO IT.` The condition is
   instead routed at `WAIT_SESSION` to a killzone-membership boolean, which is a different concept.**
@@ -444,8 +462,18 @@ i.e. **swing pivots, exactly the substitution ROW 2 found, reappearing here.**
 - ⚠️ **WHAT THIS DOES AND DOES NOT DO TO `n_taught_binds = 1`:** the count is **arithmetically correct**
   — one condition has `bind_status == BINDS`. **What is now measured is what that `1` IS.** ★★★★★
   **`THE NUMBER WAS NEVER WRONG; IT WAS NEVER A MEASURE OF WHAT ANYONE READ IT AS.`**
-- ⚠️ **AND `approximation=False` IS THE PART THAT SHOULD ALARM A READER MOST:** the one row claiming
-  **exactness** is the one substituting both the concept and its effect. `[`spec_family_bindings.py:67`]`
+- 🛑 **AMENDED IN PLACE — `STEP 1`, `F-1` (CRITICAL).** ~~*"it is the ONLY row carrying
+  `approximation=False` — an explicit EXACTNESS CLAIM"*~~ and ~~*"the one row claiming exactness is the
+  one substituting both the concept and its effect"*~~ are **BOTH FALSE.**
+  `[MEASURED BY GRADED INSTRUMENT, `F-1`]` `approximation=False` for `INVALIDATE` is
+  **`FAMILY_META["INVALIDATE"].base_approximation` — a STATIC CONSTANT WITH NO PATH TO RED.** The grader
+  bound **six** wildly different texts through the real `bind_condition()` — including
+  `"PURPLE MONKEY DISHWASHER"` and **the empty string** — and got **ONE distinct outcome.** **And it is
+  NOT unique: there are TWO such rows, not one.**
+  ★★★★★ **`I READ A FAMILY CONSTANT AS A JUDGMENT THE COMPILER HAD MADE ABOUT THIS ROW. A FIELD THAT
+  CANNOT VARY IS NOT AN ASSERTION ABOUT ANYTHING.`**
+  ✅ **WHAT SURVIVES:** the **substitution** and **non-gating** findings, which never depended on the flag.
+  `[`spec_family_bindings.py:67`]`
   justifies it as *"direct reuse of the audited stop-placement primitive"* — **true about the CALL, and
   silent about the SEMANTICS and the GATING.** ★★★ **`REUSING AN AUDITED PRIMITIVE IS NOT THE SAME AS
   COMPUTING THE AUDITED CONCEPT.`**
@@ -639,21 +667,40 @@ high/low established in the first window.
 ✅ **POSITIVE CONTROL — THE PRIMITIVE IS ALIVE AND ITS OUTPUT CAN MOVE:** scaling **all** highs by `1.05`
 changes `swing_high` `619.50 → 650.47`. ⇒ **The null above is a measurement, not a dead rig.**
 
-★★★★★ **`THE TAUGHT QUANTITY CAN BE CHANGED BY 24 POINTS AND THE PRIMITIVE BOUND TO IT RETURNS THE SAME
-ANSWER TO EVERY FIELD. THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE.`** ⇒ **ROW 2's
-`ENGINE_PRIMITIVE_WRONG_IDENTITY` is now supported by EXECUTION, discharging `R-724 §8-2`'s objection
-that it rested on a signature-and-fields reading.**
+🛑🛑🛑 **AMENDED IN PLACE — `STEP 1`, `F-9` (CRITICAL). THE CLAIM THAT STOOD HERE IS WITHDRAWN, AND IT WAS
+THIS CAMPAIGN'S MOST-ADVERTISED RESULT.**
+~~*"The taught quantity can be changed by 24 points and the primitive bound to it returns the same answer
+to every field. That is not a loose approximation — it is independence."*~~ ~~*"ROW 2's
+`ENGINE_PRIMITIVE_WRONG_IDENTITY` is now supported by EXECUTION."*~~
+**WHY IT IS FALSE** `[MEASURED BY GRADED INSTRUMENT, `F-9`]`: `swing_high` is the **most-recent confirmed
+pivot over a centred `11`-bar window** (`market_structure.py:22-48`, `structure_engine.py:132-149`) ⇒
+**bars `0–43` of `60` cannot move it AT ANY VALUE.** The grader planted a dominating `640.0` spike at
+**every** index; output moved only at `49–59`. **This experiment tested bar `0`; the mid-series follow-up
+tested bar `30`. Both are in the dead zone.** ⇒ **THE NULL IS EXPLAINED BY POSITION, NOT BY SEMANTICS.**
+🛑 **AND THE POSITIVE CONTROL BELOW IS THE WORSE HALF:** *"all highs ×1.05"* fired because it scaled bars
+`49–59` — **the live region, not the mutation site.** ★★★★★ **`A POSITIVE CONTROL MUST FIRE WHERE THE
+MUTATION IS, NOT SOMEWHERE ELSE IN THE SAME SERIES.` (`R-726 §3`, the LOCALITY RULE, minted from this
+failure.)**
+⚖️ **WHAT REPLACES IT, AND IT IS NARROWER:** **`the bound primitive was completely insensitive to a
+24-point opening-range mutation IN THE REGISTERED EDGE-WINDOW FIXTURE, while responding to its own
+structural inputs`** — a statement about **one fixture**, not about the primitive.
+✅ **ROW 2's `ENGINE_PRIMITIVE_WRONG_IDENTITY` STANDS ON THE CONTRACT EVIDENCE ONLY** — no session/clock/
+range-window parameter, and **no opening range among the `15` output fields** (grade `C3`, band `7`,
+CONFIRMED). ★★★ **`ABSENCE-OF-CAPABILITY AND INSENSITIVITY-TO-INPUT ARE DIFFERENT CLAIMS WITH DIFFERENT
+EVIDENCE, AND I CONFLATED THEM.`**
 
-⚠️ **THE HONEST ALTERNATIVE READING, STATED BECAUSE A SKEPTIC WOULD RAISE IT AND IT DESERVES AN ANSWER:**
-bar `0` sits at the series edge, and a swing detector may structurally never designate an edge bar a
-pivot — so *"swing_high ≠ OR high"* could be an artefact of my construction rather than of the concept.
-**Two things answer it.** (1) **The taught rule does not care whether the OR high is a pivot** — it is
-*the high of the first window*, by definition, so a primitive that can only report pivots cannot express
-it regardless of position. (2) **The mutation control does not depend on the edge argument at all:**
-widening the range by `24` points changed **no field**, including `premium_discount_zone`, which is a
-whole-series quantity. ⚠️ **`UNMEASURED`: the same experiment with the OR window placed mid-series.**
-*What it would add:* closes the edge objection completely. **Not run; the classification does not rest on
-it, and I would rather name it than have it found.**
+🛑 **AMENDED IN PLACE — `STEP 1`, `F-9`. I RAISED THE RIGHT OBJECTION AND THEN ANSWERED IT WRONGLY.**
+~~*"Two things answer it … the mutation control does not depend on the edge argument at all: widening the
+range by 24 points changed no field."*~~ **FALSE — and the mid-series follow-up I ran to close this
+objection landed at bar `30`, which is ALSO in the dead zone.**
+✅ **What survives of the paragraph is argument (1), and only that:** the taught rule **does not care
+whether the OR high is a pivot** — it is *the high of the first window* by definition, so a primitive
+that can only report **most-recent pivots** cannot express it. **That is a CONTRACT argument and it never
+needed the mutation.**
+★★★★★ **THE LESSON THIS PARAGRAPH NOW CARRIES: `I DESIGNED A FALSIFICATION TEST THAT COULD NOT FALSIFY,
+THEN CITED ITS SURVIVAL AS STRENGTH.` The correct move was the one `R-726 §3` now makes law — sweep the
+mutation across the whole domain and state where it DOES move the output *before* publishing where it
+does not: `"responsive at 16/60; I tested 2, both in the dead 44."`**
 
 ### LANE 2 — BUDGET: `1 / 2`, succeeded first run. **DIAGNOSIS ONLY — no production path, no repair.**
 
@@ -748,12 +795,19 @@ reports-at-lock is internally consistent. `OFF-BY-ONE PRESENT? NO.`**
 `n_present = 0`; it is PRESENT AND WRONG for `n_present = 1..5`; it is PRESENT AND CORRECT only at
 `n_present = 6`.** **DAY 2 is unaffected in all seven configurations — the positive control that the rig
 keeps emitting while DAY 1 degrades.**
-🛑🛑★★★★★ **THE TRADING-RELEVANT SHAPE, AND IT IS NOT COSMETIC: EVERY DROPPED BAR MAKES THE RANGE
-*NARROWER* (`1.05 → 0.80`), NEVER WIDER — AND A NARROWER OPENING RANGE MEANS CLOSER BREAKOUT LEVELS,
-WHICH MEANS *MORE* AND *EARLIER* SIGNALS.** ⇒ **A DATA GAP DOES NOT SUPPRESS THIS STRATEGY; IT MAKES IT
-TRADE MORE, WITH NO FLAG.** ★★★ **`THE FAILURE MODE OF A MISSING BAR IS NOT SILENCE — IT IS A CONFIDENT,
-TIGHTER, BUSIER STRATEGY.` This is exactly the direction a `more trades is not success` campaign must
-never absorb quietly.**
+🛑 **AMENDED IN PLACE — `STEP 1`, `R-727 §1`.** ~~*"…which means MORE and EARLIER SIGNALS … A DATA GAP
+DOES NOT SUPPRESS THIS STRATEGY; IT MAKES IT TRADE MORE"*~~ and ~~*"a confident, tighter, BUSIER
+strategy"*~~ are **OVERCLAIMS** — trade count depends on the **unresolved breakout rule**, later gates,
+price path and execution model, **none of which is decided.**
+✅ **CORRECTED WORDING, ADOPTED:** **`EVERY DROPPED BAR MAKES THE RANGE NARROWER (1.05 → 0.80), NEVER
+WIDER. A PARTIAL RANGE MOVES THRESHOLDS INWARD AND CAN CAUSE EARLIER OR ADDITIONAL BREAKOUT
+OPPORTUNITIES.`**
+★★★★★ **`A MEASURED DIRECTION DOES NOT LICENSE A PREDICTED OUTCOME THROUGH AN UNDECIDED MECHANISM` — and
+the mechanism I routed through is the breakout trigger, which `R-725 §4` had already fixed as
+`UNRESOLVED_SOURCE_AMBIGUITY`.**
+✅ **THE ALARM IS UNCHANGED AND STILL MONEY-FACING:** **`THE FAILURE MODE OF A MISSING BAR IS NOT SILENCE
+— IT IS A CONFIDENT, TIGHTER RANGE WITH NO FLAG RAISED ANYWHERE.`** Tighter is the direction a
+*"more trades is not success"* campaign must never absorb quietly.
 ⚠️ **SCOPE:** measured on **synthetic contiguous 5-min bars, one dropped-prefix pattern, one duration
 (`30`)**. **`UNMEASURED`:** interior-gap patterns, other durations, real venue data. **The monotone
 narrowing follows from `max`/`min` over a subset and I state that as the mechanism, not as a proof for
@@ -771,8 +825,16 @@ explicit timezone, trading-day rule and reachability; **row 9 now adds completen
 patch, no adapter, no production edit.**
 
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
-1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.
-2. **Nothing about the other 10 specs**, and nothing about the other 10 conditions of this spec.
-3. **Nothing about `runtime-production`** — unmeasured and out of scope.
-4. **No repair is proposed or performed.** Phase A is diagnosis; repair is Phase B and is not authorized.
-5. **The `9` `APPROXIMATED` conditions are untouched** — this row explains the single `UNBOUND` one only.
+🛑 **AMENDED IN PLACE — `STEP 1`, `F-7`: three of these five items were STALE when the grader read them.**
+1. ~~*"Two of three probes are unrun"*~~ **STALE — all three ran** (`A` `1/2`, `B` `1/2`, `C` `1/2`).
+   ✅ **What is still true: NO CAUSE IS CERTIFIED. `UNVERIFIABLE` stands** (`R-722 §4` / `R-723 §2`), and
+   the grade certifies **mechanical and evidentiary soundness only.**
+2. ~~*"nothing about the other 10 conditions of this spec"*~~ **STALE — `3 / 11` are traced.**
+   ✅ **Still true: nothing about the other `10` SPECS, and `8 / 11` conditions of this one are UNTRACED.**
+3. ✅ **UNCHANGED AND TRUE: nothing about `runtime-production`** — unmeasured, out of scope.
+4. ⚖️ **UPDATED: no repair is performed HERE.** Phase A was diagnosis; **`B1` is now authorized at
+   `R-727` and this file is its `STEP 1` evidence correction. No production code is edited by this file.**
+5. ~~*"The `9` `APPROXIMATED` conditions are untouched"*~~ **STALE — `1 of 9` is traced (ROW 2).**
+   ✅ **Still true: the other `8` are UNTRACED and nothing is claimed about them.**
+★★★ **`A STALE "WHAT I DID NOT MEASURE" SECTION IS WORSE THAN NONE — IT UNDERSTATES THE WORK AND
+OVERSTATES THE HUMILITY, AND A READER CANNOT TELL WHICH.`**
