@@ -4,6 +4,61 @@
 
 ---
 
+## AR-882 · 2026-08-09 · ✅ **`N-5` ENUMERATED, READ-ONLY — AND IT IS THE ONLY LANE IN `D-10` THAT GRANTS A FALSE *PERMISSION* RATHER THAN WRITING A FALSE *RECORD*.** 🛑🛑★★★★★ **A PARENT WHOSE FORGE SCORE WAS NEVER MEASURED BECOMES A BASELINE OF `0`, AND THE SURVIVOR GATE IS `candidate > parent` — SO **ANY** CANDIDATE SCORING ABOVE ZERO IS PROMOTED FOR BEATING A NUMBER NOBODY EVER MEASURED.** 🔚 **AND THIS IS MY HANDOFF: `7 / 9`, BOTH REMAINING LANES GENUINELY BLOCKED (no contract), NOTHING HALF-BUILT, TREE CLEAN, ALL COMMITS PUSHED.**
+
+**SEAT `claude.exe 23640`.** **AUTHORITY for this enumeration: `R-765 §3`'s standing read-only grant, never withdrawn, plus `R-766 §3`'s explicit *"the remaining lanes (`F-7`, `N-5`) should be searched for that shape FIRST"*.** ✅ **`[MEASURED HERE]` `git status --porcelain src/` → only the sibling's Python file. NO CODE CHANGED.**
+✅ **THE DESK'S `ADVISOR-STATE` NOTE (`5ab1c9c5`) IS CORRECT AND I AGREE WITH IT: `F-7`/`N-5` are NOT authorized by `R-766 §4`.** ⚖️ **`AR-881 §0` said the same thing before that note landed — I did not open a fix lane for either, and I am not asking to. The FIX is blocked; the SEARCH was ordered.**
+
+### §1 — 📍 THE SITES, AND THE DECISION THEY FEED
+`[MEASURED HERE, `src/server/services/critic-optimizer-service.ts`]` — **the ledger's line numbers are still accurate; this file is untouched by my `N-4` work** (that was `lifecycle-service.ts`):
+```
+:2153  const parentForgeScore = Number(strat.forgeScore ?? 0);   <- AUTO replay path
+:2532  if (bestCandidate && bestCandidate.compositeScore > parentForgeScore) {   <- survivor gate
+
+:2850  const parentForgeScore = Number(strat.forgeScore ?? 0);   <- MANUAL replay path
+:3009  if (bestCandidate && bestCandidate.compositeScore > parentForgeScore) {   <- survivor gate
+```
+⇒ **Two baselines, two gates, one shape.** **`grep -n parentForgeScore` returns exactly `6` lines — the 2 assignments, the 2 gates, and 2 comments — so the consumer set is CLOSED and I can state it without an `[UNENUMERATED]` hedge.**
+🛑 **CONTROL PROBE:** `grep -n 'isExecutionRefused\|BACKTEST_STATUS_REFUSED'` over this file → **ZERO hits. No refusal awareness anywhere in the critic optimizer.**
+
+### §2 — 🛑🛑 WHY THIS ONE IS DIFFERENT FROM EVERY OTHER `D-10` LANE
+**`F-9`/`N-4`/`F-7`/`F-10` all corrupt a RECORD — an audit row, a status, a finding.** **`N-5` corrupts a DECISION.** ⇒ **A null parent score coerces to `0`; the gate is a strict `>`; every candidate above zero therefore "beats the parent" and is promoted as a survivor.** ★★★★★ **`A FABRICATED VALUE THAT IS ALSO TRUSTED DOWNSTREAM IS A FALSE MEASUREMENT PLUS A FALSE PERMISSION`** (`R-758`) — **and this lane is the second half of that sentence. The others write something untrue; this one lets something through.**
+⚖️ **DIRECTION MATTERS AND IT IS THE OPPOSITE OF `F-7`'s:** `F-7` is over-PESSIMISTIC (a refusal reads `failed`); **`N-5` is over-PERMISSIVE (an unmeasured parent reads *beatable*).** ⇒ **`D-10` is one defect in nine costumes, but the costumes point in both directions, and a fix pattern copied from one lane can be exactly wrong in another.**
+
+### §3 — ⭐ THE COMMENT ABOVE THE DEFECT ASSERTS THE INVARIANT THE DEFECT DENIES
+`[MEASURED HERE, verbatim at `:2151-2152`]`:
+```
+// Y2 fix: Compare forge scores on the same 0-100 scale.
+// … strat.forgeScore is always 0-100, matching replayForgeScore.
+const parentForgeScore = Number(strat.forgeScore ?? 0);
+```
+🛑 **The comment says `always 0-100`. The very next line coerces a nullish value — which is only necessary if it is NOT always 0-100.** ★★★★★ **`A COERCION IS A CONFESSION THAT THE INVARIANT WRITTEN ABOVE IT IS FALSE. WHEN A COMMENT AND ITS OWN NEXT LINE DISAGREE, THE LINE IS THE SPEC.`** ⇒ **This is also why a reviewer reading top-down would clear the site: the comment answers the question the code is failing.**
+
+### §4 — ⚡ TWO SITES OUTSIDE THE `N-5` CONTRACT — REPORTED, NOT REPAIRED (`R-757 §6`)
+`[MEASURED HERE]` `grep -rn 'forgeScore ?? 0\|forge_score ?? 0' src/ --include=*.ts`, non-test:
+| site | verdict |
+|---|---|
+| `critic-optimizer-service.ts:2153` · `:2850` | **`N-5` proper** (above) |
+| `matrix-backtest-service.ts:123` | ✅ **ALREADY GUARDED — NOT a new finding.** `R-763 §1` measured the refusal gate at `:111` with all seven coercions `:123–:132` **strictly below it**. I re-confirmed the line number only. |
+| `meta-optimizer-service.ts:98` | ⚖️ **INERT, and I say why rather than listing it as a defect:** `…map(b => Number(b.forgeScore ?? 0)).filter(s => s > 0)` — **the fabricated `0` is immediately DROPPED by the filter**, so absence and zero converge on "excluded". **A real measured `0` is also excluded, which may itself be wrong, but that is a pre-existing semantic separate from refusal.** |
+| `lib/slumhouse/strategy-families.ts:18` | 🛑 **`[UNENUMERATED — OPEN]`. A fabricated `0` enters a family-grouping structure. I did NOT trace its consumers and I do NOT claim it is a defect — only that it is the one site of this shape nobody has dispositioned.** |
+★ **`R-757 §6`'s stop condition works: this is the third lane found by reporting rather than repairing.**
+
+### §5 — ⚡ WHAT AN `N-5` CONTRACT MUST SETTLE (not a proposal I may build)
+**`R-758`'s registered contract already states the invariant: an ABSENT parent score is a NAMED INELIGIBLE-COMPARISON STATE, not a zero — and `A PARENT WHOSE REAL MEASURED SCORE IS `0` MUST STILL COMPARE AS `0`** (the `N-1.4b` discipline, one layer out). **Controls owed on BOTH gates (`:2532`, `:3009`) — the two paths are separate code and a control on one witnesses nothing about the other.**
+🛑 **THE OPEN DECISION:** when the parent baseline is absent, does the survivor gate **REFUSE to promote** (fail-closed) or **DEFER the run**? **Those are different architectures** (`worker-execution §9`), and the choice interacts with `N-6`'s unbounded-deferral finding (`R-763 §4`) — **a fail-closed gate on a systematically-unmeasured parent is the same "never promoted" trap `N-6` warns about, one subsystem over.** ⚖️ **I flag the interaction; I do not resolve it.**
+⚠️ **HARNESS `[UNMEASURED]` for BOTH remaining lanes:** I did not run `R-766 §1`'s one-grep replica test against `critic-optimizer-service.ts` or `agent-service.ts`. **That measurement decides whether either lane costs a fixture or a rewrite, and it is the cheapest next thing anyone can do.**
+
+### §6 — 🔚 HANDOFF — THE `N / M` QUESTION ANSWERED OUT LOUD (`worker-onboarding §5`)
+**`7 / 9`. THE REMAINING `2` ARE BLOCKED, NOT MERELY UNSTARTED** — `[MEASURED]` `R-766 §4` grants FILES ALLOWED and acceptance to LANE 1 and LANE 2 only; the desk confirmed this in `ADVISOR-STATE` `5ab1c9c5`. **The read-only work those lanes DO allow is now COMPLETE for both** (`AR-881` `F-7`, this report `N-5`). ⇒ **There is no authorized work left for a seat to take, and I am not writing myself a stop order — the stop is the ruling's.**
+**DELIVERED THIS SEAT:** `AR-877` (seat receipt) · `AR-878` (`F-10` closed) · `AR-879` (`N-4` seam) · `AR-880` (`N-4` closed) · `AR-881` (`F-7` enumeration) · `AR-882` (this).
+**COMMITS, ALL PUSHED** — `[MEASURED HERE]` `git log @{u}..HEAD` **EMPTY**: `ca07a661` · `703b7eec` · `9c84d1d3` · `5fc2ee6d` · `6d8cfd41` · `34e75367` · `67f99900` · `ae4f940e` · `b80b27f3`.
+✅ **NOTHING HALF-BUILT.** **No production file is uncommitted. No mutation is left planted** (every one restored `git diff --exit-code` clean). 🛑 **NO SUB-AGENT WAS EVER DISPATCHED BY THIS SEAT — `[MEASURED]`, so no dispatched work dies with it.**
+📡 **THE EAR DIES WITH THIS SEAT.** `Monitor` persistent, owner `claude.exe 23640`, tuple-keyed on `(newest '## R-' heading, dirty-state, HEAD sha)`; **red-proofed on a throwaway repo before arming and it delivered `R-766` DRAFT→COMMITTED in flight.** **The incoming worker must run the `worker-onboarding §2a` census and arm its OWN.** 🛑 **DO NOT kill `claude.exe 444`'s `bash.exe` rig — that is the ADVISOR's ear** (and `AR-877 §2` records why it cannot deliver; only its owner may re-arm it).
+⚖️ **A FRESH WORKER IS NEEDED ONLY IF A CONTRACT LANDS.** **The next task, as the ruling defines it: whichever of `F-7` / `N-5` the desk contracts first — both are fully scoped in `AR-881 §5` and `§5` above, so nothing needs re-deriving.** **`ATTEMPT BUDGET: F-10 1/2 · N-4 1/2 · F-7 0/2 · N-5 0/2.`**
+
+---
+
 ## AR-881 · 2026-08-09 · ✅ **`F-7` ENUMERATED, READ-ONLY — `10` SITES IN `4` CLUSTERS, AND IT IS **NOT** THE SHAPE THE WAVE HAS BEEN HUNTING.** 🛑🛑★★★★★ **`F-7` FABRICATES A *REASON*, NOT A NUMBER: `errorMessage: … ?? "backtest failed"` WRITES THE WORDS *"backtest failed"* ABOUT A RUN THE ENGINE DECLINED TO ATTEMPT — AND `status: "failed"` LANDS ON THE **STRATEGY ROW ITSELF**, NOT MERELY AN AUDIT LINE.** ⚠️ **NO CODE CHANGED. `F-7` FIX UNSTARTED. FAN-IN UNCHANGED AT `7 / 9`.**
 
 **SEAT `claude.exe 23640`.** **AUTHORITY: `R-765 §3`'s standing READ-ONLY grant (*"`F-7` and `N-5` reachability/defect enumeration"*), which `R-766` re-ordered the lanes around but did not withdraw.** 🛑 **`R-766 §4` specifies FILES ALLOWED and acceptance for LANE 1 and LANE 2 ONLY. `F-7` and `N-5` appear in its ORDER line but carry NO lane contract, so I did not open one.** ★ **`AN ORDER OF WORK IS NOT A CONTRACT FOR IT.`**
