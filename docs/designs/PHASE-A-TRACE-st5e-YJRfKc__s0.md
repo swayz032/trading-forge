@@ -673,7 +673,7 @@ it, and I would rather name it than have it found.**
 | 6 | **completion timing (no lookahead)** | **`EXACT`** | `:560-567` null before lock, values at `>= lock`. **MEASURED B0-4:** pre-lock `6` bars / `0` non-null · post-lock `12` bars / `12` non-null. Taught: *"we take a look at these levels projected going out **after this 30 minute range is over**."* |
 | 7 | **trading-day reset** | 🛑 **`MISMATCH`** *(conditional, and I state the condition)* | `:533` groups on `ts.dt.date()` — **calendar date.** ✅ Correct for the taught **equities RTH** lesson. 🛑 **Wrong for futures**, where the trading day opens `18:00` ET the previous calendar day — and MES/MNQ/MCL are this system's instruments. **Marked MISMATCH because the reuse target is futures, not because the code is wrong for its own lesson.** |
 | 8 | **`5` / `15` / `30` support** | **`EXACT`** | **MEASURED B0-1..3:** all three durations agree with the independent reference on both days. |
-| 9 | **missing-bar behaviour** | ⚠️ **`UNMEASURED`** | **Static read:** `:527-530` all-null only when **no** day has in-range bars; a per-day miss yields a left-join null. 🛑 **No minimum-bar guard exists** — a day holding `1` of `6` window bars would compute an OR from partial data and report it as complete. **I did NOT execute a partial-window case.** *What would measure it:* delete bars inside one day's window and re-run. |
+| 9 | **missing-bar behaviour** | 🛑 **`MISMATCH` — NOW EXECUTED (`R-726 §7-1`), AND WORSE THAN THE STATIC READ SUGGESTED** | See **B0 CLOSEOUT** below. **A partial window does not refuse — it silently returns a NARROWER range.** |
 | 10 | **actual production caller** | **`EXACT`** | `core.py:649`, `:760` — the indicator dispatcher, non-test. Live. |
 | 11 | **reachability from the frozen spec path** | 🛑 **`MISMATCH`** | `spec_condition_compiler.py:52` imports **only** `compute_atr, compute_ema` from `indicators.core`; **no `FAMILY_META` primitive names the OR constructor** (all `12` enumerated, `AR-810`). **The capability exists and the spec path cannot call it.** |
 | 12 | **agreement with an independent deterministic reference** | **`EXACT`** | **MEASURED B0-1..3:** `6/6` day×duration combinations agree exactly on high, low **and** width, against a reference computed **outside all engine code**. |
@@ -718,6 +718,57 @@ CONSTRUCTION AND CONFIRMATION ARE SEPARATE SEMANTICS AND THE SOURCE NEVER SPECIF
    Loud, not silent.
 ✅ **NEITHER COUNTS AGAINST THE PROBE BUDGET: both were harness faults that produced no result, and
 both failed loudly.** **B0 budget: `1 / 2`.**
+
+## B0 CLOSEOUT (`R-726 §7`) — FOUR ITEMS, ALL EXECUTED
+
+### ITEM 2 — exact timestamps and bar interval behind the six pre-lock observations
+**Bar interval `5` min · `18` bars on DAY 1 · `session_start_et=09:30`, `range_minutes=30` ⇒ window `[570, 600)`.**
+Pre-lock bars (`orh is null`), verbatim: `09:30:00` `(570)` · `09:35:00` `(575)` · `09:40:00` `(580)` ·
+`09:45:00` `(585)` · `09:50:00` `(590)` · `09:55:00` `(595)`. **FIRST LOCKED BAR: `10:00:00` `(600)`, `orh=617.65`.**
+
+### ITEM 3 — `[start, lock)` off-by-one: **NONE**
+Forming bars = `[570, 575, 580, 585, 590, 595]` — **`6` bars, last `595`.** Lock boundary `600`; the `10:00`
+bar is **excluded from formation and is the first bar to report.** ⇒ **start-inclusive / end-exclusive /
+reports-at-lock is internally consistent. `OFF-BY-ONE PRESENT? NO.`**
+
+### ITEM 1 — 🛑 MISSING OPENING BARS: **IT DOES NOT REFUSE — IT SILENTLY NARROWS THE RANGE**
+**TRUE full-window OR for DAY 1, computed outside all engine code: `high 617.65 / low 616.60 / width 1.05`.**
+
+| bars present | engine DAY 1 (h / l / w) | equals TRUE? | DAY 2 |
+|---|---|---|---|
+| **6** | `617.65 / 616.60 / 1.05` | ✅ **True** | ok |
+| 5 | `617.65 / 616.65 / 1.00` | 🛑 False | ok |
+| 4 | `617.65 / 616.70 / 0.95` | 🛑 False | ok |
+| 3 | `617.65 / 616.75 / 0.90` | 🛑 False | ok |
+| 2 | `617.65 / 616.80 / 0.85` | 🛑 False | ok |
+| 1 | `617.65 / 616.85 / 0.80` | 🛑 False | ok |
+| **0** | **ABSENT (no value emitted)** | n/a | ok |
+
+✅ **DOMAIN SWEEP STATED, AS `R-726 §3` NOW REQUIRES OF EVERY NULL:** **the DAY-1 value is ABSENT only at
+`n_present = 0`; it is PRESENT AND WRONG for `n_present = 1..5`; it is PRESENT AND CORRECT only at
+`n_present = 6`.** **DAY 2 is unaffected in all seven configurations — the positive control that the rig
+keeps emitting while DAY 1 degrades.**
+🛑🛑★★★★★ **THE TRADING-RELEVANT SHAPE, AND IT IS NOT COSMETIC: EVERY DROPPED BAR MAKES THE RANGE
+*NARROWER* (`1.05 → 0.80`), NEVER WIDER — AND A NARROWER OPENING RANGE MEANS CLOSER BREAKOUT LEVELS,
+WHICH MEANS *MORE* AND *EARLIER* SIGNALS.** ⇒ **A DATA GAP DOES NOT SUPPRESS THIS STRATEGY; IT MAKES IT
+TRADE MORE, WITH NO FLAG.** ★★★ **`THE FAILURE MODE OF A MISSING BAR IS NOT SILENCE — IT IS A CONFIDENT,
+TIGHTER, BUSIER STRATEGY.` This is exactly the direction a `more trades is not success` campaign must
+never absorb quietly.**
+⚠️ **SCOPE:** measured on **synthetic contiguous 5-min bars, one dropped-prefix pattern, one duration
+(`30`)**. **`UNMEASURED`:** interior-gap patterns, other durations, real venue data. **The monotone
+narrowing follows from `max`/`min` over a subset and I state that as the mechanism, not as a proof for
+every pattern.**
+
+### ITEM 4 — complete-window positive control **PRESERVED**, and now stated in locality-rule form
+`baseline orh = 617.65` · **`+9` INSIDE the window → `626.50` (moved `True`)** · **`+9` AFTER lock →
+`617.65` (moved `False`)**. ⇒ **same input site · same field (`orh`) · same consumer · same evaluation
+horizon · both directions. `R-726 §3` SATISFIED.**
+
+### WHAT THE CLOSEOUT DOES TO THE DISPOSITION
+**`REUSE_WITH_TYPED_ADAPTER` STANDS — and the adapter's contract gains one clause it did not have before:
+it must REQUIRE A COMPLETE WINDOW AND FAIL CLOSED ON A PARTIAL ONE.** Rows 3, 7, 11, 13 already demanded
+explicit timezone, trading-day rule and reachability; **row 9 now adds completeness.** 🛑 **Still no
+patch, no adapter, no production edit.**
 
 ## WHAT THIS FILE DOES **NOT** ESTABLISH
 1. **No cause is established.** Two of three probes are unrun; `UNVERIFIABLE` stands.

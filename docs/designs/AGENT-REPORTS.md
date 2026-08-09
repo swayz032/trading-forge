@@ -4,6 +4,24 @@
 
 ---
 
+## AR-819 · 2026-08-09 · ✅ **B0 CLOSEOUT COMPLETE — ALL FOUR `R-726 §7` ITEMS EXECUTED, `4/4`.** 🛑🛑★★★★★ **AND THE `UNMEASURED` ROW CAME BACK WORSE THAN THE STATIC READ: A PARTIAL OPENING WINDOW DOES NOT REFUSE — IT SILENTLY RETURNS A *NARROWER* RANGE. `1.05 → 0.80` AS BARS DROP, MONOTONE, NEVER WIDER.** ★★★★★ **`THE FAILURE MODE OF A MISSING BAR IS NOT SILENCE — IT IS A CONFIDENT, TIGHTER, BUSIER STRATEGY.`** ✅ **NO OFF-BY-ONE. LOCALITY RULE SATISFIED ON EVERY CLAIM.**
+
+### §1 — 🛑 ITEM 1, THE ONE THAT MATTERS, WITH THE DOMAIN SWEEP `R-726 §3` REQUIRES
+`[MEASURED HERE]` TRUE full-window OR for DAY 1, computed outside all engine code: **`617.65 / 616.60 / 1.05`.**
+**`n_present=6` → correct · `n_present=5..1` → `1.00 · 0.95 · 0.90 · 0.85 · 0.80`, all PRESENT AND WRONG · `n_present=0` → ABSENT.** **DAY 2 correct in all seven configurations** — the positive control that the rig keeps emitting while DAY 1 degrades.
+🛑🛑 **DIRECTION IS THE FINDING, NOT THE MAGNITUDE: every dropped bar NARROWS the range. A narrower opening range means closer breakout levels, which means MORE and EARLIER signals.** ⇒ **A DATA GAP DOES NOT SUPPRESS THIS STRATEGY — IT MAKES IT TRADE MORE, WITH NO FLAG RAISED ANYWHERE.** ★★★ **For a campaign whose first law is `more trades is not success`, this is the exact direction that must never be absorbed quietly — and today it would be, silently, by a venue gap.**
+⚠️ **SCOPE, STATED RATHER THAN IMPLIED:** synthetic contiguous `5`-min bars · **one dropped-prefix pattern** · **one duration (`30`)**. **`UNMEASURED`: interior gaps, other durations, real venue data.** **The monotone narrowing follows from `max`/`min` over a subset — I give that as the MECHANISM, not as a proof for every pattern.**
+
+### §2 — ✅ ITEMS 2, 3, 4
+**ITEM 2 — timestamps printed verbatim:** interval **`5` min**, `18` DAY-1 bars, window `[570,600)`; pre-lock `09:30 · 09:35 · 09:40 · 09:45 · 09:50 · 09:55`; **first locked bar `10:00:00 (600)`, `orh=617.65`.**
+**ITEM 3 — OFF-BY-ONE: NONE.** Forming bars `[570…595]` = `6`; the `10:00` bar is excluded from formation and is the first to report. **Start-inclusive / end-exclusive / reports-at-lock is internally consistent.**
+**ITEM 4 — positive control preserved, restated in locality-rule form:** `+9` **inside** the window moved `orh` `617.65 → 626.50`; `+9` **after lock** did not move it. **Same site · same field · same consumer · same horizon · both directions.** ★ **This is the shape `F-9` proved my Phase-A control lacked, and I am now stating it in the form that makes the lack visible.**
+
+### §3 — WHAT IT DOES TO THE DISPOSITION
+**`REUSE_WITH_TYPED_ADAPTER` STANDS, with one clause added: the adapter must REQUIRE A COMPLETE WINDOW AND FAIL CLOSED ON A PARTIAL ONE.** Rows 3/7/11/13 already demanded explicit timezone, trading-day rule and reachability; **row 9 now adds completeness, and it is the only one whose failure mode INCREASES trading activity.**
+🛑 **FORBIDDEN LIST HONOURED IN FULL:** no structure-engine mutation rerun · no B1 patch · no adapter · no production edit · no repository census · no other rows · **no re-litigating `F-9`.** ✅ **`AR-818` named the rerun as the tempting one and I did not run it.**
+**NOTHING OWED. STOPPING AND WAITING, per my ratified default.**
+
 ## AR-818 · 2026-08-09 · ⚡ **START-RECEIPT — `R-726 §7` B0 CLOSEOUT ACCEPTED. FOUR ITEMS, NOTHING ELSE.**
 
 **TASK:** (1) execute the **missing-opening-bar** cases — `AR-814`'s single `UNMEASURED` row · (2) print the **exact timestamps and bar interval** behind the six pre-lock observations · (3) resolve any **`[start, lock)` off-by-one** · (4) **preserve the complete-window positive control.**
