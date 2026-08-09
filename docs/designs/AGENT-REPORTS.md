@@ -4,6 +4,43 @@
 
 ---
 
+## AR-837 · 2026-08-09 · 🛑🛑★★★★★ **`TEMPORAL_STATE_CHANNEL_MISSING` — THE STOP `R-740 §6` PRE-REGISTERED HAS FIRED, AT `6B`'s FIRST INPUT AND BEFORE ANY CODE.** ⭐ **THE EXECUTABLE LAYER'S PER-CONDITION CONTRACT IS `bool np.ndarray` — ONE BOOLEAN PER BAR — AND `OpeningRangeState` HAS SIX FIELDS, FOUR OF THEM NUMERIC. THERE IS NO CHANNEL THAT PRESERVES IT.** ✅ **MEASURED AT THE EXECUTABLE LINE, WITH A POSITIVE CONTROL FOR THE ABSENCE.** ⚖️ **I WROTE NO `6B` CODE.**
+
+**RULING:** `R-741 §6` (`6B` auto-released) — **stopped under `R-740 §6` / `R-741 §6`'s named stop.** **SEAT:** same cold seat, continuing. **HEAD at measurement `e365b058`.** **`6B` ATTEMPT BUDGET: `0 / 2` — this is a STOP, not an attempt.**
+
+### §1 — 🛑 THE CONTRACT, IN THE CODE'S OWN WORDS
+`[MEASURED HERE]`:
+```
+spec_condition_compiler.py:592   "# ─ Per-family evaluators (each returns a bool np.ndarray of len n) ─"
+spec_condition_compiler.py:905   def _dispatch_enforced(self, b, ctx) -> np.ndarray
+spec_condition_compiler.py:574   self.last_per_condition_bool: dict[str, np.ndarray]
+```
+⇒ **every routed family returns ONE BOOLEAN PER BAR.** **`OpeningRangeState` carries `opening_range_high · low · width · midpoint · complete · window_status`** — **four numeric series and a status enum.** 🛑 **A boolean array cannot carry any of the four numbers, and `R-740 §5` explicitly requires `6B` to EXPOSE all six.**
+
+### §2 — ⚖️ I CHECKED FOR A SECOND CHANNEL BEFORE CALLING IT MISSING, BECAUSE `ctx` LOOKED LIKE ONE
+🛑 **`ctx` IS A MEMO CACHE, NOT A STATE CHANNEL.** `[MEASURED]` every `ctx[...]` write (`wait_structure_cache`, `fvg_signal`, `wait_retest`, `mss_result`) is an intermediate consumed by a handler that still returns a boolean. **Nothing publishes state THROUGH it.**
+⭐ **AND THERE IS A NUMERIC STORE, WHICH IS WHY THIS NEEDED MEASURING RATHER THAN ASSUMING:** `:552` `last_population_a_level: dict[str, np.ndarray]`, written at `:877` and `:1668`. **It is ONE level series per condition** — it could carry `high` OR `low`, not four fields — **and `[MEASURED]` NO module outside `spec_condition_compiler.py` reads it, nor `last_per_condition_bool`.**
+✅ **POSITIVE CONTROL FOR THAT ABSENCE, because an empty grep over a wrong scope is not an absence** (`[absence-claim]`): the **identical grep shape** (same root, same test/self exclusions) DOES find a cross-module consumer for a sibling field — **`last_trace` → `backtester.py:8387` `result["spec_trace"] = strategy.last_trace`.** ⇒ **the scan reaches consumers when they exist; these two have none.** ⚖️ **SCOPE NAMED: `src/**/*.py`, excluding tests and the compiler itself. I did not scan TypeScript or n8n.**
+
+### §3 — 🛑 WHY I AM NOT ROUTING AROUND IT, AND THE THREE DODGES BY NAME
+**`R-740 §6` / `R-741 §6`: *"DO NOT convert the state into an always-true condition or a one-bar trigger to fit the old interface."*** **Each available dodge is forbidden and each would pass the two ordered REDs:**
+1. **return `opening_range_complete` as the boolean** — the binding routes, the REDs go green, and **four taught numbers are silently dropped.**
+2. **publish levels into `last_population_a_level`** — one slot, four fields, **and nothing reads it**; the state would be written where no consumer looks. ★ **`EXISTENCE IS NOT WIRING`, and this is the version where I would be the one building the unwired thing.**
+3. **return `np.ones` while stashing state elsewhere** — the always-true condition the ruling names first.
+★★★★★ **ALL THREE TURN BOTH ORDERED REDS GREEN WHILE COMPUTING NOTHING A CONSUMER CAN READ.** ⇒ **this stop is worth exactly as much as it costs, which is the whole slice's last step** (`A STOP IS ONLY WORTH ANYTHING WHEN HONOURING IT IS EXPENSIVE`).
+⚖️ **AND `AR-832 §5` FLAGGED THIS SURFACE AS `UNMEASURED` TWO REPORTS AGO** — *"the per-bar handler's gate semantics for a DEFINITION family, which I did not design because §1 blocks the input."* **`R-740 §6` then adopted the stop from the external read for the same seam, from the other direction. It is now measured, and it fires.**
+
+### §4 — ⚖️ WHAT THE DESK OWES A DECISION ON — OPTIONS, NO IMPLEMENTATION, NO ACTION TAKEN
+- **(A) ADD A TYPED STATE CHANNEL** to the executable layer: per-condition typed state published beside the boolean, with a consumer that reads it. **Correct and permanent; it is an INSTRUMENT-layer change to the compiler's output contract, which is not mine to design.**
+- **(B) NARROW `6B`** to production ROUTING + declaration parity only — binding becomes bindable with the opening-range primitive, the adapter is genuinely called, **but the six fields are not yet exposed to a consumer.** ⚖️ **Would turn RED #1 green and leave RED #2 red; `R-740 §5` currently expects both.**
+- **(C) `6B` AS SPECIFIED IS NOT REACHABLE** until (A) lands, and the vertical slice's last step moves behind it.
+🛑 **I AM IMPLEMENTING NONE OF THEM.** ★ **Choosing between them decides how far the slice reaches, which is `R-741 §6`'s *"anything requiring you to decide scope."***
+
+### §5 — ✅ STATE AT THIS STOP
+✅ **`STEP 6A` COMPLETE and both `R-741` closeouts landed** — `e365b058`, pushed. `[MEASURED]` **89 passed** across the five opening-range suites · **pinned conformance group `2 failed, 96 passed`, membership the two ordered REDs** · discrimination `8/8` · guards green. **All unpiped.**
+🛑 **NOTHING OF `6B` STARTED:** `FAMILY_META` · `PRIMITIVE_RESOLVERS` · `ENFORCED_DISPATCH` · TS mirror · both ordered REDs — **all unchanged**, `git status --porcelain` clean for every one.
+⚖️ **THIS SEAT IS ALIVE AND HOLDS FULL `STEP 3`–`6A` CONTEXT.** ⚠️ **AND I AM NOT REPEATING `AR-832 §5`'s MISTAKE OF PROMISING IMMEDIACY** — `AR-833` had to correct that sentence when the seat died. **What I can say instead: nothing here needs re-deriving, because it is all in `AR-833`–`AR-837` and in the four committed suites.**
+
 ## AR-836 · 2026-08-09 · ✅✅ **BOTH `R-741` CLOSEOUTS LANDED AT `b3045800`, EACH RED-PROOFED BY RESTORING ITS OWN DEFECT.** 🛑🛑★★★★★ **WRITING THE ORDERED CONTROLS FOUND A **THIRD** DEFECT NOBODY HAD NAMED: MY DURATION REGEX SAID `minute\b` AND SO NEVER MATCHED *"the first 15 minutes"* — IT WOULD HAVE FALSELY REFUSED ANY TEACHER WHO USES THE PLURAL.** ⚠️⚠️ **AND ONE OF MY OWN NEW CONTROLS DID NOT BITE — IT PASSED UNDER THE RESTORED DEFECT BECAUSE ITS FIXTURE SCANNED A GOOD SPAN FIRST. REWRITTEN, RE-MUTATED, NOW RED.** ✅ **THE `§5` PINNED CONFORMANCE GROUP REPRODUCES `2 failed, 96 passed` EXACTLY.**
 
 **RULING:** `R-741 §2` (closeout 1) · `§3` (closeout 2) · `§4` (closeout 3, retained) · `§5` (pinned group) · `§6`. **SEAT:** same cold seat, continuing. **HEAD `b3045800`, pushed; `ls-remote` = same.** **CLOSEOUT BUDGET: `1 / 2` — one attempt, both landed.**
