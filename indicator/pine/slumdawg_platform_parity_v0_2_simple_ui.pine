@@ -1,0 +1,299 @@
+//@version=6
+indicator("Slumdawg NQ/MNQ Platform Parity v0.2 — Simple UI", overlay = true, max_labels_count = 100, max_lines_count = 100)
+
+// -----------------------------------------------------------------------------
+// CLASSIFICATION / SAFETY
+// -----------------------------------------------------------------------------
+const string BUILD_CLASSIFICATION = "PLATFORM_PARITY_ONLY"
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+
+// This is still a parity build. The UI is simplified for the operator, but the
+// safety posture is unchanged: no live approval, no automatic structural selector,
+// and no edge claim.
+
+// -----------------------------------------------------------------------------
+// INPUTS
+// -----------------------------------------------------------------------------
+string groupRuntime = "1 — Runtime / Safety"
+string runtimeMode = input.string("STUDY", "Runtime mode", options = ["STUDY", "LIVE_DECISION_SUPPORT"], group = groupRuntime)
+string feedAttestation = input.string("UNKNOWN", "Feed attestation", options = ["UNKNOWN", "REALTIME", "DELAYED"], group = groupRuntime)
+bool enableParityEngine = input.bool(false, "Enable parity engine", group = groupRuntime, tooltip = "OFF by default. This is a verification engine, not a live trading switch.")
+
+string groupContext = "2 — Trading Context"
+string tradeSide = input.string("LONG", "Active plan", options = ["LONG", "SHORT"], group = groupContext)
+string overallDirection = input.string("UNKNOWN", "Overall direction", options = ["BULLISH", "BEARISH", "UNKNOWN"], group = groupContext, tooltip = "Big-picture direction only. A red trendline crossing does not auto-flip intraday direction.")
+float proofLevel = input.price(0.0, "Yellow entry / proof level", group = groupContext, tooltip = "Manual yellow proof level for parity testing. Automatic structural selection remains calibration-gated.")
+
+string groupCalibration = "3 — PARITY CALIBRATION PLACEHOLDERS"
+float minBreak = input.float(0.25, "BREAK distance (points)", minval = 0.25, step = 0.25, group = groupCalibration)
+float minPush = input.float(0.25, "PUSH distance (points)", minval = 0.25, step = 0.25, group = groupCalibration)
+float maxRecoil = input.float(2.00, "Max recoil before reset (points)", minval = 0.0, step = 0.25, group = groupCalibration)
+float maxPushSeconds = input.float(60.0, "Max seconds per push", minval = 0.1, step = 0.1, group = groupCalibration)
+float dojiBodyFraction = input.float(0.10, "DOJI_LIKE max body/range", minval = 0.0, maxval = 1.0, step = 0.01, group = groupCalibration)
+
+string groupVisual = "4 — Display"
+bool showNativeLevels = input.bool(true, "Show PDH / PDL / PWH / PWL", group = groupVisual)
+bool showSimplePanel = input.bool(true, "Show simple status panel", group = groupVisual)
+bool showEngineeringPanel = input.bool(false, "Show engineering diagnostics", group = groupVisual)
+bool showDebugMarkers = input.bool(false, "Show parity transition markers", group = groupVisual)
+
+// -----------------------------------------------------------------------------
+// PLATFORM-NATIVE PRIOR COMPLETED D/W LEVELS
+// Prior confirmed HTF value + lookahead_on. These are hidden serial plots for
+// data/parity access; operator-visible levels are current horizontal line objects.
+// -----------------------------------------------------------------------------
+float pdh = request.security(syminfo.tickerid, "D", high[1], lookahead = barmerge.lookahead_on)
+float pdl = request.security(syminfo.tickerid, "D", low[1], lookahead = barmerge.lookahead_on)
+float pwh = request.security(syminfo.tickerid, "W", high[1], lookahead = barmerge.lookahead_on)
+float pwl = request.security(syminfo.tickerid, "W", low[1], lookahead = barmerge.lookahead_on)
+
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+// Only four current blue levels are visible. This removes the historical
+// stair-step look from v0.1 while preserving the same current values.
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both, width = 2)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both, width = 2)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both, width = 1)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both, width = 1)
+var line proofLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both, width = 3)
+
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label proofLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+
+f_set_level(line ln, label lb, float price, string txt, color c, bool visible, int width) =>
+    line.set_xy1(ln, bar_index - 1, price)
+    line.set_xy2(ln, bar_index, price)
+    line.set_width(ln, width)
+    line.set_color(ln, visible ? c : color.new(c, 100))
+    label.set_xy(lb, bar_index + 2, price)
+    label.set_text(lb, visible ? txt + "  " + str.tostring(price, format.mintick) : "")
+    label.set_textcolor(lb, color.white)
+    label.set_color(lb, visible ? color.new(c, 45) : color.new(c, 100))
+    label.set_size(lb, size.small)
+
+bool proofSet = proofLevel > 0
+if barstate.islast
+    f_set_level(pdhLine, pdhLabel, pdh, "PDH", color.blue, showNativeLevels, 2)
+    f_set_level(pdlLine, pdlLabel, pdl, "PDL", color.blue, showNativeLevels, 2)
+    f_set_level(pwhLine, pwhLabel, pwh, "PWH", color.rgb(72, 61, 139), showNativeLevels, 1)
+    f_set_level(pwlLine, pwlLabel, pwl, "PWL", color.rgb(72, 61, 139), showNativeLevels, 1)
+    f_set_level(proofLine, proofLabel, proofLevel, "YELLOW ENTRY / PROOF", color.yellow, proofSet, 3)
+    label.set_textcolor(proofLabel, color.black)
+
+// -----------------------------------------------------------------------------
+// FAIL-CLOSED RUNTIME GUARDS
+// -----------------------------------------------------------------------------
+bool isFiveMinute = timeframe.isminutes and timeframe.multiplier == 5
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = syminfo.mintick == EXPECTED_TICK
+float proofTicks = proofSet ? proofLevel / syminfo.mintick : na
+bool proofOnGrid = proofSet and math.abs(proofTicks - math.round(proofTicks)) < 1e-7
+bool liveFeedAttested = feedAttestation == "REALTIME"
+bool delayedLiveBlock = runtimeMode == "LIVE_DECISION_SUPPORT" and not liveFeedAttested
+bool contextValid = isFiveMinute and isNqMnq and tickGridExpected and proofSet and proofOnGrid
+bool engineRuntimeAllowed = enableParityEngine and contextValid and not delayedLiveBlock
+bool exactIntrabarAvailable = barstate.isrealtime
+bool actionableAllowed = LIVE_DECISION_SUPPORT_APPROVED and runtimeMode == "LIVE_DECISION_SUPPORT" and engineRuntimeAllowed and exactIntrabarAvailable
+
+string runtimeReason = not isNqMnq ? "WRONG SYMBOL" : not isFiveMinute ? "USE 5-MINUTE CHART" : not tickGridExpected ? "TICK METADATA MISMATCH" : not proofSet ? "SET YELLOW ENTRY" : not proofOnGrid ? "YELLOW LEVEL OFF TICK GRID" : delayedLiveBlock ? "LIVE FEED NOT ATTESTED" : not enableParityEngine ? "PARITY TEST OFF" : not exactIntrabarAvailable ? "WAITING FOR REALTIME BAR" : "PARITY ENGINE RUNNING"
+
+// -----------------------------------------------------------------------------
+// CANDLE GEOMETRY
+// -----------------------------------------------------------------------------
+f_is_doji_like(float o, float h, float l, float c, float threshold) =>
+    float r = h - l
+    r <= 0.0 ? true : math.abs(c - o) / r <= threshold
+
+bool currentDojiLike = f_is_doji_like(open, high, low, close, dojiBodyFraction)
+
+// -----------------------------------------------------------------------------
+// MOMENTUM STATE — deterministic parity slice
+// -----------------------------------------------------------------------------
+const string STAGE_WAIT_REFERENCE = "WAIT_REFERENCE"
+const string STAGE_WAIT_BREAK = "WAIT_BREAK"
+const string STAGE_BREAK = "BREAK"
+const string STAGE_PUSH_1 = "PUSH_1"
+const string STAGE_ENTRY_READY = "ENTRY_READY"
+
+varip string stage = STAGE_WAIT_REFERENCE
+varip bool referenceArmed = false
+varip float reference = na
+varip float anchor = na
+varip int referenceSourceBar = na
+varip float currentLow = na
+varip float currentHigh = na
+varip int lastStageTimeMs = na
+varip int entryCount = 0
+varip string lastTransition = "NONE"
+
+bool eventReferenceArmed = false
+bool eventReferenceDojiVeto = false
+bool eventBreak = false
+bool eventPush1 = false
+bool eventEntryReady = false
+bool eventRecoilReset = false
+bool eventBarReset = false
+
+if barstate.isnew
+    currentLow := low
+    currentHigh := high
+else
+    currentLow := na(currentLow) ? low : math.min(currentLow, low)
+    currentHigh := na(currentHigh) ? high : math.max(currentHigh, high)
+
+float direction = tradeSide == "LONG" ? 1.0 : -1.0
+float favorable = direction * close
+float referenceFavorable = direction * reference
+float anchorFavorable = direction * anchor
+
+// One realtime execution can advance at most one stage.
+if engineRuntimeAllowed and exactIntrabarAvailable and referenceArmed and bar_index > referenceSourceBar and stage != STAGE_ENTRY_READY
+    bool recoilEligible = stage == STAGE_BREAK or stage == STAGE_PUSH_1
+    float recoil = recoilEligible and not na(anchor) ? anchorFavorable - favorable : 0.0
+
+    if recoilEligible and recoil >= maxRecoil
+        stage := STAGE_WAIT_BREAK
+        anchor := reference
+        lastStageTimeMs := na
+        lastTransition := "RECOIL_RESET"
+        eventRecoilReset := true
+    else if stage == STAGE_WAIT_BREAK
+        if favorable >= referenceFavorable + minBreak
+            stage := STAGE_BREAK
+            anchor := close
+            lastStageTimeMs := timenow
+            lastTransition := "BREAK"
+            eventBreak := true
+    else if stage == STAGE_BREAK
+        if favorable >= anchorFavorable + minPush
+            float elapsedSeconds = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if elapsedSeconds <= maxPushSeconds
+                stage := STAGE_PUSH_1
+                anchor := close
+                lastStageTimeMs := timenow
+                lastTransition := "PUSH_1"
+                eventPush1 := true
+            else
+                lastTransition := "SLOW_PUSH"
+    else if stage == STAGE_PUSH_1
+        if favorable >= anchorFavorable + minPush
+            float elapsedSeconds2 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if elapsedSeconds2 <= maxPushSeconds
+                stage := STAGE_ENTRY_READY
+                anchor := close
+                lastStageTimeMs := timenow
+                entryCount += 1
+                lastTransition := "ENTRY_READY_NONACTIONABLE"
+                eventEntryReady := true
+            else
+                lastTransition := "SLOW_PUSH_2"
+
+if engineRuntimeAllowed and exactIntrabarAvailable and barstate.isconfirmed
+    bool completedBeyondProof = tradeSide == "LONG" ? close > proofLevel : close < proofLevel
+
+    if not referenceArmed
+        if completedBeyondProof
+            if currentDojiLike
+                stage := STAGE_WAIT_REFERENCE
+                lastTransition := "REFERENCE_DOJI_VETO"
+                eventReferenceDojiVeto := true
+            else
+                reference := tradeSide == "LONG" ? high : low
+                anchor := reference
+                referenceSourceBar := bar_index
+                referenceArmed := true
+                stage := STAGE_WAIT_BREAK
+                lastStageTimeMs := na
+                lastTransition := "REFERENCE_ARMED"
+                eventReferenceArmed := true
+    else if bar_index > referenceSourceBar and stage != STAGE_ENTRY_READY
+        reference := tradeSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        stage := STAGE_WAIT_BREAK
+        lastStageTimeMs := na
+        lastTransition := "BAR_RESET"
+        eventBarReset := true
+
+if not contextValid or delayedLiveBlock or not enableParityEngine
+    stage := STAGE_WAIT_REFERENCE
+    referenceArmed := false
+    reference := na
+    anchor := na
+    referenceSourceBar := na
+    lastStageTimeMs := na
+    lastTransition := runtimeReason
+
+// -----------------------------------------------------------------------------
+// SIMPLE OPERATOR DISPLAY
+// -----------------------------------------------------------------------------
+string simpleStage = stage == STAGE_WAIT_REFERENCE ? "WAITING FOR REFERENCE" : stage == STAGE_WAIT_BREAK ? "WAITING FOR BREAK" : stage == STAGE_BREAK ? "BREAK — WATCH PUSH 1" : stage == STAGE_PUSH_1 ? "PUSH 1 — WATCH PUSH 2" : "ENTRY READY — PARITY ONLY"
+
+var table simple = table.new(position.bottom_right, 2, 6, border_width = 1, bgcolor = color.new(color.black, 20))
+if barstate.islast
+    if showSimplePanel
+        table.cell(simple, 0, 0, "SLUMDAWG", text_color = color.white, bgcolor = color.new(color.gray, 65))
+        table.cell(simple, 1, 0, "TEST BUILD", text_color = color.white, bgcolor = color.new(color.gray, 65))
+        table.cell(simple, 0, 1, "OVERALL", text_color = color.white)
+        table.cell(simple, 1, 1, overallDirection, text_color = overallDirection == "BULLISH" ? color.lime : overallDirection == "BEARISH" ? color.red : color.silver)
+        table.cell(simple, 0, 2, "PLAN", text_color = color.white)
+        table.cell(simple, 1, 2, tradeSide, text_color = tradeSide == "LONG" ? color.lime : color.red)
+        table.cell(simple, 0, 3, "YELLOW ENTRY", text_color = color.white)
+        table.cell(simple, 1, 3, proofSet ? str.tostring(proofLevel, format.mintick) : "NOT SET", text_color = proofSet ? color.yellow : color.orange)
+        table.cell(simple, 0, 4, "STATE", text_color = color.white)
+        table.cell(simple, 1, 4, enableParityEngine ? simpleStage : "TEST OFF", text_color = color.white)
+        table.cell(simple, 0, 5, "STATUS", text_color = color.white)
+        table.cell(simple, 1, 5, runtimeReason, text_color = runtimeReason == "PARITY ENGINE RUNNING" ? color.lime : color.orange)
+    else
+        for row = 0 to 5
+            table.cell(simple, 0, row, "")
+            table.cell(simple, 1, row, "")
+
+// Engineering panel is hidden by default. It exists to diagnose platform parity,
+// including the tick metadata mismatch observed during the first TradingView run.
+var table eng = table.new(position.top_right, 2, 9, border_width = 1, bgcolor = color.new(color.black, 25))
+if barstate.islast
+    if showEngineeringPanel
+        table.cell(eng, 0, 0, "BUILD")
+        table.cell(eng, 1, 0, BUILD_CLASSIFICATION)
+        table.cell(eng, 0, 1, "LIVE APPROVED")
+        table.cell(eng, 1, 1, LIVE_DECISION_SUPPORT_APPROVED ? "YES" : "NO")
+        table.cell(eng, 0, 2, "ROOT / TF")
+        table.cell(eng, 1, 2, syminfo.root + " / " + timeframe.period)
+        table.cell(eng, 0, 3, "PLATFORM TICK")
+        table.cell(eng, 1, 3, str.tostring(syminfo.mintick))
+        table.cell(eng, 0, 4, "EXPECTED TICK")
+        table.cell(eng, 1, 4, str.tostring(EXPECTED_TICK))
+        table.cell(eng, 0, 5, "REFERENCE")
+        table.cell(eng, 1, 5, na(reference) ? "NA" : str.tostring(reference, format.mintick))
+        table.cell(eng, 0, 6, "ANCHOR")
+        table.cell(eng, 1, 6, na(anchor) ? "NA" : str.tostring(anchor, format.mintick))
+        table.cell(eng, 0, 7, "LAST EVENT")
+        table.cell(eng, 1, 7, lastTransition)
+        table.cell(eng, 0, 8, "DOJI_LIKE")
+        table.cell(eng, 1, 8, currentDojiLike ? "YES" : "NO")
+    else
+        for row = 0 to 8
+            table.cell(eng, 0, row, "")
+            table.cell(eng, 1, row, "")
+
+// Debug markers are hidden by default.
+plotshape(showDebugMarkers and eventReferenceArmed, title = "Reference armed", text = "REF", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.orange, textcolor = color.black)
+plotshape(showDebugMarkers and eventReferenceDojiVeto, title = "Reference doji veto", text = "DOJI\nVETO", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.gray, textcolor = color.white)
+plotshape(showDebugMarkers and eventBreak, title = "BREAK parity event", text = "BREAK", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.yellow, textcolor = color.black)
+plotshape(showDebugMarkers and eventPush1, title = "PUSH_1 parity event", text = "P1", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.aqua, textcolor = color.black)
+plotshape(showDebugMarkers and eventEntryReady, title = "ENTRY_READY parity event", text = "ENTRY\nPARITY", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.lime, textcolor = color.black)
+plotshape(showDebugMarkers and eventRecoilReset, title = "Recoil reset", text = "RECOIL\nRESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.red, textcolor = color.white)
+plotshape(showDebugMarkers and eventBarReset, title = "Bar reset", text = "BAR\nRESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.purple, textcolor = color.white)
+
+alertcondition(eventBreak, "PARITY DEBUG — BREAK", "NON-ACTIONABLE parity event: BREAK")
+alertcondition(eventPush1, "PARITY DEBUG — PUSH_1", "NON-ACTIONABLE parity event: PUSH_1")
+alertcondition(eventEntryReady, "PARITY DEBUG — ENTRY_READY", "NON-ACTIONABLE parity event: ENTRY_READY")
+alertcondition(eventRecoilReset, "PARITY DEBUG — RECOIL_RESET", "NON-ACTIONABLE parity event: RECOIL_RESET")
