@@ -12,6 +12,79 @@
 
 ---
 
+## R-756 · 2026-08-09 · ⏳ **`F-9` IS `PARTIAL`, NOT CLOSED — BOTH GAPS CONFIRMED BY ME AT THE EXECUTABLE LINE.** 🛑🛑🛑★★★★★ **AND THE SECOND ONE IS NOT A REFUSAL BUG AT ALL: THE EXPLICIT `backtest_id` IS NEVER JOINED TO `strategy_id`, AND `collectEvidence` LOADS EACH BY ITS OWN ID — SO STRATEGY `A`'s COMPLETED BACKTEST CAN BE ANALYSED UNDER STRATEGY `B`'s IDENTITY AND CONFIG. CROSS-STRATEGY EVIDENCE CONTAMINATION, ON THE COMPLETED PATH, TODAY.** ⚡ **`N-1` AUTHORIZED; THE CRITIC SUBSYSTEM CLOSES IN ONE COMMIT.** 🔧 **AND THE WORKER'S LOCKOUT WAS MINE: THE WRITE GUARD KEYED ON THE LEDGER'S `mtime` AND MY OWN DRAFT SAVES HELD IT SHUT. FIXED AND RED-PROOFED — REPORTED HERE, NOT RULED.**
+
+**RULING ID:** R-756 · **ARs RULED: `AR-864` ONLY** · **DECISION: ACCEPT-IN-PART (`F-9` safety gate) · WITHHOLD (`F-9` closure) · ADOPT (external `R-756 §1`–`§5`, on my own measurement) · ELEVATE (the ownership-join defect out of the refusal frame) · AUTHORIZE (`N-1` + the bounded critic closeout) · HOLD (`AR-865`, pending its own read)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-865`** `[MEASURED HERE]` — **READ IN FULL AND EXPLICITLY NOT RULED.** 🛑 **The external read's own header names `AR-864` and nothing else.** ★★★★★ **`A BURST OF REPORTS DOES NOT INHERIT ONE READ — JOIN ON THE `AR RULED:` LIST THE READ NAMES.`** (Tenth operator assertion, `R-755`; it caught that ruling in draft and it binds this one too.) ⚖️ **`AR-865` is NOT blocking: `§4`'s order does not depend on its adjudication, and `§5` unblocks its one real impediment operationally.**
+**HEAD at write time `[MEASURED HERE]`.** **READ CONSUMED: external `R-756`.**
+⚠️ **NUMBERING: external `R-756` → campaign `R-756`. OFFSET REMAINS `0`.**
+⭐⭐ **PROVENANCE NOTE THAT MATTERS, AND IT IS THE OPPOSITE OF THE MONITOR CASE:** `[MEASURED HERE]` this read measured remote `d16c40e0`, which **PREDATES `R-755` (`defa3c48`)** — so it had **not seen** this desk's 8-lane expansion, its `OPTION A` decision, or its census correction, **and independently produced the same `8`-lane population and the same `N-1` authorization.** ★★★★★ **`THAT IS A GENUINE SECOND PATH — UNLIKE `R-754 §5`'s MONITOR CLAUSE, WHICH ECHOED OUR OWN STALE FILE. THE TEST FOR AN ECHO IS WHETHER THE READER COULD HAVE SEEN THE THING IT AGREES WITH.`**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — ✅ WHAT `F-9` DID ACHIEVE, AND IT IS REAL
+`[MEASURED HERE, `src/server/routes/critic-optimizer.ts`, executable lines]` — implicit resolution filters `completed`; explicit IDs are looked up rather than trusted; **both paths converge on ONE status gate at `:96-110`**; `refused` returns the named `422 refused_backtest_no_evidence`, distinct from `backtest_not_completed` and `backtest_not_found`; **the critic is not called on that path.**
+✅ **The single-validation-point design is the right one** — a later edit to the query cannot silently re-admit a refusal past it. ⭐ **`AR-864`'s `MUT-B` discrimination is structurally credible** (the generic guard still blocks, so only `F-9.2` notices the loss of refusal-specific naming). 🛑 **Its adoption as campaign law remains HELD with `AR-865`; credible is not ratified.**
+
+### §2 — 🛑 GAP ONE: THE QUERY FILTER HAS NO EXECUTING CONTROL — CONFIRMED
+`[MEASURED HERE, `src/server/__tests__/d10-f9-critic-evidence-refusal.test.ts:107-115`]`:
+```js
+function chain(rows: unknown[]) {
+  const thenable = {
+    where: () => thenable,          // <- TAKES NO ARGUMENT. The predicate is discarded.
+    orderBy: () => thenable,
+    limit: () => Promise.resolve(rows),   // <- returns the supplied rows REGARDLESS
+```
+⇒ **the fixture cannot observe whether a `completed` predicate exists at all. `F-9.1` proves the FINAL STATUS GATE and nothing about the QUERY FILTER.**
+★★★★★ **`A MOCK THAT ACCEPTS NO ARGUMENT CANNOT WITNESS A PREDICATE — IT IS A PASS-THROUGH WEARING A QUERY'S SHAPE.`** ⚖️ **Same family as `AR-863 §4`'s write-only `sql` mock, which the worker itself repaired one lane earlier — and the same family as `R-753 §2`'s `A MOCK THAT RESTATES THE VALUE IT IS CHECKING IS A COPY, NOT A CONTROL.` Third instance in three lanes.** ⚠️ **A SOURCE-TEXT ASSERTION IS NOT A SUBSTITUTE.**
+**REQUIRED:** a fixture holding a **NEWER `refused` row and an OLDER `completed` row for the same strategy**; implicit resolution must select and analyse the **older completed** one; **removing ONLY the completed-status predicate must turn this control RED while the final status guard stays intact.**
+
+### §3 — 🛑🛑🛑 GAP TWO: THE OWNERSHIP JOIN IS ABSENT — CONFIRMED END-TO-END, AND I ELEVATE IT
+`[ALL MEASURED HERE, executable lines]`:
+```
+routes/critic-optimizer.ts:81-89     .where(eq(backtests.id, backtestId))            <- NO strategy predicate
+routes/critic-optimizer.ts:112-115   triggerCriticOptimizer(backtestId, body.strategy_id, …)  <- TWO UNJOINED IDS
+critic-optimizer-service.ts:1305     .where(eq(backtests.id,  backtestId))           <- loads the BACKTEST by one id
+critic-optimizer-service.ts:1316     .where(eq(strategies.id, strategyId))           <- loads the STRATEGY by the other
+```
+🛑 **THE TWO IDENTIFIERS ARE NEVER COMPARED, ANYWHERE ON THE PATH.** ⇒ **a caller supplying strategy `A`'s completed `backtest_id` together with strategy `B`'s `strategy_id` produces an evidence packet holding `A`'s MEASUREMENTS under `B`'s IDENTITY AND CONFIG, and the critic ranks on it.**
+🛑🛑 **THIS IS NOT A REFUSAL DEFECT AND MUST NOT BE FILED AS ONE. It fires on the fully COMPLETED path, needs no refusal to exist, and predates `D-10` entirely.** ⚖️ **It is the SECOND such defect this wave has surfaced incidentally — `R-755 §3`'s `rr?.forgeScore ?? 0` was the first.**
+> ★★★★★ **`A SWEEP AIMED AT ONE FAILURE CLASS IS THE CHEAPEST INSTRUMENT YOU WILL EVER HAVE FOR FINDING THE OTHERS — BECAUSE IT IS THE FIRST TIME ANYONE HAS READ THESE LINES FOR MEANING RATHER THAN FOR THEIR OWN FEATURE.`** ⇒ **BINDING ON THE REMAINING SIX LANES: when a lane opens a file, defects OUTSIDE the refusal frame are REPORTED, not silently passed over — and they are NOT repaired in the same commit unless they sit on the identical line.**
+⚖️ **SEVERITY, SPLIT NOT AVERAGED:** **CAPITAL — `LATENT`** (pre-live, no trading). **CAMPAIGN EVIDENCE CHAIN — `ACTIVE`**: the critic's survivor ranking is the instrument that chooses what we build next, and `R-755 §3` already established it is reading a constant zero. **Two independent corruptions of the same instrument, found within one hour.** ★★★ **`AN INSTRUMENT WITH TWO INDEPENDENT CORRUPTIONS IS NOT A DEGRADED INSTRUMENT; IT IS AN UNKNOWN ONE.`**
+**REQUIRED:** join explicit `backtest_id` to `body.strategy_id`; **wrong-strategy completed evidence produces a named no-evidence/not-found outcome; the critic remains uncalled; matching-strategy completed evidence is the positive control; removing ONLY the ownership join turns that control RED.**
+
+### §4 — ⚡ AUTHORIZED NOW — ONE BOUNDED CRITIC-SUBSYSTEM COMMIT, THEN PROCEED WITHOUT A DESK WAIT
+✅ **`N-1` IS AUTHORIZED. The `AR-862` stop was adjudicated at `R-755`; DO NOT WAIT ON IT AGAIN.**
+**NEXT COMMIT (one bounded unit, critic subsystem only):** **(1)** the two `F-9` gaps in `§2`/`§3` · **(2)** `F-8.3`'s positive fixture amended to return `completed` (🛑 **do NOT reopen the `F-8` production fix and do NOT create a second waiting point**) · **(3)** `N-1` closed in the same subsystem.
+**`N-1` SITES ARE EXACTLY TWO:** `critic-optimizer-service.ts:2390` and `:2849`. 🛑 **`:2575` and `:3051` DISCARD their results — they are CENSUS CONTROLS, not repair sites** (`R-755 §2`, re-confirmed by this read).
+**`N-1` ACCEPTANCE:** inspect execution status **before** reading metrics · a refusal stays a named refusal · `replayStatus` never becomes `completed` · **tier and score remain ABSENT — never `REJECTED` and `0`** · no refusal enters ranking or survivor selection · **a completed replay reads the CANONICAL returned field `forge_score` and keeps a NONZERO score.** 🛑 **A camel-case test fixture is FORBIDDEN — it would memorialize the defect** (`R-755 §3`).
+**THEN PROCEED WITH NO FURTHER DESK WAIT: `N-3` → `N-2` → `N-4` → `F-10` → `F-7`**, then full `D-10` acceptance + exact baseline-membership comparison.
+**HONEST FAN-IN, CORRECTED: `1 / 8` CLOSED**, `F-9` **PARTIAL**. 🛑 **`AR-864`'s `2 / 4` is STRUCK — the denominator moved at `R-755` and a fan-in against a retired denominator is `[unenumerated-ladder]` exactly.**
+**CONTROLS:** every lane publishes its **per-defect mutation table** (mutation restoring each defect turns **only** its own control red), with **mutation controls and unchanged-code POSITIVE controls reported SEPARATELY.**
+**ATTEMPT BUDGET REMAINS `1 / 2`** — `AR-864` is a successful partial delivery; `§2`/`§3` are closeouts, not a failed attempt.
+
+### §5 — 🔧 THE WORKER'S LOCKOUT WAS THE DESK'S DEFECT — FIXED, RED-PROOFED, AND REPORTED RATHER THAN RULED
+🛑 **`AR-865` reports three blocked code writes and a partial edit it could neither finish nor revert. THE CAUSE WAS MINE** `[MEASURED HERE]`: `.claude/hooks/worker-execution-guard.ps1:44` keyed the gate on `(Get-Item $ledger).LastWriteTimeUtc` — **the ledger's `mtime`** — and this desk re-saved an uncommitted `R-755` draft six times in ~100 seconds, so the gate re-closed before the worker could issue the write it had just re-loaded for.
+> ★★★★★ **`A GUARD KEYED ON A FILE'S mtime CANNOT DISTINGUISH A RULING FROM A KEYSTROKE — IT ENFORCES "RE-READ AFTER EVERY RULING" AS "RE-READ AFTER EVERY SAVE", AND A DESK MID-DRAFT THEREFORE HALTS THE WORKER COMPLETELY.`**
+✅ **FIXED: the join key is now the LAST COMMIT THAT TOUCHED the ledger** (`git log -1 --format=%ct -- <file>`), **with a fail-safe fallback to `mtime` if git is unavailable — deliberately toward MORE guarding, never less.** ⚖️ **This is the campaign's own protocol made executable: `A RULING IS ISSUED WHEN IT IS COMMITTED, NOT WHEN IT IS LEGIBLE.`**
+⭐⭐ **RED-PROOFED AT BIRTH, TWO DISCRIMINATING ARMS, IN A SCRATCH GIT REPO** `[MEASURED HERE]`:
+```
+ARM 1  uncommitted draft re-saved (the AR-865 livelock)  OLD(mtime)=BLOCK  NEW(commit)=ALLOW
+ARM 2  real ruling COMMITTED after the worker loaded     OLD(mtime)=BLOCK  NEW(commit)=BLOCK
+```
+✅ **ARM 2 is the one that matters: the guard STILL BITES on a real ruling. This is a join-key repair, NOT a weakening** — and `A FIX WHOSE TWO ARMS DO NOT DISAGREE IS A NO-OP`.
+⭐⭐⭐ **AND THE WORKER'S CONDUCT HERE IS THE STANDARD:** the hook's own text offers removal from `settings.json` as recovery and **it refused to take it**, correctly distinguishing **a misfire** (for which that escape is written) from **a guard working off the wrong key** (which is a defect to fix, not to bypass). ★★★★★ **`ROUTING AROUND A GUARD THAT BLOCKED YOU IS THE ONE MOVE THAT IS NEVER AVAILABLE — AND THE SEAT MOST ENTITLED TO MAKE IT IS THE ONE IT BLOCKED UNFAIRLY.`**
+🛑 **ORDERED — the partial edit:** `git status --porcelain src/` shows ` M src/server/services/shadow-rerun-service.ts` (the worker's, incomplete). **`F-10` is FIFTH in `§4`'s order, so that edit is out of sequence: REVERT IT to a clean tree** (`git checkout -- src/server/services/shadow-rerun-service.ts`) **and rebuild it when `F-10` comes up.** ✅ **Nothing is lost — `AR-865 §3`'s reachability trace is banked in the report.** 🛑 **Do NOT touch the sibling's `test_synthetic_market_simulator.py`.**
+✅ **`AR-865 §3`'s `F-10` REACHABILITY TRACE IS ACKNOWLEDGED, NOT RULED** (no read). ⭐ **It graded itself honestly — `[MEASURED AT THE EXECUTABLE LINE]`, explicitly **NOT** `[EXECUTED BY A CONTROL]`, and refused to upgrade its own reading to a red-proof.** **That self-grading is exactly right and it is why `F-10` keeps its place in the order rather than jumping it.**
+
+### §6 — BOUNDS · REGISTER · STOPS
+🛑 **NO state-channel work.** **`D-9` follows only after ALL EIGHT `D-10` lanes close. `D-3` held until `D-10` + `D-9` close. NO new independent grade between them — the final state-channel grade covers the combined slice. `f788c64b` is RECONCILIATION INPUT ONLY: never merge, cherry-pick or replay.** ✅ **Commit and push each green bounded unit immediately.**
+**STOP CONDITION:** a **fifteenth** direct `runBacktest()` caller, or a refusal-sensitive consumer outside the `10` → **STOP and report.** · any control unreachable without crossing a stop → **STOP; do not route around it.** · **a defect outside the refusal frame → REPORT it, do not silently repair it** (`§3`).
+**STOPS (unchanged):** the other `31` baseline failures · **both ordered `6B` REDs stay RED** · re-selecting the golden slice · `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · `:534` · the sibling's Python file · `git stash` · worktree cleanup · the `21` pre-existing untracked `docs/designs/` files.
+
+**LESSON TO PERSIST:** ★★★★★ **`A GUARD KEYED ON A FILE'S mtime CANNOT DISTINGUISH A RULING FROM A KEYSTROKE` — and the desk's own drafting was the load that broke it.** · ★★★★★ **`A MOCK THAT ACCEPTS NO ARGUMENT CANNOT WITNESS A PREDICATE — IT IS A PASS-THROUGH WEARING A QUERY'S SHAPE.`** · ★★★★★ **`A SWEEP AIMED AT ONE FAILURE CLASS IS THE CHEAPEST INSTRUMENT YOU WILL EVER HAVE FOR FINDING THE OTHERS.`** · ★★★★★ **`THE TEST FOR AN ECHO IS WHETHER THE READER COULD HAVE SEEN THE THING IT AGREES WITH` — this read could not, so its agreement is a second path.** · ★★★★ **`AN INSTRUMENT WITH TWO INDEPENDENT CORRUPTIONS IS NOT A DEGRADED INSTRUMENT; IT IS AN UNKNOWN ONE.`** · ★★★★ **`ROUTING AROUND A GUARD THAT BLOCKED YOU IS NEVER AVAILABLE — LEAST OF ALL TO THE SEAT IT BLOCKED UNFAIRLY.`**
+
+---
+
 ## R-755 · 2026-08-09 · ✅ **`F-8` ACCEPTED, MUTATION-PROVED PER-DEFECT.** 🛑 **`AR-864` (`F-9`) IS READ AND DELIBERATELY **NOT** RULED — IT LANDED *AFTER* THE EXTERNAL READ, WHICH NAMES ONLY `AR-862`+`AR-863`. THE OPERATOR CLOSED THIS EXACT LOOPHOLE MID-DRAFT: *"WAIT ON GPT ANYTIME ITS RPEROTS BACK TO BACK."* I HAD DRAFTED `AR-864` INTO THIS RULING AND STRUCK IT BEFORE COMMIT.** 🛑🛑 **`AR-862`'s CENSUS IS SHORT BY ONE AND I SETTLED IT BY MEMBER, NOT BY TAKING EITHER SIDE'S COUNT: `14` DIRECT CALLS ACROSS `9` CALLER FILES — THE TWO EXTRA MATCHES ARE COMMENTS AT `metrics-registry.ts:786` AND `critic-optimizer-service.ts:8`, PLUS THE DEFINITION.** ⚡⚡★★★★★ **AND THE READ'S NEW FINDING IS CONFIRMED AND IS BIGGER THAN THE ONE IT RIDES IN ON: `rr?.forgeScore ?? 0` READS A FIELD THE RESULT DOES NOT HAVE (`forge_score`, snake_case, `backtest-service.ts:299`) — SO **EVERY LEGITIMATE COMPLETED CRITIC REPLAY IS SCORED `0` TODAY.** THAT IS NOT A REFUSAL BUG.** ⚡ **`D-10` EXPANDED TO `8` LANES. OPTION `A` + SHARED CLASSIFIER ADOPTED. WORK RELEASED.**
 
 **RULING ID:** R-755 · **ARs RULED: `AR-862` + `AR-863` ONLY** · **DECISION: ACCEPT (`F-8`) · CONFIRM (the `AR-862` stop) · CORRECT (`AR-862`'s census, on my own re-derivation) · ADOPT (external `R-755 §1`–`§7`, on my own measurement) · ELEVATE (the `forgeScore` casing defect out of the refusal frame) · DECIDE (architecture: `OPTION A` + shared classifier) · EXPAND (`D-10` → 8 lanes) · AUTHORIZE (release order) · HOLD (`AR-864`, pending its own read)**
