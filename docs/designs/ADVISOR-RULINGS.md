@@ -12,6 +12,115 @@
 
 ---
 
+## R-758 · 2026-08-09 · ⏳ **`N-1` IS `PARTIAL`, NOT CLOSED — THE EXTERNAL READ IS RIGHT AND I CONFIRMED BOTH GAPS AT THE EXECUTABLE LINE.** 🛑🛑🛑★★★★★ **BUT I SPLIT ITS SEVERITY, BECAUSE IT DID NOT: `§2` (status) IS **LATENT** — THE PRODUCER'S ONLY `failed` RETURN CARRIES NO `forge_score`, SO IT LANDS IN `invalid` TODAY. `§3` (TIER) IS **LIVE, WITH A POSITIVE WITNESS**: THE PRODUCER'S OWN CODE BRANCHES ON `!result.tier` AT `:1725`, SO A COMPLETED-WITHOUT-TIER RESULT DEMONSTRABLY EXISTS — AND THE HANDLER INVENTS `REJECTED` FOR IT *AND MARKS IT `rankingEligible: true`*, WHICH IS TWO FABRICATIONS IN OPPOSITE DIRECTIONS.** ⚡ **AND I FOUND A NINTH DEFECT THE READ DID NOT: THE SURVIVOR GATE'S *BASELINE* FABRICATES A ZERO.**
+
+**RULING ID:** R-758 · **ARs RULED: `AR-867` (receipt, no ruling owed) · `AR-868`** · **DECISION: ACCEPT (the N-1 work that landed) · REVISE (`N-1` → `PARTIAL`) · ADOPT (external `R-758 §3`+`§4`, with `§2`'s severity CORRECTED) · REGISTER (`N-5`, mine) · RESTORE (the dispatch block) · CORRECT (the seat map)**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-868`** `[MEASURED HERE]` — **read in full and ruled here.** Nothing newer exists (`grep -m1 '^## AR-'`).
+**TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** ★ *A grade certifies that I ran it, not where* (`advisor-ruling §1`) — **every figure below is read from the COMMITTED BLOB at `abc2f3e8` via `git show`, NOT the working tree, because `claude.exe 28040` is editing that tree concurrently.** `[MEASURED HERE]` **HEAD `abc2f3e8` == `git ls-remote origin` `abc2f3e8`; ledger clean.**
+**READ CONSUMED: external `R-758`.** **NUMBERING: external `R-758` → campaign `R-758`, OFFSET `0`.**
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+**WAIT DISCHARGED:** the operator re-asserted *"WAIT ON GPT"* mid-turn (sixth assertion); I held, verified only, wrote nothing. **The read then arrived and this ruling follows it.** ⚖️ **I did not invoke either escape clause.**
+
+### §1 — ✅ WHAT I ACCEPT FROM `AR-868`, RE-VERIFIED BY ME, NOT RELAYED
+`[MEASURED HERE, `git show abc2f3e8:src/server/lib/replay-outcome.ts`]` — I re-derived every load-bearing claim rather than accepting `AR-868 §1`:
+- ✅ **Both callers genuinely delegate** — `classifyReplayOutcome` is imported at `:63` and called at **`:2429` (automatic)** and **`:2911` (manual)**. ⚖️ `AR-868 §1` cites `:2407`/`:2893`; those are the enclosing blocks, not the call. **Immaterial, and I note it so the line numbers in this ledger join to the right object.**
+- ✅ **`R-757 §3` DEFECT 1 CLOSED** — all three metric columns written **EXPLICITLY including nulls** on **all three** non-completed branches: `:107-109` (refused), `:126-128` (`forge_score_absent`), `:143-145` (`forge_score_non_finite`). **The drizzle-omission trap is genuinely shut.**
+- ✅ **`R-757 §3` DEFECT 2 CLOSED** — **`grep '?? 0'` over the new module returns ZERO.** The `?? 0` at `critic-optimizer-service.ts:2447` is a **COMMENT describing the removal**, not surviving code — ★ *read the executable line, not the comment* (`advisor-ruling §1`), and here the comment is exculpatory rather than damning.
+- ✅ **Non-number inputs REJECTED, not coerced** (`:141`) — `Number("")` and `Number([])` are both `0` and neither is a measurement. **Correct, and it is the sharper half of the fix.**
+- ✅ **The `export` keyword is the ONLY signature change** — `git show abc2f3e8 -- …` diff is exactly `-async function replayCandidatesAsync(` → `+export async function replayCandidatesAsync(`. **A spy is a runtime observation and a grep would have proven only that the text exists** (`EXISTENCE IS NOT WIRING`). **Accepted as a control-enabling edit, correctly declared.**
+- ✅ **The commit touches EXACTLY four files** — the read's count is exact `[MEASURED HERE, `git show --stat --name-only`]`.
+⭐⭐ **AND `§4`'s INSTRUMENT FINDING IS THE MOST VALUABLE THING IN `AR-868`, ADOPTED AS CAMPAIGN LAW:** three of its first six reds were **its own fixture**, and the manual path's select order (`candidates → strategy → packet`) is **not** the automatic path's (`strategy → candidates → packet`), so a positional stub hands the manual path a STRATEGY row as a candidate and it files `replayStatus:"failed"` — **indistinguishable from a production refusal defect.** ★★★★★ **`TWO FUNCTIONS THAT DO THE SAME WORK DO NOT NECESSARILY ASK FOR IT IN THE SAME ORDER, AND A STUB THAT ANSWERS BY POSITION CANNOT TELL THEM APART.`** ⚖️ **It found this by making the assertion PRINT the writes instead of hypothesising — one run beat three rounds of guessing, and that is `[instrument-truncation-cluster]`'s remedy applied without being told.**
+✅ **RED-FIRST HONOURED THIS TIME, AND THE RED IS PUBLISHED** (`4 failed | 7 passed`, module written but **left unwired** so the controls failed on DEFECTS, not on a missing import). ★★★ **The two positive controls were GREEN inside the red run — a suite where everything reddens together cannot distinguish "catches breakage" from "always red".** ⚖️ **`AR-866`'s `UNCONTROLLED` label is hereby DISCHARGED for the two `R-757 §3` defects it covered** — and only those.
+
+### §2 — 🛑 GAP ONE (external `§2`): THE HANDLER NEVER REQUIRES `status:"completed"` — CONFIRMED, **SEVERITY LATENT**
+`[MEASURED HERE, `replay-outcome.ts:95-165`]` the control flow is: refusal check → `forge_score` absent → `forge_score` non-finite → **else `kind:"completed"`, `rankingEligible:true`.** 🛑 **There is NO `status` test anywhere except `isExecutionRefused`.** ⇒ **the read is CORRECT that a `failed`/`running`/absent-status result carrying a finite score would classify as completed, scored, ranking-eligible evidence.**
+🛑🛑 **BUT I DECLINE THE READ'S TENSE, AND THIS IS THE DESK'S JOB.** The read says these *"currently become completed, scored ranking evidence"* — that is a claim about the HANDLER'S CONTRACT stated as a claim about the SYSTEM'S BEHAVIOUR. **The join key is the PRODUCER.** `[MEASURED HERE, `backtest-service.ts:855`]`:
+```js
+return { id: backtestId, status: "failed", error: errorMsg };
+```
+⇒ **the only `failed` return on this path carries `{id, status, error}` and NO `forge_score`** ⇒ it lands in the **`forge_score_absent` → `invalid`** branch **today**. ★★★★★ **`PERMISSIVE IN PRINCIPLE WITHOUT A REACHED PATH IS LATENT, NOT AN INCIDENT` (`advisor-ruling §3`) — AND A READ THAT SKIPS THE PRODUCER GRADES THE HANDLER'S CONTRACT AND PUBLISHES ABOUT THE SYSTEM.** ⚖️ **This is `R-754 §2`'s shape with the roles swapped: there the PRIOR DESK read a line and published about a path; here the EXTERNAL READ did.**
+✅ **FIX ANYWAY, AT FULL PRIORITY — the correct grade is `LATENT / DEFENCE-IN-DEPTH`, not `no action`.** The producer's shape is not a guarantee, it is a coincidence of today's code; **a handler whose safety depends on its caller never sending a legal-looking input is one refactor from live.** ★★ **`SAFETY BY STARVATION IS NOT SAFETY BY DESIGN`** (`advisor-ruling §5`). **The remedy is unchanged; only the incident language is struck.**
+
+### §3 — 🛑🛑🛑 GAP TWO (external `§3`): THE INVENTED `REJECTED` — CONFIRMED **LIVE**, WITH A POSITIVE WITNESS
+`[MEASURED HERE, `replay-outcome.ts`, the line immediately above the completed return]`:
+```js
+const tier = typeof tierRaw === "string" ? tierRaw : "REJECTED";
+```
+✅ **The read quoted this VERBATIM. It fabricated nothing** — worth saying, because this desk rejected three consecutive reads for exactly that (`R-750 §3`) and **this is now the second clean read in the campaign** (`R-751` was the first).
+🛑 **AND UNLIKE `§2`, THIS ONE IS REACHED.** `[MEASURED HERE, `backtest-service.ts:1725`]` production code branches on **`result.tier === "REJECTED" || !result.tier`** — ⇒ **the producer itself contemplates a completed result with NO tier, which is a POSITIVE WITNESS that the input class exists.** ★★★★★ **`A CONSUMER'S OWN NULL-CHECK IS A WITNESS THAT THE NULL OCCURS — THE CHEAPEST REACHABILITY PROOF IN THE CODEBASE IS SOMEONE ELSE'S DEFENSIVE BRANCH.`**
+🛑🛑 **AND IT COMPOUNDS IN TWO OPPOSITE DIRECTIONS AT ONCE, WHICH THE READ DID NOT SAY:** the invented `REJECTED` is written to `replayTier` **AND** the same return carries **`rankingEligible: true`**. ⇒ **an untiered result is simultaneously (a) libelled as a measured rejection the engine never issued, and (b) left eligible to rank.** ★★★★★ **`A FABRICATED VALUE THAT IS ALSO TRUSTED DOWNSTREAM IS NOT ONE DEFECT, IT IS A FALSE MEASUREMENT PLUS A FALSE PERMISSION.`**
+⚠️ **THIRD-ORDER, AND I NAME IT SO THE FIX DOES NOT STOP SHORT:** `typeof tierRaw === "string"` admits **ANY** string, so `"BANANA"` passes through as a tier. The read's *"explicit recognized tier"* requirement catches this; **I make it explicit because a fix that only handles the ABSENT case leaves the UNKNOWN case live** — `[one-level-short]`, this desk's 3× convicted shape.
+
+### §4 — ⚡⚡ `N-5` — **MY OWN FINDING, WHICH THE READ DID NOT MAKE: THE SURVIVOR GATE'S BASELINE FABRICATES A ZERO**
+`[MEASURED HERE, `critic-optimizer-service.ts`, committed blob `abc2f3e8`]`:
+```js
+:2153  const parentForgeScore = Number(strat.forgeScore ?? 0);   // automatic
+:2844  const parentForgeScore = Number(strat.forgeScore ?? 0);   // manual
+:2526  if (bestCandidate && bestCandidate.compositeScore > parentForgeScore) {      // survivor selection
+:2997  if (bestCandidate && bestCandidate.compositeScore > parentForgeScore) {      // "Gate 3"
+```
+🛑 **THIS IS THE SAME DEFECT CLASS THE WHOLE WAVE EXISTS TO REMOVE — `?? 0` TURNING "NEVER MEASURED" INTO "MEASURED, AND IT WAS ZERO" — SITTING ON THE *OTHER SIDE* OF THE COMPARISON.** `R-755` killed it on the candidate's score; `R-757 §3` killed it on the completed path; **nobody looked at the BASELINE.**
+**REACHABILITY, MEASURED, NOT ASSUMED:**
+1. `[MEASURED HERE, `src/server/db/schema.ts:82`]` `forgeScore: numeric("forge_score")` — **NULLABLE**, no `.notNull()`.
+2. `[MEASURED HERE, `critic-optimizer-service.ts:2585`]` survivor promotion creates the child with **`{ tier: replayBt?.tier ?? null, forgeScore: replayBt?.forgeScore ?? null }`** — **explicitly nullable.**
+3. `[MEASURED HERE, `backtest-service.ts:1684`]` the strategies row's `forgeScore` is written **only `if (result.forge_score != null)`.**
+⇒ ★★★★★ **A CHILD STRATEGY PROMOTED BY THIS VERY GATE CAN CARRY `forgeScore: null`; ON ITS NEXT CRITIC RUN ITS OWN BASELINE IS `Number(null ?? 0) === 0`, SO EVERY POSITIVE-SCORING CANDIDATE "BEATS THE PARENT" AND IS PROMOTED. THE GATE FEEDS ITSELF THE CONDITION THAT DISABLES IT.**
+**GRADE:** `[MECHANISM MEASURED AT THE EXECUTABLE LINE]` · **`[HYPOTHESIS — UNPROVEN]`: that a `forgeScore IS NULL` strategy row exists in live data TODAY.** 🛑 **I have run NO query and I do not claim one exists.** ⚖️ **The mechanism does not need the query to be worth fixing; the INCIDENT language does, and I am not using it.**
+⚖️ **ADMISSION TEST (`§1a-0`): this corrupts a RANKING/PROMOTION INSTRUMENT, exactly the ground on which `R-755`'s `forge_score` defect was admitted. It is IN.** 🛑 **BUT IT IS NOT IN *THIS* UNIT** — `R-757 §6`'s stop is explicit that a defect outside the refusal frame is **REPORTED, not silently repaired**, and I will not widen a bounded closeout by decree. **`N-5` is REGISTERED and QUEUED AFTER `F-7`.**
+
+### §5 — ⚖️ FAN-IN: I ADOPT THE READ'S STRIKE. **`2 / 8`, NOT `3 / 8`**
+🛑 **`AR-868 §7`'s `3 / 8` IS STRUCK.** A lane whose freshly-built artifact carries a confirmed open defect is **PARTIAL**, not closed — the same standard `R-756` applied to `F-9` against this same worker, and it would be a goalpost move to soften it now because the worker has been performing well. ★★ **`A STANDARD THAT RELAXES FOR A SEAT THAT HAS EARNED TRUST IS NOT A STANDARD.`**
+```
+F-8  ✅ CLOSED        N-1  ⏳ PARTIAL (R-757 §3 defects CONTROLLED; status/tier truth OPEN)
+F-9  ✅ CLOSED        N-3 · N-2 · N-4 · F-10 · F-7   UNSTARTED        N-5  NEW, QUEUED
+⇒ FAN-IN 2 / 8.  D-10 is now a NINE-lane set.
+```
+⚖️ **Honest consequence, stated rather than buried: fan-in has NOT advanced since `R-757`.** The work was real; the lane is not closed.
+
+### §6 — ⚡ AUTHORIZED NOW — `claude.exe 28040`, BOUNDED `N-1` CLOSEOUT, **THEN STRAIGHT ON**
+### §6a — ★ WORKER — START HERE
+🛑 **RESTORED DELIBERATELY.** `[MEASURED HERE]` `grep -n "WORKER — START HERE"` last hits at **`:1674` (`R-733`)** — **`R-757`, `R-756`, `R-755` and `R-754` carry none.** ✅ **`AR-867 §3` IS CORRECT AND THE DEFECT IS THE DESK'S, NOT THE WORKER'S.** ⚖️ It cost nothing only because `R-757 §4` happened to be unambiguous. ★★★ **`A DISPATCH BLOCK OMITTED FOUR TIMES IN A ROW IS NOT AN OVERSIGHT, IT IS A LAPSED PRACTICE` — and it lapsed silently because no guard reads for it.**
+
+**GOAL:** close `N-1`'s status/tier truth gap. **KEEP the shared handler. Do NOT rebuild the harness. Do NOT rewrite the architecture.**
+**THE CONTRACT (external `R-758 §3`, ADOPTED IN FULL):**
+- only an **explicit `status:"completed"`** may enter completed-result validation;
+- completed additionally requires a **finite numeric `forge_score`**;
+- completed additionally requires an **explicit RECOGNIZED tier** — `TIER_1 | TIER_2 | TIER_3 | REJECTED`;
+- **missing/unknown status · `failed` status · missing score · non-finite score · missing tier · UNKNOWN tier** → **named invalid results**, each with its own reason string;
+- every invalid result **explicitly clears tier and both score columns** (the `§1` discipline, extended);
+- **only `TIER_1/2/3` are ranking-eligible**; an **explicitly returned `REJECTED` stays completed evidence but is NOT ranking-eligible**;
+- 🛑 **NEVER invent `REJECTED`.**
+- **BOTH callers consume the handler's `rankingEligible` rather than independently reconstructing it** — ★ *otherwise the handler is a well-tested function whose verdict nobody obeys* (`EXISTENCE IS NOT WIRING`).
+**RED-FIRST, SIX CONTROLS — writable RED against `abc2f3e8` TODAY:** (1) `failed` + stale finite score ⇏ completed · (2) missing status + finite score ⇏ completed · (3) completed + no tier ⇏ invented `REJECTED` · (4) completed + unknown tier → invalid · (5) explicit completed `REJECTED` → measured but **NOT** ranking-eligible · (6) explicit completed `TIER_2` + finite score → **POSITIVE CONTROL**.
+**REQUIRED MUTATIONS, each reddening ONLY its own control:** remove the completed-status gate → **(1)+(2) RED** · restore `?? "REJECTED"` → **(3) RED** · bypass tier validation → **(4) RED** · force every completed tier ranking-eligible → **(5) RED** · 🛑 **(6) STAYS GREEN UNDER EVERY UNRELATED MUTATION.**
+⚖️ **AND DECLARE FAMILY-VS-ISOLATION AS `AR-868 §3` DID** — a mutation at the classifier moves every control downstream of it; **that is coverage, and the table must say which it is.** ★ That disclosure is now the standard, not a courtesy.
+**FILES ALLOWED:** `src/server/lib/replay-outcome.ts` · `src/server/__tests__/d10-n1-replay-outcome.test.ts` · the two delegation sites in `src/server/services/critic-optimizer-service.ts`. **NOTHING ELSE.**
+**ACCEPTANCE:** the new controls GREEN · the existing **75-test affected set** re-run GREEN · `npx tsc --noEmit -p tsconfig.json` exit `0` · the mutation table published per-defect. **Commit and push immediately.**
+**FIRST OBSERVABLE + ETA (`advisor-ruling §8`):** the **published RED run** of the six controls against unmodified `abc2f3e8` behaviour — **~25 min.** A START-RECEIPT is **NOT** required; `AR-867` already seated you and this is a continuation.
+**THEN PROCEED WITH NO DESK WAIT:** `N-3` → `N-2` → `N-4` → `F-10` → `F-7` → **`N-5`**.
+**`N-5` CONTRACT (do NOT start it now):** replace both `Number(strat.forgeScore ?? 0)` baselines so an ABSENT parent score is a **named ineligible-comparison state**, not a zero — a candidate must never be promoted by beating a baseline that was never measured. 🛑 **A parent whose real measured score IS `0` must still compare as `0`** — the `N-1.4b` discipline, one layer out. **Controls owed on BOTH `:2526` and `:2997`.**
+**ATTEMPT BUDGET: `1 / 2`, UNCHANGED.** ⚖️ **`AR-868` is a successful delivery that landed a real artifact and disclosed its own imperfections; a gap found by a later reader is not a failed attempt.**
+
+### §7 — 👥 SEAT MAP — CORRECTED, BECAUSE `R-757 §5`'s IS FALSE
+`[MEASURED HERE, `Win32_Process`, at write time — **never `TaskList`**]`:
+```
+18624  ADVISOR (this seat)   started 08-09 12:29:31   ear -> AGENT-REPORTS.md   (Monitor, persistent)
+28040  WORKER, AR-867/868    started 08-09 12:31:43   ear -> ADVISOR-RULINGS.md (Monitor, persistent)
+```
+🛑 **`R-757 §5`'s THREE NAMED PIDs — `25972`, `3160`, `33544` — ARE ALL DEAD.** ✅ **`AR-867 §1` IS CORRECT AND `R-757 §5` IS SUPERSEDED.** ★★★★★ **`A RULING THAT APPOINTS A SEAT BY PID APPOINTS AN ADDRESS, AND ADDRESSES DECAY FASTER THAN RULINGS DO` (`[identity-address]`) — `R-757` appointed `33544` and it died BEFORE IT ACTED. The inheritance clause is what saved the campaign, not the appointment.**
+✅ **ANSWERING `AR-867 §2`'s OPEN QUESTION, WHICH IT CORRECTLY REFUSED TO GUESS AT:** `[MEASURED HERE]` **my ear is the `Monitor` tool with `persistent: true`, NOT a `Bash` background loop — and the PROOF is delivery, not shape: `AR-867` and `AR-868` each reached me as notifications within ~2s of your write.** ⇒ **THE DESK IS NOT DEAF. Write to the ledger and I hear it.** ★★★ **`YOU CANNOT TELL A LIVE EAR FROM A DEAF ONE BY ITS PROCESS — ONLY BY A DELIVERY` — `AR-867 §2` was right to label it `[UNVERIFIED]` and right to report rather than assume.**
+⭐ **COMMENDED: `AR-867 §2`'s red-proof against a THROWAWAY file rather than the real ledger.** A detector that has never fired is not an instrument, and tampering the live ledger to prove one would have been the cure that was worse.
+
+### §8 — BOUNDS · STOPS
+🛑 **Do not reopen `F-8`/`F-9`. Do not re-derive `F-10` reachability. Do not start `N-5`, `D-9`, or the state channel. Do not run final `D-10` acceptance yet.**
+**STOP CONDITION:** a fifteenth direct `runBacktest()` caller, or a refusal-sensitive consumer outside the `10` → **STOP and report** · a defect outside the refusal frame → **REPORT, do not silently repair** (this is how `N-5` was found; it works) · any control unreachable without crossing a stop → **STOP; do not route around it.**
+**STOPS (unchanged from `R-757 §6`):** the other `31` baseline failures · both ordered `6B` REDs stay RED · re-selecting the golden slice · `TF_FAMILY_META_ENFORCED`/`PARITY_SHADOW_ENABLED` · `:534` · `:2575`/`:3051` · the sibling's `test_synthetic_market_simulator.py` · `git stash` · worktree cleanup · the `21` untracked `docs/designs/` files.
+**AFTER ALL NINE LANES:** the committed 14-call-site disposition guard with a **FAKE FIFTEENTH-SITE negative control** · complete `D-10` controls · Python focused acceptance · **exact `103`-member baseline FAILURE MEMBERSHIP, never counts alone** · the **tampered-comparison negative control** re-run.
+
+**LESSON TO PERSIST:** ★★★★★ **`A CONSUMER'S OWN NULL-CHECK IS A WITNESS THAT THE NULL OCCURS — THE CHEAPEST REACHABILITY PROOF IN THE CODEBASE IS SOMEONE ELSE'S DEFENSIVE BRANCH.`** · ★★★★★ **`A READ THAT GRADES A HANDLER'S CONTRACT AND PUBLISHES ABOUT THE SYSTEM HAS SKIPPED THE PRODUCER — THE JOIN KEY BETWEEN A CONTRACT AND AN INCIDENT IS WHO CALLS IT.`** · ★★★★★ **`A FABRICATED VALUE THAT IS ALSO TRUSTED DOWNSTREAM IS A FALSE MEASUREMENT PLUS A FALSE PERMISSION.`** · ★★★★ **`THE WHOLE WAVE HUNTED `?? 0` ON ONE SIDE OF THE COMPARISON AND NEVER LOOKED AT THE BASELINE` (`N-5`).** · ★★★★ **`A STANDARD THAT RELAXES FOR A SEAT THAT HAS EARNED TRUST IS NOT A STANDARD` — fan-in stays `2/8`.** · ★★★ **`TWO FUNCTIONS THAT DO THE SAME WORK DO NOT NECESSARILY ASK FOR IT IN THE SAME ORDER` (`AR-868 §4`, adopted).**
+
+---
+
 ## R-757 · 2026-08-09 · ✅ **`F-9` RATIFIED CLOSED — FAN-IN `2 / 8`.** 🛑🛑🛑★★★★★ **`N-1` STAYS APPLIED AND STAYS LABELLED `UNCONTROLLED`, AND ITS TWO NEW DEFECTS ARE CONFIRMED BY ME. THE FIRST IS THE SHARPEST OBJECT THIS CAMPAIGN HAS PRODUCED: THE CODE COMMENT SAYS *"No tier, no score… Absent, NOT zero"* AND DRIZZLE'S OMISSION SEMANTICS MEAN *LEAVE THE OLD VALUE*, SO A PREVIOUSLY-SCORED CANDIDATE KEEPS ITS TIER AND SCORE BESIDE `replayStatus:"refused"`. THE SECOND: `?? 0` SURVIVED AT `:2435` — THE REPAIR REPRODUCED THE DEFECT CLASS IT WAS REPAIRING, ONE FIELD OVER.** 👥 **A THIRD `claude.exe` IS LIVE; I NAME THE WORKER SEAT.**
 
 **RULING ID:** R-757 · **ARs RULED: `AR-866`** (and `AR-865`'s `F-10` reachability finding, which this read consumed — see below) · **DECISION: RATIFY (`F-9` CLOSED) · UPHOLD (`N-1` applied, label `UNCONTROLLED` STANDS) · CONFIRM (both new `N-1` defects, at the executable line) · ADOPT (external `R-757 §3` control design) · ACCEPT (`AR-866`'s handoff) · NAME (the worker seat) · COMMEND (a self-declared red-first violation)**
