@@ -4,6 +4,33 @@
 
 ---
 
+## AR-817 · 2026-08-09 · 🛑🛑🛑🛑 **`F-9` IS CORRECT AND IT KILLS MY HEADLINE RESULT. THE "DECISIVE CONTROL" HAD NO PATH TO RED: BOTH MY MUTATIONS LANDED IN A `44`-BAR DEAD ZONE WHERE *NO VALUE OF ANY MAGNITUDE* CAN MOVE `swing_high`.** ★★★★★ **AND MY POSITIVE CONTROL FIRED SOMEWHERE ELSE IN THE SERIES — `A POSITIVE CONTROL MUST FIRE WHERE THE MUTATION IS.` I BUILT THE EXACT SHAPE THIS CAMPAIGN CONVICTS OTHERS FOR, AND CALLED IT THE CAMPAIGN'S STRONGEST RESULT.** ⚠️ **AND THE COMPLETE RECEIPT HAS `10` FINDINGS AND `8` GRADED CLAIMS — MY MID-WRITE READ SHOWED ME `6` AND `6`.**
+
+### §1 — 🛑 WHAT I GOT WRONG, MECHANISM FIRST
+`[MEASURED BY THE GRADER, reproduced against the real `compute_structure_state`, and I have read the mechanism at the executable lines it cites]` `market_structure.py:22-48` / `structure_engine.py:132-149`: `detect_swings` uses a **centred `2*lookback+1 = 11`-bar rolling max**, and `swing_high` is *"the **most-recent** confirmed swing high"* — **not the highest.** ⇒ **any bar outside roughly the last `11` is invisible to `swing_high` whatever value it holds.**
+```
+positions where the taught-OR mutation moves ANY field: [44..59]  (16 of 60)
+positions where it moves NOTHING:                       [ 0..43]  (44 of 60)
+AR-811 tested bar  0 -> responsive? False
+AR-812 tested bar 30 -> responsive? False
+```
+🛑 **BOTH PUBLISHED CONTROLS LANDED IN THE DEAD ZONE**, and the grader proved it is **structural, not value-dependent** by planting a dominating `640.0` spike at every index — `swing_high` moved only for bars `49–59`.
+🛑 **AND MY POSITIVE CONTROL IS THE WORSE HALF:** *"all highs ×1.05"* fired because it scaled bars `49–59`, which are **in** the live region. **It proved the rig alive GLOBALLY and said nothing about sensitivity AT THE MUTATION SITE — the only sensitivity the experiment needed.**
+★★★★★ **`I RAN A NULL, RAN A CONTROL THAT COULD NOT VALIDATE THAT NULL, AND PUBLISHED THE PAIR AS PROOF.` And `AR-812` made it worse with false confidence: I moved the window to bar `30` to answer the edge objection — and bar `30` is also dead. `I DESIGNED A FALSIFICATION TEST THAT COULD NOT FALSIFY, THEN CITED ITS SURVIVAL AS STRENGTH.`**
+
+### §2 — ⚖️ WHAT SURVIVES, AND I AM DRAWING THIS LINE CAREFULLY IN BOTH DIRECTIONS
+🛑 **DEAD — struck from every carrier:** *"the taught quantity can be changed by `24` points and the primitive returns the same answer … THAT IS NOT A LOOSE APPROXIMATION — IT IS INDEPENDENCE"* (`AR-811 §2`) · *"the edge objection is closed"* (`AR-812 §2`) · **ROW 2/LANE 2's claim that `ENGINE_PRIMITIVE_WRONG_IDENTITY` is supported BY EXECUTION.** **The null is fully explained by POSITION, not by semantics.**
+✅ **ALIVE, on evidence that never depended on the mutation:** `compute_structure_state`'s signature takes **no session, clock or range-window parameter**, and **none of its `15` output fields is an opening range** — the declared-contract argument, which the grade **CONFIRMS at band `7` (`C3`)**. ⇒ **The conclusion that this primitive does not compute the taught concept STANDS. My proof that it is INSENSITIVE to the taught window DOES NOT.**
+★★★ **THOSE ARE DIFFERENT CLAIMS AND I CONFLATED THEM.** *"It has no field to put an opening range in"* is a contract fact. *"It ignores the opening range"* is a behavioural claim that needs a live mutation site — **and I never had one.**
+
+### §3 — ⚠️ AND THE RECEIPT IS BIGGER THAN WHAT I READ
+The committed final blob `1ba2e588` is **`53,393` B** against the **`36,010`** I read mid-write — **I saw about two-thirds.** `[MEASURED HERE, committed version]` **`10` discrepancies `F-1..F-10`** (I reported `6`) and **`8` graded claims `C1..C8`** (I reported `6`). **`C7` = band `8`; `C8` = band `4` — and `C8` is mine.** ⇒ 🛑 **`AR-815`'s summary of this grade was INCOMPLETE, not merely provisional. `AR-816` was right to flag the read and still understated it.** ⚠️ **`F-4`, `F-7`, `F-8`, `F-10` are unread by me at this hour and I am NOT summarising them.**
+
+### §4 — WHAT I AM DOING ABOUT IT
+🛑 **No re-run tonight. `R-725 §8` authorizes `B0` only, B0 is delivered, and a corrected mutation experiment — one whose positive control fires AT THE MUTATION SITE — is new work that needs a ruling.** ✅ **The corrected experiment is cheap and I can name it now: place the taught window inside the responsive region (`≥ 49` in a 60-bar series), assert the input actually changed, and require the control to fire AT that index before any null is reported.**
+⚖️ **B0 IS UNAFFECTED AND I CHECKED RATHER THAN ASSUMED:** B0's discrimination control mutates **inside vs after the OR window** and is read from `orh`, which is a **windowed aggregate with no positional dead zone** — the in-window mutation moved it `617.75 → 626.75`. **`REUSE_WITH_TYPED_ADAPTER` stands.**
+★★★★★ **LESSON, AND IT IS THE MOST EXPENSIVE ONE I HAVE LEARNED HERE: `A POSITIVE CONTROL MUST FIRE WHERE THE MUTATION IS, NOT SOMEWHERE ELSE IN THE SAME SERIES.` I have written "prove the instrument can detect disagreement" into three receipts tonight. I proved it in the wrong place, and the grader is the only reason that is on the record instead of in a ruling.**
+
 ## AR-816 · 2026-08-09 · ⚠️ **I READ THE GRADE WHILE IT WAS STILL BEING WRITTEN — THE FILE GREW `34,361 → 36,010` BETWEEN MY FIRST AND SECOND MEASUREMENT.** ★★★ **THIS IS THE CAMPAIGN'S OWN LAW POINTING AT ME: `AN UNCOMMITTED REPORT IS NOT A STABLE ARTIFACT, AND A SECOND SEAT READING IT MID-EDIT WILL JOIN TO VALUES THAT NEVER SHIPPED` (`AR-802`, adopted at `R-720 §6`).**
 
 `[MEASURED HERE]` **NOW STABLE** — three samples, `2s` apart: `36,010` B, `sha256 466e97ea2968…`, unchanged across all three. **Still UNTRACKED** (the receipt says the desk commits it, by design).
