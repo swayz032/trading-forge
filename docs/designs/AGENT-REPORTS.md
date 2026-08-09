@@ -4,6 +4,73 @@
 
 ---
 
+## AR-878 · 2026-08-09 · ✅ **`R-766 §4` LANE 1 — `F-10` CLOSED. RED-FIRST PUBLISHED, FIX LANDED `703b7eec`, MUTATION TABLE COMPLETE, RESTORE BYTE-IDENTICAL.** ⚡ **AND THE DEFECT IS NOW `[MEASURED — EXECUTED]`, NOT STATIC: `AR-875` PROVED IT BY READING LINES; THIS RUN PROVES IT BY MAKING THE FIFTH DB READ HAPPEN — `expected 5 to be 4`.** 🛑🛑 **I ALSO CAUGHT TWO OF MY OWN INSTRUMENTS LYING BEFORE THEY REACHED A CLAIM. FAN-IN `6 / 9`.**
+
+**SEAT `claude.exe 23640`.** **TREE `wt-h1-wave4-20260712`, fix at `703b7eec`.** **RULING: `R-766 §4` LANE 1.** **ATTEMPT BUDGET: `1 / 2` — one attempt, no re-tries.**
+🛑 **`AR-872` · `AR-873` · `AR-876` remain UNRULED (`R-766` header). Nothing below rests on them.**
+
+### §1 — 🛑 TWO FIXTURE TRAPS FOUND BEFORE THEY BECAME A FALSE GREEN. THIS IS THE PART I MOST WANT AUDITED.
+**TRAP 1 — `expect(_dbIdx).toBe(4)` CANNOT FAIL ON A FOUR-ENTRY FIXTURE.** `[MEASURED HERE, reading the mock at `:79`]`:
+```
+const limit = vi.fn(() => { const r = _dbIdx < _dbSeq.length ? _dbSeq[_dbIdx++] : []; return Promise.resolve(r); });
+```
+⇒ **the counter only advances WHILE `_dbIdx < length`. On a 4-entry fixture it STOPS at `4` whether or not the code attempts a fifth read.** 🛑 **The existing `runBacktest status=skipped` block (`:366`) seeds exactly four and asserts no read count — so the obvious fixture to copy is the one that would have made `R-766`'s signature assertion inert.** ⇒ **I seeded FIVE (the fifth being the all-NULL refused row) so the counter CAN reach `5`.** ★★★★★ **`A COMPARISON THAT CANNOT FAIL IS A PRINTOUT` — and here the printout would have read as the ruling's headline control.**
+**TRAP 2 — THE SCHEMA MOCK OMITS THE CONSTANT THE CLASSIFIER JOINS ON.** `[MEASURED HERE]` `lib/backtest-refusal.ts:26` imports `BACKTEST_STATUS_REFUSED` from `../db/schema.js`; the suite's `vi.mock("../db/schema.js")` did **not** export it. ⇒ **`isExecutionRefused()` would have compared `status === undefined` and returned `false` for EVERY result — the refusal branch unreachable, the control unable to go green no matter how correct the fix.** ✅ **Added to the mock, with precedent named (`backtest-service.deepscan8-fixes.test.ts:124` does the same).** ★★★ **`A MOCK THAT OMITS THE CONSTANT A CLASSIFIER JOINS ON DOES NOT WEAKEN THE TEST — IT DELETES THE BRANCH.`**
+
+### §2 — ✅ RED FIRST, PUBLISHED VERBATIM, AGAINST PROVABLY UNMODIFIED PRODUCTION
+`[MEASURED HERE]` `git status --porcelain` on the two files at RED time showed **only the TEST file `' M'`** — production untouched.
+```
+Tests  4 failed | 34 passed (38)     VITEST_EXIT=1
+
+× stops before the shadow-row read — the fifth DB read is not consumed
+    AssertionError: expected 5 to be 4          <- THE FIFTH READ IS CONSUMED TODAY
+× names the refusal instead of comparing it — no finding, no critical
+    AssertionError: expected undefined to be 1  (r.refused)
+× carries the refusal evidence, and fabricates no key that was absent
+    AssertionError: Target cannot be null or undefined  (r.refusedStrategies)
+× F-10 discriminator: a genuinely MEASURED regression still fires critical
+    AssertionError: expected undefined to be +0 (r.refused)
+```
+⭐ **`expected 5 to be 4` IS THE UPGRADE:** `AR-875 §1` graded itself `[MEASURED — CALL CHAIN, statically]` and explicitly refused to claim execution. **This run EXECUTES the defect path: the code really does reach the shadow-row lookup on a refusal and really does run the gate on nulls.** ⇒ **`R-754 §3`'s hypothesis is now discharged on BEHAVIOUR, not only on wiring.** ⚠️ **STILL `[UNPROVEN]` AND I DO NOT UPGRADE IT: no live query, no HTTP request, no production incident. This is a MECHANISM proven in a harness.**
+
+### §3 — ✅ THE FIX — SMALLEST CHANGE, SHARED CLASSIFIER, ADDITIVE OUTPUT
+**`shadow-rerun-service.ts`:** import `isExecutionRefused`/`refusalEvidence` from `../lib/backtest-refusal.js` (**no restated literal, no new classifier**) · detect **immediately after `runBacktest()` and BEFORE** the shadow-row lookup, hashing, `metricsPassGate`, flip and severity · return a discriminated `ShadowRerunRefusal`.
+🛑 **WHY NOT `return null`, WHICH WOULD HAVE BEEN ONE LINE:** `[MEASURED HERE, `:502`]` `null` already means *pre-A2 backtest* and increments `skipped`. **A refusal counted as a skip would satisfy "no critical finding" while destroying the separation `R-766 §4` requires.** ⇒ **a distinct outcome type, checked BEFORE the null branch.**
+**Report gains `refused: number` and `refusedStrategies[{strategyId, backtestId, evidence}]`. `processed`/`skipped`/`errors`/`findings` untouched.** ⚖️ **`backtestId` is the ORIGINAL re-run row — the same join key `criticalStrategies` uses — NOT the refused shadow run's id. Stated because it is a choice, not a default.**
+✅ **NO schema change · NO endpoint · NO second harness · NO HTTP request owed.** `[MEASURED]` the only non-test consumer is `routes/shadow-rerun.ts:64`, which returns the report verbatim ⇒ additive fields surface with no route edit.
+
+### §4 — ✅ MUTATION TABLE — FAMILY vs ISOLATION DECLARED, RESTORE PROVEN
+| # | mutation | RED | GREEN | verdict |
+|---|---|---|---|---|
+| **M1** | `if (false && isExecutionRefused(…))` — **bypass the refusal branch** | **exactly the 3 refusal controls** | discriminator + **all 34 pre-existing** | ✅ **ISOLATION.** The controls redden **only** for the absence of this fix. |
+| **M2** | `if (true \|\| isExecutionRefused(…))` — **fire it for EVERY run** | **discriminator + 7 pre-existing** (info · warning · critical×3 · idempotency · skipped) | the 3 refusal controls | ✅ **FAMILY.** A "fix" that suppressed everything is caught. |
+⚖️ **M1 alone would not have been enough: it proves the controls NEED the fix, not that they REJECT an over-broad one. M2 is the negative control on the control** — `R-766 §4`'s positive discriminator **bites**, and it does not bite alone.
+✅ **RESTORE, both times: `git checkout -- <file>` then `git diff --exit-code --quiet` → exit `0`, byte-identical to `HEAD`.** ⚖️ **I committed the fix BEFORE mutating, deliberately: a live sibling seat is writing this shared tree, and `[precommit-stash]` says an unstaged plant can be captured or un-planted by someone else's commit. A committed baseline makes the restore git-exact instead of copy-exact.**
+
+### §5 — 🛑🛑 TWO OF MY OWN INSTRUMENTS LIED. BOTH CAUGHT BEFORE THEY REACHED A CLAIM.
+**(a) A TYPO'D TEST PATH SILENTLY DROPPED A MEMBER AND THE RUN STILL EXITED `0`.** I named `d10-n1-critic-refusal.test.ts` — **which does not exist** (the real member is `d10-n1-replay-outcome.test.ts`). **Vitest ran `3` files, reported `Test Files 3 passed (3)`, `56 passed`, `VITEST_EXIT=0`.** 🛑 **I had asked for four. Two members — `d10-f9` and `d10-n1` — were never executed, and nothing said so.**
+✅ **NEGATIVE CONTROL RUN:** a bogus path **alone** → `No test files found, exiting with code 1`. ⇒ **the failure mode is specifically the MIXED list: a bad member alongside good ones vanishes.** ★★★★★ **`A GREEN OVER A SET YOU NAMED FROM MEMORY IS A GREEN OVER THE SUBSET THAT HAPPENED TO EXIST. ENUMERATE THE POPULATION FROM DISK AND ASSERT ITS SIZE.`** ⇒ **re-run from `ls`: `Test Files 5 passed (5)`, `Tests 83 passed (83)`, exit `0`.**
+**(b) MY FIRST `M2` NEVER RAN, AND ITS OUTPUT LOOKED LIKE A RESULT.** I drove both mutations from a `|`-delimited shell loop; `${REST%%|*}` cut the replacement **inside the `||` operator**, wrote broken syntax, and vitest reported `Tests no tests` with a non-zero exit. **I read that as a code signal for a moment — it was my delimiter.** ⇒ **re-run with a heredoc'd python literal and a `count(old)==1` anchor assertion before writing.** ★★★ **`A SHELL LOOP THAT BUILDS CODE IS A CODE GENERATOR; DELIMIT IT LIKE ONE.`**
+
+### §6 — 📋 ACCEPTANCE, RE-TAKEN AFTER THE FINAL RESTORE (no number carried across a change)
+```
+population enumerated from disk (ls), size asserted = 5
+  d10-f9-critic-evidence-refusal · d10-n1-replay-outcome · d10-n2-matrix-refusal
+  d10-n3-evolution-refusal · shadow-rerun-service
+npx vitest run <the 5>            -> Test Files 5 passed (5) · Tests 83 passed (83) · EXIT 0
+npx tsc --noEmit                  -> TSC_EXIT=0
+git status --porcelain src/       -> only the sibling's test_synthetic_market_simulator.py
+git diff --exit-code <service>    -> 0  (restore byte-identical)
+```
+✅ **`F-10` CLOSES AT `6 / 9` under `R-766 §4`'s AUTO-RELEASE.** **F-8 · F-9 · N-1 · N-3 · N-2 · F-10.**
+
+### §7 — ⚠️ WHAT I DID **NOT** PROVE, AND WHAT I AM DOING NEXT
+🛑 **NOT PROVEN:** that a refusal has traversed this path in live data · that an operator has ever invoked the route · anything about `F-7`/`N-5` (I began a read-only enumeration under `R-765` and **abandoned it unfinished** when `R-766` re-ordered the queue — **nothing from it is reported as a finding**).
+⚠️ **`ShadowRerunRefusal` is exported but has no non-test consumer yet** — `refusedStrategies` reaches the route's JSON and nothing branches on it. **That is `R-766 §4`'s "smallest accepted", not an oversight; a consumer would be a new decision and is not authorized.**
+⚡ **PROCEEDING WITH NO DESK WAIT to `R-766 §4` LANE 2 — `N-4`, OPTION `B`**, per its auto-release. **I am NOT handing off: `worker-onboarding §5` — my fan-in is `6 / 9` and the remainder is UNSTARTED, not blocked.**
+
+---
+
 ## AR-877 · 2026-08-09 · 📣 **SEAT RECEIPT — `R-766 §6`'s ONE RESERVED OPERATOR ACT IS DISCHARGED: A FRESH WORKER SEAT EXISTS AND IT IS THIS ONE.** ⚡ **STARTING `R-766 §4` LANE 1 (`F-10`). NO CODE CHANGED YET.**
 
 **SEAT: `claude.exe 23640`, started 2026-08-09 by the operator via `/worker-onboarding`.** **TREE `wt-h1-wave4-20260712`, HEAD `fb76ebf8` at write time, clean on `src/` but the sibling's Python file.**
