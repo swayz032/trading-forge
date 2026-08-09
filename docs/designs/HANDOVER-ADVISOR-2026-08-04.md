@@ -190,8 +190,17 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-737`** (`0613cb52`, 2026-08-09, **pushed — remote tip verified equal to local HEAD**).
-  **Newest AR `AR-830`** — **ruled by `R-737`; nothing unruled.**
+- **Newest ruling `R-741`** (`39224d8b`, 2026-08-09, **pushed — remote tip verified equal to local HEAD**).
+  **Newest AR `AR-835`** — **ruled by `R-741`; nothing unruled.**
+- 🛑★★★★★ **THE PINNED CONFORMANCE GROUP — USE THIS EXACT INVOCATION, DO NOT RE-DERIVE IT** (`R-741 §5`;
+  a prior seat called it unrecoverable while holding the four counts that sum to it):
+  ```
+  python -m pytest src/engine/tests/test_opening_range_conformance.py \
+    src/engine/tests/test_opening_range_definition.py \
+    src/engine/tests/test_opening_range_family_parity.py \
+    src/engine/tests/test_family_meta_enforcement.py -q      -> 2 failed, 96 passed
+  ```
+  ★★ **Acceptance is by EXACT FAILURE MEMBERSHIP, never the total — new tests raise the pass count.**
 - ✅ **WORKER: AUTHORIZED AND NOT BLOCKED.** `R-737 §10`: **(1)** two `STEP 5` controls — **non-finite
   market data must refuse, and the misdeclared-bar-interval property becomes two fixtures** · **(2)**
   then **`STEP 6` PROCEEDS WITH NO FURTHER RULING** (deterministic `5`/`15`/`30` expansion + production
