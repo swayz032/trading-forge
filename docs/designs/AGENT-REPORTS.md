@@ -4,6 +4,33 @@
 
 ---
 
+## AR-821 · 2026-08-09 · ✅ **B1 `STEP 1` AND `STEP 2` DELIVERED.** ⭐ **`STEP 1`: `7` false claims amended AT THEIR ORIGINAL LOCATIONS, documentation-only.** ⭐ **`STEP 2`: THE PERMANENT RED EXISTS AND IS RED FOR THE RIGHT REASON — `1 failed · 1 passed · 1 skipped`, built FROM THE FROZEN ARTIFACT, WITH A PASSING POSITIVE CONTROL THAT PROVES THE HARNESS READS THE RIGHT CONDITION.** 🛑 **AND THE `worker-execution` GUARD BLOCKED MY FIRST WRITE — CORRECTLY. THREE RULINGS HAD LANDED SINCE I LOADED THE STANDARD.**
+
+### §1 — ✅ `STEP 1`, evidence-correction commit `5ed334eb` (documentation-only, no instrumentation)
+**Amended IN PLACE, never appended** — *"a correction appended below a false line leaves the false line readable and citable"*. **`7` sites:**
+`F-9` ×2 (the `24`-point independence claim **at the spot it was made**, and the honest-alternative paragraph whose argument (1) survives as a CONTRACT argument that never needed the mutation) · `F-1` (the *"only row carrying `approximation=False`"* exactness claim — a family constant with no path to red, and **two** such rows, not one) · `F-4` (*"or any other in the spec"* → the narrower, stronger *"where a typed slot exists it is EMPTY"*) · `F-3`+`F-10` (**at the exact sentence `R-724 §6` quoted**: literal set `12`, reachable set `18`, six assigned non-literally, grader's plant stayed green) · `R-727 §1` (the trade-count overclaim → the adopted *"moves thresholds inward and can cause earlier or additional breakout opportunities"*) · `F-7` (`3` of `5` stale gap-items).
+
+### §2 — ✅ `STEP 2`, the permanent RED — `src/engine/tests/test_opening_range_conformance.py`
+```
+1 failed, 1 passed, 1 skipped
+FAILED test_production_binding_cannot_produce_typed_opening_range_state
+  bound primitive : structure_engine.compute_structure_state
+  fields required : opening_range_high/low/width/midpoint/complete/window_status
+  fields produced : (none)
+```
+✅ **BUILT FROM THE REAL FROZEN ARTIFACT** — the condition is read out of committed census blob `23f30eb0` and bound through the real `bind_condition()`. **No hand-built binding**, as the read requires.
+✅ **THE PASSING TEST IS THE POSITIVE CONTROL AND IT IS THE REASON THE RED MEANS ANYTHING:** `test_frozen_artifact_is_present_and_is_the_one_we_think` asserts the artifact exists and that the condition is the `WAIT_STRUCTURE` spine carrying *"first 5, 15, and the 30 minute ranges"*. ★★★ **Without it, a `RED` would be indistinguishable from a broken path or a wrong file — which is the shape `F-9` convicted me for.**
+✅ **FIELD/OUTPUT IDENTITY IS THE LOAD-BEARING PROOF**, as ordered — the helper enumerates `StructureState`'s real annotations rather than assuming them, and is **deliberately generous**: if a repair exposes the fields by EITHER route the RED turns GREEN honestly.
+🛑 **WHAT IT DOES NOT ASSERT, BY DESIGN:** no claim that structural output stays numerically unchanged (the read forbids it, `R-726 §1` withdrew its basis) · **no decision on the breakout trigger** — `UNRESOLVED_SOURCE_AMBIGUITY` per `R-725 §4`, and `B1` may not settle it · nothing about the other `8` conditions or `10` specs.
+✅ **THE PATH-TO-RED MUTATION IS ARMED AND NAMED, NOT SILENTLY OMITTED:** a skipped test whose skip reason states it fires at `STEP 4` — routing the repaired type back to `compute_structure_state` must fail the conformance test. ★ **A skip that names its dependency is a placeholder; a skip that says nothing is a hole.**
+
+### §3 — 🛑 THE GUARD FIRED ON ME AND IT WAS RIGHT
+`worker-execution-guard` **BLOCKED my first attempt to write the test file**: `R-725`, `R-726` and `R-727` had all landed since I last loaded the standard. **I re-invoked it and re-issued the write.** ★★★ **`A REMEMBERED SKILL IS A STALE SKILL` — and tonight the ledger moved three times while I was working from one load. Recorded because a clean log would imply the gate never fired.**
+
+### §4 — POSITION
+**`STEP 2 / 8` complete. `STEPS 3–8` remain** — typed representation · typed adapter · complete-window contract · production routing · required tests · status honesty. 🛑 **NO PRODUCTION CODE EDITED YET: `STEP 1` is docs, `STEP 2` is a test.** **Per-step budget `1/2` used on each of `1` and `2`.**
+⚠️ **I am stating my context position rather than opening `STEP 3` silently: this session has run very long, and `STEPS 3–6` are the actual production edit.** ✅ **Nothing is in flight and nothing is half-done — both delivered steps are committed and self-contained.**
+
 ## AR-820 · 2026-08-09 · ⚡ **START-RECEIPT — `R-727 §4` B1 ACCEPTED, EXECUTING FROM THE BANKED READ (`STEPS 1–8`), `STEP 1` FIRST.** ✅ **AND I ACCEPT THE `§1` CORRECTION AGAINST MY OWN BEST LINE — I RELAYED IT TO THE OPERATOR AS WELL, SO IT IS CORRECTED IN BOTH PLACES.** ⚠️ **PLUS AN HONEST CONTEXT POSITION, GIVEN THIS IS THE CAMPAIGN'S FIRST PRODUCTION EDIT.**
 
 **CONTRACT SOURCE:** `docs/designs/EXTERNAL-READ-2026-08-09-B1-AUTHORIZED.md` (tracked, `337` lines) — **`STEPS 1–8` + `B1 PASS CONDITION` + `EXPLICITLY OUT`, read at the file, not from the ruling's summary**, per `R-727 §4`'s explicit instruction and `count-obligations`.
