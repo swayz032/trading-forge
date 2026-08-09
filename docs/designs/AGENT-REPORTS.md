@@ -4,6 +4,36 @@
 
 ---
 
+## AR-852 · 2026-08-09 · 🟢 **START-RECEIPT — `R-751 §8` REFUSAL TERMINALITY.** 🛑 **AND I OPEN BY CONFIRMING THE FINDING AGAINST MYSELF: I RE-MEASURED `R-751 §1` AT THE EXECUTABLE LINE *AND* BY EXECUTION AT THE PUBLIC BOUNDARY, AND IT IS EXACTLY RIGHT. MY `AR-851` CLAIMED `4 / 4`; THE TRUE FAN-IN WAS `3 / 4`.**
+
+**TASK:** `R-751 §8`'s one bounded terminality commit + `§7`'s baseline artifact. **BASE HEAD `ad0ffb4b`, local == `git ls-remote` `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`** (`R-751 §5`: this is not a failed delivery). **FIRST OBSERVABLE: the RED below, which I already have. ETA to commit ~60-90 min.**
+
+### §1 — 🛑 THE RED, MEASURED AT THE PUBLIC BOUNDARY BEFORE ANY FIX
+`[MEASURED HERE, HEAD `ad0ffb4b`, `TF_SPEC_TRACE=true`, `main.callback(...)`, golden spec]`:
+```
+execution_status : REFUSED
+spec_trace       : []          <- MY OWN §4-1 SUMMARY RECORD, ERASED
+forge_score      : None        (pipeline mode; FULL mode measured 0.0 at AR-851 §7)
+invariants       : PRESENT on a refused result
+```
+✅ **AND AT THE EXECUTABLE LINE, INDEPENDENTLY:** `:8378` writes the refusal summary **inside** the refusal branch (12-space indent); `:8420` `if "error" not in result:` sits at **8-space indent — the same level as the `if`/`elif`/`else`** — so it runs after whichever branch ran; `:8431` then reassigns `result["spec_trace"] = strategy.last_trace`, and a refused strategy never runs `compute()`, so that is still the `[]` initialiser.
+⇒ **BOTH PATHS AGREE. I am not disputing any part of `R-751 §1`.**
+
+### §2 — ⚖️ WHAT I GOT WRONG, IN ONE SENTENCE, AND THE PART THAT IS MINE
+`R-751 §3` charges the contract defect to the desk — it named the payload and not the observation point — **and I accept that reading without using it as cover.** ★★★★★ **MY OWN SHARE IS SPECIFIC: `AR-851 §9` DECLARED "no full-repo pytest" AND "any trace consumer outside the 103 is `[UNMEASURED]`", AND I NEVER ASKED THE ONE QUESTION THOSE DISCLOSURES POINT AT — *"is the surface I just built even OBSERVED by a test at the boundary a user reaches?"*.** ⇒ **`AN UNCOVERED-SURFACE DISCLOSURE IS A QUESTION, NOT A DISCHARGE. I WROTE THE GAP DOWN AND THEN TREATED WRITING IT DOWN AS HAVING HANDLED IT.`** ⚠️ **The grader's stopped-run finding (`R-751 §6`) is the mechanism: `TF_SPEC_TRACE` appears in NO test file in `src/`. I added a production emission to a flag with zero test coverage and did not notice the flag had none.**
+
+### §3 — ⏭️ ORDER OF WORK
+1. **ENUMERATE the analytical surfaces MECHANICALLY from `main()`'s source** (`R-751 §8-3` — not from the desk's list, not from the read's). Any surface found that is NOT on their list is a FINDING and gets reported.
+2. Gate on the semantic predicate `execution_status == REFUSED`. 🛑 **No fake `error` key** — a refusal is not a crash.
+3. Preserve the refusal `spec_trace`; omitted products ABSENT, never `None`/`0.0`.
+4. Controls + both mutations (`"error" not in result` restored → RED; `spec_trace` overwrite restored → RED), single AND walk-forward, pipeline AND full stress.
+5. **`§7`: commit the `33`-member baseline at `f7aefaa6` with its exact invocation.** ⚖️ **`R-751 §7` is right that "frozen to disk" was not a durability claim — my scratch space dies with this seat, and I should have committed it in the same motion I pre-registered it.**
+
+### §4 — 🛑 NOT DOING
+No state-channel code · no fix to the other `31` baseline failures · no repo-wide trace census · no frontend/TS audit (`D-8`, desk-owned) · no monitor armed · no `git stash` · no worktree cleanup · `f788c64b` untouched · **I do not grade this.**
+
+---
+
 ## AR-851 · 2026-08-09 · ✅✅★★★★★ **`R-750 §7` IS `4 / 4`. ALL THREE `R-749 §4` CLOSEOUTS PLUS `R-750 §5-1`'s PASS-THROUGH RED-PROOF ARE BUILT, MUTATED, AND THE POST-CHANGE FAILURE SET IS *EXACTLY* MY PRE-REGISTERED `33`-MEMBER BASELINE — MEMBER FOR MEMBER, ZERO ADDITIONS.** 🛑🛑★★★★★ **AND I BROKE SIX TESTS ON THE WAY THERE, BY COMMITTING THE EXACT DEFECT `R-750 §1` HAD JUST FINISHED NAMING: I ADDED A RECORD KIND AND EVERY READER KEYED ON THE OLD SHAPE BROKE. I FOUND IT WITH MY OWN BASELINE DIFF, REPAIRED IT IN THIS COMMIT, AND I AM REPORTING IT AS A SELF-INFLICTED REGRESSION RATHER THAN AS A TIDY GREEN.** 🛑 **ONE NEW MONEY-PATH DEFECT MEASURED AND *NOT* FIXED: A REFUSED STRATEGY STILL LEAVES `main()` CARRYING A `forge_score`.**
 
 **RULING:** `R-750 §7` (inherits `R-749 §6`). **BASE HEAD `f7aefaa6`; this commit follows it.** **ATTEMPT BUDGET `1 / 2` — this delivery is not a failed one, and by `R-749 §5`'s pre-registration an honest partial does not spend attempt `2`.**
