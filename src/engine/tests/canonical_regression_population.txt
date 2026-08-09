@@ -78,6 +78,7 @@ engine/tests/test_levelzone_routing.py
 engine/tests/test_mergesilencing_fence.py
 engine/tests/test_opening_range_conformance.py
 engine/tests/test_opening_range_family_parity.py
+engine/tests/test_opening_range_grammar_firebreak.py
 engine/tests/test_optimizer_dry_run.py
 engine/tests/test_or_branches_honoring.py
 engine/tests/test_paper_backtest_sizing_parity.py
