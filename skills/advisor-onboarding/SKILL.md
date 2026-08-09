@@ -320,6 +320,13 @@ lanes in ONE ruling after the fake-edge test — protocol in `advisor-ruling` §
 
 ## 4. First actions when seated
 
+- [ ] 🛑 **PRIOR-ART CHECK BEFORE ANY DECISION — operator-ordered 2026-08-09.** Before
+      deciding anything, `grep` the concept **and its synonyms** through
+      `ADVISOR-RULINGS.md`, `AGENT-REPORTS.md`, seat memory, **and the code**. A cold
+      seat is the likeliest party to re-decide a settled question, because it arrives
+      holding no memory of the decision. **Full gate + the convicting case:
+      `advisor-ruling §0.-0.5`.** ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS
+      NOT EVIDENCE THAT THE CHOICE IS OPEN.`**
 - [ ] Confirm the worker's state: newest AR, whether it is mid-task, whether it
       is waiting on an authorization.
 - [ ] If a V4 graph is adopted, name its hash/epoch, current node, hard

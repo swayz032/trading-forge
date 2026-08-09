@@ -70,6 +70,57 @@ it is in the reserved list above.
 
 ---
 
+## 0.-0.5 🛑🛑🛑★★★★★ PRIOR-ART CHECK — SEARCH BEFORE YOU DECIDE (operator-ordered 2026-08-09)
+
+**Operator, verbatim: *"make sure workers and advisor from now on check memory and reports/rulings
+to make sure they not doing work or making decisions on stuff that already been done before."***
+
+🛑 **BEFORE you decide anything, SEARCH FOR THE ANSWER YOU ARE ABOUT TO PRODUCE.** Four surfaces,
+seconds each — **and the FIRST one is a generated map that already exists, so do not hand-roll it:**
+
+```bash
+# 0. IS IT ALREADY BUILT AND IS IT WIRED?  A GENERATED MAP ANSWERS THIS IN ONE COMMAND.
+python scripts/system_inventory.py --check      # exit 1 == the map is STALE, regenerate first
+python scripts/system_inventory.py              # -> docs/designs/SYSTEM-INVENTORY.md
+#    states: WIRED · FLAG-GATED · BUILT-UNREACHABLE · DECLARED-ABSENT · UNCLASSIFIED
+#    "BUILT-UNREACHABLE" IS THE ANSWER TO "did we already build this and forget to wire it?"
+grep -inE '<concept|synonym|synonym>' docs/designs/ADVISOR-RULINGS.md   # was it RULED?
+grep -inE '<concept|synonym|synonym>' docs/designs/AGENT-REPORTS.md     # was it BUILT/attempted?
+grep -ril  '<concept>' ~/.claude/projects/C--Users-tonio-Projects-trading-forge/memory/
+```
+🛑🛑 **`system_inventory.py` EXISTS PRECISELY FOR THIS RULE AND THE DESK LET IT GO STALE.**
+`[MEASURED 2026-08-09]` it runs clean (`19/19` positive controls) and reports `WIRED 3233 ·
+BUILT-UNREACHABLE 1537` — **but its committed output had not been regenerated in 6 days.** ⭐ **Its
+own docstring names the OPENING-RANGE DETECTOR as one of the three things this campaign re-planned
+after already building it — the exact case that later convicted both roles below.** ★★★★★ **`AN
+INSTRUMENT BUILT TO PREVENT A MISTAKE PREVENTS NOTHING WHILE IT SITS UNRUN — AND A STALE GENERATED
+MAP IS WORSE THAN NONE, BECAUSE IT ANSWERS CONFIDENTLY ABOUT A TREE THAT NO LONGER EXISTS.`**
+★ **Search the CONCEPT AND ITS SYNONYMS, never only your own phrasing** — prior art is filed under
+the words whoever decided it used, not the words you arrived with. ★ **And grep the CODE too: a
+decision enforced in a function signature is stronger evidence than the ruling that ordered it.**
+
+> ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS NOT EVIDENCE THAT THE CHOICE IS OPEN.`**
+> ★★★★★ **`RE-DECIDING A SETTLED QUESTION IS HOW A CAMPAIGN QUIETLY REVERSES ITSELF — AND IT NEVER
+> FEELS LIKE REVERSAL, IT FEELS LIKE DILIGENCE.`**
+
+**THE CONVICTING CASE — BOTH ROLES FAILED IN ONE EXCHANGE, 2026-08-09.** `AR-896` put the
+opening-range duration question to the desk as an open architecture choice (`A` vs `B`); **the desk
+agreed it was open and told the operator a decision was pending.** It had been **RULED at `R-736`**
+— *"THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES THREE BOTS"* — **reaffirmed at `R-743`,
+and enforced in committed code** (`expand_execution_candidates` has no `default_variant`;
+`selected_duration_minutes` RAISES). **THE OPERATOR CAUGHT IT FROM MEMORY. One `grep` found it in
+seconds.** (Full record: `R-774 §3`.)
+
+⇒ **WHEN YOU FIND PRIOR ART: CITE IT AND PROCEED.** Do not re-adjudicate it, do not "confirm" it
+with a fresh decision, and **do not let an external read's concurrence re-date it** —
+★★★★ **`CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO, NOT A SECOND PATH.`**
+⇒ **WHEN YOU FIND NOTHING: say so in the ruling — what you searched and where.**
+★★★ **`AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH.`**
+⚠️ **ONE NARROW EXCEPTION:** prior art that has **MEASURABLY DECAYED** (the code no longer matches
+the ruling) is not settled — but **SHOW the decay, never assume it** (`[red-path-decay]`).
+
+---
+
 ## 0. Should this ruling exist?
 
 Write a ruling when: an AR has landed unruled · a load-bearing decision is being

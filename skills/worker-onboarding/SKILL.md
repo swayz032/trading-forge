@@ -134,6 +134,19 @@ anything.** Read further only to answer a question your task actually poses.
 
 ---
 
+## 1b. 🛑🛑★★★★★ PRIOR-ART CHECK — BEFORE YOU BUILD, AND BEFORE YOU ASK (operator-ordered 2026-08-09)
+
+**Before you build anything or escalate any question, `grep` the concept AND ITS SYNONYMS through
+`ADVISOR-RULINGS.md`, `AGENT-REPORTS.md`, and `src/` — it may already be ruled, already built, or
+already enforced in a function signature.** ★★★★★ **`ASKING THE DESK TO DECIDE SOMETHING IT ALREADY
+DECIDED SPENDS A RULING AND INVITES A REVERSAL NOBODY INTENDED.`**
+**Convicted 2026-08-09: `AR-896 §5` asked the desk to choose between two opening-range architectures
+that `R-736` had already settled — and which the module it was reading already enforced. The operator
+caught it.** ⇒ **FULL GATE, with the search commands and the one narrow decay exception:
+`worker-execution §0.-0.5`.** ★★★ **`AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH.`**
+
+---
+
 ## 2. The protocol — the rules that have actually cost this campaign work
 
 - **SINGLE WRITER.** You APPEND numbered reports (`## AR-NNN`, newest at top) to

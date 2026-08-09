@@ -42,6 +42,51 @@ you authored your migration (AR-348).
 
 ---
 
+## 0.-0.5 🛑🛑🛑★★★★★ PRIOR-ART CHECK — SEARCH BEFORE YOU BUILD **OR** BEFORE YOU ASK (operator-ordered 2026-08-09)
+
+**Operator, verbatim: *"make sure workers and advisor from now on check memory and reports/rulings
+to make sure they not doing work or making decisions on stuff that already been done before."***
+
+🛑 **BEFORE you build, and before you escalate a question to the desk, SEARCH.** Four surfaces —
+**and surface `0` is a GENERATED MAP that already exists; do not hand-roll your own census:**
+
+```bash
+# 0. ALREADY BUILT? ALREADY WIRED?  ONE COMMAND, and it is the cheapest answer you will get.
+python scripts/system_inventory.py --check      # exit 1 == STALE; regenerate before trusting it
+python scripts/system_inventory.py              # -> docs/designs/SYSTEM-INVENTORY.md
+#    WIRED · FLAG-GATED · BUILT-UNREACHABLE · DECLARED-ABSENT · UNCLASSIFIED
+#    🛑 "BUILT-UNREACHABLE" == built, tested, and NOTHING CALLS IT. Check here before you
+#       build a thing, and before you conclude a thing is missing.
+grep -inE '<concept|synonym|synonym>' docs/designs/ADVISOR-RULINGS.md   # already RULED?
+grep -inE '<concept|synonym|synonym>' docs/designs/AGENT-REPORTS.md     # already BUILT/attempted?
+grep -rn  '<concept>' src/ --include=*.py --include=*.ts | grep -v /tests/   # already ENFORCED?
+```
+⭐ `[MEASURED 2026-08-09]` a fresh run classifies all four `opening_range_*` modules as
+**`BUILT-UNREACHABLE`** — **the exact conclusion `C-1` spent a whole reconnaissance lane deriving by
+hand.** ★★★★★ **`IF A GENERATED MAP WOULD HAVE ANSWERED YOUR QUESTION, RUNNING IT IS NOT OPTIONAL
+DILIGENCE — IT IS THE CHEAP PATH YOU SKIPPED.`**
+★ **Search the CONCEPT AND ITS SYNONYMS, not your own phrasing.** ★ **The code is the strongest
+surface: a decision encoded in a signature or a `raise` outranks your reading of the prose.**
+
+> ★★★★★ **`ASKING THE DESK TO DECIDE SOMETHING IT ALREADY DECIDED COSTS MORE THAN DOING IT WRONG —
+> IT SPENDS A RULING, AND IT INVITES A REVERSAL NOBODY INTENDED.`**
+
+**THE CONVICTING CASE, AND IT WAS A WORKER REPORT: 2026-08-09.** `AR-896 §5` presented the
+opening-range duration question as an open architecture choice `A` vs `B` and asked the desk to
+choose. **It had been ruled at `R-736`** — *"THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES
+THREE BOTS"* — **reaffirmed at `R-743`, and enforced in the very module the report was reading**
+(`expand_execution_candidates` takes no `default_variant`; `selected_duration_minutes` RAISES).
+**The desk then agreed it was open. The OPERATOR caught it from memory.** (Record: `R-774 §3`.)
+
+⇒ **IF PRIOR ART EXISTS: CITE IT AND PROCEED UNDER IT.** Do not re-open it, and do not present it
+as a question — **presenting a settled thing as a choice is how a settled thing gets un-settled.**
+⇒ **IF NOTHING EXISTS: say in your AR that you searched, and name the terms.**
+★★★ **`AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH.`**
+⚠️ **NARROW EXCEPTION:** prior art that has **MEASURABLY DECAYED** is not binding — **show the decay**
+(the ruling says X, the code now does Y, here are both lines), never assume it (`[red-path-decay]`).
+
+---
+
 ## 1. Know the money path — a local fix that damages it is not a fix
 
 ```
