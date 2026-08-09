@@ -12,6 +12,163 @@
 
 ---
 
+## R-774 · 2026-08-09 · ✅ **`C-1` ACCEPTED `4/4`.** 🛑🛑🛑★★★★★ **AND I CORRECT THE FRAME FIRST: SHAPE `A` IS **NOT** DECIDED HERE — IT WAS DECIDED AT `R-736` (*"THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES THREE BOTS"*), REAFFIRMED AT `R-743`, AND IS ENFORCED IN COMMITTED CODE. THE OPERATOR CAUGHT THIS FROM MEMORY WHILE THIS DESK WAS ONE TURN FROM RE-DECIDING IT.** ⭐⭐⭐ **THE RECORDED BLOCKER IS DISCHARGED — THE TEACHER NAMED ALL THREE WINDOWS AND THE LIVE LOWERING RETURNS `READY`.** ⚡ **LANE `S6-1` (`B1 STEP 6`) AUTHORIZED — THE COMPILER BREAKTHROUGH LANE.** ⚠️ **AND ONE SCOPE FACT I VERIFIED MYSELF: THE GOLDEN SOURCE IS AN **EQUITIES** LESSON (`asset_class: equities`, `['stocks','S&P 500']`), NOT A FUTURES ONE.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§6` — lane `S6-1`. PRE-REGISTER THE REDS FIRST (`§6` step 1), before any wiring.** Read `§4` (the five verified structural constraints — they change the repair), `§6` (order + scope), `§7` (the 13 acceptance controls), `§8` (the 10 STOPs). 🛑 **`§3` IS NOT YOURS TO REOPEN: three candidates, choose none, is settled law.**
+
+**RULING ID:** R-774 · **ARs RULED: `AR-896`** — copied from the read's own subject (`AR-896 / B1 STEP 6`). `[MEASURED HERE]` **`AR-896` is the NEWEST `## AR-` on disk; no report overtook its adjudication.** · **DECISION: ACCEPT `C-1` · **CITE** `R-736` for architecture (not re-decide) · ADOPT the read's engineering corrections AFTER audit · AUTHORIZE lane `S6-1`**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **seat `claude.exe 25636` RE-VERIFIED ALIVE by `Win32_Process` at authorization time** (`[identity-address]`: PIDs decay, so liveness is measured in the same motion as the authorization, never inherited from `AR-896`).
+
+### §1 — ✅ `C-1` ACCEPTED, AND I RE-DERIVED ITS TWO LOAD-BEARING ANSWERS **BEFORE** READING IT
+⭐⭐⭐ **This is what makes the acceptance worth something:** `[MEASURED HERE]` I derived `Q1`/`Q2` from a DIFFERENT entry point — the two reds' own docstrings, then `grep -rn 'unsupported' src/engine/*.py` — **and landed on the same held unit (`B1 STEP 6`) and the same blocked line (`spec_family_bindings.py:678-682`, `unsupported=True`, `primitive=None`) without having read `AR-896`.** ★★★★★ **`A SECOND PATH THAT POSTDATES AND CITES THE FIRST IS AN ECHO` (`[second-reader-anchoring]`) — so the desk read the artifacts first and the report second, deliberately, then compared.**
+✅ **`Q3` SAME-OBJECT ACCEPTED ON `AR-896 §3`'s STRING-IDENTITY JOIN** — the reds' failing values ARE the binding's fields (`reason` is the `:681` literal byte-identical; `primitive: None` is the `:679` field). ★★★ **`AN IDENTITY JOIN IS A STRING YOU CAN POINT AT IN BOTH FILES; EVERYTHING ELSE IS TWO THINGS THAT LOOK ALIKE.`** ⇒ **the operator's pre-registered tie-break selects `PROCEED`, and the join he refused to assert is MADE.**
+⭐ **COMMENDED: `AR-896 §0`** re-checked staleness when HEAD moved under it mid-lane (my own `ADVISOR-STATE` commit) and **proved not one measured artifact changed**. ⭐ **And `§3`'s self-correction — *"my first pytest printed `EXIT=0` because the exit code belonged to `tail`"* — is `[gate-verdict]` caught by the worker on itself.**
+
+### §2 — ⭐⭐⭐ THE DISCHARGED BLOCKER, AND WHY IT IS THE MOST VALUABLE FINDING OF THE LANE
+🛑 **`opening_range_adapter.py:34-53` recorded that wiring *"requires naming a duration the teacher did not name"*. `[MEASURED, AR-896 §4]` THAT IS FALSE TODAY:** the lowering returns `READY` with `5m`/`15m`/`30m`, **each carrying its own verbatim source quote**, plus a taught trading-day reset rule — and the **negative control on the identical call path** (`hcHuDfxdywI__s0` → `SOURCE_INCOMPLETE`, `missing_fields ('variants',)`) proves the instrument discriminates rather than always saying `READY`.
+⚖️ **THE WORKER'S REFUSAL TO CALL IT A LIE IS CORRECT — it was TRUE when written; `opening_range_lowering.py` did not exist at `STEP 4`.** ★★★★★ **`A CAPTION IS A CLAIM, AND A CLAIM DECAYS. THE MOST EXPENSIVE STALE CLAIM IS THE ONE THAT RECORDS WHY SOMETHING IS IMPOSSIBLE, BECAUSE NOBODY RE-TESTS AN IMPOSSIBILITY.`** ⇒ **Registered `DOC-1`.** ✅ **The worker correctly did NOT edit it — a docstring in a production module is a production edit, and `R-773 §7` forbade one.**
+
+### §3 — 🛑🛑 ARCHITECTURE: **ALREADY SETTLED AT `R-736`.** THIS RULING CITES; IT DOES NOT DECIDE.
+`[MEASURED HERE, `ADVISOR-RULINGS.md:3030` and `:3074`]` **`R-736` verbatim:** *"THE DURATION QUESTION IS ANSWERED AND THE ANSWER IS NEITHER OF THE WORKER'S TWO OPTIONS: PRESERVE ALL THREE TAUGHT WINDOWS, EXPAND DETERMINISTICALLY INTO THREE CANDIDATES, CHOOSE NONE."* — minted law: ★★★★★ **`THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES THREE BOTS.`**
+✅ **STILL STANDING, CHECKED FOR DECAY** (`[red-path-decay]`): `[MEASURED HERE]` later rulings BUILD on it rather than reopening it — `R-743 §3` pre-registers the discriminator *"three candidates producing DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`"*, and a later ruling already requires *"golden binding reaches the adapter through its three candidates"*.
+✅ **AND IT IS ENFORCED IN CODE, NOT ONLY ON PAPER:** `expand_execution_candidates` takes **no `default_variant` argument** and expands *"one candidate per taught variant, IN TAUGHT ORDER, choosing none of them"*; `OpeningRangeDefinition.selected_duration_minutes` (`opening_range_definition.py:173`) **RAISES** so the choice cannot be made three layers down.
+🛑🛑 **THEREFORE `AR-896 §5`'s `A` vs `B` IS NOT AN OPEN QUESTION, AND SHAPE `B` ("chosen downstream") IS FORBIDDEN — DEFERRING THE CHOICE IS STILL CHOOSING.**
+⚠️⚠️ **THE PROCESS FAILURE IS MINE AND I RECORD IT AGAINST MYSELF:** `AR-896` presented it as a live architecture choice, I told the operator *"one genuine design call is waiting for me"*, and **the operator corrected me from memory** — *"we worked on all that already, we made 3 bots to run all three, check memories or reports"*. **He was right; one `grep` found `R-736` in seconds.** ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS NOT EVIDENCE THAT THE CHOICE IS OPEN. SEARCH THE LEDGER FOR THE ANSWER BEFORE SPENDING A DECISION — RE-DECIDING A SETTLED QUESTION IS HOW A CAMPAIGN QUIETLY REVERSES ITSELF, AND IT DOES NOT FEEL LIKE REVERSAL, IT FEELS LIKE DILIGENCE.`**
+🛑 **A PRECISION SO THE RECORD IS NOT MISDATED:** the read also approves `A` — **but it reaches `A` partly by reading OUR OWN production docstring, which quotes `R-736`.** ★★★★ **`CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO, NOT A SECOND PATH.`** ⇒ **THE AUTHORITY FOR `A` IS `R-736`, DATED EARLIER. The read CONCURS; it does not confer.** ⚖️ Its genuinely independent contribution is `§4`–`§8`, which `R-736` never specified.
+
+### §4 — ✅ THE READ'S FIVE STRUCTURAL CORRECTIONS — **ALL FIVE VERIFIED BY ME**, AND THEY CHANGE THE REPAIR
+🛑 **`AR-896 §5`'s four-move repair is directionally right and UNDER-SPECIFIED. `[MEASURED HERE, executable line, each one]`:**
+```
+1 NO VARIANT CARRIER   ConditionBinding (spec_family_bindings.py:809-819) has
+                       condition_id·type·role·object·bindable·primitive·approximation·
+                       executed·reason·disposition — and NO variant field.
+  🛑 DO NOT PUT 5/15/30 INTO ConditionBinding.parameters. That converts a
+     SOURCE-SANCTIONED ALTERNATIVE into an arbitrary parameter and reopens the
+     parameter-grammar channel this campaign spent weeks hardening.
+2 RESOLVER MISSING     PRIMITIVE_RESOLVERS (family_meta_enforcement.py:222) contains
+                       ZERO opening_range entries [MEASURED: grep -c -> 0].
+3 TS MIRROR STALE      src/server/lib/spec-family-bindings.ts:145-149 still declares
+                       primitive: null · unsupported: true ·
+                       unboundReason "opening_range_adapter_not_implemented"
+                       — byte-parallel to the Python. DECLARATION PARITY ONLY:
+                       🛑 DO NOT BUILD A SECOND TS OPENING-RANGE EVALUATOR.
+4 LOWERING BOUNDARY    produce_spec_artifact(strategy_extraction, *, video, certificate,
+                       transcript_chars) — spec_producer.py:571-577 — receives ONLY the
+                       per-strategy extraction. The lowerer needs FULL-RECORD evidence
+                       (instrument_classification). ⇒ fan out at a boundary that STILL
+                       HOLDS the certified full record.
+                       🛑 ONE LOWERER. Do not duplicate its parsing rules in the compiler;
+                          do not reconstruct evidence from the lossier spec_body.
+5 IDENTITY             the three candidates share a base spec graph. If they collapse into
+                       one cache/result/backtest namespace, THREE STRATEGIES WERE NOT
+                       EMITTED.
+```
+⭐⭐⭐ **`5` IS THE ONE I WOULD NOT HAVE WRITTEN AND IT IS THE STRONGEST POINT IN THE READ:** ★★★★★ **`A COMPILER THAT EMITS THREE STRATEGIES AND STORES ALL THREE UNDER ONE IDENTITY HAS NOT EMITTED THREE STRATEGIES.`** ⇒ **promoted to a STOP (`§8-2`), not a nice-to-have.**
+
+### §5 — ⚠️ MARKET SCOPE — VERIFIED BY ME, AND IT BOUNDS WHAT MAY EVER BE CLAIMED
+`[MEASURED HERE, the frozen provenance blob `5ebb1130`]`: `instrument_classification.asset_class = "equities"`, `instruments_mentioned = ['stocks','S&P 500']`.
+⇒ 🛑 **THE GOLDEN SLICE IS AN EQUITIES LESSON, NOT A FUTURES ONE.** **This does NOT block the lane** — the lane proves the CONCEPT survives source→type→candidate→primitive→execution. 🛑🛑 **BUT AFTER `STEP 6`, A PROFITABLE `MES`/`ES` BACKTEST OF THIS LESSON MAY NOT BE ADVERTISED AS SOURCE-FAITHFUL. It is a TRANSFER EXPERIMENT until separate evidence licenses the transfer.** ★★★★★ **`COMPILER FIDELITY AND MARKET-TRANSFER VALIDITY ARE DIFFERENT QUESTIONS, AND THE SECOND IS THE ONE THAT COSTS REAL MONEY.`** **Registered `SCOPE-1`.**
+
+### §6 — ⚡ AUTHORIZED NOW — LANE `S6-1` (`B1 STEP 6`)
+**AUTHORIZED TO `claude.exe 25636`** (re-verified ALIVE). **ATTEMPT BUDGET `0 / 2`** — at `2`, STOP, root-cause proof, CHANGE THE MECHANISM (`R-648`).
+```
+ORDER — execute only this, in this order:
+ 1 PRE-REGISTER THE REDS FIRST (candidate transport + real adapter call). Publish RED
+   before wiring. 🛑 Step 1, non-negotiable — a guard written after the fix is a guard
+   shaped by the fix.
+ 2 Wire FULL-RECORD lowering into a production compile boundary (§4-4). ONE LOWERER.
+ 3 Fan out Shape A: 5m / 15m / 30m executable candidates. None primary, none default.
+ 4 Preserve candidate identity THROUGH execution/backtest identity (§4-5).
+ 5 Register FAMILY_META + PRIMITIVE_RESOLVERS + ENFORCED_DISPATCH + the TS mirror, in ONE
+   semantic change. verify_dispatch_coverage() proves set equality BOTH ways.
+ 6 Add the candidate-aware execution handler: it receives ONE already-selected candidate
+   and may never ask "which duration?". Runtime supplies bar interval, session date,
+   tz-aware timestamps, as-of bar. FAIL CLOSED before window completion.
+   🛑 Arithmetic stays in compute_opening_range_state -> the existing shared
+      compute_opening_range_breakout. NO SECOND CALCULATOR.
+ 7 Turn the two permanent REDs green THROUGH ACTUAL ADAPTER EXECUTION, not registration.
+ 8 Run the focused regression + mutation controls (§7). Then STOP and report.
+FILES/SCOPE: the binding + resolver + dispatch + TS mirror + the compile boundary + the
+   handler + new tests. FORBIDDEN: 🛑 no D-10 work · no broad compiler census · no other
+   families · NO breakout-trigger repair (wick/touch/close stays UNRESOLVED_SOURCE_
+   AMBIGUITY) · no optimizer or edge work · no new dependency · no hardcoding
+   st5e-YJRfKc__s0 · no globals · no re-reading a video.
+FIRST OBSERVABLE: the pre-registered RED suite, published red. START-RECEIPT if >10 min.
+   No ETA imposed. `AR` on completion. 🛑 YOU DO NOT DECLARE THE BREAKTHROUGH — the desk
+   grades it (`doer ≠ grader`), and §9 says what it will and will not mean.
+```
+
+### §7 — ⚖️ ACCEPTANCE CONTROLS — PRE-REGISTERED NOW, BEFORE THE DATA (`[pre-register-criteria]`)
+**I pre-commit to NOT accepting `S6-1` if any is unmet, vacuous, or "covered by" another:**
+```
+A  the two permanent REDs green THROUGH the real production path; assertions UNWEAKENED
+B  EXACT membership {5m,15m,30m} from the committed golden record — no 4th, none missing,
+   no primary, no default
+C  ⭐ EXECUTION SPY, THE REAL BREAKTHROUGH CONTROL: 5m reaches compute_opening_range_state
+   WITH the 5m variant; 15m with 15m; 30m with 30m. EXACTLY THREE DISTINCT EXECUTIONS.
+D  MUTATION: remove one taught variant -> the candidate population CHANGES and B bites
+E  WRONG-VARIANT: hand the 15m artifact the 5m candidate -> RED
+F  SOURCE-INCOMPLETE neighbour -> ZERO candidates, ZERO adapter calls
+G  ⭐ REAL SEMANTIC DIVERGENCE: a deterministic bar fixture where the three windows do NOT
+   all produce identical ranges; prove the outputs DIFFER where the durations require it.
+   🛑 the arm that excludes "three labels -> one shared computation"
+H  INCOMPLETE WINDOW: delete an expected bar -> INCOMPLETE_OPENING_WINDOW, no numeric
+   level escapes
+I  LOOKAHEAD: before lock -> FORMING, no locked high/low; after lock -> usable
+J  IDENTITY: three runs expose THREE DISTINCT execution/cache identities
+K  ASSERT the candidate did NOT enter via ConditionBinding.parameters
+L  TS/PY declaration parity holds
+M  re-run the built suites: definition · adapter · lowering · candidate · conformance ·
+   family-meta enforcement/parity
+⚖️ AN UNMET CONTROL IS A RESULT. "NOT ACCEPTED, HERE IS WHICH" IS A COMPLETE OUTCOME.
+```
+★ **`C` and `G` convert this from registration into a breakthrough. `[main-spy-both-arms]` applies to `C`: a spy that reads `0` on every arm looks exactly like a perfect gate — so `C` owes a POSITIVE witness that the path ran.**
+
+### §8 — 🛑 STOP CONDITIONS — REPORT, DO NOT IMPROVISE
+```
+ 1 the only way to execute is to choose one of 5/15/30 downstream
+ 2 candidate identity cannot reach backtest/result identity   <- §4-5, promoted to a STOP
+ 3 the variant must be written into generic ConditionBinding.parameters
+ 4 a source-incomplete record can reach the adapter
+ 5 the adapter must fall back to a default duration
+ 6 a second opening-range calculator is required
+ 7 a constant-True handler is needed to make routing green
+ 8 hardcoding st5e-YJRfKc__s0 is required
+ 9 full source evidence is already discarded before the proposed lowering point
+10 the lane starts solving the breakout trigger
+```
+
+### §9 — ⚖️ WHAT `STEP 6` WILL AND WILL NOT MEAN — WRITTEN BEFORE IT LANDS, SO IT CANNOT INFLATE
+✅ **IF the controls pass, we hold the first production proof of:** real frozen teacher words → production extraction → canonical typed meaning → source-complete lowering → three source-sanctioned candidates → production family binding → real primitive dispatch → actual adapter execution → typed `OpeningRangeState`, **with no invented duration, no manual repair, no parameter laundering, no test-only adapter, deterministic candidate identity, source-incomplete refusal preserved.**
+🛑 **IT WILL NOT PROVE:** the full opening-range breakout strategy is source-exact · wick/touch/close resolved · targets or stops compiled · that the strategy has EDGE · `MES` transfer validity (`§5`) · Topstep readiness · Phase-1 exit (which additionally needs `BIND` + `FIDELITY` + `P0IG`).
+★★★★★ **`AFTER STEP 6 WE STOP ARGUING THAT TRADING FORGE MIGHT BE A COMPILER AND POINT AT ONE CONCEPT IT ACTUALLY COMPILED. THAT IS AN ENORMOUS CLAIM AND A NARROW ONE, AND THE NARROWNESS IS WHAT MAKES IT TRUE.`**
+
+### §10 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : ONE REAL EXTRACTED STRATEGY CONDITION COMPILED AND EXECUTED (R-648 slice)
+CRITICAL PATH  : S6-1. Distance to the vertical-slice breakthrough = ONE BOUNDED LANE,
+                 absent a §8 STOP.
+AUTHORIZED NOW : §6, seat claude.exe 25636 (re-verified alive). Attempt 0/2.
+PRECEDENCE PROOF: [MEASURED §1/§4] the blocked unit is ONE registration; the computation
+                 exists and is green (83 passed); the two ordered REDs interrogate that
+                 exact binding by string identity. Nothing else lies between here and the
+                 exit.
+DEFERRED REGISTER (none wake on this ruling)
+  DOC-1  | UNASSIGNED | opening_range_adapter.py:34-53 records a now-FALSE impossibility
+         | wake: the next lane that may edit that module | evidence R-774 §2, AR-896 §4
+  SCOPE-1| THIS DESK  | golden source is EQUITIES; a MES run is a TRANSFER EXPERIMENT
+         | wake: any backtest claim on this lesson       | evidence R-774 §5 [MEASURED]
+  TD-1 · TD-2 · TD-3 · OBS-1 · D-10-ADJ-1 · N-6 · Q-1 | unchanged from R-773 §8
+STOP           : §8's ten · any D-10 lane · re-deciding §3 · declaring the breakthrough
+                 from the worker seat.
+```
+**ARCHITECTURE INVARIANTS TOUCHED:** invariants 1 (compiler correctness ≠ profitability) and 2 (source-owned logic never silently rewritten) are **why** `§3` and `§7 B/G` exist. **No sizing/risk surface, no promotion to live capital.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS NOT EVIDENCE THAT THE CHOICE IS OPEN — SEARCH THE LEDGER BEFORE SPENDING A DECISION.`** · ★★★★★ **`THE MOST EXPENSIVE STALE CLAIM IS THE ONE THAT RECORDS WHY SOMETHING IS IMPOSSIBLE, BECAUSE NOBODY RE-TESTS AN IMPOSSIBILITY.`** · ★★★★★ **`A COMPILER THAT EMITS THREE STRATEGIES AND STORES ALL THREE UNDER ONE IDENTITY HAS NOT EMITTED THREE STRATEGIES.`** · ★★★★★ **`CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO, NOT A SECOND PATH.`** · ★★★★ **`COMPILER FIDELITY AND MARKET-TRANSFER VALIDITY ARE DIFFERENT QUESTIONS.`**
+
+---
+
 ## R-773 · 2026-08-09 · 🔒🔒🔒 **`D-10` IS SEALED.** ✅ **`G-1` ACCEPTED — AND I DID NOT SEAL ON A RELAY: I RE-RAN ALL FIVE ACCEPTANCE ITEMS MYSELF AT THE SEAL HEAD `3c8a3063`, INCLUDING THE `127`-SECOND `103`-MEMBER JOIN, AND MY OWN COPY OF THAT JOIN CARRIES A TAMPER ARM THAT **BITES**.** ⚡ **I VERIFIED CLAUSES `A`–`E` AT THE EXECUTABLE LINE: THE IDENTITY CONTAINS **ZERO** LINE-NUMBER REFERENCES (`scan.ts:43`), THE COMPARISON IS TRULY BIDIRECTIONAL (`:178`/`:179`), AND AN EMPTY REGISTRY IS HARD-CODED AS *"NEVER A PASS"* (`:199`).** ⭐⭐⭐ **AND THE SEAL DID NOT ERASE THE THING WE ARE RETURNING TO: BOTH ORDERED OPENING-RANGE REDS ARE **STILL RED BY NAME** IN MY OWN RUN.** ➡️ **SAFETY WORK ENDS HERE. THE COMPILER LANE REOPENS, READ-ONLY FIRST.**
 
 > ### ★ WORKER — START HERE
