@@ -4,6 +4,76 @@
 
 ---
 
+## AR-886 · 2026-08-09 · ✅ **LANE `C` (`N-5`) DELIVERED — `26484e5c`. AN UNMEASURED PARENT BASELINE NOW STOPS THE RUN ON BOTH PATHS, BEFORE THE ENGINE.** ⚡ **RED PUBLISHED FIRST (`e94a8dd7`), AND A FIVE-ARM MUTATION BATTERY DISCRIMINATES PER-PATH AND IN BOTH DIRECTIONS.** 🛑 **AND I REPORT THREE INSTRUMENT DEFECTS I INTRODUCED MYSELF — ONE OF WHICH DESTROYED MY OWN UNCOMMITTED FIX.**
+
+**SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `26484e5c`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `N-5` `1 / 2`** — one attempt, one mechanism, no failed hypothesis. 🛑 **I MAKE NO FAN-IN CLAIM** (`R-767 §2`: an auto-release is a predicate and THIS DESK evaluates it; `R-768 §7` restates it).
+
+### §1 — ✅ THE CONTRACT, CLAUSE BY CLAUSE, WITH ITS EVIDENCE
+**`R-767 §6` + `R-768 §7` AMENDMENT 2. FILES: `critic-optimizer-service.ts` + the EXISTING `d10-n1-replay-outcome.test.ts`. NO new harness, NO new file, NO schema change, NO second classifier.**
+```
+[MEASURED HERE — critic-optimizer-service.ts @ 26484e5c]
+ONE shared decision, BOTH paths      resolveParentForgeBaseline() — ONE definition,
+                                     called at the auto site and the manual site.  ✅
+                                     grep 'Number(strat.forgeScore ?? 0)' -> 0 hits.
+null/undefined/empty/NaN/Infinity    => { available: false }                       ✅
+numeric 0 or "0"                     => { available: true, value: 0 }  VALID       ✅
+FORBIDDEN IDIOM `if (!parentForgeScore)`  executable hits -> 0
+                                     (1 grep hit exists and it is line 2105, MY OWN
+                                      JSDoc naming it as forbidden — a comment, and
+                                      I checked rather than reporting the raw count) ✅
+stop BEFORE comparison/selection     guard precedes the replay loop on both paths;
+                                     measured as ZERO runBacktest calls, not inferred ✅
+named precondition                   `parent_forge_score_unmeasured` — R-768 §5 kept
+                                     this name over the read's proposal; I used it    ✅
+persisted AND broadcast              status:"failed" + critic:run-failed{errorCode}   ✅
+no fabricated parent score           no survivor selected, no score written           ✅
+```
+
+### §2 — ⚡ THE MUTATION BATTERY — FIVE ARMS, AND `M2`/`M4` ARE THE TWO THAT EARN THEIR KEEP
+```
+M0  UNMUTATED CONTROL            34 passed (34)    <- a suite that is always red proves nothing
+M1  restore `?? 0` AUTO only     REDDENS N-5.1 .3 .4 .5 .6 .10 .12  (7 auto controls)
+                                 GREEN: N-5.2, N-5.11 (both MANUAL controls)
+M2  restore `?? 0` MANUAL only   REDDENS N-5.2, N-5.11 — AND NOTHING ELSE
+M3  restore `?? 0` BOTH          REDDENS all 9 missing-parent controls
+    (the R-767 §6 mutation)      GREEN: N-5.7 .8 .9 .13 — every positive control
+M4  reject a MEASURED zero       REDDENS exactly N-5.7, N-5.8, N-5.13 — and nothing else
+    (the MIRROR-IMAGE defect)    GREEN: N-5.9, and every missing-parent control
+EVERY ARM RESTORED `git diff --exit-code` CLEAN; post-battery: guard-blocks=2, defect-lines=0.
+```
+⭐⭐ **`M2` IS WHY `"one caller fixed is not the defect fixed"` IS A MEASUREMENT HERE RATHER THAN A SLOGAN.** D-10's last three defects were each copied into BOTH callers and found ONE PATH AT A TIME; a battery that only mutates both paths together cannot tell a two-path repair from a one-path repair.
+⭐⭐⭐ **`M4` IS THE ARM `R-767 §6` DID NOT ASK FOR AND `R-768 §5` PREDICTED — the mirror-image defect.** It plants `value === 0 ⇒ unavailable` (i.e. what `if (!parentForgeScore)` would do) and reddens **only** the three measured-zero controls. ⇒ **the positive controls are not decorative: they FAIL when they should.** ★★★★★ **`A POSITIVE CONTROL THAT NO MUTATION CAN REDDEN IS A PRINTOUT WEARING A CONTROL'S NAME — GIVE IT AN ARM THAT KILLS IT.`**
+
+### §3 — 🛑🛑🛑 THREE INSTRUMENT DEFECTS, ALL MINE, ALL FOUND BEFORE THEY REACHED A CLAIM
+**`[instrument-truncation-cluster]` grew by three this lane. The production code was correct every time; my measuring apparatus was not.**
+**(1) THE ENGINE CALL COUNTER WAS CUMULATIVE ACROSS TESTS.** `vi.resetModules()` does NOT re-run a `vi.mock` factory, so `runBacktest` is ONE `vi.fn()` for the whole file. My first red run read **six** calls where one drive had happened. ⇒ `expect(...).toBe(0)` would have been **a statement about test ORDER**, passing for whichever control ran first. **Fixed with a per-drive `mockClear()`; the counter now reads exactly `1` per drive, measured.** ★★★★★ **`A CUMULATIVE COUNTER MAKES `toBe(0)` TRUE FOR THE FIRST TEST AND FALSE FOR ITS COPIES — THE ASSERTION IS ABOUT ORDERING, NOT PRODUCTION.`**
+**(2) A DEFAULT PARAMETER CANNOT SEE AN EXPLICIT `undefined`.** I used a `Symbol` DEFAULT to distinguish "no override" from "override with `undefined`" — and wrote a confident comment explaining why it worked. **It does not: an ES default parameter is applied whenever the argument IS `undefined`.** So `N-5.6` silently re-ran the `"50"` fixture under the `undefined` case's name. **MEASURED: it was the one test still red after the repair, and it was red for the wrong reason.** **Fixed with a REST parameter, which records ARITY.** ★★★★★ **`THE ONE VALUE A DEFAULT PARAMETER EXISTS TO REPLACE IS THE ONE VALUE IT CANNOT OBSERVE. TO ASK "WAS IT PASSED?", ASK ARITY.`** ⚠️ **AND THE HONEST PART: my RED for `N-5.6` in `e94a8dd7` was NOT a valid red. Eight controls went red there; SEVEN were genuine and one was a duplicate case mislabelled. The M1/M3 arms above are `N-5.6`'s real red-proof.**
+**(3) 🛑 THE RESTORE STEP DESTROYED MY OWN UNCOMMITTED FIX.** My battery restored with `git checkout -- <file>` while the production repair was **still uncommitted**. `git checkout` restores to **HEAD**, so arm `M1`'s "restore" silently reverted the repair itself; `M2`–`M4` then found nothing to plant and the whole first battery reported empty. **Nothing was lost permanently — I reconstructed the change and re-verified `34 passed` + `TSC_EXIT=0` before re-running — and I am reporting it rather than quietly repairing it.** ✅ **ROOT FIX, not a workaround: COMMIT THE REPAIR FIRST, THEN MUTATE. A restore is only safe when the thing it restores to is the thing you want back.** ★★★★★ **`git checkout` RESTORES TO `HEAD`, NOT TO YOUR WORK. A MUTATION BATTERY OVER AN UNCOMMITTED FIX USES THE FIX AS ITS FIRST CASUALTY.`**
+⚠️ **A FOURTH, MINOR: my first battery's "REDDENED" line read EMPTY for every arm** — the grep matched `^\s+×` against vitest output carrying ANSI colour codes. **An empty result read exactly like "nothing reddened".** Stripped the escapes; the table in `§2` is from the stripped output. ★ `[i-measured]` again: I was grepping the neighbouring bytes.
+
+### §4 — ⚖️ WHAT I DID **NOT** MEASURE — STATED SO NO READER INFERS IT
+🛑 **NO PRODUCTION DATA.** Nothing here shows a strategy with an absent `forgeScore` has EVER entered critic replay. **Mechanism only** — the same `[UNPROVEN]` carried by `R-767 §8` and `R-768 §9`, and it survives into this lane unchanged.
+🛑 **THE HARNESS IS A STUB-DB HARNESS.** `survivorSelected()` observes the `.set({selected:true})` WRITE; it does not prove an end-to-end promotion. The in-file `:199` scope note already says so and I did not widen it.
+🛑 **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`:** campaign worktree, not `runtime-production`.
+🛑 **I did NOT run the wider suite** beyond this file plus `tsc --noEmit` (both clean). **The `d10-*` population run belongs to the lane-close acceptance, and `R-768 §2` warns that a green is a statement about the commit it was taken on.**
+
+### §5 — 📍 STATE
+```
+F-8 ✅  F-9 ✅  N-1 ✅  N-3 ✅  N-2 ✅  F-10 ✅  N-4 ✅ (R-768 §2 RATIFIED, desk-evaluated)
+N-5     DELIVERED THIS AR — 26484e5c. Desk evaluates the R-767 §6 predicate.
+F-7     NEXT, STARTING NOW — same seat, no handoff at this seam. Contract R-767 §5 as
+        AMENDED by R-768 §7 amendment 1: the target is 7 `===` sites
+        (:775 :791 :1224 :1234 :1322 :1337 :2274) + 3 `!==` sites (:793 :1236 :1339).
+        🛑 I carry R-768 §3's warning INTO the work: a `grep '=== "completed"'` sweep
+           MISSES the three `!==` sites, and those three ARE the "backtest failed"
+           fabrication the finding exists for.
+N-6     DEFERRED, unassigned. OPS-1 / OPS-2 are the DESK's, not mine.
+```
+**MY FAN-IN THIS SEAT: `1 / 2`.** 🛑 **`F-7` IS UNSTARTED, NOT BLOCKED — which `worker-onboarding §5` makes the reason to STAY. No handoff is offered.**
+
+---
+
+
 ## AR-885 · 2026-08-09 · 📍 **SEAT RECEIPT — FRESH WORKER SEATED, EAR ARMED AND PROVEN TO DELIVER, BOTH REMAINING LANES TAKEN AS ONE BATCH.** ⚡ **I TAKE `C` (`N-5`) FIRST TO SPEND `AR-884 §2`'s BANKED RECON WHILE IT IS STILL FRESH, THEN `B` (`F-7`) — AND I MAKE NO HANDOFF CLAIM: THE UNIT OF WORK IS BOTH LANES.**
 
 **SEAT `claude.exe 23140`** (predecessor `23640` is GONE — `[MEASURED HERE]` `Win32_Process` lists exactly two live `claude.exe`: `23140` mine, `13416` the sibling). **TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, HEAD `aa5e7970`.**
