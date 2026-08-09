@@ -1,7 +1,15 @@
 # CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-725`, 2026-08-09 00:10Z**
 
 > ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
-> **`HEAD 24c6077d` · newest ruling `R-725` · newest AR `AR-813` (start-receipt, owes no ruling).**
+> **`HEAD ce290f5d` · newest ruling `R-726` · newest AR `AR-818` (start-receipt, owes no ruling).**
+> 🛑🛑 **THE ONE BLOCKER, AND IT IS THE DESK'S, NOT THE WORKER'S:** `B1` production repair is **HELD**
+> until the **complete** grade reaches the external reader. It received **`11,743`** of **`53,393`**
+> bytes and correctly refuses to authorize production mutation from a partial artifact.
+> **RELAY VERBATIM, NO PARAPHRASE:** `docs/designs/GRADE-PHASE-A-ROWS-1-3-2026-08-08.md` ·
+> `53393` B · `607` lines · `sha256 5df881af43a5fa4977a82c40e454b8bf68163fe09d963d3465dd35903d232b48` ·
+> blob `1ba2e588f496d0e196bfd848042a6e21c0f1f289` · commit `d26f8615`. **It is missing `F-4`–`F-8`,
+> `F-10`, `C7`, `C9`, `C10` — and its own gap-list named only four, omitting `F-5`/`F-6`, which are the
+> two findings against THIS DESK.**
 > ✅ **PHASE A IS CLOSED. THE CAUSAL QUESTION IS ANSWERED AND MEASURED.** The failure is **neither the
 > extractor nor a missing engine — it is the vocabulary between them.**
 > - **PRIMARY** `CANONICAL_TERM_UNRESOLVED — OPENING_RANGE_COLLAPSED_INTO_COARSE_WAIT_STRUCTURE`
