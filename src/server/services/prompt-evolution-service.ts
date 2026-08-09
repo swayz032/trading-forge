@@ -23,7 +23,8 @@
 import { createHash } from "crypto";
 import { eq, gte, and, sql, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemJournal, systemParameters, auditLog, promptVersions, promptAbTests } from "../db/schema.js";
+import { systemJournal, systemParameters, auditLog, promptVersions, promptAbTests,
+  BACKTEST_STATUS_REFUSED } from "../db/schema.js";
 import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { broadcastSSE } from "../routes/sse.js";
@@ -39,6 +40,13 @@ const PASS_RATE_THRESHOLD = 0.05;    // 5% pass rate improvement to promote B
 const FORGE_SCORE_THRESHOLD = 3;      // 3 forge score improvement to promote B
 const ROLLBACK_STDDEV_THRESHOLD = 2;  // 2 stddev below baseline to rollback
 const MAX_EXTENSIONS = 2;             // Max 2 test extensions (14 days total)
+
+// D-10 Lane E (R-770 §6): the corpus bucket engine refusals are reported under.
+// Deliberately NOT a tier name — it must never be mistaken for a measured outcome.
+const REFUSED_BUCKET = "REFUSED_UNMEASURED";
+// Materiality for an executability regression, in refusal-rate percentage points.
+// Reuses PASS_RATE_THRESHOLD's 5-point concept rather than inventing a second optimizer.
+const REFUSAL_RATE_MATERIALITY = PASS_RATE_THRESHOLD;
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -80,6 +88,10 @@ interface VariantMetrics {
   passRate: number;
   avgForgeScore: number;
   forgeScores: number[];
+  /** D-10 Lane E: engine refusals attributed to this variant. Attempts, never passes. */
+  refusedStrategies: number;
+  /** refusedStrategies / totalStrategies — the executability signal (R-770 §6 B). */
+  refusalRate: number;
 }
 
 // ─── Public API ────────────────────────────────────────────────
@@ -223,7 +235,7 @@ export async function runPromptEvolution(): Promise<void> {
     .where(
       and(
         gte(systemJournal.createdAt, cutoff),
-        sql`${systemJournal.status} IN ('tested', 'failed', 'promoted')`,
+        sql`${systemJournal.status} IN ('tested', 'failed', 'promoted', 'refused')`,
       ),
     )
     .orderBy(desc(systemJournal.createdAt));
@@ -537,8 +549,35 @@ async function resolveOneTest(test: typeof promptAbTests.$inferSelect): Promise<
     return;
   }
 
+  // ─── D-10 Lane E (R-770 §5/§6 C): the executability guard ─────────────────
+  // The promotion rule is an OR, so every metric added to one arm can be bypassed by
+  // the other:
+  //   `ADDING EVIDENCE TO A DISJUNCTION DOES NOT CONSTRAIN IT — IT MUST BE ADDED TO
+  //    THE ARM THAT CAN WIN ALONE, OR GUARDED SEPARATELY.`
+  // The PASS-RATE arm is already self-guarding: refusals now sit in the attempt
+  // denominator, so a refusal spike depresses passRate on its own. The FORGE arm is
+  // NOT — its average never sees refusals at all — so it is the arm guarded here.
+  //   `A HIGH FORGE SCORE CANNOT ERASE A MATERIAL EXECUTABILITY REGRESSION.`
+  const refusalRateRegression = metricsB.refusalRate - metricsA.refusalRate;
+  const materialExecutabilityRegression = refusalRateRegression >= REFUSAL_RATE_MATERIALITY;
+
+  if (materialExecutabilityRegression) {
+    logger.info(
+      {
+        testId: test.id,
+        refusalRateA: metricsA.refusalRate,
+        refusalRateB: metricsB.refusalRate,
+        refusalRateRegression,
+      },
+      "Prompt A/B resolution: variant B has a material engine-refusal regression — forge-score win suppressed",
+    );
+  }
+
   // Check if B wins
-  if (passRateImprovement >= PASS_RATE_THRESHOLD || forgeScoreImprovement >= FORGE_SCORE_THRESHOLD) {
+  if (
+    passRateImprovement >= PASS_RATE_THRESHOLD ||
+    (forgeScoreImprovement >= FORGE_SCORE_THRESHOLD && !materialExecutabilityRegression)
+  ) {
     // B is better — promote B
     await concludeTest(test, "B", metricsA, metricsB, "b_promoted");
     return;
@@ -679,7 +718,7 @@ async function collectVariantMetrics(
     .where(
       and(
         gte(systemJournal.createdAt, testStartedAt),
-        sql`${systemJournal.status} IN ('tested', 'failed', 'promoted')`,
+        sql`${systemJournal.status} IN ('tested', 'failed', 'promoted', 'refused')`,
       ),
     );
 
@@ -697,7 +736,17 @@ async function collectVariantMetrics(
   const forgeScores: number[] = [];
   let passedCount = 0;
 
+  let refusedCount = 0;
+
   for (const entry of variantEntries) {
+    // D-10 Lane E (R-770 §6 B): a refusal is an ATTEMPT and nothing more. It counts
+    // in the denominator, never as a pass, and contributes NOTHING to the forge
+    // average — 🛑 explicitly NOT a zero. `UNMEASURED != ZERO`.
+    if (entry.status === BACKTEST_STATUS_REFUSED) {
+      refusedCount++;
+      continue;
+    }
+
     if (entry.forgeScore) {
       const score = Number(entry.forgeScore);
       if (!isNaN(score)) forgeScores.push(score);
@@ -719,6 +768,8 @@ async function collectVariantMetrics(
     passRate: total > 0 ? passedCount / total : 0,
     avgForgeScore: Math.round(avgForge * 100) / 100,
     forgeScores,
+    refusedStrategies: refusedCount,
+    refusalRate: total > 0 ? refusedCount / total : 0,
   };
 }
 
@@ -831,7 +882,14 @@ function analyzeTiers(entries: JournalEntry[]): TierAnalysis[] {
   const groups: Record<string, JournalEntry[]> = {};
 
   for (const entry of entries) {
-    const tier = entry.tier ?? "UNTIERED";
+    // D-10 Lane E (R-770 §6 A): an engine REFUSAL gets its own bucket and never
+    // joins a measured tier. It carries no tier and no forge score by construction,
+    // so grouping it under `UNTIERED` beside real backtested runs would teach the
+    // proposer "unmeasured strategy = bad strategy".
+    //   `REFUSED MUST BE VISIBLE, AND REFUSED MUST STAY MARKED UNMEASURED.`
+    const tier = entry.status === BACKTEST_STATUS_REFUSED
+      ? REFUSED_BUCKET
+      : (entry.tier ?? "UNTIERED");
     if (!groups[tier]) groups[tier] = [];
     groups[tier].push(entry);
   }
@@ -885,7 +943,18 @@ function buildEvolutionPrompt(tierAnalysis: TierAnalysis[], totalEntries: number
     const symbolList = ta.symbols.length > 0 ? ta.symbols.join(", ") : "mixed/unknown";
     const tfList = ta.timeframes.length > 0 ? ta.timeframes.join(", ") : "mixed/unknown";
 
-    return `### ${ta.tier} (${ta.count} strategies, avg forge score: ${ta.avgForgeScore ?? "N/A"})
+    // D-10 Lane E: the refused bucket is annotated IN the prompt. Visibility without
+    // this annotation is a trap — the model would read a scoreless bucket as a bad one.
+    const header = ta.tier === REFUSED_BUCKET
+      ? `### ${REFUSED_BUCKET} (${ta.count} strategies — NOT BACKTESTED, no forge score exists)
+These strategies were REFUSED by the execution engine: the source was too ambiguous to
+compile deterministically, so they were never executed and carry NO performance data.
+DO NOT infer trading performance from this bucket and DO NOT treat it as failure evidence.
+Use it ONLY for proposer / executability / groundability patterns — i.e. what made these
+concepts impossible to compile.`
+      : `### ${ta.tier} (${ta.count} strategies, avg forge score: ${ta.avgForgeScore ?? "N/A"})`;
+
+    return `${header}
 Concepts:
 ${conceptList}
 Symbols: ${symbolList}

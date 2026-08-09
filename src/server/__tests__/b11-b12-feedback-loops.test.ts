@@ -228,14 +228,26 @@ describe("B12 Loop 2 — critic suggestions feed prompt evolution", () => {
   });
 
   it("runPromptEvolution reads system_journal for strategy outcomes", () => {
-    // Prompt evolution synthesizes patterns from the critic's approved/rejected strategies
+    // ─── THIS IS A WIRING GUARD, NOT AN ACCEPTANCE PROOF (D-10 Lane E, R-770 §6) ──
+    // It asserts SOURCE TEXT, so it pins the SPELLING of the predicate and not its
+    // meaning. It could never have detected what actually happened here: `F-7` began
+    // writing a new status `'refused'`, the corpus silently SHRANK, and every
+    // assertion below stayed green.
+    //   `A TEST THAT PINS A LITERAL GUARDS THE SPELLING, NOT THE MEANING.`
+    // The behavioural acceptance for that lives in
+    // `d10-e-prompt-evolution-refusal.test.ts`, which drives the real entrypoints.
+    // Its own former comment — "the full critic feedback surface" — was false as a
+    // behavioural statement the moment `'refused'` existed, and is corrected here.
     expect(promptEvolutionSrc).toContain("systemJournal");
-    // Drizzle sql template literal: sql`${systemJournal.status} IN ('tested', 'failed', 'promoted')`
-    expect(promptEvolutionSrc).toContain("IN ('tested', 'failed', 'promoted')");
-    // Covers tested, failed, promoted — the full critic feedback surface
+    // Drizzle sql template literal:
+    //   sql`${systemJournal.status} IN ('tested', 'failed', 'promoted', 'refused')`
+    expect(promptEvolutionSrc).toContain("IN ('tested', 'failed', 'promoted', 'refused')");
+    // The four statuses the learner may see. `refused` is included as EXECUTABILITY
+    // evidence and is bucketed separately — never as a measured tier (R-770 §4).
     expect(promptEvolutionSrc).toContain("'tested'");
     expect(promptEvolutionSrc).toContain("'failed'");
     expect(promptEvolutionSrc).toContain("'promoted'");
+    expect(promptEvolutionSrc).toContain("'refused'");
   });
 
   it("runPromptEvolution writes updated prompt to prompt_versions table (A/B-aware)", () => {
