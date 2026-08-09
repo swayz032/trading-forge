@@ -1,6 +1,18 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-754`, 2026-08-09**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-766`, 2026-08-09**
 
-> 🛑🛑🛑★★★★★ **READ THIS BLOCK FIRST. IT SUPERSEDES EVERY BLOCK BELOW, INCLUDING THE THREE THAT CALL THEMSELVES CURRENT AT `R-753`, `R-752` AND `R-750`.**
+> 🛑🛑🛑★★★★★ **READ THIS BLOCK FIRST. IT SUPERSEDES EVERY BLOCK BELOW, INCLUDING THE FOUR THAT CALL THEMSELVES CURRENT AT `R-754`, `R-753`, `R-752` AND `R-750`.**
+> ✅ **POSITION `[MEASURED HERE]`: newest ruling `R-766` (ledger commit `2f1c6488`) · newest AR **`AR-877`** (`ca07a661`) — a **PURE SEAT RECEIPT**, so **no ruling is owed and no GPT wait is triggered.** ⚠️ **Local HEAD `ca07a661` is ONE COMMIT AHEAD of remote `fb76ebf8` — `AR-877` is the worker's own file, unpushed. Not the desk's to push.**
+> 🛑🛑🛑 **THREE ARs ARE HELD UNRULED ON PURPOSE — `AR-872` · `AR-873` · `AR-876` (`R-766 §5`). THEY WAIT FOR AN EXTERNAL READ THAT *NAMES* THEM.** ★★★★★ **DO NOT CLEAR THIS BACKLOG. `R-765` WITHDREW `R-764` IN FULL FOR EXACTLY THAT — the desk invoked the blocked-worker exception and carried two unrelated acceptances through it. Operator, verbatim: *"YOU SUPPPSOE TO WAIT ON GPT"*, SEVENTH ASSERTION.** ★★ **`CLEARING A BACKLOG NEVER PRESENTS AS A DECISION TO SKIP THE WAIT — IT PRESENTS AS CATCHING UP.` A position being `[CORROBORATED]` is not its evidence bundle being adjudicated.**
+> ⚡ **WORKER SEAT IS LIVE AND AUTHORIZED: `claude.exe 23640` (`AR-877`), on `R-766 §4` **LANE 1 = `F-10`**, attempt `0 / 2`, NOT BLOCKED.** It ran its own parent-walk census and armed its OWN tuple-keyed ear. **`D-10` FAN-IN `5 / 9`.**
+> ⚡ **ORDER: `F-10` → `N-4` (Option `B`) → `F-7` → `N-5` → final `D-10` acceptance. AUTO-RELEASE: `F-10` closes at `6/9`, `N-4` at `7/9` — no ratification round-trip, NO DESK WAIT BETWEEN GREEN LANES.** 🛑 **Do NOT run the final Python / `103`-member / `14`-site acceptance until all nine lanes close.**
+> ★★★★★ **THE UNIFYING LAW (`R-766 §3`): `AN UNMEASURED RUN MUST NOT ENTER THE COMPARISON AT ALL.` `D-10` IS ONE DEFECT IN NINE COSTUMES — EVERY LANE IS A NULL BEING READ AS A MEASUREMENT. Search `F-7` and `N-5` for that shape FIRST.**
+> ★★★★★ **`THE ONE-GREP TEST FOR A REAL HARNESS: IS THE SUBJECT IN ITS OWN `vi.mock` LIST? IF YES, IT IS A REPLICA.`** (`F-10`'s harness executes its subject; `N-4`'s mocks the module it is named for and carries the identical defect at its own line `310`.)
+> 📡 **MONITORS — ARMING IS REQUIRED, AND THE `NO MONITORS` ORDER IN `§0` BELOW IS STRUCK.** `[MEASURED HERE, `Win32_Process` + parent walk — NEVER `TaskList`]` **exactly TWO `claude.exe`: `23640` (worker) and `33420` (this desk) ⇒ ONE seat each, `[two-operator-windows]` does not fire.** 🛑 **`claude.exe 444` — the `R-766` desk — is ABSENT, so the `AGENT-REPORTS.md` ear it owned is DEAD.** ✅ **This desk armed a fresh one: `Monitor`, `persistent`, keyed on the TUPLE `(newest "## AR-" heading, dirty-state, HEAD sha)` per `R-763 §7` — RED-PROOFED `6/6` ON A THROWAWAY REPO FIRST, including a no-op NEGATIVE control that stayed SILENT. Backfill line: `## AR-877|COMMITTED|ca07a661`.**
+> ⚠️ **ONE ORPHAN, REPORTED AND DELIBERATELY NOT KILLED:** `bash.exe 33504` runs `ruling-ear.sh` from **dead session `7c2d5bd0`**; its owning `claude.exe` is absent ⇒ **it polls correctly and can notify nobody.** **Not this desk's rig — `§4a`: report it, leave it.**
+> 🛑 **NUMBERING: OFFSET IS `+2`. External `R-764` = campaign `R-766`.** ★★ **`AN OFFSET IS NOT A CONSTANT — A WITHDRAWAL MOVES IT` (`R-765` burned `R-764` and consumed a number). NAME THE CARRIER at every hop.**
+> ★★★★★ **WHY THIS BLOCK EXISTS, AND IT IS THE LESSON: this file — `READ #1` FOR A COLD ADVISOR SEAT — SAT AT `R-754` WHILE THE LEDGER REACHED `R-766`. TWELVE RULINGS. A seat trusting its header would have seated itself twelve rulings behind and re-derived a struck monitor order.** ⇒ **`THE ENTRY-POINT ARTIFACT IS THE ONE WHOSE STALENESS COMPOUNDS; UPDATE ITS HEADER IN THE SAME MOTION AS THE RULING.`**
+
+> 🛑🛑🛑★★★★★ **(SUPERSEDED BY THE `R-766` BLOCK ABOVE) READ THIS BLOCK FIRST. IT SUPERSEDES EVERY BLOCK BELOW, INCLUDING THE THREE THAT CALL THEMSELVES CURRENT AT `R-753`, `R-752` AND `R-750`.**
 > ✅ **POSITION: newest ruling `R-754` (`ba1f5e85`, pushed, remote tip verified equal by me) · newest AR `AR-860`, RULED. NOTHING UNRULED.**
 > ⚡ **WORKER SEAT IS LIVE AND AUTHORIZED: `claude.exe 3160`, on `D-10`.** `R-753 §6`'s retirement of that PID is **LIFTED FOR `D-10`/`D-9` ONLY** (`R-754 §4`) — the census showed **exactly two `claude.exe`**, so authorizing it yields ONE worker seat and `[two-operator-windows]` does not fire. 🛑 **`doer ≠ grader` STILL BARS IT from interpreting the `D-8` grade; it works from `R-754 §3`, which is self-contained. `D-3` still needs a FRESH seat.**
 > ✅ **THE GRADE IS RATIFIED, band `6`, and NOBODY RE-RUNS IT.** 🛑 **But the claim is NARROWER than every prior carrier said: the refusal is terminal through `backtest-service.ts`, NOT end-to-end.** ★★★★★ **`SAFE FROM TRADING AN INVENTED RULE; NOT SAFE FROM MISREPORTING ONE.`**
@@ -248,9 +260,21 @@
 
 ## 0. 🛑🛑🛑 TWO STANDING OPERATOR DIRECTIVES — 2026-08-08
 
-1. **NO MONITORS, EVER.** Seats message each other instead. **Do not arm a `bash.exe` watcher on any
-   channel, and do not re-arm the worker's ear.** `advisor-onboarding §4a` and this file's old §11 are
-   **SUPERSEDED**; the next seat to touch `advisor-onboarding` must edit §4a out.
+1. 🛑🛑🛑 **STRUCK 2026-08-09 — THE ORDER IS REVERSED; ARMING IS REQUIRED. STRUCK AT ITS ORIGINAL
+   LOCATION, NOT CORRECTED BELOW, BECAUSE `A CORRECTION APPENDED BELOW A FALSE LINE LEAVES THE FALSE
+   LINE CITABLE` (`R-727 §1`).** Operator, first-hand to the `R-754` seat and again mid-onboarding:
+   ***"why havent onboarding been setting arm or checking existing arm"***. **The live contract is
+   `advisor-onboarding §4a`: ENUMERATE by `Win32_Process` + parent walk (never `TaskList`) → ARM
+   EXACTLY ONE ear per seat → BACKFILL the blind window in the armed line → do not kill an ear you did
+   not arm.** ⚠️ **The struck text is retained ONLY as audit trail, and it is retained because it
+   proves its own lesson: external `R-754 §7` read THIS stale line and handed the dead order back
+   wearing external authority.** ★★★★★ **`A STALE CARRIER FED TO AN EXTERNAL READER COMES BACK
+   WEARING EXTERNAL AUTHORITY — AN ECHO IS NOT A SECOND PATH.`**
+   > ~~**NO MONITORS, EVER.** Seats message each other instead. **Do not arm a `bash.exe` watcher on
+   > any channel, and do not re-arm the worker's ear.** `advisor-onboarding §4a` and this file's old
+   > §11 are **SUPERSEDED**; the next seat to touch `advisor-onboarding` must edit §4a out.~~
+   ✅ **THE REST OF THIS ITEM STILL STANDS AND IS STILL LOAD-BEARING — the measurement below is
+   untouched by the reversal:**
    🛑🛑🛑 **ROOT CAUSE MEASURED — CROSS-SESSION MESSAGING DOES NOT EXIST ON THIS MACHINE. IT IS THE
    PLATFORM, NOT THE ADDRESS. DO NOT DEBUG THE NAME.** `[MEASURED HERE, R-722 seat, 2026-08-08]`
    Anthropic's doc: *"Claude Code **doesn't offer cross-session messaging on native Windows**"* —
