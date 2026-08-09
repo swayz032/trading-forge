@@ -4,6 +4,66 @@
 
 ---
 
+## AR-871 · 2026-08-09 · ✅ **`N-3` CLOSED — A COMPILE REFUSAL NO LONGER FABRICATES A `-1.0` AND NO LONGER RETIRES THE HEALTHY PARENT.** ⭐⭐⭐ **THE RED-FIRST RUN PRINTED THE WHOLE CHAIN IN ONE BLOB — `"childMetrics":{"sharpe":0}` → `"improvement":"-1.0000"` → `"improvement":"-100.0%"` IN THE EXHAUSTED AUDIT ROW → `"retired":true`. THE DEFECT REPRODUCED END TO END BEFORE A LINE WAS CHANGED.** 🛑 **AND I MADE ONE JUDGMENT CALL THE CONTRACT DID NOT SETTLE — THE MIXED CASE — WHICH I DECLARE IN `§3` FOR RULING RATHER THAN BURYING IN A GREEN.** **FAN-IN `4 / 9`.**
+
+**RULING: `R-761 §4a` + `R-762 §3`.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` INVOKED THIS SEAT (fresh onboarding).** **TREE `wt-h1-wave4-20260712`, parent `b4f77148`.**
+
+### §1 — ⭐ RED FIRST, PUBLISHED, AGAINST UNMODIFIED `b4f77148`
+```
+9 tests | 5 failed | 4 passed | EXIT 1
+  × N-3.1  refusal writes a mutationOutcomes row      expected 0, got 1
+  × N-3.2  refusal RETIRES THE PARENT                 expected 0 retirements, got 1
+  × N-3.3  no NAMED refusal outcome persisted         actions seen: strategy.evolution-exhausted
+  × N-3.4  fabricated improvement persisted           blob contained "-1.0000"
+  × N-3.9  mixed arm retires on unmeasured evidence   2 outcome rows, retirement fired
+  ✓ N-3.5 · N-3.6 · N-3.7 · N-3.8
+```
+**THE FABRICATION, VERBATIM FROM THE RED RUN'S OWN OUTPUT** (not a summary of it):
+```json
+{"childMetrics":{"sharpe":0,"profitFactor":null,"maxDrawdown":null},"improvement":"-1.0000","success":false}
+{"action":"strategy.evolution-exhausted","input":{"mutations":[{"sharpe":0,"improvement":"-100.0%"}]},"result":{"retired":true}}
+```
+🛑 **HONEST LABEL ON `N-3.5`: it was GREEN at baseline.** A refused mutation can never clear the threshold, so no child was ever created from one — **`N-3.5` is a REGRESSION GUARD, not a control the defect reddens, and I am not counting it as red-proofed.** ⚖️ **`N-3.6`/`N-3.7`/`N-3.8` were also GREEN at baseline BY DESIGN — they are the discriminators. A suite where everything reddens together cannot tell "catches breakage" from "always red".**
+
+### §2 — ✅ THE FIX, AND THE TRAP INSIDE IT
+**Three changes, all inside the refusal frame:** (1) a refusal gate immediately after `runBacktest()` that `continue`s **before any number is derived**, pushing to a separate `refusals[]` and persisting `strategy.evolution-mutation-refused` with the engine's own evidence · (2) a new `inconclusive` branch that blocks retirement when any refusal occurred · (3) `status` no longer reports `"retired"` on a run that retired nothing.
+🛑🛑 **THE TRAP, AND IT IS THE PART A REVIEWER SHOULD CHECK HARDEST: SKIPPING THE REFUSED MUTATION IS NOT ENOUGH.** With refusals merely skipped, `results` is empty ⇒ `winners` is empty ⇒ **control falls into the SAME `:749` retire path and the parent dies anyway.** ★★★★★ **`REMOVING THE FABRICATED NUMBER DOES NOT REMOVE THE DECISION THE FABRICATED NUMBER WAS DRIVING — THE ABSENCE OF EVIDENCE ARRIVES AT THE LOSER BRANCH LOOKING EXACTLY LIKE EVIDENCE OF LOSS.`** The retirement gate is the actual fix; the classifier call is only what makes it possible.
+✅ **ADAPTED, NOT AUTHORED:** `isExecutionRefused` / `refusalEvidence` from the existing `backtest-refusal.ts`. **No new classifier, no new comparator.** ⭐ **That module's own header already named this consumer — *"one central exception cannot decide whether … evolution should avoid retiring a parent"* — so the domain action it deliberately left to the caller is exactly what this commit supplies.**
+
+### §3 — 🛑 THE JUDGMENT CALL I MADE, DECLARED FOR RULING
+**The contract settles the all-refused case. It does not settle the MIXED case: some mutations measured and lost, at least one refused.** **I chose the CONSERVATIVE reading — ANY refusal in the run blocks retirement** (`N-3.9`).
+**REASONING:** *"no mutation beat the parent"* is a claim about MEASURED mutations. A run that could not evaluate part of its own search space has not earned it, and **retirement is irreversible while a deferral costs one scheduler tick.** The measured losses are still persisted as real evidence — only the terminal decision is withheld.
+⚖️ **THE ALTERNATIVE IS DEFENSIBLE AND I AM NOT PRETENDING OTHERWISE:** retire when every *measured* mutation lost, treating refusals as absent. **That would let a refusal-contaminated run retire a healthy strategy, which is the harm `N-3` exists to stop, so I did not take it.** 🛑 **If the desk prefers it, this is a one-line change and `N-3.9` is the control that flips.**
+
+### §4 — ⭐ MUTATION TABLE — FAMILY VS ISOLATION DECLARED
+```
+BASELINE (unmodified b4f77148)          RED: 1, 2, 3, 4, 9        <- the defect itself
+MUT-N3-2  refusal skipped SILENTLY      RED: 3                    ISOLATED
+MUT-N3-3  gate present, retires anyway  RED: 2, 9                 FAMILY (both assert the
+                                                                   same retirement boundary)
+MUT-N3-4  retirement made UNREACHABLE   RED: 7                    ISOLATED  ★ the discriminator
+RESTORED                                 9 passed · diff -q IDENTICAL to pre-mutation backup
+```
+★★★ **`MUT-N3-4` IS THE ONE THAT MATTERS AND IT IS THE CONTRACT'S OWN CLAUSE:** a "fix" that simply never retires would pass **every** refusal control while destroying the feature. **`N-3.7` reddens under exactly that mutation and under nothing else.**
+⚠️ **INSTRUMENT DISCIPLINE:** mutations applied by a Python script with `newline=""` (a CRLF flip would have made the restore diff report every line as changed — `[ps-counting-encoding]`), each mutation **asserts its pattern matches exactly once or refuses to apply**, and the restore is proven by `diff -q`, not assumed.
+
+### §5 — ✅ EVIDENCE
+```
+d10-n3-evolution-refusal.test.ts (NEW)                    9 passed
+d10-n1 + n3 + f9 + 3 evolution regression files    6 files · 66 passed · exit 0
+npx tsc --noEmit -p tsconfig.json                  EXIT 0 · 0 errors project-wide
+```
+✅ **`R-761 §4a-1` DISCHARGED:** the three stale `N-1` comments at `:474`, `:489`, `:511` now describe `survivorSelected()` / the `.set({ selected: true })` write. **COMMENT-ONLY — no assertion, no production line touched;** `N-1` still `21 passed`.
+🛑 **NOT RUN, NOT CLAIMED:** the full `103`-member baseline · Python `65` · the 14-call-site disposition guard · any live-data query. ⚖️ **I claim a MECHANISM repair, not an incident: I have NOT shown a refusal has traversed this path in production data, and `R-760 §2` made the same distinction.**
+
+### §6 — 📍 FAN-IN · NEXT · STOPS
+**FAN-IN `4 / 9`** (`F-8` ✅ · `F-9` ✅ · `N-1` ✅ · `N-3` ✅) · **`N-2` · `N-4` · `F-10` · `F-7` · `N-5` UNSTARTED. NEXT: `N-2`, no desk wait.**
+🛑 **STOPS HELD:** `N-5` untouched (`Number(strat.forgeScore ?? 0)` still at `:2153`/`:2850`) · `F-8`/`F-9` not reopened · `schema.ts` not widened · no second harness for the two upstream triggers (`R-762 §2`) · the sibling's Python file untouched · no `git stash` · the `21` untracked `docs/designs/` files left alone.
+📡 **EAR: armed THIS SEAT and red-proofed before use** — census found **NO** watcher on the ledger under any `claude.exe`, so I armed one (`Monitor`, persistent) and proved the detector fires against a THROWAWAY file first. **It then delivered `R-762` as a DRAFT (` M` dirty); I did not act on it, re-checked, and read it only once committed at `b4f77148`** — which is why `N-3` was built to the corrected one-control-set contract instead of the superseded per-caller one. ★★★ **`A CLARIFICATION THAT ARRIVES BEFORE THE WORK IS A SPECIFICATION` — this is that, measured.**
+⚠️ **ONE GAP IN MY OWN EAR, REPORTED NOT HIDDEN: it fires on MTIME, and `git commit` does not change a working file's mtime.** ⇒ **it can tell me a ruling APPEARED but never that a draft BECAME ISSUED.** I re-check `git status` by hand at each seam; **a later seat should not read this ear as an issuance signal.**
+
+---
+
 ## AR-870 · 2026-08-09 · ✅ **`N-1`'s MANUAL-PATH RANKING WITNESS LANDED — `MUT-9` NOW REDDENS *BOTH* PATHS (`N-1.19` auto + `N-1.20` manual).** 🛑🛑★★★★★ **AND I DEVIATED FROM THE LETTER OF `R-759 §5a-2` ON PURPOSE, SO READ THIS BEFORE ACCEPTING: THE WITNESS IT TOLD ME TO REUSE WAS AN ARTIFACT OF MY OWN STUB — "the fixture threw during promotion" — AND IT DOES NOT EXIST ON THE MANUAL PATH AT ALL. I REPLACED IT ON *BOTH* CONTROLS WITH THE REAL SHARED ACT: `.set({ selected: true })`.** ⚖️ **THAT IS NOT THE HARNESS GAP THE STOP CONDITION DESCRIBES — THE HARNESS WAS FINE AND MY WITNESS WAS WRONG. I DISTINGUISH THEM RATHER THAN CLAIMING THE STOP.** **FAN-IN `3 / 9` by `R-759 §5b`'s pre-registered auto-release.**
 
 **RULING: `R-759 §5a`.** **TEST-ONLY, as ordered: `git show --stat` = ONE file + this report.** **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` re-invoked when the guard fired on `R-758`.**

@@ -19,6 +19,10 @@ import { eq, and, or, gte, desc, ne, isNotNull } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, backtests, auditLog, mutationOutcomes } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
+// D-10 N-3 (R-760 §2): the shared refusal classifier. It CLASSIFIES and never throws —
+// each consumer owns its own domain action, and evolution's action is "do not score it,
+// and do not count it as a search you exhausted".
+import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
@@ -408,6 +412,12 @@ export async function evolveStrategy(
     improvement: number;
   }> = [];
 
+  // D-10 N-3: mutations the engine REFUSED to evaluate. A refusal carries no metrics
+  // by construction (R-751 §8-5), so it is neither a measurement nor a loss — it is an
+  // ABSENCE OF EVIDENCE. Tracked separately from `results` so it can never be scored,
+  // ranked, or mistaken for a search space that was exhausted.
+  const refusals: Array<{ mutation: MutationResult; evidence: Record<string, unknown> }> = [];
+
   for (const mutation of evolverOutput.mutations) {
     try {
       // Apply mutation params to strategy config
@@ -433,6 +443,46 @@ export async function evolveStrategy(
       };
 
       const result = await runBacktest(strategyId, backtestConfig as any, undefined, undefined, correlationId) as any;
+
+      // ─── D-10 N-3: REFUSAL GATE ──────────────────────────────────────────────
+      // The `?? 0` coercions below are correct ONLY for a result that was actually
+      // measured. On a refusal there is no `sharpe_ratio` key at all, so the
+      // coercion produced a measured-looking 0, an `improvement` of exactly -1.0
+      // (a 100% degradation the engine never observed), a `mutationOutcomes` row
+      // teaching the evolver that this mutation type is bad, and — because -1.0 can
+      // never clear the 10% threshold — a retirement of the healthy parent.
+      //
+      //   `A KEY PRESENT AS 0.0 IS A MEASUREMENT; A KEY ABSENT WITH A STATED
+      //    REASON IS A REFUSAL.`
+      //
+      // A refusal leaves this iteration before any number is derived from it, and
+      // is persisted under its own action so the absence is auditable rather than
+      // silent.
+      if (isExecutionRefused(result)) {
+        const evidence = refusalEvidence(result);
+        refusals.push({ mutation, evidence });
+        logger.warn(
+          { strategyId, mutation: mutation.reason, ...evidence },
+          "Evolution: mutation REFUSED by the engine — not scored, not ranked, not counted as exhausted",
+        );
+        await db.insert(auditLog).values({
+          action: "strategy.evolution-mutation-refused",
+          entityType: "strategy",
+          entityId: strategyId,
+          input: { mutation: mutation.reason, params: mutation.params },
+          result: {
+            ...evidence,
+            note: "engine refused to execute this mutation; no metrics exist and none were derived",
+          },
+          status: "warning",
+          decisionAuthority: "agent",
+          correlationId: correlationId ?? null,
+        }).catch((auditErr: unknown) =>
+          logger.error({ err: auditErr, strategyId }, "evolution mutation-refused audit write failed (non-blocking)"),
+        );
+        continue;
+      }
+
       const mutSharpe = result.sharpe_ratio ?? 0;
       const mutPf = result.profit_factor ?? null;
       const mutDd = result.max_drawdown ?? null;
@@ -526,7 +576,8 @@ export async function evolveStrategy(
     improvementPct: string;
     reason: string;
     sharpe: number;
-  } | { kind: "retired"; mutations: number };
+  } | { kind: "retired"; mutations: number }
+    | { kind: "inconclusive"; measured: number; refused: number };
 
   if (winners.length > 0) {
     const best = winners[0];
@@ -745,6 +796,39 @@ export async function evolveStrategy(
       reason: best.mutation.reason,
       sharpe: best.sharpe,
     };
+  } else if (refusals.length > 0) {
+    // ─── D-10 N-3: UNMEASURED, THEREFORE NOT EXHAUSTED ───────────────────────
+    // No mutation cleared the threshold — but at least one was never evaluated at
+    // all. "No mutation beat the parent" is a claim about MEASURED mutations, and a
+    // run that could not measure part of its own search space has not earned it.
+    // Retiring here would destroy a healthy strategy on evidence that does not exist.
+    //
+    // NOTE this is deliberately conservative: ANY refusal in the run blocks
+    // retirement, including the mixed case where some mutations were measured and
+    // lost. The measured losses are still persisted as real evidence above; only the
+    // terminal RETIRE decision is withheld, because that decision is irreversible
+    // and the run cannot tell whether a refused mutation would have won.
+    await db.insert(auditLog).values({
+      action: "strategy.evolution-inconclusive",
+      entityType: "strategy",
+      entityId: strategyId,
+      input: {
+        measured: results.map((r) => ({ reason: r.mutation.reason, sharpe: r.sharpe })),
+        refused: refusals.map((r) => ({ reason: r.mutation.reason, ...r.evidence })),
+        threshold: `${IMPROVEMENT_THRESHOLD * 100}%`,
+      },
+      result: {
+        retired: false,
+        note: "one or more mutations were refused by the engine; the search was not exhausted, so the parent is NOT retired",
+      },
+      status: "warning",
+      decisionAuthority: "agent",
+      correlationId: correlationId ?? null,
+    }).catch((auditErr: unknown) =>
+      logger.error({ err: auditErr, strategyId }, "evolution-inconclusive audit write failed (non-blocking)"),
+    );
+
+    postCommit = { kind: "inconclusive", measured: results.length, refused: refusals.length };
   } else {
     // Loser path — retire via lifecycle service + write evolution-exhausted audit row.
     // Wrap both writes in a tx so the audit row never lands without a successful
@@ -815,10 +899,20 @@ export async function evolveStrategy(
     }, "Strategy evolved successfully");
   } else if (postCommit.kind === "retired") {
     logger.info({ strategyId, mutations: postCommit.mutations }, "Evolution exhausted — strategy retired");
+  } else if (postCommit.kind === "inconclusive") {
+    logger.warn(
+      { strategyId, measured: postCommit.measured, refused: postCommit.refused },
+      "Evolution INCONCLUSIVE — one or more mutations were refused; parent NOT retired",
+    );
   }
 
+  // D-10 N-3: "retired" was previously returned on every non-winning path. An
+  // inconclusive run retires nothing, and reporting it as retired would hand the
+  // caller — and the audit trail — a terminal state that never happened.
   return {
-    status: evolvedIds.length > 0 ? "evolved" : "retired",
+    status: evolvedIds.length > 0
+      ? "evolved"
+      : postCommit.kind === "inconclusive" ? "inconclusive" : "retired",
     evolved: evolvedIds.length > 0 ? evolvedIds : undefined,
   };
 }

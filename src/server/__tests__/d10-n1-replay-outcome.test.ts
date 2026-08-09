@@ -470,10 +470,16 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
   it("N-1.18 [auto] the CALLER obeys rankingEligible — an explicit REJECTED never enters survivor promotion", async () => {
     // Positive witness that the path RAN: the terminal write happened at all.
     // Discriminator: a ranking-eligible candidate whose score beats the parent (50)
-    // proceeds into survivor promotion, which this stub cannot satisfy and which
-    // therefore throws. A non-ranking outcome returns cleanly. So `driveError`
-    // undefined + a completed REJECTED write == the caller consumed the verdict
-    // instead of reconstructing it from the tier string.
+    // reaches survivor promotion, whose observable act is the `.set({ selected: true })`
+    // write that `survivorSelected()` reads. A non-ranking outcome never performs it.
+    // So a completed REJECTED write with NO survivor selection == the caller consumed
+    // the verdict instead of reconstructing it from the tier string.
+    //
+    // R-761 §3: this comment previously described a RETIRED witness — "the stub cannot
+    // satisfy promotion and therefore throws". That throw was an artifact of the
+    // fixture, not of the code, and it was replaced by the shared write above.
+    //   `A WITNESS THAT IS AN ARTIFACT OF THE FIXTURE IS NOT A WITNESS TO THE
+    //    BEHAVIOUR.`
     await drive("auto", { id: BT_ID, status: "completed", tier: "REJECTED", forge_score: 99.9 });
     const w = terminalWrite();
     expect(w.replayStatus).toBe("completed");
@@ -487,8 +493,10 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
     // consume-the-verdict AGREE on every valid input — measured: N-1.18 passed
     // before the fix as well as after. They only disagree when the verdict is forced
     // to contradict the tier, which is what MUT-8 does. This control is the positive
-    // witness that pairs with it: reaching survivor promotion is observable here only
-    // because this stub cannot satisfy it and therefore throws.
+    // witness that pairs with it: reaching survivor promotion is observable through the
+    // `.set({ selected: true })` write that `survivorSelected()` reads — one of exactly
+    // two such sites in the service (`:2551` automatic, `:3026` manual), which IS the
+    // act of survivor selection rather than a side effect of this fixture.
     await drive("auto", { id: BT_ID, status: "completed", tier: "TIER_2", forge_score: 99.9 });
     const w = terminalWrite();
     expect(w.replayStatus).toBe("completed");
@@ -508,9 +516,10 @@ describe("D-10 N-1 (R-758 §6a) — status and tier must be EXPLICIT, never infe
     // That blind spot is exactly how D-10's last three defects were manufactured:
     // each was copied into BOTH callers and found ONE PATH AT A TIME.
     //
-    // ★ Deliberately the SAME observable witness as `N-1.19` — reaching survivor
-    //   promotion, visible here because this stub cannot satisfy it and throws.
-    //   A different witness would make the two controls incomparable and MUT-9's
+    // ★ Deliberately the SAME observable witness as `N-1.19` — the executed
+    //   `.set({ selected: true })` write that `survivorSelected()` reads. Both paths
+    //   perform that one shared act, so the two controls are comparable by
+    //   construction. A different witness would make them incomparable and MUT-9's
     //   two-path result would prove nothing about symmetry.
     await drive("manual", { id: BT_ID, status: "completed", tier: "TIER_2", forge_score: 99.9 });
     const w = terminalWrite();
