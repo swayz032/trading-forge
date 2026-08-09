@@ -4,6 +4,66 @@
 
 ---
 
+## AR-890 · 2026-08-09 · 📍 **SEAT RECEIPT — SAME PROCESS, WIPED CONTEXT. `claude.exe 23140` IS STILL ALIVE, SO `R-770 §6`'s NAMED ADDRESSEE DID NOT DIE; ONLY ITS MEMORY DID.** ⚡ **EAR RE-ARMED AND PROVEN TO *DELIVER* — RED-PROOFED ON A THROWAWAY REPO WITH A CONTROL AND TWO BITING MUTATION ARMS BEFORE IT WENT ANYWHERE NEAR THE REAL FILE.** 🛑 **NO OPEN AUTHORIZATION: LANE `E` IS RETURNED (`AR-889`) AND THE FINAL `D-10` ACCEPTANCE IS THE DESK'S TO CLEAR. I AM NOT STARTING IT.** ⚠️ **AND ONE RULING DEFECT REPORTED AS `worker-onboarding §1` ORDERS: `R-770` CARRIES NO `★ WORKER — START HERE` BLOCK.**
+
+**SEAT `claude.exe 23140`** — **the same PID `R-770 §6` and `§8` authorize by name.** **TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.** **THIS IS A RECEIPT, NOT A DELIVERY — no code was touched.**
+
+### §1 — ⚖️ `/clear` RESET MY CONTEXT, NOT MY PROCESS — AND I PROVE THE SEAT BY OWNERSHIP, NOT BY MY SENSE OF NOVELTY
+`[MEASURED HERE — Win32_Process parent walk from my own shell, never TaskList]`:
+```
+27780 powershell.exe  ->  23140 claude.exe  ->  30904 powershell.exe  ->  9228 explorer.exe
+                          ^^^^^ the seat R-770 §6 names: "AUTHORIZED TO THE SEAT THAT
+                                EXISTS — claude.exe 23140"
+second live seat: claude.exe 13416 (parent 3952) — NOT mine, NOT touched
+```
+⇒ **The authorization did not lapse and no re-issue is needed.** ★★★ **A WIPED CONTEXT WOULD HAVE LET ME REPORT MYSELF AS A FRESH SEAT AND ASK FOR THE LANE AGAIN — the parent walk is the only thing that distinguishes *"I am new"* from *"I forgot"*.** ⚠️ **It also means `doer ≠ grader` still binds me to `AR-889`: that work is MINE, my forgetting it grants me no independence, and I do not grade it.**
+
+### §2 — ⚡ THE EAR: RED-PROOFED FIRST, THEN ARMED, AND ITS ARMED LINE ARRIVED AS A NOTIFICATION
+🛑 **I did not arm a rig and call it an ear.** `[MEASURED HERE]` the detector was proven on a **throwaway git repo** — never on the real ledger — with a control and two arms that must bite:
+```
+T0 baseline        ## R-100 old ruling | CLEAN | file-commit=29e4fc0
+T1 no change       ## R-100 old ruling | CLEAN | file-commit=29e4fc0
+T2 draft, dirty    ## R-101 NEW ruling | DIRTY | file-commit=29e4fc0
+T3 committed       ## R-101 NEW ruling | CLEAN | file-commit=2e05166
+CONTROL     PASS   unchanged file -> IDENTICAL tuple      (it is not an always-fire detector)
+MUTATION-1  PASS   new heading while DIRTY -> FIRES       (catches the draft)
+MUTATION-2  PASS   commit, mtime UNCHANGED -> FIRES AGAIN (catches the ISSUANCE)
+mtime cross-check  1786312886 before and after the commit — IDENTICAL
+                   => an mtime-keyed ear is DEAF to issuance. Confirmed here, not recalled.
+```
+✅ **ARMED via the `Monitor` tool (`persistent`), task `bc410znbu`, key = (newest `## R-` heading, dirty-state, sha of the last commit that TOUCHED THE FILE) — not mtime, and not `HEAD` (a shared tree's sibling commits would fire it on everything).**
+✅ **DELIVERY PROVEN, NOT ASSUMED: its armed line landed in my conversation as a notification.** **BACKFILL / JOIN KEY** — an ear armed at `T` hears nothing before `T`, so I read the newest ruling on disk by hand: **`R-770`**, `CLEAN`, `file-commit=2b40ccdc`.
+🛑 **TWO ORPHANED `while true` BASH RIGS FOUND AND DELIBERATELY LEFT RUNNING:** `PID 30480` (`ruling-ear.sh`, session `0fdc995a`) and `PID 33540`/`824` (`advisor-ar-ear.sh`, session `13a2f6ff`) — **all three parents are GONE from the process table, so ownership is UNPROVABLE by parent walk.** ⚖️ **I did not kill them** (`NEVER KILL AN EAR YOU DID NOT ARM`) **and I do not count them as ears: a backgrounded bash loop reaches a conversation only when it EXITS, so a rig that never exits can tell nobody anything.** ★★★ **`LIVENESS ≠ OWNERSHIP ≠ DELIVERY` — these have the first, cannot be shown the second, and provably lack the third.**
+
+### §3 — ✅ POSITION: LANE `E` IS RETURNED AND THE TREE IS NOT HALF-BUILT
+```
+[MEASURED HERE]
+HEAD                       ad76071937bda5995faa6d1dccf584a196c83d25
+git log @{u}..HEAD         EMPTY  => local == remote, AR-889 is pushed
+R-770's stated HEAD 163e9321 -> `git merge-base --is-ancestor` = YES (an ancestor, not a
+                             conflict: it moved because Lane E landed on top of it)
+commits since 163e9321     f3c01ad7 (lane E fix) · 9ccf5c79 (E.9 fixture) · ad760719 (AR-889)
+git status --porcelain src/ -> ONLY src/engine/tests/test_synthetic_market_simulator.py
+                             (the sibling seat's file, untouched by me)
+```
+⇒ **`AR-889 §7`'s *"nothing half-built, no mutation left planted"* is CORROBORATED from a wiped context** — I re-read the tree rather than inheriting the claim. **This is corroboration of my own prior work, NOT a grade of it.**
+
+### §4 — 🛑 WHAT I AM **NOT** DOING, AND WHY THAT IS THE WHOLE POINT
+**`R-770 §6`: the `R-758 §8` final `D-10` acceptance is *"Still NOT authorized in this ruling"*; `§8 STOP` lists it explicitly.** **`AR-889 §7` already declined to run it.** ⇒ **Lane `E` returning green is the CONDITION for that clearance, not the clearance itself.**
+★★★★★ **`A CONDITION BEING SATISFIED IS NOT THE PERMISSION IT WAS A CONDITION FOR.` The temptation here is real and specific: everything Lane `E` was held on is now green, `D-10` is at `9/9`, and the only thing between me and a sealed `D-10` is a ruling. That is exactly when a seat writes *"the hold is spent"* and proceeds.** ⇒ **I am idle by contract, with the ear armed. `R-771` is owed on `AR-889`.**
+✅ **NO sub-agent dispatched · NO grade self-issued · NOTHING owed back to me.**
+
+### §5 — ⚠️ RULING DEFECT, REPORTED AS `worker-onboarding §1` REQUIRES
+🛑 **`R-770` CARRIES NO `★ WORKER — START HERE` BLOCK.** I recovered the assignment from **`§6`** (files, contract, controls, seat, attempt budget) and **`§8 AUTHORIZED NOW`**, which between them were sufficient — **but only because `§8` names the seat AND the lane in one line.** ⚖️ **Reported, not complained about:** the block exists so a cold seat does not have to reconstruct its task from a 130-line record, and **a wiped-context seat is precisely the reader it was written for.** ★ **`R-430` made this a DESK defect rather than a worker one; I am filing the observation, not a grievance.**
+
+### §6 — ⚖️ GRADES ON WHAT IS ABOVE
+`[MEASURED HERE]` — the parent walk · the ear red-proof and its mtime cross-check · the delivered armed line · `HEAD` / upstream / ancestor / porcelain · `R-770`'s text.
+`[UNPROVEN]` — **who owns the three orphaned rigs.** Their parents are dead; a previous context of THIS process may well have armed `PID 30480`, and I state that as unresolved rather than claiming they are someone else's.
+`[NOT MEASURED]` — **I re-ran no test.** `AR-889`'s `166 passed | 1 failed (167)` and `TSC_EXIT=0` are ITS measurements, carried unchanged and NOT re-taken by me; the `b11` failure it proved pre-existing is likewise carried, not re-derived. **`runtime-production` untouched — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.**
+
+---
+
+
 ## AR-889 · 2026-08-09 · ✅ **LANE `E` DELIVERED — `f3c01ad7` + `9ccf5c79`. REFUSALS ARE NOW VISIBLE TO PROMPT LEARNING AS `REFUSED_UNMEASURED`, AND THE FORGE ARM CAN NO LONGER BUY A PROMOTION WITH AN EXECUTABILITY REGRESSION.** ⚡ **RED PUBLISHED FIRST ON ALL FOUR CONTRACT BEHAVIOURS.** 🛑 **AND A MUTATION CAUGHT A GAP IN MY OWN CONTROLS BEFORE THE DESK DID: ONE GUARD'S REMOVAL REDDENED **NOTHING**, BECAUSE EVERY FIXTURE ROW WAS ALREADY HARMLESS.** ⚠️ **PLUS ONE PRE-EXISTING FAILURE IN `b11-b12` THAT IS **NOT** MINE, PROVEN NOT ASSERTED.**
 
 **SEAT `claude.exe 23140`.** **TREE `wt-h1-wave4-20260712`, HEAD `9ccf5c79`, `[MEASURED HERE]` `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **ATTEMPT BUDGET: `Lane E` `1 / 2`.**
