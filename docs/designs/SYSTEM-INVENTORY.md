@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `e460c88da4a085c03d5b332959ebf7d40eabf793`  (worktree DIRTY at generation time)
+> Generated at commit `0850f69f25898180c50b291017a5e09e199010f6`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,8 +30,8 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 283 | 337 | 116464 | 1826 |
-| `src/` | TypeScript | 456 | 708 | 207164 | 2878 |
+| `src/` | Python | 289 | 356 | 119599 | 1859 |
+| `src/` | TypeScript | 461 | 717 | 209177 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1784 | 739 |
+| `src/` | 1823 | 750 |
 | `scripts/` | 206 | 206 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 34 | 0 |
-| **TOTAL** | **2024** | **945** |
+| **TOTAL** | **2063** | **956** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -55,10 +55,10 @@ Published so that under-inclusion is visible instead of silent.
 
 | Not enumerated | Count | Why |
 |---|---:|---|
-| Python class methods | 395 | one row per method would swamp the map; a method is reached through its class |
+| Python class methods | 416 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1045 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1073 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **610** of **2024** parsed files.
+Total entry points: **94**.  Modules reachable from them: **614** of **2063** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -198,21 +198,21 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3203 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1495 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.5% of 4744 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3233 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1537 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4819 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
-| C6 | a registered route module is reachable | PASS | modules reachable=610 |
-| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=345 |
+| C6 | a registered route module is reachable | PASS | modules reachable=614 |
+| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1826 ts=2878 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=33 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6535/6535 TS import specifiers non-blank |
+| C12 | symbols enumerated in both languages | PASS | py=1859 ts=2917 |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=36 (probe runs; 0 would be a legitimate reading) |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6590/6590 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
-| C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=412 |
+| C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
 | C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=94 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4439 enumerated symbol names (4.9%) are defined in more than one file, covering
-  482 of 4704 symbol rows (10.2%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4511 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4776 symbol rows (10.1%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3203 | 67.5% |
+| `WIRED` | 3233 | 67.1% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1495 | 31.5% |
-| `DECLARED-ABSENT` | 33 | 0.7% |
+| `BUILT-UNREACHABLE` | 1537 | 31.9% |
+| `DECLARED-ABSENT` | 36 | 0.7% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4744** | |
+| **TOTAL** | **4819** | |
 
 ---
 
@@ -278,9 +278,10 @@ table below it.**
 | `src/engine/anti_setups` | 25 | 0 | 6 | 0 | 0 | 31 |
 | `src/engine/archetype_evaluator.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/archetypes` | 9 | 0 | 3 | 0 | 0 | 12 |
-| `src/engine/backtester.py` | 50 | 0 | 1 | 0 | 0 | 51 |
+| `src/engine/backtester.py` | 51 | 0 | 1 | 0 | 0 | 52 |
 | `src/engine/battery` | 0 | 0 | 17 | 0 | 0 | 17 |
 | `src/engine/black_swan_evaluator.py` | 8 | 0 | 0 | 0 | 0 | 8 |
+| `src/engine/breakout_confirmation_ambiguity.py` | 2 | 0 | 0 | 0 | 0 | 2 |
 | `src/engine/cache_prewarm.py` | 0 | 0 | 1 | 0 | 0 | 1 |
 | `src/engine/changepoint.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/cloud_backend.py` | 14 | 0 | 0 | 0 | 0 | 14 |
@@ -298,6 +299,7 @@ table below it.**
 | `src/engine/deepar_regime_classifier.py` | 0 | 0 | 9 | 0 | 0 | 9 |
 | `src/engine/determinism.py` | 5 | 0 | 1 | 0 | 0 | 6 |
 | `src/engine/economic_calendar.py` | 15 | 0 | 2 | 0 | 0 | 17 |
+| `src/engine/entry_eligibility.py` | 2 | 0 | 0 | 0 | 0 | 2 |
 | `src/engine/entry_windows.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
@@ -333,6 +335,10 @@ table below it.**
 | `src/engine/nemo_scenario_designer.py` | 5 | 0 | 1 | 0 | 0 | 6 |
 | `src/engine/null_calibration_guard.py` | 0 | 0 | 3 | 0 | 0 | 3 |
 | `src/engine/nvtx_markers.py` | 3 | 0 | 1 | 0 | 0 | 4 |
+| `src/engine/opening_range_adapter.py` | 0 | 0 | 4 | 0 | 0 | 4 |
+| `src/engine/opening_range_candidate.py` | 0 | 0 | 2 | 0 | 0 | 2 |
+| `src/engine/opening_range_definition.py` | 0 | 0 | 7 | 0 | 0 | 7 |
+| `src/engine/opening_range_lowering.py` | 0 | 0 | 10 | 0 | 0 | 10 |
 | `src/engine/optimizer.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/paper_analytics.py` | 1 | 0 | 0 | 0 | 0 | 1 |
 | `src/engine/parameter_evolver.py` | 6 | 0 | 0 | 0 | 0 | 6 |
@@ -371,8 +377,8 @@ table below it.**
 | `src/engine/sizing.py` | 8 | 0 | 1 | 0 | 0 | 9 |
 | `src/engine/skip_engine` | 38 | 0 | 10 | 0 | 0 | 48 |
 | `src/engine/slippage.py` | 4 | 0 | 0 | 0 | 0 | 4 |
-| `src/engine/spec_condition_compiler.py` | 7 | 0 | 0 | 0 | 0 | 7 |
-| `src/engine/spec_family_bindings.py` | 42 | 0 | 0 | 0 | 0 | 42 |
+| `src/engine/spec_condition_compiler.py` | 8 | 0 | 0 | 0 | 0 | 8 |
+| `src/engine/spec_family_bindings.py` | 46 | 0 | 0 | 0 | 0 | 46 |
 | `src/engine/statistics` | 15 | 0 | 19 | 0 | 0 | 34 |
 | `src/engine/strategies` | 29 | 0 | 0 | 0 | 0 | 29 |
 | `src/engine/strategy_base.py` | 1 | 0 | 1 | 0 | 0 | 2 |
@@ -387,17 +393,17 @@ table below it.**
 | `src/engine/validation_runner.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/walk_forward.py` | 8 | 0 | 0 | 1 | 0 | 9 |
 | `src/engine/walk_forward_regime_context.py` | 7 | 0 | 0 | 0 | 0 | 7 |
-| `src/server/__tests__` | 0 | 0 | 0 | 11 | 0 | 11 |
-| `src/server/db` | 126 | 0 | 187 | 0 | 0 | 313 |
+| `src/server/__tests__` | 0 | 0 | 0 | 14 | 0 | 14 |
+| `src/server/db` | 127 | 0 | 187 | 0 | 0 | 314 |
 | `src/server/index.ts` | 3 | 0 | 0 | 0 | 0 | 3 |
 | `src/server/integrations` | 11 | 0 | 1 | 0 | 0 | 12 |
-| `src/server/lib` | 679 | 0 | 450 | 1 | 0 | 1130 |
+| `src/server/lib` | 690 | 0 | 460 | 1 | 0 | 1151 |
 | `src/server/load-env.ts` | 0 | 0 | 0 | 0 | 1 | 1 |
 | `src/server/middleware` | 8 | 0 | 5 | 0 | 1 | 14 |
 | `src/server/production` | 29 | 0 | 4 | 0 | 1 | 34 |
 | `src/server/routes` | 156 | 0 | 9 | 1 | 1 | 167 |
 | `src/server/scheduler.ts` | 11 | 0 | 1 | 0 | 0 | 12 |
-| `src/server/services` | 895 | 0 | 190 | 3 | 0 | 1088 |
+| `src/server/services` | 903 | 0 | 199 | 3 | 0 | 1105 |
 | `src/server/slumdawg-hmac.ts` | 0 | 0 | 4 | 0 | 0 | 4 |
 | `src/server/types` | 0 | 0 | 2 | 0 | 1 | 3 |
 | `src/shared/db-types.ts` | 0 | 0 | 20 | 0 | 0 | 20 |
@@ -417,7 +423,7 @@ invisible for weeks.
 |---|---|---|---|---|---|
 | `run_multi_asset_correlation_bootstrap` | function | `src/engine/mc_multi_asset.py:255` | `MC_MULTI_ASSET_CORRELATION_ENABLED` | `'false'` | every non-test call site is inside an env-conditional block (e.g. src/engine/monte_carlo.py) |
 | `run_regime_block_bootstrap` | function | `src/engine/mc_regime_resampling.py:254` | `MC_REGIME_AWARE_BOOTSTRAP_ENABLED` | `'false'` | every non-test call site is inside an env-conditional block (e.g. src/engine/monte_carlo.py) |
-| `run_parity_shadow` | function | `src/engine/parity_engine/shadow_runner.py:333` | `PARITY_SHADOW_ENABLED` | `'false'` | every non-test call site is inside an env-conditional block (e.g. src/engine/backtester.py) |
+| `run_parity_shadow` | function | `src/engine/parity_engine/shadow_runner.py:356` | `PARITY_SHADOW_ENABLED` | `'false'` | every non-test call site is inside an env-conditional block (e.g. src/engine/backtester.py) |
 | `collect_quantum_noise` | function | `src/engine/quantum_entropy_filter.py:235` | `QUANTUM_ENTROPY_FILTER_ENABLED` | `(no default)` | every non-test call site is inside an env-conditional block (e.g. src/engine/skip_engine/premarket_analyzer.py) |
 | `attach_structure_column` | function | `src/engine/context/htf_columns.py:61` | `TF_WIRE1_HTF_COLUMNS` | `''` | every non-test call site is inside an env-conditional block (e.g. src/engine/backtester.py) |
 | `attach_htf_columns` | function | `src/engine/context/htf_columns.py:134` | `TF_WIRE1_HTF_COLUMNS` | `''` | every non-test call site is inside an env-conditional block (e.g. src/engine/backtester.py) |
@@ -585,7 +591,7 @@ invisible for weeks.
 | `FORCE_CLOSE_TIMEOUT_MS` | `"10000"`, `(no default)` | 2 |
 | `FORCE_CLOUD_COMPUTE` | `(no default)`, `(no default; compared to "true")` | 2 |
 | `FORCE_USB_TETHERING` | `(no default)`, `(no default; compared to "true")` | 2 |
-| `FORGE_GIT_SHA` | `"unknown"` | 2 |
+| `FORGE_GIT_SHA` | `"unknown"` | 4 |
 | `FRED_API_KEY` | `''`, `(no default)` | 4 |
 | `FRONTEND_BASE_URL` | `""` | 1 |
 | `FRONTEND_ORIGIN` | `process.env.TRADING_FORGE_PUBLIC_URL` | 1 |
@@ -905,7 +911,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**33 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**36 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -932,6 +938,9 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src/types/sse-events.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:21` | repo-relative path literal with no file on disk |
 | `src/hooks/useSSE.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:26` | repo-relative path literal with no file on disk |
 | `src/components/ServerStatusBanner.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:31` | repo-relative path literal with no file on disk |
+| `src/server/services/brand-new-service.ts` | path-literal | `src/server/__tests__/g1-backtest-caller-disposition-guard.test.ts:71` | repo-relative path literal with no file on disk |
+| `src/server/services/unrelated-service.ts` | path-literal | `src/server/__tests__/g1-backtest-caller-disposition-guard.test.ts:139` | repo-relative path literal with no file on disk |
+| `src/server/services/commented-service.ts` | path-literal | `src/server/__tests__/g1-backtest-caller-disposition-guard.test.ts:153` | repo-relative path literal with no file on disk |
 | `./broker-router.js` | module | `src/server/__tests__/paper-signal-b1-routeorder-lifecycle-guard.test.ts:40` | import specifier resolves to no file on disk |
 | `./paper-execution-service.js` | module | `src/server/__tests__/paper-signal-service-deepscan-findings.test.ts:79` | import specifier resolves to no file on disk |
 | `./paper-execution-service.js` | module | `src/server/__tests__/paper-signal-service-deepscan-findings.test.ts:82` | import specifier resolves to no file on disk |
@@ -954,7 +963,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1495** `BUILT-UNREACHABLE` symbols, **754 have test coverage but no production caller**.
+Of **1537** `BUILT-UNREACHABLE` symbols, **778 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -968,7 +977,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 
 | Symbol | Kind | Defined at | Test files referencing it | Name |
 |---|---|---|---:|---|
-| `require` | function | `src/engine/battery/mapping_guard.py:32` | 15 | unique |
+| `require` | function | `src/engine/battery/mapping_guard.py:32` | 16 | unique |
 | `AuditRow` | interface | `src/server/lib/shadow-evidence-analyzer.ts:51` | 11 | unique |
 | `selectModel` | function | `src/server/services/model-router.ts:806` | 11 | unique |
 | `loadCredentials` | function | `src/server/lib/credential-loader.ts:323` | 9 | unique |
@@ -978,6 +987,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `DEFAULT_ACCOUNT_TYPE` | const | `src/shared/firm-config.ts:366` | 6 | unique |
 | `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 5 | unique |
 | `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | 5 | unique |
+| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:571` | 5 | unique |
 | `_resetForTest` | function | `src/server/lib/carter/carter-issues-store.ts:231` | 5 | unique |
 | `_testOnly` | const | `src/server/scheduler.ts:746` | 5 | unique |
 | `__clearPromptCacheForTests` | function | `src/server/services/model-router.ts:933` | 5 | unique |
@@ -986,6 +996,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
+| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:425` | 4 | unique |
@@ -994,11 +1005,16 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 3 | unique |
 | `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 3 | unique |
 | `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | 3 | unique |
-| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:648` | 3 | unique |
+| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:684` | 3 | unique |
 | `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 3 | unique |
 | `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 3 | unique |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 3 | unique |
+| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 3 | unique |
+| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 3 | unique |
+| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 3 | unique |
+| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
 | `compute_rl_kill_switch_state` | function | `src/engine/quantum_rl_agent.py:2098` | 3 | unique |
 | `emitArchetypeEvaluatorFailed` | function | `src/server/lib/archetype-routing-observability.ts:266` | 3 | unique |
@@ -1010,7 +1026,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `_resetCircuitBreakerForTests` | function | `src/server/lib/quantum-replay-runner.ts:244` | 3 | unique |
 | `checkPurgeViolation` | function | `src/server/lib/replay/quantum-disagreement.ts:319` | 3 | unique |
 | `EQUAL_WEIGHTS` | const | `src/server/lib/score-normalization.ts:115` | 3 | unique |
-| `__resetDslCriticBudgetForTests` | function | `src/server/services/agent-service.ts:134` | 3 | unique |
+| `__resetDslCriticBudgetForTests` | function | `src/server/services/agent-service.ts:135` | 3 | unique |
 | `_invalidateConsistencyCache` | function | `src/server/services/consistency-tracker-service.ts:736` | 3 | unique |
 | `__resetCorrelationMatrixForTests` | function | `src/server/services/correlated-position-guard.ts:132` | 3 | unique |
 | `__injectEquitySamplesForTests` | function | `src/server/services/dd-velocity-gate.ts:309` | 3 | unique |
@@ -1037,6 +1053,11 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `MutationCase` | class | `src/engine/forensics/calibration_battery.py:73` | 2 | unique |
 | `A14ConditioningVector` | class | `src/engine/nemo_a14_bridge.py:24` | 2 | unique |
 | `nemo_to_a14_conditioning` | function | `src/engine/nemo_a14_bridge.py:77` | 2 | unique |
+| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | 2 | unique |
+| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | 2 | unique |
+| `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | 2 | unique |
+| `refused_state` | function | `src/engine/opening_range_definition.py:253` | 2 | unique |
+| `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | 2 | unique |
 | `rank_firms_for_strategy` | function | `src/engine/prop_compliance.py:372` | 2 | unique |
 | `should_strategy_trade` | function | `src/engine/regime.py:138` | 2 | unique |
 | `is_in_lunch_blackout` | function | `src/engine/session_windows.py:177` | 2 | unique |
@@ -1067,6 +1088,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `__injectInternalsReading` | function | `src/server/services/market-internals-service.ts:287` | 2 | unique |
 | `__resetCalendarCacheForTests` | function | `src/server/services/paper-execution-service.ts:380` | 2 | unique |
 | `__resetDailyLossCacheForTests` | function | `src/server/services/paper-risk-gate.ts:135` | 2 | unique |
+| `__collectVariantMetricsForTest` | const | `src/server/services/prompt-evolution-service.ts:843` | 2 | unique |
 | `computeSurvivalProbability` | function | `src/server/services/prop-firm-survival-service.ts:307` | 2 | unique |
 | `runDrainStallCheck` | function | `src/server/services/scout-watchdog-service.ts:158` | 2 | unique |
 | `runRejectDistributionCheck` | function | `src/server/services/scout-watchdog-service.ts:350` | 2 | unique |
@@ -1194,13 +1216,12 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | 1 | unique |
 | `reject_if_spent16` | function | `src/engine/extraction/sealed_read_gate.py:181` | 1 | unique |
 | `verify_transcripts_present` | function | `src/engine/extraction/sealed_read_gate.py:155` | 1 | unique |
-| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:653` | 1 | unique |
-| `_classify_family` | function | `src/engine/extraction/spec_producer.py:343` | 1 | unique |
-| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:251` | 1 | unique |
-| `_spec_role` | function | `src/engine/extraction/spec_producer.py:513` | 1 | unique |
-| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:391` | 1 | unique |
-| `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:738` | 1 | unique |
-| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:535` | 1 | unique |
+| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:689` | 1 | unique |
+| `_classify_family` | function | `src/engine/extraction/spec_producer.py:347` | 1 | unique |
+| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:255` | 1 | unique |
+| `_spec_role` | function | `src/engine/extraction/spec_producer.py:549` | 1 | unique |
+| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:427` | 1 | unique |
+| `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:774` | 1 | unique |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | 1 | unique |
 | `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 1 | unique |
 | `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | 1 | unique |
@@ -1248,28 +1269,16 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | 1 | unique |
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | 1 | unique |
 | `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
+| `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
+| `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
+| `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
 | `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:625` | 1 | unique |
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 | `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
 | `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
 | `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
-| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
-| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
-| `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
-| `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
-| `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
-| `QuantumRunConfig` | class | `src/engine/quantum_mc.py:177` | 1 | unique |
-| `run_hybrid_compare` | function | `src/engine/quantum_mc.py:633` | 1 | unique |
-| `run_quantum_tail_loss_estimation` | function | `src/engine/quantum_mc.py:304` | 1 | unique |
-| `run_quantum_target_hit_estimation` | function | `src/engine/quantum_mc.py:291` | 1 | unique |
-| `deserialize_uncertainty_model` | function | `src/engine/quantum_models.py:196` | 1 | unique |
-| `serialize_uncertainty_model` | function | `src/engine/quantum_models.py:191` | 1 | unique |
-| `_load_production_state_at` | function | `src/engine/quantum_rl_agent.py:159` | 1 | unique |
-| `should_use_static_router_epsilon_greedy` | function | `src/engine/quantum_rl_agent.py:1513` | 1 | unique |
-| `_compute_regime_stats` | function | `src/engine/regime_survival.py:53` | 1 | unique |
-| `run_harsh_regime_survival` | function | `src/engine/regime_survival.py:139` | 1 | unique |
 
-_...454 more omitted from this table._
+_...478 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1429,7 +1438,7 @@ _...454 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | defining module is not reachable from any measured entry point |
-| `require` | function | `src/engine/battery/mapping_guard.py:32` | no non-test reference outside its own definition; 15 test file(s) do reference it |
+| `require` | function | `src/engine/battery/mapping_guard.py:32` | no non-test reference outside its own definition; 16 test file(s) do reference it |
 | `GateClass` | class | `src/engine/battery/passage_ledger.py:55` | defining module is not reachable from any measured entry point |
 | `_now_iso` | function | `src/engine/battery/passage_ledger.py:119` | defining module is not reachable from any measured entry point |
 | `_atomic_write` | function | `src/engine/battery/passage_ledger.py:123` | defining module is not reachable from any measured entry point |
@@ -1764,23 +1773,23 @@ _...454 more omitted from this table._
 | `_token_present` | function | `src/engine/extraction/sealed_read_gate.py:204` | defining module is not reachable from any measured entry point |
 | `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | defining module is not reachable from any measured entry point |
 | `gate_sealed_read` | function | `src/engine/extraction/sealed_read_gate.py:249` | defining module is not reachable from any measured entry point |
-| `_stem_pattern` | function | `src/engine/extraction/spec_producer.py:222` | defining module is not reachable from any measured entry point |
-| `_norm` | function | `src/engine/extraction/spec_producer.py:242` | defining module is not reachable from any measured entry point |
-| `_slug` | function | `src/engine/extraction/spec_producer.py:246` | defining module is not reachable from any measured entry point |
-| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:251` | defining module is not reachable from any measured entry point |
-| `_classify_family` | function | `src/engine/extraction/spec_producer.py:343` | defining module is not reachable from any measured entry point |
-| `_direction` | function | `src/engine/extraction/spec_producer.py:378` | defining module is not reachable from any measured entry point |
-| `_condition_text` | function | `src/engine/extraction/spec_producer.py:383` | defining module is not reachable from any measured entry point |
-| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:391` | defining module is not reachable from any measured entry point |
-| `_anchor_grounds` | function | `src/engine/extraction/spec_producer.py:434` | defining module is not reachable from any measured entry point |
-| `_cert_span_for` | function | `src/engine/extraction/spec_producer.py:447` | defining module is not reachable from any measured entry point |
-| `_entry_condition` | function | `src/engine/extraction/spec_producer.py:479` | defining module is not reachable from any measured entry point |
-| `_spec_role` | function | `src/engine/extraction/spec_producer.py:513` | defining module is not reachable from any measured entry point |
-| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:535` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:648` | defining module is not reachable from any measured entry point |
-| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:653` | defining module is not reachable from any measured entry point |
-| `_all_strings` | function | `src/engine/extraction/spec_producer.py:722` | defining module is not reachable from any measured entry point |
-| `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:738` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `_stem_pattern` | function | `src/engine/extraction/spec_producer.py:226` | defining module is not reachable from any measured entry point |
+| `_norm` | function | `src/engine/extraction/spec_producer.py:246` | defining module is not reachable from any measured entry point |
+| `_slug` | function | `src/engine/extraction/spec_producer.py:250` | defining module is not reachable from any measured entry point |
+| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:255` | defining module is not reachable from any measured entry point |
+| `_classify_family` | function | `src/engine/extraction/spec_producer.py:347` | defining module is not reachable from any measured entry point |
+| `_direction` | function | `src/engine/extraction/spec_producer.py:414` | defining module is not reachable from any measured entry point |
+| `_condition_text` | function | `src/engine/extraction/spec_producer.py:419` | defining module is not reachable from any measured entry point |
+| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:427` | defining module is not reachable from any measured entry point |
+| `_anchor_grounds` | function | `src/engine/extraction/spec_producer.py:470` | defining module is not reachable from any measured entry point |
+| `_cert_span_for` | function | `src/engine/extraction/spec_producer.py:483` | defining module is not reachable from any measured entry point |
+| `_entry_condition` | function | `src/engine/extraction/spec_producer.py:515` | defining module is not reachable from any measured entry point |
+| `_spec_role` | function | `src/engine/extraction/spec_producer.py:549` | defining module is not reachable from any measured entry point |
+| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:571` | no non-test reference outside its own definition; 5 test file(s) do reference it |
+| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:684` | defining module is not reachable from any measured entry point |
+| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:689` | defining module is not reachable from any measured entry point |
+| `_all_strings` | function | `src/engine/extraction/spec_producer.py:758` | defining module is not reachable from any measured entry point |
+| `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:774` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | defining module is not reachable from any measured entry point |
 | `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | defining module is not reachable from any measured entry point |
 | `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | defining module is not reachable from any measured entry point |
@@ -2091,6 +2100,57 @@ _...454 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `timed_range` | function | `src/engine/nvtx_markers.py:58` | no non-test reference outside its own definition |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_adapter.py</code> - 4 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | defining module is not reachable from any measured entry point |
+| `_window_bounds` | function | `src/engine/opening_range_adapter.py:133` | defining module is not reachable from any measured entry point |
+| `_aggregate_levels` | function | `src/engine/opening_range_adapter.py:184` | defining module is not reachable from any measured entry point |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | no non-test reference outside its own definition; 3 test file(s) do reference it |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_candidate.py</code> - 2 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | defining module is not reachable from any measured entry point |
+| `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | no non-test reference outside its own definition; 2 test file(s) do reference it |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_definition.py</code> - 7 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | defining module is not reachable from any measured entry point |
+| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | defining module is not reachable from any measured entry point |
+| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | defining module is not reachable from any measured entry point |
+| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | defining module is not reachable from any measured entry point |
+| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | defining module is not reachable from any measured entry point |
+| `refused_state` | function | `src/engine/opening_range_definition.py:253` | no non-test reference outside its own definition; 2 test file(s) do reference it |
+| `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | defining module is not reachable from any measured entry point |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_lowering.py</code> - 10 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | defining module is not reachable from any measured entry point |
+| `_duration_minutes` | function | `src/engine/opening_range_lowering.py:122` | defining module is not reachable from any measured entry point |
+| `_timezone_in` | function | `src/engine/opening_range_lowering.py:131` | defining module is not reachable from any measured entry point |
+| `_clock` | function | `src/engine/opening_range_lowering.py:143` | defining module is not reachable from any measured entry point |
+| `_taught_spans` | function | `src/engine/opening_range_lowering.py:159` | defining module is not reachable from any measured entry point |
+| `_VariantProblem` | class | `src/engine/opening_range_lowering.py:195` | defining module is not reachable from any measured entry point |
+| `_taught_variants` | function | `src/engine/opening_range_lowering.py:200` | defining module is not reachable from any measured entry point |
+| `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | defining module is not reachable from any measured entry point |
+| `OpeningRangeLoweringResult` | class | `src/engine/opening_range_lowering.py:352` | defining module is not reachable from any measured entry point |
+| `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 
 </details>
 
@@ -2557,27 +2617,27 @@ _...454 more omitted from this table._
 | `weeklyDriftReports` | const | `src/server/db/migrations/schema.ts:2338` | defining module is not reachable from any measured entry point |
 | `instanceConfig` | const | `src/server/db/migrations/schema.ts:2354` | defining module is not reachable from any measured entry point |
 | `brokerAccounts` | const | `src/server/db/migrations/schema.ts:2365` | defining module is not reachable from any measured entry point |
-| `BiasStateRow` | type | `src/server/db/schema.ts:2392` | no non-test reference outside its own definition |
-| `BiasStateInsert` | type | `src/server/db/schema.ts:2393` | no non-test reference outside its own definition |
-| `RegimeHmmModelRow` | type | `src/server/db/schema.ts:2417` | no non-test reference outside its own definition |
-| `RegimeHmmModelInsert` | type | `src/server/db/schema.ts:2418` | no non-test reference outside its own definition |
-| `HarshRegimePhaseValue` | type | `src/server/db/schema.ts:2434` | no non-test reference outside its own definition |
-| `HarshRegimePhaseRow` | type | `src/server/db/schema.ts:2435` | no non-test reference outside its own definition |
-| `HarshRegimePhaseInsert` | type | `src/server/db/schema.ts:2436` | no non-test reference outside its own definition |
-| `SystemStateRow` | type | `src/server/db/schema.ts:2473` | no non-test reference outside its own definition |
-| `SystemStateInsert` | type | `src/server/db/schema.ts:2474` | no non-test reference outside its own definition |
-| `FirmAdversarialPriorInsert` | type | `src/server/db/schema.ts:2852` | no non-test reference outside its own definition |
-| `NewSlumhouseUser` | type | `src/server/db/schema.ts:3319` | no non-test reference outside its own definition |
-| `AgentJob` | type | `src/server/db/schema.ts:3379` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `NewAgentJob` | type | `src/server/db/schema.ts:3380` | no non-test reference outside its own definition |
-| `WorkflowBackup` | type | `src/server/db/schema.ts:3408` | no non-test reference outside its own definition |
-| `NewWorkflowBackup` | type | `src/server/db/schema.ts:3409` | no non-test reference outside its own definition |
-| `LiveOrderPineDedup` | type | `src/server/db/schema.ts:3444` | no non-test reference outside its own definition |
-| `NewLiveOrderPineDedup` | type | `src/server/db/schema.ts:3445` | no non-test reference outside its own definition |
-| `CarterIssueRow` | type | `src/server/db/schema.ts:3472` | no non-test reference outside its own definition |
-| `NewCarterIssueRow` | type | `src/server/db/schema.ts:3473` | no non-test reference outside its own definition |
-| `CarterMemoryRow` | type | `src/server/db/schema.ts:3497` | no non-test reference outside its own definition |
-| `NewCarterMemoryRow` | type | `src/server/db/schema.ts:3498` | no non-test reference outside its own definition |
+| `BiasStateRow` | type | `src/server/db/schema.ts:2415` | no non-test reference outside its own definition |
+| `BiasStateInsert` | type | `src/server/db/schema.ts:2416` | no non-test reference outside its own definition |
+| `RegimeHmmModelRow` | type | `src/server/db/schema.ts:2440` | no non-test reference outside its own definition |
+| `RegimeHmmModelInsert` | type | `src/server/db/schema.ts:2441` | no non-test reference outside its own definition |
+| `HarshRegimePhaseValue` | type | `src/server/db/schema.ts:2457` | no non-test reference outside its own definition |
+| `HarshRegimePhaseRow` | type | `src/server/db/schema.ts:2458` | no non-test reference outside its own definition |
+| `HarshRegimePhaseInsert` | type | `src/server/db/schema.ts:2459` | no non-test reference outside its own definition |
+| `SystemStateRow` | type | `src/server/db/schema.ts:2496` | no non-test reference outside its own definition |
+| `SystemStateInsert` | type | `src/server/db/schema.ts:2497` | no non-test reference outside its own definition |
+| `FirmAdversarialPriorInsert` | type | `src/server/db/schema.ts:2875` | no non-test reference outside its own definition |
+| `NewSlumhouseUser` | type | `src/server/db/schema.ts:3342` | no non-test reference outside its own definition |
+| `AgentJob` | type | `src/server/db/schema.ts:3402` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `NewAgentJob` | type | `src/server/db/schema.ts:3403` | no non-test reference outside its own definition |
+| `WorkflowBackup` | type | `src/server/db/schema.ts:3431` | no non-test reference outside its own definition |
+| `NewWorkflowBackup` | type | `src/server/db/schema.ts:3432` | no non-test reference outside its own definition |
+| `LiveOrderPineDedup` | type | `src/server/db/schema.ts:3467` | no non-test reference outside its own definition |
+| `NewLiveOrderPineDedup` | type | `src/server/db/schema.ts:3468` | no non-test reference outside its own definition |
+| `CarterIssueRow` | type | `src/server/db/schema.ts:3495` | no non-test reference outside its own definition |
+| `NewCarterIssueRow` | type | `src/server/db/schema.ts:3496` | no non-test reference outside its own definition |
+| `CarterMemoryRow` | type | `src/server/db/schema.ts:3520` | no non-test reference outside its own definition |
+| `NewCarterMemoryRow` | type | `src/server/db/schema.ts:3521` | no non-test reference outside its own definition |
 
 </details>
 
@@ -2589,7 +2649,7 @@ _...454 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/server/lib</code> - 450 symbols</summary>
+<details><summary><code>src/server/lib</code> - 460 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -2606,6 +2666,15 @@ _...454 more omitted from this table._
 | `emitArchetypeSignalReceived` | function | `src/server/lib/archetype-routing-observability.ts:182` | defining module is not reachable from any measured entry point |
 | `emitArchetypeSignalResolved` | function | `src/server/lib/archetype-routing-observability.ts:217` | defining module is not reachable from any measured entry point |
 | `emitArchetypeEvaluatorFailed` | function | `src/server/lib/archetype-routing-observability.ts:266` | defining module is not reachable from any measured entry point |
+| `RefusalDisposition` | type | `src/server/lib/backtest-caller-registry.ts:31` | defining module is not reachable from any measured entry point |
+| `ApprovedCaller` | interface | `src/server/lib/backtest-caller-registry.ts:39` | defining module is not reachable from any measured entry point |
+| `APPROVED_BACKTEST_CALLERS` | const | `src/server/lib/backtest-caller-registry.ts:48` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `GUARDED_CALLEE` | const | `src/server/lib/backtest-caller-scan.ts:27` | defining module is not reachable from any measured entry point |
+| `CallerIdentity` | interface | `src/server/lib/backtest-caller-scan.ts:37` | defining module is not reachable from any measured entry point |
+| `identityKey` | function | `src/server/lib/backtest-caller-scan.ts:43` | defining module is not reachable from any measured entry point |
+| `scanBacktestCallers` | function | `src/server/lib/backtest-caller-scan.ts:121` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `CallerAuditResult` | interface | `src/server/lib/backtest-caller-scan.ts:151` | defining module is not reachable from any measured entry point |
+| `auditBacktestCallers` | function | `src/server/lib/backtest-caller-scan.ts:171` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `buildElevenLabsSignature` | function | `src/server/lib/carter/carter-auth.ts:127` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `_resetUsedConfirmations` | function | `src/server/lib/carter/carter-confirm.ts:74` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 | `__test` | const | `src/server/lib/carter/carter-introspect.ts:597` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -2788,6 +2857,7 @@ _...454 more omitted from this table._
 | `_resetRlCircuitBreakerForTests` | function | `src/server/lib/quantum-rl-training-runner.ts:257` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `QuantumRunRequest` | type | `src/server/lib/quantum-run-schema.ts:20` | no non-test reference outside its own definition |
 | `HybridCompareRequest` | type | `src/server/lib/quantum-run-schema.ts:21` | no non-test reference outside its own definition |
+| `RankingEligibleTier` | type | `src/server/lib/replay-outcome.ts:73` | no non-test reference outside its own definition |
 | `CONFLUENCE_THRESHOLD_CANDIDATES` | const | `src/server/lib/replay/confluence-disagreement.ts:58` | defining module is not reachable from any measured entry point |
 | `ConfluenceThresholdCandidate` | type | `src/server/lib/replay/confluence-disagreement.ts:59` | no non-test reference outside its own definition |
 | `DEFAULT_CONFLUENCE_THRESHOLD_UNDER_TEST` | const | `src/server/lib/replay/confluence-disagreement.ts:65` | defining module is not reachable from any measured entry point |
@@ -3093,7 +3163,7 @@ _...454 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/server/services</code> - 190 symbols</summary>
+<details><summary><code>src/server/services</code> - 199 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -3101,10 +3171,10 @@ _...454 more omitted from this table._
 | `computeDeltaDivDecision` | function | `src/server/services/adaptive-exit-engine.ts:476` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `auditDeltaDivEarlyExit` | function | `src/server/services/adaptive-exit-engine.ts:680` | no non-test reference outside its own definition |
 | `auditPreLunchExit` | function | `src/server/services/adaptive-exit-engine.ts:704` | no non-test reference outside its own definition |
-| `__resetScoutAuditorBudgetForTests` | function | `src/server/services/agent-service.ts:53` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `__resetRejectSpikeStateForTests` | function | `src/server/services/agent-service.ts:112` | no non-test reference outside its own definition |
-| `__resetDslCriticBudgetForTests` | function | `src/server/services/agent-service.ts:134` | no non-test reference outside its own definition; 3 test file(s) do reference it |
-| `__resetCriticFailOpenDiscordForTests` | function | `src/server/services/agent-service.ts:151` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `__resetScoutAuditorBudgetForTests` | function | `src/server/services/agent-service.ts:54` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `__resetRejectSpikeStateForTests` | function | `src/server/services/agent-service.ts:113` | no non-test reference outside its own definition |
+| `__resetDslCriticBudgetForTests` | function | `src/server/services/agent-service.ts:135` | no non-test reference outside its own definition; 3 test file(s) do reference it |
+| `__resetCriticFailOpenDiscordForTests` | function | `src/server/services/agent-service.ts:152` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `populateAntiSetupCache` | function | `src/server/services/anti-setup-gate-service.ts:256` | no non-test reference outside its own definition |
 | `TITLE_SCORE_ELIGIBILITY_THRESHOLD` | const | `src/server/services/autonomous-scout-runner.ts:643` | no non-test reference outside its own definition |
 | `BIAS_HARNESS_CONFIG` | const | `src/server/services/bias-calibration-harness.ts:27` | defining module is not reachable from any measured entry point |
@@ -3131,7 +3201,7 @@ _...454 more omitted from this table._
 | `clearDailyCache` | function | `src/server/services/context-gate-service.ts:350` | no non-test reference outside its own definition |
 | `getAllContractSpecs` | function | `src/server/services/contract-specs-service.ts:114` | no non-test reference outside its own definition |
 | `__resetCorrelationMatrixForTests` | function | `src/server/services/correlated-position-guard.ts:132` | no non-test reference outside its own definition; 3 test file(s) do reference it |
-| `triggerCriticOptimizerAsync` | function | `src/server/services/critic-optimizer-service.ts:565` | no non-test reference outside its own definition |
+| `triggerCriticOptimizerAsync` | function | `src/server/services/critic-optimizer-service.ts:569` | no non-test reference outside its own definition |
 | `__clearCritiqueKbCacheForTests` | function | `src/server/services/critique-knowledge-retriever.ts:85` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `PRIOR_OBSERVATIONS_HEADER` | const | `src/server/services/critique-knowledge-retriever.ts:180` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `DLL_WARN_80PCT` | const | `src/server/services/cross-symbol-pnl.ts:301` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -3149,6 +3219,15 @@ _...454 more omitted from this table._
 | `getActiveOutages` | function | `src/server/services/exchange-status-service.ts:341` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `simulateOutage` | function | `src/server/services/exchange-status-service.ts:350` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `resolveOutage` | function | `src/server/services/exchange-status-service.ts:412` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `ParameterProvenance` | type | `src/server/services/executable-parameter-contract.ts:38` | defining module is not reachable from any measured entry point |
+| `ParameterBlockCode` | type | `src/server/services/executable-parameter-contract.ts:51` | defining module is not reachable from any measured entry point |
+| `UpstreamParameterStatus` | type | `src/server/services/executable-parameter-contract.ts:73` | defining module is not reachable from any measured entry point |
+| `ContractMode` | type | `src/server/services/executable-parameter-contract.ts:91` | defining module is not reachable from any measured entry point |
+| `SourceParameter` | interface | `src/server/services/executable-parameter-contract.ts:96` | defining module is not reachable from any measured entry point |
+| `ParameterSpec` | interface | `src/server/services/executable-parameter-contract.ts:112` | defining module is not reachable from any measured entry point |
+| `ContractResult` | type | `src/server/services/executable-parameter-contract.ts:119` | defining module is not reachable from any measured entry point |
+| `resolveExecutableParameters` | function | `src/server/services/executable-parameter-contract.ts:162` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `isOutsideAdvisoryRange` | function | `src/server/services/executable-parameter-contract.ts:309` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `CohortMetrics` | interface | `src/server/services/fade-the-losers-service.ts:198` | defining module is not reachable from any measured entry point |
 | `extractCohortMetrics` | function | `src/server/services/fade-the-losers-service.ts:204` | defining module is not reachable from any measured entry point |
 | `classifyDirectionality` | function | `src/server/services/fade-the-losers-service.ts:260` | defining module is not reachable from any measured entry point |
@@ -3169,7 +3248,7 @@ _...454 more omitted from this table._
 | `DriftSummary` | interface | `src/server/services/graduated-strategy-drift-checker.ts:23` | defining module is not reachable from any measured entry point |
 | `runGraduatedStrategyDriftCheck` | function | `src/server/services/graduated-strategy-drift-checker.ts:31` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `getAvoidancePatterns` | function | `src/server/services/graveyard-intelligence-service.ts:154` | no non-test reference outside its own definition |
-| `getPromotedAtFromTransitions` | function | `src/server/services/lifecycle-service.ts:7889` | no non-test reference outside its own definition |
+| `getPromotedAtFromTransitions` | function | `src/server/services/lifecycle-service.ts:8045` | no non-test reference outside its own definition |
 | `markLevelTouched` | function | `src/server/services/liquidity-map-service.ts:576` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `expireOldLevels` | function | `src/server/services/liquidity-map-service.ts:605` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `startInternalsSubscription` | function | `src/server/services/market-internals-service.ts:154` | no non-test reference outside its own definition |
@@ -3228,10 +3307,10 @@ _...454 more omitted from this table._
 | `deliverPineBundle` | function | `src/server/services/pine-delivery-service.ts:214` | no non-test reference outside its own definition |
 | `getPipelineStatus` | function | `src/server/services/pipeline-control-service.ts:109` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `computeFirst30minVolumeRatio` | function | `src/server/services/pre-market-routine.ts:584` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `getPromptAppendix` | function | `src/server/services/prompt-evolution-service.ts:94` | no non-test reference outside its own definition |
-| `getActivePromptContentForStrategy` | function | `src/server/services/prompt-evolution-service.ts:138` | no non-test reference outside its own definition |
-| `runPromptEvolution` | function | `src/server/services/prompt-evolution-service.ts:204` | no non-test reference outside its own definition |
-| `__collectVariantMetricsForTest` | const | `src/server/services/prompt-evolution-service.ts:792` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `getPromptAppendix` | function | `src/server/services/prompt-evolution-service.ts:106` | no non-test reference outside its own definition |
+| `getActivePromptContentForStrategy` | function | `src/server/services/prompt-evolution-service.ts:150` | no non-test reference outside its own definition |
+| `runPromptEvolution` | function | `src/server/services/prompt-evolution-service.ts:216` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `__collectVariantMetricsForTest` | const | `src/server/services/prompt-evolution-service.ts:843` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `redactSensitiveEnv` | function | `src/server/services/prop-firm-cookie-refresh-service.ts:61` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `getSuspendedFirms` | function | `src/server/services/prop-firm-health-service.ts:320` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `simulateSuspension` | function | `src/server/services/prop-firm-health-service.ts:352` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -3568,7 +3647,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/backtester.py</code> - 50 symbols</summary>
+<details><summary><code>src/engine/backtester.py</code> - 51 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -3609,19 +3688,20 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_apply_dll_halt_to_entries` | function | `src/engine/backtester.py:3487` | 0 | unique |
 | `run_backtest` | function | `src/engine/backtester.py:3625` | 10 | unique |
 | `_build_expected_signals_from_trades` | function | `src/engine/backtester.py:6184` | 0 | unique |
-| `_emit_validated_result` | function | `src/engine/backtester.py:6258` | 0 | unique |
-| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6320` | 0 | unique |
-| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6368` | 0 | unique |
-| `_compute_tier` | function | `src/engine/backtester.py:6405` | 0 | unique |
-| `_compute_forge_score` | function | `src/engine/backtester.py:6429` | 0 | unique |
-| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6456` | 0 | unique |
-| `_empty_result` | function | `src/engine/backtester.py:6542` | 1 | AMBIG |
-| `run_class_backtest` | function | `src/engine/backtester.py:6573` | 7 | unique |
-| `_compute_decay_analysis` | function | `src/engine/backtester.py:8035` | 0 | unique |
-| `_load_strategy_class` | function | `src/engine/backtester.py:8060` | 1 | unique |
-| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8079` | 0 | unique |
-| `_rescore_with_crisis` | function | `src/engine/backtester.py:8109` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8173` | 180 | AMBIG |
+| `_execution_was_refused` | function | `src/engine/backtester.py:6258` | 0 | unique |
+| `_emit_validated_result` | function | `src/engine/backtester.py:6296` | 0 | unique |
+| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6366` | 0 | unique |
+| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6414` | 0 | unique |
+| `_compute_tier` | function | `src/engine/backtester.py:6451` | 0 | unique |
+| `_compute_forge_score` | function | `src/engine/backtester.py:6475` | 0 | unique |
+| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6502` | 0 | unique |
+| `_empty_result` | function | `src/engine/backtester.py:6588` | 1 | AMBIG |
+| `run_class_backtest` | function | `src/engine/backtester.py:6619` | 7 | unique |
+| `_compute_decay_analysis` | function | `src/engine/backtester.py:8081` | 0 | unique |
+| `_load_strategy_class` | function | `src/engine/backtester.py:8106` | 1 | unique |
+| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8125` | 0 | unique |
+| `_rescore_with_crisis` | function | `src/engine/backtester.py:8155` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:8219` | 180 | AMBIG |
 
 </details>
 
@@ -3637,6 +3717,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `evaluate_strategy` | function | `src/engine/black_swan_evaluator.py:428` | 0 | unique |
 | `_query_regime_bank` | function | `src/engine/black_swan_evaluator.py:619` | 0 | unique |
 | `_load_strategy_config_from_db` | function | `src/engine/black_swan_evaluator.py:767` | 0 | unique |
+
+</details>
+
+<details><summary><code>src/engine/breakout_confirmation_ambiguity.py</code> - 2 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `BreakoutAmbiguityVerdict` | class | `src/engine/breakout_confirmation_ambiguity.py:123` | 0 | unique |
+| `classify_breakout_confirmation_ambiguity` | function | `src/engine/breakout_confirmation_ambiguity.py:159` | 1 | unique |
 
 </details>
 
@@ -3996,6 +4085,15 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
+<details><summary><code>src/engine/entry_eligibility.py</code> - 2 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `EligibilityConversionRefused` | class | `src/engine/entry_eligibility.py:54` | 0 | unique |
+| `EntryEligibility` | class | `src/engine/entry_eligibility.py:59` | 1 | unique |
+
+</details>
+
 <details><summary><code>src/engine/entry_windows.py</code> - 8 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
@@ -4243,7 +4341,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_assign_globex_session_id` | function | `src/engine/indicators/core.py:218` | 0 | unique |
 | `compute_vwap_with_bands` | function | `src/engine/indicators/core.py:271` | 0 | unique |
 | `compute_anchored_vwap` | function | `src/engine/indicators/core.py:379` | 0 | unique |
-| `compute_opening_range_breakout` | function | `src/engine/indicators/core.py:467` | 0 | unique |
+| `compute_opening_range_breakout` | function | `src/engine/indicators/core.py:467` | 1 | unique |
 | `compute_indicators` | function | `src/engine/indicators/core.py:579` | 2 | unique |
 | `compute_htf_indicators` | function | `src/engine/indicators/core.py:667` | 1 | unique |
 | `fib_retracement` | function | `src/engine/indicators/fibonacci.py:34` | 0 | unique |
@@ -4598,14 +4696,14 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_reconstruct_dsl` | function | `src/engine/parity_engine/shadow_runner.py:66` | 0 | unique |
 | `_detect_entry_indicator` | function | `src/engine/parity_engine/shadow_runner.py:99` | 0 | unique |
 | `_extract_entry_params` | function | `src/engine/parity_engine/shadow_runner.py:119` | 0 | unique |
-| `_extract_stop_multiple` | function | `src/engine/parity_engine/shadow_runner.py:151` | 0 | unique |
-| `_extract_tp_multiple` | function | `src/engine/parity_engine/shadow_runner.py:165` | 0 | unique |
-| `_detect_direction` | function | `src/engine/parity_engine/shadow_runner.py:177` | 0 | unique |
-| `_extract_production_data` | function | `src/engine/parity_engine/shadow_runner.py:200` | 0 | unique |
-| `_load_tolerances` | function | `src/engine/parity_engine/shadow_runner.py:242` | 0 | unique |
-| `_disabled_report` | function | `src/engine/parity_engine/shadow_runner.py:264` | 0 | unique |
-| `_skipped_report` | function | `src/engine/parity_engine/shadow_runner.py:286` | 0 | unique |
-| `_error_report` | function | `src/engine/parity_engine/shadow_runner.py:308` | 0 | unique |
+| `_extract_stop_multiple` | function | `src/engine/parity_engine/shadow_runner.py:163` | 0 | unique |
+| `_extract_tp_multiple` | function | `src/engine/parity_engine/shadow_runner.py:184` | 0 | unique |
+| `_detect_direction` | function | `src/engine/parity_engine/shadow_runner.py:200` | 0 | unique |
+| `_extract_production_data` | function | `src/engine/parity_engine/shadow_runner.py:223` | 0 | unique |
+| `_load_tolerances` | function | `src/engine/parity_engine/shadow_runner.py:265` | 0 | unique |
+| `_disabled_report` | function | `src/engine/parity_engine/shadow_runner.py:287` | 0 | unique |
+| `_skipped_report` | function | `src/engine/parity_engine/shadow_runner.py:309` | 0 | unique |
+| `_error_report` | function | `src/engine/parity_engine/shadow_runner.py:331` | 0 | unique |
 
 </details>
 
@@ -4987,13 +5085,13 @@ This is the *we already have this* list.  Check it before writing anything.
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `_to_et_minutes_of_day` | function | `src/engine/session_windows.py:101` | 0 | unique |
+| `_to_et_minutes_of_day` | function | `src/engine/session_windows.py:101` | 1 | unique |
 | `_is_london` | function | `src/engine/session_windows.py:118` | 0 | unique |
 | `_is_ny_am` | function | `src/engine/session_windows.py:122` | 0 | unique |
 | `_is_ny_pm` | function | `src/engine/session_windows.py:126` | 0 | unique |
 | `_is_silver_bullet` | function | `src/engine/session_windows.py:130` | 0 | unique |
 | `_is_macro_window` | function | `src/engine/session_windows.py:138` | 0 | unique |
-| `is_in_killzone` | function | `src/engine/session_windows.py:155` | 1 | unique |
+| `is_in_killzone` | function | `src/engine/session_windows.py:155` | 2 | unique |
 | `active_killzones` | function | `src/engine/session_windows.py:164` | 0 | unique |
 | `_phrase_hit` | function | `src/engine/session_windows.py:236` | 0 | unique |
 | `resolve_session_keyword` | function | `src/engine/session_windows.py:244` | 1 | AMBIG |
@@ -5087,66 +5185,71 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/spec_condition_compiler.py</code> - 7 symbols</summary>
+<details><summary><code>src/engine/spec_condition_compiler.py</code> - 8 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `retest_touch_check` | function | `src/engine/spec_condition_compiler.py:173` | 0 | unique |
-| `_ffill_level_series` | function | `src/engine/spec_condition_compiler.py:201` | 0 | unique |
-| `population_a_bullish_leaning` | function | `src/engine/spec_condition_compiler.py:221` | 0 | unique |
-| `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:261` | 0 | unique |
-| `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:289` | 0 | unique |
-| `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:305` | 0 | unique |
-| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:1408` | 7 | unique |
+| `_htf_fully_covers` | function | `src/engine/spec_condition_compiler.py:268` | 0 | unique |
+| `retest_touch_check` | function | `src/engine/spec_condition_compiler.py:329` | 0 | unique |
+| `_ffill_level_series` | function | `src/engine/spec_condition_compiler.py:357` | 0 | unique |
+| `population_a_bullish_leaning` | function | `src/engine/spec_condition_compiler.py:377` | 0 | unique |
+| `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:417` | 0 | unique |
+| `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:445` | 0 | unique |
+| `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:461` | 0 | unique |
+| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2135` | 7 | unique |
 
 </details>
 
-<details><summary><code>src/engine/spec_family_bindings.py</code> - 42 symbols</summary>
+<details><summary><code>src/engine/spec_family_bindings.py</code> - 46 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `fvg_identity_enabled` | function | `src/engine/spec_family_bindings.py:76` | 0 | unique |
-| `resolve_fvg_object` | function | `src/engine/spec_family_bindings.py:85` | 1 | unique |
-| `levelzone_routing_enabled` | function | `src/engine/spec_family_bindings.py:141` | 0 | unique |
-| `resolve_levelzone_object` | function | `src/engine/spec_family_bindings.py:148` | 0 | unique |
-| `classify_population_a_kind` | function | `src/engine/spec_family_bindings.py:253` | 1 | unique |
-| `levelzone_resolver_enabled` | function | `src/engine/spec_family_bindings.py:272` | 0 | unique |
-| `composition_bundle_enabled` | function | `src/engine/spec_family_bindings.py:323` | 0 | unique |
-| `or_branches_enabled` | function | `src/engine/spec_family_bindings.py:340` | 2 | unique |
-| `role_demotion_mode` | function | `src/engine/spec_family_bindings.py:398` | 1 | unique |
-| `struct_demotes` | function | `src/engine/spec_family_bindings.py:407` | 0 | unique |
-| `resolve_sweep_object` | function | `src/engine/spec_family_bindings.py:419` | 0 | unique |
-| `resolve_mss_object` | function | `src/engine/spec_family_bindings.py:426` | 0 | unique |
-| `resolve_bundle_primitive` | function | `src/engine/spec_family_bindings.py:433` | 0 | unique |
-| `session_refusal_reason` | function | `src/engine/spec_family_bindings.py:498` | 0 | unique |
-| `FamilyMeta` | class | `src/engine/spec_family_bindings.py:520` | 1 | unique |
-| `ConditionBinding` | class | `src/engine/spec_family_bindings.py:754` | 3 | AMBIG |
-| `_session_phrase_hit` | function | `src/engine/spec_family_bindings.py:781` | 0 | unique |
-| `resolve_session_keyword` | function | `src/engine/spec_family_bindings.py:789` | 0 | AMBIG |
-| `refused_session_zone` | function | `src/engine/spec_family_bindings.py:803` | 0 | AMBIG |
-| `session_zone_window_repr` | function | `src/engine/spec_family_bindings.py:830` | 1 | unique |
-| `resolve_session_name_to_window` | function | `src/engine/spec_family_bindings.py:840` | 0 | unique |
-| `_session_clock_token_parts` | function | `src/engine/spec_family_bindings.py:975` | 0 | unique |
-| `_session_text_is_constituted_by` | function | `src/engine/spec_family_bindings.py:1039` | 0 | unique |
-| `_session_clock_does_work` | function | `src/engine/spec_family_bindings.py:1274` | 0 | unique |
-| `_session_noun_qualifier_is_market_compatible` | function | `src/engine/spec_family_bindings.py:1363` | 0 | unique |
-| `_session_has_trading_action` | function | `src/engine/spec_family_bindings.py:1552` | 0 | unique |
-| `_session_strip_governed_filler` | function | `src/engine/spec_family_bindings.py:1703` | 0 | unique |
-| `_session_government_licensed_action_edges` | function | `src/engine/spec_family_bindings.py:1718` | 0 | unique |
-| `_session_action_governed_clock` | function | `src/engine/spec_family_bindings.py:1781` | 0 | unique |
-| `_session_is_about_markets` | function | `src/engine/spec_family_bindings.py:1821` | 0 | unique |
-| `_session_interval_overlap_minutes` | function | `src/engine/spec_family_bindings.py:1890` | 0 | unique |
-| `_session_best_real_zone_for_range` | function | `src/engine/spec_family_bindings.py:1894` | 0 | unique |
-| `_session_anchor_phrase_is_governed_endpoint` | function | `src/engine/spec_family_bindings.py:1923` | 0 | unique |
-| `_session_anchor_sequence_wraps_midnight` | function | `src/engine/spec_family_bindings.py:1978` | 0 | unique |
-| `_session_clock_token_minutes` | function | `src/engine/spec_family_bindings.py:2002` | 0 | unique |
-| `SessionRoleResult` | class | `src/engine/spec_family_bindings.py:2027` | 0 | unique |
-| `classify_session_role` | function | `src/engine/spec_family_bindings.py:2085` | 0 | unique |
-| `session_role_resolver_enabled` | function | `src/engine/spec_family_bindings.py:2309` | 0 | unique |
-| `_bind_condition_dispatch` | function | `src/engine/spec_family_bindings.py:2315` | 0 | unique |
-| `bind_condition` | function | `src/engine/spec_family_bindings.py:2700` | 0 | unique |
-| `BindingPlan` | class | `src/engine/spec_family_bindings.py:2733` | 4 | AMBIG |
-| `compile_binding_plan` | function | `src/engine/spec_family_bindings.py:2762` | 8 | unique |
+| `fvg_identity_enabled` | function | `src/engine/spec_family_bindings.py:106` | 0 | unique |
+| `resolve_fvg_object` | function | `src/engine/spec_family_bindings.py:115` | 1 | unique |
+| `levelzone_routing_enabled` | function | `src/engine/spec_family_bindings.py:171` | 0 | unique |
+| `resolve_levelzone_object` | function | `src/engine/spec_family_bindings.py:178` | 0 | unique |
+| `classify_population_a_kind` | function | `src/engine/spec_family_bindings.py:283` | 1 | unique |
+| `levelzone_resolver_enabled` | function | `src/engine/spec_family_bindings.py:302` | 0 | unique |
+| `composition_bundle_enabled` | function | `src/engine/spec_family_bindings.py:353` | 0 | unique |
+| `or_branches_enabled` | function | `src/engine/spec_family_bindings.py:370` | 2 | unique |
+| `role_demotion_mode` | function | `src/engine/spec_family_bindings.py:428` | 1 | unique |
+| `struct_demotes` | function | `src/engine/spec_family_bindings.py:437` | 0 | unique |
+| `resolve_sweep_object` | function | `src/engine/spec_family_bindings.py:449` | 0 | unique |
+| `resolve_mss_object` | function | `src/engine/spec_family_bindings.py:456` | 0 | unique |
+| `resolve_bundle_primitive` | function | `src/engine/spec_family_bindings.py:463` | 0 | unique |
+| `session_refusal_reason` | function | `src/engine/spec_family_bindings.py:528` | 0 | unique |
+| `FamilyMeta` | class | `src/engine/spec_family_bindings.py:550` | 1 | unique |
+| `ConditionBinding` | class | `src/engine/spec_family_bindings.py:809` | 3 | AMBIG |
+| `_session_phrase_hit` | function | `src/engine/spec_family_bindings.py:915` | 0 | unique |
+| `resolve_session_keyword` | function | `src/engine/spec_family_bindings.py:923` | 0 | AMBIG |
+| `refused_session_zone` | function | `src/engine/spec_family_bindings.py:937` | 0 | AMBIG |
+| `session_zone_window_repr` | function | `src/engine/spec_family_bindings.py:964` | 1 | unique |
+| `resolve_session_name_to_window` | function | `src/engine/spec_family_bindings.py:974` | 0 | unique |
+| `_session_clock_token_parts` | function | `src/engine/spec_family_bindings.py:1109` | 0 | unique |
+| `_session_text_is_constituted_by` | function | `src/engine/spec_family_bindings.py:1173` | 0 | unique |
+| `_session_clock_does_work` | function | `src/engine/spec_family_bindings.py:1408` | 0 | unique |
+| `_session_noun_qualifier_is_market_compatible` | function | `src/engine/spec_family_bindings.py:1497` | 0 | unique |
+| `_session_has_trading_action` | function | `src/engine/spec_family_bindings.py:1686` | 0 | unique |
+| `_session_strip_governed_filler` | function | `src/engine/spec_family_bindings.py:1837` | 0 | unique |
+| `_session_government_licensed_action_edges` | function | `src/engine/spec_family_bindings.py:1852` | 0 | unique |
+| `_session_action_governed_clock` | function | `src/engine/spec_family_bindings.py:1915` | 0 | unique |
+| `_session_is_about_markets` | function | `src/engine/spec_family_bindings.py:1955` | 0 | unique |
+| `_session_interval_overlap_minutes` | function | `src/engine/spec_family_bindings.py:2024` | 0 | unique |
+| `_session_best_real_zone_for_range` | function | `src/engine/spec_family_bindings.py:2028` | 0 | unique |
+| `_session_anchor_phrase_is_governed_endpoint` | function | `src/engine/spec_family_bindings.py:2057` | 0 | unique |
+| `_session_anchor_sequence_wraps_midnight` | function | `src/engine/spec_family_bindings.py:2112` | 0 | unique |
+| `_session_clock_token_minutes` | function | `src/engine/spec_family_bindings.py:2136` | 0 | unique |
+| `SessionRoleResult` | class | `src/engine/spec_family_bindings.py:2161` | 0 | unique |
+| `classify_session_role` | function | `src/engine/spec_family_bindings.py:2219` | 0 | unique |
+| `session_role_resolver_enabled` | function | `src/engine/spec_family_bindings.py:2443` | 0 | unique |
+| `resolve_exact_clock_span` | function | `src/engine/spec_family_bindings.py:2467` | 0 | unique |
+| `_derive_session_zone_window_by_execution` | function | `src/engine/spec_family_bindings.py:2529` | 0 | unique |
+| `_session_keyword_fidelity_approximation` | function | `src/engine/spec_family_bindings.py:2579` | 0 | unique |
+| `_bind_condition_dispatch` | function | `src/engine/spec_family_bindings.py:2598` | 0 | unique |
+| `bind_condition` | function | `src/engine/spec_family_bindings.py:2992` | 0 | unique |
+| `BindingPlan` | class | `src/engine/spec_family_bindings.py:3025` | 4 | AMBIG |
+| `_refuse_ambiguous_breakout_trigger` | function | `src/engine/spec_family_bindings.py:3054` | 0 | unique |
+| `compile_binding_plan` | function | `src/engine/spec_family_bindings.py:3134` | 8 | unique |
 
 </details>
 
@@ -5365,7 +5468,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/server/db</code> - 126 symbols</summary>
+<details><summary><code>src/server/db</code> - 127 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -5382,119 +5485,120 @@ This is the *we already have this* list.  Check it before writing anything.
 | `BacktestResultExtrasShape` | interface | `src/server/db/jsonb-shapes.ts:219` | 1 | unique |
 | `PaperSessionGovernorStateShape` | interface | `src/server/db/jsonb-shapes.ts:268` | 2 | unique |
 | `ExitPlanConfig` | interface | `src/server/db/jsonb-shapes.ts:277` | 4 | unique |
-| `strategies` | const | `src/server/db/schema.ts:58` | 145 | AMBIG |
-| `backtests` | const | `src/server/db/schema.ts:154` | 53 | AMBIG |
-| `backtestMatrix` | const | `src/server/db/schema.ts:278` | 5 | AMBIG |
-| `backtestTrades` | const | `src/server/db/schema.ts:300` | 11 | AMBIG |
-| `monteCarloRuns` | const | `src/server/db/schema.ts:340` | 20 | AMBIG |
-| `stressTestRuns` | const | `src/server/db/schema.ts:369` | 6 | AMBIG |
-| `alerts` | const | `src/server/db/schema.ts:391` | 10 | AMBIG |
-| `systemJournal` | const | `src/server/db/schema.ts:411` | 14 | AMBIG |
-| `auditLog` | const | `src/server/db/schema.ts:446` | 114 | AMBIG |
-| `dataSyncJobs` | const | `src/server/db/schema.ts:488` | 1 | AMBIG |
-| `complianceRulesets` | const | `src/server/db/schema.ts:512` | 8 | AMBIG |
-| `complianceReviews` | const | `src/server/db/schema.ts:542` | 5 | AMBIG |
-| `complianceDriftLog` | const | `src/server/db/schema.ts:569` | 5 | AMBIG |
-| `skipDecisions` | const | `src/server/db/schema.ts:592` | 8 | AMBIG |
-| `macroSnapshots` | const | `src/server/db/schema.ts:620` | 4 | AMBIG |
-| `macroFeatures` | const | `src/server/db/schema.ts:652` | 4 | AMBIG |
-| `macroRegimeStates` | const | `src/server/db/schema.ts:675` | 5 | AMBIG |
-| `strategyGraveyard` | const | `src/server/db/schema.ts:699` | 10 | AMBIG |
-| `dayArchetypes` | const | `src/server/db/schema.ts:727` | 3 | AMBIG |
-| `tournamentResults` | const | `src/server/db/schema.ts:748` | 4 | AMBIG |
-| `paperSessions` | const | `src/server/db/schema.ts:775` | 40 | AMBIG |
-| `paperPositions` | const | `src/server/db/schema.ts:827` | 19 | AMBIG |
-| `paperTrades` | const | `src/server/db/schema.ts:896` | 29 | AMBIG |
-| `paperSignalLogs` | const | `src/server/db/schema.ts:944` | 8 | AMBIG |
-| `shadowSignals` | const | `src/server/db/schema.ts:973` | 10 | AMBIG |
-| `walkForwardWindows` | const | `src/server/db/schema.ts:998` | 5 | AMBIG |
-| `quantumMcRuns` | const | `src/server/db/schema.ts:1022` | 11 | AMBIG |
-| `quantumMcBenchmarks` | const | `src/server/db/schema.ts:1058` | 3 | AMBIG |
-| `strategyNames` | const | `src/server/db/schema.ts:1079` | 7 | AMBIG |
-| `strategyExports` | const | `src/server/db/schema.ts:1099` | 8 | AMBIG |
-| `strategyExportArtifacts` | const | `src/server/db/schema.ts:1127` | 5 | AMBIG |
-| `sqaOptimizationRuns` | const | `src/server/db/schema.ts:1146` | 5 | AMBIG |
-| `quboTimingRuns` | const | `src/server/db/schema.ts:1169` | 5 | AMBIG |
-| `tensorPredictions` | const | `src/server/db/schema.ts:1190` | 5 | AMBIG |
-| `rlTrainingRuns` | const | `src/server/db/schema.ts:1213` | 7 | AMBIG |
-| `criticOptimizationRuns` | const | `src/server/db/schema.ts:1239` | 8 | AMBIG |
-| `criticCandidates` | const | `src/server/db/schema.ts:1271` | 4 | AMBIG |
-| `researchTrialCounter` | const | `src/server/db/schema.ts:1330` | 2 | unique |
-| `deeparForecasts` | const | `src/server/db/schema.ts:1338` | 8 | AMBIG |
-| `deeparTrainingRuns` | const | `src/server/db/schema.ts:1367` | 4 | AMBIG |
-| `agentHealthReports` | const | `src/server/db/schema.ts:1393` | 3 | AMBIG |
-| `systemParameters` | const | `src/server/db/schema.ts:1411` | 20 | AMBIG |
-| `systemParameterHistory` | const | `src/server/db/schema.ts:1428` | 4 | AMBIG |
-| `paperSessionFeedback` | const | `src/server/db/schema.ts:1447` | 4 | AMBIG |
-| `mutationOutcomes` | const | `src/server/db/schema.ts:1485` | 3 | AMBIG |
-| `contractRolls` | const | `src/server/db/schema.ts:1511` | 2 | AMBIG |
-| `deadLetterQueue` | const | `src/server/db/schema.ts:1534` | 5 | AMBIG |
-| `n8nExecutionLog` | const | `src/server/db/schema.ts:1558` | 3 | unique |
-| `idempotencyKeys` | const | `src/server/db/schema.ts:1579` | 3 | AMBIG |
-| `subsystemMetrics` | const | `src/server/db/schema.ts:1588` | 6 | AMBIG |
-| `promptVersions` | const | `src/server/db/schema.ts:1606` | 6 | AMBIG |
-| `promptAbTests` | const | `src/server/db/schema.ts:1620` | 4 | AMBIG |
-| `lifecycleTransitions` | const | `src/server/db/schema.ts:1650` | 15 | AMBIG |
-| `aPlusMarketScans` | const | `src/server/db/schema.ts:1688` | 2 | AMBIG |
-| `quantumRunCosts` | const | `src/server/db/schema.ts:1723` | 4 | AMBIG |
-| `cloudQmcRuns` | const | `src/server/db/schema.ts:1753` | 4 | AMBIG |
-| `adversarialStressRuns` | const | `src/server/db/schema.ts:1783` | 5 | AMBIG |
-| `strategyLockouts` | const | `src/server/db/schema.ts:1813` | 3 | AMBIG |
-| `backtestProvenance` | const | `src/server/db/schema.ts:1845` | 4 | AMBIG |
-| `frankensteinTestRuns` | const | `src/server/db/schema.ts:1884` | 7 | AMBIG |
-| `strategySignalVectors` | const | `src/server/db/schema.ts:1930` | 4 | AMBIG |
-| `shadowRerunFindings` | const | `src/server/db/schema.ts:1970` | 3 | AMBIG |
-| `dataIntegrityFindings` | const | `src/server/db/schema.ts:2028` | 3 | AMBIG |
-| `strategyFirmEligibility` | const | `src/server/db/schema.ts:2056` | 3 | AMBIG |
-| `pilotSessions` | const | `src/server/db/schema.ts:2094` | 3 | AMBIG |
-| `exchangeOutages` | const | `src/server/db/schema.ts:2121` | 2 | AMBIG |
-| `llmInjectionAttempts` | const | `src/server/db/schema.ts:2142` | 2 | AMBIG |
-| `strategyDslFeatures` | const | `src/server/db/schema.ts:2172` | 3 | AMBIG |
-| `propFirmHealthChecks` | const | `src/server/db/schema.ts:2198` | 3 | AMBIG |
-| `contractSpecsAuthoritative` | const | `src/server/db/schema.ts:2219` | 2 | AMBIG |
-| `dailyStatistics` | const | `src/server/db/schema.ts:2243` | 3 | AMBIG |
-| `openingAuctionImbalance` | const | `src/server/db/schema.ts:2269` | 2 | AMBIG |
-| `dailyVolumeProfileLevels` | const | `src/server/db/schema.ts:2296` | 2 | AMBIG |
-| `biasState` | const | `src/server/db/schema.ts:2324` | 12 | AMBIG |
-| `regimeHmmModels` | const | `src/server/db/schema.ts:2399` | 1 | unique |
-| `harshRegimePhase` | const | `src/server/db/schema.ts:2425` | 3 | AMBIG |
-| `ProductionMode` | type | `src/server/db/schema.ts:2455` | 2 | AMBIG |
-| `systemState` | const | `src/server/db/schema.ts:2457` | 8 | AMBIG |
-| `weeklyDriftReports` | const | `src/server/db/schema.ts:2477` | 5 | AMBIG |
-| `productionTrades` | const | `src/server/db/schema.ts:2500` | 8 | AMBIG |
-| `serverMediatedOrders` | const | `src/server/db/schema.ts:2546` | 1 | unique |
-| `dailyReconciliation` | const | `src/server/db/schema.ts:2594` | 3 | AMBIG |
-| `biasDecisions` | const | `src/server/db/schema.ts:2622` | 4 | AMBIG |
-| `biasCalibrationCurves` | const | `src/server/db/schema.ts:2655` | 2 | AMBIG |
-| `biasAblationResults` | const | `src/server/db/schema.ts:2673` | 2 | AMBIG |
-| `brokerAccounts` | const | `src/server/db/schema.ts:2696` | 16 | AMBIG |
-| `instanceConfig` | const | `src/server/db/schema.ts:2741` | 4 | AMBIG |
-| `nemoScenarioBank` | const | `src/server/db/schema.ts:2751` | 3 | AMBIG |
-| `accountStrategyAssignments` | const | `src/server/db/schema.ts:2773` | 6 | AMBIG |
-| `tradingviewMarkers` | const | `src/server/db/schema.ts:2798` | 5 | AMBIG |
-| `firmAdversarialPriors` | const | `src/server/db/schema.ts:2828` | 2 | AMBIG |
-| `FirmAdversarialPriorRow` | type | `src/server/db/schema.ts:2851` | 1 | unique |
-| `strategyPendingBuckets` | const | `src/server/db/schema.ts:2855` | 11 | AMBIG |
-| `strategyPendingMentions` | const | `src/server/db/schema.ts:2881` | 8 | AMBIG |
-| `scoutDrainSamples` | const | `src/server/db/schema.ts:2903` | 2 | AMBIG |
-| `syntheticRegimeBank` | const | `src/server/db/schema.ts:2917` | 3 | AMBIG |
-| `syntheticBlackSwanRuns` | const | `src/server/db/schema.ts:2932` | 4 | AMBIG |
-| `transcriptFetchOutcomes` | const | `src/server/db/schema.ts:2963` | 1 | unique |
-| `preMarketSessions` | const | `src/server/db/schema.ts:2986` | 5 | unique |
-| `tradeCritique` | const | `src/server/db/schema.ts:3045` | 6 | unique |
-| `liquidityLevels` | const | `src/server/db/schema.ts:3077` | 3 | unique |
-| `quantumRlRuns` | const | `src/server/db/schema.ts:3124` | 1 | unique |
-| `lifecycleShadowSignals` | const | `src/server/db/schema.ts:3181` | 4 | unique |
-| `needsArchetypeQueue` | const | `src/server/db/schema.ts:3227` | 3 | unique |
-| `strategyHealthScores` | const | `src/server/db/schema.ts:3253` | 4 | unique |
-| `slumhouseUsers` | const | `src/server/db/schema.ts:3299` | 5 | unique |
-| `SlumhouseUser` | type | `src/server/db/schema.ts:3318` | 1 | unique |
-| `operatorAbsentPeriods` | const | `src/server/db/schema.ts:3325` | 2 | AMBIG |
-| `agentJobs` | const | `src/server/db/schema.ts:3353` | 2 | unique |
-| `workflowBackups` | const | `src/server/db/schema.ts:3388` | 1 | unique |
-| `liveOrderPineDedup` | const | `src/server/db/schema.ts:3417` | 0 | unique |
-| `carterIssues` | const | `src/server/db/schema.ts:3453` | 2 | unique |
-| `carterMemory` | const | `src/server/db/schema.ts:3480` | 1 | unique |
+| `strategies` | const | `src/server/db/schema.ts:58` | 146 | AMBIG |
+| `BACKTEST_STATUS_REFUSED` | const | `src/server/db/schema.ts:163` | 5 | unique |
+| `backtests` | const | `src/server/db/schema.ts:165` | 53 | AMBIG |
+| `backtestMatrix` | const | `src/server/db/schema.ts:301` | 5 | AMBIG |
+| `backtestTrades` | const | `src/server/db/schema.ts:323` | 11 | AMBIG |
+| `monteCarloRuns` | const | `src/server/db/schema.ts:363` | 20 | AMBIG |
+| `stressTestRuns` | const | `src/server/db/schema.ts:392` | 6 | AMBIG |
+| `alerts` | const | `src/server/db/schema.ts:414` | 10 | AMBIG |
+| `systemJournal` | const | `src/server/db/schema.ts:434` | 14 | AMBIG |
+| `auditLog` | const | `src/server/db/schema.ts:469` | 114 | AMBIG |
+| `dataSyncJobs` | const | `src/server/db/schema.ts:511` | 1 | AMBIG |
+| `complianceRulesets` | const | `src/server/db/schema.ts:535` | 8 | AMBIG |
+| `complianceReviews` | const | `src/server/db/schema.ts:565` | 5 | AMBIG |
+| `complianceDriftLog` | const | `src/server/db/schema.ts:592` | 5 | AMBIG |
+| `skipDecisions` | const | `src/server/db/schema.ts:615` | 8 | AMBIG |
+| `macroSnapshots` | const | `src/server/db/schema.ts:643` | 4 | AMBIG |
+| `macroFeatures` | const | `src/server/db/schema.ts:675` | 4 | AMBIG |
+| `macroRegimeStates` | const | `src/server/db/schema.ts:698` | 5 | AMBIG |
+| `strategyGraveyard` | const | `src/server/db/schema.ts:722` | 10 | AMBIG |
+| `dayArchetypes` | const | `src/server/db/schema.ts:750` | 3 | AMBIG |
+| `tournamentResults` | const | `src/server/db/schema.ts:771` | 4 | AMBIG |
+| `paperSessions` | const | `src/server/db/schema.ts:798` | 40 | AMBIG |
+| `paperPositions` | const | `src/server/db/schema.ts:850` | 19 | AMBIG |
+| `paperTrades` | const | `src/server/db/schema.ts:919` | 29 | AMBIG |
+| `paperSignalLogs` | const | `src/server/db/schema.ts:967` | 8 | AMBIG |
+| `shadowSignals` | const | `src/server/db/schema.ts:996` | 10 | AMBIG |
+| `walkForwardWindows` | const | `src/server/db/schema.ts:1021` | 5 | AMBIG |
+| `quantumMcRuns` | const | `src/server/db/schema.ts:1045` | 11 | AMBIG |
+| `quantumMcBenchmarks` | const | `src/server/db/schema.ts:1081` | 3 | AMBIG |
+| `strategyNames` | const | `src/server/db/schema.ts:1102` | 7 | AMBIG |
+| `strategyExports` | const | `src/server/db/schema.ts:1122` | 8 | AMBIG |
+| `strategyExportArtifacts` | const | `src/server/db/schema.ts:1150` | 5 | AMBIG |
+| `sqaOptimizationRuns` | const | `src/server/db/schema.ts:1169` | 5 | AMBIG |
+| `quboTimingRuns` | const | `src/server/db/schema.ts:1192` | 5 | AMBIG |
+| `tensorPredictions` | const | `src/server/db/schema.ts:1213` | 5 | AMBIG |
+| `rlTrainingRuns` | const | `src/server/db/schema.ts:1236` | 7 | AMBIG |
+| `criticOptimizationRuns` | const | `src/server/db/schema.ts:1262` | 8 | AMBIG |
+| `criticCandidates` | const | `src/server/db/schema.ts:1294` | 4 | AMBIG |
+| `researchTrialCounter` | const | `src/server/db/schema.ts:1353` | 2 | unique |
+| `deeparForecasts` | const | `src/server/db/schema.ts:1361` | 8 | AMBIG |
+| `deeparTrainingRuns` | const | `src/server/db/schema.ts:1390` | 4 | AMBIG |
+| `agentHealthReports` | const | `src/server/db/schema.ts:1416` | 3 | AMBIG |
+| `systemParameters` | const | `src/server/db/schema.ts:1434` | 20 | AMBIG |
+| `systemParameterHistory` | const | `src/server/db/schema.ts:1451` | 4 | AMBIG |
+| `paperSessionFeedback` | const | `src/server/db/schema.ts:1470` | 4 | AMBIG |
+| `mutationOutcomes` | const | `src/server/db/schema.ts:1508` | 3 | AMBIG |
+| `contractRolls` | const | `src/server/db/schema.ts:1534` | 2 | AMBIG |
+| `deadLetterQueue` | const | `src/server/db/schema.ts:1557` | 5 | AMBIG |
+| `n8nExecutionLog` | const | `src/server/db/schema.ts:1581` | 3 | unique |
+| `idempotencyKeys` | const | `src/server/db/schema.ts:1602` | 3 | AMBIG |
+| `subsystemMetrics` | const | `src/server/db/schema.ts:1611` | 6 | AMBIG |
+| `promptVersions` | const | `src/server/db/schema.ts:1629` | 6 | AMBIG |
+| `promptAbTests` | const | `src/server/db/schema.ts:1643` | 4 | AMBIG |
+| `lifecycleTransitions` | const | `src/server/db/schema.ts:1673` | 15 | AMBIG |
+| `aPlusMarketScans` | const | `src/server/db/schema.ts:1711` | 2 | AMBIG |
+| `quantumRunCosts` | const | `src/server/db/schema.ts:1746` | 4 | AMBIG |
+| `cloudQmcRuns` | const | `src/server/db/schema.ts:1776` | 4 | AMBIG |
+| `adversarialStressRuns` | const | `src/server/db/schema.ts:1806` | 5 | AMBIG |
+| `strategyLockouts` | const | `src/server/db/schema.ts:1836` | 3 | AMBIG |
+| `backtestProvenance` | const | `src/server/db/schema.ts:1868` | 4 | AMBIG |
+| `frankensteinTestRuns` | const | `src/server/db/schema.ts:1907` | 7 | AMBIG |
+| `strategySignalVectors` | const | `src/server/db/schema.ts:1953` | 4 | AMBIG |
+| `shadowRerunFindings` | const | `src/server/db/schema.ts:1993` | 3 | AMBIG |
+| `dataIntegrityFindings` | const | `src/server/db/schema.ts:2051` | 3 | AMBIG |
+| `strategyFirmEligibility` | const | `src/server/db/schema.ts:2079` | 3 | AMBIG |
+| `pilotSessions` | const | `src/server/db/schema.ts:2117` | 3 | AMBIG |
+| `exchangeOutages` | const | `src/server/db/schema.ts:2144` | 2 | AMBIG |
+| `llmInjectionAttempts` | const | `src/server/db/schema.ts:2165` | 2 | AMBIG |
+| `strategyDslFeatures` | const | `src/server/db/schema.ts:2195` | 3 | AMBIG |
+| `propFirmHealthChecks` | const | `src/server/db/schema.ts:2221` | 3 | AMBIG |
+| `contractSpecsAuthoritative` | const | `src/server/db/schema.ts:2242` | 2 | AMBIG |
+| `dailyStatistics` | const | `src/server/db/schema.ts:2266` | 3 | AMBIG |
+| `openingAuctionImbalance` | const | `src/server/db/schema.ts:2292` | 2 | AMBIG |
+| `dailyVolumeProfileLevels` | const | `src/server/db/schema.ts:2319` | 2 | AMBIG |
+| `biasState` | const | `src/server/db/schema.ts:2347` | 12 | AMBIG |
+| `regimeHmmModels` | const | `src/server/db/schema.ts:2422` | 1 | unique |
+| `harshRegimePhase` | const | `src/server/db/schema.ts:2448` | 3 | AMBIG |
+| `ProductionMode` | type | `src/server/db/schema.ts:2478` | 2 | AMBIG |
+| `systemState` | const | `src/server/db/schema.ts:2480` | 8 | AMBIG |
+| `weeklyDriftReports` | const | `src/server/db/schema.ts:2500` | 5 | AMBIG |
+| `productionTrades` | const | `src/server/db/schema.ts:2523` | 8 | AMBIG |
+| `serverMediatedOrders` | const | `src/server/db/schema.ts:2569` | 1 | unique |
+| `dailyReconciliation` | const | `src/server/db/schema.ts:2617` | 3 | AMBIG |
+| `biasDecisions` | const | `src/server/db/schema.ts:2645` | 4 | AMBIG |
+| `biasCalibrationCurves` | const | `src/server/db/schema.ts:2678` | 2 | AMBIG |
+| `biasAblationResults` | const | `src/server/db/schema.ts:2696` | 2 | AMBIG |
+| `brokerAccounts` | const | `src/server/db/schema.ts:2719` | 16 | AMBIG |
+| `instanceConfig` | const | `src/server/db/schema.ts:2764` | 4 | AMBIG |
+| `nemoScenarioBank` | const | `src/server/db/schema.ts:2774` | 3 | AMBIG |
+| `accountStrategyAssignments` | const | `src/server/db/schema.ts:2796` | 6 | AMBIG |
+| `tradingviewMarkers` | const | `src/server/db/schema.ts:2821` | 5 | AMBIG |
+| `firmAdversarialPriors` | const | `src/server/db/schema.ts:2851` | 2 | AMBIG |
+| `FirmAdversarialPriorRow` | type | `src/server/db/schema.ts:2874` | 1 | unique |
+| `strategyPendingBuckets` | const | `src/server/db/schema.ts:2878` | 11 | AMBIG |
+| `strategyPendingMentions` | const | `src/server/db/schema.ts:2904` | 8 | AMBIG |
+| `scoutDrainSamples` | const | `src/server/db/schema.ts:2926` | 2 | AMBIG |
+| `syntheticRegimeBank` | const | `src/server/db/schema.ts:2940` | 3 | AMBIG |
+| `syntheticBlackSwanRuns` | const | `src/server/db/schema.ts:2955` | 4 | AMBIG |
+| `transcriptFetchOutcomes` | const | `src/server/db/schema.ts:2986` | 1 | unique |
+| `preMarketSessions` | const | `src/server/db/schema.ts:3009` | 5 | unique |
+| `tradeCritique` | const | `src/server/db/schema.ts:3068` | 6 | unique |
+| `liquidityLevels` | const | `src/server/db/schema.ts:3100` | 3 | unique |
+| `quantumRlRuns` | const | `src/server/db/schema.ts:3147` | 1 | unique |
+| `lifecycleShadowSignals` | const | `src/server/db/schema.ts:3204` | 4 | unique |
+| `needsArchetypeQueue` | const | `src/server/db/schema.ts:3250` | 3 | unique |
+| `strategyHealthScores` | const | `src/server/db/schema.ts:3276` | 4 | unique |
+| `slumhouseUsers` | const | `src/server/db/schema.ts:3322` | 5 | unique |
+| `SlumhouseUser` | type | `src/server/db/schema.ts:3341` | 1 | unique |
+| `operatorAbsentPeriods` | const | `src/server/db/schema.ts:3348` | 2 | AMBIG |
+| `agentJobs` | const | `src/server/db/schema.ts:3376` | 2 | unique |
+| `workflowBackups` | const | `src/server/db/schema.ts:3411` | 1 | unique |
+| `liveOrderPineDedup` | const | `src/server/db/schema.ts:3440` | 0 | unique |
+| `carterIssues` | const | `src/server/db/schema.ts:3476` | 2 | unique |
+| `carterMemory` | const | `src/server/db/schema.ts:3503` | 1 | unique |
 
 </details>
 
@@ -5526,7 +5630,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/server/lib</code> - 679 symbols</summary>
+<details><summary><code>src/server/lib</code> - 690 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -5552,6 +5656,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `getB14PayoutDenialThreshold` | function | `src/server/lib/b14-ci-gate.ts:284` | 0 | unique |
 | `evaluateB14CiGate` | function | `src/server/lib/b14-ci-gate.ts:334` | 3 | unique |
 | `buildBacktestArgs` | function | `src/server/lib/backtest-args.ts:24` | 1 | AMBIG |
+| `isExecutionRefused` | function | `src/server/lib/backtest-refusal.ts:35` | 6 | unique |
+| `refusalEvidence` | function | `src/server/lib/backtest-refusal.ts:50` | 6 | unique |
 | `getBifWarnThreshold` | function | `src/server/lib/bif-gate.ts:50` | 0 | unique |
 | `getBifBlockThreshold` | function | `src/server/lib/bif-gate.ts:69` | 0 | unique |
 | `BifGateResult` | interface | `src/server/lib/bif-gate.ts:85` | 0 | unique |
@@ -5966,8 +6072,17 @@ This is the *we already have this* list.  Check it before writing anything.
 | `quarantineExtraction` | function | `src/server/lib/quarantine-extraction.ts:51` | 2 | unique |
 | `ReconSeverity` | type | `src/server/lib/recon-severity.ts:1` | 2 | AMBIG |
 | `deriveReconSeverity` | function | `src/server/lib/recon-severity.ts:15` | 1 | unique |
+| `ReplayOutcomePatch` | interface | `src/server/lib/replay-outcome.ts:46` | 0 | unique |
+| `InvalidReason` | type | `src/server/lib/replay-outcome.ts:59` | 0 | unique |
+| `RECOGNIZED_TIERS` | const | `src/server/lib/replay-outcome.ts:68` | 0 | unique |
+| `RecognizedTier` | type | `src/server/lib/replay-outcome.ts:69` | 0 | unique |
+| `RANKING_ELIGIBLE_TIERS` | const | `src/server/lib/replay-outcome.ts:72` | 0 | unique |
+| `BACKTEST_STATUS_COMPLETED` | const | `src/server/lib/replay-outcome.ts:84` | 0 | unique |
+| `ReplayOutcome` | type | `src/server/lib/replay-outcome.ts:86` | 0 | unique |
+| `REPLAY_STATUS_INVALID` | const | `src/server/lib/replay-outcome.ts:117` | 0 | unique |
+| `classifyReplayOutcome` | function | `src/server/lib/replay-outcome.ts:133` | 1 | unique |
 | `canonicalizeResult` | function | `src/server/lib/result-hasher.ts:74` | 0 | unique |
-| `computeResultHash` | function | `src/server/lib/result-hasher.ts:84` | 2 | unique |
+| `computeResultHash` | function | `src/server/lib/result-hasher.ts:84` | 3 | unique |
 | `computeDataHash` | function | `src/server/lib/result-hasher.ts:101` | 2 | unique |
 | `computeStrategyHash` | function | `src/server/lib/result-hasher.ts:124` | 2 | AMBIG |
 | `FirmId` | type | `src/server/lib/risk-sizing.ts:62` | 0 | unique |
@@ -6080,11 +6195,11 @@ This is the *we already have this* list.  Check it before writing anything.
 | `sessionRefusalReason` | function | `src/server/lib/spec-family-bindings.ts:88` | 0 | unique |
 | `MIN_SPINE_BOUND_RATIO` | const | `src/server/lib/spec-family-bindings.ts:92` | 1 | unique |
 | `FAMILY_META` | const | `src/server/lib/spec-family-bindings.ts:132` | 3 | unique |
-| `resolveSessionKeyword` | function | `src/server/lib/spec-family-bindings.ts:215` | 0 | unique |
-| `refusedSessionZone` | function | `src/server/lib/spec-family-bindings.ts:224` | 0 | unique |
-| `bindCondition` | function | `src/server/lib/spec-family-bindings.ts:232` | 0 | unique |
-| `SpecArtifactBodyLike` | interface | `src/server/lib/spec-family-bindings.ts:318` | 0 | unique |
-| `compileBindingPlan` | function | `src/server/lib/spec-family-bindings.ts:324` | 3 | unique |
+| `resolveSessionKeyword` | function | `src/server/lib/spec-family-bindings.ts:224` | 0 | unique |
+| `refusedSessionZone` | function | `src/server/lib/spec-family-bindings.ts:233` | 0 | unique |
+| `bindCondition` | function | `src/server/lib/spec-family-bindings.ts:241` | 0 | unique |
+| `SpecArtifactBodyLike` | interface | `src/server/lib/spec-family-bindings.ts:327` | 0 | unique |
+| `compileBindingPlan` | function | `src/server/lib/spec-family-bindings.ts:333` | 3 | unique |
 | `SQA_AWAIT_TIMEOUT_MS` | const | `src/server/lib/sqa-promise-registry.ts:27` | 0 | unique |
 | `SQA_TTL_MS` | const | `src/server/lib/sqa-promise-registry.ts:28` | 0 | unique |
 | `SQA_CB_WINDOW_MS` | const | `src/server/lib/sqa-promise-registry.ts:29` | 0 | unique |
@@ -6444,7 +6559,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/server/services</code> - 895 symbols</summary>
+<details><summary><code>src/server/services</code> - 903 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -6483,15 +6598,18 @@ This is the *we already have this* list.  Check it before writing anything.
 | `AgentEvent` | type | `src/server/services/agent-coordinator-service.ts:17` | 0 | unique |
 | `agentCoordinator` | const | `src/server/services/agent-coordinator-service.ts:127` | 3 | unique |
 | `initAgentCoordination` | function | `src/server/services/agent-coordinator-service.ts:135` | 1 | unique |
-| `DslQualityCriticResult` | interface | `src/server/services/agent-service.ts:155` | 0 | unique |
-| `runDslQualityCriticOllama` | function | `src/server/services/agent-service.ts:169` | 0 | unique |
-| `runDslQualityCritic` | function | `src/server/services/agent-service.ts:249` | 3 | unique |
-| `tier2AuditorFilter` | export-binding | `src/server/services/agent-service.ts:415` | 0 | unique |
-| `RunStrategyInput` | interface | `src/server/services/agent-service.ts:420` | 0 | unique |
-| `CritiqueInput` | interface | `src/server/services/agent-service.ts:432` | 0 | unique |
-| `ScoutIdea` | interface | `src/server/services/agent-service.ts:438` | 1 | unique |
-| `assertCrossValidatedSource` | function | `src/server/services/agent-service.ts:468` | 3 | unique |
-| `AgentService` | class | `src/server/services/agent-service.ts:478` | 3 | unique |
+| `DslQualityCriticResult` | interface | `src/server/services/agent-service.ts:156` | 0 | unique |
+| `runDslQualityCriticOllama` | function | `src/server/services/agent-service.ts:170` | 0 | unique |
+| `runDslQualityCritic` | function | `src/server/services/agent-service.ts:250` | 3 | unique |
+| `tier2AuditorFilter` | export-binding | `src/server/services/agent-service.ts:416` | 0 | unique |
+| `RunStrategyInput` | interface | `src/server/services/agent-service.ts:421` | 0 | unique |
+| `CritiqueInput` | interface | `src/server/services/agent-service.ts:433` | 0 | unique |
+| `ScoutIdea` | interface | `src/server/services/agent-service.ts:439` | 1 | unique |
+| `assertCrossValidatedSource` | function | `src/server/services/agent-service.ts:469` | 3 | unique |
+| `AgentOutcomeKind` | type | `src/server/services/agent-service.ts:501` | 0 | unique |
+| `AgentOutcome` | interface | `src/server/services/agent-service.ts:503` | 0 | unique |
+| `mapAgentOutcome` | function | `src/server/services/agent-service.ts:515` | 0 | unique |
+| `AgentService` | class | `src/server/services/agent-service.ts:545` | 3 | unique |
 | `AlertSeverity` | type | `src/server/services/alert-service.ts:9` | 0 | unique |
 | `AlertType` | type | `src/server/services/alert-service.ts:10` | 0 | unique |
 | `createAlert` | function | `src/server/services/alert-service.ts:12` | 4 | unique |
@@ -6534,7 +6652,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `runAutonomousScoutCycle` | function | `src/server/services/autonomous-scout-runner.ts:1374` | 3 | unique |
 | `buildBacktestArgs` | export-binding | `src/server/services/backtest-service.ts:54` | 1 | AMBIG |
 | `normalizeDecayAnalysis` | function | `src/server/services/backtest-service.ts:186` | 0 | unique |
-| `runBacktest` | function | `src/server/services/backtest-service.ts:433` | 9 | unique |
+| `PYTHON_EXECUTION_STATUS_REFUSED` | const | `src/server/services/backtest-service.ts:442` | 0 | unique |
+| `runBacktest` | function | `src/server/services/backtest-service.ts:460` | 9 | unique |
 | `StructureState` | interface | `src/server/services/bias-state-service.ts:56` | 3 | AMBIG |
 | `AsianRange` | interface | `src/server/services/bias-state-service.ts:85` | 1 | AMBIG |
 | `LondonBias` | interface | `src/server/services/bias-state-service.ts:92` | 1 | AMBIG |
@@ -6656,15 +6775,16 @@ This is the *we already have this* list.  Check it before writing anything.
 | `computeCosts` | function | `src/server/services/cost-tracker.ts:11` | 1 | unique |
 | `evaluateCriticAccuracy` | function | `src/server/services/critic-feedback-service.ts:58` | 1 | unique |
 | `checkDeclingAndTriggerRegen` | function | `src/server/services/critic-feedback-service.ts:269` | 1 | unique |
-| `LOOKAHEAD_GUARD_INSTRUCTION` | const | `src/server/services/critic-optimizer-service.ts:231` | 0 | unique |
-| `buildCandidateGovernanceMeta` | function | `src/server/services/critic-optimizer-service.ts:257` | 0 | unique |
-| `EvidenceCollector` | class | `src/server/services/critic-optimizer-service.ts:430` | 0 | unique |
-| `getEvidenceCollector` | function | `src/server/services/critic-optimizer-service.ts:542` | 0 | unique |
-| `triggerCriticOptimizer` | function | `src/server/services/critic-optimizer-service.ts:1005` | 3 | unique |
-| `manualReplayCandidates` | function | `src/server/services/critic-optimizer-service.ts:2743` | 1 | unique |
-| `getCriticRun` | function | `src/server/services/critic-optimizer-service.ts:3103` | 1 | unique |
-| `getCriticHistory` | function | `src/server/services/critic-optimizer-service.ts:3126` | 1 | unique |
-| `getCriticCandidates` | function | `src/server/services/critic-optimizer-service.ts:3148` | 1 | unique |
+| `LOOKAHEAD_GUARD_INSTRUCTION` | const | `src/server/services/critic-optimizer-service.ts:235` | 0 | unique |
+| `buildCandidateGovernanceMeta` | function | `src/server/services/critic-optimizer-service.ts:261` | 0 | unique |
+| `EvidenceCollector` | class | `src/server/services/critic-optimizer-service.ts:434` | 0 | unique |
+| `getEvidenceCollector` | function | `src/server/services/critic-optimizer-service.ts:546` | 0 | unique |
+| `triggerCriticOptimizer` | function | `src/server/services/critic-optimizer-service.ts:1009` | 3 | unique |
+| `replayCandidatesAsync` | function | `src/server/services/critic-optimizer-service.ts:2170` | 0 | unique |
+| `manualReplayCandidates` | function | `src/server/services/critic-optimizer-service.ts:2865` | 1 | unique |
+| `getCriticRun` | function | `src/server/services/critic-optimizer-service.ts:3260` | 1 | unique |
+| `getCriticHistory` | function | `src/server/services/critic-optimizer-service.ts:3283` | 1 | unique |
+| `getCriticCandidates` | function | `src/server/services/critic-optimizer-service.ts:3305` | 1 | unique |
 | `MATERIAL_WEIGHT_THRESHOLD` | const | `src/server/services/critique-faithfulness-check.ts:25` | 0 | unique |
 | `PARAMETER_HINT_WHITELIST` | const | `src/server/services/critique-faithfulness-check.ts:44` | 0 | unique |
 | `FaithfulnessResult` | interface | `src/server/services/critique-faithfulness-check.ts:91` | 0 | unique |
@@ -6778,8 +6898,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `FOMC_ANNOUNCE_DATES` | const | `src/server/services/economic-calendar-sync-service.ts:43` | 0 | unique |
 | `addDays` | function | `src/server/services/economic-calendar-sync-service.ts:72` | 0 | unique |
 | `runEconomicCalendarSync` | function | `src/server/services/economic-calendar-sync-service.ts:110` | 1 | unique |
-| `resolveLineageRootByWalking` | function | `src/server/services/evolution-service.ts:51` | 0 | unique |
-| `evolveStrategy` | function | `src/server/services/evolution-service.ts:87` | 2 | unique |
+| `resolveLineageRootByWalking` | function | `src/server/services/evolution-service.ts:55` | 0 | unique |
+| `evolveStrategy` | function | `src/server/services/evolution-service.ts:91` | 2 | unique |
 | `ExaDiscoveredStrategy` | interface | `src/server/services/exa-broker.ts:23` | 0 | unique |
 | `runExaDiscovery` | function | `src/server/services/exa-broker.ts:117` | 1 | unique |
 | `registerOutageChangeCallback` | function | `src/server/services/exchange-status-service.ts:52` | 1 | unique |
@@ -6857,11 +6977,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `LibraryDiversity` | interface | `src/server/services/library-diversity-service.ts:44` | 0 | unique |
 | `computeLibraryDiversity` | function | `src/server/services/library-diversity-service.ts:199` | 1 | unique |
 | `classifySchool` | export-binding | `src/server/services/library-diversity-service.ts:250` | 0 | unique |
-| `passingFirmNamesFromCompliance` | function | `src/server/services/lifecycle-service.ts:362` | 1 | unique |
-| `findFirmsWithComplianceDrift` | function | `src/server/services/lifecycle-service.ts:393` | 1 | unique |
-| `resolveComplianceDriftForPromotion` | function | `src/server/services/lifecycle-service.ts:426` | 0 | unique |
-| `runComplianceGateForFirms` | function | `src/server/services/lifecycle-service.ts:454` | 1 | unique |
-| `LifecycleService` | class | `src/server/services/lifecycle-service.ts:553` | 14 | unique |
+| `passingFirmNamesFromCompliance` | function | `src/server/services/lifecycle-service.ts:364` | 1 | unique |
+| `findFirmsWithComplianceDrift` | function | `src/server/services/lifecycle-service.ts:395` | 1 | unique |
+| `resolveComplianceDriftForPromotion` | function | `src/server/services/lifecycle-service.ts:428` | 0 | unique |
+| `runComplianceGateForFirms` | function | `src/server/services/lifecycle-service.ts:456` | 1 | unique |
+| `EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION` | const | `src/server/services/lifecycle-service.ts:561` | 0 | unique |
+| `EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION` | const | `src/server/services/lifecycle-service.ts:562` | 0 | unique |
+| `LifecycleService` | class | `src/server/services/lifecycle-service.ts:564` | 14 | unique |
 | `LevelType` | type | `src/server/services/liquidity-map-service.ts:42` | 2 | unique |
 | `RankedLevel` | interface | `src/server/services/liquidity-map-service.ts:73` | 2 | unique |
 | `LiquidityMapDAL` | interface | `src/server/services/liquidity-map-service.ts:87` | 1 | unique |
@@ -6897,8 +7019,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `InternalsSnapshot` | interface | `src/server/services/market-internals-service.ts:72` | 0 | unique |
 | `recordInternalsBar` | function | `src/server/services/market-internals-service.ts:102` | 0 | unique |
 | `getInternalsSnapshot` | function | `src/server/services/market-internals-service.ts:113` | 2 | unique |
-| `runMatrix` | function | `src/server/services/matrix-backtest-service.ts:236` | 3 | unique |
-| `getMatrixStatus` | function | `src/server/services/matrix-backtest-service.ts:490` | 1 | unique |
+| `runMatrix` | function | `src/server/services/matrix-backtest-service.ts:265` | 3 | unique |
+| `getMatrixStatus` | function | `src/server/services/matrix-backtest-service.ts:571` | 1 | unique |
 | `TighteningDecision` | interface | `src/server/services/mcl-pre-eia-stop-tighten-service.ts:73` | 0 | unique |
 | `computeMclTighteningDecision` | function | `src/server/services/mcl-pre-eia-stop-tighten-service.ts:82` | 0 | unique |
 | `PreEiaTightenSummary` | interface | `src/server/services/mcl-pre-eia-stop-tighten-service.ts:154` | 0 | unique |
@@ -7105,9 +7227,9 @@ This is the *we already have this* list.  Check it before writing anything.
 | `composeWrittenBias` | function | `src/server/services/pre-market-routine.ts:717` | 0 | unique |
 | `PreMarketRoutineResult` | interface | `src/server/services/pre-market-routine.ts:745` | 0 | unique |
 | `runPreMarketRoutine` | function | `src/server/services/pre-market-routine.ts:761` | 1 | unique |
-| `getActivePromptContent` | function | `src/server/services/prompt-evolution-service.ts:103` | 0 | unique |
-| `resolveAbTests` | function | `src/server/services/prompt-evolution-service.ts:368` | 1 | unique |
-| `getActiveVersionIdForGeneration` | function | `src/server/services/prompt-evolution-service.ts:763` | 1 | unique |
+| `getActivePromptContent` | function | `src/server/services/prompt-evolution-service.ts:115` | 0 | unique |
+| `resolveAbTests` | function | `src/server/services/prompt-evolution-service.ts:380` | 1 | unique |
+| `getActiveVersionIdForGeneration` | function | `src/server/services/prompt-evolution-service.ts:814` | 1 | unique |
 | `loadCookiesFromRuntimeFiles` | function | `src/server/services/prop-firm-cookie-refresh-service.ts:115` | 0 | unique |
 | `CookieStatus` | type | `src/server/services/prop-firm-cookie-refresh-service.ts:200` | 0 | unique |
 | `getCookieStatus` | function | `src/server/services/prop-firm-cookie-refresh-service.ts:210` | 1 | unique |
@@ -7193,12 +7315,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `runStatisticsPull` | function | `src/server/services/settlement-reconciliation-service.ts:71` | 1 | unique |
 | `getSettlementPrice` | function | `src/server/services/settlement-reconciliation-service.ts:158` | 0 | unique |
 | `runSettlementReconciliation` | function | `src/server/services/settlement-reconciliation-service.ts:210` | 1 | unique |
-| `PAPER_PLUS_STATES` | const | `src/server/services/shadow-rerun-service.ts:49` | 4 | unique |
-| `ShadowRerunStrategyInput` | interface | `src/server/services/shadow-rerun-service.ts:71` | 0 | unique |
-| `ShadowRerunFinding` | interface | `src/server/services/shadow-rerun-service.ts:76` | 0 | unique |
-| `ShadowRerunReport` | interface | `src/server/services/shadow-rerun-service.ts:94` | 0 | unique |
-| `runShadowRerun` | function | `src/server/services/shadow-rerun-service.ts:383` | 1 | unique |
-| `getShadowRerunFindings` | function | `src/server/services/shadow-rerun-service.ts:564` | 1 | unique |
+| `PAPER_PLUS_STATES` | const | `src/server/services/shadow-rerun-service.ts:50` | 4 | unique |
+| `ShadowRerunStrategyInput` | interface | `src/server/services/shadow-rerun-service.ts:72` | 0 | unique |
+| `ShadowRerunFinding` | interface | `src/server/services/shadow-rerun-service.ts:77` | 0 | unique |
+| `ShadowRerunRefusal` | interface | `src/server/services/shadow-rerun-service.ts:103` | 0 | unique |
+| `ShadowRerunReport` | interface | `src/server/services/shadow-rerun-service.ts:116` | 0 | unique |
+| `runShadowRerun` | function | `src/server/services/shadow-rerun-service.ts:439` | 1 | unique |
+| `getShadowRerunFindings` | function | `src/server/services/shadow-rerun-service.ts:640` | 1 | unique |
 | `logShadowSignal` | function | `src/server/services/shadow-service.ts:27` | 1 | unique |
 | `getShadowReport` | function | `src/server/services/shadow-service.ts:95` | 1 | unique |
 | `SignalConfirmation` | interface | `src/server/services/signal-confirmation-service.ts:6` | 0 | unique |
