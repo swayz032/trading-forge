@@ -12,6 +12,108 @@
 
 ---
 
+## R-776 · 2026-08-09 · ✅✅ **`AR-899` ACCEPTED — BOTH GUARD DEFECTS CLOSED, AND I RE-RAN AND RE-GREPPED EVERY LOAD-BEARING CLAIM MYSELF.** ⚡ **`STEP 2` IS CLEARED TO BEGIN NOW.** ⭐⭐⭐ **THE FALSE-GREEN IS PROVABLY DEAD: `RED 2` NOW FILLS ITS SPY ONLY THROUGH `SpecConditionStrategy._dispatch_enforced(...)` AT `:337` — REAL PRODUCTION MACHINERY, VERIFIED AT THE LINE.** ⚖️ **AND I ADOPT + SHARPEN THE READ'S `§3`: THE CONTRACT IS THE **BOUNDARY**, NEVER THE FUNCTION **NAME**.** ✅ **MANIFEST `104` ACCEPTED — EXACTLY ONE MEMBER, DIFFED BY ME.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§4` — `R-774 §6` STEP 2, cleared. Wire the FULL certified extraction record into a real public production compile boundary and call `lower_opening_range_definition()` ONCE as the authoritative lowerer.** 🛑 **STEP 2 is NOT registration, NOT dispatch, NOT the TS mirror, NOT candidate transport.** ⭐ **`§5` PRE-REGISTERS THE OUTCOME: `RED 1` ADVANCING TO A DEEPER STAGE IS SUCCESS, NOT FAILURE — do not chase it fully green in this step.**
+
+**RULING ID:** R-776 · **ARs RULED: `AR-899`** — copied from the read's own subject (`AR-899 / S6-1 STEP 1 ACCEPTANCE + STEP 2 CLEARANCE`). `[MEASURED HERE]` **`AR-899` is the NEWEST `## AR-` on disk.** · **DECISION: ACCEPT · CLEAR STEP 2**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** **SEAT `claude.exe 25636`.** **`STEP 1` closed at attempt `1 / 2`** — the budget is **RESET for STEP 2** (`0 / 2`); a per-step budget does not carry a spent attempt forward.
+
+### §1 — ✅ WHAT I VERIFIED MYSELF, NOT FROM THE REPORT AND NOT FROM THE READ
+```
+[MEASURED HERE, all at b0ced923]
+1 THE MANDATED MECHANICAL CHECK (R-775 §2)
+    grep -nE '^\s+spy\(' <testfile>   ->  0 direct invocations
+    the 5 remaining `spy(` hits are 3 `def spy(...)` + 2 DOCSTRINGS describing the old defect
+2 RED 2 GOES THROUGH REAL PRODUCTION DISPATCH — the decisive repair
+    :63  from src.engine.spec_condition_compiler import SpecConditionStrategy
+    :333 strategy = SpecConditionStrategy(artifact, binding_plan=plan)
+    :337 strategy._dispatch_enforced(binding, {})      <- ONLY this can fill the spy list
+3 I RAN THE CORRECTED SUITE
+    python -m pytest <the S6 file> -q -rf --tb=no  ->  2 failed, 3 passed
+    FAILED test_a_full_record_compile_boundary_transports_exactly_the_three_taught_candidates
+    FAILED test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate
+    ^ the NAMES now describe what is actually asserted — the caption matches the claim
+4 THE MANIFEST DELTA (R-775 §5)
+    git show 27edd639 -- <manifest>  ->  ONE inserted line, ZERO removed:
+      + engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+    members now = 104   [counted with `tr -d '\r'`, ps-counting-encoding]
+    ⭐ the worker used an ASSERT-BEFORE-WRITE that refused any diff but the authorized one
+```
+🛑 **`[ARTIFACT-SOURCED — AR-899 / the read, NOT VERIFIED BY ME]`:** that the POSITIVE WITNESS attaches through the same `module:attr` seam production resolvers use. **I verified only that it makes no direct spy call.** ⚠️ **I name that gap rather than letting item 1's grep imply I checked the witness's seam** — `advisor-ruling §2`, the weakest claim must not borrow the strongest's authority by adjacency.
+⭐ **A BONUS CONTROL I FOUND WHILE LOOKING FOR SOMETHING ELSE:** the refusal side is EXECUTABLE, not prose — `test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter_calls` asserts **both** `_find_candidates(plan) == []` **and** `calls == []`. ★★★ **`A REFUSAL CONTROL THAT ONLY CHECKS THE OUTPUT IS HALF A CONTROL — THIS ONE ALSO CHECKS THAT NOTHING WAS EXECUTED.`**
+
+### §2 — ⭐⭐⭐ THE FALSE-GREEN IS CLOSED, AND THE PROOF IS STRUCTURAL RATHER THAN TEXTUAL
+🛑 **The state `R-775 §1` named as the future disaster — candidates transport, `FAMILY_META` carries a pretty primitive string, the resolver has an entry, and NOTHING EXECUTES — now stays RED**, because the spy can only be filled by `_dispatch_enforced`. ★★★★★ **`THE REPAIR THAT COUNTS IS NOT A STRONGER ASSERTION, IT IS REMOVING THE TEST'S ABILITY TO ANSWER ITS OWN QUESTION. AN ASSERTION CAN BE ARGUED WITH; A MISSING CODE PATH CANNOT.`**
+⚖️ **AND CREDIT WHERE THE PROCESS EARNED IT:** this defect was caught, repaired, and re-proved **with production untouched**. ★★★★ **`RED-FIRST DID NOT JUST FIND THE BUG — IT BOUGHT THE WINDOW IN WHICH FIXING THE TEST WAS STILL HONEST. THAT WINDOW IS THE ENTIRE POINT, AND IT CLOSES THE MOMENT THE FIRST PRODUCTION LINE LANDS.`**
+
+### §3 — ⚖️ THE READ'S `§3`, ADOPTED AND SHARPENED — THE CONTRACT IS THE BOUNDARY, NOT THE NAME
+✅ **`RED 1` currently inspects `produce_spec_artifact()`'s signature because that is TODAY's available producer boundary** (`[MEASURED, R-774 §4-4]` it takes `strategy_extraction, *, video, certificate, transcript_chars`).
+🛑 **THAT MUST NOT HARDEN INTO A REQUIREMENT THAT THE API BE FOREVER NAMED `produce_spec_artifact`.** **STEP 2 is authorized to EITHER extend it with an explicit full-record input, OR introduce a thin public production wrapper — whichever is the smaller clean change.**
+🛑🛑 **BUT IF THE BOUNDARY MOVES, THE PERMANENT TEST MOVES WITH IT.** ★★★★★ **`A TEST PINNED TO A FUNCTION NAME GUARDS THE NAME, NOT THE BOUNDARY. IF THE REAL PUBLIC ENTRY POINT CHANGES AND THE GUARD KEEPS INSPECTING THE OBSOLETE INNER HELPER, IT WILL GO GREEN WHILE WATCHING A DOOR NOBODY USES ANY MORE.`** ⇒ **the corrected guard must end up exercising whatever the REAL public boundary is, and the AR must say which one it chose and why.**
+
+### §4 — ⚡ AUTHORIZED NOW — `R-774 §6` STEP 2
+**AUTHORIZED TO `claude.exe 25636`. ATTEMPT `0 / 2` (fresh per-step budget).**
+```
+OBJECTIVE — narrow, and the variable stays narrow:
+  wire the FULL certified extraction record into a real public production compile boundary,
+  and invoke the EXISTING lower_opening_range_definition() exactly ONCE as the authoritative
+  lowerer.
+THE BOUNDARY MUST PRESERVE: strategy extraction · record-level instrument_classification ·
+  source/video identity · condition identity + provenance · the taught opening-range
+  alternatives · trading-day evidence.
+REQUIRED BEHAVIOUR, both arms:
+  golden st5e-YJRfKc__s0        -> READY
+  neighbour hcHuDfxdywI__s0     -> SOURCE_INCOMPLETE      (the refusal arm stays executable)
+🛑 STEP 2 IS **NOT**: family registration · resolver/dispatch · the TS mirror · candidate
+  transport · backtesting · breakout semantics · stops/targets · onboarding · prop compliance.
+🛑 ONE LOWERER: no alternate lowerer, no second regex interpretation, no hand-built
+  OpeningRangeDefinition. The existing lowerer remains the semantic authority.
+FIRST OBSERVABLE: the full-record boundary landing, with RED 1's failure text showing it has
+  ADVANCED past the signature stage. START-RECEIPT if >10 min. `AR` on completion.
+```
+🛑 **STOP CONDITIONS — any one of these means THE BOUNDARY IS WRONG; stop and report:** reading the frozen provenance file from inside the compiler · recognising `st5e-YJRfKc__s0` in production · choosing `5m`/`15m`/`30m` · reconstructing `market_scope` from generated spec prose · copying opening-range parsing out of the lowerer · using `ConditionBinding.parameters` as the record carrier · manufacturing a trading-day rule · turning the source-incomplete neighbour into `READY`.
+
+### §5 — ⚖️ PRE-REGISTERED NOW: A STAGED RED THAT MOVES DEEPER IS **SUCCESS**
+`[pre-register-criteria]` **— written before the data so it cannot be re-read as disappointment:**
+```
+EXPECTED AND ACCEPTED AFTER STEP 2:
+  RED 1 stage 1 (no full-record boundary exists)      -> PASSES
+  RED 1 advances to the CANDIDATE-TRANSPORT stage     -> STILL RED, and that is CORRECT
+  RED 2 (production dispatch reaches the adapter)     -> STILL RED, untouched by STEP 2
+NOT REQUIRED, AND DO NOT CHASE IT: RED 1 fully green in this step.
+```
+★★★★★ **`A STAGED RED MOVING DEEPER IS NOT A FAILURE — IT IS THE INSTRUMENT REPORTING THAT ONE HANDOFF WAS REPAIRED AND NAMING THE NEXT. A LANE THAT INSISTS ON FULL GREEN PER STEP WILL EITHER OVER-REACH ITS SCOPE OR WEAKEN ITS GUARD, AND BOTH ARE WORSE THAN A HONEST DEEPER RED.`**
+
+### §6 — 📐 THE INVENTORY FINDING IS BANKED, NOT INSERTED INTO `S6` (read `§10`, adopted)
+✅ **Already banked by this desk in seat memory (`money-path-reachability`) BEFORE this ruling, deliberately not as a lane.** `[MEASURED HERE, earlier this seat]` `src/engine/extraction` `0 wired / 264 unreachable` · `produce_spec_artifact`'s only callers live under `docs/replay-results/` (census scripts) · `onboardSpecArtifact` has NO caller · **and my correction stands and the read accepts it: `registerStrategiesInPlaybook` IS called (`fade-the-losers-service:677`, `spec-onboarding-service:782`) but BOTH callers are unreachable (`fade-the-losers` has `0` non-test imports)** ⇒ ★★★★★ **`CALLER EXISTENCE ≠ TRANSITIVE REACHABILITY. ONE DORMANT CLUSTER, NOT THREE ORPHANS — WHICH MEANS ONE WIRING POINT MAY REVIVE ALL OF IT.`**
+⚠️ **BOUNDED HONESTLY:** *"unreachable"* = **no STATIC path found**; dynamic registries, `getattr`, n8n and subprocess entry are invisible. **I closed the two that matter by hand with a positive control; the rest are STRONG LEADS, NOT VERDICTS** (`[dormant-activation]` — this campaign already WITHDREW one dormancy claim for exactly that).
+🛑 **NOT A LANE NOW. It wakes as a READ-ONLY recon AFTER `S6` closes, and before any new strategy family.**
+
+### §7 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : one real extracted strategy condition compiled AND EXECUTED (R-648 slice)
+CRITICAL PATH  : STEP 2 (§4) -> STEP 3 candidate fan-out -> STEP 4+ identity -> registration
+                 /dispatch -> execution proof -> final controls (R-774 §7 A-M).
+AUTHORIZED NOW : §4, seat claude.exe 25636, STEP 2, attempt 0/2.
+PRECEDENCE PROOF: [MEASURED §1] RED 1's stage-1 failure NAMES the missing full-record boundary,
+                 and every later step consumes its output. It is the first arrow, not a
+                 parallel one.
+DEFERRED REGISTER: MP-1 (money-path reachability recon, READ-ONLY, wakes when S6 closes) ·
+                 INV-1 · DOC-1 · SCOPE-1 · TD-1 · TD-2 · TD-3 · OBS-1 · D-10-ADJ-1 · N-6 ·
+                 Q-1 — unchanged, none wake here.
+STOP           : §4's eight · editing acceptance-baseline-2026-08-09.json (IMMUTABLE) ·
+                 solving STEP 3 inside STEP 2 · starting the reachability recon as a
+                 competing lane.
+```
+🛑 **UNCHANGED AND RESTATED BECAUSE IT IS THE ONE ARTIFACT A SUCCESSFUL LANE IS MOST TEMPTED TO EDIT: `acceptance-baseline-2026-08-09.json` (`103`/`33`) IS THE IMMUTABLE PRE-S6 BEFORE-PICTURE.** Final join stays `NEW 0 / GONE exactly the 2 ordered opening-range reds / 31 identical` (`R-775 §3`). **A post-S6 baseline is a NEW FILE.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE YET** — `STEP 2` is the first step permitted to touch production, and it touches only a compile BOUNDARY: no compiler semantics, no extracted logic, no sizing/risk, no execution path, no live capital.
+
+**LESSON TO PERSIST:** ★★★★★ **`THE REPAIR THAT COUNTS IS NOT A STRONGER ASSERTION — IT IS REMOVING THE TEST'S ABILITY TO ANSWER ITS OWN QUESTION.`** · ★★★★★ **`A TEST PINNED TO A FUNCTION NAME GUARDS THE NAME, NOT THE BOUNDARY.`** · ★★★★★ **`A STAGED RED MOVING DEEPER IS THE INSTRUMENT NAMING THE NEXT HANDOFF, NOT A FAILURE.`** · ★★★★ **`RED-FIRST BUYS A WINDOW IN WHICH FIXING THE TEST IS STILL HONEST — IT CLOSES WITH THE FIRST PRODUCTION LINE.`** · ★★★★ **`CALLER EXISTENCE ≠ TRANSITIVE REACHABILITY.`**
+
+---
+
 ## R-775 · 2026-08-09 · 🛑🛑 **`S6-1` STEP 1: RED-FIRST DISCIPLINE ACCEPTED — THE GUARD ITSELF IS **NOT**. BOTH DEFECTS VERIFIED BY ME AT THE EXECUTABLE LINE.** ⭐⭐⭐ **THE LOAD-BEARING RED CALLS ITS OWN SPY IN A LOOP (`:293`), SO THE `(5,15,30)` IT ASSERTS IS A LIST THE **TEST** APPENDED — PRODUCTION NEVER RUNS.** 🛑 **PRODUCTION WIRING HELD UNTIL BOTH ARE REPAIRED AND REPUBLISHED RED.** ⚖️ **AND I ADOPT THE READ'S ARITHMETIC CORRECTION, WHICH IS SHARPER THAN THE WORKER'S: THE FINAL JOIN IS `NEW 0 / GONE EXACTLY 2`, NOT `NEW 0 / GONE 0`.** 📐 **`SYSTEM-INVENTORY` REGENERATED AND NOW MANDATORY FOR BOTH SEATS (operator-ordered).**
 
 > ### ★ WORKER — START HERE
