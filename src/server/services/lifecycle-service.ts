@@ -26,8 +26,8 @@
  * The system NEVER auto-deploys to TradingView.
  */
 
-import { randomUUID } from "crypto";
-import { eq, and, desc, gte, sql, count } from "drizzle-orm";
+import { randomUUID, createHash } from "crypto";
+import { eq, and, or, desc, gte, sql, count } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets, pilotSessions } from "../db/schema.js";
 import { computeAgreement } from "../lib/quantum-agreement.js";
@@ -39,6 +39,7 @@ import { getLatestFrankensteinRun } from "./frankenstein-service.js";
 // TODO: correlation_id not threaded through most call sites in this file.
 import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
 import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/sse.js";
@@ -549,6 +550,15 @@ export async function runComplianceGateForFirms(
 
   return { firmsFailing, details };
 }
+
+/**
+ * D-10 N-4: the audit actions the FIX-3 auto-backtest enqueue may write.
+ *
+ * Named constants, not inline literals: the suppression guard JOINS on these and a
+ * typo on one side would silently disable it while every test still passed.
+ */
+export const EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION = "lifecycle.evidence_auto_backtest_enqueued" as const;
+export const EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION = "lifecycle.evidence_auto_backtest_refused" as const;
 
 export class LifecycleService {
   /**
@@ -3075,22 +3085,76 @@ export class LifecycleService {
   }): Promise<void> {
     const { strategyId, strategyName, symbol, incompleteCount, totalGates, correlationId } = params;
     try {
+      // D-10 N-4: the DETERMINISTIC REQUEST IDENTITY.
+      //
+      // Built from every input capable of changing the engine's answer, and from
+      // NOTHING else — no wall-clock, no randomness, no attempt counter. Two requests
+      // with the same identity are the same question, so a refusal of one is a refusal
+      // of the other, permanently.
+      //
+      // The rest of the backtest config below is a compile-time constant, so it cannot
+      // vary between two calls and is deliberately excluded rather than hashed for show.
+      const requestIdentity = createHash("sha256")
+        .update(
+          JSON.stringify({
+            strategyId,
+            strategyName,
+            symbol: symbol ?? "MES",
+            timeframe: "5m",
+            mode: "walkforward",
+          }),
+        )
+        .digest("hex");
+
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const recentAutoEnqueues = await db
-        .select({ id: auditLog.id })
+      const priorRows = await db
+        .select({ id: auditLog.id, action: auditLog.action, input: auditLog.input })
         .from(auditLog)
         .where(
-          and(
-            eq(auditLog.action, "lifecycle.evidence_auto_backtest_enqueued"),
-            eq(auditLog.entityId, strategyId),
-            gte(auditLog.createdAt, twentyFourHoursAgo),
+          or(
+            // the existing 24h cap on successful enqueues
+            and(
+              eq(auditLog.action, EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION),
+              eq(auditLog.entityId, strategyId),
+              gte(auditLog.createdAt, twentyFourHoursAgo),
+            ),
+            // refusals are NOT time-bounded — see below
+            and(
+              eq(auditLog.action, EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION),
+              eq(auditLog.entityId, strategyId),
+            ),
           ),
         );
 
+      const recentAutoEnqueues = priorRows.filter(
+        (r) => r.action === EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION,
+      );
       if (recentAutoEnqueues.length >= 1) {
         logger.debug(
           { strategyId, recentCount: recentAutoEnqueues.length },
           "FIX-3: lifecycle evidence-incomplete: auto-backtest-enqueue cap reached today, skipping",
+        );
+        return;
+      }
+
+      // A TIME WINDOW THROTTLES A REPEATED REQUEST; IT CANNOT STOP A REQUEST WHOSE
+      // ANSWER IS ALREADY KNOWN AND WILL NEVER CHANGE (R-764 §1, adopted).
+      //
+      // The 24h cap above only counts *enqueued* rows, so before this guard a
+      // deterministically-refused strategy was re-asked every single day, forever, and
+      // the engine returned the same refusal every time. Suppression is keyed on the
+      // request identity, NOT on elapsed time: if the question has materially changed
+      // the identity changes with it and a retry is allowed automatically.
+      const priorRefusalSameIdentity = priorRows.find(
+        (r) =>
+          r.action === EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION &&
+          (r.input as { request_identity?: unknown } | null)?.request_identity ===
+            requestIdentity,
+      );
+      if (priorRefusalSameIdentity) {
+        logger.debug(
+          { strategyId, requestIdentity },
+          "FIX-3: identical request already REFUSED by the engine — not re-enqueuing (identity unchanged)",
         );
         return;
       }
@@ -3123,13 +3187,45 @@ export class LifecycleService {
         "automated",
       );
 
+      // D-10 N-4: classify BEFORE any status is derived.
+      //
+      // The old line was `btResult.status === "skipped" ? "skipped" : "success"`, a
+      // BINARY ternary over a THREE-state outcome. A refusal is neither skipped nor
+      // successful — it is a run the engine declined to execute — so it fell through
+      // to `: "success"` and the 90-day audit trail recorded SUCCESS for work that
+      // never happened. That is the record an operator reads after a strategy stalls.
+      //
+      // A refusal now gets its OWN action, its OWN status, and the engine's evidence.
+      // It is never "success", never "skipped", never "failure" (it is not a fault).
+      if (isExecutionRefused(btResult)) {
+        const evidence = refusalEvidence(btResult);
+        logger.warn(
+          { strategyId, strategyName, requestIdentity, evidence },
+          "FIX-3: engine REFUSED the auto-backtest — recording a named refusal, not a success",
+        );
+        await db.insert(auditLog).values({
+          action: EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION,
+          entityType: "strategy",
+          entityId: strategyId,
+          status: "refused",
+          decisionAuthority: "lifecycle_service",
+          // `request_identity` is what the suppression guard above joins on.
+          input: { strategyName, incompleteCount, totalGates, request_identity: requestIdentity },
+          result: { backtest_id: btResult.id, backtest_status: btResult.status, refusal_evidence: evidence },
+          correlationId: correlationId ?? null,
+        }).catch((auditErr: unknown) => {
+          logger.warn({ err: auditErr, strategyId }, "FIX-3: refusal audit write failed");
+        });
+        return;
+      }
+
       await db.insert(auditLog).values({
-        action: "lifecycle.evidence_auto_backtest_enqueued",
+        action: EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION,
         entityType: "strategy",
         entityId: strategyId,
         status: btResult.status === "skipped" ? "skipped" : "success",
         decisionAuthority: "lifecycle_service",
-        input: { strategyName, incompleteCount, totalGates },
+        input: { strategyName, incompleteCount, totalGates, request_identity: requestIdentity },
         result: { backtest_id: btResult.id, backtest_status: btResult.status },
         correlationId: correlationId ?? null,
       }).catch((auditErr: unknown) => {

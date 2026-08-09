@@ -15,27 +15,191 @@
  *
  * Deleting production would not have reddened a single one of those five tests.
  *
- * WIRING GUARD (this section)
- * ───────────────────────────
- * R-766 §4 requires "a structural call-site guard proving exactly one invocation".
- * The extraction is only legitimate if `checkAutoPromotions()` still calls the helper
- * ONCE, fire-and-forget, at the same point. A behavioural end-to-end fixture for that
- * call site is Option A, which R-764 §3 REFUSED on measured cost (the block sits
- * ~3,900 lines inside `checkAutoPromotions()`, behind the full PAPER → DEPLOY_READY
- * chain plus `incompleteCount >= 3`). So the wiring is asserted STRUCTURALLY, over the
- * production source, in the same shape `deepscan-wiring-fixes.test.ts` uses.
+ * This file has TWO halves, and they prove different things:
+ *   §A WIRING (structural, over the source) — the helper is declared once and invoked
+ *      once, fire-and-forget, from executable code.
+ *   §B BEHAVIOUR (executes the REAL `LifecycleService.runEvidenceAutoBacktestEnqueue`)
+ *      — what the audit trail actually records.
+ * Neither is sufficient alone: §A cannot see a decision, §B cannot see the call site.
  *
- * ⚠️ A structural guard proves WIRING, not BEHAVIOUR. It is deliberately paired with
- * the behavioural controls over the extracted helper — a source assertion alone would
- * be the "grep matched a comment" failure this campaign has convicted before, which is
- * why every assertion below reads an EXECUTABLE line and the comment-only forms are
- * explicitly excluded.
+ * The mock scaffold in §B is ADAPTED from `deepscan18-graveyard-burial-sse.test.ts`
+ * (one of six suites that already execute the real service) — R-648: adapt, do not
+ * author.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+
+// ── Mock state ───────────────────────────────────────────────────────────────
+
+const mockSelectFn = vi.fn();
+const mockInsertFn = vi.fn();
+const mockBroadcastSSE = vi.fn();
+const mockDecayAlert = vi.fn(() => Promise.resolve());
+const mockRunBacktest = vi.fn();
+
+// ── Module mocks — must be declared before any `import` of the subject ───────
+
+vi.mock("../db/index.js", () => ({
+  db: {
+    get select() { return mockSelectFn; },
+    get insert() { return mockInsertFn; },
+  },
+}));
+
+vi.mock("../db/schema.js", () => ({
+  // D-10: the shared classifier (`lib/backtest-refusal.ts`) imports this constant
+  // from schema. Omit it and `isExecutionRefused()` compares against `undefined`,
+  // returns false for EVERY result, and the refusal branch becomes unreachable —
+  // the control could never go green no matter how correct the fix. (AR-878 §1 hit
+  // this exact trap in the F-10 lane.)
+  BACKTEST_STATUS_REFUSED: "refused",
+  strategies:           { id: "id", lifecycleState: "lifecycleState" },
+  strategyNames:        {},
+  strategyGraveyard:    { id: "id", strategyId: "strategyId" },
+  backtests:            { id: "id", strategyId: "strategyId", status: "status", createdAt: "createdAt" },
+  auditLog: {
+    action: "action", entityId: "entityId", entityType: "entityType", createdAt: "createdAt",
+    id: "id", status: "status", decisionAuthority: "decisionAuthority", input: "input",
+    result: "result", correlationId: "correlationId",
+  },
+  lifecycleTransitions: {},
+  monteCarloRuns:       {},
+  quantumMcRuns:        {},
+  paperSessions:        {},
+  paperTrades:          {},
+  complianceRulesets:   { firm: "firm", createdAt: "createdAt", driftDetected: "driftDetected", status: "status" },
+  pilotSessions:        {},
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq:    vi.fn(() => "__eq__"),
+  and:   vi.fn(() => "__and__"),
+  or:    vi.fn(() => "__or__"),
+  desc:  vi.fn(() => "__desc__"),
+  gte:   vi.fn(() => "__gte__"),
+  sql:   new Proxy(() => "__sql__", { get: () => () => "__sql__" }),
+  count: vi.fn(() => "__count__"),
+  inArray: vi.fn(() => "__inArray__"),
+}));
+
+vi.mock("../lib/logger.js", () => ({
+  logger: { warn: vi.fn(), debug: vi.fn(), error: vi.fn(), info: vi.fn() },
+}));
+
+vi.mock("../services/backtest-service.js", () => ({
+  get runBacktest() { return mockRunBacktest; },
+}));
+
+vi.mock("../lib/metrics-registry.js", () => ({
+  autoGraveyardTotal:              { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  strategyPromotions:              { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  pboBlocksTotal:                  { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  lifecycleShadowPromotionsTotal:  { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  httpRequestDurationMs:           { observe: vi.fn(), labels: vi.fn(() => ({ observe: vi.fn() })) },
+  tfArchetypeSignalsTotal:         { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  candidateConveyorEnqueuedTotal:  { inc: vi.fn() },
+  bifGateEvaluationsTotal:         { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  slippageSurvivalBlocksTotal:     { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  auditWriteFailuresTotal:         { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  b14GateTotal:                    { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  wfeGateTotal:                    { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  parameterDriftGateTotal:         { labels: vi.fn(() => ({ inc: vi.fn() })) },
+  dslGuardsGateTotal:              { labels: vi.fn(() => ({ inc: vi.fn() })) },
+}));
+
+vi.mock("../routes/sse.js", () => ({
+  get broadcastSSE() { return mockBroadcastSSE; },
+  LIFECYCLE_GATE_EVENTS: {
+    AUTO_GRAVEYARD:               "lifecycle:auto_graveyard",
+    PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle.promotion_evidence_incomplete",
+    B14_EVALUATED:                "lifecycle:b14_evaluated",
+    WFE_EVALUATED:                "lifecycle:wfe_evaluated",
+    PARAMETER_DRIFT_EVALUATED:    "lifecycle:parameter_drift_evaluated",
+    BIF_EVALUATED:                "lifecycle:bif_evaluated",
+    PBO_EVALUATED:                "lifecycle:pbo_evaluated",
+    SHADOW_DIVERGENCE_EVALUATED:  "lifecycle:shadow_divergence_evaluated",
+    SLIPPAGE_SURVIVAL_EVALUATED:  "lifecycle:slippage_survival_evaluated",
+  },
+  WAVE29_EVENTS: {
+    SHADOW_LOGGED: "signal:shadow_logged",
+    PBO_EVALUATED: "lifecycle:pbo_evaluated",
+    SHADOW_DIVERGENCE_EVALUATED: "lifecycle:shadow_divergence_evaluated",
+    RL_AB_ROUTED: "signal:rl_ab_routed",
+    RL_TRAINING_COMPLETED: "quantum_rl:training_completed",
+    RL_KILL_SWITCH_ENGAGED: "quantum_rl:kill_switch_engaged",
+  },
+}));
+
+vi.mock("../services/notification-service.js", () => ({
+  notifyWarning:  vi.fn(),
+  notifyCritical: vi.fn(),
+}));
+vi.mock("../lib/notification-helpers.js", () => ({
+  appendFamilyGradePostscript: (op: string) => op,
+}));
+vi.mock("../lib/tracing.js", () => ({
+  tracer: {
+    startSpan: vi.fn(() => ({
+      setAttribute: vi.fn(), end: vi.fn(), setStatus: vi.fn(), recordException: vi.fn(),
+    })),
+  },
+}));
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRow:     vi.fn(),
+  insertAuditRowSafe: vi.fn(() => Promise.resolve(true)),
+}));
+vi.mock("../lib/quantum-agreement.js", () => ({ computeAgreement: vi.fn() }));
+vi.mock("../services/adversarial-stress-service.js", () => ({ getLatestAdversarialStressRun: vi.fn() }));
+vi.mock("../services/frankenstein-service.js", () => ({ getLatestFrankensteinRun: vi.fn() }));
+vi.mock("../services/evolution-service.js", () => ({ evolveStrategy: vi.fn() }));
+vi.mock("../services/alert-service.js", () => ({
+  AlertFactory: {
+    circuitOpen:              vi.fn(),
+    notifyCookieRefreshFailed: vi.fn(),
+    get decayAlert() { return mockDecayAlert; },
+  },
+}));
+vi.mock("../services/pine-export-service.js", () => ({
+  compileDualPineExport: vi.fn(),
+  compilePineExport:     vi.fn(),
+}));
+vi.mock("../services/agent-coordinator-service.js", () => ({ agentCoordinator: { emit: vi.fn() } }));
+vi.mock("../production/kill-switch.js", () => ({
+  killSwitch: { isHaltedForProduction: vi.fn(() => false), isHalted: vi.fn(() => false) },
+}));
+vi.mock("../lib/b14-ci-gate.js", () => ({ evaluateB14CiGate: vi.fn(), evaluateDsrWalkForwardGate: vi.fn() }));
+vi.mock("../lib/wfe-gate.js", () => ({ evaluateWfeGate: vi.fn() }));
+vi.mock("../lib/parameter-drift-gate.js", () => ({ evaluateParameterDriftGate: vi.fn() }));
+vi.mock("../lib/composite-shadow-gate.js", () => ({ evaluateCompositeShadow: vi.fn() }));
+vi.mock("../lib/composite-shadow-discord-router.js", () => ({ routeShadowDisagreementAlert: vi.fn() }));
+vi.mock("../lib/promotion-gate-orchestrator.js", () => ({
+  evaluatePromotionGates: vi.fn(), getWfePromotionFloor: vi.fn(), getCpcvMinPaths: vi.fn(),
+}));
+vi.mock("../lib/pbo-gate.js", () => ({ evaluatePboGate: vi.fn() }));
+vi.mock("../lib/shadow-signal-divergence-checker.js", () => ({ compareShadowToBacktest: vi.fn() }));
+vi.mock("../lib/shadow-signal-divergence-loader.js", () => ({ loadDivergenceInputs: vi.fn() }));
+vi.mock("../lib/frozen-policy-contract.js", () => ({
+  evaluateFrozenPolicyDriftAtPromotion: vi.fn(), freezePolicyForStrategy: vi.fn(),
+}));
+vi.mock("../lib/bif-gate.js", () => ({ evaluateBifGate: vi.fn() }));
+vi.mock("../lib/slippage-survival-gate.js", () => ({ evaluateSlippageSurvivalGate: vi.fn() }));
+vi.mock("../services/multi-firm-promotion-service.js", () => ({ evaluateMultiFirmEligibility: vi.fn() }));
+
+// ── Subject under test — the REAL service, NOT in its own mock list ──────────
+
+import { LifecycleService } from "../services/lifecycle-service.js";
+import {
+  EVIDENCE_AUTO_BACKTEST_ENQUEUED_ACTION as ENQUEUED_ACTION,
+  EVIDENCE_AUTO_BACKTEST_REFUSED_ACTION as REFUSED_ACTION,
+} from "../services/lifecycle-service.js";
+
+// ═════════════════════════════════════════════════════════════════════════════
+// §A — WIRING GUARD (structural, over production source)
+// ═════════════════════════════════════════════════════════════════════════════
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const LIFECYCLE_SRC = resolve(HERE, "../services/lifecycle-service.ts");
@@ -52,40 +216,228 @@ function executableLines(): string[] {
   });
 }
 
-describe("D-10 N-4 wiring guard: the extracted FIX-3 helper is invoked exactly once", () => {
+describe("§A D-10 N-4 wiring guard: the extracted FIX-3 helper is invoked exactly once", () => {
   it("POSITIVE CONTROL: the production source is readable and non-trivial", () => {
     // Without this, every "exactly N" assertion below would also pass on an empty
     // read — an absence claim needs a positive witness that the path ran.
-    const lines = sourceLines();
-    expect(lines.length).toBeGreaterThan(5000);
+    expect(sourceLines().length).toBeGreaterThan(5000);
     expect(executableLines().length).toBeGreaterThan(3000);
   });
 
   it("declares the helper exactly once", () => {
-    const decls = executableLines().filter((l) =>
-      /async runEvidenceAutoBacktestEnqueue\(/.test(l),
-    );
+    const decls = executableLines().filter((l) => /async runEvidenceAutoBacktestEnqueue\(/.test(l));
     expect(decls).toHaveLength(1);
   });
 
   it("invokes it exactly once, from executable code, fire-and-forget", () => {
-    const calls = executableLines().filter((l) =>
-      /this\.runEvidenceAutoBacktestEnqueue\(/.test(l),
-    );
+    const calls = executableLines().filter((l) => /this\.runEvidenceAutoBacktestEnqueue\(/.test(l));
     expect(calls).toHaveLength(1);
-    // fire-and-forget: `void`-prefixed, never awaited — the lifecycle cycle must not
-    // block on backtest duration. `await` here would be a real behaviour change.
     expect(calls[0].trim().startsWith("void this.runEvidenceAutoBacktestEnqueue(")).toBe(true);
     expect(calls[0]).not.toMatch(/await\s+this\.runEvidenceAutoBacktestEnqueue/);
   });
 
   it("NEGATIVE CONTROL: the comment-stripper does not simply erase everything", () => {
-    // If `executableLines()` were over-aggressive, all three counts above would be 0
-    // and "exactly one" would fail loudly rather than silently — but a token that is
-    // ONLY ever mentioned in prose must still be absent, or the filter is inert.
     const exec = executableLines().join("\n");
     expect(exec).toContain("async checkAutoPromotions(");
     // this phrase exists only inside the helper's doc comment
     expect(exec).not.toContain("BEHAVIOUR-PRESERVING");
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// §B — BEHAVIOUR (executes the REAL helper)
+// ═════════════════════════════════════════════════════════════════════════════
+
+const REFUSED_RESULT = {
+  id: "bt-refused",
+  status: "refused",
+  execution_status: "refused",
+  condition_id: "C-7",
+  disposition: "UNRESOLVED_SOURCE_AMBIGUITY",
+  reason: "entry condition not deterministically compilable",
+  metrics_omitted: true,
+};
+
+/** Rows captured from `db.insert(auditLog).values({...})`. */
+let auditRows: Array<Record<string, unknown>>;
+
+/** Drive the 24h-cap lookup: `db.select({...}).from(auditLog).where(...)` → rows. */
+function seedPriorAuditRows(rows: unknown[]) {
+  mockSelectFn.mockReturnValue({
+    from: () => ({ where: () => Promise.resolve(rows) }),
+  });
+}
+
+function params(overrides: Record<string, unknown> = {}) {
+  return {
+    strategyId: "strat-abc",
+    strategyName: "VWAPGang",
+    symbol: "MES",
+    incompleteCount: 3,
+    totalGates: 8,
+    correlationId: "corr-1",
+    ...overrides,
+  } as Parameters<LifecycleService["runEvidenceAutoBacktestEnqueue"]>[0];
+}
+
+describe("§B D-10 N-4: what the audit trail records for the auto-backtest enqueue", () => {
+  let service: LifecycleService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auditRows = [];
+    seedPriorAuditRows([]); // no prior enqueue today → cap not reached
+    mockInsertFn.mockReturnValue({
+      values: (row: Record<string, unknown>) => {
+        auditRows.push(row);
+        return Promise.resolve(undefined);
+      },
+    });
+    service = new LifecycleService();
+  });
+
+  // ── POSITIVE CONTROLS ──────────────────────────────────────────────────────
+  // These three are the CONVERTED replica tests: the same three behaviours
+  // `runFix3Logic()` asserted, now driven through PRODUCTION code. They are the
+  // reason the replica can be deleted without losing coverage.
+
+  it("POSITIVE: a completed run still records status=success", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(mockRunBacktest).toHaveBeenCalledOnce();
+    expect(auditRows).toHaveLength(1);
+    expect(auditRows[0].action).toBe("lifecycle.evidence_auto_backtest_enqueued");
+    expect(auditRows[0].status).toBe("success");
+  });
+
+  it("POSITIVE: a pipeline-paused run still records status=skipped", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-skip", status: "skipped" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(auditRows[0].status).toBe("skipped");
+  });
+
+  it("POSITIVE: actor=automated and mode=walkforward are still passed", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(mockRunBacktest.mock.calls[0][5]).toBe("automated");
+    expect(mockRunBacktest.mock.calls[0][1]).toMatchObject({ mode: "walkforward" });
+  });
+
+  it("POSITIVE: the 24h cap still blocks a second enqueue", async () => {
+    // The row carries its `action` because the query now returns BOTH kinds (enqueued
+    // within 24h, refused at any age) and production separates them in JS. A prior row
+    // without an action is not a shape the real query can produce.
+    seedPriorAuditRows([
+      { id: "prior-row", action: ENQUEUED_ACTION, input: null },
+    ]);
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(mockRunBacktest).not.toHaveBeenCalled();
+    expect(auditRows).toHaveLength(0);
+  });
+
+  // ── THE DEFECT ─────────────────────────────────────────────────────────────
+
+  it("a REFUSAL is never recorded as success/skipped/failure", async () => {
+    mockRunBacktest.mockResolvedValue(REFUSED_RESULT);
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(auditRows).toHaveLength(1);
+    expect(auditRows[0].status).not.toBe("success");
+    expect(auditRows[0].status).not.toBe("skipped");
+    expect(auditRows[0].status).not.toBe("failure");
+  });
+
+  it("a REFUSAL gets a DISTINCT named audit action, not the enqueued action", async () => {
+    mockRunBacktest.mockResolvedValue(REFUSED_RESULT);
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(auditRows[0].action).toBe("lifecycle.evidence_auto_backtest_refused");
+    expect(auditRows[0].action).not.toBe("lifecycle.evidence_auto_backtest_enqueued");
+  });
+
+  it("a REFUSAL carries the engine's evidence, and fabricates no absent key", async () => {
+    mockRunBacktest.mockResolvedValue(REFUSED_RESULT);
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const result = auditRows[0].result as Record<string, unknown>;
+    expect(result.refusal_evidence).toMatchObject({
+      execution_status: "refused",
+      condition_id: "C-7",
+      disposition: "UNRESOLVED_SOURCE_AMBIGUITY",
+      metrics_omitted: true,
+    });
+    expect(result.refusal_evidence).not.toHaveProperty("ambiguity");
+  });
+
+  // ── THE CAP: a deterministic refusal must not be re-asked forever ──────────
+  //
+  // `A TIME WINDOW THROTTLES A REPEATED REQUEST; IT CANNOT STOP A REQUEST WHOSE
+  //  ANSWER IS ALREADY KNOWN AND WILL NEVER CHANGE.`
+  //
+  // The 24h cap counts only *enqueued* rows, so before this guard a deterministically
+  // refused strategy was re-asked every day forever and refused every time.
+
+  /** The identity production derives for the default `params()` request. */
+  function identityFor(p: { strategyId: string; strategyName: string; symbol: string | null }) {
+    return createHash("sha256")
+      .update(
+        JSON.stringify({
+          strategyId: p.strategyId,
+          strategyName: p.strategyName,
+          symbol: p.symbol ?? "MES",
+          timeframe: "5m",
+          mode: "walkforward",
+        }),
+      )
+      .digest("hex");
+  }
+
+  it("does NOT re-enqueue when the SAME request was already refused", async () => {
+    seedPriorAuditRows([
+      {
+        id: "prior-refusal",
+        action: REFUSED_ACTION,
+        input: { request_identity: identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }) },
+      },
+    ]);
+    mockRunBacktest.mockResolvedValue(REFUSED_RESULT);
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    expect(mockRunBacktest).not.toHaveBeenCalled();
+    expect(auditRows).toHaveLength(0);
+  });
+
+  it("DISCRIMINATOR: a MATERIALLY CHANGED request is retried despite the prior refusal", async () => {
+    // Same strategy, different symbol ⇒ different question ⇒ different identity.
+    // Without this, a suppression that simply blocked everything would pass above.
+    seedPriorAuditRows([
+      {
+        id: "prior-refusal",
+        action: REFUSED_ACTION,
+        input: { request_identity: identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }) },
+      },
+    ]);
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params({ symbol: "MNQ" }));
+    expect(mockRunBacktest).toHaveBeenCalledOnce();
+    expect(auditRows).toHaveLength(1);
+    expect(auditRows[0].status).toBe("success");
+  });
+
+  it("the identity is DETERMINISTIC — no wall-clock, no randomness", async () => {
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const first = (auditRows[0].input as Record<string, unknown>).request_identity;
+
+    auditRows = [];
+    vi.clearAllMocks();
+    seedPriorAuditRows([]);
+    mockInsertFn.mockReturnValue({
+      values: (row: Record<string, unknown>) => { auditRows.push(row); return Promise.resolve(undefined); },
+    });
+    mockRunBacktest.mockResolvedValue({ id: "bt-ok", status: "completed" });
+    await service.runEvidenceAutoBacktestEnqueue(params());
+    const second = (auditRows[0].input as Record<string, unknown>).request_identity;
+
+    expect(first).toBe(second);
+    // and it is the identity production is expected to derive, not merely stable
+    expect(first).toBe(identityFor({ strategyId: "strat-abc", strategyName: "VWAPGang", symbol: "MES" }));
   });
 });
