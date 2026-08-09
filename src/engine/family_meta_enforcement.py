@@ -243,6 +243,13 @@ PRIMITIVE_RESOLVERS: dict[str, str] = {
     "structural_stops.compute_structural_stop": (
         "src.engine.context.structural_stops:compute_structural_stop"
     ),
+    # ── B1 STEP 6B. The STATE_PRODUCER lane's only primitive (R-743 §5). Resolves to the real
+    # adapter, whose RETURN ANNOTATION is what the conformance suite reads as the typed output
+    # contract -- so this entry is what makes `OpeningRangeState`'s six fields reachable from
+    # the production binding rather than merely present in a module nothing declares.
+    "opening_range_adapter.compute_opening_range_state": (
+        "src.engine.opening_range_adapter:compute_opening_range_state"
+    ),
     # ── Experiment primitives. Not FAMILY_META declarations -- these are returned by
     # bind_condition() only when an env-gated experiment flag is on. Registered here so
     # pin (a)'s both-directions dispatch check can tell "a handler for a declared
@@ -443,18 +450,58 @@ looked gating for the whole life of the defect), nor claim not to gate while bei
 a real evaluator."""
 
 
-def verify_dispatch_coverage(dispatch: dict[str, str]) -> list[Violation]:
+_STATE_DISPATCH_UNSET: dict[str, str] = {"\x00unset": "\x00unset"}
+"""Sentinel default for `verify_dispatch_coverage(state_dispatch=...)`.
+
+DELIBERATELY NOT `None`. `None` would mean "no state lane to check", and an omitted argument
+would then silently skip the STATE_PRODUCER half of pin (a) -- which is LYING MODE 2 exactly,
+the defect this module already paid for once ("a pin that is NAMED is EVALUATED, or the call
+raises"). With this sentinel an omitted argument reads the LIVE production table instead, so
+omission strengthens the check rather than removing it, while a caller that wants to PLANT a
+violation for red-proofing can still pass one explicitly."""
+
+
+def verify_dispatch_coverage(
+    dispatch: dict[str, str],
+    state_dispatch: dict[str, str] = _STATE_DISPATCH_UNSET,
+) -> list[Violation]:
     """(a) SINGLE SOURCE. Set equality, BOTH directions, between what FAMILY_META declares
     and what the executable layer routes.
 
     Direction 1 (declared but unrouted) catches a pointer the engine cannot act on.
     Direction 2 (routed but undeclared) is the one that matters most: a handler no
     FAMILY_META entry names is a SECOND ROUTER, and a second router is a second truth. The
-    `if/elif b.type == ...` ladder this packet deletes was exactly that."""
-    from src.engine.spec_family_bindings import FAMILY_META
+    `if/elif b.type == ...` ladder this packet deletes was exactly that.
+
+    B1 STEP 6B (R-743 §5) adds a SECOND ROUTER THAT IS LEGITIMATE -- `STATE_DISPATCH`, the
+    state-producer lane -- and the way that is kept from becoming "a second truth" is that
+    BOTH tables are checked here against the SAME declaration set, and each family's declared
+    `execution_kind` must match the table it is routed by, in both directions. A state
+    producer routed by the boolean table, or a gate routed by the state table, is a violation
+    -- not an exemption anyone had to remember to write."""
+    from src.engine.spec_family_bindings import (
+        EXECUTION_KIND_STATE_PRODUCER,
+        FAMILY_META,
+    )
+
+    if state_dispatch is _STATE_DISPATCH_UNSET:
+        from src.engine.spec_condition_compiler import STATE_DISPATCH as _live_state_dispatch
+
+        state_dispatch = _live_state_dispatch
 
     out: list[Violation] = []
     dispatch_keys = set(dispatch)
+    state_keys = set(state_dispatch)
+
+    overlap = dispatch_keys & state_keys
+    for name in sorted(overlap):
+        out.append(
+            Violation("a", None, f"{name!r} is routed by BOTH the boolean and the state lane; one "
+                                 "primitive cannot execute on two kinds, and a name in both tables "
+                                 "is a genuine second truth")
+        )
+    routed_keys = dispatch_keys | state_keys
+
     declared: set[str] = set()
     owner: dict[str, str] = {}
     for family, meta in FAMILY_META.items():
@@ -464,10 +511,10 @@ def verify_dispatch_coverage(dispatch: dict[str, str]) -> list[Violation]:
             declared.add(name)
             owner.setdefault(name, family)
 
-    for name in sorted(declared - dispatch_keys):
+    for name in sorted(declared - routed_keys):
         family = owner.get(name)
         out.append(Violation("a", family, f"declares {name!r} but the executable layer routes no such key"))
-    for name in sorted(dispatch_keys - declared - EXPERIMENT_PRIMITIVES):
+    for name in sorted(routed_keys - declared - EXPERIMENT_PRIMITIVES):
         out.append(
             Violation("a", None, f"executable layer routes {name!r}, which no FAMILY_META entry declares "
                                  "-- a second router is a second truth")
@@ -479,7 +526,31 @@ def verify_dispatch_coverage(dispatch: dict[str, str]) -> list[Violation]:
     for family, meta in FAMILY_META.items():
         primitive, mechanism = meta.enforced_declaration()
         name = primitive or mechanism
-        handler = dispatch.get(name or "")
+        if not name:
+            continue
+
+        # ── execution_kind <-> ROUTING TABLE agreement, both directions ────────────────
+        is_state_kind = meta.execution_kind == EXECUTION_KIND_STATE_PRODUCER
+        if is_state_kind and name in dispatch_keys:
+            out.append(
+                Violation("a", family, f"declares execution_kind=STATE_PRODUCER but {name!r} is routed "
+                                       "by the BOOLEAN dispatch, whose handlers return a per-bar array "
+                                       "-- that is fitting a state producer into the wrong interface")
+            )
+        if not is_state_kind and name in state_keys:
+            out.append(
+                Violation("a", family, f"declares execution_kind=GATE but {name!r} is routed by the "
+                                       "STATE dispatch, which writes no gate -- the condition would "
+                                       "silently stop gating")
+            )
+        if is_state_kind and name not in state_keys:
+            out.append(
+                Violation("a", family, f"declares execution_kind=STATE_PRODUCER but {name!r} is in no "
+                                       "state-dispatch table; the declaration names a lane that routes "
+                                       "nothing")
+            )
+
+        handler = dispatch.get(name)
         if handler is None:
             continue
         routed_non_gating = handler in NON_GATING_HANDLERS

@@ -36,11 +36,16 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
+from src.engine.entry_eligibility import (
+    REASON_NO_TRIGGER_BINDING,
+    EntryEligibility,
+)
 from src.engine.family_meta_enforcement import (
     FLAG_ENV,
     FamilyMetaEnforcementError,
@@ -56,9 +61,26 @@ from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.order_flow import detect_bearish_ob, detect_bullish_ob
 from src.engine.indicators.sweep_native import compute_sweep_signal
+from src.engine.opening_range_state_channel import (
+    CARRIER_KEY as OR_CARRIER_KEY,
+)
+from src.engine.opening_range_state_channel import (
+    REASON_NO_CANDIDATE_CARRIER as OR_REASON_NO_CARRIER,
+)
+from src.engine.opening_range_state_channel import (
+    REASON_TIMESTAMPS_NAIVE as OR_REASON_TIMESTAMPS_NAIVE,
+)
+from src.engine.opening_range_state_channel import (
+    REASON_UNRESOLVABLE_BAR_INTERVAL as OR_REASON_UNRESOLVABLE_INTERVAL,
+)
+from src.engine.opening_range_state_channel import (
+    OpeningRangeCandidateState,
+    OpeningRangeStateChannel,
+)
 from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import (
+    OPENING_RANGE_STATE_PRIMITIVE,
     BindingPlan,
     ConditionBinding,
     classify_population_a_kind,
@@ -123,6 +145,26 @@ ENFORCED_DISPATCH: dict[str, str] = {
     SWEEP_PRIMITIVE_NAME: "_h_sweep_native",
     MSS_PRIMITIVE_NAME: "_h_mss_native",
 }
+# ─── B1 STEP 6B: THE STATE-PRODUCER ROUTER (R-743 §5, Option A) ──────────────────────────
+# A SECOND TABLE, AND THAT IS THE POINT RATHER THAN AN OVERSIGHT. `ENFORCED_DISPATCH`'s
+# handlers all return `np.ndarray` and everything they return is written into
+# `per_condition_bool` at the single call site below -- which IS membership in the boolean
+# AND (AR-839 §2, confirmed at the executable line by R-744 §1). A state producer returns six
+# typed fields, four of them numeric; routing it through that table would mean converting
+# state into a boolean, which is the FIRST stop condition in R-743 §7.
+#
+# `DO NOT FIT A STATE PRODUCER INTO THE WRONG INTERFACE TO TURN THE ORDERED REDS GREEN.`
+#
+# WHY THIS IS NOT "A SECOND ROUTER IS A SECOND TRUTH". That law (pin (a)) is about a handler
+# NO DECLARATION NAMES. This table is checked by the same pin, in both directions, against
+# the same FAMILY_META declaration set, and a family's declared `execution_kind` must match
+# the table it appears in -- so a name in the wrong table is a VIOLATION, not a silent lane.
+# The `if/elif b.type == ...` ladder was a second truth because nothing declared it.
+STATE_DISPATCH: dict[str, str] = {
+    OPENING_RANGE_STATE_PRIMITIVE: "_h_opening_range_state",
+}
+
+
 # ─── LANE 28 (R-702 §6, taxonomy adopted verbatim at R-703 §1) ───────────────────────
 # EVERY HANDLER THE ENFORCED DISPATCHER CAN REACH IS CLASSIFIED HERE, BY NAME, INTO
 # EXACTLY ONE CATEGORY. `NO HANDLER MAY REMAIN IN AN UNCLASSIFIED STATE.`
@@ -168,6 +210,14 @@ HANDLER_PARAMETER_CLASSIFICATION: dict[str, str] = {
     # EXIT_HINT's provenance_only route asserts its own unreachability and raises before it
     # could read anything. It takes no parameters because it takes no execution.
     "_h_never_executed": PARAMETERLESS_BY_CONTRACT,
+    # B1 STEP 6B's state-producer route. Reached by STATE_DISPATCH, not by the enforced
+    # dispatcher -- and classified anyway, because the taxonomy's law is `NO HANDLER MAY
+    # REMAIN IN AN UNCLASSIFIED STATE` and the reason it exists (a route that accepts a
+    # parameter must consume it or refuse it before execution) does not care which table
+    # routed the handler. It REFUSES: R-743 §7 stops if `ConditionBinding.parameters` gains
+    # a production writer, and R-738 keeps that field None, so a parameter arriving here is
+    # a defect and is treated as one rather than ignored.
+    "_h_opening_range_state": REFUSES_ALL_PARAMETERS,
     # THE RESIDUAL, AND IT IS AN HONEST ONE (R-703 §1 adopted it precisely so "I could not
     # reach this one" is a REPORTABLE STATE rather than a silent omission). These are the
     # env-gated experiment primitives. Their GUARD behaviour is verified -- they refuse, like
@@ -572,6 +622,64 @@ class SpecConditionStrategy(BaseStrategy):
         # the smallest-AND-subset ("gating set") that reproduces the strategy's real entry bars,
         # BLIND to any before/after SDS comparison (Step 0 runs on baseline-mode compute() only).
         self.last_per_condition_bool: dict[str, np.ndarray] = {}
+        # ── B1 STEP 6B: the STATE_PRODUCER lane's output (R-743 §6) ──────────
+        # A SEPARATE STORE FROM last_per_condition_bool, deliberately. The two lanes carry
+        # different types and must never be merged into one dict "for convenience" -- the
+        # merge is what would put typed state back on the boolean contract. Reset per
+        # compute() call, same discipline as the stores above.
+        self.last_opening_range_state: OpeningRangeStateChannel = OpeningRangeStateChannel()
+        self.last_entry_eligibility: EntryEligibility | None = None
+
+    # ─── B1 STEP 6B: THE PUBLIC PRODUCTION OUTPUT SURFACE (R-743 §6) ────────
+    # `writing values into an internal cache that no public production consumer can read
+    # does not satisfy this contract` -- the read's strongest clause, adopted verbatim.
+    # These two accessors are that public surface: a consumer reads typed state and reads
+    # entry eligibility WITHOUT touching a private attribute and WITHOUT being able to
+    # reach "tradable" from the boolean subtotal.
+
+    def _derive_entry_eligibility(self, spine_satisfied: np.ndarray, n: int) -> EntryEligibility:
+        """Build the eligibility record from the BINDING PLAN, never from the subtotal.
+
+        WHAT `may_enter` MEANS HERE, STATED PLAINLY SO NOBODY HAS TO INFER IT: *this compiled
+        strategy has a bound, executable entry trigger and will therefore emit entry signals.*
+        It is NOT a claim that the trigger is FAITHFUL to the source. Those are different
+        questions and this engine can only answer the first one — `AR-842 §2` measured the
+        golden strategy's breakout trigger bound to `structure_engine.compute_structure_state`,
+        which never reads the taught sentence, and reporting that as "may not enter" would
+        FABRICATE the answer the rulings want rather than measure the one the engine gives.
+
+        `A SURFACE THAT REPORTS THE ORDERED END STATE INSTEAD OF THE MEASURED ONE IS NOT AN
+         INSTRUMENT, IT IS A CAPTION.`
+        """
+        trigger_id = str(self.spec.get("entry_trigger_id") or "")
+        by_id = {
+            b.condition_id: b
+            for b in self.binding_plan.bindings + self.binding_plan.invalidation_bindings
+        }
+        trigger = by_id.get(trigger_id)
+        trigger_bound = bool(trigger is not None and trigger.bindable and trigger.executed)
+        satisfied_bars = int(np.count_nonzero(spine_satisfied)) if n else 0
+        return EntryEligibility(
+            boolean_spine_satisfied_bars=satisfied_bars,
+            total_bars=n,
+            trigger_bound=trigger_bound,
+            may_enter=trigger_bound,
+            refusal_reason=None if trigger_bound else REASON_NO_TRIGGER_BINDING,
+        )
+
+    def opening_range_state_channel(self) -> OpeningRangeStateChannel:
+        """The typed opening-range state produced by the last `compute()` call."""
+        return self.last_opening_range_state
+
+    def entry_eligibility(self) -> EntryEligibility | None:
+        """Whether this strategy may enter, stated separately from the spine subtotal.
+
+        `None` before `compute()` has run — an honest "not measured yet" rather than a
+        fabricated permissive default. `R-744 §4`: `boolean spine satisfied` and `this
+        strategy may enter` are NON-EQUIVALENT and SEPARATELY READABLE, and the refusal
+        carries its reason.
+        """
+        return self.last_entry_eligibility
 
     # ─── BaseStrategy interface ────────────────────────────────────────────
     def get_params(self) -> dict:
@@ -901,6 +1009,134 @@ class SpecConditionStrategy(BaseStrategy):
         if ctx["mss_result"] is None:
             ctx["mss_result"] = compute_mss_signal(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
         return self._select_directional(ctx["mss_result"], b.object)
+
+    # ─── B1 STEP 6B: THE STATE-PRODUCER HANDLER (R-743 §5–§6) ───────────────────────────
+    def _bar_interval_minutes(self) -> int | None:
+        """This strategy's bar interval in WHOLE MINUTES, or None if it does not resolve.
+
+        None rather than a default. A guessed interval makes `expected_count` wrong, and a
+        wrong expected count turns a genuinely incomplete window into a confident, tighter
+        range — the exact silent failure `opening_range_definition` names in its own docstring.
+        """
+        raw = (self.timeframe or "").strip().lower()
+        if raw.endswith("m") and raw[:-1].isdigit():
+            minutes = int(raw[:-1])
+        elif raw.endswith("h") and raw[:-1].isdigit():
+            minutes = int(raw[:-1]) * 60
+        else:
+            return None
+        return minutes if minutes > 0 else None
+
+    def _opening_range_candidates_for(self, condition_id: str) -> tuple:
+        """The lowered execution candidates carried for ONE condition, in taught order.
+
+        Read from the COMPILED SPEC's top level, never re-derived here. The compiler does not
+        lower and does not read source prose: STEP 6A's lowering runs once, upstream, where the
+        extraction record actually is, and a second reader in the executable layer would be the
+        same shape `R-741 §6` forbids on the TypeScript side.
+        """
+        carried = self.compiled_spec.get(OR_CARRIER_KEY) or ()
+        return tuple(c for c in carried if c.source_condition_id == condition_id)
+
+    def _h_opening_range_state(self, b: ConditionBinding, ctx: dict) -> None:
+        """Compute typed opening-range state per taught candidate, per session.
+
+        RETURNS `None`, AND THAT IS THE CONTRACT, NOT AN OVERSIGHT. Every handler in
+        `ENFORCED_DISPATCH` returns a `np.ndarray` that the call site writes into
+        `per_condition_bool`. This one writes typed state into its own channel and returns
+        nothing, so there is no value for the call site to put in that dict — the exclusion
+        from the boolean AND is a consequence of the SIGNATURE rather than of a rule someone
+        has to remember not to break.
+
+        NO LOOKAHEAD. Each session's state is computed `as_of` its own LOCK INSTANT — the exact
+        moment the range becomes knowable. Later would publish what the market could not have
+        known; earlier is the adapter's `FORMING` refusal by design.
+        """
+        from src.engine.opening_range_adapter import (
+            OpeningRangeBar,
+            compute_opening_range_state,
+            opening_range_window_bounds,
+        )
+
+        # REFUSES_ALL_PARAMETERS (HANDLER_PARAMETER_CLASSIFICATION). R-743 §7 stops if
+        # `ConditionBinding.parameters` gains a production writer; a parameter arriving here
+        # is therefore a defect, and ignoring it would be `accepting a parameter without
+        # consuming it` — the precise finding R-703 §1 generalised.
+        if b.parameters:
+            raise FamilyMetaEnforcementError(
+                f"condition {b.condition_id!r} routed to the opening-range state producer "
+                f"carrying parameters {b.parameters!r}. This lane consumes no parameters and "
+                "will not silently drop them; ConditionBinding.parameters has no production "
+                "writer by design (R-738, R-743 §7)."
+            )
+
+        channel = self.last_opening_range_state
+        candidates = self._opening_range_candidates_for(b.condition_id)
+        if not candidates:
+            channel.note_unresolved(b.condition_id, OR_REASON_NO_CARRIER)
+            return
+
+        interval = self._bar_interval_minutes()
+        if interval is None:
+            channel.note_unresolved(b.condition_id, OR_REASON_UNRESOLVABLE_INTERVAL)
+            return
+
+        ts_list = ctx["ts_list"]
+        high = ctx["high"]
+        low = ctx["low"]
+        stamped = [(i, ts) for i, ts in enumerate(ts_list) if ts is not None]
+        if any(ts.tzinfo is None or ts.utcoffset() is None for _i, ts in stamped):
+            channel.note_unresolved(b.condition_id, OR_REASON_TIMESTAMPS_NAIVE)
+            return
+        if not stamped:
+            channel.note_unresolved(b.condition_id, OR_REASON_NO_CARRIER)
+            return
+
+        # Built ONCE and handed whole to the adapter for every candidate/session. The adapter
+        # does its own `start <= ts < lock` membership filter, so pre-filtering here would be a
+        # SECOND window calculator — two that agree today and diverge on the first
+        # daylight-saving edge, with nothing joining them.
+        bars = [
+            OpeningRangeBar(timestamp=ts, high=float(high[i]), low=float(low[i]))
+            for i, ts in stamped
+        ]
+
+        for candidate in candidates:
+            definition = candidate.definition
+            zone = ZoneInfo(definition.source_timezone)
+            # Session dates in the TAUGHT zone, not in the frame's zone. A UTC frame spanning
+            # a New York session crosses midnight UTC mid-session, and grouping by the frame's
+            # own date would split one taught session into two.
+            session_dates = sorted({ts.astimezone(zone).date() for _i, ts in stamped})
+            for session_date in session_dates:
+                _start, lock = opening_range_window_bounds(
+                    definition, candidate.variant, session_date
+                )
+                state = compute_opening_range_state(
+                    definition,
+                    candidate.variant,
+                    bars,
+                    session_date=session_date,
+                    bar_interval_minutes=interval,
+                    as_of=lock,
+                )
+                channel.record(
+                    OpeningRangeCandidateState(
+                        candidate_id=candidate.candidate_id,
+                        session_date=session_date,
+                        cache_identity=candidate.cache_identity,
+                        variant_label=candidate.variant.variant_label,
+                        duration_minutes=candidate.variant.duration_minutes,
+                        session_start_local=definition.session_start_local,
+                        source_timezone=definition.source_timezone,
+                        trading_day_rule=definition.trading_day_rule,
+                        market_scope=definition.market_scope,
+                        source_condition_id=candidate.source_condition_id,
+                        source_spec_id=candidate.source_spec_id,
+                        source_quote=definition.provenance.source_quote,
+                        state=state,
+                    )
+                )
 
     def _dispatch_enforced(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
         """Route THIS binding by the name its family declared. No `type` fallback, no `else`.
@@ -1494,6 +1730,13 @@ class SpecConditionStrategy(BaseStrategy):
         n = len(df)
         false_col = pl.lit(False)
         enforced = family_meta_enforced()
+        # ── B1 STEP 6B: reset the state lane BEFORE the short-frame early return ─────────
+        # ABOVE the return on purpose. `A GUARD BELOW AN EARLY RETURN IS A GUARD THE SHORT
+        # PATH NEVER MEETS` is this file's own law (LANE 29 moved the parameter refusals for
+        # exactly this reason), and a channel left un-reset on the short path would serve the
+        # PREVIOUS frame's opening ranges to a caller who thinks it read this one's.
+        self.last_opening_range_state = OpeningRangeStateChannel()
+        self.last_entry_eligibility = None
         self._acknowledge_parameters(n, enforced)
         if n < MIN_BARS_REQUIRED:
             self.last_trace = []
@@ -1628,6 +1871,38 @@ class SpecConditionStrategy(BaseStrategy):
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
                 continue
 
+            if b.primitive in STATE_DISPATCH:
+                # ── B1 STEP 6B: THE STATE-PRODUCER LANE (R-743 §5-§6) ────────────────────
+                # Checked BEFORE the boolean dispatch and it `continue`s, so this binding
+                # NEVER writes `per_condition_bool`. That dict is the sole input to
+                # `spine_satisfied` on both branches (:1739-1740 and
+                # `_combine_spine_or_branches`), so membership in it IS membership in the
+                # boolean AND — which makes R-743 §6's "must NEVER enter the boolean AND,
+                # the trigger mask, or the entry-decision population" true BY CONSTRUCTION
+                # rather than by convention. Measured AR-839 §2; confirmed independently at
+                # the executable line by R-744 §1.
+                #
+                # The precedent for a binding that legitimately produces no boolean is
+                # already in this loop, twenty lines up: `if not b.executed: continue`,
+                # whose comment forbids even `a harmless always-True pass-through`.
+                #
+                # ★ DELIBERATELY **NOT** GATED ON `enforced`, AND THIS IS THE LOAD-BEARING
+                # PART OF THE PLACEMENT. Written as `if enforced and b.primitive in
+                # STATE_DISPATCH`, the DEFAULT flag state (enforcement OFF) sends this
+                # binding down the legacy `elif b.type == ...` ladder, whose final `else`
+                # is `per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)`. That
+                # would put the state producer INTO the gate conjunction as a constant-True
+                # pass-through -- R-743 §7's second stop condition, firing in production,
+                # in the shape this codebase already deleted once (FILTER's 390 conditions).
+                # The lane is keyed on the FAMILY DECLARATION, which is flag-independent,
+                # so the exclusion holds in BOTH flag states.
+                #
+                # `A GUARD THAT ONLY WATCHES THE PATH YOU TURNED ON IS NOT WATCHING
+                #  PRODUCTION.` -- this file's own law, twenty lines from where it would
+                # have been violated.
+                getattr(self, STATE_DISPATCH[b.primitive])(b, ctx)
+                continue
+
             if enforced:
                 # pin (a): DERIVED dispatch. The `elif b.type == ...` ladder below — the
                 # SECOND ROUTER — is not consulted at all on this path.
@@ -1740,6 +2015,14 @@ class SpecConditionStrategy(BaseStrategy):
                     spine_satisfied &= arr
         else:
             spine_satisfied = np.ones(n, dtype=bool)
+
+        # ── B1 STEP 6B: ENTRY ELIGIBILITY, STATED SEPARATELY FROM THE SUBTOTAL ──────────
+        # R-744 §4, ordered as a PROPERTY: `boolean spine satisfied` and `this strategy may
+        # enter` must be NON-EQUIVALENT and SEPARATELY READABLE, and the refusal must carry
+        # its reason. Computed HERE, from the binding plan, and NEVER from `spine_satisfied`
+        # -- a value derived from the subtotal would be the subtotal wearing a second name,
+        # which is the inference the property exists to block.
+        self.last_entry_eligibility = self._derive_entry_eligibility(spine_satisfied, n)
 
         # Trigger single-fire semantics: rising edge into satisfied state.
         entry_signal = np.zeros(n, dtype=bool)

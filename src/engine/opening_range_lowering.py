@@ -72,8 +72,32 @@ refusal can report against a NAMED population rather than an implicit one."""
 
 
 class OpeningRangeLoweringDisposition(StrEnum):
+    """The V1.1 disposition, DERIVED from `failure_kind` and never hardcoded.
+
+    R-742 §4 found the defect this enum's third and fourth members repair: the
+    disposition was UNCONDITIONALLY `SOURCE_INCOMPLETE` even when
+    `failure_kind == CONTRADICTORY`, so R-742 §3's ruled mapping could not be
+    satisfied by a consumer reading `disposition` — and the two structured fields
+    DISAGREED.
+
+    `TWO STRUCTURED FIELDS THAT CONTRADICT EACH OTHER ARE WORSE THAN ONE, BECAUSE
+     EACH LOOKS AUTHORITATIVE ALONE.`
+    """
+
     READY = "READY"
     SOURCE_INCOMPLETE = "SOURCE_INCOMPLETE"
+    SOURCE_AMBIGUOUS = "SOURCE_AMBIGUOUS"
+    EXTRACTION_MISSING_REQUIRED_INFORMATION = "EXTRACTION_MISSING_REQUIRED_INFORMATION"
+
+
+# R-742 §3's mapping, adopted as ruled and expressed as a TABLE rather than as an
+# if/elif chain: the chain is where a fourth failure kind gets silently absorbed
+# into whichever branch happens to be last.
+DISPOSITION_FOR_FAILURE_KIND: dict[str, OpeningRangeLoweringDisposition] = {
+    "ABSENT": OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE,
+    "CONTRADICTORY": OpeningRangeLoweringDisposition.SOURCE_AMBIGUOUS,
+    "UNREADABLE": OpeningRangeLoweringDisposition.EXTRACTION_MISSING_REQUIRED_INFORMATION,
+}
 
 
 # ── bounded, auditable text locators ─────────────────────────────────────────
@@ -311,6 +335,20 @@ class OpeningRangeSourceRefusal:
     source_spec_id: str
     source_condition_id: str
     missing_fields: tuple[str, ...]
+    """ONLY genuinely-ABSENT fields — the teacher never said.
+
+    R-742 §4 defect 2: this used to be populated with `conflict_fields` on the
+    contradiction path (`named = conflict_fields or missing`), so fields that were
+    PRESENT AND CONFLICTING were filed as missing while the genuinely-absent ones
+    were DROPPED from the named list entirely. `R-741 §2 ORDERED TWO SILENCES BE
+    GIVEN TWO NAMES; failure_kind DID THAT AND missing_fields COLLAPSED THEM AGAIN
+    ONE FIELD LATER.`"""
+
+    conflict_fields: tuple[str, ...]
+    """Fields that are PRESENT and DISAGREE with themselves. Its own field, because
+    "the teacher never said" and "the teacher said two things" are different
+    findings with different V1.1 dispositions."""
+
     internal_reason: str
     evidence_found: tuple[tuple[str, str], ...]
     positive_control: str
@@ -329,17 +367,51 @@ class OpeningRangeSourceRefusal:
                 f"got {self.failure_kind!r} — two different silences deserve two "
                 "different names, and an unnamed one collapses them again"
             )
-        if not self.missing_fields:
+        if not self.missing_fields and not self.conflict_fields:
             raise ValueError(
-                "a SOURCE_INCOMPLETE refusal must name at least one missing field; "
-                "an unnamed refusal is indistinguishable from a crash"
+                "a refusal must name at least one field, missing OR conflicting; an unnamed "
+                "refusal is indistinguishable from a crash"
             )
-        unknown = [f for f in self.missing_fields if f not in REQUIRED_SOURCE_FIELDS]
+        # ONE invariant per failure kind, rather than one invariant enforced against all
+        # three. R-742 §4 flagged the old guard's own wording -- "a SOURCE_INCOMPLETE
+        # refusal must name at least one MISSING field" -- as enforcing the ABSENT kind's
+        # rule against contradictions too, which is what made the collapse look required.
+        if self.failure_kind == ABSENT and not self.missing_fields:
+            raise ValueError(
+                "an ABSENT refusal must name at least one MISSING field; an absence with no "
+                "absent field is not an absence"
+            )
+        if self.failure_kind in (CONTRADICTORY, UNREADABLE) and not self.conflict_fields:
+            raise ValueError(
+                f"a {self.failure_kind} refusal must name at least one CONFLICTING field; "
+                "filing it under missing_fields is the collapse R-742 §4 ordered repaired"
+            )
+        unknown = [
+            f
+            for f in (*self.missing_fields, *self.conflict_fields)
+            if f not in REQUIRED_SOURCE_FIELDS
+        ]
         if unknown:
             raise ValueError(
                 f"refusal names fields outside the required population: {unknown}; "
                 f"the population is {list(REQUIRED_SOURCE_FIELDS)}"
             )
+        overlap = set(self.missing_fields) & set(self.conflict_fields)
+        if overlap:
+            raise ValueError(
+                f"fields {sorted(overlap)} are named as BOTH missing and conflicting; a field "
+                "the teacher never mentioned cannot also be a field the teacher contradicted"
+            )
+
+    @property
+    def disposition(self) -> OpeningRangeLoweringDisposition:
+        """R-742 §3's mapping, DERIVED from `failure_kind`, never stored separately.
+
+        Derived rather than carried so `disposition` and `failure_kind` CANNOT disagree —
+        the defect R-742 §4 found was exactly two structured fields drifting apart, and the
+        repair that leaves both writable would let it recur.
+        """
+        return DISPOSITION_FOR_FAILURE_KIND[self.failure_kind]
         if not self.positive_control:
             raise ValueError(
                 "a refusal must carry a positive control proving the locator CAN "
@@ -361,7 +433,20 @@ class OpeningRangeLoweringResult:
         if ready and (self.definition is None or self.refusal is not None):
             raise ValueError("READY must carry a definition and no refusal")
         if not ready and (self.refusal is None or self.definition is not None):
-            raise ValueError("SOURCE_INCOMPLETE must carry a refusal and NO definition")
+            raise ValueError(
+                f"{self.disposition} must carry a refusal and NO definition"
+            )
+        # THE FIELD THAT CANNOT DISAGREE WITH ITSELF (R-742 §4 defect 1). The result's
+        # disposition must be the one the refusal's own failure_kind maps to. Checked here
+        # rather than trusted, because the defect being repaired was a hardcoded disposition
+        # sitting one line from the failure_kind that contradicted it.
+        if self.refusal is not None and self.disposition is not self.refusal.disposition:
+            raise ValueError(
+                f"result disposition {self.disposition} disagrees with the refusal's "
+                f"failure_kind {self.refusal.failure_kind!r}, which maps to "
+                f"{self.refusal.disposition}. Two structured fields that contradict each "
+                "other are worse than one, because each looks authoritative alone."
+            )
 
 
 def lower_opening_range_definition(
@@ -484,15 +569,19 @@ def lower_opening_range_definition(
                 if missing == ("trading_day_rule",)
                 else "opening_range_source_fields_missing:" + ",".join(missing)
             )
-        named = conflict_fields or missing
+        # R-742 §4, REPAIRED. Was `named = conflict_fields or missing`, which filed
+        # present-but-conflicting fields under `missing_fields` and DROPPED the genuinely
+        # absent ones. The two populations are now carried separately and the disposition is
+        # DERIVED from failure_kind, so `disposition` and `failure_kind` cannot disagree.
         return OpeningRangeLoweringResult(
-            disposition=OpeningRangeLoweringDisposition.SOURCE_INCOMPLETE,
+            disposition=DISPOSITION_FOR_FAILURE_KIND[failure_kind],
             source_spec_id=source_spec_id,
             source_condition_id=source_condition_id,
             refusal=OpeningRangeSourceRefusal(
                 source_spec_id=source_spec_id,
                 source_condition_id=source_condition_id,
-                missing_fields=named,
+                missing_fields=missing,
+                conflict_fields=conflict_fields,
                 internal_reason=reason,
                 evidence_found=tuple(
                     (field, span) for field, (_value, span) in sorted(found.items())

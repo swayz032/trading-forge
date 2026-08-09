@@ -173,6 +173,29 @@ def _window_bounds(
     return start, lock
 
 
+def opening_range_window_bounds(
+    definition: OpeningRangeDefinition,
+    variant: OpeningRangeVariant,
+    session_date: date,
+) -> tuple[datetime, datetime]:
+    """PUBLIC `[start, lock)` for one session — B1 STEP 6B (`R-743 §6`).
+
+    A thin delegation to `_window_bounds`, added so the LOCK INSTANT is a
+    first-class public fact rather than a private detail the state lane has to
+    re-derive.
+
+    WHY THE STATE LANE NEEDS IT, AND WHY RE-DERIVING WOULD HAVE BEEN WRONG. The
+    lock is the exact instant the opening range becomes knowable. Computing a
+    session's state `as_of` anything LATER (the session's last bar, the frame's
+    last bar) publishes a value the market could not have known at the time, and
+    computing it EARLIER is the `FORMING` refusal by design. Re-deriving the
+    boundary in a second module would also have been a SECOND INSTRUMENT: two
+    window calculators that agree today and diverge on the first daylight-saving
+    edge, with nothing joining them.
+    """
+    return _window_bounds(definition, variant, session_date)
+
+
 # The fail-loud READ-OUT row (see `_aggregate_levels`). Its values are chosen so
 # that IF it ever leaked past the shared calculator's in-range mask, the result
 # would be catastrophically, visibly wrong rather than subtly off. A sentinel

@@ -47,6 +47,7 @@ from src.engine.opening_range_definition import (
     CANONICAL_TYPE as OPENING_RANGE_DEFINITION,
 )
 from src.engine.opening_range_definition import classify_opening_range_definition
+from src.engine.opening_range_state_channel import CARRIER_KEY as OR_CARRIER_KEY
 from src.engine.spec_family_bindings import compile_binding_plan
 
 # --------------------------------------------------------------------------- #
@@ -574,6 +575,8 @@ def produce_spec_artifact(
     video: str,
     certificate: Optional[dict] = None,
     transcript_chars: int = 0,
+    extraction_sha256: Optional[str] = None,
+    extraction_record: Optional[dict] = None,
 ) -> dict:
     """Certified `staging_v32` extraction -> SpecArtifact `.spec.json` body.
     Pure/deterministic. See module docstring for the anti-fit + optimistic-bias
@@ -669,16 +672,132 @@ def produce_spec_artifact(
             "exit_source": "framework_overlay_style_c",
         }
 
+    spec_hash = _spec_hash(spec_body)
     artifact = {
         "video": video,
-        "spec_hash": _spec_hash(spec_body),
+        "spec_hash": spec_hash,
         "graph_canonical_hash": "",  # unproduced on this branch (R-040 §3), pinned honestly
         "ledger_d": "UNKNOWN",       # unproduced on this branch (R-040 §3)
         "transcript_chars": int(transcript_chars),
         "spec": spec_body,
         "approximation_metrics": _approximation_metrics(spec_body, confidences),
     }
+
+    # ── B1 STEP 6B: THE OPENING-RANGE CARRIER (R-745 §4, the amendment) ──────────────────
+    # R-705/R-707 forbid `produce_spec_artifact` BY SYMBOL. R-745 §4 AMENDS that
+    # prohibition for STEP 6B ONLY, to exactly two things: (i) calling the existing 6A
+    # lowering + candidate expansion from here, and (ii) attaching the resulting typed
+    # carrier AT THE ARTIFACT TOP LEVEL, OUTSIDE the hashed `spec` body.
+    #
+    # WHY IT HAD TO BE AMENDED AT ALL: the 6A lowering had ZERO production callers
+    # (AR-841 §1, reproduced by the desk at R-745 §2), and it reads the extraction record's
+    # taught spans -- which are NOT on the artifact. So there is no path from a frozen
+    # extraction to the adapter that does not cross this function, and R-744 §6(2)'s "the
+    # real adapter called exactly three times" was unreachable without it.
+    #
+    # HASH-NEUTRAL BY CONSTRUCTION, NOT BY MEASUREMENT: `spec_hash` is computed ABOVE, from
+    # `spec_body`, and nothing below touches `spec_body`. The carrier cannot move it. That
+    # is R-745 §7's new STOP -- "stop if the carrier cannot be attached without changing
+    # spec_hash for ANY spec" -- discharged by the shape rather than by a re-run.
+    carriers = _opening_range_carriers(
+        entry_conditions,
+        strategy_extraction=strategy_extraction,
+        extraction_record=extraction_record,
+        spec_hash=spec_hash,
+        video=video,
+        extraction_sha256=extraction_sha256,
+    )
+    if carriers:
+        artifact[OR_CARRIER_KEY] = carriers
     return artifact
+
+
+def _opening_range_carriers(
+    entry_conditions: List[dict],
+    *,
+    strategy_extraction: dict,
+    extraction_record: Optional[dict],
+    spec_hash: str,
+    video: str,
+    extraction_sha256: Optional[str],
+) -> Tuple[Any, ...]:
+    """One sealed carrier per opening-range condition, in condition order.
+
+    Returns `()` when the spec has no opening-range condition — the overwhelming majority
+    of specs — so the artifact shape is unchanged for them and the carrier key is absent
+    rather than present-and-empty. An absent key and an empty tuple read differently to a
+    consumer, and "this spec has no opening range" deserves the clearer of the two.
+
+    ★★★ AND IT ALSO RETURNS `()` WHEN `extraction_record` IS ABSENT, WHICH IS THE MORE
+    IMPORTANT CASE AND WAS A LIVE DEFECT IN MY FIRST VERSION OF THIS FUNCTION.
+
+    This function receives ONE STRATEGY. The lowering also reads DOCUMENT-LEVEL fields —
+    `instrument_classification`, which is where `market_scope` comes from. My first version
+    synthesised `{"strategies": [strategy_extraction]}` and lowered from that, and the
+    golden record came back `SOURCE_INCOMPLETE` INSTEAD OF `READY` — because the wrapper had
+    dropped a field the teacher had actually supplied.
+
+        `A REFUSAL CAUSED BY WHAT THE CALLER FAILED TO PASS IS A FABRICATED FINDING ABOUT
+         THE TEACHER, AND IT IS WORSE THAN NO FINDING AT ALL.`
+
+    So an under-supplied call emits NO CARRIER. The engine then refuses BY NAME ("carrier
+    absent"), which is true, instead of publishing "the source is incomplete", which is not.
+
+    NO SILENT UPGRADE OF LEGACY ARTIFACTS (R-745 §5): this runs at PRODUCTION time from the
+    frozen extraction record. An artifact produced before this commit simply has no carrier,
+    and the engine's join REFUSES BY NAME rather than reconstructing one from compiled
+    condition text — which would be lowering from the wrong source.
+    """
+    if extraction_record is None:
+        return ()
+    from src.engine.opening_range_candidate import expand_execution_candidates
+    from src.engine.opening_range_carrier import build_carrier
+    from src.engine.opening_range_lowering import (
+        OpeningRangeLoweringDisposition,
+        lower_opening_range_definition,
+    )
+
+    out = []
+    for cond in entry_conditions:
+        if cond.get("type") != OPENING_RANGE_DEFINITION:
+            continue
+        condition_id = str(cond.get("id") or "")
+        result = lower_opening_range_definition(
+            video,
+            condition_id,
+            extraction_record,
+            # The lowering REQUIRES a positive control so a refusal cannot be produced
+            # without one -- `A REFUSAL THAT DOES NOT CARRY ITS OWN POSITIVE CONTROL IS
+            # INDISTINGUISHABLE FROM A BROKEN READER.` This names the executed control:
+            # the same locators demonstrably resolve every required field on the member
+            # of the frozen population that IS complete.
+            positive_control=(
+                "the same locators resolve all six required fields on the complete member "
+                "of the frozen tier-A population; a field reported missing here was looked "
+                "for by machinery proven able to find it"
+            ),
+        )
+        ready = result.disposition is OpeningRangeLoweringDisposition.READY
+        candidates = (
+            expand_execution_candidates(video, condition_id, result.definition)
+            if ready
+            else ()
+        )
+        out.append(
+            build_carrier(
+                source_spec_hash=spec_hash,
+                source_extraction_sha256=extraction_sha256,
+                strategy_record=strategy_extraction,
+                source_spec_id=video,
+                source_condition_id=condition_id,
+                disposition=str(result.disposition),
+                failure_kind=result.refusal.failure_kind if result.refusal else None,
+                missing_fields=result.refusal.missing_fields if result.refusal else (),
+                conflict_fields=result.refusal.conflict_fields if result.refusal else (),
+                candidates=candidates,
+            )
+        )
+    return tuple(out)
 
 
 def _spec_hash(spec_body: dict) -> str:

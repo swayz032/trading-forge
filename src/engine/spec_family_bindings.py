@@ -546,6 +546,30 @@ _INHERIT: str = "\x00inherit"
 which is a meaningful value here ("declares no primitive")."""
 
 
+# ── B1 STEP 6B: the two execution kinds (R-743 §5, adopted verbatim) ─────────────────────
+EXECUTION_KIND_GATE: str = "GATE"
+"""One boolean per bar. Every family's kind before STEP 6B, and the default."""
+
+EXECUTION_KIND_STATE_PRODUCER: str = "STATE_PRODUCER"
+"""A typed, multi-field per-session result that the boolean contract cannot carry.
+
+R-743 §6: a state producer `must NEVER enter the boolean AND, the trigger mask, or the
+entry-decision population.` It is not a gate that happens to be always-True -- that shape is
+the FILTER defect this codebase already deleted, and re-creating it would be the same defect
+under a new name."""
+
+OPENING_RANGE_STATE_PRIMITIVE: str = "opening_range_adapter.compute_opening_range_state"
+"""The ONE primitive on the state-producer lane. Named as a constant because three surfaces
+must agree on the string -- the family declaration, the resolver registry and the state
+dispatch table -- and a literal repeated three times is a transcription bug waiting to happen
+(the exact shape R-015 was)."""
+
+EXECUTION_KINDS: frozenset[str] = frozenset({EXECUTION_KIND_GATE, EXECUTION_KIND_STATE_PRODUCER})
+"""CLOSED SET. An unlisted kind is a hard error at declaration time rather than a family that
+silently routes nowhere -- `schema = decision boundary`, the same law the confidence
+vocabulary is closed under in spec_producer._approximation_metrics."""
+
+
 @dataclass(frozen=True)
 class FamilyMeta:
     """One family's declaration. Carries TWO columns on purpose, for the length of the
@@ -573,6 +597,20 @@ class FamilyMeta:
     unsupported: bool = False
     unbound_reason: str | None = None
     executed: bool = True  # False only for EXIT_HINT (provenance-only, never drives signals)
+    execution_kind: str = EXECUTION_KIND_GATE
+    """WHICH LANE this family's declaration executes on -- B1 STEP 6B, R-743 §5, adopted
+    verbatim: two execution kinds, `GATE` (one boolean per bar) and `STATE_PRODUCER`.
+
+    A `STATE_PRODUCER` computes a TYPED, MULTI-FIELD result and therefore CANNOT be carried
+    by the per-condition boolean contract. It never writes `per_condition_bool`, so it is
+    excluded from the boolean conjunction, the trigger mask and the entry-decision population
+    BY CONSTRUCTION rather than by a remembered rule -- membership in that dict IS membership
+    in the AND (AR-839 §2, confirmed independently at the executable line by R-744 §1).
+
+    THIS IS A DECLARATION, NOT A GUARD EXEMPTION. The enforcement pins learn about the new
+    kind and check it; nothing is told to skip this family. `A GUARD EXEMPTION IS
+    STRUCTURALLY WEAKER THAN A DECLARATION` (R-729 §2, and the same reasoning that put
+    OPENING_RANGE_DEFINITION on the proper declaration route in STEP 3)."""
     enforced_primitive: str | None = _INHERIT
     enforced_mechanism: str | None = None
     enforced_approximation: bool | None = None
@@ -588,6 +626,32 @@ class FamilyMeta:
     calls with trace=True (all four signal columns byte-identical either way). The primitive
     exists and is reachable -- but only in the trace path, so declaring it plainly `executed`
     overstates what production does."""
+
+    def __post_init__(self) -> None:
+        if self.execution_kind not in EXECUTION_KINDS:
+            raise ValueError(
+                f"execution_kind {self.execution_kind!r} is not one of {sorted(EXECUTION_KINDS)}; "
+                "the set is closed on purpose so a typo becomes a load error rather than a "
+                "family that routes nowhere"
+            )
+        if self.execution_kind == EXECUTION_KIND_STATE_PRODUCER and self.gates:
+            raise ValueError(
+                "a STATE_PRODUCER family may not declare gates=True: it produces typed state, "
+                "not a per-bar boolean, and a gating state producer is the exact shape R-743 §7 "
+                "stops on"
+            )
+        if self.execution_kind == EXECUTION_KIND_STATE_PRODUCER and self.unsupported:
+            raise ValueError(
+                "a STATE_PRODUCER family cannot also be unsupported: unsupported means the "
+                "engine declares nothing and refuses, which is the STEP 3 state this kind replaces"
+            )
+
+    def is_state_producer(self) -> bool:
+        """THE single predicate the executable layer branches on.
+
+        A method rather than an inline string comparison at the call site so there is exactly
+        one place that decides which lane a family executes on."""
+        return self.execution_kind == EXECUTION_KIND_STATE_PRODUCER
 
     def enforced_declaration(self) -> tuple[str | None, str | None]:
         """(primitive, mechanism) as declared UNDER ENFORCEMENT, with `_INHERIT` resolved to
@@ -655,30 +719,36 @@ FAMILY_META: dict[str, FamilyMeta] = {
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
     ),
-    # ── B1 STEP 3 (R-730 §4). The typed subtype that splits the taught OPENING RANGE out of
-    # the coarse WAIT_STRUCTURE family above. It is declared UNSUPPORTED and it REFUSES.
+    # ── B1 STEP 6B (R-743 §5-§6, R-744 §6). The typed subtype that splits the taught OPENING
+    # RANGE out of the coarse WAIT_STRUCTURE family above. It EXECUTES, on the STATE_PRODUCER
+    # lane, and it is the first family in this table that is not a gate.
     #
-    # WHY A REFUSAL IS THE CORRECT STATE AND NOT A PLACEHOLDER. STEP 3 is the representation
-    # only; the typed adapter is STEP 4. R-730 §4 rules the temporary refusal explicitly SAFE:
-    # "the new type MAY TEMPORARILY REFUSE because its adapter does not exist yet ... It must
-    # NEVER fall back to the known-wrong structure evaluator." Declaring a primitive here to
-    # avoid an unbound row would do exactly that -- the only primitive that would accept these
-    # conditions today is compute_structure_state, which is the defect B1 exists to remove.
-    # `A REFUSAL IS AN HONEST OFF STATE; A SILENT WRONG ANSWER IS NOT.`
+    # WHAT CHANGED FROM STEP 3, AND WHAT DID NOT. STEP 3 declared this family `unsupported=True`
+    # with unbound_reason "opening_range_adapter_not_implemented" -- an HONEST refusal while no
+    # adapter existed. The adapter exists now (opening_range_adapter.compute_opening_range_state,
+    # STEP 4) and the source lowering exists (STEP 6A), so the refusal has stopped being honest
+    # and become stale. What did NOT change is the prohibition it protected: this family still
+    # must NEVER fall back to compute_structure_state, which is the defect B1 exists to remove.
     #
-    # WHY THIS NEEDS NO GUARD EXEMPTION (R-729 §2, which refused the one I proposed).
-    # `unsupported=True` makes enforced_declaration() return (None, None), so pin (a) never
-    # adds a name to `declared` and needs no ENFORCED_DISPATCH key, and pin (b) skips the
-    # family at its own `if meta.unsupported: continue`. This is the PROPER DECLARATION ROUTE
-    # -- the guard sees the family and is satisfied by it, rather than being told to ignore it.
-    # `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.`
+    # WHY gates=False AND A PRIMITIVE. Every other non-gating family in this table declares a
+    # MECHANISM because it computes no per-bar signal at all. This one is different and the
+    # difference is the point: it computes a REAL, TYPED, MULTI-FIELD result (six fields, four
+    # numeric) that the one-boolean-per-bar contract cannot carry. That is the third shape --
+    # neither a gate nor a no-op -- and R-743 §5 authorises it explicitly.
     #
-    # MIRRORED: src/server/lib/spec-family-bindings.ts carries the same entry in this commit,
-    # with a focused parity fixture (R-727 §3's stated price, paid rather than routed around).
+    # WHY THIS IS STILL THE PROPER DECLARATION ROUTE AND NOT AN EXEMPTION (R-729 §2, which
+    # refused the exemption I proposed then). The enforcement pins were TAUGHT the new kind:
+    # pin (a) checks this primitive against STATE_DISPATCH instead of ENFORCED_DISPATCH and
+    # requires the routed handler to be a state handler, both directions. Nothing is told to
+    # skip this family. `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.`
+    #
+    # MIRRORED: src/server/lib/spec-family-bindings.ts carries the same entry in this commit.
+    # TS mirrors DECLARATIONS ONLY (R-741 §6, R-743 §6) -- it never lowers, re-parses prose,
+    # expands candidates or computes an opening range.
     "OPENING_RANGE_DEFINITION": FamilyMeta(
-        primitive=None,
-        unsupported=True,
-        unbound_reason="opening_range_adapter_not_implemented",
+        primitive=OPENING_RANGE_STATE_PRIMITIVE,
+        execution_kind=EXECUTION_KIND_STATE_PRODUCER,
+        gates=False,
     ),
     "VERIFY_STRUCTURE": FamilyMeta(
         primitive="structure_engine.compute_structure_state",
@@ -2626,6 +2696,28 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
             approximation=False,
             executed=False,
             reason=meta.unbound_reason,
+        )
+
+    # ── B1 STEP 6B: the STATE_PRODUCER lane (R-743 §5-§6) ────────────────────────────────
+    # Checked here, BEFORE every experiment path and before the generic dispatch below, for
+    # the same placement reason the FVG and level/zone identity checks are checked early: a
+    # state-producer binding must never fall through to a route that returns a boolean array.
+    #
+    # approximation=False is a CLAIM and it is the honest one: the adapter computes the taught
+    # window exactly or REFUSES with a named status (FORMING / INCOMPLETE_OPENING_WINDOW).
+    # There is no looser-than-taught pass-through on this lane, which is precisely what
+    # separates it from the base_approximation=True structure route it replaces.
+    if meta.is_state_producer():
+        return ConditionBinding(
+            condition_id=cond_id,
+            type=cond_type,
+            role=role,
+            object=obj,
+            bindable=True,
+            primitive=meta.primitive,
+            approximation=False,
+            executed=True,
+            reason=None,
         )
 
     # Composition-bundle restoration (experiment, per-condition-targeted — see module docstring
