@@ -61,6 +61,12 @@ vi.mock("drizzle-orm", () => ({
 }));
 
 vi.mock("../db/schema.js", () => ({
+  // D-10 F-10: the shared refusal classifier (`lib/backtest-refusal.ts`) imports this
+  // constant from schema. Without it in the mock, `isExecutionRefused()` would compare
+  // against `undefined` and return false for EVERY result — the refusal branch would be
+  // unreachable in tests and its control could never go green. Mirrors the same addition
+  // in `backtest-service.deepscan8-fixes.test.ts:124`.
+  BACKTEST_STATUS_REFUSED: "refused",
   strategies: { id: "s_id", lifecycleState: "lifecycle_state", $inferSelect: {} },
   backtests: { id: "bt_id", strategyId: "strategy_id", status: "status", createdAt: "created_at", $inferSelect: {} },
   backtestProvenance: { backtestId: "backtest_id", $inferSelect: {} },
@@ -382,6 +388,122 @@ describe("runBacktest status=skipped (pipeline paused mid-run)", () => {
     expect(r.skipped).toBe(1);
     expect(r.processed).toBe(0);
     expect(r.errors).toBe(0);
+  });
+});
+
+// ─── D-10 F-10 ────────────────────────────────────────────────────────────────
+//
+// `AN UNMEASURED RUN MUST NOT ENTER THE COMPARISON AT ALL` (R-766 §3, campaign law).
+//
+// A refusal is not a bad score — it is the ABSENCE of a score. Every metric column
+// on a refused row is NULL by construction (R-751 §8-5), and `metricsPassGate()`
+// returns false on its first line when any metric is null. So an unguarded refusal
+// makes a previously-PASSING strategy read `newPassed=false` ⇒ `statusFlipped=true`
+// ⇒ severity "critical": the drift detector raises a CRITICAL REGRESSION ALERT for a
+// measurement that was never taken.
+//
+// FIXTURE NOTE — why the fifth row is seeded even though it must not be read:
+// the db mock only advances `_dbIdx` while `_dbIdx < _dbSeq.length`. On a 4-entry
+// fixture the counter STOPS at 4 whether or not the code attempts a fifth read, so
+// `expect(_dbIdx).toBe(4)` would pass without the fix — a comparison that cannot
+// fail is a printout. Seeding five makes the counter able to reach five, which is
+// what makes the assertion a control.
+describe("F-10: an execution REFUSAL must never enter the gate comparison", () => {
+  const REFUSED_RESULT = {
+    id: "shadow-bt-id",
+    status: "refused",
+    execution_status: "refused",
+    condition_id: "C-7",
+    disposition: "UNRESOLVED_SOURCE_AMBIGUITY",
+    reason: "entry condition not deterministically compilable",
+    metrics_omitted: true,
+  };
+
+  // What a refusal actually persists: every metric column NULL.
+  function btRefused(id: string, strategyId: string) {
+    return {
+      ...bt(id, strategyId, "0", "0", "0"),
+      profitFactor: null,
+      sharpeRatio: null,
+      maxDrawdown: null,
+      totalReturn: null,
+      winRate: null,
+      totalTrades: null,
+      avgTradePnl: null,
+      avgDailyPnl: null,
+      forgeScore: null,
+      tier: null,
+      status: "refused",
+    };
+  }
+
+  beforeEach(() =>
+    reset(
+      [
+        [{ strategyId: "strat-1" }],                    // [0] strategies
+        [{ id: "bt-1" }],                               // [1] latest backtest
+        [bt("bt-1", "strat-1", "2.0", "1.8", "1500")],  // [2] original — PASSES the gate
+        [prov("bt-1", "oldhash")],                      // [3] provenance
+        [btRefused("shadow-bt-id", "strat-1")],         // [4] MUST NOT be consumed
+      ],
+      { runBacktestResult: REFUSED_RESULT, resultHash: "differenthash" },
+    ),
+  );
+
+  it("stops before the shadow-row read — the fifth DB read is not consumed", async () => {
+    await runShadowRerun("refusal");
+    expect(vi.mocked(runBacktest)).toHaveBeenCalledTimes(1);
+    expect(_dbIdx).toBe(4);
+  });
+
+  it("names the refusal instead of comparing it — no finding, no critical", async () => {
+    const r = await runShadowRerun("refusal");
+    expect(r.refused).toBe(1);
+    expect(r.processed).toBe(0);
+    expect(r.skipped).toBe(0);
+    expect(r.errors).toBe(0);
+    expect(r.findings.critical).toBe(0);
+    expect(r.findings.warning).toBe(0);
+    expect(r.findings.info).toBe(0);
+    expect(r.criticalStrategies).toHaveLength(0);
+    expect(_insertConflictCalled).toBe(false);
+  });
+
+  it("carries the refusal evidence, and fabricates no key that was absent", async () => {
+    const r = await runShadowRerun("refusal");
+    expect(r.refusedStrategies).toHaveLength(1);
+    expect(r.refusedStrategies[0].strategyId).toBe("strat-1");
+    expect(r.refusedStrategies[0].backtestId).toBe("bt-1");
+    expect(r.refusedStrategies[0].evidence).toMatchObject({
+      execution_status: "refused",
+      condition_id: "C-7",
+      disposition: "UNRESOLVED_SOURCE_AMBIGUITY",
+      metrics_omitted: true,
+    });
+    // `refusalEvidence()` returns only keys actually present — absent stays absent.
+    expect(r.refusedStrategies[0].evidence).not.toHaveProperty("ambiguity");
+    expect(r.refusedStrategies[0].evidence).not.toHaveProperty("entry_eligible");
+  });
+});
+
+// POSITIVE DISCRIMINATOR (R-766 §4). Without this, a "fix" that suppressed every
+// finding — or short-circuited every run — would pass the controls above.
+describe("F-10 discriminator: a genuinely MEASURED regression still fires critical", () => {
+  beforeEach(() =>
+    // old PASSES (2.0/1.8/1500), new FAILS on real numbers, hash differs
+    reset(oneStrategySeq("oldhash", "2.0", "1.8", "1500", "1.1", "0.9", "1500"), {
+      resultHash: "differenthash",
+    }),
+  );
+
+  it("still reports critical, still persists, and is NOT counted as refused", async () => {
+    const r = await runShadowRerun("real regression");
+    expect(r.findings.critical).toBe(1);
+    expect(r.processed).toBe(1);
+    expect(r.refused).toBe(0);
+    expect(r.criticalStrategies).toHaveLength(1);
+    expect(_insertConflictCalled).toBe(true);
+    expect(_dbIdx).toBe(5); // the measured path DOES consume the shadow-row read
   });
 });
 

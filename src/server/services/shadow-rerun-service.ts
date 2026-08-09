@@ -39,6 +39,7 @@ import { logger } from "../index.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { runBacktest } from "./backtest-service.js";
 import { computeResultHash } from "../lib/result-hasher.js";
+import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,27 @@ export interface ShadowRerunFinding {
   error?: string;
 }
 
+/**
+ * D-10 F-10: the engine REFUSED to execute this shadow re-run.
+ *
+ * Deliberately NOT a `ShadowRerunFinding` and deliberately NOT `null`:
+ *   - a finding would enter the gate comparison, which is the defect;
+ *   - `null` already means "pre-A2 backtest, skipped", and a refusal is not a skip.
+ * It carries evidence instead of metrics, because there are no metrics.
+ */
+export interface ShadowRerunRefusal {
+  refused: true;
+  strategyId: string;
+  backtestId: string;
+  evidence: Record<string, unknown>;
+}
+
+function isRefusalOutcome(
+  outcome: ShadowRerunFinding | ShadowRerunRefusal | null,
+): outcome is ShadowRerunRefusal {
+  return outcome !== null && (outcome as ShadowRerunRefusal).refused === true;
+}
+
 export interface ShadowRerunReport {
   reason: string;
   newCodeGitSha: string;
@@ -98,6 +120,13 @@ export interface ShadowRerunReport {
   processed: number;
   skipped: number; // no provenance row (pre-A2 backtest)
   errors: number;
+  /** D-10 F-10: runs the engine declined to execute. Never compared, never a finding. */
+  refused: number;
+  refusedStrategies: Array<{
+    strategyId: string;
+    backtestId: string;
+    evidence: Record<string, unknown>;
+  }>;
   findings: {
     info: number;
     warning: number;
@@ -159,7 +188,7 @@ async function rerunOneStrategy(
   backtestId: string,
   newCodeGitSha: string,
   reason: string,
-): Promise<ShadowRerunFinding | null> {
+): Promise<ShadowRerunFinding | ShadowRerunRefusal | null> {
   // 1. Load the original backtest config + metrics
   const [originalBacktest] = await db
     .select()
@@ -235,6 +264,33 @@ async function rerunOneStrategy(
       severity: "info",
       error: errMsg,
     };
+  }
+
+  // ── D-10 F-10: an execution REFUSAL never enters the comparison ─────────────
+  //
+  // `AN UNMEASURED RUN MUST NOT ENTER THE COMPARISON AT ALL` (R-766 §3).
+  //
+  // A refusal persists a row whose metric columns are ALL NULL by construction
+  // (R-751 §8-5). Those nulls are preserved correctly further down — and that is
+  // exactly the trap: `metricsPassGate()` returns false on its first line when any
+  // metric is null, so a previously-PASSING strategy would read `newPassed=false`,
+  // `statusFlipped=true`, and `computeSeverity()` would return "critical". The
+  // drift detector would raise a CRITICAL REGRESSION ALERT for a measurement that
+  // was never taken.
+  //
+  // The bug is therefore NOT a `?? 0` coercion — removing one would not fix it.
+  // The invariant is that the comparison must not happen at all, so we return
+  // BEFORE the shadow-row lookup, the result hashing, the gate and the severity.
+  //
+  // `backtestId` here is the ORIGINAL backtest being re-run — the same join key
+  // `criticalStrategies` uses — not the refused shadow run's id.
+  if (isExecutionRefused(shadowResult)) {
+    const evidence = refusalEvidence(shadowResult);
+    logger.warn(
+      { strategyId, backtestId, evidence },
+      "shadow-rerun: engine REFUSED execution — no comparison performed, no finding recorded",
+    );
+    return { refused: true, strategyId, backtestId, evidence };
   }
 
   if (shadowResult.status === "skipped") {
@@ -396,6 +452,8 @@ export async function runShadowRerun(
       processed: 0,
       skipped: 0,
       errors: 0,
+      refused: 0,
+      refusedStrategies: [],
       findings: { info: 0, warning: 0, critical: 0 },
       criticalStrategies: [],
       durationMs: Date.now() - startMs,
@@ -439,6 +497,8 @@ export async function runShadowRerun(
       processed: 0,
       skipped: 0,
       errors: 0,
+      refused: 0,
+      refusedStrategies: [],
       findings: { info: 0, warning: 0, critical: 0 },
       criticalStrategies: [],
       durationMs: Date.now() - startMs,
@@ -483,6 +543,8 @@ export async function runShadowRerun(
   let processed = 0;
   let skipped = 0;
   let errors = 0;
+  let refused = 0;
+  const refusedStrategies: ShadowRerunReport["refusedStrategies"] = [];
   const findingCounts = { info: 0, warning: 0, critical: 0 };
   const criticalStrategies: Array<{ strategyId: string; backtestId: string }> = [];
 
@@ -496,6 +558,18 @@ export async function runShadowRerun(
         { strategyId: input.strategyId, backtestId: input.backtestId, err: raw.message },
         "shadow-rerun: strategy re-run failed",
       );
+      continue;
+    }
+
+    // D-10 F-10: checked BEFORE the null branch — a refusal is not a skip, and the
+    // two must stay semantically separate in the report.
+    if (isRefusalOutcome(raw)) {
+      refused++;
+      refusedStrategies.push({
+        strategyId: raw.strategyId,
+        backtestId: raw.backtestId,
+        evidence: raw.evidence,
+      });
       continue;
     }
 
@@ -544,6 +618,8 @@ export async function runShadowRerun(
     processed,
     skipped,
     errors,
+    refused,
+    refusedStrategies,
     findings: findingCounts,
     criticalStrategies,
     durationMs,
