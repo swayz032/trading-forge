@@ -43,6 +43,10 @@ import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.engine.opening_range_definition import (
+    CANONICAL_TYPE as OPENING_RANGE_DEFINITION,
+)
+from src.engine.opening_range_definition import classify_opening_range_definition
 from src.engine.spec_family_bindings import compile_binding_plan
 
 # --------------------------------------------------------------------------- #
@@ -359,6 +363,38 @@ def _classify_family(text: str, *, role_hint: Optional[str] = None) -> Tuple[str
     case, which is how 35 of tier-A's 50 WAIT_STRUCTURE rows -- 70% of that
     family -- were assigned with zero supporting evidence.
     """
+    # ── B1 STEP 3 (R-730 §4, widened R-732 §2): the taught OPENING RANGE gets its
+    # own explicit type BEFORE keyword scoring can collapse it into WAIT_STRUCTURE.
+    #
+    # WHY IT MUST RUN FIRST. `_FAMILY_KEYWORDS["WAIT_STRUCTURE"]` already contains
+    # "opening range", "range", "level", "high of the" and "low of the", so the
+    # scoring below reliably wins this sentence for the coarse family. That is the
+    # measured defect: an opening range is a TIME-BOUNDED STATEFUL AGGREGATION THAT
+    # PRODUCES LEVELS, and WAIT_STRUCTURE's evaluator emits market-structure EVENTS
+    # with no field a range can live in. `A CLASSIFIER THAT PRESERVES ONE OF TWO
+    # DIMENSIONS HAS NOT CLASSIFIED -- IT HAS PROJECTED.`
+    #
+    # WHY IT IS SAFE TO RUN FIRST. The rule is ORDERED and refuses before it
+    # accepts: reference/trigger evidence blocks outright, so "break above the
+    # opening-range high" -- which carries BOTH a clock and range language -- stays
+    # exactly where it is. Its breakout semantics remain UNRESOLVED_SOURCE_AMBIGUITY
+    # (R-725 §4) and this step may not settle them. `A CLEARER TEACHER DOES NOT
+    # RESOLVE A DIFFERENT TEACHER'S SILENCE.`
+    #
+    # MEASURED TIGHTNESS, not asserted: across the frozen census the rule fires on
+    # 2 of 99 conditions, and within the golden spec it captures 1 of the 9
+    # conditions currently sitting on the wrong evaluator. The six controls and the
+    # corpus blast-radius read live in
+    # docs/replay-results/h1-battery/opening_range_definition_discrimination.py,
+    # which imports THIS rule rather than copying it.
+    #
+    # CONFIDENCE IS `CONFIDENT` BY CONSTRUCTION: the rule requires two independent
+    # positive limbs and no blocking evidence, which is a stronger warrant than the
+    # single-family keyword hit that earns CONF_CONFIDENT below.
+    is_opening_range_definition, _reason, _evidence = classify_opening_range_definition(text)
+    if is_opening_range_definition:
+        return OPENING_RANGE_DEFINITION, CONF_CONFIDENT
+
     scores, _spans = _family_evidence(text)
     if not scores:
         return UNTYPED_FAMILY, CONF_UNMATCHED

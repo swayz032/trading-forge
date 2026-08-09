@@ -4,6 +4,51 @@
 
 ---
 
+## AR-826 · 2026-08-09 · ✅✅ **THE TWO-MEMBER CLASSIFICATION IS LANDED. BOTH DEFINITIONS NOW TYPE `OPENING_RANGE_DEFINITION`, REFUSE DELIBERATELY WITH `primitive=None`, AND NEITHER REACHES `compute_structure_state` — `10 passed · 2 failed`, and the `2` are the ordered `RED`-until-`STEP 4`.** 🛑🛑 **AND TWO EXISTING GUARDS FIRED. ONE IS A PRE-REGISTERED TRIPWIRE DOING EXACTLY ITS JOB; THE OTHER IS A REAL FINDING ABOUT **MY** RULE. I HAVE TOUCHED NEITHER TEST AND WIDENED NOTHING.**
+
+**RULING:** `R-732 §5`. **CONTRACT:** `EXTERNAL-READ-2026-08-09-WIDEN-TO-TWO-DEFINITIONS.md`, read at the file. **Resumed from the ratified stop in `AR-825`.**
+
+### §1 — ✅ THE POST-CONDITION, MEASURED ON BOTH MEMBERS
+```
+st5e-YJRfKc__s0  OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-establish#0
+   type=OPENING_RANGE_DEFINITION role=spine bindable=False primitive=None
+   reason=opening_range_adapter_not_implemented
+dENM6gt8ZRg__s0  OPENING_RANGE_DEFINITION:the-first-five-minute-candle-from-09-30#0
+   type=OPENING_RANGE_DEFINITION role=spine bindable=False primitive=None
+   reason=opening_range_adapter_not_implemented
+```
+✅ **Every `R-732 §3` term met for BOTH: explicit type · prose, provenance, role and ordering preserved · `primitive` is `None` · refusal reason exact · refusal RETURNED, not raised · neither reaches `compute_structure_state`.**
+✅ **NO VIDEO OR STRATEGY ID IN PRODUCTION CODE.** The rule lives in `src/engine/opening_range_definition.py` and is purely semantic; **both frozen members are named only in the TEST and in the committed instrument.** ★ **`AN ID IN PRODUCTION CODE IS A CLASSIFIER THAT HAS MEMORISED ITS ANSWER; AN ID IN A TEST IS A POPULATION ASSERTION.`**
+✅ **ONE RULE, NOT TWO:** the instrument now **imports** the production classifier instead of carrying its own copy. ★ **An instrument holding a private copy of the rule it measures drifts silently and then passes while testing a rule nothing runs — my `AR-825` version had exactly that latent defect and I removed it before it could bite.**
+✅ **CONTROLS RE-RUN AGAINST THE PRODUCTION RULE: all six PASS; blast radius EXACTLY the two authorized members** (`99` conditions, `11` specs). **The instrument now also fails if the population is SHORT, not only if it is long** — a stop that only looks one way is half a stop.
+✅ **CENSUS CONVERTED IN THIS SAME COMMIT** (`R-730 §3` order honoured): equality → **exact-delta over all `11` specs**, permitting exactly two type changes, **with the derived-id change MAPPED** (family-prefix swap only — a slug or index difference would mean prose or ordering moved and is refused by name). 🛑 **The known-wrong census is NOT edited.**
+
+### §2 — ⚖️ THE ORDERED `RED`, STILL RED ON PURPOSE
+```
+2 failed, 10 passed
+FAILED test_no_executable_opening_range_adapter_exists_yet
+FAILED test_no_typed_opening_range_output_contract_exists_in_production
+```
+★★★ **`A TRANSITION RULING THAT LISTS ONLY WHAT TURNS GREEN IS A COMPLETION CLAIM IN DISGUISE` — so I added the missing-adapter RED rather than letting the suite go all-green on a half-built path.** **`STEP 3` typed the concept and made it refuse; it did NOT make it computable.**
+
+### §3 — 🛑🛑 TWO EXISTING GUARDS FIRED. NEITHER IS TOUCHED, AND THEY ARE DIFFERENT ANIMALS
+**(a) `test_TRIPWIRE_addendum_marked_range_loses_its_taught_object` — FIRED BY DESIGN, AND ITS OWN TEXT SAYS SO.** It asserts these rows stay `WAIT_SESSION` *"because the correct family would be a LEVEL/ZONE family — which does not exist in `FAMILY_META`"*, and its failure message is **`if a LEVEL family landed, re-adjudicate these rows`**. ⇒ **A LEVEL family landed. The tripwire is not broken; it is a pre-registered request for adjudication, and adjudication is not mine.** ★ **`R-732 §5` forbids me touching other conditions, and rewriting a tripwire to match my change would be weakening a test that caught me.**
+**(b) `test_addendum_mark_the_range_twins_agree` — A REAL FINDING ABOUT MY RULE, AND I AM NOT PATCHING IT UNILATERALLY.** `[MEASURED HERE]` my rule **SPLITS a near-identical twin pair**:
+| taught text | my rule |
+|---|---|
+| *"mark out **the high and the low** of that first 5-minute candle … 9:30 to 9:35"* | `DEFINITION` |
+| *"marking out **the top and the bottom** of that range from 9:30 to 9:45"* | `REFUSED_NO_CONSTRUCTION_EVIDENCE` |
+🛑 **THE CONSTRUCTION LIMB RECOGNISES `high and … low` BUT NOT `top and … bottom` — THE SAME TEACHING IN DIFFERENT WORDS.** That test's own docstring is the standard I am failing: *"non-identical outcomes on near-identical inputs is the defect, independent of which answer is right."* ⇒ **MY RULE IS UNDER-INCLUSIVE ON A SYNONYM.**
+⚖️ **WHY I STOPPED INSTEAD OF WIDENING IT:** widening reach is the scope decision `R-732 §2` just fixed at two members, **and the tripwire fires either way** — so a synonym patch would not make the suite green, it would only make me the one who decided a re-adjudication. **Both calls are the desk's; the evidence is above and the fix is one pattern.**
+✅ **AND THE `R-732 §2` STOP IS **NOT** TRIGGERED, MEASURED RATHER THAN ASSUMED:** `[MEASURED HERE]` **neither twin text is in the frozen census** (`in census = False` for both, against all `99` conditions). **The authorized two-member population is unchanged.** ★ **I checked before claiming it, because "a third member stops again" is exactly the kind of clause a tired seat waves past.**
+
+### §4 — WHAT I DID NOT MEASURE, AND ONE ITEM I WAS TOLD TO CARRY
+🛑 **THE FULL `src/engine/tests` SWEEP IS STILL IN FLIGHT** (backgrounded; it exceeded the foreground timeout). **I ran the classifier-adjacent set instead: `499 passed, 2 failed` — the two in `§3`.** ⚠️ **So the repo-wide picture is `UNMEASURED` at the time of this commit and I am not implying otherwise; I will report it when it lands.**
+🛑 `[MEASURED, PRE-EXISTING, NOT MINE]` `test_a_plus_gate_parity.py::test_no_entry_quality_bypasses_gate` fails on `ImportError: cannot import name '_apply_a_plus_confluence_gate' from src.engine.backtester` — **a file this seat has never touched.**
+⚖️ **CARRIED PER `R-732 §5`, NOT REPAIRED HERE:** the pre-existing manifest RED from `AR-825 §4` is **out of `STEP 3`'s scope** and was **not** touched in this commit. **It remains open and owed a ruling.**
+🛑 **UNCHANGED AND UNTOUCHED:** the breakout trigger stays `UNRESOLVED_SOURCE_AMBIGUITY` · **`orb_5m_retest`'s close-based breakout/retest rules are NOT compiled** — ★★★ **and that was the sharpest trap in `R-732 §4`, because that video answers the exact question the golden one leaves open. `A CLEARER TEACHER DOES NOT RESOLVE A DIFFERENT TEACHER'S SILENCE.`** · no adapter, evaluator or calculation · no other condition.
+⚖️ **Per-step budget `2 / 2` used on `STEP 3`** (the stopped first attempt + this landed one). **Fan-in `3 / 8`.** ✅ **Not a handoff — but §3 needs a ruling before I can go further on this step.**
+
 ## AR-825 · 2026-08-09 · ✅ **`STEP 3`'s TYPED REPRESENTATION IS BUILT, DECLARED ON BOTH SIDES, AND FAILS CLOSED — `118 passed`, and the permanent RED still reds for the right three reasons.** 🛑🛑★★★★★ **AND I AM STOPPING ON THE CLASSIFICATION, NOT LANDING IT: ALL SIX CONTROLS PASS, AND THE CORPUS READ SHOWS THE RULE MOVING A **SECOND** CONDITION — A GENUINE OPENING-RANGE DEFINITION IN ANOTHER VIDEO. `R-731 §3` SAYS STOP, AND I HAVE NOT HARDCODED A VIDEO ID TO MAKE THE NUMBER ONE.** ⚠️ **PLUS A RED I FOUND THAT PRE-DATES THIS COMMIT AND IS MINE FROM AN EARLIER CONTEXT.**
 
 **RULING:** `R-730 §4` as amended by **`R-731 §2/§3/§4`**. **CONTRACT:** `EXTERNAL-READ-2026-08-09-STEP3-RELEASED.md` + `...-STEP3-DISCRIMINATION-TIGHTENED.md` **both parts, read at the files.** ✅ **The `worker-execution` guard BLOCKED my write mid-build when `R-731` landed — correctly, and it is why the ordered design got built instead of my conjunction+exclusion.**

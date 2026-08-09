@@ -1,9 +1,16 @@
 """B1 STEP 3 — ORDERED discrimination rule for OPENING_RANGE_DEFINITION, and the
 six controls + corpus blast-radius read that must pass BEFORE it lands.
 
-AUTHORITY: R-731 §2/§3, executing `EXTERNAL-READ-2026-08-09-STEP3-DISCRIMINATION-
-TIGHTENED.md` PART 2. Read-only: this instrument classifies text and reports. It
-imports no production classifier and edits nothing.
+AUTHORITY: R-731 §2/§3, widened to a TWO-member population at R-732 §2, executing
+`EXTERNAL-READ-2026-08-09-STEP3-DISCRIMINATION-TIGHTENED.md` PART 2 and
+`...-WIDEN-TO-TWO-DEFINITIONS.md`. Read-only: it classifies text and reports;
+it edits nothing.
+
+🛑 IT IMPORTS THE PRODUCTION RULE (`opening_range_definition.classify_opening_
+range_definition`) — the same function `spec_producer._classify_family` calls. It
+does NOT carry its own copy. An instrument holding a private copy of the rule it
+measures drifts from production silently and then passes while testing a rule
+nothing runs.
 
 WHY THE RULE IS ORDERED AND NOT A CONJUNCTION
 ---------------------------------------------
@@ -45,10 +52,15 @@ THE ANTI-CHEAT THIS INSTRUMENT ENFORCES ON ITSELF
     "STOP if any condition beyond the authorized golden definition changes. DO
      NOT HARDCODE THE VIDEO OR STRATEGY ID TO FORCE THE POPULATION BACK TO ONE."
 
-So this instrument takes NO stub argument and has no allow-list of videos. It
-reports the full population and exits non-zero when the population is not the
-single authorized condition. `NARROWING THE POPULATION UNTIL THE RULE LOOKS RIGHT
-IS NOT SCOPING, IT IS SUPPRESSING THE CONTROL.`
+So the RULE takes no stub argument and contains no video id — that split is
+R-732 §2's ruling: `AN ID IN PRODUCTION CODE IS A CLASSIFIER THAT HAS MEMORISED
+ITS ANSWER; AN ID IN A TEST IS A POPULATION ASSERTION.` This file is the
+population assertion, so it names both frozen members and exits non-zero if the
+measured population is not EXACTLY those two — in EITHER direction, a third
+member or a missing one. ★ The stop is not spent by being honoured once
+(R-732 §2): a third member still stops.
+`NARROWING THE POPULATION UNTIL THE RULE LOOKS RIGHT IS NOT SCOPING, IT IS
+SUPPRESSING THE CONTROL.`
 
 RUN:  python docs/replay-results/h1-battery/opening_range_definition_discrimination.py
 """
@@ -57,99 +69,30 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
+
+sys.path.insert(0, os.getcwd())
+from src.engine.opening_range_definition import (  # noqa: E402
+    classify_opening_range_definition as classify,
+)
 
 CENSUS = os.path.join("docs", "replay-results", "h1-battery", "tier-a-compile-census.json")
 
-# The one condition STEP 3 is authorized to re-type.
-AUTHORIZED_STUB = "st5e-YJRfKc__s0"
-AUTHORIZED_CONDITION_ID = "WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0"
+# 🛑 THE RULE IS IMPORTED FROM PRODUCTION, NEVER COPIED HERE.
+# A measurement instrument carrying its own copy of the rule it measures drifts
+# away from production silently and then goes on passing while testing a rule
+# nothing runs. That is the dead-control shape this campaign convicts, and the
+# six controls below are only worth anything because they exercise the SAME
+# function `spec_producer._classify_family` calls.
 
-
-# ── STAGE 1 — reference/trigger evidence, by semantic class ──────────────────
-# Each class is a way of treating the range as ALREADY BUILT. The class is the
-# rule; these patterns are evidence for it.
-REFERENCE_CLASSES: dict[str, re.Pattern] = {
-    # A directional relation between price and an existing boundary.
-    "CROSSING": re.compile(
-        r"\b(?:break|breaks|breaking|broke|breakout|cross|crosses|crossing|"
-        r"close[sd]?\s+(?:above|below|outside|inside)|pierce[sd]?)\b",
-        re.IGNORECASE,
-    ),
-    # An action taken with respect to an existing range.
-    "CONSUMPTION": re.compile(
-        r"\b(?:enter|entry|entries|look\s+for|wait\s+for|target|stop\s+(?:loss|below|above)|"
-        r"take\s+profit|project(?:ing|ed)?)\b",
-        re.IGNORECASE,
-    ),
-    # A time relation to the range's COMPLETION — the range must already exist
-    # for "after it is over" to mean anything.
-    "POSTERIORITY": re.compile(
-        r"\b(?:after|once)\b[^.]{0,80}?\b(?:is\s+over|has\s+(?:closed|formed|completed)|"
-        r"complete[ds]?|finished)\b",
-        re.IGNORECASE,
-    ),
+# The TWO conditions STEP 3 is authorized to re-type (R-732 §2). Naming them HERE
+# is correct and naming them in production code is not: `AN ID IN PRODUCTION CODE
+# IS A CLASSIFIER THAT HAS MEMORISED ITS ANSWER; AN ID IN A TEST IS A POPULATION
+# ASSERTION.` This file is the population assertion.
+AUTHORIZED_MEMBERS: set[tuple[str, str]] = {
+    ("st5e-YJRfKc__s0", "WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0"),
+    ("dENM6gt8ZRg__s0", "WAIT_STRUCTURE:the-first-five-minute-candle-from-09-30#0"),
 }
-
-# ── STAGE 2 — positive definition evidence ───────────────────────────────────
-# An EXPLICIT clock or duration. Digits are required: that is what makes stage 3
-# fall out as a consequence rather than a separate special case.
-EXPLICIT_CLOCK = re.compile(
-    r"\b\d{1,2}\s*[:.]\s*\d{2}\b"                     # 9:30, 09:35
-    r"|\b\d{1,3}\s*-?\s*(?:minute|minutes|min)\b",    # 5 minute, 30-minute
-    re.IGNORECASE,
-)
-
-# Language describing FORMATION, ESTABLISHMENT, CALCULATION, HIGH/LOW
-# CONSTRUCTION, or PRICE CAPTURED DURING THE WINDOW (read, PART 2 item 2).
-CONSTRUCTION = re.compile(
-    r"\b(?:forms?|forming|formed|establish(?:es|ed|ing)?|"
-    r"gives?\s+us|is\s+what\s+(?:forms|gives)|captur(?:e|ed|ing)|"
-    r"take\s+the\s+.{0,40}?high|high\s+and\s+the?\s*.{0,20}?low|"
-    r"difference\s+between\s+the\s+high)\b",
-    re.IGNORECASE,
-)
-
-# An anaphoric clock: a window referred to by pronoun, carrying no typed
-# duration. Reported explicitly so stage 3 is VISIBLE in the output rather than
-# being an unremarked side effect of requiring digits.
-ANAPHORIC_CLOCK = re.compile(
-    r"\b(?:these|those|this|that)\s+(?:time\s+periods?|periods?|windows?|ranges?|candles?)\b",
-    re.IGNORECASE,
-)
-
-
-def classify(text: str) -> tuple[bool, str, dict]:
-    """Ordered semantic classification. Returns (is_definition, reason, evidence)."""
-    reference_hits = {
-        name: pattern.search(text).group(0)  # type: ignore[union-attr]
-        for name, pattern in REFERENCE_CLASSES.items()
-        if pattern.search(text)
-    }
-    clock = EXPLICIT_CLOCK.search(text)
-    construction = CONSTRUCTION.search(text)
-    anaphoric = ANAPHORIC_CLOCK.search(text)
-
-    evidence = {
-        "reference_classes": reference_hits,
-        "explicit_clock": clock.group(0) if clock else None,
-        "construction": construction.group(0) if construction else None,
-        "anaphoric_clock": anaphoric.group(0) if anaphoric else None,
-    }
-
-    # STAGE 1 — reference evidence BLOCKS, whatever else the sentence carries.
-    if reference_hits:
-        return False, f"REFUSED_STAGE_1_REFERENCE[{'+'.join(sorted(reference_hits))}]", evidence
-    # STAGE 3 (evaluated as part of stage 2's requirement) — an anaphoric clock
-    # with no typed duration cannot supply the window.
-    if clock is None:
-        reason = "REFUSED_STAGE_3_ANAPHORIC_CLOCK" if anaphoric else "REFUSED_NO_EXPLICIT_CLOCK"
-        return False, reason, evidence
-    # STAGE 2 — both limbs required.
-    if construction is None:
-        return False, "REFUSED_NO_CONSTRUCTION_EVIDENCE", evidence
-    return True, "DEFINITION", evidence
 
 
 # ── the six required controls (read, PART 2 "REQUIRED CONTROLS") ─────────────
@@ -216,12 +159,13 @@ def main() -> int:
     print(f"  conditions scanned : {scanned} across {len(census['specs'])} specs")
     print(f"  would re-type      : {len(moved)}")
     for stub, name, cid, obj in moved:
-        authorized = stub == AUTHORIZED_STUB and cid == AUTHORIZED_CONDITION_ID
+        authorized = (stub, cid) in AUTHORIZED_MEMBERS
         tag = "AUTHORIZED" if authorized else "*** BEYOND THE AUTHORIZED CONDITION ***"
         print(f"    {tag}\n      spec      : {stub} ({name})\n      condition : {cid}\n"
               f"      text      : {obj[:110]}")
 
-    beyond = [m for m in moved if not (m[0] == AUTHORIZED_STUB and m[2] == AUTHORIZED_CONDITION_ID)]
+    beyond = [m for m in moved if (m[0], m[2]) not in AUTHORIZED_MEMBERS]
+    missing = AUTHORIZED_MEMBERS - {(m[0], m[2]) for m in moved}
 
     print()
     print("=" * 78)
@@ -230,13 +174,18 @@ def main() -> int:
         return 2
     if beyond:
         print("STOP — R-731 §3. The rule is semantically correct and all six controls pass,")
-        print(f"but it re-types {len(beyond)} condition(s) BEYOND the authorized golden definition.")
+        print(f"but it re-types {len(beyond)} condition(s) BEYOND the authorized population.")
         print("This is a FINDING ABOUT THE RULE and it is escalated, NOT suppressed.")
         print("No video or strategy id is hardcoded to force the population back to one:")
         print("`NARROWING THE POPULATION UNTIL THE RULE LOOKS RIGHT IS NOT SCOPING,")
         print(" IT IS SUPPRESSING THE CONTROL.`")
         return 3
-    print("ALL SIX CONTROLS PASS and the blast radius is exactly the authorized condition.")
+    if missing:
+        print(f"AUTHORIZED MEMBER(S) NOT CAPTURED: {sorted(missing)}")
+        print("The population is SHORT, which is a finding about the rule in the other")
+        print("direction and is reported rather than shrugged at.")
+        return 4
+    print("ALL SIX CONTROLS PASS and the blast radius is EXACTLY the two authorized members.")
     return 0
 
 

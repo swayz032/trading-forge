@@ -67,17 +67,17 @@ WHAT THIS FILE DELIBERATELY DOES *NOT* ASSERT
 
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 from pathlib import Path
 from typing import get_type_hints
 
-from src.engine.extraction.spec_producer import _spec_hash, produce_spec_artifact
+from src.engine.extraction.spec_producer import produce_spec_artifact
 from src.engine.family_meta_enforcement import (
     FamilyMetaEnforcementError,
     resolve_primitive,
 )
+from src.engine.opening_range_definition import CANONICAL_TYPE as OPENING_RANGE_DEFINITION
 from src.engine.spec_family_bindings import compile_binding_plan
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -112,12 +112,21 @@ REQUIRED_OR_FIELDS = (
     "opening_range_window_status",
 )
 
-# Post-census producer field. `git log be194136..HEAD -- src/engine/extraction/
-# spec_producer.py` names commit 1a9d1a1f ("emit explicit §0 load_bearing=True on
-# every produced condition") as landing AFTER the census was frozen. Removing it
-# reproduces the census `spec_hash` byte-for-byte — proven as a control below,
-# not asserted.
-POST_CENSUS_CONDITION_FIELDS = ("load_bearing",)
+# THE AUTHORIZED TWO-MEMBER POPULATION (R-732 §2). Naming the frozen members
+# HERE is correct and naming them in production code is not:
+# `AN ID IN PRODUCTION CODE IS A CLASSIFIER THAT HAS MEMORISED ITS ANSWER; AN ID
+# IN A TEST IS A POPULATION ASSERTION.` The rule stays general so it cannot be
+# fitted to a video; this pins the measured population so a silent third member
+# cannot slip in unnoticed.
+SECOND_STUB = "dENM6gt8ZRg__s0"
+SECOND_OR_PROSE = "The first five-minute candle"
+AUTHORIZED_RETYPED_CONDITIONS: set[tuple[str, str]] = {
+    (GOLDEN_STUB, "WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0"),
+    (SECOND_STUB, "WAIT_STRUCTURE:the-first-five-minute-candle-from-09-30#0"),
+}
+
+# The refusal every opening-range definition must carry until STEP 4 lands.
+EXPECTED_REFUSAL = "opening_range_adapter_not_implemented"
 
 
 # ── production chain ─────────────────────────────────────────────────────────
@@ -145,21 +154,18 @@ def _produce(stub: str):
     return doc, artifact, plan, by_id
 
 
-def _opening_range_condition(artifact: dict) -> dict:
+def _opening_range_condition(artifact: dict, prose: str = OR_PROSE) -> dict:
     """The produced condition that carries the taught opening-range definition.
 
-    Selected BY ITS TAUGHT PROSE, never by a pre-classified type or a frozen
-    condition id — selecting it by `type == WAIT_STRUCTURE` would assume the very
-    classification this file exists to convict.
+    Selected BY ITS TAUGHT PROSE, never by a type or a frozen condition id.
+    Selecting it by type would assume the very classification this file exists to
+    check — and it would silently follow the type wherever a future edit moved it,
+    which is how a conformance test stops testing anything.
     """
-    matches = [
-        c
-        for c in artifact["spec"]["entry_conditions"]
-        if OR_PROSE in c.get("object", "")
-    ]
+    matches = [c for c in artifact["spec"]["entry_conditions"] if prose in c.get("object", "")]
     assert len(matches) == 1, (
         f"expected exactly one produced condition carrying the taught opening-range "
-        f"prose {OR_PROSE!r}; found {len(matches)}. Without exactly one, every "
+        f"prose {prose!r}; found {len(matches)}. Without exactly one, every "
         f"assertion below is about the wrong object."
     )
     return matches[0]
@@ -260,45 +266,93 @@ def test_opening_range_prose_reaches_the_produced_condition_graph():
 
 
 # ── PASSING CONTROL 5 — the census joins to the independent reproduction ─────
-def test_historical_census_agrees_with_the_independently_produced_baseline():
-    """The census is a COMPARISON ORACLE here, never the production input.
+def test_census_shows_exactly_the_two_authorized_classification_changes():
+    """THE EXACT-DELTA CONTROL — converted from equality IN THE SAME COMMIT that
+    moved the classification (R-730 §3, widened R-732 §3).
 
-    Two joins:
+    ★ The conversion order is the point. The census records the KNOWN-BAD
+    historical classification, so once production is fixed production MUST NO
+    LONGER EQUAL IT. `A CONTROL THAT MUST BREAK WHEN THE FIX LANDS IS NOT A
+    FAILING CONTROL — BUT ONLY IF YOU CONVERT IT BEFORE IT BREAKS. CONVERTED
+    AFTERWARDS, IT IS INDISTINGUISHABLE FROM WEAKENING A TEST THAT CAUGHT YOU.`
 
-      (a) CONDITION IDENTITY — id, type, role and object, member by member.
-      (b) SPEC HASH, byte-identical — but only after removing the producer fields
-          that landed AFTER the census was frozen. That subtraction is not a
-          convenience: it is the two-path proof that the divergence is fully
-          explained by commit 1a9d1a1f and by nothing else. If any OTHER producer
-          change had moved the spec, this join would still fail.
+    🛑 The known-wrong census is NOT edited. It stays as the record of what was
+    wrong; editing it to match the fix would destroy the only evidence that
+    anything was repaired.
+
+    What "exact delta" means here, by member and never by count:
+      - EXACTLY the two authorized conditions change type;
+      - their mechanically derived condition IDs change, and the change is
+        MAPPED and identified rather than suppressed;
+      - their source prose, role and ordering are preserved;
+      - every other condition, in every spec of the census, is identical.
     """
-    _, artifact, _, _ = _produce(GOLDEN_STUB)
     census = json.loads(CENSUS.read_text(encoding="utf-8"))
-    census_spec = next(s for s in census["specs"] if s["stub"] == GOLDEN_STUB)
+    changes: list[tuple[str, str, str, str]] = []
 
-    produced = artifact["spec"]["entry_conditions"] + artifact["spec"]["invalidations"]
-    assert len(produced) == len(census_spec["conditions"]), (
-        f"produced {len(produced)} conditions, census recorded "
-        f"{len(census_spec['conditions'])} — join by MEMBER, and the members differ in count"
-    )
-    for produced_condition, census_condition in zip(produced, census_spec["conditions"]):
-        assert produced_condition["id"] == census_condition["condition_id"]
-        assert produced_condition["type"] == census_condition["type"]
-        assert produced_condition["role"] == census_condition["role"]
-        assert produced_condition["object"] == census_condition["object"]
+    for census_spec in census["specs"]:
+        stub = census_spec["stub"]
+        _, artifact, _, _ = _produce(stub)
+        produced = artifact["spec"]["entry_conditions"] + artifact["spec"]["invalidations"]
+        census_conditions = census_spec["conditions"]
 
-    census_era_body = copy.deepcopy(artifact["spec"])
-    for condition in census_era_body["entry_conditions"] + census_era_body["invalidations"]:
-        for field in POST_CENSUS_CONDITION_FIELDS:
-            condition.pop(field, None)
-    assert _spec_hash(census_era_body) == census_spec["spec_hash"], (
-        "the reproduced spec does not join to the census by hash even after removing the "
-        f"known post-census fields {POST_CENSUS_CONDITION_FIELDS}. Some OTHER producer "
-        "change has moved the spec and the divergence is no longer explained.\n"
-        f"  reproduced (today)          : {artifact['spec_hash']}\n"
-        f"  reproduced (census-era body): {_spec_hash(census_era_body)}\n"
-        f"  census                      : {census_spec['spec_hash']}"
+        assert len(produced) == len(census_conditions), (
+            f"{stub}: produced {len(produced)} conditions, census recorded "
+            f"{len(census_conditions)} — ORDERING or membership moved, which is never authorized"
+        )
+
+        for produced_condition, census_condition in zip(produced, census_conditions):
+            # Source prose and role are preserved for EVERY condition, changed or not.
+            assert produced_condition["object"] == census_condition["object"], (
+                f"{stub}: source prose changed for {census_condition['condition_id']} — "
+                "the classification may move, the taught text may never move"
+            )
+            assert produced_condition["role"] == census_condition["role"], (
+                f"{stub}: role changed for {census_condition['condition_id']}"
+            )
+
+            if produced_condition["type"] == census_condition["type"]:
+                # Unchanged member: its derived id must be identical too.
+                assert produced_condition["id"] == census_condition["condition_id"], (
+                    f"{stub}: type is unchanged but the derived condition id moved — "
+                    f"{census_condition['condition_id']} -> {produced_condition['id']}"
+                )
+                continue
+
+            # A CHANGED member. Record it; the authorized set is checked below.
+            changes.append(
+                (stub, census_condition["condition_id"], census_condition["type"],
+                 produced_condition["type"])
+            )
+
+            # THE ID CHANGE IS MAPPED, NOT SUPPRESSED (R-732 §3). The producer
+            # derives `id` as f"{family}:{slug}#{idx}", so re-typing necessarily
+            # moves the id. That is mechanical and must be shown to be ONLY the
+            # family prefix — a slug or index change would mean the prose or the
+            # ordering moved, which is a different and unauthorized event.
+            expected_id = census_condition["condition_id"].replace(
+                census_condition["type"] + ":", produced_condition["type"] + ":", 1
+            )
+            assert produced_condition["id"] == expected_id, (
+                f"{stub}: the derived condition id did not change MECHANICALLY.\n"
+                f"  census   : {census_condition['condition_id']}\n"
+                f"  expected : {expected_id}  (family prefix swap only)\n"
+                f"  produced : {produced_condition['id']}\n"
+                "A slug or index difference means the prose or ordering moved, not just the type."
+            )
+
+    observed = {(stub, cid) for stub, cid, _, _ in changes}
+    assert observed == AUTHORIZED_RETYPED_CONDITIONS, (
+        "the census delta is not EXACTLY the authorized two-member population.\n"
+        f"  authorized but unchanged : {sorted(AUTHORIZED_RETYPED_CONDITIONS - observed)}\n"
+        f"  changed but UNAUTHORIZED : {sorted(observed - AUTHORIZED_RETYPED_CONDITIONS)}\n"
+        "R-732 §2: a third member STOPS. The stop is not spent by being honoured once."
     )
+    for _stub, _cid, was, now in changes:
+        assert was == COARSE_FAMILY and now == OPENING_RANGE_DEFINITION, (
+            f"an authorized member moved {was} -> {now}; the only authorized transition is "
+            f"{COARSE_FAMILY} -> {OPENING_RANGE_DEFINITION}"
+        )
 
 
 # ── PASSING CONTROL 6 — the neighbour keeps its route ────────────────────────
@@ -331,57 +385,117 @@ def test_unrelated_genuine_structure_condition_retains_the_structure_route():
     )
 
 
-# ── PERMANENT RED 1 — the classification handoff ─────────────────────────────
-def test_production_must_not_type_the_opening_range_definition_as_coarse_structure():
-    """PERMANENT RED (expected until B1 STEP 3).
+# ── GREEN (B1 STEP 3 landed) — the classification handoff is repaired ────────
+def test_both_genuine_definitions_receive_the_explicit_opening_range_type():
+    """STEP 3's central claim, asserted on BOTH authorized members (R-732 §2).
 
-    Production reads the opening-range prose correctly and then seals a type too
-    coarse to preserve what it read. An opening range is a TIME-BOUNDED STATEFUL
-    AGGREGATION THAT PRODUCES LEVELS; `WAIT_STRUCTURE` can express neither half.
+    Production used to read the opening-range prose correctly and then seal a
+    type too coarse to preserve what it read. An opening range is a TIME-BOUNDED
+    STATEFUL AGGREGATION THAT PRODUCES LEVELS; `WAIT_STRUCTURE` expresses neither
+    half. Both frozen definitions must now carry the explicit type, with their
+    taught prose and role untouched.
+    """
+    for stub, prose in ((GOLDEN_STUB, OR_PROSE), (SECOND_STUB, SECOND_OR_PROSE)):
+        _, artifact, _, _ = _produce(stub)
+        condition = _opening_range_condition(artifact, prose)
+        assert condition["type"] == OPENING_RANGE_DEFINITION, (
+            f"{stub}: the taught opening-range definition is typed {condition['type']!r}, "
+            f"not {OPENING_RANGE_DEFINITION!r}"
+        )
+        # The classification moved; the taught meaning did not.
+        assert prose in condition["object"]
+        assert condition["role"] == "spine"
+        assert condition["id"].startswith(OPENING_RANGE_DEFINITION + ":")
+
+
+def test_reference_and_anaphoric_sentences_did_not_move():
+    """THE OTHER HALF OF THE CLASSIFICATION CLAIM, and the one that protects the
+    campaign's open question.
+
+    The breakout sentence carries BOTH a clock and range language, so a naive
+    conjunction would have captured it — and typing it as anything would have let
+    STEP 3 quietly decide the breakout trigger, which is
+    `UNRESOLVED_SOURCE_AMBIGUITY` (R-725 §4) and not ours to settle. The
+    anaphoric sentence carries no typed duration of its own.
+
+    Both must remain exactly where they were. `A CLEARER TEACHER DOES NOT RESOLVE
+    A DIFFERENT TEACHER'S SILENCE.`
     """
     _, artifact, _, _ = _produce(GOLDEN_STUB)
-    condition = _opening_range_condition(artifact)
+    by_prose = {c["object"]: c for c in artifact["spec"]["entry_conditions"]}
 
-    assert condition["type"] != COARSE_FAMILY, (
-        "PERMANENT RED (expected until B1 STEP 3): production itself collapses the taught "
-        "opening-range definition into the coarse structure family.\n"
-        f"  produced type : {condition['type']}\n"
-        f"  taught object : {condition['object'][:90]}...\n"
-        "Required: OPENING_RANGE_DEFINITION or an equivalently explicit typed subtype."
-    )
-    assert "OPENING_RANGE" in condition["type"].upper(), (
-        f"the produced type {condition['type']!r} is no longer the coarse family, but it "
-        "does not name the opening range either — an equivalently explicit subtype must."
-    )
+    unmoved = {
+        "breakout/reference": "we look for a breakout",
+        "anaphoric clock": "in between these time",
+    }
+    for label, marker in unmoved.items():
+        matches = [c for text, c in by_prose.items() if marker in text]
+        assert len(matches) == 1, f"expected exactly one {label} sentence, found {len(matches)}"
+        condition = matches[0]
+        assert condition["type"] == COARSE_FAMILY, (
+            f"the {label} sentence moved to {condition['type']!r}. It refers to an "
+            "already-constructed range; it does not define one, and re-typing it would "
+            "decide a question this step may not touch."
+        )
 
 
-# ── PERMANENT RED 2 — the routing handoff ────────────────────────────────────
-def test_production_must_not_route_the_opening_range_definition_to_the_structure_primitive():
-    """PERMANENT RED (expected until B1 STEPS 4-6).
+# ── GREEN — both definitions refuse explicitly, and neither can fall back ────
+def test_both_definitions_refuse_deliberately_and_neither_reaches_the_structure_evaluator():
+    """The fail-closed post-condition, on BOTH members (R-732 §3).
 
-    This is the wrong-route assertion R-728 §3 ordered folded into a LIVE test
-    rather than parked in a skip. It is also what makes the repair irreversible:
-    after B1, deliberately routing the opening-range type back to
-    `compute_structure_state` fails HERE, automatically.
+    R-731 §4 sets the bar and it excludes the cheap version: `A CRASH, A MISSING
+    DICTIONARY ENTRY OR AN ACCIDENTAL EXCEPTION IS NOT AN ACCEPTABLE REFUSAL.`
+    So this asserts the refusal is a value production DELIBERATELY returns — a
+    binding object carrying a named reason — and not an exception escaping.
+
+    The no-fallback half is the one that protects the money path: the wrong route
+    is the defect B1 exists to remove, and returning to it under any condition
+    would ship that defect behind a new name.
+    """
+    for stub, prose in ((GOLDEN_STUB, OR_PROSE), (SECOND_STUB, SECOND_OR_PROSE)):
+        _, artifact, _, by_id = _produce(stub)  # returns; an exception here fails the test
+        condition = _opening_range_condition(artifact, prose)
+        binding = by_id.get(condition["id"])
+
+        assert binding is not None, (
+            f"{stub}: NO binding object was emitted for the opening-range definition. "
+            "A missing dictionary entry is not a refusal — the refusal must be a thing the "
+            "code MEANS, reachable and observable."
+        )
+        assert binding.bindable is False, f"{stub}: expected a refusal, got bindable=True"
+        assert binding.primitive is None, (
+            f"{stub}: a refusing definition must name NO primitive; got {binding.primitive!r}"
+        )
+        assert binding.reason == EXPECTED_REFUSAL, (
+            f"{stub}: refusal reason is {binding.reason!r}, expected {EXPECTED_REFUSAL!r}"
+        )
+        assert binding.primitive != STRUCTURE_PRIMITIVE, (
+            f"{stub}: the opening-range definition reached the structure evaluator — the "
+            "exact fallback R-732 §3 forbids"
+        )
+
+
+# ── PERMANENT RED — no executable adapter yet (expected until B1 STEP 4) ─────
+def test_no_executable_opening_range_adapter_exists_yet():
+    """PERMANENT RED (expected until B1 STEP 4).
+
+    R-732 §3: `A TRANSITION RULING THAT LISTS ONLY WHAT TURNS GREEN IS A
+    COMPLETION CLAIM IN DISGUISE.` STEP 3 typed the concept and made it refuse;
+    it did NOT make it computable. This test keeps that honest — it is red on
+    purpose, and STEP 4 is what turns it green.
     """
     _, artifact, _, by_id = _produce(GOLDEN_STUB)
     condition = _opening_range_condition(artifact)
-    binding = by_id.get(condition["id"])
+    binding = by_id[condition["id"]]
 
-    assert binding is not None, (
-        "no binding was emitted for the opening-range condition; this test would otherwise "
-        "pass by absence rather than by repair"
-    )
-    assert binding.bindable is True, (
-        "the condition is expected to BIND today — that it binds to the WRONG primitive is "
-        f"the defect. Got bindable={binding.bindable!r}"
-    )
-    assert binding.primitive != STRUCTURE_PRIMITIVE, (
-        "PERMANENT RED (expected until B1 STEPS 4-6): production routes the taught opening "
-        "range to a market-structure EVENT evaluator. The taught concept is level "
-        "CONSTRUCTION over a clock window.\n"
+    assert binding.bindable is True and binding.primitive is not None, (
+        "PERMANENT RED (expected until B1 STEP 4): the opening-range definition is typed and "
+        "refuses correctly, but NO executable adapter binds it, so the golden slice still "
+        "cannot compute an opening range.\n"
         f"  condition : {condition['id']}\n"
-        f"  routes to : {binding.primitive}"
+        f"  bindable  : {binding.bindable}\n"
+        f"  primitive : {binding.primitive}\n"
+        f"  reason    : {binding.reason}"
     )
 
 

@@ -46,6 +46,7 @@ THREE INVARIANTS THIS TYPE ENFORCES BY CONSTRUCTION
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 
@@ -259,3 +260,128 @@ def refused_state() -> OpeningRangeState:
     defect behind a new name.
     """
     return OpeningRangeState.refused(OpeningRangeWindowStatus.ADAPTER_NOT_IMPLEMENTED)
+
+
+# --------------------------------------------------------------------------- #
+# THE ORDERED DISCRIMINATION RULE (R-731 §2, widened to two members at R-732 §2)
+# --------------------------------------------------------------------------- #
+# WHY IT LIVES HERE AND NOT IN THE CLASSIFIER, AND NOT IN THE INSTRUMENT.
+# `_classify_family` imports it; `docs/replay-results/h1-battery/
+# opening_range_definition_discrimination.py` imports it too. ONE rule, two
+# readers. If the measurement instrument kept its own copy, the six controls
+# would drift away from production and go on passing while testing a rule
+# nothing runs -- the shape this campaign convicts as a dead control.
+#
+# WHY THE ORDER IS THE MECHANISM. R-730 §2 first stated the rule as a
+# conjunction, "clock window AND range construction". AR-824 refuted it by
+# measurement: the breakout sentence
+#
+#     "...projected going out after this 30 minute range is over ... we look
+#      for a breakout"
+#
+# carries BOTH halves. R-731 §2 amended the design to ORDERED SEMANTIC EVIDENCE:
+#
+#     STAGE 1  reference/trigger evidence  -> REFUSE (blocks, whatever else is present)
+#     STAGE 2  positive definition evidence -> require explicit clock AND construction
+#     STAGE 3  anaphoric-only clock         -> REFUSE (carries no typed duration)
+#
+# WHY THIS IS NOT A `breakout` BLACKLIST. R-731 §2 forbids that explicitly, and
+# the reason is this campaign's own: `GOVERN WITH A CLOSED RULE, NOT AN OPEN
+# LIST` -- a blacklist is a membership test over a list you can never finish.
+# Stage 1 tests a SEMANTIC RELATION with three closed classes, each a way of
+# positioning the range as ALREADY CONSTRUCTED. The classes are the rule; the
+# patterns are evidence FOR them. A new phrasing is therefore a question about
+# which class it belongs to, not a request to extend a list.
+#
+# 🛑 NO VIDEO OR STRATEGY ID APPEARS BELOW, BY RULING (R-732 §2). The
+# authorization is SEMANTIC. `AN ID IN PRODUCTION CODE IS A CLASSIFIER THAT HAS
+# MEMORISED ITS ANSWER; AN ID IN A TEST IS A POPULATION ASSERTION.` The frozen
+# two-member population is pinned in the TESTS, where it belongs.
+
+_REFERENCE_CLASSES: dict[str, re.Pattern] = {
+    # A directional relation between price and an EXISTING boundary.
+    "CROSSING": re.compile(
+        r"\b(?:break|breaks|breaking|broke|breakout|cross|crosses|crossing|"
+        r"close[sd]?\s+(?:above|below|outside|inside)|pierce[sd]?)\b",
+        re.IGNORECASE,
+    ),
+    # An action taken with respect to an EXISTING range.
+    "CONSUMPTION": re.compile(
+        r"\b(?:enter|entry|entries|look\s+for|wait\s+for|target|stop\s+(?:loss|below|above)|"
+        r"take\s+profit|project(?:ing|ed)?)\b",
+        re.IGNORECASE,
+    ),
+    # A time relation to the range's COMPLETION -- the range must already exist
+    # for "after it is over" to mean anything.
+    "POSTERIORITY": re.compile(
+        r"\b(?:after|once)\b[^.]{0,80}?\b(?:is\s+over|has\s+(?:closed|formed|completed)|"
+        r"complete[ds]?|finished)\b",
+        re.IGNORECASE,
+    ),
+}
+
+# An EXPLICIT clock or duration. Digits are REQUIRED, and that is what makes
+# stage 3 fall out as a consequence rather than a separate special case.
+_EXPLICIT_CLOCK = re.compile(
+    r"\b\d{1,2}\s*[:.]\s*\d{2}\b"                     # 9:30, 09:35
+    r"|\b\d{1,3}\s*-?\s*(?:minute|minutes|min)\b",    # 5 minute, 30-minute
+    re.IGNORECASE,
+)
+
+# FORMATION / ESTABLISHMENT / CALCULATION / HIGH-LOW CONSTRUCTION / PRICE
+# CAPTURED DURING THE WINDOW (read, PART 2 item 2).
+_CONSTRUCTION = re.compile(
+    r"\b(?:forms?|forming|formed|establish(?:es|ed|ing)?|"
+    r"gives?\s+us|is\s+what\s+(?:forms|gives)|captur(?:e|ed|ing)|"
+    r"take\s+the\s+.{0,40}?high|high\s+and\s+the?\s*.{0,20}?low|"
+    r"difference\s+between\s+the\s+high)\b",
+    re.IGNORECASE,
+)
+
+# A window referred to by pronoun, carrying no typed duration. Matched only so
+# the refusal REASON can name stage 3 explicitly -- R-731 §4 requires refusals to
+# be explicit and measured, and "no clock found" would hide which stage refused.
+_ANAPHORIC_CLOCK = re.compile(
+    r"\b(?:these|those|this|that)\s+(?:time\s+periods?|periods?|windows?|ranges?|candles?)\b",
+    re.IGNORECASE,
+)
+
+
+def classify_opening_range_definition(text: str) -> tuple[bool, str, dict]:
+    """Is this prose a taught opening-range DEFINITION?
+
+    Returns `(is_definition, reason, evidence)`. The REASON is always a named
+    refusal or `DEFINITION` -- never a bare False -- so a caller (and the
+    committed six-control instrument) can see WHICH stage decided, and so a
+    future disagreement is resolvable by reading the reason rather than
+    re-deriving the rule.
+    """
+    reference_hits = {
+        name: match.group(0)
+        for name, pattern in _REFERENCE_CLASSES.items()
+        if (match := pattern.search(text))
+    }
+    clock = _EXPLICIT_CLOCK.search(text)
+    construction = _CONSTRUCTION.search(text)
+    anaphoric = _ANAPHORIC_CLOCK.search(text)
+
+    evidence = {
+        "reference_classes": reference_hits,
+        "explicit_clock": clock.group(0) if clock else None,
+        "construction": construction.group(0) if construction else None,
+        "anaphoric_clock": anaphoric.group(0) if anaphoric else None,
+    }
+
+    # STAGE 1 -- reference evidence BLOCKS, whatever else the sentence carries.
+    # This is the stage that keeps "break above the opening-range high" out, and
+    # keeping it out is what stops STEP 3 quietly deciding the breakout trigger.
+    if reference_hits:
+        return False, f"REFUSED_STAGE_1_REFERENCE[{'+'.join(sorted(reference_hits))}]", evidence
+    # STAGE 3 -- an anaphoric clock supplies no typed duration.
+    if clock is None:
+        reason = "REFUSED_STAGE_3_ANAPHORIC_CLOCK" if anaphoric else "REFUSED_NO_EXPLICIT_CLOCK"
+        return False, reason, evidence
+    # STAGE 2 -- both limbs required.
+    if construction is None:
+        return False, "REFUSED_NO_CONSTRUCTION_EVIDENCE", evidence
+    return True, "DEFINITION", evidence
