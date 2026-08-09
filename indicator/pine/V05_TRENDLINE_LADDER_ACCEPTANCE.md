@@ -1,4 +1,4 @@
-# Slumdawg v0.5 Trendline Ladder — TradingView Acceptance
+# Slumdawg v0.5.1 Trendline Ladder — TradingView Acceptance
 
 Status: REQUIRED / NOT YET PLATFORM-CERTIFIED
 
@@ -13,13 +13,17 @@ Paste the exact committed source into TradingView unchanged.
 
 ## B. D/W visual contract
 - PDH and PDL remain visible whenever valid.
+- PDH and PDL span the full chart left and right.
 - PWH/PWL are not permanently forced onto the chart.
 - A weekly level is displayed only when it is no farther from current price than the farther of PDH/PDL.
+- When PWH/PWL is displayed, its horizontal line also spans the full chart.
 - This weekly-near rule is visual-only. It does not qualify an entry or claim market significance.
 - Confirm the user's current example still shows PWH while the farther PWL remains hidden if the same geometry persists.
 - Reset Chart View must remain candle-readable.
 
 ## C. Top-down ladder setup
+Trendlines are intentionally operator-anchored in this parity slice; they do not auto-appear from candle heuristics.
+
 Configure the ladder in this order:
 1. Daily
 2. 4H
@@ -30,11 +34,14 @@ Configure the ladder in this order:
 Each timeframe has one current GREEN bullish ray slot and one current RED bearish ray slot. Each ray uses two explicit time+price anchor points.
 
 For each enabled line:
-- anchor A and B must match the user's intended TradingView trendline points;
+- enable the GREEN or RED line in Inputs;
+- set A and B to the user's intended TradingView swing points;
 - B time must be later than A time;
 - GREEN is bullish context / possible support wall;
 - RED is bearish context / possible resistance wall;
 - line geometry must remain attached to the same timestamps/prices when switching chart timeframe and after reload.
+
+With zero valid A/B pairs, the coach must explicitly say `NO TRENDLINES — SET A/B`; an empty chart is not allowed to look like a successful automatic trendline read.
 
 ## D. Clean-chart rule
 - Default prominent trendline count is 2.
@@ -79,9 +86,9 @@ Controlled parity cases must preserve:
 - NON-ACTIONABLE debug alerts only.
 
 ## Pass condition
-v0.5 may advance only after:
+v0.5.1 may advance only after:
 - exact source compiles unchanged;
-- PDH/PDL always-visible behavior is confirmed;
+- PDH/PDL full-span + always-visible behavior is confirmed;
 - weekly-near display matches the intended uncluttered behavior;
 - Daily -> 4H -> 1H -> 15M -> 5M GREEN/RED anchors are platform-checked;
 - NEXT WALL agrees with the configured geometry;
