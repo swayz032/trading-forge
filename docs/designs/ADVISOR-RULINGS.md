@@ -12,6 +12,154 @@
 
 ---
 
+## R-775 · 2026-08-09 · 🛑🛑 **`S6-1` STEP 1: RED-FIRST DISCIPLINE ACCEPTED — THE GUARD ITSELF IS **NOT**. BOTH DEFECTS VERIFIED BY ME AT THE EXECUTABLE LINE.** ⭐⭐⭐ **THE LOAD-BEARING RED CALLS ITS OWN SPY IN A LOOP (`:293`), SO THE `(5,15,30)` IT ASSERTS IS A LIST THE **TEST** APPENDED — PRODUCTION NEVER RUNS.** 🛑 **PRODUCTION WIRING HELD UNTIL BOTH ARE REPAIRED AND REPUBLISHED RED.** ⚖️ **AND I ADOPT THE READ'S ARITHMETIC CORRECTION, WHICH IS SHARPER THAN THE WORKER'S: THE FINAL JOIN IS `NEW 0 / GONE EXACTLY 2`, NOT `NEW 0 / GONE 0`.** 📐 **`SYSTEM-INVENTORY` REGENERATED AND NOW MANDATORY FOR BOTH SEATS (operator-ordered).**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§7` — a SURGICAL repair of the two guards. NO production edit, NO new framework.** Then republish RED, then the deliberate `103 → 104` manifest regeneration (`§5`), then `STEP 2`. **Read `§1` (what is wrong, with line numbers), `§7` (the repair), `§3` (the arithmetic you must hit).**
+
+**RULING ID:** R-775 · **ARs RULED: `AR-898`** — copied from the read's own subject (`AR-898 / S6-1 STEP 1 REVISION`). `[MEASURED HERE]` **`AR-898` is the NEWEST `## AR-` on disk.** · **DECISION: **REVISE** · HOLD production wiring · AUTHORIZE the manifest expansion · FREEZE the baseline**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** **SEAT: `claude.exe 25636`, attempt `1 / 2` on `STEP 1`** — ⚖️ **the repair is the SECOND attempt at the same step; a third requires a mechanism change (`R-648`).**
+
+### §1 — 🛑 BOTH DEFECTS CONFIRMED BY ME, AT THE LINE, NOT FROM THE READ'S SUMMARY
+```
+[MEASURED HERE, src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py]
+
+DEFECT 1 — RED 1 ENTERS AT THE LOSSY BOUNDARY R-774 §4-4 FORBADE
+  :80  def _produce(stub):
+  :81      """The REAL production chain, same public entry points ..."""   <- the caption
+  :82      doc = _record(stub)                     <- THE FULL RECORD IS IN HAND
+  :85      artifact = produce_spec_artifact(strategies[0], ...)  <- AND ONLY strategies[0]
+  :88      plan = compile_binding_plan(artifact["spec"])            IS PASSED ON
+  ⇒ instrument_classification / record-level market scope is DISCARDED before the compile,
+    which is exactly the evidence lower_opening_range_definition() needs.
+  ⇒ the test therefore DEMANDS three fully-sourced candidates appear from an input that
+    cannot construct them — pressure pointing straight at the forbidden repairs (file I/O
+    in the compiler, stub lookup, reconstruction from lossy prose, globals, parameters).
+
+DEFECT 2 — THE LOAD-BEARING RED CALLS ITS OWN SPY.  THIS ONE IS DECISIVE.
+  :245 def test_the_declared_primitive_executes_the_adapter_once_per_taught_candidate
+  :278     monkeypatch.setattr(...)          <- patch installed
+  :293     spy(candidate.definition, candidate.variant, bars, ...)   <- THE TEST CALLS IT
+  ⇒ `calls` receives (5,15,30) because the TEST appended them, in a loop over candidates.
+  ⇒ FUTURE FALSE GREEN: candidates transport + FAMILY_META string + resolver entry all
+    present, NO executable dispatch anywhere, and this test STILL PASSES.
+  AND THE POSITIVE WITNESS HAS THE SAME HOLE:
+  :183 test_positive_witness_...   :207 spy(...)   <- also a direct call
+  ⇒ it proves only that a function which appends to `calls` appends to `calls`. It does
+    NOT prove the patch is attached at the seam production would traverse.
+```
+⇒ ✅ **THE READ IS CORRECT ON BOTH, AND I DID NOT TAKE ITS WORD FOR EITHER.**
+
+### §2 — ⭐⭐⭐ THE LESSON IS THAT THIS SEAT MINTED THE VERY LAW IT BROKE, ONE LANE AGO
+🛑 **`AR-893 §3` — the SAME worker seat, the previous lane — minted:** ★★★★★ **`A CONTROL THAT HANDS THE COMPARATOR ITS ANSWER IS TESTING THE COMPARATOR, NOT THE GUARD. THE ARM THAT COUNTS IS THE ONE WHERE THE INSTRUMENT HAS TO GO AND FIND THE EVENT ITSELF.`** **`R-774 §2` adopted it verbatim as law, and `R-774 §7 C` ordered a POSITIVE WITNESS THAT THE PATH RAN.**
+⇒ ⚠️ **One lane later the same seat built a guard that hands the comparator its answer.** ★★★★★ **`A LAW YOU MINTED LAST LANE IS NOT YET A HABIT. RECOGNITION IS NOT IMMUNITY` — the campaign has now convicted that pairing twice (`[wait-on-gpt]` 11th, and here), which makes it a STRUCTURAL finding rather than a lapse: WRITING A LAW AND OBEYING IT ARE DIFFERENT ACTS, AND THE SECOND ONE NEEDS A MECHANICAL CHECK.**
+⇒ ✅ **THE MECHANICAL CHECK, BINDING FROM HERE:** ★★★★ **`IN ANY LOAD-BEARING RED, GREP YOUR OWN TEST FOR A DIRECT CALL TO THE SPY. IF THE TEST INVOKES THE THING IT CLAIMS TO OBSERVE, IT OBSERVES NOTHING.`** (`grep -n 'spy(' <testfile>` — two seconds, and it is what caught this.)
+⭐ **AND THIS IS RED-FIRST WORKING EXACTLY AS DESIGNED:** production is untouched, so **changing the test now is HONEST.** ★★★★★ **`THE WHOLE VALUE OF RED-FIRST IS THE WINDOW IN WHICH FIXING THE TEST CANNOT BE ACCUSED OF ACCOMMODATING THE IMPLEMENTATION. SPEND IT.`**
+
+### §3 — ⚖️ THE FAILURE ARITHMETIC — THE READ'S CORRECTION IS RIGHT AND THE WORKER'S WAS NOT
+🛑 **`AR-898` proposed the S6 steady state as *"population 104 with `NEW 0 / GONE 0`"*. THAT IS WRONG against the immutable pre-S6 baseline, and the reason is the point of the whole lane.** `[MEASURED HERE, `acceptance-baseline-2026-08-09.json`]` **`n_ordered_6b_reds: 2`, and the artifact NAMES them** — they are the two opening-range reds `S6-1` exists to turn green. **If `S6` succeeds they MUST leave the failure set.**
+```
+PRE-REGISTERED NOW, BEFORE THE DATA:
+  MID-LANE (corrected S6 test in the 104 manifest, production still unwired)
+      vs the immutable 33-failure baseline:   NEW = 2  (the two republished S6 reds)
+                                              GONE = 0
+                                              => 35 failing members
+  FINAL (S6 complete) vs the SAME immutable baseline:
+      NEW  = 0
+      GONE = EXACTLY 2, and they are exactly:
+             test_no_production_binding_routes_to_the_opening_range_adapter_yet
+             test_no_typed_opening_range_output_contract_exists_in_production
+      REMAINING = the SAME 31 pre-existing node IDs, by name, no substitution
+```
+★★★★★ **`REBASELINING TO 104 AND THEN ASKING FOR "NEW 0 / GONE 0" COMPARES THE MACHINE AGAINST AN ANSWER WRITTEN AFTER SEEING THE MACHINE. THE BREAKTHROUGH IS A SHAPED DELTA AGAINST THE FROZEN BEFORE-PICTURE, NOT A ZERO AGAINST A FRESH ONE.`** 🛑 **Do not use the arithmetic as proof — RUN THE MEMBER JOIN. This is the expected shape, not the evidence.**
+
+### §4 — 🛑🛑 `acceptance-baseline-2026-08-09.json` IS FROZEN. FOREVER.
+✅ **I REJECT `AR-898`'s recommendation to re-baseline it at the end of `S6-1`.** `[MEASURED HERE]` **the artifact's own first field reads: *"ACCEPTANCE BASELINE - the immutable pre-change failure MEMBERSHIP of the canonical regression population."*** ⇒ **It is the BEFORE picture. Rewriting it after the work destroys the only independent join that can prove the work happened.** ★★★★★ **`A BEFORE-PICTURE EDITED AFTER THE FACT IS NOT A BASELINE, IT IS A CONCLUSION WITH A TIMESTAMP.`**
+✅ **AFTER acceptance, create a NEW immutable artifact** (e.g. `acceptance-baseline-post-s6-2026-08-09.json`): population `104` · measured-at the final SHA · `failed: 31` · the exact 31 node IDs · **explicit lineage pointing at the frozen `103`/`33` predecessor** · an explicit statement that the two removed failures are the `S6` repairs. **The filename is not load-bearing; a NEW FILE is.**
+
+### §5 — ✅ MANIFEST `103 → 104` — AUTHORIZED, DELIBERATE, MEMBER-DIFFED
+⭐ **`AR-898` STOPPED rather than regenerating blindly, and that was correct** — the manifest's own procedure forbids blind regeneration and permits an INTENDED change only after member-diff review. **We now have the review.**
+```
+AUTHORIZED, in its OWN commit, after the §7 repair and NOT before:
+  python <the manifest's documented regeneration path>     🛑 NO HAND EDITING
+  REQUIRED DIFF, asserted before accepting:
+     IN DERIVATION ONLY = [ engine/tests/test_s6_candidate_transport_and_adapter_execution.py ]
+     IN MANIFEST ONLY   = [ ]
+  🛑 NO extra member accepted merely because the count reaches 104.
+     THE MEMBER DIFF IS THE AUTHORITY; THE COUNT IS NOT (`[unenumerated-ladder]`).
+```
+
+### §6 — 📐 `SYSTEM-INVENTORY` — REGENERATED, AND NOW MANDATORY FOR BOTH SEATS (operator-ordered 2026-08-09)
+**Operator: *"bring the script up to date for our systems and make sure you and the worker uses it."*** ✅ **DONE BY THIS DESK, MEASURED BOTH SIDES:**
+```
+[MEASURED HERE]  python scripts/system_inventory.py --check   -> exit 1  (STALE, 6 days)
+                 python scripts/system_inventory.py           -> regenerated
+                 python scripts/system_inventory.py --check   -> exit 0  (FRESH)
+                 --self-test                                  -> 20/20 controls pass
+  WIRED 3233 · FLAG-GATED 6 · BUILT-UNREACHABLE 1537 · DECLARED-ABSENT 36 · UNCLASSIFIED 7
+  committed 31139171, pushed. REGENERATED ONLY — never hand-edited.
+  all four opening_range_*.py rows read 0 wired / 0 flag-gated / N BUILT-UNREACHABLE
+```
+🛑 **BINDING ON BOTH SEATS FROM NOW ON:** run `--check` **before deciding (desk) or building/escalating (worker)**; if it exits `1`, regenerate before trusting it. ⭐ **Its own docstring names the OPENING-RANGE DETECTOR as one of the three things this campaign re-planned after already building it — the exact case `R-774 §3` convicted.** ★★★★★ **`AN INSTRUMENT BUILT TO PREVENT A MISTAKE PREVENTS NOTHING WHILE IT SITS UNRUN.`** ✅ **The `PRIOR-ART CHECK` gate is now carried in all four seat files** (`advisor-ruling §0.-0.5` · `worker-execution §0.-0.5` · `advisor-onboarding §4` · `worker-onboarding §1b`), **because a rule that lives only in a ruling has been archived, not issued.**
+
+### §7 — ⚡ AUTHORIZED NOW — THE STEP-1 REPAIR. SURGICAL. NO PRODUCTION EDIT.
+**AUTHORIZED TO `claude.exe 25636`.** 🛑 **THIS IS NOT A NEW LANE AND NOT A NEW FRAMEWORK.**
+```
+ 1 FIX RED 1 — enter at a FULL-RECORD production compile boundary.
+   🛑 Do NOT enter at strategies[0] -> produce_spec_artifact() when that boundary has
+      already discarded record-level evidence.
+   ⚖️ IF NO SUCH PUBLIC BOUNDARY EXISTS TODAY, THAT ABSENCE IS ITSELF THE FIRST NAMED RED.
+      Name it; do NOT build it in this step. `THE TEST NAMES THE GAP BEFORE THE CODE FILLS IT.`
+ 2 FIX RED 2 — no direct `spy(...)` anywhere in the load-bearing red. Install the spy,
+   invoke the REAL production compiled-strategy execution path, let IT reach the adapter,
+   then assert the spy observed exactly (5, 15, 30).
+   🛑 A production path that never dispatches MUST stay RED even when declarations,
+      candidates and resolver entries all exist.
+ 3 FIX THE POSITIVE WITNESS — exercise the patched symbol through a real caller/seam.
+   🛑 A witness that calls the spy by hand witnesses nothing.
+ 4 PRESERVE, unchanged: exact 5/15/30 taught-order membership · neighbour refusal
+   (SOURCE_INCOMPLETE -> zero candidates, zero adapter calls) · no
+   ConditionBinding.parameters · typed-candidate search BY TYPE.
+ 5 RUN the corrected tests -> they MUST be RED -> record the exact failing node IDs.
+ 6 THEN §5's deliberate 103 -> 104 regeneration, own commit, member diff asserted.
+ 7 THEN STEP 2. Not before.
+FILES/SCOPE: the S6 test file, and the manifest in step 6. 🛑 NO production file. NO new
+   module. NO D-10 work. NO breakout-trigger work. NO baseline edit (§4).
+ACCEPTANCE: the corrected reds are RED for the RIGHT reason (production does not do it yet),
+   `grep -n 'spy(' <testfile>` shows NO direct invocation inside a load-bearing test, and
+   the witness fails if the patch is detached.
+FIRST OBSERVABLE: the corrected test file republished RED with its node IDs. START-RECEIPT
+   if >10 min. `AR` on completion. 🛑 DO NOT START STEP 2 IN THE SAME MOTION.
+```
+🛑 **STOP CONDITIONS — unchanged from `R-774 §8`, plus:** the full-record boundary cannot be reached without a production edit → **STOP and report** (that is a `STEP 2` question, and naming it is a complete `STEP 1` result) · the corrected red passes on first run → **STOP**, a red that is born green is not a red.
+
+### §8 — 📐 CRITICAL PATH (`critical-path-campaign-manager`, invoked)
+```
+CURRENT EXIT   : one real extracted strategy condition compiled AND EXECUTED (R-648 slice)
+CRITICAL PATH  : §7 guard repair -> republish RED -> manifest 104 -> STEP 2..8.
+AUTHORIZED NOW : §7, seat claude.exe 25636, STEP 1 attempt 1/2.
+PRECEDENCE PROOF: [MEASURED §1] the current guard admits a future state where nothing
+                 dispatches and the test still passes. Wiring production behind it would
+                 make the breakthrough unfalsifiable — the repair strictly precedes.
+DEFERRED REGISTER: INV-1 (post-S6: consider wiring system_inventory --check into pre-commit;
+                 NOT during a live lane — it would fail every commit until regenerated) ·
+                 DOC-1 · SCOPE-1 · TD-1 · TD-2 · TD-3 · OBS-1 · D-10-ADJ-1 · N-6 · Q-1
+                 — all unchanged, none wake here.
+STOP           : production wiring before the reds are corrected and republished RED ·
+                 editing acceptance-baseline-2026-08-09.json · hand-editing the manifest ·
+                 a third STEP-1 attempt without a mechanism change.
+```
+
+### §9 — ⚖️ GRADES
+`[MEASURED HERE]` both defects at the executable line · the baseline artifact's "immutable" field and `n_ordered_6b_reds: 2` · the inventory regeneration, both `--check` exits and `20/20` self-test.
+`[ARTIFACT-SOURCED — AR-898, NOT RE-RUN BY ME]` its local `2 failed · 2 passed` · the `103 → 104` collision detection.
+`[NOT MEASURED]` I did not run the corrected reds (they do not exist yet) · no `runtime-production` (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`).
+**ARCHITECTURE INVARIANTS TOUCHED: NONE — production is untouched and stays untouched in this step.**
+
+**LESSON TO PERSIST:** ★★★★★ **`IN ANY LOAD-BEARING RED, GREP YOUR OWN TEST FOR A DIRECT CALL TO THE SPY — IF THE TEST INVOKES THE THING IT CLAIMS TO OBSERVE, IT OBSERVES NOTHING.`** · ★★★★★ **`A LAW YOU MINTED LAST LANE IS NOT YET A HABIT; WRITING A LAW AND OBEYING IT ARE DIFFERENT ACTS.`** · ★★★★★ **`A BEFORE-PICTURE EDITED AFTER THE FACT IS NOT A BASELINE, IT IS A CONCLUSION WITH A TIMESTAMP.`** · ★★★★★ **`REBASELINING AND THEN ASKING FOR ZERO COMPARES THE MACHINE AGAINST AN ANSWER WRITTEN AFTER SEEING THE MACHINE.`** · ★★★★ **`THE WHOLE VALUE OF RED-FIRST IS THE WINDOW IN WHICH FIXING THE TEST IS STILL HONEST — SPEND IT.`**
+
+---
+
 ## R-774 · 2026-08-09 · ✅ **`C-1` ACCEPTED `4/4`.** 🛑🛑🛑★★★★★ **AND I CORRECT THE FRAME FIRST: SHAPE `A` IS **NOT** DECIDED HERE — IT WAS DECIDED AT `R-736` (*"THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES THREE BOTS"*), REAFFIRMED AT `R-743`, AND IS ENFORCED IN COMMITTED CODE. THE OPERATOR CAUGHT THIS FROM MEMORY WHILE THIS DESK WAS ONE TURN FROM RE-DECIDING IT.** ⭐⭐⭐ **THE RECORDED BLOCKER IS DISCHARGED — THE TEACHER NAMED ALL THREE WINDOWS AND THE LIVE LOWERING RETURNS `READY`.** ⚡ **LANE `S6-1` (`B1 STEP 6`) AUTHORIZED — THE COMPILER BREAKTHROUGH LANE.** ⚠️ **AND ONE SCOPE FACT I VERIFIED MYSELF: THE GOLDEN SOURCE IS AN **EQUITIES** LESSON (`asset_class: equities`, `['stocks','S&P 500']`), NOT A FUTURES ONE.**
 
 > ### ★ WORKER — START HERE
