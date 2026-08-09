@@ -2089,6 +2089,67 @@ async function createChildStrategy(
 }
 
 /**
+ * D-10 `N-5` (R-767 §6) — THE SHARED PARENT-BASELINE DECISION.
+ *
+ * Both replay paths gate survivor selection on
+ * `bestCandidate.compositeScore > parentForgeScore`. The prior expression,
+ * `Number(strat.forgeScore ?? 0)`, turned an ABSENT baseline into a MEASURED ZERO —
+ * i.e. into the most permissive bar in the range, so any candidate scoring above
+ * zero was promoted against a parent nobody ever scored.
+ *   `AN ABSENT BASELINE COERCED TO ZERO DOES NOT FAIL THE COMPARISON — IT WINS IT.`
+ *
+ * 🛑 `??` ALONE IS NOT THE FIX: it only catches `null`/`undefined`, while
+ * `Number("")` -> `0` and `Number([])` -> `0` reach the same permissive bar without
+ * ever touching the operator. Hence the TYPE check before the finite check.
+ *
+ * 🛑 AND `if (!parentForgeScore)` IS FORBIDDEN (R-768 §5/§7): it collapses a
+ * legitimate MEASURED ZERO straight back into absence — the mirror image of the
+ * defect under repair.
+ *   `A RULE NAMES THE REQUIRED BEHAVIOUR; A FORBIDDEN IDIOM NAMES THE WRONG CODE
+ *    SOMEONE WILL ACTUALLY WRITE. BOTH BELONG IN THE CONTRACT.`
+ */
+const PARENT_FORGE_SCORE_UNMEASURED = "parent_forge_score_unmeasured";
+
+type ParentForgeBaseline = { available: true; value: number } | { available: false };
+
+function resolveParentForgeBaseline(raw: unknown): ParentForgeBaseline {
+  // Only a number or a numeric string is a MEASUREMENT. `Number(true)` is 1 and
+  // `Number([])` is 0 — neither is a forge score, and both would otherwise arrive
+  // as a usable baseline.
+  if (typeof raw !== "number" && typeof raw !== "string") return { available: false };
+  if (typeof raw === "string" && raw.trim() === "") return { available: false };
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return { available: false };
+  return { available: true, value };
+}
+
+/**
+ * Stop a replay run on the named precondition, before any candidate comparison.
+ * Persisted AND broadcast — a run left silently un-terminal is not a stop.
+ */
+async function failRunOnUnmeasuredParent(
+  runId: string,
+  strategyId: string,
+  rawForgeScore: unknown,
+): Promise<void> {
+  logger.error(
+    { runId, strategyId, forgeScore: rawForgeScore },
+    "Critic replay: parent forge score is unmeasured — refusing to compare candidates against a fabricated baseline",
+  );
+  await db
+    .update(criticOptimizationRuns)
+    .set({ status: "failed", completedAt: new Date() })
+    .where(eq(criticOptimizationRuns.id, runId));
+  broadcastSSE("critic:run-failed", {
+    runId,
+    strategyId,
+    errorCode: PARENT_FORGE_SCORE_UNMEASURED,
+    message:
+      "Parent forge score is unmeasured — replay stopped before candidate comparison; no survivor selected",
+  });
+}
+
+/**
  * Replay top candidates through the backtester and select survivor.
  *
  * Wrapped in try/finally so any unhandled error marks the run as "failed"
@@ -2150,7 +2211,14 @@ export async function replayCandidatesAsync(
   // Y2 fix: Compare forge scores on the same 0-100 scale.
   // Parent Python composite objective uses a different scale than forge score.
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // D-10 N-5 (R-767 §6): an unmeasured baseline stops the run BEFORE the engine is
+  // reached, so no candidate is compared and no survivor is selected.
+  const parentBaseline = resolveParentForgeBaseline(strat.forgeScore);
+  if (!parentBaseline.available) {
+    await failRunOnUnmeasuredParent(runId, strategyId, strat.forgeScore);
+    return;
+  }
+  const parentForgeScore = parentBaseline.value;
 
   // B2 fix: hoisted so it's in scope at all 2 runBacktest call sites below.
   // Populated inside the C-3 try block; defaults to 1 (no deflation) on any error.
@@ -2847,7 +2915,14 @@ export async function manualReplayCandidates(
   // Y2 fix: Use strat.forgeScore (0-100) as the parent baseline.
   // parentCompositeScore from the run is the Python composite objective (different scale,
   // can be negative or >1) and cannot be compared against replayForgeScore directly.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // D-10 N-5 (R-767 §6): the SAME shared decision as the automatic path — one caller
+  // guarded is not the defect guarded.
+  const parentBaseline = resolveParentForgeBaseline(strat.forgeScore);
+  if (!parentBaseline.available) {
+    await failRunOnUnmeasuredParent(runId, strategyId, strat.forgeScore);
+    return;
+  }
+  const parentForgeScore = parentBaseline.value;
 
   // B2 fix: fetch trial_n_total from persisted evidence packet so DSR deflation
   // receives the correct cumulative mutation count during manual replay.

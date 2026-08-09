@@ -150,15 +150,23 @@ const CANDIDATE = {
 const STRATEGY_ROW = { id: STRAT_ID, config: {}, forgeScore: "50" };
 
 /**
- * `drive()`'s parent-baseline override sentinel (D-10 `N-5`, R-767 §6).
+ * 🛑 HOW `drive()` DISTINGUISHES "NO OVERRIDE" FROM "OVERRIDE WITH `undefined`"
+ *    (D-10 `N-5`, R-767 §6) — AND WHY THE OBVIOUS WAY DOES NOT WORK.
  *
- * ★ It is a SYMBOL and not `undefined` for a load-bearing reason: `undefined` is
- *   itself one of the unavailable-baseline cases `N-5` must exercise, so a default
- *   of `undefined` would make "override with undefined" and "do not override"
- *   indistinguishable — and the control for the `undefined` case would silently
- *   become a re-run of the `"50"` case.
+ * `undefined` is ITSELF one of the unavailable-baseline cases `N-5` must exercise,
+ * so the two must stay distinguishable. The first attempt used a `Symbol` DEFAULT
+ * PARAMETER value — and that silently fails, because an ES default parameter is
+ * applied whenever the argument IS `undefined`, whether it was omitted or passed
+ * explicitly. `drive("auto", r, undefined)` therefore took the default and ran the
+ * `"50"` fixture, so `N-5.6` was a duplicate of the ordinary-ranking case wearing
+ * the `undefined` case's name. MEASURED: it was the single test still red after the
+ * repair, and it was red for the wrong reason.
+ *   `A DEFAULT PARAMETER CANNOT DETECT AN EXPLICIT `undefined` — THE ONE VALUE IT
+ *    EXISTS TO REPLACE IS THE ONE VALUE IT CANNOT OBSERVE. USE ARITY.`
+ *
+ * A REST parameter records ARITY, which is the thing actually being asked.
  */
-const NO_PARENT_OVERRIDE = Symbol("no-parent-override");
+type ParentOverride = [unknown?];
 
 /**
  * Drive the AUTOMATIC path (`replayCandidatesAsync`) or the MANUAL path
@@ -170,7 +178,7 @@ const NO_PARENT_OVERRIDE = Symbol("no-parent-override");
 async function drive(
   path: "auto" | "manual",
   result: unknown,
-  parentForgeScore: unknown = NO_PARENT_OVERRIDE,
+  ...parentForgeScore: ParentOverride
 ): Promise<void> {
   btResult.value = result;
   const { db } = await import("../db/index.js");
@@ -190,9 +198,9 @@ async function drive(
   // Default is byte-identical to the pre-N-5 fixture, so every N-1 control above is
   // driven with exactly the row it was written and observed red against.
   const strategyRow =
-    parentForgeScore === NO_PARENT_OVERRIDE
+    parentForgeScore.length === 0
       ? STRATEGY_ROW
-      : { ...STRATEGY_ROW, forgeScore: parentForgeScore };
+      : { ...STRATEGY_ROW, forgeScore: parentForgeScore[0] };
 
   // ─── SELECT ORDER IS PER-PATH, AND THEY ARE NOT THE SAME ──────────────────
   // The automatic path reads strategy → candidates → evidence packet (`:2109`,
@@ -718,5 +726,46 @@ describe("D-10 N-5 — an unmeasured parent baseline stops the run (R-767 §6)",
       frames.some((d) => d.errorCode === UNMEASURED),
       `[manual] expected a critic:run-failed frame carrying ${UNMEASURED}, got: ${JSON.stringify(frames)}`,
     ).toBe(true);
+  });
+});
+
+/**
+ * ═══ D-10 `N-5` — THE TWO DISCRIMINATORS R-768 §7 AMENDMENT 2 REQUIRES ════════
+ *
+ * `R-768 §5` adopted a FORBIDDEN IDIOM alongside the rule: the implementation must
+ * NOT use `if (!parentForgeScore)`, because that collapses a legitimate measured
+ * zero straight back into absence — swapping one conflation for its mirror image.
+ *   `A RULE NAMES THE REQUIRED BEHAVIOUR; A FORBIDDEN IDIOM NAMES THE WRONG CODE
+ *    SOMEONE WILL ACTUALLY WRITE. BOTH BELONG IN THE CONTRACT.`
+ *
+ * These two controls are that pair stated at the contract's own values, so the
+ * amendment is satisfied by measurement and not by resemblance:
+ *   (A) parent `null` + candidate `80`   ⇒ the candidate CANNOT win
+ *   (B) parent `"0"`  + candidate `> 0`  ⇒ the comparison REMAINS LEGAL
+ *
+ * ★ (A) and (B) are the SAME code path fed the two inputs a falsy check cannot
+ *   tell apart. A `if (!parentForgeScore)` implementation passes (A) and FAILS (B);
+ *   the pre-repair `?? 0` passes (B) and FAILS (A). Only a correct resolver passes
+ *   both — which is precisely why one control alone would prove nothing.
+ */
+describe("D-10 N-5 — the falsy-check discriminators (R-768 §7 amendment 2)", () => {
+  const CANDIDATE_80 = { id: BT_ID, status: "completed", tier: "TIER_1", forge_score: 80 };
+
+  it("N-5.12 (A) parent NULL + candidate 80 — a candidate cannot win against a baseline nobody measured", async () => {
+    await drive("auto", CANDIDATE_80, null);
+
+    expect(await backtestCalls(), "the engine was reached against an unmeasured parent").toBe(0);
+    expect(survivorSelected(), "an 80 beat a parent that was never scored").toBe(false);
+    expect(runFailedFrames().some((d) => d.errorCode === UNMEASURED)).toBe(true);
+  });
+
+  it("N-5.13 (B) parent MEASURED '0' + candidate 80 — the comparison remains legal and the candidate wins", async () => {
+    await drive("auto", CANDIDATE_80, "0");
+
+    // The mirror-image defect this control exists to catch: a falsy check would
+    // treat this measured zero as absence and stop the run here.
+    expect(await backtestCalls(), "a measured zero was treated as an absent baseline").toBeGreaterThan(0);
+    expect(runFailedFrames().some((d) => d.errorCode === UNMEASURED)).toBe(false);
+    expect(survivorSelected(), "80 > 0 is a legal comparison and it was not made").toBe(true);
   });
 });
