@@ -4,6 +4,77 @@
 
 ---
 
+## AR-868 · 2026-08-09 · ✅✅ **`N-1` IS CLOSED AND THE `UNCONTROLLED` LABEL COMES OFF — RED-FIRST THIS TIME, AND I HAVE THE RED TO SHOW.** ⭐⭐ **`MUT-3` REDDENS ONLY `N-1.1`+`N-1.2` AND `MUT-4` REDDENS ONLY `N-1.3` — THE TWO `R-757 §3` DEFECTS ISOLATE ONE-TO-ONE, AND THE POSITIVE CONTROL SURVIVES EVERY MUTATION EXCEPT ITS OWN.** 🛑🛑★★★★★ **AND THE HEADLINE IS AN INSTRUMENT FINDING: MY FIRST RED WAS `6` FAILURES AND **THREE OF THEM WERE MY FIXTURE, NOT THE CODE.** THE MANUAL PATH'S SELECT ORDER IS NOT THE AUTOMATIC PATH'S, AND FEEDING IT THE WRONG ORDER PRODUCES `replayStatus:"failed"` — WHICH READS EXACTLY LIKE A PRODUCTION REFUSAL DEFECT.** **FAN-IN `3 / 8`.**
+
+**RULING: `R-757 §4`** (inherited per `§5`, declared in `AR-867 §1`). **ATTEMPT BUDGET `1 / 2`.** ✅ **`worker-execution` re-invoked at seating, before the first code line.**
+
+### §1 — ✅ WHAT LANDED: ONE SHARED HANDLER, BOTH CALLERS DELEGATING
+**NEW `src/server/lib/replay-outcome.ts`** — `classifyReplayOutcome()`, pure, no db / no SSE / no logging, **NEVER THROWS**. Three outcomes: `refused` · `invalid` · `completed`. It returns the **exact column patch** its caller persists, so the DECISION is unit-testable without a database and each caller keeps its own effects — the same stance `backtest-refusal.ts` took, and it is now the layer underneath this one.
+✅ **BOTH production callers rewritten to delegate** (`replayCandidatesAsync` `:2407`, `manualReplayCandidates` `:2893`). The two near-identical transcriptions are gone; `R-755`, `R-756` and `R-757` each found a defect that had been copied into both, and there is now one place to find.
+✅ **`R-757 §3` DEFECT 1 CLOSED** — every patch writes `replayTier` / `replayForgeScore` / `actualCompositeScore` **EXPLICITLY, including its nulls.** Drizzle omission means LEAVE, so the old refusal branch let a previously-scored candidate keep a real tier and score beside `replayStatus:"refused"`.
+✅ **`R-757 §3` DEFECT 2 CLOSED** — `?? 0` is gone. A completed result whose `forge_score` is **absent or non-finite** is filed `invalid_result` with reason `forge_score_absent` / `forge_score_non_finite`: no score, no tier, **not ranking-eligible.** 🛑 **A finite `0` is still persisted as `0`** — `N-1.4b` exists so the repair cannot swallow a real measured zero. ⚖️ Non-number inputs are REJECTED rather than coerced, because `Number("")` and `Number([])` are both `0` and neither is a measurement.
+🔧 **ONE PRODUCTION EDIT THAT IS NOT A FIX AND I NAME IT:** `replayCandidatesAsync` gained the **`export` keyword and nothing else**. `AR-866` reported this path uncontrollable because it was unexported; that was the whole obstacle. `R-757 §4-3` requires a per-caller **spy**, and a spy is a RUNTIME observation — a grep would prove only that the text exists.
+
+### §2 — ⭐ RED FIRST, AND THE RED IS PUBLISHED
+🛑 **`AR-866` shipped this repair before its red test. I did not.** The module was written first but **left unwired**, so the controls failed on the DEFECTS rather than on a missing import — a module-not-found red proves nothing about behaviour.
+```
+BEFORE the wiring (RED-FINAL.txt)                    4 failed | 7 passed
+  × N-1.1  refusal nulls  [auto]    expected null, received undefined   <- DEFECT 1
+  × N-1.2  refusal nulls  [manual]  expected null, received undefined   <- DEFECT 1, other caller
+  × N-1.3  absent score             expected 'completed' not to be 'completed'  <- DEFECT 2
+  × N-1.5  delegation spy           automatic path never reached the shared handler
+  ✓ N-1.4 / N-1.4b                  POSITIVE CONTROLS GREEN BEFORE THE FIX
+AFTER the wiring                                     11 passed
+```
+★★★ **The two positive controls were GREEN in the red run. A suite where everything reddens together cannot tell "catches breakage" from "always red".**
+
+### §3 — ⭐⭐ PER-DEFECT MUTATION TABLE (`R-757 §4`), WITH ITS TWO IMPERFECTIONS NAMED
+Applied to `replay-outcome.ts` from a pristine copy, restored and `diff`-verified IDENTICAL after.
+```
+PRISTINE                                              11 passed          exit 0
+MUT-1  bypass refusal classification    RED: 1.1 1.2 1.6 1.7 1.10   (refusal family)
+MUT-2  restore `forgeScore` camelCase   RED: 1.4 1.4b 1.8           (scoring family)
+MUT-3  omit the explicit null clearing  RED: 1.1 1.2                ★ ONE-TO-ONE, defect 1
+MUT-4  restore `?? 0`                   RED: 1.3                    ★ ONE-TO-ONE, defect 2
+RESTORED from pristine                                11 passed · diff -q IDENTICAL
+```
+✅ **`MUT-3` and `MUT-4` isolate EXACTLY, and they are the two defects the ruling names.**
+🛑 **`MUT-1` and `MUT-2` each move a FAMILY, not a single row, and I disclose it rather than claiming one-to-one:** `MUT-1` breaks classification itself, so every refusal-shaped assertion goes with it; `MUT-2` removes the key the score is read from, so both positive controls AND `N-1.8` (which asserts a completed result classifies `completed`) fall. ★★★ **`A MUTATION AT THE CLASSIFIER MOVES EVERY CONTROL DOWNSTREAM OF THE CLASSIFIER — THAT IS COVERAGE, NOT ISOLATION, AND THE TABLE MUST SAY WHICH IT IS.`**
+✅★★★ **THE CLAUSE THAT MATTERS MOST IS MET: `N-1.4`, the legitimate completed replay, stays GREEN under `MUT-1`, `MUT-3` AND `MUT-4`.** It reddens only under the mutation aimed at it.
+
+### §4 — 🛑🛑 THE INSTRUMENT FINDING: THREE OF MY FIRST SIX REDS WERE THE FIXTURE
+My first run showed `6 failed`. **Only three were real.** I report all three fixture faults because each one imitates a production defect:
+1. 🛑★★★★★ **THE MANUAL PATH READS ITS SELECTS IN A DIFFERENT ORDER.** Automatic is strategy → candidates → evidence packet (`:2109`, `:2131`, `:2155`); **manual is candidates → strategy → evidence packet** (`:2801`, `:2816`, `:2839`). Feeding the automatic order to the manual path hands it the STRATEGY row as a candidate; `changedParams` is `undefined`, param application throws, and the candidate is filed **`replayStatus:"failed"`** — which is indistinguishable, from the outside, from a real refusal-handling defect. ★★★★★ **`TWO FUNCTIONS THAT DO THE SAME WORK DO NOT NECESSARILY ASK FOR IT IN THE SAME ORDER, AND A STUB THAT ANSWERS BY POSITION CANNOT TELL THEM APART.`**
+2. **The COMPLETED path polls a real 60-second MC survival gate** (`MC_GATE_WAIT_MS`, `:2487`). My stub never satisfied it, so the test timed out **mid-flight and left a live async run that corrupted the NEXT test's recorded writes** — `N-1.4b` failed for reasons that had nothing to do with `N-1.4b`. ★★★ **`A TIMED-OUT ASYNC TEST DOES NOT STOP; IT KEEPS WRITING INTO THE NEXT TEST'S EVIDENCE.`**
+3. **A second terminal write appeared on every path** — the post-loop `replay_incomplete` sweep, firing only because a stub DB never PERSISTS the write the loop just made, so the sweep re-reads the candidate as unfinished. Excluded by name in the helper, not absorbed.
+⚖️ **I found these by making the failing assertion PRINT the writes instead of guessing at them.** One run answered what three rounds of hypothesis would not have.
+
+### §5 — 🛑 SCOPE: WHAT THESE CONTROLS DO **NOT** PROVE
+- **End-to-end SURVIVOR PROMOTION is NOT exercised.** A candidate that ranks AND beats the parent proceeds into promotion, which this stub cannot satisfy (`Cannot convert undefined or null to object`). That throw is **downstream of the decision under test**; `drive()` records it rather than hiding it, and `N-1.3`'s assertion still discriminates, so nothing passes vacuously. **`R-757 §4-4` is met at the handler boundary (`rankingEligible:false` + the call-site `continue`) and at the SSE surface (`N-1.6`: a refusal emits no tier-bearing complete event) — NOT by an executed survivor-selection run.**
+- **No database was involved.** These are the decision and its persisted patch, not a round-trip.
+- **`:2575` / `:3051` NOT touched** — census controls that discard their results, unchanged since `R-756 §4`.
+
+### §6 — ✅ EVIDENCE (all re-measured in this seat; nothing inherited from `AR-866`)
+```
+BASELINE, run by me BEFORE any change (AR-867 §5's re-measure debt, discharged):
+  d10-f9 / conveyor / deepscan8 / pipeline-pause      4 files · 42 passed · exit 0
+
+AFTER:
+  d10-n1-replay-outcome.test.ts        (NEW)          11 passed
+  + the 4 baseline files + critic-optimizer.governance
+                                        6 files · 75 passed · exit 0
+  npx tsc --noEmit -p tsconfig.json     EXIT 0 · 0 errors project-wide
+```
+🛑 **NOT RUN, NOT CLAIMED:** Python `65`, the `103`-member baseline FAILURE MEMBERSHIP, the 14-call-site disposition guard with its fake fifteenth site, and the tampered-comparison negative control. **`R-757 §4` places all four at DELIVERY of the whole of `D-10`; quoting them now would be stale before `F-7` lands.**
+
+### §7 — 📍 POSITION · FAN-IN · NEXT
+**FAN-IN: `3 / 8`** (`F-8` ✅ · `F-9` ✅ · **`N-1` ✅ now CONTROLLED**) · **`N-3` · `N-2` · `N-4` · `F-10` · `F-7` UNSTARTED.**
+⚖️ **`worker-onboarding §5`'s question: the remaining five are UNSTARTED, not blocked — so this seat continues. No handoff.** **NEXT, per `R-757 §4`: `N-3`, with no desk wait.**
+📡 **EAR: alive, `Monitor` persistent, owner `claude.exe 28040`, channel `ADVISOR-RULINGS.md`, red-proofed (`AR-867 §2`).** Newest ruling seen on disk: `R-757`.
+🛑 **STOPS HELD, none crossed:** the sibling's `test_synthetic_market_simulator.py` is still the only `src/` modification I did not author and I did not touch, stage or stash it · no `git stash` · no worktree cleanup · `F-8`/`F-9` not reopened · `F-10` reachability not re-derived · no state channel · the `21` untracked `docs/designs/` files left alone.
+
+---
+
 ## AR-867 · 2026-08-09 · 📥 **START-RECEIPT — FRESH WORKER SEAT, `D-10` INHERITED PER `R-757 §5`.** 🛑🛑 **AND THE RULING'S SEAT CENSUS IS STALE: `claude.exe 33544`, THE SEAT `R-757 §5` NAMES AS THE WORKER, IS **NOT ALIVE**. NEITHER IS `25972` NOR `3160`. ONLY TWO `claude.exe` EXIST AND I AM THE NEWER ONE.** 📡 **EAR ARMED, DELIVERY PROVEN, DETECTOR RED-PROOFED.** ⚠️ **`R-757` CARRIES NO `★ WORKER — START HERE` BLOCK — REPORTED AS `worker-onboarding §1` REQUIRES.**
 
 **RULING: `R-757 §4`.** **ATTEMPT BUDGET: `1 / 2` (carried, `R-757 §4`).** **NO CODE WRITTEN YET — this is a receipt, not a delivery.**

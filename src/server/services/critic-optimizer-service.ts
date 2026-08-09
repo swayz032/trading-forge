@@ -57,7 +57,10 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-constants.js";
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
-import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
+// D-10 `N-1` (R-757 §4): both replay paths now delegate the whole outcome decision
+// here. `backtest-refusal.js` is still the classifier underneath — this module wraps
+// it with the three-way outcome and the explicit-null column patch.
+import { classifyReplayOutcome } from "../lib/replay-outcome.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -2096,7 +2099,14 @@ async function createChildStrategy(
  *   2. MC survival > MC_SURVIVAL_THRESHOLD — polled up to MC_GATE_WAIT_MS
  *   3. Composite score > parent score
  */
-async function replayCandidatesAsync(
+// EXPORTED FOR CONTROL ONLY (D-10 `N-1`, R-757 §4-3). Behaviour is unchanged: this
+// is the `export` keyword and nothing else. R-757 §4 requires "a production-path spy
+// per real caller proving BOTH delegate to it", and a delegation spy is a RUNTIME
+// observation — a grep over this file would prove only that the text exists.
+// `AR-866` reported this path as uncontrollable because it was unexported; that was
+// the whole of the obstacle, and it cost one keyword.
+// Production callers remain `:810` and `:1246`; nothing else imports it.
+export async function replayCandidatesAsync(
   runId: string,
   strategyId: string,
   originalConfig: Record<string, unknown>,
@@ -2404,48 +2414,53 @@ async function replayCandidatesAsync(
         // score 0 — so a strategy the engine refused to execute entered the critic's
         // survivor ranking as a measured failure. The refusal must not be scored,
         // must not be ranked, and must not be recorded as a completed replay.
-        if (isExecutionRefused(replayResult)) {
-          await db
-            .update(criticCandidates)
-            .set({
-              replayStatus: "refused",
-              replayBacktestId: replayResult?.id ?? null,
-              // No tier, no score, no actualCompositeScore. Absent, NOT zero.
-            })
-            .where(eq(criticCandidates.id, candidate.id));
+        // ─── D-10 `N-1` (R-757 §4): ONE SHARED OUTCOME HANDLER, BOTH PATHS ─────
+        // This branch and its twin on the manual path (`manualReplayCandidates`)
+        // were near-identical transcriptions of the same decision, and R-755, R-756
+        // and R-757 each found a defect that had been copied into both. The decision
+        // now lives in `classifyReplayOutcome` and both callers delegate to it; the
+        // delegation itself is spied per caller, because `EXISTENCE IS NOT WIRING`.
+        //
+        // The patch it returns writes EVERY metric column explicitly, including its
+        // nulls. The previous refusal `.set()` OMITTED tier and both scores under a
+        // comment asserting they were absent — but drizzle omission means LEAVE THE
+        // EXISTING VALUE, so a previously-scored candidate kept a real tier and score
+        // beside `replayStatus:"refused"` (R-757 §3 defect 1).
+        const outcome = classifyReplayOutcome(replayResult);
 
+        await db
+          .update(criticCandidates)
+          .set(outcome.patch)
+          .where(eq(criticCandidates.id, candidate.id));
+
+        if (outcome.kind === "refused") {
           broadcastSSE("critic:replay_refused", { runId, candidateId: candidate.id });
           logger.warn(
-            { runId, candidateId: candidate.id, refusal: refusalEvidence(replayResult) },
+            { runId, candidateId: candidate.id, refusal: outcome.evidence },
             "Candidate replay REFUSED — no metrics exist; excluded from survivor ranking",
           );
           continue;
         }
 
-        // Update candidate with replay results
-        const rr = replayResult as any;
-        const replayTier = rr?.tier ?? "REJECTED";
-        // ─── R-755 §3: THE RESULT FIELD IS `forge_score`, SNAKE_CASE ────────────
-        // (declared at backtest-service.ts:299). This site read `rr?.forgeScore`,
-        // which is `undefined` on EVERY result — so `?? 0` fired on the COMPLETED
-        // path too, and every legitimate replay has been persisted and ranked with a
-        // fabricated score of 0. That is not a refusal bug; it corrupted the
-        // instrument that chooses which strategy the campaign builds on next.
-        // The `as any` cast at the line above is what let it compile silently.
-        const replayForgeScore = rr?.forge_score ?? 0;
+        if (outcome.kind === "invalid") {
+          // R-757 §3 defect 2: the engine COMPLETED but returned no usable score.
+          // `?? 0` used to turn that into a measured zero and rank it. A missing
+          // measurement is now a NAMED failure — no score, no tier, no ranking.
+          // It becomes `0` ONLY when the engine actually returned a finite zero.
+          broadcastSSE("critic:replay_complete", {
+            runId,
+            candidateId: candidate.id,
+            status: outcome.patch.replayStatus,
+          });
+          logger.warn(
+            { runId, candidateId: candidate.id, reason: outcome.reason },
+            "Candidate replay completed WITHOUT a usable forge_score — filed invalid, not scored 0",
+          );
+          continue;
+        }
 
-        await db
-          .update(criticCandidates)
-          .set({
-            replayStatus: "completed",
-            replayBacktestId: replayResult?.id ?? null,
-            replayTier,
-            replayForgeScore: String(replayForgeScore),
-            // Y2 fix: store the raw forge score (0-100) so the column reflects
-            // the actual scale used for gate comparisons.
-            actualCompositeScore: String(replayForgeScore),
-          })
-          .where(eq(criticCandidates.id, candidate.id));
+        const replayTier = outcome.tier;
+        const replayForgeScore = outcome.forgeScore;
 
         broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, tier: replayTier });
 
@@ -2890,41 +2905,40 @@ export async function manualReplayCandidates(
         // ─── D-10 N-1 (R-755 §5): same guard on the MANUAL replay path ──────────
         // Both paths carried the identical defect; fixing only the automatic one
         // would leave the manual trigger fabricating scores.
-        if (isExecutionRefused(replayResult)) {
-          await db
-            .update(criticCandidates)
-            .set({
-              replayStatus: "refused",
-              replayBacktestId: replayResult?.id ?? null,
-            })
-            .where(eq(criticCandidates.id, candidate.id));
+        // ─── D-10 `N-1` (R-757 §4): the SAME shared handler as the automatic path ─
+        // Fixing one caller is not fixing the defect — R-755 §5 and R-756 §4 both had
+        // to re-order this file because a repair landed on one path only.
+        const outcome = classifyReplayOutcome(replayResult);
 
+        await db
+          .update(criticCandidates)
+          .set(outcome.patch)
+          .where(eq(criticCandidates.id, candidate.id));
+
+        if (outcome.kind === "refused") {
           broadcastSSE("critic:replay_refused", { runId, candidateId: candidate.id });
           logger.warn(
-            { runId, candidateId: candidate.id, refusal: refusalEvidence(replayResult) },
+            { runId, candidateId: candidate.id, refusal: outcome.evidence },
             "Manual replay candidate REFUSED — no metrics exist; excluded from survivor ranking",
           );
           continue;
         }
 
-        const rr = replayResult as any;
-        const replayTier = rr?.tier ?? "REJECTED";
-        // R-755 §3: `forge_score` is snake_case on the result (backtest-service.ts:299).
-        // `rr?.forgeScore` was undefined on every result, so `?? 0` fired on the
-        // COMPLETED path and every manual replay was ranked with a fabricated 0.
-        const replayForgeScore = rr?.forge_score ?? 0;
+        if (outcome.kind === "invalid") {
+          broadcastSSE("critic:replay_complete", {
+            runId,
+            candidateId: candidate.id,
+            status: outcome.patch.replayStatus,
+          });
+          logger.warn(
+            { runId, candidateId: candidate.id, reason: outcome.reason },
+            "Manual replay completed WITHOUT a usable forge_score — filed invalid, not scored 0",
+          );
+          continue;
+        }
 
-        await db
-          .update(criticCandidates)
-          .set({
-            replayStatus: "completed",
-            replayBacktestId: replayResult?.id ?? null,
-            replayTier,
-            replayForgeScore: String(replayForgeScore),
-            // Y2 fix: store raw forge score (0-100) matching the gate comparison scale.
-            actualCompositeScore: String(replayForgeScore),
-          })
-          .where(eq(criticCandidates.id, candidate.id));
+        const replayTier = outcome.tier;
+        const replayForgeScore = outcome.forgeScore;
 
         broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, tier: replayTier });
 
