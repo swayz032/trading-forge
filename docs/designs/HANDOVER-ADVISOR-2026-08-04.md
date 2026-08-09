@@ -1,15 +1,25 @@
 # CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-725`, 2026-08-09 00:10Z**
 
 > ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-725`
-> **`HEAD ce290f5d` · newest ruling `R-726` · newest AR `AR-818` (start-receipt, owes no ruling).**
-> 🛑🛑 **THE ONE BLOCKER, AND IT IS THE DESK'S, NOT THE WORKER'S:** `B1` production repair is **HELD**
-> until the **complete** grade reaches the external reader. It received **`11,743`** of **`53,393`**
-> bytes and correctly refuses to authorize production mutation from a partial artifact.
-> **RELAY VERBATIM, NO PARAPHRASE:** `docs/designs/GRADE-PHASE-A-ROWS-1-3-2026-08-08.md` ·
-> `53393` B · `607` lines · `sha256 5df881af43a5fa4977a82c40e454b8bf68163fe09d963d3465dd35903d232b48` ·
-> blob `1ba2e588f496d0e196bfd848042a6e21c0f1f289` · commit `d26f8615`. **It is missing `F-4`–`F-8`,
-> `F-10`, `C7`, `C9`, `C10` — and its own gap-list named only four, omitting `F-5`/`F-6`, which are the
-> two findings against THIS DESK.**
+> **`HEAD 8c25b5e0` · newest ruling `R-727` · newest AR `AR-820` (start-receipt, owes no ruling).**
+> ✅✅ **THE BLOCKER IS CLEARED AND `B1` IS AUTHORIZED — the first production repair this campaign has
+> allowed on the golden path.** The branch was pushed to `swayz032/trading-forge` (**PUBLIC**, `631`
+> commits, plain FF) **on the operator's explicit decision after the desk measured the blast radius**;
+> the reader then inspected commit `d26f8615…` **directly on GitHub** and confirmed `53,393` B ·
+> `F-1…F-10` · `C1…C10` · `275/275`. **Phase A: PASS WITH BOUNDED FINDINGS.**
+> 🛑 **EXECUTE `B1` FROM THE BANKED READ, NOT FROM ANY RULING'S SUMMARY:**
+> `docs/designs/EXTERNAL-READ-2026-08-09-B1-AUTHORIZED.md` — **`STEPS 1–8` + `B1 PASS CONDITION` +
+> `EXPLICITLY OUT`, adopted VERBATIM BY REFERENCE at `R-727 §4`.** ★ **A 39-item contract summarised is
+> a contract with items missing.** Desk's five amendments are `R-727 §4`; `ratify-packet` is `R-727 §3`
+> (**AUTONOMOUS class, pre-live, independent grade is the gate — NOT operator-reserved**).
+> 🛑 **`STEP 1` IS FIRST AND IS NOT CODE:** amend the false claims **at their original locations**, never
+> appended. **`A CORRECTION APPENDED BELOW A FALSE LINE LEAVES THE FALSE LINE CITABLE.`**
+> ⚠️ **HARD `B1` PASS TERM (`AR-819`, money-facing):** a partial opening window **does not refuse today**
+> — it silently returns a **narrower** range (`1.05 → 0.80`, monotone, never wider; only zero bars
+> returns absent). **Narrower = breakout levels closer to price.** `INCOMPLETE_OPENING_WINDOW` must
+> produce **no usable state and no dependent signal**, with a complete day as the live positive control.
+> ★ **Do NOT say this "makes it trade more" — corrected at `R-727 §1`: the direction is measured, the
+> trade count runs through the still-undecided breakout rule.**
 > ✅ **PHASE A IS CLOSED. THE CAUSAL QUESTION IS ANSWERED AND MEASURED.** The failure is **neither the
 > extractor nor a missing engine — it is the vocabulary between them.**
 > - **PRIMARY** `CANONICAL_TERM_UNRESOLVED — OPENING_RANGE_COLLAPSED_INTO_COARSE_WAIT_STRUCTURE`
