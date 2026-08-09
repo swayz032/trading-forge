@@ -11,6 +11,12 @@ from enum import Enum
 from math import isfinite
 from typing import Iterable, Optional, Tuple
 
+from indicator.reference.price_grid import (
+    InstrumentPriceGrid,
+    MNQ_GRID,
+    conservative_target_to_grid,
+)
+
 
 class Direction(str, Enum):
     LONG = "LONG"
@@ -241,6 +247,7 @@ class TargetCandidate:
 class TargetDecision:
     zone: Optional[ReactionZone]
     target_price: Optional[float]
+    raw_target_price: Optional[float]
     reason: str
 
 
@@ -249,6 +256,7 @@ def conservative_target_price(
     direction: Direction,
     penetration_fraction: float,
 ) -> float:
+    """Return theoretical geometric target before tradable tick-grid rounding."""
     _unit_interval("penetration_fraction", penetration_fraction)
     if direction == Direction.LONG:
         return zone.lower_bound + zone.width * penetration_fraction
@@ -261,11 +269,12 @@ def select_target(
     overall_direction: OverallDirection,
     momentum_score: float,
     config: TargetSelectorConfig,
+    price_grid: InstrumentPriceGrid = MNQ_GRID,
 ) -> TargetDecision:
     _unit_interval("momentum_score", momentum_score)
     ordered = sorted(candidates, key=lambda x: (x.distance_normalized, x.zone.zone_id))
     if not ordered:
-        return TargetDecision(None, None, "NO_TARGET_ZONE")
+        return TargetDecision(None, None, None, "NO_TARGET_ZONE")
 
     countertrend = is_countertrend(trade_direction, overall_direction)
 
@@ -288,9 +297,16 @@ def select_target(
             chosen = first
             reason = "STRONG_WITHTREND_USE_FIRST_MAJOR_OR_NONCLOSE_ZONE"
 
-    price = conservative_target_price(
+    raw_price = conservative_target_price(
         chosen.zone,
         trade_direction,
         config.conservative_penetration_fraction,
     )
-    return TargetDecision(chosen.zone, price, reason)
+    tradable_price = float(
+        conservative_target_to_grid(
+            raw_price,
+            price_grid,
+            trade_side=trade_direction.value,
+        )
+    )
+    return TargetDecision(chosen.zone, tradable_price, raw_price, reason)
