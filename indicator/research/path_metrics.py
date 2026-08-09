@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 
 class TradeSide(str, Enum):
@@ -48,12 +48,30 @@ class TradePathSpec:
 class PathOutcome:
     first_hit: FirstHit
     first_hit_index: Optional[int]
+    # MAE/MFE through the first exit event (or through full path if neither is hit).
     mae_points: float
     mfe_points: float
     mae_ticks: float
     mfe_ticks: float
-    min_price: float
-    max_price: float
+    # Full-horizon excursion is kept separately for research such as opportunity cost.
+    horizon_mae_points: float
+    horizon_mfe_points: float
+    min_price_to_exit: float
+    max_price_to_exit: float
+    horizon_min_price: float
+    horizon_max_price: float
+
+
+def _excursions(spec: TradePathSpec, path: tuple[float, ...]) -> tuple[float, float, float, float]:
+    min_p = min(path)
+    max_p = max(path)
+    if spec.side == TradeSide.LONG:
+        mae = max(0.0, spec.entry_price - min_p)
+        mfe = max(0.0, max_p - spec.entry_price)
+    else:
+        mae = max(0.0, max_p - spec.entry_price)
+        mfe = max(0.0, spec.entry_price - min_p)
+    return mae, mfe, min_p, max_p
 
 
 def evaluate_ordered_path(spec: TradePathSpec, prices: Iterable[float]) -> PathOutcome:
@@ -86,14 +104,9 @@ def evaluate_ordered_path(spec: TradePathSpec, prices: Iterable[float]) -> PathO
                 hit_index = i
                 break
 
-    min_p = min(path)
-    max_p = max(path)
-    if spec.side == TradeSide.LONG:
-        mae = max(0.0, spec.entry_price - min_p)
-        mfe = max(0.0, max_p - spec.entry_price)
-    else:
-        mae = max(0.0, max_p - spec.entry_price)
-        mfe = max(0.0, spec.entry_price - min_p)
+    to_exit = path if hit_index is None else path[: hit_index + 1]
+    mae, mfe, min_exit, max_exit = _excursions(spec, to_exit)
+    h_mae, h_mfe, h_min, h_max = _excursions(spec, path)
 
     return PathOutcome(
         first_hit=first_hit,
@@ -102,12 +115,18 @@ def evaluate_ordered_path(spec: TradePathSpec, prices: Iterable[float]) -> PathO
         mfe_points=mfe,
         mae_ticks=mae / spec.tick_size,
         mfe_ticks=mfe / spec.tick_size,
-        min_price=min_p,
-        max_price=max_p,
+        horizon_mae_points=h_mae,
+        horizon_mfe_points=h_mfe,
+        min_price_to_exit=min_exit,
+        max_price_to_exit=max_exit,
+        horizon_min_price=h_min,
+        horizon_max_price=h_max,
     )
 
 
 def stop_price_from_ticks(entry_price: float, side: TradeSide, stop_ticks: int, tick_size: float = 0.25) -> float:
+    if not (isfinite(entry_price) and entry_price > 0 and isfinite(tick_size) and tick_size > 0):
+        raise ValueError("valid positive entry/tick_size required")
     if stop_ticks <= 0:
         raise ValueError("stop_ticks must be > 0")
     distance = stop_ticks * tick_size
@@ -121,11 +140,11 @@ def zone_penetration_fraction(
     observed_prices: Iterable[float],
 ) -> float:
     """Maximum near-edge -> far-extreme penetration into a target zone, clamped [0,1]."""
-    if not (isfinite(zone_lower) and isfinite(zone_upper) and zone_lower < zone_upper):
+    if not (isfinite(zone_lower) and isfinite(zone_upper) and 0 < zone_lower < zone_upper):
         raise ValueError("invalid zone")
     path = tuple(float(p) for p in observed_prices)
-    if not path or not all(isfinite(p) for p in path):
-        raise ValueError("finite observed path required")
+    if not path or not all(isfinite(p) and p > 0 for p in path):
+        raise ValueError("finite positive observed path required")
     width = zone_upper - zone_lower
     if side == TradeSide.LONG:
         # Long approaches an upper target from below; near edge = lower bound.
