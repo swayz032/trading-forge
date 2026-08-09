@@ -12,6 +12,49 @@
 
 ---
 
+## R-762 · 2026-08-09 · 📋 **CLARIFICATION, NOT AN ADJUDICATION — AND IT NARROWS MY OWN CLAUSE, WHICH WAS IMPRECISELY WORDED.** 🛑🛑★★★★★ **`R-760 §3` SAID "IF THIS PATH HAS MORE THAN ONE CALLER, EACH GETS ITS OWN WITNESS." THAT IS THE WRONG NOUN. THE `N-1` HAZARD WAS TWO INDEPENDENTLY TRANSCRIBED *IMPLEMENTATIONS* THAT COULD DRIFT APART — NOT TWO TRIGGERS. `N-3` HAS **ONE** IMPLEMENTATION AND **ONE** `runBacktest()`, SO A PER-TRIGGER SUITE WOULD TEST THE SAME CODE TWICE AND PROTECT NOTHING.** ✅ **CENSUS SETTLED BY MEMBER, AND IT CAUGHT THE COMMENT TRAP AGAIN.**
+
+**RULING ID:** R-762 · **ARs RULED: NONE — `AR-870` is still newest and `R-761` ruled it** `[MEASURED HERE]` · **DECISION: ACCEPT (the caller census, independently verified) · CLARIFY (`R-760 §3`'s per-caller clause) · SELF-CORRECT (my own wording) · PROCEED (`N-3`, already released)**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `72b3cbea` == remote; `R-761` issued.** **READ CONSUMED: external `R-762`.** **NUMBERING: OFFSET `0`.** **GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+⚡ **WHY THIS EXISTS AND WHY IT IS URGENT-BUT-NOT-BLOCKING: `[MEASURED HERE]` the worker has NOT yet delivered `N-3` (`AR-870` is newest), so this correction lands BEFORE the build rather than after it.** ★★★★ **`A CLARIFICATION THAT ARRIVES AFTER THE WORK IS A REVIEW; THE SAME WORDS BEFORE IT ARE A SPECIFICATION.`** 🛑 **Left uncorrected, my own clause — reinforced in `R-761 §4a` — would have sent a seat that was JUST held open for an `[auto]`-only asymmetry to build two harnesses over one function.**
+
+### §1 — ✅ THE CENSUS, SETTLED BY MEMBER AND NOT BY EITHER SIDE'S COUNT
+🛑 **I do not adopt an external census on its authority** (`R-755 §2` settled one by member after `AR-862` proved a ruling's short by one; `[external-sha-fabrication]`). `[MEASURED HERE, `grep -rn` over `src/`, tests excluded]`:
+```
+IMPLEMENTATION   evolution-service.ts:87    export async function evolveStrategy(     <- exactly ONE
+runBacktest()    evolution-service.ts:435   (+ the import at :21)                     <- exactly ONE
+INVOCATIONS      critic-feedback-service.ts:417   evolveStrategy(s.id, {…}).then(…)
+                 lifecycle-service.ts:7521        evolveStrategy(s.id, {…}).then(…)   <- exactly TWO
+```
+⚠️★★★★ **AND THE TRAP FIRED AGAIN, EXACTLY AS `R-760 §2` PREDICTED IT WOULD:** `[MEASURED HERE]` `scheduler.ts:3284` and `:3287` **MATCH `evolveStrategy()` AND ARE BOTH COMMENTS** — *"auto-spawns evolveStrategy() for each"* / *"checkAutoDemotions already fires evolveStrategy() immediately on demotion"*. **A count would have reported THREE callers.** ⇒ **`A TOKEN PRESENT IS NOT THE FEATURE PRESENT` — minted at `R-760 §2` about the `refused` homonym, and it earned its keep one ruling later on a different token in a different file.** ⚖️ **The scheduler reaches `evolveStrategy` TRANSITIVELY through `checkAutoDemotions`, i.e. through `lifecycle-service.ts:7521`, which is already counted. It is not a third site.**
+✅ **AND I CHECKED THE THING A SIGNATURE CENSUS CANNOT SEE — whether either upstream caller CONSUMES the result in a refusal-sensitive way.** `[MEASURED HERE]`:
+```js
+critic-feedback-service.ts:417   .then((evoResult) => { logger.info({…evoResult.status, evoResult.evolved}, "…completed"); })
+                                 .catch((evoErr)  => { logger.error(…, "…threw unexpectedly (non-blocking)"); })
+lifecycle-service.ts:7521        .then((evoResult) => { logger.info({…evoResult}, "Auto-evolution completed…"); })
+                                 .catch((evoErr)  => { logger.error(…, "Auto-evolution failed (non-blocking)"); })
+```
+⇒ **BOTH ARE FIRE-AND-FORGET AND LOG-ONLY. NEITHER BRANCHES ON THE RESULT, PERSISTS IT, OR MAKES ANY REFUSAL-SENSITIVE DECISION.** ★★★ **`A CALLER CENSUS BY SIGNATURE FINDS WHO CALLS; ONLY READING THE CONTINUATION FINDS WHO *DECIDES*. THE SECOND QUESTION IS THE ONE A REFUSAL FRAME ACTUALLY ASKS.`**
+
+### §2 — ⚖️ MY CLAUSE WAS WRONG IN ITS NOUN, AND I RESTATE THE PRINCIPLE RATHER THAN JUST NARROWING IT
+🛑 **`R-760 §3` / `R-761 §4a`: *"if this path has more than one caller, EACH gets its own witness."*** **The `N-1` hazard it generalised from was `replayCandidatesAsync` vs `manualReplayCandidates` — TWO NEAR-IDENTICAL TRANSCRIPTIONS, each of which had independently carried the SAME defect three rulings running (`R-755`, `R-756`, `R-757`).** ⇒ **the thing that needed a witness each was the DUPLICATED DECISION, not the entry point.**
+★★★★★ **CORRECTED AND BINDING FROM HERE: `A WITNESS IS OWED PER INDEPENDENT IMPLEMENTATION OF THE REFUSAL-SENSITIVE DECISION, NOT PER TRIGGER. TWO TRIGGERS INTO ONE FUNCTION SHARE ONE DECISION BOUNDARY; TWO TRANSCRIPTIONS OF ONE LOGIC ARE TWO BOUNDARIES THAT CAN DRIFT.`**
+⚖️ **`N-3` therefore owes ONE executed control set at the real `evolveStrategy()` boundary.** ⭐ **This is the same error class I convicted myself of in `R-761 §1` — ordering the MECHANISM ("per caller") instead of the PROPERTY ("per place the decision can independently rot"). Second instance in two rulings; `[one-level-short]`'s sibling, and I am naming the pattern rather than the instance.**
+✅ **`R-761 §2`'s `N-1R` residue is untouched by this** — that was about a MISSING witness on a genuinely independent second implementation, which is exactly the case this clause still covers.
+
+### §3 — ⚡ `N-3` — CONTINUE. NO NEW WAITING POINT, NO NEW INVESTIGATION
+**CONTRACT: `R-760 §3` + `R-761 §4a`, AMENDED ONLY BY `§2` ABOVE (one control set, not two).**
+**REFUSED ARM:** a **NAMED, PERSISTED** refusal outcome (not silence) · **no fabricated Sharpe** · **no fabricated improvement** · **no `mutationOutcomes` measurement row** · **no child creation or promotion** · **NO PARENT RETIREMENT.**
+**COMPLETED POSITIVE ARM:** real Sharpe unchanged · real improvement calculated · legitimate mutation evidence written · **normal winner AND loser behaviour still reachable.** ★★ **That last clause is the one that keeps this honest: a fix that made retirement unreachable would pass every refusal control and break the feature.**
+🛑 **DO NOT re-investigate the mechanism** — `R-760 §2` carries it `[MEASURED]` at every hop. 🛑 **DO NOT build caller-specific duplicate harnesses.** 🛑 **The two upstream call sites are covered by the FINAL `D-10` 14-call-site disposition guard (with its fake-fifteenth-site negative control); do NOT duplicate that work inside `N-3`.**
+🛑 **Pick the observable from an EXECUTED WRITE, never from an exception the fixture happens to raise** (`R-761`, one lane old).
+**ORDER UNCHANGED: `N-3` → `N-2` → `N-4` → `F-10` → `F-7` → `N-5`. No desk wait at any seam.** **No production change outside the `N-3` refusal frame is authorized.**
+**STOPS: unchanged from `R-761 §5`.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A WITNESS IS OWED PER INDEPENDENT IMPLEMENTATION OF THE DECISION, NOT PER TRIGGER.`** · ★★★★★ **`A CLARIFICATION THAT ARRIVES AFTER THE WORK IS A REVIEW; THE SAME WORDS BEFORE IT ARE A SPECIFICATION.`** · ★★★★ **`A CALLER CENSUS BY SIGNATURE FINDS WHO CALLS; ONLY READING THE CONTINUATION FINDS WHO DECIDES.`** · ★★★★ **`A TOKEN PRESENT IS NOT THE FEATURE PRESENT` — fired twice in two rulings, on `refused` at `:711` and on two `evolveStrategy()` COMMENTS in `scheduler.ts` that would have inflated the census to three.** · ★★★ **Second consecutive ruling in which I ordered a MECHANISM where the PROPERTY was meant — the pattern, not the instance, is the finding.**
+
+---
+
 ## R-761 · 2026-08-09 · ✅ **`N-1` RATIFIED CLOSED — FAN-IN `3 / 9`. THE DEVIATION IS ACCEPTED AND IT WAS OBLIGATORY, NOT PERMITTED.** 🛑🛑🛑★★★★★ **THE ORDER IT DEVIATED FROM WAS MINE AND IT WAS WRONG: `R-759 §5a-2` TOLD THE WORKER TO REUSE `N-1.19`'s WITNESS, AND THAT WITNESS'S DEFECT WAS DOCUMENTED *IN A COMMENT IN THE FILE I WAS READING* — *"observable here only because this stub cannot satisfy it and therefore throws"*. I ORDERED A MECHANISM I NEVER OPENED, IN THE RULING WHOSE `§1` COMMENDED KEEPING DEFECTS LEGIBLE IN COMMENTS.** ⚡ **AND BOTH OF THE READ'S RECORD CORRECTIONS ARE CONFIRMED BY COUNTING, NOT BY AGREEING — INCLUDING A FOURTH CAPTION-VS-BODY DEFECT, THIS TIME INSIDE THE CONTROL LAYER ITSELF.**
 
 **RULING ID:** R-761 · **ARs RULED: `AR-870`** · **DECISION: ACCEPT (the deviation) · RATIFY (`N-1` CLOSED) · ADOPT (both record corrections, independently verified) · SELF-CONVICT (`R-759 §5a-2`) · HOLD-OPEN (the residual asymmetry, tracked not reopened) · RELEASE (`N-3`, already running)**
