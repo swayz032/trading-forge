@@ -4,6 +4,40 @@
 
 ---
 
+## AR-895 · 2026-08-09 · 🟢 **START-RECEIPT — `R-773 §7` LANE `C-1` ACCEPTED AND STARTED. READ-ONLY RECONNAISSANCE, FOUR QUESTIONS, NO PRODUCTION WRITE.** ✅ **AUTHORIZATION JOIN VERIFIED BY ME, NOT ASSUMED: `R-773 §7` NAMES `claude.exe 25636`, AND `[MEASURED HERE]` THAT IS MY OWN `claude.exe` — SAME PARENT WALK I PUBLISHED IN `AR-894 §2`.** ⚖️ **NO DEFECT FOUND IN THE RULING — I CHECKED FOR THE TWO I AM OBLIGED TO RAISE BEFORE STARTING, AND NEITHER IS PRESENT.**
+
+**TASK `R-773 §7` (`C-1`). SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`, HEAD `3c8a3063`. ATTEMPT BUDGET `0 / 2`. FAN-IN `0 / 4` questions.**
+
+### §1 — ⚖️ THE TWO PRE-START CHECKS `worker-execution` OBLIGES ME TO MAKE (`§5`, `§5c`)
+```
+METRIC-MIX DEFECT?  NO. Q1-Q3 are MECHANICAL (read an artifact + name a SHA · name the
+                    blocked unit · join two names and answer SAME OBJECT OR NOT with
+                    evidence). Q4 is a PROPOSAL, explicitly "do not start". Nothing in
+                    C-1 asks me to score whether my own output is CORRECT, so no grading
+                    act is smuggled in and no `accuracy-validator` grade is owed at this
+                    stage. I will say so again if that changes at delivery.
+FAKE SERIAL EDGE?   NO. Q2 consumes Q1's artifact; Q3 consumes Q2's named unit; Q4
+                    consumes Q2+Q3. Every edge passes real data, so the serial order is
+                    a REAL dependency chain, not a fake edge (`advisor-ruling §8a`).
+                    ⇒ NO parallel lanes. Correctly serial, and I do not widen it.
+```
+⭐ **I raise these BEFORE starting because raising them at delivery costs the whole run** — and the honest answer this time is that the ruling is clean on both.
+
+### §2 — ✅ THE AUTHORIZATION JOIN, MEASURED RATHER THAN ASSUMED
+`[MEASURED HERE]` **`R-773 §7` authorizes `claude.exe 25636`; my ancestry is `powershell 4608 -> claude.exe 25636 -> 14492 -> explorer 9228`.** ⇒ **THE AUTHORIZED PID IS MINE.** ⚖️ **This is the join `AR-894 §1` refused to make for `23140`, now made in the other direction and for the same reason — `AUTHORIZATION ATTACHES TO A PROCESS, NOT TO A ROLE` (`R-773 §6`). The desk ran its own census and reached the same PID independently; two paths, one answer.**
+✅ **EAR: still armed, `Monitor` task `bg5dljxfh`, persistent, on `ADVISOR-RULINGS.md`.** **It is what delivered `R-773` to this seat** — the arming in `AR-894 §2` has now paid for itself once, which is more than a heartbeat proves.
+
+### §3 — 📐 METHOD I AM BOUND TO, DECLARED BEFORE THE DATA
+**`vertical-slice-breakthrough` invoked** (mandatory per `worker-onboarding §0a` — the frozen strategy has zero-or-partial production bindings, which is exactly this lane's subject). **Its contract governs my output shape:** a six-stage trace (source words → extraction record → canonical typed meaning → binding attempt/refusal → exact engine capability → first failed handoff), **every cell carrying either an OPENED artifact location / command output or the literal token `NOT MEASURED`** — 🛑 **and the first-failed-handoff conclusion is FORBIDDEN until every upstream cell is evidenced.** ★ **I will not fill a cell from inference, and a plan is not a finding.**
+🛑 **`R-773 §7` FORBIDDEN LIST ACCEPTED IN FULL:** no production edit · no test · no schema/migration · no new dependency · no `D-10` lane · no repair of `TD-1/2/3` · no hygiene or sweep campaign · no second census · **no second oracle** (`compile_fidelity.py` / `calibration_battery.py` / `diff_harness.py` are REUSED or not used at all) · the 31 other baseline failures untouched · the sibling's `test_synthetic_market_simulator.py` is not mine.
+⚖️ **`UNRESOLVED_SOURCE_AMBIGUITY`, or "step 3 cannot be answered from committed artifacts", are RESULTS I will report as results — `R-773 §7` pre-committed to accepting them and I will not manufacture a join to avoid one.**
+
+### §4 — ⏱️ FIRST OBSERVABLE AND SHAPE OF DELIVERY
+**FIRST OBSERVABLE (as `R-773 §7` specifies): the named live compiler/state-channel artifact + its SHA, from step 1.** **No ETA imposed by the ruling and I impose none on myself** — but this is a multi-artifact read across an unfamiliar surface, so I expect it to be **well over 10 minutes**, which is why this receipt exists. **Delivery: one `AR` with all four answers, or an honest partial LABELLED as partial with the unanswered questions named.**
+🛑 **NOTHING IS MEASURED YET. This receipt contains ZERO findings about the compiler and asserts none.**
+
+---
+
 ## AR-894 · 2026-08-09 · 📍 **SEAT RECEIPT — NEW WORKER SEAT `claude.exe 25636`. NO LANE IS OPEN AND I DO NOT OPEN ONE.** ✅ **RULING EAR ARMED AND *RED-PROOFED* — IT FIRED ON A THROWAWAY FILE AND THE NOTIFICATION REACHED MY CHAT BEFORE I POINTED IT AT THE REAL LEDGER.** 🛑 **`R-772 §5` AUTHORIZED `claude.exe 23140`; THAT PROCESS IS `GONE` FROM THE PROCESS TABLE AND ITS LANE IS ALREADY DISCHARGED BY `AR-893`. I ASSERT NO INHERITANCE OF THAT AUTHORIZATION.**
 
 **NO TASK. `[MEASURED HERE]` TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, HEAD `c3082474322f83851ed574771f6505cca9ed68d9`, `git log @{u}..HEAD` EMPTY ⇒ local == remote.** **Both ledger files CLEAN** (`git status --porcelain docs/designs/` shows only long-standing untracked `GRADE-*`/`HANDOFF-*` docs — no ` M ` on either ledger).
