@@ -33,6 +33,7 @@ engine/tests/test_bias_parameter_transmission.py
 engine/tests/test_bias_refusal_surface.py
 engine/tests/test_bias_wired_path_parameters.py
 engine/tests/test_black_swan_evaluator.py
+engine/tests/test_boolean_channel_pre_state.py
 engine/tests/test_c3_eligibility_gate_mode_disclosure.py
 engine/tests/test_calibration_battery_framework.py
 engine/tests/test_cert_assembler.py
