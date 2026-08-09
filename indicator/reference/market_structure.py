@@ -15,6 +15,7 @@ from indicator.reference.price_grid import (
     InstrumentPriceGrid,
     MNQ_GRID,
     conservative_target_to_grid,
+    proof_level_to_grid,
 )
 
 
@@ -144,6 +145,7 @@ class ProofSelectorConfig:
 @dataclass(frozen=True)
 class ProofDecision:
     selected: Optional[ProofCandidate]
+    proof_level_price: Optional[float]
     rejected: Tuple[Tuple[str, str], ...]
     reason: str
 
@@ -177,8 +179,13 @@ def select_proof_level(
     trade_direction: Direction,
     overall_direction: OverallDirection,
     config: ProofSelectorConfig,
+    price_grid: InstrumentPriceGrid = MNQ_GRID,
 ) -> ProofDecision:
-    """Filter fakeout-prone/late candidates, then select deterministically."""
+    """Filter fakeout-prone/late candidates, then select deterministically.
+
+    The selected raw structural price is snapped *against* an easier fakeout:
+    LONG proof rounds up; SHORT proof rounds down.
+    """
     rejected = []
     qualified = []
     countertrend = is_countertrend(trade_direction, overall_direction)
@@ -210,10 +217,22 @@ def select_proof_level(
         qualified.append(c)
 
     if not qualified:
-        return ProofDecision(None, tuple(rejected), "NO_QUALIFIED_PROOF_LEVEL")
+        return ProofDecision(None, None, tuple(rejected), "NO_QUALIFIED_PROOF_LEVEL")
 
     selected = sorted(qualified, key=_proof_sort_key)[0]
-    return ProofDecision(selected, tuple(rejected), "QUALIFIED_BY_STRUCTURE_AND_DISTANCE")
+    proof_price = float(
+        proof_level_to_grid(
+            selected.level_price,
+            price_grid,
+            trade_side=trade_direction.value,
+        )
+    )
+    return ProofDecision(
+        selected,
+        proof_price,
+        tuple(rejected),
+        "QUALIFIED_BY_STRUCTURE_AND_DISTANCE",
+    )
 
 
 @dataclass(frozen=True)
