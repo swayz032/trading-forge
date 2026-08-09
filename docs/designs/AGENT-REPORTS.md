@@ -4,6 +4,37 @@
 
 ---
 
+## AR-859 · 2026-08-09 · ⏹️ **EAR DISARMED ON THE CONDITION `R-753 §5` NAMED — THE RECEIPT LANDED, SO THE AUTHORIZATION EXPIRED.** 🛑 **AND THIS EXISTS BECAUSE `AR-858 §4` IS NOW FALSE: IT TELLS THE NEXT SEAT THE EAR IS ARMED. IT IS NOT. A STALE POINTER LEFT IN A HANDOVER IS THE DEFECT, NOT THE DISARM.**
+
+**RULING:** `R-753 §5` (*"authorized until the grade receipt lands, then disarmed"*). **Four facts, no interpretation of the grade — `doer ≠ grader` still binds me.**
+
+### §1 — ✅ THE CONDITION FIRED, VERIFIED AT THE ARTIFACT AND NOT AT THE CAPTION
+`[MEASURED HERE]` `docs/designs/GRADE-TRIGGER-SAFETY-2026-08-09.md` — **on disk (`47,270` B), TRACKED (`git ls-files` returns it), banked at `10507df5`.**
+✅ **AND I CHECKED THE VERDICT IN THE FILE RATHER THAN IN THE COMMIT SUBJECT** — `R-753 §3` convicted the desk one ruling ago for relaying a caption as a measurement, and a commit subject is a caption. `[MEASURED HERE]` **`:38` `### PASS_WITH_BOUNDED_FINDINGS — band 6` and `:688` `PASS_WITH_BOUNDED_FINDINGS, band 6 VERIFIED`.** ⇒ **the subject and the artifact AGREE.** ★ **They agreeing is the finding; assuming they would have been is the error.**
+✅ **`## 5 — MANDATORY COVERAGE` IS PRESENT (`:578`)** — the `v2` grader signature (`worker-execution §5b`: a verdict WITHOUT it is a stale-definition symptom). **Mechanical presence check only.**
+🛑 **I DID NOT READ `## 4 — FINDINGS` AND I DO NOT INTERPRET THIS GRADE.** It grades a commit **this process authored.**
+
+### §2 — ⏹️ THE DISARM, AND ITS POSITIVE PROOF
+`[MEASURED HERE, AFTER the stop returned success — `A COMPLETION SIGNAL IS NOT A RESULT`]`:
+```
+bash.exe under claude.exe 3160 (mine)   NONE          <- EAR v4 (19352 + child 29648) is DEAD
+bash.exe 33696 / 15752 (parent 25972)   BOTH ALIVE    <- the DESK'S two rigs, untouched
+```
+✅ **I disarmed ONLY the ear THIS PROCESS ARMED** (`AR-855 §3`). 🛑 **I did not touch the desk's rigs — `AR-854`'s convicted error was killing a channel it did not arm, and the operator reversed it in his own words.**
+⚖️ **AND THE DISTINCTION THAT MADE THIS ACT LEGITIMATE RATHER THAN A REPEAT OF `AR-854`:** the ear was **mine by authorship**, and its authorization was **time-bounded by a ruling on a condition I verified had fired.** ★★★ **`DISARMING ON AN EXPIRED AUTHORIZATION IS HOUSEKEEPING; DISARMING ON A REMEMBERED HEADLINE IS HOW A SEAT GOES BLIND.`**
+
+### §3 — 🛑 THE CORRECTION THIS REPORT EXISTS FOR
+**`AR-858 §4` SAYS:** *"the ear STAYS ARMED. I am not disarming it on my way out"* and directs the next seat to check for a `bash.exe` under PID `3160`.
+🛑 **STRUCK AS TO ITS STANDING CLAIM, RETAINED AS TO ITS REASONING.** It was TRUE when written (`08:11Z`, receipt absent) and became FALSE `~29` minutes later when the receipt landed. **The instruction to walk your own parent chain before arming STILL STANDS and is still correct — only the *"an ear is already running"* premise is dead.**
+> ★★★★★ **`A HANDOVER STATES A CONDITION THAT WAS TRUE AT WRITE TIME AND WILL BE READ AS A STANDING FACT. IF ITS PREMISE CAN EXPIRE, THE HANDOVER OWES THE EXPIRY CONDITION — OR A LATER SEAT INHERITS A MEASUREMENT AS A PROMISE.`** ⚖️ **Same family as `R-750 §3`'s `A SHA IN A CONTRACT IS A TIMESTAMP, NOT A STANDING CONDITION` — there a literal SHA went stale, here a live process did.**
+⇒ ✅ **NEXT SEAT, THE CORRECTED INSTRUCTION: THERE IS NO WORKER EAR RUNNING. Walk your own parent chain, confirm it for yourself, and arm ONE if the desk's ruling in force authorizes it.** 🛑 **`R-753 §5` authorized exactly one ear UNTIL THIS RECEIPT — that authorization is now SPENT, so a new ear needs a NEW ruling, not this one.**
+
+### §4 — ⏹️ FAN-IN `0 / 0`, SEAT STILL RETIRED
+**Nothing added, nothing started.** `D-9` (the three weak controls) and `D-3` (`6B` state channel) remain the **next worker seat's**, and `D-9`'s wake trigger — the receipt — **has now fired.** ⚠️ **I am not taking it: `R-753 §6` retired this seat, and `§2`'s findings are against a commit I wrote.**
+✅ **The desk has already banked `b2c28e9d` — *"the grade LANDED and is banked — do not re-dispatch it"* — which supersedes the re-dispatch contingency in the advisor handover. ⇒ NOBODY SHOULD RE-RUN THIS GRADE.**
+
+---
+
 ## AR-858 · 2026-08-09 · 🔴 **RETIREMENT RECEIPT — `R-753 §6` ORDERS THIS SEAT (`claude.exe 3160`) TO RETIRE, AND THESE ARE THE FOUR ACTS IT ALLOWS, IN ORDER, WITH NOTHING ADDED.** ✅ **NOTHING OF MINE IS DIRTY OR UNPUSHED.** ⏳ **GRADE TARGET `16224ef5`, RECEIPT NOT YET ON DISK.** 🛑 **FAN-IN `0 / 0` — AND I DO NOT INTERPRET THE GRADE.**
 
 **RULING:** `R-753 §6`. **HEAD at write time `019caab2` (the `R-753` commit), local == remote `[MEASURED HERE]`.** **ATTEMPT BUDGET `1 / 2`, unspent by this seat.**
