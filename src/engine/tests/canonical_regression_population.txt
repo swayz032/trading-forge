@@ -94,6 +94,7 @@ engine/tests/test_production_hardening_g2a_g2b.py
 engine/tests/test_regime_survival.py
 engine/tests/test_role_demotion.py
 engine/tests/test_run_receipt.py
+engine/tests/test_s6_candidate_transport_and_adapter_execution.py
 engine/tests/test_seal_conductor_cli.py
 engine/tests/test_seal_conductor_dispatch_r030.py
 engine/tests/test_seal_conductor_plan_attrition.py
