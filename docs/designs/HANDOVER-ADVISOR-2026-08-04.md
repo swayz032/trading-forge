@@ -1,4 +1,4 @@
-# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-743`, 2026-08-09**
+# CANONICAL ADVISOR HANDOVER — **CURRENT AT `R-748`, 2026-08-09**
 
 > ★★★★★ **THIS FILE IS READ #1 FOR A COLD ADVISOR SEAT — `advisor-onboarding §1` was corrected at
 > `R-737 §9` to say so.** It had named `ADVISOR-STATE.md` instead, which `[MEASURED, R-737]` is
@@ -7,7 +7,7 @@
 > the same trap one level down.** ★ `ADVISOR-STATE.md` remains the **sole carrier of `## THE PLAN`**
 > and of unruled `[FACT, MEASURED HERE, NOT RULED]` blocks — **grep its headings, never read it whole.**
 
-> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-747`
+> ## ⚡ IF YOU READ ONE BLOCK, READ THIS ONE — POSITION AT `R-748`
 > 🛑🛑🛑★★★★★ **THE HEADLINE, AND IT OUTRANKS `6B`: THE GOLDEN STRATEGY EMITS ENTRY SIGNALS TODAY FROM
 > A FABRICATED TRIGGER.** `[MEASURED, AR-843, in a CLEAN DETACHED WORKTREE at `8a5e0085`]`
 > `entry_long=0 · entry_short=7` on `seed=7 / N=400 / 5m`. Its `entry_trigger_id` is the breakout
@@ -41,20 +41,25 @@
 > ★★★★★ **THIRD INSTANCE OF `R-726 §1`: `A GLOBALLY RESPONSIVE SYSTEM DOES NOT VALIDATE A LOCALLY NULL
 > EXPERIMENT.` The desk adopted it from a read without asking whether its target could move the
 > output — `ADOPTING A CONTROL FROM A READ IS NOT REVIEWING IT.`**
-> ⚠️ **NUMBERING: external reads `R-747` AND `R-748` are both consumed by campaign `R-747`. THERE IS NO
-> CAMPAIGN `R-748`.** The 1:1 read↔ruling mapping held for `R-742`–`R-746` and STOPS HERE.
+> ⚠️🛑 **NUMBERING IS NOW PERMANENTLY OFF BY ONE — A BARE NUMBER IS AMBIGUOUS, NAME THE CARRIER.**
+> **`R-742`–`R-746`: external ↔ campaign were 1:1.** Then external `R-747`+`R-748` **both** landed
+> against one AR and were **both consumed by campaign `R-747`**; external `R-749` → campaign `R-748`.
+> ★★★★★ **THIS IS NOT THEORETICAL: external read `R-749` "corrected" `AR-844` for citing `R-747`,
+> asserting the authorization came from "`R-748`" — ITS OWN numbering. `R-748 §2` REJECTED that; the
+> worker's citation was right.** ⇒ **`AN EXTERNAL READER CANNOT CORRECT A LEDGER IT CANNOT SEE, AND A
+> WRONG CORRECTION IS MORE DANGEROUS THAN A WRONG CLAIM — IT ARRIVES PRE-FRAMED AS A FIX.` Check every
+> external reference to OUR artifacts (SHAs, ruling numbers, paths) before entering it.**
 > ✅ **TWO GRADES NOW OWED, NOT ONE:** `GRADE-TRIGGER-SAFETY-2026-08-09.md` (the trigger commit) and
 > `GRADE-6B-STATE-CHANNEL-2026-08-09.md` (the state work). **`accuracy-validator`, adversarial, `doer ≠
 > grader`.**
-> **`HEAD 1bbfea2c` — and it MOVED TWICE while this block was being written; the ruling commit is
-> `155afcc3` (pushed, remote tip verified equal at that moment). ★ A HEAD sha here is a timestamp, not
-> a standing condition: `git rev-parse HEAD` yourself.** · **newest ruling `R-744` (`0379e179`, pushed)
-> · newest AR `AR-840` — a START-RECEIPT, unruled BY CHOICE (worker not blocked ⇒ the GPT wait applies;
-> it will be folded into the `6B` delivery ruling rather than spending a ruling of its own).**
-> **Worker ACTIVE on the single `6B` commit, attempt `0 / 2`. ETA ~60–75 min from `01:07` local, with
-> an interim AR at ~45 min if it slips.** ⚠️ **THE WORKER SEAT ROLLED AT `AR-840` — `AR-838`/`AR-839`
-> were written by a context that no longer exists; the current seat re-measured position rather than
-> inheriting it.**
+> ✅ **POSITION: newest ruling `R-748` (`fa28dc7a`, pushed, remote tip verified equal) · newest AR
+> `AR-844`, RULED. NOTHING UNRULED.** **Worker ACTIVE on step 2 — the TRIGGER-SAFETY COMMIT, alone —
+> attempt `0 / 2`.** ★ **A HEAD sha written here is a timestamp, not a standing condition: it moved
+> twice mid-block earlier tonight. `git rev-parse HEAD` yourself.**
+> ⚠️ **THE WORKER SEAT ROLLED ONCE ALREADY (at `AR-840`)** — `AR-838`/`AR-839` were written by a
+> context that no longer exists, and the successor **re-measured rather than inherited.** ★ **`R-743
+> §8`'s *"authorized to the SEAT THAT EXISTS"* does NOT void a rollover — see `§12`; it has been
+> misread as revocation twice.**
 > ✅ **`STEP 2` IS LANDED AND GREEN** (`0214903e`, `5 passed`): the pre-change witness that the
 > neighbouring boolean route really executes — route identity, then **NOT CONSTANT**. `R-744 §5`
 > ordered it **NOT deleted** when the channel lands: retire ONLY the channel-absence assertion, keep
@@ -277,10 +282,17 @@ evidence does not exist in the committed census.
 
 ## 3. NEWEST IDs · PINNED COMMITS
 
-- **Newest ruling `R-747`** (`d242ef19`, pushed, remote tip verified equal). **Newest AR `AR-843`** —
-  **ruled by `R-747`; NOTHING UNRULED.** **`AR-836`→`R-742` · `AR-837`→`R-743` · `AR-839`→`R-744` ·
-  `AR-841`→`R-745` · `AR-842`→`R-746` · `AR-843`→`R-747`.** ★ `AR-838`/`AR-840` were pure
-  start-receipts, acknowledged in-ruling rather than spending one each.
+- **Newest ruling `R-748`** (`fa28dc7a`, pushed, remote tip verified equal). **Newest AR `AR-844`** —
+  **ruled by `R-748`; NOTHING UNRULED.** **`AR-836`→`R-742` · `AR-837`→`R-743` · `AR-839`→`R-744` ·
+  `AR-841`→`R-745` · `AR-842`→`R-746` · `AR-843`→`R-747` · `AR-844`→`R-748`.** ★ `AR-838`/`AR-840`
+  were pure start-receipts, acknowledged in-ruling rather than spending one each.
+- ✅ **WIP CHECKPOINT IS SAFE AND DESK-VERIFIED AT THE REMOTE** `[MEASURED, R-748 §1]`:
+  `f788c64b6b4a8ebfaa2d0ce58481f2511126ea55` on
+  `wip/NON-PRODUCTION-INCOMPLETE-6b-state-channel-checkpoint`, **9 files, +1453/−35**, non-production
+  labelled in BOTH branch name and commit subject. **Production tree clean; the sibling seat's
+  `test_synthetic_market_simulator.py` still dirty and untouched.** 🛑 **DO NOT merge or cherry-pick it
+  just because the trigger tests pass** — resume it only after the trigger-safety commit is green,
+  independently read, and graded.
 - ✅ **THE GPT WAIT WAS HONOURED ON EVERY ONE OF THESE SIX, WITH A BLOCKED WORKER ON THE TABLE ONCE**
   (`AR-837`). **The escape clause was exercised for the first time in six assertions — HELD, and the
   PRICE was stated to the operator so he could decide whether to hurry the read.** ★★★★★ **`STATE THE
