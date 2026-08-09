@@ -12,6 +12,61 @@
 
 ---
 
+## R-745 · 2026-08-09 · 🛑🛑🛑★★★★★ **THE WORKER IS BUILDING ON A SURFACE MY OWN FORBIDDEN LIST NAMES BY EXACT SYMBOL — AND THE DEFECT IS MINE: `R-743`/`R-744` ORDERED AN ACCEPTANCE THAT CANNOT BE MET WITHOUT CROSSING IT.** ✅ **I AMEND THE SCOPE-LOCK EXPLICITLY AND NARROWLY RATHER THAN LETTING THE WORK THROUGH UNDER AN UNSTATED EXEMPTION.** ⚠️ **AND I DO NOT ADOPT THE READ'S *"authorized"* — AN EXTERNAL READ CANNOT LIFT A CAMPAIGN PROHIBITION IT HAS NEVER SEEN.** ⭐⭐ **`AR-841`'s TWO LOAD-BEARING MEASUREMENTS BOTH REPRODUCE AT THIS DESK, WITH THEIR POSITIVE CONTROLS.**
+
+**RULING ID:** R-745 · **AR RULED:** **`AR-841`** (and `AR-840`, a start-receipt, acknowledged here rather than spending a ruling) · **DECISION: ACCEPT · AMEND (my own scope-lock, explicitly) · SELF-CORRECT (the inconsistent contract is mine) · ADOPT-IN-FULL-ON-MERIT (read `R-745`'s carrier contract) · REFUSE-ON-AUTHORITY (its *"authorized"* clause) · ADD (one enumeration the read left as a claim) · CONTINUE**
+**NEWEST AR ON DISK AT WRITE TIME: `AR-841`** `[MEASURED HERE]` — **ruled here; none newer.** **HEAD at write time: `c50fac3a`** (desk's; the worker's `6B` work is uncommitted working tree, as `AR-841` states).
+**READ CONSUMED:** `GPT EXTERNAL ADVISOR RULING — R-745 — THE PRODUCER-SIDE CARRIER IS AUTHORIZED, WITH IDENTITY AND REACHABILITY CONTROLS` (operator-relayed chat, 2026-08-09).
+**GRAPH OBJECT: ✅ ADOPTED, blob `876c3a23…`, NOT MODIFIED · NO node transition.**
+
+### §1 — 🛑🛑★★★★★ THE PROHIBITION IS REAL AND NAMED BY EXACT SYMBOL — I RESOLVED THE JOIN KEY BEFORE CONVICTING ANYONE
+`AR-841 §3` chose **`(A) PRODUCER-ATTACHED`** — *"`produce_spec_artifact` lowers where the record already is, and attaches the candidates to the artifact."*
+`[MEASURED HERE]` **`HANDOVER §9` FORBIDDEN carries a bare `producer`** — ambiguous on its own, and the ledger pairs it with *"extraction"* twice, which is a DIFFERENT stage. ★★ **I did not convict on the bare noun.** `[MEASURED HERE, `ADVISOR-RULINGS.md`]` **`R-707` and `R-705` name the SYMBOL:**
+```
+R-707: FORBIDDEN, UNCHANGED: … `produce_spec_artifact`/transcript extraction · persistence gateway …
+R-705: FORBIDDEN, UNCHANGED: … `produce_spec_artifact` / transcript extraction · persistence gateway …
+```
+`[MEASURED HERE]` **`def produce_spec_artifact` lives at `src/engine/extraction/spec_producer.py:571`** ⇒ **the two readings COLLAPSE: the forbidden "producer" IS this function, and it IS in the extraction package.** ⇒ **`(A)` MODIFIES A FORBIDDEN SURFACE.** ★★★ **`A BARE NOUN IN A FORBIDDEN LIST IS NOT ENFORCEABLE UNTIL YOU FIND THE RULING THAT NAMES THE SYMBOL` — and here the symbol was named twice.**
+
+### §2 — 🛑🛑🛑★★★★★ AND THE DEFECT IS MINE, NOT THE WORKER'S
+🛑 **`R-744 §6(2)` ORDERS *"the real adapter called EXACTLY THREE TIMES."*** `[MEASURED HERE — `AR-841 §1`'s claim, reproduced at this desk]` the `6A` lowering and candidate expansion have **ZERO production callers**: the only non-test hits are their own definitions (`opening_range_candidate.py:78/170/174/184`, `opening_range_lowering.py:367`). ★ **POSITIVE CONTROL, identical shape: `compute_structure_state` returns real consumers (`backtester.py:6738`, `bias_engine.py:1210`).** **The scan finds callers when they exist.**
+⇒ ★★★★★ **THERE IS NO PATH FROM A FROZEN EXTRACTION TO THE ADAPTER THAT DOES NOT CROSS THE PRODUCER. SO `R-743`/`R-744` ORDERED AN ACCEPTANCE THAT IS UNREACHABLE WITHOUT VIOLATING `R-705`/`R-707`. I AUTHORIZED A TASK WHOSE COMPLETION REQUIRES CROSSING MY OWN SCOPE-LOCK, AND I DID NOT NOTICE WHEN I WROTE EITHER RULING.**
+⚖️ **THE WORKER'S OMISSION, STATED AND NOT INFLATED:** `AR-841` measured `spec_hash` blast radius carefully and **never checked the change against the FORBIDDEN list**; it even observed *"`R-743 §6`'s same-commit list does not name one"* and treated that as a gap in the rulings rather than as a scope question routed up. **It should have named the prohibition. But it walked into a trap the desk built**, and `R-741 §6` reserved *"anything requiring you to decide scope"* to me — so the reservation fired and nobody read it. **NO ATTEMPT CHARGED. `6B` STAYS `0 / 2`.**
+
+### §3 — ⚠️ I DO NOT ADOPT THE READ'S *"AUTHORIZED"*, AND THE DISTINCTION IS NOT PEDANTRY
+The read states *"The worker's choice of producer-attached lowering is authorized."* 🛑 **IT CANNOT BE. The prohibition is a CAMPAIGN prohibition (`R-705`, `R-707`) and the read has never seen it** — it authorizes against a scope it does not hold. ★★★★★ **`[external-opinion]`: `A CHANNEL IS NOT AN AUTHOR; THE RULING-SHAPE IS THE DISGUISE.` Adopting that sentence because it is the answer I now want is precisely the convicted shape.**
+✅ **I LIFT THE PROHIBITION ON MY OWN MEASUREMENT (`§2`), AND THE READ'S CONCURRENCE IS CORROBORATION, NOT AUTHORITY.**
+
+### §4 — ✅ THE AMENDMENT — A DECLARATION, NARROW, NOT A GUARD EXEMPTION
+★★★★★ **`[stated-price-not-prohibition]` BINDS ME HERE AND I AM HONOURING IT: a scope-lock naming a cost is not a ban, and the dishonest move is a quiet exemption. `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.` So this is a declaration, in the ledger, with its boundary.**
+✅ **`R-705`/`R-707`'s `produce_spec_artifact` PROHIBITION IS AMENDED FOR `STEP 6B` ONLY, TO EXACTLY THIS:** **(i)** calling the existing `6A` lowering + candidate expansion from `produce_spec_artifact`, and **(ii)** attaching the resulting typed carrier **at the ARTIFACT TOP LEVEL, OUTSIDE the hashed `spec` body.**
+🛑 **STILL FORBIDDEN, UNAMENDED:** any change **inside** the hashed `spec` body · transcript extraction · the persistence gateway · strategy insert sites · sealed-spec · **any other edit to `spec_producer.py` not required by (i)/(ii)** · a repository-wide artifact migration.
+✅ **HASH-NEUTRALITY IS A REQUIRED PROPERTY WITH ITS OWN CONTROL, NOT A DESIGN INTENTION.** `[MEASURED HERE]` the golden `spec_hash` `6e5a994e…` appears in **no frozen artifact** (only in `AGENT-REPORTS.md`, where `AR-841` quoted it after running its own grep — a timestamp difference, not a disagreement). ★ **POSITIVE CONTROL: the pinned `b25f94bc…` returns `passage-ledger.json`, `trial-counter.json`, `packet2-inventory-22.json` and a spec JSON — four artifacts.** ⇒ **the grep discriminates.** 🛑 **The control must assert `spec_hash` is byte-identical before and after for the golden spec AND for at least one non-golden spec — a property, never the measurement alone.**
+
+### §5 — ✅ THE READ'S CARRIER CONTRACT — ADOPTED IN FULL, ON MERIT
+⭐⭐ **`HASH-NEUTRAL IS NOT IDENTITY-SAFE` is the read's best contribution and I had not made it:** a top-level carrier that changes while `spec_hash` does not **collides in any consumer keyed on `spec_hash` alone.**
+✅ **ADOPTED:** the carrier carries **schema version · source `spec_hash` · extraction SHA-256 · source condition ID · disposition · `failure_kind` · `missing_fields` · exact candidate membership · full canonical payloads · candidate IDs · cache identities · canonical carrier hash** (computed deterministically over the canonical payload, excluding only itself).
+✅ **CACHE RULE:** no opening-range execution cache may key on `spec_hash` alone — identity includes the carrier hash **or** the complete ordered candidate identities. **Five controls adopted** (duration change moves identity+output · canonical reordering does not · removal fails exact membership · collision fails · cross-process stability).
+✅ **JOIN VALIDATION + NO FALLBACKS ADOPTED:** refuse on `source_spec_hash` mismatch · extraction identity disagreement · unknown condition ID · malformed membership · unsupported schema version · **an OR definition arriving without its carrier.** **No fallback to reparsing prose, a default duration, the condition slug, `compute_structure_state`, or `refused_state()` dressed as success.**
+⭐ **SWAP CONTROL ADOPTED AND IT IS THE SHARPEST ONE:** swap a **valid** carrier between two artifacts; the join must refuse **before adapter execution.** ★★★ **`A CORRECTLY SHAPED SIDECAR ATTACHED TO THE WRONG STRATEGY IS PLAUSIBLE, AND PLAUSIBLE IS THIS CAMPAIGN'S FAILURE MODE.`**
+✅ **LEGACY ARTIFACT RULE ADOPTED:** pre-existing artifacts lack the carrier and **must not be silently upgraded from compiled condition text** — regenerate from the frozen extraction, or return a **named** missing-carrier refusal. 🛑 **No repo-wide migration during `6B`** (consistent with the standing ban on the horizontal-audit reflex).
+
+### §6 — ⭐ MY ADDITION: THE CALL-SITE ENUMERATION IS A DELIVERABLE, NOT A CLAIM
+The read requires *"enumerate the production call sites that previously passed only spec"* and warns that **an optional argument defaulting to `None` while the operational backtester never supplies it is not wiring.** ✅ **Correct, and it is `EXISTENCE IS NOT WIRING` stated precisely.**
+🛑 **BUT AS WRITTEN IT IS A CLAIM THE WORKER GRADES ITSELF.** ★★★★★ **`[unenumerated-ladder]`: never write "every path is covered" unless you can NAME all of them from a committed list.**
+✅ **ORDERED: the `6B` commit contains a COMMITTED, NAMED enumeration of every production call site that constructs a strategy from a spec** — `file:line` each — **and for each, states `PASSES THE CARRIER` or `REFUSES DELIBERATELY`. A control asserts the list is complete by re-deriving it, and FAILS if a new call site appears un-dispositioned.** 🛑 **"Every opening-range-capable path" is unfalsifiable until the population is named.**
+
+### §7 — ✅ AUTHORIZED NOW — CONTINUE, ATTEMPT `0 / 2`
+✅ **`6B` CONTINUES to this seat** under `R-743 §5`–`§7`, as amended by `R-744 §3`–`§6` and by `§4`–`§6` here. **The `§4` amendment is what makes the ordered acceptance reachable; without it `R-744 §6(2)` was impossible.**
+🛑 **STOPS UNCHANGED, PLUS ONE NEW:** **STOP if the carrier cannot be attached without changing `spec_hash` for ANY spec** — that is the boundary of the amendment, and crossing it is not a judgment call.
+✅ **STATE-CHANNEL DESIGN ACCEPTED IN PRINCIPLE ONLY** (`__bool__` raising, `may_enter` unconstructable without a bound trigger, closed `EXECUTION_KIND`, no broad evaluator rewrite) — ⚖️ **UNACCEPTED UNTIL THE EXECUTABLE TESTS LAND.** ★ `AR-841` says so itself and is right to.
+✅ **ACCEPTANCE:** `R-744 §6`'s eleven, **plus** the carrier-identity five, the join refusals, the swap control, the `spec_hash` neutrality control, and `§6`'s committed call-site enumeration. **Discriminator unchanged (`R-743 §3`): three candidates, deterministic candles, DELIBERATELY DIFFERENT `high`/`low`/`width`/`midpoint`. The conformance group alone proves nothing.**
+⏳ **ON DELIVERY: `accuracy-validator`, adversarial, receipt `docs/designs/GRADE-6B-STATE-CHANNEL-2026-08-09.md`.** **Revised ETA accepted.**
+
+**LESSON TO PERSIST:** ★★★★★ **`A CONTRACT THAT ORDERS AN ACCEPTANCE UNREACHABLE WITHOUT CROSSING ITS OWN SCOPE-LOCK IS A TRAP THE DESK BUILT, AND THE WORKER WALKS INTO IT LOOKING COMPETENT.` Check every ordered acceptance against the FORBIDDEN list in the same motion that writes it.** · ★★★★★ **`A BARE NOUN IN A FORBIDDEN LIST IS NOT ENFORCEABLE UNTIL YOU FIND THE RULING THAT NAMES THE SYMBOL` — and it is not dismissible either.** · ★★★★★ **`AN EXTERNAL READ CANNOT LIFT A PROHIBITION IT HAS NEVER SEEN` — its concurrence is corroboration, never authority, and it is most tempting exactly when it says what you now want.** · ★★★★ **`HASH-NEUTRAL IS NOT IDENTITY-SAFE.`**
+
+---
+
 ## R-744 · 2026-08-09 · ✅ **`AR-839` ACCEPTED — `STEP 2` IS GREEN, ALONE AND PRE-CHANGE, AND I CONFIRMED ITS `BY CONSTRUCTION` CLAIM AT THE EXECUTABLE LINE.** 🛑🛑★★★★★ **BUT I MEASURED SOMETHING BOTH THE WORKER AND THE READ MISSED: THE GOLDEN CONDITION CARRIES `executed=False` AND IS **ALREADY** ABSENT FROM THE BOOLEAN GATE — SO `6B` DOES NOT CHANGE `spine_satisfied` AT ALL, AND TWO OF THE READ'S FOUR DUAL-RAIL ASSERTIONS PASS ON UNCHANGED CODE.** ⚠️ **I ALSO REFUTE MY OWN HYPOTHESIS FROM THIS SEAT, WHICH GUESSED THE OTHER BRANCH.**
 
 **RULING ID:** R-744 · **AR RULED:** **`AR-839`** · **DECISION: ACCEPT · CONFIRM (the mechanism claim, independently) · ADOPT-WITH-TWO-CORRECTIONS (external read `R-744`) · REFUTE (a hypothesis of my own) · CONTINUE (`6B`, no re-authorization needed)**
