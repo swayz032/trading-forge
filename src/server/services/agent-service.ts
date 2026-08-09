@@ -7,6 +7,7 @@ import { strategies, systemJournal, auditLog, backtests } from "../db/schema.js"
 // TODO: correlation_id not threaded through all call sites in this file.
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { runBacktest } from "./backtest-service.js";
+import { isExecutionRefused, refusalEvidence } from "../lib/backtest-refusal.js";
 import { OllamaClient } from "./ollama-client.js";
 import { GraveyardGate } from "./graveyard-gate.js";
 import { logger } from "../lib/logger.js";
@@ -475,6 +476,72 @@ export function assertCrossValidatedSource(source: string, tags: string[]): void
   );
 }
 
+/**
+ * D-10 `F-7` (R-767 §5, amended R-768 §7) — THE SHARED AGENT OUTCOME MAPPER.
+ *
+ * Before this, every `runBacktest()` consumer in this file mapped its result with a
+ * BINARY conditional — `status === "completed" ? A : B` — plus, at three sites, a
+ * fabricated reason `result.error ?? "backtest failed"`. That sorts FOUR distinct
+ * outcomes into TWO buckets, and an execution REFUSAL lands in the one named
+ * `failed`, wearing a reason nobody measured.
+ *
+ *   `A BINARY MAPPING CANNOT REPRESENT FOUR OUTCOMES. THE ONES WITHOUT A BUCKET DO
+ *    NOT GET LOST — THEY GET RENAMED AS THE BUCKET YOU ALREADY HAVE.`
+ *
+ * 🛑 THIS IS NOT A SECOND REFUSAL CLASSIFIER. It delegates to the shared
+ *    `isExecutionRefused` / `refusalEvidence` in `../lib/backtest-refusal.js`, which
+ *    classifies and never throws (R-755 §4). No `status === "refused"` literal is
+ *    restated here — a restated literal is a second classifier wearing a shared
+ *    one's name.
+ *
+ * ★ ORDER IS LOAD-BEARING: refusal is tested FIRST. A refusal is not `completed`, so
+ *   any check that asks "completed?" first has already made the wrong decision by the
+ *   time refusal is considered.
+ */
+export type AgentOutcomeKind = "completed" | "skipped" | "refused" | "failed";
+
+export interface AgentOutcome {
+  kind: AgentOutcomeKind;
+  /** `system_journal.status` — free text (R-767 §3), so `refused` needs no migration. */
+  journalStatus: "tested" | "skipped" | "refused" | "failed";
+  /** `audit_log.status`. */
+  auditStatus: "success" | "skipped" | "refused" | "failure";
+  /** ABSENT for completed / skipped / refused. Only an established failure has one. */
+  errorMessage?: string;
+  /** Present only for a refusal — the engine's own evidence, never invented. */
+  refusal?: Record<string, unknown>;
+}
+
+export function mapAgentOutcome(result: unknown): AgentOutcome {
+  // REFUSAL FIRST — see the order note above.
+  if (isExecutionRefused(result)) {
+    return {
+      kind: "refused",
+      journalStatus: "refused",
+      auditStatus: "refused",
+      refusal: refusalEvidence(result),
+      // errorMessage deliberately ABSENT: a refusal has no error to report.
+    };
+  }
+
+  const status = (result as { status?: unknown } | null | undefined)?.status;
+
+  if (status === "completed") {
+    return { kind: "completed", journalStatus: "tested", auditStatus: "success" };
+  }
+  if (status === "skipped") {
+    return { kind: "skipped", journalStatus: "skipped", auditStatus: "skipped" };
+  }
+
+  // ─── FAILURE IS ESTABLISHED ONLY HERE ──────────────────────────────────────
+  // The generic fallback is permitted at this point and NOWHERE earlier: by now the
+  // outcome is neither a refusal, nor completed, nor skipped.
+  const rawError = (result as { error?: unknown } | null | undefined)?.error;
+  const errorMessage =
+    typeof rawError === "string" && rawError.length > 0 ? rawError : "backtest failed";
+  return { kind: "failed", journalStatus: "failed", auditStatus: "failure", errorMessage };
+}
+
 export class AgentService {
   private ollama: OllamaClient;
   private graveyardGate: GraveyardGate;
@@ -755,6 +822,7 @@ export class AgentService {
 
     // 3. Run backtest (reuses existing Python bridge)
     const result = await runBacktest(strategyId, backtestConfig, undefined, undefined, correlationId);
+    const outcome = mapAgentOutcome(result);
 
     const tier = "tier" in result ? result.tier : null;
     const forgeScore = "forge_score" in result ? result.forge_score : null;
@@ -772,7 +840,7 @@ export class AgentService {
       },
       forgeScore: forgeScore != null ? String(forgeScore) : null,
       tier: tier ?? null,
-      status: result.status === "completed" ? "tested" : "failed",
+      status: outcome.journalStatus,
     });
 
     // 5. Audit log (Track A F-6: migrated to insertAuditRowSafe)
@@ -788,9 +856,9 @@ export class AgentService {
         forge_score: forgeScore,
         graveyardWarnings: graveyardWarnings.length > 0 ? graveyardWarnings : undefined,
       },
-      status: result.status === "completed" ? "success" : "failure",
+      status: outcome.auditStatus,
       decisionAuthority: "agent",
-      errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined,
+      errorMessage: outcome.errorMessage,
       correlationId: correlationId ?? null,
     });
 
@@ -802,6 +870,7 @@ export class AgentService {
       status: result.status,
       tier,
       forgeScore,
+      refusal: outcome.refusal,
       graveyardWarnings: graveyardWarnings.length > 0 ? graveyardWarnings : undefined,
     };
     } catch (err) {
@@ -854,6 +923,8 @@ export class AgentService {
     skipped?: boolean;
     reason?: string;
     compileErrors?: string[];
+    /** D-10 F-7: the engine's own refusal evidence, carried to the drain. Never invented. */
+    refusal?: Record<string, unknown>;
     dslDiversityCheck?: import("./dsl-diversity-service.js").DslDiversityCheckResult;
   }> {
     const correlationId = context?.correlationId;
@@ -1208,6 +1279,7 @@ export class AgentService {
       mode: "walkforward" as const,
     };
     const result = await runBacktest(strategyId, backtestConfig, undefined, undefined, correlationId);
+    const outcome = mapAgentOutcome(result);
 
     const tier = "tier" in result ? result.tier : null;
     const forgeScore = "forge_score" in result ? result.forge_score : null;
@@ -1221,7 +1293,7 @@ export class AgentService {
       strategyParams: dsl as Record<string, unknown>,
       forgeScore: forgeScore != null ? String(forgeScore) : null,
       tier: tier ?? null,
-      status: result.status === "completed" ? "tested" : "failed",
+      status: outcome.journalStatus,
     });
 
     // 6. Audit log
@@ -1231,15 +1303,15 @@ export class AgentService {
       entityId: strategyId,
       input: { dsl_name: dslName, source: strategySource, symbol, timeframe, bucket_id: options.bucketId ?? null },
       result: { backtestId: result.id, status: result.status, tier, forge_score: forgeScore },
-      status: result.status === "completed" ? "success" : "failure",
+      status: outcome.auditStatus,
       decisionAuthority: "agent",
-      errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined,
+      errorMessage: outcome.errorMessage,
       correlationId: correlationId ?? null,
     });
 
     logger.info({ strategyId, backtestId: result.id, tier, dslName }, "runStrategyFromDSL complete");
 
-    return { strategyId, backtestId: result.id, status: result.status, tier: tier ?? null, forgeScore: forgeScore ?? null };
+    return { strategyId, backtestId: result.id, status: result.status, tier: tier ?? null, forgeScore: forgeScore ?? null, refusal: outcome.refusal };
   }
 
   async runClassStrategy(input: {
@@ -1306,6 +1378,7 @@ export class AgentService {
 
     // 3. Run backtest with strategy class path
     const result = await runBacktest(strategyId, backtestConfig, input.strategy_class, undefined, correlationId);
+    const outcome = mapAgentOutcome(result);
 
     const tier = "tier" in result ? result.tier : null;
     const forgeScore = "forge_score" in result ? result.forge_score : null;
@@ -1319,7 +1392,7 @@ export class AgentService {
       strategyParams: input.params,
       forgeScore: forgeScore != null ? String(forgeScore) : null,
       tier: tier ?? null,
-      status: result.status === "completed" ? "tested" : "failed",
+      status: outcome.journalStatus,
     });
 
     // 5. Audit log
@@ -1334,9 +1407,9 @@ export class AgentService {
         tier,
         forge_score: forgeScore,
       },
-      status: result.status === "completed" ? "success" : "failure",
+      status: outcome.auditStatus,
       decisionAuthority: "agent",
-      errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined,
+      errorMessage: outcome.errorMessage,
       correlationId: correlationId ?? null,
     });
 
@@ -1348,6 +1421,7 @@ export class AgentService {
       status: result.status,
       tier,
       forgeScore,
+      refusal: outcome.refusal,
     };
     } catch (err) {
       // C4: Capture top-level runClassStrategy failures to DLQ — they are otherwise
@@ -2267,14 +2341,26 @@ Rules:
         // Also stamp generationPromptVersionId so the A/B comparator can attribute this
         // strategy to the real prompt version that generated it (not a coin-flip).
         if (result.strategyId) {
+          // D-10 F-7 (R-767 §5): the drain re-uses the SHARED mapper rather than
+          // restating the binary ternary. `result` here is a `runStrategyFromDSL`
+          // return, which now carries the engine's refusal evidence forward — so a
+          // refused idea records WHY on the scouted row instead of "failed".
+          const drainOutcome = mapAgentOutcome({
+            status: result.status,
+            ...(result.refusal ?? {}),
+          });
           await db
             .update(systemJournal)
             .set({
               strategyId: result.strategyId,
-              status: result.status === "completed" ? "tested" : "failed",
+              status: drainOutcome.journalStatus,
+              ...(drainOutcome.refusal && Object.keys(drainOutcome.refusal).length > 0
+                ? { analystNotes: JSON.stringify(drainOutcome.refusal) }
+                : {}),
               generationPromptVersionId,
             })
             .where(eq(systemJournal.id, entry.id));
+          // The scouted item WAS consumed. A refusal is a drain, never a failure.
           drained++;
         } else if (result.status === "compile_failed") {
           failed++;
