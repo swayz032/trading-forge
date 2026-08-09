@@ -4,6 +4,59 @@
 
 ---
 
+## AR-835 · 2026-08-09 · ✅✅ **`STEP 6A` IS DELIVERED — `dd4ec628`, PUSHED AND REMOTELY VERIFIED.** ⭐⭐⭐ **THE LOWERING REPRODUCES `R-740 §3`'s AMENDED POPULATION *WITHOUT KNOWING WHICH RECORD IS WHICH* — NO SPEC OR VIDEO ID IS IN THE MODULE AND A TEST ASSERTS IT — SO THE TWO FROZEN MEMBERS ARE DISCRIMINATING EVIDENCE RATHER THAN A LOOKUP.** ⭐⭐⭐ **AND THE IDENTITY MUTATION IS THE FINDING: PLANTING `hash()` PRODUCED `3 failed, 13 passed`, AND THE THREE WERE *ONLY* THE CROSS-PROCESS CONTROLS — THE UNIQUENESS AND SENSITIVITY TESTS BOTH PASSED WITH A RANDOMISED IDENTITY.** 🛑 **ONE GUARD FIRED ON ME AND IT WAS RIGHT. `6B` UNTOUCHED. TWO HONEST GAPS IN `§6`.**
+
+**RULING:** `R-738 §3`/`§4`/`§7-2`/`§8`(11) · `R-740 §3`–`§7` · `R-739 §1`. **SEAT:** same cold seat (`claude.exe 3160`), continuing — **no handoff.** **HEAD `dd4ec628`; `git ls-remote` = same.** **`STEP 6A` ATTEMPT BUDGET: `1 / 2`** — one attempt, delivered.
+
+### §1 — ⭐⭐⭐ THE MUTATION RED-PROOF, AND IT MEASURES A LAW THIS CAMPAIGN HAD ONLY ASSERTED
+`R-737 §8` minted **`A UNIQUENESS TEST AND A SENSITIVITY TEST ARE BOTH SATISFIED BY RANDOMNESS; ONLY A STABILITY TEST EXCLUDES IT`** as reasoning. **I planted the exact wrong implementation — `sha256` → `hash()` — and measured it** `[MEASURED HERE, unpiped]`:
+```
+mutant  -> 3 failed, 13 passed   the 3 = test_cache_identity_is_stable_in_a_separate_process[0|1|12345]
+restored-> 16 passed, exit 0     sha256 confirmed back at opening_range_candidate.py:167
+```
+🛑 **THE THIRTEEN THAT PASSED INCLUDE the collision control (obligation 6), the duration-sensitivity control (obligation 4), and the `variant_label`-vs-duration join-key control (`§7-2`).** ⇒ ★★★★★ **A RANDOM IDENTITY SATISFIES EVERY OBLIGATION ON THE LIST EXCEPT (11). The desk's added requirement was not belt-and-braces; it was the only thing standing between this slice and a cache that never hits and never collides.** ⚖️ **The mutation was reverted before the commit** — `[MEASURED]` the pristine copy was taken first and restored from it, and the suite re-run green after.
+⭐ **THE STABILITY CONTROL ALSO CARRIES ITS OWN POSITIVE CONTROL:** a sibling test asks the child process for a deliberately DIFFERENT candidate set and requires the harness to report disagreement. **Without it, "the two agree" is also what a harness that cannot see a difference reports.**
+
+### §2 — ✅ THE POPULATION, DERIVED RATHER THAN ASSERTED
+`[MEASURED HERE, against the COMMITTED provenance path authorized by `R-740 §6-3`]`:
+| spec | disposition | result |
+|---|---|---|
+| `st5e-YJRfKc__s0` | **`READY`** | `5m` · `15m` · `30m` — **3 candidates, 3 distinct cache identities** |
+| `dENM6gt8ZRg__s0` | **`SOURCE_INCOMPLETE`** | missing **exactly `('trading_day_rule',)`** · reason **`opening_range_trading_day_rule_missing_from_source`** |
+⇒ ✅ **`R-740 §3`'s pinned table, reproduced by a general rule.** ★★★★★ **THE MODULE CANNOT TELL THE TWO RECORDS APART BY NAME — `test_no_spec_or_video_id_appears_in_the_lowering_module` fails if either id, or even `st5e`/`dENM`, appears in it. That is what makes this evidence instead of a hardcoded answer** (`AN ID IN PRODUCTION CODE IS A CLASSIFIER THAT HAS MEMORISED ITS ANSWER`).
+✅ **THE REFUSAL CARRIES WHAT `R-740 §4` ORDERED** and cannot be constructed without it: **three separate `__post_init__` guards** reject a refusal that names no field, names a field outside the declared six, or carries no positive control. ⭐ **And the positive control is EXECUTED, not quoted** — a test requires the SAME trading-day locator to fire on the other member. **Without it, `missing == ('trading_day_rule',)` is equally well explained by a locator that never matches anything.**
+
+### §3 — ⭐⭐ THE FIDELITY CONTROL THE GOLDEN RECORD SPECIFICALLY NEEDED, WHICH NOBODY ORDERED
+`[MEASURED]` the golden record says **`"9:30 a.m. Eastern"`** in its window sentence and **`"off of the Pacific Standard chart"`** in its breakout sentence — **two zone tokens in one artifact.**
+🛑 **A locator scanning the record for any zone would resolve `America/Los_Angeles` depending on iteration order, and the wrong answer is a whole-session offset that every downstream number would silently inherit.** ✅ **RULE: the timezone must appear in the SAME span as the session-start clock.** ⇒ **the chart never overrides the taught window, and the breakout sentence — `UNRESOLVED_SOURCE_AMBIGUITY`, which this lowering may not touch — cannot contribute a value.** ⭐ **The control asserts `Pacific` is still PRESENT in the fixture, so it dies loudly if the competing evidence is ever removed rather than passing forever on an empty record.**
+
+### §4 — 🛑 A GUARD FIRED ON ME, AND I DID NOT MAKE IT GO AWAY
+`[MEASURED]` firebreak 5 went **RED**: `test_flag_off_parameterized_refusal.py`'s canonical-population manifest reported `committed=99 derived=100`, the extra member being **my own** `test_opening_range_grammar_firebreak.py`.
+✅ **CAUSE, at the executable line:** `_CLOSURE_TARGETS = ("spec_condition_compiler", "spec_family_bindings")` — my firebreak imports `ConditionBinding` **from `spec_family_bindings`**, so it legitimately joined that import closure. **My other two new suites do not import it and did not.**
+⚖️ **I CONSIDERED DROPPING THE IMPORT TO AVOID PERTURBING A PINNED POPULATION AND REJECTED IT:** without the real class, firebreak 1 would assert against SOURCE TEXT instead of the live object (`[document-vs-program]`), which is a weaker control bought with a tidier diff.
+✅ **REGENERATED BY THE INSTRUMENT'S OWN `_regression_population`, NEVER HAND-COPIED** (the file's own header demands exactly that), with the header preserved and order re-sorted as `R-710 §6.4` pins. `[MEASURED]` **`ADDED: ['engine/tests/test_opening_range_grammar_firebreak.py']` · `REMOVED: []` · commit diff `1 insertion(+)`, and I asserted `REMOVED` was empty BEFORE writing** — ★★ **a member LEAVING a closure is a different event from one joining, and only one of them is routine.** ⚠️ **FLAGGING IT ANYWAY: this is the population `[population-no-instrument]` records as load-bearing and previously unreconstructable. It is now `100`.**
+
+### §5 — ✅ ACCEPTANCE, ALL UNPIPED
+```
+opening-range suites (adapter+definition+candidate+lowering+firebreak) -> 81 passed        EXIT 0
+discrimination instrument -> ALL 8 CONTROLS PASS; blast radius EXACTLY the 2 authorized     EXIT 0
+guards (-k guard)         -> 208 passed, 3 skipped                                          EXIT 0
+parameter-acceptance guards (firebreak 5 baseline) -> 101 passed                            EXIT 0
+conformance FILE          -> 2 failed, 10 passed; BOTH ordered REDs STILL RED, no third     EXIT 1
+```
+✅ **BOTH ordered REDs STAYING red is the correct `6A` result** — `R-740 §5` gives them to `6B`. ⭐ **AND THEIR FAILURE OUTPUT DELIVERED FIREBREAK 1 IN THE INSTANCE FORM FOR FREE:** the printed binding repr reads **`… reason='opening_range_adapter_not_implemented', parameters=None`** — **the actual golden opening-range binding, measured, `parameters=None`.** ⇒ **I now hold BOTH the universal form (no production writer) and the instance form `R-738 §4` item 1 literally asked for.**
+✅ **Suites RE-RUN after the `ruff` autofix rather than carrying the pre-fix numbers** (`[red-path-decay]`).
+
+### §6 — 🛑 TWO HONEST GAPS, NEITHER PAPERED OVER
+1. 🛑 **I DID NOT RUN `AR-830`'s CONFORMANCE *GROUP* (`98` TESTS). I RAN THE *FILE* (`12`), AND A `-k conformance` SELECTION THAT COLLECTED `12 passed/failed + 3 skipped, 8618 deselected` — NOT the same population.** `[MEASURED]` the only pytest invocations recoverable from the ledger name the FILE. ⇒ **I confirm the RED MEMBERSHIP and the absence of a third red; I do NOT claim `2 failed, 96 passed`.** ★ **`R-737 §4` narrowed itself on this exact join and I am not undoing that narrowing by guessing the command** (`[i-measured]`). **REQUEST: name the group's exact invocation once, in a ruling, so it stops being re-derived.**
+2. 🛑 **TS PARITY NOT RE-RUN.** `6A` touched **no** TypeScript and `AR-831 §4` measured that the gate compares DECLARATIONS only, which `6A` does not alter. ⚖️ **Stated rather than implied: an unre-run gate is not a passing gate. `6B` runs it with the real `tsx` binary in the SHARED tree.**
+✅ **`R-739 §1`'s stop watched and not reached:** `6A` emits no entry and no trade — nothing here can produce a backtest, profitable or otherwise.
+
+### §7 — ✅ WHAT IS NOT DONE, AND WHY THAT IS CORRECT
+🛑 **`FAMILY_META` · `PRIMITIVE_RESOLVERS` · `ENFORCED_DISPATCH` · the TS mirror — ALL UNCHANGED** `[MEASURED]` `git status --porcelain` clean for every one. **That is `6B`, and `R-740 §8`'s same-commit rule means it lands as ONE commit, not as a trickle.**
+⚖️ **Fan-in `6 / 6` on `R-740 §7`'s list:** carrier ✅ · identity ✅ · separate-process stability ✅ · five firebreaks ✅ · `st5e` lowering + exact `5/15/30` expansion ✅ · `dENM` refusal + the new negative control ✅. **Removal-mutation and collision-mutation both present, collision planted between two GOLDEN variants per `§5`.**
+✅ **THIS SEAT CONTINUES AND IS NOT HANDING OFF.** **Next: `6B`, which `R-740 §7` releases on `6A`'s green with no further wait — I am proceeding under that clause and saying so.**
+
 ## AR-834 · 2026-08-09 · ✅ **`AR-833 §2`'s PRE-REGISTERED RISK IS REFUTED — THE `5m` IS IN THE SOURCE, NOT THE SLUG, AND I AM SAYING SO AS PLAINLY AS I WOULD HAVE SAID THE OPPOSITE.** 🛑🛑★★★★★ **BUT THE SAME MEASUREMENT FOUND A DIFFERENT GAP AND IT IS A COLLISION BETWEEN TWO CLAUSES OF `R-738`: `dENM6gt8ZRg__s0` HAS **NO** SOURCE EVIDENCE FOR `trading_day_rule`, A REQUIRED NON-DEFAULTABLE FIELD. `§5` ORDERS A REFUSAL; `§9` STOPS IF THE POPULATION IS NOT EXACTLY `4`. **A REFUSAL MAKES IT `3`.** ⚖️ **I AM NOT DECIDING IT, AND I AM NOT STOPPING EVERYTHING FOR IT — `~80%` OF `6A` DOES NOT DEPEND ON IT AND I AM BUILDING THAT NOW.**
 
 **RULING:** `R-738 §8` (`STEP 6A`), `§5` (lowering), `§9` (stops) · `R-739 §2` (the slug correction). **SEAT:** same cold seat as `AR-833`, continuing. **HEAD at measurement `3becdb30`; `R-739` (`6839ff4e`) read and its contract confirmed UNCHANGED for `6A`.** **`STEP 6A` ATTEMPT BUDGET: `0 / 2` — this is the `§5` evidence measurement `AR-833` promised as the first observable, not an attempt.**
