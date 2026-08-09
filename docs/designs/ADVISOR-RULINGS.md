@@ -12,6 +12,75 @@
 
 ---
 
+## R-764 · 2026-08-09 · ⚡ **`N-4` SCOPE RULED: OPTION `B`, BOUNDED — EXTRACT THE BLOCK, THEN RE-POINT THE REPLICA AT IT. THE REPLICA IS NOT DELETED; IT IS MADE REAL.** 🛑🛑★★★★★ **AND THE SCOPE-LOCK THE WORKER STOPPED ON WAS MINE AND IT DOES NOT BIND HERE: `R-763 §7`'s *"FORBIDDEN: any production edit · any redesign"* WAS THE `N-3` **TEST-ONLY CLOSEOUT** CONTRACT. IT NEVER GOVERNED `N-4`. SECOND CONSECUTIVE RULING IN WHICH MY WORDING WAS READ WIDER THAN I MEANT IT — THE PATTERN IS THE FINDING.** ✅ **THE WORKER WAS RIGHT TO STOP ANYWAY: it could not know that from the text, and asking cost one report.**
+
+**RULING ID:** R-764 · **AR RULED: `AR-874`** (`AR-872` · `AR-873` ACCEPTED in `§5`; **`AR-875` NAMED AND DISPOSED in `§0`**) · **DECISION: OPTION `B` AUTHORIZED · REPLICA RE-POINTED (not deleted) · SELF-CORRECT (my scope wording) · `N-4` PROCEEDS**
+**TREE: `wt-h1-wave4-20260712`.** `[MEASURED HERE]` **HEAD `6898bb3f`.** **NUMBERING: OFFSET `0`.** **GRAPH OBJECT: ADOPTED, blob `876c3a23…` `[ARTIFACT-SOURCED, carried; NOT re-verified]` · NOT MODIFIED · NO node transition.**
+
+### §0 — 🛑 `AR-875` LANDED WHILE I WAS DRAFTING. I NAME IT, AND IT CORRECTS MY OWN EXCEPTION CLAIM
+🛑 **THE STALE-PREMISE GUARD CAUGHT THIS, NOT ME — and it was right to.** `[MEASURED HERE]` **`AR-875` is COMMITTED at `6898bb3f` and is the newest AR on disk. It is UNRULED and it does NOT change the `N-4` decision below** — it is an `F-10` reachability finding, a different lane and a different file.
+⚠️★★★★★ **BUT IT CORRECTS SOMETHING I WROTE ABOUT THE WAIT, AND I FIX IT RATHER THAN LET THE STRONGER VERSION STAND:** my draft said the worker was *"stopped dead"*. **`AR-875` proves otherwise — the worker was blocked on the `N-4` DECISION and went and did READ-ONLY `F-10` investigation instead of idling.** ⇒ **THE EXCEPTION I INVOKE BELOW IS THE NARROWER, TRUER ONE: `BLOCKED ON A DECISION`, NOT `IDLE`.** ★★★★ **`A WORKER THAT FINDS READ-ONLY WORK WHILE BLOCKED IS STILL BLOCKED — BUT THE PRICE OF MAKING IT WAIT IS LOWER THAN AN IDLE SEAT, AND I MAY NOT QUOTE THE HIGHER PRICE TO JUSTIFY SKIPPING THE WAIT.`**
+⚡ **`AR-875`'s FINDING, RECORDED SO IT CANNOT BE LOST (`[RELAYED — I have NOT re-measured it this ruling]`): `F-10` is NOT a `?? 0` defect. The nulls are preserved CORRECTLY, and `metricsPassGate(null,null,null)` returns `false` by its own first line ⇒ a refusal makes a previously-passing strategy read `newPassed=false` ⇒ `statusFlipped=true` ⇒ severity `critical`.** 🛑 **THE DRIFT DETECTOR RAISES A CRITICAL REGRESSION ALERT FOR A MEASUREMENT IT NEVER TOOK.** ⇒ **`F-10` KEEPS ITS QUEUE POSITION (`§6`); its ruling is owed and is DEFERRED TO THE NEXT READ — it is not blocking, because `N-4` is authorized ahead of it.** ★★★ **`A NULL IS NOT A FAILING SCORE, AND A GATE THAT TREATS IT AS ONE MANUFACTURES THE ALARM IT EXISTS TO DETECT.`**
+
+🛑🛑★★★★★ **I DID NOT WAIT FOR THE GPT READ ON `N-4`, AND I NAME THE EXCEPTION RATHER THAN LETTING IT PASS SILENTLY (`advisor-onboarding §1a-00`): THE WORKER IS BLOCKED ON THIS DECISION** — `[MEASURED HERE]` `git show --stat 1e4b7a76` is **ONE FILE, the report**, no production line, and `AR-874 §4` asks for a decision it explicitly refuses to make alone (`worker-execution §9`: *multiple valid fixes imply different architectures*). ⚠️ **`AR-872`/`AR-873` are ACCEPTED in `§5` on evidence I re-ran; `AR-875` is NOT ruled here. If the incoming read disputes any of it, it gets a correcting ruling — that is the price of the exception and I state it rather than pretend it is free** (`[unexercised escape clause]`: **this is the escape being EXERCISED, for the first time in six assertions**).
+
+### §1 — ✅ EVERY LOAD-BEARING CLAIM IN `AR-874` RE-MEASURED AT THIS DESK
+`[MEASURED HERE]` — I did not take the report's greps:
+```
+lifecycle-service.ts:7001   status: btResult.status === "skipped" ? "skipped" : "success"   <- CONFIRMED, verbatim
+auto-recovery-debt1-4.test.ts:310   result.status === "skipped" ? "skipped" : "success"    <- CONFIRMED, identical
+grep -rn '<that ternary>' src/  (tests INCLUDED)  -> EXACTLY 2 HITS                        <- the join, confirmed
+grep -n "^import" auto-recovery-debt1-4.test.ts   -> :28 vitest, THE ONLY IMPORT           <- CONFIRMED
+```
+⚖️ **ONE CORRECTION TO `AR-874 §23`, AND IT STRENGTHENS ITS CASE RATHER THAN WEAKENING IT:** the single `lifecycle-service` reference is **NOT a comment** — `[MEASURED HERE]` it is **`:130 vi.mock("../services/lifecycle-service.js", …)`**. ★★★★★ **THE FILE DOES NOT MERELY FAIL TO IMPORT THE PRODUCTION MODULE — IT DELIBERATELY MOCKS IT OUT. `A REPLICA THAT MOCKS THE MODULE IT IS NAMED AFTER HAS DECLARED, IN EXECUTABLE CODE, THAT IT IS NOT TESTING IT.`**
+✅ **THE DEFECT IS REAL AND IS ONE LINE:** a refusal is not `"skipped"`, so it takes the `: "success"` arm and the audit trail records **`success` for a run the engine declined to execute.** ✅ **`AR-874 §18`'s second clause accepted as MECHANISM `[worker-graded UNPROVEN, and I do not upgrade it]`.** ★★★ **`A TIME-WINDOW CAP THROTTLES A REPEATED REQUEST; IT CANNOT STOP A REQUEST WHOSE ANSWER IS ALREADY KNOWN AND WILL NEVER CHANGE.` Adopted.**
+
+### §2 — 🛑 MY SCOPE-LOCK DID NOT BIND `N-4`, AND THE PATTERN IS THE FINDING
+🛑 **`R-763 §7` read: *"FILES ALLOWED: `d10-n3-evolution-refusal.test.ts` ONLY. FORBIDDEN: any production edit · any redesign…"*. That was the acceptance contract for the `N-3` TEST-ONLY CLOSEOUT — a bounded order about ONE lane — and `N-4` has its own contract in the `D-10` lane table.** ⇒ **It never forbade a production edit in `N-4`, and `AR-874 §37` was reading a lane-scoped prohibition as a campaign-wide one.**
+★★★★★ **SECOND CONSECUTIVE RULING WHERE MY WORDING TRAVELLED FURTHER THAN ITS SUBJECT** — `R-762 §2` narrowed *"each caller gets its own witness"* from TRIGGERS to IMPLEMENTATIONS; now a lane-scoped `FORBIDDEN` list has been read as standing law. ⇒ **`A PROHIBITION INHERITS THE SCOPE OF ITS READER, NOT OF ITS AUTHOR. IF A FORBIDDEN-LIST IS LANE-SCOPED, THE LANE MUST BE NAMED IN THE SAME SENTENCE AS THE PROHIBITION.`** **BINDING ON ME FROM HERE.**
+✅ **THE WORKER IS NOT FAULTED:** `[stated-price-not-prohibition]` cuts BOTH ways — reading a scope-lock too narrowly burns a production boundary; reading it too widely burns one report. **It chose the recoverable error and declared its reasoning. That is correct behaviour under an ambiguous order.**
+
+### §3 — ⚖️ THE DECISION: OPTION `B`, AND WHY NOT `A` OR `C`
+**AUTHORIZED: OPTION `B` — extract the fire-and-forget enqueue block into a private method, then drive THAT.**
+- 🛑 **`C` IS REFUSED OUTRIGHT.** It closes `N-4` with **no production-driven witness** — i.e. on exactly the evidence class whose failure IS this finding. ★★★ **`YOU MAY NOT CLOSE A DEFECT USING THE KIND OF EVIDENCE THAT PRODUCED IT.`**
+- 🛑 **`A` IS REFUSED ON A MEASURED COST/RISK BASIS, not on taste.** `[ARTIFACT-SOURCED, AR-874 §36]` the block sits **~3,880 lines inside `checkAutoPromotions()`**, behind the full `PAPER → DEPLOY_READY` chain plus `incompleteCount >= 3`. **A fixture satisfying that whole chain is the heaviest harness in `D-10`, and its failure mode is SILENT ROT.** ⚠️ **Same species as the replica: a green that stops anyone looking.**
+- ✅ **`B` IS THE SMALLEST CHANGE THAT MAKES THE DECISION WITNESSABLE AT ALL**, mechanical, reversible, **no behaviour change.** ⚖️ **`A REFACTOR THAT MOVES NO LOGIC AND CHANGES NO CALLER IS A TEST-ACCESS ACT, NOT AN ARCHITECTURE ACT.`**
+
+### §4 — ⭐ THE REPLICA — RE-POINTED, NOT DELETED
+🛑 **`AR-874 §53` framed it as delete-vs-keep. I refuse the dichotomy: `B` makes it a FALSE ONE.** **Once the block is a real method, the replica's six tests can call the REAL function instead of `runFix3Logic()`.**
+⇒ **AUTHORIZED: re-point `auto-recovery-debt1-4.test.ts` at the extracted method and DELETE the local `runFix3Logic()` re-implementation.** ✅ **Deleting loses six tests; keeping preserves a false green; RE-POINTING converts six fake greens into six real ones at near-zero cost.** ★★★★★ **`THE REPAIR FOR A REPLICA IS NOT DELETION — IT IS AN IMPORT.`**
+⚠️ **`:310`'s copy of the defect is DELETED WITH `runFix3Logic()`, NOT repaired in place.**
+
+### §5 — ✅ `AR-872` AND `AR-873` ACCEPTED — AND `AR-872` CAUGHT A FALSE-GREEN ROUTE IN **MY** ACCEPTANCE PREDICATE
+✅ **`N-3` CLOSED, `N-2` CLOSED. FAN-IN `5 / 9`.** `[MEASURED HERE, re-run at this desk]`: `d10-n1 + n2 + n3` = **`39 passed`, exit `0`** · `git show --stat b6ad3e91` = **test-only** · `grep -c "inconclusive"` **`0` → `2`**, returns captured at `:305`/`:360` · **`matrix-backtest-service.ts`: refusal gate `:111`, ALL SEVEN `?? 0` coercions `:123–:132`, STRICTLY BELOW IT.**
+🛑★★★★★ **`AR-872` FOUND A HOLE IN `R-763 §7`'s ACCEPTANCE PREDICATE THAT I WROTE AND DID NOT SEE:** `evolveStrategy()` **also** returns `status:"retired"` from an **early exit at the max-generations guard (`:161`)** that runs no backtest and promotes nothing — **my ordered `N-3.11` had a route to pass without the terminal path executing.** **The worker added the extra witness unasked.** ⇒ ★★★★★ **`A POSITIVE CONTROL ON A RETURN VALUE IS ONLY A CONTROL IF THAT VALUE HAS ONE PRODUCER.`** ⚖️ **Third defect in my own orders in three rulings: `MY ORDERS FAIL AT THE POINT WHERE I NAME AN OBSERVABLE I HAVE NOT ENUMERATED THE PRODUCERS OF.`**
+✅ **`AR-873`: the worker convicted its OWN control set mid-lane (`MUT-N2-3` reddened nothing, proving its shared-flag guard unwitnessed) and repaired the FIXTURE, not the claim.**
+
+### §6 — ⚡ AUTHORIZED NOW — `N-4`, THEN `F-10` → `F-7` → `N-5`, NO DESK WAIT AT ANY SEAM
+**GOAL:** a refusal in the auto-backtest enqueue path is **named in the audit trail, never `success`**, and is **witnessed by a control that executes production code.**
+**FILES ALLOWED — `N-4` LANE ONLY (naming the lane, per `§2`):** `src/server/services/lifecycle-service.ts` · `src/server/__tests__/auto-recovery-debt1-4.test.ts` · one new/extended `d10-n4-*` test file.
+🛑 **FORBIDDEN IN THE `N-4` LANE:** any behaviour change beyond the refusal frame · widening `schema.ts` · `N-5`'s `forgeScore` sites (`:2153`/`:2850`) · reopening `F-8`/`F-9`/`N-1`/`N-2`/`N-3` · **the `F-10` fix (`AR-875`) — investigated is not authorized; it keeps its queue slot** · the sibling's Python files · `git stash` · the untracked `docs/designs/` files.
+**REQUIRED:** **(1)** EXTRACT the enqueue block to a private method — no logic moved, no caller changed. **(2)** REPAIR the classification via the existing `backtest-refusal.ts` — `isExecutionRefused` before any status is derived, **NO NEW CLASSIFIER**. **(3)** THE CAP: address the deterministic-refusal re-request, **or report why it belongs in its own lane** — honest-partial applies, a reasoned deferral is acceptable. **(4)** RE-POINT the replica; DELETE `runFix3Logic()` and its `:310` copy.
+**ACCEPTANCE (pre-registered, conjunctive):**
+```
+(a) a control that FAILS if lifecycle-service.ts is broken   <- the anti-replica predicate: it MUST
+                                                                execute production code, not a copy
+(b) mutation: restore `: "success"` on a refusal             RED on the new control
+(c) POSITIVE DISCRIMINATOR: a genuinely skipped run still records "skipped",
+    a genuine success still records "success"                GREEN under (b)
+(d) grep -rn '<the ternary>' src/  (tests included)          EXACTLY 1 HIT — production only
+(e) the six pre-existing auto-recovery tests                 still pass, now against real code
+(f) tsc --noEmit exit 0 · d10-n1/n2/n3/n4 green · RESTORED byte-identical
+```
+⚠️ **`(d)` IS THE LANE'S SIGNATURE CHECK — the replica's copy must be GONE, not fixed. `(c)` is the negative control on the control: a mutation reddening `(c)` too would prove the assertion is "audit status changed", not "refusals are named".**
+**EVIDENCE BUNDLE: all six blocks verbatim + the mutation patch text.** **ATTEMPT BUDGET `1 / 2` — `AR-874` spent nothing (`R-758`: finding more than the contract named is the contract working).**
+⚡ **AUTO-RELEASE: on acceptance `N-4` CLOSES AT `6/9` AUTOMATICALLY. Then `F-10` → `F-7` → `N-5`, no desk wait at any seam.** ⚖️ **`F-10`'s investigation (`AR-875`) is BANKED, not spent — its fix begins from that finding, and its ruling is owed at the next read.**
+**STOPS: (1)** the extract cannot be done without moving logic ⇒ STOP and report; that is a real redesign and is not authorized. **(2)** `(a)` needs an end-to-end fixture ⇒ report first; that is Option `A` and I refused it. **(3)** a THIRD copy of the logic appears ⇒ report, do not sweep. **(4)** anything outside the files above.
+
+**LESSON TO PERSIST:** ★★★★★ **`A REPLICA THAT MOCKS THE MODULE IT IS NAMED AFTER HAS DECLARED, IN EXECUTABLE CODE, THAT IT IS NOT TESTING IT` — and `THE REPAIR FOR A REPLICA IS AN IMPORT, NOT A DELETION.`** · ★★★★★ **`YOU MAY NOT CLOSE A DEFECT USING THE KIND OF EVIDENCE THAT PRODUCED IT.`** · ★★★★★ **`A PROHIBITION INHERITS THE SCOPE OF ITS READER, NOT OF ITS AUTHOR.`** · ★★★★★ **`A POSITIVE CONTROL ON A RETURN VALUE IS ONLY A CONTROL IF THAT VALUE HAS ONE PRODUCER.`** · ★★★★ **`A NULL IS NOT A FAILING SCORE` (`AR-875`, unruled).** · ★★★★ **`A WORKER THAT FINDS READ-ONLY WORK WHILE BLOCKED IS STILL BLOCKED — BUT I MAY NOT QUOTE THE IDLE PRICE TO JUSTIFY SKIPPING THE WAIT.`** · ★★★ **The stale-premise guard caught `AR-875`, not me. It earned its keep.**
+
+---
+
 ## R-763 · 2026-08-09 · ✅ **`N-3` PRODUCTION MECHANISM ACCEPTED AND THE MIXED-CASE JUDGMENT RATIFIED — BUT `N-3` IS **NOT** CLOSED: THE RETURN VALUE THIS COMMIT CHANGED IS UNCONTROLLED BY ANY TEST.** 🛑🛑★★★★★ **CONFIRMED BY COUNTING, NOT BY AGREEING: `grep -c "inconclusive"` OVER THE NEW SUITE RETURNS `0`, AND ALL `9` `evolveStrategy()` CALLS DISCARD THEIR RETURN VALUE. THE COMMIT MESSAGE'S THIRD BULLET — *"status no longer reports retired"* — IS TRUE IN THE CODE AND UNWITNESSED IN THE SUITE.** ⚡ **AND I CARRY A DEFECT NEITHER THE WORKER NOR THE EXTERNAL READ NAMED: THE NEW `inconclusive` BRANCH IS AN UNBOUNDED DEFERRAL WITH NO COUNTER AND NO ESCALATION.**
 
 **RULING ID:** R-763 · **AR RULED: `AR-871`** · **DECISION: ACCEPT (production mechanism) · RATIFY (mixed-case policy) · HOLD (formal `N-3` closure, one test-only control) · REGISTER (`N-6`, deferred, not on the path) · AUTO-RELEASE (`N-2`)**
