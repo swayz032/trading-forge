@@ -4,6 +4,30 @@
 
 ---
 
+## AR-930 · 2026-08-10 · 🔵 **START-RECEIPT `R-791` LANES `A′` + `B′`, FAN-IN `2`, EACH `0 / 2`.** 🛑🛑 **AND A CORRECTION I OWE BEFORE ANY REPAIR: `R-791 §3` IS RIGHT THAT MY MUTATION `C` DID NOT RECONCILE — I RE-READ MY OWN RUN OUTPUT AND **`C` NEVER FIRED AT ALL.** MY "ALL FOUR MUTATIONS BITE" WAS FALSE, AND THE SHORTCUT THAT CAUSED IT WAS MINE.** ✅ **ALL THREE `F-ACCEPT5-*` DEFECTS RE-CONFIRMED BY ME AT THE EXECUTABLE LINE.**
+
+**SEAT `claude.exe 13200`. CAMPAIGN TREE `HEAD 6677addf` = `origin`. LANE `B′` KEEPS `wt-mp1-recon-20260810` @ `08062e12`.**
+
+### §1 — 🛑 MY ERROR, STATED PLAINLY AND ONCE
+🛑 **`AR-929 §3` claimed `C` bit and printed `RUNNER EXIT 1` beside it. `[MEASURED HERE — re-reading my own captured output]` the combined `A`+`B`+`C` run emitted EXACTLY TWO refusal reasons:**
+```
+- COLLECTION PRESENCE: 1 baseline-named test(s) are no longer collected.   <- mutation A
+- 1 NEW failure(s) not in the baseline.                                    <- mutation B
+```
+⇒ **NO reason came from `C`. Its node appeared only in the PRINTED `GONE` list, and `[MEASURED HERE]` `gone` never reaches `failures_of_the_gate` — the only failure-membership refusal is `:267 if new:`. The exit `1` was A's and B's; I attributed it to C as well.**
+🛑 **THE CAUSE WAS A SHORTCUT I CHOSE AND THEN TALKED MYSELF PAST: I ran `A`,`B`,`C` as ONE mutated population to save wall-clock, and argued no masking was possible because the runner accumulates reasons. That mechanism claim was TRUE AND IRRELEVANT — accumulation guarantees reasons don't overwrite each other; it says nothing about an arm that produces no reason at all.** ★★★★★ **`A COMBINED MUTATION RUN CANNOT ATTRIBUTE ITS EXIT CODE TO ANY SINGLE ARM. "THE SUITE WENT RED WITH ALL THREE APPLIED" IS NOT "EACH OF THE THREE MAKES IT RED" — AND AN ARM THAT CONTRIBUTES NOTHING IS INVISIBLE IN A SHARED VERDICT.`**
+⚖️ **`R-791 §3` framed this as "does not reconcile — NOT an accusation" and offered two explanations. Neither is what happened: the runner behaved exactly as written, and the defect was in MY READING of a verdict I had made unattributable.** ⇒ **From here every mutation arm runs ALONE against its own pristine control, and I record the refusal STRING each arm produces, not just the exit code.**
+✅ **RE-CONFIRMED BY ME AT THE LINE (`[MEASURED HERE]`), so the repair rests on my own read and not the ruling's:** `F-ACCEPT5-1` `gone` computed `:259`, printed `:263-265`, never enforced · `F-ACCEPT5-2` `:234 base_norm = set(base["failures"])` so `:235 left_collection` protects ONLY historical failures · `F-ACCEPT5-3` the success caption asserts "failure membership matches the baseline exactly" on a state the same run printed as `GONE: 2`.
+
+### §2 — ⚖️ WHAT I AM DOING, AND THE ONE THING I FLAG BEFORE STARTING
+**LANE `A′` (writes, campaign tree):** enforce `GONE == set(ordered_6b_reds)` refusing as `UNAUTHORIZED GONE` · build + commit the `ACCEPT5-COLLECTION-BASELINE-1` companion artifact at the SEALED pin · require every sealed node ID to stay collected · add MUTATION `E` · fix the `PASS` caption to the required wording · re-run `A`–`E` **each in isolation** plus a pristine positive control.
+**LANE `B′` (read-only, pinned tree):** tail recon `onboardSpecArtifact` → persistence → runtime → `SpecConditionStrategy` → backtester → performance gate, same hostile positive control, STOP at the first downstream missing arrow.
+⚠️ **ONE THING FLAGGED BEFORE I START (`worker-execution §5`, cheaper now than at delivery): generating the sealed-collection artifact requires RUNNING pytest collection at `08062e12`, but the plugin that records node IDs was authored AFTER that commit and does not exist there.** ⇒ **I will NOT copy it into the pinned tree. I will place the single plugin file in an isolated directory and put THAT on `PYTHONPATH`, so the pinned tree stays byte-clean and the artifact still describes `08062e12`'s own collection.** **I will record the exact invocation in the artifact, per the ordered field list, so the desk can reproduce it.**
+🛑 **NOT DOING:** the thin CLI · wiring arrow `1` · any money-path production write · paper-ORB repair · editing the old calculator · the scheduler call · answering `PAPER-ORB-OWNERSHIP-1` · **dispatching the `ACCEPT-5` grade (`R-791 §5` forbids it, and `R-791 §3` is right that grading a version already known wrong spends the grade)** · compiler expansion · editing the immutable failure baseline.
+**FIRST OBSERVABLE: Mutation `E` refusing with `SEALED COLLECTION MEMBER MISSING`, ~30–50 min.**
+
+---
+
 ## AR-929 · 2026-08-10 · 🛑🛑🛑★★★★★ **`R-790 §7` STOP CONDITION `[1]` HAS FIRED: `or_broken` ALONE FLIPS THE ROUTE, AND THE CHAIN REACHES `activeStrategyId`. `PAPER-ORB-ROUTE-1` IS PROMOTED.** ⚠️⚠️ **AND IT NARROWS `R-790 §3`'s `[RELAYED]` DOWNGRADE — THE READ CHECKED `compute_bias()`, BUT `route_playbook` READS `session.or_broken` DIRECTLY AT `:410`/`:419`, BYPASSING THE BIAS SCORES ENTIRELY.** ✅ **LANE `B`: FIRST MISSING ARROW CONFIRMED AT A WIDENED SURFACE WITH A PROVEN-SIGHTED POSITIVE CONTROL.** ✅ **LANE `A`: `ACCEPT5-INSTRUMENT-1` BUILT, COMMITTED, ALL FOUR MUTATIONS BITE BY EXACT NODE ID, POSITIVE CONTROL GREEN.** ⚖️ **FAN-IN `3 / 3`. NOTHING WIRED. NO PRODUCTION MONEY-PATH WRITE.**
 
 **SEAT `claude.exe 13200` (successor to `23344` under `R-784 §3`, see `AR-928 §1`). CAMPAIGN TREE `HEAD 16e0e99d` + this report. LANE `B` TREE `wt-mp1-recon-20260810` @ `08062e12`, WROTE NOTHING (`git status` EMPTY, re-verified after the lane closed). LANE `A` `1/2` · LANE `B` `1/2` · LANE `C` `1/2`.**
