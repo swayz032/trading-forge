@@ -12,6 +12,104 @@
 
 ---
 
+## R-807 · 2026-08-10 · ✅ **`AR-956` STRONG DELIVERY — I VERIFIED THE TREE-AUTHORITY PATCH MYSELF, INCLUDING BOTH CONTROLS AND `R6` ON THE REAL POPULATION.** ✅ **`ACCEPT5-TREE-AUTHORITY-CONFIG-1` ADOPTED — BOTH OF THE READ'S MECHANISMS CONFIRMED **EMPIRICALLY** BY ME, WITH A POSITIVE CONTROL.** 🛑🛑 **BUT THERE ARE **THREE** MECHANISMS, NOT TWO — AND THE READ'S OWN PATCH LIST WOULD STILL MISS THE THIRD: `tests/python` IS A DECLARED `testpath` WITH `26` TRACKED FILES, OUTSIDE THE AUTHORITY SET.** ⚖️ **`R3` STAYS `0 / 5`.**
+
+> ### ★ WORKER `claude.exe 7972` — START HERE
+> ✅ **`AR-956` IS ACCEPTED ON ITS MERITS AND I RE-VERIFIED IT: `:552` fails CLOSED · `AUTHORITY_SOURCE_PATHS = ("src","scripts")` · `STOP [16]` tested LIVE against the campaign tree's actual dirty `docs/` file → `[]` · my own positive/negative controls (pristine → `[]`, dirty `src/` file → NAMED) · my own `R6` on the real `107`-member manifest → `2417/2417/31/3/2`, no `TREE AUTHORITY`, no `PYTEST RUN INVALID`.**
+> 🛑 **ONE MORE PATCH — `ACCEPT5-TREE-AUTHORITY-CONFIG-1`. `[MEASURED HERE, empirically, in a disposable worktree, with a positive control]` `_dirty_source_paths()` returned `[]` for ALL THREE of:**
+> ```
+> dirty TRACKED pyproject.toml            -> MISSED   (it carries [tool.pytest.ini_options])
+> UNTRACKED src/engine/tests/conftest.py  -> MISSED   (pytest auto-loads conftest)
+> dirty TRACKED tests/python/__init__.py  -> MISSED   (a DECLARED testpath, 26 tracked files)
+> CONTROL: plain `git status --porcelain --untracked-files=all` saw ALL THREE
+> ```
+> 🛑🛑 **DO NOT ADOPT THE READ'S PATH LIST LITERALLY — IT OMITS `tests/`. `[MEASURED]` `pyproject.toml:30` reads `testpaths = ["src/engine/tests", "tests/python"]`, and `tests/python` holds `26` tracked files that pytest EXECUTES. A list of `src · scripts · pyproject.toml · conftest.py · pytest.ini · tox.ini · setup.cfg` leaves that directory unguarded.**
+> ✅ **THE SET I ORDER: `src/` · `scripts/` · `tests/` · `pyproject.toml` · `pytest.ini` · `tox.ini` · `setup.cfg` · root `conftest.py` — and switch to `--untracked-files=all` over exactly those paths.** **Files that do not exist yet are fine; the point is that creating one untracked must be seen.**
+> ✅ **AND FIX THE STALE PROSE IN THE SAME PATCH (`§7` of the read, CONFIRMED BY ME): `_git_head()`'s docstring still says callers should *"skip the HEAD-did-not-move join rather than fail it"* — the code now REFUSES. No behaviour change; correct the sentence beside the code it contradicts.**
+> 🛑 **THEN RE-RUN `R1`–`R7` EACH ALONE. Use your own `AR-956 §4` technique for `R7` — commit the mutation INSIDE the disposable worktree so the new gate does not mask the `run_id` join.** ⚠️ **`R6`'s required property is `VALID EXIT 1 REACHES SCORING` — NOT that the verdict is `PASS`. A conforming checkout still refuses on `F-ACCEPT5-8` and that is expected.**
+
+**RULING ID:** R-807 · **ARs RULED: `AR-956`.** `[MEASURED HERE, immediately before this write]` **`AR-956` is the newest `## AR-` on disk.** · **DECISION: `AR-956` APPROVE (core) · `R3-1` HELD ON ONE FINAL SCOPED PATCH · `R3` REMAINS `0 / 5` · READ ADOPTED AND EXTENDED BY ONE MEASURED MECHANISM**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 604db48e`. SEATS: desk `16828` · worker `7972`. ONE each.**
+
+### §0 — ⏳ THE WAIT: HONOURED, AND THE READ IS NEW
+✅ **`[MEASURED HERE]` `ACCEPT5-TREE-AUTHORITY-CONFIG-1` → `0` in the ledger, against a positive control of `14`.** ⇒ **NEW READ, not a re-paste (`[relayed-read-no-timestamp]`).** ✅ **It arrived before this ruling, on the operator's own relay cadence.**
+
+### §1 — ✅ WHAT `9cdaef55` GENUINELY FIXED, RE-VERIFIED BY ME
+✅ **`[MEASURED HERE]`** `:552` → `if pre_head is None:` ⇒ REFUSE with `TREE_AUTHORITY_UNAVAILABLE`, *"pytest was not started; nothing was scored"* — **the fail-open branch is gone** · `_dirty_source_paths()` is path-scoped via `git status --porcelain --untracked-files=no -- src scripts` · **its own refusal string, correctly NOT `PYTEST RUN INVALID`.**
+✅ **AND I RAN THE CONTROLS RATHER THAN READING THEM: `[MEASURED HERE, disposable worktree]` pristine → `[]`; a dirtied tracked file under `src/` → `[' M src/engine/tests/test_accept5_stale_run_consumption.py']`, then restored clean.** ⇒ **THE GATE DISCRIMINATES — it is not inert.** ★★★★ **`AR-955 §3` MINTED `AN INERT ARM DOES NOT FAIL — IT AGREES WITH YOU`, SO A NEW GATE GETS A POSITIVE CONTROL BEFORE IT GETS CREDIT.**
+✅ **`STOP [16]` DISPROVEN BY ME ON THE LIVE TREE, WHICH IS BETTER THAN A FIXTURE: the campaign tree has `docs/wave25-exit-engine-ab-report.md` MODIFIED RIGHT NOW, and `_dirty_source_paths()` returns `[]`.** ✅ **`STOP [17]` DISPROVEN BY MY OWN `R6` ON THE REAL `107`-MEMBER MANIFEST: `2417/2417/31/3/2`, feeders agree, `TREE AUTHORITY` absent, `PYTEST RUN INVALID` absent.**
+⭐ **AND `AR-956 §4` CARRIES THE ROUND'S BEST OPERATIONAL LESSON, WHICH I ADOPT: the new gate would have MASKED the `R7` arm (its mutation dirties `scripts/`), so the worker COMMITTED the mutation inside the disposable worktree to reach the `run_id` join.** ★★★★★ **`A NEW GUARD CAN HIDE AN OLD ARM. RE-RUNNING A BATTERY AFTER A PATCH IS NOT RE-EXECUTING THE COMMANDS — IT IS RE-CHECKING THAT EACH ARM STILL REACHES THE THING IT WAS AIMED AT.`**
+
+### §2 — ✅ THE READ'S TWO MECHANISMS: CONFIRMED EMPIRICALLY, NOT BY INSPECTION
+🛑 **I did not adopt these from the argument. `[MEASURED HERE, disposable worktree at `HEAD`, each mutation applied then queried]`:**
+```
+_dirty_source_paths() baseline (pristine)                      -> []
+after dirtying TRACKED pyproject.toml                          -> []   MISSED
+after creating UNTRACKED src/engine/tests/conftest.py          -> []   MISSED
+POSITIVE CONTROL: git status --porcelain --untracked-files=all -> M pyproject.toml
+                                                                  ?? src/engine/tests/conftest.py
+```
+✅ **`[MEASURED, `pyproject.toml:29-37`]` it carries `[tool.pytest.ini_options]` with `testpaths`, `python_files`, `python_classes`, `python_functions`, `pythonpath`, `filterwarnings` — it does not merely accompany the run, IT DEFINES WHICH TESTS ARE COLLECTED AND HOW THEY IMPORT.** ⇒ **A dirty `pyproject.toml` changes what pytest executes while the authority gate reports CLEAN. The read is right.**
+✅ **AND THE `--untracked-files=no` COMMENT IS FALSE AS WRITTEN — it claims *"an untracked file is not executed unless the manifest names it"*. `conftest.py` is auto-loaded by pytest and no manifest names it.** ★★★★★ **`A COMMENT THAT STATES A SAFETY PROPERTY IS A CLAIM WITH AN EVIDENCE GRADE LIKE ANY OTHER — THIS ONE ASSERTED A MECHANISM THAT PYTEST'S OWN COLLECTION RULES CONTRADICT, AND IT SAT INSIDE THE FUNCTION IT WAS EXCUSING.`**
+
+### §3 — 🛑🛑 THE THIRD MECHANISM, WHICH THE READ'S OWN PATCH LIST WOULD LEAVE OPEN
+🛑 **`[MEASURED HERE]` `pyproject.toml:30` → `testpaths = ["src/engine/tests", "tests/python"]`. `git ls-files tests/python` → **`26` TRACKED FILES**. And `[MEASURED, same probe]` dirtying `tests/python/__init__.py` left `_dirty_source_paths()` at `[]`.**
+⇒ 🛑 **AN ENTIRE DECLARED TESTPATH IS OUTSIDE THE AUTHORITY SET, AND THE READ'S PROPOSED LIST — `src · scripts · pyproject.toml · conftest.py · pytest.ini · tox.ini · setup.cfg` — DOES NOT CONTAIN IT.** ⇒ **ADOPTING ITS PATCH VERBATIM WOULD HAVE CLOSED TWO HOLES AND LEFT THE THIRD, WHILE THE COMMIT MESSAGE SAID "TREE AUTHORITY".**
+★★★★★ **`THIS IS THE SECOND ROUND RUNNING WHERE THE READ'S PRINCIPLE WAS RIGHT AND ITS ENUMERATION WAS SHORT — LAST TIME A DROPPED CLASS `D`, THIS TIME A DROPPED TESTPATH. A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE THE LIST IS SUPPOSED TO GUARD.`**
+⚠️ **AND I NAME THE DECAY RATHER THAN PRETENDING THE FIX IS PERMANENT: a literal list drifts the moment someone edits `testpaths`. `[MEASURED]` that edit WOULD now be caught, because `pyproject.toml` enters the guarded set — so the list is self-defending at one remove, which is acceptable today.** ✅ **BANKED — `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1`** | worker | derive the authority surface from `testpaths` instead of hard-coding it | **WAKE: before the final permanent-authority grade, or on the first `testpaths` edit** | evidence `§3`. 🛑 **NOT now — `R3-1` is not a redesign lane.**
+
+### §4 — ✅ THE ORDERED PATCH, CONTROLS, AND THE ONE PROSE FIX
+✅ **AUTHORITY SURFACE:** `src/` · `scripts/` · **`tests/`** · `pyproject.toml` · `pytest.ini` · `tox.ini` · `setup.cfg` · root `conftest.py`. **Switch to `--untracked-files=all` over exactly those paths.** 🛑 **Non-existent files are fine and expected — the requirement is that CREATING one untracked is SEEN.**
+✅ **CONTROLS — the read's `A`–`E` adopted, plus one I add because `§3` is mine:**
+```
+A clean authority surface                          -> proceeds, gate silent
+B dirty TRACKED pyproject.toml (isolated worktree)  -> REFUSE before pytest
+C UNTRACKED src/engine/tests/conftest.py            -> REFUSE before pytest
+D dirty ONLY docs/wave25-…md                        -> DOES NOT FIRE  (preserves STOP [16])
+E restored / deleted                                -> normal scoring resumes
+F dirty TRACKED tests/python/<file>                 -> REFUSE   <- DESK ADDITION, SS3
+```
+🛑 **`C` MUST USE A FILE PYTEST WOULD GENUINELY AUTO-LOAD — a `conftest.py`, not a `random.txt`. A control that plants an inert file proves the gate sees untracked files, not that it guards EXECUTION.** ★★★ **`A CONTROL MUST EXERCISE THE MECHANISM, NOT THE SYMPTOM.`**
+✅ **PROSE FIX, SAME PATCH — `[MEASURED HERE, `_git_head()`'s docstring]` it still reads *"Callers must therefore treat None as 'unknown' and skip the HEAD-did-not-move join rather than fail it"* while `:552` now REFUSES.** ⇒ **CORRECT IT BESIDE THE CODE.** ★★★★ **`A DOCSTRING THAT SURVIVES THE BEHAVIOUR IT DESCRIBES IS THE NEXT READER'S FALSE PREMISE — AND `R-806` MINTED "A WRONG MECHANISM GETS OBEYED" FOR EXACTLY THIS.`**
+🛑 **NO REDESIGN, NO `R3-1B`, NO SIXTH `R3` ITEM. Patch the existing helper.**
+
+### §5 — ⚖️ BOOKKEEPING AND WHAT IS NOT REOPENED
+✅ **`R3` STAYS `0 / 5`.** **Do not count a five-part item complete while a named execution-authority input is provably unguarded.** ⇒ **On green with `R1`–`R7` intact: `R3-1` CLOSED, `R3` = `1 / 5`, then `R3-3`.**
+🛑 **NOT REOPENED, AND I ENDORSE THE READ'S LIST: `F-R2-1`'s repair · unique run directories · the exit `0`/`1` policy · `R1`–`R7`'s design · the `--from-run` advisory split · lane `L` · `S6` · candidate persistence · `F-ACCEPT5-8` · `R3-4`'s four machine-local inputs.**
+⭐ **FOURTH SIGHTING OF `F-ACCEPT5-8`, RECORDED BECAUSE IT KEEPS SHAPING EVERY `PASS`: `[MEASURED HERE]` my `R6` in a CONFORMING worktree ended `REFUSED` while the worker's in the NON-CONFORMING campaign tree ended `PASS` — the `R6` PROPERTY held identically in both.** ✅ **The read states the right standard and I adopt it verbatim: `R6`'s requirement is `VALID EXIT 1 REACHES SCORING`, NOT that every environment currently passes `ACCEPT-5`.**
+⚠️ **WORKTREE HYGIENE, ONE INSTRUCTION: `R-803` retained `wt-r3-faithful-20260810` *"until `R3-1` closes"*. That condition has NOT yet been met, so it stays.** ⚠️ **`wt-r3-accept5-20260810` (from `AR-946`, attempt `1`) has no retention order and is debris — remove it when convenient; I did not, because I did not create it.**
+
+### §6 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized.
+AUTHORIZED NOW : ACCEPT5-TREE-AUTHORITY-CONFIG-1, worker 7972 -- authority surface per
+                 SS4 (INCLUDING tests/), --untracked-files=all, the docstring fix,
+                 controls A-F, then RE-RUN R1-R7 EACH ALONE. Self-executing.
+                 On green: R3-1 CLOSES, R3 = 1/5, then R3-3.
+PRECEDENCE PROOF: MEASURED EMPIRICALLY, SS2/SS3 -- three execution-authority inputs are
+                 invisible to the gate that exists to attest the tested bytes.
+                 It is the last unguarded input class in the fresh-run contract.
+R3 FAN-IN      : 0 / 5.
+STOP           : SS7.
+```
+
+### §7 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[18]`, NEW:** the widened surface refuses a run whose only dirty path is under `docs/`. **That is `STOP [16]` again and it must not regress — control `D` exists to catch it.**
+🛑 **STOP `[19]`:** `--untracked-files=all` makes routine artefacts (`__pycache__`, `.pytest_cache`, coverage output) refuse every run. **If gitignore does not already suppress them, SCOPE the surface — do not weaken the rule and do not start committing noise.**
+🛑 **CARRIED:** `R-806 §7`'s `[16]`/`[17]` (both MEASURED not to fire, and they must stay that way) · `R-805 §5`'s `[15]` DISCHARGED · `[13]` DISCHARGED · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER — new:** **`ACCEPT5-TREE-AUTHORITY-CONFIG-1`** | worker | `§4` | **WAKE: NOW, inside `R3-1`** | evidence `§2`/`§3` · **`ACCEPT5-AUTHORITY-SURFACE-DERIVED-1`** | worker | derive from `testpaths` | WAKE: before final grade | evidence `§3`. **CARRIED: `ACCEPT5-AUTHORITY-FIELD-1` · `ACCEPT5-GOVERNED-SKIP-SCOPE-1` · `ACCEPT5-RUN-ORDER-SKIP-1` · `ACCEPT5-SKIP-CENSUS-ARTIFACT-1` · `ACCEPT5-LATENT-OTHER-CHECKOUT-3` · and all others unchanged from `R-806 §7`.**
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE THE LIST IS SUPPOSED TO GUARD.`**
+★★★★★ **`A COMMENT THAT STATES A SAFETY PROPERTY IS A CLAIM WITH AN EVIDENCE GRADE — THIS ONE ASSERTED A MECHANISM PYTEST'S OWN COLLECTION RULES CONTRADICT, AND IT SAT INSIDE THE FUNCTION IT WAS EXCUSING.`**
+★★★★★ **`TWO ROUNDS RUNNING, THE READ'S PRINCIPLE WAS RIGHT AND ITS ENUMERATION WAS SHORT. ADOPT THE PRINCIPLE, RE-DERIVE THE LIST.`**
+★★★★ **`A NEW GUARD CAN HIDE AN OLD ARM — RE-RUNNING A BATTERY IS RE-CHECKING THAT EACH ARM STILL REACHES ITS TARGET.`**
+★★★★ **`A CONTROL MUST EXERCISE THE MECHANISM, NOT THE SYMPTOM — PLANT A conftest.py, NOT A random.txt.`**
+★★★★ **`A DOCSTRING THAT SURVIVES THE BEHAVIOUR IT DESCRIBES IS THE NEXT READER'S FALSE PREMISE.`**
+
+---
+
 ## R-806 · 2026-08-10 · ✅✅ **`AR-955` CORE APPROVED — `F-R2-1` IS CLOSED, AND I VERIFIED THE WHOLE CHAIN MYSELF ON THREE ARMS INCLUDING A PRE-REPAIR PLANT.** ✅ **THE EXTERNAL READ'S `ACCEPT5-TREE-AUTHORITY-1` IS REAL AND I CONFIRMED IT AT THE EXECUTABLE LINE: `:555` FAILS OPEN, AND THERE IS NO CLEANLINESS CHECK AT ALL.** 🛑🛑 **BUT ITS MICROREPAIR, IMPLEMENTED AS WRITTEN, WOULD RE-CREATE THE EXACT FALSE-RED CLASS `R6` EXISTS TO PREVENT — BECAUSE THE ACCEPTANCE RUN DIRTIES A TRACKED FILE BY CONSTRUCTION. I SCOPE IT.** ⚖️ **`R3` STAYS `0 / 5` FOR THIS ONE PATCH.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE
