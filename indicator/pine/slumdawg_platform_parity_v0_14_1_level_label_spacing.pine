@@ -4,18 +4,15 @@ indicator("Slumdawg traders indicator", shorttitle = "SLUMDAWG", overlay = true,
 // v0.14.1 - KEY-LEVEL LABEL SPACING / NO AUTOMATIC TRENDLINES
 // PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
 // PDH/PDL/PWH/PWL keep the v0.14 price semantics and main-chart scale.
-// Level chips are slightly larger and are pushed into right-side chart space so they do not crowd active candles.
+// Level chips are slightly larger and are pushed farther into right-side chart space so they do not crowd active candles.
 
 const bool LIVE_DECISION_SUPPORT_APPROVED = false
 const float EXPECTED_TICK = 0.25
 const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
 const float HUGE_DISTANCE = 1e12
-const int LEVEL_LABEL_OFFSET_BARS = 8
+const int LEVEL_LABEL_OFFSET_BARS = 16
 const int FALLBACK_BAR_MS = 5 * 60 * 1000
 
-// -----------------------------------------------------------------------------
-// INPUTS
-// -----------------------------------------------------------------------------
 string gSetup = "1 - SETUP"
 string bigDirection = input.string("NOT SET", "BIG DIRECTION", options = ["UP", "DOWN", "NOT SET"], group = gSetup, display = display.none)
 string planSide = input.string("LONG", "PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
@@ -29,9 +26,6 @@ bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near", group = gVi
 bool showGoLine = input.bool(true, "Show yellow GO LINE", group = gView)
 bool showSafeTarget = input.bool(true, "Show blue SAFE TARGET", group = gView)
 
-// -----------------------------------------------------------------------------
-// COLORS
-// -----------------------------------------------------------------------------
 color GREEN_UP = color.rgb(0, 205, 105)
 color RED_DOWN = color.rgb(230, 55, 70)
 color BLUE_DAY = color.rgb(35, 112, 255)
@@ -43,16 +37,9 @@ color PANEL_DARK = color.rgb(18, 20, 25)
 color PANEL_MID = color.rgb(37, 41, 49)
 color GOLD_ACCENT = color.rgb(205, 165, 70)
 
-// -----------------------------------------------------------------------------
-// PLATFORM CONTEXT
-// -----------------------------------------------------------------------------
 bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
 bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
 
-// -----------------------------------------------------------------------------
-// FROZEN KEY-LEVEL ENGINE — copied from the visually accepted v0.14 baseline.
-// Key levels remain available on all chart timeframes and are isolated from trendline research.
-// -----------------------------------------------------------------------------
 [dHighCurrent, dLowCurrent, dCloseTimeCurrent] = request.security(syminfo.tickerid, "D", [high, low, time_close], lookahead = barmerge.lookahead_off)
 [dHighPrev, dLowPrev] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
 [wHighCurrent, wLowCurrent, wCloseTimeCurrent] = request.security(syminfo.tickerid, "W", [high, low, time_close], lookahead = barmerge.lookahead_off)
@@ -82,12 +69,6 @@ plot(pdl, "PDL data", display = display.none)
 plot(pwh, "PWH data", display = display.none)
 plot(pwl, "PWL data", display = display.none)
 
-// -----------------------------------------------------------------------------
-// KEY-LEVEL DRAWINGS
-// Label x-position is derived from the current chart bar duration. This makes the
-// visual spacing adapt when the user changes chart timeframe without changing any
-// PDH/PDL/PWH/PWL price value. Chips remain title-only and do not print level prices.
-// -----------------------------------------------------------------------------
 var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
 var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
 var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
@@ -118,9 +99,6 @@ f_sync_level(line id, label lid, float price, string name, color c, bool visible
         label.set_xy(lid, na, na)
         label.set_text(lid, "")
 
-// -----------------------------------------------------------------------------
-// MANUAL GO LINE / SAFE TARGET. Kept isolated from the key-level engine.
-// -----------------------------------------------------------------------------
 var line goDraw = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
 var label goLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
 var box targetBox = na
@@ -129,7 +107,6 @@ var label targetLabel = na
 bool goSet = goLine > 0
 bool targetSet = safeTargetLow > 0 and safeTargetHigh > safeTargetLow
 
-// NEXT WALL uses key levels only. Automatic trendlines remain intentionally absent.
 array<string> wallNames = array.new_string()
 array<float> wallPrices = array.new_float()
 
@@ -200,11 +177,6 @@ if barstate.islast
             label.delete(targetLabel)
             targetLabel := na
 
-// -----------------------------------------------------------------------------
-// BEGINNER COACH
-// Pine tables are display objects, not clickable controls. The input above is the
-// actual toggle. When OFF, the full coach is replaced by a tiny visible tab.
-// -----------------------------------------------------------------------------
 bool directionKnown = bigDirection != "NOT SET"
 bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
 string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
