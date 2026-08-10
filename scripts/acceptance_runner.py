@@ -76,9 +76,66 @@ SEAL_APPROVED_POP_SHA256 = "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b4
 #   `AN INSTRUMENT THAT VALIDATES EVERY INPUT EXCEPT ITS MOST AUTHORITATIVE ONE
 #    HAS AUDITED ITS WITNESSES AND TAKEN THE JUDGE'S WORD FOR IT.`
 # ---------------------------------------------------------------------------
-BASELINE_APPROVED_RAW_SHA256 = (
-    "a9f70e2ed7ecc534f970ddd6c070aa0436c8605a134560b4b877d38c7d10d8fc"
+# ---------------------------------------------------------------------------
+# F-ACCEPT5-8 (R-796 §4) — THE DUAL ANCHOR, REPLACING THE RAW-BYTE SHA-256.
+#
+# The previous anchor hashed the file EXACTLY AS IT SAT ON DISK. `.gitattributes`
+# declares `*.json text eol=lf` and `core.autocrlf` is false, so a CONFORMING
+# checkout gets LF everywhere — yet the approved constant was computed over a
+# working copy carrying 66 CR bytes. It therefore PASSED IN EXACTLY ONE PLACE:
+# the single non-conforming worktree that minted it, and refused everywhere else.
+# `git status` cannot warn about this, because it compares NORMALISED content,
+# which matched the blob perfectly.
+#
+#   `AN ANCHOR PINNED TO A MATERIALIZATION ACCIDENT OF ONE WORKING COPY IS NOT
+#    PINNING THE ARTIFACT — AND THE ONE TOOL THAT WOULD HAVE TOLD YOU IS BLIND
+#    TO IT BY DESIGN.`
+#
+# TWO anchors, because neither alone is sufficient:
+#   BLOB OID       — "is this the artifact git COMMITTED?" Normalised first, so it
+#                    answers identically on every checkout. Alone it would bless a
+#                    RE-COMMITTED mutation, whose new OID someone could paste here.
+#   CANONICAL JSON — "did any semantic CONTENT change?" Line-ending immune, and it
+#                    bites exactly the re-commit the OID would wave through.
+#
+# 🛑 NO `git` SUBPROCESS. The OID is computed in pure Python, so this still anchors
+# inside a container, a tarball, or any export that has no `.git` at all.
+# 🛑 `git hash-object --no-filters` is FORBIDDEN (R-796 §9) and is not used here.
+# MEASURED (R-796 §4): the UNQUALIFIED form is the filter-applying SAFE one and
+# `--no-filters` is the trap — the inverse of the caution that was circulating.
+#   `A CAUTION THAT NAMES THE WRONG FLAG IS OBEYED AT THE WRONG FLAG.`
+# ---------------------------------------------------------------------------
+BASELINE_APPROVED_BLOB_OID = "b71c164147201f7a42dcd1899402a56ae19a6f32"
+BASELINE_APPROVED_CANONICAL_SHA256 = (
+    "1b97e38ae1e9c15a3653e0adf8533b0f73b7c7a5c092296dd00c5079dd1a02d4"
 )
+
+
+def _lf_normalized(raw: bytes) -> bytes:
+    """The content git stores for a `text eol=lf` path, whatever checked out."""
+    return raw.replace(b"\r\n", b"\n")
+
+
+def _git_blob_oid(raw: bytes) -> str:
+    """git's own object id for this content, computed without invoking git.
+
+    The format is git's: the literal `blob`, a space, the byte length, a NUL, then
+    the normalised content. sha1 here is not a security choice — it is git's object
+    format, and reproducing the identity git already assigned is the entire point.
+    """
+    body = _lf_normalized(raw)
+    header = b"blob " + str(len(body)).encode("ascii") + b"\x00"
+    return hashlib.sha1(header + body).hexdigest()  # noqa: S324
+
+
+def _canonical_sha256(parsed) -> str:
+    """Content identity that survives any line-ending or key-order presentation."""
+    canonical = json.dumps(
+        parsed, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 BASELINE_APPROVED_MEASURED_AT_SHA = "f8273f418558ad9552486dfee2dc37d9401dd360"
 BASELINE_APPROVED_FAILURE_COUNT = 33
 BASELINE_APPROVED_FAILURE_MEMBERSHIP_SHA256 = (
@@ -98,13 +155,17 @@ def validate_baseline_bytes(path: Path):
     """
     probs = []
 
-    # (1) raw bytes — the whole file, before any interpretation.
+    # (1) COMMITTED IDENTITY — the whole file, before any interpretation, compared
+    #     as git itself would identify it. Normalised, so this asks about the
+    #     ARTIFACT and not about how one worktree happened to materialise it.
     raw = path.read_bytes()
-    raw_sha = hashlib.sha256(raw).hexdigest()
-    if raw_sha != BASELINE_APPROVED_RAW_SHA256:
+    oid = _git_blob_oid(raw)
+    if oid != BASELINE_APPROVED_BLOB_OID:
         probs.append(
-            "BASELINE INTEGRITY FAILURE: raw-byte SHA-256 of the failure baseline is "
-            f"{raw_sha}, not the approved {BASELINE_APPROVED_RAW_SHA256}."
+            "BASELINE INTEGRITY FAILURE: the failure baseline's git blob OID is "
+            f"{oid}, not the approved {BASELINE_APPROVED_BLOB_OID}. This is compared "
+            "over LF-NORMALISED content, so a CRLF checkout is NOT the cause — the "
+            "committed content itself differs."
         )
 
     # (2) it must parse at all.
@@ -113,6 +174,19 @@ def validate_baseline_bytes(path: Path):
     except Exception as exc:
         probs.append(f"BASELINE INTEGRITY FAILURE: the baseline does not parse: {exc}")
         return probs
+
+    # (2b) CANONICAL CONTENT — the anchor a RE-COMMITTED mutation cannot dodge. The
+    #      blob OID above proves "git committed this"; a forger who commits their
+    #      edit gets a fresh OID and could paste it into the constant. Semantic
+    #      content is what they cannot restate without changing this digest.
+    canon = _canonical_sha256(d)
+    if canon != BASELINE_APPROVED_CANONICAL_SHA256:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: the baseline's canonical-JSON SHA-256 is "
+            f"{canon}, not the approved {BASELINE_APPROVED_CANONICAL_SHA256}. This "
+            "digest is line-ending and key-order immune, so it changed only because "
+            "the baseline's CONTENT changed."
+        )
 
     # (3) measured_at_sha — read AND compared. It was previously read and discarded.
     if d.get("measured_at_sha") != BASELINE_APPROVED_MEASURED_AT_SHA:
@@ -186,9 +260,31 @@ DISPOSITION_APPROVED_XFAILED_SHA256 = (
 # 🛑 AUTHORIZED DISPOSITION CHANGES — declared, never absorbed.
 #
 # R-794 §6 specifies exact equality: current_skipped ∩ sealed_population ==
-# sealed_skipped. MEASURED: that rule REFUSES THE PRISTINE TREE, because the seal
-# is taken at 08062e12 (before S6 activation) while HEAD is after it, and S6
-# activation legitimately RE-ENABLED two tests that were skipped at the pin.
+# sealed_skipped. MEASURED: that rule REFUSES THE PRISTINE TREE, and the reason is
+# NOT the one previously recorded here.
+#
+# 🛑 THE ORIGINAL EXPLANATION IN THIS COMMENT WAS REFUTED AND IS CORRECTED, NOT
+# QUIETLY DELETED. It read: "the seal is taken at 08062e12 (before S6 activation)
+# while HEAD is after it, and S6 activation legitimately RE-ENABLED two tests that
+# were skipped at the pin." R-795 §3 measured every load-bearing part of that and
+# it is false: `git log 08062e12..HEAD -- test_spec_family_bindings.py` is EMPTY —
+# the file has not changed at all — and both named tests ALREADY EXIST at the pin
+# with the same fixture. The S6 seal artefacts are not even ancestors of 08062e12;
+# they postdate it. NO CODE CHANGE RE-ENABLED ANYTHING.
+#
+# ✅ THE MEASURED MECHANISM: both tests call `_governed_split()`, which reaches
+# `pytest.skip("governed grade unavailable at ...")`. That is an ARTIFACT-
+# AVAILABILITY skip, not a semantic one. AR-936's G-3 then measured the artifact
+# as UNTRACKED — present on one disk, absent from the repository — so the two
+# "authorized unskips" were authorizing THE PRESENCE OF A FILE ON ONE LAPTOP.
+#
+#   `A CHRONOLOGY THAT FITS IS NOT A MECHANISM — TWO COMMITS BEING ADJACENT IN
+#    TIME SAYS NOTHING ABOUT ONE CAUSING THE OTHER.`
+#
+# ⏳ THIS AUTHORIZATION IS THEREFORE TEMPORARY AND IS ALREADY RETIRING. On this
+# branch the governed artifact is COMMITTED (K-1), which makes the input
+# deterministic; once that reaches the campaign branch the two entries below
+# should be removed, not renewed.
 #
 # The rule is not weakened to make the control pass — that would be exactly the
 # forbidden move. Instead the two known changes are NAMED here, out-of-band, in the
