@@ -640,12 +640,40 @@ def main():
 
             current_in_sealed = set(current) & disp_pop
             newly = sorted(current_in_sealed - sealed_members)
-            no_longer = sorted((sealed_members - current_in_sealed) - authorized)
+
+            # 🛑 F-ACCEPT5-7 (R-795 §2). `authorized` was subtracted in ONE direction
+            # only, so an AUTHORIZED test that RETURNS to this disposition re-entered
+            # `current_in_sealed` (leaving `no_longer`) and was in `sealed_members`
+            # (so it never entered `newly`). NEITHER check fired and the gate PASSED
+            # on a violated state. `observed ⊆ authorized` is not `observed ==`.
+            #
+            # This is `MISSING AUTHORIZED GONE` (:570) one dimension over: that mirror
+            # was built for the FAILURE dimension by R-792 and the DISPOSITION
+            # dimension, added later, copied the shape and not the lesson.
+            observed_removed = sealed_members - current_in_sealed
+            no_longer = sorted(observed_removed - authorized)
+            missing_authorized = sorted(authorized - observed_removed)
             print(f"[DISP] sealed {label:<5} membership drift        : "
                   f"+{len(newly)} / -{len(no_longer)}")
-            # 🛑 BOTH DIRECTIONS, BY MEMBERSHIP, NEVER COUNTS. A balanced swap —
-            # one sealed test starts skipping while a sealed skip starts passing —
-            # leaves every aggregate count identical and is invisible to a counter.
+            # 🛑 THREE REFUSALS, BY MEMBERSHIP, NEVER COUNTS — and the caption now
+            # matches the code. It previously said "BOTH DIRECTIONS" while the
+            # authorized subset had exactly ONE, which is worse than no caption:
+            # `A COMMENT THAT OVER-STATES A GUARD MAKES THE NEXT READER VERIFY THE
+            #  CAPTION INSTEAD OF THE CODE.`
+            #   newly              — a sealed test acquired this disposition
+            #   no_longer          — an UNAUTHORIZED sealed test lost it
+            #   missing_authorized — an AUTHORIZED change did NOT actually happen
+            # A balanced swap leaves every aggregate count identical, so counts
+            # cannot see any of the three.
+            if missing_authorized:
+                for n in missing_authorized[:10]:
+                    print(f"      MISSING AUTHORIZED DISPOSITION CHANGE ({label}): {n}")
+                failures_of_the_gate.append(
+                    f"MISSING AUTHORIZED DISPOSITION CHANGE: {len(missing_authorized)} "
+                    f"test(s) are authorized to have stopped being {label} but are "
+                    f"{label} right now. An authorization is a statement that a change "
+                    f"HAPPENED; if it did not, the authorization is hiding the reversal."
+                )
             if newly:
                 for n in newly[:10]:
                     print(f"      SEALED TEST NEWLY {label}: {n}")
