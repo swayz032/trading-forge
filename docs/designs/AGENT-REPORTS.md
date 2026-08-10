@@ -4,6 +4,81 @@
 
 ---
 
+## AR-910 · 2026-08-09 · ✅✅ **`STEP 0` IS LANDED, PUSHED, AND VERIFIED BY RE-FETCH. THE DEADLOCK IS GONE AND THE GUARD IS NOT WEAKER — IT BLOCKED ME ONE MORE TIME ON THE WAY OUT, FOR A GENUINE REASON, AND THEN TERMINATED.** ⭐ **THE PUSH SUCCEEDING IS THE PROOF, AND `origin` NOW CARRIES ALL SIX COMMITS INCLUDING `b1c17970`, WHICH THE EXTERNAL READER COULD NOT SEE.** ⚠️ **AND I OWN THE CORRECTION: I NAMED THE HELPER `_strip_provenance`. IT IS `content_only` (`:1826`). I INVENTED AN IDENTIFIER INSIDE A MEASUREMENT THAT WAS OTHERWISE REAL.**
+
+**TASK `R-780 §6 STEP 0`. SEAT `claude.exe 12460` (re-authorized). HEAD `d1b6ab34` = `origin/h1-wave4-sealed12-driver`. ATTEMPT `0 / 2`, UNSPENT. FAN-IN: `STEP 0` **DONE** · `STEP 1` NEXT, UNSTARTED.**
+
+### §1 — ✅ THE PUSH, AND THE VERIFICATION THAT IS NOT AN EXIT CODE
+```
+[MEASURED HERE, unpiped]
+git push -> SYSTEM-INVENTORY freshness (pre-push) ... Passed
+            5a5b8410..d1b6ab34  h1-wave4-sealed12-driver -> h1-wave4-sealed12-driver
+git fetch origin && compare (R-780 §6: "VERIFY BY RE-FETCH, never by exit 0"):
+  local  d1b6ab349bde7fd061b1066b404801ae3bfaa39f
+  remote d1b6ab349bde7fd061b1066b404801ae3bfaa39f      unpushed remaining: 0
+ANCESTOR CHECK against the REMOTE tip, per commit, by name:
+  b1c17970 ON ORIGIN · 0d23cf15 ON ORIGIN · 80800773 ON ORIGIN
+  befe9d34 ON ORIGIN · 742f4359 ON ORIGIN · d1b6ab34 ON ORIGIN
+R-780 ITSELF ON ORIGIN, joined by CONTENT not by claim:
+  git cat-file blob origin/...:docs/designs/ADVISOR-RULINGS.md -> "## R-780 · 2026-08-09 ..."
+```
+✅ **`R-780`'s stated harm is discharged: the external reader can now see `b1c17970`, `AR-908`, `AR-909` and this repair.**
+
+### §2 — ⚡ THE REPAIR: DELEGATION, AND THE DESK WAS RIGHT TO OVERRULE MY SHAPE
+**`742f4359` — `scripts/inventory_freshness_gate.py` + `tests/python/test_inventory_freshness_gate.py`, NOTHING ELSE.**
+```
+--check exit 0     -> ALLOW   (a stamp lagging HEAD is not staleness)
+--check exit 1     -> regenerate, then BLOCK with the UNCHANGED guidance
+--check other      -> BLOCK, surface stdout+stderr, and DO NOT regenerate over a
+                      checker reporting its own defect
+no src/ or scripts/ change -> skip (unchanged, :69)
+```
+⭐ **I PROPOSED IMPORTING `content_only()`; `R-780 §10-1b` ADOPTED DELEGATION INSTEAD AND IS RIGHT.** **My shape fixes today's bug and leaves TWO IMPLEMENTATIONS OF ONE POLICY — the next non-semantic field added to `--check` re-opens the same divergence.** ⇒ **the gate now asks the generator and obeys the answer; `content_only` is neither imported nor re-implemented here.** ★★★★★ **`FIXING A DIVERGENCE BY COPYING THE CORRECT SIDE PRESERVES THE DIVERGENCE.` ADOPTED.**
+✅ **`§10-1c`'s side effect is fixed too:** the old shape ran the generator with NO `--check` **before deciding anything**, so every armed push rewrote a repo-tracked file even when nothing was stale. **It now writes only on the stale branch.** `[MEASURED — CONTROL]` `--check` itself does not write: `md5 d31802ad…` identical across a run, exit `0`.
+
+### §3 — ✅ THE RED-PROOF: FOUR ARMS, TWO CONTROLS, AND I MEASURED **BOTH** DIRECTIONS
+🛑 **THE ARMS RUN THE ACTUAL PRE-REPAIR FILE, FETCHED FROM GIT BY PINNED BLOB `43db7eabcc0df292fb5ef7c9e9ab6592e340b1bf`** — `[MEASURED]` that blob contains `if after == before:` at `:84`, so it IS the deadlocking version. **Not a paraphrase of it** (`[red-path-decay]`: a fix is proven by the UNCHANGED instrument that convicted it).
+```
+[MEASURED HERE] python -m pytest tests/python/test_inventory_freshness_gate.py -q
+  AGAINST THE REPAIRED GATE : 6 passed                                  EXIT 0
+  AGAINST THE PRE-REPAIR BLOB SWAPPED IN AS THE IMPLEMENTATION UNDER TEST:
+                              3 failed · 3 passed
+    FAILED arm A  provenance-only difference        (the bug)
+    FAILED arm C  termination after the remedy      (the property it lacked)
+    FAILED arm D  broken checker must not read as fresh
+  (swap performed on a scratchpad backup and restored; md5 fd4bb8c8 identical
+   before and after, and `after == before` greps 0 in the restored file)
+```
+⭐ **ARM `B` PASSES ON *BOTH* GATES, AND THAT IS THE POINT, NOT A GAP.** Genuine content drift blocked before the repair and blocks after it. **`B` is the NOT-BLIND POSITIVE CONTROL; `A`, `C`, `D` are the discriminators.** ★★★★ **`A SUITE WHERE EVERY ARM FLIPS IS NOT A RED-PROOF, IT IS A REWRITE — THE ARM THAT MUST *NOT* CHANGE IS WHAT PROVES YOU KEPT THE GUARD.`**
+⭐ **ARM `C` IS THE ONE NEITHER THE DESK NOR I NAMED, AND IT IS THE ACTUAL DEFECT:** the old gate's failure was never "it blocks", it was **"it never stops blocking."** **A remedy that advances the state it measures cannot terminate.**
+⚠️ **THE GENERATOR IS STUBBED IN THE ARMS, DELIBERATELY, AND I NAME THE LIMIT:** the arms prove the gate's DECISION LOGIC hermetically in `0.4s`; **they do not prove the real generator's semantics.** **The real-world witness for that is `§4`.**
+
+### §4 — ⭐⭐ THE BEST EVIDENCE IS THE ONE I DID NOT DESIGN: IT BLOCKED ME AGAIN, CORRECTLY
+```
+[MEASURED HERE, first push after the repair landed]
+SYSTEM-INVENTORY freshness (pre-push) ... Failed
+python scripts/system_inventory.py --check -> "STALE: ... does not match the tree"  EXIT 1
+THE DRIFT, and it is NOT the stamp:
+  -| `tests/` | 34 | 0 |          +| `tests/` | 35 | 0 |
+  -| **TOTAL** | **2064** | ...   +| **TOTAL** | **2065** | ...
+  -... **614** of **2064** parsed  +... **614** of **2065** parsed
+```
+⇒ **MY OWN RED-PROOF FILE MOVED THE MAP'S COUNTS, THE REPAIRED GATE CAUGHT IT, AND IT WAS RIGHT TO.** ⇒ **I applied the remedy ONCE (`d1b6ab34`) and the next push PASSED.** ★★★★★ **`THE REPAIR WAS PROVEN BY THE GUARD BLOCKING ME A SECOND TIME AND THEN LETTING GO. A GUARD THAT STOPPED BLOCKING ENTIRELY WOULD HAVE LOOKED EXACTLY LIKE SUCCESS.`**
+🛑 **AND `d1b6ab34` IS NOT THE "FURTHER STAMP-CHASING COMMIT" `R-780 §6` FORBIDS.** **A stamp chase carries a provenance-line-only diff and cannot terminate; this carries a CONTENT diff and terminated on the next push.** **I state the distinction because the two look identical in `git log`.**
+
+### §5 — ⚠️ THE CORRECTION AGAINST ME, WHICH I ACCEPT WITHOUT QUALIFICATION
+🛑 **`AR-909 §5` named the helper `_strip_provenance`. `[MEASURED HERE]` it is `content_only` at `system_inventory.py:1826`. I INVENTED THAT IDENTIFIER.** The mechanism, the line range and the deadlock were all real and independently confirmed by the desk — **and the one token the next seat would actually have typed was fiction.** ⚖️ **`R-780 §10-1a` records this as the third name-or-line slip from this lane in four reports (`:454` twice, now a function name).**
+⭐ **WHAT I AM CHANGING, NOT JUST NOTING:** the slip's shape is that **identifiers get transcribed from the reading, while line numbers get transcribed from the grep.** ⇒ **from here, any identifier I put in an AR gets pasted from a `grep -n 'def <name>'` in the same command block as the line cite, so the pointer and the name share one provenance.** ★★★★★ **`A MEASUREMENT AND THE NAME YOU GIVE IT ARE TWO CLAIMS, AND ONLY ONE OF THEM WAS MEASURED.`**
+
+### §6 — 🛑 WHAT I DID NOT DO, AND WHAT IS NOT PROVEN
+🛑 **NOT TOUCHED:** `system_inventory.py` · provenance semantics · the schema · the reachability methodology · other hooks · any compiler file · `acceptance-baseline-2026-08-09.json`. 🛑 **NO `--no-verify`, at any point.** 🛑 **NO history rewrite — `befe9d34` stays; the broken hook told the previous attempt to create it.** 🛑 **NO gate work and S6 work in one commit** (`§6` forbidden list).
+🛑 **NOT MEASURED:** the gate's behaviour under a CONCURRENT sibling-seat push · a generator that hangs rather than exits non-zero · `tsc` · TS parity · any S6 suite in this step (`ACCEPT-1/2/3` were not re-run — **nothing in `742f4359` or `d1b6ab34` touches `src/`**, and I will not quote a stale green as if I had).
+⚠️ **ONE HAZARD OBSERVED, NOT FIXED, REPORTED:** `pre-commit` stashes unstaged work around every hook run, and on the blocked push it printed **`Stashed changes conflicted with hook auto-fixes... Rolling back fixes`** — i.e. the hook's write and the stash collided. **It rolled back cleanly and no work was lost `[MEASURED: the pre-existing dirt is still present and unchanged]`.** **The repaired gate makes this rarer by not writing unless stale, but it does not eliminate it** (`[precommit-stash]`, live sibling seat `claude.exe 28472`). **Not in scope for `STEP 0`; naming it so it is not rediscovered as a mystery.**
+
+**NEXT: `STEP 1` — publish the flag-OFF silent-pass RED, ALONE, no production edit, and STOP. It decides member `11`. FIRST OBSERVABLE: that RED committed and pushed, with an explicit `RED` / `CANNOT GO RED` verdict. NO ATTEMPT SPENT SO FAR.**
+
+---
+
 ## AR-909 · 2026-08-09 · 🛑🛑🛑 **`R-780 §6 STEP 1` IS UNEXECUTABLE AS ORDERED. THE PRE-PUSH INVENTORY GATE IS A DEADLOCK BY CONSTRUCTION, AND ITS PRINTED REMEDY CANNOT TERMINATE — I RODE ONE FULL CYCLE TO MEASURE IT RATHER THAN ASSERT IT.** ⚖️ **THE GATE COMPARES RAW BYTES INCLUDING THE PROVENANCE STAMP; `system_inventory.py --check` STRIPS THAT LINE **DELIBERATELY**, WITH A DOCSTRING EXPLAINING THAT NOT STRIPPING IT WOULD "MAKE `--check` FAIL PERMANENTLY". THE GATE IS THE VERY FAILURE ITS OWN GENERATOR DOCUMENTED AND AVOIDED.** 🛑 **I DID NOT USE `--no-verify`, AND I WILL NOT.**
 
 **TASK `R-780 §6 STEP 1`. SEAT `claude.exe 12460` (unauthorized — see `AR-908 §5b`). HEAD `befe9d34`. TREE `wt-h1-wave4-20260712`. FAN-IN: `STEP 1` **BLOCKED BY A REPO GUARD**, not by the work.**
