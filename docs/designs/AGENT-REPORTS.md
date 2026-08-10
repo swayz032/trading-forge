@@ -4,6 +4,22 @@
 
 ---
 
+## AR-911 · 2026-08-09 · 🟢 **START-RECEIPT — `R-780 §6 STEP 1` (flag-OFF silent-pass RED), STARTED. SEAT `claude.exe 12460`, ATTEMPT `0 / 2`, HEAD `6131dc3a` = `origin`.** ⏱ **ETA ~20–40 min. FIRST OBSERVABLE: the RED committed and PUSHED with an explicit `RED` / `CANNOT GO RED` verdict.**
+
+**`R-781 §3`'s `GATE-LIM-2` READ AND BANKED — NOT TOUCHED.** ⭐ **And I accept the near-miss as stated: in `742f4359` the file that ARMED the gate (`scripts/…`) and the file that MOVED the map (`tests/…`) were different files. A one-file commit of the test alone would have pushed a stale map under a "skipped" message. That was luck, not design, and it was not mine.**
+
+### §1 — 📍 THE QUESTION `STEP 1` HAS TO ANSWER, NAMED BEFORE I WRITE THE TEST
+🛑 **`R-780 §4` makes this red a DECIDER, so it must discriminate something a red at the carrier boundary cannot.** `[MEASURED HERE]` the S6 file already carries `_require_activated()` (`:254`) and `_execution_instance()` (`:310`), and **every candidate-aware arm dies there first, by design** (`AR-907 §1`: an arm that passes before the feature exists is a coincidence with an assertion attached).
+⇒ **A flag-OFF arm written the same way is RED TODAY AT THE SAME BOUNDARY AS `RED 2` — and a red that reports the boundary already named decides NOTHING about the ladder.** ⇒ **the deliverable has to be BOTH: an arm that is red-capable now AND an assertion that, once the activation lands, separates `the real adapter's per-bar array` from `:1929`'s all-True fallback.**
+**MY HYPOTHESES, LABELLED AS SUCH, TO BE MEASURED NOT ARGUED:**
+- **`H1` — reachable:** activation sets `executed`/`bindable` true (`spec_family_bindings.py:584 production_executed: bool = True`), both shields at `:1830`/`:1837` drop, flag-OFF lands on `:1929` ⇒ **member `11` is REAL.**
+- **`H2` — unreachable:** a third gate ahead of the ladder keeps the condition out entirely ⇒ **`CANNOT GO RED`, member `11` NOT built, and I name the gate.**
+- **`H3` — neither:** the key is never written at all, so the output is ABSENT rather than all-True ⇒ **a different defect than the one `§4` predicts, and I must not report it as that one.**
+🛑 **I will measure `b.executed` / `b.bindable` for the golden opening-range binding on TODAY's tree rather than inherit `R-744 §2`'s value** (`[red-path-decay]`; the ruling itself tags it `[ARTIFACT-SOURCED]`, not `[MEASURED HERE]`).
+🛑 **SCOPE HELD (`R-781 §5`): test-only, no production edit, no activation patch, no `SpecConditionStrategy` edit, no `FAMILY_META`, no TS mirror, no fixture transition, no 104-member join.** **Neither verdict spends an attempt — measuring is not attempting.**
+
+---
+
 ## AR-910 · 2026-08-09 · ✅✅ **`STEP 0` IS LANDED, PUSHED, AND VERIFIED BY RE-FETCH. THE DEADLOCK IS GONE AND THE GUARD IS NOT WEAKER — IT BLOCKED ME ONE MORE TIME ON THE WAY OUT, FOR A GENUINE REASON, AND THEN TERMINATED.** ⭐ **THE PUSH SUCCEEDING IS THE PROOF, AND `origin` NOW CARRIES ALL SIX COMMITS INCLUDING `b1c17970`, WHICH THE EXTERNAL READER COULD NOT SEE.** ⚠️ **AND I OWN THE CORRECTION: I NAMED THE HELPER `_strip_provenance`. IT IS `content_only` (`:1826`). I INVENTED AN IDENTIFIER INSIDE A MEASUREMENT THAT WAS OTHERWISE REAL.**
 
 **TASK `R-780 §6 STEP 0`. SEAT `claude.exe 12460` (re-authorized). HEAD `d1b6ab34` = `origin/h1-wave4-sealed12-driver`. ATTEMPT `0 / 2`, UNSPENT. FAN-IN: `STEP 0` **DONE** · `STEP 1` NEXT, UNSTARTED.**
