@@ -4,6 +4,78 @@
 
 ---
 
+## AR-955 · 2026-08-10 · ✅✅✅ **`R3-1` IS COMPLETE. THE GATE NOW READS ITS OWN SUBPROCESS'S EXIT CODE, AND ALL SEVEN RED-PROOFS PASS — EACH ALONE.** ✅ **`R6` RAN AGAINST THE REAL `107`-MEMBER MANIFEST AND SCORED NORMALLY ON A LEGITIMATE `exit 1`, SO THE REPAIR INVENTS NO NEW FALSE RED — `STOP [13]` AND `STOP [15]` BOTH DISCHARGED.** ✅ **`--from-run` CAN NO LONGER ISSUE AN AUTHORITATIVE `PASS`.** 🛑 **AND MY FIRST `R7` ARM WAS INERT — IT "PASSED" WHILE TESTING NOTHING, AND I CAUGHT IT BY READING WHAT THE PLUGIN ACTUALLY RECORDED.**
+
+**SEAT `claude.exe 7972`. TREE `HEAD 85101e87`. `R3` **`1 / 5`** — `R3-1` closed; `R3-2`/`R3-3`/`R3-4`-conversion/`R3-5` remain.**
+
+### §1 — ✅ THE REPAIR, RED-PROOFED IN BOTH DIRECTIONS WITH THE CONVICTING INSTRUMENT UNCHANGED
+✅ **`058d83ce` — the `R-799 §2` fresh-run protocol at the defect site.** `subprocess.run(cmd, cwd=REPO)` is no longer a bare expression statement: **unique `run_id` · unique per-run output dir · assert this run's artifacts do not already exist · pre-run authority (`run_id`, `HEAD`, manifest, runner sha, invocation digest) · the subprocess result CAPTURED · only real exits `0`/`1` proceed to scoring · post-run joins (both feeders present and from the unique dir, `pytest_exitstatus == returncode`, `run_id` matches, plugin `cwd` == the authorised repo, `HEAD` did not move).**
+🛑 **NOT `check=True`, deliberately: exit `1` is LEGITIMATE because the governed population contains historical failures, and blind `check=True` would convert every real failing member into an infrastructure error — a new false RED wearing a fix.**
+✅ **`[MEASURED HERE, the SAME test carried onto BOTH trees]`:**
+```
+repaired tree  (HEAD)      -> 1 passed in 2.84s
+pre-repair     (c31a30e3)  -> 1 failed in 3.15s
+                              [a] REPORTED exit 0 vs REAL 4 · [b] SHAs unchanged
+                              [c] verdict identical (100 lines)
+   and I confirmed the old tree still carried the defect: grep for the bare
+   `subprocess.run(cmd, cwd=REPO)` -> 1 occurrence there, 0 here.
+```
+⇒ ★★★★ **`RED WITHOUT THE FIX, GREEN WITH IT — AND THE RED RE-MEASURED AT THE PIN RATHER THAN REMEMBERED FROM THIS MORNING` (`[red-path-decay]`).**
+⚠️ **ONE DISCLOSED CHANGE TO THE APPROVED RED: its artifact discovery moved from a hardcoded `out_dir/acceptance-run.json` to `rglob`, because the protocol now writes into a unique subdirectory. `[MEASURED]` THE ORACLE IS UNTOUCHED — the pre-repair run above used the UPDATED test and still failed, which is the proof that the change did not weaken it.**
+
+### §2 — ✅ ALL SEVEN RED-PROOFS, EACH ALONE
+```
+[MEASURED HERE, each arm run independently against the REAL runner subprocess]
+R1  stale artifacts + pytest dies at startup   -> REFUSED - PYTEST RUN INVALID
+                                                  + "nothing was scored"
+R2  same, but ONE old feeder deleted first     -> REFUSED - PYTEST RUN INVALID,
+                                                  citing "pytest exited 4"
+                                                  => refuses for INVALID EXECUTION,
+                                                     NOT merely for a missing feeder
+R3  internal error   (real pytest exit 3)      -> REFUSED - PYTEST RUN INVALID
+R4  usage error      (real pytest exit 4)      -> REFUSED - PYTEST RUN INVALID
+R5  nothing collected(real pytest exit 5)      -> REFUSED - PYTEST RUN INVALID
+R6  VALID run, exit 1 from governed failures   -> ACCEPTANCE: PASS, exit 0   <-- see SS4
+R7  plugin record carries a different run_id   -> REFUSED - PYTEST RUN INVALID,
+                                                  naming BOTH ids            <-- see SS3
+```
+⭐ **`R2` IS THE ONE I WATCHED MOST CLOSELY, BECAUSE IT IS THE ARM THAT COULD PASS FOR THE WRONG REASON: with a feeder missing, a lazy implementation would refuse for *"file not found"* and look correct. `[MEASURED]` it refuses citing `pytest exited 4` — the EXECUTION, not the artifact.** ★★★★ **`AN ARM THAT CAN PASS FOR TWO DIFFERENT REASONS HAS NOT BEEN RUN UNTIL YOU READ WHICH REASON FIRED.`**
+✅ **`R3`'s exit-`3` condition was MANUFACTURED, not waited for: a throwaway plugin raising in `pytest_configure` `[MEASURED]` yields real pytest exit `3`, confirmed by a standalone control before the runner was pointed at it.**
+
+### §3 — 🛑 MY FIRST `R7` ARM WAS INERT AND WOULD HAVE READ AS A PASS
+🛑 **I first produced the `run_id` mismatch by injecting `--acceptance-run-id=bogus…` through `PYTEST_ADDOPTS`. The run came back `ACCEPTANCE: REFUSED` — a refusal — and it would have been easy to tick `R7` and move on.**
+✅ **IT WAS THE WRONG REFUSAL, AND I FOUND OUT BY READING WHAT THE PLUGIN ACTUALLY RECORDED `[MEASURED HERE]`:** the record's `run_id` was `aabdd634…`, IDENTICAL to the run directory's own uuid. ⇒ **`PYTEST_ADDOPTS` PREPENDS, so the runner's own `--acceptance-run-id` came last and won. THE MISMATCH NEVER EXISTED; the arm exercised nothing, and the `REFUSED` it produced was the ordinary population-drift verdict.**
+★★★★★ **`AN INERT ARM DOES NOT FAIL — IT AGREES WITH YOU. THE ONLY THING SEPARATING "R7 PASSES" FROM "R7 WAS NEVER RUN" WAS READING THE JOIN KEY INSIDE THE ARTIFACT INSTEAD OF THE VERDICT ON THE SCREEN.`** (`[i-measured]` again: I read the neighbouring object — the verdict — instead of the claim.)
+✅ **RE-RUN PROPERLY AS A REAL SOURCE MUTATION, UNDER `MUTATION-HARNESS-ATOMICITY-1`: disposable worktree · pre-mutation sha `ed6ee2c8…` · anchor asserted to appear EXACTLY ONCE before editing · post-run the worktree was DESTROYED, so the mutation died with it.** `[MEASURED]` **the campaign tree's plugin sha is `ed6ee2c8…` — pristine, byte-identical, never touched.** ⇒ **`R7` REFUSES, naming both the recorded and the requested id.**
+
+### §4 — ✅ `R6` ON THE REAL POPULATION — THE ARM THAT PROVES THE FIX IS NOT A NEW FALSE RED
+🛑 **`R-805 §5 STOP [15]` was explicit: `R6` on the fixture manifest alone does not close it.** ✅ **`[MEASURED HERE, the REAL `107`-member manifest]`:**
+```
+NOTE: [0] fresh run  : 1d51e5b743e64c1b98d541f4a1cf64c7 (HEAD 058d83ce…)
+NOTE: [3] feeder     : acceptance_pytest_plugin (pytest exit 1)
+NOTE: [4] collected/executed/failed/skip/xfail : 2417/2417/31/3/2
+[SELF-CHECK] independent feeder (junitxml) cases=2417 failures=31
+ACCEPTANCE: PASS       R6_RUNNER_EXIT=0
+```
+⇒ ✅ **A LEGITIMATE `exit 1` FROM `31` GENUINE GOVERNED FAILURES STILL REACHES NORMAL MEMBERSHIP SCORING AND A REAL VERDICT. `STOP [13]` AND `STOP [15]` ARE BOTH DISCHARGED BY MEASUREMENT.** ★★★★ **`THE HARDEST PART OF FIXING A GATE THAT WRONGLY PASSES IS NOT MAKING IT REFUSE — IT IS MAKING SURE IT STILL AGREES WITH EVERY REAL FAILURE IT WAS ALREADY RIGHT ABOUT.`**
+
+### §5 — ✅ THE ARCHITECTURAL SPLIT — A STANDING PROHIBITION THE CODE ITSELF WAS VIOLATING
+🛑 **`R-799 §8` and `R-800 §8` both FORBID *"`--from-run` issuing an authoritative `PASS`"* — and `[MEASURED]` the code did exactly that: one `print("ACCEPTANCE: PASS …")` served both paths.**
+✅ **`85101e87`: `--from-run` now prints `ACCEPTANCE: ADVISORY / FORENSIC` and states it may not be cited as sign-off evidence. `--run` is unchanged and still authoritative.** `[MEASURED HERE, red-proofed on `R6`'s OWN valid bundle]` **`--from-run` → occurrences of `ACCEPTANCE: PASS` = `0`, sign-off prohibition present = `1`; `--run` → `ACCEPTANCE: PASS` still reachable.** ★★★★★ **`THE DEFECT IS NOT THAT OLD EVIDENCE MAY BE READ — IT IS THAT OLD EVIDENCE MAY MASQUERADE AS A NEW RUN. EMITTING THE SAME WORD FOR BOTH PATHS IS HOW `F-R2-1` STAYED INVISIBLE.`**
+
+### §6 — ⚠️ SIDE EFFECTS AND HYGIENE, DECLARED RATHER THAN ABSORBED
+⚠️ **`[MEASURED HERE]` `docs/wave25-exit-engine-ab-report.md` is MODIFIED in the campaign tree — a single line, `Run date: 2026-05-24 …` → `2026-08-10 21:04 UTC`, rewritten by a governed test during my `R6` run.** ✅ **This is `ACCEPT5-TEST-SIDE-EFFECT-1` / `F-ACCEPT5-9`, already ruled output-only and non-escalating (cited `6×` in the ledger).** 🛑 **I did NOT `git checkout` it — the shared-tree rule forbids that outright, and reverting another seat's visible state to tidy an appearance is exactly what that rule exists to stop. It is DECLARED here instead.**
+✅ **`[MEASURED]` no orphaned mutation: the `R7` worktree is destroyed, the campaign plugin sha is pristine `ed6ee2c8…`, and the two verification worktrees (`wt-r3-hermetic`, `wt-r3-redproof`, `wt-r3-r7`) are all REMOVED.** ⚠️ **`wt-r3-faithful-20260810` REMAINS, retained on purpose per `R-803`.**
+
+### §7 — 🛑 WHAT IS NOT DONE
+🛑 **`R3` IS `1 / 5`.** **`R3-2`** (seal manifest binding + the successor node-ID chain + the hermeticity admission precondition) · **`R3-3`** (the two `F-R2-3` tests at `test_fix4_adaptive_symbol_dst.py:127`/`:148`, node IDs PRESERVED, plus `SEALED-MEMBER-CORRECTION-1`) · **`R3-4` conversion phase** (`SAMPLES_DIR`, `S3`+AWS, git-history; scope still `ACCEPT5-GOVERNED-SKIP-SCOPE-1`) · **`R3-5`** (LOW cleanup) — **all UNSTARTED.**
+⚠️ **NOT MEASURED, AND I WILL NOT IMPLY IT: whether the new refusal path behaves correctly when `--out-dir` points at a location that is not writable, and whether `_git_head()` returning `None` in a non-git environment leaves any join weaker than intended. Both are reachable states I did not exercise.**
+⚠️ **The new test is NOT in `canonical_regression_population.txt`. Admission is `R3-2`'s decision, not mine, and adding it unilaterally would grow the gate without the successor-chain governance `R3-2` exists to build.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` — `R3-1` complete at `85101e87`: RED at `c31a30e3`, repair at `058d83ce`, split at `85101e87`, all seven arms each alone, `R6` on the real population.** **Next smallest task, ONE: `R3-3`, whose defect is already located.** ⚠️ **I am continuing, not handing off.**
+
+---
+
 ## AR-954 · 2026-08-10 · ✅✅ **`R3-1`'s PERMANENT RED IS COMMITTED AT `c31a30e3` AND IT IS GENUINELY RED — WITH ALL FOUR SIGNALS `[a]`/`[b]`/`[c]`/`[d]` CARRIED IN ITS OWN FAILURE MESSAGE.** ✅ **HERMETICITY PROVEN WHERE IT COUNTS: IT REPRODUCES IDENTICALLY IN A FRESH **CONFORMING** WORKTREE, SO `STOP [12]` DOES NOT FIRE.** ⭐ **AND IT RUNS IN `3` SECONDS, NOT `2.4` MINUTES, BECAUSE THE FIXTURE MANIFEST MAKES THE GOVERNED POPULATION A TEST-CONTROLLED INPUT.** 🛑 **MY FIRST `[c]` INSTRUMENT WAS WRONG AND I CAUGHT IT WITH A CONTROL BEFORE ENCODING IT.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD c31a30e3`, tracked paths CLEAN. `R3` `0 / 5` — the RED is `R3-1`'s FIRST HALF; the repair and `R1`–`R7` are NOT done.**
