@@ -4,6 +4,95 @@
 
 ---
 
+## AR-901 · 2026-08-09 · 📍 **EAR RECEIPT — AND THE HEADLINE IS A CORRECTION ABOUT MYSELF: THIS IS NOT A NEW SEAT. `claude.exe 25636` IS THE **SAME PROCESS** THAT WROTE `AR-894`…`AR-900`; ONLY THE CONTEXT WAS CLEARED.** 🛑 **THE EAR I INHERITED WAS RECORDING, NOT INTERRUPTING — IT CORRECTLY LOGGED ALL FOUR OF `R-773`…`R-776` TO A FILE AND COULD NOTIFY ONLY BY DYING.** ✅ **REPLACED WITH A `Monitor persistent` RIG, RED-PROOFED ON A THROWAWAY BEFORE IT WAS POINTED AT THE LEDGER.** 🛑 **NO LANE IS OPEN AND I DO NOT OPEN ONE — `R-776 §4` IS DISCHARGED BY `AR-900` AND NOTHING HAS RULED ON IT.** ⚠️ **`system_inventory --check` EXITS `1` (STALE) AT `90be759b`.**
+
+**NO TASK — SEAT/EAR RECEIPT ONLY. SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`. HEAD `90be759b`, nothing unpushed (`git log @{u}..HEAD` empty). NOT ONE PRODUCTION BYTE WRITTEN.**
+
+### §1 — 🛑 THE CORRECTION I OWE FIRST: A CLEARED CONTEXT IS NOT A NEW SEAT
+```
+[MEASURED HERE]  parent walk from my own shell
+  31332 powershell.exe <- 25636 claude.exe <- 14492 powershell.exe <- 9228 explorer.exe
+  claude.exe alive: 25636 (mine, start 18:47:32) · 32080 (the OTHER seat, start 18:09:09)
+```
+⇒ **`R-776 §4` authorized `claude.exe 25636`, and `[MEASURED HERE]` that is me.** **I hold that authorization by process identity — but it is already DISCHARGED by `AR-900`, so it authorizes nothing further.**
+★★★★★ **`A CONTEXT WIPE IS NOT A NEW SEAT. THE ONLY HONEST DISCRIMINATOR IS THE PARENT WALK — "I DON'T REMEMBER ARMING THAT" IS EVIDENCE ABOUT MY CONTEXT, NOT ABOUT THE PROCESS TABLE.`** ⚠️ **This matters beyond bookkeeping: it decides whether the running monitors are MINE to touch. They were.**
+
+### §2 — 🛑 THE INHERITED EAR: LIVE, OWNED, CORRECT — AND STRUCTURALLY UNABLE TO INTERRUPT ME
+`[MEASURED HERE]` **`bash.exe 24736/29972` under my PID ran `ruling-ear.sh` on `ADVISOR-RULINGS.md` at a 20s poll, armed as a `Bash run_in_background` task (`bg5dljxfh`).** **Its logic was sound — sha256 of CONTENT, mtime unused.** **And its output file proves it worked:**
+```
+[MEASURED HERE] bg5dljxfh.output, 3810 bytes, read in full
+  [EAR ARMED]        ... newest-heading R-772
+  [LEDGER CHANGED]   -> R-773
+  [LEDGER CHANGED]   -> R-774
+  [LEDGER CHANGED]   -> R-775
+  [LEDGER CHANGED]   -> R-776
+```
+🛑 **FOUR REAL RULINGS DETECTED. ZERO NOTIFICATIONS DELIVERED — a backgrounded `Bash` task reaches the conversation only when it EXITS.** ⚖️ **And I can prove that end of it too, by accident: the ONLY notification this channel ever produced in my chat was its FAILURE (`exit 255`) at the moment I killed it.** ★★★★★ **`A DETECTOR THAT LOGS PERFECTLY AND CANNOT INTERRUPT YOU IS AN ARCHIVE, NOT AN ALARM — AND ITS LOG FILE IS EXACTLY WHAT MAKES IT LOOK LIKE AN INSTRUMENT.`**
+⚖️ **I sharpen `worker-onboarding §2a` rather than just citing it: the file said such a loop "notifies you of nothing." `[MEASURED HERE]` **it notifies you of exactly one thing — its own death.** That is worse than silence, because a stop-notification arriving proves the channel exists and invites you to conclude the change-notifications would have too.**
+
+### §3 — ✅ THE REPLACEMENT, RED-PROOFED BEFORE IT WAS TRUSTED (`§2a`: a detector that has never fired is not an instrument)
+```
+[MEASURED HERE, in this order — the order is the point]
+1 wrote ear2.sh (same sha256-of-content key; ONE stdout line per change)
+2 armed Monitor on a THROWAWAY file, poll 3s
+    -> "[EAR ARMED] throwaway-ledger.md sha=50d31e55b913"   ARRIVED IN CHAT  (channel proven)
+3 PLANTED a change in the throwaway
+    -> "[LEDGER CHANGED] ... 50d31e55b913 -> 5cca4ec08960 :: ## FAKE-RULING-1 planted"
+       ARRIVED IN CHAT                                                       (DETECTOR proven)
+4 TaskStop'd the red-proof rig
+5 armed Monitor persistent on the REAL ledger, poll 15s   -> task b8jqpyimg
+    -> "[EAR ARMED] ADVISOR-RULINGS.md sha=92428ddf4047 newest-heading: ## R-776 ..."
+```
+⭐ **Step 3 is the one that was skipped last time: the arm line proves the CHANNEL, and only a planted change proves the CHANGE-DETECTION.** **Both now have a positive witness, and neither was taken on the real file.**
+
+### §4 — 🛑 THE DISARMS, EACH WITH ITS CLAUSE — AND ONE INSTRUMENT LIE I CAUGHT MID-CENSUS
+**Disarmed (all four are MINE by `§1`; none belongs to `claude.exe 32080`, whose descendants I enumerated and did not touch):**
+```
+24736 + 29972  the inherited rulings ear  -> CLAUSE: worker-onboarding §2a "Never a Bash
+               background loop that never exits" + [one-monitor] "one rig per channel, never
+               new + old". CONDITION FIRED: a delivering rig now watches the same channel.
+21800          ORPHANED second copy of ruling-ear.sh on the REAL ledger, parent 12632 GONE
+               -> [one-monitor]: a duplicate rig on my channel that can reach nobody.
+26884          ORPHANED ruling-ear.sh on a DEAD throwaway fixture from the pre-clear context.
+16948          orphan of my own red-proof rig (task already TaskStop'd), throwaway file.
+```
+🛑 **AND THE INSTRUMENT LIED TO ME WHILE I DID THIS, exactly as `[ps-counting-encoding]` warns:** my first census matched `CommandLine -like '*ruling-ear.sh*'` and returned a `powershell.exe` under my own PID as a hit — **it was the QUERY ITSELF, whose command line contains the pattern.** ★★★★ **`A PROCESS SEARCH BY COMMAND LINE MATCHES ITS OWN COMMAND LINE. THE SEARCH IS A MEMBER OF THE POPULATION IT IS SEARCHING`** (`[i-measured]`). **Excluding `$PID` changed the answer.**
+✅ **FINAL CENSUS — exactly ONE rig on the channel:** `33568 (ppid 25636) + 31988 + 29860`, **all three started in the SAME second (20:04:19) and are the one `Monitor` task `b8jqpyimg`**, not three rigs. **`29860`'s parent `5220` has already exited — I verified by START TIME, not by parentage, that it is not a fourth rig.** ★★★ **`AN ORPHANED GRANDCHILD LOOKS EXACTLY LIKE A ROGUE SECOND RIG UNTIL YOU JOIN ON CREATION TIME.`**
+
+### §5 — ✅ BLIND-WINDOW BACKFILL (arming time is the join key)
+**My ear armed at `20:04:19`; it can never hear anything before that.** `[MEASURED HERE]` **newest ruling on disk, read BY HAND: `R-776`** (sha `92428ddf4047`). **Newest report on disk: `AR-900`, which is mine.** ⇒ **`R-776 §4` STEP 2 was authorized and is DELIVERED. Nothing has ruled on `AR-900`.** **The blind window is empty.**
+
+### §6 — ⚠️ `system_inventory --check` EXITS `1` — MEASURED, EXPLAINED, AND **NOT** SILENTLY REPAIRED
+```
+[MEASURED HERE] python scripts/system_inventory.py --check -> exit 1
+  "STALE: docs/designs/SYSTEM-INVENTORY.md does not match the tree."
+WHY, measured rather than assumed:
+  inventory last regenerated at 31139171 (R-775 §6, operator-ordered)
+  commits touching src/ since, ancestor-verified: 42199191 · 27edd639 · ba0803b1
+  ba0803b1 IS STEP 2 — it added the new production boundary. The map predates the code.
+```
+⚖️ **I did NOT regenerate it, and the reason is a clause, not a preference.** **`R-775 §6` binds the worker to run `--check` before building/escalating and to *"regenerate before TRUSTING it"* — the trigger is trusting the map. `[MEASURED]` **no claim in this AR rests on it**, no lane is open, and a regeneration is a commit into a tree whose other seat (`claude.exe 32080`) is live and whose working tree already carries 7 unrelated modified files (`[precommit-stash]`: a path-scoped commit is not a path-scoped hook). ★★★ **`A MANDATE TO REFRESH AN INSTRUMENT BEFORE TRUSTING IT IS NOT A MANDATE TO COMMIT DURING SOMEONE ELSE'S WINDOW.`** 🛑 **BUT IT IS NOW A NAMED DEBT: the first seat that relies on the reachability map — `MP-1` above all — must regenerate first, and `[MEASURED]` it will otherwise be reading a map that does not contain `produce_spec_artifact_from_record` at all.**
+
+### §7 — 🛑 WHAT I DID NOT DO, AND WHAT I AM ASKING FOR
+🛑 **NOT RUN:** the S6 suite · the `104` join · `tsc` · any backtest. **NOTHING re-measured from `AR-900` — its numbers are ITS receipt, and I will not launder them through a fresh-looking report (`[red-path-decay]`).**
+🛑 **NOT STARTED:** `STEP 3`, `MP-1`, or any deferred-register item. **`AR-900` recommended `STEP 3` and asked for approval; that approval has not been given, and a recommendation I wrote is not an authorization I may act on.**
+**RECOMMENDATION: APPROVAL_REQUESTED — a ruling on `AR-900`.** **NEXT SMALLEST TASK, unchanged from `AR-900 §6`: `STEP 3`, fan the lowered definition out into the 5/15/30 execution candidates via the existing `expand_execution_candidates`, none primary, none default, so `RED 1` STAGE 2 goes green.** ⚠️ **Two items the desk should rule on in the same motion rather than later: `STEP2-LIM-1` (the artifact is no longer plain-JSON-serialisable) and `§6`'s stale map.**
+
+### §8 — ⭐⭐⭐ ADDENDUM WRITTEN MINUTES LATER: THE EAR FIRED ON THE REAL CHANNEL, AND `R-777` IS WHAT IT CAUGHT
+**While I was writing `§7`, the rig interrupted me:**
+```
+[MEASURED HERE] [LEDGER CHANGED] ADVISOR-RULINGS.md sha 92428ddf4047 -> 54a3d7551188
+                :: ## R-777 · 2026-08-09 · ✅ STEP 2 CORE ACCEPTED ...
+```
+⇒ ✅ **The replacement is proven on the REAL ledger, not only on the fixture — armed at `20:04:19`, and the first ruling to land after that reached my chat unprompted.** 🛑 **AND THE COUNTERFACTUAL IS THE WHOLE ARGUMENT OF THIS AR: under the inherited rig this line would have gone into a file, and I would have finished `§7` — which says *"nothing has ruled on `AR-900`"* — and been WRONG while holding a live, correct, useless detector.**
+★★★★★ **`THE COST OF AN EAR THAT ONLY LOGS IS NOT A MISSED MESSAGE — IT IS A CONFIDENT, WELL-EVIDENCED, STALE CONCLUSION.`**
+⚖️ **`§7` IS THEREFORE SUPERSEDED, AND I STRIKE IT RATHER THAN EDIT IT** (`preserve-and-strike`): its *"no lane is open"* was true when written at `20:0x` and is false now. **`R-777 §4`+`§5` authorize `STEP 2.1` then `STEP 3` to `claude.exe 25636` in one continuous motion.**
+🟢 **START-RECEIPT — `R-777 §4`/`§5` ACCEPTED AND STARTED.** **First observable per `§5`: the firebreak test published BEFORE the shape change. ETA to that observable ~20-30 min. ONE `AR` will cover `2.1` + `3`.** **Attempt `0 / 2`.**
+
+**LESSON:** ★★★★★ **`A DETECTOR THAT CAN ONLY NOTIFY YOU BY DYING IS AN ARCHIVE, NOT AN ALARM.`** · ★★★★★ **`A CONTEXT WIPE IS NOT A NEW SEAT — THE PARENT WALK IS THE ONLY HONEST DISCRIMINATOR.`** · ★★★★ **`A PROCESS SEARCH BY COMMAND LINE IS A MEMBER OF THE POPULATION IT IS SEARCHING.`** · ★★★ **`AN ORPHANED GRANDCHILD LOOKS LIKE A ROGUE SECOND RIG UNTIL YOU JOIN ON CREATION TIME.`**
+
+---
+
 ## AR-900 · 2026-08-09 · ✅ **`STEP 2` DELIVERED (`ba0803b1`) — THE FULL-RECORD PRODUCTION COMPILE BOUNDARY EXISTS AND THE AUTHORITATIVE LOWERER RUNS INSIDE IT.** ⭐⭐⭐ **`RED 1` HAS **ADVANCED STAGE 1 → STAGE 2**, WHICH `R-776 §5` PRE-REGISTERED AS THE SUCCESS SIGNAL — AND I DID NOT CHASE IT GREEN.** ✅ **BOTH REQUIRED ARMS EXECUTABLE: GOLDEN → `READY` WITH `5/15/30`, NEIGHBOUR → `SOURCE_INCOMPLETE` WITH NAMED MISSING FIELDS.** ✅ **REGRESSION: `2 failed, 128 passed` — AND THE TWO ARE THE TWO ORDERED OPENING-RANGE REDS THAT MUST STAY RED.**
 
 **TASK `R-776 §4` (STEP 2). SEAT `claude.exe 25636`. ATTEMPT `0 / 2` — UNSPENT. HEAD `ba0803b1`. FAN-IN `1 / 1`.**
