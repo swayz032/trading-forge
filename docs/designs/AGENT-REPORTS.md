@@ -4,6 +4,104 @@
 
 ---
 
+## AR-927 · 2026-08-10 · 🛑🛑🛑★★★★★ **`R-789 §8` STOP CONDITION `[1]` HAS FIRED, AND I STOPPED. THE SECOND OPENING-RANGE CALCULATOR IS **REACHABLE TO A PAPER-TRADING DECISION** — `scheduler.ts:5076` AND `paper-signal-service.ts:1961` BOTH CALL IT, AND ITS RESULT GATES A STRATEGY BLOCK AT `paper-signal-service.ts:4154`.** ✅ **LANE `A` ITEM 1 `GATE-LIM-2` IS DONE, RED-PROOFED BOTH WAYS AND COMMITTED `11421ac8`.** 🛑 **LANE `A` ITEM 2 `ACCEPT5-COLLECTION-1` IS BLOCKED ON A CONTRACT DEFECT I CAN PROVE: THERE IS NO COMMITTED `ACCEPT-5` INSTRUMENT TO EXTEND — `ordered_6b_reds` AND THE BASELINE FILE ARE READ BY **ZERO** CODE IN THE REPO, POSITIVE-CONTROLLED.** ⚖️ **FAN-IN `2 / 2` LANES ENGAGED; NEITHER SILENTLY ABSORBED.**
+
+**SEAT `claude.exe 23344`. CAMPAIGN TREE `HEAD 11421ac8`. LANE `B` TREE `wt-mp1-recon-20260810` @ SEAL PIN `08062e12`, READ-ONLY, WROTE NOTHING. LANE `A` `1 / 2` ATTEMPTS. LANE `B` `1 / 2`.**
+
+### §1 — 🛑🛑🛑 STOP CONDITION `[1]`: `OR-DUPLICATE-1` IS REACHABLE. THIS OUTRANKS BOTH LANES.
+🛑 **`R-789 §8 [1]` says STOP AND REPORT if the second calculator is reachable to the backtest/live decision path. IT IS. I stopped Lane `B` here rather than finishing the arrow table.**
+```
+[MEASURED HERE, seal pin 08062e12, non-test filter with a POSITIVE CONTROL (§4)]
+bias-state-service.ts:361  export async function getOrComputeBiasStateForDay(...)
+                    :440+  builds `refreshContext` — the Python heredoc — and runs it
+                           via runPythonModule  ⇒ THE CALL CHAIN REACHES THE CALCULATOR
+                    :485+  `except Exception: pass  # fall through to neutral defaults`
+                           with opening_range_high = opening_range_low = current_price
+                           ⇒ THE ZERO-WIDTH RANGE the grade named, confirmed at the line
+
+CALLERS (non-test):
+  src/server/scheduler.ts:5076              <- automated scheduler path
+  src/server/services/paper-signal-service.ts:1961
+
+AND THE DECISION IT GATES:
+  paper-signal-service.ts:4154  if (!isLegacyStrategy && biasState && biasState.activeStrategyId !== null) {
+                        :4155      if (biasState.activeStrategyId !== sessionConfig.strategyId) {
+                                       -> the signal is BLOCKED for that strategy
+```
+⇒ **MECHANISM WITH ITS EVIDENCE IN THE SAME SENTENCE: `getOrComputeBiasStateForDay` executes the heredoc that computes an opening range, returns `biasState`, and `paper-signal-service.ts:4154-4155` uses `biasState.activeStrategyId` to decide whether a paper signal proceeds. The calculator is therefore ON a decision path, not beside one.**
+🛑🛑 **AND THE ISSUE IS THE FALLBACK, NOT MERELY THE DUPLICATION: on ANY exception the range collapses to `high = low = current_price` under a bare `except Exception: pass`. A zero-width opening range is not a neutral default — it is a fabricated level that reads as real to everything downstream.** ★★★★★ **`A FAIL-OPEN THAT SUBSTITUTES A FABRICATED VALUE IS WORSE THAN A CRASH: THE CRASH IS VISIBLE AND THE VALUE IS NOT.`**
+⚠️⚠️ **WHAT I DID **NOT** MEASURE, AND IT IS THE DIFFERENCE BETWEEN "REACHABLE" AND "CHANGES THE OUTCOME":** I did **NOT** trace whether `activeStrategyId` is itself a FUNCTION of the opening-range values, or whether those values only populate `SessionContext` fields that this particular decision ignores. **That requires reading the Python bias module and I stopped before it, per `[1]`.** 🛑 **So the proven claim is REACHABILITY OF THE CALCULATOR TO A DECISION PATH — which is exactly what `[1]` asks — and NOT "wrong opening-range levels change which strategy trades." I will not upgrade one into the other.** ★★★★★ **`"IT IS ON THE PATH" AND "IT CHANGES THE ANSWER" ARE DIFFERENT CLAIMS, AND ONLY THE FIRST IS MEASURED HERE.`**
+🛑 **I DID NOT DELETE, REWRITE OR "FIX" IT** (`R-789 §8` forbids it, and `A SECOND CALCULATOR IS NOT SAFE UNTIL YOU KNOW WHAT READS IT — DELETING IT BEFORE CLASSIFYING DESTROYS THE EVIDENCE`). **Classification only, as ordered.**
+
+### §2 — ✅ LANE `A` ITEM 1 — `GATE-LIM-2` REPAIRED, RED-PROOFED BOTH WAYS, COMMITTED `11421ac8`
+✅ **THE DEFECT, PROVEN AT THE LINE BEFORE ANY EDIT:**
+```
+[MEASURED HERE] system_inventory.py:69          REFERENCE_ROOTS = ["src","scripts","e2e","tests"]
+                inventory_freshness_gate.py:79  WATCHED = ("src/", "scripts/")
+                :101/:125  no WATCHED match -> main() returns 0 WITHOUT ASKING THE GENERATOR
+```
+⭐ **RED — in an isolated throwaway worktree with a REAL upstream, because the gate reads `{upstream}..HEAD` and a working-tree edit would not have exercised it at all:**
+```
+[MEASURED HERE] committed diff vs upstream -> tests/test_gatelim2_probe.py  (ONLY)
+                system_inventory.py --check -> exit 1  (STALE)
+                OLD GATE  -> "no src/ or scripts/ change in this push - skipped"  exit 0
+                            ⇒ A STALE MAP WOULD HAVE BEEN PUSHED.
+```
+✅ **GREEN — same state, new gate: exit `1`, blocks with the remedy.**
+✅ **POSITIVE CONTROL, RUN IN BOTH TREES — map regenerated and fresh ⇒ new gate exit `0`, push allowed. It is not an always-red gate.** ★★★ **A mutation suite without the unmutated control cannot tell "catches breakage" from "always red".**
+⭐⭐ **AND I CORRECTED MY OWN MECHANISM CLAIM MID-PROOF: I assumed the probe moved the map by ADDING A ROW; `grep -c test_gatelim2_probe SYSTEM-INVENTORY.md` returned `0`. It does not appear by name. The REAL mechanism, measured from the map diff, is a per-root COUNT row:**
+```
+- | `tests/` | 35 | 0 |        +  | `tests/` | 36 | 0 |
+- Modules reachable ... of 2067 parsed files    + ... of 2068 parsed files
+```
+⇒ **ANY `tests/` change moves the map BY CONSTRUCTION, which is stronger than the row-based story I started with.** ★★★★★ **`A RED-PROOF THAT WORKS FOR A REASON YOU GUESSED IS STILL AN UNVERIFIED MECHANISM — DIFF THE ARTIFACT AND FIND OUT WHY.`**
+🛑 **REPAIR IS DELETION, NOT WIDENING.** I did **not** extend the allowlist to include `e2e/`/`tests/`: that re-creates the divergence the next time `REFERENCE_ROOTS` gains a member (`INV-2` again), and the file's own docstring already argues against it. **`WATCHED` survives at exactly one place — line `27`, inside the docstring, as the recorded historical value.** `ruff` clean; `ast.parse` OK.
+⚠️ **THE PRICE, MEASURED AND DECLARED: `--check` costs `15,332 ms`, so every armed push now pays it, including docs-only pushes — the most frequent kind on this campaign. `R-789 §7` chose correctness over a skip that cannot be trusted, and I am not hedging that choice, only invoicing it.**
+
+### §3 — 🛑 LANE `A` ITEM 2 — `ACCEPT5-COLLECTION-1` CANNOT BE EXECUTED AS WRITTEN. THE GATE DOES NOT EXIST.
+🛑 **`R-789 §7` orders: *"the sign-off gate ADDITIONALLY pins/verifies COLLECTION PRESENCE."* There is no sign-off gate.**
+```
+[MEASURED HERE, whole repo minus node_modules, --include=*.py,*.ts,*.mjs,*.js]
+grep -rln "ordered_6b_reds"                 -> ZERO files
+grep -rln "acceptance-baseline-2026-08-09"  -> ZERO files
+POSITIVE CONTROL, same grep form:
+grep -rln "canonical_regression_population" -> src/engine/tests/test_flag_off_parameterized_refusal.py
+```
+⇒ **The immutable baseline JSON is read by NO CODE. `ACCEPT-5` has never had a committed runner: every execution in this campaign — including mine in `AR-923`, and the desk's — was a hand-built script authored per seat.** ⚖️ **This CORROBORATES memory `[population-no-instrument]` ("no import-closure script committed as of 08-04") and shows it has not changed.**
+🛑🛑 **AND THE CAMPAIGN HAS ALREADY PAID FOR THIS ONCE, MEASURED BY SOMEONE ELSE: `R-789 §6` records that the GRADER's own ad-hoc `ACCEPT-5` extractor reported `51` failures against pytest's `31` — a `49-MEMBER FABRICATED REGRESSION AGAINST A CLEAN COMMIT`.** ⇒ **That is not a grader defect; it is the predicted consequence of a sign-off criterion with no committed instrument. Every seat rebuilds it, and rebuilds differ.** ★★★★★ **`A GATE WITH NO COMMITTED INSTRUMENT IS NOT A GATE — IT IS A PROCEDURE EACH SEAT RE-AUTHORS, AND THE CAMPAIGN HAS ALREADY SHIPPED ONE FABRICATED REGRESSION FROM EXACTLY THAT.`**
+⚖️ **WHY I STOPPED RATHER THAN BUILT (`worker-execution §9`): the ordered repair is a one-line addition to an existing gate; the ACTUAL work is AUTHORING THE CAMPAIGN'S SIGN-OFF INSTRUMENT FROM SCRATCH, which would become the authority every future acceptance joins on — authored by the doer, ungraded, on a lane budgeted as a microrepair.** 🛑 **That is a materially different and larger thing than what `R-789` authorized, and `R-648`'s law still reads: `A NEW CHECKER PROPOSED MID-LANE IS SCOPE CREEP WEARING A SAFETY COSTUME — REPORT IT, DO NOT BUILD IT.`**
+⚡ **MY RECOMMENDATION, NOT A DECISION: authorize `ACCEPT5-INSTRUMENT-1` as its own lane with its own budget and an INDEPENDENT GRADE, since its output is the thing every future sign-off will cite. I have not started it and I will not without a ruling.** ⚖️ **`[HYPOTHESIS, UNPROVEN]` the minimal honest form is a committed script that (a) resolves the manifest, (b) records COLLECTED node IDs as well as failures, and (c) diffs both against the baseline — but I have not designed or tested it, and I am not asserting that shape is right.**
+
+### §4 — ⚖️ INSTRUMENT AUDIT AGAINST MYSELF — MY FIRST NON-TEST FILTER WAS WRONG
+⚠️ **My first reachability filter excluded `/tests/` and `test_` — Python conventions — and therefore counted TypeScript test files (`__tests__/`, `*.test.ts`) as PRODUCTION references. It reported `onboardSpecArtifact` at `26` refs and `registerStrategiesInPlaybook` at `35`, both inflated.**
+✅ **CORRECTED FILTER: `grep -vE "(^|/)tests?/|__tests__/|\.test\.ts|\.spec\.ts|/test_[^/]*\.py|conftest\.py"`, with a POSITIVE CONTROL requiring the production `def` to survive it.** ★★★★★ **`A TEST-EXCLUSION FILTER WRITTEN FOR ONE LANGUAGE'S CONVENTIONS SILENTLY PROMOTES ANOTHER LANGUAGE'S TESTS INTO PRODUCTION EVIDENCE.`** ⚖️ **Every count in `§1` and `§5` is from the CORRECTED filter; the inflated ones are discarded, not carried.**
+
+### §5 — ⚖️ LANE `B` PARTIAL: THE ARROWS I DID CLASSIFY, AND THE FIRST MISSING ONE
+```
+[MEASURED HERE @ 08062e12, corrected non-test filter]
+ARROW 1  certified extraction -> produce_spec_artifact_from_record
+         refs: 1, and it is the function's OWN `def` at spec_producer.py:959
+         ⇒ ACTUALLY UNWIRED.  *** THIS IS THE FIRST MISSING ARROW ***
+ARROW 2  produce_spec_artifact_from_record -> expand_execution_candidates
+         WIRED, in-file, spec_producer.py:1033
+ARROW 3  candidate fan-out -> build_execution_instances
+         refs: 2 = its own `def` (:53) + its `__all__` (:122)
+         ⇒ ACTUALLY UNWIRED. Confirms R-785 §4 and grade #2 AT THE SEAL PIN.
+CONTEXT  produce_spec_artifact (the OLDER, single-strategy boundary) IS called
+         (spec_producer.py:1001) — but only BY produce_spec_artifact_from_record,
+         which itself has no caller. A wired inner hop inside a dead outer one.
+```
+⭐ **AND ONE MEMORY DECAY CORRECTED BY MEASUREMENT: `[money-path-reachability]` records *"`onboardSpecArtifact` has NO caller."* At this pin it HAS one — `scripts/onboard-compiled-specs.ts:125`, non-test. `[red-path-decay]`: I show the decay rather than assume it, and that memory needs updating.**
+🛑 **ARROWS 4–7 (onboarding/runtime → `SpecConditionStrategy` → backtester → performance gate) ARE `[NOT CLASSIFIED]`. I stopped on `[1]`, and the contract also says stop at the first missing arrow. HONEST PARTIAL: the surface I covered is the five symbols named above, by static non-test reference count only. Dynamic reach, string-based invocation and subprocess dispatch are `[NOT MEASURED]`.**
+
+### §6 — ⚖️ FAN-IN AND STATE
+**`2 / 2` LANES ENGAGED, none silently absorbed:** **LANE `A`** = `1` of `2` items delivered (`GATE-LIM-2` ✅ committed `11421ac8`), `1` BLOCKED ON A CONTRACT DEFECT (`§3`). **LANE `B`** = STOPPED ON STOP CONDITION `[1]` with a partial arrow table (`§5`).
+🛑 **NOTHING WIRED. NO PRODUCTION MONEY-PATH WRITE. `bias-state-service.ts` UNTOUCHED. No compiler expansion. `OR-STATE-HANDOFF-1` not started. Immutable baseline and historical `S6` result untouched. Lane `B` worktree wrote nothing and is still pinned at `08062e12`.**
+⚠️ **DEVIATION CARRIED FROM `AR-926 §4`: both lanes run by me, not as subagents — `worker-execution §5a` records this harness does not launch subagents without the operator's word. Serialized, so they never contended; stop condition `[6]` did not fire.**
+⚡ **RECOMMENDATION: `BLOCKED` — pending a desk ruling on `OR-DUPLICATE-1`'s severity and on whether `ACCEPT5-INSTRUMENT-1` is authorized as its own graded lane.** **NEXT SMALLEST TASK (one, not a roadmap): trace whether `activeStrategyId` depends on the heredoc's opening-range values — that is the single measurement separating "on the path" from "changes the answer", and it is the one I deliberately did not take.**
+
+---
+
 ## AR-926 · 2026-08-10 · 🔵 **START-RECEIPT — BOTH `R-789` LANES ACCEPTED BY `claude.exe 23344`, FAN-IN TARGET `2`, EACH `0 / 2`.** ⭐ **`GATE-LIM-2` IS ALREADY LOCALISED AT THE LINE AND THE MISSING POPULATION MEMBERS ARE NAMED: THE GENERATOR READS `REFERENCE_ROOTS = ["src", "scripts", "e2e", "tests"]`; THE GATE WATCHES `("src/", "scripts/")`. ⇒ `tests/` AND `e2e/` MOVE THE MAP AND THE GATE SKIPS.** ✅ **LANE `B`'s ISOLATED READ-ONLY WORKTREE IS UP AT THE SEAL PIN `08062e12`.** ⚠️ **ONE DEVIATION DECLARED UP FRONT: I AM RUNNING BOTH LANES MYSELF, NOT AS SUBAGENTS — `worker-execution §5a` RECORDS THAT THIS HARNESS DOES NOT LAUNCH SUBAGENTS WITHOUT THE OPERATOR'S WORD.**
 
 **SEAT `claude.exe 23344` (born `01:56:32`) — and `R-789`'s own census says `desk 21324 + worker 23344`, which MATCHES my `Win32_Process` walk exactly, so the ruling is addressed to the seat that actually holds it. CAMPAIGN TREE `HEAD 36f890f2`. LANE `B` TREE `wt-mp1-recon-20260810` @ `08062e12` (detached).**
