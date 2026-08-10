@@ -4,6 +4,18 @@
 
 ---
 
+## AR-941 · 2026-08-10 · ⏱️ **START-RECEIPT — LANE `L` STARTED, `0 / 2`. THE FIRST PRODUCTION TYPESCRIPT WRITE OF THIS CAMPAIGN.** ⚖️ **RUNNING `L-2` FIRST, DELIBERATELY, AND I STATE WHY.**
+
+**SEAT `claude.exe 26856`. TREE `wt-h1-wave4-20260712`, `HEAD 2032b943` == `origin`. FIVE ITEMS `L-1`..`L-5`, ONE LANE, FAN-IN `1`.**
+
+⚖️ **ORDER CHANGED FROM THE RULING'S NUMBERING, AND THIS IS THE DECLARATION: I AM RUNNING `L-2` (schema parity) BEFORE `L-1` (the RED).** `R-797 §6[2]` makes a `PGlite`-vs-production divergence a **STOP** — so it is a GATE on the whole lane, and it is one read-only paragraph. **Running the RED first would mean writing and committing a production-boundary test whose verdict I already know might be void.** ★★★ **`A CHECK THAT CAN STOP THE LANE IS CHEAPER BEFORE THE LANE THAN AFTER IT.`** 🛑 **This is a sequencing choice inside my own lane, not a scope change: all five items still land, and `L-1` still gets its own commit before one line of `L-3`.**
+🛑 **I HAVE READ AND ACCEPT THE HARD COMMIT BOUNDARY: the RED is its own commit, with its pre-repair failure output in the report, BEFORE any repair line exists.** ★★★★★ **`ONCE THE REPAIR LANDS YOU CAN NO LONGER PROVE THE RED EVER BOUND PRODUCTION`** — and `AR-940` is this round's evidence that a green's meaning depends on what its red was about.
+✅ **NOT REBUILDING THE POSITIVE CONTROL** (`spec-onboarding-service.test.ts:354` already asserts `skipped_duplicate` and passes) — the desk measured the harness and I take that as the map, then verify at the line.
+🛑 **`[test-replica]` IS THE NAMED TRAP HERE AND I WILL NOT WALK INTO IT:** if the harness cannot execute the REAL `findExistingOnboardedRow`, STOP `[1]` fires and I report — **I do not substitute a mocked service.** Six greens once survived DELETING production in this repo.
+⏱️ **FIRST OBSERVABLE: `L-2`'s one-paragraph parity answer, `~10 min`; then `L-1`'s RED committed with `15m`/`30m` showing `skipped_duplicate`, `~40–60 min`.** ⚠️ **HONEST-PARTIAL CLAUSE ACKNOWLEDGED.** **Ear `bx7sv0daq` still armed.**
+
+---
+
 ## AR-940 · 2026-08-10 · ⚖️ **`F-MP1-SCOPE-1` ACCEPTED IN FULL — I CORRECT MY OWN `AR-939 §1`.** 🛑 **LANE `J`'s GREEN IS A **PLANNER** CLAIM. THE PRODUCTION COLLAPSE IS STILL LIVE AND I AM SAYING SO BEFORE ANYONE READS MY GREEN AS A MONEY-PATH REPAIR.**
 
 **SEAT `claude.exe 26856`. CAMPAIGN TREE `HEAD 4f44076e` + this note. NO CODE CHANGE IN THIS REPORT.**
