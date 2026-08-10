@@ -19,7 +19,23 @@
 🛑 **THE `ACCEPT-5` FINAL REGRADE IS HELD — and the hold is now the DESK's, not the read's:** a grader dispatched today would rediscover `F-ACCEPT5-7` in one pass. **Dispatch only after `G-1`+`G-2`+`G-3` land, PINNED to an exact commit, never a moving `HEAD`.**
 
 ## NOT AUTHORIZED
-money-path production wiring · `/api/backtests` · TypeScript persistence · a new SQL column for the receipt · the receipt inside `compiled_spec`/`SpecArtifact` · altering `spec_hash` semantics · any default/index/timeframe-derived candidate · widening `needs_archetype_queue` · touching `SCHEMA-1` · renaming `ordered_6b_reds` · editing the immutable baseline · changing the worker guard · compiler expansion · ALL paper-ORB work.
+money-path production wiring · `/api/backtests` · TypeScript persistence · a new SQL column for the receipt · the receipt inside `compiled_spec`/`SpecArtifact` · altering `spec_hash` semantics · any default/index/timeframe-derived candidate · widening `needs_archetype_queue` · touching `SCHEMA-1` · renaming `ordered_6b_reds` · editing the immutable baseline · **REGENERATING THE DISPOSITION SEAL AT `HEAD`** · **COMMITTING THE UNTRACKED GOVERNED-GRADE ARTIFACT** · changing the worker guard · compiler expansion · ALL paper-ORB work.
+
+## 🛑🛑🛑 [FACT, MEASURED HERE 2026-08-10 BY DESK `8552`, **NOT RULED**] — `F-ACCEPT5-8`: THE BASELINE ANCHOR IS LINE-ENDING SENSITIVE
+**Found by independently measuring `AR-936 §5`'s one `ARTIFACT-SOURCED` claim instead of accepting it.** Full `ACCEPT-5 --run` in an isolated worktree pinned at `a67f0997` (`C:/Users/tonio/Projects/wt-accept5-pin-a67f0997`, **KEPT as the live reproduction — do not delete without replacing the evidence**).
+✅ **MY PRE-REGISTERED PREDICTION HELD:** the run REFUSED with **`MISSING AUTHORIZED DISPOSITION CHANGE`** naming BOTH authorized tests — an untracked file cannot follow a worktree, so both SKIP there. ⭐ **This is stronger evidence for `G-1` than mutation `10` was: a synthetic plant proves it *can* fire; this is the REAL WORLD producing the condition unprompted.**
+🛑 **AND A SECOND REFUSAL I DID *NOT* PREDICT, WHICH IS THE MORE SERIOUS ONE:**
+```
+[MEASURED HERE — [System.IO.File]::ReadAllBytes + Get-FileHash, both trees, ONE command]
+docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json
+  CAMPAIGN tree : len 6368   CR bytes 66   sha256 a9f70e2e...  <- the APPROVED anchor
+  CLEAN worktree: len 6302   CR bytes  0   sha256 5e79f72c...  <- REFUSED as "tampered"
+  6368 - 6302 = 66 = EXACTLY the CR count => THE FILES DIFFER ONLY BY LINE ENDINGS.
+```
+⇒ **`F-2` anchors the failure baseline on a RAW-BYTE SHA-256, and the approved constant was computed on a CRLF working copy. Any clean checkout — a grader's worktree, CI, a fresh clone, a different `core.autocrlf` — normalizes to LF and REFUSES an UNTAMPERED file.** ★★★★★ **`AN INTEGRITY ANCHOR THAT FIRES ON AN UNTAMPERED FILE IS WORSE THAN NO ANCHOR: A CHECK THAT CRIES FORGERY ON EVERY CLEAN CHECKOUT TEACHES ITS READERS TO DISMISS IT.`** ⚠️ **The irony is exact: `F-2` used raw bytes ON PURPOSE, because `read_text()` HIDES CRLF (`[ps-counting-encoding]`). The same correctness that catches tampering catches normalization.**
+⭐ **THE PORTABLE FORM ALREADY EXISTS IN THIS CAMPAIGN, ONE HOP AWAY: `R-794 §1` verified the baseline "byte-identical to `186f22cd` **by blob SHA**". `git hash-object` is line-ending-normalized and travels.**
+🛑🛑 **CONSEQUENCE FOR THE REGRADE PIN — AND IT ANSWERS THE QUESTION THE DESK PUT TO THE EXTERNAL READER: `a67f0997` CANNOT BE HANDED TO A GRADER AS-IS. In an isolated worktree it REFUSES TWICE on an UNTAMPERED tree, and NEITHER refusal is a real defect in the instrument being graded.** ★★★★★ **`A PIN WHOSE PRISTINE STATE THE GRADER CANNOT REPRODUCE IS NOT A PIN.`** ⇒ **REGRADE STAYS HELD. `[UNRULED — owed a decision in `R-796`]`**
+⚖️ **OTHER MEASUREMENTS FROM THE SAME RUN, all `[MEASURED HERE]`:** `NEW failures 0` at `a67f0997` ⇒ **the worker's `§5` reasoning that this commit predates lane `H`'s reds is CONFIRMED** · `GONE 2`, authorized `2`, `UNAUTHORIZED 0`, `MISSING AUTHORIZED GONE 0` · `[SEAL] sealed members no longer collected: 0` · feeders agree on failure membership, collection membership AND size (`F-1`'s repair working on a real run) · collected `2404` vs sealed `2392`, seal check still clean.
 
 ## STATE, WITH EVIDENCE GRADES
 `[MEASURED HERE, desk `8552`, campaign tree, worktree root, UNPIPED]` **Lane `F` reproduced by me: `python -m pytest src/engine/tests/test_mp1_candidate_receipt.py` → `12 passed`, `exit 0`.** Not the report's number — mine.
