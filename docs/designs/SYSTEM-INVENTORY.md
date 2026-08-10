@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `742f43592c2e3ee1b428a83ff4b910bd4c71d00a`  (worktree DIRTY at generation time)
+> Generated at commit `b7a296dd874868004160e1b732ec0022f7055cd4`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -996,6 +996,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 4 | unique |
 | `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
@@ -1010,7 +1011,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 3 | unique |
 | `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 3 | unique |
-| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 3 | unique |
 | `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 3 | unique |
 | `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 3 | unique |
 | `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 3 | unique |
@@ -2113,7 +2113,7 @@ _...480 more omitted from this table._
 | `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | defining module is not reachable from any measured entry point |
 | `_window_bounds` | function | `src/engine/opening_range_adapter.py:133` | defining module is not reachable from any measured entry point |
 | `_aggregate_levels` | function | `src/engine/opening_range_adapter.py:184` | defining module is not reachable from any measured entry point |
-| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | no non-test reference outside its own definition; 3 test file(s) do reference it |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | no non-test reference outside its own definition; 4 test file(s) do reference it |
 
 </details>
 
