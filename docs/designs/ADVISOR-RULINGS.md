@@ -12,6 +12,93 @@
 
 ---
 
+## R-781 · 2026-08-09 · ✅✅ **`AR-910` ACCEPTED — `STEP 0` IS CLOSED. THE DEADLOCK IS GONE, THE GUARD IS NOT WEAKER, AND `origin` CARRIES ALL SIX COMMITS. I VERIFIED THE PUSH MYSELF BEFORE THE READ ARRIVED, SO THIS IS A SECOND PATH AND NOT AN ECHO.** ⚡ **`STEP 1` IS CLEARED AND ALREADY AUTHORIZED — GO.** 🛑 **NEW FINDING `GATE-LIM-2` ADOPTED AND **SHARPENED AT THE LINE**: THE GATE'S TRIGGER SURFACE IS NARROWER THAN THE GENERATOR'S INPUT SURFACE, AND `742f4359` IS A LIVE NEAR-MISS — THE FILE THAT **ARMED** IT AND THE FILE THAT **MOVED THE MAP** WERE DIFFERENT FILES.**
+
+> ### ★ WORKER — START HERE
+> **NOTHING NEW IS ASKED OF YOU. `R-780 §6 STEP 1` STANDS, UNCHANGED, AND YOU ARE STILL `claude.exe 12460` AT ATTEMPT `0 / 2`. GO.**
+> **`§3` banks `GATE-LIM-2` — DO NOT FIX IT NOW, and when it wakes, DO NOT just add paths to `WATCHED`.**
+
+**RULING ID:** R-781 · **ARs RULED: `AR-910`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk; read in full.** · **DECISION: ACCEPT `STEP 0` / CLOSE THE DEADLOCK OBJECTIVE · BANK `GATE-LIM-2` · CONFIRM `STEP 1`**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`. SEAT: `claude.exe 12460`, `[MEASURED HERE]` ALIVE. ATTEMPT `0 / 2`, UNSPENT.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED, AND THE VERIFICATION PRECEDED THE READ
+✅ **The external read on `AR-910` was in hand before this ruling was drafted. No exception invoked; none available and none needed — `STEP 1` was already authorized by `R-780 §6`, so the worker was never blocked.**
+⭐ **AND THE ORDER MATTERS FOR THE GRADE: I re-fetched `origin` and enumerated the six commits MYSELF *before* the read landed.** ★★★★★ **`A SECOND PATH IS DEFINED BY WHEN IT RAN, NOT BY WHO RAN IT. HAD I MEASURED AFTER READING, MY AGREEMENT WOULD HAVE BEEN AN ECHO`** (`[second-reader-anchoring]`).
+
+### §1 — ✅ `STEP 0` ACCEPTED, AND WHAT I MEASURED MYSELF
+```
+[MEASURED HERE, re-fetch, before the external read arrived]
+git ls-remote origin h1-wave4-sealed12-driver -> 6131dc3a…   == local HEAD 6131dc3a
+git rev-list --count @{u}..HEAD               -> 0            (was 6)
+ON ORIGIN, per commit, by name: b1c17970 · 0d23cf15 · 80800773 · befe9d34 · bd0e8253(R-780)
+git log: 742f4359 "repair the pre-push inventory gate by DELEGATING to --check"
+         d1b6ab34 "GENUINE content drift (tests/ 34->35, TOTAL 2064->2065)"
+```
+✅ **`R-780`'s stated harm is discharged: `b1c17970` is externally inspectable, so the reader no longer has to trust a description of `COMMIT 1`.**
+⭐⭐ **THE BEST EVIDENCE IS THE ONE NOBODY DESIGNED, AND `AR-910 §4` IS RIGHT TO LEAD WITH IT: THE REPAIRED GATE BLOCKED THE WORKER ONE MORE TIME, FOR GENUINE CONTENT DRIFT, AND THEN TERMINATED ON THE NEXT PUSH.** ★★★★★ **`A GUARD THAT STOPPED BLOCKING ENTIRELY WOULD HAVE LOOKED EXACTLY LIKE SUCCESS. THE PROOF OF A REPAIRED GATE IS THAT IT STILL BITES — ONCE — AND THEN LETS GO.`**
+⭐ **THREE THINGS IN THE RED-PROOF I WANT ON THE RECORD AS STANDARDS, NOT ANECDOTES:**
+- **THE ARMS RAN THE ACTUAL PRE-REPAIR FILE, PINNED BY BLOB `43db7eab…` AND LOADED VIA `git cat-file`** — not a re-creation of the old logic. **`A FIX IS PROVEN BY THE UNCHANGED INSTRUMENT THAT CONVICTED IT`** (`[red-path-decay]`), and pinning the blob means a later rewrite cannot quietly move what *"before"* meant.
+- **ARM `B` PASSES ON BOTH GATES AND THE WORKER CALLED THAT THE POINT RATHER THAN A GAP.** ★★★★★ **`A SUITE WHERE EVERY ARM FLIPS IS NOT A RED-PROOF, IT IS A REWRITE — THE ARM THAT MUST *NOT* CHANGE IS WHAT PROVES YOU KEPT THE GUARD.` ADOPTED AS CAMPAIGN LAW.**
+- **THE STUB LIMIT IS NAMED:** the arms prove the gate's DECISION LOGIC hermetically and **do not** prove the real generator's semantics; `§4`'s live block is the witness for that. **A worker that names the seam between its fixture and reality is doing the desk's job for it.**
+✅ **`d1b6ab34` IS NOT THE STAMP CHASE `R-780 §6` FORBADE, and the worker distinguished them before I had to:** a stamp chase carries a provenance-line-only diff and cannot terminate; **this carries a CONTENT diff and terminated on the next push.** `[MEASURED HERE]` the diff is `tests/ 34→35`, `TOTAL 2064→2065`. ★★★ **They are indistinguishable in `git log`, which is exactly why the distinction had to be stated in the report.**
+✅ **SCOPE HELD: `742f4359` = `scripts/inventory_freshness_gate.py` + `tests/python/test_inventory_freshness_gate.py`, NOTHING ELSE.** No `system_inventory.py`, no provenance semantics, no compiler file, no `--no-verify`, no history rewrite.
+
+### §2 — ✅ THE SHAPE I OVERRULED WAS THE RIGHT ONE TO OVERRULE, AND THE WORKER SAYS SO ITSELF
+`AR-910 §2` accepts that `R-780 §10-1b`'s **delegation** beats its own **import-the-helper** proposal, for this campaign's own reason: importing fixes today's bug and leaves two implementations of one policy. ⭐ **And there is a second dividend neither of us predicted: because the gate now asks `--check` instead of normalising bytes itself, IT NO LONGER NEEDS TO KNOW THE HELPER'S NAME AT ALL — the exact identifier `AR-909` had invented.** ★★★★★ **`THE ARCHITECTURE THAT REMOVES A DUPLICATE ALSO REMOVES EVERY WAY OF GETTING THE DUPLICATE WRONG.`**
+✅ **`§10-1c`'s unconditional-write side effect is closed too, with a control:** `--check` itself does not write (`md5` identical across a run, exit `0`), so an armed-but-fresh push no longer dirties a repo-tracked file in a shared worktree.
+
+### §3 — 🛑 `GATE-LIM-2` — ADOPTED, VERIFIED AT THE LINE, AND SHARPER THAN THE READ HAS IT
+```
+[MEASURED HERE — my own read, not adopted from the report]
+inventory_freshness_gate.py:79    WATCHED = ("src/", "scripts/")
+                           :111   any(n.startswith(WATCHED) for n in names)   <- the trigger
+system_inventory.py:69            REFERENCE_ROOTS = ["src", "scripts", "e2e", "tests"]
+                    :1761         for root in REFERENCE_ROOTS + ["workflows"]:
+⇒ tests/ · e2e/ · workflows/ CHANGE THE GENERATED MAP AND DO NOT ARM THE GATE.
+```
+🛑🛑 **AND THE LIVE NEAR-MISS IS ONE COMMIT'S FILE-LIST AWAY — IN THE VERY COMMIT THAT FIXED THE GATE.** `[MEASURED HERE]` `git show --name-only 742f4359` returns **exactly two files**:
+```
+scripts/inventory_freshness_gate.py        <- THIS ARMED THE GATE
+tests/python/test_inventory_freshness_gate.py   <- THIS MOVED THE MAP (34->35)
+```
+⇒ ★★★★★ **THE FILE THAT ARMED THE GATE AND THE FILE THAT CAUSED THE DRIFT WERE DIFFERENT FILES. HAD THE WORKER COMMITTED THE TEST ALONE, THE GATE WOULD HAVE PRINTED *"no src/ or scripts/ change - skipped"* AND PUSHED A GENUINELY STALE MAP. THE COVERAGE GAP IS NOT HYPOTHETICAL; IT WAS AVOIDED BY THE ACCIDENT OF A TWO-FILE COMMIT.**
+⚠️ **AND THE SAME FUNCTION SHOWS THE AUTHOR WAS THINKING ABOUT THIS:** `:104-106` deliberately **falls back to `True` when upstream cannot be resolved** — *"a gate that silently skips because it could not answer is a gate with no path to red."* ★★★★★ **`IT FAILS SAFE ON THE UNKNOWN CASE AND FAILS OPEN ON THE ENUMERATED ONE. A HAND-WRITTEN ENUMERATION IS THE PLACE A CAREFUL AUTHOR STOPS BEING CAREFUL, BECAUSE IT LOOKS LIKE DATA RATHER THAN LOGIC.`**
+🛑 **DISPOSITION — BANKED, NOT FIXED. THIS IS NOT A DETOUR AND I WILL NOT MAKE IT ONE.** ⚖️ **PRECEDENCE FAILS ON PURPOSE: every upcoming `S6` file is under `src/`, so the gate WILL arm on every `S6` push and this residual cannot reproduce `AR-909`'s invisibility.** ⇒ **`GATE-LIM-2` · OWNER: THE DESK · WAKE TRIGGER: `S6` closes, and BEFORE `MP-1` — because `MP-1` is money-path reachability recon and it CONSUMES THE INVENTORY AS A SEALED CURRENT MAP.** ★★★★ **`A MAP IS ONLY A PREREQUISITE FOR THE WORK THAT READS IT — WAKE THE REPAIR AGAINST ITS CONSUMER, NOT AGAINST THE CALENDAR.`**
+🛑🛑 **AND WHEN IT WAKES: DO NOT ADD `tests/`, `e2e/`, `workflows/`, `package.json` TO `WATCHED`. THAT IS THE SAME DEFECT AGAIN.** ⇒ **DELETE THE TRIGGER LIST: run `--check` on every pre-push and let the generator answer "did this push change the map?" by comparing its own output.** ⚖️ **The `<5s` budget that forced this to pre-push is a PRE-COMMIT constraint; no equivalent budget binds a push hook.** ★★★★★ **`GATE-LIM-2 IS INV-2 A SECOND TIME IN ONE INSTRUMENT: A HAND-MAINTAINED COPY OF A POLICY THE GENERATOR ALREADY OWNS. THE FIRST COPY WAS THE EQUALITY RULE; THIS ONE IS THE INPUT SURFACE. FIX IT THE SAME WAY — DELETE, DO NOT SYNCHRONISE.`**
+
+### §4 — ✅ CARRIED, UNCHANGED
+- ✅ **`AR-909`'s helper-name slip is CLOSED** — `content_only` (`:1826`), owned by the worker without qualification, and **it changed its practice rather than only noting it**: identifiers now get pasted from a `grep -n 'def <name>'` in the same block as the line cite. ★★★★★ **`A MEASUREMENT AND THE NAME YOU GIVE IT ARE TWO CLAIMS, AND ONLY ONE OF THEM WAS MEASURED.`**
+- ⚠️ **THE `pre-commit` STASH COLLISION STAYS BANKED, NOT REOPENED** (`AR-910 §6`; it printed *"Stashed changes conflicted with hook auto-fixes... Rolling back fixes"*, rolled back cleanly, `[MEASURED]` no work lost). 🛑 **BUT THIS DESK LOST A WHOLE RULING TO THAT MECHANISM TODAY (`R-780 §11-1`), SO IT IS NOT MERELY THEORETICAL HERE.** ⇒ **the standing remedy stands and applies to BOTH seats: `git add` the file the instant it is written and commit in the same motion. STAGED CHANGES ARE NOT STASHED.** ⚖️ **Hook architecture is NOT reopened during `S6`.**
+- ⚠️ **`AR-910 §6`'s NOT-MEASURED list is carried honestly:** concurrent sibling-seat push · a generator that HANGS rather than exits non-zero · `tsc` · TS parity · **any `S6` suite in this step, correctly not re-run and correctly not quoted as a fresh green** (nothing in `742f4359`/`d1b6ab34` touches `src/`).
+
+### §5 — ⚡ AUTHORIZED NOW — UNCHANGED: `R-780 §6 STEP 1`
+🛑 **I ISSUE NO NEW TASK AND I AM SAYING SO EXPLICITLY, BECAUSE A RESTATED TASK READS AS A CHANGED ONE.** **`R-780 §6 STEP 1` stands verbatim, to `claude.exe 12460`, attempt `0 / 2`:** publish the flag-OFF silent-pass RED, **ALONE, test-only, no production edit**, flag at its default OFF, explicit legal candidate, candidate-aware strategy, bars spanning forming → lock; assert production reaches the real adapter, pre-lock `False`, post-lock `True`, and **the array is NOT an all-True fallback**. **Then STOP and report `RED` or `CANNOT GO RED`.**
+⚖️ **`CANNOT GO RED` REMAINS A FIRST-CLASS RESULT, NOT A FAILURE:** name the earlier boundary that prevents the candidate-aware flag-OFF path from reaching the legacy router, and **member `11` is not built.** 🛑 **NEITHER OUTCOME SPENDS AN ATTEMPT — measuring is not attempting.**
+🛑 **AND DO NOT WIDEN `STEP 1`:** no activation patch, no `SpecConditionStrategy` edit, no `FAMILY_META`, no TS mirror, no fixture transition, no 104-member join. **Commit, push through the repaired gate, stop.**
+**FIRST OBSERVABLE: that RED committed AND pushed, with the explicit verdict. ETA ~20–40 min. START-RECEIPT if >10 min.**
+
+### §6 — 📐 CRITICAL PATH · REGISTER
+```
+CURRENT EXIT   : one real extracted strategy condition compiled AND EXECUTED (R-648 slice)
+CRITICAL PATH  : RED 2 is the last load-bearing S6 red. STEP 1 answers the ONE remaining
+                 question: what does DEFAULT-OFF production do when a taught candidate
+                 reaches execution?
+AUTHORIZED NOW : R-780 §6 STEP 1, unchanged, claude.exe 12460, attempt 0/2
+PRECEDENCE     : STEP 0 is CLOSED for the deadlock objective; remote visibility restored,
+                 so the verification loop that protects the compiler is live again.
+REGISTER       : INV-2 ✅ CLOSED by 742f4359 (deadlock objective)
+                 GATE-LIM-2 🆕 BANKED — desk-owned, wakes when S6 closes, BEFORE MP-1
+                 MP-1 · DOC-1 · SCOPE-1 · TD-1/2/3 · OBS-1 · D-10-ADJ-1 · N-6 · Q-1 — ASLEEP
+STOP           : R-780 §6's forbidden list, unchanged · widening STEP 1 · fixing GATE-LIM-2
+                 now · reopening hook architecture · starting MP-1
+```
+**GRADES.** `[MEASURED HERE]` the remote tip and the six-commit enumeration (**taken BEFORE the read**) · `742f4359`'s two-file scope · the `tests/ 34→35` content diff · `WATCHED` at `:79`/`:111` · `REFERENCE_ROOTS` at `:69`/`:1761` · the `:104-106` fail-safe fallback · the arming-vs-drift file split. `[ARTIFACT-SOURCED — AR-910, NOT re-run by me]` the four-arm suite results (`6 passed` repaired / `3 failed · 3 passed` against the pinned pre-repair blob), the `md5` no-write control, and the live block/terminate sequence — **hook stdout cannot be reconstructed from the remote, and I say so rather than claim it.** `[CORROBORATED — external read]` the same six commits resolved independently on GitHub, and `GATE-LIM-2`, **which I then re-derived at the line and sharpened.** `[NOT MEASURED]` `tsc`, TS parity, any `S6` suite, any backtest, the 104-join — **none is a predicate of this acceptance.**
+**ARCHITECTURE INVARIANTS TOUCHED: NONE.** `STEP 0` was repository instrumentation; no compiler file, no source-owned logic, no measurement the money path consumes.
+
+**LESSON TO PERSIST:** ★★★★★ **`THE PROOF OF A REPAIRED GATE IS THAT IT STILL BITES — ONCE — AND THEN LETS GO. A GUARD THAT STOPPED BLOCKING ENTIRELY WOULD HAVE LOOKED EXACTLY LIKE SUCCESS.`** · ★★★★★ **`A SUITE WHERE EVERY ARM FLIPS IS NOT A RED-PROOF, IT IS A REWRITE — THE ARM THAT MUST NOT CHANGE IS WHAT PROVES YOU KEPT THE GUARD.`** · ★★★★★ **`A HAND-WRITTEN ENUMERATION IS THE PLACE A CAREFUL AUTHOR STOPS BEING CAREFUL, BECAUSE IT LOOKS LIKE DATA RATHER THAN LOGIC.`** · ★★★★★ **`THE ARCHITECTURE THAT REMOVES A DUPLICATE ALSO REMOVES EVERY WAY OF GETTING THE DUPLICATE WRONG.`** · ★★★★★ **`A SECOND PATH IS DEFINED BY WHEN IT RAN, NOT BY WHO RAN IT.`** · ★★★★ **`WAKE A DEFERRED REPAIR AGAINST ITS CONSUMER, NOT AGAINST THE CALENDAR.`**
+
+---
+
 ## R-780 · 2026-08-09 · ✅ **`AR-907` + `AR-908` + `AR-909` ACCEPTED. `COMMIT 1` IS IN — TEST-ONLY, STILL RED, ON A DEEPER AND CORRECTLY-ORDERED BOUNDARY.** 🛑🛑🛑 **THE TENTH MEMBER UNCOVERED A PRODUCTION HOLE THE ACTIVATION WOULD *CREATE*: FLAG **OFF — THE DEFAULT** ⇒ AN ACTIVATED OPENING-RANGE CONDITION FALLS TO `else: np.ones` = **CONSTANT TRUE** (`OPENING_RANGE` APPEARS **ZERO** TIMES IN THE ROUTER FILE).** ⚡ **`A+` APPROVED, ELEVEN SURFACES, MEMBER `11` **RED-FIRST AND THE RED IS THE DECIDER**.** 🛑🛑 **AND THE PUSH GATE IS A NON-TERMINATING DEADLOCK: IT IS NOW `STEP 0`, REPAIRED BY **DELEGATION**, NOT BY A SECOND COPY OF THE RULE.**
 
 > ### ★ WORKER — START HERE
