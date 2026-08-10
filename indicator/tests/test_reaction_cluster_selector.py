@@ -1,6 +1,12 @@
 import unittest
 
-from indicator.reference.reaction_cluster_selector import ReactionInterval, select_target_ladder
+from indicator.reference.reaction_cluster_selector import (
+    ReactionCluster,
+    ReactionInterval,
+    TargetLevel,
+    merge_distinct_target_ladders,
+    select_target_ladder,
+)
 
 
 class ReactionClusterSelectorTests(unittest.TestCase):
@@ -83,6 +89,38 @@ class ReactionClusterSelectorTests(unittest.TestCase):
             tick=0.25,
         )
         self.assertEqual(ladder, ())
+
+    def test_cross_lane_same_shelf_cannot_consume_tp2(self):
+        # Two timeframe adapters describe adjacent pieces of one physical shelf.
+        # The first shelf should count once; the genuinely deeper shelves promote.
+        lane_15 = (
+            TargetLevel(ReactionCluster(29688.0, 29699.0, 3, ("15m-a", "15m-b", "15m-c")), 29696.25, 29696.25),
+            TargetLevel(ReactionCluster(29635.0, 29648.0, 2, ("15m-deep-a", "15m-deep-b")), 29644.75, 29644.75),
+            TargetLevel(ReactionCluster(29580.0, 29596.0, 2, ("15m-deeper-a", "15m-deeper-b")), 29592.0, 29592.0),
+        )
+        lane_5 = (
+            # Adjacent/nested representation of the SAME first destination.
+            TargetLevel(ReactionCluster(29672.0, 29682.0, 5, ("5m-a", "5m-b", "5m-c", "5m-d", "5m-e")), 29679.5, 29679.5),
+            TargetLevel(ReactionCluster(29634.0, 29646.0, 4, ("5m-deep-a", "5m-deep-b", "5m-deep-c", "5m-deep-d")), 29643.0, 29643.0),
+        )
+
+        merged = merge_distinct_target_ladders(
+            (lane_15, lane_5),
+            side="SHORT",
+            entry=29719.0,
+            entry_gap=10.0,
+            zone_gap=4.0,
+            fusion_gap=10.0,
+            max_targets=3,
+        )
+
+        self.assertEqual(len(merged), 3)
+        self.assertEqual(merged[0].price, 29696.25)
+        # 29679.5 is rejected as the same shelf neighborhood, so the old deeper
+        # destination promotes into TP2.
+        self.assertEqual(merged[1].price, 29644.75)
+        self.assertEqual(merged[2].price, 29592.0)
+        self.assertNotEqual(merged[1].price, 29679.5)
 
 
 if __name__ == "__main__":
