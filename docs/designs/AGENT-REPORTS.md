@@ -4,6 +4,61 @@
 
 ---
 
+## AR-944 · 2026-08-10 · ✅ **LANE `L` COMPLETE `5 / 5` — THE MONEY PATH IS GREEN AT THE REAL BOUNDARY: THREE TAUGHT CANDIDATES, THREE ROWS, THREE IDENTITIES.** ✅ **THE REQUIRED PRODUCTION MUTATION BITES `F` AND `G` — STOP `[8]` DOES NOT FIRE.** 🛑 **OBLIGATION `M` IS CONVICTED BY NOTHING AND I SAY SO RATHER THAN LET `13 / 14` READ AS `14 / 14`.** 🛑 **I REFUTED MY OWN HEADLINE HYPOTHESIS BY MEASUREMENT, AND I RAISED A FALSE ALARM ABOUT LOST WORK — BOTH BELOW.** ⚖️ **`MP1-CANDIDATE-NAME-1` MEASURED: ITS WAKE CONDITION IS **NOT** MET, SO I DID NOT TOUCH IT.**
+
+**SEAT `claude.exe 26036`. TREE `HEAD 66bdf77d` == `origin` (`ls-remote`, one command each side). LANE `L` `5 / 5`. `L-3`/`L-4`/`L-5` at `826c24c7`; `L-1` RED preserved unedited at `c51dcdb9`. NO DB schema · NO SQL migration · NO `spec_hash` change · NO `/api/backtests` · NO paper-ORB.**
+
+### §0 — ⚠️ TWO CORRECTIONS OF MY OWN, FIRST, BECAUSE THEY ARE LOAD-BEARING
+🛑 **`AR-943` SAID *"WORKER `26856` IS DEAD"*. WRONG WORD.** A vanished worker PID here is a **PLANNED SEAT ROLL** by the operator, not a death, and it is not to be investigated or treated as lost work. **The MEASUREMENT stands unchanged** (`26856` absent from `Win32_Process`; I am its successor by image name + birth time); only the framing was wrong. I say **seat roll** from here.
+🛑 **AND A FALSE ALARM I RAISED MID-LANE: I read `git status --untracked-files=no` as EMPTY and concluded my uncommitted `L-3`/`L-4`/`L-5` were GONE. THEY WERE NOT.** `[MEASURED HERE]` all three files held their content; `git status` re-read seconds later showed all three `M`. **I had read the tree INSIDE the desk's commit window** — `[precommit-stash]` stashes TREE-WIDE, not path-scoped, and `git stash list` reads EMPTY while it does. `[MEASURED HERE]` `~/.cache/pre-commit/patch…` holds **two `42,321`-byte patches at `14:13` and `14:30`** — my three-file diff, round-tripped by ANOTHER SEAT'S commits, twice. ★★★★★ **`ON A SHARED TREE WITH A LIVE CONCURRENT COMMITTER, `git status` IS NOT A STABLE INSTRUMENT — IT HAS A WINDOW IN WHICH IT HONESTLY REPORTS A TREE THAT WILL EXIST AGAIN IN ONE SECOND.`** ⇒ **The real lesson is not "the instrument lied" — it is that my work sat uncommitted through two foreign commits. I committed immediately after.**
+
+### §1 — ✅ `L-3` THE REPAIR · `L-4` THE FOURTEEN · `L-5` THE PROSE
+```
+[MEASURED HERE, committed tree HEAD 66bdf77d, service byte-identical to HEAD, unpiped]
+L-4  spec-onboarding-candidate-identity.test.ts ...... 15 passed   (A–N; N = 2 arms)
+     spec-onboarding-service.test.ts + .bandc ........ 16 passed   STOP [6] clear
+L-5  test_mp1_candidate_persistence.py ............... 13 passed   (13 before = prose only)
+     tsc --noEmit -p tsconfig.json ................... exit 0, unpiped
+```
+✅ **THE KEY:** LEGACY (no `executionCandidate`) = `spec_hash + symbol`, EXACTLY as before (`M`). CANDIDATE-AWARE = `spec_hash + symbol + candidate_id` (`F`, `G`). 🛑 **`cache_identity` is NOT a fourth dimension** — same candidate + changed cache identity **REFUSES** as provenance drift (`refused_candidate_identity_conflict`), asserted to be **neither inserted nor skipped**, because "not inserted" alone is satisfied by a silent skip.
+✅ **RECEIPT CHECKING MIRRORS `opening_range_candidate_receipt.py`, IT DOES NOT RE-DERIVE IT:** `RECEIPT_SCHEMA` and its five outer keys verbatim, unknown keys refused in both directions like `_exact_keys`. 🛑 **`payload` is checked for PRESENCE, NEVER CONTENT — definition, taught variants and every duration stay Python's authority.** Identity persists as SIBLINGS of `compiled_spec`, never inside it: `spec_hash` is computed over the certified artifact.
+
+### §2 — ✅ THE REQUIRED PRODUCTION MUTATION, AND THE FULL MATRIX
+🛑 **`R-798 §5`: the mutation MUST bite the REAL-SERVICE integration tests.** It does.
+```
+[MEASURED HERE, each arm ALONE, restore proven byte-exact by sha256 / git-clean]
+M1 REQUIRED  remove candidate_id from the REAL TS duplicate lookup .. RED: A B C D F G N
+M2           obligation-L conflict falls through to skipped_duplicate  RED: L
+M7           the receipt refusal reports a DIFFERENT status .......... RED: H I J K
+M8           identity-conflict guard fires even when cache MATCHES ... RED: E
+M5 / M6      arms that convert a SKIP into an EXTRA INSERT ........... HUNG — INCONCLUSIVE
+```
+✅ **`F` AND `G` BOTH FALL UNDER `M1`. STOP `[8]` DOES NOT FIRE.** ⭐ **I read `M1`'s letters by hand off the raw failure lines FIRST, then built an extractor and required it to REPRODUCE that hand-read answer before I trusted any later arm** — `[ps-counting-encoding]`, and it earned its keep in `§3`.
+🛑🛑 **CONVICTED BY AT LEAST ONE MUTATION: `A B C D E F G H I J K L N` — THIRTEEN.** 🛑 **CONVICTED BY NOTHING: `M`.** ⚖️ **Every mutation that could falsify `M` necessarily converts a skip into an extra insert, which is precisely the arm class that hangs. So `M` is asserted, GREEN, and NOT YET EVIDENCE.** ★★★★★ **`AN OBLIGATION NO MUTATION CAN BREAK IS NOT YET EVIDENCE — IT IS A SENTENCE THAT HAPPENS TO BE TRUE`** (`AR-939`'s law, applied against my own delivery). **Banked as `MP1-OBLIGATION-M-UNCONVICTED-1`.**
+
+### §3 — 🛑 THREE INSTRUMENT FAILURES, ALL MINE, AND WHAT EACH ONE NEARLY COST
+**[1] A SHELL-MANGLED MUTATION SCORED AS A REAL ARM.** `\&\&` survived into the `.ts` file, so `M2`'s first run produced INVALID TypeScript: `exit=1` with **ZERO per-test failures**, and my extractor read that as "no letters". ⇒ ★★★★★ **`exit != 0` AND `A BITTEN MUTATION` ARE NOT THE SAME EVENT — A HARNESS THAT CANNOT TELL THEM APART SCORES A BROKEN BUILD AS A PASSING RED-PROOF.`** ✅ Fixed: mutations carried as FILES, and an arm with a non-empty exit but no per-test failure is reported **INCONCLUSIVE**, never counted.
+**[2] MY OWN ORPHANED RUNNERS POISONED EVERY MEASUREMENT AFTER THEM.** Aborted harnesses left `vitest` alive; `[MEASURED HERE]` six across three generations (`14:00`, `14:35`, `14:44`), and runs that took `13s` began exceeding `420s`. **I nearly attributed that to a Python subprocess in the production path.** ✅ Reaped mine only — **my ruling ear is a `bash` process and was never a candidate** — then re-established the CONTROL: unmutated suite back to **`12.7s`, `15 passed`.** ★★★★ **`A HARNESS THAT LEAVES A RUNNER BEHIND ON EVERY ABORT IS AN INSTRUMENT THAT GETS SLOWER THE MORE YOU USE IT — AND SLOWNESS IS THE ONE SYMPTOM THAT LOOKS LIKE THE CODE'S FAULT.`**
+**[3] 🛑 THE NEAR-MISS THAT MATTERS: A KILLED HARNESS LEFT A MUTATION IN THE PRODUCTION FILE.** An arm died between applying and restoring, leaving **`return null;` injected at `:486` inside `refuseExecutionCandidate`** — which neuters `H`/`I`/`J`/`K` completely. ⚠️ **The harness's own last line had printed `restore: OK` on an EARLIER arm, and I nearly took that as current.** ✅ **The sha256 pin caught it: `sha256sum -c` → `FAILED`, and `diff` named the exact injected line.** ★★★★★ **`THE PIN IS NOT CEREMONY — WITHOUT IT I WOULD HAVE COMMITTED A DEAD VALIDATOR UNDER A GREEN SUITE, BECAUSE THE FOUR TESTS IT DISABLES WOULD HAVE BEEN DISABLED TOO.`**
+
+### §4 — ⚖️ `MP1-CANDIDATE-NAME-1`: MEASURED, WAKE CONDITION **NOT** MET, NOT TOUCHED
+🛑 **I FORMED A HYPOTHESIS THAT A DUPLICATE-NAME INSERT HANGS, AND THEN REFUTED IT MYSELF RATHER THAN REPORTING IT.** `[MEASURED HERE, temporary probe against the COMMITTED service, since deleted, tree verified clean]` three candidates sharing ONE exec timeframe:
+```
+PROBE A/B/C : inserted · inserted · inserted        (1.0s, no hang)
+PROBE ROWS  : 3  ["order_block_entry_trigger_mes_5m" x3]
+```
+⇒ ✅ **THE FINDING IS REAL BUT IT IS NOT THE ONE I EXPECTED: three DISTINCT qualification identities now share ONE human-facing name.** `deriveStrategyName(concept, symbol, timeframe)` keys on the EXEC timeframe, while the three candidates differ by RANGE DURATION. **`L-4` uses `5m`/`15m`/`30m`, so its rows get three different names and never exercise this.**
+🛑 **INSERTION DOES NOT FAIL.** ⇒ **`MP1-CANDIDATE-NAME-1`'s wake condition — *"only if `L-1` proves the name collision itself BLOCKS persistence"* — is NOT MET, and `R-798` forbids display-name cleanup *"unless insertion actually fails because of it"*.** ⇒ **I DID NOT TOUCH IT.** ⚖️ **Desk-owned, evidence now attached. The name is not a join key anywhere in my repair — identity is `execution_candidate_id`, and obligation `N` asserts no identity is derivable from the name.**
+⚠️ **AND THE MECHANISM OF THE `M5`/`M6` HANG REMAINS UNEXPLAINED.** My duplicate-name explanation is REFUTED by the probe above. **I am not substituting a second guess: `UNRESOLVED`, banked as `MP1-MUTATION-ARM-HANG-1`.** ★★★ **A refuted hypothesis with no replacement is an honest result; a fresh hypothesis dressed as a finding is not.**
+
+### §5 — ⚖️ SCOPE, STOPS, AND WHAT I DID NOT MEASURE
+✅ **STOPS:** `[1]`/`[2]`/`[3]` discharged earlier in the lane · `[4]` NO migration/schema/`spec_hash` change · `[5]` the conflict case refuses distinctly · `[6]` existing suites `16 passed`, unchanged · `[7]` no second redesign · `[8]` **the mutation bit `F` and `G`.**
+✅ **`R-799` READ AND HONOURED — my ear caught it mid-lane and I read it before writing another line.** Nothing in `L-4` leans on an `ACCEPT-5` green, so the new prohibition on citing `ACCEPT-5 PASS` as sign-off costs this lane nothing. **I did not context-switch to `R3`.**
+🛑 **WHAT I DID NOT MEASURE, STATED PLAINLY:** obligation `M` has no convicting mutation (`§2`) · the `M5`/`M6` hang mechanism (`§4`) · **I did NOT run the full TS suite, only the three onboarding suites `R-798` names — so "no existing suite reddens" is scoped to those, not to the repo** · and `L-1` proves a CONDITIONAL: production collapses candidates 2 and 3 IF candidate-aware data reaches `onboardSpecArtifact`. **It does NOT prove the certified Python compiler feeds them — that is `MP1-CANDIDATE-INGRESS-1`, desk-owned, and `[MEASURED HERE]` `SYSTEM-INVENTORY` still classes `onboardSpecArtifact`'s module as not reachable from any measured entry point, which is consistent with it.**
+**RECOMMENDATION: APPROVAL_REQUESTED. Lane `L` `5 / 5`, nothing half-done, nothing in flight, no sub-agent dispatched or owed.** **NEXT: lane `R3` per `R-799 §7` — I am NOT starting it in this report; it opens on the desk's word now that `L` has closed.**
+
+---
+
 ## AR-943 · 2026-08-10 · 🪑 **SEAT RECEIPT + START-RECEIPT — WORKER `26856` IS DEAD; I AM ITS SUCCESSOR `claude.exe 26036`.** ⚡ **LANE `L` RESUMES AT `2 / 5` — `L-3` → `L-4` → `L-5`, NO HANDOFF.** ✅ **EAR ARMED, DETECTOR RED-PROOFED — AND THE BACKFILL PAID IMMEDIATELY: THE ARMING LINE ITSELF TOLD ME `R-798` HAD LANDED.**
 
 **SEAT `claude.exe 26036`, born `13:46:34`. TREE `wt-h1-wave4-20260712`, `HEAD b1d851ca` == `origin`. LANE `L`, items `L-3`/`L-4`/`L-5`, fan-in `1`. NOT GRAPH-SCHEDULED (`R-798`: GRAPH OBJECT NOT ADOPTED).**
