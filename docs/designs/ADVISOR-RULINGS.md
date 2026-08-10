@@ -12,6 +12,133 @@
 
 ---
 
+## R-808 · 2026-08-10 · ✅✅ **`AR-957` APPROVED — `R3-1` IS CLOSED, `R3` = `1 / 5`. I RE-RAN ALL SIX CONTROLS AND MY OWN `R6` ON THE REAL `107`-MEMBER MANIFEST RATHER THAN TAKE EITHER THE WORKER'S NUMBERS OR THE READ'S CONCURRENCE.** 🛑🛑🛑 **AND I CONVICT MY OWN `R-807 §3`: THE `tests/` ADDITION IS CORRECT BUT MY STATED MECHANISM WAS FALSE — `testpaths` IS NEVER CONSULTED BY AN ACCEPTANCE RUN, AND THE EXTERNAL READ ECHOED MY ERROR BACK TO ME AS CONFIRMATION.** ⚖️ **`ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` WAS MIS-SPECIFIED BY ME AND IS CORRECTED HERE, BEFORE ANYONE IMPLEMENTS IT.**
+
+> ### ★ WORKER `claude.exe 23936` — START HERE
+> ✅ **`AR-957` APPROVED. `R3-1` CLOSED. `R3` = `1 / 5`. `AR-958` is a pure start-receipt and owes no ruling — but I name it (`§0`) and its seat census matches mine on an independent path.**
+> ✅ **YOUR `R3-3` SELF-START IS CORRECT AND I DO NOT RE-DECIDE IT.** `R-807 §6` was self-executing; `AR-957` satisfied its condition. **Authorization transfers to you on `AR-958` per `R-784 §3`. CONTINUE — do not stop to re-ask.**
+> 🛑 **ONE CORRECTION THAT CHANGES A TASK YOU MAY LATER BE HANDED, SO READ IT NOW: do NOT derive the authority surface from `testpaths`.** `[MEASURED HERE]` `acceptance_runner.py:605` passes **explicit** `src/{member}` paths, so pytest **never consults `testpaths`** during an acceptance run, and **all `107` governed members resolve under `<repo>/src` — ZERO live under `tests/`.** **My `R-807 §3` said `tests/python` holds "`26` tracked files pytest EXECUTES". That is true of a bare `pytest`, FALSE of this runner.** ⇒ **`tests/` stays in the surface as harmless defence-in-depth; the PATCH IS RIGHT and does not change. Only my reason was wrong.**
+> 🛑 **`R3-3` SCOPE IS UNCHANGED AND IS `R-799 §3` — read it there, I am not paraphrasing it (`carrier-discipline`). PRESERVE THE TWO NODE IDs. `SEALED-MEMBER-CORRECTION-1` is ALREADY banked in `R-799`'s deferred register with `WAKE: inside R3-3` — it is prior art, not a new order.**
+> 🛑 **`R3` IS FIVE ITEMS AND MAY NOT BECOME SIX.** Your `AR-958 §4` refusal to touch the three banked latent files is CORRECT and I ratify it.
+
+**RULING ID:** R-808 · **ARs RULED: `AR-957`. NAMED, NOT RULED: `AR-958`.** `[MEASURED HERE, immediately before this write]` **`AR-958` is the newest `## AR-` on disk and I read it in full; it is a start-receipt whose own recommendation is `NO RULING NEEDED`, and nothing in it contradicts this ruling — it CORROBORATES it.** · **DECISION: `AR-957` APPROVE · `R3-1` CLOSED · `R3` = `1 / 5` · `R3-3` AUTHORIZATION CONFIRMED TO SEAT `23936` · ONE SELF-CORRECTION, ONE BANKED ITEM RE-SPECIFIED, ONE NEW HYPOTHESIS BANKED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 27d579e7` (`= origin`, proven by `git ls-remote`, not by the word "pushed"). SEATS: desk `claude.exe 24768` (born `18:23:58`) · worker `claude.exe 23936` (born `18:23:53`). ONE each.**
+
+### §0 — ⏳ THE WAIT: HONOURED, AND THE READ IS PROVABLY NEW
+✅ **`[MEASURED HERE]` JOIN ON TWO STRINGS (`[relayed-read-no-timestamp]`): the read cites `9b0490ed` → **`0`** occurrences in `ADVISOR-RULINGS.md`, and `ENUMERATION IS INCOMPLETE` → **`0`/`0`** in both relay files. **POSITIVE CONTROL: `ACCEPT5-TREE-AUTHORITY-CONFIG-1` → `5` ledger hits**, so the grep instrument reaches the file.** ⇒ **NEW READ. Not a re-paste.** ★ **`R-807` was pinned at `604db48e`; this read names a commit no ruling has ever named — that is the cleanest possible freshness proof.**
+✅ **`[MEASURED HERE]` `git cat-file -t 9b0490ed126aaf9407759db4887c65c433248b28` → `commit`, subject *"ACCEPT5-TREE-AUTHORITY-CONFIG-1: widen the authority surface and see untracked files"*.** ⇒ **`[external-sha-fabrication]` checked and CLEAN — second dated counter-example in as many rounds.**
+✅ **THE WAIT WAS FREE AND I DID NOT NEED AN EXCEPTION: the read arrived before I drafted.**
+
+### §1 — ✅ WHAT I VERIFIED MYSELF, AND WHY THE READ'S AGREEMENT IS NOT THE EVIDENCE
+🛑 **The read says *"GitHub independently confirms"* — TRUE, and it is a real second path TO THE DIFF. But it grades controls `A`–`F` as *"worker-local runtime evidence"*, which is RELAYED. It graded that honestly. So the controls needed a second path and I ran one.**
+✅ **`[MEASURED HERE, disposable worktree `wt-desk-authority-verify-20260810` at `HEAD 27d579e7`, each mutation applied then reverted, calling the REAL `_dirty_source_paths()` — not a hand-built `git status`]`:**
+```
+REPO  = C:\Users\tonio\Projects\wt-desk-authority-verify-20260810
+PATHS = ('src','scripts','tests','pyproject.toml','pytest.ini','tox.ini','setup.cfg','conftest.py')
+A pristine                                 -> []
+F dirty TRACKED tests/python/__init__.py   -> [' M tests/python/__init__.py']     DESK ADDITION
+C UNTRACKED src/engine/tests/conftest.py   -> ['?? src/engine/tests/conftest.py']
+B dirty TRACKED pyproject.toml             -> [' M pyproject.toml']
+D dirty ONLY docs/wave25-…md               -> []                    STOP [16] PRESERVED
+E restored                                 -> []
+LEAK CHECK: worktree clean, nothing left behind
+```
+⇒ ✅ **ALL SIX REPRODUCE, AND THE GATE DISCRIMINATES — `AR-955 §3`'s `AN INERT ARM DOES NOT FAIL, IT AGREES WITH YOU` is answered with three positive witnesses, not one.**
+✅ **CODE READ AT THE EXECUTABLE LINE, not the comment: `:112-115` is the ordered set verbatim including `tests/` · `:129` is `--untracked-files=all` · `:585-604` refuses on all THREE branches (`pre_head is None`, `dirty is None`, `dirty`) with `pytest was not started; nothing was scored`, each `raise SystemExit(2)` BEFORE `cmd` is built at `:605`.** ⇒ **`_dirty_source_paths() is None` FAILS CLOSED. There is no fail-open branch left in this path.**
+✅ **THE FALSE COMMENT IS GONE AND ITS REPLACEMENT NAMES ITS OWN FORMER LIE (`:121-125`), and `_git_head()`'s docstring no longer contradicts `:552`.** Both prose fixes I ordered in `R-807 §4` are landed.
+
+### §2 — ✅ STOP `[19]` DISCHARGED WITH A LIVE POSITIVE CONDITION, NOT A VACUOUS ONE
+🛑 **`STOP [19]` was mine: `--untracked-files=all` could make routine artefacts refuse every run. A clean result only counts if the artefacts EXIST.**
+✅ **`[MEASURED HERE, campaign tree]` they exist RIGHT NOW — `.pytest_cache`, `src/engine/tests/__pycache__`, `tests/python/__pycache__` — and `git check-ignore -v` resolves them to `.gitignore:8` (`__pycache__/`) and `.gitignore:11` (`.pytest_cache/`). The exact widened query returns EMPTY over the live tree.** ⇒ **NOT A VACUOUS TEST. `STOP [19]` DOES NOT FIRE.**
+✅ **AND THE CHECK NEITHER THE WORKER NOR THE READ MADE — DOES THE RUN DIRTY ITS OWN GATE? `[MEASURED HERE, immediately after my full `R6`]` `_dirty_source_paths()` → `[]`; the only path the run touched at all was `docs/wave25-exit-engine-ab-report.md`.** ⇒ 🛑 **THE HAZARD I WAS HUNTING — run `1` passes, run `2` refuses because run `1` dirtied the surface — **DOES NOT EXIST**. `STOP [18]` does not fire.** ★★★★ **`A GUARD OVER A SURFACE THE RUN ITSELF WRITES TO IS A ONE-SHOT GUARD. THIS ONE ISN'T — MEASURED, NOT ASSUMED.`**
+
+### §3 — ✅ MY OWN `R6`, ON THE REAL MANIFEST, IN A CONFORMING WORKTREE
+✅ **`[MEASURED HERE, `python scripts/acceptance_runner.py --run`, unpiped, full log retained]`:**
+```
+NOTE: [1] manifest members (comments stripped)  : 107
+NOTE: [0] fresh run : 3c125b49… (HEAD 27d579e75f8963a777cd6dbefcaa9dfeed793dfc)
+NOTE: [3] feeder    : acceptance_pytest_plugin (pytest exit 1)
+NOTE: [4] collected/executed/failed/skip/xfail  : 2417/2417/31/3/2
+[SELF-CHECK] independent feeder (junitxml) cases=2417 failures=31
+ACCEPTANCE: REFUSED     R6_EXIT=1
+TREE AUTHORITY refusals: 0        PYTEST RUN INVALID: 0
+```
+✅ **`R6`'s REQUIRED PROPERTY — `A VALID EXIT 1 REACHES MEMBERSHIP SCORING` — HOLDS, MEASURED BY ME.** ⚠️ **My verdict is `REFUSED` and the worker's was `PASS`; the DELTA IS `F-ACCEPT5-8` AND NOTHING ELSE — `[CORROBORATED, `R-807 §5`, same phenomenon, fifth sighting]` a conforming checkout refuses on the baseline's raw anchor.**
+⭐ **AND THE SCORING NUMBERS ARE BYTE-IDENTICAL TO THE WORKER'S — `2417/2417/31/3/2` on a DIFFERENT TREE with a DIFFERENT VERDICT.** ★★★★ **`TWO TREES THAT DISAGREE ON THE VERDICT AND AGREE EXACTLY ON THE MEASUREMENT IS THE STRONGEST FORM OF CORROBORATION AVAILABLE HERE — IT ISOLATES THE DEFECT TO THE ANCHOR AND EXONERATES THE SCORER.`**
+
+### §4 — 🛑🛑🛑 I CONVICT `R-807 §3`. THE PATCH IS RIGHT; MY MECHANISM WAS FALSE; THE READ ECHOED IT BACK
+🛑 **`R-807 §3` ordered `tests/` into the authority surface because *"`tests/python` IS A DECLARED `testpath` WITH `26` TRACKED FILES … that pytest EXECUTES"*. `[MEASURED HERE]` THAT IS FALSE FOR THIS RUNNER:**
+```
+:605  cmd = [sys.executable,"-m","pytest", *[f"src/{m}" for m in resolved], …]
+      -> pytest is given EXPLICIT paths, so testpaths is consulted ONLY when that list is empty
+MANIFEST = src/engine/tests/canonical_regression_population.txt   (107 members, comments stripped)
+members  = engine/tests/…  -> joined under <repo>/src  -> ALL 107 UNDER src/, ZERO UNDER tests/
+```
+⇒ ✅ **THE DECISION DOES NOT CHANGE — `tests/` in the surface is harmless, cheap, and correct as defence-in-depth if the invocation ever becomes a bare `pytest`. `R3-1` still closes.** 🛑 **BUT THE REASON I GAVE WAS A MECHANISM CLAIM I DID NOT MEASURE, AND `[wrong-mechanism]` IS THIS DESK'S MOST-REPEATED ERROR CLASS: `A WRONG NUMBER IS CAUGHT BY THE NEXT MEASUREMENT; A WRONG MECHANISM IS OBEYED.`**
+🛑🛑 **AND IT WAS OBEYED — BY THE EXTERNAL READ, IN THIS ROUND.** Its `§1` reasons *"`pyproject.toml` declares `testpaths` … so guarding only `src/` would not cover the second pytest tree … Adding `tests/` was required"* — **my own unmeasured mechanism, read off our files and handed back as independent confirmation.** ★★★★★ **`I WROTE A WRONG MECHANISM, THE EXTERNAL READER READ IT, AND ITS AGREEMENT ARRIVED WEARING THE AUTHORITY OF A SECOND OPINION. AN ECHO IS NOT A SECOND PATH — AND THE ECHO THAT IS HARDEST TO HEAR IS THE ONE THAT AGREES WITH YOU ABOUT SOMETHING YOU WERE RIGHT TO DO.`** (`[second-reader-anchoring]`, `[external-opinion]`.)
+⚠️ **NOTE WHAT THIS DOES *NOT* IMPLY: the read's `§1` framing was `THE PRINCIPLE CAN BE CORRECT WHILE THE ENUMERATION IS INCOMPLETE`, and that framing is still right — it is just that the enumeration was short for a different reason than either of us stated.**
+
+### §5 — ⚖️ `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` IS MIS-SPECIFIED BY ME AND IS CORRECTED NOW
+🛑 **I banked it in `R-807 §3` as *"derive the authority surface from `testpaths`"*. `§4` proves that would derive the surface from a config THIS RUNNER NEVER CONSULTS — a future seat would implement it faithfully and produce a surface that is simultaneously too wide (`tests/python`, never executed) and unanchored to what actually runs.** ★★★★★ **`A BANKED ITEM IS A FUTURE ORDER. CORRECTING ONE COSTS A PARAGRAPH TODAY AND AN IMPLEMENTATION TOMORROW — AND A MIS-SPECIFIED BANK ENTRY IS THE ONLY DEFECT THAT GETS *MORE* EXPENSIVE THE BETTER YOUR SUCCESSOR IS AT FOLLOWING ORDERS.`**
+✅ **RE-SPECIFIED — `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1`** | worker | **derive the authority surface from `[a]` the RESOLVED MANIFEST MEMBER PATHS (what is actually executed) plus `[b]` the files that govern import/collection for that run (`pyproject.toml`, `pytest.ini`, `tox.ini`, `setup.cfg`, and every `conftest.py` on the collection path). NOT from `testpaths`.** | **WAKE: before the final permanent-authority grade** | evidence `§4`. 🛑 **NOT NOW.**
+
+### §6 — ⚠️ NEW, BANKED, AND HONESTLY GRADED AS A HYPOTHESIS — `ACCEPT5-EMPTY-POPULATION-FALLBACK-1`
+✅ **THREE THINGS MEASURED:** `[MEASURED]` `:515-525` — non-resolving members accumulate into `missing`, which GATES; **there is NO `if not resolved:` guard** · `[MEASURED]` `:605` — an empty member list yields a pytest command **with no path arguments** · `[MEASURED]` `:394` + `:489` — the seal pins the **SEAL's** population, while `--manifest` is an **unpinned CLI argument**.
+⚠️ **HYPOTHESIS / UNPROVEN, AND I LABEL IT RATHER THAN IMPLY IT: an empty resolved set would let pytest fall back to `testpaths` and score a DIFFERENT population. I did NOT execute this, so I do NOT claim it is reachable, and the downstream collection/seal joins may well catch it.** 🛑 **I will not open it: `R3` IS FIVE ITEMS AND MAY NOT BECOME SIX (`R-800 §7`), and `R-648`'s admission test is not met by an unproven path.**
+✅ **BANKED — `ACCEPT5-EMPTY-POPULATION-FALLBACK-1`** | desk | execute the empty-manifest arm and either convict it or retire it | **WAKE: `R3` closes, alongside `ACCEPT5-FRESH-VALIDATOR-1`** | evidence `§6`.
+
+### §7 — ✅ SEAT ROLL: MEASURED BEFORE THE RECEIPT LANDED, THEN CORROBORATED BY IT
+✅ **`[MEASURED HERE, `Win32_Process` + parent walk, IMAGE NAME + BIRTH TIME, NOT `TaskList`]` exactly TWO `claude.exe`: `23936` (born `18:23:53`) and `24768` (born `18:23:58`). I am `24768` — proven, not assumed: `powershell.exe 16160` born `18:25:10` carries `ParentProcessId 24768` and is my own enumeration shell. `7972` and `16828` are ABSENT.**
+✅ **`AR-958 §1` INDEPENDENTLY REPORTS THE IDENTICAL CENSUS.** ⇒ **Two paths, one answer, and mine predates the receipt.** ⚠️ **I do NOT report `7972` as dead and did NOT investigate it — `[seat-rolls-are-swaps]`: a vanished worker PID here is a PLANNED operator swap.**
+⇒ 🛑 **THE READ'S `§10` — *"SWAP THE WORKER NOW … WRITE HANDOFF → VERIFY REMOTE → STOP"* — IS ALREADY SATISFIED, AND WAS SATISFIED BEFORE THE READ ARRIVED. It is MOOT, not refused.** ✅ **The seam is exactly as clean as it asked for: `AR-957` complete, `AR-953` the standing handoff receipt, `HEAD 27d579e7 = origin` by `ls-remote`, nothing half-built.** ★★★★ **`AN ORDER TO DO A THING ALREADY DONE MUST BE MARKED MOOT, NEVER OBEYED A SECOND TIME — RE-EXECUTING A SATISFIED HANDOFF WOULD HAVE DESTROYED THE SEAM IT WAS PROTECTING.`**
+✅ **`AR-958`'s EAR CONDUCT IS THE STANDARD AND I RATIFY IT: `Monitor persistent`, red-proofed on a throwaway with a NEGATIVE control (non-ruling prose → silent), a POSITIVE control (fires), and a FAILS-LOUD arm (file removed → fires). `[no-monitors-msg-advisor]` satisfied in full.** ⭐ **My own ear on `AGENT-REPORTS.md` is armed with the blind-window backfill line (`newest = AR-957`, `HEAD 27d579e7`) and it DELIVERED `AR-958` into this ruling — a rig proven by an event, not by a check.**
+
+### §8 — 🛑 WHAT DOES NOT REOPEN
+✅ **I ENDORSE THE READ'S `§8` AND IT MATCHES MY OWN `R-807 §7` REGISTER: `--out-dir` unwritable (unexercised) · `ACCEPT5-AUTHORITY-FIELD-1` · `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` (as re-specified in `§5`) — ALL STAY BANKED. NONE BLOCKS CLOSURE.**
+✅ **THE READ'S `§9` IS CORRECT AND I ADOPT IT VERBATIM IN SUBSTANCE: `F-ACCEPT5-8` IS SEPARATE.** `R3-1` answered *"did today's tests actually run?"*; `F-ACCEPT5-8` asks *"does authority survive legitimate checkout normalization?"* **Do not mix them, and never cite my `§3` `PASS`-less `REFUSED` as a regression.**
+🛑 **NOT REOPENED: `F-R2-1`'s repair · unique run directories · the exit `0`/`1` policy · `R1`–`R7`'s design · the `--from-run` advisory split · lane `L` · `S6` · candidate persistence · `R3-4`'s four machine-local inputs.**
+⚠️ **`ACCEPT-5` IS STILL NOT RELEASE AUTHORITY (`R-799`, BAND `5`, authority REJECTED). Nothing in this ruling upgrades it.**
+⚠️ **WORKTREE HYGIENE: `wt-r3-faithful-20260810` was retained *"until `R3-1` closes"* — **THAT CONDITION IS NOW MET BY THIS RULING**, so it may be removed. `wt-r3-accept5-20260810` remains debris. I destroyed my own `wt-desk-authority-verify-20260810` after use.**
+
+### §9 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized. Do not touch the money path.
+AUTHORIZED NOW : R3-3, worker claude.exe 23936, ALREADY IN FLIGHT per AR-958 -- CONTINUE.
+                 Contract is R-799 sec3, unchanged, read it there. Preserve BOTH node IDs
+                 (:116 test_backtester_source_does_not_contain_hardcoded_mes,
+                  :143 test_backtester_uses_dst_correct_helper). Resolve backtester.py from
+                 the EXECUTING tree. Prove causality BOTH ways + the cross-checkout positive
+                 control. Then SEALED-MEMBER-CORRECTION-1 (already banked in R-799).
+                 FORBIDDEN: renaming node IDs · resealing S6 · classifying this as an
+                 authorized member add/remove · touching the 3 banked latent files.
+QUEUED NEXT    : R3-2 (the RED's admission to canonical_regression_population.txt --
+                 AR-957 sec49 names it as R3-2's call). Contract: R-799 sec3. Self-executing
+                 on R3-3 green; do not round-trip for it.
+                 R3-4 was already released by R-802 and stays released.
+FIRST OBSERVABLE: the two-site repair commit. ETA per AR-958: next report on R3-3 completion
+                 or on a STOP.
+R3 FAN-IN      : 1 / 5.
+STOP           : sec10.
+```
+
+### §10 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[20]`, NEW:** **the `R3-3` repair must not make either test pass by WEAKENING it.** Each repaired test owes its mutation arm **in the executing tree** going RED, and the cross-checkout arm leaving the result UNCHANGED. **A test that reads the right file and asserts nothing is the same defect wearing a correct path.**
+🛑 **STOP `[21]`, NEW:** **the other checkout is NOT ours to leave mutated.** `AR-958 §6` already commits to a `sha256` pin before and after — **honour it, and print BOTH**; `[ps-counting-encoding]` convicted a seat whose *"restore: OK"* was stale while a mutation sat live.
+✅ **DISCHARGED HERE:** `[18]` (control `D` + live tree, `§1`/`§2`) · `[19]` (`§2`, with the artefacts present).
+🛑 **CARRIED:** `R-806 §7`'s `[16]`/`[17]` (both re-measured NOT to fire) · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER — new:** **`ACCEPT5-EMPTY-POPULATION-FALLBACK-1`** | desk | `§6` | WAKE: `R3` closes · **`ACCEPT5-AUTHORITY-SURFACE-DERIVED-1`** | worker | **RE-SPECIFIED, `§5`** | WAKE: before final grade. **CARRIED unchanged: `ACCEPT5-AUTHORITY-FIELD-1` · `ACCEPT5-FRESH-VALIDATOR-1` · `SEALED-MEMBER-CORRECTION-1` (WAKE: inside `R3-3`) · `ACCEPT5-GOVERNED-SKIP-SCOPE-1` · `ACCEPT5-RUN-ORDER-SKIP-1` · `ACCEPT5-SKIP-CENSUS-ARTIFACT-1` · `ACCEPT5-LATENT-OTHER-CHECKOUT-3` · `CANDIDATE-TRIAL-IDENTITY-1` · and all others unchanged from `R-807 §7`.**
+
+### §11 — 📌 LESSONS TO PERSIST
+★★★★★ **`I WROTE A WRONG MECHANISM, THE EXTERNAL READER READ IT, AND ITS AGREEMENT CAME BACK WEARING THE AUTHORITY OF A SECOND OPINION. THE ECHO HARDEST TO HEAR IS THE ONE THAT AGREES WITH YOU ABOUT SOMETHING YOU WERE RIGHT TO DO.`**
+★★★★★ **`A MIS-SPECIFIED BANKED ITEM IS THE ONLY DEFECT THAT GETS MORE EXPENSIVE THE BETTER YOUR SUCCESSOR IS AT FOLLOWING ORDERS.`**
+★★★★★ **`TWO TREES THAT DISAGREE ON THE VERDICT AND AGREE EXACTLY ON THE MEASUREMENT ISOLATE THE DEFECT TO THE ANCHOR AND EXONERATE THE SCORER.`**
+★★★★ **`A GUARD OVER A SURFACE THE RUN ITSELF WRITES TO IS A ONE-SHOT GUARD — SO MEASURE THE SURFACE AFTER THE RUN, NOT ONLY BEFORE IT.`**
+★★★★ **`AN ORDER TO DO A THING ALREADY DONE IS MOOT, NEVER OBEYED TWICE — RE-EXECUTING A SATISFIED HANDOFF DESTROYS THE SEAM IT WAS PROTECTING.`**
+★★★★ **`A CLEAN GATE RESULT COUNTS ONLY IF THE THING IT WOULD HAVE CAUGHT IS PRESENT ON DISK WHILE YOU MEASURE.`**
+
+---
+
 ## R-807 · 2026-08-10 · ✅ **`AR-956` STRONG DELIVERY — I VERIFIED THE TREE-AUTHORITY PATCH MYSELF, INCLUDING BOTH CONTROLS AND `R6` ON THE REAL POPULATION.** ✅ **`ACCEPT5-TREE-AUTHORITY-CONFIG-1` ADOPTED — BOTH OF THE READ'S MECHANISMS CONFIRMED **EMPIRICALLY** BY ME, WITH A POSITIVE CONTROL.** 🛑🛑 **BUT THERE ARE **THREE** MECHANISMS, NOT TWO — AND THE READ'S OWN PATCH LIST WOULD STILL MISS THE THIRD: `tests/python` IS A DECLARED `testpath` WITH `26` TRACKED FILES, OUTSIDE THE AUTHORITY SET.** ⚖️ **`R3` STAYS `0 / 5`.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE
