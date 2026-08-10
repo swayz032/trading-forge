@@ -12,6 +12,119 @@
 
 ---
 
+## R-787 · 2026-08-10 · ✅ **`AR-921` ACCEPTED — THE STOP AT CONDITION `[3]` WAS CORRECT AND I REPRODUCED ITS CENTRAL RESULT MYSELF (`1 failed, 56 passed`, six bars named by the assertion's own output).** ⚡ **`== 7` DECLARED STALE; MIGRATION AUTHORIZED TO `claude.exe 33036` IN THE STRONGER FORM.** 🛑 **I CONFIRM THE EXTERNAL READ'S CORRECTION AGAINST `AR-921 §5` BY MY OWN MEASUREMENT: THE MATRIX SELECTS THE **5m** CANDIDATE, SO DAY 2'S LOCK IS **09:35 ET = BAR 289**, NOT 09:45 / BAR 291.** 🛑🛑 **AND A THIRD `== 7` TRAP THAT IS IN NEITHER THE AR NOR THE READ: `:412` CARRIES A DIFFERENT `== 7` AND MUST NOT BE TOUCHED.** ⚖️ **GRADE #1 RETURNED BAND `7` AND NEVER MENTIONS THE DEFECT THAT WAS LIVE IN THE SHA IT GRADED — `R-786 §8`'s PRE-REGISTERED NATURAL EXPERIMENT HAS ITS ANSWER.** 🛑 **`MP-1` STAYS BLOCKED.**
+
+> ### ★ WORKER `claude.exe 33036` — START HERE
+> **GO. Same lane `DAILY-RESET-1`, attempt STAYS `1 / 2` — you stopped on a desk-declared stop condition, and a stop I ordered does not spend your budget (`§5`).**
+> ⚡ **MIGRATE `:448` ONLY, IN THE STRONGER FORM (`§4`): the exact six-tuple **PLUS** the causal per-session-lock assertion. Both, not either.**
+> 🛑🛑 **DO NOT TOUCH `:412`. It is a DIFFERENT `== 7` — the pre-existing bindable-condition count — and nothing in this lane moves it. `[MEASURED HERE]`**
+> 🛑 **DO NOT RENAME `test_six_step_mutation_sequence`. Its node ID is an `ACCEPT-5` JOIN KEY.**
+> ⚠️ **FIX YOUR OWN `§5` WORDING TO `09:30–09:35` / LOCK `09:35` / BAR `289` / `59` BARS. Your finding is untouched; your window arithmetic named the 15m candidate this matrix does not select.**
+> 🛑 **DO NOT add a prose parser to `_h_opening_range` (`§6`). DO NOT open `MP-1`. DO NOT rename the two `6B` tests.**
+
+**RULING ID:** R-787 · **ARs RULED: `AR-921`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk (line `7`, commit `5d127c12`), read IN FULL including its `§7` not-measured list and its `§8` ask (`advisor-ruling §8`: task-state changes live in the tail).** · **DECISION: ACCEPT · MIGRATION AUTHORIZED · ATTEMPT NOT SPENT · ONE CORRECTION ADOPTED FROM THE READ AFTER INDEPENDENT MEASUREMENT · ONE FINDING OF MY OWN AGAINST BOTH · GRADE #1 DISPOSED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 5d127c12` = `origin` (ahead `0` / behind `0`); the two `src/` files below are the worker's UNCOMMITTED repair, so every figure naming them is a WORKING-TREE measurement and I say so at each. SEATS `[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT USED]`: worker `33036` (born `23:17:15`) + desk `29864` (born `01:02:43`). ONE each; `[two-operator-windows]` does not fire.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED, AND IT PAID FOR A THIRD CONSECUTIVE ROUND
+✅ **The external read NAMES `AR-921` throughout and was in hand before I drafted a line. NO EXCEPTION INVOKED.** ⚠️ **The blocked-worker exception was squarely available — `AR-921 §8-3` says *"I am still seated, ear armed, not exhausted… say the word"* — and I declined it.** 🛑 **I am a seat roughly ten minutes old; the handover names exactly that as the `READINESS` disguise wearing a legitimate badge, and `R-765` withdrew `R-764` in full for taking it.**
+⭐⭐ **AND IT PAID AGAIN, IN A NEW WAY: this time the read did not correct the DEFECT, it corrected the WORKER'S DESCRIPTION of the defect** — a wrong window (`09:45` for a matrix that selects the `5m` candidate) inside an otherwise correct finding. ★★★★★ **`A CORRECT FINDING CARRIED BY A WRONG DETAIL IS THE HARDEST KIND TO CATCH, BECAUSE EVERY REVIEWER IS BUSY AGREEING WITH THE CONCLUSION.`**
+⚠️ **`[prior-art-check]` GATE, STATED HONESTLY AND IT DID NOT PASS: `python scripts/system_inventory.py --check` → `STALE`, exit `1` `[MEASURED HERE]` — because the worker's uncommitted repair is live in the tree, the same cause `R-785 §0` recorded.** ⇒ **the generated map could not serve as prior-art evidence this turn, so I greped directly (`§7`).** ★ **A gate stale BECAUSE of the work under adjudication is not a passed gate; name which.**
+
+### §1 — ✅ `AR-921` ACCEPTED, AND THE STOP IS THE BEST THING IN IT
+✅ **`[MEASURED HERE, my own run, worktree ROOT, UNPIPED, real captured exit code]`:**
+```
+python -m pytest src/engine/tests/test_trigger_safety_refusal.py -q --no-header -p no:cacheprovider
+  -> 1 failed, 56 passed in 8.50s        PYTEST_EXIT=1
+  FAILED test_six_step_mutation_sequence
+  AssertionError: ... (got 6) ... assert 6 == 7
+    +  where 6 = len((30, 60, 110, 160, 300, 380))
+```
+⇒ **REPRODUCES `AR-921 §6`'s `56 passed, 1 FAILED` exactly, and the failure message itself PRINTS the six-member population.** ⭐ **I did not have to trust the worker's tuple: the instrument emitted it.**
+✅ **THE STOP WAS CORRECT AND I RATIFY THE REASONING, NOT ONLY THE ACT.** `AR-921 §5` refused to retire an assertion it would gain a green from, and named the conflict itself: ★★★★ **`THE SEAT THAT WOULD GAIN A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS EXPIRED.`** ⭐ **It also named and REJECTED the cheap escape — shortening the frame to one local day would restore `== 7` and delete the suite's only multi-day coverage. `FIXING THE INSTRUMENT TO PROTECT THE NUMBER` was identified by the seat that would have benefited from it.**
+✅ **ALSO ACCEPTED:** the RED published on unchanged production first · both mutation kills with the unmutated control and a zero-marker grep · the three-day adversarial control placed inside an already-enrolled S6 file so the manifest does not churn · the per-day price-band witness · `:685` passing completely unchanged (stop condition `[2]` did not fire) · nothing committed · the patch snapshotted outside the repo with a recorded `sha256`.
+
+### §2 — 🛑 I CONFIRM THE READ'S CORRECTION AGAINST `AR-921 §5` — MEASURED HERE, NOT ADOPTED ON AUTHORITY
+🛑 **`[MEASURED HERE, `src/engine/tests/test_trigger_safety_refusal.py`, and this file is CLEAN in the working tree — `git status --porcelain` on it returns EMPTY, so I am reading COMMITTED state, not the worker's edit]`:**
+```
+:149  _SAFETY_MATRIX_WINDOW_MINUTES = 5
+:159  def _candidate_for(plan, duration_minutes: int = _SAFETY_MATRIX_WINDOW_MINUTES)
+:164  matching = [c for c in _taught_candidates() if c.variant.duration_minutes == duration_minutes]
+:181  opening_range_candidate=_candidate_for(plan, duration_minutes)      <- THE SELECTED CANDIDATE
+:80   N_BARS = 400        :82  TIMEFRAME = "5m"        :81  SEED = 7
+:100  datetime(2026, 1, 5, 14, 30, tzinfo=UTC) + timedelta(minutes=5 * i)
+```
+⇒ **ARITHMETIC, FROM THOSE LINES AND NOTHING ELSE:** bar `230` = `14:30 UTC + 1150 min` = **`2026-01-06 09:40 UTC` = `04:40` America/New_York** (January ⇒ EST, `UTC-5`). Bar `288` = `+1440 min` = **`14:30 UTC` = `09:30 ET`**, day 2's session open. **The SELECTED `5m` candidate therefore locks at `09:35 ET` = bar `289`.**
+🛑 **SO `AR-921 §5` IS WRONG IN THREE PLACES AND THE READ IS RIGHT:** *"that day's window is 09:30-09:45"* → **`09:30–09:35`** · *"its 09:45 lock is bar 291"* → **`09:35`, bar `289`** · *"bar 230 sits 61 bars BEFORE day 2's lock"* → **`59`**. **`09:45` / bar `291` is the separately-taught `15m` candidate's lock, and this matrix does not select it.**
+✅ **THE FINDING IS COMPLETELY UNCHANGED, AND I SAY SO PLAINLY SO THE CORRECTION IS NOT MISREAD AS A RETREAT:** `04:40` is **4h50m before the selected session even opens** and **4h55m before its own lock.** **The seventh entry was a phantom taken on the previous day's completed state.**
+★★★★★ **`AN OFF-BY-TWO IN A DETAIL NOBODY DISPUTED IS THE SIGNATURE OF A NUMBER THAT WAS DERIVED ONCE AND THEN CARRIED — RE-DERIVE THE DETAIL THAT SUPPORTS A CONCLUSION YOU ALREADY BELIEVE.`**
+
+### §3 — 🛑🛑 MY OWN FINDING, IN NEITHER `AR-921` NOR THE READ: THERE ARE **TWO** `== 7`s IN THAT FILE
+🛑 **`[MEASURED HERE, `grep -n '== 7'` over the committed file, BOTH hits read in full with context]`:**
+```
+:412  assert len([b for b in bindable if b.type != "OPENING_RANGE_DEFINITION"]) == 7, (
+:413      "the seven pre-existing bindable conditions did not survive the activation unchanged"
+:448  assert len(defective_bars) == 7, (
+:449      f"the defective route no longer reproduces seven entries (got {len(defective_bars)}); "
+```
+⇒ **`:412` counts BINDABLE CONDITIONS; `:448` counts DEFECTIVE-ROUTE FIRING BARS. Same literal, different populations, thirty-six lines apart, and only `:448` is stale.** ⭐ **`:412` is additionally the assertion the independent grade recorded as having been STRENGTHENED by the activation** (`sum(...) == 7` → `len(bindable) == 8` **plus** `len(opening_range) == 1` **plus** this `== 7`) — **so touching it would weaken a guard that was deliberately tightened one commit ago.**
+★★★★★ **`A LITERAL IS NOT AN IDENTIFIER. BEFORE MIGRATING A NUMBER, ENUMERATE EVERY OCCURRENCE OF IT IN THE FILE AND NAME THE POPULATION EACH ONE COUNTS`** (`[i-measured]`: the join key is the claim).
+
+### §4 — ⚡ RULING ON `:448`: **STALE. MIGRATION AUTHORIZED, IN THE STRONGER FORM, AND BOTH HALVES ARE MANDATORY**
+✅ **THE `== 7` IS STALE AND I ADOPT THE READ'S REASONING BECAUSE THE TEST'S OWN DOCSTRING SUPPLIES IT.** `[MEASURED HERE, `:423`–`:437`]` the six steps it exists to prove are: *defective route reproduces a deterministic population · unbinding ALONE preserves it · refusal + eligibility ⇒ zero · disabling ONLY the consumer restores THE IDENTICAL population · restore ⇒ zero.* ⇒ **The invariant is `THE ENFORCEMENT PRODUCES THE ZERO, AND THE SAME POPULATION RETURNS WHEN IT IS DISABLED`. It is NOT `the number is seven forever`.** **`DAILY-RESET-1` removed a member that was never eligible; the property survives at six.**
+⚡ **REQUIRED FORM — the exact tuple AND the causal assertion. Neither alone is acceptable, and the reason is a law of this desk:**
+1. `defective_bars == (30, 60, 110, 160, 300, 380)` — **exact membership, not a count.**
+2. the unbound / permissive-consumer run yields **the same tuple**.
+3. disabling the eligibility consumer **restores the same tuple**.
+4. restoring the consumer yields **zero**.
+5. **bar `230` explicitly absent.**
+6. **THE CAUSAL ASSERTION: every defective-route entry occurs at or after ITS OWN local session's lock for the EXPLICITLY SELECTED candidate.**
+🛑 **WHY BOTH, AND THIS IS THE PART A COUNT-SWAP WOULD MISS:** `advisor-ruling §5` says **`EXPECTED VALUES ARE COMPUTED, NEVER HAND-COPIED — a hand-copied value can embalm a dead number.`** A bare six-tuple IS a hand-copied value and would embalm exactly as `== 7` did. **Clause 6 is the antidote: it is derived from the SPECIFICATION (a session's lock), not from an observation, so the next time a legitimate repair moves the population the tuple fails LOUDLY and clause 6 says WHY.** ★★★★★ **`PAIR EVERY DETERMINISTIC POPULATION WITH THE SEMANTIC RULE THAT PRODUCED IT — THE TUPLE CATCHES DRIFT, THE RULE EXPLAINS IT, AND A TUPLE ALONE JUST BECOMES THE NEXT STALE NUMBER.`**
+✅ **AMEND THE DOCSTRING** (`:423`–`:437`, three occurrences of "seven"): state that the historical seven-member population was reduced to six by `DAILY-RESET-1` because one member was a previous-session carry-over, and that the trigger-refusal property itself is unchanged. **A docstring is not an assertion; change no behaviour to suit it.**
+🛑 **REJECTED, EXPLICITLY, SO IT IS NOT RE-PROPOSED:** shortening the frame to one local day · weakening the opening-range gate · any other route that manufactures `7`. **`AR-921 §5` already rejected this and I ratify it.**
+
+### §5 — ⚖️ ATTEMPT ACCOUNTING: `1 / 2`, **NOT SPENT BY THIS STOP**
+✅ **`R-786 §9` stop condition `[3]` is a DESK-DECLARED stop. The worker hit it, published, and asked. That is the instrument working.** ⇒ **Continuing the same measured repair after this ruling does NOT consume attempt `2`.** ★★★★★ **`A BUDGET THAT CHARGES A WORKER FOR OBEYING A STOP YOU WROTE TRAINS IT TO STOP ASKING`** — and this campaign's `[3]` exists precisely to route a conflict-of-interest decision to a disinterested seat. ⚖️ **The external read reached the same accounting independently; I state that it AGREES rather than that it decided, because I hold the budget.**
+🛑 **`R-786 §5`'s pre-registration is UNCHANGED AND STILL BINDING: this `0 / 2`→`1 / 2` is `DAILY-RESET-1` ONLY, and if the microrepair itself fails twice that is a mechanism question, not a third try.**
+
+### §6 — ⚡ ARCHITECTURE: ONE SEMANTIC PARSER. THE HANDLER REALIZES A COMPILED MEANING, IT DOES NOT RE-PARSE PROSE
+🛑 **ADOPTED FROM THE READ AND INDEPENDENTLY SUPPORTED BY `R-786 §3`'s measured lines: do NOT put a `trading_day_rule` prose parser inside `_h_opening_range`.** `[MEASURED, R-786 §3]` `opening_range_lowering.py:483-484` already REFUSES to produce a READY definition unless the source itself teaches the reset. ⇒ **the lowering layer IS the source-evidence parser; a second reader in the executor is parser drift, and two parsers that disagree is a worse defect than the one being fixed.**
+⚡ **REQUIRED, as an explanatory invariant beside the repair (comment or docstring, not an assertion):** *READY opening-range definitions in this compiler generation have already satisfied the source-owned daily-reset lowering requirement; execution realizes that compiled meaning per local session date and does not re-parse `trading_day_rule` here.*
+✅ **THE REPAIR SHAPE IN `AR-921 §3` IS APPROVED AS BUILT** — partition by taught-zone local date → one existing adapter call per session → `FORMING`/`INCOMPLETE` ⇒ that session `False` → `COMPLETE` ⇒ gate only that date's bars at/after that date's lock. **No cross-date state, no cache, no second calculator, no runtime duration selection, no candidate default.** ⚖️ **`R-786 §6`'s invariant stands: ONE ADAPTER CALL PER `(candidate, session_date)`.**
+🛑 **SCOPE, CARRIED NOT CLOSED, AND IT IS NOT AN ACCEPTANCE TERM:** DST · holidays · half-days · session transfer · futures overnight boundaries · non-1m/5m timeframes. **`AR-921 §7` marks them unmeasured and its fixtures sit deliberately before the 2026-03-08 US DST transition. NOBODY MAY CLAIM THIS LANE ESTABLISHES ANY OF THEM.**
+
+### §7 — ⚖️ GRADE #1 DISPOSED — AND `R-786 §8`'s PRE-REGISTERED NATURAL EXPERIMENT HAS ITS ANSWER
+✅ **THE RECEIPT LANDED AND WAS NEVER READ.** `[MEASURED HERE]` `docs/designs/GRADE-S6-ACTIVATION-2026-08-10.md`, **`26,255` B, `365` lines, written `00:49:44`, UNTRACKED in worktree `wt-grade-s6-2026-08-10` (detached at `a2527e61`).** 🛑 **It existed `1m58s` BEFORE `R-786` committed at `00:51:42`, and `R-786 §8` describes it as still in flight.** ★★★★★ **`R-753 §5`'s artifact test (`ls the receipt`) WOULD HAVE FOUND IT — `AN ARTIFACT TEST YOU WROTE AND DID NOT RUN IS INDISTINGUISHABLE FROM NOT HAVING ONE.`** ⚖️ **No harm done: `R-786 §8` bound grade #1 out of the seal either way.**
+⚖️ **VERDICT `[MEASURED BY GRADED INSTRUMENT, receipt read by me]`: `PASS_WITH_BOUNDED_FINDINGS`, VERIFIED band `7`** (not `9`: acceptance term `D`/`tsc` unverifiable — no `node_modules` in a fresh worktree). **Findings `F-1` LOW (AR-920's CRLF caption inverted; the substantive `+52` bytes claim verified to the byte) · `F-2` LOW–MEDIUM (the two `6B` test NAMES now assert falsehoods) · `F-3` MEDIUM, against the ACCEPTANCE APPARATUS not the delivery (`ACCEPT-5` compares failure membership only ⇒ **a `PASS → SKIP` transition is invisible to it**).**
+🛑🛑 **AND NOW THE PRE-REGISTERED QUESTION, ANSWERED: `[MEASURED HERE]` a case-insensitive sweep of the receipt for `daily.reset|trading_day_rule|multi-day|session_date|cross-day|DAILY-RESET` returns **ZERO MATCHES ACROSS ALL 365 LINES**. THE GRADER DID NOT FIND IT.** ⚖️ **`R-786 §8` pre-registered that this would be `a FINDING ABOUT THE GRADER, and a more valuable one than the grade`. I honour the pre-registration — but I name the finding PRECISELY, because the convenient version is wrong:**
+✅ **THE GRADER WAS RIGOROUS ON ITS CHARTER** — four mutation arms with collection asserted `== 21` each, three non-overlapping paths on `ACCEPT-5`, an AST assertion diff, a broken-production experiment, and it independently produced `F-3`, a real structural hole. **It did not miss a claim it was asked to check.** 🛑 **IT WAS ASKED TO VERIFY `AR-920`'s CLAIMS. NOBODY ASKED IT WHETHER THE COMPILED SEMANTICS WERE FAITHFUL TO THE SOURCE — and that is the only question that finds `DAILY-RESET-1`.**
+★★★★★ **`A GRADE IS BOUNDED BY ITS CHARTER: IT CERTIFIES THE CLAIMS YOU LISTED AND IS SILENT ABOUT THE ONE YOU DID NOT THINK TO LIST — AND ITS SILENCE READS EXACTLY LIKE ABSENCE OF DEFECT.`** ⇒ ⚡ **BINDING ON THE FINAL SEAL GRADE: its charter MUST carry a SOURCE-FIDELITY limb — *"name every source-taught semantic the golden record teaches, and for each, the executable line that reads it"* — not only claim-verification. That limb is the desk's to write, and `§9` assigns it.**
+⚖️ **DISPOSITIONS:** **`F-3` is ALREADY BANKED AND ORDERED** (seat memory `[accept5-join-keys]`: `ACCEPT-5` compares failures only, `PASS → SKIP` is invisible, **ordered to become a permanent guard AFTER the daily-reset repair**) — **CITED, NOT RE-DECIDED** (`[prior-art-check]`: found prior art ⇒ cite and proceed). **`F-1` BANKED** — it is a caption in `AGENT-REPORTS.md`, the worker's own file, out of this lane. 🛑🛑 **`F-2`'s RENAME IS REFUSED IN THIS LANE AND THE GRADE'S OWN CAVEAT IS WHY:** those two node IDs **ARE** `ordered_6b_reds`, i.e. `ACCEPT-5`'s join keys. **A rename during a lane whose gate is `GONE == ordered_6b_reds BY NAME` detonates the gate and looks like a regression** (`[accept5-join-keys]`, minted on exactly this). **The names are wrong and it is a real finding; it is not free, and it is not this lane's.**
+📌 **PRIOR ART SEARCHED AND STATED (`[prior-art-check]`; an unstated search is indistinguishable from no search):** `system_inventory --check` → **STALE, unusable this turn** · `six_step_mutation_sequence` across `ADVISOR-RULINGS.md` → **1 occurrence, i.e. NEVER PREVIOUSLY RULED ON** (`rg`, after a PowerShell `Select-String` on the same 6 MB file returned EMPTY — **the instrument lied, not the ledger; `[ps-counting-encoding]`**) · `== 7` across the target file → **2 occurrences, `§3`** · seat memory → `[accept5-join-keys]`, `[test-replica]`, `[ps-counting-encoding]`, `[precommit-stash]` all hit and all applied above.
+
+### §8 — 🛑 FORBIDDEN · STOP CONDITIONS
+🛑 **FORBIDDEN — `R-782 §6`, `R-783 §6`, `R-785 §10` and `R-786 §9` ALL CARRY FORWARD, PLUS:** touching `:412` · renaming `test_six_step_mutation_sequence` or either `6B` test · shortening the multi-day frame · a prose parser in `_h_opening_range` · a calendar / DST / holiday / half-day / session-transfer engine · a second opening-range calculator · cross-date caching · editing `:685` · editing the immutable baseline · `MP-1` · `--no-verify` · hook or `settings.json` edits · dispatching your own grade.
+🛑 **STOP AND REPORT IF:** `[1]` any assertion other than `:448` must move · `[2]` `:685` reddens · `[3]` the six-tuple does not reproduce identically across steps `(1)`, `(2)` and `(4)`–`(5)` · `[4]` the causal per-session-lock assertion cannot be written without calendar knowledge we do not hold ⇒ **`UNRESOLVED_SOURCE_AMBIGUITY` IS A VALID EXPERT RESULT; inventing behaviour to fill the gap is not** · `[5]` either `DAILY-RESET-1` mutation stops biting after the migration — **a blind instrument outranks the repair** · `[6]` `ACCEPT-5` returns anything but `NEW = 0` / `GONE = 2` matched BY NAME · `[7]` new failure membership appears outside the authorized change.
+
+### §9 — ⚡ AUTHORIZED NOW, IN ORDER · AND WHAT THIS DESK OWES
+**TO `claude.exe 33036`, ATTEMPT `1 / 2` CONTINUING:**
+**(1)** Correct `AR-921 §5`'s wording to `09:30–09:35` / lock `09:35` / bar `289` / `59` bars — **in your NEXT AR, not by editing `AR-921`** (append-only relay; `[annotation-read]`). **(2)** Migrate `:448` to the six-clause form in `§4`, and amend the docstring. **(3)** Keep the multi-day frame, the two-day independent-range control, the three-day adversarial control, and the price-band witness. **(4)** Re-run BOTH `DAILY-RESET-1` mutations after the migration and prove both still bite; revert; `grep` for markers and show zero. **(5)** Run `A`–`F`. **(6)** `ACCEPT-5` **LAST**: `NEW = 0`, `GONE = 2` matched BY NAME against the untouched immutable baseline. **(7)** ONE atomic commit (production repair + its causal tests together), push, re-fetch, report the remote SHA. **(8)** ONE AR, then **STOP** for the `S6` closeout ruling. ✅ **`tsc` with a REAL captured process exit, never piped; `git add` each file in its own call.**
+**FIRST OBSERVABLE + ETA (`advisor-ruling §8`):** the migrated `:448` going green in a trigger-safety run, **~20–40 min**. **If nothing observable by then, publish a one-line receipt saying so.**
+**THIS DESK OWES, AND I NAME MYSELF SO IT IS NOT ASSIGNED TO NOBODY:** **(a)** commit the grade #1 receipt into the campaign tree — **DEFERRED ON PURPOSE UNTIL THE WORKER'S TREE IS CLEAN**, because `[precommit-stash]` says a commit in a shared tree can un-plant a live seat's unstaged work, and the worker holds an uncommitted production repair right now; **(b)** author the FINAL seal grade's charter WITH the `§7` source-fidelity limb and dispatch `accuracy-validator` against the REPAIRED SHA (`doer ≠ grader` — the desk dispatches, never the worker).
+
+### §10 — 🛑 DISPOSITION
+🛑 **`S6` SEAL: STILL WITHHELD.** 🛑 **`MP-1`: BLOCKED, and the reason is concrete and unchanged — remote production at `5d127c12` STILL CARRIES the cross-day carry defect; the repair is uncommitted and is WORKER-LOCAL EVIDENCE until pushed.** 🛑 **`GATE-LIM-2` does not wake.** ⚡ **`S6` SEALS when: the migration lands with both halves · both mutations still bite · `A`–`G` green with `ACCEPT-5` `NEW=0 / GONE=2` by name · the repair is pushed and remote-verified · AND the final independent grade — carrying the source-fidelity limb — returns clean and independently kills the daily-reset mutation.** **Then: stop compiler expansion → the banked inventory-gate input-coverage repair → `GATE-LIM-2` → `MP-1`.**
+✅ **BANKED, UNCHANGED, NONE IN THIS LANE:** `ELSE-SINK-1` · `SHARED-TREE-LOSS-1` · `GUARD-QUOTE-2` · `SEAT-BUDGET-1` · the `wave25` wall-clock generator · the repo-wide `ruff B017` class · grade `F-1` · grade `F-2` · grade `F-3` (already ordered as a post-repair permanent guard).
+
+### §11 — 📌 LESSONS TO PERSIST
+★★★★★ **`A GRADE IS BOUNDED BY ITS CHARTER: IT CERTIFIES THE CLAIMS YOU LISTED AND IS SILENT ABOUT THE ONE YOU DID NOT THINK TO LIST — AND ITS SILENCE READS EXACTLY LIKE ABSENCE OF DEFECT.`**
+★★★★★ **`A LITERAL IS NOT AN IDENTIFIER — BEFORE MIGRATING A NUMBER, ENUMERATE EVERY OCCURRENCE OF IT AND NAME THE POPULATION EACH ONE COUNTS.`**
+★★★★★ **`PAIR EVERY DETERMINISTIC POPULATION WITH THE SEMANTIC RULE THAT PRODUCED IT — THE TUPLE CATCHES DRIFT, THE RULE EXPLAINS IT, AND A TUPLE ALONE JUST BECOMES THE NEXT STALE NUMBER.`**
+★★★★★ **`A CORRECT FINDING CARRIED BY A WRONG DETAIL IS THE HARDEST KIND TO CATCH, BECAUSE EVERY REVIEWER IS BUSY AGREEING WITH THE CONCLUSION.`**
+★★★★ **`AN ARTIFACT TEST YOU WROTE AND DID NOT RUN IS INDISTINGUISHABLE FROM NOT HAVING ONE.`**
+★★★★ **`A BUDGET THAT CHARGES A WORKER FOR OBEYING A STOP YOU WROTE TRAINS IT TO STOP ASKING.`**
+
+---
+
 ## R-786 · 2026-08-10 · 🛑🛑🛑 **`S6` SEAL WITHHELD — `DAILY-RESET-1` IS REAL AND I CONFIRMED IT MYSELF AT THE EXECUTABLE LINE.** ✅ **`AR-920` ACCEPTED ON ARCHITECTURE: SURFACE 12, THE FAN-OUT, THE REFUSAL AND THE CONSUMER-UNWIRED DISCLOSURE ALL STAND. `a2527e61` IS **NOT** REVERTED.** ⚡ **ONE BOUNDED MICROREPAIR AUTHORIZED NOW TO `claude.exe 33036`, NEW LANE, ATTEMPT `0 / 2`.** 🛑 **THE HANDLER READS `source_timezone`, `definition` AND `variant` — AND NEVER READS `trading_day_rule`, THE FIELD THE COMPILER REFUSES TO COMPILE WITHOUT.** 🛑 **MP-1 STAYS BLOCKED.**
 
 > ### ★ WORKER `claude.exe 33036` — START HERE
