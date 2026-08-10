@@ -4,6 +4,98 @@
 
 ---
 
+## AR-905 · 2026-08-09 · 📍 **SEAT RECEIPT — A NEW WORKER SEAT IS UP (`claude.exe 16536`), AND THE SEAT `R-778 §5` AUTHORIZED (`claude.exe 25636`) IS GONE FROM THE PROCESS TABLE.** ✅ **RULING EAR ARMED AND RED-PROOFED BEFORE IT WAS POINTED AT THE LEDGER — ARMED LINE AND A SYNTHETIC CHANGE BOTH ARRIVED AS NOTIFICATIONS.** ✅ **`AR-904`'s REVERT IS CONFIRMED BY MY OWN RUN, NOT INHERITED: PINNED GROUP `2 failed / 96 passed`, S6 `1 failed / 7 passed`, AND THE REDS ARE EXACTLY THE THREE PRE-ORDERED ONES.** 🛑 **NO LANE IS OPEN AND I DO NOT OPEN ONE — `AR-904` ASKS A NARROW RULING AND NOTHING ON DISK HAS RULED ON IT.** ⚠️ **AND ONE INSTRUMENT CONVICTION AGAINST MYSELF, BEFORE IT REACHED A CLAIM.**
+
+**TASK: NONE AUTHORIZED TO THIS SEAT. SEAT `claude.exe 16536`. HEAD `37015d09`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.**
+
+### §1 — 📍 SEAT AND CENSUS, BY OWNERSHIP
+```
+[MEASURED HERE, Win32_Process + parent walk from my own shell]
+  powershell.exe 31864 <- claude.exe 16536 <- powershell.exe 14856 <- explorer.exe 9228
+  ⇒ MY SEAT = claude.exe 16536
+
+LIVE claude.exe: 16536 (mine) · 28472 (the other seat — NOT touched, NOT claimed as the advisor)
+PID 25636 — the seat R-778 §5 authorized and that wrote AR-901…AR-904 — NOT PRESENT.
+```
+🛑 **SO `R-778 §5`'s AUTHORIZATION NAMES A SEAT THAT NO LONGER EXISTS, AND I DO NOT INHERIT IT BY SITTING DOWN.** `[authorize-seat]` — an authorization is to a seat, not to a chair. **I am reporting, not assuming.**
+⚠️ **`TaskList` NOT USED — documented-blind on this box.**
+
+### §2 — ✅ THE EAR: ARMED, RED-PROOFED, AND IT DELIVERS
+```
+[MEASURED HERE]
+  CENSUS FIRST: two live bash.exe polling rigs — 32836 (session e88ae3c7) and 29860
+  (session bd94835c). NEITHER is mine (my session is 79a5075f), and BOTH their parent
+  claude.exe processes (3000, 5220) are ABSENT ⇒ orphaned. NOT KILLED, NOT ADOPTED.
+  (`never kill an ear you did not arm` — the 2026-08-08 blinding.)
+
+  RED-PROOF FIRST, on a THROWAWAY file, never the ledger:
+    notification 1  "REDPROOF ARMED baseline=[## R-000 baseline throwaway]"   ⇒ CHANNEL PROVEN
+    then I prepended a synthetic `## R-999` header
+    notification 2  "REDPROOF FIRED: ## R-999 SYNTHETIC RULING (red-proof)"   ⇒ DETECTOR PROVEN
+  ONLY THEN, the real ear: Monitor persistent on docs/designs/ADVISOR-RULINGS.md,
+    notification 3  "RULING-EAR ARMED (worker seat claude.exe 16536) baseline=[## R-778 …]"
+```
+✅ **BACKFILL OF THE BLIND WINDOW, BY HAND, STATED AS THE JOIN KEY REQUIRES:** the newest ruling on disk at arming time is **`R-778`**, read by hand this session. **The ear can only report what lands after it.**
+✅ **IT IS A `Monitor persistent` RIG, NOT A BACKGROUNDED `while true` — every emitted line becomes a notification in my chat.** ★★★ **A rig that can only notify by dying is a log file with a heartbeat, and the previous seat already convicted one (`AR-901`).**
+
+### §3 — ✅ TREE STATE RE-MEASURED, NOT INHERITED
+**`AR-904` says it reverted items 3–5 and left the tree at `3 failed / 135 passed` over 9 suites. I did not take that on trust, and I did not guess its 9-suite invocation** — a previous seat already asked the desk, in this ledger, to *"name the group's exact invocation once, in a ruling, so it stops being re-derived"*, and guessing it is exactly what that request was about. **I ran the two populations the ledger names EXACTLY:**
+```
+[MEASURED HERE, unpiped, exit captured directly — never through `| head`]
+R-741 §5 PINNED GROUP (4 files, run from the worktree root):
+   2 failed, 96 passed in 1.07s          PYTEST_EXIT=1
+   MEMBERSHIP: test_no_production_binding_routes_to_the_opening_range_adapter_yet
+               test_no_typed_opening_range_output_contract_exists_in_production
+   ⇒ the two ordered 6B reds. NO THIRD. Exactly the historical figure.
+
+S6 FILE (test_s6_candidate_transport_and_adapter_execution.py, from the worktree root):
+   1 failed, 7 passed in 0.42s           PYTEST_EXIT=1
+   MEMBERSHIP: test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate
+   ⇒ RED 2, red BY ORDER (R-778 §5-7). The other 7 include AR-904's new join test.
+```
+✅ **THIS JOINS `AR-904` EXACTLY:** its `9 suites → 3 failed` decomposes as *these two ordered 6B reds* + *RED 2*, and its S6 contribution of `+1 failed / +7 passed` is what I measured independently. ⇒ **the revert is real on disk, and the branch is NOT carrying a broken tree.**
+🛑 **I DO NOT RE-QUOTE `3 failed / 135 passed`** — that is a 9-suite population whose membership I cannot name from the ledger, and `[unenumerated-ladder]` forbids quoting a denominator I cannot enumerate. **The two populations above I CAN name, file by file.**
+
+### §4 — ⚠️ AN INSTRUMENT CONVICTION AGAINST MYSELF, CAUGHT BEFORE IT REACHED A CLAIM
+**My FIRST S6 run reported `8 failed` — a catastrophic-looking result that would have read as *"the previous seat left the tree broken."* IT WAS MY OWN INSTRUMENT.**
+```
+[MEASURED HERE] I ran pytest with cwd = src/engine/tests. The S6 suite resolves the frozen
+record by a path RELATIVE TO THE REPO ROOT:
+   test_s6_…:87  assert path.exists(), f"frozen provenance record missing: {path}"
+   E  AssertionError: frozen provenance record missing:
+      docs\replay-results\h1-battery\tier-a-extraction-provenance\st5e-YJRfKc__s0.json
+Re-run from the worktree root ⇒ 1 failed / 7 passed.
+CONTROL: the pinned 4-suite group returns 2 failed / 96 passed from BOTH cwds ⇒ it is
+cwd-insensitive, which is exactly why it did not warn me.
+```
+★★★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST — AND A SUITE THAT SILENTLY DEPENDS ON THE CALLER'S CWD WILL FAIL 100% AND LOOK LIKE A BROKEN CODEBASE.`** ⚠️ **AND IT IS A REAL PROPERTY OF THE SUITE, NOT JUST MY MISTAKE: the S6 file MUST be invoked from the worktree root. Naming it here so the next seat does not spend the same ten minutes.**
+
+### §5 — ⚠️ ONE STANDING DEBT THAT HAS MOVED SINCE `AR-904`
+```
+[MEASURED HERE, exit captured directly]
+python scripts/system_inventory.py --check
+  -> "FRESH: docs/designs/SYSTEM-INVENTORY.md matches the tree
+      (content compared; provenance sha ignored)."     EXIT=0
+```
+✅ **`AR-904 §7` and `R-778 §7`'s `INV-1` recorded the inventory as STALE (`exit 1`). IT IS NOW FRESH** — `[ARTIFACT-SOURCED, git log]` `8fba9f2d` regenerated it and `1680e69b`/`b39bcbe1` added a PRE-PUSH freshness gate, all landed after `AR-904`'s measurement. **`INV-1` reads as discharged; I state that as a measurement, and leave the disposition to the desk.**
+⚠️ **PRE-EXISTING DIRT I DID NOT CREATE AND DID NOT TOUCH:** `git status` shows `src/engine/tests/test_synthetic_market_simulator.py` modified (`18+/3-`), plus six modified docs and a long tail of untracked `docs/designs/GRADE-*` charters. **`[MEASURED]` its last commit is `410b75cf` (the null-byte recovery), i.e. this dirt predates `S6-1` entirely. NOT MINE, NOT REVERTED, NOT COMMITTED** — `[precommit-stash]`: the tree is shared and `git checkout` eats uncommitted work.
+
+### §6 — 🛑 WHAT IS OPEN, AND WHY I AM NOT STARTING ANYTHING
+**`AR-904` is `APPROVAL_REQUESTED` and NOTHING ON DISK HAS RULED ON IT.** `[MEASURED HERE]` **`R-778` is the newest `## R-` in `ADVISOR-RULINGS.md`, and it PREDATES `AR-904`.**
+**THE OPEN QUESTION, restated verbatim from `AR-904` so the desk need not re-derive it:** *does `STEP 4`'s atomic unit include an `ENFORCED_DISPATCH` entry — making it `FAMILY_META` + `PRIMITIVE_RESOLVERS` + `ENFORCED_DISPATCH` — and if so, what may the handler DO in this step, given `R-778 §6` sequences the candidate-aware carrier AFTER it?* **Shapes on the table: (A) land all three with a handler that refuses loudly until the carrier exists; (B) defer the whole declaration into the carrier step so declaration · resolver · dispatch · carrier land as ONE atomic truth. The previous seat leaned `(B)` and refused to choose alone.**
+🛑 **AND THE ATTEMPT BUDGET IS THE REASON THIS IS NOT A WORKER JUDGEMENT CALL: `STEP 4` STANDS AT `1 / 2`.** `[R-648]` **the second attempt may only be spent on a CHANGED MECHANISM, and which mechanism changes is the ruling's to name.** ★★★ **Re-running the same shape under a new name would burn the last attempt on a renamed hypothesis.**
+🛑 **I ALSO DO NOT RE-OPEN THE PRIOR-ART QUESTION `AR-904` ALREADY ANSWERED:** `opening_range_adapter.py:40` records the `ENFORCED_DISPATCH` obligation, and `verify_dispatch_coverage` at `family_meta_enforcement.py:454` enforces set equality in both directions. **That search is done; asking the desk to re-decide it would spend a ruling** (`[prior-art-check]`).
+
+### §7 — ⚠️ WHAT I DID NOT MEASURE
+🛑 **NOT RUN:** `tsc` · the TS parity script · any backtest · the 104-member manifest join · the pathless suite · the 9-suite group (population unnamed). 🛑 **NOT DONE:** any edit to `src/`, any commit, any registration/resolver/dispatch work. **This seat has written exactly one file: this report.**
+⚠️ **NOT CLAIMED:** that `claude.exe 28472` is the advisor — I measured that it exists, nothing more. **A process-table enumeration is not an identification.**
+
+**RECOMMENDATION: BLOCKED ON A RULING, NOT ON WORK.** **NEXT SMALLEST TASK: whichever of `(A)`/`(B)` the desk names in `§6`, as ONE commit, red-first — plus a re-authorization to THIS seat (`claude.exe 16536`), since the seat named in `R-778 §5` is gone.**
+
+**LESSON:** ★★★★★ **`A SURPRISING RESULT ACCUSES THE INSTRUMENT FIRST — A SUITE THAT SILENTLY DEPENDS ON THE CALLER'S CWD FAILS 100% AND LOOKS LIKE A BROKEN CODEBASE.`** · ★★★★★ **`AN AUTHORIZATION NAMES A SEAT, NOT A CHAIR — A NEW PROCESS DOES NOT INHERIT IT BY SITTING DOWN.`** · ★★★★ **`RED-PROOF THE EAR ON A THROWAWAY BEFORE POINTING IT AT THE LEDGER; A DETECTOR THAT HAS NEVER FIRED IS NOT YET AN INSTRUMENT.`** · ★★★★ **`DO NOT QUOTE A TOTAL WHOSE POPULATION YOU CANNOT NAME FILE BY FILE — RUN THE ONE THE LEDGER PINS INSTEAD.`**
+
+---
+
 ## AR-904 · 2026-08-09 · ✅ **`STEP 4` ITEMS `1`+`2` AND THE `§3` COMMENT FIX DELIVERED (`012e3c80`, `d83eebff`) — THE SOURCE-IDENTITY HOLE IS CLOSED, RED-PROOFED IN ITS OWN COMMIT.** 🛑🛑 **ITEMS `3`–`5` ARE **BLOCKED BY A STRUCTURAL RULE OF THE ENGINE**, NOT BY DIFFICULTY: `FAMILY_META` + `PRIMITIVE_RESOLVERS` IS **NOT** THE ATOMIC UNIT — PIN `(a)` PROVES SET EQUALITY AGAINST `ENFORCED_DISPATCH` IN **BOTH DIRECTIONS**, SO A DECLARED PRIMITIVE WITH NO DISPATCH KEY IS A VIOLATION BY CONSTRUCTION.** ⭐⭐⭐ **I BUILT IT ANYWAY TO MEASURE IT, AND IT WORKS EXACTLY AS `§5` INTENDED — `RED 2` ADVANCED PAST STAGE 1 AND NAMED THE NEXT BOUNDARY — BUT IT BREAKS `4` PREVIOUSLY-GREEN TESTS, SO I REVERTED IT RATHER THAN LAND IT.** ⚖️ **ATTEMPT `1 / 2`. I AM NOT SPENDING THE SECOND ON THE SAME MECHANISM.**
 
 **TASK `R-778 §5` (`STEP 4`). SEAT `claude.exe 25636`. HEAD `d83eebff`. FAN-IN `3 / 7` items — and the remaining `4` are BLOCKED, not unstarted.**
