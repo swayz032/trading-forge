@@ -53,8 +53,11 @@ import pathlib
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from src.engine.extraction.spec_producer import (
     SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY,
+    RecordCompileResult,
     produce_spec_artifact,
     produce_spec_artifact_from_record,
 )
@@ -352,6 +355,63 @@ def test_the_old_per_strategy_boundary_json_behaviour_is_unchanged():
             "the per-strategy boundary grew a lowering key; STEP 2.1 was supposed to leave "
             "this entry point untouched"
         )
+
+
+# ── STEP 4 ITEM 1 — THE SOURCE-IDENTITY JOIN (R-778 §4) ───────────────────────
+#
+# 🛑 WHAT THIS IS, STATED PRECISELY, BECAUSE THE DISTINCTION MATTERS:
+# this is an INVARIANT HOLE, not a live defect. `[MEASURED, R-778 §4]` production
+# calls the factory with `source_spec_id=video` and
+# `source_condition_id=lowering.source_condition_id`, so the LIVE PATH IS CORRECT.
+# The envelope simply does not FORBID a wrong one, and `cache_identity` is computed
+# FROM those ids — so the hole is closed BEFORE identity starts flowing into
+# execution, not after.
+#
+#   `AN INVARIANT HOLE IS NOT A DEFECT SIGHTING — SAY WHICH ONE YOU FOUND, OR THE
+#    NEXT READER WILL "FIX" WORKING CODE.`
+def test_the_envelope_refuses_a_candidate_whose_source_ids_disagree_with_its_lowering():
+    """RED until STEP 4 item 2 closes the join. Two arms, one control.
+
+    The existing `:918` check compares the DEFINITION OBJECT and nothing else, so a
+    candidate carrying the right definition, the right variant and the WRONG
+    `source_spec_id` is constructible today.
+    """
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    lowering = result.opening_range_lowering
+    candidates = result.opening_range_candidates
+    assert candidates, "no candidates to mutate — STEP 3's fan-out regressed"
+
+    def build(cands):
+        # dict() so the artifact is never shared between the control and the arms
+        return RecordCompileResult(
+            artifact=dict(result.artifact),
+            opening_range_lowering=lowering,
+            opening_range_candidates=cands,
+        )
+
+    # ── CONTROL FIRST — the unmutated envelope must still CONSTRUCT.
+    # `A GUARD THAT REFUSES EVERYTHING IS NOT A GUARD.` Built through the identical
+    # helper the arms use, so a failure below cannot be blamed on the harness.
+    build(candidates)
+
+    # ── THE TWO ARMS. Each mutates EXACTLY ONE id and changes nothing else.
+    for field, wrong in (
+        ("source_spec_id", "NOT-THE-GOLDEN-SPEC"),
+        ("source_condition_id", "not-the-taught-condition"),
+    ):
+        mutated = dataclasses.replace(candidates[0], **{field: wrong})
+        assert getattr(mutated, field) == wrong, (
+            f"the mutation did not take on {field}; the arm cannot accuse anything"
+        )
+        # POSITIVE WITNESS that the mutation is REACHABLE by the thing that matters:
+        # identity is derived from these ids, so a changed id MUST change the hash.
+        assert mutated.cache_identity != candidates[0].cache_identity, (
+            f"mutating {field} did not change cache_identity — then this arm is not "
+            "exercising the identity risk R-778 §4 names, and closing the join would "
+            "be guarding a field nothing depends on"
+        )
+        with pytest.raises(ValueError):
+            build((mutated,) + candidates[1:])
 
 
 # ── RED 1 — CANDIDATE TRANSPORT FROM A **FULL-RECORD** BOUNDARY ───────────────
