@@ -67,6 +67,94 @@ SEAL = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-collection-
 SEAL_APPROVED_GRADED_SHA = "08062e12b3e2b59d44eada150c8d8b8653796c90"
 SEAL_APPROVED_POP_SHA256 = "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9"
 
+# ---------------------------------------------------------------------------
+# F-2 (R-794 §6) — THE FAILURE BASELINE'S APPROVED IDENTITY, ALSO OUT-OF-BAND.
+# The baseline DEFINES `NEW` and `GONE`; it is the most authoritative input this
+# gate has, and until now it was the only one with no external anchor while the
+# seal received one in the same commit. Git protects it operationally, but that
+# is defence in depth, not the instrument checking its own authority file.
+#   `AN INSTRUMENT THAT VALIDATES EVERY INPUT EXCEPT ITS MOST AUTHORITATIVE ONE
+#    HAS AUDITED ITS WITNESSES AND TAKEN THE JUDGE'S WORD FOR IT.`
+# ---------------------------------------------------------------------------
+BASELINE_APPROVED_RAW_SHA256 = (
+    "a9f70e2ed7ecc534f970ddd6c070aa0436c8605a134560b4b877d38c7d10d8fc"
+)
+BASELINE_APPROVED_MEASURED_AT_SHA = "f8273f418558ad9552486dfee2dc37d9401dd360"
+BASELINE_APPROVED_FAILURE_COUNT = 33
+BASELINE_APPROVED_FAILURE_MEMBERSHIP_SHA256 = (
+    "576153e8a01b578b1c90d84c0cf7a121698a2e74e07e0d20773b3c83ed27e07d"
+)
+
+
+def validate_baseline_bytes(path: Path):
+    """BASELINE PREFLIGHT (F-2) — the six-step chain, run BEFORE the baseline is used.
+
+    Ordered deliberately: raw bytes FIRST, so a file that is not the approved file
+    is refused before anything parses it and starts believing its contents. Each
+    later step then anchors a DIFFERENT property, so a forger who repairs one
+    still trips the next.
+
+    Returns a list of refusal strings; empty means the baseline may be trusted.
+    """
+    probs = []
+
+    # (1) raw bytes — the whole file, before any interpretation.
+    raw = path.read_bytes()
+    raw_sha = hashlib.sha256(raw).hexdigest()
+    if raw_sha != BASELINE_APPROVED_RAW_SHA256:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: raw-byte SHA-256 of the failure baseline is "
+            f"{raw_sha}, not the approved {BASELINE_APPROVED_RAW_SHA256}."
+        )
+
+    # (2) it must parse at all.
+    try:
+        d = json.loads(raw)
+    except Exception as exc:
+        probs.append(f"BASELINE INTEGRITY FAILURE: the baseline does not parse: {exc}")
+        return probs
+
+    # (3) measured_at_sha — read AND compared. It was previously read and discarded.
+    if d.get("measured_at_sha") != BASELINE_APPROVED_MEASURED_AT_SHA:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: measured_at_sha is "
+            f"{d.get('measured_at_sha')!r}, not the approved "
+            f"{BASELINE_APPROVED_MEASURED_AT_SHA!r}."
+        )
+
+    failures = d.get("failures")
+    if not isinstance(failures, list) or not failures:
+        probs.append("BASELINE INTEGRITY FAILURE: `failures` is missing or empty.")
+        return probs
+
+    # (4) failure COUNT.
+    if len(failures) != BASELINE_APPROVED_FAILURE_COUNT:
+        probs.append(
+            f"BASELINE INTEGRITY FAILURE: failure count {len(failures)} != approved "
+            f"{BASELINE_APPROVED_FAILURE_COUNT}."
+        )
+
+    # (5) sorted failure-MEMBERSHIP digest. A count is satisfied by any swap;
+    #     only a membership digest names the population.
+    membership = hashlib.sha256("\n".join(sorted(failures)).encode("utf-8")).hexdigest()
+    if membership != BASELINE_APPROVED_FAILURE_MEMBERSHIP_SHA256:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: the sorted failure-membership digest is "
+            f"{membership}, not the approved {BASELINE_APPROVED_FAILURE_MEMBERSHIP_SHA256}. "
+            "A baseline swapped member-for-member preserves the count and changes this."
+        )
+
+    # (6) the two authorized subtractions must actually BE members of the failure set.
+    reds = d.get("ordered_6b_reds") or []
+    strays = sorted(set(reds) - set(failures))
+    if strays:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: ordered_6b_reds contains "
+            f"{len(strays)} member(s) that are not baseline failures: {strays}. "
+            "An authorized subtraction that was never in the set can only widen it."
+        )
+    return probs
+
 
 def validate_seal(seal):
     """SEAL PREFLIGHT — run BEFORE the seal is used for anything (F-ACCEPT5-5).
@@ -199,6 +287,16 @@ def main():
     notes = []
 
     members = read_manifest(args.manifest)
+
+    # --- F-2 BASELINE PREFLIGHT — BEFORE the baseline is used for anything ----
+    # It defines NEW and GONE. Validating it after reading it would be auditing a
+    # witness whose testimony you have already written down.
+    baseline_problems = validate_baseline_bytes(args.baseline)
+    print(f"[BASELINE] preflight problems            : {len(baseline_problems)}")
+    for pr in baseline_problems:
+        print(f"      {pr}")
+    failures_of_the_gate.extend(baseline_problems)
+
     base = read_baseline(args.baseline)
     seal = None
     if args.seal and Path(args.seal).is_file():
@@ -265,6 +363,17 @@ def main():
         only_plugin = plugin_failures - j_failures
         only_junit = j_failures - plugin_failures
         size_delta = len(collected) - n_junit_cases
+
+        # --- F-1 (R-794 §6) — COLLECTION MEMBERSHIP, BOTH DIRECTIONS. ----------
+        # `j_cases` was built here and then never read again: the only collection
+        # comparison was on SIZE. A BALANCED edit — one member dropped, another
+        # added — preserves the size and was completely invisible, while the
+        # runner printed "feeders AGREE on membership and size".
+        #   `COMPARE MEMBERS, NEVER COUNTS` was already this campaign's law for the
+        #   FAILURE set; it was never applied to the COLLECTION set.
+        only_plugin_collection = sorted(collected - j_cases)
+        only_junit_collection = sorted(j_cases - collected)
+
         print(f"[SELF-CHECK] independent feeder (junitxml) cases={n_junit_cases} "
               f"failures={len(j_failures)}")
         if only_plugin or only_junit:
@@ -272,13 +381,28 @@ def main():
                 "FEEDER DISAGREEMENT on failure membership — "
                 f"plugin-only={sorted(only_plugin)[:5]} junit-only={sorted(only_junit)[:5]}"
             )
+        if only_plugin_collection or only_junit_collection:
+            failures_of_the_gate.append(
+                "FEEDER DISAGREEMENT on collection membership — "
+                f"ONLY_PLUGIN_COLLECTION={only_plugin_collection[:5]} "
+                f"ONLY_JUNIT_COLLECTION={only_junit_collection[:5]}"
+            )
         if abs(size_delta) > 0:
             failures_of_the_gate.append(
                 f"FEEDER DISAGREEMENT on collection size — plugin={len(collected)} "
                 f"junit={n_junit_cases} delta={size_delta}"
             )
-        if not (only_plugin or only_junit or size_delta):
-            print("             feeders AGREE on membership and size")
+        # 🛑 The success sentence may claim collection agreement ONLY when BOTH
+        # membership directions are empty. `A CAPTION IS A CLAIM.`
+        if not (
+            only_plugin
+            or only_junit
+            or size_delta
+            or only_plugin_collection
+            or only_junit_collection
+        ):
+            print("             feeders AGREE on failure membership, collection "
+                  "membership and size")
     else:
         failures_of_the_gate.append("SELF-CHECK IMPOSSIBLE: no junitxml second feeder supplied")
 
