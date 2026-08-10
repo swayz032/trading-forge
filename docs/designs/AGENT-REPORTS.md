@@ -4,6 +4,76 @@
 
 ---
 
+## AR-959 · 2026-08-10 · ✅✅✅ **`R3-3` COMPLETE AT `216ecd90`. BOTH SITES RESOLVE FROM THE EXECUTING TREE, BOTH NODE IDs PRESERVED BYTE-FOR-BYTE, AND `SEALED-MEMBER-CORRECTION-1` IS WRITTEN.** ⭐ **THE CROSS-CHECKOUT CONTROL IS A *PAIRED* ONE AND IT IS DECISIVE: THE SAME MUTATION, SAME MOMENT, SAME FILE — PRE-REPAIR TREE GOES RED, POST-REPAIR TREE STAYS GREEN.** ✅ **`STOP [20]` AND `STOP [21]` BOTH ANSWERED WITH EVIDENCE.** ⚠️ **AND THE HONEST FINDING: THE HISTORICAL GREENS WERE NOT WRONG — THEY WERE *UNEARNED*, WHICH IS HARDER TO SEE AND EXACTLY AS DANGEROUS.**
+
+**SEAT `claude.exe 23936`. TREE `HEAD 216ecd90`. `R3` = `2 / 5`.**
+
+### §1 — ✅ THE REPAIR, AND THE CLASS-LEVEL FIX RATHER THAN THE INSTANCE
+🛑 **`[MEASURED, pre-repair]` both tests read a hardcoded `C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py` — a DIFFERENT checkout — while executing in `wt-h1-wave4-20260712`.**
+✅ **BOTH SITES NOW GO THROUGH ONE ANCHORED HELPER, `_executing_tree_backtester_path()` = `Path(__file__).resolve().parents[1] / "backtester.py"`.** ⭐ **ONE definition, not two literals — `worker-execution §12`'s bar is to make the CLASS harder to reintroduce, and two copies of a path expression is precisely how one site gets fixed later and the other drifts. A loud `assert` names a resolution failure instead of raising a bare `FileNotFoundError`.**
+✅ **`[MEASURED, `216ecd90`]` forbidden-pattern census in the file: `C:/Users` `0` · `C:\Users` `0` · `trading-forge/trading-forge` `0` · `os.getcwd` `0` · `Path.cwd` `0` · `expanduser` `0`.**
+✅ **NODE IDs PRESERVED, VERIFIED: `test_backtester_source_does_not_contain_hardcoded_mes` · `test_backtester_uses_dst_correct_helper`. Neither renamed, moved between classes, added, or removed.**
+✅ **`[MEASURED]` the helper resolves to `…\wt-h1-wave4-20260712\src\engine\backtester.py`, sha `c58c8901…` — equal to the executing tree's file, and `== OTHER checkout` is **`False`**.**
+
+### §2 — ⭐ CAUSALITY: EACH ARM ALONE, AND THE CROSS-CHECKOUT ARM IS *PAIRED*
+`[MEASURED HERE, two disposable worktrees pinned to EXPLICIT SHAs — `wt-r33-new` @ `216ecd90`, `wt-r33-old` @ `27d579e7` — both destroyed after use]`
+```
+ARM 0  UNMUTATED CONTROL
+  post-repair pristine                          -> 2 passed
+  pre-repair  pristine                          -> 2 passed
+
+CROSS-CHECKOUT POSITIVE CONTROL
+  OTHER checkout mutated so BOTH assertions would fail if read
+  post-repair tree  -> 2 passed   UNCHANGED
+  pre-repair  tree  -> 2 FAILED
+
+ARM A  rename _dst_correct_et_hour IN THE GRADED TREE
+  test_backtester_uses_dst_correct_helper                -> FAILED
+  test_backtester_source_does_not_contain_hardcoded_mes  -> PASSED
+
+ARM B  restore the forbidden hardcoded-MES evidence IN THE GRADED TREE
+  test_backtester_source_does_not_contain_hardcoded_mes  -> FAILED
+  test_backtester_uses_dst_correct_helper                -> PASSED
+
+ARM E  restored -> 2 passed        graded-tree leak check -> empty
+```
+⭐⭐ **THE CROSS-CHECKOUT ARM IS NOT A SINGLE OBSERVATION, IT IS A PAIR: the SAME mutation, applied at the SAME moment to the SAME file, flips the PRE-repair tree RED and leaves the POST-repair tree GREEN.** ⇒ **Nothing but "which file does each tree read" can explain that difference.** ★★★★★ **`A ONE-ARMED CROSS-CHECKOUT CONTROL ONLY SHOWS THE NEW CODE IGNORES THE OTHER TREE; THE PAIRED FORM ALSO SHOWS THE OLD CODE DID NOT — AND WITHOUT THAT SECOND ARM YOU HAVE NOT MEASURED THE DEFECT, ONLY THE FIX.`**
+⭐ **`STOP [20]` ANSWERED: arms `A` and `B` each redden their OWN node ID and leave the other GREEN.** ⇒ **The tests are AIMED, not blunt. A mutation reddening both would have shown exactly the `STOP [20]` failure — a test that reads the right file and asserts nothing.**
+🛑 **AND I RE-RAN `A`/`B` A SECOND TIME WITH `-v` BECAUSE THE FIRST PASS ONLY PRINTED `1 failed, 1 passed`, WHICH DOES NOT NAME *WHICH*.** ★★★★ **`"1 FAILED, 1 PASSED" IS A COUNT, NOT AN IDENTIFICATION — AND AN ARM AIMED AT THE NEIGHBOURING OBJECT PRODUCES THE IDENTICAL COUNT.` (`[i-measured]`.)**
+
+### §3 — ✅ `STOP [21]`: THE OTHER CHECKOUT IS RESTORED, PROVEN BY A PIN
+```
+OTHER checkout sha256 PIN (before) : 4b1e967824db79d2f1b8ee209819c84a2939a717bb0d697eb0848d6871ae2847
+OTHER checkout sha256 NOW  (after) : 4b1e967824db79d2f1b8ee209819c84a2939a717bb0d697eb0848d6871ae2847
+RESTORE: VERIFIED IDENTICAL        (re-measured again at final verification)
+```
+✅ **The restore ran from a `trap` on shell EXIT, so it would have fired even if an arm had died mid-battery — the restore did not depend on the battery succeeding.** ⚠️ **`[ps-counting-encoding]`: a printed `restore: OK` is worth nothing without the recomputed hash beside it, and that is why both numbers are here rather than a word.**
+
+### §4 — ⚠️ THE FINDING I DID NOT EXPECT, AND IT MAKES THE DEFECT WORSE
+🛑 **`[MEASURED, at repair time]` all four asserted tokens had IDENTICAL counts in both files: `"symbol not available on spec"` `0/0` · `"_adaptive_symbol"` `2/2` · `"_dst_correct_et_hour"` `9/9` · `"FIX 4"` `5/5`.**
+⇒ ⚠️ **SO THE HISTORICAL GREENS WERE NOT WRONG IN OUTCOME — THEY WERE **UNEARNED**. The two trees happened to agree on the four tokens under assertion, while being different files three weeks apart (`459767`/Aug 9 vs `456051`/Jul 18, different sha256).**
+★★★★★ **`A GREEN THAT IS CORRECT BY COINCIDENCE IS INDISTINGUISHABLE FROM A GREEN THAT IS CORRECT BY MEASUREMENT — AND ONLY ONE OF THEM KEEPS WORKING. THIS ONE WOULD HAVE SILENTLY BECOME A FALSE GREEN THE FIRST TIME THE TWO CHECKOUTS DIVERGED ON A TOKEN ANYONE CARED ABOUT.`**
+✅ **`SEALED-MEMBER-CORRECTION-1` states the correct and NARROWER claim rather than the dramatic one: the pre-correction results are not EVIDENCE about their executing worktree. I do NOT claim any past acceptance verdict was wrong, and I did not attempt to re-derive which runs would have differed.**
+
+### §5 — ✅ `SEALED-MEMBER-CORRECTION-1` — WRITTEN, AND ITS THREE REFUSALS HONOURED
+✅ **`docs/designs/SEALED-MEMBER-CORRECTION-1-2026-08-10.md`.** It names the two exact node IDs, states the correction verbatim per `R-799 §3`, and carries the causality table and the restore pin.
+🛑 **THE THREE REFUSALS `R-799` NAMES ARE EXPLICIT IN IT: the `S6` seal is NOT amended · this is NOT an authorized member add/remove or disposition change (the node-ID SET is unchanged, so membership did not change at all; both tests were `PASS` before and after) · `S6` is NOT re-sealed.**
+
+### §6 — ⚠️ ONE WIDENED DIFF I DECLARE RATHER THAN BURY
+⚠️ **The pre-commit `ruff` hook lints only CHANGED files, so touching this file surfaced `12` PRE-EXISTING findings — `[MEASURED against `27d579e7`, i.e. before my edit]`, none in code I authored.** **The hook REFUSES the commit while they stand and `--no-verify` is forbidden by `R-799 §8`, so they are fixed in the same commit: `F401` unused `ast` + unused `patch`, and `10×` `UP017` `datetime.timezone.utc` → `datetime.UTC`.**
+✅ **MEASURED NO-OP, not assumed: `datetime.UTC is datetime.timezone.utc` → **`True`**, the same object.** ⚠️ **I flag it because it touches lines in four OTHER governed tests in this file that `R3-3` did not ask me to touch. `[MEASURED]` `15 passed` before and after.**
+⭐ **A first commit attempt FAILED on this hook and I nearly missed it — I had piped the commit through `tail`, which shows the last stage's output, and the desk's own `[ps-counting-encoding]` law names exactly that trap. I re-checked `git log` unpiped and found the commit had NOT landed.** ★★★★ **`A COMMIT YOU READ THROUGH A PIPE IS A COMMIT YOU HAVE NOT CONFIRMED.`**
+
+### §7 — 🛑 WHAT IS NOT DONE
+🛑 **`R3-2`** (seal manifest binding · successor node-ID chain · hermeticity admission precondition · the RED's admission to `canonical_regression_population.txt`) · **`R3-4` conversion** · **`R3-5`** — **UNSTARTED. `R3` = `2 / 5`.**
+⚠️ **`ACCEPT5-LATENT-OTHER-CHECKOUT-3` is NOT discharged — 3 files / 6 sites, same defect class, still BANKED with `WAKE: R3 closes`. `R-808` ratified my refusal to fold them in; `R3` may not become six items.**
+⚠️ **NOT RUN, AND I SAY SO: I did NOT re-run `R1`–`R7` or a full `ACCEPT-5` for `R3-3`. `R-799 §3` does not order it for this item and `R-808 §9` does not either — but a governed member's body changed, so the desk may want `R6` before it counts this closed. That is the desk's call, not mine.**
+⚠️ **`ACCEPT5-AUTHORITY-FIELD-1` · `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` (as RE-SPECIFIED in `R-808 §5` — derive from RESOLVED MANIFEST MEMBER PATHS, **NOT** `testpaths`) — both still banked, neither done.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` — `R3-3` complete at `216ecd90` + receipt. Next smallest task, ONE: `R3-2`, which `R-808 §9` queues as self-executing on `R3-3` green and explicitly says not to round-trip for.** ⚠️ **I am continuing to `R3-2`, not handing off.**
+
+---
+
 ## AR-958 · 2026-08-10 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 23936`, NOT `7972`.** ✅ **RULING EAR ARMED AND PROVEN TO *DELIVER*; BLIND WINDOW BACKFILLED TO `R-807`.** ⚡ **STARTING `R3-3` ON `R-807 §6`'s "ON GREEN … THEN `R3-3`", WHICH `AR-957` SATISFIES.** 🛑 **AND ONE MEASUREMENT THAT MAKES `F-R2-3` A LIVE DEFECT RATHER THAN A THEORETICAL ONE: THE TWO CHECKOUTS' `backtester.py` ARE **DIFFERENT FILES**.**
 
 **SEAT `claude.exe 23936`. TREE `wt-h1-wave4-20260712`, `HEAD 27d579e7`. `R3` = `1 / 5`.**
