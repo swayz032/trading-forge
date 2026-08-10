@@ -4,6 +4,90 @@
 
 ---
 
+## AR-950 · 2026-08-10 · ✅✅ **`R3-4`'s ORDERED FIRST ACT IS DONE AND PROVEN: `ACCEPTANCE: PASS` IS NOW REACHABLE IN AN ISOLATED WORKTREE — `R3-1`'s UNBLOCKER IS REAL, AND THE DESK'S RE-SEQUENCING IS VINDICATED BY MEASUREMENT.** ✅ **SINGLE VARIABLE, MEMBER-LEVEL DIFF, `STOP [9]` CHECKED AND IT DOES NOT FIRE. EVIDENCE COMMITTED AT `e55a9ef1`.** 🛑🛑🛑 **BUT THE CENSUS `R3-4` ORDERED RETURNS A SCOPE NOBODY ANTICIPATED: `32` `pytest.skip` SITES ACROSS `9` GOVERNED FILES, AND THE WORST CLASS SKIPS WHEN THE CODE UNDER TEST WILL NOT IMPORT.** ⚖️ **SO I AM **NOT** CLOSING `R3-4`, BECAUSE CLOSING IT ON `1 OF 32` IS `[instance-not-condition]` A FOURTH TIME.**
+
+**SEAT `claude.exe 7972`. CAMPAIGN TREE `HEAD e55a9ef1`. ISOLATED WORKTREE `wt-r3-faithful-20260810` @ `8cca128e`. `R3` REMAINS `0 / 5` — see `§6` for why `R3-4` is PARTIAL, not closed.**
+
+### §1 — ✅ CAUSALITY PROVEN, SINGLE VARIABLE, AND `PASS` IS REACHABLE WHERE IT IS SAFE TO BREAK
+✅ **`[MEASURED HERE, the real `acceptance_runner.py --run` subprocess, twice, in the SAME isolated worktree, the ONLY delta being one `978`-byte file]`:**
+```
+                       collected/executed/failed/skip/xfail   VERDICT            EXIT
+CONTROL  (no evidence)      2417/2417/31/5/2                  ACCEPTANCE: REFUSED   1
+AFTER    (evidence present) 2417/2417/31/3/2                  ACCEPTANCE: PASS      0
+```
+✅ **AND I DID NOT TRUST THE COUNTS — `COMPARE MEMBERS, NEVER COUNTS` (this campaign's own law, and the exact defect `F-1` was):**
+```
+collected  ONLY-control=0  ONLY-after=0        executed  ONLY-control=0  ONLY-after=0
+failures   ONLY-control=0  ONLY-after=0        xfailed   ONLY-control=0  ONLY-after=0
+skipped    ONLY-control=2  ONLY-after=0
+     - test_spec_family_bindings.py::test_s6_coverage_6a_re_derives_on_the_governed_population
+     - test_spec_family_bindings.py::test_s6_dead_17_denominator_stays_retired
+```
+⇒ ✅ **`R-802 §6` STOP `[9]` CHECKED AND IT DOES NOT FIRE: no `S6` or opening-range outcome moved, the failure set is IDENTICAL MEMBER-FOR-MEMBER, `[DISP] sealed SKIP/XFAIL membership drift +0 / -0`, and the two node IDs are UNCHANGED — only their disposition moved, and it moved TO the authorized one.**
+✅ **COMMITTED AS `R-799 §5` PERMITTED FORM `[1]` at `e55a9ef1`** — `docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json`, `978` bytes, sha `920557eb…`, in its own commit so it is trivially revertible.
+⇒ ⭐⭐ **`R-802 §2`'s CHAIN `(a)`–`(d)` IS CONFIRMED END-TO-END BY MEASUREMENT: the blocker WAS the ordering. `R3-4` was a HARD PREDECESSOR of `R3-1`, exactly as the desk ruled against itself.**
+
+### §2 — ⚖️ THE SCOPE OF THAT `PASS`, STATED BEFORE ANYONE QUOTES IT
+🛑 **THE TREE THAT EMITTED `PASS` IS ISOLATED AND SAFE TO BREAK. IT IS **NOT** HERMETIC.** `[MEASURED HERE]` **it still carries the `AR-949 §2` lab copy of the CRLF baseline; without that, `BASELINE INTEGRITY FAILURE` returns.** ⇒ **WHAT IS PROVEN: `PASS` is reachable in a tree it is safe to destroy — which is precisely what `R-799 §7`'s demonstration needs. WHAT IS NOT PROVEN: `PASS` in a fully hermetic checkout, which still requires `F-ACCEPT5-8`'s dual anchor (`R-799 §8` forbids me to merge it).**
+⚖️ **THEREFORE I DO NOT DECLARE `ACCEPT5-RED-SHAPE-1` MOOT.** `R-802 §6` revised its wake to *"only if `R3-4` lands and `PASS` is STILL unreachable in a hermetic tree."* **Both readings are live and the distinction is the desk's to make, not mine:** `[a]` if "hermetic" means the demonstration tree, `PASS` is reachable and the item is moot · `[b]` if it means a conforming checkout, it is NOT reachable and the item stays awake. 🛑 **I state the fork and pick neither.** ★★★★ **`A WORKER WHO RESOLVES THE DESK'S WAKE CONDITION IN ITS OWN FAVOUR HAS CLOSED THE DESK'S ITEM FOR IT.`**
+
+### §3 — 🛑🛑🛑 THE CENSUS `R3-4` ORDERED — AND IT IS MUCH LARGER THAN ONE FILE
+✅ **METHOD PER `R-802 §3`, BY BEHAVIOUR AND TRACKED-NESS, NOT BY PATH SHAPE — and the manifest parsed with the GUARD'S OWN RULE (`R-801 §1`: a raw grep over the manifest OVER-READS):** `107` members · `107` distinct files · `0` missing on disk · **POSITIVE CONTROL `test_spec_family_bindings.py` FOUND · NEGATIVE CONTROL `test_this_cannot_exist_zzz.py` ABSENT.**
+🛑 **`[MEASURED HERE]` `9` GOVERNED MEMBER FILES CONTAIN `32` `pytest.skip()` SITES. `R-802 §3` scoped this exactly: *"Any `pytest.skip` reachable from a governed member on missing evidence is a `R-799 §5` violation and is in scope."*** **I CLASSIFY rather than lump, because `32` is a NOMINATION set:**
+```
+CLASS A — SKIPS BECAUSE THE CODE UNDER TEST WILL NOT IMPORT         10 sites   WORST
+  test_signal_vector.py         :185 :206 :228       "backtester not importable"        3
+  test_wave_b_intrabar_stops.py :380 :405 :426       "backtester not imported"          3
+  test_accuracy_fixes.py        :561 :568 :578 :594  "exits module import error"        4
+
+CLASS B — SKIPS ON MISSING EXTERNAL EVIDENCE (R-799 SS5's named disease) 11 sites
+  test_spec_family_bindings.py  :47 :569 :901 :914 :1914 :1916 :2815                    7
+  test_signal_vector.py         :195 :215 :237   (S3 / missing AWS creds)               3
+  test_static_c_partials_ab.py  :183 "fixture_perfect.json not found in golden dir"     1
+
+CLASS C — SKIPS ON A BEHAVIOURAL OUTCOME (a different species; I do NOT call these SS5) 10
+  test_pnl_accuracy.py          :866 :909 :975 :992  "fixture produced no trades"       4
+  test_walk_forward_wrc_spa_emission.py :177 :192 :305 :318                             4
+  test_fvg_identity_dispatch.py :182 / test_levelzone_routing.py :346                   2
+
+CLASS D — MISSING CONFIG ENTRY                                                      1 site
+  test_accuracy_fixes.py        :466 "mffu_50k not in FIRM_COMMISSIONS"
+
+                                        A 10 + B 11 + C 10 + D 1 = 32   <- SUMS TO THE TOTAL
+```
+⚠️ **I state that ladder as an arithmetic check on purpose: my first draft of this table said CLASS `A` was `9`, listed `10`, and left `:466` unclassified so the classes did not sum to `32`. I caught it before committing. `[unenumerated-ladder]`: a reader who cannot re-run my census can still audit my addition.**
+🛑🛑 **CLASS `A` IS THE ONE I WOULD ESCALATE ABOVE ALL OTHERS, AND IT IS NOT WHAT `R3-4` WENT LOOKING FOR: NINE GOVERNED RELEASE-AUTHORITY TESTS STEP ASIDE WHEN THE MODULE THEY EXIST TO TEST FAILS TO IMPORT.** ★★★★★ **`A TEST THAT SKIPS WHEN ITS SUBJECT WILL NOT LOAD CANNOT EVER FAIL FOR THE REASON IT WAS WRITTEN — AND ONE OF THEM SAYS "pre-existing import error" IN ITS OWN SKIP MESSAGE, SO A KNOWN BREAKAGE IS BEING ROUTED AROUND INSIDE THE GATE.`**
+⚠️ **ONLY `5` OF THE `32` FIRED IN TODAY'S RUN. THE OTHER `27` ARE LATENT ON THIS MACHINE AND WOULD FIRE ELSEWHERE — which is the same shape as `ACCEPT5-LATENT-OTHER-CHECKOUT-3` and must not be read as "mostly fine."**
+
+### §4 — ✅ `R-799 §5`'s ENUMERATION, RESOLVED — AND ITS "THREE SEALED SKIPS" IDENTIFIED
+🛑 **`AR-949 §3` and `R-802 §3` both left this `[UNENUMERATED — OPEN]` and forbade me to claim a fourth input. `R3-4`'s census resolves it `[MEASURED HERE]`:**
+```
+INPUT                         TRACKED  BEHAVIOUR TODAY          R-799 SS5 FORM
+[1] blind-second-judge-LOCKED   0/1     2 members SKIPPED       NONE -> now FORM [1]  ✅ FIXED
+[2] SAMPLES_DIR (141 files)     0/141   PASSES (path exists!)   NONE - see SS5
+[3] S3 + AWS credentials        n/a     3 members SKIPPED       NONE - network+secret
+[4] git history (:1914/:1916)   n/a     PASSES (git present)    ~[3], but SKIPS on miss
+```
+✅ **`R-799 §5`'s *"three sealed skips remain artifact-availability skips"* ARE INPUT `[3]` — `test_signal_vector.py::TestBacktesterSignalVectorIntegration`'s three, whose skip message reads `"Data not available: S3 read for 's3://trading-forge-data/futures/ES/consolidated/5min.parquet' aborted before DuckDB: missing AWS_ACCE…"`.** ⇒ **ENUMERATION CLOSED: `blind-readjudication` WAS a genuine FOURTH input, absent from `R-799 §5`'s list — and now I can say so with the denominator named, rather than asserting it.**
+🛑🛑 **AND INPUT `[3]` IS THE STRONGEST POSSIBLE EVIDENCE FOR `R-801 §3`'s ALLOW-LIST RULING: a governed gate member whose external dependency is `s3://` + an AWS SECRET. NO PATH-SHAPE DENY-LIST CONTAINS "the absence of a cloud credential."** ★★★★★ **`THE DENY-LIST WOULD HAVE PASSED A RELEASE GATE THAT SILENTLY STANDS DOWN WHEN THE CLOUD CREDENTIALS ARE MISSING.`**
+
+### §5 — 🛑 THE SILENT ONE: `SAMPLES_DIR` PASSES, SO A BEHAVIOUR CENSUS CANNOT SEE IT
+🛑 **`[MEASURED HERE]` `SAMPLES_DIR` = `C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization` — it EXISTS on this machine with `141` files and `git ls-files` returns `0`.** ⇒ **Its consumers PASS today. They appear in NO skip list and in NO failure list.**
+★★★★★ **`THE SKIP-BEHAVIOUR CENSUS FINDS ONLY THE DEPENDENCIES THAT ARE CURRENTLY BROKEN. THE ONE THAT IS SATISFIED RIGHT NOW IS INVISIBLE TO IT AND IS EXACTLY AS MACHINE-LOCAL. THIS IS WHY `R-802 §3` ORDERED **BOTH** AXES, AND EITHER ONE ALONE WOULD HAVE RETURNED A FALSE ALL-CLEAR.`**
+⭐ **AND THE MODULE DECLARES ITS OWN VIOLATION IN A COMMENT `[MEASURED HERE, `:38-41`]`:** *"Absolute path per the fixed reference location; tests skip gracefully if it's unavailable in some other environment rather than hard-failing the whole suite."* ⇒ **That sentence is `R-799 §5`'s prohibition, written down as the design intent, before the rule existed.**
+
+### §6 — ⚖️ WHY `R3-4` IS **PARTIAL** AND I AM NOT CLOSING IT
+🛑 **`R-802 §7`'s acceptance has THREE parts: census · convert `blind-readjudication` · prove causality in a fresh tree. `[MEASURED]` PARTS 1 AND 3 ARE DONE AND PART 2 IS DONE FOR ONE INPUT OF FOUR.** ⇒ **Inputs `[2]`, `[3]`, `[4]` are UNCONVERTED, and `31` of `32` skip sites are undispositioned.**
+🛑 **I WILL NOT REPORT `R3-4` CLOSED. `[instance-not-condition]` has been convicted THREE times in this campaign — twice in one day — and its rule is: name the MECHANISM, then ask "what is the ENUMERATION over it, and did I run it?"** ✅ **I ran the enumeration. It returns `32`. So the honest statement is `ONE INPUT CONVERTED, FOUR ENUMERATED, THIRTY-ONE SITES OPEN` — not `R3-4 COMPLETE`.** ★★★★★ **`I NOW HAVE THE ENUMERATION THAT THE PREVIOUS THREE CONVICTIONS LACKED, WHICH MEANS THERE IS NO EXCUSE LEFT FOR CALLING THE CONDITION CLOSED.`**
+⚠️ **AND `R-802 §6` STOP `[10]` IS LIVE FOR CLASS `A`: converting *"skip if the backtester will not import"* into a REFUSE would make `9`+ governed members REFUSE on any machine where that import is broken. That is CORRECT under `R-799 §5` and it is a large blast radius. I am REPORTING it, not deciding it.**
+
+### §7 — ⚖️ ONE TENSION I AM FLAGGING RATHER THAN SLIDING PAST
+⚠️ **`R-801 §8` wrote: *"if you find yourself copying machine-local bytes into anything that gets COMMITTED, the clause binds again and you stop."* `R-802`'s `START HERE` then ORDERED the form-`[1]` conversion, measured `git check-ignore` to show it was available, and named it the cheapest route.** ⇒ ✅ **I READ THE LATER, SPECIFIC, EVIDENCED ORDER AS GOVERNING THE EARLIER GENERAL TRIPWIRE, and I executed it — after checking `STOP [9]` by measurement first.** 🛑 **I am recording the tension because the tripwire was addressed to me by name and I do not want its discharge to rest on my silence. If the desk reads it the other way, `e55a9ef1` is one commit and reverts cleanly.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` for `§1` (proven, committed, `STOP [9]` clear) and `REVISION_REQUIRED` on `R3-4`'s SCOPE — the ruling sized it as one input and the census returns four inputs and `32` sites.** **Next smallest task, ONE: disposition CLASS `A` (the import-skips), because it is the only class that can make the gate structurally unable to fail.** ⚠️ **`R3` fan-in `0 / 5`. I am NOT handing off — I have context and I am continuing; name the scope and I keep going.**
+
+---
+
 ## AR-949 · 2026-08-10 · 🛑🛑 **MY OWN PRE-REGISTERED FALSIFICATION FIRED. THE HYPOTHESIS IS REFUTED AND I AM STOPPING AT `2 / 2` — I AM NOT RESHAPING THE CLONE.** ✅ **HALF OF IT WAS CONFIRMED DECISIVELY: THE BASELINE REFUSAL IS GONE, AND I MEASURED `F-ACCEPT5-8`'s MECHANISM SIDE-BY-SIDE IN ONE COMMAND.** 🛑 **THE SECOND REFUSAL SURVIVES, AND ITS CAUSE IS NOW MEASURED WITH A DISCRIMINATING CONTROL: TWO SEALED GATE TESTS DEPEND ON AN **UNTRACKED** FILE THAT EXISTS IN EXACTLY ONE WORKING COPY ON THIS MACHINE.** ⚠️ **AND THE LANE'S `60–90 min` ETA IS WRONG BY ~`30×` — I MEASURED `2.4 min`.**
 
 **SEAT `claude.exe 7972`. CAMPAIGN TREE `wt-h1-wave4-20260712`, `HEAD 8cca128e`, CLEAN. ISOLATED WORKTREE `C:\Users\tonio\Projects\wt-r3-faithful-20260810` @ `8cca128e` detached — `[MEASURED HERE]` `git rev-parse --show-toplevel` returns the worktree itself, so `[session-cwd-decoy-git]` did not fire. ALL destructive/lab work ran THERE. `R3` REMAINS `0 / 5`.**
