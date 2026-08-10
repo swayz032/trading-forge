@@ -4,6 +4,68 @@
 
 ---
 
+## AR-956 · 2026-08-10 · ✅✅✅ **`ACCEPT5-TREE-AUTHORITY-1` IS LANDED AND GREEN — THE LAST FAIL-OPEN JOIN IN THE FRESH-RUN CONTRACT IS CLOSED. `R3-1` IS WHOLE; `R3` IS `1 / 5`.** ✅ **ALL FOUR ORDERED CONTROLS PASS, AND `STOP [16]` IS DISPROVEN ON THE **REAL** POPULATION, NOT JUST THE FIXTURE: `R6` RAN WITH `docs/` DIRTY AND STILL REACHED `ACCEPTANCE: PASS`.** ✅ **`R1`–`R7` RE-RUN EACH ALONE AFTER THE PATCH — ALL SEVEN HOLD, AND THE PERMANENT RED IS STILL GREEN.**
+
+**SEAT `claude.exe 7972`. TREE `HEAD 9cdaef55`. `R3` **`1 / 5`**.**
+
+### §1 — ✅ THE PATCH: FAIL-CLOSED, AND SCOPED TO THE PATHS THAT DEFINE THE TESTED BYTES
+✅ **`9cdaef55`. `[MEASURED HERE, `:555` before the patch]` the join read `if pre_head is not None and post_head != pre_head:` — so when git could not answer, **the first conjunct was false and the whole join was skipped**, and an authoritative `PASS` could be issued by a run that could not name the commit it tested. `[MEASURED]` `grep -c "status --porcelain\|is_dirty\|diff --quiet\|working tree clean"` → **`0`**: there was no cleanliness check at all.**
+✅ **NOW, on the `--run` path ONLY and BEFORE the run:** `_git_head()` unresolvable ⇒ REFUSE · git cannot report working-tree state ⇒ REFUSE · tracked paths under `src/` or `scripts/` differ from `HEAD` ⇒ REFUSE, naming them. **The `HEAD`-moved join no longer has a branch that skips itself.**
+✅ **ITS OWN REFUSAL STRING — `ACCEPTANCE INSTRUMENT REFUSED - TREE AUTHORITY UNAVAILABLE`, NOT `PYTEST RUN INVALID`.** 🛑 **Reusing the pytest string would send the next reader hunting a pytest failure that never happened; here pytest may have run perfectly and we still cannot say WHICH tree it measured.**
+★★★★★ **`IF THE REFEREE CANNOT PROVE WHICH CLEAN TREE IT WATCHED, IT DOES NOT GET TO SIGN THE SCORECARD.`**
+
+### §2 — ✅ THE FOUR ORDERED CONTROLS, AND `[3]` DISCRIMINATES AS SHARPENED
+```
+[MEASURED HERE, each control alone]
+[1] clean src//scripts/, ONLY docs/ dirty   -> PROCEEDS. TREE AUTHORITY fired 0 times.
+[2] git cannot resolve HEAD (GIT_DIR bogus) -> REFUSED - TREE AUTHORITY UNAVAILABLE
+                                               "pytest was not started"; occurrences of
+                                               PYTEST RUN INVALID = 0 (not misclassified)
+[3] dirty TRACKED src/…test_fvg_identity_dispatch.py, in a DISPOSABLE worktree
+                                            -> REFUSED - TREE AUTHORITY UNAVAILABLE,
+                                               and it NAMES the offending path
+[4] restored pristine (sha back to f282af8f) -> normal scoring resumes, gate silent
+```
+✅ **`[3]` DIRTIED `src/`, NOT `docs/` — the sharpening `R-806 §4` insisted on. A control that dirtied `docs/` would have passed under the scoped rule and proven nothing, and one that dirtied `docs/` and EXPECTED a refusal would have encoded the very false RED this patch exists to avoid.** ★★★★ **`A CONTROL MUST BE ABLE TO TELL THE NEW RULE FROM THE OLD ONE, OR IT IS TESTING YOUR HOPES.`**
+
+### §3 — ✅ `STOP [16]` DISPROVEN ON THE **REAL** POPULATION, WHICH IS STRONGER THAN THE CONTROL ASKED FOR
+🛑 **`R-806 §7 STOP [16]`: the gate must NOT refuse a run whose only dirty path is under `docs/`.** ✅ **Control `[1]` shows that on the fixture manifest — but the decisive evidence is `R6` itself:**
+```
+[MEASURED HERE, REAL 107-member manifest, campaign tree with docs/wave25… MODIFIED]
+NOTE: [0] fresh run : 112d041f1d704aa08ff15a7826fbd064 (HEAD 9cdaef55…)
+NOTE: [3] feeder    : acceptance_pytest_plugin (pytest exit 1)
+NOTE: [4] collected/executed/failed/skip/xfail : 2417/2417/31/3/2
+[SELF-CHECK] independent feeder (junitxml) cases=2417 failures=31
+ACCEPTANCE: PASS      R6_EXIT=0      TREE AUTHORITY refusals: 0
+```
+⇒ ⭐⭐ **THE RUN THAT WOULD HAVE BEEN KILLED BY THE LITERAL WHOLE-TREE RULE IS THE ONE THAT PASSED. `docs/wave25-exit-engine-ab-report.md` was dirty THROUGHOUT — rewritten by a governed member during the run — and the authoritative verdict still issued.** 🛑 **`STOP [16]` AND `STOP [17]` BOTH FAIL TO FIRE, MEASURED ON THE REAL POPULATION RATHER THAN ARGUED.**
+★★★★★ **`THE READ'S OWN AUTHORITY FIX, IMPLEMENTED LITERALLY, WOULD HAVE REFUSED EVERY AUTHORITATIVE RUN — INCLUDING THE ONE PROVING IT DIDN'T. THE DESK CAUGHT IT BECAUSE IT HAD MEASURED THE SIDE EFFECT FIRST.`**
+
+### §4 — ✅ `R1`–`R7` RE-RUN EACH ALONE AFTER THE PATCH
+```
+R1 stale + startup death   -> REFUSED - PYTEST RUN INVALID      R5 exit 5   -> REFUSED - PYTEST RUN INVALID
+R2 one feeder deleted      -> REFUSED - PYTEST RUN INVALID      R6 real 107 -> ACCEPTANCE: PASS (SS3)
+R3 internal error (exit 3) -> REFUSED - PYTEST RUN INVALID      R7 foreign run_id -> REFUSED - PYTEST RUN
+R4 usage error   (exit 4)  -> REFUSED - PYTEST RUN INVALID         INVALID, naming BOTH ids
+PERMANENT RED (c31a30e3 contract) -> 1 passed in 3.13s
+```
+⚠️ **`R7` NEEDED A CHANGED METHOD AND I SAY SO RATHER THAN QUIETLY RE-USING THE OLD ONE: the mutation dirties `scripts/`, so the NEW cleanliness gate now fires FIRST and would mask the `run_id` join. I therefore COMMITTED the mutation inside the disposable worktree — tree clean, code mutated — which is the only way to reach the join under the new contract.** ⇒ **`[MEASURED]` worktree `git status` empty after the commit; the runner then refused on `run_id` exactly as required.** ★★★★ **`A NEW GUARD CAN HIDE AN OLD ARM. RE-RUNNING A BATTERY AFTER A PATCH IS NOT RE-EXECUTING THE COMMANDS — IT IS RE-CHECKING THAT EACH ARM STILL REACHES THE THING IT WAS AIMED AT.`**
+✅ **`[MEASURED]` campaign plugin sha `ed6ee2c8…` — PRISTINE. The mutation died with its worktree; the shared tree was never touched.**
+
+### §5 — ✅ `R3-1` CLOSED · `R3` = `1 / 5`
+✅ **`R3-1` is now whole: RED `c31a30e3` · fresh-run protocol `058d83ce` · `--from-run` advisory split `85101e87` · tree authority `9cdaef55`. `F-R2-1` closed by `R-806 §1`; the last fail-open join closed here.**
+⚠️ **AND THE ONE THING THAT HAS NOT CHANGED, RESTATED SO NO `PASS` IS MIS-READ: `[CORROBORATED, `R-806 §5` + `AR-949 §2`; not re-measured in this run]` `ACCEPTANCE: PASS` remains reachable ONLY on the NON-CONFORMING campaign tree — a conforming checkout still refuses on `F-ACCEPT5-8`'s baseline anchor. The dual anchor stays open and stays needed.**
+
+### §6 — 🛑 WHAT IS NOT DONE
+🛑 **`R3-2`** (seal manifest binding · successor node-ID chain · hermeticity admission precondition) · **`R3-3`** (`test_fix4_adaptive_symbol_dst.py:127`/`:148`, node IDs PRESERVED, + `SEALED-MEMBER-CORRECTION-1`) · **`R3-4` conversion** · **`R3-5`** — **all UNSTARTED.**
+⚠️ **NOT MEASURED: the refusal path when `--out-dir` is unwritable. Still reachable, still unexercised — carried from `AR-955 §7`, not silently dropped.**
+⚠️ **`ACCEPT5-AUTHORITY-FIELD-1` (typed `authority` field) is BANKED to me and NOT done — `R-806 §5` deliberately did not hold `R3-1` on it.**
+⚠️ **The new RED is still NOT in `canonical_regression_population.txt`; admission belongs to `R3-2`.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` — `R3-1` complete at `9cdaef55`, four controls green, seven arms re-run each alone, `STOP [16]`/`[17]` measured not to fire on the real population. Next smallest task, ONE: `R3-3`, defect already located.** ⚠️ **I am continuing, not handing off.**
+
+---
+
 ## AR-955 · 2026-08-10 · ✅✅✅ **`R3-1` IS COMPLETE. THE GATE NOW READS ITS OWN SUBPROCESS'S EXIT CODE, AND ALL SEVEN RED-PROOFS PASS — EACH ALONE.** ✅ **`R6` RAN AGAINST THE REAL `107`-MEMBER MANIFEST AND SCORED NORMALLY ON A LEGITIMATE `exit 1`, SO THE REPAIR INVENTS NO NEW FALSE RED — `STOP [13]` AND `STOP [15]` BOTH DISCHARGED.** ✅ **`--from-run` CAN NO LONGER ISSUE AN AUTHORITATIVE `PASS`.** 🛑 **AND MY FIRST `R7` ARM WAS INERT — IT "PASSED" WHILE TESTING NOTHING, AND I CAUGHT IT BY READING WHAT THE PLUGIN ACTUALLY RECORDED.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD 85101e87`. `R3` **`1 / 5`** — `R3-1` closed; `R3-2`/`R3-3`/`R3-4`-conversion/`R3-5` remain.**
