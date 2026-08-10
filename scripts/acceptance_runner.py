@@ -39,6 +39,8 @@ import hashlib
 import json
 import subprocess
 import sys
+import time
+import uuid
 from pathlib import Path
 
 # defusedxml over stdlib ElementTree: the junitxml is locally generated and so
@@ -56,6 +58,39 @@ REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "src" / "engine" / "tests" / "canonical_regression_population.txt"
 BASELINE = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-baseline-2026-08-09.json"
 SEAL = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-collection-seal-08062e12.json"
+
+# The single refusal string for an execution that produced no evidence about the tree.
+# R-799 SS2 carries this wording verbatim and R-801 SS5 ruled it governs over the prose
+# paraphrases elsewhere in the ledger: `A PARAPHRASE OF A SPEC IS NOT A SECOND SPEC.`
+PYTEST_RUN_INVALID = "ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID"
+
+
+def _sha256_file(path):
+    """SHA-256 of a file's raw bytes, or None if it is not readable."""
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def _git_head():
+    """The executing tree's HEAD, or None if git cannot answer.
+
+    None is returned rather than raising: a tree without git history is a degraded
+    environment, not an invalid pytest run, and conflating the two would convert a
+    missing tool into a false refusal. Callers must therefore treat None as
+    "unknown" and skip the HEAD-did-not-move join rather than fail it.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO, capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode != 0:
+        return None
+    return proc.stdout.strip() or None
 
 # ---------------------------------------------------------------------------
 # THE SEAL'S APPROVED IDENTITY, HELD IN THE RUNNER'S OWN CONTRACT (R-792 §5.2).
@@ -428,15 +463,102 @@ def main():
         )
 
     # --- run or consume ------------------------------------------------------
+    #
+    # F-R2-1 REPAIR — the fresh-run protocol (R-799 SS2, carried verbatim).
+    #
+    # WHAT WAS WRONG: this block used to read
+    #     subprocess.run(cmd, cwd=REPO)
+    # as a BARE EXPRESSION STATEMENT, and the next statement parsed `run_json`
+    # unconditionally. So a pytest that died before executing anything left the
+    # PREVIOUS run's artifacts on disk and the runner scored those instead --
+    # issuing a verdict about a run that never happened. The permanent RED for
+    # this is src/engine/tests/test_accept5_stale_run_consumption.py (c31a30e3).
+    #
+    #   `A GATE THAT DOES NOT READ ITS OWN SUBPROCESS'S EXIT CODE IS NOT MEASURING
+    #    THE TREE -- IT IS MEASURING THE LAST TIME SOMEBODY MEASURED THE TREE.`
+    #
+    # Note the exit-status policy carefully: exit 1 is LEGITIMATE here, because the
+    # governed population intentionally contains historical failures. Blindly using
+    # check=True would convert every genuinely failing member into an infrastructure
+    # error, which is a new false RED rather than a fix (red-proof R6).
     if args.run:
-        args.out_dir.mkdir(parents=True, exist_ok=True)
-        run_json = args.out_dir / "acceptance-run.json"
-        run_xml = args.out_dir / "acceptance-run.xml"
+        # (1) unique run identity, and (2) a unique output location for it.
+        run_id = uuid.uuid4().hex
+        run_dir = args.out_dir / f"run-{run_id}"
+        run_dir.mkdir(parents=True, exist_ok=False)
+        run_json = run_dir / "acceptance-run.json"
+        run_xml = run_dir / "acceptance-run.xml"
+
+        # (3) the artifacts of THIS run must not already exist.
+        if run_json.exists() or run_xml.exists():
+            print(f"{PYTEST_RUN_INVALID}: output artifacts already exist in the "
+                  f"freshly minted run directory {run_dir}.")
+            raise SystemExit(2)
+
+        # (4) pre-run authority: what this run claims to be, recorded BEFORE it runs
+        #     so nothing measured afterwards can quietly redefine it.
+        pre_head = _git_head()
         cmd = [sys.executable, "-m", "pytest", *[f"src/{m}" for m in resolved],
                "-q", "--no-header", "-p", "no:cacheprovider",
                "-p", "scripts.acceptance_pytest_plugin",
-               f"--acceptance-out={run_json}", f"--junitxml={run_xml}"]
-        subprocess.run(cmd, cwd=REPO)
+               f"--acceptance-out={run_json}", f"--junitxml={run_xml}",
+               f"--acceptance-run-id={run_id}"]
+        pre_run_authority = {
+            "run_id": run_id,
+            "head": pre_head,
+            "manifest": str(args.manifest),
+            "runner_sha256": _sha256_file(Path(__file__)),
+            "invocation_digest": hashlib.sha256(
+                "\x00".join(cmd).encode("utf-8")).hexdigest(),
+            "started_at": time.time(),
+            "repo": str(REPO),
+        }
+        print(f"NOTE: [0] fresh run                            : {run_id} "
+              f"(HEAD {pre_head or 'unknown'})")
+
+        # ---- execute, and CAPTURE the result --------------------------------
+        proc = subprocess.run(cmd, cwd=REPO)
+
+        # Only 0 and 1 mean "the population was collected and executed". Everything
+        # else -- 2 interrupted, 3 internal error, 4 usage error, 5 nothing
+        # collected, or any crash -- means this run produced no evidence about the
+        # tree, and membership must NOT be parsed afterwards.
+        if proc.returncode not in (0, 1):
+            print(f"{PYTEST_RUN_INVALID}: pytest exited {proc.returncode}, which is "
+                  f"not a valid execution status (0=clean, 1=failures occurred). "
+                  f"The governed population was not executed, so no verdict is "
+                  f"possible. Run id {run_id}; nothing was scored.")
+            raise SystemExit(2)
+
+        # ---- post-run joins, ALL required BEFORE scoring begins --------------
+        invalid = []
+        if not run_json.is_file():
+            invalid.append(f"the plugin record was not written to {run_json}")
+        if not run_xml.is_file():
+            invalid.append(f"the JUnit XML was not written to {run_xml}")
+        if not invalid:
+            _rec = json.loads(run_json.read_text(encoding="utf-8"))
+            if int(_rec.get("pytest_exitstatus", -1)) != proc.returncode:
+                invalid.append(
+                    f"the plugin recorded pytest_exitstatus "
+                    f"{_rec.get('pytest_exitstatus')!r} but the subprocess really "
+                    f"exited {proc.returncode} - the record does not describe this run")
+            if _rec.get("run_id") != run_id:
+                invalid.append(
+                    f"the plugin recorded run_id {_rec.get('run_id')!r}, not the "
+                    f"requested {run_id!r} - this record belongs to a different run")
+            if _rec.get("cwd") != pre_run_authority["repo"]:
+                invalid.append(
+                    f"the plugin ran in {_rec.get('cwd')!r}, not the repository "
+                    f"{pre_run_authority['repo']!r} this invocation authorised")
+        post_head = _git_head()
+        if pre_head is not None and post_head != pre_head:
+            invalid.append(
+                f"HEAD moved during execution ({pre_head} -> {post_head}); the run "
+                f"does not describe a single tree state")
+        if invalid:
+            print(f"{PYTEST_RUN_INVALID}: " + " | ".join(invalid))
+            raise SystemExit(2)
     else:
         run_json, run_xml = args.from_run, args.junit
 

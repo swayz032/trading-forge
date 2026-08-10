@@ -115,12 +115,18 @@ def test_acceptance_runner_refuses_when_pytest_could_not_run(tmp_path):
 
     # --- ARM 1: a real, valid run. Mints the artifacts that arm 2 must not reuse. -------
     good = _run_runner(out_dir, manifest)
-    run_json = out_dir / "acceptance-run.json"
-    run_xml = out_dir / "acceptance-run.xml"
-    assert run_json.is_file() and run_xml.is_file(), (
+    # Discover arm 1's artifacts wherever the runner chose to put them. Deliberately
+    # NOT a hardcoded `out_dir/acceptance-run.json`: the fresh-run protocol writes into
+    # a UNIQUE per-run subdirectory, and pinning the old flat path would make this test
+    # fail for a reason that has nothing to do with the defect it exists to convict.
+    # The ORACLE below is untouched by this; only the discovery is version-agnostic.
+    found_json = sorted(out_dir.rglob("acceptance-run.json"))
+    found_xml = sorted(out_dir.rglob("acceptance-run.xml"))
+    assert found_json and found_xml, (
         "arm 1 produced no artifacts, so this test cannot measure staleness.\n"
         "stdout:\n" + good.stdout[-2000:]
     )
+    run_json, run_xml = found_json[0], found_xml[0]
     sha_before = (_sha(run_json), _sha(run_xml))
     verdict_before = _verdict_block(good.stdout)
     assert verdict_before, "arm 1 emitted no runner verdict block"

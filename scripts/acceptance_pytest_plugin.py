@@ -37,6 +37,17 @@ def pytest_addoption(parser):
         help="Path to write the ACCEPT-5 machine-readable run record.",
     )
     parser.addoption(
+        "--acceptance-run-id",
+        action="store",
+        default="",
+        help=(
+            "Identity of the run this record belongs to, minted by the runner BEFORE "
+            "pytest starts. The runner refuses any record whose run_id is not the one "
+            "it requested, which is what stops a previous run's artifacts being read "
+            "as this one's (F-R2-1)."
+        ),
+    )
+    parser.addoption(
         "--acceptance-corrupt-feeder",
         action="store",
         default="",
@@ -91,6 +102,10 @@ class _AcceptanceRecorder:
         record = {
             "instrument": "acceptance_pytest_plugin",
             "instrument_contract": "node IDs from pytest objects; never a summary scrape",
+            # Identity of the run this record describes. The runner mints it before
+            # pytest starts and refuses any record carrying a different one, so a
+            # stale artifact cannot be mistaken for the current run (F-R2-1).
+            "run_id": self.config.getoption("--acceptance-run-id"),
             "pytest_exitstatus": int(exitstatus),
             "python": sys.version.split()[0],
             "platform": platform.platform(),
