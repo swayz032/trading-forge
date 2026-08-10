@@ -4,6 +4,76 @@
 
 ---
 
+## AR-909 · 2026-08-09 · 🛑🛑🛑 **`R-780 §6 STEP 1` IS UNEXECUTABLE AS ORDERED. THE PRE-PUSH INVENTORY GATE IS A DEADLOCK BY CONSTRUCTION, AND ITS PRINTED REMEDY CANNOT TERMINATE — I RODE ONE FULL CYCLE TO MEASURE IT RATHER THAN ASSERT IT.** ⚖️ **THE GATE COMPARES RAW BYTES INCLUDING THE PROVENANCE STAMP; `system_inventory.py --check` STRIPS THAT LINE **DELIBERATELY**, WITH A DOCSTRING EXPLAINING THAT NOT STRIPPING IT WOULD "MAKE `--check` FAIL PERMANENTLY". THE GATE IS THE VERY FAILURE ITS OWN GENERATOR DOCUMENTED AND AVOIDED.** 🛑 **I DID NOT USE `--no-verify`, AND I WILL NOT.**
+
+**TASK `R-780 §6 STEP 1`. SEAT `claude.exe 12460` (unauthorized — see `AR-908 §5b`). HEAD `befe9d34`. TREE `wt-h1-wave4-20260712`. FAN-IN: `STEP 1` **BLOCKED BY A REPO GUARD**, not by the work.**
+
+### §1 — 🛑 THE MEASUREMENT: TWO CYCLES, DETERMINISTIC, THE STAMP CHASING `HEAD`
+```
+[MEASURED HERE, unpiped, exit read directly, worktree root]
+CYCLE 1  HEAD 80800773 -> git push
+         SYSTEM-INVENTORY freshness (pre-push) ... Failed   exit 1
+         git diff -- SYSTEM-INVENTORY.md  ->  1 file changed, 1 insertion, 1 deletion
+           -> Generated at commit `d83eebff...`
+           +> Generated at commit `80800773...`      <- THE ONLY DIFFERENCE. CONTENT IDENTICAL.
+CYCLE 2  applied the hook's OWN printed remedy verbatim:
+           git commit -o docs/designs/SYSTEM-INVENTORY.md -m 'SYSTEM-INVENTORY: regenerate'
+         HEAD 80800773 -> befe9d34   (the committed file still says 80800773)
+         git push
+         SYSTEM-INVENTORY freshness (pre-push) ... Failed   exit 1        <- BLOCKED AGAIN
+         stamp on disk afterwards: `befe9d34...`   <- IT CHASED HEAD AGAIN
+```
+⇒ **EVERY REMEDY COMMIT ADVANCES `HEAD`, AND THE STAMP IS DERIVED FROM `HEAD`, SO THE FILE CAN NEVER MATCH THE REGENERATION THAT FOLLOWS IT. THE REMEDY IS THE CAUSE.**
+
+### §2 — ✅ THE MECHANISM, AT THE EXECUTABLE LINE — NOT INFERRED FROM THE SYMPTOM
+```
+[MEASURED HERE] scripts/inventory_freshness_gate.py
+  :73  before = MAP.read_bytes()
+  :74  subprocess.run([sys.executable, str(GEN)])          <- regenerate
+  :83  after  = MAP.read_bytes()
+  :84  if after == before: return 0                        <- RAW BYTE EQUALITY. NO STRIPPING.
+  :69  if not _code_changed_vs_upstream(): return 0        <- THE ONLY ESCAPE
+[MEASURED HERE] scripts/system_inventory.py
+  :1253 sha = git rev-parse HEAD          :1290 emits "> Generated at commit `<sha>`"
+  :1823 PROVENANCE_LINE_RE
+  :1829-1834 (verbatim): "`--check` must answer 'does this inventory still describe the CODE?',
+             not 'was it generated at exactly this commit'. HEAD advances on every commit,
+             [which would] make --check fail permanently. A staleness check that always
+             fires is [useless]."
+  :1835 return PROVENANCE_LINE_RE.sub(...)                 <- --check STRIPS IT. THE GATE DOES NOT.
+```
+★★★★★ **THE LAW: `TWO INSTRUMENTS OVER ONE ARTEFACT ARE TWO INSTRUMENTS. THE GENERATOR'S OWN AUTHOR WROTE DOWN WHY THE PROVENANCE LINE MUST BE IGNORED, AND THE GATE BUILT ON TOP OF IT DID NOT READ ITS OWN DOCSTRING.`**
+🛑 **AND THIS IS WHY `--check` GREEN DID NOT PREDICT THE PUSH.** `R-780 §5` and my own `AR-908 §3` both cite `system_inventory.py --check → FRESH, exit 0` as the prior-art gate. **`[MEASURED HERE]` that verdict was TRUE and it does NOT generalise to the push gate — they disagree by construction on a file neither of them thinks is stale.** ★★★★ **`A GREEN FROM THE INSTRUMENT THAT IGNORES A FIELD SAYS NOTHING ABOUT THE GATE THAT COMPARES IT.`**
+
+### §3 — 🛑 THE ONE ESCAPE IS CLOSED FOR THIS PUSH, AND I CHECKED IT RATHER THAN ASSUMED IT
+```
+[MEASURED HERE]  the gate skips only when the push carries no src/ or scripts/ change:
+  git diff --name-only origin/h1-wave4-sealed12-driver..HEAD | grep '^(src/|scripts/)'
+  -> src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+```
+⇒ **`b1c17970` — the very commit `R-780 STEP 1` exists to publish — is what keeps the gate armed.** **The gate cannot be waited out; a docs-only push would skip it, but this push is not docs-only and never will be.**
+⚠️ **`[HYPOTHESIS — NOT MEASURED]` why the gate's OWN three commits (`1680e69b`, `b39bcbe1`, `8fba9f2d`) reached `origin` while mine cannot: the gate's docstring states the config is INERT until `pre-commit install --hook-type pre-push` runs, so those pushes plausibly predate installation. `[MEASURED]` all three ARE on `origin`; `[NOT MEASURED]` the install time. **I may simply be the first seat to push since it went live.** I do not claim that as fact.
+
+### §4 — ⚖️ WHAT I DID NOT DO, AND WHY EACH REFUSAL IS DELIBERATE
+🛑 **I DID NOT `git push --no-verify`.** That is routing around a guard that is doing exactly what it was built to do — badly implemented, but not wrong to exist. **The guard's PURPOSE is sound and its reason is on the record: an external reader once consumed a 6-day-stale map from GitHub.**
+🛑 **I DID NOT REPAIR THE GATE.** It is INSTRUMENT code, `R-648 §0` closes governance lanes mid-slice, and `R-780`'s forbidden list is explicit about scope. **A guard repair authored by the seat the guard is blocking is the exact shape this campaign convicts.** ⇒ **REPORTED, NOT BUILT.**
+🛑 **I DID NOT `git checkout` ANYTHING** (`[precommit-stash]`: this tree is shared and `git checkout` eats uncommitted work — the sibling advisor seat `claude.exe 28472` is LIVE).
+⚠️ **WHAT I DID LEAVE BEHIND, STATED SO NOBODY REDISCOVERS IT AS A MYSTERY:** **(a)** one extra commit, `befe9d34`, the hook's own prescribed remedy, docs-only, one line; **(b)** `docs/designs/SYSTEM-INVENTORY.md` DIRTY on disk, stamped `befe9d34`, left by the gate's cycle-2 regeneration. **Neither is load-bearing and both are trivially discardable — but they are mine and I am naming them.**
+
+### §5 — ⚡ WHAT I RECOMMEND, AND THE ASK
+**`(A)` — RECOMMENDED: teach the gate to compare with the provenance line STRIPPED, reusing `system_inventory.py`'s EXISTING `_strip_provenance` helper (`:1823-1835`).** **No new checker, no second implementation — it makes the push gate agree with `--check`, on `--check`'s own documented reasoning.** ⚖️ **It keeps every ounce of the guard's real power: a genuine CONTENT change still blocks the push, which is the failure it was built to catch.**
+`(B)` stamp the upstream tip or merge-base instead of `HEAD` — **larger, changes what the provenance line MEANS, and I do not recommend it.**
+`(C)` `--no-verify` — **named only to record that I considered and rejected it. It defeats the guard on every future push, not just this one.**
+🛑 **RED-PROOF OWED BY WHOEVER BUILDS `(A)`:** a real content change to `src/` must still BLOCK the push (positive control), and a pure-stamp difference must NOT (the bug). **Without the positive control the repair is indistinguishable from disabling the gate.**
+
+**THE ASK — TWO THINGS, ONE ROUND-TRIP, BECAUSE I AM ALREADY STOPPED:**
+1. **RE-AUTHORIZE `R-780 §6` `STEP 2`+`STEP 3` TO `claude.exe 12460`** — `R-780`'s header names `claude.exe 16536`, `[MEASURED TWICE]` ABSENT (`AR-908 §5b`).
+2. **RULE THE GATE:** `(A)`, or another shape, or explicitly defer `STEP 1` and let `STEP 2` proceed unpushed.
+⚠️ **NOTE THE COMPOUNDING HARM, SINCE IT IS THE REASON `STEP 1` WAS ORDERED FIRST: `AR-908` AND THIS REPORT ARE ALSO UNPUSHED. The external reader cannot see them either.** **`[MEASURED]` `git rev-list --count origin/…..HEAD` = `4` before this commit.**
+**NO ATTEMPT SPENT: `STEP 2` has not been started, and the budget stands at `0 / 2` per `R-780 §8`.**
+
+---
+
 ## AR-908 · 2026-08-09 · 🟢 **START-RECEIPT — A NEW WORKER SEAT IS UP: `claude.exe 12460`.** 🛑🛑 **AND I MUST CORRECT THE RULING THAT LANDED WHILE I WAS WRITING THIS: `R-780`'s HEADER STATES `SEAT claude.exe 16536, unchanged and live`. `[MEASURED HERE, TWICE, Win32_Process]` **IT IS ABSENT.** `R-780 §6` THEREFORE AUTHORIZES A SEAT THAT DOES NOT EXIST.** ✅ **THE RULING EAR IS ARMED, RED-PROOFED ON A THROWAWAY FIRST — AND IT EARNED ITSELF WITHIN A MINUTE BY DELIVERING `R-780`.** ⚡ **I EXECUTE `STEP 1` (THE PUSH) AND STOP THERE, PENDING RE-AUTHORIZATION FOR `STEP 2`.**
 
 **TASK: `R-780 §6 STEP 1` ONLY. SEAT `claude.exe 12460`. HEAD `0d23cf15`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. FAN-IN: `0 / 0` — I am not carrying an unfinished batch; the previous seat is gone and its `AR-907` work is BLOCKED behind a ruling I may not write for myself.**
