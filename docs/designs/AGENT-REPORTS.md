@@ -4,6 +4,62 @@
 
 ---
 
+## AR-958 · 2026-08-10 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 23936`, NOT `7972`.** ✅ **RULING EAR ARMED AND PROVEN TO *DELIVER*; BLIND WINDOW BACKFILLED TO `R-807`.** ⚡ **STARTING `R3-3` ON `R-807 §6`'s "ON GREEN … THEN `R3-3`", WHICH `AR-957` SATISFIES.** 🛑 **AND ONE MEASUREMENT THAT MAKES `F-R2-3` A LIVE DEFECT RATHER THAN A THEORETICAL ONE: THE TWO CHECKOUTS' `backtester.py` ARE **DIFFERENT FILES**.**
+
+**SEAT `claude.exe 23936`. TREE `wt-h1-wave4-20260712`, `HEAD 27d579e7`. `R3` = `1 / 5`.**
+
+### §1 — 🛑 SEAT CENSUS: BOTH SEATS ROLLED, AND THE NEXT RULING MUST ADDRESS THE ONE THAT EXISTS
+`[MEASURED HERE, `Win32_Process` + parent walk from my own shell — NOT `TaskList`]`:
+```
+claude.exe 23936  PPID 18480  born 2026-08-10 18:23:53   <- ME, the worker seat
+claude.exe 24768  PPID  6872  born 2026-08-10 18:23:58   <- sibling seat (desk)
+EXACTLY TWO claude.exe. Prior desk 16828 and worker 7972 are BOTH ABSENT.
+```
+⚠️ **I do NOT report `7972` as dead and I did not investigate it — `R-807` addressed it, and a vanished worker PID on this box is a PLANNED operator swap. `[identity-address]` I matched by IMAGE NAME + BIRTH TIME rather than bare liveness, because a PID is an address, not an identity.** ⇒ 🛑 **`R-808` should address `claude.exe 23936`.** ✅ **`R-784 §3` transfers the authorization on the successor's receipt; this is that receipt.**
+
+### §2 — ✅ THE EAR: ARMED, OWNED, AND IT ACTUALLY DELIVERS
+🛑 **`[MEASURED]` NO ear was watching `ADVISOR-RULINGS.md` under either seat — the only process whose command line named the file was my own one-shot tool shell.** ⇒ **I armed one. I did not disarm anything, and there was nothing under the sibling seat to leave alone.**
+✅ **`Monitor` tool, `persistent: true` — NOT a backgrounded `Bash` loop.** ⚠️ **A `while true` under `Bash` notifies on EXIT only, so it would have polled correctly and told me nothing.** ✅ **PROVEN: the arming line arrived in my chat as a notification.**
+✅ **AND THE DETECTOR WAS RED-PROOFED ON A THROWAWAY BEFORE IT WENT ON THE REAL LEDGER — a detector that has never fired is not an instrument:**
+```
+[MEASURED HERE, scratchpad file, four arms]
+no change                        -> SILENT   (correct)
+appended NON-ruling prose        -> SILENT   (correct)   <- negative control
+prepended "## R-808" at top      -> FIRED    (correct)   <- positive control
+file removed / unreadable        -> FIRED    (correct)   <- fails LOUD, not silent
+```
+✅ **BACKFILL — arming time is the join key: `[MEASURED, read by hand]` the newest ruling on disk at arming is `R-807`, and I read it in full. The ear owes me nothing before that point.**
+
+### §3 — ⚖️ WHY I AM STARTING `R3-3` WITHOUT ASKING
+✅ **`[MEASURED HERE]` `AR-957` is the newest `## AR-` on disk and is UNRULED; `R-807` is the newest `## R-`. `HEAD 27d579e7` carries `AR-957`.**
+✅ **`R-807 §5`/`§6`: *"On green with `R1`–`R7` intact: `R3-1` CLOSED, `R3` = `1 / 5`, then `R3-3`."* `AR-957` reports controls `A`–`F` green and `R1`–`R7` re-run each alone.** ⇒ **`R3-3` is released.** ✅ **It is also independently standing: `R-802 §5` per `R-803`, and `R-799 §7` — `R-802`'s answer was explicit that the STOP *"covered `R3-1` ONLY. IT NEVER COVERED THE LANE."*** ⇒ 🛑 **I am not spending a ruling to re-ask a question three rulings have answered.**
+⚠️ **I do NOT grade `AR-957`. That is the desk's act and this receipt makes no claim about it.**
+
+### §4 — 🛑 PRIOR-ART GATE, RUN AND STATED
+✅ **`[MEASURED HERE]` `python scripts/system_inventory.py --check` → `FRESH: docs/designs/SYSTEM-INVENTORY.md matches the tree`, **exit `0`**.**
+✅ **`grep "R3-3"` through `ADVISOR-RULINGS.md` (`17` hits) and `AGENT-REPORTS.md` (`16` hits): `R3-3` is UNSTARTED, its defect already located by a prior seat, and its scope was REFUSED permission to grow twice (`R-801 §2`, `AR-947 §3`).**
+🛑 **THEREFORE I WILL NOT TOUCH THE THREE BANKED LATENT FILES (`ACCEPT5-LATENT-OTHER-CHECKOUT-3`, 3 files / 6 sites). `R-800 §7`: `R3` is five items and may not become six. Its WAKE is `R3` closes, not now.**
+
+### §5 — 🛑 THE DEFECT IS LIVE, NOT THEORETICAL — AND THIS IS THE PART WORTH READING
+`[MEASURED HERE]` **`test_fix4_adaptive_symbol_dst.py:126-128` and `:147-149` both read a hardcoded absolute path into the OTHER checkout:**
+```
+hardcoded : C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py
+executing : C:/Users/tonio/Projects/wt-h1-wave4-20260712/src/engine/backtester.py
+
+executing tree  459767 bytes  Aug  9 03:17  sha c58c8901dd8eb2b2…
+OTHER checkout  456051 bytes  Jul 18 15:04  sha 4b1e967824db79d2…
+```
+⇒ 🛑 **THE TWO FILES ARE NOT THE SAME BYTES AND ARE THREE WEEKS APART. Two governed members currently attest to a file this tree does not execute.** ★★★★★ **`A GREEN THAT READS ANOTHER MACHINE'S FILE IS NOT A WEAK PASS — IT IS A PASS ABOUT SOMETHING ELSE.`**
+✅ **REPAIR TARGET FIXED: the test lives at `src/engine/tests/`, so `Path(__file__).resolve().parents[1] / "backtester.py"` is the executing tree's copy. No cwd, no home path, no project-name literal, no other-worktree path.**
+✅ **NODE IDs TO PRESERVE, VERBATIM AND UNCHANGED: `test_backtester_source_does_not_contain_hardcoded_mes` (`:116`) · `test_backtester_uses_dst_correct_helper` (`:143`).**
+
+### §6 — ⏱️ WHAT I OWE NEXT
+**`R3-3` per `R-799 §3`: the two-site repair · mutation `A` (`_dst_correct_et_hour` in THIS tree) ⇒ DST test FAILS · mutation `B` (restore the forbidden hardcoded-MES evidence in THIS tree) ⇒ symbol test FAILS · POSITIVE CONTROL: mutate the OTHER checkout ⇒ outcome UNCHANGED · then `SEALED-MEMBER-CORRECTION-1`.** ⚠️ **The cross-checkout control is the one that proves `MEASURED == MEASURED-WHERE-IT-RUNS`, and it is the reason this item is not a one-line edit.**
+🛑 **I WILL NOT MUTATE THE OTHER CHECKOUT IN PLACE WITHOUT RESTORING IT, AND I WILL PIN ITS `sha256` BEFORE AND AFTER — `[ps-counting-encoding]` convicted a seat whose "restore: OK" was stale while a mutation sat live in production.**
+**ETA: next report on `R3-3` completion or on a `STOP`.** **RECOMMENDATION: `NO RULING NEEDED` — this is a receipt, not an escalation.**
+
+---
+
 ## AR-957 · 2026-08-10 · ✅✅✅ **`ACCEPT5-TREE-AUTHORITY-CONFIG-1` LANDED AT `9b0490ed`. ALL SIX CONTROLS `A`–`F` PASS, INCLUDING THE DESK'S ADDITION `F` — THE `tests/python` TESTPATH THE EXTERNAL READ'S OWN LIST WOULD HAVE LEFT OPEN.** ✅ **`R1`–`R7` RE-RUN EACH ALONE, RED STILL GREEN, AND `R6` ON THE REAL `107`-MEMBER MANIFEST REACHED NORMAL SCORING.** ✅ **`STOP [16]` HELD AGAIN — CONTROL `D` AND `R6` BOTH RAN WITH `docs/` DIRTY AND THE GATE STAYED SILENT.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD 9b0490ed`. `R3-1` complete; `R3` = `1 / 5`.**
