@@ -4,6 +4,120 @@
 
 ---
 
+## AR-923 · 2026-08-10 · ✅✅✅ **`DAILY-RESET-1` IS LANDED AND PUSHED — ONE ATOMIC COMMIT `8f729410`, AND `A`–`G` ARE GREEN WITH `ACCEPT-5` `NEW = 0` / `GONE = 2` MATCHED **BY NAME**.** ⭐⭐⭐ **AND THE `== 7` WAS WORSE THAN STALE, WHICH I CAN NOW PROVE RATHER THAN ARGUE: UNDER THE MUTATION THAT **REINTRODUCES** THE CARRY-OVER IT READS **SEVEN AGAIN** ⇒ **THE OLD ASSERTION WENT GREEN EXACTLY WHEN THE DEFECT WAS LIVE.** IT WAS AN ANTI-DETECTOR, NOT A STALE NUMBER.** ✅ **BOTH `DAILY-RESET-1` MUTATIONS STILL BITE, AND I RED-PROOFED MY TWO **NEW** CLAUSES SEPARATELY BECAUSE CLAUSE 1 FIRED FIRST AND MASKED THEM.** 🛑 **`S6` SEAL IS THE DESK'S; THE FINAL GRADE IS OWED AND IS NOT MINE TO DISPATCH.**
+
+**SEAT `claude.exe 23892`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2` — NOT ADVANCED (`R-787 §5`). `HEAD 08062e12` `==` `origin` `==` `ls-remote`, ahead `0` / behind `0`. REPAIR COMMIT `8f729410`.**
+
+### §1 — ✅ WHAT LANDED, AND THE SECOND COMMIT I DID NOT PLAN
+```
+[MEASURED HERE] git diff --stat a2527e61..HEAD -- src/
+  src/engine/spec_condition_compiler.py                        106 +++---
+  src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py   306 +++++
+  src/engine/tests/test_trigger_safety_refusal.py               91 ++++-
+  3 files changed, 461 insertions(+), 42 deletions(-)
+8f729410  the atomic unit (production repair + its causal tests together)
+08062e12  SYSTEM-INVENTORY regenerate  <- NOT PLANNED BY ME. Declared in §7.
+git diff HEAD -- src/  ->  EMPTY   (I shipped exactly what I measured)
+```
+✅ **`git add` per file in its own call (`R-783 §4a`); the three files were staged and verified as EXACTLY three before the commit.**
+
+### §2 — ⭐⭐⭐ THE FINDING THAT IS BIGGER THAN THE MIGRATION: `== 7` WAS ANTI-CORRELATED WITH THE DEFECT
+🛑 **`R-787 §4` ruled the `== 7` STALE. It is stale, and it is also something worse, which nobody had measured — including me until the mutation ran:**
+```
+[MEASURED HERE] MUTATION 2 (carry a COMPLETE session onto every later bar =
+                            reintroduce DAILY-RESET-1) applied to the repaired handler:
+  defective_bars -> (30, 60, 110, 160, 230, 300, 380)      n = 7
+```
+⇒ **`assert len(defective_bars) == 7` would have been **SATISFIED** by the mutation that puts the defect BACK.** ⚖️ **So the old assertion did not merely fail to notice `DAILY-RESET-1` — it was GREEN in the defective state and RED in the repaired one. Its polarity was inverted with respect to the very defect that moved it.**
+★★★★★ **`A STALE ASSERTION MERELY STOPS DETECTING. AN ANTI-CORRELATED ONE ACTIVELY DEFENDS THE DEFECT — AND IT LOOKS IDENTICAL FROM THE GREEN SIDE.`**
+⚖️ **THIS STRENGTHENS `R-787 §4`'s REASONING RATHER THAN AMENDING IT — the ruling required the causal clause because a bare tuple could embalm; the measurement shows the count was already doing exactly that, in the worst direction. `[MEASURED HERE]`, not inferred.**
+
+### §3 — ✅ THE MIGRATION, IN THE ORDERED SIX-CLAUSE FORM (`R-787 §4`)
+```
+[MEASURED HERE] the ONE assertion that moved, and the two that joined it:
+ (1) defective_bars == _DEFECTIVE_ROUTE_BARS = (30, 60, 110, 160, 300, 380)   <- membership
+ (2) unbound/permissive run == defective_bars          (pre-existing, unchanged)
+ (3) consumer disabled restores == defective_bars      (pre-existing, unchanged)
+ (4) consumer restored -> ()                           (pre-existing, unchanged)
+ (5) _DAILY_RESET_CARRYOVER_BAR = 230 explicitly NOT IN defective_bars        <- NEW
+ (6) _assert_every_entry_is_at_or_after_its_own_session_lock(...)             <- NEW, CAUSAL
+```
+⭐ **CLAUSE 6 IS DERIVED FROM THE SPECIFICATION, NOT FROM AN OBSERVATION**, which is the whole point of `R-787 §4`: it resolves each entry's LOCAL date in the taught zone, then asks the adapter's **OWN** `_window_bounds` for THAT date's lock for the **EXPLICITLY SELECTED** candidate. **ONE calculator. No reimplemented arithmetic. No prose parsing of `trading_day_rule` (`R-787 §6`).**
+⭐ **AND IT CARRIES ITS OWN POSITIVE WITNESS:** a per-member rule over an empty population passes vacuously and reads exactly like a satisfied invariant, so it asserts `bars` is non-empty and that a candidate resolved, **before** it asserts anything about locks.
+✅ **DOCSTRING AMENDED** — the three "seven"s now record that the population went `7 → 6` because bar `230` was a previous-session carry-over, and that the trigger-refusal property is unchanged. **No behaviour was changed to suit the prose.**
+🛑 **`:412`'s SEPARATE `== 7` UNTOUCHED** — I enumerated the literal before editing (`grep -n -- "== 7"` ⇒ exactly two hits, different populations) rather than trusting that `R-787 §3` had found them all. ★★★★★ **`A LITERAL IS NOT AN IDENTIFIER.`**
+✅ **`test_six_step_mutation_sequence` NOT RENAMED** (`ACCEPT-5` join key). **The two `6B` tests NOT renamed.** **The multi-day frame NOT shortened.**
+
+### §4 — ✅ BOTH MUTATIONS STILL BITE — AND MY TWO NEW CLAUSES ARE RED-PROOFED **SEPARATELY**
+```
+[MEASURED HERE — save/restore by BYTE COPY, never `git checkout` (it eats uncommitted work)]
+PRISTINE compiler sha16 f22bc8368c7d096b   PRISTINE test sha16 19ffbbfa1286b15e
+
+MUTATION 1  collapse every session onto day 1  -> 5 FAILED  (4 S6 controls + six_step)
+            six_step failed on CLAUSE 1: got (30, 60, 110, 160)  <- day 2 gates vanish
+MUTATION 2  carry a COMPLETE session forward   -> 3 FAILED  (2 S6 controls + six_step)
+            six_step failed on CLAUSE 1: got (30, 60, 110, 160, 230, 300, 380)
+BOTH REVERTED; both files restored to the PRISTINE sha16 above, verified by hash.
+```
+🛑 **CLAUSE 1 FIRED FIRST IN BOTH ARMS, WHICH MEANS CLAUSES 5 AND 6 WERE NEVER EXERCISED — a clause that never ran is a clause with no proven path to red, and I refuse to ship one on the strength of a green.**
+```
+[MEASURED HERE — clause-by-clause red-proof, mutation 2 still live]
+PROBE A  clause 1 relaxed to the 7-tuple  -> CLAUSE 5 FIRES:
+         "bar 230 is back - that is the DAILY-RESET-1 phantom"
+PROBE B  clause 5 ALSO disabled           -> CLAUSE 6 FIRES:
+         "bar 230 fires at 2026-01-06 04:40 EST, BEFORE its own session's 09:35 lock
+          for the taught 5m window"
+         assert datetime(2026,1,6,4,40, NY) >= datetime(2026,1,6,9,35, NY)
+```
+⭐ **CLAUSE 6's MESSAGE PRINTS THE LOCK IT DERIVED (`09:35`), NOT A LITERAL I TYPED — that is the visible proof it came from `_window_bounds` and the taught session start rather than from my hand.**
+✅ **MARKER GREP ZERO — WITH A CONTROL THAT ACTUALLY DISCRIMINATES.** ⚠️ **MY FIRST CONTROL WAS WORTHLESS AND I SAY SO: I greped a pytest LOG for the marker (it was never going to appear there) and got `0`, which proves nothing about `src/`.** ✅ **REDONE PROPERLY: planted a marker file inside `src/` ⇒ grep returns `1`; removed it ⇒ grep returns `0`.** ★★★★★ **`A POSITIVE CONTROL IN THE WRONG SURFACE IS NOT A WEAK CONTROL, IT IS A DECORATION.`**
+
+### §5 — ✅ ACCEPTANCE `A`–`G`, ALL RUN FROM THE WORKTREE ROOT WITH REAL CAPTURED EXITS
+```
+[MEASURED HERE]
+A  S6 + 12B fan-out                                    25 passed   REAL_EXIT=0
+B  ACCEPT-1 conformance+definition+parity+lowering      54 passed   REAL_EXIT=0
+C  ACCEPT-3 enforcement+param+flag-off+short-frame     136 passed   REAL_EXIT=0
+D  npx tsc --noEmit                          TSC_REAL_EXIT=0, UNPIPED
+E  trigger safety                                      57 passed   REAL_EXIT=0
+F  migration guard (test_spec_producer)                47 passed   REAL_EXIT=0
+   opening_range_adapter (unchanged, still green)      31 passed   REAL_EXIT=0
+G  ACCEPT-5, LAST, 105-member population vs the IMMUTABLE 103-member baseline:
+     NEW  = 0
+     GONE = 2  -> test_no_production_binding_routes_to_the_opening_range_adapter_yet
+                  test_no_typed_opening_range_output_contract_exists_in_production
+     GONE == the baseline's OWN ordered_6b_reds, BY MEMBER: True
+     S6 file contribution 0 · FAN-OUT file 0 · TRIGGER-SAFETY file 0
+     (baseline 33 failures -> 31. MEMBERSHIP is the criterion; counts are incidental.)
+```
+⭐ **`B`/`C`/`F` WERE RECONSTRUCTED FILE-SETS, AND I DID NOT ASK ANYONE TO TRUST THE RECONSTRUCTION: `54` / `136` / `47` / `31` REPRODUCE `AR-920`'s AND `AR-921`'s COUNTS EXACTLY. The counts are the join key that says I ran the same populations, not merely similar ones.**
+⚠️ **`D` — I ALMOST MISREAD IT AND DIDN'T:** `tsc` printed `5` lines with exit `0`. **They are `npm notice` version banners, not diagnostics — I opened the file rather than counting lines.** ★★★ **`A LINE COUNT IS NOT A DIAGNOSTIC COUNT.`** ⚖️ **No TypeScript changed in this lane (`git diff --name-only a2527e61 -- '*.ts' '*.tsx'` ⇒ `0`); I ran it because `R-787 §9` names it, and I report it as a re-confirmation rather than as evidence about my change.**
+✅ **`ACCEPT-5` RAN **LAST**, after `E` was green.** ✅ **THE IMMUTABLE BASELINE AND THE `105`-MEMBER MANIFEST WERE BOTH UNTOUCHED — `git diff --numstat` on each is EMPTY.**
+
+### §6 — ✅ STOP CONDITIONS `[1]`–`[7]`: NONE FIRED, ANSWERED ONE BY ONE
+**`[1]`** no assertion other than `:448` moved — **`:412` untouched, verified by enumeration.** · **`[2]`** `:685` **PASSES UNCHANGED** (inside `A`'s 25). · **`[3]`** the six-tuple reproduces IDENTICALLY across steps `(1)`, `(2)` and `(4)`–`(5)` — clauses 2/3 compare against the same `defective_bars` object. · **`[4]`** the causal assertion needed **no calendar knowledge** — only `session_start_local` + the selected variant's duration through `_window_bounds`; **`UNRESOLVED_SOURCE_AMBIGUITY` was not reached.** · **`[5]`** both mutations bite (`§4`). · **`[6]`** `ACCEPT-5` = `NEW 0 / GONE 2` by name. · **`[7]`** no failure membership outside the authorized change — **`NEW = 0` IS that measurement.**
+
+### §7 — ⚠️ TWO CHANGES I DID NOT PLAN, DECLARED RATHER THAN ABSORBED
+**1. `SYSTEM-INVENTORY.md` REGENERATED AND COMMITTED SEPARATELY (`08062e12`).** 🛑 **The `pre-push` gate BLOCKED the push, regenerated the map on disk itself, and printed the exact remedy (`git commit -o <path>`); I followed it verbatim.** ✅ **I READ THE DIFF BEFORE COMMITTING IT rather than committing a map I had not opened: `3 insertions / 3 deletions` — the generation SHA stamp, a `src/` line total `120203 → 120239`, and `from_compiled_spec` shifting `:2328 → :2364` (`+36`, exactly my compiler additions). **NO module changed classification.**
+**2. `docs/wave25-exit-engine-ab-report.md` RE-STAMPED AGAIN** by the `ACCEPT-5` population run (`Run date: 2026-05-24 13:29 UTC` → `2026-08-10 05:27 UTC`). ✅ **Restored by a PLAIN TEXT EDIT, never `git checkout`; CRLF preserved (`43` CRLF / `0` bare LF, before and after); `git diff --numstat` on that path EMPTY; NOT committed.** ⚠️ **`git status` still prints ` M` from its stat cache and I am NOT running an index operation to tidy an appearance** (`AR-920 §6-3` documented exactly this). ⚖️ **BANKED per `R-787 §10`; the generator is NOT fixed and was not touched.**
+★★★★ **`AN UNPLANNED CHANGE DECLARED IS A FINDING; THE SAME CHANGE ABSORBED IS A LIE OF OMISSION.`**
+
+### §8 — 🛑 WHAT I DID **NOT** MEASURE, AND WHAT I AM NOT CLAIMING
+- **DST · exchange holidays · half-days · session transfer · futures overnight boundaries · non-1m/5m timeframes.** `R-780 §7` / `R-787 §6` carried limits. **My fixture dates sit deliberately before the 2026-03-08 US DST transition. A frame crossing a DST boundary is `[NOT MEASURED]` and this repair is NOT asserted correct across one. THIS LANE ESTABLISHES NONE OF THEM.**
+- **Whether any OTHER suite in the repo drives a multi-day frame through this handler.** `ACCEPT-5`'s `NEW = 0` over `105` members is evidence that none of them CHANGED, **which is not the same as an enumeration of which ones exercise it.**
+- **`MP-1`, Surface 12, the fan-out, `ELSE-SINK-1`, the adapter, `_window_bounds`** — **untouched, and I make no claim about any of them.**
+- **THE SEAL.** 🛑 **Not mine. `R-787 §10` holds it, and it additionally requires the FINAL independent grade carrying the `§7` source-fidelity limb, on the repaired SHA.** ⚖️ **`doer ≠ grader`: the desk dispatches `accuracy-validator`, never me, and I did not dispatch one.**
+- **GRADE #1's RECEIPT** — still unopened by me. Its band `7` and findings `F-1`/`F-2`/`F-3` are `[RELAYED via R-787 §7]`, not mine.
+- **PRIOR ART STATED:** `system_inventory --check` (STALE before the lane, **`REAL_EXIT=0` FRESH now**) · `R-787` · `R-786` · `R-784 §3` (the transfer rule that let me act at all) · `AR-921` · `== 7` enumerated in-file · `ordered_6b_reds` traced to the baseline JSON. **No new instrument was authored in the repo; the `ACCEPT-5` diff ran from a scratchpad script that only re-executes the baseline's own `exact_invocation` and diffs member sets.**
+
+### §9 — ⚡ STATE, AND WHAT I RECOMMEND NEXT (ONE ITEM, NOT A ROADMAP)
+🛑 **STOPPING HERE per `R-787 §9-8`, for the `S6` closeout ruling.**
+✅ **Remote production NO LONGER carries the cross-day carry defect** — `R-787 §10` named that as the concrete reason `MP-1` stayed blocked, and it is now `[MEASURED]` false: `8f729410` is on `origin`, verified by `ls-remote` and by `git branch -r --contains` on the commit itself, not by a local ref comparison.
+⚡ **NEXT SMALLEST TASK, AND IT IS THE DESK'S, NOT MINE: dispatch the FINAL `accuracy-validator` on `08062e12` with the `R-787 §7` source-fidelity limb** — *"name every source-taught semantic the golden record teaches, and for each, the executable line that reads it."* ⭐ **That limb is exactly what would have caught `DAILY-RESET-1`, and grade #1 `[MEASURED, R-787 §7]` never mentioned it across all 365 lines.**
+✅ **I AM STILL SEATED, EAR ARMED AND DELIVERING (`Monitor b2ve77cx2`), NOT EXHAUSTED, AND MY LANE IS COMPLETE — `1 / 1`. No sub-agent is owed; I dispatched none.**
+
+---
+
 ## AR-922 · 2026-08-10 · 🔵 **START-RECEIPT — FRESH WORKER `claude.exe 23892` TAKING `R-787 §9` UNDER `R-784 §3`'s TRANSFER RULE. NOT ASKING FOR RE-AUTHORIZATION, BECAUSE THIS CAMPAIGN ALREADY RULED IT.** 🛑🛑 **AND A SEAT-IDENTITY FINDING THAT `R-787` COULD NOT HAVE HAD: `claude.exe 33036` — THE PID `R-787` ADDRESSES AND RECORDS AS LIVE — IS **DEAD**, AND PID `33036` HAS BEEN **RECYCLED ONTO MY OWN `powershell.exe` CHILD**, BORN `01:15:37`.** ✅ **`AR-921`'s UNCOMMITTED REPAIR IS INTACT — LIVE TREE BYTE-IDENTICAL TO THE SNAPSHOT, `sha256 e1164897…`, RE-DERIVED FROM THE TREE.** ✅ **I REPRODUCED THE HALT ROW INDEPENDENTLY (`81 passed / 1 failed`) AND I CONFIRM `R-787 §2` AND `§3` BY MY OWN ARITHMETIC BEFORE ACTING ON THEM.**
 
 **SEAT `claude.exe 23892` (born `01:09:38`; parent walk `powershell 33036 → claude.exe 23892 → powershell 10032 → explorer 9228`). TREE `wt-h1-wave4-20260712`, `HEAD 5d127c12` `==` fetched `origin`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2` — NOT ADVANCED BY MY SEATING, per `R-787 §5`.**
