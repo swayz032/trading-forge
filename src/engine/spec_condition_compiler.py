@@ -34,7 +34,7 @@ tests/test_spec_condition_compiler_trace_byte_identity.py.
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -879,12 +879,19 @@ class SpecConditionStrategy(BaseStrategy):
         silently rewritten into `always`. That is exactly the `else: np.ones` sink this
         activation adds a route above.
 
-        🛑 EXACTLY ONE ADAPTER CALL PER DISPATCH. The lock boundary comes from the adapter's
-        OWN `_window_bounds` — the single source of that arithmetic, including its
-        midnight-crossing refusal — rather than from a second copy computed here. Re-deriving
-        `start + duration` locally would be the duplicated opening-range arithmetic this
-        commit is forbidden to create, and the two copies would drift the moment either
-        changed. `THE SECOND COPY OF A CALCULATION IS A DISAGREEMENT WAITING FOR A REASON.`
+        🛑 EXACTLY ONE ADAPTER CALL PER `(candidate, session_date)`. The earlier wording
+        here said "per dispatch", which was not wrong so much as UNDER-SPECIFIED: every
+        fixture that pinned it ran a SINGLE-SESSION frame, and a single-session frame cannot
+        tell "once" from "once per thing it never varied". A multi-day frame can, and does.
+
+          `A SINGLE-INSTANCE FIXTURE CANNOT TELL "ONCE" FROM "ONCE PER THING IT NEVER
+           VARIED" — AND THE ASSERTION WILL SOUND EXACT EITHER WAY.`
+
+        The lock boundary comes from the adapter's OWN `_window_bounds` — the single source
+        of that arithmetic, including its midnight-crossing refusal — rather than from a
+        second copy computed here. Re-deriving `start + duration` locally would be duplicated
+        opening-range arithmetic, and the two copies would drift the moment either changed.
+        `THE SECOND COPY OF A CALCULATION IS A DISAGREEMENT WAITING FOR A REASON.`
 
         🛑 THE ADAPTER IS CALLED THROUGH ITS MODULE ATTRIBUTE, NOT A MODULE-LEVEL
         `from … import`. A name bound at import time cannot be reached by a spy attached at
@@ -928,44 +935,73 @@ class SpecConditionStrategy(BaseStrategy):
         # safety argument of the adapter's refusal path.
         interval_minutes = self._bar_interval_minutes()
 
-        bars: list[OpeningRangeBar] = []
         high = ctx["high"]
         low = ctx["low"]
+
+        # ── THE TAUGHT RULE: THE RANGE IS RECOMPUTED EVERY TRADING DAY ───────────────────
+        # `trading_day_rule` is a REQUIRED field on the definition, and the lowerer REFUSES
+        # to produce one without it (`REASON_TRADING_DAY_RULE_MISSING`) precisely because
+        # daily reset may NOT be inferred from convention. So a definition reaching here
+        # carries a source-taught reset rule, and the executor must actually honour it.
+        #
+        # 🛑 IT DID NOT. The previous form took ONE session date from the FIRST bar, ONE
+        # lock from that date, and set True on every bar at/after that instant — so on any
+        # multi-day frame day 2 opened ALREADY TRUE, before its own window had formed. The
+        # engine had implemented `available after the first session, forever` where the
+        # source teaches `recomputed every trading day`, and every downstream number would
+        # have been plausible, well-formed and wrong.
+        #
+        #   `A FIELD CARRIED FAITHFULLY THROUGH EVERY LAYER AND READ BY NO CONSUMER IS NOT
+        #    PRESERVED SEMANTICS — IT IS A RECEIPT FOR A DECISION NOBODY EXECUTED.`
+        #
+        # The trading date is the bar's LOCAL date in the TAUGHT zone — never the host's
+        # local date and never UTC, because a session that starts at 09:30 New York belongs
+        # to the New York day even when the instant is already tomorrow in UTC.
+        indices_by_session: dict[date, list[int]] = {}
         for i, ts in enumerate(ts_list):
             if ts is None:
                 continue
-            bars.append(
+            indices_by_session.setdefault(ts.astimezone(zone).date(), []).append(i)
+
+        for session_date, indices in indices_by_session.items():
+            session_bars = [
                 OpeningRangeBar(
-                    timestamp=ts, high=float(high[i]), low=float(low[i])
+                    timestamp=ts_list[i], high=float(high[i]), low=float(low[i])
                 )
+                for i in indices
+            ]
+            if not session_bars:
+                continue
+
+            # EXACTLY ONE ADAPTER CALL PER (candidate, session_date), and it is handed ONLY
+            # that session's observations — so one day's bars can never widen or narrow
+            # another day's range. `as_of` is that session's own last observation.
+            state = opening_range_adapter.compute_opening_range_state(
+                candidate.definition,
+                candidate.variant,
+                session_bars,
+                session_date=session_date,
+                bar_interval_minutes=interval_minutes,
+                as_of=max(bar.timestamp for bar in session_bars),
             )
-        if not bars:
-            return out
 
-        # The session the frame is describing, read off the FIRST observation in the TAUGHT
-        # zone — never a literal, and never the host's local date.
-        session_date = bars[0].timestamp.astimezone(zone).date()
-        as_of = max(bar.timestamp for bar in bars)
+            # ── A REFUSAL GATES NOTHING, AND IT GATES NOTHING *LOCALLY*. FORMING and
+            # INCOMPLETE_OPENING_WINDOW both land here and mean the taught range is not
+            # available FOR THIS DAY — which is False on this day's bars only. A day whose
+            # observations are incomplete must not borrow a neighbour's answer, and must not
+            # poison the days around it either. `FAIL CLOSED` is the adapter's shape and it
+            # must survive the handler, per session.
+            if not state.opening_range_complete:
+                continue
 
-        state = opening_range_adapter.compute_opening_range_state(
-            candidate.definition,
-            candidate.variant,
-            bars,
-            session_date=session_date,
-            bar_interval_minutes=interval_minutes,
-            as_of=as_of,
-        )
-
-        # ── A REFUSAL GATES NOTHING. FORMING / INCOMPLETE_OPENING_WINDOW both land here, and
-        # both mean the taught range is not available — which is FALSE on every bar, not a
-        # pass-through. `FAIL CLOSED` is the adapter's shape and it must survive the handler.
-        if not state.opening_range_complete:
-            return out
-
-        _start, lock = _window_bounds(candidate.definition, candidate.variant, session_date)
-        for i, ts in enumerate(ts_list):
-            if ts is not None and ts >= lock:
-                out[i] = True
+            # The lock comes from the adapter's OWN window arithmetic, for THIS date. No
+            # second calculator, and no state carried across dates.
+            _start, lock = _window_bounds(
+                candidate.definition, candidate.variant, session_date
+            )
+            for i in indices:
+                if ts_list[i] >= lock:
+                    out[i] = True
         return out
 
     def _bar_interval_minutes(self) -> int:

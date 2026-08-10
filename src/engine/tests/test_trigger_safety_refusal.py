@@ -193,6 +193,62 @@ def _short_bars(out: pl.DataFrame) -> tuple[int, ...]:
     return tuple(int(i) for i in np.flatnonzero(out["entry_short"].to_numpy()))
 
 
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# THE DEFECTIVE ROUTE'S POPULATION, AND THE RULE THAT PRODUCES IT (R-787 §4)
+#
+# This was `== 7` and it is now an exact six-member tuple PLUS the semantic rule beside it.
+# `DAILY-RESET-1` removed bar 230 — a 2026-01-06 04:40 America/New_York entry gated by the
+# PREVIOUS session's completed opening range, 4h55m before that day's own 09:35 lock. It was
+# never an eligible entry, so the trigger-refusal property is unchanged at six.
+#
+#     `PAIR EVERY DETERMINISTIC POPULATION WITH THE SEMANTIC RULE THAT PRODUCED IT — THE
+#      TUPLE CATCHES DRIFT, THE RULE EXPLAINS IT, AND A TUPLE ALONE JUST BECOMES THE NEXT
+#      STALE NUMBER.`
+# ─────────────────────────────────────────────────────────────────────────────────────────
+_DEFECTIVE_ROUTE_BARS = (30, 60, 110, 160, 300, 380)
+_DAILY_RESET_CARRYOVER_BAR = 230
+
+
+def _assert_every_entry_is_at_or_after_its_own_session_lock(strategy, bars) -> None:
+    """R-787 §4 clause 6 — the CAUSAL assertion that keeps the tuple above from embalming.
+
+    A hand-copied population is exactly what `== 7` was, and it survived a real defect for a
+    commit. This rule is DERIVED FROM THE SPECIFICATION — the taught `session_start_local`
+    plus the EXPLICITLY SELECTED candidate's duration, resolved through the adapter's OWN
+    `_window_bounds` — so the next time a legitimate repair moves the population, the tuple
+    fails loudly and this says WHY.
+
+    🛑 ONE calculator only. This reads the production window helper; it does not reimplement
+    the arithmetic, and it does not parse `trading_day_rule` (R-787 §6: the lowering layer is
+    the source-evidence parser, and a second reader in a consumer is parser drift).
+    """
+    from zoneinfo import ZoneInfo
+
+    from src.engine.opening_range_adapter import _window_bounds
+
+    # POSITIVE WITNESS: a per-member rule over an EMPTY population passes vacuously and would
+    # read exactly like a satisfied invariant.
+    assert bars, "the per-session-lock rule was handed an EMPTY population; it proved nothing"
+
+    candidate = _candidate_for(strategy.binding_plan)
+    assert candidate is not None, (
+        "no taught candidate on this plan, so the lock below would be unresolvable and this "
+        "rule vacuous"
+    )
+    zone = ZoneInfo(candidate.definition.source_timezone)
+    stamps = _frame()["ts_event"].to_list()
+
+    for bar in bars:
+        local = stamps[bar].astimezone(zone)
+        _start, lock = _window_bounds(candidate.definition, candidate.variant, local.date())
+        assert local >= lock, (
+            f"bar {bar} fires at {local:%Y-%m-%d %H:%M %Z}, BEFORE its own session's "
+            f"{lock:%H:%M} lock for the taught {candidate.variant.duration_minutes}m window. "
+            "An entry gated by a range its own trading day has not finished forming is the "
+            "DAILY-RESET-1 defect returning."
+        )
+
+
 # ═══════════════════════════════════════════════════════════════════════════════════════
 # 1. THE CLASSIFIER — four conditions, ALL required
 # ═══════════════════════════════════════════════════════════════════════════════════════
@@ -422,16 +478,28 @@ def test_only_the_trigger_is_touched():
 def test_six_step_mutation_sequence(monkeypatch):
     """R-747 §3, adopted verbatim, replacing the withdrawn locality control.
 
-    (1) defective route reproduces the exact seven firing bars
-    (2) trigger unbinding ALONE preserves those seven      <- encodes AR-843
+    (1) defective route reproduces the exact firing-bar population
+    (2) trigger unbinding ALONE preserves it               <- encodes AR-843
     (3) refusal PLUS eligibility enforcement -> zero
     (4) disable ONLY the eligibility consumer
-    (5) the exact seven MUST return
+    (5) the identical population MUST return
     (6) restore -> zero again
 
     Steps (4)-(5) are the load-bearing ones: they prove the zero in step (3) is produced by
     the ENFORCEMENT and not by some unrelated drift, because turning the consumer off brings
-    the identical seven bars back.
+    the identical bars back.
+
+    🛑 THE POPULATION WAS SEVEN AND IS NOW SIX (R-787 §4). `DAILY-RESET-1` repaired
+    `_h_opening_range`, which had computed the taught opening range ONCE from the first bar's
+    session and then treated it as available forever. Bar 230 — 2026-01-06 04:40
+    America/New_York — was an entry taken 4h55m BEFORE that day's own 09:35 lock, gated by
+    the PREVIOUS session's completed range. It was never an eligible entry; it was a
+    previous-session carry-over. The trigger-refusal property this file exists to prove is
+    UNCHANGED and survives at six.
+
+    🛑 AND THE COUNT IS NO LONGER WHAT IS ASSERTED, because `== 7` embalmed itself for
+    exactly one commit too long. Membership is exact AND the semantic rule that produced it
+    is asserted beside it — see `_assert_every_entry_is_at_or_after_its_own_session_lock`.
     """
     spec = _golden_spec()
 
@@ -445,10 +513,19 @@ def test_six_step_mutation_sequence(monkeypatch):
     )
     defective_strategy, defective_out = _run(spec)
     defective_bars = _short_bars(defective_out)
-    assert len(defective_bars) == 7, (
-        f"the defective route no longer reproduces seven entries (got {len(defective_bars)}); "
-        "this control cannot measure a repair whose defect it cannot restore"
+    # ── (1a) EXACT MEMBERSHIP, NEVER A COUNT (R-787 §4 clause 1) ─────────────────────
+    assert defective_bars == _DEFECTIVE_ROUTE_BARS, (
+        f"the defective route no longer reproduces the exact firing-bar population "
+        f"(got {defective_bars}, expected {_DEFECTIVE_ROUTE_BARS}); this control cannot "
+        "measure a repair whose defect it cannot restore"
     )
+    # ── (1b) THE CARRY-OVER BAR IS NAMED AND MUST STAY ABSENT (clause 5) ─────────────
+    assert _DAILY_RESET_CARRYOVER_BAR not in defective_bars, (
+        f"bar {_DAILY_RESET_CARRYOVER_BAR} is back — that is the DAILY-RESET-1 phantom, an "
+        "entry gated by the PREVIOUS session's opening range before its own session's lock"
+    )
+    # ── (1c) THE CAUSAL RULE THAT PRODUCES THAT MEMBERSHIP (clause 6) ────────────────
+    _assert_every_entry_is_at_or_after_its_own_session_lock(defective_strategy, defective_bars)
     assert defective_strategy.execution_status == EXECUTION_STATUS_EXECUTED
     trigger_binding = next(
         b for b in defective_strategy.binding_plan.bindings

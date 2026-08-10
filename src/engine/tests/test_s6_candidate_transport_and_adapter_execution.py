@@ -200,6 +200,53 @@ def _taught_session_bars(definition, minutes: int = SESSION_MINUTES) -> list[Ope
     ]
 
 
+def _multi_day_session_bars(
+    definition,
+    session_dates: list[date],
+    minutes: int = SESSION_MINUTES,
+    skip_minute_on: dict[date, int] | None = None,
+) -> list[OpeningRangeBar]:
+    """Consecutive TRADING DAYS of taught-session bars, each day VISIBLY DIFFERENT.
+
+    🛑 EACH DAY GETS ITS OWN PRICE BAND (day index × 100). That is not decoration: it is
+    what makes `two independent daily ranges were computed` observable instead of merely
+    `the adapter was called twice`. If the handler ever computed one range and reused it,
+    the levels would betray it even when the booleans happened to look right.
+
+      `"IT WAS CALLED TWICE" AND "TWO INDEPENDENT RESULTS WERE COMPUTED" ARE DIFFERENT
+       CLAIMS, AND ONLY THE SECOND IS EVER THE TAUGHT RULE.`
+
+    `skip_minute_on` drops ONE in-window observation for a given date, which is how the
+    adversarial control makes a single day INCOMPLETE without disturbing its neighbours.
+
+    The session start comes OFF THE DEFINITION, never a literal — a fixture that hardcodes
+    09:30 stops measuring the source the moment the source says something else.
+    """
+    zone = ZoneInfo(definition.source_timezone)
+    hour_text, _, minute_text = definition.session_start_local.partition(":")
+    skip = skip_minute_on or {}
+    bars: list[OpeningRangeBar] = []
+    for day_index, session_date in enumerate(session_dates):
+        start = datetime(
+            session_date.year,
+            session_date.month,
+            session_date.day,
+            int(hour_text),
+            int(minute_text),
+            tzinfo=zone,
+        )
+        band = 100.0 + day_index * 100.0
+        for i in range(minutes):
+            if skip.get(session_date) == i:
+                continue
+            bars.append(
+                OpeningRangeBar(
+                    timestamp=start + timedelta(minutes=i), high=band + i, low=band - i
+                )
+            )
+    return bars
+
+
 def _dispatch_ctx(bars: list[OpeningRangeBar]) -> dict:
     """The slice of production's real `ctx` an opening-range handler can read.
 
@@ -1249,3 +1296,262 @@ def test_flag_off_the_candidate_aware_instance_gates_on_the_real_window(monkeypa
             f"{lock_index}m instance: a constant-True array is the all-True fallback, "
             "not a gate computed from the taught window"
         )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# DAILY-RESET-1 (R-786) — THE TAUGHT RANGE IS RECOMPUTED EVERY TRADING DAY
+#
+# The source teaches daily reset IN ITS OWN WORDS, and the compiler REFUSES to
+# produce a definition without it (`REASON_TRADING_DAY_RULE_MISSING`). The
+# candidate carries `trading_day_rule` all the way to the runtime.
+#
+# 🛑 AND NO EXECUTOR READ IT. `_h_opening_range` derived ONE session date from
+# the FIRST bar, took ONE lock from it, and set True on every bar at/after that
+# instant — so Day 2 opened ALREADY TRUE, before its own window had formed.
+#
+#   `A FIELD CARRIED FAITHFULLY THROUGH EVERY LAYER AND READ BY NO CONSUMER IS
+#    NOT PRESERVED SEMANTICS — IT IS A RECEIPT FOR A DECISION NOBODY EXECUTED.`
+#
+# Every single-session fixture above is BLIND to this: with one date in the
+# frame, `per candidate` and `per candidate per session` are indistinguishable.
+# `A SUITE THAT IS GREEN ON EVERY TEST IT HAS IS SILENT ABOUT THE TEST IT LACKS.`
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Two consecutive ordinary weekdays in the taught zone. DELIBERATELY BEFORE the
+# 2026-03-08 US DST transition: a fixture straddling that boundary would make a
+# real zone bug look like a test bug, and vice versa (R-780 §7's limits stand —
+# DST is NOT closed by this lane and is NOT an acceptance term).
+DAY_1 = date(2026, 3, 3)
+DAY_2 = date(2026, 3, 4)
+DAY_3 = date(2026, 3, 5)
+
+
+def _golden_result():
+    return produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+
+
+def _candidate_of(result, duration_minutes: int):
+    """The taught candidate for a duration, chosen EXPLICITLY and never by index."""
+    matching = [
+        c for c in result.opening_range_candidates
+        if c.variant.duration_minutes == duration_minutes
+    ]
+    assert len(matching) == 1, (
+        f"expected exactly one taught {duration_minutes}m window, found {len(matching)}"
+    )
+    return matching[0]
+
+
+def _instance_for(result, candidate):
+    plan = compile_binding_plan(result.artifact["spec"])
+    strategy = SpecConditionStrategy(
+        result.artifact,
+        binding_plan=plan,
+        timeframe=BAR_TIMEFRAME,
+        opening_range_candidate=candidate,
+    )
+    return strategy, _opening_range_binding(plan)
+
+
+def test_the_taught_opening_range_resets_every_trading_day(monkeypatch):
+    """THE DECIDER FOR `DAILY-RESET-1`. RED on `a2527e61`, GREEN after the repair.
+
+    THE LOAD-BEARING CLAIM, and it is deliberately the one a carry-over cannot fake:
+
+      `THE FIRST BAR OF DAY 2, BEFORE THAT DAY'S OWN LOCK, IS FALSE — EVEN THOUGH
+       DAY 1 FINISHED TRUE.`
+
+    A handler that computes one range and holds it open answers True there, and
+    every downstream number it produces is plausible, well-formed and wrong.
+    """
+    result = _golden_result()
+    definition = result.opening_range_lowering.definition
+    candidate = _candidate_of(result, 15)
+    duration = candidate.variant.duration_minutes
+
+    bars = _multi_day_session_bars(definition, [DAY_1, DAY_2])
+    assert len(bars) == 2 * SESSION_MINUTES, "the fixture did not build two full sessions"
+
+    strategy, binding = _instance_for(result, candidate)
+    array = np.asarray(strategy._dispatch_enforced(binding, _dispatch_ctx(bars)))
+    assert array.shape == (len(bars),)
+
+    d1 = slice(0, SESSION_MINUTES)
+    d2 = slice(SESSION_MINUTES, 2 * SESSION_MINUTES)
+    day1 = array[d1]
+    day2 = array[d2]
+
+    # DAY 1 — the behaviour already proven by the single-session fixtures, restated
+    # here as the POSITIVE WITNESS that this frame reaches the adapter at all. Without
+    # it, an all-False array would satisfy the Day-2 claim below by doing nothing.
+    assert not day1[:duration].any(), "day 1: gated True before its own window locked"
+    assert day1[duration:].all(), (
+        "day 1: did not gate True after its own window locked — this frame never reached "
+        "a completed range, so the day-2 claim below would be vacuous"
+    )
+
+    # ── THE CLAIM ────────────────────────────────────────────────────────────
+    assert not day2[:duration].any(), (
+        "DAILY-RESET-1 — the taught opening range did NOT reset for the new trading day.\n"
+        f"  day 2 pre-lock bars (first {duration} of the session) : {day2[:duration].tolist()}\n"
+        "  the source teaches the range is recomputed EVERY trading day, and the compiler\n"
+        "  REFUSES to produce a definition without that rule — yet the runtime is answering\n"
+        "  True before day 2's window has formed, because the lock was taken from day 1.\n"
+        "  ⇒ `available after the first session, forever` is not what the teacher taught."
+    )
+    assert day2[duration:].all(), (
+        "day 2: the range did not become available after DAY 2's OWN lock — the reset "
+        "removed the carry-over but never recomputed the new session"
+    )
+
+
+def test_each_trading_day_computes_its_OWN_range_not_a_reused_one(monkeypatch):
+    """THE RANGE CONTROL (R-786 §7-2). Booleans alone are not enough.
+
+    A handler could call the adapter twice and still answer from one cached range;
+    the booleans would look perfect. So the two days are given VISIBLY DIFFERENT
+    price bands and the ADAPTER'S OWN INPUTS are recorded per call: the session
+    dates must differ, and the observations handed to each call must come from
+    that day's band.
+
+      `"THE ADAPTER WAS CALLED TWICE" AND "TWO INDEPENDENT DAILY RANGES WERE
+       COMPUTED" ARE DIFFERENT CLAIMS, AND ONLY THE SECOND IS THE TAUGHT RULE.`
+    """
+    result = _golden_result()
+    definition = result.opening_range_lowering.definition
+    candidate = _candidate_of(result, 15)
+
+    seen: list[tuple] = []
+    real = compute_opening_range_state
+
+    def spy(defn, variant, bars, **kw):
+        in_window = [b for b in bars if b.timestamp.date() == kw["session_date"]]
+        seen.append(
+            (
+                kw["session_date"],
+                variant.duration_minutes,
+                max((b.high for b in in_window), default=None),
+                min((b.low for b in in_window), default=None),
+            )
+        )
+        return real(defn, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    bars = _multi_day_session_bars(definition, [DAY_1, DAY_2])
+    strategy, binding = _instance_for(result, candidate)
+    strategy._dispatch_enforced(binding, _dispatch_ctx(bars))
+
+    dates = [s[0] for s in seen]
+    assert dates == [DAY_1, DAY_2], (
+        f"the adapter was not asked for each trading day exactly once, in order: {dates}"
+    )
+    highs = [s[2] for s in seen]
+    lows = [s[3] for s in seen]
+    assert len(set(highs)) == 2 and len(set(lows)) == 2, (
+        "both days were computed from the SAME observations, so one range is being reused "
+        f"under two calls.\n  highs: {highs}\n  lows : {lows}"
+    )
+    assert highs[1] > highs[0] and lows[1] > lows[0], (
+        "day 2's observations are not from day 2's price band — the per-day slice is not "
+        f"actually slicing.\n  highs: {highs}\n  lows: {lows}"
+    )
+
+
+def test_the_adapter_is_called_once_per_candidate_PER_SESSION(monkeypatch):
+    """THE INVARIANT, IN ITS CORRECTED FORM (R-786 §6).
+
+    `ONE ADAPTER CALL PER (candidate, session_date)`. The older wording — once per
+    taught candidate — was never wrong, it was UNDER-SPECIFIED: a single-session
+    fixture cannot distinguish `once` from `once per thing it never varied`.
+
+    Membership is asserted as `(session_date, duration)` PAIRS, never candidate
+    ordering alone, because ordering would pass for a handler that computed the
+    right number of calls on the wrong days.
+    """
+    result = _golden_result()
+    definition = result.opening_range_lowering.definition
+
+    seen: list[tuple] = []
+    real = compute_opening_range_state
+
+    def spy(defn, variant, bars, **kw):
+        seen.append((kw["session_date"], variant.duration_minutes))
+        return real(defn, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    bars = _multi_day_session_bars(definition, [DAY_1, DAY_2])
+    ctx = _dispatch_ctx(bars)
+    for duration in TAUGHT_DURATIONS:
+        strategy, binding = _instance_for(result, _candidate_of(result, duration))
+        strategy._dispatch_enforced(binding, ctx)
+
+    expected = {(d, m) for d in (DAY_1, DAY_2) for m in TAUGHT_DURATIONS}
+    assert set(seen) == expected, (
+        "the (session_date, duration) call membership is wrong.\n"
+        f"  expected : {sorted(expected)}\n  observed : {sorted(set(seen))}"
+    )
+    assert len(seen) == 6, (
+        f"expected exactly 6 calls (2 sessions x 3 taught windows), got {len(seen)}: {seen}"
+    )
+
+
+def test_a_day_with_an_incomplete_window_fails_closed_WITHOUT_poisoning_its_neighbours():
+    """THE THREE-DAY ADVERSARIAL CONTROL (R-786 §7-4). Three properties at once:
+
+      NO CARRY      — day 2 must not inherit day 1's completed range;
+      LOCAL FAIL-CLOSED — day 2 refuses on its OWN missing observation;
+      RECOVERY      — day 3 computes normally again, so the refusal is not sticky.
+
+    🛑 THE MIDDLE DAY IS THE POINT. A handler that carries state forward would answer
+    True on day 2 from day 1's range; a handler that fails GLOBALLY would answer False
+    on day 3 as well. Both are wrong, in opposite directions, and only a three-day
+    frame with the defect in the MIDDLE can tell them apart.
+
+      `A REFUSAL THAT SPREADS IS AS WRONG AS ONE THAT CARRIES — AND A TWO-DAY FIXTURE
+       CANNOT SEE EITHER.`
+    """
+    result = _golden_result()
+    definition = result.opening_range_lowering.definition
+    candidate = _candidate_of(result, 15)
+    duration = candidate.variant.duration_minutes
+
+    # Drop ONE observation from INSIDE day 2's opening window. Day 1 and day 3 are whole.
+    bars = _multi_day_session_bars(
+        definition, [DAY_1, DAY_2, DAY_3], skip_minute_on={DAY_2: duration // 2}
+    )
+    assert len(bars) == 3 * SESSION_MINUTES - 1, "the fixture did not drop exactly one bar"
+
+    zone = ZoneInfo(definition.source_timezone)
+    strategy, binding = _instance_for(result, candidate)
+    array = np.asarray(strategy._dispatch_enforced(binding, _dispatch_ctx(bars)))
+
+    by_day: dict[date, list[bool]] = {}
+    for bar, value in zip(bars, array.tolist(), strict=True):
+        by_day.setdefault(bar.timestamp.astimezone(zone).date(), []).append(value)
+
+    # DAY 1 — POSITIVE WITNESS. Without a real gate somewhere in this frame, the day-2
+    # assertion below would be satisfied by a handler that did nothing at all.
+    assert not any(by_day[DAY_1][:duration]), "day 1 gated True before its own lock"
+    assert all(by_day[DAY_1][duration:]), "day 1 never produced a completed range"
+
+    # DAY 2 — THE CLAIM. Incomplete observations ⇒ no usable range ⇒ False ALL DAY.
+    assert not any(by_day[DAY_2]), (
+        "day 2 was missing a required opening-window observation, so no range could be "
+        "computed for it — but the gate opened anyway.\n"
+        f"  day 2 : {by_day[DAY_2]}\n"
+        "  ⇒ either day 1's range carried forward, or an incomplete window was treated as "
+        "complete. Both invent a level the market never printed."
+    )
+
+    # DAY 3 — RECOVERY. The refusal was local, not sticky.
+    assert not any(by_day[DAY_3][:duration]), "day 3 gated True before its own lock"
+    assert all(by_day[DAY_3][duration:]), (
+        "day 3 has complete observations of its own, but never produced a range — day 2's "
+        "refusal spread forward, which is as wrong as carrying a range forward"
+    )
