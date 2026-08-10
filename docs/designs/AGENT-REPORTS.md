@@ -4,6 +4,81 @@
 
 ---
 
+## AR-904 · 2026-08-09 · ✅ **`STEP 4` ITEMS `1`+`2` AND THE `§3` COMMENT FIX DELIVERED (`012e3c80`, `d83eebff`) — THE SOURCE-IDENTITY HOLE IS CLOSED, RED-PROOFED IN ITS OWN COMMIT.** 🛑🛑 **ITEMS `3`–`5` ARE **BLOCKED BY A STRUCTURAL RULE OF THE ENGINE**, NOT BY DIFFICULTY: `FAMILY_META` + `PRIMITIVE_RESOLVERS` IS **NOT** THE ATOMIC UNIT — PIN `(a)` PROVES SET EQUALITY AGAINST `ENFORCED_DISPATCH` IN **BOTH DIRECTIONS**, SO A DECLARED PRIMITIVE WITH NO DISPATCH KEY IS A VIOLATION BY CONSTRUCTION.** ⭐⭐⭐ **I BUILT IT ANYWAY TO MEASURE IT, AND IT WORKS EXACTLY AS `§5` INTENDED — `RED 2` ADVANCED PAST STAGE 1 AND NAMED THE NEXT BOUNDARY — BUT IT BREAKS `4` PREVIOUSLY-GREEN TESTS, SO I REVERTED IT RATHER THAN LAND IT.** ⚖️ **ATTEMPT `1 / 2`. I AM NOT SPENDING THE SECOND ON THE SAME MECHANISM.**
+
+**TASK `R-778 §5` (`STEP 4`). SEAT `claude.exe 25636`. HEAD `d83eebff`. FAN-IN `3 / 7` items — and the remaining `4` are BLOCKED, not unstarted.**
+
+### §1 — ✅ WHAT IS DELIVERED AND COMMITTED
+```
+[MEASURED HERE]
+012e3c80  ITEM 1  the two source-id mutation arms, published RED BEFORE the join closed
+                  RED reason: "DID NOT RAISE <class 'ValueError'>"
+d83eebff  ITEM 2  the join closed in RecordCompileResult.__post_init__
+          §3      the false STAGE 3 comment corrected (assertion KEPT, per §3)
+          -> the arm went RED -> GREEN across exactly those two commits
+SUITE at d83eebff: 9 suites -> 3 failed · 135 passed
+   the 3 = the two ordered 6B conformance reds + RED 2. NO new failure. (+1 pass vs AR-902
+   is the join test itself.)
+```
+⭐ **Each arm ships a POSITIVE WITNESS I added unprompted: it asserts that mutating the id actually MOVES `cache_identity`.** **Without it the arm could "pass" against a field nothing derives from, and closing the join would be guarding a decoration.** ★★★★ **`A MUTATION ARM PROVES A GUARD ONLY IF THE MUTATION REACHES THE THING THE GUARD EXISTS TO PROTECT — ASSERT THE REACH, DO NOT ASSUME IT.`**
+⚖️ **`§4` scoping honoured exactly: I describe it as an INVARIANT HOLE, never a defect sighting.** `[MEASURED]` production passes the correct ids; the envelope simply did not forbid a wrong pair.
+
+### §2 — 🛑🛑 THE BLOCKER, MEASURED AT THE EXECUTABLE LINE — AND IT CONTRADICTS `§5`'s SCOPE
+**`R-778 §5-4` names the atomic pair as `FAMILY_META` + `PRIMITIVE_RESOLVERS`. `[MEASURED HERE]` THE ENGINE REQUIRES A THIRD MEMBER:**
+```
+family_meta_enforcement.py:454  def verify_dispatch_coverage(dispatch)
+   ":454-461  (a) SINGLE SOURCE. Set equality, BOTH directions, between what FAMILY_META
+              declares and what the executable layer routes."
+   ":475      for name in sorted(declared - dispatch_keys):
+                  Violation('a', family, 'declares ... but the executable layer routes no
+                  such key')"
+⇒ DECLARED-WITHOUT-DISPATCH IS A VIOLATION BY CONSTRUCTION. There is no flag, no waiver,
+  and no partial-credit state.
+```
+🛑 **AND `§5-7` FORBIDS ME FROM SUPPLYING THE THIRD MEMBER:** *"Do NOT chase the remaining stages green if that crosses into dispatch or execution work."* ⇒ ★★★★★ **`STEP 4 AS SCOPED CANNOT LAND. THE RULING'S OWN LAW — "A DECLARED-BUT-UNRESOLVED PRIMITIVE IS AN INVALID INTERMEDIATE PRODUCTION TRUTH, THERE IS NO MOMENT AT WHICH IT IS ALLOWED TO EXIST" — IS TRUE OF A WIDER SET THAN THE RULING ENUMERATED: "RESOLVABLE" IS NOT ENOUGH, THE ENGINE DEMANDS "ROUTED".`**
+⭐⭐⭐ **AND THE PRIOR-ART CHECK FOUND THIS ALREADY WRITTEN DOWN, BY A PREVIOUS SEAT, IN THE MODULE ITSELF** — `opening_range_adapter.py:40`, `[ARTIFACT-SOURCED — AR-829 §2]`: *"declaring the primitive obliges an `ENFORCED_DISPATCH` entry, because `verify_dispatch_coverage()` proves set equality in BOTH directions."* ⚖️ **Its STATED REASON is now stale — it said wiring "requires naming a duration the teacher did not name", and `R-774`/`STEP 3` discharged exactly that.** 🛑 **But the STRUCTURAL obligation it recorded is untouched, and that is the live one.** ★★★★★ **`WHEN PRIOR ART IS RETRACTED, CHECK WHICH HALF WAS RETRACTED. A DISCHARGED REASON DOES NOT DISCHARGE THE MECHANISM IT WAS ATTACHED TO.`**
+
+### §3 — ⭐ WHAT THE ATTEMPT MEASURED BEFORE I REVERTED IT (this is the useful part)
+**I made all four edits — `FAMILY_META`, `PRIMITIVE_RESOLVERS`, the TS mirror, and the parity fixture — and ran the suites. `[MEASURED HERE]`:**
+```
+✅ RED 2 ADVANCED PAST STAGE 1, EXACTLY AS §5-6 ASKED, AND NAMED THE NEXT BOUNDARY:
+     was: "STAGE 1: production declares NO primitive ... primitive: None, unsupported: True"
+     now: FamilyMetaEnforcementError at spec_condition_compiler.py:1117 —
+          "carries primitive 'opening_range_adapter.compute_opening_range_state', which the
+           executable layer does not route. No silent pass-through is available."
+     ⇒ THE NEXT MISSING BOUNDARY, NAMED: ENFORCED_DISPATCH routing in the executable layer.
+✅ parity + the new atomicity fixture: 12 passed
+🛑 BUT THE FULL 9-SUITE REGRESSION MOVED 3 failed/134 -> 5 failed/134:
+     GONE GREEN (2): test_no_production_binding_routes_to_the_opening_range_adapter_yet
+                     test_no_typed_opening_range_output_contract_exists_in_production
+                     ^ THE TWO ORDERED 6B REDS. The desk must know STEP 4 RETIRES them.
+     NEWLY RED (4): test_both_definitions_refuse_deliberately_and_neither_reaches_the_
+                    structure_evaluator          (pinned the pre-STEP-4 refusal: bindable=True now)
+                    test_existing_parameter_acceptance_guards_stay_green
+                    test_on_plus_valid_canonical_reaches_the_enforced_dispatcher
+                    test_on_plus_unknown_key_still_refuses_and_never_falls_back_to_the_off_ladder
+                    ^ the last three are ONE root cause: pin (a), flag-ON.
+```
+✅ **REVERTED. `[MEASURED]` `git diff --stat HEAD -- src/` is empty for all four files, and the 9 suites are back to `3 failed / 135 passed` with the three pre-ordered reds and nothing else.** **The work is not lost — the full diff is preserved and the four edits are small and named below.**
+🛑 **I DID NOT COMMIT A BROKEN TREE, and that was deliberate:** the desk re-runs these suites to accept, and a branch carrying `5` reds where `3` are expected would corrupt the next acceptance rather than inform it.
+
+### §4 — ⭐ ONE FINDING FROM THE ATTEMPT THAT SURVIVES THE REVERT, AND THE DESK SHOULD KEEP IT
+**`FamilyMeta.production_executed` exists and its contract is:** *"False when the declared primitive is real and resolvable but is NOT called on a production run."* ⇒ **that is precisely `STEP 4`'s state, and I set it `False`.** 🛑 **Leaving the default `True` would have declared that production executes the adapter while `RED 2` simultaneously proves it does not.** ★★★★★ **`A DECLARATION THAT OVERSTATES WHAT PRODUCTION DOES IS A FIDELITY LIE EVEN WHEN EVERY NAME IN IT RESOLVES` — the honest column is not optional politeness, it is the difference between a declaration and a claim.**
+⚠️ **AND A FIXTURE-MOVE THE DESK MUST RULE ON, WHICH I FLAG RATHER THAN QUIETLY MAKE:** `test_opening_range_family_parity.py` and `test_both_definitions_refuse_deliberately_...` **PIN THE REFUSING STATE** (`primitive is None`, `unsupported is True`, `bindable=False`). **They are correct today and become false the moment `STEP 4` lands.** ★★★ **`A FIXTURE THAT PINS A TEMPORARY STATE MUST NAME THE EVENT THAT RETIRES IT, OR IT BECOMES AN ARGUMENT AGAINST THE WORK IT WAS WRITTEN TO PROTECT.`** **In my reverted attempt I moved them and kept the durable invariant (no `structure_engine` fallback, asserted on BOTH surfaces) — but a guard moving in the same commit as the code it guards is exactly the shape that needs a ruling, not a worker's judgement.**
+
+### §5 — 🛑 WHAT I DID NOT DO, AND THE DECISION I AM NOT TAKING
+🛑 **I did NOT add an `ENFORCED_DISPATCH` entry.** **It requires a per-bar handler, and a handler must know WHICH taught window it is computing** — which is the candidate-aware execution carrier **`R-778 §6` explicitly sequences AFTER this step**. **Inventing a refusing stub handler to satisfy set-equality would be manufacturing a production code path to get past a gate**, and that is the class this campaign convicts.
+🛑 **I did NOT weaken pin `(a)`, and I did NOT touch the enforcement checker.**
+🛑 **I did NOT spend attempt `2`.** `[R-648]` a second attempt at the same mechanism is not authorizable; **the mechanism must change, and the change is the desk's to specify.**
+🛑 **NOT RUN:** `tsc` · the TS parity script · any backtest · the 104-member join. **Inventory left STALE by `R-778 §7`'s explicit order.**
+
+**RECOMMENDATION: BLOCKED — one narrow ruling unblocks it.** **THE QUESTION, precisely:** *does `STEP 4`'s atomic unit include an `ENFORCED_DISPATCH` entry (making it `FAMILY_META` + `PRIMITIVE_RESOLVERS` + `ENFORCED_DISPATCH`), and if so, what may the handler DO in this step given `§6` puts the candidate-aware carrier later?* ⚖️ **Two shapes I can see, and I recommend neither without a ruling: (A) land all three with a handler that refuses loudly until the carrier exists — honest, but it is production code written to satisfy a gate; (B) defer the whole declaration into the same step as the candidate-aware carrier, so declaration · resolver · dispatch · carrier land as ONE atomic truth — larger, but it is the only shape in which no intermediate state is invalid.** ⭐ **I lean `(B)`, because `§5-4`'s own law is an argument for it: if there is no moment at which a declared-but-unrouted primitive may exist, then the step boundary is in the wrong place, not the work.**
+**NEXT SMALLEST TASK, once ruled: whichever of `(A)`/`(B)` the desk names — as ONE commit, red-first.**
+
+**LESSON:** ★★★★★ **`WHEN PRIOR ART IS RETRACTED, CHECK WHICH HALF WAS RETRACTED — A DISCHARGED REASON DOES NOT DISCHARGE THE MECHANISM IT WAS ATTACHED TO.`** · ★★★★★ **`A DECLARATION THAT OVERSTATES WHAT PRODUCTION DOES IS A FIDELITY LIE EVEN WHEN EVERY NAME IN IT RESOLVES.`** · ★★★★ **`A MUTATION ARM PROVES A GUARD ONLY IF THE MUTATION REACHES WHAT THE GUARD PROTECTS.`** · ★★★★ **`IF NO INTERMEDIATE STATE IS VALID, THE STEP BOUNDARY IS IN THE WRONG PLACE — NOT THE WORK.`**
+
+---
+
 ## AR-903 · 2026-08-09 · 🟢 **START-RECEIPT — `R-778 §5` `STEP 4` ACCEPTED AND STARTED, ATTEMPT `0 / 2`, SEAT `claude.exe 25636`.** ✅ **BOTH `§3`/`§4` FINDINGS ACCEPTED WITHOUT ARGUMENT — THE FALSE COMMENT WAS MINE, AND IT IS THE WORSE OF THE TWO.**
 
 **HEAD at start `ce7ba98b`. First observable: the two source-id mutation arms published RED, before the join is closed. ETA ~20-30 min to that observable. ONE `AR` will cover all seven items.**
