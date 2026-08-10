@@ -4,6 +4,97 @@
 
 ---
 
+## AR-915 · 2026-08-09 · 🔵 **SEAT RECEIPT + START-RECEIPT — FRESH WORKER SEATED, EAR ARMED AND RED-PROOFED, TREE VERIFIED CLEAN AND REMOTE-IDENTICAL.** 🛑 **`STEP 2` IS NOT STARTED AND I AM NOT STARTING IT: `R-782 §6` AUTHORIZED IT TO `claude.exe 12460`, WHICH IS `[MEASURED]` **DEAD**. RE-AUTHORIZATION REQUESTED TO `claude.exe 29192`, ATTEMPT `0 / 2`.** ✅ **AND I CLOSE `AR-913 §4`'s OPEN JUDGMENT BY MEASUREMENT RATHER THAN HANDING IT BACK: THE RENAME IS FREE, AND I NAME BOTH JOIN KEYS.** ⚠️ **ONE CITATION DEFECT IN `R-782` LOCATED AND WORKED AROUND, NOT ESCALATED AS A QUESTION.**
+
+**SEAT `claude.exe 29192`. HEAD `f448c58d` = `origin/h1-wave4-sealed12-driver` `[MEASURED, re-fetched this seat]`. THIS AR CHANGES NO CODE.**
+
+### §1 — ✅ SEAT CENSUS BY OWNERSHIP, NOT BY THE TASK LIST
+```
+[MEASURED HERE, Win32_Process + parent walk from my own shell]
+MY CHAIN : 27908 powershell.exe -> 29192 claude.exe -> 12096 powershell.exe -> 9228 explorer.exe
+ALL claude.exe : 13528 (start 22:16:45)  <- THE DESK
+                 29192 (start 22:41:07)  <- ME, this seat
+12460 (the seat R-782 authorized)        -> DEAD, not in the process table
+```
+⚖️ **TWO SEATS, ONE EACH: desk `13528`, worker `29192`.** ⚠️ **`TaskList` happened to answer correctly this time and I am recording that as a COINCIDENCE, not a rehabilitation — it is documented-blind here 8×, and I did not rule from it.**
+
+### §2 — ✅ THE EAR: ARMED, RED-PROOFED **BEFORE** BEING POINTED AT THE REAL FILE, AND PROVEN TO **DELIVER**
+✅ **`Monitor persistent`, owner `claude.exe 29192`, on `docs/designs/ADVISOR-RULINGS.md`, 10s poll.**
+✅ **RED-PROOF ON A THROWAWAY FIRST, both witnesses delivered as chat notifications:** the `ARMED` line proved the channel; a planted `## R-999` fired `*** NEW RULING LANDED: ## R-999 ***`. **A detector that has never gone off is not an instrument; this one has.** The throwaway monitor then timed out as designed and is gone.
+✅ **BACKFILL — the blind window, read by hand:** `[MEASURED HERE]` the newest ruling on disk at arming time is **`R-782`**, and it is what I read in full. Newest AR on disk is **`AR-914`**.
+⚠️ **INSTRUMENT CAVEAT I AM DECLARING BEFORE ANYONE RELIES ON IT:** my ear's banner printed `newest_on_disk=R-999` and `baseline_rulings=764`. **Both are artefacts of my own regex, not of the file.** `[MEASURED]` `grep -n '## R-999'` hits **`ADVISOR-RULINGS.md:531`** — prose inside `R-779` *describing a previous seat's red-proof*; line-start ruling headers number **`761`**, not `764`. ⇒ **The DETECTION logic is unaffected** (set-difference over all tokens; a real `R-783` is a new token either way) **and its failure direction is a FALSE POSITIVE, never a miss.** 🛑 **But the banner's "newest" field is a claim I did not measure when I printed it, so I am not letting it stand beside the measured backfill above.** ★★★ **`A DETECTOR AND ITS STATUS LINE ARE TWO INSTRUMENTS, AND ONLY ONE OF THEM WAS RED-PROOFED.`**
+🛑 **ORPHANED RIGS FOUND AND DELIBERATELY LEFT ALONE:** `bash.exe 4192` (ear on the real ruling file, tagged `WORKER-12460`, parent `30640` **DEAD**) and `bash.exe 30400` (the dead seat's throwaway red-proof, parent `23212` **DEAD**). **I did not arm them and I did not kill them.** ⚠️ **AND THEY CORRECT `AR-913 §5`, WHICH SAID *"MY RULING EAR DIES WITH THIS SESSION"* — `[MEASURED]` **THE PROCESS OUTLIVED ITS OWNER.** It cannot deliver to anyone (its conversation is gone), so it is harmless, but **"dies with the session" is false as stated** and a future seat should expect to find these. **`AN ORPHANED EAR IS NOT A DEAD EAR — IT IS A LIVE PROCESS WITH NO RETURN PATH, AND ONLY THE SECOND HALF IS OBVIOUS.`**
+
+### §3 — ✅ TREE STATE, RE-TAKEN AT WRITE TIME (NOT CARRIED FROM THE HANDOFF)
+```
+[MEASURED HERE, worktree wt-h1-wave4-20260712, after an explicit git fetch]
+HEAD                          f448c58d96ad03f98fdeac6713da49401b576f0f
+git ls-remote origin <branch> f448c58d…            <- IDENTICAL
+rev-list --count @{u}..HEAD   0     HEAD..@{u}  0  <- neither ahead nor behind
+git status --porcelain -- src/ scripts/ tests/     <- EMPTY
+git cat-file -t 18501f4e      commit               <- the pre-activation red-proof base EXISTS
+python scripts/system_inventory.py --check         -> FRESH, exit 0
+```
+⚖️ **`AR-914`'s incident is consistent with what I see: `test_synthetic_market_simulator.py` is clean.** ⚠️ **I re-took this rather than inheriting `AR-913 §1` — that is the whole lesson of `AR-914`, and inheriting it would have repeated the exact error one report later.**
+
+### §4 — 🛑 WHY I HAVE NOT STARTED `STEP 2`: THE AUTHORIZATION NAMES A SEAT THAT NO LONGER EXISTS
+`R-782 §6` reads **"AUTHORIZED NOW: `STEP 2`, TO `claude.exe 12460`, ATTEMPT `0 / 2`"**. `[MEASURED, §1]` **`12460` is dead and I am `29192`.** ⇒ **`AN AUTHORIZATION NAMES A SEAT, NOT A CHAIR` (`R-779 §7`), and `[authorize-seat]` is standing campaign law.**
+⚡ **REQUEST — the only thing I need, and `AR-913 §5` predicted the round-trip so I am pre-paying it here:** **re-issue `R-782 §6 STEP 2` to `claude.exe 29192`, attempt `0 / 2` unspent.** **I am otherwise ready: task located, list located, order located, acceptance located, red-proof base verified present.**
+🛑 **I am NOT invoking the blocked-worker exception against the GPT wait, and I want that on the record.** `R-782 §0` names a fresh seat invoking it in its first ten minutes as **`R-765`'s convicted shape wearing a legitimate badge**. **I am a fresh seat and I am ten minutes old. The shoe fits, so I am not putting it on.**
+
+### §5 — ⚠️ CITATION DEFECT IN `R-782`, LOCATED AND WORKED AROUND — REPORTED, NOT ASKED
+`R-782` directs the build at **"`R-780 §5`'s list"** in **three places** (`:18` START-HERE, `:59` §3 heading, `:98` §6). `AR-913 §3` repeats it.
+```
+[MEASURED HERE, ADVISOR-RULINGS.md]
+:262  R-780 §5  = "PRIOR ART SEARCHED AND STATED"   <- NOT a list of surfaces
+:305  R-780 §6  = "STEP 2  THE ATOMIC ACTIVATION — ELEVEN SURFACES … ALL OR NONE:"
+:306-313  the eleven, verbatim
+```
+⇒ **The list is at `R-780 §6 STEP 2`, not `§5`.** ✅ **BENIGN AND NOT BLOCKING: there is exactly one eleven-surface list in `R-780`, so the referent is unambiguous.** ⇒ **I proceed under the located list and I am NOT presenting this as a question** — `[prior-art-check]`: **presenting a settled thing as a choice is how a settled thing gets un-settled.** ⚠️ **Flagged only so the record is correctable, and because `R-782 §3` diffs "`R-780 §5`'s eleven" item-by-item against the external read — that diff was real, the section number attached to it is not.**
+**THE ELEVEN I WILL BUILD, as located** — `1` typed candidate carrier · `2` real `_h_opening_range` · `3` classification `REFUSES_ALL_PARAMETERS` · `4` Python `FAMILY_META` declaration · `5` `gates=True` **(default — NOTHING TO ADD, do not set `False`)** · `6` `PRIMITIVE_RESOLVERS` · `7` `ENFORCED_DISPATCH[<declared primitive>] = _h_opening_range` **(both halves, `R-782 §4`)** · `8` TS declaration mirror · `9` the three temporary-refusal fixtures transitioned · `10` one shared candidate-aware construction helper · `11` the flag-OFF ladder branch → **the same** `_h_opening_range`.
+
+### §6 — ✅ `AR-913 §4` IS CLOSED BY MEASUREMENT: **THE RENAME IS FREE**, AND I NAME BOTH JOIN KEYS
+`AR-913` left this open — *"a rename is free until something joins on the name — check the join key before you improve a label"* — and marked it `[NOT MEASURED]`. **It is one read of the artifact's own membership rule, so I took it rather than handing it back.**
+```
+[MEASURED HERE, docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json
+ — note the path: it is NOT under docs/designs/, where I first looked and got a clean miss]
+population_manifest : src/engine/tests/canonical_regression_population.txt
+manifest_paths_are_relative_to : "<repo>/src (NOT the repo root)"
+                                    => THE 104-MEMBER JOIN IS ON **FILE PATH**
+how_to_use : "COMPARE MEMBERS, NEVER COUNTS … the post-change failure NODE-ID set
+              equals this list exactly"
+                                    => ACCEPT-5's JOIN IS ON **PYTEST NODE ID**,
+                                       but ONLY OVER THE 33-MEMBER *FAILURE* SET
+n_failed : 33      n_ordered_6b_reds : 2
+```
+**AND THE DISCRIMINATING QUESTION — ARE THE THREE TRANSITIONING FIXTURES IN THAT 33?**
+```
+[MEASURED HERE, with a positive control on the SAME query, SAME file]
+test_both_definitions_refuse_deliberately…                    -> 0 hits
+test_opening_range_definition_agrees_field_for_field          -> 0 hits
+test_the_refusing_family_declares_no_primitive_to_fall_back_to-> 0 hits
+any 'family_parity' member at all                             -> NONE
+POSITIVE CONTROL, must be present and is:
+  test_no_typed_opening_range_output_contract_exists_in_production -> 1 hit
+```
+⇒ ✅ **RESOLUTION: renaming those three test FUNCTIONS moves neither join.** The `104`-member manifest keys on **file path**, which a function rename does not touch; `ACCEPT-5` keys on **node ID** but only over failures, and none of the three is a failure at baseline. 🛑 **THE CONDITION, STATED RATHER THAN ASSUMED: this holds only while they stay GREEN.** A renamed fixture that goes RED enters the join as a **`NEW` member under a name the baseline has never seen** — and `NEW = 0` is the acceptance term. **That is a redness failure, not a naming one, but it would arrive wearing a naming failure's clothes.**
+⚖️ **I therefore treat the rename as IN SCOPE for member `9` and will land it with the transition** — leaving `test_the_refusing_family_declares_no_primitive_to_fall_back_to` on a family that now DOES declare a primitive is a false label in a guard, which is the defect `AR-913` correctly refused to leave silently.
+⚠️ **`[UNRESOLVED, NOT MINE, NOT BLOCKING]` the manifest reads `104` members with comments stripped (`127` raw lines — the raw count is the number that lies) while this immutable baseline records `population_members: 103`. `R-782 §6` says "the `104`-member join". The baseline is explicitly immutable and `R-782` forbids editing it.** **I am not reconciling `103` vs `104` and I am not touching either artifact — I am naming it so `ACCEPT-5` is not run against an unstated mismatch.**
+
+### §7 — ⚠️ `AR-914`'s RECOVERY IS STILL OPEN AND IT IS PERISHABLE
+`C:\Users\tonio\.cache\pre-commit\patch1786326181-24272` holds the discarded `test_synthetic_market_simulator.py` diff. **I have not touched it and I am not re-applying it** — same reasoning `AR-914` gave, and it is the operator's call. 🛑 **But it sits in a CACHE, and a `pre-commit` cache clean destroys it. This is the only copy.** ⇒ **`A RECOVERY THAT LIVES IN A CACHE IS A DEADLINE, NOT A BACKUP.`**
+
+### §8 — 🛑 WHAT I HAVE **NOT** MEASURED THIS SEAT
+- **Nothing in `STEP 2` itself.** No production file opened for edit, no fixture transitioned, no suite run by me. **`AR-912`'s `6 failed / 8 passed` is the previous seat's and the desk's measurement, not mine, and I am not re-quoting it as fresh.**
+- **The eleven surfaces' current code state** — I have read the ruling's description of them, not each file. That happens when the work is authorized.
+- **`tsc`, TS parity, `ACCEPT-3`, `ACCEPT-5`** — untouched.
+- **Whether the desk's ear (`bash.exe 32152` under `claude.exe 13528`) is healthy** — not mine, not inspected beyond its existence.
+- **PRIOR-ART SEARCH STATED (`worker-execution §0.-0.5`):** `system_inventory.py --check` → **FRESH**; searched `ADVISOR-RULINGS.md` / `AGENT-REPORTS.md` for `ELEVEN|SURFACES|eleven surfaces`, and `R-999`, `acceptance-baseline`, `family_parity` across the ledger and the artifact. **The rename question in `§6` was searched before it was measured and had no prior ruling — `AR-913 §4` explicitly delegated it.**
+
+**STATUS: BLOCKED ON ONE LINE — re-authorization of `R-782 §6 STEP 2` to `claude.exe 29192`. Everything else is ready. No attempt spent.**
+
+---
+
 ## AR-914 · 2026-08-09 · 🛑🛑 **CORRECTION AND INCIDENT: UNCOMMITTED WORK IN THIS SHARED TREE **WAS** LOST, AND I SAID IT WASN'T.** ⚠️ **`AR-910 §6` STATES `[MEASURED: no work lost]` — TRUE WHEN I MEASURED IT, FALSE NOW. `AR-913 §1` REPEATS THE STALE VERSION. BOTH ARE CORRECTED HERE.** ✅ **THE LOSS IS RECOVERABLE, AND I NAME THE EXACT FILE THAT HOLDS IT.**
 
 **SEAT `claude.exe 12460`. HEAD `d2be7f7e` = `origin` `[MEASURED, re-fetched]`. THIS CHANGES NO CODE.**
