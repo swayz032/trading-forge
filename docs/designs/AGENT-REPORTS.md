@@ -4,6 +4,47 @@
 
 ---
 
+## AR-914 · 2026-08-09 · 🛑🛑 **CORRECTION AND INCIDENT: UNCOMMITTED WORK IN THIS SHARED TREE **WAS** LOST, AND I SAID IT WASN'T.** ⚠️ **`AR-910 §6` STATES `[MEASURED: no work lost]` — TRUE WHEN I MEASURED IT, FALSE NOW. `AR-913 §1` REPEATS THE STALE VERSION. BOTH ARE CORRECTED HERE.** ✅ **THE LOSS IS RECOVERABLE, AND I NAME THE EXACT FILE THAT HOLDS IT.**
+
+**SEAT `claude.exe 12460`. HEAD `d2be7f7e` = `origin` `[MEASURED, re-fetched]`. THIS CHANGES NO CODE.**
+
+### §1 — 🛑 WHAT WAS LOST, MEASURED
+```
+[MEASURED HERE]
+src/engine/tests/test_synthetic_market_simulator.py
+  · was ` M ` (modified, uncommitted) throughout this session — measured at seating (AR-908 §4),
+    again after the STEP 0 commit, and quoted as intact in AR-910 §6
+  · is NOW CLEAN, identical to HEAD
+  · was NOT committed by anyone: git log -1 -- <that file> = 410b75cf, Tonio, 2026-05-19
+⇒ the working-tree modification was DISCARDED, not landed. It is gone from the tree.
+```
+🛑 **I DID NOT CREATE THAT CHANGE AND IT WAS NOT MINE TO LOSE.** Two previous seats (`AR-905 §5`, `AR-907 §5`) explicitly refused to touch it.
+
+### §2 — ✅ WHERE IT WENT, NARROWED BY THE STASH PATCHES THEMSELVES
+```
+[MEASURED HERE, pre-commit's own stash files, this session only]
+patch1786326181-24272   72,339 B   9 files   CONTAINS the simulator diff   <- AR-908's commit
+patch1786326438-20900        734 B   1 file    simulator ABSENT              <- AR-909's commit
+patch1786327333-30860        734 B   1 file    simulator ABSENT              <- STEP 0's commit
+patch1786327342-17316        734 B   1 file    simulator ABSENT              <- the blocked push
+```
+⇒ **IT WAS PRESENT IN THE FIRST STASH AND GONE BY THE SECOND.** ⇒ **THE WINDOW IS THE TWO DEADLOCKED PUSH CYCLES AND THE `git commit -o` REMEDY BETWEEN THEM** — i.e. **the period when the BROKEN gate was regenerating `SYSTEM-INVENTORY.md` unconditionally on every push while `pre-commit` stashed and restored around it.**
+🛑 **I DO NOT CLAIM THE PRECISE MECHANISM.** `[HYPOTHESIS — WINDOW MEASURED, MECHANISM NOT]` a stash/restore collision during those cycles is the obvious candidate and is the hazard `[precommit-stash]` and `R-781 §4` both name, **but I did not observe the discard and I will not narrate one.** ⚠️ **The `Stashed changes conflicted with hook auto-fixes... Rolling back fixes` message I reported in `AR-910 §6` came from a LATER push whose stash provably did NOT contain this file — so that message is NOT the event, and citing it would have been a plausible wrong answer.**
+
+### §3 — ✅ THE RECOVERY, NAMED PRECISELY
+```
+C:\Users\tonio\.cache\pre-commit\patch1786326181-24272     <- HOLDS THE DIFF
+inspect : grep -A40 'test_synthetic_market_simulator' <that file>
+```
+🛑 **I AM NOT RE-APPLYING IT.** It is another party's uncommitted work, it sits alongside 8 other files' diffs in the same patch, and re-applying selectively into a SHARED tree at a handoff boundary is a change nobody authorized. **The operator or the next seat decides.** ⚠️ **`pre-commit`'s cache is not durable storage — this patch will not survive a cache clean. Recover it or write it off deliberately, but do not assume it will still be there next week.**
+
+### §4 — ⚖️ THE CORRECTION AGAINST MYSELF, AND WHAT IT TEACHES
+🛑 **`AR-910 §6` said `[MEASURED: the pre-existing dirt is still present and unchanged]` — a TRUE measurement, taken BEFORE the event, presented in a report written AFTER it.** ★★★★★ **`A MEASUREMENT TAKEN BEFORE AN EVENT AND QUOTED AFTER IT IS A PREDICTION, NOT A MEASUREMENT — AND "NO WORK WAS LOST" IS EXACTLY THE CLAIM THAT MUST BE RE-TAKEN AT WRITE TIME.`** ⚖️ **This is `[red-path-decay]` / `A NUMBER CARRIED ACROSS A REPAIR IS STALE` applied to a SAFETY claim rather than a count, and the safety claim is the one that matters more.**
+⭐ **AND THE ONLY REASON IT SURFACED: `AR-913` re-ran `git status` one last time to prove `nothing is half-done` before declaring the handoff.** ★★★★ **`THE CHECK YOU RUN TO CONFIRM WHAT YOU ALREADY BELIEVE IS THE ONE THAT CATCHES YOU.` Run it anyway, and read it.**
+✅ **`AR-913`'s handoff stands otherwise unchanged and is not weakened by this:** `STEP 2` is still UNSTARTED, no production file was touched, and `d2be7f7e` is pushed and remote-verified. **Only the parenthetical "apart from the pre-existing dirt" is wrong — there is no such dirt now, and that is the incident, not a tidier tree.**
+
+---
+
 ## AR-913 · 2026-08-09 · 🔄 **HANDOFF — GENUINE CONTEXT EXHAUSTION, DECLARED BEFORE STARTING `STEP 2` RATHER THAN INSIDE IT.** ✅ **FAN-IN `2 / 3`: `STEP 0` DONE+ACCEPTED (`R-781`) · `STEP 1` DONE+ACCEPTED, VERDICT `RED` (`R-782`) · `STEP 2` **UNSTARTED**, NOT BLOCKED.** 🛑 **NOTHING IS HALF-DONE. NO PRODUCTION FILE HAS BEEN TOUCHED. THE TREE IS PUSHED AND REMOTE-VERIFIED.**
 
 **SEAT `claude.exe 12460`. HEAD `a3f84daf` = `origin/h1-wave4-sealed12-driver` `[MEASURED, re-fetched]`. ATTEMPT `0 / 2`, UNSPENT.**
