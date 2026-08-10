@@ -9,8 +9,10 @@ indicator("Slumdawg traders indicator", shorttitle = "SLUMDAWG", overlay = true,
 // - CURRENT MOVE stays independent as the persistent 15m BOS leg.
 // - TP ranking now carries full zone LOW/HIGH bounds through the cross-timeframe merge.
 // - TP2/TP3 must be entirely beyond the previous selected reaction zone, not merely
-//   a few points beyond the previous target price. Overlapping 5m/15m/1H/4H views
-//   of the same physical shelf therefore count as ONE destination.
+//   a few points beyond the previous target price. Overlapping/adjacent 5m/15m/1H/4H
+//   views of the same physical shelf therefore count as ONE destination.
+// - cross-timeframe shelf fusion reuses the calibrated cluster tolerance rather than
+//   inventing a second magic distance threshold.
 // - deeper retained candidates remain available so the old next distinct shelf can
 //   promote from TP3 -> TP2 and a genuinely deeper shelf can become TP3.
 // - the panel row is renamed ENTRY CONFIRMATION. Candle geometry can run silently,
@@ -407,6 +409,8 @@ f_tp_zone_ladder_local(int lookbackBars, int maxPerSide, int minTouches, float t
 float atr15ForTp = request.security(syminfo.tickerid, "15", ta.atr(14), lookahead = barmerge.lookahead_off)
 float mergedEntryGap = math.max(syminfo.mintick * 4.0, nz(atr15ForTp, syminfo.mintick * 20.0) * tpEntrySeparationAtr)
 float mergedZoneGap = math.max(syminfo.mintick * 4.0, nz(atr15ForTp, syminfo.mintick * 20.0) * tpZoneSeparationAtr)
+float mergedShelfFusionGap = math.max(syminfo.mintick * 4.0, nz(atr15ForTp, syminfo.mintick * 20.0) * tpClusterToleranceAtr)
+float distinctZoneGap = math.max(mergedZoneGap, mergedShelfFusionGap)
 
 f_add_zone_candidate(array<float> lows, array<float> highs, array<float> targets, float lo, float hi, float target) =>
     if not na(lo) and not na(hi) and not na(target) and hi > lo and target >= lo and target <= hi
@@ -420,13 +424,11 @@ f_next_long_zone(array<float> lows, array<float> highs, array<float> targets, fl
     float bestHi = na
     float bestDist = HUGE_DISTANCE
     int n = array.size(lows)
-    if n > 0
+    if n > 0 and not na(boundaryHi)
         for i = 0 to n - 1
             float lo = array.get(lows, i)
             float hi = array.get(highs, i)
             float target = array.get(targets, i)
-            // Full-zone separation is the invariant. Two targets from overlapping
-            // representations of one shelf cannot become two TP numbers.
             bool distinct = lo >= boundaryHi + gap
             if distinct
                 float dist = lo - boundaryHi
@@ -443,7 +445,7 @@ f_next_short_zone(array<float> lows, array<float> highs, array<float> targets, f
     float bestHi = na
     float bestDist = HUGE_DISTANCE
     int n = array.size(lows)
-    if n > 0
+    if n > 0 and not na(boundaryLo)
         for i = 0 to n - 1
             float lo = array.get(lows, i)
             float hi = array.get(highs, i)
@@ -491,12 +493,14 @@ f_add_zone_candidate(shortCandLo, shortCandHi, shortCandTarget, s240_1lo, s240_1
 f_add_zone_candidate(shortCandLo, shortCandHi, shortCandTarget, s240_2lo, s240_2hi, s240_2)
 f_add_zone_candidate(shortCandLo, shortCandHi, shortCandTarget, s240_3lo, s240_3hi, s240_3)
 
-[longTp1Raw, longTp1Lo, longTp1Hi] = longEntrySet ? f_next_long_zone(longCandLo, longCandHi, longCandTarget, longEntry, mergedEntryGap) : [na, na, na]
-[longTp2Raw, longTp2Lo, longTp2Hi] = not na(longTp1Hi) ? f_next_long_zone(longCandLo, longCandHi, longCandTarget, longTp1Hi, mergedZoneGap) : [na, na, na]
-[longTp3Raw, longTp3Lo, longTp3Hi] = not na(longTp2Hi) ? f_next_long_zone(longCandLo, longCandHi, longCandTarget, longTp2Hi, mergedZoneGap) : [na, na, na]
-[shortTp1Raw, shortTp1Lo, shortTp1Hi] = shortEntrySet ? f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortEntry, mergedEntryGap) : [na, na, na]
-[shortTp2Raw, shortTp2Lo, shortTp2Hi] = not na(shortTp1Lo) ? f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortTp1Lo, mergedZoneGap) : [na, na, na]
-[shortTp3Raw, shortTp3Lo, shortTp3Hi] = not na(shortTp2Lo) ? f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortTp2Lo, mergedZoneGap) : [na, na, na]
+// Calls are unconditional. If a boundary is na, the selector safely returns an na tuple.
+// Ternary expressions are intentionally not used to return tuples.
+[longTp1Raw, longTp1Lo, longTp1Hi] = f_next_long_zone(longCandLo, longCandHi, longCandTarget, longEntry, mergedEntryGap)
+[longTp2Raw, longTp2Lo, longTp2Hi] = f_next_long_zone(longCandLo, longCandHi, longCandTarget, longTp1Hi, distinctZoneGap)
+[longTp3Raw, longTp3Lo, longTp3Hi] = f_next_long_zone(longCandLo, longCandHi, longCandTarget, longTp2Hi, distinctZoneGap)
+[shortTp1Raw, shortTp1Lo, shortTp1Hi] = f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortEntry, mergedEntryGap)
+[shortTp2Raw, shortTp2Lo, shortTp2Hi] = f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortTp1Lo, distinctZoneGap)
+[shortTp3Raw, shortTp3Lo, shortTp3Hi] = f_next_short_zone(shortCandLo, shortCandHi, shortCandTarget, shortTp2Lo, distinctZoneGap)
 
 float longTp1Price = f_round_down_tick(longTp1Raw)
 float longTp2Price = f_round_down_tick(longTp2Raw)
