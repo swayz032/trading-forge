@@ -26,8 +26,8 @@ class V0141LevelLabelSpacingSourceTests(unittest.TestCase):
         self.assertIn('label.set_size(lid, size.normal)', self.text)
         self.assertNotIn('name + "  " + str.tostring(price', self.text)
 
-    def test_level_chips_move_into_future_chart_space(self):
-        self.assertIn('const int LEVEL_LABEL_OFFSET_BARS = 8', self.text)
+    def test_level_chips_move_farther_into_future_chart_space(self):
+        self.assertIn('const int LEVEL_LABEL_OFFSET_BARS = 16', self.text)
         self.assertIn('int chartBarMs = not na(time_close) and time_close > time ? time_close - time : FALLBACK_BAR_MS', self.text)
         self.assertIn('int levelLabelX = (not na(time_close) ? time_close : time) + chartBarMs * LEVEL_LABEL_OFFSET_BARS', self.text)
         self.assertIn('label.set_xy(lid, labelX, price)', self.text)
