@@ -4,6 +4,92 @@
 
 ---
 
+## AR-902 · 2026-08-09 · ✅✅ **`STEP 2.1` + `STEP 3` DELIVERED IN ONE MOTION (`0591047e` → `4aa45a8e` → `960b2d26`).** ⭐⭐⭐ **`RED 1` IS **GREEN**: THE GOLDEN RECORD NOW COMPILES TO EXACTLY THE THREE TAUGHT CANDIDATES `5/15/30` IN TAUGHT ORDER, AND `RED 2` IS STILL RED AS ORDERED.** ✅ **THE FIREBREAK WAS PUBLISHED **RED IN ITS OWN COMMIT BEFORE ANY SHAPE CHANGE** AND WENT GREEN ON THE NEXT — RED-PROOFED AT BIRTH.** ⭐ **THREE ENVELOPE INVARIANTS **BIT** UNDER MUTATION AND THE UNMUTATED CONTROL DID NOT.** 🛑 **AND I REPORT A GUARD THAT IS *NOT* RED-PROOVABLE ON THIS FIXTURE RATHER THAN LETTING IT LOOK PROVEN.**
+
+**TASK `R-777 §4`+`§5`. SEAT `claude.exe 25636`. ATTEMPT `0 / 2` — UNSPENT. HEAD `960b2d26`. FAN-IN `2 / 2`.**
+
+### §1 — ✅ THE ORDER OF THE COMMITS IS THE EVIDENCE, AND IT IS DELIBERATE
+```
+[MEASURED HERE]
+0591047e  FIREBREAK ONLY, production UNTOUCHED   -> 3 failed, 4 passed
+          firebreak reddens at its OWN named stage: "RED - STAGE 1 [READY arm,
+          st5e-YJRfKc__s0] ... returned type : dict"
+4aa45a8e  STEP 2.1 shape change                  -> 2 failed, 5 passed   (firebreak GREEN)
+          RED 1 still red and STILL NAMING STAGE 2 -- verified, not assumed
+960b2d26  STEP 3 fan-out                         -> 1 failed, 6 passed   (RED 1 GREEN)
+```
+⭐ **The firebreak is red-proofed by CONSTRUCTION rather than by assertion: it exists as a commit in which it FAILS, on a tree where the repair does not exist yet.** ★★★★★ **`A GUARD THAT WAS NEVER COMMITTED IN ITS FAILING STATE IS A GUARD WHOSE RED YOU ARE TAKING ON TRUST. THE CHEAPEST PROOF IS AN EXTRA COMMIT.`**
+
+### §2 — ⚙️ `STEP 2.1`: WHAT I BUILT, AND THE ONE FUNCTION I DELETED ON PURPOSE
+```
+RecordCompileResult(artifact=<plain JSON SpecArtifact>,
+                    opening_range_lowering=<typed>,
+                    opening_range_candidates=<typed tuple>)     # §3
+```
+✅ **`R-777 §4`'s split is now structural: PORTABLE CONTRACT = the artifact; IN-PROCESS STATE = everything typed, beside it.** 🛑 **I did NOT `asdict()` anything into the artifact** — the shape `§4` forbids because the TS parser would drop it silently.
+⭐ **The invariant is enforced in `__post_init__`, not documented:** an envelope whose artifact still carries the lowering key **cannot be constructed.** ★★★★★ **`AN INCONSISTENT PAIR YOU CANNOT CONSTRUCT NEEDS NO VALIDATION`** — the same principle `R-777 §1` accepted for `STEP 2`, applied one level up.
+🛑 **AND I REMOVED `opening_range_lowering_of()`, which is a repair rather than tidying, and I want the desk to check my reasoning:** it read the lowering back OUT of the artifact, and `None` was already its way of saying *"this artifact predates the boundary."* **Once the lowering moved to the envelope, its ONLY possible answer became `None` — for every artifact, forever.** ★★★★★ **`A FUNCTION WHOSE ONLY REMAINING ANSWER IS ITS "NOT FOUND" ANSWER IS NOT DEAD CODE — IT IS A DETECTOR THAT HAS QUIETLY BECOME A LIAR.`** `[MEASURED, prior-art check]` **it had zero callers outside the S6 guard.**
+
+### §3 — ✅ `STEP 3`: THE FAN-OUT, AND THE THREE STOPS I DID NOT TRIP
+```
+[MEASURED HERE, through the real boundary]
+GOLDEN    st5e-YJRfKc__s0 -> durations (5, 15, 30) in taught order
+                          -> candidate_id distinct 3/3 · cache_identity distinct 3/3
+NEIGHBOUR hcHuDfxdywI__s0 -> definition None -> candidates ()   (refusal survives the fan-out)
+```
+✅ **ONE IDENTITY SYSTEM (`§5` STOP):** the candidates carry the EXISTING `candidate_id` / `cache_identity`. **I invented nothing** — `[MEASURED]` `expand_execution_candidates` is called with no `default_variant` because it has no such parameter, so *"none primary, none default"* is a property of the function I reused, not a promise I am making.
+✅ **ONE LOWERER still holds:** `[MEASURED HERE]` `lower_opening_range_definition` appears on 4 lines of `spec_producer.py` — 1 import, **2 comments**, and **exactly ONE executable call (`:983`)**. ⚠️ **I counted by OPENING THE LINES, not with `grep -c`, precisely because `R-777 §1` records that a `grep -c` on this same symbol told the DESK `3`.**
+🛑 **`§5` NOT-IN-STEP-3 LIST — none touched:** no `FAMILY_META`, no `PRIMITIVE_RESOLVERS`, no `ENFORCED_DISPATCH`, no TS mirror, no adapter execution, no onboarding, no backtest, nothing in `ConditionBinding.parameters`, nothing in the serialized artifact.
+
+### §4 — ⭐ THE MUTATION ARMS: THREE BIT, AND THE CONTROL CORRECTLY DID NOT
+```
+[MEASURED HERE — the unmutated control is in the same run, [red-path-decay]]
+CONTROL  unmutated envelope                      -> constructs cleanly   (does NOT bite)
+ARM B    candidates attached to a REFUSED lowering -> BIT
+ARM C    candidates whose definition is not this envelope's -> BIT   (the SWAP control)
+ARM D    lowering smuggled back into the artifact  -> BIT
+```
+⭐ **`ARM C` is the one I added without being asked, and the campaign's own record is why:** ★★★★★ **`A CORRECTLY SHAPED SIDECAR ATTACHED TO THE WRONG STRATEGY IS PLAUSIBLE, AND PLAUSIBLE IS THIS CAMPAIGN'S FAILURE MODE.`** **A candidate joined to the wrong record passes every shape check downstream; now it cannot be constructed.**
+✅ **`ARM E` matters as much as the three that bit:** a guard that raises on everything is not a guard. ★★★ **`A CONTROL THAT CANNOT PASS IS AS USELESS AS ONE THAT CANNOT FAIL.`**
+
+### §5 — 🛑 THE GUARD I COULD **NOT** RED-PROOF, REPORTED RATHER THAN QUIETLY BANKED
+**I added `STAGE 3` to `RED 1` (candidate_id AND cache_identity must be distinct) and then tried to make it fail. IT DID NOT FAIL — `STAGE 2` caught my mutation first.**
+```
+[MEASURED HERE] MUTATION ARM A: production fan-out returns candidates[0] three times
+   observed: "RED - STAGE 2 ... found : (5,)"        <- STAGE 2, never reaching STAGE 3
+   REVERTED; tree byte-identical to 960b2d26 (git diff --stat vs HEAD == empty)
+```
+🛑 **TWO HONEST CONSEQUENCES:**
+**(a)** under today's identity scheme `candidate_id` embeds `label@duration`, so **any mutation that collides identity also collides the duration tuple** ⇒ **`STAGE 3` is SUBSUMED by `STAGE 2` on the golden fixture and is defence-in-depth, not an independently proven guard.** **It would only bite on a record teaching two variants that SHARE a duration — a case `opening_range_candidate.py` explicitly says is legal, and which the golden record does not contain.** ⇒ **I claim it as UNPROVEN-ON-THIS-FIXTURE.**
+**(b)** ⭐ **the mutation also convicted my reading of the INSTRUMENT: `_find_candidates` de-duplicates by `id(obj)`, so three references to ONE candidate are observed as `(5,)`, not `(5,5,5)`.** **That is a real property of the walker that neither I nor the guard's text knew.** ★★★★ **`THE MUTATION THAT FAILS TO REDDEN YOUR NEW GUARD IS STILL WORTH ITS COST — IT TOLD ME WHAT MY INSTRUMENT ACTUALLY MEASURES.`**
+
+### §6 — ✅ REGRESSION, AND THE ARITHMETIC JOINS EXACTLY
+```
+[MEASURED HERE] 9 suites, each file ls'd and ASSERTED NON-EMPTY first
+   ([ps-counting-encoding]: a typo'd path in a mixed list is dropped at exit 0)
+   -> 3 failed, 134 passed in 35.45s      (pytest exit captured DIRECTLY, not through a pipe)
+THE 3, ALL PRE-ORDERED REDS, NONE NEW:
+   test_no_production_binding_routes_to_the_opening_range_adapter_yet     (6B red)
+   test_no_typed_opening_range_output_contract_exists_in_production       (6B red)
+   test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate (RED 2)
+THE JOIN TO AR-900, which ran the 8 suites WITHOUT the S6 file:
+   AR-900   8 suites          128 passed · 2 failed
+   + S6                       +6 passed · +1 failed
+   = MINE   9 suites          134 passed · 3 failed        ✅ EXACT, no pass lost, no new red
+```
+✅ **THE FROZEN POPULATION PIN DID NOT MOVE:** `[MEASURED]` the manifest is **byte-identical to HEAD** and its pin test is in the green set. **I put the firebreak in the EXISTING member file precisely so `104` would not move** — `R-777` authorized a firebreak, not a manifest change.
+🛑 **AND MY OWN COUNT LIED TO ME FIRST:** counting non-blank manifest lines gave **`127`**. **The file's own membership rule (`test_flag_off_parameterized_refusal.py:592`) strips comments — 23 of them — giving `104`.** ★★★★★ **`A TOKEN MATCHING YOUR REGEX IS NOT A MEMBER OF YOUR POPULATION. READ THE INSTRUMENT'S MEMBERSHIP RULE BEFORE QUOTING ITS COUNT.`** (`[i-measured]`, caught on myself, before it reached a claim.)
+
+### §7 — ⚠️ WHAT I DID NOT MEASURE, AND ONE STANDING DEBT
+🛑 **NOT RUN:** `tsc` · the TS mirror · any backtest · the full 104-member join · the pathless suite. **NOT DONE by scope:** registration, resolver, dispatch — `RED 2` is red BY ORDER, not by accident.
+⚠️ **`system_inventory --check` STILL EXITS `1`** `[MEASURED HERE, exit captured directly — the piped form reported `0`, which was `head`'s]`. **My three commits are now among the causes.** **I again did not regenerate it: `[MEASURED]` the other seat committed `0ca9fcb9` DURING this lane, so the tree is demonstrably shared right now, and no claim in this AR rests on the map** (`[precommit-stash]`). 🛑 **It remains a NAMED DEBT: the map does not contain `RecordCompileResult` or `produce_spec_artifact_from_record`, so `MP-1` must regenerate before reading it.**
+⚠️ **`STEP2-LIM-1` is CLOSED** by `§2` — the artifact serialises on both arms, asserted permanently by the firebreak with a negative control that bites.
+**RECOMMENDATION: APPROVAL_REQUESTED.** **NEXT SMALLEST TASK: `STEP 4` — the identity/declaration step `R-777 §5` names next, i.e. what production must DECLARE for `OPENING_RANGE_DEFINITION` so `RED 2`'s STAGE 1 (`primitive: None · unsupported: True`) can move.** ⚠️ **One item for the desk in the same motion: `§5`'s `STAGE 3` — keep it as unproven defence-in-depth, or drop it as subsumed? I did not decide that myself.**
+
+**LESSON:** ★★★★★ **`A GUARD THAT WAS NEVER COMMITTED IN ITS FAILING STATE IS A GUARD WHOSE RED YOU TAKE ON TRUST.`** · ★★★★★ **`A FUNCTION WHOSE ONLY REMAINING ANSWER IS ITS "NOT FOUND" ANSWER IS A DETECTOR THAT HAS BECOME A LIAR.`** · ★★★★★ **`READ THE INSTRUMENT'S MEMBERSHIP RULE BEFORE QUOTING ITS COUNT.`** · ★★★★ **`THE MUTATION THAT FAILS TO REDDEN YOUR NEW GUARD STILL TELLS YOU WHAT YOUR INSTRUMENT MEASURES.`**
+
+---
+
 ## AR-901 · 2026-08-09 · 📍 **EAR RECEIPT — AND THE HEADLINE IS A CORRECTION ABOUT MYSELF: THIS IS NOT A NEW SEAT. `claude.exe 25636` IS THE **SAME PROCESS** THAT WROTE `AR-894`…`AR-900`; ONLY THE CONTEXT WAS CLEARED.** 🛑 **THE EAR I INHERITED WAS RECORDING, NOT INTERRUPTING — IT CORRECTLY LOGGED ALL FOUR OF `R-773`…`R-776` TO A FILE AND COULD NOTIFY ONLY BY DYING.** ✅ **REPLACED WITH A `Monitor persistent` RIG, RED-PROOFED ON A THROWAWAY BEFORE IT WAS POINTED AT THE LEDGER.** 🛑 **NO LANE IS OPEN AND I DO NOT OPEN ONE — `R-776 §4` IS DISCHARGED BY `AR-900` AND NOTHING HAS RULED ON IT.** ⚠️ **`system_inventory --check` EXITS `1` (STALE) AT `90be759b`.**
 
 **NO TASK — SEAT/EAR RECEIPT ONLY. SEAT `claude.exe 25636`. TREE `wt-h1-wave4-20260712`. HEAD `90be759b`, nothing unpushed (`git log @{u}..HEAD` empty). NOT ONE PRODUCTION BYTE WRITTEN.**
