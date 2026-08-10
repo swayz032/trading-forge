@@ -41,6 +41,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.engine.opening_range_definition import (
@@ -841,7 +842,60 @@ def dispose_inventory(strategy_extraction: dict, instrument_classification: Opti
 # second interpretation of the taught prose here — not a regex, not a fallback, not a
 # hand-built `OpeningRangeDefinition`. [MEASURED, R-776 prior-art check] this is the FIRST
 # production caller of that function; it does not compete with an existing one.
+# ── STEP 2.1 — THE SERIALIZATION FIREBREAK (R-777 §4) ─────────────────────────
+#
+# STEP 2 attached the typed lowering to the artifact under this key. R-777 §3
+# confirmed BY EXECUTION that this made the artifact unserialisable on BOTH arms,
+# including the refusal path, and promoted it to a firebreak before STEP 3.
+#
+# THE DISTINCTION, and it is the whole design:
+#   PORTABLE CONTRACT = SpecArtifact  -- plain JSON, crosses into TypeScript, durable
+#   IN-PROCESS STATE  = lowering, candidates, binding plan -- typed, Python-only
+#
+# 🛑 THE KEY IS NOW A FORBIDDEN NAME, NOT A STORAGE LOCATION. It survives only so
+# the envelope can REFUSE it. `dataclasses.asdict()`-ing the lowering under this
+# key is the specific repair R-777 §4-2 forbids: the TS `parseSpecArtifact()`
+# rebuilds only recognised fields, so Python would believe it sent the lowering
+# while TypeScript dropped it without a word.
+#
+#   `A HANDOFF WHERE THE SENDER BELIEVES IT SENT AND THE RECEIVER SILENTLY DROPS
+#    IS WORSE THAN ONE THAT FAILS LOUDLY.`
 SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY: str = "opening_range_lowering"
+
+
+@dataclass(frozen=True)
+class RecordCompileResult:
+    """What the full-record compile boundary returns: a portable artifact PLUS the
+    typed in-process state derived alongside it.
+
+    `artifact` is the SpecArtifact exactly as the existing onboarding back-half
+    expects it — plain JSON, no Python objects, unchanged in shape from what
+    `produce_spec_artifact()` produces.
+
+    `opening_range_lowering` is the authoritative lowering. It lives HERE, beside
+    the artifact rather than inside it, so that moving it out of the portable
+    contract does not mean losing it.
+
+    🛑 THE INVARIANT IS ENFORCED IN `__post_init__`, NOT DOCUMENTED IN A DOCSTRING.
+    An envelope carrying an artifact that still holds the typed lowering is
+    UNCONSTRUCTABLE — the same principle STEP 2 used for the strategy/record pair,
+    and the one R-777 §1 accepted:
+
+        `AN INCONSISTENT PAIR YOU CANNOT CONSTRUCT NEEDS NO VALIDATION.`
+    """
+
+    artifact: Dict[str, Any]
+    opening_range_lowering: OpeningRangeLoweringResult
+
+    def __post_init__(self) -> None:
+        if SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY in self.artifact:
+            raise ValueError(
+                f"the SpecArtifact carries {SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY!r}; "
+                "the typed lowering belongs on this envelope, never inside the portable "
+                "contract. Serialising it under an artifact key would be silently "
+                "discarded by the TypeScript parser (R-777 §4)"
+            )
+
 
 _LOWERING_POSITIVE_CONTROL: str = (
     "the same locators run over every certified record at this boundary, and the corpus "
@@ -857,12 +911,16 @@ def produce_spec_artifact_from_record(
     certificate: Optional[dict] = None,
     transcript_chars: int = 0,
     strategy_index: int = 0,
-) -> dict:
+) -> "RecordCompileResult":
     """The public production compile boundary that receives the FULL certified record.
 
-    Produces the spec artifact for one strategy and attaches the authoritative
-    opening-range lowering, which needs record-level evidence the per-strategy
-    boundary cannot see.
+    Produces the spec artifact for one strategy and returns it BESIDE the
+    authoritative opening-range lowering, which needs record-level evidence the
+    per-strategy boundary cannot see.
+
+    Returns a `RecordCompileResult`, not the artifact: the artifact stays plain
+    JSON (the portable contract) and the typed lowering rides alongside it as
+    in-process state (R-777 §4).
 
     The lowering is attempted for EVERY record, not only for records that carry an
     `OPENING_RANGE_DEFINITION` condition. That is deliberate: `SOURCE_INCOMPLETE`
@@ -895,13 +953,14 @@ def produce_spec_artifact_from_record(
         transcript_chars=transcript_chars,
     )
 
-    artifact[SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY] = lower_opening_range_definition(
+    lowering = lower_opening_range_definition(
         source_spec_id=video,
         source_condition_id=_opening_range_condition_id(artifact),
         record=record,
         positive_control=_LOWERING_POSITIVE_CONTROL,
     )
-    return artifact
+
+    return RecordCompileResult(artifact=artifact, opening_range_lowering=lowering)
 
 
 def _opening_range_condition_id(artifact: dict) -> str:
@@ -917,12 +976,18 @@ def _opening_range_condition_id(artifact: dict) -> str:
     return ""
 
 
-def opening_range_lowering_of(artifact: dict) -> Optional[OpeningRangeLoweringResult]:
-    """Read the attached lowering, or `None` if the artifact came from the
-    per-strategy boundary that cannot produce one.
-
-    Downstream code asks through this accessor rather than indexing the key, so
-    "this artifact predates the full-record boundary" stays distinguishable from
-    "the lowering refused".
-    """
-    return artifact.get(SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY)
+# 🛑 `opening_range_lowering_of(artifact)` WAS REMOVED HERE BY STEP 2.1, AND ITS
+# REMOVAL IS PART OF THE REPAIR RATHER THAN TIDYING.
+#
+# It read the lowering back OUT of the artifact. Once the lowering moved onto the
+# envelope, that accessor could only ever return `None` — and `None` was already
+# its way of saying "this artifact predates the boundary". It would have answered
+# "no lowering here" for every artifact ever produced, forever, and been right
+# about the storage location while being catastrophically misleading about the
+# fact. `[MEASURED, R-777 prior-art check]` it had no caller outside the S6 guard.
+#
+#   `A FUNCTION WHOSE ONLY REMAINING ANSWER IS ITS "NOT FOUND" ANSWER IS NOT DEAD
+#    CODE — IT IS A DETECTOR THAT HAS QUIETLY BECOME A LIAR.`
+#
+# The lowering is now reached as `RecordCompileResult.opening_range_lowering`,
+# which cannot be absent: it is a required field of the envelope.

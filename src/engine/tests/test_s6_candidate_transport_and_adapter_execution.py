@@ -34,12 +34,13 @@ that the observation path runs at all. So:
 
 🛑 MECHANISM-AGNOSTIC ON PURPOSE
 --------------------------------
-RED 1 searches the compiled plan for `OpeningRangeExecutionCandidate` INSTANCES
-BY TYPE, not by a field name. R-774 §4-1 forbids smuggling the variant through
-`ConditionBinding.parameters`, and this lane has not yet chosen a carrier — so
-this guard must not prescribe one. Whatever carrier the wiring picks, a typed
-candidate is findable; a string in a parameters dict is not, and that asymmetry
-is deliberate (it is also control `K`).
+RED 1 searches for `OpeningRangeExecutionCandidate` INSTANCES BY TYPE, not by a
+field name. R-774 §4-1 forbids smuggling the variant through
+`ConditionBinding.parameters`. R-777 §5 has since named the carrier — the typed
+compiler-result envelope — so the search now covers the envelope AND the compiled
+plan, but it still refuses to name an attribute. Whatever carrier the wiring
+picks, a typed candidate is findable; a string in a parameters dict is not, and
+that asymmetry is deliberate (it is also control `K`).
 """
 
 from __future__ import annotations
@@ -54,7 +55,6 @@ from zoneinfo import ZoneInfo
 
 from src.engine.extraction.spec_producer import (
     SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY,
-    opening_range_lowering_of,
     produce_spec_artifact,
     produce_spec_artifact_from_record,
 )
@@ -379,8 +379,8 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
         f"  parameters : {sorted(params)}"
     )
 
-    artifact = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
-    lowering = opening_range_lowering_of(artifact)
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    lowering = result.opening_range_lowering
     assert lowering is not None and lowering.definition is not None, (
         "RED — STAGE 1: the full-record boundary exists but does not carry an authoritative "
         "opening-range lowering for the golden record.\n"
@@ -394,10 +394,13 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
         f"{tuple(v.duration_minutes for v in lowering.definition.variants)}"
     )
 
-    # ── STAGE 2 — candidate transport. STILL RED until STEP 3; R-776 §5 pre-registered
-    # that reaching this stage IS the STEP 2 success signal.
-    plan = compile_binding_plan(artifact["spec"])
-    candidates = _find_candidates(plan)
+    # ── STAGE 2 — candidate transport.
+    # R-777 §5 named the carrier: the typed compiler-result envelope. So the search
+    # covers BOTH the envelope and the compiled plan — still BY TYPE, still refusing
+    # to prescribe an attribute. A carrier this guard did not anticipate is still
+    # found; a variant smuggled as a string in `ConditionBinding.parameters` is not.
+    plan = compile_binding_plan(result.artifact["spec"])
+    candidates = _find_candidates((result, plan))
     durations = tuple(c.variant.duration_minutes for c in candidates)
     assert durations == TAUGHT_DURATIONS, (
         "RED — STAGE 2 (expected until B1 STEP 6 / STEP 3): the full-record boundary now "
@@ -488,8 +491,8 @@ def test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter
 
     # R-776 §4 REQUIRED BEHAVIOUR, the refusal arm — measured THROUGH the full-record
     # boundary, so it guards the boundary rather than the lowerer in isolation.
-    artifact = produce_spec_artifact_from_record(_record(NEIGHBOUR_STUB), video=NEIGHBOUR_STUB)
-    lowering = opening_range_lowering_of(artifact)
+    result = produce_spec_artifact_from_record(_record(NEIGHBOUR_STUB), video=NEIGHBOUR_STUB)
+    lowering = result.opening_range_lowering
     assert lowering is not None and lowering.definition is None, (
         "the full-record boundary produced a definition for the SOURCE_INCOMPLETE neighbour; "
         f"a refusal was turned into a READY.\n  lowering : {lowering}"
@@ -499,8 +502,8 @@ def test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter
         "indistinguishable from a crash"
     )
 
-    plan = compile_binding_plan(artifact["spec"])
-    assert _find_candidates(plan) == [], (
+    plan = compile_binding_plan(result.artifact["spec"])
+    assert _find_candidates((result, plan)) == [], (
         "a SOURCE_INCOMPLETE record produced execution candidates — the refusal is not "
         "being preserved through the compile"
     )
