@@ -73,37 +73,90 @@ def test_opening_range_definition_is_declared_on_both_sides():
 
 
 def test_opening_range_definition_agrees_field_for_field():
-    """The two declarations must say the same thing, not merely both exist."""
+    """DURABLE INVARIANT 1 (R-779 §7-b): Python and TypeScript agree the family is
+    SUPPORTED and name the SAME primitive.
+
+    TRANSITIONED (R-779 §7-b, authorized R-783 §6). Until the activation this test
+    pinned the OPPOSITE claim — `primitive is None`, `unsupported is True`,
+    `unboundReason: "opening_range_adapter_not_implemented"` — i.e. the deliberately
+    temporary refusal state B1 STEP 3 shipped. That state is now retired, so the
+    fixture moves with it.
+
+    🛑 IT MAY NOT LOSE PROTECTION, which is the whole condition R-779 §7-b attached
+    to letting it move. The old version proved the two surfaces agreed on a REFUSAL;
+    this one proves they agree on an ACTIVATION, and it is strictly harder to satisfy
+    — a refusal can be spelled two ways that both mean "off", but there is exactly one
+    primitive string and both surfaces must carry it byte-for-byte.
+
+    ★ THE PRIMITIVE IS DERIVED FROM `FAMILY_META`, NEVER TRANSCRIBED. This file must
+    not become a second place the primitive's name is written down; a hand-copied
+    string here would go stale silently, which is the defect one level up.
+    """
     python_meta = FAMILY_META[CANONICAL_TYPE]
     entry = _mirror_entry(CANONICAL_TYPE)
     assert entry is not None, "mirror entry missing; see the previous test"
 
-    # Python side — the properties that matter for a refusing family.
-    assert python_meta.primitive is None
-    assert python_meta.unsupported is True
-    assert python_meta.unbound_reason == "opening_range_adapter_not_implemented"
+    # Python side — the family is supported and names a primitive.
+    assert python_meta.unsupported is False, (
+        "Python still declares OPENING_RANGE_DEFINITION unsupported=True. The family "
+        "is activated; the declaration must say so."
+    )
+    primitive = python_meta.primitive
+    assert primitive is not None, (
+        "Python declares no primitive for an activated family. An activated family "
+        "with no primitive is an unroutable pointer (pin (a))."
+    )
 
-    # TypeScript side — same three facts, read out of the mirror text.
-    assert "primitive: null" in entry, f"mirror does not declare primitive null: {entry!r}"
-    assert "unsupported: true" in entry, f"mirror does not declare unsupported: {entry!r}"
-    assert f'unboundReason: "{python_meta.unbound_reason}"' in entry, (
-        f"mirror's unboundReason disagrees with Python's "
-        f"{python_meta.unbound_reason!r}: {entry!r}"
+    # TypeScript side — the SAME primitive, and no residue of the retired refusal.
+    assert f'primitive: "{primitive}"' in entry, (
+        f"mirror does not name Python's primitive {primitive!r}: {entry!r}"
+    )
+    assert "primitive: null" not in entry, (
+        f"mirror still declares primitive null: {entry!r}"
+    )
+    assert "unsupported: true" not in entry, (
+        f"mirror still declares unsupported: true for an activated family: {entry!r}"
     )
 
 
-def test_the_refusing_family_declares_no_primitive_to_fall_back_to():
-    """The invariant that actually protects the money path.
+def test_the_activated_family_declares_a_primitive_and_never_falls_back_to_structure():
+    """DURABLE INVARIANT 2 (R-779 §7-b): neither surface routes this family back to
+    `structure_engine.compute_structure_state`.
 
-    R-730 §4: the new type must NEVER fall back to `compute_structure_state`.
-    The strongest form of that guarantee is having no primitive at all to fall
-    back to — so this asserts the absence directly, on the declaration that
-    production reads.
+    RENAMED IN THE TRANSITION. The old name —
+    `test_the_refusing_family_declares_no_primitive_to_fall_back_to` — asserts a claim
+    that is now FALSE: the family DOES declare a primitive. Leaving the name would have
+    left a guard whose title states the opposite of what it checks.
+
+    ⚖️ THE RENAME WAS MEASURED SAFE BEFORE IT WAS MADE, NOT ASSUMED (AR-915 §6,
+    confirmed independently by the desk at R-783 §2): the 104-member manifest joins on
+    FILE PATH, and ACCEPT-5 joins on pytest NODE ID but only over the 33-member FAILURE
+    set — and no `family_parity` member is in that set. `A RENAME IS FREE UNTIL
+    SOMETHING JOINS ON THE NAME.` Nothing does, while this test stays GREEN.
+
+    R-730 §4's protection is UNCHANGED and is the reason this fixture still exists: the
+    new type must NEVER fall back to `compute_structure_state`. The old proof of that
+    was "it has no primitive at all". That proof is gone, so the invariant is now
+    asserted DIRECTLY against the primitive the family really declares — which is the
+    stronger statement, because it survives the family being switched on.
     """
     python_meta = FAMILY_META[CANONICAL_TYPE]
     declared_primitive, declared_mechanism = python_meta.enforced_declaration()
-    assert declared_primitive is None
-    assert declared_mechanism is None
+
+    assert declared_primitive is not None, (
+        "the activated family declares NO primitive under enforcement. "
+        "enforced_declaration() returns (None, None) while unsupported=True — if this "
+        "fires, the FAMILY_META entry was not actually transitioned."
+    )
+    assert declared_mechanism is None, (
+        f"opening range declares a MECHANISM {declared_mechanism!r}. It computes a real "
+        "per-bar signal, so it declares a PRIMITIVE; a mechanism is the gates=False shape."
+    )
+    assert "structure_engine" not in declared_primitive, (
+        f"the declared primitive {declared_primitive!r} names the structure engine — "
+        "that is the exact fallback R-730 §4 forbids, now reachable because the family "
+        "is switched on."
+    )
 
     entry = _mirror_entry(CANONICAL_TYPE) or ""
     assert "structure_engine" not in entry, (

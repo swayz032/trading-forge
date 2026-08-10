@@ -439,39 +439,131 @@ def test_reference_and_anaphoric_sentences_did_not_move():
         )
 
 
-# ── GREEN — both definitions refuse explicitly, and neither can fall back ────
-def test_both_definitions_refuse_deliberately_and_neither_reaches_the_structure_evaluator():
-    """The fail-closed post-condition, on BOTH members (R-732 §3).
+# ── DURABLE INVARIANTS 3 and 4 (R-779 §7-b), landed in the activation commit ──
+def test_the_declared_opening_range_primitive_resolves_to_the_real_adapter():
+    """DURABLE INVARIANT 3 (R-779 §7-b): the declared primitive resolves to the real
+    adapter — not to a stub, not to the structure engine, not to nothing.
 
-    R-731 §4 sets the bar and it excludes the cheap version: `A CRASH, A MISSING
-    DICTIONARY ENTRY OR AN ACCIDENTAL EXCEPTION IS NOT AN ACCEPTABLE REFUSAL.`
-    So this asserts the refusal is a value production DELIBERATELY returns — a
-    binding object carrying a named reason — and not an exception escaping.
+    ★ WHY THIS IS NOT COVERED BY THE PARITY FIXTURE: that one proves the two
+    DECLARATION surfaces agree with each other. Two surfaces can agree perfectly on a
+    string that points at nothing. This asserts the string is a live pointer to the
+    module that does the arithmetic. `A DECLARATION AND THE CODE IT NAMES ARE TWO
+    CLAIMS, AND ONLY ONE OF THEM IS CHECKED BY SPELLING.`
 
-    The no-fallback half is the one that protects the money path: the wrong route
-    is the defect B1 exists to remove, and returning to it under any condition
-    would ship that defect behind a new name.
+    🛑 ASSERTION ORDER IS PART OF THE VERDICT (R-782 §1, campaign law): the activation
+    witness is asserted FIRST. A failure at that line means the family was never
+    transitioned; a failure BELOW it means the pointer is genuinely broken. Without the
+    ordering both read as one undifferentiated red.
     """
+    from src.engine.opening_range_adapter import compute_opening_range_state
+    from src.engine.spec_family_bindings import FAMILY_META
+
+    declared = FAMILY_META[OPENING_RANGE_DEFINITION].primitive
+    assert declared is not None, (
+        "OPENING_RANGE_DEFINITION declares no primitive — the family has not been "
+        "activated. This is the WITNESS, not the claim: nothing below can be read."
+    )
+
+    resolved = resolve_primitive(declared)
+    assert resolved is compute_opening_range_state, (
+        f"the declared primitive {declared!r} resolves to {resolved!r}, not to the real "
+        "adapter opening_range_adapter.compute_opening_range_state."
+    )
+
+
+def test_the_declared_opening_range_primitive_has_an_enforced_dispatch_route():
+    """DURABLE INVARIANT 4 (R-779 §7-b): the declared primitive exists in
+    ENFORCED_DISPATCH.
+
+    This is pin (a)'s obligation stated as its own fixture rather than left to the
+    load-time checker: `family_meta_enforcement.verify_dispatch_coverage()` proves set
+    equality in BOTH directions, so a declared name with no route is an UNROUTABLE
+    POINTER and a route nothing declares is a SECOND ROUTER.
+
+    ⚖️ R-782 §4 measured that this surface has TWO load-bearing halves pinned by two
+    different committed tests — the KEY (pin (a), family_meta_enforcement.py:486-494)
+    and the VALUE (test_parameter_acceptance_guard.py's `assert classified == routed`).
+    This fixture pins the KEY half against the family that owns it, so the obligation
+    is visible from the opening-range suite and not only from the enforcement suite.
+    """
+    from src.engine.spec_condition_compiler import ENFORCED_DISPATCH
+    from src.engine.spec_family_bindings import FAMILY_META
+
+    declared = FAMILY_META[OPENING_RANGE_DEFINITION].primitive
+    assert declared is not None, (
+        "OPENING_RANGE_DEFINITION declares no primitive — the family has not been "
+        "activated. WITNESS, not the claim."
+    )
+    assert declared in ENFORCED_DISPATCH, (
+        f"the declared primitive {declared!r} has NO ENFORCED_DISPATCH entry. Under "
+        "pin (a) that is an unroutable pointer and the load-time check fails."
+    )
+
+
+# ── TRANSITIONED — the definitions now BIND, and still never reach structure ──
+def test_both_definitions_bind_to_the_opening_range_primitive_and_neither_reaches_structure():
+    """TRANSITIONED (R-779 §7-b, authorized R-783 §6). Formerly
+    `test_both_definitions_refuse_deliberately_and_neither_reaches_the_structure_evaluator`.
+
+    WHAT MOVED AND WHAT DID NOT. The retired half is the REFUSAL: this used to assert
+    `bindable is False`, `primitive is None`, `reason == "opening_range_adapter_not_
+    implemented"` — the deliberately temporary off-state B1 STEP 3 shipped. That state
+    is what the activation exists to end, so pinning it would block the work it was
+    written to protect.
+
+    🛑 THE HALF THAT DID NOT MOVE IS THE ONE THAT PROTECTS THE MONEY PATH, and it is
+    now STRONGER rather than merely preserved. R-730 §4 forbids this family ever
+    falling back to `structure_engine.compute_structure_state`. Under the old refusal
+    that was cheap — a family with no primitive cannot fall back to anything. Now the
+    family is switched on and a fallback is genuinely POSSIBLE, so the assertion is
+    doing real work for the first time. `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN`
+    (R-780 §4) applies to the GUARD as much as to the code it guards.
+
+    R-731 §4's bar still binds and is unchanged: a crash, a missing dictionary entry or
+    an accidental exception is not an acceptable outcome. The binding must be a value
+    production DELIBERATELY returns.
+    """
+    from src.engine.spec_family_bindings import FAMILY_META
+
+    declared = FAMILY_META[OPENING_RANGE_DEFINITION].primitive
+    assert declared is not None, (
+        "OPENING_RANGE_DEFINITION declares no primitive — the family has not been "
+        "activated. WITNESS: nothing below this line can be read as a verdict."
+    )
+    assert "structure_engine" not in declared, (
+        f"the declared primitive {declared!r} names the structure engine — the exact "
+        "fallback R-730 §4 forbids."
+    )
     for stub, prose in ((GOLDEN_STUB, OR_PROSE), (SECOND_STUB, SECOND_OR_PROSE)):
         _, artifact, _, by_id = _produce(stub)  # returns; an exception here fails the test
         condition = _opening_range_condition(artifact, prose)
         binding = by_id.get(condition["id"])
 
+        # UNCHANGED from the pre-transition fixture, and deliberately so: R-731 §4's bar
+        # excludes the cheap version — a crash or a missing dictionary entry is not an
+        # acceptable outcome in EITHER regime. This assertion never depended on the
+        # refusal and is carried across the transition byte-for-byte in meaning.
         assert binding is not None, (
             f"{stub}: NO binding object was emitted for the opening-range definition. "
-            "A missing dictionary entry is not a refusal — the refusal must be a thing the "
-            "code MEANS, reachable and observable."
+            "A missing dictionary entry is not an outcome — the binding must be a thing "
+            "the code MEANS, reachable and observable."
         )
-        assert binding.bindable is False, f"{stub}: expected a refusal, got bindable=True"
-        assert binding.primitive is None, (
-            f"{stub}: a refusing definition must name NO primitive; got {binding.primitive!r}"
+        assert binding.bindable is True, (
+            f"{stub}: the activated opening-range definition is still unbindable "
+            f"(reason={binding.reason!r}). Activation removes the unsupported shield; if "
+            "this fires, FAMILY_META moved but the binder did not follow."
         )
-        assert binding.reason == EXPECTED_REFUSAL, (
-            f"{stub}: refusal reason is {binding.reason!r}, expected {EXPECTED_REFUSAL!r}"
+        assert binding.primitive == declared, (
+            f"{stub}: the binding names {binding.primitive!r} but the family declares "
+            f"{declared!r}. The binder and the declaration must name ONE primitive — two "
+            "spellings of the same route is the drift pin (a) exists to catch."
         )
+        # THE MONEY-PATH GUARD, unchanged in intent and now genuinely load-bearing:
+        # pre-activation this could not fail (no primitive at all); post-activation a
+        # fallback is reachable, so this is the first regime in which it can bite.
         assert binding.primitive != STRUCTURE_PRIMITIVE, (
             f"{stub}: the opening-range definition reached the structure evaluator — the "
-            "exact fallback R-732 §3 forbids"
+            "exact fallback R-732 §3 and R-730 §4 forbid"
         )
 
 
