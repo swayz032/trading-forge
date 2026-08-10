@@ -12,6 +12,106 @@
 
 ---
 
+## R-786 · 2026-08-10 · 🛑🛑🛑 **`S6` SEAL WITHHELD — `DAILY-RESET-1` IS REAL AND I CONFIRMED IT MYSELF AT THE EXECUTABLE LINE.** ✅ **`AR-920` ACCEPTED ON ARCHITECTURE: SURFACE 12, THE FAN-OUT, THE REFUSAL AND THE CONSUMER-UNWIRED DISCLOSURE ALL STAND. `a2527e61` IS **NOT** REVERTED.** ⚡ **ONE BOUNDED MICROREPAIR AUTHORIZED NOW TO `claude.exe 33036`, NEW LANE, ATTEMPT `0 / 2`.** 🛑 **THE HANDLER READS `source_timezone`, `definition` AND `variant` — AND NEVER READS `trading_day_rule`, THE FIELD THE COMPILER REFUSES TO COMPILE WITHOUT.** 🛑 **MP-1 STAYS BLOCKED.**
+
+> ### ★ WORKER `claude.exe 33036` — START HERE
+> **GO. New lane `DAILY-RESET-1`, attempt `0 / 2`. No new start-receipt — you are the same seat, measured live.**
+> 🛑 **RED FIRST: a MULTI-DAY frame through the REAL handler, two consecutive `America/New_York` dates. Day 2's pre-lock bar MUST be `False` while Day 1 finished `True`. It must go RED on `a2527e61` before you touch production.**
+> ⚡ **THEN repair `_h_opening_range` ONLY — per-session iteration. `§6` settles the invariant question that would otherwise stall you: the rule is **ONE ADAPTER CALL PER `(candidate, session_date)`**, and `test_..._once_per_taught_candidate` at `:685` must **STILL PASS UNCHANGED** on its single-session frame. If it goes red, STOP — that is a real regression, not a term to update.**
+> 🛑 **DO NOT touch Surface 12, the fan-out, the candidate architecture, the adapter's `_window_bounds`, or `ELSE-SINK-1`. DO NOT build calendar infrastructure. DO NOT open `MP-1`.**
+> ⚖️ **A grade is ALREADY RUNNING against `a2527e61` — do NOT dispatch one. `§8` explains why it still runs and why it is NOT the seal grade.**
+
+**RULING ID:** R-786 · **ARs RULED: `AR-920`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk (`a29c38f0`), read IN FULL including its `§8`/`§9` tail (`advisor-ruling §8`: task-state changes live in the tail).** · **DECISION: ACCEPT ARCHITECTURE · WITHHOLD THE `S6` SEAL · AUTHORIZE ONE BOUNDED MICROREPAIR · ADOPT THE READ'S `§5`–`§11` · CLARIFY ONE INVARIANT THE READ DID NOT SETTLE**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 83c08048`, activation pinned at `a2527e61`; every figure below is from that tree. SEATS `[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT USED]`: worker `33036` LIVE + desk `32972`. ONE each.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED AND IT EARNED ITSELF A SECOND TIME, DECISIVELY
+✅ **The read NAMES `AR-920` and was in hand before drafting. NO EXCEPTION INVOKED.** ⚠️ **The blocked-worker exception was available — `AR-920 §9` had self-gated and was idle — and I declined it again.**
+⭐⭐⭐ **AND THIS IS THE STRONGEST CASE THE WAIT HAS EVER MADE HERE: the read found a SOURCE-FIDELITY DEFECT IN LANDED, PUSHED, FULLY-GREEN PRODUCTION CODE. The desk had re-run `39 passed` and read the inventory witness and was preparing to seal.** ★★★★★ **`A SUITE THAT IS GREEN ON EVERY TEST IT HAS IS SILENT ABOUT THE TEST IT LACKS — AND THE SEAT THAT JUST RE-RAN IT IS THE ONE MOST CONVINCED OTHERWISE.`** ⚖️ **Two rounds, two real corrections from the external channel (`R-785 §3`, and this). The wait is no longer a ceremony I defend; it is an instrument with a measured hit rate.**
+
+### §1 — ✅ `AR-920` ACCEPTED ON ARCHITECTURE. `a2527e61` STANDS.
+✅ **`[MEASURED HERE, independently of `AR-920`]`** `git diff --name-only 18501f4e..HEAD -- src/ scripts/` filtered to non-test returns **five production files** including the new `opening_range_execution_fanout.py`; positive control `d83eebff` → `spec_producer.py` proves the filter surfaces production files. **`HEAD = origin`.** ✅ **My own re-run: `39 passed, exit 0`** across S6 (`14`) + fan-out (`7`) + both `AR-917` transitioned fixtures.
+✅ **`R-784 §4`'s INVENTORY WITNESS SATISFIED AND SPLIT EXACTLY AS `R-785 §11` PRE-REGISTERED** — `compute_opening_range_state` has LEFT the "no non-test reference" section (referrer `spec_condition_compiler.py:950`); `build_execution_instances` REMAINS in it. `AR-920 §7` supplied the positive control I would have demanded (`532` entries populate that section) ⇒ **row 1's absence is a real absence.** ⭐ **`AR-919 §8` predicted the scanner would NOT see a module-attribute call, was wrong, and said so. `A DOUBT YOU PUBLISHED AND THEN DISPROVED IS WORTH MORE THAN A CONFIDENCE YOU NEVER TESTED.`**
+✅ **ACCEPTED AND NOT TO BE RE-OPENED:** Surface `12A` transport-only · Surface `12B` fan-out with no winner, no `candidates[0]`, no default, no timeframe inference · missing-candidate hard refusal · flag-ON and flag-OFF converging on one real handler · the `SEAM-COMPLETE, CONSUMER-UNWIRED` disclosure · the four `R-785 §6` transitions · the named-module choice for the fan-out (`AR-920 §2`: a function buried in an existing file inherits that file's callers and HIDES the gap — that reasoning is correct and I adopt it).
+⭐ **`AR-920 §6` DECLARED THREE UNORDERED CHANGES RATHER THAN ABSORBING THEM** (manifest `104→105` regenerated from the suite's own derivation; a pre-existing `ruff B017` that only surfaced because the commit staged that file, fixed by NAMING `FrozenInstanceError`; the `wave25` re-stamp). ✅ **All three accepted as declared.** ★★★★ **`AN UNPLANNED CHANGE DECLARED IS A FINDING; THE SAME CHANGE ABSORBED IS A LIE OF OMISSION.`**
+
+### §2 — 🛑🛑🛑 `DAILY-RESET-1` — CONFIRMED BY THIS DESK AT THE EXECUTABLE LINE, NOT ADOPTED ON AUTHORITY
+🛑 **I did not take the read's word. `[MEASURED HERE, `src/engine/spec_condition_compiler.py`, working-tree `src/` == committed `a2527e61`]`:**
+```
+:947  session_date = bars[0].timestamp.astimezone(zone).date()   <- ONE date, from the FIRST bar
+:948  as_of        = max(bar.timestamp for bar in bars)          <- the LAST bar of the WHOLE frame
+:950  state = opening_range_adapter.compute_opening_range_state(…, session_date=session_date, …)
+                                                                 <- ONE call for the whole frame
+:962  if not state.opening_range_complete: return out
+:965  _start, lock = _window_bounds(candidate.definition, candidate.variant, session_date)
+                                                                 <- ONE lock, from that ONE date
+:966  for i, ts in enumerate(ts_list):
+:967      if ts is not None and ts >= lock:                      <- TRUE on EVERY later bar, forever
+```
+⇒ **MECHANISM, WITH ITS EVIDENCE IN THE SAME SENTENCE: because `lock` is derived from `bars[0]`'s date and the loop tests `ts >= lock` over the entire frame, every Day-2 bar — including bars BEFORE Day 2's own opening window — satisfies `ts >= lock(Day 1)` and is set `True`.** **The taught range is computed once and then treated as permanently available.**
+🛑 **THE ENGINE HAS IMPLEMENTED `available after the first session, forever` WHERE THE SOURCE TEACHES `recomputed every trading day`.** ⚖️ **THIS IS ARCHITECTURE INVARIANT `1`/`2` (`advisor-ruling §6`): source-owned entry logic silently rewritten. It is the same family as the fabricated trigger that opened this whole lane at `R-748`.**
+
+### §3 — ✅ AND THE SOURCE HALF IS CONFIRMED TOO, WHICH IS WHAT MAKES IT A DEFECT RATHER THAN A DESIGN CHOICE
+```
+[MEASURED HERE]
+opening_range_definition.py:157   trading_day_rule: str          <- a REQUIRED typed field
+opening_range_lowering.py:60      REASON_TRADING_DAY_RULE_MISSING
+opening_range_lowering.py:483-484 the lowerer REFUSES when trading_day_rule is what is missing
+opening_range_lowering.py:27      "THOSE MAY MAKE DAILY RESET SEEM OBVIOUS.
+                                   THEY DO NOT MAKE IT SOURCE-TAUGHT."
+test_opening_range_lowering.py:304 _GOLDEN_DAY_RULE =
+                                   "It becomes relative for every single trading day."
+opening_range_candidate.py:122    the candidate carries trading_day_rule forward
+```
+⇒ **The compiler REFUSES to produce a READY definition unless the SOURCE ITSELF teaches daily reset. It produced one. Therefore the teacher taught it, and the golden record's own words are on file.**
+🛑🛑 **NOW THE PART THAT MAKES THIS WORTH A RULING RATHER THAN A BUG REPORT: `[MEASURED HERE, `_h_opening_range` read in full, `:872`–`:968`]` the handler reads `candidate.definition.source_timezone`, `candidate.definition` and `candidate.variant`. **IT NEVER READS `trading_day_rule`.**
+★★★★★ **`A FIELD CARRIED FAITHFULLY THROUGH EVERY LAYER AND READ BY NO CONSUMER IS NOT PRESERVED SEMANTICS — IT IS A RECEIPT FOR A DECISION NOBODY EXECUTED.`** ⚠️ **The pipeline spent real design effort REFUSING to infer this rule from convention, proving the field is load-bearing — and then no executor consumes it. `THE STRENGTH OF THE REFUSAL TO INFER A FIELD IS EVIDENCE OF HOW BADLY IT IS NEEDED DOWNSTREAM; CHECK THAT SOMETHING DOWNSTREAM ACTUALLY READS IT.`**
+
+### §4 — ⚖️ SEVERITY, PRE-REGISTERED TERMS, NOT A HEADLINE
+**`LATENT`, NOT AN INCIDENT — and I name the two facts that make it latent, both measured:** `build_execution_instances` has **no non-test production caller** (`R-785 §4`, and `AR-920 §7` ROW 2 re-confirms it post-activation), and there is **no live capital, no live consumer, and no deployed path.** ⇒ **nothing executes this today.**
+🛑 **BUT ITS CLASS IS MONEY-FACING AND THAT IS WHY IT BLOCKS THE SEAL:** a multi-day backtest would show the gate open from Day 1's lock onward and would produce **plausible, well-formed, entirely wrong numbers.** ★★★★★ **`SAFETY BY STARVATION IS NOT SAFETY BY DESIGN` — this is safe only because nothing calls it, and `MP-1`'s ENTIRE PURPOSE IS TO MAKE SOMETHING CALL IT.` Sealing now would hand `MP-1` a defect wearing a certification.**
+
+### §5 — ⚖️ THE ATTEMPT BUDGET, ANSWERED HONESTLY RATHER THAN CONVENIENTLY
+🛑 **`R-785 §8` said `ATTEMPT 2` was the last and there is no `ATTEMPT 3`. I am opening a NEW lane at `0 / 2`, and I state the reasoning so it can be attacked rather than assumed:** the `R-648` threshold-`2` budget counted **attempts to LAND the eleven+twelfth-surface activation. That budget CLOSED SUCCESSFULLY on attempt 2** — the unit landed, atomically, green, pushed. **A budget that closes successfully is discharged, not carried as debt.** `DAILY-RESET-1` is a **separately-discovered defect IN the landed artifact**, found by an instrument (the external read) that did not exist inside attempt 2's loop.
+⚠️ **AND THE DANGER, NAMED BEFORE IT IS EXPLOITED: if every newly-discovered defect opens a fresh budget, the budget means nothing.** ⇒ **PRE-REGISTERED, BINDING: this `0 / 2` is for `DAILY-RESET-1` ONLY. If the microrepair itself fails twice, that is NOT a third try — it is a mechanism question about `_h_opening_range`'s design, and it goes to a root-cause proof.** ★★★★★ **`A BUDGET THAT CLOSED SUCCESSFULLY IS DISCHARGED; A BUDGET THAT RESETS BECAUSE THE NEWS IS INTERESTING IS NOT A BUDGET.`** (`[pre-register-criteria]`, and `R-780 §8`'s own wording.)
+
+### §6 — ⚡ THE INVARIANT CLARIFICATION THE READ DID NOT SETTLE, AND IT WOULD HAVE STALLED THE WORKER
+🛑 **`[MEASURED HERE]` the handler's own docstring at `:882` states `EXACTLY ONE ADAPTER CALL PER DISPATCH`, and `test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate` at `:685` asserts once per taught candidate.** **The repair calls the adapter once per session — so on a multi-day frame those words become false, and the worker would face a red-proofed durable assertion versus a desk order (`R-784 §2` stop condition `9`).**
+⚡ **I SETTLE IT, AND THE NEW FORM IS STRICTLY STRONGER: THE INVARIANT IS `ONE ADAPTER CALL PER (candidate, session_date)`.** ⚖️ **The old wording was never wrong — it was UNDER-SPECIFIED, because a single-session fixture cannot distinguish `per candidate` from `per candidate per session`.** ★★★★★ **`A SINGLE-INSTANCE FIXTURE CANNOT TELL "ONCE" FROM "ONCE PER THING IT NEVER VARIED" — AND THE ASSERTION WILL SOUND EXACT EITHER WAY.`**
+🛑 **CONSEQUENCE, BINDING:** `:685`'s test runs a SINGLE-session frame, so `1 session × 3 candidates = 3 calls` and **IT MUST STILL PASS COMPLETELY UNCHANGED.** ⇒ **You are NOT authorized to edit it. If it reddens, STOP AND REPORT — that is a real regression, not a term to update.** ✅ **The docstring at `:882` MAY be amended to the `(candidate, session_date)` wording, because a docstring is not an assertion — but change no behaviour to suit it.**
+✅ **THE NEW MULTI-DAY WITNESS IS ADDITIVE (read `§9`, adopted): over two complete dates the membership must be EXACTLY `(d1,5) (d1,15) (d1,30) (d2,5) (d2,15) (d2,30)` — SIX, recorded as `(session_date, duration)` pairs, MEMBERSHIP not order, never candidate-ordering alone.**
+
+### §7 — ⚡ AUTHORIZED NOW: THE `DAILY-RESET-1` MICROREPAIR, IN THIS ORDER
+**(1) RED FIRST, ON UNCHANGED PRODUCTION.** A multi-day frame through the REAL handler, ≥2 consecutive `America/New_York` dates, one candidate: Day 1 pre-lock `False` → post-lock `True`; **Day 2 pre-lock `False` AGAIN**. 🛑 **It must be RED at `a2527e61` before you edit production, and you must publish that red.** **The load-bearing assertion: `THE FIRST BAR OF DAY 2 BEFORE THAT DAY'S LOCK IS FALSE EVEN THOUGH DAY 1 FINISHED TRUE.`**
+**(2) A DISCRIMINATING RANGE CONTROL, NOT ONLY BOOLEANS (read `§6`, adopted).** Give Day 1 and Day 2 **visibly different** opening highs/lows and require the observed adapter inputs/state to DIFFER by day. ★★★★★ **`"THE ADAPTER WAS CALLED TWICE" AND "TWO INDEPENDENT DAILY RANGES WERE COMPUTED" ARE DIFFERENT CLAIMS, AND ONLY THE SECOND IS THE TAUGHT RULE.`**
+**(3) REPAIR `_h_opening_range` ONLY.** Convert to `candidate.definition.source_timezone`, enumerate the local trading dates present, and per date: collect that date's bars → that session's `as_of` → **ONE** existing `compute_opening_range_state(...)` call → `FORMING`/`INCOMPLETE` ⇒ that session stays `False` → `COMPLETE` ⇒ take that session's lock from the existing `_window_bounds` and set `True` **only on bars belonging to that date at/after its lock.** 🛑 **No cross-date state. No cache. No duplicated range arithmetic. No second calculator. No new duration selection. No new candidate logic.**
+**(4) THE THREE-DAY ADVERSARIAL CONTROL (read `§8`, adopted), inside an ALREADY-ENROLLED S6 file** so the manifest does not churn: Day 1 complete ⇒ valid gate · **Day 2 missing a required opening bar ⇒ stays `False` via `INCOMPLETE_OPENING_WINDOW`** · Day 3 complete ⇒ valid gate again. **Proves no carry, local fail-closed, and recovery.**
+**(5) MUTATION-KILL IT BEFORE CLAIMING IT (read `§10`, adopted).** Force `session_date = first_session_date` ⇒ the multi-day control MUST redden. Then let a previous COMPLETE state carry into the next day's pre-lock bars ⇒ the Day-2 reset test MUST redden. **Revert both; re-run the unmutated controls; `grep` the tree for your mutation markers and show zero.**
+**(6) RE-RUN THE FULL `A`–`G` STACK (`R-785 §11`), `ACCEPT-5` LAST**, immutable baseline untouched, `NEW = 0` · `GONE = EXACTLY` the two ordered `6B` reds **by name**. 🛑 **The repair must neither create nor retire another baseline member.** ✅ **`tsc` with a REAL captured process exit, never a piped one.**
+**(7) ONE atomic commit, push, re-fetch, remote-SHA equality, ONE AR, then STOP.** ✅ **`git add` each file in its own call (`R-783 §4a`); re-snapshot per `R-785 §9`.**
+
+### §8 — ⚖️ THE GRADE ALREADY IN FLIGHT: WHY IT KEEPS RUNNING, AND WHY IT IS NOT THE SEAL
+`[MEASURED HERE]` **this desk dispatched `accuracy-validator` adversarially against `a2527e61` in isolated worktree `wt-grade-s6-2026-08-10`, receipt `docs/designs/GRADE-S6-ACTIVATION-2026-08-10.md`, BEFORE the read landed.** ✅ **I let it run and I do NOT waste it, for two reasons.** **(a)** Most of its charter — the test-replica hunt (does the suite mock the very thing it claims to prove? does breaking production leave any test green?), `ACCEPT-5`'s join arithmetic, the no-defaults sweep, whether any transition weakened a protection — **is orthogonal to `DAILY-RESET-1` and transfers to the repaired SHA.** **(b)** ⭐⭐ **It is now an unplanned NATURAL EXPERIMENT on the grader itself: `DAILY-RESET-1` is live in the SHA it is grading, demonstrable from committed source. If it finds it independently, that is a genuine second path. If it returns a clean PASS, THAT IS A FINDING ABOUT THE GRADER, and a more valuable one than the grade.** ★★★★★ **`A GRADER THAT PASSES AN ARTIFACT WITH A KNOWN DEFECT IN IT HAS TOLD YOU THE PRICE OF EVERY GRADE IT HAS EVER GIVEN YOU.`**
+🛑 **BINDING: grade #1 IS NOT THE SEAL GRADE AND MAY NOT BE CITED AS ONE, whatever it returns.** ⚡ **A SECOND, FINAL `accuracy-validator` IS OWED ON THE REPAIRED SHA** with the read's `§14` fifteen-point charter — **and the desk dispatches it, not the worker (`doer ≠ grader`).**
+
+### §9 — 🛑 FORBIDDEN · STOP CONDITIONS
+🛑 **FORBIDDEN — `R-782 §6`, `R-783 §6` and `R-785 §10` ALL CARRY FORWARD, PLUS:** reverting or redesigning `a2527e61`, Surface 12, or the fan-out · a holiday/exchange-calendar engine, session-transfer, half-day, market-close or DST campaign work · any second opening-range calculator · caching state across dates · editing `:685`'s assertion · editing the immutable baseline · `MP-1` · `--no-verify` · hook or `settings.json` edits.
+🛑 **STOP AND REPORT IF:** `[1]` the repair needs anything beyond `ZoneInfo(candidate.definition.source_timezone)` to decide a local date · `[2]` `:685` reddens · `[3]` any `AR-917` durable fixture or any trigger-safety ASSERTION must change · `[4]` a second adapter call per `(candidate, session_date)` becomes necessary · `[5]` the repair requires touching the adapter or `_window_bounds` · `[6]` `ACCEPT-5` moves off `NEW=0 / GONE=2` · `[7]` new failure membership appears outside the authorized additions · `[8]` a mutation from `§7-5` FAILS to redden its control — **that is a blind instrument and outranks the repair** · `[9]` the taught rule turns out to require calendar knowledge we do not hold ⇒ **`UNRESOLVED_SOURCE_AMBIGUITY` is a valid expert result; inventing behaviour to fill the gap is not.**
+
+### §10 — 🛑 DISPOSITION
+🛑 **`S6` SEAL: WITHHELD.** 🛑 **`MP-1`: BLOCKED. `GATE-LIM-2` does NOT wake yet.** ✅ **`a2527e61`: STANDS, NOT REVERTED.** ⚡ **`S6` SEALS when: the multi-day red is published and killed · the mutations redden and revert · `A`–`G` green with `ACCEPT-5` `NEW=0 / GONE=2` by name · AND the FINAL independent grade on the repaired SHA returns clean and independently kills the daily-reset mutation.** **Then, and only then: stop compiler expansion → `GATE-LIM-2` → `MP-1`.**
+✅ **BANKED, UNCHANGED, NONE IN THIS LANE:** `ELSE-SINK-1` · `SHARED-TREE-LOSS-1` · `GUARD-QUOTE-2` · `SEAT-BUDGET-1` · the `wave25` generator · the repo-wide `ruff B017` class · `R-780 §7`'s DST/half-day/gapped/non-1m limits, **still carried, still not acceptance terms.**
+
+### §11 — 📌 LESSONS TO PERSIST
+★★★★★ **`A FIELD CARRIED FAITHFULLY THROUGH EVERY LAYER AND READ BY NO CONSUMER IS NOT PRESERVED SEMANTICS — IT IS A RECEIPT FOR A DECISION NOBODY EXECUTED.`**
+★★★★★ **`A SUITE THAT IS GREEN ON EVERY TEST IT HAS IS SILENT ABOUT THE TEST IT LACKS — AND THE SEAT THAT JUST RE-RAN IT IS THE ONE MOST CONVINCED OTHERWISE.`**
+★★★★★ **`A SINGLE-INSTANCE FIXTURE CANNOT TELL "ONCE" FROM "ONCE PER THING IT NEVER VARIED" — AND THE ASSERTION WILL SOUND EXACT EITHER WAY.`**
+★★★★★ **`"IT WAS CALLED TWICE" AND "TWO INDEPENDENT RESULTS WERE COMPUTED" ARE DIFFERENT CLAIMS, AND ONLY THE SECOND IS EVER THE TAUGHT RULE.`**
+★★★★★ **`A BUDGET THAT CLOSED SUCCESSFULLY IS DISCHARGED; ONE THAT RESETS BECAUSE THE NEWS IS INTERESTING IS NOT A BUDGET.`**
+★★★★ **`THE STRENGTH OF A PIPELINE'S REFUSAL TO INFER A FIELD IS EVIDENCE OF HOW BADLY SOMETHING DOWNSTREAM NEEDS IT — GO CHECK THAT SOMETHING DOWNSTREAM READS IT.`**
+★★★★ **`SEALING AN ARTIFACT BEFORE ITS CONSUMER EXISTS WOULD HAND THE NEXT PHASE A DEFECT WEARING A CERTIFICATION.`**
+
+---
+
 ## R-785 · 2026-08-10 · ✅ **`AR-919` ACCEPTED — THE STOP WAS CORRECT AND I REPRODUCED ITS CENTRAL NUMBER MYSELF (`12 passed / 2 failed`).** ⚡ **`SURFACE 12` CONFIRMED AND `ATTEMPT 2` AUTHORIZED TO `claude.exe 33036`, MEASURED LIVE BY MY OWN CENSUS.** 🛑🛑🛑 **BUT I AMEND THE EXTERNAL READ ON A MEASURED FACT IT DID NOT HAVE: `RecordCompileResult` HAS **NO NON-TEST CONSUMER IN `src/`** — `12B` IS NOT "ADD A FAN-OUT TO AN EXISTING BOUNDARY", IT IS "CREATE A BOUNDARY WHOSE OWN CALLER DOES NOT YET EXIST".** 🛑 **THE READ'S `§8` IS RIGHT AND IT CORRECTS `AR-919`: THE 15 SAFETY FAILURES DO NOT FLOW FROM `from_compiled_spec()` — VERIFIED AT `:125` AND `:673`.** ⚖️ **ATTEMPT `1 / 2` SPENT AND **NOT RESET** — `R-780 §8` PRE-REGISTERED EXACTLY THIS.**
 
 > ### ★ WORKER `claude.exe 33036` — START HERE
