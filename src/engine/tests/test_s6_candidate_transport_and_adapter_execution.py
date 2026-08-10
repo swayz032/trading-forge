@@ -53,6 +53,7 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from src.engine.extraction.spec_producer import (
+    SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY,
     opening_range_lowering_of,
     produce_spec_artifact,
     produce_spec_artifact_from_record,
@@ -242,6 +243,115 @@ def test_positive_witness_the_patch_is_visible_through_production_symbol_resolut
         "resolution returned the spy but invoking it recorded nothing — the observation "
         "mechanism is broken"
     )
+
+
+# ── STEP 2.1 FIREBREAK — THE PORTABLE CONTRACT STAYS PORTABLE ─────────────────
+#
+# AUTHORITY: R-777 §4, which promoted the worker-declared `STEP2-LIM-1` to a
+# pre-`STEP 3` firebreak after confirming BY EXECUTION that the artifact is
+# unserialisable on BOTH arms — including the refusal path.
+#
+# 🛑 WHY THIS LIVES IN THIS FILE RATHER THAN A NEW ONE:
+# a new test file moves the frozen canonical population `104 -> 105` and reddens
+# its pin. That number is a PRE-REGISTERED acceptance figure (R-775 §5) and
+# R-777 authorized a firebreak, not a manifest change. Same lane, same boundary,
+# no population perturbation.
+#
+# THE DISTINCTION BEING GUARDED (R-777 §4, verbatim):
+#   PORTABLE CONTRACT = SpecArtifact  (JSON, cross-language, durable)
+#   IN-PROCESS STATE  = lowering · candidates · binding plan  (typed, Python-only)
+def test_the_full_record_boundary_keeps_the_spec_artifact_plain_json_on_both_arms():
+    """PERMANENT. Fails at the first unmet stage and names it.
+
+    🛑 THE FAILURE MODE THIS EXISTS TO PREVENT IS NOT A CRASH — IT IS A SILENT
+    DROP. The TS onboarding service consumes a SERIALIZED `SpecArtifact` and
+    `parseSpecArtifact()` rebuilds only recognised fields. So the tempting repair
+    — `dataclasses.asdict()` the lowering under an extra artifact key — would let
+    Python believe it sent the lowering while TypeScript discarded it without a
+    word. R-777 §4 forbids it:
+
+        `A HANDOFF WHERE THE SENDER BELIEVES IT SENT AND THE RECEIVER SILENTLY
+         DROPS IS WORSE THAN ONE THAT FAILS LOUDLY.`
+
+    This test therefore asserts BOTH directions: the artifact must serialise,
+    AND the lowering must not be inside it.
+    """
+    for stub, arm in ((GOLDEN_STUB, "READY"), (NEIGHBOUR_STUB, "SOURCE_INCOMPLETE")):
+        result = produce_spec_artifact_from_record(_record(stub), video=stub)
+
+        # ── STAGE 1 — the boundary returns an ENVELOPE, not the artifact itself.
+        assert not isinstance(result, dict), (
+            f"RED — STAGE 1 [{arm} arm, {stub}]: the full-record boundary still returns the "
+            "SpecArtifact dict itself, so the typed lowering can only live INSIDE the "
+            "portable contract.\n"
+            f"  returned type : {type(result).__name__}\n"
+            "  ⇒ the typed lowering must move to a compiler-result envelope (R-777 §4-2)."
+        )
+
+        # ── STAGE 2 — the portable contract is plain JSON. BOTH ARMS (R-777 §3).
+        try:
+            json.dumps(result.artifact)
+        except TypeError as exc:
+            raise AssertionError(
+                f"RED — STAGE 2 [{arm} arm, {stub}]: the SpecArtifact is not JSON-serialisable, "
+                "so it cannot traverse the seam its own name promises.\n"
+                f"  TypeError : {exc}\n"
+                "  ⇒ the refusal arm matters MOST here: a refusal that cannot be serialised "
+                "is the one piece of bad news downstream is most entitled to receive intact."
+            ) from exc
+
+        # ── STAGE 3 — the lowering is REACHABLE, on the envelope.
+        assert result.opening_range_lowering is not None, (
+            f"RED — STAGE 3 [{arm} arm, {stub}]: the envelope carries no lowering. Moving it "
+            "out of the artifact must not mean losing it — `AN ABSENT RESULT AND A REFUSAL "
+            "ARE DIFFERENT FACTS`."
+        )
+
+        # ── STAGE 4 — and it is NOT smuggled back into the portable contract.
+        assert SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY not in result.artifact, (
+            f"RED — STAGE 4 [{arm} arm, {stub}]: the lowering key is back inside the "
+            "SpecArtifact. Even if it serialises today (e.g. via asdict()), TypeScript's "
+            "parseSpecArtifact() rebuilds only recognised fields and would DISCARD it "
+            "silently. R-777 §4 forbids this shape by name."
+        )
+
+        # ── NEGATIVE CONTROL, and it must BITE ────────────────────────────────
+        # `A COMPARISON THAT CANNOT FAIL IS A PRINTOUT.` json.dumps() succeeding
+        # above is evidence only if json.dumps() could still have failed on this
+        # very artifact. So re-embed the real typed lowering and require the
+        # TypeError the firebreak exists to prevent.
+        poisoned = dict(result.artifact)
+        poisoned[SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY] = result.opening_range_lowering
+        try:
+            json.dumps(poisoned)
+        except TypeError:
+            pass
+        else:
+            raise AssertionError(
+                f"[{arm} arm, {stub}] NEGATIVE CONTROL DID NOT BITE: re-embedding the typed "
+                "lowering still serialised. Either the lowering stopped being a typed object "
+                "or json.dumps is not the instrument this test believes it is — in both cases "
+                "STAGE 2 above proves nothing."
+            )
+
+
+def test_the_old_per_strategy_boundary_json_behaviour_is_unchanged():
+    """REGRESSION ARM (R-777 §4-1, item 5). GREEN before and after STEP 2.1.
+
+    This is also the POSITIVE CONTROL for the firebreak's instrument: it proves
+    `json.dumps` succeeds on an artifact from the untouched boundary, so a
+    failure in the firebreak convicts the NEW shape rather than the harness.
+    """
+    for stub in (GOLDEN_STUB, NEIGHBOUR_STUB):
+        doc = _record(stub)
+        artifact = produce_spec_artifact(
+            (doc.get("strategies") or [{}])[0], video=stub, certificate=None, transcript_chars=0
+        )
+        json.dumps(artifact)
+        assert SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY not in artifact, (
+            "the per-strategy boundary grew a lowering key; STEP 2.1 was supposed to leave "
+            "this entry point untouched"
+        )
 
 
 # ── RED 1 — CANDIDATE TRANSPORT FROM A **FULL-RECORD** BOUNDARY ───────────────
