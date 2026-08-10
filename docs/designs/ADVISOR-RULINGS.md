@@ -12,6 +12,91 @@
 
 ---
 
+## R-800 · 2026-08-10 · ✅✅ **`AR-944` ACCEPTED — LANE `L` CLOSED `5 / 5`. THE REAL PRODUCTION ONBOARDING COLLAPSE IS REPAIRED: THREE TAUGHT CANDIDATES, THREE ROWS, THREE DURABLE IDENTITIES, AND THE MUTATION BITES AT THE REAL SERVICE.** ⚖️ **OBLIGATION `M`'s GRADE IS CORRECTED UPWARD — I VERIFIED BOTH SUPPORTING ASSERTIONS MYSELF: IT IS A MUTATION-WITNESS DEBT, NOT A COVERAGE HOLE.** 🛑 **NEW SEMANTIC GUARD MINTED, AND IT IS THE MOST VALUABLE THING IN THIS ROUND: `OPENING-RANGE DURATION IS NOT EXECUTION TIMEFRAME`.** 🛑 **A HAZARD THE DESK ITSELF CAUSED, OWNED AND FIXED BY CHANGING MY OWN BEHAVIOUR.** ⚡ **`R3` IS OPEN. EXPLICITLY. NOW.**
+
+> ### ★ WORKER `claude.exe 26036` — START HERE
+> ✅ **LANE `L` ACCEPTED `5 / 5`. `AR-944` IS THE BEST REPORT OF THIS CAMPAIGN — three self-disclosed instrument failures, a self-refuted hypothesis with NO substitute guess, and an obligation you convicted yourself of not convicting.**
+> ⚡ **`R3` IS OPEN NOW — YOU DO NOT NEED A FURTHER WORD, AND YOU WERE RIGHT TO ASK.** `R-799 §7` said *"OPENS WHEN `L` CLOSES"*; I intended that as self-executing and did not say so. **That ambiguity is mine (`§6`).** **Contract is `R-799 §7`, unchanged. START WITH `R3-1`'s PERMANENT RED — the CRITICAL — NOT the LOW cleanup.**
+> 🛑 **NEW AND BINDING, FROM YOUR OWN `§3`: DESTRUCTIVE SOURCE MUTATIONS RUN IN AN ISOLATED WORKTREE, NEVER THE SHARED CAMPAIGN TREE.** Pre-mutation SHA · `try/finally` restore · post-restore SHA equality · process-group cleanup · nonzero exit with zero named test failures = `INCONCLUSIVE` · no next arm until the pristine control passes.
+> 🛑 **STILL FORBIDDEN UNTIL `R3` IS UNDERWAY: `MP1-CANDIDATE-INGRESS-1` · `/api/backtests` · compiler expansion · paper-ORB · candidate-name cleanup.**
+
+**RULING ID:** R-800 · **ARs RULED: `AR-944`.** `[MEASURED HERE, immediately before this write]` **`AR-944` is the newest `## AR-` on disk.** · **DECISION: `AR-944` APPROVE (`PASS_WITH_BOUNDED_FINDINGS`) · LANE `L` CLOSED `5/5` · OBLIGATION `M` REGRADED UPWARD ON MY OWN MEASUREMENT · THREE NEW FINDINGS BANKED · ONE DESK BEHAVIOUR CHANGED · `R3` OPENED EXPLICITLY**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD a21f27be`. SEATS: desk `21488` · worker `26036`. ONE each.**
+
+### §0 — ⏳ THE WAIT, SIXTEENTH ROUND — HONOURED, NO EXCEPTION INVOKED
+✅ **The read was in hand before drafting. The worker was IDLE, which is the state that tempts the exception — and `R-792`, `R-795` and `R-799` all refused it before me.** `A PRECEDENT YOU INVOKE AGAINST OPTION A BINDS YOU ON OPTION B.` **The price was stated to the operator in plain words while it ran.**
+⭐ **AND THE WAIT EARNED ITS KEEP AGAIN, IN A WAY I COULD NOT HAVE: the read corrected obligation `M`'s grade UPWARD and caught a semantic trap in the test fixture that neither the worker nor I saw. Both are in `§2` and `§4`, and I verified both rather than adopting them.**
+
+### §1 — ✅ LANE `L` CLOSED `5 / 5` — THE MONEY-PATH WALL IS DOWN
+✅ **`[MEASURED HERE, my own runs, unpiped]`** production-boundary suite `A`–`N` → **`15 passed`** · existing onboarding suites → **`16 passed`** (regression control) · Python planner contract after the prose edit → **`13 passed`** · `git status` on `src scripts tests` → **CLEAN**, no mutation left live · `refuseExecutionCandidate` returns refusal STRINGS, wired `:620` → `:761 refused_candidate_identity_conflict`. **I did not take the report's numbers.**
+✅ **THE REPAIR IS THE ONE ORDERED.** LEGACY (no `executionCandidate`) = `spec_hash + symbol`, exactly as before. CANDIDATE-AWARE = `spec_hash + symbol + candidate_id`. 🛑 **`cache_identity` is NOT a fourth identity dimension** — same candidate + changed cache identity REFUSES as provenance drift, and the test asserts **neither inserted NOR skipped**, because *"not inserted"* alone is satisfied by a silent skip. ★★★★ **`AN ASSERTION THAT ONLY FORBIDS ONE OF THE TWO WRONG ANSWERS IS SATISFIED BY THE OTHER ONE.`**
+✅ **THE MUTATION BITES AT THE REAL SERVICE — `M1` removes `candidate_id` from the REAL TypeScript duplicate lookup and reds `A B C D F G N`. `F` and `G` both fall. STOP `[8]` DOES NOT FIRE.** ⇒ **THE CANDIDATE DIMENSION IS LOAD-BEARING IN THE ACTUAL SERVICE. That is what lane `L` existed to prove, and it is the thing `F-MP1-SCOPE-1` proved we had NOT yet done.** ⭐ **The worker hand-read `M1`'s letters off raw failure lines FIRST, then required its extractor to REPRODUCE that hand answer before trusting any later arm. That is `[ps-counting-encoding]` applied before the instrument was needed, not after it lied.**
+✅ **THE FIREBREAK HELD:** TypeScript validates only the receipt's OUTER transport contract and checks `payload` for PRESENCE, NEVER CONTENT. **Python remains the candidate semantic authority; TypeScript is shipping-and-storage authority and did not become compiler #2.** ✅ **Identity persists as SIBLINGS of `compiled_spec`. `spec_hash` semantics unchanged · NO SQL column · NO migration.**
+
+### §2 — ⚖️ OBLIGATION `M` REGRADED **UPWARD**, ON MY OWN MEASUREMENT
+🛑 **`AR-944` reported `M` as *"convicted by nothing"* and refused to let `13/14` read as `14/14`. That honesty is the standard — but the read is right that it UNDERSTATES `M`, and I verified the correction rather than adopting it.**
+✅ **`[MEASURED HERE]` `M` IS BACKED BY TWO REAL-SERVICE INTEGRATION ASSERTIONS:** `[1]` the new suite at `:358`/`:362`/`:363` — a legacy call inserts, **a second legacy call with a DIFFERENT `timeframe` returns `skipped_duplicate`, and `rows.length === 1`** ⇒ **this proves the legacy key ignores `timeframe`, which is the exact property `M` asserts** · `[2]` `spec-onboarding-service.test.ts:354`, which **PREDATES lane `L` entirely** and asserts every status is `skipped_duplicate` on re-onboarding.
+⇒ ✅ **THE HONEST GRADE, AND IT IS NOW STANDING WORDING: `14 / 14 ASSERTED · 13 / 14 MUTATION-CONVICTED`.** 🛑 **NOBODY MAY WRITE `14/14 MUTATION-CONVICTED`.** ⚖️ **`MP1-OBLIGATION-M-UNCONVICTED-1` STAYS OPEN as a TEST-STRENGTH DEBT — it is not a reason to reject the repair, and `R-799`'s lesson applies in reverse here: I will not spend an hour fighting a hanging harness to turn a true statement into a differently-labelled true statement.** ★★★★★ **`"NOT MUTATION-CONVICTED" AND "NOT COVERED" ARE DIFFERENT DEBTS, AND COLLAPSING THEM UNDERSTATES YOUR EVIDENCE EXACTLY AS BADLY AS OVERSTATING IT.`**
+
+### §3 — ✅ THREE SELF-DISCLOSED INSTRUMENT FAILURES · `MUTATION-HARNESS-ATOMICITY-1`
+⭐ **ALL THREE WERE DISCLOSED UNPROMPTED AND EACH ONE IS A LAW:**
+**`[1]`** a shell-mangled mutation produced INVALID TypeScript — **`exit=1` with ZERO per-test failures**, scored by the extractor as *"no letters"*. ★★★★★ **`exit != 0` AND `A BITTEN MUTATION` ARE NOT THE SAME EVENT — A HARNESS THAT CANNOT TELL THEM APART SCORES A BROKEN BUILD AS A PASSING RED-PROOF.`**
+**`[2]`** orphaned `vitest` runners took runs from `13s` to `>420s`, and **the worker nearly attributed that to a Python subprocess in the production path.** ★★★★ **`SLOWNESS IS THE ONE SYMPTOM THAT LOOKS LIKE THE CODE'S FAULT.`** ⭐ **It reaped only its own and correctly identified the desk's ruling ear as a `bash` process that was never a candidate — `NEVER KILL AN EAR YOU DID NOT ARM`, honoured under pressure.**
+**`[3]` THE ONE THAT MATTERS: a harness killed between apply and restore left `return null;` injected at `:486` inside `refuseExecutionCandidate`, which neuters `H`/`I`/`J`/`K` ENTIRELY — and the harness's own last line printed `restore: OK` from an EARLIER arm.** **The pre-battery `sha256` pin caught it.** ★★★★★ **`A NEUTERED VALIDATOR UNDER A GREEN SUITE IS INVISIBLE — THE FOUR TESTS THAT WOULD HAVE CAUGHT IT ARE THE FOUR IT DISABLED.`**
+✅ **BANKED AND BINDING — `MUTATION-HARNESS-ATOMICITY-1`: destructive source mutations run in an ISOLATED WORKTREE, never the shared campaign tree.** Minimum: pre-mutation file SHA · `try/finally` restore · post-restore SHA equality · process-group cleanup · **nonzero runner exit with zero named test failures = `INCONCLUSIVE`, never mutation success** · no next arm until the pristine control passes. 🛑 **Do NOT build a general mutation framework for this — just stop mutating shared production files in place.**
+
+### §4 — 🛑 `MP1-CANDIDATE-DURATION-VS-TF-1` — THE READ'S CATCH, VERIFIED, AND I ADD THE EVIDENCE THAT SETTLES IT
+🛑 **THE TRAP: `[MEASURED HERE]` `L-4` sets `TF_A="5m"` · `TF_B="15m"` · `TF_C="30m"` and passes them as the row's `timeframe`. But the certified opening-range variants are **OPENING-RANGE DURATIONS**, not EXECUTION-CHART TIMEFRAMES. Those are different concepts and the fixture pairs them 1:1.**
+✅ **THE REPAIR ITSELF IS SAFE AND I CONFIRMED WHY:** `[MEASURED HERE, the test's own header at `:126-127`]` *"The ids encode NO trading semantics. `R-797 §6` forbids a timeframe-derived candidate, and ids reading `..._5m` would invite the next reader to parse a duration"* ⇒ **identity is the OPAQUE `candidate_id`, never the timeframe, and obligation `N` asserts no identity is derivable from name or timeframe.**
+⭐⭐ **AND THE EVIDENCE THAT SETTLES IT IS ALREADY IN HAND, FROM A PROBE THE WORKER RAN FOR A DIFFERENT REASON: `AR-944 §4`'s three-candidates-sharing-ONE-exec-timeframe probe inserted all three.** ⇒ **THE FIXTURE'S `5m`/`15m`/`30m` IS INCIDENTAL, NOT LOAD-BEARING — the repair provably does not require three different chart timeframes.** ★★★★★ **`THE PROBE HE RAN TO CHASE A HANG IS THE PROOF THAT HIS FIXTURE'S TIMEFRAME CHOICE WAS NEVER A SEMANTIC COMMITMENT — EVIDENCE COLLECTED FOR ONE QUESTION OFTEN ANSWERS A BETTER ONE, IF SOMEONE ASKS.`**
+🛑🛑 **HARD RULE, MINTED NOW AND BINDING ON `MP1-CANDIDATE-INGRESS-1`: NEVER TURN *"15-MINUTE OPENING RANGE"* INTO *"15-MINUTE CHART"* UNLESS THE SOURCE ACTUALLY TAUGHT BOTH.** **Ingress uses the REAL Python golden candidates and preserves the source's REAL execution timeframe INDEPENDENTLY of the opening-range duration.** ★★★★★ **`SOLVING IDENTITY AND THEN INVENTING THE SEMANTICS IT CARRIES IS A WORSE OUTCOME THAN THE COLLAPSE WE JUST FIXED — THE COLLAPSE LOST TWO BOTS VISIBLY; THIS WOULD SHIP THREE BOTS THE TEACHER NEVER TAUGHT.`** (Campaign invariant `1`/`2`: source-owned logic is never silently rewritten.)
+
+### §5 — 🛑 A HAZARD THE DESK CAUSED — OWNED, AND MY OWN BEHAVIOUR CHANGES
+🛑 **`AR-944 §0` measured it: the worker read `git status --untracked-files=no` as EMPTY mid-lane and concluded its uncommitted `L-3`/`L-4`/`L-5` were GONE. They were not.** `[MEASURED, worker]` **two `42,321`-byte patches sat in `~/.cache/pre-commit/` at `14:13` and `14:30` — its diff, round-tripped by MY OWN path-scoped commits, twice.** `[precommit-stash]`: **a path-scoped commit is NOT a path-scoped hook; the stash is TREE-WIDE and `git stash list` reads EMPTY while it holds.**
+✅ **DESK BEHAVIOUR CHANGED, EFFECTIVE NOW — no ruling needed, it is mine: I will BATCH ledger and state writes during an active lane instead of committing after every step.** ★★★★★ **`ON A SHARED TREE, THE DESK'S OWN COMMIT CADENCE IS AN INSTRUMENT THE WORKER MUST READ THROUGH — I WAS THE NOISE IN HIS MEASUREMENT, AND I FOUND OUT BECAUSE HE REPORTED HIS OWN FALSE ALARM.`**
+⚖️ **AND THE DEEPER RULE, ADOPTED: `DO NOT USE A SHARED WORKTREE AS A STABLE OBSERVATION SURFACE WHILE ANOTHER SEAT MAY COMMIT.`** This is the same argument as `MUTATION-HARNESS-ATOMICITY-1` and it points the same way — **isolated worktrees for graders, mutation runs, acceptance certification and adversarial plants.**
+
+### §6 — ⚖️ THE CLAIM BOUNDARY · AND MY AMBIGUITY, OWNED
+🛑🛑 **WHAT IS TRUE: THE CANDIDATE-AWARE PERSISTENCE BOUNDARY IS GREEN. WHAT IS NOT TRUE: THAT THE COMPILER → DATABASE → BACKTEST MONEY PATH IS GREEN.** `[MEASURED HERE, third independent path — the regenerated `SYSTEM-INVENTORY` at `66bdf77d`]` the `spec-onboarding-service.ts` module's types are still marked ***"defining module is not reachable from any measured entry point."*** ⇒ ★★★★★ **`THE SHIPPING DOOR NOW KEEPS ALL THREE BOXES. THE CONVEYOR BELT IS STILL NOT CONNECTED TO THE DOOR.`** 🛑 **NOBODY MAY SAY *"compiler → production database is now wired."* Two arrows remain: `MP1-CANDIDATE-INGRESS-1`, then `MP1-BACKTEST-FORWARD-1`.**
+🛑 **AND `AR-944` ASKED A FAIR QUESTION I MUST ANSWER AGAINST MYSELF: `R-799 §7` said `R3` *"OPENS WHEN `L` CLOSES"*. I INTENDED SELF-EXECUTING AND DID NOT SAY SO, SO THE WORKER IDLED WAITING FOR A WORD.** ⚖️ **Its caution was correct — `A PREDECESSOR'S PROPOSED NEXT STEP IS NOT A DISPATCH` cuts both ways, and a seat that self-authorizes on an ambiguous clause is the worse failure.** ✅ **STANDING FIX: A CONDITIONAL AUTHORIZATION MUST NAME ITS TRIGGER *AND* STATE WHETHER A FURTHER WORD IS REQUIRED. Silence on that question defaults to REQUIRED, and the cost of my silence was one idle worker.** ★★★★ **`A TRIGGER WITHOUT A STATED SELF-EXECUTION CLAUSE IS NOT AN AUTHORIZATION — IT IS A HINT.`**
+
+### §7 — ⚡ `R3` IS OPEN. NOW. EXPLICITLY.
+✅ **CONTRACT UNCHANGED FROM `R-799 §7` — `R3-1` … `R3-5`, five items, and it may not become six. NO FURTHER WORD IS REQUIRED; this sentence is the word.**
+🛑 **START WITH THE CRITICAL, NOT THE CLEANUP. `R3-1` FIRST, RED-FIRST:** run `ACCEPT-5` successfully once so valid artifacts exist → break the tree → make pytest fail BEFORE it can execute the governed population → invoke the ACTUAL `acceptance_runner.py --run` → **demonstrate the CURRENT instrument consumes the stale prior JSON/XML and reports `PASS`.** **That is the permanent RED.** Then the fresh-run protocol carried verbatim in `R-799 §2`, and the same test must read **`REFUSED — INVALID/FRESH RUN NOT PRODUCED`**. 🛑 **No synthetic helper, no mocked subprocess as the only proof.** 🛑 **And per `§3`: run the destructive arms in an ISOLATED WORKTREE.**
+⚠️ **START-RECEIPT owed within ~2 minutes. FIRST OBSERVABLE: the `R3-1` permanent RED committed, demonstrating `PASS` from stale artifacts.**
+
+### §8 — 🛑 STOPS · FORBIDDEN · DEFERRED
+🛑 **STOPS: `R-799 §8`'s six, carried unchanged, plus `[7]`: any destructive mutation is found to have been run in the SHARED campaign tree rather than an isolated worktree — stop and re-run it isolated before trusting the arm.**
+🛑 **FORBIDDEN:** `MP1-CANDIDATE-INGRESS-1` · `/api/backtests` · compiler expansion · paper-ORB · candidate-name cleanup · amending/regenerating the `S6` root seal · `--from-run` issuing authoritative `PASS` · citing any `ACCEPT-5 PASS` as sign-off evidence · DB schema · `spec_hash` semantics · `--no-verify`.
+✅ **DEFERRED REGISTER — new:** **`MP1-CANDIDATE-DURATION-VS-TF-1`** | worker | ingress preserves the source's REAL execution timeframe independently of opening-range duration | **WAKE: at `MP1-CANDIDATE-INGRESS-1`, before its first fixture is written** | evidence `R-800 §4` · **`MUTATION-HARNESS-ATOMICITY-1`** | worker | isolated worktree + the six minimums | **WAKE: NOW, binding on `R3`** | evidence `AR-944 §3` · **`MP1-MUTATION-ARM-HANG-1`** | worker | the `M5`/`M6` hang mechanism, **UNRESOLVED with its hypothesis REFUTED and no substitute** | WAKE: if it recurs in `R3` | evidence `AR-944 §4`.
+✅ **`MP1-CANDIDATE-IDEMPOTENCY-1` — CLOSED. That is the wall lane `L` existed to take down.** **`MP1-OBLIGATION-M-UNCONVICTED-1` open as a test-strength debt (`§2`).** **`MP1-CANDIDATE-NAME-1` stays banked — duplication does NOT block persistence; WAKE only when a downstream consumer is SHOWN to key by name.** **CARRIED:** `MP1-CANDIDATE-INGRESS-1` · `MP1-BACKTEST-FORWARD-1` · `ACCEPT5-FRESH-VALIDATOR-1` · `SEALED-MEMBER-CORRECTION-1` · `ACCEPT5-POPULATION-SUCCESSOR-1` · `ACCEPT5-TEST-SIDE-EFFECT-1` · `CANDIDATE-TRIAL-IDENTITY-1` · `MP-REQBODY-AUTHORITY-1` · `WORKER-GUARD-ACT-1` · `ACCEPT5-USAGE-ERROR-1` · `ACCEPT5-ARTIFACT-TO-CAMPAIGN-1` · `ACCEPT5-SEAL-SINGLE-SOURCE-1` · `ACCEPT5-POPULATION-DRIFT-1`.
+
+### §9 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+ACHIEVED THIS ROUND: the candidate-aware PRODUCTION PERSISTENCE boundary is green.
+                 BEFORE: 5m -> row · 15m -> swallowed · 30m -> swallowed.
+                 AFTER : A -> row A · B -> row B · C -> row C, one parent spec,
+                 three durable identities. MUTATION-PROVEN AT THE REAL SERVICE.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- but it is NOT authorized yet.
+AUTHORIZED NOW : R3, worker 26036. Instrument repair, admitted under admission-rule 2:
+                 the ACCEPT-5 receipt is what every future sign-off joins on and it is
+                 MEASURED able to certify a run that never happened. R-799 ordered it
+                 before any new money-path lane; L has closed, so R3 opens.
+STOP           : SS8.
+```
+
+### §10 — 📌 LESSONS TO PERSIST
+★★★★★ **`"NOT MUTATION-CONVICTED" AND "NOT COVERED" ARE DIFFERENT DEBTS — COLLAPSING THEM UNDERSTATES YOUR EVIDENCE EXACTLY AS BADLY AS OVERSTATING IT.`**
+★★★★★ **`OPENING-RANGE DURATION IS NOT EXECUTION TIMEFRAME. SOLVING IDENTITY AND THEN INVENTING THE SEMANTICS IT CARRIES SHIPS THREE BOTS THE TEACHER NEVER TAUGHT.`**
+★★★★★ **`A NEUTERED VALIDATOR UNDER A GREEN SUITE IS INVISIBLE — THE FOUR TESTS THAT WOULD HAVE CAUGHT IT ARE THE FOUR IT DISABLED.`**
+★★★★★ **`ON A SHARED TREE, THE DESK'S OWN COMMIT CADENCE IS AN INSTRUMENT THE WORKER MUST READ THROUGH.`**
+★★★★ **`A TRIGGER WITHOUT A STATED SELF-EXECUTION CLAUSE IS NOT AN AUTHORIZATION — IT IS A HINT.`**
+★★★★ **`AN ASSERTION THAT ONLY FORBIDS ONE OF THE TWO WRONG ANSWERS IS SATISFIED BY THE OTHER ONE.`**
+★★★★ **`EVIDENCE COLLECTED FOR ONE QUESTION OFTEN ANSWERS A BETTER ONE, IF SOMEONE ASKS.`**
+
+---
+
 ## R-799 · 2026-08-10 · ⚖️ **THE `ACCEPT-5` INDEPENDENT REGRADE IS ACCEPTED: `VERIFIED BAND 5`.** 🛑🛑🛑 **AUTHORITY STATUS: **REJECTED**. THE ANSWER TO THE ONE QUESTION IS `YES` — THIS INSTRUMENT CAN CERTIFY A RUN THAT NEVER HAPPENED, AND I CONFIRMED IT AT THE EXECUTABLE LINE.** 🛑 **`F-R2-3` VERIFIED AND WIDENED BY ME: THE TWO SEALED TESTS NEVER MEASURED THE GRADED TREE — NOT AT `HEAD`, NOT AT THE SEAL, NOT EVER — AND THE FILE THEY DO READ HAS BEEN FROZEN SINCE JULY 18.** 🛑 **`ACCEPT5-ENV-DETERMINISM-1` REOPENED; MY OWN "CLOSED" WAS TOO BROAD.** ⚡ **LANE `L` FINISHES. THE `ACCEPT-5` REPAIR IS LANE `R3` AND IT OPENS THE MOMENT `L` CLOSES — MEASURED, NOT PREFERRED: THERE IS EXACTLY ONE WORKER SEAT.**
 
 > ### ★ WORKER `claude.exe 26036` — START HERE
