@@ -4,6 +4,65 @@
 
 ---
 
+## AR-926 · 2026-08-10 · 🔵 **START-RECEIPT — BOTH `R-789` LANES ACCEPTED BY `claude.exe 23344`, FAN-IN TARGET `2`, EACH `0 / 2`.** ⭐ **`GATE-LIM-2` IS ALREADY LOCALISED AT THE LINE AND THE MISSING POPULATION MEMBERS ARE NAMED: THE GENERATOR READS `REFERENCE_ROOTS = ["src", "scripts", "e2e", "tests"]`; THE GATE WATCHES `("src/", "scripts/")`. ⇒ `tests/` AND `e2e/` MOVE THE MAP AND THE GATE SKIPS.** ✅ **LANE `B`'s ISOLATED READ-ONLY WORKTREE IS UP AT THE SEAL PIN `08062e12`.** ⚠️ **ONE DEVIATION DECLARED UP FRONT: I AM RUNNING BOTH LANES MYSELF, NOT AS SUBAGENTS — `worker-execution §5a` RECORDS THAT THIS HARNESS DOES NOT LAUNCH SUBAGENTS WITHOUT THE OPERATOR'S WORD.**
+
+**SEAT `claude.exe 23344` (born `01:56:32`) — and `R-789`'s own census says `desk 21324 + worker 23344`, which MATCHES my `Win32_Process` walk exactly, so the ruling is addressed to the seat that actually holds it. CAMPAIGN TREE `HEAD 36f890f2`. LANE `B` TREE `wt-mp1-recon-20260810` @ `08062e12` (detached).**
+
+### §1 — ✅ PRIOR-ART GATE, RUN BY ME AND NOT INHERITED
+```
+[MEASURED HERE] python scripts/system_inventory.py --check -> REAL exit 0 (FRESH), 15,332 ms
+```
+✅ **The generated map is usable as prior-art evidence this turn.** ⚖️ **`R-789` already published its own gate run and CITED `GATE-LIM-2` (`17`/`7`) and `MP-1` (`39`/`22`) as deep prior art NOT to be re-adjudicated. I adopt that and re-open neither.** ⭐ **The `15.3 s` figure is mine and it matters — see `§2`, it is the price of the ordered repair and I measured it before proposing anything.**
+
+### §2 — ⭐ LANE `A` / `GATE-LIM-2`: THE DEFECT IS PROVEN AT THE LINE, NOT ASSUMED FROM THE RULING
+```
+[MEASURED HERE — scripts/system_inventory.py]
+:65  SYMBOL_ROOTS    = ["src"]
+:69  REFERENCE_ROOTS = ["src", "scripts", "e2e", "tests"]     <- THE GENERATOR'S POPULATION
+[MEASURED HERE — scripts/inventory_freshness_gate.py]
+:79  WATCHED = ("src/", "scripts/")                            <- THE GATE'S POPULATION
+:101 _code_changed_vs_upstream()  -> if nothing matches WATCHED, main() returns 0 at :125
+                                     WITHOUT EVER ASKING THE GENERATOR.
+```
+🛑 **⇒ THE GAP IS EXACTLY `{tests/, e2e/}`, and it is not hypothetical:**
+```
+[MEASURED HERE]  tests/  EXISTS, 35 py/ts files
+                 e2e/    EXISTS, 0 py/ts files (1 .mts, which the map still cites)
+                 rows in SYSTEM-INVENTORY.md citing those roots -> 7
+                 e.g. tests/test_cross_engine_parity.py · tests/test_golden_fixtures.py
+                      e2e/office-test-server.mts
+```
+⇒ **A push whose only changes are under `tests/` can move the map — reference counts and the "no non-test reference" classification are exactly what those rows carry — while the gate exits `0` at `:125` and never asks. THAT IS `GATE-LIM-2`.** ⭐ **This also hands me the red-proof for free: the discriminating change lives in `tests/`, a root the OLD gate is blind to BY CONSTRUCTION.**
+⚡ **REPAIR (as ordered): delete `WATCHED` and `_code_changed_vs_upstream()`; ALWAYS delegate to `--check`.** 🛑 **NOT extending the allowlist to `("src/","scripts/","e2e/","tests/")` — `R-789` names that as `INV-2` again, and it would be a SECOND hand-maintained copy of the generator's population that silently re-diverges the next time `REFERENCE_ROOTS` gains a member.** ★★★★★ **`FIXING A DIVERGENCE BY COPYING THE CORRECT SIDE PRESERVES THE DIVERGENCE`** — the gate's own docstring already says this at `:38-42` about a different duplication, so the file argues against its own `WATCHED` constant.
+⚠️ **THE PRICE, MEASURED AND DECLARED BEFORE I CHARGE IT: `--check` costs `15.3 s`, so EVERY push now pays it — including docs-only pushes, which on this campaign are the MOST FREQUENT kind (rulings and ARs).** ⚖️ **I am implementing it as ordered and I am NOT treating the cost as a reason to hedge** (`[stated-price-not-prohibition]`: a stated cost is not a prohibition). **I flag it because `R-789` chose correctness over the skip and the operator should see the bill, not because I think it is wrong.**
+
+### §3 — ✅ LANE `B` / `MP-1`: ISOLATION SATISFIED BEFORE ANY READ
+✅ **`git worktree add --detach C:/Users/tonio/Projects/wt-mp1-recon-20260810 08062e12` — up, detached at the SEAL SHA, `4,838` files checked out.** ⚖️ **`R-789 §7` made isolation MANDATORY because `[precommit-stash]` is measured here: a Lane `A` commit in the shared tree stashes and restores Lane `B`'s unstaged work. **Lane `B` writes nothing by contract, so the hazard is small — but the pin is the real reason: Lane `B` must read the SEALED tree (`08062e12`), and the campaign tree has already advanced to `36f890f2`.**
+🛑 **LANE `B` CONTRACT RESTATED SO I CAN BE HELD TO IT: trace the eight-arrow conveyor, classify every arrow, STOP AT THE FIRST MISSING ARROW, classify `OR-DUPLICATE-1`'s reachability ONLY. WIRE NOTHING. WRITE NO PRODUCTION CODE. DO NOT audit the ~1,500 unreachable inventory.**
+
+### §4 — ⚠️ THE ONE DEVIATION FROM `R-789 §7`, DECLARED BEFORE I START RATHER THAN AT DELIVERY
+🛑 **`R-789 §7` says *"RUN THEM IN PARALLEL AS YOUR OWN SUBAGENTS"*. I am NOT fanning out; I am running both lanes myself.**
+⚖️ **REASON, and it is the campaign's own record rather than a preference: `worker-execution §5a` states verbatim that *"this harness does not launch subagents unless the operator asks for one"*, and my operating instruction is the same. No operator request for a fan-out exists on this lane.**
+✅ **NOTHING BINDING IS LOST, and I name what is:** the isolation requirement is satisfied by the worktree, not by the concurrency mechanism; the fake-edge finding still holds; I remain the single integrator and single signer either way. **What IS lost is WALL-CLOCK — `R-789` called serialization *"waiting time given away"*, and that cost is real and is mine.**
+⭐ **PRECEDENCE HONOURED ANYWAY: `R-789` says if the lanes contend, LANE `B` WINS. Serialized, they cannot contend — but if I run short of capacity, `B` is the lane I finish, because it is the only one with an evidenced edge to the exit.**
+⚠️ **If the desk wants the true fan-out, it is one operator sentence away and I will take it.**
+
+### §5 — ⚡ FIRST OBSERVABLES + ETA (`R-789 §7`)
+- **LANE `A`:** the `GATE-LIM-2` red-proof going RED on the OLD gate — a `tests/`-only change that moves the map, which the old gate waves through — **~20–40 min.**
+- **LANE `B`:** the eight-arrow classification table with the FIRST MISSING ARROW named — **~30–60 min.**
+🛑 **If nothing observable by then I publish a one-line receipt saying so.**
+
+### §6 — 🛑 STOP CONDITIONS I AM CARRYING (`R-789 §8`), AND THE ONE I EXPECT TO MATTER
+**`[1]`** Lane `B` finds `bias-state-service.ts`'s second calculator IS reachable to the backtest/live decision path ⇒ **outranks both lanes, straight back to the desk.** ⚖️ **This is the one I rate most likely to fire and it is the reason `B` is the priority lane.** · **`[2]`** a red-proof fails to bite ⇒ **a blind gate outranks the repair** · **`[3]`** `GATE-LIM-2` cannot be repaired without a second allowlist · **`[4]`** recon needs a WRITE to answer its question · **`[5]`** any `S6` suite reddens · **`[6]`** the lanes contend for a file.
+🛑 **FORBIDDEN AND UNTOUCHED:** all compiler expansion · `OR-STATE-HANDOFF-1` · deleting or rewriting `bias-state-service.ts` · any production money-path WRITE · wiring during recon · the immutable baseline · the historical `S6` result · the `6B`/`six_step` names.
+
+### §7 — 🛑 NOT YET MEASURED
+- **Whether a `tests/`-only edit ACTUALLY flips `--check` to STALE.** ⚠️ **`§2` proves the root is in the generator's population and that the map cites it; it does NOT yet prove a specific edit moves the output. That is the red-proof itself and it is the next thing I run — I am not claiming it in advance.**
+- **Anything in Lane `B`.** No arrow is classified yet; no claim is made about reachability, in either direction.
+- **PRIOR ART STATED:** `system_inventory --check` FRESH · `R-789` read in full · `GATE-LIM-2` and `MP-1` prior art CITED per `R-789`'s own gate, not re-adjudicated · `worker-execution` re-invoked after `R-789` landed (the guard blocks code writes otherwise, and it blocked me correctly earlier this session).
+
+---
+
 ## AR-925 · 2026-08-10 · 🔵 **SUCCESSOR START-RECEIPT — THE SEAT CRASHED AND ROLLED. NEW SEAT `claude.exe 23344`, TAKING THE `DAILY-RESET-1` LANE BY `R-784 §3` EXACTLY AS `R-788` PRE-ROUTED IT.** ✅ **NOTHING WAS LOST: `8f729410` IS ON `origin`, `HEAD 839174f4` `==` REMOTE, AND THE ONLY TRACKED "CHANGE" IS THE KNOWN `wave25` STAT-CACHE GHOST (`numstat` EMPTY).** ✅ **EAR RE-ARMED AND DELIVERING — IT DIED WITH THE PROCESS AND I WAS BLIND UNTIL `05:58:56Z`; I NAME THE WINDOW RATHER THAN LET IT PASS.** 🛑 **`HOLD` STANDS. I HAVE STARTED NOTHING.** ⚠️ **AND ONE UNPAID DISCLOSURE FROM THE PREVIOUS SEAT: MY OWN EAR EMITTED A FALSE FIRE, I FIXED IT, AND THE CRASH TOOK THE REPORT BEFORE IT REACHED THIS LEDGER.**
 
 **SEAT `claude.exe 23344` (born `01:56:32`; parent walk `powershell 8960 → claude.exe 23344 → powershell 2284 → explorer 11340`). PREDECESSOR `claude.exe 23892` — GONE. LANE `DAILY-RESET-1`: COMPLETE AND ACCEPTED AT `R-788`, ATTEMPT `1 / 2`, NOTHING OWED. `MP-1` · `GATE-LIM-2` · `ACCEPT-5` collection repair: ALL UNSTARTED.**
