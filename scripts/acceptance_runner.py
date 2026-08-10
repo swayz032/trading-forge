@@ -87,18 +87,46 @@ TREE_AUTHORITY_UNAVAILABLE = (
 #
 # Residue, named rather than waived: a tracked docs/ change cannot be seen by this join.
 # That is correct only while no governed member reads docs/ as source.
-AUTHORITY_SOURCE_PATHS = ("src", "scripts")
+# ACCEPT5-TREE-AUTHORITY-CONFIG-1 (R-807 SS4). The first version of this set was
+# ("src", "scripts") and MEASURABLY missed three ways to change what pytest executes
+# while the gate still reported CLEAN:
+#
+#   pyproject.toml            carries [tool.pytest.ini_options] -- testpaths,
+#                             python_files, pythonpath. It does not accompany the run,
+#                             it DEFINES which tests are collected and how they import.
+#   an untracked conftest.py  pytest AUTO-LOADS it. No manifest names it, and the old
+#                             --untracked-files=no could not see it at all.
+#   tests/python              a DECLARED testpath (pyproject.toml:30) holding 26 tracked
+#                             files that pytest executes, entirely outside the old set.
+#
+# That third one is the reason this list is the ruling's and not the obvious one:
+#   `A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE THE LIST IS
+#    SUPPOSED TO GUARD.`
+# It is self-defending at one remove -- editing `testpaths` now dirties pyproject.toml,
+# which IS guarded -- and ACCEPT5-AUTHORITY-SURFACE-DERIVED-1 is banked to derive this
+# surface from testpaths rather than hard-code it.
+#
+# `docs/` remains EXCLUDED for the reason in the block above: a governed member rewrites
+# a tracked file there during every run, and guarding it would refuse every authoritative
+# run. Paths that do not exist are fine -- the requirement is that CREATING one is seen.
+AUTHORITY_SOURCE_PATHS = (
+    "src", "scripts", "tests",
+    "pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg", "conftest.py",
+)
 
 
 def _dirty_source_paths():
-    """Tracked modifications under AUTHORITY_SOURCE_PATHS, or None if git cannot answer.
+    """Working-tree changes under AUTHORITY_SOURCE_PATHS, or None if git cannot answer.
 
-    Tracked only: an untracked file is not executed unless the manifest names it, and
-    the manifest members are resolved and reported separately.
+    UNTRACKED FILES COUNT. The previous version passed --untracked-files=no and excused
+    it with "an untracked file is not executed unless the manifest names it" -- which is
+    FALSE: pytest auto-loads conftest.py, and no manifest names it. That comment asserted
+    a safety property pytest's own collection rules contradict, and it sat inside the
+    function it was excusing.
     """
     try:
         proc = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=no", "--",
+            ["git", "status", "--porcelain", "--untracked-files=all", "--",
              *AUTHORITY_SOURCE_PATHS],
             cwd=REPO, capture_output=True, text=True, timeout=60,
         )
@@ -120,10 +148,15 @@ def _sha256_file(path):
 def _git_head():
     """The executing tree's HEAD, or None if git cannot answer.
 
-    None is returned rather than raising: a tree without git history is a degraded
-    environment, not an invalid pytest run, and conflating the two would convert a
-    missing tool into a false refusal. Callers must therefore treat None as
-    "unknown" and skip the HEAD-did-not-move join rather than fail it.
+    None is returned rather than raising so the CALLER decides what it means. On the
+    authoritative --run path the caller REFUSES (TREE_AUTHORITY_UNAVAILABLE): a run that
+    cannot name the commit it measured may not sign a verdict.
+
+    An earlier version of this docstring told callers to "skip the HEAD-did-not-move join
+    rather than fail it". That was the fail-open behaviour ACCEPT5-TREE-AUTHORITY-1
+    removed, and the sentence outlived the code it described.
+      `A DOCSTRING THAT SURVIVES THE BEHAVIOUR IT DESCRIBES IS THE NEXT READER'S FALSE
+       PREMISE.`
     """
     try:
         proc = subprocess.run(
