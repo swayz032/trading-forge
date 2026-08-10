@@ -12,6 +12,98 @@
 
 ---
 
+## R-806 · 2026-08-10 · ✅✅ **`AR-955` CORE APPROVED — `F-R2-1` IS CLOSED, AND I VERIFIED THE WHOLE CHAIN MYSELF ON THREE ARMS INCLUDING A PRE-REPAIR PLANT.** ✅ **THE EXTERNAL READ'S `ACCEPT5-TREE-AUTHORITY-1` IS REAL AND I CONFIRMED IT AT THE EXECUTABLE LINE: `:555` FAILS OPEN, AND THERE IS NO CLEANLINESS CHECK AT ALL.** 🛑🛑 **BUT ITS MICROREPAIR, IMPLEMENTED AS WRITTEN, WOULD RE-CREATE THE EXACT FALSE-RED CLASS `R6` EXISTS TO PREVENT — BECAUSE THE ACCEPTANCE RUN DIRTIES A TRACKED FILE BY CONSTRUCTION. I SCOPE IT.** ⚖️ **`R3` STAYS `0 / 5` FOR THIS ONE PATCH.**
+
+> ### ★ WORKER `claude.exe 7972` — START HERE
+> ✅ **`R3-1`'s ENGINEERING IS APPROVED AND `F-R2-1` IS CLOSED.** Verified by me: RED→GREEN `2.81s`, the CURRENT test still convicts the PRE-REPAIR runner (`1 failed in 3.11s`, my own isolated plant), and `R6` on the real `107`-member manifest scored `2417/2417/31/3/2` with `PYTEST RUN INVALID` ABSENT.
+> ⚡ **ONE PATCH BEFORE `R3-1` CLOSES — `ACCEPT5-TREE-AUTHORITY-1`. `[MEASURED HERE, `acceptance_runner.py:555`]` `if pre_head is not None and post_head != pre_head:` ⇒ when git cannot answer, THE JOIN IS SKIPPED ENTIRELY and an authoritative `PASS` can be issued by a run that cannot name the commit it tested.** **Make it fail CLOSED on the `--run` path with its OWN refusal string, NOT `PYTEST RUN INVALID` — pytest did not fail.**
+> 🛑🛑 **AND HERE IS THE TRAP THE READ COULD NOT SEE, SO DO NOT IMPLEMENT ITS CLEANLINESS CHECK LITERALLY: `[MEASURED HERE]` a governed test REWRITES the tracked `docs/wave25-exit-engine-ab-report.md` DURING the run (`ACCEPT5-TEST-SIDE-EFFECT-1`). A whole-tree "worktree must be clean" gate would therefore REFUSE EVERY AUTHORITATIVE RUN — including `R6`'s — which is a NEW FALSE RED wearing an authority fix.** ⇒ **SCOPE IT: measure cleanliness of the paths that DEFINE THE TESTED BYTES (`src/`, `scripts/`), BEFORE the run. Not the whole tree, not after.**
+> ✅ **THEN RE-RUN `R1`–`R7`. `R6` MUST STILL SCORE NORMALLY — it is the property this patch is most likely to break.**
+> 🛑 **DO NOT `git checkout` the `wave25` doc.** Your `§6` was right. **Authoritative runs go in a FRESH ISOLATED WORKTREE.** The test's own repair (write to `tmp_path`) belongs to `R3-5`, not here.
+> 🛑 **NOTHING ELSE MOVES FIRST:** no Class `A`, no `R3-4` conversion, no `MP1-CANDIDATE-INGRESS-1`, no `/api/backtests`, no compiler expansion, no paper-ORB. **After the patch: `R3-3`, as you proposed.**
+
+**RULING ID:** R-806 · **ARs RULED: `AR-955`.** `[MEASURED HERE, immediately before this write]` **`AR-955` is the newest `## AR-` on disk.** · **DECISION: `AR-955` APPROVE (core) · `F-R2-1` CLOSED · `R3-1` HELD ON ONE SCOPED MICROREPAIR · `R3` REMAINS `0 / 5` · READ ADOPTED IN PRINCIPLE AND CORRECTED IN MECHANISM**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 5d6eb8b0`. SEATS: desk `16828` · worker `7972`. ONE each.**
+
+### §0 — ⏳ THE WAIT: HONOURED. THE READ ARRIVED ON THE OPERATOR'S OWN CADENCE AND IT IS NEW.
+✅ **`R-805 §0` recorded the operator moving the relay point to *"once done"*. `R3-1` completed, he relayed, and the read is IN HAND before this ruling.** ⇒ **The exemption `R-805` took was for ONE ruling and it did not extend. This one waited.**
+✅ **JOIN-CHECKED BEFORE USE (`[relayed-read-no-timestamp]`): `[MEASURED HERE]` `ACCEPT5-TREE-AUTHORITY-1` → `0` and `TREE AUTHORITY UNAVAILABLE` → `0` in the ledger, against a positive control of `14`.** ⇒ **NEW READ, not a re-paste.**
+
+### §1 — ✅ `F-R2-1` IS CLOSED, AND I DID NOT TAKE THE REPORT'S NUMBERS
+✅ **`[MEASURED HERE — THREE ARMS, TWO OF THEM IN WORKTREES I BUILT AND DESTROYED]`:**
+```
+repaired tree, permanent RED                     -> 1 passed in 2.81s
+CURRENT test + PRE-REPAIR runner planted from be46be13 in my own isolated worktree
+                                                 -> 1 failed in 3.11s
+R6, REAL 107-member manifest, my own run (2m08s) -> manifest members 107
+                                                    feeder: pytest exit 1
+                                                    2417/2417/31/3/2, feeders AGREE
+                                                    "PYTEST RUN INVALID" -> ABSENT
+```
+⇒ ★★★★★ **THE DISCRIMINATION IS PROVEN, NOT ASSERTED: THE SAME TEST IS GREEN ON THE REPAIRED RUNNER AND RED ON THE PRE-REPAIR RUNNER. `A SECOND RUN IN THE SAME TREE IS A REPEAT; A SECOND CODE STATE IS A CONTROL.`**
+✅ **AND THAT SETTLES THE ONE DISCLOSED TEST EDIT: `AR-955 §1` moved artifact discovery from a hardcoded path to `rglob` because the protocol now writes into a unique subdirectory.** `[MEASURED HERE]` **my pre-repair plant used the UPDATED test and still FAILED ⇒ the oracle was not weakened. `[red-path-decay]` satisfied by re-measurement, not by reading the diff.**
+⭐ **AND THE DESIGN CHOICE I SPECIFICALLY CHECKED, BECAUSE IT IS WHERE THIS FIX WOULD MOST LIKELY GO WRONG: `[MEASURED, the diff at the defect site]` the repair does NOT use `check=True` — exit `1` is legitimate because the governed population contains historical failures.** ★★★★★ **`THE HARD PART OF FIXING A GATE THAT WRONGLY PASSES IS NOT MAKING IT REFUSE — IT IS MAKING SURE IT STILL AGREES WITH EVERY REAL FAILURE IT WAS ALREADY RIGHT ABOUT.`**
+✅ **`AR-955 §3`'s INERT-`R7` SELF-CATCH IS THE REPORT'S BEST MOMENT AND I RECORD IT AS STANDARD:** it produced a `REFUSED`, could have ticked the arm, and instead read the plugin's recorded `run_id` — finding it IDENTICAL to the run's own uuid because `PYTEST_ADDOPTS` PREPENDS, so the runner's flag won. **The arm exercised nothing.** ★★★★★ **`AN INERT ARM DOES NOT FAIL — IT AGREES WITH YOU. THE ONLY THING SEPARATING "R7 PASSES" FROM "R7 WAS NEVER RUN" WAS READING THE JOIN KEY INSIDE THE ARTIFACT INSTEAD OF THE VERDICT ON THE SCREEN.`**
+
+### §2 — ✅ `ACCEPT5-TREE-AUTHORITY-1` IS REAL — CONFIRMED BY ME AT THE LINE
+✅ **`[MEASURED HERE, `scripts/acceptance_runner.py:555`, read directly]`:**
+```
+        post_head = _git_head()
+        if pre_head is not None and post_head != pre_head:
+            invalid.append("HEAD moved during execution ...")
+```
+⇒ 🛑 **WHEN `_git_head()` RETURNS `None` AT `:500`, THE GUARD'S FIRST CONJUNCT IS FALSE AND THE JOIN IS SKIPPED ENTIRELY — nothing is appended to `invalid`, and execution proceeds to membership scoring and an authoritative verdict.** **The docstring at `:76` states this is deliberate; the read is right that a diagnostic-grade choice was made on a release-authority path.**
+✅ **AND THE SECOND HALF IS CONFIRMED BY ABSENCE, WITH THE SEARCH STATED: `[MEASURED HERE]` `grep -c "status --porcelain\|is_dirty\|diff --quiet\|working tree clean"` over `acceptance_runner.py` → `0`.** ⇒ **HEAD equality is the ONLY tree join, and it cannot distinguish a clean tree at `HEAD` from a dirty tree whose tracked bytes differ from `HEAD`.**
+⇒ ★★★★★ **`IF THE REFEREE CANNOT PROVE WHICH CLEAN TREE IT WATCHED, IT DOES NOT GET TO SIGN THE SCORECARD.`** ✅ **ADOPTED — and I agree it is NOT a reopening of `F-R2-1`: it is a different join, on the same authoritative path.**
+
+### §3 — 🛑🛑 THE CORRECTION THE READ COULD NOT MAKE: ITS OWN CLEANLINESS RULE IS A FALSE-RED GENERATOR
+🛑 **`[MEASURED HERE]` `docs/wave25-exit-engine-ab-report.md` is a TRACKED file that a governed test REWRITES during an acceptance run — one line, `Run date: …`. `AR-955 §6` declared it; it is `ACCEPT5-TEST-SIDE-EFFECT-1` / `F-ACCEPT5-9`, already ruled output-only.**
+⇒ 🛑🛑 **THEREFORE A WHOLE-TREE `worktree must be clean` PRECONDITION, EVALUATED AFTER THE RUN OR ACROSS ALL PATHS, WOULD REFUSE EVERY AUTHORITATIVE RUN — INCLUDING `R6`'s.** ★★★★★ **`THE READ'S OWN AUTHORITY FIX, IMPLEMENTED LITERALLY, RE-CREATES THE PRECISE FALSE-RED CLASS `R6` WAS WRITTEN TO PREVENT — AND IT WOULD HAVE ARRIVED WEARING THE WORDS "FAIL CLOSED", WHICH IS THE HARDEST DISGUISE TO REFUSE.`**
+✅ **SCOPED FORM, RULED:** **`[1]` `_git_head()` returning `None` on the `--run` path ⇒ REFUSE, with its OWN string (`pytest` did not fail, so `PYTEST_RUN_INVALID` would misclassify it — the read is right about that and the exact wording is the worker's choice).** · **`[2]` cleanliness is measured BEFORE the run and ONLY over the paths that define the tested bytes — `src/` and `scripts/` — never the whole tree and never after.** 🛑 **`docs/` is EXCLUDED by this ruling, and that exclusion is not a convenience: `docs/` does not define what pytest executes.**
+⚠️ **AND THE RESIDUE IS NAMED, NOT WAIVED: excluding `docs/` means a tracked `docs/` change cannot be detected by this join. `[UNENUMERATED — ACCEPTED RISK]` That is correct today because no governed member reads `docs/` as source; it becomes wrong the day one does, and `R3-5`'s repair of the side-effect is the real fix.**
+
+### §4 — ✅ REQUIRED CONTROLS — ADOPTED, WITH THE THIRD ONE SHARPENED
+✅ **`[1]` clean tree + resolvable `HEAD` ⇒ authoritative path proceeds · `[2]` `_git_head()` unavailable ⇒ CANNOT emit authoritative `PASS` · `[3]` dirty TRACKED SOURCE (`src/` or `scripts/`) in an ISOLATED worktree ⇒ CANNOT emit authoritative `PASS` · `[4]` restore pristine ⇒ normal scoring resumes.**
+🛑 **`[3]` IS SHARPENED AND IT IS THE ONE THAT DISCRIMINATES: the control must dirty a file under `src/` or `scripts/` — NOT `docs/`. A control that dirties `docs/` would pass under the scoped rule and prove nothing, and a control that dirties `docs/` and is EXPECTED to refuse would encode the false-RED this ruling just removed.** ★★★ **`A CONTROL MUST BE ABLE TO TELL THE NEW RULE FROM THE OLD ONE, OR IT IS TESTING YOUR HOPES.`**
+✅ **THEN RE-RUN `R1`–`R7` EACH ALONE. `R6` on the REAL population is mandatory and is the property most at risk from this patch.** ⚠️ **At `~2.4 min` per governed run there is no cost argument for skipping it.**
+🛑 **NO DATABASE, NO SIGNING SERVICE, NO PROVENANCE FRAMEWORK, NO SIXTH `R3` ITEM. This is a small fail-closed boundary inside `R3-1`.**
+
+### §5 — ⚖️ BOOKKEEPING, `--from-run`, AND WHAT I DECLINE TO HOLD
+✅ **`R3` STAYS `0 / 5` UNTIL THE PATCH IS GREEN — the read's bookkeeping is right and it matches this desk's own standard: do not call a five-part item complete while one of its ordered release-authority joins is intentionally fail-open.** ⇒ **On green with `R1`–`R7` intact: `R3-1` CLOSED, `R3` = `1 / 5`, then `R3-3`.**
+✅ **`--from-run` RETURNING EXIT `0` AFTER `ACCEPTANCE: ADVISORY / FORENSIC` IS ACCEPTED FOR THIS LANE.** The textual split at `85101e87` discharges `R-799 §8`'s prohibition. ⚠️ **I DO NOT hold `R3-1` on the machine-readable `authority` field.** ✅ **BANKED — `ACCEPT5-AUTHORITY-FIELD-1`** | worker | any machine-readable receipt must carry `authority = authoritative | advisory` | **WAKE: before the final permanent-authority grade** | evidence the read's `--from-run` section. ★★★ **`A TEXTUAL SPLIT PROTECTS A HUMAN READER; ONLY A TYPED FIELD PROTECTS A MACHINE ONE.`**
+⭐ **AND A THIRD SIGHTING OF `F-ACCEPT5-8` I RECORD BECAUSE IT BEARS ON EVERY FUTURE `PASS`: `[MEASURED HERE]` my own `R6` in a CONFORMING worktree ended `REFUSED`, while the worker's in the NON-CONFORMING campaign tree ended `PASS`. The `R6` PROPERTY held identically in both — `2417/2417/31/3/2`, no `PYTEST RUN INVALID`.** 🛑 **So `ACCEPTANCE: PASS` remains reachable ONLY on the non-conforming tree. `[CORROBORATED via `AR-949 §2`'s `5e79f72c` vs `a9f70e2e`; I did not re-measure the anchor in that specific run.]` The dual anchor stays open and stays needed.**
+
+### §6 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized.
+AUTHORIZED NOW : ACCEPT5-TREE-AUTHORITY-1, worker 7972 -- scoped per SS3, controls per
+                 SS4, then RE-RUN R1-R7 EACH ALONE. Self-executing; no further word.
+                 On green: R3-1 CLOSES, R3 = 1/5, then R3-3.
+PRECEDENCE PROOF: MEASURED at acceptance_runner.py:555 -- the HEAD join fails OPEN when
+                 git cannot answer, on the AUTHORITATIVE path, and no cleanliness
+                 check exists (grep -> 0). It is the last fail-open join in the
+                 fresh-run contract R3-1 exists to close.
+R3 FAN-IN      : 0 / 5. Do not count R3-1 until this patch is green.
+STOP           : SS7.
+```
+
+### §7 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[16]`, NEW AND THE IMPORTANT ONE:** the cleanliness gate is found to refuse a run whose ONLY dirty path is under `docs/`. **That is the false RED `§3` forbids — stop and re-scope, do not weaken `R6`.**
+🛑 **STOP `[17]`:** after the patch, `R6` on the real population no longer reaches normal membership scoring. **The patch has broken the property it was required to preserve.**
+🛑 **CARRIED:** `R-805 §5`'s `[15]` (DISCHARGED by `AR-955 §4` and my own run) · `[13]` DISCHARGED · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER — new:** **`ACCEPT5-TREE-AUTHORITY-1`** | worker | `§3` scoped form + `§4` controls | **WAKE: NOW, inside `R3-1`** | evidence `§2` · **`ACCEPT5-AUTHORITY-FIELD-1`** | worker | typed `authority` field | WAKE: before final grade | evidence `§5`. **ALL OTHERS CARRIED UNCHANGED FROM `R-803 §7`.**
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`AN AUTHORITY FIX IMPLEMENTED LITERALLY CAN RE-CREATE THE FALSE-RED CLASS IT WAS MEANT TO GUARD — AND IT ARRIVES WEARING THE WORDS "FAIL CLOSED", WHICH IS THE HARDEST DISGUISE TO REFUSE.`**
+★★★★★ **`IF THE REFEREE CANNOT PROVE WHICH CLEAN TREE IT WATCHED, IT DOES NOT GET TO SIGN THE SCORECARD.`**
+★★★★★ **`AN INERT ARM DOES NOT FAIL — IT AGREES WITH YOU.`**
+★★★★ **`A SECOND RUN IN THE SAME TREE IS A REPEAT; A SECOND CODE STATE IS A CONTROL.`**
+★★★★ **`A CONTROL MUST BE ABLE TO TELL THE NEW RULE FROM THE OLD ONE, OR IT IS TESTING YOUR HOPES.`**
+★★★★ **`A TEXTUAL SPLIT PROTECTS A HUMAN READER; ONLY A TYPED FIELD PROTECTS A MACHINE ONE.`**
+
+---
+
 ## R-805 · 2026-08-10 · ✅✅ **`AR-954` ACCEPTED — `R3-1`'s PERMANENT RED IS APPROVED AT `c31a30e3`, AND I RAN IT THREE TIMES MYSELF ON TWO DIFFERENT TREES RATHER THAN TAKE ITS NUMBERS.** ✅ **`STOP [12]` DOES NOT FIRE — I BUILT MY OWN CONFORMING WORKTREE AND IT REPRODUCED THERE.** ⚡ **`R3-1`'s SECOND HALF IS RELEASED: THE `R-799 §2` FRESH-RUN PROTOCOL, THEN `R1`–`R7` EACH ALONE.** ⚖️ **AND I STATE PLAINLY WHY THIS RULING DID NOT WAIT: THE OPERATOR MOVED THE RELAY POINT.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE
