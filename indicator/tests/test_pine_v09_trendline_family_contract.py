@@ -69,6 +69,23 @@ class PineV09TrendlineFamilyContractTests(unittest.TestCase):
         self.assertIn('[nextDGBreach, nextDGViolated] = f_violation', SRC)
         self.assertIn('dGBreach := nextDGBreach', SRC)
 
+    def test_swing_pack_tuple_returns_are_single_line_parse_safe(self):
+        pack6 = SRC.split('f_pack6() =>', 1)[1].split('f_pack4() =>', 1)[0]
+        pack4 = SRC.split('f_pack4() =>', 1)[1].split('[dlt5, dlp5', 1)[0]
+        for block in (pack6, pack4):
+            tuple_lines = [
+                line.strip()
+                for line in block.splitlines()
+                if line.lstrip().startswith('[')
+            ]
+            self.assertEqual(len(tuple_lines), 1)
+            self.assertTrue(tuple_lines[0].endswith(']'))
+            self.assertNotIn('[\n', block)
+
+    def test_m5_red_violation_assignment_is_exact(self):
+        self.assertIn('m5RViolated := nextM5RViolated', SRC)
+        self.assertNotIn('m5RViolated := nextM5Violated', SRC)
+
     def test_d_w_lines_full_span_and_hidden_geometry_is_na(self):
         self.assertIn('extend = extend.both', SRC)
         self.assertIn(
