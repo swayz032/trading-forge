@@ -923,6 +923,31 @@ class RecordCompileResult:
                 "enough to survive every shape check downstream"
             )
 
+        # 🛑 AND THE IDENTITIES MUST AGREE TOO — R-778 §4.
+        # The definition check above compares the DEFINITION OBJECT and nothing else, so a
+        # candidate carrying the right definition, the right variant and the WRONG
+        # `source_spec_id` was constructible. That is not cosmetic: `candidate_id` and
+        # `cache_identity` are computed FROM these ids, so a disagreeing pair produces a
+        # STABLE, PLAUSIBLE hash for the wrong source — and a cache keyed on it would serve
+        # one lesson's opening range under another lesson's name.
+        #
+        #   `AN IDENTITY DERIVED FROM A FIELD NOTHING VALIDATES IS A CONFIDENT ANSWER TO AN
+        #    UNASKED QUESTION.`
+        mismatched = [
+            (c.candidate_id, c.source_spec_id, c.source_condition_id)
+            for c in self.opening_range_candidates
+            if c.source_spec_id != self.opening_range_lowering.source_spec_id
+            or c.source_condition_id != self.opening_range_lowering.source_condition_id
+        ]
+        if mismatched:
+            raise ValueError(
+                f"{len(mismatched)} candidate(s) name a source this envelope's lowering does "
+                f"not: lowering is "
+                f"({self.opening_range_lowering.source_spec_id!r}, "
+                f"{self.opening_range_lowering.source_condition_id!r}); "
+                f"offenders {mismatched}"
+            )
+
 
 _LOWERING_POSITIVE_CONTROL: str = (
     "the same locators run over every certified record at this boundary, and the corpus "

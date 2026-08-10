@@ -470,13 +470,29 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
         "  ⇒ STAGE 1 is repaired; this is the next handoff, and it is STEP 3's."
     )
 
-    # ── STAGE 3 — THREE CANDIDATES, NOT ONE CANDIDATE COUNTED THREE TIMES.
+    # ── STAGE 3 — the two identities are distinct across the fan-out.
     # R-777 §5 requires the EXISTING identity system and forbids inventing a second.
     # `A UNIQUENESS GUARD PROVES UNIQUENESS OF THE FIELD IT READS, AND OF NOTHING
-    #  ELSE` (R-738 §7-2), so both identities are checked: `candidate_id` is the
-    # human-traceable name, `cache_identity` is the content hash. A fan-out that
-    # returned the same object three times satisfies the duration tuple above and
-    # fails here.
+    #  ELSE` (R-738 §7-2), so both are checked: `candidate_id` is the human-traceable
+    # name, `cache_identity` is the content hash.
+    #
+    # 🛑 CORRECTED (R-778 §3) — THE PREVIOUS COMMENT HERE WAS FALSE, AND ITS FALSENESS
+    # WAS THE POINT. It claimed "a fan-out that returned the same object three times
+    # satisfies the duration tuple above and fails here." IT DOES NOT: `_find_candidates`
+    # de-duplicates by `id(obj)`, so three references to ONE object are observed as ONE
+    # candidate and STAGE 2's duration tuple fails first — measured, by mutation.
+    #
+    #   `A COMMENT THAT DESCRIBES WHAT A TEST WOULD CATCH IS A MECHANISM CLAIM ABOUT YOUR
+    #    OWN INSTRUMENT AND CARRIES AN EVIDENCE GRADE LIKE ANY OTHER. A WRONG ONE IS
+    #    OBEYED BY EVERY FUTURE READER, WHO THEN STOPS LOOKING.`
+    #
+    # WHAT THIS STAGE HONESTLY IS: defence-in-depth on the golden fixture, which cannot
+    # express the case that would isolate it. The INDEPENDENT identity proof lives in
+    # `test_opening_range_candidate.py`, whose fixture CAN — two legal variants sharing a
+    # duration but differing in label. Kept, not deleted; scoped, not oversold.
+    #
+    # ⚠️ AND THE FINDER'S LIMIT, STATED RATHER THAN DISCOVERED: `_find_candidates` cannot
+    # distinguish "three identical objects" from "one object", by construction.
     ids = [c.candidate_id for c in candidates]
     identities = [c.cache_identity for c in candidates]
     assert len(set(ids)) == len(candidates), (
