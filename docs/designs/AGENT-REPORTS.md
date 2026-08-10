@@ -4,6 +4,55 @@
 
 ---
 
+## AR-957 · 2026-08-10 · ✅✅✅ **`ACCEPT5-TREE-AUTHORITY-CONFIG-1` LANDED AT `9b0490ed`. ALL SIX CONTROLS `A`–`F` PASS, INCLUDING THE DESK'S ADDITION `F` — THE `tests/python` TESTPATH THE EXTERNAL READ'S OWN LIST WOULD HAVE LEFT OPEN.** ✅ **`R1`–`R7` RE-RUN EACH ALONE, RED STILL GREEN, AND `R6` ON THE REAL `107`-MEMBER MANIFEST REACHED NORMAL SCORING.** ✅ **`STOP [16]` HELD AGAIN — CONTROL `D` AND `R6` BOTH RAN WITH `docs/` DIRTY AND THE GATE STAYED SILENT.**
+
+**SEAT `claude.exe 7972`. TREE `HEAD 9b0490ed`. `R3-1` complete; `R3` = `1 / 5`.**
+
+### §1 — ✅ THE THREE MISSES, CLOSED — AND I CHECKED THE FALSE-RED RISK BEFORE COMMITTING
+✅ **AUTHORITY SURFACE NOW: `src/` · `scripts/` · **`tests/`** · `pyproject.toml` · `pytest.ini` · `tox.ini` · `setup.cfg` · root `conftest.py`, queried with `--untracked-files=all`.**
+🛑 **BEFORE COMMITTING I MEASURED THE OBVIOUS WAY THIS PATCH COULD BECOME A FALSE RED: `--untracked-files=all` fires on ANY stray untracked file under the surface, which would refuse every run.** `[MEASURED HERE, campaign tree, the exact new query]` → **`1` line, and it was my own uncommitted edit.** ⇒ **No stray untracked files; the widened gate does not false-fire here.** ★★★ **`A GUARD THAT WOULD REFUSE EVERYTHING IS INDISTINGUISHABLE FROM A GUARD THAT WORKS UNTIL SOMEBODY RUNS IT.`**
+✅ **AND TWO PROSE DEFECTS FIXED BESIDE THE CODE THEY CONTRADICTED:** the comment claiming *"an untracked file is not executed unless the manifest names it"* — **FALSE, pytest auto-loads `conftest.py` and no manifest names it** — and `_git_head()`'s docstring still instructing callers to *"skip the HEAD-did-not-move join rather than fail it"*, which described the fail-open behaviour removed two commits earlier.
+
+### §2 — ✅ CONTROLS `A`–`F`, EACH ALONE, IN A DISPOSABLE WORKTREE
+```
+[MEASURED HERE, each mutation applied then reverted, worktree destroyed after]
+A clean authority surface                 -> proceeds, TREE AUTHORITY silent
+B dirty TRACKED pyproject.toml            -> REFUSED - TREE AUTHORITY UNAVAILABLE
+C UNTRACKED src/engine/tests/conftest.py  -> REFUSED - TREE AUTHORITY UNAVAILABLE
+F dirty TRACKED tests/python/__init__.py  -> REFUSED - TREE AUTHORITY UNAVAILABLE   <- DESK ADDITION
+D dirty ONLY docs/wave25-…md              -> proceeds, gate silent   (STOP [16] preserved)
+E restored / deleted                      -> normal scoring resumes
+final worktree authority state: []        (every mutation reverted; nothing leaked)
+```
+⭐ **`C` USED A REAL `conftest.py`, NOT AN INERT FILE — `R-807 §4` was explicit that planting a `random.txt` would prove the gate sees untracked files, not that it guards EXECUTION.** ★★★ **`A CONTROL MUST EXERCISE THE MECHANISM, NOT THE SYMPTOM.`**
+⭐⭐ **`F` IS THE ONE THAT MATTERS MOST AND IT IS NOT MINE: I would have adopted the read's list, which omits `tests/`. `[MEASURED, `pyproject.toml:30`]` `testpaths = ["src/engine/tests", "tests/python"]` and `git ls-files tests/python` → `26` tracked files pytest EXECUTES.** ⇒ **The read's patch would have closed two holes, left the third, and been committed under the words "tree authority".** ★★★★★ **`A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE THE LIST IS SUPPOSED TO GUARD — AND THIS IS THE SECOND ROUND RUNNING WHERE THE PRINCIPLE WAS RIGHT AND THE ENUMERATION WAS SHORT.`**
+
+### §3 — ✅ `R1`–`R7` RE-RUN EACH ALONE AFTER THE PATCH
+```
+R1 stale + startup death   -> REFUSED - PYTEST RUN INVALID    R5 exit 5  -> REFUSED - PYTEST RUN INVALID
+R2 one feeder deleted      -> REFUSED - PYTEST RUN INVALID    R6 real 107-member manifest -> see below
+R3 internal error (exit 3) -> REFUSED - PYTEST RUN INVALID    R7 foreign run_id -> REFUSED - PYTEST RUN
+R4 usage error   (exit 4)  -> REFUSED - PYTEST RUN INVALID       INVALID, naming BOTH ids
+PERMANENT RED -> 1 passed in 3.11s
+
+R6  NOTE: [0] fresh run : 352152652360479f8e26d30101460d20 (HEAD 9b0490ed…)
+    NOTE: [3] feeder    : acceptance_pytest_plugin (pytest exit 1)
+    NOTE: [4] 2417/2417/31/3/2     [SELF-CHECK] junitxml cases=2417 failures=31
+    ACCEPTANCE: PASS    R6_EXIT=0    TREE AUTHORITY refusals: 0
+```
+✅ **`R6`'s REQUIRED PROPERTY IS `A VALID EXIT 1 REACHES MEMBERSHIP SCORING` — `R-807` was explicit that the verdict need not be `PASS`. `[MEASURED]` exit `1` from `31` genuine governed failures reached full scoring and a real verdict. `STOP [17]` does not fire.**
+✅ **`R7` USED THE COMMITTED-MUTATION TECHNIQUE AGAIN (the new gate would otherwise mask it): mutation committed INSIDE the disposable worktree → authority surface `[]` → the `run_id` join fired.** `[MEASURED]` **campaign plugin sha `ed6ee2c8…`, PRISTINE; worktree destroyed.**
+
+### §4 — ✅ `R3-1` IS COMPLETE
+✅ **RED `c31a30e3` · fresh-run protocol `058d83ce` · `--from-run` advisory split `85101e87` · tree authority `9cdaef55` · authority surface `9b0490ed`.** **Six controls, seven arms, all each alone, all re-run after every patch that could have masked them.**
+⚠️ **UNCHANGED AND RESTATED SO NO `PASS` IS MIS-READ: `[CORROBORATED, `R-806 §5`; not re-measured here]` `ACCEPTANCE: PASS` is reachable only on the NON-CONFORMING campaign tree; a conforming checkout still refuses on `F-ACCEPT5-8`'s baseline anchor. The dual anchor stays open.**
+⚠️ **CARRIED, NOT DROPPED: `--out-dir` unwritable is still unexercised · `ACCEPT5-AUTHORITY-FIELD-1` (typed `authority` field) banked and not done · `ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` banked (derive the surface from `testpaths`) · the RED is still NOT in `canonical_regression_population.txt`, which is `R3-2`'s call.**
+🛑 **`R3-2` · `R3-3` · `R3-4` conversion · `R3-5` — all UNSTARTED. `R3` = `1 / 5`.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` — `R3-1` complete at `9b0490ed`.** ⚠️ **AND A SEAT NOTE, WHICH IS SELF-ASSESSMENT AND NOT A REQUEST FOR PERMISSION: this seat has now run a long session across `R3-1` end to end. Nothing is half-built, everything is committed and pushed, and `AR-953` is the standing receipt. `R3-3` is a multi-step mutation exercise with a cross-checkout positive control, and I judge a fresh seat would carry it more safely than I would from here. The lever is the operator's; I am not stopping and will start `R3-3` if it stays with me.**
+
+---
+
 ## AR-956 · 2026-08-10 · ✅✅✅ **`ACCEPT5-TREE-AUTHORITY-1` IS LANDED AND GREEN — THE LAST FAIL-OPEN JOIN IN THE FRESH-RUN CONTRACT IS CLOSED. `R3-1` IS WHOLE; `R3` IS `1 / 5`.** ✅ **ALL FOUR ORDERED CONTROLS PASS, AND `STOP [16]` IS DISPROVEN ON THE **REAL** POPULATION, NOT JUST THE FIXTURE: `R6` RAN WITH `docs/` DIRTY AND STILL REACHED `ACCEPTANCE: PASS`.** ✅ **`R1`–`R7` RE-RUN EACH ALONE AFTER THE PATCH — ALL SEVEN HOLD, AND THE PERMANENT RED IS STILL GREEN.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD 9cdaef55`. `R3` **`1 / 5`**.**
