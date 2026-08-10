@@ -4,6 +4,114 @@
 
 ---
 
+## AR-929 · 2026-08-10 · 🛑🛑🛑★★★★★ **`R-790 §7` STOP CONDITION `[1]` HAS FIRED: `or_broken` ALONE FLIPS THE ROUTE, AND THE CHAIN REACHES `activeStrategyId`. `PAPER-ORB-ROUTE-1` IS PROMOTED.** ⚠️⚠️ **AND IT NARROWS `R-790 §3`'s `[RELAYED]` DOWNGRADE — THE READ CHECKED `compute_bias()`, BUT `route_playbook` READS `session.or_broken` DIRECTLY AT `:410`/`:419`, BYPASSING THE BIAS SCORES ENTIRELY.** ✅ **LANE `B`: FIRST MISSING ARROW CONFIRMED AT A WIDENED SURFACE WITH A PROVEN-SIGHTED POSITIVE CONTROL.** ✅ **LANE `A`: `ACCEPT5-INSTRUMENT-1` BUILT, COMMITTED, ALL FOUR MUTATIONS BITE BY EXACT NODE ID, POSITIVE CONTROL GREEN.** ⚖️ **FAN-IN `3 / 3`. NOTHING WIRED. NO PRODUCTION MONEY-PATH WRITE.**
+
+**SEAT `claude.exe 13200` (successor to `23344` under `R-784 §3`, see `AR-928 §1`). CAMPAIGN TREE `HEAD 16e0e99d` + this report. LANE `B` TREE `wt-mp1-recon-20260810` @ `08062e12`, WROTE NOTHING (`git status` EMPTY, re-verified after the lane closed). LANE `A` `1/2` · LANE `B` `1/2` · LANE `C` `1/2`.**
+
+### §1 — 🛑🛑🛑 LANE `C` / STOP CONDITION `[1]`: THE ROUTE FLIPS ON `or_broken` ALONE
+**Two arms, every other field held constant, verified by a FIELD-CONSTANCY CONTROL that asserts the arms differ in exactly one field. No production edit — the fixture imports production modules from the scratchpad.**
+```
+[MEASURED HERE, campaign tree, real captured exit 0, UNPIPED]
+fixture: institutional_regime=None · no_trade_reasons=[] · bias_confidence=0.5 (<0.6 so neither
+         TREND_CONTINUATION arm can fire) · london_swept_pdh/pdl=False · pd_location="equilibrium"
+         (so neither MEAN_REVERSION arm can fire) ⇒ every branch before ORB stands down, as ordered.
+
+FIELD-CONSTANCY CONTROL, differing fields : ['session_context.or_broken']   <- EXACTLY ONE
+
+LONG  net_bias=+30   ARM A or_broken=None    -> NO_TRADE
+                     ARM B or_broken="above" -> ORB_LONG    (positive witness, not "not A")
+SHORT net_bias=-30   ARM A or_broken=None    -> NO_TRADE
+                     ARM B or_broken="below" -> ORB_SHORT
+LITERAL CONTROL      or_broken="sideways"    -> NO_TRADE    <- keys on the exact literals,
+                                                               not on "or_broken is truthy"
+```
+🛑 **AND THE CHAIN DOES NOT STOP AT THE ROUTER. Every link verified at the executable line:**
+```
+[MEASURED HERE]
+bias-state-service.ts:674   _decision = _route_playbook(state, ...)      <- the REAL router, so the
+                                                                            fixture above exercises
+                                                                            the production path
+                     :521-531  PLAYBOOK_TO_REGIME  NO_TRADE->"NO_TRADE"
+                                                   ORB_LONG->"TRENDING_UP"
+                                                   ORB_SHORT->"TRENDING_DOWN"
+                     :691   regime_label = PLAYBOOK_TO_REGIME.get(routed_playbook, "UNKNOWN")
+                     :1034  activeStrategyId = await resolveActiveStrategy(regimeLabel, ...)
+                     :240   if (regimeLabel === "NO_TRADE") return null;   <- DETERMINISTIC, DB-FREE
+paper-signal-service.ts:4154-4155  gates the signal on biasState.activeStrategyId
+```
+⭐ **The mapping was PARSED OUT OF the TS source by the fixture, not retyped — a retyped constant is how a fixture quietly stops testing the real thing.** Parse positive control: the three required keys must be present, and were.
+⚠️⚠️ **THIS NARROWS `R-790 §3`, AND I THINK IT MATTERS MORE THAN THE STOP CONDITION ITSELF.** The desk marked the non-causality claim `[RELAYED — NOT re-derived]` and said so plainly, which is why this is a narrowing and not a collision. **The read's reasoning was that `compute_bias()` scores nothing from `session.opening_range` and that `resolveActiveStrategy()` receives only `regimeLabel`. Both are TRUE. But `route_playbook` reads `session.or_broken` DIRECTLY at `:410`/`:419` — it never passes through a bias score — and its output IS the `regimeLabel`.** ⇒ **`or_broken` is causal to `activeStrategyId` by a path the bias-score argument does not cover.**
+★★★★★ **`A NON-CAUSALITY PROOF THAT WALKS ONE ROUTE IS ONLY AS WIDE AS THAT ROUTE. THE SCORES DID NOT READ THE FIELD — THE ROUTER DID.`**
+🛑🛑 **WHAT I DID *NOT* PROVE, AND WILL NOT UPGRADE:**
+- **NOT PROVEN: that the non-`NO_TRADE` branch returns a NON-null strategy id.** That needs a populated `strategies` table. **The DB half of Lane `C` was NOT PRACTICABLE — `resolveActiveStrategy` issues a real `db.select()` (`:247-267`), and `[db-moved-env-stale]` records every `.env` here points at the RETIRED Railway project.** I flagged this risk in `AR-928 §5` BEFORE starting, and it landed as predicted. ⇒ **the proven flip is `null` → `pool-dependent`, which still changes the input `:4154` branches on.**
+- **NOT CLAIMED: anything about the OR HIGH/LOW VALUES.** `R-790 §6` scopes Lane `C` to `or_broken` only, and the values are a different field and a different claim. ★★★ **`"IT IS ON THE PATH", "IT CHANGES THE ROUTE" AND "IT CHANGES THE FINAL STRATEGY" ARE THREE CLAIMS; I PROVED THE FIRST TWO.`**
+⚖️ **SEVERITY IS NOT MINE TO SET AND I AM NOT SETTING IT.** `R-790 §3`'s incident findings are untouched by this: no live capital, pre-existing by months, paper engine not halted. **What changes is the REASON the ORB routes are unreachable: not a harmless dead field, but a field whose permanent `None` deterministically pins this path to `NO_TRADE`-or-other and makes `ORB_LONG`/`ORB_SHORT` unselectable.**
+🛑 **I did NOT teach the calculator to derive `or_broken`, did not delete or rewrite it, did not touch the scheduler, wired nothing.**
+
+### §2 — ✅ LANE `B`: FIRST MISSING ARROW CONFIRMED, AND THE SCANNER WAS PROVEN SIGHTED FIRST
+⚖️ **`R-790` ordered the surface widened past static Python names AND a positive control so a `zero` cannot mean a blind scanner. I did the control FIRST and chose it to be hostile to my own method:**
+```
+[MEASURED HERE @ 08062e12, whole repo, ALL filetypes, node_modules/.git excluded]
+POSITIVE CONTROL = route_playbook — a Python function whose production caller lives inside a
+  TYPESCRIPT HEREDOC, under an ALIAS, invoked by subprocess. If the scanner can see THAT, it can
+  see the dynamic surfaces the contract names.
+  -> FOUND: bias-state-service.ts:673  `import route_playbook as _route_playbook`
+            bias-state-service.ts:674  `_decision = _route_playbook(...)`
+     plus function-local imports, .sql comments and frontend .ts. 23 non-test hits. SCANNER SIGHTED.
+
+AGAINST THAT SIGHTED SCANNER:
+  produce_spec_artifact_from_record -> 1 non-test/non-doc hit: its own def, spec_producer.py:959
+  build_execution_instances         -> 2: its own def (:53) + its __all__ (:122)
+  COMPLETE file population naming either symbol = campaign docs + tests + the defining module.
+  NO .json/.yaml/.yml/.toml/.ini/.cfg names either  => no computed-name dispatch can resolve them.
+  NEGATIVE CONTROL: a ...ZZZ token returns nothing (rc=1).
+```
+⭐ **CORROBORATED BY AN INSTRUMENT I DID NOT BUILD:** `SYSTEM-INVENTORY.md:1795`/`:2122` independently say *"no non-test reference outside its own definition"* for both symbols. ⚠️ **I mark this as corroboration, not proof — the map is ALSO static, and `TWO INSTRUMENTS THAT SHARE A BLIND SPOT AGREE MOST CONFIDENTLY EXACTLY WHERE THEY ARE BOTH BLIND.`** The widened all-filetype scan is what closes that, not the agreement.
+🛑 **FIRST MISSING ARROW: `certified extraction → produce_spec_artifact_from_record`. The production compile boundary has no caller.**
+⚡ **SMALLEST PROPOSED PRODUCTION CALLER (PROPOSAL ONLY — I WIRED NOTHING):** `[MEASURED HERE]` the consumer side is already alive but wired to a FOLDER: `scripts/onboard-compiled-specs.ts:75` reads `--specs-dir` (default `tmp/generalization`) and calls `onboardSpecArtifact` at `:125`. ⇒ **the smallest arrow is ONE thin Python CLI that takes a certified record, calls `produce_spec_artifact_from_record(record, video=…)`, and writes the artifact JSON into that directory. No new semantics; both ends already exist.**
+⭐ **ONE MEMORY REFUTED BY MEASUREMENT, DECAY SHOWN NOT ASSUMED (`[red-path-decay]`):** `[money-path-reachability]` records *"`onboardSpecArtifact` has NO caller."* **At `93da12b4` it HAS one** — `scripts/onboard-compiled-specs.ts:50`+`:125`, non-test, positive-controlled. **The cluster conclusion survives and sharpens: a handoff can be broken with BOTH ENDS ALIVE.** Memory updated.
+⚠️ **HONEST PARTIAL: arrows 4–7 (onboarding/runtime → `SpecConditionStrategy` → backtester → performance gate) remain `[NOT CLASSIFIED]` — the contract says stop at the first missing arrow. A name constructed at runtime by string concatenation is `[NOT MEASURABLE]` by any static method and I do not claim otherwise.**
+
+### §3 — ✅ LANE `A`: `ACCEPT5-INSTRUMENT-1` BUILT AND RED-PROOFED FOUR WAYS
+**Committed `7926bce0` (+ `16e0e99d` lint): `scripts/acceptance_pytest_plugin.py` (the feeder) and `scripts/acceptance_runner.py` (the gate).** Node IDs come from `item.nodeid` at collection and `report.outcome` at execution — **pytest's own objects, never a regex over summary prose**, which is the contract clause aimed at the fabricated `49`.
+✅ **ALL FOUR MUTATIONS BITE, EACH NAMING THE EXACT NODE:**
+```
+[MEASURED HERE — A/B/C in an ISOLATED THROWAWAY worktree at 16e0e99d, full 105-member
+ population, 2m21s; D on the pristine record. ALL EXITS CAPTURED UNPIPED.]
+A  baseline-named test renamed so it cannot COLLECT
+   -> [5] "GONE FROM COLLECTION: ...TestAPlus_Gate_Wiring::test_empty_factors_list_bypasses_gate"
+B  a green non-baseline test forced red
+   -> [7/8] NEW: ...TestVpShapeScoreFormulaParity::test_d_shape_any_confidence_is_zero
+C  a baseline historical red forced green
+   -> [7/8] GONE: ...TestAPlus_Gate_Wiring::test_gate_stats_totals_are_consistent
+   RUNNER EXIT 1
+D  feeder corrupted 3 ways, caught by the INDEPENDENT junitxml feeder, each EXIT 1:
+     drop-a-failure   -> "junit-only=[...test_empty_factors_list_bypasses_gate]"
+     invent-a-failure -> "plugin-only=[...test_ghost.py::test_fabricated]"
+     drop-a-collected -> "collection size plugin=2391 junit=2392 delta=-1"
+POSITIVE CONTROL (pristine, unmutated): collected/executed 2392/2392, feeders AGREE,
+   NEW=0, GONE=2 (the two known retired 6B tests), COLLECTION PRESENCE intact
+   -> ACCEPTANCE: PASS, RUNNER EXIT 0.   It is not an always-red gate.
+```
+⭐⭐ **THE PAIR THAT JUSTIFIES THE WHOLE LANE: mutation `A` and mutation `C` BOTH appear in `GONE`. The ONLY thing that separates "this red went green" from "this test vanished" is check `[5]`.** ⇒ **the old `ACCEPT-5`, comparing failure membership alone, would have read mutation `A` as an improvement.** ★★★★★ **`A TEST THAT STOPS BEING COLLECTED DOES NOT LOOK LIKE A REGRESSION — IT LOOKS LIKE A FIX.`**
+✅ **NO MASKING, by mechanism AND by measurement:** the runner accumulates every reason into one list rather than returning at the first (verifiable at the line), and the combined run emitted `[5]` and `[7/8]` refusals TOGETHER. **This is `R-788 §3`'s lesson applied in advance — a clause that never ran is not a passing clause.**
+⭐ **AND THE POSITIVE CONTROL CONVICTED MY OWN INSTRUMENT BEFORE IT CONVICTED ANY CODE.** My first junitxml reader collapsed the class chain and compared on `(file, final test name)`. **Two same-named tests in different classes in one file collapsed into one member, producing a silent `-2` collection delta that looked exactly like a real regression.** The pristine control refused, I found the bug was MINE, and rebuilt the reader to reconstruct the exact node id. ★★★★★ **`AN INSTRUMENT'S FIRST RED IS MORE LIKELY TO BE THE INSTRUMENT THAN THE CODE — AND A LOSSY JOIN KEY FAILS BY MERGING MEMBERS, WHICH READS AS A DISAPPEARANCE.`**
+🛑 **STOP CONDITION `[4]` DID NOT FIRE:** node IDs were captured without scraping summary prose. 🛑 **The immutable baseline and the historical `S6` result were NOT altered** (`git status` shows neither).
+
+### §4 — ⚠️ THREE THINGS THE DESK SHOULD KNOW THAT NOBODY ORDERED ME TO LOOK FOR
+⚠️ **(1) POPULATION DRIFT, and the runner reports it rather than absorbing it:** `[MEASURED HERE]` the manifest now holds **`105`** members; the baseline pinned **`103`**. **Failure membership is being compared across DIFFERENT populations.** The gate prints this as a `NOTE` on every run. ⚖️ **It did not change today's verdict — `NEW=0` at pristine — but a future `NEW` could come from a member the baseline never saw.**
+⚠️ **(2) THE ACCEPTANCE RUN IS NOT SIDE-EFFECT-FREE:** `[MEASURED HERE]` running the population rewrites a timestamp into the tracked file `docs/wave25-exit-engine-ab-report.md`. **I reverted it in the campaign tree.** 🛑 **This matters because of `[precommit-stash]`: an acceptance run in the SHARED tree dirties a tracked file that another seat's commit would sweep up.** ⇒ **recommend the gate be run in an isolated worktree as a matter of course.**
+⚠️ **(3) `GATE-LIM-2` GOT A LIVE POSITIVE CONTROL FOR FREE:** adding two `scripts/` files made `system_inventory.py --check` go **`STALE` (exit 1)**, and I regenerated to `FRESH` before pushing. **The repair `AR-927` landed is working on a change it was never tested against.**
+
+### §5 — ⚖️ FAN-IN, AND WHAT IS STILL OWED
+**`3 / 3` LANES RETURNED, none silently absorbed:** **`A`** DELIVERED + red-proofed 4/4 · **`B`** DELIVERED, first missing arrow confirmed, arrows 4–7 not classified BY CONTRACT · **`C`** DELIVERED on its load-bearing half, **DB half NOT PRACTICABLE with the reason named and pre-flagged.**
+🛑 **NOTHING WIRED · NO PRODUCTION MONEY-PATH WRITE · `bias-state-service.ts` UNTOUCHED · scheduler UNTOUCHED · no compiler expansion · `OR-STATE-HANDOFF-1` not started · immutable baseline and historical `S6` result untouched · no `--no-verify` · no hook edits.**
+⚡ **THE GRADE `R-790 §6` REQUIRES IS OWED AND IT IS NOT MINE:** `ACCEPT5-INSTRUMENT-1` is *"the authority every future acceptance joins on"*, I authored it, and `doer ≠ grader` applies with full force. **The grader is `accuracy-validator`, it is one authorization away, and I am naming it rather than reporting the grade blocked** (`worker-execution §5a`). **Pin: `16e0e99d` + this report's commit. Access recipe: `python scripts/acceptance_runner.py --from-run <json> --junit <xml>`; regenerate a run with `--run --out-dir <dir>`. Ask it explicitly for a NOVEL false-green hunt against the four mutation arms, and for a DURABLE RECEIPT file.**
+⚡ **RECOMMENDATION: `APPROVAL_REQUESTED` for Lanes `A`/`B`; `BLOCKED — DESK DECISION` on `PAPER-ORB-ROUTE-1`'s severity, because `§1` narrows the evidence `R-790 §3` downgraded on.**
+**NEXT SMALLEST TASK (ONE, not a roadmap): confirm by DB fixture whether a qualifying pool exists for `TRENDING_UP`, which is the single remaining measurement between "the route flips" and "a different strategy trades." It needs a working database and `[db-moved-env-stale]` says this repo has none configured.**
+
+---
+
 ## AR-928 · 2026-08-10 · 🔵 **START-RECEIPT — SEAT TRANSFER. `R-790`'s THREE LANES ARE ADDRESSED TO `claude.exe 23344`, WHICH IS DEAD; I AM `claude.exe 13200` AND I TAKE THEM UNDER `R-784 §3`.** ✅ **RULING EAR ARMED AND RED-PROOFED — IT FIRED FOR REAL ON `R-790` DURING THIS SEATING, WHICH IS HOW I HAVE THE RULING AT ALL.** ✅ **PRIOR-ART GATE `FRESH`, REAL EXIT `0`, RUN BY ME.** ⭐ **AND THE GENERATED MAP INDEPENDENTLY CORROBORATES `AR-927 §5` ON BOTH LANE-`B` SYMBOLS — A SECOND, NON-OVERLAPPING INSTRUMENT.** ⚠️ **ONE CONDITIONAL RISK DECLARED UP FRONT AGAINST LANE `C`'s OPTIONAL SECOND HALF.**
 
 **FAN-IN TARGET `3` (`A` `ACCEPT5-INSTRUMENT-1` · `B` `MP-1` RESUMED · `C` `PAPER-ORB-DECIDER-1`), EACH `0 / 2`.**
