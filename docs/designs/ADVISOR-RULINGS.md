@@ -12,6 +12,190 @@
 
 ---
 
+## R-780 · 2026-08-09 · ✅ **`AR-907` + `AR-908` + `AR-909` ACCEPTED. `COMMIT 1` IS IN — TEST-ONLY, STILL RED, ON A DEEPER AND CORRECTLY-ORDERED BOUNDARY.** 🛑🛑🛑 **THE TENTH MEMBER UNCOVERED A PRODUCTION HOLE THE ACTIVATION WOULD *CREATE*: FLAG **OFF — THE DEFAULT** ⇒ AN ACTIVATED OPENING-RANGE CONDITION FALLS TO `else: np.ones` = **CONSTANT TRUE** (`OPENING_RANGE` APPEARS **ZERO** TIMES IN THE ROUTER FILE).** ⚡ **`A+` APPROVED, ELEVEN SURFACES, MEMBER `11` **RED-FIRST AND THE RED IS THE DECIDER**.** 🛑🛑 **AND THE PUSH GATE IS A NON-TERMINATING DEADLOCK: IT IS NOW `STEP 0`, REPAIRED BY **DELEGATION**, NOT BY A SECOND COPY OF THE RULE.**
+
+> ### ★ WORKER — START HERE
+> **`§6`, RE-AUTHORIZED TO `claude.exe 12460`. THREE steps; the first is new and everything waits on it:**
+> **(0) FIX THE PUSH GATE — make it CALL `system_inventory.py --check` instead of comparing raw bytes. Four red-proof arms, `§6` names them. Nothing leaves this machine until this lands.**
+> **(1) PUBLISH THE FLAG-OFF SILENT-PASS RED, ALONE — it DECIDES member `11`. Cannot go red ⇒ member `11` is NOT built, you NAME the gate, and that is a FINDING.**
+> **(2) THEN the eleven-surface atomic activation.**
+
+**RULING ID:** R-780 · **ARs RULED: `AR-907` (substantive) · `AR-908` (seat receipt + a correction against me) · `AR-909` (instrument deadlock).** `[MEASURED HERE]` **`AR-909` is the newest `## AR-` on disk; I read it in full.** · **DECISION: ACCEPT `COMMIT 1` · APPROVE `A+` · MEMBER `11` CONDITIONAL · `INV-2` PROMOTED TO `STEP 0` · CORRECT `R-779 §10` · RE-AUTHORIZE THE SEAT**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** 🛑 **SEAT: `claude.exe 12460`** `[MEASURED HERE, `Win32_Process` + parent walk, immediately before this commit]`. **`16536` (which `R-779 §7` authorized) and `25636` before it are DEAD — two seat deaths inside two consecutive rulings.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED ON EVERY ITEM, AND THE OPERATOR WAS RIGHT TO STOP ME
+✅ **`§1`–`§9` were adjudicated with the external read on `AR-907` in hand; `§6 STEP 0` and `§10-1` are adjudicated with the external read on `AR-909` in hand. NO ITEM IN THIS RULING WENT UNREAD.**
+🛑 **I ALMOST SHIPPED ONE THAT DID.** A prior draft promoted `INV-2` under the blocked-worker exception, with the price stated. **The operator said *"you suppose to wait on gpt"* and I stopped. The read then arrived — and it CHANGED THE REPAIR SHAPE** (`§6 STEP 0`: delegate, do not copy the helper) **and CORRECTED A NAME I WAS ABOUT TO PUBLISH** (`§10-1`). ★★★★★ **`THE EXCEPTION I INVOKED WOULD HAVE PRODUCED A CORRECT DECISION AND THE WRONG MECHANISM. AN ESCAPE CLAUSE FEELS FREE PRECISELY WHEN THE ANSWER LOOKS OBVIOUS — AND THAT IS WHEN THE READ IS WORTH MOST.` SIXTH AND SEVENTH ASSERTION; BOTH TIMES THE WAIT PAID.**
+🛑 **AND I ADOPTED NOTHING ON AUTHORITY.** The read's `§5` claim on the ladder is re-derived in `§4` **with a reachability check it did not make**; its gate repair is re-derived in `§10-1` **with a side-effect finding it did not make.**
+
+### §1 — ✅ `COMMIT 1` ACCEPTED, VERIFIED BY ME
+```
+[MEASURED HERE]  b1c17970  1 file changed, 409 insertions(+), 24 deletions(-)
+  git show --name-only -> src/engine/tests/test_s6_...py AND NOTHING ELSE   SCOPE HELD
+  post-revert: git status --porcelain -- src/  ->  ONLY the pre-existing sibling file
+```
+⭐⭐ **`AR-907 §2` IS A LAW:** its first publication still died at the OLD boundary because it had ordered the guard's stages declaration→resolver→routing→carrier, while the PATH constructs an instance before it dispatches. **It re-ordered to the path's real execution order before committing.** ★★★★★ **`THE STAGE ORDER OF A GUARD IS A CLAIM ABOUT THE PATH. A WRONG FIRST FAILURE SENDS THE NEXT REPAIR TO THE WRONG LAYER.`**
+⭐ **`_require_activated()`:** all three arms would have gone GREEN on an unrelated pre-activation exception. **`AN ARM THAT PASSES BEFORE THE FEATURE EXISTS IS NOT A GUARD — IT IS A COINCIDENCE WITH AN ASSERTION ATTACHED.`** ✅ **Carrier discovered BY TYPE ANNOTATION** (`R-776 §3`).
+✅ **`AR-907 §6`'s import-binding defect is real:** `from module import f` captured a reference the spy could not reach ⇒ **the declaration would have been true and unverifiable at once.** Keep the fix: declared pointer, resolver pointer, runtime call target = ONE module attribute.
+
+### §2 — ⚠️ I CORRECT `R-779 §10`. THE NUMBER WAS MINE AND IT WAS WRONG
+```
+[MEASURED HERE, both groups run by me, worktree root, unpiped]
+ACCEPT-1 AS §10 NAMES ITS FILES (conformance+definition+parity+LOWERING) : 2 failed ·  50 passed
+R-741 §5's GROUP  (conformance+definition+parity+FAMILY_META_ENFORCEMENT) : 2 failed ·  96 passed
+FAILURE MEMBERSHIP IDENTICAL IN BOTH — the two ordered 6B reds, no third.
+```
+🛑 **`R-779 §10` printed `96` beside a file list producing `50`** — I carried another group's total across a different population, the exact class I had lectured about two sections earlier in the same ruling. ✅ **`AR-907 §7-1` caught it; I re-ran both groups.** ★★★★★ **`WHEN THE MEMBERSHIP CHANGES, THE TOTAL IS A DIFFERENT INSTRUMENT'S READING — AND THE DESK THAT JUST MINTED THAT LAW IS NOT IMMUNE TO IT.`**
+
+### §3 — ✅ MEMBER `10`: SHAPE `A` — CONFIRMED AT THE LINE
+`[MEASURED HERE, `test_family_meta_enforcement.py`]` `:463` gating (7) · `:474` non-gating (1) · `:490-493` `declared` read **FROM `FAMILY_META`, not transcribed** · `:497` `assert declared == gating | non_gating` · **`:503-504` the split must match the table's own `gates` flag** ⇒ `gates=True` forces the family into the GATING list, and `:533-538` then constructs the strategy with NO candidate.
+✅ **ONE shared construction helper supplies an explicit legal candidate for `OPENING_RANGE_DEFINITION` ONLY** — not `if family == ...` in five tests. Explicit, `source_condition_id` matching the synthetic condition, **no default duration, no selection, no `ConditionBinding.parameters`, no "primary".** ⚖️ **TEST SETUP, not source compilation — the three-candidate fan-out law (`R-736`) is untouched; the S6 golden test remains the sole prover of `5/15/30`.**
+🛑 **REJECTED: any exclusion from the polarity population or `PER_BAR_FAMILIES`** — that removes the detector and preserves the failure. 🛑 **THE MISSING-CANDIDATE HARD REFUSAL STAYS.** ★★★★★ **`A SET-EQUALITY GUARD ENROLS THE NEW MEMBER IN EVERY FIXTURE THAT DERIVES ITS POPULATION FROM THAT SET.`**
+
+### §4 — 🛑🛑🛑 MEMBER `11`: THE READ'S CLAIM IS TRUE, AND I ADD THE REACHABILITY IT DID NOT CHECK
+```
+[MEASURED HERE, spec_condition_compiler.py — grep 'OPENING_RANGE' over the WHOLE FILE = 0 HITS]
+:1830  if not b.executed:  continue                       <- TODAY'S ONLY SHIELD
+:1837  if not b.bindable:  per_condition_bool[...] = np.ones(n, bool); continue
+:1843  if enforced:        self._dispatch_enforced(b, ctx)         <- FLAG ON -> real handler
+:1847..:1927  ladder: FVG · MSS · WAIT_SESSION · WAIT_STRUCTURE/VERIFY · WAIT_BIAS/CONFIRM ·
+              WAIT_RETEST · WAIT_CONFIRMATION · FILTER
+:1928  else: per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)  <- CONSTANT TRUE
+[MEASURED HERE] family_meta_enforcement.py:55 "TF_FAMILY_META_ENFORCED (default OFF)"
+                                          :60 "any change to the default lands separately,
+                                              and only on the grade"   <- TWO-COMMIT LAW
+```
+🛑🛑 **WHAT THE READ DID NOT STATE, AND IT IS THE WHOLE JUSTIFICATION FOR PUTTING IT IN THIS COMMIT: TODAY THE HOLE IS UNREACHABLE, AND *THE ACTIVATION MAKES IT REACHABLE.*** `[MEASURED, `R-744 §2`]` the golden OR binding carries `executed=False` ⇒ `:1835`'s `continue`. **Activation makes it executed AND bindable — removing BOTH shields — and at the DEFAULT flag it lands on `:1929`.**
+⇒ ★★★★★ **`NOT A PRE-EXISTING DEFECT WE ARE ADOPTING — IT IS THE ACTIVATION'S OWN BLAST RADIUS. THAT IS WHY IT IS NOT SCOPE CREEP.`** ★★★★★ **`SAFETY BY STARVATION IS NOT SAFETY BY DESIGN. THE FAMILY IS SAFE TODAY BECAUSE IT NEVER EXECUTES; THE ACTIVATION IS THE `INSERT`.**
+🛑 **I DO NOT ORDER THE BRANCH BUILT ON MY REASONING.** `[HYPOTHESIS — HIGH CONFIDENCE, NOT MEASURED]` ⇒ **`§6 STEP 1` PUBLISHES THE RED AND THE RED DECIDES.** ★★★★★ **CANNOT GO RED ⇒ MEMBER `11` IS **NOT BUILT**; adding an unreachable production route is the convicted class (`R-754 §2`). REPORT IT AS A FINDING.**
+✅ **IF RED — ONE HANDLER, TWO ROUTES.** 🛑 No `_h_opening_range_legacy`, no copied arithmetic, no second candidate selection. ⚖️ Not a third router: the engine deliberately runs two regimes during the migration (`:1844`). 🛑 **DO NOT flip the flag default** (`:60`; it would HIDE the hole) **and DO NOT exclude the family from the flag-OFF population.** ✅ **`_acknowledge_parameters()` is ABOVE both routers ⇒ the smuggling refusal must hold in BOTH states.**
+
+### §5 — ✅ PRIOR ART SEARCHED AND STATED
+`grep OPENING_RANGE` over the router → **0** · polarity/ladder/flag/gate lines all opened by me. **`R-736`/`R-743`, the pre-registered `NEW 0 / GONE exactly 2` join, and `MP-1` banked are UNCHANGED and NOT re-adjudicated — the read concurs, and concurrence does not re-date them.** ⚠️ **`--check → FRESH` was cited as prior art here and in `AR-908 §3`; `§10-1` shows that verdict is TRUE and DOES NOT GENERALISE to the push gate.**
+
+### §6 — ⚡ AUTHORIZED NOW — TO `claude.exe 12460`, ATTEMPT `0 / 2`
+```
+STEP 0  🛑 FIX THE PUSH GATE. NOTHING LEAVES THIS MACHINE UNTIL IT LANDS. SEPARATE COMMIT.
+        THE SHAPE IS DELEGATION, NOT DUPLICATION (external read §3/§5, ADOPTED ON MERIT):
+          scripts/inventory_freshness_gate.py must CALL
+              python scripts/system_inventory.py --check
+          and branch on ITS exit code. DO NOT copy content_only() into the gate. The
+          GENERATOR defines what "fresh" means; the GATE decides what to do about it.
+        CONTROL FLOW:
+          no src/ or scripts/ change      -> skip, exit 0            (unchanged, :69)
+          --check exit 0                  -> ALLOW the push          (stamp may lag HEAD)
+          --check exit 1                  -> regenerate, then BLOCK with the existing guidance
+          --check any other exit          -> BLOCK, surface stdout+stderr, DO NOT regenerate
+                                             over a checker reporting its own defect
+        ⭐ AND FIX THE SIDE EFFECT NOBODY NAMED (§10-1c): today :74-76 runs the generator
+          WITHOUT --check, so it WRITES the map unconditionally before deciding. That is what
+          leaves the tree dirty. After the repair the gate must NOT write unless --check
+          says stale -- on a SHARED TREE an unconditional write is a hazard of its own.
+        RED-PROOF, FOUR ARMS, ALL REQUIRED (A-D from the read, adopted verbatim in substance):
+          A  provenance-only difference, gate armed -> TODAY BLOCKS, REPAIRED ALLOWS   (the bug)
+          B  real semantic content drift            -> STILL BLOCKS                (not blind)
+          C  commit the refreshed map, push again   -> ALLOWS               (TERMINATION -- the
+             property today's gate lacks, and the arm neither I nor AR-909 named)
+          D  checker fails for a non-staleness reason -> BLOCKS, does not read as fresh
+        🛑 NEVER --no-verify. AR-909 refused it and was right; the read forbids it for this lane.
+        🛑 DO NOT touch system_inventory.py, the provenance semantics, the schema, the
+          reachability methodology, other hooks, or any compiler file in this commit.
+        🛑 DO NOT rewrite shared history to remove befe9d34 -- the broken hook told the worker
+          to create it. Leave it. And once repaired, create NO further stamp-chasing commit.
+        ⇒ THEN PUSH EVERYTHING: b1c17970 · 0d23cf15 · 80800773 · befe9d34 · this ruling.
+           VERIFY BY RE-FETCH, never by exit 0.
+
+STEP 1  PUBLISH THE FLAG-OFF SILENT-PASS RED, ALONE, AND STOP. No production edit.
+        Flag OFF (default). Explicit legal candidate. Candidate-aware strategy. Bars
+        spanning forming -> lock. ASSERT: production reaches the real adapter · pre-lock
+        False · post-lock True · THE OUTPUT IS NOT AN ALL-TRUE FALLBACK.
+        🛑 THIS RED DECIDES MEMBER 11 (§4):
+             RED           -> reachable; build member 11 in STEP 2.
+             CANNOT GO RED -> UNREACHABLE. Do NOT build member 11. NAME the gate. FINDING.
+
+STEP 2  THE ATOMIC ACTIVATION — ELEVEN SURFACES (10 if STEP 1 says unreachable), ALL OR NONE:
+        1 typed candidate carrier       2 real _h_opening_range
+        3 classification = REFUSES_ALL_PARAMETERS   4 Python FAMILY_META declaration
+        5 gates=True (default, DO NOT touch)        6 PRIMITIVE_RESOLVERS
+        7 ENFORCED_DISPATCH (keyed on the DECLARED PRIMITIVE)  8 TS declaration mirror
+        9 the three temporary-refusal fixtures TRANSITIONED (R-779 §7-b: red-proof each RED
+          at pre-activation HEAD on its NEW assertion)
+       10 ONE shared candidate-aware construction helper (§3)
+       11 the flag-OFF ladder branch -> THE SAME _h_opening_range (only if STEP 1 went red)
+🛑 FORBIDDEN: flipping the enforcement default · excluding the family from any population ·
+   a second calculator/lowerer/candidate-id/router/freshness-rule · a default or primary
+   candidate · tolerating a missing candidate · TS OR math · editing
+   acceptance-baseline-2026-08-09.json · weakening pin (a) · breakout semantics · MP-1 ·
+   --no-verify · gate work and S6 work in one commit.
+FIRST OBSERVABLE: STEP 0's four-arm red-proof output, committed AND PUSHED — THE PUSH
+   SUCCEEDING IS THE PROOF. ETA ~20-40 min. START-RECEIPT if >10 min. ONE AR per step.
+```
+
+### §7 — ⚖️ FINAL EXECUTION PROOF
+**Enforced ON:** `5m→5 · 15m→15 · 30m→30`, spy `(5, 15, 30)`, filled ONLY via `_dispatch_enforced`. **Flag OFF:** same handler, same adapter, **same per-bar array as ON.** **Missing candidate:** hard refusal, BOTH regimes. **Parameter smuggling:** refusal before the adapter, BOTH regimes. **Source-incomplete neighbour:** zero instances, zero calls. **`compute_structure_state`:** exactly 0 calls. **Forming:** False, no levels. **Complete:** True with typed state. **Gapped bar:** no usable locked state. **Identity:** `candidate_id`/`cache_identity` survive onto execution metadata.
+⚠️ **`AR-907 §8`'s limit CARRIED, NOT WAIVED:** ONE record, ONE session date, 1-minute bars, a 45-minute frame. **DST changeover, half-day session, gapped frame, non-1m timeframe are `[NOT MEASURED]`, are NOT acceptance terms, and must NOT be implied closed.**
+
+### §8 — ⚖️ ATTEMPT `0 / 2` — AND I PRE-REGISTER WHEN I STOP RESETTING IT
+`AR-907` delivered `COMMIT 1` and its `COMMIT 2` probe stopped at a NEWLY DISCOVERED wall with a measured root cause, then reverted: **honest partial, not failed delivery** (`R-749 §5`), **and the mechanism changed again.** ⇒ **RESET.** ✅ **`AR-908` and `AR-909` spend nothing — a seat receipt and a broken-instrument report. `NO ATTEMPT IS CHARGED FOR DISCOVERING THAT A REPOSITORY INSTRUMENT IS BROKEN`** (read `§14`, and I agree independently).
+🛑🛑 **PRE-REGISTERED BEFORE THE DATA (`[pre-register-criteria]`): IF `STEP 2` DISCOVERS A *TWELFTH* SURFACE OF THE SAME SET-EQUALITY / POPULATION-ENROLMENT SHAPE, I WILL **NOT** RESET AGAIN — a fourth repetition is evidence the activation cannot be landed atomically, and the DESK RE-SCOPES rather than the worker retrying.** ★★★★★ **`A BUDGET THAT RESETS WHENEVER THE NEWS IS INTERESTING IS NOT A BUDGET. NAME THE RESET'S LAST RESET IN ADVANCE.`**
+
+### §9 — ✅ ACCEPTANCE COMMANDS — `ACCEPT-1` CORRECTED
+```
+🛑 ALL FROM THE WORKTREE ROOT (the S6 file is cwd-sensitive). NEVER `| head`/`| tail`.
+ACCEPT-0  the four gate arms A-D above; the successful push IS the acceptance.
+ACCEPT-1  conformance + definition + family_parity + lowering
+          PRE-ACTIVATION: 2 failed / 50 passed   <- CORRECTED from R-779 §10's wrong "96"
+          (R-741 §5's group swaps lowering for family_meta_enforcement and gives 96.
+           MEMBERSHIP is the criterion in both and is identical. QUOTE MEMBERSHIP.)
+ACCEPT-2  test_s6_candidate_transport_and_adapter_execution.py
+          AFTER STEP 1: still red.   AFTER STEP 2: green, spy (5, 15, 30).
+ACCEPT-3  family_meta_enforcement + parameter_acceptance_guard + flag_off_parameterized_refusal
+          + short_frame_parameter_acknowledgement
+          🛑 AMENDED: R-779 §10 said "GREEN BOTH BEFORE AND AFTER". Members 10/11 land IN this
+          file set BY ORDER, so: GREEN BEFORE, GREEN AFTER, and every fixture that MOVES is
+          red-proofed RED at pre-activation HEAD on its NEW assertion.
+ACCEPT-4  tsc + scripts/check-spec-binding-plan-parity.ts        <- owed by the TS mirror
+ACCEPT-5  the 104-member failure-membership join, LAST, against the IMMUTABLE baseline:
+          NEW 0 / GONE exactly the two ordered 6B reds / the other 31 member-identical.
+          🛑 NO COUNT SUBSTITUTION. A post-S6 baseline is a NEW FILE, never an edit.
+```
+
+### §10 — 🛑🛑 `INV-2`: I REVERSE MY OWN DISPOSITION, AND I VERIFIED THE MECHANISM MYSELF
+**I first filed `INV-2` as "low severity, DO NOT FIX NOW". `AR-909` measured that wrong by riding two full cycles rather than asserting, and it is right.**
+```
+[MEASURED HERE, my own read of the executable lines — not adopted from the report]
+inventory_freshness_gate.py:73  before = MAP.read_bytes()
+                           :74-76 subprocess.run([GEN])        <- NO --check: IT WRITES
+                           :83  after  = MAP.read_bytes()
+                           :84  if after == before: return 0   <- RAW BYTES, NO STRIPPING
+                           :69  the ONLY escape: no src/ or scripts/ change
+system_inventory.py:1290        the stamp is git rev-parse HEAD
+                    :1823       PROVENANCE_LINE_RE
+                    :1826       def content_only(text)         <- THE HELPER'S REAL NAME
+                    :1829-1834  "HEAD advances on every commit ... would make --check fail
+                                 permanently. A staleness check that always fires is worse
+                                 than no check at all: it trains readers to ignore it."
+                    :1861-1862  --check: "exit 1 if the file on disk differs from fresh output"
+```
+⇒ 🛑 **EVERY REMEDY COMMIT ADVANCES `HEAD`; THE STAMP DERIVES FROM `HEAD`; THE FILE CAN NEVER MATCH THE REGENERATION THAT FOLLOWS. A NON-TERMINATING DEADLOCK, BLOCKING EVERY PUSH CARRYING A `src/` CHANGE.** ⇒ **PROMOTED TO `STEP 0` under `critical-path-campaign-manager`'s precedence rule — the instrument blocking the trace may precede it, with controls and a red-proof, and ONLY the minimum repair.**
+**(a) ⚠️ `AR-909` NAMED THE HELPER `_strip_provenance`. `[MEASURED HERE]` IT IS `content_only` (`:1826`).** The external read caught it first; I confirmed at the line. **The mechanism and the line range were right; the identifier was invented.** ★★★★★ **`THIRD NAME-OR-LINE SLIP IN FOUR REPORTS FROM THIS LANE (`:454` twice, now a function name). THE MEASUREMENT WAS REAL EVERY TIME AND THE POINTER WAS NOT — AND A POINTER IS WHAT THE NEXT SEAT ACTUALLY FOLLOWS.`**
+**(b) ✅ I ADOPT THE READ'S SHAPE OVER `AR-909`'s, ON MERIT.** `AR-909` proposed importing `content_only()` into the gate; the read proposes **delegating to `--check`**. **Delegation is better and the reason is this campaign's own: importing the helper fixes today's bug and leaves TWO IMPLEMENTATIONS OF ONE POLICY, so the next non-semantic field added to `--check` re-opens the divergence.** ★★★★★ **`FIXING A DIVERGENCE BY COPYING THE CORRECT SIDE PRESERVES THE DIVERGENCE — DELETE THE SECOND IMPLEMENTATION, DO NOT SYNCHRONISE IT.`**
+**(c) ⭐ AND ONE THING NEITHER `AR-909` NOR THE READ NAMED, WHICH I FOUND AT `:74-76`: THE GATE RUNS THE GENERATOR WITHOUT `--check`, SO IT WRITES THE MAP UNCONDITIONALLY BEFORE DECIDING ANYTHING.** That is the source of the dirty tree `AR-909 §4(b)` reported, **and on a SHARED TREE an unconditional write by a guard is a hazard in its own right — another seat's commit can sweep it in.** ⇒ **folded into `STEP 0`.**
+**(d) ⚖️ THE GUARD'S PURPOSE IS SOUND AND IS NOT BEING WEAKENED.** `AR-909` refused `--no-verify` unprompted and refused to repair the instrument that was blocking it. ★★★★★ **`A GUARD REPAIR AUTHORED BY THE SEAT THE GUARD IS BLOCKING IS THE EXACT SHAPE THIS CAMPAIGN CONVICTS` — it reported instead, and that is why the desk can authorize the repair cleanly now.** ★★★★★ **`A GUARD WHOSE REMEDY ADVANCES THE STATE IT MEASURES CANNOT TERMINATE — RED-PROOF THE REMEDY, NOT ONLY THE DETECTOR.`** ⭐ **This gate is hours old and operator-ordered; its first two acts were to block its own author and then deadlock the worker. That is an argument for control `C`, not against gates.**
+
+### §11 — ⚠️ OTHER INSTRUMENT FINDINGS, AND THE RULING THAT WAS DESTROYED BEFORE IT LANDED
+1. 🛑🛑 **THIS RULING WAS WRITTEN, LOST, AND REWRITTEN — `[precommit-stash]`.** `[MEASURED HERE]` I wrote `R-780` uncommitted; the worker committed `AR-908` (`80800773`) path-scoped to `AGENT-REPORTS.md`; **pre-commit stashed ALL UNSTAGED changes, ran, restored — and my ledger text was gone from both the working file and history** (`git commit` → *"no changes added to commit"*; `Select-String '^## R-780'` → ABSENT). **Recovered from the authoring session's own context.** ★★★★★ **`A PATH-SCOPED COMMIT IS NOT A PATH-SCOPED HOOK. ON A SHARED TREE ANOTHER SEAT'S COMMIT RUNS A STASH/RESTORE CYCLE OVER *YOUR* UNSTAGED WORK — AN UNCOMMITTED RULING IS NOT A DRAFT, IT IS A HOSTAGE.`** ⇒ 🛑 **STANDING REMEDY: `git add` THE LEDGER THE INSTANT IT IS WRITTEN AND COMMIT IN THE SAME MOTION. STAGED CHANGES ARE NOT STASHED.**
+2. ✅ **`AR-908 §5b`'s CORRECTION AGAINST ME, ADOPTED.** My draft header read *"SEAT `claude.exe 16536`, unchanged and live."* **I re-censused before committing and fixed the `START HERE` block and `§6` — AND MISSED THE HEADER.** ★★★★★ **`A SEAT IS A MEASUREMENT WITH A HALF-LIFE, AND "UNCHANGED" IS NOT A MEASUREMENT.`** ★★★ **AND MINE ON TOP: `FIXING TWO OF THE THREE PLACES A STALE FACT APPEARS IS HOW A CORRECTION SHIPS AS A CONTRADICTION — GREP YOUR OWN DRAFT FOR THE VALUE YOU JUST RETIRED.`**
+3. ⚠️ **`TaskStop` REPORTED SUCCESS AND A CHILD SURVIVED** (`bash.exe 29296`, still polling; unambiguously mine ⇒ killed). ★★★★ **`A COMPLETION SIGNAL IS NOT A RESULT — AND IT IS NOT A CENSUS EITHER.`** ⚠️ **ORPHANS REPORTED, NOT KILLED:** `17740` · `30400` · `4192`, all under dead parents — I could not PROVE I armed them. ✅ **Live and owned: my ear `27724`→`13684` (parent `28472`); the worker's `7024`→`18400` (parent `12460`).**
+4. ⭐ **`AR-908 §5`'s ear artefact, ADOPTED:** its poll caught this file mid-rewrite and fired `758→759→758→759` — **ONE ruling written non-atomically, not three.** ★★★★ **`A HEADING COUNT IS AN EDGE DETECTOR, NOT A LEDGER — CONFIRM EVERY FIRE BY READING THE FILE.`**
+
+**GRADES.** `[MEASURED HERE]` `b1c17970`'s scope and the clean revert · both ACCEPT-1 populations re-run · the polarity guard `:463`/`:474`/`:490-504`/`:533-538` · the ladder `:1830`/`:1837`/`:1843`/`:1847-1929` · **`grep OPENING_RANGE` = 0** · the flag default `:55-60` · **the gate at `:69`/`:73-86` and `system_inventory.py` `:1290`/`:1823`/`:1826`/`:1829-1834`/`:1861` — read by me, not adopted** · the seat census · the gate blocking my own push twice · the `§11-1` loss and recovery. `[MEASURED BY THE WORKER, TWO CYCLES, NOT RE-RUN BY ME]` `AR-909`'s cycle-1/cycle-2 stamp chase; **accepted because its symptom blocked me independently and its mechanism lines check out.** `[ARTIFACT-SOURCED — R-744 §2]` the `executed=False` shield. `[HYPOTHESIS — NOT MEASURED]` the post-activation fall-through to `:1929` — **`STEP 1` decides it.** `[ARTIFACT-SOURCED — AR-907]` its `8/9` measurement, `RED 2` green, spy `(5,15,30)`. `[RELAYED — external read]` its handler DOES/DOES-NOT list and its gate control-flow, **both adopted on merit after I re-derived their premises; I added `§4`'s reachability and `§10-1c`'s write side effect, which it did not have.** `[NOT MEASURED]` `tsc`, TS parity, any backtest, the 104-join.
+**ARCHITECTURE INVARIANTS TOUCHED:** invariant `2` remains live, and member `11` is its sharpest form — **a constant-True fallback would be the engine silently asserting a taught condition is satisfied on every bar.** None of the other five is touched.
+
+**LESSON TO PERSIST:** ★★★★★ **`SAFETY BY STARVATION IS NOT SAFETY BY DESIGN — AN ACTIVATION MUST BE AUDITED FOR THE HOLES IT OPENS, NOT ONLY THE ONES IT CLOSES.`** · ★★★★★ **`A GUARD WHOSE REMEDY ADVANCES THE STATE IT MEASURES CANNOT TERMINATE.`** · ★★★★★ **`FIXING A DIVERGENCE BY COPYING THE CORRECT SIDE PRESERVES THE DIVERGENCE — DELETE THE SECOND IMPLEMENTATION, DO NOT SYNCHRONISE IT.`** · ★★★★★ **`A PATH-SCOPED COMMIT IS NOT A PATH-SCOPED HOOK — AN UNCOMMITTED RULING ON A SHARED TREE IS A HOSTAGE.`** · ★★★★★ **`AN ESCAPE CLAUSE FEELS FREE PRECISELY WHEN THE ANSWER LOOKS OBVIOUS — AND THAT IS WHEN THE READ IS WORTH MOST.`** · ★★★★★ **`A SEAT IS A MEASUREMENT WITH A HALF-LIFE.`** · ★★★★ **`THE MEASUREMENT WAS REAL EVERY TIME AND THE POINTER WAS NOT — AND A POINTER IS WHAT THE NEXT SEAT FOLLOWS.`**
+
+---
+
 ## R-779 · 2026-08-09 · ✅ **`AR-904` ACCEPTED — ITEMS `1`+`2` AND THE `§3` COMMENT FIX PASS, AND I RE-RAN THE TREE MYSELF RATHER THAN READ THE COUNT.** 🛑🛑 **I CORRECT MY OWN RULING: `R-778 §5-4`'s ATOMIC UNIT WAS WRONG. THE WORKER FOUND A STRUCTURAL LAW OF THE ENGINE AND WAS RIGHT TO REVERT RATHER THAN LAND.** ⚡ **OPTION `B` APPROVED — ONE `S6 EXECUTION ACTIVATION`, RE-AUTHORIZED TO THE LIVE SEAT `claude.exe 16536`.** 🛑🛑 **AND IT IS WIDER THAN THE WORKER *AND* THE EXTERNAL READ BOTH SAID: `[MEASURED HERE]` PIN `(a)` HAS A THIRD CLAUSE NOBODY NAMED, AND THE PARAMETER CLASSIFICATION IS MANDATORY FOR A DIFFERENT REASON THAN THE READ GAVE.**
 
 > ### ★ WORKER — START HERE
