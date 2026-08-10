@@ -1,5 +1,35 @@
 # ADVISOR-STATE — money-path / H1 seat
 
+## SEAT — 2026-08-10, desk `claude.exe 21924` · **LIVE COPY, TAKE THIS ONE**
+🛑 **I DID NOT TRUNCATE THIS FILE AND I SAY WHY: the header below orders "rewritten in place", but `advisor-onboarding §1.2` records that this file is the SOLE CARRIER of an unknown number of `[FACT, MEASURED HERE, NOT RULED]` blocks and "has never been safely truncated". `AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE` — deleting them is irreversible destruction and is not the desk's call. PREPENDED instead, which puts the live copy at the LOWEST line number, exactly as the documented `grep -n "^## " → take the FIRST hit` pattern expects.**
+
+**Ledger at `R-794` (`8bc4c47b`); handover carried (`b98246b9`). `HEAD b98246b9` = `origin`, verified by `ls-remote`. `src/ scripts/ tests/` CLEAN.**
+**Newest AR: `AR-934` — RULED by `R-794`. Nothing unruled.** `AR-930`/`AR-933` were pure start-receipts, acknowledged in-ruling.
+**Seats `[MEASURED, `Win32_Process` + parent walk, IMAGE NAME + BIRTH TIME]`: desk `21924` (born `03:41:56`) · worker `3136` (born `10:03:02`). Worker `13200` and `23344` are DEAD — `R-791`/`R-792` address dead PIDs.**
+**Desk ear ARMED on `AGENT-REPORTS.md` (backfilled, red-proofed, delivered `AR-931`/`932`/`933`/`934` live).**
+
+## AUTHORIZED NOW — to seat `3136`, two parallel lanes, fake edge declared
+**`E` — `ACCEPT5` HARDENING, attempt `2 / 2`.** `F-1` exact feeder collection-membership equality BOTH directions · `F-2` external baseline integrity anchor · `F-3` sealed skip/xfail membership seal. Eight mutations, each alone; `(1)`/`(2)`/`(7)` hold counts CONSTANT so the old size check cannot take credit. 🛑 **A third attempt is a STOP, not a retry.**
+**`F` — IMPLEMENT `src/engine/opening_range_candidate_receipt.py`** against the committed RED contract (`1d01b9e2` + `6ef81775`). Target `12/12` + `S6` green. **`F` WINS on contention.**
+
+## NOT AUTHORIZED
+money-path production wiring · `/api/backtests` · TypeScript persistence · a new SQL column for the receipt · the receipt inside `compiled_spec`/`SpecArtifact` · altering `spec_hash` semantics · any default/index/timeframe-derived candidate · widening `needs_archetype_queue` · touching `SCHEMA-1` · renaming `ordered_6b_reds` · editing the immutable baseline · changing the worker guard · compiler expansion · ALL paper-ORB work.
+
+## STATE, WITH EVIDENCE GRADES
+`[MEASURED BY GRADED INSTRUMENT]` **`ACCEPT5-INSTRUMENT-1` = band `7`, `PASS_WITH_BOUNDED_FINDINGS`, `1 CRITICAL + 2 HIGH`. ADVISORY GATE ONLY — NOT final release authority.** Receipt `a5d2f96a`, pushed to `grade/accept5-instrument-20260810`, remote-verified.
+`[MEASURED HERE]` `F-1`: `acceptance_runner.py:262-264` builds `j_cases`, three grep hits total, never consumed; feeders compared on failure membership + collection SIZE only.
+`[MEASURED HERE]` **Two money-path arrows unwired:** `certified extraction → produce_spec_artifact_from_record` (arrow 1) and `persisted compiled_spec → backtest config` (`backtests.ts:226`, a nine-field allowlist; the DB row IS in scope at `:184`).
+`[MEASURED HERE]` **`MP1-CANDIDATE-IDEMPOTENCY-1`** — `spec-onboarding-service.ts:416-422` dedupes by TAG-ARRAY membership + two column filters ⇒ candidates 2 and 3 return `skipped_duplicate`. **No migration needed to repair.** **PRIOR ART IS `R-793 §4` — do not let a later read re-date it.**
+`[MEASURED HERE]` The candidate firebreak is DELIBERATE (`R-785`) and enforced: `spec_producer.py:896` RAISES; `spec_condition_compiler.py:914-923` refuses a missing candidate rather than defaulting; `:2371` carries the typed param.
+`[RELAYED, NOT RE-DERIVED]` **`CANDIDATE-TRIAL-IDENTITY-1`** — `trial_counter.py:298` effective-`N` has no candidate dimension ⇒ three candidates count as one experiment. **WAKE before statistical qualification, not before the conveyor.**
+`[UNENUMERATED — OPEN]` `ACCEPT5-SEAL-SINGLE-SOURCE-1` (the `2392` population never regenerated from a tree pinned at `08062e12`) · arrows `4`–`7` beyond the backtest route · whether the golden spec reaches `needs_archetype_queue` at all.
+
+## KNOWN-BENIGN — do not investigate
+The pinned conformance group reads `102 passed / 0 failed` against a pinned `2 failed / 96 passed`: **both `ordered_6b_reds` live inside that file, so `2→0` is the AUTHORIZED subtraction. THE PIN IS STALE, NOT THE TREE.** · `HANDOVER` `§2`/`§3` are stale bodies under a fresh title — take IDs from the ledger. · The `Agent` tool's `isolation:"worktree"` fails on the session cwd's decoy `.git`.
+
+## OPERATOR-FACING
+**Nothing pending.** No decision is parked on him. He relays reports to GPT by copy-paste, so **every substantive AR must be printed IN CHAT in full** or the wait never opens.
+
 > **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
 > → newest 1–2 ARs. **Never read the ledger from the top.**
 >
