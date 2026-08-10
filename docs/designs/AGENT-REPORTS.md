@@ -4,6 +4,85 @@
 
 ---
 
+## AR-934 · 2026-08-10 · ✅ **LANE `C` DELIVERED — THE ELEVEN-OBLIGATION RED CONTRACT IS COMMITTED AND RED, EACH OBLIGATION FAILING BY ITS OWN NAME.** 🛑🛑 **AND THE RED-PROOF CONVICTED MY OWN CONTRACT: OBLIGATIONS `(9)` AND `(10)` WERE PASSING FOR THE WRONG REASON — CAUGHT BY A GUARD THAT HAS EXISTED SINCE `R-738`, NOT BY IDENTITY VERIFICATION. BOTH CORRECTED, BOTH NOW BITE.** ✅ **LANE `D` DELIVERED.** 🛑🛑🛑 **STOP CONDITION `R-793 §6[3]` FIRES — BUT IN A **WEAKER** FORM THAN THE LANE REPORTED, AND I NAME WHICH, BECAUSE I RE-DERIVED IT MYSELF.** ⚖️ **FAN-IN `2 / 2`.**
+
+**SEAT `claude.exe 3136`. CAMPAIGN TREE `HEAD 6ef81775` + this report; `src/ scripts/ tests/` CLEAN. LANE `C` attempt `1 / 2` · LANE `D` attempt `1 / 2`. NO PRODUCTION CODE WRITTEN. `S6` RE-RUN AFTER EVERY CHANGE: `18 passed`, exit `0` — stop `[4]` clear.**
+
+### §1 — ✅ LANE `C`: THE CONTRACT, AND WHY IT IS NOT ELEVEN COPIES OF ONE FAILURE
+✅ **COMMITTED `1d01b9e2` (contract) + `6ef81775` (the correction below).** `src/engine/opening_range_candidate_receipt.py` **DOES NOT EXIST** — verified before writing (`ls` → `No such file`), and `grep ExecutionCandidateReceipt src/` → **ZERO**. The red is real, not a broken import.
+```
+[MEASURED HERE — campaign tree, EXIT CODES UNPIPED, captured to file then read]
+python -m pytest src/engine/tests/test_mp1_candidate_receipt.py -q
+   11 failed, 1 passed        PYTEST_EXIT=1
+   the 1 PASSED is the PRE-CONDITION: the golden record still yields exactly
+   5/15/30 with three DISTINCT candidate_ids and cache_identities  => R-793 §6[1]
+   does NOT fire. Asserted FIRST so a source drift can never be misread as a
+   receipt defect.
+```
+⭐ **EACH OBLIGATION FAILS THROUGH A NAMED `_api()` MESSAGE, NOT A MODULE-LEVEL `ImportError`.** ⇒ **eleven distinct reds that go green one at a time.** ★★★★★ **`AR-930 §1`'s law applied one layer up: `A COMBINED RUN CANNOT ATTRIBUTE ITS EXIT CODE TO ANY SINGLE ARM` — and a collection error is the most combined run there is.**
+
+### §2 — 🛑🛑 THE RED-PROOF CONVICTED THE CONTRACT I HAD JUST WRITTEN
+🛑 **I did not stop at "eleven tests are red". Eleven tests failing because a module is absent proves NOTHING about whether the obligations discriminate.** ⇒ **I built a THROWAWAY STRAWMAN in an isolated worktree (`wt-laneC-strawman-20260810` @ `1d01b9e2`, REMOVED after the run, never committed, campaign tree never written to) — deliberately what a competent engineer writes given the DESIGN but not the adversarial checks: it serialises, it rehydrates, and it verifies NOTHING.**
+```
+[MEASURED HERE — the SAME test file, byte-identical (`cmp` exit 0), not a replica]
+
+STRAWMAN A (verifies nothing), FIRST RUN:
+  PASSED  01 02 03 04 05 06 09 10 11        <-- 09 and 10 PASSED. THEY SHOULD NOT HAVE.
+  FAILED  07 08
+```
+🛑🛑 **THE DEFECT WAS MINE AND IT IS THE EXACT SHAPE THIS CAMPAIGN CONVICTS:** my `(9)` and `(10)` mutated the duration to an **UNTAUGHT** value (`5 → 6`). **`OpeningRangeExecutionCandidate.__post_init__` has refused untaught variants since `R-738`** — so both arms were being convicted by a guard that predates this lane by weeks. ⇒ **They would have reported the self-repair defence as PRESENT while it was ABSENT.** ★★★★★ **`A RED-PROOF THAT PASSES FOR AN UNIDENTIFIED REASON IS NOT A RED-PROOF` — `R-791 §3` minted it against Mutation `C`; here it convicted the instrument's author.**
+✅ **CORRECTED (`6ef81775`): `(9)` now swaps to another **TAUGHT** variant; `(10)` now forges `source_spec_id`, a free string feeding BOTH identities. Both survive construction, so ONLY a stale-identity check can convict them.**
+```
+STRAWMAN A, RE-RUN AFTER THE CORRECTION:
+  FAILED  07 08 09 10        <-- all four now bite for their OWN reason
+STRAWMAN B (adds identity verification + the outer persisted anchor):
+  12 passed, EXIT 0          <-- THE CONTRACT IS SATISFIABLE, NOT "ALWAYS RED"
+ARM C  (collapse the fan-out to ONE receipt):
+  FAILED  01 02 03           <-- the cardinality obligations bite
+```
+★★★★★ **`A MUTATION SUITE WITHOUT AN UNMUTATED CONTROL CANNOT TELL "CATCHES BREAKAGE" FROM "ALWAYS RED" — AND ONE WITHOUT A PLAUSIBLE WRONG IMPLEMENTATION CANNOT TELL "CATCHES THE RIGHT THING" FROM "CATCHES SOMETHING".`**
+⚠️ **HONEST GAP, NAMED NOT WAIVED: obligations `(5)`, `(6)` and `(11)` received NO independent discriminating mutation — they pass under both strawmen. `(11)` is structurally SUBSUMED BY `(7)` under the signature I chose: a resolver that never receives the candidate list cannot return `[0]`, so "never selects `[0]`" is currently proven only as "refuses". If the desk wants `(11)` to bite independently, the resolver must be handed the candidate tuple — that is a CONTRACT SHAPE decision and it is not mine.**
+
+### §3 — ✅ LANE `D`, AND THE PART I REFUSE TO LAUNDER
+⚖️ **PROVENANCE, STATED FIRST: lane `D` was executed by a subagent under my brief (`worker-execution §5c` — I remain the single integrator and signer). Its table is `[RELAYED]`. Everything I call `[MEASURED HERE]` below I re-read at the executable line myself.**
+✅ **RELAYED, NOT RE-DERIVED BY ME (the bulk):** ~30 consumers classified across Python engine, TS onboarding, playbook registry, backfill scripts and SQL. **Load-bearing relayed claims:** `playbook-registration.ts:177` stores names in a `Set` (three identical names dedupe to one) · `:336` returns `ok:true` for an already-present name, so onboarding sees a SUCCESSFUL registration it never wrote · `trial_counter.py:298` keys effective-`N` on `(spec_hash, engine_sha, ds, cfg)` with NO candidate component · **NO UNIQUE index anywhere mentions `spec_hash`** · lifecycle joins key on `strategies.id`, not `spec_hash`. ✅ **It carried a positive control in BOTH languages and its own honest-partial section, unprompted.**
+
+### §4 — 🛑🛑🛑 STOP `R-793 §6[3]` — IT FIRES, BUT NARROWER THAN REPORTED
+🛑 **THE LANE FLAGGED TWO SCHEMA-LEVEL BLOCKERS. I RE-DERIVED BOTH AT THE LINE, AND THE LOUDEST ONE IS ALMOST CERTAINLY INERT:**
+```
+[MEASURED HERE — DDL and writer both read directly, campaign tree]
+
+SCHEMA-1  0109_archive_zombie_strategies.sql:81-89
+  CREATE UNIQUE INDEX ... ON strategies (
+    symbol, timeframe, (config->'entry_indicator'), (config->'entry_params') )
+  WHERE archived_at IS NULL AND lifecycle_state NOT IN ('GRAVEYARD','RETIRED');
+        ^ the index reads entry_indicator at the TOP LEVEL of config.
+
+BUT THE WRITER — spec-onboarding-service.ts:610-618:
+  const compiled = { direction, entry_type, regime_gate,
+                     strategy: { entry_long, entry_short, entry_indicator, ... } }
+        ^ entry_indicator is NESTED UNDER `strategy`. And `entry_params` is
+          NEVER WRITTEN AT ALL - grep across the compiled object: absent.
+  => config->'entry_indicator' and config->'entry_params' are BOTH SQL NULL on
+     every spec-onboarded row.
+```
+⚖️ **THEREFORE, GRADED HONESTLY:** the DDL and the writer are **`[MEASURED HERE]`**. The consequence — *NULLs are distinct in a default btree UNIQUE, so three rows do NOT collide* — is **`[ENTAILED BY DOCUMENTED POSTGRES SEMANTICS, NOT OBSERVED ON A LIVE DB]`**; the migration declares no `NULLS NOT DISTINCT`. 🛑 **I could not close it against the live DB, and `[db-moved-env-stale]` is the reason, not an excuse.** ⇒ **`SCHEMA-1` is a LATENT constraint that would bite the moment anything starts populating `config.entry_indicator` at the top level — it is NOT today's blocker.**
+🛑 **`SCHEMA-2` STANDS AND IS UNCONDITIONAL AT THE LINE:** `[MEASURED HERE]` `0162_needs_archetype_queue.sql:44-45` — `CREATE UNIQUE INDEX ... ON needs_archetype_queue (speaker_term);` ⇒ **one queue row per concept term; three candidates of one spec cannot be parked separately.** ⚠️ **Whether the golden spec reaches that path at all is NOT MEASURED.**
+🛑🛑 **AND THE ONE THAT ACTUALLY BLOCKS, WHICH IS NOT DDL AT ALL:** `[MEASURED HERE, `spec_producer.py:896`]` `RecordCompileResult.__post_init__` **RAISES** if the lowering enters the artifact — so the `.spec.json` the TypeScript onboarder consumes carries ONE `spec_hash` and **ZERO candidates, by design (`R-777 §4`)**. ⇒ ★★★★★ **`NO TYPESCRIPT-SIDE CHANGE ALONE CAN EVER PRODUCE THREE ROWS — THE THIRD ROW'S EVIDENCE NEVER CROSSES. THAT IS PRECISELY THE HOLE THE RECEIPT EXISTS TO FILL, AND IT IS WHY LANE `C` IS THE CRITICAL PATH AND NOT LANE `D`.`**
+
+### §5 — ⚖️ SCOPE, FORBIDDEN, AND ONE DEFECT IN THE RULING'S OWN PREMISE
+🛑 **A GAP IN `R-793` I COULD NOT CLOSE, RAISED NOW RATHER THAN AT DELIVERY:** `§3` adopts *"`§11`'s seven rehydration checks"*, but **the external read is NOT COMMITTED TO THIS TREE** — `[MEASURED HERE]` `ExecutionCandidateReceipt` appears on disk ONLY in `ADVISOR-RULINGS.md` and `HANDOVER-ADVISOR-2026-08-04.md`. ⇒ **I built `(6)` from `R-793 §5`'s own inline enumeration, which IS self-contained. The seven checks were unavailable to me. If they pin anything beyond identity-equality-after-round-trip, `(6)` is incomplete and I cannot know it.** ★★★ **`A RULING THAT ADOPTS A DOCUMENT THE WORKER CANNOT OPEN HAS ADOPTED IT ON THE WORKER'S BEHALF, NOT INTO HIS HANDS.`**
+⚠️ **API NAMES ARE MY PROPOSAL, NOT THE READ'S:** `RECEIPT_SCHEMA` · `ExecutionCandidateReceipt` · `build_execution_candidate_receipts` · `rehydrate_candidate` · `resolve_execution_candidate` · field `parent_spec_hash`. **If the read pins different names, the names move and the eleven obligations do not.**
+🛑 **NOT DONE, AS FORBIDDEN:** no production code (`opening_range_candidate_receipt.py` still absent in the campaign tree) · no money-path write · `/api/backtests` untouched · typed candidate NOT put inside `SpecArtifact` · no `dataclasses.asdict()` spec field · `spec_hash` semantics unchanged · no variant derived from timeframe/prose/index/default · no primary candidate designated · `ordered_6b_reds` NOT renamed · immutable baseline untouched · worker guard untouched · paper-ORB work untouched · no `--no-verify`.
+✅ **THE GUARD FIRED ON ME AND I DID NOT ROUTE AROUND IT:** my first `Write` of the contract was BLOCKED because `R-793` had landed since I loaded `worker-execution`. **I re-invoked the skill and re-issued the write** — no heredoc, no `python -` , no bypass. ⚖️ **`WORKER-GUARD-ACT-1` is the reason that path was watched; it worked.**
+
+### §6 — ⚖️ FAN-IN, AND THE ONE NEXT THING
+**`2 / 2` LANES RETURNED.** ⚡ **`C`: contract committed, RED, red-proofed against a plausible wrong implementation, self-corrected on two obligations, satisfiable proven. `D`: inventory delivered; stop `[3]` fires on `SCHEMA-2` and on the artifact contract, and I have DOWNGRADED `SCHEMA-1` to latent with the evidence for the downgrade in `§4`.**
+**RECOMMENDATION: `APPROVAL_REQUESTED` for `C`. `D` returns a STOP, not a request.**
+**NEXT SMALLEST TASK (ONE): the desk rules whether the receipt travels as a NEW COLUMN or inside `compiled_spec` — because `§4` proves the artifact contract, not the DDL, is what blocks the third row, and that is a design ruling, not a measurement.**
+
+---
+
 ## AR-933 · 2026-08-10 · 🔁 **SEAT ROLL — WORKER `claude.exe 13200` IS GONE; I AM ITS SUCCESSOR, `claude.exe 3136`.** ✅ **THIS IS A START-RECEIPT, NOT A DELIVERY: NO LANE IS OPEN TO ME.** ✅ **`R-792`'s BOTH LANES WERE RETURNED BEFORE THAT SEAT DIED — `AR-932`, FAN-IN `2 / 2`, LANDED AT `HEAD 5bb98fd9` = `origin`.** ✅ **RULING EAR ARMED UNDER **THIS** SEAT AND RED-PROOFED: THE DETECTOR FIRED **AND** THE FIRING REACHED CHAT.** ⚖️ **I AM IDLE AND AWAITING `R-793` — the next step `AR-932 §5` names is a DESK DESIGN RULING, not a measurement, so there is nothing for a worker to pull.**
 
 **SEAT `claude.exe 3136` (born `10:03:02`). CAMPAIGN TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 5bb98fd9` = `origin`, `src/ scripts/ tests/` CLEAN. NO LANE CLAIMED · NO ATTEMPT SPENT · NO PRODUCTION WRITE.**
