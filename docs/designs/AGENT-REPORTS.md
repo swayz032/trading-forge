@@ -4,6 +4,52 @@
 
 ---
 
+## AR-942 · 2026-08-10 · ✅ **`L-2` ANSWERED: SCHEMA PARITY HOLDS — STOP `[2]` DOES NOT FIRE.** ✅ **`L-1` DELIVERED: THE PRODUCTION-BOUNDARY RED IS COMMITTED AT `c51dcdb9`, IN ITS OWN COMMIT, WITH TWO PASSING ARMS AS ITS POSITIVE WITNESS.** 🛑 **AND I CAUGHT MYSELF MAKING THIS CAMPAIGN'S OWN FALSE-ABSENCE ERROR — `§1` — WITH THE CONTROL THAT SAVED IT.** ⚖️ **PROGRESS `2 / 5` ITEMS. I AM CONTINUING, NOT HANDING OFF.**
+
+**SEAT `claude.exe 26856`. TREE `HEAD c51dcdb9` + this report. LANE `L` attempt `1 / 2`. NO DB schema · NO SQL migration · NO `spec_hash` change · NO dedupe-key change yet (that is `L-3`).**
+
+### §1 — 🛑 MY OWN FALSE ABSENCE, CAUGHT BY THE CONTROL AND NOT BY LUCK
+🛑 **I ASKED "does production have a UNIQUE index on `strategies`?" AND GREPPED `migrations/` AND `drizzle/`. BOTH RETURNED EMPTY. NEITHER DIRECTORY EXISTS.** `[MEASURED HERE]` the real path is **`src/server/db/migrations`, `200` `.sql` files.**
+⇒ **An empty grep over a wrong path is not an absence — and this one would have produced the RIGHT ANSWER FOR THE WRONG REASON, which is the version nobody catches.** ★★★★★ **`A NULL RESULT THAT AGREES WITH YOUR EXPECTATION IS THE ONE YOU MUST CONTROL-PROBE HARDEST — IT PAYS ITS OWN VERIFICATION BILL WITH YOUR PRIOR BELIEF.`**
+✅ **RE-RUN WITH POSITIVE CONTROLS ON THE REAL PATH:** `71` migration files mention `strategies` and `45` contain `UNIQUE` ⇒ **the instrument demonstrably reaches the data.**
+
+### §2 — ✅ `L-2`: PARITY, WITH THE DIVERGENCE I FOUND STATED HONESTLY
+```
+[MEASURED HERE]                        PGlite test DDL        PRODUCTION
+strategies uniqueness .......... PRIMARY KEY (id) only   PRIMARY KEY (id) only
+UNIQUE index on strategies ..... none                    none  (0 hits / 71 files that name it)
+spec_hash as a COLUMN .......... absent                  absent (0 hits across 200 migrations)
+schema.ts .unique()/uniqueIndex. n/a                     none on strategies
+```
+✅ **VERDICT: PARITY ON EVERY COLUMN THIS LANE DEPENDS ON. STOP `[2]` DOES NOT FIRE, AND `NO MIGRATION` IS CONFIRMED BY MEASUREMENT RATHER THAN INHERITED** (`R-796 §9[2]` holds; `R-793 §4`'s application-level finding is corroborated at the schema layer). **`MP1-PGLITE-SCHEMA-PARITY-1` DISCHARGED.**
+⚠️ **ONE REAL DIVERGENCE, AND IT IS NOT A CONSTRAINT — I REPORT IT BECAUSE IT COULD MASK A PRODUCTION FAILURE:** `[MEASURED HERE]` the PGlite DDL gives `symbol` `DEFAULT 'MES'`, `timeframe` `DEFAULT '5m'` and `config` `DEFAULT '{}'`; production `schema.ts` declares all three `notNull` **with no default**. ⇒ **A test insert that OMITS one passes in `PGlite` and would violate `NOT NULL` in production.** ⇒ 🛑 **BINDING ON MY OWN LANE: every row this lane creates supplies those columns EXPLICITLY and relies on no DDL default.** ★★★★ **`A DEFAULT THE TEST SCHEMA HAS AND PRODUCTION LACKS IS NOT A CONSTRAINT DIFFERENCE — IT IS A TEST THAT CANNOT FAIL THE WAY PRODUCTION WOULD.`** ⚖️ **It does not affect the lane's verdict, which rests on uniqueness — but the desk asked whether the test schema "lacks none that production has", and this is the honest full answer.**
+
+### §3 — ✅ `L-1`: THE RED, AND WHY TWO OF ITS FOUR ARMS PASS ON PURPOSE
+```
+[MEASURED HERE, real onboardSpecArtifact + real PGlite, unpiped, vitest exit 1]
+PASS  PRE-REPAIR WITNESS  A inserted · B skipped_duplicate · C skipped_duplicate
+PASS  GUARD               replaying the IDENTICAL candidate is STILL a duplicate
+FAIL  REQUIREMENT         three rows survive ............ expected 3, received 1
+FAIL  REQUIREMENT         each row names its candidate .. expected 3 distinct, received 0
+      2 failed | 2 passed
+existing onboarding suites (incl. the `:354` positive control) ... 16 passed, exit 0
+```
+✅ **THE TWO PASSING ARMS ARE LOAD-BEARING, NOT FILLER.** ★★★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — without them, "three rows did not appear" is indistinguishable from a harness that never reached production.** ✅ **The GUARD is the desk's anti-overshoot requirement, and it must hold BEFORE and AFTER `L-3`, so "candidate-aware idempotency works" can never be confused with "dedupe was switched off".**
+✅ **STOP `[1]` DID NOT FIRE — the harness runs the REAL service.** `[MEASURED HERE]` the only `vi.mock` is the DB-connection seam (`get db()`), plus the `logger` bootstrap; `onboardSpecArtifact` is imported from the production module. **`[test-replica]` is the named trap here and I did not substitute a mocked service.** ✅ **STOP `[3]` DID NOT FIRE: the pre-repair statuses ARE `skipped_duplicate` for B and C, so `R-793 §4` is corroborated at the boundary, not refuted.** ✅ **STOP `[6]` DID NOT FIRE: `16 passed`.**
+
+### §4 — ⚖️ A DESIGN FORK IN `L-1`, AND WHY ONE BRANCH IS PROVABLY WRONG
+🛑 **`L-1` says to feed "three candidate-aware inputs … differing in `candidate_id` / `cache_identity` / receipt". `[MEASURED HERE]` NO SUCH INPUT CHANNEL EXISTED: `OnboardSpecOptions` had no candidate field, and `compiled_spec` is BUILT INSIDE the service (`:666`), never passed in.** ⇒ **Two readings, and I tested them rather than picking the comfortable one:**
+- **(A) feed three IDENTICAL inputs** (same artifact, same symbol — what three taught candidates look like today). 🛑 **PROVABLY WRONG: identical inputs are a LEGITIMATE duplicate even after the repair, so this RED could never be turned green by `L-3`. It would be measuring the absence of a channel, not the collapse.** ★★★★★ **`A RED THE REPAIR CANNOT TURN GREEN IS NOT A RED ABOUT THE REPAIR.`**
+- ✅ **(B) accept an opaque `executionCandidate` on the options — plumbing ONLY, idempotency decision untouched.** Three inputs become distinguishable; the key is still `(spec_hash, symbol)`; B and C still collapse. **This is the reading the desk's OWN expected outcome requires** — *"`5m` onboarded, `15m` `skipped_duplicate`, `30m` `skipped_duplicate`"* is only meaningful if the three are distinguishable.
+⇒ ✅ **PROCEEDING UNDER (B), DECLARED HERE RATHER THAN ASSUMED.** 🛑 **The `L-1` commit contains NO dedupe-key change and NO persistence — the RED-before-repair boundary is intact and `git show --stat` is two files, `+232 / −0`.** 🛑 **The identity values are OPAQUE by construction: no timeframe is derivable from them, because `R-797 §6` forbids a timeframe-derived candidate and an id reading `..._5m` invites the next reader to parse one.**
+
+### §5 — ⏳ WHAT REMAINS, AND I AM NOT HANDING OFF
+**PROGRESS `2 / 5`: `L-2` ✅ · `L-1` ✅ · `L-3` (repair, separate commit) · `L-4` (tests `A`–`N` + the required production mutation) · `L-5` (prose) — all UNSTARTED, none BLOCKED.** ★★★ **Unstarted is not a reason to leave; it is the reason to stay.**
+⚠️ **ONE DEPENDENCY I DO NOT YET HOLD: `L-4` cites "the external `§16`" for obligations `A`–`N`, and that enumeration is not in my context.** ⚖️ **I will derive the `A`–`N` set from `R-797 §5 L-3`'s own stated semantics and NAME each obligation explicitly, so the desk can see exactly which fourteen I built and correct any mismatch — rather than silently shipping thirteen.** ★★★★★ **`COUNT OBLIGATIONS, NOT SENTENCES — NOTHING DETECTS A MISSING ROW.`**
+**RECOMMENDATION: no ruling needed to continue; `§4`'s reading (B) is declared and reversible if the desk disagrees.**
+
+---
+
 ## AR-941 · 2026-08-10 · ⏱️ **START-RECEIPT — LANE `L` STARTED, `0 / 2`. THE FIRST PRODUCTION TYPESCRIPT WRITE OF THIS CAMPAIGN.** ⚖️ **RUNNING `L-2` FIRST, DELIBERATELY, AND I STATE WHY.**
 
 **SEAT `claude.exe 26856`. TREE `wt-h1-wave4-20260712`, `HEAD 2032b943` == `origin`. FIVE ITEMS `L-1`..`L-5`, ONE LANE, FAN-IN `1`.**
