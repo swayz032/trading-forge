@@ -1,0 +1,735 @@
+//@version=6
+indicator("Slumdawg traders indicator", shorttitle = "SLUMDAWG", overlay = true, behind_chart = true, max_bars_back = 1200, max_labels_count = 120, max_lines_count = 80, max_boxes_count = 10)
+
+// v0.17.1 — CANONICAL CONTEXT + MULTI-LANE TP + CANDLE QUALITY
+// PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
+//
+// V2 changes:
+// - BIG DIRECTION is persistent protected 4H/D structure, not a weighted vote.
+// - CURRENT MOVE is persistent 15m BOS state; a small bounce cannot flip a bearish leg.
+// - AUTO PLAN follows CURRENT MOVE while the panel keeps the BIG-vs-MOVE relationship explicit.
+// - yellow Entry Zones preserve the user-approved v0.15 outer-swing selector.
+// - normal entry path remains proof -> reference -> BREAK -> PUSH1 -> quality PUSH2 -> READY.
+// - separate research-only strong-engulf / rejection->engulf lane is explicit and audited.
+// - TP uses 15m primary + dense 5m fallback + 1H/4H major-reaction lanes.
+// - TP1/2/3 are ordered distinct lines and penetrate inside the near side of the reaction shelf.
+// - missing TP has an explicit reason; no silent dash means "detector worked".
+// - panel is presentation only: all rows read the same canonical variables used by geometry.
+
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
+const float HUGE_DISTANCE = 1e12
+const int LEVEL_LABEL_OFFSET_BARS = 16
+const int FALLBACK_BAR_MS = 5 * 60 * 1000
+const int ENTRY_PIVOT_LEFT = 2
+const int ENTRY_PIVOT_RIGHT = 2
+const int STRUCT_PIVOT_LEFT = 2
+const int STRUCT_PIVOT_RIGHT = 2
+
+string gSetup = "1 - SETUP"
+string directionMode = input.string("AUTO", "BIG DIRECTION MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+string manualBigDirection = input.string("DOWN", "MANUAL BIG DIRECTION", options = ["UP", "DOWN"], group = gSetup, display = display.none)
+string planMode = input.string("AUTO", "PLAN MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+string manualPlanSide = input.string("SHORT", "MANUAL PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
+string entryMode = input.string("AUTO", "ENTRY LEVEL MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+float manualLongEntry = input.price(0.0, "MANUAL LONG ENTRY", group = gSetup, display = display.none)
+float manualShortEntry = input.price(0.0, "MANUAL SHORT ENTRY", group = gSetup, display = display.none)
+string targetMode = input.string("AUTO", "TAKE PROFIT MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+float manualTargetLow = input.price(0.0, "MANUAL TAKE PROFIT lower edge", group = gSetup, display = display.none)
+float manualTargetHigh = input.price(0.0, "MANUAL TAKE PROFIT upper edge", group = gSetup, display = display.none)
+
+string gView = "2 - DISPLAY"
+bool showCoach = input.bool(true, "Show Slumdawg Traders panel", group = gView)
+bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near", group = gView)
+bool showEntryLines = input.bool(true, "Show LONG/SHORT entry zones", group = gView)
+bool showTakeProfitZones = input.bool(true, "Show Take Profit Zones", group = gView)
+bool showBothTpSides = input.bool(true, "Show both LONG/SHORT TP ladders", group = gView)
+
+string gTpResearch = "3 - TP RESEARCH (CALIBRATION REQUIRED)"
+int tpMinTouches15 = input.int(2, "15m minimum reactions", minval = 2, maxval = 4, group = gTpResearch)
+int tpMinTouches5 = input.int(3, "5m fallback minimum reactions", minval = 2, maxval = 6, group = gTpResearch)
+float tpClusterToleranceAtr = input.float(0.25, "15m cluster tolerance × ATR", minval = 0.05, maxval = 0.75, step = 0.05, group = gTpResearch)
+float tpEntrySeparationAtr = input.float(0.35, "Entry separation × 15m ATR", minval = 0.10, maxval = 1.50, step = 0.05, group = gTpResearch)
+float tpZoneSeparationAtr = input.float(0.15, "TP-to-TP separation × 15m ATR", minval = 0.05, maxval = 0.75, step = 0.05, group = gTpResearch)
+float tpPenetrationFraction = input.float(0.25, "TP penetration into reaction zone", minval = 0.05, maxval = 0.45, step = 0.05, group = gTpResearch, tooltip = "SHORT sits inside the top side; LONG sits inside the bottom side. Research default only.")
+
+string gMomentum = "4 - ENTRY MOMENTUM (CALIBRATION REQUIRED)"
+int momentumMinBreakTicks = input.int(1, "Minimum break ticks", minval = 1, maxval = 20, group = gMomentum)
+float momentumPushAtr = input.float(0.08, "PUSH distance × 5m ATR", minval = 0.02, maxval = 0.50, step = 0.01, group = gMomentum)
+float momentumRecoilAtr = input.float(0.20, "Hard recoil × 5m ATR", minval = 0.05, maxval = 1.00, step = 0.05, group = gMomentum)
+float referenceMinBodyFraction = input.float(0.15, "Minimum proof-candle body/range", minval = 0.0, maxval = 0.50, step = 0.05, group = gMomentum)
+
+string gCandle = "5 - CANDLE QUALITY RESEARCH"
+float candleDojiBodyMax = input.float(0.15, "Doji max body/range", minval = 0.02, maxval = 0.35, step = 0.01, group = gCandle)
+float candleRejectWickMin = input.float(0.45, "Rejection wick min fraction", minval = 0.20, maxval = 0.80, step = 0.05, group = gCandle)
+float candleStrongBodyMin = input.float(0.60, "Strong engulf body/range", minval = 0.30, maxval = 0.90, step = 0.05, group = gCandle)
+float candleStrongRangeAtr = input.float(0.80, "Strong engulf range × 5m ATR", minval = 0.30, maxval = 2.00, step = 0.05, group = gCandle)
+float candleCloseQualityMin = input.float(0.75, "Close near favorable extreme", minval = 0.55, maxval = 0.95, step = 0.05, group = gCandle)
+float candleOppWickMax = input.float(0.20, "Max rejection wick against continuation", minval = 0.05, maxval = 0.50, step = 0.05, group = gCandle)
+float candleMinRoomAtr = input.float(1.0, "Minimum room to TP1 × 5m ATR", minval = 0.25, maxval = 4.0, step = 0.25, group = gCandle)
+
+color GREEN_UP = color.rgb(0, 205, 105)
+color RED_DOWN = color.rgb(230, 55, 70)
+color BLUE_DAY = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color BLUE_TARGET = color.rgb(42, 118, 255)
+color YELLOW_GO = color.rgb(255, 190, 25)
+color ORANGE_WAIT = color.rgb(255, 155, 35)
+color PANEL_DARK = color.rgb(18, 20, 25)
+color PANEL_MID = color.rgb(37, 41, 49)
+color GOLD_ACCENT = color.rgb(205, 165, 70)
+
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+bool planningViewSupported = timeframe.isminutes and timeframe.multiplier <= 15
+bool entryEngineSupported = timeframe.isminutes and timeframe.multiplier == 5
+
+// -----------------------------------------------------------------------------
+// FROZEN D/W KEY LEVELS
+// -----------------------------------------------------------------------------
+[dHighCurrent, dLowCurrent, dCloseTimeCurrent] = request.security(syminfo.tickerid, "D", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[dHighPrev, dLowPrev] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+[wHighCurrent, wLowCurrent, wCloseTimeCurrent] = request.security(syminfo.tickerid, "W", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[wHighPrev, wLowPrev] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+int closedGapMs = timenow - time_close
+bool recentClosedGap = not barstate.isrealtime and closedGapMs >= 0 and closedGapMs <= NORMAL_CLOSED_GAP_MS
+bool extendedClosedGap = not barstate.isrealtime and closedGapMs > NORMAL_CLOSED_GAP_MS
+bool dailyCurrentCompletedNow = recentClosedGap and not na(dCloseTimeCurrent) and timenow >= dCloseTimeCurrent
+bool weeklyCurrentCompletedNow = recentClosedGap and not na(wCloseTimeCurrent) and timenow >= wCloseTimeCurrent
+
+float pdh = dailyCurrentCompletedNow ? dHighCurrent : dHighPrev
+float pdl = dailyCurrentCompletedNow ? dLowCurrent : dLowPrev
+float pwh = weeklyCurrentCompletedNow ? wHighCurrent : wHighPrev
+float pwl = weeklyCurrentCompletedNow ? wLowCurrent : wLowPrev
+
+bool dayValuesValid = not na(pdh) and not na(pdl)
+bool weekValuesValid = not na(pwh) and not na(pwl)
+float dailyVisualEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na
+bool showPdh = dayValuesValid
+bool showPdl = dayValuesValid
+bool showPwh = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwh - close) <= dailyVisualEnvelope
+bool showPwl = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwl - close) <= dailyVisualEnvelope
+
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// CANONICAL PERSISTENT MARKET CONTEXT
+// Use only previous completed HTF snapshots so a live HTF candle cannot repaint
+// BIG DIRECTION. 4H controls persistence; Daily can veto a premature reversal.
+// -----------------------------------------------------------------------------
+f_confirmed_structure_snapshot() =>
+    float ph = ta.pivothigh(high, STRUCT_PIVOT_LEFT, STRUCT_PIVOT_RIGHT)
+    float pl = ta.pivotlow(low, STRUCT_PIVOT_LEFT, STRUCT_PIVOT_RIGHT)
+    float h0 = ta.valuewhen(not na(ph), ph, 0)
+    float h1 = ta.valuewhen(not na(ph), ph, 1)
+    float l0 = ta.valuewhen(not na(pl), pl, 0)
+    float l1 = ta.valuewhen(not na(pl), pl, 1)
+    [close[1], h0[1], h1[1], l0[1], l1[1]]
+
+f_clear_dir(float h0, float h1, float l0, float l1) =>
+    bool enough = not na(h0) and not na(h1) and not na(l0) and not na(l1)
+    enough and h0 > h1 and l0 > l1 ? 1 : enough and h0 < h1 and l0 < l1 ? -1 : 0
+
+[dStructClose, dH0, dH1, dL0, dL1] = request.security(syminfo.tickerid, "D", f_confirmed_structure_snapshot(), lookahead = barmerge.lookahead_off)
+[h4StructClose, h4H0, h4H1, h4L0, h4L1] = request.security(syminfo.tickerid, "240", f_confirmed_structure_snapshot(), lookahead = barmerge.lookahead_off)
+[m15StructClose, m15H0, m15H1, m15L0, m15L1] = request.security(syminfo.tickerid, "15", f_confirmed_structure_snapshot(), lookahead = barmerge.lookahead_off)
+
+int dStructDir = f_clear_dir(dH0, dH1, dL0, dL1)
+int h4StructDir = f_clear_dir(h4H0, h4H1, h4L0, h4L1)
+int m15StructDir = f_clear_dir(m15H0, m15H1, m15L0, m15L1)
+
+var int bigDirState = 0
+var float bigProtectedLevel = na
+var string bigDirectionReason = "BUILDING STRUCTURE"
+
+if directionMode == "AUTO"
+    if bigDirState == 0
+        if h4StructDir != 0 and dStructDir != -h4StructDir
+            bigDirState := h4StructDir
+            bigProtectedLevel := h4StructDir == 1 ? h4L0 : h4H0
+            bigDirectionReason := "CONFIRMED 4H STRUCTURE"
+        else if h4StructDir == 0 and dStructDir != 0
+            bigDirState := dStructDir
+            bigProtectedLevel := dStructDir == 1 ? h4L0 : h4H0
+            bigDirectionReason := "DAILY CONTEXT / 4H BUILDING"
+        else
+            bigDirectionReason := "HTF CONFLICT / BUILDING"
+    else if bigDirState == -1
+        if h4StructDir == -1
+            bigProtectedLevel := h4H0
+            bigDirectionReason := "BEARISH PROTECTED HIGH INTACT"
+        else
+            bool bearishInvalidated = not na(bigProtectedLevel) and not na(h4StructClose) and h4StructClose > bigProtectedLevel
+            if bearishInvalidated and h4StructDir == 1 and dStructDir != -1
+                bigDirState := 1
+                bigProtectedLevel := h4L0
+                bigDirectionReason := "PROTECTED HIGH BROKEN + BULLISH 4H CONFIRMED"
+            else
+                bigDirectionReason := "BEARISH STATE PERSISTS THROUGH PULLBACK"
+    else
+        if h4StructDir == 1
+            bigProtectedLevel := h4L0
+            bigDirectionReason := "BULLISH PROTECTED LOW INTACT"
+        else
+            bool bullishInvalidated = not na(bigProtectedLevel) and not na(h4StructClose) and h4StructClose < bigProtectedLevel
+            if bullishInvalidated and h4StructDir == -1 and dStructDir != 1
+                bigDirState := -1
+                bigProtectedLevel := h4H0
+                bigDirectionReason := "PROTECTED LOW BROKEN + BEARISH 4H CONFIRMED"
+            else
+                bigDirectionReason := "BULLISH STATE PERSISTS THROUGH PULLBACK"
+
+int bigDir = directionMode == "MANUAL" ? (manualBigDirection == "UP" ? 1 : -1) : bigDirState
+
+// CURRENT MOVE is a separate persistent 15m BOS state. It does not flip because
+// the most recent pivot type changed; it flips only through the latest opposing swing.
+var int currentMoveState = 0
+var string currentMoveReason = "BUILDING 15M MOVE"
+if currentMoveState == 0
+    if m15StructDir != 0
+        currentMoveState := m15StructDir
+        currentMoveReason := "CONFIRMED 15M STRUCTURE"
+    else if not na(m15StructClose) and not na(m15H0) and m15StructClose > m15H0
+        currentMoveState := 1
+        currentMoveReason := "BULLISH 15M BOS"
+    else if not na(m15StructClose) and not na(m15L0) and m15StructClose < m15L0
+        currentMoveState := -1
+        currentMoveReason := "BEARISH 15M BOS"
+else if currentMoveState == -1
+    if not na(m15StructClose) and not na(m15H0) and m15StructClose > m15H0
+        currentMoveState := 1
+        currentMoveReason := "BULLISH 15M BOS"
+    else
+        currentMoveReason := "BEARISH LEG BELOW LOWER-HIGH PROTECTION"
+else
+    if not na(m15StructClose) and not na(m15L0) and m15StructClose < m15L0
+        currentMoveState := -1
+        currentMoveReason := "BEARISH 15M BOS"
+    else
+        currentMoveReason := "BULLISH LEG ABOVE HIGHER-LOW PROTECTION"
+
+int currentMoveDir = currentMoveState
+int autoPlanDir = currentMoveDir != 0 ? currentMoveDir : bigDir
+int planDir = planMode == "MANUAL" ? (manualPlanSide == "LONG" ? 1 : -1) : autoPlanDir
+
+// -----------------------------------------------------------------------------
+// USER-APPROVED OUTER-SWING ENTRY SELECTOR (15m)
+// -----------------------------------------------------------------------------
+f_max_na(float a, float b) => na(a) ? b : na(b) ? a : math.max(a, b)
+f_min_na(float a, float b) => na(a) ? b : na(b) ? a : math.min(a, b)
+
+f_outer_entry_pair_local() =>
+    float ph = ta.pivothigh(high, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float pl = ta.pivotlow(low, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float ph0 = ta.valuewhen(not na(ph), ph, 0)
+    float ph1 = ta.valuewhen(not na(ph), ph, 1)
+    float ph2 = ta.valuewhen(not na(ph), ph, 2)
+    float ph3 = ta.valuewhen(not na(ph), ph, 3)
+    float ph4 = ta.valuewhen(not na(ph), ph, 4)
+    float ph5 = ta.valuewhen(not na(ph), ph, 5)
+    float ph6 = ta.valuewhen(not na(ph), ph, 6)
+    float ph7 = ta.valuewhen(not na(ph), ph, 7)
+    float pl0 = ta.valuewhen(not na(pl), pl, 0)
+    float pl1 = ta.valuewhen(not na(pl), pl, 1)
+    float pl2 = ta.valuewhen(not na(pl), pl, 2)
+    float pl3 = ta.valuewhen(not na(pl), pl, 3)
+    float pl4 = ta.valuewhen(not na(pl), pl, 4)
+    float pl5 = ta.valuewhen(not na(pl), pl, 5)
+    float pl6 = ta.valuewhen(not na(pl), pl, 6)
+    float pl7 = ta.valuewhen(not na(pl), pl, 7)
+    float outerHigh = f_max_na(f_max_na(f_max_na(ph0, ph1), f_max_na(ph2, ph3)), f_max_na(f_max_na(ph4, ph5), f_max_na(ph6, ph7)))
+    float outerLow = f_min_na(f_min_na(f_min_na(pl0, pl1), f_min_na(pl2, pl3)), f_min_na(f_min_na(pl4, pl5), f_min_na(pl6, pl7)))
+    [outerHigh, outerLow]
+
+[autoLongRaw, autoShortRaw] = request.security(syminfo.tickerid, "15", f_outer_entry_pair_local(), lookahead = barmerge.lookahead_off)
+
+f_round_up_tick(float p) => na(p) ? na : math.ceil((p - 1e-10) / syminfo.mintick) * syminfo.mintick
+f_round_down_tick(float p) => na(p) ? na : math.floor((p + 1e-10) / syminfo.mintick) * syminfo.mintick
+
+float autoLongEntry = f_round_up_tick(autoLongRaw)
+float autoShortEntry = f_round_down_tick(autoShortRaw)
+float longEntry = entryMode == "MANUAL" and manualLongEntry > 0 ? manualLongEntry : autoLongEntry
+float shortEntry = entryMode == "MANUAL" and manualShortEntry > 0 ? manualShortEntry : autoShortEntry
+bool longEntrySet = not na(longEntry) and longEntry > 0
+bool shortEntrySet = not na(shortEntry) and shortEntry > 0
+float activeStructuralProof = planDir == 1 ? longEntry : planDir == -1 ? shortEntry : na
+bool structuralProofSet = not na(activeStructuralProof) and activeStructuralProof > 0
+
+plot(longEntry, "LONG structural proof data", display = display.none)
+plot(shortEntry, "SHORT structural proof data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// MULTI-LANE REACTION-SHELF TARGET ENGINE
+// -----------------------------------------------------------------------------
+f_pick_long_cluster(array<float> lows, array<float> highs, float floorPrice, float requiredGap, float tolerance, int minTouches) =>
+    float bestLo = na
+    float bestHi = na
+    float bestDist = HUGE_DISTANCE
+    int bestTouches = 0
+    int n = array.size(lows)
+    if n > 0
+        for i = 0 to n - 1
+            float seedLo = array.get(lows, i)
+            float seedHi = array.get(highs, i)
+            if not na(seedLo) and not na(seedHi) and seedHi > seedLo
+                int touches = 0
+                float clusterLo = na
+                float clusterHi = na
+                for j = 0 to n - 1
+                    float lo = array.get(lows, j)
+                    float hi = array.get(highs, j)
+                    bool sameShelf = not na(lo) and not na(hi) and hi > lo and math.abs(lo - seedLo) <= tolerance
+                    if sameShelf
+                        touches += 1
+                        clusterLo := na(clusterLo) ? lo : math.min(clusterLo, lo)
+                        clusterHi := na(clusterHi) ? hi : math.max(clusterHi, hi)
+                bool separated = touches >= minTouches and not na(clusterLo) and clusterLo >= floorPrice + requiredGap
+                if separated
+                    float dist = clusterLo - floorPrice
+                    if dist < bestDist or (math.abs(dist - bestDist) <= syminfo.mintick and touches > bestTouches)
+                        bestDist := dist
+                        bestLo := clusterLo
+                        bestHi := clusterHi
+                        bestTouches := touches
+    [bestLo, bestHi, bestTouches]
+
+f_pick_short_cluster(array<float> lows, array<float> highs, float ceilingPrice, float requiredGap, float tolerance, int minTouches) =>
+    float bestLo = na
+    float bestHi = na
+    float bestDist = HUGE_DISTANCE
+    int bestTouches = 0
+    int n = array.size(lows)
+    if n > 0
+        for i = 0 to n - 1
+            float seedLo = array.get(lows, i)
+            float seedHi = array.get(highs, i)
+            if not na(seedLo) and not na(seedHi) and seedHi > seedLo
+                int touches = 0
+                float clusterLo = na
+                float clusterHi = na
+                for j = 0 to n - 1
+                    float lo = array.get(lows, j)
+                    float hi = array.get(highs, j)
+                    bool sameShelf = not na(lo) and not na(hi) and hi > lo and math.abs(hi - seedHi) <= tolerance
+                    if sameShelf
+                        touches += 1
+                        clusterLo := na(clusterLo) ? lo : math.min(clusterLo, lo)
+                        clusterHi := na(clusterHi) ? hi : math.max(clusterHi, hi)
+                bool separated = touches >= minTouches and not na(clusterHi) and clusterHi <= ceilingPrice - requiredGap
+                if separated
+                    float dist = ceilingPrice - clusterHi
+                    if dist < bestDist or (math.abs(dist - bestDist) <= syminfo.mintick and touches > bestTouches)
+                        bestDist := dist
+                        bestLo := clusterLo
+                        bestHi := clusterHi
+                        bestTouches := touches
+    [bestLo, bestHi, bestTouches]
+
+f_tp_ladder_local(int lookbackBars, int maxReactions, int minTouches, float toleranceAtr, float entrySepAtr, float zoneSepAtr) =>
+    [outerHigh, outerLow] = f_outer_entry_pair_local()
+    float atrLocal = ta.atr(14)
+    float tolerance = math.max(syminfo.mintick * 4.0, nz(atrLocal, syminfo.mintick * 20.0) * toleranceAtr)
+    float entryGap = math.max(syminfo.mintick * 4.0, nz(atrLocal, syminfo.mintick * 20.0) * entrySepAtr)
+    float zoneGap = math.max(syminfo.mintick * 4.0, nz(atrLocal, syminfo.mintick * 20.0) * zoneSepAtr)
+    array<float> zoneLos = array.new_float()
+    array<float> zoneHis = array.new_float()
+    for i = 3 to lookbackBars
+        if array.size(zoneLos) < maxReactions
+            bool localLow = low[i] <= low[i - 1] and low[i] < low[i + 1]
+            bool localHigh = high[i] >= high[i - 1] and high[i] > high[i + 1]
+            if localLow
+                float zLo = low[i]
+                float zHi = math.min(open[i], close[i])
+                if zHi > zLo
+                    array.push(zoneLos, zLo)
+                    array.push(zoneHis, zHi)
+            if localHigh and array.size(zoneLos) < maxReactions
+                float zLo = math.max(open[i], close[i])
+                float zHi = high[i]
+                if zHi > zLo
+                    array.push(zoneLos, zLo)
+                    array.push(zoneHis, zHi)
+
+    [l1Lo, l1Hi, l1N] = f_pick_long_cluster(zoneLos, zoneHis, outerHigh, entryGap, tolerance, minTouches)
+    [l2Lo, l2Hi, l2N] = f_pick_long_cluster(zoneLos, zoneHis, na(l1Hi) ? outerHigh : l1Hi, zoneGap, tolerance, minTouches)
+    [l3Lo, l3Hi, l3N] = f_pick_long_cluster(zoneLos, zoneHis, na(l2Hi) ? (na(l1Hi) ? outerHigh : l1Hi) : l2Hi, zoneGap, tolerance, minTouches)
+    [s1Lo, s1Hi, s1N] = f_pick_short_cluster(zoneLos, zoneHis, outerLow, entryGap, tolerance, minTouches)
+    [s2Lo, s2Hi, s2N] = f_pick_short_cluster(zoneLos, zoneHis, na(s1Lo) ? outerLow : s1Lo, zoneGap, tolerance, minTouches)
+    [s3Lo, s3Hi, s3N] = f_pick_short_cluster(zoneLos, zoneHis, na(s2Lo) ? (na(s1Lo) ? outerLow : s1Lo) : s2Lo, zoneGap, tolerance, minTouches)
+
+    float long1 = l1N >= minTouches ? l1Lo + (l1Hi - l1Lo) * tpPenetrationFraction : na
+    float long2 = l2N >= minTouches ? l2Lo + (l2Hi - l2Lo) * tpPenetrationFraction : na
+    float long3 = l3N >= minTouches ? l3Lo + (l3Hi - l3Lo) * tpPenetrationFraction : na
+    float short1 = s1N >= minTouches ? s1Hi - (s1Hi - s1Lo) * tpPenetrationFraction : na
+    float short2 = s2N >= minTouches ? s2Hi - (s2Hi - s2Lo) * tpPenetrationFraction : na
+    float short3 = s3N >= minTouches ? s3Hi - (s3Hi - s3Lo) * tpPenetrationFraction : na
+    [long1, long2, long3, short1, short2, short3]
+
+// Lane A: primary 15m shelf evidence.
+[l15_1, l15_2, l15_3, s15_1, s15_2, s15_3] = request.security(syminfo.tickerid, "15", f_tp_ladder_local(260, 36, tpMinTouches15, tpClusterToleranceAtr, tpEntrySeparationAtr, tpZoneSeparationAtr), lookahead = barmerge.lookahead_off)
+// Lane B: dense 5m reaction fallback. This lane is only a candidate source; final
+// ordering still uses the accepted 15m Entry Zone as the boundary.
+[l5_1, l5_2, l5_3, s5_1, s5_2, s5_3] = request.security(syminfo.tickerid, "5", f_tp_ladder_local(360, 36, tpMinTouches5, 0.18, 0.25, 0.12), lookahead = barmerge.lookahead_off)
+// Lanes C/D: major HTF reaction candidates. One major 1H/4H reaction may qualify
+// as fallback evidence; it is still separated from entry and other TPs below.
+[l60_1, l60_2, l60_3, s60_1, s60_2, s60_3] = request.security(syminfo.tickerid, "60", f_tp_ladder_local(180, 24, 1, 0.35, 0.20, 0.10), lookahead = barmerge.lookahead_off)
+[l240_1, l240_2, l240_3, s240_1, s240_2, s240_3] = request.security(syminfo.tickerid, "240", f_tp_ladder_local(120, 20, 1, 0.40, 0.15, 0.10), lookahead = barmerge.lookahead_off)
+
+float atr15ForTp = request.security(syminfo.tickerid, "15", ta.atr(14), lookahead = barmerge.lookahead_off)
+float mergedEntryGap = math.max(syminfo.mintick * 4.0, nz(atr15ForTp, syminfo.mintick * 20.0) * tpEntrySeparationAtr)
+float mergedZoneGap = math.max(syminfo.mintick * 4.0, nz(atr15ForTp, syminfo.mintick * 20.0) * tpZoneSeparationAtr)
+
+f_add_candidate(array<float> rows, float value) =>
+    if not na(value) and value > 0
+        array.push(rows, value)
+
+f_next_long(array<float> rows, float boundary, float gap) =>
+    float best = na
+    int n = array.size(rows)
+    if n > 0
+        for i = 0 to n - 1
+            float p = array.get(rows, i)
+            if p >= boundary + gap and (na(best) or p < best)
+                best := p
+    best
+
+f_next_short(array<float> rows, float boundary, float gap) =>
+    float best = na
+    int n = array.size(rows)
+    if n > 0
+        for i = 0 to n - 1
+            float p = array.get(rows, i)
+            if p <= boundary - gap and (na(best) or p > best)
+                best := p
+    best
+
+array<float> longTpCandidates = array.new_float()
+array<float> shortTpCandidates = array.new_float()
+f_add_candidate(longTpCandidates, l15_1), f_add_candidate(longTpCandidates, l15_2), f_add_candidate(longTpCandidates, l15_3)
+f_add_candidate(longTpCandidates, l5_1), f_add_candidate(longTpCandidates, l5_2), f_add_candidate(longTpCandidates, l5_3)
+f_add_candidate(longTpCandidates, l60_1), f_add_candidate(longTpCandidates, l60_2), f_add_candidate(longTpCandidates, l60_3)
+f_add_candidate(longTpCandidates, l240_1), f_add_candidate(longTpCandidates, l240_2), f_add_candidate(longTpCandidates, l240_3)
+f_add_candidate(shortTpCandidates, s15_1), f_add_candidate(shortTpCandidates, s15_2), f_add_candidate(shortTpCandidates, s15_3)
+f_add_candidate(shortTpCandidates, s5_1), f_add_candidate(shortTpCandidates, s5_2), f_add_candidate(shortTpCandidates, s5_3)
+f_add_candidate(shortTpCandidates, s60_1), f_add_candidate(shortTpCandidates, s60_2), f_add_candidate(shortTpCandidates, s60_3)
+f_add_candidate(shortTpCandidates, s240_1), f_add_candidate(shortTpCandidates, s240_2), f_add_candidate(shortTpCandidates, s240_3)
+
+float longTp1Raw = longEntrySet ? f_next_long(longTpCandidates, longEntry, mergedEntryGap) : na
+float longTp2Raw = not na(longTp1Raw) ? f_next_long(longTpCandidates, longTp1Raw, mergedZoneGap) : na
+float longTp3Raw = not na(longTp2Raw) ? f_next_long(longTpCandidates, longTp2Raw, mergedZoneGap) : na
+float shortTp1Raw = shortEntrySet ? f_next_short(shortTpCandidates, shortEntry, mergedEntryGap) : na
+float shortTp2Raw = not na(shortTp1Raw) ? f_next_short(shortTpCandidates, shortTp1Raw, mergedZoneGap) : na
+float shortTp3Raw = not na(shortTp2Raw) ? f_next_short(shortTpCandidates, shortTp2Raw, mergedZoneGap) : na
+
+float longTp1Price = f_round_down_tick(longTp1Raw)
+float longTp2Price = f_round_down_tick(longTp2Raw)
+float longTp3Price = f_round_down_tick(longTp3Raw)
+float shortTp1Price = f_round_up_tick(shortTp1Raw)
+float shortTp2Price = f_round_up_tick(shortTp2Raw)
+float shortTp3Price = f_round_up_tick(shortTp3Raw)
+
+bool longTp1Set = not na(longTp1Price)
+bool longTp2Set = not na(longTp2Price)
+bool longTp3Set = not na(longTp3Price)
+bool shortTp1Set = not na(shortTp1Price)
+bool shortTp2Set = not na(shortTp2Price)
+bool shortTp3Set = not na(shortTp3Price)
+
+bool manualTargetSet = manualTargetLow > 0 and manualTargetHigh > manualTargetLow
+float manualTargetPrice = not manualTargetSet ? na : planDir == 1 ? f_round_down_tick(manualTargetLow) : f_round_up_tick(manualTargetHigh)
+float activeTp1Price = targetMode == "MANUAL" ? manualTargetPrice : planDir == 1 ? longTp1Price : planDir == -1 ? shortTp1Price : na
+float activeTp2Price = targetMode == "AUTO" ? (planDir == 1 ? longTp2Price : planDir == -1 ? shortTp2Price : na) : na
+float activeTp3Price = targetMode == "AUTO" ? (planDir == 1 ? longTp3Price : planDir == -1 ? shortTp3Price : na) : na
+bool activeTp1Set = not na(activeTp1Price) and activeTp1Price > 0
+string tpDetectorReason = activeTp1Set ? "TP SET" : not longEntrySet or not shortEntrySet ? "ENTRY STRUCTURE UNAVAILABLE" : "NO QUALIFIED TP SHELF AFTER FULL SEARCH"
+
+plot(longTp1Price, "LONG TP1 multi-lane data", display = display.none)
+plot(shortTp1Price, "SHORT TP1 multi-lane data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// CANDLE QUALITY / SEPARATE RESEARCH MOMENTUM LANE
+// -----------------------------------------------------------------------------
+float atr5 = ta.atr(14)
+f_body_fraction(int i) =>
+    float r = high[i] - low[i]
+    r > 0 ? math.abs(close[i] - open[i]) / r : 0.0
+f_upper_wick_fraction(int i) =>
+    float r = high[i] - low[i]
+    r > 0 ? (high[i] - math.max(open[i], close[i])) / r : 0.0
+f_lower_wick_fraction(int i) =>
+    float r = high[i] - low[i]
+    r > 0 ? (math.min(open[i], close[i]) - low[i]) / r : 0.0
+f_close_location(int i) =>
+    float r = high[i] - low[i]
+    r > 0 ? (close[i] - low[i]) / r : 0.5
+
+bool enoughCandleHistory = bar_index >= 3
+bool dojiTwoBack = enoughCandleHistory and f_body_fraction(2) <= candleDojiBodyMax
+bool rejectionPrevious = enoughCandleHistory and math.max(f_upper_wick_fraction(1), f_lower_wick_fraction(1)) >= candleRejectWickMin
+bool bullishEngulf = enoughCandleHistory and close > open and close >= math.max(open[1], close[1]) and open <= math.min(open[1], close[1])
+bool bearishEngulf = enoughCandleHistory and close < open and open >= math.max(open[1], close[1]) and close <= math.min(open[1], close[1])
+bool strongBody = f_body_fraction(0) >= candleStrongBodyMin
+bool strongRange = (high - low) >= nz(atr5, syminfo.mintick * 20.0) * candleStrongRangeAtr
+bool longCloseQuality = f_close_location(0) >= candleCloseQualityMin and f_upper_wick_fraction(0) <= candleOppWickMax
+bool shortCloseQuality = (1.0 - f_close_location(0)) >= candleCloseQualityMin and f_lower_wick_fraction(0) <= candleOppWickMax
+bool strongEngulfForPlan = planDir == 1 ? (bullishEngulf and strongBody and strongRange and longCloseQuality) : planDir == -1 ? (bearishEngulf and strongBody and strongRange and shortCloseQuality) : false
+bool sequenceBreak = planDir == 1 ? close > math.max(high[1], high[2]) : planDir == -1 ? close < math.min(low[1], low[2]) : false
+bool rejectionEngulfSequence = dojiTwoBack and rejectionPrevious and strongEngulfForPlan and sequenceBreak
+bool candleProofCross = planDir == 1 ? (longEntrySet and close > longEntry) : planDir == -1 ? (shortEntrySet and close < shortEntry) : false
+float roomToTp = activeTp1Set and structuralProofSet ? math.abs(activeStructuralProof - activeTp1Price) : na
+bool candleRoomOk = not na(roomToTp) and roomToTp >= nz(atr5, syminfo.mintick * 20.0) * candleMinRoomAtr
+bool momentumEntryCandidateLive = entryEngineSupported and strongEngulfForPlan and candleProofCross and candleRoomOk
+bool qualifiedMomentumEntry = momentumEntryCandidateLive and barstate.isconfirmed
+string candleSetupText = rejectionEngulfSequence ? "🕯️ REJECTION -> ENGULF" : strongEngulfForPlan ? "⚡ STRONG ENGULF" : dojiTwoBack ? "🕯️ DOJI / INDECISION" : rejectionPrevious ? "🕯️ REJECTION" : "NONE / WAIT"
+
+// -----------------------------------------------------------------------------
+// STANDARD 5M ENTRY STATE MACHINE
+// -----------------------------------------------------------------------------
+float minBreakDistance = math.max(syminfo.mintick * momentumMinBreakTicks, syminfo.mintick)
+float minPushDistance = math.max(syminfo.mintick * 2.0, nz(atr5, syminfo.mintick * 20.0) * momentumPushAtr)
+float maxRecoilDistance = math.max(syminfo.mintick * 2.0, nz(atr5, syminfo.mintick * 20.0) * momentumRecoilAtr)
+
+var string entryStage = "WAIT_PROOF"
+var int armedSide = 0
+var float armedStructuralProof = na
+var float referencePrice = na
+var int referenceBar = na
+var float momentumAnchor = na
+var string lastEntryEvent = "WAITING"
+
+if not entryEngineSupported
+    entryStage := "WAIT_PROOF"
+    armedSide := 0
+    armedStructuralProof := na
+    referencePrice := na
+    referenceBar := na
+    momentumAnchor := na
+else
+    bool proofChanged = armedSide != 0 and structuralProofSet and not na(armedStructuralProof) and math.abs(activeStructuralProof - armedStructuralProof) >= syminfo.mintick
+    bool contextChanged = armedSide != 0 and (planDir != armedSide or proofChanged or not structuralProofSet)
+    if contextChanged
+        entryStage := "WAIT_PROOF"
+        armedSide := 0
+        armedStructuralProof := na
+        referencePrice := na
+        referenceBar := na
+        momentumAnchor := na
+        lastEntryEvent := "CONTEXT RESET"
+
+    float proofRange = high - low
+    float proofBodyFraction = proofRange > 0 ? math.abs(close - open) / proofRange : 0.0
+    bool proofCandleQuality = proofBodyFraction >= referenceMinBodyFraction
+    bool proofCloseLong = planDir == 1 and longEntrySet and barstate.isconfirmed and close > longEntry
+    bool proofCloseShort = planDir == -1 and shortEntrySet and barstate.isconfirmed and close < shortEntry
+
+    if entryStage == "WAIT_PROOF"
+        if proofCloseLong or proofCloseShort
+            if proofCandleQuality
+                armedSide := planDir
+                armedStructuralProof := activeStructuralProof
+                referencePrice := planDir == 1 ? high : low
+                referenceBar := bar_index
+                momentumAnchor := referencePrice
+                entryStage := "WAIT_BREAK"
+                lastEntryEvent := "REFERENCE ARMED"
+            else
+                lastEntryEvent := "DOJI PROOF REJECTED"
+    else if entryStage == "WAIT_BREAK"
+        bool breakLong = armedSide == 1 and bar_index > referenceBar and high >= referencePrice + minBreakDistance
+        bool breakShort = armedSide == -1 and bar_index > referenceBar and low <= referencePrice - minBreakDistance
+        if breakLong or breakShort
+            momentumAnchor := armedSide == 1 ? high : low
+            entryStage := "BREAK"
+            lastEntryEvent := "BREAK"
+        else if barstate.isconfirmed and bar_index > referenceBar
+            referencePrice := armedSide == 1 ? high : low
+            referenceBar := bar_index
+            momentumAnchor := referencePrice
+            lastEntryEvent := "REFERENCE ROLLED"
+    else if entryStage == "BREAK"
+        bool hardRecoil = armedSide == 1 ? close <= momentumAnchor - maxRecoilDistance : close >= momentumAnchor + maxRecoilDistance
+        bool push1 = armedSide == 1 ? high >= momentumAnchor + minPushDistance : low <= momentumAnchor - minPushDistance
+        if hardRecoil
+            entryStage := "WAIT_BREAK"
+            momentumAnchor := referencePrice
+            lastEntryEvent := "RECOIL RESET"
+        else if push1
+            momentumAnchor := armedSide == 1 ? high : low
+            entryStage := "PUSH_1"
+            lastEntryEvent := "PUSH 1"
+    else if entryStage == "PUSH_1"
+        bool hardRecoil2 = armedSide == 1 ? close <= momentumAnchor - maxRecoilDistance : close >= momentumAnchor + maxRecoilDistance
+        bool push2 = armedSide == 1 ? high >= momentumAnchor + minPushDistance : low <= momentumAnchor - minPushDistance
+        if hardRecoil2
+            entryStage := "WAIT_BREAK"
+            momentumAnchor := referencePrice
+            lastEntryEvent := "RECOIL RESET"
+        else if push2
+            momentumAnchor := armedSide == 1 ? high : low
+            entryStage := "ENTRY_READY"
+            lastEntryEvent := "ENTRY READY"
+
+float displayedLongEntry = armedSide == 1 and entryStage != "WAIT_PROOF" and not na(referencePrice) ? referencePrice : longEntry
+float displayedShortEntry = armedSide == -1 and entryStage != "WAIT_PROOF" and not na(referencePrice) ? referencePrice : shortEntry
+bool standardEntryReady = entryStage == "ENTRY_READY"
+bool anyEntryReady = standardEntryReady or qualifiedMomentumEntry
+
+// -----------------------------------------------------------------------------
+// DRAWINGS
+// -----------------------------------------------------------------------------
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longEntryLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortEntryLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp1Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp2Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp3Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp1Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp2Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp3Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line manualTpLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label manualTpLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+
+int chartBarMs = not na(time_close) and time_close > time ? time_close - time : FALLBACK_BAR_MS
+int levelLabelX = (not na(time_close) ? time_close : time) + chartBarMs * LEVEL_LABEL_OFFSET_BARS
+
+f_sync_level(line id, label lid, float price, string name, color c, bool visible, int labelX, int width, color txtColor) =>
+    if visible and not na(price) and price > 0
+        line.set_xy1(id, time, price)
+        line.set_xy2(id, time_close, price)
+        line.set_extend(id, extend.both)
+        line.set_color(id, c)
+        line.set_width(id, width)
+        label.set_xy(lid, labelX, price)
+        label.set_text(lid, name)
+        label.set_color(lid, c)
+        label.set_textcolor(lid, txtColor)
+        label.set_size(lid, size.normal)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
+
+array<string> wallNames = array.new_string()
+array<float> wallPrices = array.new_float()
+f_add_wall(bool condition, string name, float price) =>
+    if condition and not na(price)
+        array.push(wallNames, name)
+        array.push(wallPrices, price)
+
+if planDir == 1
+    f_add_wall(showPdh and pdh > close, "PDH", pdh)
+    f_add_wall(showPwh and pwh > close, "PWH", pwh)
+else if planDir == -1
+    f_add_wall(showPdl and pdl < close, "PDL", pdl)
+    f_add_wall(showPwl and pwl < close, "PWL", pwl)
+
+string nextWallName = "NONE AHEAD"
+float nextWallPrice = na
+float nextWallDistance = HUGE_DISTANCE
+if array.size(wallPrices) > 0
+    for i = 0 to array.size(wallPrices) - 1
+        float p = array.get(wallPrices, i)
+        float dist = math.abs(p - close)
+        if dist < nextWallDistance
+            nextWallDistance := dist
+            nextWallName := array.get(wallNames, i)
+            nextWallPrice := p
+string nextWallText = na(nextWallPrice) ? nextWallName : nextWallName + " @ " + str.tostring(nextWallPrice, format.mintick)
+
+if barstate.islast
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, levelLabelX, 2, color.white)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, levelLabelX, 2, color.white)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, levelLabelX, 2, color.white)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, levelLabelX, 2, color.white)
+    bool showEntryGeometry = showEntryLines and planningViewSupported
+    f_sync_level(longEntryLine, longEntryLabel, displayedLongEntry, "🟢 LONG - ENTRY ZONE", YELLOW_GO, showEntryGeometry and longEntrySet, levelLabelX, 3, color.black)
+    f_sync_level(shortEntryLine, shortEntryLabel, displayedShortEntry, "🔴 SHORT - ENTRY ZONE", YELLOW_GO, showEntryGeometry and shortEntrySet, levelLabelX, 3, color.black)
+    bool tpView = showTakeProfitZones and planningViewSupported
+    bool drawLongTp = tpView and (showBothTpSides or planDir == 1) and targetMode == "AUTO"
+    bool drawShortTp = tpView and (showBothTpSides or planDir == -1) and targetMode == "AUTO"
+    f_sync_level(longTp1Line, longTp1Label, longTp1Price, "🎯 TAKE PROFIT ZONE 1", BLUE_TARGET, drawLongTp and longTp1Set, levelLabelX, 2, color.white)
+    f_sync_level(longTp2Line, longTp2Label, longTp2Price, "🎯 TAKE PROFIT ZONE 2", BLUE_TARGET, drawLongTp and longTp2Set, levelLabelX, 2, color.white)
+    f_sync_level(longTp3Line, longTp3Label, longTp3Price, "🎯 TAKE PROFIT ZONE 3", BLUE_TARGET, drawLongTp and longTp3Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp1Line, shortTp1Label, shortTp1Price, "🎯 TAKE PROFIT ZONE 1", BLUE_TARGET, drawShortTp and shortTp1Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp2Line, shortTp2Label, shortTp2Price, "🎯 TAKE PROFIT ZONE 2", BLUE_TARGET, drawShortTp and shortTp2Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp3Line, shortTp3Label, shortTp3Price, "🎯 TAKE PROFIT ZONE 3", BLUE_TARGET, drawShortTp and shortTp3Set, levelLabelX, 2, color.white)
+    bool drawManual = tpView and targetMode == "MANUAL" and manualTargetSet
+    f_sync_level(manualTpLine, manualTpLabel, manualTargetPrice, "🎯 TAKE PROFIT ZONE", BLUE_TARGET, drawManual, levelLabelX, 2, color.white)
+
+// -----------------------------------------------------------------------------
+// 🤖 SLUMDAWG TRADERS PANEL — presentation only
+// -----------------------------------------------------------------------------
+string bigDirectionText = bigDir == 1 ? "📈 UP" : bigDir == -1 ? "📉 DOWN" : "BUILDING / UNCLEAR"
+string currentMoveText = currentMoveDir == 0 ? "BUILDING 15M MOVE" : bigDir == 0 ? (currentMoveDir == 1 ? "📈 UP MOVE" : "📉 DOWN MOVE") : currentMoveDir == bigDir ? (currentMoveDir == 1 ? "📈 UP WITH DIRECTION" : "📉 DOWN WITH DIRECTION") : (currentMoveDir == 1 ? "📈 UP PULLBACK" : "📉 DOWN PULLBACK")
+string activePlanText = planDir == 1 ? "🟢 LONG" : planDir == -1 ? "🔴 SHORT" : "WAIT / BUILDING"
+color bigDirectionColor = bigDir == 1 ? GREEN_UP : bigDir == -1 ? RED_DOWN : color.gray
+color currentMoveColor = currentMoveDir == 1 ? GREEN_UP : currentMoveDir == -1 ? RED_DOWN : color.gray
+color planColor = planDir == 1 ? GREEN_UP : planDir == -1 ? RED_DOWN : color.gray
+string tp1Text = activeTp1Set ? str.tostring(activeTp1Price, format.mintick) : tpDetectorReason
+string tp2Text = not na(activeTp2Price) ? str.tostring(activeTp2Price, format.mintick) : activeTp1Set ? "NO DISTINCT TP2" : "—"
+string tp3Text = not na(activeTp3Price) ? str.tostring(activeTp3Price, format.mintick) : activeTp1Set ? "NO DISTINCT TP3" : "—"
+string nowText = not entryEngineSupported ? "ENTRY ENGINE: USE 5M" : qualifiedMomentumEntry ? "⚡ QUALIFIED MOMENTUM ENTRY" : momentumEntryCandidateLive ? "⚡ MOMENTUM CANDIDATE" : entryStage == "WAIT_PROOF" ? "⏳ WAIT PROOF CLOSE" : entryStage == "WAIT_BREAK" ? "📍 REFERENCE ARMED" : entryStage == "BREAK" ? "⚡ BREAK" : entryStage == "PUSH_1" ? "⚡ PUSH 1" : entryStage == "ENTRY_READY" ? "✅ ENTRY READY" : "⏳ WAIT"
+string runtimeReason = not isNqMnq ? "USE NQ OR MNQ" : not tickGridExpected ? "CHECK CONTRACT TICK" : extendedClosedGap ? "EXTENDED CLOSE - VERIFY LEVELS" : "CANONICAL CONTEXT + MULTI-LANE TP"
+
+var table coach = na
+if barstate.isfirst
+    if showCoach
+        coach := table.new(position.top_right, 2, 13, border_width = 2, frame_width = 2, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+        table.merge_cells(coach, 0, 0, 1, 0)
+    else
+        coach := table.new(position.top_right, 1, 1, border_width = 1, frame_width = 1, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+
+if barstate.islast
+    if showCoach
+        table.cell(coach, 0, 0, "🤖 SLUMDAWG TRADERS", text_color = color.lime, bgcolor = PANEL_MID, text_size = 16)
+        table.cell(coach, 0, 1, "BIG DIRECTION", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 1, bigDirectionText, text_color = color.white, bgcolor = bigDirectionColor, text_size = 14)
+        table.cell(coach, 0, 2, "CURRENT MOVE", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 2, currentMoveText, text_color = color.white, bgcolor = currentMoveColor, text_size = 13)
+        table.cell(coach, 0, 3, "ACTIVE PLAN", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 3, activePlanText, text_color = color.white, bgcolor = planColor, text_size = 13)
+        table.cell(coach, 0, 4, "NEXT WALL", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 4, nextWallText, text_color = color.orange, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 0, 5, "🟢 LONG ENTRY", text_color = color.black, bgcolor = YELLOW_GO, text_size = 13)
+        table.cell(coach, 1, 5, longEntrySet ? str.tostring(displayedLongEntry, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 14)
+        table.cell(coach, 0, 6, "🔴 SHORT ENTRY", text_color = color.black, bgcolor = YELLOW_GO, text_size = 13)
+        table.cell(coach, 1, 6, shortEntrySet ? str.tostring(displayedShortEntry, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 14)
+        table.cell(coach, 0, 7, "🎯 TP1", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 1, 7, tp1Text, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 0, 8, "🎯 TP2", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 1, 8, tp2Text, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 0, 9, "🎯 TP3", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 1, 9, tp3Text, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 0, 10, "🕯️ CANDLE SETUP", text_color = color.white, bgcolor = PANEL_DARK, text_size = 12)
+        table.cell(coach, 1, 10, candleSetupText, text_color = color.white, bgcolor = PANEL_MID, text_size = 12)
+        table.cell(coach, 0, 11, "NOW", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 11, nowText, text_color = anyEntryReady ? color.white : color.black, bgcolor = anyEntryReady ? GREEN_UP : ORANGE_WAIT, text_size = 13)
+        table.cell(coach, 0, 12, "SYSTEM", text_color = color.white, bgcolor = PANEL_DARK, text_size = 12)
+        table.cell(coach, 1, 12, runtimeReason, text_color = color.orange, bgcolor = PANEL_DARK, text_size = 12)
+    else
+        table.cell(coach, 0, 0, "🤖 SLUMDAWG  ▸", text_color = color.lime, bgcolor = PANEL_MID, text_size = 12)
+
+alertcondition(standardEntryReady, "Slumdawg STANDARD ENTRY READY", "SLUMDAWG STANDARD ENTRY READY - verify plan/risk before any action")
+alertcondition(qualifiedMomentumEntry, "Slumdawg RESEARCH MOMENTUM ENTRY", "SLUMDAWG RESEARCH MOMENTUM ENTRY CANDIDATE - research/parity only")
