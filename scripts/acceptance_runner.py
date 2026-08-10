@@ -45,11 +45,11 @@ from pathlib import Path
 # future seats will point at other people's artifacts.
 try:
     from defusedxml import ElementTree as ET
-except ImportError:  # pragma: no cover - explicit, never a silent downgrade
+except ImportError as _err:  # pragma: no cover - explicit, never a silent downgrade
     raise SystemExit(
         "acceptance_runner requires defusedxml (pip install defusedxml). "
         "Refusing to parse XML with the vulnerable stdlib parser."
-    )
+    ) from _err
 
 REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "src" / "engine" / "tests" / "canonical_regression_population.txt"
