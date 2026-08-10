@@ -4,6 +4,40 @@
 
 ---
 
+## AR-952 · 2026-08-10 · ✅ **`ACCEPT5-FIXTURE-PERFECT-CLASS-1` DECIDED IN ONE COMMAND AS ORDERED: `fixture_perfect.json` IS **COMMITTED** — so it is NOT a machine-local input, and the machine-local enumeration is `4`, MEASURED rather than assumed.** 🛑 **BUT IT IS STILL A DEFECT, OF A DIFFERENT AND SHARPER KIND: A SKIP GUARDING COMMITTED EVIDENCE CAN NEVER LEGITIMATELY FIRE, SO IT EXISTS ONLY TO HIDE A DELETION.** ⚖️ **I RETRACT `AR-950 §4`'s "ENUMERATION CLOSED" — THE DESK IS RIGHT THAT MY OWN `§3` CONTAINED THE COUNTEREXAMPLE TWO SECTIONS EARLIER.** ✅ **LEDGER INVESTIGATION STOOD DOWN ON `R-803 §0`.**
+
+**SEAT `claude.exe 7972`. TREE `HEAD 0e7cbdfe`. `R3` `0 / 5` — NOT fractionalized, per `R-803 §6`.**
+
+### §1 — ✅ THE ORDERED MEASUREMENT, AND ITS CONTROL
+✅ **`[MEASURED HERE, `git ls-files`, the deciding command `R-803 §3` named]`:**
+```
+src/engine/tests/fixtures/golden/fixture_perfect.json     TRACKED
+src/engine/tests/snapshots/fixture_perfect.json           TRACKED
+tracked matches 2 · on-disk matches 2
+POSITIVE CONTROL  git ls-files scripts/acceptance_runner.py -> 1   (the instrument reaches the index)
+```
+✅ **`test_static_c_partials_ab.py:181` reads `GOLDEN_DIR / "fixture_perfect.json"`, and `[MEASURED]` that exact path — `src/engine/tests/fixtures/golden/fixture_perfect.json` — IS in the tracked set.** ⇒ **IT IS `R-799 §5` PERMITTED FORM `[1]`, COMMITTED GOVERNED EVIDENCE. NOT A FIFTH MACHINE-LOCAL INPUT.**
+⇒ ✅ **THE MACHINE-LOCAL ENUMERATION IS `4` — `blind-readjudication` (CLOSED, `e55a9ef1`) · `SAMPLES_DIR` · `S3`+AWS credentials · git history.** 🛑 **AND I STATE IT AS A MEASURED DENOMINATOR THIS TIME, WITH THE FIFTH CANDIDATE MEASURED **OUT** RATHER THAN NEVER LOOKED AT.**
+
+### §2 — 🛑 IT IS STILL A DEFECT, AND BEING COMMITTED IS WHAT MAKES IT ONE
+🛑 **`R-803 §3` ruled the consequence in advance: *"If committed ⇒ its absence must be a HARD FAILURE, never an environmental skip."*** ⇒ **`:182-183` is `if not fixture_path.exists(): pytest.skip(...)` over evidence that IS committed.**
+★★★★★ **A SKIP GUARDING COMMITTED EVIDENCE CANNOT FIRE FOR ANY LEGITIMATE REASON — THE FILE IS IN THE TREE OR THE TREE IS BROKEN. SO THE GUARD HAS EXACTLY ONE REACHABLE MEANING: SOMEBODY DELETED THE FIXTURE AND THE GATE SAID NOTHING.** ⇒ **It is not an availability guard; it is a deletion-suppressor, and it is the same species as `A2`'s dead-code skips rather than anything environmental.**
+✅ **RE-CLASSIFIED, and this MOVES it between buckets rather than adding a bucket: `test_static_c_partials_ab.py:183` leaves CLASS `B` (missing external evidence) and joins the DEAD-SKIP group with `A2`.** ⚠️ **The `32`-site total is UNCHANGED — one site changed class, none appeared or vanished. `B` `11 → 10`, dead-skip group `4 → 5`. `A1 3 + A2 4 + A3 3 + B 10 + C 10 + D 1 + reclassified 1 = 32`.** 🛑 **I am NOT converting it — that is `ACCEPT5-GOVERNED-SKIP-SCOPE-1`, and `R-803 §7` says Class `A`/`C` members are reviewed INDIVIDUALLY, never blanket-failed.**
+
+### §3 — ⚖️ THE RETRACTION, AND THE DESK'S DIAGNOSIS OF IT IS EXACT
+🛑 **`AR-950 §4` wrote *"ENUMERATION CLOSED"* with a denominator of `4`, while `AR-950 §3` — two sections earlier, in my own table — listed `test_static_c_partials_ab.py:183` under CLASS `B` as an external-evidence skip I had never classified.** ⚖️ **`R-803 §3` names it precisely: `[instance-not-condition]` ARRIVING AS A DENOMINATOR RATHER THAN AS A CLASS.** ⇒ ✅ **`AR-950 §4`'s "CLOSED" IS RETRACTED. The correct wording, which I now hold to: `FOUR MACHINE-LOCAL INPUTS ENUMERATED AND EACH CLASSIFIED; THE FIFTH CANDIDATE MEASURED AND EXCLUDED.`**
+★★★★★ **`I BUILT THE ENUMERATION THAT PROVED I SHOULD NOT CLOSE THINGS EARLY, THEN CLOSED SOMETHING EARLY IN THE SAME REPORT — AND THE COUNTEREXAMPLE WAS ALREADY PRINTED IN MY OWN TABLE. A DENOMINATOR IS NOT VERIFIED BY BEING NAMED; IT IS VERIFIED BY EVERY CANDIDATE HAVING A DISPOSITION.`**
+⚠️ **AND I NOTE WHAT DID WORK, BECAUSE IT IS THE REASON THIS WAS CATCHABLE: the census artifact was complete and printed, so the desk could find my error INSIDE MY OWN EVIDENCE. `AN HONEST TABLE CONVICTS ITS AUTHOR FASTER THAN A CAREFUL SUMMARY.`**
+
+### §4 — ✅ STOOD DOWN, ADOPTED, AND WHAT I DO NEXT
+✅ **LEDGER INVESTIGATION STOOD DOWN. `R-803 §0` supplies the cause: the desk withdrew the draft in place on the OPERATOR's instruction to wait for the read, with no git operation — which is exactly why my `reflog`/`stash`/`pre-commit` sweep came back empty.** ⚖️ **`AR-951` needs no correction — its measurements were right and its refusal to guess the cause was right — but its FRAMING as a possible corruption event is now RESOLVED, and I would rather say so plainly than leave a scary report standing as the last word.** 🛑 **`AR-951 §3`'s recovery copy is now SUPERSEDED AND MUST NOT BE USED: `R-803` reversed its own `§1`. Anyone reading `AR-951 §3` must read `R-803 §1` instead.**
+✅ **ADOPTED, WITHOUT RE-ARGUING ANY OF IT:** the permanent RED asserts **STALE CONSUMPTION** — `[a]` reported `pytest_exitstatus` disagrees with the subprocess's real exit · `[b]` artifact SHAs unchanged across the failed run · `[c]` verdict output `diff`-identical to the prior good run, **and `[c]` is not tradeable.** ⚖️ **I record that this is the desk AMENDING its own criterion, not me having won an argument — `AR-946` refused to change it silently and `AR-949` refused to buy it with a third attempt.**
+⏱️ **NEXT: `R3-1`, and I choose it over `R3-3` because `R-803 §5` names `F-R2-1` the measured CRITICAL while `R3-3`'s targets are non-gating today.** **The stale-consumption oracle needs NO `PASS`-capable tree, so it runs in a plain isolated worktree with no lab copy — which is what makes it admissible under `R-799 §5` form `[2]`.**
+
+**RECOMMENDATION: NONE REQUESTED — one ordered measurement returned, one retraction filed. `R3` fan-in `0 / 5`, and I am continuing on `R3-1`, not handing off.**
+
+---
+
 ## AR-951 · 2026-08-10 · 🛑🛑🛑 **LEDGER-INTEGRITY INCIDENT: `R-803` WAS WRITTEN, I READ IT IN FULL, AND IT IS NOW GONE FROM DISK AND FROM EVERY COMMIT. THE NEWEST COMMITTED RULING IS `R-802`.** ✅ **I HOLD WHAT IS PROBABLY THE ONLY SURVIVING COPY AND I REPRODUCE IT BELOW RATHER THAN LET IT DIE WITH MY CONTEXT.** 🛑 **I DID NOT AND WILL NOT EDIT `ADVISOR-RULINGS.md` — SINGLE-WRITER HOLDS EVEN IN AN INCIDENT.** ⚖️ **AND I AM NOT CITING `R-803` AS AUTHORITY: I FALL BACK TO `R-802`, WHICH IS COMMITTED.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD 000dc79f`. `R3` `0 / 5`.**
