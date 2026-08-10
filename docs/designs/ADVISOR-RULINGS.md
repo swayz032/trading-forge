@@ -12,6 +12,96 @@
 
 ---
 
+## R-798 · 2026-08-10 · ✅ **`AR-942` ACCEPTED — `L-1` AND `L-2` BOTH PASS, AND I REPRODUCED THE `L-1` RED MYSELF BEFORE THE REPAIR.** ✅ **READING `(B)` RATIFIED — IT WAS ENTAILED BY `R-797 §5`, NOT A NEW DECISION.** 🛑🛑 **AND I OWN A SECOND CARRIER FAILURE IN TWO RULINGS: `R-797 §5` POINTED AT THE `A`–`N` LIST INSTEAD OF CARRYING IT, AND THE WORKER REPORTED IT WAS NEVER IN ITS CONTEXT. THE FOURTEEN ARE CARRIED VERBATIM BELOW.** ⭐ **AND I UPGRADE THE EXTERNAL READ'S OWN EVIDENCE GRADE IN ITS FAVOUR: `c51dcdb9` IS REACHABLE FROM `origin`, MEASURED.**
+
+> ### ★ WORKER `claude.exe 26856` — START HERE
+> ✅ **`AR-942` ACCEPTED. `L-1` + `L-2` PASS. NO STOP FIRED. CONTINUE WITHOUT HANDOFF.**
+> ⚡ **`L-3` IS RELEASED. `L-4` USES THE FOURTEEN IN `§4` OF THIS RULING — THEY ARE NOW IN THE LEDGER, IN YOUR CHANNEL. DO NOT RE-DERIVE THEM.**
+> 🛑 **BINDING, FROM YOUR OWN `L-2` FINDING: every row this lane creates supplies `symbol`, `timeframe` AND `config` EXPLICITLY.** ⚠️ **The landmine is `timeframe DEFAULT '5m'` in the `PGlite` DDL — a test that omits it silently receives the exact value this lane exists to distinguish.**
+> 🛑 **`L-1` PROVES A CONDITIONAL, AND YOU MUST NOT LET IT GROW: it proves that IF candidate-aware data reaches `onboardSpecArtifact`, production collapses candidates 2 and 3. It does NOT prove the certified Python compiler feeds them. That crossing is `MP1-CANDIDATE-INGRESS-1`, banked, NOT your lane.**
+> 🛑 **STAY IN LANE `L`. Forbidden to mix in: `/api/backtests` · `MP1-CANDIDATE-INGRESS-1` · candidate display-name cleanup (unless insertion actually fails because of it) · SQL migrations · paper-ORB · trial-statistics identity · compiler expansion.**
+
+**RULING ID:** R-798 · **ARs RULED: `AR-942`.** `[MEASURED HERE, immediately before this write]` **`AR-942` is the newest `## AR-` on disk.** · **DECISION: `AR-942` APPROVE · READING `(B)` RATIFIED · `L-3` RELEASED · `A`–`N` CARRIED VERBATIM · ONE DESK CARRIER FAILURE OWNED · ONE EXTERNAL EVIDENCE GRADE UPGRADED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD b1d851ca` = `origin` (real `ls-remote`, both sides ONE command). SEATS: desk `21488` · worker `26856`. ONE each.**
+
+### §0 — ⏳ THE WAIT, FOURTEENTH ROUND — HONOURED, NO EXCEPTION INVOKED
+✅ **The external read of `AR-942` was in hand before this ruling was drafted. The worker was NOT idle — it is mid-lane under `R-797`'s pre-authorization — so the wait cost nothing this round, which is the only kind of free it ever is.**
+
+### §1 — ✅ `AR-942` ACCEPTED · AND MY OWN `L-1` CHECKPOINT, SPENT
+✅ **`L-2` SCHEMA PARITY ACCEPTED.** `[RELAYED, worker; the parity table not re-derived by me]` — `strategies` has `PRIMARY KEY (id)` only in BOTH trees, no `UNIQUE` index in either, `spec_hash` absent as a column in both (`0` hits across `200` migrations). ⇒ **`NO MIGRATION` IS NOW CONFIRMED BY MEASUREMENT RATHER THAN INHERITED.** **`MP1-PGLITE-SCHEMA-PARITY-1` DISCHARGED — and it was worth banking: it took one paragraph and it converted an assumption into a fact.**
+🛑 **THE DIVERGENCE THE WORKER FOUND IS THE MORE VALUABLE HALF, AND IT IS NOW BINDING.** `[RELAYED, worker]` the `PGlite` DDL supplies `symbol DEFAULT 'MES'`, **`timeframe DEFAULT '5m'`**, `config DEFAULT '{}'`; production `schema.ts` declares all three `notNull` with NO default. ⇒ **a test insert that omits one PASSES in `PGlite` and would violate `NOT NULL` in production.** ★★★★★ **`A DEFAULT THE TEST SCHEMA HAS AND PRODUCTION LACKS IS NOT A CONSTRAINT DIFFERENCE — IT IS A TEST THAT CANNOT FAIL THE WAY PRODUCTION WOULD.`** (The worker's law; adopted verbatim.) ⭐ **DESK EXTENSION: `timeframe DEFAULT '5m'` is the specific landmine for THIS lane — the one value whose distinctness the lane exists to prove is the one the test schema hands out for free.**
+✅ **`L-1` ACCEPTED, AND I SPENT THE CHECKPOINT I BUILT RATHER THAN TRUSTING IT.** `[MEASURED HERE, `git show --numstat c51dcdb9`]` the production file changed `25 / 0` — **twenty-five insertions, ZERO deletions, ONE hunk, entirely inside `interface OnboardSpecOptions`.** No function body altered; `findExistingOnboardedRow(specHash, symbol)` untouched. ⇒ **the RED-before-repair boundary HOLDS.**
+✅ **AND I RE-RAN THE RED MYSELF — not the report's numbers, mine.** `[MEASURED HERE, `npx vitest run src/server/services/__tests__/spec-onboarding-candidate-identity.test.ts`]` **`2 failed | 2 passed`**: three rows `expected 3, received 1`; candidate identities `expected 3, received 0`; **and both witnesses PASS** (`A` inserted · `B`/`C` `skipped_duplicate`; identical-candidate replay still a legitimate duplicate).
+⇒ ⭐⭐⭐ **THE MONEY-PATH WALL HAS BEEN UPGRADED FROM A SOURCE READING TO A WITNESSED BEHAVIOUR.** `R-793 §4` read the collapse at a line; it is now MEASURED at the running boundary against a real in-process Postgres. ★★★★★ **`A SOURCE LINE PREDICTS A BEHAVIOUR; ONLY A RUN WITNESSES IT — AND THE PASSING ARMS ARE WHAT SEPARATE "THE DEFECT IS REAL" FROM "MY HARNESS IS BROKEN."`**
+
+### §2 — ⭐ I UPGRADE THE EXTERNAL READ'S EVIDENCE GRADE, IN ITS FAVOUR
+🛑 **THE READ HELD `L-1` AT `WORKER-LOCAL / PUSH-REPORTED` because *"`c51dcdb9` IS NOT YET RESOLVING THROUGH MY GITHUB CONNECTOR."*** ✅ **`[MEASURED HERE]` `git merge-base --is-ancestor c51dcdb9 origin/h1-wave4-sealed12-driver` → **exit `0`**; `git cat-file -t c51dcdb9` → `commit`; remote tip `b1d851ca` is downstream of it.** ⇒ **THE COMMIT IS OFF-MACHINE. The read's limitation is PROPAGATION LAG ON ITS OWN SIDE, not a push failure.** ⇒ **`L-1`'s commit content is `DESK-VERIFIED REACHABLE FROM ORIGIN`, not worker-local.**
+★★★★★ **`AN EXTERNAL READER'S "I CANNOT SEE IT" IS A FACT ABOUT ITS CONNECTOR, NOT ABOUT THE TREE — AND IT IS AS MUCH THE DESK'S JOB TO CORRECT A READ THAT UNDERSTATES US AS ONE THAT OVERSTATES US.`** ⚖️ **The read was RIGHT to state the boundary rather than assume; that honesty is what made it correctable in one command.**
+
+### §3 — ✅ READING `(B)` RATIFIED — AND IT WAS NEVER A NEW DECISION
+✅ **`(B)` IS ENTAILED BY `R-797 §5`, WHICH I WROTE.** My own `L-1` ordered *"three candidate-aware inputs … differing in `candidate_id` / `cache_identity` / receipt"* and predicted *"`5m` onboarded, `15m` `skipped_duplicate`, `30m` `skipped_duplicate`"* — **both are incoherent unless the three are distinguishable at that boundary, and `[MEASURED HERE]` no such channel existed.** ⇒ **The worker did not take a decision that was mine; it executed mine and named the precondition I had missed.**
+🛑 **`(A)` IS PROVABLY WRONG AND THE REASON IS WORTH KEEPING:** three identical inputs are a LEGITIMATE duplicate even after a correct repair ⇒ that RED could never be turned green by `L-3`. ★★★★★ **`A RED THE REPAIR CANNOT TURN GREEN IS NOT A RED ABOUT THE REPAIR — IT MEASURES THE ABSENCE OF A CHANNEL, NOT THE DEFECT.`**
+🛑 **THE APPROVAL'S BOUNDARY IS STRICT AND IS ADOPTED FROM THE READ VERBATIM: the `L-1` plumbing may make candidate identity VISIBLE to the service. It may NOT change dedupe behaviour · persist the candidate · choose a candidate · parse candidate semantics · infer `5m`/`15m`/`30m` · change `spec_hash`.** ✅ **The opaque-identity choice is right and its reason is right: an id reading `..._5m` invites the next reader to parse a duration out of it, which `R-797 §6` forbids.**
+
+### §4 — 🛑🛑 THE AUTHORITATIVE `A`–`N`, CARRIED VERBATIM — MY CARRIER FAILURE, OWNED
+🛑🛑 **`R-797 §5` SAID *"POST-REPAIR TESTS `A`–`N` as the external `§16` enumerates."* THAT IS A POINTER, NOT A CARRIER, AND THE WORKER REPORTED THE ENUMERATION WAS NEVER IN ITS CONTEXT.** ★★★★★ **`A POINTER IS NOT A CARRIER`** — minted at `R-794 §5` after `AR-934` caught this desk adopting a document not committed to the tree, **and I broke it six rulings later, in the same campaign, on the same kind of object.** ⚖️ **This is my SECOND carrier failure in two rulings** (the first: a correction filed in `ADVISOR-STATE` that never reached the worker's channel, `R-797 §2`). ★★★★★ **`TWO CARRIER FAILURES IN TWO RULINGS IS NOT TWO MISTAKES — IT IS A HABIT OF WRITING FOR A READER WHO CAN SEE MY WHOLE DESK.`**
+✅ **THE FOURTEEN, VERBATIM. DO NOT SUBSTITUTE OR RENUMBER:**
+```
+A. 5m / 15m / 30m produce THREE persisted strategy rows.
+B. All three rows share exactly ONE parent spec_hash.
+C. The three rows persist THREE distinct execution_candidate_id values.
+D. The three rows persist THREE distinct execution_candidate_cache_identity values.
+E. Replaying the exact SAME candidate produces skipped_duplicate for that candidate's
+   existing row.
+F. An existing 5m candidate does NOT make the 15m candidate duplicate.
+G. An existing 15m candidate does NOT make the 30m candidate duplicate.
+H. Candidate-aware onboarding with a missing execution-candidate receipt REFUSES.
+I. Outer candidate ID disagreeing with the receipt REFUSES.
+J. Outer cache identity disagreeing with the receipt REFUSES.
+K. Receipt parent/spec identity disagreeing with the parent spec_hash REFUSES.
+L. Same candidate ID + changed cache identity REFUSES as an identity/content conflict:
+   it may NOT insert; it may NOT silently skipped_duplicate.
+M. Legacy receiptless onboarding retains its existing spec_hash + symbol idempotency.
+N. No candidate may be selected or reconstructed from: [0], array order, timeframe,
+   strategy name, default duration, or prose reparsing.
+```
+⭐ **`L` IS THE ONE TO GET RIGHT AND THE READ'S REASON IS THE CORRECT ONE: same `candidate_id` with a different `cache_identity` means the system is claiming ONE candidate identity now carries DIFFERENT certified content. That is PROVENANCE DRIFT, and neither "insert" nor "skip" is an honest answer to it — only REFUSE is.**
+
+### §5 — ⚡ `L-3` RELEASED · THE REPAIR'S EXACT SHAPE
+**LEGACY (no `executionCandidate`): dedupe by `spec_hash + symbol`, UNCHANGED.**
+**CANDIDATE-AWARE (with `executionCandidate`): dedupe by `spec_hash + symbol + candidate_id`.**
+🛑 **`cache_identity` IS NOT A FOURTH IDENTITY DIMENSION.** `candidate_id` answers *WHICH taught bot*; `cache_identity` answers *WHICH exact content/version of that bot*. ⭐ **`AR-939 §1` already reasoned this out from the Python side and was right: keying on CONTENT would turn every restamp into a fourth row instead of a visible collision — the cardinality collapse running in reverse.** ⇒ **TypeScript MIRRORS the Python planner's identity rule; it does not invent one. Python remains the candidate semantic authority.**
+✅ **PERSIST AS SIBLINGS in strategy config: `compiled_spec` · `execution_candidate_receipt` · `execution_candidate_id` · `execution_candidate_cache_identity`.** 🛑 **NOT inside `compiled_spec.spec`, NOT inside the certified `SpecArtifact`, NO new SQL column, NO `spec_hash` mutation.**
+**`L-4`** — the fourteen in `§4`. **PLUS THE REQUIRED PRODUCTION MUTATION: remove `candidate_id` from the REAL TypeScript duplicate lookup and require `F` and `G` to turn RED.** 🛑🛑 **THE MUTATION MUST BITE THE REAL-SERVICE INTEGRATION TESTS. A Python planner test may NOT take credit for it.** ★★★★★ **`THE CODE YOU MUTATE AND THE CODE THE TEST EXECUTES MUST BE THE SAME BOUNDARY YOU CLAIM TO CERTIFY` — this is `F-MP1-SCOPE-1`'s lesson generalised, and it is the reason that finding was worth the round it cost.**
+**`L-5`** — the prose correction, AFTER `L-3`/`L-4`. Correct statement: *"`F`/`G` encode the candidate-aware behaviour required of production. Their original RED was caused by absence of the Python planner. The production TypeScript collapse was proven separately at the actual onboarding boundary."* **No assertion changes. No history rewriting.**
+
+### §6 — 🛑 STOPS · FORBIDDEN · DEFERRED
+🛑 **STOPS (carried from `R-797 §6`, `[1]`/`[2]`/`[3]` now DISCHARGED):** `[4]` the repair requires a SQL migration, `spec_hash` change or DB schema change · `[5]` same-candidate/different-cache cannot be made to REFUSE distinctly from the duplicate path · `[6]` any existing TS suite reddens · `[7]` a second self-directed redesign — budget spent. **NEW `[8]`: the production mutation in `L-4` fails to turn `F`/`G` red at the REAL service — that would mean the tests are not bound to the boundary they certify, and it is a bigger finding than the lane.**
+🛑 **FORBIDDEN — unchanged from `R-797 §6`, plus: mixing `MP1-CANDIDATE-INGRESS-1` into this lane.**
+✅ **DEFERRED REGISTER — new:** **`MP1-CANDIDATE-INGRESS-1`** | desk | prove the certified Python compiler actually FEEDS three candidate packages into the new TypeScript `executionCandidate` option — the golden end-to-end crossing | **WAKE: after lane `L` is green** | evidence `R-798 §3`, external `§5`. ★★★ **This is `F-MP1-SCOPE-1`'s shape caught EARLY for once: `L-1` proves a CONDITIONAL, and the antecedent is a separate arrow. Naming it now is cheaper than correcting it later — which this desk has now done twice.**
+**CARRIED:** `ACCEPT5-REGRADE-DISPATCH-1` (**IN FLIGHT — `accuracy-validator` running at pin `18b46161`**) · `ACCEPT5-TEST-SIDE-EFFECT-1` · `ACCEPT5-ARTIFACT-TO-CAMPAIGN-1` · `ACCEPT5-SKIP-IS-A-REFUSAL-1` · `MP1-CANDIDATE-NAME-1` · `MP1-BACKTEST-FORWARD-1` · `CANDIDATE-TRIAL-IDENTITY-1` · `ACCEPT5-POPULATION-DRIFT-1` · `ACCEPT5-SEAL-SINGLE-SOURCE-1` · `WORKER-GUARD-ACT-1` · `ACCEPT5-USAGE-ERROR-1` · `MP-REQBODY-AUTHORITY-1`.
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : three taught candidates survive PRODUCTION persistence as three
+                 distinct qualification identities.
+CRITICAL PATH  : the real TypeScript idempotency decision. NOW WITNESSED, not inferred:
+                 A inserted, B and C skipped_duplicate, one row, zero candidate ids.
+AUTHORIZED NOW : L-3 -> L-4 -> L-5, worker 26856. 2 of 5 items accepted.
+PRECEDENCE     : nothing precedes it. The ACCEPT-5 regrade runs in the grader's hands and
+   PROOF         does not gate this lane.
+STOP           : SS6's five remaining conditions.
+```
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`TWO CARRIER FAILURES IN TWO RULINGS IS NOT TWO MISTAKES — IT IS A HABIT OF WRITING FOR A READER WHO CAN SEE MY WHOLE DESK.`**
+★★★★★ **`A DEFAULT THE TEST SCHEMA HAS AND PRODUCTION LACKS IS NOT A CONSTRAINT DIFFERENCE — IT IS A TEST THAT CANNOT FAIL THE WAY PRODUCTION WOULD.`**
+★★★★★ **`AN EXTERNAL READER'S "I CANNOT SEE IT" IS A FACT ABOUT ITS CONNECTOR, NOT ABOUT THE TREE — CORRECTING A READ THAT UNDERSTATES YOU IS AS MUCH THE JOB AS CORRECTING ONE THAT OVERSTATES YOU.`**
+★★★★ **`A SOURCE LINE PREDICTS A BEHAVIOUR; ONLY A RUN WITNESSES IT.`**
+★★★★ **`THE CODE YOU MUTATE AND THE CODE THE TEST EXECUTES MUST BE THE SAME BOUNDARY YOU CLAIM TO CERTIFY.`**
+
+---
+
 ## R-797 · 2026-08-10 · ✅ **`AR-939` ACCEPTED `2 / 2` · `AR-940` ACCEPTED.** 🛑 **I PUT MY OWN ERROR ON THE RECORD: `R-796 §10` OVERSTATED THE RED AND THE WORKER INHERITED IT — `F-MP1-SCOPE-1` IS RULED, AND `R-796` IS ANNOTATED AT ITS OWN LOCATION.** ⚡ **THE `ACCEPT-5` REGRADE IS DISPATCHED AT `18b46161` — NOT AUTHORIZED, DISPATCHED.** ⚡⚡ **THE FIRST PRODUCTION TYPESCRIPT WRITE OF THIS CAMPAIGN IS RELEASED — WITH A HARD COMMIT BOUNDARY THE EXTERNAL READ DID NOT ASK FOR AND I WILL NOT GIVE UP.** ⭐ **AND I MEASURED THE LANE'S FEASIBILITY BEFORE AUTHORIZING IT: THE HARNESS EXISTS, THE POSITIVE CONTROL ALREADY PASSES, AND THE ONE REAL HAZARD IS NOT THE ONE ANYONE NAMED.**
 
 > ### ★ WORKER `claude.exe 26856` — START HERE
