@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `fd4421a8277b38d0d79a68e28061615102169ead`  (worktree DIRTY at generation time)
+> Generated at commit `34f4592c14c2f1a62bd35c4cf822fd94e7ca1d6c`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 291 | 358 | 120556 | 1870 |
+| `src/` | Python | 291 | 359 | 120556 | 1870 |
 | `src/` | TypeScript | 461 | 717 | 209177 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1827 | 752 |
+| `src/` | 1828 | 752 |
 | `scripts/` | 211 | 211 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2073** | **963** |
+| **TOTAL** | **2074** | **963** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 421 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1075 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1076 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **618** of **2073** parsed files.
+Total entry points: **94**.  Modules reachable from them: **618** of **2074** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -200,7 +200,7 @@ table below it.**
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3245 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1536 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.2% of 4830 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.2% of 4832 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=618 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
@@ -209,7 +209,7 @@ table below it.**
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1870 ts=2917 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=36 (probe runs; 0 would be a legitimate reading) |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6590/6590 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
@@ -247,9 +247,9 @@ table below it.**
 | `WIRED` | 3245 | 67.2% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1536 | 31.8% |
-| `DECLARED-ABSENT` | 36 | 0.7% |
+| `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4830** | |
+| **TOTAL** | **4832** | |
 
 ---
 
@@ -391,6 +391,7 @@ table below it.**
 | `src/engine/synthetic` | 8 | 0 | 1 | 0 | 0 | 9 |
 | `src/engine/synthetic_market_simulator.py` | 0 | 0 | 13 | 0 | 0 | 13 |
 | `src/engine/tensor_signal_model.py` | 12 | 0 | 1 | 0 | 0 | 13 |
+| `src/engine/tests` | 0 | 0 | 0 | 2 | 0 | 2 |
 | `src/engine/validation` | 16 | 0 | 1 | 0 | 0 | 17 |
 | `src/engine/validation_runner.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/walk_forward.py` | 8 | 0 | 0 | 1 | 0 | 9 |
@@ -913,7 +914,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**36 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**38 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -935,6 +936,8 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1596` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1668` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:2194` | import specifier resolves to no file on disk |
+| `src.engine.opening_range_candidate_persistence` | module | `src/engine/tests/test_mp1_candidate_persistence.py:85` | import specifier resolves to no file on disk |
+| `src/engine/opening_range_candidate_persistence.py` | path-literal | `src/engine/tests/test_mp1_candidate_persistence.py:88` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/walk_forward.py:1198` | import specifier resolves to no file on disk |
 | `src/server/db/migrations/0058_audit_log_append_only.down.sql` | path-literal | `src/server/__tests__/audit-log-append-only.test.ts:56` | repo-relative path literal with no file on disk |
 | `src/types/sse-events.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:21` | repo-relative path literal with no file on disk |
@@ -965,7 +968,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1536** `BUILT-UNREACHABLE` symbols, **775 have test coverage but no production caller**.
+Of **1536** `BUILT-UNREACHABLE` symbols, **776 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -990,6 +993,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 5 | unique |
 | `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | 5 | unique |
 | `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:580` | 5 | unique |
+| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | 5 | unique |
 | `_resetForTest` | function | `src/server/lib/carter/carter-issues-store.ts:231` | 5 | unique |
 | `_testOnly` | const | `src/server/scheduler.ts:746` | 5 | unique |
 | `__clearPromptCacheForTests` | function | `src/server/services/model-router.ts:933` | 5 | unique |
@@ -997,7 +1001,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | 4 | unique |
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
@@ -1050,6 +1053,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `MutationCase` | class | `src/engine/forensics/calibration_battery.py:73` | 2 | unique |
 | `A14ConditioningVector` | class | `src/engine/nemo_a14_bridge.py:24` | 2 | unique |
 | `nemo_to_a14_conditioning` | function | `src/engine/nemo_a14_bridge.py:77` | 2 | unique |
+| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | 2 | unique |
+| `rehydrate_candidate` | function | `src/engine/opening_range_candidate_receipt.py:253` | 2 | unique |
 | `refused_state` | function | `src/engine/opening_range_definition.py:253` | 2 | unique |
 | `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | 2 | unique |
 | `rank_firms_for_strategy` | function | `src/engine/prop_compliance.py:372` | 2 | unique |
@@ -1265,8 +1270,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | 1 | unique |
 | `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
 | `ExecutionCandidateReceipt` | class | `src/engine/opening_range_candidate_receipt.py:117` | 1 | unique |
-| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | 1 | unique |
-| `rehydrate_candidate` | function | `src/engine/opening_range_candidate_receipt.py:253` | 1 | unique |
+| `ExecutionCandidateReceiptError` | class | `src/engine/opening_range_candidate_receipt.py:85` | 1 | unique |
 | `resolve_execution_candidate` | function | `src/engine/opening_range_candidate_receipt.py:281` | 1 | unique |
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
 | `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
@@ -1278,9 +1282,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
 | `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
 | `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
-| `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
 
-_...475 more omitted from this table._
+_...476 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1793,7 +1796,7 @@ _...475 more omitted from this table._
 | `_all_strings` | function | `src/engine/extraction/spec_producer.py:767` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:783` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:871` | defining module is not reachable from any measured entry point |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | no non-test reference outside its own definition; 4 test file(s) do reference it |
+| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | no non-test reference outside its own definition; 5 test file(s) do reference it |
 | `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1046` | defining module is not reachable from any measured entry point |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | defining module is not reachable from any measured entry point |
 | `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | defining module is not reachable from any measured entry point |
@@ -2115,7 +2118,7 @@ _...475 more omitted from this table._
 | `ExecutionCandidateReceiptError` | class | `src/engine/opening_range_candidate_receipt.py:85` | defining module is not reachable from any measured entry point |
 | `_exact_keys` | function | `src/engine/opening_range_candidate_receipt.py:94` | defining module is not reachable from any measured entry point |
 | `ExecutionCandidateReceipt` | class | `src/engine/opening_range_candidate_receipt.py:117` | defining module is not reachable from any measured entry point |
-| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `_candidate_from_canonical_payload` | function | `src/engine/opening_range_candidate_receipt.py:183` | defining module is not reachable from any measured entry point |
 | `rehydrate_candidate` | function | `src/engine/opening_range_candidate_receipt.py:253` | defining module is not reachable from any measured entry point |
 | `resolve_execution_candidate` | function | `src/engine/opening_range_candidate_receipt.py:281` | no non-test reference outside its own definition; 1 test file(s) do reference it |
