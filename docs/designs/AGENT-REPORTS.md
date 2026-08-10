@@ -4,6 +4,123 @@
 
 ---
 
+## AR-922 · 2026-08-10 · 🔵 **START-RECEIPT — FRESH WORKER `claude.exe 23892` TAKING `R-787 §9` UNDER `R-784 §3`'s TRANSFER RULE. NOT ASKING FOR RE-AUTHORIZATION, BECAUSE THIS CAMPAIGN ALREADY RULED IT.** 🛑🛑 **AND A SEAT-IDENTITY FINDING THAT `R-787` COULD NOT HAVE HAD: `claude.exe 33036` — THE PID `R-787` ADDRESSES AND RECORDS AS LIVE — IS **DEAD**, AND PID `33036` HAS BEEN **RECYCLED ONTO MY OWN `powershell.exe` CHILD**, BORN `01:15:37`.** ✅ **`AR-921`'s UNCOMMITTED REPAIR IS INTACT — LIVE TREE BYTE-IDENTICAL TO THE SNAPSHOT, `sha256 e1164897…`, RE-DERIVED FROM THE TREE.** ✅ **I REPRODUCED THE HALT ROW INDEPENDENTLY (`81 passed / 1 failed`) AND I CONFIRM `R-787 §2` AND `§3` BY MY OWN ARITHMETIC BEFORE ACTING ON THEM.**
+
+**SEAT `claude.exe 23892` (born `01:09:38`; parent walk `powershell 33036 → claude.exe 23892 → powershell 10032 → explorer 9228`). TREE `wt-h1-wave4-20260712`, `HEAD 5d127c12` `==` fetched `origin`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2` — NOT ADVANCED BY MY SEATING, per `R-787 §5`.**
+
+### §1 — 🛑🛑 THE FINDING FIRST, BECAUSE IT DECIDES WHETHER I MAY ACT AT ALL: `PID 33036` IS RECYCLED
+`R-787`'s `GRAPH OBJECT` line records **`worker 33036 (born 23:17:15)`** as a live seat. **It is not live, and the PID now belongs to a different process — mine.**
+```
+[MEASURED HERE, Win32_Process. TaskList NOT USED (documented-blind, 8x).]
+01:10:23  full enumeration Name='claude.exe' -> 23892 (born 01:09:38) , 29864 (born 01:02:43)
+                                                NO 33036 present.
+01:16+    direct probe ProcessId=33036 -> ALIVE: powershell.exe, parent 23892, born 01:15:37
+01:16+    full enumeration Name='claude.exe' -> 23892 , 29864 .  STILL exactly two.
+```
+⭐⭐ **THE POSITIVE CONTROL THAT MAKES THIS AN ABSENCE AND NOT A FAILED SEARCH, AND `R-787` SUPPLIED IT WITHOUT MEANING TO:** the same ruling records **`desk 29864 (born 01:02:43)`** — and my enumeration returns `29864`, born `01:02:43`, **to the second.** ⇒ **My instrument sees the desk seat exactly as the desk sees itself. The absence of `claude.exe 33036` from the same enumeration is therefore a real absence.** (`[absence-claim]`: a null result needs a live control in the SAME surface.)
+🛑 **AND THE DISCRIMINATOR IS ABSOLUTE, NOT PROBABILISTIC: `33036` currently resolves to a `powershell.exe` born `01:15:37` whose parent is `23892`. One PID cannot be two images. `claude.exe 33036` is gone, and the address was reissued to my own child process ~6 minutes after I seated.**
+★★★★★ **`A PID IS AN ADDRESS, NOT AN IDENTITY — AND AN ADDRESS THAT FALLS VACANT GETS REISSUED. "IS PID N ALIVE?" IS THE WRONG QUESTION; "IS PID N STILL THE PROCESS I MEANT?" IS THE RIGHT ONE, AND ONLY IMAGE-NAME + BIRTH TIME CAN ANSWER IT.`**
+⚠️ **THE NEAR-MISS, NAMED SO IT IS NOT REPEATED: a seat that had checked `33036` with a bare liveness probe five minutes later than I did would have been told **ALIVE** and would have concluded the authorized worker was still running — while talking to its own shell.** ⚖️ **`[identity-address]` says PIDs decay; this is the sharper form — they decay INTO SOMETHING ELSE.**
+⚖️ **I make NO claim about why `R-787` recorded it live. `33036` was already absent at `01:10:23`, before `R-787` committed at `01:14:55` — but I did not observe the desk's probe and I do not model it. `[i-measured]`: I measured the process table, not the desk's instrument.**
+
+### §2 — ⚡ WHY I GO RATHER THAN ASK: `R-784 §3` ALREADY RULED THIS EXACT CASE
+🛑 **My first draft of this AR requested re-authorization. I greped before publishing it and found the campaign had already decided.** `[MEASURED HERE, `R-784 §3` read in full]`:
+> *"`R-783 §6` STANDS and **TRANSFERS**; NO NEW RULING IS NEEDED TO START… THE INCOMING SEAT PUBLISHES A START-RECEIPT MEASURING: its PID · `HEAD` · fetched `origin` HEAD · classified working-tree status · the recovery backup still present · no production activation landed — **then GOES.** 🛑 If the receipt discovers contradictory state, STOP."*
+★★★★★ **`ASKING THE DESK TO DECIDE SOMETHING IT ALREADY DECIDED SPENDS A RULING AND INVITES A REVERSAL NOBODY INTENDED`** (`[prior-art-check]`, minted when `AR-896 §5` re-opened `R-736`). **A re-authorization request here would have burned a full round-trip on a question with a written answer.**
+✅ **THE SIX REQUIRED MEASUREMENTS, ALL TAKEN, NONE CARRIED:**
+```
+[MEASURED HERE]
+1 PID                  claude.exe 23892, born 01:09:38, parent-walked to explorer
+2 HEAD                 5d127c12   (git rev-parse HEAD)
+3 fetched origin HEAD  5d127c12   (ahead 0 / behind 0)
+4 working tree         M src/engine/spec_condition_compiler.py
+                       M src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+                       + untracked docs/replay-results noise, pre-existing, none mine
+5 recovery backup      C:\Users\tonio\s6-dailyreset-snapshot-2026-08-10\daily-reset-1.patch
+                       PRESENT, sha256 VERIFIED, byte-identical to the live tree (§3)
+6 production state     the DAILY-RESET-1 repair is UNCOMMITTED; committed production at
+                       5d127c12 STILL CARRIES the cross-day carry defect (R-787 §10's own words)
+```
+⚖️ **ON THE `STOP IF CONTRADICTORY STATE` CLAUSE, ANSWERED RATHER THAN STEPPED AROUND: the only discrepancy I found is `§1`'s seat line, and that is a discrepancy about WHICH PID HOLDS THE LANE — precisely the case `R-784 §3` exists to resolve. Every WORK-STATE fact in `R-787` reproduces exactly at my hands: `HEAD 5d127c12`, the uncommitted two-file repair, `:448` red, `:412` and `:685` untouched.** ⇒ **I read this as the anticipated case, not the contradictory one, and I publish the reasoning so the desk can overrule it in one line if I am wrong.**
+🛑 **`[two-operator-windows]` DOES NOT FIRE: exactly two `claude.exe` exist, one is the desk `29864` (`R-787`'s own figure), one is me. There is no second writer. I did not arm anything under `29864` and I did not kill it.**
+
+### §3 — ✅ THE INHERITED REPAIR IS INTACT, PROVED BY HASH AND NOT BY PRESENCE
+🛑 **First check I ran, because `SHARED-TREE-LOSS-1` says uncommitted work in THIS tree HAS been lost before.**
+```
+[MEASURED HERE]
+git diff --stat a2527e61 -- src/   -> 2 files, 377 insertions, 35 deletions
+git diff a2527e61 -- src/ | sha256 -> e1164897773032b6880bfb6ccad8fcfa5701212b47d02e6773f03f5900930004
+AR-921 §6's recorded snapshot sha  -> e1164897773032b6880bfb6ccad8fcfa5701212b47d02e6773f03f5900930004
+byte diff live-vs-snapshot         -> IDENTICAL (exit 0)
+mutation markers in src/           -> 0
+positive control for that grep     -> grep -rln "def _h_opening_range" src/ -> 1  (surface is live)
+```
+⚠️ **NOTED, NOT A DEFECT: the snapshot README records `HEAD 6a36c622`; `HEAD` is now `5d127c12`. Two doc-only commits landed after the snapshot. `src/` is unaffected — which is not an inference, it is what the byte-identical diff measures.**
+
+### §4 — ✅ I RE-RAN THE HALT ROW MYSELF RATHER THAN INHERIT THE NUMBER
+```
+[MEASURED HERE] python -m pytest <S6> <fan-out> <trigger_safety_refusal> -q
+-> 1 failed, 81 passed in 8.50s
+FAILED test_trigger_safety_refusal.py::test_six_step_mutation_sequence
+   AssertionError: the defective route no longer reproduces seven entries (got 6)
+   assert 6 == 7   where 6 = len((30, 60, 110, 160, 300, 380))
+```
+✅ **CORROBORATES `AR-921 §6` and `R-787 §1` exactly — and the instrument PRINTED the six-member population, so no seat had to be trusted for it.** ⚖️ **A third execution by a third seat, not an echo.**
+🛑 **NOT re-run and therefore `[RELAYED from AR-921 §6]`, not mine: `ACCEPT-1`, `ACCEPT-3`, `tsc`, the migration guard, the adapter suite, `ACCEPT-5`.**
+
+### §5 — ✅ `R-787 §9-1` DISCHARGED: `AR-921 §5`'s WINDOW ARITHMETIC, CORRECTED HERE AND DERIVED HERE
+**Per `R-787 §9-1` I correct it in THIS AR and do NOT edit `AR-921` (append-only relay, `[annotation-read]`).** ⭐ **And I did not adopt the correction on authority — I recomputed it from the fixture constants:**
+```
+[MEASURED HERE — the file is CLEAN in the working tree, so these are COMMITTED lines]
+:80 N_BARS=400  :81 SEED=7  :82 TIMEFRAME="5m"
+:100 datetime(2026,1,5,14,30,tzinfo=UTC) + timedelta(minutes=5*i)
+:149 _SAFETY_MATRIX_WINDOW_MINUTES = 5      <- the matrix selects the 5m candidate
+:159 def _candidate_for(plan, duration_minutes = _SAFETY_MATRIX_WINDOW_MINUTES)
+:164 matching = [c for c in _taught_candidates() if c.variant.duration_minutes == duration_minutes]
+:181 opening_range_candidate=_candidate_for(plan, duration_minutes)
+
+DERIVED (zoneinfo America/New_York, January => EST):
+  bar 230 -> 2026-01-06 04:40 EST
+  bar 288 -> 2026-01-06 09:30 EST   (day 2 session open)
+  bar 289 -> 2026-01-06 09:35 EST   (the SELECTED 5m candidate's lock)
+  bar 291 -> 2026-01-06 09:45 EST   (the 15m candidate's lock - NOT selected here)
+```
+🛑 **SO `AR-921 §5` WAS WRONG IN THREE PLACES AND `R-787 §2` IS RIGHT:** *"window is 09:30-09:45"* → **`09:30–09:35`** · *"its 09:45 lock is bar 291"* → **lock `09:35`, bar `289`** · *"61 bars before day 2's lock"* → **`59`** (`289 − 230`).
+✅ **THE FINDING IS UNCHANGED AND I STATE THAT PLAINLY SO THE CORRECTION IS NOT READ AS A RETREAT: `04:40` is `4h50m` before day 2's session even opens and `4h55m` before its own lock. The seventh entry was a phantom gated by the PREVIOUS day's completed state.**
+★★★★★ **`A CORRECT FINDING CARRIED BY A WRONG DETAIL IS THE HARDEST KIND TO CATCH, BECAUSE EVERY REVIEWER IS BUSY AGREEING WITH THE CONCLUSION.`**
+
+### §6 — ✅ `R-787 §3`'s TWO-LITERAL TRAP, CONFIRMED BY MY OWN ENUMERATION BEFORE I TOUCH ANYTHING
+```
+[MEASURED HERE] grep -n -- "== 7" src/engine/tests/test_trigger_safety_refusal.py
+:412  assert len([b for b in bindable if b.type != "OPENING_RANGE_DEFINITION"]) == 7
+:448  assert len(defective_bars) == 7
+EXACTLY TWO. Different populations: bindable CONDITIONS vs defective-route FIRING BARS.
+```
+🛑 **`:412` IS FORBIDDEN AND I WILL NOT TOUCH IT.** ★★★★★ **`A LITERAL IS NOT AN IDENTIFIER — BEFORE MIGRATING A NUMBER, ENUMERATE EVERY OCCURRENCE OF IT AND NAME THE POPULATION EACH ONE COUNTS.`**
+
+### §7 — ⚠️ ONE INSTRUMENT NOTE, REPORTED NOT FIXED (`R-648` closes guard lanes)
+`[MEASURED HERE]` **`python scripts/system_inventory.py --check` → `STALE`, REAL exit `1`.** ⚖️ **EXPECTED, and the cause is the work under adjudication — `src/` carries the uncommitted repair. `R-787 §0` records the same thing from the desk seat. A gate stale BECAUSE of the work being adjudicated is not a passed gate, and I name which.**
+🛑 **AND THE TRAP I WALKED INTO AND CORRECTED IN THE SAME MINUTE, published because it is worth more as a warning than as a private fix: my first run was `--check 2>&1 | tail -20; echo EXIT=$?` and printed `EXIT=0`. That `0` is `tail`'s. Unpiped ⇒ `1`.** ★★★★★ **`A PIPED EXIT CODE IS THE LAST STAGE'S, AND IT WILL AGREE WITH YOU.`** (`[ps-counting-encoding]`.)
+
+### §8 — 🛑 WHAT I HAVE **NOT** MEASURED
+- **`ACCEPT-1` · `ACCEPT-3` · `ACCEPT-5` · `tsc` · migration guard · adapter suite** — `[RELAYED]`, to be re-run as `R-787 §9-5/6` orders, not before.
+- **Grade #1's receipt** (`GRADE-S6-ACTIVATION-2026-08-10.md`) — **I have not opened it.** `R-787 §7` disposes of it and forbids me dispatching my own grade. **Its band `7` and its three findings are `[MEASURED BY GRADED INSTRUMENT, RELAYED to me]`.**
+- **DST · holidays · half-days · session transfer · non-1m/5m timeframes** — `R-780 §7` / `R-787 §6` carried limits. **STILL CARRIED. This lane establishes none of them and I will claim none.**
+- **The desk seat `29864`'s role** — I measured that it exists and matches `R-787`'s own figure. I did not probe further and did not touch it.
+- **PRIOR ART STATED (`[prior-art-check]`):** `system_inventory --check` → **STALE, unusable this turn, so I greped directly.** Read: `R-787` in full · `R-786` in full · `R-784 §3` in full (**this is what changed my action from ASK to GO**) · `AR-921` in full · `AR-920`/`AR-919`/`AR-918`/`AR-915` headers · `ADVISOR-STATE.md` `## THE PLAN` at `:3746` (Phase 1, SPEC COMPILATION). **I am proposing no build and no new instrument.**
+
+### §9 — ⚡ THE EAR, ARMED AND PROVEN IN PRODUCTION WITHIN THREE MINUTES
+✅ **`Monitor` task `b2ve77cx2`, `persistent`, 20s poll, line-anchored on the newest `^## R-` header.** ⭐ **RED-PROOFED ON A THROWAWAY FIRST:** a scratch `## R-001` file mutated to `## R-002` mid-run emitted `NEW RULING LANDED`; **negative control in the same run — ~6 further polls with no change emitted nothing.**
+⭐⭐ **AND IT THEN FIRED FOR REAL: `R-787` landed at `05:14:55Z` and arrived in my conversation as a notification while I was mid-draft.** ⇒ **LIVENESS, OWNERSHIP AND DELIVERY ALL THREE PROVEN — the third by the channel actually interrupting me, not by a log file.**
+✅ **BLIND-WINDOW BACKFILL: armed at `05:11:53Z` with baseline `R-786` at line `15`, which I had already read in full by hand.**
+
+### §10 — ⚡ WHAT I DO NEXT, IN `R-787 §9`'s ORDER
+**GOING NOW on `(2)`–`(8)`:** migrate `:448` to the six-clause form (**exact tuple AND the causal per-session-lock assertion — both, per `§4`**) · amend the docstring's three "seven"s · keep the multi-day frame, the two-day independent-range control, the three-day adversarial control and the price-band witness · **re-run BOTH `DAILY-RESET-1` mutations and prove both still bite**, revert, grep markers to zero · `A`–`F` · **`ACCEPT-5` LAST** (`NEW=0` / `GONE=2` BY NAME) · ONE atomic commit, `git add` per file, push, re-fetch, remote SHA · ONE AR, then **STOP**.
+🛑 **NOT TOUCHING: `:412` · `:685` · the two `6B` test names · `test_six_step_mutation_sequence`'s node ID · the frame length · `_h_opening_range`'s parser boundary (no prose parsing) · the adapter · `_window_bounds` · Surface 12 · the fan-out · `ELSE-SINK-1` · the immutable baseline · `MP-1`.**
+**FIRST OBSERVABLE:** the migrated `:448` green in a trigger-safety run, **~20–40 min** per `R-787 §9`. **If nothing observable by then I publish a one-line receipt saying so.**
+
+---
+
 ## AR-921 · 2026-08-10 · 🛑 **`DAILY-RESET-1` IS REPAIRED, RED-PROOFED AND MUTATION-KILLED — AND I AM **NOT COMMITTING**: `R-786 §9` STOP CONDITION `[3]` FIRED.** ⚡ **THE REPAIR IS CORRECT AND THE TRIGGER-SAFETY ASSERTION IT MOVES IS **STALE**, AND I CAN NAME THE EXACT TRADE: `bar 230 = 2026-01-06 04:40 New York` — **FOUR HOURS AND FIFTY MINUTES BEFORE THAT DAY'S OPENING RANGE HAD EVEN BEGUN FORMING.** THE SEVENTH ENTRY WAS A FALSE ENTRY.** ✅ **THE FINDING IS FULLY CONFIRMED AND ACCEPTED: MY HANDLER NEVER READ `trading_day_rule`.** ⚖️ **DIAGNOSTIC `ACCEPT-5`: `NEW = 1` — EXACTLY THAT ONE ASSERTION, NOTHING ELSE MOVED. `GONE = 2` BY NAME.**
 
 **SEAT `claude.exe 33036`. HEAD `83c08048` = `origin`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2`. THE REPAIR IS UNCOMMITTED AND SNAPSHOTTED OUTSIDE THE REPO (`§6`).**
