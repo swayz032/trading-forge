@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `10ef68062475715b2524186ff76c78c70000a773`  (worktree DIRTY at generation time)
+> Generated at commit `00344c2c5f949584f8d7c794a82c4dcfbb846158`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 290 | 358 | 120239 | 1863 |
+| `src/` | Python | 291 | 358 | 120556 | 1870 |
 | `src/` | TypeScript | 461 | 717 | 209177 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1826 | 751 |
+| `src/` | 1827 | 752 |
 | `scripts/` | 210 | 210 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2071** | **961** |
+| **TOTAL** | **2072** | **962** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -55,7 +55,7 @@ Published so that under-inclusion is visible instead of silent.
 
 | Not enumerated | Count | Why |
 |---|---:|---|
-| Python class methods | 419 | one row per method would swamp the map; a method is reached through its class |
+| Python class methods | 421 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
 | `src/` test files | 1075 | tests are the reference surface, never the symbol surface |
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **618** of **2071** parsed files.
+Total entry points: **94**.  Modules reachable from them: **618** of **2072** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -199,8 +199,8 @@ table below it.**
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3245 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1529 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4825 rows |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1536 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.2% of 4830 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=618 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
@@ -208,8 +208,8 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1863 ts=2917 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
+| C12 | symbols enumerated in both languages | PASS | py=1870 ts=2917 |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=36 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6590/6590 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4515 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4780 symbol rows (10.1%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4522 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4787 symbol rows (10.1%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3245 | 67.3% |
+| `WIRED` | 3245 | 67.2% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1529 | 31.7% |
-| `DECLARED-ABSENT` | 38 | 0.8% |
+| `BUILT-UNREACHABLE` | 1536 | 31.8% |
+| `DECLARED-ABSENT` | 36 | 0.7% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4825** | |
+| **TOTAL** | **4830** | |
 
 ---
 
@@ -337,6 +337,7 @@ table below it.**
 | `src/engine/nvtx_markers.py` | 3 | 0 | 1 | 0 | 0 | 4 |
 | `src/engine/opening_range_adapter.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/opening_range_candidate.py` | 2 | 0 | 0 | 0 | 0 | 2 |
+| `src/engine/opening_range_candidate_receipt.py` | 0 | 0 | 7 | 0 | 0 | 7 |
 | `src/engine/opening_range_definition.py` | 6 | 0 | 1 | 0 | 0 | 7 |
 | `src/engine/opening_range_execution_fanout.py` | 0 | 0 | 1 | 0 | 0 | 1 |
 | `src/engine/opening_range_lowering.py` | 0 | 0 | 10 | 0 | 0 | 10 |
@@ -390,7 +391,6 @@ table below it.**
 | `src/engine/synthetic` | 8 | 0 | 1 | 0 | 0 | 9 |
 | `src/engine/synthetic_market_simulator.py` | 0 | 0 | 13 | 0 | 0 | 13 |
 | `src/engine/tensor_signal_model.py` | 12 | 0 | 1 | 0 | 0 | 13 |
-| `src/engine/tests` | 0 | 0 | 0 | 2 | 0 | 2 |
 | `src/engine/validation` | 16 | 0 | 1 | 0 | 0 | 17 |
 | `src/engine/validation_runner.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/walk_forward.py` | 8 | 0 | 0 | 1 | 0 | 9 |
@@ -913,7 +913,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**38 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**36 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -935,8 +935,6 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1596` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1668` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:2194` | import specifier resolves to no file on disk |
-| `src.engine.opening_range_candidate_receipt` | module | `src/engine/tests/test_mp1_candidate_receipt.py:109` | import specifier resolves to no file on disk |
-| `src/engine/opening_range_candidate_receipt.py` | path-literal | `src/engine/tests/test_mp1_candidate_receipt.py:112` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/walk_forward.py:1198` | import specifier resolves to no file on disk |
 | `src/server/db/migrations/0058_audit_log_append_only.down.sql` | path-literal | `src/server/__tests__/audit-log-append-only.test.ts:56` | repo-relative path literal with no file on disk |
 | `src/types/sse-events.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:21` | repo-relative path literal with no file on disk |
@@ -967,7 +965,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1529** `BUILT-UNREACHABLE` symbols, **771 have test coverage but no production caller**.
+Of **1536** `BUILT-UNREACHABLE` symbols, **775 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1266,6 +1264,10 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | 1 | unique |
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | 1 | unique |
 | `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
+| `ExecutionCandidateReceipt` | class | `src/engine/opening_range_candidate_receipt.py:117` | 1 | unique |
+| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | 1 | unique |
+| `rehydrate_candidate` | function | `src/engine/opening_range_candidate_receipt.py:253` | 1 | unique |
+| `resolve_execution_candidate` | function | `src/engine/opening_range_candidate_receipt.py:281` | 1 | unique |
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
 | `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
 | `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
@@ -1277,12 +1279,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
 | `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
 | `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
-| `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
-| `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
-| `QuantumRunConfig` | class | `src/engine/quantum_mc.py:177` | 1 | unique |
-| `run_hybrid_compare` | function | `src/engine/quantum_mc.py:633` | 1 | unique |
 
-_...471 more omitted from this table._
+_...475 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -2107,6 +2105,20 @@ _...471 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `timed_range` | function | `src/engine/nvtx_markers.py:58` | no non-test reference outside its own definition |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_candidate_receipt.py</code> - 7 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `ExecutionCandidateReceiptError` | class | `src/engine/opening_range_candidate_receipt.py:85` | defining module is not reachable from any measured entry point |
+| `_exact_keys` | function | `src/engine/opening_range_candidate_receipt.py:94` | defining module is not reachable from any measured entry point |
+| `ExecutionCandidateReceipt` | class | `src/engine/opening_range_candidate_receipt.py:117` | defining module is not reachable from any measured entry point |
+| `build_execution_candidate_receipts` | function | `src/engine/opening_range_candidate_receipt.py:163` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `_candidate_from_canonical_payload` | function | `src/engine/opening_range_candidate_receipt.py:183` | defining module is not reachable from any measured entry point |
+| `rehydrate_candidate` | function | `src/engine/opening_range_candidate_receipt.py:253` | defining module is not reachable from any measured entry point |
+| `resolve_execution_candidate` | function | `src/engine/opening_range_candidate_receipt.py:281` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -4621,7 +4633,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | 3 | unique |
+| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | 4 | unique |
 | `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | 1 | unique |
 
 </details>
@@ -4631,9 +4643,9 @@ This is the *we already have this* list.  Check it before writing anything.
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
 | `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 1 | unique |
-| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 1 | unique |
-| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 3 | unique |
-| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 3 | unique |
+| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 2 | unique |
+| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 4 | unique |
+| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
 | `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 1 | unique |
 | `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
 
