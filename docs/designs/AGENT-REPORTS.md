@@ -4,6 +4,58 @@
 
 ---
 
+## AR-924 · 2026-08-10 · 🛑🛑★★★★★ **`HOLD` ACKNOWLEDGED AND OBEYED — AND ONE FINDING BEFORE I GO QUIET, BECAUSE THE REPORTING DUTY DOES NOT LAPSE UNDER A HOLD (`R-648`).** 🛑 **`R-788 §7`'s NEWEST CARRIED LIMIT — *"`MES`/`MNQ` SOURCE-MARKET TRANSFER VALIDITY … futures use is a TRANSFER EXPERIMENT"*, RATED *"the most load-bearing of the set"* AND *"never named in this ledger"* — WAS **RULED AND CLEARED WITH `NO RESIDUAL`** ON `2026-08-03` BY **`R-653`**, ON **THIS EXACT GOLDEN SLICE**, AFTER THE **OPERATOR PERSONALLY ORDERED THE SAME LABEL WITHDRAWN.** ⚖️ **I AM NOT RULING THIS AND I HAVE STARTED NOTHING. I STEELMAN THE DESK'S NARROW READING IN `§3` — BUT THE WORDING AS IT STANDS IS THE SHAPE `AR-701` WITHDREW UNDER ORDER.**
+
+**SEAT `claude.exe 23892`. LANE `DAILY-RESET-1` — COMPLETE, ACCEPTED AT `R-788`, ATTEMPT `1 / 2`, NOTHING OWED BY ME. `HEAD 699a42f7`. NO CODE TOUCHED IN THIS AR. `MP-1` · `GATE-LIM-2` · the `ACCEPT-5` collection repair: ALL UNSTARTED, per `R-788`'s forbidden list.**
+
+### §1 — ✅ THE HOLD, ACKNOWLEDGED PRECISELY
+✅ **`R-788`'s `START HERE` block received, in full, through the armed ear** (`Monitor b2ve77cx2` fired at `05:44:42Z`; that is the ear's **third** real delivery today). **Blocker: the final `accuracy-validator`. Owner: the DESK. Verdict ruling: the DESK. `doer ≠ grader` bars me; `R-786 §8` bars me from dispatching one. I have not, and will not.**
+⚖️ **I am publishing this receipt rather than going silent because a held seat and a dead seat are indistinguishable without one — and `R-788` explicitly anticipates my retirement and routes the lane by `R-784 §3`.**
+
+### §2 — 🛑🛑 THE FINDING, MEASURED AT THE LINE
+🛑 **`R-788 §7` states, of the `MES`/`MNQ` transfer limit: *"That one had never been named in this ledger and it is the most load-bearing of the set."* `[MEASURED HERE]` **BOTH HALVES ARE REFUTABLE FROM THE LEDGER ITSELF:**
+```
+[MEASURED HERE — grep over the committed ledgers, with a POSITIVE CONTROL]
+ADVISOR-RULINGS.md  "strategy is a mechanic | care about the strategy |
+                     strategies get used in different markets"        -> 1 hit   (R-653)
+POSITIVE CONTROL, same file, "DAILY-RESET-1"                          -> 18 hits
+   ⇒ the search surface is live; the single hit is a real single hit, not a blind grep.
+AGENT-REPORTS.md, same terms                                          -> 2 hits  (AR-701)
+```
+**`R-653 · 2026-08-03`, its own header, verbatim:**
+> **`AR-700` + `AR-701` ACCEPTED. `R-652 §5.1` CLEARS AND — AFTER THE OPERATOR'S OWN RULE — IT CLEARS WITH **NO RESIDUAL**.**
+> **DECISION: … **ADOPT THE OPERATOR'S STANDING RULE** …**
+
+**And `AR-701 · 2026-08-03`, operator-ordered, withdrew by preserve-and-strike the EXACT residual `R-788 §7` has just re-admitted:**
+> 🛑 ~~*"I have refuted equities-specificity. I have not measured futures-appropriateness, and those are not the same claim."*~~
+> **WHY IT WAS WRONG: `I APPLIED THE MECHANIC TEST, GOT A CLEAN PASS, AND THEN RE-ADMITTED THE INSTRUMENT LABEL THROUGH A BACK DOOR MARKED `[NOT MEASURED]`.`**
+> ★★★★★ **`AN UNMEASURED-RESIDUAL LABEL IS STILL A GATE IF A RULING CAN STOP ON IT.`**
+
+⭐ **AND IT WAS APPLIED TO *THIS* SLICE, NOT A NEIGHBOUR — `AR-701 §2` names the mechanic element by element:** opening range high/low · `range = high − low` · `half = range ÷ 2` · breakout · half-range stop/target, with `[MEASURED]` `share 0 · float 0 · halt 0 · borrow 0 · pre-market 0` across all `16` condition rows. **Its conclusion: nothing in that mechanic depends on anything `MES`/`MNQ` lacks, and the `09:30 ET` cash open is a real, tradeable event on the index futures.**
+⚖️ **THE OPERATOR'S DISCRIMINATOR, which the ledger records in his own words twice (`2026-05-27`, restated `2026-08-03`): REJECT ONLY WHEN THE MECHANIC DEPENDS ON SOMETHING THE TARGET MARKET DOES NOT HAVE. The speaker's symbol and the extraction's `asset_class` label are NOT that dependency.** ⭐ **`AR-701 §3` then proves the rule has teeth in BOTH directions — it re-derived `gap_and_go`'s exclusion on a REAL dependency (a cross-sectional screen needs a universe; `MES`/`MNQ` is two instruments), so this is not a rule that clears everything.**
+
+### §3 — ⚖️ THE STEELMAN, STATED BEFORE THE OBJECTION, BECAUSE THE DESK MAY MEAN THE NARROW THING
+✅ **There IS a reading of `R-788 §7` that is fully compatible with `R-653` and I will not pretend otherwise:** *"the seal certifies COMPILATION FIDELITY to what was taught; it does not certify that the teacher DEMONSTRATED results on `MES`"* — a scope-of-claim honesty point, and a close relative of `R-788 §4`'s excellent certified-claim clause (`A SEAL ON A SLICE THAT GETS REPORTED AS A SEAL ON THE STRATEGY…`). **Under that reading nothing is re-opened and my finding is merely a wording risk.**
+🛑 **BUT THE WORDING AS IT STANDS DOES NOT SIT IN THAT POSITION.** It sits in **`CARRIED LIMITS, NOT CLOSED`**, beside DST, holidays, half-days and session transfer — i.e. **the residual slot** — is labelled **`NEW`**, and is rated **`the most load-bearing of the set`**. ⇒ **That is precisely `AN UNMEASURED-RESIDUAL LABEL IS STILL A GATE IF A RULING CAN STOP ON IT`, and `R-788 §6` does list carried limits among the things a later ruling may stop on.**
+⚠️ **AND THE PROVENANCE IS THE `[external-opinion]` SHAPE:** it entered as an ADOPTED LIMB FROM THE EXTERNAL READ. **`R-653`'s OWN HEADER is the precedent — it refuted a relayed external opinion on this same golden slice, on the taught stop (`half`-range vs *"opposite side of the range"*, `2×` the taught distance).** ★★★★★ **`A CHANNEL IS NOT AN AUTHOR; THE RULING-SHAPE IS THE DISGUISE.`**
+
+### §4 — ⚖️ WHY THE DECAY HAPPENED, WHICH IS THE PART WORTH FIXING
+`[MEASURED HERE]` **the operator's rule appears `2×` in `AGENT-REPORTS.md` and `1×` in `ADVISOR-RULINGS.md`. Its full statement, its discriminator and its worked example all live on the WORKER side (`AR-700`/`AR-701`) plus desk memory `feedback_strategy_mechanic_not_instrument`.** ⇒ **A desk seat doing a normal prior-art grep over the RULINGS would find one header line — `R-653`'s — and would not find the discriminator that makes the rule operable.**
+★★★★★ **`A STANDING RULE THAT LIVES IN THE REPORTS AND IN MEMORY, BUT NOT IN THE RULINGS, WILL BE RE-OPENED BY THE NEXT SEAT THAT SEARCHES ONLY WHERE RULINGS ARE KEPT — AND IT WILL LOOK LIKE A NEW INSIGHT WHEN IT COMES BACK.`**
+⚖️ **This is the third time this campaign has re-opened something already settled (`AR-896 §5` vs `R-736`, caught by the operator; `AR-700 §4` vs `2026-05-27`, caught by the operator; this one). All three were caught by a SEARCH, not by a memory — which is the argument for the `[prior-art-check]` gate rather than against it.**
+
+### §5 — 🛑 WHAT I AM **NOT** DOING, AND WHAT I HAVE **NOT** MEASURED
+- 🛑 **I AM NOT RULING THIS, NOT RE-OPENING `R-788`, AND NOT ASKING FOR A REVERSAL.** `R-788` is otherwise correct and its acceptance of my lane is not in question. **The desk owns whether `§7`'s limb is the narrow claim (`§3`) or the residual gate — and it may simply RE-WORD it, which costs nothing.**
+- 🛑 **I HAVE STARTED NOTHING.** `MP-1`, `GATE-LIM-2`, the `ACCEPT-5` collection repair and all compiler expansion remain UNSTARTED. **No code, no tests, no dispatch.**
+- **`[NOT MEASURED]`** whether the RUNNING grader received the transfer-validity limb as part of its charter, and whether it would treat it as a gate. **I did not open `GRADE-S6-SEAL-2026-08-10.md` and I will not — `doer ≠ grader`, and reading a live grade's receipt is how a doer anchors it.**
+- **`[NOT MEASURED]`** the OTHER carried limits (DST · holidays · half-days · overnight assignment · session transfer · non-minute bars). **I make no claim about any of them; my finding is about ONE limb only, and I would not want it read as an attack on the list.** ⚖️ **The DST limit in particular is REAL and is MINE — `AR-923 §8` carries it against my own repair.**
+- **PRIOR ART STATED:** searched `mechanic`/`instrument`/`transfer`/`equities`/`source market`/`MES` across both ledgers **and** desk memory; hits: `R-653`, `R-654`, `AR-700`, `AR-701`, `feedback_strategy_mechanic_not_instrument`. **Positive control run on the RULINGS grep (`DAILY-RESET-1` → 18).**
+
+### §6 — ⚡ STATE
+🛑 **HOLDING, per `R-788`. Ear armed and delivering (`Monitor b2ve77cx2`). Lane `1 / 1` complete. No sub-agent owed — I dispatched none.** ✅ **If my seat retires, the lane transfers by `R-784 §3` and the successor should read `R-788 §7` and this AR together.**
+
+---
+
 ## AR-923 · 2026-08-10 · ✅✅✅ **`DAILY-RESET-1` IS LANDED AND PUSHED — ONE ATOMIC COMMIT `8f729410`, AND `A`–`G` ARE GREEN WITH `ACCEPT-5` `NEW = 0` / `GONE = 2` MATCHED **BY NAME**.** ⭐⭐⭐ **AND THE `== 7` WAS WORSE THAN STALE, WHICH I CAN NOW PROVE RATHER THAN ARGUE: UNDER THE MUTATION THAT **REINTRODUCES** THE CARRY-OVER IT READS **SEVEN AGAIN** ⇒ **THE OLD ASSERTION WENT GREEN EXACTLY WHEN THE DEFECT WAS LIVE.** IT WAS AN ANTI-DETECTOR, NOT A STALE NUMBER.** ✅ **BOTH `DAILY-RESET-1` MUTATIONS STILL BITE, AND I RED-PROOFED MY TWO **NEW** CLAUSES SEPARATELY BECAUSE CLAUSE 1 FIRED FIRST AND MASKED THEM.** 🛑 **`S6` SEAL IS THE DESK'S; THE FINAL GRADE IS OWED AND IS NOT MINE TO DISPATCH.**
 
 **SEAT `claude.exe 23892`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2` — NOT ADVANCED (`R-787 §5`). `HEAD 08062e12` `==` `origin` `==` `ls-remote`, ahead `0` / behind `0`. REPAIR COMMIT `8f729410`.**
