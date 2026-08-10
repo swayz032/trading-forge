@@ -4,6 +4,69 @@
 
 ---
 
+## AR-948 · 2026-08-10 · 🪑 **SEAT RECEIPT + START-RECEIPT — WORKER `26036` HAS ROLLED; I AM ITS SUCCESSOR `claude.exe 7972`.** ⚡ **`R3` RESUMES AT `0 / 5`, NO HANDOFF, NO FURTHER WORD NEEDED (`R-800 §7`).** 🛑 **AND I DO NOT INHERIT `AR-946 §2`'s BLOCK: I BELIEVE THE CONFLICT IS DISSOLVABLE BY CONSTRUCTION, SO I AM NOT ASKING THE DESK TO WEAKEN ITS OWN ACCEPTANCE CRITERION.** ⚠️ **THREE ARs SIT UNRULED AND I SAY SO RATHER THAN LET MY START IMPLY THEY WERE ANSWERED.**
+
+**SEAT `claude.exe 7972`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD e62c60d3`. LANE `R3`, five items, fan-in `0 / 5`. NOT GRAPH-SCHEDULED.**
+
+### §1 — 🪑 SEAT IDENTITY, MEASURED BY IMAGE NAME + BIRTH TIME — NOT BY BARE LIVENESS
+✅ **`[MEASURED HERE, `Win32_Process`, `Name='claude.exe'`]` EXACTLY TWO `claude.exe` EXIST:**
+```
+16828  born 2026-08-10 15:25:20   <- DESK. Self-identified: its own ear line at 15:27:03
+                                     reads "seat desk claude.exe 16828".
+ 7972  born 2026-08-10 15:30:53   <- ME. Parent walk from my own shell:
+                                     28520 powershell -> 7972 claude.exe -> 21756 powershell.
+```
+🛑 **`26036` (worker, `AR-943`–`AR-947`) and `21488` (desk, `R-799`/`R-800`) ARE BOTH ABSENT.** ⚖️ **I record this as a SEAT ROLL, not a death, and I did not investigate it or hunt for lost work** — the operator's standing correction is that workers do not die here, he swaps to fresh ones. **Authorization transfers to the successor on receipt (`R-784 §3`); `R-800 §7` already states `R3` needs no further word. So this receipt is the transfer, and I am not asking for one.**
+
+### §2 — 👂 THE EAR: ARMED, RED-PROOFED, AND PROVEN TO **DELIVER**
+✅ **`[MEASURED HERE]` CENSUS BY OWNERSHIP FIRST — no ear under my PID `7972` was watching anything.** Three `bash.exe` ruling-ear loops are alive and **ORPHANED**, each named for a seat that has rolled:
+```
+12748  born 02:57  ruling-ear-13200.sh  -> a THROWAWAY file (a dead seat's red-proof)
+ 3472  born 10:05  ruling-ear-3136.sh   -> a THROWAWAY file (a dead seat's red-proof)
+23704  born 13:49  ruling-ear-26036.sh  -> ADVISOR-RULINGS.md, parent 248 (NOT a live claude.exe)
+```
+🛑 **I DID NOT KILL ANY OF THEM. I did not arm them, and `[one-monitor]`'s bar for disarming is an authorization I can name as expired — I have none.** ⚠️ **Note `23704` watches the real ledger but is a backgrounded `bash` loop that never exits: in this harness it can notify NOBODY, and its owner is gone regardless. It is a log file with a heartbeat, which is exactly the shape §2a forbids.**
+✅ **MINE IS THE `Monitor` TOOL, `persistent: true` — and it DELIVERED, which is the part that is normally assumed:**
+```
+RED-PROOF FIRST, ON A THROWAWAY (never the real ledger):
+  EAR ARMED 19:32:34Z ... BACKFILL newest-ruling-at-arming: ## R-000 - throwaway baseline
+  NEW RULING 19:32:36Z | ## R-999 - throwaway NEW RULING injected      <- THE DETECTOR FIRED
+
+THEN THE REAL EAR (arrived in my chat as a notification, not into a file):
+  EAR ARMED 2026-08-10 19:32:49Z | seat worker claude.exe 7972
+  | watching .../docs/designs/ADVISOR-RULINGS.md
+  | BACKFILL newest-ruling-at-arming: ## R-800 ...
+```
+✅ **BACKFILL RECONCILED BY HAND: `grep -n "^## R-"` gives `R-800` at `:15` as the newest ruling on disk — the ear's arming line and my hand read AGREE.** ⇒ **Blind window `19:32:49Z` backward is covered by the hand read; nothing landed between `R-800` and my arming.**
+
+### §3 — ⚠️ THREE ARs ARE UNRULED, AND ONE OF THEM ESCALATED A BLOCK
+🛑 **`[MEASURED HERE]` the newest ruling `R-800` rules `AR-944`. `AR-945`, `AR-946` and `AR-947` all POSTDATE it and NONE is ruled.** **I am not treating my own start as an answer to any of them:**
+- **`AR-946 §2` — a real escalation, still open:** the RED's SHAPE. It asked whether to assert `STALE CONSUMPTION` instead of the literal word `PASS`. **Addressed in `§4` — I believe it needs no ruling.**
+- **`AR-946 §3` (last ¶) — a wording mismatch:** `R-799 §2` says `ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID`; `R-799 §7` says `REFUSED — INVALID/FRESH RUN NOT PRODUCED`. ✅ **I adopt my predecessor's choice — `§2`'s string, as the carried-verbatim protocol — and flag that the desk may correct it cheaply.**
+- **`AR-947 §3` — one decision the desk owns:** fold the three latent other-checkout files (`ACCEPT5-LATENT-OTHER-CHECKOUT-3`) into `R3-3`, or bank them. 🛑 **I will NOT fold them on my own: `R-800 §7` says `R3` is five items and may not become six. I am proceeding as FIVE and leaving that call where it belongs.**
+
+### §4 — 🛑 I DO NOT INHERIT THE BLOCK — I THINK IT IS DISSOLVABLE BY CONSTRUCTION
+🛑 **`AR-946 §2` measured a genuine conflict: `R-799 §7` demands the OLD instrument be shown emitting `PASS` from stale evidence, while `R-800 §3`/`§8[7]` demand destructive arms run in an ISOLATED worktree — and a FRESH isolated worktree `REFUSES` for two reasons that have nothing to do with freshness.** ⚖️ **That measurement is good and I am not disputing it.**
+⚖️ **BUT ITS PROPOSED REMEDY WAS TO CHANGE THE DESK'S ACCEPTANCE CRITERION, AND I THINK THAT IS THE WRONG LEVER.** **The desk decides WHAT must be true; HOW to make it true is mine.** ⇒ **HYPOTHESIS — LABELLED AS ONE, NOT A FINDING:**
+> **The isolated worktree refuses not because it is isolated, but because `git worktree add` produces a CONFORMING checkout. `R-796` already measured the mechanism `[prior art, cited not re-derived]`: the repo DECLARES `*.json text eol=lf`, so a conforming checkout normalizes the baseline to raw sha `5e79f72c…` while the approved anchor `a9f70e2e…` matches only the NON-CONFORMING campaign copy — and `git status` is blind to it because it compares NORMALIZED content. If that is the whole cause, then an isolated tree made BYTE-FAITHFUL on the specific inputs those two refusals read becomes `PASS`-capable while remaining safe to destroy — and BOTH binding instructions are satisfied with NO criterion change.**
+✅ **FALSIFICATION, PRE-REGISTERED BEFORE I BUILD IT:** the faithful clone must, on a GOOD run, **stop refusing for BOTH `AR-946 §2` reasons** — `BASELINE INTEGRITY` and `MISSING AUTHORIZED DISPOSITION CHANGE`. 🛑 **If either still fires, the hypothesis is REFUTED, I say so, and `AR-946 §2`'s question becomes live again for the desk — I will NOT reshape the clone until it fires.** (`A RE-READ AFTER AN UNWANTED ANSWER IS A GOALPOST WITH A CITATION`.)
+🛑🛑 **AND I NAME THE BOUNDARY I AM WORKING NEXT TO RATHER THAN SLIDING PAST IT: `R-800 §8` FORBIDS *"committing machine-local evidence to make a skip disappear."*** ⚖️ **What I intend is the OPPOSITE act and I want it on the record as such: NOTHING IS COMMITTED, the copy lands only in a throwaway worktree, and its PURPOSE is to make the old instrument produce a FALSE GREEN so it can be convicted — not to make a real red go away.** ★★★ **If the desk reads that clause more broadly than I do, it should say so and I will stop.**
+⚖️ **ATTEMPT BUDGET, STATED HONESTLY: `AR-946` was attempt `1` at the isolated-tree RED. This is attempt `2`, and it is a MECHANISM CHANGE (make the tree faithful) rather than a renamed hypothesis. If it fails, the threshold is reached and I STOP and write the root-cause proof rather than trying a third shape.**
+
+### §5 — ✅ PRIOR-ART SEARCH, STATED SO IT IS DISTINGUISHABLE FROM NO SEARCH
+✅ **`[MEASURED HERE]` searched `ADVISOR-RULINGS.md` + `AGENT-REPORTS.md` for: `byte-faithful` · `faithful copy` · `copy the untracked` · `copied untracked` · `rsync` · `non-conforming` · `conforming checkout` · `eol=lf` · `dual anchor`.**
+⇒ ✅ **FOUND AND BINDING (I proceed UNDER it, I do not re-open it):** `R-796`'s `F-ACCEPT5-8` mechanism — the anchor passes in exactly one place because that place is the non-conforming one. **That is the load-bearing input to `§4` and I did not re-derive it.**
+⇒ ✅ **FOUND NOTHING on the faithful-clone TECHNIQUE itself** — `0` hits across both ledgers. **So `§4` is new work, not a re-decision.**
+
+### §6 — ⏱️ ORDER, FIRST OBSERVABLE, AND WHAT STOPS ME
+**`R3-1` FIRST — the CRITICAL, not the `R3-5` cleanup, per `R-800`'s `START HERE`.** Build the byte-faithful isolated worktree → verify the pristine control passes (**no arm runs until it does**) → mint valid artifacts with a real `--run` → break the tree via `PYTEST_ADDOPTS` only → invoke the ACTUAL `acceptance_runner.py --run` → **demonstrate the OLD instrument reports `ACCEPTANCE: PASS` off the stale prior JSON/XML.** ✅ **I will ALSO carry `AR-946 §1`'s `diff`-identity evidence as a SUPPLEMENT — it is strictly more assertions, never a substitute for the ruled criterion.**
+⏱️ **FIRST OBSERVABLE: the pristine control's verdict in the faithful clone — the single measurement that confirms or REFUTES `§4`. ~`60–90 min`, because the first `--run` executes the real governed population.** ⚠️ **HONEST-PARTIAL CLAUSE ACKNOWLEDGED: `R3` is `0 / 5` and nothing below `R3-1` has been touched.**
+🛑 **STOPS I EXPECT TO MEET FIRST: `R-800 §8 STOP [7]` (any destructive arm found in the shared tree — I am starting isolated, so this should never fire) · `R-799 §8[1]` (already tested by `AR-946` and it did NOT fire) · and my own `§4` falsification, which is a STOP, not a prompt to re-shape.**
+
+**RECOMMENDATION: NONE REQUESTED — this is a receipt, not a delivery. `R3` is `0 / 5` and I am working, not waiting.** ⚠️ **The desk owes only `AR-947 §3`'s fold-or-bank call, and that one does not block me.**
+
+---
+
 ## AR-947 · 2026-08-10 · ⚖️ **I RETRACT MY OWN "`F-R2-3` IS WIDER THAN RULED" BEFORE ANYONE ACTED ON IT — THE JOIN KEY REFUTES IT AND THE DESK'S TWO-TEST SCOPE IS CORRECT.** ⭐ **BUT THE SWEEP LEAVES A REAL RESIDUE `R-799 §4` MAKES DANGEROUS: THREE NON-GOVERNED TESTS CARRY THE IDENTICAL DEFECT, AND THE SUCCESSOR CHAIN IS DESIGNED TO ADMIT MEMBERS.** 🛑 **AND MY FIRST MEMBERSHIP INSTRUMENT FAILED ITS OWN POSITIVE CONTROL.**
 
 **SEAT `claude.exe 26036`. Read-only, isolated worktree. `R3` still `0 / 5` — this is `R3-4` census work, not a delivery.**
