@@ -32,6 +32,16 @@ class ReactionCluster:
     touches: int
     member_ids: Tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isfinite(self.lower) or not isfinite(self.upper):
+            raise ValueError("cluster prices must be finite")
+        if self.lower <= 0 or self.upper <= 0 or self.lower >= self.upper:
+            raise ValueError("cluster must have positive lower < upper")
+        if self.touches < 1:
+            raise ValueError("cluster touches must be >= 1")
+        if not self.member_ids:
+            raise ValueError("cluster member_ids required")
+
     @property
     def width(self) -> float:
         return self.upper - self.lower
@@ -42,6 +52,12 @@ class TargetLevel:
     cluster: ReactionCluster
     raw_price: float
     price: float
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.raw_price) or not isfinite(self.price):
+            raise ValueError("target prices must be finite")
+        if not self.cluster.lower <= self.raw_price <= self.cluster.upper:
+            raise ValueError("raw target must sit inside its cluster")
 
 
 def _round_long_target(price: float, tick: float) -> float:
@@ -138,6 +154,8 @@ def select_target_ladder(
     qualify when ``min_touches >= 2``.
     """
     rows = tuple(intervals)
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("side must be LONG or SHORT")
     if not isfinite(entry) or entry <= 0:
         raise ValueError("entry must be finite and positive")
     if entry_gap < 0 or zone_gap < 0 or tolerance < 0:
@@ -171,4 +189,68 @@ def select_target_ladder(
         )
         boundary = cluster.upper if side == "LONG" else cluster.lower
         required_gap = zone_gap
+    return tuple(out)
+
+
+def merge_distinct_target_ladders(
+    ladders: Iterable[Iterable[TargetLevel]],
+    *,
+    side: str,
+    entry: float,
+    entry_gap: float,
+    zone_gap: float,
+    fusion_gap: float,
+    max_targets: int = 3,
+) -> Tuple[TargetLevel, ...]:
+    """Merge platform/timeframe ladders by *zone identity*, not target price.
+
+    Different lanes can describe the same physical reaction shelf with different
+    bounds and different inside-zone target prices. After the first destination is
+    selected, another candidate must put its *entire cluster* beyond the previous
+    cluster plus ``max(zone_gap, fusion_gap)``. This prevents a 5m sub-zone and a
+    15m/1H view of the same shelf from becoming TP1 and TP2.
+    """
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("side must be LONG or SHORT")
+    if not isfinite(entry) or entry <= 0:
+        raise ValueError("entry must be finite and positive")
+    if min(entry_gap, zone_gap, fusion_gap) < 0:
+        raise ValueError("gaps must be non-negative")
+    if max_targets < 1:
+        raise ValueError("max_targets must be >= 1")
+
+    candidates = tuple(level for ladder in ladders for level in ladder)
+    out = []
+    boundary = entry
+    required_gap = entry_gap
+
+    for _ in range(max_targets):
+        best: Optional[TargetLevel] = None
+        best_distance = float("inf")
+        for candidate in candidates:
+            cluster = candidate.cluster
+            if side == "LONG":
+                if cluster.lower < boundary + required_gap:
+                    continue
+                distance = cluster.lower - boundary
+            else:
+                if cluster.upper > boundary - required_gap:
+                    continue
+                distance = boundary - cluster.upper
+
+            if distance < best_distance - 1e-12:
+                best = candidate
+                best_distance = distance
+            elif abs(distance - best_distance) <= 1e-12 and best is not None:
+                # Prefer stronger evidence when two lanes arrive at the same shelf edge.
+                if cluster.touches > best.cluster.touches:
+                    best = candidate
+
+        if best is None:
+            break
+
+        out.append(best)
+        boundary = best.cluster.upper if side == "LONG" else best.cluster.lower
+        required_gap = max(zone_gap, fusion_gap)
+
     return tuple(out)
