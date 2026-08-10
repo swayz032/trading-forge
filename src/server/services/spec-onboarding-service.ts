@@ -410,7 +410,23 @@ export type PerSymbolStatus =
   | "rejected_auditor"
   | "rejected_dsl_critic"
   | "registration_failed"
-  | "dry_run_planned";
+  | "dry_run_planned"
+  /**
+   * MP-1 `L-3`: the candidate's shipping label is absent, malformed, or disagrees with
+   * the identity it claims (obligations H/I/J/K). Distinct from every REJECTION above:
+   * those are judgements about the STRATEGY, this is a refusal to trust the LABEL.
+   */
+  | "refused_candidate_receipt"
+  /**
+   * MP-1 `L-3`, obligation `L`: one candidate identity is claiming DIFFERENT certified
+   * content than the row that already carries it — provenance drift.
+   *
+   * 🛑 Deliberately NOT `skipped_duplicate` and deliberately NOT an insert. Skipping
+   * would silently prefer the stored content; inserting would mint a second row for
+   * one candidate identity. Neither is an honest answer to a contradiction, so the
+   * only honest answer is to refuse and make a human look.
+   */
+  | "refused_candidate_identity_conflict";
 
 export interface PerSymbolOnboardResult {
   symbol: SymbolCode;
@@ -438,13 +454,110 @@ export interface OnboardSpecResult {
   perSymbol: PerSymbolOnboardResult[];
 }
 
-async function findExistingOnboardedRow(specHash: string, symbol: string) {
+/**
+ * MP-1 `L-3`. MIRRORS `src/engine/opening_range_candidate_receipt.py` — it does not
+ * re-derive it. `RECEIPT_SCHEMA` and `_RECEIPT_KEYS` are that module's, verbatim.
+ *
+ * 🛑 THE BOUNDARY THIS FILE MAY NOT CROSS: these are the receipt's OUTER, OPAQUE
+ * identity fields. `payload` is checked for PRESENCE and never for CONTENT — the
+ * definition, the taught variants and every duration inside it are Python's authority.
+ * Nothing here parses opening-range semantics, and nothing here may learn to.
+ */
+const EXECUTION_CANDIDATE_RECEIPT_SCHEMA = "OPENING_RANGE_EXECUTION_CANDIDATE_RECEIPT/1";
+const EXECUTION_CANDIDATE_RECEIPT_KEYS = [
+  "schema",
+  "parent_spec_hash",
+  "candidate_id",
+  "cache_identity",
+  "payload",
+] as const;
+
+/**
+ * Obligations H/I/J/K. Returns a REASON when the label may not be trusted, else null.
+ *
+ * Every branch refuses; none defaults. A receipt this function cannot fully verify is
+ * a receipt that does not travel — `NOTHING IS DEFAULTED OR IGNORED` is the Python
+ * module's own rule and it is the whole value of a shipping label.
+ */
+function refuseExecutionCandidate(
+  candidate: NonNullable<OnboardSpecOptions["executionCandidate"]>,
+  specHash: string,
+): string | null {
+  // Outer identity must itself be substantive — an empty id is not an identity.
+  if (typeof candidate.candidateId !== "string" || candidate.candidateId.length === 0) {
+    return "execution candidate id is absent or empty";
+  }
+  if (typeof candidate.cacheIdentity !== "string" || candidate.cacheIdentity.length === 0) {
+    return "execution candidate cache identity is absent or empty";
+  }
+
+  // H — the receipt itself.
+  const receipt = candidate.receipt;
+  if (receipt === null || receipt === undefined || typeof receipt !== "object" || Array.isArray(receipt)) {
+    return "execution candidate receipt is absent or is not an object";
+  }
+  const r = receipt as Record<string, unknown>;
+  const got = Object.keys(r);
+  const missing = EXECUTION_CANDIDATE_RECEIPT_KEYS.filter((k) => !got.includes(k));
+  const unknown = got.filter((k) => !(EXECUTION_CANDIDATE_RECEIPT_KEYS as readonly string[]).includes(k));
+  if (missing.length > 0 || unknown.length > 0) {
+    // Unknown keys refuse too, mirroring `_exact_keys`: a field this file does not
+    // understand is a field some other writer believed was load-bearing.
+    return `execution candidate receipt has the wrong field set (missing: [${missing.join(", ")}]; unknown: [${unknown.join(", ")}])`;
+  }
+  if (r["schema"] !== EXECUTION_CANDIDATE_RECEIPT_SCHEMA) {
+    return `unrecognised execution candidate receipt schema ${JSON.stringify(r["schema"])}; expected ${JSON.stringify(EXECUTION_CANDIDATE_RECEIPT_SCHEMA)}`;
+  }
+
+  // I — outer candidate id vs the receipt's.
+  if (r["candidate_id"] !== candidate.candidateId) {
+    return "execution candidate id disagrees with the receipt it travels with";
+  }
+  // J — outer cache identity vs the receipt's.
+  if (r["cache_identity"] !== candidate.cacheIdentity) {
+    return "execution candidate cache identity disagrees with the receipt it travels with";
+  }
+  // K — the receipt must name the parent spec it is actually a child of.
+  if (r["parent_spec_hash"] !== specHash) {
+    return "execution candidate receipt names a different parent spec than the artifact being onboarded";
+  }
+  return null;
+}
+
+/** Reads a persisted sibling identity field. Never infers one — see obligation `N`. */
+function readPersistedCandidateField(config: unknown, key: string): string | null {
+  if (config === null || typeof config !== "object" || Array.isArray(config)) return null;
+  const v = (config as Record<string, unknown>)[key];
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+/**
+ * MP-1 `L-3`, the repair. The idempotency question this answers changed shape:
+ *
+ *   LEGACY (no `candidateId`)  — `spec_hash + symbol`, EXACTLY as before. Obligation `M`.
+ *   CANDIDATE-AWARE           — `spec_hash + symbol + candidate_id`.
+ *
+ * 🛑 `cache_identity` is NOT a fourth identity dimension. `candidate_id` answers WHICH
+ * taught bot; `cache_identity` answers WHICH content of that bot. Keying on content
+ * would turn every restamp into a new row instead of a visible collision — the
+ * cardinality collapse running in reverse. The mismatch is handled by the CALLER as a
+ * refusal (obligation `L`), not silently here.
+ */
+async function findExistingOnboardedRow(specHash: string, symbol: string, candidateId?: string) {
   const tag = `spec_hash:${specHash}`;
   const rows = await db
-    .select({ id: strategies.id, tags: strategies.tags })
+    .select({ id: strategies.id, tags: strategies.tags, config: strategies.config })
     .from(strategies)
     .where(and(eq(strategies.source, "spec_onboarding"), eq(strategies.symbol, symbol)));
-  return rows.find((r) => Array.isArray(r.tags) && r.tags.includes(tag)) ?? null;
+  const forThisSpec = rows.filter((r) => Array.isArray(r.tags) && r.tags.includes(tag));
+  if (candidateId === undefined) {
+    // Legacy: first row for this (spec_hash, symbol) — identical to the pre-L-3
+    // `rows.find(...)` over the same predicate. Receiptless callers see no change.
+    return forThisSpec[0] ?? null;
+  }
+  return (
+    forThisSpec.find((r) => readPersistedCandidateField(r.config, "execution_candidate_id") === candidateId) ?? null
+  );
 }
 
 export async function onboardSpecArtifact(
@@ -493,6 +606,49 @@ export async function onboardSpecArtifact(
 
   const symbols: SymbolCode[] =
     opts.symbols ?? (inferSymbolSet(null, conceptName, "MES") as SymbolCode[]);
+
+  // ── MP-1 L-3: the candidate's shipping label, checked BEFORE any DB work ────
+  // Obligations H/I/J/K. Symbol-independent by nature — the receipt is a claim about
+  // the CANDIDATE and its parent spec, not about a market — so it is settled once and
+  // reported for every symbol rather than re-derived per iteration.
+  //
+  // 🛑 Refusing here rather than mid-loop is deliberate: a malformed label must not be
+  // able to insert row 1 and then refuse row 2, which would leave the caller a partial
+  // write to reason about.
+  const executionCandidate = opts.executionCandidate;
+  if (executionCandidate) {
+    const refusal = refuseExecutionCandidate(executionCandidate, specHash);
+    if (refusal) {
+      logger.warn({ video, specHash, refusal }, "spec_onboarding.execution_candidate_refused");
+      if (!opts.dryRun) {
+        await insertAuditRowSafe({
+          action: "onboard.execution_candidate_refused",
+          entityType: "strategy",
+          status: "warning",
+          input: { video, spec_hash: specHash, candidate_id: executionCandidate.candidateId },
+          result: { refusal },
+          decisionAuthority: "gate",
+        });
+      }
+      return {
+        video,
+        specHash,
+        ok: false,
+        reason: `execution_candidate_refused: ${refusal}`,
+        archetypeMatch,
+        conceptName,
+        confluenceFactors,
+        perSymbol: symbols.map((symbol) => ({
+          symbol,
+          status: "refused_candidate_receipt" as const,
+          strategyName: deriveStrategyName(conceptName, symbol, opts.timeframe ?? "unresolved"),
+          lifecycleState: "n/a",
+          needsArchetype: !archetypeMatch.matched && !conditionCompiled,
+          reason: refusal,
+        })),
+      };
+    }
+  }
 
   // ── Per-spec timeframe (Timeframe Integrity Fix, 2026-07-03) ──────────────
   // THE ONE INVIOLABLE PRINCIPLE: never silently default a timeframe to "5m".
@@ -559,10 +715,59 @@ export async function onboardSpecArtifact(
   for (const symbol of symbols) {
     const strategyName = deriveStrategyName(conceptName, symbol, timeframe);
 
-    // ── Idempotency: key on spec_hash + symbol ──────────────────────────────
+    // ── Idempotency (MP-1 L-3) ──────────────────────────────────────────────
+    //   LEGACY         : spec_hash + symbol                  (obligation M, unchanged)
+    //   CANDIDATE-AWARE: spec_hash + symbol + candidate_id    (obligations F, G)
+    //
+    // The whole money path turns on this: three taught candidates of ONE certified
+    // parent spec share `spec_hash`, `graph_canonical_hash` and `ledger_d`, so before
+    // L-3 they were duplicates of each other and candidates 2 and 3 vanished into
+    // `skipped_duplicate`. `ONE TAUGHT CANDIDATE = ONE DURABLE QUALIFICATION IDENTITY`.
     if (!opts.dryRun) {
-      const existing = await findExistingOnboardedRow(specHash, symbol);
+      const existing = await findExistingOnboardedRow(specHash, symbol, executionCandidate?.candidateId);
       if (existing) {
+        // ── Obligation L: same candidate, different content ⇒ REFUSE ────────
+        // The row already carrying this candidate identity was certified from
+        // DIFFERENT content. Skipping would silently prefer the stored version;
+        // inserting would give one candidate identity two rows. Both launder a
+        // contradiction, so neither is available.
+        if (executionCandidate) {
+          const storedCacheIdentity = readPersistedCandidateField(
+            existing.config,
+            "execution_candidate_cache_identity",
+          );
+          if (storedCacheIdentity !== executionCandidate.cacheIdentity) {
+            const reason =
+              `candidate ${executionCandidate.candidateId} already exists with cache identity ` +
+              `${JSON.stringify(storedCacheIdentity)}, but this onboarding claims ` +
+              `${JSON.stringify(executionCandidate.cacheIdentity)} — provenance drift, refusing`;
+            logger.warn({ video, specHash, symbol, reason }, "spec_onboarding.candidate_identity_conflict");
+            await insertAuditRowSafe({
+              action: "onboard.candidate_identity_conflict",
+              entityType: "strategy",
+              status: "warning",
+              input: {
+                video,
+                spec_hash: specHash,
+                symbol,
+                candidate_id: executionCandidate.candidateId,
+                claimed_cache_identity: executionCandidate.cacheIdentity,
+              },
+              result: { existing_strategy_id: existing.id, stored_cache_identity: storedCacheIdentity },
+              decisionAuthority: "gate",
+            });
+            perSymbol.push({
+              symbol,
+              status: "refused_candidate_identity_conflict",
+              strategyId: existing.id,
+              strategyName,
+              lifecycleState: "unknown",
+              needsArchetype: !archetypeMatch.matched && !conditionCompiled,
+              reason,
+            });
+            continue;
+          }
+        }
         perSymbol.push({
           symbol,
           status: "skipped_duplicate",
@@ -712,6 +917,22 @@ export async function onboardSpecArtifact(
             }
           : {}),
       },
+      // ── MP-1 L-3: the candidate's identity, persisted as SIBLINGS ──────────
+      // 🛑 Siblings of `compiled_spec`, never inside it: `compiled_spec.spec` is the
+      // CERTIFIED artifact and `spec_hash` is computed over it. Writing a per-candidate
+      // field in there would change what the certification covers and silently move the
+      // hash — the one thing this lane is forbidden to touch.
+      //
+      // Absent entirely for legacy callers (obligation N): a row with no candidate is a
+      // row with no candidate FIELDS. Nothing here mints one from a timeframe, an array
+      // index, a strategy name or a default duration.
+      ...(executionCandidate
+        ? {
+            execution_candidate_id: executionCandidate.candidateId,
+            execution_candidate_cache_identity: executionCandidate.cacheIdentity,
+            execution_candidate_receipt: executionCandidate.receipt,
+          }
+        : {}),
     };
 
     // ── Auditor ──────────────────────────────────────────────────────────────

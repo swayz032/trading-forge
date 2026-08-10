@@ -15,16 +15,47 @@ three taught candidates. `R-794 §5` then decided the receipt rides in
 This file pins what PLANNING those rows must mean. It is the Python-side contract;
 the eventual TypeScript repair must satisfy the same semantics.
 
-🛑 OBLIGATIONS `F` AND `G` ARE RED AGAINST CURRENT PRODUCTION AND THAT IS THE POINT
+🛑 WHAT OBLIGATIONS `F` AND `G` ACTUALLY ENCODE — CORRECTED (`R-798 §5`, lane `L-5`)
 -----------------------------------------------------------------------------------
-`[PRIOR ART — R-793 §4, measured and published by THIS DESK first, and I do not
-let a later reader re-date it]` `spec-onboarding-service.ts:537` keys idempotency
-on `(spec_hash, symbol)`, and `:416-422` dedupes by TAG-ARRAY membership plus two
-column filters. Both are APPLICATION-LEVEL — no unique index — so the eventual
-repair needs NO MIGRATION.
+⚠️ THIS BLOCK PREVIOUSLY READ *"OBLIGATIONS `F` AND `G` ARE RED AGAINST CURRENT
+PRODUCTION AND THAT IS THE POINT."* THAT WAS WRONG, and it is corrected here rather
+than annotated below, because `A CORRECTION APPENDED BELOW A FALSE LINE LEAVES THE
+FALSE LINE CITABLE`. Nothing about the assertions changed; only this description of
+them. (`F-MP1-CONTRACT-PROSE-1`, banked `R-797 §2`.)
 
-Under that key, candidate 2 and candidate 3 return `skipped_duplicate` SILENTLY.
-`F` and `G` are the tests that say so out loud.
+THE CORRECT STATEMENT, per `R-798 §5`:
+
+    `F`/`G` encode the candidate-aware behaviour REQUIRED of production. Their
+    original RED was caused by absence of the PYTHON PLANNER. The production
+    TypeScript collapse was proven SEPARATELY, at the actual onboarding boundary.
+
+Why the distinction is worth this many lines — it cost a whole round to learn
+(`F-MP1-SCOPE-1`, `R-797 §2`, a DESK error the worker re-derived at the line):
+
+    `A TEST THAT WAS RED BECAUSE THE CODE WAS ABSENT GOES GREEN THE MOMENT THE CODE
+     EXISTS — AND THAT PROVES THE CODE EXISTS, NOT THAT THE DEFECT IT WAS WRITTEN
+     ABOUT IS GONE. THE RED'S CAUSE IS PART OF WHAT ITS GREEN MEANS.`
+
+Every obligation here asserts `mod.would_collide(...)` against the Python planner.
+NONE of them ever reached `spec-onboarding-service.ts`, so none of them could have
+witnessed — or repaired — the TypeScript collapse.
+
+`[PRIOR ART — R-793 §4, measured and published by THIS DESK first, and I do not
+let a later reader re-date it]` `spec-onboarding-service.ts` keyed idempotency on
+`(spec_hash, symbol)` and deduped by TAG-ARRAY membership plus two column filters.
+Both are APPLICATION-LEVEL — no unique index — so the repair needed NO MIGRATION,
+and `AR-942 §2` later confirmed that at the schema layer in both trees.
+
+THE TYPESCRIPT SIDE'S OWN WITNESS AND REPAIR, for the reader who lands here first:
+  · `c51dcdb9` — the production-boundary RED, in its own commit: three taught
+    candidates driven through the REAL `onboardSpecArtifact` against a real
+    in-process Postgres produced ONE row and ZERO candidate identities.
+  · lane `L-3`/`L-4` — the repair and its own fourteen obligations `A`–`N`
+    (`R-798 §4`), living in
+    `src/server/services/__tests__/spec-onboarding-candidate-identity.test.ts`.
+🛑 THOSE FOURTEEN ARE A DIFFERENT LETTERING FROM THE TWELVE BELOW. Do not join the
+two sets by letter — this file's `F`/`G` and that file's `F`/`G` are different
+obligations that happen to share a symbol.
 
     `THE COMPILER DID NOT CHOOSE, SO PERSISTENCE DOES NOT GET TO CHOOSE EITHER.`
 
