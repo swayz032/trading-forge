@@ -4,6 +4,35 @@
 
 ---
 
+## AR-947 · 2026-08-10 · ⚖️ **I RETRACT MY OWN "`F-R2-3` IS WIDER THAN RULED" BEFORE ANYONE ACTED ON IT — THE JOIN KEY REFUTES IT AND THE DESK'S TWO-TEST SCOPE IS CORRECT.** ⭐ **BUT THE SWEEP LEAVES A REAL RESIDUE `R-799 §4` MAKES DANGEROUS: THREE NON-GOVERNED TESTS CARRY THE IDENTICAL DEFECT, AND THE SUCCESSOR CHAIN IS DESIGNED TO ADMIT MEMBERS.** 🛑 **AND MY FIRST MEMBERSHIP INSTRUMENT FAILED ITS OWN POSITIVE CONTROL.**
+
+**SEAT `claude.exe 26036`. Read-only, isolated worktree. `R3` still `0 / 5` — this is `R3-4` census work, not a delivery.**
+
+### §1 — ⚖️ THE RETRACTION, AND IT IS MINE
+🛑 **I grepped for other-checkout absolute paths, found FOUR files where `R-799 §3` named TWO, and said `F-R2-3` was "wider than ruled". I had not checked MEMBERSHIP.** ✅ **`[MEASURED HERE, `src/engine/tests/canonical_regression_population.txt`, with BOTH controls green]`:**
+```
+POSITIVE CONTROL  test_mp1_candidate_persistence ... IN MANIFEST      (instrument reaches data)
+NEGATIVE CONTROL  test_this_does_not_exist_xyz ..... absent           (it can say NO)
+
+test_fix4_adaptive_symbol_dst.py ... GOVERNED MEMBER   (manifest :63)  <- the F-R2-3 pair
+test_fix3_cpcv_default.py .......... NOT a member
+test_quantum_mc.py ................. NOT a member
+test_quantum_rl_agent.py ........... NOT a member
+```
+⇒ **THE DESK'S SCOPE IS RIGHT. Only `test_fix4_adaptive_symbol_dst.py` is a gate input, so only it can manufacture a false green in `ACCEPT-5`. `R3-3` does NOT grow.** ★★★★★ **`A GREP OVER THE REPOSITORY NOMINATES; THE MANIFEST CLASSIFIES. I PUBLISHED A NOMINATION AS A FINDING, WHICH IS THE ONE THING `A MECHANICAL LAYER NOMINATES, JUDGMENT CLASSIFIES` EXISTS TO FORBID.`** ⚖️ **Retracted within one measurement and before any repair was aimed at it — but it should not have been said first.**
+
+### §2 — 🛑 MY MEMBERSHIP INSTRUMENT FAILED ITS OWN CONTROL, AND THAT IS WHY THIS IS TRUSTWORTHY
+🛑 **My first attempt located the manifest by `find docs -name "*acceptance*manifest*"` and found NOTHING — then reported all four files as "not found in manifest".** ⚠️ **Had I stopped there I would have published the EXACT OPPOSITE conclusion — that even the ruled pair is not governed — with total confidence.** ✅ **The POSITIVE CONTROL caught it: `test_mp1_candidate_persistence` also read ABSENT, which is impossible.** **Real path: `src/engine/tests/canonical_regression_population.txt`, declared in the runner's own `MANIFEST =` line.** ★★★★★ **`AN EMPTY MEMBERSHIP RESULT AND A MISSING MEMBERSHIP FILE PRODUCE THE SAME OUTPUT — ONLY A CONTROL THAT MUST BE PRESENT CAN TELL THEM APART.`** (`[absence-claim]`, re-convicted; `[i-measured]` — I queried the neighbouring object again.)
+
+### §3 — ⭐ THE RESIDUE, AND WHY `R-799 §4` PROMOTES IT FROM TRIVIA TO A TRAP
+✅ **`[MEASURED HERE]` three NON-governed tests hardcode the OTHER checkout — `test_fix3_cpcv_default.py:30` (`walk_forward.py`), `test_quantum_rl_agent.py:598,618` (`quantum_rl_agent.py`), `test_quantum_mc.py:425` (`cwd=` the other tree root).** **Today they are harmless: not gate inputs, so they cannot produce a false green.**
+🛑 **BUT `R-799 §4` ADOPTED A SUCCESSOR POPULATION CHAIN WHOSE WHOLE PURPOSE IS TO ADMIT NEW MEMBERS, and `§4` also accepted that *"EVERY COMMITTED CANONICAL RED CONTRACT BECOMES A GATE INPUT."*** ⇒ ★★★★★ **`A LATENT FALSE-GREEN OUTSIDE THE POPULATION IS NOT A DEFECT TODAY AND IS A DEFECT THE DAY SOMEBODY ADMITS IT — AND THE MECHANISM FOR ADMITTING IT WAS RATIFIED THIS ROUND.`** ⇒ **BANKED `ACCEPT5-LATENT-OTHER-CHECKOUT-3`: three files, six sites, named above. Cheapest disposition is to fix them WITH `R3-3` while the technique is loaded — same `Path(__file__).resolve().parents[...]` repair, no node-ID change, no new lane.** 🛑 **I did NOT touch them: `R3` may not become six items and the desk owns that call.**
+✅ **`R3-4`'s other named inputs, located, not yet dispositioned:** `SAMPLES_DIR` = `test_spec_family_bindings.py:41`, an absolute path into `…/.claude/worktrees/extraction-100/tmp/generalization` — **untracked, another worktree, exactly `R-799 §5`'s class.** ⚠️ **The git-history dependency `R-799 §5` cites at `test_spec_family_bindings.py:1908` did NOT match my `git log|subprocess|check_output` grep — that absence is UNCONTROLLED and I am not claiming it.**
+
+**RECOMMENDATION: no ruling needed for `§1`/`§2` — they are corrections. `§3` needs one decision: fold the three latent files into `R3-3`, or bank them for after `R3`. `R3-1` remains blocked on `AR-946 §2` only.**
+
+---
+
 ## AR-946 · 2026-08-10 · 🛑🛑🛑 **`F-R2-1` REPRODUCED AGAINST THE OLD INSTRUMENT, IN AN ISOLATED WORKTREE — AND IT IS WORSE THAN "IT CAN CERTIFY A RUN THAT NEVER HAPPENED": THE OUTPUT OF A REAL RUN AND OF NO RUN AT ALL ARE `diff`-IDENTICAL.** ✅ **`STOP R-799 §8[1]` DOES NOT FIRE.** 🛑 **BUT I CANNOT DELIVER THE RED IN THE LETTER `R-799 §7` ASKS FOR, AND THE REASON IS A CONFLICT BETWEEN TWO BINDING INSTRUCTIONS — I AM REPORTING IT, NOT PICKING ONE SILENTLY.** ⚖️ **`R3` `0 / 5` — RED MEASURED, NOT YET COMMITTED AS A TEST.**
 
 **SEAT `claude.exe 26036`. CAMPAIGN TREE `HEAD f7ed5682`, CLEAN. ISOLATED WORKTREE `C:\Users\tonio\Projects\wt-r3-accept5-20260810` @ `f7ed5682` detached — `[MEASURED HERE]` `git rev-parse --show-toplevel` returns the worktree itself, so `[session-cwd-decoy-git]` did not fire. ALL destructive work below ran THERE, never in the campaign tree (`R-800 §8 STOP [7]`).**
