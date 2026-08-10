@@ -4,6 +4,147 @@
 
 ---
 
+## AR-919 · 2026-08-09 · 🛑🛑 **`ATTEMPT 1` — ALL ELEVEN SURFACES ARE BUILT AND THE EXECUTION CONTRACT IS MET, BUT I AM **NOT COMMITTING**: `R-784 §2` STOP CONDITION `12` FIRED, AND IT FIRED ON A REAL ARCHITECTURAL GAP RATHER THAN A FIXTURE.** ⚡ **THE FINDING, AND IT IS THE `TWELFTH SURFACE` `R-780 §8` PRE-REGISTERED: `from_compiled_spec()` — THE ONLY NON-TEST PRODUCTION FACTORY — CANNOT CARRY A CANDIDATE, AND NOTHING IN PRODUCTION SELECTS ONE. THE ACTIVATION IS UNREACHABLE ON EVERY REAL PATH, AND 15 SAFETY-SUITE TESTS NOW HARD-REFUSE BECAUSE OF IT.** ✅ **`ACCEPT-1` 54/54 · `ACCEPT-3` 136/136 · `tsc` EXIT `0` · TS PARITY 15/15 · S6 `12 passed / 2 failed` (was `8 / 6`) · `GONE = EXACTLY` THE TWO ORDERED `6B` REDS.** ⚖️ **I READ `ATTEMPT 1` AS SPENT.**
+
+**SEAT `claude.exe 33036`. HEAD `a26a4372` = `origin` `[MEASURED]`. THE ELEVEN-SURFACE DIFF IS UNCOMMITTED AND SNAPSHOTTED OUTSIDE THE REPO (`§7`).**
+
+### §1 — ✅ ALL ELEVEN BUILT, AT FILE:LINE, AS `AR-917 §8` LOCATED THEM
+```
+[MEASURED HERE — git diff --name-only, 5 files + 1 restored, 484 patch lines]
+ 1 typed candidate carrier   spec_condition_compiler.py:508  __init__(..., opening_range_candidate:
+                             OpeningRangeExecutionCandidate | None = None)   + :541 assignment
+ 2 real _h_opening_range     spec_condition_compiler.py:~880  signature EXACTLY the twelve siblings'
+                             (self, b: ConditionBinding, ctx: dict) -> np.ndarray   — NOT invented
+ 3 classification            HANDLER_PARAMETER_CLASSIFICATION["_h_opening_range"]=REFUSES_ALL_PARAMETERS
+ 4 FAMILY_META declaration   spec_family_bindings.py  primitive="opening_range_adapter.
+                             compute_opening_range_state"; unsupported + unbound_reason RETIRED
+ 5 gates=True                NOTHING ADDED (default). NOT set False.
+ 6 PRIMITIVE_RESOLVERS       family_meta_enforcement.py -> "src.engine.opening_range_adapter:
+                             compute_opening_range_state"
+ 7 ENFORCED_DISPATCH         keyed on the DECLARED PRIMITIVE -> "_h_opening_range"; landed in the
+                             SAME diff as surface 3, so the parameter guard does not bite
+ 8 TS mirror                 src/server/lib/spec-family-bindings.ts, same entry
+ 9 the three fixtures        NOT EDITED. They were already written and RED; production turned
+                             them green. I authored no assertion in them.
+10 shared construction       test_family_meta_enforcement.py::_strategy_for — ONE helper, ONE
+   helper                    conditional, explicit legal candidate, source_condition_id = "c1"
+11 flag-OFF ladder branch    an `elif b.type == "OPENING_RANGE_DEFINITION"` ABOVE :1928's `else`,
+                             routing to THE SAME _h_opening_range. THE `else` ARM IS UNTOUCHED.
+```
+✅ **`ELSE-SINK-1` NOT CLOSED AND NOT TOUCHED** — member `11` is strictly an added `elif`; the sink's own line is byte-identical.
+⭐ **ONE HANDLER, TWO EDGES, AS ORDERED.** No `_h_opening_range_legacy`, no second calculator, no duplicated `_window_bounds`, no default candidate. **The lock boundary is read from the adapter's OWN `_window_bounds`** rather than recomputed — re-deriving `start + duration` locally is the duplicated arithmetic stop condition `6` forbids, and two copies would be free to drift.
+⭐ **EXACTLY ONE ADAPTER CALL PER DISPATCH**, through the MODULE ATTRIBUTE (`opening_range_adapter.compute_opening_range_state`), never a module-level `from … import` — a name bound at import time is unreachable by the spy, which is `AR-907 §6`'s "true and unverifiable at once".
+
+### §2 — ✅ THE EXECUTION CONTRACT IS ACTUALLY MET. THIS IS THE PART THAT WORKS.
+```
+[MEASURED HERE, worktree root, unpiped]
+S6 suite : 12 passed, 2 failed     (BASELINE 8 passed, 6 failed)
+  GREEN NOW, and these are the claims the whole lane exists to make:
+    test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate  -> (5,15,30)
+    test_control_an_execution_instance_computes_ITS_OWN_candidate_not_another
+    test_an_execution_instance_with_no_candidate_refuses_and_never_reaches_the_adapter
+    test_a_duration_smuggled_into_binding_parameters_refuses_before_the_adapter
+    test_flag_off_the_candidate_aware_instance_gates_on_the_real_window   <- pre-lock False,
+                                                                            post-lock True
+ACCEPT-1 : 54 passed, 0 failed     (BASELINE 2 failed / 50 passed)
+ACCEPT-3 : 136 passed, 0 failed
+tsc --noEmit          -> exit 0, no diagnostics   [RE-RUN UNPIPED, see §6]
+TS parity fixture     -> 15 passed, exit 0
+```
+⭐ **THE SPY READS `(5, 15, 30)` AND THE TEST NEVER CALLS THE ADAPTER ITSELF** — that list can only be filled by production's `_dispatch_enforced`. **And the discrimination control passes too:** handed the MIDDLE candidate alone, production computes `15`, so the tuple is not an accident of ordering.
+
+### §3 — 🛑🛑 THE FINDING. STOP CONDITION `12`, AND IT IS NOT A FIXTURE PROBLEM.
+```
+[MEASURED HERE — 104-member canonical population, membership diff vs the IMMUTABLE baseline]
+baseline n_failed = 33      now = 49
+GONE = 2  -> EXACTLY the two ordered 6B reds, and nothing else:
+   test_no_production_binding_routes_to_the_opening_range_adapter_yet
+   test_no_typed_opening_range_output_contract_exists_in_production
+NEW  = 18 -> 2 S6 (§4)  +  1 test_spec_producer  +  15 test_trigger_safety_refusal
+```
+**THE 15 ARE NOT COUNT ASSERTIONS. THEY ARE ONE CAUSE, AND I LOCATED IT:**
+```
+[MEASURED HERE — the ONLY non-test constructors in the repo]
+grep -rn "SpecConditionStrategy(" src/ scripts/ --include=*.py | grep -v /tests/
+   spec_condition_compiler.py:482   the class
+   spec_condition_compiler.py:2348  from_compiled_spec(...)  <- the ONLY production factory
+from_compiled_spec's signature: compiled_spec · symbol · timeframe · trace · strategy_name ·
+   restore_condition_ids        ⇒ NO CANDIDATE PARAMETER, AND IT PASSES NONE.
+the candidates live on RecordCompileResult (spec_producer.py:1031) — AN OBJECT THIS FACTORY
+   NEVER SEES.
+```
+🛑🛑 **⇒ THE CARRIER EXISTS AND NOTHING FILLS IT ON A REAL PATH.** The only instances that carry a candidate are the ones the S6 suite builds BY HAND. **Every existing production-shaped caller now reaches `_h_opening_range` with `candidate is None` and takes the hard refusal** — which is the refusal `R-780`/`R-779` ORDERED and which `test_an_execution_instance_with_no_candidate_refuses…` proves correct. **The refusal is right. The absent wiring is the defect.**
+⇒ ★★★★★ **`A CARRIER WITH NO FILLER IS NOT A HALF-BUILT FEATURE — IT IS A LOADED REFUSAL ON EVERY EXISTING CALLER, AND THE MORE CORRECT THE REFUSAL IS, THE MORE THINGS IT STOPS.`**
+⚖️ **`test_trigger_safety_refusal.py` IS A SAFETY SUITE** (the golden strategy must be REFUSED and publish no performance surface). It still refuses — but now via a DIFFERENT exception, thrown EARLIER, for a different reason. **Rewriting 15 safety assertions to accommodate my own change is precisely what I must not do as the doer**, and stop condition `9` names it.
+🛑 **THE 16th (`test_spec_producer::test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definitions`) IS A DELIBERATE MIGRATION GUARD** asserting `OPENING_RANGE_DEFINITION must be DECLARED unsupported`. **The activation contradicts it BY DESIGN.** Whether that guard has now expired is a RULING, not a worker edit — the last time a seat treated a guard as expired from memory it was wrong.
+⚡ **THIS IS THE `TWELFTH SURFACE` OF THE POPULATION-ENROLMENT SHAPE, AND `R-780 §8` PRE-REGISTERED THE CONSEQUENCE BEFORE THE DATA: *"a fourth repetition is evidence the activation cannot be landed atomically, and the DESK RE-SCOPES rather than the worker retrying."* I am not retrying. I am reporting.**
+
+### §4 — 🛑 THE TWO S6 REDS ARE ARCHITECTURALLY UNSATISFIABLE ALONGSIDE THE ACTIVATION — I DID NOT TOUCH THEM
+```
+[MEASURED HERE, each run individually]
+test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder
+   E  "today's shield moved: … no longer executed=False/bindable=False
+       (executed=True, bindable=True)"
+   ⇒ IT ASSERTS THE PRE-ACTIVATION SHIELD. The activation's SUCCESS CONDITION is that both
+     flip True — and the transitioned fixture 1 asserts `bindable is True` on the same object.
+     THE TWO CANNOT BOTH PASS. Mutually exclusive by construction, not by defect.
+test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true
+   E  FamilyMetaEnforcementError: … carries NO opening-range execution candidate
+   ⇒ It builds a declaration-only instance with NO candidate and expects a per-bar ARRAY.
+     Post-activation the only way to produce one is to DEFAULT a candidate — forbidden by
+     R-736/R-743 and by stop condition 3.
+```
+⚖️ **BOTH ARE `STEP 1` DIAGNOSTICS WHOSE MEASUREMENT IS COMPLETE:** the decider went RED pre-activation, which is what AUTHORISED member `11`; the control existed only to make that red attributable. **A decider that has decided is not a durable guard.** 🛑 **BUT THAT IS THE DOER'S READING OF INSTRUMENTS THE DOER BENEFITS FROM RETIRING, AND STOP CONDITION `9` EXISTS FOR EXACTLY THAT CONFLICT OF INTEREST. I CHANGED NEITHER ASSERTION AND I ASK THE DESK TO RULE.** ★★★★ **`THE SEAT THAT WOULD GAIN A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS EXPIRED.`**
+⚠️ **CONSEQUENCE FOR `ACCEPT-5`, STATED BECAUSE `R-783 §4` MADE IT LOAD-BEARING:** `NEW = 0` is now the same gate as "every S6 test green", and **two S6 tests cannot go green while the activation stands.** ⇒ **`ACCEPT-5` IS UNREACHABLE AS CURRENTLY WRITTEN, AND I DID NOT RUN IT** (`R-783 §4` gates it on full S6 green).
+
+### §5 — ⚠️ AN UNOWNED TRACKED MODIFICATION APPEARED, AND IT WAS NOT ANOTHER SEAT — IT WAS THE ACCEPTANCE INSTRUMENT ITSELF
+🛑 **`docs/wave25-exit-engine-ab-report.md` went ` M` mid-session and I did not author it.** `R-783 §5` says STOP, snapshot outside the repo, report before invoking the hook. **I did, and then I identified it rather than leaving it as a scare.**
+```
+[MEASURED HERE]
+diff = ONE line:  -Run date: 2026-05-24 13:29 UTC   +Run date: 2026-08-10 03:36 UTC
+that instant == MY canonical-population run.
+writer  : scripts/wave25_exit_engine_ab_report.py
+imported by: src/engine/tests/test_exit_engine_ab.py
+which is: MEMBER 59 OF canonical_regression_population.txt
+```
+🛑 ⇒ **RUNNING THE CAMPAIGN'S OWN 104-MEMBER ACCEPTANCE POPULATION MUTATES A TRACKED FILE WITH A WALL-CLOCK STAMP.** ★★★★★ **`AN ACCEPTANCE RUN THAT WRITES TO THE TREE IS NOT A MEASUREMENT — IT IS AN EDIT THAT REPORTS A NUMBER, AND ON A SHARED TREE THE NEXT SEAT READS ITS OUTPUT AS SOMEONE ELSE'S UNCOMMITTED WORK.`** ⚖️ **BANKED AS A FINDING, NO LANE OPENED** (`R-648` closes governance lanes; I am reporting, which never lapses).
+✅ **RESTORED BY A PLAIN TEXT EDIT, NOT A GIT COMMAND** — `git checkout` is forbidden here and `[ps-counting-encoding]` records that it EATS AN UNCOMMITTED FIX. `[MEASURED]` `git diff` and `git diff --numstat` on that path are **BOTH EMPTY** ⇒ content is identical to `HEAD`. ⚠️ **`git status` still prints ` M` from its stat cache; I am NOT running an index operation to tidy an appearance, because the protocol forbids exactly that and the content measurement is the one that matters.**
+
+### §6 — ⚠️ ONE CORRECTION AGAINST MYSELF, CAUGHT BEFORE IT ENTERED A CLAIM
+🛑 **I ran `npx tsc --noEmit 2>&1 | tail -15` and read `$?` as the compiler's exit code. IT WAS `tail`'s.** `[ps-counting-encoding]` warns never to pipe a result you rely on, and `AR-917 §6` was convicted of the same shape hours earlier. ✅ **Re-run unpiped to a file: `TSC_REAL_EXIT=0`, zero diagnostics.** **The answer did not change; the evidence did.** ★★★★ **`A PIPED EXIT CODE IS THE LAST STAGE'S, AND THE LAST STAGE ALMOST ALWAYS SUCCEEDS.`**
+⚠️ **AND ONE IN MY OWN CODE, FIXED BEFORE IT RAN:** my first refusal message interpolated `getattr(candidate, 'definition', …)` on the branch where `candidate is None`, which would have printed *"the source taught 0 or more alternative windows"* — **a confident sentence with no information in it.** Rewritten to say what is actually known.
+⚠️ **AND ONE IN MY START-RECEIPT (`AR-918 §1`), WHICH I CAUGHT BEFORE IT COMMITTED:** I wrote a positive control I had not yet run. **I ran it before staging** — `d83eebff~1..d83eebff -- src/` returns `spec_producer.py`, a NON-test file, through the identical filter — and I recorded that it returns TWO files rather than rounding it to the flattering shape.
+
+### §7 — 🛑 DISPOSITION: NOTHING COMMITTED, NOTHING LOST, NOTHING WIDENED
+🛑 **THE ELEVEN-SURFACE DIFF IS UNCOMMITTED.** Stop condition `12` says STOP **BEFORE COMMITTING**, and `R-780 §6` forbids an intermediate production state. **I did not commit, did not push, used no `--no-verify`, edited no hook, and did not widen the diff to chase the 16.**
+✅ **SNAPSHOTTED OUTSIDE THE REPO AND OUTSIDE THE CACHE, `SHA-256` RECORDED:**
+```
+C:\Users\tonio\s6-attempt1-snapshot-2026-08-09\
+  s6-attempt1-eleven-surfaces.patch   484 lines
+  sha256 09129917f27034f159c2528dfbd6f26ca3b32a3d065e746fb09142e132e638d9
+  + status.txt · SYSTEM-INVENTORY.committed.md · README.txt naming what it is and that it is
+    NOT applied anywhere
+```
+⚖️ **`R-784 §5` NAMED `R-747 §6`'s non-production-branch checkpoint as PRIOR ART AND EXPLICITLY DID NOT ADOPT IT. I AM NOT ADOPTING IT EITHER** — an outside-the-repo snapshot preserves the work without asserting that a checkpoint satisfies atomicity. **`PRESERVING AN OPTION IS NOT EXERCISING IT.`**
+⚖️ **ATTEMPT: I BUILT PRODUCTION CODE, SO I READ `ATTEMPT 1` AS SPENT — `1 / 2`. That is my honest reading and the desk's call.**
+
+### §8 — 🛑 WHAT I DID **NOT** MEASURE
+- 🛑 **`R-784 §4`'s INVENTORY WITNESS — NOT MEASURED, AND I WILL NOT GUESS IT.** `[MEASURED]` `system_inventory.py --check` now exits `1` (STALE), which proves the tree changed. **But I did NOT regenerate**, so I cannot say whether the map would now show `compute_opening_range_state` gaining a non-test reference. ⚠️ **AND THERE IS A SPECIFIC REASON TO DOUBT IT: my call is a MODULE-ATTRIBUTE call (`opening_range_adapter.compute_opening_range_state(...)`), not a direct import** — whether the static scanner attributes that is exactly `R-784 §4`'s *"or confessing it cannot see"* branch. **Unresolved, named, not implied closed.**
+- **`ACCEPT-5` — NOT RUN** (`R-783 §4` gates it on full S6 green, which `§4` shows is unreachable as written).
+- **`ACCEPT-0`** — no push attempted, so the push gate was not exercised this seat.
+- **Whether the 15 trigger-safety tests would pass with a candidate wired in.** I did not build the twelfth surface to find out; that is the desk's re-scope, not my retry.
+- **Anything about DST, half-day sessions, gapped frames or non-1m timeframes** — `R-780 §7`'s carried limit, still carried, still not an acceptance term.
+- **PRIOR ART STATED, TERMS NAMED:** `--check` FRESH at seating; searched `opening_range`, `OPENING_RANGE`, `_h_opening_range`, `ENFORCED_DISPATCH`, `PRIMITIVE_RESOLVERS`, `compute_opening_range_state`, `from_compiled_spec`, `timeframe→minutes` across both ledgers and `src/`. **No reusable timeframe parser exists** (searched before writing `_bar_interval_minutes`, which refuses rather than guessing). **`R-736`/`R-743` proceeded under, NOT re-opened.**
+
+### §9 — ⚡ WHAT I AM ASKING FOR, IN ONE LINE EACH
+1. **RULE ON THE TWELFTH SURFACE:** does `from_compiled_spec()` gain a candidate parameter, and **what selects which of the three candidates a production instance gets** — the "three bots" question at the FACTORY, which `R-736` settled in principle and which has no production plumbing.
+2. **RULE ON THE TWO S6 STEP-1 DIAGNOSTICS** (`§4`): retired by the activation, or is production incomplete?
+3. **RULE ON THE MIGRATION GUARD** `test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definitions` — expired, or binding?
+4. **`ACCEPT-5` NEEDS RE-SPECIFYING** if any S6 test is retired, because `NEW = 0` currently means "all 14 S6 green".
+5. **I AM STILL SEATED, EAR ARMED, NOT EXHAUSTED.** Say the word and I build the twelfth surface, or revert the snapshot, or hold.
+
+---
+
 ## AR-918 · 2026-08-09 · 🔵 **START-RECEIPT — FRESH WORKER SEATED `claude.exe 33036`, INHERITING `R-783 §6` UNDER `R-784 §3`. ALL SIX ORDERED MEASUREMENTS TAKEN; NONE CONTRADICTORY.** ✅ **EAR ARMED, DELIVERING, AND RED-PROOFED ON A THROWAWAY FIRST — AND ITS BANNER IS LINE-ANCHORED, WHICH FIXES THE `AR-915 §2` STATUS-LINE DEFECT RATHER THAN INHERITING IT.** ⚡ **`ATTEMPT 1` ON THE ELEVEN-SURFACE ATOMIC ACTIVATION STARTS NOW. NO GRADED METRIC IS MIXED INTO MY ACCEPTANCE LIST — I CHECKED, `§5`.**
 
 **SEAT `claude.exe 33036`. HEAD `089bd5c1` = `origin` `[MEASURED, after an explicit fetch]`. THIS AR CHANGES NO CODE.**
