@@ -988,3 +988,218 @@ def test_a_duration_smuggled_into_binding_parameters_refuses_before_the_adapter(
         f"look rather than what to change (R-704 §4A).\n  raised : {excinfo.value!r}"
     )
     assert calls == [], "a smuggled duration reached the adapter before being refused"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# STEP 1 (R-780 §6) — THE FLAG-OFF SILENT-PASS DECIDER
+#
+# R-780 §4 makes this red the DECIDER for member 11: does an ACTIVATED
+# opening-range condition, with `TF_FAMILY_META_ENFORCED` at its DEFAULT OFF,
+# fall through the legacy `b.type` ladder to `else: np.ones` = CONSTANT TRUE?
+#
+# 🛑 THE SHIELD THAT HIDES THE QUESTION IS THE DECLARATION ITSELF.
+# [MEASURED] `spec_family_bindings.py:2633  if meta.unsupported:` returns
+# `bindable=False, executed=False`, and the golden binding reads exactly that
+# today. So `spec_condition_compiler.py:1830 if not b.executed: continue` skips
+# the condition before the ladder is ever consulted. The family is safe today
+# because it never executes -- `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN`
+# (R-780 §4) -- and the activation is the INSERT.
+#
+# ⇒ To ask the question WITHOUT a production edit, arm 1 applies MEMBER 4 ALONE
+#   (the declaration) as a monkeypatch and lets PRODUCTION's own binder and
+#   PRODUCTION's own router answer. Nothing else is faked: the plan is compiled
+#   by `compile_binding_plan`, the array is produced by `compute()`, and the
+#   positive witness below asserts the shields dropped through the REAL binder
+#   rather than trusting that the patch did what I intended.
+#
+# ⭐ AND THIS IS WHY ARM 1 CAN DECIDE TODAY WHERE `RED 2` CANNOT: the flag-OFF
+#   ladder routes on `b.type` and never reaches `_h_opening_range`, so it needs
+#   NO candidate carrier. Every candidate-aware arm above dies at
+#   `_require_activated()`; this one runs all the way to the array.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# The primitive string member 4 will declare. Named here so the fixture is
+# explicit, but the flag-OFF ladder routes on `b.type` and never reads it --
+# which is itself part of the finding.
+DECLARED_PRIMITIVE = "opening_range_adapter.compute_opening_range_state"
+
+
+def _polars_session_bars(bars: list[OpeningRangeBar]):
+    """The SAME taught session bars, in the frame `compute()` consumes.
+
+    Derived from `_taught_session_bars` rather than re-invented, so the window
+    the adapter would lock on and the bars the ladder sees are one population.
+    `OpeningRangeBar` carries only timestamp/high/low ([MEASURED]
+    opening_range_adapter.py:106-108), so open/close are placed INSIDE that
+    range and never outside it.
+    """
+    import polars as pl
+
+    return pl.DataFrame(
+        {
+            "ts_event": [b.timestamp for b in bars],
+            "open": [(b.high + b.low) / 2 for b in bars],
+            "high": [b.high for b in bars],
+            "low": [b.low for b in bars],
+            "close": [(b.high + b.low) / 2 for b in bars],
+            "volume": [1000 for _ in bars],
+        }
+    )
+
+
+def _declaration_only_activation(monkeypatch) -> None:
+    """MEMBER 4 AND NOTHING ELSE: retire `unsupported`, declare the primitive.
+
+    🛑 This is TEST-ONLY and edits no production file. It is deliberately the
+    SMALLEST possible piece of the activation -- no carrier, no handler, no
+    resolver, no ENFORCED_DISPATCH entry -- because the claim under test is
+    precisely that the DECLARATION alone is enough to expose the hole.
+    """
+    meta = FAMILY_META[FAMILY]
+    monkeypatch.setitem(
+        FAMILY_META,
+        FAMILY,
+        dataclasses.replace(
+            meta, unsupported=False, primitive=DECLARED_PRIMITIVE, unbound_reason=None
+        ),
+    )
+
+
+# ── CONTROL — today the condition never reaches the ladder at all ────────────
+def test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder(monkeypatch):
+    """Discriminates the THIRD possibility, which is neither 'reachable' nor
+    'gated elsewhere': the key could simply never be written, making the output
+    ABSENT rather than constant-True. It must be ABSENT here, and PRESENT in
+    arm 1 -- otherwise arm 1's red is a pre-existing condition rather than the
+    activation's own blast radius."""
+    monkeypatch.delenv(FLAG_ENV, raising=False)
+
+    _, artifact, plan = _produce(GOLDEN_STUB)
+    binding = _opening_range_binding(plan)
+    assert binding is not None and not binding.executed and not binding.bindable, (
+        "today's shield moved: the golden opening-range binding is no longer "
+        f"executed=False/bindable=False (executed={binding.executed}, "
+        f"bindable={binding.bindable}) -- re-derive R-780 §4 before trusting arm 1"
+    )
+
+    strategy = SpecConditionStrategy(artifact, binding_plan=plan, timeframe=BAR_TIMEFRAME)
+    strategy.compute(_polars_session_bars(_taught_session_bars(_lower_golden().definition)))
+
+    assert binding.condition_id not in strategy.last_per_condition_bool, (
+        "the unactivated condition produced a per-bar array; then the ladder is "
+        "already reachable and arm 1 is not measuring the activation"
+    )
+
+
+# ── ARM 1 — THE DECIDER. RED means member 11 is REAL. ────────────────────────
+def test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true(
+    monkeypatch,
+):
+    """RED = the hole is REAL and REACHABLE ⇒ build member 11 (R-780 §4).
+
+    A constant-True array is the engine asserting, on EVERY bar, that a taught
+    entry condition is satisfied -- with no adapter call, no window, and no
+    range. That is architecture invariant 2 inverted: source-owned entry logic
+    silently rewritten into `always`.
+    """
+    monkeypatch.delenv(FLAG_ENV, raising=False)
+    _declaration_only_activation(monkeypatch)
+
+    _, artifact, plan = _produce(GOLDEN_STUB)
+    binding = _opening_range_binding(plan)
+    assert binding is not None, f"no {FAMILY} binding in the compiled plan"
+
+    # POSITIVE WITNESS 1 — the shields actually dropped, through the REAL binder.
+    # Without this, a passing assertion below could mean 'the ladder was never
+    # reached', which is the opposite conclusion.
+    assert binding.executed and binding.bindable, (
+        "RED-PROOF BROKEN, NOT A FINDING — the declaration alone did not clear "
+        f"the two ladder shields (executed={binding.executed}, "
+        f"bindable={binding.bindable}). spec_condition_compiler.py:1830/:1837 "
+        "still skip this condition, so nothing below measures the ladder."
+    )
+
+    calls: list[int] = []
+    real = compute_opening_range_state
+
+    def spy(definition, variant, bars, **kw):
+        calls.append(variant.duration_minutes)
+        return real(definition, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    session_bars = _taught_session_bars(_lower_golden().definition)
+    strategy = SpecConditionStrategy(artifact, binding_plan=plan, timeframe=BAR_TIMEFRAME)
+    strategy.compute(_polars_session_bars(session_bars))
+
+    # POSITIVE WITNESS 2 — the path RAN and produced an array for THIS condition.
+    # A negative assertion needs a witness that the path executed.
+    assert binding.condition_id in strategy.last_per_condition_bool, (
+        "no per-bar array was produced for the activated condition, so 'not "
+        "constant True' below would be satisfied by absence rather than behaviour"
+    )
+    array = np.asarray(strategy.last_per_condition_bool[binding.condition_id])
+    assert array.shape == (len(session_bars),), (
+        f"array length {array.shape} does not match the {len(session_bars)} bars fed in"
+    )
+
+    # ── THE CLAIM ────────────────────────────────────────────────────────────
+    assert not array.all(), (
+        "RED — FLAG-OFF SILENT PASS CONFIRMED. With TF_FAMILY_META_ENFORCED at its "
+        "DEFAULT OFF, an ACTIVATED opening-range condition produces a CONSTANT-TRUE "
+        "per-bar array.\n"
+        f"  bars                 : {len(session_bars)}   all True: {bool(array.all())}\n"
+        f"  adapter calls        : {tuple(calls)}   <- production never computed a range\n"
+        "  the legacy b.type ladder (spec_condition_compiler.py:1847-1927) has NO\n"
+        "  OPENING_RANGE_DEFINITION branch, so the condition lands on :1928\n"
+        "  `else: per_condition_bool[...] = np.ones(n, dtype=bool)`.\n"
+        "  ⇒ MEMBER 11 IS REAL AND REACHABLE: the flag-OFF ladder needs its own\n"
+        "    route to the SAME _h_opening_range."
+    )
+    assert calls, (
+        "the array is not constant-True, but production never reached the adapter "
+        "either — something else is producing it and the conclusion above does not follow"
+    )
+
+
+# ── ARM 2 — the ordered candidate-aware shape (R-780 §6 STEP 1 verbatim) ─────
+def test_flag_off_the_candidate_aware_instance_gates_on_the_real_window(monkeypatch):
+    """The assertions STEP 1 names that CANNOT be made without the carrier:
+    pre-lock False, post-lock True, and a gate computed from the taught window.
+
+    🛑 RED at `_require_activated()` until the activation lands -- by design.
+    Arm 1 is what decides member 11 today; this one pins what the flag-OFF path
+    must DO once a candidate can reach it, so the activation cannot land with
+    the ladder branch returning something other than the adapter's own answer.
+    """
+    monkeypatch.delenv(FLAG_ENV, raising=False)
+
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    plan = compile_binding_plan(result.artifact["spec"])
+    candidates = _find_candidates((result, plan))
+    assert candidates, "RED 1's territory: no taught candidates to carry"
+
+    _require_activated()
+
+    binding = _opening_range_binding(plan)
+    session_bars = _taught_session_bars(result.opening_range_lowering.definition)
+    frame = _polars_session_bars(session_bars)
+
+    for candidate in candidates:
+        strategy = _execution_instance(result.artifact, plan, candidate)
+        strategy.compute(frame)
+        array = np.asarray(strategy.last_per_condition_bool[binding.condition_id])
+        lock_index = candidate.variant.duration_minutes
+        assert not array[:lock_index].any(), (
+            f"{lock_index}m instance: the window has not locked yet, so the state is "
+            "NOT available and the gate must be False on every pre-lock bar"
+        )
+        assert array[lock_index:].all(), (
+            f"{lock_index}m instance: after the lock the state is available and complete"
+        )
+        assert not array.all(), (
+            f"{lock_index}m instance: a constant-True array is the all-True fallback, "
+            "not a gate computed from the taught window"
+        )
