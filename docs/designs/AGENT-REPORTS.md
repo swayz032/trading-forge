@@ -4,6 +4,37 @@
 
 ---
 
+## AR-906 · 2026-08-09 · 🟢 **START-RECEIPT — `R-779 §7` `S6 EXECUTION ACTIVATION` ACCEPTED AND STARTED. SEAT `claude.exe 16536`, ATTEMPT `0 / 2`, TWO COMMITS, `COMMIT 1` TEST-ONLY AND MUST STAY RED.** ⚠️ **AND I CORRECT MY OWN CITE FIRST: `R-779 §2` IS RIGHT — I COPIED `:454` FROM `AR-904` WITHOUT RE-DERIVING IT. THE `def` IS AT `:446`.**
+
+**TASK: `R-779 §7`. SEAT `claude.exe 16536` (re-authorized explicitly; I did not inherit `R-778 §5`). HEAD at start: `90984b88`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. ATTEMPT `0 / 2`.**
+
+### §1 — ⚠️ MY CITE ERROR, CORRECTED BEFORE ANYTHING ELSE
+**`AR-905 §6` repeated `family_meta_enforcement.py:454` verbatim from `AR-904`. `R-779 §2` re-derived it: the `def` is `:446`, the direction-1 loop `:467-469`.** ✅ **I accept it without argument, and the mechanism I described is unaffected — only my pointer was wrong.** ★★★★★ **`A WRONG CITE IS COPIED FASTER THAN IT IS CHECKED` — I am the second copier, and the reason is exactly the one the ruling names: I quoted a neighbour's line number instead of opening the line.** ⇒ **from here, every line number in my reports is one I opened myself this session.**
+
+### §2 — 📋 WHAT I AM DOING, IN ORDER
+```
+COMMIT 1  TEST ONLY, no production file, MUST STILL BE RED, then STOP and NAME the boundary
+   move RED 2's execution half onto produce_spec_artifact_from_record(golden record)
+   -> three candidates -> ONE production execution instance per candidate
+   -> production enforced dispatch -> spy on the REAL adapter (no test-called adapter)
+   + add as RED-CAPABLE members: missing-candidate · candidate-swap · parameter-smuggling
+COMMIT 2  ONE ATOMIC S6 EXECUTION ACTIVATION, nine members, all-or-none (R-779 §5/§7)
+   incl. the two the ruling added that neither AR-904 nor the external read named:
+   HANDLER_PARAMETER_CLASSIFICATION[_h_opening_range] = REFUSES_ALL_PARAMETERS  (§5-B)
+   and KEEP gates=True — do NOT set gates=False, do NOT touch NON_GATING_HANDLERS  (§5-C)
+```
+✅ **PRIOR-ART GATE, STATED:** `[MEASURED HERE]` `python scripts/system_inventory.py --check` → **`FRESH`, exit `0`**. **`R-779 §6` already searched and pinned what is settled — one strategy instance = one candidate (`R-736`/`R-743`), the two `6B` reds retiring, `RED 2`'s move to the full-record path (`R-778 §6`), `MP-1` banked. I re-open NONE of them and spend no ask on them.**
+
+### §3 — 🛑 WHAT I WILL NOT DO
+🛑 **No production file in `COMMIT 1`.** 🛑 **No breakout/breakdown/midpoint/retest/stop/target semantics — this family is a DEFINITION, and its boolean means `STATE AVAILABLE AND COMPLETE`, never `TRADE NOW`.** 🛑 **No default/primary candidate, no `candidates[0]`, no duration in `ConditionBinding.parameters`, no second id, no second calculator, no TS opening-range math.** 🛑 **No edit to `acceptance-baseline-2026-08-09.json`, no weakening of pin `(a)`, no `MP-1`, and no touching the pre-existing dirt.**
+⚠️ **AND ONE THING I WILL STOP AND REPORT RATHER THAN SOLVE:** `R-779 §7` says if candidate identity (`candidate_id` / `cache_identity`) disappears on entry to the strategy, that is a **finding**, not a detail. **I will report it, not invent a carrier for it.**
+
+### §4 — ⏱️ FIRST OBSERVABLE AND ETA
+**FIRST OBSERVABLE: `RED 2` republished RED on the full-record candidate-aware path, committed, with the new boundary NAMED.** **ETA ~30–60 min per `R-779 §7`.** **ONE `AR` at the end — or immediately on a second blocker.**
+🛑 **ACCEPTANCE INVOCATIONS: I use `R-779 §10`'s four, verbatim, ALL FROM THE WORKTREE ROOT, exits read directly and never through a pipe.** ⭐ **That debt is now paid and I will not re-derive a population.**
+
+---
+
 ## AR-905 · 2026-08-09 · 📍 **SEAT RECEIPT — A NEW WORKER SEAT IS UP (`claude.exe 16536`), AND THE SEAT `R-778 §5` AUTHORIZED (`claude.exe 25636`) IS GONE FROM THE PROCESS TABLE.** ✅ **RULING EAR ARMED AND RED-PROOFED BEFORE IT WAS POINTED AT THE LEDGER — ARMED LINE AND A SYNTHETIC CHANGE BOTH ARRIVED AS NOTIFICATIONS.** ✅ **`AR-904`'s REVERT IS CONFIRMED BY MY OWN RUN, NOT INHERITED: PINNED GROUP `2 failed / 96 passed`, S6 `1 failed / 7 passed`, AND THE REDS ARE EXACTLY THE THREE PRE-ORDERED ONES.** 🛑 **NO LANE IS OPEN AND I DO NOT OPEN ONE — `AR-904` ASKS A NARROW RULING AND NOTHING ON DISK HAS RULED ON IT.** ⚠️ **AND ONE INSTRUMENT CONVICTION AGAINST MYSELF, BEFORE IT REACHED A CLAIM.**
 
 **TASK: NONE AUTHORIZED TO THIS SEAT. SEAT `claude.exe 16536`. HEAD `37015d09`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.**
