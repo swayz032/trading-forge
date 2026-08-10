@@ -54,6 +54,7 @@ except ImportError as _err:  # pragma: no cover - explicit, never a silent downg
 REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "src" / "engine" / "tests" / "canonical_regression_population.txt"
 BASELINE = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-baseline-2026-08-09.json"
+SEAL = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-collection-seal-08062e12.json"
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +147,8 @@ def main():
     ap.add_argument("--out-dir", type=Path, default=Path("."))
     ap.add_argument("--manifest", type=Path, default=MANIFEST)
     ap.add_argument("--baseline", type=Path, default=BASELINE)
+    ap.add_argument("--seal", type=Path, default=SEAL,
+                    help="ACCEPT5-COLLECTION-BASELINE-1 companion artifact")
     args = ap.parse_args()
 
     failures_of_the_gate = []   # every reason this gate refuses
@@ -153,6 +156,9 @@ def main():
 
     members = read_manifest(args.manifest)
     base = read_baseline(args.baseline)
+    seal = None
+    if args.seal and Path(args.seal).is_file():
+        seal = json.loads(Path(args.seal).read_text(encoding="utf-8"))
 
     # --- preflight: the baseline's own two assertions -----------------------
     resolved, missing = [], []
@@ -267,6 +273,48 @@ def main():
     if new:
         failures_of_the_gate.append(f"{len(new)} NEW failure(s) not in the baseline.")
 
+    # --- (R-791 §4.1) GONE IS ENFORCED, NOT MERELY PRINTED --------------------
+    # F-ACCEPT5-1: `gone` was computed and printed and never reached the refusal
+    # list, so a baseline red that went green, stayed collected and produced no
+    # feeder disagreement let the gate PASS. The campaign criterion is
+    # ADDITIONS FORBIDDEN, SUBTRACTIONS NAMED AND EXPLAINED — for S6 the only
+    # authorized subtraction is the two ordered_6b_reds.
+    authorized_gone = set(base["ordered_6b_reds"])
+    unauthorized_gone = sorted(set(gone) - authorized_gone)
+    print(f"[7/8] authorized GONE (ordered_6b_reds)  : {len(authorized_gone)}")
+    print(f"[7/8] UNAUTHORIZED GONE                  : {len(unauthorized_gone)}")
+    for n in unauthorized_gone[:15]:
+        print(f"      UNAUTHORIZED GONE: {n}")
+    if unauthorized_gone:
+        failures_of_the_gate.append(
+            f"UNAUTHORIZED GONE: {len(unauthorized_gone)} baseline failure(s) stopped "
+            f"failing without authorization. Only the {len(authorized_gone)} "
+            f"ordered_6b_reds may leave the failure set."
+        )
+
+    # --- (R-791 §4.3) THE SEALED COLLECTION MUST REMAIN COLLECTED -------------
+    # F-ACCEPT5-2: protecting only baseline FAILURES leaves every previously
+    # GREEN sealed test unguarded — rename it, delete it, or hide it behind a
+    # skip-producing import error and no check notices.
+    if seal is not None:
+        sealed_pop = set(seal["collected_population"])
+        vanished = sorted(sealed_pop - collected)
+        print(f"[SEAL] sealed collection @ {seal['graded_sha'][:8]} : {len(sealed_pop)} node IDs")
+        print(f"[SEAL] sealed members no longer collected : {len(vanished)}")
+        for n in vanished[:15]:
+            print(f"      SEALED COLLECTION MEMBER MISSING: {n}")
+        if vanished:
+            failures_of_the_gate.append(
+                f"SEALED COLLECTION MEMBER MISSING: {len(vanished)} test(s) that were "
+                f"collected at the sealed commit are no longer collected. New tests may "
+                f"be added; no sealed test may silently vanish."
+            )
+    else:
+        failures_of_the_gate.append(
+            "NO SEALED COLLECTION SUPPLIED: --seal is required. Without it a "
+            "previously-green sealed test can vanish unseen (F-ACCEPT5-2)."
+        )
+
     # ordered_6b_reds are expected reds; report their live status by identity
     print("[9] ordered_6b_reds live status:")
     for n in base["ordered_6b_reds"]:
@@ -287,8 +335,8 @@ def main():
             print(f"  - {f}")
         print("=" * 72)
         return 1
-    print("ACCEPTANCE: PASS — failure membership matches the baseline exactly, "
-          "collection presence intact, feeders agree.")
+    print("ACCEPTANCE: PASS — NEW=0; GONE matches the authorized set; "
+          "sealed collection intact; feeders agree.")
     print("=" * 72)
     return 0
 
