@@ -15,9 +15,46 @@ WHAT IT DOES
 ------------
 1. If the push contains no changes under src/ or scripts/, do nothing (exit 0).
    A docs-only push (e.g. a ruling) cannot change code reachability.
-2. Otherwise regenerate the map.  If the regeneration changed the committed file,
-   FAIL the push with a one-line remedy.  The file has already been refreshed on
-   disk, so the remedy is `git add` + commit + push again.
+2. Otherwise ASK THE GENERATOR whether the map is stale, by running
+   `system_inventory.py --check` and branching on its exit code.  Only when the
+   checker says STALE do we regenerate and block.
+
+WHY IT DELEGATES INSTEAD OF COMPARING BYTES  (R-780 STEP 0, 2026-08-09)
+-----------------------------------------------------------------------
+This gate previously regenerated the map and compared RAW BYTES before-vs-after.
+That was a NON-TERMINATING DEADLOCK, measured over two full cycles in AR-909:
+
+  * the map carries a provenance line `> Generated at commit <git rev-parse HEAD>`
+  * so every remedy commit advances HEAD, which changes the stamp, which makes
+    the next regeneration differ again -- forever.
+
+`system_inventory.py` had ALREADY solved this for `--check`: its `content_only()`
+helper strips the provenance line, and its docstring says why in as many words --
+"HEAD advances on every commit ... would make --check fail permanently.  A
+staleness check that always fires is worse than no check at all: it trains
+readers to ignore it."  This gate reproduced the exact failure its own generator
+had documented and avoided.
+
+The repair is DELEGATION, not duplication.  We do NOT import or re-implement
+`content_only()` here: fixing a divergence by copying the correct side preserves
+the divergence, and the next non-semantic field added to the map would re-open
+it.  THE GENERATOR DEFINES WHAT "FRESH" MEANS; THIS GATE ONLY DECIDES WHAT TO DO
+ABOUT IT.
+
+  --check exit 0     -> ALLOW the push.  The committed stamp may lag HEAD; that
+                        is expected and is not staleness.
+  --check exit 1     -> STALE.  Regenerate, then BLOCK with the remedy.
+  --check other exit -> the CHECKER ITSELF failed.  BLOCK, surface its output,
+                        and DO NOT regenerate on top of a checker reporting its
+                        own defect.  A gate that cannot answer must not guess.
+
+WHY IT NO LONGER WRITES UNCONDITIONALLY
+---------------------------------------
+The old shape ran the generator BEFORE deciding anything, so every armed push
+rewrote the map on disk even when nothing was stale -- which is what left the
+tree dirty.  On a SHARED TREE an unconditional write by a guard is a hazard in
+its own right: another seat's commit can sweep it in.  We now write only on the
+stale branch.
 
 WHY IT FAILS RATHER THAN AUTO-COMMITTING
 ----------------------------------------
@@ -41,6 +78,19 @@ MAP = REPO / "docs" / "designs" / "SYSTEM-INVENTORY.md"
 GEN = REPO / "scripts" / "system_inventory.py"
 WATCHED = ("src/", "scripts/")
 
+STALE_GUIDANCE = """
+  PUSH BLOCKED - docs/designs/SYSTEM-INVENTORY.md was STALE.
+  It has been REGENERATED on disk (not committed - this is a shared tree).
+
+  Remedy:
+    git commit -o docs/designs/SYSTEM-INVENTORY.md -m 'SYSTEM-INVENTORY: regenerate'
+    git push
+
+  Why: the map is what tells the next seat whether a thing is already built
+  and wired. A stale map answers confidently about a tree that no longer
+  exists, and an external reader once consumed a 6-day-old copy from GitHub.
+"""
+
 
 def _git(*args: str) -> str:
     return subprocess.run(
@@ -61,6 +111,12 @@ def _code_changed_vs_upstream() -> bool:
     return any(n.startswith(WATCHED) for n in names)
 
 
+def _run_generator(*extra: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(GEN), *extra], cwd=REPO, capture_output=True, text=True
+    )
+
+
 def main() -> int:
     if not GEN.is_file():
         print(f"inventory-freshness: generator missing at {GEN}", file=sys.stderr)
@@ -70,35 +126,41 @@ def main() -> int:
         print("inventory-freshness: no src/ or scripts/ change in this push - skipped")
         return 0
 
-    before = MAP.read_bytes() if MAP.is_file() else b""
-    proc = subprocess.run(
-        [sys.executable, str(GEN)], cwd=REPO, capture_output=True, text=True
-    )
-    if proc.returncode != 0:
-        print("inventory-freshness: GENERATOR FAILED", file=sys.stderr)
-        print(proc.stdout[-2000:], file=sys.stderr)
-        print(proc.stderr[-2000:], file=sys.stderr)
-        return 1
+    check = _run_generator("--check")
 
-    after = MAP.read_bytes() if MAP.is_file() else b""
-    if after == before:
-        print("inventory-freshness: SYSTEM-INVENTORY.md already current - push allowed")
+    if check.returncode == 0:
+        print(
+            "inventory-freshness: SYSTEM-INVENTORY.md describes the current tree "
+            "(content compared; provenance stamp ignored) - push allowed"
+        )
         return 0
 
-    print(
-        "\n"
-        "  PUSH BLOCKED - docs/designs/SYSTEM-INVENTORY.md was STALE.\n"
-        "  It has been REGENERATED on disk (not committed - this is a shared tree).\n"
-        "\n"
-        "  Remedy:\n"
-        "    git commit -o docs/designs/SYSTEM-INVENTORY.md -m 'SYSTEM-INVENTORY: regenerate'\n"
-        "    git push\n"
-        "\n"
-        "  Why: the map is what tells the next seat whether a thing is already built\n"
-        "  and wired. A stale map answers confidently about a tree that no longer\n"
-        "  exists, and an external reader once consumed a 6-day-old copy from GitHub.\n",
-        file=sys.stderr,
-    )
+    if check.returncode != 1:
+        # The checker could not answer.  Do NOT regenerate over a tool that is
+        # reporting its own defect, and do NOT read an unknown exit as "fresh".
+        print(
+            "\n"
+            "  PUSH BLOCKED - the freshness CHECKER itself failed "
+            f"(exit {check.returncode}).\n"
+            "  The map was NOT regenerated: a gate that cannot answer must not guess.\n"
+            "  Fix the checker, then push again.\n",
+            file=sys.stderr,
+        )
+        if check.stdout:
+            print(check.stdout[-2000:], file=sys.stderr)
+        if check.stderr:
+            print(check.stderr[-2000:], file=sys.stderr)
+        return 1
+
+    # exit 1 == genuinely stale.  Now, and only now, write.
+    gen = _run_generator()
+    if gen.returncode != 0:
+        print("inventory-freshness: GENERATOR FAILED", file=sys.stderr)
+        print(gen.stdout[-2000:], file=sys.stderr)
+        print(gen.stderr[-2000:], file=sys.stderr)
+        return 1
+
+    print(STALE_GUIDANCE, file=sys.stderr)
     return 1
 
 
