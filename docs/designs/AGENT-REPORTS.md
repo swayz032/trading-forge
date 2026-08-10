@@ -4,6 +4,91 @@
 
 ---
 
+## AR-939 · 2026-08-10 · ✅ **LANE `J` DELIVERED — THE MONEY PATH IS GREEN: `13 passed`, ALL TWELVE OBLIGATIONS CONVICTED BY SIX MUTATIONS OF MY OWN MODULE.** ✅ **LANE `K` DELIVERED — PIN `18b46161`, `ACCEPT-5` PASSES **TWICE** IN A CHECKOUT THAT NEVER HELD THE LOCAL ARTIFACT.** ✅ **BOTH ANCHOR CONSTANTS COMPUTED AT SOURCE AND THEY AGREE WITH `R-796 §4` — STOP `[3]` DOES NOT FIRE.** 🛑 **ONE NEW FINDING: `K-3`'s "`git status` clean" CANNOT BE MET — A POPULATION MEMBER WRITES INTO THE TREE ON EVERY GATE RUN.** ⚠️ **AND I WITHDRAW THE WORD "IDENTICAL" IN ITS STRONGEST SENSE — `§4` STATES EXACTLY WHAT MATCHED.** ⚖️ **FAN-IN `2 / 2`.**
+
+**SEAT `claude.exe 26856`. CAMPAIGN TREE `HEAD ab0380f2` + this report. LANE `K` BRANCH `grade/accept5-instrument-r2-20260810` @ `18b46161`, PUSHED (`git ls-remote` == local). LANE `J` attempt `1 / 2` · LANE `K` attempt `1 / 2`. NO TypeScript · NO `/api/backtests` · NO DB · NO `spec_hash` change · NO seal re-pin · ARTIFACT **NOT** ON THE CAMPAIGN BRANCH.**
+
+### §1 — ✅ LANE `J`: THE MODULE, AND THE SIX MUTATIONS THAT PROVE THE CONTRACT STILL CONVICTS IT
+✅ **`src/engine/opening_range_candidate_persistence.py` @ `ab0380f2`.** `[MEASURED HERE, worktree root, UNPIPED]` **`13 passed, exit 0`** against the committed `A`–`L` contract. 🛑 **THE CONTRACT FILE WAS NOT TOUCHED — `git show --stat` on my commit is ONE file, the module, `+214 / −0`.**
+⚡ **THE REPAIR IS ONE DIMENSION, NOT A BIGGER HASH:** `candidate_id` enters the dedupe key; `cache_identity` deliberately does **NOT**. ★★★★ **`cache_identity` IS A CONTENT HASH AND `candidate_id` IS AN IDENTITY — KEYING ON CONTENT WOULD TURN EVERY RESTAMP INTO A FOURTH ROW INSTEAD OF A VISIBLE COLLISION, WHICH IS THE CARDINALITY COLLAPSE RUNNING IN REVERSE.**
+🛑 **A GREEN SUITE PROVES THE MODULE AGREES WITH THE TEST, NOT THAT THE TEST WOULD CATCH A WRONG MODULE. So I mutated my own module, each arm ALONE, restoring byte-exact between arms and PROVING the restore with sha256:**
+```
+[MEASURED HERE — obligations that FAILED under each arm, pristine sha256 84298004… restored MATCH=True]
+M1  drop candidate_id from the dedupe key (production's live bug) ... F G
+M2  a receiptless row resolves to the first taught candidate ....... H L
+M3  drop the parent anchor ........................................ J
+M4  would_collide never recognises an existing row ................ E K
+M5  plan only the first taught candidate .......................... A C D F G I
+M6  each row names a different parent spec ........................ B
+PRISTINE (before AND after) ....................................... 13 passed, exit 0
+```
+⭐ **`M6` EXISTS BECAUSE THE FIRST FIVE LEFT OBLIGATION `B` CONVICTED BY NOTHING.** I found the hole by listing which letters each arm bit and noticing `B` never appeared — **so I closed it rather than disclosing it.** ★★★★★ **`AN OBLIGATION NO MUTATION CAN BREAK IS NOT YET EVIDENCE — IT IS A SENTENCE THAT HAPPENS TO BE TRUE.`** ⇒ **ALL TWELVE are now convicted by at least one arm.**
+✅ **`F` AND `G` ARE NOW GREEN, AND THAT IS THE ORDERED OUTCOME, NOT A REFUTATION OF `R-793 §4`.** They were RED against *current production*; lane `J` is the Python-side repair that makes them green. `[PRIOR ART CITED, NOT RE-DATED — `R-793 §4`, this desk first]` the collapse is application-level ⇒ **the eventual TypeScript repair still needs NO MIGRATION.**
+✅ **`K` KEEPS THE LEGACY LIBRARY OUT OF SCOPE:** receiptless rows keep `(spec_hash, symbol)` exactly, so the ~120 strategies cannot be silently un-deduped. ✅ **`L`: `resolve_row_for_execution` has NO branch that returns a default — every failure path raises.**
+✅ **REGRESSION:** `[MEASURED HERE, UNPIPED]` `S6` + all nine opening-range suites + both `MP1` suites + the population guard → **`521 passed, exit 0`.** **STOP `[5]` did not fire.**
+✅ **MANIFEST: MEASURED, NOT ASSUMED.** `[MEASURED HERE, via the guard's OWN `_regression_population()`]` derived **107** == committed **107**, `ADDED none / REMOVED none`, positive control present in both. **I regenerated BEFORE asserting.** ⚠️ **The raw file is `130` lines — the membership rule strips comments, and a raw line count over-reads by `23`.**
+
+### §2 — ✅ LANE `K-1`/`K-2`: PROVENANCE RE-DERIVED, AND BOTH CONSTANTS COMPUTED AT SOURCE
+✅ **`K-1` @ `1d8d6de5`.** The governed artifact is committed on the isolated branch with its `AR-203` join **in the commit message**. 🛑 **I DID NOT COPY THE RULING'S JOIN — I re-derived all four keys from the artifact itself:** `[MEASURED HERE]` tally `{'A':2,'B':21,'C':4}` **recounted from the 27 raw verdicts** and agreeing with the stored `counts`; `written_before_reading_prior: True`; `count=27 of 155 taught conditions`; corpus `claude-rung-v32/shakedown_specs/`. **`978` bytes, `sha256 920557eb…`** — matching `R-796 §3` exactly, which is what makes that cross-check worth having.
+✅ **`K-2` @ `18b46161`. BOTH CONSTANTS COMPUTED AT SOURCE, AND THEY AGREE WITH THE DESK'S CROSS-CHECK ⇒ 🛑 STOP `[3]` DOES NOT FIRE:**
+```
+[MEASURED HERE, in a FRESH conforming checkout, pure Python, NO git subprocess]
+blob OID       b71c164147201f7a42dcd1899402a56ae19a6f32   == desk §4  AND == git rev-parse HEAD:<file>
+canonical json 1b97e38ae1e9c15a3653e0adf8533b0f73b7c7a5c092296dd00c5079dd1a02d4   == desk §4
+```
+⭐ **AND THE DEFECT IS CONFIRMED LIVE, NOT INFERRED:** `[MEASURED HERE]` in this conforming checkout the baseline's raw sha256 is `5e79f72c…` while the OLD approved constant was `a9f70e2e…` ⇒ **the old anchor REFUSES here.** It passed in exactly one place: the non-conforming worktree that minted it.
+✅ **RED-PROOFED THREE WAYS, WITH A POSITIVE AND A NEGATIVE DIRECTION:**
+```
+[MEASURED HERE, unpiped]
+pristine conforming checkout ... 0 problems   (the OLD anchor refused here)
+CRLF-materialised copy ......... 0 problems   (line-ending IMMUNE — the actual repair)
+n_failed + 1 ................... 2 problems   (BOTH anchors bite; canonical 8e7bd6a4… == desk §4)
+```
+✅ **THE CHECK WAS COMPLETED, NOT REPLACED:** `measured_at_sha`, failure count, failure-membership digest and `ordered_6b_reds` are all untouched. ✅ **NO `--no-filters` ANYWHERE:** `[MEASURED HERE]` two occurrences in `scripts/`, **both inside my own comment saying it is forbidden**; ZERO executable uses; none in `src/`. ⚠️ **My first grep of this was MALFORMED — `--` swallowed the `--include` flags and it reported a bare "2". I re-ran it with a sound instrument rather than publish the number.** ★★★ **`A SURPRISING COUNT ACCUSES YOUR INSTRUMENT FIRST.`**
+✅ **THE REFUTED CAUSAL COMMENT IS CORRECTED IN PLACE, WITH THE OLD TEXT RETAINED** so the record shows what was believed and why it was wrong (`R-795 §3`'s measurement, quoted). **The temporary nature of `DISPOSITION_AUTHORIZED_UNSKIPPED` is now written where the next reader will meet it.**
+
+### §3 — ✅ `K-3`: THE PIN REPRODUCES IN A CHECKOUT THAT NEVER HELD THE LOCAL ARTIFACT
+✅ **THIRD worktree `wt-accept5-verify-20260810`, checked out from the branch tip — it received the artifact ONLY from the commit, never from my disk.** ★★★★★ **`A PIN VALIDATED IN THE TREE THAT CREATED IT PROVES ONLY THAT THE TREE AGREES WITH ITSELF` — so the K-1/K-2 worktree was NOT used for validation.**
+```
+[MEASURED HERE, two full population runs, exit codes read DIRECTLY]
+RUN 1  ACCEPTANCE: PASS   exit 0    [BASELINE] preflight problems: 0
+RUN 2  ACCEPTANCE: PASS   exit 0    [BASELINE] preflight problems: 0
+both   NEW=0 · GONE=2 (both authorized) · UNAUTHORIZED GONE=0 · MISSING AUTHORIZED GONE=0
+       [SEAL] problems 0 · sealed members no longer collected 0
+       [DISP] SKIP drift +0/−0 · XFAIL drift +0/−0
+       31 failed, 2368 passed, 3 skipped, 2 xfailed   (identical counts both runs)
+```
+⭐ **THE TWO AUTHORIZED UNSKIPS RAN HERE BECAUSE THE ARTIFACT CAME FROM GIT, NOT FROM A LAPTOP. That is `ACCEPT5-ENV-DETERMINISM-1` closing in practice, on this branch.**
+
+### §4 — ⚠️ I WITHDRAW "IDENTICAL" IN ITS STRONGEST SENSE, AND SAY EXACTLY WHAT MATCHED
+🛑 **THE TWO RUNS' STDOUT IS *NOT* BYTE-FOR-BYTE IDENTICAL, AND I WILL NOT REPORT IT AS THOUGH IT WERE.** `[MEASURED HERE]` raw `sha256` differs (`e8741dd9…` vs `c3119d3f…`). **The diff is 31 lines and every one of them is either a Python object memory address (`0x…`) inside an unrelated pytest traceback, or the elapsed-seconds figure.**
+✅ **NORMALISE those two nondeterministic classes and the runs are IDENTICAL:** `[MEASURED HERE]` both normalise to **`d8f36078e705869e4d1501567959a657ed5d2ad259b3e49bd650420af6f05f4a`**. **Every gate-decision line — verdict, preflight, NEW/GONE, seal, disposition, pass/fail counts — matched without normalisation.**
+⇒ ⚖️ **STOP `[4]` DOES NOT FIRE: the gate's OUTPUT is reproducible. But "identical" needed its scope stated, because a grader who diffs raw stdout will see 31 lines and must not read them as instability.** ★★★★★ **`A REPRODUCIBILITY CLAIM IS ABOUT A DEFINED SET OF LINES — NAME THE SET, OR THE NEXT READER PICKS A STRICTER ONE THAN YOU MEANT AND CALLS YOU WRONG.`**
+
+### §5 — 🛑 NEW FINDING `F-ACCEPT5-9`: THE GATE DIRTIES THE REPOSITORY IT IS GRADING
+🛑 **`K-3` REQUIRES `git status` CLEAN. IT IS NOT, AND THE CAUSE IS NOT MY CHANGE.** `[MEASURED HERE, ISOLATED — I restored the file, ran ONE suite alone, and re-checked]`:
+```
+git status after a full ACCEPT-5 run ...... M docs/wave25-exit-engine-ab-report.md
+restore, then run test_exit_engine_ab.py ALONE -> 34 passed
+git status .............................. M docs/wave25-exit-engine-ab-report.md   <- ATTRIBUTED
+writer: scripts/wave25_exit_engine_ab_report.py:548  Path(report_file).write_text(...)
+the rewritten line is a timestamp: "Run date: 2026-05-24" -> "2026-08-10 17:01 UTC"
+```
+⇒ **`src/engine/tests/test_exit_engine_ab.py` IS A MEMBER OF THE CANONICAL POPULATION, and running it mutates a TRACKED file.** ⇒ **Every ACCEPT-5 run leaves the tree dirty, on any machine.**
+🔎 **PRIOR-ART SEARCH, STATED (`worker-execution §0.-0.5`) — SEARCHED `ADVISOR-RULINGS.md` and `AGENT-REPORTS.md` for `wave25-exit-engine-ab` · `newline-writer-census` · `writer census`.** ✅ **FOUND AND CITED RATHER THAN RE-DISCOVERED: the desk already censused this exact path and dispositioned it `GENERATOR — OUT, this is its purpose`.** ⚖️ **SO THE CLASS IS KNOWN AND I AM NOT CLAIMING IT AS NOVEL. THE DELTA I AM REPORTING IS NARROWER: that disposition is about the GENERATOR SCRIPT writing its own report, which is legitimate — it does not address a TEST INSIDE THE ACCEPTANCE POPULATION triggering that write during a gate run.**
+⚖️ **SEVERITY: LOW-MODERATE, INSTRUMENT-SCOPED. It did NOT affect the verdict** — run 2 executed against a tree already dirtied by run 1 and produced the identical decision set, **which is a natural control I did not have to build.** 🛑 **BUT A GRADER TOLD TO EXPECT A CLEAN TREE WILL SEE A FALSE ALARM, so the desk needs it before the regrade charter goes out.** 🛑 **I did NOT "fix" it by committing the churn, gitignoring the file, or editing the test — none is authorized and all three would launder it.**
+⭐ **SECOND, SMALLER INSTRUMENT NOTE:** `[MEASURED HERE]` pre-commit reported **`ruff lint……Skipped (no files to check)`** while committing a `.py` file under `scripts/` — the hook's file filter does not cover that path. **I linted it myself (`ruff check` → `All checks passed`) rather than accept a skipped gate as a passed one.** ★★★ **`A GATE THAT SKIPPED IS NOT A GATE THAT PASSED.`**
+
+### §6 — 🛑 STOPS · FORBIDDEN · WHAT IS OWED
+**STOPS: `[1]` no obligation needed a contract edit — none was made · `[2]` `F`/`G` went green with NO TypeScript, DB or `spec_hash` change · `[3]` **DID NOT FIRE** — my constants agree with `R-796 §4` · `[4]` **DID NOT FIRE** — PASS twice, decision-identical (`§4` states the scope) · `[5]` no `S6` or opening-range suite reddened (`521 passed`) · `[6]` lane `K` needed no second redesign.**
+🛑 **NOT DONE, AS FORBIDDEN:** no TypeScript production edit · `findExistingOnboardedRow` untouched · `/api/backtests` untouched · no DB schema or SQL column · receipt NOT inside `compiled_spec`/`SpecArtifact` · no `dataclasses.asdict()` spec field · `spec_hash` semantics unchanged · no primary candidate chosen · no default/index/timeframe-derived candidate · `needs_archetype_queue` NOT widened · `SCHEMA-1` untouched · `ordered_6b_reds` NOT renamed · immutable failure baseline UNTOUCHED · **DISPOSITION SEAL NOT RE-PINNED** · **artifact NOT committed to the campaign branch** · **no `git hash-object --no-filters`** · worker guard untouched · no compiler expansion · paper-ORB untouched · no `--no-verify` · **lane `K` never rebased onto campaign `HEAD` and lane `J` cherry-picked nothing from `K`.**
+⚡ **THE REGRADE PIN, REPORTED AND NOT DISPATCHED (`K-3`): `18b46161`** on `grade/accept5-instrument-r2-20260810`, pushed and verified against a real `ls-remote`. **`ACCEPT5-REGRADE-DISPATCH-1` is the desk's and its wake condition is now met.** ⚖️ **If the charter goes out, `§5` should be carried into it so the grader is not surprised by a dirty tree.**
+**RECOMMENDATION: `APPROVAL_REQUESTED` for `J` and `K`; `F-ACCEPT5-9` (`§5`) is a FINDING for the desk to dispose, not a lane I may open.**
+**NEXT SMALLEST TASK (ONE): whatever `R-797` names — `MP1-CANDIDATE-IDEMPOTENCY-1` is now awake, since lane `J` is green.**
+⚠️ **TWO WORKTREES LEFT IN PLACE DELIBERATELY, BOTH CLEAN, so a grader can use them: `wt-accept5-r2-20260810` (branch) and `wt-accept5-verify-20260810` (detached @ `18b46161`, the never-held-the-artifact checkout).**
+
+---
+
 ## AR-938 · 2026-08-10 · ⏱️ **START-RECEIPT — `R-796` ACCEPTED BY THE SEAT IT NAMES. BOTH LANES STARTED, FAN-IN `2`.** ✅ **NO RULING DEFECT TO FLAG: THE FAKE EDGE IS REAL, AND THE ACCEPTANCE CRITERIA ARE MECHANICAL — NO GRADING ACT WAS HANDED TO THE DOER.**
 
 **SEAT `claude.exe 26856`. TREE `wt-h1-wave4-20260712`, campaign branch `h1-wave4-sealed12-driver`, `HEAD f5ca866f` (== `origin`; note this is `AR-937` on top of the `08000e41` the ruling measured). LANE `J` attempt `0 / 2` · LANE `K` attempt `0 / 2`.**
