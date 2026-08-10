@@ -101,7 +101,37 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 28472` (FRESH, seated via `/advisor-onboarding`), LEDGER AT `R-779` (`8eab4e2b`, PUSHED, remote tip verified equal by RE-FETCH, `0` unpushed), NEWEST AR `AR-905`.** 🔒 **`D-10` SEALED · ➡️ `S6-1` STEP 4 RULED — `S6 EXECUTION ACTIVATION` AUTHORIZED.**
+## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 28472`, LEDGER AT `R-781` (`42d0ca45`, PUSHED, remote tip verified equal by RE-FETCH, `0` unpushed), NEWEST AR `AR-910`, RULED.** 🔒 **`D-10` SEALED · ➡️ `S6 EXECUTION ACTIVATION`: `STEP 0` CLOSED, `STEP 1` RUNNING.**
+
+⚡ **AUTHORIZED NOW: `R-780 §6 STEP 1`, VERBATIM AND UNCHANGED BY `R-781`, to WORKER `claude.exe 12460`, attempt `0 / 2`.** **Publish the flag-OFF silent-pass RED, ALONE, TEST-ONLY, then STOP and report `RED` or `CANNOT GO RED`.** ⚖️ **`CANNOT GO RED` is a FIRST-CLASS RESULT: it means member `11` is NOT built and the worker names the earlier boundary. NEITHER OUTCOME SPENDS AN ATTEMPT — measuring is not attempting.**
+📊 **`S6` POSITION:** `RED 1` GREEN and closed (`R-778`) · **`COMMIT 1` LANDED** (`b1c17970`, test-only, `RED 2` moved onto the full-record candidate-aware path and republished RED on a DEEPER boundary: **production has no typed carrier for a taught candidate**) · **`RED 2` IS THE LAST LOAD-BEARING S6 RED.** ⭐ **`AR-907` built the activation to `8 / 9` and MEASURED `RED 2` GREEN with the spy reading `(5, 15, 30)` — then REVERTED rather than land it. The breakthrough is measured; it is not yet landed.**
+🛑 **THE ATOMIC UNIT IS ELEVEN SURFACES (`R-780 §5`/`§6`). THREE ARE NOT IN ANY EXTERNAL READ — DO NOT DROP THEM WHEN SUMMARISING:**
+```
+[MEASURED HERE, executable lines]
+ (i)  HANDLER_PARAMETER_CLASSIFICATION["_h_opening_range"] = REFUSES_ALL_PARAMETERS
+      -- mandatory because test_parameter_acceptance_guard.py:273 asserts SET EQUALITY with
+         set(ENFORCED_DISPATCH.values()); NOT because it "fails closed quietly".
+ (ii) PIN (a) THIRD CLAUSE, family_meta_enforcement.py:491 -- a real evaluator + gates=False
+      is a violation. gates: bool = True is the default (:579) and :678-682 does not override
+      it => NOTHING TO ADD. THE TRAP: the read's own "this family is not the trigger" INVITES
+      gates=False, which would break it.
+(iii) MEMBER 11, the flag-OFF legacy route -- ORDERED RED-FIRST, THE RED IS THE DECIDER.
+      grep OPENING_RANGE over spec_condition_compiler.py = 0 HITS; the ladder ends
+      :1928-1929 else: np.ones = CONSTANT TRUE; TF_FAMILY_META_ENFORCED defaults OFF (:55,
+      two-commit law :60). Today :1830 "if not b.executed: continue" is the ONLY shield and
+      ACTIVATION REMOVES IT => the activation CREATES the hole; it is blast radius, not scope
+      creep. SAFETY BY STARVATION IS NOT SAFETY BY DESIGN; the activation is the INSERT.
+```
+✅ **`INV-2` CLOSED (`742f4359`).** The pre-push inventory gate was a NON-TERMINATING DEADLOCK — raw-byte compare including the provenance stamp, while the generator documents at `:1829-1834` why that line must be ignored; every remedy commit advanced `HEAD`, so it could never converge. **Repaired by DELEGATION to `system_inventory.py --check` (NOT by copying `content_only`), four red-proof arms against the ACTUAL pre-repair blob `43db7eab`.** ⭐ **It then blocked the worker once more for GENUINE drift and terminated — `A GUARD THAT STOPPED BLOCKING ENTIRELY WOULD HAVE LOOKED EXACTLY LIKE SUCCESS.`**
+🛑 **`GATE-LIM-2` BANKED (`R-781 §3`) — DESK-OWNED, WAKES WHEN `S6` CLOSES AND **BEFORE `MP-1`** (which consumes the inventory as a sealed map).** `[MEASURED HERE]` `WATCHED = ("src/","scripts/")` (`:79`) vs `REFERENCE_ROOTS = [src, scripts, e2e, tests]` (`:69`) `+ ["workflows"]` (`:1761`). **LIVE NEAR-MISS: `742f4359`'s two files split the roles — `scripts/…` ARMED the gate, `tests/…` MOVED the map. A tests-only commit would have skipped and pushed a stale map.** 🛑 **WHEN IT WAKES, DO NOT EXTEND `WATCHED` — that is `INV-2` again. DELETE THE LIST; always run `--check`.**
+👥 **`[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT used]` TWO live `claude.exe`: `12460` (worker) + `28472` (this desk) ⇒ one seat each, `[two-operator-windows]` does NOT fire.** ⚠️ **THE WORKER SEAT DIED TWICE TODAY MID-RULING (`25636` → `16536` → `12460`).** ★★★★★ **`A SEAT IS A MEASUREMENT WITH A HALF-LIFE, AND "UNCHANGED" IS NOT A MEASUREMENT — RE-CENSUS IMMEDIATELY BEFORE THE COMMIT, NOT WHEN YOU START WRITING.`**
+🛑🛑 **`R-780` WAS WRITTEN, DESTROYED BEFORE IT LANDED, AND REWRITTEN.** A sibling seat's path-scoped commit ran `pre-commit`'s stash/restore over this desk's UNSTAGED ledger edit and it vanished from working file AND history. ⇒ **STANDING REMEDY, BOTH SEATS: `git add` THE FILE THE INSTANT IT IS WRITTEN AND COMMIT IN THE SAME MOTION. STAGED CHANGES ARE NOT STASHED.** ★★★★★ **`AN UNCOMMITTED RULING ON A SHARED TREE IS NOT A DRAFT, IT IS A HOSTAGE.`**
+📡 **DESK EAR: `Monitor` persistent on `AGENT-REPORTS.md`, owner `claude.exe 28472`, keyed on the TUPLE `(newest "## AR-" heading, dirty-state, file-commit sha)`. RED-PROOFED ON A THROWAWAY FIRST — armed line delivered, a no-op `touch` stayed SILENT across 3 polls (it is NOT an mtime ear), a synthetic heading FIRED.** ⚠️ **ORPHANS REPORTED AND NOT KILLED: `17740`, `30400`, `4192` — parents dead, I could not PROVE I armed them.** ⚠️ **`TaskStop` reported success while a child kept polling; `A COMPLETION SIGNAL IS NOT A CENSUS.`**
+⏳ **GPT WAIT: HONOURED ON `R-779`, `R-780`, `R-781`.** ⭐ **`R-780` NEARLY SHIPPED ONE ITEM UNDER THE BLOCKED-WORKER EXCEPTION; THE OPERATOR STOPPED IT, THE READ THEN ARRIVED AND **CHANGED THE REPAIR SHAPE AND CORRECTED A NAME ABOUT TO BE PUBLISHED**.** ★★★★★ **`AN ESCAPE CLAUSE FEELS FREE PRECISELY WHEN THE ANSWER LOOKS OBVIOUS — AND THAT IS WHEN THE READ IS WORTH MOST.`** 🛑 **`"I COULD PROCEED BUT IT WOULD BE INEFFICIENT" IS NOT BLOCKED.`**
+⚠️ **`R-779 §10`'s `ACCEPT-1` FIGURE WAS WRONG AND IS CORRECTED AT `R-780 §9`: `2 failed / 50 passed` for the files it names, NOT `96` (that is `R-741 §5`'s group). MEMBERSHIP is the criterion; do not quote either total.**
+🛑 **STANDING STOPS, UNCHANGED:** `acceptance-baseline-2026-08-09.json` **IMMUTABLE** · no second candidate identity · **`MP-1` BANKED** · no breakout semantics in `OPENING_RANGE_DEFINITION` · **three taught windows → THREE candidates, CHOOSE NONE** (`R-736`, reaffirmed `R-743`, enforced in code) · the two ordered `6B` reds **SHOULD** retire on activation (pre-registered `NEW 0 / GONE exactly those 2 / 31 identical`) · pre-existing tree dirt predates `S6-1` and is **not ours**.
+
+## ★★★★★ SEAT — **SUPERSEDED (same seat, earlier state): `R-779` (`8eab4e2b`), NEWEST AR `AR-905`.**
 
 ⚡ **AUTHORIZED NOW (`R-779 §7`), TO `claude.exe 16536`, attempt `0 / 2`: TWO COMMITS.** **(1) TEST-ONLY — move `RED 2` onto the full-record candidate-aware path and PUBLISH IT RED.** **(2) ONE ATOMIC `S6 EXECUTION ACTIVATION`, NINE members, all-or-none.** **First observable: `RED 2` republished RED, committed. START-RECEIPT if >10 min.**
 🛑 **`R-778 §5-4` IS CORRECTED BY `R-779 §3` — MY OWN ERROR, NOT THE WORKER'S.** `[MEASURED HERE, `family_meta_enforcement.py:467`]` **direction 1 of `verify_dispatch_coverage` has NO waiver** (`EXPERIMENT_PRIMITIVES` is subtracted only in direction 2) ⇒ **`FAMILY_META` + `PRIMITIVE_RESOLVERS` was never the atomic unit; a declared-but-unrouted primitive is a violation by construction.** ★★★★★ **`A LAW IS ONLY AS WIDE AS THE SET YOU CHECKED IT AGAINST — THE ENFORCER, NOT THE AUTHOR, OWNS THAT SET.`**
