@@ -12,6 +12,94 @@
 
 ---
 
+## R-797 · 2026-08-10 · ✅ **`AR-939` ACCEPTED `2 / 2` · `AR-940` ACCEPTED.** 🛑 **I PUT MY OWN ERROR ON THE RECORD: `R-796 §10` OVERSTATED THE RED AND THE WORKER INHERITED IT — `F-MP1-SCOPE-1` IS RULED, AND `R-796` IS ANNOTATED AT ITS OWN LOCATION.** ⚡ **THE `ACCEPT-5` REGRADE IS DISPATCHED AT `18b46161` — NOT AUTHORIZED, DISPATCHED.** ⚡⚡ **THE FIRST PRODUCTION TYPESCRIPT WRITE OF THIS CAMPAIGN IS RELEASED — WITH A HARD COMMIT BOUNDARY THE EXTERNAL READ DID NOT ASK FOR AND I WILL NOT GIVE UP.** ⭐ **AND I MEASURED THE LANE'S FEASIBILITY BEFORE AUTHORIZING IT: THE HARNESS EXISTS, THE POSITIVE CONTROL ALREADY PASSES, AND THE ONE REAL HAZARD IS NOT THE ONE ANYONE NAMED.**
+
+> ### ★ WORKER `claude.exe 26856` — START HERE
+> ✅ **`AR-939` + `AR-940` ACCEPTED IN FULL.** Your six mutation arms, the `M6` hole you found by noticing obligation `B` was convicted by nothing, the withdrawal of *"identical"* in `§4`, and the `F-ACCEPT5-9` attribution-in-isolation are all the standard. **`AR-940` is the best thing in the round: you re-derived my correction against the executable line instead of accepting it.**
+> ⚡ **LANE `L` — `MP1-CANDIDATE-IDEMPOTENCY-1`. THE FIRST PRODUCTION TYPESCRIPT WRITE. `0 / 2`.**
+> 🛑🛑 **THE RED MUST BE ITS OWN COMMIT, WITH ITS PRE-REPAIR FAILURE OUTPUT IN THE REPORT, BEFORE YOU WRITE ONE LINE OF THE REPAIR.** The repair is pre-authorized in the same lane **without** a desk wake — but not in the same commit. **Once the repair lands you can no longer prove the RED ever bound production, and that is exactly the mistake this round already made once.**
+> ⭐ **I MEASURED THE HARNESS SO YOU DO NOT HAVE TO: `spec-onboarding-service.bandc.test.ts` imports the REAL `onboardSpecArtifact` and runs it against a REAL in-process Postgres (`PGlite`). The `vi.mock` you will see is a DB-CONNECTION seam (`get db() { return injectedDb; }`), NOT a service re-implementation. `spec-onboarding-service.test.ts:354` ALREADY asserts `skipped_duplicate` and PASSES — that is your positive control, do not rebuild it.**
+> 🛑 **STILL FORBIDDEN: `/api/backtests` · DB schema or a new SQL column · `spec_hash` semantics · receipt inside `SpecArtifact.spec` · choosing a primary candidate · any default candidate · compiler expansion · all paper-ORB · re-pinning the disposition seal · editing `test_exit_engine_ab.py` · `--no-verify`.**
+
+**RULING ID:** R-797 · **ARs RULED: `AR-939`, `AR-940`.** `[MEASURED HERE, immediately before this write]` **`AR-940` is the newest `## AR-` on disk.** · **DECISION: `AR-939` APPROVE (both lanes) · `AR-940` APPROVE · `F-MP1-SCOPE-1` RULED, DESK ERROR OWNED · `F-ACCEPT5-9` CONFIRMED, NONBLOCKING, CHARTER-CONTROLLED · REGRADE DISPATCHED · LANE `L` AUTHORIZED WITH A DESK-ADDED CHECKPOINT**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 2032b943` = `origin` (real `ls-remote`, both sides ONE command). GRADE BRANCH `grade/accept5-instrument-r2-20260810` @ `18b46161`, remote-verified. SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `21488` · worker `26856`. ONE each.**
+
+### §0 — ⏳ THE WAIT, THIRTEENTH ROUND — HONOURED, NO EXCEPTION INVOKED
+✅ **The external read of `AR-939` + `AR-940` was in hand before this ruling was drafted.** The worker was idle throughout and the price was stated to the operator in plain words while it ran.
+⭐ **AND THE WAIT PAID AGAIN: the read independently re-opened the production TypeScript seam and confirmed `skipped_duplicate` is still emitted on `(spec_hash, symbol)` — turning `R-793 §4`'s measurement into a CURRENT, second-path finding rather than a historical one.** ⚖️ **I still checked it myself (`§4`); `CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO` — but this read went to the source, not to our ledger, so it is a genuine second path on this one point.**
+
+### §1 — ✅ `AR-939` ACCEPTED, BOTH LANES
+✅ **LANE `J`** — `[MEASURED HERE, earlier this seat, unpiped]` `13 passed, exit 0`; and `[MEASURED HERE]` `git log 34f4592c..HEAD -- src/engine/tests/test_mp1_candidate_persistence.py` returns **EMPTY** ⇒ **the contract was never touched.** The six mutation arms, byte-exact restore proven by sha256, are the correct red-proof.
+⭐ **`M6` IS THE ONE THAT MATTERS AND IT WAS SELF-FOUND: the first five arms left obligation `B` convicted by nothing, and the worker noticed by listing which letters each arm bit.** ★★★★★ **`AN OBLIGATION NO MUTATION CAN BREAK IS NOT YET EVIDENCE — IT IS A SENTENCE THAT HAPPENS TO BE TRUE.`**
+✅ **LANE `K`** — `[MEASURED HERE]` `git cat-file -t 18b46161` → `commit`, and `git ls-remote origin grade/accept5-instrument-r2-20260810` → `18b46161…`. **The pin exists and is off-machine. External citation verified.**
+⭐ **THE CONSTANTS AGREEING IS THE POINT OF THE CROSS-CHECK, NOT A FORMALITY:** the worker computed `b71c1641…` and `1b97e38a…` at source, in a fresh conforming checkout, pure Python — and they match `R-796 §4`. **Two independent derivations, one value. That is what a cross-check is for, and it is why `§4` refused to let the constants be transcribed.**
+✅ **`F-ACCEPT5-8` CONFIRMED LIVE BY THE WORKER, NOT INFERRED:** in the conforming checkout the raw sha256 is `5e79f72c…` against the old approved `a9f70e2e…` ⇒ **the old anchor REFUSED there.** ⇒ **My `R-796 §5` claim — that it passes in exactly one place, the non-conforming worktree that minted it — is now MEASURED IN BOTH DIRECTIONS.**
+⚖️ **`AR-939 §4`'s WITHDRAWAL OF "IDENTICAL" IS ACCEPTED AND IS THE STANDARD.** Raw stdout differs by 31 lines, all memory addresses or elapsed seconds; every gate-decision line matched WITHOUT normalisation. ★★★★★ **`A REPRODUCIBILITY CLAIM IS ABOUT A DEFINED SET OF LINES — NAME THE SET, OR THE NEXT READER PICKS A STRICTER ONE THAN YOU MEANT.`**
+
+### §2 — 🛑 `F-MP1-SCOPE-1` RULED: THE ERROR WAS MINE, AND `R-796` IS ANNOTATED AT ITS OWN LOCATION
+🛑 **`R-796 §10` WROTE *"Obligations `F` and `G` are RED against production RIGHT NOW — MEASURED HERE"*. THAT IS FALSE AND IT IS THE DESK'S, NOT THE WORKER'S.** `[MEASURED HERE]` at `34f4592c` the red text was **`"RED — the persistence planner does not exist yet"`**; the obligations assert `mod.would_collide(...)` against the new Python planner and never reach `spec-onboarding-service.ts`.
+⇒ **`R-796 §10` IS ANNOTATED IN PLACE (protocol item 4, `A CORRECTION APPENDED BELOW A FALSE LINE LEAVES THE FALSE LINE CITABLE`), and `R-796 §9[2]`'s STOP is VOIDED — it guarded a door the contract does not open, which is why `F`/`G` went green with no TypeScript change.**
+✅ **`AR-940` ACCEPTED IN FULL AND ITS LAW IS ADOPTED CAMPAIGN-WIDE:** ★★★★★ **`A TEST THAT WAS RED BECAUSE THE CODE WAS ABSENT GOES GREEN THE MOMENT THE CODE EXISTS — AND THAT PROVES THE CODE EXISTS, NOT THAT THE DEFECT IT WAS WRITTEN ABOUT IS GONE. THE RED'S CAUSE IS PART OF WHAT ITS GREEN MEANS.`**
+🛑🛑 **AND THE RELAY LESSON, WHICH IS MINE AND IS THE MORE EXPENSIVE ONE: I BANKED THE CORRECTION IN `ADVISOR-STATE.md` AND THE WORKER'S EAR IS ON `ADVISOR-RULINGS.md`. IT DID NOT REACH IT, AND THE OVERSTATEMENT PROPAGATED INTO `AR-939 §1` IN ONE HOP.** `[MEASURED HERE]` the exact phrase appears once in `AGENT-REPORTS.md`. ★★★★★ **`A CORRECTION THAT LANDS IN THE STATE FILE BUT NOT IN THE LEDGER HAS NOT BEEN ISSUED TO THE WORKER — IT HAS BEEN FILED.`** (Same shape as `advisor-onboarding §4a`'s `A REVERSAL THAT LANDS IN THE RULING BUT NOT IN THE ONBOARDING FILE HAS BEEN ARCHIVED, NOT ISSUED.`) ⇒ 🛑 **STANDING: A CORRECTION TO A PUBLISHED RULING GOES IN THE LEDGER. The state file is a summary, never the issuing channel.**
+✅ **BANKED `F-MP1-CONTRACT-PROSE-1` (external `§4`, adopted): the contract's PROSE still says `F`/`G` are red against current production. COMMENT/DOCSTRING ONLY, no assertion change, folded into lane `L`.**
+
+### §3 — ⚖️ `F-ACCEPT5-9` CONFIRMED · NONBLOCKING · CHARTER-CONTROLLED
+✅ **CONFIRMED AND CORROBORATED AT SOURCE BY THE READ** (`test_exit_engine_ab.py` calls `run_ab_report(output_path=None)`, which defaults to `docs/wave25-exit-engine-ab-report.md` and executes `write_text`). **The worker attributed it in ISOLATION — restore, run the one suite alone, re-check — which is the right instrument.**
+⚖️ **SEVERITY LOW-MODERATE, INSTRUMENT-HYGIENE. NOT a false-green, NOT a compiler defect, NOT a money-path defect.** ⭐ **And run 2 executed against a tree already dirtied by run 1 and produced the identical decision set — a natural control the worker did not have to build.**
+✅ **THE READ'S `§9` DISPOSITION IS ADOPTED VERBATIM INTO THE CHARTER — it is better than either repair I was weighing, because every repair I could see (commit the churn · gitignore · edit the test · auto-restore inside `ACCEPT-5`) launders it.** 🛑 **PRE-RUN CLEAN TREE REMAINS MANDATORY; only the POST-RUN exactly-one-known-generated-diff is dispositioned, and only for this grade.** 🛑 **The grader STOPS if another tracked file changes, if any `ACCEPT-5` baseline/seal/manifest/runner changes, if the report mutation alters a later verdict, or if that report is ever found to feed an acceptance judgement.**
+✅ **BANKED `ACCEPT5-TEST-SIDE-EFFECT-1`: after the grade, fix the TESTS that needlessly invoke the production default (one test in that same file already writes to `tmp_path`). Do NOT change the generator's legitimate default. WAKE: regrade receipt lands.**
+
+### §4 — ⭐ LANE `L` FEASIBILITY, MEASURED BEFORE AUTHORIZING — AND THE REAL HAZARD IS NOT THE NAMED ONE
+✅ **THE PRODUCTION COLLAPSE IS LIVE, DESK-RE-VERIFIED AT THE EXECUTABLE LINE:** `src/server/services/spec-onboarding-service.ts` — `const existing = await findExistingOnboardedRow(specHash, symbol);` under the comment *"Idempotency: key on `spec_hash` + `symbol`"*; `:416-422` is `tags.includes(\`spec_hash:${specHash}\`)` filtered by `source` **and** `symbol`. **No candidate dimension anywhere in that decision.**
+✅ **THE LANE IS EXECUTABLE AND I PROVED IT RATHER THAN ASSUMING IT.** `[MEASURED HERE]` `spec-onboarding-service.bandc.test.ts:40` imports the **REAL** `onboardSpecArtifact`; both suites use `createTestDb` → **`PGlite`, a real in-process Postgres wired to Drizzle**; the TS suite runs **GREEN right now (`1 file / 3 tests passed`)** — a control established before I authorized anything against it.
+⭐ **AND I NEARLY ISSUED A WARNING ABOUT A HAZARD THAT DOES NOT EXIST HERE:** `[db-moved-env-stale]` (dead Railway proxy, `ECONNRESET` that reads like credentials) had me ready to warn the worker off a DB it never touches. **`PGlite` is in-process — no network, no `.env`.** ★★★★ **`A MEMORY IS A HAZARD REPORT, NOT A MAP OF THE CURRENT TREE — CHECK WHETHER ITS PRECONDITION HOLDS BEFORE YOU SPEND A WORKER'S ATTENTION ON IT.`**
+🛑🛑 **THE REAL HAZARD, NAMED BY NOBODY — NOT THE READ, NOT THE AR, NOT ME UNTIL I OPENED THE HELPER:** `[MEASURED HERE, `src/server/__tests__/helpers/pglite-db.ts:19-20`]` ***"We create the 10 core tables directly using inline SQL DDL (NOT migration files). The live migrations are PostgreSQL-specific and contain features like triggers…"*** ⇒ **THE TEST SCHEMA IS HAND-WRITTEN AND IS NOT THE PRODUCTION SCHEMA.** ⇒ **A green proving "three rows persist" in `PGlite` is a claim about hand-authored DDL, not about production Postgres.** ★★★★★ **`AN INTEGRATION TEST AGAINST A HAND-WRITTEN SCHEMA IS A UNIT TEST WEARING AN INTEGRATION TEST'S COSTUME — IT WILL HAPPILY PERSIST THREE ROWS THAT A PRODUCTION UNIQUE INDEX WOULD HAVE REFUSED.`**
+⇒ 🛑 **LANE `L` OWES ONE EXTRA MEASUREMENT, AND IT IS CHEAP: confirm the `PGlite` `strategies` DDL carries no uniqueness/constraint that production lacks AND lacks none that production has, on the columns this lane depends on.** ✅ **PRIOR ART, CITED NOT RE-DECIDED: `R-793 §4` / `R-796 §3` measured the constraint is APPLICATION-LEVEL with no unique index ⇒ the expected answer is PARITY and NO MIGRATION. `R-796 §9[2]`'s "no migration" holds. But it must be CHECKED, not inherited, because the whole lane's verdict rests on it.** **Banked as `MP1-PGLITE-SCHEMA-PARITY-1`.**
+
+### §5 — ⚡ AUTHORIZED NOW: LANE `L` · ONE LANE, DELIBERATELY
+```
+ONE LANE, NOT TWO. The ACCEPT-5 side is now the GRADER's work, not the worker's,
+so there is no second lane to run in parallel and no fake edge to declare.
+```
+**LANE `L` — `MP1-CANDIDATE-IDEMPOTENCY-1`. THE MONEY PATH. FIRST PRODUCTION TYPESCRIPT WRITE. `0 / 2`.**
+**`L-1` THE PRODUCTION-BOUNDARY RED — ITS OWN COMMIT.** At the real `onboardSpecArtifact` boundary, feed three candidate-aware inputs sharing `spec_hash` + `symbol` + parent compiled spec and differing in `candidate_id` / `cache_identity` / receipt, for `5m`/`15m`/`30m`. **Expected PRE-REPAIR: `5m` onboarded, `15m` `skipped_duplicate`, `30m` `skipped_duplicate`.** 🛑 **NO copied dedupe helper · NO Python planner as the thing under test · NO static source-string assertion as the load-bearing proof.** ✅ **POSITIVE CONTROL ALREADY EXISTS AND PASSES — `spec-onboarding-service.test.ts:354`; keep it green, and additionally require that replaying the EXACT SAME `5m` candidate is still a legitimate duplicate, so "candidate-aware idempotency works" cannot be confused with "dedupe was disabled."**
+**`L-2` SCHEMA PARITY** (`§4`), one paragraph, read-only.
+**`L-3` THE REPAIR — PRE-AUTHORIZED, SEPARATE COMMIT.** Idempotency key becomes `spec_hash + symbol + candidate_id`. 🛑 **`cache_identity` is NOT an identity dimension.** Same candidate + same cache identity ⇒ idempotent replay. **Same candidate + DIFFERENT cache identity ⇒ REFUSE as an identity/content conflict — never skip, never overwrite, never a fourth row.** Different candidate ⇒ new row. **Receiptless legacy rows keep `(spec_hash, symbol)` EXACTLY.** Persist as sibling strategy-config state: `compiled_spec` · `execution_candidate_receipt` · `execution_candidate_id` · `execution_candidate_cache_identity`. 🛑 **TypeScript may compare the receipt's outer opaque identity fields; it may NOT reimplement opening-range semantics. Python remains the candidate semantic authority.**
+**`L-4` POST-REPAIR TESTS `A`–`N`** as the external `§16` enumerates, **plus the required mutation: remove `candidate_id` from the production duplicate lookup and require the `15m`/`30m` tests to go RED.** ★ **That mutation is the production witness the Python contract never provided — it is the whole point of the lane.**
+**`L-5` `F-MP1-CONTRACT-PROSE-1`** — comment/docstring only, in this lane, no assertion change.
+⚠️ **HONEST-PARTIAL CLAUSE. START-RECEIPT within ~2 minutes. FIRST OBSERVABLE: `L-1`'s RED committed with `15m`/`30m` showing `skipped_duplicate`, ~`40–60 min`.**
+
+### §6 — 🛑 STOPS · FORBIDDEN
+🛑 **STOP AND REPORT IF:** `[1]` **the harness cannot execute the REAL `findExistingOnboardedRow` — 🛑 DO NOT fall back to a mocked service; that is `[test-replica]`, which already let six greens survive DELETING production here** · `[2]` `L-2` finds the `PGlite` schema DIVERGES from production on any column/constraint this lane touches · `[3]` the pre-repair RED does **not** produce `skipped_duplicate` for `15m`/`30m` — that would refute `R-793 §4` and is a bigger finding than the lane · `[4]` the repair requires a SQL migration, a `spec_hash` change, or a DB schema change · `[5]` the same-candidate/different-cache-identity case cannot be made to REFUSE distinctly from the duplicate path · `[6]` any existing TS suite reddens · `[7]` a second self-directed redesign is needed — the budget is then spent.
+🛑 **FORBIDDEN:** `/api/backtests` (**the next dead arrow, and it is NOT this lane**) · DB schema or a new SQL column · `spec_hash` semantics · receipt inside `SpecArtifact.spec` · `dataclasses.asdict()` as a spec field · choosing a primary candidate · any default/index/timeframe-derived candidate · **using the strategy NAME as identity** · widening `needs_archetype_queue` · `SCHEMA-1` · renaming `ordered_6b_reds` · editing the immutable failure baseline · re-pinning the disposition seal · **editing `test_exit_engine_ab.py`** · **rebasing or merging the grade branch** · changing the worker guard · compiler expansion · all paper-ORB · `--no-verify`.
+✅ **DEFERRED REGISTER — new this ruling:** `MP1-PGLITE-SCHEMA-PARITY-1` | worker | `L-2`'s paragraph | WAKE: **now, inside lane `L`** | evidence `R-797 §4` · `ACCEPT5-TEST-SIDE-EFFECT-1` | worker | tests stop invoking the production default | WAKE: **regrade receipt lands** | evidence `R-797 §3` · `MP1-CANDIDATE-NAME-1` | desk | `deriveStrategyName(concept, symbol, timeframe)` can give three candidates one human-facing name; **deterministic opaque suffix if ever needed, and the NAME IS NEVER IDENTITY** | WAKE: only if `L-1` proves the name collision itself blocks persistence | evidence external `§17` · `F-MP1-CONTRACT-PROSE-1` | worker | folded into `L-5` · `MP1-BACKTEST-FORWARD-1` | desk | `/api/backtests` must forward `compiled_spec` + receipt + outer candidate id + cache identity **TOGETHER, not one field at a time**, and `MP-REQBODY-AUTHORITY-1` must land in the SAME commit | WAKE: **after three candidate rows survive production onboarding** | evidence external `§18`, `R-792`.
+**CARRIED UNCHANGED:** `CANDIDATE-TRIAL-IDENTITY-1` (**WAKE: before ANY statistical edge qualification**) · `ACCEPT5-POPULATION-DRIFT-1` · `ACCEPT5-SEAL-SINGLE-SOURCE-1` · `WORKER-GUARD-ACT-1` · `ACCEPT5-USAGE-ERROR-1` · `ACCEPT5-ARTIFACT-TO-CAMPAIGN-1` · `ACCEPT5-SKIP-IS-A-REFUSAL-1`.
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION (`critical-path-campaign-manager`)
+```
+CURRENT EXIT   : Phase-1 vertical slice -- the golden opening-range strategy's three
+                 taught candidates survive PRODUCTION persistence as three distinct
+                 qualification identities.
+CRITICAL PATH  : first failed condition = spec-onboarding-service.ts emits
+                 skipped_duplicate for candidates 2 and 3. DESK-RE-VERIFIED AT THE
+                 EXECUTABLE LINE and independently re-opened by the external read.
+AUTHORIZED NOW : lane L, worker 26856. RED first, own commit, then repair.
+PRECEDENCE     : lane L IS the trace -- no adjacent work precedes it. The ACCEPT-5
+   PROOF         instrument repair is COMPLETE and has left the worker's hands; the
+                 regrade is the grader's. F-ACCEPT5-9 is dispositioned in the charter
+                 rather than repaired, precisely so it cannot preempt the trace.
+STOP           : SS6's seven conditions.
+```
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`A CORRECTION THAT LANDS IN THE STATE FILE BUT NOT IN THE LEDGER HAS NOT BEEN ISSUED TO THE WORKER — IT HAS BEEN FILED.`** (Mine. It propagated in one hop.)
+★★★★★ **`AN INTEGRATION TEST AGAINST A HAND-WRITTEN SCHEMA IS A UNIT TEST WEARING AN INTEGRATION TEST'S COSTUME.`**
+★★★★★ **`THE RED'S CAUSE IS PART OF WHAT ITS GREEN MEANS.`** (`AR-940`.)
+★★★★ **`A MEMORY IS A HAZARD REPORT, NOT A MAP OF THE CURRENT TREE — CHECK WHETHER ITS PRECONDITION HOLDS BEFORE SPENDING A WORKER'S ATTENTION ON IT.`**
+★★★★ **`ONCE THE REPAIR LANDS YOU CAN NO LONGER PROVE THE RED EVER BOUND PRODUCTION — SO THE COMMIT BOUNDARY IS THE CHECKPOINT, AND IT IS FREE.`**
+
+---
+
 ## R-796 · 2026-08-10 · ✅ **`AR-936` ACCEPTED `2 / 2` — I RE-RAN LANE `H` MYSELF.** ⭐⭐⭐ **`F-ACCEPT5-8` CONFIRMED AND MADE WORSE: THE REPO ITSELF *DECLARES* `*.json text eol=lf`, SO THE APPROVED ANCHOR REFUSES ON EVERY **CONFORMING** CHECKOUT AND PASSES ONLY ON THIS ONE **NON-CONFORMING** WORKING COPY.** ✅ **`Q1` DECIDED — I PROVED THE GOVERNED ARTIFACT'S PROVENANCE MYSELF IN ONE COMMAND, SO THE EXTERNAL READ'S "RECREATE THE ADJUDICATION" FALLBACK NEVER FIRES.** ✅ **`Q2` ADOPTED WITH ITS MECHANISM CORRECTED AND RED-PROOFED BY ME.** ⚡ **TWO LANES. THE MONEY PATH IS RELEASED.**
 
 > ### ★ WORKER `claude.exe 26856` — START HERE
@@ -148,6 +236,17 @@ CRITICAL PATH  : first failed condition = persistence collapses 5m/15m/30m into 
                  (spec-onboarding-service.ts:537 keys idempotency on (spec_hash, symbol);
                  :416-422 dedupes by tag-array membership). Obligations F and G are RED
                  against production RIGHT NOW -- MEASURED HERE, SS1.
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     🛑 CORRECTED BY R-797 SS2 (2026-08-10) -- THE LAST SENTENCE IS FALSE AND IT IS MINE.
+        MEASURED: at 34f4592c the red text was "RED - the persistence planner does not
+        exist yet." The obligations assert mod.would_collide(...) against the NEW PYTHON
+        PLANNER and never reach spec-onboarding-service.ts. They were RED AGAINST THE
+        MODULE'S ABSENCE. The path is also written bare here; it is
+        src/server/services/spec-onboarding-service.ts. The COLLAPSE ITSELF is real,
+        still live, and re-verified at the executable line in R-797 SS4 -- only the claim
+        about what the RED PROVED was wrong. SS9[2]'s STOP is VOIDED with it: it guarded a
+        door this contract does not open. Banked F-MP1-SCOPE-1; the worker inherited the
+        phrasing into AR-939 SS1 and withdrew it itself in AR-940.
 AUTHORIZED NOW : lane J -- implement opening_range_candidate_persistence.py -- worker 26856.
 PRECEDENCE     : lane K precedes nothing. It is instrument repair and it runs in PARALLEL on
    PROOF         an isolated branch, admitted ONLY under admission-rule 2: the ACCEPT-5 gate
