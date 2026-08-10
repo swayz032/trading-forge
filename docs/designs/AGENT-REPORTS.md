@@ -4,6 +4,70 @@
 
 ---
 
+## AR-949 · 2026-08-10 · 🛑🛑 **MY OWN PRE-REGISTERED FALSIFICATION FIRED. THE HYPOTHESIS IS REFUTED AND I AM STOPPING AT `2 / 2` — I AM NOT RESHAPING THE CLONE.** ✅ **HALF OF IT WAS CONFIRMED DECISIVELY: THE BASELINE REFUSAL IS GONE, AND I MEASURED `F-ACCEPT5-8`'s MECHANISM SIDE-BY-SIDE IN ONE COMMAND.** 🛑 **THE SECOND REFUSAL SURVIVES, AND ITS CAUSE IS NOW MEASURED WITH A DISCRIMINATING CONTROL: TWO SEALED GATE TESTS DEPEND ON AN **UNTRACKED** FILE THAT EXISTS IN EXACTLY ONE WORKING COPY ON THIS MACHINE.** ⚠️ **AND THE LANE'S `60–90 min` ETA IS WRONG BY ~`30×` — I MEASURED `2.4 min`.**
+
+**SEAT `claude.exe 7972`. CAMPAIGN TREE `wt-h1-wave4-20260712`, `HEAD 8cca128e`, CLEAN. ISOLATED WORKTREE `C:\Users\tonio\Projects\wt-r3-faithful-20260810` @ `8cca128e` detached — `[MEASURED HERE]` `git rev-parse --show-toplevel` returns the worktree itself, so `[session-cwd-decoy-git]` did not fire. ALL destructive/lab work ran THERE. `R3` REMAINS `0 / 5`.**
+
+### §1 — 🛑 THE FALSIFICATION, AS I PRE-REGISTERED IT, WITH THE ANSWER IT GAVE
+🛑 **`AR-948 §4` pre-registered, before building anything: *"the faithful clone must, on a GOOD run, stop refusing for BOTH `AR-946 §2` reasons — `BASELINE INTEGRITY` and `MISSING AUTHORIZED DISPOSITION CHANGE`. If either still fires, the hypothesis is REFUTED."***
+✅ **`[MEASURED HERE, the real `scripts/acceptance_runner.py --run` subprocess in the faithful clone, unpiped, full log retained]`:**
+```
+NOTE: [1] manifest members (comments stripped) : 107
+NOTE: [3] feeder ... (pytest exit 1)      NOTE: [4] 2417/2417/31/5/2
+[SELF-CHECK] independent feeder (junitxml) cases=2417 failures=31
+
+BASELINE INTEGRITY FAILURE .......... ABSENT FROM THE OUTPUT   <- ELIMINATED by the copy
+MISSING AUTHORIZED DISPOSITION CHANGE (SKIP):
+      test_spec_family_bindings.py::test_s6_coverage_6a_re_derives_on_the_governed_population
+      test_spec_family_bindings.py::test_s6_dead_17_denominator_stays_retired
+
+ACCEPTANCE: REFUSED          RUNNER_EXIT=1
+  - MISSING AUTHORIZED DISPOSITION CHANGE: 2 test(s) ...
+```
+⇒ 🛑 **ONE OF THE TWO STILL FIRES ⇒ BY MY OWN CRITERION, THE HYPOTHESIS IS **REFUTED**. `PASS` IS STILL UNREACHABLE IN A TREE IT IS SAFE TO BREAK.**
+🛑 **I AM STOPPING, NOT ITERATING. `R-800 §0`'s budget is `2` and this was attempt `2`.** ⚖️ **The move I am deliberately NOT making is obvious and available: copy the missing artifact too, and the refusal would very likely vanish. THAT IS ATTEMPT `3` WEARING ATTEMPT `2`'s CLOTHES, and it is exactly the re-read-after-an-unwanted-answer my own receipt forbade me.** ★★★★★ **`THE MOMENT A PRE-REGISTERED CRITERION FAILS IS THE MOMENT IT IS WORTH SOMETHING — A CRITERION YOU WOULD EXTEND ON A MISS NEVER CONSTRAINED YOU AT ALL.`**
+✅ **`R-801 §5` ALREADY ROUTED THIS: `ACCEPT5-RED-SHAPE-1` is DESK-OWNED and its WAKE is *"the instant `AR-948 §4`'s falsification REFUTES the hypothesis"*, with *"the worker does not re-ask; the falsification firing IS the ask."*** ⇒ **THIS SECTION IS THE ASK. I ADD NO ARGUMENT FOR EITHER SHAPE.**
+
+### §2 — ✅ THE HALF THAT IS CONFIRMED, AND IT IS CONFIRMED HARD
+✅ **`[MEASURED HERE, both trees side by side, one command]`:**
+```
+APPROVED CONSTANT (acceptance_runner.py:79) : a9f70e2e...
+CAMPAIGN TREE   (on disk)                   : a9f70e2e...   CR bytes: 66   <- MATCHES
+FRESH ISOLATED TREE, BEFORE the copy        : 5e79f72c...   CR bytes:  0   <- REFUSES
+FRESH ISOLATED TREE, AFTER  the copy        : a9f70e2e...                  <- ACCEPTED
+```
+⇒ ✅ **`F-ACCEPT5-8` (`R-796 §5`) IS CONFIRMED BY ME, NOT INHERITED, AND THE `AR-946`/`R-801` PREMISE IS EXACT: the approved anchor is a snapshot of a byte-state the repo's own `.gitattributes` forbids, and it matches in exactly one working copy.** **The `BASELINE INTEGRITY` half of `AR-946 §2`'s blocker is DISSOLVED — the technique works.**
+⭐ **AND A BOUND ON ITS BLAST RADIUS, WHICH IS BETTER NEWS THAN EXPECTED:** `[MEASURED HERE]` **`18` files under `docs/replay-results/h1-battery/` differ between a conforming and a non-conforming checkout — including BOTH seal files.** 🛑 **But `[MEASURED HERE, every anchor constant in the runner]` only the BASELINE is anchored on RAW FILE BYTES (`:104`). `SEAL` and `DISPOSITION_SEAL` are anchored on PARSED CONTENT (`graded_sha`, node-ID digests, counts — `:219`, `:266`), which CRLF cannot move.** ⇒ ★★★★ **`THE NORMALISATION TOUCHES EIGHTEEN FILES AND BREAKS EXACTLY ONE CHECK — BECAUSE ONLY ONE CHECK READS BYTES INSTEAD OF MEANING. THE OTHER SEVENTEEN ARE A SCARE, NOT A DEFECT.`** **I copied ONLY the one anchored file, deliberately, so the clone stays minimally divergent.**
+
+### §3 — 🛑 THE SURVIVING REFUSAL: CAUSE MEASURED, WITH A CONTROL THAT DISCRIMINATES
+✅ **`[MEASURED HERE, the SAME two node IDs, the SAME command, the only variable being the tree]`:**
+```
+ISOLATED CLONE  : 2 skipped   "governed grade unavailable at
+                              <tree>/src/engine/tests/../../../docs/replay-results/blind-readjud..."
+CAMPAIGN TREE   : 2 passed
+```
+✅ **AND THE CAUSE, `[MEASURED HERE]`:** `docs/replay-results/blind-readjudication` in the campaign tree holds **`0` TRACKED files and `1` ON-DISK file**; in the fresh clone the directory **does not exist at all**. ⇒ **`git worktree add` materialises tracked content only, so this evidence cannot exist in ANY fresh checkout, by construction.**
+🛑 **SO TWO SEALED TESTS THAT GATE THE `ACCEPT-5` VERDICT PASS ON THIS MACHINE ONLY, VIA A FILE NOBODY COMMITTED.** ★★★★★ **`THE PATH IS TREE-RELATIVE AND HONEST — `Path(__file__)`-style, NOT A HOME PATH — SO IT LOOKS HERMETIC AND IS NOT. WHAT MAKES EVIDENCE MACHINE-LOCAL IS NOT AN ABSOLUTE PATH, IT IS BEING UNTRACKED.`** (`R-799 §5`'s class exactly: it is none of the three permitted forms.)
+⚠️ **BOUND I WILL NOT OVERSTATE: `R-799 §5` enumerated `SAMPLES_DIR` (`:41`), a git-history dependency (`:1908`), and *"three sealed skips"*. This input is `blind-readjudication`, resolved at `:901`, and is NOT `SAMPLES_DIR`.** 🛑 **Whether the desk's existing enumeration already counted these two tests under a different description, I DID NOT VERIFY and I am NOT claiming a fourth input.** ⇒ **This is `R3-4` evidence either way, and I have NOT dispositioned it.**
+
+### §4 — ⚠️ THE LANE'S ETA IS WRONG BY ~`30×`, AND IT HAS BEEN RE-QUOTED THREE TIMES
+🛑 **`[MEASURED HERE]` the full governed run: START `19:44:09Z` → FINISH `19:46:33Z` = **`2.4 minutes`**, `2417` collected/executed.**
+⚠️ **`AR-945` estimated *"`60–90 min`; the first `--run` must execute the real governed population, which is not fast"*. `AR-946`, `R-800 §7` and `R-801 §9` all carried it forward.** ⇒ ★★★★ **`AN ETA IS A MEASUREMENT LIKE ANY OTHER, AND THIS ONE WAS INHERITED THROUGH FOUR DOCUMENTS WITHOUT ANYONE TIMING IT ONCE. IT MADE EVERY REMAINING `R3` ITEM LOOK ~30× MORE EXPENSIVE THAN IT IS.`** ✅ **PRACTICAL CONSEQUENCE, AND IT IS THE USEFUL PART: the seven red-proofs `R1`–`R7` EACH ALONE are ~`17` minutes of compute total, not a day. `R6` in particular is cheap and there is now no cost argument for letting it slide.**
+
+### §5 — ⭐ AN OBSTACLE TO `R-801 §8`'s STOP `[8]` THAT I FOUND WHILE READING, AND DID NOT ACT ON
+✅ **`R-801 §4` requires the COMMITTED red to build its baseline as permitted form `[2]`, and `§8 STOP [8]` says to report if that cannot be done without the byte-faithful copy.** ⇒ ✅ **`[MEASURED HERE, `acceptance_runner.py:372-379`]` THE RUNNER ALREADY EXPOSES `--baseline` (`:378`) AND `--manifest` (`:377`) AS CLI ARGUMENTS.**
+⇒ ⚖️ **HYPOTHESIS, LABELLED, NOT TESTED, AND NOT ACTED ON: a committed RED can create its own baseline fixture (strip CR, then LF→CRLF — deterministic in a conforming AND a non-conforming checkout), assert its sha equals the approved constant, and pass `--baseline <fixture>` to the REAL runner subprocess. That would satisfy form `[2]` with NO source modification and NO byte-faithful tree, on any machine.** 🛑 **I did NOT build it: the RED's SHAPE is now desk-owned (`§1`), and building the vehicle before the shape is ruled risks encoding a criterion the desk did not choose.** ✅ **Reported so `STOP [8]` can be assessed on evidence rather than fired on my silence.**
+✅ **PRIOR ART STATED (`worker-execution §0.-0.5`): `[MEASURED HERE]` `grep -rln "acceptance_runner" --include=*.py` over the whole tree returns **`0`** files besides the runner itself. **NO existing test harness exercises this instrument** — the committed RED is genuinely new construction, not an adaptation.**
+
+### §6 — ⚖️ WHAT I DID NOT DO, AND WHAT I DID NOT MEASURE
+🛑 **I did NOT demonstrate `ACCEPTANCE: PASS`. The verdict was `REFUSED` in both trees. Anyone quoting `§2` must quote that.** 🛑 **I did NOT write one line of the fresh-run protocol, did NOT touch `R3-2`…`R3-5`, and did NOT run red-proofs `R1`–`R7`. `R3` is `0 / 5`.**
+✅ **NO PRODUCTION FILE WAS MUTATED ANYWHERE. `[MEASURED HERE]` the campaign tree is CLEAN at `8cca128e` on tracked paths; the only writes were one file COPY inside a throwaway worktree and its log — nothing committed, `R-801 §8`'s clarification honoured.** ⚠️ **The isolated worktree `wt-r3-faithful-20260810` IS STILL ON DISK, deliberately: it carries the falsification evidence. Say the word and I remove it.**
+⚠️ **I did NOT re-derive `AR-946 §1`'s `diff`-identical two-run result. `CORROBORATED` at best — my run reproduced its `2417/2417/31/5/2` and `pytest exit 1` line exactly, which is consistent with it, but I ran the GOOD arm only.**
+
+**RECOMMENDATION: `BLOCKED` on `ACCEPT5-RED-SHAPE-1`, which `R-801 §5` already assigned to the DESK and which this report wakes. I add no argument for either shape.** ⚠️ **ONE PROCEDURAL QUESTION, AND IT IS NOT A RE-ASK OF THE RED SHAPE: `R3-3` and `R3-4` do not depend on the RED's shape. `R-801 §9` says STOP, and `R-800 §6` says a seat that self-authorizes on an ambiguous clause is the worse failure — so I am NOT starting them on my own reading. Name whether the STOP covers the lane or only `R3-1`, and I will move the same minute.**
+
+---
+
 ## AR-948 · 2026-08-10 · 🪑 **SEAT RECEIPT + START-RECEIPT — WORKER `26036` HAS ROLLED; I AM ITS SUCCESSOR `claude.exe 7972`.** ⚡ **`R3` RESUMES AT `0 / 5`, NO HANDOFF, NO FURTHER WORD NEEDED (`R-800 §7`).** 🛑 **AND I DO NOT INHERIT `AR-946 §2`'s BLOCK: I BELIEVE THE CONFLICT IS DISSOLVABLE BY CONSTRUCTION, SO I AM NOT ASKING THE DESK TO WEAKEN ITS OWN ACCEPTANCE CRITERION.** ⚠️ **THREE ARs SIT UNRULED AND I SAY SO RATHER THAN LET MY START IMPLY THEY WERE ANSWERED.**
 
 **SEAT `claude.exe 7972`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD e62c60d3`. LANE `R3`, five items, fan-in `0 / 5`. NOT GRAPH-SCHEDULED.**
