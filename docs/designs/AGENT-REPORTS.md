@@ -4,6 +4,51 @@
 
 ---
 
+## AR-913 · 2026-08-09 · 🔄 **HANDOFF — GENUINE CONTEXT EXHAUSTION, DECLARED BEFORE STARTING `STEP 2` RATHER THAN INSIDE IT.** ✅ **FAN-IN `2 / 3`: `STEP 0` DONE+ACCEPTED (`R-781`) · `STEP 1` DONE+ACCEPTED, VERDICT `RED` (`R-782`) · `STEP 2` **UNSTARTED**, NOT BLOCKED.** 🛑 **NOTHING IS HALF-DONE. NO PRODUCTION FILE HAS BEEN TOUCHED. THE TREE IS PUSHED AND REMOTE-VERIFIED.**
+
+**SEAT `claude.exe 12460`. HEAD `a3f84daf` = `origin/h1-wave4-sealed12-driver` `[MEASURED, re-fetched]`. ATTEMPT `0 / 2`, UNSPENT.**
+
+### §1 — ⚖️ WHY THIS IS AN EXHAUSTION CALL AND NOT A LANE-BOUNDARY PREFERENCE
+🛑 **I know the rule and it is right: `A LANE BOUNDARY IS NOT A CONTEXT LIMIT`, and `AR-521` was overruled for exactly this at `1 / 4` with its process still alive.** ⚖️ **The distinguishing test is whether the remaining work is UNSTARTED-but-doable or genuinely beyond this seat. `STEP 2` is the second.**
+- **`STEP 2` is ATOMIC BY ORDER — `ALL ELEVEN OR NONE`, and `R-782 §6` forbids committing an intermediate production state.** ⇒ **there is no safe partial. A truncation mid-`STEP 2` leaves an UNPUSHED half-activation in a tree SHARED with a live sibling seat (`claude.exe 28472`).**
+- **Its full cost is eleven production surfaces + three fixture transitions each red-proofed at `18501f4e` + five acceptance groups including `tsc`, the TS parity script and the `104`-member membership join.** **The previous seat reached `8 / 9` and spent a whole session there.**
+- ⇒ ★★★★ **`WHEN THE UNIT OF WORK CANNOT BE PARTIALLY LANDED, THE HANDOFF DECISION MUST BE MADE BEFORE IT STARTS — INSIDE IT, EVERY OPTION IS ALREADY BAD.`**
+✅ **I therefore did NOT begin the transitions.** **`git status --porcelain -- src/ scripts/` is clean apart from the pre-existing `test_synthetic_market_simulator.py` dirt I did not create.**
+
+### §2 — ✅ EXACTLY WHAT THIS SEAT DELIVERED, ALL PUSHED AND REMOTE-VERIFIED
+```
+742f4359  STEP 0  gate repair (delegation) + tests/python/test_inventory_freshness_gate.py
+d1b6ab34  STEP 0  SYSTEM-INVENTORY regenerate — GENUINE content drift, terminated
+18501f4e  STEP 1  the flag-OFF silent-pass RED  <- PRE-ACTIVATION HEAD for §7-b red-proofs
+80800773 / ff67175a / a3f84daf  AR-908 · AR-909 · AR-910 · AR-911 · AR-912
+```
+✅ **`STEP 1`'s VERDICT, which is the thing `STEP 2` rests on: `RED`. Member `11` is MANDATORY** — flag at default `OFF`, family declared ⇒ `True` on all `45` bars, ZERO adapter calls.
+
+### §3 — 📌 THE NEXT SEAT'S TASK, PINNED SO NOTHING IS RE-DERIVED
+**`R-782 §6` — `STEP 2`, eleven surfaces, `R-780 §5`'s list VERBATIM with `R-782 §4` replacing surface `7`.** **Attempt `0 / 2`.**
+1. **`R-782 §4` — surface `7` is ONE statement with TWO pinned halves:** `ENFORCED_DISPATCH[<declared primitive>] = _h_opening_range`. **The KEY half is pinned by pin (a) `family_meta_enforcement.py:486-494`; the VALUE half by `test_parameter_acceptance_guard.py`'s `assert classified == routed`** ⇒ **surface `3` lands in the SAME commit or the parameter guard bites.** 🛑 **Key on the PRIMITIVE, never the family or `b.type`.**
+2. **`gates=True` is the DEFAULT ⇒ surface `5` is NOTHING TO ADD.** 🛑 **The read's "this family is not the trigger" framing INVITES `gates=False`; that is a pin-(a) violation. DO NOT SET IT.**
+3. **ORDER:** publish each of the three fixtures' NEW durable assertion **RED against `18501f4e`** first, then land the transitions WITH the activation.
+   **THE THREE, LOCATED:** `test_opening_range_conformance.py:443 test_both_definitions_refuse_deliberately_…` · `test_opening_range_family_parity.py:75 test_opening_range_definition_agrees_field_for_field` · `test_opening_range_family_parity.py:95 test_the_refusing_family_declares_no_primitive_to_fall_back_to`.
+   **The four durable invariants to rewrite onto are `R-779 §7-b`'s, unchanged.**
+4. **`ELSE-SINK-1` (`R-782 §5`) is DESK-OWNED and NOT in this commit** — read it only so the member-`11` diff does not close it by accident.
+5. **ACCEPTANCE, IN ORDER:** S6 all green → `ACCEPT-1` → `ACCEPT-3` (polarity green WITH opening range, no exemption) → `ACCEPT-4` (`tsc` + TS parity) → **`ACCEPT-5` LAST: membership, `NEW = 0`, `GONE = EXACTLY` the two historical reds.** 🛑 **MEMBERSHIP, NEVER AGGREGATE COUNTS.** **Then push → re-fetch → prove remote SHA equality.**
+
+### §4 — ⚠️ ONE OPEN JUDGMENT I IDENTIFIED AND DELIBERATELY DID NOT RESOLVE
+🛑 **The two `family_parity` fixtures assert the OPPOSITE of what they will assert after the transition** (`primitive is None`, `unsupported is True`, `unboundReason == "opening_range_adapter_not_implemented"`). **Their NAMES encode the old claim** — `test_the_refusing_family_declares_no_primitive_to_fall_back_to` will, post-activation, guard a family that DOES declare a primitive.
+⚖️ **Leaving the name is a lie; renaming changes member NAMES in a manifest whose join key I have not verified.** **`R-782 §6` pins `ACCEPT-5` on MEMBERSHIP, and I did not establish whether membership is keyed on test NAME.** ⇒ ★★★ **`A RENAME IS FREE UNTIL SOMETHING JOINS ON THE NAME — CHECK THE JOIN KEY BEFORE YOU IMPROVE A LABEL.`** **`[NOT MEASURED]` by me. Resolve it against the manifest's own membership rule, not by preference.**
+
+### §5 — 🛑 SEAT HYGIENE FOR THE INCOMING WORKER
+- 🔇 **MY RULING EAR DIES WITH THIS SESSION.** It is a `Monitor persistent` rig owned by `claude.exe 12460`. **ARM YOUR OWN, red-proof it on a throwaway FIRST, and backfill: the newest ruling on disk at handoff is `R-782`.** 🛑 **Do NOT kill `bash.exe 27724 / 13684 / 17740` — those are the ADVISOR's ear under `claude.exe 28472` and are not yours.**
+- ✅ **NO SUBAGENT IS OWED.** I dispatched none; there is no in-flight work to reconcile.
+- ⚠️ **`R-781 §4`'s standing remedy applies to you: `git add` a file the instant it is written and commit in the same motion.** `pre-commit` stashes UNSTAGED work around every hook run and collided once in this session (rolled back cleanly, `[MEASURED]` nothing lost).
+- ⚠️ **The S6 suite is CWD-SENSITIVE — run from the worktree root or it fails `8/8`.**
+- ⚠️ **`R-782` authorized `STEP 2` to `claude.exe 12460`. YOU ARE NOT THAT SEAT.** ⇒ **`AN AUTHORIZATION NAMES A SEAT, NOT A CHAIR` (`R-779 §7`): state your PID and ask for re-authorization in your START-RECEIPT. This cost two round-trips today; asking in the receipt makes it zero.**
+
+**A FRESH WORKER SESSION IS NEEDED. `STEP 2` IS UNSTARTED, FULLY SPECIFIED ABOVE, AND ITS PREREQUISITE VERDICT IS IN.**
+
+---
+
 ## AR-912 · 2026-08-09 · 🛑🛑🛑 **`STEP 1` VERDICT: **`RED`**. MEMBER `11` IS REAL AND REACHABLE, AND IT IS MEASURED, NOT REASONED.** ⭐ **WITH THE FLAG AT ITS DEFAULT `OFF` AND THE FAMILY DECLARED, PRODUCTION RETURNS `True` ON ALL `45` TAUGHT BARS WITH **ZERO** ADAPTER CALLS.** ⭐⭐ **AND THE RED LANDED ON THE CLAIM, NOT ON A BROKEN WITNESS — BOTH POSITIVE WITNESSES PASSED FIRST, WHICH IS THE ONLY REASON THE VERDICT MEANS WHAT IT SAYS.**
 
 **TASK `R-780 §6 STEP 1` (confirmed unchanged by `R-781 §5`). SEAT `claude.exe 12460`. HEAD `18501f4e`. ATTEMPT `0 / 2`, UNSPENT — `R-781 §5`: measuring is not attempting. FAN-IN: `STEP 0` DONE · `STEP 1` **DONE, VERDICT RED** · `STEP 2` NEXT.**
