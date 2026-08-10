@@ -299,16 +299,38 @@ def test_obligation_08_a_receipt_swapped_onto_another_persisted_identity_goes_re
 
 # ── OBLIGATION (9) — DURATION CHANGED WITHOUT UPDATING `cache_identity` ───────
 def test_obligation_09_editing_the_duration_without_restamping_identity_goes_red():
+    """🛑 THE MUTATION MUST SURVIVE THE TYPED CONSTRUCTOR, OR THIS ARM PROVES NOTHING.
+
+    RED-PROOFED AND CORRECTED: the first version of this test moved the duration to
+    an UNTAUGHT value (`5 -> 6`). Measured against a strawman that verifies no
+    identity at all, it PASSED — because `OpeningRangeExecutionCandidate.__post_init__`
+    already refuses a variant the source never taught. The arm was being satisfied by
+    a guard that has existed since R-738, and would have reported identity
+    verification as present while it was absent.
+
+        `A RED-PROOF THAT PASSES FOR AN UNIDENTIFIED REASON IS NOT A RED-PROOF.`
+
+    So the mutation now swaps to ANOTHER **TAUGHT** variant. Construction succeeds;
+    only a stale-identity check can convict it.
+    """
     mod = _api()
     result = _golden_compile()
     receipt = mod.build_execution_candidate_receipts(result)[0]
-    original = result.opening_range_candidates[0]
+    original, other = result.opening_range_candidates[0], result.opening_range_candidates[1]
 
     payload = json.loads(json.dumps(receipt.to_payload(), ensure_ascii=False))
-    before = payload["payload"]["variant"]["duration_minutes"]
-    payload["payload"]["variant"]["duration_minutes"] = before + 1
-    # POSITIVE WITNESS that the mutation took and is reachable by the guard.
-    assert payload["payload"]["variant"]["duration_minutes"] != before
+    payload["payload"]["variant"] = {
+        "variant_label": other.variant.variant_label,
+        "duration_minutes": other.variant.duration_minutes,
+        "source_quote": other.variant.source_quote,
+    }
+    # POSITIVE WITNESS: the mutation took, AND it is a duration the source really
+    # taught — so the typed constructor cannot be the thing that refuses it.
+    assert payload["payload"]["variant"]["duration_minutes"] != original.variant.duration_minutes
+    assert payload["payload"]["variant"]["duration_minutes"] in {
+        v["duration_minutes"] for v in payload["payload"]["definition"]["taught_variants"]
+    }
+    # `cache_identity` and `candidate_id` are left as the 5m receipt stamped them.
 
     with pytest.raises(Exception):
         mod.resolve_execution_candidate(
@@ -330,8 +352,13 @@ def test_obligation_10_editing_the_payload_and_restamping_only_candidate_id_stil
     original = result.opening_range_candidates[0]
 
     payload = json.loads(json.dumps(receipt.to_payload(), ensure_ascii=False))
+
+    # 🛑 SAME CORRECTION AS (9): mutate a field the typed constructor ACCEPTS, so the
+    # only thing that can convict the forgery is identity verification. `source_spec_id`
+    # is a free string that feeds `candidate_id` AND `cache_identity` — perfect for a
+    # forgery that repairs one and not the other.
+    payload["payload"]["source_spec_id"] = "FORGED-BUT-WELL-FORMED-SPEC-ID"
     variant = payload["payload"]["variant"]
-    variant["duration_minutes"] = variant["duration_minutes"] + 1
 
     # Recompute ONLY `candidate_id`, exactly as the real type derives it, so the
     # forgery is internally consistent on that field.
