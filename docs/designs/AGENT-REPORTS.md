@@ -4,6 +4,108 @@
 
 ---
 
+## AR-921 · 2026-08-10 · 🛑 **`DAILY-RESET-1` IS REPAIRED, RED-PROOFED AND MUTATION-KILLED — AND I AM **NOT COMMITTING**: `R-786 §9` STOP CONDITION `[3]` FIRED.** ⚡ **THE REPAIR IS CORRECT AND THE TRIGGER-SAFETY ASSERTION IT MOVES IS **STALE**, AND I CAN NAME THE EXACT TRADE: `bar 230 = 2026-01-06 04:40 New York` — **FOUR HOURS AND FIFTY MINUTES BEFORE THAT DAY'S OPENING RANGE HAD EVEN BEGUN FORMING.** THE SEVENTH ENTRY WAS A FALSE ENTRY.** ✅ **THE FINDING IS FULLY CONFIRMED AND ACCEPTED: MY HANDLER NEVER READ `trading_day_rule`.** ⚖️ **DIAGNOSTIC `ACCEPT-5`: `NEW = 1` — EXACTLY THAT ONE ASSERTION, NOTHING ELSE MOVED. `GONE = 2` BY NAME.**
+
+**SEAT `claude.exe 33036`. HEAD `83c08048` = `origin`. LANE `DAILY-RESET-1`, ATTEMPT `1 / 2`. THE REPAIR IS UNCOMMITTED AND SNAPSHOTTED OUTSIDE THE REPO (`§6`).**
+
+### §1 — ✅ THE FINDING IS RIGHT, AND I ACCEPT IT WITHOUT QUALIFICATION
+**`R-786 §2` is correct at the executable line and the defect was mine.** `_h_opening_range` derived ONE `session_date` from `bars[0]`, took ONE lock from it, and set `True` on every bar at/after that instant. **On any multi-day frame Day 2 opened ALREADY TRUE.** ⚖️ **The pipeline REFUSES to lower a definition without `trading_day_rule` — and then my executor never read the field.** ★★★★★ **`A FIELD CARRIED FAITHFULLY THROUGH EVERY LAYER AND READ BY NO CONSUMER IS NOT PRESERVED SEMANTICS — IT IS A RECEIPT FOR A DECISION NOBODY EXECUTED.`**
+⚠️ **AND I NOTE WHY *I* DID NOT CATCH IT: every fixture I wrote was single-session, including the ones I red-proofed and the ones I mutation-killed.** ★★★★★ **`A MUTATION SUITE PROVES YOUR TESTS CAN FAIL; IT SAYS NOTHING ABOUT THE DIMENSION THEY NEVER VARIED.`**
+
+### §2 — ✅ THE RED, PUBLISHED ON UNCHANGED PRODUCTION FIRST (`§7-1`)
+```
+[MEASURED HERE — git diff --name-only a2527e61 -- src/ filtered to non-test -> NONE]
+  ⇒ the red below is on a2527e61's handler, untouched.
+python -m pytest <S6> -k "resets_every_trading_day or OWN_range or once_per_candidate_PER_SESSION"
+  -> 3 failed
+DECIDER, verbatim:
+  DAILY-RESET-1 - the taught opening range did NOT reset for the new trading day.
+    day 2 pre-lock bars (first 15 of the session) :
+      [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+INVARIANT WITNESS, verbatim — and this one names the mechanism on its own:
+    expected : [(03-03,5) (03-03,15) (03-03,30) (03-04,5) (03-04,15) (03-04,30)]
+    observed : [(03-03,5) (03-03,15) (03-03,30)]
+  ⇒ ONE adapter call for the WHOLE frame. Day 2 was never computed at all.
+```
+✅ **Day 1's pre/post-lock assertions are the POSITIVE WITNESS** — without a real gate somewhere in the frame, the Day-2 claim would be satisfied by a handler that did nothing.
+
+### §3 — ✅ THE REPAIR: HANDLER ONLY, PER-SESSION, NOTHING ELSE TOUCHED
+```
+[MEASURED HERE] git diff a2527e61 -- src/  ->  THREE hunks, ALL in spec_condition_compiler.py:
+   :34   `from datetime import UTC, date, datetime`      (the `date` annotation)
+   :879  the docstring, amended to `(candidate, session_date)` per §6 — a docstring is not
+         an assertion, and NO behaviour was changed to suit it
+   :935  _h_opening_range's body: group ts_list indices by LOCAL trading date in the TAUGHT
+         zone -> per date, ONE compute_opening_range_state on THAT DATE'S bars with THAT
+         DATE'S as_of -> FORMING/INCOMPLETE ⇒ that session stays False -> COMPLETE ⇒ lock
+         from the existing _window_bounds for THAT date -> True only on THAT date's indices.
+```
+🛑 **NO cross-date state · NO cache · NO second calculator · NO duplicated range arithmetic · NO new duration selection · NO candidate logic · the adapter and `_window_bounds` UNTOUCHED · Surface 12, the fan-out and `ELSE-SINK-1` UNTOUCHED.**
+✅ **`:685` PASSES COMPLETELY UNCHANGED** (`1 passed`) — stop condition `[2]` did not fire. **Its single-session frame still yields `1 session × 3 candidates = 3 calls`.**
+
+### §4 — ✅ MUTATION-KILLED BEFORE CLAIMING IT (`§7-5`), BOTH ARMS, WITH THE UNMUTATED CONTROL
+```
+[MEASURED HERE]
+MUTATION 1  session_date := sorted(...)[0]      -> 4 FAILED (all three new controls + the
+                                                   three-day adversarial). BITES.
+MUTATION 2  `for i in range(n)` (carry a completed session onto every later bar)
+                                                -> 2 FAILED (the reset decider + the
+                                                   adversarial control). BITES.
+BOTH REVERTED -> S6 18 passed · fan-out 7 passed · 25 passed total
+grep -rn "MUTATION-KILL|TEMP-MEASUREMENT|RED-PROOF MUTATION" src/  -> NONE
+```
+✅ **THE THREE-DAY ADVERSARIAL CONTROL (`§7-4`) IS IN THE ALREADY-ENROLLED S6 FILE, so the manifest does NOT churn** — `[MEASURED]` `canonical_regression_population.txt` is unchanged and still `105`. **Day 1 complete ⇒ gate · Day 2 missing one in-window observation ⇒ `False` ALL DAY · Day 3 complete ⇒ gate again.** ⭐ **The middle day is the point: a carry-over answers True on Day 2, a global failure answers False on Day 3, and only a three-day frame with the defect in the MIDDLE separates them.**
+⭐ **AND THE RANGE CONTROL IS NOT JUST BOOLEANS (`§7-2`):** each day gets its own price band, and the spy records the ADAPTER'S OWN inputs per call — **the two days' highs and lows must DIFFER and Day 2's must come from Day 2's band.** ★★★★★ **`"THE ADAPTER WAS CALLED TWICE" AND "TWO INDEPENDENT DAILY RANGES WERE COMPUTED" ARE DIFFERENT CLAIMS.`**
+
+### §5 — 🛑🛑 STOP CONDITION `[3]`: A TRIGGER-SAFETY ASSERTION MOVED. I STOPPED, AND I MEASURED THE TRADE.
+`test_six_step_mutation_sequence` step `(1)` asserts the defective route reproduces **seven** entries. **It now reproduces six.** 🛑 **`R-786 §9 [3]` says STOP AND REPORT if a trigger-safety ASSERTION must change. I did not touch it.**
+```
+[MEASURED HERE — I restored pre-repair behaviour TEMPORARILY to name the missing bar,
+ then reverted; the marker grep above is zero]
+PRE-REPAIR  entries: (30, 60, 110, 160, 230, 300, 380)   n=7
+POST-REPAIR entries: (30, 60, 110,      160, 300, 380)   n=6
+THE ONE THAT DISAPPEARED, in New York local time:
+   bar 230 -> 2026-01-06 04:40      <- DAY 2, and that day's window is 09:30-09:45
+   the frame spans EXACTLY TWO New York dates:
+     2026-01-05 bars   0..173   local 09:30..23:55
+     2026-01-06 bars 174..399   local 00:00..18:45   (its 09:45 lock is bar 291)
+   ⇒ bar 230 sits 61 bars BEFORE day 2's lock.
+```
+🛑🛑 **⇒ THE SEVENTH ENTRY WAS AN ENTRY TAKEN AT 04:40 ON A DAY WHOSE OPENING RANGE HAD NOT BEGUN FORMING, GATED BY THE PREVIOUS DAY'S LEVELS.** ⚖️ **That is not a test detail — it is precisely the money-facing consequence `R-786 §4` described, made concrete: `plausible, well-formed, entirely wrong`.**
+⚖️ **MY READING, WHICH IS NOT A RULING: the `== 7` is now STALE, and the correct migrated form is `== 6` PLUS an assertion that no entry precedes its own session's lock — which would be strictly stronger than a count.** 🛑 **BUT `[3]` IS EXPLICIT AND THE CONFLICT OF INTEREST IS OBVIOUS — I AM THE SEAT THAT GAINS A GREEN FROM RETIRING IT.** ★★★★ **`THE SEAT THAT WOULD GAIN A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS EXPIRED.`** **The desk judges; I execute.**
+⚠️ **I ALSO NAME THE ALTERNATIVE I REJECTED AND WHY:** the frame could be shortened to one local day, which would make the count `7` true again **and would delete the only multi-day coverage the trigger-safety suite has.** **That is fixing the instrument to protect the number.**
+
+### §6 — ⚖️ ACCEPTANCE AS IT STANDS, AND THE DIAGNOSTIC `ACCEPT-5`
+```
+A  S6                       18 passed, 0 failed   (14 + the four new multi-day guards)
+   12B fan-out               7 passed, 0 failed
+B  ACCEPT-1                 54 passed, 0 failed
+C  ACCEPT-3                136 passed, 0 failed
+E  trigger safety           56 passed, 1 FAILED   <- §5, the stale count, HALTED HERE
+F  migration guard          47 passed, 0 failed
+   opening_range_adapter    31 passed, 0 failed   (unchanged, still green)
+G  DIAGNOSTIC ONLY — NOT the gated ACCEPT-5, because E is red and §7-6 orders it LAST:
+     NEW  = 1  -> src/.../test_trigger_safety_refusal.py::test_six_step_mutation_sequence
+     GONE = 2  -> and GONE == the baseline's own ordered_6b_reds, BY MEMBER: True
+```
+⭐ **THE BLAST RADIUS IS EXACTLY ONE ASSERTION.** **No other baseline member moved in either direction — so stop condition `[6]`/`[7]` fire on nothing beyond `§5`.** ⚖️ **`D` (`tsc`) NOT RE-RUN: no TypeScript changed in this lane, and re-running it would add a green I did not earn.**
+🛑 **NOTHING COMMITTED.** ✅ **SNAPSHOTTED OUTSIDE THE REPO:** `C:\Users\tonio\s6-dailyreset-snapshot-2026-08-10\daily-reset-1.patch`, `sha256 e1164897773032b6880bfb6ccad8fcfa5701212b47d02e6773f03f5900930004`. **`a2527e61` still stands as the committed activation; committed production still has the defect, which is why `MP-1` must stay blocked.**
+✅ **`wave25` re-stamped by the population run again (`05:01 UTC`), restored by a plain text edit; `git diff --numstat` on that path EMPTY. Banked, generator NOT fixed.**
+
+### §7 — 🛑 WHAT I DID **NOT** MEASURE
+- **DST, half-day sessions, exchange holidays, session transfer, non-1m/5m timeframes** — `R-780 §7`'s carried limits, STILL CARRIED. **My fixture dates are deliberately before the 2026-03-08 US DST transition, and I make no claim beyond that.** ⚠️ **A frame crossing a DST boundary is `[NOT MEASURED]` and the repair is NOT asserted correct across one.**
+- **Whether any OTHER suite in the repo runs a multi-day frame through this handler** — the diagnostic `ACCEPT-5` says none of them changed membership, which is evidence but not an enumeration.
+- **`tsc` / TS parity** — untouched this lane, deliberately not re-run.
+- **The grade in flight on `a2527e61`** — `R-786 §8` forbids me dispatching one and I did not.
+- **PRIOR ART STATED:** searched `trading_day_rule`, `session_date`, `daily reset`, `REASON_TRADING_DAY_RULE_MISSING`, `_window_bounds`, `astimezone`, `multi-day`, `N_BARS` across both ledgers and `src/`. **`_window_bounds` and the adapter were read but NOT modified.**
+
+### §8 — ⚡ WHAT I AM ASKING FOR — ONE DECISION
+1. **RULE ON `test_six_step_mutation_sequence`'s `== 7`:** stale and migratable to `6` (my reading, `§5`), or does its expiry need a different remedy? **It is the ONLY thing between this repair and a full green stack.**
+2. **If you migrate it, I recommend NOT a bare `== 6`** but `== 6` **plus** *"no entry precedes its own session's lock"* — a count that moved for a reason should assert the reason.
+3. **I am still seated, ear armed, not exhausted.** ⚡ **Say the word and I migrate it, re-run `A`–`G` with `ACCEPT-5` last, and land the atomic commit — or I hold.**
+
+---
+
 ## AR-920 · 2026-08-10 · ✅✅✅ **`ATTEMPT 2` LANDED. THE S6 COMPILER VERTICAL-SLICE ACTIVATION IS COMMITTED AND PUSHED AS ONE ATOMIC COMMIT `a2527e61`, AND EVERY ACCEPTANCE TERM `A`–`G` IS MET.** ⚡ **`ACCEPT-5`: `NEW = 0` · `GONE = EXACTLY` THE TWO ORDERED `6B` REDS, MATCHED **BY NAME** AGAINST THE BASELINE'S OWN `ordered_6b_reds` FIELD. S6 `14 / 14`.** ✅ **`R-784 §4`'s INVENTORY WITNESS IS **SATISFIED, NOT WAIVED** — THE ADAPTER GAINED A NON-TEST PRODUCTION REFERENCE AND LEFT THE "no non-test reference" SECTION; THE SCANNER **DID** SEE THE MODULE-ATTRIBUTE CALL, WHICH IS THE OPPOSITE OF WHAT I PREDICTED IN `AR-919 §8`.** 🛑 **THE NAMED GAP STANDS AND I STATE IT IN THE RULING'S OWN WORDS: `SEAM-COMPLETE, CONSUMER-UNWIRED — MP-1 OWNS THE CALLER`.**
 
 **SEAT `claude.exe 33036`. HEAD `a2527e61` = `origin` `[MEASURED, re-fetched]`. `ATTEMPT 2 / 2`.**
