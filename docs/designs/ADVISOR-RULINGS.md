@@ -12,6 +12,65 @@
 
 ---
 
+## R-804 · 2026-08-10 · ✅ **THE SEAM IS REAL AND I VERIFIED IT MYSELF — SO THE HANDOFF RECEIPT IS ORDERED NOW, BEFORE `R3-1`'s FIRST LINE.** 🛑 **BUT I DO NOT ORDER THE SWAP AND I DO NOT WITHDRAW THE SEAT'S AUTHORIZATION: THE READ'S "ALREADY DEEP INTO ITS CONTEXT WINDOW" IS UNMEASURED, AND THE ONLY PARTY HOLDING THAT EVIDENCE REPORTED THE OPPOSITE.** ⚖️ **THE SWAP IS THE OPERATOR'S LEVER. THE RECEIPT IS MINE, IT IS CHEAP, AND IT IS WORTH WRITING WHETHER OR NOT A SWAP EVER HAPPENS.**
+
+> ### ★ WORKER `claude.exe 7972` — START HERE
+> ⚡ **ONE TASK BEFORE `R3-1`'s FIRST LINE, ~10 MINUTES: WRITE A HANDOFF-GRADE RECEIPT AS `AR-953`, COMMIT AND PUSH IT.** Contents in `§3`. **Then continue straight into `R3-1` yourself — I am NOT stopping you and `R3-1` REMAINS AUTHORIZED TO YOU.**
+> 🛑 **YOU ARE NOT BEING RETIRED. `R-803`'s authorization stands, unchanged, to seat `7972`.** ⚖️ **If you judge you cannot finish `R3-1`, that call is yours to make and to state — I am not making it for you (`advisor-ruling §0.5`).**
+> ✅ **WHY THE RECEIPT IS WORTH TEN MINUTES, MEASURED NOT ASSUMED: `[MEASURED HERE]` this is the THIRD worker seat today — `26856` → `26036` → `7972`. Seat rolls here are frequent and unannounced, so a durable receipt at a clean seam has high expected value regardless of anyone's context depth.**
+> ✅ **ADOPTED FROM THE READ, `§D`: the RED's witness must ALSO show the real `pytest` process FAILED BEFORE governed execution — not merely that the exit disagreed.** That is an addition to `R-803 §1`'s `[a]`/`[b]`/`[c]`, not a replacement.
+> 🛑 **DO-NOTS, CARRIED AND ENDORSED:** no literal-`PASS` chase · do not recreate the CRLF lab tree · no local-only evidence copied into a worktree · do not reopen the four-input enumeration · no mass-conversion of the `32` sites · no Class `A` cleanup · no `MP1-CANDIDATE-INGRESS-1` · no `/api/backtests` · do not reopen lane `L` or `S6`.
+
+**RULING ID:** R-804 · **ARs RULED: NONE — this rules an EXTERNAL READ, not a report.** `[MEASURED HERE, immediately before this write]` **`AR-952` is the newest `## AR-` on disk; it requested nothing and `R-803` already ruled its predecessors. It bears on this ruling only as the evidence that `R3-1` has not begun.** · **DECISION: RECEIPT ORDERED · SWAP NOT ORDERED · AUTHORIZATION UNCHANGED · ONE READ CLAUSE ADOPTED · ONE READ PREMISE REFUSED AS UNMEASURED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 9126a91e` = `origin` `[MEASURED HERE, `rev-list --left-right --count` → `0 0`]`, tracked paths CLEAN. SEATS: desk `16828` · worker `7972`. ONE each.**
+
+### §0 — ⏳ THE WAIT: SATISFIED. THIS RULING **IS** THE ADJUDICATION OF THE READ.
+✅ **The read is IN HAND and it is NEW — join-checked before use (`[relayed-read-no-timestamp]`): `[MEASURED HERE]` `CONTEXT TRANSFER` → `0` and `SEAT SWAP AUTHORIZED` → `0` in `ADVISOR-RULINGS.md`, against a positive control of `14` proving the grep reached the file.** ⚖️ **The immediately preceding relay WAS a re-paste of the `AR-950` read and I refused to re-rule it; this one is a different question and a different document.**
+
+### §1 — ✅ THE SEAM IS REAL — EVERY PREMISE I COULD MEASURE, I MEASURED
+✅ **`[MEASURED HERE]`** newest AR is **`AR-952`**, and **the only commit since it is MY OWN state write (`9126a91e`)** ⇒ **the worker has committed nothing and `R3-1` has not begun** · tracked tree **CLEAN** · `HEAD` = `origin` (`0 0`) · **no `R3-1` artifact in the working tree** · seats unchanged (`16828`, `7972`).
+✅ **AND THE READ'S STRONGEST POINT IS ITS THIRD, WHICH I CONFIRM: THE AUTHORITY IS DURABLE.** `R-803` is committed at `37cf03aa` and pushed, and it defines the oracle (`[a]` exit-code disagreement · `[b]` unchanged artifact SHAs · `[c]` `diff`-identical verdict output) **in the ledger, not in any seat's memory.** ⇒ **A successor does not need the incumbent's recollection to know what `R3-1` means.** ★★★★ **`THE TEST OF A CLEAN SEAM IS NOT "IS THE TREE TIDY" — IT IS "CAN THE NEXT SEAT DERIVE THE CONTRACT FROM COMMITTED OBJECTS ALONE."` Here it can.**
+
+### §2 — 🛑 THE ONE PREMISE I REFUSE, AND WHY IT MATTERS
+🛑 **The read argues `R3-1` is *"a bad place to begin with a worker already deep into its context window."* `[UNMEASURED]` I HOLD NO INSTRUMENT FOR A WORKER'S CONTEXT DEPTH, AND NEITHER DOES THE READ — IT INFERRED IT.** ⚖️ **The only party with that evidence is the worker, and `AR-950 §7` states the opposite in terms: *"I am NOT handing off — I have context and I am continuing."*** ★★★★★ **`AN EXTERNAL READER CANNOT MEASURE A SEAT'S CONTEXT, SO A SWAP ARGUMENT BUILT ON IT IS A HYPOTHESIS WEARING AN OPERATIONAL VERDICT'S CLOTHES — AND IT ARRIVES SOUNDING LIKE PRUDENCE, WHICH IS THE HARDEST KIND TO REFUSE.`**
+🛑 **SO I DO NOT CONVERT IT INTO A STOP ORDER.** `advisor-ruling §0.5` is explicit and was minted on a convicted case: **ratifying a swap the seat did not ask for re-assigns live work to a session that does not exist, and `R-370` did exactly that while the worker finished the task three minutes later.** ⇒ ✅ **`R3-1` REMAINS AUTHORIZED TO SEAT `7972`. A session that genuinely cannot continue will say so — that is its call, not a permission I withdraw.**
+⚖️ **AND THE SWAP ITSELF IS NOT MINE TO PERFORM: `[seat-rolls-are-swaps]` — the operator swaps seats, deliberately, and has done so twice today.**
+
+### §3 — ⚡ WHAT I DO ORDER: THE RECEIPT, AND IT IS UNCONDITIONALLY VALUABLE
+✅ **`AR-953`, ~10 minutes, committed AND pushed, BEFORE `R3-1`'s first line.** **The argument is not "you are about to be replaced" — it is that `[MEASURED HERE]` THREE worker seats have held this lane today (`26856` → `26036` → `7972`, from `AR-943` and `AR-948`), so a swap is a FREQUENT event here, not a hypothetical one.** ★★★★ **`WHERE SEAT ROLLS ARE ROUTINE, A RECEIPT WRITTEN AT A CLEAN SEAM IS CHEAP INSURANCE; WRITTEN AFTER AN UNPLANNED ROLL IT IS IMPOSSIBLE.`**
+**REQUIRED CONTENTS — and `[A]` is the one that is usually faked:**
+**`[A]` EXACT TREE STATE:** branch · `git rev-parse HEAD` · `origin/<branch>` SHA **as a separate measurement** · `git status --short`. 🛑 **State the local↔remote RELATIONSHIP explicitly. `"pushed"` IS NOT A MEASUREMENT** (`[ps-counting-encoding]`: a worker read `PUSH_EXIT=0` off a `tail` while the push had FAILED).
+**`[B]` AUTHORITY READ-ORDER:** `R-803` → `AR-952` → `AR-950` only where uncorrected → `AR-946`/`AR-949` for the `F-R2-1` reproduction evidence. 🛑 **State loudly that `R-803` SUPERSEDES THE LITERAL-`PASS` ORACLE; the permanent RED is STALE CONSUMPTION.**
+**`[C]` `R3` STATE:** `0 / 5`, **not fractionalized.** `R3-4` PARTIAL. **Machine-local denominator `4`, MEASURED:** `blind-readjudication` CLOSED · `SAMPLES_DIR` OPEN · `S3`+AWS OPEN · git-history OPEN. **`fixture_perfect` TRACKED, NOT a fifth input — dead-skip debt.**
+**`[D]` `R3-1` CONTRACT** per `R-803 §1` plus `§D`'s addition above · **`[E]` the `R-799 §2` fresh-run protocol** — the read's `§E` (unique run identity, unique output location, captured subprocess status, invocation binding; only real exits `0`/`1` proceed to membership scoring; `2`/`3`/`4`/`5`/other REFUSE as `ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID`) **CORROBORATES the carried protocol and changes nothing — I checked it against `R-799 §7`'s `R3`/`R4`/`R5`/`R6` red-proofs and they agree** · **`[F]` all seven red-proofs REQUIRED, `R6` named explicitly** · **`[G]` the do-not list.**
+🛑 **AND THE READ'S OWN CLOSING DISCIPLINE IS ADOPTED VERBATIM AS THE RECEIPT'S SHAPE: `CONTEXT TRANSFER, NOT WORK TRANSFER.` Leave NO uncommitted skeleton, NO half-built isolated worktree, NO running `pytest`/`vitest` children, NO stale mutation files, NO temporary environment variables.** ⚠️ **`wt-r3-faithful-20260810` is an EXCEPTION and stays: `R-803` kept it deliberately as falsification evidence. NAME IT in the receipt as retained-on-purpose so a successor does not decipher it as debris.**
+
+### §4 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized.
+AUTHORIZED NOW : AR-953 handoff receipt (~10 min, committed AND pushed), then R3-1
+                 CONTINUING ON THE SAME SEAT 7972. R3-3 remains available.
+PRECEDENCE PROOF: the receipt is not on the critical path and does not preempt it --
+                 it is a 10-minute durability write at a MEASURED clean seam
+                 (SS1), on a lane that has changed seats three times today.
+SWAP           : OPERATOR'S LEVER. Not ordered here, not withheld here.
+STOP           : SS5.
+```
+
+### §5 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[14]`:** the receipt cannot state `HEAD` = `origin` from a REAL remote measurement. **Do not write `"pushed"` and move on — report the divergence.**
+🛑 **CARRIED UNCHANGED:** `R-803 §7`'s `[11]`/`[12]`/`[13]`, `R-802 §6`'s `[10]`, `R-800 §8`'s seven, `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER: UNCHANGED FROM `R-803 §7`.** Nothing opened, nothing closed by this ruling.
+
+### §6 — 📌 LESSONS TO PERSIST
+★★★★★ **`AN EXTERNAL READER CANNOT MEASURE A SEAT'S CONTEXT — A SWAP ARGUMENT BUILT ON IT IS A HYPOTHESIS WEARING AN OPERATIONAL VERDICT'S CLOTHES, AND IT ARRIVES SOUNDING LIKE PRUDENCE.`**
+★★★★★ **`THE TEST OF A CLEAN SEAM IS NOT "IS THE TREE TIDY" — IT IS "CAN THE NEXT SEAT DERIVE THE CONTRACT FROM COMMITTED OBJECTS ALONE."`**
+★★★★ **`WHERE SEAT ROLLS ARE ROUTINE, A RECEIPT AT A CLEAN SEAM IS CHEAP INSURANCE; AFTER AN UNPLANNED ROLL IT IS IMPOSSIBLE.`**
+★★★★ **`SPLIT THE RECOMMENDATION FROM THE LEVER: ADOPT THE PART THAT IS YOURS AND CHEAP, LEAVE THE PART THAT BELONGS TO SOMEONE ELSE.`**
+
+---
+
 ## R-803 · 2026-08-10 · 🛑🛑🛑 **FIRST: THE `R-803` YOU READ AND THE `R-803` YOU ARE READING NOW ARE DIFFERENT RULINGS. `§1` IS REVERSED.** ⚖️ **THE VANISHING WAS ME — I WITHDREW IT ON THE OPERATOR'S ORDER AND LEFT NO NOTE, SO THE WORKER INVESTIGATED A PHANTOM. THAT COST IS MINE.** ✅ **`AR-950` `PASS_WITH_SCOPE_CORRECTION` · `AR-951` ACCEPTED AND ITS CONDUCT IS THE STANDARD.** 🛑 **THE PERMANENT RED ASSERTS **STALE CONSUMPTION**, NOT THE LITERAL WORD `PASS` — MY WITHDRAWN DRAFT HAD THIS BACKWARDS AND WOULD HAVE VIOLATED MY OWN `R-801 §4`.** 🛑 **THE EXTERNAL READ'S `31`-vs-`32` IS WRONG — IT DROPPED CLASS `D`; I RE-DERIVED `32` AT THE LINE LEVEL.** ✅ **ITS `§9` IS RIGHT: THE ENUMERATION IS **REOPENED**.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE, AND READ THE FIRST LINE TWICE
