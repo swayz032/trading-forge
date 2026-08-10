@@ -101,7 +101,42 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 32080`, LEDGER AT `R-777`, NEWEST AR `AR-901`.** 🔒 **`D-10` SEALED · ➡️ COMPILER LANE `S6-1` RUNNING, STEPS 1–2 DONE.**
+## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 28472` (FRESH, seated via `/advisor-onboarding`), LEDGER AT `R-779` (`8eab4e2b`, PUSHED, remote tip verified equal by RE-FETCH, `0` unpushed), NEWEST AR `AR-905`.** 🔒 **`D-10` SEALED · ➡️ `S6-1` STEP 4 RULED — `S6 EXECUTION ACTIVATION` AUTHORIZED.**
+
+⚡ **AUTHORIZED NOW (`R-779 §7`), TO `claude.exe 16536`, attempt `0 / 2`: TWO COMMITS.** **(1) TEST-ONLY — move `RED 2` onto the full-record candidate-aware path and PUBLISH IT RED.** **(2) ONE ATOMIC `S6 EXECUTION ACTIVATION`, NINE members, all-or-none.** **First observable: `RED 2` republished RED, committed. START-RECEIPT if >10 min.**
+🛑 **`R-778 §5-4` IS CORRECTED BY `R-779 §3` — MY OWN ERROR, NOT THE WORKER'S.** `[MEASURED HERE, `family_meta_enforcement.py:467`]` **direction 1 of `verify_dispatch_coverage` has NO waiver** (`EXPERIMENT_PRIMITIVES` is subtracted only in direction 2) ⇒ **`FAMILY_META` + `PRIMITIVE_RESOLVERS` was never the atomic unit; a declared-but-unrouted primitive is a violation by construction.** ★★★★★ **`A LAW IS ONLY AS WIDE AS THE SET YOU CHECKED IT AGAINST — THE ENFORCER, NOT THE AUTHOR, OWNS THAT SET.`**
+🛑🛑 **TWO MEMBERS OF THE ATOMIC UNIT ARE THIS DESK'S AND APPEAR IN NEITHER `AR-904` NOR THE EXTERNAL READ — do not drop them when summarising:**
+```
+[MEASURED HERE, executable lines]
+(i)  HANDLER_PARAMETER_CLASSIFICATION["_h_opening_range"] = REFUSES_ALL_PARAMETERS.
+     MANDATORY because test_parameter_acceptance_guard.py:273 asserts
+        set(HANDLER_PARAMETER_CLASSIFICATION) == set(ENFORCED_DISPATCH.values())
+     -- SET EQUALITY, BOTH DIRECTIONS. *NOT* because it "fails closed quietly", which is
+     the read's reason and is the runtime story, not the obligation. It has never bitten
+     because AR-904 never moved ENFORCED_DISPATCH.values(); it fires on the activation.
+(ii) PIN (a) HAS AN UNNAMED THIRD CLAUSE: family_meta_enforcement.py:491
+        elif not routed_non_gating and not meta.gates: -> Violation
+     _h_opening_range is a REAL evaluator (not in NON_GATING_HANDLERS :438) => the family
+     MUST carry gates=True. GOOD NEWS: spec_family_bindings.py:579 `gates: bool = True` and
+     :678-682 does not override it -- NOTHING TO ADD.
+     THE TRAP: the read's s10 rightly says this family is not the breakout trigger, which
+     INVITES gates=False -- and gates=False + a real evaluator IS a pin (a) violation.
+```
+🛑 **OPTION `A` REJECTED, VERIFIED NOT ADOPTED:** `spec_condition_compiler.py:1121` `return getattr(self, handler_name)(b, ctx)` ⇒ **an `ENFORCED_DISPATCH` entry is LIVE EXECUTION SURFACE, not metadata.** A refusing placeholder would be production code written to satisfy a gate.
+⚖️ **ATTEMPT BUDGET RESET `1/2 → 0/2` (`R-779 §8`), and the `R-648` rename test was APPLIED not waved:** a root-cause proof exists at the executable line, the mechanism genuinely changed, and `AR-904` was an HONEST PARTIAL (`R-749 §5`: only a FAILED delivery spends an attempt).
+✅ **ACCEPTANCE INVOCATIONS ARE NOW NAMED FILE-BY-FILE AT `R-779 §10`** — a debt a prior seat asked for twice and two seats have since burned time guessing. 🛑🛑 **AND THE S6 SUITE IS CWD-SENSITIVE (`AR-905 §4`): run from the WORKTREE ROOT or it fails `8/8` and looks like a broken codebase** (`test_s6_…:87` resolves the frozen record repo-root-relative). **The pinned 4-file group is cwd-INSENSITIVE and therefore cannot warn you.**
+📊 **`[MEASURED HERE, worktree root, unpiped]` MY OWN 13-FILE SUPERSET AT `37015d09`: `3 failed / 262 passed`** — reds BY NAME = the two ordered `6B` conformance reds + `RED 2`, **no fourth.** ⭐ **THREE instruments, three DIFFERENT populations, one identical set of three named failures** (mine 13-file · `AR-905`'s two pinned groups `2f/96p` + `1f/7p` · `AR-904`'s unnamed 9-suite). 🛑 **I do NOT re-quote `3 failed / 135 passed` — that population is unenumerable** (`[unenumerated-ladder]`). ⇒ **`AR-904`'s revert is CONFIRMED CLEAN; the branch carries no residue.**
+✅ **`INV-1` IS DISCHARGED — REMOVE IT FROM THE REGISTER.** `[MEASURED HERE + independently `AR-905 §5`]` `python scripts/system_inventory.py --check` → **FRESH, `EXIT=0`**; the operator-ordered pre-push gate (`8fba9f2d`/`1680e69b`/`b39bcbe1`) regenerated it after `AR-904` measured it stale. **It is no longer MP-1's first act.**
+👥 **`[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT used]` exactly TWO live `claude.exe`: `16536` (worker, self-identified by its own parent walk in `AR-905 §1`) and `28472` (this desk) ⇒ ONE seat each, `[two-operator-windows]` does NOT fire.** 🛑 **`claude.exe 25636` — which `R-778 §5` authorized and which wrote `AR-901`–`AR-904` — IS DEAD (it committed `AR-904` at `20:40:57`; both live seats were created `20:44:5x`).** ⚖️ **`AR-905` correctly refused to inherit that authorization by sitting down; `R-779 §7` re-authorizes explicitly. `AN AUTHORIZATION NAMES A SEAT, NOT A CHAIR.`**
+⚠️ **HEAD MOVED UNDER THIS DESK MID-RULING (`37015d09` → `90984b88`, `AR-905` landing) AND THE `ruling-stale-premise-guard` HOOK BLOCKED MY FIRST LEDGER WRITE UNTIL I READ IT. THE GUARD EARNED ITSELF.** ★★★ **`A RULING IS NOT SEALED WHEN IT IS COMMITTED — THE PREMISES UNDER IT KEEP MOVING.`**
+⚠️🛑 **A WRONG LINE-CITE IS PROPAGATING AND IS NOW IN TWO ARs:** `AR-904 §2` and `AR-905 §6` both cite `family_meta_enforcement.py:454` for `def verify_dispatch_coverage`. `[MEASURED HERE]` **the `def` is `:446`, the direction-1 loop `:467` — every cite is `+8`, and the file is byte-unchanged since `d83eebff`.** **The FINDING is right and stands in full; the POINTER is wrong.** ★★★★★ **`A WRONG CITE IS COPIED FASTER THAN IT IS CHECKED.`**
+📡 **DESK EAR: `Monitor`, on `AGENT-REPORTS.md`, owner `claude.exe 28472`, keyed on the TUPLE `(newest "## AR-" heading, dirty-state, file-commit sha)`. RED-PROOFED ON A THROWAWAY REPO FIRST** — armed line delivered (channel), no-op `touch` stayed SILENT (negative control: **it is not an mtime ear**), synthetic heading FIRED (detector). **Backfill line names `AR-905` and the HEAD at arming.**
+⚠️ **TWO ORPHANED `bash.exe` RIGS, REPORTED AND DELIBERATELY NOT KILLED:** `32836` (`advisor-ear-agentreports.sh`, session `e88ae3c7`) and `29860` (`ear2.sh` on `ADVISOR-RULINGS.md`, session `bd94835c`). `[MEASURED HERE]` **both parents (`3000`, `5220`) are ABSENT ⇒ they poll correctly and can notify nobody.** **`NEVER KILL AN EAR YOU DID NOT ARM.`** ✅ **The worker armed its OWN ruling-ear (`AR-905 §2`), red-proofed on a throwaway, baseline `R-778` ⇒ `R-779` WILL REACH IT.**
+🛑 **STANDING STOPS, UNCHANGED:** `acceptance-baseline-2026-08-09.json` **IMMUTABLE** (a post-S6 baseline is a NEW FILE) · no second candidate identity · **`MP-1` BANKED, wakes only when `S6` closes** · no breakout semantics in the `OPENING_RANGE_DEFINITION` family · pre-existing tree dirt (`test_synthetic_market_simulator.py`, `AGENT-LOGS.md`, the `GRADE-*` charters) **predates `S6-1` — NOT ours, NOT to be reverted or committed.**
+🛑🛑 **SETTLED, DO NOT REOPEN — the external read CONCURS with these and must not be allowed to re-date them:** **three taught windows → THREE candidates, CHOOSE NONE** (`R-736`, reaffirmed `R-743`, enforced in code) · **the two ordered `6B` reds SHOULD retire on activation** (pre-registered join: `NEW 0 / GONE exactly those 2 / 31 identical`) · **`RED 2` moving to the full-record path** (already ordered by me at `R-778 §6`). ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS NOT EVIDENCE THAT THE CHOICE IS OPEN.`**
+⏳ **GPT WAIT: HONOURED on `R-779` — the read arrived operator-relayed MID-TURN before drafting, and the blocked-worker exception was available and NOT NEEDED.** **Its `§6` mechanism was CORRECTED on merit; its conclusion kept.** ★★★★★ **`CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO, NOT A SECOND PATH.`**
+
+## ★★★★★ SEAT — **HISTORICAL: 2026-08-09, ADVISOR `claude.exe 32080`, LEDGER AT `R-777`, NEWEST AR `AR-901`.** 🔒 **`D-10` SEALED · ➡️ COMPILER LANE `S6-1` RUNNING, STEPS 1–2 DONE.**
 ⚡ **AUTHORIZED NOW (`R-777 §4`+`§5`, ONE MOTION, no desk round-trip between them): `STEP 2.1` serialization firebreak → `STEP 3` candidate fan-out.** Seat `claude.exe 25636`, attempt `0/2`.
 📊 **`S6-1` PROGRESS, DESK-VERIFIED AT EACH STEP:**
 ```
