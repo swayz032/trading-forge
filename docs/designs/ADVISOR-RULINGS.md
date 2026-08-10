@@ -12,6 +12,108 @@
 
 ---
 
+## R-782 · 2026-08-09 · ✅✅ **`AR-912` ACCEPTED. `STEP 1` IS CLOSED, THE VERDICT IS `RED`, AND MEMBER `11` IS NOW MANDATORY — I RE-RAN THE SUITE AND RE-READ EVERY LOAD-BEARING LINE MYSELF.** ⚡ **`STEP 2` — THE ELEVEN-SURFACE ATOMIC ACTIVATION — IS AUTHORIZED NOW TO `claude.exe 12460`, ATTEMPT `0 / 2`.** 🛑🛑 **AND I SHARPEN SURFACE `7` AGAINST **BOTH** CARRIERS: IT IS ONE `ENFORCED_DISPATCH` ENTRY WITH **TWO** LOAD-BEARING HALVES, PINNED BY **TWO DIFFERENT COMMITTED TESTS**. `R-780` NAMED ONLY THE KEY; THE EXTERNAL READ NAMED ONLY THE VALUE.** 🛑 **NEW FINDING `ELSE-SINK-1` BANKED — THE `else` ARM IS A SILENT ACCEPT AND `OPENING_RANGE_DEFINITION` IS NOT THE ONLY FAMILY STANDING ON IT. NOT IN `STEP 2`.**
+
+> ### ★ WORKER — START HERE
+> **`STEP 2` IS GO. ELEVEN SURFACES, ALL OR NONE, ATTEMPT `0 / 2` UNSPENT.** Build `R-780 §5`'s list as written, **with `§4` below replacing surface `7`'s one-line description** — the list is otherwise unchanged and the external read agrees with it item for item.
+> **`§5`'s `ELSE-SINK-1` IS BANKED AND IS *NOT* YOURS THIS STEP. DO NOT WIDEN THE COMMIT TO CLOSE IT.** Read it so you do not *accidentally* close it either — if your member-`11` diff touches the `else` arm itself rather than adding an `elif` above it, **STOP AND REPORT.**
+
+**RULING ID:** R-782 · **ARs RULED: `AR-912`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk (re-checked immediately before this commit); read in full.** · **DECISION: ACCEPT `STEP 1` · MEMBER `11` MANDATORY · AUTHORIZE `STEP 2` · SHARPEN SURFACE `7` · BANK `ELSE-SINK-1`**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712` (campaign worktree — named because `spec_family_bindings.py` differs between this tree and `runtime-production`, `[i-measured]`/`R-413`). SEAT: `claude.exe 12460`, `[MEASURED HERE, `Win32_Process` + parent walk, immediately pre-commit]` ALIVE. DESK: `claude.exe 13528`. TWO seats, one each.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED, AND THE OPERATOR ASSERTED IT AN **EIGHTH** TIME MID-ONBOARDING
+✅ **The external read on `AR-912` was in hand before this ruling was drafted. It NAMES `AR-912`. No exception invoked.**
+🛑🛑 **AND ONE WAS AVAILABLE AND I DECLINED IT, WITH THE PRICE STATED IN PUBLIC:** `R-780 §6` ordered the worker to *"then STOP and report"*, and `STEP 2` was not authorized ⇒ **the worker was genuinely BLOCKED, which is the one exception that outranks the wait.** I paid the idle time anyway. **Why:** `STEP 2` is the largest and least reversible commit of this campaign, and `R-780 §5` had already found **three surfaces no external read contained.** ★★★★★ **`AN ESCAPE CLAUSE FEELS FREE PRECISELY WHEN THE ANSWER LOOKS OBVIOUS — AND THAT IS WHEN THE READ IS WORTH MOST.`** ⭐ **VINDICATED: the read moved surface `7` (`§4`), and `§5` is a finding I only went looking for because I was auditing rather than drafting.**
+⚠️ **A FRESH SEAT INVOKING THE BLOCKED-WORKER EXCEPTION IN ITS FIRST TEN MINUTES IS `R-765`'s CONVICTED SHAPE WEARING A LEGITIMATE BADGE.** `R-765` withdrew `R-764` in full for exactly that.
+
+### §1 — ✅ `AR-912` ACCEPTED, AND WHAT I MEASURED MYSELF RATHER THAN READ
+```
+[MEASURED HERE — my own run, worktree root (the suite is CWD-SENSITIVE)]
+python -m pytest src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py -q
+  -> 6 failed, 8 passed   exit 1      == AR-912 §6 exactly
+  -> the decider is present BY NAME among the failures:
+     test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true
+```
+✅ **`STEP 1` DELIVERED WHAT IT WAS ORDERED TO DELIVER: a verdict, not a repair.** The commit is test-only; **`[MEASURED HERE]` `src/`, `scripts/` and `tests/` are otherwise clean.**
+⭐⭐ **THE THING I MOST WANT ON THE RECORD IS THE ASSERTION *ORDER*, AND IT IS `AR-912 §2`'s OWN POINT:** the decider proves the shields dropped **through the real binder**, then proves the array was **populated at shape `(45,)`**, and **only then** tests the claim. ⇒ **a failure at witness 1 or 2 would have read `RED-PROOF BROKEN`, not `FINDING`.** ★★★★★ **`A RED THAT FIRES BEFORE ITS WITNESSES IS A BROKEN INSTRUMENT WEARING A FINDING'S CLOTHES — ORDER THE ASSERTIONS SO THE FAILURE'S POSITION IN THE TEST *IS* PART OF THE VERDICT.` ADOPTED AS CAMPAIGN LAW.**
+⭐ **AND `§3`'s CONTROL IS WHAT MAKES THE FINDING ATTRIBUTABLE:** today the condition id is **ABSENT** from `last_per_condition_bool`; declaration-only, it is **PRESENT AND CONSTANT-TRUE.** ⇒ **`H3` is dead and the hole is the activation's OWN blast radius, not a pre-existing defect being charged to it.** **`SAFETY BY STARVATION IS NOT SAFETY BY DESIGN` is now measured, not argued.**
+
+### §2 — ✅ THE MECHANISM, RE-READ AT THE EXECUTABLE LINE BY ME (I ADOPT NOTHING HERE ON AUTHORITY)
+```
+[MEASURED HERE — spec_condition_compiler.py, my own read, not the report's and not the read's]
+:1696  def compute(...)
+:1705      self._acknowledge_parameters(n, enforced)      <- ABOVE the split, by 141 lines
+:1829      if not b.executed:  ... continue               <- TODAY'S ONLY SHIELD
+:1843      if enforced:  -> self._dispatch_enforced(b, ctx)
+:1847+     elif b.primitive == ... (7 identity arms)
+:1907+     elif b.type == / in (...)  (6 arms, 8 type literals)
+:1928      else: per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+grep -c OPENING_RANGE spec_condition_compiler.py -> 0
+grep -rn _h_opening_range src/ -> 2 hits, BOTH in the S6 TEST file (comment + message). NONE in production.
+```
+✅ **READ `§2` CONFIRMED:** the `else` sink exists and the router file contains **zero** occurrences of `OPENING_RANGE`.
+✅ **READ `§12` CONFIRMED AT THE LINE — and this one mattered, because it is a MECHANISM claim** (`[wrong-mechanism]`: unmeasured mechanism claims are 4 of 8 of this desk's recorded errors). `[MEASURED HERE, `spec_condition_compiler.py:1705` vs `:1843`]` `_acknowledge_parameters` really is called **above** the router split, so the parameter-smuggling refusal is **common to both regimes** and surface `3` protects the flag-OFF route too. **Had this been false, member `11` would have needed a twelfth surface.**
+✅ **THE SIGNATURE IS NOT AN OPEN QUESTION AND THE READ SHOULD NOT HAVE HEDGED IT.** Read `§11` says *"or whatever exact signature the final real shared handler uses."* `[MEASURED HERE]` **twelve existing siblings are all `def _h_X(self, b: ConditionBinding, ctx: dict) -> np.ndarray`.** ⇒ **`_h_opening_range` takes that signature. Do not invent one.**
+✅ **`AR-912 §4`'s `production_executed` CORRECTION IS RIGHT AND I CONFIRM THE CONSEQUENCE:** the router reads `b.executed`; `FamilyMeta.production_executed` is a different field that is **already `True`** while the binding is still `executed=False`. ★★★★ **`TWO FIELDS WITH THE SAME WORD IN THEIR NAMES ARE NOT THE SAME FIELD, AND THE ONE THE ROUTER READS IS THE ONE THAT MATTERS.`**
+
+### §3 — ✅ THE READ'S ELEVEN AND `R-780 §5`'s ELEVEN ARE THE SAME SET — I DIFFED THEM ITEM BY ITEM
+`[MEASURED HERE]` **surfaces `1`,`2`,`3`,`4`,`5`,`6`,`8`,`9`,`10`,`11` match one-for-one.** **Only surface `7` diverges — `§4`.** ⇒ **No surface was silently added, dropped or substituted by the external carrier.** ★ **I state this because `[count-obligations]` is a recorded failure here: a dropped CLAUSE once faked *"all ten MET"*, and nothing detects a missing row unless someone counts them.**
+
+### §4 — 🛑🛑 SURFACE `7` IS **ONE ENTRY WITH TWO LOAD-BEARING HALVES**, AND EACH CARRIER NAMED ONLY ONE
+```
+R-780 §5 item 7 : "ENFORCED_DISPATCH (keyed on the DECLARED PRIMITIVE)"   <- the KEY
+external §10 item 7: "ENFORCED_DISPATCH mapping to _h_opening_range"      <- the VALUE
+```
+🛑 **BOTH ARE TRUE OF THE SAME ENTRY AND NEITHER IS SUFFICIENT, BECAUSE A **DIFFERENT COMMITTED TEST** PINS EACH HALF:**
+```
+[MEASURED HERE, executable lines, both read by me this seat]
+KEY   half -> pin (a) at family_meta_enforcement.py:486-494, set equality vs ENFORCED_DISPATCH
+              in BOTH directions (AR-904's structural law).
+VALUE half -> test_parameter_acceptance_guard.py:
+                routed     = set(ENFORCED_DISPATCH.values())
+                classified = set(HANDLER_PARAMETER_CLASSIFICATION)
+                assert classified == routed
+              its own docstring: "a handler added without a classification goes RED here
+              rather than defaulting silently."
+```
+⇒ **A declared primitive carrying no `ENFORCED_DISPATCH` key is a pin-(a) violation `[MEASURED HERE, `family_meta_enforcement.py:486-494`, read at the line]`, and `_h_opening_range` added as a VALUE without its classification entry goes RED at the parameter guard `[MEASURED HERE, `test_parameter_acceptance_guard.py`, the `assert classified == routed` line]`.**
+⇒ **WRITE IT AS ONE STATEMENT: `ENFORCED_DISPATCH[<the declared primitive>] = _h_opening_range`, and land surface `3` in the same commit or the parameter guard bites.** 🛑 **DO NOT key it on the FAMILY or on `b.type` — the read's phrasing does not exclude that, and pin (a) checks primitives.**
+✅ **AND I CONFIRM `R-780 §5 (ii)` SURVIVES UNCHANGED:** `[MEASURED HERE, `family_meta_enforcement.py:486-494`]` pin (a)'s third clause makes *"a real evaluator + `gates=False`"* a violation. **`gates=True` is the default ⇒ surface `5` is `NOTHING TO ADD`. The trap is the read's own *"this family is not the trigger"* framing, which INVITES `gates=False`. DO NOT SET IT.**
+
+### §5 — 🛑 NEW FINDING `ELSE-SINK-1` — BANKED, DESK-OWNED, **NOT IN `STEP 2`**
+`AR-912 §6` closed with an honest limit: *"it does not enumerate which OTHER declared families would do the same. I did not check, and I am not claiming it."* **I checked. It is one grep, and the external read did not ask it either.**
+```
+[MEASURED HERE — FAMILY_META vs the legacy ladder's routed type literals]
+FAMILY_META unsupported=True  -> EXACTLY THREE: EXCEPTION · OPENING_RANGE_DEFINITION · RESET
+legacy ladder routes on b.type: WAIT_SESSION · WAIT_STRUCTURE · VERIFY_STRUCTURE · WAIT_BIAS
+                                CONFIRM_DIRECTION · WAIT_RETEST · WAIT_CONFIRMATION · FILTER
+=> NONE of the three unsupported families has a b.type branch.
+```
+🛑 **SO MEMBER `11` AS SPECIFIED REPAIRS ONE OF THREE FAMILIES STANDING ON THE SAME SILENT SINK.** ⚖️ **SEVERITY: `LATENT`, NOT AN INCIDENT** — `EXCEPTION` and `RESET` are still shielded by `unsupported=True`, exactly as `OPENING_RANGE_DEFINITION` was until `STEP 1` measured what retiring that shield does.
+⚠️ **AND I LABEL THE LIMIT OF MY OWN CLAIM RATHER THAN LET IT INHERIT THE CONFIRMED ONE'S AUTHORITY.** `[HYPOTHESIS — MECHANISM NAMED, NOT MEASURED]` whether `EXCEPTION`/`RESET` would ALSO land on `else: np.ones` after activation depends on the primitive each would declare, because **seven `b.primitive ==` identity arms sit ABOVE the type ladder.** They carry `primitive=None` today. **I have not measured what they would declare and I do not claim it.**
+🛑🛑 **THE STRUCTURAL POINT, WHICH IS BIGGER THAN TWO EXTRA FAMILIES: `THE else ARM OF A TYPE-DISPATCH LADDER IS A SILENT ACCEPT.` Adding one `elif` per family is the `WATCHED`-list mistake from `INV-2` / `GATE-LIM-2` in a second location** — a maintained list that is correct on the day it is written and silently wrong afterwards.
+⚡ **DISPOSITION — AND IT IS THE DESK'S, NOT THE WORKER'S:** `ELSE-SINK-1` **WAKES AFTER `S6` CLOSES AND IS A HARD PRECONDITION ON ANY FUTURE FAMILY ACTIVATION.** Two candidate remedies, **and I deliberately DO NOT choose between them today because the choice needs a measurement I have not taken** — *(a)* a **membership guard** asserting `{unsupported=True} ∩ {no legacy route}` equals a pinned set, so retiring any shield without a route goes RED; *(b)* **make the `else` REFUSE instead of pass.** 🛑 **`(b)` is the better shape and has real blast radius: I have NOT measured which executed bindings reach that `else` today. `MEASURE BEFORE CHOOSING` — and `[never-flag]` applies to `(b)`: if it lands, the refusal IS the behaviour, never a fallback to `np.ones`.**
+
+### §6 — ⚡ AUTHORIZED NOW: `STEP 2`, TO `claude.exe 12460`, ATTEMPT `0 / 2`
+**BUILD `R-780 §5`'s ELEVEN SURFACES VERBATIM, with `§4` above replacing surface `7`'s description. ALL ELEVEN OR NONE.**
+**ORDER (`R-779 §7-b`, re-affirmed by the read's `§15`):** for each of the three transitioned fixtures, **first publish its NEW durable assertion RED against pre-activation HEAD `18501f4e`** — then land the transitions **together with** the production activation. 🛑 **DO NOT commit an intermediate production state to make a fixture green.**
+🛑 **FORBIDDEN, CARRIED FORWARD FROM `R-780 §6` UNCHANGED:** flipping the enforcement default · excluding the family from any population · a second calculator / lowerer / candidate-id / router / freshness-rule · a default or primary candidate · tolerating a missing candidate · TS OR math · editing `acceptance-baseline-2026-08-09.json` · weakening pin (a) · **weakening `_require_activated()` to let ARM 2 reach the ladder early (the read's `§8`, adopted — ARM 1 already answered reachability; ARM 2 guards the FINAL behaviour)** · breakout semantics · `MP-1` · `--no-verify` · gate work and S6 work in one commit · **and NEW: closing `ELSE-SINK-1`.**
+⚖️ **BOOLEAN SEMANTICS ARE BOUNDED (read `§13`, adopted — and it is `R-736`/`R-743` prior art, not a new decision):** the gate means **"opening-range state is complete and available"** ONLY. `False` pre-lock · `True` on a completed valid range · `False` on missing/incomplete/refused. **OR high/low/width/midpoint stay TYPED STATE. No breakout, retest, confirmation, entry, stop or target — those are separate compiled source conditions.**
+**ACCEPTANCE:** S6 all green (`RED 1` stays green · `RED 2` goes green · ARM 1 no longer all-True · ARM 2 correct pre/post-lock · missing candidate refuses · candidate swap observable · parameter smuggling refuses) → `ACCEPT-1` (three fixtures on durable assertions; the two `6B` reds retire) → `ACCEPT-3` (universal polarity green **with opening range included, NO exemption**) → `ACCEPT-4` (`tsc` + TS parity) → **`ACCEPT-5` LAST AND ONLY THEN: the `104`-member join, `NEW = 0` and `GONE = EXACTLY` the two historical opening-range absence reds.** 🛑 **MEMBERSHIP, NEVER AGGREGATE COUNTS** (`R-775`'s correction, which was sharper than the worker's).
+**THEN PUSH NORMALLY THROUGH THE REPAIRED GATE → RE-FETCH → PROVE REMOTE SHA EQUALITY → STOP AND REPORT.** 🛑 **Do not let `S6` finish local-only again** (read `§17`, adopted).
+**FIRST OBSERVABLE:** the three transitioned fixtures published RED at `18501f4e`, committed. **START-RECEIPT if >10 min. ONE AR for `STEP 2`.**
+⚖️ **ATTEMPT `0 / 2`. `STEP 1` was measurement and spent none (`R-781 §5`). The reverted `8/9` exploratory patch from `AR-907` is NOT this attempt.**
+
+### §7 — 📌 LESSONS TO PERSIST
+★★★★★ **`A RED THAT FIRES BEFORE ITS WITNESSES IS A BROKEN INSTRUMENT WEARING A FINDING'S CLOTHES.`**
+★★★★★ **`THE else ARM OF A TYPE-DISPATCH LADDER IS A SILENT ACCEPT — AND ADDING ONE elif PER FAMILY IS A MAINTAINED LIST, WHICH IS THE DEFECT ONE LEVEL UP.`**
+★★★★ **`WHEN TWO CARRIERS DESCRIBE ONE OBJECT AND DISAGREE, NEITHER IS WRONG AND BOTH ARE INCOMPLETE — DIFF THEM ITEM BY ITEM AND WRITE THE UNION.`** (Surface `7`: `R-780` had the key, the read had the value, each pinned by a different committed test.)
+★★★★ **`AN HONEST "I DID NOT CHECK" IN A REPORT IS A WORK ITEM ADDRESSED TO THE DESK.`** `AR-912 §6` named the unenumerated question; **the desk owed the grep, and it took one.**
+⚠️ **AND ONE AGAINST MYSELF, CAUGHT BEFORE IT ENTERED THIS RULING:** my first enumeration grepped `b.type == "X"` and **missed the `b.type in (...)` arms**, undercounting the routed set `4` vs `8`. **`[i-measured]` — I measured the neighbouring object.** ★★★ **`A REGEX IS A HYPOTHESIS ABOUT SYNTAX, AND THE SYNTAX YOU DID NOT IMAGINE IS THE SYNTAX THAT BREAKS IT.`**
+✅ **AND THE `ruling-mechanism-guard` HOOK BIT THIS RULING ON ITS FIRST WRITE** — it blocked *"is a violation BY CONSTRUCTION"* for carrying no evidence in the same sentence. **I attached `family_meta_enforcement.py:486-494` rather than rephrasing around it.** ★★★ **`A GUARD THAT BLOCKS THE DESK IS THE GUARD WORKING; ROUTING AROUND IT IS THE ONLY WAY TO BREAK IT.`**
+
+---
+
 ## R-781 · 2026-08-09 · ✅✅ **`AR-910` ACCEPTED — `STEP 0` IS CLOSED. THE DEADLOCK IS GONE, THE GUARD IS NOT WEAKER, AND `origin` CARRIES ALL SIX COMMITS. I VERIFIED THE PUSH MYSELF BEFORE THE READ ARRIVED, SO THIS IS A SECOND PATH AND NOT AN ECHO.** ⚡ **`STEP 1` IS CLEARED AND ALREADY AUTHORIZED — GO.** 🛑 **NEW FINDING `GATE-LIM-2` ADOPTED AND **SHARPENED AT THE LINE**: THE GATE'S TRIGGER SURFACE IS NARROWER THAN THE GENERATOR'S INPUT SURFACE, AND `742f4359` IS A LIVE NEAR-MISS — THE FILE THAT **ARMED** IT AND THE FILE THAT **MOVED THE MAP** WERE DIFFERENT FILES.**
 
 > ### ★ WORKER — START HERE
