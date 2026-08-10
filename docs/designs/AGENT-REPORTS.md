@@ -4,6 +4,44 @@
 
 ---
 
+## AR-943 · 2026-08-10 · 🪑 **SEAT RECEIPT + START-RECEIPT — WORKER `26856` IS DEAD; I AM ITS SUCCESSOR `claude.exe 26036`.** ⚡ **LANE `L` RESUMES AT `2 / 5` — `L-3` → `L-4` → `L-5`, NO HANDOFF.** ✅ **EAR ARMED, DETECTOR RED-PROOFED — AND THE BACKFILL PAID IMMEDIATELY: THE ARMING LINE ITSELF TOLD ME `R-798` HAD LANDED.**
+
+**SEAT `claude.exe 26036`, born `13:46:34`. TREE `wt-h1-wave4-20260712`, `HEAD b1d851ca` == `origin`. LANE `L`, items `L-3`/`L-4`/`L-5`, fan-in `1`. NOT GRAPH-SCHEDULED (`R-798`: GRAPH OBJECT NOT ADOPTED).**
+
+### §1 — 🪑 SEAT SUCCESSION, MEASURED BY OWNERSHIP NOT BY THE TASK LIST
+🛑 **`R-797` AND `R-798` BOTH ADDRESS `★ WORKER claude.exe 26856`. THAT PROCESS IS GONE.** `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME, parent walk from my own shell]` the only two `claude.exe` are **`21488`** (born `12:20:45`, = the desk `R-798` names) and **`26036`** (born `13:46:34`, = me, chain `powershell.exe 2376 ← claude.exe 26036 ← powershell.exe 25992 ← explorer.exe`). **`26856` is ABSENT.** ⇒ **I am `26856`'s successor and lane `L` is mine.** ★★★ **`[identity-address]`: a PID is an address, not an identity — I matched image name + birth time and did not probe bare liveness.**
+⚖️ **`R-784 §3` rules authorization TRANSFERS on a receipt, so this is a GO, not an ask. Desk: the seat number in your next `START HERE` block is `26036`.**
+
+### §2 — ✅ THE EAR: ARMED, OWNED, RED-PROOFED, AND IT DELIVERS
+✅ **CENSUS FIRST, BY OWNERSHIP.** `[MEASURED HERE]` `bash.exe 20760`/`11240` walk up to **`claude.exe 21488` — the DESK's ear. NOT MINE, NOT TOUCHED** (`[no-monitors-msg-advisor]`: never kill an ear you did not arm). `bash.exe 12748` (`ruling-ear-13200.sh`) and `3472` (`ruling-ear-3136.sh`) are **ORPHANS — their parents `10132` and `25792` are both ABSENT.** Left alone; they are not mine to reap. **NOTHING was watching under `26036`** ⇒ I armed one.
+✅ **DELIVERY, NOT MERELY LIVENESS: `Monitor` tool, `persistent: true`, task `bglvf8nvb`** — every stdout line becomes a notification in my chat. 🛑 **I did NOT use a backgrounded `Bash` loop; `[background-monitors]` and `worker-onboarding §2a` both convict that shape — it polls correctly and notifies nobody.**
+✅ **THE DETECTOR IS RED-PROOFED AGAINST A THROWAWAY, NOT THE REAL FILE, AND IT DISCRIMINATES:**
+```
+[MEASURED HERE, scratchpad/fake-rulings.md, 3 arms]
+CONTROL  no change ................ SILENT except the arming line   <- discriminates
+CHANGE   R-900 -> R-901 injected .. "NEW RULING LANDED: ## R-901 (was ## R-900)"  FIRED
+BROKEN   headings removed ......... "EAR-ERROR: cannot read a '## R-' heading"    FIRED
+```
+★★★ **The error arm is the one that matters: without it, "my ear is quiet" and "my ear is broken" are the same observation.**
+
+### §3 — ⭐ THE BACKFILL PAID ON ITS FIRST BREATH — AND THIS IS THE WHOLE ARGUMENT FOR IT
+🛑 **I read `ADVISOR-RULINGS.md` by hand and the newest ruling was `R-797`. Minutes later the ear's OWN ARMING LINE reported `baseline=## R-798`.** ⇒ **`R-798` landed inside my blind window — the exact interval `[monitor-backfill]` says an ear armed at `T` can never hear.** ✅ **I read `R-798` in full before writing one line of `L-3`.** ★★★★★ **`AN EAR ARMED AT T NEVER HEARS ANYTHING BEFORE T — AND THE ARMING LINE ITSELF IS THE CHEAPEST BACKFILL YOU WILL EVER GET, BECAUSE IT REPORTS THE STATE IT FOUND, NOT THE STATE YOU LEFT.`**
+⚠️ **Had I trusted my own read, I would have re-derived the `A`–`N` fourteen that `R-798 §4` carries verbatim — the precise waste `AR-942 §5` flagged as owed.**
+
+### §4 — ✅ NO RULING DEFECT TO FLAG, AND I CHECKED FOR THE TWO I AM REQUIRED TO
+✅ **NO METRIC-MIX** (`worker-execution §5`): every `L-4` obligation `A`–`N` is a MECHANICAL predicate — row counts, distinctness, `skipped_duplicate` vs REFUSE, a mutation biting. **None requires ground truth, so no grading act has been handed to the doer.**
+✅ **NO FAKE EDGE** (`§5c`): `L-3` → `L-4` → `L-5` is a GENUINE serial chain — `L-4` executes the code `L-3` writes, `L-5` describes the outcome of both. **Serial order is correct here and I am not flagging it.**
+✅ **PRIOR-ART SEARCH STATED** (`§0.-0.5`): `grep -rn "candidateId|executionCandidate|execution_candidate" src/server --include=*.ts` excluding tests — **the only production hits are `critic-optimizer-service.ts`/`critic-optimizer.ts`, which are CRITIC-REPLAY candidates, a DIFFERENT concept, plus the `OnboardSpecOptions` field `L-1` itself added.** ⇒ **nothing to reuse and nothing already ruled that I am about to re-open.** ★★★ `AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH.`
+
+### §5 — ⏱️ WHAT I AM DOING, AND WHAT WOULD STOP ME
+**`L-3`** the repair, SEPARATE COMMIT: candidate-aware dedupe on `spec_hash + symbol + candidate_id`; legacy receiptless path keeps `(spec_hash, symbol)` EXACTLY; `cache_identity` is NOT an identity dimension — same candidate + changed cache identity **REFUSES**. Siblings persisted in strategy config, **no new SQL column, no `spec_hash` mutation.**
+**`L-4`** the fourteen `A`–`N` **verbatim from `R-798 §4`, not re-derived**, plus the required production mutation — **remove `candidate_id` from the REAL TypeScript duplicate lookup and require `F` and `G` to go RED at the REAL service.** 🛑 **A Python planner test may not take credit for that mutation.**
+**`L-5`** prose only, after `L-3`/`L-4`.
+🛑 **BINDING ON EVERY ROW I CREATE (`R-798`, from `AR-942`'s own finding): `symbol`, `timeframe` AND `config` supplied EXPLICITLY. The landmine is `timeframe DEFAULT '5m'` in the `PGlite` DDL — the one value this lane exists to distinguish is the one the test schema hands out for free.**
+⏱️ **FIRST OBSERVABLE: `L-3` committed with the existing `16` onboarding tests still green and the `L-1` RED's two REQUIREMENT arms flipped to PASS, `~45–70 min`.** ⚠️ **HONEST-PARTIAL CLAUSE ACKNOWLEDGED.** ⚖️ **`2 / 5`; the remaining three are UNSTARTED, not blocked — that is the reason to stay, not to leave.**
+
+---
+
 ## AR-942 · 2026-08-10 · ✅ **`L-2` ANSWERED: SCHEMA PARITY HOLDS — STOP `[2]` DOES NOT FIRE.** ✅ **`L-1` DELIVERED: THE PRODUCTION-BOUNDARY RED IS COMMITTED AT `c51dcdb9`, IN ITS OWN COMMIT, WITH TWO PASSING ARMS AS ITS POSITIVE WITNESS.** 🛑 **AND I CAUGHT MYSELF MAKING THIS CAMPAIGN'S OWN FALSE-ABSENCE ERROR — `§1` — WITH THE CONTROL THAT SAVED IT.** ⚖️ **PROGRESS `2 / 5` ITEMS. I AM CONTINUING, NOT HANDING OFF.**
 
 **SEAT `claude.exe 26856`. TREE `HEAD c51dcdb9` + this report. LANE `L` attempt `1 / 2`. NO DB schema · NO SQL migration · NO `spec_hash` change · NO dedupe-key change yet (that is `L-3`).**
