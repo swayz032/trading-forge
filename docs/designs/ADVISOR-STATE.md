@@ -101,8 +101,26 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 32080`, LEDGER AT `R-774`, NEWEST AR `AR-897`.** 🔒 **`D-10` SEALED · ➡️ COMPILER LANE `S6-1` RUNNING.**
-⚡ **AUTHORIZED NOW: `S6-1` = `B1 STEP 6`, the COMPILER BREAKTHROUGH LANE (`R-774 §6`), seat `claude.exe 25636`, attempt `0/2`, STARTED (`AR-897`).** Order: **pre-register the REDs FIRST** → full-record lowering at a production compile boundary (ONE lowerer) → fan out `5m`/`15m`/`30m` → carry candidate identity into backtest identity → register `FAMILY_META` + `PRIMITIVE_RESOLVERS` + `ENFORCED_DISPATCH` + the TS mirror in ONE change → candidate-aware handler (fail closed) → the two permanent REDs green **through real adapter execution** → controls. **13 pre-registered acceptance controls (`§7`), 10 STOPs (`§8`).**
+## ★★★★★ SEAT — **CURRENT: 2026-08-09 (LATEST), ADVISOR `claude.exe 32080`, LEDGER AT `R-777`, NEWEST AR `AR-901`.** 🔒 **`D-10` SEALED · ➡️ COMPILER LANE `S6-1` RUNNING, STEPS 1–2 DONE.**
+⚡ **AUTHORIZED NOW (`R-777 §4`+`§5`, ONE MOTION, no desk round-trip between them): `STEP 2.1` serialization firebreak → `STEP 3` candidate fan-out.** Seat `claude.exe 25636`, attempt `0/2`.
+📊 **`S6-1` PROGRESS, DESK-VERIFIED AT EACH STEP:**
+```
+STEP 1  guards          DONE (R-776). False-green CLOSED: RED 2 fills its spy ONLY via
+                        SpecConditionStrategy._dispatch_enforced (:337). 0 direct spy calls.
+                        Manifest 103 -> 104, delta EXACTLY one member (desk-diffed).
+STEP 2  full-record     DONE (R-777, ba0803b1). produce_spec_artifact_from_record() DERIVES
+        boundary        the strategy from the record (inconsistent pair unconstructable);
+                        ONE executable call to lower_opening_range_definition (:898).
+                        golden -> READY 5/15/30 · neighbour -> SOURCE_INCOMPLETE. Scope held:
+                        2 files, no registration/dispatch/TS mirror; stop-sweep clean.
+RED 1   STAGE 1 -> STAGE 2  ✅ pre-registered as SUCCESS (R-776 §5): the boundary lowers all
+                        three windows; the plan does not yet TRANSPORT them as candidates.
+RED 2   STAGE 1, untouched — production declares NO primitive for OPENING_RANGE_DEFINITION.
+NEXT    2.1 firebreak -> 3 fan-out -> 4+ identity -> registration/dispatch -> execution proof
+                        -> R-774 §7's A–M controls.
+```
+🛑 **`STEP2-LIM-1`, CONFIRMED BY DESK EXECUTION (not argument):** `produce_spec_artifact_from_record` returns a `dict` whose key **`opening_range_lowering`** holds an `OpeningRangeLoweringResult`, so `json.dumps` raises **on BOTH arms — golden AND the `SOURCE_INCOMPLETE` refusal** (positive control: the OLD boundary still serialises). ⇒ **fix BEFORE layering candidates.** 🛑 **NO `asdict()` into the artifact** (TS `parseSpecArtifact` rebuilds only recognised fields ⇒ Python "preserves", TypeScript silently DROPS) · **NO TS contract expansion in the micro-repair.** ★★★★★ **`WHEN A DEFECT IS FOUND ON THE SUCCESS PATH, TEST THE REFUSAL PATH BEFORE SCOPING THE REPAIR.`**
+🛑 **STANDING STOPS:** `acceptance-baseline-2026-08-09.json` is **IMMUTABLE** (final join = `NEW 0 / GONE exactly the 2 ordered opening-range reds / 31 identical`; a post-S6 baseline is a NEW FILE) · no second candidate identity (reuse `candidate_id`/`cache_identity`) · no registration inside `STEP 3` · **`MP-1` money-path reachability recon is BANKED, READ-ONLY, and wakes only when `S6` closes.**
 🛑🛑 **SETTLED, DO NOT REOPEN: three taught windows → THREE candidates, CHOOSE NONE (`R-736`, law: `THE TEACHER GAVE THREE VERSIONS, SO THE FACTORY MAKES THREE BOTS`; reaffirmed `R-743`; enforced in code — `expand_execution_candidates` has no `default_variant`, `selected_duration_minutes` RAISES).** ⚠️ **`AR-896 §5` offered it to the desk as an open `A`/`B` choice and the desk nearly re-decided it; THE OPERATOR CAUGHT IT FROM MEMORY.** ★★★★★ **`A QUESTION THAT ARRIVES SHAPED AS A CHOICE IS NOT EVIDENCE THAT THE CHOICE IS OPEN — SEARCH THE LEDGER BEFORE SPENDING A DECISION.`**
 ⚠️ **`SCOPE-1`, MEASURED BY THIS DESK from the frozen provenance blob: the golden source is `asset_class: equities`, `['stocks','S&P 500']` — NOT a futures lesson.** ⇒ **after `STEP 6`, a profitable `MES`/`ES` run is a TRANSFER EXPERIMENT and may NOT be advertised as source-faithful.** ★★★★★ **`COMPILER FIDELITY AND MARKET-TRANSFER VALIDITY ARE DIFFERENT QUESTIONS.`**
 ⭐ **THE BLOCKER THAT DISSOLVED:** `opening_range_adapter.py:34-53` still records that wiring *"requires naming a duration the teacher did not name"* — **MEASURED FALSE** (`AR-896 §4`): the teacher named all three windows with verbatim quotes and the live lowering returns `READY`. **Registered `DOC-1`, NOT edited (a production docstring is a production edit).**
