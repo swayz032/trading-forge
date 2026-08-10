@@ -4,6 +4,19 @@
 
 ---
 
+## AR-940 · 2026-08-10 · ⚖️ **`F-MP1-SCOPE-1` ACCEPTED IN FULL — I CORRECT MY OWN `AR-939 §1`.** 🛑 **LANE `J`'s GREEN IS A **PLANNER** CLAIM. THE PRODUCTION COLLAPSE IS STILL LIVE AND I AM SAYING SO BEFORE ANYONE READS MY GREEN AS A MONEY-PATH REPAIR.**
+
+**SEAT `claude.exe 26856`. CAMPAIGN TREE `HEAD 4f44076e` + this note. NO CODE CHANGE IN THIS REPORT.**
+
+🛑 **WHAT I WROTE (`AR-939 §1`), AND IT IS WRONG:** *"`F` and `G` … were RED against **current production**; lane `J` is the Python-side repair that makes them green."*
+✅ **WHAT IS TRUE `[MEASURED HERE, the contract's own helper]`:** every one of the twelve obligations was red through `_api()`, whose failure text is **`"RED — the persistence planner does not exist yet"`**. ⇒ **The contract was RED AGAINST THE MODULE'S ABSENCE, not against `spec-onboarding-service.ts`. `F` and `G` went green because a planner now exists that keys on `candidate_id` — not because anything in production changed.**
+⇒ 🛑 **THE COLLAPSE AT `spec-onboarding-service.ts:537` IS UNTOUCHED AND STILL LIVE.** It is TypeScript, which `R-796 §9` forbids me, and I did not go near it. **`MP1-CANDIDATE-IDEMPOTENCY-1` is the item that closes it, and it is NOT closed by lane `J`.**
+⚖️ **THE DESK BANKED THIS AS `F-MP1-SCOPE-1` AT `958ba692` BEFORE MY REPORT LANDED — I am not being told twice, I am confirming it against the executable line and withdrawing my sentence.** ⭐ **`AR-939 §1` did carry the mitigating clause (*"the eventual TypeScript repair still needs NO MIGRATION"*), which is why the error is a MIS-SCOPED CLAIM rather than a false one — but a caveat further down the paragraph does not repair a headline.**
+★★★★★ **`A TEST THAT WAS RED BECAUSE THE CODE WAS ABSENT GOES GREEN THE MOMENT THE CODE EXISTS — AND THAT PROVES THE CODE EXISTS, NOT THAT THE DEFECT IT WAS WRITTEN ABOUT IS GONE. THE RED'S CAUSE IS PART OF WHAT ITS GREEN MEANS.`**
+⚖️ **NOTHING ELSE IN `AR-939` IS AFFECTED:** the six mutation arms, the `521 passed` regression, the `107` manifest, both anchor constants, the twice-PASS pin `18b46161`, and `F-ACCEPT5-9` are all independent of this scoping error and stand as measured.
+
+---
+
 ## AR-939 · 2026-08-10 · ✅ **LANE `J` DELIVERED — THE MONEY PATH IS GREEN: `13 passed`, ALL TWELVE OBLIGATIONS CONVICTED BY SIX MUTATIONS OF MY OWN MODULE.** ✅ **LANE `K` DELIVERED — PIN `18b46161`, `ACCEPT-5` PASSES **TWICE** IN A CHECKOUT THAT NEVER HELD THE LOCAL ARTIFACT.** ✅ **BOTH ANCHOR CONSTANTS COMPUTED AT SOURCE AND THEY AGREE WITH `R-796 §4` — STOP `[3]` DOES NOT FIRE.** 🛑 **ONE NEW FINDING: `K-3`'s "`git status` clean" CANNOT BE MET — A POPULATION MEMBER WRITES INTO THE TREE ON EVERY GATE RUN.** ⚠️ **AND I WITHDRAW THE WORD "IDENTICAL" IN ITS STRONGEST SENSE — `§4` STATES EXACTLY WHAT MATCHED.** ⚖️ **FAN-IN `2 / 2`.**
 
 **SEAT `claude.exe 26856`. CAMPAIGN TREE `HEAD ab0380f2` + this report. LANE `K` BRANCH `grade/accept5-instrument-r2-20260810` @ `18b46161`, PUSHED (`git ls-remote` == local). LANE `J` attempt `1 / 2` · LANE `K` attempt `1 / 2`. NO TypeScript · NO `/api/backtests` · NO DB · NO `spec_hash` change · NO seal re-pin · ARTIFACT **NOT** ON THE CAMPAIGN BRANCH.**
