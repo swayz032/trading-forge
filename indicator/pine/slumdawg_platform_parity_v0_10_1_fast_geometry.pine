@@ -1,0 +1,607 @@
+//@version=6
+indicator("Slumdawg traders indicator", shorttitle = "Slumdawg traders indicator", overlay = true, scale = scale.none, behind_chart = true, max_labels_count = 100, max_lines_count = 200, max_boxes_count = 20, calc_bars_count = 1600)
+
+// v0.10.1 PERFORMANCE ARCHITECTURE
+// PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
+const string BUILD_CLASSIFICATION = "PLATFORM_PARITY_ONLY"
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+const float HUGE_DISTANCE = 1e12
+const int FREEZE_PADDING = 320
+const int MAX_B_CANDIDATES = 12
+
+string gSetup = "1 — SETUP"
+string bigDirection = input.string("NOT SET", "BIG DIRECTION", options = ["UP", "DOWN", "NOT SET"], group = gSetup, display = display.none)
+string planSide = input.string("LONG", "PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
+float goLine = input.price(0.0, "GO LINE (yellow)", group = gSetup, display = display.none)
+float safeTargetLow = input.price(0.0, "SAFE TARGET lower edge", group = gSetup, display = display.none)
+float safeTargetHigh = input.price(0.0, "SAFE TARGET upper edge", group = gSetup, display = display.none)
+
+string gView = "2 — DISPLAY"
+bool showCoach = input.bool(true, "Show Slumdawg coach", group = gView)
+bool showWeeklyLevels = input.bool(true, "Show PWH/PWL when near", group = gView)
+bool showGoLine = input.bool(true, "Show yellow GO LINE", group = gView)
+bool showSafeTarget = input.bool(true, "Show blue SAFE TARGET", group = gView)
+
+string gBoard = "2A — FROZEN TRENDLINE BOARD"
+int boardFreezeTime = input.time(0, "Build/freeze board at", group = gBoard, confirm = true, tooltip = "Choose the current bar once. Source-timeframe geometry is reconstructed from this same timestamp and stays fixed across chart timeframes.", display = display.none)
+bool showMGreen = input.bool(true, "Monthly GREEN", inline = "M", group = gBoard)
+bool showMRed = input.bool(true, "Monthly RED", inline = "M", group = gBoard)
+bool showWGreen = input.bool(true, "Weekly GREEN", inline = "W", group = gBoard)
+bool showWRed = input.bool(true, "Weekly RED", inline = "W", group = gBoard)
+bool showDGreen = input.bool(true, "Daily GREEN", inline = "D", group = gBoard)
+bool showDRed = input.bool(true, "Daily RED", inline = "D", group = gBoard)
+bool show4HGreen = input.bool(true, "4H GREEN", inline = "4H", group = gBoard)
+bool show4HRed = input.bool(true, "4H RED", inline = "4H", group = gBoard)
+bool show1HGreen = input.bool(true, "1H GREEN", inline = "1H", group = gBoard)
+bool show1HRed = input.bool(true, "1H RED", inline = "1H", group = gBoard)
+bool show15MGreen = input.bool(true, "15M GREEN", inline = "15M", group = gBoard)
+bool show15MRed = input.bool(true, "15M RED", inline = "15M", group = gBoard)
+bool show5MGreen = input.bool(true, "5M GREEN", inline = "5M", group = gBoard)
+bool show5MRed = input.bool(true, "5M RED", inline = "5M", group = gBoard)
+
+string gResearch = "2B — TRENDLINE RESEARCH GUARDS"
+int monthlyLookback = input.int(60, "Monthly structural bars", minval = 12, maxval = 120, group = gResearch, display = display.none)
+int weeklyLookback = input.int(104, "Weekly structural bars", minval = 20, maxval = 260, group = gResearch, display = display.none)
+int dailyLookback = input.int(180, "Daily structural bars", minval = 30, maxval = 500, group = gResearch, display = display.none)
+int h4Lookback = input.int(240, "4H structural bars", minval = 40, maxval = 600, group = gResearch, display = display.none)
+int h1Lookback = input.int(320, "1H structural bars", minval = 60, maxval = 800, group = gResearch, display = display.none)
+int m15Lookback = input.int(400, "15M structural bars", minval = 80, maxval = 1000, group = gResearch, display = display.none)
+int m5Lookback = input.int(600, "5M structural bars", minval = 100, maxval = 1500, group = gResearch, display = display.none)
+int touchToleranceTicks = input.int(1, "Fresh-ray tolerance (ticks)", minval = 0, maxval = 20, group = gResearch, tooltip = "Research placeholder; not production calibrated.", display = display.none)
+int overlapTicks = input.int(8, "Parent/child separation (ticks)", minval = 0, maxval = 100, group = gResearch, tooltip = "Rejects a child that adds no distinct path versus its parent.", display = display.none)
+
+string gTest = "3 — PARITY TEST ONLY"
+bool enableParityEngine = input.bool(false, "Enable test engine", group = gTest, display = display.none)
+float minBreak = input.float(0.25, "BREAK distance", minval = 0.25, step = 0.25, group = gTest, display = display.none)
+float minPush = input.float(0.25, "PUSH distance", minval = 0.25, step = 0.25, group = gTest, display = display.none)
+float maxRecoil = input.float(2.0, "Max recoil", minval = 0.0, step = 0.25, group = gTest, display = display.none)
+
+color GREEN_UP = color.rgb(0, 205, 105)
+color RED_DOWN = color.rgb(230, 55, 70)
+color BLUE_DAY = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color BLUE_TARGET = color.rgb(42, 118, 255)
+color YELLOW_GO = color.rgb(255, 215, 0)
+color ORANGE_WAIT = color.rgb(255, 155, 35)
+color PANEL_DARK = color.rgb(18, 20, 25)
+color PANEL_MID = color.rgb(37, 41, 49)
+color GOLD_ACCENT = color.rgb(205, 165, 70)
+
+bool isFiveMinute = timeframe.isminutes and timeframe.multiplier == 5
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+float touchTolerance = touchToleranceTicks * syminfo.mintick
+float overlapTolerance = overlapTicks * syminfo.mintick
+
+[pdh, pdl] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on, calc_bars_count = 4)
+[pwh, pwl] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on, calc_bars_count = 4)
+bool dayValuesValid = not na(pdh) and not na(pdl)
+bool weekValuesValid = not na(pwh) and not na(pwl)
+float dailyEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na
+bool showPdh = dayValuesValid
+bool showPdl = dayValuesValid
+bool showPwh = showWeeklyLevels and weekValuesValid and not na(dailyEnvelope) and math.abs(pwh - close) <= dailyEnvelope
+bool showPwl = showWeeklyLevels and weekValuesValid and not na(dailyEnvelope) and math.abs(pwl - close) <= dailyEnvelope
+
+f_line_at(int t1, float p1, int t2, float p2, int atTime) =>
+    not na(t1) and not na(t2) and t2 > t1 ? p1 + (float(atTime - t1) / float(t2 - t1)) * (p2 - p1) : na
+
+f_is_swing(int off, bool bullish) =>
+    off >= 2 and (bullish ? (low[off] <= low[off + 1] and low[off] <= low[off + 2] and low[off] < low[off - 1] and low[off] < low[off - 2]) : (high[off] >= high[off + 1] and high[off] >= high[off + 2] and high[off] > high[off - 1] and high[off] > high[off - 2]))
+
+f_find_freeze_off(int freezeTs, int scanBars) =>
+    int out = na
+    if freezeTs > 0 and scanBars > 0
+        for i = 0 to scanBars - 1
+            if na(out) and not na(time_close[i]) and time_close[i] <= freezeTs
+                out := i
+    out
+
+f_ray_clean(bool bullish, int aT, float aP, int bT, float bP, int newestOff, int oldestOff, float tol) =>
+    bool clean = true
+    if not na(aT) and not na(bT) and bT > aT and oldestOff >= newestOff
+        for k = newestOff to oldestOff
+            int kt = time[k]
+            if not na(kt) and kt >= aT
+                float lp = f_line_at(aT, aP, bT, bP, kt)
+                if not na(lp)
+                    if bullish and low[k] < lp - tol
+                        clean := false
+                    if not bullish and high[k] > lp + tol
+                        clean := false
+    clean
+
+f_root_from_a(bool bullish, int freezeOff, int maxOff, int aOff, float aP, float tol) =>
+    bool valid = false
+    int outAT = na
+    float outAP = na
+    int outBT = na
+    float outBP = na
+    int tested = 0
+    int newestConfirmed = freezeOff + 2
+    if not na(aOff) and aOff > newestConfirmed and aOff <= maxOff
+        int aT = time[aOff]
+        int span = aOff - newestConfirmed
+        for step = 1 to span
+            int j = aOff - step
+            bool swingOk = j >= newestConfirmed and j + 2 <= maxOff and f_is_swing(j, bullish)
+            float bP = bullish ? low[j] : high[j]
+            bool directional = bullish ? bP > aP : bP < aP
+            if not valid and swingOk and directional
+                tested += 1
+                bool clean = f_ray_clean(bullish, aT, aP, time[j], bP, freezeOff, aOff, tol)
+                if clean
+                    valid := true
+                    outAT := aT
+                    outAP := aP
+                    outBT := time[j]
+                    outBP := bP
+                    break
+                if tested >= MAX_B_CANDIDATES
+                    break
+    [valid, outAT, outAP, outBT, outBP]
+
+f_child_from_parent(bool parentValid, int parentAT, float parentAP, int parentBT, float parentBP, bool bullish, int freezeOff, int maxOff, float tol, float separation) =>
+    bool valid = false
+    int outAT = na
+    float outAP = na
+    int outBT = na
+    float outBP = na
+    int tested = 0
+    int newestConfirmed = freezeOff + 2
+    int oldestCandidate = maxOff - 2
+    if parentValid and not na(parentBT) and not na(parentBP) and oldestCandidate >= newestConfirmed
+        int span = oldestCandidate - newestConfirmed
+        for step = 0 to span
+            int j = oldestCandidate - step
+            int jt = time[j]
+            bool afterParent = not na(jt) and jt > parentBT
+            bool swingOk = afterParent and f_is_swing(j, bullish)
+            float bP = bullish ? low[j] : high[j]
+            bool directional = bullish ? bP > parentBP : bP < parentBP
+            if not valid and swingOk and directional
+                float parentProjected = f_line_at(parentAT, parentAP, parentBT, parentBP, jt)
+                bool distinct = na(parentProjected) or math.abs(bP - parentProjected) >= separation
+                if distinct
+                    tested += 1
+                    bool clean = f_ray_clean(bullish, parentBT, parentBP, jt, bP, freezeOff, maxOff, tol)
+                    if clean
+                        valid := true
+                        outAT := parentBT
+                        outAP := parentBP
+                        outBT := jt
+                        outBP := bP
+                        break
+                    if tested >= MAX_B_CANDIDATES
+                        break
+    [valid, outAT, outAP, outBT, outBP]
+
+f_root_pair_fast(int freezeTs, int lookbackBars, float tol) =>
+    bool gV = false
+    int gAT = na
+    float gAP = na
+    int gBT = na
+    float gBP = na
+    bool rV = false
+    int rAT = na
+    float rAP = na
+    int rBT = na
+    float rBP = na
+    if barstate.islast and freezeTs > 0
+        int scanBars = math.min(lookbackBars + FREEZE_PADDING, bar_index + 1)
+        int freezeOff = f_find_freeze_off(freezeTs, scanBars)
+        if not na(freezeOff)
+            int maxOff = math.min(freezeOff + lookbackBars - 1, scanBars - 1)
+            int gAOff = na
+            float gExtreme = 1e20
+            int rAOff = na
+            float rExtreme = -1e20
+            for i = freezeOff to maxOff
+                if not na(low[i]) and low[i] < gExtreme
+                    gExtreme := low[i]
+                    gAOff := i
+                if not na(high[i]) and high[i] > rExtreme
+                    rExtreme := high[i]
+                    rAOff := i
+            [gV0, gAT0, gAP0, gBT0, gBP0] = f_root_from_a(true, freezeOff, maxOff, gAOff, gExtreme, tol)
+            [rV0, rAT0, rAP0, rBT0, rBP0] = f_root_from_a(false, freezeOff, maxOff, rAOff, rExtreme, tol)
+            gV := gV0
+            gAT := gAT0
+            gAP := gAP0
+            gBT := gBT0
+            gBP := gBP0
+            rV := rV0
+            rAT := rAT0
+            rAP := rAP0
+            rBT := rBT0
+            rBP := rBP0
+    [gV, gAT, gAP, gBT, gBP, rV, rAT, rAP, rBT, rBP]
+
+f_family_pair_fast(bool gParentValid, int gParentAT, float gParentAP, int gParentBT, float gParentBP, bool rParentValid, int rParentAT, float rParentAP, int rParentBT, float rParentBP, int freezeTs, int lookbackBars, float tol, float separation) =>
+    bool gV = false
+    int gAT = na
+    float gAP = na
+    int gBT = na
+    float gBP = na
+    bool rV = false
+    int rAT = na
+    float rAP = na
+    int rBT = na
+    float rBP = na
+    if barstate.islast and freezeTs > 0
+        int scanBars = math.min(lookbackBars + FREEZE_PADDING, bar_index + 1)
+        int freezeOff = f_find_freeze_off(freezeTs, scanBars)
+        if not na(freezeOff)
+            int maxOff = math.min(freezeOff + lookbackBars - 1, scanBars - 1)
+            if gParentValid
+                [gV0, gAT0, gAP0, gBT0, gBP0] = f_child_from_parent(true, gParentAT, gParentAP, gParentBT, gParentBP, true, freezeOff, maxOff, tol, separation)
+                gV := gV0
+                gAT := gAT0
+                gAP := gAP0
+                gBT := gBT0
+                gBP := gBP0
+            else
+                int gAOff = na
+                float gExtreme = 1e20
+                for i = freezeOff to maxOff
+                    if not na(low[i]) and low[i] < gExtreme
+                        gExtreme := low[i]
+                        gAOff := i
+                [gV0, gAT0, gAP0, gBT0, gBP0] = f_root_from_a(true, freezeOff, maxOff, gAOff, gExtreme, tol)
+                gV := gV0
+                gAT := gAT0
+                gAP := gAP0
+                gBT := gBT0
+                gBP := gBP0
+            if rParentValid
+                [rV0, rAT0, rAP0, rBT0, rBP0] = f_child_from_parent(true, rParentAT, rParentAP, rParentBT, rParentBP, false, freezeOff, maxOff, tol, separation)
+                rV := rV0
+                rAT := rAT0
+                rAP := rAP0
+                rBT := rBT0
+                rBP := rBP0
+            else
+                int rAOff = na
+                float rExtreme = -1e20
+                for i = freezeOff to maxOff
+                    if not na(high[i]) and high[i] > rExtreme
+                        rExtreme := high[i]
+                        rAOff := i
+                [rV0, rAT0, rAP0, rBT0, rBP0] = f_root_from_a(false, freezeOff, maxOff, rAOff, rExtreme, tol)
+                rV := rV0
+                rAT := rAT0
+                rAP := rAP0
+                rBT := rBT0
+                rBP := rBP0
+    [gV, gAT, gAP, gBT, gBP, rV, rAT, rAP, rBT, rBP]
+
+[mGV, mGAT, mGAP, mGBT, mGBP, mRV, mRAT, mRAP, mRBT, mRBP] = request.security(syminfo.tickerid, "M", f_root_pair_fast(boardFreezeTime, monthlyLookback, touchTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = monthlyLookback + FREEZE_PADDING)
+[wGV, wGAT, wGAP, wGBT, wGBP, wRV, wRAT, wRAP, wRBT, wRBP] = request.security(syminfo.tickerid, "W", f_family_pair_fast(mGV, mGAT, mGAP, mGBT, mGBP, mRV, mRAT, mRAP, mRBT, mRBP, boardFreezeTime, weeklyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = weeklyLookback + FREEZE_PADDING)
+
+bool gParentWV = wGV or mGV
+int gParentWAT = wGV ? wGAT : mGAT
+float gParentWAP = wGV ? wGAP : mGAP
+int gParentWBT = wGV ? wGBT : mGBT
+float gParentWBP = wGV ? wGBP : mGBP
+bool rParentWV = wRV or mRV
+int rParentWAT = wRV ? wRAT : mRAT
+float rParentWAP = wRV ? wRAP : mRAP
+int rParentWBT = wRV ? wRBT : mRBT
+float rParentWBP = wRV ? wRBP : mRBP
+
+[dGV, dGAT, dGAP, dGBT, dGBP, dRV, dRAT, dRAP, dRBT, dRBP] = request.security(syminfo.tickerid, "D", f_family_pair_fast(gParentWV, gParentWAT, gParentWAP, gParentWBT, gParentWBP, rParentWV, rParentWAT, rParentWAP, rParentWBT, rParentWBP, boardFreezeTime, dailyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = dailyLookback + FREEZE_PADDING)
+
+bool gParentDV = dGV or gParentWV
+int gParentDAT = dGV ? dGAT : gParentWAT
+float gParentDAP = dGV ? dGAP : gParentWAP
+int gParentDBT = dGV ? dGBT : gParentWBT
+float gParentDBP = dGV ? dGBP : gParentWBP
+bool rParentDV = dRV or rParentWV
+int rParentDAT = dRV ? dRAT : rParentWAT
+float rParentDAP = dRV ? dRAP : rParentWAP
+int rParentDBT = dRV ? dRBT : rParentWBT
+float rParentDBP = dRV ? dRBP : rParentWBP
+
+[h4GV, h4GAT, h4GAP, h4GBT, h4GBP, h4RV, h4RAT, h4RAP, h4RBT, h4RBP] = request.security(syminfo.tickerid, "240", f_family_pair_fast(gParentDV, gParentDAT, gParentDAP, gParentDBT, gParentDBP, rParentDV, rParentDAT, rParentDAP, rParentDBT, rParentDBP, boardFreezeTime, h4Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = h4Lookback + FREEZE_PADDING)
+
+bool gParent4V = h4GV or gParentDV
+int gParent4AT = h4GV ? h4GAT : gParentDAT
+float gParent4AP = h4GV ? h4GAP : gParentDAP
+int gParent4BT = h4GV ? h4GBT : gParentDBT
+float gParent4BP = h4GV ? h4GBP : gParentDBP
+bool rParent4V = h4RV or rParentDV
+int rParent4AT = h4RV ? h4RAT : rParentDAT
+float rParent4AP = h4RV ? h4RAP : rParentDAP
+int rParent4BT = h4RV ? h4RBT : rParentDBT
+float rParent4BP = h4RV ? h4RBP : rParentDBP
+
+[h1GV, h1GAT, h1GAP, h1GBT, h1GBP, h1RV, h1RAT, h1RAP, h1RBT, h1RBP] = request.security(syminfo.tickerid, "60", f_family_pair_fast(gParent4V, gParent4AT, gParent4AP, gParent4BT, gParent4BP, rParent4V, rParent4AT, rParent4AP, rParent4BT, rParent4BP, boardFreezeTime, h1Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = h1Lookback + FREEZE_PADDING)
+
+bool gParent1V = h1GV or gParent4V
+int gParent1AT = h1GV ? h1GAT : gParent4AT
+float gParent1AP = h1GV ? h1GAP : gParent4AP
+int gParent1BT = h1GV ? h1GBT : gParent4BT
+float gParent1BP = h1GV ? h1GBP : gParent4BP
+bool rParent1V = h1RV or rParent4V
+int rParent1AT = h1RV ? h1RAT : rParent4AT
+float rParent1AP = h1RV ? h1RAP : rParent4AP
+int rParent1BT = h1RV ? h1RBT : rParent4BT
+float rParent1BP = h1RV ? h1RBP : rParent4BP
+
+[m15GV, m15GAT, m15GAP, m15GBT, m15GBP, m15RV, m15RAT, m15RAP, m15RBT, m15RBP] = request.security(syminfo.tickerid, "15", f_family_pair_fast(gParent1V, gParent1AT, gParent1AP, gParent1BT, gParent1BP, rParent1V, rParent1AT, rParent1AP, rParent1BT, rParent1BP, boardFreezeTime, m15Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = m15Lookback + FREEZE_PADDING)
+
+bool gParent15V = m15GV or gParent1V
+int gParent15AT = m15GV ? m15GAT : gParent1AT
+float gParent15AP = m15GV ? m15GAP : gParent1AP
+int gParent15BT = m15GV ? m15GBT : gParent1BT
+float gParent15BP = m15GV ? m15GBP : gParent1BP
+bool rParent15V = m15RV or rParent1V
+int rParent15AT = m15RV ? m15RAT : rParent1AT
+float rParent15AP = m15RV ? m15RAP : rParent1AP
+int rParent15BT = m15RV ? m15RBT : rParent1BT
+float rParent15BP = m15RV ? m15RBP : rParent1BP
+
+[m5GV, m5GAT, m5GAP, m5GBT, m5GBP, m5RV, m5RAT, m5RAP, m5RBT, m5RBP] = request.security(syminfo.tickerid, "5", f_family_pair_fast(gParent15V, gParent15AT, gParent15AP, gParent15BT, gParent15BP, rParent15V, rParent15AT, rParent15AP, rParent15BT, rParent15BP, boardFreezeTime, m5Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off, calc_bars_count = m5Lookback + FREEZE_PADDING)
+
+int projectionTime = time_close
+float mGreenNow = mGV ? f_line_at(mGAT, mGAP, mGBT, mGBP, projectionTime) : na
+float mRedNow = mRV ? f_line_at(mRAT, mRAP, mRBT, mRBP, projectionTime) : na
+float wGreenNow = wGV ? f_line_at(wGAT, wGAP, wGBT, wGBP, projectionTime) : na
+float wRedNow = wRV ? f_line_at(wRAT, wRAP, wRBT, wRBP, projectionTime) : na
+float dGreenNow = dGV ? f_line_at(dGAT, dGAP, dGBT, dGBP, projectionTime) : na
+float dRedNow = dRV ? f_line_at(dRAT, dRAP, dRBT, dRBP, projectionTime) : na
+float h4GreenNow = h4GV ? f_line_at(h4GAT, h4GAP, h4GBT, h4GBP, projectionTime) : na
+float h4RedNow = h4RV ? f_line_at(h4RAT, h4RAP, h4RBT, h4RBP, projectionTime) : na
+float h1GreenNow = h1GV ? f_line_at(h1GAT, h1GAP, h1GBT, h1GBP, projectionTime) : na
+float h1RedNow = h1RV ? f_line_at(h1RAT, h1RAP, h1RBT, h1RBP, projectionTime) : na
+float m15GreenNow = m15GV ? f_line_at(m15GAT, m15GAP, m15GBT, m15GBP, projectionTime) : na
+float m15RedNow = m15RV ? f_line_at(m15RAT, m15RAP, m15RBT, m15RBP, projectionTime) : na
+float m5GreenNow = m5GV ? f_line_at(m5GAT, m5GAP, m5GBT, m5GBP, projectionTime) : na
+float m5RedNow = m5RV ? f_line_at(m5RAT, m5RAP, m5RBT, m5RBP, projectionTime) : na
+
+int activeTlCount = (mGV ? 1 : 0) + (mRV ? 1 : 0) + (wGV ? 1 : 0) + (wRV ? 1 : 0) + (dGV ? 1 : 0) + (dRV ? 1 : 0) + (h4GV ? 1 : 0) + (h4RV ? 1 : 0) + (h1GV ? 1 : 0) + (h1RV ? 1 : 0) + (m15GV ? 1 : 0) + (m15RV ? 1 : 0) + (m5GV ? 1 : 0) + (m5RV ? 1 : 0)
+
+array<string> wallNames = array.new_string()
+array<float> wallPrices = array.new_float()
+f_add_wall(bool condition, string name, float price) =>
+    if condition and not na(price)
+        array.push(wallNames, name)
+        array.push(wallPrices, price)
+
+if planSide == "LONG"
+    f_add_wall(mRV and mRedNow > close, "M RED", mRedNow)
+    f_add_wall(wRV and wRedNow > close, "W RED", wRedNow)
+    f_add_wall(dRV and dRedNow > close, "D RED", dRedNow)
+    f_add_wall(h4RV and h4RedNow > close, "4H RED", h4RedNow)
+    f_add_wall(h1RV and h1RedNow > close, "1H RED", h1RedNow)
+    f_add_wall(m15RV and m15RedNow > close, "15M RED", m15RedNow)
+    f_add_wall(m5RV and m5RedNow > close, "5M RED", m5RedNow)
+    f_add_wall(showPdh and pdh > close, "PDH", pdh)
+    f_add_wall(showPwh and pwh > close, "PWH", pwh)
+else
+    f_add_wall(mGV and mGreenNow < close, "M GREEN", mGreenNow)
+    f_add_wall(wGV and wGreenNow < close, "W GREEN", wGreenNow)
+    f_add_wall(dGV and dGreenNow < close, "D GREEN", dGreenNow)
+    f_add_wall(h4GV and h4GreenNow < close, "4H GREEN", h4GreenNow)
+    f_add_wall(h1GV and h1GreenNow < close, "1H GREEN", h1GreenNow)
+    f_add_wall(m15GV and m15GreenNow < close, "15M GREEN", m15GreenNow)
+    f_add_wall(m5GV and m5GreenNow < close, "5M GREEN", m5GreenNow)
+    f_add_wall(showPdl and pdl < close, "PDL", pdl)
+    f_add_wall(showPwl and pwl < close, "PWL", pwl)
+
+string nextWallName = "NONE AHEAD"
+float nextWallPrice = na
+float nextWallDistance = HUGE_DISTANCE
+if array.size(wallPrices) > 0
+    for i = 0 to array.size(wallPrices) - 1
+        float p = array.get(wallPrices, i)
+        float dist = math.abs(p - close)
+        if dist < nextWallDistance
+            nextWallDistance := dist
+            nextWallName := array.get(wallNames, i)
+            nextWallPrice := p
+string nextWallText = na(nextWallPrice) ? nextWallName : nextWallName + " @ " + str.tostring(nextWallPrice, format.mintick)
+
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+
+f_sync_level(line id, label lid, float price, string name, color c, bool visible) =>
+    if visible and not na(price)
+        line.set_xy1(id, math.max(0, bar_index - 1), price)
+        line.set_xy2(id, bar_index + 1, price)
+        line.set_extend(id, extend.both)
+        line.set_color(id, c)
+        line.set_width(id, 2)
+        label.set_xy(lid, bar_index + 3, price)
+        label.set_text(lid, name + "  " + str.tostring(price, format.mintick))
+        label.set_color(lid, c)
+        label.set_textcolor(lid, color.white)
+        label.set_size(lid, size.large)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
+
+var line mGreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line mRedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line wGreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line wRedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line dGreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line dRedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h4GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h4RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h1GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h1RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m15GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m15RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m5GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m5RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+
+f_sync_trend(line id, bool valid, bool visible, int aT, float aP, int bT, float bP, color c) =>
+    if valid and visible and not na(aT) and not na(bT) and aP > 0 and bP > 0
+        line.set_xy1(id, aT, aP)
+        line.set_xy2(id, bT, bP)
+        line.set_extend(id, extend.right)
+        line.set_color(id, c)
+        line.set_width(id, 2)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+
+var line goDraw = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var label goLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var box targetBox = na
+var label targetLabel = na
+bool goSet = goLine > 0
+bool targetSet = safeTargetLow > 0 and safeTargetHigh > safeTargetLow
+
+if barstate.islast
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl)
+    f_sync_trend(mGreenLine, mGV, showMGreen, mGAT, mGAP, mGBT, mGBP, GREEN_UP)
+    f_sync_trend(mRedLine, mRV, showMRed, mRAT, mRAP, mRBT, mRBP, RED_DOWN)
+    f_sync_trend(wGreenLine, wGV, showWGreen, wGAT, wGAP, wGBT, wGBP, GREEN_UP)
+    f_sync_trend(wRedLine, wRV, showWRed, wRAT, wRAP, wRBT, wRBP, RED_DOWN)
+    f_sync_trend(dGreenLine, dGV, showDGreen, dGAT, dGAP, dGBT, dGBP, GREEN_UP)
+    f_sync_trend(dRedLine, dRV, showDRed, dRAT, dRAP, dRBT, dRBP, RED_DOWN)
+    f_sync_trend(h4GreenLine, h4GV, show4HGreen, h4GAT, h4GAP, h4GBT, h4GBP, GREEN_UP)
+    f_sync_trend(h4RedLine, h4RV, show4HRed, h4RAT, h4RAP, h4RBT, h4RBP, RED_DOWN)
+    f_sync_trend(h1GreenLine, h1GV, show1HGreen, h1GAT, h1GAP, h1GBT, h1GBP, GREEN_UP)
+    f_sync_trend(h1RedLine, h1RV, show1HRed, h1RAT, h1RAP, h1RBT, h1RBP, RED_DOWN)
+    f_sync_trend(m15GreenLine, m15GV, show15MGreen, m15GAT, m15GAP, m15GBT, m15GBP, GREEN_UP)
+    f_sync_trend(m15RedLine, m15RV, show15MRed, m15RAT, m15RAP, m15RBT, m15RBP, RED_DOWN)
+    f_sync_trend(m5GreenLine, m5GV, show5MGreen, m5GAT, m5GAP, m5GBT, m5GBP, GREEN_UP)
+    f_sync_trend(m5RedLine, m5RV, show5MRed, m5RAT, m5RAP, m5RBT, m5RBP, RED_DOWN)
+    if showGoLine and goSet
+        line.set_xy1(goDraw, math.max(0, bar_index - 1), goLine)
+        line.set_xy2(goDraw, bar_index + 1, goLine)
+        line.set_color(goDraw, YELLOW_GO)
+        line.set_width(goDraw, 4)
+        label.set_xy(goLabel, bar_index + 3, goLine)
+        label.set_text(goLabel, "GO LINE  " + str.tostring(goLine, format.mintick))
+        label.set_color(goLabel, YELLOW_GO)
+        label.set_textcolor(goLabel, color.black)
+        label.set_size(goLabel, size.large)
+    else
+        line.set_xy1(goDraw, na, na)
+        line.set_xy2(goDraw, na, na)
+        label.set_xy(goLabel, na, na)
+        label.set_text(goLabel, "")
+    if showSafeTarget and targetSet
+        int boxLeft = math.max(0, bar_index - 35)
+        int boxRight = bar_index + 10
+        if na(targetBox)
+            targetBox := box.new(boxLeft, safeTargetHigh, boxRight, safeTargetLow, xloc = xloc.bar_index, border_color = BLUE_TARGET, bgcolor = color.new(BLUE_TARGET, 84), border_width = 2)
+        else
+            box.set_lefttop(targetBox, boxLeft, safeTargetHigh)
+            box.set_rightbottom(targetBox, boxRight, safeTargetLow)
+        float targetMid = (safeTargetHigh + safeTargetLow) / 2.0
+        if na(targetLabel)
+            targetLabel := label.new(bar_index + 3, targetMid, "SAFE TARGET", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left, color = BLUE_TARGET, textcolor = color.white, size = size.large)
+        else
+            label.set_xy(targetLabel, bar_index + 3, targetMid)
+    else
+        if not na(targetBox)
+            box.delete(targetBox)
+            targetBox := na
+        if not na(targetLabel)
+            label.delete(targetLabel)
+            targetLabel := na
+
+const string WAIT_REFERENCE = "WAIT_REFERENCE"
+const string WAIT_BREAK = "WAIT_BREAK"
+const string BREAK_STAGE = "BREAK"
+const string PUSH_1 = "PUSH_1"
+const string ENTRY_READY = "ENTRY_READY"
+varip string stage = WAIT_REFERENCE
+varip bool referenceArmed = false
+varip float reference = na
+varip float anchor = na
+varip int referenceSourceBar = na
+bool contextValid = isFiveMinute and isNqMnq and tickGridExpected and goSet
+bool engineRuntimeAllowed = enableParityEngine and contextValid
+float direction = planSide == "LONG" ? 1.0 : -1.0
+float favorable = direction * close
+float referenceFav = direction * reference
+float anchorFav = direction * anchor
+if engineRuntimeAllowed and barstate.isrealtime and referenceArmed and bar_index > referenceSourceBar and stage != ENTRY_READY
+    float recoil = (stage == BREAK_STAGE or stage == PUSH_1) and not na(anchor) ? anchorFav - favorable : 0.0
+    if (stage == BREAK_STAGE or stage == PUSH_1) and recoil >= maxRecoil
+        stage := WAIT_BREAK
+        anchor := reference
+    else if stage == WAIT_BREAK and favorable >= referenceFav + minBreak
+        stage := BREAK_STAGE
+        anchor := close
+    else if stage == BREAK_STAGE and favorable >= anchorFav + minPush
+        stage := PUSH_1
+        anchor := close
+    else if stage == PUSH_1 and favorable >= anchorFav + minPush
+        stage := ENTRY_READY
+        anchor := close
+if engineRuntimeAllowed and barstate.isrealtime and barstate.isconfirmed
+    bool beyondGo = planSide == "LONG" ? close > goLine : close < goLine
+    if not referenceArmed and beyondGo
+        reference := planSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        referenceArmed := true
+        stage := WAIT_BREAK
+    else if referenceArmed and bar_index > referenceSourceBar and stage != ENTRY_READY
+        reference := planSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        stage := WAIT_BREAK
+if not engineRuntimeAllowed
+    stage := WAIT_REFERENCE
+    referenceArmed := false
+    reference := na
+    anchor := na
+    referenceSourceBar := na
+
+bool directionKnown = bigDirection != "NOT SET"
+bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
+string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
+string safeTargetText = targetSet ? str.tostring(safeTargetLow, format.mintick) + " – " + str.tostring(safeTargetHigh, format.mintick) : "NOT SET"
+string trendlineText = boardFreezeTime <= 0 ? "SET FREEZE POINT" : str.tostring(activeTlCount) + " LOCKED | FAST GATE"
+string stageText = stage == WAIT_REFERENCE ? "1  WAIT FOR CANDLE PAST GO LINE" : stage == WAIT_BREAK ? "2  REFERENCE SET — WAIT FOR BREAK" : stage == BREAK_STAGE ? "3  BREAK — WATCH PUSH 1" : stage == PUSH_1 ? "4  PUSH 1 — WATCH PUSH 2" : "5  READY — TEST ONLY"
+string runtimeReason = boardFreezeTime <= 0 ? "SET BOARD FREEZE POINT" : not isNqMnq ? "USE NQ OR MNQ" : not isFiveMinute ? "BOARD FIXED | EXECUTION 5 MIN" : not goSet ? "SET YELLOW GO LINE" : not enableParityEngine ? "TEST ENGINE OFF" : "TEST ENGINE RUNNING"
+color bigDirectionColor = bigDirection == "UP" ? GREEN_UP : bigDirection == "DOWN" ? RED_DOWN : color.gray
+color moveColor = not directionKnown ? color.gray : planSide == "LONG" ? GREEN_UP : RED_DOWN
+color stageColor = stage == ENTRY_READY ? GREEN_UP : stage == PUSH_1 ? color.aqua : stage == BREAK_STAGE ? YELLOW_GO : ORANGE_WAIT
+var table coach = table.new(position.top_right, 2, 9, border_width = 2, frame_width = 2, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+if barstate.islast
+    if showCoach
+        table.cell(coach, 0, 0, "SLUMDAWG", text_color = color.lime, bgcolor = PANEL_MID, text_size = 18)
+        table.cell(coach, 1, 0, "COACH", text_color = color.white, bgcolor = PANEL_MID, text_size = 18)
+        table.cell(coach, 0, 1, "BIG DIRECTION", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 1, bigDirection, text_color = color.white, bgcolor = bigDirectionColor, text_size = 16)
+        table.cell(coach, 0, 2, "CURRENT MOVE", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 2, currentMoveText, text_color = color.white, bgcolor = moveColor, text_size = 15)
+        table.cell(coach, 0, 3, "TRENDLINES", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 3, trendlineText, text_color = activeTlCount > 0 ? color.lime : color.orange, text_size = 13)
+        table.cell(coach, 0, 4, "NEXT WALL", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 4, nextWallText, text_color = color.orange, text_size = 14)
+        table.cell(coach, 0, 5, "GO LINE", text_color = color.black, bgcolor = YELLOW_GO, text_size = 15)
+        table.cell(coach, 1, 5, goSet ? str.tostring(goLine, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 16)
+        table.cell(coach, 0, 6, "SAFE TARGET", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 15)
+        table.cell(coach, 1, 6, safeTargetText, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 15)
+        table.cell(coach, 0, 7, "NOW", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 7, stageText, text_color = color.black, bgcolor = stageColor, text_size = 15)
+        table.cell(coach, 0, 8, "SYSTEM", text_color = color.white, text_size = 14)
+        table.cell(coach, 1, 8, runtimeReason, text_color = runtimeReason == "TEST ENGINE RUNNING" ? color.lime : color.orange, text_size = 13)
+    else
+        for r = 0 to 8
+            table.cell(coach, 0, r, "")
+            table.cell(coach, 1, r, "")
+
+alertcondition(false, "V0.10.1 research build", "NON-ACTIONABLE research build")
