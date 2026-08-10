@@ -53,6 +53,7 @@ import pathlib
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import numpy as np
 import pytest
 
 from src.engine.extraction.spec_producer import (
@@ -61,15 +62,19 @@ from src.engine.extraction.spec_producer import (
     produce_spec_artifact,
     produce_spec_artifact_from_record,
 )
-from src.engine.family_meta_enforcement import PRIMITIVE_RESOLVERS
+from src.engine.family_meta_enforcement import FLAG_ENV, PRIMITIVE_RESOLVERS
 from src.engine.opening_range_adapter import OpeningRangeBar, compute_opening_range_state
 from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
 from src.engine.opening_range_lowering import (
     COMMITTED_PROVENANCE_DIR,
     lower_opening_range_definition,
 )
-from src.engine.spec_condition_compiler import SpecConditionStrategy
-from src.engine.spec_family_bindings import FAMILY_META, compile_binding_plan
+from src.engine.spec_condition_compiler import ENFORCED_DISPATCH, SpecConditionStrategy
+from src.engine.spec_family_bindings import (
+    FAMILY_META,
+    ConditionBinding,
+    compile_binding_plan,
+)
 
 # The golden slice. Named here as TEST DATA, never in production code (R-774 §6
 # forbids hardcoding the stub in the compiler, not in a fixture that must name
@@ -150,6 +155,176 @@ def _deterministic_bars(session_date: date, tz: str, minutes: int) -> list[Openi
         OpeningRangeBar(timestamp=start + timedelta(minutes=i), high=100.0 + i, low=100.0 - i)
         for i in range(minutes)
     ]
+
+
+# ── THE EXECUTION-SIDE FIXTURE (R-779 §7 COMMIT 1) ────────────────────────────
+# An ordinary weekday, deliberately not a holiday and not a DST changeover: a
+# fixture that straddles a DST boundary would make a REAL zone bug look like a
+# test bug, and vice versa.
+SESSION_DATE = date(2026, 3, 3)
+# One-minute bars, so the taught 5/15/30 windows are expressible on the grid and
+# the instance's `timeframe` (a REAL production constructor parameter) says so.
+BAR_INTERVAL_MINUTES = 1
+BAR_TIMEFRAME = "1m"
+# Long enough that ALL THREE windows have closed by the last bar. A frame ending
+# at 09:59 would leave the 30m window FORMING, and a refusal that is really a
+# short fixture is the most convincing wrong answer available here.
+SESSION_MINUTES = 45
+
+
+def _taught_session_bars(definition, minutes: int = SESSION_MINUTES) -> list[OpeningRangeBar]:
+    """One 1-minute bar per minute from the TAUGHT session start, on the grid, no gaps.
+
+    The start instant comes OFF THE DEFINITION (`session_start_local` /
+    `source_timezone`), never from a literal in this file. A fixture that hardcodes
+    09:30 stops measuring the source the moment the source says something else, and
+    it would still look green while doing it.
+
+    Highs/lows widen with the minute, so a LONGER window necessarily produces a
+    WIDER range — which is what makes "three windows, three different states"
+    observable rather than asserted.
+    """
+    zone = ZoneInfo(definition.source_timezone)
+    hour_text, _, minute_text = definition.session_start_local.partition(":")
+    start = datetime(
+        SESSION_DATE.year,
+        SESSION_DATE.month,
+        SESSION_DATE.day,
+        int(hour_text),
+        int(minute_text),
+        tzinfo=zone,
+    )
+    return [
+        OpeningRangeBar(timestamp=start + timedelta(minutes=i), high=100.0 + i, low=100.0 - i)
+        for i in range(minutes)
+    ]
+
+
+def _dispatch_ctx(bars: list[OpeningRangeBar]) -> dict:
+    """The slice of production's real `ctx` an opening-range handler can read.
+
+    Keys mirror `spec_condition_compiler.compute()`'s own ctx construction (`n`,
+    `ts_list`, `open_`/`high`/`low`/`close`), built here from the SAME bars the
+    adapter will see. `ts_list` entries are tz-aware, exactly as `_bars_to_ts_list`
+    normalises them in production.
+
+    🛑 IT INVENTS NO KEY PRODUCTION DOES NOT HAVE. The bar interval is NOT smuggled
+    in here — it is carried by the instance's `timeframe`, which is a real
+    constructor parameter. `A FIXTURE THAT HANDS THE HANDLER A KEY PRODUCTION NEVER
+    BUILDS IS TESTING A CONTEXT THAT WILL NEVER EXIST.`
+    """
+    high = np.array([b.high for b in bars], dtype=np.float64)
+    low = np.array([b.low for b in bars], dtype=np.float64)
+    mid = (high + low) / 2.0
+    return {
+        "n": len(bars),
+        "ts_list": [b.timestamp for b in bars],
+        "open_": mid.copy(),
+        "high": high,
+        "low": low,
+        "close": mid.copy(),
+    }
+
+
+def _candidate_carrier_parameter() -> str | None:
+    """The constructor parameter that carries ONE typed execution candidate, or None.
+
+    🛑 DISCOVERED BY TYPE, NEVER BY A NAME THIS TEST CHOSE. `R-779 §7-1` requires the
+    carrier to be "an explicit typed input", so the ANNOTATION is the contract and any
+    parameter name the wiring picks satisfies this guard. Pinning a name here would
+    reproduce exactly the defect `R-776 §3` deleted:
+
+      `A TEST PINNED TO A NAME GUARDS THE NAME, NOT THE BOUNDARY.`
+
+    Reads string annotations and real objects alike, because whether this module has
+    `from __future__ import annotations` is not a fact this guard should depend on.
+    """
+    for name, param in inspect.signature(SpecConditionStrategy.__init__).parameters.items():
+        annotation = param.annotation
+        text = (
+            annotation
+            if isinstance(annotation, str)
+            else getattr(annotation, "__name__", "") or str(annotation)
+        )
+        if OpeningRangeExecutionCandidate.__name__ in text:
+            return name
+    return None
+
+
+def _require_activated() -> str:
+    """The four production facts every execution arm below needs, or a RED that NAMES
+    the first missing one.
+
+    🛑 THIS EXISTS TO PREVENT A FALSE GREEN, AND THE FALSE GREEN IS SPECIFIC. Each arm
+    below asserts a REFUSAL or a MIS-ROUTE. Today production raises
+    `FamilyMetaEnforcementError` for a completely different reason — the primitive is
+    not routed at all — so an arm written as a bare `pytest.raises` would go GREEN
+    immediately, on an exception that has nothing to do with what it claims to guard.
+
+      `AN ARM THAT PASSES BEFORE THE FEATURE EXISTS IS NOT A GUARD, IT IS A
+       COINCIDENCE WITH AN ASSERTION ATTACHED.`
+
+    So every arm calls this first and is RED until the activation lands.
+
+    🛑 STAGE ORDER IS THE PATH'S OWN EXECUTION ORDER, NOT A RANKING I CHOSE. An
+    execution instance is CONSTRUCTED before anything is dispatched, so the carrier is
+    the first fact the path needs; declaration, resolver and routing are read inside
+    `_dispatch_enforced`, which cannot run until construction has succeeded.
+    """
+    # ── FIRST: the carrier. Construction precedes dispatch.
+    carrier = _candidate_carrier_parameter()
+    assert carrier is not None, (
+        "RED — production offers NO typed carrier for bringing ONE taught execution "
+        "candidate into an execution instance.\n"
+        f"  SpecConditionStrategy.__init__ parameters : "
+        f"{sorted(inspect.signature(SpecConditionStrategy.__init__).parameters)}\n"
+        f"  none is annotated with {OpeningRangeExecutionCandidate.__name__}\n"
+        "  ⇒ the compiler now produces three taught candidates and the runtime has "
+        "nowhere to put one. Until this exists, 'which window is this instance "
+        "computing' has no answer that is not a guess.\n"
+        "  ⚠️ NOT THE ONLY GAP — declaration, resolver and routing are ALSO absent "
+        "behind it; they are simply not reachable until an instance can be built."
+    )
+    # ── THEN the three dispatch-time facts, in the order `_dispatch_enforced` needs them.
+    meta = FAMILY_META[FAMILY]
+    assert meta.primitive is not None and not meta.unsupported, (
+        "RED (expected until the S6 EXECUTION ACTIVATION, R-779 §7 COMMIT 2) — production "
+        f"declares NO primitive for {FAMILY}.\n"
+        f"  primitive : {meta.primitive} · unsupported : {meta.unsupported}\n"
+        f"  unbound_reason : {meta.unbound_reason}"
+    )
+    assert meta.primitive in PRIMITIVE_RESOLVERS, (
+        f"RED — {FAMILY} declares {meta.primitive!r} but PRIMITIVE_RESOLVERS has no entry: "
+        "a declared name with no route is an unroutable pointer"
+    )
+    # R-779 §3: the engine does not ask for RESOLVABLE, it asks for ROUTED.
+    # `verify_dispatch_coverage`'s direction-1 loop has no waiver, so a declared
+    # primitive absent from ENFORCED_DISPATCH is a pin (a) violation by construction.
+    assert meta.primitive in ENFORCED_DISPATCH, (
+        f"RED — {FAMILY} declares {meta.primitive!r} and resolves it, but the executable "
+        "layer routes no such key. `RESOLVABLE IS NOT ROUTED`"
+    )
+    return carrier
+
+
+def _execution_instance(artifact: dict, plan, candidate: OpeningRangeExecutionCandidate):
+    """ONE production execution instance carrying ONE candidate — R-779 §7's shape.
+
+    `R-736`/`R-743`, settled and not re-opened here: the teacher gave three versions,
+    so the factory makes three bots. There is no default, no primary, and no
+    `candidates[0]` — each instance is told exactly which taught window it is.
+    """
+    carrier = _require_activated()
+    return SpecConditionStrategy(
+        artifact,
+        binding_plan=plan,
+        timeframe=BAR_TIMEFRAME,
+        **{carrier: candidate},
+    )
+
+
+def _opening_range_binding(plan):
+    return next((b for b in plan.bindings if b.type == FAMILY), None)
 
 
 def _lower_golden():
@@ -508,7 +683,21 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
 
 # ── RED 2 — PRODUCTION ITSELF MUST REACH THE ADAPTER ──────────────────────────
 def test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate(monkeypatch):
-    """PERMANENT RED until B1 STEP 6 declares, routes AND executes.
+    """PERMANENT RED until the S6 EXECUTION ACTIVATION declares, routes AND executes.
+
+    🛑 MOVED ONTO THE FULL-RECORD CANDIDATE-AWARE PATH (R-778 §6, ordered again at
+    R-779 §7 COMMIT 1). The previous version built its setup through
+    `_produce(GOLDEN_STUB)` — the OLD per-strategy boundary — and then dispatched ONE
+    strategy that carried no candidate at all. That shape CANNOT express the claim
+    this lane exists to make: the taught 5/15/30 now live on `RecordCompileResult`,
+    not in that artifact, so a test entering there is asking production to rediscover
+    what the compiler already computed, and the four forbidden escapes (stuffing
+    candidates into the `SpecArtifact`, `ConditionBinding.parameters`, re-reading the
+    source, or choosing a candidate downstream) are exactly the shortcuts it would
+    invite.
+
+    `THE TEST THAT PROVES THE BREAKTHROUGH MUST ENTER THROUGH THE DOOR THE
+     BREAKTHROUGH BUILT.` (R-778 §6)
 
     🛑 THIS TEST NEVER CALLS THE ADAPTER, AND NEVER CALLS THE SPY.
     R-775 §1 defect 2: the previous version looped over candidates calling `spy(...)`
@@ -524,18 +713,21 @@ def test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candi
     which routes `ENFORCED_DISPATCH[binding.primitive]` and RAISES on an unroutable
     name rather than passing through.
     """
-    meta = FAMILY_META[FAMILY]
-    assert meta.primitive is not None and not meta.unsupported, (
-        "RED (expected until B1 STEP 6) — STAGE 1: production declares NO primitive for "
-        f"{FAMILY}, so no dispatch can exist.\n"
-        f"  primitive : {meta.primitive} · unsupported : {meta.unsupported}\n"
-        f"  unbound_reason : {meta.unbound_reason}\n"
-        "  (the executable adapter EXISTS and is green — this is a wiring gap)"
+    # ── STAGE 1 — the CANDIDATES, from the full-record boundary. Green since STEP 3.
+    # This is setup, not the claim: if it ever reddens, RED 1 reddens with it and the
+    # failure is transport, not execution.
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    plan = compile_binding_plan(result.artifact["spec"])
+    candidates = _find_candidates((result, plan))
+    durations = tuple(c.variant.duration_minutes for c in candidates)
+    assert durations == TAUGHT_DURATIONS, (
+        "RED — STAGE 1: the full-record boundary did not transport the three taught "
+        f"candidates.\n  expected : {TAUGHT_DURATIONS}\n  found    : {durations or '(none)'}\n"
+        "  ⇒ this is RED 1's territory, not this test's; fix transport first."
     )
-    assert meta.primitive in PRIMITIVE_RESOLVERS, (
-        f"RED — STAGE 2: {FAMILY} declares {meta.primitive!r} but PRIMITIVE_RESOLVERS has no "
-        "entry — a declared name with no route is an unroutable pointer"
-    )
+
+    # ── STAGE 2 — declaration · resolver · ROUTING · carrier. Names the first gap.
+    _require_activated()
 
     calls: list[int] = []
     real = compute_opening_range_state
@@ -548,18 +740,19 @@ def test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candi
         "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
     )
 
-    _, artifact, plan = _produce(GOLDEN_STUB)
-    binding = next(
-        (b for b in plan.bindings if b.type == FAMILY),
-        None,
-    )
+    binding = _opening_range_binding(plan)
     assert binding is not None, f"RED — STAGE 3: no {FAMILY} binding in the compiled plan"
 
-    strategy = SpecConditionStrategy(artifact, binding_plan=plan)
+    lowering = result.opening_range_lowering
+    ctx_bars = _taught_session_bars(lowering.definition)
 
-    # PRODUCTION performs the dispatch. The test hands it a binding and a context and
-    # touches nothing else; if production does not reach the adapter, `calls` stays empty.
-    strategy._dispatch_enforced(binding, {})
+    # ── STAGE 4 — ONE PRODUCTION INSTANCE PER TAUGHT CANDIDATE.
+    # PRODUCTION performs every dispatch. The test hands each instance its own
+    # candidate, a binding and a context, and touches nothing else; if production does
+    # not reach the adapter, `calls` stays empty.
+    for candidate in candidates:
+        strategy = _execution_instance(result.artifact, plan, candidate)
+        strategy._dispatch_enforced(binding, _dispatch_ctx(ctx_bars))
 
     assert tuple(calls) == TAUGHT_DURATIONS, (
         "RED — STAGE 4: the production dispatch path did not execute the adapter once per "
@@ -603,3 +796,195 @@ def test_the_source_incomplete_neighbour_yields_zero_candidates_and_zero_adapter
         "being preserved through the compile"
     )
     assert calls == [], "a SOURCE_INCOMPLETE record reached the adapter"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RED-CAPABLE ARMS (R-779 §7 COMMIT 1-2). All three are RED today, at the SAME
+# boundary RED 2 names, because `_require_activated()` runs first in each. They
+# exist now so the activation cannot land without them, and so none of them can
+# be written after the fact to fit whatever the activation happens to do.
+#
+#   `A CONTROL WRITTEN AFTER THE CODE IT CHECKS IS A DESCRIPTION OF THAT CODE.`
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+# ── ARM 1 — NO CANDIDATE MUST REFUSE, LOUDLY, AND NEVER PICK ONE ──────────────
+def test_an_execution_instance_with_no_candidate_refuses_and_never_reaches_the_adapter(
+    monkeypatch,
+):
+    """An opening-range binding arriving with NO candidate is a HARD REFUSAL.
+
+    🛑 THIS IS THE ARM THAT FORBIDS THE CONVENIENT REPAIR. The tempting
+    implementation — "if no candidate was supplied, use the first / the 15m / the
+    longest" — is precisely what `R-736`/`R-743` settled against and what
+    `R-779 §7`'s forbidden list names again. A silent default here would produce a
+    bot that trades a window the teacher's lesson did not assign to it, and every
+    downstream number would look perfectly reasonable.
+
+    ⚖️ AND IT IS NOT OPTION `A`. Option `A` — rejected at `R-779 §4` — was a handler
+    that refuses ALWAYS, standing in for execution that does not exist. This refuses
+    ONLY when the contract is violated; the same handler executes fully when a
+    candidate is present (RED 2 above is the arm that proves that).
+    """
+    _require_activated()
+
+    calls: list[int] = []
+    real = compute_opening_range_state
+
+    def spy(definition, variant, bars, **kw):
+        calls.append(variant.duration_minutes)
+        return real(definition, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    plan = compile_binding_plan(result.artifact["spec"])
+    binding = _opening_range_binding(plan)
+    assert binding is not None, f"no {FAMILY} binding in the compiled plan"
+
+    # Built through the SAME production constructor, with the carrier simply not
+    # supplied — the state a real caller reaches by forgetting, not a mutated object.
+    bare = SpecConditionStrategy(result.artifact, binding_plan=plan, timeframe=BAR_TIMEFRAME)
+    ctx = _dispatch_ctx(_taught_session_bars(result.opening_range_lowering.definition))
+
+    with pytest.raises(Exception) as excinfo:
+        bare._dispatch_enforced(binding, ctx)
+
+    message = str(excinfo.value).lower()
+    assert "candidate" in message, (
+        "the refusal does not mention the candidate, so it is not evidence that the "
+        "MISSING CANDIDATE caused it — an unnamed refusal is indistinguishable from an "
+        f"unrelated crash.\n  raised : {excinfo.value!r}"
+    )
+    # POSITIVE WITNESS FOR A NEGATIVE ASSERTION: `calls == []` alone is satisfied by a
+    # handler that does nothing at all. The raise above proves the path RAN and then
+    # refused; this proves it refused BEFORE the adapter rather than after it.
+    assert calls == [], (
+        "the adapter was reached despite no candidate being supplied — production picked "
+        f"a window nobody assigned it: {calls}"
+    )
+
+
+# ── ARM 2 — AN INSTANCE USES ITS OWN CANDIDATE, AND A SWAP IS OBSERVABLE ──────
+def test_control_an_execution_instance_computes_ITS_OWN_candidate_not_another(monkeypatch):
+    """DISCRIMINATION CONTROL for RED 2. Without it, `(5, 15, 30)` is weaker than it looks.
+
+    RED 2 dispatches three instances and reads `(5, 15, 30)`. That tuple is also
+    consistent with an implementation that ignores the carrier entirely and iterates
+    the candidate collection inside the handler — which is `R-779 §7`'s forbidden
+    "search the collection" shape wearing the right answer.
+
+    So this arm hands ONE instance the 15m candidate and requires the observed call to
+    be 15m. If the instance is reading anything other than the candidate it was given —
+    the first, the longest, a default — this reddens and RED 2's tuple is exposed as
+    an accident of ordering.
+
+      `A GUARD THAT READS THE RIGHT ANSWER FROM THE WRONG FIELD IS GREEN FOR AS LONG
+       AS THE TWO AGREE.`
+    """
+    _require_activated()
+
+    calls: list[int] = []
+    real = compute_opening_range_state
+
+    def spy(definition, variant, bars, **kw):
+        calls.append(variant.duration_minutes)
+        return real(definition, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    plan = compile_binding_plan(result.artifact["spec"])
+    candidates = _find_candidates((result, plan))
+    assert len(candidates) == len(TAUGHT_DURATIONS), (
+        f"expected {len(TAUGHT_DURATIONS)} taught candidates, found {len(candidates)}"
+    )
+    binding = _opening_range_binding(plan)
+    ctx = _dispatch_ctx(_taught_session_bars(result.opening_range_lowering.definition))
+
+    middle = candidates[1]
+    assert middle.variant.duration_minutes != candidates[0].variant.duration_minutes, (
+        "the fixture cannot discriminate: the second candidate has the same duration as "
+        "the first, so reading either would look identical"
+    )
+
+    _execution_instance(result.artifact, plan, middle)._dispatch_enforced(binding, ctx)
+
+    assert tuple(calls) == (middle.variant.duration_minutes,), (
+        "the instance did not compute the candidate it was constructed with.\n"
+        f"  constructed with : {middle.variant.duration_minutes}m "
+        f"({middle.variant.variant_label!r})\n"
+        f"  adapter observed : {tuple(calls) or '(never called)'}\n"
+        "  ⇒ production is reading a window from somewhere other than its own carrier."
+    )
+    # AND THE IDENTITY SURVIVED THE CARRIER (R-779 §7): if `candidate_id` /
+    # `cache_identity` vanish on entry to the strategy, that is a FINDING, not a detail.
+    assert middle.candidate_id and middle.cache_identity, (
+        "the candidate handed to production carries no identity, so nothing downstream "
+        "can tell these three apart"
+    )
+
+
+# ── ARM 3 — A DURATION SMUGGLED THROUGH `parameters` MUST REFUSE FIRST ────────
+def test_a_duration_smuggled_into_binding_parameters_refuses_before_the_adapter(monkeypatch):
+    """The taught windows have a TYPED carrier, so `ConditionBinding.parameters` must
+    never become a second one.
+
+    `R-703 §1` / `R-779 §7`: the parameter channel does not carry opening-range
+    semantics, and `HANDLER_PARAMETER_CLASSIFICATION` must classify the handler
+    `REFUSES_ALL_PARAMETERS`. `R-779 §5-B` names the mechanism precisely, and it is
+    NOT "it fails closed quietly": omitting the classification turns
+    `test_parameter_acceptance_guard.py`'s set-equality assertion RED. This arm guards
+    the RUNTIME half of the same contract — that a smuggled key refuses BEFORE any
+    computation rather than being accepted and discarded.
+
+    Measured through `_acknowledge_parameters`, which is `compute()`'s FIRST statement
+    and therefore precedes every evaluator, cache write and condition-state
+    publication (`A REFUSAL THAT FIRES AFTER A MUTATION IS A PARTIAL RUN WEARING AN
+    EXCEPTION.`).
+    """
+    _require_activated()
+
+    calls: list[int] = []
+    real = compute_opening_range_state
+
+    def spy(definition, variant, bars, **kw):
+        calls.append(variant.duration_minutes)
+        return real(definition, variant, bars, **kw)
+
+    monkeypatch.setattr(
+        "src.engine.opening_range_adapter.compute_opening_range_state", spy, raising=True
+    )
+    # The refusal lives on the ENFORCED path; production default is OFF (R-697 §5.10
+    # stands — this enables it for THIS TEST ONLY, exactly as the parameter-acceptance
+    # suite does).
+    monkeypatch.setenv(FLAG_ENV, "true")
+
+    result = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB)
+    plan = compile_binding_plan(result.artifact["spec"])
+    candidates = _find_candidates((result, plan))
+    binding = _opening_range_binding(plan)
+    assert binding is not None, f"no {FAMILY} binding in the compiled plan"
+
+    smuggled = dataclasses.replace(binding, parameters=(("duration_minutes", 15),))
+    plan.bindings = [smuggled if b is binding else b for b in plan.bindings]
+    assert any(b.parameters for b in plan.bindings), (
+        "the smuggled parameter did not survive into the plan, so this arm would pass "
+        "without ever exercising the refusal"
+    )
+    assert isinstance(smuggled, ConditionBinding)
+
+    strategy = _execution_instance(result.artifact, plan, candidates[0])
+
+    with pytest.raises(ValueError) as excinfo:
+        strategy._acknowledge_parameters(SESSION_MINUTES, enforced=True)
+
+    assert "duration_minutes" in str(excinfo.value), (
+        "the refusal did not NAME the unsupported key, so it tells a reader to go and "
+        f"look rather than what to change (R-704 §4A).\n  raised : {excinfo.value!r}"
+    )
+    assert calls == [], "a smuggled duration reached the adapter before being refused"
