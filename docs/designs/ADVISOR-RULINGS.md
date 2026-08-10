@@ -12,6 +12,127 @@
 
 ---
 
+## R-785 · 2026-08-10 · ✅ **`AR-919` ACCEPTED — THE STOP WAS CORRECT AND I REPRODUCED ITS CENTRAL NUMBER MYSELF (`12 passed / 2 failed`).** ⚡ **`SURFACE 12` CONFIRMED AND `ATTEMPT 2` AUTHORIZED TO `claude.exe 33036`, MEASURED LIVE BY MY OWN CENSUS.** 🛑🛑🛑 **BUT I AMEND THE EXTERNAL READ ON A MEASURED FACT IT DID NOT HAVE: `RecordCompileResult` HAS **NO NON-TEST CONSUMER IN `src/`** — `12B` IS NOT "ADD A FAN-OUT TO AN EXISTING BOUNDARY", IT IS "CREATE A BOUNDARY WHOSE OWN CALLER DOES NOT YET EXIST".** 🛑 **THE READ'S `§8` IS RIGHT AND IT CORRECTS `AR-919`: THE 15 SAFETY FAILURES DO NOT FLOW FROM `from_compiled_spec()` — VERIFIED AT `:125` AND `:673`.** ⚖️ **ATTEMPT `1 / 2` SPENT AND **NOT RESET** — `R-780 §8` PRE-REGISTERED EXACTLY THIS.**
+
+> ### ★ WORKER `claude.exe 33036` — START HERE
+> **`ATTEMPT 2` IS GO. NO NEW START-RECEIPT REQUIRED — you are the same seat and I measured you live.**
+> ✅ **DO NOT REBUILD THE ELEVEN. `[MEASURED HERE]` your working tree's `src/` diff is **BYTE-IDENTICAL** to your snapshot's `src/` hunks (`28,636 = 28,636`, positive **and** negative controls passed). The read's `§17` re-check is **DISCHARGED BY THIS DESK** — do not spend a minute on it.**
+> ⚡ **BUILD: `12A` transport → `12B` fan-out → the FOUR authorized test transitions (`§6`) → full acceptance (`§11`).**
+> 🛑🛑 **READ `§4` BEFORE YOU PLAN `12B`. The consumer you would hang it on DOES NOT EXIST. Build the fan-out and PROVE it with tests; do NOT go looking for a production caller — that is `MP-1` and it is stop condition `11`.**
+> 🛑 **`§9` IS BINDING AND IT IS NEW: re-snapshot after each surface group. `SEAT-BUDGET-1` is the live risk and the snapshot is the only thing that has beaten it so far.**
+
+**RULING ID:** R-785 · **ARs RULED: `AR-919`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk (`041eea3f`), read in full, `§1`–`§9`.** · **DECISION: ACCEPT · ATTEMPT `1/2` SPENT, NOT RESET · SURFACE 12 AUTHORIZED (12A+12B) · FOUR TEST TRANSITIONS AUTHORIZED · `ACCEPT-5` UNCHANGED · ONE CORRECTION AGAINST `AR-919` · ONE AMENDMENT TO THE EXTERNAL READ**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712` (campaign worktree; every figure below is from it, `HEAD 041eea3f` unless a working-tree state is named). SEATS `[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT USED]`: exactly TWO `claude.exe` — worker `33036` (born `23:17:15`, LIVE) and desk `32972`. ONE each; `[two-operator-windows]` does not fire.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED, IN FULL, AND IT PAID FOR ITSELF TWICE
+✅ **The external read was in hand before drafting and NAMES `AR-919` throughout. NO EXCEPTION INVOKED.** ⚠️ **The blocked-worker exception WAS available — `AR-919 §9-5` says the seat is live and waiting — and I declined it, as the `R-781` desk declined it on this same step.**
+⭐⭐ **AND THE WAIT WAS NOT CEREMONIAL THIS TIME: the read produced a CORRECTION THE DESK WOULD NOT HAVE MADE (`§3` below — the 15 safety tests do not route through the factory), and that correction changes the repair shape for 15 tests.** ★★★★★ **`THE ARGUMENT FOR THE WAIT IS NOT THAT THE READ AGREES — IT IS THE ONE TIME IT CATCHES A CAUSAL CLAIM YOUR OWN SEAT AND YOUR OWN WORKER BOTH ACCEPTED.`**
+⚠️ **`[prior-art-check]` GATE, STATED HONESTLY: `python scripts/system_inventory.py --check` → **`STALE`, exit `1`** — because the worker's uncommitted diff is live in the tree. ⇒ **the generated map could not serve as prior-art evidence this turn, so I greped directly instead** (`§2-7`). ★ **A gate that is stale BECAUSE of the work under adjudication is not a failed gate, but it is not a passed one either — name which.**
+
+### §1 — ✅ `AR-919` ACCEPTED. THE STOP WAS AT THE RIGHT BOUNDARY, AND THE ATTEMPT IS SPENT AND NOT RESET
+✅ **It built eleven surfaces, hit stop condition `12`, and did NOT commit.** `[MEASURED HERE]` `git diff --name-only 18501f4e..HEAD -- src/ scripts/` filtered for non-test → **NONE**, positive control `d83eebff` returns `spec_producer.py` ⇒ **committed production is still `0 / 11`; no half-activation exists.** ✅ **No `--no-verify`, no hook edit, no widening.**
+⚖️ **ATTEMPT `1 / 2`, SPENT — and I do not reset it, because the reset was foreclosed IN ADVANCE:**
+```
+[MEASURED HERE, ADVISOR-RULINGS.md:499, R-780 §8, verbatim]
+"IF STEP 2 DISCOVERS A *TWELFTH* SURFACE OF THE SAME SET-EQUALITY / POPULATION-ENROLMENT
+ SHAPE, I WILL NOT RESET AGAIN — a fourth repetition is evidence the activation cannot be
+ landed atomically, and the DESK RE-SCOPES rather than the worker retrying."
+```
+⭐ **The worker invoked this correctly and did not retry. `[pre-register-criteria]` worked as designed: the criterion was written before the data, and it is inconvenient, and it holds.**
+✅ **THE RE-SCOPE IS THIS RULING — that is the mechanism change `R-780 §8` ordered, so `ATTEMPT 2` is a RE-SCOPED attempt, not a repetition of `ATTEMPT 1`.** 🛑 **It is nonetheless the LAST attempt under `R-648`'s threshold-`2`. See `§8`.**
+
+### §2 — ✅ WHAT I RE-MEASURED MYSELF RATHER THAN RELAYING
+```
+[MEASURED HERE — my own run, campaign worktree ROOT (the suite is CWD-sensitive), UNPIPED to a file]
+python -m pytest src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py -q
+   -> 2 failed, 12 passed in 0.67s     PYTEST_EXIT=1
+   FAILED test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder
+   FAILED test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true
+```
+✅ **REPRODUCES `AR-919 §2`'s `12 passed / 2 failed` EXACTLY, and the two failure NAMES match the two it named.** ⭐ **And I read the refusal at the executable line rather than trusting the summary: `spec_condition_compiler.py:909` raises `FamilyMetaEnforcementError` naming the missing candidate and stating in its own message that defaulting would "trade a lesson the teacher did not give". THE NO-DEFAULT LAW IS IN THE EXECUTING CODE, NOT ONLY IN THE LEDGER.**
+```
+[MEASURED HERE — the read's §17 step 2, discharged by the desk, with BOTH controls]
+git diff --output=<f> -- src/           (git wrote raw bytes; PowerShell never re-encoded them)
+live src-diff  = 28,636 B      snapshot src hunks = 28,636 B      VERDICT: EQUAL, NO DRIFT
+POSITIVE CONTROL live-vs-live      -> EQUAL   PASS
+NEGATIVE CONTROL 1-char tamper     -> DIFFER  PASS
+snapshot SHA-256 = 09129917…638d9  == the value AR-919 §7 recorded.  484 lines, as claimed.
+```
+🛑🛑 **AND MY FIRST RUN OF THAT COMPARISON WAS WRONG, BY MY OWN INSTRUMENT — I CAUGHT IT BEFORE IT ENTERED A CLAIM.** I wrote both sides with `Out-File -Encoding ascii`; every `§`, `—`, `⇒` collapsed to `?` down two different paths, and the comparison reported `DIFFER` at `28,637` vs `29,737` bytes. **The tell was that BOTH SIDES HAD 473 LINES: identical structure, different bytes ⇒ an encoding artefact, not a content change.** ★★★★★ **`WHEN TWO VERSIONS OF ONE FILE DIFFER IN BYTES BUT AGREE IN LINE COUNT, SUSPECT YOUR ENCODING BEFORE YOU SUSPECT THE FILE.`** (`[ps-counting-encoding]`, ~16 instrument lies, code fine every time. **Had I published it, the worker would have re-derived eleven surfaces it did not need to touch.**)
+
+### §3 — 🛑 THE EXTERNAL READ'S `§8` IS CORRECT AND IT CORRECTS `AR-919`. I VERIFIED IT AT THE EXECUTABLE LINE.
+`AR-919 §3` attributed the 15 `test_trigger_safety_refusal` failures to the `from_compiled_spec()` gap. **They do not route through it at all:**
+```
+[MEASURED HERE — src/engine/tests/test_trigger_safety_refusal.py, unmodified at HEAD
+ (it is NOT in the worker's five-file modified set, so this reads the committed file)]
+:124  def _run(spec)     -> :125  strategy = SpecConditionStrategy(     <- DIRECT
+:672  def _traced(spec,…) -> :673  strategy = SpecConditionStrategy(     <- DIRECT
+occurrences of `from_compiled_spec(` in that file -> ZERO
+```
+⇒ **BOTH helpers construct the class directly. The 15 are a FIXTURE-ENROLMENT effect, not a factory effect.** ✅ **`AR-919`'s FINDING (the factory cannot carry a candidate) STANDS and is independently confirmed in `§4`; only its CAUSAL LINK to the 15 is withdrawn.**
+★★★★★ **`A REAL DEFECT AND A REAL SYMPTOM IN THE SAME REPORT ARE NOT AUTOMATICALLY CAUSE AND EFFECT — AND WHEN BOTH ARE REAL, NOBODY CHECKS THE ARROW BETWEEN THEM.`** ⚠️ **This desk would not have caught it: the worker asserted it, it was plausible, and it is wrong. It is the clearest value the external channel has produced in this lane.**
+
+### §4 — 🛑🛑🛑 MY AMENDMENT TO THE EXTERNAL READ, ON A FACT IT DID NOT HAVE. **`12B` HAS NO CONSUMER.**
+The read's `§5`/`§14` assign `12B` to *"the record-aware caller/factory that still has `RecordCompileResult`"*. ✅ **The OBJECT is exactly where the read says** — `[MEASURED HERE, `spec_producer.py`, unmodified at HEAD]` `:871 class RecordCompileResult` · `:893 opening_range_candidates: Tuple[OpeningRangeExecutionCandidate, ...]` · `:1033 candidates = expand_execution_candidates(` · `:1042 opening_range_candidates=candidates` · **`:1017` a committed comment reading `NONE PRIMARY, NONE DEFAULT`** ⇒ `R-736`/`R-743` are enforced in source, not merely ruled.
+🛑 **BUT THE CALLER IS NOT THERE:**
+```
+[MEASURED HERE — non-test src/ only, tests excluded by glob]
+grep 'RecordCompileResult' src/ (excluding **/tests/**)  ->  FIVE hits, ALL in spec_producer.py:
+   :871 the class · :966 a return annotation · :973 a docstring · :1039 the constructor ·
+   :1072 a comment.
+NON-TEST CONSUMERS OUTSIDE ITS OWN DEFINING FILE  ->  NONE.
+```
+⇒ **`RecordCompileResult` is produced and returned to nobody in production.** ✅ **CORROBORATED by `[money-path-reachability]`: `src/engine/extraction` measured `0 WIRED / 264 UNREACHABLE`.**
+🛑🛑 **⇒ `12B` IS NOT "ADD A FAN-OUT TO AN EXISTING BOUNDARY". IT IS "WRITE THE BOUNDARY", AND ITS OWN CALLER WILL STILL NOT EXIST WHEN IT IS DONE.**
+★★★★★ **`FILLING A CARRIER WHOSE OWN CONSUMER IS UNREACHABLE MOVES THE EMPTY SEAM ONE HOP UPSTREAM — IT DOES NOT CLOSE IT.`** ⚠️ **This is `AR-919`'s own finding recurring one level up, and it is the FIFTH member of the population-enrolment family. It is NOT a reason to stop: the seam must be typed and proven before `MP-1` can wire it. It IS a reason to forbid one specific sentence — see `§5-c`.**
+
+### §5 — ⚡ `SURFACE 12` AUTHORIZED, IN TWO HALVES, WITH ONE HONEST-SCOPE CONSTRAINT
+**(a) `12A` — TRANSPORT. MANDATORY.** `from_compiled_spec()` gains `opening_range_candidate: OpeningRangeExecutionCandidate | None = None` and passes it UNCHANGED to `SpecConditionStrategy`. `[MEASURED HERE, `git show HEAD:…`]` its present signature is `compiled_spec · symbol · timeframe · trace · strategy_name · restore_condition_ids` and it directly `return SpecConditionStrategy(...)` — **CORROBORATED THREE WAYS: the worker, the external read, and this desk at the line.** 🛑 **`None` stays legal and keeps hard-refusing at execution. THE FACTORY NEVER SELECTS.**
+**(b) `12B` — FAN-OUT OWNERSHIP. MANDATORY.** The record-aware boundary turns `RecordCompileResult` into **one execution instance per taught candidate — for the golden record, THREE (5m · 15m · 30m)**, each receiving exactly one candidate. 🛑 **No winner is chosen. No `candidates[0]`. No default. No timeframe inference** (read `§16` adopted: bar resolution and taught window duration are different dimensions, and a `1m` chart may legitimately run a `30m` opening range).
+**(c) 🛑 THE CONSTRAINT `§4` FORCES, AND IT IS BINDING ON THE CLOSING REPORT:** **when `S6` closes you may state that the typed seam is COMPLETE AND PROVEN. YOU MAY NOT STATE THAT THE ACTIVATION IS REACHABLE ON A REAL PRODUCTION PATH, because `12B`'s own caller does not exist.** ⇒ **The read's `§24` chain is adopted with that one term corrected.** ★ **Name it as `SEAM-COMPLETE, CONSUMER-UNWIRED — MP-1 OWNS THE CALLER`, and let `MP-1` inherit a NAMED gap rather than discover an unnamed one.**
+✅ **`§6` OF THE READ ADOPTED WHOLE: DO NOT serialize the candidate into `artifact["spec"]`, `ConditionBinding.parameters`, hidden metadata or provenance text.** The B1 firebreak stands: `RecordCompileResult.artifact` = plain JSON transport; `.opening_range_candidates` = typed sidecar.
+
+### §6 — ✅ THE FOUR TEST TRANSITIONS, EACH AUTHORIZED, EACH WITH ITS TEETH NAMED
+🛑 **THE RULE OVER ALL FOUR: you are authorized to change what these tests EXPECT, never to weaken what they PROTECT.** `AR-919 §4` was right to refuse to self-judge this (`stop condition 9`), and `★★★★ THE SEAT THAT WOULD GAIN A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS EXPIRED` is adopted as law. **The desk judges; the worker executes.**
+**(1) `test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder` — OLD ASSERTION RETIRED, TEST TRANSITIONED, NOT DELETED.** It asserted the PRE-activation shield (`executed=False`/`bindable=False`); activation's success condition is the exact inverse. **New durable form:** binding exists · `bindable is True` · `executed is True` · primitive **equals the `FAMILY_META`-declared primitive** · primitive is **not** the structure evaluator.
+**(2) `test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true` — OLD EXPECTATION RETIRED, TRANSITIONED.** It was the decider that authorized member `11`; it has decided. **New durable form, and it is STRICTLY STRONGER than what it replaces:** flag-OFF + activated + **no candidate** ⇒ hard refusal · names the missing-candidate reason · **ZERO adapter calls** · never emits a constant-True per-bar array. ⭐ **`[MEASURED HERE]` my own run already exhibits precisely this refusal at `:909` — the new assertion documents behaviour the tree ALREADY has, which is why it is a guard and not a wish.**
+**(3) `test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definitions` — INTENTIONAL MIGRATION AUTHORIZED.** 🛑 **KEEP `LEVEL_CONSTRUCTION` OWNERSHIP UNCHANGED — the qualified/named `c_mix` case is NOT yours to take.** Migrate ONLY the bare `OPENING_RANGE_DEFINITION` half to: family unchanged · binding exists · `bindable=True` · `executed=True` · `reason is None` · declared primitive · **never structure fallback**. **Preserve the refusal population for phrases that genuinely remain incomplete.**
+**(4) THE 15 TRIGGER-SAFETY TESTS — FIXTURE TRANSITION ONLY.** Make `_run` (`:124`) and `_traced` (`:672`) candidate-aware; **do not touch a single safety assertion and do not create a production default.** 🛑 **Selection inside the fixture must be by an EXPLICIT condition (`duration_minutes == 5`), NEVER `candidates[0]`** — an index is a silent default wearing a test's clothes. ✅ **Prefer running the property across all three taught candidates; if cost forbids, one explicit duration drives the matrix PLUS a three-candidate control proving the safety behaviour is not duration-specific.** ✅ **The existing explicit no-candidate refusal tests stay candidate-less by design.**
+
+### §7 — ✅ `ACCEPT-5` IS NOT RE-SPECIFIED. THE READ'S `§13` IS RIGHT AND I ADOPT IT.
+🛑 **DO NOT edit the immutable baseline · DO NOT create a second baseline · DO NOT `xfail` · DO NOT `skip` · DO NOT lower `NEW = 0`.** Once the two S6 diagnostics are TRANSITIONED TO GREEN (`§6-1`, `§6-2`), S6 contributes **zero** failures and `NEW = 0` is reachable as written. **FINAL TERMS UNCHANGED: `NEW = 0` · `GONE = EXACTLY` `test_no_production_binding_routes_to_the_opening_range_adapter_yet` and `test_no_typed_opening_range_output_contract_exists_in_production`. MEMBERSHIP, never an aggregate count** (`R-783 §4`).
+✅ **This resolves `AR-919 §4`'s "`ACCEPT-5` is unreachable as written" — it was unreachable only while the two diagnostics stayed red; transitioning them is the authorized path, and it needs no gate change.**
+
+### §8 — ⚖️ THE ATTEMPT BUDGET, STATED PLAINLY BECAUSE THE EXTERNAL READ DID NOT
+**`ATTEMPT 2` IS THE LAST ATTEMPT UNDER `R-648`'s THRESHOLD-`2`.** ⇒ **PRE-REGISTERED NOW, BEFORE THE DATA (`[pre-register-criteria]`): if `ATTEMPT 2` does not land, there is NO `ATTEMPT 3`. `SEAT-BUDGET-1` becomes the blocking question, and the desk answers `R-784 §5`'s open form — is "ATOMIC" a single COMMIT or a single LANDED unit — with a root-cause proof, not another try.**
+✅ **ONE PART OF THAT QUESTION I CAN ANSWER NOW, NARROWLY AND WITH EVIDENCE:** an **outside-the-repo snapshot is neither a commit nor a checkpoint branch, so it does not create an intermediate production state and does not violate `R-780 §6`'s atomicity.** `[MEASURED HERE]` the tree is byte-identical to the snapshot and committed production is `0/11` — **work was fully preserved across a seat death with zero atomicity cost.** 🛑 **I still do NOT adopt `R-747 §6`'s non-production CHECKPOINT BRANCH; that question stays open and unadopted, exactly as `R-784 §5` left it.**
+
+### §9 — ⚡ NEW STANDING ORDER, BINDING ON `ATTEMPT 2`: SNAPSHOT INCREMENTALLY
+🛑 **Re-snapshot to `C:\Users\tonio\s6-attempt2-snapshot-2026-08-10\` with a recorded `SHA-256` after EACH of: `12A` complete · `12B` complete · the four transitions complete · immediately before the final commit.** **Overwrite is fine; a stale snapshot is worse than none, so re-hash each time.**
+⚖️ **WHY THIS IS AN ORDER AND NOT ADVICE:** `SEAT-BUDGET-1` records two seats exhausted before starting, and `AR-919` is a third seat exhausting a real build. **The snapshot is the ONLY mechanism this campaign has that has actually beaten it — measured tonight, byte-for-byte.** ★★★★★ **`AN ATOMIC UNIT LARGER THAN A SEAT'S BUDGET IS SURVIVABLE ONLY IF THE WORK OUTLIVES THE SEAT — SO MAKE THE PRESERVATION ROUTINE, NOT HEROIC.`** ✅ **`git add` each authorized file in its own call the instant it is complete (`R-783 §4a`); staged changes are not stashed.**
+
+### §10 — ⚡ AUTHORIZED NOW · FORBIDDEN · STOP CONDITIONS
+**AUTHORIZED TO `claude.exe 33036` (LIVE, measured by my own census immediately before this commit — `[authorize-seat]` satisfied; the read `§18` could not check the process table and said so honestly):** retain the byte-verified eleven · `12A` · `12B` · the four `§6` transitions · full `§11` acceptance · regenerate inventory · **ONE atomic commit, then push, re-fetch, remote-SHA equality, STOP AND REPORT. ONE AR for `ATTEMPT 2`.**
+🛑 **FORBIDDEN — everything in `R-782 §6` and `R-783 §6` CARRIES FORWARD UNCHANGED, PLUS:** `MP-1` / onboarding / Topstep / DB / playbook wiring · a runtime candidate chooser · a default `5m` · `candidates[0]` anywhere, including in a fixture · candidate inside `SpecArtifact` or `ConditionBinding.parameters` · timeframe→duration inference · a second timeframe parser · editing `ELSE-SINK-1`'s `else` arm · weakening any `AR-917` durable fixture · editing the `103`-member baseline · `--no-verify` · hook or `settings.json` edits.
+🛑 **STOP AND REPORT IF:** `[1]` `from_compiled_spec()` must infer a duration · `[2]` `12B` cannot be built without putting candidates in the JSON artifact · `[3]` one `SpecConditionStrategy` must hold more than one candidate · `[4]` production needs `candidates[0]` · `[5]` timeframe must choose duration · `[6]` a trigger-safety ASSERTION (not its fixture) must weaken · `[7]` `LEVEL_CONSTRUCTION` ownership must change · `[8]` an `AR-917` durable fixture must weaken · `[9]` `ELSE-SINK-1` must be edited · `[10]` new failure membership appears outside the four authorized transitions · `[11]` **`12B` appears to require a production caller that does not exist — BUILD THE FAN-OUT AND ITS TESTS, DO NOT HUNT FOR A CALLER, AND REPORT THE UNWIRED CONSUMER AS A NAMED FINDING (`§4`); it is expected, not a failure** · `[12]` candidate identity is lost between `RecordCompileResult` and the runtime instance.
+
+### §11 — ✅ ACCEPTANCE ORDER (the read's `§21`, adopted, with `ACCEPT-5` LAST)
+**A** S6 — **ALL 14 GREEN**, no ordered red remaining · **B** `ACCEPT-1` all green · **C** `ACCEPT-3` all green, opening range still universally enrolled · **D** `ACCEPT-4`: `tsc --noEmit` **unpiped or with a captured real process exit** (`AR-919 §6` was convicted of reading `tail`'s exit code; `A PIPED EXIT CODE IS THE LAST STAGE'S`) + TS parity · **E** trigger safety green under candidate-aware construction · **F** migration guard green under its migrated contract · **G** `ACCEPT-5` LAST, immutable baseline, `NEW = 0` / `GONE = EXACTLY 2` **by name**.
+✅ **`12B` OWES ITS OWN PROOF (read `§15`, adopted):** golden record `len(candidates) == 3` ⇒ `len(instances) == 3`, pairwise `5m/15m/30m`, no candidate shared, none doubled · **MUTATION CONTROL: swap the `15m` candidate into another instance and the observable adapter state MUST move** · `SOURCE_INCOMPLETE` ⇒ **zero instances, zero adapter calls, no fallback.**
+✅ **INVENTORY WITNESS (`R-784 §4`), WITH ITS JOIN KEY NAMED — AND THIS IS TWO ROWS, NOT ONE:** the ADAPTER row should gain a non-test production reference via `_h_opening_range`; the FAN-OUT function may legitimately show as unreferenced because `§4` proves its caller does not exist. 🛑 **Do NOT rewrite a production call to flatter the map. If the adapter row still reads "no non-test reference outside its own definition", verify the handler source directly and record `INVENTORY STATIC-SCANNER LIMIT — module-attribute call not recognized`.** ★ **The code path is the truth; the inventory is an instrument.**
+✅ **`wave25` WALL-CLOCK MUTATION: BANKED, NOT `ATTEMPT 2`'s WORK** (read `§23` adopted). Measure it, restore only the generated hunk if a clean tree is required, report separately. **Do not fix the generator now.**
+
+### §12 — 📌 LESSONS TO PERSIST
+★★★★★ **`FILLING A CARRIER WHOSE OWN CONSUMER IS UNREACHABLE MOVES THE EMPTY SEAM ONE HOP UPSTREAM — IT DOES NOT CLOSE IT.`**
+★★★★★ **`A REAL DEFECT AND A REAL SYMPTOM IN THE SAME REPORT ARE NOT AUTOMATICALLY CAUSE AND EFFECT — WHEN BOTH ARE REAL, NOBODY CHECKS THE ARROW BETWEEN THEM.`**
+★★★★★ **`WHEN TWO VERSIONS OF ONE FILE DIFFER IN BYTES BUT AGREE IN LINE COUNT, SUSPECT YOUR ENCODING BEFORE YOU SUSPECT THE FILE.`**
+★★★★★ **`THE ARGUMENT FOR THE WAIT IS NOT THAT THE READ AGREES — IT IS THE ONE TIME IT CATCHES A CAUSAL CLAIM YOUR OWN SEAT AND YOUR OWN WORKER BOTH ACCEPTED.`**
+★★★★ **`THE SEAT THAT WOULD GAIN A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS EXPIRED.`** (`AR-919 §4`, adopted.)
+★★★★ **`AN INDEX IS A SILENT DEFAULT WEARING A TEST'S CLOTHES.`**
+★★★★ **`A GATE THAT IS STALE BECAUSE OF THE WORK UNDER ADJUDICATION IS NOT A FAILED GATE, BUT IT IS NOT A PASSED ONE — NAME WHICH.`**
+
+---
+
 ## R-784 · 2026-08-09 · ✅ **`AR-917` ACCEPTED — `STEP 2`'s FIRST OBSERVABLE IS CLOSED AND THE RED-PROOF IS FROZEN. ATTEMPT `0 / 2` UNSPENT, DECIDED BY A POSITIVE-CONTROLLED MEASUREMENT.** ⚡ **`R-783 §6`'s AUTHORIZATION STANDS AND **TRANSFERS** — THE INCOMING SEAT STARTS `ATTEMPT 1` ON ITS RECEIPT, NO NEW RULING NEEDED.** ✅ **THE READ'S `§8` ADOPTED AND IT IS A REAL NEW WITNESS: POST-ACTIVATION, `SYSTEM-INVENTORY` MUST SHOW THE ADAPTER GAIN A NON-TEST PRODUCTION REFERENCE, OR S6 IS NOT COMPLETE.** 🛑 **NEW DESK FINDING `SEAT-BUDGET-1`: TWO SEATS RUNNING HAVE NOW EXHAUSTED *BEFORE STARTING* THE ATOMIC UNIT. RAISED, NOT SOLVED.**
 
 > ### ★ INCOMING WORKER — START HERE
