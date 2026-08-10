@@ -4,6 +4,27 @@
 
 ---
 
+## AR-945 · 2026-08-10 · ⏱️ **START-RECEIPT — `R3` STARTED, `0 / 5`. `R-800`'s WORD RECEIVED; NO FURTHER ASK.** ✅ **`F-R2-1` RE-CONFIRMED BY ME AT THE EXECUTABLE LINE BEFORE PLANNING AGAINST IT.** 🛑 **`MUTATION-HARNESS-ATOMICITY-1` IS BINDING FROM MY OWN `AR-944 §3`, AND I AM APPLYING IT TO THE LANE THAT ORDERED IT.** ⚖️ **ONE RULING CORRECTION ADOPTED AGAINST MY OWN WORDING.**
+
+**SEAT `claude.exe 26036`. TREE `wt-h1-wave4-20260712`, `HEAD 29b584ad`. LANE `R3`, five items, fan-in `1`. NOT GRAPH-SCHEDULED.**
+
+### §1 — ✅ THE CRITICAL, RE-MEASURED BY ME RATHER THAN INHERITED
+✅ **`[MEASURED HERE, `HEAD 29b584ad`]` `scripts/acceptance_runner.py:439` → `subprocess.run(cmd, cwd=REPO)` — a BARE EXPRESSION STATEMENT.** No `check=`, no binding, no `returncode` read. ⇒ **`F-R2-1` stands at the tree I am about to work in, not merely at the graded pin.** `[MEASURED HERE]` **`acceptance-run.json` / `acceptance-run.xml` are ABSENT from the worktree right now** — so `R3-1`'s RED must MINT the stale artifacts itself before it can prove they are consumed. **That is the first concrete step, not an assumption.**
+
+### §2 — ⚖️ I ADOPT `R-800 §2`'s CORRECTION AGAINST MY OWN WORDING
+🛑 **`AR-944` wrote obligation `M` as *"convicted by nothing"* and let that stand as the whole story. The desk verified two real-service assertions backing `M` and regraded it UPWARD.** ✅ **I adopt the standing wording and will use it from here: `14 / 14 ASSERTED · 13 / 14 MUTATION-CONVICTED`.** ★★★★★ **`"NOT MUTATION-CONVICTED" AND "NOT COVERED" ARE DIFFERENT DEBTS — COLLAPSING THEM UNDERSTATES YOUR EVIDENCE EXACTLY AS BADLY AS OVERSTATING IT.`** ⚖️ **I was guarding against overclaiming and underclaimed instead. `MP1-OBLIGATION-M-UNCONVICTED-1` stays open as TEST-STRENGTH debt, and I am NOT reopening the hanging harness to relabel a true statement.**
+
+### §3 — 🛑 HOW I WILL RUN THE DESTRUCTIVE ARMS, PER `MUTATION-HARNESS-ATOMICITY-1`
+🛑 **`R-800 §8 STOP [7]`: a destructive mutation found to have run in the SHARED campaign tree must be re-run isolated before its arm is trusted.** ⇒ **`R3-1`'s RED deliberately BREAKS the tree and forces `pytest` to fail before collection. That is exactly the class that must not touch the shared worktree** — and `AR-944 §0` already measured what shared-tree instability costs when the desk and I write at once.
+✅ **PLAN: an isolated worktree for every arm that breaks the tree · pre-mutation SHA · `try/finally` restore · post-restore SHA equality · process-group cleanup of runners · a nonzero runner exit with ZERO named test failures recorded `INCONCLUSIVE`, never mutation success · and NO next arm until the pristine control passes.** ⚠️ **`[session-cwd-decoy-git]` is a known trap for worktree creation here and I will verify the new tree's root before running anything in it.** 🛑 **No general mutation framework — `R-800 §3` forbids building one, and the lane may not become six items.**
+
+### §4 — ⏱️ ORDER, FIRST OBSERVABLE, AND WHAT WOULD STOP ME
+**`R3-1` FIRST — the CRITICAL, not the `R3-5` cleanup, per the `START HERE` block.** Mint valid artifacts with a real `--run` → break the tree → force `pytest` to fail BEFORE it executes the governed population → invoke the ACTUAL `acceptance_runner.py --run` → **demonstrate the CURRENT instrument reports `ACCEPTANCE: PASS` off the stale prior JSON/XML.** 🛑 **No synthetic helper, no mocked subprocess as the only proof.** Then the `R-799 §2` protocol verbatim, and the identical test must read **`REFUSED — INVALID/FRESH RUN NOT PRODUCED`**, with all seven red-proofs `R1`–`R7` EACH ALONE — **`R6` is the one I will not let slide: a VALID run whose `pytest` exit is `1` because governed historical tests fail MUST still score normally, or the repair has invented a new false RED.**
+⏱️ **FIRST OBSERVABLE: the `R3-1` permanent RED committed, showing `PASS` produced from stale artifacts after `pytest` could not run. ~`60–90 min`** — the first `--run` must execute the real governed population, which is not fast. ⚠️ **HONEST-PARTIAL CLAUSE ACKNOWLEDGED.**
+🛑 **STOPS I EXPECT TO TEST FIRST: `R-799 §8[1]` — if the stale-artifact RED cannot be reproduced against the OLD instrument, `F-R2-1` is not what we think and everything downstream is mis-aimed. I report that rather than reshaping the RED until it fires.**
+
+---
+
 ## AR-944 · 2026-08-10 · ✅ **LANE `L` COMPLETE `5 / 5` — THE MONEY PATH IS GREEN AT THE REAL BOUNDARY: THREE TAUGHT CANDIDATES, THREE ROWS, THREE IDENTITIES.** ✅ **THE REQUIRED PRODUCTION MUTATION BITES `F` AND `G` — STOP `[8]` DOES NOT FIRE.** 🛑 **OBLIGATION `M` IS CONVICTED BY NOTHING AND I SAY SO RATHER THAN LET `13 / 14` READ AS `14 / 14`.** 🛑 **I REFUTED MY OWN HEADLINE HYPOTHESIS BY MEASUREMENT, AND I RAISED A FALSE ALARM ABOUT LOST WORK — BOTH BELOW.** ⚖️ **`MP1-CANDIDATE-NAME-1` MEASURED: ITS WAKE CONDITION IS **NOT** MET, SO I DID NOT TOUCH IT.**
 
 **SEAT `claude.exe 26036`. TREE `HEAD 66bdf77d` == `origin` (`ls-remote`, one command each side). LANE `L` `5 / 5`. `L-3`/`L-4`/`L-5` at `826c24c7`; `L-1` RED preserved unedited at `c51dcdb9`. NO DB schema · NO SQL migration · NO `spec_hash` change · NO `/api/backtests` · NO paper-ORB.**
