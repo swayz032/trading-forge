@@ -1,0 +1,12 @@
+{
+  "artifact": "blind-second-judge-LOCKED",
+  "written_before_reading_prior": true,
+  "population_derivation": "16 specs in docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json; spec.entry_conditions filtered type=='WAIT_SESSION'; count=27 of 155 taught conditions",
+  "decision_rule": "C if the row states no taught condition at all (indicator/platform setup, vacuous scope phrase, one-off replay narration). Otherwise A iff the TAUGHT OBJECT is a clock/session/calendar construct; B if the session term is only an ANCHOR and the taught object is a price level, pattern, structure or mechanic.",
+  "verdicts": {
+    "R01":"B","R02":"B","R03":"B","R04":"B","R05":"B","R06":"B","R07":"B","R08":"B","R09":"B",
+    "R10":"B","R11":"B","R12":"B","R13":"B","R14":"A","R15":"C","R16":"C","R17":"B","R18":"B",
+    "R19":"B","R20":"B","R21":"B","R22":"A","R23":"B","R24":"B","R25":"B","R26":"C","R27":"C"
+  },
+  "counts": {"A": 2, "B": 21, "C": 4, "total": 27}
+}
