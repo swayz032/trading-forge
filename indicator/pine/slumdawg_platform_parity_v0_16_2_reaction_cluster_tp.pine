@@ -1,0 +1,487 @@
+//@version=6
+indicator("Slumdawg traders indicator", shorttitle = "SLUMDAWG", overlay = true, behind_chart = true, max_labels_count = 80, max_lines_count = 40, max_boxes_count = 10)
+
+// v0.16.2 - REACTION-CLUSTER TAKE-PROFIT SELECTOR
+// PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
+//
+// Frozen from visually accepted lanes:
+// - PDH/PDL/PWH/PWL engine from v0.14.x.
+// - 15m outer-swing LONG/SHORT entry selector from v0.15.x.
+// - TP is rendered as full-width blue lines.
+// - 🤖 SLUMDAWG TRADERS keeps the original panel palette.
+//
+// v0.16.2 changes TP selection only:
+// - a single old pivot/wick can no longer qualify by itself;
+// - TP candidates must form a multi-touch reaction cluster;
+// - TP1 must be structurally separated from the entry neighborhood;
+// - successive TP zones must be separate clusters, not duplicates;
+// - SHORT TP uses the cluster's near/upper edge;
+// - LONG TP uses the cluster's near/lower edge;
+// - far wick remains evidence for zone extent, never the automatic target price.
+//
+// The ATR ratios below are RESEARCH DEFAULTS / CALIBRATION REQUIRED. They are
+// exposed as inputs so no threshold is silently promoted to production doctrine.
+
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
+const float HUGE_DISTANCE = 1e12
+const int LEVEL_LABEL_OFFSET_BARS = 16
+const int FALLBACK_BAR_MS = 5 * 60 * 1000
+const int ENTRY_PIVOT_LEFT = 2
+const int ENTRY_PIVOT_RIGHT = 2
+const int ENTRY_SWING_MEMORY = 8
+
+// -----------------------------------------------------------------------------
+// INPUTS
+// -----------------------------------------------------------------------------
+string gSetup = "1 - SETUP"
+string bigDirection = input.string("NOT SET", "BIG DIRECTION", options = ["UP", "DOWN", "NOT SET"], group = gSetup, display = display.none)
+string planSide = input.string("LONG", "PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
+string entryMode = input.string("AUTO", "ENTRY LEVEL MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+float manualLongEntry = input.price(0.0, "MANUAL LONG ENTRY", group = gSetup, display = display.none)
+float manualShortEntry = input.price(0.0, "MANUAL SHORT ENTRY", group = gSetup, display = display.none)
+string targetMode = input.string("AUTO", "TAKE PROFIT MODE", options = ["AUTO", "MANUAL"], group = gSetup, display = display.none)
+float manualTargetLow = input.price(0.0, "MANUAL TAKE PROFIT lower edge", group = gSetup, display = display.none)
+float manualTargetHigh = input.price(0.0, "MANUAL TAKE PROFIT upper edge", group = gSetup, display = display.none)
+
+string gView = "2 - DISPLAY"
+bool showCoach = input.bool(true, "Show Slumdawg Traders panel", group = gView, tooltip = "Turn OFF to collapse the panel into a small SLUMDAWG tab. Turn ON to restore the full panel.")
+bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near", group = gView)
+bool showEntryLines = input.bool(true, "Show LONG/SHORT entry zones", group = gView)
+bool showTakeProfitZones = input.bool(true, "Show Take Profit Zones", group = gView)
+bool showBothTpSides = input.bool(true, "Show both LONG/SHORT TP ladders", group = gView, tooltip = "ON shows target lines above and below price. OFF shows only the PLAN side.")
+
+string gTpResearch = "3 - TP RESEARCH (CALIBRATION REQUIRED)"
+int tpMinTouches = input.int(2, "Minimum reactions in a TP cluster", minval = 2, maxval = 4, group = gTpResearch, tooltip = "Research default only. A lone pivot cannot qualify as a Take Profit Zone.")
+float tpClusterToleranceAtr = input.float(0.20, "Cluster tolerance × 15m ATR", minval = 0.05, maxval = 0.75, step = 0.05, group = gTpResearch, tooltip = "Groups nearby reaction shelf edges. Calibration required before production use.")
+float tpEntrySeparationAtr = input.float(0.35, "Entry separation × 15m ATR", minval = 0.10, maxval = 1.50, step = 0.05, group = gTpResearch, tooltip = "Rejects a TP candidate that is effectively the same structure as the entry. Calibration required.")
+float tpZoneSeparationAtr = input.float(0.15, "TP-to-TP separation × 15m ATR", minval = 0.05, maxval = 0.75, step = 0.05, group = gTpResearch, tooltip = "Keeps TP1/TP2/TP3 as distinct shelves rather than duplicate clusters.")
+
+// -----------------------------------------------------------------------------
+// COLORS
+// -----------------------------------------------------------------------------
+color GREEN_UP = color.rgb(0, 205, 105)
+color RED_DOWN = color.rgb(230, 55, 70)
+color BLUE_DAY = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color BLUE_TARGET = color.rgb(42, 118, 255)
+color YELLOW_GO = color.rgb(255, 190, 25)
+color ORANGE_WAIT = color.rgb(255, 155, 35)
+color PANEL_DARK = color.rgb(18, 20, 25)
+color PANEL_MID = color.rgb(37, 41, 49)
+color GOLD_ACCENT = color.rgb(205, 165, 70)
+
+// -----------------------------------------------------------------------------
+// PLATFORM CONTEXT
+// -----------------------------------------------------------------------------
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+bool executionViewSupported = timeframe.isminutes and timeframe.multiplier <= 15
+
+// -----------------------------------------------------------------------------
+// FROZEN D/W KEY LEVELS
+// -----------------------------------------------------------------------------
+[dHighCurrent, dLowCurrent, dCloseTimeCurrent] = request.security(syminfo.tickerid, "D", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[dHighPrev, dLowPrev] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+[wHighCurrent, wLowCurrent, wCloseTimeCurrent] = request.security(syminfo.tickerid, "W", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[wHighPrev, wLowPrev] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+int closedGapMs = timenow - time_close
+bool recentClosedGap = not barstate.isrealtime and closedGapMs >= 0 and closedGapMs <= NORMAL_CLOSED_GAP_MS
+bool extendedClosedGap = not barstate.isrealtime and closedGapMs > NORMAL_CLOSED_GAP_MS
+bool dailyCurrentCompletedNow = recentClosedGap and not na(dCloseTimeCurrent) and timenow >= dCloseTimeCurrent
+bool weeklyCurrentCompletedNow = recentClosedGap and not na(wCloseTimeCurrent) and timenow >= wCloseTimeCurrent
+
+float pdh = dailyCurrentCompletedNow ? dHighCurrent : dHighPrev
+float pdl = dailyCurrentCompletedNow ? dLowCurrent : dLowPrev
+float pwh = weeklyCurrentCompletedNow ? wHighCurrent : wHighPrev
+float pwl = weeklyCurrentCompletedNow ? wLowCurrent : wLowPrev
+
+bool dayValuesValid = not na(pdh) and not na(pdl)
+bool weekValuesValid = not na(pwh) and not na(pwl)
+float dailyVisualEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na
+bool showPdh = dayValuesValid
+bool showPdl = dayValuesValid
+bool showPwh = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwh - close) <= dailyVisualEnvelope
+bool showPwl = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwl - close) <= dailyVisualEnvelope
+
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// FROZEN v0.15.x ENTRY SELECTOR
+// -----------------------------------------------------------------------------
+f_max_na(float a, float b) =>
+    na(a) ? b : na(b) ? a : math.max(a, b)
+
+f_min_na(float a, float b) =>
+    na(a) ? b : na(b) ? a : math.min(a, b)
+
+f_outer_entry_pair_15m() =>
+    float ph = ta.pivothigh(high, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float pl = ta.pivotlow(low, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float ph0 = ta.valuewhen(not na(ph), ph, 0)
+    float ph1 = ta.valuewhen(not na(ph), ph, 1)
+    float ph2 = ta.valuewhen(not na(ph), ph, 2)
+    float ph3 = ta.valuewhen(not na(ph), ph, 3)
+    float ph4 = ta.valuewhen(not na(ph), ph, 4)
+    float ph5 = ta.valuewhen(not na(ph), ph, 5)
+    float ph6 = ta.valuewhen(not na(ph), ph, 6)
+    float ph7 = ta.valuewhen(not na(ph), ph, 7)
+    float pl0 = ta.valuewhen(not na(pl), pl, 0)
+    float pl1 = ta.valuewhen(not na(pl), pl, 1)
+    float pl2 = ta.valuewhen(not na(pl), pl, 2)
+    float pl3 = ta.valuewhen(not na(pl), pl, 3)
+    float pl4 = ta.valuewhen(not na(pl), pl, 4)
+    float pl5 = ta.valuewhen(not na(pl), pl, 5)
+    float pl6 = ta.valuewhen(not na(pl), pl, 6)
+    float pl7 = ta.valuewhen(not na(pl), pl, 7)
+    float hi01 = f_max_na(ph0, ph1)
+    float hi23 = f_max_na(ph2, ph3)
+    float hi45 = f_max_na(ph4, ph5)
+    float hi67 = f_max_na(ph6, ph7)
+    float outerHigh = f_max_na(f_max_na(hi01, hi23), f_max_na(hi45, hi67))
+    float lo01 = f_min_na(pl0, pl1)
+    float lo23 = f_min_na(pl2, pl3)
+    float lo45 = f_min_na(pl4, pl5)
+    float lo67 = f_min_na(pl6, pl7)
+    float outerLow = f_min_na(f_min_na(lo01, lo23), f_min_na(lo45, lo67))
+    [outerHigh, outerLow]
+
+[autoLongRaw, autoShortRaw] = request.security(syminfo.tickerid, "15", f_outer_entry_pair_15m(), lookahead = barmerge.lookahead_off)
+
+f_round_up_tick(float p) =>
+    na(p) ? na : math.ceil((p - 1e-10) / syminfo.mintick) * syminfo.mintick
+
+f_round_down_tick(float p) =>
+    na(p) ? na : math.floor((p + 1e-10) / syminfo.mintick) * syminfo.mintick
+
+float autoLongEntry = f_round_up_tick(autoLongRaw)
+float autoShortEntry = f_round_down_tick(autoShortRaw)
+float longEntry = entryMode == "MANUAL" and manualLongEntry > 0 ? manualLongEntry : autoLongEntry
+float shortEntry = entryMode == "MANUAL" and manualShortEntry > 0 ? manualShortEntry : autoShortEntry
+bool longEntrySet = not na(longEntry) and longEntry > 0
+bool shortEntrySet = not na(shortEntry) and shortEntry > 0
+float activeGoLine = planSide == "LONG" ? longEntry : shortEntry
+bool goSet = not na(activeGoLine) and activeGoLine > 0
+
+plot(longEntry, "LONG structural proof data", display = display.none)
+plot(shortEntry, "SHORT structural proof data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// v0.16.2 REACTION-CLUSTER TP ENGINE
+// We look behind the 8 pivots used by the entry selector so target discovery does
+// not simply recycle the active proof structure. Each old pivot contributes a
+// reaction interval: body-edge -> wick extreme. Clustering is performed on the
+// NEAR EDGE of those intervals, because that is the first side price reaches.
+// -----------------------------------------------------------------------------
+f_tp_candidates_15m() =>
+    float ph = ta.pivothigh(high, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float pl = ta.pivotlow(low, ENTRY_PIVOT_LEFT, ENTRY_PIVOT_RIGHT)
+    float highBody = math.max(open[ENTRY_PIVOT_RIGHT], close[ENTRY_PIVOT_RIGHT])
+    float lowBody = math.min(open[ENTRY_PIVOT_RIGHT], close[ENTRY_PIVOT_RIGHT])
+
+    float h8 = ta.valuewhen(not na(ph), ph, 8), hb8 = ta.valuewhen(not na(ph), highBody, 8)
+    float h9 = ta.valuewhen(not na(ph), ph, 9), hb9 = ta.valuewhen(not na(ph), highBody, 9)
+    float h10 = ta.valuewhen(not na(ph), ph, 10), hb10 = ta.valuewhen(not na(ph), highBody, 10)
+    float h11 = ta.valuewhen(not na(ph), ph, 11), hb11 = ta.valuewhen(not na(ph), highBody, 11)
+    float h12 = ta.valuewhen(not na(ph), ph, 12), hb12 = ta.valuewhen(not na(ph), highBody, 12)
+    float h13 = ta.valuewhen(not na(ph), ph, 13), hb13 = ta.valuewhen(not na(ph), highBody, 13)
+    float h14 = ta.valuewhen(not na(ph), ph, 14), hb14 = ta.valuewhen(not na(ph), highBody, 14)
+    float h15 = ta.valuewhen(not na(ph), ph, 15), hb15 = ta.valuewhen(not na(ph), highBody, 15)
+    float h16 = ta.valuewhen(not na(ph), ph, 16), hb16 = ta.valuewhen(not na(ph), highBody, 16)
+    float h17 = ta.valuewhen(not na(ph), ph, 17), hb17 = ta.valuewhen(not na(ph), highBody, 17)
+    float h18 = ta.valuewhen(not na(ph), ph, 18), hb18 = ta.valuewhen(not na(ph), highBody, 18)
+    float h19 = ta.valuewhen(not na(ph), ph, 19), hb19 = ta.valuewhen(not na(ph), highBody, 19)
+    float h20 = ta.valuewhen(not na(ph), ph, 20), hb20 = ta.valuewhen(not na(ph), highBody, 20)
+    float h21 = ta.valuewhen(not na(ph), ph, 21), hb21 = ta.valuewhen(not na(ph), highBody, 21)
+    float h22 = ta.valuewhen(not na(ph), ph, 22), hb22 = ta.valuewhen(not na(ph), highBody, 22)
+    float h23 = ta.valuewhen(not na(ph), ph, 23), hb23 = ta.valuewhen(not na(ph), highBody, 23)
+
+    float l8 = ta.valuewhen(not na(pl), pl, 8), lb8 = ta.valuewhen(not na(pl), lowBody, 8)
+    float l9 = ta.valuewhen(not na(pl), pl, 9), lb9 = ta.valuewhen(not na(pl), lowBody, 9)
+    float l10 = ta.valuewhen(not na(pl), pl, 10), lb10 = ta.valuewhen(not na(pl), lowBody, 10)
+    float l11 = ta.valuewhen(not na(pl), pl, 11), lb11 = ta.valuewhen(not na(pl), lowBody, 11)
+    float l12 = ta.valuewhen(not na(pl), pl, 12), lb12 = ta.valuewhen(not na(pl), lowBody, 12)
+    float l13 = ta.valuewhen(not na(pl), pl, 13), lb13 = ta.valuewhen(not na(pl), lowBody, 13)
+    float l14 = ta.valuewhen(not na(pl), pl, 14), lb14 = ta.valuewhen(not na(pl), lowBody, 14)
+    float l15 = ta.valuewhen(not na(pl), pl, 15), lb15 = ta.valuewhen(not na(pl), lowBody, 15)
+    float l16 = ta.valuewhen(not na(pl), pl, 16), lb16 = ta.valuewhen(not na(pl), lowBody, 16)
+    float l17 = ta.valuewhen(not na(pl), pl, 17), lb17 = ta.valuewhen(not na(pl), lowBody, 17)
+    float l18 = ta.valuewhen(not na(pl), pl, 18), lb18 = ta.valuewhen(not na(pl), lowBody, 18)
+    float l19 = ta.valuewhen(not na(pl), pl, 19), lb19 = ta.valuewhen(not na(pl), lowBody, 19)
+    float l20 = ta.valuewhen(not na(pl), pl, 20), lb20 = ta.valuewhen(not na(pl), lowBody, 20)
+    float l21 = ta.valuewhen(not na(pl), pl, 21), lb21 = ta.valuewhen(not na(pl), lowBody, 21)
+    float l22 = ta.valuewhen(not na(pl), pl, 22), lb22 = ta.valuewhen(not na(pl), lowBody, 22)
+    float l23 = ta.valuewhen(not na(pl), pl, 23), lb23 = ta.valuewhen(not na(pl), lowBody, 23)
+
+    [hb8,h8,hb9,h9,hb10,h10,hb11,h11,hb12,h12,hb13,h13,hb14,h14,hb15,h15,
+     hb16,h16,hb17,h17,hb18,h18,hb19,h19,hb20,h20,hb21,h21,hb22,h22,hb23,h23,
+     l8,lb8,l9,lb9,l10,lb10,l11,lb11,l12,lb12,l13,lb13,l14,lb14,l15,lb15,
+     l16,lb16,l17,lb17,l18,lb18,l19,lb19,l20,lb20,l21,lb21,l22,lb22,l23,lb23]
+
+[tpHb8,tpH8,tpHb9,tpH9,tpHb10,tpH10,tpHb11,tpH11,tpHb12,tpH12,tpHb13,tpH13,tpHb14,tpH14,tpHb15,tpH15,
+ tpHb16,tpH16,tpHb17,tpH17,tpHb18,tpH18,tpHb19,tpH19,tpHb20,tpH20,tpHb21,tpH21,tpHb22,tpH22,tpHb23,tpH23,
+ tpL8,tpLb8,tpL9,tpLb9,tpL10,tpLb10,tpL11,tpLb11,tpL12,tpLb12,tpL13,tpLb13,tpL14,tpLb14,tpL15,tpLb15,
+ tpL16,tpLb16,tpL17,tpLb17,tpL18,tpLb18,tpL19,tpLb19,tpL20,tpLb20,tpL21,tpLb21,tpL22,tpLb22,tpL23,tpLb23] = request.security(syminfo.tickerid, "15", f_tp_candidates_15m(), lookahead = barmerge.lookahead_off)
+
+float tpAtr15 = request.security(syminfo.tickerid, "15", ta.atr(14), lookahead = barmerge.lookahead_off)
+float tpClusterTolerance = math.max(syminfo.mintick * 4.0, nz(tpAtr15, syminfo.mintick * 20.0) * tpClusterToleranceAtr)
+float tpEntryGap = math.max(syminfo.mintick * 4.0, nz(tpAtr15, syminfo.mintick * 20.0) * tpEntrySeparationAtr)
+float tpZoneGap = math.max(syminfo.mintick * 4.0, nz(tpAtr15, syminfo.mintick * 20.0) * tpZoneSeparationAtr)
+
+array<float> longZoneLos = array.from(tpHb8,tpHb9,tpHb10,tpHb11,tpHb12,tpHb13,tpHb14,tpHb15,tpHb16,tpHb17,tpHb18,tpHb19,tpHb20,tpHb21,tpHb22,tpHb23)
+array<float> longZoneHis = array.from(tpH8,tpH9,tpH10,tpH11,tpH12,tpH13,tpH14,tpH15,tpH16,tpH17,tpH18,tpH19,tpH20,tpH21,tpH22,tpH23)
+array<float> shortZoneLos = array.from(tpL8,tpL9,tpL10,tpL11,tpL12,tpL13,tpL14,tpL15,tpL16,tpL17,tpL18,tpL19,tpL20,tpL21,tpL22,tpL23)
+array<float> shortZoneHis = array.from(tpLb8,tpLb9,tpLb10,tpLb11,tpLb12,tpLb13,tpLb14,tpLb15,tpLb16,tpLb17,tpLb18,tpLb19,tpLb20,tpLb21,tpLb22,tpLb23)
+
+// LONG: cluster by near/lower edge. Return aggregate zone + touch count.
+f_pick_long_cluster(array<float> lows, array<float> highs, float floorPrice, float requiredGap, float tolerance, int minTouches) =>
+    float bestLo = na
+    float bestHi = na
+    float bestDist = HUGE_DISTANCE
+    int bestTouches = 0
+    int n = array.size(lows)
+    if n > 0
+        for i = 0 to n - 1
+            float seedLo = array.get(lows, i)
+            float seedHi = array.get(highs, i)
+            if not na(seedLo) and not na(seedHi) and seedHi > seedLo
+                int touches = 0
+                float clusterLo = na
+                float clusterHi = na
+                for j = 0 to n - 1
+                    float lo = array.get(lows, j)
+                    float hi = array.get(highs, j)
+                    bool sameShelf = not na(lo) and not na(hi) and hi > lo and math.abs(lo - seedLo) <= tolerance
+                    if sameShelf
+                        touches += 1
+                        clusterLo := na(clusterLo) ? lo : math.min(clusterLo, lo)
+                        clusterHi := na(clusterHi) ? hi : math.max(clusterHi, hi)
+                bool separated = touches >= minTouches and not na(clusterLo) and clusterLo >= floorPrice + requiredGap
+                if separated
+                    float dist = clusterLo - floorPrice
+                    if dist < bestDist or (math.abs(dist - bestDist) <= syminfo.mintick and touches > bestTouches)
+                        bestDist := dist
+                        bestLo := clusterLo
+                        bestHi := clusterHi
+                        bestTouches := touches
+    [bestLo, bestHi, bestTouches]
+
+// SHORT: cluster by near/upper edge. Return aggregate zone + touch count.
+f_pick_short_cluster(array<float> lows, array<float> highs, float ceilingPrice, float requiredGap, float tolerance, int minTouches) =>
+    float bestLo = na
+    float bestHi = na
+    float bestDist = HUGE_DISTANCE
+    int bestTouches = 0
+    int n = array.size(lows)
+    if n > 0
+        for i = 0 to n - 1
+            float seedLo = array.get(lows, i)
+            float seedHi = array.get(highs, i)
+            if not na(seedLo) and not na(seedHi) and seedHi > seedLo
+                int touches = 0
+                float clusterLo = na
+                float clusterHi = na
+                for j = 0 to n - 1
+                    float lo = array.get(lows, j)
+                    float hi = array.get(highs, j)
+                    bool sameShelf = not na(lo) and not na(hi) and hi > lo and math.abs(hi - seedHi) <= tolerance
+                    if sameShelf
+                        touches += 1
+                        clusterLo := na(clusterLo) ? lo : math.min(clusterLo, lo)
+                        clusterHi := na(clusterHi) ? hi : math.max(clusterHi, hi)
+                bool separated = touches >= minTouches and not na(clusterHi) and clusterHi <= ceilingPrice - requiredGap
+                if separated
+                    float dist = ceilingPrice - clusterHi
+                    if dist < bestDist or (math.abs(dist - bestDist) <= syminfo.mintick and touches > bestTouches)
+                        bestDist := dist
+                        bestLo := clusterLo
+                        bestHi := clusterHi
+                        bestTouches := touches
+    [bestLo, bestHi, bestTouches]
+
+float longTpFloor = longEntrySet ? longEntry : close
+float shortTpCeiling = shortEntrySet ? shortEntry : close
+
+[longTp1Lo, longTp1Hi, longTp1Touches] = f_pick_long_cluster(longZoneLos, longZoneHis, longTpFloor, tpEntryGap, tpClusterTolerance, tpMinTouches)
+[longTp2Lo, longTp2Hi, longTp2Touches] = f_pick_long_cluster(longZoneLos, longZoneHis, na(longTp1Hi) ? longTpFloor : longTp1Hi, tpZoneGap, tpClusterTolerance, tpMinTouches)
+[longTp3Lo, longTp3Hi, longTp3Touches] = f_pick_long_cluster(longZoneLos, longZoneHis, na(longTp2Hi) ? (na(longTp1Hi) ? longTpFloor : longTp1Hi) : longTp2Hi, tpZoneGap, tpClusterTolerance, tpMinTouches)
+
+[shortTp1Lo, shortTp1Hi, shortTp1Touches] = f_pick_short_cluster(shortZoneLos, shortZoneHis, shortTpCeiling, tpEntryGap, tpClusterTolerance, tpMinTouches)
+[shortTp2Lo, shortTp2Hi, shortTp2Touches] = f_pick_short_cluster(shortZoneLos, shortZoneHis, na(shortTp1Lo) ? shortTpCeiling : shortTp1Lo, tpZoneGap, tpClusterTolerance, tpMinTouches)
+[shortTp3Lo, shortTp3Hi, shortTp3Touches] = f_pick_short_cluster(shortZoneLos, shortZoneHis, na(shortTp2Lo) ? (na(shortTp1Lo) ? shortTpCeiling : shortTp1Lo) : shortTp2Lo, tpZoneGap, tpClusterTolerance, tpMinTouches)
+
+bool longTp1Set = not na(longTp1Lo) and longTp1Touches >= tpMinTouches
+bool longTp2Set = not na(longTp2Lo) and longTp2Touches >= tpMinTouches
+bool longTp3Set = not na(longTp3Lo) and longTp3Touches >= tpMinTouches
+bool shortTp1Set = not na(shortTp1Hi) and shortTp1Touches >= tpMinTouches
+bool shortTp2Set = not na(shortTp2Hi) and shortTp2Touches >= tpMinTouches
+bool shortTp3Set = not na(shortTp3Hi) and shortTp3Touches >= tpMinTouches
+
+// Conservative near-side targeting: lower edge for LONG, upper edge for SHORT.
+float longTp1Price = longTp1Set ? f_round_down_tick(longTp1Lo) : na
+float longTp2Price = longTp2Set ? f_round_down_tick(longTp2Lo) : na
+float longTp3Price = longTp3Set ? f_round_down_tick(longTp3Lo) : na
+float shortTp1Price = shortTp1Set ? f_round_up_tick(shortTp1Hi) : na
+float shortTp2Price = shortTp2Set ? f_round_up_tick(shortTp2Hi) : na
+float shortTp3Price = shortTp3Set ? f_round_up_tick(shortTp3Hi) : na
+
+bool manualTargetSet = manualTargetLow > 0 and manualTargetHigh > manualTargetLow
+float manualTargetPrice = not manualTargetSet ? na : planSide == "LONG" ? f_round_down_tick(manualTargetLow) : f_round_up_tick(manualTargetHigh)
+float activeTp1Price = targetMode == "MANUAL" ? manualTargetPrice : planSide == "LONG" ? longTp1Price : shortTp1Price
+bool activeTp1Set = not na(activeTp1Price) and activeTp1Price > 0
+
+plot(longTp1Price, "LONG TP1 reaction-cluster near-side data", display = display.none)
+plot(shortTp1Price, "SHORT TP1 reaction-cluster near-side data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// DRAWINGS
+// -----------------------------------------------------------------------------
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longEntryLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortEntryLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp1Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp2Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line longTp3Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp1Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp2Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line shortTp3Line = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line manualTpLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label manualTpLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+
+int chartBarMs = not na(time_close) and time_close > time ? time_close - time : FALLBACK_BAR_MS
+int levelLabelX = (not na(time_close) ? time_close : time) + chartBarMs * LEVEL_LABEL_OFFSET_BARS
+
+f_sync_level(line id, label lid, float price, string name, color c, bool visible, int labelX, int width, color txtColor) =>
+    if visible and not na(price) and price > 0
+        line.set_xy1(id, time, price)
+        line.set_xy2(id, time_close, price)
+        line.set_extend(id, extend.both)
+        line.set_color(id, c)
+        line.set_width(id, width)
+        label.set_xy(lid, labelX, price)
+        label.set_text(lid, name)
+        label.set_color(lid, c)
+        label.set_textcolor(lid, txtColor)
+        label.set_size(lid, size.normal)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
+
+// NEXT WALL stays isolated from TP research.
+array<string> wallNames = array.new_string()
+array<float> wallPrices = array.new_float()
+
+f_add_wall(bool condition, string name, float price) =>
+    if condition and not na(price)
+        array.push(wallNames, name)
+        array.push(wallPrices, price)
+
+if planSide == "LONG"
+    f_add_wall(showPdh and pdh > close, "PDH", pdh)
+    f_add_wall(showPwh and pwh > close, "PWH", pwh)
+else
+    f_add_wall(showPdl and pdl < close, "PDL", pdl)
+    f_add_wall(showPwl and pwl < close, "PWL", pwl)
+
+string nextWallName = "NONE AHEAD"
+float nextWallPrice = na
+float nextWallDistance = HUGE_DISTANCE
+if array.size(wallPrices) > 0
+    for i = 0 to array.size(wallPrices) - 1
+        float p = array.get(wallPrices, i)
+        float dist = math.abs(p - close)
+        if dist < nextWallDistance
+            nextWallDistance := dist
+            nextWallName := array.get(wallNames, i)
+            nextWallPrice := p
+string nextWallText = na(nextWallPrice) ? nextWallName : nextWallName + " @ " + str.tostring(nextWallPrice, format.mintick)
+
+if barstate.islast
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, levelLabelX, 2, color.white)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, levelLabelX, 2, color.white)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, levelLabelX, 2, color.white)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, levelLabelX, 2, color.white)
+
+    bool showEntryGeometry = showEntryLines and executionViewSupported
+    f_sync_level(longEntryLine, longEntryLabel, longEntry, "🟢 LONG - ENTRY ZONE", YELLOW_GO, showEntryGeometry and longEntrySet, levelLabelX, 3, color.black)
+    f_sync_level(shortEntryLine, shortEntryLabel, shortEntry, "🔴 SHORT - ENTRY ZONE", YELLOW_GO, showEntryGeometry and shortEntrySet, levelLabelX, 3, color.black)
+
+    bool tpView = showTakeProfitZones and executionViewSupported
+    bool drawLongTp = tpView and (showBothTpSides or planSide == "LONG") and targetMode == "AUTO"
+    bool drawShortTp = tpView and (showBothTpSides or planSide == "SHORT") and targetMode == "AUTO"
+    f_sync_level(longTp1Line, longTp1Label, longTp1Price, "🎯 TAKE PROFIT ZONE 1", BLUE_TARGET, drawLongTp and longTp1Set, levelLabelX, 2, color.white)
+    f_sync_level(longTp2Line, longTp2Label, longTp2Price, "🎯 TAKE PROFIT ZONE 2", BLUE_TARGET, drawLongTp and longTp2Set, levelLabelX, 2, color.white)
+    f_sync_level(longTp3Line, longTp3Label, longTp3Price, "🎯 TAKE PROFIT ZONE 3", BLUE_TARGET, drawLongTp and longTp3Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp1Line, shortTp1Label, shortTp1Price, "🎯 TAKE PROFIT ZONE 1", BLUE_TARGET, drawShortTp and shortTp1Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp2Line, shortTp2Label, shortTp2Price, "🎯 TAKE PROFIT ZONE 2", BLUE_TARGET, drawShortTp and shortTp2Set, levelLabelX, 2, color.white)
+    f_sync_level(shortTp3Line, shortTp3Label, shortTp3Price, "🎯 TAKE PROFIT ZONE 3", BLUE_TARGET, drawShortTp and shortTp3Set, levelLabelX, 2, color.white)
+
+    bool drawManual = tpView and targetMode == "MANUAL" and manualTargetSet
+    f_sync_level(manualTpLine, manualTpLabel, manualTargetPrice, "🎯 TAKE PROFIT ZONE", BLUE_TARGET, drawManual, levelLabelX, 2, color.white)
+
+// -----------------------------------------------------------------------------
+// 🤖 SLUMDAWG TRADERS PANEL — ORIGINAL PALETTE RETAINED
+// -----------------------------------------------------------------------------
+bool directionKnown = bigDirection != "NOT SET"
+bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
+string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
+string activeTpText = activeTp1Set ? str.tostring(activeTp1Price, format.mintick) : "NOT SET"
+string nowText = not executionViewSupported ? "ENTRY/TP VIEW: 5M / 15M" : not goSet ? "⚠️ NO CONFIRMED ENTRY WICK" : planSide == "LONG" ? "⏳ WATCH 🟢 LONG ENTRY" : "⏳ WATCH 🔴 SHORT ENTRY"
+string runtimeReason = not isNqMnq ? "USE NQ OR MNQ" : not tickGridExpected ? "CHECK CONTRACT TICK" : extendedClosedGap ? "EXTENDED CLOSE - VERIFY LEVELS" : "KEY LEVELS + ENTRY + CLUSTER TP"
+color bigDirectionColor = bigDirection == "UP" ? GREEN_UP : bigDirection == "DOWN" ? RED_DOWN : color.gray
+color moveColor = not directionKnown ? color.gray : planSide == "LONG" ? GREEN_UP : RED_DOWN
+
+var table coach = na
+if barstate.isfirst
+    if showCoach
+        coach := table.new(position.top_right, 2, 9, border_width = 2, frame_width = 2, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+        table.merge_cells(coach, 0, 0, 1, 0)
+    else
+        coach := table.new(position.top_right, 1, 1, border_width = 1, frame_width = 1, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+
+if barstate.islast
+    if showCoach
+        table.cell(coach, 0, 0, "🤖 SLUMDAWG TRADERS", text_color = color.lime, bgcolor = PANEL_MID, text_size = 16)
+        table.cell(coach, 0, 1, "BIG DIRECTION", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 1, bigDirection, text_color = color.white, bgcolor = bigDirectionColor, text_size = 14)
+        table.cell(coach, 0, 2, "CURRENT MOVE", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 2, currentMoveText, text_color = color.white, bgcolor = moveColor, text_size = 13)
+        table.cell(coach, 0, 3, "NEXT WALL", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 3, nextWallText, text_color = color.orange, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 0, 4, "🟢 LONG ENTRY", text_color = color.black, bgcolor = YELLOW_GO, text_size = 13)
+        table.cell(coach, 1, 4, longEntrySet ? str.tostring(longEntry, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 14)
+        table.cell(coach, 0, 5, "🔴 SHORT ENTRY", text_color = color.black, bgcolor = YELLOW_GO, text_size = 13)
+        table.cell(coach, 1, 5, shortEntrySet ? str.tostring(shortEntry, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 14)
+        table.cell(coach, 0, 6, "🎯 TAKE PROFIT", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 1, 6, activeTpText, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 0, 7, "NOW", text_color = color.white, bgcolor = PANEL_DARK, text_size = 13)
+        table.cell(coach, 1, 7, nowText, text_color = color.black, bgcolor = ORANGE_WAIT, text_size = 13)
+        table.cell(coach, 0, 8, "SYSTEM", text_color = color.white, bgcolor = PANEL_DARK, text_size = 12)
+        table.cell(coach, 1, 8, runtimeReason, text_color = color.orange, bgcolor = PANEL_DARK, text_size = 12)
+    else
+        table.cell(coach, 0, 0, "🤖 SLUMDAWG  ▸", text_color = color.lime, bgcolor = PANEL_MID, text_size = 12)
+
+alertcondition(false, "V0.16.2 reaction-cluster TP selector", "NON-ACTIONABLE research build")
