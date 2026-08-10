@@ -50,18 +50,36 @@ ledger from the top.** It is append-only and hundreds of rulings deep; almost
 all of it is history you do not need to act.
 
 1. ★★★★★ **`docs/designs/HANDOVER-ADVISOR-2026-08-04.md` — THIS IS THE ENTRY
-   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED 2026-08-09, LATER SEAT]` IT HAS
-   GROWN: `588` lines / `66,361` bytes — the earlier `326 lines / 25 KB` in this very
-   block is STALE.** ★★★ **A CARRIER THAT MEASURES ANOTHER FILE MUST RE-MEASURE IT, NOT
-   QUOTE ITSELF — this block's own number aged 2.6× in five days while presenting as
-   `[MEASURED]`.** Still one `Read` (well under the `256 KB` cap), and its `§0` carries
-   the **two standing operator directives**
-   (`NO MONITORS` · **`WAIT ON THE GPT READ BEFORE EVERY NEW RULING`**) that a seat
-   can violate within its first three minutes if it reads anything else first.
-   Then `§1` position · `§2` gate states · `§3` newest IDs and pinned commits.
-   ⚠️ **Check its header date against the ledger's top ruling and carry the delta
-   as a known staleness, not as truth** — at this writing it was current to
-   `R-729` against a ledger at `R-736`.
+   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED HERE 2026-08-10]` `687` lines /
+   `106,558` bytes — the `588 / 66,361` in this very block is STALE, as was the
+   `326 / 25 KB` before it.** ★★★ **A CARRIER THAT MEASURES ANOTHER FILE MUST RE-MEASURE
+   IT, NOT QUOTE ITSELF — this block's own number has now aged twice, each time while
+   presenting as `[MEASURED]`.**
+   🛑🛑★★★★★ **AND THE "still one `Read`, well under the `256 KB` cap" CLAUSE WAS FALSE
+   AND IS STRUCK. `[MEASURED HERE 2026-08-10]` a whole-file `Read` FAILS OUTRIGHT:
+   `File content (34282 tokens) exceeds maximum allowed tokens (25000)`.** ★★★★★ **`THE
+   BINDING LIMIT IS THE 25,000-TOKEN CAP, NOT THE 256 KB BYTE CAP — A FILE CAN SIT AT
+   40% OF THE BYTE BUDGET AND STILL BE UNREADABLE. NEVER SIZE A READ IN BYTES.`**
+   ⚠️ **The density is NOT uniform, so a fixed `limit` is not portable: `[MEASURED HERE]`
+   `limit: 150` ALSO fails (`30,696` tokens) because lines `1`–`355` are a prepended wall
+   of blockquote blocks with **NO markdown headings at all** (~`200+` tokens/line), while
+   the numbered body below is far sparser.
+   ✅ **MEASURED READ RECIPE, TWO CALLS:** `Read limit: 55` → the LIVE prepended blocks,
+   newest first, each one superseding the blocks under it. Then `Read offset: 359` → `§0`'s
+   **two standing operator directives** (**`ARM ONE EAR`** · **`WAIT ON THE GPT READ BEFORE
+   EVERY NEW RULING`**) that a seat can violate within its first three minutes if it reads
+   anything else first.
+   🛑🛑 **`NO MONITORS` IS **NOT** ONE OF THE TWO DIRECTIVES — IT WAS REVERSED 2026-08-09
+   AND THIS BLOCK NAMED THE DEAD ORDER AS CURRENT UNTIL 2026-08-10.** See `§4a`. ★★★★★
+   **`THE CARRIER THAT WARNS YOU ABOUT STALE CARRIERS IS NOT EXEMPT FROM BEING ONE.`**
+   🛑🛑★★★★★ **`§2` AND `§3` ARE STALE BODIES UNDER A FRESH TITLE — DO NOT READ THEM AS
+   CURRENT.** `[MEASURED HERE 2026-08-10]` the title says **`CURRENT AT R-791 / AR-929`**
+   while **`§3` says *"Newest ruling `R-748`… Newest AR `AR-844`"*** and `§2`'s gate table
+   cites `R-706`/`R-718`/`R-721`. **Fresh content is PREPENDED above `§0`; the numbered
+   sections were never rewritten.** ⇒ ★★★★★ **`SECTION NUMBERING IS NOT READ ORDER ONCE A
+   FILE IS APPENDED-TO AT THE TOP — AND A FRESH TITLE OVER A STALE BODY IS THE ONE
+   STALENESS A DATE-CHECK CANNOT CATCH.`** **Take position, IDs and pins from the ledger's
+   top ruling (read `3` below), never from `§3`.**
 
 2. 🛑🛑 **`docs/designs/ADVISOR-STATE.md` — DEMOTED, AND DO NOT `Read` IT WHOLE.**
    ★★★★★ **The "small, rewritten in place, always current" description was FALSE
@@ -97,6 +115,12 @@ all of it is history you do not need to act.
 + `git status --porcelain`. `[MEASURED 2026-08-09]` **HEAD moved from `133be226`
 to `cd92ecb2` DURING this onboarding** — the worker is a live sibling committing
 into the same tree, so a snapshot you took four calls ago is already history.
+⚠️ **`[RE-MEASURED HERE 2026-08-10]` `cd92ecb2` IS NOW `~50` COMMITS STALE (HEAD
+`33552d7f`) — the pin above is a WORKED EXAMPLE OF DRIFT, not a current value. Do
+not join on it.** ★★ **ALSO MEASURE `git rev-parse HEAD origin/<branch>`: local ran
+`2` commits AHEAD of `origin` here while the newest ruling's own header asserted
+`HEAD = origin`.** ★★★★★ **`"HEAD = ORIGIN" IS A CLAIM WITH A TIMESTAMP, AND THE
+WORKER COMMITS BETWEEN YOUR READ AND YOUR RULING.`**
 
 **Read further only to answer a specific question you actually have.** Reading
 "for context" is how a cold session burns half its budget before doing anything.
