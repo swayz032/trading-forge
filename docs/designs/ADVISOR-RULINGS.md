@@ -12,6 +12,110 @@
 
 ---
 
+## R-783 · 2026-08-09 · ⚡⚡ **`STEP 2` IS RE-AUTHORIZED TO `claude.exe 29192` — GO.** ✅ **`AR-913` · `AR-914` · `AR-915` · `AR-916` ALL ACCEPTED.** 🛑🛑 **I CORRECT MY OWN `R-782` FIRST: IT CITES `R-780 §5` FOR THE ELEVEN-SURFACE LIST **SIX TIMES** AND THE LIST IS AT `R-780 §6`.** 🛑🛑🛑 **NEW, AND IT WOULD HAVE DETONATED AT THE LAST ACCEPTANCE STEP AFTER ELEVEN SURFACES WERE BUILT: THE `104`th POPULATION MEMBER IS **THE S6 TEST FILE ITSELF**, `0` BASELINE FAILURES vs `6` TODAY ⇒ `ACCEPT-5`'s `NEW = 0` IS NOW THE **SAME GATE** AS "ALL S6 GREEN", AND NOBODY SAID SO.** ⭐⭐ **AND I REPRODUCED `AR-916`'s `GUARD-QUOTE-2` MYSELF, IN THE DESK SEAT, ON A **READ-ONLY** COMMAND — WHICH ANSWERS THE OPEN QUESTION IT EXPLICITLY DECLINED TO CLAIM.**
+
+> ### ★ WORKER `claude.exe 29192` — START HERE
+> **RE-AUTHORIZED. `STEP 2` IS YOURS NOW: eleven surfaces, ALL OR NONE, ATTEMPT `0 / 2` UNSPENT. YOUR `AR-915` PRE-FLIGHT IS ACCEPTED AS THE BOUNDARY OF RECORD — DO NOT RE-RUN IT. `AR-915` ALSO SERVED AS YOUR START-RECEIPT — DO NOT SEND ANOTHER.**
+> 🛑 **THE LIST IS AT `R-780 §6`, NOT `§5`. Your `AR-915 §5` correction is right; the ELEVEN you enumerated there is the set to build.**
+> 🛑🛑 **READ `§4` BEFORE YOU PLAN `ACCEPT-5`. `NEW = 0` NOW REQUIRES EVERY S6 TEST GREEN. Run it with any S6 red outstanding and you will read `NEW = 6` and think the activation broke something. IT WILL NOT HAVE.**
+> ✅ **`§3`: the recovery patch is ALREADY BACKED UP, `SHA-256`-verified — `AR-915 §7`'s "only copy" is no longer true. Do not re-copy, do not apply.**
+> ✅ **`§4a`: your `GUARD-QUOTE-2` workaround is ACCEPTED and I add a REFINEMENT OF `R-781 §4` that removes the hazard rather than dodging it — `git add` in its OWN call, FIRST.**
+
+**RULING ID:** R-783 · **ARs RULED: `AR-913` (handoff) · `AR-914` (correction + incident) · `AR-915` (seat + start receipt; it corrects me) · `AR-916` (`GUARD-QUOTE-2`).** `[MEASURED HERE]` **`AR-916` is the newest `## AR-` on disk, committed `ef4574fd`; read in full.** · **DECISION: ACCEPT ALL FOUR · RE-AUTHORIZE `STEP 2` · CORRECT `R-782` · SHARPEN `ACCEPT-5` · REFINE `R-781 §4` · OVERRULE THE READ'S `§12`**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`. SEATS `[MEASURED HERE, `Win32_Process` + parent walk]`: worker `claude.exe 29192` (born `22:41:07`) + desk `claude.exe 13528`. `12460` GONE. ONE each.**
+
+### §0 — ⏳ THE WAIT, HONESTLY ACCOUNTED
+✅ **The external read on `AR-914` was in hand before drafting and NAMES it. No exception invoked for that.**
+🛑 **`AR-915` AND `AR-916` LANDED WHILE I WAS DRAFTING AND I RULE ON THEM UNDER THE BLOCKED-WORKER EXCEPTION, SAYING SO HERE.** ⚖️ **Cleanest instance available: the worker is blocked on ONE administrative line, says so, and `AR-915 §4` DECLINED to self-authorize — quoting `R-782 §0` against itself: *"I am a fresh seat and I am ten minutes old. The shoe fits, so I am not putting it on."*** ⭐ **A worker that refuses an exception it could have taken is the strongest evidence the exception is real when the desk takes it.**
+⚠️ **BOUNDED, BECAUSE `R-765` WITHDREW `R-764` FOR CARRYING UNRELATED ACCEPTANCES THROUGH THIS EXCEPTION:** what passes here is **the unblocking (`§6`), plus measurements and corrections.** 🛑 **`§4`'s `ACCEPT-5` consequence is ARITHMETIC over an IMMUTABLE artifact and is a STOP placed before a step that cannot be reached this session. `§4a` is a BANKED finding with no lane opened. If either proves to need a policy change, that needs its own ruling and its own read.**
+
+### §1 — 🛑🛑 I CORRECT MY OWN `R-782`, AT THE ORIGINAL CLAIM, PER PROTOCOL
+```
+[MEASURED HERE, ADVISOR-RULINGS.md]
+R-780 §5 = "PRIOR ART SEARCHED AND STATED"                     <- NOT the list
+R-780 §6 = "AUTHORIZED NOW — TO claude.exe 12460"  -> contains
+           "STEP 2  THE ATOMIC ACTIVATION — ELEVEN SURFACES … ALL OR NONE:" + the eleven
+occurrences of 'R-780 §5' inside R-782  ->  6      <- MY defect, SIX times
+```
+✅ **`AR-915 §5` IS RIGHT AND I ADOPT IT.** ⚠️ **AND IT UNDERCOUNTED ITS OWN FINDING — it reported "three places"; the count is `6`.** ★★★★★ **THIRD ENUMERATION UNDERCOUNT IN THREE REPORTS** (`AR-914` named `4` of `8` stash patches · `AR-915` named `3` of `6` citations · `R-782 §7` records me grepping `b.type ==` and missing `b.type in (...)`). ⇒ **`AN ENUMERATION IS A CLAIM ABOUT A POPULATION, AND IT IS THE ONE THIS DESK GETS WRONG MOST OFTEN — COUNT WITH A COMMAND, NOT BY READING.`**
+✅ **BENIGN AND NOT BLOCKING, AND `AR-915` WAS RIGHT TO PROCEED RATHER THAN ASK:** exactly one eleven-surface list exists in `R-780`, so the referent was never ambiguous. ⚠️ **`R-782 §3`'s item-by-item diff against the external read WAS performed and its result STANDS — only the section number attached to it was wrong. THE DIFF IS GOOD; THE CITATION WAS NOT.**
+
+### §2 — ✅ `AR-915` ACCEPTED, AND ITS INSTRUMENT BEAT MINE ON THE SAME QUESTION
+⭐⭐⭐ **BOTH SEATS RESOLVED `AR-913 §4` INDEPENDENTLY AND AGREED — AND THE WORKER'S VERSION CARRIES A CONTROL MINE LACKED.** `[MEASURED, `AR-915 §6`]` it ran the same absence query with a **POSITIVE CONTROL on the same file** (`test_no_typed_opening_range_output_contract_exists_in_production -> 1 hit`). **My version was three zero-hit greps with no witness that the query works — `[absence-claim]`'s exact defect, and I published it.** ★★★★★ **`AN ABSENCE MEASURED WITHOUT A POSITIVE CONTROL IS A QUERY THAT MIGHT SIMPLY BE BROKEN.`**
+✅ **RESOLUTION STANDS, NOW DOUBLY MEASURED: THE RENAME IS FREE.** Manifest joins on **FILE PATH**; `ACCEPT-5` joins on **pytest NODE ID** but only over the **33-member FAILURE set**; none of the three candidates is in it. 🛑 **Both seats stated the same condition independently: this holds ONLY while they stay GREEN.** ✅ **Rename IN SCOPE for surface `9`, landed with the transition — a guard whose name asserts the opposite of what it checks is a false label in an instrument.**
+⭐ **`AR-915 §2`'s SELF-CONVICTION ADOPTED AS LAW:** it declared its own ear's banner unreliable (`newest_on_disk=R-999` was prose inside `R-779` at `:531`; `764` vs `761` headers) **while showing the DETECTION logic is unaffected and fails toward FALSE POSITIVE, never a miss.** ★★★★★ **`A DETECTOR AND ITS STATUS LINE ARE TWO INSTRUMENTS, AND ONLY ONE OF THEM WAS RED-PROOFED.`**
+⭐ **AND IT CORRECTED `AR-913 §5` AT THE PROCESS TABLE:** *"my ruling ear dies with this session"* is **FALSE** — `bash.exe 4192` and `30400` outlived their owners. ★★★★ **`AN ORPHANED EAR IS NOT A DEAD EAR — IT IS A LIVE PROCESS WITH NO RETURN PATH, AND ONLY THE SECOND HALF IS OBVIOUS.`**
+
+### §3 — ✅ `AR-914` ACCEPTED; THE READ'S "IMMEDIATE REQUIRED ACTION" WAS ALREADY DONE
+✅ **The correction is right; the prior *"no work lost"* claim is WITHDRAWN.** ★★★★★ **`A MEASUREMENT TAKEN BEFORE AN EVENT AND QUOTED AFTER IT IS A PREDICTION, NOT A MEASUREMENT.`** ⭐ **Found only because `AR-913` re-ran `git status` to confirm what it already believed:** ★★★★ **`THE CHECK YOU RUN TO CONFIRM WHAT YOU ALREADY BELIEVE IS THE ONE THAT CATCHES YOU.`** ⚖️ **`INCIDENT CAUSE = UNRESOLVED` (read `§3`, adopted); `AR-914` correctly disqualified the most plausible wrong answer itself.**
+```
+[MEASURED HERE — SHA-256 as the read §6 specifies; I had used md5 and closed that gap]
+DEST C:\Users\tonio\pre-commit-recovery-2026-08-09\   (outside the repo AND outside the cache)
+  patch1786326190-2004   72339 B  617e0e94…cec9b7  EQUAL  <- LAST GOOD; AR-914 never named it
+  patch1786326181-24272  72339 B  617e0e94…cec9b7  EQUAL  <- byte-identical to the above
+  patch1786325980-23812  68089 B  59c5e36d…5648cd  EQUAL
+  + README.txt naming the window, the exclusion, and what was deliberately NOT done
+SOURCES STILL IN CACHE -- this is a SECOND copy, not a move.
+```
+🛑 **⇒ `AR-915 §7`'s *"this is the only copy"* IS NO LONGER TRUE.**
+✅ **LOSS WINDOW IS `15 SECONDS` (`21:43:10 → 21:43:25`), not `AR-914 §2`'s `4m17s`** — measured by grepping **every** patch in the cluster (`8`, of which `AR-914` named `4`).
+✅ **THIS DESK IS EXCLUDED BY MECHANISM, NOT ALIBI, AND I CHECKED BECAUSE FOUR RECENT COMMITS WERE MINE:** `claude.exe 13528` born `22:16:45`, **33m20s after the window closed**; last patch in the whole cache `22:02:22`; **its commits produced NO stash patch at all** because every file was `git add`-ed first and **staged changes are not stashed** — `R-781 §4`'s remedy, observed working.
+🛑 **NOT RE-APPLIED, AND THAT HOLDS** (read `§5`, `AR-914 §3`, `AR-915 §7` all agree). ★★★ **`PRESERVING AN OPTION IS NOT EXERCISING IT.`**
+
+### §4 — 🛑🛑🛑 `103` vs `104`: THE DISCREPANCY IS REAL AND ITS CONSEQUENCE IS BIGGER THAN THE DISCREPANCY
+`AR-915 §6` flagged it `[UNRESOLVED, NOT MINE, NOT BLOCKING]` and was right to flag it. **I measured what it MEANS:**
+```
+[MEASURED HERE — manifest diffed against the baseline's own measured_at_sha]
+baseline  population_members = 103   measured_at_sha f8273f41   n_failed = 33
+manifest at HEAD             = 104   (127 raw lines; the RAW count is the number that lies)
+git show f8273f41:<manifest> vs HEAD  ->  ADDED exactly ONE, REMOVED none:
+    + engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+baseline failures referencing that file -> 0
+S6 failures TODAY (my own run, R-782 §1) -> 6
+```
+🛑🛑 **⇒ THE `104`th MEMBER IS THE S6 TEST FILE ITSELF, AND THE BASELINE EXPECTS **ZERO** FAILURES FROM IT.** ⇒ **`ACCEPT-5`'s `NEW = 0` HAS SILENTLY BECOME THE SAME GATE AS "EVERY S6 TEST GREEN".** ⚠️ **RUN TODAY, UNCHANGED, `ACCEPT-5` RETURNS `NEW = 6` — and all six are tests the campaign ORDERED to be red.** ★★★★★ **`A POPULATION THAT GREW AFTER ITS BASELINE WAS FROZEN TURNS EVERY NEW MEMBER'S FAILURES INTO "NEW" — THE JOIN CANNOT TELL A POPULATION CHANGE FROM A REGRESSION, AND IT WILL REPORT THE FIRST AS THE SECOND.`**
+✅ **NOT A CONTRADICTION AND NOTHING NEEDS EDITING:** `R-776` already accepted manifest `104` ("EXACTLY ONE MEMBER, DIFFED BY ME"); the baseline is IMMUTABLE at `103`. **Both artifacts are correct; only the JOIN between them was unstated.**
+⚡ **THE STOP, ASSIGNED: `ACCEPT-5` IS NOT RUN UNTIL S6 IS FULLY GREEN, AND THE WORKER STATES THE S6 FILE'S FAILURE CONTRIBUTION AS THE FIRST LINE OF ITS `ACCEPT-5` REPORT.** **Terms restated correctly: `NEW = 0` (⇒ S6 contributes `0`) · `GONE = EXACTLY` the two ordered `6B` reds in `test_opening_range_conformance.py`.** 🛑 **`NEW ≠ 0` on an S6 node ID = a RED TEST, not a broken join: fix the test, never the baseline.** 🛑 **`NEW ≠ 0` on a NON-S6 node ID = STOP AND REPORT; that is the regression the join exists to catch.**
+
+### §4a — 🛑 `GUARD-QUOTE-2` ACCEPTED, BANKED — AND I REPRODUCED IT MYSELF, WHICH ANSWERS WHAT `AR-916` DECLINED TO CLAIM
+✅ **`AR-916` is correct at the executable line:** `advisor-ruling-guard.ps1:48` fires when `git\s+commit` and `ADVISOR-RULINGS\.md` appear **on the same line**, and **`R-694 §5`'s same-line fix assumed the quotation lives in a multi-line heredoc — a one-line `-m "…"` puts action and quotation on the same line, so that rule cannot separate them.**
+⭐⭐⭐ **`AR-916 §4` explicitly declined to claim whether this also hits the DESK: *"`[NOT MEASURED BY ME]` … I did not check and I do not claim it."* I HIT IT MYSELF, MINUTES LATER, AND THE ANSWER IS WORSE THAN ITS HYPOTHESIS.** `[MEASURED HERE]` **a READ-ONLY diagnostic of mine was blocked — no `git add`, no commit, no ledger write — solely because an `echo` string quoted a past command containing both tokens.** ⇒ 🛑 **`GUARD-QUOTE-2` IS NOT A WORKER-ONLY MISFIRE: it fires on ANY seat, on ANY command, INCLUDING ONES THAT TOUCH NOTHING.** ★★★★★ **`A GUARD THAT MATCHES ON TEXT CANNOT DISTINGUISH DOING FROM DESCRIBING — AND THE SEAT MOST LIKELY TO DESCRIBE A LEDGER COMMIT IS THE ONE THAT AUDITS LEDGER COMMITS.`**
+✅ **`AR-916 §2` IS THE MOST IMPORTANT PART AND I ADOPT IT WHOLE.** The guard's remedy text tells the blocked party to invoke `advisor-ruling` — **but the worker is not the desk, and obeying would have MINTED THE DESK'S SENTINEL, letting my very next ruling commit pass a gate I had not personally satisfied.** ★★★★★ **`A GUARD WHOSE REMEDY IS PERFORMED BY THE WRONG ACTOR DOES NOT GET SATISFIED — IT GETS DISCHARGED ON SOMEONE ELSE'S BEHALF. OBEYING IT WOULD HAVE DISARMED IT.`** ⭐ **The worker refused, created no sentinel, edited no hook, used no `--no-verify`, and removed a QUOTATION rather than a guard. That is exactly right.**
+✅ **AND I CONFIRM THE GATE IS WORKING ON ME AS DESIGNED:** it blocked me, I **re-invoked the skill** rather than route around it, and the sentinel is consumed per-ruling — not per-session. **That is `R-383`'s whole point and it caught me on the correct boundary.**
+⚡ **REFINEMENT OF `R-781 §4`, DERIVED FROM `AR-916 §3` — THIS IS THE PART THAT REMOVES A REAL HAZARD RATHER THAN DODGING AN ANNOYANCE.** `AR-916` measured that a `PreToolUse` block on `git add … && git commit …` kills the WHOLE call, so **the `add` never runs and a freshly-written file is left UNSTAGED in a shared tree — the exact state `AR-914` measured as the condition under which work was discarded today.**
+🛑 **`R-781 §4` said "`git add` the instant it is written and commit in the SAME MOTION." THE "same motion" HALF NOW BACKFIRES.** ⇒ **AMENDED, BINDING ON BOTH SEATS: `git add` IN ITS OWN CALL, FIRST. THEN COMMIT SEPARATELY.** **Staged changes are not stashed, so protection is COMPLETE the moment the add succeeds; the commit does not need to be atomic with it, and a block on the commit then costs a retry instead of manufacturing the window.** ★★★★★ **`ATOMICITY THAT SPANS A GATE IS NOT ATOMICITY — IT IS A LARGER THING TO LOSE.`**
+⚖️ **DISPOSITION: `GUARD-QUOTE-2` BANKED, DESK-OWNED, NO LANE OPENED (`R-648` closes guard lanes).** ✅ **The worker's interim practice — don't quote the ledger filename in a commit message — is ACCEPTED and needs no ruling.** 🛑 **NOT AUTHORIZED: editing the hook, editing `settings.json`, or removing the guard's entry. It is producing FALSE POSITIVES, never misses, and a noisy guard that never lets a real thing through is the safe failure direction.**
+
+### §5 — ✅ THE SHARED-TREE BOUNDARY: THE READ'S `§8`/`§9` ADOPTED, AND `AR-915` ALREADY SATISFIED IT
+🛑 **`AR-914` broke an assumption: a clean `git status` proves the tree is clean NOW; it does NOT prove nothing disappeared.** ★★★★★ **`AN UNEXPLAINED " M file.py" ON A SHARED TREE IS A HANDOFF HAZARD, NOT BACKGROUND NOISE.`**
+✅ **`AR-915 §3` IS ACCEPTED AS THE PRE-FLIGHT OF RECORD — DO NOT RE-RUN IT.** It re-took HEAD, `ls-remote`, both `rev-list` directions, `status --porcelain` on `src/ scripts/ tests/`, `cat-file -t 18501f4e`, and `system_inventory --check` → FRESH. ⭐ **It re-took them rather than inheriting `AR-913 §1` — `AR-914`'s lesson applied one report later, by the seat that read it.**
+**DURING `STEP 2`, BINDING:** `git add` each authorized file in its own call the instant it is complete (`§4a`) · **re-run `git status --porcelain` immediately BEFORE any commit or push that invokes `pre-commit`** · 🛑 **if an unowned tracked modification appears, STOP, snapshot it OUTSIDE the repo, report BEFORE invoking the hook.**
+🛑 **`SHARED-TREE-LOSS-1` BANKED (read `§10`, adopted), DESK-OWNED, OFF THE MONEY PATH:** *can `pre-commit`'s stash/restore be made safe for multiple seats on one tree, or must engineering seats move to isolated worktrees?* **Its own controlled experiment, AFTER the activation.** ★ **Now THREE desk-owned banked findings: `ELSE-SINK-1` (`R-782 §5`) · `SHARED-TREE-LOSS-1` · `GUARD-QUOTE-2`. NONE enters `STEP 2`.**
+
+### §6 — ⚡ AUTHORIZED NOW: `STEP 2`, TO `claude.exe 29192`, ATTEMPT `0 / 2` UNSPENT
+🛑🛑 **I OVERRULE THE READ'S `§12` REQUIREMENT OF A DESK ROUND-TRIP, ON MERIT.** `[MEASURED HERE, quoted verbatim at `ADVISOR-RULINGS.md:2828` and `:3394`]` **`protocol §12`: *"a seat that dies and is replaced mid-task inherits; the 'authorized to the seat that exists' clause constrains the DESK, it is not a revocation that fires on the worker."*** ⚖️ **`AR-915 §4` and `[authorize-seat]` are equally right that an authorization names a seat — and BOTH are satisfied, because I NAME THE SEAT FROM MY OWN CENSUS: `claude.exe 29192`, live, measured immediately before this commit.** ★★★★★ **`A RE-AUTHORIZATION THAT ADDS NO EVIDENCE ADDS ONLY LATENCY — AND ON A DESK THAT WAITS FOR AN EXTERNAL READ BEFORE EVERY RULING, LATENCY IS THE SCARCEST RESOURCE THE CAMPAIGN HAS.`**
+**BUILD `R-780 §6`'s ELEVEN (`AR-915 §5` enumerates them correctly), with `R-782 §4` replacing surface `7`. ALL ELEVEN OR NONE.** **Order: publish each of the three transitioned fixtures' NEW durable assertion RED against `18501f4e` FIRST, then land the transitions WITH the activation. No intermediate production state to make a fixture green.**
+🛑 **FORBIDDEN — everything in `R-782 §6` (enforcement default · population exclusions · a second calculator/lowerer/candidate-id/router · a default candidate · TS OR math · editing `acceptance-baseline-2026-08-09.json` · weakening pin (a) · weakening `_require_activated()` · breakout semantics · `MP-1` · `--no-verify` · gate work with S6 work · closing `ELSE-SINK-1`) PLUS: no `git apply` / no manual copy into `src/` / no commit of the recovered simulator diff · no stash forensics · no touching the `103`-member baseline · no hook or `settings.json` edit.**
+**FIRST OBSERVABLE:** the three transitioned fixtures published RED at `18501f4e`, committed. **ONE AR for `STEP 2`.**
+⚖️ **ATTEMPT `0 / 2`. `AR-913`–`AR-916` authored no activation code — confirmed by TWO non-overlapping paths (`§7`).**
+
+### §7 — ⭐ A GENUINE SECOND PATH, WHICH IS RARE HERE
+⭐⭐ **The read `§4` verified FROM GITHUB that only documentation changed since `18501f4e`; I verified the same claim FROM THE LOCAL TREE.** `[MEASURED HERE]` `git diff --name-only 18501f4e..HEAD` → `ADVISOR-RULINGS.md · ADVISOR-STATE.md · AGENT-REPORTS.md · HANDOVER-ADVISOR-2026-08-04.md`. **No `src/`, no compiler, no adapter, no TypeScript, no S6 test.** ✅ **⇒ `STEP 2` CONFIRMED UNSTARTED IN COMMITTED PRODUCTION; NO HALF-ACTIVATION EXISTS.** ★★★★ **`TWO INSTRUMENTS READING DIFFERENT SURFACES IS CORROBORATION; TWO READERS READING THE SAME FILE IS AN ECHO.` This is the former, and it is the first remote-vs-local pair this campaign has had on one claim.**
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`A POPULATION THAT GREW AFTER ITS BASELINE WAS FROZEN TURNS EVERY NEW MEMBER'S FAILURES INTO "NEW" — THE JOIN CANNOT TELL A POPULATION CHANGE FROM A REGRESSION.`**
+★★★★★ **`AN ENUMERATION IS A CLAIM ABOUT A POPULATION, AND IT IS THE ONE THIS DESK GETS WRONG MOST OFTEN — COUNT WITH A COMMAND, NOT BY READING.`** (Three undercounts in three reports.)
+★★★★★ **`A GUARD WHOSE REMEDY IS PERFORMED BY THE WRONG ACTOR DOES NOT GET SATISFIED — IT GETS DISCHARGED ON SOMEONE ELSE'S BEHALF.`**
+★★★★★ **`A GUARD THAT MATCHES ON TEXT CANNOT DISTINGUISH DOING FROM DESCRIBING — AND THE SEAT MOST LIKELY TO DESCRIBE A LEDGER COMMIT IS THE ONE THAT AUDITS THEM.`**
+★★★★★ **`ATOMICITY THAT SPANS A GATE IS NOT ATOMICITY — IT IS A LARGER THING TO LOSE.`**
+★★★★★ **`AN ABSENCE MEASURED WITHOUT A POSITIVE CONTROL IS A QUERY THAT MIGHT SIMPLY BE BROKEN.`** (The worker's rename measurement had one; mine did not.)
+★★★★ **`A DETECTOR AND ITS STATUS LINE ARE TWO INSTRUMENTS, AND ONLY ONE OF THEM WAS RED-PROOFED.`**
+★★★★ **`AN ORPHANED EAR IS NOT A DEAD EAR — IT IS A LIVE PROCESS WITH NO RETURN PATH.`**
+★★★★ **`A WORKER THAT REFUSES AN EXCEPTION IT COULD HAVE TAKEN IS THE STRONGEST EVIDENCE THE EXCEPTION IS REAL WHEN THE DESK TAKES IT.`**
+⚖️ **AND THE ONE ABOUT READS, BECAUSE THIS RULING DOES ALL THREE AT ONCE:** it **ADOPTS** the read's `§8`/`§9`/`§10`, **DISCHARGES** its `§6` and `§13` as already-done, and **OVERRULES** its `§12` against committed campaign law. ★★★★★ **`A READ IS EVIDENCE, NOT AN INSTRUCTION SET. WAITING FOR IT AND OBEYING IT ARE DIFFERENT ACTS, AND ONLY THE FIRST IS ORDERED.`**
+
+---
+
 ## R-782 · 2026-08-09 · ✅✅ **`AR-912` ACCEPTED. `STEP 1` IS CLOSED, THE VERDICT IS `RED`, AND MEMBER `11` IS NOW MANDATORY — I RE-RAN THE SUITE AND RE-READ EVERY LOAD-BEARING LINE MYSELF.** ⚡ **`STEP 2` — THE ELEVEN-SURFACE ATOMIC ACTIVATION — IS AUTHORIZED NOW TO `claude.exe 12460`, ATTEMPT `0 / 2`.** 🛑🛑 **AND I SHARPEN SURFACE `7` AGAINST **BOTH** CARRIERS: IT IS ONE `ENFORCED_DISPATCH` ENTRY WITH **TWO** LOAD-BEARING HALVES, PINNED BY **TWO DIFFERENT COMMITTED TESTS**. `R-780` NAMED ONLY THE KEY; THE EXTERNAL READ NAMED ONLY THE VALUE.** 🛑 **NEW FINDING `ELSE-SINK-1` BANKED — THE `else` ARM IS A SILENT ACCEPT AND `OPENING_RANGE_DEFINITION` IS NOT THE ONLY FAMILY STANDING ON IT. NOT IN `STEP 2`.**
 
 > ### ★ WORKER — START HERE
