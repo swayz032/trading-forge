@@ -2,40 +2,56 @@
 
 Status: **PLATFORM PARITY / RESEARCH ONLY**. Not live-decision-support approved.
 
-FX Replay's current MTF documentation says `mtf.timeframe()` should be called once in `init()` and warns that the MTF API is beta. Because Slumdawg needs 15m entry/TP structure plus 4H/D/W context, the robust FXR implementation is a bundle rather than an undocumented multi-MTF hack.
+The FXR adapter keeps higher-timeframe responsibilities separated instead of inventing unsupported cross-timeframe shortcuts. The bundle must reproduce the same semantic objects as the canonical Slumdawg reference engine, but full one-box parity is not claimed until cross-script synchronization is certified.
 
 ## Load on a 5-minute MNQ/NQ replay chart
 
-1. `slumdawg_v2_entry_tp_15m.fxr.js`
-   - 15m CURRENT MOVE using persistent BOS state
+1. `slumdawg_v2_entry_tp_15m_v0_2.fxr.js`
+   - persistent 15m CURRENT MOVE / BOS state
    - 🟢 LONG / 🔴 SHORT Entry Zones
-   - 15m primary + dense 5m fallback reaction-shelf TP search
+   - directional reaction-history retention: above-entry and below-entry shelves cannot consume each other's history budget
+   - deeper 15m primary + dense 5m body/turn fallback reaction-shelf TP search
    - 🎯 TP1/TP2/TP3 lines when qualified
    - standard reference/BREAK/PUSH state foundation
-   - research-only strong-engulf momentum candidate marker
 
-2. `slumdawg_v2_context_4h.fxr.js`
-   - persistent 4H protected-structure context
-   - draws the protected HIGH/LOW with BIG-DIRECTION wording
-   - does **not** fake Daily confirmation
+2. `slumdawg_v2_macro_daily_v0_2.fxr.js`
+   - **macro BIG DIRECTION authority** for the FXR bundle
+   - persistent Daily higher-high/higher-low or lower-high/lower-low structure
+   - large lower-timeframe pullbacks do not flip macro direction by themselves
+   - draws the protected macro swing level with `📈/📉 BIG DIRECTION` wording
 
-3. Existing Daily helper
+3. `slumdawg_v2_context_4h.fxr.js`
+   - retained only as a 4H protected-structure research/corroboration helper
+   - it is **not** the macro authority once the Daily helper is loaded
+   - do not treat a strong 4H pullback as a macro reversal merely because the helper turns locally bullish
+
+4. Existing Daily key-level helper
    - `slumdawg_daily_levels_v0_1.fxr.js`
+   - PDH/PDL only; distinct from the Daily macro-direction helper
 
-4. Existing Weekly helper
+5. Existing Weekly key-level helper
    - `slumdawg_weekly_levels_v0_1.fxr.js`
 
 ## Important parity limitation
 
-The current documented FXR API does not provide a supported cross-indicator shared-state contract and documents one MTF timeframe request per indicator. Therefore a single FXR script cannot yet combine 4H + Daily + 15m into the exact TradingView V2 `🤖 SLUMDAWG TRADERS` box without either:
+The current bundle has separate scripts for Daily macro state, 4H corroboration, 15m current move/Entry/TP, and D/W key levels. Until a supported and tested cross-script state-sharing mechanism is available, FX Replay cannot honestly render the exact combined TradingView `🤖 SLUMDAWG TRADERS` panel from one canonical shared in-platform state.
 
-- violating documented MTF guidance, or
-- silently approximating higher-timeframe state.
+Therefore:
 
-Both are forbidden by the V2 spec.
+- Entry/TP geometry is directly testable in FXR.
+- Daily macro BIG DIRECTION is directly testable in FXR.
+- The human can compare macro state + current move across the loaded bundle.
+- Full one-panel Python/Pine/FXR parity remains a certification blocker, not something to fake.
 
-So this bundle is **FXR implementation-ready and testable**, but **full canonical BIG-DIRECTION/panel parity remains blocked on an FXR platform capability or an explicitly certified cross-script synchronization mechanism**. Entry/TP geometry must still be compared against the same golden fixtures used by Python/Pine.
+## Golden regression from 2026-08-10
+
+The FXR bundle must preserve the same semantics as the TradingView fixture:
+
+- a strong bullish 4H rally may still be an `UP PULLBACK` inside `BIG DIRECTION = DOWN`;
+- after bearish resumption, CURRENT MOVE may become `DOWN WITH DIRECTION`;
+- a short Entry Zone near the reviewed ~29,719 structure must not produce an overlapping TP around ~29,714;
+- deeper approved reaction shelves around the reviewed TP1/TP2 areas must not disappear merely because recent irrelevant reactions filled a shared candidate cap.
 
 ## No hidden fallback
 
-If TP1/TP2/TP3 cannot be produced from the supported 15m + chart-5m lanes, do not invent a target. Add a golden case and improve the canonical detector. 1H/4H target-lane parity is currently richer in Pine than in this FXR adapter because the FXR entry script has already used its one MTF request for 15m.
+If a target cannot be produced after the supported 15m + chart-5m search, do not invent one. The adapter must expose the missing-data/detector limitation during parity review and the fixture must remain failing until the supported detector is improved.
