@@ -13,11 +13,37 @@ moment and the correct one.
 
 WHAT IT DOES
 ------------
-1. If the push contains no changes under src/ or scripts/, do nothing (exit 0).
-   A docs-only push (e.g. a ruling) cannot change code reachability.
-2. Otherwise ASK THE GENERATOR whether the map is stale, by running
-   `system_inventory.py --check` and branching on its exit code.  Only when the
-   checker says STALE do we regenerate and block.
+ALWAYS ASK THE GENERATOR whether the map is stale, by running
+`system_inventory.py --check` and branching on its exit code.  Only when the
+checker says STALE do we regenerate and block.
+
+WHY THERE IS NO LONGER A PATH-PREFILTER  (GATE-LIM-2, R-789 §7, 2026-08-10)
+---------------------------------------------------------------------------
+This gate used to skip entirely unless the pushed diff touched `src/` or
+`scripts/`.  That prefilter was a SECOND, HAND-MAINTAINED COPY of the
+generator's input population, and it had already diverged:
+
+    system_inventory.py:69   REFERENCE_ROOTS = ["src", "scripts", "e2e", "tests"]
+    inventory_freshness_gate.py (old) WATCHED = ("src/", "scripts/")
+
+[MEASURED, AR-927] a commit touching ONLY `tests/` left `--check` reporting
+STALE while this gate printed "no src/ or scripts/ change in this push -
+skipped" and exited 0 -- i.e. it waved a stale map straight through.  `tests/`
+holds 35 py/ts files and the map cites those rows.
+
+The repair is to DELETE the prefilter, not to widen it.  Widening it would
+re-create the same divergence the next time REFERENCE_ROOTS gains a member,
+which is the INV-2 defect this file's own docstring already argues against
+below: `FIXING A DIVERGENCE BY COPYING THE CORRECT SIDE PRESERVES THE
+DIVERGENCE.`  THE GENERATOR DEFINES ITS OWN INPUTS; THIS GATE ONLY DECIDES WHAT
+TO DO ABOUT THE ANSWER.
+
+    `A GATE THAT DECIDES WHETHER TO ASK, USING A COPY OF THE ANSWERER'S OWN
+     RULES, IS TWO INSTRUMENTS PRETENDING TO BE ONE.`
+
+COST, MEASURED AND ACCEPTED: `--check` runs the generator, ~15.3s, so every
+armed push now pays it -- including docs-only pushes.  R-789 §7 chose that
+over a skip that cannot be trusted.
 
 WHY IT DELEGATES INSTEAD OF COMPARING BYTES  (R-780 STEP 0, 2026-08-09)
 -----------------------------------------------------------------------
@@ -76,7 +102,6 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 MAP = REPO / "docs" / "designs" / "SYSTEM-INVENTORY.md"
 GEN = REPO / "scripts" / "system_inventory.py"
-WATCHED = ("src/", "scripts/")
 
 STALE_GUIDANCE = """
   PUSH BLOCKED - docs/designs/SYSTEM-INVENTORY.md was STALE.
@@ -92,25 +117,6 @@ STALE_GUIDANCE = """
 """
 
 
-def _git(*args: str) -> str:
-    return subprocess.run(
-        ["git", *args], cwd=REPO, capture_output=True, text=True
-    ).stdout
-
-
-def _code_changed_vs_upstream() -> bool:
-    """True if anything under a WATCHED prefix differs from the upstream tip.
-
-    Falls back to True (run the gate) when upstream cannot be resolved -- a gate
-    that silently skips because it could not answer is a gate with no path to red.
-    """
-    upstream = _git("rev-parse", "--abbrev-ref", "@{u}").strip()
-    if not upstream:
-        return True
-    names = _git("diff", "--name-only", f"{upstream}..HEAD").splitlines()
-    return any(n.startswith(WATCHED) for n in names)
-
-
 def _run_generator(*extra: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(GEN), *extra], cwd=REPO, capture_output=True, text=True
@@ -121,10 +127,6 @@ def main() -> int:
     if not GEN.is_file():
         print(f"inventory-freshness: generator missing at {GEN}", file=sys.stderr)
         return 1
-
-    if not _code_changed_vs_upstream():
-        print("inventory-freshness: no src/ or scripts/ change in this push - skipped")
-        return 0
 
     check = _run_generator("--check")
 
