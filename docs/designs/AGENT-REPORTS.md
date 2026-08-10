@@ -4,6 +4,61 @@
 
 ---
 
+## AR-946 · 2026-08-10 · 🛑🛑🛑 **`F-R2-1` REPRODUCED AGAINST THE OLD INSTRUMENT, IN AN ISOLATED WORKTREE — AND IT IS WORSE THAN "IT CAN CERTIFY A RUN THAT NEVER HAPPENED": THE OUTPUT OF A REAL RUN AND OF NO RUN AT ALL ARE `diff`-IDENTICAL.** ✅ **`STOP R-799 §8[1]` DOES NOT FIRE.** 🛑 **BUT I CANNOT DELIVER THE RED IN THE LETTER `R-799 §7` ASKS FOR, AND THE REASON IS A CONFLICT BETWEEN TWO BINDING INSTRUCTIONS — I AM REPORTING IT, NOT PICKING ONE SILENTLY.** ⚖️ **`R3` `0 / 5` — RED MEASURED, NOT YET COMMITTED AS A TEST.**
+
+**SEAT `claude.exe 26036`. CAMPAIGN TREE `HEAD f7ed5682`, CLEAN. ISOLATED WORKTREE `C:\Users\tonio\Projects\wt-r3-accept5-20260810` @ `f7ed5682` detached — `[MEASURED HERE]` `git rev-parse --show-toplevel` returns the worktree itself, so `[session-cwd-decoy-git]` did not fire. ALL destructive work below ran THERE, never in the campaign tree (`R-800 §8 STOP [7]`).**
+
+### §1 — 🛑 THE CRITICAL, REPRODUCED. THE SUBPROCESS EXIT IS PROVEN, NOT ASSUMED.
+```
+[MEASURED HERE, isolated worktree, real scripts/acceptance_runner.py --run, unpiped]
+
+RUN 1 — GOOD RUN, artifacts minted
+  NOTE:[3] feeder ... (pytest exit 1)      NOTE:[4] 2417/2417/31/5/2
+  [SELF-CHECK] junitxml cases=2417 failures=31        ACCEPTANCE: REFUSED
+  acceptance-run.json sha256 3cb3ae35…    acceptance-run.xml sha256 d9a92e00…
+
+RUN 2 — PYTEST_ADDOPTS="--this-option-does-not-exist", i.e. pytest CANNOT START
+  NOTE:[3] feeder ... (pytest exit 1)      NOTE:[4] 2417/2417/31/5/2
+  [SELF-CHECK] junitxml cases=2417 failures=31        ACCEPTANCE: REFUSED
+  sha256sum -c  ->  acceptance-run.json: OK   acceptance-run.xml: OK   (UNCHANGED)
+
+POSITIVE CONTROL — what pytest ACTUALLY did under that env:
+  python -m pytest … -> REAL EXIT 4  (usage error: FAILED BEFORE COLLECTION)
+
+diff(RUN 1 verdict lines, RUN 2 verdict lines)  ->  EMPTY
+```
+🛑 **THE CONTRADICTION: the runner REPORTED `pytest exit 1`, `2417` collected, `31` failures. The subprocess ACTUALLY exited `4` and collected NOTHING.** ⇒ **`scripts/acceptance_runner.py:439`'s bare `subprocess.run(cmd, cwd=REPO)` discarded a `4`, and `:443`'s `json.loads(Path(run_json).read_text(...))` then scored the PREVIOUS run's file.**
+⭐ **AND THE CROSS-CHECK CANNOT SAVE IT, EXACTLY AS `R-799 §2` PREDICTED: both feeders are stale TOGETHER, so `[SELF-CHECK]` compared the old JSON against the old XML and reported AGREEMENT.** ★★★★★ **`A CROSS-CHECK BETWEEN TWO FEEDERS THAT ARE STALE FOR THE SAME REASON IS NOT A SECOND PATH — IT IS ONE PATH READ TWICE.`**
+✅ **STOP `R-799 §8[1]` DOES NOT FIRE — the stale-artifact RED IS reproducible against the OLD instrument. `F-R2-1` is exactly what the grade said it was.** ⚖️ **I state the bound honestly: I did NOT re-derive the grader's *"both feeders must go stale together"* claim independently — I OBSERVED it, which is the same thing arriving by a different road.**
+
+### §2 — 🛑🛑 THE CONFLICT I WILL NOT RESOLVE SILENTLY: `PASS` IS UNREACHABLE IN AN ISOLATED WORKTREE
+🛑 **`R-799 §7` REQUIRES: *"demonstrate the OLD instrument emits `ACCEPTANCE: PASS` from stale evidence. THAT is the permanent RED."*** 🛑 **`R-800 §3` + `§8 STOP [7]` REQUIRE: destructive arms run in an ISOLATED WORKTREE, never the shared campaign tree.** ⇒ **THESE TWO CANNOT BOTH BE SATISFIED TODAY, and the reason is measured:**
+```
+[MEASURED HERE] the isolated (FRESH, CONFORMING) worktree REFUSES for TWO reasons that
+have NOTHING to do with freshness — they fire on the GOOD run too:
+  1. BASELINE INTEGRITY FAILURE: raw sha 5e79f72c… vs approved a9f70e2e…
+     == F-ACCEPT5-8 EXACTLY (R-796 §5): the repo DECLARES `*.json text eol=lf`, so the
+        old anchor passes ONLY in the non-conforming campaign worktree that minted it.
+        AR-939 already measured this same 5e79f72c… in a conforming checkout.
+  2. MISSING AUTHORIZED DISPOSITION CHANGE: 2 tests authorized to have stopped being
+     SKIP are SKIP right now == AR-936's G-3, the LOCAL-ONLY skip artifact, absent from
+     any fresh checkout by construction.
+```
+⇒ ★★★★★ **`THE INSTRUMENT CANNOT EMIT "PASS" ANYWHERE IT IS SAFE TO BREAK IT, AND CANNOT BE SAFELY BROKEN ANYWHERE IT EMITS "PASS."`** ⚖️ **Both blockers are ALREADY-RULED findings, and lane `K`'s dual-anchor repair for `[1]` exists at `18b46161` on `grade/accept5-instrument-r2-20260810` — which `R-799 §8` FORBIDS me to merge or rebase.**
+✅ **MY RECOMMENDATION, AND I BELIEVE IT IS STRICTLY STRONGER THAN THE LETTER ASKED FOR — but it is a change to a ruling's stated acceptance criterion, so it is the desk's call, not mine:** **make the permanent RED assert STALE CONSUMPTION rather than the word `PASS`** —
+`[a]` the runner reports a `pytest_exitstatus` that DISAGREES with the subprocess's real exit · `[b]` the artifact SHAs are unchanged across the failed run · `[c]` **the full verdict output is `diff`-identical to the prior good run.** 🛑 **`[c]` is the one I would not trade: "it printed PASS" says the gate was wrong once; "its output is byte-identical whether or not the tests ran" says the gate is not connected to the tree at all.**
+⚠️ **I have NOT written the RED to either shape yet. I will not encode an acceptance criterion the desk did not choose** (`A RE-READ AFTER AN UNWANTED ANSWER IS A GOALPOST WITH A CITATION` cuts against me here, so I am asking BEFORE building, per `worker-execution §0.-0.5`).
+
+### §3 — ⚖️ WHAT THIS DOES **NOT** SHOW
+🛑 **I did NOT demonstrate a false `PASS`.** In this tree the verdict is `REFUSED` both times. **Anyone quoting `§1` must quote that the verdict was `REFUSED`, not `PASS`.**
+🛑 **I have NOT yet run red-proofs `R1`–`R7`, NOT touched `R3-2`…`R3-5`, and NOT written one line of the fresh-run protocol.** **`R3` is `0 / 5`.**
+✅ **NO PRODUCTION FILE WAS MUTATED. The only lever used was an ENVIRONMENT VARIABLE (`PYTEST_ADDOPTS`) in a throwaway worktree** — `[MEASURED HERE]` campaign tree `git status` CLEAN at `f7ed5682` throughout. **`MUTATION-HARNESS-ATOMICITY-1` honoured, and cheaply: the cheapest destructive arm is the one that never edits a file.**
+⚠️ **AND A RULING-WORDING MISMATCH THE DESK SHOULD SETTLE WHILE IT IS CHEAP: `R-799 §2` specifies the refusal string `ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID`; `R-799 §7` describes the same thing as `REFUSED — INVALID/FRESH RUN NOT PRODUCED`. I intend `§2`'s, as the carried-verbatim protocol, and say so rather than pick one quietly.**
+
+**RECOMMENDATION: BLOCKED on `§2`'s one decision — and ONLY on the RED's SHAPE. Everything else in `R3-1` is unblocked and I am not idle on it.** ★★★ **`A CHECK THAT CAN STOP THE LANE IS CHEAPER BEFORE THE LANE THAN AFTER IT` — and this one would have been discovered only after the RED was written and committed.**
+
+---
+
 ## AR-945 · 2026-08-10 · ⏱️ **START-RECEIPT — `R3` STARTED, `0 / 5`. `R-800`'s WORD RECEIVED; NO FURTHER ASK.** ✅ **`F-R2-1` RE-CONFIRMED BY ME AT THE EXECUTABLE LINE BEFORE PLANNING AGAINST IT.** 🛑 **`MUTATION-HARNESS-ATOMICITY-1` IS BINDING FROM MY OWN `AR-944 §3`, AND I AM APPLYING IT TO THE LANE THAT ORDERED IT.** ⚖️ **ONE RULING CORRECTION ADOPTED AGAINST MY OWN WORDING.**
 
 **SEAT `claude.exe 26036`. TREE `wt-h1-wave4-20260712`, `HEAD 29b584ad`. LANE `R3`, five items, fan-in `1`. NOT GRAPH-SCHEDULED.**
