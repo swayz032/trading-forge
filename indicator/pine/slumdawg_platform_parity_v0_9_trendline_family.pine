@@ -118,6 +118,7 @@ plot(pwl, "PWL data", display = display.none)
 // -----------------------------------------------------------------------------
 // CONFIRMED SWING PACKS. Daily carries six same-side pivots; lower TFs carry four.
 // Combined request tuple count remains under Pine's request tuple-element ceiling.
+// Pine tuple return expressions are intentionally kept on one physical line here.
 // -----------------------------------------------------------------------------
 f_pack6() =>
     float pl = ta.pivotlow(low, 2, 2)
@@ -126,20 +127,7 @@ f_pack6() =>
     bool hasPh = not na(ph)
     int plt = hasPl ? time[2] : na
     int pht = hasPh ? time[2] : na
-    [
-      ta.valuewhen(hasPl, plt, 5), ta.valuewhen(hasPl, pl, 5),
-      ta.valuewhen(hasPl, plt, 4), ta.valuewhen(hasPl, pl, 4),
-      ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3),
-      ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2),
-      ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1),
-      ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0),
-      ta.valuewhen(hasPh, pht, 5), ta.valuewhen(hasPh, ph, 5),
-      ta.valuewhen(hasPh, pht, 4), ta.valuewhen(hasPh, ph, 4),
-      ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3),
-      ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2),
-      ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1),
-      ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)
-    ]
+    [ta.valuewhen(hasPl, plt, 5), ta.valuewhen(hasPl, pl, 5), ta.valuewhen(hasPl, plt, 4), ta.valuewhen(hasPl, pl, 4), ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3), ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2), ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1), ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0), ta.valuewhen(hasPh, pht, 5), ta.valuewhen(hasPh, ph, 5), ta.valuewhen(hasPh, pht, 4), ta.valuewhen(hasPh, ph, 4), ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3), ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2), ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1), ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)]
 
 f_pack4() =>
     float pl = ta.pivotlow(low, 2, 2)
@@ -148,16 +136,7 @@ f_pack4() =>
     bool hasPh = not na(ph)
     int plt = hasPl ? time[2] : na
     int pht = hasPh ? time[2] : na
-    [
-      ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3),
-      ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2),
-      ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1),
-      ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0),
-      ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3),
-      ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2),
-      ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1),
-      ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)
-    ]
+    [ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3), ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2), ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1), ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0), ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3), ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2), ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1), ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)]
 
 [dlt5, dlp5, dlt4, dlp4, dlt3, dlp3, dlt2, dlp2, dlt1, dlp1, dlt0, dlp0, dht5, dhp5, dht4, dhp4, dht3, dhp3, dht2, dhp2, dht1, dhp1, dht0, dhp0] = request.security(syminfo.tickerid, "D", f_pack6(), lookahead = barmerge.lookahead_off)
 [h4lt3, h4lp3, h4lt2, h4lp2, h4lt1, h4lp1, h4lt0, h4lp0, h4ht3, h4hp3, h4ht2, h4hp2, h4ht1, h4hp1, h4ht0, h4hp0] = request.security(syminfo.tickerid, "240", f_pack4(), lookahead = barmerge.lookahead_off)
@@ -497,7 +476,7 @@ if boardInitialized
     m5GViolated := nextM5GViolated
     [nextM5RBreach, nextM5RViolated] = f_violation(m5RedValid, false, m5RAT, m5RAP, m5RBT, m5RBP, newM5SourceClose, m5SourceCloseTime, m5SourceClose, m5RBreach, m5RViolated)
     m5RBreach := nextM5RBreach
-    m5RViolated := nextM5RViolated
+    m5RViolated := nextM5Violated
 
 // -----------------------------------------------------------------------------
 // SELECTIVE REPAIR EVENTS. Valid lines are never assigned inside this block.
