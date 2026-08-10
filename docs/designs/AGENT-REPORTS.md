@@ -4,6 +4,82 @@
 
 ---
 
+## AR-936 · 2026-08-10 · ✅ **LANE `G` DELIVERED — `F-ACCEPT5-7` CLOSED, MUTATION `10` BITES NAMING `MISSING AUTHORIZED DISPOSITION CHANGE`, CAPTION CORRECTED.** 🛑🛑🛑 **`G-3` FIRES STOP `R-795 §7[3]`: THE SKIP ARTIFACT IS **LOCAL-ONLY** — AND IT IS THE SOLE CAUSE OF **BOTH** AUTHORIZED UNSKIPS.** ✅ **LANE `H` DELIVERED — TWELVE OBLIGATIONS `A`–`L` COMMITTED RED, PLUS `RECEIPT-CACHE-RECOMPUTE-1` **GREEN**, WHICH GIVES `AR-935`'s SELF-DISCLOSED `M2` GAP ITS WITNESS.** ⚖️ **I ACCEPT THE `§3` CAUSAL REFUTATION IN FULL — MY MECHANISM WAS WRONG.** ⚡ **AND A MEASURED CONSEQUENCE THE DESK MUST HAVE BEFORE IT PINS THE REGRADE (`§5`).** ⚖️ **FAN-IN `2 / 2`.**
+
+**SEAT `claude.exe 3136`. CAMPAIGN TREE `HEAD e451385b` + this report. LANE `G` attempt `1 / 2` · LANE `H` attempt `1 / 2`. NO TypeScript · NO `/api/backtests` · NO DB · NO money-path wiring · SEAL **NOT** RE-PINNED · ARTIFACT **NOT** COMMITTED.**
+
+### §1 — ⚖️ I WAS WRONG ABOUT THE MECHANISM, AND THE CORRECTION IS BETTER THAN MY STORY
+🛑 **`AR-935 §4` said `08062e12` is "pre-`S6`-activation" and that "`S6` activation legitimately RE-ENABLED two tests". `R-795 §3` refutes it by a stronger measurement than either document had: `test_spec_family_bindings.py` HAS NOT CHANGED since the pin and both tests already exist there.** ⇒ **NO CODE RE-ENABLED ANYTHING. I inferred a mechanism from a plausible chronology instead of measuring the file.** ★★★★★ **`A CHRONOLOGY THAT FITS IS NOT A MECHANISM — TWO COMMITS BEING ADJACENT IN TIME SAYS NOTHING ABOUT ONE CAUSING THE OTHER.`** ✅ **Accepted without reservation; the desk's third answer is the right one and it changes the repair.**
+
+### §2 — 🛑🛑🛑 `G-3`: THE ANSWER, AND IT FIRES STOP `[3]`
+`[MEASURED HERE — `git cat-file -e HEAD:<path>`, `git ls-files --error-unmatch`, `git check-ignore`, exit codes read DIRECTLY]`:
+```
+GATE 1  test_spec_family_bindings.py:901
+        pytest.skip(f"governed grade unavailable at {path}")
+        path = docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json
+        tracked at HEAD ........ NO          <- NOT IN THE TREE
+        git ls-files ........... untracked
+        git check-ignore ....... no match    <- not even ignored; simply never committed
+        exists on this disk .... YES
+        => LOCAL-ONLY
+
+GATE 2  test_spec_family_bindings.py:914
+        pytest.skip(f"corpus unavailable at {d}")
+        d = docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/
+        tracked files .......... 16    on disk: 16
+        => COMMITTED, deterministic
+```
+🛑🛑 **AND THE ATTRIBUTION, WHICH IS THE PART THAT DECIDES IT:** `[MEASURED HERE]` **BOTH authorized tests call `_governed_split()`** — `test_s6_coverage_6a_re_derives_on_the_governed_population` calls it at its first line and `_corpus_wait_session_rows()` second; `test_s6_dead_17_denominator_stays_retired` calls `_governed_split()` too. ⇒ **THE ENTIRE `DISPOSITION_AUTHORIZED_UNSKIPPED` LIST EXISTS BECAUSE OF ONE UNTRACKED FILE ON ONE DISK.** ⇒ ★★★★★ **`AN ACCEPTANCE GATE WHOSE GREEN DEPENDS ON A FILE THAT IS NOT IN THE REPOSITORY IS NOT PINNING THE THING IT EXISTS TO PIN — IT IS PINNING A LAPTOP.`**
+🛑 **STOP `R-795 §7[3]` FIRES. I did NOT re-pin the seal and I did NOT "fix" it by committing the artifact — both are forbidden and both would launder the state.** ⇒ **`ACCEPT5-ENV-DETERMINISM-1` now has its deciding fact: `LOCAL-ONLY` ⇒ the gate IS machine-dependent, the authorization is a TEMPORARY accommodation, and on a clean box the two tests will SKIP and the new exact-equality check will correctly go RED.** ⚖️ **That is the gate becoming honest, and `R-795 §4` predicted it in advance — it must be EXPECTED in CI, not discovered there.**
+
+### §3 — ✅ `G-1` + `G-2`: THE MIRROR DIRECTION, AND THE ARM THAT PROVES IT
+✅ **`G-1`** `[MEASURED HERE, `acceptance_runner.py`]` — `observed_removed` computed ONCE, then BOTH `observed_removed - authorized` (kept) and **`authorized - observed_removed`** refusing as **`MISSING AUTHORIZED DISPOSITION CHANGE`**. **Repaired for `SKIP` AND `XFAIL`, including the currently-empty `DISPOSITION_AUTHORIZED_UNXFAILED` — an empty list is exactly when a missing check is invisible.** ✅ **Caption corrected: it claimed `BOTH DIRECTIONS` while the authorized subset had one.**
+⭐ **The desk's `§2` finding 3 is the one I should have seen myself: `MISSING AUTHORIZED GONE` at `:570` is the SAME mirror, built for the FAILURE dimension by `R-792`. I wrote the DISPOSITION dimension by reading the repaired code as a template and copied the SHAPE, not the LESSON.** ★★★★★ **`A CLASS CLOSED IN ONE DIMENSION IS NOT CLOSED — THE NEXT DIMENSION COPIES THE SHAPE.`**
+```
+[MEASURED HERE — each arm ALONE, re-scored against the same preserved record, unpiped]
+(10) AUTHORIZED un-skip REVERSES back to SKIP -> exit 1  REFUSED
+     "MISSING AUTHORIZED DISPOSITION CHANGE: 1 test(s) are authorized to have
+      stopped being SKIP but are SKIP right now"
+     collection membership · failure membership · feeder agreement ALL HELD
+     IDENTICAL, so no other arm could take credit.
+(8) PRISTINE .......... exit 0 PASS      (1)-(7),(9) each alone ... all REFUSED
+```
+🛑 **`(9)` DOES NOT SUBSTITUTE FOR `(10)` and the desk was right to forbid it: `(9)` proves an UNAUTHORIZED test may not LEAVE `SKIP`; `(10)` proves an AUTHORIZED one may not RETURN to it. Opposite set directions.**
+✅ **STOP `[2]` DID NOT FIRE: pristine stays GREEN on this box, which is exactly what `R-795 §7[2]` requires — and `§2` explains why it is green here and would not be elsewhere.**
+
+### §4 — ✅ LANE `H`: TWELVE RED, AND ONE GREEN THAT CLOSES MY OWN DISCLOSED GAP
+```
+[MEASURED HERE, unpiped]  12 failed, 1 passed  exit 1
+FAILED  A B C D E F G H I J K L      <- each through a NAMED _api() message
+PASSED  test_receipt_cache_recompute_is_load_bearing_without_any_outer_anchor
+```
+⭐⭐ **THE GREEN ONE IS THE POINT: `AR-935 §1` disclosed that mutation `M2` — deleting the `cache_identity` recompute — broke NO obligation, because the outer anchors covered for it. This arm calls `rehydrate_candidate()` DIRECTLY, with no outer anchors in play, on a WELL-FORMED tamper (swapped to another TAUGHT variant so the `R-738` constructor cannot be what refuses) with both stamped identities left stale.** ⇒ **`ExecutionCandidateReceiptError` raised. The layer IS load-bearing; it was merely never isolated.** ★★★★★ **`AN UNTESTED SECOND LAYER IS A COMMENT` — I said it about my own code, and this is the retraction with evidence.**
+🛑 **`F` AND `G` ARE RED AND THAT IS THE ORDERED OUTCOME (`R-795 §7[4]`).** ✅ **`[PRIOR ART CITED, NOT RE-DATED — `R-793 §4`, this desk first]` the collapse is `spec-onboarding-service.ts:537` `(spec_hash, symbol)` plus `:416-422` tag-array dedupe — APPLICATION-LEVEL, no unique index ⇒ **the eventual repair needs NO MIGRATION**.**
+✅ **`K` keeps the ~120-strategy legacy library OUT OF SCOPE: two receiptless rows for one spec+symbol must still collide. The candidate dimension is ADDITIVE.** ✅ **`L` forbids the default in `R-736`'s own words: never `[0]`, never a timeframe inference, never any other default.**
+✅ **MANIFEST REGENERATED FIRST THIS TIME (`106 → 107`), by the guard's own `_regression_population()`; exactly one member added, zero removed, asserted BEFORE writing. Population guards + `S6` + the receipt contract: `32 passed, exit 0`.** ⚖️ **That is the `AR-935 §2` lesson applied without being told twice.**
+
+### §5 — ⚡ A MEASURED CONSEQUENCE THE DESK NEEDS **BEFORE** IT PINS THE REGRADE
+🛑 **COMMITTING A DELIBERATELY-RED CONTRACT INTO THE CANONICAL POPULATION MAKES THE ACCEPTANCE GATE REFUSE. I measured it rather than leaving it to be discovered:**
+```
+[MEASURED HERE — full population run at e451385b, unpiped]
+[BASELINE] preflight problems .......... 0
+[7/8] NEW failures (by node ID) ........ 12   <- ALL TWELVE are lane H obligations,
+                                               named individually. NOTHING ELSE.
+[7/8] GONE ............................. 2   authorized · UNAUTHORIZED 0 · MISSING 0
+[DISP] sealed SKIP  membership drift ... +0 / -0     <- G-1 stable on the live gate
+[DISP] sealed XFAIL membership drift ... +0 / -0
+ACCEPTANCE: REFUSED          exit 1
+```
+✅ **THE REFUSAL IS CORRECT AND FULLY ATTRIBUTABLE — every NEW failure is a RED obligation I committed on purpose, and the gate names each one.** ⇒ 🛑 **BUT IT MEANS `HEAD` CANNOT PRODUCE AN `ACCEPT-5 PASS` UNTIL THE PERSISTENCE MODULE LANDS.** ⚡ **RECOMMENDATION, and it is a decision only the desk may take: PIN THE `ACCEPT-5` REGRADE AT `a67f0997` — the commit carrying `F-1` + `F-2` + `F-3` + the `F-ACCEPT5-7` equality repair and NOT lane `H`'s reds. `R-795 §7` already forbids grading a moving `HEAD`; this names which commit.** ⚖️ **`[GRADE: the a67f0997 gate PASS is ARTIFACT-SOURCED from the arm-(8) pristine re-score, NOT from a fresh `--run` at that exact commit. If the desk wants it MEASURED before pinning, say so and I will run it.]`**
+
+### §6 — 🛑 STOPS, FORBIDDEN, AND WHAT IS OWED
+**STOPS: `[1]` Mutation `10` DID refuse · `[2]` pristine stayed GREEN on this box · 🛑 `[3]` **FIRED — `§2`, artifact is LOCAL-ONLY; reported, not repaired** · `[4]` `F`/`G` are RED as ordered, so no refutation of `R-793 §4` · `[5]` no `S6` suite reddened · `[6]` lane `G` needed no second redesign.**
+🛑 **NOT DONE, AS FORBIDDEN:** no TypeScript production edit · `findExistingOnboardedRow` untouched · `/api/backtests` untouched · no DB schema or SQL column · receipt NOT inside `compiled_spec`/`SpecArtifact` · no `dataclasses.asdict()` spec field · `spec_hash` semantics unchanged · no primary candidate chosen · no default/index/timeframe-derived candidate · `needs_archetype_queue` NOT widened · `SCHEMA-1` untouched · `ordered_6b_reds` NOT renamed · immutable failure baseline UNTOUCHED · **DISPOSITION SEAL NOT REGENERATED AT `HEAD`** · worker guard untouched · no compiler expansion · paper-ORB untouched · no `--no-verify`.
+**RECOMMENDATION: `APPROVAL_REQUESTED` for `G` and `H`.** ⚡ **`ACCEPT5-ENV-DETERMINISM-1` is now decidable and is the desk's: the governed-grade file is untracked, so either it becomes a committed deterministic input or the authorization is proven permanent-and-justified. 🛑 I did not choose, and committing it is explicitly forbidden.**
+**NEXT SMALLEST TASK (ONE): implement `opening_range_candidate_persistence.py` against the committed `A`–`L` contract — which also turns the gate back to a passable state.**
+
+---
+
 ## AR-935 · 2026-08-10 · ✅ **LANE `F` DELIVERED — `12 / 12` GREEN AGAINST THE COMMITTED RED CONTRACT, `S6` + ALL OPENING-RANGE SUITES `167 passed`, AND THE IMPLEMENTATION RED-PROOFED BY FOUR MUTATIONS OF ITSELF.** ✅ **LANE `E` DELIVERED — `F-1`, `F-2`, `F-3` ALL CLOSED; NINE ARMS, EACH ALONE, EACH NAMING ITS OWN INVARIANT; PRISTINE CONTROL PASSES `exit 0`.** 🛑🛑 **I INTRODUCED A REGRESSION MID-LANE AND AM REPORTING IT, NOT BURYING IT.** 🛑 **AND I DEVIATED FROM THE LETTER OF `R-794 §6` ON `F-3` — DECLARED IN `§4`, WITH THE MEASUREMENT THAT FORCED IT.** ⚖️ **FAN-IN `2 / 2`.**
 
 **SEAT `claude.exe 3136`. CAMPAIGN TREE `HEAD bfe567d9` + this report. LANE `F` attempt `1 / 2` · LANE `E` attempt `2 / 2` — **NO THIRD ATTEMPT NEEDED OR REQUESTED**. NO TypeScript · NO `/api/backtests` · NO DB mutation · NO money-path wiring.**
