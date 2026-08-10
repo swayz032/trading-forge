@@ -4,6 +4,109 @@
 
 ---
 
+## AR-920 · 2026-08-10 · ✅✅✅ **`ATTEMPT 2` LANDED. THE S6 COMPILER VERTICAL-SLICE ACTIVATION IS COMMITTED AND PUSHED AS ONE ATOMIC COMMIT `a2527e61`, AND EVERY ACCEPTANCE TERM `A`–`G` IS MET.** ⚡ **`ACCEPT-5`: `NEW = 0` · `GONE = EXACTLY` THE TWO ORDERED `6B` REDS, MATCHED **BY NAME** AGAINST THE BASELINE'S OWN `ordered_6b_reds` FIELD. S6 `14 / 14`.** ✅ **`R-784 §4`'s INVENTORY WITNESS IS **SATISFIED, NOT WAIVED** — THE ADAPTER GAINED A NON-TEST PRODUCTION REFERENCE AND LEFT THE "no non-test reference" SECTION; THE SCANNER **DID** SEE THE MODULE-ATTRIBUTE CALL, WHICH IS THE OPPOSITE OF WHAT I PREDICTED IN `AR-919 §8`.** 🛑 **THE NAMED GAP STANDS AND I STATE IT IN THE RULING'S OWN WORDS: `SEAM-COMPLETE, CONSUMER-UNWIRED — MP-1 OWNS THE CALLER`.**
+
+**SEAT `claude.exe 33036`. HEAD `a2527e61` = `origin` `[MEASURED, re-fetched]`. `ATTEMPT 2 / 2`.**
+
+### §1 — ✅ WHAT LANDED, AND ITS EXACT SCOPE
+```
+[MEASURED HERE] a2527e61  12 files changed, 1111 insertions(+), 213 deletions(-)
+  spec_condition_compiler.py +210   spec_family_bindings.py  ±39   family_meta_enforcement.py +7
+  opening_range_execution_fanout.py  +122 (NEW)   test_opening_range_execution_fanout.py +253 (NEW)
+  test_s6_...py ±162   test_trigger_safety_refusal.py +140   test_spec_producer.py ±73
+  test_family_meta_enforcement.py +73   spec-family-bindings.ts ±14
+  canonical_regression_population.txt +1   SYSTEM-INVENTORY.md (regenerated)
+git status --porcelain --untracked-files=no -> only docs/wave25-... (§6), whose CONTENT DIFF IS EMPTY
+push exit 0; LOCAL == REMOTE == a2527e61 [VERIFIED BY RE-FETCH, not by exit code]
+```
+✅ **NO `--no-verify`. No hook edit. No `settings.json` edit. No `git checkout`. The `103`-member baseline is UNTOUCHED. `ELSE-SINK-1`'s `else` arm is byte-identical.**
+
+### §2 — ✅ SURFACE 12, BOTH HALVES, BUILT TO THE RULING'S SHAPE
+**`12A` TRANSPORT:** `from_compiled_spec()` gains `opening_range_candidate` and passes it **UNCHANGED**. **It does not read it, validate it, choose it, or infer it from `timeframe`.** `None` stays legal and still hard-refuses at `_h_opening_range`, where the condition is actually evaluated — hoisting the refusal into the factory would reject every caller that has no opening-range condition at all.
+**`12B` FAN-OUT:** a **NEW, NAMED** module `src/engine/opening_range_execution_fanout.py::build_execution_instances` turns `RecordCompileResult` into **one instance per taught candidate — THREE for the golden record.** 🛑 **No winner, no ranking, no `candidates[0]`, no default, no timeframe inference.** ⭐ **I gave it its own module ON PURPOSE:** `R-785 §5-c` requires the seam be nameable for `MP-1`, and a function buried in an existing file inherits that file's callers and hides the gap. **A named module is greppable, and `MP-1` inherits a seam it can find.**
+⭐ **THE FAN-OUT ENFORCES ITS OWN INVARIANT AT RUNTIME, NOT IN A DOCSTRING:** instance count == candidate count · no instance without its carrier · **no two instances sharing a `candidate_id`.** ⚖️ **That third check is what caught the red-proof mutation below before any assertion did.**
+
+### §3 — ✅ RED-PROOFED AT BIRTH, TWICE, WITH AN UNMUTATED CONTROL. THIS IS THE PART I WOULD WANT AUDITED.
+🛑 **SEVEN GREEN ON FIRST WRITE IS EXACTLY WHEN A TEST IS MOST LIKELY TO BE A DESCRIPTION**, so I planted the two defects this boundary exists to prevent:
+```
+[MEASURED HERE — MUTATION 1: the forbidden shape, opening_range_candidate=candidates[0]]
+  -> 5 of 7 fan-out arms RED. The fan-out's own identity invariant fired FIRST:
+     "two execution instances carry the SAME candidate identity ([...5m, ...5m, ...5m])"
+[MEASURED HERE — MUTATION 2: read the right answer from the WRONG FIELD,
+                 candidate.definition.variants[0] instead of candidate.variant]
+  -> test_control_swapping_the_candidate_moves_the_observable_adapter_state RED:
+       At index 1 diff: (15, (5,)) != (15, (15,))
+  -> and the S6 discrimination control RED on the same mutation.
+[MEASURED HERE — UNMUTATED CONTROL, both reverted]
+  fan-out 7/7 GREEN · S6 14/14 GREEN · grep 'RED-PROOF MUTATION' src/ -> none
+```
+⭐ **`(15, (5,))` IS THE WHOLE POINT:** the instance was CONSTRUCTED with the 15m candidate and COMPUTED the 5m window. **Without the mutation control, `(5, 15, 30)` was equally consistent with a fan-out that ignores its carrier and is merely ordered correctly.** ★★★★ **`A CONTROL THAT ONLY EVER RUNS AGAINST CORRECT CODE IS A DESCRIPTION OF THAT CODE.`**
+
+### §4 — ✅ THE FOUR TRANSITIONS: I CHANGED WHAT THEY EXPECT, NEVER WHAT THEY PROTECT
+**(1)** `..._todays_unactivated_binding_never_reaches_the_ladder` → **`test_the_golden_opening_range_binding_is_activated_and_declares_the_real_adapter`.** Asserts `bindable` · `executed` · **primitive EQUALS the `FAMILY_META`-declared primitive** · **primitive is NOT a structure primitive.** ⭐ **That last clause is the teeth: every other assertion is also satisfied by declaring `compute_structure_state`, which is the exact defect B1 exists to remove.**
+**(2)** `..._silently_passes_constant_true` → **`..._with_no_candidate_refuses_loudly`.** **STRICTLY STRONGER, and I mean that literally:** the old form proved only "not constant-True"; the new one proves **hard refusal · naming the missing candidate · ZERO adapter calls · AND no constant-True column published on the way to the refusal.** **The old claim is retained as the last assertion rather than dropped.**
+**(3) MIGRATION GUARD — MIGRATED AT ONE PLACE ONLY.** `unsupported/primitive-is-None/unbound_reason` → **declared, bound, `reason is None`, plus a compiled binding proving it BINDS and not merely DECLARES**, plus the never-structure clause. 🛑 **`LEVEL_CONSTRUCTION` family ownership UNTOUCHED. All five `_MUST_STAY_REFUSED` rows UNTOUCHED.**
+**(4) 15 TRIGGER-SAFETY TESTS — FIXTURE ONLY.** `_run` and `_traced` are candidate-aware; **selection is `duration_minutes == 5`, an EXPLICIT taught duration, never an index.** 🛑 **NOT ONE SAFETY ASSERTION WAS WEAKENED.**
+⭐ **AND I ADDED THE THREE-CANDIDATE CONTROL THE RULING ASKED FOR** — `test_control_the_trigger_refusal_is_not_specific_to_one_taught_window` re-measures the golden refusal across ALL THREE taught windows and requires outcome, status, reason and ambiguity to be IDENTICAL. **Without it the whole matrix silently assumes a property it never tested.**
+⚠️ **ONE ASSERTION I DID CHANGE, AND I FLAG IT RATHER THAN BURY IT:** `test_only_the_trigger_is_touched`'s blast-radius count `7 → 8`. **I did NOT leave it as a bare number** — a bare `== 8` is satisfied by ANY binding flipping. **It now NAMES the newly-bindable member as the opening-range family and separately asserts the seven pre-existing ones are unchanged.** ★★★★ **`A COUNT THAT MOVED FOR A REASON SHOULD ASSERT THE REASON, NOT JUST THE NEW NUMBER.`**
+
+### §5 — ✅ ACCEPTANCE `A`–`G`, ALL MEASURED FROM THE WORKTREE ROOT
+```
+A  S6                                    14 passed,  0 failed   <- ALL 14 GREEN
+   12B proof suite                         7 passed
+B  ACCEPT-1 conformance+definition+parity+lowering    54 passed, 0 failed
+C  ACCEPT-3 enforcement+param guard+flag-off+short-frame  136 passed, 0 failed
+D  npx tsc --noEmit   TSC_REAL_EXIT=0, no diagnostics   <- UNPIPED, real process exit
+   TS parity fixture  TS_PARITY_EXIT=0, 15 passed
+E  trigger safety                         57 passed,  0 failed  (was 56 + my new control)
+F  migration guard (test_spec_producer)   47 passed,  0 failed
+G  ACCEPT-5, LAST, 105-member population vs the IMMUTABLE 103-member baseline:
+     S6 FILE failure contribution : 0     <- R-783 §4's ordered FIRST LINE
+     FAN-OUT FILE contribution    : 0
+     NEW  = 0
+     GONE = 2, and GONE == the baseline's OWN ordered_6b_reds field, BY MEMBER: True
+              test_no_production_binding_routes_to_the_opening_range_adapter_yet
+              test_no_typed_opening_range_output_contract_exists_in_production
+     (baseline 33 failed -> now 31. MEMBERSHIP is the criterion; the counts are incidental.)
+```
+✅ **`D` RUN THE WAY `R-785 §11` ORDERED IT AFTER CONVICTING ME:** `AR-919 §6` read `tail`'s exit code as the compiler's. **This one captures the real process exit into a variable before anything is piped.**
+
+### §6 — ⚠️ THREE THINGS I CHANGED THAT WERE NOT ON THE LIST, EACH NAMED
+1. **MANIFEST `104 → 105`.** My new fan-out proof file enrolled itself in the derived population and `test_the_canonical_population_matches_its_committed_manifest_by_member` went red — **the guard working exactly as designed.** ✅ **REGENERATED FROM THE SUITE'S OWN `_regression_population` DERIVATION, never hand-edited** (`A COMMITTED GENERATOR REPRODUCES THE RULE, NOT THE ANSWER`), **CRLF preserved (128 CRLF / 0 bare LF), header block preserved verbatim, diff = `1 insertion, 0 deletions`, exactly one added member.** 🛑 **The `103`-member BASELINE is a different artifact and was NOT touched.**
+2. **A PRE-EXISTING `ruff B017` BLOCKED THE COMMIT** — `pytest.raises(Exception)` in the trigger-safety suite. `[MEASURED]` **it is present at `HEAD` too** (I ran `ruff` against `git show HEAD:<file>` — line `519` there, `635` here; my additions only shifted it). **It surfaced solely because this commit stages that file and the hook lints whole files.** ✅ **Fixed by NAMING the real exception (`dataclasses.FrozenInstanceError`), which STRENGTHENS it: a blind `Exception` would also pass on an unrelated `AttributeError` or a typo in the attribute name, i.e. on a verdict that was never frozen at all.** ⚠️ **Unplanned and outside the four authorized transitions — declared here rather than absorbed.**
+3. **`wave25-exit-engine-ab-report.md`** re-stamped by the population run again (`04:20 UTC`). ✅ **Restored by a plain text edit, never `git checkout`; `git diff --numstat` on that path is EMPTY.** ⚠️ **`git status` still prints ` M` from its stat cache — I am NOT running an index operation to tidy an appearance.** ⚖️ **BANKED per `R-785 §11`; generator NOT fixed.**
+
+### §7 — ✅ THE INVENTORY WITNESS, WITH A POSITIVE CONTROL, AND I WAS WRONG IN A GOOD DIRECTION
+```
+[MEASURED HERE, after regeneration; --check exits 0 = FRESH]
+ROW 1  compute_opening_range_state  -> ABSENT from the "no non-test reference outside its
+       own definition" section  ⇒ IT GAINED A NON-TEST PRODUCTION REFERENCE.
+       referrer read at the source line: spec_condition_compiler.py:950
+         state = opening_range_adapter.compute_opening_range_state(
+ROW 2  build_execution_instances    -> STILL LISTED as "no non-test reference outside its
+       own definition; 1 test file(s) do reference it"   <- EXPECTED, and R-785 §11 permits
+       it: this function's caller does not exist. NOT rewritten to flatter the map.
+POSITIVE CONTROL: that section is populated and can name things — 532 entries, including
+       ROW 2 itself. So ROW 1's ABSENCE is a real absence, not an empty section.
+```
+🛑 **`AR-919 §8` PREDICTED THE SCANNER WOULD *NOT* SEE A MODULE-ATTRIBUTE CALL AND SAID SO AS A DOUBT. THE PREDICTION WAS WRONG AND I RECORD IT AS WRONG.** ⚖️ **`R-784 §4`'s two branches were "unwired" or "scanner cannot see"; the answer is NEITHER — it is wired AND seen.** ★★★★ **`A DOUBT YOU PUBLISHED AND THEN DISPROVED IS WORTH MORE THAN A CONFIDENCE YOU NEVER TESTED — BUT ONLY IF YOU GO BACK AND SAY WHICH IT WAS.`**
+
+### §8 — 🛑 WHAT I DID **NOT** MEASURE, AND THE LIMIT THAT IS NOW CAMPAIGN-VISIBLE
+🛑 **`SEAM-COMPLETE, CONSUMER-UNWIRED — MP-1 OWNS THE CALLER.` I state the constraint `R-785 §5-c` binds me to, verbatim, and I do NOT claim what it forbids:** the typed seam is **COMPLETE AND PROVEN**; **I DO NOT CLAIM THE ACTIVATION IS REACHABLE ON A REAL PRODUCTION PATH**, because `build_execution_instances` has no production caller — measured, not assumed, and `§7` ROW 2 is the standing witness.
+- **I did not hunt for a caller** (`R-785` stop condition `11`) and I opened no `MP-1` work.
+- **DST changeover · half-day session · gapped frame · non-1m timeframe** — `R-780 §7`'s carried limit, STILL CARRIED, still not acceptance terms, still not implied closed.
+- **The `wave25` generator** — banked, not fixed.
+- **The pre-existing `B017` class elsewhere in the repo** — I fixed the one instance that blocked this commit and did not sweep for others.
+- **PRIOR ART STATED, TERMS NAMED:** `--check` FRESH before commit; searched `RecordCompileResult`, `from_compiled_spec`, `build_execution_instances`, `expand_execution_candidates`, `opening_range_candidate`, `candidates[0]`, `canonical_regression_population`, `timeframe→minutes` across both ledgers and `src/`. **`R-736`/`R-743` proceeded under, never re-opened — and `expand_execution_candidates`' committed `NONE PRIMARY, NONE DEFAULT` comment is cited in the new module as the upstream half of the same law.**
+
+### §9 — ⚖️ ATTEMPT ACCOUNTING AND WHAT I AM ASKING FOR
+⚖️ **`ATTEMPT 2 / 2`, SPENT AND LANDED.** `R-785 §8` pre-registered that there is no `ATTEMPT 3`; **none is needed.**
+🛑 **I DO NOT GRADE THIS.** `[grading-integrity]`, and `R-785 §6` adopted my own `AR-919` line as law: **the seat that would gain from a verdict is the wrong seat to issue it.** **Every number above is MECHANICAL and reproducible from the commands as written; the BAND is the desk's.**
+⚡ **ONE SENTENCE, PER `worker-execution §5a`: the independent grade on `a2527e61` is owed — say the word and I will dispatch the `accuracy-validator` against it, with a novel false-green hunt and a durable receipt file.**
+✅ **I AM STILL SEATED, EAR ARMED ON THE RULING LEDGER, NOT EXHAUSTED.** **Next as `R-784 §6` defines it: STOP COMPILER EXPANSION; `GATE-LIM-2` wakes, then `MP-1` MONEY-PATH REACHABILITY RECON — which now inherits a NAMED seam instead of discovering an unnamed one.**
+
+---
+
 ## AR-919 · 2026-08-09 · 🛑🛑 **`ATTEMPT 1` — ALL ELEVEN SURFACES ARE BUILT AND THE EXECUTION CONTRACT IS MET, BUT I AM **NOT COMMITTING**: `R-784 §2` STOP CONDITION `12` FIRED, AND IT FIRED ON A REAL ARCHITECTURAL GAP RATHER THAN A FIXTURE.** ⚡ **THE FINDING, AND IT IS THE `TWELFTH SURFACE` `R-780 §8` PRE-REGISTERED: `from_compiled_spec()` — THE ONLY NON-TEST PRODUCTION FACTORY — CANNOT CARRY A CANDIDATE, AND NOTHING IN PRODUCTION SELECTS ONE. THE ACTIVATION IS UNREACHABLE ON EVERY REAL PATH, AND 15 SAFETY-SUITE TESTS NOW HARD-REFUSE BECAUSE OF IT.** ✅ **`ACCEPT-1` 54/54 · `ACCEPT-3` 136/136 · `tsc` EXIT `0` · TS PARITY 15/15 · S6 `12 passed / 2 failed` (was `8 / 6`) · `GONE = EXACTLY` THE TWO ORDERED `6B` REDS.** ⚖️ **I READ `ATTEMPT 1` AS SPENT.**
 
 **SEAT `claude.exe 33036`. HEAD `a26a4372` = `origin` `[MEASURED]`. THE ELEVEN-SURFACE DIFF IS UNCOMMITTED AND SNAPSHOTTED OUTSIDE THE REPO (`§7`).**
