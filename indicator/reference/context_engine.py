@@ -1,8 +1,9 @@
 """Canonical persistent market-context state for Slumdawg V2.
 
 This module is the semantic oracle for BIG DIRECTION and CURRENT MOVE.
-It intentionally uses persistent protected structure rather than a weighted
-per-bar vote. Numeric pivot extraction remains a platform adapter concern.
+BIG DIRECTION means the persistent larger-market regime, not the strongest recent
+countertrend leg. Platform adapters are responsible for feeding a *major* 4H
+snapshot (slower pivots than the 15m execution structure) plus Daily structure.
 """
 from __future__ import annotations
 
@@ -52,72 +53,111 @@ class ContextState:
 
 
 class PersistentBigDirection:
-    """Persistent higher-timeframe direction with a protected structure level.
+    """Persistent macro regime with protected higher-timeframe structure.
 
-    A countertrend rally/selloff does not flip BIG DIRECTION. Reversal requires:
-    1) the protected structure to be closed through;
-    2) opposite 4H structure to be confirmed; and
-    3) Daily not to remain clearly opposed.
+    Hierarchy:
+    - clear Daily structure is the macro authority;
+    - major 4H structure is the fallback when Daily is not yet clear;
+    - a countertrend 4H rally/selloff never flips a clear Daily macro regime;
+    - once initialized, reversal requires a protected-level close-through *and*
+      confirmed opposite macro structure. A PWH/PDH touch may be context, but it
+      is never by itself a direction flip.
     """
 
     def __init__(self) -> None:
         self.direction = Dir.UNKNOWN
         self.protected_level: Optional[float] = None
+        self.authority = "NONE"
         self.reason = "BUILDING_STRUCTURE"
+
+    @staticmethod
+    def _protected(snapshot: StructureSnapshot, direction: Dir) -> float:
+        return snapshot.low0 if direction == Dir.UP else snapshot.high0
 
     def update(self, h4: StructureSnapshot, daily: Optional[StructureSnapshot] = None) -> Dir:
         h4_dir = h4.clear_direction
         d_dir = daily.clear_direction if daily is not None else Dir.UNKNOWN
 
+        # Seed from the slowest clear structure. This is the key distinction
+        # between "big bullish pullback" and "bullish macro market".
         if self.direction == Dir.UNKNOWN:
-            if h4_dir != Dir.UNKNOWN and d_dir != -h4_dir:
-                self.direction = h4_dir
-                self.protected_level = h4.low0 if h4_dir == Dir.UP else h4.high0
-                self.reason = "INITIALIZED_FROM_CONFIRMED_4H_STRUCTURE"
-            elif h4_dir == Dir.UNKNOWN and d_dir != Dir.UNKNOWN:
+            if d_dir != Dir.UNKNOWN and daily is not None:
                 self.direction = d_dir
-                self.protected_level = h4.low0 if d_dir == Dir.UP else h4.high0
-                self.reason = "INITIALIZED_FROM_DAILY_WITH_4H_UNCLEAR"
+                self.protected_level = self._protected(daily, d_dir)
+                self.authority = "DAILY"
+                self.reason = "INITIALIZED_FROM_DAILY_MACRO_STRUCTURE"
+            elif h4_dir != Dir.UNKNOWN:
+                self.direction = h4_dir
+                self.protected_level = self._protected(h4, h4_dir)
+                self.authority = "4H_MAJOR"
+                self.reason = "INITIALIZED_FROM_MAJOR_4H_STRUCTURE"
             else:
-                self.reason = "HTF_CONFLICT_OR_INSUFFICIENT_STRUCTURE"
+                self.reason = "HTF_STRUCTURE_BUILDING"
             return self.direction
 
         if self.direction == Dir.DOWN:
-            # A newly confirmed lower high becomes the bearish protected high.
-            if h4_dir == Dir.DOWN:
-                self.protected_level = h4.high0
-                self.reason = "BEARISH_STRUCTURE_PERSISTS"
+            # A still-bearish Daily structure is authoritative even if 4H is
+            # temporarily HH/HL during a large countertrend rally.
+            if d_dir == Dir.DOWN and daily is not None:
+                self.protected_level = daily.high0
+                self.authority = "DAILY"
+                self.reason = "BEARISH_DAILY_MACRO_PERSISTS"
                 return self.direction
-            invalidated = self.protected_level is not None and h4.close > self.protected_level
-            if invalidated and h4_dir == Dir.UP and d_dir != Dir.DOWN:
+
+            # If Daily is unclear, a major 4H lower-high/lower-low sequence may
+            # refresh protection, but a local bullish 4H leg cannot flip alone.
+            if d_dir == Dir.UNKNOWN and h4_dir == Dir.DOWN:
+                self.protected_level = h4.high0
+                self.authority = "4H_MAJOR"
+                self.reason = "BEARISH_MAJOR_4H_STRUCTURE_PERSISTS"
+                return self.direction
+
+            invalidated = self.protected_level is not None and (
+                (daily is not None and d_dir == Dir.UP and daily.close > self.protected_level)
+                or (d_dir == Dir.UNKNOWN and h4_dir == Dir.UP and h4.close > self.protected_level)
+            )
+            opposite_confirmed = d_dir == Dir.UP or (d_dir == Dir.UNKNOWN and h4_dir == Dir.UP)
+            if invalidated and opposite_confirmed:
                 self.direction = Dir.UP
-                self.protected_level = h4.low0
-                self.reason = "BEARISH_PROTECTED_HIGH_BROKEN_AND_BULLISH_STRUCTURE_CONFIRMED"
+                source = daily if d_dir == Dir.UP and daily is not None else h4
+                self.protected_level = source.low0
+                self.authority = "DAILY" if d_dir == Dir.UP else "4H_MAJOR"
+                self.reason = "BEARISH_MACRO_INVALIDATED_AND_BULLISH_STRUCTURE_CONFIRMED"
             else:
-                self.reason = "BEARISH_STATE_PERSISTS_THROUGH_PULLBACK"
+                self.reason = "BEARISH_MACRO_PERSISTS_THROUGH_BULLISH_PULLBACK"
             return self.direction
 
-        # Existing bullish state.
-        if h4_dir == Dir.UP:
-            self.protected_level = h4.low0
-            self.reason = "BULLISH_STRUCTURE_PERSISTS"
+        # Existing bullish macro state.
+        if d_dir == Dir.UP and daily is not None:
+            self.protected_level = daily.low0
+            self.authority = "DAILY"
+            self.reason = "BULLISH_DAILY_MACRO_PERSISTS"
             return self.direction
-        invalidated = self.protected_level is not None and h4.close < self.protected_level
-        if invalidated and h4_dir == Dir.DOWN and d_dir != Dir.UP:
+
+        if d_dir == Dir.UNKNOWN and h4_dir == Dir.UP:
+            self.protected_level = h4.low0
+            self.authority = "4H_MAJOR"
+            self.reason = "BULLISH_MAJOR_4H_STRUCTURE_PERSISTS"
+            return self.direction
+
+        invalidated = self.protected_level is not None and (
+            (daily is not None and d_dir == Dir.DOWN and daily.close < self.protected_level)
+            or (d_dir == Dir.UNKNOWN and h4_dir == Dir.DOWN and h4.close < self.protected_level)
+        )
+        opposite_confirmed = d_dir == Dir.DOWN or (d_dir == Dir.UNKNOWN and h4_dir == Dir.DOWN)
+        if invalidated and opposite_confirmed:
             self.direction = Dir.DOWN
-            self.protected_level = h4.high0
-            self.reason = "BULLISH_PROTECTED_LOW_BROKEN_AND_BEARISH_STRUCTURE_CONFIRMED"
+            source = daily if d_dir == Dir.DOWN and daily is not None else h4
+            self.protected_level = source.high0
+            self.authority = "DAILY" if d_dir == Dir.DOWN else "4H_MAJOR"
+            self.reason = "BULLISH_MACRO_INVALIDATED_AND_BEARISH_STRUCTURE_CONFIRMED"
         else:
-            self.reason = "BULLISH_STATE_PERSISTS_THROUGH_PULLBACK"
+            self.reason = "BULLISH_MACRO_PERSISTS_THROUGH_BEARISH_PULLBACK"
         return self.direction
 
 
 class PersistentCurrentMove:
-    """15-minute active leg using break-of-structure persistence.
-
-    A small bounce inside a bearish leg does not turn CURRENT MOVE up. The leg
-    flips only after price closes beyond the latest confirmed opposing swing.
-    """
+    """15-minute active leg using break-of-structure persistence."""
 
     def __init__(self) -> None:
         self.direction = Dir.UNKNOWN
