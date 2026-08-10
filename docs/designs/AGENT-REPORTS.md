@@ -4,6 +4,82 @@
 
 ---
 
+## AR-935 · 2026-08-10 · ✅ **LANE `F` DELIVERED — `12 / 12` GREEN AGAINST THE COMMITTED RED CONTRACT, `S6` + ALL OPENING-RANGE SUITES `167 passed`, AND THE IMPLEMENTATION RED-PROOFED BY FOUR MUTATIONS OF ITSELF.** ✅ **LANE `E` DELIVERED — `F-1`, `F-2`, `F-3` ALL CLOSED; NINE ARMS, EACH ALONE, EACH NAMING ITS OWN INVARIANT; PRISTINE CONTROL PASSES `exit 0`.** 🛑🛑 **I INTRODUCED A REGRESSION MID-LANE AND AM REPORTING IT, NOT BURYING IT.** 🛑 **AND I DEVIATED FROM THE LETTER OF `R-794 §6` ON `F-3` — DECLARED IN `§4`, WITH THE MEASUREMENT THAT FORCED IT.** ⚖️ **FAN-IN `2 / 2`.**
+
+**SEAT `claude.exe 3136`. CAMPAIGN TREE `HEAD bfe567d9` + this report. LANE `F` attempt `1 / 2` · LANE `E` attempt `2 / 2` — **NO THIRD ATTEMPT NEEDED OR REQUESTED**. NO TypeScript · NO `/api/backtests` · NO DB mutation · NO money-path wiring.**
+
+### §1 — ✅ LANE `F`: THE RECEIPT, AND THE MUTATIONS THAT PROVE THE CONTRACT STILL CONVICTS IT
+✅ **`src/engine/opening_range_candidate_receipt.py` @ `60647d74`.** `[MEASURED HERE, unpiped]` **`12 passed, exit 0`** against the contract committed at `6ef81775`; **`167 passed, exit 0`** across `S6` + seven opening-range suites. **All eleven `R-794 §5` invariants sit at named lines; `(4)` is DELEGATED to `OpeningRangeExecutionCandidate.__post_init__` and wrapped, never reimplemented** — `TWO IMPLEMENTATIONS OF ONE GUARD ARE A DISAGREEMENT WITH A COMMIT DATE`. The builder derives from the existing `canonical_payload()`; this module does not know how to canonicalise a candidate.
+🛑 **A GREEN SUITE PROVES THE IMPLEMENTATION AGREES WITH THE TEST, NOT THAT THE TEST WOULD CATCH A WRONG ONE. So I mutated my own module, each arm alone, restoring byte-exact between arms:**
+```
+[MEASURED HERE — obligations that FAILED under each mutation]
+M1  disable the OUTER anchors only .................... 08
+M2  disable the cache_identity RECOMPUTE alone ........ (none)
+M3  disable BOTH .................................... 08, 10
+M4  no-receipt RETURNS instead of refusing ............ 07, 11
+PRISTINE ............................................. 12 passed; file restored byte-exact
+```
+⭐ **`M4` DISCHARGES THE GAP I FLAGGED IN `AR-934 §2`: obligation `(11)` DOES bite. It is still not INDEPENDENT of `(7)`, and `R-794 §3` already ruled that it need not be — `AN OBLIGATION THAT NEEDS A WORSE API TO BECOME INDEPENDENTLY TESTABLE IS ALREADY TESTED BY ITS NEIGHBOURS`. I did not distort the resolver API.**
+⚠️ **`M2` IS THE HONEST ONE AND I WILL NOT DRESS IT UP: with the outer anchors intact, NOTHING isolates the `cache_identity` recompute. It is defence in depth, not independently load-bearing, and no obligation currently convicts its removal alone.** ⇒ **A reader could delete it and every test would stay green.** ★★★ **`DEFENCE IN DEPTH IS ONLY DEFENCE WHILE SOMEBODY KNOWS IT IS THERE — AN UNTESTED SECOND LAYER IS A COMMENT.`**
+
+### §2 — 🛑🛑 THE REGRESSION I INTRODUCED, AND THE CLAIM OF MINE IT INVALIDATED
+🛑 **Adding the lane `C` contract file made the DERIVED canonical population `106` while the committed manifest held `105`. Two guards went red:** `test_flag_off_parameterized_refusal.py::test_the_canonical_population_matches_its_committed_manifest_by_member` and `test_opening_range_grammar_firebreak.py::test_existing_parameter_acceptance_guards_stay_green`. ⚖️ **`[MEASURED HERE]` the second is a SUBPROCESS WRAPPER around the first — ONE defect, two surfaces, not two defects.**
+🛑🛑 **AND IT CONVICTS A SENTENCE OF MINE: I reported "`167 passed`" for lane `F`. That was TRUE of the seven suites it named and NARROWER THAN IT SOUNDED — neither guard was in it.** ★★★★★ **`A PASS COUNT IS A CLAIM ABOUT THE SUITES YOU RAN, AND THE ONES YOU DID NOT RUN ARE INVISIBLE IN THE NUMBER.`**
+✅ **REPAIRED AT `ef4e9560` by REGENERATING with the guard's OWN `_regression_population()`, never by hand — the file's docstring forbids a hand-copied list because `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`. Asserted BEFORE writing: exactly ONE member added, ZERO removed. CRLF preserved, no BOM.**
+⚠️ **POPULATION `105 → 106`. This is the desk's to fold into the banked `ACCEPT5-POPULATION-DRIFT-1` when the baseline is next re-pinned. It does NOT affect the pre-authorized `ACCEPT-5` regrade, which regenerates from a tree pinned at `08062e12`.**
+
+### §3 — ✅ LANE `E`: `F-1` AND `F-2`, MEASURED LIVE
+✅ **`F-1` (CRITICAL) CLOSED.** `j_cases` was built and never read again; the only collection comparison was on SIZE, so a BALANCED edit was invisible while the runner printed *"feeders AGREE on membership and size"*. Now both directions — `ONLY_PLUGIN_COLLECTION` / `ONLY_JUNIT_COLLECTION` — and the success sentence may claim collection agreement only when both are empty. ⇒ `[MEASURED HERE]` the live caption is now **`feeders AGREE on failure membership, collection membership and size`**.
+✅ **`F-2` CLOSED.** Six-step chain, **raw bytes FIRST** so a file that is not the approved file is refused before anything parses it and starts believing its contents: raw `SHA-256` → parse → `measured_at_sha` (previously read and DISCARDED) → failure count → sorted failure-MEMBERSHIP digest → `ordered_6b_reds` really are members. Anchors held in the runner's contract, outside the baseline. `[MEASURED HERE]` **`[BASELINE] preflight problems : 0`** on the pristine tree.
+
+### §4 — 🛑 `F-3` CLOSED, AND A DECLARED DEVIATION FROM `R-794 §6`'s LETTER
+✅ **New companion `acceptance-disposition-seal-08062e12.json`: `2392` population · `5` sealed skips · `2` sealed xfails, digests anchored OUTSIDE the file.**
+⭐⭐ **A TWO-PATH AGREEMENT WORTH NAMING: the disposition seal's `sealed_population_sha256` is BYTE-IDENTICAL to `SEAL_APPROVED_POP_SHA256` (`63d4b541…`). Two different generators — one `--collect-only`, one EXECUTING the population — independently reproduced the same `2392`-member digest. That is corroboration, not a copy.**
+🛑🛑 **THE DEVIATION, STATED PLAINLY: `R-794 §6` specifies EXACT equality. `[MEASURED HERE]` THAT RULE REFUSES THE PRISTINE TREE.** The seal is taken at `08062e12` (pre-`S6`-activation) while `HEAD` is after it, and **`S6` activation legitimately RE-ENABLED two tests that were skipped at the pin:**
+```
+src/engine/tests/test_spec_family_bindings.py::test_s6_coverage_6a_re_derives_on_the_governed_population
+src/engine/tests/test_spec_family_bindings.py::test_s6_dead_17_denominator_stays_retired
+```
+🛑 **I DID NOT WEAKEN THE CHECK TO MAKE THE CONTROL PASS — that is the forbidden move, and a gate that refuses its own pristine state is useless anyway.** ✅ **Instead the two changes are NAMED out-of-band in `DISPOSITION_AUTHORIZED_UNSKIPPED`, the SAME SHAPE the failure baseline already uses for `ordered_6b_reds`.** 🛑 **And the list cannot become a blank cheque: every authorized member must actually BE in the seal's skipped set, or the AUTHORIZATION ITSELF refuses.** ★★★★★ **`AN AUTHORIZED CHANGE IS ONE SOMEBODY NAMED IN ADVANCE. AN UNNAMED ONE IS A REGRESSION WEARING THE SAME CLOTHES.`** ⚖️ **If the desk prefers a re-pinned seal at `HEAD` over an authorization list, that is a one-command regeneration and I will do it — but it would EMBALM today's dispositions as the pin, which is why I did not choose it unilaterally.**
+
+### §5 — ✅ THE MUTATION MATRIX: NINE ARMS, EACH ALONE, EACH NAMING ITS INVARIANT
+```
+[MEASURED HERE — each arm re-scored against the SAME preserved run record; only the
+ RUNNER changed, so holding the population byte-identical isolates the variable
+ (R-794 §1 ratified this as the stricter experiment). ALL EXITS UNPIPED.]
+
+(8) PRISTINE CONTROL ........................... exit 0  PASS
+(1) junit collection member gone, SIZE KEPT .... exit 1  REFUSED — EXACTLY ONE REASON:
+      "FEEDER DISAGREEMENT on collection membership"
+      *** the size was preserved, so the OLD size check could not take credit. This
+          arm proves F-1 and nothing else. ***
+(2) plugin collection member gone, SIZE KEPT ... exit 1  REFUSED (4 reasons, all correct)
+(3) baseline forged to absorb a NEW regression . exit 1  REFUSED — BASELINE INTEGRITY x3
+(4) baseline re-checksummed INTERNALLY ......... exit 1  REFUSED against the EXTERNAL
+      anchor — G2 one layer up: repairing your own evidence does not authorize you
+(5) sealed PASS -> SKIP ........................ exit 1  REFUSED — "now SKIP that were RUNNING"
+(6) sealed PASS -> XFAIL ....................... exit 1  REFUSED — "now XFAIL that were RUNNING"
+(7) balanced PASS<->SKIP, IDENTICAL count ...... exit 1  REFUSED — BOTH directions fired
+(9) UNAUTHORIZED un-skip  [MY ARM, NOT ORDERED]  exit 1  REFUSED — the authorization
+      list is not a blank cheque
+```
+⚡ **`(9)` IS MINE AND I ADDED IT BECAUSE `§4`'s authorization list is a NEW WAY FOR THE GATE TO STAY SILENT, and every new silence needs its own red-proof.**
+
+### §6 — ⚠️ SIDE EFFECTS, MINOR FINDINGS, AND WHAT I DID NOT DO
+🛑 **THE BANKED TIMESTAMP SIDE-EFFECT IS REAL AND I TRIPPED IT: running the population REWRITES `docs/wave25-exit-engine-ab-report.md` (a `Run date:` line). `[MEASURED HERE]` it appeared in BOTH the campaign tree and the pinned tree after my runs. RESTORED in both (`git checkout --`, both verified clean afterwards).** ⚖️ **This is `R-792 §8`'s banked *"run the gate in an isolated worktree"* item, now with a named file and a named line.**
+⚠️ **MINOR, NOT FIXED (lane `E` is three named defects only): `acceptance_runner.py` invoked with neither `--run` nor `--from-run` dies with a raw `TypeError: argument should be a str or os.PathLike... not 'NoneType'` instead of a named refusal. A usage error should not read like a crash in the instrument.**
+⚠️ **`[MEASURED HERE]` the pre-commit hook STASHED AND RESTORED the desk's unstaged `ADVISOR-STATE.md` on three of my commits, and once reported `Stashed changes conflicted with hook auto-fixes... Rolling back fixes`. The desk's edits survived intact each time (verified by diffstat), and the desk has since committed them — but `[precommit-stash]` is exactly this window and it fired repeatedly today.**
+🛑 **AN INSTRUMENT ERROR OF MINE, DISCLOSED: I piped a `git push` through `tail` and read `PUSH_EXIT=0` from `tail`, not from `git` — the push had actually FAILED. Caught within one command because `HEAD` and `@{u}` disagreed.** ★★★★★ **`[ps-counting-encoding]` HOLDS AND I BROKE IT ANYWAY: `A PIPED EXIT CODE IS THE LAST STAGE'S.`**
+🛑 **NOT DONE, AS FORBIDDEN:** no money-path wiring · `/api/backtests` untouched · no TypeScript persistence · **no new SQL column, and the receipt is NOT inside `compiled_spec` or `SpecArtifact`** · no `dataclasses.asdict()` spec field · `spec_hash` semantics unchanged · no default/index/timeframe-derived candidate · `needs_archetype_queue` NOT widened · `SCHEMA-1` untouched · `ordered_6b_reds` NOT renamed · immutable failure baseline UNTOUCHED (newest commit still `186f22cd`) · worker guard untouched · no compiler expansion · all paper-ORB work still banked · no `--no-verify`.
+
+### §7 — ⚖️ FAN-IN AND WHAT IS OWED
+**`2 / 2`.** ⚡ **`F`: implemented, green, and red-proofed against itself. `E`: all three named defects closed at attempt `2 / 2`, nine arms bite alone, pristine passes — NO THIRD ATTEMPT NEEDED, so `R-794 §7[5]` does not fire.**
+**STOP CONDITIONS: `[1]` mutation `(7)` DID refuse, both directions · `[2]` mutation `(4)` DID refuse against the external anchor · `[3]` the RED contract was NOT changed to fit the implementation — the implementation was written to the contract as committed · `[4]` no `S6` suite reddened (`167 passed` after every change).**
+**RECOMMENDATION: `APPROVAL_REQUESTED` for both.** ⚡ **The `ACCEPT-5` REGRADE is the desk's to dispatch and is now unblocked. 🛑 Brief it on `§4`'s authorization list — it is the newest way this gate can stay silent, and `R-794 §7`'s question is the right one: *can this exact instrument still issue `PASS` when the `S6` acceptance state it claims to enforce is false?***
+**NEXT SMALLEST TASK (ONE): `MP1-CANDIDATE-PERSISTENCE-RED` — the committed RED for the persistence boundary (`§18`'s twelve obligations `A`–`L`), before any onboarding edit.**
+
+---
+
 ## AR-934 · 2026-08-10 · ✅ **LANE `C` DELIVERED — THE ELEVEN-OBLIGATION RED CONTRACT IS COMMITTED AND RED, EACH OBLIGATION FAILING BY ITS OWN NAME.** 🛑🛑 **AND THE RED-PROOF CONVICTED MY OWN CONTRACT: OBLIGATIONS `(9)` AND `(10)` WERE PASSING FOR THE WRONG REASON — CAUGHT BY A GUARD THAT HAS EXISTED SINCE `R-738`, NOT BY IDENTITY VERIFICATION. BOTH CORRECTED, BOTH NOW BITE.** ✅ **LANE `D` DELIVERED.** 🛑🛑🛑 **STOP CONDITION `R-793 §6[3]` FIRES — BUT IN A **WEAKER** FORM THAN THE LANE REPORTED, AND I NAME WHICH, BECAUSE I RE-DERIVED IT MYSELF.** ⚖️ **FAN-IN `2 / 2`.**
 
 **SEAT `claude.exe 3136`. CAMPAIGN TREE `HEAD 6ef81775` + this report; `src/ scripts/ tests/` CLEAN. LANE `C` attempt `1 / 2` · LANE `D` attempt `1 / 2`. NO PRODUCTION CODE WRITTEN. `S6` RE-RUN AFTER EVERY CHANGE: `18 passed`, exit `0` — stop `[4]` clear.**
