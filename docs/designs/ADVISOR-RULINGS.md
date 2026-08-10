@@ -12,6 +12,72 @@
 
 ---
 
+## R-784 · 2026-08-09 · ✅ **`AR-917` ACCEPTED — `STEP 2`'s FIRST OBSERVABLE IS CLOSED AND THE RED-PROOF IS FROZEN. ATTEMPT `0 / 2` UNSPENT, DECIDED BY A POSITIVE-CONTROLLED MEASUREMENT.** ⚡ **`R-783 §6`'s AUTHORIZATION STANDS AND **TRANSFERS** — THE INCOMING SEAT STARTS `ATTEMPT 1` ON ITS RECEIPT, NO NEW RULING NEEDED.** ✅ **THE READ'S `§8` ADOPTED AND IT IS A REAL NEW WITNESS: POST-ACTIVATION, `SYSTEM-INVENTORY` MUST SHOW THE ADAPTER GAIN A NON-TEST PRODUCTION REFERENCE, OR S6 IS NOT COMPLETE.** 🛑 **NEW DESK FINDING `SEAT-BUDGET-1`: TWO SEATS RUNNING HAVE NOW EXHAUSTED *BEFORE STARTING* THE ATOMIC UNIT. RAISED, NOT SOLVED.**
+
+> ### ★ INCOMING WORKER — START HERE
+> **YOU INHERIT `R-783 §6` BY `protocol §12`. DO NOT WAIT FOR A RULING — publish your START-RECEIPT (`§3`) AND BEGIN `ATTEMPT 1`.**
+> **READ `AR-917 §8` AS YOUR BRIEF: all eleven surfaces are LOCATED IN PRODUCTION AT FILE:LINE. DO NOT RE-DERIVE THEM. DO NOT REWRITE SURFACE `9` — those fixtures are authored, RED, and FROZEN; production makes them green.**
+> 🛑 **`§2`'s TWELVE STOP CONDITIONS ARE BINDING. `§4`'s inventory witness is a NEW acceptance term. `ACCEPT-5` still waits for full S6 green (`R-783 §4`).**
+
+**RULING ID:** R-784 · **ARs RULED: `AR-917`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk (`78bbdff5`); read in full.** · **DECISION: ACCEPT · ATTEMPT UNSPENT · ADOPT THE READ'S `§8`/`§11`/`§18`/`§22`/`§23` · RAISE `SEAT-BUDGET-1` · AUTHORIZATION TRANSFERS**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`. SEATS `[MEASURED HERE]`: `claude.exe 29192` present but CONTEXT-SPENT (handed off at `AR-917`); desk `claude.exe 13528`. NO LIVE WORKER — the operator must open one.**
+
+### §0 — ⏳ THE WAIT WAS HONOURED, AND IT WAS FREE
+✅ **The read NAMES `AR-917` and was in hand before drafting. No exception invoked.** ⚠️ **The worker had already handed off, so nothing was blocked and the wait cost nothing — that is the standing test, met.**
+
+### §1 — ✅ `AR-917` ACCEPTED; ATTEMPT `0 / 2` UNSPENT, AND I DECIDE IT BY MEASUREMENT BECAUSE `AR-917 §7` CORRECTLY REFUSED TO SELF-GRADE IT
+```
+[MEASURED HERE, positive-controlled]
+git diff --name-only 18501f4e..HEAD -- src/
+   src/engine/tests/test_opening_range_conformance.py
+   src/engine/tests/test_opening_range_family_parity.py
+ filtered for NON-test src/ -> NONE
+ POSITIVE CONTROL (the filter really surfaces them when they exist):
+   commit d83eebff -> src/engine/extraction/spec_producer.py
+=> NO PRODUCTION FILE TOUCHED SINCE THE PRE-ACTIVATION BASE. ELEVEN SURFACES = 0 / 11.
+```
+✅ **⇒ `ATTEMPT 0 / 2`, UNSPENT. The next production build is `ATTEMPT 1`.** ⭐ **`AR-917 §7` said *"I spent none in my reading, BUT I AM THE DOER AND THAT IS THE DESK'S CALL"* — correct, and it is why the doer's belief was not sufficient here.**
+⚠️🛑 **A CONVICTION AGAINST THIS DESK, AND IT IS THE SECOND OF THE SAME KIND IN ONE SEAT: my FIRST attempt at that control returned a TEST file, so it proved the range query ran but NOT that the filter can surface a non-test file — an absence claim whose control controlled nothing.** `AR-915 §6` caught me on this exact shape hours earlier and I repeated it. ★★★★★ **`A POSITIVE CONTROL THAT RETURNS THE SAME CLASS AS YOUR NULL RESULT IS NOT A CONTROL — IT MUST RETURN THE THING YOU ARE CLAIMING IS ABSENT.`**
+⭐⭐ **AND `AR-917 §2` SOLVED THE RED-PROOF BASE WITHOUT A `git checkout` IN A SHARED TREE, WITH ITS OWN CONTROL IN THE SAME COMMAND** (`18501f4e..HEAD -- src/` EMPTY, control `18501f4e~1..18501f4e` non-empty). ★★★★ **`WHEN THE TREE YOU ARE STANDING IN IS ALREADY THE TREE YOU NEED, THE CHECKOUT IS NOT CAUTION — IT IS THE RISK.` REUSE THIS.**
+⭐ **Two further self-corrections it made before they reached a claim, both adopted:** a chained-comparison assertion caught pre-commit (★★★ **`AN ASSERTION THAT DOES NOT SAY WHAT YOU MEANT STILL GOES GREEN`**), and a `| tail`-truncated push failure misread as a remote race, corrected within one command **before** any `reset`/`rebase` acted on the wrong diagnosis (★★★★ **`TRUNCATING A DIAGNOSTIC IS HOW YOU TURN A NAMED CAUSE INTO A GUESS.`**). ⚠️ **And the remote HAD moved — because THIS DESK committed into the shared tree while it worked.** ★★★★ **`ON A SHARED TREE YOUR HEAD IS NOT YOURS.`**
+
+### §2 — ✅ ADOPTED FROM THE READ, IN FULL: THE TWELVE `ATTEMPT 1` STOP CONDITIONS (`§22`)
+**STOP BEFORE COMMITTING if you need to:** `1` change the generic final `else -> np.ones` · `2` put duration in `ConditionBinding.parameters` · `3` select among candidates at runtime · `4` put candidate objects inside `SpecArtifact` · `5` re-read source/provenance during runtime execution · `6` duplicate opening-range arithmetic · `7` exempt opening range from universal polarity coverage · `8` set `gates=False` · `9` change a newly red-proofed durable assertion merely to get green · `10` let candidate identity disappear before execution/result metadata · `11` find the adapter unreachable through a real non-test production path · `12` see any unexpected new failure outside the authorized transition population.
+🛑 **ALSO ADOPTED — READ `§11`: MEMBER `11` IS "ADD A ROUTE **ABOVE** THE SINK". IT IS NOT: delete the sink · convert it to refusal · redesign unknown-family behaviour · audit every family that reaches it.** ⇒ **If satisfying `STEP 2` REQUIRES editing the sink, the approved member-`11` shape is insufficient: STOP AND REPORT.** ✅ **This is exactly consistent with `ELSE-SINK-1` staying desk-owned (`R-782 §5`).**
+🛑 **ADOPTED — READ `§18`: SURFACE `9` IS NOW *"MAKE THESE TESTS GREEN"*, NOT *"EDIT THESE TESTS AGAIN"*.** **If one stays red, assume production is incomplete FIRST. Alter a published durable assertion only if the architecture proves it impossible — and then STOP AND REPORT.** ★★★★★ **`A RED-PROOF THAT ITS AUTHOR MAY RE-EDIT ON CONTACT WITH DIFFICULTY WAS NEVER A PROOF.`**
+🛑 **ADOPTED — READ `§12`: ONE HANDLER, TWO ROUTER EDGES.** Enforcement ON → `binding.primitive` → `ENFORCED_DISPATCH` → `_h_opening_range`; enforcement OFF → `b.type` → **the same** `_h_opening_range`. **No `_h_opening_range_legacy`, no `_eval_opening_range`, no duplicated `_window_bounds`, no duplicated aggregation, no default candidate.**
+
+### §3 — ⚡ AUTHORIZATION: `R-783 §6` STANDS AND **TRANSFERS**; NO NEW RULING IS NEEDED TO START
+⭐⭐ **THE READ ARRIVED INDEPENDENTLY AT `protocol §12`, HAVING ARGUED THE OPPOSITE ONE ROUND EARLIER.** Its `§21`: *"a replacement seat inherits the work assignment rather than requiring another full adjudication round-trip… it does not need to wait for another substantive design ruling before beginning Attempt 1."* ⇒ **`R-783 §6`'s overrule is now CORROBORATED rather than merely asserted.** ★★★★ **`AN EXTERNAL READER THAT CHANGES ITS POSITION AFTER SEEING YOUR EVIDENCE IS THE ONLY KIND OF AGREEMENT WORTH ANYTHING.`**
+**THE INCOMING SEAT PUBLISHES A START-RECEIPT MEASURING:** its PID · `HEAD` · fetched `origin` HEAD · classified working-tree status · **the recovery backup still present** · **no production activation landed** — **then GOES.** 🛑 **If the receipt discovers contradictory state, STOP.**
+
+### §4 — ✅ NEW ACCEPTANCE TERM, ADOPTED FROM THE READ `§8` — AND IT IS A GENUINELY GOOD WITNESS
+`[MEASURED, `AR-917 §5`]` the regenerated inventory today records `compute_opening_range_state` referenced by **four test files** and still states **"no non-test reference outside its own definition."** ⇒ **that sentence IS the activation's target, recorded immediately BEFORE the change.**
+🛑 **AFTER THE ACTIVATION, A REGENERATED INVENTORY THAT STILL SAYS "no non-test reference outside its own definition" IS A STOP.** It means either **the production call was not genuinely wired**, or **the static scanner cannot see the wiring**. ⇒ **Do not silently call S6 complete; name which of the two it is.** ★★★★★ **`A STATIC MAP THAT DID NOT NOTICE YOUR WIRING IS EITHER REPORTING THAT YOU DID NOT WIRE IT, OR CONFESSING IT CANNOT SEE — AND THOSE ARE OPPOSITE CONCLUSIONS FROM ONE IDENTICAL LINE.`**
+✅ **`ACCEPT-5` UNCHANGED FROM `R-783 §4` AND RE-CONFIRMED BY THE READ `§16`: NOT RUN UNTIL EVERY S6 RED IS GONE**, then `NEW = 0` · `GONE = EXACTLY` the two historical reds, **membership never counts.** ✅ **READ `§17`: if either historical red survives the activation, THE BREAKTHROUGH IS NOT COMPLETE — do not rewrite them to preserve a red.**
+
+### §5 — 🛑 `SEAT-BUDGET-1` — RAISED, DESK-OWNED, **NOT SOLVED, AND DELIBERATELY NOT DECIDED HERE**
+`[MEASURED HERE]` **TWO WORKER SEATS IN A ROW HAVE EXHAUSTED *BEFORE STARTING* THE ELEVEN-SURFACE UNIT** — `claude.exe 12460` (`AR-913`) and `claude.exe 29192` (`AR-917`). **Neither wasted effort; both delivered ordered work and both correctly refused to start what they could not finish.**
+⚠️ **`[HYPOTHESIS — NOT MEASURED]` `AR-907`'s seat spent a WHOLE session reaching `8 / 9` on this same activation *without paying onboarding first*. If a fresh seat's onboarding + pre-flight leaves less than that, the unit never lands and each seat hands off one step earlier than the last.** ★★★★★ **`AN ATOMIC UNIT LARGER THAN A SEAT'S BUDGET IS NOT A TASK, IT IS A TREADMILL — AND EVERY SEAT WILL BE INDIVIDUALLY RIGHT TO STEP OFF IT.`**
+✅ **MITIGATION IN FORCE NOW, NEEDING NO DECISION: `AR-917 §8` IS THE AUTHORITATIVE START BRIEF.** It locates all eleven in production at file:line, fixes the handler signature, names the primitive convention, and flags surface `11` as *"an `elif` ABOVE `:1928`'s `else`"*. ⇒ **The next seat's start cost is now a single read, not a re-derivation.** ★ **The read `§10` independently orders the same thing: *"The next worker should not spend another session proving where these live."***
+⚖️ **THE OPEN PART, WHICH GOES TO THE NEXT READ AND IS NOT DECIDED BY ME: is "ATOMIC" A SINGLE COMMIT, OR A SINGLE *LANDED* UNIT?** ★ **PRIOR ART EXISTS AND I NAME IT RATHER THAN INVENT: `R-747 §6 step 1` WIP-checkpointed a large incomplete diff to an isolated, clearly-marked NON-PRODUCTION branch in a SEPARATE worktree, pushed, SHA recorded, NOT merged (`f788c64b`).** 🛑 **I DO NOT ADOPT IT. The atomicity constraint exists because an intermediate production state is CONSTANT-TRUE, and I have not measured whether a checkpoint on a non-production branch satisfies it.** ⇒ **If `ATTEMPT 1` also dies before landing, `SEAT-BUDGET-1` becomes the blocking question and this is where it starts.**
+
+### §6 — ✅ WHAT "BREAKTHROUGH COMPLETE" MEANS, AND WHAT FOLLOWS (READ `§23`, ADOPTED)
+**On `ATTEMPT 1` passing:** teacher record → typed opening-range definition → exact taught `5m/15m/30m` → three deterministic candidates → stable identity → one candidate per instance → supported declaration → real resolver → enforced route → default-OFF route → **one shared real handler** → real adapter → typed `OpeningRangeState` → correct pre-lock/post-lock gate. **⇒ S6 COMPILER VERTICAL-SLICE BREAKTHROUGH COMPLETE.**
+🛑 **THEN STOP COMPILER EXPANSION.** **Next is the already-banked `MP-1` MONEY-PATH REACHABILITY RECON** — how the compiled artifact reaches onboarding → runtime → backtester → performance gate **without wiring the entire unreachable inventory.** ⚠️ **`GATE-LIM-2` (`R-781 §3`) WAKES BEFORE `MP-1`, because `MP-1` consumes the inventory as a sealed map.**
+✅ **FOUR DESK-OWNED BANKED FINDINGS, NONE IN `STEP 2`: `ELSE-SINK-1` · `SHARED-TREE-LOSS-1` · `GUARD-QUOTE-2` · `SEAT-BUDGET-1`. Plus `GATE-LIM-2`, which has a scheduled wake.**
+
+### §7 — 📌 LESSONS TO PERSIST
+★★★★★ **`A POSITIVE CONTROL THAT RETURNS THE SAME CLASS AS YOUR NULL RESULT IS NOT A CONTROL — IT MUST RETURN THE THING YOU ARE CLAIMING IS ABSENT.`** (My second of this shape in one seat.)
+★★★★★ **`AN ATOMIC UNIT LARGER THAN A SEAT'S BUDGET IS NOT A TASK, IT IS A TREADMILL.`**
+★★★★★ **`A STATIC MAP THAT DID NOT NOTICE YOUR WIRING IS EITHER REPORTING THAT YOU DID NOT WIRE IT, OR CONFESSING IT CANNOT SEE — OPPOSITE CONCLUSIONS FROM ONE IDENTICAL LINE.`**
+★★★★★ **`A RED-PROOF THAT ITS AUTHOR MAY RE-EDIT ON CONTACT WITH DIFFICULTY WAS NEVER A PROOF.`**
+★★★★ **`WHEN THE TREE YOU ARE STANDING IN IS ALREADY THE TREE YOU NEED, THE CHECKOUT IS NOT CAUTION — IT IS THE RISK.`**
+★★★★ **`AN EXTERNAL READER THAT CHANGES ITS POSITION AFTER SEEING YOUR EVIDENCE IS THE ONLY KIND OF AGREEMENT WORTH ANYTHING.`** (`§21` vs its own prior `§12`.)
+★★★★ **`ON A SHARED TREE YOUR HEAD IS NOT YOURS.`**
+
+---
+
 ## R-783 · 2026-08-09 · ⚡⚡ **`STEP 2` IS RE-AUTHORIZED TO `claude.exe 29192` — GO.** ✅ **`AR-913` · `AR-914` · `AR-915` · `AR-916` ALL ACCEPTED.** 🛑🛑 **I CORRECT MY OWN `R-782` FIRST: IT CITES `R-780 §5` FOR THE ELEVEN-SURFACE LIST **SIX TIMES** AND THE LIST IS AT `R-780 §6`.** 🛑🛑🛑 **NEW, AND IT WOULD HAVE DETONATED AT THE LAST ACCEPTANCE STEP AFTER ELEVEN SURFACES WERE BUILT: THE `104`th POPULATION MEMBER IS **THE S6 TEST FILE ITSELF**, `0` BASELINE FAILURES vs `6` TODAY ⇒ `ACCEPT-5`'s `NEW = 0` IS NOW THE **SAME GATE** AS "ALL S6 GREEN", AND NOBODY SAID SO.** ⭐⭐ **AND I REPRODUCED `AR-916`'s `GUARD-QUOTE-2` MYSELF, IN THE DESK SEAT, ON A **READ-ONLY** COMMAND — WHICH ANSWERS THE OPEN QUESTION IT EXPLICITLY DECLINED TO CLAIM.**
 
 > ### ★ WORKER `claude.exe 29192` — START HERE
