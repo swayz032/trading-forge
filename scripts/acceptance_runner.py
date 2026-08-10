@@ -156,6 +156,103 @@ def validate_baseline_bytes(path: Path):
     return probs
 
 
+# ---------------------------------------------------------------------------
+# F-3 (R-794 §6) — THE SEALED DISPOSITIONS, WITH THEIR OWN OUT-OF-BAND ANCHOR.
+# A test that goes PASS -> SKIP is still collected (collection seal satisfied),
+# never failed (not in the failure baseline), and produces no feeder disagreement.
+# All three existing checks are blind to it and the gate reports NEW=0.
+#   `A TEST THAT IS SKIPPED IS NOT A TEST THAT PASSED — AND A GATE THAT CANNOT TELL
+#    THEM APART CAN BE TURNED OFF ONE DECORATOR AT A TIME.`
+# ⭐ sealed_population_sha256 below is BYTE-IDENTICAL to SEAL_APPROVED_POP_SHA256:
+#    two generators, one using --collect-only and one executing the population,
+#    independently reproduced the same 2392-member digest.
+# ---------------------------------------------------------------------------
+DISPOSITION_SEAL = (
+    REPO / "docs" / "replay-results" / "h1-battery"
+    / "acceptance-disposition-seal-08062e12.json"
+)
+DISPOSITION_APPROVED_GRADED_SHA = "08062e12b3e2b59d44eada150c8d8b8653796c90"
+DISPOSITION_APPROVED_POP_SHA256 = (
+    "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9"
+)
+DISPOSITION_APPROVED_SKIPPED_SHA256 = (
+    "ef6bcbeb9504cfb589aae7ce530b392c1b77a73f1e822a02bf6eaca3371e7ce0"
+)
+DISPOSITION_APPROVED_XFAILED_SHA256 = (
+    "ec9e2d7d0b2cc0739fd4bdf07f6ea857735c2f57f851ef42fab0151f4be0f2bf"
+)
+
+# ---------------------------------------------------------------------------
+# 🛑 AUTHORIZED DISPOSITION CHANGES — declared, never absorbed.
+#
+# R-794 §6 specifies exact equality: current_skipped ∩ sealed_population ==
+# sealed_skipped. MEASURED: that rule REFUSES THE PRISTINE TREE, because the seal
+# is taken at 08062e12 (before S6 activation) while HEAD is after it, and S6
+# activation legitimately RE-ENABLED two tests that were skipped at the pin.
+#
+# The rule is not weakened to make the control pass — that would be exactly the
+# forbidden move. Instead the two known changes are NAMED here, out-of-band, in the
+# same shape the failure baseline already uses for `ordered_6b_reds`: an authorized
+# subtraction is declared, and everything else still refuses.
+#
+#   `AN AUTHORIZED CHANGE IS ONE SOMEBODY NAMED IN ADVANCE. AN UNNAMED ONE IS A
+#    REGRESSION WEARING THE SAME CLOTHES.`
+#
+# 🛑 Each member must actually BE in the seal's skipped set (enforced below), so
+# this list cannot be padded with names that silently excuse future drift.
+# ---------------------------------------------------------------------------
+DISPOSITION_AUTHORIZED_UNSKIPPED = (
+    "src/engine/tests/test_spec_family_bindings.py::"
+    "test_s6_coverage_6a_re_derives_on_the_governed_population",
+    "src/engine/tests/test_spec_family_bindings.py::"
+    "test_s6_dead_17_denominator_stays_retired",
+)
+DISPOSITION_AUTHORIZED_UNXFAILED = ()
+
+
+def validate_disposition_seal(seal):
+    """DISPOSITION SEAL PREFLIGHT — anchored OUTSIDE the file, exactly like the seal.
+
+    Returns a list of refusal strings; empty means it may be trusted.
+    """
+    probs = []
+    if seal.get("graded_sha") != DISPOSITION_APPROVED_GRADED_SHA:
+        probs.append(
+            "DISPOSITION SEAL INTEGRITY FAILURE: graded_sha "
+            f"{seal.get('graded_sha')!r} is not the approved "
+            f"{DISPOSITION_APPROVED_GRADED_SHA!r}."
+        )
+    for key, count_key, approved in (
+        ("sealed_population", "sealed_population_count", DISPOSITION_APPROVED_POP_SHA256),
+        ("sealed_skipped", "sealed_skipped_count", DISPOSITION_APPROVED_SKIPPED_SHA256),
+        ("sealed_xfailed", "sealed_xfailed_count", DISPOSITION_APPROVED_XFAILED_SHA256),
+    ):
+        members = seal.get(key)
+        if members is None:
+            probs.append(f"DISPOSITION SEAL INTEGRITY FAILURE: {key} is missing.")
+            continue
+        if seal.get(count_key) != len(members):
+            probs.append(
+                f"DISPOSITION SEAL INTEGRITY FAILURE: {count_key} "
+                f"{seal.get(count_key)} != len({key}) {len(members)}."
+            )
+        if len(set(members)) != len(members):
+            probs.append(
+                f"DISPOSITION SEAL INTEGRITY FAILURE: {key} contains duplicate node IDs."
+            )
+        recomputed = hashlib.sha256(
+            "\n".join(sorted(members)).encode("utf-8")
+        ).hexdigest()
+        # Against the EXTERNAL anchor, never the file's own stored digest — a seal
+        # that recomputes its own digest cannot be allowed to authorize itself.
+        if recomputed != approved:
+            probs.append(
+                f"DISPOSITION SEAL INTEGRITY FAILURE: {key} digest {recomputed} does "
+                f"not match the approved hash pinned in this runner ({approved})."
+            )
+    return probs
+
+
 def validate_seal(seal):
     """SEAL PREFLIGHT — run BEFORE the seal is used for anything (F-ACCEPT5-5).
 
@@ -509,6 +606,67 @@ def main():
         failures_of_the_gate.append(
             "NO SEALED COLLECTION SUPPLIED: --seal is required. Without it a "
             "previously-green sealed test can vanish unseen (F-ACCEPT5-2)."
+        )
+
+    # --- F-3: SEALED DISPOSITIONS — PASS→SKIP / PASS→XFAIL ------------------
+    if DISPOSITION_SEAL.is_file():
+        disp = json.loads(DISPOSITION_SEAL.read_text(encoding="utf-8"))
+        disp_problems = validate_disposition_seal(disp)
+        print(f"[DISP] preflight problems                : {len(disp_problems)}")
+        for pr in disp_problems:
+            print(f"      {pr}")
+        failures_of_the_gate.extend(disp_problems)
+
+        disp_pop = set(disp["sealed_population"])
+        # 🛑 SCOPED TO THE SEALED POPULATION on purpose: a NEWLY ADDED test may
+        # legally skip without tripping this gate, while no SEALED test may change
+        # disposition in EITHER direction.
+        for label, current, sealed_members, authorized in (
+            ("SKIP", skipped, set(disp["sealed_skipped"]),
+             set(DISPOSITION_AUTHORIZED_UNSKIPPED)),
+            ("XFAIL", xfailed, set(disp["sealed_xfailed"]),
+             set(DISPOSITION_AUTHORIZED_UNXFAILED)),
+        ):
+            # An authorization naming a test that was never in this disposition at
+            # the seal cannot authorize anything — and left unchecked it would be a
+            # blank cheque for future drift.
+            phantom = sorted(authorized - sealed_members)
+            if phantom:
+                failures_of_the_gate.append(
+                    f"AUTHORIZED {label} LIST IS INVALID: {len(phantom)} member(s) were "
+                    f"never {label} at the seal: {phantom}. An authorization for a change "
+                    f"that never existed can only widen what passes."
+                )
+
+            current_in_sealed = set(current) & disp_pop
+            newly = sorted(current_in_sealed - sealed_members)
+            no_longer = sorted((sealed_members - current_in_sealed) - authorized)
+            print(f"[DISP] sealed {label:<5} membership drift        : "
+                  f"+{len(newly)} / -{len(no_longer)}")
+            # 🛑 BOTH DIRECTIONS, BY MEMBERSHIP, NEVER COUNTS. A balanced swap —
+            # one sealed test starts skipping while a sealed skip starts passing —
+            # leaves every aggregate count identical and is invisible to a counter.
+            if newly:
+                for n in newly[:10]:
+                    print(f"      SEALED TEST NEWLY {label}: {n}")
+                failures_of_the_gate.append(
+                    f"SEALED DISPOSITION CHANGED: {len(newly)} sealed test(s) are now "
+                    f"{label} that were RUNNING at the seal. A test that stops running "
+                    f"reads as NEW=0 while its assertion no longer executes."
+                )
+            if no_longer:
+                for n in no_longer[:10]:
+                    print(f"      SEALED TEST NO LONGER {label}: {n}")
+                failures_of_the_gate.append(
+                    f"SEALED DISPOSITION CHANGED: {len(no_longer)} sealed test(s) are no "
+                    f"longer {label} though they were at the seal. Re-enabling is likely "
+                    f"good news, but it is a POPULATION CHANGE and must be declared, not "
+                    f"absorbed."
+                )
+    else:
+        failures_of_the_gate.append(
+            "NO SEALED DISPOSITIONS SUPPLIED: the disposition seal is required. "
+            "Without it a sealed test can go PASS->SKIP and the gate reads NEW=0 (F-3)."
         )
 
     # F-ACCEPT5-6, THE WORKED EXAMPLE: this block already computed "FAILING" —
