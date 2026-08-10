@@ -4,6 +4,82 @@
 
 ---
 
+## AR-933 · 2026-08-10 · 🔁 **SEAT ROLL — WORKER `claude.exe 13200` IS GONE; I AM ITS SUCCESSOR, `claude.exe 3136`.** ✅ **THIS IS A START-RECEIPT, NOT A DELIVERY: NO LANE IS OPEN TO ME.** ✅ **`R-792`'s BOTH LANES WERE RETURNED BEFORE THAT SEAT DIED — `AR-932`, FAN-IN `2 / 2`, LANDED AT `HEAD 5bb98fd9` = `origin`.** ✅ **RULING EAR ARMED UNDER **THIS** SEAT AND RED-PROOFED: THE DETECTOR FIRED **AND** THE FIRING REACHED CHAT.** ⚖️ **I AM IDLE AND AWAITING `R-793` — the next step `AR-932 §5` names is a DESK DESIGN RULING, not a measurement, so there is nothing for a worker to pull.**
+
+**SEAT `claude.exe 3136` (born `10:03:02`). CAMPAIGN TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 5bb98fd9` = `origin`, `src/ scripts/ tests/` CLEAN. NO LANE CLAIMED · NO ATTEMPT SPENT · NO PRODUCTION WRITE.**
+
+### §1 — 🔁 THE SEAT CHANGED, AND THE PRIOR ART SAYS I DO NOT ASK TO BE RE-AUTHORIZED
+`[MEASURED HERE — `Win32_Process` + parent walk from my own shell. 🛑 `TaskList` NOT USED (`[background-monitors]`, blind 8×).]`
+```
+claude.exe 21924  born 03:41:56  ALIVE   = the DESK (R-792's own seat line names it)
+claude.exe  3136  born 10:03:02  ALIVE   = ME, worker successor (my shell's parent)
+claude.exe 13200      ---        ABSENT  = the worker BOTH R-791 and R-792 address by PID
+```
+⚠️ **`[identity-address]` HONOURED: I matched on IMAGE NAME + BIRTH TIME, not bare liveness — a PID is an address, not an identity, and this box has already re-issued one.**
+✅ **PRIOR-ART SEARCH STATED, NOT IMPLIED (`worker-execution §0.-0.5`). Terms: `authorization transfer` · `TRANSFERS` · `seat retires` · `successor`.** **FOUND, so I cite it and proceed under it rather than spending a ruling on it:**
+```
+ADVISOR-RULINGS.md:439  "IF YOUR SEAT RETIRES, THE LANE STATE TRANSFERS BY R-784 §3 -
+                         a successor publishes a start-receipt and reads §7."
+ADVISOR-RULINGS.md:892  R-784 DECISION: "... AUTHORIZATION TRANSFERS"
+ADVISOR-RULINGS.md:920  R-784 §3: "R-783 §6 STANDS AND TRANSFERS; NO NEW RULING IS
+                         NEEDED TO START"
+```
+🛑 **BUT THE TRANSFER IS MOOT, AND THAT IS THE WHOLE POINT OF THIS RECEIPT: THERE IS NOTHING LEFT TO TRANSFER.** `[MEASURED HERE]` **`AR-932` is the newest `## AR-` on disk and it POSTDATES `R-792` — commit order `e6f0431a` (`R-792`) → `9b62c439` (the `A″` code) → `5bb98fd9` (`AR-932`).** ⇒ **the retiring seat closed its whole batch before it died. `worker-onboarding §5`'s "finish your lanes" is satisfied BY THE RECORD, not by my say-so.**
+⚖️ **EVIDENCE GRADE, STATED PLAINLY: `AR-932`'s eight-arm result is `[ARTIFACT-SOURCED — READ, NOT RE-EXECUTED BY ME]`. I have not re-run `A`–`G`, and I am not certifying them. `[MEASURED HERE]` is limited to: the file is on disk, it is newest, and its commit is `HEAD` = `origin`.** ★★★ **A SUCCESSOR RELAYING ITS PREDECESSOR'S GREEN AS ITS OWN MEASUREMENT IS HOW A CLAIM LAUNDERS ITS GRADE ACROSS A SEAT BOUNDARY.**
+
+### §2 — ✅ THE EAR: CENSUS FIRST, THEN ARMED, THEN RED-PROOFED — ALL THREE PROVEN SEPARATELY
+`[MEASURED HERE — `Win32_Process` `CommandLine`, every `bash.exe` on the box]`:
+```
+bash 10048 / 21876  parent claude.exe 21924 (DESK)  -> polls AGENT-REPORTS.md
+                    NOT MINE. NOT TOUCHED. (worker-onboarding §2a.3)
+bash 18496          parent 24592, script "ruling-ear-13200.sh" on ADVISOR-RULINGS.md
+bash 12748          same script, on a THROWAWAY file
+                    -> BOTH belong to the DEAD seat 13200. NOT KILLED (not mine to kill).
+UNDER claude.exe 3136 (ME): ZERO ears existed. => I armed one.
+```
+🛑 **FLAGGED FOR THE DESK, NOT ACTED ON: `bash 18496` is a live `while true` loop polling the REAL ledger on behalf of a seat that no longer exists.** ⇒ **it is `[LIVENESS ≠ DELIVERY]` in its purest form — it will poll correctly forever and notify nobody. If a future census sees it and reads "an ear is watching the rulings file", that is FALSE.** ⚖️ **I left it running because `§2a.3` forbids killing a rig I did not arm; naming it is the remedy available to me.**
+✅ **MY EAR — `Monitor`, `persistent: true`, so every emitted line lands as a CHAT NOTIFICATION (not a background `Bash` loop, which `§2a` rules is not an ear at all):**
+```
+EAR ARMED 2026-08-10T14:06:06Z | seat claude.exe 3136
+   watching: docs/designs/ADVISOR-RULINGS.md
+   BACKFILL newest-at-arming: ## R-792 · 2026-08-10 · AR-931 PARTIAL PASS ...
+```
+✅ **RED-PROOF, ON A THROWAWAY, BEFORE THE REAL FILE — and it proves TWO different things that are easy to conflate:**
+```
+[MEASURED HERE, real captured notifications]
+1. armed on scratchpad/throwaway-rulings.md (seed header ## R-000)
+   -> "EAR ARMED ..." arrived in chat            = THE CHANNEL DELIVERS
+2. prepended "## R-001 ... RED-PROOF INJECTION"
+   -> "NEW RULING 14:05:38Z | ## R-001 ..."      = THE DETECTOR ACTUALLY FIRES
+3. throwaway monitor stopped; real ear armed separately.
+```
+★★★★★ **`AN ARMED-LINE PROVES THE CHANNEL AND NOTHING ELSE — A DETECTOR THAT HAS NEVER GONE OFF IS NOT YET AN INSTRUMENT.`** ✅ **COVERAGE, per `Monitor`'s own silence-is-not-success rule: the script ALSO emits `EAR BLIND` if the ledger becomes unreadable, so a vanished/renamed file cannot read as "no new ruling".**
+✅ **BACKFILL DISCHARGED BY HAND, NOT BY THE RIG: I read the newest ruling on disk myself — it is `R-792` — and the ear's independent backfill line agrees. Arming time `14:06:06Z` is the join key; nothing before it was delivered by this rig.**
+
+### §3 — ✅ THE STANDING PRIOR-ART GATE, RUN AND UNPIPED
+```
+[MEASURED HERE, campaign tree, EXIT CODE READ DIRECTLY - NOT THROUGH A PIPE]
+python scripts/system_inventory.py --check
+  FRESH: docs/designs/SYSTEM-INVENTORY.md matches the tree
+         (content compared; provenance sha ignored).
+  EXITCODE = 0
+```
+⇒ **the generated map is FRESH, so it is usable as-is by whoever takes the next lane; no regeneration is owed.**
+
+### §4 — 🛑 WHAT I HAVE NOT DONE, ALL OF IT STILL FORBIDDEN BY `R-792 §8`
+🛑 **NOT DONE:** `compiled_spec` NOT forwarded · no thin CLI · **arrow `1` and arrow `2` BOTH still unwired — I did not touch them** · typed candidate NOT serialized · `PAPER-ORB-OWNERSHIP-1` NOT answered · paper ORB, old `OR` calculator and scheduler call untouched · **`ACCEPT-5` grade NOT dispatched** · the two `ordered_6b_reds` names NOT renamed (`[accept5-join-keys]`) · immutable failure baseline untouched · no compiler expansion · no `--no-verify` · no `git checkout` / `reset` / amend in this shared tree.
+✅ **SINGLE-WRITER HONOURED: this file only. I have not edited `ADVISOR-RULINGS.md` and will not.**
+⚠️ **SHARED-TREE CARE (`[two-operator-windows]`, `[precommit-stash]`): the desk seat `21924` is LIVE. I re-checked `HEAD` immediately before committing and staged EXACTLY ONE PATH — `docs/designs/AGENT-REPORTS.md`. Nothing else was staged, and there were no modified tracked files to sweep.**
+
+### §5 — ⚖️ WHAT IS OWED, AND BY WHOM
+**FAN-IN: `N / A` — no lane was authorized to THIS seat.** ⚡ **`R-792`'s fan-in of `2 / 2` was discharged by `AR-932` and belongs to seat `13200`.**
+⚡ **OPEN AND NOT MINE — `AR-932 §5` states it and I agree with the reasoning:** the desk must decide **what identity may cross the persistence boundary**, given (a) `R-785`'s firebreak deliberately forbids the typed candidate crossing, and (b) `spec_hash` / `graph_canonical_hash` / `ledger_d` are provably IDENTICAL across all three taught candidates. **That is a design ruling. A worker cannot measure his way to it, and inventing an answer is exactly the defaulting `R-736` eliminated.**
+⚡ **ALSO HELD BY THE DESK:** whether the `ACCEPT-5` independent grade is now released. **`R-792 §7` pre-registered the release condition as *"after `A`–`G` all bite alone and the pristine control passes"*, and `AR-932 §1` reports exactly that — but I am the successor to the seat that produced it, so I am NOT the one who gets to say the condition is met.** ⚖️ **If the desk (or the operator) wants it: grader `accuracy-validator`, pin `5bb98fd9`, brief pre-written at `AR-932 §5`, DURABLE RECEIPT file required.**
+**RECOMMENDATION: `BLOCKED` — awaiting `R-793`. Not blocked on evidence; blocked on a decision that is the desk's by construction.**
+**NEXT SMALLEST TASK (ONE): none for a worker until `R-793` lands. My ear is armed and will deliver it.**
+
+---
+
 ## AR-932 · 2026-08-10 · ✅ **LANE `A″` DELIVERED — THE CLASS IS CLOSED, NOT THREE BUGS. ALL EIGHT ARMS `A`–`G` BITE IN ISOLATION, EACH NAMING ITS OWN REFUSAL STRING, PRISTINE STILL PASSES.** ⭐ **`G2` IS THE ONE THAT MATTERS: AN INTERNALLY-CONSISTENT FORGED SEAL — COUNT FIXED, DIGEST RECOMPUTED — IS STILL REFUSED BY THE HASH PINNED IN THE RUNNER'S OWN CONTRACT.** ✅ **LANE `B″` ANSWERED: THE CANDIDATE IDENTITY **EXISTS AND IS SUFFICIENT IN PYTHON**, IS **ABSENT** FROM EVERYTHING THAT CROSSES, AND EVERY CROSSING FIELD IS **AMBIGUOUS ACROSS ALL THREE CANDIDATES BY CONSTRUCTION.** ⚖️ **FAN-IN `2 / 2`.** 🛑 **ONE PROCESS DISCLOSURE I OWE (`§4`).**
 
 **SEAT `claude.exe 13200`. CAMPAIGN TREE `HEAD 9b62c439` + this report. LANE `B″` TREE `wt-mp1-recon-20260810` @ `08062e12`, `git status` EMPTY. `A″` attempt `1 / 2` · `B″` attempt `1 / 2`.**
