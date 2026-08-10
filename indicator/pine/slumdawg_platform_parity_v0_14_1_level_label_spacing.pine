@@ -1,0 +1,242 @@
+//@version=6
+indicator("Slumdawg traders indicator", shorttitle = "SLUMDAWG", overlay = true, behind_chart = true, max_labels_count = 40, max_lines_count = 20, max_boxes_count = 10)
+
+// v0.14.1 - KEY-LEVEL LABEL SPACING / NO AUTOMATIC TRENDLINES
+// PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
+// PDH/PDL/PWH/PWL keep the v0.14 price semantics and main-chart scale.
+// Level chips are slightly larger and are pushed into right-side chart space so they do not crowd active candles.
+
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
+const float HUGE_DISTANCE = 1e12
+const int LEVEL_LABEL_OFFSET_BARS = 8
+const int FALLBACK_BAR_MS = 5 * 60 * 1000
+
+// -----------------------------------------------------------------------------
+// INPUTS
+// -----------------------------------------------------------------------------
+string gSetup = "1 - SETUP"
+string bigDirection = input.string("NOT SET", "BIG DIRECTION", options = ["UP", "DOWN", "NOT SET"], group = gSetup, display = display.none)
+string planSide = input.string("LONG", "PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
+float goLine = input.price(0.0, "GO LINE (yellow)", group = gSetup, display = display.none)
+float safeTargetLow = input.price(0.0, "SAFE TARGET lower edge", group = gSetup, display = display.none)
+float safeTargetHigh = input.price(0.0, "SAFE TARGET upper edge", group = gSetup, display = display.none)
+
+string gView = "2 - DISPLAY"
+bool showCoach = input.bool(true, "Show Slumdawg coach", group = gView, tooltip = "Turn OFF to collapse the coach into a small SLUMDAWG tab. Turn ON to restore the full coach.")
+bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near", group = gView)
+bool showGoLine = input.bool(true, "Show yellow GO LINE", group = gView)
+bool showSafeTarget = input.bool(true, "Show blue SAFE TARGET", group = gView)
+
+// -----------------------------------------------------------------------------
+// COLORS
+// -----------------------------------------------------------------------------
+color GREEN_UP = color.rgb(0, 205, 105)
+color RED_DOWN = color.rgb(230, 55, 70)
+color BLUE_DAY = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color BLUE_TARGET = color.rgb(42, 118, 255)
+color YELLOW_GO = color.rgb(255, 215, 0)
+color ORANGE_WAIT = color.rgb(255, 155, 35)
+color PANEL_DARK = color.rgb(18, 20, 25)
+color PANEL_MID = color.rgb(37, 41, 49)
+color GOLD_ACCENT = color.rgb(205, 165, 70)
+
+// -----------------------------------------------------------------------------
+// PLATFORM CONTEXT
+// -----------------------------------------------------------------------------
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+
+// -----------------------------------------------------------------------------
+// FROZEN KEY-LEVEL ENGINE — copied from the visually accepted v0.14 baseline.
+// Key levels remain available on all chart timeframes and are isolated from trendline research.
+// -----------------------------------------------------------------------------
+[dHighCurrent, dLowCurrent, dCloseTimeCurrent] = request.security(syminfo.tickerid, "D", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[dHighPrev, dLowPrev] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+[wHighCurrent, wLowCurrent, wCloseTimeCurrent] = request.security(syminfo.tickerid, "W", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[wHighPrev, wLowPrev] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+int closedGapMs = timenow - time_close
+bool recentClosedGap = not barstate.isrealtime and closedGapMs >= 0 and closedGapMs <= NORMAL_CLOSED_GAP_MS
+bool extendedClosedGap = not barstate.isrealtime and closedGapMs > NORMAL_CLOSED_GAP_MS
+bool dailyCurrentCompletedNow = recentClosedGap and not na(dCloseTimeCurrent) and timenow >= dCloseTimeCurrent
+bool weeklyCurrentCompletedNow = recentClosedGap and not na(wCloseTimeCurrent) and timenow >= wCloseTimeCurrent
+
+float pdh = dailyCurrentCompletedNow ? dHighCurrent : dHighPrev
+float pdl = dailyCurrentCompletedNow ? dLowCurrent : dLowPrev
+float pwh = weeklyCurrentCompletedNow ? wHighCurrent : wHighPrev
+float pwl = weeklyCurrentCompletedNow ? wLowCurrent : wLowPrev
+
+bool dayValuesValid = not na(pdh) and not na(pdl)
+bool weekValuesValid = not na(pwh) and not na(pwl)
+float dailyVisualEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na
+bool showPdh = dayValuesValid
+bool showPdl = dayValuesValid
+bool showPwh = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwh - close) <= dailyVisualEnvelope
+bool showPwl = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwl - close) <= dailyVisualEnvelope
+
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// KEY-LEVEL DRAWINGS
+// Label x-position is derived from the current chart bar duration. This makes the
+// visual spacing adapt when the user changes chart timeframe without changing any
+// PDH/PDL/PWH/PWL price value. Chips remain title-only and do not print level prices.
+// -----------------------------------------------------------------------------
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+
+int chartBarMs = not na(time_close) and time_close > time ? time_close - time : FALLBACK_BAR_MS
+int levelLabelX = (not na(time_close) ? time_close : time) + chartBarMs * LEVEL_LABEL_OFFSET_BARS
+
+f_sync_level(line id, label lid, float price, string name, color c, bool visible, int labelX) =>
+    if visible and not na(price) and price > 0
+        line.set_xy1(id, time, price)
+        line.set_xy2(id, time_close, price)
+        line.set_extend(id, extend.both)
+        line.set_color(id, c)
+        line.set_width(id, 2)
+        label.set_xy(lid, labelX, price)
+        label.set_text(lid, name)
+        label.set_color(lid, c)
+        label.set_textcolor(lid, color.white)
+        label.set_size(lid, size.normal)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
+
+// -----------------------------------------------------------------------------
+// MANUAL GO LINE / SAFE TARGET. Kept isolated from the key-level engine.
+// -----------------------------------------------------------------------------
+var line goDraw = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var label goLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var box targetBox = na
+var label targetLabel = na
+
+bool goSet = goLine > 0
+bool targetSet = safeTargetLow > 0 and safeTargetHigh > safeTargetLow
+
+// NEXT WALL uses key levels only. Automatic trendlines remain intentionally absent.
+array<string> wallNames = array.new_string()
+array<float> wallPrices = array.new_float()
+
+f_add_wall(bool condition, string name, float price) =>
+    if condition and not na(price)
+        array.push(wallNames, name)
+        array.push(wallPrices, price)
+
+if planSide == "LONG"
+    f_add_wall(showPdh and pdh > close, "PDH", pdh)
+    f_add_wall(showPwh and pwh > close, "PWH", pwh)
+else
+    f_add_wall(showPdl and pdl < close, "PDL", pdl)
+    f_add_wall(showPwl and pwl < close, "PWL", pwl)
+
+string nextWallName = "NONE AHEAD"
+float nextWallPrice = na
+float nextWallDistance = HUGE_DISTANCE
+if array.size(wallPrices) > 0
+    for i = 0 to array.size(wallPrices) - 1
+        float p = array.get(wallPrices, i)
+        float dist = math.abs(p - close)
+        if dist < nextWallDistance
+            nextWallDistance := dist
+            nextWallName := array.get(wallNames, i)
+            nextWallPrice := p
+string nextWallText = na(nextWallPrice) ? nextWallName : nextWallName + " @ " + str.tostring(nextWallPrice, format.mintick)
+
+if barstate.islast
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, levelLabelX)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, levelLabelX)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, levelLabelX)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, levelLabelX)
+
+    if showGoLine and goSet
+        line.set_xy1(goDraw, time, goLine)
+        line.set_xy2(goDraw, time_close, goLine)
+        line.set_extend(goDraw, extend.right)
+        line.set_color(goDraw, YELLOW_GO)
+        line.set_width(goDraw, 4)
+        label.set_xy(goLabel, time_close, goLine)
+        label.set_text(goLabel, "GO")
+        label.set_color(goLabel, YELLOW_GO)
+        label.set_textcolor(goLabel, color.black)
+        label.set_size(goLabel, size.small)
+    else
+        line.set_xy1(goDraw, na, na)
+        line.set_xy2(goDraw, na, na)
+        label.set_xy(goLabel, na, na)
+        label.set_text(goLabel, "")
+
+    if showSafeTarget and targetSet
+        if na(targetBox)
+            targetBox := box.new(time, safeTargetHigh, time_close, safeTargetLow, xloc = xloc.bar_time, extend = extend.right, border_color = BLUE_TARGET, bgcolor = color.new(BLUE_TARGET, 84), border_width = 2)
+        else
+            box.set_lefttop(targetBox, time, safeTargetHigh)
+            box.set_rightbottom(targetBox, time_close, safeTargetLow)
+        float targetMid = (safeTargetHigh + safeTargetLow) / 2.0
+        if na(targetLabel)
+            targetLabel := label.new(time_close, targetMid, "SAFE TARGET", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left, color = BLUE_TARGET, textcolor = color.white, size = size.small)
+        else
+            label.set_xy(targetLabel, time_close, targetMid)
+    else
+        if not na(targetBox)
+            box.delete(targetBox)
+            targetBox := na
+        if not na(targetLabel)
+            label.delete(targetLabel)
+            targetLabel := na
+
+// -----------------------------------------------------------------------------
+// BEGINNER COACH
+// Pine tables are display objects, not clickable controls. The input above is the
+// actual toggle. When OFF, the full coach is replaced by a tiny visible tab.
+// -----------------------------------------------------------------------------
+bool directionKnown = bigDirection != "NOT SET"
+bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
+string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
+string safeTargetText = targetSet ? str.tostring(safeTargetLow, format.mintick) + " - " + str.tostring(safeTargetHigh, format.mintick) : "NOT SET"
+string nowText = not goSet ? "SET GO LINE" : "WATCH GO LINE"
+string runtimeReason = not isNqMnq ? "USE NQ OR MNQ" : not tickGridExpected ? "CHECK CONTRACT TICK" : extendedClosedGap ? "EXTENDED CLOSE - VERIFY LEVELS" : "KEY LEVELS ACTIVE"
+color bigDirectionColor = bigDirection == "UP" ? GREEN_UP : bigDirection == "DOWN" ? RED_DOWN : color.gray
+color moveColor = not directionKnown ? color.gray : planSide == "LONG" ? GREEN_UP : RED_DOWN
+
+var table coach = na
+if barstate.isfirst
+    coach := showCoach ? table.new(position.top_right, 2, 8, border_width = 2, frame_width = 2, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK) : table.new(position.top_right, 1, 1, border_width = 1, frame_width = 1, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+
+if barstate.islast
+    if showCoach
+        table.cell(coach, 0, 0, "SLUMDAWG", text_color = color.lime, bgcolor = PANEL_MID, text_size = 16)
+        table.cell(coach, 1, 0, "COACH", text_color = color.white, bgcolor = PANEL_MID, text_size = 16)
+        table.cell(coach, 0, 1, "BIG DIRECTION", text_color = color.white, text_size = 13)
+        table.cell(coach, 1, 1, bigDirection, text_color = color.white, bgcolor = bigDirectionColor, text_size = 14)
+        table.cell(coach, 0, 2, "CURRENT MOVE", text_color = color.white, text_size = 13)
+        table.cell(coach, 1, 2, currentMoveText, text_color = color.white, bgcolor = moveColor, text_size = 13)
+        table.cell(coach, 0, 3, "NEXT WALL", text_color = color.white, text_size = 13)
+        table.cell(coach, 1, 3, nextWallText, text_color = color.orange, text_size = 13)
+        table.cell(coach, 0, 4, "GO LINE", text_color = color.black, bgcolor = YELLOW_GO, text_size = 13)
+        table.cell(coach, 1, 4, goSet ? str.tostring(goLine, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 14)
+        table.cell(coach, 0, 5, "SAFE TARGET", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 1, 5, safeTargetText, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 13)
+        table.cell(coach, 0, 6, "NOW", text_color = color.white, text_size = 13)
+        table.cell(coach, 1, 6, nowText, text_color = color.black, bgcolor = ORANGE_WAIT, text_size = 13)
+        table.cell(coach, 0, 7, "SYSTEM", text_color = color.white, text_size = 12)
+        table.cell(coach, 1, 7, runtimeReason, text_color = color.orange, text_size = 12)
+    else
+        table.cell(coach, 0, 0, "SLUMDAWG  ▸", text_color = color.lime, bgcolor = PANEL_MID, text_size = 12)
+
+alertcondition(false, "V0.14.1 level-label spacing", "NON-ACTIONABLE research build")
