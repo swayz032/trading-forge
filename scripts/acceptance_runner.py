@@ -842,6 +842,26 @@ def main():
             print(f"  - {f}")
         print("=" * 72)
         return 1
+    # R-799 SS2 ARCHITECTURAL SPLIT, ADOPTED.
+    #
+    # `--run` MAY issue an authoritative PASS, because it executed the population itself
+    # and every join in the fresh-run protocol above held. `--from-run` MAY NOT: it
+    # consumes a bundle it did not produce, so it can attest that the RECORDED evidence
+    # would satisfy today's scoring, and nothing at all about whether a run happened.
+    #
+    #   `THE DEFECT IS NOT THAT OLD EVIDENCE MAY BE READ -- IT IS THAT OLD EVIDENCE MAY
+    #    MASQUERADE AS A NEW RUN.`
+    #
+    # Emitting the same word for both is precisely how F-R2-1 stayed invisible.
+    if not args.run:
+        print("ACCEPTANCE: ADVISORY / FORENSIC - this previously recorded bundle would "
+              "satisfy current scoring.")
+        print("  This is NOT an authoritative PASS and may not be cited as sign-off "
+              "evidence: --from-run did not execute anything, so it cannot attest that "
+              "the run it is reading ever happened. Re-run with --run for a verdict "
+              "carrying release authority.")
+        print("=" * 72)
+        return 0
     print("ACCEPTANCE: PASS — NEW=0; GONE matches the authorized set; "
           "sealed collection intact; feeders agree.")
     print("=" * 72)
