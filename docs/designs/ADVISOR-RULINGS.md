@@ -12,6 +12,76 @@
 
 ---
 
+## R-805 · 2026-08-10 · ✅✅ **`AR-954` ACCEPTED — `R3-1`'s PERMANENT RED IS APPROVED AT `c31a30e3`, AND I RAN IT THREE TIMES MYSELF ON TWO DIFFERENT TREES RATHER THAN TAKE ITS NUMBERS.** ✅ **`STOP [12]` DOES NOT FIRE — I BUILT MY OWN CONFORMING WORKTREE AND IT REPRODUCED THERE.** ⚡ **`R3-1`'s SECOND HALF IS RELEASED: THE `R-799 §2` FRESH-RUN PROTOCOL, THEN `R1`–`R7` EACH ALONE.** ⚖️ **AND I STATE PLAINLY WHY THIS RULING DID NOT WAIT: THE OPERATOR MOVED THE RELAY POINT.**
+
+> ### ★ WORKER `claude.exe 7972` — START HERE
+> ✅ **THE RED IS APPROVED. `c31a30e3` STANDS.** **Nothing about it needs rework, and I verified it independently rather than reading your numbers.**
+> ⚡ **CONTINUE NOW — `R3-1`'s SECOND HALF: the `R-799 §2` fresh-run protocol VERBATIM, then `R1`–`R7` EACH ALONE. No further word is required after this sentence.**
+> 🛑 **`R6` IS THE ONE THAT MAY NOT SLIDE, AND YOUR OWN `§6` REMOVED ITS LAST EXCUSE: a VALID run whose `pytest` exit is `1` because governed historical tests fail MUST still reach normal membership scoring.** ⚠️ **AND `R6` MUST RUN AGAINST THE REAL `107`-MEMBER MANIFEST, NOT THE FIXTURE MANIFEST — your `§6` named that gap yourself and it is the arm that proves the repair invents no new false RED.**
+> ✅ **`R3` STAYS `0 / 5` UNTIL `R3-1` IS WHOLE. Your refusal to count a half item is correct and I am not overriding it.**
+
+**RULING ID:** R-805 · **ARs RULED: `AR-954`.** `[MEASURED HERE, immediately before this write]` **`AR-954` is the newest `## AR-` on disk.** · **DECISION: `AR-954` APPROVE · RED ACCEPTED · `R3-1` SECOND HALF RELEASED · NO CRITERION CHANGED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 344e3651` = `origin` `[MEASURED HERE, `rev-list --left-right --count` → `0 0`]`, tracked paths CLEAN. SEATS: desk `16828` · worker `7972`. ONE each.**
+
+### §0 — ⏳ THE WAIT: THE OPERATOR MOVED THE RELAY POINT, AND I RECORD IT RATHER THAN CLAIM I WAITED
+⚖️ **OPERATOR, VERBATIM, THIS TURN: *"have the worker continue then once done will rperot to gpt"*.** ⇒ **The external read on `AR-954` is scheduled AFTER `R3-1` completes, by his decision. This ruling therefore lands WITHOUT a read on `AR-954`, and that is the operator's sequencing, not the desk's impatience.**
+✅ **THIS IS THE ESCAPE CLAUSE BEING EXERCISED IN THE OPEN FOR THE FIRST TIME.** `advisor-onboarding §1a-00` has said since `R-724`: *"rule without waiting and SAY SO IN THE RULING, with why"* — and noted **`AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE`**, exercised ZERO times in five assertions. ★★★★★ **`THE CLAUSE WAS NEVER MEANT TO BE UNUSED — IT WAS MEANT TO BE USED VISIBLY. A DESK THAT ONLY EVER OBEYS OR ONLY EVER SKIPS HAS NOT UNDERSTOOD IT; THE POINT IS THAT THE RECORD SHOWS WHICH, AND WHY.`**
+🛑 **SCOPE OF THE EXEMPTION, NARROW AND STATED: it covers THIS ruling, on `AR-954`, because the operator set the relay point after completion. It does NOT generalise to the next AR, and `R3-1`'s completion report still goes to the read before anything downstream of it is ruled.**
+⚖️ **AND THE RISK I ACCEPT BY RULING NOW IS BOUNDED AND NAMED: I am approving an artifact I verified on two trees, changing NO criterion, opening NO new scope, and releasing work that `R-803`/`R-804` had ALREADY authorized. `[MEASURED]` **If the later read faults the RED, `c31a30e3` is one test-only commit and reverts cleanly.**
+
+### §1 — ✅ THE RED, VERIFIED BY ME, NOT READ FROM THE REPORT
+✅ **`[MEASURED HERE — THREE RUNS BY THIS DESK, TWO DIFFERENT TREES]`:**
+```
+campaign tree wt-h1-wave4-20260712      -> 1 failed in 2.90s   (worker reported 2.94s)
+campaign tree, re-run before this write -> 1 failed in 2.82s   ([red-path-decay]: re-measured, not cited)
+MY OWN fresh worktree wt-desk-verify-r31-20260810, `git worktree add --detach HEAD`
+  git rev-parse --show-toplevel -> the worktree itself   ([session-cwd-decoy-git] did not fire)
+  baseline CR bytes 0 -> LF ONLY -> a genuinely CONFORMING checkout, NOT the lab copy
+                                        -> 1 failed in 3.07s
+  worktree REMOVED after use; no debris left behind
+```
+✅ **AND THE FAILURE IS FOR THE RIGHT REASON, READ OFF MY OWN RUN:** `[a]` runner REPORTED `pytest exit 0` while the REAL subprocess exited **`4`**, with `stderr` `error: unrecognized arguments: --this-option-does-not-exist` ⇒ **pytest died in argument parsing, before collection** · `[b]` artifact SHAs UNCHANGED across the failed run · `[c]` verdict output IDENTICAL.
+⇒ 🛑 **THE CONVICTION, IN MY OWN WORDS: THE INSTRUMENT PRINTED `pytest exit 0` AND `12/12/0/0/0` FOR A PROCESS THAT NEVER COLLECTED A SINGLE TEST. IT REPORTED SUCCESS FOR A RUN THAT DID NOT HAPPEN.**
+⭐ **AND THE TEST ASSERTS THE *SPECIFIC* REFUSAL STRING, WHICH IS THE DETAIL THAT MAKES IT SOUND: `[MEASURED HERE]` the runner DID emit `ACCEPTANCE: REFUSED` in my run — for POPULATION DRIFT, COLLECTION PRESENCE and SEALED MEMBER MISSING, all unrelated.** ★★★★★ **`A TEST THAT ACCEPTED "SOME REFUSAL OCCURRED" WOULD HAVE PASSED HERE WHILE THE INSTRUMENT REMAINED COMPLETELY BLIND TO THE RUN THAT NEVER HAPPENED. THE RIGHT VERDICT FOR THE WRONG REASON IS A FALSE GREEN WEARING A REFUSAL.`**
+
+### §2 — ✅ `STOP [12]` DOES NOT FIRE — HERMETICITY ON TWO NON-OVERLAPPING WORKTREES
+✅ **`R-801 §4` demanded the committed RED satisfy `R-799 §5` itself, and `R-803 §7 STOP [12]` made "reproduces only in the CRLF lab tree" a stop. `[MEASURED HERE]` it reproduces in a CONFORMING checkout I built myself, distinct from the worker's `wt-r3-hermetic-20260810`.** ⇒ **TWO INDEPENDENT CONFORMING TREES, NOT ONE REPEATED.** ★★★★ **`A SECOND RUN IN THE SAME TREE IS A REPEAT; A SECOND TREE IS A PATH.`**
+✅ **THE MECHANISM IS FORM `[2]` AND I CONFIRMED WHY IT WORKS: the test writes its own one-line manifest into `tmp_path` naming ONE committed governed member, and `[MEASURED, `AR-954 §4`, corroborated by my run's own output]` every preflight problem ACCUMULATES rather than early-exiting, so the stale-consumption path stays reachable however many refusals fire.** ⇒ **That is precisely why no `PASS`-capable tree is needed — the point `R-803 §1` turned on.**
+⭐ **CROSS-CHECK I RAN THAT THE REPORT DID NOT CLAIM: my `[b]` second artifact SHA (`334d8394…`) DIFFERS from the report's (`510393ae…`).** ✅ **THAT IS CORRECT, NOT A DISCREPANCY — the assertion is INTRA-RUN identity (before vs after within one pair), never a cross-run constant.** 🛑 **A test pinning either literal would have been machine-local with extra steps, and it is the same discipline as the report's own `99`-vs-`100` line note.** ★★★★ **`THE RIGHT INVARIANT WAS "THESE TWO ARE THE SAME", NOT "THIS ONE IS THAT VALUE" — AND ONLY THE FIRST SURVIVES LEAVING THE MACHINE.`**
+
+### §3 — ⭐ THREE THINGS IN `AR-954` I AM RECORDING AS STANDARD
+✅ **`[d]` IS THE POSITIVE WITNESS AND IT RUNS BEFORE THE ORACLE:** the test independently executes `python -m pytest <member>` under the same broken env and REQUIRES the real exit outside `{0,1}`. 🛑 **Without it, *"the runner reported the wrong exit"* is satisfiable by a pytest that ran perfectly.** ★★★★ **`A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — honoured without being asked twice.**
+✅ **THE SELF-AUDITED COMPARATOR (`§3`): its first `[c]` compared the two runs' WHOLE logs, reported `DIFFERS`, and it went looking for why instead of encoding it. The difference was the pytest CHILD's own stderr, which the runner never reads.** ⭐ **AND IT RED-PROOFED THE COMPARATOR — a planted `REFUSED`→`PASS` mutation made it report a difference — so `"identical"` is a finding, not a comparator that always says yes.** ★★★★★ **`THE SURPRISING RESULT ACCUSED ITS TOOLING FIRST, AND THE TOOLING WAS GUILTY. THAT IS THE CAMPAIGN'S MOST-CONVICTED SHAPE, CAUGHT BY THE AUTHOR BEFORE IT REACHED ME.`**
+✅ **THE RECURSION FIREBREAK (`§4`): the fixture manifest deliberately omits this test's own file, so the inner runner cannot re-enter it even if the file is later admitted to the canonical population.** ★★★★ **`A GATE TEST THAT INVOKES THE GATE MUST CHOOSE ITS OWN INNER POPULATION, OR ADMISSION DAY TURNS IT INTO A FORK BOMB.`**
+✅ **AND THE GUARD REPORT (`§5`) IS THE BEHAVIOUR I WANT: `worker-execution-guard` blocked its first write because three rulings had landed since it loaded the skill; it had talked itself out of re-loading by checking the skill FILE's `mtime` — the wrong join key, since the standard is per-RULING. It re-loaded, re-issued, did not route around, and REPORTED the block rather than letting a silent stop look like a clean run.** ★★★★ **`A GUARD THAT FIRES ON A CONDITION YOU TALKED YOURSELF OUT OF IS THE ONLY KIND WORTH HAVING.`**
+
+### §4 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized.
+AUTHORIZED NOW : R3-1 SECOND HALF, worker 7972 -- the R-799 SS2 fresh-run protocol
+                 VERBATIM, then R1-R7 EACH ALONE. Self-executing; no further word.
+                 R6 additionally against the REAL 107-member manifest.
+                 R3-3 remains available. R3-4 conversion phase still open.
+PRECEDENCE PROOF: unchanged -- F-R2-1 is the measured CRITICAL and the RED now
+                 convicts it permanently, verified by the desk on two trees.
+R3 FAN-IN      : 0 / 5. R3-1 is HALF delivered. Do not count a half item.
+STOP           : SS5.
+```
+
+### §5 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[15]`, NEW:** `R6` passes on the FIXTURE manifest but was never run against the REAL `107`-member manifest. **`AR-954 §6` named this gap honestly; it may not be closed by the cheap arm alone.**
+🛑 **CARRIED UNCHANGED:** `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` (`[12]` now MEASURED not to fire) and `[13]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER: UNCHANGED FROM `R-803 §7`.** Nothing opened, nothing closed. **`wt-r3-faithful-20260810` REMAINS retained on purpose; my own `wt-desk-verify-r31-20260810` was REMOVED after use.**
+
+### §6 — 📌 LESSONS TO PERSIST
+★★★★★ **`THE RIGHT VERDICT FOR THE WRONG REASON IS A FALSE GREEN WEARING A REFUSAL — THE INSTRUMENT DID REFUSE, AND WAS STILL COMPLETELY BLIND TO THE RUN THAT NEVER HAPPENED.`**
+★★★★★ **`THE ESCAPE CLAUSE WAS MEANT TO BE USED VISIBLY, NOT LEFT UNUSED — THE POINT IS THAT THE RECORD SHOWS WHICH, AND WHY.`**
+★★★★ **`A SECOND RUN IN THE SAME TREE IS A REPEAT; A SECOND TREE IS A PATH.`**
+★★★★ **`THE RIGHT INVARIANT WAS "THESE TWO ARE THE SAME", NOT "THIS ONE IS THAT VALUE" — ONLY THE FIRST SURVIVES LEAVING THE MACHINE.`**
+
+---
+
 ## R-804 · 2026-08-10 · ✅ **THE SEAM IS REAL AND I VERIFIED IT MYSELF — SO THE HANDOFF RECEIPT IS ORDERED NOW, BEFORE `R3-1`'s FIRST LINE.** 🛑 **BUT I DO NOT ORDER THE SWAP AND I DO NOT WITHDRAW THE SEAT'S AUTHORIZATION: THE READ'S "ALREADY DEEP INTO ITS CONTEXT WINDOW" IS UNMEASURED, AND THE ONLY PARTY HOLDING THAT EVIDENCE REPORTED THE OPPOSITE.** ⚖️ **THE SWAP IS THE OPERATOR'S LEVER. THE RECEIPT IS MINE, IT IS CHEAP, AND IT IS WORTH WRITING WHETHER OR NOT A SWAP EVER HAPPENS.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE
