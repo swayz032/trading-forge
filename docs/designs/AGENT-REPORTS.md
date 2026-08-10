@@ -4,6 +4,66 @@
 
 ---
 
+## AR-953 · 2026-08-10 · 🧭 **HANDOFF-GRADE RECEIPT AT A CLEAN SEAM, ORDERED BY `R-804 §3`. WRITTEN BEFORE `R3-1`'s FIRST LINE.** ✅ **`HEAD` = `origin` PROVEN BY A REAL REMOTE MEASUREMENT (`git ls-remote`), NOT BY THE WORD "PUSHED" — `STOP [14]` DOES NOT FIRE.** ⚖️ **I AM NOT HANDING OFF AND HAVE NOT BEEN RETIRED: `R3-1` REMAINS AUTHORIZED TO THIS SEAT AND I CONTINUE INTO IT NEXT.** 🛑 **THIS IS CONTEXT TRANSFER, NOT WORK TRANSFER — THERE IS NO WORK IN FLIGHT TO TRANSFER.**
+
+**SEAT `claude.exe 7972` (born `15:30:53`). Desk `16828`. `R3` `0 / 5`.**
+
+### `[A]` — ✅ EXACT TREE STATE, EACH LINE ITS OWN MEASUREMENT
+```
+[MEASURED HERE, four separate commands, no summarising]
+branch                         : h1-wave4-sealed12-driver
+git rev-parse HEAD             : cab33ad3c73a4719e0f3922dd19e67c8a05fe33a
+git ls-remote origin <branch>  : cab33ad3c73a4719e0f3922dd19e67c8a05fe33a   <- HIT THE SERVER
+git rev-parse origin/<branch>  : cab33ad3c73a4719e0f3922dd19e67c8a05fe33a   (tracking ref agrees)
+git rev-list --left-right --count HEAD...origin/<branch>  ->  0    0
+git status --short --untracked-files=no                   ->  EMPTY (tracked paths CLEAN)
+```
+✅ **RELATIONSHIP, STATED EXPLICITLY AS ORDERED: LOCAL AND REMOTE ARE THE SAME COMMIT. `0` ahead, `0` behind. NOTHING OF MINE IS UNPUSHED.** 🛑 **I used `git ls-remote` deliberately — `git rev-parse origin/<branch>` reads a LOCAL tracking ref that can be stale, so it is corroboration, not the measurement. `[ps-counting-encoding]`: a seat here read `PUSH_EXIT=0` off a `tail` while the push had FAILED.**
+✅ **MY COMMITS THIS SEAT, ALL REMOTE-REACHABLE:** `8cca128e` `AR-948` · `b7291497` `AR-949` · `e55a9ef1` **the governed-evidence conversion** · `000dc79f` `AR-950` · `0e7cbdfe` `AR-951` · `bf6949cc` `AR-952`.
+
+### `[B]` — 📚 AUTHORITY READ-ORDER FOR A SUCCESSOR
+1. **`R-803` — THE GOVERNING RULING. READ IT FIRST AND WHOLE.**
+2. `AR-952` (this seat's last substantive report), then `AR-950` **only where uncorrected by `AR-952`**, then `AR-946`/`AR-949` for the `F-R2-1` reproduction evidence.
+3. `R-804` for this receipt's mandate. `R-802` for the re-sequencing history.
+🛑🛑 **THE ONE THING THAT MUST NOT BE INHERITED WRONG: `R-803 §1` SUPERSEDES THE LITERAL-`PASS` ORACLE. THE PERMANENT RED ASSERTS **STALE CONSUMPTION**, NOT THAT THE INSTRUMENT PRINTED `PASS`.** ⚠️ **`AR-951 §3` contains a RECOVERY COPY of a WITHDRAWN `R-803` draft that says the OPPOSITE. IT IS SUPERSEDED. DO NOT USE IT. It is retained only as an incident record.**
+⚠️ **`R-799 §7`'s literal *"emits `ACCEPTANCE: PASS`"* is AMENDED by `R-803 §1`. Read `R-799 §2`'s protocol as still-binding, but not that clause.**
+
+### `[C]` — 📊 `R3` STATE
+✅ **`R3` = `0 / 5`. NOT FRACTIONALIZED — no item is "half done" for counting purposes (`R-803 §6`).**
+- **`R3-1`** — NOT STARTED. Authorized, contract in `[D]`. **`F-R2-1` is the measured CRITICAL.**
+- **`R3-2`** — NOT STARTED. Carries the hermeticity admission precondition (`R-801 §3`) + the successor node-ID chain (`R-799 §4`).
+- **`R3-3`** — NOT STARTED, available. **Defect located: `src/engine/tests/test_fix4_adaptive_symbol_dst.py:127` and `:148` hardcode `C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py`.** **Node IDs to PRESERVE: `test_backtester_source_does_not_contain_hardcoded_mes` (`:116`) · `test_backtester_uses_dst_correct_helper` (`:143`).**
+- **`R3-4`** — **PARTIAL.** Census phase COMPLETE AND ACCEPTED (`R-803 §2` re-derived `32` sites / `9` files at the line level). Conversion phase OPEN.
+- **`R3-5`** — NOT STARTED (LOW cleanup; do not do it first).
+✅ **MACHINE-LOCAL INPUT DENOMINATOR = `4`, MEASURED, EACH WITH A DISPOSITION:** `blind-readjudication` **CLOSED** (`e55a9ef1`, committed as form `[1]`, member-level proof in `AR-950 §1`) · `SAMPLES_DIR` **OPEN** (`test_spec_family_bindings.py:41`, `141` files, `0` tracked, PASSES today so it is invisible to a skip census) · `S3` + AWS credentials **OPEN** (`test_signal_vector.py:195/:215/:237`) · git history **OPEN** (`:1914/:1916`).
+✅ **`fixture_perfect.json` is TRACKED (`2` copies) — NOT a fifth input. It is DEAD-SKIP debt (`AR-952 §2`).** 🛑 **DO NOT REOPEN THIS ENUMERATION** (`R-804` do-not list).
+
+### `[D]` — 🎯 `R3-1` CONTRACT, AS RULED
+**The permanent RED asserts STALE CONSUMPTION against the REAL `scripts/acceptance_runner.py --run` subprocess (never a mock, never a synthetic helper):**
+- **`[a]`** the runner's reported `pytest_exitstatus` **DISAGREES** with the subprocess's real exit.
+- **`[b]`** artifact SHAs **UNCHANGED** across the failed run.
+- **`[c]`** verdict output **`diff`-IDENTICAL** to the prior good run. 🛑 **`[c]` MAY NOT BE TRADED AWAY.**
+- **`[d]` ADDED BY `R-804`:** the witness must ALSO show the real `pytest` process **FAILED BEFORE GOVERNED EXECUTION** — not merely that the exit disagreed. **A positive control proving what pytest actually did (`AR-946` measured real exit `4`, collected nothing).**
+✅ **AFTER the repair the identical test must read `ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID`** — **`R-799 §2`'s string governs** (`R-801 §5`: a paraphrase of a spec is not a second spec).
+🛑 **`R-801 §4` BINDS: the committed RED becomes a gate input, so it must satisfy `R-799 §5` form `[2]` — a deterministic fixture it creates. `STOP [12]`: it may NOT reproduce only in a tree carrying the CRLF lab copy.** ⭐ **KEY ENABLER ALREADY FOUND: `acceptance_runner.py:377-378` exposes `--manifest` AND `--baseline` as real CLI arguments (`AR-949 §5`), and `[MEASURED]` `REPO = Path(__file__).resolve().parents[1]`, so the runner is executing-tree relative.** ⚖️ **AND the stale-consumption oracle needs NO `PASS`-capable tree at all — `AR-946 §1` measured both runs `diff`-identical in a REFUSED tree — which is exactly why `R-803 §1` chose it.**
+
+### `[E]` — 🔧 THE FRESH-RUN PROTOCOL (`R-799 §2`, CARRIED, UNCHANGED)
+Before pytest: unique `run_id` · unique temp output dir · assert its JSON/XML do NOT already exist · record pre-run authority (`run_id`, `HEAD`, manifest identity, runner identity, invocation digest, start time) · **never reuse `./acceptance-run.json`/`.xml` as authority paths.** Capture the subprocess result — 🛑 **NOT `check=True`: exit `1` is LEGITIMATE because the governed population intentionally contains historical failures.** Proceed to scoring ONLY on real exit `0` or `1`; **`2`/`3`/`4`/`5`/crash ⇒ emit `ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID` and STOP before parsing membership.** After: both feeders exist and come from the unique dir · plugin `pytest_exitstatus == proc.returncode` · plugin `run_id` == requested · repository/run identity == pre-run authority · **`HEAD` did not move during execution.**
+
+### `[F]` — 🧪 RED-PROOFS: ALL SEVEN, **EACH ALONE**
+`R1` stale artifacts + pytest fails at startup ⇒ refuse, old artifacts never scored · `R2` same with ONE old feeder removed ⇒ must still refuse for INVALID EXECUTION, not merely a missing feeder · `R3` exit `3` · `R4` exit `4` · `R5` exit `5` ⇒ each refuses before scoring · **`R6` a VALID run whose pytest exit is `1` from genuine governed failures ⇒ membership scoring MUST PROCEED NORMALLY** · `R7` mutate `run_id`/tree binding in an otherwise valid plugin record ⇒ refuse.
+🛑 **`R6` MAY NOT SLIDE (`STOP [13]`). ⏱️ COST IS NOT AN ARGUMENT: `[MEASURED, `AR-949 §4`]` a full governed run is `2.4 min` — `19:44:09Z → 19:46:33Z`, `2417` collected/executed — NOT the `60–90 min` that four documents carried.**
+
+### `[G]` — 🛑 DO-NOT LIST, AND HYGIENE STATE
+🛑 **DO NOT:** chase the literal `PASS` · recreate the CRLF lab tree · copy local-only evidence into any worktree · reopen the four-input enumeration · mass-convert the `32` skip sites · do Class `A` cleanup · touch `MP1-CANDIDATE-INGRESS-1` · `/api/backtests` · reopen lane `L` or `S6` · convert `test_wave_b_intrabar_stops.py:380/:405/:426` (`STOP [11]` — run-order guard protecting a real `vectorbt` JIT hang, NOT an import guard) · `--no-verify`.
+✅ **HYGIENE `[MEASURED HERE]`: tracked tree CLEAN · `0` orphaned `pytest`/`vitest`/`acceptance_runner` children (`Win32_Process`, matched on command line, not `TaskList`) · NO uncommitted skeleton · NO half-built worktree · NO stale mutation file · NO temporary environment variable set by me (`PYTEST_ADDOPTS` was passed inline to one subprocess and never exported).**
+⚠️ **RETAINED ON PURPOSE, NOT DEBRIS — `C:\Users\tonio\Projects\wt-r3-faithful-20260810`** (detached @ `8cca128e`). **`R-803` kept it deliberately as `AR-949`'s falsification evidence.** It carries: the CRLF baseline lab copy · a copy of `blind-second-judge-LOCKED.json` · `r3-control.log` / `r3-control-out/` (the `REFUSED` control) · `r3-after.log` / `r3-after-out/` (the `PASS` arm). 🛑 **It is NOT hermetic and must NOT be used as the RED's tree.**
+✅ **MY RULING EAR IS LIVE AND IS MINE** (`Monitor`, persistent, red-proofed on a throwaway before arming, watching `ADVISOR-RULINGS.md`). **A successor must arm its OWN and must NOT kill any ear it did not arm.** ⚠️ **Three ORPHANED `bash.exe` ear loops from rolled seats remain alive (`12748`, `3472`, `23704`) — leave them; they belong to no live seat and can notify nobody.**
+
+**RECOMMENDATION: NONE REQUESTED. Receipt complete, committed and pushed as ordered.** ⚡ **I now continue into `R3-1` on this seat, per `R-804`'s `START HERE`. The swap remains the operator's lever; I have not asked for one and am not stopping.**
+
+---
+
 ## AR-952 · 2026-08-10 · ✅ **`ACCEPT5-FIXTURE-PERFECT-CLASS-1` DECIDED IN ONE COMMAND AS ORDERED: `fixture_perfect.json` IS **COMMITTED** — so it is NOT a machine-local input, and the machine-local enumeration is `4`, MEASURED rather than assumed.** 🛑 **BUT IT IS STILL A DEFECT, OF A DIFFERENT AND SHARPER KIND: A SKIP GUARDING COMMITTED EVIDENCE CAN NEVER LEGITIMATELY FIRE, SO IT EXISTS ONLY TO HIDE A DELETION.** ⚖️ **I RETRACT `AR-950 §4`'s "ENUMERATION CLOSED" — THE DESK IS RIGHT THAT MY OWN `§3` CONTAINED THE COUNTEREXAMPLE TWO SECTIONS EARLIER.** ✅ **LEDGER INVESTIGATION STOOD DOWN ON `R-803 §0`.**
 
 **SEAT `claude.exe 7972`. TREE `HEAD 0e7cbdfe`. `R3` `0 / 5` — NOT fractionalized, per `R-803 §6`.**
