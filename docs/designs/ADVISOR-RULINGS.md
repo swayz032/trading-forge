@@ -12,6 +12,116 @@
 
 ---
 
+## R-778 · 2026-08-09 · ✅✅✅ **`RED 1` IS GREEN AND CLOSED. THE FIRST HALF OF THE VERTICAL SLICE IS DONE: REAL TEACHER WORDS → THREE TYPED `5m/15m/30m` EXECUTION CANDIDATES, THROUGH A PRODUCTION BOUNDARY, WITH THE PORTABLE ARTIFACT STILL PLAIN JSON.** ⭐⭐⭐ **VERIFIED BY MY OWN INSTRUMENT ON BOTH ARMS.** 🛑 **TWO REAL FINDINGS ADOPTED AFTER I CONFIRMED BOTH AT THE LINE: THE ENVELOPE DOES **NOT** JOIN CANDIDATE SOURCE IDS TO THE LOWERING (`:918` CHECKS THE DEFINITION OBJECT AND NOTHING ELSE), AND A COMMENT IN THE S6 TEST MAKES A **FALSE CLAIM ABOUT WHAT THE TEST WOULD CATCH`.** ⚡ **`STEP 4` AUTHORIZED, RED-FIRST.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§5` — `STEP 4`, in this order: (1) publish the wrong-source-id mutation RED, (2) close the join, (3) declare the real adapter **and** its resolver **atomically**, (4) mirror the TS declaration in the SAME commit, (5) confirm `RED 2` advances — and STOP when the next boundary is named.** 🛑 **Also fix the false comment (`§3`) — the comment, NOT the assertion.**
+
+**RULING ID:** R-778 · **ARs RULED: `AR-902`** — copied from the read's subject (`AR-902 / STEP 2.1 + STEP 3 ACCEPTED / RED 1 CLOSED`). `[MEASURED HERE]` **`AR-902` is the NEWEST `## AR-` on disk.** · **DECISION: ACCEPT · CLOSE `RED 1`, `STEP 2.1`, `STEP 3`, `STEP2-LIM-1` · AUTHORIZE `STEP 4`**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** **SEAT `claude.exe 25636`, `STEP 4` at attempt `0/2`.**
+
+### §1 — ✅ WHAT I VERIFIED MYSELF
+```
+[MEASURED HERE]
+FIREBREAK, re-run with MY OWN script (the one that convicted it in R-777 §3):
+   POSITIVE CONTROL  OLD produce_spec_artifact(golden)        json.dumps -> OK
+   NEW BOUNDARY      returns RecordCompileResult (ENVELOPE detected via .artifact)
+      golden     st5e-YJRfKc__s0   envelope.artifact  json.dumps -> OK
+      neighbour  hcHuDfxdywI__s0   envelope.artifact  json.dumps -> OK
+   ⇒ BOTH ARMS FIXED — including the refusal arm, which was MY widening in R-777 §3.
+SUITE   1 failed · 6 passed   (was 2 failed · 3 passed)
+   the ONLY failure is test_the_production_dispatch_path_... = RED 2, which MUST still be red
+   ⇒ RED 1 (candidate transport) IS GREEN.
+SCOPE   git diff --stat 90be759b..ce7ba98b -- src/  ->  2 files
+        spec_producer.py (+150) · the S6 test (+166/-32).  NO registration, NO resolver,
+        NO dispatch, NO TS mirror. Scope held.
+```
+⭐⭐⭐ **AND THE DISCIPLINE THAT MAKES THIS BELIEVABLE IS THE COMMIT ORDER:** `0591047e` (firebreak) landed **BEFORE** `4aa45a8e` (the envelope repair), so the guard was **demonstrably RED against the broken shape** before the shape changed. ★★★★★ **`A GUARD COMMITTED BEFORE THE FIX IS EVIDENCE; THE SAME GUARD COMMITTED AFTER IT IS A DESCRIPTION. THE ONLY DIFFERENCE IS THE ORDER, AND IT IS THE WHOLE DIFFERENCE.`**
+
+### §2 — ✅ THE ARCHITECTURE IS RIGHT, AND THE REMOVAL WAS AS IMPORTANT AS THE ADDITION
+✅ **`RecordCompileResult` separates the PORTABLE CONTRACT (`artifact`, plain JSON, cross-language) from IN-PROCESS COMPILER STATE (`opening_range_lowering`, `opening_range_candidates`, typed, Python-only)** — exactly the distinction `R-777 §4` ordered. **And it REFUSES construction if the lowering key is re-inserted into the artifact** — the invariant is enforced, not documented.
+⭐ **`opening_range_lowering_of()` was REMOVED, and that is the subtle right call:** once lowering left the artifact, that accessor's only possible answer was its historical *"not present"*. ★★★★ **`AN ACCESSOR THAT CAN NOW ONLY RETURN "ABSENT" IS NOT HARMLESS DEAD CODE — IT IS A FUNCTION THAT WILL CONFIDENTLY ANSWER THE WRONG QUESTION FOR THE NEXT READER.`**
+✅ **`STEP 3` reused the EXISTING factory** — no new candidate factory, no second identity system, no default, no primary; a refusing lowering yields zero candidates. **Nothing was designed that already existed** (`R-648` REUSE, and `[prior-art-check]`).
+
+### §3 — 🛑 A FALSE COMMENT ABOUT WHAT THE TEST WOULD CATCH — CONFIRMED, AND IT IS A CLASS
+`[MEASURED HERE, the S6 test's `_find_candidates`]`: `seen: set[int]` · `if depth > 12 or id(obj) in seen: return` · `seen.add(id(obj))` ⇒ **the finder DE-DUPLICATES BY PYTHON OBJECT IDENTITY.**
+⇒ 🛑 **the comment claiming *"a fan-out that returned the same object three times satisfies the duration tuple above and fails here"* is FALSE:** three references to one object are observed as **ONE** candidate, so **Stage 2 (the duration tuple) fails first** and Stage 3 is never reached.
+✅ **DISPOSITION, adopting the read: KEEP THE ASSERTION, FIX THE COMMENT.** The assertion is **defence-in-depth on the golden fixture**, and the *independent* identity proof already lives in the dedicated candidate suite — which uses a stronger fixture the golden source cannot provide (**two legal variants with the SAME duration but different labels**, proving cache identities stay distinct), plus duration-mutation, cross-spec, and cross-process stability. **No redundant fixture is required.**
+★★★★★ **THE CLASS, AND IT IS WORTH MINTING: `A COMMENT THAT DESCRIBES WHAT A TEST WOULD CATCH IS A MECHANISM CLAIM ABOUT YOUR OWN INSTRUMENT, AND IT CARRIES AN EVIDENCE GRADE LIKE ANY OTHER. THIS ONE WAS WRITTEN IN A VERDICT'S VOICE AND WAS WRONG — AND A WRONG CLAIM ABOUT WHAT A GUARD CATCHES IS OBEYED BY EVERY FUTURE READER WHO THEN STOPS LOOKING.`** (`[wrong-mechanism]`, now convicted inside a test comment rather than a ruling.)
+⚠️ **AND NAME THE FINDER'S BOUNDARY WHILE WE ARE HERE:** `_find_candidates` **cannot distinguish "three identical objects" from "one object"**, by construction. Not a defect for this lane (Stage 2 covers it) — **but it is a stated limit of the instrument, not an accident.**
+
+### §4 — 🛑 THE REAL NEW FINDING: THE ENVELOPE DOES NOT JOIN SOURCE IDENTITIES
+`[MEASURED HERE, `spec_producer.py` `RecordCompileResult.__post_init__`]` **it enforces exactly three things:**
+```
+:897  the lowering is not smuggled into the serialized artifact
+:908  a REFUSED lowering cannot carry candidates
+:918  foreign = [c for c in self.opening_range_candidates if c.definition is not definition]
+      ^^^ DEFINITION OBJECT IDENTITY, AND NOTHING ELSE
+```
+🛑 **`OpeningRangeExecutionCandidate` also carries `source_spec_id` and `source_condition_id`, and `OpeningRangeLoweringResult` carries the same identities — the envelope NEVER compares them.** ⇒ **this object is constructible today: correct definition + correct variant + WRONG `source_spec_id`.** **And that matters because candidate/cache identity is computed FROM those ids.**
+⚖️ **THIS DOES NOT INVALIDATE `STEP 3`, AND I SAY SO PLAINLY:** `[MEASURED]` production calls the factory with `source_spec_id=video` and `source_condition_id=lowering.source_condition_id`, so **the live path is correct.** ★★★ **`AN INVARIANT HOLE IS NOT A DEFECT SIGHTING — SAY WHICH ONE YOU FOUND, OR THE NEXT READER WILL "FIX" WORKING CODE.`** ⇒ **hardening, folded into `STEP 4`, red-first.**
+
+### §5 — ⚡ AUTHORIZED NOW — `STEP 4`, IN THIS ORDER
+**AUTHORIZED TO `claude.exe 25636`, attempt `0/2`.**
+```
+1 PUBLISH THE MUTATION RED FIRST, into the EXISTING S6 population (no new file):
+    ARM A  real definition + real variant, mutate ONLY source_spec_id      -> construct
+    ARM B  real definition + real variant, mutate ONLY source_condition_id -> construct
+    EXPECTED NOW: RED — the envelope currently ACCEPTS both.
+    CONTROL: the correct, unmutated envelope stays GREEN.
+2 CLOSE THE JOIN in __post_init__: for every candidate,
+    candidate.source_spec_id      == lowering.source_spec_id
+    candidate.source_condition_id == lowering.source_condition_id
+3 DECLARE THE REAL PRIMITIVE — retire primitive=None / unsupported=True /
+    "opening_range_adapter_not_implemented". Name the ACTUAL adapter, not a proxy and NOT
+    compute_structure_state:  opening_range_adapter.compute_opening_range_state
+4 🛑 ATOMIC: FAMILY_META + PRIMITIVE_RESOLVERS
+    (src.engine.opening_range_adapter:compute_opening_range_state) LAND IN ONE COMMIT.
+    ★★★★★ `A DECLARED-BUT-UNRESOLVED PRIMITIVE IS AN INVALID INTERMEDIATE PRODUCTION TRUTH —
+    THERE IS NO MOMENT AT WHICH IT IS ALLOWED TO EXIST.`
+5 🛑 TS DECLARATION MIRROR IN THE SAME SEMANTIC COMMIT (spec_family_bindings.py says the
+    surface is mirrored and must change together). DECLARATION PARITY ONLY —
+    NO TypeScript opening-range evaluator, NO TS math. Python stays the execution authority.
+6 CONFIRM RED 2 ADVANCES past Stage 1, and NAME the next missing boundary.
+7 STOP THERE. Do NOT chase the remaining stages green if that crosses into dispatch or
+    execution work. A deeper red is the deliverable (R-776 §5, standing).
+🛑 FORBIDDEN, unchanged: a `duration` generic parameter · a default or primary candidate ·
+   a second candidate id · a second OR calculator · a second lowerer · TS OR math ·
+   ConditionBinding.parameters · editing acceptance-baseline-2026-08-09.json.
+FIRST OBSERVABLE: the two mutation arms published RED. START-RECEIPT if >10 min. One `AR`.
+```
+
+### §6 — ⚖️ PRE-REGISTERED FOR THE FINAL EXECUTION STEP (so it cannot be improvised later)
+🛑 **`RED 2` currently builds its setup through `_produce(GOLDEN_STUB)` — the OLD per-strategy path.** **That is ACCEPTABLE for Stages 1–3 (declaration · resolver · binding) and NOT acceptable for the final execution stage**, because the `5/15/30` candidates now live on `RecordCompileResult`, not in that artifact.
+⇒ **BEFORE adapter-execution wiring lands, `RED 2` MUST move to the candidate-aware boundary, exactly as `RED 1` did.** **The load-bearing final execution test must originate from `produce_spec_artifact_from_record(...)` and preserve its typed candidates into whatever candidate-specific execution carrier `STEP 4/5` establishes.**
+🛑 **The four forbidden escapes, named now so none is discovered as convenient later:** stuffing candidates into the `SpecArtifact` · `ConditionBinding.parameters` · re-reading the source · choosing a candidate downstream. ★★★★ **`THE TEST THAT PROVES THE BREAKTHROUGH MUST ENTER THROUGH THE DOOR THE BREAKTHROUGH BUILT.`**
+
+### §7 — 📐 CRITICAL PATH · GRADES · STOPS
+```
+CURRENT EXIT   : one real extracted strategy condition compiled AND EXECUTED (R-648 slice)
+FIRST HALF     : ✅ DONE — teacher words -> record -> artifact -> typed lowering -> exact
+                 5/15/30 -> three candidates -> stable identities -> JSON/state separation.
+REMAINING      : candidate -> family declaration -> resolver -> executable dispatch ->
+                 candidate-aware runtime -> real compute_opening_range_state() ->
+                 typed OpeningRangeState.   RED 2 IS THE LAST LOAD-BEARING S6 RED.
+AUTHORIZED NOW : §5 STEP 4, seat claude.exe 25636, attempt 0/2.
+PRECEDENCE PROOF: [MEASURED §4] the envelope admits a candidate whose source ids disagree
+                 with its lowering, and cache identity is computed from those ids — so it is
+                 hardened BEFORE identity starts flowing into execution, not after.
+DEFERRED REGISTER: INV-1 🛑 UPDATED — the inventory is STALE AGAIN (the tree moved). DO NOT
+                 regenerate mid-lane; none of this acceptance depends on it. REGENERATE AT A
+                 STABLE HEAD AND CONFIRM `--check` GREEN **as MP-1's first act**, after S6
+                 closes. · MP-1 · DOC-1 · SCOPE-1 · TD-1/2/3 · OBS-1 · D-10-ADJ-1 · N-6 · Q-1
+STOP           : §5's forbidden list · a non-atomic declaration/resolver landing · chasing
+                 RED 2 fully green through dispatch in STEP 4 · starting MP-1.
+```
+**GRADES:** `[MEASURED HERE]` the firebreak re-run on both arms with its positive control · the suite (`1 failed / 6 passed`) · the scope diff · `__post_init__`'s three checks at `:897/:908/:918` · `_find_candidates`'s `id()` dedup. `[ARTIFACT-SOURCED — AR-902]` the three commit SHAs and the candidate-suite's own identity fixtures (I did not re-run that suite). `[NOT MEASURED]` the TS mirror's current text this session (read at `R-774 §4-3`, unchanged since by `git diff`).
+**ARCHITECTURE INVARIANTS TOUCHED: NONE of the six.** `STEP 4` first touches a DECLARATION surface; execution wiring is a later step and is explicitly not authorized here.
+
+**LESSON TO PERSIST:** ★★★★★ **`A GUARD COMMITTED BEFORE THE FIX IS EVIDENCE; THE SAME GUARD COMMITTED AFTER IT IS A DESCRIPTION.`** · ★★★★★ **`A COMMENT THAT DESCRIBES WHAT A TEST WOULD CATCH IS A MECHANISM CLAIM ABOUT YOUR OWN INSTRUMENT AND CARRIES AN EVIDENCE GRADE.`** · ★★★★★ **`A DECLARED-BUT-UNRESOLVED PRIMITIVE IS AN INVALID INTERMEDIATE PRODUCTION TRUTH.`** · ★★★★ **`AN ACCESSOR THAT CAN NOW ONLY RETURN "ABSENT" WILL CONFIDENTLY ANSWER THE WRONG QUESTION FOR THE NEXT READER.`** · ★★★★ **`THE TEST THAT PROVES THE BREAKTHROUGH MUST ENTER THROUGH THE DOOR THE BREAKTHROUGH BUILT.`** · ★★★ **`AN INVARIANT HOLE IS NOT A DEFECT SIGHTING — SAY WHICH ONE YOU FOUND.`**
+
+---
+
 ## R-777 · 2026-08-09 · ✅ **`STEP 2` CORE ACCEPTED — THE FULL-RECORD BOUNDARY IS THE RIGHT SHAPE AND `RED 1` ADVANCED `STAGE 1 → STAGE 2` EXACTLY AS PRE-REGISTERED.** 🛑🛑 **`STEP2-LIM-1` IS CONFIRMED **BY DIRECT EXECUTION**, NOT BY ARGUMENT — AND IT IS WIDER THAN EITHER READER STATED: THE ARTIFACT IS UNSERIALISABLE ON **BOTH** ARMS, INCLUDING THE REFUSAL PATH.** ⚡ **`STEP 2.1` (SERIALIZATION FIREBREAK) AUTHORIZED, THEN `STEP 3` IMMEDIATELY — ONE SMALL CORRECTION, THEN FAN-OUT. NOT A CAMPAIGN.**
 
 > ### ★ WORKER — START HERE
