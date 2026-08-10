@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `16e0e99d603f87adc099836f67fdceaff6964866`  (worktree DIRTY at generation time)
+> Generated at commit `33552d7f33c76099db0c7eb37d10b8c3dc98222b`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1825 | 751 |
-| `scripts/` | 209 | 209 |
+| `scripts/` | 210 | 210 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2069** | **960** |
+| **TOTAL** | **2070** | **961** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **618** of **2069** parsed files.
+Total entry points: **94**.  Modules reachable from them: **618** of **2070** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -3475,15 +3475,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `pull_definition` | function | `src/data/scripts/databento_definition_pull.py:92` | 0 | unique |
 | `check_against_expected` | function | `src/data/scripts/databento_definition_pull.py:179` | 0 | unique |
 | `save_to_cache` | function | `src/data/scripts/databento_definition_pull.py:213` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 182 | AMBIG |
+| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 183 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_imbalance_pull.py:64` | 4 | AMBIG |
 | `et_to_utc_window` | function | `src/data/scripts/databento_imbalance_pull.py:72` | 0 | unique |
 | `pull_imbalance_for_date` | function | `src/data/scripts/databento_imbalance_pull.py:98` | 0 | unique |
 | `get_trading_dates` | function | `src/data/scripts/databento_imbalance_pull.py:185` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 182 | AMBIG |
+| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 183 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_statistics_pull.py:66` | 4 | AMBIG |
 | `pull_statistics` | function | `src/data/scripts/databento_statistics_pull.py:74` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 182 | AMBIG |
+| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 183 | AMBIG |
 
 </details>
 
@@ -3612,7 +3612,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_get_archetype_class_map` | function | `src/engine/archetype_evaluator.py:100` | 0 | unique |
 | `_build_synthetic_df` | function | `src/engine/archetype_evaluator.py:191` | 0 | unique |
 | `evaluate_archetype` | function | `src/engine/archetype_evaluator.py:262` | 0 | unique |
-| `main` | function | `src/engine/archetype_evaluator.py:374` | 182 | AMBIG |
+| `main` | function | `src/engine/archetype_evaluator.py:374` | 183 | AMBIG |
 | `_emit_error` | function | `src/engine/archetype_evaluator.py:453` | 0 | unique |
 
 </details>
@@ -3687,7 +3687,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_strategy_class` | function | `src/engine/backtester.py:8106` | 1 | unique |
 | `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8125` | 0 | unique |
 | `_rescore_with_crisis` | function | `src/engine/backtester.py:8155` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8219` | 182 | AMBIG |
+| `main` | function | `src/engine/backtester.py:8219` | 183 | AMBIG |
 
 </details>
 
@@ -3923,7 +3923,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_bars` | function | `src/engine/context_runner.py:25` | 1 | unique |
 | `run_bias` | function | `src/engine/context_runner.py:35` | 0 | unique |
 | `run_evaluate` | function | `src/engine/context_runner.py:141` | 0 | unique |
-| `main` | function | `src/engine/context_runner.py:317` | 182 | AMBIG |
+| `main` | function | `src/engine/context_runner.py:317` | 183 | AMBIG |
 
 </details>
 
@@ -4033,7 +4033,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_parquet_data` | function | `src/engine/deepar_forecaster.py:147` | 0 | unique |
 | `_prepare_series` | function | `src/engine/deepar_forecaster.py:195` | 0 | unique |
 | `DeepARForecaster` | class | `src/engine/deepar_forecaster.py:291` | 0 | unique |
-| `main` | function | `src/engine/deepar_forecaster.py:571` | 182 | AMBIG |
+| `main` | function | `src/engine/deepar_forecaster.py:571` | 183 | AMBIG |
 
 </details>
 
@@ -4276,7 +4276,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `cluster_graveyard` | function | `src/engine/graveyard/cluster.py:19` | 0 | unique |
 | `_aggregate_failure_modes` | function | `src/engine/graveyard/cluster.py:97` | 0 | unique |
 | `_aggregate_categories` | function | `src/engine/graveyard/cluster.py:106` | 0 | unique |
-| `main` | function | `src/engine/graveyard/cluster.py:119` | 182 | AMBIG |
+| `main` | function | `src/engine/graveyard/cluster.py:119` | 183 | AMBIG |
 | `embed_strategy` | function | `src/engine/graveyard/embedder.py:21` | 2 | unique |
 | `embed_text` | function | `src/engine/graveyard/embedder.py:71` | 0 | unique |
 | `FailureTag` | class | `src/engine/graveyard/failure_tagger.py:22` | 0 | unique |
@@ -4577,7 +4577,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_sample_paths` | function | `src/engine/monte_carlo.py:1426` | 0 | unique |
 | `_compute_risk_metrics` | function | `src/engine/monte_carlo.py:1448` | 0 | unique |
 | `run_monte_carlo` | function | `src/engine/monte_carlo.py:1467` | 4 | unique |
-| `main` | function | `src/engine/monte_carlo.py:2219` | 182 | AMBIG |
+| `main` | function | `src/engine/monte_carlo.py:2219` | 183 | AMBIG |
 
 </details>
 
@@ -4959,7 +4959,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `fit_hmm_regime` | function | `src/engine/regime.py:187` | 0 | unique |
 | `_compute_avg_duration` | function | `src/engine/regime.py:259` | 0 | unique |
 | `_compute_regime_persistence` | function | `src/engine/regime.py:275` | 0 | unique |
-| `main` | function | `src/engine/regime.py:293` | 182 | AMBIG |
+| `main` | function | `src/engine/regime.py:293` | 183 | AMBIG |
 
 </details>
 
@@ -5353,7 +5353,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_default_scenarios` | function | `src/engine/stress_test.py:26` | 0 | unique |
 | `_run_crisis_backtest` | function | `src/engine/stress_test.py:96` | 0 | unique |
 | `run_stress_test` | function | `src/engine/stress_test.py:142` | 1 | unique |
-| `main` | function | `src/engine/stress_test.py:191` | 182 | AMBIG |
+| `main` | function | `src/engine/stress_test.py:191` | 183 | AMBIG |
 
 </details>
 
@@ -5378,14 +5378,14 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_firm_profile` | function | `src/engine/survival/firm_profiles.py:65` | 2 | unique |
 | `list_firms` | function | `src/engine/survival/firm_profiles.py:73` | 1 | unique |
 | `compare_strategies` | function | `src/engine/survival/survival_comparator.py:12` | 0 | unique |
-| `main` | function | `src/engine/survival/survival_comparator.py:124` | 182 | AMBIG |
+| `main` | function | `src/engine/survival/survival_comparator.py:124` | 183 | AMBIG |
 | `_recovery_speed_score` | function | `src/engine/survival/survival_scorer.py:51` | 0 | unique |
 | `_worst_month_score` | function | `src/engine/survival/survival_scorer.py:109` | 0 | unique |
 | `_commission_drag_score` | function | `src/engine/survival/survival_scorer.py:160` | 0 | unique |
 | `_eval_speed_score` | function | `src/engine/survival/survival_scorer.py:205` | 0 | unique |
 | `_assign_grade` | function | `src/engine/survival/survival_scorer.py:246` | 0 | unique |
 | `survival_score` | function | `src/engine/survival/survival_scorer.py:260` | 6 | unique |
-| `main` | function | `src/engine/survival/survival_scorer.py:379` | 182 | AMBIG |
+| `main` | function | `src/engine/survival/survival_scorer.py:379` | 183 | AMBIG |
 
 </details>
 
@@ -5395,7 +5395,7 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `_make_result_record` | function | `src/engine/synthetic/populate_regime_bank.py:105` | 0 | unique |
 | `run_populate` | function | `src/engine/synthetic/populate_regime_bank.py:144` | 0 | unique |
-| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 182 | AMBIG |
+| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 183 | AMBIG |
 | `_emit_output` | function | `src/engine/synthetic/populate_regime_bank.py:467` | 0 | unique |
 | `ScenarioSpec` | class | `src/engine/synthetic/stochastic_regime_generator.py:126` | 1 | unique |
 | `_returns_to_ohlcv` | function | `src/engine/synthetic/stochastic_regime_generator.py:379` | 0 | unique |
@@ -5454,7 +5454,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `run_runtime` | function | `src/engine/validation_runner.py:46` | 0 | unique |
 | `run_cross` | function | `src/engine/validation_runner.py:71` | 0 | unique |
 | `run_list_specs` | function | `src/engine/validation_runner.py:91` | 0 | unique |
-| `main` | function | `src/engine/validation_runner.py:97` | 182 | AMBIG |
+| `main` | function | `src/engine/validation_runner.py:97` | 183 | AMBIG |
 
 </details>
 
