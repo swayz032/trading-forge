@@ -35,6 +35,7 @@ USAGE
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -55,6 +56,49 @@ REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "src" / "engine" / "tests" / "canonical_regression_population.txt"
 BASELINE = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-baseline-2026-08-09.json"
 SEAL = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-collection-seal-08062e12.json"
+
+# ---------------------------------------------------------------------------
+# THE SEAL'S APPROVED IDENTITY, HELD IN THE RUNNER'S OWN CONTRACT (R-792 §5.2).
+# The seal file carries its own digest, so validating it only against itself
+# lets a re-checksummed seal AUTHORIZE ITSELF. These two constants are the
+# out-of-band anchor that makes that impossible.
+#   `A SEALED BASELINE THAT IS NOT VALIDATED BEFORE USE IS STILL MUTABLE AUTHORITY.`
+# ---------------------------------------------------------------------------
+SEAL_APPROVED_GRADED_SHA = "08062e12b3e2b59d44eada150c8d8b8653796c90"
+SEAL_APPROVED_POP_SHA256 = "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9"
+
+
+def validate_seal(seal):
+    """SEAL PREFLIGHT — run BEFORE the seal is used for anything (F-ACCEPT5-5).
+
+    Returns a list of refusal strings; empty means the seal may be trusted.
+    """
+    probs = []
+    pop = seal.get("collected_population")
+    if not isinstance(pop, list) or not pop:
+        return ["SEAL INTEGRITY FAILURE: collected_population is missing or empty — "
+                "an empty seal would silently authorize every future run."]
+    if seal.get("graded_sha") != SEAL_APPROVED_GRADED_SHA:
+        probs.append(
+            f"SEAL INTEGRITY FAILURE: graded_sha {seal.get('graded_sha')!r} is not the "
+            f"approved sealed commit {SEAL_APPROVED_GRADED_SHA!r}.")
+    if seal.get("collected_count") != len(pop):
+        probs.append(
+            f"SEAL INTEGRITY FAILURE: collected_count {seal.get('collected_count')} != "
+            f"len(collected_population) {len(pop)}.")
+    dupes = len(pop) - len(set(pop))
+    if dupes:
+        probs.append(f"SEAL INTEGRITY FAILURE: {dupes} duplicate node ID(s) in the sealed population.")
+    recomputed = hashlib.sha256("\n".join(sorted(pop)).encode("utf-8")).hexdigest()
+    if recomputed != seal.get("collected_population_sha256"):
+        probs.append(
+            "SEAL INTEGRITY FAILURE: the stored collected_population_sha256 does not match "
+            "a recompute over the sorted population.")
+    if recomputed != SEAL_APPROVED_POP_SHA256:
+        probs.append(
+            "SEAL INTEGRITY FAILURE: the sealed population does not match the approved hash "
+            "pinned in this runner. A seal that recomputes its own digest cannot authorize itself.")
+    return probs
 
 
 # ---------------------------------------------------------------------------
@@ -165,16 +209,18 @@ def main():
     for m in members:
         p = REPO / "src" / m
         (resolved if p.is_file() else missing).append(m)
-    print(f"[1] manifest members (comments stripped) : {len(members)}")
-    print(f"    resolved under <repo>/src            : {len(resolved)}")
-    print(f"    missing                              : {len(missing)}")
+    # CLASS RULE (F-ACCEPT5-6): every line this runner prints either GATES or is
+    # prefixed NOTE:. `missing` gates; the two counts beside it are context.
+    print(f"NOTE: [1] manifest members (comments stripped) : {len(members)}")
+    print(f"NOTE:     resolved under <repo>/src            : {len(resolved)}")
+    print(f"[1] manifest members that DO NOT RESOLVE : {len(missing)}")
     if missing:
         failures_of_the_gate.append(f"PREFLIGHT: {len(missing)} manifest members do not resolve: {missing[:5]}")
 
-    print(f"[2] baseline                             : {args.baseline.name}")
-    print(f"    baseline population_members          : {base['population_members']}")
-    print(f"    baseline failures (node IDs)         : {len(base['failures'])}")
-    print(f"[9] ordered_6b_reds READ FROM baseline   : {len(base['ordered_6b_reds'])}")
+    print(f"NOTE: [2] baseline                             : {args.baseline.name}")
+    print(f"NOTE:     baseline population_members          : {base['population_members']}")
+    print(f"NOTE:     baseline failures (node IDs)         : {len(base['failures'])}")
+    print(f"NOTE: [9] ordered_6b_reds READ FROM baseline   : {len(base['ordered_6b_reds'])}")
     for n in base["ordered_6b_reds"]:
         print(f"      - {n}")
 
@@ -206,9 +252,9 @@ def main():
     skipped = set(rec["skipped"])
     xfailed = set(rec["xfailed"])
 
-    print(f"[3] feeder                               : {rec['instrument']} "
+    print(f"NOTE: [3] feeder                               : {rec['instrument']} "
           f"(pytest exit {rec['pytest_exitstatus']})")
-    print(f"[4] collected/executed/failed/skip/xfail : "
+    print(f"NOTE: [4] collected/executed/failed/skip/xfail : "
           f"{len(collected)}/{len(executed)}/{len(plugin_failures)}/{len(skipped)}/{len(xfailed)}")
 
     # --- SELF-CHECK against the independent feeder ---------------------------
@@ -292,14 +338,40 @@ def main():
             f"ordered_6b_reds may leave the failure set."
         )
 
+    # --- (R-792 §5.1) THE OTHER SET DIRECTION ---------------------------------
+    # F-ACCEPT5-4: enforcing only `gone ⊆ authorized` while the caption asserts
+    # `gone == authorized` leaves the converse open. An authorized 6B red that
+    # starts FAILING again shrinks `gone`, adds no NEW (it was already a
+    # baseline failure), trips no feeder disagreement — and the gate PASSED.
+    #   `A REPAIR THAT FIXES THE INSTANCE AND NOT THE CLASS RE-CREATES THE
+    #    DEFECT IN THE SAME COMMIT.`
+    missing_authorized_gone = sorted(authorized_gone - set(gone))
+    print(f"[7/8] MISSING AUTHORIZED GONE            : {len(missing_authorized_gone)}")
+    for n in missing_authorized_gone[:15]:
+        print(f"      MISSING AUTHORIZED GONE: {n}")
+    if missing_authorized_gone:
+        failures_of_the_gate.append(
+            f"MISSING AUTHORIZED GONE: {len(missing_authorized_gone)} authorized "
+            f"ordered_6b_red(s) did NOT leave the failure set. The S6 result requires "
+            f"GONE to EQUAL the authorized set, not merely be contained in it."
+        )
+
     # --- (R-791 §4.3) THE SEALED COLLECTION MUST REMAIN COLLECTED -------------
     # F-ACCEPT5-2: protecting only baseline FAILURES leaves every previously
     # GREEN sealed test unguarded — rename it, delete it, or hide it behind a
     # skip-producing import error and no check notices.
     if seal is not None:
+        # SEAL PREFLIGHT FIRST — the seal is not used for anything until it has
+        # been validated against the runner's own out-of-band contract.
+        seal_problems = validate_seal(seal)
+        print(f"[SEAL] preflight problems                : {len(seal_problems)}")
+        for pr in seal_problems:
+            print(f"      {pr}")
+        failures_of_the_gate.extend(seal_problems)
+
         sealed_pop = set(seal["collected_population"])
         vanished = sorted(sealed_pop - collected)
-        print(f"[SEAL] sealed collection @ {seal['graded_sha'][:8]} : {len(sealed_pop)} node IDs")
+        print(f"[SEAL] sealed collection @ {str(seal.get('graded_sha'))[:8]} : {len(sealed_pop)} node IDs")
         print(f"[SEAL] sealed members no longer collected : {len(vanished)}")
         for n in vanished[:15]:
             print(f"      SEALED COLLECTION MEMBER MISSING: {n}")
@@ -315,14 +387,17 @@ def main():
             "previously-green sealed test can vanish unseen (F-ACCEPT5-2)."
         )
 
-    # ordered_6b_reds are expected reds; report their live status by identity
-    print("[9] ordered_6b_reds live status:")
+    # F-ACCEPT5-6, THE WORKED EXAMPLE: this block already computed "FAILING" —
+    # which IS `MISSING AUTHORIZED GONE` — and then only printed it. The
+    # judgement is now GATED above; what remains here is context, so it is
+    # labelled NOTE: rather than left looking like an unenforced verdict.
+    print("NOTE: [9] ordered_6b_reds live status (GATED above):")
     for n in base["ordered_6b_reds"]:
         nn = n
         state = ("FAILING" if nn in plugin_failures else
                  "NOT COLLECTED" if nn not in collected else
                  "COLLECTED BUT NOT FAILING")
-        print(f"      {state:<26} {nn}")
+        print(f"NOTE:       {state:<26} {nn}")
 
     # --- verdict -------------------------------------------------------------
     print()
