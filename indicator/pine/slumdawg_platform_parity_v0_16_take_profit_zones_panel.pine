@@ -274,8 +274,8 @@ bool shortTp2Set = not na(shortTp2Lo) and not na(shortTp2Hi)
 bool shortTp3Set = not na(shortTp3Lo) and not na(shortTp3Hi)
 
 bool manualTargetSet = manualTargetLow > 0 and manualTargetHigh > manualTargetLow
-float activeTp1Lo = targetMode == "MANUAL" and manualTargetSet ? manualTargetLow : planSide == "LONG" ? longTp1Lo : shortTp1Lo
-float activeTp1Hi = targetMode == "MANUAL" and manualTargetSet ? manualTargetHigh : planSide == "LONG" ? longTp1Hi : shortTp1Hi
+float activeTp1Lo = targetMode == "MANUAL" and manualTargetSet ? manualTargetLow : (planSide == "LONG" ? longTp1Lo : shortTp1Lo)
+float activeTp1Hi = targetMode == "MANUAL" and manualTargetSet ? manualTargetHigh : (planSide == "LONG" ? longTp1Hi : shortTp1Hi)
 bool activeTp1Set = not na(activeTp1Lo) and not na(activeTp1Hi) and activeTp1Hi > activeTp1Lo
 
 // -----------------------------------------------------------------------------
@@ -295,20 +295,21 @@ var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.pri
 var label longEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
 var label shortEntryLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
 
-var box longTp1Box = na
-var box longTp2Box = na
-var box longTp3Box = na
-var box shortTp1Box = na
-var box shortTp2Box = na
-var box shortTp3Box = na
-var box manualTpBox = na
-var label longTp1Label = na
-var label longTp2Label = na
-var label longTp3Label = na
-var label shortTp1Label = na
-var label shortTp2Label = na
-var label shortTp3Label = na
-var label manualTpLabel = na
+// Pre-create TP objects once. This avoids delete/recreate churn on realtime updates.
+var box longTp1Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box longTp2Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box longTp3Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box shortTp1Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box shortTp2Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box shortTp3Box = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var box manualTpBox = box.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.both)
+var label longTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label longTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp1Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp2Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label shortTp3Label = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
+var label manualTpLabel = label.new(na, na, "", xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left)
 
 int chartBarMs = not na(time_close) and time_close > time ? time_close - time : FALLBACK_BAR_MS
 int levelLabelX = (not na(time_close) ? time_close : time) + chartBarMs * LEVEL_LABEL_OFFSET_BARS
@@ -332,33 +333,24 @@ f_sync_level(line id, label lid, float price, string name, color c, bool visible
         label.set_text(lid, "")
 
 f_sync_tp_box(box bid, label lid, float lo, float hi, string name, bool visible, int labelX) =>
-    box outBox = bid
-    label outLabel = lid
     if visible and not na(lo) and not na(hi) and hi > lo
-        if na(outBox)
-            outBox := box.new(time, hi, time_close, lo, xloc = xloc.bar_time, extend = extend.both, border_color = BLUE_TARGET, bgcolor = color.new(BLUE_TARGET, 88), border_width = 1)
-        else
-            box.set_lefttop(outBox, time, hi)
-            box.set_rightbottom(outBox, time_close, lo)
-            box.set_extend(outBox, extend.both)
-            box.set_border_color(outBox, BLUE_TARGET)
-            box.set_bgcolor(outBox, color.new(BLUE_TARGET, 88))
+        box.set_lefttop(bid, time, hi)
+        box.set_rightbottom(bid, time_close, lo)
+        box.set_extend(bid, extend.both)
+        box.set_border_color(bid, BLUE_TARGET)
+        box.set_border_width(bid, 1)
+        box.set_bgcolor(bid, color.new(BLUE_TARGET, 88))
         float mid = (lo + hi) / 2.0
-        if na(outLabel)
-            outLabel := label.new(labelX, mid, name, xloc = xloc.bar_time, yloc = yloc.price, style = label.style_label_left, color = BLUE_TARGET, textcolor = color.white, size = size.normal)
-        else
-            label.set_xy(outLabel, labelX, mid)
-            label.set_text(outLabel, name)
-            label.set_color(outLabel, BLUE_TARGET)
-            label.set_textcolor(outLabel, color.white)
+        label.set_xy(lid, labelX, mid)
+        label.set_text(lid, name)
+        label.set_color(lid, BLUE_TARGET)
+        label.set_textcolor(lid, color.white)
+        label.set_size(lid, size.normal)
     else
-        if not na(outBox)
-            box.delete(outBox)
-            outBox := na
-        if not na(outLabel)
-            label.delete(outLabel)
-            outLabel := na
-    [outBox, outLabel]
+        box.set_lefttop(bid, na, na)
+        box.set_rightbottom(bid, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
 
 // NEXT WALL remains key-level-only. Entry lines and TP zones do not redefine D/W walls.
 array<string> wallNames = array.new_string()
@@ -403,15 +395,15 @@ if barstate.islast
     bool drawLongTp = tpView and (showBothTpSides or planSide == "LONG") and targetMode == "AUTO"
     bool drawShortTp = tpView and (showBothTpSides or planSide == "SHORT") and targetMode == "AUTO"
 
-    [longTp1Box, longTp1Label] := f_sync_tp_box(longTp1Box, longTp1Label, longTp1Lo, longTp1Hi, "🎯 TAKE PROFIT ZONE 1", drawLongTp and longTp1Set, levelLabelX)
-    [longTp2Box, longTp2Label] := f_sync_tp_box(longTp2Box, longTp2Label, longTp2Lo, longTp2Hi, "🎯 TAKE PROFIT ZONE 2", drawLongTp and longTp2Set, levelLabelX)
-    [longTp3Box, longTp3Label] := f_sync_tp_box(longTp3Box, longTp3Label, longTp3Lo, longTp3Hi, "🎯 TAKE PROFIT ZONE 3", drawLongTp and longTp3Set, levelLabelX)
-    [shortTp1Box, shortTp1Label] := f_sync_tp_box(shortTp1Box, shortTp1Label, shortTp1Lo, shortTp1Hi, "🎯 TAKE PROFIT ZONE 1", drawShortTp and shortTp1Set, levelLabelX)
-    [shortTp2Box, shortTp2Label] := f_sync_tp_box(shortTp2Box, shortTp2Label, shortTp2Lo, shortTp2Hi, "🎯 TAKE PROFIT ZONE 2", drawShortTp and shortTp2Set, levelLabelX)
-    [shortTp3Box, shortTp3Label] := f_sync_tp_box(shortTp3Box, shortTp3Label, shortTp3Lo, shortTp3Hi, "🎯 TAKE PROFIT ZONE 3", drawShortTp and shortTp3Set, levelLabelX)
+    f_sync_tp_box(longTp1Box, longTp1Label, longTp1Lo, longTp1Hi, "🎯 TAKE PROFIT ZONE 1", drawLongTp and longTp1Set, levelLabelX)
+    f_sync_tp_box(longTp2Box, longTp2Label, longTp2Lo, longTp2Hi, "🎯 TAKE PROFIT ZONE 2", drawLongTp and longTp2Set, levelLabelX)
+    f_sync_tp_box(longTp3Box, longTp3Label, longTp3Lo, longTp3Hi, "🎯 TAKE PROFIT ZONE 3", drawLongTp and longTp3Set, levelLabelX)
+    f_sync_tp_box(shortTp1Box, shortTp1Label, shortTp1Lo, shortTp1Hi, "🎯 TAKE PROFIT ZONE 1", drawShortTp and shortTp1Set, levelLabelX)
+    f_sync_tp_box(shortTp2Box, shortTp2Label, shortTp2Lo, shortTp2Hi, "🎯 TAKE PROFIT ZONE 2", drawShortTp and shortTp2Set, levelLabelX)
+    f_sync_tp_box(shortTp3Box, shortTp3Label, shortTp3Lo, shortTp3Hi, "🎯 TAKE PROFIT ZONE 3", drawShortTp and shortTp3Set, levelLabelX)
 
     bool drawManual = tpView and targetMode == "MANUAL" and manualTargetSet
-    [manualTpBox, manualTpLabel] := f_sync_tp_box(manualTpBox, manualTpLabel, manualTargetLow, manualTargetHigh, "🎯 TAKE PROFIT ZONE", drawManual, levelLabelX)
+    f_sync_tp_box(manualTpBox, manualTpLabel, manualTargetLow, manualTargetHigh, "🎯 TAKE PROFIT ZONE", drawManual, levelLabelX)
 
 // -----------------------------------------------------------------------------
 // SLUMDAWG TRADERS PANEL
