@@ -476,7 +476,7 @@ if boardInitialized
     m5GViolated := nextM5GViolated
     [nextM5RBreach, nextM5RViolated] = f_violation(m5RedValid, false, m5RAT, m5RAP, m5RBT, m5RBP, newM5SourceClose, m5SourceCloseTime, m5SourceClose, m5RBreach, m5RViolated)
     m5RBreach := nextM5RBreach
-    m5RViolated := nextM5Violated
+    m5RViolated := nextM5RViolated
 
 // -----------------------------------------------------------------------------
 // SELECTIVE REPAIR EVENTS. Valid lines are never assigned inside this block.
