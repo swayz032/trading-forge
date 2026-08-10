@@ -4,6 +4,68 @@
 
 ---
 
+## AR-954 · 2026-08-10 · ✅✅ **`R3-1`'s PERMANENT RED IS COMMITTED AT `c31a30e3` AND IT IS GENUINELY RED — WITH ALL FOUR SIGNALS `[a]`/`[b]`/`[c]`/`[d]` CARRIED IN ITS OWN FAILURE MESSAGE.** ✅ **HERMETICITY PROVEN WHERE IT COUNTS: IT REPRODUCES IDENTICALLY IN A FRESH **CONFORMING** WORKTREE, SO `STOP [12]` DOES NOT FIRE.** ⭐ **AND IT RUNS IN `3` SECONDS, NOT `2.4` MINUTES, BECAUSE THE FIXTURE MANIFEST MAKES THE GOVERNED POPULATION A TEST-CONTROLLED INPUT.** 🛑 **MY FIRST `[c]` INSTRUMENT WAS WRONG AND I CAUGHT IT WITH A CONTROL BEFORE ENCODING IT.**
+
+**SEAT `claude.exe 7972`. TREE `HEAD c31a30e3`, tracked paths CLEAN. `R3` `0 / 5` — the RED is `R3-1`'s FIRST HALF; the repair and `R1`–`R7` are NOT done.**
+
+### §1 — ✅ THE RED, AND IT FAILS FOR THE RIGHT REASON
+✅ **`src/engine/tests/test_accept5_stale_run_consumption.py`, committed ALONE at `c31a30e3` (RED in its own commit, `R-797` precedent). `[MEASURED HERE]` `ruff` PASSED.**
+✅ **IT ASSERTS THE REQUIRED BEHAVIOUR — the refusal — so it is RED today and turns GREEN when the `R-799 §2` protocol lands. `[MEASURED HERE, campaign tree]`:**
+```
+1 failed in 2.94s
+
+E  AssertionError: The acceptance runner did NOT refuse an invalid pytest execution.
+E    It consumed the artifacts of the PREVIOUS run and issued a verdict about a run
+E    that never happened.
+E    F-R2-1 EVIDENCE (why this test is red):
+E      [a] runner REPORTED pytest exit : 0
+E          REAL subprocess exit         : 4  (pytest failed before collection)
+E      [b] artifact SHAs before         : 2c3877dbd7bf9634 / 510393ae71acb7f7
+E          artifact SHAs after          : 2c3877dbd7bf9634 / 510393ae71acb7f7
+E          unchanged                    : True
+E      [c] verdict output identical     : True (99 lines)
+```
+✅ **`[d]` IS A HARD ASSERT THAT RUNS *BEFORE* THE ORACLE, AND IT IS THE POSITIVE WITNESS THE CAMPAIGN'S OWN LAW DEMANDS:** the test independently executes `python -m pytest <member>` under the same broken env and **requires the real exit to be OUTSIDE `{0,1}`** — `[MEASURED]` it is `4`, a usage error, i.e. pytest died in argument parsing, before collection. 🛑 **Without it, *"the runner reported the wrong exit"* would also be satisfied by a pytest that ran perfectly. `A NEGATIVE ASSERTION NEEDS A POSITIVE WITNESS THAT THE PATH RAN.`**
+⇒ ★★★★★ **THE CONVICTION IN ONE LINE: `THE INSTRUMENT REPORTED "pytest exit 0, 12 collected, 12 executed" WHILE THE PROCESS IT LAUNCHED EXITED 4 AND COLLECTED NOTHING. IT WAS NOT DESCRIBING THE RUN IT JUST DID — IT WAS DESCRIBING THE ONE BEFORE.`**
+
+### §2 — ✅ HERMETICITY PROVEN IN A CONFORMING TREE — `STOP [12]` DOES NOT FIRE
+🛑 **`R-801 §4` binds and `STOP [12]` is explicit: the committed RED may NOT reproduce only in a tree carrying the CRLF lab copy.** ✅ **SO I VERIFIED IT WHERE IT WOULD BREAK, NOT WHERE IT WAS BUILT `[MEASURED HERE]`:**
+```
+fresh worktree wt-r3-hermetic-20260810 @ c31a30e3, created by `git worktree add --detach`
+  git rev-parse --show-toplevel -> the worktree itself   ([session-cwd-decoy-git] did not fire)
+  baseline sha  5e79f72c...  vs approved a9f70e2e...     <- DIFFERENT => CONFORMING tree
+  CR bytes      0                                        <- LF, i.e. NOT the lab copy
+  RESULT: 1 failed in 3.10s
+    [a] reported 0 vs REAL 4 · [b] unchanged True · [c] identical True (100 lines)
+```
+⇒ ✅ **THE RED REPRODUCES ON A CONFORMING CHECKOUT. It depends on nothing machine-local: no absolute path, no home path, no other-worktree path, no network, no credential, and nothing copied in.**
+⚠️ **ONE HONEST DETAIL, BECAUSE IT LOOKS LIKE AN INCONSISTENCY AND IS NOT: the verdict block is `99` lines in the campaign tree and `100` in the conforming one — the conforming tree emits an extra `BASELINE INTEGRITY` refusal line (`F-ACCEPT5-8`).** 🛑 **The assertion is INTRA-TREE IDENTITY — arm 1 versus arm 2 *within the same tree* — never a cross-tree constant. A test pinning `99` would have been a machine-local test with extra steps.**
+✅ **The verification tree is REMOVED (no half-built worktrees, `R-804 §3`); the recipe is durable: `git worktree add --detach <path> c31a30e3`.** ⚠️ **`wt-r3-faithful-20260810` REMAINS, retained on purpose per `R-803`.**
+
+### §3 — 🛑 I AUDITED MY OWN `[c]` INSTRUMENT AND IT WAS WRONG THE FIRST TIME
+🛑 **MY FIRST `[c]` COMPARED THE TWO RUNS' WHOLE LOGS AND REPORTED `DIFFERS`.** ⚠️ **Had I encoded that, I would have concluded the defect was weaker than it is — or worse, "fixed" the test until it agreed with me.**
+✅ **THE CAUSE, MEASURED: the difference was entirely the pytest CHILD's own stdout, inherited straight through — `"ERROR: usage: … unrecognized arguments: --this-option-does-not-exist"`. The RUNNER never reads that text; it is not part of any verdict.** ⇒ **The correct object is the runner's OWN report, which begins at its first `NOTE: ` line. `[MEASURED]` those blocks are byte-identical: same line count, same `sha256` `bfe79442…`.**
+✅ **AND I RED-PROOFED THE COMPARATOR ITSELF BEFORE TRUSTING IT — `A CONTROL MUST DISCRIMINATE`:** `[MEASURED HERE]` planting a single-word mutation (`REFUSED`→`PASS`) into one block made the comparison report a difference. **So "identical" is a finding, not a comparator that always says yes.**
+★★★★★ **`MY FIRST INSTRUMENT COMPARED THE CHILD'S NOISE INSTEAD OF THE INSTRUMENT'S REPORT, AND IT WOULD HAVE UNDERSTATED THE DEFECT. THE SURPRISING RESULT ACCUSED MY TOOLING FIRST, AND THE TOOLING WAS GUILTY.`**
+
+### §4 — ⭐ THE DESIGN CHOICE THAT MADE THIS CHEAP AND SAFE
+✅ **`[MEASURED HERE, `acceptance_runner.py:386`]` the population comes from `--manifest`, and `[:380-435]` EVERY preflight problem ACCUMULATES into `failures_of_the_gate` — there is NO early exit before `if args.run:`.** ⇒ **The stale-consumption path is reachable no matter how many preflight refusals fire, which is exactly why the oracle does not need a `PASS`-capable tree.**
+⇒ ✅ **THE TEST WRITES ITS OWN ONE-LINE MANIFEST INTO `tmp_path` (`R-799 §5` form `[2]`) naming ONE committed governed member (form `[1]`).** **Cost: `[MEASURED]` `2.4 min` → **`~3 s`** per full test, two real runner subprocesses included.**
+🛑 **AND IT CANNOT RECURSE: the fixture manifest deliberately does NOT name this test's own file, so the inner runner never re-enters it — even if this file is later admitted to the canonical population.** ★★★★ **`A GATE TEST THAT INVOKES THE GATE MUST CHOOSE ITS OWN INNER POPULATION, OR ADMISSION DAY TURNS IT INTO A FORK BOMB.`**
+
+### §5 — ⚖️ A GUARD BLOCKED ME AND IT WAS RIGHT
+🛑 **`worker-execution-guard` REFUSED my first write of the test file: three rulings (`R-802`/`R-803`/`R-804`) had landed since I last loaded `worker-execution`.** ⚖️ **I had earlier decided the re-load was unnecessary because I measured the SKILL FILE's `mtime` and found it unchanged.** 🛑 **THAT WAS THE WRONG JOIN KEY: the standard is re-read after every RULING, not after every skill-file edit. I measured the neighbouring object (`[i-measured]`, re-convicted).**
+✅ **I RE-LOADED AND RE-ISSUED. I did not route around it, and I am reporting it rather than letting a silent block look like a clean run.** ★★★★ **`A GUARD THAT FIRES ON A CONDITION YOU TALKED YOURSELF OUT OF IS THE ONLY KIND WORTH HAVING.`**
+
+### §6 — 🛑 WHAT IS **NOT** DONE
+🛑 **`R3-1` IS HALF DELIVERED. THE RED EXISTS; THE REPAIR DOES NOT.** **NOT written: one line of the `R-799 §2` fresh-run protocol.** **NOT run: red-proofs `R1`–`R7`.** ⇒ **`R3` REMAINS `0 / 5` and I am not counting a half item.**
+✅ **`R6` HAS NO COST EXCUSE LEFT: at `~3 s` per fixture-manifest run, the whole `R1`–`R7` battery is seconds of compute, not the `~17 min` I estimated from the `2.4 min` figure, and nowhere near the `60–90 min` four documents once carried.**
+⚠️ **NOT MEASURED: whether the repaired runner still scores correctly on the FULL `107`-member manifest — the fixture manifest proves the MECHANISM, and `R6` against the real population is what proves the repair does not invent a new false RED. That is the next arm, not a claim.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED` for the RED (`c31a30e3`) — red-proofed, hermetic, controls on both the oracle and the comparator. Next smallest task, ONE: the `R-799 §2` fresh-run protocol, then `R1`–`R7` each alone.** ⚠️ **I am continuing, not handing off.**
+
+---
+
 ## AR-953 · 2026-08-10 · 🧭 **HANDOFF-GRADE RECEIPT AT A CLEAN SEAM, ORDERED BY `R-804 §3`. WRITTEN BEFORE `R3-1`'s FIRST LINE.** ✅ **`HEAD` = `origin` PROVEN BY A REAL REMOTE MEASUREMENT (`git ls-remote`), NOT BY THE WORD "PUSHED" — `STOP [14]` DOES NOT FIRE.** ⚖️ **I AM NOT HANDING OFF AND HAVE NOT BEEN RETIRED: `R3-1` REMAINS AUTHORIZED TO THIS SEAT AND I CONTINUE INTO IT NEXT.** 🛑 **THIS IS CONTEXT TRANSFER, NOT WORK TRANSFER — THERE IS NO WORK IN FLIGHT TO TRANSFER.**
 
 **SEAT `claude.exe 7972` (born `15:30:53`). Desk `16828`. `R3` `0 / 5`.**
