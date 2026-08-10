@@ -4,6 +4,126 @@
 
 ---
 
+## AR-907 · 2026-08-09 · ✅ **`COMMIT 1` DELIVERED AND COMMITTED (`b1c17970`) — `RED 2` NOW ENTERS THROUGH THE DOOR THE BREAKTHROUGH BUILT, AND IT NAMES A NEW, DEEPER BOUNDARY: PRODUCTION HAS NO TYPED CARRIER FOR A TAUGHT CANDIDATE.** ⭐⭐⭐ **`COMMIT 2` BUILT TO `8 / 9` AND MEASURED: `RED 2` GOES **GREEN** — THE PRODUCTION DISPATCH PATH EXECUTES THE REAL ADAPTER ONCE PER TAUGHT CANDIDATE, `(5, 15, 30)`, AND THE TWO ORDERED `6B` REDS RETIRE EXACTLY AS `R-779 §6` PREDICTED.** 🛑🛑 **BUT THERE IS A **TENTH** MEMBER, AND IT IS THE SAME SET-EQUALITY SHAPE AS `§5-B` AND `§5-C`: A COMMITTED TEST REQUIRES EVERY ENFORCED-PRIMITIVE FAMILY TO JOIN A POLARITY LIST, AND THE SHARED POLARITY FIXTURE THEN CONSTRUCTS THE STRATEGY **FROM A SPEC ALONE, WITH NO CANDIDATE** — WHICH `§7` ORDERS TO BE A HARD REFUSAL.** ⚖️ **REVERTED RATHER THAN LANDED, FULL DIFF PRESERVED. ATTEMPT `1 / 2`; I AM NOT SPENDING THE SECOND WITHOUT A RULING.**
+
+**TASK `R-779 §7`. SEAT `claude.exe 16536`. HEAD `b1c17970`. TREE `wt-h1-wave4-20260712`. FAN-IN: `COMMIT 1` **DONE** · `COMMIT 2` `8 / 9` members built and measured, `1` member (`§7-b` fixture transition) **UNSTARTED**, and a **TENTH** member **BLOCKED**.**
+
+### §1 — ✅ `COMMIT 1`, DELIVERED, TEST-ONLY, AND STILL RED BY ORDER
+```
+[MEASURED HERE, worktree root, unpiped, exit read directly]
+b1c17970   1 file changed, 409 insertions(+), 24 deletions(-)
+           git show --name-only -> src/engine/tests/test_s6_...py  AND NOTHING ELSE
+S6 AFTER COMMIT 1 : 4 failed · 7 passed        (was 1 failed · 7 passed)
+ACCEPT-1          : 2 failed · 50 passed       membership unchanged, the two ordered 6B reds
+ACCEPT-3          : 134 passed                 EXIT 0
+```
+✅ **`RED 2` NO LONGER ENTERS AT THE OLD SEAM.** It was building its setup through `_produce(GOLDEN_STUB)` — the per-strategy boundary that has already discarded the record-level evidence — and then dispatching ONE strategy carrying no candidate at all. **It now enters at `produce_spec_artifact_from_record`, takes the three candidates off the envelope, and constructs ONE production execution instance PER candidate.** ✅ **It still never calls the adapter and never calls the spy.**
+✅ **THE THREE ARMS `§7 COMMIT 1-2` ORDERED ARE PUBLISHED:** missing-candidate · candidate-swap · parameter-smuggling.
+⭐ **AND THE THING THAT MAKES THEM ARMS RATHER THAN DECORATION — `_require_activated()`.** Each arm asserts a REFUSAL or a MIS-ROUTE, and today production raises `FamilyMetaEnforcementError` for a completely unrelated reason (nothing is routed). **A bare `pytest.raises` would therefore have gone GREEN immediately, on the wrong exception.** ★★★★★ **`AN ARM THAT PASSES BEFORE THE FEATURE EXISTS IS NOT A GUARD — IT IS A COINCIDENCE WITH AN ASSERTION ATTACHED.`** ⇒ all three are RED at the same named boundary until the activation lands. **`[MEASURED]` after `COMMIT 2` was applied, two of them went GREEN on their own assertions.**
+✅ **THE CARRIER IS DISCOVERED BY TYPE, NEVER BY A NAME I CHOSE:** the guard reads `SpecConditionStrategy.__init__`'s annotations for `OpeningRangeExecutionCandidate`. `R-779 §7-1` requires "an explicit typed input", so the annotation IS the contract and any parameter name the wiring picks satisfies it (`R-776 §3`: `A TEST PINNED TO A NAME GUARDS THE NAME, NOT THE BOUNDARY`).
+
+### §2 — 📍 THE NEW BOUNDARY `COMMIT 1` NAMES, AND WHY THE STAGE ORDER MOVED
+```
+[MEASURED HERE, the RED published by COMMIT 1]
+RED — production offers NO typed carrier for bringing ONE taught execution candidate
+      into an execution instance.
+  SpecConditionStrategy.__init__ parameters : ['binding_plan', 'compiled_spec',
+      'restore_condition_ids', 'self', 'strategy_name', 'symbol', 'timeframe', 'trace']
+  none is annotated with OpeningRangeExecutionCandidate
+```
+⚠️ **MY FIRST PUBLICATION NAMED THE OLD BOUNDARY, AND I CORRECTED IT BEFORE COMMITTING.** I had ordered the stages declaration → resolver → routing → carrier, so the test still died at *"production declares NO primitive"* — **the same boundary the OLD `RED 2` died at, which would have meant `COMMIT 1` revealed nothing.** ⇒ **I re-ordered to the PATH'S OWN EXECUTION ORDER: an instance is CONSTRUCTED before anything is dispatched, so the carrier is the first fact needed; declaration/resolver/routing are read inside `_dispatch_enforced`, which cannot run until construction succeeds.** ★★★ **`THE STAGE ORDER OF A GUARD IS A CLAIM ABOUT THE PATH. IF IT DISAGREES WITH THE PATH'S REAL ORDER, THE GUARD REPORTS THE WRONG FIRST FAILURE — AND A WRONG FIRST FAILURE SENDS THE NEXT REPAIR TO THE WRONG LAYER.`**
+🛑 **AND THE MESSAGE SAYS IT IS NOT THE ONLY GAP** — declaration, resolver and routing are also absent behind it, merely unreachable until an instance can be built. **An honest first-failure claim must say what is queued behind it, or it reads as the last one.**
+
+### §3 — ⭐⭐⭐ `COMMIT 2`, `8 / 9` MEMBERS, MEASURED — AND THE BREAKTHROUGH IS REAL
+**Built: (1) the typed carrier · (2) the real `_h_opening_range` · (3) `HANDLER_PARAMETER_CLASSIFICATION = REFUSES_ALL_PARAMETERS` · (4) `FAMILY_META` declaration · (5) `gates` left at its `True` default, untouched · (6) `PRIMITIVE_RESOLVERS` · (7) `ENFORCED_DISPATCH` keyed on the DECLARED PRIMITIVE · (8) the TS declaration mirror. NOT BUILT: (9) the `§7-b` fixture transition.**
+```
+[MEASURED HERE, with all 8 applied]
+S6        : 11 passed                    EXIT 0    <- RED 2 IS GREEN
+              the spy reads (5, 15, 30), filled ONLY by SpecConditionStrategy._dispatch_enforced
+ACCEPT-1  : 3 failed · 49 passed
+              GONE (retired, as R-779 §6 PREDICTED):
+                test_no_production_binding_routes_to_the_opening_range_adapter_yet
+                test_no_typed_opening_range_output_contract_exists_in_production
+              NEWLY RED — ALL THREE ARE THE §7-b AUTHORIZED TRANSITION SET, i.e. member 9,
+              which I did not do:
+                test_both_definitions_refuse_deliberately_and_neither_reaches_the_structure_evaluator
+                test_opening_range_definition_agrees_field_for_field
+                test_the_refusing_family_declares_no_primitive_to_fall_back_to
+ACCEPT-3  : 1 failed · 133 passed        <- THE BLOCKER, AND IT IS NOT IN ANY AUTHORIZED SET
+                test_every_enforced_primitive_family_is_polarity_tested
+```
+🛑 **THE HANDLER DOES NOT TRADE, AND THAT IS ENFORCED BY WHAT IT CONTAINS, NOT BY A PROMISE:** no breakout, no breakdown, no midpoint, no direction, no retest, no confirmation, no stop, no target. **Its boolean means `OPENING RANGE STATE AVAILABLE AND COMPLETE` — `False` before the window locks, `False` on a refusal, `True` once complete.** ✅ **NO LOOKAHEAD: the adapter is called ONCE and reads only `[start, lock)`, and the per-bar gate publishes `False` before the lock instant — the 09:34 bar cannot know the 5m range.** ✅ **The lock instant comes from the adapter's OWN `_window_bounds`, REUSED — not a second window calculator.**
+
+### §4 — 🛑🛑 THE TENTH MEMBER, MEASURED AT THE EXECUTABLE LINE — AND IT IS `§5-B`/`§5-C`'s SHAPE A THIRD TIME
+```
+[MEASURED HERE, test_family_meta_enforcement.py]
+:463  ENFORCED_PRIMITIVE_FAMILIES            (gating, 7 members)
+:474  ENFORCED_PRIMITIVE_NON_GATING_FAMILIES (non-gating, 1 member)
+:490  declared = {family for family, meta in FAMILY_META.items()
+                  if meta.enforced_declaration()[0] is not None}
+:497  assert declared == gating | non_gating
+      -> AssertionError: families declaring an enforced primitive but covered by NO
+         polarity test: ['OPENING_RANGE_DEFINITION']
+```
+⇒ **JOINING A POLARITY LIST IS MANDATORY BY CONSTRUCTION, exactly like pin `(a)`: set equality, read FROM `FAMILY_META`, not transcribed.** **`gates=True` (`§5-C`) puts it in the GATING list.**
+🛑 **AND JOINING IT IS WHAT BREAKS, BECAUSE THE LIST IS ALSO A FIXTURE POPULATION.** `[MEASURED HERE, I added the entry and ran it]`:
+```
+:533  @pytest.mark.parametrize(("family","obj"), ENFORCED_PRIMITIVE_FAMILIES)
+:534  def test_polarity_resolves_and_runs(family, obj):
+:538      strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))   <- NO CANDIDATE
+:539      strategy.compute(_bars())
+:731  PER_BAR_FAMILIES = ENFORCED_PRIMITIVE_FAMILIES + [("FILTER","confluence")]
+
+RESULT of adding ("OPENING_RANGE_DEFINITION", "the opening range"):
+  ✅ test_every_enforced_primitive_family_is_polarity_tested        -> GREEN
+  ✅ test_polarity_fails_loud_when_absent[OPENING_RANGE_DEFINITION] -> GREEN
+  🛑 test_polarity_resolves_and_runs[OPENING_RANGE_DEFINITION]      -> RED
+  🛑 test_flag_off_per_bar_output_matches_the_ladder                -> RED
+  BOTH with MY OWN refusal, verbatim:
+    ValueError: condition 'c1' (OPENING_RANGE_DEFINITION) is an opening-range condition,
+    but this strategy instance carries NO execution candidate ... REFUSAL
+    opening_range_candidate_absent
+  (probe REVERTED; test_family_meta_enforcement.py is byte-clean against HEAD)
+```
+⚖️ **THIS IS NOT A DEFECT IN THE IMPLEMENTATION, AND I WANT TO BE PRECISE ABOUT THAT.** The refusal is what `R-779 §7` ORDERS: *"an opening-range binding arriving with NO candidate is a HARD REFUSAL. Never pick one."* **The two fixtures encode an assumption that was true of all eight previous families and is false of this one: that a gating family is evaluable FROM A SPEC ALONE.** `OPENING_RANGE_DEFINITION` is **the first family whose execution requires an INSTANCE-LEVEL input**, and `§7-1` is what made it instance-level.
+★★★★★ **THE LAW, AND IT IS THE THIRD SIGHTING OF ONE SHAPE IN ONE RULING: `A SET-EQUALITY GUARD DOES NOT ONLY DEMAND MEMBERSHIP — IT ENROLS THE NEW MEMBER IN EVERY FIXTURE THAT DERIVES ITS POPULATION FROM THAT SET. THE COST OF JOINING IS NOT THE LINE YOU ADD; IT IS EVERY TEST PARAMETERISED OVER THE LIST YOU ADDED IT TO.`**
+
+### §5 — 🛑 WHY I REVERTED INSTEAD OF LANDING, AND WHY MEMBER `9` WOULD NOT HAVE HELPED
+🛑 **`R-779 §10` states ACCEPT-3 `MUST BE GREEN BOTH BEFORE AND AFTER`, and `§11` lists `a non-atomic activation` as a STOP.** **Member 9 repairs the three ACCEPT-1 reds; it does NOT touch ACCEPT-3.** ⇒ **even with member 9 perfect, `COMMIT 2` cannot land green.** **Finishing it first would have produced a more complete commit that still could not land — so I measured the blocker and stopped, rather than spending the work to arrive at the same wall.**
+✅ **AR-904's precedent, and the desk ratified it:** a branch carrying reds where none are expected **corrupts the next acceptance rather than informing it.**
+✅ **THE WORK IS NOT LOST AND IS NOT SITTING IN AN UNBACKED TREE** (`[precommit-stash]`: this tree is shared and `git checkout` eats uncommitted work). **The complete `8/9` diff is committed as `docs/designs/S6-EXECUTION-ACTIVATION-MEASURED-ATTEMPT-2026-08-09.patch` (292 lines, 4 files) and re-applies cleanly.**
+```
+[MEASURED HERE, after revert — the tree is back where COMMIT 1 left it]
+S6 4 failed · 7 passed   ·   ACCEPT-1 2 failed · 50 passed   ·   ACCEPT-3 134 passed EXIT 0
+git diff --stat -- src/  ->  ONLY test_synthetic_market_simulator.py, the pre-existing dirt
+                             I did not create and did not touch
+```
+
+### §6 — ⭐ ONE REAL DEFECT I FOUND IN MY OWN WIRING, AND THE LAW IT CARRIES
+**My first `_h_opening_range` bound the adapter at import time (`from ... import compute_opening_range_state`). `[MEASURED]` `RED 2` stayed red with `observed calls : ()` — production ran the handler and the spy saw nothing.**
+⇒ **the module-attribute patch could not reach a reference captured at import.** ✅ **REPAIRED: the call resolves through the module attribute, which is the SAME object `PRIMITIVE_RESOLVERS` resolves (`module:attr`).**
+★★★★★ **`A POINTER THAT NAMES THE RIGHT FUNCTION AND A CALL THAT REACHES A PRIVATE COPY OF IT ARE NOT THE SAME WIRING. THEY AGREE IN PRODUCTION AND DIVERGE UNDER EVERY INSTRUMENT THAT MEASURES THEM — SO THE DECLARATION WOULD HAVE BEEN TRUE AND UNVERIFIABLE AT THE SAME TIME.`** ⭐ **The file's own positive witness (`R-775 §1`) is what convicted it. That witness earned itself today.**
+
+### §7 — ⚠️ TWO INSTRUMENT FINDINGS AND ONE ARITHMETIC CORRECTION TO THE RULING
+1. 🛑 **`R-779 §10`'s `ACCEPT-1` EXPECTED FIGURE DOES NOT JOIN ITS OWN FILE LIST.** `[MEASURED HERE, per file]` `conformance 2F/10P · definition 12P · family_parity 4P · lowering 24P · family_meta_enforcement 70P`.
+   ⇒ **ACCEPT-1 as `§10` names it (conformance + definition + parity + LOWERING) = `2 failed / 50 passed`, NOT the `2 failed / 96 passed` it states.** **The `96` belongs to `R-741 §5`'s group, which carries `family_meta_enforcement` instead of `lowering`.** ✅ **FAILURE MEMBERSHIP is identical in both, and `R-741 §5` says membership is the criterion and never the total** — so nothing is invalidated. ⚠️ **But the number in `§10` is a count carried across a changed population, and I will not quote it.** ★★★★ **`WHEN THE MEMBERSHIP CHANGES, THE TOTAL IS A DIFFERENT INSTRUMENT'S READING.`**
+2. ⚠️ **MY EDITOR SILENTLY CONVERTED TWO FILES TO CRLF** (`test_s6_...py`, then `spec_condition_compiler.py`). `[MEASURED]` HEAD is pure LF; the S6 file would have committed as a **990-line rewrite** instead of a 409/24 diff, destroying the reviewable diff and every future line-based join. **Caught by `git`'s own warning, normalized, and every affected measurement RE-TAKEN afterwards** (`[ps-counting-encoding]`; `A NUMBER CARRIED ACROSS A REPAIR IS STALE`).
+3. ⚠️ **I ALSO CAUGHT A PIPED EXIT CODE IN MY OWN COMMAND** (`git status ... | head` inside an `&&` chain reported `head`'s success). It changed no result here, but it is the same class the ledger has convicted repeatedly, and I am recording it rather than only the times it bit.
+
+### §8 — ⚠️ WHAT I DID NOT MEASURE, AND WHAT I DID NOT DO
+🛑 **NOT RUN:** `tsc` · the TS parity script (`scripts/check-spec-binding-plan-parity.ts`) · any backtest · the 104-member manifest join (`§10` forbids it mid-lane) · the pathless suite · `R-779 §1`'s 13-file superset (I ran the three NAMED acceptance groups instead of re-deriving a population).
+🛑 **NOT DONE:** member `9`, the `§7-b` fixture transition — **UNSTARTED, not blocked**, and its three target fixtures are named in `§3` above. **It is the first thing to do once the tenth member is ruled**, since both land in the same atomic commit.
+🛑 **NOT CLAIMED:** that the activation is correct beyond the three acceptance groups. **`_h_opening_range` has been exercised on ONE golden record, ONE session date, 1-minute bars and a 45-minute frame.** **Its behaviour on a DST changeover, a half-day session, a gapped frame, or a non-1m timeframe is `[NOT MEASURED]`.**
+🛑 **I DID NOT WEAKEN ANYTHING:** pin `(a)` untouched · the enforcement checker untouched · `acceptance-baseline-2026-08-09.json` untouched · no fixture edited to accommodate the activation · the probe in `test_family_meta_enforcement.py` reverted to byte-clean.
+
+**RECOMMENDATION: BLOCKED ON ONE NARROW RULING.** **THE QUESTION, precisely:** *the activation forces `OPENING_RANGE_DEFINITION` into `ENFORCED_PRIMITIVE_FAMILIES` by set equality, which enrols it in `test_polarity_resolves_and_runs` and `test_flag_off_per_bar_output_matches_the_ladder` — both of which construct `SpecConditionStrategy(compiled_spec=...)` with no candidate, the state `§7` orders a HARD REFUSAL for. Is amending those two shared fixtures to supply a candidate for this family part of the atomic activation (a TENTH member), or does the desk want a different resolution?* ⚖️ **I see three shapes and recommend `(A)`: (A) teach both fixtures to supply a candidate for this one family, keeping every existing assertion — smallest, and it preserves both polarity proofs; (B) give the family its own polarity pair and exclude it from the shared parameterisation — larger, and it splits a population that exists precisely to prevent exclusions; (C) something that makes the handler tolerate a missing candidate — which `§7` forbids and which I will not propose seriously.** 🛑 **I did not choose: `§7-b`'s own words are that a guard moving in the same commit as the code it guards needs a ruling, not a worker's judgement — and these two fixtures are not in the set `§7-b` named.**
+**NEXT SMALLEST TASK, once ruled: re-apply the preserved patch, add the ruled tenth member and member `9`, and land ALL of it as ONE atomic commit — red-proofing each transitioned fixture RED at pre-activation HEAD on its NEW assertion, per `§7-b`.**
+⚖️ **ATTEMPT `1 / 2`. The mechanism is not exhausted and the root cause is proven, not narrated — but I will not spend the second attempt inventing a resolution the desk has not named.**
+
+**LESSON:** ★★★★★ **`A SET-EQUALITY GUARD ENROLS THE NEW MEMBER IN EVERY FIXTURE PARAMETERISED OVER THAT SET — THE COST OF JOINING IS NOT THE LINE YOU ADD.`** · ★★★★★ **`A POINTER THAT NAMES THE RIGHT FUNCTION AND A CALL THAT REACHES A PRIVATE COPY OF IT ARE NOT THE SAME WIRING.`** · ★★★★ **`THE STAGE ORDER OF A GUARD IS A CLAIM ABOUT THE PATH; A WRONG FIRST FAILURE SENDS THE NEXT REPAIR TO THE WRONG LAYER.`** · ★★★★ **`AN ARM THAT PASSES BEFORE THE FEATURE EXISTS IS A COINCIDENCE WITH AN ASSERTION ATTACHED.`** · ★★★★ **`WHEN THE MEMBERSHIP CHANGES, THE TOTAL IS A DIFFERENT INSTRUMENT'S READING.`**
+
+---
+
 ## AR-906 · 2026-08-09 · 🟢 **START-RECEIPT — `R-779 §7` `S6 EXECUTION ACTIVATION` ACCEPTED AND STARTED. SEAT `claude.exe 16536`, ATTEMPT `0 / 2`, TWO COMMITS, `COMMIT 1` TEST-ONLY AND MUST STAY RED.** ⚠️ **AND I CORRECT MY OWN CITE FIRST: `R-779 §2` IS RIGHT — I COPIED `:454` FROM `AR-904` WITHOUT RE-DERIVING IT. THE `def` IS AT `:446`.**
 
 **TASK: `R-779 §7`. SEAT `claude.exe 16536` (re-authorized explicitly; I did not inherit `R-778 §5`). HEAD at start: `90984b88`. TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. ATTEMPT `0 / 2`.**

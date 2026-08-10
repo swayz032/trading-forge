@@ -1,0 +1,292 @@
+diff --git a/src/engine/family_meta_enforcement.py b/src/engine/family_meta_enforcement.py
+index 1d3c173f..aea51d89 100644
+--- a/src/engine/family_meta_enforcement.py
++++ b/src/engine/family_meta_enforcement.py
+@@ -243,6 +243,13 @@ PRIMITIVE_RESOLVERS: dict[str, str] = {
+     "structural_stops.compute_structural_stop": (
+         "src.engine.context.structural_stops:compute_structural_stop"
+     ),
++    # S6 EXECUTION ACTIVATION (R-779 §7-6). Points at the REAL adapter -- the function
++    # whose return annotation is the typed `OpeningRangeState` output contract -- and not
++    # at `structure_engine.compute_structure_state`, which is the look-alike this family
++    # must never be routed back to.
++    "opening_range_adapter.compute_opening_range_state": (
++        "src.engine.opening_range_adapter:compute_opening_range_state"
++    ),
+     # ── Experiment primitives. Not FAMILY_META declarations -- these are returned by
+     # bind_condition() only when an env-gated experiment flag is on. Registered here so
+     # pin (a)'s both-directions dispatch check can tell "a handler for a declared
+diff --git a/src/engine/spec_condition_compiler.py b/src/engine/spec_condition_compiler.py
+index ca77f11d..e5a37c34 100644
+--- a/src/engine/spec_condition_compiler.py
++++ b/src/engine/spec_condition_compiler.py
+@@ -36,6 +36,7 @@ from __future__ import annotations
+ import os
+ from datetime import UTC, datetime
+ from typing import Any
++from zoneinfo import ZoneInfo
+ 
+ import numpy as np
+ import polars as pl
+@@ -60,6 +61,9 @@ from src.engine.indicators.market_structure import detect_swings
+ from src.engine.indicators.mss_native import compute_mss_signal
+ from src.engine.indicators.order_flow import detect_bearish_ob, detect_bullish_ob
+ from src.engine.indicators.sweep_native import compute_sweep_signal
++from src.engine import opening_range_adapter
++from src.engine.opening_range_adapter import OpeningRangeBar, _window_bounds
++from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
+ from src.engine.role_demotion_audit import get_classifications_for_video
+ from src.engine.session_windows import is_in_killzone
+ from src.engine.spec_family_bindings import (
+@@ -154,6 +158,11 @@ ENFORCED_DISPATCH: dict[str, str] = {
+     "spec_condition_compiler.wait_bias_directional_proxy": "_h_wait_bias",
+     "spec_condition_compiler.retest_touch_check": "_h_retest",
+     "spec_condition_compiler.candle_confirmation_check": "_h_confirmation",
++    # KEYED ON THE DECLARED PRIMITIVE, NEVER ON THE HANDLER NAME (R-779 §7-7). Pin (a)
++    # compares FAMILY_META's declarations against THESE KEYS in both directions, so the
++    # key here and the string in FAMILY_META are the same object of comparison; a handler
++    # name in this position would satisfy nothing and would fail direction 1 immediately.
++    "opening_range_adapter.compute_opening_range_state": "_h_opening_range",
+     # gates=False families — real disposition, recorded not hidden (see _h_non_gating)
+     "static_true_pass_through": "_h_non_gating",      # FILTER
+     "spine_conjunction_trigger": "_h_non_gating",     # ENABLE_ENTRY / ENTER
+@@ -205,6 +214,13 @@ HANDLER_PARAMETER_CLASSIFICATION: dict[str, str] = {
+     # `_h_structure` is the sharpest of them -- it reads `b.parameters` as a CACHE KEY and
+     # then calls an evaluator that cannot honour it, so the taught numbers visibly move
+     # cache occupancy while changing no answer.
++    # R-779 §5-B. The taught 5/15/30 travel on a TYPED carrier
++    # (`opening_range_candidate`), so `ConditionBinding.parameters` must never become a
++    # second channel for the same fact. The classification is MANDATORY, and not for the
++    # reason it looks like: `test_parameter_acceptance_guard.py` asserts set equality
++    # between this table and `ENFORCED_DISPATCH.values()`, so omitting it turns a
++    # committed test RED rather than quietly failing closed.
++    "_h_opening_range": REFUSES_ALL_PARAMETERS,
+     "_h_structure": REFUSES_ALL_PARAMETERS,
+     "_h_retest": REFUSES_ALL_PARAMETERS,
+     "_h_confirmation": REFUSES_ALL_PARAMETERS,
+@@ -484,6 +500,7 @@ class SpecConditionStrategy(BaseStrategy):
+         binding_plan: BindingPlan | None = None,
+         strategy_name: str | None = None,
+         restore_condition_ids: frozenset[str] | None = None,
++        opening_range_candidate: OpeningRangeExecutionCandidate | None = None,
+     ) -> None:
+         # ─── THE LOAD GATE (pin (b)/(b2)/(a), docs/designs/packet-family-meta-enforced-
+         # 2026-07-20.md). No-op with TF_FAMILY_META_ENFORCED OFF (default). With it ON, a
+@@ -503,6 +520,20 @@ class SpecConditionStrategy(BaseStrategy):
+         # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
+         self.restore_condition_ids = restore_condition_ids
+ 
++        # ─── THE TAUGHT OPENING-RANGE WINDOW THIS INSTANCE EXECUTES (R-779 §7-1) ──────
++        # ONE instance, ONE candidate. R-736 (reaffirmed R-743) settled the architecture:
++        # the teacher gave three versions, so the factory makes three bots. There is
++        # deliberately NO default, NO primary, NO `candidates[0]` and no collection to
++        # search -- an instance either knows which window it is computing because it was
++        # TOLD, or it refuses in `_h_opening_range`.
++        #
++        # `A RUNTIME THAT CAN CHOOSE A WINDOW WILL EVENTUALLY CHOOSE ONE THE TEACHER
++        #  NEVER ASSIGNED TO IT, AND EVERY NUMBER DOWNSTREAM WILL LOOK REASONABLE.`
++        #
++        # None is the correct default for every pre-existing caller: no spec outside the
++        # opening-range family reaches the handler, so nothing that works today changes.
++        self.opening_range_candidate = opening_range_candidate
++
+         # ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
+         # experiment-2026-07-05.md) ──────────────────────────────────────────────────
+         # Resolve TF_ROLE_DEMOTION_MODE + the audited (video, condition_id) -> classification
+@@ -1105,6 +1136,118 @@ class SpecConditionStrategy(BaseStrategy):
+             ctx["mss_result"] = compute_mss_signal(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
+         return self._select_directional(ctx["mss_result"], b.object)
+ 
++    def _h_opening_range(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
++        """Execute the TAUGHT opening-range window this instance carries.
++
++        WHAT THIS BOOLEAN MEANS, AND IT IS NOT WHAT A READER WILL ASSUME:
++        `OPENING RANGE STATE AVAILABLE AND COMPLETE` — never `TRADE NOW`. This family
++        is a DEFINITION, not a trigger. There is no breakout above the range high, no
++        breakdown below the low, no midpoint entry, no direction selection, no retest,
++        no confirmation, no stop and no target here; every one of those is source-owned
++        entry logic that this step is forbidden to invent (R-779 §7, and architecture
++        invariant 2 — source-owned entry logic is never silently rewritten).
++
++        PER-BAR, AND FALSE BEFORE THE WINDOW CLOSES. The bar at 09:34 must not know the
++        5m range, 09:44 the 15m, 09:59 the 30m. The adapter is called ONCE, and it reads
++        only bars inside `[start, lock)`, so its answer cannot depend on anything later;
++        the availability gate below is what stops that answer being published early.
++
++        REFUSES, NEVER GUESSES:
++          * no candidate            -> ValueError naming the missing candidate
++          * a frame with no usable timestamps -> ValueError, not a silent all-False
++          * FORMING / INCOMPLETE    -> all-False, the adapter's own refusal, unedited
++        """
++        candidate = self.opening_range_candidate
++        if candidate is None:
++            raise ValueError(
++                f"condition {b.condition_id!r} ({b.type}) is an opening-range condition, but "
++                "this strategy instance carries NO execution candidate, so the taught window "
++                "it should compute is unknown. REFUSAL opening_range_candidate_absent: the "
++                "teacher taught three alternatives and named no default, so selecting one "
++                "here would be invention. Construct the instance with the candidate it is "
++                "meant to execute."
++            )
++
++        ts_list = ctx.get("ts_list") or []
++        n = int(ctx.get("n") or len(ts_list))
++        out = np.zeros(n, dtype=bool)
++        stamped = [(i, ts) for i, ts in enumerate(ts_list) if ts is not None]
++        if not stamped:
++            raise ValueError(
++                f"condition {b.condition_id!r} ({b.type}) reached the opening-range adapter "
++                "with a frame carrying no usable timestamps. REFUSAL "
++                "opening_range_frame_untimed: an opening range is defined by wall-clock "
++                "boundaries in a named zone, so an untimed frame cannot produce one. "
++                "Refused rather than returning an all-False column, which a caller cannot "
++                "tell apart from a session where the window simply never closed."
++            )
++
++        # The bar interval is a DATA-CONTRACT fact the runtime supplies, never something
++        # the source taught (opening_range_definition.py is explicit that interval belongs
++        # to the adapter side of the boundary). It is read off this instance's declared
++        # timeframe rather than inferred from the bars, because inferring it from the same
++        # timestamps the adapter then grid-checks would make the completeness check
++        # partly self-confirming: a frame missing a bar would define its own interval and
++        # look on-grid. `AN INSTRUMENT THAT DERIVES ITS TOLERANCE FROM THE SAMPLE CANNOT
++        # DETECT AN OUT-OF-TOLERANCE SAMPLE.`
++        timeframe = str(self.timeframe or "").strip().lower()
++        if not (timeframe.endswith("m") and timeframe[:-1].isdigit()):
++            raise ValueError(
++                f"condition {b.condition_id!r} ({b.type}) cannot be evaluated: this instance's "
++                f"timeframe {self.timeframe!r} is not a whole number of minutes, and the "
++                "opening-range adapter requires the bar interval in minutes. REFUSAL "
++                "opening_range_bar_interval_unknown: no interval was guessed."
++            )
++        bar_interval_minutes = int(timeframe[:-1])
++
++        zone = ZoneInfo(candidate.definition.source_timezone)
++        # The SESSION DATE is runtime-owned and comes from the frame's own first stamped
++        # bar, read in the TAUGHT zone — not from a constant, and not from the source.
++        session_date = stamped[0][1].astimezone(zone).date()
++        as_of = stamped[-1][1]
++
++        # ONE call. The existing adapter, with the candidate's OWN definition and variant —
++        # no second calculator, no re-derivation of the window, no reimplementation of the
++        # refusals it already owns.
++        #
++        # RESOLVED THROUGH THE MODULE ATTRIBUTE, DELIBERATELY. `from ... import
++        # compute_opening_range_state` would bind this call to a private reference taken at
++        # import time, which is a different object from the one `PRIMITIVE_RESOLVERS`
++        # resolves (`module:attr`). The two agree in production and diverge under any
++        # instrumentation that patches the module — so the import form would make the
++        # declared primitive and the executed function DIFFERENT THINGS while every name in
++        # the declaration still resolved. `A POINTER THAT NAMES THE RIGHT FUNCTION AND A
++        # CALL THAT REACHES A COPY OF IT ARE NOT THE SAME WIRING.`
++        state = opening_range_adapter.compute_opening_range_state(
++            candidate.definition,
++            candidate.variant,
++            [
++                OpeningRangeBar(
++                    timestamp=ts,
++                    high=float(ctx["high"][i]),
++                    low=float(ctx["low"][i]),
++                )
++                for i, ts in stamped
++            ],
++            session_date=session_date,
++            bar_interval_minutes=bar_interval_minutes,
++            as_of=as_of,
++        )
++        if not state.opening_range_complete:
++            # The adapter refused (FORMING or INCOMPLETE_OPENING_WINDOW). Its refusal is
++            # published as-is: no levels, no signal, and no fallback to a shorter window.
++            return out
++
++        # AVAILABILITY GATE — the same single window calculator the adapter uses, reused
++        # rather than duplicated, so there is exactly one definition of when this window
++        # closes. Bars before the lock instant are False: that is the no-lookahead rule
++        # expressed as code rather than asserted in a comment.
++        _, lock = _window_bounds(candidate.definition, candidate.variant, session_date)
++        for i, ts in stamped:
++            if ts >= lock:
++                out[i] = True
++        return out
++
+     def _dispatch_enforced(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+         """Route THIS binding by the name its family declared. No `type` fallback, no `else`.
+ 
+diff --git a/src/engine/spec_family_bindings.py b/src/engine/spec_family_bindings.py
+index 8a8dfae7..ae94a7e3 100644
+--- a/src/engine/spec_family_bindings.py
++++ b/src/engine/spec_family_bindings.py
+@@ -667,18 +667,33 @@ FAMILY_META: dict[str, FamilyMeta] = {
+     # `A REFUSAL IS AN HONEST OFF STATE; A SILENT WRONG ANSWER IS NOT.`
+     #
+     # WHY THIS NEEDS NO GUARD EXEMPTION (R-729 §2, which refused the one I proposed).
+-    # `unsupported=True` makes enforced_declaration() return (None, None), so pin (a) never
+-    # adds a name to `declared` and needs no ENFORCED_DISPATCH key, and pin (b) skips the
+-    # family at its own `if meta.unsupported: continue`. This is the PROPER DECLARATION ROUTE
+-    # -- the guard sees the family and is satisfied by it, rather than being told to ignore it.
+-    # `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.`
++    # ── ACTIVATED (S6 EXECUTION ACTIVATION, R-779 §7). The previous entry here declared
++    # `primitive=None, unsupported=True, unbound_reason="opening_range_adapter_not_
++    # implemented"`, and its comment explained that `unsupported=True` was the honest
++    # declaration route while no adapter existed. THAT REASON IS NOW DISCHARGED: the
++    # adapter exists, the lowerer produces the three taught candidates, and
++    # `_h_opening_range` executes them -- so the honest entry is the real one.
++    #
++    # ATOMIC BY NECESSITY, NOT BY PREFERENCE (R-779 §3): `verify_dispatch_coverage`'s
++    # direction-1 loop subtracts no waiver, so this declaration is a pin (a) VIOLATION
++    # from the instant it lands until `PRIMITIVE_RESOLVERS` and `ENFORCED_DISPATCH` carry
++    # the same string. There is no valid intermediate state, which is why all three move
++    # in one commit. `RESOLVABLE IS NOT ROUTED.`
++    #
++    # gates STAYS TRUE (the field default, and NOT overridden here) -- R-779 §5-C. It is
++    # tempting to read "this family is a definition, not a breakout trigger" as
++    # `gates=False`; that reading is a pin (a) violation, because pin (a) requires a
++    # gates=False family to route to a NON-GATING handler and `_h_opening_range` is a real
++    # evaluator. The family does gate: it gates on OPENING RANGE STATE AVAILABLE AND
++    # COMPLETE -- False before the window locks, False on a refusal, True once complete.
++    #
++    # production_executed stays at its default True: production now calls the declared
++    # primitive on a real run, which is exactly what that column asserts.
+     #
+     # MIRRORED: src/server/lib/spec-family-bindings.ts carries the same entry in this commit,
+     # with a focused parity fixture (R-727 §3's stated price, paid rather than routed around).
+     "OPENING_RANGE_DEFINITION": FamilyMeta(
+-        primitive=None,
+-        unsupported=True,
+-        unbound_reason="opening_range_adapter_not_implemented",
++        primitive="opening_range_adapter.compute_opening_range_state",
+     ),
+     "VERIFY_STRUCTURE": FamilyMeta(
+         primitive="structure_engine.compute_structure_state",
+diff --git a/src/server/lib/spec-family-bindings.ts b/src/server/lib/spec-family-bindings.ts
+index 075b2ea8..332ed983 100644
+--- a/src/server/lib/spec-family-bindings.ts
++++ b/src/server/lib/spec-family-bindings.ts
+@@ -138,14 +138,20 @@ export const FAMILY_META: Record<string, FamilyMeta> = {
+     enforcedPrimitive: "session_windows.is_in_killzone",
+   },
+   WAIT_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
+-  // B1 STEP 3 (R-730 §4). The typed subtype that splits the taught OPENING RANGE out of the
+-  // coarse WAIT_STRUCTURE family above. UNSUPPORTED and REFUSING until STEP 4 supplies the
+-  // typed adapter — it must never fall back to compute_structure_state, which is the defect
+-  // B1 exists to remove. Mirrors src/engine/spec_family_bindings.py::FAMILY_META, same commit.
++  // B1 STEP 3 (R-730 §4), ACTIVATED by the S6 EXECUTION ACTIVATION (R-779 §7-8). The typed
++  // subtype that splits the taught OPENING RANGE out of the coarse WAIT_STRUCTURE family
++  // above. It was UNSUPPORTED while no typed adapter existed; the adapter now exists and
++  // Python routes and executes it, so this entry declares the real primitive.
++  //
++  // 🛑 DECLARATION PARITY ONLY. There is no TypeScript opening-range evaluator here and
++  // there must not be one: PYTHON IS THE EXECUTION AUTHORITY, and a second implementation
++  // of the window arithmetic would be a second answer to the same question. This file
++  // mirrors WHAT PYTHON DECLARES, never HOW PYTHON COMPUTES.
++  //
++  // It must still never fall back to compute_structure_state, which is the defect B1 exists
++  // to remove. Mirrors src/engine/spec_family_bindings.py::FAMILY_META, same commit.
+   OPENING_RANGE_DEFINITION: {
+-    primitive: null,
+-    unsupported: true,
+-    unboundReason: "opening_range_adapter_not_implemented",
++    primitive: "opening_range_adapter.compute_opening_range_state",
+   },
+   VERIFY_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
+   // Declared bias_engine.classify_institutional_regime; MEASURED 0 calls to it on 2000 real ES
