@@ -4,6 +4,57 @@
 
 ---
 
+## AR-925 · 2026-08-10 · 🔵 **SUCCESSOR START-RECEIPT — THE SEAT CRASHED AND ROLLED. NEW SEAT `claude.exe 23344`, TAKING THE `DAILY-RESET-1` LANE BY `R-784 §3` EXACTLY AS `R-788` PRE-ROUTED IT.** ✅ **NOTHING WAS LOST: `8f729410` IS ON `origin`, `HEAD 839174f4` `==` REMOTE, AND THE ONLY TRACKED "CHANGE" IS THE KNOWN `wave25` STAT-CACHE GHOST (`numstat` EMPTY).** ✅ **EAR RE-ARMED AND DELIVERING — IT DIED WITH THE PROCESS AND I WAS BLIND UNTIL `05:58:56Z`; I NAME THE WINDOW RATHER THAN LET IT PASS.** 🛑 **`HOLD` STANDS. I HAVE STARTED NOTHING.** ⚠️ **AND ONE UNPAID DISCLOSURE FROM THE PREVIOUS SEAT: MY OWN EAR EMITTED A FALSE FIRE, I FIXED IT, AND THE CRASH TOOK THE REPORT BEFORE IT REACHED THIS LEDGER.**
+
+**SEAT `claude.exe 23344` (born `01:56:32`; parent walk `powershell 8960 → claude.exe 23344 → powershell 2284 → explorer 11340`). PREDECESSOR `claude.exe 23892` — GONE. LANE `DAILY-RESET-1`: COMPLETE AND ACCEPTED AT `R-788`, ATTEMPT `1 / 2`, NOTHING OWED. `MP-1` · `GATE-LIM-2` · `ACCEPT-5` collection repair: ALL UNSTARTED.**
+
+### §1 — 🛑 THE CRASH, AND WHAT IT ACTUALLY COST
+🛑 **The harness crashed. BOTH `claude.exe` seats rolled** `[MEASURED HERE, `Win32_Process`, `TaskList` NOT USED]`: the table now holds `21324` (born `01:56:23`, **NOT MINE — untouched, not probed further, not killed**) and `23344` (born `01:56:32`, **me**). **`23892` and `29864` are both gone.** ⇒ **this is a genuinely new PROCESS, not a cleared context, so `[cleared-context-not-new-seat]` does not apply and a real successor receipt is owed.**
+🛑 **THE ONE REAL COST WAS THE EAR, AND I STATE THE BLIND WINDOW RATHER THAN QUIETLY RE-ARMING:** the monitor died with the process. **Blind from the crash until `05:58:56Z`.** ✅ **BACKFILLED BY HAND: newest ruling on disk is `R-788` at line `15`, INCLUDING the `§7` correction committed at `839174f4` (`01:50:08`), which I read in full. Newest `## AR-` is my own `AR-924`. Nothing landed in the blind window that I have not read.**
+⚖️ **`[background-monitors-die-with-session-roll]` predicted exactly this: a RESTART kills every monitor including the ear. It did.**
+
+### §2 — ✅ NOTHING WAS LOST, MEASURED NOT ASSUMED
+```
+[MEASURED HERE]
+HEAD                                 839174f4  ==  git ls-remote origin  839174f4
+git branch -r --contains 8f729410 -> origin/h1-wave4-sealed12-driver   (the repair is SAFE)
+tracked changes                    -> ONLY  M docs/wave25-exit-engine-ab-report.md
+git diff --numstat on that path     -> EMPTY
+```
+⚖️ **So the `wave25` ` M` is the STAT-CACHE GHOST again, not a re-stamp — `AR-920 §6-3` and `AR-923 §7` both documented it.** 🛑 **I am NOT running an index operation to tidy an appearance, and I did not `git checkout` anything** (`[ps-counting-encoding]`: `git checkout` eats uncommitted work, and this tree has a history of exactly that).
+✅ **No uncommitted repair was at risk this time — `AR-923` landed and pushed everything before the crash. `SHARED-TREE-LOSS-1` did not fire.**
+
+### §3 — ⚠️ THE UNPAID DISCLOSURE: MY OWN EAR PRODUCED A FALSE FIRE
+🛑 **Before the crash my ear emitted `NEW RULING LANDED … <none>` at `05:52:31Z`, then re-announced `R-788` as new at `05:53:14Z`. NEITHER WAS A NEW RULING.**
+```
+[MEASURED HERE, immediately after]
+ADVISOR-RULINGS.md  6,315,544 bytes · 767 `^## R-` headers · newest R-788 at line 15
+git status on it -> CLEAN
+```
+⇒ **ROOT CAUSE, at the mechanism: my poll landed WHILE THE DESK WAS REWRITING THE FILE (the `839174f4` correction commit, `01:50:08`). The read returned EMPTY on a file that was provably intact. My detector then STORED that empty as its baseline — so the next poll saw `R-788 != <none>` and re-fired the same ruling as new.**
+✅ **FIXED AND RED-PROOFED ON A THROWAWAY, BOTH ARMS:** an empty read is now `continue` — **NO OBSERVATION, never a value.** Probe: `R-001` → truncate to empty → restore `R-001` ⇒ **SILENT** (the false-fire path is dead); then → `R-002` ⇒ **FIRES**. **The fix suppresses the false positive without suppressing detection, which is the only version worth shipping.**
+⚖️ **SEVERITY, HONESTLY: this ear OVER-reports, it does not UNDER-report — it has never failed to deliver a real ruling (four real deliveries: `R-787`, `R-788`, and two armings). An ear that cries wolf is far safer than one that sleeps.** 🛑 **BUT IT MATTERS FOR THE RECORD, because I have twice cited delivery counts as evidence the channel works, and one of those fires was mine, not the desk's.** ★★★★★ **`AN INSTRUMENT'S FALSE POSITIVE IS STILL YOUR CLAIM — IF YOU COUNT ITS FIRES AS EVIDENCE, YOU OWE THE COUNT A CORRECTION.`**
+⚠️ **I fixed the script BEFORE the crash and never got the report out. The crash converted a written-down finding into an almost-lost one.** ★★★ **`A FINDING THAT LIVES ONLY IN A RUNNING SESSION IS ONE PROCESS DEATH FROM NEVER HAVING HAPPENED.`**
+✅ **ONE RIG ON THE CHANNEL:** the old monitor was stopped BEFORE the replacement was armed (`[one-monitor]`, never new + old). **Current ear: `b9yfhorhl`, persistent, baseline `R-788`, hardened script verified present after the crash.**
+
+### §4 — ✅ `R-788 §7` CORRECTION READ, AND `AR-924` IS DISCHARGED
+✅ **`[MEASURED HERE]` the desk STRUCK the `MES`/`MNQ` transfer-validity limb by preserve-and-strike at `839174f4`, verified my citation at `ADVISOR-RULINGS.md:9737` itself, and stated *"Both halves of my claim were false."*** ⭐ **It also PROPAGATED the strike to the RUNNING grader rather than only annotating the ledger, and invited it to treat any other unsearched absence claim in the brief as a finding against the charter.** ★★★★ **`AN ANNOTATION THAT DOES NOT REACH THE INSTRUMENT ALREADY ACTING ON THE ERROR IS ONLY HALF A CORRECTION.`**
+✅ **AND IT NARROWED THE LIMB TO ITS ONLY TRUE PART, OUT OF THE RESIDUAL SLOT:** the seal certifies COMPILATION FIDELITY to what the source taught and does **not** assert the teacher demonstrated results on `MES`/`MNQ`. ⇒ **`§3`'s steelman was the correct reading and the desk adopted it. `AR-924` is DISCHARGED and I am not carrying it further.**
+⚖️ **The other six carried limits — DST · holidays · half-days · overnight assignment · session transfer · non-minute bars — are UNAFFECTED and remain real and unmeasured. `AR-923 §8`'s DST disclosure against my own repair STANDS.**
+✅ **BANKED BY THE DESK, POST-SEAL, FROM `AR-924 §4`:** carry the operator's mechanic-vs-instrument discriminator into the RULINGS ledger with `AR-701`'s `gap_and_go` counter-example. **Not mine, not started.**
+
+### §5 — 🛑 WHAT I HAVE **NOT** DONE AND **NOT** MEASURED
+- 🛑 **STARTED NOTHING.** No code, no tests, no dispatch, no lane. `MP-1`, `GATE-LIM-2`, the `ACCEPT-5` collection repair and all compiler expansion remain UNSTARTED per `R-788 §6`.
+- **`[MEASURED HERE]` `docs/designs/GRADE-S6-SEAL-2026-08-10.md` IS NOT ON DISK IN THIS TREE.** ⚖️ **I draw NO conclusion from that: `R-788 §4` dispatched it into an ISOLATED worktree, and grade #1's receipt was likewise untracked-elsewhere until the desk committed it. Absence here is consistent with "still running" AND with "finished but not yet committed here", and I cannot tell those apart from this seat.** 🛑 **I did not go looking in the grader's worktree — `doer ≠ grader`, and reading a live grade's receipt is how a doer anchors it.**
+- **I did not re-run `A`–`G`.** Nothing in `src/` changed across the crash (`HEAD` is a docs-only commit above `08062e12`), so a re-run would add a green I did not earn. **`AR-923 §5`'s figures stand as measured there.**
+- **I did not probe the sibling `claude.exe 21324` beyond its existence,** and I did not touch or kill it.
+- **PRIOR ART STATED:** re-read `R-788` in full including the `§7` strike · `R-784 §3` (the transfer rule this receipt runs on) · `AR-924` · `AR-923`. **No build proposed.**
+
+### §6 — ⚡ STATE
+🛑 **HOLDING, per `R-788`. Blocker: the final `accuracy-validator`. Owner: the DESK. Verdict ruling: the DESK.** ✅ **Ear armed, hardened and delivering (`b9yfhorhl`). Lane `1 / 1` complete. No sub-agent owed — I dispatched none, and the previous seat dispatched none.**
+
+---
+
 ## AR-924 · 2026-08-10 · 🛑🛑★★★★★ **`HOLD` ACKNOWLEDGED AND OBEYED — AND ONE FINDING BEFORE I GO QUIET, BECAUSE THE REPORTING DUTY DOES NOT LAPSE UNDER A HOLD (`R-648`).** 🛑 **`R-788 §7`'s NEWEST CARRIED LIMIT — *"`MES`/`MNQ` SOURCE-MARKET TRANSFER VALIDITY … futures use is a TRANSFER EXPERIMENT"*, RATED *"the most load-bearing of the set"* AND *"never named in this ledger"* — WAS **RULED AND CLEARED WITH `NO RESIDUAL`** ON `2026-08-03` BY **`R-653`**, ON **THIS EXACT GOLDEN SLICE**, AFTER THE **OPERATOR PERSONALLY ORDERED THE SAME LABEL WITHDRAWN.** ⚖️ **I AM NOT RULING THIS AND I HAVE STARTED NOTHING. I STEELMAN THE DESK'S NARROW READING IN `§3` — BUT THE WORDING AS IT STANDS IS THE SHAPE `AR-701` WITHDREW UNDER ORDER.**
 
 **SEAT `claude.exe 23892`. LANE `DAILY-RESET-1` — COMPLETE, ACCEPTED AT `R-788`, ATTEMPT `1 / 2`, NOTHING OWED BY ME. `HEAD 699a42f7`. NO CODE TOUCHED IN THIS AR. `MP-1` · `GATE-LIM-2` · the `ACCEPT-5` collection repair: ALL UNSTARTED, per `R-788`'s forbidden list.**
