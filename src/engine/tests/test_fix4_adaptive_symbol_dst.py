@@ -15,8 +15,29 @@ _apply_adaptive_management mock sys.modules to avoid the JIT hang.
 from __future__ import annotations
 
 import datetime
+import pathlib
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+
+def _executing_tree_backtester_path() -> pathlib.Path:
+    """Locate `backtester.py` in the tree THIS test file is executing from.
+
+    F-R2-3 (R-799 §3): both source-regression tests below used to read an
+    absolute path into a DIFFERENT checkout, so they attested to bytes this
+    tree never executes. `parents[1]` is `<tree>/src/engine`, because this
+    file lives at `<tree>/src/engine/tests/`.
+
+    No cwd assumptions, no home paths, no project-name literals, no
+    other-worktree paths — the anchor is this file's own resolved location.
+    """
+    path = pathlib.Path(__file__).resolve().parents[1] / "backtester.py"
+    assert path.is_file(), (
+        f"backtester.py not found at {path!r}, resolved from {__file__!r}. "
+        "The test layout moved; fix the parents[] index rather than "
+        "reintroducing an absolute path."
+    )
+    return path
 
 
 # ─── Test A: _dst_correct_et_hour DST-correct resolution ─────────────────────
@@ -46,7 +67,7 @@ class TestFix4DstCorrectEtHour:
     def test_edt_bar_resolves_correctly(self):
         """Summer EDT: UTC 14:00 on 2024-03-15 → ET 10:00."""
         helper = self._load_helper()
-        utc_dt = datetime.datetime(2024, 3, 15, 14, 0, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 3, 15, 14, 0, tzinfo=datetime.UTC)
         et_str = helper(utc_dt)
         assert "10:00" in et_str, (
             f"EDT bar (UTC 14:00 on Mar 15) must resolve to ET 10:00, got {et_str!r}"
@@ -55,7 +76,7 @@ class TestFix4DstCorrectEtHour:
     def test_est_bar_resolves_correctly(self):
         """Winter EST: UTC 14:00 on 2024-01-15 → ET 09:00, not 10:00."""
         helper = self._load_helper()
-        utc_dt = datetime.datetime(2024, 1, 15, 14, 0, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 1, 15, 14, 0, tzinfo=datetime.UTC)
         et_str = helper(utc_dt)
         assert "09:00" in et_str, (
             f"EST bar (UTC 14:00 on Jan 15) must resolve to ET 09:00, got {et_str!r}. "
@@ -69,7 +90,7 @@ class TestFix4DstCorrectEtHour:
         Correct:  EST = UTC-5 → (20 - 5) = 15 → '15:55'.
         """
         helper = self._load_helper()
-        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.UTC)
         et_str = helper(utc_dt)
         assert "15:55" in et_str, (
             f"UTC 20:55 in January (EST) must give ET 15:55, got {et_str!r}. "
@@ -79,7 +100,7 @@ class TestFix4DstCorrectEtHour:
     def test_1555_detection_correct_in_edt(self):
         """15:55 ET in summer EDT = UTC 19:55."""
         helper = self._load_helper()
-        utc_dt = datetime.datetime(2024, 6, 15, 19, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 6, 15, 19, 55, tzinfo=datetime.UTC)
         et_str = helper(utc_dt)
         assert "15:55" in et_str, (
             f"UTC 19:55 in June (EDT) must give ET 15:55, got {et_str!r}."
@@ -116,17 +137,12 @@ class TestFix4SymbolFromSpec:
     def test_backtester_source_does_not_contain_hardcoded_mes(self):
         """Regression: the hardcoded 'MES' string must be gone from the adaptive path.
 
-        We do AST-level check to avoid the vectorbt JIT import hang.
+        We check the SOURCE TEXT rather than importing backtester, to avoid the
+        vectorbt JIT import hang.
         The hardcoded line was: symbol="MES",   # symbol not available on spec
         After fix: symbol=_adaptive_symbol,
         """
-        import ast
-        import pathlib
-
-        backtester_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py"
-        )
-        source = backtester_path.read_text(encoding="utf-8")
+        source = _executing_tree_backtester_path().read_text(encoding="utf-8")
 
         # The comment that accompanied the hardcoded MES must be gone
         assert "symbol not available on spec" not in source, (
@@ -142,12 +158,7 @@ class TestFix4SymbolFromSpec:
 
     def test_backtester_uses_dst_correct_helper(self):
         """Regression: _bar_et_str must call _dst_correct_et_hour, not UTC-4 arithmetic."""
-        import pathlib
-
-        backtester_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py"
-        )
-        source = backtester_path.read_text(encoding="utf-8")
+        source = _executing_tree_backtester_path().read_text(encoding="utf-8")
 
         # The DST-correct helper must be referenced in _apply_adaptive_management
         assert "_dst_correct_et_hour" in source, (
@@ -192,7 +203,7 @@ class TestDstUsRuleOffset:
     def test_january_returns_est_offset(self):
         """January is well within EST (UTC-5) — winter standard time."""
         fn = self._load_rule_offset()
-        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         assert offset == -5, (
             f"January (EST) must return UTC offset -5, got {offset}. "
@@ -202,7 +213,7 @@ class TestDstUsRuleOffset:
     def test_july_returns_edt_offset(self):
         """July is well within EDT (UTC-4) — summer daylight saving time."""
         fn = self._load_rule_offset()
-        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         assert offset == -4, (
             f"July (EDT) must return UTC offset -4, got {offset}."
@@ -215,7 +226,7 @@ class TestDstUsRuleOffset:
         (missing the flatten trigger). The US DST rule gives the correct 15:55.
         """
         fn = self._load_rule_offset()
-        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         et_hour = (utc_dt.hour + offset) % 24
         assert et_hour == 15, (
@@ -226,7 +237,7 @@ class TestDstUsRuleOffset:
     def test_fallback_summer_1555_computes_correctly(self):
         """Fallback: UTC 19:55 in July must give ET hour 15 (correct for EDT)."""
         fn = self._load_rule_offset()
-        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         et_hour = (utc_dt.hour + offset) % 24
         assert et_hour == 15, (
@@ -236,7 +247,7 @@ class TestDstUsRuleOffset:
     def test_december_returns_est_offset(self):
         """December is also in EST — verify consistent winter behavior."""
         fn = self._load_rule_offset()
-        utc_dt = datetime.datetime(2024, 12, 10, 14, 0, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 12, 10, 14, 0, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         assert offset == -5, (
             f"December (EST) must return UTC offset -5, got {offset}."
@@ -246,7 +257,7 @@ class TestDstUsRuleOffset:
         """Early March (before the second Sunday) is still EST."""
         fn = self._load_rule_offset()
         # March 1 is always before the second Sunday of March
-        utc_dt = datetime.datetime(2024, 3, 1, 20, 0, tzinfo=datetime.timezone.utc)
+        utc_dt = datetime.datetime(2024, 3, 1, 20, 0, tzinfo=datetime.UTC)
         offset = fn(utc_dt)
         assert offset == -5, (
             f"Early March (before spring-forward) must be EST (-5), got {offset}."
