@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-ENTRY = Path("indicator/fxr/slumdawg_v2_entry_tp_15m_v0_2.fxr.js")
+ENTRY = Path("indicator/fxr/slumdawg_v2_entry_tp_15m_v0_3.fxr.js")
 MACRO = Path("indicator/fxr/slumdawg_v2_macro_daily_v0_2.fxr.js")
 CONTEXT4H = Path("indicator/fxr/slumdawg_v2_context_4h.fxr.js")
 DOC = Path("indicator/fxr/V2_BUNDLE.md")
@@ -26,11 +26,22 @@ def test_fxr_v2_entry_preserves_bos_and_standard_entry_state():
     s = ENTRY.read_text(encoding="utf-8")
     assert "currentMove" in s
     assert "if (finite(c) && c > h0) currentMove = 1" in s
-    assert "if (finite(c) && c < l0)" in s
+    assert "finite(c) && c < l0" in s
     assert 'entryStage = "WAIT_PROOF"' in s
     assert 'entryStage = "BREAK"' in s
     assert 'entryStage = "PUSH_1"' in s
     assert 'entryStage = "ENTRY_READY"' in s
+
+
+def test_fxr_v03_merges_cross_lane_targets_by_full_zone_identity():
+    s = ENTRY.read_text(encoding="utf-8")
+    assert "mergeDistinctZones" in s
+    assert "out.push({ lo: c.lo, hi: c.hi, target, touches: c.touches })" in s
+    assert "const shelfFusionGap" in s
+    assert "const distinctZoneGap = Math.max(zoneGap, shelfFusionGap)" in s
+    assert "z.lo >= boundary + gap" in s
+    assert "z.hi <= boundary - gap" in s
+    assert "z.target" in s
 
 
 def test_fxr_daily_macro_helper_is_separate_authority():
@@ -48,4 +59,5 @@ def test_fxr_bundle_keeps_4h_helper_non_authoritative_and_documents_parity_limit
     assert "it is **not** the macro authority" in s
     assert "full one-panel Python/Pine/FXR parity remains a certification blocker" in s
     assert "above-entry and below-entry shelves cannot consume each other's history budget" in s
+    assert "full zone LOW/HIGH bounds" in s
     assert CONTEXT4H.exists()
