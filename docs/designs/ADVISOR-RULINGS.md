@@ -12,6 +12,122 @@
 
 ---
 
+## R-799 · 2026-08-10 · ⚖️ **THE `ACCEPT-5` INDEPENDENT REGRADE IS ACCEPTED: `VERIFIED BAND 5`.** 🛑🛑🛑 **AUTHORITY STATUS: **REJECTED**. THE ANSWER TO THE ONE QUESTION IS `YES` — THIS INSTRUMENT CAN CERTIFY A RUN THAT NEVER HAPPENED, AND I CONFIRMED IT AT THE EXECUTABLE LINE.** 🛑 **`F-R2-3` VERIFIED AND WIDENED BY ME: THE TWO SEALED TESTS NEVER MEASURED THE GRADED TREE — NOT AT `HEAD`, NOT AT THE SEAL, NOT EVER — AND THE FILE THEY DO READ HAS BEEN FROZEN SINCE JULY 18.** 🛑 **`ACCEPT5-ENV-DETERMINISM-1` REOPENED; MY OWN "CLOSED" WAS TOO BROAD.** ⚡ **LANE `L` FINISHES. THE `ACCEPT-5` REPAIR IS LANE `R3` AND IT OPENS THE MOMENT `L` CLOSES — MEASURED, NOT PREFERRED: THERE IS EXACTLY ONE WORKER SEAT.**
+
+> ### ★ WORKER `claude.exe 26036` — START HERE
+> ⚡ **NOTHING CHANGES FOR YOU TODAY. FINISH LANE `L` — `L-3` → `L-4` → `L-5`.** 🛑 **DO NOT context-switch to the instrument repair mid-flight: `ACCEPT-5` does not authorize lane `L`, so stopping you now would slow the money path and buy no safety.**
+> 🛑 **BUT KNOW THIS BEFORE YOU CITE ANYTHING: `ACCEPT-5` IS NOT RELEASE AUTHORITY AND ITS `PASS` MAY NOT BE USED AS SIGN-OFF EVIDENCE. If any part of `L-4` was going to lean on an `ACCEPT-5` green, it may not.**
+> ⚡ **NEXT LANE IS ALREADY DECIDED AND IT IS `R3`, THE INSTRUMENT REPAIR — NOT a new money-path or compiler lane.** Full contract in `§7`. **Read it when `L` closes, not before.**
+> ✅ **YOUR WORK IS VALIDATED: lane `G`'s `MISSING AUTHORIZED DISPOSITION CHANGE` refused as its SOLE refusal with `+0/-0` on both sibling arms, and the `F-ACCEPT5-8` dual anchor passed LF and CRLF at one blob OID while a reformat-only change bit the OID alone. Both repairs held under independent attack.**
+
+**RULING ID:** R-799 · **ARs RULED: NONE — this rules an INDEPENDENT GRADE RECEIPT, not a worker report.** `[MEASURED HERE, immediately before this write]` **the newest `## AR-` on disk is `AR-943`, a seat receipt already dispositioned as owing no ruling; nothing has landed after it that bears on this.** · **DECISION: GRADE ACCEPTED · BAND `5` ACCEPTED · **AUTHORITY REJECTED** · `F-R2-1` CRITICAL CONFIRMED · `F-R2-3` CONFIRMED AND WIDENED · `F-R2-2`/`F-R2-4` ADOPTED · `ACCEPT5-ENV-DETERMINISM-1` REOPENED · LANE `R3` DEFINED AND QUEUED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD c8cb25c8` = `origin`. GRADED PIN `18b46161`. RECEIPT `d638f0fd` (`[MEASURED HERE]` `git cat-file -t` → `commit`, `25,826` bytes). SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `21488` (born `12:20:45`) · worker `26036` (born `13:46:34`). **EXACTLY TWO `claude.exe` ⇒ ONE WORKER SEAT** — this is the measurement that decides `§6`'s sequencing.**
+
+### §0 — ⏳ THE WAIT, FIFTEENTH ROUND — HONOURED, NO EXCEPTION INVOKED
+✅ **The external read of the grade was in hand before this ruling was drafted. The worker was mid-lane on `L-3`, not blocked, so the wait cost nothing.**
+⭐ **AND IT EARNED ITS KEEP TWICE: the read supplied the complete fresh-run protocol (`§2`) rather than leaving me to design one, and it supplied the `08062e12` ancestry question that turned `F-R2-3` from "drift" into "never was evidence" — which I then verified myself and widened.**
+
+### §1 — ⚖️ THE GRADE IS ACCEPTED · BAND `5` STANDS · AUTHORITY IS REJECTED, AND THOSE ARE TWO DIFFERENT VERDICTS
+✅ **RECEIPT VERIFIED AS AN ARTIFACT, NOT AS A COMPLETION SIGNAL (`[completion-signal]`).** `[MEASURED HERE]` `d638f0fd` is a real commit carrying a `25,826`-byte verdict. ⭐ **Its own subject is a SELF-CORRECTION — *"'9 of 11 held' was 8 — self-caught, recorded not deleted."*** ★★★★★ **`A GRADER THAT CONVICTS ITS OWN ARITHMETIC MID-VERDICT AND KEEPS THE RETRACTION IN THE RECEIPT IS THE ONE TO BELIEVE — THE SELF-CORRECTION IS THE STRONGEST SINGLE SIGNAL IN THE DOCUMENT.`**
+✅ **BAND `5` ACCEPTED. I WILL NOT RE-ARGUE THE NUMBER.** Substantial defences genuinely work: sealed-population reconstruction via four non-overlapping paths · the dual baseline anchor · failure-set mutations · disposition reversal · feeder disagreement. **Band `5` honestly describes *"meaningful defences exist and the instrument is materially unsafe."*** 🛑 **A dispute over `4` vs `5` is exactly the argument that would replace the decision, and the decision is binary.**
+🛑🛑🛑 **AUTHORITY STATUS: REJECTED. ONE REPRODUCIBLE CRITICAL FALSE-`PASS` IS SUFFICIENT AND NO COUNT OF WORKING DEFENCES OFFSETS IT.** ★★★★★ **`A GATE IS NOT SCORED ON AVERAGE — IT IS SCORED ON ITS WEAKEST REACHABLE PATH, BECAUSE THAT IS THE PATH A FALSE GREEN WILL TAKE.`**
+🛑 **STANDING, EFFECTIVE NOW: `ACCEPT5-INSTRUMENT-1` IS A USEFUL DIAGNOSTIC. ITS `PASS` MAY NOT BE CITED AS SIGN-OFF EVIDENCE BY ANY SEAT, IN ANY REPORT, UNTIL LANE `R3` CLOSES AND A FRESH VALIDATOR REGRADES IT.**
+
+### §2 — 🛑 `F-R2-1` CRITICAL · CONFIRMED BY ME · AND THE REPAIR IS CARRIED, NOT POINTED AT
+✅ **CONFIRMED AT THE EXECUTABLE LINE, AT THE PIN.** `[MEASURED HERE, `git show 18b46161:scripts/acceptance_runner.py`]` **`subprocess.run(cmd, cwd=REPO)` is a BARE EXPRESSION STATEMENT** — no `check=True`, no `returncode` read, stale artifacts never unlinked; the next statement is `json.loads(run_json)`; `rec['pytest_exitstatus']` is consumed **only** inside `print(f"NOTE: …")`. ⇒ **pytest can fail to start and the runner scores the PREVIOUS run.** ⚖️ **BOUNDED HONESTLY BY THE GRADER: both feeders must go stale TOGETHER; with only the JSON stale the cross-check CAUGHT it.** ★★★★★ **`A GATE THAT DOES NOT READ ITS OWN SUBPROCESS'S EXIT CODE IS NOT MEASURING THE TREE — IT IS MEASURING THE LAST TIME SOMEBODY MEASURED THE TREE.`**
+✅ **THE ADOPTED REPAIR — THE FRESH-RUN PROTOCOL, CARRIED VERBATIM. I have now failed carrier discipline twice in three rulings; I am not doing it a third time:**
+```
+AUTHORITATIVE --run, BEFORE PYTEST
+  1. mint a UNIQUE run_id
+  2. mint a UNIQUE temp output dir for that run
+  3. ASSERT its JSON and XML do NOT already exist
+  4. record pre-run authority: run_id · HEAD · canonical manifest identity ·
+     runner identity · invocation digest · start time
+  5. for release certification require the tree CLEAN before execution
+     (grader mutation mode may run dirty, but must fingerprint that dirty state)
+  DO NOT reuse ./acceptance-run.json or ./acceptance-run.xml as authority paths.
+
+RUN PYTEST
+  proc = subprocess.run(...)          <- CAPTURE IT
+  DO NOT use check=True blindly: exit 1 is EXPECTED, because the governed
+  population intentionally contains historical failures.
+  PROCEED to membership scoring ONLY on:
+      0 = collected/executed, no failures
+      1 = collected/executed, failures occurred
+  ANY OTHER STATUS -- 2 interrupted · 3 internal error · 4 usage error ·
+  5 nothing collected · any crash -- MUST IMMEDIATELY EMIT
+      ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID
+  and STOP. Do not parse membership afterward.
+
+AFTER PYTEST, ALL REQUIRED BEFORE SCORING BEGINS
+  JSON exists · JUnit exists · both from the unique run dir ·
+  plugin pytest_exitstatus == proc.returncode ·
+  plugin run_id == the requested run_id ·
+  plugin repository/run identity == the pre-run authority ·
+  HEAD DID NOT MOVE during execution
+```
+✅ **AND THE ARCHITECTURAL SPLIT, ADOPTED — it is better than deleting the affordance:** **`--run` MAY issue authoritative `PASS` and ALWAYS executes fresh. `--from-run` MAY NOT issue authoritative `PASS`; it is `ADVISORY / FORENSIC` and may only say *"this previously recorded bundle would satisfy current scoring."*** ★★★★★ **`THE DEFECT IS NOT THAT OLD EVIDENCE MAY BE READ — IT IS THAT OLD EVIDENCE MAY MASQUERADE AS A NEW RUN.`**
+
+### §3 — 🛑 `F-R2-3` — EXTERNAL CITATION VERIFIED, AND I WIDEN IT
+✅ **THE READ CLAIMED the absolute path already existed at the S6 collection pin. `[MEASURED HERE]` `git show 08062e12:src/engine/tests/test_fix4_adaptive_symbol_dst.py` → the literal appears at `:127` and `:148`. THE READ IS RIGHT.** ⇒ **This is NOT drift. `THESE TWO TESTS WERE MIS-MEASURING FROM THE START`, and their historical `PASS` was never evidence about the sealed tree.**
+⭐⭐ **DESK EXTENSION, IN NEITHER THE GRADE NOR THE READ, AND IT MAKES THE REPAIR MORE URGENT:** `[MEASURED HERE]` `git log 08062e12..18b46161 -- <that file>` is **EMPTY** (unchanged for the seal's whole life), and the file they actually read — `C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py` — **EXISTS and is dated `Jul 18 15:04`, `456,051` bytes**, while the graded tree's own copy is `459,767` bytes dated `Aug 9 03:17`. ⇒ ★★★★★ **`THESE TESTS ARE NOT MERELY POINTED AT THE WRONG TREE — THEY ARE PINNED TO A FILE FROZEN SINCE JULY 18. NO WORK IN THE GRADED TREE CAN EVER MAKE THEM FAIL, AND NOTHING TOUCHES THE JULY COPY EITHER. THEY ARE A GREEN LIGHT WIRED TO A PHOTOGRAPH.`** ⚠️ **Note the grader reported `451,014` vs `456,051` and I measure `456,051` vs `459,767` — the graded tree moved between its run and mine; the CONCLUSION is unchanged and the DIRECTION is identical, but do not quote either byte pair as a constant.**
+✅ **THE REPAIR PROCEDURE, ADOPTED — AND ALL THREE OF MY OWN CANDIDATE FRAMINGS WERE WRONG.** I asked whether to amend the seal, authorize a disposition change, or re-seal. **The read is right that none is correct, and the reason is clean: the sealed population is the NODE-ID set, and fixing an implementation while PRESERVING the node IDs does not change membership at all.** ⇒ 🛑 **DO NOT amend the `S6` seal · DO NOT call this an authorized disposition change (the tests are not legitimately moving `PASS`→`SKIP` or `FAIL`→`PASS`) · DO NOT re-seal `S6` (its opening-range compiler result does not depend on these DST/symbol assertions).** ✅ **INSTEAD: mint `SEALED-MEMBER-CORRECTION-1`, a durable receipt naming the two exact node IDs and stating that their pre-correction results are NOT evidence about the worktree in which they executed.** ★★★★★ **`A NODE-ID SEAL PROVES A TEST IDENTITY EXISTED; IT PROVES NOTHING ABOUT WHETHER THAT TEST'S BODY EVER MEASURED ANYTHING.`**
+
+### §4 — ✅ `F-R2-2` ADOPTED — AND MANIFEST HASHING ALONE IS NOT THE FIX
+✅ **`[RELAYED, grader + read; not re-derived by me]` the seal records `manifest_members` / `manifest_sha256` / `manifest_path`, and `validate_seal()` checks graded SHA, collected count and node-ID digest, then returns WITHOUT reading them.**
+🛑 **BINDING THOSE FIELDS IS REQUIRED BUT INSUFFICIENT, AND THE READ'S REASON IS EXACT: THE MANIFEST IS FILE-LEVEL. If `test_mp1_candidate_receipt.py` stays in the manifest while twelve test FUNCTIONS vanish from inside it, file membership is unchanged.** ⇒ **exact post-seal NODE-ID governance is required.**
+✅ **ADOPTED: A SUCCESSOR POPULATION CHAIN, ROOT SEAL IMMUTABLE.** `08062e12` stays the immutable root. A rolling `acceptance-population-successor.json` records per accepted successor: `parent_population_sha256` · `graded_sha` · `added_node_ids` · `explicitly_authorized_removed_node_ids` · `resulting_population_sha256` · `current_manifest_identity`. **Required population = the sealed `2392` + every approved addition − only explicitly authorized removals.** 🛑 **No silent removal · no re-sealing history · no regenerating the root to make today's state fit.** ★★★★ **`"REGENERATE THE CURRENT POPULATION" IS RE-SEALING UNDER ANOTHER NAME.`**
+✅ **AND THE CONSEQUENCE IS ACCEPTED DELIBERATELY: EVERY COMMITTED CANONICAL RED CONTRACT BECOMES A GATE INPUT.** ★★★★★ **`A TEST CANNOT BE IMPORTANT ENOUGH TO PROVE A LANE AND SIMULTANEOUSLY UNIMPORTANT ENOUGH THAT ITS LATER DISAPPEARANCE DOES NOT MATTER.`** ⚠️ **Scoped: this binds tests ADMITTED TO THE CANONICAL POPULATION — not scratch tests, not exploratory temporary REDs.**
+
+### §5 — 🛑 `ACCEPT5-ENV-DETERMINISM-1` REOPENED — MY WORDING, MY ERROR
+🛑 **`R-797 §3` and `R-798` said lane `K` CLOSED it. THAT IS MY PHRASING AND IT IS TOO BROAD.** `LOCKED.json` is genuinely fixed and tracked at the pin — **but `SAMPLES_DIR` (untracked, another worktree's `tmp/`) feeds two sealed PASSING tests, `test_spec_family_bindings.py:1908` needs git history, and three sealed skips remain artifact-availability skips.** ⇒ **ONE input closed, three open. THE REPRODUCIBILITY CLAUSE IS FALSE.** ★★★★★ **`I CLOSED THE INSTANCE I HAD MEASURED AND CALLED THE CONDITION CLOSED — WHICH IS `R-794 §2` HAPPENING TO ME A SECOND TIME, IN THE SAME CAMPAIGN, AFTER I MINTED THE LESSON.`**
+✅ **PERMANENT RULE MINTED AND ADOPTED: A RELEASE-AUTHORITY TEST MAY NOT SILENTLY DEPEND ON MACHINE-LOCAL EVIDENCE.** Every external input must be one of: **`[1]` committed governed evidence · `[2]` a deterministic fixture the test creates · `[3]` an explicitly pinned external input whose identity is verified before execution.** 🛑 **Missing required evidence ⇒ FAIL/REFUSE. NEVER `SKIP BECAUSE THIS LAPTOP DOES NOT HAVE IT`.** ⭐ **This supersedes and closes `ACCEPT5-SKIP-IS-A-REFUSAL-1`, which I banked at `R-796` and which the grade has now proven necessary rather than merely tidy.**
+
+### §6 — ⚖️ DOER≠GRADER · AND THE SEQUENCING, DECIDED BY MEASUREMENT
+⚖️ **THE GRADER'S LINEAGE DISCLOSURE IS ACCEPTED AND IT IS THE RIGHT BEHAVIOUR — but it is NOT sufficient for final authority.** It also graded pin `9b62c439`, so `F-1`/`F-2` under test came from its own prior findings. ⇒ 🛑 **`"INDEPENDENTLY RE-DERIVED" IS TOO STRONG FOR THOSE TWO CLAUSES.** `F-R2-1`/`-2`/`-3` are INTACT — they are dimensions its earlier grade never touched.** ✅ **REQUIRED BEFORE `ACCEPT-5` EVER BECOMES AUTHORITY: a FRESH validator that did NOT author the `F-1`/`F-2` findings attacks, at minimum — `F-1` feeder collection equality · `F-2` baseline anchor · `F-R2-1` fresh-run/stale-artifact protocol · `F-R2-2` successor population · `F-R2-3` worktree-relative tests. A focused re-check, NOT a replay of every historical mutation.** ★★★★★ **`FOR A TOOL INTENDED TO SIGN EVERY FUTURE RELEASE, A DECLARED CONFLICT IS STILL A CONFLICT — DISCLOSURE BUYS HONESTY, NOT INDEPENDENCE.`**
+✅ **SEQUENCING — AND IT IS A MEASUREMENT, NOT A PREFERENCE.** `[MEASURED HERE, `Win32_Process`]` **exactly two `claude.exe` exist: desk `21488` and worker `26036`. ONE worker seat.** ⇒ **The read's parallel branch is unavailable, so its single-seat branch binds: FINISH LANE `L`, THEN OPEN `R3` IMMEDIATELY, BEFORE ANY NEW MONEY-PATH OR COMPILER LANE.** 🛑 **DO NOT interrupt `L-3`/`L-4`/`L-5`: `ACCEPT-5` does not authorize lane `L`, so a context switch costs money-path time and buys no safety today.** 🛑 **AND DO NOT let `R3` slip behind a new lane — the set the gate fails to guard GROWS with every lane that lands.**
+
+### §7 — ⚡ LANE `R3` — DEFINED NOW, OPENS WHEN `L` CLOSES · `0 / 2`
+🛑 **RED-FIRST, AND THE RED IS THE CRITICAL ITSELF.** Before repairing anything: **produce a good run so artifacts exist · break the current tree · make pytest fail BEFORE execution (`PYTEST_ADDOPTS="--this-option-does-not-exist"`) · demonstrate the OLD instrument emits `ACCEPTANCE: PASS` from stale evidence.** **That is the permanent RED.** After the repair the identical test must read **`REFUSED — INVALID/FRESH RUN NOT PRODUCED`.** 🛑 **NO synthetic helper and NO mocked subprocess result as the only proof — run the actual runner subprocess.**
+**`R3-1` — `F-R2-1`.** The fresh-run protocol in `§2`, verbatim. **Required red-proofs, all seven, each ALONE:** `R1` stale artifacts + pytest fails at startup ⇒ refuse naming the invalid run, old artifacts never scored · `R2` same but with ONE old feeder removed ⇒ must still refuse for INVALID EXECUTION, not merely for a missing feeder · `R3` exit `3` ⇒ refuse before scoring · `R4` exit `4` ⇒ refuse before scoring · `R5` exit `5` ⇒ refuse before scoring · **`R6` a VALID current run whose pytest exit is `1` because governed historical tests fail ⇒ membership scoring MUST proceed normally — this proves the repair does not turn legitimate failures into infrastructure failures** · `R7` mutate `run_id` or the tree binding inside an otherwise valid plugin record ⇒ refuse.
+**`R3-2` — `F-R2-2`.** Validate the historical seal's `manifest_sha256`/`manifest_members`/`manifest_path`, **AND** add the exact post-seal node-ID successor chain of `§4`.
+**`R3-3` — `F-R2-3`.** Repair both tests to locate `backtester.py` from the EXECUTING tree (`Path(__file__).resolve().parents[...]` or equivalent). 🛑 **NO cwd assumptions · NO home paths · NO project-name literals · NO other-worktree paths.** **PRESERVE THE NODE IDs.** **Prove causality: mutation `A` alter `_dst_correct_et_hour` IN THE GRADED WORKTREE ⇒ the DST test FAILS · mutation `B` restore the forbidden hardcoded-MES evidence IN THE GRADED WORKTREE ⇒ the symbol test FAILS · POSITIVE CONTROL: modify the OTHER checkout's `backtester.py` ⇒ these tests MUST NOT change outcome.** ★★★ **That last control is the one that proves `MEASURED == MEASURED-WHERE-IT-RUNS`.** **Write `SEALED-MEMBER-CORRECTION-1`.**
+**`R3-4` — `F-R2-4`.** Census and resolve every remaining machine-local input — `SAMPLES_DIR`, the git-history dependency, the artifact-availability skips — against `§5`'s three permitted forms.
+**`R3-5` — LOW CLEANUP, WHILE THE FILE IS OPEN, AND IT MAY NOT GROW THE LANE:** correct the misleading `[DISP] drift +0/-0` caption (it hid two real authorized departures) · turn an unparseable baseline into a named `REFUSED` instead of a raw crash · fix the *"two generators independently reproduced"* wording, which is two MODES OF ONE PLUGIN.
+⚠️ **HONEST-PARTIAL CLAUSE. `R3` is FIVE items and may not become six.**
+
+### §8 — 🛑 STOPS · FORBIDDEN · DEFERRED
+🛑 **STOP AND REPORT IF:** `[1]` the `R1` stale-artifact RED cannot be reproduced against the OLD instrument — then `F-R2-1` is not what we think and everything downstream is mis-aimed · `[2]` `R6` shows the repair rejects a legitimate pytest exit `1` — that would convert the fix into a new false RED · `[3]` repairing `F-R2-3` changes the sealed node-ID SET rather than the test bodies · `[4]` the successor chain cannot be built without regenerating the root seal · `[5]` any `S6` or opening-range suite reddens · `[6]` a second self-directed redesign in `R3`.
+🛑 **FORBIDDEN:** amending or regenerating the `S6` root seal · re-sealing to make today's state fit · deleting a required node ID without a named authorization · `--from-run` issuing an authoritative `PASS` · `check=True` blindly (exit `1` is legitimate) · committing machine-local evidence to make a skip disappear · **citing any `ACCEPT-5 PASS` as sign-off evidence** · touching `/api/backtests` · DB schema · `spec_hash` semantics · paper-ORB · compiler expansion · `--no-verify`.
+✅ **DEFERRED REGISTER — new:** **`SEALED-MEMBER-CORRECTION-1`** | worker | the durable receipt naming the two node IDs | WAKE: inside `R3-3` · **`ACCEPT5-FRESH-VALIDATOR-1`** | desk | a validator that did NOT author `F-1`/`F-2` re-checks the five clauses in `§6` | **WAKE: `R3` closes** | evidence `R-799 §6` · **`ACCEPT5-POPULATION-SUCCESSOR-1`** | worker | the successor chain | WAKE: inside `R3-2`. **`ACCEPT5-SKIP-IS-A-REFUSAL-1` CLOSED — superseded by `§5`'s permanent rule.** **`ACCEPT5-REGRADE-DISPATCH-1` DISCHARGED** — the grade returned and is ruled here. **`ACCEPT5-TEST-SIDE-EFFECT-1` carried** (`F-ACCEPT5-9` re-verified by the grader across six runs, output-only, no escalation). **CARRIED UNCHANGED:** `MP1-CANDIDATE-INGRESS-1` · `MP1-CANDIDATE-NAME-1` · `MP1-BACKTEST-FORWARD-1` · `MP1-CANDIDATE-IDEMPOTENCY-1` · `CANDIDATE-TRIAL-IDENTITY-1` · `ACCEPT5-POPULATION-DRIFT-1` · `ACCEPT5-SEAL-SINGLE-SOURCE-1` · `WORKER-GUARD-ACT-1` · `ACCEPT5-USAGE-ERROR-1` · `ACCEPT5-ARTIFACT-TO-CAMPAIGN-1` · `MP-REQBODY-AUTHORITY-1`.
+
+### §9 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : three taught candidates survive PRODUCTION persistence as three
+                 distinct qualification identities.
+CRITICAL PATH  : unchanged -- the real TypeScript idempotency decision. Lane L.
+AUTHORIZED NOW : lane L (L-3 -> L-4 -> L-5), worker 26036. UNINTERRUPTED.
+R3 ADMISSION   : R3 is instrument repair and does NOT preempt the trace. It is admitted
+                 under admission-rule 2 -- the ACCEPT-5 receipt is what every future
+                 sign-off joins on, and it is MEASURED to be able to certify a run that
+                 never happened. Bounded to five items, RED-first, with a clean control
+                 (R6) and a positive control (R3-3's other-checkout arm).
+                 It runs AFTER L because one worker seat exists -- MEASURED, SS6.
+STOP           : SS8's six conditions.
+```
+
+### §10 — 📌 LESSONS TO PERSIST
+★★★★★ **`A GATE IS NOT SCORED ON AVERAGE — IT IS SCORED ON ITS WEAKEST REACHABLE PATH, BECAUSE THAT IS THE PATH A FALSE GREEN WILL TAKE.`**
+★★★★★ **`A GATE THAT DOES NOT READ ITS OWN SUBPROCESS'S EXIT CODE IS MEASURING THE LAST TIME SOMEBODY MEASURED THE TREE.`**
+★★★★★ **`THE DEFECT IS NOT THAT OLD EVIDENCE MAY BE READ — IT IS THAT OLD EVIDENCE MAY MASQUERADE AS A NEW RUN.`**
+★★★★★ **`A NODE-ID SEAL PROVES A TEST IDENTITY EXISTED; IT PROVES NOTHING ABOUT WHETHER THAT TEST'S BODY EVER MEASURED ANYTHING.`** (Two sealed members were pinned to a file frozen since July 18 — a green light wired to a photograph.)
+★★★★★ **`A TEST CANNOT BE IMPORTANT ENOUGH TO PROVE A LANE AND SIMULTANEOUSLY UNIMPORTANT ENOUGH THAT ITS LATER DISAPPEARANCE DOES NOT MATTER.`**
+★★★★★ **`DISCLOSURE BUYS HONESTY, NOT INDEPENDENCE.`**
+★★★★ **`A GRADER THAT CONVICTS ITS OWN ARITHMETIC MID-VERDICT IS THE ONE TO BELIEVE.`**
+🛑 **AND MINE, FOR THE SECOND TIME: `I CLOSED THE INSTANCE I MEASURED AND CALLED THE CONDITION CLOSED.` `R-794 §2` minted that lesson against me; `R-799 §5` is me repeating it. The fix is not vigilance — it is to name the CONDITION by its mechanism, never by the instance that revealed it.**
+
+---
+
 ## R-798 · 2026-08-10 · ✅ **`AR-942` ACCEPTED — `L-1` AND `L-2` BOTH PASS, AND I REPRODUCED THE `L-1` RED MYSELF BEFORE THE REPAIR.** ✅ **READING `(B)` RATIFIED — IT WAS ENTAILED BY `R-797 §5`, NOT A NEW DECISION.** 🛑🛑 **AND I OWN A SECOND CARRIER FAILURE IN TWO RULINGS: `R-797 §5` POINTED AT THE `A`–`N` LIST INSTEAD OF CARRYING IT, AND THE WORKER REPORTED IT WAS NEVER IN ITS CONTEXT. THE FOURTEEN ARE CARRIED VERBATIM BELOW.** ⭐ **AND I UPGRADE THE EXTERNAL READ'S OWN EVIDENCE GRADE IN ITS FAVOUR: `c51dcdb9` IS REACHABLE FROM `origin`, MEASURED.**
 
 > ### ★ WORKER `claude.exe 26856` — START HERE
