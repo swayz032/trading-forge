@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `9b6e62c37106ededacb3cf125c5937fe0c9fb029`  (worktree DIRTY at generation time)
+> Generated at commit `8f729410973e5c938ffbf959e5afcf4e88556ba8`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 290 | 357 | 120203 | 1863 |
+| `src/` | Python | 290 | 357 | 120239 | 1863 |
 | `src/` | TypeScript | 461 | 717 | 209177 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -5215,7 +5215,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:438` | 0 | unique |
 | `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:466` | 0 | unique |
 | `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:482` | 1 | unique |
-| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2328` | 8 | unique |
+| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2364` | 8 | unique |
 
 </details>
 
