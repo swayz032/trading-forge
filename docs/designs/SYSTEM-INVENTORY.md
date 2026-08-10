@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `0fd86c9a21805cc530dd67a540016e4f935c49a2`  (worktree DIRTY at generation time)
+> Generated at commit `826c24c7818fe4b4c36f13c64afa6996d9364ad7`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 292 | 359 | 120770 | 1876 |
-| `src/` | TypeScript | 461 | 718 | 209202 | 2917 |
+| `src/` | TypeScript | 461 | 718 | 209423 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -999,7 +999,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:450` | 5 | unique |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:563` | 5 | unique |
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
@@ -3364,9 +3364,9 @@ _...481 more omitted from this table._
 | `SymbolCode` | type | `src/server/services/spec-onboarding-service.ts:359` | defining module is not reachable from any measured entry point |
 | `OnboardSpecOptions` | interface | `src/server/services/spec-onboarding-service.ts:361` | defining module is not reachable from any measured entry point |
 | `PerSymbolStatus` | type | `src/server/services/spec-onboarding-service.ts:406` | defining module is not reachable from any measured entry point |
-| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:415` | defining module is not reachable from any measured entry point |
-| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:426` | defining module is not reachable from any measured entry point |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:450` | defining module is not reachable from any measured entry point |
+| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:431` | defining module is not reachable from any measured entry point |
+| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:442` | defining module is not reachable from any measured entry point |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:563` | defining module is not reachable from any measured entry point |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 | `getActiveAssignments` | function | `src/server/services/strategy-assignment-service.ts:620` | no non-test reference outside its own definition |
 | `unreleaseFromFamily` | function | `src/server/services/strategy-assignment-service.ts:697` | no non-test reference outside its own definition |
