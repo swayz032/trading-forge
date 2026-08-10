@@ -60,3 +60,35 @@ repos:
             src/engine/backtester\.py|
             src/engine/risk_metrics\.py
           )$
+
+  # ─── SYSTEM-INVENTORY freshness (PRE-PUSH stage, operator-ordered 2026-08-09) ──
+  # "the inventory map should be auto."
+  #
+  # PRE-PUSH, NOT PRE-COMMIT, AND THE REASON IS THIS FILE'S OWN BUDGET:
+  #   the header above mandates "< 5 seconds total on a typical commit".
+  #   [MEASURED 2026-08-09] the generator takes ~13s -> a commit-stage hook would
+  #   blow that budget by ~3x on exactly the commits that matter (code commits).
+  #   Push is also the moment the map becomes visible to OTHER readers, including
+  #   the external reviewer who reads it from GitHub and once consumed a 6-day-old
+  #   copy. So push is both the affordable moment and the correct one.
+  #
+  # It regenerates, then FAILS the push if the committed map had drifted. It does
+  # NOT auto-commit: this tree is shared with a sibling seat, and a hook that
+  # commits could capture another seat's unstaged work.
+  #
+  # 🛑 INERT UNTIL INSTALLED. Enable with:
+  #        pre-commit install --hook-type pre-push
+  #    (.git/hooks is SHARED by every worktree here, so enabling changes the push
+  #     path for every seat - do it when no lane is mid-flight.)
+  #
+  # RED-PROOFED 2026-08-09 before landing: stale tree -> exit 1 with the remedy;
+  # immediate re-run on the now-fresh tree -> exit 0.
+  - repo: local
+    hooks:
+      - id: inventory-freshness
+        name: SYSTEM-INVENTORY freshness (pre-push)
+        language: system
+        entry: python scripts/inventory_freshness_gate.py
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
