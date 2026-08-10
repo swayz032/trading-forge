@@ -4,6 +4,104 @@
 
 ---
 
+## AR-917 · 2026-08-09 · ✅ **`STEP 2`'s FIRST OBSERVABLE IS DELIVERED, COMMITTED AND PUSHED: THE THREE TRANSITIONED FIXTURES ARE PUBLISHED **RED** ON THEIR NEW DURABLE ASSERTIONS, AT THE PRE-ACTIVATION BASE.** ⭐ **AND I PROVED THE BASE WITHOUT A `git checkout` IN A SHARED TREE — `HEAD`'s `src/` IS `18501f4e`'s `src/`, MEASURED WITH A POSITIVE CONTROL.** 🛑 **THE ELEVEN-SURFACE ACTIVATION IS **NOT STARTED**, AND I AM HANDING OFF BEFORE STARTING IT — GENUINE EXHAUSTION AGAINST AN ATOMIC UNIT, NOT A LANE-BOUNDARY PREFERENCE.** ⚠️ **ONE CORRECTION AGAINST MYSELF INSIDE.**
+
+**SEAT `claude.exe 29192`. HEAD `896398ce` = `origin` `[MEASURED, re-fetched]`. ATTEMPT `0 / 2` — I BELIEVE UNSPENT, BUT THAT IS THE DESK'S CALL (`§7`).**
+
+### §1 — ✅ WHAT LANDED, AND ITS SCOPE
+```
+[MEASURED HERE]
+b7a296dd  STEP 2 red-proof — TEST-ONLY
+          git show --name-only -> EXACTLY TWO FILES:
+            src/engine/tests/test_opening_range_conformance.py
+            src/engine/tests/test_opening_range_family_parity.py
+          NO production file. NO src/engine/*.py outside tests/. NO TS.
+896398ce  SYSTEM-INVENTORY regenerate (the gate's own printed remedy)
+both pushed; local == remote == 896398ce; ahead 0 / behind 0
+git status --porcelain --untracked-files=no  ->  EMPTY
+```
+
+### §2 — ⭐ THE RED-PROOF BASE, SOLVED WITHOUT A CHECKOUT — REUSE THIS
+`R-779 §7-b` requires each transitioned fixture to be **RED at pre-activation HEAD `18501f4e`**. 🛑 **A `git checkout` is forbidden in this shared tree and `[ps-counting-encoding]` records that it EATS AN UNCOMMITTED FIX.**
+```
+[MEASURED HERE, with the control in the same command]
+git diff --name-only 18501f4e..HEAD -- src/        -> EMPTY
+POSITIVE CONTROL, same command, adjacent range:
+git diff --name-only 18501f4e~1..18501f4e -- src/  -> src/engine/tests/test_s6_...py
+```
+⇒ **`src/` at `HEAD` is byte-identical to `src/` at `18501f4e`, so RUNNING HERE *IS* RUNNING AT THE PRE-ACTIVATION BASE.** ★★★★ **`WHEN THE TREE YOU ARE STANDING IN IS ALREADY THE TREE YOU NEED, THE CHECKOUT IS NOT CAUTION — IT IS THE RISK.`** ⚖️ **Independently corroborates `R-783 §7` from the local tree; the desk read the same claim from GitHub.**
+
+### §3 — ✅ THE RED-PROOF ITSELF, ITEMISED — 5 NEW REDS + THE 2 ORDERED `6B` REDS
+```
+[MEASURED HERE, worktree root, unpiped]
+python -m pytest test_opening_range_conformance.py test_opening_range_family_parity.py -q
+  -> 7 failed, 11 passed
+MINE, RED AS DESIGNED (all five go GREEN only when the activation lands):
+  invariant 3  test_the_declared_opening_range_primitive_resolves_to_the_real_adapter
+  invariant 4  test_the_declared_opening_range_primitive_has_an_enforced_dispatch_route
+  fixture 1    test_both_definitions_bind_to_the_opening_range_primitive_and_neither_
+               reaches_structure                      (transitioned)
+  fixture 2    test_opening_range_definition_agrees_field_for_field   (transitioned)
+  fixture 3    test_the_activated_family_declares_a_primitive_and_never_falls_back_to_
+               structure                              (transitioned + RENAMED)
+PRE-EXISTING, the two the activation RETIRES (baseline's ordered 6B reds):
+  test_no_production_binding_routes_to_the_opening_range_adapter_yet
+  test_no_typed_opening_range_output_contract_exists_in_production
+```
+✅ **THE `11` PASSES ARE THE NON-VACUITY WITNESS**, including the parity file's own mirror-parser positive control — **if that parser broke, the parity assertions would be vacuous and would pass quietly.**
+✅ **EVERY NEW ASSERTION LEADS WITH THE ACTIVATION WITNESS** (`R-782 §1`, campaign law): a red at *"the family declares no primitive"* means **the family was never transitioned**; a red BELOW it means the pointer or the binder is **genuinely broken**. **Without that ordering the two are one undifferentiated failure.**
+⚠️ **AND I CAUGHT A BROKEN ASSERTION IN MY OWN FIRST DRAFT BEFORE IT COMMITTED:** I wrote `assert "primitive: null" in entry is False or ...`, which Python parses as a CHAINED comparison, not the test I meant. **Fixed to a plain `not in` before staging.** ★★★ **`AN ASSERTION THAT DOES NOT SAY WHAT YOU MEANT STILL GOES GREEN — AND A GREEN YOU DID NOT EARN IS WORSE THAN THE RED YOU WERE AVOIDING.`**
+
+### §4 — ⚖️ THE PRIMITIVE NAME, DERIVED FROM CONVENTION AND **NOT** HARD-CODED INTO THE TESTS
+**`opening_range_adapter.compute_opening_range_state`**, resolving to **`src.engine.opening_range_adapter:compute_opening_range_state`**.
+```
+[MEASURED HERE — the convention it follows, not my invention]
+FAMILY_META declarations : "<module>.<function>"   e.g. session_windows.is_in_killzone
+PRIMITIVE_RESOLVERS      : "src.engine.<module>:<attr>"
+opening_range_adapter.py : the ONLY public entry point is compute_opening_range_state:237
+```
+🛑 **THE FIXTURES DO NOT TRANSCRIBE IT.** Every one reads `FAMILY_META[...].primitive` and asserts the OTHER surfaces agree. **A hand-copied string in a test file is a second place the name lives, and it goes stale silently — the `INV-2` defect one level up.** ⇒ **the next seat may still change this string; only surface `4` decides it.**
+
+### §5 — ✅ THE PUSH GATE FIRED ON ME, FOR GENUINE DRIFT, AND TERMINATED — AND I CHECKED FOR LOSS
+The pre-push gate **BLOCKED** my first push: `SYSTEM-INVENTORY.md` was stale because my new test imports the adapter.
+```
+[MEASURED HERE] the drift is CONTENT, 3 lines, one being the stamp:
+  compute_opening_range_state ... | 3 -> 4 referencing test files
+  and it STILL reads "no non-test reference outside its own definition"
+```
+⚖️ **That last line is the activation's own target, recorded immediately BEFORE the change rather than after it.** ✅ **Committed the regeneration, pushed, gate PASSED. It bit once and let go — `R-781 §1`'s exact predicted signature, and `d1b6ab34`'s shape, not a stamp chase.**
+🛑 **THE STASH WINDOW OPENED AND I CHECKED IT, PER `R-783 §5`:** the hook printed *"Stashed changes conflicted with hook auto-fixes… Rolling back fixes"* — **the same string `AR-914` correctly excluded as the loss event.** `[MEASURED, immediately after]` `git status --porcelain --untracked-files=no` → only `SYSTEM-INVENTORY.md`; the stash patch `patch1786330923-32988` contains **that one file and no `src/` file at all**; my commit's two-file scope intact. ⇒ **NO WORK LOST, measured AT WRITE TIME rather than quoted from earlier.**
+
+### §6 — ⚠️ CORRECTION AGAINST MYSELF, AND A SHARED-TREE FACT WORTH RECORDING
+🛑 **I read the first push failure as a REMOTE RACE and said so — *"the remote moved under me"*. IT WAS THE GATE.** The push output was truncated by my own `| tail`, so I saw `failed to push some refs` beside a moved remote SHA and joined two unrelated facts. **Re-run unpiped, the full output named the gate immediately.** ⚠️ **`[ps-counting-encoding]` warns NEVER to `| head`/`| tail` a result you rely on, and I did exactly that.** ★★★★ **`TRUNCATING A DIAGNOSTIC IS HOW YOU TURN A NAMED CAUSE INTO A GUESS.`** ✅ **Corrected within one command, before acting on it — no `reset`, no `pull --rebase`, no history operation was performed on the wrong diagnosis.**
+⭐ **AND THE REMOTE HAD GENUINELY MOVED, FOR A DIFFERENT REASON: the DESK committed `555c8734` (`R-783`) and `826edc51` into THIS SHARED WORKING TREE, so MY `HEAD` ADVANCED WITHOUT ME DOING ANYTHING.** `[MEASURED]` my commit's parent is `826edc51`. ⇒ **No conflict, linear history.** ★★★★ **`ON A SHARED TREE YOUR HEAD IS NOT YOURS. A SHA YOU MEASURED TWO MINUTES AGO IS A SHA SOMEBODY ELSE MAY HAVE MOVED.`**
+
+### §7 — 🛑 HANDOFF: FAN-IN, AND WHY THIS IS EXHAUSTION AND NOT A CLEAN SEAM
+**FAN-IN: `STEP 2` FIRST OBSERVABLE `1 / 1` DONE · THE ELEVEN SURFACES `0 / 11` — NOT STARTED, NOT BLOCKED.**
+🛑 **I know the rule and it is right (`AR-521` was overruled at `1/4` with its process alive). The distinguishing test is whether the remainder is unstarted-but-doable or beyond this seat.**
+- **The remainder is ATOMIC BY ORDER — `ALL ELEVEN OR NONE`, and an intermediate production state is forbidden.** ⇒ **there is no safe partial, and a truncation mid-activation leaves an unpushed half-activation in a tree the DESK IS ACTIVELY COMMITTING TO (`§6` — measured, this session).**
+- **Remaining cost: eleven production surfaces across ≥6 files + `ACCEPT-1` through `ACCEPT-5` including `tsc`, the TS parity script, and the `104`-member membership join.**
+- ⇒ **I would be starting what I cannot finish, which `worker-execution §10` names directly.** ★★★★ **`WHEN THE UNIT OF WORK CANNOT BE PARTIALLY LANDED, THE HANDOFF DECISION MUST BE MADE BEFORE IT STARTS.`**
+⚖️ **ATTEMPT: I spent none in my reading — this was the ordered red-proof publication, and `R-781 §5` holds that measuring is not attempting. 🛑 BUT I AM THE DOER AND THAT IS THE DESK'S CALL, NOT MINE.**
+
+### §8 — 📌 WHAT THE NEXT SEAT DOES NOT NEED TO RE-DERIVE
+1. **The base is HERE** (`§2`) — no checkout, and the control is written.
+2. **The primitive string and resolver** (`§4`), convention-derived; still changeable at surface `4`.
+3. **THE ELEVEN, LOCATED IN PRODUCTION** `[MEASURED HERE, grep, non-test]`: `1` `SpecConditionStrategy.__init__` `spec_condition_compiler.py:461` — the S6 red names the exact gap, *no parameter annotated `OpeningRangeExecutionCandidate`* · `2` new `_h_opening_range`, **signature `(self, b: ConditionBinding, ctx: dict) -> np.ndarray` — `R-782 §2` measured all twelve siblings use it, DO NOT INVENT ONE** · `3` `HANDLER_PARAMETER_CLASSIFICATION:198` (`REFUSES_ALL_PARAMETERS:194`) · `4` `spec_family_bindings.py:678` · `5` **NOTHING TO ADD** (`gates=True` default; setting `False` is a pin-(a) violation) · `6` `PRIMITIVE_RESOLVERS` `family_meta_enforcement.py:222` · `7` `ENFORCED_DISPATCH` `spec_condition_compiler.py:150` — **key on the PRIMITIVE; land with surface `3` or the parameter guard bites** · `8` `src/server/lib/spec-family-bindings.ts` · `9` **the fixtures are ALREADY WRITTEN AND RED — they turn green, nothing more to author** · `10` the shared construction helper · `11` an `elif` ABOVE `spec_condition_compiler.py:1928`'s `else` — 🛑 **touch the `else` ARM ITSELF and you are closing `ELSE-SINK-1`: STOP AND REPORT.**
+4. **`ACCEPT-5` IS GATED BY `R-783 §4`** — not until S6 is fully green, and state the S6 file's failure contribution as the FIRST line of the report.
+5. **`git add` in its OWN call, FIRST** (`R-783 §4a`) — I followed it throughout and `§5` is why it matters.
+
+### §9 — 🛑 WHAT I DID **NOT** MEASURE
+- **Any production behaviour of the activation.** I have not run the adapter through the compiler, not touched `FAMILY_META`, not confirmed the binder flips `bindable` — **fixture 1 ASSERTS `bindable is True` on `R-780 §4`'s stated model, and I did not verify that model. If it is wrong, that assertion is wrong and the next seat should REPORT rather than weaken it.**
+- **The S6 suite since my baseline run** (`6 failed / 8 passed`, my own, `§0` of this session) — unchanged by a test-only commit, but not re-run after it.
+- **`tsc`, TS parity, `ACCEPT-1`, `ACCEPT-3`, `ACCEPT-5`** — untouched.
+- **Whether `EXPECTED_REFUSAL` still has a consumer** in the conformance file after the transition. Module-level constant, no lint failure (`ruff` PASSED), but I did not grep its remaining uses.
+- **PRIOR ART STATED:** `--check` FRESH at seating; searched the ledgers for the transition, the join key and the primitive convention; `R-779 §7-b` read verbatim rather than summarised, and the four invariants are quoted from it, not paraphrased.
+
+**A FRESH WORKER SESSION IS NEEDED. THE ELEVEN-SURFACE ACTIVATION IS UNSTARTED, FULLY LOCATED ABOVE, AND ITS RED-PROOF PREREQUISITE IS COMMITTED AND PUSHED.**
+
+---
+
 ## AR-916 · 2026-08-09 · 🛑 **FINDING `GUARD-QUOTE-2` — THE `advisor-ruling` GUARD FALSE-BLOCKED A WORKER REPORT FOR THE **SECOND** TIME, IN A SHAPE ITS OWN `R-694` FIX DOES NOT COVER.** ⚠️ **AND THE COMPLIANT RESPONSE WOULD HAVE BEEN THE HARMFUL ONE — INVOKING THE SKILL WOULD HAVE MINTED THE **DESK'S** SENTINEL AND DISARMED ITS GATE FOR AN HOUR.** 🛑 **REPORTED, NOT FIXED — `R-648` CLOSES GUARD LANES.**
 
 **SEAT `claude.exe 29192`. THIS CHANGES NO CODE AND NO HOOK.**
