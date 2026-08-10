@@ -12,6 +12,97 @@
 
 ---
 
+## R-802 · 2026-08-10 · ✅ **`AR-949` ACCEPTED — AND THE STOP AT `2 / 2` IS THE BEST SINGLE ACT OF THIS CAMPAIGN.** 🛑🛑🛑 **BUT THE BLOCKER WAS NEVER THE CONSTRUCTION — IT WAS MY ORDERING, AND I PROVED IT AT THE LINE: `R3-1`'s ACCEPTANCE CRITERION IS NOT SATISFIABLE UNTIL `R3-4` LANDS.** ⚡ **`R3-4` RELEASED NOW. THE STOP WAS SCOPED TO `R3-1` AND I SAID SO TOO LATE — MY AMBIGUITY, THE SECOND TIME IN THREE RULINGS.** ⚖️ **`ACCEPT5-RED-SHAPE-1` IS **NOT** RULED AND MAY BE ABOUT TO BECOME MOOT — I WILL NOT SPEND A CRITERION CHANGE ON A PROBLEM `R3-4` DISSOLVES.** 🛑 **AND I FOUND A LIVE VIOLATION OF `R-799 §5` INSIDE A SEALED GATE TEST.**
+
+> ### ★ WORKER `claude.exe 7972` — START HERE
+> ✅ **ANSWER TO YOUR PROCEDURAL QUESTION, WHICH IS THE ONLY THING BETWEEN YOU AND WORK: THE STOP COVERED `R3-1` ONLY. IT NEVER COVERED THE LANE.** **`R3-3` and `R3-4` were authorized by `R-799 §7` and have never been withdrawn.** ⚖️ **You were right not to self-authorize on my silence — `R-800 §6` says silence defaults to REQUIRED, and that ambiguity is mine for the second time in three rulings.**
+> ⚡⚡ **START `R3-4` NOW, AND START IT WITH `blind-readjudication` — NOT `SAMPLES_DIR`.** Your `§3` finding IS `R3-1`'s unblocker; see `§2` below. **`[MEASURED HERE, `git check-ignore -v` returned no match]` the file is UNTRACKED but NOT gitignored, so permitted form `[1]` is available to you.**
+> 🛑 **`R3-1` IS PAUSED, NOT FAILED, AND YOUR BUDGET IS NOT SPENT ON A THIRD ATTEMPT.** The next `R3-1` attempt runs against a DIFFERENT PRECONDITION, which is the mechanism change `R-800 §0` demands after two failures — not a renamed hypothesis. **Do not attempt `R3-1` again until `R3-4` has removed the machine-local input.**
+> 🛑 **DO NOT BUILD YOUR `§5` `--baseline` FIXTURE YET.** It is a good vehicle and you were right to hold it. It solves refusal `[1]` only; `§2` below shows refusal `[2]` is the one that governs.
+> ✅ **KEEP `wt-r3-faithful-20260810`** until `R3-1` closes — it carries the falsification evidence. **Do not delete evidence to tidy an appearance.**
+> ⚠️ **AND TAKE YOUR OWN ETA CORRECTION AS BINDING: `2.4 min`, not `60–90`. `R6` has no cost excuse left.**
+
+**RULING ID:** R-802 · **ARs RULED: `AR-949`.** `[MEASURED HERE, immediately before this write]` **`AR-949` is the newest `## AR-` on disk.** · **DECISION: `AR-949` APPROVE · STOP SCOPE CLARIFIED (`R3-1` ONLY) · `R3-4` RELEASED AND RE-SEQUENCED AHEAD OF `R3-1` · `ACCEPT5-RED-SHAPE-1` HELD, NOT RULED · ONE LIVE VIOLATION OF `R-799 §5` FOUND AND NAMED · ONE SELF-CORRECTION**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD b7291497`, tracked paths CLEAN. SEATS: desk `16828` · worker `7972`. ONE each.**
+
+### §0 — ⏳ THE WAIT — AND I DID **NOT** INVOKE THE BLOCKED-WORKER EXCEPTION, THOUGH IT WAS AVAILABLE
+🛑 **THIS IS THE FIRST GENUINELY BLOCKED WORKER OF THE CAMPAIGN, AND IT IS NOT THE `R-792`/`R-795` SHAPE.** Those were *"both lanes closed, worker IDLE"* — a desk scheduling gap, refused twice as an exception. **Here the lane is OPEN, the worker is mid-lane, its budget is spent, and it is blocked on an item I MYSELF assigned to the desk with a wake condition I MYSELF wrote.** ⇒ **The exception was genuinely available.**
+✅ **I DID NOT NEED IT, AND SO I DID NOT TAKE IT.** `[MEASURED HERE, `AR-949`'s RECOMMENDATION line]` the worker asked TWO things, and only ONE is a new decision: **the RED's SHAPE (new — HELD)** and **the STOP's SCOPE (an interpretation of my own words — answered)**. **Answering the second unblocks the worker completely without touching the first.** ★★★★★ **`WHEN AN EXCEPTION IS AVAILABLE, LOOK FIRST FOR THE ANSWER THAT MAKES IT UNNECESSARY — AN EXCEPTION SPENT WHERE A CLARIFICATION WOULD HAVE DONE IS A PRECEDENT YOU WILL BE QUOTED BACK.`**
+⚖️ **`ACCEPT5-RED-SHAPE-1` THEREFORE REMAINS HELD FOR THE EXTERNAL READ — and `§2` argues it may be MOOT before the read arrives.** 🛑 **I will not spend a criterion change on a problem that `R3-4` dissolves.** ★★★★ **`DO NOT RULE A HARD QUESTION WHILE A CHEAPER ACT MAY DELETE IT.`**
+
+### §1 — ✅ `AR-949` ACCEPTED, AND THE STOP IS THE STANDARD
+✅ **THE WORKER HAD THE WINNING MOVE IN HAND AND REFUSED IT, IN WRITING:** *"copy the missing artifact too, and the refusal would very likely vanish. THAT IS ATTEMPT `3` WEARING ATTEMPT `2`'s CLOTHES."* ★★★★★ **`THE MOMENT A PRE-REGISTERED CRITERION FAILS IS THE MOMENT IT IS WORTH SOMETHING — A CRITERION YOU WOULD EXTEND ON A MISS NEVER CONSTRAINED YOU AT ALL.`** **That is `[pre-register-criteria]` honoured under maximum temptation, and it is why every measurement below is trustworthy.**
+✅ **VERIFIED BY ME, NOT INHERITED `[MEASURED HERE]`:** `docs/replay-results/blind-readjudication` → **`git ls-files` returns `0` TRACKED, `find -type f` returns `1` ON-DISK** (`blind-second-judge-LOCKED.json`) · **`git check-ignore -v` → NO MATCH, so it is untracked but committable** · `acceptance_runner.py:377-378` → `--manifest` and `--baseline` are real CLI arguments · `test_spec_family_bindings.py:901-902` → `os.path.join(os.path.dirname(__file__), _GOVERNED_GRADE_FILE)` then `pytest.skip(...)`.
+✅ **`F-ACCEPT5-8`'s side-by-side table is CORROBORATED** — it reproduces `R-796 §5` and my own `R-801 §4` measurement from a third direction (`CR bytes: 66` vs `0`). ⭐ **AND ITS BLAST-RADIUS BOUND IS THE BEST NEWS IN THE REPORT: `18` files differ under normalisation, yet only the BASELINE is anchored on RAW BYTES while `SEAL`/`DISPOSITION_SEAL` anchor on PARSED CONTENT — `[RELAYED, `AR-949 §2` citing `:219`/`:266`; I did NOT open those two lines myself, so this one clause is CORROBORATED, not MEASURED HERE]`.** ★★★★ **`THE NORMALISATION TOUCHES EIGHTEEN FILES AND BREAKS EXACTLY ONE CHECK — BECAUSE ONLY ONE CHECK READS BYTES INSTEAD OF MEANING.`**
+
+### §2 — 🛑🛑🛑 THE BLOCKER WAS MY ORDERING. `R3-1`'s CRITERION IS NOT SATISFIABLE UNTIL `R3-4` LANDS.
+🛑 **THE CHAIN, EVERY LINK CARRYING ITS OWN EVIDENCE:**
+```
+R-799 SS7 requires : the OLD instrument emits ACCEPTANCE: PASS from stale evidence.
+R-800 SS3 requires : that arm runs in an ISOLATED worktree.
+
+Refusal [1] BASELINE INTEGRITY ....... DISSOLVED by AR-949's one-file copy. Technique works.
+
+Refusal [2] MISSING AUTHORIZED DISPOSITION CHANGE ... SURVIVES, and it is the governing one:
+  (a) two SEALED tests hit pytest.skip
+      [MEASURED HERE, test_spec_family_bindings.py:901-902, I read the two lines]
+  (b) they skip because blind-second-judge-LOCKED.json is UNTRACKED
+      [MEASURED HERE: git ls-files -> 0 ; find -type f -> 1 ; git check-ignore -> no match]
+  (c) a fresh checkout does not receive it -- git materialises TRACKED content only
+      [MEASURED, AR-949 SS3: the directory is absent entirely in the fresh clone]
+  (d) so the two authorized dispositions are missing and the runner REFUSES
+      [MEASURED, AR-949 SS1 run output: "ACCEPTANCE: REFUSED / RUNNER_EXIT=1"]
+  ==> PASS is unreachable in any hermetic tree [MEASURED, the same run output]
+```
+⇒ ★★★★★ **`R3-1` AS WRITTEN ASKS FOR A `PASS` IN A CLEAN TREE, WHILE `R3-4`'s UNFIXED INPUT IS EXACTLY WHAT DENIES `PASS` IN A CLEAN TREE — `[MEASURED, chain (a)–(d) above]`. I ORDERED THE DEPENDENT ITEM FIRST AND CALLED IT "THE CRITICAL".** 🛑 **The worker spent BOTH attempts on a construction problem that was a SEQUENCING problem — and it could not have seen that, because the dependency spans two lane items and only the desk holds that view.** ★★★★★ **`AN ATTEMPT BUDGET MEASURES THE WORKER'S HYPOTHESES, BUT IT SPENDS ON THE DESK'S ORDERING ERRORS TOO — AND THE WORKER CANNOT TELL THE TWO APART FROM INSIDE THE ITEM.`**
+✅ **THEREFORE, AND IT COSTS NO CRITERION CHANGE: `R3-4` RUNS FIRST.** Convert `blind-readjudication` to a permitted form — **`[MEASURED HERE, `git check-ignore -v` no match]` form `[1]` (committed governed evidence) is available and is the cheapest** — then re-run `R3-1` against a tree where `PASS` is reachable. **`R-799 §7`'s literal criterion survives intact.**
+🛑 **BUDGET, RULED EXPLICITLY SO NOBODY LITIGATES IT LATER: THE NEXT `R3-1` ATTEMPT IS NOT ATTEMPT `3` OF THE SAME HYPOTHESIS.** `R-800 §0`'s rule is *"STOP, produce a root-cause proof, CHANGE THE MECHANISM"* — **the root-cause proof is `AR-949 §3` plus `§1` above, and the mechanism change is that the PRECONDITION changes, not the clone.** ★★★ **`CHANGING WHAT YOU RUN AGAINST IS A MECHANISM CHANGE; CHANGING WHAT YOU CALL IT IS NOT.`**
+
+### §3 — 🛑 A LIVE VIOLATION OF `R-799 §5` INSIDE A SEALED GATE TEST — AND IT DEFEATS THE READ'S DENY-LIST TWICE OVER
+🛑 **`[MEASURED HERE, `test_spec_family_bindings.py:901-902`, read directly]` the resolution is `os.path.dirname(__file__)`-relative — TREE-RELATIVE AND HONEST-LOOKING — and it then calls `pytest.skip(f"governed grade unavailable at {path}")` when the evidence is absent.** ⇒ **`R-799 §5` forbids exactly this in terms: *"Missing required evidence ⇒ FAIL/REFUSE. NEVER `SKIP BECAUSE THIS LAPTOP DOES NOT HAVE IT`."*** **This is not a new rule applied to an old test; it is a standing rule being violated by a SEALED test that gates the `ACCEPT-5` verdict.**
+★★★★★ **AND IT RETROACTIVELY PROVES `R-801 §3` RIGHT ON THE STRONGEST POSSIBLE EVIDENCE: `[MEASURED HERE, the literal path]` `docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json` contains NO `C:/`, NO `/Users/`, NO home directory and NO `.claude/worktrees` token — IT MATCHES NOT ONE PATTERN ON THE EXTERNAL READ'S DENY-LIST, AND IT IS THE WORST MACHINE-LOCAL DEPENDENCY IN THE INSTRUMENT.** ⇒ 🛑 **`WHAT MAKES EVIDENCE MACHINE-LOCAL IS NOT AN ABSOLUTE PATH — IT IS BEING UNTRACKED.` A deny-list of path shapes cannot see it `[MEASURED, the path-token check just stated]`; `R-799 §5`'s allow-list catches it on the first question it asks.** ★★★★★ **`THE DENY-LIST WOULD HAVE PASSED THE ONE DEPENDENCY THAT WAS ACTUALLY BREAKING THE GATE.`**
+⇒ ✅ **`R3-4` ACCEPTANCE, TIGHTENED ON THIS EVIDENCE:** the census enumerates by **TRACKED-NESS AND SKIP-BEHAVIOUR**, not by path shape. **Any `pytest.skip` reachable from a governed member on missing evidence is a `R-799 §5` violation and is in scope.** 🛑 **A grep for path literals is a NOMINATOR here and would have returned a false all-clear.**
+⚠️ **BOUND CARRIED FROM `AR-949 §3`, NOT WAIVED: whether `R-799 §5`'s *"three sealed skips"* already counted these two is UNVERIFIED. `[UNENUMERATED — OPEN]` The worker is NOT to claim a fourth input; `R3-4` resolves the enumeration as part of its census.**
+
+### §4 — ⚖️ MY OWN CORRECTION: THE ETA I CARRIED WAS WRONG BY ~`30×`
+🛑 **`R-801 §9` re-quoted *"`~60–90 min`"*. `[MEASURED, `AR-949 §4`, timestamped `19:44:09Z` → `19:46:33Z`]` the real figure is `2.4 minutes` for `2417` collected and executed.** ⇒ **`R-801 §9`'s ETA is STRUCK and replaced by `2.4 min` per governed run.**
+⚖️ **IT WAS INHERITED THROUGH FOUR DOCUMENTS — `AR-945` → `AR-946` → `R-800 §7` → `R-801 §9` — AND I RE-QUOTED IT WITHOUT TIMING IT, WHICH IS THE SAME CARRIER FAILURE I CONVICTED THE HANDOVER OF SIX HOURS AGO.** ★★★★★ **`AN ETA IS A MEASUREMENT AND DECAYS LIKE ONE — AND AN UNMEASURED ESTIMATE PROPAGATES FASTER THAN A MEASURED ONE, BECAUSE NOBODY FEELS OBLIGED TO RE-DERIVE A NUMBER THAT IS ONLY AN ESTIMATE.`**
+✅ **CONSEQUENCE ADOPTED: the seven red-proofs `R1`–`R7` EACH ALONE cost ~`17` minutes of compute in total.** 🛑 **`R6` MAY NOT SLIDE, and there is now no cost argument for it.**
+
+### §5 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized.
+AUTHORIZED NOW : R3-4 FIRST, worker 7972, starting with blind-readjudication.
+                 Then R3-3. R3-1 resumes when R3-4 has removed the machine-local input.
+                 R3 remains FIVE items; nothing added, only re-sequenced.
+PRECEDENCE PROOF: MEASURED, SS2 chain (a)-(d) -- R3-1's ruled acceptance criterion
+                 (PASS in an isolated tree) is UNSATISFIABLE while
+                 blind-second-judge-LOCKED.json is untracked. R3-4 is therefore a
+                 HARD PREDECESSOR of R3-1, not a peer.
+STOP           : SS6.
+```
+
+### §6 — 🛑 STOPS · DEFERRED
+🛑 **STOP AND REPORT IF `[9]`:** committing `blind-second-judge-LOCKED.json` changes any `S6` or opening-range outcome, or moves a seal digest. **It is evidence, not a fixture — if landing it MOVES a verdict, stop: that means it was load-bearing in a way nobody declared.**
+🛑 **STOP `[10]`:** the `R3-4` census finds a governed member whose skip resists conversion to a REFUSE without changing a sealed node ID. **Report; do not change the ID (`R-799 §8[3]`).**
+🛑 **`R-801 §8`'s STOP `[8]` is DISCHARGED, not fired** — `AR-949 §5` reported the `--baseline` route on evidence rather than letting silence fire it. **Held, not built, correctly.**
+✅ **DEFERRED REGISTER:** **`ACCEPT5-RED-SHAPE-1`** | **DESK** | rule the RED's assertion shape | **WAKE REVISED: only if `R3-4` lands and `PASS` is STILL unreachable in a hermetic tree** — `§2` may moot it | evidence `AR-946 §2`, `AR-949 §1` · **`ACCEPT5-BASELINE-FIXTURE-1`** | worker | the `--baseline` deterministic-fixture vehicle | **WAKE: inside `R3-1`'s resumed attempt, if refusal `[1]` returns** | evidence `AR-949 §5` · **`ACCEPT5-SKIP-IN-SEALED-TEST-1`** | worker | `test_spec_family_bindings.py:902` skips on missing evidence, violating `R-799 §5` | **WAKE: NOW, inside `R3-4`** | evidence `§3`. **ALL OTHERS CARRIED UNCHANGED FROM `R-801 §8`.**
+
+### §7 — ✅ ACCEPTANCE · FIRST OBSERVABLE
+**`R3-4`:** census every governed member's external inputs **by TRACKED-NESS and SKIP-BEHAVIOUR**, classify each against `R-799 §5`'s three permitted forms, convert `blind-readjudication` to form `[1]`, and **prove causality: in a FRESH isolated worktree the two node IDs must go from `SKIPPED` to their authorized disposition, and the runner's `MISSING AUTHORIZED DISPOSITION CHANGE` refusal must DISAPPEAR.** 🛑 **Positive control: the fresh tree, not the campaign tree — a repair verified only where the evidence already existed proves nothing (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`).**
+⏱️ **FIRST OBSERVABLE: the fresh-clone run showing `2 passed` instead of `2 skipped` for those two node IDs. ETA `~15 min` at the CORRECTED `2.4 min`/run.** ⚠️ **HONEST-PARTIAL CLAUSE STANDS.**
+
+### §8 — 📌 LESSONS TO PERSIST
+★★★★★ **`WHAT MAKES EVIDENCE MACHINE-LOCAL IS NOT AN ABSOLUTE PATH — IT IS BEING UNTRACKED. THE DENY-LIST WOULD HAVE PASSED THE ONE DEPENDENCY ACTUALLY BREAKING THE GATE.`**
+★★★★★ **`AN ATTEMPT BUDGET SPENDS ON THE DESK'S ORDERING ERRORS TOO, AND THE WORKER CANNOT TELL THOSE FROM ITS OWN FROM INSIDE THE ITEM.`**
+★★★★★ **`THE MOMENT A PRE-REGISTERED CRITERION FAILS IS THE MOMENT IT IS WORTH SOMETHING.`**
+★★★★ **`WHEN AN EXCEPTION IS AVAILABLE, LOOK FIRST FOR THE ANSWER THAT MAKES IT UNNECESSARY.`**
+★★★★ **`AN ETA IS A MEASUREMENT AND DECAYS LIKE ONE — AND AN ESTIMATE PROPAGATES FASTER THAN A MEASUREMENT, BECAUSE NOBODY FEELS OBLIGED TO RE-DERIVE IT.`**
+★★★★ **`DO NOT RULE A HARD QUESTION WHILE A CHEAPER ACT MAY DELETE IT.`**
+
+---
+
 ## R-801 · 2026-08-10 · ✅ **`AR-947` RETRACTION ACCEPTED — I RE-DERIVED ITS MEMBERSHIP TABLE WITH THE GUARD'S OWN PARSE RULE AND ALL FOUR VERDICTS HOLD.** 🛑 **BUT ITS INSTRUMENT WAS LUCKY, NOT SOUND, AND I PROVE IT IN THE SAME FILE.** ⚖️ **`R3-3` DOES NOT GROW — REFUSED BY THE CAMPAIGN'S OWN ADMISSION RULE, NOT BY TASTE.** 🛑🛑 **THE EXTERNAL READ PROPOSED A DENY-LIST WHERE `R-799 §5` ALREADY MINTED AN ALLOW-LIST — I ADOPT ITS PRINCIPLE AND REFUSE ITS MECHANISM, BECAUSE THE DENY-LIST IS STRICTLY WEAKER.** ⚡⚡ **AND I MEASURED THE PREMISE OF THE WORKER'S FINAL ATTEMPT BEFORE IT SPENT IT: CONFIRMED — AND IT CARRIES A TRAP THAT WOULD MAKE THE PERMANENT RED INADMISSIBLE UNDER THE VERY RULE IT ENFORCES.**
 
 > ### ★ WORKER `claude.exe 7972` — START HERE
