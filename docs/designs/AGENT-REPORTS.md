@@ -4,6 +4,70 @@
 
 ---
 
+## AR-912 · 2026-08-09 · 🛑🛑🛑 **`STEP 1` VERDICT: **`RED`**. MEMBER `11` IS REAL AND REACHABLE, AND IT IS MEASURED, NOT REASONED.** ⭐ **WITH THE FLAG AT ITS DEFAULT `OFF` AND THE FAMILY DECLARED, PRODUCTION RETURNS `True` ON ALL `45` TAUGHT BARS WITH **ZERO** ADAPTER CALLS.** ⭐⭐ **AND THE RED LANDED ON THE CLAIM, NOT ON A BROKEN WITNESS — BOTH POSITIVE WITNESSES PASSED FIRST, WHICH IS THE ONLY REASON THE VERDICT MEANS WHAT IT SAYS.**
+
+**TASK `R-780 §6 STEP 1` (confirmed unchanged by `R-781 §5`). SEAT `claude.exe 12460`. HEAD `18501f4e`. ATTEMPT `0 / 2`, UNSPENT — `R-781 §5`: measuring is not attempting. FAN-IN: `STEP 0` DONE · `STEP 1` **DONE, VERDICT RED** · `STEP 2` NEXT.**
+
+### §1 — 🛑 THE VERDICT, AND THE EXACT LINE IT FAILED ON
+```
+[MEASURED HERE, worktree root, unpiped]
+test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true
+  AssertionError: RED — FLAG-OFF SILENT PASS CONFIRMED.
+    bars          : 45   all True: True
+    adapter calls : ()            <- production never computed a range
+    assert not np.True_
+```
+⇒ **`RED`. Per `R-780 §4`: the hole is REAL and REACHABLE ⇒ `STEP 2` builds ELEVEN surfaces, not ten.**
+⚖️ **WHAT A CONSTANT-TRUE ARRAY ACTUALLY IS, in the operator's terms: the engine asserting on EVERY bar that a taught entry condition is satisfied — with no window, no range and no adapter call.** **That is architecture invariant `2` inverted: source-owned entry logic silently rewritten into `always`.**
+
+### §2 — ✅ WHY THE VERDICT IS TRUSTWORTHY: THE TWO WITNESSES PASSED **BEFORE** THE CLAIM FAILED
+🛑 **A RED HERE HAD TWO COMPLETELY DIFFERENT MEANINGS AND I BUILT THE TEST TO SEPARATE THEM.**
+- ✅ **WITNESS 1 — the shields actually dropped, through the REAL binder:** `binding.executed` and `binding.bindable` both `True` after the declaration. **Had this failed, the honest reading would have been `RED-PROOF BROKEN, NOT A FINDING` — the assertion says exactly that in its own message.**
+- ✅ **WITNESS 2 — the path RAN:** the condition id IS present in `last_per_condition_bool`, array shape `(45,)` matching the bars fed in. **A negative assertion needs a positive witness that the path executed; without it, "not constant True" is satisfied by absence.**
+- 🛑 **ONLY THEN did the CLAIM fail.** ★★★★★ **`A RED THAT FIRES BEFORE ITS WITNESSES IS A BROKEN INSTRUMENT WEARING A FINDING'S CLOTHES — ORDER THE ASSERTIONS SO THE FAILURE'S POSITION IN THE TEST *IS* PART OF THE VERDICT.`**
+
+### §3 — ✅ THE CONTROL, WHICH RULES OUT THE THIRD POSSIBILITY `AR-911 §1` PRE-REGISTERED
+```
+[MEASURED HERE] test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder -> 1 passed
+  TODAY (unactivated): binding.condition_id is ABSENT from last_per_condition_bool
+  ARM 1 (activated)  : it is PRESENT and constant-True
+```
+⇒ **`H3` IS DEAD: the output is not "absent either way".** ⇒ **the red is the ACTIVATION'S OWN BLAST RADIUS, not a pre-existing defect I am attributing to it.** ⭐ **`R-780 §4`'s framing is confirmed by a control rather than accepted: `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN`, and the declaration is the `INSERT`.**
+
+### §4 — 🔬 THE MECHANISM, RE-DERIVED AT THE LINE — AND `R-744 §2`'s VALUE NEEDED RE-TAKING
+```
+[MEASURED HERE, today's tree, via production's own binder]
+golden OPENING_RANGE_DEFINITION binding : executed=False  bindable=False  primitive=None
+FAMILY_META[OPENING_RANGE_DEFINITION]   : unsupported=True  gates=True
+                                          production_executed=True   <- ALREADY True
+spec_family_bindings.py:2633  if meta.unsupported:  -> bindable=False, executed=False
+spec_condition_compiler.py:1830  if not b.executed: continue   <- the ladder is never consulted
+```
+🛑 **`production_executed` IS ALREADY `True` AND THE BINDING IS STILL `executed=False`.** ⇒ **`executed` is NOT that flag; `unsupported` at `:2633` is what decides it.** ★★★★ **`TWO FIELDS WITH THE SAME WORD IN THEIR NAMES ARE NOT THE SAME FIELD, AND THE ONE THE ROUTER READS IS THE ONE THAT MATTERS.`**
+✅ **`R-744 §2`'s `executed=False` is CONFIRMED, not decayed** — but `R-780` itself tagged it `[ARTIFACT-SOURCED]`, so I re-measured rather than quoted it. **It was worth doing: the neighbouring `production_executed=True` would have sent a reader to the wrong field.**
+
+### §5 — ⚙️ HOW ARM 1 ASKS THE QUESTION WITHOUT A PRODUCTION EDIT, AND WHY IT COULD DECIDE TODAY
+⭐ **THE INSIGHT THAT MADE `STEP 1` DECIDABLE AT ALL:** `AR-911 §1` warned that an arm written in the ordered candidate-aware shape dies at `_require_activated()` — **the same boundary `RED 2` already names — and would decide NOTHING.** 🛑 **BUT THE FLAG-OFF LADDER ROUTES ON `b.type` AND NEVER REACHES `_h_opening_range`, SO IT NEEDS NO CARRIER.** ⇒ **arm 1 runs all the way to the array today.**
+✅ **Arm 1 applies MEMBER `4` ALONE — retire `unsupported`, declare the primitive — as a `monkeypatch`, and lets PRODUCTION's binder and PRODUCTION's router answer.** **No production file is edited. No handler, no resolver, no `ENFORCED_DISPATCH` entry, no carrier is faked** — because the claim is precisely that **the DECLARATION alone is enough to open the hole.** ⚖️ **And witness 1 is what stops that monkeypatch from being a model I trust: it asserts the shields dropped through the REAL binder rather than that my patch did what I intended.**
+✅ **Arm 2 publishes the ordered shape verbatim** (`pre-lock False · post-lock True · not an all-True fallback`) and **is RED at `_require_activated()` by design** — it pins what the flag-OFF path must DO once a candidate can reach it, so `STEP 2` cannot land with the ladder branch returning something other than the adapter's own answer.
+
+### §6 — ✅ SCOPE AND COLLATERAL
+```
+[MEASURED HERE]  18501f4e  1 file changed — test_s6_...py AND NOTHING ELSE
+S6        : 6 failed · 8 passed   (was 4 failed · 7 passed)
+              +2 reds  : arm 1 (the decider) · arm 2 (ordered shape, red at the carrier)
+              +1 pass  : the control
+ACCEPT-1  : 2 failed · 50 passed  MEMBERSHIP UNCHANGED — the two ordered 6B reds, BY NAME,
+                                  and the total matches R-780 §9's CORRECTED figure
+ACCEPT-3  : 134 passed            EXIT 0
+```
+🛑 **NOT TOUCHED:** any production file · `SpecConditionStrategy` · `FAMILY_META` on disk · the TS mirror · the fixture transition · `acceptance-baseline-2026-08-09.json` · pin `(a)` · `GATE-LIM-2` (`R-781 §3`, banked, not mine). 🛑 **NOT RUN:** `ACCEPT-4` (`tsc` / TS parity) · `ACCEPT-5` (the 104-member join, forbidden mid-lane) · any backtest.
+⚠️ **NOT PROVEN, AND I WILL NOT LET IT BE IMPLIED:** arm 1 measures **ONE record, ONE session date, 1-minute bars, a 45-minute frame** — `AR-907 §8`'s limit, **CARRIED, NOT WAIVED** (`R-780 §7`). **DST changeover, half-day session, gapped frame and non-1m timeframe remain `[NOT MEASURED]`.** ⚠️ **And arm 1 proves the ladder falls through for THIS family; it does not enumerate which OTHER declared families would do the same. I did not check, and I am not claiming it.**
+
+**RECOMMENDATION: PROCEED TO `STEP 2` WITH ELEVEN SURFACES. The decider has decided. NEXT SMALLEST TASK: the atomic activation, all eleven or none, with each transitioned fixture red-proofed RED at pre-activation HEAD on its NEW assertion. ATTEMPT `0 / 2` — this step spent none.**
+
+---
+
 ## AR-911 · 2026-08-09 · 🟢 **START-RECEIPT — `R-780 §6 STEP 1` (flag-OFF silent-pass RED), STARTED. SEAT `claude.exe 12460`, ATTEMPT `0 / 2`, HEAD `6131dc3a` = `origin`.** ⏱ **ETA ~20–40 min. FIRST OBSERVABLE: the RED committed and PUSHED with an explicit `RED` / `CANNOT GO RED` verdict.**
 
 **`R-781 §3`'s `GATE-LIM-2` READ AND BANKED — NOT TOUCHED.** ⭐ **And I accept the near-miss as stated: in `742f4359` the file that ARMED the gate (`scripts/…`) and the file that MOVED the map (`tests/…`) were different files. A one-file commit of the test alone would have pushed a stale map under a "skipped" message. That was luck, not design, and it was not mine.**
