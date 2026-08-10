@@ -44,6 +44,10 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.engine.opening_range_candidate import (
+    OpeningRangeExecutionCandidate,
+    expand_execution_candidates,
+)
 from src.engine.opening_range_definition import (
     CANONICAL_TYPE as OPENING_RANGE_DEFINITION,
 )
@@ -886,6 +890,7 @@ class RecordCompileResult:
 
     artifact: Dict[str, Any]
     opening_range_lowering: OpeningRangeLoweringResult
+    opening_range_candidates: Tuple[OpeningRangeExecutionCandidate, ...] = ()
 
     def __post_init__(self) -> None:
         if SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY in self.artifact:
@@ -894,6 +899,28 @@ class RecordCompileResult:
                 "the typed lowering belongs on this envelope, never inside the portable "
                 "contract. Serialising it under an artifact key would be silently "
                 "discarded by the TypeScript parser (R-777 §4)"
+            )
+
+        # STEP 3 — the refusal must survive the fan-out. A record whose source was
+        # incomplete has NO definition to expand, so candidates here would be
+        # invented durations wearing a valid type.
+        definition = self.opening_range_lowering.definition
+        if definition is None and self.opening_range_candidates:
+            raise ValueError(
+                f"{len(self.opening_range_candidates)} execution candidates accompany a "
+                "lowering that REFUSED; a SOURCE_INCOMPLETE record cannot yield candidates, "
+                "and candidates built without a definition are invented"
+            )
+
+        # And the candidates must belong to THIS lowering, not merely be well-shaped.
+        # `A CORRECTLY SHAPED SIDECAR ATTACHED TO THE WRONG STRATEGY IS PLAUSIBLE, AND
+        #  PLAUSIBLE IS THIS CAMPAIGN'S FAILURE MODE.`
+        foreign = [c for c in self.opening_range_candidates if c.definition is not definition]
+        if foreign:
+            raise ValueError(
+                f"{len(foreign)} candidate(s) carry a definition that is not this envelope's "
+                "lowered definition; a candidate joined to the wrong source is plausible "
+                "enough to survive every shape check downstream"
             )
 
 
@@ -960,7 +987,35 @@ def produce_spec_artifact_from_record(
         positive_control=_LOWERING_POSITIVE_CONTROL,
     )
 
-    return RecordCompileResult(artifact=artifact, opening_range_lowering=lowering)
+    # ── STEP 3 (R-777 §5) — FAN OUT THE TAUGHT DEFINITION INTO EXECUTION CANDIDATES ──
+    #
+    # 🛑 NONE PRIMARY, NONE DEFAULT. `expand_execution_candidates()` takes no
+    # `default_variant` and returns one candidate per taught variant IN TAUGHT ORDER.
+    # Choosing among them is a decision the teacher declined to make (R-736: "the
+    # teacher gave three versions, so the factory makes three bots"), and
+    # `OpeningRangeDefinition.selected_duration_minutes` already RAISES to stop that
+    # happening three layers down.
+    #
+    # 🛑 ONE IDENTITY SYSTEM. The candidates' `candidate_id` / `cache_identity` come
+    # from the existing module; nothing here invents a second one. The existing hash
+    # covers the whole source-owned definition plus the selected variant, which is
+    # strictly stronger than keying on a duration.
+    #
+    # A refusal fans out to NOTHING, and the envelope enforces that rather than
+    # trusting this line.
+    candidates: Tuple[OpeningRangeExecutionCandidate, ...] = ()
+    if lowering.definition is not None:
+        candidates = expand_execution_candidates(
+            source_spec_id=video,
+            source_condition_id=lowering.source_condition_id,
+            definition=lowering.definition,
+        )
+
+    return RecordCompileResult(
+        artifact=artifact,
+        opening_range_lowering=lowering,
+        opening_range_candidates=candidates,
+    )
 
 
 def _opening_range_condition_id(artifact: dict) -> str:

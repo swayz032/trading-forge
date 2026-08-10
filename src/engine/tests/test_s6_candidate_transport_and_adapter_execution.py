@@ -410,6 +410,25 @@ def test_a_full_record_compile_boundary_transports_exactly_the_three_taught_cand
         "  ⇒ STAGE 1 is repaired; this is the next handoff, and it is STEP 3's."
     )
 
+    # ── STAGE 3 — THREE CANDIDATES, NOT ONE CANDIDATE COUNTED THREE TIMES.
+    # R-777 §5 requires the EXISTING identity system and forbids inventing a second.
+    # `A UNIQUENESS GUARD PROVES UNIQUENESS OF THE FIELD IT READS, AND OF NOTHING
+    #  ELSE` (R-738 §7-2), so both identities are checked: `candidate_id` is the
+    # human-traceable name, `cache_identity` is the content hash. A fan-out that
+    # returned the same object three times satisfies the duration tuple above and
+    # fails here.
+    ids = [c.candidate_id for c in candidates]
+    identities = [c.cache_identity for c in candidates]
+    assert len(set(ids)) == len(candidates), (
+        f"candidate_id is not unique across the fan-out: {ids}\n"
+        "  ⇒ the three taught windows are not three distinguishable candidates."
+    )
+    assert len(set(identities)) == len(candidates), (
+        f"cache_identity collides across the fan-out: {identities}\n"
+        "  ⇒ two candidates hash identically, so a cache keyed on this would serve one "
+        "window's result for another's."
+    )
+
 
 # ── RED 2 — PRODUCTION ITSELF MUST REACH THE ADAPTER ──────────────────────────
 def test_the_production_dispatch_path_executes_the_adapter_once_per_taught_candidate(monkeypatch):
