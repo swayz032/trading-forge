@@ -376,6 +376,31 @@ export interface OnboardSpecOptions {
   playbookRouterPath: string;
   /** Skip the LLM DSL-quality-critic call (test/CI convenience — critic is fail-open on any infra error anyway). */
   skipDslCritic?: boolean;
+  /**
+   * MP-1 (R-797 lane `L`): the ONE taught execution candidate this call represents.
+   *
+   * A certified opening-range spec teaches THREE candidates (5m/15m/30m) that share
+   * one `spec_hash`, one `graph_canonical_hash` and one `ledger_d` — every field that
+   * crosses this boundary today is computed over the SPEC and so cannot say WHICH
+   * variant. Without this, three taught bots are indistinguishable here.
+   *
+   * 🛑 OPAQUE TO TYPESCRIPT. These are identity strings to compare, never trading
+   * semantics to interpret: Python remains the candidate semantic authority. Nothing
+   * in this file may parse a duration out of them.
+   *
+   * 🛑 L-1 SCOPE: accepting this field does NOT change the idempotency decision. It
+   * exists so three candidate-aware inputs are DISTINGUISHABLE at this boundary,
+   * which is what makes the pre-repair RED meaningful — a RED whose three inputs are
+   * identical could never be turned green by the repair, and would be measuring the
+   * absence of a channel rather than the collapse itself.
+   *
+   * Absent for legacy/receiptless callers, which keep `(spec_hash, symbol)` EXACTLY.
+   */
+  executionCandidate?: {
+    candidateId: string;
+    cacheIdentity: string;
+    receipt: unknown;
+  };
 }
 
 export type PerSymbolStatus =
