@@ -12,6 +12,110 @@
 
 ---
 
+## R-777 · 2026-08-09 · ✅ **`STEP 2` CORE ACCEPTED — THE FULL-RECORD BOUNDARY IS THE RIGHT SHAPE AND `RED 1` ADVANCED `STAGE 1 → STAGE 2` EXACTLY AS PRE-REGISTERED.** 🛑🛑 **`STEP2-LIM-1` IS CONFIRMED **BY DIRECT EXECUTION**, NOT BY ARGUMENT — AND IT IS WIDER THAN EITHER READER STATED: THE ARTIFACT IS UNSERIALISABLE ON **BOTH** ARMS, INCLUDING THE REFUSAL PATH.** ⚡ **`STEP 2.1` (SERIALIZATION FIREBREAK) AUTHORIZED, THEN `STEP 3` IMMEDIATELY — ONE SMALL CORRECTION, THEN FAN-OUT. NOT A CAMPAIGN.**
+
+> ### ★ WORKER — START HERE
+> **Your task: `§4` — `STEP 2.1`, then `§5` — `STEP 3`, in one continuous motion, no desk round-trip between them.** **`STEP 2.1`:** keep the `SpecArtifact` plain-JSON; move the typed lowering into a compiler-result **sidecar/envelope**. **Pre-register the firebreak test FIRST (`§4`).** 🛑 **Do NOT expand the TypeScript contract, do NOT `asdict()` the dataclass into the artifact, do NOT start the reachability recon.**
+
+**RULING ID:** R-777 · **ARs RULED: `AR-900`** — copied from the read's subject (`AR-900 / STEP 2 ACCEPTED, SERIALIZATION FIREBREAK`). `[MEASURED HERE]` **`AR-900` is the NEWEST `## AR-` on disk.** · **DECISION: ACCEPT `STEP 2` core · PROMOTE `STEP2-LIM-1` to a pre-`STEP 3` firebreak · AUTHORIZE `STEP 2.1` + `STEP 3`**
+**GRAPH OBJECT: NOT ADOPTED.** **TREE: `wt-h1-wave4-20260712`.** **SEAT `claude.exe 25636`. `STEP 2` closed at attempt `1/2`; `STEP 2.1`+`STEP 3` open at `0/2`.**
+
+### §1 — ✅ `STEP 2` CORE: ACCEPTED, AND THE DESIGN CHOICE IS BETTER THAN THE ONE I AUTHORIZED
+✅ **`[MEASURED HERE]`** `git show ba0803b1 --stat` → **exactly two files**: `spec_producer.py` (+117) and the S6 test (+72/−21). **NO registration, NO resolver, NO dispatch, NO TS mirror** — scope held (`R-776 §4`).
+✅ **`[MEASURED HERE]` STOP-CONDITION SWEEP over the added production lines: CLEAN** — no frozen-file read, no `st5e-` recognition, no `5/15/30` literal selection, no `market_scope` reconstruction, no `ConditionBinding.parameters`.
+✅ **`[MEASURED HERE]` ONE LOWERER:** `lower_opening_range_definition` appears on 4 lines of `spec_producer.py` — an import, **two comments**, and **exactly ONE executable call at `:898`**. ⚠️ **My own `grep -c` said `3` and was wrong** — the paren pattern matched two comment lines. ★★★ **`A COUNT OVER A PATTERN THAT MATCHES COMMENTS IS NOT A COUNT OF CALL SITES — OPEN THE LINES` (`[instrument-truncation-cluster]`, the homonym class, caught on myself here).**
+⭐⭐⭐ **THE WORKER PICKED THE BETTER OF THE TWO SHAPES `R-776 §3` AUTHORIZED, AND ITS REASON IS THE RIGHT ONE:** `produce_spec_artifact_from_record(record, *, video, …)` **DERIVES the strategy from the record** rather than accepting `strategy + record` as two independent inputs. ★★★★★ **`AN INCONSISTENT PAIR YOU CANNOT CONSTRUCT NEEDS NO VALIDATION. MAKING THE BROKEN COMBINATION UNREPRESENTABLE BEATS FORBIDDING IT IN A DOCSTRING.`**
+✅ **AND THE GUARD MOVED WITH THE BOUNDARY, WHICH IS WHAT `R-776 §3` DEMANDED:** `[MEASURED HERE]` the test now inspects and CALLS `produce_spec_artifact_from_record` (`:266`, `:272`, `:381`) — **it guards the door, not the old name.**
+
+### §2 — ✅ `RED 1` ADVANCED — THE PRE-REGISTERED SUCCESS SHAPE, MEASURED
+`[MEASURED HERE — I ran the suite]` `2 failed · 3 passed`, and the failure TEXT is the evidence:
+```
+RED 1 -> "RED — STAGE 2 ...: the full-record boundary now lowers a source-complete
+          definition with all three taught windows, but the compiled plan does not yet
+          TRANSPORT them as execution candidates."      <- STAGE 1 REPAIRED, STAGE 2 NAMED
+RED 2 -> "STAGE 1: production declares NO primitive for OPENING_RANGE_DEFINITION"
+          primitive: None · unsupported: True           <- untouched by STEP 2, as ordered
+```
+⇒ ✅ **`R-776 §5` pre-registered exactly this and pre-committed to calling it SUCCESS. It is.** ★★★★ **`THE INSTRUMENT DID NOT JUST GO RED — IT MOVED ITS OWN RED FORWARD AND NAMED THE NEXT HANDOFF. THAT IS WHAT A STAGED GUARD IS FOR, AND IT IS ONLY CREDIBLE BECAUSE THE STAGES WERE WRITTEN DOWN BEFORE THE WORK.`**
+
+### §3 — 🛑🛑 `STEP2-LIM-1` — CONFIRMED BY EXECUTION, AND WIDER THAN REPORTED
+🛑 **I did not reason about this; I ran it.** `[MEASURED HERE, desk script, POSITIVE CONTROL FIRST]`:
+```
+POSITIVE CONTROL  OLD produce_spec_artifact(golden)      json.dumps -> OK
+                  (so a failure below convicts the ARTIFACT, not my harness)
+NEW BOUNDARY      produce_spec_artifact_from_record(...) returns a plain `dict`
+   golden     st5e-YJRfKc__s0  -> TypeError: Object of type OpeningRangeLoweringResult
+                                  is not JSON serializable
+                                  OFFENDING KEY: 'opening_range_lowering'
+   neighbour  hcHuDfxdywI__s0  -> TypeError: SAME
+```
+⭐⭐⭐ **THE WIDENING IS MINE AND IT MATTERS: BOTH ARMS FAIL, INCLUDING THE `SOURCE_INCOMPLETE` REFUSAL PATH.** Both readers framed this around the golden/success path. **A refusal artifact that cannot be serialised is arguably worse — the refusal is the thing the downstream is most entitled to receive intact.** ★★★★★ **`WHEN A DEFECT IS FOUND ON THE SUCCESS PATH, TEST THE REFUSAL PATH BEFORE SCOPING THE REPAIR — THE ERROR ARM IS THE ONE NOBODY CHECKS AND THE ONE THAT CARRIES THE BAD NEWS.`**
+⚖️ **WHY IT CANNOT BE DEFERRED, and the reason is the money path, not tidiness:** the TS onboarding service consumes a **SERIALIZED** `SpecArtifact`, and `parseSpecArtifact()` rebuilds only the recognised JSON fields. ⇒ **the new function currently returns something called a `SpecArtifact` that cannot traverse the seam its own name promises.** 🛑 **DO NOT LAYER CANDIDATE STATE ON TOP OF THAT SHAPE.**
+⭐ **CREDIT WHERE IT IS DUE: THE WORKER DISCLOSED THIS ITSELF as `STEP2-LIM-1`.** ★★★★ **`A LIMITATION THE BUILDER NAMES IS WORTH MORE THAN A DEFECT A REVIEWER FINDS — IT ARRIVES WITH ITS SCOPE ALREADY HONEST.`** ⇒ **the desk's job here was to test it and PROMOTE it, not to discover it.**
+
+### §4 — ⚡ AUTHORIZED — `STEP 2.1`, THE SERIALIZATION FIREBREAK (do this first)
+**AUTHORIZED TO `claude.exe 25636`, attempt `0/2`.**
+```
+ 1 PRE-REGISTER THE FIREBREAK TEST **BEFORE** CHANGING THE SHAPE. It must assert:
+      golden    -> json.dumps(<the serialized artifact>)  SUCCEEDS
+      neighbour -> json.dumps(<the serialized artifact>)  SUCCEEDS      <- §3, both arms
+      the lowering IS reachable from the compiler result/envelope
+      the lowering is NOT embedded as a Python object inside the SpecArtifact
+      the OLD produce_spec_artifact() JSON behaviour is UNCHANGED (regression arm)
+   🛑 Pure Python. No TS, no onboarding, no network. ONE boundary invariant.
+ 2 THEN move the typed lowering OUT of the artifact into a typed compiler-result envelope
+   (e.g. `RecordCompileResult` with `.artifact` = the plain JSON-safe SpecArtifact and
+   `.opening_range_lowering` = the typed result).
+   🛑 DO NOT "fix" this with dataclasses.asdict() under an extra artifact key — the TS
+      parser rebuilds only recognised fields, so Python would "preserve" it and TypeScript
+      would SILENTLY DISCARD it. ★★★★★ `A HANDOFF WHERE THE SENDER BELIEVES IT SENT AND THE
+      RECEIVER SILENTLY DROPS IS WORSE THAN ONE THAT FAILS LOUDLY.`
+   🛑 DO NOT expand the TS contract in this micro-repair. Versioning the cross-language
+      contract is a LATER, deliberate decision — not a side effect of a firebreak.
+THE DISTINCTION THIS BUYS, and it is worth stating plainly:
+   PORTABLE CONTRACT  = SpecArtifact (JSON, cross-language, durable)
+   IN-PROCESS STATE   = lowering · candidates · binding plan (typed, Python-only)
+```
+
+### §5 — ⚡ THEN IMMEDIATELY — `STEP 3`, CANDIDATE FAN-OUT (no desk round-trip)
+```
+OBJECTIVE: lowering.definition -> expand_execution_candidates(...) -> EXACTLY 5m/15m/30m,
+   IN TAUGHT ORDER, none primary, none default. Attach them to the typed compiler-result
+   envelope. Then RED 1 stage 2 should go GREEN.
+🛑 IDENTITY: use the EXISTING candidate_id and cache_identity. DO NOT invent a second
+   identity system. The existing hash covers the whole source-owned definition plus the
+   selected variant — it is STRONGER than `duration=5`, and R-774 §4-5 makes identity a STOP.
+🛑 NOT IN STEP 3: FAMILY_META · PRIMITIVE_RESOLVERS · ENFORCED_DISPATCH · the TS mirror ·
+   real adapter execution · onboarding · backtesting. RED 2 stays RED — that is correct.
+🛑 NOT the serialized artifact, NOT ConditionBinding.parameters.
+FIRST OBSERVABLE: the firebreak test published (red or green as appropriate) BEFORE the
+   shape change. START-RECEIPT if >10 min. ONE `AR` covering 2.1 + 3.
+```
+✅ **`§13` ADOPTED — the lowerer running for EVERY record and returning a named `SOURCE_INCOMPLETE` is accepted AS COMPILER DIAGNOSTIC STATE.** 🛑 **It does NOT become a policy that every downstream strategy must treat an absent concept as an error. That policy belongs to onboarding/lifecycle, later.**
+
+### §6 — 📐 CRITICAL PATH · GRADES · STOPS
+```
+CURRENT EXIT   : one real extracted strategy condition compiled AND EXECUTED (R-648 slice)
+CRITICAL PATH  : STEP 2.1 firebreak -> STEP 3 fan-out -> STEP 4+ identity -> registration
+                 /dispatch -> execution proof -> R-774 §7 A-M controls.
+AUTHORIZED NOW : §4 then §5, one motion, seat claude.exe 25636, attempt 0/2.
+PRECEDENCE PROOF: [MEASURED §3, by execution] the artifact the next step would build on is
+                 unserialisable on BOTH arms, and the downstream seam is defined as
+                 serialized JSON. Layering candidates on it would compound the defect.
+DEFERRED REGISTER: MP-1 (money-path reachability recon, READ-ONLY, wakes when S6 closes —
+                 🛑 NOT NOW, and an internally correct compiler boundary is NOT a production
+                 conveyor) · INV-1 · DOC-1 · SCOPE-1 · TD-1/2/3 · OBS-1 · D-10-ADJ-1 · N-6 · Q-1
+STOP           : expanding the TS contract · asdict() into the artifact · inventing a second
+                 candidate identity · solving registration/dispatch inside STEP 3 · editing
+                 acceptance-baseline-2026-08-09.json (IMMUTABLE) · starting MP-1.
+```
+**GRADES:** `[MEASURED HERE]` the scope/stat, the stop sweep, the one executable lowerer call, the suite re-run and both red stages, **and the `json.dumps` failure on both arms with a positive control**. `[ARTIFACT-SOURCED — AR-900]` its `2 failed / 128 passed` full-population figure (I ran only the focused S6 file). `[NOT MEASURED]` the TS `parseSpecArtifact` behaviour — **I read the read's account of it and did not open the TS parser myself; the firebreak is justified by the Python-side failure alone, which I did measure.**
+**ARCHITECTURE INVARIANTS TOUCHED:** none of the six protected ones. `STEP 2.1` touches a serialization boundary only: no compiler semantics, no extracted logic, no sizing/risk, no live capital.
+
+**LESSON TO PERSIST:** ★★★★★ **`WHEN A DEFECT IS FOUND ON THE SUCCESS PATH, TEST THE REFUSAL PATH BEFORE SCOPING THE REPAIR.`** · ★★★★★ **`AN INCONSISTENT PAIR YOU CANNOT CONSTRUCT NEEDS NO VALIDATION.`** · ★★★★★ **`A HANDOFF WHERE THE SENDER BELIEVES IT SENT AND THE RECEIVER SILENTLY DROPS IS WORSE THAN ONE THAT FAILS LOUDLY.`** · ★★★★ **`A LIMITATION THE BUILDER NAMES ARRIVES WITH ITS SCOPE ALREADY HONEST.`** · ★★★ **`A COUNT OVER A PATTERN THAT MATCHES COMMENTS IS NOT A COUNT OF CALL SITES.`**
+
+---
+
 ## R-776 · 2026-08-09 · ✅✅ **`AR-899` ACCEPTED — BOTH GUARD DEFECTS CLOSED, AND I RE-RAN AND RE-GREPPED EVERY LOAD-BEARING CLAIM MYSELF.** ⚡ **`STEP 2` IS CLEARED TO BEGIN NOW.** ⭐⭐⭐ **THE FALSE-GREEN IS PROVABLY DEAD: `RED 2` NOW FILLS ITS SPY ONLY THROUGH `SpecConditionStrategy._dispatch_enforced(...)` AT `:337` — REAL PRODUCTION MACHINERY, VERIFIED AT THE LINE.** ⚖️ **AND I ADOPT + SHARPEN THE READ'S `§3`: THE CONTRACT IS THE **BOUNDARY**, NEVER THE FUNCTION **NAME**.** ✅ **MANIFEST `104` ACCEPTED — EXACTLY ONE MEMBER, DIFFED BY ME.**
 
 > ### ★ WORKER — START HERE
