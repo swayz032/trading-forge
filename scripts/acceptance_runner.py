@@ -64,6 +64,50 @@ SEAL = REPO / "docs" / "replay-results" / "h1-battery" / "acceptance-collection-
 # paraphrases elsewhere in the ledger: `A PARAPHRASE OF A SPEC IS NOT A SECOND SPEC.`
 PYTEST_RUN_INVALID = "ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID"
 
+# A DIFFERENT refusal, deliberately. ACCEPT5-TREE-AUTHORITY-1: pytest may have run
+# perfectly and still leave us unable to say WHICH tree it measured. Reusing
+# PYTEST_RUN_INVALID here would misclassify a healthy run as a broken one and would
+# send the next reader hunting a pytest failure that never happened.
+TREE_AUTHORITY_UNAVAILABLE = (
+    "ACCEPTANCE INSTRUMENT REFUSED - TREE AUTHORITY UNAVAILABLE"
+)
+
+# The paths whose bytes DEFINE what pytest executes. Cleanliness is measured over these
+# and ONLY these, BEFORE the run.
+#
+# `docs/` is deliberately EXCLUDED, and the exclusion is load-bearing rather than
+# convenient: a governed member rewrites the tracked docs/wave25-exit-engine-ab-report.md
+# during every acceptance run (ACCEPT5-TEST-SIDE-EFFECT-1, ruled output-only). A
+# whole-tree cleanliness gate would therefore REFUSE EVERY AUTHORITATIVE RUN -- which is
+# a new false RED wearing the words "fail closed", and exactly what red-proof R6 exists
+# to prevent.
+#
+#   `AN AUTHORITY FIX IMPLEMENTED LITERALLY CAN RE-CREATE THE FALSE-RED CLASS IT WAS
+#    MEANT TO GUARD.`
+#
+# Residue, named rather than waived: a tracked docs/ change cannot be seen by this join.
+# That is correct only while no governed member reads docs/ as source.
+AUTHORITY_SOURCE_PATHS = ("src", "scripts")
+
+
+def _dirty_source_paths():
+    """Tracked modifications under AUTHORITY_SOURCE_PATHS, or None if git cannot answer.
+
+    Tracked only: an untracked file is not executed unless the manifest names it, and
+    the manifest members are resolved and reported separately.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no", "--",
+             *AUTHORITY_SOURCE_PATHS],
+            cwd=REPO, capture_output=True, text=True, timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode != 0:
+        return None
+    return [ln for ln in proc.stdout.splitlines() if ln.strip()]
+
 
 def _sha256_file(path):
     """SHA-256 of a file's raw bytes, or None if it is not readable."""
@@ -495,9 +539,36 @@ def main():
                   f"freshly minted run directory {run_dir}.")
             raise SystemExit(2)
 
-        # (4) pre-run authority: what this run claims to be, recorded BEFORE it runs
-        #     so nothing measured afterwards can quietly redefine it.
+        # (4) TREE AUTHORITY, measured BEFORE the run and FAIL-CLOSED
+        #     (ACCEPT5-TREE-AUTHORITY-1, R-806 SS3).
+        #
+        # This join used to fail OPEN: `if pre_head is not None and ...` meant that when
+        # git could not answer, the check was skipped entirely and an authoritative PASS
+        # could be issued by a run that could not name the commit it tested.
+        #
+        #   `IF THE REFEREE CANNOT PROVE WHICH CLEAN TREE IT WATCHED, IT DOES NOT GET TO
+        #    SIGN THE SCORECARD.`
         pre_head = _git_head()
+        if pre_head is None:
+            print(f"{TREE_AUTHORITY_UNAVAILABLE}: git could not resolve HEAD for "
+                  f"{REPO}, so this run cannot name the commit it measured. pytest was "
+                  f"not started; nothing was scored.")
+            raise SystemExit(2)
+
+        dirty = _dirty_source_paths()
+        if dirty is None:
+            print(f"{TREE_AUTHORITY_UNAVAILABLE}: git could not report the working-tree "
+                  f"state of {'/, '.join(AUTHORITY_SOURCE_PATHS)}/, so this run cannot "
+                  f"attest that the bytes it executed are the bytes at {pre_head}. "
+                  f"pytest was not started; nothing was scored.")
+            raise SystemExit(2)
+        if dirty:
+            listed = " | ".join(dirty[:10])
+            print(f"{TREE_AUTHORITY_UNAVAILABLE}: {len(dirty)} tracked path(s) under "
+                  f"{'/, '.join(AUTHORITY_SOURCE_PATHS)}/ differ from {pre_head}, so an "
+                  f"authoritative verdict would describe a tree that is not any commit: "
+                  f"{listed}. pytest was not started; nothing was scored.")
+            raise SystemExit(2)
         cmd = [sys.executable, "-m", "pytest", *[f"src/{m}" for m in resolved],
                "-q", "--no-header", "-p", "no:cacheprovider",
                "-p", "scripts.acceptance_pytest_plugin",
@@ -551,8 +622,10 @@ def main():
                 invalid.append(
                     f"the plugin ran in {_rec.get('cwd')!r}, not the repository "
                     f"{pre_run_authority['repo']!r} this invocation authorised")
+        # pre_head is guaranteed non-None here: the fail-closed gate above refuses
+        # otherwise, so this join no longer has a branch that silently skips itself.
         post_head = _git_head()
-        if pre_head is not None and post_head != pre_head:
+        if post_head != pre_head:
             invalid.append(
                 f"HEAD moved during execution ({pre_head} -> {post_head}); the run "
                 f"does not describe a single tree state")
