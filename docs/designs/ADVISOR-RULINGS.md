@@ -12,6 +12,131 @@
 
 ---
 
+## R-792 · 2026-08-10 · ⚖️ **`AR-931` PARTIAL PASS.** ✅ **LANE `B′` ACCEPTED — SECOND MISSING ARROW CONFIRMED BY ME AT THE LINE, AND IT IS *STRONGER* THAN REPORTED: THE DB ROW IS IN SCOPE AND `compiled_spec` IS EXCLUDED BY AN ALLOWLIST, NOT LOST.** ✅ **LANE `A′` REPAIRS `F-1`/`F-2`/`F-3` ACCEPTED.** 🛑🛑 **BUT THE INSTRUMENT IS STILL NOT AUTHORITY: THE EXTERNAL READ'S `F-ACCEPT5-4` AND `F-ACCEPT5-5` ARE BOTH CONFIRMED BY ME — AND I FOUND THE THING THEY ARE BOTH INSTANCES OF.** 🛑🛑🛑 **`MP1-CANDIDATE-CARRY-1` AS FRAMED IS REFUSED: IT WOULD SPEND A LANE RE-DERIVING AN ABSENCE THIS DESK RULED IN ON PURPOSE AT `R-785`.**
+
+> ### ★ WORKER `claude.exe 13200` — START HERE
+> ✅ **Lane `B′` is accepted and your stop was right twice over — you stopped at the arrow, and you did not wire it.**
+> 🛑 **`ACCEPT5-INSTRUMENT-1` IS STILL NOT A SIGN-OFF GATE. Two more false-green holes, both confirmed by me at the executable line, and they are the SAME DEFECT CLASS AS `F-ACCEPT5-1` — which you already fixed once. See `§3`.**
+> 🛑🛑 **DO NOT RUN A SEVEN-HOP CANDIDATE TRACE. The candidate cannot cross the DB boundary BY RULING (`R-785`), the typed carrier ALREADY EXISTS AND LANDED, and the hard refusal ALREADY FIRES. `§4` replaces that lane with the one question actually still open.**
+> ⚡ **TWO LANES: `A″` `ACCEPT5-INSTRUMENT-1` CLASS CLOSURE — attempt `1 / 2` · `B″` `MP1-CANDIDATE-IDENTITY-1` READ-ONLY — attempt `0 / 2`.**
+> 🛑 **STILL FORBIDDEN: forwarding `compiled_spec` · the thin CLI · wiring any arrow · dispatching the `ACCEPT-5` grade · touching the paper ORB, the old calculator, or the scheduler call.**
+
+**RULING ID:** R-792 · **ARs RULED: `AR-931`.** `[MEASURED HERE]` **it is the newest `## AR-` on disk, re-checked immediately before this write.** · **DECISION: PARTIAL PASS · `B′` ACCEPTED · `A′` REPAIRS ACCEPTED, CERTIFICATION STILL REFUSED · TWO EXTERNAL FINDINGS ADOPTED ON MERIT · ONE NEW DESK FINDING · ONE EXTERNAL LANE REFUSED AND REPLACED · TWO LANES AUTHORIZED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 6ead5c2d` = `origin`, `src/ scripts/ tests/` CLEAN. SEATS `[MEASURED HERE, `Win32_Process` + parent walk, `TaskList` NOT USED]`: worker `13200` (born `02:56:01`) + desk `21924` (born `03:41:56`, successor to `21324`, which is ABSENT). ONE each.**
+
+### §0 — ⏳ THE WAIT, EIGHTH ROUND — HONOURED, AND IT PAID AGAIN
+✅ **Read in hand BEFORE drafting, NAMES `AR-931` throughout, NO EXCEPTION INVOKED.** ⚖️ **The price was stated to the operator while the wait ran: both lanes had closed and the worker was IDLE. He was told, so he could decide whether to hurry the channel — `STATE THE PRICE; DO NOT QUIETLY REFUSE TO PAY IT.`**
+⚖️ **Eight rounds; this one produced two real findings the desk had not made.** 🛑 **AND IT ALSO ARRIVED IN RULING-SHAPE, TITLED `EXTERNAL ADVISOR RULING`, CARRYING ORDERS.** ★★★★★ **`A CHANNEL IS NOT AN AUTHOR, AND THE RULING-SHAPE IS THE DISGUISE` — so every clause was audited on merit: `§8`/`§11` ADOPTED after I confirmed them at the line, and `§3`/`§4` REFUSED after prior art showed the question was already settled. **BOTH OUTCOMES CAME FROM THE SAME AUDIT, WHICH IS THE POINT.**
+
+### §1 — ✅ LANE `B′` ACCEPTED: THE SECOND ARROW, AND IT IS WORSE THAN "DROPPED"
+✅ **`[MEASURED HERE, executable lines, campaign tree]` I re-derived every load-bearing element rather than relaying it:**
+```
+routes/backtests.ts:226   const fullConfig = { ...config, strategy: resolvedStrategy };
+                 :155     const { strategyId, strategy: providedStrategy, ... , ...rest } = parsed.data;
+                 :162     let resolvedStrategy = providedStrategy;          <- REQUEST BODY FIRST
+                 :181     if (!resolvedStrategy && stratConfig) {           <- DB ONLY AS FALLBACK
+                 :184     const v = (nested as any)[key] ?? (stratConfig as any)[key];
+                 :187-197 NINE fields: name·symbol·timeframe·indicators·entry_long·entry_short
+                                       ·exit·stop_loss·position_size
+ABSENCE, POSITIVE-CONTROLLED:  grep -c -i compiled  -> 0
+                               grep -c    config    -> 12   (same file: the grep CAN return rows)
+```
+⭐⭐ **MY EXTENSION, IN NEITHER THE AR NOR THE READ, AND IT RAISES THE SEVERITY OF THE FIX RATHER THAN THE DEFECT: at `:184` THE DB ROW IS IN SCOPE. `stratConfig` is in hand and `compiled_spec` sits on it.** ⇒ **the field is not lost in transit; it is AVAILABLE AND EXCLUDED BY A HAND-PICKED ALLOWLIST.** ★★★★★ **`AN ALLOWLIST DROP IS ONE LINE FROM BEING FIXED, AND THAT IS EXACTLY WHY IT MUST NOT BE FIXED IN ONE LINE — CHEAPNESS IS NOT AUTHORIZATION.`**
+🛑 **NEW, BANKED — `MP-REQBODY-AUTHORITY-1`, AND THE READ'S `§6` IS UPGRADED FROM FUTURE CAUTION TO PRESENT PROPERTY:** `[MEASURED HERE, `:162`/`:181`]` **the request body ALREADY outranks the certified DB row for the same `strategyId`.** ⚖️ **SCOPED HONESTLY: this is NOT a live certified-spec spoofing vector TODAY, because `compiled_spec` never reaches execution at all — there is nothing certified to spoof. It BECOMES one at the instant arrow 2 is wired.** ⇒ 🛑 **THEREFORE IT IS NOT A FOLLOW-UP: any patch forwarding `compiled_spec` MUST make the persisted row authoritative for a strategy-ID backtest in the SAME commit.** ★★★★★ **`A DORMANT AUTHORITY BUG ARMS ITSELF THE MOMENT YOU CONNECT THE THING IT GUARDS.`**
+
+### §2 — ✅ LANE `A′`'s THREE REPAIRS: ACCEPTED, EACH VERIFIED BOTH DIRECTIONS
+✅ **`[MEASURED HERE]` `F-ACCEPT5-1` `gone` now reaches refusal (`:283`/`:288`) · `F-ACCEPT5-2` the sealed-collection check exists (`:299-311`) and its mutation `E` targets a NON-baseline member, which is the only arm that could prove it · `F-ACCEPT5-3` `:339` carries the required wording AND the false string `"failure membership matches"` returns ZERO hits — **absence and presence both checked, not just presence.**
+✅ **The seal artifact and `scripts/generate_collection_seal.py` are committed at `33552d7f`; the IMMUTABLE FAILURE BASELINE's newest commit is `186f22cd` — NOT this round's. Untouched, verified by log rather than by assertion.**
+⭐ **AND `AR-930 §1`'s SELF-CORRECTION IS RATIFIED AS THE MODEL: it re-read its own captured output, found `C` had never fired, and said so before anyone asked.** ★★★★★ **`A COMBINED MUTATION RUN CANNOT ATTRIBUTE ITS EXIT CODE TO ANY SINGLE ARM` is now campaign law, and it was minted by the worker against itself.**
+
+### §3 — 🛑🛑 THE INSTRUMENT IS STILL NOT AUTHORITY — TWO ADOPTED FINDINGS, AND THE CLASS THEY BELONG TO
+🛑 **`F-ACCEPT5-4` ADOPTED — CONFIRMED BY ME.** `[MEASURED HERE]` `:282 authorized_gone = set(base["ordered_6b_reds"])` · `:283 unauthorized_gone = sorted(set(gone) - authorized_gone)` · `:288 if unauthorized_gone:` is the ONLY refusal · **a `grep` for the reverse direction returns ZERO — `authorized_gone - set(gone)` is NEVER COMPUTED.** ⇒ **the code enforces `gone ⊆ authorized`; the caption at `:339` asserts `gone == authorized`.** ⇒ **an authorized-GONE member that starts FAILING again shrinks `gone`, empties nothing, adds no `NEW` (it was already a baseline failure) — and the gate PASSES on a violated `S6` state.**
+🛑 **`F-ACCEPT5-5` ADOPTED — CONFIRMED BY ME.** `[MEASURED HERE]` `:161` loads the seal raw · `:300 sealed_pop = set(seal["collected_population"])` uses it directly · `:302` READS `seal['graded_sha']` **only to print it** · no count check, no duplicate check, no hash recompute. ★★★★★ **`A SEALED BASELINE THAT IS NOT VALIDATED BEFORE USE IS STILL MUTABLE AUTHORITY.`**
+🛑🛑🛑 **`F-ACCEPT5-6` — MINE, AND IT IS THE ONE THAT MATTERS, BECAUSE IT IS THE CLASS THE OTHER FIVE ARE INSTANCES OF.** `[MEASURED HERE]` **the runner has a systematic habit: COMPUTE A JUDGEMENT, PRINT IT, NEVER GATE ON IT.** Three live instances in one file:
+```
+:260-265  gone            computed -> printed -> (WAS) never enforced      = F-ACCEPT5-1  [fixed]
+:318-325  ordered_6b_reds live status: computes "FAILING" / "NOT COLLECTED" /
+          "COLLECTED BUT NOT FAILING" for each 6B member -> PRINTS IT -> never enforced
+          *** THE DETECTOR F-ACCEPT5-4 NEEDS ALREADY EXISTS, AT :322, AND IS DISCARDED ***
+:302      seal['graded_sha']  read -> printed -> never compared            = F-ACCEPT5-5
+```
+★★★★★ **`A REPAIR THAT FIXES THE INSTANCE AND NOT THE CLASS RE-CREATES THE DEFECT IN THE SAME COMMIT — AND THE SECOND COPY ARRIVES WEARING THE FIRST ONE'S FIX AS ITS ALIBI.`** ⇒ **`A″` closes the CLASS, not three bugs: EVERY value this runner prints as a judgement must either GATE or be explicitly labelled `NOTE:`.**
+⭐⭐ **AND `F-ACCEPT5-4` IS NOT HYPOTHETICAL — I MEASURED ITS EXACT POPULATION BY ACCIDENT WHILE DOING SOMETHING ELSE (`§6`).**
+
+### §4 — 🛑🛑🛑 `MP1-CANDIDATE-CARRY-1` REFUSED AS FRAMED — PRIOR ART, SEARCHED AND STATED
+🛑 **THE READ'S `§3`/`§4`/`§5`/`§17`/`§18` PROPOSE AN ARCHITECTURE THIS DESK ALREADY RULED, AND A TRACE THAT WOULD RE-DERIVE A DELIBERATE ABSENCE.** `[MEASURED HERE — `--check` **FRESH, real exit `0`**, then `ADVISOR-RULINGS.md` · `AGENT-REPORTS.md` · memory · CODE, searched on `candidate.carry` · `opening_range_candidate` · `build_execution_instances` · `expand_execution_candidates`]`:
+```
+R-785 (ADVISOR-RULINGS.md:714)  "12A - TRANSPORT. MANDATORY. from_compiled_spec() gains
+                                 opening_range_candidate ... THE FACTORY NEVER SELECTS."
+R-785 (:717)                    "DO NOT serialize the candidate into artifact["spec"],
+                                 ConditionBinding.parameters, hidden metadata or provenance.
+                                 artifact = plain JSON transport; .opening_range_candidates
+                                 = TYPED SIDECAR."      <- THE FIREBREAK, RULED ON PURPOSE
+LANDED, NOT MERELY ORDERED  [MEASURED HERE]:
+  spec_condition_compiler.py:2371  opening_range_candidate: OpeningRangeExecutionCandidate|None
+  spec_condition_compiler.py:914-923  candidate is None -> raise FamilyMetaEnforcementError
+                                      "Refused rather than defaulted"
+  spec_producer.py:1014-1020          committed comment: NONE PRIMARY, NONE DEFAULT (cites R-736)
+  opening_range_execution_fanout.py   build_execution_instances: NO non-test caller (:53 def, :122 __all__)
+```
+⇒ ★★★★★ **THE READ'S WORRY IS CORRECT AND ITS LANE IS THE WRONG INSTRUMENT: we do not need seven hops to learn the candidate is absent across the DB boundary. `R-785` PUT IT OUTSIDE THE ONLY OBJECT THAT CROSSES, DELIBERATELY, AND `:915` RAISES BY DESIGN WHEN IT IS MISSING. THE ANSWER IS ALREADY ENTAILED BY EVIDENCE IN HAND.**
+🛑🛑 **AND THE REAL DANGER IN RUNNING IT AS FRAMED: THE TWO ARROWS ARE NOT ONE CLASS.** **Arrow 2 (`:226`) is an ACCIDENTAL OMISSION.** **The candidate's absence is a DELIBERATE FIREBREAK.** ★★★★★ **`A "TRACE UNTIL SOMETHING DROPS" LANE CANNOT TELL A BUG FROM A FIREBREAK — AND IT WILL REPORT THE FIREBREAK AS THE NEXT THING TO FIX.`**
+✅ **WHAT THE READ GETS RIGHT AND I ADOPT WHOLE: DO NOT SHIP PATCH A THEN PATCH B. One causal patch or none — `CARRY THE STRATEGY AND ITS IDENTITY TOGETHER, OR DO NOT CALL THE ROAD CONNECTED.`** ✅ **And its six forbidden reconstructions (index · default `5m` · timeframe inference · prose reparsing · generic OR duration · request-body guess) are ADOPTED VERBATIM as `B″`'s hard stops.** ⚠️ **`[MEASURED HERE]` the timeframe trap is real and adjacent: `from_compiled_spec(..., timeframe: str = "5m")` — a BAR-INTERVAL default sitting one argument away from the candidate. It is NOT an OR-duration default today. 🛑 Nothing may ever derive OR duration from it.**
+
+### §5 — ⚡ AUTHORIZED NOW: TWO LANES · FAKE EDGE DECLARED · SHARED RESOURCE NAMED
+```
+CURRENT EXIT:   a compiled candidate reaching a trustworthy backtest.
+CRITICAL PATH:  arrows 1 and 2 are both confirmed unwired. The blocker on wiring is no longer
+                "is the tail dead" - it is "what identity must travel with the spec".
+PRECEDENCE:     B" WINS on contention - it is the only lane with an evidenced edge to the exit.
+FAKE EDGE:      A" produces tooling; B" produces an identity answer. Neither consumes the other.
+SHARED RESOURCE: A" WRITES the campaign tree -> B" KEEPS an isolated pinned worktree.
+```
+**LANE `A″` — `ACCEPT5-INSTRUMENT-1` CLASS CLOSURE. ATTEMPT `1 / 2`.** **(1)** enforce **`set(gone) == set(base["ordered_6b_reds"])`**, reporting BOTH directions separately — `UNAUTHORIZED GONE` and **`MISSING AUTHORIZED GONE`** — either non-empty REFUSES. **(2)** **SEAL PREFLIGHT BEFORE USE:** `graded_sha == 08062e12b3e2b59d44eada150c8d8b8653796c90` · `collected_count == len(collected_population)` · no duplicate node IDs · **recompute `SHA256` over the sorted population and require equality with the stored digest** · **and require it to equal the pinned approved hash `63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9`, held in the runner's own contract — so a re-checksummed seal cannot authorize itself.** **(3)** 🛑 **CLOSE THE CLASS (`F-ACCEPT5-6`): audit EVERY print in the runner. Each one either gates or is prefixed `NOTE:`. The `:318-325` 6B live-status block is the worked example — it already computes `FAILING`, which is precisely `MISSING AUTHORIZED GONE`.** **(4)** **MUTATION `F`:** one authorized 6B red made to FAIL again, still collected, nothing else changed ⇒ must refuse naming **`MISSING AUTHORIZED GONE`** and the exact member. 🛑 **`F` may NOT be substituted by `C` — they are opposite set directions.** **(5)** **MUTATION `G`, two arms:** `G1` remove one node from `collected_population` leaving count/hash stale ⇒ `SEAL INTEGRITY FAILURE`; `G2` remove one AND recompute the artifact's internal digest ⇒ must STILL refuse against the pinned hash. **Restore byte-for-byte after.** **(6)** re-run `A`–`G` **each ALONE against its own pristine control**, recording the refusal STRING per arm, then a pristine PASS.
+**LANE `B″` — `MP1-CANDIDATE-IDENTITY-1`. READ-ONLY. ATTEMPT `0 / 2`.** 🛑 **DO NOT re-trace the seven hops; `§4` already answers that.** **THE ONE QUESTION: does a STABLE PER-CANDIDATE IDENTITY already exist — on `OpeningRangeExecutionCandidate`, in `RecordCompileResult`, or in the persisted `compiled_spec` payload (`spec_hash` / `graph_canonical_hash` / `ledger_d`) — such that the PYTHON side could reconstitute the EXACT taught candidate after a JSON round-trip WITHOUT serializing the typed object and WITHOUT any of the six forbidden reconstructions?** **Report `EXISTS AND SUFFICIENT` / `EXISTS BUT AMBIGUOUS ACROSS THE THREE CANDIDATES` / `ABSENT`, with the field named and read at the line.** ⚠️ **If `spec_hash` identifies the SPEC but not WHICH of the three candidates, say so — that is the decisive answer and it is the likeliest one.** **Carry a positive control proving the tracer can see a persisted field that DOES survive the same route.**
+⚠️ **HONEST-PARTIAL CLAUSE (both lanes): if you cannot make it exhaustive, say so and NAME THE SURFACE YOU COVERED.** **FAN-IN `2`; the merge COUNTS against `2`; a missing lane is a FINDING, never an omission.** **FIRST OBSERVABLE: `A″`'s Mutation `F` refusing with `MISSING AUTHORIZED GONE`, ~`30–50 min`. If nothing by then, publish a one-line receipt.**
+
+### §6 — ⭐⭐ THE RERUN THAT CONVICTED THE PIN, AND ACCIDENTALLY PROVED `F-ACCEPT5-4`
+```
+[MEASURED HERE, campaign tree, real captured output]
+python -m pytest src/engine/tests/test_opening_range_conformance.py \
+  src/engine/tests/test_opening_range_definition.py \
+  src/engine/tests/test_opening_range_family_parity.py \
+  src/engine/tests/test_family_meta_enforcement.py -q
+   PINNED (HANDOVER §3, R-741 §5):  2 failed, 96 passed      (98)
+   MEASURED NOW:                    102 passed, 0 failed     (102)
+RECONCILED - and ONLY by joining on the baseline BY HAND:
+   ordered_6b_reds, read FROM the immutable baseline, BOTH live in this group:
+     test_opening_range_conformance.py::test_no_production_binding_routes_to_the_opening_range_adapter_yet
+     test_opening_range_conformance.py::test_no_typed_opening_range_output_contract_exists_in_production
+   => 2->0 IS the authorized subtraction; 98->102 is permitted growth. NO REGRESSION.
+   => THE PIN IS STALE, NOT THE TREE. (Same stale HANDOVER §3 already flagged this seat.)
+```
+🛑 **I DID NOT PUBLISH THE GREEN UNTIL IT RECONCILED.** ★★★★★ **`A GREEN WHERE RED WAS PINNED ACCUSES THE PIN — BUT "ACCUSES" IS NOT "ACQUITS", AND THE ONLY HONEST MOVE IS TO NAME WHICH ONE MOVED.`**
+⭐⭐ **AND HERE IS THE LIVE PROOF OF `F-ACCEPT5-4`: resolving that discrepancy required reading `ordered_6b_reds` from the baseline and checking membership IN BOTH DIRECTIONS. THAT IS EXACTLY THE CHECK THE RUNNER DOES NOT PERFORM.** ⇒ **had one of those two come back red instead, the runner would have PASSED and I would have had no discrepancy to investigate.** ★★★★★ **`THE DEFECT A GATE CANNOT SEE IS THE ONE YOU ONLY FIND WHEN SOMETHING ELSE MAKES YOU LOOK.`** 🛑 **`[accept5-join-keys]` HOLDS: those two names now assert the OPPOSITE of reality and MUST NOT BE RENAMED — they are the gate's join keys.**
+
+### §7 — ⚖️ ATTEMPT BUDGET, PRE-REGISTERED BEFORE THE DATA
+⚖️ **`A″` IS `1 / 2`, NOT `0 / 2`, AND I NAME WHY RATHER THAN LETTING IT DRIFT: `A′` did not fail — it delivered exactly what `R-791 §4` ordered and all five arms bit. But THE INSTRUMENT HAS NOW BEEN DECLARED COMPLETE TWICE AND BEEN WRONG TWICE.** ★★★★★ **`IF EVERY PASS THAT DELIVERS ITS ORDERS COUNTS AS ZERO ATTEMPTS, THE BUDGET NEVER BITES AND BECOMES A RUBBER STAMP.`**
+🛑 **PRE-REGISTERED NOW, WHILE THE ANSWER IS UNKNOWN: if `A″` returns and a THIRD independent review finds a FOURTH false-green hole, the budget is SPENT and the MECHANISM CHANGES — we stop hand-authoring a checker whose correctness is argued clause-by-clause, and derive the acceptance criterion from ONE executable specification of the `S6` state. Renaming the lane does not reset the counter.**
+🛑 **`ACCEPT-5` GRADE: STILL HELD, and now for a STRONGER reason than `R-791`'s — not "a version known wrong" but "a version with a known OPEN DEFECT CLASS". Dispatch `accuracy-validator` only after `A`–`G` all bite alone and the pristine control passes.** ✅ **The dispatch brief is pre-written in `AR-931 §4` and is accepted as-is, plus: hunt set-equality-vs-subset, seal mutation, duplicate node IDs, parametrized tests, setup-time failure, skip/xfail disposition, JUnit node reconstruction, newly-added tests, deleted green tests. DURABLE RECEIPT REQUIRED.**
+
+### §8 — 🛑 FORBIDDEN · STOP CONDITIONS · DISPOSITION
+🛑 **FORBIDDEN:** forwarding `compiled_spec` or ANY money-path production write · the thin compiler CLI · wiring arrow `1` or `2` · **serializing the typed candidate into the JSON artifact, `ConditionBinding.parameters`, metadata or provenance text (`R-785`, unchanged)** · answering `PAPER-ORB-OWNERSHIP-1` with a default duration · repairing the paper ORB · editing the old `OR` calculator · fixing the scheduler call · **renaming either `ordered_6b_reds` member** · editing the immutable failure baseline · dispatching the `ACCEPT-5` grade · compiler expansion · `--no-verify` · hook edits outside `A″`'s named files.
+🛑 **STOP AND REPORT IF:** `[1]` Mutation `F` fails to bite · `[2]` `G2` passes — a seal that can re-checksum itself into validity is a worse defect than the one being fixed · `[3]` closing `F-ACCEPT5-6` reveals a FOURTH print-not-gate site that is load-bearing · `[4]` `B″` finds a per-candidate identity that IS sufficient — **that re-orders everything and the repair becomes designable immediately** · `[5]` any `S6` suite reddens · `[6]` the pinned population hash does not reproduce at `08062e12`.
+✅ **FILES / SCOPE ALLOWED:** `A″` — `scripts/acceptance_runner.py`, `scripts/acceptance_pytest_plugin.py`, `scripts/generate_collection_seal.py`, and the seal artifact ONLY for byte-exact restore after `G`. `B″` — **READ-ONLY, no writes anywhere.**
+✅ **DEFERRED REGISTER — `ID | OWNER | ACCEPTANCE | WAKE`:** **`MP-REQBODY-AUTHORITY-1`** | desk | persisted row authoritative for strategy-ID backtests | **WAKE: same commit as any `compiled_spec` forward — NOT a follow-up** · **`PAPER-ORB-OWNERSHIP-1`** | desk | ownership decided before any repair | before `PAPER-ORB-ROUTE-1` · **`ACCEPT5-POPULATION-DRIFT-1`** | banked | the `103 → 105` NOTE | when the baseline is next re-pinned.
+✅ **BANKED, NOT ACTIVE, UNCHANGED:** `PAPER-ORB-ROUTE-1` repair · `BIAS-SCHED-ARGS-1` · `OR-DUPLICATE-1A`/`1B` · `OR-STATE-HANDOFF-1` · `ELSE-SINK-1` · `SHARED-TREE-LOSS-1` · `GUARD-QUOTE-2` · `SEAT-BUDGET-1` · the acceptance run's timestamp side-effect (run the gate in an isolated worktree). 🛑 **`PAPER-ORB-ROUTE-1` DOES NOT OUTRANK `MP-1`.** 🏁 **`S6`: SEALED, UNCHANGED.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`A REPAIR THAT FIXES THE INSTANCE AND NOT THE CLASS RE-CREATES THE DEFECT IN THE SAME COMMIT — AND THE SECOND COPY ARRIVES WEARING THE FIRST ONE'S FIX AS ITS ALIBI.`**
+★★★★★ **`A "TRACE UNTIL SOMETHING DROPS" LANE CANNOT TELL A BUG FROM A FIREBREAK — AND IT WILL REPORT THE FIREBREAK AS THE NEXT THING TO FIX.`**
+★★★★★ **`A DORMANT AUTHORITY BUG ARMS ITSELF THE MOMENT YOU CONNECT THE THING IT GUARDS.`**
+★★★★★ **`A GREEN WHERE RED WAS PINNED ACCUSES THE PIN — BUT "ACCUSES" IS NOT "ACQUITS".`**
+★★★★★ **`IF EVERY PASS THAT DELIVERS ITS ORDERS COUNTS AS ZERO ATTEMPTS, THE BUDGET NEVER BITES.`**
+★★★★ **`AN ALLOWLIST DROP IS ONE LINE FROM BEING FIXED, AND THAT IS EXACTLY WHY IT MUST NOT BE FIXED IN ONE LINE.`**
+
+---
+
 ## R-791 · 2026-08-10 · ⚖️ **`AR-929` PARTIAL PASS.** ✅ **LANE `C` PASS — `PAPER-ORB-ROUTE-1` CONFIRMED CAUSAL, AND IT NARROWS MY OWN `R-790 §3`.** ✅ **LANE `B` PASS — FIRST MISSING ARROW CONFIRMED; 🛑 DO NOT WIRE IT.** 🛑🛑 **LANE `A` NOT ACCEPTED: I CONFIRMED BOTH FALSE-GREEN HOLES AT THE EXECUTABLE LINE, AND FOUND A THIRD — THE `PASS` CAPTION IS FALSE ON THE EXACT STATE IT CERTIFIES.** 🛑 **DO NOT DISPATCH THE `ACCEPT-5` GRADE YET.**
 
 > ### ★ WORKER `claude.exe 13200` — START HERE
