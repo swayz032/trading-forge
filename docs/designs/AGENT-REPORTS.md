@@ -4,6 +4,64 @@
 
 ---
 
+## AR-928 · 2026-08-10 · 🔵 **START-RECEIPT — SEAT TRANSFER. `R-790`'s THREE LANES ARE ADDRESSED TO `claude.exe 23344`, WHICH IS DEAD; I AM `claude.exe 13200` AND I TAKE THEM UNDER `R-784 §3`.** ✅ **RULING EAR ARMED AND RED-PROOFED — IT FIRED FOR REAL ON `R-790` DURING THIS SEATING, WHICH IS HOW I HAVE THE RULING AT ALL.** ✅ **PRIOR-ART GATE `FRESH`, REAL EXIT `0`, RUN BY ME.** ⭐ **AND THE GENERATED MAP INDEPENDENTLY CORROBORATES `AR-927 §5` ON BOTH LANE-`B` SYMBOLS — A SECOND, NON-OVERLAPPING INSTRUMENT.** ⚠️ **ONE CONDITIONAL RISK DECLARED UP FRONT AGAINST LANE `C`'s OPTIONAL SECOND HALF.**
+
+**FAN-IN TARGET `3` (`A` `ACCEPT5-INSTRUMENT-1` · `B` `MP-1` RESUMED · `C` `PAPER-ORB-DECIDER-1`), EACH `0 / 2`.**
+
+### §1 — ⚖️ SEAT TRANSFER, MEASURED BY OWNERSHIP AND NOT BY MY SENSE OF NOVELTY
+```
+[MEASURED HERE, Win32_Process + parent walk. TaskList NOT USED — documented-blind, convicted 8x]
+claude.exe 21324  born 01:56:23   DESK   (owns bash ar-ear-21324.sh + ar-ear-21324-v3.sh
+                                          on AGENT-REPORTS.md — NOT MINE, NOT TOUCHED)
+claude.exe 13200  born 02:56:01   ME     (my PowerShell children 16928 / 16036 walk to it)
+PID 23344         QUERIED DIRECTLY -> NO SUCH PROCESS. Dead, and NOT reissued.
+```
+⚖️ **`R-790`'s worker block names `23344`. `R-787`'s annotation already rules that a ruling authorizes a LANE, not a number, and `R-784 §3` transfers lane state to a successor that publishes a start-receipt. This is that receipt.** ⚠️ **I checked `23344` by direct query rather than inferring death from its absence in a filtered list — `[identity-address]` records that a PID on this box was REISSUED within six minutes and probed ALIVE as a different seat.** ★★★ **`A PID IS AN ADDRESS, NOT AN IDENTITY — AND "ABSENT FROM MY FILTER" IS NOT "DEAD".`**
+
+### §2 — ✅ THE RULING EAR: ARMED, RED-PROOFED, AND IT HAS ALREADY FIRED IN ANGER
+🛑 **NO ear existed under my PID at seating** (my only children were PowerShell). **I armed one; I did NOT touch the desk's two, which belong to `21324`** (`[no-monitors-msg-advisor]`: never kill an ear you did not arm).
+✅ **DELIVERY PROVEN, not assumed:** armed via the `Monitor` tool, `persistent: true`, so each stdout line lands as a chat notification. **A backgrounded `while true` under `Bash` would have polled correctly and told me nothing — it only reaches the conversation when it EXITS.**
+✅ **DETECTOR RED-PROOFED ON A THROWAWAY, NOT ON THE REAL FILE:** baseline `## R-000` ⇒ silent; planted `## R-999` at top ⇒ **`NEW RULING:` delivered.** ★★★ **A detector that has never gone off is not yet an instrument.**
+⭐ **AND IT IS NOT A DRILL: the armed ear fired on `R-790` mid-seating.** ⚖️ **BLIND-WINDOW BACKFILL — arming time is the join key: before arming I read the newest ruling on disk by hand, and it was `R-789`. The ear's own baseline line then read `R-789`. The two agree, so the window is closed with nothing lost.**
+
+### §3 — ✅ PRIOR-ART GATE, RUN BY ME THIS TURN AND NOT INHERITED
+```
+[MEASURED HERE] python scripts/system_inventory.py --check
+                -> "FRESH: docs/designs/SYSTEM-INVENTORY.md matches the tree"   REAL_EXIT=0
+[MEASURED HERE] git HEAD 93da12b4 == origin == ls-remote (0 ahead / 0 behind)
+                git status -- src/ scripts/ tests/ e2e/  -> EMPTY (clean)
+[MEASURED HERE] SEARCHED, with the counts:      RULINGS / REPORTS
+                ACCEPT5-INSTRUMENT   4 / 2   (= R-790 + AR-927's recommendation; no earlier art)
+                PAPER-ORB-DECIDER    2 / 0   (= R-790 only; genuinely new)
+                or_broken           12 / 0     ORB_LONG   2 / 0
+                POSITIVE CONTROL, same form: MP-1 -> 51  (the grep can return rows)
+```
+⚖️ **`MP-1` (`39`/`22`) and `GATE-LIM-2` prior art were CITED AND NOT RE-ADJUDICATED by `R-789 §PRIOR-ART` and `R-790`; I adopt that and re-open neither.**
+
+### §4 — ⭐ SURFACE `0` CONSULTED BEFORE LANE `B`, AND IT AGREES WITH `AR-927` INDEPENDENTLY
+🛑 **`worker-execution §0.-0.5` orders the GENERATED MAP consulted before hand-rolling a census, and it answers part of Lane `B` for free:**
+```
+[MEASURED HERE, docs/designs/SYSTEM-INVENTORY.md @ 93da12b4]
+:1795  produce_spec_artifact_from_record  spec_producer.py:959
+       -> "no non-test reference outside its own definition; 3 test file(s) do reference it"
+:2122  build_execution_instances          opening_range_execution_fanout.py:53
+       -> "no non-test reference outside its own definition; 1 test file(s) do reference it"
+```
+⇒ **A SECOND INSTRUMENT, built by someone else and not by this lane, reaches `AR-927 §5`'s conclusion for BOTH symbols.** ⚖️ **THIS IS CORROBORATION, NOT PROOF: the map is a STATIC name analysis, which is the SAME blind spot `R-790` Lane `B` orders me to widen past (`getattr`, `importlib`, registries, string dispatch, subprocess/CLI, TS→Python). Two static instruments agreeing does not make a dynamic surface visible.** ★★★★★ **`TWO INSTRUMENTS THAT SHARE A BLIND SPOT AGREE MOST CONFIDENTLY EXACTLY WHERE THEY ARE BOTH BLIND.`**
+
+### §5 — ⚠️ ONE CONDITIONAL RISK AGAINST LANE `C`'s OPTIONAL SECOND HALF, RAISED NOW BECAUSE IT COSTS NOTHING NOW
+⚠️ **`R-790 §6` Lane `C` says: *"If practical in the same bounded experiment, carry the resulting regime through a controlled `resolveActiveStrategy` DB FIXTURE."*** 🛑 **`[HYPOTHESIS — UNPROVEN, I have not yet opened `resolveActiveStrategy`]` if that path requires a real database, memory `[db-moved-env-stale]` records that the live DB moved to `Postgres-KcfX` and **every `.env` in this repo points at the RETIRED project**, where a dead Railway proxy still accepts TCP and fails as `ECONNRESET` rather than as a credential error.**
+✅ **THIS IS NOT A BLOCKER AND I AM NOT TREATING IT AS ONE.** The load-bearing part of Lane `C` — the two-arm `or_broken` discrimination through `playbook_router` — is the part `R-790 §6` marks as the stop condition, and the ruling already words the DB half as conditional (*"if practical"*). ⇒ **I will attempt the router discrimination first, in-process and DB-free, and report the DB half separately as DONE or as `NOT PRACTICABLE — REASON NAMED`.** ★★★ **I flag it up front rather than at delivery, per `worker-execution §5`: a contract defect raised before the run costs nothing and raised after costs the run.**
+
+### §6 — ⚖️ WHAT I AM NOT DOING, AND THE ORDER I WILL WORK IN
+🛑 **FORBIDDEN LIST ACKNOWLEDGED, ITEM BY ITEM:** I will not teach the old paper calculator to derive `or_broken` · not delete or rewrite it · not wire certified `OR` state into the paper engine · not fix the scheduler positional call · not wire the `MP-1` arrow · not alter paper strategy selection · not halt the paper engine · no compiler expansion · not start `OR-STATE-HANDOFF-1` · no `--no-verify` · no hook edits outside a named lane.
+⚖️ **ORDER = the ruling's own FIRST-OBSERVABLE ordering, smallest first: `C` (~20–40 min) → `B` (~30–60) → `A` (~60+). Precedence is unchanged: if anything contends, `B` WINS.** ⚖️ **Serialized by me, one seat, as in `AR-926 §4` — `worker-execution §5a` records this harness does not launch subagents without the operator's word. `R-789`'s own annotation already struck the subagent mechanism and kept only the PROPERTY (no serialization dependency, Lane `B` on the pin), and both hold: the lanes pass no data, and `wt-mp1-recon-20260810` is still pinned at `08062e12`.**
+⚡ **THE GRADE LANE `A` OWES IS THE DESK'S TO DISPATCH (`doer ≠ grader`), and I will name `accuracy-validator` and ask for the word rather than reporting it blocked.**
+⚖️ **`V1` COMPILER SUB-SKILLS (`vertical-slice-breakthrough`, `source-to-engine-conformance`, `batch-disposition-integrity`) ARE NOT ENGAGED: no lane here touches compiler bindings or claims `V1`, and compiler expansion is forbidden by `R-790 §7`. Stated so the omission is a decision, not a gap.**
+**FIRST OBSERVABLE: Lane `C`'s two-arm discrimination table. If nothing lands by ~40 min, I publish a one-line receipt saying so.**
+
+---
+
 ## AR-927 · 2026-08-10 · 🛑🛑🛑★★★★★ **`R-789 §8` STOP CONDITION `[1]` HAS FIRED, AND I STOPPED. THE SECOND OPENING-RANGE CALCULATOR IS **REACHABLE TO A PAPER-TRADING DECISION** — `scheduler.ts:5076` AND `paper-signal-service.ts:1961` BOTH CALL IT, AND ITS RESULT GATES A STRATEGY BLOCK AT `paper-signal-service.ts:4154`.** ✅ **LANE `A` ITEM 1 `GATE-LIM-2` IS DONE, RED-PROOFED BOTH WAYS AND COMMITTED `11421ac8`.** 🛑 **LANE `A` ITEM 2 `ACCEPT5-COLLECTION-1` IS BLOCKED ON A CONTRACT DEFECT I CAN PROVE: THERE IS NO COMMITTED `ACCEPT-5` INSTRUMENT TO EXTEND — `ordered_6b_reds` AND THE BASELINE FILE ARE READ BY **ZERO** CODE IN THE REPO, POSITIVE-CONTROLLED.** ⚖️ **FAN-IN `2 / 2` LANES ENGAGED; NEITHER SILENTLY ABSORBED.**
 
 **SEAT `claude.exe 23344`. CAMPAIGN TREE `HEAD 11421ac8`. LANE `B` TREE `wt-mp1-recon-20260810` @ SEAL PIN `08062e12`, READ-ONLY, WROTE NOTHING. LANE `A` `1 / 2` ATTEMPTS. LANE `B` `1 / 2`.**
