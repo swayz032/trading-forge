@@ -35,6 +35,8 @@ import polars as pl
 import pytest
 
 import src.engine.family_meta_enforcement as fme
+import src.engine.opening_range_candidate as orc
+import src.engine.opening_range_definition as orc_def
 import src.engine.session_windows as session_windows
 import src.engine.spec_family_bindings as sfb
 from src.engine.spec_condition_compiler import ENFORCED_DISPATCH, SpecConditionStrategy
@@ -174,6 +176,64 @@ def _spec(cond_type: str, obj: str = "london session", cid: str = "c1") -> dict:
             "direction": "long",
         }
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# SURFACE 10 — THE ONE SHARED CANDIDATE-AWARE CONSTRUCTION HELPER (S6 EXECUTION ACTIVATION)
+#
+# OPENING_RANGE_DEFINITION is the only family in this module whose evaluator needs an
+# explicit typed input: it must be TOLD which taught window it is running, because
+# `R-736`/`R-743` settled that the teacher's three alternatives make THREE BOTS and that
+# nothing may select one on their behalf. Every other family here needs no such input.
+#
+# 🛑 ONE HELPER, NOT `if family == ...` REPEATED IN FIVE TESTS. The conditional lives here
+# exactly once, so the polarity tests keep reading as a uniform population and a sixth test
+# added tomorrow inherits the wiring instead of forgetting it.
+#
+# 🛑 WHAT THIS CANDIDATE IS NOT: not a default, not a "primary", not a selection. It is an
+# EXPLICIT fixture input for a synthetic condition, and its `source_condition_id` matches the
+# synthetic condition it belongs to. It carries ONE variant because an execution candidate
+# carries exactly one; supplying several and letting production choose is the shape the whole
+# activation exists to prevent.
+# ─────────────────────────────────────────────────────────────────────────────────────────
+_FIXTURE_OPENING_RANGE_VARIANT = orc_def.OpeningRangeVariant(
+    variant_label="15m",
+    duration_minutes=15,
+    source_quote="(synthetic enforcement fixture — not a taught quote)",
+)
+_FIXTURE_OPENING_RANGE_DEFINITION = orc_def.OpeningRangeDefinition(
+    session_start_local="09:30",
+    source_timezone="America/New_York",
+    variants=(_FIXTURE_OPENING_RANGE_VARIANT,),
+    market_scope="(synthetic enforcement fixture)",
+    trading_day_rule="resets each session",
+    provenance=orc_def.OpeningRangeProvenance(
+        source_quote="(synthetic enforcement fixture — not a taught quote)",
+        condition_id="c1",
+    ),
+)
+
+
+def _strategy_for(family: str, obj: str, cid: str = "c1") -> SpecConditionStrategy:
+    """Build the production strategy for a polarity fixture, candidate-aware.
+
+    Constructed through the REAL production constructor in every case — the opening-range
+    family simply also receives the typed candidate its evaluator requires. An instance built
+    WITHOUT one is not a lesser fixture, it is a contract violation, and
+    `test_s6_candidate_transport_and_adapter_execution.py` owns proving that it refuses.
+    """
+    spec = _spec(family, obj, cid)
+    if family == "OPENING_RANGE_DEFINITION":
+        return SpecConditionStrategy(
+            compiled_spec=spec,
+            opening_range_candidate=orc.OpeningRangeExecutionCandidate(
+                source_spec_id="(synthetic enforcement fixture)",
+                source_condition_id=cid,
+                definition=_FIXTURE_OPENING_RANGE_DEFINITION,
+                variant=_FIXTURE_OPENING_RANGE_VARIANT,
+            ),
+        )
+    return SpecConditionStrategy(compiled_spec=spec)
 
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
@@ -468,6 +528,13 @@ ENFORCED_PRIMITIVE_FAMILIES = [
     ("CONFIRM_DIRECTION", "bullish bias"),
     ("WAIT_RETEST", "retest of the level"),
     ("WAIT_CONFIRMATION", "confirmation candle"),
+    # S6 EXECUTION ACTIVATION. Enrolled here rather than exempted: `gates=True` on a family
+    # with a real evaluator puts it in the GATING population BY DERIVATION
+    # (test_every_enforced_primitive_family_is_polarity_tested reads the population off
+    # FAMILY_META), and excluding it would delete the detector while preserving the failure.
+    # `A SET-EQUALITY GUARD ENROLS THE NEW MEMBER IN EVERY FIXTURE THAT DERIVES ITS
+    #  POPULATION FROM THAT SET.`
+    ("OPENING_RANGE_DEFINITION", "the opening range of the session"),
 ]
 """Families declaring an enforced primitive that is routed to a REAL evaluator (gates=True)."""
 
@@ -535,7 +602,7 @@ def test_polarity_resolves_and_runs(family: str, obj: str):
     """Polarity 1: the declared primitive resolves AND the condition produces a real per-bar
     array (not the constant-True pass-through)."""
     with enforced():
-        strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))
+        strategy = _strategy_for(family, obj)
         strategy.compute(_bars())
         arrays = strategy.last_per_condition_bool
         assert arrays, f"{family} produced no per-condition array"
@@ -547,7 +614,7 @@ def test_polarity_fails_loud_when_absent(family: str, obj: str):
     """Polarity 2: the same binding fails loud when its primitive is made absent."""
     with enforced(), family_meta_patched(family, enforced_primitive=f"gone.{family.lower()}_primitive"):
         with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
-            SpecConditionStrategy(compiled_spec=_spec(family, obj))
+            _strategy_for(family, obj)
         assert f"gone.{family.lower()}_primitive" in str(exc.value)
 
 
@@ -743,7 +810,7 @@ LADDER_SHARED_EVALUATOR_PAIRS = [
 
 def _per_bar_run(family: str, obj: str, bars: pl.DataFrame):
     """One compute(), returning the actual per-bar condition array and both signal columns."""
-    strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))
+    strategy = _strategy_for(family, obj)
     out = strategy.compute(bars)
     return (
         strategy.last_per_condition_bool["c1"],

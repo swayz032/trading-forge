@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `b7a296dd874868004160e1b732ec0022f7055cd4`  (worktree DIRTY at generation time)
+> Generated at commit `9b6e62c37106ededacb3cf125c5937fe0c9fb029`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 289 | 356 | 119861 | 1862 |
+| `src/` | Python | 290 | 357 | 120203 | 1863 |
 | `src/` | TypeScript | 461 | 717 | 209177 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1823 | 750 |
+| `src/` | 1825 | 751 |
 | `scripts/` | 207 | 207 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2065** | **957** |
+| **TOTAL** | **2067** | **958** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -55,10 +55,10 @@ Published so that under-inclusion is visible instead of silent.
 
 | Not enumerated | Count | Why |
 |---|---:|---|
-| Python class methods | 417 | one row per method would swamp the map; a method is reached through its class |
+| Python class methods | 419 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1073 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1074 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **614** of **2065** parsed files.
+Total entry points: **94**.  Modules reachable from them: **618** of **2067** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -198,17 +198,17 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3233 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1540 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.0% of 4822 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3245 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1529 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4823 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
-| C6 | a registered route module is reachable | PASS | modules reachable=614 |
+| C6 | a registered route module is reachable | PASS | modules reachable=618 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1862 ts=2917 |
+| C12 | symbols enumerated in both languages | PASS | py=1863 ts=2917 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=36 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6590/6590 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4514 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4779 symbol rows (10.1%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4515 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4780 symbol rows (10.1%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3233 | 67.0% |
+| `WIRED` | 3245 | 67.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1540 | 31.9% |
+| `BUILT-UNREACHABLE` | 1529 | 31.7% |
 | `DECLARED-ABSENT` | 36 | 0.7% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4822** | |
+| **TOTAL** | **4823** | |
 
 ---
 
@@ -335,9 +335,10 @@ table below it.**
 | `src/engine/nemo_scenario_designer.py` | 5 | 0 | 1 | 0 | 0 | 6 |
 | `src/engine/null_calibration_guard.py` | 0 | 0 | 3 | 0 | 0 | 3 |
 | `src/engine/nvtx_markers.py` | 3 | 0 | 1 | 0 | 0 | 4 |
-| `src/engine/opening_range_adapter.py` | 0 | 0 | 4 | 0 | 0 | 4 |
-| `src/engine/opening_range_candidate.py` | 0 | 0 | 2 | 0 | 0 | 2 |
-| `src/engine/opening_range_definition.py` | 0 | 0 | 7 | 0 | 0 | 7 |
+| `src/engine/opening_range_adapter.py` | 4 | 0 | 0 | 0 | 0 | 4 |
+| `src/engine/opening_range_candidate.py` | 2 | 0 | 0 | 0 | 0 | 2 |
+| `src/engine/opening_range_definition.py` | 6 | 0 | 1 | 0 | 0 | 7 |
+| `src/engine/opening_range_execution_fanout.py` | 0 | 0 | 1 | 0 | 0 | 1 |
 | `src/engine/opening_range_lowering.py` | 0 | 0 | 10 | 0 | 0 | 10 |
 | `src/engine/optimizer.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/paper_analytics.py` | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -963,7 +964,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1540** `BUILT-UNREACHABLE` symbols, **780 have test coverage but no production caller**.
+Of **1529** `BUILT-UNREACHABLE` symbols, **771 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -996,8 +997,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
-| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 4 | unique |
-| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:425` | 4 | unique |
@@ -1007,14 +1006,11 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 3 | unique |
 | `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | 3 | unique |
 | `_spec_hash` | function | `src/engine/extraction/spec_producer.py:693` | 3 | unique |
+| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | 3 | unique |
 | `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 3 | unique |
 | `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 3 | unique |
-| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 3 | unique |
-| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 3 | unique |
-| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 3 | unique |
-| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
 | `compute_rl_kill_switch_state` | function | `src/engine/quantum_rl_agent.py:2098` | 3 | unique |
 | `emitArchetypeEvaluatorFailed` | function | `src/server/lib/archetype-routing-observability.ts:266` | 3 | unique |
@@ -1053,9 +1049,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `MutationCase` | class | `src/engine/forensics/calibration_battery.py:73` | 2 | unique |
 | `A14ConditioningVector` | class | `src/engine/nemo_a14_bridge.py:24` | 2 | unique |
 | `nemo_to_a14_conditioning` | function | `src/engine/nemo_a14_bridge.py:77` | 2 | unique |
-| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | 2 | unique |
-| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | 2 | unique |
-| `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | 2 | unique |
 | `refused_state` | function | `src/engine/opening_range_definition.py:253` | 2 | unique |
 | `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | 2 | unique |
 | `rank_firms_for_strategy` | function | `src/engine/prop_compliance.py:372` | 2 | unique |
@@ -1223,13 +1216,12 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `_spec_role` | function | `src/engine/extraction/spec_producer.py:558` | 1 | unique |
 | `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:436` | 1 | unique |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:783` | 1 | unique |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | 1 | unique |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | 1 | unique |
 | `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 1 | unique |
 | `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | 1 | unique |
 | `ConditionEntry` | class | `src/engine/extraction/topology_producer.py:87` | 1 | unique |
-| `enforcement_status` | function | `src/engine/family_meta_enforcement.py:529` | 1 | unique |
-| `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:606` | 1 | unique |
+| `enforcement_status` | function | `src/engine/family_meta_enforcement.py:536` | 1 | unique |
+| `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:613` | 1 | unique |
 | `compute_fill_probabilities` | function | `src/engine/fill_model.py:70` | 1 | unique |
 | `get_payout_cap` | function | `src/engine/firm_config.py:275` | 1 | unique |
 | `compute_firm_rules_version_from_dicts` | function | `src/engine/firm_rules_version.py:73` | 1 | unique |
@@ -1271,14 +1263,23 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | 1 | unique |
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | 1 | unique |
 | `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
-| `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
+| `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
 | `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
 | `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
 | `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:625` | 1 | unique |
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 | `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
+| `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
+| `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
+| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
+| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
+| `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
+| `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
+| `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
+| `QuantumRunConfig` | class | `src/engine/quantum_mc.py:177` | 1 | unique |
+| `run_hybrid_compare` | function | `src/engine/quantum_mc.py:633` | 1 | unique |
 
-_...480 more omitted from this table._
+_...471 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1791,7 +1792,7 @@ _...480 more omitted from this table._
 | `_all_strings` | function | `src/engine/extraction/spec_producer.py:767` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:783` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:871` | defining module is not reachable from any measured entry point |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:959` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 | `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1046` | defining module is not reachable from any measured entry point |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | defining module is not reachable from any measured entry point |
 | `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | defining module is not reachable from any measured entry point |
@@ -1864,8 +1865,8 @@ _...480 more omitted from this table._
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `enforcement_status` | function | `src/engine/family_meta_enforcement.py:529` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:606` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `enforcement_status` | function | `src/engine/family_meta_enforcement.py:536` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:613` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -2106,37 +2107,19 @@ _...480 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/opening_range_adapter.py</code> - 4 symbols</summary>
+<details><summary><code>src/engine/opening_range_definition.py</code> - 1 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | defining module is not reachable from any measured entry point |
-| `_window_bounds` | function | `src/engine/opening_range_adapter.py:133` | defining module is not reachable from any measured entry point |
-| `_aggregate_levels` | function | `src/engine/opening_range_adapter.py:184` | defining module is not reachable from any measured entry point |
-| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | no non-test reference outside its own definition; 4 test file(s) do reference it |
-
-</details>
-
-<details><summary><code>src/engine/opening_range_candidate.py</code> - 2 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | defining module is not reachable from any measured entry point |
-| `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | defining module is not reachable from any measured entry point |
-
-</details>
-
-<details><summary><code>src/engine/opening_range_definition.py</code> - 7 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | defining module is not reachable from any measured entry point |
-| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | defining module is not reachable from any measured entry point |
-| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | defining module is not reachable from any measured entry point |
-| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | defining module is not reachable from any measured entry point |
-| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | defining module is not reachable from any measured entry point |
 | `refused_state` | function | `src/engine/opening_range_definition.py:253` | no non-test reference outside its own definition; 2 test file(s) do reference it |
-| `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | defining module is not reachable from any measured entry point |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_execution_fanout.py</code> - 1 symbols</summary>
+
+| Symbol | Kind | Defined at | Reason |
+|---|---|---|---|
+| `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -4165,13 +4148,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `FamilyMetaEnforcementError` | class | `src/engine/family_meta_enforcement.py:155` | 1 | unique |
 | `family_meta_enforced` | function | `src/engine/family_meta_enforcement.py:173` | 2 | unique |
 | `active_pins` | function | `src/engine/family_meta_enforcement.py:180` | 0 | unique |
-| `Violation` | class | `src/engine/family_meta_enforcement.py:311` | 0 | unique |
-| `resolve_primitive` | function | `src/engine/family_meta_enforcement.py:321` | 0 | unique |
-| `verify_primitives` | function | `src/engine/family_meta_enforcement.py:353` | 0 | unique |
-| `verify_emit_subset_covered` | function | `src/engine/family_meta_enforcement.py:404` | 0 | unique |
-| `verify_dispatch_coverage` | function | `src/engine/family_meta_enforcement.py:446` | 0 | unique |
-| `collect_violations` | function | `src/engine/family_meta_enforcement.py:499` | 0 | unique |
-| `ensure_enforced` | function | `src/engine/family_meta_enforcement.py:581` | 1 | unique |
+| `Violation` | class | `src/engine/family_meta_enforcement.py:318` | 0 | unique |
+| `resolve_primitive` | function | `src/engine/family_meta_enforcement.py:328` | 0 | unique |
+| `verify_primitives` | function | `src/engine/family_meta_enforcement.py:360` | 0 | unique |
+| `verify_emit_subset_covered` | function | `src/engine/family_meta_enforcement.py:411` | 0 | unique |
+| `verify_dispatch_coverage` | function | `src/engine/family_meta_enforcement.py:453` | 0 | unique |
+| `collect_violations` | function | `src/engine/family_meta_enforcement.py:506` | 0 | unique |
+| `ensure_enforced` | function | `src/engine/family_meta_enforcement.py:588` | 1 | unique |
 
 </details>
 
@@ -4617,6 +4600,39 @@ This is the *we already have this* list.  Check it before writing anything.
 | `annotate` | function | `src/engine/nvtx_markers.py:35` | 4 | unique |
 | `range_push` | function | `src/engine/nvtx_markers.py:46` | 3 | unique |
 | `range_pop` | function | `src/engine/nvtx_markers.py:52` | 3 | unique |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_adapter.py</code> - 4 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | 1 | unique |
+| `_window_bounds` | function | `src/engine/opening_range_adapter.py:133` | 1 | unique |
+| `_aggregate_levels` | function | `src/engine/opening_range_adapter.py:184` | 0 | unique |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_candidate.py</code> - 2 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `OpeningRangeExecutionCandidate` | class | `src/engine/opening_range_candidate.py:78` | 3 | unique |
+| `expand_execution_candidates` | function | `src/engine/opening_range_candidate.py:170` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_definition.py</code> - 6 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 1 | unique |
+| `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 1 | unique |
+| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 3 | unique |
+| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 3 | unique |
+| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 1 | unique |
+| `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
 
 </details>
 
@@ -5192,14 +5208,14 @@ This is the *we already have this* list.  Check it before writing anything.
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `_htf_fully_covers` | function | `src/engine/spec_condition_compiler.py:268` | 0 | unique |
-| `retest_touch_check` | function | `src/engine/spec_condition_compiler.py:329` | 0 | unique |
-| `_ffill_level_series` | function | `src/engine/spec_condition_compiler.py:357` | 0 | unique |
-| `population_a_bullish_leaning` | function | `src/engine/spec_condition_compiler.py:377` | 0 | unique |
-| `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:417` | 0 | unique |
-| `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:445` | 0 | unique |
-| `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:461` | 0 | unique |
-| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2135` | 7 | unique |
+| `_htf_fully_covers` | function | `src/engine/spec_condition_compiler.py:289` | 0 | unique |
+| `retest_touch_check` | function | `src/engine/spec_condition_compiler.py:350` | 0 | unique |
+| `_ffill_level_series` | function | `src/engine/spec_condition_compiler.py:378` | 0 | unique |
+| `population_a_bullish_leaning` | function | `src/engine/spec_condition_compiler.py:398` | 0 | unique |
+| `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:438` | 0 | unique |
+| `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:466` | 0 | unique |
+| `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:482` | 1 | unique |
+| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2328` | 8 | unique |
 
 </details>
 
@@ -5222,37 +5238,37 @@ This is the *we already have this* list.  Check it before writing anything.
 | `resolve_bundle_primitive` | function | `src/engine/spec_family_bindings.py:463` | 0 | unique |
 | `session_refusal_reason` | function | `src/engine/spec_family_bindings.py:528` | 0 | unique |
 | `FamilyMeta` | class | `src/engine/spec_family_bindings.py:550` | 1 | unique |
-| `ConditionBinding` | class | `src/engine/spec_family_bindings.py:809` | 3 | AMBIG |
-| `_session_phrase_hit` | function | `src/engine/spec_family_bindings.py:915` | 0 | unique |
-| `resolve_session_keyword` | function | `src/engine/spec_family_bindings.py:923` | 0 | AMBIG |
-| `refused_session_zone` | function | `src/engine/spec_family_bindings.py:937` | 0 | AMBIG |
-| `session_zone_window_repr` | function | `src/engine/spec_family_bindings.py:964` | 1 | unique |
-| `resolve_session_name_to_window` | function | `src/engine/spec_family_bindings.py:974` | 0 | unique |
-| `_session_clock_token_parts` | function | `src/engine/spec_family_bindings.py:1109` | 0 | unique |
-| `_session_text_is_constituted_by` | function | `src/engine/spec_family_bindings.py:1173` | 0 | unique |
-| `_session_clock_does_work` | function | `src/engine/spec_family_bindings.py:1408` | 0 | unique |
-| `_session_noun_qualifier_is_market_compatible` | function | `src/engine/spec_family_bindings.py:1497` | 0 | unique |
-| `_session_has_trading_action` | function | `src/engine/spec_family_bindings.py:1686` | 0 | unique |
-| `_session_strip_governed_filler` | function | `src/engine/spec_family_bindings.py:1837` | 0 | unique |
-| `_session_government_licensed_action_edges` | function | `src/engine/spec_family_bindings.py:1852` | 0 | unique |
-| `_session_action_governed_clock` | function | `src/engine/spec_family_bindings.py:1915` | 0 | unique |
-| `_session_is_about_markets` | function | `src/engine/spec_family_bindings.py:1955` | 0 | unique |
-| `_session_interval_overlap_minutes` | function | `src/engine/spec_family_bindings.py:2024` | 0 | unique |
-| `_session_best_real_zone_for_range` | function | `src/engine/spec_family_bindings.py:2028` | 0 | unique |
-| `_session_anchor_phrase_is_governed_endpoint` | function | `src/engine/spec_family_bindings.py:2057` | 0 | unique |
-| `_session_anchor_sequence_wraps_midnight` | function | `src/engine/spec_family_bindings.py:2112` | 0 | unique |
-| `_session_clock_token_minutes` | function | `src/engine/spec_family_bindings.py:2136` | 0 | unique |
-| `SessionRoleResult` | class | `src/engine/spec_family_bindings.py:2161` | 0 | unique |
-| `classify_session_role` | function | `src/engine/spec_family_bindings.py:2219` | 0 | unique |
-| `session_role_resolver_enabled` | function | `src/engine/spec_family_bindings.py:2443` | 0 | unique |
-| `resolve_exact_clock_span` | function | `src/engine/spec_family_bindings.py:2467` | 0 | unique |
-| `_derive_session_zone_window_by_execution` | function | `src/engine/spec_family_bindings.py:2529` | 0 | unique |
-| `_session_keyword_fidelity_approximation` | function | `src/engine/spec_family_bindings.py:2579` | 0 | unique |
-| `_bind_condition_dispatch` | function | `src/engine/spec_family_bindings.py:2598` | 0 | unique |
-| `bind_condition` | function | `src/engine/spec_family_bindings.py:2992` | 0 | unique |
-| `BindingPlan` | class | `src/engine/spec_family_bindings.py:3025` | 4 | AMBIG |
-| `_refuse_ambiguous_breakout_trigger` | function | `src/engine/spec_family_bindings.py:3054` | 0 | unique |
-| `compile_binding_plan` | function | `src/engine/spec_family_bindings.py:3134` | 8 | unique |
+| `ConditionBinding` | class | `src/engine/spec_family_bindings.py:812` | 3 | AMBIG |
+| `_session_phrase_hit` | function | `src/engine/spec_family_bindings.py:918` | 0 | unique |
+| `resolve_session_keyword` | function | `src/engine/spec_family_bindings.py:926` | 0 | AMBIG |
+| `refused_session_zone` | function | `src/engine/spec_family_bindings.py:940` | 0 | AMBIG |
+| `session_zone_window_repr` | function | `src/engine/spec_family_bindings.py:967` | 1 | unique |
+| `resolve_session_name_to_window` | function | `src/engine/spec_family_bindings.py:977` | 0 | unique |
+| `_session_clock_token_parts` | function | `src/engine/spec_family_bindings.py:1112` | 0 | unique |
+| `_session_text_is_constituted_by` | function | `src/engine/spec_family_bindings.py:1176` | 0 | unique |
+| `_session_clock_does_work` | function | `src/engine/spec_family_bindings.py:1411` | 0 | unique |
+| `_session_noun_qualifier_is_market_compatible` | function | `src/engine/spec_family_bindings.py:1500` | 0 | unique |
+| `_session_has_trading_action` | function | `src/engine/spec_family_bindings.py:1689` | 0 | unique |
+| `_session_strip_governed_filler` | function | `src/engine/spec_family_bindings.py:1840` | 0 | unique |
+| `_session_government_licensed_action_edges` | function | `src/engine/spec_family_bindings.py:1855` | 0 | unique |
+| `_session_action_governed_clock` | function | `src/engine/spec_family_bindings.py:1918` | 0 | unique |
+| `_session_is_about_markets` | function | `src/engine/spec_family_bindings.py:1958` | 0 | unique |
+| `_session_interval_overlap_minutes` | function | `src/engine/spec_family_bindings.py:2027` | 0 | unique |
+| `_session_best_real_zone_for_range` | function | `src/engine/spec_family_bindings.py:2031` | 0 | unique |
+| `_session_anchor_phrase_is_governed_endpoint` | function | `src/engine/spec_family_bindings.py:2060` | 0 | unique |
+| `_session_anchor_sequence_wraps_midnight` | function | `src/engine/spec_family_bindings.py:2115` | 0 | unique |
+| `_session_clock_token_minutes` | function | `src/engine/spec_family_bindings.py:2139` | 0 | unique |
+| `SessionRoleResult` | class | `src/engine/spec_family_bindings.py:2164` | 0 | unique |
+| `classify_session_role` | function | `src/engine/spec_family_bindings.py:2222` | 0 | unique |
+| `session_role_resolver_enabled` | function | `src/engine/spec_family_bindings.py:2446` | 0 | unique |
+| `resolve_exact_clock_span` | function | `src/engine/spec_family_bindings.py:2470` | 0 | unique |
+| `_derive_session_zone_window_by_execution` | function | `src/engine/spec_family_bindings.py:2532` | 0 | unique |
+| `_session_keyword_fidelity_approximation` | function | `src/engine/spec_family_bindings.py:2582` | 0 | unique |
+| `_bind_condition_dispatch` | function | `src/engine/spec_family_bindings.py:2601` | 0 | unique |
+| `bind_condition` | function | `src/engine/spec_family_bindings.py:2995` | 0 | unique |
+| `BindingPlan` | class | `src/engine/spec_family_bindings.py:3028` | 4 | AMBIG |
+| `_refuse_ambiguous_breakout_trigger` | function | `src/engine/spec_family_bindings.py:3057` | 0 | unique |
+| `compile_binding_plan` | function | `src/engine/spec_family_bindings.py:3137` | 8 | unique |
 
 </details>
 

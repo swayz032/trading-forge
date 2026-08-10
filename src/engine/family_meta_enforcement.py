@@ -243,6 +243,13 @@ PRIMITIVE_RESOLVERS: dict[str, str] = {
     "structural_stops.compute_structural_stop": (
         "src.engine.context.structural_stops:compute_structural_stop"
     ),
+    # SURFACE 6 — S6 EXECUTION ACTIVATION. The taught OPENING RANGE resolves to its OWN typed
+    # adapter, never to `structure_engine.compute_structure_state`. That fallback is the exact
+    # defect B1 exists to remove, and it is the reason this family carried a temporary refusal
+    # rather than a convenient pointer until the adapter existed.
+    "opening_range_adapter.compute_opening_range_state": (
+        "src.engine.opening_range_adapter:compute_opening_range_state"
+    ),
     # ── Experiment primitives. Not FAMILY_META declarations -- these are returned by
     # bind_condition() only when an env-gated experiment flag is on. Registered here so
     # pin (a)'s both-directions dispatch check can tell "a handler for a declared

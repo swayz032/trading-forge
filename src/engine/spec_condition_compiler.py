@@ -36,6 +36,7 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import polars as pl
@@ -60,6 +61,7 @@ from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.order_flow import detect_bearish_ob, detect_bullish_ob
 from src.engine.indicators.sweep_native import compute_sweep_signal
+from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
 from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import (
@@ -154,6 +156,15 @@ ENFORCED_DISPATCH: dict[str, str] = {
     "spec_condition_compiler.wait_bias_directional_proxy": "_h_wait_bias",
     "spec_condition_compiler.retest_touch_check": "_h_retest",
     "spec_condition_compiler.candle_confirmation_check": "_h_confirmation",
+    # SURFACE 7 (S6 EXECUTION ACTIVATION, R-780 §6 / R-782 §4). KEYED ON THE DECLARED
+    # PRIMITIVE, never on the family or on `b.type` — pin (a) checks PRIMITIVES, and
+    # `verify_dispatch_coverage`'s direction-1 loop has no waiver, so a family that declares
+    # this name and is absent here is a load-time violation. The VALUE half is pinned by a
+    # DIFFERENT test: `test_parameter_acceptance_guard.py` asserts
+    # `set(HANDLER_PARAMETER_CLASSIFICATION) == set(ENFORCED_DISPATCH.values())`, so this
+    # entry and the classification below MUST land together or that guard goes red.
+    # `RESOLVABLE IS NOT ROUTED` (R-779 §3).
+    "opening_range_adapter.compute_opening_range_state": "_h_opening_range",
     # gates=False families — real disposition, recorded not hidden (see _h_non_gating)
     "static_true_pass_through": "_h_non_gating",      # FILTER
     "spine_conjunction_trigger": "_h_non_gating",     # ENABLE_ENTRY / ENTER
@@ -210,6 +221,16 @@ HANDLER_PARAMETER_CLASSIFICATION: dict[str, str] = {
     "_h_confirmation": REFUSES_ALL_PARAMETERS,
     "_h_non_gating": REFUSES_ALL_PARAMETERS,
     "_h_session": REFUSES_ALL_PARAMETERS,
+    # SURFACE 3 (S6 EXECUTION ACTIVATION). The taught windows reach this route through a
+    # TYPED CARRIER on the instance, so `ConditionBinding.parameters` must never become a
+    # SECOND channel for them: a `duration_minutes` smuggled through the parameter dict is
+    # refused by `_acknowledge_parameters` BEFORE the adapter runs, because this handler is
+    # absent from PARAMETER_CONSUMING_HANDLERS.
+    # 🛑 THE MECHANISM IS SET-EQUALITY, NOT SILENT FAIL-CLOSED (R-779 §5-B): omitting this
+    # line does not merely make the route refuse — it turns `test_parameter_acceptance_guard`
+    # RED, because that suite asserts this table's key set EQUALS ENFORCED_DISPATCH's value
+    # set. The two entries are one obligation.
+    "_h_opening_range": REFUSES_ALL_PARAMETERS,
     # EXIT_HINT's provenance_only route asserts its own unreachability and raises before it
     # could read anything. It takes no parameters because it takes no execution.
     "_h_never_executed": PARAMETERLESS_BY_CONTRACT,
@@ -484,6 +505,7 @@ class SpecConditionStrategy(BaseStrategy):
         binding_plan: BindingPlan | None = None,
         strategy_name: str | None = None,
         restore_condition_ids: frozenset[str] | None = None,
+        opening_range_candidate: OpeningRangeExecutionCandidate | None = None,
     ) -> None:
         # ─── THE LOAD GATE (pin (b)/(b2)/(a), docs/designs/packet-family-meta-enforced-
         # 2026-07-20.md). No-op with TF_FAMILY_META_ENFORCED OFF (default). With it ON, a
@@ -502,6 +524,21 @@ class SpecConditionStrategy(BaseStrategy):
         # Composition Fidelity Experiment (default None — 100% backward compatible; see
         # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
         self.restore_condition_ids = restore_condition_ids
+
+        # ─── SURFACE 1 — THE TYPED EXECUTION CANDIDATE CARRIER (S6 EXECUTION ACTIVATION)
+        # EXACTLY ONE taught window per instance. `R-736`/`R-743`, settled and NOT re-opened
+        # here: the teacher gave three versions, so the FACTORY MAKES THREE BOTS. There is no
+        # default, no primary, no `candidates[0]` and no selection at runtime — each instance
+        # is TOLD which taught window it is, and an instance that was told nothing REFUSES in
+        # `_h_opening_range` rather than picking one.
+        #
+        # IT IS AN EXPLICIT TYPED CONSTRUCTOR INPUT ON PURPOSE (R-779 §7-1). The alternatives
+        # were all rejected: stuffing candidates into the `SpecArtifact` (which must stay plain
+        # JSON), into `ConditionBinding.parameters` (which is the smuggling channel this same
+        # commit refuses), or re-reading the source at runtime. The ANNOTATION is the contract
+        # — the conformance suite discovers this parameter BY TYPE and never by name, so the
+        # name may change and the boundary still holds.
+        self.opening_range_candidate = opening_range_candidate
 
         # ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
         # experiment-2026-07-05.md) ──────────────────────────────────────────────────
@@ -824,6 +861,138 @@ class SpecConditionStrategy(BaseStrategy):
     # column in the follow-on commit.
     def _h_session(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
         return self._eval_wait_session(b, ctx["ts_list"], ctx["n"])
+
+    # ─── SURFACE 2 — THE ONE REAL OPENING-RANGE HANDLER (S6 EXECUTION ACTIVATION) ────────
+    # ONE HANDLER, TWO ROUTER EDGES (R-784 §2, adopting the external read's §12). Enforcement
+    # ON reaches it as ENFORCED_DISPATCH[binding.primitive]; enforcement OFF — the PRODUCTION
+    # DEFAULT — reaches THE SAME METHOD through the `b.type` ladder branch in compute(). There
+    # is deliberately no `_h_opening_range_legacy`, no second window calculator and no second
+    # candidate selection: two routes that computed the taught range separately would be free
+    # to disagree, and the flag would silently decide which answer a bot traded.
+    def _h_opening_range(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        """Gate on THIS instance's ONE taught opening-range window.
+
+        Returns False on every bar BEFORE the taught window locks and True after it, and
+        ALL-FALSE when the adapter refuses. It never returns a constant-True array: an
+        all-True column is the engine asserting on every bar that a taught entry condition
+        is satisfied, which is architecture invariant 2 inverted — source-owned entry logic
+        silently rewritten into `always`. That is exactly the `else: np.ones` sink this
+        activation adds a route above.
+
+        🛑 EXACTLY ONE ADAPTER CALL PER DISPATCH. The lock boundary comes from the adapter's
+        OWN `_window_bounds` — the single source of that arithmetic, including its
+        midnight-crossing refusal — rather than from a second copy computed here. Re-deriving
+        `start + duration` locally would be the duplicated opening-range arithmetic this
+        commit is forbidden to create, and the two copies would drift the moment either
+        changed. `THE SECOND COPY OF A CALCULATION IS A DISAGREEMENT WAITING FOR A REASON.`
+
+        🛑 THE ADAPTER IS CALLED THROUGH ITS MODULE ATTRIBUTE, NOT A MODULE-LEVEL
+        `from … import`. A name bound at import time cannot be reached by a spy attached at
+        the resolution seam, which would make the declaration TRUE AND UNVERIFIABLE AT ONCE
+        (AR-907 §6's import-binding defect). Declared pointer, resolver pointer and runtime
+        call target are ONE module attribute.
+        """
+        from src.engine import opening_range_adapter
+        from src.engine.opening_range_adapter import OpeningRangeBar, _window_bounds
+
+        n = ctx["n"]
+        out = np.zeros(n, dtype=bool)
+
+        # ── NO CANDIDATE IS A HARD REFUSAL, NEVER A CHOICE ───────────────────────────────
+        # The tempting repair — "none supplied, so use the first / the 15m / the longest" —
+        # is what R-736/R-743 settled against. A silent default here produces a bot trading a
+        # window the teacher's lesson did not assign to it, and every downstream number would
+        # look perfectly reasonable. Refusing NAMES the candidate so the failure is
+        # attributable rather than an unexplained crash.
+        candidate = self.opening_range_candidate
+        if candidate is None:
+            raise FamilyMetaEnforcementError(
+                f"condition {b.condition_id!r} ({b.type}) routes to the opening-range adapter, "
+                f"but this execution instance carries NO opening-range execution candidate, "
+                f"so NOTHING says which taught window it is running. "
+                f"Refused rather than defaulted: choosing a window nobody assigned would trade "
+                f"a lesson the teacher did not give, and every downstream number would still "
+                f"look reasonable. Construct the strategy with its taught candidate."
+            )
+
+        ts_list = ctx["ts_list"]
+        if n == 0 or not ts_list:
+            return out
+
+        zone = ZoneInfo(candidate.definition.source_timezone)
+
+        # ── THE BAR INTERVAL COMES FROM THE INSTANCE, NOT FROM THE FRAME ─────────────────
+        # `timeframe` is a real constructor parameter and is what the instance was told it is
+        # running on. Measuring the spacing off the frame instead would let a gapped or
+        # short frame silently redefine what "complete" means — and completeness is the whole
+        # safety argument of the adapter's refusal path.
+        interval_minutes = self._bar_interval_minutes()
+
+        bars: list[OpeningRangeBar] = []
+        high = ctx["high"]
+        low = ctx["low"]
+        for i, ts in enumerate(ts_list):
+            if ts is None:
+                continue
+            bars.append(
+                OpeningRangeBar(
+                    timestamp=ts, high=float(high[i]), low=float(low[i])
+                )
+            )
+        if not bars:
+            return out
+
+        # The session the frame is describing, read off the FIRST observation in the TAUGHT
+        # zone — never a literal, and never the host's local date.
+        session_date = bars[0].timestamp.astimezone(zone).date()
+        as_of = max(bar.timestamp for bar in bars)
+
+        state = opening_range_adapter.compute_opening_range_state(
+            candidate.definition,
+            candidate.variant,
+            bars,
+            session_date=session_date,
+            bar_interval_minutes=interval_minutes,
+            as_of=as_of,
+        )
+
+        # ── A REFUSAL GATES NOTHING. FORMING / INCOMPLETE_OPENING_WINDOW both land here, and
+        # both mean the taught range is not available — which is FALSE on every bar, not a
+        # pass-through. `FAIL CLOSED` is the adapter's shape and it must survive the handler.
+        if not state.opening_range_complete:
+            return out
+
+        _start, lock = _window_bounds(candidate.definition, candidate.variant, session_date)
+        for i, ts in enumerate(ts_list):
+            if ts is not None and ts >= lock:
+                out[i] = True
+        return out
+
+    def _bar_interval_minutes(self) -> int:
+        """This instance's bar interval in whole minutes, from its `timeframe`.
+
+        REFUSES rather than guessing. An unparseable or sub-minute timeframe has no whole-
+        minute interval, and the adapter's completeness arithmetic (`duration % interval`) is
+        only meaningful on one — so inventing a value here would manufacture a confident
+        COMPLETE state on a frame whose bars were never counted correctly.
+        """
+        text = (self.timeframe or "").strip().lower()
+        if text.endswith("m") and text[:-1].isdigit():
+            minutes = int(text[:-1])
+        elif text.endswith("h") and text[:-1].isdigit():
+            minutes = int(text[:-1]) * 60
+        else:
+            raise ValueError(
+                f"timeframe {self.timeframe!r} does not express a whole-minute bar interval, "
+                f"so the opening-range window cannot be checked for completeness. Refused "
+                f"rather than assumed."
+            )
+        if minutes <= 0:
+            raise ValueError(
+                f"timeframe {self.timeframe!r} resolves to a non-positive bar interval "
+                f"({minutes})"
+            )
+        return minutes
 
     def _h_structure(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
         # COMPOSITE KEY (R-681 §5(5)), mirroring _h_levelzone_resolver's
@@ -1925,6 +2094,30 @@ class SpecConditionStrategy(BaseStrategy):
                 # Static presence-only pass-through — see module docstring
                 # ("no standalone per-bar confluence primitive exists").
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+            elif b.type == "OPENING_RANGE_DEFINITION":
+                # ─── SURFACE 11 — THE FLAG-OFF ROUTE TO THE SAME REAL HANDLER ────────────
+                # THIS IS THE ACTIVATION'S OWN BLAST RADIUS, NOT A PRE-EXISTING DEFECT.
+                # Before the activation this family carried `unsupported=True`, so its
+                # binding arrived `executed=False`/`bindable=False` and was skipped above
+                # before the ladder was ever consulted. The declaration removes BOTH shields
+                # — and at the DEFAULT flag state the condition would then land on the
+                # `else` below and be answered CONSTANT TRUE, on every bar, with no adapter
+                # call and no window. `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN` — the
+                # family was safe only because it never executed, and activating it is the
+                # INSERT. Measured red before this branch existed
+                # (`test_flag_off_an_activated_opening_range_condition_silently_passes_
+                # constant_true`), which is what decided this member was real rather than
+                # speculative.
+                #
+                # 🛑 IT IS AN `elif` ABOVE THE SINK, AND THE SINK IS UNTOUCHED. The `else`
+                # arm below is a SEPARATE, STILL-OPEN finding (`ELSE-SINK-1`) covering every
+                # OTHER family that could reach it; closing it is not this commit's business
+                # and widening the diff to do so was explicitly forbidden.
+                #
+                # 🛑 SAME METHOD AS THE ENFORCED ROUTE, deliberately: two routes computing
+                # the taught window separately could disagree, and the flag would decide
+                # which answer a bot traded.
+                per_condition_bool[b.condition_id] = self._h_opening_range(b, ctx)
             else:
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
 
@@ -2139,6 +2332,7 @@ def from_compiled_spec(
     trace: bool = False,
     strategy_name: str | None = None,
     restore_condition_ids: frozenset[str] | None = None,
+    opening_range_candidate: OpeningRangeExecutionCandidate | None = None,
 ) -> SpecConditionStrategy:
     """Factory mirroring the `_load_strategy_class` -> `cls()` pattern in
     backtester.py, but parameterized with the actual spec payload since this
@@ -2151,6 +2345,21 @@ def from_compiled_spec(
 
     `restore_condition_ids`: Composition Fidelity Experiment bundle-restoration target set,
     default None (100% backward compatible — see compile_binding_plan's docstring).
+
+    ─── SURFACE 12A — TRANSPORT ONLY (S6 EXECUTION ACTIVATION) ──────────────────────────
+    `opening_range_candidate` is passed through UNCHANGED. This factory does not read it, does
+    not validate it, does not choose it and does not infer it from `timeframe`.
+
+    🛑 `None` STAYS LEGAL AND STILL HARD-REFUSES AT EXECUTION. The refusal belongs to
+    `_h_opening_range`, where the condition is actually evaluated — moving it up here would
+    reject every caller that has no opening-range condition at all, and defaulting here would
+    be the silent window-selection `R-736`/`R-743` settled against.
+
+    🛑 THE FACTORY NEVER SELECTS. `timeframe` is BAR RESOLUTION; a taught opening-range window
+    is a DIFFERENT DIMENSION, and a `1m` chart may legitimately run a `30m` opening range.
+    Deriving one from the other would look like a sensible default and would silently trade a
+    window the teacher never assigned to this instance. Choosing WHICH candidate an instance
+    gets is the fan-out's job (12B), one instance per taught candidate.
     """
     return SpecConditionStrategy(
         compiled_spec=compiled_spec,
@@ -2159,4 +2368,5 @@ def from_compiled_spec(
         trace=trace,
         strategy_name=strategy_name,
         restore_condition_ids=restore_condition_ids,
+        opening_range_candidate=opening_range_candidate,
     )

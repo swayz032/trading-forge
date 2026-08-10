@@ -652,13 +652,28 @@ def test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definition
 
     WHAT THIS GUARD PROVES, AND WHY BOTH HALVES ARE LOAD-BEARING:
       (a) the level-construction family -- not WAIT_SESSION, not WAIT_STRUCTURE
-          -- owns genuine opening-range definitions, and owning them means
-          REFUSING them honestly: bindable False, NO primitive, and a named
-          unbound reason. A family that claimed them and then bound them to the
-          structure evaluator would be the original defect wearing a new type.
+          -- owns genuine opening-range definitions, and it now BINDS them to
+          their own typed adapter rather than refusing them. A family that
+          claimed them and then bound them to the structure evaluator would be
+          the original defect wearing a new type, so that fallback is asserted
+          against explicitly.
       (b) the sentences that must NOT be definitions still are not, each at the
           stage that refuses it. `A GUARD THAT ONLY ASSERTS THE NEW HAPPY STATE
-          CANNOT GO RED THE NEXT TIME A FAMILY LANDS.`"""
+          CANNOT GO RED THE NEXT TIME A FAMILY LANDS.`
+
+    ⚡ MIGRATED (R-785 §6-3), AND ONLY IN ONE PLACE. Through STEP 3 half (a) asserted
+    `unsupported is True` / `primitive is None` / a named `unbound_reason` -- the honest
+    OFF state for a family whose adapter did not exist. THE ADAPTER NOW EXISTS, so that
+    refusal has become a false label:
+
+      `A REFUSAL IS AN HONEST OFF STATE ONLY FOR AS LONG AS THE THING IT REFUSES IS
+       MISSING.`
+
+    🛑 WHAT WAS DELIBERATELY NOT TOUCHED: the FAMILY-OWNERSHIP adjudication above and
+    EVERY row in (b). The migration is confined to the bare
+    `OPENING_RANGE_DEFINITION` declaration; the refusal population for phrases that
+    genuinely remain incomplete is preserved intact, because widening a migration to
+    the rows it happens to sit beside is how a guard quietly stops guarding."""
     from src.engine.opening_range_definition import (
         CANONICAL_TYPE,
         classify_opening_range_definition,
@@ -674,15 +689,47 @@ def test_MIGRATION_GUARD_level_construction_family_owns_opening_range_definition
         assert fam == _TWIN_ADJUDICATION[spec], (
             f"{spec}: adjudicated {_TWIN_ADJUDICATION[spec]}, classified {fam}")
 
-    # ...and the family it landed in must REFUSE, not bind. This is the half that
-    # stops a future adapter silently routing these rows to the wrong evaluator.
+    # ...and the family it landed in must now BIND them to their OWN adapter. This is
+    # the half that stops the adapter silently routing these rows to the wrong evaluator.
+    from src.engine.spec_family_bindings import compile_binding_plan
+
     meta = FAMILY_META[CANONICAL_TYPE]
-    assert meta.unsupported is True, f"{CANONICAL_TYPE} must be DECLARED unsupported"
-    assert meta.primitive is None, (
-        f"{CANONICAL_TYPE} must name NO primitive while its adapter is unbuilt; "
-        f"got {meta.primitive!r}")
-    assert meta.unbound_reason == "opening_range_adapter_not_implemented", (
-        f"unexpected unbound reason: {meta.unbound_reason!r}")
+    assert meta.unsupported is False, (
+        f"{CANONICAL_TYPE} is still DECLARED unsupported, but its typed adapter exists; "
+        "the refusal is now a false label rather than an honest off state")
+    assert meta.primitive is not None, (
+        f"{CANONICAL_TYPE} names NO primitive although its adapter is built")
+    assert meta.unbound_reason is None, (
+        f"{CANONICAL_TYPE} still carries unbound_reason {meta.unbound_reason!r}; a stale "
+        "reason string is a false label in a governance surface")
+    # NEVER THE KNOWN-WRONG FALLBACK. This is the assertion that keeps the guard's teeth:
+    # every check above is also satisfied by declaring compute_structure_state, which is
+    # the precise defect this whole subtype was split out to remove.
+    assert "structure" not in meta.primitive.lower(), (
+        f"{CANONICAL_TYPE} declares {meta.primitive!r} — it fell back to the structure "
+        "evaluator, which is the original defect wearing a new type")
+
+    # AND IT MUST ACTUALLY BIND, not merely declare. A declaration that no binding
+    # carries is an unroutable pointer, and the ledger's label would outrun the engine.
+    plan = compile_binding_plan(
+        {
+            "entry_conditions": [
+                {"id": "c1", "type": CANONICAL_TYPE, "role": "spine",
+                 "object": "the opening range of the session"}
+            ],
+            "invalidations": [],
+            "entry_trigger_id": "c1",
+            "direction": "long",
+        }
+    )
+    binding = next((b for b in plan.bindings if b.type == CANONICAL_TYPE), None)
+    assert binding is not None, f"no {CANONICAL_TYPE} binding was produced at all"
+    assert binding.bindable, f"{CANONICAL_TYPE} binding is not bindable"
+    assert binding.executed, f"{CANONICAL_TYPE} binding is not executed"
+    assert binding.reason is None, (
+        f"{CANONICAL_TYPE} binding still carries a refusal reason: {binding.reason!r}")
+    assert binding.primitive == meta.primitive, (
+        f"binding carries {binding.primitive!r} but the family declares {meta.primitive!r}")
 
     # (b) THE TEETH — the refusals stay refused, each at its named stage.
     for label, text, expected_stage in _MUST_STAY_REFUSED:

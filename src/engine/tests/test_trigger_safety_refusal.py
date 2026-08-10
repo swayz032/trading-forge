@@ -36,6 +36,7 @@ The six-step sequence replaces it because it mutates the ELIGIBILITY CONSUMER �
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -51,7 +52,10 @@ from src.engine.breakout_confirmation_ambiguity import (
     BreakoutAmbiguityVerdict,
     classify_breakout_confirmation_ambiguity,
 )
-from src.engine.extraction.spec_producer import produce_spec_artifact
+from src.engine.extraction.spec_producer import (
+    produce_spec_artifact,
+    produce_spec_artifact_from_record,
+)
 from src.engine.spec_condition_compiler import (
     EXECUTION_STATUS_EXECUTED,
     EXECUTION_STATUS_REFUSED,
@@ -121,12 +125,60 @@ def _neighbour_spec() -> dict:
     }
 
 
-def _run(spec: dict) -> tuple[SpecConditionStrategy, pl.DataFrame]:
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# CANDIDATE-AWARE CONSTRUCTION (S6 EXECUTION ACTIVATION, authorized at R-785 §6-4)
+#
+# The golden record's opening-range condition is now ACTIVATED, so an execution instance
+# must be told WHICH taught window it runs or it refuses at the adapter boundary. That
+# refusal is correct and is proven elsewhere; here it would simply mask the trigger-safety
+# property these fixtures exist to measure.
+#
+# 🛑 FIXTURE TRANSITION ONLY. NOT ONE SAFETY ASSERTION BELOW IS TOUCHED, and no production
+# default is created — the wiring lives here, in the test's own setup.
+#
+# 🛑 SELECTION IS BY AN EXPLICIT TAUGHT DURATION, NEVER BY POSITION. `candidates[0]` would
+# read identically today and would silently follow taught order if it ever changed:
+#
+#     `AN INDEX IS A SILENT DEFAULT WEARING A TEST'S CLOTHES.`
+#
+# The 5m window drives the matrix for cost, and
+# `test_control_the_trigger_refusal_is_not_specific_to_one_taught_window` runs the same
+# safety property across ALL THREE taught candidates so this choice cannot hide a
+# duration-specific result.
+# ─────────────────────────────────────────────────────────────────────────────────────────
+_SAFETY_MATRIX_WINDOW_MINUTES = 5
+
+
+def _taught_candidates() -> tuple:
+    """The golden record's taught execution candidates, through the REAL full-record
+    boundary — never hand-built, so a change in what the source teaches reaches here."""
+    doc = json.loads(GOLDEN_EXTRACTION.read_text(encoding="utf-8"))
+    return produce_spec_artifact_from_record(doc, video="st5e-YJRfKc__s0").opening_range_candidates
+
+
+def _candidate_for(plan, duration_minutes: int = _SAFETY_MATRIX_WINDOW_MINUTES):
+    """The taught candidate for THIS plan, chosen by DURATION, or None if the plan has no
+    opening-range condition at all (the neighbour spec, which must stay candidate-free)."""
+    if not any(b.type == "OPENING_RANGE_DEFINITION" for b in plan.bindings):
+        return None
+    matching = [c for c in _taught_candidates() if c.variant.duration_minutes == duration_minutes]
+    assert len(matching) == 1, (
+        f"expected exactly one taught {duration_minutes}m window, found {len(matching)}; "
+        "the fixture's explicit selection no longer identifies a unique taught alternative"
+    )
+    return matching[0]
+
+
+def _run(
+    spec: dict, duration_minutes: int = _SAFETY_MATRIX_WINDOW_MINUTES
+) -> tuple[SpecConditionStrategy, pl.DataFrame]:
+    plan = compile_binding_plan(spec)
     strategy = SpecConditionStrategy(
         {"spec": spec, "spec_hash": "trigger-safety"},
         symbol="MES",
         timeframe=TIMEFRAME,
-        binding_plan=compile_binding_plan(spec),
+        binding_plan=plan,
+        opening_range_candidate=_candidate_for(plan, duration_minutes),
     )
     return strategy, strategy.compute(_frame())
 
@@ -288,13 +340,78 @@ def test_the_refusal_names_the_confirmation_not_the_direction():
     assert "above" in trigger.object, "the taught direction must survive in the prose"
 
 
+def test_control_the_trigger_refusal_is_not_specific_to_one_taught_window():
+    """THE THREE-CANDIDATE CONTROL (R-785 §6-4). Required BECAUSE the matrix above runs
+    on one explicitly-chosen taught window.
+
+    🛑 WHAT IT DISCRIMINATES. Every candidate-aware fixture in this file is constructed
+    with the 5m window. That is a cost decision, and it silently assumes the
+    trigger-safety property is independent of which taught window the instance carries.
+    If it were not — if the refusal held for 5m and quietly stopped holding for 30m —
+    the entire matrix would stay green while the property was false for two thirds of
+    the bots the factory builds.
+
+      `A MATRIX PINNED TO ONE MEMBER OF A POPULATION PROVES THE PROPERTY FOR THAT MEMBER
+       AND ASSUMES IT FOR THE REST — AND THE ASSUMPTION IS INVISIBLE ONCE IT IS GREEN.`
+
+    So the golden refusal is re-measured across ALL THREE taught windows and must be
+    IDENTICAL: same refusal, same reason, same ambiguity, on every one.
+    """
+    candidates = _taught_candidates()
+    durations = [c.variant.duration_minutes for c in candidates]
+    assert len(durations) == 3 and len(set(durations)) == 3, (
+        f"the control cannot discriminate: taught windows are {durations}"
+    )
+    assert _SAFETY_MATRIX_WINDOW_MINUTES in durations, (
+        f"the matrix runs on a {_SAFETY_MATRIX_WINDOW_MINUTES}m window that the source does "
+        f"not teach ({durations}) — the fixture is measuring an invented alternative"
+    )
+
+    spec = _golden_spec()
+    frame = _frame()
+    observed = []
+    for duration in durations:
+        strategy = _traced(spec, frame, duration_minutes=duration)
+        assert strategy.last_trace, f"{duration}m: a refused strategy produced an EMPTY trace"
+        head = strategy.last_trace[0]
+        observed.append(
+            (head["trace_outcome"], head["execution_status"], head["reason"], head["ambiguity"])
+        )
+
+    assert len(set(observed)) == 1, (
+        "the trigger-safety refusal is NOT identical across the taught windows, so the "
+        "one-window matrix above is proving a property that does not hold for the others.\n"
+        + "\n".join(f"  {d}m -> {o}" for d, o in zip(durations, observed, strict=True))
+    )
+
+
 def test_only_the_trigger_is_touched():
     """Blast radius. Every other condition binds exactly as before the rule existed."""
     spec = _golden_spec()
     plan = compile_binding_plan(spec)
     refused = [b for b in plan.bindings if b.disposition == "SOURCE_AMBIGUOUS"]
     assert [b.condition_id for b in refused] == [spec["entry_trigger_id"]]
-    assert sum(1 for b in plan.bindings if b.bindable) == 7
+    # ── BLAST-RADIUS COUNT: 7 -> 8 (S6 EXECUTION ACTIVATION, R-785 §6-4) ─────────────
+    # This is a change to what the fixture EXPECTS, not to what it PROTECTS. The count was
+    # 7 while OPENING_RANGE_DEFINITION was declared unsupported and therefore unbindable;
+    # activating it binds exactly one more condition. The trigger-safety property — that
+    # the refusal rule touches ONLY the trigger — is unchanged and still asserted above.
+    #
+    # 🛑 AND THE COUNT ALONE WOULD BE WEAKER THAN WHAT IT REPLACED: a bare `== 8` is
+    # satisfied by ANY binding flipping bindable, including one this activation had no
+    # business touching. So the newly-bindable member is NAMED, and the pre-existing seven
+    # are asserted to still exclude it. `A COUNT THAT MOVED FOR A REASON SHOULD ASSERT THE
+    # REASON, NOT JUST THE NEW NUMBER.`
+    bindable = [b for b in plan.bindings if b.bindable]
+    assert len(bindable) == 8
+    opening_range = [b for b in bindable if b.type == "OPENING_RANGE_DEFINITION"]
+    assert len(opening_range) == 1, (
+        "the 8th bindable condition is not the activated opening-range definition; "
+        f"something else changed binding state: {[b.type for b in bindable]}"
+    )
+    assert len([b for b in bindable if b.type != "OPENING_RANGE_DEFINITION"]) == 7, (
+        "the seven pre-existing bindable conditions did not survive the activation unchanged"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
@@ -516,7 +633,12 @@ def test_classifier_verdict_is_frozen_and_carries_its_evidence():
         opening_range_defined_in_spec=True,
     )
     assert isinstance(verdict, BreakoutAmbiguityVerdict)
-    with pytest.raises(Exception):
+    # PRE-EXISTING at HEAD (ruff B017), surfaced only because this commit stages this file
+    # and the hook lints whole files. NAMED rather than silenced: a blind `Exception` here
+    # would also be satisfied by an unrelated `AttributeError` or a typo in the attribute
+    # name, so this assertion could have passed on a verdict that was never frozen at all.
+    # `A GUARD THAT ACCEPTS ANY EXCEPTION CANNOT TELL THE ONE IT MEANT FROM THE ONE IT GOT.`
+    with pytest.raises(dataclasses.FrozenInstanceError):
         verdict.ambiguous = False  # frozen
     names = [name for name, _span in verdict.evidence]
     assert names == [
@@ -669,13 +791,17 @@ def _flat_tape(n: int = N_BARS) -> pl.DataFrame:
     )
 
 
-def _traced(spec: dict, frame: pl.DataFrame) -> SpecConditionStrategy:
+def _traced(
+    spec: dict, frame: pl.DataFrame, duration_minutes: int = _SAFETY_MATRIX_WINDOW_MINUTES
+) -> SpecConditionStrategy:
+    plan = compile_binding_plan(spec)
     strategy = SpecConditionStrategy(
         {"spec": spec, "spec_hash": "trigger-safety-trace"},
         symbol="MES",
         timeframe=TIMEFRAME,
         trace=True,
-        binding_plan=compile_binding_plan(spec),
+        binding_plan=plan,
+        opening_range_candidate=_candidate_for(plan, duration_minutes),
     )
     strategy.compute(frame)
     return strategy

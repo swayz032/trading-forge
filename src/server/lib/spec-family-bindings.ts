@@ -138,14 +138,14 @@ export const FAMILY_META: Record<string, FamilyMeta> = {
     enforcedPrimitive: "session_windows.is_in_killzone",
   },
   WAIT_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
-  // B1 STEP 3 (R-730 §4). The typed subtype that splits the taught OPENING RANGE out of the
-  // coarse WAIT_STRUCTURE family above. UNSUPPORTED and REFUSING until STEP 4 supplies the
-  // typed adapter — it must never fall back to compute_structure_state, which is the defect
-  // B1 exists to remove. Mirrors src/engine/spec_family_bindings.py::FAMILY_META, same commit.
+  // SURFACE 8 — S6 EXECUTION ACTIVATION. The typed subtype that splits the taught OPENING
+  // RANGE out of the coarse WAIT_STRUCTURE family above is now SUPPORTED and EXECUTES against
+  // its OWN typed adapter. It still never falls back to compute_structure_state — that
+  // fallback is the defect B1 exists to remove, and it is why this entry carried a temporary
+  // refusal until the adapter existed rather than a convenient pointer.
+  // Mirrors src/engine/spec_family_bindings.py::FAMILY_META, same commit.
   OPENING_RANGE_DEFINITION: {
-    primitive: null,
-    unsupported: true,
-    unboundReason: "opening_range_adapter_not_implemented",
+    primitive: "opening_range_adapter.compute_opening_range_state",
   },
   VERIFY_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
   // Declared bias_engine.classify_institutional_regime; MEASURED 0 calls to it on 2000 real ES

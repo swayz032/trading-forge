@@ -655,30 +655,33 @@ FAMILY_META: dict[str, FamilyMeta] = {
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
     ),
-    # ── B1 STEP 3 (R-730 §4). The typed subtype that splits the taught OPENING RANGE out of
-    # the coarse WAIT_STRUCTURE family above. It is declared UNSUPPORTED and it REFUSES.
+    # ── SURFACE 4 — S6 EXECUTION ACTIVATION. The typed subtype that splits the taught OPENING
+    # RANGE out of the coarse WAIT_STRUCTURE family above is now SUPPORTED and EXECUTES.
     #
-    # WHY A REFUSAL IS THE CORRECT STATE AND NOT A PLACEHOLDER. STEP 3 is the representation
-    # only; the typed adapter is STEP 4. R-730 §4 rules the temporary refusal explicitly SAFE:
-    # "the new type MAY TEMPORARILY REFUSE because its adapter does not exist yet ... It must
-    # NEVER fall back to the known-wrong structure evaluator." Declaring a primitive here to
-    # avoid an unbound row would do exactly that -- the only primitive that would accept these
-    # conditions today is compute_structure_state, which is the defect B1 exists to remove.
-    # `A REFUSAL IS AN HONEST OFF STATE; A SILENT WRONG ANSWER IS NOT.`
+    # WHAT CHANGED, AND WHY IT IS NOT THE THING R-730 §4 FORBADE. Through STEP 3 this entry
+    # was `unsupported=True` with `unbound_reason="opening_range_adapter_not_implemented"`,
+    # and that refusal was CORRECT while it was true: R-730 §4 ruled the temporary refusal
+    # safe precisely so the family would never "fall back to the known-wrong structure
+    # evaluator". The forbidden repair was declaring `structure_engine.compute_structure_
+    # state` here to avoid an unbound row. THIS IS THE OPPOSITE: the typed adapter now EXISTS,
+    # and the pointer names IT. The reason string is retired because it is no longer true, and
+    # a stale `unbound_reason` is a false label in a governance surface.
+    # `A REFUSAL IS AN HONEST OFF STATE ONLY FOR AS LONG AS THE THING IT REFUSES IS MISSING.`
     #
-    # WHY THIS NEEDS NO GUARD EXEMPTION (R-729 §2, which refused the one I proposed).
-    # `unsupported=True` makes enforced_declaration() return (None, None), so pin (a) never
-    # adds a name to `declared` and needs no ENFORCED_DISPATCH key, and pin (b) skips the
-    # family at its own `if meta.unsupported: continue`. This is the PROPER DECLARATION ROUTE
-    # -- the guard sees the family and is satisfied by it, rather than being told to ignore it.
-    # `A GUARD EXEMPTION IS STRUCTURALLY WEAKER THAN A DECLARATION.`
+    # THE POINTER IS THE ROUTING KEY, NOT A DESCRIPTION. `PRIMITIVE_RESOLVERS` maps this exact
+    # string to the real symbol and `ENFORCED_DISPATCH` maps it to the one shared handler;
+    # `verify_dispatch_coverage()` proves both directions at load, so this declaration cannot
+    # be an unroutable pointer and no handler can be reached that nothing declares.
+    #
+    # `gates` IS LEFT AT ITS DEFAULT `True` ON PURPOSE. This family GATES: it answers whether
+    # a taught entry condition is satisfied on a bar. Setting `gates=False` to dodge the
+    # polarity/gating populations would be a pin-(a) violation (a real evaluator declared
+    # non-gating) and would remove the very detector that proves this route works.
     #
     # MIRRORED: src/server/lib/spec-family-bindings.ts carries the same entry in this commit,
     # with a focused parity fixture (R-727 §3's stated price, paid rather than routed around).
     "OPENING_RANGE_DEFINITION": FamilyMeta(
-        primitive=None,
-        unsupported=True,
-        unbound_reason="opening_range_adapter_not_implemented",
+        primitive="opening_range_adapter.compute_opening_range_state",
     ),
     "VERIFY_STRUCTURE": FamilyMeta(
         primitive="structure_engine.compute_structure_state",

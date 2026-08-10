@@ -1065,42 +1065,91 @@ def _declaration_only_activation(monkeypatch) -> None:
     )
 
 
-# ── CONTROL — today the condition never reaches the ladder at all ────────────
-def test_control_flag_off_todays_unactivated_binding_never_reaches_the_ladder(monkeypatch):
-    """Discriminates the THIRD possibility, which is neither 'reachable' nor
-    'gated elsewhere': the key could simply never be written, making the output
-    ABSENT rather than constant-True. It must be ABSENT here, and PRESENT in
-    arm 1 -- otherwise arm 1's red is a pre-existing condition rather than the
-    activation's own blast radius."""
-    monkeypatch.delenv(FLAG_ENV, raising=False)
-
-    _, artifact, plan = _produce(GOLDEN_STUB)
-    binding = _opening_range_binding(plan)
-    assert binding is not None and not binding.executed and not binding.bindable, (
-        "today's shield moved: the golden opening-range binding is no longer "
-        f"executed=False/bindable=False (executed={binding.executed}, "
-        f"bindable={binding.bindable}) -- re-derive R-780 §4 before trusting arm 1"
-    )
-
-    strategy = SpecConditionStrategy(artifact, binding_plan=plan, timeframe=BAR_TIMEFRAME)
-    strategy.compute(_polars_session_bars(_taught_session_bars(_lower_golden().definition)))
-
-    assert binding.condition_id not in strategy.last_per_condition_bool, (
-        "the unactivated condition produced a per-bar array; then the ladder is "
-        "already reachable and arm 1 is not measuring the activation"
-    )
-
-
-# ── ARM 1 — THE DECIDER. RED means member 11 is REAL. ────────────────────────
-def test_flag_off_an_activated_opening_range_condition_silently_passes_constant_true(
+# ── THE BINDING IS ACTIVATED, AND POINTS AT ITS OWN ADAPTER ──────────────────
+def test_the_golden_opening_range_binding_is_activated_and_declares_the_real_adapter(
     monkeypatch,
 ):
-    """RED = the hole is REAL and REACHABLE ⇒ build member 11 (R-780 §4).
+    """TRANSITIONED (R-785 §6-1). NOT DELETED, AND THE NAME NOW STATES WHAT IT CHECKS.
 
-    A constant-True array is the engine asserting, on EVERY bar, that a taught
-    entry condition is satisfied -- with no adapter call, no window, and no
-    range. That is architecture invariant 2 inverted: source-owned entry logic
-    silently rewritten into `always`.
+    🛑 WHAT THIS USED TO ASSERT, AND WHY THAT HAD TO GO. Through STEP 3 this was a
+    CONTROL named `..._todays_unactivated_binding_never_reaches_the_ladder`, and it
+    asserted `executed=False`/`bindable=False` -- the PRE-ACTIVATION SHIELD. It existed
+    so that the flag-OFF decider's red could be attributed to the activation rather
+    than to a pre-existing condition. That decider has decided, member 11 was built,
+    and the activation's SUCCESS CONDITION is the exact inverse of what this asserted:
+    both shields drop. The two could never be green together.
+
+      `A CONTROL THAT DESCRIBES THE STATE YOU ARE LEAVING EXPIRES WHEN YOU LEAVE IT --
+       AND KEEPING IT RED IS NOT RIGOUR, IT IS A FALSE LABEL ON A PASSING SYSTEM.`
+
+    ⚖️ THE DESK JUDGED THE EXPIRY, NOT THIS SEAT (R-785 §6): `THE SEAT THAT WOULD GAIN
+    A GREEN FROM RETIRING AN INSTRUMENT IS THE WRONG SEAT TO JUDGE WHETHER IT HAS
+    EXPIRED.` AR-919 refused to self-judge it and reported instead.
+
+    WHAT IT ASSERTS NOW is strictly more than the inverse of the old claim: the binding
+    is not merely activated, it points at the family's OWN declared adapter and NOT at
+    the structure evaluator -- the known-wrong fallback that B1 exists to remove, and
+    the single most plausible way this could go green while being wrong.
+    """
+    monkeypatch.delenv(FLAG_ENV, raising=False)
+
+    _, _artifact, plan = _produce(GOLDEN_STUB)
+    binding = _opening_range_binding(plan)
+    assert binding is not None, f"no {FAMILY} binding in the compiled plan"
+
+    assert binding.bindable, (
+        "the activated opening-range binding is not bindable, so nothing downstream can "
+        "execute it -- the declaration did not reach the binder"
+    )
+    assert binding.executed, (
+        "the activated opening-range binding is not executed, so the compiler skips it "
+        "before any router is consulted (spec_condition_compiler.py's `if not b.executed`)"
+    )
+
+    declared = FAMILY_META[FAMILY].primitive
+    assert declared is not None and not FAMILY_META[FAMILY].unsupported, (
+        f"{FAMILY} no longer declares a primitive; the activation was reverted"
+    )
+    assert binding.primitive == declared, (
+        "the binding does not carry the family's DECLARED primitive.\n"
+        f"  declared on FAMILY_META : {declared!r}\n  carried by the binding  : {binding.primitive!r}\n"
+        "  ⇒ the pointer and the binding disagree, and the ledger's label is not what runs."
+    )
+    # THE FALLBACK THIS WHOLE SUBTYPE EXISTS TO PREVENT. Declaring the coarse structure
+    # evaluator here would satisfy every 'is it bound' check above while computing the
+    # wrong thing -- `A REFUSAL IS AN HONEST OFF STATE; A SILENT WRONG ANSWER IS NOT.`
+    assert "structure" not in (binding.primitive or "").lower(), (
+        f"the opening-range binding fell back to a structure primitive ({binding.primitive!r}); "
+        "that is the exact defect B1 exists to remove"
+    )
+
+
+# ── THE DECIDER, TRANSITIONED — IT DECIDED, AND ITS SUCCESSOR IS STRONGER ────
+def test_flag_off_an_activated_opening_range_condition_with_no_candidate_refuses_loudly(
+    monkeypatch,
+):
+    """TRANSITIONED (R-785 §6-2). THE DECIDER HAS DECIDED; THIS IS WHAT IT BECAME.
+
+    🛑 WHAT IT USED TO ASSERT. Named `..._silently_passes_constant_true`, this was
+    `R-780 §6 STEP 1`'s DECIDER: with enforcement at its DEFAULT OFF, did an ACTIVATED
+    opening-range condition fall through the legacy `b.type` ladder to `else: np.ones`
+    -- CONSTANT TRUE, on every bar, with no adapter call and no window? It went RED.
+    That red is what AUTHORIZED member 11, and member 11 is now built, so the question
+    it existed to ask has a permanent answer and cannot be asked again.
+
+    ⭐ THE REPLACEMENT IS STRICTLY STRONGER THAN WHAT IT REPLACES. The old form proved
+    only that the array was not constant-True. This proves the far harder property:
+    on the DEFAULT flag path, an activated condition with NO candidate REFUSES BY NAME
+    and reaches NO adapter -- so the failure mode is loud, attributable, and cannot be
+    mistaken for a computed answer. The old assertion is implied by this one: a run
+    that raises never publishes a constant-True column at all.
+
+      `THE SUCCESSOR TO A DECIDER MUST GUARD MORE THAN THE DECIDER MEASURED, OR THE
+       TRANSITION IS A DELETION WEARING A RENAME.`
+
+    ⚖️ AND IT DOCUMENTS BEHAVIOUR THE TREE ALREADY HAS (R-785 §6-2 measured the same
+    refusal at spec_condition_compiler.py:909 independently) -- which is what makes it
+    a guard rather than a wish.
     """
     monkeypatch.delenv(FLAG_ENV, raising=False)
     _declaration_only_activation(monkeypatch)
@@ -1109,14 +1158,13 @@ def test_flag_off_an_activated_opening_range_condition_silently_passes_constant_
     binding = _opening_range_binding(plan)
     assert binding is not None, f"no {FAMILY} binding in the compiled plan"
 
-    # POSITIVE WITNESS 1 — the shields actually dropped, through the REAL binder.
-    # Without this, a passing assertion below could mean 'the ladder was never
-    # reached', which is the opposite conclusion.
+    # POSITIVE WITNESS — the shields really dropped, through the REAL binder. Without
+    # this, the refusal below could mean 'the ladder was never reached', which is the
+    # opposite conclusion and would make this test vacuous.
     assert binding.executed and binding.bindable, (
-        "RED-PROOF BROKEN, NOT A FINDING — the declaration alone did not clear "
-        f"the two ladder shields (executed={binding.executed}, "
-        f"bindable={binding.bindable}). spec_condition_compiler.py:1830/:1837 "
-        "still skip this condition, so nothing below measures the ladder."
+        "GUARD BROKEN, NOT A FINDING — the activated binding did not clear the two "
+        f"ladder shields (executed={binding.executed}, bindable={binding.bindable}), so "
+        "nothing below measures the flag-OFF route at all."
     )
 
     calls: list[int] = []
@@ -1131,36 +1179,34 @@ def test_flag_off_an_activated_opening_range_condition_silently_passes_constant_
     )
 
     session_bars = _taught_session_bars(_lower_golden().definition)
+    # Built through the SAME production constructor with the carrier simply not
+    # supplied — the state a real caller reaches by forgetting, not a mutated object.
     strategy = SpecConditionStrategy(artifact, binding_plan=plan, timeframe=BAR_TIMEFRAME)
-    strategy.compute(_polars_session_bars(session_bars))
 
-    # POSITIVE WITNESS 2 — the path RAN and produced an array for THIS condition.
-    # A negative assertion needs a witness that the path executed.
-    assert binding.condition_id in strategy.last_per_condition_bool, (
-        "no per-bar array was produced for the activated condition, so 'not "
-        "constant True' below would be satisfied by absence rather than behaviour"
-    )
-    array = np.asarray(strategy.last_per_condition_bool[binding.condition_id])
-    assert array.shape == (len(session_bars),), (
-        f"array length {array.shape} does not match the {len(session_bars)} bars fed in"
-    )
+    with pytest.raises(Exception) as excinfo:
+        strategy.compute(_polars_session_bars(session_bars))
 
-    # ── THE CLAIM ────────────────────────────────────────────────────────────
-    assert not array.all(), (
-        "RED — FLAG-OFF SILENT PASS CONFIRMED. With TF_FAMILY_META_ENFORCED at its "
-        "DEFAULT OFF, an ACTIVATED opening-range condition produces a CONSTANT-TRUE "
-        "per-bar array.\n"
-        f"  bars                 : {len(session_bars)}   all True: {bool(array.all())}\n"
-        f"  adapter calls        : {tuple(calls)}   <- production never computed a range\n"
-        "  the legacy b.type ladder (spec_condition_compiler.py:1847-1927) has NO\n"
-        "  OPENING_RANGE_DEFINITION branch, so the condition lands on :1928\n"
-        "  `else: per_condition_bool[...] = np.ones(n, dtype=bool)`.\n"
-        "  ⇒ MEMBER 11 IS REAL AND REACHABLE: the flag-OFF ladder needs its own\n"
-        "    route to the SAME _h_opening_range."
+    message = str(excinfo.value).lower()
+    assert "candidate" in message, (
+        "the flag-OFF route refused, but not for a reason a reader can act on: the "
+        "message does not name the missing candidate, so it is indistinguishable from "
+        f"an unrelated crash.\n  raised : {excinfo.value!r}"
     )
-    assert calls, (
-        "the array is not constant-True, but production never reached the adapter "
-        "either — something else is producing it and the conclusion above does not follow"
+    # POSITIVE WITNESS FOR A NEGATIVE ASSERTION: the raise above proves the ladder RAN
+    # and then refused; this proves it refused BEFORE computing anything.
+    assert calls == [], (
+        f"the flag-OFF route reached the adapter despite carrying no candidate: {calls} — "
+        "production picked a taught window nobody assigned to this instance"
+    )
+    # AND THE OLD CLAIM, PRESERVED RATHER THAN DROPPED: no constant-True column was
+    # published on the way to the refusal. `A REFUSAL THAT FIRES AFTER A MUTATION IS A
+    # PARTIAL RUN WEARING AN EXCEPTION.`
+    published = np.asarray(
+        strategy.last_per_condition_bool.get(binding.condition_id, np.zeros(0, dtype=bool))
+    )
+    assert not (published.size and published.all()), (
+        "a constant-True per-bar array was published for the activated condition before "
+        "the refusal — the silent pass member 11 removed is back, behind an exception"
     )
 
 
