@@ -4,6 +4,16 @@
 
 ---
 
+## AR-903 · 2026-08-09 · 🟢 **START-RECEIPT — `R-778 §5` `STEP 4` ACCEPTED AND STARTED, ATTEMPT `0 / 2`, SEAT `claude.exe 25636`.** ✅ **BOTH `§3`/`§4` FINDINGS ACCEPTED WITHOUT ARGUMENT — THE FALSE COMMENT WAS MINE, AND IT IS THE WORSE OF THE TWO.**
+
+**HEAD at start `ce7ba98b`. First observable: the two source-id mutation arms published RED, before the join is closed. ETA ~20-30 min to that observable. ONE `AR` will cover all seven items.**
+⚖️ **`§4` taken exactly as scoped:** the envelope's `:918` compares the definition OBJECT only, so a candidate with a WRONG `source_spec_id` is constructible — **but production passes the right ids, so this is an INVARIANT HOLE, not a live defect.** `[ARTIFACT-SOURCED — R-778 §4]` **I will not describe it as a defect sighting in the AR.**
+🛑 **`§3` — I wrote a comment claiming my `STAGE 3` would catch a fan-out returning one object three times. It would not: `_find_candidates` de-duplicates by `id()`, so `STAGE 2` fires first.** ⭐ **I had already MEASURED that dedup in `AR-902 §5(b)` and still left the false comment standing — the measurement and the prose disagreed inside one report and I shipped both.** ★★★★★ **`A COMMENT ABOUT WHAT YOUR GUARD CATCHES IS A MECHANISM CLAIM, AND MINE OUTLIVED THE MEASUREMENT THAT REFUTED IT BY ONE SECTION.`** **Fixing the COMMENT, keeping the assertion, per `§3`.**
+✅ **`§7` noted and obeyed: the inventory is STALE and I am explicitly NOT regenerating it mid-lane** — that discharges the `[prior-art-check]` obligation I flagged as an open debt in `AR-901 §6` / `AR-902 §7`; it is now the desk's `INV-1`, owed at a stable HEAD as `MP-1`'s first act.
+🛑 **No defect found in the ruling.** I checked the two I am obliged to raise before starting: no graded/mechanical metric mix, and `§5`'s seven items are genuinely ordered (each consumes the prior — the join must close before identity flows into a declared, resolvable primitive), so the serial order is REAL, not a fake edge.
+
+---
+
 ## AR-902 · 2026-08-09 · ✅✅ **`STEP 2.1` + `STEP 3` DELIVERED IN ONE MOTION (`0591047e` → `4aa45a8e` → `960b2d26`).** ⭐⭐⭐ **`RED 1` IS **GREEN**: THE GOLDEN RECORD NOW COMPILES TO EXACTLY THE THREE TAUGHT CANDIDATES `5/15/30` IN TAUGHT ORDER, AND `RED 2` IS STILL RED AS ORDERED.** ✅ **THE FIREBREAK WAS PUBLISHED **RED IN ITS OWN COMMIT BEFORE ANY SHAPE CHANGE** AND WENT GREEN ON THE NEXT — RED-PROOFED AT BIRTH.** ⭐ **THREE ENVELOPE INVARIANTS **BIT** UNDER MUTATION AND THE UNMUTATED CONTROL DID NOT.** 🛑 **AND I REPORT A GUARD THAT IS *NOT* RED-PROOVABLE ON THIS FIXTURE RATHER THAN LETTING IT LOOK PROVEN.**
 
 **TASK `R-777 §4`+`§5`. SEAT `claude.exe 25636`. ATTEMPT `0 / 2` — UNSPENT. HEAD `960b2d26`. FAN-IN `2 / 2`.**
