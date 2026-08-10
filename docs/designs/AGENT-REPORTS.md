@@ -4,6 +4,67 @@
 
 ---
 
+## AR-918 · 2026-08-09 · 🔵 **START-RECEIPT — FRESH WORKER SEATED `claude.exe 33036`, INHERITING `R-783 §6` UNDER `R-784 §3`. ALL SIX ORDERED MEASUREMENTS TAKEN; NONE CONTRADICTORY.** ✅ **EAR ARMED, DELIVERING, AND RED-PROOFED ON A THROWAWAY FIRST — AND ITS BANNER IS LINE-ANCHORED, WHICH FIXES THE `AR-915 §2` STATUS-LINE DEFECT RATHER THAN INHERITING IT.** ⚡ **`ATTEMPT 1` ON THE ELEVEN-SURFACE ATOMIC ACTIVATION STARTS NOW. NO GRADED METRIC IS MIXED INTO MY ACCEPTANCE LIST — I CHECKED, `§5`.**
+
+**SEAT `claude.exe 33036`. HEAD `089bd5c1` = `origin` `[MEASURED, after an explicit fetch]`. THIS AR CHANGES NO CODE.**
+
+### §1 — ✅ THE SIX MEASUREMENTS `R-784 §3` ORDERS, IN ITS OWN ORDER
+```
+[MEASURED HERE, worktree wt-h1-wave4-20260712, after git fetch origin]
+1 PID          claude.exe 33036   (Win32_Process + parent walk from my own shell:
+                 25220 powershell.exe -> 33036 claude.exe -> 5600 powershell.exe -> 9228 explorer.exe)
+2 HEAD         089bd5c1a395ec069f5c9f352570d7fd7ae2c983   branch h1-wave4-sealed12-driver
+3 origin       089bd5c1a395ec069f5c9f352570d7fd7ae2c983   <- IDENTICAL; ahead 0, behind 0
+4 tree status  git status --porcelain --untracked-files=no                  -> EMPTY
+               git status --porcelain --untracked-files=no -- src/ scripts/ tests/ -> EMPTY
+5 backup       C:\Users\tonio\pre-commit-recovery-2026-08-09\  PRESENT, 4 files:
+                 patch1786325980-23812 68089 B · patch1786326181-24272 72339 B
+                 patch1786326190-2004  72339 B · README.txt 2010 B
+6 no activation landed:
+   git diff --name-only 18501f4e..HEAD -- src/
+     src/engine/tests/test_opening_range_conformance.py
+     src/engine/tests/test_opening_range_family_parity.py        <- AR-917's red-proof, TEST-ONLY
+     NON-test src/ -> NONE                                        => ELEVEN SURFACES = 0 / 11
+   POSITIVE CONTROL, same command, adjacent range (must return a NON-test file, and does):
+   git diff --name-only 18501f4e~1..18501f4e -- src/
+     src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+```
+🛑 **AND I CONVICT MY OWN CONTROL BEFORE ANYONE ELSE DOES: `R-784 §1` minted `A POSITIVE CONTROL THAT RETURNS THE SAME CLASS AS YOUR NULL RESULT IS NOT A CONTROL` — and the adjacent-range control above returns a **TEST** file, which is the same class as my null result.** ⇒ **IT PROVES THE RANGE QUERY RUNS; IT DOES **NOT** PROVE THE `non-test` FILTER CAN SURFACE A NON-TEST FILE.** ✅ **DISCHARGED SEPARATELY WITH A REAL CONTROL, RUN BEFORE THIS AR COMMITTED:**
+```
+[MEASURED HERE, identical command shape, exit 0]
+git diff --name-only d83eebff~1..d83eebff -- src/
+  src/engine/extraction/spec_producer.py                      <- NON-TEST PRODUCTION FILE
+  src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py
+```
+⇒ **the filter DOES surface a non-test production file when one exists, so my `NON-test src/ -> NONE` at `6` is a real absence and not a broken query.** ⚠️ **Stated exactly: that command returns TWO files, not one; only the first is the control. I am not rounding it to the shape that flatters the claim.** ⚖️ **This is the desk's own `R-784 §1` conviction applied one ruling later by the seat that read it, rather than repeated.**
+✅ **`python scripts/system_inventory.py --check` → `FRESH`, exit `0`.** ✅ **`git cat-file -t 18501f4e` → `commit`.** ⚖️ **NO CONTRADICTORY STATE ⇒ `R-784 §3`'s STOP DOES NOT FIRE.**
+
+### §2 — ✅ THE EAR: ARMED BY ME, DELIVERING, RED-PROOFED ON A THROWAWAY, AND ITS BANNER IS FIXED
+✅ **CENSUS FIRST `[MEASURED HERE, `Win32_Process` + parent walk]`: TWO `claude.exe` — `32972` and `33036` (me), both parented to `explorer.exe 9228`.** **FOUR `bash.exe` — `30400 · 32152 · 8500 · 28488` — and `[MEASURED]` **every one of them has a DEAD parent** (the walk terminates at the bash PID itself). ⇒ **ALL FOUR ARE ORPHANS, NONE IS MINE, AND I KILLED NONE OF THEM** (`worker-onboarding §2a-3`; a seat went blind doing exactly that on 2026-08-08). ⚠️ **`AR-915` predicted a future seat would find these. It did.**
+✅ **NO EAR EXISTED UNDER MY PID ⇒ I ARMED ONE: `Monitor persistent`, owner `claude.exe 33036`, 10s poll.**
+✅ **RED-PROOFED ON A THROWAWAY FILE **BEFORE** POINTING AT THE REAL ONE, BOTH WITNESSES DELIVERED AS CHAT NOTIFICATIONS:** the `ARMED(throwaway) … baseline_line_start_headers=2` line proved **the channel**, and a planted `## R-999` fired `*** THROWAWAY DETECTOR FIRED: ## R-999 ***`, which proved **the detector**. **The throwaway was then stopped via `TaskStop`.** ★ **A detector that has never gone off is not an instrument; this one has, on a file where a false positive costs nothing.**
+⭐ **AND I FIXED THE DEFECT `AR-915 §2` DECLARED AGAINST ITSELF RATHER THAN INHERITING IT.** Its banner printed `newest_on_disk=R-999`/`baseline_rulings=764` because its regex matched `## R-` **anywhere on a line**, including prose inside `R-779`. **Mine anchors at line start (`grep -oE '^## R-[0-9]+'`).** `[MEASURED — the armed banner, delivered]` `line_start_headers=763  newest_line_start_header=R-784`. ⇒ **the status line now agrees with the hand-read backfill instead of contradicting it.** ★★★★ **`A DETECTOR AND ITS STATUS LINE ARE TWO INSTRUMENTS` — the fix was one anchor character, and the reason it got fixed is that the previous seat published the defect instead of hiding it.**
+✅ **BACKFILL — THE BLIND WINDOW, READ BY HAND, ARMING TIME IS THE JOIN KEY:** newest ruling on disk at arming = **`R-784`**, read in full; newest AR on disk = **`AR-917`**, read in full.
+
+### §3 — ⚖️ WHY I AM NOT REQUESTING RE-AUTHORIZATION, AND WHY THAT IS NOT `AR-915`'s SITUATION INVERTED
+`AR-915` correctly refused to start because `R-782 §6` named **`claude.exe 12460`**, a seat measured DEAD. **My case is the opposite and it is explicit:** `R-784 §3` reads *"`R-783 §6`'s AUTHORIZATION STANDS AND **TRANSFERS** — THE INCOMING SEAT STARTS `ATTEMPT 1` ON ITS RECEIPT, NO NEW RULING NEEDED"*, resting on `protocol §12` and **corroborated by the external read's `§21`, which reversed its own earlier position to get there.** ⇒ **I am the incoming seat; the receipt above is the condition; I start.**
+🛑 **I am NOT invoking the blocked-worker exception against the GPT wait and I do not need it — I am not blocked.**
+
+### §4 — ⚖️ WHAT I INHERIT AND WILL NOT RE-DERIVE (`R-784 §5`'s MITIGATION, USED AS INTENDED)
+**`AR-917 §8` is my brief.** The base is here (no checkout — `§2` of that AR); the primitive string is `opening_range_adapter.compute_opening_range_state` → `src.engine.opening_range_adapter:compute_opening_range_state`, convention-derived and still mine to change at surface `4`; **all eleven are located in production at file:line and I will not re-locate them.** **Surface `9` is "make these RED fixtures green", NOT "edit them"** (`R-784 §2`, read `§18`).
+🛑 **THE TWELVE STOP CONDITIONS (`R-784 §2`) AND `R-782 §6`'s FORBIDDEN LIST ARE LOADED AND BINDING.** **Member `11` is an `elif` ABOVE `spec_condition_compiler.py:1928`'s `else` — touching the `else` arm itself closes `ELSE-SINK-1` and is a STOP.**
+✅ **NEW ACCEPTANCE TERM NOTED (`R-784 §4`): after activation, a regenerated inventory that STILL reads *"no non-test reference outside its own definition"* for `compute_opening_range_state` is a **STOP**, and I must name which of the two it is — unwired, or a scanner that cannot see.**
+
+### §5 — ✅ THE TWO DEFECT-CHECKS `worker-execution` ORDERS BEFORE STARTING, BOTH CLEAN
+✅ **METRIC MIX (`§5`):** `ACCEPT-0`…`ACCEPT-5` are **mechanical** — pytest membership, node-ID set arithmetic, `tsc`, a spy tuple, a static-map string. **None requires ground truth ⇒ no grading act is smuggled into my acceptance list, and I owe no `accuracy-validator` dispatch for `STEP 2` itself.** ⚖️ **Stated because raising it at delivery would cost the whole run.**
+✅ **FAKE EDGE (`§5c`):** the eleven are **ordered ALL-OR-NONE in ONE commit**, so serialisation is the point, not a fake edge. **No lane may be parallelised and I am not proposing any.**
+✅ **PRIOR ART STATED (`§0.-0.5`), TERMS NAMED:** `--check` FRESH at seating; `R-780 §6` / `R-782 §4` / `R-783 §4`+`§4a` / `R-784 §2`+`§4` read verbatim rather than summarised; searched `opening_range`, `OPENING_RANGE`, `_h_opening_range`, `ENFORCED_DISPATCH`, `PRIMITIVE_RESOLVERS`, `compute_opening_range_state` across the two ledgers and `src/`. **`R-736`/`R-743` (three durations ⇒ three bots, no default, no selection) are SETTLED and I proceed under them — I am not re-opening the question `AR-896 §5` was caught re-opening.**
+
+### §6 — ⏳ FIRST OBSERVABLE AND WHAT WOULD STOP ME
+**FIRST OBSERVABLE: ONE commit containing the eleven production surfaces, with `ACCEPT-1`/`ACCEPT-2`/`ACCEPT-3` output.** **ETA: this session, single AR for `STEP 2`.** 🛑 **ANY of the twelve stop conditions fires ⇒ I stop and report BEFORE committing, and `ATTEMPT 1` is spent either way.** ✅ **`git add` in its OWN call, FIRST (`R-783 §4a`); `git status --porcelain` re-run immediately before any commit or push; an unowned tracked modification ⇒ STOP, snapshot OUTSIDE the repo, report before invoking the hook.**
+
+---
+
 ## AR-917 · 2026-08-09 · ✅ **`STEP 2`'s FIRST OBSERVABLE IS DELIVERED, COMMITTED AND PUSHED: THE THREE TRANSITIONED FIXTURES ARE PUBLISHED **RED** ON THEIR NEW DURABLE ASSERTIONS, AT THE PRE-ACTIVATION BASE.** ⭐ **AND I PROVED THE BASE WITHOUT A `git checkout` IN A SHARED TREE — `HEAD`'s `src/` IS `18501f4e`'s `src/`, MEASURED WITH A POSITIVE CONTROL.** 🛑 **THE ELEVEN-SURFACE ACTIVATION IS **NOT STARTED**, AND I AM HANDING OFF BEFORE STARTING IT — GENUINE EXHAUSTION AGAINST AN ATOMIC UNIT, NOT A LANE-BOUNDARY PREFERENCE.** ⚠️ **ONE CORRECTION AGAINST MYSELF INSIDE.**
 
 **SEAT `claude.exe 29192`. HEAD `896398ce` = `origin` `[MEASURED, re-fetched]`. ATTEMPT `0 / 2` — I BELIEVE UNSPENT, BUT THAT IS THE DESK'S CALL (`§7`).**
