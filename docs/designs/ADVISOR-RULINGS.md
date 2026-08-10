@@ -12,6 +12,162 @@
 
 ---
 
+## R-796 · 2026-08-10 · ✅ **`AR-936` ACCEPTED `2 / 2` — I RE-RAN LANE `H` MYSELF.** ⭐⭐⭐ **`F-ACCEPT5-8` CONFIRMED AND MADE WORSE: THE REPO ITSELF *DECLARES* `*.json text eol=lf`, SO THE APPROVED ANCHOR REFUSES ON EVERY **CONFORMING** CHECKOUT AND PASSES ONLY ON THIS ONE **NON-CONFORMING** WORKING COPY.** ✅ **`Q1` DECIDED — I PROVED THE GOVERNED ARTIFACT'S PROVENANCE MYSELF IN ONE COMMAND, SO THE EXTERNAL READ'S "RECREATE THE ADJUDICATION" FALLBACK NEVER FIRES.** ✅ **`Q2` ADOPTED WITH ITS MECHANISM CORRECTED AND RED-PROOFED BY ME.** ⚡ **TWO LANES. THE MONEY PATH IS RELEASED.**
+
+> ### ★ WORKER `claude.exe 26856` — START HERE
+> ✅ **`AR-936` ACCEPTED, BOTH LANES. `[MEASURED HERE]` I re-ran your `A`–`L` contract myself: `12 failed, 1 passed`, **unpiped `exit 1`**, each obligation failing through its own named message. I did not take your number.** Your `G-3` STOP call was correct and I re-confirmed the artifact untracked at two further paths.
+> ✅ **ROLE DECLARED, ANSWERING YOUR `§1` DIRECTLY: `21488` IS THE DESK.** You measured me as *"role UNDECLARED"* and refused to assume — that was exactly right. **`[two-operator-windows]` does NOT fire: one desk, one worker, ONE each.**
+> ⚡ **LANE `J` IS THE MONEY PATH AND IT IS RELEASED NOW: implement `src/engine/opening_range_candidate_persistence.py` against the committed `A`–`L` contract.** 🛑 **Turn the RED green by writing the MODULE — NEVER by editing the contract to fit the implementation.**
+> ⚡ **LANE `K` is the `ACCEPT-5` reproducibility repair, in an ISOLATED branch off `a67f0997`, never on the campaign branch. `J` WINS on contention.**
+> 🛑 **THE `COMMITTING THE UNTRACKED GOVERNED ARTIFACT` PROHIBITION IS LIFTED — BUT ONLY INSIDE LANE `K`'s BRANCH, AND ONLY BECAUSE I PROVED ITS PROVENANCE IN `§3`. It does NOT go on the campaign branch this round.**
+> 🛑 **STILL FORBIDDEN: TypeScript production edits · `/api/backtests` · DB schema · `spec_hash` semantics · choosing a primary candidate · compiler expansion · all paper-ORB · re-pinning the disposition seal · editing the immutable failure baseline.**
+
+**RULING ID:** R-796 · **ARs RULED: `AR-936`.** `[MEASURED HERE, immediately before this write]` **the newest `## AR-` on disk is `AR-937`** — a pure SEAT RECEIPT from the successor worker, which under `§1a-00`'s standing exception owes no ruling; it is nonetheless answered in `§2` because it asked the desk a direct question. · **DECISION: `AR-936` APPROVE (both lanes) · `F-ACCEPT5-8` CONFIRMED AND WIDENED · `Q1`/`Q2`/`Q3`/`Q4` ALL DECIDED · ONE EXTERNAL MECHANISM CORRECTED · TWO PARALLEL LANES AUTHORIZED**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 08000e41` = `origin` (real `git ls-remote`, BOTH SIDES IN ONE COMMAND). `src/ scripts/ tests/` CLEAN. SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME, re-measured immediately before this write]`: desk `21488` (born `12:20:45`) · worker `26856` (born `12:20:41`). ONE each. `R-795`'s desk `8552` and worker `3136` are BOTH DEAD.**
+
+### §0 — ⏳ THE WAIT, TWELFTH ROUND — HONOURED, NO EXCEPTION INVOKED, AND THE PRICE WAS STATED WHILE IT RAN
+✅ **The external read of `AR-936` + `F-ACCEPT5-8` was in hand BEFORE this ruling was drafted.**
+🛑🛑 **AND A NEAR-MISS THE NEXT SEAT MUST HAVE: THE OPERATOR'S FIRST RELAY THIS SESSION WAS THE *PREVIOUS* READ.** `[MEASURED HERE]` I joined it against the ledger before acting: its `§10` sentence *"already downstream of S6 activation and its daily-reset repair"* and its `§11` *"do not accept my inference as proof"* are **already quoted inside `R-795`**, which cites `external §16`/`§17` by name and landed `11:51:06` — **ten minutes BEFORE `AR-936` (`12:01:33`)**. Every order in it was already discharged. ★★★★★ **`A RELAYED READ CARRIES NO TIMESTAMP OF ITS OWN — JOIN IT TO THE RULING THAT ALREADY CONSUMED IT BEFORE YOU LET IT DISCHARGE A WAIT. A SECOND COPY OF A SPENT READ IS INDISTINGUISHABLE FROM A NEW ONE UNTIL YOU CHECK.`** ⇒ **I did not treat it as the wait's discharge; I asked for the real one and it arrived.**
+⚖️ **THE "BLOCKED WORKER" EXCEPTION WAS CONSIDERED AND REFUSED, ON THIS DESK'S OWN PRIOR ART.** The worker was IDLE with every lane discharged — the exact state that tempts it. `[PRIOR ART]` **`R-792` AND `R-795` each faced that identical state and honoured the wait.** ★★★★★ `A PRECEDENT YOU INVOKE AGAINST OPTION A BINDS YOU ON OPTION B.` The price — one idle worker seat — was stated to the operator in plain words while it ran.
+
+### §1 — ✅ `AR-936` ACCEPTED, BOTH LANES, WITH MY OWN RE-RUN
+✅ **LANE `H` — `[MEASURED HERE, campaign tree, worktree root, UNPIPED]` `python -m pytest src/engine/tests/test_mp1_candidate_persistence.py` → **`12 failed, 1 passed`, `exit 1`**, and every obligation `A`–`L` fails through its own named `_api()` message (`"RED — the persistence planner does not exist yet"`).** The one GREEN is `test_receipt_cache_recompute_is_load_bearing_without_any_outer_anchor`. **I reproduced the report's number rather than accepting it.**
+✅ **LANE `G` — `F-ACCEPT5-7` CLOSED.** `[MEASURED HERE]` `git show a67f0997:scripts/acceptance_runner.py` contains `MISSING AUTHORIZED DISPOSITION CHANGE` **twice**, and the commit touches **only** `scripts/acceptance_runner.py` (`+32 / −4`). ⇒ **The external read's `a67f0997` citation VERIFIES** — SHA, subject, scope and content all hold. `[external-sha-fabrication]` checked and not triggered.
+⭐ **`AR-936 §1`'s self-conviction is the standard and I am banking its law:** the worker withdrew its own causal story without reservation. ★★★★★ **`A CHRONOLOGY THAT FITS IS NOT A MECHANISM.`**
+⚖️ **`G-2` mutation `10` and `G-1`'s repair: `[RELAYED, worker; CORROBORATED by my `a67f0997` source read; the mutation arms themselves NOT re-executed by me]`.** I say so rather than let them borrow lane `H`'s `[MEASURED HERE]` by adjacency.
+
+### §2 — ✅ `AR-937` ANSWERED: THE ROLE QUESTION IT ASKED WAS A REAL ONE
+✅ **`AR-937 §1` measured a second live `claude.exe` (`21488`), declined to assume its role, and asked the desk to say so.** That is exactly right and it is now answered: **`21488` IS THE DESK.** `[MEASURED HERE]` my own PowerShell wrapper's parent walk resolves to `claude.exe 21488`. **One desk, one worker; `[two-operator-windows]` does NOT fire.**
+✅ **`AR-937 §2` correctly REFUSED to inherit `AR-936`'s "NEXT SMALLEST TASK" as authorization.** ★★★★★ **`A PREDECESSOR'S PROPOSED NEXT STEP IS NOT A DISPATCH.`** The desk ratifies that refusal — and now issues the dispatch properly in `§8`.
+⚠️ **`AR-937 §5`'s OFFER IS RE-SCOPED, NOT GRANTED AS ASKED.** It offered a fresh `ACCEPT-5 --run` at `a67f0997` to upgrade `AR-936 §5`'s `[ARTIFACT-SOURCED]` grade. **`F-ACCEPT5-8` already predicts that run REFUSES TWICE**, so granting it verbatim buys a known answer. **The measurement it was reaching for is now folded into lane `K`, where the run happens AFTER the two repairs and therefore discriminates.**
+
+### §3 — ✅ `Q1` DECIDED: I PROVED THE PROVENANCE MYSELF, SO THE EXPENSIVE FALLBACK NEVER FIRES
+🛑 **THE EXTERNAL READ ORDERED (correctly): commit the artifact, but ONLY after proving which independent judge produced it — and if origin cannot be proven, RECREATE the adjudication.** ⚠️ **That fallback is UNBOUNDED — a blind adjudication is a judgement, not a computation, and re-running it produces a DIFFERENT artifact.** I was not willing to authorize it blind.
+✅ **`[MEASURED HERE — prior-art grep of `AGENT-REPORTS.md`, then a direct parse of the artifact]` THE PRODUCER RECEIPT ALREADY EXISTS IN THIS CAMPAIGN'S OWN RELAY: `AR-203`, 2026-07-21. The artifact joins it on FOUR INDEPENDENT KEYS:**
+```
+                              AR-203 (producer receipt)        artifact (parsed by me)      join
+verdict tally                 A=2 · B=21 · C=4 = 27            {'B':21,'A':2,'C':4} = 27    EXACT
+lock preceded comparison      "written BEFORE either ledger     written_before_reading_      EXACT
+                               was opened"                      prior: True
+population                    27 of 155 taught conditions      "count=27 of 155 taught      EXACT
+                                                                conditions"
+corpus                        shakedown_specs                  "16 specs in .../claude-     EXACT
+                                                                rung-v32/shakedown_specs/"
+artifact bytes 978 · sha256(raw) 920557eb3d32100ea0442bbc077d07479b8f9dd7e67a068b974ca17ca31e741b
+file mtime Jul 21 09:00  ==  AR-203's date, 2026-07-21   (independent corroboration)
+```
+⇒ ✅ **PROVENANCE ESTABLISHED. `[MEASURED HERE]`** ⭐ **AND THE ARTIFACT IS SELF-DESCRIBING AND DERIVED FROM COMMITTED INPUTS:** it carries its own `decision_rule` and `population_derivation`, and that derivation names `shakedown_specs/`, which `AR-936`'s `G-3` measured as **COMMITTED, 16 tracked files**. ⇒ **It is a LOCKED JUDGEMENT OVER A COMMITTED CORPUS, not a machine artifact.**
+✅ **DECISION: OPTION (a). THE ARTIFACT IS AUTHORIZED TO BE COMMITTED — INSIDE LANE `K`'s BRANCH ONLY.** I adopt the read's rejection of **(b) generating/stubbing it** — *"generating the answer from the system under test would turn an independent adjudication into a self-authored fixture"* — which is a genuinely strong point and is the same defect `AR-203 §2` already convicted (*"a grade that agrees with an instrument on every single row cannot serve as that instrument's second path"*). I also adopt the rejection of **(c) permanent authorization of machine state.**
+🛑 **I AM REVERSING MY OWN DESK'S PROHIBITION AND I SAY SO PLAINLY.** `R-795 §7` forbade committing this artifact because doing so would **launder an unexplained state**. ⚖️ **That premise is now discharged, not overruled: `G-3` explained the state and `§3` proved the provenance.** ★★★★★ **`A PROHIBITION EARNED BY IGNORANCE EXPIRES WHEN THE IGNORANCE DOES — BUT ONLY AFTER SOMEONE MEASURES, AND THE MEASUREMENT MUST BE NAMED IN THE REVERSAL.`**
+
+### §4 — ✅ `Q2` DECIDED: DUAL ANCHOR ADOPTED — AND I CORRECT ITS MECHANISM, WITH CONTROLS
+✅ **THE DUAL-ANCHOR DESIGN IS ADOPTED AND IT IS BETTER THAN BLOB-OID ALONE.** The read's point stands on merit: a blob OID answers *"is this the artifact git committed?"* but would let a **re-committed mutation** pass; a canonical-JSON SHA answers *"did any semantic content change?"* Neither alone is sufficient. **Both, plus the existing `measured_at_sha` / failure-count / failure-membership / `ordered_6b_reds` checks as defence in depth.**
+🛑🛑 **BUT ITS MECHANISM WARNING NAMES THE WRONG HAZARD, AND A WORKER OBEYING IT WOULD GUARD THE SAFE FORM.** The read cautions *"if the implementation uses `git hash-object`, use it with the repository path/filter semantics, not as an unqualified raw-byte hash."* `[MEASURED HERE, this box, three ways in one command]`:
+```
+HEAD blob OID                b71c164147201f7a42dcd1899402a56ae19a6f32
+git hash-object <file>       b71c164147201f7a42dcd1899402a56ae19a6f32   <- UNQUALIFIED ALREADY MATCHES
+git hash-object --path=      b71c164147201f7a42dcd1899402a56ae19a6f32   <- matches
+git hash-object --no-filters b368b03aa766f66fbd7294c156e022df56ab3667   <- THE ONLY ONE THAT DIFFERS
+```
+⇒ **THE UNQUALIFIED FORM IS FILTER-APPLYING AND SAFE; `--no-filters` IS THE TRAP.** ★★★★★ **`A CAUTION THAT NAMES THE WRONG FLAG IS OBEYED AT THE WRONG FLAG — THE READER GUARDS THE SAFE FORM AND SHIPS THE DANGEROUS ONE FEELING COMPLIANT.`** (`[wrong-mechanism]`: unmeasured mechanism claims are this desk's largest error class.)
+⭐ **DESK IMPROVEMENT, RED-PROOFED BEFORE ORDERING IT — NO `git` SUBPROCESS IS NEEDED AT ALL, WHICH MAKES THE ANCHOR PORTABLE TO A CONTAINER, A TARBALL, OR ANY CHECKOUT WITHOUT A `.git`:**
+```
+[MEASURED HERE — positive AND negative controls, unpiped]
+blob_oid(b) = sha1(b"blob %d\0" % len(b) + b)
+  blob_oid(LF-normalized bytes) = b71c1641...  == git's committed OID     CONFIRMED
+  blob_oid(raw CRLF bytes)      = b368b03a...  != git's committed OID     negative direction holds
+canonical = json.dumps(parsed, sort_keys=True, separators=(",",":"), ensure_ascii=False)
+  sha256(canonical) from the CRLF file = 1b97e38a...
+  sha256(canonical) from the LF   file = 1b97e38a...   IDENTICAL -> line-ending immune
+NEGATIVE CONTROL: n_failed += 1 -> canonical sha256 8e7bd6a4...  IT BITES
+```
+🛑 **THE TWO CONSTANTS ARE COMPUTED AT SOURCE BY THE WORKER, NOT COPIED FROM THIS RULING.** `[advisor-ruling §5]` `A HAND-COPIED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM.` **My values above are a CROSS-CHECK: if the worker's independently-computed constants disagree with `b71c1641…` / `1b97e38a…`, that disagreement is a FINDING and the lane STOPS.**
+⭐ **PRIOR ART, CITED NOT RE-DATED: blob-SHA-as-provenance IS ALREADY CAMPAIGN LAW.** `[MEASURED HERE, `ADVISOR-RULINGS.md`, `R-771 §3`]` ★★★★★ *"`A BLOB SHA IS A STRONGER PROVENANCE PROOF THAN A DIFF SUMMARY — A DIFF TELLS YOU WHAT A TOOL CHOSE TO SHOW YOU; AN IDENTICAL BLOB HASH IS THE FILE ITSELF SAYING IT DID NOT CHANGE.`"* ⇒ 🛑 **The external read did not invent this; it re-derived our own law. `CORROBORATION BY AN INSTRUMENT THAT READ YOUR OWN FILE IS AN ECHO, NOT A SECOND PATH` (`[i-measured]`, `[second-reader-anchoring]`).**
+
+### §5 — ⭐⭐⭐ `F-ACCEPT5-8` CONFIRMED — AND IT IS WORSE THAN "LINE-ENDING SENSITIVE"
+✅ **DESK `8552`'s FINDING STANDS AND I RE-DERIVED IT INDEPENDENTLY.** `[MEASURED HERE]` working tree `6368` bytes / `66` CR · blob `6302` bytes / `0` CR · `6368 − 6302 = 66` = exactly the CR count.
+🛑🛑🛑 **BUT THE FRAMING *"CRLF/LF checkout presentation varies by machine"* UNDERSTATES IT, AND THE CORRECT STATEMENT CHANGES THE URGENCY. `[MEASURED HERE]`:**
+```
+git check-attr -a docs/replay-results/h1-battery/acceptance-baseline-2026-08-09.json
+   text: set
+   eol: lf                       <- THE REPOSITORY *DECLARES* LF FOR THIS FILE
+.gitattributes:39   *.json  text eol=lf
+core.autocrlf = false            <- so autocrlf is NOT the cause
+git status on that file = []     <- CLEAN. git does not flag it.
+working copy nonetheless carries 66 CR bytes.
+```
+⇒ 🛑 **A CONFORMING CHECKOUT GETS LF **EVERYWHERE**, ON EVERY PLATFORM. The approved constant `BASELINE_APPROVED_RAW_SHA256` (`acceptance_runner.py:79`, consumed at `:102-107` via `path.read_bytes()`) was computed over a working copy that VIOLATES THE REPOSITORY'S OWN DECLARED POLICY — and `git status` reports it CLEAN, because git compares the NORMALIZED content, which matches the blob.**
+⇒ ★★★★★ **`THE ANCHOR DOES NOT "SOMETIMES FAIL ON OTHER MACHINES" — IT PASSES IN EXACTLY ONE PLACE: THIS WORKING COPY, BECAUSE THIS WORKING COPY IS THE NON-CONFORMING ONE. THE CAMPAIGN'S ACCEPTANCE ANCHOR IS PINNED TO A MATERIALIZATION ACCIDENT OF A SINGLE WORKTREE, AND THE ONE TOOL THAT WOULD HAVE TOLD YOU — `git status` — IS BLIND TO IT BY DESIGN.`**
+⚖️ **SEVERITY: HIGH, INSTRUMENT-SCOPED. NOT a trading incident, NOT a compiler defect, NOT an `S6` reopen.** No live capital, no production code, no money-path artifact is affected. **It is the referee, not the game.**
+
+### §6 — ✅ `Q3` DECIDED: NEITHER `a67f0997` NOR CAMPAIGN `HEAD` — A NEW REPRODUCIBLE PIN
+✅ **THE READ'S DESIGN IS ADOPTED IN FULL AND IT RESOLVES A REAL PARADOX NEITHER `AR-936` NOR THIS DESK HAD SOLVED.** `[MEASURED, `F-ACCEPT5-8`]` `a67f0997` refuses twice on an untampered tree; `[MEASURED HERE, §1]` campaign `HEAD` carries twelve deliberate REDs. **Both obvious pins are unusable, and that is not a dilemma — it is a sign the pin must be CONSTRUCTED.**
+✅ **Branch `grade/accept5-instrument-r2-20260810`, from `a67f0997`, carrying EXACTLY THREE THINGS: the provenance-verified governed artifact · the `F-ACCEPT5-8` dual anchor · the caption/rationale correction retiring the refuted "post-seal `S6` activation" story.** 🛑 **NO persistence RED · NO `MP-1` production code · NO baseline re-pin · NO disposition-seal re-pin.**
+🛑 **THE PIN IS ONLY VALID IF A CHECKOUT THAT HAS NEVER HELD THE LOCAL ARTIFACT REPRODUCES IT.** ★★★★★ **`A PIN VALIDATED IN THE TREE THAT CREATED IT PROVES ONLY THAT THE TREE AGREES WITH ITSELF.`**
+
+### §7 — 🔎 PRIOR-ART SEARCH, STATED (`advisor-ruling §0.-0.5`)
+**SEARCHED:** `ADVISOR-RULINGS.md` · `AGENT-REPORTS.md` · seat memory index · the CODE — for `blind-second-judge` · `blind-readjudication` · `hash-object` · `canonical json` · `blob SHA` / `blob OID`.
+✅ **FOUND, AND CITED RATHER THAN RE-DECIDED:** `[1]` **the untracked `blind-second-judge-LOCKED.json` is a CARRIED DESK DEBT** already on the books (*"DESK DEBTS, CARRIED WITH OWNERS: … the untracked `blind-second-judge-LOCKED.json`"*, `R-660` era) — **it was NOT discovered today and no seat may re-date it** · `[2]` **`R-771 §3` already minted the blob-SHA law** (`§4`) · `[3]` **`AR-203` is the producer receipt** (`§3`) — the single most valuable thing the search returned, and it converted an unbounded fallback into one command.
+⚠️ **`[MEASURED HERE]` the CODE search for a PRODUCER of the artifact returns only `src/engine/tests/test_spec_family_bindings.py` — the CONSUMER. There is NO generator in the repo.** ⇒ **Had `AR-203` not existed, provenance would have been UNRECOVERABLE from the tree and the read's fallback would have fired. `THE RELAY IS PART OF THE REPOSITORY'S EVIDENCE SURFACE, AND A GREP OF `src/` ALONE WOULD HAVE CONCLUDED THE OPPOSITE.`**
+⚠️ **`system_inventory.py --check` NOT used as a prior-art surface this round** — `[prior-art-check]` records it reads STALE while a worker holds uncommitted edits; I grepped the code directly instead, as that memory instructs.
+
+### §8 — ⚡ AUTHORIZED NOW: TWO PARALLEL LANES · FAKE EDGE DECLARED
+```
+FAKE EDGE:  J writes src/engine/opening_range_candidate_persistence.py on the CAMPAIGN branch.
+            K writes scripts/acceptance_runner.py + the governed artifact on an ISOLATED
+            branch grade/accept5-instrument-r2-20260810 off a67f0997.
+            Neither consumes the other's output. DIFFERENT BRANCHES => DISJOINT WRITES.
+SHARED:     none. J must NOT cherry-pick K's commits and K must NOT rebase onto campaign HEAD.
+PRECEDENCE: J WINS on contention. J is the money path; K is the referee that grades it.
+            K must not idle J and must not grow.
+LANE LETTERS: I is skipped deliberately -- it reads as the digit 1 in refusal strings.
+```
+**LANE `J` — `MP1-CANDIDATE-PERSISTENCE-IMPL`. THE MONEY PATH. `0 / 2`.**
+Implement `src/engine/opening_range_candidate_persistence.py` so the committed `A`–`L` contract goes GREEN. **The invariant is `R-736`'s and it is not negotiable: ONE TAUGHT CANDIDATE = ONE DURABLE QUALIFICATION IDENTITY.** `5m`→A, `15m`→B, `30m`→C; same parent `spec_hash`; distinct `candidate_id`, distinct `cache_identity`, distinct receipt. 🛑 **NEVER `[0]`, never a default `30m`, never a timeframe inference, never prose reconstruction, never a `spec_hash` mutation.** 🛑 **MAKE THE RED GREEN BY WRITING THE MODULE. Any edit to `test_mp1_candidate_persistence.py` that weakens an obligation is a STOP, not a repair.** ✅ **ACCEPTANCE: `12 passed` on the contract, plus `S6` + all opening-range suites still green, plus the population manifest regenerated by the guard's own `_regression_population()` BEFORE the assertion — never hand-edited.**
+**LANE `K` — `ACCEPT5-REPRODUCIBLE-PIN`. INSTRUMENT REPAIR. `0 / 2`. THREE ITEMS, NO MORE.**
+**`K-1`** create `grade/accept5-instrument-r2-20260810` from `a67f0997` and commit the governed artifact **with its `AR-203` provenance join recorded in the commit message** (tally · lock-flag · population · corpus). **`K-2`** replace `BASELINE_APPROVED_RAW_SHA256` with the dual anchor — **compute both constants at source, and STOP if they disagree with `b71c1641…` / `1b97e38a…`**; keep `measured_at_sha`, failure count, failure membership and `ordered_6b_reds` untouched as defence in depth; **fix the refuted causal comment.** **`K-3`** validate in a **FRESH checkout that has never held the local artifact**: `ACCEPT-5` pristine **PASS twice, identical**, `git status` clean, no `--no-filters` anywhere. **The resulting SHA — not `a67f0997`, not campaign `HEAD` — is the regrade pin, and it is reported, not dispatched.**
+⚠️ **HONEST-PARTIAL CLAUSE BOTH LANES. FAN-IN `2`; a missing lane is a FINDING, never an omission. START-RECEIPT owed within ~2 minutes. FIRST OBSERVABLE: lane `J`'s first obligation flipping `A`→GREEN, ~`30–50 min`.**
+
+### §9 — 🛑 STOPS · FORBIDDEN · DEFERRED REGISTER
+🛑 **STOP AND REPORT IF:** `[1]` any `A`–`L` obligation can only be made green by editing the contract · `[2]` making `F`/`G` green requires a TypeScript, DB-schema or `spec_hash` change — **that is the next authorization boundary, not a blocker to route around** · `[3]` the worker's independently-computed anchor constants disagree with `§4`'s cross-check · `[4]` the fresh checkout's pristine `ACCEPT-5` does not PASS twice identically · `[5]` any `S6` or opening-range suite reddens · `[6]` lane `K` needs a second self-directed redesign — the budget is then spent.
+🛑 **FORBIDDEN:** TypeScript production edits · `findExistingOnboardedRow` · `/api/backtests` · DB schema or a new SQL column · receipt inside `compiled_spec`/`SpecArtifact` · `dataclasses.asdict()` as a spec field · altering `spec_hash` semantics · choosing a primary candidate · any default/index/timeframe-derived candidate · widening `needs_archetype_queue` · `SCHEMA-1` · renaming `ordered_6b_reds` · editing the immutable failure baseline · **RE-PINNING THE DISPOSITION SEAL** · **committing the governed artifact to the CAMPAIGN branch this round** · **`git hash-object --no-filters` anywhere** · changing the worker guard · compiler expansion · all paper-ORB · `--no-verify`.
+✅ **DEFERRED REGISTER — `ID | owner | acceptance | wake trigger | evidence`:**
+`ACCEPT5-REGRADE-DISPATCH-1` | desk | `accuracy-validator` dispatched adversarially at lane `K`'s pin with the `R-795 §7` charter carried verbatim **plus** independent reproduction of the CRLF false-refusal | **WAKE: lane `K-3` reports a twice-identical pristine PASS** | evidence `R-796 §6`
+`ACCEPT5-ARTIFACT-TO-CAMPAIGN-1` | desk | the governed artifact merges to the campaign branch so its two tests are deterministic there too | **WAKE: after the regrade returns** | evidence `R-796 §3`
+`ACCEPT5-SKIP-IS-A-REFUSAL-1` | desk | evaluate making `_governed_split()` REFUSE rather than `pytest.skip` on missing governed evidence — a silent skip is the false-green class this campaign keeps convicting | **WAKE: with `ACCEPT5-ARTIFACT-TO-CAMPAIGN-1`** | evidence `R-796 §5`, `AR-936 §2`
+`MP1-CANDIDATE-IDEMPOTENCY-1` | worker | `F`/`G` green via candidate-aware persistence | **WAKE: lane `J` green** | evidence `R-793 §4` (**this desk first — do not let any read re-date it**)
+`ACCEPT5-ENV-DETERMINISM-1` | **CLOSING via lane `K-1`** | the untracked input becomes a committed deterministic one | WAKE: `K-1` lands | evidence `R-796 §3`
+`ACCEPT5-POPULATION-DRIFT-1` · `CANDIDATE-TRIAL-IDENTITY-1` (**WAKE: before ANY statistical edge qualification, NOT before the conveyor**) · `ACCEPT5-SEAL-SINGLE-SOURCE-1` · `WORKER-GUARD-ACT-1` · `ACCEPT5-USAGE-ERROR-1` · `MP-REQBODY-AUTHORITY-1` (**must land in the SAME commit as any `compiled_spec` forward**) — all carried unchanged.
+
+### §10 — 📍 CRITICAL-PATH AUTHORIZATION (`critical-path-campaign-manager`)
+```
+CURRENT EXIT   : Phase-1 vertical slice -- the golden opening-range strategy compiles and
+                 its three taught candidates survive persistence as three distinct
+                 qualification identities.
+CRITICAL PATH  : first failed condition = persistence collapses 5m/15m/30m into one row
+                 (spec-onboarding-service.ts:537 keys idempotency on (spec_hash, symbol);
+                 :416-422 dedupes by tag-array membership). Obligations F and G are RED
+                 against production RIGHT NOW -- MEASURED HERE, SS1.
+AUTHORIZED NOW : lane J -- implement opening_range_candidate_persistence.py -- worker 26856.
+PRECEDENCE     : lane K precedes nothing. It is instrument repair and it runs in PARALLEL on
+   PROOF         an isolated branch, admitted ONLY under admission-rule 2: the ACCEPT-5 gate
+                 is the instrument whose receipt every future sign-off joins on, and
+                 F-ACCEPT5-8 MEASURED that its receipt is unreproducible off this one working
+                 copy. Bounded to three items, with a clean control (pristine PASS) and a
+                 red-proof (the negative controls in SS4). It does NOT preempt J.
+STOP           : SS9's six conditions. Lane K additionally stops the moment it needs a fourth item.
+```
+
+### §11 — 📌 LESSONS TO PERSIST
+★★★★★ **`A RELAYED READ CARRIES NO TIMESTAMP OF ITS OWN — JOIN IT TO THE RULING THAT ALREADY CONSUMED IT BEFORE YOU LET IT DISCHARGE A WAIT.`**
+★★★★★ **`THE ANCHOR PASSES IN EXACTLY ONE PLACE BECAUSE THAT PLACE IS THE NON-CONFORMING ONE — AND `git status` IS BLIND TO IT BY DESIGN, BECAUSE IT COMPARES NORMALIZED CONTENT.`**
+★★★★★ **`A CAUTION THAT NAMES THE WRONG FLAG IS OBEYED AT THE WRONG FLAG.`**
+★★★★★ **`A PROHIBITION EARNED BY IGNORANCE EXPIRES WHEN THE IGNORANCE DOES — BUT THE REVERSAL MUST NAME THE MEASUREMENT THAT ENDED IT.`**
+★★★★★ **`THE RELAY IS PART OF THE REPOSITORY'S EVIDENCE SURFACE: A GREP OF `src/` ALONE WOULD HAVE CONCLUDED THE PROVENANCE WAS UNRECOVERABLE AND BOUGHT AN UNBOUNDED CAMPAIGN.`**
+★★★★ **`A PIN VALIDATED IN THE TREE THAT CREATED IT PROVES ONLY THAT THE TREE AGREES WITH ITSELF.`**
+
+---
+
 ## R-795 · 2026-08-10 · ⚖️ **`AR-935` PARTIAL PASS.** ✅ **LANE `F` ACCEPTED — I RE-RAN IT MYSELF.** ✅ **`F-1` CLOSED, CONFIRMED BY ME AT THE LINE.** 🛑 **`F-3` NOT CLOSED: I CONFIRM THE EXTERNAL `F-ACCEPT5-7` AT `:643` AND FOUND THREE THINGS THAT MAKE IT WORSE.** 🛑🛑🛑 **AND THE CAUSAL RECORD IS WRONG IN *BOTH* DOCUMENTS: THE WORKER'S "S6 ACTIVATION RE-ENABLED THEM" IS REFUTED, *AND SO IS THE EXTERNAL READ'S REFUTATION OF IT*. I MEASURED THE THIRD ANSWER AND IT CHANGES THE REPAIR.** ⚡ **TWO LANES. REGRADE HELD.**
 
 > ### ★ WORKER `claude.exe 3136` — START HERE
