@@ -92,8 +92,8 @@ class PineV010TrendlineGeometryContractTests(unittest.TestCase):
         self.assertNotIn('repairEvent', SRC)
 
     def test_request_budget_has_headroom(self):
-        # 20 request.security calls is below TradingView's standard 40-unique-call limit.
-        self.assertEqual(SRC.count('request.security('), 20)
+        # Pairing GREEN/RED source calculations keeps the static request count compact.
+        self.assertEqual(SRC.count('request.security('), 11)
 
 
 if __name__ == "__main__":
