@@ -1,0 +1,988 @@
+//@version=6
+indicator("Slumdawg traders indicator", shorttitle = "Slumdawg traders indicator", overlay = true, behind_chart = true, max_labels_count = 100, max_lines_count = 140, max_boxes_count = 20)
+
+// PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
+const string BUILD_CLASSIFICATION = "PLATFORM_PARITY_ONLY"
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+const int NORMAL_CLOSED_GAP_MS = 72 * 60 * 60 * 1000
+const float HUGE_DISTANCE = 1e12
+
+// -----------------------------------------------------------------------------
+// USER-FACING INPUTS
+// -----------------------------------------------------------------------------
+string gSetup = "1 — SETUP"
+string bigDirection = input.string("NOT SET", "BIG DIRECTION", options = ["UP", "DOWN", "NOT SET"], group = gSetup, display = display.none)
+string planSide = input.string("LONG", "PLAN", options = ["LONG", "SHORT"], group = gSetup, display = display.none)
+float goLine = input.price(0.0, "GO LINE (yellow)", group = gSetup, display = display.none)
+float safeTargetLow = input.price(0.0, "SAFE TARGET lower edge", group = gSetup, display = display.none)
+float safeTargetHigh = input.price(0.0, "SAFE TARGET upper edge", group = gSetup, display = display.none)
+
+string gView = "2 — CLEAN CHART"
+bool showWeeklyWhenNear = input.bool(true, "Show PWH/PWL when near", group = gView)
+bool showCoach = input.bool(true, "Slumdawg coach", group = gView)
+bool showGoLine = input.bool(true, "Yellow GO LINE", group = gView)
+bool showSafeTarget = input.bool(true, "Blue SAFE TARGET", group = gView)
+bool showDebugMarkers = input.bool(false, "Tiny parity markers", group = gView, display = display.none)
+
+string gBoard = "2A — LOCKED TRENDLINE BOARD"
+int boardFreezeTime = input.time(0, "Build/freeze board at", group = gBoard, confirm = true, tooltip = "Click the current 5-minute bar when adding the indicator. The board is rebuilt deterministically at this time and then anchors stay frozen.", display = display.none)
+bool showDGreen = input.bool(true, "Daily GREEN", inline = "D", group = gBoard)
+bool showDRed = input.bool(true, "Daily RED", inline = "D", group = gBoard)
+bool show4HGreen = input.bool(true, "4H GREEN", inline = "4H", group = gBoard)
+bool show4HRed = input.bool(true, "4H RED", inline = "4H", group = gBoard)
+bool show1HGreen = input.bool(true, "1H GREEN", inline = "1H", group = gBoard)
+bool show1HRed = input.bool(true, "1H RED", inline = "1H", group = gBoard)
+bool show15MGreen = input.bool(true, "15M GREEN", inline = "15M", group = gBoard)
+bool show15MRed = input.bool(true, "15M RED", inline = "15M", group = gBoard)
+bool show5MGreen = input.bool(true, "5M GREEN", inline = "5M", group = gBoard)
+bool show5MRed = input.bool(true, "5M RED", inline = "5M", group = gBoard)
+
+string gRepair = "2B — REPAIR VIOLATED ONLY"
+bool repair1Enabled = input.bool(false, "Repair #1", inline = "R1", group = gRepair)
+int repair1Time = input.time(0, "time", inline = "R1", group = gRepair, active = repair1Enabled, tooltip = "Set to the bar where you want the selective repair. Valid lines remain untouched.", display = display.none)
+bool repair2Enabled = input.bool(false, "Repair #2", inline = "R2", group = gRepair)
+int repair2Time = input.time(0, "time", inline = "R2", group = gRepair, active = repair2Enabled, display = display.none)
+bool repair3Enabled = input.bool(false, "Repair #3", inline = "R3", group = gRepair)
+int repair3Time = input.time(0, "time", inline = "R3", group = gRepair, active = repair3Enabled, display = display.none)
+
+string gResearch = "2C — TRENDLINE RESEARCH GUARDS"
+int touchToleranceTicks = input.int(1, "Clean-ray tolerance (ticks)", minval = 0, maxval = 20, group = gResearch, tooltip = "Research/calibration value. Not production-certified.", display = display.none)
+int overlapTicks = input.int(8, "Parent/child overlap filter (ticks)", minval = 0, maxval = 100, group = gResearch, tooltip = "Rejects a child whose B remains too close to the parent ray. Research/calibration value.", display = display.none)
+int violationPenetrationTicks = input.int(1, "Violation penetration (ticks)", minval = 0, maxval = 20, group = gResearch, display = display.none)
+int violationCloses = input.int(2, "Consecutive source-TF closes", minval = 1, maxval = 4, group = gResearch, tooltip = "Slumdawg robustness layer, not attributed to the external trendline teaching.", display = display.none)
+
+string gTest = "3 — PARITY TEST ONLY"
+bool enableParityEngine = input.bool(false, "Enable test engine", group = gTest, display = display.none)
+string runtimeMode = input.string("STUDY", "Runtime", options = ["STUDY", "LIVE_DECISION_SUPPORT"], group = gTest, display = display.none)
+string feedAttestation = input.string("UNKNOWN", "Feed", options = ["UNKNOWN", "REALTIME", "DELAYED"], group = gTest, display = display.none)
+float minBreak = input.float(0.25, "BREAK distance", minval = 0.25, step = 0.25, group = gTest, display = display.none)
+float minPush = input.float(0.25, "PUSH distance", minval = 0.25, step = 0.25, group = gTest, display = display.none)
+float maxRecoil = input.float(2.00, "Max recoil", minval = 0.0, step = 0.25, group = gTest, display = display.none)
+float maxPushSeconds = input.float(60.0, "Max seconds per push", minval = 0.1, step = 0.1, group = gTest, display = display.none)
+float dojiBodyFraction = input.float(0.10, "Doji body/range", minval = 0.0, maxval = 1.0, step = 0.01, group = gTest, display = display.none)
+
+// -----------------------------------------------------------------------------
+// COLORS / PLATFORM CONTEXT
+// -----------------------------------------------------------------------------
+color GREEN_UP = color.rgb(0, 205, 105)
+color RED_DOWN = color.rgb(230, 55, 70)
+color BLUE_DAY = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color BLUE_TARGET = color.rgb(42, 118, 255)
+color YELLOW_GO = color.rgb(255, 215, 0)
+color ORANGE_WAIT = color.rgb(255, 155, 35)
+color PANEL_DARK = color.rgb(18, 20, 25)
+color PANEL_MID = color.rgb(37, 41, 49)
+color GOLD_ACCENT = color.rgb(205, 165, 70)
+
+bool isFiveMinute = timeframe.isminutes and timeframe.multiplier == 5
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+bool exactIntrabarAvailable = barstate.isrealtime
+string chartStatus = isFiveMinute ? "5 MIN ✓" : timeframe.period + " — USE 5 MIN"
+float touchTolerance = touchToleranceTicks * syminfo.mintick
+float overlapTolerance = overlapTicks * syminfo.mintick
+float violationPenetration = violationPenetrationTicks * syminfo.mintick
+
+// -----------------------------------------------------------------------------
+// PDH / PDL / PWH / PWL — PDH/PDL always; weekly only when near.
+// -----------------------------------------------------------------------------
+[dHighCurrent, dLowCurrent, dCloseTimeCurrent] = request.security(syminfo.tickerid, "D", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[dHighPrev, dLowPrev] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+[wHighCurrent, wLowCurrent, wCloseTimeCurrent] = request.security(syminfo.tickerid, "W", [high, low, time_close], lookahead = barmerge.lookahead_off)
+[wHighPrev, wLowPrev] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+int closedGapMs = timenow - time_close
+bool recentClosedGap = not barstate.isrealtime and closedGapMs >= 0 and closedGapMs <= NORMAL_CLOSED_GAP_MS
+bool extendedClosedGap = not barstate.isrealtime and closedGapMs > NORMAL_CLOSED_GAP_MS
+bool dailyCurrentCompletedNow = recentClosedGap and not na(dCloseTimeCurrent) and timenow >= dCloseTimeCurrent
+bool weeklyCurrentCompletedNow = recentClosedGap and not na(wCloseTimeCurrent) and timenow >= wCloseTimeCurrent
+float pdh = dailyCurrentCompletedNow ? dHighCurrent : dHighPrev
+float pdl = dailyCurrentCompletedNow ? dLowCurrent : dLowPrev
+float pwh = weeklyCurrentCompletedNow ? wHighCurrent : wHighPrev
+float pwl = weeklyCurrentCompletedNow ? wLowCurrent : wLowPrev
+bool dayValuesValid = not na(pdh) and not na(pdl)
+bool weekValuesValid = not na(pwh) and not na(pwl)
+float dailyVisualEnvelope = dayValuesValid ? math.max(math.abs(pdh - close), math.abs(pdl - close)) : na
+bool showPdh = dayValuesValid
+bool showPdl = dayValuesValid
+bool showPwh = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwh - close) <= dailyVisualEnvelope
+bool showPwl = showWeeklyWhenNear and weekValuesValid and not na(dailyVisualEnvelope) and math.abs(pwl - close) <= dailyVisualEnvelope
+
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+// -----------------------------------------------------------------------------
+// CONFIRMED SWING PACKS. Daily carries six same-side pivots; lower TFs carry four.
+// Combined request tuple count remains under Pine's request tuple-element ceiling.
+// -----------------------------------------------------------------------------
+f_pack6() =>
+    float pl = ta.pivotlow(low, 2, 2)
+    float ph = ta.pivothigh(high, 2, 2)
+    bool hasPl = not na(pl)
+    bool hasPh = not na(ph)
+    int plt = hasPl ? time[2] : na
+    int pht = hasPh ? time[2] : na
+    [
+      ta.valuewhen(hasPl, plt, 5), ta.valuewhen(hasPl, pl, 5),
+      ta.valuewhen(hasPl, plt, 4), ta.valuewhen(hasPl, pl, 4),
+      ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3),
+      ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2),
+      ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1),
+      ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0),
+      ta.valuewhen(hasPh, pht, 5), ta.valuewhen(hasPh, ph, 5),
+      ta.valuewhen(hasPh, pht, 4), ta.valuewhen(hasPh, ph, 4),
+      ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3),
+      ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2),
+      ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1),
+      ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)
+    ]
+
+f_pack4() =>
+    float pl = ta.pivotlow(low, 2, 2)
+    float ph = ta.pivothigh(high, 2, 2)
+    bool hasPl = not na(pl)
+    bool hasPh = not na(ph)
+    int plt = hasPl ? time[2] : na
+    int pht = hasPh ? time[2] : na
+    [
+      ta.valuewhen(hasPl, plt, 3), ta.valuewhen(hasPl, pl, 3),
+      ta.valuewhen(hasPl, plt, 2), ta.valuewhen(hasPl, pl, 2),
+      ta.valuewhen(hasPl, plt, 1), ta.valuewhen(hasPl, pl, 1),
+      ta.valuewhen(hasPl, plt, 0), ta.valuewhen(hasPl, pl, 0),
+      ta.valuewhen(hasPh, pht, 3), ta.valuewhen(hasPh, ph, 3),
+      ta.valuewhen(hasPh, pht, 2), ta.valuewhen(hasPh, ph, 2),
+      ta.valuewhen(hasPh, pht, 1), ta.valuewhen(hasPh, ph, 1),
+      ta.valuewhen(hasPh, pht, 0), ta.valuewhen(hasPh, ph, 0)
+    ]
+
+[dlt5, dlp5, dlt4, dlp4, dlt3, dlp3, dlt2, dlp2, dlt1, dlp1, dlt0, dlp0, dht5, dhp5, dht4, dhp4, dht3, dhp3, dht2, dhp2, dht1, dhp1, dht0, dhp0] = request.security(syminfo.tickerid, "D", f_pack6(), lookahead = barmerge.lookahead_off)
+[h4lt3, h4lp3, h4lt2, h4lp2, h4lt1, h4lp1, h4lt0, h4lp0, h4ht3, h4hp3, h4ht2, h4hp2, h4ht1, h4hp1, h4ht0, h4hp0] = request.security(syminfo.tickerid, "240", f_pack4(), lookahead = barmerge.lookahead_off)
+[h1lt3, h1lp3, h1lt2, h1lp2, h1lt1, h1lp1, h1lt0, h1lp0, h1ht3, h1hp3, h1ht2, h1hp2, h1ht1, h1hp1, h1ht0, h1hp0] = request.security(syminfo.tickerid, "60", f_pack4(), lookahead = barmerge.lookahead_off)
+[m15lt3, m15lp3, m15lt2, m15lp2, m15lt1, m15lp1, m15lt0, m15lp0, m15ht3, m15hp3, m15ht2, m15hp2, m15ht1, m15hp1, m15ht0, m15hp0] = request.security(syminfo.tickerid, "15", f_pack4(), lookahead = barmerge.lookahead_off)
+[m5lt3, m5lp3, m5lt2, m5lp2, m5lt1, m5lp1, m5lt0, m5lp0, m5ht3, m5hp3, m5ht2, m5hp2, m5ht1, m5hp1, m5ht0, m5hp0] = request.security(syminfo.tickerid, "5", f_pack4(), lookahead = barmerge.lookahead_off)
+
+array<int> dLowT = array.from(dlt5, dlt4, dlt3, dlt2, dlt1, dlt0)
+array<float> dLowP = array.from(dlp5, dlp4, dlp3, dlp2, dlp1, dlp0)
+array<int> dHighT = array.from(dht5, dht4, dht3, dht2, dht1, dht0)
+array<float> dHighP = array.from(dhp5, dhp4, dhp3, dhp2, dhp1, dhp0)
+array<int> h4LowT = array.from(h4lt3, h4lt2, h4lt1, h4lt0)
+array<float> h4LowP = array.from(h4lp3, h4lp2, h4lp1, h4lp0)
+array<int> h4HighT = array.from(h4ht3, h4ht2, h4ht1, h4ht0)
+array<float> h4HighP = array.from(h4hp3, h4hp2, h4hp1, h4hp0)
+array<int> h1LowT = array.from(h1lt3, h1lt2, h1lt1, h1lt0)
+array<float> h1LowP = array.from(h1lp3, h1lp2, h1lp1, h1lp0)
+array<int> h1HighT = array.from(h1ht3, h1ht2, h1ht1, h1ht0)
+array<float> h1HighP = array.from(h1hp3, h1hp2, h1hp1, h1hp0)
+array<int> m15LowT = array.from(m15lt3, m15lt2, m15lt1, m15lt0)
+array<float> m15LowP = array.from(m15lp3, m15lp2, m15lp1, m15lp0)
+array<int> m15HighT = array.from(m15ht3, m15ht2, m15ht1, m15ht0)
+array<float> m15HighP = array.from(m15hp3, m15hp2, m15hp1, m15hp0)
+array<int> m5LowT = array.from(m5lt3, m5lt2, m5lt1, m5lt0)
+array<float> m5LowP = array.from(m5lp3, m5lp2, m5lp1, m5lp0)
+array<int> m5HighT = array.from(m5ht3, m5ht2, m5ht1, m5ht0)
+array<float> m5HighP = array.from(m5hp3, m5hp2, m5hp1, m5hp0)
+
+// -----------------------------------------------------------------------------
+// FAMILY GEOMETRY: Daily root; every child uses parent.B as child.A exactly.
+// -----------------------------------------------------------------------------
+f_line_at(int t1, float p1, int t2, float p2, int atTime) =>
+    not na(t1) and not na(t2) and t2 > t1 ? p1 + (float(atTime - t1) / float(t2 - t1)) * (p2 - p1) : na
+
+f_clean_pair(int aT, float aP, int bT, float bP, array<int> ts, array<float> ps, bool bullish, float tol) =>
+    bool clean = true
+    int n = array.size(ts)
+    for i = 0 to n - 1
+        int st = array.get(ts, i)
+        float sp = array.get(ps, i)
+        if not na(st) and not na(sp) and st > aT and st < bT
+            float lp = f_line_at(aT, aP, bT, bP, st)
+            if bullish and sp < lp - tol
+                clean := false
+            if not bullish and sp > lp + tol
+                clean := false
+    clean
+
+f_root(array<int> ts, array<float> ps, bool bullish, float tol, int minBExclusive) =>
+    bool valid = false
+    int aT = na
+    float aP = na
+    int bT = na
+    float bP = na
+    int n = array.size(ts)
+    for i = 0 to n - 1
+        int st = array.get(ts, i)
+        float sp = array.get(ps, i)
+        if not na(st) and not na(sp)
+            bool better = na(aP) or (bullish ? sp < aP : sp > aP)
+            if better
+                aT := st
+                aP := sp
+    if not na(aT)
+        for off = 0 to n - 1
+            int j = n - 1 - off
+            int st = array.get(ts, j)
+            float sp = array.get(ps, j)
+            bool afterA = not na(st) and st > aT
+            bool afterOld = na(minBExclusive) or (not na(st) and st > minBExclusive)
+            bool directional = not na(sp) and (bullish ? sp > aP : sp < aP)
+            if not valid and afterA and afterOld and directional and f_clean_pair(aT, aP, st, sp, ts, ps, bullish, tol)
+                valid := true
+                bT := st
+                bP := sp
+    [valid, aT, aP, bT, bP]
+
+f_child(bool parentValid, int pAT, float pAP, int pBT, float pBP, array<int> ts, array<float> ps, bool bullish, float tol, float separation, int minBExclusive) =>
+    bool valid = false
+    int aT = pBT
+    float aP = pBP
+    int bT = na
+    float bP = na
+    int n = array.size(ts)
+    if parentValid and not na(aT) and not na(aP)
+        for off = 0 to n - 1
+            int j = n - 1 - off
+            int st = array.get(ts, j)
+            float sp = array.get(ps, j)
+            bool afterA = not na(st) and st > aT
+            bool afterOld = na(minBExclusive) or (not na(st) and st > minBExclusive)
+            bool directional = not na(sp) and (bullish ? sp > aP : sp < aP)
+            if not valid and afterA and afterOld and directional and f_clean_pair(aT, aP, st, sp, ts, ps, bullish, tol)
+                float parentAtB = f_line_at(pAT, pAP, pBT, pBP, st)
+                bool distinctPath = na(parentAtB) or math.abs(sp - parentAtB) >= separation
+                if distinctPath
+                    valid := true
+                    bT := st
+                    bP := sp
+    [valid, aT, aP, bT, bP]
+
+// Current confirmed candidate family. This may evolve internally; the BOARD below does not.
+[dGC, dGATC, dGAPC, dGBTC, dGBPC] = f_root(dLowT, dLowP, true, touchTolerance, na)
+[dRC, dRATC, dRAPC, dRBTC, dRBPC] = f_root(dHighT, dHighP, false, touchTolerance, na)
+[h4GC, h4GATC, h4GAPC, h4GBTC, h4GBPC] = f_child(dGC, dGATC, dGAPC, dGBTC, dGBPC, h4LowT, h4LowP, true, touchTolerance, overlapTolerance, na)
+[h4RC, h4RATC, h4RAPC, h4RBTC, h4RBPC] = f_child(dRC, dRATC, dRAPC, dRBTC, dRBPC, h4HighT, h4HighP, false, touchTolerance, overlapTolerance, na)
+
+bool h1GPV = h4GC or dGC
+int h1GPAT = h4GC ? h4GATC : dGATC
+float h1GPAP = h4GC ? h4GAPC : dGAPC
+int h1GPBT = h4GC ? h4GBTC : dGBTC
+float h1GPBP = h4GC ? h4GBPC : dGBPC
+bool h1RPV = h4RC or dRC
+int h1RPAT = h4RC ? h4RATC : dRATC
+float h1RPAP = h4RC ? h4RAPC : dRAPC
+int h1RPBT = h4RC ? h4RBTC : dRBTC
+float h1RPBP = h4RC ? h4RBPC : dRBPC
+[h1GC, h1GATC, h1GAPC, h1GBTC, h1GBPC] = f_child(h1GPV, h1GPAT, h1GPAP, h1GPBT, h1GPBP, h1LowT, h1LowP, true, touchTolerance, overlapTolerance, na)
+[h1RC, h1RATC, h1RAPC, h1RBTC, h1RBPC] = f_child(h1RPV, h1RPAT, h1RPAP, h1RPBT, h1RPBP, h1HighT, h1HighP, false, touchTolerance, overlapTolerance, na)
+
+bool m15GPV = h1GC or h4GC or dGC
+int m15GPAT = h1GC ? h1GATC : h4GC ? h4GATC : dGATC
+float m15GPAP = h1GC ? h1GAPC : h4GC ? h4GAPC : dGAPC
+int m15GPBT = h1GC ? h1GBTC : h4GC ? h4GBTC : dGBTC
+float m15GPBP = h1GC ? h1GBPC : h4GC ? h4GBPC : dGBPC
+bool m15RPV = h1RC or h4RC or dRC
+int m15RPAT = h1RC ? h1RATC : h4RC ? h4RATC : dRATC
+float m15RPAP = h1RC ? h1RAPC : h4RC ? h4RAPC : dRAPC
+int m15RPBT = h1RC ? h1RBTC : h4RC ? h4RBTC : dRBTC
+float m15RPBP = h1RC ? h1RBPC : h4RC ? h4RBPC : dRBPC
+[m15GC, m15GATC, m15GAPC, m15GBTC, m15GBPC] = f_child(m15GPV, m15GPAT, m15GPAP, m15GPBT, m15GPBP, m15LowT, m15LowP, true, touchTolerance, overlapTolerance, na)
+[m15RC, m15RATC, m15RAPC, m15RBTC, m15RBPC] = f_child(m15RPV, m15RPAT, m15RPAP, m15RPBT, m15RPBP, m15HighT, m15HighP, false, touchTolerance, overlapTolerance, na)
+
+bool m5GPV = m15GC or h1GC or h4GC or dGC
+int m5GPAT = m15GC ? m15GATC : h1GC ? h1GATC : h4GC ? h4GATC : dGATC
+float m5GPAP = m15GC ? m15GAPC : h1GC ? h1GAPC : h4GC ? h4GAPC : dGAPC
+int m5GPBT = m15GC ? m15GBTC : h1GC ? h1GBTC : h4GC ? h4GBTC : dGBTC
+float m5GPBP = m15GC ? m15GBPC : h1GC ? h1GBPC : h4GC ? h4GBPC : dGBPC
+bool m5RPV = m15RC or h1RC or h4RC or dRC
+int m5RPAT = m15RC ? m15RATC : h1RC ? h1RATC : h4RC ? h4RATC : dRATC
+float m5RPAP = m15RC ? m15RAPC : h1RC ? h1RAPC : h4RC ? h4RAPC : dRAPC
+int m5RPBT = m15RC ? m15RBTC : h1RC ? h1RBTC : h4RC ? h4RBTC : dRBTC
+float m5RPBP = m15RC ? m15RBPC : h1RC ? h1RBPC : h4RC ? h4RBPC : dRBPC
+[m5GC, m5GATC, m5GAPC, m5GBTC, m5GBPC] = f_child(m5GPV, m5GPAT, m5GPAP, m5GPBT, m5GPBP, m5LowT, m5LowP, true, touchTolerance, overlapTolerance, na)
+[m5RC, m5RATC, m5RAPC, m5RBTC, m5RBPC] = f_child(m5RPV, m5RPAT, m5RPAP, m5RPBT, m5RPBP, m5HighT, m5HighP, false, touchTolerance, overlapTolerance, na)
+
+// -----------------------------------------------------------------------------
+// EVENT-SOURCED FROZEN BOARD. The selected freeze time makes reload deterministic.
+// -----------------------------------------------------------------------------
+var bool boardInitialized = false
+var bool dGreenValid = false
+var bool dRedValid = false
+var bool h4GreenValid = false
+var bool h4RedValid = false
+var bool h1GreenValid = false
+var bool h1RedValid = false
+var bool m15GreenValid = false
+var bool m15RedValid = false
+var bool m5GreenValid = false
+var bool m5RedValid = false
+
+var int dGAT = na
+var float dGAP = na
+var int dGBT = na
+var float dGBP = na
+var int dRAT = na
+var float dRAP = na
+var int dRBT = na
+var float dRBP = na
+var int h4GAT = na
+var float h4GAP = na
+var int h4GBT = na
+var float h4GBP = na
+var int h4RAT = na
+var float h4RAP = na
+var int h4RBT = na
+var float h4RBP = na
+var int h1GAT = na
+var float h1GAP = na
+var int h1GBT = na
+var float h1GBP = na
+var int h1RAT = na
+var float h1RAP = na
+var int h1RBT = na
+var float h1RBP = na
+var int m15GAT = na
+var float m15GAP = na
+var int m15GBT = na
+var float m15GBP = na
+var int m15RAT = na
+var float m15RAP = na
+var int m15RBT = na
+var float m15RBP = na
+var int m5GAT = na
+var float m5GAP = na
+var int m5GBT = na
+var float m5GBP = na
+var int m5RAT = na
+var float m5RAP = na
+var int m5RBT = na
+var float m5RBP = na
+
+var int dGBreach = 0
+var int dRBreach = 0
+var int h4GBreach = 0
+var int h4RBreach = 0
+var int h1GBreach = 0
+var int h1RBreach = 0
+var int m15GBreach = 0
+var int m15RBreach = 0
+var int m5GBreach = 0
+var int m5RBreach = 0
+var bool dGViolated = false
+var bool dRViolated = false
+var bool h4GViolated = false
+var bool h4RViolated = false
+var bool h1GViolated = false
+var bool h1RViolated = false
+var bool m15GViolated = false
+var bool m15RViolated = false
+var bool m5GViolated = false
+var bool m5RViolated = false
+
+bool freezeEvent = not boardInitialized and boardFreezeTime > 0 and time >= boardFreezeTime
+if freezeEvent
+    boardInitialized := true
+    dGreenValid := dGC
+    dGAT := dGATC
+    dGAP := dGAPC
+    dGBT := dGBTC
+    dGBP := dGBPC
+    dRedValid := dRC
+    dRAT := dRATC
+    dRAP := dRAPC
+    dRBT := dRBTC
+    dRBP := dRBPC
+
+    h4GreenValid := h4GC
+    h4GAT := h4GATC
+    h4GAP := h4GAPC
+    h4GBT := h4GBTC
+    h4GBP := h4GBPC
+    h4RedValid := h4RC
+    h4RAT := h4RATC
+    h4RAP := h4RAPC
+    h4RBT := h4RBTC
+    h4RBP := h4RBPC
+
+    h1GreenValid := h1GC
+    h1GAT := h1GATC
+    h1GAP := h1GAPC
+    h1GBT := h1GBTC
+    h1GBP := h1GBPC
+    h1RedValid := h1RC
+    h1RAT := h1RATC
+    h1RAP := h1RAPC
+    h1RBT := h1RBTC
+    h1RBP := h1RBPC
+
+    m15GreenValid := m15GC
+    m15GAT := m15GATC
+    m15GAP := m15GAPC
+    m15GBT := m15GBTC
+    m15GBP := m15GBPC
+    m15RedValid := m15RC
+    m15RAT := m15RATC
+    m15RAP := m15RAPC
+    m15RBT := m15RBTC
+    m15RBP := m15RBPC
+
+    m5GreenValid := m5GC
+    m5GAT := m5GATC
+    m5GAP := m5GAPC
+    m5GBT := m5GBTC
+    m5GBP := m5GBPC
+    m5RedValid := m5RC
+    m5RAT := m5RATC
+    m5RAP := m5RAPC
+    m5RBT := m5RBTC
+    m5RBP := m5RBPC
+
+// -----------------------------------------------------------------------------
+// VIOLATION: confirmed closes on each line's own source timeframe.
+// -----------------------------------------------------------------------------
+[dSourceClose, dSourceCloseTime] = request.security(syminfo.tickerid, "D", [close[1], time_close[1]], lookahead = barmerge.lookahead_on)
+[h4SourceClose, h4SourceCloseTime] = request.security(syminfo.tickerid, "240", [close[1], time_close[1]], lookahead = barmerge.lookahead_on)
+[h1SourceClose, h1SourceCloseTime] = request.security(syminfo.tickerid, "60", [close[1], time_close[1]], lookahead = barmerge.lookahead_on)
+[m15SourceClose, m15SourceCloseTime] = request.security(syminfo.tickerid, "15", [close[1], time_close[1]], lookahead = barmerge.lookahead_on)
+[m5SourceClose, m5SourceCloseTime] = request.security(syminfo.tickerid, "5", [close[1], time_close[1]], lookahead = barmerge.lookahead_on)
+bool newDSourceClose = ta.change(dSourceCloseTime) != 0
+bool newH4SourceClose = ta.change(h4SourceCloseTime) != 0
+bool newH1SourceClose = ta.change(h1SourceCloseTime) != 0
+bool newM15SourceClose = ta.change(m15SourceCloseTime) != 0
+bool newM5SourceClose = ta.change(m5SourceCloseTime) != 0
+
+f_violation(bool valid, bool bullish, int aT, float aP, int bT, float bP, bool isNewClose, int sourceCloseTime, float sourceClose, int streak, bool violated) =>
+    int nextStreak = streak
+    bool nextViolated = violated
+    if valid and isNewClose and not na(sourceCloseTime) and sourceCloseTime > bT and not violated
+        float linePrice = f_line_at(aT, aP, bT, bP, sourceCloseTime)
+        bool adverse = bullish ? sourceClose < linePrice - violationPenetration : sourceClose > linePrice + violationPenetration
+        if adverse
+            nextStreak += 1
+            if nextStreak >= violationCloses
+                nextViolated := true
+        else
+            nextStreak := 0
+    [nextStreak, nextViolated]
+
+if boardInitialized
+    [nextDGBreach, nextDGViolated] = f_violation(dGreenValid, true, dGAT, dGAP, dGBT, dGBP, newDSourceClose, dSourceCloseTime, dSourceClose, dGBreach, dGViolated)
+    dGBreach := nextDGBreach
+    dGViolated := nextDGViolated
+    [nextDRBreach, nextDRViolated] = f_violation(dRedValid, false, dRAT, dRAP, dRBT, dRBP, newDSourceClose, dSourceCloseTime, dSourceClose, dRBreach, dRViolated)
+    dRBreach := nextDRBreach
+    dRViolated := nextDRViolated
+    [nextH4GBreach, nextH4GViolated] = f_violation(h4GreenValid, true, h4GAT, h4GAP, h4GBT, h4GBP, newH4SourceClose, h4SourceCloseTime, h4SourceClose, h4GBreach, h4GViolated)
+    h4GBreach := nextH4GBreach
+    h4GViolated := nextH4GViolated
+    [nextH4RBreach, nextH4RViolated] = f_violation(h4RedValid, false, h4RAT, h4RAP, h4RBT, h4RBP, newH4SourceClose, h4SourceCloseTime, h4SourceClose, h4RBreach, h4RViolated)
+    h4RBreach := nextH4RBreach
+    h4RViolated := nextH4RViolated
+    [nextH1GBreach, nextH1GViolated] = f_violation(h1GreenValid, true, h1GAT, h1GAP, h1GBT, h1GBP, newH1SourceClose, h1SourceCloseTime, h1SourceClose, h1GBreach, h1GViolated)
+    h1GBreach := nextH1GBreach
+    h1GViolated := nextH1GViolated
+    [nextH1RBreach, nextH1RViolated] = f_violation(h1RedValid, false, h1RAT, h1RAP, h1RBT, h1RBP, newH1SourceClose, h1SourceCloseTime, h1SourceClose, h1RBreach, h1RViolated)
+    h1RBreach := nextH1RBreach
+    h1RViolated := nextH1RViolated
+    [nextM15GBreach, nextM15GViolated] = f_violation(m15GreenValid, true, m15GAT, m15GAP, m15GBT, m15GBP, newM15SourceClose, m15SourceCloseTime, m15SourceClose, m15GBreach, m15GViolated)
+    m15GBreach := nextM15GBreach
+    m15GViolated := nextM15GViolated
+    [nextM15RBreach, nextM15RViolated] = f_violation(m15RedValid, false, m15RAT, m15RAP, m15RBT, m15RBP, newM15SourceClose, m15SourceCloseTime, m15SourceClose, m15RBreach, m15RViolated)
+    m15RBreach := nextM15RBreach
+    m15RViolated := nextM15RViolated
+    [nextM5GBreach, nextM5GViolated] = f_violation(m5GreenValid, true, m5GAT, m5GAP, m5GBT, m5GBP, newM5SourceClose, m5SourceCloseTime, m5SourceClose, m5GBreach, m5GViolated)
+    m5GBreach := nextM5GBreach
+    m5GViolated := nextM5GViolated
+    [nextM5RBreach, nextM5RViolated] = f_violation(m5RedValid, false, m5RAT, m5RAP, m5RBT, m5RBP, newM5SourceClose, m5SourceCloseTime, m5SourceClose, m5RBreach, m5RViolated)
+    m5RBreach := nextM5RBreach
+    m5RViolated := nextM5RViolated
+
+// -----------------------------------------------------------------------------
+// SELECTIVE REPAIR EVENTS. Valid lines are never assigned inside this block.
+// -----------------------------------------------------------------------------
+var bool repair1Applied = false
+var bool repair2Applied = false
+var bool repair3Applied = false
+bool fireRepair1 = boardInitialized and repair1Enabled and not repair1Applied and repair1Time > boardFreezeTime and time >= repair1Time
+bool fireRepair2 = boardInitialized and repair2Enabled and not repair2Applied and repair2Time > boardFreezeTime and time >= repair2Time
+bool fireRepair3 = boardInitialized and repair3Enabled and not repair3Applied and repair3Time > boardFreezeTime and time >= repair3Time
+bool repairEvent = fireRepair1 or fireRepair2 or fireRepair3
+var int lastRepairReplaced = 0
+
+if repairEvent
+    int replaced = 0
+
+    if dGreenValid and dGViolated
+        [rv, raT, raP, rbT, rbP] = f_root(dLowT, dLowP, true, touchTolerance, dGBT)
+        if rv
+            dGAT := raT
+            dGAP := raP
+            dGBT := rbT
+            dGBP := rbP
+            dGBreach := 0
+            dGViolated := false
+            replaced += 1
+    if dRedValid and dRViolated
+        [rv, raT, raP, rbT, rbP] = f_root(dHighT, dHighP, false, touchTolerance, dRBT)
+        if rv
+            dRAT := raT
+            dRAP := raP
+            dRBT := rbT
+            dRBP := rbP
+            dRBreach := 0
+            dRViolated := false
+            replaced += 1
+
+    bool h4GPActive = dGreenValid and not dGViolated
+    bool h4RPActive = dRedValid and not dRViolated
+    if h4GreenValid and h4GViolated and h4GPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, dGAT, dGAP, dGBT, dGBP, h4LowT, h4LowP, true, touchTolerance, overlapTolerance, h4GBT)
+        if rv
+            h4GAT := raT
+            h4GAP := raP
+            h4GBT := rbT
+            h4GBP := rbP
+            h4GBreach := 0
+            h4GViolated := false
+            replaced += 1
+    if h4RedValid and h4RViolated and h4RPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, dRAT, dRAP, dRBT, dRBP, h4HighT, h4HighP, false, touchTolerance, overlapTolerance, h4RBT)
+        if rv
+            h4RAT := raT
+            h4RAP := raP
+            h4RBT := rbT
+            h4RBP := rbP
+            h4RBreach := 0
+            h4RViolated := false
+            replaced += 1
+
+    bool h1GPActive = (h4GreenValid and not h4GViolated) or (dGreenValid and not dGViolated)
+    int h1PAT = h4GreenValid and not h4GViolated ? h4GAT : dGAT
+    float h1PAP = h4GreenValid and not h4GViolated ? h4GAP : dGAP
+    int h1PBT = h4GreenValid and not h4GViolated ? h4GBT : dGBT
+    float h1PBP = h4GreenValid and not h4GViolated ? h4GBP : dGBP
+    bool h1RPActive = (h4RedValid and not h4RViolated) or (dRedValid and not dRViolated)
+    int h1R_PAT = h4RedValid and not h4RViolated ? h4RAT : dRAT
+    float h1R_PAP = h4RedValid and not h4RViolated ? h4RAP : dRAP
+    int h1R_PBT = h4RedValid and not h4RViolated ? h4RBT : dRBT
+    float h1R_PBP = h4RedValid and not h4RViolated ? h4RBP : dRBP
+    if h1GreenValid and h1GViolated and h1GPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, h1PAT, h1PAP, h1PBT, h1PBP, h1LowT, h1LowP, true, touchTolerance, overlapTolerance, h1GBT)
+        if rv
+            h1GAT := raT
+            h1GAP := raP
+            h1GBT := rbT
+            h1GBP := rbP
+            h1GBreach := 0
+            h1GViolated := false
+            replaced += 1
+    if h1RedValid and h1RViolated and h1RPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, h1R_PAT, h1R_PAP, h1R_PBT, h1R_PBP, h1HighT, h1HighP, false, touchTolerance, overlapTolerance, h1RBT)
+        if rv
+            h1RAT := raT
+            h1RAP := raP
+            h1RBT := rbT
+            h1RBP := rbP
+            h1RBreach := 0
+            h1RViolated := false
+            replaced += 1
+
+    bool m15GPActive = (h1GreenValid and not h1GViolated) or (h4GreenValid and not h4GViolated) or (dGreenValid and not dGViolated)
+    int m15PAT = h1GreenValid and not h1GViolated ? h1GAT : h4GreenValid and not h4GViolated ? h4GAT : dGAT
+    float m15PAP = h1GreenValid and not h1GViolated ? h1GAP : h4GreenValid and not h4GViolated ? h4GAP : dGAP
+    int m15PBT = h1GreenValid and not h1GViolated ? h1GBT : h4GreenValid and not h4GViolated ? h4GBT : dGBT
+    float m15PBP = h1GreenValid and not h1GViolated ? h1GBP : h4GreenValid and not h4GViolated ? h4GBP : dGBP
+    bool m15RPActive = (h1RedValid and not h1RViolated) or (h4RedValid and not h4RViolated) or (dRedValid and not dRViolated)
+    int m15R_PAT = h1RedValid and not h1RViolated ? h1RAT : h4RedValid and not h4RViolated ? h4RAT : dRAT
+    float m15R_PAP = h1RedValid and not h1RViolated ? h1RAP : h4RedValid and not h4RViolated ? h4RAP : dRAP
+    int m15R_PBT = h1RedValid and not h1RViolated ? h1RBT : h4RedValid and not h4RViolated ? h4RBT : dRBT
+    float m15R_PBP = h1RedValid and not h1RViolated ? h1RBP : h4RedValid and not h4RViolated ? h4RBP : dRBP
+    if m15GreenValid and m15GViolated and m15GPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, m15PAT, m15PAP, m15PBT, m15PBP, m15LowT, m15LowP, true, touchTolerance, overlapTolerance, m15GBT)
+        if rv
+            m15GAT := raT
+            m15GAP := raP
+            m15GBT := rbT
+            m15GBP := rbP
+            m15GBreach := 0
+            m15GViolated := false
+            replaced += 1
+    if m15RedValid and m15RViolated and m15RPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, m15R_PAT, m15R_PAP, m15R_PBT, m15R_PBP, m15HighT, m15HighP, false, touchTolerance, overlapTolerance, m15RBT)
+        if rv
+            m15RAT := raT
+            m15RAP := raP
+            m15RBT := rbT
+            m15RBP := rbP
+            m15RBreach := 0
+            m15RViolated := false
+            replaced += 1
+
+    bool m5GPActive = (m15GreenValid and not m15GViolated) or (h1GreenValid and not h1GViolated) or (h4GreenValid and not h4GViolated) or (dGreenValid and not dGViolated)
+    int m5PAT = m15GreenValid and not m15GViolated ? m15GAT : h1GreenValid and not h1GViolated ? h1GAT : h4GreenValid and not h4GViolated ? h4GAT : dGAT
+    float m5PAP = m15GreenValid and not m15GViolated ? m15GAP : h1GreenValid and not h1GViolated ? h1GAP : h4GreenValid and not h4GViolated ? h4GAP : dGAP
+    int m5PBT = m15GreenValid and not m15GViolated ? m15GBT : h1GreenValid and not h1GViolated ? h1GBT : h4GreenValid and not h4GViolated ? h4GBT : dGBT
+    float m5PBP = m15GreenValid and not m15GViolated ? m15GBP : h1GreenValid and not h1GViolated ? h1GBP : h4GreenValid and not h4GViolated ? h4GBP : dGBP
+    bool m5RPActive = (m15RedValid and not m15RViolated) or (h1RedValid and not h1RViolated) or (h4RedValid and not h4RViolated) or (dRedValid and not dRViolated)
+    int m5R_PAT = m15RedValid and not m15RViolated ? m15RAT : h1RedValid and not h1RViolated ? h1RAT : h4RedValid and not h4RViolated ? h4RAT : dRAT
+    float m5R_PAP = m15RedValid and not m15RViolated ? m15RAP : h1RedValid and not h1RViolated ? h1RAP : h4RedValid and not h4RViolated ? h4RAP : dRAP
+    int m5R_PBT = m15RedValid and not m15RViolated ? m15RBT : h1RedValid and not h1RViolated ? h1RBT : h4RedValid and not h4RViolated ? h4RBT : dRBT
+    float m5R_PBP = m15RedValid and not m15RViolated ? m15RBP : h1RedValid and not h1RViolated ? h1RBP : h4RedValid and not h4RViolated ? h4RBP : dRBP
+    if m5GreenValid and m5GViolated and m5GPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, m5PAT, m5PAP, m5PBT, m5PBP, m5LowT, m5LowP, true, touchTolerance, overlapTolerance, m5GBT)
+        if rv
+            m5GAT := raT
+            m5GAP := raP
+            m5GBT := rbT
+            m5GBP := rbP
+            m5GBreach := 0
+            m5GViolated := false
+            replaced += 1
+    if m5RedValid and m5RViolated and m5RPActive
+        [rv, raT, raP, rbT, rbP] = f_child(true, m5R_PAT, m5R_PAP, m5R_PBT, m5R_PBP, m5HighT, m5HighP, false, touchTolerance, overlapTolerance, m5RBT)
+        if rv
+            m5RAT := raT
+            m5RAP := raP
+            m5RBT := rbT
+            m5RBP := rbP
+            m5RBreach := 0
+            m5RViolated := false
+            replaced += 1
+
+    lastRepairReplaced := replaced
+    if fireRepair1
+        repair1Applied := true
+    if fireRepair2
+        repair2Applied := true
+    if fireRepair3
+        repair3Applied := true
+
+// -----------------------------------------------------------------------------
+// CURRENT LINE PROJECTIONS / NEXT WALL — violated lines stay visible but are not walls.
+// -----------------------------------------------------------------------------
+int projectionTime = time_close
+float dGreenNow = dGreenValid ? f_line_at(dGAT, dGAP, dGBT, dGBP, projectionTime) : na
+float dRedNow = dRedValid ? f_line_at(dRAT, dRAP, dRBT, dRBP, projectionTime) : na
+float h4GreenNow = h4GreenValid ? f_line_at(h4GAT, h4GAP, h4GBT, h4GBP, projectionTime) : na
+float h4RedNow = h4RedValid ? f_line_at(h4RAT, h4RAP, h4RBT, h4RBP, projectionTime) : na
+float h1GreenNow = h1GreenValid ? f_line_at(h1GAT, h1GAP, h1GBT, h1GBP, projectionTime) : na
+float h1RedNow = h1RedValid ? f_line_at(h1RAT, h1RAP, h1RBT, h1RBP, projectionTime) : na
+float m15GreenNow = m15GreenValid ? f_line_at(m15GAT, m15GAP, m15GBT, m15GBP, projectionTime) : na
+float m15RedNow = m15RedValid ? f_line_at(m15RAT, m15RAP, m15RBT, m15RBP, projectionTime) : na
+float m5GreenNow = m5GreenValid ? f_line_at(m5GAT, m5GAP, m5GBT, m5GBP, projectionTime) : na
+float m5RedNow = m5RedValid ? f_line_at(m5RAT, m5RAP, m5RBT, m5RBP, projectionTime) : na
+
+int activeTlCount = (dGreenValid ? 1 : 0) + (dRedValid ? 1 : 0) + (h4GreenValid ? 1 : 0) + (h4RedValid ? 1 : 0) + (h1GreenValid ? 1 : 0) + (h1RedValid ? 1 : 0) + (m15GreenValid ? 1 : 0) + (m15RedValid ? 1 : 0) + (m5GreenValid ? 1 : 0) + (m5RedValid ? 1 : 0)
+int violatedCount = (dGViolated ? 1 : 0) + (dRViolated ? 1 : 0) + (h4GViolated ? 1 : 0) + (h4RViolated ? 1 : 0) + (h1GViolated ? 1 : 0) + (h1RViolated ? 1 : 0) + (m15GViolated ? 1 : 0) + (m15RViolated ? 1 : 0) + (m5GViolated ? 1 : 0) + (m5RViolated ? 1 : 0)
+
+array<string> wallNames = array.new_string()
+array<float> wallPrices = array.new_float()
+f_add_wall(bool condition, string name, float price) =>
+    if condition and not na(price)
+        array.push(wallNames, name)
+        array.push(wallPrices, price)
+
+if planSide == "LONG"
+    f_add_wall(dRedValid and not dRViolated and dRedNow > close, "D RED", dRedNow)
+    f_add_wall(h4RedValid and not h4RViolated and h4RedNow > close, "4H RED", h4RedNow)
+    f_add_wall(h1RedValid and not h1RViolated and h1RedNow > close, "1H RED", h1RedNow)
+    f_add_wall(m15RedValid and not m15RViolated and m15RedNow > close, "15M RED", m15RedNow)
+    f_add_wall(m5RedValid and not m5RViolated and m5RedNow > close, "5M RED", m5RedNow)
+    f_add_wall(showPdh and pdh > close, "PDH", pdh)
+    f_add_wall(showPwh and pwh > close, "PWH", pwh)
+else
+    f_add_wall(dGreenValid and not dGViolated and dGreenNow < close, "D GREEN", dGreenNow)
+    f_add_wall(h4GreenValid and not h4GViolated and h4GreenNow < close, "4H GREEN", h4GreenNow)
+    f_add_wall(h1GreenValid and not h1GViolated and h1GreenNow < close, "1H GREEN", h1GreenNow)
+    f_add_wall(m15GreenValid and not m15GViolated and m15GreenNow < close, "15M GREEN", m15GreenNow)
+    f_add_wall(m5GreenValid and not m5GViolated and m5GreenNow < close, "5M GREEN", m5GreenNow)
+    f_add_wall(showPdl and pdl < close, "PDL", pdl)
+    f_add_wall(showPwl and pwl < close, "PWL", pwl)
+
+string nextWallName = "NONE AHEAD"
+float nextWallPrice = na
+float nextWallDistance = HUGE_DISTANCE
+if array.size(wallPrices) > 0
+    for i = 0 to array.size(wallPrices) - 1
+        float p = array.get(wallPrices, i)
+        float dist = math.abs(p - close)
+        if dist < nextWallDistance
+            nextWallDistance := dist
+            nextWallName := array.get(wallNames, i)
+            nextWallPrice := p
+string nextWallText = na(nextWallPrice) ? nextWallName : nextWallName + " @ " + str.tostring(nextWallPrice, format.mintick)
+
+// -----------------------------------------------------------------------------
+// DRAWINGS — no timeframe labels on trendline rays.
+// -----------------------------------------------------------------------------
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.both)
+var line goDraw = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label goLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var box targetBox = na
+var label targetLabel = na
+
+f_sync_level(line id, label lid, float price, string name, color c, bool visible, int width, bool fullSpan) =>
+    if visible and not na(price) and price > 0
+        line.set_xy1(id, math.max(0, bar_index - 1), price)
+        line.set_xy2(id, bar_index + 1, price)
+        line.set_extend(id, fullSpan ? extend.both : extend.right)
+        line.set_color(id, c)
+        line.set_width(id, width)
+        label.set_xy(lid, bar_index + 3, price)
+        label.set_text(lid, name + "  " + str.tostring(price, format.mintick))
+        label.set_color(lid, c)
+        label.set_textcolor(lid, name == "GO LINE" ? color.black : color.white)
+        label.set_size(lid, size.large)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+        label.set_xy(lid, na, na)
+        label.set_text(lid, "")
+
+var line dGreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line dRedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h4GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h4RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h1GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line h1RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m15GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m15RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m5GreenLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+var line m5RedLine = line.new(na, na, na, na, xloc = xloc.bar_time, extend = extend.right)
+
+f_sync_trend(line id, bool valid, bool visible, int aT, float aP, int bT, float bP, color c) =>
+    if valid and visible and not na(aT) and not na(bT) and aP > 0 and bP > 0
+        line.set_xy1(id, aT, aP)
+        line.set_xy2(id, bT, bP)
+        line.set_extend(id, extend.right)
+        line.set_color(id, c)
+        line.set_width(id, 2)
+    else
+        line.set_xy1(id, na, na)
+        line.set_xy2(id, na, na)
+
+bool goSet = goLine > 0
+float goTicks = goSet ? goLine / syminfo.mintick : na
+bool goOnGrid = goSet and math.abs(goTicks - math.round(goTicks)) < 1e-7
+bool targetSet = safeTargetLow > 0 and safeTargetHigh > safeTargetLow
+float targetLowTicks = targetSet ? safeTargetLow / syminfo.mintick : na
+float targetHighTicks = targetSet ? safeTargetHigh / syminfo.mintick : na
+bool targetOnGrid = targetSet and math.abs(targetLowTicks - math.round(targetLowTicks)) < 1e-7 and math.abs(targetHighTicks - math.round(targetHighTicks)) < 1e-7
+
+if barstate.islast
+    f_sync_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_DAY, showPdh, 2, true)
+    f_sync_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_DAY, showPdl, 2, true)
+    f_sync_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showPwh, 2, true)
+    f_sync_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showPwl, 2, true)
+    f_sync_level(goDraw, goLabel, goLine, "GO LINE", YELLOW_GO, showGoLine and goSet and goOnGrid, 4, false)
+
+    f_sync_trend(dGreenLine, dGreenValid, showDGreen, dGAT, dGAP, dGBT, dGBP, GREEN_UP)
+    f_sync_trend(dRedLine, dRedValid, showDRed, dRAT, dRAP, dRBT, dRBP, RED_DOWN)
+    f_sync_trend(h4GreenLine, h4GreenValid, show4HGreen, h4GAT, h4GAP, h4GBT, h4GBP, GREEN_UP)
+    f_sync_trend(h4RedLine, h4RedValid, show4HRed, h4RAT, h4RAP, h4RBT, h4RBP, RED_DOWN)
+    f_sync_trend(h1GreenLine, h1GreenValid, show1HGreen, h1GAT, h1GAP, h1GBT, h1GBP, GREEN_UP)
+    f_sync_trend(h1RedLine, h1RedValid, show1HRed, h1RAT, h1RAP, h1RBT, h1RBP, RED_DOWN)
+    f_sync_trend(m15GreenLine, m15GreenValid, show15MGreen, m15GAT, m15GAP, m15GBT, m15GBP, GREEN_UP)
+    f_sync_trend(m15RedLine, m15RedValid, show15MRed, m15RAT, m15RAP, m15RBT, m15RBP, RED_DOWN)
+    f_sync_trend(m5GreenLine, m5GreenValid, show5MGreen, m5GAT, m5GAP, m5GBT, m5GBP, GREEN_UP)
+    f_sync_trend(m5RedLine, m5RedValid, show5MRed, m5RAT, m5RAP, m5RBT, m5RBP, RED_DOWN)
+
+    bool targetVisible = showSafeTarget and targetSet and targetOnGrid
+    if targetVisible
+        int boxLeft = math.max(0, bar_index - 35)
+        int boxRight = bar_index + 10
+        if na(targetBox)
+            targetBox := box.new(boxLeft, safeTargetHigh, boxRight, safeTargetLow, xloc = xloc.bar_index, border_color = BLUE_TARGET, bgcolor = color.new(BLUE_TARGET, 84), border_width = 2)
+        else
+            box.set_lefttop(targetBox, boxLeft, safeTargetHigh)
+            box.set_rightbottom(targetBox, boxRight, safeTargetLow)
+        float targetMid = (safeTargetHigh + safeTargetLow) / 2.0
+        if na(targetLabel)
+            targetLabel := label.new(bar_index + 3, targetMid, "SAFE TARGET", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left, color = BLUE_TARGET, textcolor = color.white, size = size.large)
+        else
+            label.set_xy(targetLabel, bar_index + 3, targetMid)
+    else
+        if not na(targetBox)
+            box.delete(targetBox)
+            targetBox := na
+        if not na(targetLabel)
+            label.delete(targetLabel)
+            targetLabel := na
+
+// -----------------------------------------------------------------------------
+// BEGINNER SEMANTICS / RUNTIME GUARDS
+// -----------------------------------------------------------------------------
+bool directionKnown = bigDirection != "NOT SET"
+bool planWithDirection = directionKnown and ((bigDirection == "UP" and planSide == "LONG") or (bigDirection == "DOWN" and planSide == "SHORT"))
+string currentMoveText = not directionKnown ? "WAITING FOR DIRECTION" : planWithDirection ? (planSide == "LONG" ? "UP WITH BIG DIRECTION" : "DOWN WITH BIG DIRECTION") : (planSide == "LONG" ? "TEMPORARY UP MOVE" : "TEMPORARY DOWN MOVE")
+string safeTargetText = targetSet and targetOnGrid ? str.tostring(safeTargetLow, format.mintick) + " – " + str.tostring(safeTargetHigh, format.mintick) : "NOT SET"
+string trendlineText = not boardInitialized ? "SET FREEZE POINT" : str.tostring(activeTlCount) + " LOCKED" + (violatedCount > 0 ? " | " + str.tostring(violatedCount) + " VIOLATED" : "")
+
+bool liveFeedAttested = feedAttestation == "REALTIME"
+bool delayedLiveBlock = runtimeMode == "LIVE_DECISION_SUPPORT" and not liveFeedAttested
+bool contextValid = isFiveMinute and isNqMnq and tickGridExpected and goSet and goOnGrid and not extendedClosedGap
+bool engineRuntimeAllowed = enableParityEngine and contextValid and not delayedLiveBlock
+string runtimeReason =
+     not boardInitialized ? "CLICK BOARD FREEZE POINT" :
+     not isNqMnq ? "USE NQ OR MNQ" :
+     not isFiveMinute ? "CHANGE CHART TO 5 MIN" :
+     not tickGridExpected ? "TICK DATA CHECK NEEDED" :
+     extendedClosedGap ? "EXTENDED CLOSE — VERIFY LEVELS" :
+     not goSet ? "SET YELLOW GO LINE" :
+     not goOnGrid ? "GO LINE MUST BE .00/.25/.50/.75" :
+     targetSet and not targetOnGrid ? "SAFE TARGET TICK CHECK" :
+     delayedLiveBlock ? "LIVE FEED NOT CONFIRMED" :
+     not enableParityEngine ? "TEST ENGINE OFF" :
+     not exactIntrabarAvailable ? "WAITING FOR LIVE 5M CANDLE" :
+     "TEST ENGINE RUNNING"
+
+// -----------------------------------------------------------------------------
+// EXISTING TEST-ONLY 5M MOMENTUM STATE MACHINE (unchanged semantics).
+// -----------------------------------------------------------------------------
+f_is_doji_like(float o, float h, float l, float c, float threshold) =>
+    float r = h - l
+    r <= 0.0 ? true : math.abs(c - o) / r <= threshold
+
+const string WAIT_REFERENCE = "WAIT_REFERENCE"
+const string WAIT_BREAK = "WAIT_BREAK"
+const string BREAK_STAGE = "BREAK"
+const string PUSH_1 = "PUSH_1"
+const string ENTRY_READY = "ENTRY_READY"
+varip string stage = WAIT_REFERENCE
+varip bool referenceArmed = false
+varip float reference = na
+varip float anchor = na
+varip int referenceSourceBar = na
+varip int lastStageTimeMs = na
+varip string lastTransition = "NONE"
+
+bool eventBreak = false
+bool eventPush1 = false
+bool eventReady = false
+bool eventRecoil = false
+float direction = planSide == "LONG" ? 1.0 : -1.0
+float favorable = direction * close
+float referenceFav = direction * reference
+float anchorFav = direction * anchor
+
+if engineRuntimeAllowed and exactIntrabarAvailable and referenceArmed and bar_index > referenceSourceBar and stage != ENTRY_READY
+    bool recoilEligible = stage == BREAK_STAGE or stage == PUSH_1
+    float recoil = recoilEligible and not na(anchor) ? anchorFav - favorable : 0.0
+    if recoilEligible and recoil >= maxRecoil
+        stage := WAIT_BREAK
+        anchor := reference
+        lastStageTimeMs := na
+        lastTransition := "RECOIL — START OVER"
+        eventRecoil := true
+    else if stage == WAIT_BREAK
+        if favorable >= referenceFav + minBreak
+            stage := BREAK_STAGE
+            anchor := close
+            lastStageTimeMs := timenow
+            lastTransition := "BREAK"
+            eventBreak := true
+    else if stage == BREAK_STAGE
+        if favorable >= anchorFav + minPush
+            float sec1 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if sec1 <= maxPushSeconds
+                stage := PUSH_1
+                anchor := close
+                lastStageTimeMs := timenow
+                lastTransition := "PUSH 1"
+                eventPush1 := true
+    else if stage == PUSH_1
+        if favorable >= anchorFav + minPush
+            float sec2 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if sec2 <= maxPushSeconds
+                stage := ENTRY_READY
+                anchor := close
+                lastStageTimeMs := timenow
+                lastTransition := "READY — TEST ONLY"
+                eventReady := true
+
+if engineRuntimeAllowed and exactIntrabarAvailable and barstate.isconfirmed
+    bool beyondGo = planSide == "LONG" ? close > goLine : close < goLine
+    if not referenceArmed and beyondGo
+        if not f_is_doji_like(open, high, low, close, dojiBodyFraction)
+            reference := planSide == "LONG" ? high : low
+            anchor := reference
+            referenceSourceBar := bar_index
+            referenceArmed := true
+            stage := WAIT_BREAK
+            lastStageTimeMs := na
+            lastTransition := "REFERENCE CANDLE SET"
+    else if referenceArmed and bar_index > referenceSourceBar and stage != ENTRY_READY
+        reference := planSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        stage := WAIT_BREAK
+        lastStageTimeMs := na
+        lastTransition := "NEW CANDLE — RESET TEST"
+
+if not contextValid or delayedLiveBlock or not enableParityEngine
+    stage := WAIT_REFERENCE
+    referenceArmed := false
+    reference := na
+    anchor := na
+    referenceSourceBar := na
+    lastStageTimeMs := na
+    lastTransition := runtimeReason
+
+string stageText =
+     stage == WAIT_REFERENCE ? "1  WAIT FOR CANDLE PAST GO LINE" :
+     stage == WAIT_BREAK ? "2  REFERENCE SET — WAIT FOR BREAK" :
+     stage == BREAK_STAGE ? "3  BREAK — WATCH PUSH 1" :
+     stage == PUSH_1 ? "4  PUSH 1 — WATCH PUSH 2" :
+     "5  READY — TEST ONLY"
+
+// -----------------------------------------------------------------------------
+// PREMIUM BEGINNER COACH
+// -----------------------------------------------------------------------------
+color bigDirectionColor = bigDirection == "UP" ? GREEN_UP : bigDirection == "DOWN" ? RED_DOWN : color.gray
+color moveColor = not directionKnown ? color.gray : planSide == "LONG" ? GREEN_UP : RED_DOWN
+color stageColor = stage == ENTRY_READY ? GREEN_UP : stage == PUSH_1 ? color.aqua : stage == BREAK_STAGE ? YELLOW_GO : ORANGE_WAIT
+var table coach = table.new(position.top_right, 2, 9, border_width = 2, frame_width = 2, frame_color = GOLD_ACCENT, bgcolor = PANEL_DARK)
+if barstate.islast
+    if showCoach
+        table.cell(coach, 0, 0, "SLUMDAWG", text_color = color.lime, bgcolor = PANEL_MID, text_size = 18)
+        table.cell(coach, 1, 0, "5M COACH", text_color = color.white, bgcolor = PANEL_MID, text_size = 18)
+        table.cell(coach, 0, 1, "BIG DIRECTION", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 1, bigDirection, text_color = color.white, bgcolor = bigDirectionColor, text_size = 16)
+        table.cell(coach, 0, 2, "CURRENT MOVE", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 2, currentMoveText, text_color = color.white, bgcolor = moveColor, text_size = 15)
+        table.cell(coach, 0, 3, "TRENDLINES", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 3, trendlineText, text_color = violatedCount > 0 ? color.orange : activeTlCount > 0 ? color.lime : color.orange, text_size = 13)
+        table.cell(coach, 0, 4, "NEXT WALL", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 4, nextWallText, text_color = color.orange, text_size = 14)
+        table.cell(coach, 0, 5, "GO LINE", text_color = color.black, bgcolor = YELLOW_GO, text_size = 15)
+        table.cell(coach, 1, 5, goSet ? str.tostring(goLine, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_GO, text_size = 16)
+        table.cell(coach, 0, 6, "SAFE TARGET", text_color = color.white, bgcolor = BLUE_TARGET, text_size = 15)
+        table.cell(coach, 1, 6, safeTargetText, text_color = color.white, bgcolor = BLUE_TARGET, text_size = 15)
+        table.cell(coach, 0, 7, "NOW", text_color = color.white, text_size = 15)
+        table.cell(coach, 1, 7, stageText, text_color = color.black, bgcolor = stageColor, text_size = 15)
+        table.cell(coach, 0, 8, "SYSTEM", text_color = color.white, text_size = 14)
+        string repairSuffix = lastRepairReplaced > 0 ? " | REPAIRED " + str.tostring(lastRepairReplaced) : ""
+        table.cell(coach, 1, 8, runtimeReason + " | " + chartStatus + repairSuffix, text_color = runtimeReason == "TEST ENGINE RUNNING" ? color.lime : color.orange, text_size = 13)
+    else
+        for r = 0 to 8
+            table.cell(coach, 0, r, "")
+            table.cell(coach, 1, r, "")
+
+plotshape(showDebugMarkers and eventBreak, title = "Break", text = "BREAK", style = shape.labelup, location = location.belowbar, size = size.tiny, color = YELLOW_GO, textcolor = color.black)
+plotshape(showDebugMarkers and eventPush1, title = "Push 1", text = "P1", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.aqua, textcolor = color.black)
+plotshape(showDebugMarkers and eventReady, title = "Ready", text = "READY", style = shape.labelup, location = location.belowbar, size = size.tiny, color = GREEN_UP, textcolor = color.white)
+plotshape(showDebugMarkers and eventRecoil, title = "Recoil reset", text = "RESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = RED_DOWN, textcolor = color.white)
+
+alertcondition(eventBreak, "PARITY DEBUG — BREAK", "NON-ACTIONABLE parity event: BREAK")
+alertcondition(eventPush1, "PARITY DEBUG — PUSH_1", "NON-ACTIONABLE parity event: PUSH_1")
+alertcondition(eventReady, "PARITY DEBUG — ENTRY_READY", "NON-ACTIONABLE parity event: ENTRY_READY")
+alertcondition(eventRecoil, "PARITY DEBUG — RECOIL_RESET", "NON-ACTIONABLE parity event: RECOIL_RESET")
