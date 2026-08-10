@@ -219,6 +219,16 @@ f_child_candidate(bool parentValid, int parentAT, float parentAP, int parentBT, 
     float snapBP = ta.valuewhen(sourceStartedByFreeze, candBP, 0)
     [snapValid, snapAT, snapAP, snapBT, snapBP]
 
+f_root_pair(int freezeTs, int lookbackBars, float tol) =>
+    [gV, gAT, gAP, gBT, gBP] = f_root_candidate(true, freezeTs, lookbackBars, tol)
+    [rV, rAT, rAP, rBT, rBP] = f_root_candidate(false, freezeTs, lookbackBars, tol)
+    [gV, gAT, gAP, gBT, gBP, rV, rAT, rAP, rBT, rBP]
+
+f_child_pair(bool gParentValid, int gParentAT, float gParentAP, int gParentBT, float gParentBP, bool rParentValid, int rParentAT, float rParentAP, int rParentBT, float rParentBP, int freezeTs, int lookbackBars, float tol, float separation) =>
+    [gV, gAT, gAP, gBT, gBP] = f_child_candidate(gParentValid, gParentAT, gParentAP, gParentBT, gParentBP, true, freezeTs, lookbackBars, tol, separation)
+    [rV, rAT, rAP, rBT, rBP] = f_child_candidate(rParentValid, rParentAT, rParentAP, rParentBT, rParentBP, false, freezeTs, lookbackBars, tol, separation)
+    [gV, gAT, gAP, gBT, gBP, rV, rAT, rAP, rBT, rBP]
+
 // -----------------------------------------------------------------------------
 // TOP-DOWN FAMILY.
 // Monthly is checked first. If a color has no accepted ancestor yet, the first
@@ -226,13 +236,10 @@ f_child_candidate(bool parentValid, int parentAT, float parentAP, int parentBT, 
 // available root for that color. Once a parent exists, descendants cannot root
 // independently; they must attach to the nearest accepted ancestor B.
 // -----------------------------------------------------------------------------
-[mGV, mGAT, mGAP, mGBT, mGBP] = request.security(syminfo.tickerid, "M", f_root_candidate(true, boardFreezeTime, monthlyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
-[mRV, mRAT, mRAP, mRBT, mRBP] = request.security(syminfo.tickerid, "M", f_root_candidate(false, boardFreezeTime, monthlyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
+[mGV, mGAT, mGAP, mGBT, mGBP, mRV, mRAT, mRAP, mRBT, mRBP] = request.security(syminfo.tickerid, "M", f_root_pair(boardFreezeTime, monthlyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
 
-[wChildGV, wChildGAT, wChildGAP, wChildGBT, wChildGBP] = request.security(syminfo.tickerid, "W", f_child_candidate(mGV, mGAT, mGAP, mGBT, mGBP, true, boardFreezeTime, weeklyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[wChildRV, wChildRAT, wChildRAP, wChildRBT, wChildRBP] = request.security(syminfo.tickerid, "W", f_child_candidate(mRV, mRAT, mRAP, mRBT, mRBP, false, boardFreezeTime, weeklyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[wRootGV, wRootGAT, wRootGAP, wRootGBT, wRootGBP] = request.security(syminfo.tickerid, "W", f_root_candidate(true, boardFreezeTime, weeklyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
-[wRootRV, wRootRAT, wRootRAP, wRootRBT, wRootRBP] = request.security(syminfo.tickerid, "W", f_root_candidate(false, boardFreezeTime, weeklyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
+[wChildGV, wChildGAT, wChildGAP, wChildGBT, wChildGBP, wChildRV, wChildRAT, wChildRAP, wChildRBT, wChildRBP] = request.security(syminfo.tickerid, "W", f_child_pair(mGV, mGAT, mGAP, mGBT, mGBP, mRV, mRAT, mRAP, mRBT, mRBP, boardFreezeTime, weeklyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[wRootGV, wRootGAT, wRootGAP, wRootGBT, wRootGBP, wRootRV, wRootRAT, wRootRAP, wRootRBT, wRootRBP] = request.security(syminfo.tickerid, "W", f_root_pair(boardFreezeTime, weeklyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
 bool wGV = mGV ? wChildGV : wRootGV
 int wGAT = mGV ? wChildGAT : wRootGAT
 float wGAP = mGV ? wChildGAP : wRootGAP
@@ -255,10 +262,8 @@ float rParentWAP = wRV ? wRAP : mRAP
 int rParentWBT = wRV ? wRBT : mRBT
 float rParentWBP = wRV ? wRBP : mRBP
 
-[dChildGV, dChildGAT, dChildGAP, dChildGBT, dChildGBP] = request.security(syminfo.tickerid, "D", f_child_candidate(gParentWV, gParentWAT, gParentWAP, gParentWBT, gParentWBP, true, boardFreezeTime, dailyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[dChildRV, dChildRAT, dChildRAP, dChildRBT, dChildRBP] = request.security(syminfo.tickerid, "D", f_child_candidate(rParentWV, rParentWAT, rParentWAP, rParentWBT, rParentWBP, false, boardFreezeTime, dailyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[dRootGV, dRootGAT, dRootGAP, dRootGBT, dRootGBP] = request.security(syminfo.tickerid, "D", f_root_candidate(true, boardFreezeTime, dailyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
-[dRootRV, dRootRAT, dRootRAP, dRootRBT, dRootRBP] = request.security(syminfo.tickerid, "D", f_root_candidate(false, boardFreezeTime, dailyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
+[dChildGV, dChildGAT, dChildGAP, dChildGBT, dChildGBP, dChildRV, dChildRAT, dChildRAP, dChildRBT, dChildRBP] = request.security(syminfo.tickerid, "D", f_child_pair(gParentWV, gParentWAT, gParentWAP, gParentWBT, gParentWBP, rParentWV, rParentWAT, rParentWAP, rParentWBT, rParentWBP, boardFreezeTime, dailyLookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[dRootGV, dRootGAT, dRootGAP, dRootGBT, dRootGBP, dRootRV, dRootRAT, dRootRAP, dRootRBT, dRootRBP] = request.security(syminfo.tickerid, "D", f_root_pair(boardFreezeTime, dailyLookback, touchTolerance), lookahead = barmerge.lookahead_off)
 bool dGV = gParentWV ? dChildGV : dRootGV
 int dGAT = gParentWV ? dChildGAT : dRootGAT
 float dGAP = gParentWV ? dChildGAP : dRootGAP
@@ -281,8 +286,7 @@ float rParentDAP = dRV ? dRAP : rParentWAP
 int rParentDBT = dRV ? dRBT : rParentWBT
 float rParentDBP = dRV ? dRBP : rParentWBP
 
-[h4GV, h4GAT, h4GAP, h4GBT, h4GBP] = request.security(syminfo.tickerid, "240", f_child_candidate(gParentDV, gParentDAT, gParentDAP, gParentDBT, gParentDBP, true, boardFreezeTime, h4Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[h4RV, h4RAT, h4RAP, h4RBT, h4RBP] = request.security(syminfo.tickerid, "240", f_child_candidate(rParentDV, rParentDAT, rParentDAP, rParentDBT, rParentDBP, false, boardFreezeTime, h4Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[h4GV, h4GAT, h4GAP, h4GBT, h4GBP, h4RV, h4RAT, h4RAP, h4RBT, h4RBP] = request.security(syminfo.tickerid, "240", f_child_pair(gParentDV, gParentDAT, gParentDAP, gParentDBT, gParentDBP, rParentDV, rParentDAT, rParentDAP, rParentDBT, rParentDBP, boardFreezeTime, h4Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
 
 bool gParent4V = h4GV or gParentDV
 int gParent4AT = h4GV ? h4GAT : gParentDAT
@@ -295,8 +299,7 @@ float rParent4AP = h4RV ? h4RAP : rParentDAP
 int rParent4BT = h4RV ? h4RBT : rParentDBT
 float rParent4BP = h4RV ? h4RBP : rParentDBP
 
-[h1GV, h1GAT, h1GAP, h1GBT, h1GBP] = request.security(syminfo.tickerid, "60", f_child_candidate(gParent4V, gParent4AT, gParent4AP, gParent4BT, gParent4BP, true, boardFreezeTime, h1Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[h1RV, h1RAT, h1RAP, h1RBT, h1RBP] = request.security(syminfo.tickerid, "60", f_child_candidate(rParent4V, rParent4AT, rParent4AP, rParent4BT, rParent4BP, false, boardFreezeTime, h1Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[h1GV, h1GAT, h1GAP, h1GBT, h1GBP, h1RV, h1RAT, h1RAP, h1RBT, h1RBP] = request.security(syminfo.tickerid, "60", f_child_pair(gParent4V, gParent4AT, gParent4AP, gParent4BT, gParent4BP, rParent4V, rParent4AT, rParent4AP, rParent4BT, rParent4BP, boardFreezeTime, h1Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
 
 bool gParent1V = h1GV or gParent4V
 int gParent1AT = h1GV ? h1GAT : gParent4AT
@@ -309,8 +312,7 @@ float rParent1AP = h1RV ? h1RAP : rParent4AP
 int rParent1BT = h1RV ? h1RBT : rParent4BT
 float rParent1BP = h1RV ? h1RBP : rParent4BP
 
-[m15GV, m15GAT, m15GAP, m15GBT, m15GBP] = request.security(syminfo.tickerid, "15", f_child_candidate(gParent1V, gParent1AT, gParent1AP, gParent1BT, gParent1BP, true, boardFreezeTime, m15Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[m15RV, m15RAT, m15RAP, m15RBT, m15RBP] = request.security(syminfo.tickerid, "15", f_child_candidate(rParent1V, rParent1AT, rParent1AP, rParent1BT, rParent1BP, false, boardFreezeTime, m15Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[m15GV, m15GAT, m15GAP, m15GBT, m15GBP, m15RV, m15RAT, m15RAP, m15RBT, m15RBP] = request.security(syminfo.tickerid, "15", f_child_pair(gParent1V, gParent1AT, gParent1AP, gParent1BT, gParent1BP, rParent1V, rParent1AT, rParent1AP, rParent1BT, rParent1BP, boardFreezeTime, m15Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
 
 bool gParent15V = m15GV or gParent1V
 int gParent15AT = m15GV ? m15GAT : gParent1AT
@@ -323,8 +325,7 @@ float rParent15AP = m15RV ? m15RAP : rParent1AP
 int rParent15BT = m15RV ? m15RBT : rParent1BT
 float rParent15BP = m15RV ? m15RBP : rParent1BP
 
-[m5GV, m5GAT, m5GAP, m5GBT, m5GBP] = request.security(syminfo.tickerid, "5", f_child_candidate(gParent15V, gParent15AT, gParent15AP, gParent15BT, gParent15BP, true, boardFreezeTime, m5Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
-[m5RV, m5RAT, m5RAP, m5RBT, m5RBP] = request.security(syminfo.tickerid, "5", f_child_candidate(rParent15V, rParent15AT, rParent15AP, rParent15BT, rParent15BP, false, boardFreezeTime, m5Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
+[m5GV, m5GAT, m5GAP, m5GBT, m5GBP, m5RV, m5RAT, m5RAP, m5RBT, m5RBP] = request.security(syminfo.tickerid, "5", f_child_pair(gParent15V, gParent15AT, gParent15AP, gParent15BT, gParent15BP, rParent15V, rParent15AT, rParent15AP, rParent15BT, rParent15BP, boardFreezeTime, m5Lookback, touchTolerance, overlapTolerance), lookahead = barmerge.lookahead_off)
 
 // -----------------------------------------------------------------------------
 // PROJECTIONS / NEXT WALL
