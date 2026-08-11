@@ -62,29 +62,46 @@ def _slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", path).strip("_")
 
 
-def _tracked_tree_digest():
-    """A byte-level fingerprint of the TRACKED working tree.
+def _authority_surface_digest():
+    """Cleanliness over the AUTHORITY'S OWN source surface, at one instant.
 
-    C13 / R-828 §4a. `arm_start_head == arm_end_head` binds COMMITS, and a
-    working-tree write moves no commit -- so an arm can measure one commit while
-    the measurement edits the tree. `[MEASURED, AR-992]` a governed test
-    regenerates docs/wave25-exit-engine-ab-report.md and stamps it with the run
-    time, in a worktree created clean from the pin.
+    C13, as AMENDED by R-829 §2/§4[1].
 
-    `git status --porcelain -uno` names WHICH tracked files differ; `git diff
-    HEAD` carries their CONTENT. Hashing both makes this a byte-level statement
-    rather than a filename-level one. Untracked/ignored build cache is
-    deliberately excluded -- .numba_cache is not a claim about the tree.
+    ⚠️ MY FIRST VERSION DIGESTED THE WHOLE TRACKED TREE. That is the exact
+    false-RED class R-807 §4 closed: a governed member rewrites the tracked
+    docs/wave25-exit-engine-ab-report.md on EVERY acceptance run
+    (ACCEPT5-TEST-SIDE-EFFECT-1, ruled OUTPUT-ONLY), so a whole-tree gate would
+    REFUSE EVERY AUTHORITATIVE RUN -- "a new false RED wearing the words fail
+    closed".
+
+        AN AUTHORITY FIX IMPLEMENTED LITERALLY CAN RE-CREATE THE FALSE-RED
+        CLASS IT WAS MEANT TO GUARD.
+
+    So the surface is DERIVED BY IMPORT from acceptance_runner, never re-listed:
+    the bytes that DECIDE WHAT PYTEST EXECUTES. Re-listing would fork the surface
+    the day someone edits `testpaths` --
+        A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE
+        THE LIST IS SUPPOSED TO GUARD.
+    🛑 And NOTHING is exempted BY NAME here: docs/wave25-... is outside the
+    surface for a ruled reason, not because this function excuses it. A by-name
+    exemption is the allowlist shape that once excused 24 kill-switch assertions.
+
+    UNTRACKED COUNTS, mirroring the authority: pytest auto-loads conftest.py and
+    no manifest names it.
     """
     import hashlib as _h
     import subprocess as _sp
+    paths = list(_runner.AUTHORITY_SOURCE_PATHS)      # IMPORTED, never re-listed
     parts = []
-    for cmd in (["git", "status", "--porcelain", "-uno"], ["git", "diff", "HEAD"]):
+    for cmd in (["git", "status", "--porcelain", "--untracked-files=all", "--", *paths],
+                ["git", "diff", "HEAD", "--", *paths]):
         try:
             out = _sp.run(cmd, cwd=str(REPO), capture_output=True, timeout=120)
-            parts.append(out.stdout or b"")
         except Exception:                                      # noqa: BLE001
             return None
+        if out.returncode != 0:
+            return None
+        parts.append(out.stdout or b"")
     return _h.sha256(b"\0".join(parts)).hexdigest()
 
 
@@ -418,7 +435,7 @@ def main(argv=None):
           f" | order {'REVERSE' if args.reverse else 'canonical'}")
     print(f"artifacts {run_root}")
 
-    tree_start = _tracked_tree_digest()          # C13, R-828 §4a
+    tree_start = _authority_surface_digest()     # C13, R-828 §4a / R-829 §2
     receipts, t0 = [], time.time()
     for i, f in enumerate(files, 1):
         r = run_child(f, plan["children"][f], run_root,
@@ -461,7 +478,7 @@ def main(argv=None):
     # LAYER 2: the ORDERED manifest. `entries` is a SEQUENCE, never sorted --
     # serialising it sorted would destroy the only witness to execution order.
     arm_end_head = _runner._git_head()
-    tree_end = _tracked_tree_digest()
+    tree_end = _authority_surface_digest()
     manifest = {
         "arm_start_head": head,
         "arm_end_head": arm_end_head,

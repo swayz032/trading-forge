@@ -597,6 +597,43 @@ def red_proof():
     # C12: the control suite audits ITS OWN fixtures. This is the only case here
     # whose subject is the other cases, and it may not be dropped as meta --
     # F-5 existed precisely because nobody asserted this.
+    # ---- C13's SURFACE ITSELF (R-829 §4[2]) --------------------------------
+    # C13 compares a digest at arm start and arm end. That comparison is only
+    # meaningful if the digest MOVES for an in-surface change and DOES NOT move
+    # for the ruled out-of-surface one. Both directions, or the control is a
+    # constant. Measured against the real repo, then restored.
+    import accept5_isolated_runner as _air
+    base = _air._authority_surface_digest()
+    probe = REPO / "scripts" / "_c13_surface_probe.tmp"
+    moved = out_moved = None
+    try:
+        probe.write_text("in-surface probe\n", encoding="utf-8")
+        moved = _air._authority_surface_digest()
+    finally:
+        if probe.exists():
+            probe.unlink()
+    restored = _air._authority_surface_digest()
+    cases.append(("C13a an IN-SURFACE change moves the digest => detectable",
+                  base is not None and moved is not None and base != moved,
+                  f"base={str(base)[:10]} withProbe={str(moved)[:10]}"))
+    cases.append(("C13b the digest RESTORES when the change is reverted",
+                  base == restored,
+                  f"base={str(base)[:10]} restored={str(restored)[:10]}"))
+    # And the ruled exclusion, asserted rather than assumed: the writer's target
+    # is OUT of the surface, so a change to it must NOT move the digest. This is
+    # what stops C13 becoming R-807 §4's false-RED-on-every-run.
+    rep = REPO / "docs" / "wave25-exit-engine-ab-report.md"
+    if rep.is_file():
+        orig = rep.read_bytes()
+        try:
+            rep.write_bytes(orig + b"\n<!-- c13 out-of-surface probe -->\n")
+            out_moved = _air._authority_surface_digest()
+        finally:
+            rep.write_bytes(orig)
+        cases.append(("C13c an OUT-OF-SURFACE change (the ruled writer) does NOT move it",
+                      out_moved == base,
+                      f"base={str(base)[:10]} withDocsEdit={str(out_moved)[:10]}"))
+
     cases.append(("C12 the red-proof's OWN default pin RESOLVES",
                   _resolves_to_commit(REAL_PIN),
                   f"{REAL_PIN[:12]}... resolves="
