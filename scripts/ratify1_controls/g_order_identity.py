@@ -346,13 +346,27 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
                 V.append((f"[G-NODE] arms share children to compare ({node_axis})",
                           False, "no shared child node sequences recorded"))
             else:
-                bad = [t for t in shared
-                       if (a[t] == list(reversed(b[t]))) is not (node_axis == "reverse")
-                       or (node_axis == "same" and a[t] != b[t])]
+                # A 0- or 1-node child satisfies BOTH `a == b` and
+                # `a == reversed(b)`. Testing "is not the reverse" for the
+                # "same" case would therefore flag every singleton child as a
+                # violation, so each case asserts its OWN relation directly.
+                if node_axis == "same":
+                    bad = [t for t in shared if a[t] != b[t]]
+                else:
+                    bad = [t for t in shared if a[t] != list(reversed(b[t]))]
                 V.append((f"[G-NODE] intra-file order is {node_axis.upper()} "
                           f"across the arms", not bad,
                           f"{len(shared)} shared children, {len(bad)} violating "
                           f"{bad[:3]}"))
+                # ...and for a REVERSE pair the axis must have ACTUALLY varied.
+                # Satisfying "a == reversed(b)" across nothing but singletons
+                # would be a vacuous pass: the arms would be identical.
+                if node_axis == "reverse":
+                    varied = [t for t in shared if len(a[t]) >= 2 and a[t] != b[t]]
+                    V.append(("[G-NODE] the node axis GENUINELY varied",
+                              bool(varied),
+                              f"{len(varied)} child(ren) with >=2 nodes actually "
+                              f"reordered, of {len(shared)} shared"))
             V.append(("[G-NODE] arms' declared node axis matches the request",
                       (fwd.get("reverse_nodes") is not rev.get("reverse_nodes"))
                       is (node_axis == "reverse"),
