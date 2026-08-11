@@ -136,6 +136,13 @@ DIGEST-ADDRESSABLE and `C1`–`C12` still discriminate.** 🛑 **`AR-989`'s "one
 was a design option and is NOT a requirement; do not let a representation choice become a `[H]`
 breach.** **The fields below are the CONTENT obligation, not a file layout.**
 
+✅ **AS IMPLEMENTED (`f3225b69`): one receipt file per child**, `receipts/<ordinal:04d>-<slug>.json`,
+where `<slug>` is the RUNNER'S OWN `_slug`, **imported by the verifier rather than re-implemented** —
+🛑 **a second copy of a naming rule is a second registry: it agrees until the day it does not, and
+then the verifier cannot find receipts that exist.** ⚠️ **This shape was chosen for legibility, NOT
+because it is cheapest; `R-827 §9` permits changing it if `[H]` demands, and the cost is measured in
+the arms rather than argued.**
+
 Per `R-826 §8[2]` plus `R-827 §8[1]`, each child contributes:
 
 | field | meaning | why it is load-bearing |
@@ -316,6 +323,16 @@ themselves written against a fake pin — **so the instrument was never taught t
 ⇒ ★★★★★ **`A RED-PROOF FIXTURE IS A SPECIFICATION. WHATEVER IT NORMALIZES, THE INSTRUMENT WILL ACCEPT
 FOREVER.`** (`R-827 §4`.) 🛑 **`C12` therefore audits the CONTROLS, not the comparator — it is the only
 control in this set whose subject is the other controls, and it may not be dropped as meta.**
+
+### 4.2b — ⚠️ A CONTROL-DESIGN TRAP THIS SPEC WALKED INTO, RECORDED SO THE NEXT READER DOES NOT
+
+🛑 **The first implementation of `C1`–`C7` built its own cheap arms with `--limit 2` instead of using
+real ones. `--limit` sets `limited_subset=True`, which the comparator CORRECTLY refuses.** ⇒ **every
+case went RED — so all six negatives "passed" for a reason that had nothing to do with the chain, and
+only the two POSITIVE controls (`C4`/`C4b`) failed and exposed it.**
+⇒ ★★★★★ **`A NEGATIVE CONTROL THAT WOULD HAVE BEEN RED ANYWAY MEASURES NOTHING. THE POSITIVE ARM IS
+THE ONLY THING THAT CAN TELL YOU SO — WHICH IS PRECISELY WHY `C4` AND `C9` ARE NOT PADDING.`**
+⚡ **BINDING: `C1`–`C7` run against TAMPERED COPIES of real FULL-POPULATION arms, never a subset.**
 
 ### 4.3 — REPORTING OBLIGATION ON EVERY CONTROL (`R-827 §8[5]`)
 
