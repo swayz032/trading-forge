@@ -4,6 +4,62 @@
 
 ---
 
+## AR-1002 · 2026-08-11 · 📌 **START-RECEIPT, `R-834 §9[12]`. THE FIVE CERTIFYING ARMS ARE RUNNING.** ✅ **FIRST OBSERVABLE DELIVERED IN FULL: PUSH DONE (FAST-FORWARD, `STOP J` DID NOT FIRE) · `fb71a3ef` RESOLVES FROM `origin` ⇒ **THE BLOCK IS LIFTED BY ITS OWN OBJECTIVE CONDITION** · FRESH WORKTREE `wt-cert5-fb71a3ef`.** 🛑 **I RED-PROOFED THE `STOP K` / `[H]` GUARD BEFORE TRUSTING IT TO HALT A 30-MINUTE RUN — GREEN ON REAL DATA, RED ON FOUR MUTATIONS.** ⚖️ **AND I ANSWERED THE ROTATION QUESTION BEFORE ARM `A`, NOT DURING.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. CERT PIN `fb71a3ef`. WORKTREE `C:/Users/tonio/Projects/wt-cert5-fb71a3ef`. RULING `R-834 §9`.** 🛑 No grader dispatched · no promotion · no seal · no `RATIFY-1` number published · `CLUSTER-E` untouched · `acceptance_runner.py` untouched · `margin_expansion.py` and every production engine file UNOPENED · the `33` NOT adjudicated · nothing parallelised · no `--limit`.
+
+### §1 — ✅ THE PUSH, WHICH THE DESK ASKED FOR (`R-834 §3`, `§9[2]`)
+✅ **`[MEASURED HERE]` PRE-CHECK FIRST: `git merge-base --is-ancestor origin/… HEAD` ⇒ origin IS an ancestor ⇒ **the push is a FAST-FORWARD**, which is what carries `fb71a3ef` to `origin` UNCHANGED.**
+```
+1817c037..4257e3e8  h1-wave4-sealed12-driver -> h1-wave4-sealed12-driver
+SYSTEM-INVENTORY freshness (pre-push) .......... Passed
+```
+✅ **NO cherry-pick · NO rebase · NO force · NO cleanup/formatting/polish commit.** ✅ **`STOP J` DID NOT FIRE** — the push was accepted first time, and the `SYSTEM-INVENTORY` hook `R-834 §3` warned about **PASSED** rather than blocking, so no regenerate-and-commit was needed.
+✅ **THE CONDITION THAT LIFTS THE BLOCK, VERIFIED TWO WAYS `[MEASURED HERE]`:** `git branch -r --contains fb71a3ef` ⇒ **`origin/h1-wave4-sealed12-driver`** · **AND the independent join** — `git ls-remote origin` reports the remote tip is `4257e3e8`, and `git merge-base --is-ancestor fb71a3ef 4257e3e8` ⇒ **TRUE**. ⇒ **the pin is contained in what the remote actually holds, not merely in what my local ref claims.** ★★★ **`A REMOTE-TRACKING REF IS A CACHED CLAIM ABOUT THE REMOTE; ls-remote ASKS THE REMOTE.`**
+
+### §2 — ✅ FRESH, CLEAN, EXCLUSIVE — NOT THE DIAGNOSTIC WORKTREE
+✅ **`R-834 §5`/`§9[5]` forbids reusing `wt-gnode-fb71a3ef` because it holds the diagnostic's untracked `gnode-arms/` output and *"clean" is part of the contract*. NEW worktree created at the EXACT full SHA `fb71a3efa99af94e37b94738dcdd85e92b571aea`, detached — never a branch name** (`worktree-session` START `§2`).
+✅ **`wt-gnode-fb71a3ef` is PRESERVED, per `R-834 §8`, until `AR-1001`'s artifacts are durably captured. I have removed nothing.**
+
+### §3 — 🛑 THE `STOP K` / `[H]` GUARD, RED-PROOFED BEFORE THE RUN
+⚖️ **`STOP K` says stop on the FIRST unexplained failure and do NOT run the remaining arms to get the full picture. That is unenforceable if I only look after all five finish — so the halt is MECHANICAL: each arm's `aggregate.json` is checked the moment that arm ends, and a breach EXITS the job before the next arm starts.**
+🛑 **AND A GUARD THAT HAS NEVER GONE OFF IS NOT AN INSTRUMENT, so I red-proofed it BOTH WAYS on throwaway copies before arm `A`:**
+```
+POSITIVE  real known-good arm (the AR-1001 diagnostic A)   -> OK, exit 0
+NEGATIVE  wall_s 700.0        -> RED exit 4 "[H] HARD GATE BREACH: 700.0 > 600.0"
+NEGATIVE  nodes 2418          -> RED exit 4 "nodes=2418 (want 2419)"
+NEGATIVE  arm_end_head moved  -> RED exit 4 "HEAD MOVED mid-arm"
+NEGATIVE  limited_subset True -> RED exit 4 "a --limit arm may not certify"
+```
+✅ **Each mutation named ITS OWN reason — the guard is not a blanket red.** ⚖️ **SCOPE, STATED: this is a GUARD over the committed instrument's own output. It computes NO oracle. The `A == B == C == D` / `A == E` comparison is done separately, afterwards, from the same `aggregate.json` files — I have NOT authored a second comparator** (`R-648`; `R-834 §9[10]`).
+⚡ **PER-ARM CONTRACT ENFORCED (`R-834 §9[7]`, `STOP [41]`): `children = 108` · `nodes = 2419` · `observed outcomes = 2419` · `duplicate_nodes = 0` · `collected_but_unexecuted = 0` · `invalid_children = 0` · `limited_subset = False` · `arm_start_head == arm_end_head == fb71a3ef` · `wall_s <= 600.0`.**
+
+### §4 — ⚖️ THE ROTATION QUESTION, ANSWERED BEFORE ARM `A`
+⚖️ **`R-834 §9[11]` says one seat owns all five arms, no rotation midway, and *"if you feel ANY strain, rotate NOW, BEFORE arm `A`."* I am answering it deliberately rather than by drift, because the ruling makes NOW the only safe moment.**
+✅ **I AM CONTINUING.** **Grounds, honestly: three deliveries this seat (`AR-999` seating + finding · `AR-1000` receipt · `AR-1001` diagnostic), no instance yet of re-deriving something I had already established, and the remaining work is `~30` min of BACKGROUND execution plus one comparison and one report — not five fresh reasoning problems.** ⚖️ **`worker-execution §10`: handoff is for genuine exhaustion, and `THE SEAT THAT EXISTS IS THE SEAT THAT FINISHES` — a handoff I do not need is a stop order I write for myself.**
+🛑 **AND THE TRIPWIRE I BIND MYSELF TO, so this is a commitment and not a mood: if I catch myself re-deriving an established fact, or if any arm needs a judgment I cannot ground in a ruling I can cite, I STOP AND REPORT rather than pushing through mid-certification.**
+
+### §5 — 📌 THE RUN, AND THE PRE-REGISTERED ACCEPTANCE
+```
+ARM A : (no flags)                  canonical files, canonical nodes
+ARM B : --reverse                   reverse files,   canonical nodes
+ARM C : --reverse-nodes             canonical files, reverse nodes
+ARM D : --reverse --reverse-nodes   reverse files,   reverse nodes
+ARM E : (no flags)                  repeat of A
+ORACLE: A == B == C == D  and  A == E, by EXACT NODE ID -> OUTCOME.
+```
+🛑 **PRE-REGISTERED BEFORE THE DATA (`[pre-register-criteria]`), so no reading is available to me afterwards that is not available now:**
+> **ALL FOUR EQUALITIES HOLD ⇒ `[G-FILE]`, `[G-NODE]`, `[G]` and `[I]` are satisfied AT POPULATION SCOPE, and `[H]` passes if every arm is `<= 600.0s`. I REPORT — I DO NOT CERTIFY, DO NOT PUBLISH A `RATIFY-1` NUMBER, AND DO NOT DISPATCH THE GRADER.**
+> **ANY EQUALITY FAILS ⇒ `STOP K`: I stop at that arm once its receipt is durable, and report the exact differing node IDs. NO repair, NO re-run to get a nicer picture.**
+> **`33` STABLE FAILURES: NOT ADJUDICATED AND NOT REPAIRED.** If all five arms produce the same `33`, that is `R-834 §6`'s satisfied case and the `33` become the LATER disposition lane's candidate map — **not my lane, and not a thing to make greener.**
+🛑 **A FIVE-ARM GREEN IS `[MEASURED BY THE DOER]` AND SELF-CERTIFIES NOTHING (`R-834 §7`). The independent `accuracy-validator` grade is REQUIRED and is the DESK's to dispatch — I name it here, as I did at `AR-999 §5` and `AR-1001 §4`, so it is never reported as an unowned prerequisite** (`[grader-agent]`).
+
+**ETA `~30–35` min (5 arms, `~6` min each observed). NEXT OBSERVABLE: the four exact-node-ID equality comparisons + per-arm `wall_s` against the `600.0s` gate.**
+🛑 **NOTHING IS MEASURED YET. This receipt contains no certification result and asserts none.**
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — a receipt is not a stop; the run is in flight and I am not waiting on anyone for it.
+
+---
+
 ## AR-1001 · 2026-08-11 · ✅✅✅ **`[G-NODE]` AT POPULATION SCOPE: THE MOVING SET IS `∅`. ORDER-DEPENDENT NODE MEMBERSHIP OVER ALL `108` CHILDREN / `2419` NODES IS `0`.** ⚡ **THE `12` THAT MOVED AT `AR-991` ARE ALL PRESENT, JOINED `12/12` BY EXACT NODE ID, AND ALL NOW STABLE.** 🛑🛑 **AND I DID NOT REPORT THE NULL UNTIL I HAD PROVEN IT COULD HAVE BEEN NON-NULL: THE AXIS PROVABLY VARIED (`104/104`), THE COMPARISON PROVABLY DISCRIMINATES, AND THE OUTCOME MAP IS PROVABLY NON-TRIVIAL.** 🛑 **THE FIVE CERTIFYING ARMS ARE **NOT** RUN AND THIS RESULT DOES NOT UNLOCK THEM.**
 
 **SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. RUN PIN `fb71a3ef` in disposable exclusive worktree `C:/Users/tonio/Projects/wt-gnode-fb71a3ef`. RULING `R-833 §4`.** 🛑 No repair · no fixture or assertion touched · no arm of the five · `acceptance_runner.py` untouched · no seal · no promotion · `CLUSTER-E` HELD · no `--limit` · not parallelised · `margin_expansion.py` and every production engine file UNOPENED.
