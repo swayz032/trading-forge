@@ -4,6 +4,78 @@
 
 ---
 
+## AR-1001 · 2026-08-11 · ✅✅✅ **`[G-NODE]` AT POPULATION SCOPE: THE MOVING SET IS `∅`. ORDER-DEPENDENT NODE MEMBERSHIP OVER ALL `108` CHILDREN / `2419` NODES IS `0`.** ⚡ **THE `12` THAT MOVED AT `AR-991` ARE ALL PRESENT, JOINED `12/12` BY EXACT NODE ID, AND ALL NOW STABLE.** 🛑🛑 **AND I DID NOT REPORT THE NULL UNTIL I HAD PROVEN IT COULD HAVE BEEN NON-NULL: THE AXIS PROVABLY VARIED (`104/104`), THE COMPARISON PROVABLY DISCRIMINATES, AND THE OUTCOME MAP IS PROVABLY NON-TRIVIAL.** 🛑 **THE FIVE CERTIFYING ARMS ARE **NOT** RUN AND THIS RESULT DOES NOT UNLOCK THEM.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. RUN PIN `fb71a3ef` in disposable exclusive worktree `C:/Users/tonio/Projects/wt-gnode-fb71a3ef`. RULING `R-833 §4`.** 🛑 No repair · no fixture or assertion touched · no arm of the five · `acceptance_runner.py` untouched · no seal · no promotion · `CLUSTER-E` HELD · no `--limit` · not parallelised · `margin_expansion.py` and every production engine file UNOPENED.
+
+### §1 — ⚡ THE RESULT
+```
+ARM    FLAGS              CHILDREN  NODES  WALL     HEAD(start==end)
+A      (none, canonical)     108     2419  374.4s   fb71a3ef == fb71a3ef
+C      --reverse-nodes       108     2419  359.6s   fb71a3ef == fb71a3ef
+
+A vs C   axis varied: NODE ORDER ONLY  (reverse=False on BOTH arms)
+         node-ID key sets: in A not C = 0 . in C not A = 0
+    ***  [G-NODE] MOVING SET = 0 nodes  ***
+```
+⚡ **PRE-REGISTERED DISPOSITION THAT FIRES (`AR-1000 §4`, committed BEFORE the data at `e9881040`): `MOVING SET = ∅` ⇒ population-scope order-dependent membership is `0`; the `STOP B` precondition is **MET ON MEASUREMENT**. I REPORT AND STOP.**
+⚠️ **`STOP [41]` HONOURED — BOTH DENOMINATORS, NEITHER STANDING IN FOR THE OTHER: `108` children, `2419` nodes.** ✅ **`duplicate_nodes 0` · `collected_but_unexecuted 0` · `invalid_children 0` on BOTH arms** — so the `2` unbound-artifact children `AR-991 §` flagged under `STOP C` do not recur here.
+
+### §2 — 🛑 THE NULL, AUDITED. THIS IS THE PART THAT MAKES `0` A RESULT AND NOT A BROKEN CHECK
+🛑 **A `0` IS THE EXACT SHAPE OF A FALSE GREEN, SO I RED-PROOFED THE MEASUREMENT BEFORE BELIEVING IT — three independent ways it could have been vacuous, each closed by a positive witness:**
+> **`[1]` DID THE AXIS ACTUALLY MOVE, or did `--reverse-nodes` silently do nothing?** ✅ **`[MEASURED HERE, per-child `node-sequence.json`, A vs C]` of the `104` children with `>1` node, **`104` had their node order EXACTLY reversed** and `0` did not. `2` single-node children (reversal is a no-op by definition) · `2` zero-node children · `0` missing sequence files. **The `108` reconcile exactly.** ★★★★★ **`WITHOUT THIS, "NOTHING MOVED" AND "NOTHING WAS MOVED" ARE THE SAME PICTURE — AND THE SECOND ONE IS A FLAG THAT DID NOT TAKE EFFECT.`**
+> **`[2]` CAN THE COMPARISON DETECT A DIFFERENCE AT ALL, or is it always-green?** ✅ **`[MEASURED HERE]` inject ONE synthetic outcome change into a copy of `C` ⇒ the comparison returns **`1` moving node and NAMES it**; the real pair returns `0`. **The control BITES.**
+> **`[3]` IS THE OUTCOME MAP NON-TRIVIAL, or is everything one value?** ✅ **`[MEASURED HERE]` A = `2384 passed / 33 failed / 2 xfailed`; C = **identical distribution**. `33` reds are present in BOTH arms — this is not an all-green surface where equality is free.**
+✅ **AND THE PIN HELD THROUGH BOTH ARMS, WHICH IS THE INSTRUMENT'S OWN `STOP [35]` GUARD: `arm_start_head == arm_end_head == fb71a3ef` on A AND on C.** ⇒ **no mid-arm `HEAD` drift, despite the shared branch having moved under me during setup (`AR-1000 §1`).**
+⚠️ **ONE METADATA DIFFERENCE I CHASED RATHER THAN LEFT UNEXPLAINED, because an unexplained delta in a certification-adjacent report is what a reader challenges first: `manifest_sha256` DIFFERS between the arms (`e7cf45d1…` vs `d3ab4d1d…`).** ✅ **`[MEASURED HERE]` it is an ORDERING artifact, NOT a population difference — `population_digest` is **IDENTICAL** (`552f4f37e67cdd1f9bf38ded0ec0a2c65a6d46beca9264895f611adae4727dcd`) and `arm_start_tree` is **IDENTICAL** (`6e340b9c…`) on both arms. Per manifest entry, `ordinal` and `target` match and only `receipt_sha256` differs — i.e. the same `108` targets in the same ordinals, with different per-child receipts because the node order inside them differs.** ★★★ **`TWO HASHES DISAGREEING IS NOT A FINDING UNTIL YOU KNOW WHICH FIELD MOVED — AND THE FIELD THAT WOULD HAVE BEEN A FINDING IS THE ONE THAT MATCHED.`**
+
+### §3 — ⚡ THE `AR-991` TWELVE, JOINED BY EXACT NODE ID
+✅ **`12 / 12` joined by exact node-ID suffix — none went missing, none was silently renamed** (`[accept5-join-keys]`: I did NOT rename anything to make a join work).
+```
+A         C          NODE
+passed -> passed   TestAnchoredVwapTrueVolumeWeighting::test_avwap_trail_stop_is_volume_weighted_not_structural
+passed -> passed   TestDispatchRouting::test_static_styleC_calls_static_handler
+passed -> passed   test_no_reconciliation_error_with_large_roll_cost
+passed -> passed   test_small_roll_cost_also_reconciles
+passed -> passed   TestVixAtrMultiplier::test_enabled_vix_above_30_returns_high_tier
+passed -> passed   TestVixAtrMultiplier::test_enabled_vix_below_20_returns_low_tier
+passed -> passed   TestVixAtrMultiplier::test_enabled_vix_crisis_55_returns_high_tier
+passed -> passed   TestVixAtrMultiplier::test_enabled_vix_exactly_30_returns_mid_tier
+passed -> passed   TestVixAtrMultiplier::test_env_flag_true_activates_tiers
+passed -> passed   TestIntrabarsStopsAndTP::test_eligibility_gate_empty_htf_passthrough
+passed -> passed   TestIntrabarsStopsAndTP::test_eligibility_gate_no_htf_passthrough_preserves_signals
+passed -> passed   TestIntrabarsStopsAndTP::test_eligibility_gate_unregistered_strategy_passthrough
+```
+⭐ **THE `M1` TRIO IS THE INFORMATIVE ROW AND IT CONFIRMS `R-832 §3` AT POPULATION SCOPE:** `[MEASURED HERE]` in arm `A` those three sit **LAST** in their child's sequence; in arm `C` they sit **FIRST** — **the exact position change that previously flipped them to `skipped`** — and they now **RUN AND PASS IN BOTH POSITIONS. NO `skipped` ANYWHERE IN EITHER ARM.** ⇒ **stable RUN, not stable SKIP, held under the strongest positional stress the axis can apply.** ★★★★★ **`THE CHEAP CLOSURE WOULD HAVE SCORED THIS SAME ∅ WHILE DELETING THE COVERAGE OVER A BANKED MONEY-PATH HAZARD. THE EXPENSIVE ONE SCORED IT WITH THE COVERAGE ALIVE.`**
+
+### §4 — 🛑 WHAT THIS DOES **NOT** ESTABLISH
+🛑 **IT DOES NOT UNLOCK THE FIVE CERTIFYING ARMS. `R-833 §4[6]` names this as the one place I could over-read my authorization, and I am not taking it: `A GOOD MEASUREMENT IS NOT A LIFTED BLOCK.` I have not run them and will not without the read.**
+🛑 **IT DOES NOT APPROVE `AR-998`.** `R-833 §3` is explicit that a `∅` result does NOT retroactively approve those repairs. **They remain DOER-GRADED ONLY and unruled.**
+🛑 **IT DOES NOT MOVE A `RATIFY-1` LETTER. `RATIFY-1` STANDS UNCERTIFIED AT `6/10`, `[F]` CONDITIONAL. `STOP B` IS NOT CLOSED BY ME** — this measures its precondition; closing it is the desk's.
+⚠️ **WHAT I DID NOT MEASURE, STATED AS A PARTIAL:** the **NODE axis only** — I did NOT re-run `[G-FILE]` (file order), `[I]` (repeat-identical), or the `[H]` runtime gate; `R-833` authorized one diagnostic and I ran one · **the `33` failures are NOT adjudicated** — they are stable in BOTH arms, which is exactly what `R-831 §4` calls stable evidence, and their merit is not my question · I did not re-run any of `AR-998`'s own controls · the second independent `accuracy-validator` grade remains owed, queued, and the desk's to dispatch (`[grader-agent]` — I name it rather than reporting it blocked).
+⚖️ **AND ONE HONEST SCOPING OF MY OWN WALL TIMES: `374.4s` and `359.6s` are OBSERVATIONS, not an `[H]` pass. `[H]` is a gate with its own contract and I did not run it. I report the numbers because they bear on cost, and I decline to dress them as a certification.**
+
+### §5 — 📌 ARTIFACTS AND POSITION
+```
+PIN        fb71a3ef (committed, NOT pushed -- R-833 §4[7] forbids me pushing on
+           the desk's behalf unless asked, and this report is committed for the
+           same reason)
+ARTIFACTS  C:/Users/tonio/Projects/wt-gnode-fb71a3ef/gnode-arms/
+             A/isolated-5caf01635bcb/aggregate.json   (canonical)
+             C/isolated-aba3e96d7873/aggregate.json   (--reverse-nodes)
+           both carry manifest.json, receipts/, and per-child node-sequence.json
+WORKTREES  wt-gnode-fb71a3ef  is MINE and DISPOSABLE -- keep until the desk has
+           read this, then a one-line removal.
+           wt-ratify1-final-f3225b69 . wt-ctl-d66e46aa  PRESERVED BY RULING.
+           wt-m3-44db4eae  mine, keep until STOP B closes (R-833 §4[7]).
+IN FLIGHT  NOTHING. No sub-agent dispatched, none owed.
+EAR        armed under claude.exe 25076; it DELIVERED R-833 in production.
+```
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING` for the measurement, and `BLOCKED` for what comes next** — the queue beyond this diagnostic is the five arms, and those are the read's call. 🛑 **`R-833 §4[4]` said report `∅` as `∅`; I am doing exactly that and stopping, rather than treating a clean result as permission.**
+**Next task, needing no re-derivation, WHEN the read lifts the block:** the **FIVE-ARM CERTIFYING RUN** — `A`/`B`/`C`/`D`/`E` from ONE clean exclusive worktree at the then-current pin, `A == B == C == D` and `A == E` by EXACT NODE → OUTCOME, each arm `<= 10.0` min, NO carve-out for the `12`.
+
+---
+
 ## AR-1000 · 2026-08-11 · 📌 **START-RECEIPT, `R-833 §4[8]`. `[G-NODE]` POPULATION DIAGNOSTIC IS RUNNING.** ⚡ **FIRST OBSERVABLE DELIVERED: PIN `fb71a3ef` · WORKTREE `C:/Users/tonio/Projects/wt-gnode-fb71a3ef` (disposable, exclusive, DETACHED).** 🛑 **THE SHARED BRANCH MOVED UNDER ME MID-SETUP — `STOP [35]` IS NOT THEORETICAL AND I NAME WHAT IT DID.** ⚖️ **I RESTATE THE PRE-REGISTERED DISPOSITIONS IN MY OWN WORDS BEFORE THE DATA, AND I FLAG ONE THING I DID BEFORE `R-833` EXISTED THAT `R-833 §4[7]` NOW PROHIBITS.**
 
 **SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. RULING `R-833 §4`. RUN PIN `fb71a3ef`.** 🛑 Read-only over the governed population · no repair · no arm of the five · nothing promoted · no seal · `acceptance_runner.py` untouched · no `--limit`.
