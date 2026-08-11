@@ -1,8 +1,13 @@
 //@version=1
-// Slumdawg FX Replay V2.0.4.3 - FXR-RUNTIME-SCOPE-SAFE REACTION-ZONE TARGETS
+// Slumdawg FX Replay V2.0.4.4 - FXR-OBSERVABLE REACTION-ZONE TARGETS
 // PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
 // Run on 5m NQ/MNQ. One requested MTF lane: 15m.
-
+//
+// v0.4.4 observability correction:
+// - standard plot.line output mirrors entry/TP band lines so a band-render issue cannot look like a dead script;
+// - an optional close-price heartbeat (circles) proves the Slumdawg script is alive while FXR MTF/structure is building;
+// - missing 15m structure remains fail-closed: no fake entry or TP is manufactured just to force output.
+//
 // FXR runtime note: primitive top-level constants are intentionally avoided.
 // FX Replay v1 may evaluate helper functions outside that primitive scope.
 // Mutable array state follows the platform's documented top-level array pattern.
@@ -14,6 +19,7 @@ init = () => {
   indicator({ onMainPanel: true, format: "inherit" });
   input.bool("Show Entry Zones", true, "showentries");
   input.bool("Show Take Profit Zones", true, "showtps");
+  input.bool("Show FXR heartbeat while testing", true, "showheartbeat");
   input.str("BIG DIRECTION (match Daily helper)", "DOWN", "bigdirection", ["UP", "DOWN"]);
   input.int("Swing Memory", 8, "swingmemory", 2, 20, 1);
   input.int("15m TP Minimum Reactions", 2, "mintouches15", 2, 4, 1);
@@ -547,10 +553,22 @@ const drawTargets = (rows, sideName, mode) => {
 onTick = (length, _moment, _, ta, inputs) => {
   if (length < 100) return;
 
+  // Always-visible FXR acceptance heartbeat. It follows candle closes with small circles.
+  // Turn this input OFF after the platform-render gate is proven.
+  if (inputs.showheartbeat) {
+    plot.line("SLUMDAWG ACTIVE", closeC(0), "#808080", 6, 0, 0, "slumdawg_active");
+  }
+
   const memory = Math.max(2, Math.min(20, inputs.swingmemory));
   const pair = selectOuterPair(memory, 320);
   const move = updateCurrentMove(pair.pivots, runtimeState);
   const side = move;
+
+  // A valid running script must never look dead. If FXR MTF has not produced both
+  // structural sides yet, show an explicit fail-closed BUILDING line at current price.
+  if ((pair.longEntry === null || pair.shortEntry === null) && inputs.showheartbeat) {
+    band.line("SLUMDAWG BUILDING STRUCTURE", closeC(0), "#808080", 2, 1, true);
+  }
 
   const atr15 = mtf.atr(14, false);
   const atr5 = atr5Simple(14);
@@ -640,16 +658,25 @@ onTick = (length, _moment, _, ta, inputs) => {
 
   if (inputs.showentries && pair.longEntry !== null) {
     band.line("LONG ENTRY ZONE", pair.longEntry, "#FFBE19", 0, 3, true);
+    plot.line("SLUMDAWG LONG ENTRY", pair.longEntry, "#FFBE19", 7, 0, 0, "slumdawg_long_entry");
   }
 
   if (inputs.showentries && pair.shortEntry !== null) {
     band.line("SHORT ENTRY ZONE", pair.shortEntry, "#FFBE19", 0, 3, true);
+    plot.line("SLUMDAWG SHORT ENTRY", pair.shortEntry, "#FFBE19", 7, 0, 0, "slumdawg_short_entry");
   }
 
   if (inputs.showtps) {
     const mode = withBigDirection ? "MID" : "SAFE";
     drawTargets(longTp, "LONG", mode);
     drawTargets(shortTp, "SHORT", mode);
+
+    if (longTp.length > 0) plot.line("SLUMDAWG LONG TP1", longTp[0].target, "#2A76FF", 7, 0, 0, "slumdawg_long_tp1");
+    if (longTp.length > 1) plot.line("SLUMDAWG LONG TP2", longTp[1].target, "#2A76FF", 7, 0, 0, "slumdawg_long_tp2");
+    if (longTp.length > 2) plot.line("SLUMDAWG LONG TP3", longTp[2].target, "#2A76FF", 7, 0, 0, "slumdawg_long_tp3");
+    if (shortTp.length > 0) plot.line("SLUMDAWG SHORT TP1", shortTp[0].target, "#2A76FF", 7, 0, 0, "slumdawg_short_tp1");
+    if (shortTp.length > 1) plot.line("SLUMDAWG SHORT TP2", shortTp[1].target, "#2A76FF", 7, 0, 0, "slumdawg_short_tp2");
+    if (shortTp.length > 2) plot.line("SLUMDAWG SHORT TP3", shortTp[2].target, "#2A76FF", 7, 0, 0, "slumdawg_short_tp3");
   }
 
   let proof = null;
