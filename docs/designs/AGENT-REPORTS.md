@@ -4,6 +4,38 @@
 
 ---
 
+## AR-984 · 2026-08-11 · ⚖️ **CORRECTION TO MY OWN `AR-983 §4`: `R-824` LANDED WHILE I WAS WRITING IT AND **CLOSES `[J]`**, SO QUESTION `1` IS NOW **`YES`**, NOT `NO`.** 🛑 **THE HANDOFF STANDS — BUT IT NOW RESTS ENTIRELY ON QUESTION `4`, WHICH IS THE ONE ONLY THIS SEAT CAN ANSWER.** ✅ **AND `R-824 §6` ORDERS REAL `[F]`, WHICH `AR-983` ALREADY DELIVERED — THE DESK HAD NOT SEEN IT.**
+
+**SEAT `claude.exe 27448`. `HEAD ed7d501f`. TREE `wt-h1-wave4-20260712`.** ⚠️ **`R-823` and `R-824` are LOCAL-ONLY on the desk's side by its own containment (`R-823 §6`); MY PUSH CARRIES THEM, as it did `R-822`.**
+
+### §1 — ⚖️ THE CORRECTION, BECAUSE A WRONG ANSWER TO A GATING CHECKLIST IS NOT A TYPO
+🛑 **`AR-983 §4` answered `R-822 §6` Q1 = `NO`, citing real `[J]` as unsatisfied and quoting `R-823 §8[2]`.** ✅ **`R-824 §1`/`§4` CLOSES `[J]` WITH A BOUNDED FINDING — the ownership-aware boundary changes `0` of `84` governed node outcomes, and the non-discriminating negative arm is recorded as `NON-DISCRIMINATING — trigger absent, NOT a passing control`, which is exactly how I reported it.** ⇒ **Q1 IS `YES`.**
+⚖️ **REVISED ANSWER SET: `YES / NO / YES / NOT-WITH-CONFIDENCE`.** 🛑 **`R-822 §6`'s rule is `YES / NO / YES / YES` keeps the seat, ANYTHING ELSE hands off before `[G]`. IT STILL FIRES — but the reason is now Q4 ALONE, and that is a materially different statement about why this seat is stopping.** ★★★ **`A CHECKLIST THAT FIRES FOR THE WRONG REASON STILL FIRES, AND LEAVING THE WRONG REASON ON THE RECORD WOULD TELL THE NEXT SEAT THE WORK WAS INCOMPLETE WHEN IT IS THE READER WHO IS.`**
+
+### §2 — ✅ REAL `[F]` IS ALREADY DELIVERED — DO NOT RE-ORDER IT
+✅ **`R-824 §6` orders real `[F]` next. `[MEASURED]` `AR-983 §2` delivered it before `R-824` was written** (the desk's own header records `NEWEST AR ON DISK: AR-982`). **Governed file, disposable worktree at `5956393e`, shared tree never modified, EXACT NODE IDs:**
+```
+ARM A  Layer 2 OFF  exit=1  FAILED ...::test_zz_planted_observer_must_not_see_it
+ARM B  Layer 2 ON   exit=0  14 passed   keys_evicted=1
+original 12 governed nodes unaffected in BOTH arms
+```
+⇒ **`[F]` asks the opposite question from `[J]` — does the boundary actually REMOVE a real governed test-time contaminant — and the answer is measured YES.** ⚖️ **Reported so `R-825` grades it rather than re-authorizing work that is done.**
+
+### §3 — ✅ CORRECTIONS I CARRY FORWARD
+✅ **`R-824 §3` — I DROP *"one environment variable away"*.** The supported wording, which I use from now on: **`LATENT BEHIND THE SUPPORTED FIXTURE-ACTIVATION PATH, NOT CURRENTLY FIRING` — a governed child must REQUEST `mock_vectorbt_session` *while* `TF_MOCK_VBT=1` for the hazard to arm.** ⚖️ **Mine was a mechanism claim and mechanism claims carry their evidence in the same sentence; "one env var away" omitted the request half.**
+✅ **`STOP [47]` — THREE DENOMINATORS, NEVER COLLAPSED:** `9` fixture DEFINITIONS across `5` SOURCE files · `4` explicit test CHILD files in the arm · `84` governed NODE OUTCOMES compared. **The fifth source file is `conftest.py`, which pytest AUTO-LOADS into each child rather than running as a governed target.** ★★★★ **`A FILE THAT DEFINES FIXTURES AND A FILE THAT RUNS TESTS ARE BOTH "FILES", AND A COUNT THAT ADDS THEM IS A COUNT OF NOTHING.`**
+✅ **`R-823 §8[7]` mechanism correction carried in `AR-983 §1`: `black_swan` COLLECTION-TIME module pollution changed the `7`; it contains ZERO occurrences of `prop_sim`.**
+
+### §4 — 📌 THE HANDOFF, UNCHANGED IN SUBSTANCE
+**FAN-IN `8 / 10`** (`[A]` `[B]` `[C]` `[D]` `RATIFY-[E]` `[F]` `[J]` + the `§9[6]` teardown edge). 🛑 **`[G]` `[H]` `[I]` UNSTARTED — none blocked, all simply not begun.** **The next-seat instructions are `AR-983 §5`, unchanged; `STOP [42]` makes the `[G]` ordered pair ATOMIC, which is why the only safe moment to leave is before it starts.**
+✅ **`[MEASURED]` no disposable worktree outstanding · nothing half-built · no subagent dispatched, so no delivery is owed · working tree carries only the two pre-existing files that predate this seat.**
+🛑 **THE RULING EAR DIES WITH THIS SEAT. The next seat re-arms it and backfills from `R-824`.**
+🛑 **AND THE PUSH THIS SEAT OWES: `R-823` and `R-824` are local-only; my push carries them to `origin`. `R-823 §7` binds at promotion — the final `RATIFY-1` commit must resolve from `origin`, NO LOCAL-ONLY AUTHORITY.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED`** — reserved sense (`worker-execution §11a[3]`): **the next step is `[G]` and `R-822 §6`'s objective checklist forbids this seat launching it. A fresh worker session is needed.**
+
+---
+
 ## AR-983 · 2026-08-11 · ✅ **REAL `[F]` SATISFIED ON A GOVERNED FILE · `[C]` AND `[D]` CLOSED TO `R-823 §5`'s STRICT CONTRACT.** ⚖️ **I CARRY THE DESK'S MECHANISM CORRECTION AND OWN THE ERROR: `black_swan` NEVER TOUCHES `prop_sim`.** 🛑🛑 **AND I ANSWER `R-822 §6`'s FOUR QUESTIONS HONESTLY — THE ANSWER SET IS **NOT** `YES/NO/YES/YES`, SO THE RULE FIRES AND I HAND OFF **BEFORE** LAUNCHING `[G]`.**
 
 **SEAT `claude.exe 27448`. `HEAD 8bde6b71`. RULING `R-823 §8`. TREE `wt-h1-wave4-20260712`. 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal moved; `CLUSTER-E` HELD.**
