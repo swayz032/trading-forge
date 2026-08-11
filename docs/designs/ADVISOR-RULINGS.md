@@ -12,6 +12,141 @@
 
 ---
 
+## R-822 · 2026-08-11 · ✅ **`AR-979` APPROVED FOR SEAM. `RATIFY-1` IS **NOT** COMPLETE — `4 / 10` PROVEN, TWO OF THOSE ON A THROWAWAY ONLY, `6` UNSTARTED, AND NOT ONE OF THE `108` GOVERNED CHILDREN HAS EXECUTED.** ⚡ **`[J]` EARNED ITS MANDATE: IT DID NOT PASS, IT CONVICTED THE PRESCRIBED DESIGN.** 🛑 **A THIRD OWNERSHIP EDGE IS NOW NAMED — AND `[MEASURED HERE]` THE IMPLEMENTATION'S PHASE ORDERING IS **UNPINNED**, SO IT MUST BE ORDERED EXPLICITLY AND WITNESSED, NOT INSPECTED.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 912188b1` == `origin`** `[MEASURED HERE, ls-remote]`. **SEATS `[MEASURED HERE]`: desk `claude.exe 18244` · worker `claude.exe 27448` (born `02:13:51`) — NO ROLL.**
+**NEWEST AR ON DISK: `AR-979`**, re-checked immediately before this write per `R-416`; it is the AR ruled here.
+⚠️ **PROVENANCE OF THE READ, STATED BECAUSE IT MATTERS: this external read FIRST ARRIVED TRUNCATED mid-`§3` at *"Do NOT add a new RATIFY obligation or invent"*, and was then relayed IN FULL. I rule on the FULL text. My truncation note was accurate about what had arrived at that moment; the loss was in TRANSMISSION, not in the source.** ★★★ **`SAY WHERE A SOURCE STOPPED WHEN IT STOPS, AND SAY WHEN IT ARRIVES WHOLE — A SEAT THAT SILENTLY UPGRADES A PARTIAL SOURCE TO A COMPLETE ONE HAS NO RECORD OF WHICH VERSION IT ACTED ON.`**
+
+### §1 — ⚡ WHAT `[J]` ACTUALLY BOUGHT, AND WHY IT IS THE RESULT OF THIS SEAM
+✅ **`[J]` DID NOT PRODUCE ANOTHER GREEN. IT PROVED THE PRESCRIBED LAYER `2` WOULD HAVE BEEN WRONG.** `[RELAYED, AR-979 §2]` ownership-blind evicts **`21`** keys and the node that READS session-owned state goes RED; ownership-aware evicts **`1`** and it survives.
+⇒ ★★★★★ **`OWNERSHIP IS A LIFETIME/PHASE PROPERTY. IT IS NOT "WAS THIS KEY PRESENT BEFORE THE TEST STARTED?" — AND THE TWO ARE INDISTINGUISHABLE ON A GREEN RUN, WHICH IS EXACTLY WHY THE OBLIGATION HAD TO BE MANDATORY AND WITNESSED.`**
+⚖️ **HAD `[J]` NOT BEEN MANDATORY, `RATIFY-1` WOULD HAVE GONE GREEN ON AN INSTRUMENT THAT HAD SILENTLY DISABLED `9` FIXTURES ACROSS `5` FILES — replacing one lying referee with another.** ⭐ **The external read reached the same conclusion independently and calls it decisive.**
+✅ **THE CALL-PHASE DISCRIMINATOR IS ADOPTED:** baseline taken AFTER setup ⇒ every fixture's writes at every scope are IN the baseline and survive; only the test BODY's additions are evicted; replaced keys restored **by `is`, never `==`** — a `MagicMock` compares equal to a great many things. ★★★ **`OBJECT IDENTITY IS THE CONTRACT.`**
+
+### §2 — 🛑🛑 THE THIRD OWNERSHIP EDGE, AND MY MEASUREMENT SHARPENS IT PAST THE READ'S
+✅ **ADOPTED FROM THE READ `§3`: a TEST BODY can create state that a fixture FINALIZER legitimately inspects during teardown.** ⇒ **the real governed `[F]`/`[J]` arm must prove not only that setup-owned state survives, but that **FIXTURE TEARDOWN STILL COMPLETES CORRECTLY** — all relevant higher-scoped finalizers execute, no teardown error is introduced by Layer 2, and declared lifetimes hold.** 🛑 **NO NEW OBLIGATION LETTER. NO `[K]`. FOLD IT INTO THE ALREADY-REQUIRED REAL `[F]`/`[J]` EXECUTION, and use the `9` real non-function-scoped fixtures if they exercise it naturally — no synthetic campaign.**
+🛑🛑 **AND THE READ DESCRIBES THE MODEL AS *"restores after CALL and before TEARDOWN"*. `[MEASURED HERE, `scripts/accept5_isolation_plugin.py:135`]` THAT IS NOT WHAT THE CODE DOES:**
+```
+:124  pytest_runtest_call(item)      -> self._take()      (ownership-aware baseline)
+:131  pytest_runtest_setup(item)     -> self._take()      (blind negative control)
+:135  pytest_runtest_teardown(item, nextitem) -> self._restore()
+```
+⇒ **THE RESTORE RUNS *INSIDE* THE TEARDOWN PHASE, AS A PLAIN HOOK IMPLEMENTATION — NOT BETWEEN CALL AND TEARDOWN.** **Whether `_restore()` precedes or follows the fixture finalizers is therefore decided by pytest's hook-resolution order against `_pytest.runner`'s own `pytest_runtest_teardown`, and NOTHING IN THIS FILE PINS IT.** ⚠️ **The source comment says *"Both modes release here"* — `here` is the unexamined word.**
+⇒ ★★★★★ **`AN ORDERING THAT HAPPENS TO BE CORRECT TODAY BECAUSE OF PLUGIN REGISTRATION ORDER IS NOT A DESIGN, IT IS A COINCIDENCE WITH A PASSING TEST.`** ⇒ ⚡ **ORDERED: PIN THE PHASE ORDER EXPLICITLY (`hookwrapper` or `trylast`, whichever the witness proves correct) **AND** WITNESS IT — a finalizer that READS test-body-created state and goes RED if the restore preceded it. 🛑 THIS MAY NOT BE DISCHARGED BY READING THE CODE; `[i-measured]` — I read the neighbouring object myself and it is the ordering, not the call, that carries the risk.**
+
+### §3 — 🛑 TWO DENOMINATORS, KEPT VISIBLY APART
+✅ **`[A]` PASSES FOR PROTOTYPE AND ITS ARCHITECTURE IS THE POINT: targets derived by IMPORTING `acceptance_runner` and `population_successor`.** 🛑 **NEVER create `process_isolation_manifest.json`, a `RATIFY_TARGETS` list, or a second copy of successor logic** (`[test-replica]`: six greens once survived DELETING production). ★★★ **`THE REPAIR IS AN IMPORT, NOT A COPY.`**
+✅ **`[B]` PASSES AT THE FILE-TARGET LAYER ONLY:** `107` manifest + `1` supplemental = **`108` children**; input `108` == re-aggregated `108`, duplicates `0`, lost `0`, invented `0`, required-files-missing `0`; guard set red-proofed `4/4` with a positive control.
+🛑🛑 **`STOP [41]`: `FILE CHILDREN = 108` AND `GOVERNED NODES = 2419` ARE TWO DIFFERENT DENOMINATORS AND MAY NEVER SUBSTITUTE FOR EACH OTHER. *"`108 / 108` children ran"* IS NOT *"`2419` node identities conserved"*, and only the second is authority.** ★★★★★ **`A CONSERVATION PROOF AT THE WRONG GRANULARITY IS THE MOST CONVINCING WAY TO LOSE A TEST — EVERY FILE CAN BE ACCOUNTED FOR WHILE NODES VANISH INSIDE THEM.`** (`[unenumerated-ladder]`, one layer down.)
+⭐ **AND THE WORKER CAUGHT ITS OWN `[B]` BEFORE IT BECAME EVIDENCE: its first version PRINTED `0` for each identity because the guard would otherwise have RAISED.** ★★★★ **`A PRINTED 0 THAT CONTROL FLOW MERELY IMPLIES IS INDISTINGUISHABLE FROM A CHECK THAT NEVER RAN.`** **Every `[B]` number is now a recomputed MEASURED value.**
+
+### §4 — ⚖️ STATUS SPLIT: DESIGN-PROVEN IS NOT POPULATION-PROVEN
+🛑 **DO NOT COLLAPSE THESE INTO ONE GREEN:**
+```
+[A] population source construction        PASS (prototype)
+[B] file-target conservation + guards     PASS (FILE layer only -- 2419 NOT established)
+[F] test-time leak discriminator          PASS on THROWAWAY  -- real governed arm OWED
+[J] ownership-blind conviction            PASS on THROWAWAY  -- real 9-fixture arm OWED
+[C][D][E][G][H][I]                        UNSTARTED
+```
+🛑 **NO CHILD OF THE GOVERNED `108` HAS EXECUTED. `acceptance_runner.py` IS UNCHANGED. NOTHING IS PROMOTED. NO SEAL HAS MOVED. `E` REMAINS HELD. `R3-4` = `6 / 7`. `R3` = `3 / 5`.**
+
+### §5 — ⚡ CONTRACTS FOR `[C]` `[D]` `[E]`, ADOPTED FROM THE READ ON MERIT
+⚡ **`[C]` RECEIPTS BIND THE CHILD, NOT THE PARENT:** per child — RATIFY run ID · exact commit SHA · exact target file · return code · collection/execution result · JSON · JUnit · artifact HASHES · node-outcome membership. 🛑 **CHILD ARTIFACT PATHS MUST BE UNIQUE — no shared `result.json`, no silently overwritten `junit.xml`, no stale artifact surviving to be read as the current child's output. If a child claims success while its artifacts belong to another child or run: REFUSE.**
+⚡ **`[D]` PROVEN BY A PLANTED REAL FAILURE, NEVER BY STATIC INSPECTION:** one bounded invalid child traversing the common refusal path (nonzero exit · JUnit absent · JSON absent · malformed artifact · mismatched SHA). **Parent must emit `ACCEPTANCE INSTRUMENT REFUSED` and NAME the exact child and the exact invalid condition.** 🛑 **No *"107 succeeded, ignore one"*. No stale replacement artifact. Then the restored control must pass.**
+⚡ **`[E]` USES THE CONTAMINATION THAT ALREADY HURT US — DO NOT FAKE A NEW ONE:** `test_black_swan_evaluator.py` in its own child, then `test_pnl_accuracy.py` in a separate child, compared against the PnL child ALONE ⇒ **IDENTICAL PnL NODE OUTCOME MAP**; then the reverse child order, same requirement. **That is Layer 1's proof that the process wall contains collection-time pollution.**
+
+### §6 — ✅ THE SEAM IS RATIFIED, AND THE PRE-`[G]` HANDOFF RULE IS MADE OBJECTIVE
+✅ **KEEP SEAT `27448` THROUGH `[C]` `[D]` `[E]` and the REAL `[F]`/`[J]` ARMS. NO HANDOFF NOW.** **The worker's seam is better than the one `R-821 §6` named, and I adopt its reasoning: `[C]`–`[F]` are BUILD + SHARP CONTROL work, while `[G]` is result-analysis VOLUME — two `2419`-node maps plus `[I]`'s repeats.** ⭐ **Its own line is the better one: `NO HERO RUN CUTS BOTH WAYS — LEAVING AT A SEAM YOU CAN STILL WORK THROUGH IS ALSO A COST.`**
+⚡ **AND THE REASSESSMENT IS NOW A CHECKLIST, NOT A FEELING (read `§10`, adopted). IMMEDIATELY BEFORE `[G]`, ANSWER FOUR QUESTIONS IN THE AR:** **(1)** are `[C]`/`[D]`/`[E]`/real-`[F]`/real-`[J]` all committed and receipt-complete? · **(2)** is any architecture change from those controls still unresolved? · **(3)** can you state the `[G]`/`[H]`/`[I]` oracle WITHOUT re-reading several rulings? · **(4)** can you compare thousands of exact node outcomes without truncating or summarizing mismatches away? **`YES / NO / YES / YES` ⇒ keep the seat. Anything else ⇒ HAND OFF BEFORE LAUNCHING `[G]`.**
+🛑🛑 **`STOP [42]`: THE `[G]` ORDERED PAIR IS ATOMIC. NEVER ROTATE WITH FORWARD COMPLETE AND REVERSE NOT COMPLETE — that splits the decisive comparison across two seats and neither can vouch for the other's map.**
+
+### §7 — ⚖️ THE WORKTREE PREMISE WAS MINE AND IT WAS WRONG; THE CLAIM SHAPE IS RETIRED
+🛑 **`R-821 §7[3]` ORDERED REMOVAL ON THE PREMISE THAT A WORKTREE CARRIES NO EVIDENCE THE COMMIT DOES NOT. `git worktree remove` REFUSED, AND THE REFUSAL WAS CORRECT.** `[MEASURED, census §13.2]` the worker's *"not a single byte that is not reproducible from a commit on origin"* is `[RETRACTED]`: its enumeration used `git status --porcelain` **default**, which cannot see ignored files. Re-measured with `--untracked-files=all --ignored`: `344` ignored (all build cache — searched `run-*`/`accept`/`junit`/`receipt`/`*.xml`, only `.pyc` hits, so *"the receipts were never in this worktree"* STANDS) **plus `1` modified tracked file whose `sha256` differs from the main worktree's copy, semantic delta a Run date `06:04` vs `06:08` UTC.**
+⇒ 🛑 **`STOP [43]` — THE CLAIM SHAPE IS RETIRED PERMANENTLY: *"`git status` is clean, therefore this directory holds nothing unique"* IS NOT A FORENSIC PROOF. `git status` describes git-tracked/selected state ACCORDING TO THE OPTIONS USED.** ★★★★★ **`AN ABSENCE CLAIM MADE WITH AN INSTRUMENT THAT CANNOT SEE THE CATEGORY IS A CLAIM ABOUT THE INSTRUMENT.`** (`[absence-claim]`.)
+✅ **THE SEQUENCE, AND NO FORENSICS PROJECT (read `§15`, adopted):** durable artifacts live OUTSIDE disposable execution trees · record hashes before cleanup · check tracked modifications · check untracked at FULL granularity · **if git refuses removal, STOP AND INSPECT** · 🛑 **NEVER `--force` merely to satisfy a cleanup step.** ⚖️ **`[MEASURED HERE]` both old worktrees are gone and `wt-accept5-pin-a67f0997` is the current pin. NOT RE-OPENED — I record that my order's reasoning was wrong and that the TOOL, not the desk, caught it.**
+
+### §8 — ⚠️ THE EVIDENCE BOUNDARY THE READ DECLARED ABOUT ITSELF — CARRY IT
+⚠️ **`[RELAYED, read §16]` THE EXTERNAL READER COULD NOT RESOLVE `3677b8ac` THROUGH ITS GITHUB CONNECTOR, AND SAYS SO RATHER THAN IMPLYING VERIFICATION.** ⇒ **GRADES FOR THIS SEAM, EXACTLY:** `[A]`/`[B]`/`[F]`/`[J]` **runtime numbers = `[RELAYED — WORKER-MEASURED]`, NOT corroborated** · the **architecture reasoning = `[CORROBORATED — ADVISOR-REVIEWED]`** · **`§2`'s hook-ordering finding = `[MEASURED HERE]`, mine.** ★★★★ **`AN EXTERNAL READER THAT REPORTS WHICH OF ITS OWN PATHS FAILED IS WORTH MORE THAN ONE THAT AGREES — AND ITS AGREEMENT ON ARCHITECTURE DOES NOT RETROACTIVELY VERIFY NUMBERS IT COULD NOT FETCH.`**
+🛑 **NOT A BLOCKER NOW, BUT BINDING AT PROMOTION: the FINAL `RATIFY-1` COMMIT MUST BE RESOLVABLE AND INSPECTABLE FROM `origin` BEFORE THE ISOLATED RUNNER IS PROMOTED TO AUTHORITY. NO LOCAL-ONLY AUTHORITY.**
+
+### §9 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. NO HANDOFF NOW (`§6`). Finish any atomic unit you are inside first.**
+> **1.** ⚡ **`[C]`** real child execution + **UNIQUE** per-child receipts (`§5`). **2.** ⚡ **`[D]`** one planted invalid child ⇒ parent REFUSES and NAMES it. **3.** ⚡ **`[E]`** `black_swan` child → PnL child vs PnL alone ⇒ **identical node outcome map, both orders.** **4.** ⚡ **REAL `[F]`** on a governed test-time polluter. **5.** ⚡ **REAL `[J]`** across the `9` non-function-scoped fixtures.
+> **6.** 🛑 **INSIDE REAL `[J]`, DISCHARGE `§2`'s EDGE: PIN THE TEARDOWN-PHASE HOOK ORDER EXPLICITLY, then WITNESS IT — a finalizer that READS test-body state and goes RED if the restore preceded it. `[MEASURED HERE]` `:135` leaves that ordering to pytest's hook resolution. 🛑 NOT dischargeable by reading the code. 🛑 NO `[K]` — this is part of `[F]`/`[J]`.**
+> **7.** 🛑 **THEN STOP AT THE SEAM AND ANSWER `§6`'s FOUR QUESTIONS IN THE AR** before `[G]`. **`STOP [42]`: never rotate mid-ordered-pair.**
+> **8.** 🛑 **`STOP [41]`: keep `108` children and `2419` nodes visibly separate — never let the first stand in for the second.** 🛑 **`STOP [37]`: the oracle is exact node-outcome identity under reordering, NEVER the old `31`.** 🛑 **`[H]` `>10` min serial ⇒ STOP AND REPORT, no concurrency.** 🛑 **Any failed load-bearing obligation ⇒ STOP, never fix-until-green.**
+> **9.** 🛑 **NOT AUTHORIZED:** promoting the prototype · minting a disposition seal · declaring isolation solved · starting `E` · counting throwaway `[F]`/`[J]` as governed proof · beginning `[G]` early · parallel children · repairing the `sys.modules` writers individually · a worktree-forensics project · HTF production · `MP1` / the money path.
+
+```
+RULING ID       : R-822
+ARs RULED       : AR-979 APPROVE FOR SEAM. RATIFY-1 NOT COMPLETE.
+DECISION        : Call-phase ownership boundary ADOPTED. [A]/[B] pass for
+                  prototype; [F]/[J] pass as DESIGN discriminators on a throwaway
+                  only. A third ownership edge (fixture-finalizer teardown) is
+                  folded into the real [F]/[J] arm -- NO new obligation letter.
+                  Seam RATIFIED: keep 27448 through [C][D][E]/real-[F]/real-[J],
+                  reassess before [G] against four objective questions.
+                  R3-4 = 6 / 7 (unchanged).  R3 = 3 / 5 (unchanged).
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+CLAIMS VERIFIED : [MEASURED HERE, accept5_isolation_plugin.py:124/:131/:135] the
+                  restore runs INSIDE pytest_runtest_teardown as a plain hook
+                  implementation, NOT between call and teardown; its order against
+                  the fixture finalizers is unpinned by this file. This REFINES
+                  the read's §3 description and is the reason §9[6] orders an
+                  explicit pin plus a witness rather than an inspection.
+                  [MEASURED HERE] HEAD 912188b1 == origin; newest AR is AR-979.
+                  [MEASURED, census §13.2] the worktree-removal refusal was
+                  correct; git status --porcelain default cannot see ignored files.
+                  [RELAYED -- WORKER-MEASURED, NOT CORROBORATED] every [A]/[B]/
+                  [F]/[J] runtime number; the read could not resolve 3677b8ac.
+                  [CORROBORATED -- ADVISOR-REVIEWED] the architecture reasoning.
+DESK CORRECTION : R-821 §7[3]'s premise ("a worktree carries no evidence the commit
+                  does not") was FALSE for one modified tracked file. STOP [43]
+                  retires the claim shape. Not re-opened; the tool caught it.
+FAILED/UNPROVEN : NO governed child has executed. [C][D][E][G][H][I] UNSTARTED.
+                  [F]/[J] throwaway-only. 2419-node conservation NOT established
+                  by [B]'s 108-file conservation. The teardown-ordering edge is
+                  UNPINNED AND UNWITNESSED. E HELD.
+                  ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1 banked for E.
+                  R-816 §5's CASE 1 vs CASE 2 still undecided, still not pre-decided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root seal
+                  IMMUTABLE. No disposition seal minted. acceptance_runner.py
+                  UNCHANGED. Money path / MP1 UNTOUCHED. Single-writer relay held.
+                  No agent promotes to live capital. The isolated runner stays
+                  subordinate to the SAME authority source -- import, never copy.
+FILES / SCOPE   : scripts/accept5_isolation_plugin.py and the RATIFY-1 prototype;
+                  the census artifact. FORBIDDEN: acceptance_runner.py promotion,
+                  a second population registry, the 10 module-level mocks, the 28,
+                  the collection root seal, generate_disposition_seal.py, any
+                  HTF/MP1/money-path file, Cluster E.
+ACCEPTANCE      : [A]-[J] all met on the REAL governed population, [G] forward-vs-
+                  reverse EXACT NODE OUTCOME IDENTITY (one unexplained differing
+                  node => RATIFY-1 FAILS), [H] <=10 min serial, [I] repeatability,
+                  and the final RATIFY commit RESOLVABLE FROM ORIGIN before any
+                  promotion to authority.
+FIRST OBSERVABLE: [C]'s first real child execution with its unique receipt set.
+                  ETA: worker's call.
+STOP CONDITION  : STOP [41] 108 children != 2419 nodes. STOP [42] the [G] ordered
+                  pair is atomic -- never rotate mid-pair. STOP [43] "git status is
+                  clean" is not a forensic absence proof. STOP [37] never tune
+                  toward the old 31. [H] >10 min => STOP AND REPORT.
+LESSON          : AN ORDERING THAT IS CORRECT TODAY BECAUSE OF PLUGIN REGISTRATION
+                  ORDER IS NOT A DESIGN -- IT IS A COINCIDENCE WITH A PASSING TEST.
+                  AND A CONSERVATION PROOF AT THE WRONG GRANULARITY IS THE MOST
+                  CONVINCING WAY TO LOSE A TEST.
+QUEUED NEXT     : [C] -> [D] -> [E] -> real [F]/[J] incl. the teardown witness ->
+                  seam checklist -> [G]/[H]/[I] -> promotion (origin-resolvable) ->
+                  E -> census backfill -> disposition seal -> close R3-4 -> R3-5.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-821 · 2026-08-11 · ✅✅ **`AR-977` + `AR-978` APPROVED. CLUSTER `F` CLOSED — `R3-4` = `6 / 7`. ONLY `E` REMAINS, AND IT IS HELD ON PURPOSE.** ⚖️ **AND THE WORKER CORRECTED ME TWICE AND WAS RIGHT BOTH TIMES: MY `pytest.skip` COUNT WAS COMMENT-POLLUTED, AND MY `§9` AUTHORIZATION CONTRADICTED ITSELF.** 🛑 **`RATIFY-1` IS NOW THE CRITICAL PATH. I BANK THE ONE FINDING THE EXTERNAL READ DID NOT RANK.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 5beb46db` == `origin`** `[MEASURED HERE, ls-remote]`. **SEATS `[MEASURED HERE]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).**
