@@ -18,9 +18,12 @@ import { getB14CiHighThreshold } from "../b14-ci-gate.js";
 import { getWfeHardFloor } from "../wfe-gate.js";
 import { resolveGateJourney, type Gate, type GateSignals } from "./gate-journey.js";
 import { getStrategySourceUrl } from "../strategy-source-resolver.js";
+import { resolvePremiumName } from "./premium-names.js";
+
+export type RecipeInstrument = { kind: string; [key: string]: unknown };
 
 export interface RecipeData {
-  identity: { id: string; name: string; symbol: string; stationStreet: string; lifecycleState: string };
+  identity: { id: string; name: string; displayName: string; symbol: string; stationStreet: string; lifecycleState: string };
   youtubeUrl: string | null;
   slumdawgScore: number;
   backtest: {
@@ -58,7 +61,7 @@ export interface RecipeData {
   calendar: Array<{ date: string; pnl: number; trades: number }>;
   otherTests: Array<{ name: string; sentence: string; status: "pass" | "warn" | "fail" }>;
   // Per-gate metric detail — the left card switches to show one of these when a gate is clicked.
-  gateMetrics: Record<string, { what: string; value: string; threshold: string; verdict: "pass" | "warn" | "fail" }>;
+  gateMetrics: Record<string, { what: string; value: string; threshold: string; verdict: "pass" | "warn" | "fail"; instrument: RecipeInstrument }>;
   gateJourney: Gate[];
   dead: boolean;
 }
@@ -66,7 +69,7 @@ export interface RecipeData {
 export async function assembleRecipeData(args: { strategyId: string }): Promise<RecipeData> {
   // 1. Strategy identity (required)
   const [strat] = (await db.execute(sql`
-    SELECT id::text AS id, name, symbol, lifecycle_state,
+    SELECT id::text AS id, name, symbol, symbols, timeframe, config, lifecycle_state,
            config->'metadata'->>'source_url' AS meta_source_url,
            config->'compiled_spec'->>'video' AS spec_video
     FROM strategies WHERE id = ${args.strategyId}::uuid LIMIT 1
@@ -92,9 +95,12 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   // (already being fetched and parsed for the Calendar panel) rather than
   // reading a scalar column that was never persisted.
   const [bt] = (await db.execute(sql`
-    SELECT total_trades, daily_pnls, equity_curve, result_extras
+    SELECT total_trades, daily_pnls, equity_curve, result_extras,
+           win_rate, sharpe_ratio, profit_factor, max_drawdown,
+           walk_forward_results, b15_battery, mrp_regime_breakdown, prop_compliance
     FROM backtests
     WHERE strategy_id = ${args.strategyId}::uuid
+      AND status = 'completed'
     ORDER BY created_at DESC
     LIMIT 1
   `).catch(() => [] as any[])) as any[];
@@ -118,7 +124,23 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     FROM monte_carlo_runs mc
     JOIN backtests bt2 ON bt2.id = mc.backtest_id
     WHERE bt2.strategy_id = ${args.strategyId}::uuid
+      AND mc.status = 'completed'
     ORDER BY mc.created_at DESC LIMIT 1
+  `).catch(() => [] as any[])) as any[];
+
+  const [frankenstein] = (await db.execute(sql`
+    SELECT passed, p95_sharpe, median_pf
+    FROM frankenstein_test_runs
+    WHERE strategy_id = ${args.strategyId}::uuid AND status = 'completed'
+    ORDER BY created_at DESC LIMIT 1
+  `).catch(() => [] as any[])) as any[];
+
+  const [blackSwan] = (await db.execute(sql`
+    SELECT survival_rate, num_regimes_tested, num_regimes_survived,
+           worst_regime_drawdown, worst_regime_label
+    FROM synthetic_black_swan_runs
+    WHERE strategy_id = ${args.strategyId}::uuid AND status = 'completed'
+    ORDER BY created_at DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
   // 4. Recent paper P&L for Preseason status
@@ -127,12 +149,12 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     FROM paper_trades pt
     JOIN paper_sessions ps ON ps.id = pt.session_id
     WHERE ps.strategy_id = ${args.strategyId}::uuid
-      AND pt.exit_time >= NOW() - INTERVAL '30 days'
+      AND pt.exit_time >= NOW() - INTERVAL '7 days'
   `).catch(() => [{ paper_total: 0 }])) as any[];
 
   // 5. SHADOW divergence (latest, if any)
   const [shadow] = (await db.execute(sql`
-    SELECT divergence_pct FROM lifecycle_shadow_signals
+    SELECT divergence_vs_backtest FROM lifecycle_shadow_signals
     WHERE strategy_id = ${args.strategyId}::uuid
     ORDER BY ts DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
@@ -150,19 +172,23 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const riskMetrics = parseJSON(mc?.risk_metrics);
   const mcPaths = parseJSON(mc?.paths);
   const extras = parseJSON(bt?.result_extras);
+  const walkForward = parseJSON(bt?.walk_forward_results);
+  const b15Battery = parseJSON(bt?.b15_battery);
+  const regimes = parseJSON(bt?.mrp_regime_breakdown);
+  const propCompliance = parseJSON(bt?.prop_compliance);
 
   const trades = Number(bt?.total_trades ?? 0);
 
   // Quant metrics from result_extras (backtests stamp these on completion;
   // older rows may omit some — every read is defensive with sane fallbacks).
-  const winRateRaw = Number(extras?.win_rate ?? extras?.winrate ?? 0);
+  const winRateRaw = Number(bt?.win_rate ?? 0);
   const winRatePct = winRateRaw <= 1 ? Math.round(winRateRaw * 100) : Math.round(winRateRaw);
-  const sharpeRatio = round2(Number(extras?.sharpe_ratio ?? extras?.sharpe ?? 0));
-  const profitFactor = round2(Number(extras?.profit_factor ?? extras?.pf ?? 0));
+  const sharpeRatio = round2(Number(bt?.sharpe_ratio ?? 0));
+  const profitFactor = round2(Number(bt?.profit_factor ?? 0));
   const avgWin = Number(extras?.avg_win ?? extras?.average_win ?? 0);
   const avgLoss = Math.abs(Number(extras?.avg_loss ?? extras?.average_loss ?? 0));
   const riskReward = round2(avgLoss > 0 ? avgWin / avgLoss : 0);
-  const ddRaw = Number(extras?.max_drawdown ?? extras?.max_dd ?? 0);
+  const ddRaw = Number(bt?.max_drawdown ?? 0);
   const maxDrawdownPct = ddRaw <= 1 && ddRaw > 0 ? Math.round(ddRaw * 100) : Math.round(Math.abs(ddRaw));
 
   // Compute daily aggregates (used by both Backtest panel + Calendar)
@@ -236,15 +262,18 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const slumdawgScore = Math.max(0, Math.min(100, Math.round(compositeRaw * 100)));
 
   // ── 8 Other Tests ───────────────────────────────────────────────────────
-  const wfe = Number(extras?.wfe_overall ?? 0);
-  const b15Passed = extras?.b15_passed === true || extras?.b15_status === "pass";
-  const a14Severity = String(extras?.a14_severity ?? "pass");
+  const wfeValue = walkForward?.wfe_overall ?? walkForward?.wfe ?? extras?.wfe_overall ?? null;
+  const wfe = wfeValue == null ? 0 : Number(wfeValue);
+  const b15Passed = b15Battery ? b15Battery.passed === true : extras?.b15_passed === true || extras?.b15_status === "pass";
+  const a14Severity = blackSwan ? (Number(blackSwan.survival_rate) >= 1 ? "pass" : "warn") : String(extras?.a14_severity ?? "unknown");
   // Tri-state: true=pass, false=fail, absent=untested (deep-scan #13 —
   // defaulting missing gate data to "pass" asserted success that never ran).
-  const b10Pass: boolean | null = extras?.b10_pass === true ? true : extras?.b10_pass === false ? false : null;
-  const frankPass: boolean | null = extras?.frankenstein_pass === true ? true : extras?.frankenstein_pass === false ? false : null;
-  const shadowDiv = Number(shadow?.divergence_pct ?? 0);
-  const compliancePassRate = Number(extras?.compliance_pass_rate ?? 1.0);
+  const regimeValues = regimes && typeof regimes === "object" ? Object.values(regimes).map(Number).filter(Number.isFinite) : [];
+  const b10Pass: boolean | null = regimeValues.length ? regimeValues.every((value) => value > 0.5) : extras?.b10_pass === true ? true : extras?.b10_pass === false ? false : null;
+  const frankPass: boolean | null = frankenstein?.passed === true ? true : frankenstein?.passed === false ? false : null;
+  const shadowDiv = shadow?.divergence_vs_backtest == null ? null : Number(shadow.divergence_vs_backtest);
+  const complianceRaw = propCompliance?.pass_rate ?? propCompliance?.passRate ?? extras?.compliance_pass_rate ?? null;
+  const compliancePassRate = complianceRaw == null ? null : Number(complianceRaw);
   const paperTotal = Number(paper?.paper_total ?? 0);
 
   const otherTests: RecipeData["otherTests"] = [
@@ -287,75 +316,83 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Preseason",
-      sentence: `30 days of fake money, real market. Pocketed ${formatBag(paperTotal)} in practice.`,
+      sentence: `One week of fake money, real market. Pocketed ${formatBag(paperTotal)} in practice.`,
       status: paperTotal > 0 ? "pass" : paperTotal === 0 ? "warn" : "fail",
     },
     {
       name: "Real-Time Match",
-      sentence: shadow ? `Watched the bot call live shots. ${(shadowDiv * 100).toFixed(1)}% off from the test.` : "Live signals matched the test signals.",
-      status: shadow ? (shadowDiv < 0.05 ? "pass" : "fail") : "warn",
+      sentence: shadowDiv !== null ? `Watched the bot call live shots. ${(shadowDiv * 100).toFixed(1)}% off from the test.` : "Live match hasn't been measured yet.",
+      status: shadowDiv !== null ? (shadowDiv < 0.05 ? "pass" : "fail") : "warn",
     },
     {
       name: "Plays Clean",
-      sentence: compliancePassRate >= 1.0
+      sentence: compliancePassRate !== null && compliancePassRate >= 1.0
         ? "Followed every house rule. Won't get the account shut down."
         : "Broke house rules in testing. Not clean yet.",
-      status: compliancePassRate >= 1.0 ? "pass" : compliancePassRate >= 0.95 ? "warn" : "fail",
+      status: compliancePassRate === null ? "warn" : compliancePassRate >= 1.0 ? "pass" : compliancePassRate >= 0.95 ? "warn" : "fail",
     },
   ];
 
   // Per-gate metric detail — the left card swaps to one of these on gate click.
   const wfeFloor = getWfeHardFloor();
-  const hasB15 = extras?.b15_passed !== undefined || extras?.b15_status !== undefined;
-  const hasCompliance = extras?.compliance_pass_rate != null;
+  const hasB15 = b15Battery != null || extras?.b15_passed !== undefined || extras?.b15_status !== undefined;
+  const hasCompliance = compliancePassRate !== null;
   const gateMetrics: RecipeData["gateMetrics"] = {
     "Surprise Test": {
       what: "Walk-Forward Efficiency — how well it holds up on data it never trained on.",
       value: wfe > 0 ? wfe.toFixed(2) : "Not run yet",
       threshold: "needs ≥ " + wfeFloor.toFixed(2),
       verdict: otherTests[0].status,
+      instrument: { kind: "walk-forward", folds: Array.isArray(walkForward?.folds) ? walkForward.folds.map(Number) : null, wfe: wfeValue == null ? null : wfe },
     },
     "Sloppy Bot Test": {
       what: "Knocked every dial ±20% off — did the edge survive the jitter?",
       value: hasB15 ? (b15Passed ? "Held together" : "Fell apart") : "Not run yet",
       threshold: "SDR ≥ 0.85 · PSI ≤ 0.05 · RWS ≤ 0.20",
       verdict: otherTests[1].status,
+      instrument: { kind: "jitter-dials", sdr: finiteOrNull(b15Battery?.sdr), psi: finiteOrNull(b15Battery?.psi), rws: finiteOrNull(b15Battery?.rws) },
     },
     "Worst Day Test": {
       what: "Ran it through the worst historical crashes to see if it blows up.",
       value: ciHighRaw !== null ? "Ruin odds " + Math.round(ciHigh * 100) + "%" : "Not run yet",
       threshold: "worst year " + formatBag(worstYear),
       verdict: otherTests[2].status,
+      instrument: { kind: "crash", ruinProbability: ciHighRaw, survivalRate: finiteOrNull(blackSwan?.survival_rate), worstDrawdown: finiteOrNull(blackSwan?.worst_regime_drawdown) },
     },
     "Every Mood Test": {
       what: "Played it in 5 market moods — trending, choppy, crashing, sleeping, wild.",
       value: b10Pass === true ? "Won every one" : b10Pass === false ? "Cracked in some" : "Not run yet",
       threshold: "must survive all 5 regimes",
       verdict: otherTests[3].status,
+      instrument: { kind: "regimes", regimes: regimeValues.length ? regimes : null },
     },
     "Real or Lucky": {
       what: "Shuffled the wins to see if the edge was real or just a hot streak.",
       value: frankPass === true ? "Real edge" : frankPass === false ? "Just luck" : "Not run yet",
       threshold: "must beat the shuffle",
       verdict: otherTests[4].status,
+      instrument: { kind: "shuffle", p95Sharpe: finiteOrNull(frankenstein?.p95_sharpe), medianProfitFactor: finiteOrNull(frankenstein?.median_pf) },
     },
     "Preseason": {
-      what: "30 days of fake money on the live market — did it actually make money?",
+      what: "One week of fake money on the live market — did it actually make money?",
       value: paperTotal !== 0 ? formatBag(paperTotal) : "Not run yet",
       threshold: "must end green",
       verdict: otherTests[5].status,
+      instrument: { kind: "paper", pnl: paper ? paperTotal : null },
     },
     "Real-Time Match": {
       what: "Compared its live-called shots against the tested signals.",
-      value: shadow ? (shadowDiv * 100).toFixed(1) + "% drift" : "Not run yet",
+      value: shadowDiv !== null ? (shadowDiv * 100).toFixed(1) + "% drift" : "Not run yet",
       threshold: "needs < 5% drift",
       verdict: otherTests[6].status,
+      instrument: { kind: "drift", divergence: shadowDiv },
     },
     "Plays Clean": {
       what: "Checked every trade against the prop-firm rulebook.",
       value: hasCompliance ? Math.round(compliancePassRate * 100) + "% clean" : "Not run yet",
       threshold: "needs 100% clean",
       verdict: otherTests[7].status,
+      instrument: { kind: "compliance", passRate: compliancePassRate },
     },
   };
 
@@ -397,10 +434,15 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     }
   }
 
+  const premium = resolvePremiumName({
+    name: String(strat.name), symbols: Array.isArray(strat.symbols) ? strat.symbols.map(String) : [String(strat.symbol)],
+    timeframe: String(strat.timeframe ?? ""), config: parseJSON(strat.config) ?? {},
+  });
   return {
     identity: {
       id: String(strat.id),
       name: String(strat.name),
+      displayName: premium.displayName,
       symbol: String(strat.symbol),
       stationStreet: lifecycleToStation(strat.lifecycle_state),
       lifecycleState: String(strat.lifecycle_state),
@@ -450,6 +492,12 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
 function round2(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.round(n * 100) / 100;
+}
+
+function finiteOrNull(value: unknown): number | null {
+  if (value == null) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 /**

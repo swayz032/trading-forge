@@ -72,8 +72,8 @@ describe("recipe-data (pglite real-schema regression — CRIT column/table fix)"
     // No total_pnl column exists at all — totalPnl is derived from summing
     // daily_pnls, which recipe-data.ts already fetches for the Calendar panel.
     await ctx.pg.query(
-      `INSERT INTO backtests (id, strategy_id, total_trades, daily_pnls, equity_curve, result_extras, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      `INSERT INTO backtests (id, strategy_id, status, total_trades, daily_pnls, equity_curve, result_extras, created_at)
+       VALUES ($1, $2, 'completed', $3, $4, $5, $6, NOW())`,
       [
         backtestId,
         strategyId,
@@ -101,8 +101,8 @@ describe("recipe-data (pglite real-schema regression — CRIT column/table fix)"
     // Paths mirror src/engine/monte_carlo.py::_sample_paths shape: [initial_capital, ...equity].
     // Terminal P&L = last - first: -2840, 42500, 94200.
     await ctx.pg.query(
-      `INSERT INTO monte_carlo_runs (id, backtest_id, num_simulations, risk_metrics, paths, probability_of_ruin, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      `INSERT INTO monte_carlo_runs (id, backtest_id, status, num_simulations, risk_metrics, paths, probability_of_ruin, created_at)
+       VALUES ($1, $2, 'completed', $3, $4, $5, $6, NOW())`,
       [
         mcId,
         backtestId,
@@ -172,8 +172,8 @@ describe("recipe-data (pglite real-schema regression — CRIT column/table fix)"
       ],
     );
     await ctx.pg.query(
-      `INSERT INTO backtests (id, strategy_id, total_trades, daily_pnls, equity_curve, result_extras, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,NOW()), ($7,$8,$9,$10,$11,$12,NOW())`,
+      `INSERT INTO backtests (id, strategy_id, status, total_trades, daily_pnls, equity_curve, result_extras, created_at)
+       VALUES ($1,$2,'completed',$3,$4,$5,$6,NOW()), ($7,$8,'completed',$9,$10,$11,$12,NOW())`,
       [
         backtestA, strategyA, 10, "[]", "[]", "{}",
         backtestB, strategyB, 20, "[]", "[]", "{}",
@@ -181,8 +181,8 @@ describe("recipe-data (pglite real-schema regression — CRIT column/table fix)"
     );
     // Only strategy B's backtest has an MC run.
     await ctx.pg.query(
-      `INSERT INTO monte_carlo_runs (id, backtest_id, num_simulations, risk_metrics, paths, probability_of_ruin, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      `INSERT INTO monte_carlo_runs (id, backtest_id, status, num_simulations, risk_metrics, paths, probability_of_ruin, created_at)
+       VALUES ($1, $2, 'completed', $3, $4, $5, $6, NOW())`,
       [randomUUID(), backtestB, 1000, JSON.stringify({ probability_of_ruin_ci: { ci_high: 0.5 } }), "[]", 0.5],
     );
 
