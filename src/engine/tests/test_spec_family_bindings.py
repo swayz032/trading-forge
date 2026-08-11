@@ -565,8 +565,17 @@ _BATTERY_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
 
 def _load_battery(name: str) -> dict:
     path = os.path.join(_BATTERY_DIR, name)
-    if not os.path.isfile(path):
-        pytest.skip(f"h1-battery fixture unavailable at {path}")
+    # R-818 §7[3] Cluster D / R-799 §5 form [1]: this h1-battery artifact is
+    # COMMITTED GOVERNED EVIDENCE — `git ls-files` resolves it (MEASURED, AR-977).
+    # A tracked file cannot be "unavailable in this environment"; if it is absent
+    # the checkout is broken, and a release-authority test must REFUSE, never skip.
+    # ★ This helper is reached from a MODULE-LEVEL @pytest.mark.parametrize (:804),
+    #   so the old pytest.skip() fired at COLLECTION time and skipped THE ENTIRE
+    #   FILE — one missing artifact silently retired all 339 tests.
+    assert os.path.isfile(path), (
+        f"tracked h1-battery artifact missing at {path} -- this file is committed, "
+        "so its absence is a broken checkout, not an environment gap"
+    )
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
@@ -910,8 +919,12 @@ def _corpus_wait_session_rows() -> list[tuple[str, str]]:
         os.path.dirname(__file__), "..", "..", "..",
         "docs", "replay-results", "h1-scripts", "claude-rung-v32", "shakedown_specs",
     )
-    if not os.path.isdir(d):
-        pytest.skip(f"corpus unavailable at {d}")
+    # R-818 §7[3] Cluster D / R-799 §5 form [1]: the 16 shakedown *.spec.json are
+    # COMMITTED GOVERNED EVIDENCE — 16 tracked, 0 untracked (MEASURED, AR-977).
+    assert os.path.isdir(d), (
+        f"tracked shakedown corpus missing at {d} -- these 16 spec files are "
+        "committed, so their absence is a broken checkout, not an environment gap"
+    )
     rows: list[tuple[str, str]] = []
     for f in sorted(os.listdir(d)):
         if not f.endswith(".spec.json"):
@@ -2811,8 +2824,17 @@ def test_both_flag_arms_agree_on_every_refusal_path_object(monkeypatch):
     Boundary printed with the verdict: all 9 corpus objects that reach the
     refusal path (exact-phrase matcher misses AND a refused zone is named)."""
     all_objects = _all_wait_session_objects()
-    if not all_objects:
-        pytest.skip("docs/ corpora unavailable in this checkout")
+    # R-818 §7[3] Cluster D / R-799 §5 form [1]: the docs/ corpora are COMMITTED
+    # GOVERNED EVIDENCE. MEASURED (AR-977): of 1082 docs/**/*.json on disk, 1025
+    # are TRACKED and 57 UNTRACKED, and the untracked 57 contribute ZERO
+    # WAIT_SESSION objects — the census below reads 395 on a tracked-only tree and
+    # 395 on this working copy. So an EMPTY census is a broken checkout, never
+    # "this laptop does not have the data".
+    assert all_objects, (
+        "WAIT_SESSION census over the committed docs/ corpora came back EMPTY -- "
+        "these corpora are tracked, so an empty census is a broken checkout, not "
+        "an environment gap"
+    )
     # ★ THE CENSUS CARRIES ITS BOUNDARY. An independent grade measured 396
     # where this said 395; resolved by measurement rather than by credibility,
     # and BOTH are right under different definitions:

@@ -89,12 +89,12 @@ therefore a statement about THIS BOX's state, not a portability claim** (`R-813 
 | 16 | `test_signal_vector.py:228` | `test_signal_vector_is_json_serializable` | `backtester not importable` | importability | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
 | 17 | `test_signal_vector.py:237` | `test_signal_vector_is_json_serializable` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | 🛑 **FIRED** |
 | 18 | `test_spec_family_bindings.py:47` | `_load_sample` **(helper)** | `reference sample corpus unavailable at {path}` | **`SAMPLES_DIR`** — 141 files, **0 tracked**, absolute path into ANOTHER worktree | **VIOLATION** — input `[2]` of `R-803`'s four | **DID NOT FIRE** |
-| 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | **VIOLATION** | **DID NOT FIRE** |
+| 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:575`); see `§11` | **DID NOT FIRE** |
 | 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes | **DID NOT FIRE** |
-| 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | **VIOLATION** | **DID NOT FIRE** |
+| 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:924`); see `§11` | **DID NOT FIRE** |
 | 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | **VIOLATION** — input `[4]` of `R-803`'s four | **DID NOT FIRE** |
 | 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | **VIOLATION** — input `[4]` | **DID NOT FIRE** |
-| 24 | `test_spec_family_bindings.py:2815` | `test_both_flag_arms_agree_on_every_refusal_path_object` | `docs/ corpora unavailable in this checkout` | `docs/` corpora | **VIOLATION** — "in this checkout" is the tell | **DID NOT FIRE** |
+| 24 | `test_spec_family_bindings.py:2815` | `test_both_flag_arms_agree_on_every_refusal_path_object` | `docs/ corpora unavailable in this checkout` | `docs/` corpora | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:2833`); see `§11` | **DID NOT FIRE** |
 | 25 | `test_static_c_partials_ab.py:183` | `test_pf_computation_flag_independent` | `fixture_perfect.json not found in golden dir` | `fixture_perfect.json` | ⚠️ **`R-803`: TRACKED, dead-skip debt, NOT a fifth input** — tracked ⇒ absence must be HARD FAILURE | **DID NOT FIRE** |
 | 26 | `test_walk_forward_wrc_spa_emission.py:177` | `test_wrc_spa_values_present_when_sufficient_obs` | `CPCV paths unavailable — acceptable: {reason}` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
 | 27 | `test_walk_forward_wrc_spa_emission.py:192` | `test_wrc_spa_p_values_are_floats_in_unit_interval` | `CPCV unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
@@ -457,3 +457,79 @@ claim stands — but the ENGINE'S INTERNAL PATH still differs by environment.**
 change**), so it is **NAMED, NOT TOUCHED**, and recorded in the test's own docstring so the next reader
 cannot mistake a green for full cloud independence. ★★★★ **`A TEST THAT PASSES ON BOTH ARMS CAN STILL BE
 MEASURING TWO DIFFERENT ENGINES.`**
+
+---
+
+## 11. ✅ CLUSTER `D` — LANDED. ROWS `19`/`21`/`24` CARRY A `FINAL_DISPOSITION` AND A `PROOF_RECEIPT`
+
+**Ruling:** `R-818 §7[3]`, continued by `R-819 §8[1]`. **Schema:** `R-815 §7`'s adopted six fields, as
+Cluster `A` used at `§10`. **Tree:** `wt-h1-wave4-20260712`, pin `48a7d0ac` (`STOP [36]` — a figure
+states its tree).
+
+| field | row `19` (`:569`) | row `21` (`:914`) | row `24` (`:2815`) |
+|---|---|---|---|
+| `FIRED_C0` | **NO** | **NO** | **NO** |
+| `FIRED_C1` | **NO** | **NO** | **NO** |
+| `AXIS_VARIED` | **NOT VARIED** — resource present in both arms | **NOT VARIED** | **NOT VARIED** |
+| `ROOT_CAUSE` | tracked artifact treated as machine-local | tracked corpus dir treated as machine-local | tracked corpora treated as machine-local |
+| `FINAL_DISPOSITION` | ✅ **`R-799 §5` form `[1]`** — committed governed evidence; `pytest.skip` **DELETED**, replaced by a hard `assert` | ✅ **form `[1]`**, same shape | ✅ **form `[1]`**, same shape |
+| `PROOF_RECEIPT` | `§11.1` arms `R19` | `§11.1` arms `R21` | `§11.1` arms `R24` |
+
+**TRACKED-NESS RE-MEASURED HERE, NOT INHERITED FROM `AR-966 §6`** (`git ls-files`, this pin):
+`session-ab-blind-grade-RESULT.json` **TRACKED** · `session-ab-blind-grade-sample.json` **TRACKED** ·
+`shakedown_specs/*.spec.json` **16 tracked / 16 on disk / 0 untracked** ·
+`docs/**/*.json` **1082 on disk = 1025 tracked + 57 untracked**.
+
+### 11.1 THE PROOF RECEIPT — THREE ARMS PER ROW, IN A DISPOSABLE WORKTREE PINNED AT `48a7d0ac`
+🛑 **All three skips are `DID NOT FIRE` on this box, so the absence was PLANTED. A `POST` arm alone
+cannot tell "the guard bites" from "it always fails", so the `PRE` arm is mandatory.**
+
+```
+ROW 19  _load_battery -- reached from a MODULE-LEVEL @parametrize (:813), COLLECTION time
+  PRE  + artifact absent   exit=2  1 error   <- NOT a skip; see 11.2
+  POST + artifact absent   exit=2  1 error, AssertionError naming the exact missing file
+  POST + artifact present  exit=0  339 passed                     (no regression)
+
+ROW 21  _corpus_wait_session_rows -- shakedown_specs/ moved aside
+  PRE  + corpus absent     exit=0  1 skipped  <- the false green, reproduced
+  POST + corpus absent     exit=1  1 failed, "these 16 spec files are committed"
+  POST + corpus present    exit=0  1 passed                       (no regression)
+
+ROW 24  empty census -- MUTATION planted on the real path (_all_wait_session_objects -> set())
+        the plant REFUSES to arm if its target string is absent (MUTATION TARGET ABSENT)
+  PRE  + empty census      exit=0  1 skipped  <- the false green, reproduced
+  POST + empty census      exit=1  1 failed, "an empty census is a broken checkout"
+  POST + unmutated         exit=0  1 passed                       (no regression)
+
+WHOLE-FILE CONTROL, fixed tree, nothing planted:  exit=0  339 passed
+BASELINE, unfixed tree, nothing planted:          exit=0  339 passed   => 0 flips
+```
+⚠️ **Exit codes captured DIRECTLY from `python -m pytest`, never through a pipe** (`[ps-counting-encoding]`
+— a piped exit code is the last stage's).
+
+### 11.2 🛑 A CORRECTION TO THIS CENSUS'S OWN SEVERITY CLAIM FOR ROW `19`
+🛑 **`[MEASURED HERE, pytest 9.0.3]` row `19`'s pre-repair behaviour was **NOT** a silent skip.** `pytest`
+refuses a module-level `pytest.skip()` without `allow_module_level=True` and raises a **collection ERROR**:
+> *"Using pytest.skip outside of a test will skip the entire module. If that's your intention, pass
+> `allow_module_level=True`."*
+
+⇒ **On this pytest version row `19` was already fail-closed, and the repair's value is DIAGNOSTIC, not a
+false-green removal: the old error names no artifact at all, the new one names the exact missing tracked
+file and says the checkout is broken.** ⚠️ **The false-green risk was real on older `pytest`, where a
+module-level skip silently retired all `339` tests — so the conversion is still required by `R-799 §5`;
+but this census's implied "silent skip" severity for row `19` is `[CORRECTED]` here.**
+★★★★★ **`I EXPECTED A SKIP, GOT AN ERROR, AND THE HONEST MOVE WAS TO CORRECT THE CENSUS RATHER THAN LET
+MY OWN RED-PROOF HARNESS'S "UNEXPECTED" VERDICT BE QUIETLY RE-LABELLED AS THE PREDICTED ONE.`**
+
+### 11.3 ⚠️ WHAT CLUSTER `D` DOES **NOT** ESTABLISH
+⚠️ **NO portability claim.** The three arms ran on ONE box in ONE linked worktree; `[fresh-worktree-varies-nothing]`
+— a linked worktree varies `0` of `5` env axes, so this is a PLANT-based proof, not an environment-variation proof.
+⚠️ **Row `24`'s guard is now DOMINATED by row `19`'s:** on a genuinely docs-less checkout, collection fails at
+`_load_battery` before row `24`'s test runs. Row `24`'s assert is defence-in-depth, and its conviction rests on a
+**planted mutation**, not on a reachable natural state. **Stated, not hidden.**
+⚠️ **`57` untracked `docs/**/*.json` contribute **ZERO** WAIT_SESSION objects on this box** (census reads `395`
+tracked-only and `395` as-committed) — **but that is a measurement of THIS working copy, not a guarantee about
+any other.**
+🛑 **ROWS `2`–`12`, `25`–`29` (Clusters `B`, `C`, `G`) STILL CARRY THE RETIRED SINGLE BOOLEAN and no
+`FINAL_DISPOSITION`/`PROOF_RECEIPT`.** `R-819`'s `ACCEPTANCE` requires all `32` rows to carry them.
+**REPORTED AS AN OPEN DEBT, NOT REPAIRED — those rows are not Cluster `D`'s** (`R-819 §8[8]`, no scope expansion).
