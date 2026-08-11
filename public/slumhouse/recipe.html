@@ -657,7 +657,8 @@
 
     async function resolveMenuDisplayName(id) {
       const urls = ["/slumhouse/api/menu/now-serving", "/slumhouse/api/menu/kitchen?symbol=MES", "/slumhouse/api/menu/kitchen?symbol=MNQ", "/slumhouse/api/menu/kitchen?symbol=MCL", "/slumhouse/api/menu/graveyard"];
-      const payloads = await Promise.all(urls.map(function (url) { return SH.fetchJSON(url); }));
+      const settled = await Promise.allSettled(urls.map(function (url) { return SH.fetchJSON(url); }));
+      const payloads = settled.map(function (result) { return result.status === "fulfilled" ? result.value : null; });
       for (const data of payloads) {
         for (const dish of ((data && data.dishes) || [])) if (String(dish.id) === String(id)) return dish.displayName || dish.premiumName || null;
         for (const family of ((data && data.families) || [])) {

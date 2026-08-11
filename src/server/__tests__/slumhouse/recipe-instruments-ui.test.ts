@@ -55,6 +55,7 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("r.identity.displayName || cleanName(r.identity.name)");
     expect(kitchen).not.toContain("&name=" + "' + encodeURIComponent(fam.title) + '");
     expect(html).toContain("resolveMenuDisplayName(id)");
+    expect(html).toContain("Promise.allSettled");
     expect(html).toContain('class: "r-panel r-instrument-panel"');
     expect(html).not.toContain('class: "r-gate-body"');
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderGate(r, name))");
