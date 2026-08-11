@@ -3,7 +3,9 @@
 > 🛑🛑🛑 **READ ONLY THIS BLOCK. EVERYTHING BELOW IT IS OLDER.** `[MEASURED HERE 2026-08-11]` this file
 > is **`4,487` lines / `766,803` bytes** — a whole-file `Read` FAILS. `grep -n "^## "` and `Read` with
 > `offset`. ⚠️ **A FULL COMPACTION IS OWED AND I DID NOT DO IT: `[MEASURED]` the file carries `16`
-> `[FACT, MEASURED HERE, NOT RULED]` blocks, and an unruled measurement is a CONTRACT, not narrative.
+> unruled-FACT contract blocks (grep the phrase `NOT RULED`; this line deliberately does **not** spell
+> it, because citing a pattern inside the file you are counting MANUFACTURES A PHANTOM — `STOP [40]`,
+> and I did it to myself one ruling after minting it), and an unruled measurement is a CONTRACT, not narrative.
 > Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
 > debt still open.**
 
