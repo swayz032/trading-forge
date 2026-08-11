@@ -12,6 +12,170 @@
 
 ---
 
+## R-826 · 2026-08-11 · ✅✅ **`AR-986` + `AR-987` APPROVED. `[G]` `[H]` `[I]` ARE A WORKER-MEASURED PASS ON THE FULL GOVERNED POPULATION — AND `RATIFY-1` IS THEREFORE **CLAIMED `10 / 10`, CERTIFIED `7 / 10`.`** ⚡⚡ **THE GRADER IS DISPATCHED AND RE-BRIEFED; IT IS NOW THE ACTIVE LANE.** 🛑🛑 **AND A NEW HIGH BLOCKER IS BANKED BEFORE ANY PROMOTION: `ACCEPT5-AGGREGATE-PROVENANCE-1` — THE COMPARATOR MAY BE ABLE TO CERTIFY A FORGED PAIR.** ⚖️ **I CORRECT THE EXTERNAL READ'S WORDING ON THE ONE MECHANISM IT RESTS ON.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD f32f4b2e`; `origin f32f4b2e` — `[MEASURED HERE, git ls-remote]`, NOT taken from the read.** **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 26972` (born `07:38:42`) · worker `claude.exe 23968` (born `07:38:38`).** ⚠️ **BOTH SEATS NAMED IN `R-825` ARE GONE — desk `18244` and worker `9592` — PLANNED SEAT ROLLS (`[seat-rolls-are-swaps]`), NOT investigated, no work hunted.**
+**NEWEST AR ON DISK AT COMMIT: `AR-987`** (`R-416`), ruled here with `AR-986`.
+✅ **THE WAIT WAS HELD AND IS DISCHARGED (`[wait-on-gpt]`, asserted 5×): external reads arrived for `AR-986` AND for `AR-987` BEFORE this ruling. I did not invoke the blocked-worker exception even though the worker's queue was genuinely dry — `AR-987 §5` proved dryness clause-by-clause, which is the strongest form that exception has ever been available in, and I declined it because the read was minutes away.**
+
+### §1 — ⚖️ THE MECHANISM CORRECTION FIRST, BECAUSE THE WHOLE NEW BLOCKER RESTS ON IT
+🛑 **The external read states the durable `aggregate.json` *"does NOT contain the child receipt/hash chain."* `[MEASURED HERE, the forward map, `json.load` + key sort]` THAT IS RIGHT ABOUT THE TOP LEVEL AND WRONG AS WRITTEN.** The 13 top-level keys are exactly:
+```
+children · collected_but_unexecuted · duplicate_nodes · head · invalid_children · layer2
+limited_subset · nodes · outcomes · ownership_blind · reverse · run_root · wall_s
+```
+⇒ **NO receipt or hash chain at top level — the read's direction is CORRECT.** ⚠️ **BUT `[MEASURED HERE, grep -o over the forward map]` the file contains the string `receipt` `34` times and `sha256` **EXACTLY ONCE**, in a run covering `108` children.** ⇒ ★★★★★ **`[MEASURED HERE — sha256 occurs 1x across 108 children]` ONE DIGEST NAMES ONE BYTE-SEQUENCE, SO AT MOST ONE CHILD IS DIGEST-BOUND ON THAT COUNT.** ★★★★★ **`"NO CHAIN" AND "A CHAIN TOO SHORT TO BIND THE POPULATION" ARE DIFFERENT DEFECTS WITH DIFFERENT REPAIRS, AND ADOPTING THE READ'S WORDING WOULD HAVE SENT THE WORKER TO BUILD THE WRONG ONE.`** (`[external-opinion]`: audit on merit, adopt nothing on authority.)
+⚖️ **I DID NOT RE-DERIVE THE COMPARATOR'S INTERNALS MYSELF — the grader owns that surface and a second reader on it would corrupt the grade. Every claim about what the comparator CONSULTS is therefore `[HYPOTHESIS — ASSIGNED, NOT PROVEN]` in this ruling.**
+
+### §2 — ✅ `[G]` `[H]` `[I]`: WORKER-MEASURED PASS. THE CERTIFIED NUMBER DOES NOT MOVE.
+✅ **`[G]` `[RELAYED, AR-986 §1]`: forward `108` children / `2419` nodes vs `--reverse` same, EXACT NODE ID → OUTCOME, `0` DIFFERING NODES; `15/15` verdicts OK; arms genuinely opposed; same commit; neither a limited subset; invalid children `0`.**
+✅ **`[H]` `[RELAYED, AR-986 §2]`: `9.28` / `9.16` / `9.21` min against a pre-registered `10.0` min ceiling — PASS, with `0.72` min (`7.2%`) headroom, which the worker flagged rather than reporting a bare OK.**
+✅ **`[I]` `[RELAYED, AR-986 §3]`: `0` differing nodes across repeats at an identical pin, distinct artifact dirs and run IDs.**
+🛑🛑 **AND THE ARITHMETIC THAT MATTERS:**
+```
+CERTIFIED (desk-ruled)                    A B C D E F J   = 7
+WORKER-MEASURED, UNCERTIFIED              G H I           = 3
+                          CLAIMED 10 / 10   ·   CERTIFIED 7 / 10
+```
+🛑 **`STOP [49]` NEW: NEVER PUBLISH `RATIFY-1 = 10 / 10` WITHOUT THE WORD `CLAIMED`.** ★★★★★ **`THE QUALIFIER DIES IN TRANSIT AND THE NUMBER SURVIVES — THIS IS THE THIRD TIME IN FOUR RULINGS THAT A FAN-IN NUMBER HAS TRIED TO ESCAPE ITS OWN CAVEAT` (`STOP [41]`, `STOP [48]`, now this).** ⭐ **BOTH `AR-986 §6` AND `AR-987 §5` PUBLISHED THE QUALIFIER THEMSELVES AND REFUSED TO CERTIFY THEIR OWN WORK. That is the behaviour this desk wants and it is recorded as such.**
+
+### §3 — 🛑🛑 `ACCEPT5-AGGREGATE-PROVENANCE-1` — BANKED, `HIGH`, PROMOTION BLOCKER
+🛑 **THE ATTACK, ADOPTED FROM THE EXTERNAL READ ON MERIT:** take the FORWARD aggregate, copy it to a different path, edit ONLY `reverse` false→true, leave all `2419` outcomes byte-identical, feed the pair to `[G]`. **If `[G]` returns GREEN, the instrument can certify a FORGED pair.**
+🛑 **THE TWO CLAIMS MUST NEVER BE MERGED:** this would **NOT** mean the worker's three runs were fake. It would mean **THE INSTRUMENT IS INCAPABLE OF TELLING.** ★★★★★ **`A 0-DIFFERENCE RESULT PROVES THE TWO INPUTS AGREE; IT CARRIES NO TERM FOR WHETHER THEY ARE TWO INDEPENDENT PIECES OF EVIDENCE` `[HYPOTHESIS — THIS IS PRECISELY WHAT THE GRADER'S STAGE 1 IS DISPATCHED TO TEST]`.**
+⚠️ **SEVERITY DISCIPLINE (`§3`): the blocker is `HIGH` **as a promotion gate**; whether the defect EXISTS is `UNKNOWN PENDING THE GRADER`. I am not publishing a verdict in the same breath as the order to measure it.**
+✅ **PRIOR-ART GATE RUN AND STATED (`§0.-0.5`): `grep -c` over `ADVISOR-RULINGS.md` and `AGENT-REPORTS.md` for `AGGREGATE-PROVENANCE`, `ISOLATED-FAILURE-DISPOSITION`, `RUNTIME-HEADROOM` ⇒ `0 / 0` in both channels for all three. These three names are NEW; nothing is being re-decided.**
+
+### §4 — ✅ THE GRADER IS DISPATCHED. RECORDED, NOT REQUESTED.
+✅ **`accuracy-validator` DISPATCHED BY THIS DESK `[MEASURED HERE]` — not by the worker, which preserves `doer ≠ grader` at the dispatch layer too.** Brief carries: the claim verbatim · the four pins with distinct roles · a WORKING access recipe (preserved maps + committed comparator), never a prohibition · two NON-OVERLAPPING paths, path 2 forbidden from using the project's own comparator · an explicit NOVEL false-green hunt · a durable receipt path.
+✅ **RE-BRIEFED MID-RUN when the external read landed**, with the provenance attack promoted to **STAGE 1** and an explicit **STOP-EARLY** rule: if any attack returns GREEN, report the minimum causal defect and DO NOT spend ~28 minutes on the three-arm rerun.
+⭐ **THE DESK'S OWN CONTRIBUTION TO THE HUNT, HANDED TO THE GRADER:** the `34`-receipt / `1`-sha256 discrepancy above, with the question *"does the comparator consult ANY of them, or only the summary fields? If it never reads them, they are decoration, not provenance."*
+🛑 **`STOP [50]` NEW: WHILE A GRADER IS ATTACKING AN INSTRUMENT, THE INSTRUMENT IS FROZEN.** No seat may edit `g_order_identity.py` or `accept5_isolated_runner.py` until the grade lands. **A grade taken against a moving instrument is void** — this is `STOP [35]` (`pin every canonical run`) applied to the instrument instead of the tree.
+
+### §5 — ⚖️ EVIDENCE: PRESERVE YES, CANONIZE NO — I ADOPT THE READ'S REFINEMENT AGAINST MY OWN INCLINATION
+✅ **PRESERVATION IS DONE AND IS NOT TO BE REPEATED.** `[MEASURED HERE, sha256 of all six files, both locations]` the three maps are BYTE-IDENTICAL across the dead seat's scratchpad and the live seat's copy: `4ca0aab3…` / `ad8c911e…` / `fb704503…`. **`AR-987` had already executed the preservation the external read later ordered — DO NOT RE-ORDER IT** (the same `R-416` shape `R-825 §1` owned).
+🛑 **I WAS GOING TO AUTHORIZE COMMITTING THE THREE MAPS NOW. I AM NOT. The read's `§8` is right and I adopt it on mechanism: if the provenance grade forces an evidence-format repair, committing today's format canonizes a superseded authority.** ⇒ **The three maps are `PRE-GRADE / WORKER-MEASURED` historical evidence. The FINAL bundle lands on origin BEFORE promotion and AFTER the grade/repair.** ★★★★ **`RECOVERING EVIDENCE IS NOT A REASON TO PROMOTE IT TO AUTHORITY — "WE ALMOST LOST IT" ARGUES FOR DURABILITY, NOT FOR CANONICITY.`**
+⚠️ **BUT PRESERVATION IS NOW LOAD-BEARING AND UNPROTECTED: the maps live in TWO `Temp` scratchpads, one of them owned by a DEAD seat. `[UNENUMERATED — OPEN]` I have not measured any retention or cleanup policy on those directories. If the grade slips past today, the desk revisits this.**
+
+### §6 — ✅ `[H]` PRICED, CEILING FROZEN — AND THE CAMPAIGN'S OWN LAW ALREADY SAID SO
+✅ **`[H]` PASSES TODAY. THE `10.0`-MINUTE CEILING STAYS FROZEN. NO POST-HOC INCREASE, NO NEW PER-CHILD INSTRUMENT BEFORE PROMOTION.**
+⭐ **THIS IS NOT A NEW POLICY — IT IS `[pre-register-criteria]`, ALREADY THIS CAMPAIGN'S LAW: criteria BEFORE candidates, and a re-read after an unwanted answer is a goalpost with a citation. Raising a ceiling that was just passed is the same act with a friendlier face.** ✅ **Prior art CITED, not re-decided.**
+⚡ **BANK `ACCEPT5-RUNTIME-HEADROOM-1`:** wake on material governed-population growth **or** runtime `≥ 9.5` min · **`> 10.0` min ⇒ STOP AND REPORT** · **concurrency is NOT the automatic response** — it buys file/artifact/DB races and would destroy the determinism `RATIFY-1` exists to establish.
+⭐ **AND THE WORKER IS NOT GRADED DOWN FOR A THIN MARGIN IT VOLUNTEERED.** `A THRESHOLD PASSED BY 7% IS A MEASUREMENT, NOT A GUARANTEE` — reporting that is the behaviour, not the fault. 🛑 **Equally: never publish *"performance is comfortably inside budget."***
+
+### §7 — ⚡ `ACCEPT5-ISOLATED-FAILURE-DISPOSITION-1` — A BOUNDED TRIAGE LANE, NOT A 287-FIX CAMPAIGN
+🛑 **`STOP [44]` AND `STOP [37]` STAND: the `287` are NOT adjudicated now, and the old `31` is NEVER a target — it was measured under proven contamination.**
+🛑 **BUT WE MAY NOT MINT A SUCCESSOR DISPOSITION SEAL THAT SILENTLY BASELINES `287` UNEXPLAINED FAILURES.** ⇒ **NEW LANE, positioned AFTER `CLUSTER-E` and BEFORE the seal:** group the `287` mechanically by exact node · file · failure signature · subsystem, and assign each group ONE disposition from a taxonomy that **owes a residual category** (`§4`): `KNOWN_PREEXISTING` · `EXPOSED_BY_ISOLATION` · `TEST_CONTRACT_DEFECT` · `PRODUCT_ENGINE_DEFECT` · `ENVIRONMENT_DEPENDENCY_DEFECT` · `INTENTIONAL_NEGATIVE_NEEDS_EXPLICIT_CONTRACT` · **`UNEXPLAINED`**.
+🛑 **`UNEXPLAINED` MAY NOT BE SILENTLY SEALED — it becomes explicit banked debt with a name.** ⚡ **Prioritise groups touching compiler · backtester · P&L · prop simulation · risk · candidate ingress · money-path persistence, because those are the surfaces strategy qualification will rest on.**
+🛑 **AND THE DENOMINATORS STAY SEPARATE (`STOP [41]` family): `287` = isolated failures across `45/108` files · `11` = isolated failures in `test_pnl_accuracy.py` · `7` = shared-vs-isolated CHANGING PnL outcomes. THREE POPULATIONS.** ⭐ **`AR-986 §5` REFUSED TO JOIN `11` TO `7` AND WAS RIGHT `[RELAYED, AR-986 §5]`: deciding which of the `11` sit among the `7` requires the SHARED-process map, which is `[E]`'s evidence and is absent from `[G]`'s two arms.**
+
+### §8 — ⚡ AUTHORIZATION TO SEAT `claude.exe 23968` — SELF-CONTAINED
+
+> ### ★ WORKER `claude.exe 23968` — START HERE. THIS IS YOUR AUTHORIZATION.
+> **YOUR QUEUE IS NO LONGER DRY, AND YOU DO NOT NEED ANOTHER ROUND-TRIP. `AR-987 §5`'s clause-by-clause dryness proof was correct and is now answered.**
+> **1.** 🛑 **THE INSTRUMENT IS FROZEN (`STOP [50]`). DO NOT EDIT `g_order_identity.py` OR `accept5_isolated_runner.py` WHILE THE GRADER RUNS.** A grade against a moving instrument is void. **DO NOT run your own version of the provenance attack either — that is the grader's surface and a doer's pre-emptive result muddies `doer ≠ grader`.**
+> **2.** ⚡ **AUTHORIZED LANE — DESIGN SPEC ONLY, NO INSTRUMENT CODE:** write `docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md` specifying the durable evidence chain: per-child receipt (`run_id` · `target` · execution ORDINAL · exact `head` SHA · return code · exact outcome membership · JSON `sha256` · JUnit `sha256` · Layer-2 witness · validity verdict) → **ORDERED parent manifest that cryptographically names those receipts** → aggregate DERIVED from the manifest → comparator VERIFIES the chain. **It is a new document touching neither frozen file `[MEASURED HERE — the path does not exist yet]`, so the grader's surface is unchanged, and the spec is needed in BOTH branches of the grade.**
+> **3.** 🛑 **SPECIFY THE CONTROLS AS PROPERTIES, NOT MECHANISMS (`§4`), AND DEMAND ALL FOUR:** copied aggregate + flipped `reverse` ⇒ **RED** · tampered child artifact ⇒ **RED** · differing child `HEAD` ⇒ **RED** · genuine unmodified arm ⇒ **GREEN**. 🛑 **The verifier must DERIVE the fact — a `provenance_verified=true` Boolean is forbidden (`§5`: a guard whose remedy is "trust the flag" converts silent drift into accepted drift).** ⚡ **Also require: all child `HEAD` SHAs == arm start pin, AND arm end `HEAD` == arm start pin.**
+> **4.** ⚡ **CONDITIONAL MICROREPAIR — PRE-AUTHORIZED, NO ROUND-TRIP.** If the grader confirms `ACCEPT5-AGGREGATE-PROVENANCE-1`, implement §8[2]'s chain **in a DISPOSABLE worktree pinned at an explicit commit** (`STOP [35]`), red-proof all four controls, then re-run `[G]`/`[H]`/`[I]` and request re-grade. **Scope: RATIFY instrumentation ONLY.**
+> **5.** 🛑 **NOT AUTHORIZED:** promoting `acceptance_runner.py` · minting any disposition seal · `CLUSTER-E` · adjudicating the `287`/`11`/`7` · committing the three worker maps as final authority (`§5`) · re-preserving or re-hashing the maps (DONE) · any new scanner, sweep or audit · HTF production · **`MP1` / the money path** · any production, compiler or backtester change.
+> **6.** ⚡ **START-RECEIPT OWED (`§8`): one line within ~2 min — task · first observable · ETA.** **FIRST OBSERVABLE: the spec file's first committed draft. ETA: your call.** ⚡ **HONEST-PARTIAL CLAUSE: if the chain spec cannot be made exhaustive, say so and name the surface you covered.**
+
+### §9 — 📌 THE FOUR PINS, WITH DISTINCT ROLES — NEVER "THE PINNED COMMIT"
+```
+EXECUTION EVIDENCE PIN   4032d954   the tree the 2419-node runs actually measured
+FINAL COMPARATOR PIN     c5da1d4f   comparator gained --mode repeat; [G] RE-EVALUATED through it
+INVENTORY DESCENDANT     a0d54ab3   docs only
+HANDOFF / PRESERVATION   f32f4b2e   AR-987; [MEASURED HERE, ls-remote] ON ORIGIN
+```
+🛑 **A LATER GRADE MAY RUN AT A LATER PIN — BUT IT MAY NEVER CLAIM THE ORIGINAL THREE MAPS MEASURED THAT LATER COMMIT.**
+
+```
+RULING ID       : R-826
+ARs RULED       : AR-986 APPROVE (measurement accepted; certification withheld).
+                  AR-987 APPROVE (preservation + handoff; reproduction correctly
+                  NOT offered as a grade).
+DECISION        : [G] [H] [I] = WORKER-MEASURED PASS. RATIFY-1 CLAIMED 10/10,
+                  CERTIFIED 7/10. Grader is the ACTIVE LANE. Instrument FROZEN.
+                  ACCEPT5-AGGREGATE-PROVENANCE-1 banked HIGH, promotion blocker.
+                  ACCEPT5-RUNTIME-HEADROOM-1 banked; 10.0 min ceiling FROZEN.
+                  ACCEPT5-ISOLATED-FAILURE-DISPOSITION-1 created, positioned after
+                  CLUSTER-E and before the seal. R3-4 = 6/7. R3 = 3/5. Nothing
+                  promoted; no seal minted; CLUSTER-E HELD; money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+DESK CORRECTION : The external read's "aggregate.json does NOT contain the child
+                  receipt/hash chain" is directionally right, imprecisely worded.
+                  Corrected at §1 from my own measurement.
+CLAIMS VERIFIED : [MEASURED HERE, git ls-remote] HEAD == origin == f32f4b2e; the
+                  read's GitHub resolution is CORROBORATED by a genuinely second
+                  path, not echoed.
+                  [MEASURED HERE] 4032d954 and c5da1d4f are both ancestors of an
+                  origin-resolvable HEAD => R-825 §4's NO-LOCAL-ONLY-AUTHORITY
+                  binding is satisfied for the work as it stands.
+                  [MEASURED HERE, sha256 x6] the three maps are byte-identical
+                  across both scratchpads.
+                  [MEASURED HERE, json key sort] aggregate.json's 13 top-level
+                  keys; receipt x34; sha256 x1 in a 108-child run.
+                  [MEASURED HERE, Win32_Process] desk 26972, worker 23968; the two
+                  seats R-825 named are gone (planned rolls).
+                  [MEASURED HERE, grep -c] prior art 0/0 for all three new names.
+                  [RELAYED -- WORKER-MEASURED] every AR-986/AR-987 runtime number.
+EVIDENCE
+INDEPENDENTLY
+CHECKED         : accuracy-validator DISPATCHED BY THIS DESK, two non-overlapping
+                  paths required, path 2 forbidden the project's own comparator,
+                  novel-hunt requested, durable receipt path named. RUNNING.
+FAILED/UNPROVEN : [HYPOTHESIS -- ASSIGNED, NOT PROVEN] that the comparator trusts
+                  aggregate metadata without deriving provenance. I did NOT read
+                  its executable lines -- the grader owns that surface and a
+                  second reader on it would corrupt the grade. NOT a desk finding
+                  until the grader reports.
+                  [G][H][I] UNCERTIFIED. The 287 unadjudicated BY ORDER.
+                  The 11-vs-7 join UNRESOLVED [RELAYED, AR-986 §5]: it needs the
+                  shared-process map, absent from [G]'s two arms. [H]'s margin
+                  thin. The maps preserved but UNPROTECTED in two Temp
+                  scratchpads. AR-980 §3's lost-edit cause stays UNEXPLAINED by
+                  ruling.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root seal
+                  IMMUTABLE. acceptance_runner.py UNCHANGED. No seal minted. Money
+                  path / MP1 UNTOUCHED. Single-writer relay held -- I have not
+                  edited AGENT-REPORTS.md. No agent promotes to live capital.
+FILES / SCOPE   : docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md (new, worker).
+                  FORBIDDEN: g_order_identity.py and accept5_isolated_runner.py
+                  (FROZEN for the grade), acceptance_runner.py promotion, the
+                  three worker maps as final authority, a second population
+                  registry, the 287/11/7 fixtures, CLUSTER-E, the collection root
+                  seal, generate_disposition_seal.py, any HTF/MP1/money-path file.
+ACCEPTANCE      : the spec names all ten receipt fields, the ORDERED parent
+                  manifest, and all four controls as PROPERTIES with no
+                  provenance_verified Boolean. Then: grader verdict => certify or
+                  microrepair => re-run [G][H][I] => re-grade => CERTIFIED 10/10
+                  => promote (origin-resolvable) => CLUSTER-E => final isolated
+                  map => 287 disposition => six-field census => ONE successor seal
+                  => isolated canonical run => close R3-4 => R3-5 => EXIT ACCEPT-5
+                  => MP1.
+FIRST OBSERVABLE: seat 23968's start-receipt, then the spec's first draft.
+                  Independently: the grader's Stage-1 attack result.
+STOP CONDITION  : STOP [50] NEW -- the instrument is FROZEN while the grader
+                  attacks it. STOP [49] NEW -- never publish RATIFY-1 10/10
+                  without the word CLAIMED. STOP [44] the 287 stay unadjudicated.
+                  STOP [37] never tune toward the old 31. STOP [45] RATIFY-[E] !=
+                  CLUSTER-E. STOP [35] pin every canonical run. [H] > 10.0 min =>
+                  STOP, and concurrency is NOT the automatic answer.
+LESSON          : A 0-DIFFERENCE RESULT PROVES THE TWO INPUTS AGREE; IT CARRIES NO
+                  TERM FOR WHETHER THEY ARE TWO INDEPENDENT PIECES OF EVIDENCE
+                  [HYPOTHESIS, ASSIGNED TO THE GRADER]. ALSO: RECOVERING EVIDENCE
+                  IS NOT A REASON TO PROMOTE IT TO AUTHORITY.
+QUEUED NEXT     : provenance spec -> grader verdict -> (microrepair + re-run +
+                  re-grade if it bites) -> certify 10/10 -> promote -> CLUSTER-E
+                  -> final isolated map -> 287 disposition lane -> six-field
+                  census -> ONE successor seal -> isolated canonical run -> close
+                  R3-4 -> R3-5 -> EXIT ACCEPT-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes. This
+                  is the last referee-engineering round before the money path.
+```
+
+---
+
 ## R-825 · 2026-08-11 · ✅✅ **`AR-983` + `AR-984` APPROVED. `[C]` `[D]` `[F]` CLOSED — `RATIFY-1` FAN-IN IS **`7 / 10`**, AND ONLY `[G]` `[H]` `[I]` REMAIN.** ⚡⚡ **THE WORKER HANDOFF ALREADY EXECUTED — SEAT `27448` IS RETIRED, `claude.exe 9592` IS LIVE, AND ITS AUTHORIZATION IS **EXHAUSTED**. THIS RULING AUTHORIZES `[G]`.** ⚖️ **AND I OWN A DEFECT: `R-824 §6` ORDERED REAL `[F]` THAT `AR-983` HAD ALREADY DELIVERED.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD b749f304`; `origin 7fcc0a07`.** **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 18244` (`02:02:46`) · worker **`claude.exe 9592` (born `03:45:47`)** — `27448` is a PLANNED SEAT ROLL (`[seat-rolls-are-swaps]`), NOT investigated, no work hunted.**
