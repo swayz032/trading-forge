@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `c5da1d4f5e7ea0cff8b54d5159e32701c11dab39`  (worktree DIRTY at generation time)
+> Generated at commit `099cf1d0264d6b0158184c3f249096f6793c8821`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -203,7 +203,7 @@ table below it.**
 | C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4837 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=618 |
-| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
+| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
@@ -883,12 +883,12 @@ invisible for weeks.
 | `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH` | `"1"` | 1 |
 | `VALIDATION_CADENCE_RED_THRESHOLD_DAYS` | `"7"` | 1 |
 | `VITEST` | `(no default)`, `(no default; compared to "true")` | 3 |
-| `VIX_ATR_MULT_HIGH` | `'2.5'`, `'3.0'` | 2 |
+| `VIX_ATR_MULT_HIGH` | `'2.5'` | 1 |
 | `VIX_ATR_MULT_LOW` | `'1.5'` | 1 |
 | `VIX_ATR_MULT_MID` | `'2.0'` | 1 |
 | `VIX_ATR_TIER_HIGH` | `"2.5"` | 1 |
-| `VIX_ATR_TIER_LOW` | `"1.5"`, `'15.0'`, `'20.0'` | 3 |
-| `VIX_ATR_TIER_MID` | `"2.0"`, `'25.0'`, `'30.0'` | 3 |
+| `VIX_ATR_TIER_LOW` | `"1.5"`, `'20.0'` | 2 |
+| `VIX_ATR_TIER_MID` | `"2.0"`, `'30.0'` | 2 |
 | `VIX_MARGIN_ROLLING_WINDOW` | `'30'` | 1 |
 | `VIX_TIERED_ATR_ENABLED` | `'false'`, `(no default; compared to "true")` | 2 |
 | `VP_NODE_THRESHOLD_PCT_DEFAULT` | `(no default)` | 1 |
