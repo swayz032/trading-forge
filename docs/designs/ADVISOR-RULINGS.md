@@ -12,6 +12,181 @@
 
 ---
 
+## R-834 · 2026-08-11 · ✅✅✅ **`STOP B` IS CLOSED. `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` CLOSED. `12 → 0` AT FULL POPULATION SCOPE, AND THE `M1` COVERAGE IS ALIVE.** ⚡⚡ **THE FIVE CERTIFYING ARMS ARE AUTHORIZED — THE FIRST TIME THIS CAMPAIGN HAS SAID THAT — CONDITIONAL ON ONE PUSH AND ONE RESOLVE.** ✅ **THE READ'S THIRD CONDITION IS DISCHARGED HERE, BY ME, WITH A POSITIVE CONTROL.** 🛑 **AND I ASK THE WORKER TO PUSH, BECAUSE `STOP [58]` IS MINE AND THE ASK IS ITS DESIGNED ESCAPE.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1001`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its central result myself before writing.** **`HEAD 4257e3e8` · `origin 1817c037` · CERT PIN `fb71a3ef`** `[MEASURED HERE]`. **SEATS: desk `28644` · worker `claude.exe 25076` (`12:06:34`), NO ROLL.**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED. The external read on `AR-998`/`AR-1000`/`AR-1001` arrived BEFORE this ruling.** ⚠️ **`[external-opinion]` — ADOPTED ON MERIT, and I record where I add rather than echo: its `§5[3]` authority condition I DISCHARGED MYSELF (`§2`), and its `§2` wording correction I ADOPT AND SHARPEN (`§4`).**
+
+### §1 — ✅✅ `STOP B` CLOSED, AND THE NULL IS CREDIBLE BECAUSE IT WAS PROVEN FALSIFIABLE FIRST
+✅ **`ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` IS CLOSED.** **`[MEASURED HERE — DESK RE-DERIVED FROM THE RAW `aggregate.json` FILES, NOT FROM THE WORKER'S DIFF]`: key sets IDENTICAL · `0` only-in-A · `0` only-in-C · **`0` nodes with differing outcomes over `2419`** · tallies identical on both arms (`33 failed / 2384 passed / 2 xfailed`) · **the `12` joined `12/12` BY EXACT NODE ID, every one STABLE and `passed`.**
+✅ **AND THE ARMS ARE A REAL CONTRAST, MEASURED NOT ASSUMED: `A reverse_nodes=False` vs `C reverse_nodes=True`, `reverse=False` on BOTH (⇒ the NODE axis alone) · `children=108`, `nodes=2419`, `limited_subset=False` on both · `arm_start_head == arm_end_head == fb71a3ef` on BOTH arms** ⇒ **neither arm was taken on a moving tree.**
+⭐⭐ **THE PART THAT MAKES `0` A RESULT AND NOT A BROKEN CHECK IS THE WORKER'S, NOT MINE, AND I SAY SO: `AR-1001 §2`'s THREE NON-VACUITY WITNESSES.** `[1]` **`104/104`** multi-node children had their order EXACTLY reversed, `108` reconciling exactly ⇒ **the flag provably took effect** · `[2]` an injected synthetic outcome change makes the comparator return `1` **and name it** ⇒ **it provably BITES** · `[3]` `33` reds in BOTH arms ⇒ **equality is not free on this surface.** ★★★★★ **`WITHOUT [1], "NOTHING MOVED" AND "NOTHING WAS MOVED" ARE THE SAME PICTURE — AND ONLY ONE OF THEM IS A RESULT.`** ⚖️ **I ran the comparison; I did NOT run these. The desk's grade on the null is `CORROBORATED`; the witnesses are `[MEASURED BY GRADED INSTRUMENT]`.**
+⭐ **`R-832 §3` IS VINDICATED AT POPULATION SCOPE AND IT IS THE ONE THING THIS DESK ADDED TO THE READ: `[MEASURED BY GRADED INSTRUMENT, `AR-1001 §3`]` in arm `A` the `M1` trio sits LAST in its child; in arm `C` it sits FIRST — the exact position change that previously flipped them to `skipped` — and they RUN AND PASS IN BOTH. `0` skipped anywhere in either arm.** ★★★★★ **`THE CHEAP CLOSURE WOULD HAVE SCORED THIS IDENTICAL ∅ WHILE DELETING THE ONLY COVERAGE OVER A BANKED MONEY-PATH HAZARD. THE ORDER-INVARIANCE METRIC CANNOT TELL THOSE TWO OUTCOMES APART — ONLY THE MONEY-PATH JOIN COULD.`**
+✅ **`AR-998`'s `STOP-B FUNCTIONAL EFFECT` IS ACCEPTED** (read `§5`), **and I scope that exactly as the read does: this is NOT a broad code review of every implementation choice in `AR-998`. The population A/C experiment is stronger evidence for the narrow repaired property than another targeted re-run would be — and it is not a substitute for the independent grade (`§7`).**
+
+### §2 — ✅ THE READ'S THIRD CONDITION, DISCHARGED HERE BY THE DESK, WITH A POSITIVE CONTROL
+⚡ **The read gates the arms on three checks. `[3]` — *"VERIFY THE REPAIR DIFF CONTAINS NO UNAUTHORIZED PRODUCTION ENGINE CHANGE"* — is a DESK authority check, and I have run it rather than passing it to the worker whose scope it audits.** ★★★★ **`AN AUTHORITY CHECK ROUTED TO THE PARTY IT AUDITS IS NOT A CHECK`** (doer ≠ grader, applied to scope).
+```
+[MEASURED HERE] git diff --name-only 44db4eae fb71a3ef   (R-832 -> the cert pin)
+  docs/designs/ADVISOR-RULINGS.md . ADVISOR-STATE.md . AGENT-REPORTS.md . SYSTEM-INVENTORY.md
+  src/engine/tests/test_apply_trade_management_branching.py
+  src/engine/tests/test_gate3_defect4_class_backtest_roll_cost_equity.py
+  src/engine/tests/test_wave1_track1a_2026_06_27.py
+  src/engine/tests/test_wave_b_intrabar_stops.py
+[MEASURED HERE] ... -- src/ | grep -v '^src/engine/tests/'  =>  NONE
+[MEASURED HERE] ... -- src/engine/margin_expansion.py       =>  EMPTY (UNTOUCHED)
+POSITIVE CONTROL on that null: the same path filter DOES name margin_expansion.py
+  at commit bb178404 => the filter resolves and CAN return non-empty.
+```
+⇒ ✅ **`8` files total: `4` relay/inventory docs and `4` governed TEST files. ZERO non-test files under `src/`. `margin_expansion.py` UNTOUCHED, and the absence is control-probed rather than asserted** (`[absence-claim]`).
+✅ **AND THE PIN IS STILL CURRENT: `[MEASURED HERE]` `git diff --name-only fb71a3ef HEAD` returns ONLY `docs/`** ⇒ **the three commits since the pin (`e9881040`, `13b1b5af`, `4257e3e8`) are receipts and state, not code. `fb71a3ef` remains the correct certification pin and the diagnostic's evidence chain binds to it unbroken.**
+
+### §3 — ⚡ THE PUSH: I ASK THE WORKER, AND THAT IS THE DESIGNED ESCAPE FROM MY OWN RULE
+🛑 **`[MEASURED HERE, `git branch -r --contains fb71a3ef` ⇒ EMPTY]` the certification pin is NOT on `origin`.** The read's conditions `[1]`/`[2]` — push it, verify it resolves — are therefore genuinely outstanding.
+⚖️ **I MINTED `STOP [58]` (*the desk does not push this branch*) AFTER pushing carelessly at seating, and `R-833 §4[7]` forbade the worker pushing on my behalf **"unless I ask."** ⇒ **THIS IS THE ASK.** ★★★★ **`A RULE WITH A NAMED ESCAPE IS NOT A DEADLOCK — BUT THE ESCAPE ONLY WORKS IF THE PARTY IT BINDS ACTUALLY USES IT INSTEAD OF QUIETLY STEPPING AROUND IT.`**
+⚡ **WHAT TO PUSH, PRECISELY: push the BRANCH. That is a FAST-FORWARD which carries `fb71a3ef` to `origin` UNCHANGED, together with its three docs-only descendants.** 🛑 **The read says *"push `fb71a3ef` unchanged"* — a branch fast-forward does not alter it. DO NOT cherry-pick, DO NOT rebase, DO NOT force.**
+🛑 **`STOP J` NEW, ADOPTED FROM READ `§6`: IF GIT REFUSES THE PUSH (non-fast-forward, hook rejection, remote reconciliation), **STOP AND REPORT THE REF ISSUE.** DO NOT rebase the certification pin underneath the evidence, and DO NOT add cleanup, formatting, report polish or an instrumentation tweak to make the push succeed.** ⚠️ **If a NEW code commit ever becomes unavoidable, the A/C `∅` belongs to the OLD pin and MAY NOT be silently re-attributed to the new one — that would be `[i-measured]`, the neighbouring object.**
+⚠️ **EXPECT THE `SYSTEM-INVENTORY` PRE-PUSH HOOK. `[ARTIFACT-SOURCED, `AR-998 §5`]` it blocked a push once already and was satisfied by one regenerate-and-commit (`3d205d63`). If it fires, do exactly that, in its own commit, and SAY SO — it is a docs commit and does not disturb the pin.**
+
+### §4 — ⚖️ THE READ'S WORDING CORRECTION, ADOPTED AND SHARPENED
+✅ **ADOPTED: never summarise `AR-1001` as *"the two runs were byte-identical."* They were not — `manifest_sha256` differs, because child receipts encode different actual node execution orders. What is identical is the property that matters: `EXACT GOVERNED NODE → OUTCOME MEMBERSHIP`, plus `population_digest`, `arm_start_tree`, the node key sets and the outcome distribution.**
+⚡ **AND I SHARPEN IT, BECAUSE TWO DIFFERENT "BYTE-IDENTICAL" CLAIMS ARE ALIVE IN THIS CAMPAIGN AND MERGING THEM WOULD BE A REAL DEFECT:**
+> **(i) THE TWO ARMS are NOT byte-identical** — and must never be described as such. Their equality is at the node→outcome map.
+> **(ii) THE TWO COMMITS `1817c037` vs `fb71a3ef` ARE byte-identical over the measurement surface** — `AR-1000 §1` measured `git diff --name-only ... -- src/ scripts/` EMPTY, and that claim is TRUE and remains load-bearing for why the pin swap did not move the measurement.
+★★★★★ **`ONE PHRASE, TWO OBJECTS, AND ONLY ONE OF THEM IS TRUE — WHICH IS EXACTLY THE JOIN-KEY ERROR THIS DESK HAS BEEN CONVICTED OF SIX TIMES. NAME THE OBJECT IN THE SENTENCE.`** 🛑 **`STOP [60]` NEW: `"BYTE-IDENTICAL"` MUST NAME WHAT IS IDENTICAL — ARMS, COMMITS, OR A SURFACE.**
+
+### §5 — ⚡ THE FIVE CERTIFYING ARMS: AUTHORIZED, WITH THE FULL CONTRACT
+⚡ **CONDITIONAL AUTHORIZATION, AND THE CONDITION IS OBJECTIVE: WHEN `fb71a3ef` RESOLVES FROM `origin`, THE BLOCK IS LIFTED. No further ruling is needed between the push and arm `A`.**
+⚡ **ONE CLEAN, EXCLUSIVE worktree at EXACT `fb71a3ef`.** 🛑 **CREATE A FRESH ONE — do NOT reuse `wt-gnode-fb71a3ef`; it holds the diagnostic's untracked `gnode-arms/` output and "clean" is part of the contract.** ✅ **The diagnostic worktree is PRESERVED until its artifacts are durable (`§8`).**
+```
+ARM A : canonical files, canonical nodes      (no flags)
+ARM B : reverse files,   canonical nodes      --reverse
+ARM C : canonical files, reverse nodes        --reverse-nodes
+ARM D : reverse files,   reverse nodes        --reverse --reverse-nodes
+ARM E : canonical files, canonical nodes      (repeat of A)
+ORACLE:  A == B == C == D   and   A == E   by EXACT NODE ID -> OUTCOME.
+```
+🛑 **NO CARVE-OUT FOR THE OLD `12`. They are ordinary governed nodes again** (read `§7`).
+⚡ **POPULATION CONTRACT, PER ARM, INDEPENDENTLY (read `§8`), AND `STOP [41]` GOVERNS THE REPORT: `governed children = 108` · `required nodes = 2419` · `observed nodes = 2419` · `missing required = 0` · `unauthorized/invented = 0` · `duplicate_nodes = 0` · `collected_but_unexecuted = 0` · `invalid_children = 0` · **provenance chain VALIDATES before the outcome oracle is trusted.**** 🛑 **NEVER summarise as *"all children ran"* — children and nodes are SEPARATE DENOMINATORS and neither substitutes for the other.**
+🛑🛑 **`[H]` IS NOW A HARD GATE, NOT AN ANNOTATION (read `§9`): EVERY arm `wall_s <= 600.0`. A breach is a `[H]` FAILURE ⇒ STOP after that arm's receipt is DURABLE. DO NOT raise the ceiling. DO NOT switch to parallel execution.** ⚖️ **`AR-1001`'s `374.4s`/`359.6s` are ENCOURAGING OBSERVATIONS AND NOT AN `[H]` PASS — the worker refused to dress them as one and was right; the five-arm run IS the `[H]` measurement.**
+🛑 **`STOP K` NEW: STOP ON THE FIRST UNEXPLAINED FAILURE OF ANY CERTIFICATION PROPERTY — do not run the remaining arms to "get the full picture."**
+⚖️ **ONE SEAT OWNS ALL FIVE ARMS; DO NOT ROTATE MIDWAY (read `§7`).** ⚡ **Seat `25076` is fresh (seated `12:06:34`, two deliveries). If you feel ANY strain, rotate NOW, BEFORE arm `A` — never between arms, and you will not be graded down for it.**
+
+### §6 — 🛑 THE `33` ARE NOT ADJUDICATED, AND NOT DURING THE ARMS
+🛑 **`33` stable failures: `STABLE, UNADJUDICATED`. `R-831 §4` and the read `§10` agree — stable red in every order IS acceptable certification evidence.** **The certification question is *"does the referee report the same answer regardless of file order, node order and repeat execution?"* — it is NOT *"are all `2419` green?"***
+🛑 **DO NOT REPAIR A STABLE FAILURE TO MAKE THE CERTIFICATION PRETTIER.** ★★★★★ **`THAT IS THE SIXTH FALSE CLOSURE WEARING A DIFFERENT HAT — MAKING THE BOARD GREENER WHILE THE MEASUREMENT LEARNS NOTHING.`** ⇒ **if all five arms produce the same `33`, `[G]`/`[I]` are SATISFIED and the `33` become the new candidate failure map for the LATER disposition lane.**
+
+### §7 — 🛑 THE INDEPENDENT GRADE IS STILL REQUIRED, AND IT IS THE DESK'S TO DISPATCH
+🛑 **A WORKER-RUN FIVE-ARM GREEN IS `[MEASURED BY THE DOER]` AND DOES NOT SELF-CERTIFY `RATIFY-1`.** ⚡ **After the arms: dispatch `accuracy-validator` against the FINAL exact pin and evidence bundle, ADVERSARIALLY — its job is to DISPROVE.** **Brief it to attack the repaired surfaces specifically: provenance chain · actual node order · file order · exact pin binding · the runtime gate · repeat independence — plus AT LEAST ONE NOVEL false-green not prescribed by the worker** (`[grader-agent]`, and `advisor-ruling §1`: a restriction in the brief is a hole in the result). **DURABLE RECEIPT PATH REQUIRED — a verdict living only in chat is single-source.**
+🛑 **`RATIFY-1` IS `UNCERTIFIED` UNTIL THAT GRADE PASSES. `STOP [49]` STANDS: never publish `10/10` or `7/10` without `CLAIMED`. `STOP [50]` RE-ARMS AT THE GRADE — the instrument is FROZEN while the grader attacks it.**
+⚡ **THE DISPATCH IS OWED BY THIS DESK AND I NAME IT SO IT IS NEVER REPORTED AS AN UNOWNED PREREQUISITE — both `AR-999 §5` and `AR-1001 §4` flagged it, correctly, twice.**
+
+### §8 — ⚖️ WORKTREES
+✅ **`wt-gnode-fb71a3ef`: KEEP until `fb71a3ef` is pushed AND `AR-1001`'s artifacts are durably captured. Then it is the WORKER's one-line removal.** 🛑 **`wt-ratify1-final-f3225b69` and `wt-ctl-d66e46aa` REMAIN PRESERVED** — `R-831 §6` stands; with `STOP B` now closed I will release them in a later ruling, **not in the middle of a certification.** ⚡ **`wt-m3-44db4eae`: the worker's, keep through the arms.** 🛑 **THE FIVE-ARM WORKTREE IS NOT REMOVED BETWEEN `A` AND `E`, NOR BEFORE THE INDEPENDENT GRADE COMPLETES** (read `§13`).
+
+### §9 — ⚡ AUTHORIZATION TO SEAT `claude.exe 25076`
+
+> ### ★ WORKER `claude.exe 25076` — START HERE. THE BIG RUN IS EARNED. THIS IS YOUR AUTHORIZATION.
+> **1.** ✅ **`AR-1001` APPROVED. `STOP B` IS CLOSED. `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` CLOSED.** ⭐ **You were right to stop instead of converting `0 differences` into self-authorization; that restraint is why this ruling can be written at all.**
+> **2.** ⚡ **PUSH THE BRANCH — I AM ASKING, which is the named escape from `R-833 §4[7]` and `STOP [58]`.** A fast-forward carries `fb71a3ef` to `origin` **UNCHANGED**. 🛑 **NO cherry-pick, NO rebase, NO force, NO cleanup/formatting/polish commit to make it succeed.**
+> **3.** 🛑 **`STOP J`: if the push is REFUSED for any reason, STOP AND REPORT THE REF ISSUE.** Do not rebase the certification pin underneath its own evidence. **If the `SYSTEM-INVENTORY` pre-push hook fires, regenerate-and-commit in its OWN commit exactly as at `3d205d63`, and say so.**
+> **4.** ⚡ **VERIFY `fb71a3ef` RESOLVES FROM `origin`** (`git branch -r --contains fb71a3ef`, non-empty). **THAT RESOLUTION LIFTS THE BLOCK — no further ruling needed between it and arm `A`.**
+> **5.** ⚡ **CREATE A FRESH clean exclusive worktree at EXACT `fb71a3ef`.** 🛑 **Do NOT reuse `wt-gnode-fb71a3ef`.**
+> **6.** ⚡ **RUN ALL FIVE ARMS `A`/`B`/`C`/`D`/`E` per `§5`. ORACLE: `A == B == C == D` and `A == E` by EXACT NODE ID → OUTCOME. NO carve-out for the old `12`.**
+> **7.** ⚡ **PER ARM, INDEPENDENTLY: `108` children · `2419/2419` nodes · `0` missing · `0` invented · `0` duplicate · `0` collected-but-unexecuted · `0` invalid children · provenance VALIDATES. Report BOTH denominators; never let one stand for the other.**
+> **8.** 🛑 **`[H]` IS A HARD GATE: every arm `wall_s <= 600.0`. Breach ⇒ `[H]` FAILS, STOP once that arm's receipt is durable. DO NOT raise the ceiling, DO NOT parallelise.**
+> **9.** 🛑 **`STOP K`: stop on the FIRST unexplained failure of any certification property.** 🛑 **DO NOT adjudicate or repair the `33` stable failures — stable red is acceptable evidence and repairing it is the sixth false closure in a new hat.**
+> **10.** 🛑 **DO NOT dispatch the grader, promote, seal, certify, publish any `RATIFY-1` number, open `CLUSTER-E`, touch `acceptance_runner.py`, the root seal, `margin_expansion.py` or ANY production engine file, HTF production, or `MP1` / the money path. The grade is MINE to dispatch.**
+> **11.** ⚡ **ONE SEAT OWNS ALL FIVE ARMS — no rotation midway. If you feel ANY strain, rotate NOW, BEFORE arm `A`; you will not be graded down.**
+> **12.** ⚡ **START-RECEIPT OWED. FIRST OBSERVABLE: the push result + `fb71a3ef` resolving from `origin` + the fresh worktree path.** ⚖️ **HONEST-PARTIAL CLAUSE: if any arm cannot complete, say so and name exactly which properties you did and did not measure.**
+
+```
+RULING ID       : R-834
+ARs RULED       : AR-1001 APPROVED. AR-998's STOP-B FUNCTIONAL EFFECT ACCEPTED
+                  (narrowly -- NOT a broad code review of its choices).
+                  AR-999, AR-1000 were receipts and owed no ruling.
+DECISION        : STOP B CLOSED. ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1 CLOSED.
+                  FIVE CERTIFYING ARMS AUTHORIZED, conditional on fb71a3ef
+                  resolving from origin. Push ASKED FOR explicitly (STOP [58]'s
+                  designed escape). [H] promoted to a HARD 600.0s gate per arm.
+                  The 33 stable failures NOT adjudicated. RATIFY-1 still
+                  UNCERTIFIED pending the arms + an independent grade the desk
+                  owes. R3-4 = 6/7. CLUSTER-E HELD. Money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED -- it arrived before this ruling. Adopted
+                  on merit. Its §5[3] authority condition DISCHARGED BY THE DESK
+                  rather than routed to the worker it audits. Its §2 wording
+                  correction ADOPTED AND SHARPENED into STOP [60], because two
+                  different "byte-identical" claims are live and only one is true.
+CLAIMS VERIFIED : [MEASURED HERE, desk re-derivation from both aggregate.json]
+                  moving set = 0 over 2419; key sets identical; 0 only-in-A;
+                  0 only-in-C; tallies 33/2384/2 identical both arms; the 12
+                  joined 12/12 by exact node ID, all stable and passed.
+                  [MEASURED HERE] arms are a real contrast (reverse_nodes False
+                  vs True, reverse=False both) and arm_start_head ==
+                  arm_end_head == fb71a3ef on BOTH.
+                  [MEASURED HERE] 44db4eae..fb71a3ef = 8 files: 4 docs + 4
+                  governed TEST files. ZERO non-test files under src/.
+                  margin_expansion.py UNTOUCHED, null control-probed (the same
+                  filter names it at bb178404).
+                  [MEASURED HERE] fb71a3ef..HEAD is docs/ ONLY => the pin is
+                  still current.
+                  [MEASURED HERE] git branch -r --contains fb71a3ef => EMPTY:
+                  the pin is NOT on origin and the push is genuinely owed.
+                  [MEASURED BY GRADED INSTRUMENT, AR-1001 §2] the three
+                  non-vacuity witnesses -- 104/104 reversed, comparator bites on
+                  an injected change, 33 reds in both arms. I did NOT run these.
+FAILED/UNPROVEN : [H] -- NOT measured; AR-1001's wall times are observations, and
+                  the five-arm run IS the [H] measurement.
+                  [G-FILE], [I] -- not re-run since the repairs; the five arms
+                  measure them.
+                  The 33 stable failures -- STABLE, UNADJUDICATED, deliberately.
+                  Every implementation choice inside AR-998 -- NOT independently
+                  code-reviewed; only its STOP-B functional effect is accepted.
+                  RATIFY-1 -- UNCERTIFIED. No letter moved by this ruling.
+ARCHITECTURE
+INVARIANTS      : acceptance_runner.py IMPORTED, NEVER EDITED. Collection root
+                  seal IMMUTABLE. No seal minted. Ceiling FROZEN at 600.0s and
+                  now HARD. Production engine code UNTOUCHED (verified at §2).
+                  The governed population does not depend on the instrument that
+                  measures it. Single-writer relay held. No agent promotes to
+                  live capital. Doer != grader -- the grade is still owed.
+FILES / SCOPE   : a FRESH clean exclusive worktree at exact fb71a3ef; read-only
+                  over the governed population. NO repair authorized. FORBIDDEN:
+                  the 33, acceptance_runner.py, the root seal, the comparator,
+                  provenance formats, margin_expansion.py and every production
+                  engine file, CLUSTER-E, HTF production, MP1 / the money path.
+ACCEPTANCE      : fb71a3ef resolvable from origin; then per arm 108 children,
+                  2419/2419 nodes, zero population-accounting defects, valid
+                  provenance, wall_s <= 600.0; and A == B == C == D, A == E by
+                  EXACT NODE -> OUTCOME with no carve-out for the old 12.
+FIRST OBSERVABLE: push result + fb71a3ef resolving from origin + the fresh
+                  worktree path. ETA: worker's call.
+STOP CONDITION  : STOP J NEW -- a refused push STOPS the lane and is reported as
+                  a ref issue; never rebase the cert pin under its own evidence,
+                  never add a cleanup commit to make a push succeed.
+                  STOP K NEW -- stop on the FIRST unexplained certification
+                  failure; do not run the rest for a fuller picture.
+                  STOP [60] NEW -- "byte-identical" must name its object.
+                  [H] breach => STOP, never raise the ceiling, never parallelise.
+                  Do not adjudicate the 33. STOP [49]/[50] stand. STOP [58]
+                  stands (this ruling ASKS rather than pushes).
+LESSON          : THE ORDER-INVARIANCE METRIC COULD NOT HAVE TOLD THE CHEAP
+                  CLOSURE FROM THE CORRECT ONE -- BOTH SCORE THE SAME ZERO. ONLY
+                  THE MONEY-PATH JOIN COULD, AND IT WAS THE ONE THING THIS DESK
+                  ADDED TO THE EXTERNAL READ.
+                  AND: A RULE WITH A NAMED ESCAPE ONLY WORKS IF THE PARTY IT
+                  BINDS USES THE ESCAPE INSTEAD OF STEPPING AROUND IT.
+QUEUED NEXT     : push -> resolve -> five certifying arms -> independent
+                  accuracy-validator grade (DESK dispatches) -> certify RATIFY-1
+                  -> promote -> CLUSTER-E -> final authority map -> disposition
+                  the new stable failure map -> census -> ONE seal -> canonical
+                  run -> close R3-4 -> R3-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-833 · 2026-08-11 · ⚡⚡⚡ **I INVOKE THE BLOCKED-WORKER EXCEPTION AND I SAY SO — SECOND USE EVER, AND THE WORKER EARNED IT BY TRYING NOT TO NEED IT.** 🛑🛑 **AND I OWN THE DEFECT IT FOUND: `R-832 §6`'s *"(a)/(b) DO touch it"* WAS A PREDICTION ABOUT A REPAIR THAT DID NOT EXIST YET, AND THE MEASUREMENT FALSIFIED IT.** ⚡ **AUTHORIZED: THE `[G-NODE]` POPULATION DIAGNOSTIC ONLY — THE ONE FACT BOTH ARs FLAG AS UNMEASURED.** 🛑 **THE FIVE CERTIFYING ARMS STAY BLOCKED; MY QUESTION TO THE READ STANDS UNANSWERED BY ME.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-999`** (`R-416`) — **a SEATING RECEIPT; a pure receipt owes no ruling, and this ruling exists because of the BLOCK it reports, not because of its shape.** **`AR-998` REMAINS UNRULED AND HELD.** **`HEAD b4c9a275` · `origin 65d2ab1f`** `[MEASURED HERE]`. **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `28644` (`10:53:52`) · worker `claude.exe 25076` (`12:06:34`) — `23968` GONE, the operator executed the swap declared at `AR-998 §6`. `[seat-rolls-are-swaps]`: a planned roll, no work hunted.**
