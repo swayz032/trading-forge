@@ -45,6 +45,24 @@
         "manifest_sha256": "dc615e39eecfc69dc086dc9b4192e97ff5cfbbee63d14befd9f709acd2e3f3c9",
         "manifest_members": 107
       }
+    },
+    {
+      "entry_kind": "admission",
+      "authority": "R-799 SS4 + R-811 SS7[4]; hermeticity precondition R-799 SS5 / R-801, ENFORCED at record time",
+      "hermeticity_precondition": "ENFORCED at record time on 1 candidate file(s) (R-799 SS5 forms; R-811 SS3)",
+      "note": "Admits the R3-1 permanent RED as a post-seal canonical contract. It is NOT in canonical_regression_population.txt's import closure and must never be hand-inserted there (that reddens the manifest derivation guard, governed member #67 - measured in AR-960 SS5). Authority A stays COMPUTED; this chain is Authority B, the exact node-ID population, and the runner executes both.",
+      "parent_population_sha256": "e95eb0a77f5ccd5a7617fd2aaace8c246c3ea48ce7c388a813e96796c506849c",
+      "graded_sha": "11b29d6ae8ac0f8ef682d41cd2834504646452c7",
+      "added_node_ids": [
+        "src/engine/tests/test_accept5_stale_run_consumption.py::test_acceptance_runner_refuses_when_pytest_could_not_run"
+      ],
+      "explicitly_authorized_removed_node_ids": [],
+      "resulting_population_sha256": "1c118f3925717d6f12a6758fed4cc74df8cb93eb65383e16677a0950d4ea6c1e",
+      "current_manifest_identity": {
+        "manifest_path": "src/engine/tests/canonical_regression_population.txt",
+        "manifest_sha256": "dc615e39eecfc69dc086dc9b4192e97ff5cfbbee63d14befd9f709acd2e3f3c9",
+        "manifest_members": 107
+      }
     }
   ]
 }
