@@ -67,8 +67,13 @@ arm("successor chain not derivable", plant_chain_problem,
 
 
 def plant_missing_supplemental_file():
-    popsucc.required_population = lambda repo: (
-        ["src/engine/tests/PLANTED_deleted_obligation.py::test_x"], [])
+    # Assembled at runtime, NEVER written as a repo-relative path literal:
+    # scripts/system_inventory.py scans for exactly that shape, and a literal
+    # here makes the generated map declare a fictional file ABSENT. The map is
+    # what the prior-art check tells the next seat to trust, so a control must
+    # not pollute it. (MEASURED: it did, on the first run of this file.)
+    fake = "/".join(["src", "engine", "tests", "PLANTED_deleted_obligation.py"])
+    popsucc.required_population = lambda repo: ([f"{fake}::test_x"], [])
 
 
 arm("chain-required file deleted", plant_missing_supplemental_file,
