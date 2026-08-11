@@ -1,22 +1,14 @@
 //@version=1
-// Slumdawg FX Replay V2.0.4.2 - FXR-SCOPE-SAFE REACTION-ZONE TARGETS
+// Slumdawg FX Replay V2.0.4.3 - FXR-RUNTIME-SCOPE-SAFE REACTION-ZONE TARGETS
 // PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
 // Run on 5m NQ/MNQ. One requested MTF lane: 15m.
 
-const TICK = 0.25;
-const MAX_MTF_SCAN = 320;
-const MAX_5M_SCAN = 600;
-const MAX_15_SIDE_REACTIONS = 80;
-const MAX_5_SIDE_REACTIONS = 120;
-
-let currentMove = 0;
-let entryStage = "WAIT_PROOF";
-let armedSide = 0;
-let armedProof = null;
-let referencePrice = null;
-let referenceLength = null;
-let momentumAnchor = null;
-let lastLength = 0;
+// FXR runtime note: primitive top-level constants are intentionally avoided.
+// FX Replay v1 may evaluate helper functions outside that primitive scope.
+// Mutable array state follows the platform's documented top-level array pattern.
+// [0]=currentMove [1]=entryStage [2]=armedSide [3]=armedProof
+// [4]=referencePrice [5]=referenceLength [6]=momentumAnchor [7]=lastLength
+const runtimeState = [0, "WAIT_PROOF", 0, null, null, null, null, 0];
 
 init = () => {
   indicator({ onMainPanel: true, format: "inherit" });
@@ -38,19 +30,19 @@ const finite = (v) => {
 };
 
 const roundLong = (p) => {
-  return Math.ceil((p - 1e-10) / TICK) * TICK;
+  return Math.ceil((p - 1e-10) / 0.25) * 0.25;
 };
 
 const roundShort = (p) => {
-  return Math.floor((p + 1e-10) / TICK) * TICK;
+  return Math.floor((p + 1e-10) / 0.25) * 0.25;
 };
 
 const roundLongTarget = (p) => {
-  return Math.floor((p + 1e-10) / TICK) * TICK;
+  return Math.floor((p + 1e-10) / 0.25) * 0.25;
 };
 
 const roundShortTarget = (p) => {
-  return Math.ceil((p - 1e-10) / TICK) * TICK;
+  return Math.ceil((p - 1e-10) / 0.25) * 0.25;
 };
 
 const clamp = (v, lo, hi) => {
@@ -126,11 +118,11 @@ const pivotLow5 = (i) => {
   return l < l1 && l < l2 && l < l3 && l < l4;
 };
 
-const collectPivots15 = (memory) => {
+const collectPivots15 = (memory, scanLimit) => {
   const highs = [];
   const lows = [];
   let i = 2;
-  while (i <= MAX_MTF_SCAN && (highs.length < memory || lows.length < memory)) {
+  while (i <= scanLimit && (highs.length < memory || lows.length < memory)) {
     if (highs.length < memory && pivotHigh15(i)) {
       highs.push({ price: mtf.high(i, false), index: i });
     }
@@ -142,8 +134,8 @@ const collectPivots15 = (memory) => {
   return { highs: highs, lows: lows };
 };
 
-const selectOuterPair = (memory) => {
-  const pivots = collectPivots15(memory);
+const selectOuterPair = (memory, scanLimit) => {
+  const pivots = collectPivots15(memory, scanLimit);
   let outerHigh = null;
   let outerLow = null;
   let i = 0;
@@ -180,25 +172,27 @@ const clear15Direction = (p) => {
   return 0;
 };
 
-const updateCurrentMove = (p) => {
-  if (p.highs.length === 0 || p.lows.length === 0) return currentMove;
+const updateCurrentMove = (p, state) => {
+  let moveValue = state[0];
+  if (p.highs.length === 0 || p.lows.length === 0) return moveValue;
 
   const structural = clear15Direction(p);
   const c = mtf.closeC(0, false);
   const h0 = p.highs[0].price;
   const l0 = p.lows[0].price;
 
-  if (currentMove === 0) {
-    if (structural !== 0) currentMove = structural;
-    else if (finite(c) && c > h0) currentMove = 1;
-    else if (finite(c) && c < l0) currentMove = -1;
-  } else if (currentMove === -1) {
-    if (finite(c) && c > h0) currentMove = 1;
+  if (moveValue === 0) {
+    if (structural !== 0) moveValue = structural;
+    else if (finite(c) && c > h0) moveValue = 1;
+    else if (finite(c) && c < l0) moveValue = -1;
+  } else if (moveValue === -1) {
+    if (finite(c) && c > h0) moveValue = 1;
   } else {
-    if (finite(c) && c < l0) currentMove = -1;
+    if (finite(c) && c < l0) moveValue = -1;
   }
 
-  return currentMove;
+  state[0] = moveValue;
+  return moveValue;
 };
 
 const interval15 = (i, kind) => {
@@ -309,14 +303,14 @@ const qualifyingClusters = (rows, side, tolerance, minTouches) => {
   while (i < rows.length) {
     const c = clusterAt(rows, i, side, tolerance);
     if (c !== null && c.touches >= minTouches) {
-      const loTick = Math.round(c.lo / TICK);
-      const hiTick = Math.round(c.hi / TICK);
+      const loTick = Math.round(c.lo / 0.25);
+      const hiTick = Math.round(c.hi / 0.25);
       let duplicate = false;
       let j = 0;
 
       while (j < out.length) {
-        const oldLoTick = Math.round(out[j].lo / TICK);
-        const oldHiTick = Math.round(out[j].hi / TICK);
+        const oldLoTick = Math.round(out[j].lo / 0.25);
+        const oldHiTick = Math.round(out[j].hi / 0.25);
         if (oldLoTick === loTick && oldHiTick === hiTick) {
           duplicate = true;
           break;
@@ -383,8 +377,8 @@ const canonicalizeZones = (first, second, fusionGap) => {
 };
 
 const safeTargetFromZone = (zone, side, depth) => {
-  const minInside = zone.lo + TICK;
-  const maxInside = zone.hi - TICK;
+  const minInside = zone.lo + 0.25;
+  const maxInside = zone.hi - 0.25;
   if (minInside > maxInside) return null;
 
   const width = zone.hi - zone.lo;
@@ -459,85 +453,85 @@ const bodyFraction = (i) => {
   return Math.abs(closeC(i) - openC(i)) / range;
 };
 
-const updateEntryState = (length, side, proof, atr5) => {
-  const newBar = length > lastLength;
+const updateEntryState = (length, side, proof, atr5, state) => {
+  const newBar = length > state[7];
 
-  if (lastLength === 0) lastLength = length;
+  if (state[7] === 0) state[7] = length;
 
   if (
-    armedSide !== 0 &&
+    state[2] !== 0 &&
     (
-      armedSide !== side ||
+      state[2] !== side ||
       !finite(proof) ||
-      !finite(armedProof) ||
-      Math.abs(proof - armedProof) >= TICK
+      !finite(state[3]) ||
+      Math.abs(proof - state[3]) >= 0.25
     )
   ) {
-    entryStage = "WAIT_PROOF";
-    armedSide = 0;
-    armedProof = null;
-    referencePrice = null;
-    referenceLength = null;
-    momentumAnchor = null;
+    state[1] = "WAIT_PROOF";
+    state[2] = 0;
+    state[3] = null;
+    state[4] = null;
+    state[5] = null;
+    state[6] = null;
   }
 
   if (newBar) {
-    if (entryStage === "WAIT_PROOF" && finite(proof)) {
+    if (state[1] === "WAIT_PROOF" && finite(proof)) {
       const crossed = side === 1 ? closeC(1) > proof : closeC(1) < proof;
       if (crossed && bodyFraction(1) >= 0.15) {
-        armedSide = side;
-        armedProof = proof;
-        referencePrice = side === 1 ? high(1) : low(1);
-        referenceLength = length;
-        momentumAnchor = referencePrice;
-        entryStage = "WAIT_BREAK";
+        state[2] = side;
+        state[3] = proof;
+        state[4] = side === 1 ? high(1) : low(1);
+        state[5] = length;
+        state[6] = state[4];
+        state[1] = "WAIT_BREAK";
       }
-    } else if (entryStage === "WAIT_BREAK" && referenceLength !== null && length > referenceLength) {
-      referencePrice = armedSide === 1 ? high(1) : low(1);
-      referenceLength = length;
-      momentumAnchor = referencePrice;
+    } else if (state[1] === "WAIT_BREAK" && state[5] !== null && length > state[5]) {
+      state[4] = state[2] === 1 ? high(1) : low(1);
+      state[5] = length;
+      state[6] = state[4];
     }
 
-    lastLength = length;
+    state[7] = length;
   }
 
-  if (entryStage === "WAIT_BREAK" && referenceLength !== null && length >= referenceLength) {
-    const broke = armedSide === 1
-      ? high(0) >= referencePrice + TICK
-      : low(0) <= referencePrice - TICK;
+  if (state[1] === "WAIT_BREAK" && state[5] !== null && length >= state[5]) {
+    const broke = state[2] === 1
+      ? high(0) >= state[4] + 0.25
+      : low(0) <= state[4] - 0.25;
 
     if (broke) {
-      momentumAnchor = armedSide === 1 ? high(0) : low(0);
-      entryStage = "BREAK";
+      state[6] = state[2] === 1 ? high(0) : low(0);
+      state[1] = "BREAK";
       return;
     }
-  } else if (entryStage === "BREAK") {
-    const pushBreak = Math.max(TICK * 2, atr5 * 0.08);
-    const recoil = Math.max(TICK * 2, atr5 * 0.20);
-    const hard = armedSide === 1
-      ? closeC(0) <= momentumAnchor - recoil
-      : closeC(0) >= momentumAnchor + recoil;
+  } else if (state[1] === "BREAK") {
+    const pushBreak = Math.max(0.25 * 2, atr5 * 0.08);
+    const recoil = Math.max(0.25 * 2, atr5 * 0.20);
+    const hard = state[2] === 1
+      ? closeC(0) <= state[6] - recoil
+      : closeC(0) >= state[6] + recoil;
 
     if (hard) {
-      entryStage = "WAIT_BREAK";
-      momentumAnchor = referencePrice;
+      state[1] = "WAIT_BREAK";
+      state[6] = state[4];
     } else {
-      const p1 = armedSide === 1
-        ? high(0) >= momentumAnchor + pushBreak
-        : low(0) <= momentumAnchor - pushBreak;
+      const p1 = state[2] === 1
+        ? high(0) >= state[6] + pushBreak
+        : low(0) <= state[6] - pushBreak;
 
       if (p1) {
-        momentumAnchor = armedSide === 1 ? high(0) : low(0);
-        entryStage = "PUSH_1";
+        state[6] = state[2] === 1 ? high(0) : low(0);
+        state[1] = "PUSH_1";
       }
     }
-  } else if (entryStage === "PUSH_1") {
-    const pushSecond = Math.max(TICK * 2, atr5 * 0.08);
-    const p2 = armedSide === 1
-      ? high(0) >= momentumAnchor + pushSecond
-      : low(0) <= momentumAnchor - pushSecond;
+  } else if (state[1] === "PUSH_1") {
+    const pushSecond = Math.max(0.25 * 2, atr5 * 0.08);
+    const p2 = state[2] === 1
+      ? high(0) >= state[6] + pushSecond
+      : low(0) <= state[6] - pushSecond;
 
-    if (p2) entryStage = "ENTRY_READY";
+    if (p2) state[1] = "ENTRY_READY";
   }
 };
 
@@ -554,30 +548,30 @@ onTick = (length, _moment, _, ta, inputs) => {
   if (length < 100) return;
 
   const memory = Math.max(2, Math.min(20, inputs.swingmemory));
-  const pair = selectOuterPair(memory);
-  const move = updateCurrentMove(pair.pivots);
+  const pair = selectOuterPair(memory, 320);
+  const move = updateCurrentMove(pair.pivots, runtimeState);
   const side = move;
 
   const atr15 = mtf.atr(14, false);
   const atr5 = atr5Simple(14);
-  const basis15 = finite(atr15) ? atr15 : 20 * TICK;
-  const basis5 = finite(atr5) ? atr5 : 20 * TICK;
+  const basis15 = finite(atr15) ? atr15 : 20 * 0.25;
+  const basis5 = finite(atr5) ? atr5 : 20 * 0.25;
 
-  const tolerance15 = Math.max(TICK * 4, basis15 * inputs.tptolerance);
-  const tolerance5 = Math.max(TICK * 4, basis5 * 0.18);
-  const entryGap = Math.max(TICK * 4, basis15 * inputs.tpentrygap);
-  const zoneGap = Math.max(TICK * 4, basis15 * inputs.tpzonegap);
-  const fusionGap = Math.max(zoneGap, Math.max(TICK * 4, basis15 * inputs.tptolerance));
+  const tolerance15 = Math.max(0.25 * 4, basis15 * inputs.tptolerance);
+  const tolerance5 = Math.max(0.25 * 4, basis5 * 0.18);
+  const entryGap = Math.max(0.25 * 4, basis15 * inputs.tpentrygap);
+  const zoneGap = Math.max(0.25 * 4, basis15 * inputs.tpzonegap);
+  const fusionGap = Math.max(zoneGap, Math.max(0.25 * 4, basis15 * inputs.tptolerance));
 
-  const scan5 = Math.min(MAX_5M_SCAN, Math.max(10, length - 4));
+  const scan5 = Math.min(600, Math.max(10, length - 4));
 
   const d15 = collectDirectionalReactions(
     "15",
-    MAX_MTF_SCAN,
+    320,
     pair.longEntry,
     pair.shortEntry,
     entryGap,
-    MAX_15_SIDE_REACTIONS,
+    80,
     false
   );
 
@@ -587,7 +581,7 @@ onTick = (length, _moment, _, ta, inputs) => {
     pair.longEntry,
     pair.shortEntry,
     entryGap,
-    MAX_5_SIDE_REACTIONS,
+    120,
     true
   );
 
@@ -663,6 +657,6 @@ onTick = (length, _moment, _, ta, inputs) => {
   else if (side === -1) proof = pair.shortEntry;
 
   if (side !== 0 && finite(proof) && finite(atr5)) {
-    updateEntryState(length, side, proof, atr5);
+    updateEntryState(length, side, proof, atr5, runtimeState);
   }
 };
