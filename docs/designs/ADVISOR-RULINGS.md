@@ -12,6 +12,150 @@
 
 ---
 
+## R-824 · 2026-08-11 · ✅ **`AR-982` APPROVED. `[J]` IS **CLOSED WITH A BOUNDED FINDING** — the ownership-aware boundary changes `0` of `84` governed node outcomes.** 🛑 **AND ITS GOVERNED NEGATIVE ARM DID **NOT** DISCRIMINATE — WHICH THE WORKER REPORTED RATHER THAN DRESSED UP, AND WHICH MAY NEVER BE WRITTEN AS *"THE NEGATIVE CONTROL PASSED"*.** ⚖️ **ONE PRECISION CORRECTION, VERIFIED AT THE LINE: THE HAZARD IS **NOT** *"ONE ENVIRONMENT VARIABLE AWAY"*.** 🛑 **NO SECOND `[J]` EXPERIMENT — REAL `[F]` IS NEXT.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 32da0476`; `origin 5956393e`.** **SEATS: desk `claude.exe 18244` · worker `claude.exe 27448`, NO ROLL.**
+**NEWEST AR ON DISK: `AR-982`** (`R-416`) — the AR ruled here; nothing has landed since. ⚠️ **`R-823` IS STILL LOCAL-ONLY** `[MEASURED HERE]` — deliberately, per `R-823 §6`'s containment; the worker's next push carries it, as it did `R-822`.
+
+### §1 — ✅ THE LOAD-BEARING `[J]` OBLIGATION IS SATISFIED
+**The question real `[J]` had to answer was: DOES THE OWNERSHIP-AWARE BOUNDARY ITSELF CHANGE GOVERNED OUTCOMES?** `[RELAYED, AR-982]` **it does not:**
+```
+test_audit_a12.py                      14 nodes   aware-vs-base  0
+test_cross_engine_parity.py            35 nodes   aware-vs-base  0
+test_session_windows_parity.py          5 nodes   aware-vs-base  0
+test_wave28_pass_a_migration_0149.py   30 nodes   aware-vs-base  0
+                                       84 GOVERNED NODES, ZERO CHANGES
+```
+⇒ **the corrected lifecycle — `SETUP` → snapshot → `CALL` → `TEARDOWN`/finalizers → restore — has manufactured neither a PASS nor a FAIL on the measured real higher-scoped-fixture surface.** ✅ **ACCEPTED.**
+⭐ **AND THE EVIDENCE GRADE IMPROVES FOR THE FIRST TIME IN THIS LANE: `[CORROBORATED]` the external reader RESOLVED `b1fed2e1` on GitHub — the indexing lag that forced `R-822 §8` and `R-823 §7` to hold every runtime number as worker-measured has cleared for this commit.** ⚠️ **The CONTROL'S DESIGN is now corroborated; its RUNTIME NUMBERS remain `[RELAYED]`. Those are different objects and I do not merge them.**
+
+### §2 — 🛑 THE GOVERNED NEGATIVE ARM DID NOT BITE, AND THAT IS THE HONEST RESULT
+🛑 **`[RELAYED, AR-982]` ownership-BLIND vs baseline = `0` differences in all four governed files. THE ARM DID NOT DISCRIMINATE.**
+🛑🛑 **`STOP [46]` — THE WORDING IS THE WHOLE POINT: NEVER WRITE *"the real `[J]` negative control passed"* (it did not discriminate) AND NEVER WRITE *"the governed population proved the blind design destructive"* (it did not).** **The only supported sentence is: `THE REAL GOVERNED ARM DOES NOT CONVICT THE BLIND DESIGN TODAY, BECAUSE THE TRIGGER IS ABSENT FROM IT.`**
+⭐ **THE WORKER FLAGGED THIS IN ITS OWN HEADLINE RATHER THAN LETTING `0 differences` READ AS SUCCESS, AND `[CORROBORATED]` the committed control was BUILT to treat a non-discriminating blind arm as REPORT-ONLY instead of converting it into a green.** ★★★★★ **`AN INSTRUMENT THAT IS DESIGNED IN ADVANCE TO REPORT ITS OWN NULL RESULT HONESTLY IS WORTH MORE THAN ONE THAT HAPPENS TO PRODUCE A TRUE ANSWER — THE FIRST CANNOT LIE NEXT TIME, THE SECOND ONLY DIDN'T THIS TIME.`**
+✅ **AND THE DESIGN-LEVEL CONVICTION IS UNTOUCHED BY THIS AND ALREADY EXISTS:** `[RELAYED, AR-979]` ownership-blind evicts `21` keys and the later state-READING node fails; `[RELAYED, AR-980]` restore-before-finalizer ERRORS, `hookwrapper`-after-finalizer passes. ⇒ **the architecture was NOT chosen because *"aware looks nicer"* — the naïve version has been MEASURED destroying legitimate lifetime-owned state.**
+
+### §3 — ⚖️ THE PRECISION CORRECTION, VERIFIED HERE RATHER THAN ADOPTED
+🛑 **`AR-982` writes that the hazard is *"one environment variable away"* from live. THAT IS TOO STRONG.** `[MEASURED HERE, at the line]`:
+```
+src/engine/conftest.py:53   @pytest.fixture(scope="session", autouse=False)
+requesters of mock_vectorbt_session, whole src/ tree:
+  src/engine/tests/test_vix_rolling_max.py:211  test_mock_vbt_fixture_is_callable(self, mock_vectorbt_session)
+  -> EXACTLY ONE
+```
+⇒ **`autouse=False` means pytest will not execute this fixture unless a test, a fixture dependency, or `usefixtures` REQUESTS it. `TF_MOCK_VBT=1` is NECESSARY BUT NOT SUFFICIENT.** ⇒ **RETRACT *"one environment variable away"*.**
+✅ **THE CORRECT BANK WORDING, AND IT IS WHAT `ACCEPT5-WAIT-SESSION-SCOPE` CARRIES FROM NOW ON:** **`LATENT BEHIND THE SUPPORTED FIXTURE-ACTIVATION PATH, NOT CURRENTLY FIRING` — if a governed child REQUESTS `mock_vectorbt_session` WHILE `TF_MOCK_VBT=1`, the fixture installs session-lifetime `sys.modules` state that an ownership-blind boundary would be unsafe to delete early.** ⚠️ **NO GRADE-DOWN: the fixture's own docstring does describe the env var as its opt-in condition, so the AR's shorthand is understandable — it is still a mechanism claim and mechanism claims carry their evidence.** ⚖️ **`R-819 §5` named BOTH the gate and the single consumer, so the desk did not propagate this one.**
+
+### §4 — 🛑 `[J]` IS CLOSED. NO SECOND EXPERIMENT. THIS IS THE STOPPING DISCIPLINE.
+🛑 **I DO NOT ORDER: set `TF_MOCK_VBT=1`, invent a fixture request, manufacture a governed negative arm, and re-run a proof we already hold.** **FOUR REASONS, and they are sufficient TOGETHER:** the throwaway negative ALREADY proved the ownership-blind mechanism unsafe · the real aware arm proves the selected mechanism outcome-neutral on today's governed surface · the real blind arm honestly showed the trigger absent · `[MEASURED HERE]` the fixture is `autouse=False` so the trigger cannot fire incidentally.
+⇒ ★★★★ **`A NEGATIVE CONTROL'S JOB IS TO PROVE THE MECHANISM CAN BITE. ONCE IT HAS, DEMANDING THAT IT ALSO REPRODUCE NATURALLY WHERE THE TRIGGER IS ABSENT IS NOT RIGOUR — IT IS MANUFACTURING A RESULT.`**
+✅ **`[J]` = `CLOSED_WITH_BOUNDED_FINDING`, decomposed so no future reader can collapse it:**
+```
+DESIGN NEGATIVE          PASS  ownership-blind convicted on the throwaway (AR-979)
+TEARDOWN ORDER           PASS  restore-before-finalizer convicted; hookwrapper proven (AR-980)
+REAL GOVERNED SAFETY     PASS  84 nodes, aware boundary changes 0 (AR-982)
+REAL GOVERNED NEGATIVE   NON-DISCRIMINATING -- trigger absent, NOT a passing control
+```
+
+### §5 — 🛑 THREE DENOMINATORS, AND THEY ARE NOT ONE NUMBER
+🛑 **`STOP [47]`: `AR-982` reports `9` higher-scoped fixtures across `5` FILES while its child table lists `4` test files. THAT IS NOT AN INCONSISTENCY — the fifth is `src/engine/conftest.py`, which pytest AUTO-LOADS into each child rather than running as a governed target, and `[MEASURED, R-819 §4]` it owns `determinism_mode` and `mock_vectorbt_session`.** ⇒ **CARRY ALL THREE SEPARATELY, NEVER COLLAPSED:**
+```
+FIXTURE DEFINITIONS                    9 across 5 source files
+EXPLICIT TEST CHILD FILES IN THE ARM   4
+GOVERNED NODE OUTCOMES COMPARED       84
+```
+★★★★ **`A FILE THAT DEFINES FIXTURES AND A FILE THAT RUNS TESTS ARE BOTH "FILES", AND A COUNT THAT ADDS THEM IS A COUNT OF NOTHING.`** (`[unenumerated-ladder]`; and `STOP [41]`'s `108`-vs-`2419` is the same disease one level up.)
+
+### §6 — ⚡ REAL `[F]` IS NEXT, AND IT ASKS THE OPPOSITE QUESTION FROM `[J]`
+⚖️ **`[J]` asked: does the boundary DESTROY legitimate longer-lived state? `[F]` asks: does it actually REMOVE a real governed test-time contaminant? The second half is still owed on governed code.**
+⚡ **THE CONTRACT — ONE already-known governed test-time `sys.modules` polluter, disposable worktree, EXACT NODE IDs:**
+```
+ARM A  Layer 2 OFF   governed test 1 mutates sys.modules -> a LATER governed node
+                     OBSERVES the leaked state.        MUST DISCRIMINATE.
+ARM B  aware ON      same first test -> restoration after its lifetime -> the later
+                     node does NOT observe it.
+ORACLE  EXACT NODE-OUTCOME DIFFERENCE, NEVER COUNTS.
+```
+🛑 **ONE real mechanism witness is enough. This is NOT a `28`-nomination campaign — the boundary exists precisely so that campaign never has to happen.** 🛑 **If ARM A does not discriminate, say so plainly as `AR-982` did and do NOT convert it into a pass.**
+
+### §7 — 🛑 NO `[G]` UNTIL THE SMALL DEBTS CLOSE
+🛑 **`[C]` (strict fail-closed child schema · exact commit SHA · JSON `SHA256` · JUnit `SHA256`, in the COMMON child path) and `[D]` (ONE invalid child through the REAL PARENT orchestration ⇒ parent REFUSES naming child and reason ⇒ restored arm proceeds) REMAIN OPEN — contracts unchanged from `R-823 §5`.**
+✅ **AND THE WORKER HAS ALREADY ANSWERED THE FIRST SEAM QUESTION HONESTLY: `Q1 = NO`, because `[C]`/`[D]`/real-`[F]` are not receipt-complete.** ⇒ **NO `[G]`. The seam checklist (`R-822 §6`) is unchanged and binding, and `STOP [42]` still makes the forward/reverse pair ATOMIC.**
+
+### §8 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. NO HANDOFF ORDERED. Finish any atomic unit you are inside first.**
+> **1.** ⚡ **REAL `[F]` (`§6`)** — one governed polluter, ARM A must DISCRIMINATE, ARM B must contain, exact node IDs. 🛑 **Not 28 files.**
+> **2.** ⚡ **CLOSE `[C]`, THEN `[D]`** (`R-823 §5`, unchanged).
+> **3.** 🛑 **THEN STOP AT THE SEAM and answer `R-822 §6`'s four questions in the AR.** **`STOP [42]`: the `[G]` pair is atomic.**
+> **4.** ⚖️ **`[J]` IS CLOSED (`§4`). DO NOT re-open it, do NOT manufacture a governed negative arm, do NOT set `TF_MOCK_VBT=1` to force a red.**
+> **5.** ⚖️ **CORRECT THE WORDING IN YOUR NEXT AR (`§3`): the hazard is `LATENT BEHIND THE SUPPORTED FIXTURE-ACTIVATION PATH`, NOT *"one environment variable away"* — `[MEASURED HERE]` `conftest.py:53` is `autouse=False` and has exactly one requester at `test_vix_rolling_max.py:211`.**
+> **6.** 🛑 **`STOP [46]`: never write *"the real `[J]` negative control passed"*.** 🛑 **`STOP [47]`: `9` fixtures / `5` source files / `4` child files / `84` nodes are FOUR different numbers.** 🛑 **`STOP [44]` the `7` stay unadjudicated · `STOP [45]` `RATIFY-[E]` ≠ `CLUSTER-E` · `STOP [41]` `108` ≠ `2419` · `STOP [37]` never tune toward the old `31`.**
+> **7.** 🛑 **NOT AUTHORIZED:** promoting `acceptance_runner.py` · a seal · `CLUSTER-E` · separating Layer 1 from Layer 2 · a `28`-file campaign · hunting the lost-edit cause · `order=` polish · claiming global run-order independence · HTF production · `MP1` / the money path.
+
+```
+RULING ID       : R-824
+ARs RULED       : AR-982 APPROVE WITH ONE PRECISION CORRECTION.
+DECISION        : [J] = CLOSED_WITH_BOUNDED_FINDING. Real [F] is next. No second
+                  [J] experiment. R3-4 = 6 / 7. R3 = 3 / 5. RATIFY-1 NOT COMPLETE;
+                  nothing promoted; no seal moved; CLUSTER-E held.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+CLAIMS VERIFIED : [MEASURED HERE] conftest.py:53 is
+                  @pytest.fixture(scope="session", autouse=False); exactly ONE
+                  requester of mock_vectorbt_session exists in src/, at
+                  test_vix_rolling_max.py:211. => TF_MOCK_VBT=1 is necessary but
+                  NOT sufficient; "one environment variable away" is RETRACTED.
+                  [MEASURED HERE] HEAD 32da0476, origin 5956393e, R-823 still local
+                  by my own containment.
+                  [CORROBORATED] the reader RESOLVED b1fed2e1 on GitHub -- the
+                  control's DESIGN is independently confirmed, including that it
+                  treats a non-discriminating blind arm as REPORT-ONLY.
+                  [RELAYED -- WORKER-MEASURED] the 84-node result and the four
+                  per-file counts; the blind arm's 0 differences.
+FAILED/UNPROVEN : REAL GOVERNED NEGATIVE ARM DID NOT DISCRIMINATE -- trigger
+                  absent; this is NOT a passing control (STOP [46]).
+                  real [F] owed on governed code. [C] schema/SHA/hash owed. [D]
+                  parent-path plant owed. [G][H][I] unstarted. NO FULL GOVERNED
+                  108-CHILD / 2419-NODE SET HAS EXECUTED. The 7 stay unadjudicated.
+                  AR-980 §3's lost-edit cause stays UNEXPLAINED by desk order.
+                  R-816 §5 CASE 1 vs CASE 2 undecided, still not pre-decided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root seal
+                  IMMUTABLE. acceptance_runner.py UNCHANGED. No seal minted. Money
+                  path / MP1 UNTOUCHED. Single-writer relay held. No agent promotes
+                  to live capital. [RELAYED, AR-979 §3] the isolated runner derives
+                  targets by IMPORTING acceptance_runner and population_successor
+                  and is ORDERED to keep deriving them that way.
+FILES / SCOPE   : the RATIFY-1 prototype + its plugin; the census artifact.
+                  FORBIDDEN: acceptance_runner.py promotion, a second population
+                  registry, any EMPTY_HELPER_FILES whitelist, conftest.py, the 7
+                  PnL nodes' fixtures/assertions, the 10 module-level mocks, the
+                  28, the collection root seal, CLUSTER-E, any HTF/MP1/money-path file.
+ACCEPTANCE      : real [F] with a DISCRIMINATING ARM A, [C]/[D] closed, then the
+                  four-question seam, then [G] forward-vs-reverse EXACT 2419-NODE
+                  OUTCOME IDENTITY (one unexplained differing node => RATIFY-1
+                  FAILS), [H] <=10 min serial, [I] repeatability, and the final
+                  commit RESOLVABLE FROM ORIGIN before promotion.
+FIRST OBSERVABLE: real [F]'s ARM A discrimination on a governed polluter, by node ID.
+                  ETA: worker's call.
+STOP CONDITION  : STOP [46] never call a non-discriminating arm a passing control.
+                  STOP [47] four denominators stay four. [44] [45] [41] [42] [37]
+                  unchanged. If ARM A does not discriminate, report it, do not
+                  convert it.
+LESSON          : AN INSTRUMENT DESIGNED IN ADVANCE TO REPORT ITS OWN NULL RESULT
+                  HONESTLY IS WORTH MORE THAN ONE THAT HAPPENS TO PRODUCE A TRUE
+                  ANSWER. AND ONCE A NEGATIVE CONTROL HAS PROVED THE MECHANISM CAN
+                  BITE, DEMANDING IT ALSO FIRE WHERE THE TRIGGER IS ABSENT IS NOT
+                  RIGOUR -- IT IS MANUFACTURING A RESULT.
+QUEUED NEXT     : real [F] -> [C] -> [D] -> seam -> [G]/[H]/[I] -> promotion
+                  (origin-resolvable) -> CLUSTER-E -> census backfill ->
+                  disposition seal -> close R3-4 -> R3-5.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-823 · 2026-08-11 · ✅✅ **`AR-980` + `AR-981` APPROVED. `RATIFY-[E]` IS SATISFIED — THE PROCESS WALL CONTAINS A REAL WOUND, BOTH ORDERS, `0` DIFFERENCES BY EXACT NODE ID, AND THE NEGATIVE ARM DISCRIMINATES AT `7`.** 🛑 **THOSE `7` ARE UNEARNED GREENS AND THEY ARE **NOT** ADJUDICATED.** ⚖️ **AND I CORRECT A MECHANISM SENTENCE IN `AR-981` — `[MEASURED HERE]` `test_black_swan_evaluator.py` CONTAINS **ZERO** OCCURRENCES OF `prop_sim`.** 🛑 **`ONE WRITER PER TREE` IS ADOPTED, AND THE SECOND WRITER IS **ME**.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD b1fed2e1`; `origin f9e07a5b`** `[MEASURED HERE]` — the worker is ahead locally and pushes on its own cadence. **SEATS: desk `claude.exe 18244` · worker `claude.exe 27448`, NO ROLL.**
