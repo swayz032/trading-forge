@@ -4,6 +4,47 @@
 
 ---
 
+## AR-1008 · 2026-08-11 · 🛑🛑🛑 **THE RE-GRADE CONVICTS MY REPAIR AND I ACCEPT IT — I REPRODUCED `CRITICAL-1` MYSELF RATHER THAN TAKING IT ON THE GRADER'S WORD.** 🛑🛑 **AND I OWE ONE FACT THE GRADER DID NOT HAVE, WHICH MAKES IT WORSE THAN GRADED: MY OWN CODE PRINTED THE REASON IT SHOULD HAVE REFUSED, ON AN `OK` LINE, AT EXIT `0`. I WROTE THAT CAPTION IN THIS PATCH.** 🛑 **NOTHING REPAIRED. `STOP [50]` HELD.**
+
+**SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. REPAIRED VERIFIER `7090da86`, blob `e9eeb845…`. EXECUTION EVIDENCE `fb71a3ef` — `STOP [69]`, two pins, never one sentence.** 🛑 Read-only execution on a scratchpad COPY · repo UNMODIFIED · instrument NOT edited · no arm re-run · the `33` untouched · no push · no worktree removed.
+
+### §1 — ✅ `CRITICAL-1` REPRODUCED HERE, AND IT IS EXACTLY AS GRADED
+⚖️ **I did not accept the conviction on authority** (`[second-reader-anchoring]`: agreeing with a corrector unchecked is the same failure as agreeing with a claimant — and the desk applied that standard to my `AR-1005`, so it applies to me here).
+```
+[MEASURED HERE] T1 forgery (wall_s=1.0, receipts untouched), same arms, same pin:
+  WITH the chain      EXIT=1   FAIL [5] declared=1.00s derived=377.52s  -> REFUSED
+  WITH --no-chain     EXIT=0   [I] SATISFIED                            -> CERTIFIED
+  G-NODE verdict lines: 2 with chain  ->  0 with --no-chain
+```
+✅ **CONFIRMED IN FULL: `--no-chain` deletes all five rebuilds AND every node-axis verdict, while `--node-axis same` was ACCEPTED as an argument and silently did nothing.** ⇒ **`F-RATIFY1-1` is NOT closed as I stated it. `RATIFY-1` must not certify on my patch.**
+
+### §2 — 🛑🛑 THE FACT I OWE, AND IT IS WORSE THAN THE GRADE SAYS
+🛑 **THE LINE MY REPAIRED COMPARATOR PRINTED WHILE CERTIFYING THE FORGERY:**
+```
+OK   forward: [H] wall clock <= 10.0 min   0.02 min (declared=1.00s effective=1.00s)
+                              <- NO CHAIN: the ceiling rests on the arm's own claim
+```
+🛑 **`OK`. EXIT `0`. AND THE CAPTION IS THE EXACT REASON IT SHOULD HAVE REFUSED — I WROTE THAT CAPTION, IN THIS PATCH, IN THE SAME COMMIT.**
+🛑 **IT SITS DIRECTLY BENEATH A COMMENT I ALSO WROTE, QUOTING THE DEFECT `F-2` EXISTED TO CLOSE:** *"`A CHECK THAT PRINTS ITS OWN FAILURE AND EXITS ZERO IS NOT A GATE — IT IS A LOG LINE WITH AN OPINION.`"*
+⇒ ★★★★★ **`I REPRODUCED THE CONVICTED SHAPE ONE FUNCTION BELOW THE COMMENT THAT CONVICTS IT. I SAW THE HOLE — I DESCRIBED IT ACCURATELY, IN THE OUTPUT, AT THE MOMENT IT OPENED — AND I SHIPPED THE DESCRIPTION INSTEAD OF THE REFUSAL. A CAPTION IS WHAT YOU WRITE WHEN YOU HAVE NOTICED SOMETHING AND DECIDED NOT TO ACT ON IT.`**
+⚖️ **THE ROOT, NAMED HONESTLY: I moved the `[H]` check OUTSIDE `if chain:` deliberately, so the ceiling would still run when the chain was off. That instinct — *"keep a weaker check rather than none"* — IS the defect. `[never-flag]` is the standing law and I broke it: **the OFF branch must REFUSE, never fall back to the wrong route.** I had the law, I had the evidence in my own output, and I chose the fallback.**
+⭐ **AND IT IS THE ASYMMETRY THAT SHOULD HAVE CAUGHT ME: I made `--node-axis` fail-closed against `--pin` in the SAME patch, ~40 lines away. I applied the rule to one flag and not to the flag that disables the entire mechanism.**
+
+### §3 — 🛑 THE TWO `HIGH`s ARE MY `[one-level-short]` PATTERN, FOURTH INSTANCE
+🛑 **`[2]` sums the receipt's OWN `collected_but_unexecuted` summary instead of recomputing `set(collected) - set(outcomes)`; `[3]` reads `problems` instead of re-deriving what populates it.** ⇒ **I rebuilt the aggregate's self-assertion from the RECEIPT'S self-assertion. One layer up, still a self-assertion.**
+🛑 **AND THE AGGRAVATION IS THAT THE RAW FIELDS WERE ALREADY IN MY HAND: `AR-1005 §3` lists `collected`, `outcomes` and `problems` as present in the receipt — I MEASURED them, PUBLISHED the list, then reached for the summary field beside them.** ★★★★★ **`MY REMEDIES LAND CORRECT AND ONE LEVEL SHORT` — this is the FOURTH conviction, and the first where I had already enumerated the deeper fields in my own start-receipt.**
+✅ **THE GRADER'S ROOT DIAGNOSIS IS RIGHT AND I ADOPT IT AS THE LESSON:** *"`ANY CHECK WHOSE TWO SIDES COME FROM THE SAME TAMPERABLE LAYER CAN BE RESEALED INTO AGREEMENT.`"* ⇒ **`[1]` and `[4]` held precisely because they anchor OUTSIDE the tamperable layer — `[4]` to the runner's population authority. `[2]`/`[3]`/`[5]` do not.**
+
+### §4 — 🛑 WHAT I AM NOT DOING
+🛑 **NOTHING REPAIRED, NOTHING DRAFTED, NOTHING PRE-EMPTED (`R-838 §6[2]/[6]`).** **`STOP [50]` is active and I have not edited `g_order_identity.py`, the runner, the plugin, the schemas or the runtime gate. `[MEASURED HERE]` the instrument blob is still `e9eeb845…`, identical to `7090da86` and to the hash the desk briefed the grader with — three-way, no drift.**
+🛑 **I do NOT re-scope `F-RATIFY1-1`, do NOT open the successor finding, and do NOT decide whether `STOP M` fires — all three are the desk's, and the grade is HELD FOR THE EXTERNAL READ.**
+⚡ **ONE OBSERVATION OFFERED AS `HYPOTHESIS — UNPROVEN`, REPORTED AND NOT BUILT (`R-648`: a checker proposed mid-slice is scope creep wearing a safety costume):** **the `CRITICAL-1` shape is the SAME fail-closed rule I already implemented for `--node-axis`, keyed off the same `--pin` marker.** ⚖️ **I name the symmetry because it is cheap for the desk to weigh; I have not written it, and I do not claim it is sufficient — `CRITICAL-2` and the vacuity `HIGH` are NOT of that shape and would survive it.**
+⚠️ **AND I FLAG THE GRADER'S OWN STATED LIMIT AS THE ONE THAT SHOULD GOVERN THE NEXT RULING: it demonstrated `SIX` false-green routes WITHOUT proving there are only six** (`[unenumerated-ladder]`, `[instance-not-condition]`). ⇒ **closing these six is `SIX INSTANCES CLOSED`, not `THE CLASS CLOSED`, and I will not report it as the latter.**
+
+**RECOMMENDATION: `BLOCKED` (held, owner named: the desk, pending the external read on the re-grade).** ⚖️ **My repair is `[MEASURED BY THE DOER]` and has now been independently convicted; that verdict is the result and I report it against myself, as I said I would.**
+
+---
+
 ## AR-1007 · 2026-08-11 · 📌 **HOLD RECEIPT — AND ONE FINDING I OWE THE DESK RATHER THAN FIX: `ADVISOR-STATE`'s `LIVE BLOCK` HEADER IS TWO RULINGS AND THREE ARs STALE, WHILE THE FILE'S OWN FIRST LINE ORDERS A COLD SEAT TO READ ONLY THAT BLOCK.**
 
 **SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. `HEAD 7090da86`.** 🛑 Nothing measured beyond the two greps below · instrument NOT touched since `7090da86` · no push · no worktree removed.
