@@ -12,6 +12,183 @@
 
 ---
 
+## R-836 · 2026-08-11 · ✅✅ **THE INDEPENDENT GRADE IS ACCEPTED AND `AR-1003`'s FIVE-ARM RESULT IS INDEPENDENTLY VERIFIED.** 🛑🛑 **AND `RATIFY-1` DOES **NOT** CERTIFY: `F-RATIFY1-1` IS A REAL HIGH FALSE-GREEN IN THE CERTIFYING INSTRUMENT, AND WE DO NOT CERTIFY A REFEREE WHILE KNOWING EXACTLY HOW TO MAKE ONE OF ITS HARD GATES LIE.** ⚡⚡ **BRANCH `B`: REPAIR THE LIE DETECTOR, KEEP THE EXPENSIVE EVIDENCE, RE-GRADE, THEN CERTIFY.** 🛑 **DO NOT RE-RUN THE FIVE ARMS.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1004`** (`R-416`) — **a receipt (self-correction + hold receipt + handoff declaration); it owes no ruling and its state change is carried into `ADVISOR-STATE`. The object ruled here is the GRADE RECEIPT `eb435472`.** **`HEAD 3f5cdc00` · `origin 4257e3e8` · CERT PIN `fb71a3ef`.** **SEATS: desk `28644` · worker `claude.exe 25076` — **handoff DECLARED at `AR-1004 §3`, seat STILL ALIVE, lever is the operator's.** If a swap occurs, `R-784 §3` transfers this authorization on the successor's receipt; no new ruling needed.**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED — the external read on the grade arrived BEFORE this ruling, and it decided the fork I refused to decide.**
+
+### §0 — 🛑 A SMALL DEFECT OF MINE, SAME FAMILY AS THE ONE I JUST MINTED
+🛑 **I grepped the grade receipt for `F-3` and got NOTHING, then control-probed instead of concluding.** `[MEASURED HERE]` **the findings are named `F-RATIFY1-2/3/4/5`; the relay summary abbreviated them and I searched the abbreviation.** ⇒ ★★★★ **`I SEARCHED FOR A TOKEN THAT IS NOT THE ONE IN THE FILE — THE SAME SHAPE AS `STOP [64]`'s NONEXISTENT PATH, ONE RULING LATER.`** ✅ **The control probe (`derived_rev` → `2` hits, `F-RATIFY1-1` → `5` hits) turned a false absence into the real text in one command** (`[absence-claim]`).
+
+### §1 — ✅ THE GRADE IS ACCEPTED; THE RESULT IS REAL
+✅ **`AR-1003`'s SUBSTANTIVE FIVE-ARM RESULT IS INDEPENDENTLY VERIFIED — `13/13`, and STRONGER than the doer's original six comparisons: the grader extended the oracle to ALL `10` ARM PAIRS with `0` node-outcome differences on every one, through a verifier that NEVER IMPORTS THE COMPARATOR (JUnit element shape, its own node-ID rebuild at `0 UNMAPPED`, agreeing with the plugin on `2419/2419` in all five arms; two independent node-order witnesses, `0` disagreements across `540` children).** ★★★★★ **`THAT IS A SECOND PATH, NOT A SECOND LOOK — AND IT IS THE STRONGEST EVIDENCE THIS CAMPAIGN HAS PRODUCED.`**
+⚖️ **LINEAGE, WEIGHED NOT WAIVED: the grader PRODUCED the `[G]`/`[H]`/`[I]` findings this set repairs, declared it unprompted, and bought its independence BY METHOD (no shared code) rather than by identity.** ⇒ **ACCEPTED, and recorded so a successor weighs it rather than discovering it.**
+🛑 **`RATIFY-1` IS **NOT** CERTIFIED. `STOP [49]` holds: no number is published, and the grader's bands (`8` for the measurement claim, `6` for the comparator as a certifying gate) are NOT `RATIFY-1` scores and may not be quoted as one.**
+
+### §2 — ⚖️ THE DISTINCTION THAT MUST NOT BE BLURRED, AND I RULE IT EXPLICITLY
+✅ **THE FIVE ACTUAL RUNS PASSED `[H]`. `377.7 / 372.7 / 363.2 / 368.2 / 367.9` seconds, all under `600.0`, and the grader CORROBORATED those durations from underlying evidence.** 🛑 **NOTHING in `F-RATIFY1-1` means the runs secretly exceeded the ceiling. THEY DID NOT.**
+🛑 **WHAT IS BROKEN IS THAT THE CERTIFYING TOOL WOULD ALSO HAVE ACCEPTED A FAKE LOW NUMBER.** ⇒ ★★★★★ **`HISTORICAL MEASUREMENT TRUTH = VERIFIED, AND REUSABLE CERTIFYING AUTHORITY = NOT EARNED, ARE SIMULTANEOUSLY TRUE. A RULING THAT COLLAPSES THEM EITHER REWRITES HISTORY OR CERTIFIES A LIAR.`** 🛑 **`STOP [65]` NEW: never report `F-RATIFY1-1` as *"the timing was wrong"* — it is *"the timing was right and the gate could not have known."***
+
+### §3 — ⚡ BRANCH `B`, AND THE REASON IS THE CAMPAIGN'S WHOLE PURPOSE
+⚡ **THE FORK WAS: (`A`) certify now and bank the HIGH · (`B`) repair first and re-earn the affected clause. **`B` IS CHOSEN**, adopted from the read on merit.**
+★★★★★ **`YOU DO NOT CERTIFY A REFEREE WHILE KNOWING EXACTLY HOW TO MAKE ONE OF ITS HARD GATES FALSE-GREEN. DOING SO WOULD CONTRADICT THE ENTIRE ACCEPT-5 CAMPAIGN ONE STEP BEFORE THE FINISH.`** ⚖️ **NOT because `AR-1003` is doubtful — it is not; the grade made the strongest case yet that it is real.**
+✅ **AND THIS IS NOT ANOTHER DETOUR: the expensive evidence is GOOD and we KEEP it. One small verifier repair, one adversarial re-grade, then certify.**
+
+### §4 — ⚡ THE REPAIR: COMPARATOR ONLY, AND THE RULE IS *DERIVE, DO NOT BELIEVE*
+⚡ **ONE BOUNDED INSTRUMENT REPAIR. PRIMARY AND ONLY TARGET: `scripts/ratify1_controls/g_order_identity.py`** (`[MEASURED HERE]` that is the real path — `scripts/g_order_identity.py` DOES NOT EXIST, `STOP [64]`).
+🛑 **DO NOT TOUCH: production engine code · strategy code · compiler code · the money path · governed test outcomes · the `33` · and NOT `accept5_isolated_runner.py` or `accept5_isolation_plugin.py` unless a comparator-only repair proves insufficient (`§7`).**
+⚡ **THE ENGINEERING RULE, ADOPTED VERBATIM: `IF A CERTIFICATION CLAIM CAN BE DERIVED FROM THE RECEIPTS, DERIVE IT. DO NOT BELIEVE THE SUMMARY'S COPY OF IT.`** ⇒ **inside `verify_chain()`, REBUILD and CROSS-CHECK, with any disagreement ⇒ RED:**
+> **`[1]` DUPLICATE NODE COUNT — derived from receipt outcome memberships vs `aggregate.duplicate_nodes`.**
+> **`[2]` COLLECTED-BUT-UNEXECUTED — derived from receipt records vs the aggregate claim.**
+> **`[3]` INVALID CHILDREN — derived from receipt problems / execution validity vs the aggregate claim.**
+> **`[4]` LIMITED-SUBSET — derived from the manifest target population against the authoritative governed child population. 🛑 Do NOT trust `limited_subset=false` because `aggregate.json` says so.**
+> **`[5]` `[H]` ELAPSED — rebuild the certifying time observable from the `108` digest-bound child receipts (`elapsed_s`).**
+⚡ **THE `[H]` FORM, ADOPTED: `effective_h_s = max(declared_wall_s, receipt_derived_child_elapsed_s)`, with only a TINY DOCUMENTED tolerance for the receipts' `0.01s` rounding when checking reconciliation. Then `effective_h_s <= 600` ⇒ GREEN, `> 600` ⇒ RED.** ⇒ **this closes the measured false-green: `wall_s = 1.0` while the receipts encode `~377s` MUST go RED.** 🛑 **DO NOT RAISE THE `600`-SECOND CEILING.**
+⚠️ **DO NOT OVER-ENGINEER ARM TIMING. Parent-loop wall time and the sum of child elapsed differ by orchestration overhead; the receipts are already durable. With `~222s` of real headroom this is NOT a `599.8` vs `600.1` decision.** 🛑 **`STOP L` NEW: if implementation discovers the receipt-derived reconstruction CANNOT safely enforce the existing `[H]` property, **STOP AND REPORT** — a new durable arm-level timing witness would change the execution artifact schema, and that seam is not to be guessed through.**
+
+### §5 — 🛑 THE RED CONTROLS THE REPAIR OWES, ON THE REAL INSTRUMENT
+⚡ **BEFORE THE REPAIR IS COMPLETE, all of these, run through THE REAL COMPARATOR PATH:**
+```
+T1  downward time forgery : genuine arm copy, aggregate.wall_s = 1.0, receipts untouched  => RED
+                            (this is the EXACT independent-grade finding)
+T2  upward time           : wall_s = 36000                                                => RED
+                            (preserves the direction that already worked)
+T3  duplicate-count lie   : aggregate duplicate_nodes inconsistent with receipts          => RED
+T4  collected-unexecuted  : aggregate summary inconsistent with receipt evidence          => RED
+T5  invalid-child lie     : aggregate says none, receipt evidence says otherwise          => RED
+T6  limited-subset lie    : aggregate limited_subset vs manifest/authority proving subset  => RED
+POS untouched AR-1003 arm evidence                                                        => GREEN
+```
+🛑 **DO NOT MANUFACTURE A PARALLEL COPY OF THE VERIFIER TO TEST IT.** ★★★★ **`A CONTROL THAT EXERCISES A COPY PROVES THE COPY` — and this campaign has been convicted of exactly that** (`[test-replica]`).
+
+### §6 — ⚖️ THE THREE LOWs: ONE REPAIRED, ONE CAPTION, ONE CLASSIFIED HERE BY THE DESK
+⚡ **`F-RATIFY1-2` — REPAIR IT IN THE SAME PATCH: make the node axis MANDATORY / FAIL-CLOSED for certifying comparisons. A certifying invocation must state `node_axis=same` or `node_axis=reverse`; MISSING ⇒ **REFUSE**.** 🛑 **Do NOT silently read omission as *"node-order proof not requested"* — the certification protocol always knows which relation it expects.** ⚖️ **`AR-1003` is unaffected: all three lines were present in the real files.**
+⚡ **`F-RATIFY1-5` — CAPTION ONLY: `AR-1003` says `--red-proof` has `23` controls; it emits `26`. Correct it in the same patch. NONBLOCKING; do NOT open a campaign for a caption.**
+✅ **`F-RATIFY1-3` — I READ THE EXACT WORDING AND CLASSIFY IT HERE, SO THE WORKER DOES NOT GUESS AND DOES NOT PAY A ROUND-TRIP** (read `§9` required the exact text; I have it):
+> `[MEASURED HERE, GRADE receipt `:216-222`]` *"`:256-264` sets `derived_rev = (targets == reversed(canonical))`, then forces `False` if `targets == canonical`. **Any other permutation also yields `False`**, so a forward arm whose files ran in an arbitrary shuffle is indistinguishable from a canonical one. **The reverse arm IS pinned exactly** (it must equal `reversed(canonical)`), so the `[G-FILE]` "axis varied" claim SURVIVES; only "the forward arm was canonical" is unproven. **INERT HERE** — A/C/E exactly canonical, B/D exactly reversed, `0/108` shared positions. Exploitability NOT executed."*
+⇒ ⚖️ **RULED: `BANKED LOW`, NO REPAIR IN THIS PATCH. It is genuinely bounded — the axis-varied claim, which is the certifying property, survives on the reverse arm's exact pinning. The unproven residual is narrower: *"the forward arm was canonical."*** 🛑 **BANK IT WITH THAT EXACT LIMITATION as `ACCEPT5-DERIVED-REV-FORWARD-SHUFFLE-1`, `LOW`, exploitability UNEXECUTED. `DEFERRED ≠ CLOSED`.**
+
+### §7 — 🛑 DO NOT RE-RUN THE FIVE ARMS. AND THE LINE WHERE THAT CHANGES.
+🛑🛑 **DO NOT SPEND ANOTHER `~31` MINUTES EXECUTING `A/B/C/D/E`.** ★★★★★ **`THE FIVE EXECUTION ARTIFACTS DO NOT BECOME FALSE MERELY BECAUSE THE VERIFIER LEARNS TO CHECK MORE FACTS ABOUT THEM.`**
+⚡ **IF THE PATCH TOUCHES ONLY `g_order_identity.py`, its comparator controls, and captions/docs — and NOT `accept5_isolated_runner.py`, `accept5_isolation_plugin.py`, the acceptance pytest plugin, the evidence schema, the governed tests or the authority population — then REUSE THE IMMUTABLE `A/B/C/D/E` EVIDENCE.** ⚡ **Run the REPAIRED comparator against those same five arms and require ALL TEN PAIRINGS again at `0` node-outcome differences, plus the rebuilt self-assertion checks agreeing with the existing evidence.** ⚖️ **That is a VERIFIER RE-CERTIFICATION, not a new execution experiment.**
+🛑 **`STOP M` NEW — THE STALENESS LINE: if the worker discovers it MUST change `accept5_isolated_runner.py`, the child receipt schema, the manifest schema, the isolation plugin, the node-ordering mechanism, or governed test code, **STOP AND REPORT**. The old five arms would then no longer represent the final certifying execution instrument, and what must be re-run becomes a fresh desk decision. THE PREFERRED REPAIR SHOULD NOT NEED TO CROSS THIS LINE.**
+
+### §8 — ⚡ THE TARGETED RE-GRADE, AND WHAT CLOSES `RATIFY-1`
+⚡ **AFTER the repair, `accuracy-validator` returns — and it does NOT re-execute the five `108`-child arms if `§7` held.** **Its mission: (1) independently inspect the repair · (2) re-run the forged-low-time attack · (3) attempt a resealed-or-equivalent self-assertion attack against the other four rebuilt fields · (4) confirm omitted `node_axis` now REFUSES · (5) independently reconstruct the five existing arms again · (6) compare all `10` pairs · (7) verify the same exact `33` · (8) perform ONE NOVEL false-green attack of its own choosing.**
+✅ **IF CLEAN: `F-RATIFY1-1` = CLOSED, and `RATIFY-1` CERTIFIES.** 🛑 **NO third full independent execution battery absent a NEW finding.** 🛑 **THE DISPATCH IS THE DESK'S, and `STOP [61]` applies: it waits on the external read unless the operator says otherwise.**
+🛑 **`STOP [64]` APPLIES TO THAT DISPATCH: I will `ls` EVERY path in the brief before sending it. ONE PREFLIGHT EXISTENCE ASSERTION — not a general path-audit framework.**
+
+### §9 — ⚖️ DURABILITY: THE GRADE RECEIPT IS NOT YET ON ORIGIN, AND THAT IS MINE TO SOLVE
+⚠️ **`[MEASURED HERE, `git branch -r --contains eb435472` ⇒ EMPTY]` the grade receipt is LOCAL-COMMITTED ONLY. The read confirms it cannot resolve `eb435472`, so the grade's status is `[RELAYED / LOCAL-COMMITTED]` until landed.**
+✅ **THIS DOES NOT BLOCK THE REPAIR.** 🛑 **BUT BEFORE ANY `RATIFY` PROMOTION, the independent grade + the repair + the targeted final grade + the evidence manifest MUST be origin-resolvable.** 🛑 **DO NOT BULK-PUSH unreviewed desk commits to achieve it** (`STOP [58]`, and the read's better reason at `R-835 §5`). ⚡ **OWNER: THIS DESK. I will rule a clean, explicitly adjudicated landing path at promotion time — named here so it is never reported as an unowned prerequisite** (`§0.5`).
+
+### §10 — ⚡ AUTHORIZATION TO SEAT `claude.exe 25076` (or its successor on receipt, `R-784 §3`)
+
+> ### ★ WORKER — START HERE. THE HOLD IS LIFTED. ONE SMALL REPAIR STANDS BETWEEN US AND CERTIFICATION.
+> **1.** ✅ **The grade CONFIRMED your five-arm result in every clause, `13/13`, and extended it to all `10` pairs. `RATIFY-1` does NOT certify yet, and that is about the INSTRUMENT, not your measurement (`§2`).**
+> **2.** ⚡ **REPAIR `scripts/ratify1_controls/g_order_identity.py` ONLY.** Inside `verify_chain()`, REBUILD and cross-check the five self-asserted fields (`§4`): duplicate count · collected-but-unexecuted · invalid children · limited-subset · `[H]` elapsed. **Disagreement ⇒ RED.**
+> **3.** ⚡ **`[H]`: `effective_h_s = max(declared_wall_s, receipt_derived_child_elapsed_s)`, tiny documented tolerance for `0.01s` rounding; `<= 600` GREEN, `> 600` RED. 🛑 CEILING FROZEN.**
+> **4.** ⚡ **ALSO IN THIS PATCH: make `node_axis` MANDATORY / FAIL-CLOSED for certifying comparisons (omitted ⇒ REFUSE), and fix the `23` → `26` control-count caption.**
+> **5.** ⚖️ **`F-RATIFY1-3` IS ALREADY CLASSIFIED BY THE DESK (`§6`) — BANK IT AS `ACCEPT5-DERIVED-REV-FORWARD-SHUFFLE-1`, `LOW`, with the exact limitation quoted there. DO NOT repair it and DO NOT re-derive its wording.**
+> **6.** ⚡ **CONTROLS `T1`–`T6` + the positive, ON THE REAL COMPARATOR PATH (`§5`). 🛑 No parallel copy of the verifier.**
+> **7.** 🛑 **DO NOT RE-RUN THE FIVE ARMS. Replay the REPAIRED comparator over the EXISTING `A/B/C/D/E` evidence; require all `10` pairings at `0` differences plus the rebuilt checks agreeing.**
+> **8.** 🛑 **`STOP L`: if the receipt-derived reconstruction cannot safely enforce `[H]`, STOP AND REPORT — do not invent a new timing artifact.** 🛑 **`STOP M`: if you must change the runner, plugin, receipt/manifest schema, node-ordering mechanism or governed tests, STOP AND REPORT — the five arms would go stale and that is a fresh desk decision.**
+> **9.** 🛑 **UNCHANGED: no push · no worktree removed · `cmp_AC.txt` intact · the `33` not adjudicated, not repaired, not compared to `287`/`31` · no promotion · no seal · no certification · no `RATIFY-1` number · `CLUSTER-E` · `acceptance_runner.py` · the root seal · `margin_expansion.py` or any production engine file · HTF production · `MP1`.**
+> **10.** ⚡ **START-RECEIPT OWED. FIRST OBSERVABLE: `T1` going RED on the repaired comparator — the exact finding, inverted.** ⚖️ **HONEST-PARTIAL CLAUSE stands. And you may hand off before starting; `AR-1004`'s declaration is ratified and the lever remains the operator's.**
+
+```
+RULING ID       : R-836
+ARs RULED       : the INDEPENDENT GRADE RECEIPT eb435472 -- ACCEPTED. AR-1004 is
+                  a receipt (self-correction + hold + handoff declaration), owes
+                  no ruling; its state change is carried into ADVISOR-STATE.
+DECISION        : ACCEPT (the grade) + BRANCH B (repair the instrument, then
+                  re-grade, then certify) + AUTHORIZE (one bounded comparator-only
+                  repair) + REFUSE (certification today).
+                  AR-1003's five-arm result INDEPENDENTLY VERIFIED, 13/13, all 10
+                  pairs. RATIFY-1 NOT CERTIFIED. F-RATIFY1-1 HIGH open.
+                  F-RATIFY1-2 repaired in the same patch. F-RATIFY1-3 CLASSIFIED
+                  LOW by the desk and BANKED. F-RATIFY1-5 caption. DO NOT re-run
+                  the five arms. R3-4 = 6/7. CLUSTER-E HELD. Money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED. It decided the fork this desk explicitly
+                  refused to decide (certify-and-bank vs repair-first) and chose
+                  repair-first. Adopted on merit. Its §9 forbade guessing
+                  F-RATIFY1-3; I read the exact text and classified it here to
+                  save a round-trip, rather than passing the instruction down.
+DESK DEFECT     : I grepped the grade receipt for "F-3" and got an empty result;
+                  the findings are named F-RATIFY1-3. Same shape as STOP [64]'s
+                  nonexistent path, one ruling later. Caught by control-probing
+                  instead of concluding.
+CLAIMS VERIFIED : [MEASURED HERE] scripts/g_order_identity.py DOES NOT EXIST; the
+                  instrument is scripts/ratify1_controls/g_order_identity.py.
+                  [MEASURED HERE, :335 and :449] wall_s is read as
+                  arm["wall_s"]/60.0 and never recomputed; controls C8/C8b only
+                  test values OVER the ceiling => the gate is unfalsifiable
+                  downward, exactly as graded.
+                  [MEASURED HERE, GRADE receipt :216-222] F-RATIFY1-3's exact
+                  text: the reverse arm IS pinned exactly, so the [G-FILE]
+                  axis-varied claim SURVIVES; only "the forward arm was
+                  canonical" is unproven => genuinely bounded, banked LOW.
+                  [MEASURED HERE] git branch -r --contains eb435472 => EMPTY: the
+                  grade receipt is not yet origin-resolvable.
+FAILED/UNPROVEN : RATIFY-1 -- UNCERTIFIED, and no letter moves today.
+                  F-RATIFY1-3 exploitability -- code fact measured, exploit NOT
+                  executed. Banked, not closed.
+                  --red-proof-chain C1-C7 -- the grader judged it too write-heavy
+                  against a live evidence set, so its coverage is [RELAYED], not
+                  [MEASURED]. Named, not waived.
+                  The merit of the 33, the 2 xfailed, and ANY production
+                  behaviour -- out of scope; this is referee determinism, NOT
+                  engine correctness, and the two may not share a sentence.
+ARCHITECTURE
+INVARIANTS      : the repair is COMPARATOR-ONLY. accept5_isolated_runner.py,
+                  accept5_isolation_plugin.py, the receipt/manifest schema, the
+                  node-ordering mechanism and governed tests are UNTOUCHABLE
+                  without a fresh ruling (STOP M). acceptance_runner.py IMPORTED,
+                  NEVER EDITED. Root seal IMMUTABLE. Ceiling FROZEN at 600.0s.
+                  Production engine code UNTOUCHED. Doer != grader. No agent
+                  promotes to live capital.
+FILES / SCOPE   : scripts/ratify1_controls/g_order_identity.py + its comparator
+                  controls + captions/docs. The five A/B/C/D/E artifacts are
+                  FROZEN INPUTS, read-only.
+ACCEPTANCE      : T1-T6 RED and the positive GREEN on the REAL comparator path;
+                  omitted node_axis REFUSES; the repaired comparator replayed
+                  over the EXISTING five arms with all 10 pairings at 0
+                  node-outcome differences and the rebuilt self-assertion checks
+                  agreeing with the existing evidence.
+FIRST OBSERVABLE: T1 (wall_s = 1.0 on untouched receipts) going RED -- the exact
+                  independent-grade finding, inverted. ETA: worker's call.
+STOP CONDITION  : STOP L NEW -- if receipt-derived reconstruction cannot safely
+                  enforce [H], STOP; do not invent a timing artifact.
+                  STOP M NEW -- if the repair must cross into the runner, plugin,
+                  schema, node-ordering or governed tests, STOP; the five arms go
+                  stale and that is a fresh desk decision.
+                  STOP [65] NEW -- never report F-RATIFY1-1 as "the timing was
+                  wrong"; it is "the timing was right and the gate could not have
+                  known".
+                  STOP [64] applies to the next grader dispatch: ls every path.
+                  No parallel copy of the verifier. Ceiling frozen. No re-run of
+                  the five arms. STOP [49], [50], [58], [61], [62], [63] stand.
+LESSON          : HISTORICAL MEASUREMENT TRUTH AND REUSABLE CERTIFYING AUTHORITY
+                  ARE TWO DIFFERENT CLAIMS, AND THIS EVIDENCE SET EARNED THE
+                  FIRST WITHOUT THE SECOND. A RULING THAT COLLAPSES THEM EITHER
+                  REWRITES HISTORY OR CERTIFIES A LIAR.
+                  AND: YOU DO NOT CERTIFY A REFEREE WHILE KNOWING EXACTLY HOW TO
+                  MAKE ONE OF ITS HARD GATES FALSE-GREEN.
+QUEUED NEXT     : comparator repair -> T1-T6 + positive -> replay over the
+                  existing five arms, all 10 pairs -> targeted independent
+                  re-grade (desk dispatches, STOP [61] applies) -> certify
+                  RATIFY-1 -> adjudicated durable landing of grade + repair +
+                  final grade + evidence manifest on origin -> promote ->
+                  CLUSTER-E -> post-E authority map -> disposition THAT map ->
+                  six-field 32-row census -> ONE successor seal -> canonical
+                  isolated ACCEPT-5 -> close R3-4 -> bounded R3-5 -> EXIT the
+                  referee loop -> MP1-CANDIDATE-INGRESS-1 -> MONEY PATH.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-835 · 2026-08-11 · ✅✅✅ **`AR-1003` APPROVED AS THE FINAL DOER MEASUREMENT. `[G-FILE]` `[G-NODE]` `[I]` `[H]` ALL WORKER-MEASURED PASS, AND I RE-DERIVED THE ORACLE MYSELF FROM ALL FIVE RAW ARMS.** ⚡⚡ **THE INDEPENDENT GRADER IS DISPATCHED — THE LAST GATE BEFORE `RATIFY-1` CAN BE CERTIFIED, AND THE FIRST TIME THIS CAMPAIGN HAS REACHED IT.** 🛑 **I CORRECT AN ARITHMETIC ERROR I INHERITED AND REPUBLISHED: `377.7s` IS `63%` OF THE BUDGET USED, NOT `37%`.** 🛑 **`STOP [50]` IS NOW ACTIVE: THE INSTRUMENT IS FROZEN WHILE THE GRADER ATTACKS IT.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1003`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its central result from the artifacts before writing.** **`HEAD 974cf9b8` · `origin 4257e3e8` · CERT PIN `fb71a3ef` (RESOLVES from origin).** **SEATS `[MEASURED HERE]`: desk `28644` · worker `claude.exe 25076`, NO ROLL.**
