@@ -4,6 +4,51 @@
 
 ---
 
+## AR-989 · 2026-08-11 · ✅ **`R-826 §8[2]` DELIVERED — `docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md` COMMITTED AT `d5076656`, `248` LINES, BOTH FROZEN FILES PROVABLY UNTOUCHED.** ⚖️⚖️ **AND I OWE THE DESK A CORRECTION TO `R-826 §1`, MEASURED AT THE OBJECT: `sha256` × `1` IS A **TEST NAME**, NOT A DIGEST — SO **ZERO** CHILDREN ARE DIGEST-BOUND, NOT *"AT MOST ONE"*.** ⚡ **THE EXTERNAL READ'S ORIGINAL WORDING WAS RIGHT AS WRITTEN; THE REFINEMENT OF IT WAS THE ERROR.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD d5076656`. RULING `R-826 §8`.** 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal; `CLUSTER-E` HELD; the `287`/`11`/`7` untouched; the three maps NOT committed as authority and NOT re-hashed.
+
+### §1 — ✅ `STOP [50]` HELD, AND PROVEN RATHER THAN ASSERTED
+✅ **`[MEASURED HERE]` `git status --porcelain scripts/ratify1_controls/g_order_identity.py scripts/accept5_isolated_runner.py` ⇒ **EMPTY**, taken AFTER the work.** ✅ **`git show --stat d5076656` ⇒ `1 file changed, 248 insertions(+)` — ONE new document, zero instrument edits.**
+✅ **I READ both frozen files to specify against their REAL field names, and edited neither.** **Reading is not editing; `STOP [50]` freezes the instrument, not the documentation of it.**
+🛑 **AND I DID NOT RUN `R-826 §3`'s COPIED-AGGREGATE ATTACK.** **That is the grader's surface and a doer's pre-emptive result muddies `doer ≠ grader`.** **Every statement in the spec about what the CURRENT comparator does is labelled `[HYPOTHESIS — THE GRADER'S]`.**
+
+### §2 — ⚖️⚖️ THE CORRECTION I OWE THE DESK, AND IT RUNS AGAINST MY OWN CONVENIENCE
+🛑 **`R-826 §1` corrected the external read's *"`aggregate.json` does NOT contain the child receipt/hash chain"* to *"a chain too short to bind the population"*, inferring from `sha256` × `1` that **"AT MOST ONE CHILD IS DIGEST-BOUND"**.** 🛑 **`[MEASURED HERE, `json.load` + key-partitioned substring census over the preserved forward map `4ca0aab3…`]` THE COUNT IS EXACTLY RIGHT AND THE OBJECT IT COUNTS IS NOT PROVENANCE:**
+```
+                              IN outcomes NODE IDs      OUTSIDE outcomes
+'receipt'                               34 / 39                       0
+'sha256'                                      1                       0
+per-child records of any kind               n/a                    NONE
+```
+**The single `sha256` is the test node ID `test_pilot_conveyor.py::test_prepare_strategy_computes_sha256_when_not_supplied`** — a test about a PRODUCT feature. **Every `receipt` hit is likewise a test name** (`test_mp1_candidate_receipt.py`, `test_run_receipt.py`, `TestRunReceipt::…`).
+⚖️ **COUNT RECONCILED SO THIS DOES NOT READ AS A DISAGREEMENT: the desk's `34` is case-SENSITIVE `grep -o`; `39` is case-INSENSITIVE (the extra `5` are capital-`R` `TestRunReceipt` class names). BOTH COUNT THE SAME OBJECTS. NEITHER NUMBER IS WRONG — only the inference drawn from them.**
+⇒ ★★★★★ **`ZERO CHILDREN ARE DIGEST-BOUND. THE EXTERNAL READ WAS CORRECT AS WRITTEN AND THE DESK'S REFINEMENT WAS THE ERROR — IT COUNTED TEST NAMES AND READ THEM AS PROVENANCE FIELDS.`** (`[i-measured]` — the neighbouring object, and `R-826 §1` itself warned that adopting the wrong wording *"WOULD HAVE SENT THE WORKER TO BUILD THE WRONG ONE"*. **It nearly did — in the opposite direction: I would have specified a chain that PRESERVES one existing digest, when there is none to preserve.**)
+⚖️ **I DO NOT GRADE THE DESK AND I DO NOT ADOPT THIS UNILATERALLY — it is submitted as a measurement for the desk to accept or refute.** ⭐ **It does not weaken `ACCEPT5-AGGREGATE-PROVENANCE-1`; it STRENGTHENS it, and the blocker's severity is unaffected.**
+
+### §3 — ✅ THE STRUCTURAL CAUSE, WHICH MAKES THE REPAIR SMALLER THAN IT LOOKED
+✅ **`[MEASURED HERE, `accept5_isolated_runner.py:123-135, 280-295, 349-360`]` `run_child()` ALREADY mints a rich per-child receipt — `run_id` · per-child `head` · `returncode` · `artifact_sha256` · `layer2_witness` · `problems`. `aggregate()` then keeps ONLY `outcomes` and three counts, and the `summary` dict written to `aggregate.json` DISCARDS EVERY RECEIPT.**
+⇒ ★★★★ **`THE PROVENANCE IS COMPUTED AND THROWN AWAY. THE REPAIR IS NOT TO INVENT IT — IT IS TO STOP DISCARDING IT.`** ⭐ **`THE EVIDENCE WAS NEVER MISSING FROM THE RUN; IT WAS MISSING FROM THE ARTIFACT, AND ONLY THE ARTIFACT SURVIVES TO BE COMPARED.`**
+
+### §4 — ✅ WHAT THE SPEC SPECIFIES
+✅ **FOUR LAYERS, each bound to the one below by a digest over BYTES:** child receipt (persisted, `R-826 §8[2]`'s ten fields + execution `ordinal`) → **ORDERED** parent manifest naming each receipt by digest → aggregate **DERIVED** from the manifest → comparator **VERIFIES the chain BEFORE it may report any outcome verdict.**
+✅ **THE CORE MOVE, AND IT IS WHY `C1` CAN BE CAUGHT AT ALL: `reverse` STOPS BEING DECLARED AND BECOMES DERIVED** from the observed ordinal sequence against the canonical population order. **A forged copy carries the FORWARD sequence while asserting `reverse=true`; the disagreement is ARITHMETIC, NOT TRUST.**
+✅ **`R-826 §8[3]`'s FOUR CONTROLS STATED AS PROPERTIES, NOT MECHANISMS** — `C1` flipped-`reverse` copy ⇒ RED · `C2` tampered child artifact ⇒ RED · `C3` differing child `HEAD` ⇒ RED · `C4` genuine arm ⇒ GREEN. **Plus `§8[3]`'s pin assertions: every child `HEAD` == arm start pin, and arm end `HEAD` == arm start pin.** 🛑 **`provenance_verified=true` FORBIDDEN, and generalised: no provenance property may be believed because it was written down.**
+✅ **AND EVERY NEGATIVE CONTROL OWES A POSITIVE WITNESS THAT THE PATH RAN** — *"did not certify"* is satisfied by a verifier that crashed on startup.
+⭐ **I ADDED THREE CONTROLS THE FOUR LEAVE OPEN, and one of them is the sharp one:** `C5` an arm compared AGAINST ITSELF ⇒ RED · `C6` a receipt removed with `children` decremented to match ⇒ RED · **`C7` a manifest whose entries are RE-SORTED while every receipt stays valid ⇒ RED.** ★★★★★ **`C7` IS THE FORGERY A PURELY DIGEST-BASED CHAIN CANNOT CATCH — every hash verifies and only the recorded ORDER is wrong. A chain that passes `C1`–`C6` and fails `C7` has hashes but no order witness.**
+
+### §5 — ⚠️ THE RISK I FOUND AND DID NOT MEASURE, FLAGGED BEFORE THE LANE OPENS
+⚠️ **`[UNMEASURED — OPEN]` `108` extra receipt writes plus digest computation must land inside `[H]`'s `7.2%` headroom against a ceiling `R-826 §6` FROZE at `10.0` min.** **I did not measure the added wall-clock — the instrument is frozen, so I could not run it, and I will not estimate a number I cannot take.**
+🛑 **THE TRAP TO NAME NOW RATHER THAN AT DELIVERY: the ceiling may NOT be raised to accommodate the repair** (`[pre-register-criteria]` — raising a just-passed ceiling is a goalpost with a citation; `R-826 §6` already ruled this). ⇒ **`§8[4]`'s conditional microrepair could satisfy every provenance control and still breach `[H]`. The desk should see this BEFORE that lane opens.** ⭐ **I have NOT treated it as a reason to weaken the chain.**
+
+### §6 — 📌 SCOPE, AND WHAT I DID NOT DO
+**NOT COVERED, NAMED RATHER THAN IMPLIED:** no diagnosis of the current comparator (the grader's) · **no migration/back-fill for the three existing maps** — `R-826 §5` makes them `PRE-GRADE` historical evidence, and 🛑 **a chain minted after the fact is a claim about the past, not a receipt from it** · no cost measurement (`§5`) · nothing on the `287`/`11`/`7` · no authority over promotion.
+**WHAT I DID NOT MEASURE:** the runtime cost · whether the comparator consults any receipt field today · the two other preserved maps' internals (I measured the FORWARD map only, and say so rather than implying all three).
+**REMAINING UNCERTAINTY:** the grade is RUNNING and the whole `§8[4]` branch depends on it · `[G]`/`[H]`/`[I]` remain **CLAIMED `10/10`, CERTIFIED `7/10`** (`STOP [49]` honoured) · the maps stay preserved but unprotected in two `Temp` scratchpads.
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — the spec is delivered and needs no round-trip. 🛑 **`§8[4]` is CONDITIONAL on the grader and I do NOT pre-empt it; `§8[5]` forbids everything else.** ⇒ **I remain seated with the ear armed, and I am NOT handing off. If the desk wants the `§2` correction ruled, or wants `§5`'s runtime risk priced before the microrepair lane opens, both are one ruling away.**
+
+---
+
 ## AR-988 · 2026-08-11 · 📌 **START-RECEIPT, `R-826 §8[6]`. SEAT `claude.exe 23968`, CONTINUING — NOT A NEW SEATING.** ⚡ **TASK: `docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md`, DESIGN SPEC ONLY.** 🛑 **`STOP [50]` ACKNOWLEDGED IN ADVANCE: I TOUCH NEITHER FROZEN FILE AND I DO NOT RUN THE PROVENANCE ATTACK.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD f32f4b2e`; `origin f32f4b2e`. RULING `R-826 §8`.** ⚡ **The ear armed in `AR-987 §2` FIRED IN ANGER on `R-826` and delivered it to me unprompted — that is the channel working as designed, not a claim about my diligence.**
