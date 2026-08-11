@@ -4,6 +4,71 @@
 
 ---
 
+## AR-968 · 2026-08-11 · ✅✅ **CLUSTER `A` LANDED WITH ALL FOUR CONTROLS EXECUTED. THE THREE `signal_vector` SKIPS ARE GONE AT THE MECHANISM: THE BROAD `except → pytest.skip` IS **DELETED**, DATA IS A DETERMINISTIC IN-TEST FIXTURE, AND `REAL SKIPS` IN THE GOVERNED POPULATION GO `3 → 0`.** ⭐ **AND IT REPRODUCES `C1`'s OUTCOME **WITHOUT** CREDENTIALS — SAME THREE NODES, SAME DIRECTION, ON A CREDENTIAL-LESS BOX.** 🛑 **ONE RESIDUAL SENSITIVITY REPORTED, NOT ABSORBED: THE ENGINE STILL ATTEMPTS AN S3 HTF READ AND DEGRADES TO PASSTHROUGH.**
+
+**SEAT `claude.exe 23692`. `R3` = `3 / 5`, `R3-4` OPEN. CLUSTER FAN-IN: `A` = `1 / 7` (`B`–`G` UNSTARTED, `H` FORBIDDEN).**
+
+### §1 — ✅ THE REPAIR, AT THE MECHANISM
+🛑 **DELETED, not narrowed** (`R-815`: *"do not improve the substring"*): the `except Exception → pytest.skip(f"Data not available: {e}")` clause in all three tests.
+✅ **Data is now `R-799 §5` form `[2]` — a deterministic fixture the test creates** (`_deterministic_ohlcv`, `480` bars, no RNG), fed through **`run_backtest(request, data=...)`** — `[ARTIFACT-SOURCED, `R-815 §6`]` an EXISTING seam **production already exercises** at `walk_forward.py:178`, **not a test-only backdoor.**
+⚖️ **SEMANTIC PRESERVATION: the three assertions are UNCHANGED** — presence, value-range `{-1,0,1}`, JSON-serializability. **I removed an environment escape hatch; I did not weaken, strengthen or re-scope what the tests assert.**
+✅ **NON-VACUITY WITNESSED, because an empty vector would satisfy all three assertions trivially: `[MEASURED]` `len=480`, counts `{0: 112, 1: 192, -1: 176}` — all three values present.**
+
+### §2 — ✅ THE FOUR CONTROLS `R-815` ORDERED, ALL EXECUTED
+```
+[1] PRE-FIX FALSE GREEN   C0: the 3 nodes SKIPPED, reason naming the credentials
+[2] CLOUD INDEPENDENCE    backtester.load_ohlcv PLANTED to raise "REMOTE LOADER
+                          MUST NOT BE CALLED" -> all 3 still PASS.
+                          PLANT RED-PROOFED: fixture removed -> it RAISES, so it
+                          provably sits on the LIVE path, not beside it.
+                          Shipped PERMANENT, not as a throwaway arm.
+[3] THREE MUTATIONS on the REAL emission line backtester.py:5825
+      M1 key removed      -> present_in_result        RED
+      M2 value 2          -> values_valid             RED
+      M3 non-serializable -> is_json_serializable     RED
+    pre-battery sha256 PIN c58c8901..., re-verified after EVERY arm + at end: CLEAN
+[4] UNMUTATED CONTROL     16 passed / 0 skipped
+```
+⭐ **THE NEW CONTROL IS NOT A RUBBER STAMP — it went RED under all three mutations.** ★★★★ **`A GUARD THAT SURVIVES EVERY MUTATION OF THE THING IT GUARDS IS NOT A GUARD.`**
+🛑 **I PATCHED THE CHOKEPOINT, NEVER A CONSUMER** (`[main-spy-both-arms]`: a consumer spy reads zero on BOTH arms and looks like a perfect gate).
+
+### §3 — ✅ POPULATION EFFECT, BY MEMBERSHIP (`[P3]` DISCIPLINE HELD)
+```
+C0    (pre-fix, no creds)  2417 nodes | passed 2381 · failed 31 · REAL SKIPS 3
+postA (fix,     no creds)  2418 nodes | passed 2385 · failed 31 · REAL SKIPS 0
+  new node ...::test_signal_vector_path_never_reaches_the_remote_loader
+  FLIPS 3, ALL skipped -> passed        unchanged 2414
+  FAILURES 31 -> 31  <- NEGATIVE CONTROL: no regression, and I re-ran the WHOLE
+                        population rather than the one file I edited
+```
+⇒ ★★★★★ **THE FIX REPRODUCES ON A CREDENTIAL-LESS BOX EXACTLY WHAT INJECTING LIVE CREDENTIALS PRODUCED IN `C1` — SAME THREE NODES, SAME DIRECTION. THE TEST NO LONGER NEEDS THE OPERATOR'S `.env` TO REPORT ANYTHING.**
+
+### §4 — 🛑 THE RESIDUAL SENSITIVITY, REPORTED RATHER THAN ABSORBED
+🛑 **`[MEASURED HERE, engine stdout]` the repair does NOT reduce the engine's S3 attempts to zero.** The HTF daily-cache build calls the same loader, fails, and **catches it**: `{"event": "backtest.htf_passthrough_engaged", … "all signals pass unfiltered"}`.
+⇒ **The eligibility gate runs in PASSTHROUGH without credentials and FOR REAL with them.** `[MEASURED]` the asserted properties hold identically on both arms, so Cluster `A`'s claim stands — **but the ENGINE'S INTERNAL PATH still differs by environment.**
+🛑 **OUT OF SCOPE and NOT TOUCHED** — `R-815` binds Cluster `A` to tests/evidence with **no production trading-behaviour change**. **Named in the test's own docstring** so no future reader mistakes this green for total cloud independence. ★★★★ **`A TEST THAT PASSES ON BOTH ARMS CAN STILL BE MEASURING TWO DIFFERENT ENGINES.`**
+
+### §5 — ⚠️ TWO MORE INSTRUMENT FAULTS, BOTH MINE, BOTH CAUGHT BEFORE A CLAIM
+```
+[1] my mutation needle ended in '\n' and matched 0 times -- backtester.py is CRLF
+    (8753 pairs, MEASURED). `cat -A` did NOT reveal it; only the byte count did.
+    The harness REFUSED to mutate an ambiguous target rather than guessing. [ps-counting-encoding]
+[2] my FAILED-parser printed "NONE" while the same run said "2 failed" -- -q --tb=no
+    emits no FAILED lines; repaired with -rf. I did NOT read the NONE as a result.
+[3] (also) a non-ASCII glyph crashed the harness on cp1252 mid-battery. Restore had
+    ALREADY been verified against the pin, and I re-checked the sha before continuing.
+```
+⚠️ **A first attempt also set the request dates to fix a bar-count warning — `[MEASURED]` that was the WRONG LAYER: with `data=` passed, `backtester.py:3696` derives the span from `ts_event`, NOT the request. I corrected the fixture's session layout instead and removed the comment that asserted my wrong mechanism.** ★★★★ **`I FIXED THE THING I COULD SEE AND THE WARNING DID NOT MOVE — WHICH IS THE ONLY REASON I FOUND THE LAYER THAT ACTUALLY OWNED IT.`**
+
+### §6 — 🛑 NOT DONE
+🛑 **CLUSTERS `B`–`G` UNSTARTED** — `B` fixture-outcome skips · `C` `wrc_spa` targeted mutation · `D` governed evidence · `E` `SAMPLES_DIR`/corpora · `F` git history · `G` `FIRM_COMMISSIONS`. **`H` FORBIDDEN (`STOP [11]`), not touched.**
+🛑 **The census still carries the OLD single-Boolean column for the other `29` rows** — `R-815`'s six-field schema is applied to rows `13`/`15`/`17` only (census `§10`). The remaining rows get theirs as their clusters land.
+⚠️ **`31` baseline failures NOT analysed, NOT claimed** · **rows `26`–`29` still untested** · **no portability claim anywhere.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Cluster `B` is authorized by the same ruling and I am continuing to it — no round-trip** (`R-815 §7`: *"DO NOT ROUND-TRIP BETWEEN CLUSTERS — file a receipt and continue"*). ⚠️ **NOT A HANDOFF: fan-in `1 / 7`, and the remaining six are UNSTARTED, not blocked.**
+
+---
+
 ## AR-967 · 2026-08-11 · ✅✅ **`ARM C1` RAN ON THE OPERATOR'S WORD AND THE CREDENTIAL AXIS IS NOW ISOLATED BY MEASUREMENT: `C0 → C1` MOVES **EXACTLY `3`** NODES, ALL `skipped → passed`, WITH `2414` UNMOVED.** ✅ **THE POSITIVE CONTROL RAN FIRST AND THE ARM WAS GATED ON IT — `head_object` ON THE EXACT OBJECT, `7,708,321` BYTES.** 🛑🛑 **AND I CORRECT MYSELF: `AR-966 §4`'s *"this box has NO AWS credential source"* WAS FALSE — I ENUMERATED THE STANDARD CHAIN AND NEVER ENUMERATED `.env`.** ⚖️ **`C1` PROVES THE CAUSE; IT DOES **NOT** MAKE THE SKIP PERMISSIBLE.**
 
 **SEAT `claude.exe 23692`. TREE `HEAD` at commit time below. `R3` = `3 / 5`, `R3-4` OPEN.**

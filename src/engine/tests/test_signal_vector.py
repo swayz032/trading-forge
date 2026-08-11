@@ -14,6 +14,7 @@ Tests that backtester.py emits a correct signal_vector field:
 """
 
 import json
+from datetime import datetime, timedelta
 
 import numpy as np
 import polars as pl
@@ -144,6 +145,48 @@ class TestSignalVectorConstruction:
 # ─── Integration test: run_backtest emits signal_vector ──────────────────────
 
 
+def _deterministic_ohlcv(n: int = 480) -> pl.DataFrame:
+    """`R-799 §5` form `[2]`: a DETERMINISTIC FIXTURE THE TEST CREATES.
+
+    `R-815` Cluster A. These integration tests previously loaded MES bars from S3 and
+    converted any data-shaped exception into a `pytest.skip`, so on a box without AWS
+    credentials they reported nothing at all — and a genuine `signal_vector` defect
+    whose message merely mentioned "data" was absorbed by the same clause.
+
+    The frame is fed through `run_backtest(request, data=...)`, an EXISTING seam that
+    PRODUCTION already exercises (`walk_forward.py:178`) — not a test-only backdoor.
+
+    Closes OSCILLATE around their own SMA so `close > sma_5` and `close < sma_5` both
+    occur and the emitted vector contains non-zero entries: an all-zero vector would
+    satisfy the value-range and JSON assertions VACUOUSLY.
+
+    Bars are laid out as SESSIONS, not one contiguous 5-minute run, so the frame's own
+    calendar span satisfies the engine's bar-count sanity check. That check derives its
+    span from `ts_event` -- NOT from the request -- whenever `data=` is passed
+    (`backtester.py:3690-3698`, "derive date span from actual data"), so a contiguous
+    block would ship a standing `Wrong timeframe data?` warning inside a governed test.
+    480 bars over a 5-day span -> expected int(5*252/365)*172 = 516, deviation 6.98%,
+    inside the 10% tolerance at `backtester.py:2684`.
+    """
+    bars_per_session = 80                     # 80 * 5min = 6h40m, an RTH-shaped session
+    sessions = n // bars_per_session
+    ts = [
+        datetime(2020, 1, 2, 9, 30) + timedelta(days=d, minutes=5 * b)
+        for d in range(sessions)
+        for b in range(bars_per_session)
+    ]
+    # deterministic, no RNG: slow drift + fixed-period oscillation
+    closes = [4000.0 + 0.15 * i + 6.0 * float(np.sin(i / 7.0)) for i in range(len(ts))]
+    return pl.DataFrame({
+        "ts_event": ts,
+        "open":   [c - 0.75 for c in closes],
+        "high":   [c + 2.50 for c in closes],
+        "low":    [c - 2.50 for c in closes],
+        "close":  closes,
+        "volume": [1000] * n,
+    })
+
+
 class TestBacktesterSignalVectorIntegration:
     """Integration tests: verify backtester.py run_backtest emits signal_vector."""
 
@@ -169,8 +212,11 @@ class TestBacktesterSignalVectorIntegration:
                 "stop_loss": {"type": "atr", "multiplier": 2.0},
                 "position_size": {"type": "fixed", "fixed_contracts": 1},
             },
-            "start_date": "2020-01-01",
-            "end_date": "2020-03-31",
+            # Bounds match _deterministic_ohlcv()'s own span. NOTE: with data= passed,
+            # the engine's bar-count check reads ts_event, not these (backtester.py:3696)
+            # -- the fixture's session layout is what satisfies it, not these strings.
+            "start_date": "2020-01-02",
+            "end_date": "2020-01-07",
             "slippage_ticks": 1,
             "commission_per_side": 0.62,
             "mode": "single",
@@ -186,14 +232,12 @@ class TestBacktesterSignalVectorIntegration:
 
         config = self._make_config()
 
-        try:
-            request = BacktestRequest(**config)
-            result = run_backtest(request)
-        except Exception as e:
-            # If data isn't available (S3 not accessible in CI), skip gracefully
-            if "S3" in str(e) or "No such file" in str(e) or "data" in str(e).lower():
-                pytest.skip(f"Data not available: {e}")
-            raise
+        # R-815 Cluster A: the broad `except ... pytest.skip("Data not available")`
+        # is DELETED, not narrowed. Data is now a deterministic in-test fixture, so
+        # there is no environment condition left for a skip to describe -- any
+        # exception here is a real defect and must surface as one.
+        request = BacktestRequest(**config)
+        result = run_backtest(request, data=_deterministic_ohlcv())
 
         assert "signal_vector" in result, "signal_vector must be in run_backtest result"
 
@@ -207,13 +251,9 @@ class TestBacktesterSignalVectorIntegration:
 
         config = self._make_config()
 
-        try:
-            request = BacktestRequest(**config)
-            result = run_backtest(request)
-        except Exception as e:
-            if "S3" in str(e) or "No such file" in str(e) or "data" in str(e).lower():
-                pytest.skip(f"Data not available: {e}")
-            raise
+        # R-815 Cluster A: skip clause DELETED; deterministic fixture supplies the data.
+        request = BacktestRequest(**config)
+        result = run_backtest(request, data=_deterministic_ohlcv())
 
         sv = result.get("signal_vector", [])
         assert isinstance(sv, list)
@@ -229,17 +269,54 @@ class TestBacktesterSignalVectorIntegration:
 
         config = self._make_config()
 
-        try:
-            request = BacktestRequest(**config)
-            result = run_backtest(request)
-        except Exception as e:
-            if "S3" in str(e) or "No such file" in str(e) or "data" in str(e).lower():
-                pytest.skip(f"Data not available: {e}")
-            raise
+        # R-815 Cluster A: skip clause DELETED; deterministic fixture supplies the data.
+        request = BacktestRequest(**config)
+        result = run_backtest(request, data=_deterministic_ohlcv())
 
         sv = result.get("signal_vector", [])
         # Should not raise
         json.dumps(sv)
+
+    def test_signal_vector_path_never_reaches_the_remote_loader(self, monkeypatch):
+        """R-815 Cluster A CLOUD-INDEPENDENCE CONTROL — the guard that keeps the skip gone.
+
+        Deleting a `pytest.skip` only removes the SYMPTOM. What must stay true is that
+        this property no longer depends on a remote read at all. So the remote loader is
+        planted to RAISE, and all three asserted properties must still hold.
+
+        Planted at `backtester.load_ohlcv` — the CHOKEPOINT — never at a consumer: a spy
+        on a consumer reads zero on both arms and looks like a perfect gate.
+
+        🛑 HONEST SCOPE, MEASURED — this control does NOT claim the engine makes zero S3
+        attempts. It does not. `[MEASURED]` the HTF daily-cache build calls the same
+        loader and CATCHES the failure, emitting
+        `backtest.htf_passthrough_engaged` and running the eligibility gate in
+        passthrough. That is a REAL residual environment sensitivity: the engine takes a
+        DIFFERENT internal path with and without credentials. It is out of Cluster A's
+        scope (tests/evidence only, no production trading-behaviour change) and is
+        reported rather than silently absorbed. What this control DOES prove is that the
+        asserted signal_vector properties survive a hard remote-loader failure.
+        """
+        import src.engine.backtester as bt
+
+        def _must_not_be_called(*args, **kwargs):
+            raise AssertionError("REMOTE LOADER MUST NOT BE CALLED")
+
+        monkeypatch.setattr(bt, "load_ohlcv", _must_not_be_called)
+
+        from src.engine.config import BacktestRequest
+
+        request = BacktestRequest(**self._make_config())
+        result = bt.run_backtest(request, data=_deterministic_ohlcv())
+
+        sv = result.get("signal_vector", [])
+        assert "signal_vector" in result
+        assert isinstance(sv, list)
+        assert all(v in {-1, 0, 1} for v in sv)
+        json.dumps(sv)
+        # POSITIVE WITNESS that the path actually ran and is not vacuously empty --
+        # an all-zero or empty vector would satisfy every assertion above.
+        assert any(v != 0 for v in sv), "vector is vacuous; the control proved nothing"
 
 
 # ─── Cosine similarity parity tests ──────────────────────────────────────────

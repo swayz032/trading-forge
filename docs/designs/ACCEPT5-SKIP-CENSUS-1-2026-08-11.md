@@ -383,3 +383,68 @@ IS EXACTLY THE RUN THAT PROVES NOTHING ABOUT IT.`**
   because this operator's `.env` happens to hold live keys is exactly the dependency the rule
   forbids** — `C1` proves the CAUSE, it does not make the skip permissible.
 - ⚠️ **NO PORTABILITY CLAIM IS MADE ANYWHERE.** Both arms ran on one box.
+
+## 10. ✅ CLUSTER `A` — LANDED. ROWS `13`/`15`/`17` CARRY A `FINAL_DISPOSITION` AND A `PROOF_RECEIPT`
+
+**Ruling:** `R-815 §7` Cluster `A`. **Schema:** `R-815 §7`'s adopted six fields. 🛑 **The single pristine
+Boolean is RETIRED — `AXIS_VARIED` is written explicitly, because `FIRED = NO` does NOT mean portable
+when the dependency was present in BOTH arms.**
+
+| field | rows `13`, `15`, `17` (`test_signal_vector.py:195/:215/:237`) |
+|---|---|
+| `FIRED_C0` | **YES** — all three skipped, credential chain actively disabled |
+| `FIRED_C1` | **NO** — all three passed with credentials injected (positive control `head_object` = `7,708,321` bytes) |
+| `AXIS_VARIED` | **CREDENTIAL — VARIED.** The only axis of the five that was varied; the other four are `NOT VARIED` (`§6`) |
+| `ROOT_CAUSE` | remote S3 OHLCV read, converted to a skip by a `str(e)` substring test (`"S3" or "No such file" or "data"`) |
+| `FINAL_DISPOSITION` | ✅ **CONVERTED to `R-799 §5` form `[2]`** — a deterministic in-test fixture through `run_backtest(request, data=...)`. **The broad `except → pytest.skip` is DELETED, not narrowed** (`R-815`: do not improve the substring) |
+| `PROOF_RECEIPT` | `§10.1` below — four controls, all executed |
+
+### 10.1 THE FOUR CONTROLS, EXECUTED
+```
+[1] PRE-FIX FALSE GREEN      C0 arm: the 3 nodes SKIPPED, reason names the
+                             credential variables.                      MEASURED
+[2] POST-FIX CLOUD INDEPENDENCE
+      backtester.load_ohlcv PLANTED to raise "REMOTE LOADER MUST NOT BE
+      CALLED" (the CHOKEPOINT, never a consumer) -> all 3 still PASS.
+      RED-PROOF OF THE PLANT ITSELF: same patch with the fixture removed
+      -> AssertionError("REMOTE LOADER MUST NOT BE CALLED") raised, so the
+      plant provably sits on the live path.                             MEASURED
+      Shipped as a PERMANENT test, not a throwaway arm:
+        ::test_signal_vector_path_never_reaches_the_remote_loader
+[3] THREE CONTRACT MUTATIONS on the REAL result path
+      (backtester.py:5825 "signal_vector": signal_vector -- the engine's own
+       emission line, NOT a copy of an assertion)
+      M1 key removed      -> test_signal_vector_present_in_result     RED
+      M2 value 2 injected -> test_signal_vector_values_valid          RED
+      M3 non-serializable -> test_signal_vector_is_json_serializable  RED
+      pre-battery sha256 PIN c58c8901... re-verified after EVERY arm and at
+      the end -> CLEAN. (A killed arm has previously left a mutation live
+      under a stale "restore: OK"; the pin is why that cannot happen here.)
+[4] UNMUTATED CONTROL        16 passed / 0 skipped                     MEASURED
+```
+⭐ **AND THE NEW CONTROL IS NOT A RUBBER STAMP: it went RED under all three mutations too** — a guard
+that survives every mutation of the thing it guards is not a guard.
+
+### 10.2 ✅ POPULATION EFFECT, BY MEMBERSHIP — AND IT REPRODUCES `C1` **WITHOUT** CREDENTIALS
+```
+C0 (pre-fix, no creds)  2417 nodes | passed 2381 · failed 31 · REAL SKIPS 3
+postA (fix, no creds)   2418 nodes | passed 2385 · failed 31 · REAL SKIPS 0
+  new node: ...::test_signal_vector_path_never_reaches_the_remote_loader
+  FLIPS: 3, ALL skipped -> passed (the three signal_vector nodes)
+  unchanged: 2414        <- NEGATIVE CONTROL; failures 31 -> 31, no regression
+```
+⇒ ★★★★★ **THE FIX REPRODUCES, ON A CREDENTIAL-LESS BOX, EXACTLY THE OUTCOME THAT INJECTING LIVE
+CREDENTIALS PRODUCED IN `C1` — SAME THREE NODES, SAME DIRECTION. THAT IS THE POINT: THE TEST NO LONGER
+NEEDS THE OPERATOR'S `.env` TO REPORT ANYTHING.**
+
+### 10.3 🛑 A RESIDUAL SENSITIVITY I AM REPORTING RATHER THAN ABSORBING
+🛑 **`[MEASURED HERE, engine stdout]` the fix does NOT make the engine make zero S3 attempts.** The HTF
+daily-cache build calls the same loader, FAILS, and **catches it**, emitting
+`{"event": "backtest.htf_passthrough_engaged", ... "all signals pass unfiltered"}` — so the eligibility
+gate runs in **passthrough** without credentials and **for real** with them.
+⚠️ **The asserted `signal_vector` properties hold on both paths (`C1` and `postA` agree), so Cluster `A`'s
+claim stands — but the ENGINE'S INTERNAL PATH still differs by environment.**
+🛑 **OUT OF CLUSTER `A`'s SCOPE** (`R-815`: tests/evidence only, **no production trading-behaviour
+change**), so it is **NAMED, NOT TOUCHED**, and recorded in the test's own docstring so the next reader
+cannot mistake a green for full cloud independence. ★★★★ **`A TEST THAT PASSES ON BOTH ARMS CAN STILL BE
+MEASURING TWO DIFFERENT ENGINES.`**
