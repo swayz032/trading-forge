@@ -4,6 +4,25 @@
 
 ---
 
+## AR-996 · 2026-08-11 · 📌 **START-RECEIPT, `R-831 §7[8]`. `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` OPENED.** ⚡ **FIRST OBSERVABLE: THE `12`-ROW TABLE WITH STANDALONE OUTCOMES.** 🛑 **I RESTATE THE ACCEPTANCE CRITERION IN MY OWN WORDS BEFORE STARTING, BECAUSE `R-831 §2` CALLS IT THE MOST MISREADABLE LINE IN THE RULING — AND IT IS THE ONE I COULD MOST EASILY DRIFT FROM.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD d66d7f8c`. RULING `R-831 §7`.**
+
+### 🛑 THE CRITERION, IN MY WORDS, SO A LATER READER CAN CATCH ME DRIFTING
+**I am NOT being asked to make `12` tests pass. I am being asked to make the MEASUREMENT ORDER-INVARIANT.** ⇒ **A node that FAILS in canonical AND FAILS in reverse is STABLE EVIDENCE and SATISFIES `[G-NODE]`.** **The number that must reach `0` is ORDER-DEPENDENT MEMBERSHIP, not the failure count.**
+★★★★★ **`IF I FIND MYSELF MAKING A TEST PASS RATHER THAN MAKING IT ORDER-INDEPENDENT, I HAVE LEFT THE LANE.`**
+🛑 **THE SIX FORBIDDEN FALSE CLOSURES ARE PRE-ACKNOWLEDGED AND I WILL NOT REACH FOR ONE:** sorting back to canonical · disabling `--reverse-nodes` · filtering the `12` from the comparator · `xfail`-ing them for moving · picking whichever order has more passes · turning a `FAIL` into a `PASS` without removing the ordering dependency. ⇒ **If `0` is unreachable without one of them, I STOP AND REPORT** (`§7[6]`).
+🛑 **`STOP G` PRE-ACKNOWLEDGED: a family-`D` (intentional ordered scenario) claim needs a PRE-EXISTING COMMITTED contract. I will NOT infer a scenario from the reversal behaviour itself — that is the observation, not the contract.**
+
+### ⚡ PLAN, AND ITS SCOPE FENCE
+**`ARM 1` normal file execution · `ARM 2` reversed node execution · `ARM 3` each moving node ALONE · `ARM 4` minimum predecessor→victim pair ONLY where `1`–`3` do not decide it.** 🛑 **NO exhaustive permutation.**
+🛑 **SCOPE, HELD TIGHT: the `12` nodes and their DIRECT shared state. NOT the `53` failures, NOT the old `287`, NOT a test-suite cleanup, NOT the certifying five arms, NEITHER worktree removed.**
+⚖️ **THE DESK'S HEAD START IS INHERITED AS A CLAIM, NOT A RESULT: `R-830 §3`/`R-831 §3` measured the three `passed→skipped` nodes skipping on a `sys.modules` predicate (family `A`, mechanism at the line) and REFUTED the env-leak hypothesis for the five `TestVixAtrMultiplier` nodes. `R-831 §3` orders me to RE-MEASURE rather than inherit, and I will** (`[red-path-decay]`).
+**GROUPING DISCIPLINE: I group by CAUSAL MECHANISM. Three shared causes beat twelve bespoke patches** (`§3`), **and `STOP [56]` stands — at least three shapes, one disposition may not cover them.**
+**RECOMMENDATION: `PROCEEDING`.** **ETA: the table within this working block.**
+
+---
+
 ## AR-995 · 2026-08-11 · 📌 **DECLINE-RECEIPT: I DECLINE `R-830 §5`'s OPTIONAL HANDOFF AND STAY SEATED.** ⚡ **NOTHING MEASURED HERE — THIS IS A STATE CHANGE, AND A DECLINE OWES A RECEIPT EXACTLY LIKE A START.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD f486a743` = `origin`. RULING `R-830`, which orders me nothing.**
