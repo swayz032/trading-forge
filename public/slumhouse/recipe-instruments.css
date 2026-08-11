@@ -20,6 +20,10 @@
 .instrument-ghost { width:76%; height:92px; display:flex; align-items:flex-end; justify-content:center; gap:9px; perspective:500px; }
 .instrument-ghost span { width:13%; height:var(--h,44%); border:1px solid rgba(163,255,18,.42); background:linear-gradient(90deg,rgba(72,110,20,.3),rgba(163,255,18,.12)); box-shadow:5px -4px 0 rgba(53,79,18,.45),0 0 12px rgba(163,255,18,.1); transform:skewY(-5deg); }
 .instrument-ghost span:nth-child(1){--h:26%}.instrument-ghost span:nth-child(2){--h:48%}.instrument-ghost span:nth-child(3){--h:72%}.instrument-ghost span:nth-child(4){--h:58%}.instrument-ghost span:nth-child(5){--h:84%}
+.instrument-ghost--backtest { height:150px; align-items:center; transform-style:preserve-3d; }
+.instrument-ghost--backtest span { width:16%; height:62px; border-radius:6px; transform:rotateX(55deg) rotateZ(-12deg) translateY(var(--float,0)); animation:backtest-float 3.8s ease-in-out infinite; box-shadow:10px 10px 0 rgba(35,55,10,.55),0 0 20px rgba(163,255,18,.18); }
+.instrument-ghost--backtest span:nth-child(2){--float:-22px;animation-delay:-.7s}.instrument-ghost--backtest span:nth-child(3){--float:12px;animation-delay:-1.4s}.instrument-ghost--backtest span:nth-child(4){--float:-12px;animation-delay:-2.1s}.instrument-ghost--backtest span:nth-child(5){--float:20px;animation-delay:-2.8s}
+@keyframes backtest-float { 0%,100%{translate:0 -6px} 50%{translate:0 10px} }
 .instrument-ghost--jitter-dials span,.instrument-ghost--regimes span { width:46px; height:46px; border-radius:50%; transform:rotate(-35deg); border-width:4px; background:conic-gradient(rgba(163,255,18,.5) 0 22%,#111 22%); }
 .instrument-ghost--crash span { width:52px; height:64px; clip-path:polygon(50% 0,92% 16%,82% 76%,50% 100%,18% 76%,8% 16%); }
 .instrument-ghost--drift span { width:15%; border-radius:50% 50% 3px 3px; }

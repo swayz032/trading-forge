@@ -736,7 +736,6 @@
     function renderBacktest(r) {
       const { el } = SH;
       const bt = r.backtest || {};
-      const hasBacktestEvidence = Number(bt.tradesCount) > 0;
       const panel = el("div", { class: "r-panel r-instrument-panel" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
@@ -745,17 +744,6 @@
           "If the bot had been running on the ",
           el("b", {}, "last 12 months"),
           " of real market data, here's what would've happened. None of it actually did.",
-        ),
-        el("div", { class: "r-bt-stats" },
-          kpi("Total made", hasBacktestEvidence ? bt.totalMade : "—", "green", hasBacktestEvidence ? `across ${bt.tradesCount} plays` : "awaiting backtest"),
-          kpi("Per play", hasBacktestEvidence ? bt.perPlay : "—", null, "average win-or-lose"),
-          kpi("Worst day", hasBacktestEvidence ? bt.worstDay : "—", "red", "single rough session"),
-          kpi("Winning days", hasBacktestEvidence ? String(bt.winningDays) : "—", null, "of trading days"),
-        ),
-        el("div", { class: "r-quant-row" },
-          quantChip("Win Rate", hasBacktestEvidence ? bt.winRatePct + "%" : "—", hasBacktestEvidence ? winRateSub(bt.winRatePct) : "awaiting backtest"),
-          quantChip("Sharpe", hasBacktestEvidence ? fmt2(bt.sharpeRatio) : "—", hasBacktestEvidence ? sharpeSub(bt.sharpeRatio) : "awaiting backtest"),
-          quantChip("R:R", hasBacktestEvidence ? fmt2(bt.riskReward) + "x" : "—", hasBacktestEvidence ? rrSub(bt.riskReward) : "awaiting backtest"),
         ),
       );
       panel.appendChild(window.RecipeInstruments.renderBacktest(r));

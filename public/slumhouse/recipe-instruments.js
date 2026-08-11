@@ -54,9 +54,19 @@
     }).join("") + "</div>";
   }
 
+  function displayCards(evidence) {
+    return '<div class="instrument-readouts backtest-metrics">' + Object.keys(evidence || {}).filter(function (key) {
+      return evidence[key] !== null && evidence[key] !== undefined && evidence[key] !== "";
+    }).map(function (key) {
+      return '<div><small>' + key.replace(/([A-Z])/g, " $1") + '</small><strong>' + String(evidence[key]) + "</strong></div>";
+    }).join("") + "</div>";
+  }
+
   function renderBacktest(recipe) {
     var bt = recipe && recipe.backtest || {};
-    return panel("backtest", { curve: bt.equityCurve }, '<div class="instrument-screen">' + bars(bt.equityCurve) + "</div>" + cards({ sharpe: bt.sharpeRatio, profitFactor: bt.profitFactor, drawdown: bt.maxDrawdownPct }));
+    var measured = Number(bt.tradesCount) > 0;
+    var metrics = measured ? { totalMade: bt.totalMade, perPlay: bt.perPlay, worstDay: bt.worstDay, winningDays: bt.winningDays, winRate: bt.winRatePct + "%", sharpe: bt.sharpeRatio, riskReward: bt.riskReward + "x", trades: bt.tradesCount } : {};
+    return panel("backtest", { curve: bt.equityCurve, trades: measured ? bt.tradesCount : null }, '<div class="instrument-screen">' + bars(bt.equityCurve) + "</div>" + displayCards(metrics));
   }
 
   function renderGate(recipe, name) {

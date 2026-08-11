@@ -58,11 +58,14 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("Promise.allSettled");
     expect(html).toContain('class: "r-panel r-instrument-panel"');
     expect(html).not.toContain('class: "r-gate-body"');
+    expect(html).not.toContain('el("div", { class: "r-bt-stats" }');
+    expect(html).not.toContain('el("div", { class: "r-quant-row" }');
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderGate(r, name))");
     expect(html).not.toContain("left.appendChild(instrument)");
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
     expect(css).toContain("appearance: none");
     expect(css).toContain("instrument-ghost");
+    expect(css).toContain("instrument-ghost--backtest");
     expect(css).toContain("background:#000");
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
