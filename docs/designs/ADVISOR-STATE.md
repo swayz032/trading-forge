@@ -9,10 +9,23 @@
 > Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
 > debt still open.**
 
-## SEAT — 2026-08-11 ~06:55Z · desk `claude.exe 18244` · **LIVE BLOCK, TAKE THIS ONE**
+## SEAT — 2026-08-11 ~07:40Z · desk `claude.exe 18244` · **LIVE BLOCK, TAKE THIS ONE**
 
-**Ledger at `R-821`** (`d3b01e68`, PUSHED, `ls-remote` VERIFIED). **Newest AR: `AR-978`, RULED.**
-**NO UNRULED AR BACKLOG.** Worker: **`claude.exe 27448`** (born `02:13:51`), ACTIVE, not blocked.
+**Ledger at `R-824`** (`92d693c7`, **COMMITTED, NOT PUSHED — deliberately, see below**). **Newest AR: `AR-982`, RULED. NO UNRULED BACKLOG.** Worker: **`claude.exe 27448`** (born `02:13:51`), ACTIVE, not blocked, on real `[F]`.
+🛑🛑 **THE DESK IS A SECOND WRITER ON THIS TREE AND MUST BEHAVE LIKE ONE (`R-823 §6`).** `[MEASURED]` **EVERY ledger COMMIT prints `Unstaged files detected. Stashing unstaged files…` — my writes stash the WORKER's working tree, not just my pushes; the pre-PUSH hook is worse (it runs the inventory fixer and produced one observed rollback).** ⇒ **DO NOT write the ledger while the worker has in-flight instrument or `AR` edits, and DEFER THE PUSH — `R-822` and `R-823` both reached origin on the WORKER's own push, so deferring costs nothing.** ⚠️ **`AR-980 §3`'s lost edit: I tested whether I caused it — `[MEASURED]` NO (my stash captured the file but contains `0 hookwrapper` / `0 --accept5-restore-early`), window narrows to after `03:19:04`. 🛑 CAUSE STAYS `[UNEXPLAINED]`; NOT hunted further, by ruling.**
+
+### RATIFY-1 SCORECARD (the live object — `R3-4`'s validity blocker)
+```
+[A] PASS(prototype)   [B] PASS(FILE layer only -- 2419 NOT established)
+[C] LANDED -- strict fail-closed schema + commit SHA + JSON/JUnit SHA256 OWED
+[D] validator 5/5 -- ONE invalid child through the REAL PARENT path OWED
+[E] SATISFIED (RATIFY-[E]: 7 diffs shared-process, 0 isolated BOTH orders)
+[F] throwaway only -- REAL governed arm IS THE NEXT TASK
+[J] CLOSED_WITH_BOUNDED_FINDING (84 governed nodes, aware boundary changes 0;
+    governed NEGATIVE arm did NOT discriminate -- trigger absent, NOT a pass)
+[G][H][I] UNSTARTED.   NO FULL GOVERNED 108-CHILD / 2419-NODE SET HAS EXECUTED.
+acceptance_runner.py UNCHANGED. Nothing promoted. No seal minted.
+```
 🔁 **Seat rolls this session (all PLANNED, `[seat-rolls-are-swaps]`, none investigated):** desk
 `24040` → `18244` · worker `23692` → `6536` → `27448`. **Match IMAGE NAME + BIRTH TIME, never bare PID.**
 👂 **Desk ear ARMED** on `AGENT-REPORTS.md` (`Monitor`, persistent, red-proofed both ends, backfilled
@@ -20,6 +33,14 @@ at `AR-973`/`c2193868`). ⚠️ **Two orphaned `bash.exe` `ruling-ear.sh` loops 
 parents — REPORT, DO NOT KILL (`§4a[5]`); they reach nobody.**
 
 ## AUTHORIZED NOW
+**REAL `[F]`** (`R-824 §6`): ONE governed test-time `sys.modules` polluter, disposable worktree, EXACT
+NODE IDs. ARM A (Layer 2 OFF) **must DISCRIMINATE** — a later governed node OBSERVES the leak; ARM B
+(ownership-aware ON) — it does not. 🛑 **ONE witness, NOT a 28-file campaign. If ARM A does not
+discriminate, SAY SO — do not convert it into a pass.** **THEN close `[C]` then `[D]` (`R-823 §5`), THEN
+STOP at the seam and answer `R-822 §6`'s four questions in the AR before `[G]`.**
+🛑 **`STOP [42]`: the `[G]` forward/reverse pair is ATOMIC — never rotate between the two halves.**
+
+### (superseded context) the original packet
 **`ACCEPT5-PROCESS-ISOLATION-RATIFY-1`, obligations `[A]`–`[J]`** (`R-820 §5`, `R-821 §5`). Two-layer
 isolation: **one pytest subprocess per governed file** + **runner-owned per-test `sys.modules`
 restoration inside each child**. Prototype → prove `[A]`–`[J]` → only then promote to authority.
@@ -65,7 +86,12 @@ synthetic `_gitref_*` key in `_load_module_at_ref` shadows no production module.
 `[37]` the oracle is ORDER-INDEPENDENT EXACT NODE OUTCOMES — **never tune toward the old `31`** ·
 `[38]` after ANY blocked ledger write, `grep` for the ruling ID — a guard block is an UNLANDED ruling ·
 `[39]` Cluster `D` is `2` false-greens `+ 1` hardening, **never `3`** · `[40]` a count of code is
-**anchored** (`^\s*`) or it is not a count of code.
+**anchored** (`^\s*`) or it is not a count of code · `[41]` `108` children ≠ `2419` nodes ·
+`[42]` the `[G]` ordered pair is ATOMIC · `[43]` *"`git status` is clean"* is NOT a forensic absence
+proof — it describes tracked/selected state per the options used · `[44]` the `7` UNEARNED GREENS are
+NOT adjudicated; **keep the reds, tune nothing** · `[45]` **`RATIFY-[E]` ≠ `CLUSTER-E`** — never a bare
+`E` · `[46]` never write *"the real `[J]` negative control passed"* — it did NOT discriminate ·
+`[47]` `9` fixtures / `5` source files / `4` child files / `84` nodes are FOUR different numbers.
 
 ## OPERATOR-FACING
 **Nothing is waiting on him.** No spend, no capital, no irreversible act pending. **He is the courier to
