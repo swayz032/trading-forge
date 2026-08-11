@@ -4,6 +4,18 @@
 
 ---
 
+## AR-988 · 2026-08-11 · 📌 **START-RECEIPT, `R-826 §8[6]`. SEAT `claude.exe 23968`, CONTINUING — NOT A NEW SEATING.** ⚡ **TASK: `docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md`, DESIGN SPEC ONLY.** 🛑 **`STOP [50]` ACKNOWLEDGED IN ADVANCE: I TOUCH NEITHER FROZEN FILE AND I DO NOT RUN THE PROVENANCE ATTACK.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD f32f4b2e`; `origin f32f4b2e`. RULING `R-826 §8`.** ⚡ **The ear armed in `AR-987 §2` FIRED IN ANGER on `R-826` and delivered it to me unprompted — that is the channel working as designed, not a claim about my diligence.**
+
+**TASK** — `R-826 §8[2]`: specify the durable evidence chain (per-child receipt → ORDERED parent manifest cryptographically naming those receipts → aggregate DERIVED from the manifest → comparator VERIFIES the chain), with `§8[3]`'s four controls stated **as PROPERTIES, not mechanisms**, and a DERIVED verdict — 🛑 **no `provenance_verified=true` Boolean.**
+**FIRST OBSERVABLE** — the spec file's first committed draft at `docs/designs/RATIFY1-PROVENANCE-CHAIN-SPEC.md`. **ETA: within this working block.**
+**FROZEN-SURFACE DISCIPLINE** — 🛑 **I will READ `g_order_identity.py` and `accept5_isolated_runner.py` to specify against their real field names, and I will EDIT NEITHER.** **Reading is not editing; `STOP [50]` freezes the instrument, not the documentation of it.** 🛑 **I will NOT execute `R-826 §3`'s copied-aggregate attack — that is the grader's surface and a doer's pre-emptive result muddies `doer ≠ grader`.**
+**SCOPE HELD** — nothing promoted · no seal · `CLUSTER-E` HELD · the `287`/`11`/`7` untouched · the three maps NOT committed as authority (`R-826 §5`) and NOT re-preserved or re-hashed (DONE in `AR-987`, and `R-826 §5` explicitly forbids repeating it).
+**RECOMMENDATION: `PROCEEDING`** — `R-826 §8` is self-contained, no round-trip needed, and I am inside it.
+
+---
+
 ## AR-987 · 2026-08-11 · 📌 **START-RECEIPT, NEW SEAT `claude.exe 23968`. `R-825 §6`'s AUTHORIZATION IS **EXHAUSTED** — `AR-986` DELIVERED `[G]`/`[H]`/`[I]` AND NO RULING HAS GRADED IT.** 🛑🛑 **AND I FOUND A REAL EVIDENCE-DURABILITY HAZARD: `AR-986`'s THREE `aggregate.json` MAPS — THE ENTIRE EVIDENCE BASE FOR `[G]`/`[H]`/`[I]` — EXISTED ONLY INSIDE THE SCRATCHPAD OF A SEAT THAT IS NOW DEAD. PRESERVED, HASH-MATCHED, AND REPRODUCED.** ⚡ **ONE ASK: THE GRADER WORD.**
 
 **SEAT `claude.exe 23968`, born `07:38:38` `[MEASURED HERE, Win32_Process + parent walk from my own shell]`. TREE `wt-h1-wave4-20260712`. `HEAD a0d54ab3`; `origin a0d54ab3`.** 🛑 `acceptance_runner.py` UNCHANGED; **NOTHING PROMOTED**; no seal moved; `CLUSTER-E` HELD; the `287`/`11`/`7` PnL nodes UNTOUCHED.
