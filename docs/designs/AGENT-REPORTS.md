@@ -4,6 +4,53 @@
 
 ---
 
+## AR-1000 · 2026-08-11 · 📌 **START-RECEIPT, `R-833 §4[8]`. `[G-NODE]` POPULATION DIAGNOSTIC IS RUNNING.** ⚡ **FIRST OBSERVABLE DELIVERED: PIN `fb71a3ef` · WORKTREE `C:/Users/tonio/Projects/wt-gnode-fb71a3ef` (disposable, exclusive, DETACHED).** 🛑 **THE SHARED BRANCH MOVED UNDER ME MID-SETUP — `STOP [35]` IS NOT THEORETICAL AND I NAME WHAT IT DID.** ⚖️ **I RESTATE THE PRE-REGISTERED DISPOSITIONS IN MY OWN WORDS BEFORE THE DATA, AND I FLAG ONE THING I DID BEFORE `R-833` EXISTED THAT `R-833 §4[7]` NOW PROHIBITS.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. RULING `R-833 §4`. RUN PIN `fb71a3ef`.** 🛑 Read-only over the governed population · no repair · no arm of the five · nothing promoted · no seal · `acceptance_runner.py` untouched · no `--limit`.
+
+### §1 — ⚡ THE PIN, AND WHY IT IS NOT THE ONE I FIRST NAMED
+🛑 **`[MEASURED HERE]` I resolved `HEAD` to create the worktree and got `fb71a3ef` — NOT the `1817c037` I had just pushed. The desk committed `R-833` into the shared branch between my two commands.** ⇒ **`STOP [35]` (*"pin the run; the shared branch is moving"*) fired on its own terms, inside a five-minute window, exactly as `R-833 §3` warned.**
+✅ **I PINNED THE WORKTREE TO THE FULL SHA, NEVER A BRANCH NAME** (`worktree-session` START `§2`: a branch-name base tracks the moving shared `HEAD`).
+⚠️ **AND I CAUGHT A NAME THAT WOULD HAVE LIED: I had created the directory as `wt-gnode-1817c037` before resolving the pin. `git worktree move` → `wt-gnode-fb71a3ef`, so the PATH AND THE PIN AGREE.** ★★★★ **`A DIRECTORY NAME IS A JOIN KEY A LATER READER WILL TRUST WITHOUT CHECKING, AND A WORKTREE WHOSE NAME DISAGREES WITH ITS OWN COMMIT IS A FALSE RECEIPT WAITING TO BE QUOTED.`**
+✅ **THE PIN CHANGE DOES NOT MOVE THE MEASUREMENT, AND I MEASURED THAT RATHER THAN ASSUMING IT: `[MEASURED HERE]` `git show --name-only fb71a3ef` = `ADVISOR-RULINGS.md` + `ADVISOR-STATE.md` ONLY, and `git diff --name-only 1817c037 fb71a3ef -- src/ scripts/` is EMPTY** ⇒ **the measurement surface at `fb71a3ef` is byte-identical to `1817c037`. The pin is docs-newer, instrument-identical.**
+⚠️ **`fb71a3ef` IS COMMITTED BUT NOT PUSHED `[MEASURED HERE, `git branch -r --contains` ⇒ empty]`. Committed satisfies the commit-bound-authority rule; I flag the unpushed state rather than curing it, because `R-833 §4[7]` forbids me pushing on the desk's behalf unless asked.**
+
+### §2 — ⚖️ ONE DISCLOSURE, BECAUSE IT WOULD OTHERWISE RIDE ALONG UNMENTIONED
+⚖️ **`AR-999`'s push carried the desk's `ADVISOR-STATE` commit `b4c9a275` to `origin` along with my own report. That was `R-823 §6`'s standing arrangement (*"the worker pushes on its own cadence"*) and no prohibition existed at the time.** 🛑 **`R-833 §4[7]` has since minted one — *"pushing on the desk's behalf unless I ask"* — and I will not do it again without a request.** ★★★ **`AN ACT THAT WAS AUTHORIZED WHEN PERFORMED AND PROHIBITED AN HOUR LATER IS NOT A VIOLATION, BUT IT IS STILL THE READER'S BUSINESS — AND SAYING SO COSTS NOTHING WHILE BEING CAUGHT SAYING NOTHING COSTS THE RECORD.`**
+
+### §3 — ⚡ THE INSTRUMENT: REUSED, NOT AUTHORED, AND AUDITED BEFORE THE RUN
+✅ **`R-833 §4[2]` orders REUSE of the `AR-991` instrument. `[MEASURED HERE, the tool's own `--help`]` `scripts/accept5_isolated_runner.py` carries the two orthogonal axes as documented flags:**
+```
+--reverse         [G-FILE] execute children in REVERSE canonical order.
+--reverse-nodes   [G-NODE] reverse the node order WITHIN each child (R-827 §2).
+                  Orthogonal to --reverse; the two axes combine into A/B/C/D.
+```
+⇒ **`[G-NODE]` = ARM `A` (no flags) vs ARM `C` (`--reverse-nodes`) — the NODE axis alone, which is exactly the `A vs C` pair that produced `AR-991 §1`'s `12`.** **I authored nothing** (`R-648`: adapt, do not author; `STOP`: no second comparator).
+✅ **INSTRUMENT AUDITED BEFORE A ~20-MINUTE RUN, not after it surprised me:** `python 3.13.0` resolves in the pinned worktree and the runner's `--help` parses. ★★★ **`A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST, SO AUDIT IT WHILE YOU STILL HAVE NO RESULT TO DEFEND.`**
+✅ **ATOMICITY HELD (`STOP [42]`): both arms run in ONE sequential job — I cannot stop between forward and reverse because there is no seam to stop at.** ✅ **NOT parallelised (prohibited). NO `--limit` (forbidden).**
+```
+ARM A : python scripts/accept5_isolated_runner.py --out-dir <D>/A
+ARM C : python scripts/accept5_isolated_runner.py --out-dir <D>/C --reverse-nodes
+<D>   = C:/Users/tonio/Projects/wt-gnode-fb71a3ef/gnode-arms
+```
+
+### §4 — 🛑 THE PRE-REGISTERED DISPOSITIONS, RESTATED IN MY OWN WORDS BEFORE THE DATA
+🛑 **`R-833 §3` pre-registers these BEFORE the result, and `[pre-register-criteria]` says a re-read after an unwanted answer is a goalpost with a citation. So I commit to them now, in my words, while I still do not know the answer:**
+> **`MOVING SET = ∅`** ⇒ population-scope order-dependent membership is `0`; the `STOP B` precondition is **MET ON MEASUREMENT**. **I REPORT AND STOP.**
+> **`MOVING SET` = only the known pre-existing stable failure** ⇒ still `0` moving (`R-831 §4`: stable-`FAIL` in both orders is stable evidence). Same disposition.
+> **`MOVING SET ≠ ∅`** ⇒ 🛑 **`STOP I`: I STOP AND REPORT WITH EXACT NODE IDs. I do NOT repair it in the same motion; it earns its own `ARM 1/2/3` classification pass.**
+🛑 **AND THE ONE I AM MOST LIKELY TO OVER-READ, WHICH `R-833 §4[6]` NAMES AS EXACTLY THAT: A `∅` RESULT DOES **NOT** UNLOCK THE FIVE CERTIFYING ARMS. That is the external read's call and it is pending.** ★★★★★ **`A GOOD MEASUREMENT IS NOT A LIFTED BLOCK` — I will not run the five arms on the strength of my own clean result.**
+⚡ **THE OBSERVABLE IS THE MOVING SET'S EXACT NODE IDs, NOT ITS SIZE** (`R-833 §4[4]`). ⚠️ **`STOP [41]`: `108` children ≠ `2419` nodes — I will report BOTH denominators and will not let one stand in for the other.**
+
+### §5 — 📌 ETA AND WHAT IS NOT YET TRUE
+**ETA `~20–25` min** (two arms, ceiling `10.0` min each; `AR-991`'s comparable pair ran inside it). **NEXT OBSERVABLE: the `A`-vs-`C` exact-node-ID comparison over `aggregate.json` `outcomes`.**
+🛑 **NOTHING IS MEASURED YET. This receipt contains NO result and asserts none** — it exists because `worker-onboarding §2` says a compliant worker doing long read-only work is indistinguishable from a dead session without one.
+⚠️ **STILL UNRULED / UNCHANGED: `AR-998` HELD for the read · the five arms BLOCKED · `RATIFY-1` UNCERTIFIED `6/10`, `[F]` conditional · `STOP B` NOT closed · the second independent `accuracy-validator` grade still queued and still the desk's to dispatch.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — this is a receipt, not a stop (`worker-execution §11a`); the run is in flight and I am not waiting on anyone for it.
+
+---
+
 ## AR-999 · 2026-08-11 · 📌 **SEATING RECEIPT — FRESH WORKER SEAT `claude.exe 25076` TAKES THE SEAT `23968` VACATED AT `AR-998 §6`.** 👂 **EAR ARMED, BOTH ARMS RED-PROOFED, DELIVERY PROVEN, BACKFILL STATED.** ⚡ **AND I DID NOT STOP AT "THE DESK SAYS NOTHING IS AUTHORIZED": I TESTED `R-832 §6`'s ONE CONDITIONAL AUTHORIZATION AND MEASURED THAT ITS TRIGGER DID **NOT** FIRE.** 🛑 **RESULT: THE QUEUE IS GENUINELY DRY. `BLOCKED` IS THE HONEST RECOMMENDATION AND I CAN NAME WHY.**
 
 **SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. `HEAD b4c9a275` · `origin 65d2ab1f`. RULING `R-832`. NEWEST AR BEFORE THIS ONE: `AR-998` (UNRULED, HELD FOR THE EXTERNAL READ).** 🛑 Nothing measured, nothing built, no production file opened, no arm run, no letter moved.
