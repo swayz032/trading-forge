@@ -88,7 +88,7 @@ def _required_nodes_for(target_file):
 
 
 def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
-              timeout=900, head_sha=None):
+              timeout=900, head_sha=None, ordinal=None, reverse_nodes=False):
     """Execute ONE governed file in its own interpreter and return its receipt."""
     run_id = uuid.uuid4().hex
     if head_sha is None:
@@ -99,17 +99,21 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
     child_dir.mkdir(parents=True, exist_ok=False)
     out_json = child_dir / "acceptance-run.json"
     out_xml = child_dir / "acceptance-run.xml"
+    out_seq = child_dir / "node-sequence.json"
 
     cmd = [sys.executable, "-m", "pytest", *targets,
            "-q", "--no-header", "-p", "no:cacheprovider",
            "-p", "scripts.acceptance_pytest_plugin",
            "-p", "scripts.accept5_isolation_plugin",
            f"--acceptance-out={out_json}", f"--junitxml={out_xml}",
-           f"--acceptance-run-id={run_id}"]
+           f"--acceptance-run-id={run_id}",
+           f"--accept5-node-sequence-out={out_seq}"]
     if layer2:
         cmd.append("--accept5-layer2")
     if blind:
         cmd.append("--accept5-ownership-blind")
+    if reverse_nodes:
+        cmd.append("--accept5-reverse-nodes")
 
     started = time.time()
     try:
@@ -126,6 +130,12 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
         # the exact commit it measured -- a receipt that cannot name its own tree
         # is a claim about "some checkout", which is what R3 exists to remove.
         "head_sha": head_sha,
+        # R-827 §8[4] / F-6: the child's own pin is now PERSISTED and compared,
+        # not merely re-derived and dropped. And the EXECUTION ORDINAL is what
+        # lets `reverse` be DERIVED at verification instead of believed.
+        "ordinal": ordinal,
+        "reverse_nodes": bool(reverse_nodes),
+        "node_sequence": [],
         "child_dir": str(child_dir), "returncode": rc, "elapsed_s": round(elapsed, 2),
         "timed_out": timed_out, "problems": [], "outcomes": {}, "collected": [],
         # Artifact HASHES, not merely paths. A path proves a file was named; a
@@ -265,7 +275,24 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
     if unexecuted:
         P.append(f"{len(unexecuted)} node(s) collected but never executed in "
                  f"{target_file}: {unexecuted[:3]}")
-    for label, path in (("acceptance-run.json", out_json), ("acceptance-run.xml", out_xml)):
+    # ---- [G-NODE] WITNESS: the order the nodes ACTUALLY RAN ----------------
+    # Read from the child's own artifact rather than re-derived from `collected`,
+    # so a child that executed in an order other than the one it claims stays
+    # detectable. Fail-closed like every other field here.
+    if not out_seq.is_file():
+        P.append(f"the node-sequence witness was not written for {target_file} "
+                 f"-- [G-NODE] cannot be derived, so the child is refused")
+    else:
+        try:
+            _seq = json.loads(out_seq.read_text(encoding="utf-8"))
+            receipt["node_sequence"] = list(_seq["node_sequence"])
+        except Exception as exc:                               # noqa: BLE001
+            P.append(f"the node-sequence witness for {target_file} is unreadable "
+                     f"or malformed: {exc!r}")
+
+    for label, path in (("acceptance-run.json", out_json),
+                        ("acceptance-run.xml", out_xml),
+                        ("node-sequence.json", out_seq)):
         if path.is_file():
             receipt["artifact_sha256"][label] = hashlib.sha256(
                 path.read_bytes()).hexdigest()
@@ -301,7 +328,11 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, default=0,
                     help="Run only the first N children (prototype smoke arms).")
     ap.add_argument("--reverse", action="store_true",
-                    help="[G] execute children in REVERSE canonical order.")
+                    help="[G-FILE] execute children in REVERSE canonical order.")
+    ap.add_argument("--reverse-nodes", action="store_true",
+                    help="[G-NODE] reverse the node order WITHIN each child "
+                         "(R-827 §2). Orthogonal to --reverse; the two axes "
+                         "combine into the four final arms A/B/C/D.")
     ap.add_argument("--no-layer2", action="store_true")
     ap.add_argument("--ownership-blind", action="store_true")
     ap.add_argument("--child-timeout", type=int, default=900)
@@ -336,7 +367,8 @@ def main(argv=None):
     for i, f in enumerate(files, 1):
         r = run_child(f, plan["children"][f], run_root,
                       layer2=not args.no_layer2, blind=args.ownership_blind,
-                      timeout=args.child_timeout)
+                      timeout=args.child_timeout, head_sha=head, ordinal=i,
+                      reverse_nodes=args.reverse_nodes)
         receipts.append(r)
         flag = "!!" if r["problems"] else "  "
         print(f"{flag} [{i:3d}/{len(files)}] rc={str(r['returncode']):>4} "
@@ -346,6 +378,45 @@ def main(argv=None):
     agg = aggregate(receipts)
     bad = [r for r in receipts if r["problems"]]
 
+    # ---- THE PROVENANCE CHAIN (R-827 §8[4], closing F-1) -------------------
+    # Until now every one of these receipts -- run_id, per-child head,
+    # artifact_sha256 -- was computed and then DISCARDED when main() returned.
+    # `[MEASURED BY GRADED INSTRUMENT, F-1]` that is why a copied aggregate with
+    # one flipped byte, sitting in a directory containing NO child artifacts at
+    # all, certified 15/15 OK and exit 0.
+    #
+    #   THE PROVENANCE WAS NEVER MISSING FROM THE RUN. IT WAS MISSING FROM THE
+    #   ARTIFACT, AND ONLY THE ARTIFACT SURVIVES TO BE COMPARED.
+    #
+    # LAYER 1: one receipt file per child, individually digest-addressable.
+    receipts_dir = run_root / "receipts"
+    receipts_dir.mkdir(parents=True, exist_ok=False)
+    entries = []
+    for r in receipts:
+        rp = receipts_dir / f"{r['ordinal']:04d}-{_slug(r['file'])}.json"
+        rp.write_text(json.dumps(r, indent=2, sort_keys=True), encoding="utf-8")
+        entries.append({
+            "ordinal": r["ordinal"], "target": r["file"],
+            "receipt_sha256": hashlib.sha256(rp.read_bytes()).hexdigest(),
+            "node_sequence_sha256": hashlib.sha256(
+                json.dumps(r["node_sequence"]).encode("utf-8")).hexdigest(),
+        })
+
+    # LAYER 2: the ORDERED manifest. `entries` is a SEQUENCE, never sorted --
+    # serialising it sorted would destroy the only witness to execution order.
+    arm_end_head = _runner._git_head()
+    manifest = {
+        "arm_start_head": head,
+        "arm_end_head": arm_end_head,
+        "population_digest": hashlib.sha256(
+            json.dumps(sorted(plan["children"])).encode("utf-8")).hexdigest(),
+        "reverse": bool(args.reverse),
+        "reverse_nodes": bool(args.reverse_nodes),
+        "entries": entries,
+    }
+    mpath = run_root / "manifest.json"
+    mpath.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
     summary = {
         "head": head, "run_root": str(run_root), "children": len(files),
         "wall_s": round(wall, 1), "nodes": agg["n_nodes"],
@@ -353,11 +424,21 @@ def main(argv=None):
         "collected_but_unexecuted": len(agg["collected_but_unexecuted"]),
         "invalid_children": [r["file"] for r in bad],
         "limited_subset": bool(args.limit), "reverse": bool(args.reverse),
+        "reverse_nodes": bool(args.reverse_nodes),
         "layer2": not args.no_layer2, "ownership_blind": bool(args.ownership_blind),
+        # LAYER 3: the aggregate now NAMES its manifest by digest. Every claim
+        # below it is recomputable; none of it has to be believed.
+        "arm_start_head": head,
+        "arm_end_head": arm_end_head,
+        "manifest_sha256": hashlib.sha256(mpath.read_bytes()).hexdigest(),
         "outcomes": agg["outcomes"],
     }
     (run_root / "aggregate.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    if arm_end_head != head:
+        print(f"{REFUSED} - THE TREE MOVED MID-ARM: started {head}, ended "
+              f"{arm_end_head}. This arm measured more than one commit.")
+        return 2
 
     print()
     print(f"[B] nodes aggregated          : {agg['n_nodes']}")

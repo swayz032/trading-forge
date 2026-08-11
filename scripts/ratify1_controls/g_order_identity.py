@@ -116,7 +116,136 @@ def authority_nodes():
     return set(required)
 
 
-def compare(fwd, rev, required, out_dir=None, mode="order", pin=None):
+def _sha_bytes(p):
+    import hashlib
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+def verify_chain(tag, arm):
+    """LAYER 4: recompute the provenance chain from BYTES. Returns verdicts.
+
+    R-827 §8[4], closing F-1. `[MEASURED BY GRADED INSTRUMENT]` the old
+    load_arm() opened ONLY aggregate.json, so a copied map with one flipped byte
+    -- sitting in a directory containing no child artifacts at all -- certified
+    15/15 OK, exit 0.
+
+        A 0-DIFFERENCE RESULT PROVES THE TWO INPUTS AGREE; IT CARRIES NO TERM
+        FOR WHETHER THEY ARE TWO INDEPENDENT PIECES OF EVIDENCE. THE CHAIN IS
+        WHAT ADDS THAT TERM.
+
+    Every check below RECOMPUTES a value and compares it to a stored one. No
+    field is believed because it was written down, and there is deliberately no
+    `provenance_verified` boolean to trust (R-827 §8[4]).
+    """
+    import hashlib
+    import json as _json
+    V = []
+    root = Path(arm["_path"]).parent
+
+    def add(name, ok, detail):
+        V.append((f"{tag}: {name}", ok, detail))
+
+    mpath = root / "manifest.json"
+    if not mpath.is_file():
+        add("provenance manifest EXISTS", False,
+            f"no manifest.json beside {arm['_path']} -- an aggregate with no "
+            f"chain cannot be distinguished from a forgery")
+        return V
+    add("provenance manifest EXISTS", True, str(mpath))
+
+    if "manifest_sha256" not in arm:
+        add("aggregate NAMES its manifest by digest", False,
+            "aggregate has no 'manifest_sha256' -- pre-chain schema, REFUSED")
+        return V
+    got = _sha_bytes(mpath)
+    add("manifest digest RECOMPUTES", got == arm["manifest_sha256"],
+        f"stored={arm['manifest_sha256'][:12]} recomputed={got[:12]}")
+
+    try:
+        man = _json.loads(mpath.read_text(encoding="utf-8"))
+    except Exception as exc:                                   # noqa: BLE001
+        add("manifest is readable", False, repr(exc))
+        return V
+
+    entries = man.get("entries") or []
+    add("children count == manifest entries",
+        len(entries) == arm["children"],
+        f"aggregate={arm['children']} manifest={len(entries)}")
+
+    # Ordinals exactly 1..N, no gaps, no duplicates.
+    ords = [e.get("ordinal") for e in entries]
+    add("ordinals are exactly 1..N", ords == list(range(1, len(entries) + 1)),
+        f"{len(ords)} ordinals, first={ords[:3]} last={ords[-3:] if ords else []}")
+
+    # Every receipt recomputes from its own bytes, and every child artifact
+    # recomputes from ITS bytes. This is the step that opens a child at all.
+    bad_receipt, bad_artifact, missing = [], [], []
+    heads, rebuilt, seqs = set(), {}, {}
+    for e in entries:
+        rp = root / "receipts" / f"{e['ordinal']:04d}-{_slug_like(e['target'])}.json"
+        if not rp.is_file():
+            missing.append(e["target"]); continue
+        if _sha_bytes(rp) != e["receipt_sha256"]:
+            bad_receipt.append(e["target"]); continue
+        try:
+            r = _json.loads(rp.read_text(encoding="utf-8"))
+        except Exception:                                      # noqa: BLE001
+            bad_receipt.append(e["target"]); continue
+        heads.add(r.get("head_sha"))
+        seqs[e["target"]] = list(r.get("node_sequence") or [])
+        rebuilt.update(r.get("outcomes") or {})
+        cd = Path(r.get("child_dir", ""))
+        for label, digest in (r.get("artifact_sha256") or {}).items():
+            ap = cd / label
+            if not ap.is_file() or _sha_bytes(ap) != digest:
+                bad_artifact.append(f"{e['target']}:{label}")
+
+    add("every receipt PRESENT", not missing, f"{len(missing)} missing {missing[:3]}")
+    add("every receipt digest RECOMPUTES", not bad_receipt,
+        f"{len(bad_receipt)} mismatched {bad_receipt[:3]}")
+    add("every child artifact digest RECOMPUTES", not bad_artifact,
+        f"{len(bad_artifact)} mismatched {bad_artifact[:3]}")
+
+    # The aggregate's payload must be REBUILT from the receipts, not copied.
+    add("outcomes REBUILD from the receipts", rebuilt == arm["outcomes"],
+        f"rebuilt={len(rebuilt)} aggregate={len(arm['outcomes'])}")
+    add("nodes count RECOMPUTES", len(rebuilt) == arm["nodes"],
+        f"rebuilt={len(rebuilt)} declared={arm['nodes']}")
+
+    # F-6: one pin for the whole arm, start to end, child by child.
+    add("arm_start_head == arm_end_head",
+        man.get("arm_start_head") == man.get("arm_end_head"),
+        f"{man.get('arm_start_head')} -> {man.get('arm_end_head')}")
+    add("every child measured the arm's pin",
+        heads == {arm["head"]} if heads else False,
+        f"distinct child heads={len(heads)} {sorted(heads)[:2]}")
+
+    # `reverse` DERIVED from the observed ordinal sequence, never believed.
+    targets = [e["target"] for e in entries]
+    canonical = sorted(targets)
+    derived_rev = (targets == list(reversed(canonical)))
+    if targets == canonical:
+        derived_rev = False
+    add("reverse is DERIVED and matches the claim",
+        derived_rev == bool(arm["reverse"]),
+        f"claimed={arm['reverse']!r} derived={derived_rev!r}")
+
+    arm["_node_sequences"] = seqs
+    return V
+
+
+def _slug_like(p):
+    """The runner's OWN _slug, imported -- never re-implemented.
+
+    A second copy of a naming rule is a second registry: it agrees until the day
+    it does not, and then the verifier cannot find receipts that exist.
+    """
+    import accept5_isolated_runner as _r
+    return _r._slug(p)
+
+
+def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
+            chain=True, node_axis=None):
     """Return (verdicts, differences). Verdicts are (name, ok, detail).
 
     mode="order"   [G]: the arms must be OPPOSED -- canonical vs REVERSE.
@@ -194,6 +323,41 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None):
                   f"{len(missing)} {missing[:5]}"))
         V.append((f"{tag}: invented/unauthorized nodes == 0", not invented,
                   f"{len(invented)} {invented[:5]}"))
+
+    # ---- LAYER 4: VERIFY THE CHAIN BEFORE COMPARING ANYTHING ---------------
+    # VERIFY-BEFORE-COMPARE. A 0-difference result computed over unverified
+    # inputs is exactly the false green F-1 describes, so the chain verdicts sit
+    # in the SAME list the exit code folds.
+    if chain:
+        V.extend(verify_chain("forward", fwd))
+        V.extend(verify_chain("reverse", rev))
+
+        # ---- [G-NODE] CROSS-ARM RELATIONSHIP -------------------------------
+        # node_axis="same"    the pair must NOT vary intra-file order
+        # node_axis="reverse" the pair MUST vary it, and each shared child's
+        #                     executed sequence must be the EXACT reverse.
+        # Derived from the recorded sequences; the arms' own reverse_nodes flag
+        # is a claim checked against it, never the source of truth.
+        if node_axis in ("same", "reverse"):
+            a = fwd.get("_node_sequences") or {}
+            b = rev.get("_node_sequences") or {}
+            shared = sorted(set(a) & set(b))
+            if not shared:
+                V.append((f"[G-NODE] arms share children to compare ({node_axis})",
+                          False, "no shared child node sequences recorded"))
+            else:
+                bad = [t for t in shared
+                       if (a[t] == list(reversed(b[t]))) is not (node_axis == "reverse")
+                       or (node_axis == "same" and a[t] != b[t])]
+                V.append((f"[G-NODE] intra-file order is {node_axis.upper()} "
+                          f"across the arms", not bad,
+                          f"{len(shared)} shared children, {len(bad)} violating "
+                          f"{bad[:3]}"))
+            V.append(("[G-NODE] arms' declared node axis matches the request",
+                      (fwd.get("reverse_nodes") is not rev.get("reverse_nodes"))
+                      is (node_axis == "reverse"),
+                      f"fwd.reverse_nodes={fwd.get('reverse_nodes')!r} "
+                      f"rev.reverse_nodes={rev.get('reverse_nodes')!r}"))
 
     # ---- THE ORACLE --------------------------------------------------------
     D = diff(fwd["outcomes"], rev["outcomes"])
@@ -281,8 +445,14 @@ def red_proof():
 
     cases = []
 
-    def run(name, f, r, expect_pass, mode="order", pin=REAL_PIN):
-        V, _ = compare(f, r, req, mode=mode, pin=pin)
+    # These synthetic cases exercise the ORACLE AND GUARD LOGIC, not the
+    # provenance chain -- their arms are in-memory dicts with no run directory.
+    # chain=False is therefore correct here AND IS NOT A WAIVER: the chain has
+    # its own controls, built on a REAL chain the runner actually produced, in
+    # red_proof_chain() below. C12's lesson is that a fixture normalizes
+    # whatever it skips, so the skip is bounded and separately covered.
+    def run(name, f, r, expect_pass, mode="order", pin=REAL_PIN, chain=False):
+        V, _ = compare(f, r, req, mode=mode, pin=pin, chain=chain)
         ok = all(v for _, v, _ in V)
         cases.append((name, ok is expect_pass,
                       f"expected {'GREEN' if expect_pass else 'RED'}, "
@@ -372,12 +542,137 @@ def red_proof():
                   f"{_resolves_to_commit(REAL_PIN)}"))
 
     print("=== [G]/[I] COMPARATOR RED-PROOF ===")
+    print("    (oracle + guard logic; the CHAIN has its own controls -- "
+          "--red-proof-chain)")
     for name, ok, detail in cases:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:40s} {detail}")
     allok = all(ok for _, ok, _ in cases)
     print()
     print("COMPARATOR DISCRIMINATES - demonstrated path to RED on every arm"
           if allok else "*** COMPARATOR NOT TRUSTWORTHY -- DO NOT RUN [G] ***")
+    return allok
+
+
+def red_proof_chain(workdir, a1, a2, a3):
+    """C1..C7 on a REAL chain the runner actually produced.
+
+    R-827 §8[5]. Synthetic dicts cannot exercise a chain, and a chain control
+    written against a synthetic fixture would normalize exactly the absence it
+    is supposed to detect (C12's lesson). So this TAMPERS COPIES of genuine
+    full-population arms.
+
+    ⚠️ WHY NOT `--limit`: the first version of this built its own cheap arms with
+    `--limit 2`. That sets `limited_subset=True`, which the comparator correctly
+    refuses -- so EVERY case went RED, the negatives "passed" for a reason that
+    had nothing to do with the chain, and the positives failed.
+
+        A NEGATIVE CONTROL THAT WOULD HAVE BEEN RED ANYWAY MEASURES NOTHING.
+        THE POSITIVE ARM IS WHAT EXPOSED IT.
+
+    So these run against the real arms, which are full-population by
+    construction. Every negative is paired with a positive.
+
+    a1 canonical . a2 an independent canonical REPEAT . a3 node-reversed.
+    """
+    import json as _json
+    import shutil
+    import subprocess
+    W = Path(workdir)
+    W.mkdir(parents=True, exist_ok=True)
+    PIN = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(REPO),
+                         capture_output=True, text=True).stdout.strip()
+
+    req = authority_nodes()
+    cases = []
+
+    def run(name, f, r, expect_pass, mode="repeat", node_axis=None, pin=PIN):
+        try:
+            V, _ = compare(load_arm(f), load_arm(r), req, mode=mode, pin=pin,
+                           chain=True, node_axis=node_axis)
+            ok = all(v for _, v, _ in V)
+            why = next((n for n, v, d in V if not v), "")
+        except SystemExit as exc:
+            ok, why = False, f"REFUSED: {exc}"
+        cases.append((name, ok is expect_pass,
+                      f"expected {'GREEN' if expect_pass else 'RED'}, got "
+                      f"{'GREEN' if ok else 'RED'}"
+                      + (f" [{why}]" if not ok else "")))
+
+    def clone(src, tag):
+        """Copy a whole arm directory so tampering never touches the original."""
+        dst = W / tag
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(Path(src).parent, dst)
+        return dst / "aggregate.json"
+
+    def edit(p, fn):
+        d = _json.loads(Path(p).read_text(encoding="utf-8"))
+        fn(d)
+        Path(p).write_text(_json.dumps(d, indent=2, sort_keys=True), encoding="utf-8")
+        return p
+
+    # ---- POSITIVE CONTROLS FIRST ------------------------------------------
+    run("C4  genuine independent pair, full chain => GREEN", a1, a2, True,
+        node_axis="same")
+    run("C4b genuine [G-NODE] pair (nodes reversed) => GREEN", a1, a3, True,
+        node_axis="reverse")
+
+    # ---- C1: the grade's own attack, on a real chain ----------------------
+    lone = W / "forged"
+    lone.mkdir(exist_ok=True)
+    shutil.copy(a1, lone / "aggregate.json")
+    edit(lone / "aggregate.json", lambda d: d.update(reverse=True))
+    run("C1  aggregate copied ALONE, reverse flipped => RED",
+        a1, lone / "aggregate.json", False, mode="order")
+
+    # ---- C2: a child artifact tampered after its receipt was minted -------
+    c2 = clone(a2, "c2")
+    victim = next(Path(c2).parent.glob("*/acceptance-run.xml"))
+    victim.write_bytes(victim.read_bytes() + b"<!-- tampered -->")
+    run("C2  child artifact tampered => RED", a1, c2, False, node_axis="same")
+
+    # ---- C3: a child that measured a different tree -----------------------
+    c3 = clone(a2, "c3")
+    edit(next((Path(c3).parent / "receipts").glob("*.json")),
+         lambda d: d.update(head_sha="0" * 40))
+    run("C3  child head differs from the arm pin => RED", a1, c3, False,
+        node_axis="same")
+
+    # ---- C5: an arm compared against ITSELF --------------------------------
+    c5 = clone(a1, "c5")
+    run("C5  arm compared against a copy of itself => RED", a1, c5, False,
+        node_axis="same")
+
+    # ---- C6: a receipt removed, children decremented to match --------------
+    c6 = clone(a2, "c6")
+    mp = Path(c6).parent / "manifest.json"
+    man = _json.loads(mp.read_text(encoding="utf-8"))
+    dropped = man["entries"].pop()
+    mp.write_text(_json.dumps(man, indent=2), encoding="utf-8")
+    (Path(c6).parent / "receipts" /
+     f"{dropped['ordinal']:04d}-{_slug_like(dropped['target'])}.json").unlink()
+    edit(c6, lambda d: d.update(children=len(man["entries"])))
+    run("C6  receipt removed + children decremented => RED", a1, c6, False,
+        node_axis="same")
+
+    # ---- C7: THE SHARPEST -- entries re-sorted, every digest still valid ---
+    c7 = clone(a2, "c7")
+    mp = Path(c7).parent / "manifest.json"
+    man = _json.loads(mp.read_text(encoding="utf-8"))
+    man["entries"] = list(reversed(man["entries"]))
+    mp.write_text(_json.dumps(man, indent=2), encoding="utf-8")
+    run("C7  manifest entries RE-SORTED, all digests valid => RED",
+        a1, c7, False, node_axis="same")
+
+    print()
+    print("=== PROVENANCE CHAIN RED-PROOF (C1-C7, real chain) ===")
+    for name, ok, detail in cases:
+        print(f"  {'OK  ' if ok else 'FAIL'}  {name:52s} {detail}")
+    allok = all(ok for _, ok, _ in cases)
+    print()
+    print("CHAIN DISCRIMINATES - a forged or tampered arm cannot certify"
+          if allok else "*** CHAIN NOT TRUSTWORTHY -- DO NOT RUN THE FINAL ARMS ***")
     return allok
 
 
@@ -395,19 +690,41 @@ def main(argv=None):
                     help="The exact commit SHA being certified. Both arms' "
                          "'head' must EQUAL it and it must RESOLVE (F-5). "
                          "Fail-closed: omitting it FAILS a certifying run.")
+    ap.add_argument("--node-axis", choices=("same", "reverse"), default=None,
+                    help="[G-NODE]: 'reverse' = the arms MUST vary intra-file "
+                         "node order (each shared child's executed sequence is "
+                         "the exact reverse); 'same' = they must NOT.")
+    ap.add_argument("--no-chain", action="store_true",
+                    help="Skip provenance verification. FOR DIAGNOSIS ONLY -- a "
+                         "certifying run must never use it (F-1).")
     ap.add_argument("--red-proof", action="store_true",
                     help="prove this comparator can go RED, then exit")
+    ap.add_argument("--red-proof-chain", metavar="WORKDIR", default=None,
+                    help="run C1-C7 against TAMPERED COPIES of real "
+                         "full-population arms, then exit. Requires "
+                         "--chain-a1/--chain-a2/--chain-a3.")
+    ap.add_argument("--chain-a1", default=None, help="canonical arm aggregate")
+    ap.add_argument("--chain-a2", default=None, help="independent canonical REPEAT")
+    ap.add_argument("--chain-a3", default=None, help="node-reversed arm")
     args = ap.parse_args(argv)
 
     if args.red_proof:
         return 0 if red_proof() else 1
+    if args.red_proof_chain:
+        if not (args.chain_a1 and args.chain_a2 and args.chain_a3):
+            ap.error("--red-proof-chain needs --chain-a1/--chain-a2/--chain-a3 "
+                     "(real FULL-POPULATION arms; a --limit subset makes every "
+                     "case red for the wrong reason)")
+        return 0 if red_proof_chain(args.red_proof_chain, args.chain_a1,
+                                    args.chain_a2, args.chain_a3) else 1
     if not (args.forward and args.reverse):
         ap.error("--forward and --reverse are required unless --red-proof")
 
     fwd, rev = load_arm(args.forward), load_arm(args.reverse)
     required = authority_nodes()
     V, D = compare(fwd, rev, required, out_dir=args.out_dir, mode=args.mode,
-                   pin=args.pin)
+                   pin=args.pin, chain=not args.no_chain,
+                   node_axis=args.node_axis)
     return 0 if report(fwd, rev, required, V, D, mode=args.mode) else 1
 
 

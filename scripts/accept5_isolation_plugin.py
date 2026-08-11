@@ -74,6 +74,31 @@ def pytest_addoption(parser):
         ),
     )
     group.addoption(
+        "--accept5-reverse-nodes",
+        action="store_true",
+        default=False,
+        help=(
+            "[G-NODE] axis (R-827 §2). Reverse the COLLECTED ITEM SEQUENCE within "
+            "this child, so intra-file execution order is varied. Whole-file "
+            "collection, unauthorized-extra detection and helper-file behaviour "
+            "are unchanged -- only the order of the items pytest already "
+            "collected. The grade measured a live intra-file order dependence "
+            "(F-3) that the FILE-level axis could never reach."
+        ),
+    )
+    group.addoption(
+        "--accept5-node-sequence-out",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Write the ACTUAL EXECUTION ORDER of this child's nodes to PATH as "
+            "JSON. This is the [G-NODE] witness: reverse_nodes must be DERIVED "
+            "from it, never trusted as a written flag. It records the order the "
+            "nodes RAN, not a collection order re-derived afterwards -- "
+            "re-derivation would launder exactly the defect it must detect."
+        ),
+    )
+    group.addoption(
         "--accept5-restore-early",
         action="store_true",
         default=False,
@@ -134,8 +159,40 @@ def _is_genuine_import(obj):
 
 def pytest_configure(config):
     config._accept5_boundary = _Boundary()
+    config._accept5_node_sequence = []
     if config.getoption("--accept5-layer2"):
         config.pluginmanager.register(_Layer2(config), "accept5-layer2")
+
+
+# ---- [G-NODE]: vary the intra-file axis -----------------------------------
+# trylast so this runs AFTER any other ordering plugin has had its say; the
+# sequence we reverse is the one that would otherwise have executed.
+@pytest.hookimpl(trylast=True)
+def pytest_collection_modifyitems(session, config, items):
+    if config.getoption("--accept5-reverse-nodes"):
+        items.reverse()
+
+
+# ---- the [G-NODE] WITNESS: what actually ran, in the order it ran ---------
+# Recorded at protocol level rather than reconstructed from the collection, so
+# `reverse_nodes` can be DERIVED (R-827 §8[4]) instead of believed.
+def pytest_runtest_logstart(nodeid, location):
+    _SEQ.append(nodeid)
+
+
+_SEQ = []
+
+
+def pytest_sessionfinish(session, exitstatus):
+    out = session.config.getoption("--accept5-node-sequence-out")
+    if not out:
+        return
+    import json as _json
+    import pathlib as _pathlib
+    _pathlib.Path(out).write_text(
+        _json.dumps({"node_sequence": list(_SEQ), "n": len(_SEQ)},
+                    indent=2, sort_keys=False),
+        encoding="utf-8")
 
 
 class _Layer2:
