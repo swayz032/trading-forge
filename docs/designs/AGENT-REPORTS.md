@@ -4,6 +4,57 @@
 
 ---
 
+## AR-980 · 2026-08-11 · ✅ **`R-822 §9[6]` DISCHARGED BY WITNESS, NOT INSPECTION — THE TEARDOWN PHASE ORDER IS PINNED AND THE DESK'S FINDING WAS NOT MERELY THEORETICAL: `[MEASURED]` THE UNPINNED IMPLEMENTATION REALLY DID RESTORE **BEFORE** THE FINALIZER.** ✅ **`[C]`/`[D]` LANDED AT `a643b149` — AND MY OWN AGGREGATOR HAD LIED ABOUT `39` HEALTHY TESTS BEFORE I CAUGHT IT.** 🛑🛑 **INCIDENT: A VERIFIED-ON-DISK INSTRUMENT EDIT WAS SILENTLY LOST ON THE SHARED TREE. CAUSE UNEXPLAINED AND I DO NOT INVENT ONE.**
+
+**SEAT `claude.exe 27448`. `HEAD aff86d76`. RULING `R-822 §9[1]`–`[6]`. TREE `wt-h1-wave4-20260712`. 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted.**
+
+### §1 — ✅ `§9[6]`: THE ORDERING WAS WRONG, AND THE WITNESS PROVES BOTH DIRECTIONS
+✅ **`R-822 §2` was right and it was not a theoretical risk.** `[MEASURED HERE]` with the ORIGINAL plain `pytest_runtest_teardown` implementation, the new witness **ERRORS**: a fixture finalizer that READS test-body-created state cannot see it, because the restore ran first.
+```
+BEFORE (plain hook, ordering unpinned)   exit=1  ERROR at teardown of
+                                                 test_body_creates_state_its_finalizer_must_still_see
+AFTER  (hookwrapper, restore after yield) exit=0  2 passed
+NEGATIVE CONTROL --accept5-restore-early  exit=1  ERROR at the SAME node
+```
+✅ **THE PIN: `@pytest.hookimpl(hookwrapper=True)` with `_restore()` AFTER the `yield`** — the wrapper resumes only once every other implementation of that hook, including `_pytest.runner`'s finalizer pass, has completed. **`--accept5-restore-early` reproduces the unpinned ordering DELIBERATELY so the witness can be SHOWN red rather than asserted safe.**
+✅ **AND PINNING DID NOT BUY CORRECTNESS AT `[F]`'s EXPENSE — the witness carries a SECOND test asserting the body-created key is STILL evicted before the next test. `keys_evicted=1` on the passing arm is the positive witness that the boundary ran.**
+★★★★★ **`AN ORDERING THAT HAPPENS TO BE CORRECT TODAY BECAUSE OF PLUGIN REGISTRATION ORDER IS NOT A DESIGN, IT IS A COINCIDENCE WITH A PASSING TEST — AND HERE IT WAS NOT EVEN CORRECT TODAY.`**
+⚠️ **RESIDUAL, MINOR, DECLARED: the witness line prints `mode=` but not `order=`; the two arms are distinguished by their flag and their result, not by the receipt line. Not repaired — see `§3`, I am not making avoidable edits to this file right now.**
+
+### §2 — ✅ `[C]`/`[D]` AT `a643b149`, AND TWO DEFECTS IN MY OWN FIRST VERSION
+🛑 **MY AGGREGATOR READ `rec["outcomes"]`. `[MEASURED]` THE SERIALIZED RECORD HAS NO SUCH KEY** — the plugin keeps one internally and writes **five disjoint lists**. My reader silently got `{}` and reported **`39` healthy tests as "collected but never executed"**. ⇒ ★★★★★ **`THE SCHEMA IS THE ARTIFACT ON DISK, NEVER THE VARIABLE THAT PRODUCED IT. I READ THE NEIGHBOURING OBJECT AND ACCUSED THE TREE WITH IT.`** (`[i-measured]`.) **Now rebuilt from `passed`/`failures`/`skipped`/`xfailed`/`xpassed` AND cross-checked against the record's own `n_*` totals, so a schema change cannot empty it silently again.**
+🛑 **EXIT `5` IS A STATUS ONLY THIS ARCHITECTURE CAN EMIT.** `[MEASURED]` two manifest members — `_a_packet_harness.py`, `_forensics_fixtures.py` — are HELPERS with no test functions. **Alongside `105` other files they are invisible; run ALONE they legitimately exit `5`.** ⇒ **accepted ONLY on proof of genuine emptiness (record written AND `n_collected == 0`).** ★★★★ **`A STATUS THAT ONLY THE NEW ARCHITECTURE CAN EMIT IS NOT AUTOMATICALLY A DEFECT — BUT IT MUST BE DISCRIMINATED, NOT WAIVED.`**
+✅ **`[D]` RED-PROOFED `5 / 5` WITH ITS POSITIVE CONTROL:** healthy child clean (`12` node outcomes as the positive witness) · foreign `run_id` caught · nonexistent target (exit `4`) caught · missing Layer-2 witness caught · **exit-`5`-with-tests-present REFUSED**. ⭐ **That last arm CORRECTED MY OWN PREDICTION: I had written that `-k` deselection was *"genuinely empty, so accepting it is correct"*. It is not. `DESELECTION IS NOT EMPTINESS, AND n_collected IS THE ONLY THING THAT TELLS THE TWO CASES APART.`**
+✅ **SMOKE, `6` children: `89` nodes · duplicates `0` · collected-but-unexecuted `0` · invalid `0`.** 🛑 **`STOP [41]` OBSERVED: that is a FILE-layer result. `2419` NODE conservation is NOT established and I do not imply it.**
+
+### §3 — 🛑🛑 INCIDENT: A VERIFIED INSTRUMENT EDIT WAS SILENTLY LOST
+🛑 **The `hookwrapper` pin and the `--accept5-restore-early` control were applied, CONFIRMED PRESENT ON DISK, and then were GONE.** `[MEASURED]` the working copy had reverted to `HEAD` plus a single unrelated `import` line; `git diff --stat` read `1 file changed, 2 insertions(+)`.
+⚠️ **HOW I FOUND IT — NOT BY LOOKING: the negative-control arm died with `unrecognized arguments: --accept5-restore-early`, and the pinned arm failed. I first blamed stale bytecode, cleared `__pycache__`, and `--help` STILL did not list the option. Only then did I read the file on disk.** ★★★★★ **`I DEBUGGED THE INSTRUMENT'S CACHE BEFORE I CHECKED WHETHER MY CHANGE EXISTED. THE FIRST QUESTION FOR A FEATURE THAT DOES NOT WORK IS WHETHER IT IS THERE.`**
+🛑 **CAUSE UNEXPLAINED, AND I WILL NOT FABRICATE ONE:** `[MEASURED]` searched all `2866` `~/.cache/pre-commit/patch*` files for the lost content — **no hit**; both nearby commits (`fcf63f34` desk `R-822` `03:17:51`, `a643b149` mine `03:18:19`) **PREDATE** the edits. **A shared tree with two live seats is the standing hazard, but I have no evidence naming the mechanism, so it stays `[UNEXPLAINED]`.**
+✅ **THE REMEDY THAT IS ACTUALLY IN MY CONTROL, ADOPTED: COMMIT AN INSTRUMENT CHANGE THE MOMENT IT VERIFIES, NOT AFTER THE NEXT EXPERIMENT.** `aff86d76` was committed BEFORE its own arms were run, deliberately.
+⚠️ **CONSEQUENCE FOR THE RECORD: any uncommitted measurement I quote from a working copy on this tree is weaker than one quoted from a commit. Everything in `§1`/`§2` is quoted from committed state.**
+
+### §4 — 📌 STATUS AGAINST `R-822 §4`'s SPLIT, WHICH I DO NOT COLLAPSE
+```
+[A] population source construction     PASS (prototype)
+[B] file-target conservation + guards  PASS (FILE layer only -- 2419 NOT established)
+[C] per-child execution + receipts     LANDED a643b149 -- receipts still owe exact
+                                       commit SHA + artifact HASHES (R-822 §5)
+[D] invalid-child refusal              red-proofed 5/5 -- OWED: one planted invalid
+                                       child through the PARENT's own path, then the
+                                       restored control passing
+[F] test-time leak                     THROWAWAY only -- real governed arm OWED
+[J] ownership + teardown order         THROWAWAY only -- real 9-fixture arm OWED;
+                                       §9[6]'s ordering edge DISCHARGED (§1)
+[E] cross-file contamination           UNSTARTED -- next
+[G] [H] [I]                            UNSTARTED
+```
+🛑 **NO GOVERNED CHILD SET HAS RUN. `E` REMAINS HELD. `R3-4` = `6 / 7`. `R3` = `3 / 5`. Nothing promoted, no seal moved.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **`[E]` next — `black_swan` child then PnL child versus PnL alone, both orders, identical node-outcome map. No round-trip.**
+
+---
+
 ## AR-979 · 2026-08-11 · 📍 **`RATIFY-1` SEAM REPORT (`R-821 §7[2]`) — `[A]`/`[B]` PROVEN AND THE `[F]`/`[J]` DISCRIMINATION CONTROLS BOTH BITE, AT `3677b8ac`.** ✅ **`[J]` HAS ITS RED: THE OWNERSHIP-BLIND BOUNDARY DESTROYS SESSION-SCOPED FIXTURE STATE AND THE WITNESS NAMES IT BY NODE ID.** ⚖️ **CONTEXT REASSESSED AS ORDERED: I CONTINUE — AND I NAME THE NEXT HARD BOUNDARY RATHER THAN LEAVE IT TO FEEL.** 🛑 **NO CHILD HAS EXECUTED YET; `[C][D][E][G][H][I]` ARE UNSTARTED.**
 
 **SEAT `claude.exe 27448`. `HEAD 3677b8ac`. RULING `R-820 §5` / `R-821 §5`. TREE `wt-h1-wave4-20260712`. 🛑 THE COMMITTED `acceptance_runner.py` IS UNCHANGED — this is a PROTOTYPE and is NOT promoted to authority** (`R-821 §5`: prototype → prove `[A]`–`[J]` → only then promote).
