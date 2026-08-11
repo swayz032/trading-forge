@@ -32,4 +32,4 @@
 .r-feed-click[aria-pressed="true"] { border:1px solid #a3ff12; background: rgba(163,255,18,.08); }
 .r-feed-click:focus-visible,.r-gate-back:focus-visible { outline: 2px solid #a3ff12; outline-offset: 3px; }
 @media (max-width:640px) { .recipe-instrument { min-height:220px; padding:14px; transform:none; } }
-@media (prefers-reduced-motion: reduce) { .recipe-instrument { transition:none; transform:none; } }
+@media (prefers-reduced-motion: reduce) { .recipe-instrument { transition:none; transform:none; } .instrument-ghost--backtest span { animation:none; } }

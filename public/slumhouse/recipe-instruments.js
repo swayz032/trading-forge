@@ -18,6 +18,7 @@
     var number = Number(value);
     return value !== null && value !== undefined && Number.isFinite(number) ? number : null;
   }
+  function escapeHtml(value) { return String(value).replace(/[&<>"']/g, function (char) { return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]; }); }
 
   function panel(kind, evidence, body) {
     var root = document.createElement("section");
@@ -58,7 +59,7 @@
     return '<div class="instrument-readouts backtest-metrics">' + Object.keys(evidence || {}).filter(function (key) {
       return evidence[key] !== null && evidence[key] !== undefined && evidence[key] !== "";
     }).map(function (key) {
-      return '<div><small>' + key.replace(/([A-Z])/g, " $1") + '</small><strong>' + String(evidence[key]) + "</strong></div>";
+      return '<div><small>' + escapeHtml(key.replace(/([A-Z])/g, " $1")) + '</small><strong>' + escapeHtml(evidence[key]) + "</strong></div>";
     }).join("") + "</div>";
   }
 

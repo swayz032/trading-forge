@@ -66,6 +66,7 @@ describe("Recipe premium instruments", () => {
     expect(css).toContain("appearance: none");
     expect(css).toContain("instrument-ghost");
     expect(css).toContain("instrument-ghost--backtest");
+    expect(css).toContain(".instrument-ghost--backtest span { animation:none; }");
     expect(css).toContain("background:#000");
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
