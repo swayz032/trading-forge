@@ -28,11 +28,10 @@
     .kv-hero-art {
       display: block;
       width: 100%;
-      min-height: 0;
-      aspect-ratio: 1672 / 941;
+      height: 340px;
       background-image: url('/slumhouse/images/slumdawg-kitchen-banner.png');
       background-size: cover;      /* spans the full page width; trims a little top/bottom */
-      background-position: center;
+      background-position: center 12%;
     }
 
     .kv-section-label { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; }
@@ -269,6 +268,7 @@
     }
     @media (max-width: 640px) {
       .kv-hero { margin-bottom: 20px; }
+      .kv-hero-art { height: 190px; }
 
       .kv-section-label { font-size: 10px; margin-bottom: 12px; }
       .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
