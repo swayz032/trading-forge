@@ -1,6 +1,8 @@
 from pathlib import Path
 
 SRC = Path("indicator/pine/slumdawg_platform_parity_v0_19_0_reaction_zone_targets.pine")
+QUALITY_SPEC = Path("indicator/spec/TP_REACTION_QUALITY_ACCEPTANCE.md")
+LONG_GOLDEN = Path("indicator/spec/golden/2026-08-11_mnqu2026_long_tp_reaction_quality.md")
 
 
 def text():
@@ -70,3 +72,16 @@ def test_v019_profit_side_is_defensive_hard_invariant():
     assert "shortTp1Raw < shortEntry ? shortTp1Raw : na" in s
     assert "longTp1Price > displayedLongEntry" in s
     assert "shortTp1Price < displayedShortEntry" in s
+
+
+def test_v0191_aug11_long_visual_failure_is_frozen():
+    q = QUALITY_SPEC.read_text(encoding="utf-8")
+    g = LONG_GOLDEN.read_text(encoding="utf-8")
+    assert "Distance is downstream of quality" in q
+    assert "LONG targets remain above LONG Entry" in q
+    assert "29900.00" in g
+    assert "29915" in g
+    assert "REJECTED" in g
+    assert "29938.25" in g
+    assert "not frozen as the final TP price" in g
+    assert "NO QUALIFIED REACTION ZONE" in g
