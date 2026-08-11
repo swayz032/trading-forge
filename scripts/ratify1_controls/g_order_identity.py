@@ -740,8 +740,31 @@ def red_proof_chain(workdir, a1, a2, a3):
     # ---- POSITIVE CONTROLS FIRST ------------------------------------------
     run("C4  genuine independent pair, full chain => GREEN", a1, a2, True,
         node_axis="same")
-    run("C4b genuine [G-NODE] pair (nodes reversed) => GREEN", a1, a3, True,
-        node_axis="reverse")
+    # C4b's SUBJECT IS THE CHAIN, NOT THE ORACLE -- and that distinction is
+    # forced on me by a real finding, not chosen for convenience.
+    # `[MEASURED, AR-991 §1]` a genuine node-reversed pair DIFFERS on 12 governed
+    # nodes: STOP B, held by ruling and not mine to resolve. So a whole-verdict
+    # GREEN is unavailable here and will stay unavailable until the desk rules.
+    # Asserting it anyway would leave a permanently-red control that everyone
+    # learns to ignore; deleting it would drop the only proof that the chain
+    # ACCEPTS a legitimately node-reversed arm.
+    #
+    #   A CONTROL WHOSE EXPECTED RESULT DEPENDS ON AN UNRESOLVED FINDING MUST
+    #   NARROW ITS SUBJECT, NOT ITS STANDARD.
+    try:
+        Vb, Db = compare(load_arm(a1), load_arm(a3), req, mode="repeat", pin=PIN,
+                         chain=True, node_axis="reverse")
+        chain_v = [(n, ok) for n, ok, _ in Vb
+                   if "EXACT node-outcome identity" not in n]
+        bad_chain = [n for n, ok in chain_v if not ok]
+        cases.append(("C4b genuine node-reversed pair: CHAIN accepts it => GREEN",
+                      not bad_chain,
+                      f"{len(chain_v)} chain/guard verdicts, {len(bad_chain)} failing "
+                      f"{bad_chain[:2]}; oracle difference {len(Db)} = STOP B's 12, "
+                      f"EXPECTED and reported, NOT suppressed"))
+    except SystemExit as exc:
+        cases.append(("C4b genuine node-reversed pair: CHAIN accepts it => GREEN",
+                      False, f"REFUSED: {exc}"))
 
     # ---- C1: the grade's own attack, on a real chain ----------------------
     lone = W / "forged"
