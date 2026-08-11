@@ -56,6 +56,180 @@ REQUIRED_FIELDS = ("outcomes", "children", "nodes", "wall_s", "reverse", "head",
 CEILING_MIN = 10.0          # [H] pre-registered, R-825 §6[6]
 
 
+def _runner_ceiling_s():
+    """The [H] ceiling, read from its OWNER (R-840 §3[D], row 10).
+
+    The value is frozen and unchanged; R-840 moved its OWNER to the runner,
+    which now enforces it at source against a live monotonic clock. This reads
+    that single registry instead of keeping a second copy, and asserts the two
+    still agree -- a silent divergence here would mean the comparator was
+    checking a ceiling nobody enforces.
+    """
+    import accept5_isolated_runner as _r
+    c = float(_r.CEILING_S)
+    if abs(c - CEILING_MIN * 60.0) > 1e-9:
+        raise SystemExit(f"{REFUSED} - CEILING REGISTRY DRIFT: the runner "
+                         f"enforces {c}s but this comparator displays "
+                         f"{CEILING_MIN} min ({CEILING_MIN * 60.0}s). The "
+                         f"ceiling is frozen; one of these moved.")
+    return c
+
+
+# ==========================================================================
+# THE EVIDENCE CONTRACT (R-840 §3[B]/[C], authority-table row 12)
+# ==========================================================================
+# `[MEASURED BY GRADED INSTRUMENT]` the convicted defect was NOT a check that
+# returned the wrong answer. It was a check that WAS NOT THERE:
+#
+#     allok = all(ok for _, ok, _ in V)       # V is built by APPENDING
+#
+# `--no-chain` skipped the block that appends the provenance, node-axis and
+# run-identity verdicts. `all()` over the shorter list was True, and the
+# instrument printed SATISFIED at exit 0.
+#
+#   AN ABSENT CHECK AND A PASSING CHECK ARE THE SAME VALUE TO all().
+#   A VERDICT LIST BUILT BY APPENDING CANNOT DETECT ITS OWN MISSING MEMBERS.
+#
+# So completeness stops being emergent and becomes a PROPERTY. Every verdict
+# now carries a STABLE ID; certification requires OBSERVED >= REQUIRED *and*
+# every required verdict TRUE. A proof that never ran is a REFUSAL, never a
+# silent pass.
+#
+# ⚠️ THE REQUIRED SET IS A HAND-DECLARED FROZEN LITERAL, NOT A DERIVATION FROM
+# WHAT THE CODE HAPPENS TO EMIT. If it were derived from the emitting code,
+# both sides of the completeness check would come from the same layer and
+# agreement would prove nothing -- the exact class this repair exists to close.
+
+_PAIR_REQUIRED = frozenset({
+    "PAIR/ARM_RELATION",
+    "PAIR/SAME_COMMIT",
+    "PAIR/PIN_BOUND",
+    "PAIR/DISTINCT_ARTIFACTS",
+    "PAIR/DISTINCT_EXECUTIONS",
+    "PAIR/GNODE_RELATION",
+    "PAIR/GNODE_AXIS_DECLARED",
+    "PAIR/ORACLE",
+})
+
+# Emitted once per arm, and required for BOTH arms. Everything under VERIFIED/
+# is derived by an authority OUTSIDE the arm's own summary (R-840 §3[C]).
+_PER_ARM_REQUIRED = frozenset({
+    "HEAD_RESOLVES",
+    "CHAIN/MANIFEST_EXISTS",
+    "CHAIN/MANIFEST_NAMED_BY_DIGEST",
+    "CHAIN/MANIFEST_DIGEST_RECOMPUTES",
+    "CHAIN/MANIFEST_READABLE",
+    "CHAIN/CHILDREN_COUNT",
+    "CHAIN/ORDINALS",
+    "CHAIN/RECEIPTS_PRESENT",
+    "CHAIN/RECEIPT_DIGESTS",
+    "CHAIN/ARTIFACT_DIGESTS",
+    "CHAIN/NO_UNBOUND_FILE",
+    "CHAIN/C13_TREE_RECORDED",
+    "CHAIN/C13_TREE_UNCHANGED",
+    "CHAIN/OUTCOMES_REBUILD",
+    "CHAIN/NODES_RECOMPUTE",
+    "CHAIN/ARM_HEAD_STABLE",
+    "CHAIN/CHILD_PINS",
+    "CHAIN/REVERSE_DERIVED",
+    "VERIFIED/DUPLICATE_NODES",
+    "VERIFIED/COLLECTED_BUT_UNEXECUTED",
+    "VERIFIED/INVALID_CHILDREN",
+    "VERIFIED/NOT_LIMITED_SUBSET",
+    "VERIFIED/MISSING_REQUIRED_NODES",
+    "VERIFIED/INVENTED_NODES",
+    "VERIFIED/TIMING_AUTHORITY",
+    "VERIFIED/H_RECONCILES",
+    "VERIFIED/H_CEILING",
+})
+
+# Only a REVERSE node axis can be vacuously satisfied by singleton children,
+# so only it owes the anti-vacuity verdict.
+_AXIS_REVERSE_REQUIRED = frozenset({"PAIR/GNODE_VARIED"})
+
+ARMS = ("forward", "reverse")
+
+
+def required_proofs(node_axis):
+    """The closed REQUIRED_PROOFS set for a certifying comparison."""
+    req = set(_PAIR_REQUIRED)
+    for tag in ARMS:
+        req |= {f"{tag}/{p}" for p in _PER_ARM_REQUIRED}
+    if node_axis == "reverse":
+        req |= _AXIS_REVERSE_REQUIRED
+    return frozenset(req)
+
+
+def observed_proofs(V):
+    return {pid for pid, _, _, _ in V}
+
+
+def all_true(V):
+    """Do all the verdicts that RAN pass? Says NOTHING about completeness."""
+    return all(ok for _, _, ok, _ in V)
+
+
+def completeness(V, node_axis):
+    """(missing, duplicated) against the closed required set."""
+    req = required_proofs(node_axis)
+    obs = observed_proofs(V)
+    seen, dupes = set(), set()
+    for pid, _, _, _ in V:
+        if pid in seen:
+            dupes.add(pid)
+        seen.add(pid)
+    return sorted(req - obs), sorted(dupes)
+
+
+_MISSING = object()
+
+
+class VerifiedArm:
+    """Facts DERIVED from an arm's own bytes by an authority outside its claim.
+
+    R-840 §3[C]. A field exists here ONLY after the derivation that owns it has
+    actually run. There is deliberately NO default and NO fallback: reading a
+    field nobody derived RAISES, because the alternative -- quietly
+    substituting the arm's own summary of itself -- is precisely the defect
+    F-RATIFY1-1 convicted, and precisely the instinct R-839 named as the root
+    ("keep a weaker check rather than none").
+
+        AN ABSENT DERIVATION MUST BE LOUDER THAN A WRONG ONE, NEVER QUIETER.
+    """
+
+    FIELDS = frozenset({
+        "outcomes", "nodes", "duplicate_nodes", "collected_but_unexecuted",
+        "invalid_children", "limited_subset", "derived_elapsed_s",
+        "receipts", "node_sequences", "run_ids",
+        "runner_wall_s", "timing_clock", "timing_within_ceiling",
+    })
+
+    def __init__(self, tag):
+        self._tag = tag
+        self._d = {}
+
+    def set(self, key, value):
+        if key not in self.FIELDS:
+            raise SystemExit(f"{REFUSED} - VerifiedArm has no field {key!r}; "
+                             f"the verified surface is a closed set")
+        self._d[key] = value
+
+    def has(self, key):
+        return key in self._d
+
+    def __getattr__(self, key):
+        if key.startswith("_"):
+            raise AttributeError(key)
+        val = self.__dict__.get("_d", {}).get(key, _MISSING)
+        if val is _MISSING:
+            raise SystemExit(
+                f"{REFUSED} - certification asked for the VERIFIED value "
+                f"{key!r} on the {self.__dict__.get('_tag')} arm, but no "
+                f"authority derived it. A certifying comparison may not fall "
+                f"back to the arm's own claim (R-840 §3[C]).")
+        return val
+
+
 def diff(a, b):
     """EXACT by node ID. Carried UNCHANGED from the ratified [E] control
     (redproof_cross_file_isolation.py:50). Absence is an outcome, not a skip."""
@@ -121,6 +295,52 @@ def _sha_bytes(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
+def _primitive_child_problems(r):
+    """Child validity from RAW PRIMITIVES, never from the receipt's `problems`.
+
+    R-840 authority-table row 6. `[MEASURED BY GRADED INSTRUMENT]` the previous
+    rebuild read r["problems"] -- so a resealed receipt declared its own
+    health and the "rebuild" agreed with it. The check and the thing checked
+    were the same field.
+
+        A CHILD THAT REPORTS ITS OWN VALIDITY IS NOT EVIDENCE OF ITS VALIDITY.
+
+    These are the observables the runner itself branches on, read directly:
+    timed_out, returncode, the minted run_id, receipt schema types, and the
+    existence of the artifact a scoring child must have produced.
+
+    DIRECTION ASSERTED, NOT ASSUMED. `[MEASURED HERE, arm A's 108 receipts]`
+    returncodes are 97x0, 9x1 and 2x5 -- and exactly those 2 carry
+    empty_by_design, 0 receipts lack acceptance-run.json, and 0 have a mistyped
+    field. So this rule yields ZERO invalid children on genuine evidence: it is
+    a discriminator, not a blanket RED.
+    """
+    why = []
+    if r.get("timed_out") is True:
+        why.append("timed_out")
+    rc = r.get("returncode")
+    empty = bool(r.get("empty_by_design"))
+    if rc is None:
+        why.append("returncode is null -- the child never reported an exit")
+    elif rc == 5:
+        # 5 is accepted ONLY on proof of genuine emptiness, exactly as the
+        # runner accepts it -- never waived.
+        if not empty:
+            why.append("exit 5 without a proven empty_by_design child")
+    elif rc not in (0, 1):
+        why.append(f"exit {rc} is not a valid execution status")
+    if not r.get("run_id"):
+        why.append("no run_id minted -- the child cannot be joined to an execution")
+    for _f, _t in (("outcomes", dict), ("collected", list),
+                   ("artifact_sha256", dict)):
+        if not isinstance(r.get(_f), _t):
+            why.append(f"receipt field {_f!r} is missing or mistyped")
+    arts = r.get("artifact_sha256")
+    if not empty and isinstance(arts, dict) and "acceptance-run.json" not in arts:
+        why.append("a scoring child bound no acceptance-run.json artifact")
+    return why
+
+
 def verify_chain(tag, arm):
     """LAYER 4: recompute the provenance chain from BYTES. Returns verdicts.
 
@@ -140,41 +360,51 @@ def verify_chain(tag, arm):
     import hashlib
     import json as _json
     V = []
+    va = VerifiedArm(tag)
+    arm["_verified"] = va
     root = Path(arm["_path"]).parent
 
-    def add(name, ok, detail):
-        V.append((f"{tag}: {name}", ok, detail))
+    def add(pid, name, ok, detail):
+        # R-840 §3[B]: every verdict carries a STABLE ID so that its ABSENCE is
+        # detectable. A name is for humans; the ID is what completeness joins on.
+        V.append((f"{tag}/{pid}", f"{tag}: {name}", bool(ok), detail))
 
     mpath = root / "manifest.json"
     if not mpath.is_file():
-        add("provenance manifest EXISTS", False,
+        add("CHAIN/MANIFEST_EXISTS", "provenance manifest EXISTS", False,
             f"no manifest.json beside {arm['_path']} -- an aggregate with no "
             f"chain cannot be distinguished from a forgery")
         return V
-    add("provenance manifest EXISTS", True, str(mpath))
+    add("CHAIN/MANIFEST_EXISTS", "provenance manifest EXISTS", True, str(mpath))
 
-    if "manifest_sha256" not in arm:
-        add("aggregate NAMES its manifest by digest", False,
-            "aggregate has no 'manifest_sha256' -- pre-chain schema, REFUSED")
+    named = "manifest_sha256" in arm
+    add("CHAIN/MANIFEST_NAMED_BY_DIGEST", "aggregate NAMES its manifest by digest",
+        named, "present" if named else
+        "aggregate has no 'manifest_sha256' -- pre-chain schema, REFUSED")
+    if not named:
         return V
     got = _sha_bytes(mpath)
-    add("manifest digest RECOMPUTES", got == arm["manifest_sha256"],
+    add("CHAIN/MANIFEST_DIGEST_RECOMPUTES", "manifest digest RECOMPUTES",
+        got == arm["manifest_sha256"],
         f"stored={arm['manifest_sha256'][:12]} recomputed={got[:12]}")
 
     try:
         man = _json.loads(mpath.read_text(encoding="utf-8"))
     except Exception as exc:                                   # noqa: BLE001
-        add("manifest is readable", False, repr(exc))
+        add("CHAIN/MANIFEST_READABLE", "manifest is readable", False, repr(exc))
         return V
+    add("CHAIN/MANIFEST_READABLE", "manifest is readable", True,
+        f"{len(man)} top-level keys")
 
     entries = man.get("entries") or []
-    add("children count == manifest entries",
+    add("CHAIN/CHILDREN_COUNT", "children count == manifest entries",
         len(entries) == arm["children"],
         f"aggregate={arm['children']} manifest={len(entries)}")
 
     # Ordinals exactly 1..N, no gaps, no duplicates.
     ords = [e.get("ordinal") for e in entries]
-    add("ordinals are exactly 1..N", ords == list(range(1, len(entries) + 1)),
+    add("CHAIN/ORDINALS", "ordinals are exactly 1..N",
+        ords == list(range(1, len(entries) + 1)),
         f"{len(ords)} ordinals, first={ords[:3]} last={ords[-3:] if ords else []}")
 
     # Every receipt recomputes from its own bytes, and every child artifact
@@ -193,7 +423,8 @@ def verify_chain(tag, arm):
     #
     # These accumulate in the SAME pass over the SAME already-digest-verified
     # receipt bytes -- no second reader, no second registry.
-    d_elapsed, d_cbu, d_invalid, d_owner, d_dups, n_parsed = 0.0, 0, [], {}, [], 0
+    d_elapsed, d_cbu_ids, d_invalid, d_owner, d_dups, n_parsed = 0.0, [], [], {}, [], 0
+    d_invalid_why = []
     for e in entries:
         rp = root / "receipts" / f"{e['ordinal']:04d}-{_slug_like(e['target'])}.json"
         if not rp.is_file():
@@ -217,9 +448,21 @@ def verify_chain(tag, arm):
             rebuilt[_nid] = _o
             d_owner[_nid] = e["target"]
         d_elapsed += float(r.get("elapsed_s") or 0.0)
-        d_cbu += len(r.get("collected_but_unexecuted") or [])
-        if r.get("problems"):
+        # ---- ROW 5: EXACT IDS FROM THE RAW LISTS, NOT THE RECEIPT'S SUMMARY --
+        # `[MEASURED BY GRADED INSTRUMENT]` the previous version summed
+        # r["collected_but_unexecuted"] -- the receipt's OWN count of itself. A
+        # resealed receipt could set it to 0 and the "rebuild" agreed, because
+        # both sides came from the same tamperable layer. R-840 row 5 names the
+        # authority: set(collected) - set(outcomes), per child, EXACT IDS.
+        _collected, _outs = r.get("collected"), r.get("outcomes")
+        if isinstance(_collected, list) and isinstance(_outs, dict):
+            for _nid in sorted(set(_collected) - set(_outs)):
+                d_cbu_ids.append(f"{e['target']}::{_nid}")
+        # ---- ROW 6: CHILD VALIDITY FROM PRIMITIVES, NOT FROM `problems` ------
+        _why = _primitive_child_problems(r)
+        if _why:
             d_invalid.append(r.get("file") or e["target"])
+            d_invalid_why.append(f"{e['target']}: {_why[0]}")
         n_parsed += 1
         # RESOLVE CHILD ARTIFACTS RELATIVE TO *THIS* ARM, never via the absolute
         # child_dir the receipt recorded. `[MEASURED, C2]` following the recorded
@@ -244,31 +487,38 @@ def verify_chain(tag, arm):
             for orphan in sorted(present - set(digests)):
                 unbound.append(f"{e['target']}:{orphan}")
 
-    add("every receipt PRESENT", not missing, f"{len(missing)} missing {missing[:3]}")
-    add("every receipt digest RECOMPUTES", not bad_receipt,
+    add("CHAIN/RECEIPTS_PRESENT", "every receipt PRESENT", not missing,
+        f"{len(missing)} missing {missing[:3]}")
+    add("CHAIN/RECEIPT_DIGESTS", "every receipt digest RECOMPUTES", not bad_receipt,
         f"{len(bad_receipt)} mismatched {bad_receipt[:3]}")
-    add("every child artifact digest RECOMPUTES", not bad_artifact,
-        f"{len(bad_artifact)} mismatched {bad_artifact[:3]}")
-    add("NO UNBOUND FILE in any child directory", not unbound,
-        f"{len(unbound)} unbound {unbound[:3]}")
+    add("CHAIN/ARTIFACT_DIGESTS", "every child artifact digest RECOMPUTES",
+        not bad_artifact, f"{len(bad_artifact)} mismatched {bad_artifact[:3]}")
+    add("CHAIN/NO_UNBOUND_FILE", "NO UNBOUND FILE in any child directory",
+        not unbound, f"{len(unbound)} unbound {unbound[:3]}")
 
     # ---- C13 (R-828 §4a): the arm must not MUTATE the tree it measures -----
     # arm_start_head == arm_end_head binds COMMITS. A working-tree write moves
     # no commit, so the chain can prove an arm measured one COMMIT while the
     # measurement itself edited the TREE. AR-992 measured exactly that.
+    # BOTH ids are emitted on BOTH paths. The old shape emitted one verdict OR
+    # the other, so a pre-C13 arm left the "unchanged" proof simply ABSENT --
+    # and an absent proof is exactly what row 12 refuses to read as a pass.
     ts, te = man.get("arm_start_tree"), man.get("arm_end_tree")
-    if ts is None or te is None:
-        add("C13 arm records its tracked-tree state", False,
-            "manifest has no arm_start_tree/arm_end_tree -- pre-C13 schema")
-    else:
-        add("C13 tracked working tree UNCHANGED across the arm", ts == te,
-            f"start={ts[:12]} end={te[:12]}"
-            + ("" if ts == te else "  <- the arm MUTATED the tree it certifies"))
+    recorded = ts is not None and te is not None
+    add("CHAIN/C13_TREE_RECORDED", "C13 arm records its tracked-tree state",
+        recorded, "recorded" if recorded else
+        "manifest has no arm_start_tree/arm_end_tree -- pre-C13 schema")
+    add("CHAIN/C13_TREE_UNCHANGED", "C13 tracked working tree UNCHANGED across the arm",
+        recorded and ts == te,
+        (f"start={ts[:12]} end={te[:12]}"
+         + ("" if ts == te else "  <- the arm MUTATED the tree it certifies"))
+        if recorded else "unprovable: the arm never recorded its tree state")
 
     # The aggregate's payload must be REBUILT from the receipts, not copied.
-    add("outcomes REBUILD from the receipts", rebuilt == arm["outcomes"],
+    add("CHAIN/OUTCOMES_REBUILD", "outcomes REBUILD from the receipts",
+        rebuilt == arm["outcomes"],
         f"rebuilt={len(rebuilt)} aggregate={len(arm['outcomes'])}")
-    add("nodes count RECOMPUTES", len(rebuilt) == arm["nodes"],
+    add("CHAIN/NODES_RECOMPUTE", "nodes count RECOMPUTES", len(rebuilt) == arm["nodes"],
         f"rebuilt={len(rebuilt)} declared={arm['nodes']}")
 
     # ---- R-836 §4 [1]-[5]: THE FIVE SELF-ASSERTIONS, REBUILT ---------------
@@ -277,17 +527,23 @@ def verify_chain(tag, arm):
     # OWN, read from accept5_isolated_runner (aggregate():379-394, the receipt
     # builder's `problems` list, and `collected_but_unexecuted`) -- never
     # re-invented here, because a second copy of a rule is a second registry.
-    add("[1] duplicate_nodes REBUILDS from receipts",
-        len(d_dups) == arm["duplicate_nodes"],
+    # Each verdict now carries BOTH halves in one proposition: the DERIVED fact
+    # must be clean, AND the aggregate's copy of it must agree. Splitting them
+    # is what let a clean-looking summary sit beside a dirty derivation.
+    add("VERIFIED/DUPLICATE_NODES", "[1] duplicate node IDs: DERIVED clean and declared agrees",
+        (not d_dups) and len(d_dups) == arm["duplicate_nodes"],
         f"derived={len(d_dups)} declared={arm['duplicate_nodes']}"
         + (f" e.g. {d_dups[0]}" if d_dups else ""))
-    add("[2] collected_but_unexecuted REBUILDS from receipts",
-        d_cbu == arm["collected_but_unexecuted"],
-        f"derived={d_cbu} declared={arm['collected_but_unexecuted']}")
-    add("[3] invalid_children REBUILDS from receipt problems",
-        sorted(d_invalid) == sorted(arm["invalid_children"]),
+    add("VERIFIED/COLLECTED_BUT_UNEXECUTED",
+        "[2] collected-but-unexecuted: DERIVED from raw ids, declared agrees",
+        (not d_cbu_ids) and len(d_cbu_ids) == arm["collected_but_unexecuted"],
+        f"derived={len(d_cbu_ids)} declared={arm['collected_but_unexecuted']}"
+        + (f" e.g. {d_cbu_ids[0]}" if d_cbu_ids else ""))
+    add("VERIFIED/INVALID_CHILDREN",
+        "[3] invalid children: DERIVED from primitives, declared agrees",
+        (not d_invalid) and sorted(d_invalid) == sorted(arm["invalid_children"]),
         f"derived={len(d_invalid)} declared={len(arm['invalid_children'])} "
-        f"{sorted(d_invalid)[:3]}")
+        + (f"{d_invalid_why[0]}" if d_invalid_why else f"{sorted(d_invalid)[:3]}"))
 
     # [4] LIMITED-SUBSET. `[MEASURED, accept5_isolated_runner.py:502]` the
     # runner writes `limited_subset = bool(args.limit)` -- a FLAG ECHO that
@@ -307,13 +563,16 @@ def verify_chain(tag, arm):
     except SystemExit:
         _auth_files = None
     if _auth_files is None:
-        add("[4] limited_subset REBUILDS from manifest vs authority", False,
+        _absent = None
+        add("VERIFIED/NOT_LIMITED_SUBSET",
+            "[4] full population: DERIVED from manifest vs authority", False,
             "the governed population could not be derived -- fail-closed")
     else:
         _absent = sorted(_auth_files - _targets)
-        add("[4] limited_subset REBUILDS from manifest vs authority",
-            bool(_absent) == bool(arm["limited_subset"]),
-            f"derived={bool(_absent)} declared={arm['limited_subset']!r} "
+        add("VERIFIED/NOT_LIMITED_SUBSET",
+            "[4] full population: DERIVED from manifest vs authority",
+            (not _absent) and bool(_absent) == bool(arm["limited_subset"]),
+            f"derived_limited={bool(_absent)} declared={arm['limited_subset']!r} "
             f"({len(_absent)} governed file(s) absent from the arm"
             + (f", e.g. {_absent[0]}" if _absent else "") + ")")
 
@@ -334,7 +593,8 @@ def verify_chain(tag, arm):
     _slack = 0.01 * max(n_parsed, 1)
     arm["_derived_elapsed_s"] = d_elapsed
     arm["_derived_receipts"] = n_parsed
-    add("[5] [H] declared wall_s RECONCILES with receipt-derived elapsed",
+    add("VERIFIED/H_RECONCILES",
+        "[5] [H] declared wall_s RECONCILES with receipt-derived elapsed",
         arm["wall_s"] >= d_elapsed - _slack,
         f"declared={arm['wall_s']:.2f}s derived={d_elapsed:.2f}s "
         f"delta={arm['wall_s'] - d_elapsed:+.2f}s slack={_slack:.2f}s "
@@ -342,11 +602,48 @@ def verify_chain(tag, arm):
         + ("" if arm["wall_s"] >= d_elapsed - _slack else
            "  <- declared BELOW the serial sum of its own children"))
 
+    # ---- [H]'s OWNER: THE RUNNER'S LIVE MONOTONIC CLOCK (R-840 §3[D]) -------
+    # The comparator is DOWNSTREAM and cannot recover a parent's wall clock
+    # after the fact -- it can only be TOLD, and being told is what
+    # F-RATIFY1-1 convicted. So the fact is now minted by the process that
+    # holds the clock, refused at source when breached, and carried INSIDE the
+    # digest-bound manifest. This verdict checks the witness is present, is the
+    # right kind of clock, and passed its own gate.
+    #
+    #   THE OWNER OF A FACT ENFORCES THE FACT.
+    #
+    # An arm produced BEFORE this repair carries no witness. That arm is not
+    # certifiable, and it says so here rather than falling back to the claim.
+    _ceil = _runner_ceiling_s()
+    _t = man.get("timing")
+    _t_ok = (isinstance(_t, dict)
+             and _t.get("clock") == "time.monotonic"
+             and _t.get("within_ceiling") is True
+             and isinstance(_t.get("wall_s"), (int, float))
+             and float(_t.get("ceiling_s", -1)) == _ceil)
+    add("VERIFIED/TIMING_AUTHORITY",
+        "[H] the RUNNER minted a monotonic timing witness that passed at source",
+        _t_ok,
+        (f"clock={_t.get('clock')!r} wall_s={_t.get('wall_s')} "
+         f"ceiling_s={_t.get('ceiling_s')} within={_t.get('within_ceiling')!r}"
+         if isinstance(_t, dict) else
+         "manifest carries NO timing witness -- pre-R-840 arm, NOT certifiable "
+         "(the ceiling would otherwise rest on the arm's own claim)"))
+
+    _runner_wall = float(_t["wall_s"]) if _t_ok else None
+    _effective = max(_runner_wall, d_elapsed) if _t_ok else None
+    add("VERIFIED/H_CEILING", f"[H] runtime <= {CEILING_MIN} min, from the OWNER's clock",
+        _t_ok and _effective <= _ceil,
+        (f"{_effective / 60.0:.2f} min (runner={_runner_wall:.2f}s "
+         f"receipt-derived={d_elapsed:.2f}s ceiling={_ceil:.0f}s)"
+         if _t_ok else
+         "REFUSED: no runner timing authority to gate on"))
+
     # F-6: one pin for the whole arm, start to end, child by child.
-    add("arm_start_head == arm_end_head",
+    add("CHAIN/ARM_HEAD_STABLE", "arm_start_head == arm_end_head",
         man.get("arm_start_head") == man.get("arm_end_head"),
         f"{man.get('arm_start_head')} -> {man.get('arm_end_head')}")
-    add("every child measured the arm's pin",
+    add("CHAIN/CHILD_PINS", "every child measured the arm's pin",
         heads == {arm["head"]} if heads else False,
         f"distinct child heads={len(heads)} {sorted(heads)[:2]}")
 
@@ -356,12 +653,30 @@ def verify_chain(tag, arm):
     derived_rev = (targets == list(reversed(canonical)))
     if targets == canonical:
         derived_rev = False
-    add("reverse is DERIVED and matches the claim",
+    add("CHAIN/REVERSE_DERIVED", "reverse is DERIVED and matches the claim",
         derived_rev == bool(arm["reverse"]),
         f"claimed={arm['reverse']!r} derived={derived_rev!r}")
 
     arm["_node_sequences"] = seqs
     arm["_run_ids"] = run_ids
+
+    # ---- PUBLISH THE VERIFIED SURFACE (R-840 §3[C]) ------------------------
+    # These fields exist ONLY here, ONLY after the derivations above ran. The
+    # comparator consumes THEM; it may not reach into arm[...] for any fact
+    # this surface owns.
+    va.set("outcomes", rebuilt)
+    va.set("nodes", len(rebuilt))
+    va.set("duplicate_nodes", len(d_dups))
+    va.set("collected_but_unexecuted", len(d_cbu_ids))
+    va.set("invalid_children", list(d_invalid))
+    va.set("limited_subset", bool(_absent) if _absent is not None else True)
+    va.set("derived_elapsed_s", d_elapsed)
+    va.set("receipts", n_parsed)
+    va.set("node_sequences", seqs)
+    va.set("run_ids", run_ids)
+    va.set("runner_wall_s", _runner_wall)
+    va.set("timing_clock", _t.get("clock") if isinstance(_t, dict) else None)
+    va.set("timing_within_ceiling", bool(_t_ok))
     return V
 
 
@@ -418,6 +733,9 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
     """
     V = []
 
+    def add(pid, name, ok, detail):
+        V.append((pid, name, bool(ok), detail))
+
     # ---- ARM-RELATIONSHIP GUARD -------------------------------------------
     # Two same-direction runs diff to zero and would read as a perfect [G]
     # pass; two OPPOSED runs prove nothing about REPEATABILITY. Refuse first.
@@ -429,82 +747,101 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
         rel_name = "[I] arms are the SAME direction, run twice"
     else:
         raise SystemExit(f"{REFUSED} - unknown mode {mode!r}")
-    V.append((rel_name, rel_ok,
-              f"fwd.reverse={fwd['reverse']!r} rev.reverse={rev['reverse']!r}"))
-    V.append(("both arms measured the SAME commit", fwd["head"] == rev["head"],
-              f"{fwd['head']} vs {rev['head']}"))
+    add("PAIR/ARM_RELATION", rel_name, rel_ok,
+        f"fwd.reverse={fwd['reverse']!r} rev.reverse={rev['reverse']!r}")
+    add("PAIR/SAME_COMMIT", "both arms measured the SAME commit",
+        fwd["head"] == rev["head"], f"{fwd['head']} vs {rev['head']}")
 
     # ---- F-5 / F-6: ANCHOR THE PIN, DO NOT MERELY AGREE ON IT --------------
     # Agreement between arms is a relation between two claims. Neither of them
     # is bound to a commit that exists, nor to the commit being certified.
-    for tag, arm in (("forward", fwd), ("reverse", rev)):
-        V.append((f"{tag}: head RESOLVES to a real commit",
-                  _resolves_to_commit(arm["head"]), f"{arm['head']}"))
+    for tag, arm in ((ARMS[0], fwd), (ARMS[1], rev)):
+        add(f"{tag}/HEAD_RESOLVES", f"{tag}: head RESOLVES to a real commit",
+            _resolves_to_commit(arm["head"]), f"{arm['head']}")
     # Fail-closed: an unsupplied pin is a MISSING binding, never a waived one.
-    V.append(("arms are bound to the CERTIFIED pin", pin is not None
-              and fwd["head"] == pin and rev["head"] == pin,
-              f"pin={pin!r} fwd={fwd['head']!r} rev={rev['head']!r}"
-              + ("  <- NO --pin SUPPLIED; a certifying run must bind one"
-                 if pin is None else "")))
+    add("PAIR/PIN_BOUND", "arms are bound to the CERTIFIED pin",
+        pin is not None and fwd["head"] == pin and rev["head"] == pin,
+        f"pin={pin!r} fwd={fwd['head']!r} rev={rev['head']!r}"
+        + ("  <- NO --pin SUPPLIED; a certifying run must bind one"
+           if pin is None else ""))
 
-    # NOTE: the [H] gate USED to sit here. It now runs AFTER verify_chain
-    # (below), because its input is no longer the arm's own claim about itself
-    # and the derived value does not exist until the receipts are read.
-    V.append(("arms are distinct artifacts", fwd["_path"] != rev["_path"],
-              f"{fwd['_path']} vs {rev['_path']}"))
-    V.append(("neither arm is a LIMITED SUBSET",
-              (fwd["limited_subset"] is False) and (rev["limited_subset"] is False),
-              f"fwd={fwd['limited_subset']!r} rev={rev['limited_subset']!r}"))
-
-    # ---- PER-ARM INTEGRITY -------------------------------------------------
-    for tag, arm in (("forward", fwd), ("reverse", rev)):
-        V.append((f"{tag}: invalid children == 0", not arm["invalid_children"],
-                  f"{len(arm['invalid_children'])} {arm['invalid_children'][:5]}"))
-        V.append((f"{tag}: duplicate node IDs == 0", arm["duplicate_nodes"] == 0,
-                  str(arm["duplicate_nodes"])))
-        V.append((f"{tag}: collected-but-unexecuted == 0",
-                  arm["collected_but_unexecuted"] == 0,
-                  str(arm["collected_but_unexecuted"])))
-        obs = set(arm["outcomes"])
-        missing = sorted(required - obs)
-        invented = sorted(obs - required)
-        V.append((f"{tag}: missing required nodes == 0", not missing,
-                  f"{len(missing)} {missing[:5]}"))
-        V.append((f"{tag}: invented/unauthorized nodes == 0", not invented,
-                  f"{len(invented)} {invented[:5]}"))
+    add("PAIR/DISTINCT_ARTIFACTS", "arms are distinct artifacts",
+        fwd["_path"] != rev["_path"], f"{fwd['_path']} vs {rev['_path']}")
 
     # ---- LAYER 4: VERIFY THE CHAIN BEFORE COMPARING ANYTHING ---------------
     # VERIFY-BEFORE-COMPARE. A 0-difference result computed over unverified
     # inputs is exactly the false green F-1 describes, so the chain verdicts sit
     # in the SAME list the exit code folds.
     if chain:
-        V.extend(verify_chain("forward", fwd))
-        V.extend(verify_chain("reverse", rev))
+        V.extend(verify_chain(ARMS[0], fwd))
+        V.extend(verify_chain(ARMS[1], rev))
 
-    # ---- F-2 + F-RATIFY1-1: [H] IS A GATE, AND ITS INPUT IS NOT BELIEVED ---
-    # F-2 (closed earlier) made [H] a real verdict instead of a printed line.
-    # F-RATIFY1-1 is the sequel: the verdict was real but its INPUT was the
-    # arm's own claim, so the gate was unfalsifiable DOWNWARD -- wall_s = 1.0
-    # certified GREEN with receipts encoding ~377s.
+    # ---- PER-ARM INTEGRITY, FROM THE VERIFIED SURFACE (R-840 §3[C]) --------
+    # THIS IS THE HINGE OF THE WHOLE REPAIR, SO IT IS SPELLED OUT.
     #
-    #   MAKING A GATE REAL DOES NOT MAKE ITS INPUT TRUE.
+    # With the chain ON these facts come from VerifiedArm -- values DERIVED
+    # from receipt bytes by an authority outside the arm's own summary. With
+    # the chain OFF they can only come from the arm's claim about itself, so
+    # they are emitted under a DIFFERENT ID NAMESPACE (CLAIMED/) that is not a
+    # member of REQUIRED_PROOFS and therefore CANNOT SATISFY CERTIFICATION.
     #
-    # R-837 §2(b): the ceiling now folds the RECONCILED value. The paired
-    # reconciliation check lives in verify_chain() and catches the downward
-    # lie; this catches the upward one and stops anyone sneaking under.
-    for tag, arm in (("forward", fwd), ("reverse", rev)):
-        _declared = arm["wall_s"]
-        _derived = arm.get("_derived_elapsed_s")
-        _effective = _declared if _derived is None else max(_declared, _derived)
-        _mins = _effective / 60.0
-        V.append((f"{tag}: [H] wall clock <= {CEILING_MIN} min",
-                  _mins <= CEILING_MIN,
-                  f"{_mins:.2f} min (declared={_declared:.2f}s"
-                  + (f" receipt-derived={_derived:.2f}s"
-                     if _derived is not None else "")
-                  + f" effective={_effective:.2f}s)"
-                  + ("" if _derived is not None else
-                     "  <- NO CHAIN: the ceiling rests on the arm's own claim")))
+    # This is deliberately NOT "keep a weaker check rather than none" -- the
+    # instinct R-839 named as the root defect. The weaker check still runs and
+    # can still go RED, but it is structurally incapable of counting toward a
+    # certifying verdict, because completeness joins on IDs it does not have.
+    #
+    #   A DIAGNOSTIC MAY INFORM A HUMAN. IT MAY NEVER SATISFY A CERTIFICATION.
+    ns = "VERIFIED" if chain else "CLAIMED"
+    for tag, arm in ((ARMS[0], fwd), (ARMS[1], rev)):
+        va = arm.get("_verified") if chain else None
+        if chain:
+            _outcomes = va.outcomes
+        else:
+            _outcomes = arm["outcomes"]
+            add(f"{tag}/CLAIMED/INVALID_CHILDREN",
+                f"{tag}: [CLAIMED] invalid children == 0",
+                not arm["invalid_children"],
+                f"{len(arm['invalid_children'])} {arm['invalid_children'][:5]}")
+            add(f"{tag}/CLAIMED/DUPLICATE_NODES",
+                f"{tag}: [CLAIMED] duplicate node IDs == 0",
+                arm["duplicate_nodes"] == 0, str(arm["duplicate_nodes"]))
+            add(f"{tag}/CLAIMED/COLLECTED_BUT_UNEXECUTED",
+                f"{tag}: [CLAIMED] collected-but-unexecuted == 0",
+                arm["collected_but_unexecuted"] == 0,
+                str(arm["collected_but_unexecuted"]))
+            add(f"{tag}/CLAIMED/NOT_LIMITED_SUBSET",
+                f"{tag}: [CLAIMED] not a LIMITED SUBSET",
+                arm["limited_subset"] is False, f"{arm['limited_subset']!r}")
+            add(f"{tag}/CLAIMED/H_CEILING",
+                f"{tag}: [CLAIMED] wall clock <= {CEILING_MIN} min",
+                arm["wall_s"] / 60.0 <= CEILING_MIN,
+                f"{arm['wall_s'] / 60.0:.2f} min (declared={arm['wall_s']:.2f}s)"
+                f"  <- CLAIMED, not verified: cannot certify")
+        obs = set(_outcomes)
+        missing = sorted(required - obs)
+        invented = sorted(obs - required)
+        add(f"{tag}/{ns}/MISSING_REQUIRED_NODES",
+            f"{tag}: missing required nodes == 0", not missing,
+            f"{len(missing)} {missing[:5]}")
+        add(f"{tag}/{ns}/INVENTED_NODES",
+            f"{tag}: invented/unauthorized nodes == 0", not invented,
+            f"{len(invented)} {invented[:5]}")
+
+    # ---- F-2 + F-RATIFY1-1 + R-840 §3[D]: WHERE [H] LIVES NOW --------------
+    # The [H] gate USED to sit here, folding `_effective = _declared if
+    # _derived is None else max(...)`. That collapse WAS the defect: with the
+    # chain off, `_derived` was None, the ceiling silently fell back to the
+    # arm's own claim, and the comparator PRINTED that it had done so on an
+    # `OK` line at exit 0.
+    #
+    #   A CAPTION IS WHAT YOU WRITE WHEN YOU HAVE NOTICED SOMETHING AND
+    #   DECIDED NOT TO ACT ON IT.
+    #
+    # [H] is now TWO verdicts inside verify_chain(), both fed by authorities
+    # outside the claim: VERIFIED/TIMING_AUTHORITY (the runner's monotonic
+    # witness, gated at source) and VERIFIED/H_CEILING. There is no fallback
+    # here to write, because there is no branch in which a weaker [H] may
+    # count.
 
     if chain:
         # ---- ARE THESE TWO RUNS AT ALL? ------------------------------------
@@ -514,11 +851,12 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
         # so disjoint run_id sets is the cheapest proof of two real executions.
         #
         #   TWO FILES IN TWO DIRECTORIES ARE NOT TWO PIECES OF EVIDENCE.
-        ra, rb = fwd.get("_run_ids") or set(), rev.get("_run_ids") or set()
+        ra, rb = fwd["_verified"].run_ids, rev["_verified"].run_ids
         shared_ids = ra & rb
-        V.append(("arms are two DISTINCT EXECUTIONS (run_ids disjoint)",
-                  bool(ra) and bool(rb) and not shared_ids,
-                  f"fwd={len(ra)} rev={len(rb)} shared={len(shared_ids)}"))
+        add("PAIR/DISTINCT_EXECUTIONS",
+            "arms are two DISTINCT EXECUTIONS (run_ids disjoint)",
+            bool(ra) and bool(rb) and not shared_ids,
+            f"fwd={len(ra)} rev={len(rb)} shared={len(shared_ids)}")
 
         # ---- [G-NODE] CROSS-ARM RELATIONSHIP -------------------------------
         # node_axis="same"    the pair must NOT vary intra-file order
@@ -527,12 +865,17 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
         # Derived from the recorded sequences; the arms' own reverse_nodes flag
         # is a claim checked against it, never the source of truth.
         if node_axis in ("same", "reverse"):
-            a = fwd.get("_node_sequences") or {}
-            b = rev.get("_node_sequences") or {}
+            a = fwd["_verified"].node_sequences
+            b = rev["_verified"].node_sequences
             shared = sorted(set(a) & set(b))
+            # EVERY branch emits the SAME proof ID. The old shape emitted a
+            # DIFFERENTLY-NAMED verdict when there was nothing to compare, so
+            # the relation proof was simply absent -- and an absent proof is
+            # what row 12 exists to refuse.
             if not shared:
-                V.append((f"[G-NODE] arms share children to compare ({node_axis})",
-                          False, "no shared child node sequences recorded"))
+                add("PAIR/GNODE_RELATION",
+                    f"[G-NODE] intra-file order is {node_axis.upper()} across the arms",
+                    False, "no shared child node sequences recorded")
             else:
                 # A 0- or 1-node child satisfies BOTH `a == b` and
                 # `a == reversed(b)`. Testing "is not the reverse" for the
@@ -542,31 +885,40 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
                     bad = [t for t in shared if a[t] != b[t]]
                 else:
                     bad = [t for t in shared if a[t] != list(reversed(b[t]))]
-                V.append((f"[G-NODE] intra-file order is {node_axis.upper()} "
-                          f"across the arms", not bad,
-                          f"{len(shared)} shared children, {len(bad)} violating "
-                          f"{bad[:3]}"))
-                # ...and for a REVERSE pair the axis must have ACTUALLY varied.
-                # Satisfying "a == reversed(b)" across nothing but singletons
-                # would be a vacuous pass: the arms would be identical.
-                if node_axis == "reverse":
-                    varied = [t for t in shared if len(a[t]) >= 2 and a[t] != b[t]]
-                    V.append(("[G-NODE] the node axis GENUINELY varied",
-                              bool(varied),
-                              f"{len(varied)} child(ren) with >=2 nodes actually "
-                              f"reordered, of {len(shared)} shared"))
-            V.append(("[G-NODE] arms' declared node axis matches the request",
-                      (fwd.get("reverse_nodes") is not rev.get("reverse_nodes"))
-                      is (node_axis == "reverse"),
-                      f"fwd.reverse_nodes={fwd.get('reverse_nodes')!r} "
-                      f"rev.reverse_nodes={rev.get('reverse_nodes')!r}"))
+                add("PAIR/GNODE_RELATION",
+                    f"[G-NODE] intra-file order is {node_axis.upper()} across the arms",
+                    not bad,
+                    f"{len(shared)} shared children, {len(bad)} violating {bad[:3]}")
+            # ...and for a REVERSE pair the axis must have ACTUALLY varied.
+            # Satisfying "a == reversed(b)" across nothing but singletons would
+            # be a vacuous pass: the arms would be identical. Emitted on BOTH
+            # branches so it can never go missing.
+            if node_axis == "reverse":
+                varied = [t for t in shared if len(a[t]) >= 2 and a[t] != b[t]]
+                add("PAIR/GNODE_VARIED", "[G-NODE] the node axis GENUINELY varied",
+                    bool(varied),
+                    f"{len(varied)} child(ren) with >=2 nodes actually reordered, "
+                    f"of {len(shared)} shared")
+            add("PAIR/GNODE_AXIS_DECLARED",
+                "[G-NODE] arms' declared node axis matches the request",
+                (fwd.get("reverse_nodes") is not rev.get("reverse_nodes"))
+                is (node_axis == "reverse"),
+                f"fwd.reverse_nodes={fwd.get('reverse_nodes')!r} "
+                f"rev.reverse_nodes={rev.get('reverse_nodes')!r}")
 
     # ---- THE ORACLE --------------------------------------------------------
-    D = diff(fwd["outcomes"], rev["outcomes"])
-    V.append((("[G] EXACT node-outcome identity forward vs reverse"
-               if mode == "order" else
-               "[I] EXACT node-outcome identity across repeats"), not D,
-              f"{len(D)} differing node(s)"))
+    # R-840 §3[C]: in a certifying run the oracle compares the REBUILT maps --
+    # the outcomes derived from receipt bytes -- not the aggregates' own copies
+    # of them. The oracle is THE claim, so it may not be the one place that
+    # still reads a summary.
+    _fo = fwd["_verified"].outcomes if chain else fwd["outcomes"]
+    _ro = rev["_verified"].outcomes if chain else rev["outcomes"]
+    D = diff(_fo, _ro)
+    add("PAIR/ORACLE",
+        ("[G] EXACT node-outcome identity forward vs reverse"
+         if mode == "order" else
+         "[I] EXACT node-outcome identity across repeats"), not D,
+        f"{len(D)} differing node(s)")
 
     if D and out_dir:
         p = Path(out_dir) / f"{'G' if mode == 'order' else 'I'}-DIFFERENCES.txt"
@@ -576,7 +928,8 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
     return V, D
 
 
-def report(fwd, rev, required, V, D, mode="order"):
+def report(fwd, rev, required, V, D, mode="order", node_axis=None,
+           certifying=True):
     ob = "[G]" if mode == "order" else "[I]"
     a, b = (("forward", "reverse") if mode == "order" else ("run-1  ", "run-2  "))
     print()
@@ -587,9 +940,20 @@ def report(fwd, rev, required, V, D, mode="order"):
     print()
     print(f"=== [H] SERIAL WALL CLOCK -- pre-registered ceiling {CEILING_MIN} min per arm ===")
     for tag, arm in ((a.strip(), fwd), (b.strip(), rev)):
-        mins = arm["wall_s"] / 60.0
-        note = "OK" if mins <= CEILING_MIN else "*** EXCEEDS CEILING -- STOP AND REPORT, DO NOT PARALLELIZE ***"
-        print(f"  {tag:8s} {mins:6.2f} min   {note}")
+        # Print the OWNER's number when it exists, and say plainly when it does
+        # not. A display that silently shows the claim is how a reader comes to
+        # believe an unverified figure.
+        va = arm.get("_verified")
+        rw = va.runner_wall_s if (va is not None and va.has("runner_wall_s")) else None
+        if rw is None:
+            print(f"  {tag:8s} {arm['wall_s'] / 60.0:6.2f} min   "
+                  f"CLAIMED BY THE ARM -- no runner timing authority "
+                  f"(not certifiable)")
+        else:
+            mins = rw / 60.0
+            note = ("OK" if mins <= CEILING_MIN else
+                    "*** EXCEEDS CEILING -- STOP AND REPORT, DO NOT PARALLELIZE ***")
+            print(f"  {tag:8s} {mins:6.2f} min   runner monotonic clock   {note}")
     print()
     if D:
         print(f"=== {ob} DIFFERENCES -- ALL {len(D)}, NEVER SLICED ===")
@@ -597,11 +961,42 @@ def report(fwd, rev, required, V, D, mode="order"):
             print(f"  {nid}\n      {a.strip()}={x}   {b.strip()}={y}")
         print()
     print(f"=== {ob} VERDICT ===")
-    for name, ok, detail in V:
+    for _pid, name, ok, detail in V:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:52s} {detail}")
-    allok = all(ok for _, ok, _ in V)
+    allok = all_true(V)
+
+    # ---- THE COMPLETENESS PROPERTY (R-840 §3[B], row 12) -------------------
+    # `all()` over an append-built list cannot see its own missing members. So
+    # the required set is joined EXPLICITLY, and a proof that never ran is a
+    # REFUSAL -- never a silent pass.
+    missing, dupes = completeness(V, node_axis)
+    req = required_proofs(node_axis)
     print()
-    if allok:
+    print(f"=== EVIDENCE CONTRACT -- required {len(req)}, observed "
+          f"{len(observed_proofs(V))}, MISSING {len(missing)} ===")
+    if missing:
+        for pid in missing:
+            print(f"  MISSING  {pid}")
+    if dupes:
+        for pid in dupes:
+            print(f"  DUPLICATE {pid}  <- one ID emitted twice; the contract is a SET")
+    if not missing and not dupes:
+        print("  every required proof is PRESENT")
+
+    complete = (not missing) and (not dupes)
+    satisfied = bool(certifying and allok and complete)
+    print()
+    if not certifying:
+        print(f"*** {ob} DIAGNOSTIC RUN -- NOT A CERTIFICATION. ***")
+        print(f"    Provenance verification was disabled, so the certifying "
+              f"evidence set cannot be assembled. This mode is structurally "
+              f"incapable of printing {ob} SATISFIED (R-840 §3[A]).")
+    elif not complete:
+        print(f"*** {REFUSED} -- INCOMPLETE CERTIFICATION EVIDENCE: "
+              f"{len(missing)} required proof(s) never ran. ***")
+        print(f"    An ABSENT check and a PASSING check are the same value to "
+              f"all(). This refuses on the difference (R-840 §3[B]).")
+    elif satisfied:
         print(f"{ob} SATISFIED - " + ("EXACT NODE-OUTCOME IDENTITY UNDER REORDERING"
                                       if mode == "order" else
                                       "EXACT NODE-OUTCOME IDENTITY ACROSS REPEATS "
@@ -609,7 +1004,7 @@ def report(fwd, rev, required, V, D, mode="order"):
     else:
         print(f"*** {ob} NOT SATISFIED -- STOP AND REPORT. Do NOT repair while the "
               f"evidence is half-understood (R-825 sec6[5]). ***")
-    return allok
+    return satisfied
 
 
 # --------------------------------------------------------------------------
@@ -654,8 +1049,13 @@ def red_proof():
     # red_proof_chain() below. C12's lesson is that a fixture normalizes
     # whatever it skips, so the skip is bounded and separately covered.
     def run(name, f, r, expect_pass, mode="order", pin=REAL_PIN, chain=False):
+        # These cases assert the ORACLE AND GUARD logic, so they fold
+        # all_true() -- "did every verdict that ran pass?". Completeness is a
+        # separate property with its own controls (A/B/C/J below); folding it
+        # here would turn every synthetic case RED for the same reason and
+        # destroy the suite's ability to discriminate.
         V, _ = compare(f, r, req, mode=mode, pin=pin, chain=chain)
-        ok = all(v for _, v, _ in V)
+        ok = all_true(V)
         cases.append((name, ok is expect_pass,
                       f"expected {'GREEN' if expect_pass else 'RED'}, "
                       f"got {'GREEN' if ok else 'RED'}"))
@@ -841,8 +1241,8 @@ def red_proof_chain(workdir, a1, a2, a3):
         try:
             V, _ = compare(load_arm(f), load_arm(r), req, mode=mode, pin=pin,
                            chain=True, node_axis=node_axis)
-            ok = all(v for _, v, _ in V)
-            why = next((n for n, v, d in V if not v), "")
+            ok = all_true(V)
+            why = next((n for _p, n, v, _d in V if not v), "")
         except SystemExit as exc:
             ok, why = False, f"REFUSED: {exc}"
         cases.append((name, ok is expect_pass,
@@ -902,7 +1302,7 @@ def red_proof_chain(workdir, a1, a2, a3):
     try:
         Vb, Db = compare(load_arm(a1), load_arm(a3), req, mode="repeat", pin=PIN,
                          chain=True, node_axis="reverse")
-        chain_v = [(n, ok) for n, ok, _ in Vb
+        chain_v = [(n, ok) for _p, n, ok, _d in Vb
                    if "EXACT node-outcome identity" not in n]
         bad_chain = [n for n, ok in chain_v if not ok]
         cases.append(("C4b genuine node-reversed pair: CHAIN accepts it => GREEN",
@@ -1076,12 +1476,32 @@ def main(argv=None):
     # PRINTED on a Windows console, where a non-ASCII glyph renders as mojibake.
     # A refusal nobody can read is a refusal that gets ignored.
 
+    # ---- R-840 §3[A]: ONE CERTIFYING PATH, REFUSED BEFORE COMPARISON -------
+    # `[MEASURED BY GRADED INSTRUMENT, CRITICAL-1]` --pin had a fail-closed
+    # guard for --node-axis eleven lines above and NONE for --no-chain, in the
+    # same function. With both flags supplied, a forged arm certified at exit 0
+    # while every provenance, node-axis and run-identity verdict silently
+    # vanished from the list all() folded.
+    #
+    #   NO CLI FLAG MAY CONVERT A CERTIFYING RUN INTO A DIAGNOSTIC ONE
+    #   INVISIBLY. THE TWO ARE NOW DIFFERENT RUNS, AND ASKING FOR BOTH IS AN
+    #   ERROR RATHER THAN A PREFERENCE.
+    if args.pin and args.no_chain:
+        raise SystemExit(
+            f"{REFUSED} - a certifying comparison (--pin supplied) may not "
+            f"disable provenance verification (--no-chain). The chain carries "
+            f"the node-axis, run-identity and derived-integrity proofs a "
+            f"certification requires; without it there is no certifying "
+            f"evidence set to complete (R-840 sec 3[A]). Drop --pin to run a "
+            f"DIAGNOSTIC comparison, which cannot certify.")
+
     fwd, rev = load_arm(args.forward), load_arm(args.reverse)
     required = authority_nodes()
+    chain = not args.no_chain
     V, D = compare(fwd, rev, required, out_dir=args.out_dir, mode=args.mode,
-                   pin=args.pin, chain=not args.no_chain,
-                   node_axis=args.node_axis)
-    return 0 if report(fwd, rev, required, V, D, mode=args.mode) else 1
+                   pin=args.pin, chain=chain, node_axis=args.node_axis)
+    return 0 if report(fwd, rev, required, V, D, mode=args.mode,
+                       node_axis=args.node_axis, certifying=chain) else 1
 
 
 if __name__ == "__main__":

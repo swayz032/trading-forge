@@ -57,6 +57,24 @@ import population_successor as _popsucc        # noqa: E402
 REPO = _runner.REPO
 REFUSED = "ACCEPTANCE INSTRUMENT REFUSED"
 
+# ---- [H] TIMING AUTHORITY (R-840 §3[D], authority-table row 10) -------------
+# THE OWNER OF A FACT ENFORCES THE FACT. The [H] ceiling used to be enforced
+# only downstream, by the comparator, reading `wall_s` -- a number this runner
+# wrote about itself. `[MEASURED BY GRADED INSTRUMENT, F-RATIFY1-1]` forging it
+# to 1.0 certified GREEN, because the arm was the sole authority on its own
+# runtime and the check consumed the claim.
+#
+# The value is FROZEN and unchanged (600.0s == the pre-registered 10.0 min,
+# R-825 §6[6]); R-840 moves its OWNER, not its number. This module is now that
+# owner: it measures with a monotonic clock it holds live, and REFUSES AT
+# SOURCE. A breaching arm is never emitted as certifiable, so no downstream
+# reader has to be trusted to catch it.
+#
+# This is the SINGLE REGISTRY for the ceiling. The comparator imports it rather
+# than keeping a second copy -- a second copy of a rule agrees until the day it
+# does not.
+CEILING_S = 600.0
+
 
 def _slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", path).strip("_")
@@ -191,14 +209,22 @@ def _run_child_inner(target_file, targets, run_root, *, layer2=True, blind=False
     if reverse_nodes:
         cmd.append("--accept5-reverse-nodes")
 
-    started = time.time()
+    # R-840 §3[D] / row 10: MONOTONIC, not wall clock. `elapsed_s` is a DURATION,
+    # and time.time() can step backwards (NTP correction, DST, a manual set) --
+    # which would understate the very duration a certification ceiling rests on.
+    #
+    #   A HARD GATE MAY NOT REST ON A CLOCK THAT CAN JUMP.
+    #
+    # STOP M: this changes no child command, no ordering, no isolation and no
+    # outcome parsing -- only WHICH CLOCK measures the same interval.
+    started = time.monotonic()
     try:
         proc = subprocess.run(cmd, cwd=REPO, capture_output=True,
                               encoding="utf-8", errors="replace", timeout=timeout)
         rc, stdout, stderr, timed_out = proc.returncode, proc.stdout, proc.stderr, False
     except subprocess.TimeoutExpired as exc:
         rc, stdout, stderr, timed_out = None, (exc.stdout or ""), (exc.stderr or ""), True
-    elapsed = time.time() - started
+    elapsed = time.monotonic() - started
 
     receipt = {
         "file": target_file, "targets": targets, "run_id": run_id,
@@ -436,7 +462,7 @@ def main(argv=None):
     print(f"artifacts {run_root}")
 
     tree_start = _authority_surface_digest()     # C13, R-828 §4a / R-829 §2
-    receipts, t0 = [], time.time()
+    receipts, t0 = [], time.monotonic()          # R-840 §3[D]: monotonic owner
     for i, f in enumerate(files, 1):
         r = run_child(f, plan["children"][f], run_root,
                       layer2=not args.no_layer2, blind=args.ownership_blind,
@@ -446,7 +472,24 @@ def main(argv=None):
         flag = "!!" if r["problems"] else "  "
         print(f"{flag} [{i:3d}/{len(files)}] rc={str(r['returncode']):>4} "
               f"{r['elapsed_s']:6.1f}s nodes={len(r['outcomes']):4d} {f}")
-    wall = time.time() - t0
+    wall = time.monotonic() - t0
+
+    # ---- [H] TIMING WITNESS, MINTED BY THE OWNER (R-840 §3[D], row 10) -----
+    # This is the durable record of a fact only this process could observe: the
+    # parent's own live monotonic interval. It is written into the MANIFEST --
+    # not merely the aggregate -- so it is covered by manifest_sha256 and the
+    # comparator can recompute it from bytes instead of believing a summary.
+    #
+    #   THE CEILING IS ENFORCED HERE, WHERE THE CLOCK IS. A DOWNSTREAM READER
+    #   CANNOT RECOVER A PARENT'S WALL CLOCK AFTER THE FACT -- IT CAN ONLY BE
+    #   TOLD, AND BEING TOLD IS WHAT F-RATIFY1-1 CONVICTED.
+    timing = {
+        "clock": "time.monotonic",
+        "wall_s": round(wall, 3),
+        "ceiling_s": CEILING_S,
+        "within_ceiling": bool(wall <= CEILING_S),
+        "children": len(files),
+    }
 
     agg = aggregate(receipts)
     bad = [r for r in receipts if r["problems"]]
@@ -488,6 +531,10 @@ def main(argv=None):
             json.dumps(sorted(plan["children"])).encode("utf-8")).hexdigest(),
         "reverse": bool(args.reverse),
         "reverse_nodes": bool(args.reverse_nodes),
+        # R-840 §3[D]: the [H] authority travels INSIDE the digest-bound
+        # manifest, so the ceiling's evidence is chain-protected like every
+        # other provenance fact rather than sitting loose in the summary.
+        "timing": timing,
         "entries": entries,
     }
     mpath = run_root / "manifest.json"
@@ -514,6 +561,18 @@ def main(argv=None):
     if arm_end_head != head:
         print(f"{REFUSED} - THE TREE MOVED MID-ARM: started {head}, ended "
               f"{arm_end_head}. This arm measured more than one commit.")
+        return 2
+
+    # ---- [H] REFUSAL AT SOURCE (R-840 §3[D], row 10 FAIL-CLOSED) -----------
+    # The evidence above is written FIRST and deliberately: a breaching arm
+    # must leave a durable, inspectable record of WHY it was refused. What it
+    # must never do is exit 0 and become a certifiable input.
+    if not timing["within_ceiling"]:
+        print(f"{REFUSED} - [H] CEILING BREACHED AT SOURCE: this arm took "
+              f"{wall:.1f}s against a frozen ceiling of {CEILING_S:.1f}s. "
+              f"The arm is NOT certifiable. Do NOT raise the ceiling and do "
+              f"NOT parallelise (R-834 §9); the evidence is preserved at "
+              f"{run_root} for diagnosis.")
         return 2
 
     print()
