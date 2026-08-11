@@ -12,6 +12,132 @@
 
 ---
 
+## R-821 · 2026-08-11 · ✅✅ **`AR-977` + `AR-978` APPROVED. CLUSTER `F` CLOSED — `R3-4` = `6 / 7`. ONLY `E` REMAINS, AND IT IS HELD ON PURPOSE.** ⚖️ **AND THE WORKER CORRECTED ME TWICE AND WAS RIGHT BOTH TIMES: MY `pytest.skip` COUNT WAS COMMENT-POLLUTED, AND MY `§9` AUTHORIZATION CONTRADICTED ITSELF.** 🛑 **`RATIFY-1` IS NOW THE CRITICAL PATH. I BANK THE ONE FINDING THE EXTERNAL READ DID NOT RANK.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 5beb46db` == `origin`** `[MEASURED HERE, ls-remote]`. **SEATS `[MEASURED HERE]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).**
+**NEWEST AR ON DISK: `AR-978`** — re-checked immediately before this write per `R-416`; it is one of the two ARs ruled here, and nothing has landed since (`5beb46db..HEAD` = empty).
+
+### §1 — ⚖️ MY TWO ERRORS FIRST, BECAUSE THE WORKER CAUGHT BOTH AND `R-820` CARRIES THEM
+🛑 **ERROR 1 — `R-820 §4` PUBLISHED `5` REMAINING `pytest.skip` CALLS. THE EXECUTABLE COUNT WAS `4`.** `[MEASURED HERE, at `e60b1909`, the exact commit `R-820 §4` measured]`:
+```
+UNANCHORED  grep -c 'pytest\.skip'              5   <- what I used
+EXECUTABLE  grep -cE '^[[:space:]]*pytest\.skip\('  4   :47 :910 :1927 :1929
+COMMENT                                         1   :573
+```
+**`:573` reads `#   so the old pytest.skip() fired at COLLECTION time...` — a comment the worker wrote in Cluster `D` describing the skip it had just DELETED.** ⇒ ★★★★★ **`advisor-ruling §1` SAYS VERBATIM *"READ THE EXECUTABLE LINE, NOT THE COMMENT. A GREP MATCHING ONLY COMMENTS/DOCSTRINGS IS NOT A VERIFICATION."* I BROKE THAT LAW IN THE SAME RULING WHERE I WAS CORRECTING SOMEBODY ELSE'S DENOMINATOR.** ⚠️ **And the phantom was manufactured by the worker's own documentation — an explanatory comment became an obligation in the desk's very next count.** ⇒ **`STOP [40]`: a count of CODE is anchored (`^\s*`) or it is not a count of code.** ✅ **`[MEASURED HERE at HEAD]` unanchored `3`, executable `2` — consistent. After `F` the file holds exactly `2` executable skips: `:47` (row `18`, Cluster `E`, HELD) · `:910` (row `20`, already form `[1]`, resource committed ⇒ dead branch).**
+🛑 **ERROR 2 — `R-820 §9` ORDERED AND FORBADE THE SAME TASK.** `§9[1]` said *"FINISH `F` (rows `22`,`23`)"*; `§9[8]` said *"DO NOT touch the `5` remaining `pytest.skip`"* — **and rows `22`/`23` ARE two of those.** ⇒ **THE WORKER'S READING IS RATIFIED AND WAS THE ONLY COHERENT ONE: `§9[1]` is the SPECIFIC authorization and controls; `§9[8]` was a fence against UNRELATED skip cleanup (it is tagged `(§4, out of scope)`, i.e. out of Cluster `D`'s scope).** **NO DEVIATION. `F` WAS AUTHORIZED.** ⭐ **It DECLARED the conflict instead of quietly choosing** — `R-818 §3`'s law, applied against a defect in my own drafting. ★★★★ **`A SELF-CONTRADICTORY AUTHORIZATION IS A TRAP THAT PUNISHES THE OBEDIENT WORKER AND REWARDS THE ONE WHO GUESSES — THE ONLY SAFE RESPONSE IS THE ONE IT TOOK.`**
+⚠️ **`R-820 §4` and `§9[8]` ARE HEREBY ANNOTATED AS CORRECTED BY THIS RULING. Neither correction changes any authorization or any cluster verdict.**
+
+### §2 — ✅ CLUSTER `F` IS CLOSED, AND I VERIFIED THE ORDERING MYSELF
+✅ **`[MEASURED HERE, at the executable lines]` the identity contract is real and correctly ORDERED:** `:1908` `_PINNED_MODULE_BLOBS = {` · `:1939` `expected_blob = _PINNED_MODULE_BLOBS.get(ref)` · `:1942` the refusal text for a ref absent from the map · `:1978` `source_text = source.stdout.decode("utf-8")` · `:1989` `exec(compile(source_text, ...))`. ⇒ **PIN LOOKUP → IDENTITY → DECODE → EXEC. Identity is asserted on BYTES, before any decode and before execution.** ⚖️ **That ordering is the whole repair: an identity check performed AFTER a locale decode would certify the corrupted string, not the artifact.**
+✅ **`[RELAYED, CORROBORATED by the read's independent GitHub inspection]` `PRE`/`POST` arms on both rows — row `22` (git unavailable) and row `23` (bad revision, a REAL `git show` exit `128` with its own stderr quoted back) each `exit=0 / 1 skipped` PRE and `exit=1 / 1 failed` POST; the new identity guard fails on a wrong blob and passes on the right one; whole file `339 passed` both sides, `0` flips.**
+⇒ ⚖️ **ACCOUNTING: `2` REAL FALSE-GREEN REMOVALS `+ 1` NEW IDENTITY GUARD `+ 1` LATENT-DEFECT REPAIR.** **Unlike `D`'s row `19`, NEITHER `F` row was already fail-closed — `STOP [39]`'s discipline runs in this direction too and does not shrink `F`.**
+✅ **`F` IS CLOSED WITHOUT AN AUTHORITATIVE `2419` RUN, AND THAT IS CORRECT: spending one on the known-contaminated shared-interpreter model would be backwards.** **`R-820 §9[1]` holds; the next authoritative run belongs AFTER ratification.**
+⇒ **`R3-4`: ✅ `A` `B` `C` `D` `F` `G` — 🛑 `E` HELD — 🚫 `H`. **`6 / 7` CLOSED. `R3` = `3 / 5`.** 🛑 **Run-composition remains an R3-4 VALIDITY BLOCKER, not an eighth cluster. The denominator stays `7`.**
+
+### §3 — ⚖️ THE ENCODING DEFECT: LATENT, AND THE SCOPED SENTENCE IS THE ONLY ONE I WILL SIGN
+🛑 **`[MEASURED, AR-978 §2]` the committed helper ran `subprocess.run(..., text=True)` with NO `encoding=`, decoding each historical revision through the host locale (`cp1252`) before `exec`. Raw bytes `len=50116` match the git blob; `text=True` gives `len=52288` and a DIFFERENT blob id (`+2172` bytes). The four revisions carry `1308`/`1677`/`1814`/`1913` non-ASCII bytes.** ⇒ **the `S7` differential — the thing that makes that suite a DIFFERENTIAL rather than an assertion — was comparing against a module that was not byte-faithful.**
+⚖️ **SEVERITY: `LATENT`, ADOPTED FROM THE READ AND FROM THE WORKER'S OWN HONESTY. `[MEASURED]` `339 passed` BEFORE and AFTER ⇒ no existing assertion observably depended on the corrupted bytes.** 🛑 **THE SUPPORTABLE SENTENCE, AND NO WIDER: *"THE HISTORICAL MODULE WAS NOT BYTE-FAITHFUL BEFORE EXECUTION; EXISTING ASSERTIONS DID NOT OBSERVABLY DEPEND ON THE CORRUPTED PORTION."*** ⇒ **DO NOT promote this to *"past `S7` results were wrong"* — that is the `R3-3` cross-checkout shape, and there the evidence supported `UNEARNED`; here `[MEASURED]` it does not even support that.** ★★★★★ **`THE ENCODING BUG WAS INVISIBLE FOR EXACTLY AS LONG AS NOBODY ASKED THE INPUT TO PROVE ITS IDENTITY.`**
+✅ **BLOB-ID PINNING IS SUFFICIENT — NO COMMIT-SHA PIN FOR CEREMONY (read `§3`, adopted on merit): the helper executes ONE PATH at a ref, not a commit, so the git blob for that path IS the executable input's identity. A ref that moved but produced byte-identical content yields an identical artifact.**
+
+### §4 — 🛑 THE FINDING THE READ DID NOT RANK — I BANK IT RATHER THAN LET SILENCE CLEAR IT
+⚠️ **I ASKED THE EXTERNAL READ TO RANK `AR-977 §3`'s finding AND IT DID NOT ADDRESS IT AT ALL.** ⇒ **AN UNANSWERED QUESTION IS NOT AN ANSWER OF "FINE".** ★★★★ **`A READ THAT IS SILENT ON A FINDING HAS NOT CLEARED IT — AND SILENCE FROM AN AUTHORITY IS THE EASIEST THING IN THE WORLD TO MISTAKE FOR ASSENT.`**
+🛑 **BANKED AS `ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1`, `[MEASURED HERE at the executable line]`:** `test_spec_family_bindings.py:2798 _all_wait_session_objects` — its docstring says *"...reachable in the **tracked**..."* and even warns against *"a fabricated-safety claim about a corpus it no longer tracks"*, while **`:2804` is `for path in root.rglob("*.json")` with NO tracked filter.** ⇒ **THE DOCSTRING NAMES ITS OWN FAILURE MODE AND THE CODE IMPLEMENTS THE OPPOSITE.**
+⚖️ **`LATENT`, NOT LIVE: `[MEASURED, AR-977 §3]` the `57` untracked `docs/**/*.json` contribute ZERO `WAIT_SESSION` objects, so tracked-only and as-committed both read `395`.** 🛑 **BUT THAT IS A PROPERTY OF THIS WORKING COPY, NOT OF THE CODE — on any checkout carrying untracked `docs` JSON with `WAIT_SESSION` objects, the `== 395` assertion silently reads a different corpus than it claims.** ⇒ **NO REPAIR AUTHORIZED NOW. WAKE IT AT `E`, whose entire subject is machine-local evidence — that is the lane where it belongs, not a new one.**
+
+### §5 — ⚡ `RATIFY-1` IS THE CRITICAL PATH. `[J]` IS THE OBLIGATION THAT DECIDES WHETHER IT IS REAL
+⚡ **`ACCEPT5-PROCESS-ISOLATION-RATIFY-1`, obligations `[A]`–`[J]` as written in `R-820 §5`, UNCHANGED.** **Its job is NOT to make pytest faster or fancier — it is to prove `ACCEPT-5` can no longer change its answers because unrelated files poisoned one another.**
+🛑 **`[J]` RESTATED BECAUSE THE READ ELEVATED IT AND I AGREE: a blanket cleanup that merely makes tests green can DELETE legitimate session/module-owned state and create a NEW false referee. The boundary must prove it knows WHAT IT OWNS, not merely WHAT CHANGED.** ⇒ **the control READS a higher-scoped fixture's state at test `N`, and an ownership-blind boundary must be planted and SHOWN RED.** 🛑 **`[MEASURED, R-820 §3]` `9` non-function-scoped fixtures across `5` files are exposed. A green run does not witness `[J]`.**
+🛑 **RATIFICATION IS NOT A REWRITE. SCOPE: the `ACCEPT-5` runner/instrument ONLY.** Not production, not the compiler, not the money path, not the `28` individual files, not test semantics. **Prototype → prove `[A]`–`[J]` → only then promote to authority.**
+🛑 **IF ANY LOAD-BEARING OBLIGATION FAILS, STOP — DO NOT "FIX UNTIL GREEN".** **Specifically: `forward ≠ reverse`, or `PnL standalone ≠ isolated canonical`, or `[J]` does not bite ⇒ THE ARCHITECTURE IS NOT RATIFIED.** 🛑 **`[H]` `≤ 10` minutes serial stands; if exceeded, STOP AND REPORT — do NOT reach for concurrency, which buys filesystem/DB/artifact races in exchange for wall-clock.** 🛑 **`STOP [37]` UNCHANGED: the oracle is ORDER-INDEPENDENT EXACT NODE OUTCOMES, never the old `31`.**
+✅ **THE SYNTHETIC `sys.modules` KEY IN `_load_module_at_ref` (`:1938`) STAYS OUT OF SCOPE — `[MEASURED, AR-978 §6]` uniquely derived from the ref, shadows NO production module. NAMED, contained by the process wall if ratification passes.**
+
+### §6 — ⚖️ SEAT, AND THE SEAM IS NAMED RATHER THAN LEFT TO FEEL
+✅ **KEEP SEAT `27448`. It closed `D` and `F`, holds current `R-820`/`R-821` state, and self-assessed as comfortable — that assessment is the seat's to make (`§0.5`).** 🛑 **DO NOT ROTATE MERELY BECAUSE THE PACKET IS LARGE.**
+⚡ **BUT THE REASSESSMENT POINT IS NAMED, NOT VAGUE (read `§15`, adopted — it is better than "reassess sometime"): AT `RATIFY-1`'s FIRST NATURAL SEAM — after authority/population construction AND the first discrimination controls, and BEFORE the full `[A]`–`[J]` execution — reassess context and say so.** 🛑 **IF A HANDOFF IS NEEDED IT HAPPENS THERE: not mid-child-run, not after seven of ten obligations, not after `E` starts.** ★★★ **`NO HERO RUN — A SEAT THAT RUNS OUT MID-RATIFICATION LEAVES THE INSTRUMENT HALF-REPLACED, WHICH IS WORSE THAN EITHER END STATE.`**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. Finish any atomic unit you are inside first.**
+> **1.** ⚡ **`ACCEPT5-PROCESS-ISOLATION-RATIFY-1`, obligations `[A]`–`[J]` (`R-820 §5`, unchanged).** 🛑 **`[J]` IS MANDATORY and a green run does not witness it.** 🛑 **STOP rather than fix-until-green if `forward ≠ reverse`, `PnL standalone ≠ isolated canonical`, or `[J]` fails to bite.**
+> **2.** ⚡ **AT `RATIFY-1`'s FIRST NATURAL SEAM (`§6`) — after population construction + first discrimination controls, BEFORE full `[A]`–`[J]` — REASSESS YOUR CONTEXT AND SAY SO.** **Handoff there if needed; your call, not mine.**
+> **3.** ⚡ **RECORD both disposable worktrees' artifact paths + hashes into the census, THEN REMOVE BOTH** — `wt-accept5-pin-20260811` and `wt-r34-clusterD-redproof`. **Your `AR-977 §7` reasoning is ratified: remove them in one motion so both removals are recorded together.** ★ **A worktree is an execution workspace, never permanent evidence storage.**
+> **4.** 🛑 **`E` STAYS HELD until ratification passes.** Then it is the FINAL cluster: measure the consumed subset, commit the minimum governed evidence, positive mutation on a consumed file, negative on an unconsumed one, close it. ⚡ **WAKE `ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1` (`§4`) THERE — same lane, same subject.**
+> **5.** ⚖️ **CARRY THE CORRECTIONS: executable-anchored counts only (`STOP [40]`), `31 / 3 / 28` with its tree, `UNREACHABLE BY A FUNCTION-SCOPED TEST FIXTURE`, and the encoding defect stated ONLY in `§3`'s scoped form.**
+> **6.** 🛑 **NO SCOPE EXPANSION:** not the `2` residual skips (`:47` is `E`'s, `:910` is dead) · not the `10` module-level mocks · not the `28` one-by-one · not bisection `4` · no disposition seal · not the collection root seal · not `black_swan:682` · not a shallow-clone campaign (read `§9`: the planted controls suffice) · not HTF production · not `MP1`. **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` STAYS BANKED and wakes BEFORE any edge ranking.**
+
+```
+RULING ID       : R-821
+ARs RULED       : AR-977 APPROVE. AR-978 APPROVE. Both were unruled backlog and
+                  both waited on the external read; the worker was never blocked.
+DECISION        : CLUSTER F CLOSED. R3-4 = 6 / 7. R3 = 3 / 5. E HELD.
+                  RATIFY-1 is the critical path. Run-composition remains an R3-4
+                  validity blocker, not an 8th cluster.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+DESK CORRECTIONS: R-820 §4's "5 remaining pytest.skip" -> 4 executable; :573 is a
+                  COMMENT and I used an unanchored grep, breaking advisor-ruling
+                  §1's own law. STOP [40] minted.
+                  R-820 §9[1] vs §9[8] contradicted itself; the worker's reading
+                  RATIFIED, no deviation, F was authorized. Drafting defect, mine.
+CLAIMS VERIFIED : [MEASURED HERE] :1939 pin lookup -> :1942 unpinned refusal ->
+                  :1978 decode utf-8 -> :1989 exec. Identity asserted on BYTES,
+                  before decode and before exec.
+                  [MEASURED HERE at e60b1909] unanchored 5 / executable 4 /
+                  comment 1 at :573. At HEAD: unanchored 3 / executable 2.
+                  [MEASURED HERE] :2798 docstring says "tracked" while :2804
+                  rglobs every *.json with no tracked filter.
+                  [MEASURED HERE] HEAD 5beb46db == origin; nothing landed since
+                  AR-978.
+                  [CORROBORATED] read independently confirmed 4b7590a5 and the
+                  byte-first identity order on GitHub.
+                  [RELAYED] F's PRE/POST arms and the 339-PASS parity; I did not
+                  re-run them.
+FAILED/UNPROVEN : ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1 BANKED, unrepaired, wakes at
+                  E. No portability claim for D or F -- a linked worktree shares
+                  the object store, so the git-history axis was never varied; a
+                  genuinely shallow clone was NOT tested and is NOT ordered.
+                  The 28 remain [UNADJUDICATED] pending ratification. Rows 2-12,
+                  25-29 still carry the retired single-boolean census schema --
+                  OPEN DEBT, backfilled after E. R-816 §5's CASE 1 vs CASE 2
+                  STILL UNDECIDED and still not pre-decided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live; independent grade is
+                  the gate. Collection root seal IMMUTABLE. No disposition seal
+                  minted. Money path / MP1 UNTOUCHED. Single-writer relay held.
+                  No agent promotes to live capital. RATIFY-1 is instrumentation
+                  only -- no production, compiler or money-path code.
+FILES / SCOPE   : the ACCEPT-5 runner/harness; the census artifact. FORBIDDEN: the
+                  2 residual skips, the 10 module-level mocks, the 28, the
+                  collection root seal, generate_disposition_seal.py, manifest
+                  hand-edit, hand-edited added_node_ids, black_swan:682, any
+                  HTF/MP1/money-path file, test_wave_b_intrabar_stops.py:380/:405/:426.
+ACCEPTANCE      : [A]-[J] all met, [G] forward-vs-reverse EXACT NODE OUTCOME
+                  IDENTITY, [J] witnessed by a control that goes RED under an
+                  ownership-blind boundary. THEN worktree removal with recorded
+                  hashes. THEN E. THEN the six-field census backfill across all 32
+                  rows. THEN one successor disposition seal. THEN the isolated
+                  canonical authority run. THEN close R3-4.
+FIRST OBSERVABLE: RATIFY-1's population construction + first discrimination
+                  control, reported at the §6 seam. ETA: worker's call.
+STOP CONDITION  : STOP [37] never tune toward the old 31. STOP [40] anchor any
+                  count of code. [H] >10 min serial => STOP AND REPORT, no
+                  concurrency. Any failed load-bearing obligation => STOP, never
+                  fix-until-green.
+LESSON          : A READ THAT IS SILENT ON A FINDING HAS NOT CLEARED IT. AND A
+                  SELF-CONTRADICTORY AUTHORIZATION PUNISHES THE OBEDIENT WORKER
+                  AND REWARDS THE ONE WHO GUESSES -- THE DECLARED READING IS THE
+                  ONLY SAFE RESPONSE, AND THE DRAFTING DEFECT IS THE DESK'S.
+QUEUED NEXT     : RATIFY-1 -> seam reassessment -> worktree removal -> E ->
+                  census backfill -> disposition seal -> isolated canonical run ->
+                  close R3-4 -> R3-5.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes. One
+                  real cluster left. First make the referee incapable of lying by
+                  run order, then close E, then the money path.
+```
+
+---
+
 ## R-820 · 2026-08-11 · 🛑🛑🛑 **FIRST, A DEBT: THIS RULING WAS BLOCKED BY A GUARD AND NEVER LANDED — AND AN EXTERNAL READ HAS BEEN CITING "`R-820`" AS BINDING WHILE IT DID NOT EXIST. `[MEASURED]` `grep -c '^## R-820'` = `0`.** ⚡⚡ **NOW PAID: `ACCEPT-5` MOVES TO **TWO-LAYER ISOLATION** — ONE SUBPROCESS PER GOVERNED FILE **+** A RUNNER-OWNED PER-TEST RESTORATION BOUNDARY, BANKED AS `ACCEPT5-PROCESS-ISOLATION-RATIFY-1`.** ✅ **CLUSTER `D` CLOSED — `2` REAL FALSE-GREENS + `1` DIAGNOSTIC HARDENING, NOT `3`. `R3-4` = `5 / 7`.** 🛑 **AND I ADD OBLIGATION `[J]`: THE PRESCRIBED LAYER `2` WOULD SILENTLY DESTROY `9` LEGITIMATE HIGHER-SCOPED FIXTURES.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD e60b1909` == `origin`** `[MEASURED HERE]`. **SEATS `[MEASURED HERE, Win32_Process]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).**
