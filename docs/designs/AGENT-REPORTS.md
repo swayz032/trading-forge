@@ -4,6 +4,26 @@
 
 ---
 
+## AR-1007 · 2026-08-11 · 📌 **HOLD RECEIPT — AND ONE FINDING I OWE THE DESK RATHER THAN FIX: `ADVISOR-STATE`'s `LIVE BLOCK` HEADER IS TWO RULINGS AND THREE ARs STALE, WHILE THE FILE'S OWN FIRST LINE ORDERS A COLD SEAT TO READ ONLY THAT BLOCK.**
+
+**SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. `HEAD 7090da86`.** 🛑 Nothing measured beyond the two greps below · instrument NOT touched since `7090da86` · no push · no worktree removed.
+
+### §1 — 📌 HOLD RECEIPT
+✅ **`[MEASURED HERE, `ADVISOR-STATE` `## AUTHORIZED NOW`]` *"NOTHING TO THE WORKER — AND THE NEXT ACTION IS THE DESK'S, HELD."*** ⇒ **I am on an explicit hold with a NAMED owner: the desk's targeted `accuracy-validator` re-grade (`R-836 §8`), itself held by `STOP [61]` pending the external read.**
+⚖️ **`worker-execution §11a` asks whether my next item is ALREADY authorized before I stop. `[MEASURED]` it is explicitly NOT — this is the reserved `BLOCKED` case, not a re-ask for scope I already hold.** ✅ **My ear stays armed; I have not disarmed anything and I remain seated.**
+🛑 **I DO NOT PRE-EMPT THE RE-GRADE OUTCOME.** No repair prepared, no false-green guessed, nothing certified. **If the re-grade convicts my patch, that verdict is the result and I will report it against myself.**
+
+### §2 — ⚠️ THE FINDING: THE COLD-START SURFACE CONTRADICTS THE LEDGER
+⚠️ **`[MEASURED HERE]` `ADVISOR-STATE.md:3` orders *"READ ONLY THIS BLOCK. EVERYTHING BELOW IT IS OLDER."* `:12-14`, the block it points at, says: *"Ledger at `R-835`. Newest AR: `AR-1003`… `STOP [50]` IS ACTIVE: `g_order_identity.py` … FROZEN until the grade returns… THE WORKER IS ON AN EXPLICIT HOLD."***
+🛑 **`[MEASURED HERE]` THE LEDGER IS AT `R-837` AND THE NEWEST AR IS `AR-1006`.** ⇒ **the header is stale by TWO rulings and THREE ARs, and every load-bearing clause in it is now WRONG: the grade RETURNED, `R-836` LIFTED the hold, `R-837` AMENDED the `[H]` formula, and `STOP [50]`'s freeze was superseded by an AUTHORIZED repair that is COMMITTED at `7090da86`.**
+⭐ **THE `## AUTHORIZED NOW` BLOCK (`:31-37`) IS FULLY CURRENT — it names `AR-1006`, `R-837` and `7090da86`. So the file is not neglected; the HEADER and the AUTHORIZATION block have simply drifted apart, and the file's own reading instruction points at the stale one.**
+🛑 **WHY THIS IS NOT COSMETIC, AND IT IS AN ADVISOR-SEAT HAZARD RATHER THAN A WORKER ONE: a cold DESK seat obeying `:3` would believe the instrument is FROZEN under `STOP [50]` and that an independent grade is still in flight.** ⇒ **the two available wrong moves are RE-FREEZING an instrument that was just repaired under authorization, and RE-DISPATCHING a grade that already returned (`eb435472`).** ⚠️ **This desk has recorded that exact shape before: `R-823 §6`'s `PUSH DEFERRED` was live in this file while a cold seat pushed anyway, and the ruling above it says why — `A COLD SEAT IS THE LIKELIEST PARTY TO RE-DECIDE A SETTLED QUESTION, BECAUSE IT ARRIVES HOLDING NO MEMORY OF THE DECISION.`**
+⚖️ **REPORTED, NOT FIXED — `ADVISOR-STATE.md` IS THE DESK'S FILE AND SINGLE-WRITER HOLDS.** ★★★★ **`A FILE THAT TELLS YOU WHICH BLOCK TO TRUST IS ONLY AS GOOD AS ITS ROUTING — AND HERE THE ROUTING POINTS AT THE ONE BLOCK THAT DID NOT MOVE.`**
+
+**RECOMMENDATION: `BLOCKED` (held, owner named: the desk's re-grade dispatch).** **No action requested of me; this AR exists because the duty to report a finding does not lapse during a hold (`R-648`).**
+
+---
+
 ## AR-1006 · 2026-08-11 · ✅✅✅ **`F-RATIFY1-1` IS CLOSED AT THE INSTRUMENT: `T1` — THE EXACT INDEPENDENT-GRADE FINDING — NOW GOES RED, AND IT IS THE ONLY VERDICT THAT CATCHES IT.** ⚡ **ALL `10` PAIRINGS REPLAY AT `0` DIFFERING NODES ON THE REPAIRED COMPARATOR OVER THE EXISTING FIVE ARMS. NO ARM RE-RUN.** ⚡ **AND I WENT PAST THE BRIEF ON THE THREE CONTROLS THAT MATTERED, BECAUSE THE DIRECTION `R-836 §5` SPECIFIES IS THE ONE THE OLD GUARDS COULD NOT SEE.** 🛑 **TWO ERRORS OF MINE DISCLOSED: MY CONTROL HARNESS LIED FIRST, AND MY FIRST `T3`/`T4`/`T5` WERE THE EASY DIRECTION.**
 
 **SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. RULING `R-836 §10` AS AMENDED BY `R-837 §5`.** 🛑 Comparator-only · five arms READ-ONLY and NOT re-run · no push · no worktree removed · `cmp_AC.txt` intact · the `33` untouched · `STOP L` and `STOP M` NOT crossed · no promotion, seal, certification or `RATIFY-1` number.
