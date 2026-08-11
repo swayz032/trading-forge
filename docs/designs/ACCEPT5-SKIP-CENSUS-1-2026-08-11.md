@@ -628,3 +628,43 @@ that is the guard firing, not a defect.
 exception.** `[MEASURED]` the key is uniquely derived from the ref (`_gitref_spec_family_bindings_*`) so it
 shadows no production module. **NAMED, NOT REPAIRED** — it belongs to the `28` `[UNADJUDICATED]`
 nominations, which `R-820 §6` will record `CONTAINED_BY_ACCEPT5_PROCESS_BOUNDARY` if ratification passes.
+
+---
+
+## 13. ✅ DISPOSABLE WORKTREE DISPOSITION — RECORDED, THEN REMOVED (`R-820 §7`, `R-821 §7[3]`)
+
+**Order:** record artifact paths + hashes FIRST, then remove. `R-820 §7` reversed `R-819 §8[6]` on the
+mechanism that *"a worktree is RECONSTRUCTIBLE from the commit and carries no evidence the commit does not"*
+— ★ **so I MEASURED that premise before acting on it rather than taking it on relay.**
+
+| worktree | pin | on origin? | own output artifacts |
+|---|---|---|---|
+| `wt-accept5-pin-20260811` | `c2193868` | ✅ **ANCESTOR of `origin/h1-wave4-sealed12-driver`** | **NONE** — `git status --porcelain` shows only `docs/wave25-exit-engine-ab-report.md`, which was modified before that worktree existed |
+| `wt-r34-clusterD-redproof` | `2d8b1da1` | ✅ **ANCESTOR of `origin`** | **NONE** — working tree completely clean |
+
+⇒ ✅ **THE PREMISE HOLDS BY MEASUREMENT: neither worktree contained a single byte that is not reproducible
+from a commit on `origin`.** Both removed.
+
+**GOVERNED-AUTHORITY ARTIFACTS AT `c2193868`, PINNED BY CONTENT HASH so the receipt's inputs stay joinable
+after the worktree is gone:**
+```
+blob 56cbd71ef3a75985409ad0f120bfd3970871b999  298208 B  acceptance-collection-seal-08062e12.json
+blob 8b37749f0ecff967929c3212d3c02fe6c0a61368  299504 B  acceptance-disposition-seal-08062e12.json
+blob 7d6b66ec0f65702b7e13b1d8758a7f264724a9f3    7555 B  acceptance-population-successor.json
+blob b71c164147201f7a42dcd1899402a56ae19a6f32    6302 B  acceptance-baseline-2026-08-09.json
+```
+
+### 13.1 🛑 A GAP I FOUND WHILE DISCHARGING THIS, AND IT IS NOT CLOSED BY REMOVING THE WORKTREE
+🛑 **`[MEASURED HERE]` the canonical run reported in `AR-974 §4` (`2419/2419/31/0/2`, feeders agree,
+`NEW failures 0`, `ACCEPTANCE: REFUSED — SEALED DISPOSITION CHANGED`) wrote its machine-readable outputs to
+`acceptance_runner.py --out-dir` (`:536` default `.`, `:612` `run-{run_id}`), and NO `run-*` directory exists
+in the pinned worktree.** ⇒ **those JSON / JUnit receipts went to the previous seat's scratchpad and that
+seat is GONE.**
+⚖️ **CONSEQUENCE, STATED PLAINLY: the receipt survives as NUMBERS IN AN AR, not as a re-checkable artifact.
+That is `[RELAYED]` evidence, not `[ARTIFACT-SOURCED]`, and removing the worktree does not cause this — the
+worktree never held them.** ★★★★★ **`I WENT TO RECORD THE ARTIFACT HASHES AND DISCOVERED THERE WERE NO
+ARTIFACTS TO HASH. THE THING I WAS ORDERED TO PRESERVE HAD ALREADY BEEN LOST BEFORE THE ORDER WAS WRITTEN —
+AND THE WORKTREE'S CONTINUED EXISTENCE WAS MAKING IT LOOK OTHERWISE.`**
+⚡ **NOT REPAIRED HERE: the next authoritative run belongs AFTER `RATIFY-1` (`R-821 §2`), and `[C]` already
+requires unique per-child receipt dirs. ⇒ RECORDED so `RATIFY-1` inherits the requirement that its receipt
+dir live INSIDE the repo tree or be hashed into the census at write time, never in a seat-local scratchpad.**
