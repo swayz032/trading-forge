@@ -20,7 +20,6 @@ from typing import Any
 
 import numpy as np
 import polars as pl
-import pytest
 
 from src.engine.config import (
     BacktestRequest,
@@ -168,15 +167,18 @@ class TestCpcvWrcSpaEmission:
             request=req, data=data, n_splits=6, k_test_groups=2, embargo_bars=5
         )
         wrc = result.get("wrc_result", {})
-        # Skip when CPCV paths fail for environmental reasons (no S3 data, H5 bug,
-        # insufficient trades, etc.).  The key contract tests below prove real p-values
-        # are emitted on the statistics module level — we can't force paths to succeed
-        # in an environment with no S3 access or backtester-level bugs.
-        if wrc.get("available") is False:
-            reason = wrc.get("reason", "")
-            pytest.skip(
-                f"CPCV paths unavailable in test environment — acceptable: {reason}"
-            )
+        # R-817 §3 Cluster C — the old clause skipped here, blaming "the test
+        # environment (no S3 data, H5 bug, ...)". [MEASURED] that premise is false on
+        # this path: the OHLCV is `_make_trending_data(n=800)`, generated IN-PROCESS
+        # and handed to walk-forward as `data=`, so no environmental input reaches it.
+        # An `available=False` here is a COMPUTATION FAILURE inside walk_forward's own
+        # WRC/SPA block (walk_forward.py:906-914), which is a defect, not a fact about
+        # the machine. Fail loudly and carry the engine's own reason.
+        assert wrc.get("available") is not False, (
+            "CPCV wrc_result reported available=False, so the p-value contract below "
+            "was never checked and this test would have passed vacuously. "
+            f"Engine reason: {wrc.get('reason')!r}"
+        )
         _assert_wrc_spa_available(result, "CPCV/trending")
 
     def test_wrc_spa_p_values_are_floats_in_unit_interval(self):
@@ -188,10 +190,13 @@ class TestCpcvWrcSpaEmission:
         )
         wrc = result.get("wrc_result", {})
         spa = result.get("spa_result", {})
-        if wrc.get("available") is False:
-            pytest.skip(
-                f"CPCV unavailable in test environment: {wrc.get('reason')}"
-            )
+        # R-817 §3 Cluster C — see the note above; in-process fixture, so
+        # available=False is a computation failure, not an environment fact.
+        assert wrc.get("available") is not False, (
+            "CPCV wrc_result reported available=False, so the [0,1] float contract "
+            "below was never checked. "
+            f"Engine reason: {wrc.get('reason')!r}"
+        )
         p_wrc = wrc.get("p_value")
         p_spa = spa.get("spa_consistent_p")
         assert isinstance(p_wrc, float), f"wrc p_value must be float, got {type(p_wrc)}"
@@ -300,11 +305,14 @@ class TestPlainWfWrcSpaEmission:
         req = _base_request()
         result = run_walk_forward(request=req, data=data, n_splits=5)
         wrc = result.get("wrc_result", {})
-        if wrc.get("available") is False:
-            reason = wrc.get("reason", "")
-            pytest.skip(
-                f"Plain WF unavailable in test environment: {reason}"
-            )
+        # R-817 §3 Cluster C — in-process fixture (`_make_trending_data(n=800)` passed
+        # as `data=`), so available=False is a computation failure inside
+        # walk_forward.py:2170-2178, not a fact about this machine.
+        assert wrc.get("available") is not False, (
+            "Plain WF wrc_result reported available=False, so the p-value contract "
+            "below was never checked and this test would have passed vacuously. "
+            f"Engine reason: {wrc.get('reason')!r}"
+        )
         _assert_wrc_spa_available(result, "plain WF")
 
     def test_wrc_spa_p_values_in_unit_interval_plain(self):
@@ -314,10 +322,12 @@ class TestPlainWfWrcSpaEmission:
         result = run_walk_forward(request=req, data=data, n_splits=5)
         wrc = result.get("wrc_result", {})
         spa = result.get("spa_result", {})
-        if wrc.get("available") is False:
-            pytest.skip(
-                f"Plain WF unavailable in test environment: {wrc.get('reason')}"
-            )
+        # R-817 §3 Cluster C — see the note above.
+        assert wrc.get("available") is not False, (
+            "Plain WF wrc_result reported available=False, so the [0,1] float "
+            "contract below was never checked. "
+            f"Engine reason: {wrc.get('reason')!r}"
+        )
         p_wrc = wrc.get("p_value")
         p_spa = spa.get("spa_consistent_p")
         assert isinstance(p_wrc, float) and 0.0 <= p_wrc <= 1.0, (
