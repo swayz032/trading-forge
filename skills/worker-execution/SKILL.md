@@ -441,10 +441,50 @@ Results:                   pass/fail counts, relevant metrics
 Before/after behaviour:    concrete comparison
 Remaining uncertainty:     what is NOT proven
 Risk:                      what could regress
-Recommendation:            APPROVAL_REQUESTED | REVISION_REQUIRED | BLOCKED
+Recommendation:            GRADE_REQUESTED_CONTINUING | APPROVAL_REQUESTED
+                           | REVISION_REQUIRED | BLOCKED
 Next smallest task:        ONE follow-up — not a roadmap
 Graph output / consumer:   exact output hash + downstream node
 ```
+
+### 11a. 🛑🛑🛑★★★★★ A RECEIPT IS NOT A STOP. DEFAULT TO `GRADE_REQUESTED_CONTINUING`.
+
+**Operator-ordered 2026-08-10, verbatim: *"the receipt from the worker is cool but after
+that it should auto work not wait for somebdoy again."***
+
+🛑 **MEASURED, AND IT IS WHY THIS SECTION EXISTS:** `AR-959` was written at `18:43:11`
+ending in `APPROVAL_REQUESTED`, while explicitly saying *"I am continuing to `R3-2`, not
+handing off."* **`R-808 §9` had ALREADY authorized `R3-2` as self-executing, in writing,
+before that report was drafted.** The seat was **alive and idle for 2h 15m** — zero
+commits, no new AR, nothing uncommitted. **It waited for permission it already held.**
+
+> ★★★★★ **`A GRADE IS RETROSPECTIVE. AN AUTHORIZATION IS PROSPECTIVE. ASKING TO BE
+> GRADED IS NOT ASKING FOR PERMISSION — AND THE OLD FORM HAD NO WORD FOR THE
+> DIFFERENCE, SO EVERY FINISHED TASK CAME OUT SOUNDING LIKE A REQUEST TO STOP.`**
+
+**THE RULE:**
+
+1. **Before choosing a recommendation, ASK: "is my next item already authorized?"**
+   Re-read the newest ruling's `AUTHORIZED NOW` / `QUEUED NEXT` block. **`QUEUED NEXT`
+   with "self-executing" IS an authorization — it is not a preview of one.**
+2. **If YES → `GRADE_REQUESTED_CONTINUING`, and START THE NEXT ITEM IN THE SAME TURN.**
+   The AR is filed for retrospective grading; you do not wait for the ruling on it.
+   **Do not end your turn on a completed item when the next is already authorized.**
+3. **`APPROVAL_REQUESTED` is now RESERVED for the case where the next step is genuinely
+   NOT authorized** — a merge, a production write, a scope you cannot stay inside, or a
+   queue that has actually run dry. **If you cannot name which of those applies, it does
+   not apply.**
+4. **The desk's ruling cycle runs IN PARALLEL with your work and does not gate it.** The
+   desk waits on the external read before ruling; **that wait is the desk's and it stays.
+   It was never a licence for the worker to idle** — a ruling that grades finished work
+   changes nothing about work already authorized.
+5. **`BLOCKED` still outranks everything and is still honest.** Being blocked is a fact;
+   being unsure whether you may continue is a question you answer by reading the ruling.
+
+⚠️ **THE ONE THING THIS DOES NOT CHANGE:** you still may not self-authorize. This section
+does not widen your scope by one line — it stops you re-asking for scope you were already
+given. ★★★★ **`THE WORKER'S IDLE TIME IS THE CAMPAIGN'S LATENCY, AND MOST OF IT HAS BEEN
+SPENT WAITING FOR A YES THAT WAS ALREADY IN THE LEDGER.`**
 
 ---
 
