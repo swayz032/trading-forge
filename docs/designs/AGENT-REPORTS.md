@@ -4,6 +4,71 @@
 
 ---
 
+## AR-975 · 2026-08-11 · 🛑🛑🛑 **`R-818 §5`'s STOP FIRES, AND I AM STOPPING.** ✅ **CONTAMINATOR `3` NAMED: `test_black_swan_evaluator.py` — THE FILE THE RECORD HAS CARRIED AS AN UNADJUDICATED CANDIDATE SINCE `R-814`.** 🛑 **AND MY OWN SCANNER UNDER-COUNTED: THE POPULATION IS `32` FILES, NOT `22` — I ENUMERATED ONE SYNTACTIC FORM AND PUBLISHED IT AS THE CLASS.** 🛑🛑 **`10` OF THEM MUTATE `sys.modules` AT **MODULE LEVEL**, SO THEY ARE UNRESTORABLE BY A PER-TEST FIXTURE **BY CONSTRUCTION** — THE REPAIR SHAPE `R-818 §4` AUTHORIZED CANNOT REACH THEM.**
+
+**SEAT `claude.exe 6536`. `HEAD fc8d8f92`. This AR is a `STOP AND REPORT` under `R-818 §5`, not a handoff.**
+
+### §1 — ✅ CONTAMINATOR `3`, BY THE SAME GATED METHOD
+```
+BISECTION 3, on the REPAIRED tree (c2193868)
+  CONTROL subject ALONE   D1 0/4 · D2 0/1 -> flip FALSE   (required FALSE)
+  CONTROL full 71 prefix  D1 4/4 · D2 1/1 -> flip TRUE    (required TRUE)
+  9 arms  =>  CULPRIT 3: src/engine/tests/test_black_swan_evaluator.py
+```
+⚖️ **THE CONTROLS STILL DISCRIMINATE AFTER THE FIRST REPAIR, WHICH IS ITSELF THE PROOF THAT `AR-974 §1` WAS RIGHT TO REFUSE CLOSURE.**
+⭐ **AND THE RECORD ALREADY SUSPECTED THIS FILE: `R-814 §1` / `R-815 §8` / `R-816 §8` carry `test_black_swan_evaluator.py:682` as `[CANDIDATE, unadjudicated]` in `ACCEPT5-SILENT-SWALLOW-SURFACE-1`, DEFERRED on measured low yield.** ★★★★★ **`THE ONE CANDIDATE THE DESK DEFERRED IS THE FILE THAT WAS CORRUPTING THE GOVERNED POPULATION. "DEFERRED ON LOW YIELD" WAS A COST DECISION MEASURED AGAINST THE WRONG YIELD — IT WAS SCORED AS A SILENT-SWALLOW CANDIDATE AND ITS REAL DEFECT WAS IN A DIFFERENT CLASS ENTIRELY.`** ⚠️ **NOT a criticism of the deferral: `R-814 §1` deferred it as a SWALLOW candidate and it is a STATE-LEAK defect. Two classes, one file.**
+
+### §2 — 🛑 MY SCANNER WAS THE INSTRUMENT AND IT LIED, IN THE WAY THIS CAMPAIGN NAMES
+🛑 **`AR-973 §5` reported `22` files nominated. `[MEASURED HERE]` THE CORRECT NUMBER IS `32`.**
+```
+sys.modules[key] = ...        22 files   <- the ONLY form my grep matched
+sys.modules.setdefault(...)    9 files   <- MISSED ENTIRELY
+sys.modules.update(...)        0 files
+UNIQUE files, any form        32
+```
+🛑 **CONTAMINATOR `3` USES `setdefault`, WHICH IS EXACTLY WHY MY `22`-FILE LIST DID NOT CONTAIN IT** — the file that was actively corrupting the population was invisible to the census I published about that corruption.
+⇒ ★★★★★ **`I ENUMERATED ONE SYNTACTIC FORM AND PUBLISHED IT AS THE CLASS. MY POSITIVE CONTROL PASSED — BOTH KNOWN CULPRITS APPEARED — AND IT PASSED BECAUSE I BUILT THE CONTROL FROM THE SAME TWO EXAMPLES THAT SHAPED THE PATTERN. A CONTROL DRAWN FROM THE CASES THAT INSPIRED YOUR REGEX CANNOT DETECT THE FORM YOU NEVER IMAGINED.`** (`[i-measured]`; `[unenumerated-ladder]` — I quoted `20 UNADJUDICATED` as a denominator I could not name.)
+⚖️ **`AR-973 §5`'s `22 / 2 / 20` split is `[RETRACTED]` and replaced by `32 / 3 / 29`, and `29` is still `[UNADJUDICATED]`.**
+
+### §3 — 🛑🛑 THE PART THAT CHANGES THE REPAIR SHAPE: `10` FIRE AT IMPORT TIME
+`[MEASURED HERE, column-0 match]` **`10` of the `32` mutate `sys.modules` at MODULE LEVEL**, i.e. when pytest **COLLECTS** the file, before any fixture of any scope exists:
+```
+test_black_swan_evaluator.py   test_payout_cap_r054.py
+test_populate_regime_bank.py   test_populate_regime_bank_nemo.py
+test_stochastic_regime_generator.py   test_tooth2.py
+test_wave_a_bca_replace_true.py   test_wave_a_cpcv_npaths_dedup.py
+test_wave_a_dsr_sharpe_fixes.py   test_wave_a_mc_no_firm_ruin.py
+```
+🛑 **THE `R-818 §4` REPAIR SHAPE — an autouse per-test boundary fixture — CANNOT REACH THESE. It restores around a TEST; these fire at IMPORT.** ⚠️ **And pytest imports every collected module up front, so ALL TEN pollute the interpreter before the FIRST test in the population executes** — which is also why they are invisible to a file-order bisection's *later* arms and why bisection 3 could still find one: `black_swan` is inside the prefix, so excluding it excludes its import.
+⇒ **`[HYPOTHESIS — NOT CLAIMED]` the remaining composition dependence may be dominated by this import-time class rather than by any further test-time leaker. I did NOT test that.**
+
+### §4 — 🛑 `R-818 §5`'s STOP, QUOTED AND FIRED
+> *"Repair only those that are UNRESTORED **and** write a module the governed population imports. If the count of genuinely-unrestored files exceeds `5`, STOP and report rather than repairing them all."*
+
+🛑 **`[MEASURED]` the `10` module-level writers are UNRESTORED BY CONSTRUCTION — there is no teardown point for an import-time side effect. `10 > 5`.** ⇒ **THE STOP FIRES ON THE MODULE-LEVEL SUBSET ALONE, before any of the `22` test-time writers is even adjudicated.**
+🛑 **I AM THEREFORE NOT REPAIRING THEM, AND NOT STARTING THE ONE-PASS ADJUDICATION** — its population was `20` and is now `29`, its repair shape is disproven for `10` of them, and continuing would be executing a ruling whose premise I have just measured to be wrong. ★★★ **`A BOUNDED PASS OVER A POPULATION THAT TRIPLED IS NO LONGER THE BOUNDED PASS THAT WAS AUTHORIZED.`**
+⚖️ **DESK DECISION OWED, and I name the options without choosing:** **(a)** a conftest-level `sys.modules` boundary per test FILE (reaches import-time writers, wide blast radius); **(b)** convert the `10` to lazy/in-fixture installation (touches `10` files, each a separate semantic change); **(c)** accept them and instead make `ACCEPT-5` run each governed file in its own process (kills composition dependence as a CLASS, at wall-clock cost); **(d)** bound the defect explicitly and ship `R3-4` with it declared. ⚠️ **`(c)` is the only one that closes the CLASS rather than the instances, and it is an instrument-architecture change — `ratify-packet` shaped, not mine.**
+
+### §5 — ✅ STATE, AND WHAT IS SAFE TO RELY ON
+```
+CLOSED      A (R-818 §1) · B · G
+LANDED      C  (5b59b3a9, four controls, mutation-convicted; desk owns closure)
+LANDED      R-818 §4 repair (c2193868) -- CORRECT for the 2 confirmed leakers,
+            INSUFFICIENT for the defect (AR-974 §1)
+UNSTARTED   D (19,21,24) · F (22,23) · E (18)
+FORBIDDEN   H  -- untouched, STOP [11]
+BLOCKED     R-818 §7[2] adjudication -- STOP fired, this AR
+OPEN        ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1 -- 3 contaminators named,
+            population NOT clean, canonical company still disagrees
+```
+✅ **PINNED-WORKTREE RECEIPT STANDS (`AR-974 §4`), and it is the only canonical run of this seat that is not `[VOIDABLE]`:** `2419/2419/31/0/2`, feeders agree, `NEW failures 0`, `UNAUTHORIZED GONE 0`, `ACCEPTANCE: REFUSED — SEALED DISPOSITION CHANGED (+0/-3)`, expected per `R-818 §2`.
+🛑 **`wt-accept5-pin-20260811` is OUTSTANDING on disk** (deliberately — it is the receipt's tree). Remove it or re-pin it when the desk has read this.
+⚠️ **NOT CLAIMED:** contaminators beyond `3` `[UNENUMERATED]` · the `29` `[UNADJUDICATED]` · `§3`'s hypothesis `[UNTESTED]` · `R-816 §5`'s CASE 1 vs CASE 2 `[STILL UNDECIDED, and I still refuse to pre-decide]`.
+
+**RECOMMENDATION: `APPROVAL_REQUESTED`** — and I use it deliberately, per `worker-execution §11a[3]`: **the next step on this lane is genuinely NOT authorized.** `R-818 §5`'s own STOP fired, and every remaining option in `§4` is either a wider blast radius than my scope or an instrument-architecture change. ⏭️ **I am NOT idle: Clusters `D` and `F` are authorized, independent of this decision, and I continue there now.**
+
+---
+
 ## AR-974 · 2026-08-11 · ✅ **CLUSTER `C` LANDED (`5b59b3a9`) AND THE `R-818 §4` LEAK REPAIR LANDED (`c2193868`), BOTH RED-PROOFED.** 🛑🛑🛑 **BUT `R-818 §4`'s POSTCONDITION HAS FOUR TERMS AND ONLY THREE HOLD — `CANONICAL COMPANY` STILL DISAGREES. RUN-COMPOSITION DEPENDENCE IS **NOT** CLOSED; AT LEAST A **THIRD** CONTAMINATOR EXISTS.** ⚖️ **AND I AM CORRECTING MY OWN COMMIT MESSAGE, WHICH SAYS "ZERO RUN-COMPOSITION FLIPS" AND IS TRUE ONLY OF THE THREE TERMS I TESTED.** ✅ **THE PINNED WORKTREE WORKED: FIRST VALID CANONICAL RUN AFTER THREE VOIDS.**
 
 **SEAT `claude.exe 6536`. `HEAD c2193868`, PUSHED (`ls-remote` MATCH).**
