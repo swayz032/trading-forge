@@ -1,8 +1,8 @@
 .recipe-instrument { position: relative; min-height: 230px; margin-top: 18px; padding: 20px; overflow: hidden; border: 1px solid rgba(163,255,18,.2); border-radius: 14px; background: radial-gradient(circle at 50% -20%,rgba(163,255,18,.12),transparent 48%),linear-gradient(145deg,#151a12,#030503 72%); box-shadow: 0 18px 38px rgba(0,0,0,.52), inset 0 1px rgba(210,255,140,.12), 0 0 26px rgba(163,255,18,.05); transform: perspective(900px) rotateX(1.5deg); transition: opacity .2s ease, transform .2s ease; }
-.r-panel.r-instrument-panel { min-height:560px; isolation:isolate; border-color:rgba(163,255,18,.22); background:radial-gradient(circle at 50% 105%,rgba(163,255,18,.15),transparent 44%),linear-gradient(145deg,#11160e,#020302 68%); box-shadow:inset 0 1px rgba(210,255,140,.1),inset 0 -60px 100px rgba(53,90,8,.08),0 24px 55px rgba(0,0,0,.65),0 0 32px rgba(163,255,18,.06); }
+.r-panel.r-instrument-panel { min-height:560px; isolation:isolate; border-color:rgba(163,255,18,.18); background:#000; box-shadow:inset 0 1px rgba(210,255,140,.08),0 24px 55px rgba(0,0,0,.72),0 0 28px rgba(163,255,18,.05); }
 .r-instrument-panel > :not(.recipe-instrument) { position:relative; z-index:2; }
 .r-instrument-panel > .recipe-instrument { position:absolute; inset:0; z-index:0; min-height:0; margin:0; padding:0; border:0; border-radius:inherit; background:transparent; box-shadow:none; transform:none; pointer-events:none; }
-.r-instrument-panel > .recipe-instrument .instrument-empty { min-height:100%; padding:170px 24px 20px; border:0; border-radius:inherit; background:linear-gradient(rgba(163,255,18,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(163,255,18,.035) 1px,transparent 1px),radial-gradient(circle at 50% 70%,rgba(163,255,18,.11),transparent 38%); background-size:24px 24px,24px 24px,auto; }
+.r-instrument-panel > .recipe-instrument .instrument-empty { min-height:100%; padding:90px 24px 20px; border:0; border-radius:inherit; background:#000; }
 .r-instrument-panel > .recipe-instrument[data-state="measured"] { padding:190px 22px 22px; }
 .recipe-instrument:focus { outline: 3px solid #a3ff12; outline-offset: 3px; }
 .instrument-title { color: #a3ff12; font-size: 11px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
@@ -14,7 +14,7 @@
 .instrument-readouts div { padding: 12px; border-radius: 9px; background: rgba(255,255,255,.055); }
 .instrument-readouts small { display: block; color: #92999f; text-transform: uppercase; font-size: 8px; }
 .instrument-readouts strong { color: #f3f6ef; font-size: 18px; }
-.instrument-empty { display:flex; min-height:185px; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#a3ff12; border:1px solid rgba(163,255,18,.16); border-radius:11px; background:linear-gradient(rgba(163,255,18,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(163,255,18,.025) 1px,transparent 1px),#050705; background-size:22px 22px; text-transform:uppercase; letter-spacing:.12em; }
+.instrument-empty { display:flex; min-height:185px; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#a3ff12; border:1px solid rgba(163,255,18,.16); border-radius:11px; background:#000; text-transform:uppercase; letter-spacing:.12em; }
 .instrument-empty b { font-size:11px; text-shadow:0 0 14px rgba(163,255,18,.45); }
 .instrument-empty small { color:#737b70; font-size:8px; }
 .instrument-ghost { width:76%; height:92px; display:flex; align-items:flex-end; justify-content:center; gap:9px; perspective:500px; }

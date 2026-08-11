@@ -669,7 +669,7 @@
             '<span class="nm">' + esc(fam.title) + '</span>' +
             '<span class="dots"></span>' +
             '<span class="tag">' + right + '</span>' +
-            '<a class="kv-recipe" href="/slumhouse/recipe.html?id=' + rid + '&name=' + encodeURIComponent(fam.title) + '">recipe →</a>' +
+            '<a class="kv-recipe" href="/slumhouse/recipe.html?id=' + rid + '">recipe →</a>' +
             '</div>';
         }).join("");
         var pagesHtml = totalPages > 1 ? ('<div class="kv-pages"><span class="kv-pg-btn' + (ps.page === 0 ? " off" : "") + '" data-pg="-1">‹ prev</span><span class="kv-pg-lbl">Page ' + (ps.page + 1) + ' / ' + totalPages + '</span><span class="kv-pg-btn' + (ps.page >= totalPages - 1 ? " off" : "") + '" data-pg="1">next ›</span></div>') : "";

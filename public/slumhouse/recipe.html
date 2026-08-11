@@ -636,7 +636,6 @@
     (async () => {
       const params = new URLSearchParams(location.search);
       const id = params.get("id");
-      const menuName = params.get("name");
       if (!id) {
         document.getElementById("r-app").innerHTML =
           '<p style="color:#888;padding:40px 0">No strategy picked yet — go to <a href="/slumhouse/kitchen.html" style="color:var(--lime)">The Kitchen</a> and tap a dish.</p>';
@@ -651,9 +650,24 @@
           '<a href="javascript:location.reload()" style="color:var(--lime)">Try again</a></p>';
         return;
       }
-      if (menuName) r.identity.displayName = menuName;
+      const exactMenuName = await resolveMenuDisplayName(id);
+      if (exactMenuName) r.identity.displayName = exactMenuName;
       render(r);
     })();
+
+    async function resolveMenuDisplayName(id) {
+      const urls = ["/slumhouse/api/menu/now-serving", "/slumhouse/api/menu/kitchen?symbol=MES", "/slumhouse/api/menu/kitchen?symbol=MNQ", "/slumhouse/api/menu/kitchen?symbol=MCL", "/slumhouse/api/menu/graveyard"];
+      const payloads = await Promise.all(urls.map(function (url) { return SH.fetchJSON(url); }));
+      for (const data of payloads) {
+        for (const dish of ((data && data.dishes) || [])) if (String(dish.id) === String(id)) return dish.displayName || dish.premiumName || null;
+        for (const family of ((data && data.families) || [])) {
+          const variants = (family.variants && family.variants.length ? family.variants : [family.champion]).filter(Boolean);
+          const match = variants.find(function (v) { return String(v.id) === String(id); });
+          if (match) return match.displayName || match.premiumName || family.premiumName || null;
+        }
+      }
+      return null;
+    }
 
     const HISTORICAL_FIRST_YEAR = 2015;
     const HISTORICAL_LAST_YEAR = 2026;
@@ -721,6 +735,7 @@
     function renderBacktest(r) {
       const { el } = SH;
       const bt = r.backtest || {};
+      const hasBacktestEvidence = Number(bt.tradesCount) > 0;
       const panel = el("div", { class: "r-panel r-instrument-panel" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
@@ -731,15 +746,15 @@
           " of real market data, here's what would've happened. None of it actually did.",
         ),
         el("div", { class: "r-bt-stats" },
-          kpi("Total made", bt.totalMade || "$0", "green", `across ${bt.tradesCount || 0} plays`),
-          kpi("Per play", bt.perPlay || "$0", null, "average win-or-lose"),
-          kpi("Worst day", bt.worstDay || "$0", "red", "single rough session"),
-          kpi("Winning days", String(bt.winningDays || 0), null, "of trading days"),
+          kpi("Total made", hasBacktestEvidence ? bt.totalMade : "—", "green", hasBacktestEvidence ? `across ${bt.tradesCount} plays` : "awaiting backtest"),
+          kpi("Per play", hasBacktestEvidence ? bt.perPlay : "—", null, "average win-or-lose"),
+          kpi("Worst day", hasBacktestEvidence ? bt.worstDay : "—", "red", "single rough session"),
+          kpi("Winning days", hasBacktestEvidence ? String(bt.winningDays) : "—", null, "of trading days"),
         ),
         el("div", { class: "r-quant-row" },
-          quantChip("Win Rate", (bt.winRatePct ?? 0) + "%", winRateSub(bt.winRatePct)),
-          quantChip("Sharpe", fmt2(bt.sharpeRatio), sharpeSub(bt.sharpeRatio)),
-          quantChip("R:R", fmt2(bt.riskReward) + "x", rrSub(bt.riskReward)),
+          quantChip("Win Rate", hasBacktestEvidence ? bt.winRatePct + "%" : "—", hasBacktestEvidence ? winRateSub(bt.winRatePct) : "awaiting backtest"),
+          quantChip("Sharpe", hasBacktestEvidence ? fmt2(bt.sharpeRatio) : "—", hasBacktestEvidence ? sharpeSub(bt.sharpeRatio) : "awaiting backtest"),
+          quantChip("R:R", hasBacktestEvidence ? fmt2(bt.riskReward) + "x" : "—", hasBacktestEvidence ? rrSub(bt.riskReward) : "awaiting backtest"),
         ),
       );
       panel.appendChild(window.RecipeInstruments.renderBacktest(r));
@@ -1275,12 +1290,6 @@
       var panel = el("div", { class: "r-panel r-instrument-panel", role: "region", tabindex: "-1", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
         el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
         el("div", { class: "r-cap" }, m.what),
-        el("div", { class: "r-gate-body" },
-          el("div", { class: "r-gate-big " + vclass }, value),
-          m.threshold ? el("div", { class: "r-gate-thresh" }, m.threshold) : null,
-          el("div", { class: "r-gate-verdict " + vclass }, vword),
-          sentence ? el("div", { class: "r-gate-sentence" }, sentence) : null,
-        ),
       );
       panel.appendChild(window.RecipeInstruments.renderGate(r, name));
       return panel;

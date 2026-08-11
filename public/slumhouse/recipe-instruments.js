@@ -12,6 +12,7 @@
     compliance: "Rule-control board",
     backtest: "Backtest replay deck"
   };
+  var GATE_KINDS = { "Surprise Test":"walk-forward", "Sloppy Bot Test":"jitter-dials", "Worst Day Test":"crash", "Every Mood Test":"regimes", "Real or Lucky":"shuffle", Preseason:"paper", "Real-Time Match":"drift", "Plays Clean":"compliance" };
 
   function finite(value) {
     var number = Number(value);
@@ -61,7 +62,7 @@
   function renderGate(recipe, name) {
     var metric = recipe && recipe.gateMetrics && recipe.gateMetrics[name] || {};
     var evidence = metric.instrument || {};
-    var kind = evidence.kind || "compliance";
+    var kind = evidence.kind || GATE_KINDS[name] || "compliance";
     var series = evidence.folds || (evidence.regimes && Object.values(evidence.regimes));
     var body = series ? bars(series) + cards(evidence) : cards(evidence);
     return panel(kind, evidence, '<div class="instrument-bezel"><div class="instrument-title">' + (LABELS[kind] || kind) + "</div>" + body + "</div>");

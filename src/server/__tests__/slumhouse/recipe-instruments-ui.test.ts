@@ -41,6 +41,7 @@ describe("Recipe premium instruments", () => {
     const neutral = api.renderGate({ gateMetrics: { "Real or Lucky": { instrument: { kind: "shuffle", p95Sharpe: null } } } }, "Real or Lucky");
     expect(neutral.attributes["data-state"]).toBe("empty");
     expect(neutral.innerHTML).not.toContain("data-series");
+    expect(api.renderGate({ gateMetrics: {} }, "Surprise Test").attributes["data-instrument"]).toBe("walk-forward");
   });
 
   it("wires the exact banner, accessible controls, renderer assets, and reduced motion", () => {
@@ -52,14 +53,16 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("/slumhouse/recipe-instruments.css");
     expect(html).toContain('aria-pressed');
     expect(html).toContain("r.identity.displayName || cleanName(r.identity.name)");
-    expect(kitchen).toContain("&name=" + "' + encodeURIComponent(fam.title) + '");
-    expect(html).toContain('params.get("name")');
+    expect(kitchen).not.toContain("&name=" + "' + encodeURIComponent(fam.title) + '");
+    expect(html).toContain("resolveMenuDisplayName(id)");
     expect(html).toContain('class: "r-panel r-instrument-panel"');
+    expect(html).not.toContain('class: "r-gate-body"');
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderGate(r, name))");
     expect(html).not.toContain("left.appendChild(instrument)");
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
     expect(css).toContain("appearance: none");
     expect(css).toContain("instrument-ghost");
+    expect(css).toContain("background:#000");
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
 });
