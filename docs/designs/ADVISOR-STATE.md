@@ -1,6 +1,80 @@
 # ADVISOR-STATE — money-path / H1 seat
 
-## SEAT — 2026-08-10, desk `claude.exe 16828` · **LIVE COPY, TAKE THIS ONE**
+> 🛑🛑🛑 **READ ONLY THIS BLOCK. EVERYTHING BELOW IT IS OLDER.** `[MEASURED HERE 2026-08-11]` this file
+> is **`4,487` lines / `766,803` bytes** — a whole-file `Read` FAILS. `grep -n "^## "` and `Read` with
+> `offset`. ⚠️ **A FULL COMPACTION IS OWED AND I DID NOT DO IT: `[MEASURED]` the file carries `16`
+> `[FACT, MEASURED HERE, NOT RULED]` blocks, and an unruled measurement is a CONTRACT, not narrative.
+> Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
+> debt still open.**
+
+## SEAT — 2026-08-11 ~06:55Z · desk `claude.exe 18244` · **LIVE BLOCK, TAKE THIS ONE**
+
+**Ledger at `R-821`** (`d3b01e68`, PUSHED, `ls-remote` VERIFIED). **Newest AR: `AR-978`, RULED.**
+**NO UNRULED AR BACKLOG.** Worker: **`claude.exe 27448`** (born `02:13:51`), ACTIVE, not blocked.
+🔁 **Seat rolls this session (all PLANNED, `[seat-rolls-are-swaps]`, none investigated):** desk
+`24040` → `18244` · worker `23692` → `6536` → `27448`. **Match IMAGE NAME + BIRTH TIME, never bare PID.**
+👂 **Desk ear ARMED** on `AGENT-REPORTS.md` (`Monitor`, persistent, red-proofed both ends, backfilled
+at `AR-973`/`c2193868`). ⚠️ **Two orphaned `bash.exe` `ruling-ear.sh` loops (`23812`, `2440`) have DEAD
+parents — REPORT, DO NOT KILL (`§4a[5]`); they reach nobody.**
+
+## AUTHORIZED NOW
+**`ACCEPT5-PROCESS-ISOLATION-RATIFY-1`, obligations `[A]`–`[J]`** (`R-820 §5`, `R-821 §5`). Two-layer
+isolation: **one pytest subprocess per governed file** + **runner-owned per-test `sys.modules`
+restoration inside each child**. Prototype → prove `[A]`–`[J]` → only then promote to authority.
+**Reassess the seat at RATIFY's FIRST NATURAL SEAM** (after population construction + first
+discrimination controls, BEFORE full `[A]`–`[J]`). **Then remove both disposable worktrees after
+recording their artifact hashes. Then `E`.**
+
+## NOT AUTHORIZED
+`E` (HELD until ratification passes) · the `10` module-level mocks · the `28` nominations one-by-one ·
+bisection `4` · any disposition seal · the collection root seal · `black_swan:682` · the `2` residual
+skips · a shallow-clone campaign · HTF production · **`MP1` / the money path** · any production,
+compiler or money-path code inside RATIFY-1.
+
+## STATE, WITH EVIDENCE GRADES
+- `[MEASURED HERE]` **`R3-4` = `6 / 7`** — ✅ `A` `B` `C` `D` `F` `G` · 🛑 `E` HELD · 🚫 `H` forbidden,
+  **in no denominator. `R3` = `3 / 5`.**
+- `[MEASURED HERE]` **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` is OPEN** — `3` contaminators named, the
+  canonical company still disagrees. **It is an `R3-4` VALIDITY BLOCKER, NOT an eighth cluster.**
+- `[MEASURED HERE]` **`10` files mutate `sys.modules` at MODULE LEVEL** (column-`0`) ⇒ **UNREACHABLE BY
+  A FUNCTION-SCOPED TEST FIXTURE** — never "unrestorable by construction".
+- `[MEASURED HERE]` **population `31 / 3 / 28`**, tree `src/engine/tests` (22 direct + 9 `setdefault`,
+  overlap `0`). 🛑 **NOT `32`** — the external read carries `32` and states it did not re-enumerate.
+- `[MEASURED HERE]` **`9` non-function-scoped fixtures across `5` files** would be silently disabled by
+  an ownership-blind Layer 2 ⇒ obligation **`[J]`**, which a green run does NOT witness.
+- `[BANKED, LATENT]` **`ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1`** — `:2798` docstring says "tracked",
+  `:2804` `rglob`s everything. **Wakes at `E`.** The external read went SILENT on it; silence ≠ cleared.
+- `[BANKED, LATENT]` **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1`** — **WAKES BEFORE ANY EDGE RANKING.**
+- `[UNENUMERATED — OPEN]` contaminators beyond `3` (deliberately NOT hunted — the process wall replaces
+  the hunt) · the `28` · rows `2`–`12`/`25`–`29` still on the retired census schema · `R-816 §5`'s
+  CASE 1 vs CASE 2, still not pre-decided.
+
+## QUEUE (next 4, in order)
+1. `RATIFY-1` `[A]`–`[J]` · 2. worktree removal with recorded hashes · 3. `E` (final cluster) ·
+4. six-field census backfill → ONE successor disposition seal → isolated canonical run → close `R3-4`.
+
+## KNOWN-BENIGN (do not investigate)
+`src/engine/conftest.py` — snapshots, restores, pops; `autouse=False`; gated on `TF_MOCK_VBT`, which is
+set NOWHERE in the repo (`R-819 §4`) · `ACCEPTANCE: REFUSED` from `SEALED DISPOSITION CHANGED` and
+`F-ACCEPT5-8` is EXPECTED (`R-818 §2`, `STOP [34]`) — **never cite either as a regression** · the
+synthetic `_gitref_*` key in `_load_module_at_ref` shadows no production module.
+
+## STANDING STOPS MINTED THIS SESSION
+`[37]` the oracle is ORDER-INDEPENDENT EXACT NODE OUTCOMES — **never tune toward the old `31`** ·
+`[38]` after ANY blocked ledger write, `grep` for the ruling ID — a guard block is an UNLANDED ruling ·
+`[39]` Cluster `D` is `2` false-greens `+ 1` hardening, **never `3`** · `[40]` a count of code is
+**anchored** (`^\s*`) or it is not a count of code.
+
+## OPERATOR-FACING
+**Nothing is waiting on him.** No spend, no capital, no irreversible act pending. **He is the courier to
+the external GPT reader and relays by copy-paste — every substantive AR and ruling must be PRINTED IN
+CHAT IN FULL, or no external read can arrive** (`[ar-on-screen-for-gpt]`). ⚠️ **`[wait-on-gpt]` holds:
+wait for the read before every new ruling; the blocked-worker exception has been genuinely available
+twice this session and declined both times.**
+
+---
+
+## SEAT — 2026-08-10, desk `claude.exe 16828` · **SUPERSEDED — historical, see the block above**
 🔁 **SEAT ROLL: desk `21488` is ABSENT; I am its successor `claude.exe 16828` (born `15:25:20`), seated via `/advisor-onboarding`.** `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]` **exactly two `claude.exe` exist: desk `16828` · worker `7972` (born `15:30:53`).** Worker `26036` also rolled mid-round. **Not investigated — `[seat-rolls-are-swaps]`.**
 ✅ **Ledger at `R-803` (`37cf03aa`, PUSHED and REMOTE-VERIFIED — `git ls-remote` + `merge-base --is-ancestor`, never the push's own word).** Newest AR: **`AR-952`** — an ordered measurement returned + a retraction, **requests nothing, owes no ruling.** `AR-950`/`AR-951` ruled by `R-803`; `AR-946 §2` resolved by `R-803 §1`.
 🛑🛑 **INCIDENT I CAUSED, ALREADY OWNED IN `R-803 §0` — DO NOT RE-INVESTIGATE:** I drafted `R-803` INTO the live ledger, the operator said *"wait on gpt"*, and I removed it in place with no git op. **The worker's ear delivered it, then reported it gone 61s later, and it spent `AR-951` proving a ledger-integrity incident whose cause was me.** ⇒ ✅ **STANDING FIX, BINDING: draft rulings in the SCRATCHPAD; the ledger IS the relay, so writing there is publishing. Land + commit in ONE motion.** ★★★★★ **`AN UNCOMMITTED RULING IS ALREADY DELIVERED AND NOT YET RECORDED — THE WORST OF BOTH STATES.`**
