@@ -284,21 +284,63 @@ class TestVixAtrMultiplier:
         results = [apply_vix_atr_multiplier(1.5, 25.0, enabled=True) for _ in range(5)]
         assert len(set(results)) == 1
 
-    def test_env_tier_thresholds_overridable(self, monkeypatch):
-        monkeypatch.setenv("VIX_ATR_TIER_LOW", "15.0")
-        monkeypatch.setenv("VIX_ATR_TIER_MID", "25.0")
-        monkeypatch.setenv("VIX_ATR_MULT_HIGH", "3.0")
-        from src.engine.margin_expansion import apply_vix_atr_multiplier
-        # Use kwargs to test env-driven paths (avoids module re-import complexity)
-        result = apply_vix_atr_multiplier(
-            1.5, 28.0,
-            enabled=True,
-            tier_low=float(os.environ.get("VIX_ATR_TIER_LOW", "15.0")),
-            tier_mid=float(os.environ.get("VIX_ATR_TIER_MID", "25.0")),
-            mult_high=float(os.environ.get("VIX_ATR_MULT_HIGH", "3.0")),
+    def test_env_tier_thresholds_overridable(self):
+        """Env tier thresholds are read AT IMPORT — proven in a FRESH interpreter.
+
+        M2 of ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1 (R-832 §2 / §7[4]).
+
+        THE OLD BODY LEAKED, AND IT DID NOT TEST WHAT ITS NAME CLAIMS. It called
+        `monkeypatch.setenv` on three vars and then passed `tier_low=` /
+        `tier_mid=` / `mult_high=` EXPLICITLY as kwargs, with the comment
+        "avoids module re-import complexity" -- so its assertion never read the
+        baked module constants at all.
+
+        `[MEASURED, AR-997 §3]` margin_expansion.py:161-165 reads those vars at
+        IMPORT time into module-level constants. monkeypatch restores the
+        ENVIRONMENT but cannot UN-BAKE a module first imported while the patch
+        was live, so the three setenv calls were pure collateral: they poisoned
+        whatever imported margin_expansion inside their window, flipping 5
+        sibling nodes depending on execution order.
+
+            THE LEAK WAS A SIDE EFFECT OF A DEPENDENCY THE TEST HAD ALREADY
+            WRITTEN ITSELF OUT OF.
+
+        Deleting the setenv calls would also close the leak -- and would leave a
+        test named `test_env_tier_thresholds_overridable` that never touches the
+        environment. `[accept5-join-keys]`: a name that is a join key is not free
+        to correct. So the contract is proven where it can be proven honestly: in
+        a child interpreter that imports the module fresh with the environment
+        already set. The parent's environment is never mutated, so nothing is
+        left to leak.
+
+        Subprocess pattern REUSED, not invented -- R-832 §2 measured it already
+        in use at test_accept5_stale_run_consumption.py:95 and
+        test_archetype_evaluator.py:288.
+        """
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        repo = Path(__file__).resolve().parents[3]
+        env = dict(os.environ)
+        env.pop("PYTEST_ADDOPTS", None)   # never inherit a stray one into the child
+        env.update({"VIX_ATR_TIER_LOW": "15.0",
+                    "VIX_ATR_TIER_MID": "25.0",
+                    "VIX_ATR_MULT_HIGH": "3.0"})
+        # No kwargs: the tiers MUST come from the constants baked at import.
+        # VIX=28 > tier_mid=25 => high tier => 3.0
+        child = subprocess.run(
+            [sys.executable, "-c",
+             "from src.engine.margin_expansion import apply_vix_atr_multiplier as f;"
+             "print(f(1.5, 28.0, enabled=True))"],
+            cwd=repo, env=env, capture_output=True, text=True, timeout=120,
         )
-        # VIX=28 > tier_mid=25 → high tier 3.0
-        assert result == pytest.approx(3.0)
+        assert child.returncode == 0, (
+            f"child failed rc={child.returncode}\nstdout={child.stdout}\n"
+            f"stderr={child.stderr}")
+        assert float(child.stdout.strip()) == pytest.approx(3.0), (
+            "env tier thresholds were not honoured at import: expected 3.0 "
+            f"(VIX=28 > TIER_MID=25 -> MULT_HIGH), got {child.stdout.strip()!r}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
