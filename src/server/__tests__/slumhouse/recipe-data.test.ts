@@ -54,7 +54,7 @@ function setupQueries(custom: Partial<Record<typeof ORDER[number], unknown[]>> =
       paths: JSON.stringify([[50000, 47160], [50000, 92500], [50000, 144200]]), // terminal P&L: -2840, 42500, 94200
       probability_of_ruin: 0.03,
     }],
-    paper: [{ paper_total: 3840 }],
+    paper: [{ paper_total: 3840, paper_count: 12 }],
     shadow: [{ divergence_vs_backtest: 0.018 }],
     health: [{ composite_score: 0.84 }],
     ...custom,
@@ -66,6 +66,44 @@ function setupQueries(custom: Partial<Record<typeof ORDER[number], unknown[]>> =
 
 describe("recipe-data", () => {
   beforeEach(() => { mocks.execute.mockReset(); });
+
+  it("binds completed downstream evidence to the exact rendered backtest", async () => {
+    setupQueries();
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    await assembleRecipeData({ strategyId: "s1" });
+    const flatten = (value: any): string => {
+      if (typeof value === "string") return value;
+      if (!value || typeof value !== "object") return "";
+      if (Array.isArray(value)) return value.map(flatten).join(" ");
+      return flatten(value.queryChunks || value.value || []);
+    };
+    const queries = mocks.execute.mock.calls.map(([query]) => flatten(query));
+    expect(queries[1]).toContain("SELECT id::text AS backtest_id");
+    expect(queries[2]).toContain("mc.backtest_id =");
+    expect(queries[3]).toContain("backtest_id =");
+    expect(queries[4]).toContain("backtest_id =");
+  });
+
+  it("treats zero-PnL paper trades as measured evidence and missing compliance as neutral", async () => {
+    setupQueries({
+      backtest: [{ total_trades: 1, daily_pnls: "[]", equity_curve: "[]", result_extras: "{}" }],
+      paper: [{ paper_total: 0, paper_count: 2 }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.gateMetrics.Preseason.value).toBe("$0");
+    expect(r.gateMetrics.Preseason.instrument).toMatchObject({ pnl: 0, tradeCount: 2 });
+    expect(r.otherTests.find((test) => test.name === "Plays Clean")?.sentence).toContain("hasn't been run yet");
+    expect(r.gateMetrics["Plays Clean"].value).toBe("Not run yet");
+  });
+
+  it("normalizes null symbols exactly like the Kitchen/Menu identity path", async () => {
+    setupQueries({ strategy: [{ id: "s1", name: "vwap-band-mes", symbol: "MES", symbols: null, timeframe: "5m", config: {}, lifecycle_state: "DEPLOY_READY" }] });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const { resolvePremiumName } = await import("../../lib/slumhouse/premium-names.js");
+    const recipe = await assembleRecipeData({ strategyId: "s1" });
+    expect(recipe.identity.displayName).toBe(resolvePremiumName({ name: "vwap-band-mes", symbols: [], timeframe: "5m", config: {} }).displayName);
+  });
 
   it("assembles all 4 panels + 8 tests with full data", async () => {
     setupQueries();
