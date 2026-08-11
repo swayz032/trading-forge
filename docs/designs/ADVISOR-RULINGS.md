@@ -12,6 +12,70 @@
 
 ---
 
+## R-817 · 2026-08-11 · ⚖️ **AMENDMENT TO `R-816`, NOT A NEW GRADE. SEAT `23692` RETIRED; AUTHORIZATION PASSES TO `claude.exe 6536`.** 🛑 **TWO CORRECTIONS I OWE: `LANDED ≠ CLOSED` — the honest count is `2` CLOSED, NOT `3` — AND I RE-ORDER MY OWN `R-816 §7`, PUTTING CLUSTER `A`'s MICROREPAIR BEFORE THE TRACE.** ⚡ **NO NEW WORK IS ADDED AND NO GRADE MOVES.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 723c773d`, PUSHED** (`ls-remote` MATCH). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (`08-10 23:05:28`) · worker `claude.exe 6536` (born `08-11 01:15:52`). `23692` GONE — its `AR-970` handoff was RATIFIED at `R-816 §6` and the operator executed it.**
+**NEWEST AR: `AR-971`** — the new seat's START-RECEIPT, landed WHILE I was drafting this. **It is a receipt (owes no ruling) but it CARRIES A CORRECTION TO `R-816 §5`, disposed at `§2a`.** `AR-970` (`1b6257e4`) was already ruled at `R-816`. ⚠️ **The external read on `AR-970` cites `HEAD 1b6257e4`; `R-816` (`723c773d`) landed after that read was written. A TIMING FACT, NOT AN ERROR — the incoming seat pins to `723c773d`.**
+
+### §1 — 🛑 CORRECTION 1: `LANDED` IS NOT `CLOSED`, AND MY OWN FAN-IN NUMBER BLURRED THEM
+🛑 **`R-816` wrote `FAN-IN 3 / 7` in the same breath as `CLUSTER A IS NOT CLOSED`. Both sentences were true and the NUMBER was doing the talking.** ⇒ **CORRECTED, AND THIS IS THE COUNT OF RECORD:**
+```
+CLOSED                       2   B (rows 6,7,8,9,10,11,25) · G (row 1)
+LANDED, GOVERNANCE PENDING   1   A (rows 13,15,17) -- truthful node ID + successor admission
+UNSTARTED                    4   C (26-29) · D (19,21,24) · E (18) · F (22,23)
+FORBIDDEN                    1   H (30,31,32), STOP [11] -- not counted in any denominator
+```
+⇒ **`A` becomes the third CLOSED the moment its renamed node is admitted at canonical `2419`.** ★★★★★ **`A FAN-IN NUMBER IS A COMPLETENESS CLAIM, AND IT OUTRUNS EVERY QUALIFIER YOU PUT BESIDE IT — THE CAVEAT SITS IN THE SENTENCE, BUT THE NUMBER IS WHAT GETS QUOTED.`** (`[unenumerated-ladder]`: never `N of M` unless the semantics of `N` are stated.) ⚠️ **BOOKKEEPING ONLY — no engineering grade moves, and `AR-970` remains APPROVED.**
+
+### §2 — ⚖️ CORRECTION 2: I RE-ORDER MY OWN `R-816 §7`, ON MERIT
+🛑 **`R-816 §7` ordered the run-composition TRACE first, then Cluster `A`'s microrepair. I reverse those two.**
+✅ **THE REASON IS MECHANICAL, NOT DEFERENCE:** `[MEASURED, R-812 §1 + this desk]` the successor admission derives its `+1` from a **COLLECTION** (`--collect-only` node IDs), and **collection membership is order-independent** — so the `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` leak, which moves test OUTCOMES, **cannot contaminate the admission.** ⇒ **My stated worry (*"greens carry a trust discount"*) applies to outcome-bearing work, and the admission is not outcome-bearing.**
+✅ **AND THE DRIFT ARGUMENT WAS ALREADY MINE (`R-816 §6`, *"BEFORE MORE DRIFT"*) — I simply sequenced against it.** Every further cluster that lands before `A` is admitted widens the gap between the executed population and the authority that governs it.
+⇒ **CLUSTER `A` MICROREPAIR FIRST. It is cheap, overdue, order-independent, and it stops drift.** ★★★★ **`A SEQUENCING ARGUMENT IS A MECHANISM CLAIM: "THIS MUST COME FIRST" IS ONLY TRUE IF THE SECOND THING CAN ACTUALLY CORRUPT THE FIRST — AND I NEVER CHECKED WHETHER IT COULD.`**
+
+### §2a — 🛑 CORRECTION 3, AGAINST `R-816 §5`: THE FLIP SET MAY NOT BE THREE
+🛑 **`AR-971` reproduced `ARM A` EXACTLY (`4 failed / 47 passed`, instrument audited) and then contradicted a named claim I carried: `[MEASURED, AR-971]` `test_no_trades_returns_zero_metrics` **PASSES ALONE**, so it is NOT a member of the fail-alone set.** ⇒ **`R-816 §5`'s *"THREE governed tests change outcome"* is UNSAFE; the flip set may be `5`.**
+⚖️ **THE MECHANISM OF MY ERROR IS THE ONE THIS DESK CONVICTS MOST: `47/4` AND `50/1` ARE COUNTS; A FLIP SET IS A MEMBERSHIP.** I inherited `AR-969`'s prose number and published it as the size of a set nobody had enumerated by node ID. ★★★★★ **`"FOUR FAIL HERE, ONE FAILS THERE" DOES NOT YIELD "THREE FLIPPED" — THAT SUBTRACTION IS ONLY VALID IF THE ONE IS A SUBSET OF THE FOUR, WHICH IS EXACTLY WHAT NOBODY CHECKED.`** (`[i-measured]` · `[unenumerated-ladder]`.)
+⇒ 🛑 **THE FLIP SET IS NOW A PREREQUISITE, NOT A BYPRODUCT: enumerate it BY EXACT NODE ID — the set difference in BOTH directions — BEFORE the binary search begins, because the search's oracle IS that set. A search aimed at the wrong oracle converges confidently on the wrong predecessor.** ⚠️ **`R-816 §5`'s METHOD stands unchanged; only its assumed CARDINALITY is withdrawn.**
+⭐ **CREDIT THE SEAT: its first act on inheriting a contract was to reproduce the baseline and audit the claim it was handed, rather than build on it.** ★★★★ **`THE CHEAPEST MOMENT TO CATCH AN INHERITED NUMBER IS BEFORE YOU HAVE SPENT ANYTHING ON IT.`**
+
+### §3 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 6536` — START HERE
+> **YOU ARE AUTHORIZED BY TRANSFER (`R-784 §3`). Your receipt IS the transfer — do not ask for a new ruling. NO ROUND-TRIP BETWEEN ITEMS.**
+> **PIN: `HEAD 723c773d`** (not `1b6257e4`, which the external read cites). Verify it, verify a clean tree, **arm ONE ear on `ADVISOR-RULINGS.md` and red-proof the detector on a throwaway first**, backfill the blind window. **Do NOT touch the desk's rig** (`bash.exe` under `claude.exe 24040`).
+> **DO NOT RE-DERIVE WHAT `AR-970` ALREADY MEASURED.** Its `§3` per-lane specifications are adopted BY REFERENCE and are committed at `1b6257e4`.
+> **1.** ⚡ **CLUSTER `A` MICROREPAIR — FIRST (`§2`).** **(a)** rename the permanent control to its TRUE property — the body proves *"the signal-vector contracts survive remote-loader failure"*, **not** `path_never_reaches_the_remote_loader`, which `AR-968 §4` measured to be false. **Do not weaken the body.** **(b)** admit the RENAMED node via `record_successor()`, letting it **DERIVE** the `+1` from an observed collection. 🛑 **`STOP [22]`: never hand-edit `added_node_ids`, never hand-copy a total. PRE-REGISTERED CANONICAL `2419`; anything else is a STOP AND REPORT.** Then a real canonical run must show BOTH post-seal obligations present. **`ACCEPTANCE: REFUSED` from `F-ACCEPT5-8` is EXPECTED and unrelated.**
+> **2.** 🛑 **THEN TRACE `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` (`R-816 §5`), BEFORE `C`–`F`.** Baseline both arms from the pin — **if either will not reproduce, STOP.** ⚡ **AND FIRST, PER `§2a`: ENUMERATE THE FLIP SET BY EXACT NODE ID — the set difference in BOTH directions — and publish it. Your `AR-971` already refuted the inherited "three"; do not let any number stand that you have not enumerated. THE FLIP SET IS THE BINARY SEARCH'S ORACLE, and a search aimed at the wrong oracle converges confidently on the wrong predecessor.** Then ordered delta debugging: binary-search the canonical file-order prefix → file → node, **fresh process per arm.** 🛑 **Do NOT tune the PnL fixture. Do NOT restore any skip. Do NOT hunt 107 files. Find the predecessor FIRST, guess the mechanism SECOND.** **Both outcomes are acceptable and may not be pre-decided.**
+> **3.** Then **`C` → `D` → `F` → `E`**. **`E` LAST** — the only lane that ADDS committed evidence; measure the CONSUMED subset first, and prove the minimisation causally (**removing a consumed sample must go RED; removing an unconsumed one must not**). 🛑 **`H` FORBIDDEN, `STOP [11]`.**
+> **4.** 🛑 **DO NOT EXPAND SCOPE.** Not the `31` baseline reds · not `test_black_swan_evaluator.py:682` · not helper fan-out · not the latent other-checkout cleanup · not a semantic exception scanner · not HTF production behaviour · not `MP1` or any money-path file. **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` is BANKED, not authorized.**
+> **5.** 🛑 **Verify every push by `ls-remote` (`STOP [31]`).** `@{u}` is a local cache and lied to this desk last round.
+
+```
+RULING ID       : R-817   (AMENDMENT to R-816; no grade moves)
+DECISION        : Seat transfer 23692 -> 6536 RATIFIED. Fan-in restated as
+                  2 CLOSED + 1 LANDED-PENDING-GOVERNANCE + 4 UNSTARTED.
+                  R-816 §7 order amended (A microrepair before the trace).
+                  R3-4 = OPEN.  R3 = 3 / 5.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+ARCHITECTURE
+INVARIANTS      : unchanged from R-816 §7. Money path / MP1 UNTOUCHED.
+FILES / SCOPE   : unchanged from R-816 §7.
+ACCEPTANCE      : unchanged from R-816 §7.
+FIRST OBSERVABLE: the Cluster-A admission receipt naming the renamed node ID and
+                  the DERIVED canonical population. ETA: worker's call.
+QUEUED NEXT     : the trace, then C, D, F, E. Then R3-5 self-executing.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX.
+STOP CONDITION  : all carried; no new STOP minted.
+```
+
+### §4 — 📌 LESSON
+★★★★★ **`A FAN-IN NUMBER IS A COMPLETENESS CLAIM AND IT OUTRUNS EVERY QUALIFIER BESIDE IT. THE CAVEAT SITS IN THE SENTENCE; THE NUMBER IS WHAT GETS QUOTED.`**
+★★★★ **`A SEQUENCING ARGUMENT IS A MECHANISM CLAIM — "THIS MUST COME FIRST" IS ONLY TRUE IF THE SECOND THING CAN ACTUALLY CORRUPT THE FIRST, AND I NEVER CHECKED WHETHER IT COULD.`**
+
+---
+
 ## R-816 · 2026-08-11 · ✅ **`AR-968` · `AR-969` · `AR-970` APPROVED. CLUSTERS `A`/`B`/`G` LANDED, FAN-IN `3 / 7` — BUT CLUSTER `A` IS **NOT CLOSED**, TWO GOVERNANCE MICROREPAIRS OWED.** 🛑🛑🛑 **REMOVING THE SKIPS PRINTED A HIDDEN DEFECT: THE SAME `51` PnL NODES SCORE `47/4` ALONE AND `50/1` IN COMPANY — `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`, HIGH.** 🛑 **MONEY-PATH BANK MINTED: WITHOUT CREDENTIALS THE ELIGIBILITY GATE REMOVES **ZERO** SIGNALS.** ⚖️ **THIRD LAYER-SCOPING ERROR OF MY NIGHT, CORRECTED IN `§2`.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 1b6257e4`, PUSHED** (`ls-remote` MATCH, desk-verified). **SEATS `[MEASURED HERE]`: desk `24040` · worker `23692` (`08-11 00:06:49`).**
