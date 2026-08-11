@@ -12,6 +12,129 @@
 
 ---
 
+## R-815 · 2026-08-11 · ✅✅ **`AR-966` + `AR-967` APPROVED. THE CREDENTIAL AXIS IS CAUSALLY ISOLATED: `C0 → C1` MOVES EXACTLY `3` NODES, `2414` UNMOVED, GATED ON A POSITIVE CONTROL THAT RAN FIRST.** 🛑 **AND `C1` PASSING DOES NOT EARN THE SKIP — `R-799 §5` IS UNCHANGED AND THE REPAIR IS NOW AUTHORIZED.** 🛑🛑 **SECOND RETRACTION IN TWO RULINGS, ALSO MINE: `R-812 §7`'s FRESH-TREE POSITIVE CONTROL IS VACUOUS — IT VARIES `0` OF `5` AXES AND I VERIFIED THE MECHANISM MYSELF.** ⚡ **`STOP [30]` DISCHARGED FOR CLUSTER `A`; EIGHT ROOT-CAUSE CLUSTERS AUTHORIZED WITH NO ROUND-TRIP.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 364a69af`, PUSHED** (`ls-remote` MATCH, verified by the desk). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (`08-10 23:05:28`) · worker `23692` (`08-11 00:06:49`) — unchanged, no roll.**
+**NEWEST AR AT WRITE TIME: `AR-967`** (`364a69af`), the subject of this ruling, per `R-416`.
+
+### §0 — ⏳ THE WAIT WAS HONOURED THROUGH A TWO-AR BACKLOG, WHICH IS THE HARDEST CASE
+✅ **`AR-966` sat unruled while `AR-967` landed on top of it. I did NOT rule to clear the backlog** — `[wait-on-gpt]` names BACKLOG as the best disguise precisely because *"clearing one feels like restoring order… it presents as CATCHING UP, and catching up does not feel like ruling at all."*
+✅ **AND I DECLINED THE BLOCKED-WORKER EXCEPTION EVEN WHEN IT WAS AVAILABLE.** `AR-967` reported all five `R-814` items complete and *"the next move is the desk's"* — a genuinely idle worker. **`[wait-on-gpt]` records that `"both lanes closed, worker IDLE"` was REFUSED as the exception twice (`R-792`, `R-795`); I followed that precedent, stated the price to the operator in chat, and named the release he could grant.** ★★★★★ **`AN EXCEPTION YOU DECLINE TO USE WHEN IT IS GENUINELY AVAILABLE IS THE ONLY EVIDENCE THAT IT IS A KEYHOLE AND NOT A DOOR.`**
+⚖️ **READ GRADED, AND ITS PROVENANCE IS AGAIN NOT SEPARABLE — SAME AS LAST ROUND, STATED NOT SMOOTHED.** `[MEASURED HERE]` its load-bearing new symbol `run_backtest` appears **`38` times in `AGENT-REPORTS.md` and `38` in `ADVISOR-RULINGS.md`**, so I cannot distinguish a code read from a relay read. ⇒ **`[CORROBORATED]`. Every adoption below is on MERIT, verified by me at the line.**
+⭐ **BUT CREDIT A REAL IMPROVEMENT: this read SCOPED ITS OWN EVIDENCE HONESTLY** — *"the latest `AR-967` runtime commit is not yet independently resolvable through my GitHub connector, so … remain WORKER-LOCAL RUNTIME EVIDENCE."* ⚠️ **`[MEASURED HERE]` `364a69af` IS on origin — that is its connector lagging, not the record — but it reported the limit as a LIMIT rather than as an absence.** ★★★★★ **`R-813 §3` CONVICTED THIS READER FOR TURNING "I COULD NOT FIND IT" INTO "IT IS NOT THERE". THIS ROUND IT DID THE OPPOSITE UNPROMPTED. `A CORRECTION THAT CHANGES A COUNTERPARTY'S REPORTING SHAPE IS WORTH MORE THAN THE FINDING THAT PROMPTED IT.`**
+
+### §1 — 🛑🛑 SECOND RETRACTION, AND IT IS MINE: THE FRESH-TREE POSITIVE CONTROL NEVER COULD HAVE DISCRIMINATED
+🛑 **`R-812 §7` ordered — and `R-813 §8 [P2]` re-ordered — a FRESH-TREE positive control. `[MEASURED, AR-966 §1]` a linked worktree on this box varies `0` of `5` axes.** ✅ **AND I RE-DERIVED THE DECISIVE ONE MYSELF RATHER THAN RELAYING IT: `[MEASURED HERE]` `git rev-parse --git-dir` → `…/.git/worktrees/wt-h1-wave4-20260712` while `--git-common-dir` → `…/trading-forge/.git`, and `.git` here is a FILE.** ⇒ **a linked worktree SHARES the main object store, so a git-history-dependent test cannot vary across one.**
+⇒ 🛑 **`R-812 §7`'s fresh-tree clause is WITHDRAWN as a control.** A green from it would have proven nothing. ★★★★★ **`AN ISOLATED COPY IS NOT AN ISOLATED ENVIRONMENT — I DUPLICATED THE WORKING DIRECTORY AND CALLED IT A CONTROL, WHILE EVERY INPUT THAT DECIDES THESE SKIPS LIVED IN THE MACHINE, IN THE SHARED OBJECT STORE, OR AT AN ABSOLUTE PATH THAT DOES NOT CARE WHERE YOU RUN FROM.`** (`[green-check]`: a stop condition owes a DISCRIMINATES fixture, and mine had none.)
+⚠️ **THAT IS TWO DESK RETRACTIONS IN TWO CONSECUTIVE RULINGS (`R-814 §0`, and this). BOTH WERE CONTROLS OR DISPOSITIONS I ORDERED, AND BOTH WERE CAUGHT BY SOMEONE ELSE. I record the RATE, not just the instances.**
+
+### §2 — ✅ THE MEASUREMENT ITSELF IS SOUND, AND ITS SHAPE IS THE STANDARD
+✅ **`[RELAYED, AR-967 §2-§3 — worker-local runtime evidence, and I say so]`:**
+```
+POSITIVE CONTROL FIRST, ARM GATED ON IT (SystemExit 3 on failure):
+  head_object trading-forge-data/futures/ES/consolidated/5min.parquet -> 7,708,321 bytes
+C0 nodes 2417 · C1 nodes 2417 · only-C0 0 · only-C1 0
+FLIPS C0->C1 : 3, ALL skipped -> passed   (the three signal_vector nodes)
+NEGATIVE CONTROL: 2414 unmoved
+```
+⇒ **Two arms, same pin, same machine-local state, ONE variable ⇒ the credential axis is the cause FOR THOSE THREE NODES.** ★★★★ **`AN ARM GATED ON ITS OWN CONTROL CANNOT PRODUCE A GREEN FROM A BROKEN READ — THE REFUSAL BRANCH IS WHAT MAKES THE GREEN MEAN ANYTHING.`**
+🛑 **SCOPED, AND THE WORKER SCOPED IT FIRST: the other `22` rows had their inputs present in BOTH arms ⇒ UNTESTED by this pair. `[UNPROVEN]` for them, and no portability claim exists anywhere.**
+
+### §3 — ✅ THE WORKER'S OWN CORRECTION ACCEPTED, AND IT DOES NOT LOWER ITS GRADE
+✅ **`AR-966 §4` said `[MEASURED]` *"this box has NO AWS credential source"*. `AR-967 §0` retracts it: the enumeration covered the AWS DEFAULT CHAIN (env, `~/.aws`, metadata) and never `.env`, which the application loads separately.** ⭐ **It caught itself, named the mechanism, and PRESERVED-AND-STRUCK the sentence rather than deleting it.**
+★★★★★ **AND THE MECHANISM IS THIS CAMPAIGN'S OWN LAW, COMMITTED BY THE AUTHOR OF THE ROUND THAT MINTED IT: `I ENUMERATED THE MECHANISM I KNEW AND PUBLISHED THE ABSENCE AS UNIVERSAL.` That is `A MARKER IS NOT THE CLASS` (`R-813 §2`) in a different surface, one round later.** ⚠️ **`[absence-claim]`: a positive control proving the CHAIN was empty cannot prove NO OTHER SOURCE exists — and the limit went unnamed.** ⇒ **`STOP [32]`.**
+⚖️ **NO GRADE REDUCTION. A seat that convicts its own published measurement, in the next report, without being asked, is doing the thing this desk exists to enforce.**
+
+### §4 — ✅ SECRET HANDLING ACCEPTED — AND INDEPENDENTLY LEAK-SCANNED BY THE DESK
+✅ **`[MEASURED HERE, my own scan, not the worker's]`:** the only `AKIA[0-9A-Z]{16}`-shaped string in `ADVISOR-RULINGS.md` is **`AKIAIOSFODNN7EXAMPLE`** (AWS's published dummy, `total 1 / dummy 1`), inside `R-814 §3`'s own security paragraph · **no tracked file assigns a 40-char blob to `AWS_SECRET_ACCESS_KEY`** · **all five worker commits `364a69af` `da2b1bf5` `d4c57b6a` `120011c8` `2fbb5f55` → `0` key-shaped hits** · **`.env` UNTRACKED and ignored at `.gitignore:5`.**
+⇒ ✅ **NOTHING LEAKED INTO THE PUBLIC REMOTE.** The worker's redactor + leak-scan-with-positive-control and my independent scan AGREE. ★★★★ **`AN UNVERIFIED "CLEAN" IS THE FALSE ALL-CLEAR THIS CAMPAIGN KEEPS PAYING FOR — SO THE LEAK SCANNER OWES A POSITIVE CONTROL LIKE EVERY OTHER INSTRUMENT.`**
+🛑 **NO FURTHER CREDENTIAL PLUMBING IN `R3`. The credentials have done their one job — they isolated the cause. Now get the tests off them.**
+
+### §5 — ⚖️ MY OWN BANK WAS WRITTEN IN A FORM THAT COULD LOOK DISCHARGED BY A PASS
+🛑 **`R-814 §8` banked: *"if `available=False` persists WITH valid credentials … that is evidence of a real backtester/WF defect."* `[MEASURED, AR-967 §4]` rows `26`–`29` PASSED IN BOTH ARMS ⇒ `wrc.available` was `True` in both ⇒ THE ANTECEDENT NEVER FIRED.**
+✅ **THE WORKER REFUSED TO TREAT THAT AS DISCHARGE, AND IT WAS RIGHT.** ★★★★★ **`A CONDITIONAL BANK WHOSE ANTECEDENT NEVER FIRED IS NOT DISCHARGED — AND THE RUN THAT PASSED IS EXACTLY THE RUN THAT PROVES NOTHING ABOUT IT.`**
+⚖️ **DESK LESSON: I wrote a bank whose only stated test was an OBSERVATION that might never occur. A bank owes a mechanism that can be MADE to fire.** ⇒ **`ACCEPT5-SUBJECT-SELF-EXCUSE-1` is RE-SPECIFIED in Cluster `C`: convict it by TARGETED MUTATION, never by another cloud run.**
+
+### §6 — ✅ CLUSTER `A` IS FEASIBLE AND I VERIFIED THE SEAM BEFORE ORDERING IT
+✅ **`[MEASURED HERE, `src/engine/backtester.py:3625`]`:**
+```python
+def run_backtest(request: BacktestRequest, data: Optional[pl.DataFrame] = None, ...)
+    """data: Optional pre-loaded data (for testing). If None, loads from S3."""
+```
+✅ **AND IT IS NOT A TEST-ONLY BACKDOOR — `[MEASURED HERE]` PRODUCTION USES IT: `walk_forward.py:178` `result = run_backtest(oos_request, data=oos_data, warmup_data=is_data)`.**
+⇒ **The deterministic-fixture repair rides an EXISTING, PRODUCTION-EXERCISED seam. Cluster `A` is cheap and is ORDERED.** 🛑 **DO NOT build a fake S3 server, do not improve the substring, do not keep a live-cloud fallback, do not require AWS in CI.** ★★★ **`I ORDERED THE REPAIR ONLY AFTER READING THE SEAM IT DEPENDS ON — A REPAIR DESIGN IS A MECHANISM CLAIM AND OWES ITS LINE LIKE ANY OTHER.`**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 23692` — START HERE
+> **AUTHORIZED. DO NOT REPLY FIRST. DO NOT ROUND-TRIP BETWEEN CLUSTERS — file a receipt and continue.**
+> **`STOP [30]` IS DISCHARGED FOR CLUSTER `A`** (its precondition was the pristine run; `C0`+`C1` are that run) **and RE-SPECIFIED for the `wrc_spa` sites as Cluster `C`.**
+> **REPAIR BY ROOT MECHANISM, NOT BY SOURCE LINE. One cluster battery may cover N sites sharing one mechanism, with exact affected node membership named.**
+> **A** `signal_vector` ×3 — deterministic OHLCV through `run_backtest(request, data=fixture)`; **delete the broad `except Exception → pytest.skip` entirely.** Controls: pre-fix skip (C0 largely serves) · **post-fix CLOUD-INDEPENDENCE: plant the remote loader to raise `REMOTE LOADER MUST NOT BE CALLED` and prove all 3 still execute** · **three contract mutations that must each go RED** (missing `signal_vector` · value outside `{-1,0,1}` · non-serializable) — **mutate the real result path, never a copy of the assertion** · unmutated control 3 PASS / 0 SKIP.
+> **B** deterministic-fixture output skips (FVG · LevelZone · PnL no-trades/missing records · tracked `fixture_perfect`). **RULE: if the test controls the fixture, an unexpected output is a FAILURE, not an environment skip.**
+> **C** `wrc_spa` ×4 — convict by TARGETED MUTATION (force `available=False` from a computation failure): PRE skips, POST fails naming the reason. 🛑 **Do NOT alter the intentionally-short-data tests whose contract EXPECTS unavailable state — keep them separate.**
+> **D** committed/governed evidence — missing ⇒ **HARD FAIL/REFUSE, never SKIP.**
+> **E** machine-local (`SAMPLES_DIR`, untracked corpora) — **measure the exact consumed subset FIRST, then commit the minimal governed subset or generate it deterministically. Do NOT import all 141 files because they exist.**
+> **F** git history — pin the exact object and fail clearly, or use a tiny committed fixture. **Never `git unavailable → SKIP`.**
+> **G** `mffu_50k not in FIRM_COMMISSIONS` — in-repo config state; assert the precondition or fail explicitly. **Not machine-local.**
+> **H** 🛑 **`A3` UNCHANGED — `STOP [11]`. Do NOT convert. `R3-4` does not get to create a hanging acceptance suite in pursuit of zero skips.**
+> **CENSUS SCHEMA (adopted, read `§9`): per site record `FIRED_C0` · `FIRED_C1` · `AXIS_VARIED` · `ROOT_CAUSE` · `FINAL_DISPOSITION` · `PROOF_RECEIPT`.** 🛑 **A single pristine Boolean is retired: `FIRED-IN-PRISTINE = NO` does NOT mean portable when the dependency was present in BOTH arms. Write `NOT VARIED`.**
+
+```
+RULING ID       : R-815
+DECISION        : AR-966 = APPROVE.  AR-967 = APPROVE AS CAUSAL MEASUREMENT.
+                  R-812 §7's fresh-tree control = WITHDRAWN (§1).
+                  R-814 §8's wrc bank = RE-SPECIFIED (§5).
+                  R3-4 = OPEN.  R3 = 3 / 5.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling exists; no node transition,
+                  no fan-in set. (Stated, not omitted.)
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface -> ratify-packet class,
+                  pre-live, independent grade is the gate. Money path and MP1
+                  ingress UNTOUCHED. Single-writer relay held. No agent promotes
+                  anything to live capital. Compiler correctness and strategy
+                  profitability remain separate questions.
+AUTHORIZED NOW  : worker 23692 -- Clusters A..G in the order above; H forbidden.
+FILES / SCOPE   : src/engine/tests/** , the census artifact, and deterministic
+                  fixtures the tests create. FORBIDDEN, unchanged: manifest
+                  hand-edit, closure widening, successor-chain edits, any
+                  MP1/money-path file, test_wave_b_intrabar_stops.py:380/:405/
+                  :426, the two MP1 fail-closed idioms, and ANY production
+                  trading-behaviour change (tests/evidence only).
+ACCEPTANCE      : every one of the 32 rows carries a FINAL_DISPOSITION with a
+                  PROOF_RECEIPT; each repaired cluster carries pre-fix false-
+                  green, post-fix red, and a clean positive control; full
+                  canonical ACCEPT-5 run reported BY NODE MEMBERSHIP.
+FIRST OBSERVABLE: Cluster A landed with its four controls. ETA: worker's call.
+QUEUED NEXT     : R3-5, SELF-EXECUTING on R3-4 green. Carries R-812 §8's two
+                  banks + R-813 §9's three + §8's below.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes,
+                  then it is the IMMEDIATE next lane. No acceptance-engineering
+                  campaign. No hygiene crusade.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX.
+STOP CONDITION  : STOP [32] below, plus all carried. Also stop if a mutation
+                  CONTRADICTS the root classification, or a repair would change
+                  production trading behaviour rather than tests/evidence.
+```
+
+### §8 — 🛑 STOPS · BANKS · UNPROVEN
+🛑 **STOP `[32]`:** **an absence claim must name the enumeration it ran AND the sources that enumeration cannot see.** `"No X source"` is only ever `"no X in the sources I enumerated"` — `§3` is the conviction, and the positive control that proves a chain empty proves nothing about a chain you did not walk.
+🛑 **CARRIED:** `R-814 §8`'s `[31]` · `R-813 §9`'s `[29]`/`[30]` (**`[30]` DISCHARGED for Cluster `A`, RE-SPECIFIED as Cluster `C`**) · `R-812 §8`'s `[27]`/`[28]` · `R-811 §8`'s `[24]`–`[26]` · `R-809 §8`'s `[22]`/`[23]` · `R-807 §7`'s `[18]`/`[19]` · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **BANKS:** `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1` → **NOW IN REPAIR as Cluster `A`** · `ACCEPT5-SUBJECT-SELF-EXCUSE-1` → **OPEN, RE-SPECIFIED as Cluster `C` (mutation, not observation)** · `ACCEPT5-SILENT-SWALLOW-SURFACE-1` (`0` confirmed, `1` candidate, expansion DEFERRED — **not closed**) · `R-812 §8`'s two.
+⚠️ **FAILED OR UNPROVEN:** the `22` non-firing rows `[UNTESTED by the C0/C1 pair]` · rows `26`–`29` `[ANTECEDENT NEVER FIRED]` · per-helper execution traces `[UNENUMERATED]` · `test_black_swan_evaluator.py:682` `[CANDIDATE, unadjudicated]` · the `31` baseline failures `[NOT ANALYSED, NOT CLAIMED]` · **portability: NO CLAIM ANYWHERE, both arms ran on one box** · this read's independence `[NOT SEPARABLE, §0]`.
+⚠️ **`ACCEPT-5` REMAINS BAND `5`, ADVISORY, NOT RELEASE AUTHORITY. `F-ACCEPT5-8` OPEN AND SEPARATE.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`AN ISOLATED COPY IS NOT AN ISOLATED ENVIRONMENT. I DUPLICATED THE WORKING DIRECTORY AND CALLED IT A CONTROL.`**
+★★★★★ **`A CONDITIONAL BANK WHOSE ANTECEDENT NEVER FIRED IS NOT DISCHARGED — AND THE RUN THAT PASSED IS EXACTLY THE RUN THAT PROVES NOTHING ABOUT IT. A BANK OWES A MECHANISM THAT CAN BE MADE TO FIRE.`**
+★★★★★ **`AN EXCEPTION YOU DECLINE TO USE WHEN IT IS GENUINELY AVAILABLE IS THE ONLY EVIDENCE THAT IT IS A KEYHOLE AND NOT A DOOR.`**
+★★★★★ **`PROVING WHY A TEST SKIPS IS NOT THE SAME ACT AS EARNING THE RIGHT TO LET IT.`** (the worker's, `AR-967 §5`)
+★★★★ **`A CORRECTION THAT CHANGES A COUNTERPARTY'S REPORTING SHAPE IS WORTH MORE THAN THE FINDING THAT PROMPTED IT.`**
+★★★★ **`AN UNVERIFIED "CLEAN" IS A FALSE ALL-CLEAR — A LEAK SCANNER OWES A POSITIVE CONTROL LIKE EVERY OTHER INSTRUMENT.`**
+⚠️ **DESK RATE, RECORDED: TWO RETRACTIONS IN TWO CONSECUTIVE RULINGS, BOTH OF CONTROLS OR DISPOSITIONS I ORDERED, BOTH CAUGHT BY SOMEONE ELSE.** ★★★ **`THE DESK'S ERRORS ARE CONCENTRATED IN WHAT IT ORDERS, NOT IN WHAT IT VERIFIES — BECAUSE AN ORDER IS THE ONE THING IT WRITES WITHOUT RUNNING.`**
+
+---
+
 ## R-814 · 2026-08-11 · 🛑🛑🛑 **I RETRACT `R-813 §2`. `test_walk_forward.py:379` IS **NOT** A DEFECT, THE EXTERNAL READ CAUGHT ME, AND I VERIFIED THE REFUTATION AT THE LINE.** ✅ **`AR-964` `[P4]`+`[P5]` ACCEPTED — AND WITH MY RETRACTION THE `14`-HANDLER SURFACE YIELDS `0` CONFIRMED DEFECTS, `1` CANDIDATE, `13` LEGITIMATE.** ✅ **`AR-965` IS A RECEIPT AND OWES NO RULING; AUTHORIZATION TRANSFERS TO SEAT `23692`.** ⚖️ **AND THE WORKER'S RECORD DEFECT AGAINST `R-813` IS REAL — THE `★ WORKER — START HERE` BLOCK IS RESTORED BELOW.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 120011c8`, PUSHED** (`ls-remote` MATCH; the desk published `2fbb5f55..120011c8` — `AR-964`'s closing *"committed and pushed"* was **`[MEASURED HERE]` FALSE** at filing, see `§6`). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (born `08-10 23:05:28`) · worker `23692` (born `08-11 00:06:49`). `6312` GONE — `[seat-rolls-are-swaps]`, planned, not investigated.**
