@@ -15,7 +15,9 @@
 > **(1)** THIS BLOCK · **(2)** `docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md` — the FAILED re-grade (committed `8c6ef980`) · **(3)** `AR-1008` · **(4)** `R-839` — it carries the external read's whole architecture in its `§3` · **(5)** verifier blob `e9eeb845…` at pin `7090da86` · **(6)** execution pin `fb71a3ef`.
 > 🛑 **DO NOT RE-READ `AR-970`..`AR-1007`, AND DO NOT READ THIS FILE BELOW THIS BLOCK.** ★★★★★ **`A HANDOFF THAT MAKES THE SUCCESSOR RECONSTRUCT THE PREDECESSOR'S CONTEXT HAS NOT SAVED ANYTHING — IT HAS MOVED THE COST AND ADDED A SEAM.`**
 
-**LEDGER `R-839`. NEWEST AR `AR-1008` — RULED.** **WORKER `claude.exe 30716`: HELD, correctly stopped, NOT to be rotated for symmetry.** **DESK: ROTATING — the operator holds the lever.**
+**LEDGER `R-839`. NEWEST AR `AR-1009`** (a SEATING RECEIPT — owes no ruling; `AR-1008` is the last substantive one and is RULED).
+**WORKER: `claude.exe 28956`** `[MEASURED HERE, `Win32_Process`, born `08-11 18:38:34`]` — **`30716` IS GONE; the roll happened AFTER `R-839` and its `AR-1009` states the HOLD IS INHERITED, NOT RE-OPENED, which is correct.** 🛑 **ADDRESS `28956`, NOT `30716` — `R-839 §8` is addressed to the retired seat and transfers on `28956`'s receipt (`R-784 §3`), which `AR-1009` is.** **DESK `28644`: ROTATING — the operator holds the lever.**
+⚖️ **I caught this line going stale on myself within hours of minting `STOP [68]` for exactly it — a seat identifier in the one block a fresh desk is told to trust. `AN IDENTIFIER IN A ROUTING BLOCK DECAYS ON SOMEONE ELSE'S SCHEDULE, NOT YOURS.`**
 
 ### WHERE THE CAMPAIGN ACTUALLY IS
 ✅ **THE FIVE HISTORICAL ARMS ARE GOOD AND STAY: `108` children · `2419` nodes · `0` differences across ALL `10` arm pairs · the same `33` stable failures · real runtimes under `600s`. Independently verified through non-overlapping paths. `[G]`/`[I]` substantive results HOLD.**
