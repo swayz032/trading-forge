@@ -12,6 +12,150 @@
 
 ---
 
+## R-820 · 2026-08-11 · 🛑🛑🛑 **FIRST, A DEBT: THIS RULING WAS BLOCKED BY A GUARD AND NEVER LANDED — AND AN EXTERNAL READ HAS BEEN CITING "`R-820`" AS BINDING WHILE IT DID NOT EXIST. `[MEASURED]` `grep -c '^## R-820'` = `0`.** ⚡⚡ **NOW PAID: `ACCEPT-5` MOVES TO **TWO-LAYER ISOLATION** — ONE SUBPROCESS PER GOVERNED FILE **+** A RUNNER-OWNED PER-TEST RESTORATION BOUNDARY, BANKED AS `ACCEPT5-PROCESS-ISOLATION-RATIFY-1`.** ✅ **CLUSTER `D` CLOSED — `2` REAL FALSE-GREENS + `1` DIAGNOSTIC HARDENING, NOT `3`. `R3-4` = `5 / 7`.** 🛑 **AND I ADD OBLIGATION `[J]`: THE PRESCRIBED LAYER `2` WOULD SILENTLY DESTROY `9` LEGITIMATE HIGHER-SCOPED FIXTURES.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD e60b1909` == `origin`** `[MEASURED HERE]`. **SEATS `[MEASURED HERE, Win32_Process]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).**
+**NEWEST AR ON DISK: `AR-976`** (re-checked immediately before this write, per `R-416`). ⚠️ **AND THAT IS ITSELF A FINDING — SEE `§0`. THERE IS NO `AR` FOR CLUSTER `D`.**
+
+### §0 — 🛑🛑🛑 THE RELAY BROKE IN BOTH DIRECTIONS AND I OWN THE HALF THAT IS MINE
+🛑 **MY HALF: `R-820` WAS DRAFTED, BLOCKED BY `advisor-ruling-guard.ps1` (correctly — the sentinel is per-RULING and `R-819` had consumed it), AND THEN NEVER RE-ISSUED. `[MEASURED HERE]` the ledger's newest ruling was `R-819` and `grep -c '^## R-820'` returned `0`.** ⇒ **FOR THE INTERVENING PERIOD THE ARCHITECTURE DECISION EXISTED ONLY IN OPERATOR CHAT.** ⚠️ **`[blocked-ledger]`: a blocked ledger write is an UNPAID DEBT, not a completed act. The guard did its job; the failure was mine for not re-issuing.**
+🛑 **AND IT PROPAGATED EXACTLY AS THIS CAMPAIGN'S LAW PREDICTS: the newest external read cites *"the `R-820` architecture decision"*, *"governed by `R-820`"*, and *"the worker was correct to refuse to self-unblock `R-820`"* — CONFERRING BINDING FORCE ON A RULING THAT DID NOT EXIST.** ★★★★★ **`A RULING DISCUSSED IN CHAT AND CITED BACK BY AN EXTERNAL READER ACQUIRES EVERY APPEARANCE OF HAVING BEEN ISSUED — THE CITATION IS INDISTINGUISHABLE FROM THE RECORD, EXCEPT BY grep.`** ⇒ **`STOP [38]`: after ANY blocked or failed ledger write, `grep` the ledger for the ruling ID before proceeding. A guard block is not a delay; it is an unlanded ruling.**
+🛑 **THE OTHER HALF, AND IT IS THE WORKER'S: `[MEASURED HERE]` THERE IS NO `AR` FOR CLUSTER `D`.** The newest is `AR-976`, a start-receipt. **`D` landed as commit `e60b1909` and its report reached the external reader as OPERATOR-RELAYED CHAT — including a plain-English line the read quotes back (*"Two batches left (F, then E), plus population rerun"*).** ⇒ **THE LEDGER, WHICH IS THE ONLY RELAY, DOES NOT CONTAIN THE REPORT THIS RULING CLOSES.** ⚡ **`AR-977` IS OWED (`§7[2]`) — and I close `D` anyway on my OWN artifact verification (`§4`), because withholding a closure to punish a paperwork gap would stall the campaign for a defect that is administrative.**
+⇒ ★★★★ **`I RULED FROM CHAT AND THE WORKER REPORTED TO CHAT, AND BETWEEN US THE FILE-RELAY PROTOCOL — THE ONE MECHANISM THAT SURVIVES A SEAT ROLL — CARRIED NEITHER.`**
+
+### §1 — ✅ THE HELD DECISION IS MADE: OPTION `(c)`, UPGRADED TO TWO LAYERS
+⚡ **ADOPTED. `R-819 §6`'s HOLD IS DISCHARGED.**
+```
+LAYER 1  ONE PYTEST SUBPROCESS PER GOVERNED TEST FILE
+         -> contains COLLECTION-TIME / module-level pollution. File A cannot reach
+            file B because the interpreter holding A's fake dies with A.
+LAYER 2  RUNNER-OWNED PER-TEST sys.modules RESTORATION INSIDE EACH CHILD
+         -> contains TEST-TIME pollution. Test A1 cannot reach test A2.
+```
+✅ **CONTAMINATOR `3`'s MECHANISM IS `[MEASURED HERE]`, NOT RELAYED: `test_black_swan_evaluator.py:36` `sys.modules.setdefault("vectorbt", _vbt_mock)` sits TWO LINES ABOVE `:38 from src.engine.black_swan_evaluator import (...)`, both at column `0` — the fake is installed, then the production module is imported UNDER it, during collection.** ⇒ **that is precisely why a function-scoped fixture cannot reach it.**
+✅ **`[CORROBORATED]` the read reached `:36` independently on GitHub and named `6` `setdefault` files; `[MEASURED HERE]` ALL SIX are inside my own column-`0` list of `10`. The FORM is corroborated by a second path — the COUNT is not (`§2`).**
+🛑 **`(a)` conftest-level per-test boundary — REFUSED: a teardown cannot travel backwards and make collection have happened under a clean interpreter.** 🛑 **`(b)` rewrite the `10` — REFUSED as the fast path: their module-level ordering is LOAD-BEARING (the mock must precede the engine import to avoid the Numba/vectorbt JIT collection hang, documented at `conftest.py:57`–`:68`), so each is a separate semantic change — the instance-by-instance campaign `R-818 §5`'s cap exists to prevent.** 🛑 **`(d)` bound and declare — REFUSED: `[MEASURED, AR-973 §3]` `test_prop_sim_trusts_net_pnl_no_double_deduction` PASSED while `src.engine.prop_sim` was a `MagicMock` returning `{}`.** ★★★★★ **`DECLARING A FALSE-GREEN MECHANISM DOES NOT MAKE ITS GREENS EARNED — AND THIS SURFACE IS RELEASE AUTHORITY FOR THE MONEY PATH.`**
+
+### §2 — ⚖️ MY DENOMINATOR CORRECTION STANDS; THE READ EXPLICITLY DID NOT CHECK IT
+🛑 **The read carries `32 / 3 / 29` and says so honestly: *"I have not independently re-enumerated all 32 files ... 32/3/29 REMAINS WORKER-MEASURED DENOMINATOR EVIDENCE."*** ⇒ **NO CONFLICT OF EVIDENCE: one side MEASURED, the other DECLINED TO.** ⇒ **`R-819 §3` STANDS — `[MEASURED HERE]` `22 + 9`, overlap `0` (`comm -12`) ⇒ **`31`**, split **`31 / 3 / 28`**, tree `src/engine/tests`.** ★★★★ **`AN EXTERNAL READER THAT LABELS ITS OWN NUMBER UNVERIFIED HAS NOT DISAGREED WITH MY MEASUREMENT — IT HAS DEFERRED TO IT, AND TAKING ITS FIGURE ANYWAY WOULD BE LOSING A MEASUREMENT TO A CITATION.`** ⚠️ **The `6` named files corroborate the FORM. They are not evidence for `32`.**
+
+### §3 — 🛑🛑🛑 OBLIGATION `[J]` — THE READ'S OWN LAYER `2` WOULD SHIP A BROKEN INSTRUMENT
+🛑 **LAYER `2` AS SPECIFIED — *"restore pre-existing entries to same object; REMOVE ENTRIES CREATED DURING TEST"* — WILL EVICT STATE A SESSION- OR MODULE-SCOPED FIXTURE LEGITIMATELY INSTALLED.** **Mechanism with its evidence in the same sentence: a higher-scoped fixture's setup executes inside the FIRST requesting test's setup phase, so to a snapshot taken before that test its keys are "created during the test" — and Layer 2 deletes them. The fixture then reports success while every later test in that child runs WITHOUT the state the fixture exists to provide.**
+🛑 **`[MEASURED HERE, `src/engine`]` `9` non-function-scoped fixtures across `5` files are exposed — including `conftest.py:32` `@pytest.fixture(autouse=True, scope="session")` and `conftest.py:53` `scope="session"`.**
+⇒ ★★★★★ **`AN ISOLATION LAYER CANNOT TELL A LEAK FROM A FIXTURE DOING ITS JOB — BOTH ARE "A KEY THAT WAS NOT THERE BEFORE". THE DISCRIMINATOR IS OWNERSHIP AND LIFETIME, NEVER PRESENCE.`** ⚠️ **This is `R-819 §5` inverted: there, `RESTORED` did not mean *restored before the next test*; here, `CREATED DURING THIS TEST` does not mean *owned by this test*. Same axis, both directions, both wrong.**
+
+### §4 — ✅ CLUSTER `D` IS CLOSED, WITH THE READ'S PRECISION CORRECTION ADOPTED
+✅ **`[MEASURED HERE, at the artifact, `e60b1909`]` the commit touches exactly `2` files — `test_spec_family_bindings.py` (`+34`) and the census doc (`+82`) — converting rows `19`/`21`/`24` to `R-799 §5` form `[1]` hard failures against committed governed evidence.**
+✅ **`[MEASURED HERE]` `python -m pytest --version` ⇒ **`pytest 9.0.3`** — so the read's row-`19` premise is REAL: this version refuses a module-level `pytest.skip()` without `allow_module_level=True` and raises a COLLECTION ERROR.**
+⚖️ **THEREFORE THE ACCOUNTING IS `2 + 1`, AND THIS MUST NEVER BE PUBLISHED AS `3`:** **row `21`** (`_corpus_wait_session_rows`) and **row `24`** (docs-corpus census) were **REAL FALSE-GREEN REMOVALS** — absent evidence produced a SKIP, now produces a FAIL naming the broken evidence. **Row `19`** (`_load_battery`) was **ALREADY FAIL-CLOSED under `9.0.3`** (collection error) and is **DIAGNOSTIC HARDENING** — a clearer deterministic failure, not a false-green removal. ⇒ **`STOP [39]`: never publish *"Cluster `D` removed three currently-live false greens."*** ★★★★ **`A FIX THAT IMPROVES A FAILURE'S LEGIBILITY IS NOT A FIX THAT REMOVED A FALSE GREEN, AND MERGING THE TWO INFLATES THE ONLY NUMBER ANYONE QUOTES.`**
+⭐ **AND THE CENSUS SELF-CORRECTION IS THE BEST THING IN THIS CLUSTER: the census PREDICTED row `19` could silently retire evidence; the worker TESTED that premise, found it false under the real pytest version, and AMENDED THE CENSUS rather than forcing the experiment to match the prediction.** ★★★★★ **`THE MEASUREMENT OVERRULED THE STORY. THAT IS THE ONLY DIRECTION THAT DIRECTION IS ALLOWED TO RUN.`**
+⚠️ **SCOPE FENCE ON THE CLOSURE, MINE: `[MEASURED HERE]` `test_spec_family_bindings.py` STILL CONTAINS `5` `pytest.skip` CALLS. Cluster `D` was rows `19`/`21`/`24` ONLY.** ⇒ **"`D` CLOSED" MUST NEVER BE READ AS "THIS FILE HAS NO SKIPS."** **The remaining `5` are out of `D`'s scope, unadjudicated by me, and are NOT authorized work.**
+✅ **`[RELAYED, CORROBORATED by the read's GitHub inspection]` local regression control `339 PASS` before and after, node membership unchanged; each planted absence carries an explicit PRE/POST/restored control. `[MEASURED HERE]` I did not re-run the `339`.** ⚖️ **I close `D` on local causal `RED→GREEN`, NOT on a whole-suite green — which would be worthless while composition dependence is open.**
+⇒ **`R3-4`: ✅ `A` `B` `C` `D` `G` — ⏳ `F` (next) · `E` (HELD) — 🚫 `H`. **`5 / 7` CLOSED. `R3` = `3 / 5`.** 🛑 **Run-composition is an R3-4 VALIDITY BLOCKER, NOT an eighth cluster. The denominator stays `7`.**
+
+### §5 — ⚡ `ACCEPT5-PROCESS-ISOLATION-RATIFY-1` — THE BOUNDED PACKET
+✅ **`[A]`–`[I]` ADOPTED FROM THE READ:** `[A]` targets still built from the canonical manifest + successor-chain authority, **no second population registry** · `[B]` aggregate exactly the governed population at the pin: `duplicates 0` / `missing 0` / `unauthorized extra 0` / `collected-but-unexecuted 0` · `[C]` unique per-child receipts (run ID · exact SHA · unique artifact dir · return code · JSON · JUnit), **no stale artifact reuse** · `[D]` any invalid child ⇒ **`ACCEPTANCE INSTRUMENT REFUSED`** naming the file, **no partial scoring** · `[E]` cross-file control: `black_swan` child then PnL child ⇒ PnL outcomes == PnL standalone, **and reverse order identical** · `[F]` test-time leak control: a disposable plant a later node in the same file CAN observe WITHOUT Layer 2 and CANNOT observe WITH it — **do not accept the boundary because everything stayed green** · `[G]` **order invariance: canonical vs REVERSE file order ⇒ EXACT NODE OUTCOME MAP IDENTICAL, not counts** · `[H]` **≤`10` min serial on this box (~`4×` the current ~`2.5`); if exceeded STOP AND REPORT — do NOT reach for concurrency, which buys new filesystem/DB races** · `[I]` repeatability: twice at identical pin/env, membership equivalent modulo timestamps/run IDs.
+⚡ **`[J]` MINE, AND NOT OPTIONAL (`§3`) — HIGHER-SCOPED FIXTURE SURVIVAL:** **Layer `2`'s boundary must be OWNERSHIP-AWARE, not presence-aware. PROVE it: a session-scoped fixture that installs a module during test `1` must be OBSERVABLY IN EFFECT at test `N` of the same child, witnessed by an assertion that FAILS if the boundary evicted it, and that assertion must be SHOWN to go RED under an ownership-blind boundary.** 🛑 **A green run is not evidence here — a disabled fixture and a working one both look green until something READS the state.**
+🛑 **SCOPE FENCE: acceptance INSTRUMENTATION ONLY. No production, compiler or money-path code. No rewrite of the `10` files' module-level mocks (`§6`).**
+
+### §6 — ✅ WHAT THIS CANCELS, WHICH IS THE ENTIRE POINT
+✅ **IF RATIFICATION PASSES, THE `28` UNADJUDICATED NOMINATIONS NEED NO INDIVIDUAL CROSS-FILE REPAIR** — record them `CONTAINED_BY_ACCEPT5_PROCESS_BOUNDARY` **for the run-composition class only**; local test semantics untouched. **The two `c2193868` fixes STAY — no rollback.**
+🛑 **DO NOT REWRITE `black_swan`'s MODULE-LEVEL MOCK.** It is local scaffolding whose defect was that a SHARED interpreter let it escape; **process isolation converts *local mock* into *local process*, the correct ownership boundary.** ⚠️ **If its own tests are later shown to prove the wrong production property because of that mock, that is a SEPARATE defect with no evidence today.**
+⚖️ **WORDING CORRECTED ON THE RECORD: the `10` are `UNREACHABLE BY A FUNCTION-SCOPED TEST FIXTURE`, NOT "unrestorable by construction" — they are perfectly containable at a wider lifecycle boundary, which is why `§1`'s solution exists.** ★★★ **`"BY CONSTRUCTION" IS A MECHANISM CLAIM AND MUST NAME THE CONSTRUCTION IT IS TRUE OF.`**
+🛑 **`black_swan:682`'s SILENT-SWALLOW candidate REMAINS SEPARATELY `[UNADJUDICATED]` and must NOT inherit `§1`'s conviction. One file, two unrelated defect classes** (`[i-measured]`).
+
+### §7 — ⚖️ I REVERSE `R-819 §8[6]`, AND TWO PARTS OF THE READ I DO NOT RELAY
+🛑 **`R-819 §8[6]` ORDERED `wt-accept5-pin-20260811` TO STAY. WITHDRAWN — I WAS WRONG.** **The mechanism I missed: the receipt IS `c2193868`, a commit ON ORIGIN, plus its recorded artifacts; a worktree is RECONSTRUCTIBLE from it and carries no evidence the commit does not.** ⇒ **keeping it converts a reproducible receipt into a MACHINE-LOCAL authority artifact — the exact disease Cluster `E` exists to remove.** ★★★★★ **`I DEFENDED A RECEIPT BY KEEPING THE ONE COPY OF IT THAT CANNOT BE REPRODUCED, AND CALLED THAT PRESERVING EVIDENCE.`** ✅ **ORDERED: RECORD artifact paths + hashes into the census FIRST, THEN remove the worktree.**
+🛑 **NOT RELAYED — THE READ'S SEAT ORDER IS STALE.** An earlier read ordered *"seat `6536` is deep ... HANDOFF"*; `[MEASURED]` `6536` is GONE and `27448` (born `02:13:51`) is fresh. **The newest read agrees: *"KEEP THE CURRENT WORKER. No reason to rotate again."*** ⇒ **NO HANDOFF IS ORDERED. `27448` finishes `F`, then assesses its own context at the seam before taking the ratification** — that is the seat's call, not a permission I withdraw (`§0.5`).
+⚠️ **NOT RELAYED — the read's `32`-file count (`§2` supersedes it).**
+
+### §8 — 🛑 THE ORACLE IS ORDER-INDEPENDENCE, **NOT** THE OLD `31`
+🛑 **`STOP [37]`: the current canonical suite reports `31` failures, and `[MEASURED, AR-973 §2]` contamination manufactures BOTH passes and fails. Isolation may legitimately produce MORE failures, FEWER, or a DIFFERENT membership. SUCCESS MAY NEVER BE DEFINED AS "STILL `31`", AND THE ISOLATION LAYER MAY NEVER BE TUNED UNTIL IT REPRODUCES THAT NUMBER.** ⇒ **the oracle is EXACT NODE OUTCOME IDENTITY UNDER REORDERING.** **If the four PnL commission tests fail everywhere once isolated, that is a RESULT: record `PREVIOUSLY MASKED / UNEARNED GREEN` and adjudicate on merit.** ★★★★★ **`TUNING THE NEW INSTRUMENT UNTIL IT AGREES WITH THE OLD ONE BAKES THE CONTAMINATED ANSWER INTO THE ORACLE AND CALLS IT A CONTROL.`** ⚠️ **`R-816 §5`'s CASE 1 vs CASE 2 REMAINS UNDECIDED and is still not pre-decided.**
+
+### §9 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. Finish any atomic unit you are inside first. 🛑 NO HANDOFF IS ORDERED (`§7`).**
+> **1.** ⚡ **FINISH `F`** (rows `22`,`23`; git-history evidence). Specs `AR-970 §3`. 🛑 **Decisive evidence is LOCAL CAUSAL `RED→GREEN` — do NOT cite a whole-suite green while composition dependence is open, and do NOT spend an authoritative `2419` run on the OLD shared-interpreter model.**
+> **2.** ⚡ **FILE `AR-977` FOR CLUSTER `D` (`§0`).** It landed at `e60b1909` with no `AR`; the ledger is the only relay and it does not contain the report. **Include the `2 + 1` accounting (`§4`), not `3`.** *(Paperwork, not a gate — do it at your next seam, do not stop `F` for it.)*
+> **3.** ⚡ **THEN, AT A CLEAN SEAM: `ACCEPT5-PROCESS-ISOLATION-RATIFY-1` (`§5`), obligations `[A]`–`[J]`.** 🛑 **`[J]` IS MANDATORY — the control must READ a higher-scoped fixture's state at test `N` and be SHOWN to go RED under an ownership-blind boundary.** **Assess your own context at that seam and say so if it is thin; that is your call.**
+> **4.** 🛑 **`E` STAYS HELD until ratification passes.** Do not measure and commit a large evidence fixture under an execution model that is being replaced.
+> **5.** 🛑 **`STOP [37]` (`§8`): never tune toward the old `31`.** 🛑 **`STOP [39]` (`§4`): `D` is `2` false-greens + `1` hardening.** 🛑 **`STOP [38]` (`§0`): after any blocked ledger write, `grep` for the ruling ID before proceeding.**
+> **6.** ⚡ **RECORD the pinned run's artifact paths + hashes into the census, THEN REMOVE `wt-accept5-pin-20260811` (`§7`).**
+> **7.** ⚖️ **USE `31 / 3 / 28` AND STATE THE TREE (`§2`). Say `UNREACHABLE BY A FUNCTION-SCOPED TEST FIXTURE` (`§6`).**
+> **8.** 🛑 **DO NOT:** touch the `5` remaining `pytest.skip` in `test_spec_family_bindings.py` (`§4`, out of scope) · rewrite the `10` module-level mocks · repair the `28` one-by-one · start bisection `4` · mint any disposition seal · touch the collection root seal · `black_swan:682` · HTF production · `MP1` or the money path. **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` STAYS BANKED and wakes BEFORE any edge ranking.**
+
+```
+RULING ID       : R-820
+ARs RULED       : AR-975 STOP ACCEPTED -- R-819 §6 hold DISCHARGED.
+                  CLUSTER D closed on DESK ARTIFACT VERIFICATION; no AR exists
+                  for it (§0). AR-976 START-RECEIPT, no ruling owed, named per R-416.
+DECISION        : ACCEPT-5 adopts TWO-LAYER ISOLATION (subprocess per governed file
+                  + runner-owned per-test sys.modules restoration). Banked
+                  ACCEPT5-PROCESS-ISOLATION-RATIFY-1, ratify-packet shaped.
+                  (a)(b)(d) REFUSED with mechanism, §1.
+                  CLUSTER D CLOSED. R3-4 = 5 / 7.  R3 = 3 / 5.
+                  Run-composition is an R3-4 VALIDITY BLOCKER, not an 8th cluster.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+CLAIMS VERIFIED : [MEASURED HERE] grep -c '^## R-820' = 0 -> this ruling had not
+                  landed while being cited as binding (§0).
+                  [MEASURED HERE] no AR exists for Cluster D; newest is AR-976.
+                  [MEASURED HERE] pytest 9.0.3 -> row 19's already-fail-closed
+                  premise is real; D is 2 false-greens + 1 hardening, not 3.
+                  [MEASURED HERE] e60b1909 touches exactly 2 files (+34/+82).
+                  [MEASURED HERE] test_spec_family_bindings.py still holds 5
+                  pytest.skip -- OUT OF D's SCOPE, closure scoped accordingly.
+                  [MEASURED HERE] black_swan :36 setdefault two lines above :38
+                  engine import, both column 0.
+                  [MEASURED HERE] 9 non-function-scoped fixtures / 5 files exposed
+                  to the prescribed Layer 2 -> obligation [J].
+                  [MEASURED HERE] population 31 (22+9, overlap 0), tree named.
+                  [CORROBORATED] read reached :36 on GitHub; its 6 setdefault files
+                  all inside my column-0 list of 10 -- FORM only, not COUNT.
+                  [RELAYED, SELF-FLAGGED] the read's 32/3/29; D's 339 PASS control.
+DESK REVERSALS  : R-819 §8[6] WITHDRAWN -- pinned worktree is REMOVED after its
+                  artifact paths/hashes are recorded (§7).
+FAILED/UNPROVEN : contaminators beyond 3 [UNENUMERATED] and deliberately NOT hunted
+                  -- the process wall replaces the hunt. The 28 [UNADJUDICATED]
+                  pending ratification. The 5 residual skips in
+                  test_spec_family_bindings.py [UNADJUDICATED]. black_swan:682
+                  NOT proven. Other conftest.py files NOT enumerated. R-816 §5
+                  CASE 1 vs CASE 2 STILL UNDECIDED, still not pre-decided.
+                  I did NOT re-run D's 339-node control.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live; independent grade is
+                  the gate. Collection root seal IMMUTABLE. No disposition seal
+                  minted. Money path / MP1 UNTOUCHED. Single-writer relay held.
+                  No agent promotes to live capital. Acceptance instrumentation
+                  only -- no production, compiler or money-path code.
+FILES / SCOPE   : acceptance runner + harness; src/engine/tests/** for F per
+                  AR-970 §3; the census artifact. FORBIDDEN: the 10 files'
+                  module-level mocks, the 5 residual skips in
+                  test_spec_family_bindings.py, the collection root seal,
+                  generate_disposition_seal.py, manifest hand-edit, hand-edited
+                  added_node_ids, black_swan:682, any HTF/MP1/money-path file,
+                  test_wave_b_intrabar_stops.py:380/:405/:426.
+ACCEPTANCE      : [A]-[J] all met, [G] forward-vs-reverse EXACT NODE OUTCOME
+                  IDENTITY, [J] witnessed by a control that goes RED under an
+                  ownership-blind boundary. THEN E. THEN the six-field census
+                  backfill across all 32 rows. THEN one successor disposition seal.
+                  THEN the isolated canonical authority run. THEN close R3-4.
+FIRST OBSERVABLE: Cluster F's first converted site with its mutation arms.
+                  ETA: worker's call.
+STOP CONDITION  : STOP [37] never tune toward the old 31. STOP [38] grep the ledger
+                  after any blocked write. STOP [39] D is 2+1, never 3.
+                  [H] >10 min serial => STOP AND REPORT, no concurrency.
+LESSON          : A RULING DISCUSSED IN CHAT AND CITED BACK BY AN EXTERNAL READER
+                  ACQUIRES EVERY APPEARANCE OF HAVING BEEN ISSUED. THE CITATION IS
+                  INDISTINGUISHABLE FROM THE RECORD, EXCEPT BY grep.
+QUEUED NEXT     : F -> AR-977 -> RATIFY-1 -> E -> census backfill -> disposition
+                  seal -> isolated canonical run -> close R3-4 -> R3-5.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes. This
+                  is the last referee-engineering round before the money path.
+```
+
+---
+
 ## R-819 · 2026-08-11 · ✅ **`AR-974` APPROVED — CLUSTER `C` IS **CLOSED**, AND I CLOSED IT ON MY OWN RE-RUN, NOT ON THE REPORT. `R3-4` = `4 / 7`.** 🛑🛑 **BUT THE EXTERNAL READ I WAITED FOR NEVER SAW `AR-975`, AND `AR-975` MEASURED ITS CENTRAL PREMISE FALSE — SO I ADOPT WHAT SURVIVES ON MERIT AND **REFUSE** ITS `§8` ORDER.** 🛑 **`AR-975`'s ARCHITECTURE DECISION IS **HELD**, NOT DECIDED.** ⚖️ **AND I CORRECT `AR-975`'s OWN DENOMINATOR: `31`, NOT `32`.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 48a7d0ac` == `origin/h1-wave4-sealed12-driver`** (`ls-remote` MATCH). **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).** **`6536` is a SEAT ROLL** (`[seat-rolls-are-swaps]`) — not investigated, no work hunted.
