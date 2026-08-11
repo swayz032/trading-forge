@@ -4,6 +4,68 @@
 
 ---
 
+## AR-967 · 2026-08-11 · ✅✅ **`ARM C1` RAN ON THE OPERATOR'S WORD AND THE CREDENTIAL AXIS IS NOW ISOLATED BY MEASUREMENT: `C0 → C1` MOVES **EXACTLY `3`** NODES, ALL `skipped → passed`, WITH `2414` UNMOVED.** ✅ **THE POSITIVE CONTROL RAN FIRST AND THE ARM WAS GATED ON IT — `head_object` ON THE EXACT OBJECT, `7,708,321` BYTES.** 🛑🛑 **AND I CORRECT MYSELF: `AR-966 §4`'s *"this box has NO AWS credential source"* WAS FALSE — I ENUMERATED THE STANDARD CHAIN AND NEVER ENUMERATED `.env`.** ⚖️ **`C1` PROVES THE CAUSE; IT DOES **NOT** MAKE THE SKIP PERMISSIBLE.**
+
+**SEAT `claude.exe 23692`. TREE `HEAD` at commit time below. `R3` = `3 / 5`, `R3-4` OPEN.**
+
+### §0 — 🛑🛑 THE CORRECTION FIRST, BECAUSE IT IS MINE AND IT IS THE SAME ERROR THIS CENSUS EXISTS TO CATCH
+🛑 **`AR-966 §4` stated `[MEASURED]` *"this box has NO AWS credential source"* and filed `C1` as BLOCKED. THAT WAS FALSE.** `[MEASURED HERE]` the operator's **gitignored `.env`** carries live keys; the operator answered the ask in four words: *"aws keys are in the files."*
+⚖️ **THE MECHANISM OF MY ERROR, NAMED SO IT IS REUSABLE: I enumerated the AWS *default credential chain* — env vars, `~/.aws`, instance metadata — and reported the absence as TOTAL.** `.env` is not part of that chain; the application loads it separately. ★★★★★ **`I ENUMERATED THE MECHANISM I KNEW AND PUBLISHED THE ABSENCE AS UNIVERSAL — WHICH IS THIS CENSUS'S OWN CONVICTION (A MARKER IS NOT THE CLASS) COMMITTED BY THE PERSON WRITING IT UP, ONE ROUND AFTER WRITING IT UP.`** (`[instance-not-condition]`, `[absence-claim]`: my positive control proved the chain was empty — it could not prove no OTHER source existed, and I did not name that limit.)
+✅ **The struck sentence is PRESERVED-AND-STRUCK in census `§8`, not deleted.**
+
+### §1 — ✅ SECRET HANDLING, AND IT IS MECHANISED RATHER THAN PROMISED (`R-814 §3`)
+```
+.env          UNTRACKED and IGNORED at .gitignore:5   <- no credential in git
+.env.example  TRACKED, placeholders only
+key material  AWS_ACCESS_KEY_ID len=20 · AWS_SECRET_ACCESS_KEY len=40   (LENGTHS ONLY)
+```
+✅ **Runtime input only:** read from `.env`, injected into the child process's environment, **never written into the disposable tree, never committed, never printed.**
+✅ **The runner pipes ALL of its own output through a REDACTOR** (exact values + `AKIA[0-9A-Z]{16}` + 40-char blobs) so a boto3/DuckDB error that echoes a key cannot reach a log or a report.
+✅ **LEAK SCAN OVER THE ARTIFACTS I AM COMMITTING: `CLEAN`, with a POSITIVE CONTROL proving the scanner can see a value** — an unverified `CLEAN` is exactly the false all-clear this campaign keeps paying for.
+
+### §2 — ✅ THE POSITIVE CONTROL RAN **FIRST**, AND THE ARM WAS CONDITIONAL ON IT
+`R-814 §3`: *"credentials present"* is not *"the required read succeeds"*. So the runner attempted the exact object the skipping tests need, and was written to **REFUSE the arm (`SystemExit 3`) if it failed:**
+```
+head_object Bucket=trading-forge-data Key=futures/ES/consolidated/5min.parquet
+-> CONTROL_OK bytes=7708321
+```
+★★★★ **`AN ARM GATED ON ITS OWN CONTROL CANNOT PRODUCE A GREEN FROM A BROKEN READ — THE REFUSAL BRANCH IS WHAT MAKES THE GREEN MEAN ANYTHING.`**
+
+### §3 — ✅✅ THE RESULT: THE AXIS IS ISOLATED, BY MEMBERSHIP
+```
+C0 nodes 2417   C1 nodes 2417   only-C0 0   only-C1 0
+C1 outcomes: passed 2384 · failed 31 · REAL SKIPS 0  (+2 xfail, unchanged)
+
+OUTCOME FLIPS C0 -> C1 : 3      ALL skipped -> passed
+  test_signal_vector...::test_signal_vector_present_in_result
+  test_signal_vector...::test_signal_vector_values_valid
+  test_signal_vector...::test_signal_vector_is_json_serializable
+NEGATIVE CONTROL: unchanged 2414   <- the arm moved 3 of 2417, not everything
+```
+⇒ ✅ **Rows `13`/`15`/`17` skip because of the CREDENTIAL AXIS ALONE — two arms, same pin, same machine-local state, ONE variable changed.** **`AR-966 §4`'s `[UNPROVEN]` is now `[MEASURED]`.**
+🛑 **SCOPED: this isolates the axis FOR THESE THREE NODES.** The other `22` rows had their inputs present in **both** arms and are therefore **untested by this pair.**
+
+### §4 — ⚖️ THE `wrc_spa` BANK: ITS ANTECEDENT NEVER FIRED, SO IT IS NOT DISCHARGED
+`R-814 §8` banked: *"if `available=False` persists WITH valid credentials … that is evidence of a real backtester/WF defect."*
+⇒ `[MEASURED]` **rows `26`–`29` PASSED IN BOTH ARMS** ⇒ `wrc.available` was `True` in both ⇒ **the self-excuse clause never evaluated in either run.**
+✅ **NO evidence of a backtester/WF defect — and equally NO evidence the clause is safe.** 🛑 **`ACCEPT5-SUBJECT-SELF-EXCUSE-1` REMAINS OPEN AND UNTESTED; `STOP [30]` still binds.** ★★★★★ **`A CONDITIONAL BANK WHOSE ANTECEDENT NEVER FIRED IS NOT DISCHARGED — AND THE RUN THAT PASSED IS EXACTLY THE RUN THAT PROVES NOTHING ABOUT IT.`**
+
+### §5 — 🛑 THE FINDING I WILL NOT LET A GREEN `C1` BURY
+🛑 **`C1` PASSING DOES NOT MAKE THE SKIP PERMISSIBLE.** `R-799 §5` is unchanged: **a release-authority test may not silently depend on machine-local evidence.** A test that passes **only** because this operator's `.env` holds live keys **is precisely the dependency that rule forbids.**
+⇒ **`C1` identifies the CAUSE; the REPAIR is still owed, and it is still `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1`: typed/deterministic classification, never a better substring** (`R-813 §6`). ★★★★ **`PROVING WHY A TEST SKIPS IS NOT THE SAME ACT AS EARNING THE RIGHT TO LET IT.`**
+
+### §6 — 🛑 NOT DONE / NOT ESTABLISHED
+🛑 **`25 / 32` STILL UNCONVERTED** — grouped by ROOT CAUSE in census `§7` as `R-814`'s acceptance ordered, **deliberately NOT edited site-by-site.** `STOP [30]` still forbids the `signal_vector` predicate and the four `wrc_spa` sites.
+🛑 **Rows `26`–`29` UNTESTED in both arms** (`§4`) · **the `22` non-firing rows NOT isolated** (`§3`) · **per-helper execution traces `[UNENUMERATED]`** · **the `31` failures neither analysed nor claimed.**
+⚠️ **NO PORTABILITY CLAIM ANYWHERE — both arms ran on one box, and the axis matrix (census `§6`) says `NOT VARIED` on four of five axes.**
+✅ **DISPOSABLE WORKTREE REMOVED after both arms; `git worktree list` checked for orphans. No secret was ever written into it.**
+
+### §7 — 📌 POSITION
+**PUSH VERIFIED BY `ls-remote` IN THE SAME ACTION AS THE CLAIM (`STOP [31]`) — the pair is printed in the commit turn, never asserted from boilerplate.**
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **`R-814`'s five authorized items are now COMPLETE: `[P4]` retraction applied · `C0`/`C1` run with membership + controls · hypothesis honoured as pre-registered · secrets runtime-only · push verified.** 🛑 **I am NOT self-authorizing the `25` conversions — `R-814`'s acceptance says GROUP them, not edit them. The next move is the desk's.** ⚠️ **NOT A HANDOFF — nothing half-built, no exhaustion declared.**
+
+---
+
 ## AR-966 · 2026-08-11 · ✅ **`[P1]`/`[P2]`/`[P3]` DISCHARGED AT `d4c57b6a` — `FIRED-IN-PRISTINE` IS POPULATED FOR ALL `32` ROWS FROM OBSERVATION, EVERY `DID NOT FIRE` CARRYING A POSITIVE WITNESS THAT THE TEST RAN.** 🛑🛑🛑 **AND THE HEADLINE IS A REFUTATION OF THE CONTROL ITSELF: `[MEASURED]` A FRESH LINKED WORKTREE ON THIS BOX VARIES `0` OF `5` AXES — `R-812 §7`'s FRESH-TREE POSITIVE CONTROL CANNOT DISCRIMINATE, AND A GREEN FROM IT WOULD HAVE PROVEN NOTHING.** ⭐ **`3` SITES FIRE, NOT `32`, AND ALL THREE ARE ONE CAUSE.** 🛑 **`ARM C1` IS BLOCKED ON THE OPERATOR — I WILL NOT SOURCE A CREDENTIAL.**
 
 **SEAT `claude.exe 23692`. TREE `HEAD d4c57b6a`. RUN PIN: disposable worktree at `120011c8`. `R3` = `3 / 5`, `R3-4` OPEN.**

@@ -303,16 +303,83 @@ strong, but a per-helper execution trace is `[UNENUMERATED — OPEN]`.
 
 ## 8. 🛑 WHAT `§6`–`§7` DO **NOT** ESTABLISH
 
-- 🛑 **`ARM C1` (CREDENTIALS ON) IS NOT RUN — BLOCKED ON THE OPERATOR, NOT ON EFFORT.** `[MEASURED]`
-  this box has **no** AWS credential source, and a worker **may not fabricate, mint, or source one**.
-  ⇒ **The claim *"these 3 skips are caused by the credential axis ALONE"* is `[UNPROVEN]`.** What is
-  proven is that they skip **with** the chain disabled and that the reason names the credential
-  variables. **`C1` requires the operator's word; the ask is filed in the `AR`.**
-- 🛑 **AND `C1` NEEDS A CONTROL BEFORE IT IS EVIDENCE (`R-814 §3`):** *"credentials present"* is not
-  *"the required read succeeds"*. Without a positive control proving the S3 object actually READS,
-  a green `C1` is unfalsifiable.
+- ~~🛑 **`ARM C1` (CREDENTIALS ON) IS NOT RUN — BLOCKED ON THE OPERATOR.** `[MEASURED]` this box has
+  **no** AWS credential source … the claim *"these 3 skips are caused by the credential axis ALONE"*
+  is `[UNPROVEN]`.~~ 🛑 **STRUCK, NOT DELETED (preserve-and-strike) — `C1` RAN; see `§9`.**
+  ⚠️ **AND THE STRUCK SENTENCE CONTAINED A REAL ERROR OF MINE, RETAINED HERE DELIBERATELY:** *"this box
+  has no AWS credential source"* was **scoped to the standard chain** (env vars, `~/.aws`, instance
+  metadata) and **I never enumerated `.env` files.** `[MEASURED]` the operator's gitignored `.env`
+  carries live keys. ★★★★★ **`I ENUMERATED THE MECHANISM I KNEW AND REPORTED THE ABSENCE AS TOTAL —
+  WHICH IS THIS CENSUS'S OWN CONVICTION (MARKER vs CLASS) COMMITTED BY THE PERSON WRITING IT UP.`**
+- ✅ **AND `C1`'s CONTROL WAS RUN FIRST, NOT ASSUMED (`R-814 §3`):** *"credentials present"* is not
+  *"the required read succeeds"* — see `§9`.
 - ⚠️ **`26`–`29` REMAIN UNTESTED IN BOTH ARMS** — they passed, so the self-excuse clause never
   evaluated. `[UNPROVEN]`, and it is exactly what `C1` would probe.
 - ⚠️ **THE `31` FAILURES ARE NOT CHARACTERISED HERE.** This artifact is about SKIPS; the reds are the
   standing baseline population and were neither analysed nor claimed.
 - ⚠️ **PORTABILITY IS NOT CLAIMED ANYWHERE IN `§6`/`§7`**, per `R-813 §8 [P2]` and `R-814 §7.3`.
+
+## 9. ✅✅ `ARM C1` — CREDENTIALS ON. THE CREDENTIAL AXIS IS NOW **ISOLATED BY MEASUREMENT**
+
+**Operator authorised the credential use in his own words (*"aws keys are in the files"*) in answer to
+the ask filed by `AR-966 §4`.** 🛑 **HANDLING, PER `R-814 §3`: runtime input only — read from the
+gitignored `.env`, injected into the child process's environment, NEVER written into the disposable
+tree, NEVER committed, NEVER printed. The runner pipes every line of its own output through a
+REDACTOR so a boto3/DuckDB error that echoes a key cannot leak into a log or a report.**
+
+✅ **PROVENANCE MEASURED BEFORE USE, VALUES NEVER READ ALOUD:**
+```
+.env          UNTRACKED, and IGNORED at .gitignore:5      <- no credential in git
+.env.example  TRACKED, placeholders only
+key material  AWS_ACCESS_KEY_ID len=20 · AWS_SECRET_ACCESS_KEY len=40   (lengths only)
+```
+
+### 9.1 🛑 THE POSITIVE CONTROL RAN **FIRST**, AND THE ARM WAS CONDITIONAL ON IT
+`R-814 §3` is explicit that *"credentials present"* is not a control. So before the population ran,
+the runner attempted **the exact object the skipping tests require**, and was written to **REFUSE the
+arm (`SystemExit 3`) if it failed**:
+```
+head_object  Bucket=trading-forge-data  Key=futures/ES/consolidated/5min.parquet
+-> CONTROL_OK bytes=7708321
+```
+⇒ ✅ **THE REQUIRED READ PATH GENUINELY RESOLVES.** ★★★★ **`AN ARM GATED ON ITS OWN CONTROL CANNOT
+PRODUCE A GREEN FROM A BROKEN READ — THE REFUSAL BRANCH IS WHAT MAKES THE GREEN MEAN ANYTHING.`**
+
+### 9.2 ✅ `C0` → `C1`, JOINED BY NODE ID — EXACTLY THREE FLIPS, AND NOTHING ELSE MOVED
+```
+C0 nodes 2417        C1 nodes 2417        only-C0 0        only-C1 0
+C1 outcomes: passed 2384 · failed 31 · skipped 0 real (+2 xfail)   <- ZERO real skips
+
+OUTCOME FLIPS C0 -> C1 : 3      ALL skipped -> passed
+  test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_present_in_result
+  test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_values_valid
+  test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_is_json_serializable
+
+NEGATIVE CONTROL: unchanged = 2414   <- the arm moved 3 of 2417, not everything
+```
+⇒ ✅✅ **THE CREDENTIAL AXIS IS ISOLATED. Rows `13`/`15`/`17` skip because of credentials ALONE —
+`[MEASURED]`, two arms, same pin, same machine-local state, one variable changed.**
+🛑 **AND THE CLAIM STAYS SCOPED: this isolates the axis FOR THESE THREE NODES. It says nothing about
+the other 22 rows, whose inputs were present in BOTH arms and therefore untested by this pair.**
+
+### 9.3 ⚖️ WHAT `C1` SETTLES ABOUT `ACCEPT5-SUBJECT-SELF-EXCUSE-1` — AND WHAT IT DOES NOT
+`R-814 §8` banked a conditional: *"if `available=False` persists WITH valid credentials and
+deterministic synthetic data, that is evidence of a real backtester/WF defect, not an environment
+fact."*
+⇒ `[MEASURED]` **THE ANTECEDENT DID NOT FIRE.** Rows `26`–`29` **PASSED in BOTH arms**, so
+`wrc.available` was `True` in both and the self-excuse clause **never evaluated in either.**
+✅ **THEREFORE: NO evidence of a backtester/WF defect — and equally NO evidence the clause is safe.**
+🛑 **`ACCEPT5-SUBJECT-SELF-EXCUSE-1` REMAINS OPEN AND UNTESTED. `STOP [30]` still binds.**
+★★★★★ **`A CONDITIONAL BANK WHOSE ANTECEDENT NEVER FIRED IS NOT DISCHARGED — AND THE RUN THAT PASSED
+IS EXACTLY THE RUN THAT PROVES NOTHING ABOUT IT.`**
+
+### 9.4 🛑 WHAT `C0`/`C1` STILL DO NOT ESTABLISH
+- 🛑 **The `22` `DID NOT FIRE` rows are NOT isolated by this pair.** Their inputs were present in both
+  arms; only the credential axis was varied. **`NOT VARIED` still means `NOT VARIED`.**
+- 🛑 **Rows `26`–`29` UNTESTED** (`§9.3`), and **`25 / 32` remain UNCONVERTED** — grouped by root cause
+  in `§7`, deliberately not edited site-by-site.
+- ⚠️ **`C1` PASSING IS NOT A LICENCE TO LEAVE THE SKIP IN PLACE.** `R-799 §5` is unchanged: a
+  release-authority test may not silently depend on machine-local evidence. **A test that PASSES only
+  because this operator's `.env` happens to hold live keys is exactly the dependency the rule
+  forbids** — `C1` proves the CAUSE, it does not make the skip permissible.
+- ⚠️ **NO PORTABILITY CLAIM IS MADE ANYWHERE.** Both arms ran on one box.
