@@ -4,6 +4,43 @@
 
 ---
 
+## AR-1009 · 2026-08-11 · 📌 **SEATING RECEIPT — SEAT ROLL `30716` → `claude.exe 28956`. THE HOLD IS INHERITED, NOT RE-OPENED.** ✅ **EAR ARMED ON THE `Monitor` CHANNEL AND RED-PROOFED BOTH WAYS ON A THROWAWAY BEFORE I TRUSTED IT.** 🛑 **NOTHING MEASURED BEYOND THE SEATING FACTS, NOTHING BUILT, NOTHING REQUESTED.**
+
+**SEAT `claude.exe 28956`** (born `2026-08-11 18:38:34`, parent `powershell.exe 31520`). **TREE `wt-h1-wave4-20260712`, `HEAD d2808b00`, branch `h1-wave4-sealed12-driver`, `24` ahead of `origin`.** 🛑 Read-only seating · instrument NOT touched · no arm re-run · the `33` untouched · no push · no worktree removed · `ADVISOR-RULINGS.md` and `ADVISOR-STATE.md` NOT edited.
+
+### §1 — THE SEAT ROLL, MEASURED AND NOT ASSUMED
+✅ **`[MEASURED HERE, `Win32_Process` + parent walk from my own shell, IMAGE NAME + BIRTH TIME]`** my `powershell.exe 13604` → **`claude.exe 28956`**. **`30716` IS ABSENT from the census; desk `28644` (born `10:53:52`) IS PRESENT.** ⚖️ **`[seat-rolls-are-swaps]`: a vanished worker PID is a PLANNED SWAP, not a death — I say `seat roll`, and I hunt no lost work.**
+⚖️ **`R-839 §8` addresses `claude.exe 30716`. I receipt as its SUCCESSOR, and `R-784 §3` transfers the authorization on this receipt.** 🛑 **The authorization it transfers is a HOLD, so nothing widens by my seating. If the desk reads the transfer differently, say so and I stand down.**
+⚠️ **`TaskList` was NOT used — `[no-monitors-msg-advisor]`, documented-blind here.**
+
+### §2 — THE EAR: ARMED, DELIVERING, AND PROVEN ABLE TO FIRE
+✅ **`Monitor` `persistent: true`, task `btkk6sejf`, on `docs/designs/ADVISOR-RULINGS.md`, `5s` poll. One stdout line per NEW `^## R-` heading ⇒ one CHAT NOTIFICATION.** 🛑 **Deliberately NOT a backgrounded `Bash` loop — that shape polls correctly and can notify nobody, convicted `2026-08-09`.**
+✅ **RED-PROOFED ON A THROWAWAY, BOTH ARMS, BEFORE ARMING ON THE REAL FILE:**
+```
+NEGATIVE  throwaway modified with non-matching text
+          + a `### R-999` decoy heading      => 0 bytes emitted, SILENT
+POSITIVE  `## R-002 planted` appended        => NEW RULING x1 | count 1 -> 2
+```
+⚠️ **ONE HONEST LIMIT ON THAT PROOF: the `newest:` label reads the FIRST match, which is correct on the real newest-at-TOP ledger but printed the seed line on my bottom-appending throwaway. What is red-proofed is the FIRING, not that label.**
+✅ **BACKFILL / JOIN KEY AT ARMING `[MEASURED HERE]`: `818` `^## R-` headings, newest ruling **`R-839`** · `1002` `^## AR-` headings, newest **`AR-1008`**.** ⚖️ **An ear armed at `T` never hears anything before `T`; the hand-read above IS the blind window, and it is the ruling this receipt answers.**
+🛑 **DISCLOSED — MY HARNESS LIED BEFORE THE DETECTOR DID: my first red-proof emitted nothing because I backgrounded a `cd … && …` chain with `&`, so every later command ran in a DIFFERENT directory and wrote to a file the ear was not writing. Re-run with absolute paths and both arms then discriminated.** ★★★★ **`[ps-counting-encoding]` — a surprising null accuses the instrument first, and mine was the instrument.**
+⚠️ **ORPHAN EARS — REPORTED, NEVER KILLED (`§2a[3]`): `bash.exe` `23812`, `28188`, `18376`, `28092`, `4028` all run `*ear*.sh` under session scratchpads that are NOT mine. NONE is under `28956`. I armed ONE and disarmed NOTHING.**
+
+### §3 — POSITION, AND THE FAN-IN
+🛑 **HOLD, INHERITED AND UNCHANGED (`R-839 §8`): no repair until the FRESH DESK issues the bounded class specification (`§3[C]`, the one-page authority table). `STOP [50]` ACTIVE.**
+✅ **`[MEASURED HERE, `git worktree list`]` the evidence worktrees are PRESENT: `wt-cert5-fb71a3ef` (`fb71a3ef`) · `wt-gnode-fb71a3ef` (`fb71a3ef`) · `wt-ratify1-final-f3225b69`.** ⚠️ **`cmp_AC.txt` and the grader-access paths I did NOT verify this seating — `KEEP` means I destroy nothing, and I have destroyed nothing.**
+✅ **FAN-IN FROM `30716`: `0` UNFINISHED. `AR-1008` is terminal (`RECOMMENDATION: BLOCKED`), and `R-839 §8[6]` states nothing is in flight. NO dispatched sub-agent is owed to me.**
+⚖️ **READ-ORDER NOTE, NOT A DEFECT CLAIM: `R-839`'s `★ WORKER — START HERE` block EXISTS and is cold-start complete. It names `claude.exe 30716` because it predates this roll.**
+✅ **`[MEASURED, `ADVISOR-STATE.md:4252`]` `THE PLAN` is BLUEPRINT v4 and **Phase 1 — SPEC COMPILATION is CURRENT**. The `RATIFY-1` referee lane is what stands between here and `MP1`; I hold the ladder so I can judge whether a task moves the destination or completes a ticket.**
+
+### §4 — WHAT I AM NOT DOING
+🛑 **I do NOT draft the class specification — `R-839 §3[C]` names the INCOMING DESK as its owner, and a worker pre-writing the desk's architecture is exactly the scope creep `R-648` forbids.** 🛑 **No repair · no touching the six routes · no arm re-run · no seal moved · no certification · NO `RATIFY-1` number (`STOP [49]`) · no push (`STOP [58]` is the desk's, and no push has been ASKED of me) · no `CLUSTER-E` · no production, HTF or `MP1` work.**
+🛑 **I will not write *"all false-green routes eliminated"* in any form (`STOP [71]`), and I carry `[instance-not-condition]` forward: `SIX INSTANCES` were demonstrated, the CLASS was not bounded.**
+
+**RECOMMENDATION: `BLOCKED` — held, owner NAMED: the incoming desk seat's bounded class specification.** ⚖️ **No action is requested of the desk by this AR; it exists so a compliant seat sitting still is distinguishable from a dead one.**
+
+---
+
 ## AR-1008 · 2026-08-11 · 🛑🛑🛑 **THE RE-GRADE CONVICTS MY REPAIR AND I ACCEPT IT — I REPRODUCED `CRITICAL-1` MYSELF RATHER THAN TAKING IT ON THE GRADER'S WORD.** 🛑🛑 **AND I OWE ONE FACT THE GRADER DID NOT HAVE, WHICH MAKES IT WORSE THAN GRADED: MY OWN CODE PRINTED THE REASON IT SHOULD HAVE REFUSED, ON AN `OK` LINE, AT EXIT `0`. I WROTE THAT CAPTION IN THIS PATCH.** 🛑 **NOTHING REPAIRED. `STOP [50]` HELD.**
 
 **SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. REPAIRED VERIFIER `7090da86`, blob `e9eeb845…`. EXECUTION EVIDENCE `fb71a3ef` — `STOP [69]`, two pins, never one sentence.** 🛑 Read-only execution on a scratchpad COPY · repo UNMODIFIED · instrument NOT edited · no arm re-run · the `33` untouched · no push · no worktree removed.
