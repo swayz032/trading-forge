@@ -181,6 +181,19 @@ def verify_chain(tag, arm):
     # recomputes from ITS bytes. This is the step that opens a child at all.
     bad_receipt, bad_artifact, missing, unbound = [], [], [], []
     heads, rebuilt, seqs, run_ids = set(), {}, {}, set()
+    # ---- R-836 §4: DERIVE, DO NOT BELIEVE ---------------------------------
+    # `[MEASURED BY GRADED INSTRUMENT, F-RATIFY1-1]` five of the ten
+    # REQUIRED_FIELDS are SELF-ASSERTIONS the aggregate makes about itself, and
+    # four of them are rebuildable from the very receipts this loop already
+    # opens. The gate read arm["wall_s"] and never recomputed it, so a forged
+    # LOW wall_s certified GREEN.
+    #
+    #   IF A CERTIFICATION CLAIM CAN BE DERIVED FROM THE RECEIPTS, DERIVE IT.
+    #   DO NOT BELIEVE THE SUMMARY'S COPY OF IT.
+    #
+    # These accumulate in the SAME pass over the SAME already-digest-verified
+    # receipt bytes -- no second reader, no second registry.
+    d_elapsed, d_cbu, d_invalid, d_owner, d_dups, n_parsed = 0.0, 0, [], {}, [], 0
     for e in entries:
         rp = root / "receipts" / f"{e['ordinal']:04d}-{_slug_like(e['target'])}.json"
         if not rp.is_file():
@@ -194,7 +207,20 @@ def verify_chain(tag, arm):
         heads.add(r.get("head_sha"))
         run_ids.add(r.get("run_id"))
         seqs[e["target"]] = list(r.get("node_sequence") or [])
-        rebuilt.update(r.get("outcomes") or {})
+        # Duplicate detection mirrors accept5_isolated_runner.aggregate()
+        # EXACTLY: a node ID reappearing in a second child is a duplicate, and
+        # last-write-wins so `rebuilt` stays byte-for-byte what .update() built.
+        # A dict .update() SILENTLY ABSORBS the collision it is meant to expose.
+        for _nid, _o in (r.get("outcomes") or {}).items():
+            if _nid in rebuilt:
+                d_dups.append((_nid, d_owner[_nid], e["target"]))
+            rebuilt[_nid] = _o
+            d_owner[_nid] = e["target"]
+        d_elapsed += float(r.get("elapsed_s") or 0.0)
+        d_cbu += len(r.get("collected_but_unexecuted") or [])
+        if r.get("problems"):
+            d_invalid.append(r.get("file") or e["target"])
+        n_parsed += 1
         # RESOLVE CHILD ARTIFACTS RELATIVE TO *THIS* ARM, never via the absolute
         # child_dir the receipt recorded. `[MEASURED, C2]` following the recorded
         # path made the verifier read the ORIGINAL arm's untampered artifacts
@@ -245,6 +271,77 @@ def verify_chain(tag, arm):
     add("nodes count RECOMPUTES", len(rebuilt) == arm["nodes"],
         f"rebuilt={len(rebuilt)} declared={arm['nodes']}")
 
+    # ---- R-836 §4 [1]-[5]: THE FIVE SELF-ASSERTIONS, REBUILT ---------------
+    # Each compares a value DERIVED from receipt bytes against the aggregate's
+    # copy of it. Disagreement is RED. The derivation rules are the RUNNER'S
+    # OWN, read from accept5_isolated_runner (aggregate():379-394, the receipt
+    # builder's `problems` list, and `collected_but_unexecuted`) -- never
+    # re-invented here, because a second copy of a rule is a second registry.
+    add("[1] duplicate_nodes REBUILDS from receipts",
+        len(d_dups) == arm["duplicate_nodes"],
+        f"derived={len(d_dups)} declared={arm['duplicate_nodes']}"
+        + (f" e.g. {d_dups[0]}" if d_dups else ""))
+    add("[2] collected_but_unexecuted REBUILDS from receipts",
+        d_cbu == arm["collected_but_unexecuted"],
+        f"derived={d_cbu} declared={arm['collected_but_unexecuted']}")
+    add("[3] invalid_children REBUILDS from receipt problems",
+        sorted(d_invalid) == sorted(arm["invalid_children"]),
+        f"derived={len(d_invalid)} declared={len(arm['invalid_children'])} "
+        f"{sorted(d_invalid)[:3]}")
+
+    # [4] LIMITED-SUBSET. `[MEASURED, accept5_isolated_runner.py:502]` the
+    # runner writes `limited_subset = bool(args.limit)` -- a FLAG ECHO that
+    # derives from nothing. So it is rebuilt here from the MANIFEST's target
+    # set against the AUTHORITY's governed child files.
+    #
+    # DIRECTION MATTERS AND IS ASSERTED, NOT ASSUMED: a governed file ABSENT
+    # from the arm means the arm measured a SUBSET (RED). Extra targets do NOT
+    # -- `[MEASURED HERE]` the manifest carries 108 targets while the authority
+    # node IDs imply 106 files; the 2 extras (_a_packet_harness.py,
+    # _forensics_fixtures.py) are `empty_by_design` harness files holding no
+    # governed node. Treating "extra" as "limited" would false-RED every
+    # genuine arm.
+    _targets = {e.get("target") for e in entries}
+    try:
+        _auth_files = _authority_child_files()
+    except SystemExit:
+        _auth_files = None
+    if _auth_files is None:
+        add("[4] limited_subset REBUILDS from manifest vs authority", False,
+            "the governed population could not be derived -- fail-closed")
+    else:
+        _absent = sorted(_auth_files - _targets)
+        add("[4] limited_subset REBUILDS from manifest vs authority",
+            bool(_absent) == bool(arm["limited_subset"]),
+            f"derived={bool(_absent)} declared={arm['limited_subset']!r} "
+            f"({len(_absent)} governed file(s) absent from the arm"
+            + (f", e.g. {_absent[0]}" if _absent else "") + ")")
+
+    # [5] [H] ELAPSED. The children run SERIALLY inside the parent, so the
+    # parent's wall clock CANNOT be less than the sum of its children's
+    # elapsed. Declared-ABOVE-derived is ordinary orchestration overhead and is
+    # permitted without bound; declared-BELOW-derived is not overhead, it is
+    # physically impossible -- and it is exactly the forged-low signature.
+    #
+    #   A CEILING CHECK THAT READS A NUMBER THE ARM WROTE ABOUT ITSELF CAN
+    #   ONLY CATCH A LIAR WHO LIED UPWARD.
+    #
+    # SLACK is derived from the artifact, not chosen: each receipt rounds
+    # elapsed_s to 0.01s, so N receipts carry at most N*0.01s of rounding.
+    # `[MEASURED HERE, all five certifying arms]` the real gap is +0.15s..
+    # +0.21s (declared ABOVE derived) -- 15x-21x a flat 0.01s band, which is
+    # why a symmetric 0.01s tolerance would false-RED every genuine arm.
+    _slack = 0.01 * max(n_parsed, 1)
+    arm["_derived_elapsed_s"] = d_elapsed
+    arm["_derived_receipts"] = n_parsed
+    add("[5] [H] declared wall_s RECONCILES with receipt-derived elapsed",
+        arm["wall_s"] >= d_elapsed - _slack,
+        f"declared={arm['wall_s']:.2f}s derived={d_elapsed:.2f}s "
+        f"delta={arm['wall_s'] - d_elapsed:+.2f}s slack={_slack:.2f}s "
+        f"over {n_parsed} receipts"
+        + ("" if arm["wall_s"] >= d_elapsed - _slack else
+           "  <- declared BELOW the serial sum of its own children"))
+
     # F-6: one pin for the whole arm, start to end, child by child.
     add("arm_start_head == arm_end_head",
         man.get("arm_start_head") == man.get("arm_end_head"),
@@ -266,6 +363,32 @@ def verify_chain(tag, arm):
     arm["_node_sequences"] = seqs
     arm["_run_ids"] = run_ids
     return V
+
+
+def _authority_child_files():
+    """The governed CHILD-FILE population, from the RUNNER'S OWN by-file map.
+
+    R-837 §5[4] forbids two things here: inventing a child authority, and
+    falling back to the manifest's own claim -- the latter being the exact
+    self-assertion class this repair exists to remove.
+
+        A REBUILD THAT SOURCES ITS TRUTH FROM THE THING IT IS CHECKING IS NOT
+        A REBUILD.
+
+    Neither is needed. `accept5_isolated_runner._required_nodes_for()` already
+    projects required_population() onto files by the runner's own rule
+    (runner:126-129) and caches it in `_REQUIRED_BY_FILE`. This primes that map
+    and reads it, rather than re-deriving the `::` split here -- the _slug_like
+    precedent below: a second copy of a rule is a second registry.
+    """
+    import accept5_isolated_runner as _r
+    _r._required_nodes_for("")                       # prime the lazy map
+    by_file = getattr(_r, "_REQUIRED_BY_FILE", None)
+    if not by_file:
+        raise SystemExit(f"{REFUSED} - the runner exposes no governed "
+                         f"CHILD-FILE population; per R-837 §5[4] this STOPS "
+                         f"rather than inventing one or trusting the manifest")
+    return set(by_file)
 
 
 def _slug_like(p):
@@ -324,17 +447,9 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
               + ("  <- NO --pin SUPPLIED; a certifying run must bind one"
                  if pin is None else "")))
 
-    # ---- F-2: [H] IS A GATE, NOT A PRINTED LINE ----------------------------
-    # The wall-clock check used to live only in report(); it never entered the
-    # verdict list that the exit code folds, so a forged wall_s of 60x the
-    # ceiling printed its own warning and returned 0.
-    #
-    #   A CHECK THAT PRINTS ITS OWN FAILURE AND EXITS ZERO IS NOT A GATE --
-    #   IT IS A LOG LINE WITH AN OPINION.
-    for tag, arm in (("forward", fwd), ("reverse", rev)):
-        mins = arm["wall_s"] / 60.0
-        V.append((f"{tag}: [H] wall clock <= {CEILING_MIN} min",
-                  mins <= CEILING_MIN, f"{mins:.2f} min"))
+    # NOTE: the [H] gate USED to sit here. It now runs AFTER verify_chain
+    # (below), because its input is no longer the arm's own claim about itself
+    # and the derived value does not exist until the receipts are read.
     V.append(("arms are distinct artifacts", fwd["_path"] != rev["_path"],
               f"{fwd['_path']} vs {rev['_path']}"))
     V.append(("neither arm is a LIMITED SUBSET",
@@ -366,6 +481,32 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
         V.extend(verify_chain("forward", fwd))
         V.extend(verify_chain("reverse", rev))
 
+    # ---- F-2 + F-RATIFY1-1: [H] IS A GATE, AND ITS INPUT IS NOT BELIEVED ---
+    # F-2 (closed earlier) made [H] a real verdict instead of a printed line.
+    # F-RATIFY1-1 is the sequel: the verdict was real but its INPUT was the
+    # arm's own claim, so the gate was unfalsifiable DOWNWARD -- wall_s = 1.0
+    # certified GREEN with receipts encoding ~377s.
+    #
+    #   MAKING A GATE REAL DOES NOT MAKE ITS INPUT TRUE.
+    #
+    # R-837 §2(b): the ceiling now folds the RECONCILED value. The paired
+    # reconciliation check lives in verify_chain() and catches the downward
+    # lie; this catches the upward one and stops anyone sneaking under.
+    for tag, arm in (("forward", fwd), ("reverse", rev)):
+        _declared = arm["wall_s"]
+        _derived = arm.get("_derived_elapsed_s")
+        _effective = _declared if _derived is None else max(_declared, _derived)
+        _mins = _effective / 60.0
+        V.append((f"{tag}: [H] wall clock <= {CEILING_MIN} min",
+                  _mins <= CEILING_MIN,
+                  f"{_mins:.2f} min (declared={_declared:.2f}s"
+                  + (f" receipt-derived={_derived:.2f}s"
+                     if _derived is not None else "")
+                  + f" effective={_effective:.2f}s)"
+                  + ("" if _derived is not None else
+                     "  <- NO CHAIN: the ceiling rests on the arm's own claim")))
+
+    if chain:
         # ---- ARE THESE TWO RUNS AT ALL? ------------------------------------
         # `[MEASURED, C5]` comparing an arm against a COPY of itself passed:
         # the "distinct artifacts" guard only compares _path strings, and a copy
@@ -642,11 +783,18 @@ def red_proof():
     print("=== [G]/[I] COMPARATOR RED-PROOF ===")
     print("    (oracle + guard logic; the CHAIN has its own controls -- "
           "--red-proof-chain)")
+    # F-RATIFY1-5 (R-836 §6) was a CAPTION drift: a report said "23 controls"
+    # while the suite emitted 26, because the suite never stated its own count
+    # and a human had to hand-count it. Emitting it removes the need to.
+    #
+    #   A COUNT A READER HAS TO DERIVE BY HAND IS A COUNT THAT WILL DRIFT.
+    print(f"    {len(cases)} controls in this suite")
     for name, ok, detail in cases:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:40s} {detail}")
     allok = all(ok for _, ok, _ in cases)
     print()
-    print("COMPARATOR DISCRIMINATES - demonstrated path to RED on every arm"
+    print(f"COMPARATOR DISCRIMINATES - demonstrated path to RED on every arm "
+          f"({len(cases)} controls)"
           if allok else "*** COMPARATOR NOT TRUSTWORTHY -- DO NOT RUN [G] ***")
     return allok
 
@@ -908,6 +1056,25 @@ def main(argv=None):
                                     args.chain_a2, args.chain_a3) else 1
     if not (args.forward and args.reverse):
         ap.error("--forward and --reverse are required unless --red-proof")
+
+    # ---- F-RATIFY1-2 (R-836 §6): node_axis is MANDATORY, FAIL-CLOSED -------
+    # Omitting --node-axis used to be read as "node-order proof not requested",
+    # while the run still printed its reordering headline -- so a comparison
+    # that asserted NOTHING about node order looked like one that had.
+    #
+    #   THE CERTIFICATION PROTOCOL ALWAYS KNOWS WHICH RELATION IT EXPECTS,
+    #   AND AN UNSTATED EXPECTATION IS NOT A WAIVED ONE.
+    #
+    # `--pin` is the certifying marker: this comparator already treats an
+    # unsupplied pin as a MISSING binding rather than a waived one, so the two
+    # fail-closed rules key off the same signal.
+    if args.pin and args.node_axis is None:
+        raise SystemExit(
+            f"{REFUSED} - a certifying comparison (--pin supplied) must state "
+            f"--node-axis same|reverse. Omission is refused rather than "
+            f"defaulted (F-RATIFY1-2, R-836 sec 6).")   # ASCII: this string is
+    # PRINTED on a Windows console, where a non-ASCII glyph renders as mojibake.
+    # A refusal nobody can read is a refusal that gets ignored.
 
     fwd, rev = load_arm(args.forward), load_arm(args.reverse)
     required = authority_nodes()

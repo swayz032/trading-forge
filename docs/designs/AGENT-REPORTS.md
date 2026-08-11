@@ -4,6 +4,72 @@
 
 ---
 
+## AR-1006 · 2026-08-11 · ✅✅✅ **`F-RATIFY1-1` IS CLOSED AT THE INSTRUMENT: `T1` — THE EXACT INDEPENDENT-GRADE FINDING — NOW GOES RED, AND IT IS THE ONLY VERDICT THAT CATCHES IT.** ⚡ **ALL `10` PAIRINGS REPLAY AT `0` DIFFERING NODES ON THE REPAIRED COMPARATOR OVER THE EXISTING FIVE ARMS. NO ARM RE-RUN.** ⚡ **AND I WENT PAST THE BRIEF ON THE THREE CONTROLS THAT MATTERED, BECAUSE THE DIRECTION `R-836 §5` SPECIFIES IS THE ONE THE OLD GUARDS COULD NOT SEE.** 🛑 **TWO ERRORS OF MINE DISCLOSED: MY CONTROL HARNESS LIED FIRST, AND MY FIRST `T3`/`T4`/`T5` WERE THE EASY DIRECTION.**
+
+**SEAT `claude.exe 30716`. TREE `wt-h1-wave4-20260712`. RULING `R-836 §10` AS AMENDED BY `R-837 §5`.** 🛑 Comparator-only · five arms READ-ONLY and NOT re-run · no push · no worktree removed · `cmp_AC.txt` intact · the `33` untouched · `STOP L` and `STOP M` NOT crossed · no promotion, seal, certification or `RATIFY-1` number.
+
+### §1 — ⚡ WHAT WAS BUILT, AND IT IS ALL INSIDE THE EXISTING MECHANISM
+✅ **`scripts/ratify1_controls/g_order_identity.py` ONLY.** **The five rebuilds live INSIDE `verify_chain()`'s existing receipt loop, over the same already-digest-verified dicts** — `R-648`'s *adapt, do not author*, and the file's own `_slug_like` law: **a second copy of a rule is a second registry.**
+```
+[1] duplicate_nodes          rebuilt by the RUNNER'S OWN rule (aggregate():379-394)
+[2] collected_but_unexecuted rebuilt from receipt lists
+[3] invalid_children         rebuilt from receipt `problems`
+[4] limited_subset           rebuilt from manifest targets vs the AUTHORITY's
+                             governed child files
+[5] [H] elapsed              rebuilt from the 108 digest-bound `elapsed_s`
+```
+⚡ **`[H]` IS NOW TWO CHECKS, `R-837 §2` EXACTLY:** **(a) RECONCILIATION `declared >= derived − slack` else RED, `slack = n_receipts × 0.01s` DERIVED FROM THE ARTIFACT · (b) CEILING `max(declared, derived) <= 600.0` else RED.** 🛑 **The `600.0s` ceiling is untouched. This ADDS a check and weakens nothing.**
+✅ **`[4]` NEEDED NO INVENTED AUTHORITY AND NO FALLBACK TO THE MANIFEST (`R-837 §5[4]`'s stop condition did NOT fire).** `[MEASURED HERE]` **`accept5_isolated_runner._required_nodes_for()` ALREADY projects `required_population()` onto files (`runner:126-129`) and caches `_REQUIRED_BY_FILE`. I prime and read THAT map.** ⇒ **the governed child-file population is the runner's own, not mine.**
+⚖️ **AND THE DIRECTION IS ASSERTED, NOT ASSUMED: a governed file ABSENT from the arm ⇒ limited (RED). EXTRA targets do not** — `[MEASURED HERE]` the manifest carries `108` targets while the authority implies `106` files; the `2` extras (`_a_packet_harness.py`, `_forensics_fixtures.py`) are `empty_by_design` harnesses holding no governed node. **Treating "extra" as "limited" would have false-REDDED every genuine arm.**
+✅ **`F-RATIFY1-2`: `--node-axis` is MANDATORY FAIL-CLOSED for certifying runs.** **`--pin` is the certifying marker — the same signal the comparator already uses to refuse an unbound run.**
+✅ **`F-RATIFY1-5`: fixed AT THE CLASS, not the instance.** **The caption lives in `AR-1003`, which is COMMITTED and which I may not edit** (`[preserve-and-strike]`) — **so I STRIKE it here: `AR-1003 §2` says `--red-proof` has `23` controls; `[MEASURED HERE]` it emits `26`.** ⚡ **AND the suite now PRINTS its own count in both header and verdict line, so no reader ever hand-counts it again.** ★★★★ **`A COUNT A READER HAS TO DERIVE BY HAND IS A COUNT THAT WILL DRIFT.`**
+
+### §2 — ✅ THE CONTROLS, ON THE REAL COMPARATOR PATH, NO PARALLEL COPY
+```
+CASE                                                 EXPECT  GOT   CAUGHT BY
+POS  untouched arm A vs E                            GREEN   GREEN  (0 FAIL lines)
+T1   downward forgery wall_s=1.0, receipts untouched RED     RED    [5] ONLY
+T2   upward wall_s=36000                             RED     RED    [H] ceiling
+T6a  aggregate claims limited_subset=true            RED     RED    [4] + pre-existing
+T6b  RESEALED subset claiming FULL coverage          RED     RED    [4] + 3 others
+--- the DANGEROUS direction R-836 §5 specifies: aggregate says ZERO, receipts say otherwise,
+    receipt + manifest + aggregate ALL RESEALED so the whole chain still validates ---
+T3'  two children own one node, aggregate says dup=0 RED     RED    [1] ONLY
+T4'  receipt has an unexecuted node, aggregate 0     RED     RED    [2] ONLY
+T5'  receipt has problems, aggregate invalid=[]      RED     RED    [3] ONLY
+```
+⭐⭐ **THE LOAD-BEARING LINE IS `ONLY`: on `T1`, `T3'`, `T4'` and `T5'` the repaired comparator emits EXACTLY ONE `FAIL`, and it is the new rebuild.** ⇒ **the full provenance chain — every digest, every artifact, every ordinal — validated GREEN on all four. These lies were previously invisible WITH THE CHAIN ON, which is precisely what `F-RATIFY1-1` said.**
+✅ **`F-RATIFY1-2` PROVEN BOTH WAYS: `--pin` without `--node-axis` ⇒ `ACCEPTANCE INSTRUMENT REFUSED`, exit `1`. NEGATIVE CONTROL — the same call WITH `--node-axis` ⇒ `[I] SATISFIED`, exit `0`.** ⇒ **the refusal discriminates; it is not a blanket refusal.**
+✅ **`--red-proof`: `26` controls, `0` FAIL, `COMPARATOR DISCRIMINATES`.** ⇒ **I broke none of the pre-existing controls.**
+⭐ **AND I CLOSED A COVERAGE GAP THE GRADE LEFT OPEN RATHER THAN INHERITING IT: `--red-proof-chain` `C1`–`C7` was `[RELAYED]`, never `[MEASURED]`, because the grader judged it too write-heavy against a live evidence set.** ✅ **`[MEASURED HERE]` I ran it against COPIES in a scratchpad outside the repo: `12` controls (`C1 C2 C2b C2c C3 C4 C4b C5 C6 C7 C10c C13`), `0` FAIL, `CHAIN DISCRIMINATES`, exit `0`.** ⚖️ **My change lands INSIDE `verify_chain()`, so the chain's own suite is exactly the one that had to be re-run, and it is now `[MEASURED]` on the repaired instrument.**
+
+### §3 — ✅ THE REPLAY: ALL TEN PAIRINGS, EXISTING EVIDENCE, NO RE-RUN
+```
+A vs B  order/same     0 diff | C vs B  order/reverse  0 diff
+A vs C  repeat/reverse 0 diff | B vs D  repeat/reverse 0 diff
+A vs D  order/reverse  0 diff | E vs B  order/same     0 diff
+A vs E  repeat/same    0 diff | C vs D  order/same     0 diff
+C vs E  repeat/reverse 0 diff | E vs D  order/reverse  0 diff
+                                        PASSED 10 / 10, 0 FAIL lines
+```
+✅ **Every pairing ran with the mode and node-axis its ARMS ACTUALLY STAND IN — derived from each arm's `reverse`/`reverse_nodes`, not chosen to make a run go green.** ⚖️ **`[G]` requires `fwd.reverse=False, rev.reverse=True`, so `B`/`D` appear as the REVERSE side and `C`/`E` as the forward side; that is the tool's relationship guard doing its job, not a re-labelling.**
+✅ **THE REBUILT CHECKS AGREE WITH THE EXISTING EVIDENCE ON EVERY ARM:** `[1]`=0 `[2]`=0 `[3]`=0 `[4]`=False `[5]` reconciles — **arm `A` `declared=377.70s derived=377.52s delta=+0.18s slack=1.08s`; arm `E` `367.90/367.74/+0.16`.** ⇒ **`R-836 §7`'s condition is satisfied: the patch touched ONLY the comparator, so the five arms stand and are NOT re-executed.**
+🛑 **`STOP M` NOT APPROACHED: `accept5_isolated_runner.py`, `accept5_isolation_plugin.py`, the receipt/manifest schema, the node-ordering mechanism and governed tests are ALL UNTOUCHED — the runner is IMPORTED (read-only) for its `_slug`, its by-file map and its aggregation rule, never edited.**
+
+### §4 — 🛑 MY OWN TWO ERRORS, BOTH DISCLOSED, AND THE FIRST IS THE MORE INSTRUCTIVE
+🛑 **`[1]` MY CONTROL HARNESS LIED BEFORE THE INSTRUMENT DID.** **Its `mutate()` handed native Python an MSYS `/c/...` path. Every mutation died in a traceback, the arm stayed PRISTINE, and the comparator correctly returned GREEN on untouched evidence — which printed as `T1`–`T6` all `**MISMATCH**`.** ⚠️ **For a moment I was looking at what appeared to be six false greens in the instrument I had just repaired.** ✅ **THE REPAIR: `cygpath -m`, AND a POSITIVE WITNESS printing the tamper READ BACK FROM DISK before each case is scored, plus a hard `exit 9` if a mutation fails.** ★★★★★ **`A SILENTLY-FAILED MUTATION IS INDISTINGUISHABLE FROM A COMPARATOR THAT MISSED — AND THE HARNESS ACCUSED THE CODE. AUDIT THE INSTRUMENT BEFORE BELIEVING IT` (`[ps-counting-encoding]`, the same path trap I had already hit once this session and did not generalise fast enough).**
+🛑 **`[2]` MY FIRST `T3`/`T4`/`T5` WERE THE EASY DIRECTION AND PROVED LITTLE.** I made the aggregate declare a NON-ZERO the receipts denied — **which the PRE-EXISTING guards already caught, so the new rebuilds were merely redundant there.** **`R-836 §5` specifies the other direction — *"aggregate says none, receipt evidence says otherwise"* — which requires tampering a RECEIPT and RESEALING receipt→manifest→aggregate so the chain still validates.** ✅ **Rebuilt as `T3'`/`T4'`/`T5'`; each now produces exactly ONE FAIL, the new check.** ★★★★ **`I NEARLY BANKED THREE CONTROLS THAT WOULD HAVE PASSED WITHOUT MY PATCH.`**
+⚖️ **A THIRD, COSMETIC: the refusal string carried a `§`, which mojibakes on this Windows console. Changed to ASCII — a refusal nobody can read is a refusal that gets ignored.**
+
+### §5 — ⚠️ WHAT I DID NOT MEASURE, AND WHAT IS BANKED
+⚠️ **NOT MEASURED:** whether `[4]`'s rebuild adds power BEYOND the pre-existing `missing required nodes == 0` guard in the realistic subset case — **`T6b` fired FOUR verdicts, only one of them mine, so `[4]` is DEFENCE-IN-DEPTH there rather than a unique catch. I state that rather than counting it as a fourth unique closure.** · **`F-RATIFY1-3`'s exploitability — NOT executed** · **whether the `2` `xfailed` nodes deserve that status** · **the merit of the `33`** · **ANY production behaviour — this is referee determinism, NOT engine correctness, and the two may not share a sentence.**
+🛑 **`F-RATIFY1-3` BANKED, NOT REPAIRED, wording NOT re-derived (`R-836 §6`): `ACCEPT5-DERIVED-REV-FORWARD-SHUFFLE-1`, `LOW`, exploitability UNEXECUTED. `DEFERRED ≠ CLOSED`.**
+🛑 **I CERTIFY NOTHING. `RATIFY-1` REMAINS UNCERTIFIED, NO NUMBER IS PUBLISHED (`STOP [49]`), AND THE TARGETED RE-GRADE IS THE DESK'S TO DISPATCH (`R-836 §8`).** ⚖️ **A repair verified by the party who wrote it is `[MEASURED BY THE DOER]`.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** **Every item in `R-836 §10` as amended by `R-837 §5` is delivered: fan-in `9 / 9` — rebuilds `[1]`–`[5]` · `[H]` two-check · `node_axis` fail-closed · caption · `T1`–`T6` + POS on the real path · `10/10` pairings · no re-run · `F-RATIFY1-3` banked · the prohibition list held.** **NEXT SMALLEST TASK — and it is the desk's, not mine: dispatch the targeted `accuracy-validator` re-grade per `R-836 §8`.** ⚖️ **I hold; I do not pre-empt it, and I do not interpret a grade I asked for.**
+
+---
+
 ## AR-1005 · 2026-08-11 · 📌 **START-RECEIPT + SUCCESSOR SEATING (`R-784 §3`). SEAT `claude.exe 25076` → `claude.exe 30716`.** 🛑🛑 **AND I RAISE A DEFECT IN `R-836 §4` BEFORE STARTING, BECAUSE IT COSTS NOTHING NOW: THE ADOPTED `[H]` FORMULA CANNOT MAKE `T1` GO RED, AND ITS STATED TOLERANCE WOULD FALSE-RED ALL FIVE GENUINE ARMS.** ✅ **`STOP L` DOES NOT FIRE — the receipts already carry the reconstruction inputs; no schema change is needed.**
 
 **SEAT `claude.exe 30716`** (born `2026-08-11 14:08:37`, parent `powershell.exe 20104`). **TREE `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, `HEAD 3f5cdc00`.** **RULING `R-836 §10`.** 🛑 Nothing written to the instrument yet · no push · no worktree removed · `cmp_AC.txt` intact · the `33` untouched · five arms NOT re-run.
