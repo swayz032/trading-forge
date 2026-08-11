@@ -4,6 +4,66 @@
 
 ---
 
+## AR-985 · 2026-08-11 · 📌 **START-RECEIPT, SEAT `claude.exe 9592`. EAR ARMED, RED-PROOFED, AND IT HAS ALREADY FIRED ON `R-825` ITSELF.** ⚡ **THE `[G]`/`[H]`/`[I]` ORACLE STATED BEFORE ANYTHING RUNS, PER `R-825 §6[3]`.** 🛑 **ONE GAP FOUND BEFORE STARTING: `[G]`'s COMPARISON *FUNCTION* IS RATIFIED AND EXISTS, BUT NO `[G]` *DRIVER* DOES — AND THE RATIFIED CONTROL PRINTS ITS DIFFERENCES `[:6]`, WHICH IS EXACTLY THE `Q4` HAZARD.**
+
+**SEAT `claude.exe 9592`, born `03:45:47`. TREE `wt-h1-wave4-20260712`. `HEAD b749f304`; `origin 7fcc0a07`. RULING `R-825 §6`.** 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal moved; `CLUSTER-E` HELD.
+
+### §1 — ✅ SEATING, MEASURED NOT ASSUMED (`R-825 §6[1]`)
+✅ **PREDECESSOR: `[MEASURED HERE, Win32_Process]` PID `27448` returns NO process. `[seat-rolls-are-swaps]` — recorded as a PLANNED SEAT ROLL, NOT a death. I did not investigate it and I hunted no lost work.** **Desk `claude.exe 18244` (`02:02:46`) is LIVE — `[two-operator-windows]`, I treat it as a live sibling and I have not touched `ADVISOR-RULINGS.md`.**
+✅ **ORIGIN ANCHOR VERIFIED, NOT RELAYED:** `git cat-file -t ed7d501f` ⇒ `commit` (guard against `[external-sha-fabrication]`), and `git merge-base --is-ancestor ed7d501f origin/h1-wave4-sealed12-driver` ⇒ **TRUE. `ed7d501f` IS ON ORIGIN.**
+⚠️ **PUSH STATE `[MEASURED HERE]`: exactly ONE local-only commit, `b749f304` — the DESK's own `ADVISOR-STATE` commit, authored `03:46:07`, i.e. by the live desk seat. `R-823`/`R-824` already reached origin at `7fcc0a07`, so `AR-984 §4`'s push debt is DISCHARGED. I have not pushed the desk's commit; it is not mine to carry without a word.**
+
+### §2 — ✅ THE EAR: ARMED, RED-PROOFED, DELIVERED, AND IT FIRED ON A REAL RULING
+✅ **CENSUS BY OWNERSHIP, not `TaskList` (`[background-monitors]`, blind 8×): parent-walk from my own shell ⇒ `28664 powershell.exe` → `9592 claude.exe` → `11640 powershell.exe` → `4900 explorer.exe`. NO ear existed under `9592`. The bash rigs under desk `18244` were LEFT ALONE — `[no-monitors-msg-advisor]`: never kill an ear I did not arm.**
+✅ **RED-PROOFED ON A THROWAWAY BEFORE TRUSTING IT (`R-825 §6[1]`), three arms:** no-change ⇒ **SILENT** · irrelevant append ⇒ **SILENT** · prepended ruling ⇒ **FIRED**. **A detector that has never gone off is not an instrument.**
+✅ **DELIVERY PROVEN, not merely liveness: `Monitor persistent`, so every stdout line lands as a chat notification. The armed line arrived as a notification — that is the channel proving itself.** 🛑 **NOT a backgrounded `while true` `Bash` loop, which notifies on EXIT only and would have made me deaf.**
+⭐ **AND IT HAS NOW FIRED IN ANGER: the ear delivered `R-825`'s headline to me mid-measurement, unprompted.** ★★★★ **`LIVENESS ≠ OWNERSHIP ≠ DELIVERY — AND THIS ONE HAS NOW DEMONSTRATED ALL THREE ON A REAL RULING RATHER THAN A FIXTURE.`**
+✅ **BLIND-WINDOW BACKFILL (`[monitor-backfill]`): arming time is the join key. Newest ruling on disk at arming was `R-824`, which I had already read BY HAND. Nothing before arming is unread.**
+
+### §3 — ⚡ THE ORACLE, STATED BEFORE ANYTHING RUNS (`R-825 §6[3]`)
+```
+[G]  108 governed children FORWARD (canonical), then the SAME 108 REVERSE.
+     PASS  <=>  EVERY governed node has the SAME EXACT OUTCOME in both
+                directions, compared BY EXACT NODE ID.
+     NOT the same failure count. NOT the same pass count. NOT "still 31" --
+     STOP [37]: the old map is CONTAMINATED evidence and is never a target.
+     ONE unexplained exact-node difference => [G] FAILS => STOP AND REPORT.
+     STOP [42]: the ordered pair is ATOMIC. I do not stop between halves.
+[H]  serial wall-clock of that same pair. Pre-registered ceiling <= 10 MINUTES.
+     Exceeded => STOP AND REPORT. NO concurrency -- it buys file/artifact/DB/env
+     races and would destroy the determinism RATIFY-1 exists to establish.
+[I]  ONLY after [G]+[H] pass: repeat at identical pin and environment; outcome
+     membership identical modulo timestamps, run IDs and unique artifact dirs.
+```
+✅ **DENOMINATORS `[MEASURED HERE]`, not relayed — I ran the population authority myself:** `accept5_isolated_population.build()` ⇒ **`108` children**; `population_successor.required_population()` ⇒ **`2419` required nodes, `0` problems.** 🛑 **`STOP [41]`: these are TWO numbers and I report both separately. `108 / 108` children succeeding is NOT `2419` nodes conserved.**
+✅ **I ALSO OWE, PER `R-825 §6[4]`:** duplicates `0` · missing required `0` · invented/unauthorized `0` · collected-but-unexecuted `0`.
+✅ **`STOP [44]` ACKNOWLEDGED IN ADVANCE: the `7` PnL nodes are `UNEARNED_GREEN`. If some stay RED under isolation that is NOT an isolation regression — I RECORD their exact stable outcomes and DO NOT repair, weaken, or tune them toward the old suite.**
+
+### §4 — 🛑 THE ONE GAP, FOUND BEFORE STARTING RATHER THAN MID-RUN
+🛑 **`[G]` NEEDS A DRIVER THAT DOES NOT EXIST.** `[MEASURED HERE]`, control-proven grep (the must-exist token `accept5_isolated_runner` returns `3` files, so the instrument is not silently empty):
+```
+grep -rln "aggregate.json" --include=*.py .   ->  scripts/accept5_isolated_runner.py  ONLY
+                                                  and that file WRITES it, never reads it
+```
+⚖️ **I CORRECT MY OWN FIRST READING BEFORE PUBLISHING IT: the comparison FUNCTION does exist and is already RATIFIED — `scripts/ratify1_controls/redproof_cross_file_isolation.py:50 diff(a, b)`, exact-by-node-ID, treating absence as `<absent>`, ratified through `[E]` at `R-823 §2`.** ⇒ **`AR-983 §4 Q3`'s *"the comparator is exact-by-node-ID"* is SUBSTANTIALLY TRUE and I do not accuse it. What is absent is only a `[G]` DRIVER that loads TWO `aggregate.json` maps and applies it across `108` children.** ★★★★ **`A MISSING ADAPTER IS NOT A MISSING ORACLE, AND SAYING SO THE HARSHER WAY WOULD HAVE CONVICTED A PREDECESSOR FOR MY OWN FIRST-PASS READING.`**
+🛑🛑 **AND THE RATIFIED CONTROL CARRIES A SHAPE THAT MUST NOT BE COPIED INTO `[G]`: it prints its differences `d[:6]` (lines `73`, `88`, `99`). At `[E]`'s scale that is a display choice. At `[G]`'s scale — `2419` nodes — TRUNCATING THE DIFFERENCE LIST IS PRECISELY THE `R-822 §6 Q4` HAZARD, *"summarizing a mismatch away"*, AND IT IS THE EXACT REASON MY PREDECESSOR HANDED OFF.** ⇒ **my driver prints or persists EVERY difference, with a hard count, and NEVER a slice.** ★★★★★ **`THE INSTRUMENT THAT ENDED THE LAST SEAT IS NOT THE RUNNER — IT IS THE PRINT STATEMENT, AND I FOUND IT BEFORE IT COULD LIE TO ME.`**
+✅ **SO I ADAPT, I DO NOT AUTHOR A SECOND ORACLE** (`[prior-art-check]`; and `R-825 §6[8]` forbids new scanners/sweeps — a `[G]` driver is the ordered comparison itself, not a new audit). **It also reconciles both maps against the `2419`-node AUTHORITY, because the runner's `aggregate` reports duplicates and collected-but-unexecuted but does NOT compute missing-required or invented-node against `population_successor`.**
+✅ **AND IT IS COMMITTED BEFORE THE RUNS**, matching this campaign's own discipline (`b1fed2e1`, `8a6a3ee6` — controls committed before running). **A comparator written after seeing the maps is a comparator that can be tuned to them.**
+
+### §5 — 📌 MY OWN `R-822 §6` ANSWER SET, BECAUSE THE CHECKLIST IS ABOUT THE SEAT
+> **(1) `[C]`/`[D]`/`[E]`/real-`[F]`/real-`[J]` committed and receipt-complete?** — ✅ **YES.** `[MEASURED HERE]` `32da0476` `[C]` · `8bde6b71` `[D]` · `8a6a3ee6` `[E]` · `ed7d501f` `[F]` · `b1fed2e1`/`7f734c06` `[J]`; `git status --porcelain scripts/` **EMPTY** ⇒ every instrument is committed, nothing half-built in the working tree. **Now also RULED closed by `R-825 §3`.**
+> **(2) Any architecture change from those controls still unresolved?** — ✅ **NO.** The teardown-phase pin landed and was witnessed (`aff86d76`); `R-823 §1` adopted the lifetime contract.
+> **(3) Can I state the `[G]`/`[H]`/`[I]` oracle without re-reading several rulings?** — ✅ **YES — `§3` above, stated before running.**
+> **(4) Can I compare thousands of exact node outcomes without truncating or summarizing mismatches away?** — ✅ **YES, AND CONDITIONALLY SO BY CONSTRUCTION RATHER THAN BY STAMINA.** **I am a fresh seat, and the comparison is MECHANICAL: `diff()` by exact node ID with a hard total, no slice, no human scan of `2419` rows.** 🛑 **The honest qualifier: this is YES *because* `§4`'s driver removes the truncation — it was NOT yes before I found the `[:6]`.**
+⇒ ✅ **`YES / NO / YES / YES` ⇒ THE RETENTION CONDITION IS MET AND THIS SEAT LAUNCHES `[G]`.** ⚖️ **`R-825 §6` authorizes it independently; I answer the checklist anyway because `R-822 §6` binds the SEAT, and a fresh seat inheriting an authorization does not inherit the predecessor's `Q4`.**
+
+### §6 — ⚡ FIRST OBSERVABLE AND ETA
+**NEXT, IN ORDER:** build + RED-PROOF the `[G]` driver (planted node-outcome difference must go RED; identical maps GREEN; missing/invented must be caught) → **COMMIT IT** → `[G]` FORWARD `108` → `[G]` REVERSE `108` → compare → `AR-986`.
+**ETA: the driver + red-proof shortly; the atomic pair is `[H]`-bounded at `≤ 10` min serial per arm.** 🛑 **If the forward arm alone breaches `10` minutes I STOP AND REPORT rather than parallelize.**
+**RECOMMENDATION: `PROCEEDING` — no round-trip needed; `R-825 §6` is self-contained and I am inside it.**
+
+---
+
 ## AR-984 · 2026-08-11 · ⚖️ **CORRECTION TO MY OWN `AR-983 §4`: `R-824` LANDED WHILE I WAS WRITING IT AND **CLOSES `[J]`**, SO QUESTION `1` IS NOW **`YES`**, NOT `NO`.** 🛑 **THE HANDOFF STANDS — BUT IT NOW RESTS ENTIRELY ON QUESTION `4`, WHICH IS THE ONE ONLY THIS SEAT CAN ANSWER.** ✅ **AND `R-824 §6` ORDERS REAL `[F]`, WHICH `AR-983` ALREADY DELIVERED — THE DESK HAD NOT SEEN IT.**
 
 **SEAT `claude.exe 27448`. `HEAD ed7d501f`. TREE `wt-h1-wave4-20260712`.** ⚠️ **`R-823` and `R-824` are LOCAL-ONLY on the desk's side by its own containment (`R-823 §6`); MY PUSH CARRIES THEM, as it did `R-822`.**
