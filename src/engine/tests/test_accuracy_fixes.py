@@ -553,29 +553,28 @@ class TestH8StyleCContractDivisibility:
 
     @staticmethod
     def _import_validate():
-        """Import validate_style_c_base_contracts, skip if exits/__init__ broken."""
-        try:
-            from src.engine.exits import style_c_handler
-            return style_c_handler.validate_style_c_base_contracts
-        except ImportError:
-            pytest.skip("exits module has pre-existing import error — skipping H8 test")
+        """Import validate_style_c_base_contracts.
+
+        R-799 §5: a release-authority test may not silently depend on
+        machine-local evidence. An unimportable ``exits`` module is a HARD
+        FAILURE, never a skip -- the skip that used to sit here reported
+        ``3 skipped`` on a genuinely broken import (R3-4 arm 1).
+        """
+        from src.engine.exits import style_c_handler
+        return style_c_handler.validate_style_c_base_contracts
 
     def test_divisible_by_3_passes_unchanged(self):
         """6, 9, 12 contracts should pass through without modification."""
-        try:
-            from src.engine.exits.style_c_handler import validate_style_c_base_contracts
-        except ImportError:
-            pytest.skip("exits import error — skipping")
+        # R-799 §5: an unimportable module is a HARD FAILURE, never a skip.
+        from src.engine.exits.style_c_handler import validate_style_c_base_contracts
         for n in [3, 6, 9, 12, 18, 30]:
             result = validate_style_c_base_contracts(n)
             assert result == n, f"Expected {n} unchanged, got {result}"
 
     def test_non_divisible_rounds_down_with_warning(self):
         """7 → 6, 8 → 6, 10 → 9, 11 → 9 etc. with a UserWarning."""
-        try:
-            from src.engine.exits.style_c_handler import validate_style_c_base_contracts
-        except ImportError:
-            pytest.skip("exits import error — skipping")
+        # R-799 §5: an unimportable module is a HARD FAILURE, never a skip.
+        from src.engine.exits.style_c_handler import validate_style_c_base_contracts
 
         cases = [(7, 6), (8, 6), (10, 9), (11, 9), (13, 12), (14, 12)]
         for inp, expected in cases:
@@ -588,10 +587,8 @@ class TestH8StyleCContractDivisibility:
 
     def test_result_never_below_3(self):
         """Even if base is 1 or 2, result should floor to 3 (minimum viable)."""
-        try:
-            from src.engine.exits.style_c_handler import validate_style_c_base_contracts
-        except ImportError:
-            pytest.skip("exits import error — skipping")
+        # R-799 §5: an unimportable module is a HARD FAILURE, never a skip.
+        from src.engine.exits.style_c_handler import validate_style_c_base_contracts
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             result = validate_style_c_base_contracts(1)
@@ -775,8 +772,9 @@ class TestF9MaxTradesPerDayOffByOne:
 
     def test_same_bar_long_short_counted_as_two(self):
         """When both long and short fire on same bar, daily count increments by 2."""
-        from src.engine.backtester import _apply_max_trades_per_day
         import numpy as np
+
+        from src.engine.backtester import _apply_max_trades_per_day
         n = 5
         longs = np.array([True, False, False, False, False])
         shorts = np.array([True, False, False, False, False])  # same bar as long
@@ -791,9 +789,9 @@ class TestF9MaxTradesPerDayOffByOne:
 
     def test_different_bars_count_independently(self):
         """Long on bar 0 and short on bar 1 both allowed with max_trades=1."""
-        from src.engine.backtester import _apply_max_trades_per_day
         import numpy as np
-        n = 5
+
+        from src.engine.backtester import _apply_max_trades_per_day
         longs = np.array([True, False, False, False, False])
         shorts = np.array([False, True, False, False, False])
         # Use different days so the limit resets
@@ -814,9 +812,11 @@ class TestF11FirstDayPnl:
 
     def test_first_day_included_in_records(self):
         """daily_pnl_records must have an entry for the first calendar date."""
-        from src.engine.backtester import _compute_daily_pnls
-        import numpy as np
         from datetime import date
+
+        import numpy as np
+
+        from src.engine.backtester import _compute_daily_pnls
 
         class FakeDate:
             def __init__(self, d): self._d = d
