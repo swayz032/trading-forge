@@ -4,6 +4,86 @@
 
 ---
 
+## AR-978 · 2026-08-11 · ✅✅ **CLUSTER `F` LANDED AND RED-PROOFED AT `4b7590a5` — ROWS `22`/`23` CONVERTED TO `R-799 §5` FORM `[3]`, PINNED **AND IDENTITY-VERIFIED BEFORE EXECUTION**. `R3-4` = `6 / 7`.** 🛑🛑 **AND THE VERIFIER FOUND A LATENT DEFECT BIGGER THAN THE SKIPS: THE HELPER WAS `exec`-ING A **MIS-DECODED** HISTORICAL MODULE — `text=True` WITH NO `encoding=` ON A `cp1252` BOX.** ⚖️ **AND I OWE THE DESK A COUNT CORRECTION WHOSE PHANTOM I CREATED MYSELF.**
+
+**SEAT `claude.exe 27448`. `HEAD 4b7590a5`, PUSHED (`ls-remote` MATCH). RULING `R-818 §7[3]` → `R-820 §9[1]`. TREE `wt-h1-wave4-20260712` (`STOP [36]`).** ⭐ **FILED IN THE SAME MOTION AS THE WORK — `R-820 §0`'s conviction against me is not repeated here.**
+
+### §1 — ✅ THE REPAIR: FORM `[3]`, WHICH IS THE ONE THAT NEEDS A MAP
+`_load_module_at_ref` `exec`s historical revisions of `spec_family_bindings.py` straight from `git`, and `pytest.skip`'d whenever `git` failed (row `22`) or the revision was missing (row `23`).
+⭐ **`[MEASURED HERE]` it is called with **FOUR distinct refs across FIVE sites** — `ee49fdca~1` · `d8cf8043` · `6dd3a00f` · `6a56618b`. **So form `[3]` needed a PINNED MAP, not a constant**, and a ref that is `exec`'d but ABSENT from the map is itself a hard failure — an unpinned historical input is precisely the dependency `R3-4` exists to remove.
+```
+ee49fdca~1 -> blob f9a56c7e0016a4675e259c9abbccd012771019b2   50116 bytes
+d8cf8043   -> blob 02c6bf25b50886671b218f3ce506cce765078da1   75796 bytes
+6dd3a00f   -> blob 133df1979f8895a380f0161e094abae1943be206   96633 bytes
+6a56618b   -> blob c34250cae48c73ed186fadbab5b939fb4a17e1a6  108090 bytes
+```
+✅ **`[MEASURED HERE]` ALL FOUR commits are ANCESTORS of `origin/h1-wave4-sealed12-driver`** ⇒ **this history is fetchable from any full clone and is NOT machine-local evidence.** ⚖️ **That measurement is what makes `FAIL` the right verdict rather than `SKIP`: a missing object means a broken or shallow checkout, not a laptop gap.**
+
+### §2 — 🛑🛑 THE FINDING THAT MATTERS MORE THAN THE TWO SKIPS
+🛑 **`[MEASURED HERE]` the committed helper ran `subprocess.run(..., text=True)` with NO `encoding=`, so it decoded each revision with the LOCALE codec — `cp1252` on this box — before `exec`ing it:**
+```
+raw BYTES   len=50116  git blob id f9a56c7e...  == the pin    MATCH
+text=True   len=52288  git blob id d9eb7c36...  != the pin    MISMATCH  (+2172 bytes)
+```
+`[MEASURED]` **the four revisions carry `1308` / `1677` / `1814` / `1913` non-ASCII bytes each.** ⇒ **the S7 differential — the thing that makes this suite *"a differential instead of an assertion"* — was comparing against a CORRUPTED module.**
+✅ **REPAIRED AS PART OF FORM `[3]`, AND IT IS ENTAILED, NOT SCOPE CREEP: identity verification is a property of BYTES, and the old call could not produce bytes.** The helper now reads bytes → verifies the git blob id → decodes UTF-8 explicitly.
+⚠️ **HONEST SEVERITY — LATENT, NOT LIVE: `[MEASURED]` `339 passed` before AND after, so no assertion ever depended on the mis-decoded bytes.** ★★★★★ **`THE ENCODING BUG WAS INVISIBLE FOR EXACTLY AS LONG AS NOBODY ASKED THE INPUT TO PROVE ITS IDENTITY. 339 TESTS PASSED OVER A CORRUPTED MODULE BECAUSE NOTHING EVER READ THE CORRUPTED PART.`** (`[i-measured]` — the neighbouring object was being measured, and it looked fine.)
+
+### §3 — ✅ THE RED-PROOF — PLANTS THAT REFUSE TO ARM, AND A `PRE` ARM ON EVERY CONVERTED ROW
+**Disposable worktree re-pinned to `2d8b1da1` so `PRE` means *post-`D`, pre-`F`*, not *pre-`D`*.**
+```
+ROW 22  git not runnable (OSError branch)
+  PRE  + git unavailable  exit=0  1 skipped  <- REAL false green, REPRODUCED
+  POST + git unavailable  exit=1  1 failed   "...a broken checkout, not an environment gap"
+ROW 23  bad revision -- a REAL trigger, not a forced branch: _MODULE_REL_PATH mutated
+        so `git show` legitimately exits 128, and its OWN stderr is quoted back
+  PRE  + bad revision     exit=0  1 skipped  <- REAL false green, REPRODUCED
+  POST + bad revision     exit=1  1 failed   "...broken or shallow checkout"
+NEW form-[3] IDENTITY GUARD  (no PRE arm exists -- the guard is new)
+  POST + wrong blob id    exit=1  1 failed   "does not match its recorded identity"
+  POST + correct blob     exit=0  1 passed
+WHOLE FILE  POST 339 passed  ==  PRE 339 passed   => 0 flips, 0 node changes
+```
+⚠️ **Exit codes captured DIRECTLY from `python -m pytest`, never through a pipe** (`[ps-counting-encoding]`).
+⇒ ⚖️ **CLUSTER `F` ACCOUNTING: `2` REAL FALSE-GREEN REMOVALS `+ 1` NEW IDENTITY GUARD `+ 1` LATENT-DEFECT REPAIR.** **Unlike `D`'s row `19`, BOTH `F` rows were genuinely live false greens** — `STOP [39]`'s discipline applied in the other direction, and it does not shrink this one.
+⚖️ **`[NOT CLAIMED]` no authoritative canonical `2419` run, per `R-820 §9[1]` — decisive evidence is LOCAL CAUSAL `RED→GREEN`, and I will not spend one on the old shared-interpreter model.**
+
+### §4 — ⚖️ A COUNT CORRECTION I OWE THE DESK, AND THE PHANTOM IS MINE
+🛑 **`R-820 §4` records *"`test_spec_family_bindings.py` STILL CONTAINS `5` `pytest.skip` CALLS"*. `[MEASURED HERE at `e60b1909`, the exact commit that ruling measured]` the EXECUTABLE count is `4`:**
+```
+UNANCHORED  grep -c 'pytest\.skip'         5
+EXECUTABLE  grep -cE '^\s*pytest\.skip\('  4    :47  :910  :1927  :1929
+COMMENT                                    1    :573
+```
+⚠️ **AND `:573` IS A COMMENT I WROTE IN CLUSTER `D`**, describing the skip I had just deleted. **My own documentation manufactured a phantom obligation in the desk's very next count.** ★★★★★ **`THIS CENSUS'S OWN §1 RECORDS FOUR COMMENT-ONLY MATCHES THAT WOULD HAVE INFLATED THE ORIGINAL DENOMINATOR — AND I THEN WROTE A FIFTH INTO EXISTENCE BY EXPLAINING MYSELF IN A COMMENT.`** (`[unenumerated-ladder]`; the census's *"a grep matching only comments is not a verification"*, recurring one level up.)
+✅ **AFTER `F`, EXECUTABLE `pytest.skip` IN THIS FILE = `2`, both UNTOUCHED:** `:47` (row `18`, Cluster `E`, **HELD** by `R-820 §9[4]`) · `:910` (row `20`, already form `[1]` since `e55a9ef1`; the resource is committed so the branch is unreachable dead code).
+
+### §5 — ⚖️ A SCOPE READING I DECLARE RATHER THAN ASSUME
+⚠️ **`R-820 §9[8]` says *"DO NOT touch the `5` remaining `pytest.skip`"* while `§9[1]` orders *"FINISH `F` (rows `22`,`23`)"* — and rows `22`/`23` ARE two of those five.** ⇒ **I read `§9[1]` as controlling, because `§9[8]`'s fence is explicitly tagged `(§4, out of scope)` — i.e. out of CLUSTER `D`'s scope — and the alternative reading makes `§9[1]` unexecutable.** 🛑 **DECLARED, NOT ABSORBED: if the desk meant otherwise, this is the line to correct, and I would rather be corrected than have quietly chosen.** ★★★ **`A DEVIATION DECLARED IS A DEVIATION THE DESK CAN PRICE`** (`R-818 §3`).
+
+### §6 — ⚠️ WHAT CLUSTER `F` DOES **NOT** ESTABLISH
+⚠️ **NO PORTABILITY CLAIM.** `[MEASURED, AR-966 §6]` **a linked worktree SHARES the object store, so the git-history axis was never varied by any tree on this box.** The proof is PLANT-based. **A genuinely shallow clone was NOT tested** — that is the one arm that would convict portability and I did not have it.
+⚠️ **The pinned blob ids are correct AT THIS PIN.** A history rewrite breaks them **deliberately** — that is the guard firing, not a defect.
+⚠️ **`_load_module_at_ref` writes a synthetic key into `sys.modules` (`:1938`) and pops it only on exception.** `[MEASURED]` the key is uniquely derived from the ref (`_gitref_spec_family_bindings_*`), so it shadows NO production module. **NAMED, NOT REPAIRED** — it belongs to the `28` `[UNADJUDICATED]`, which `R-820 §6` records `CONTAINED_BY_ACCEPT5_PROCESS_BOUNDARY` if ratification passes.
+⚖️ **CARRIED, AS ORDERED: denominator `31 / 3 / 28`, tree `src/engine/tests` (`R-820 §2`). The `10` are `UNREACHABLE BY A FUNCTION-SCOPED TEST FIXTURE`, NOT *"unrestorable by construction"* — that phrasing was mine and it overstated the mechanism (`R-820 §6`).**
+
+### §7 — 📌 STATE AND WHAT I DO NEXT
+```
+R3-4   ✅ A · B · C · D · F · G      6 / 7 CLOSED
+       🛑 E  HELD (R-820 §9[4]) -- not started, deliberately
+       🚫 H  FORBIDDEN, STOP [11], untouched, in no denominator
+R3     3 / 5
+OPEN   ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1 -- 3 contaminators named, NOT closed;
+       the process wall (R-820 §1) replaces the hunt
+```
+⏭️ **NEXT, IN ORDER: `ACCEPT5-PROCESS-ISOLATION-RATIFY-1` `[A]`–`[J]` (`R-820 §5`), `[J]` MANDATORY — the higher-scoped-fixture control must READ the state at test `N` and be SHOWN to go RED under an ownership-blind boundary.** ⏭️ **THEN record the pinned run's artifact paths + hashes into the census and REMOVE `wt-accept5-pin-20260811` (`R-820 §7`).**
+🛑 **DISPOSABLE WORKTREES OUTSTANDING, DECLARED:** `wt-accept5-pin-20260811` @ `c2193868` (desk-ordered removal, pending the artifact-hash record) · `wt-r34-clusterD-redproof` @ `2d8b1da1` (mine, clean, backs `§3` and `AR-977 §4`). **Both removed together once the hashes are recorded, so both removals are on one receipt.**
+⚠️ **CONTEXT SELF-ASSESSMENT (`R-820 §7`, my call, and I am asked to say it plainly): this seat has run a long session and is now carrying substantial history. It is NOT exhausted and I am NOT declaring a handoff — but the ratification packet is `10` obligations with a mandatory RED-witnessed control, and it is the largest unit remaining. I will begin it and re-assess at its first natural seam rather than at its end.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Starting `RATIFY-1`. No round-trip.**
+
+---
+
 ## AR-977 · 2026-08-11 · ✅ **CLUSTER `D` LANDED AND RED-PROOFED AT `e60b1909` — ROWS `19`/`21`/`24` CONVERTED TO `R-799 §5` FORM `[1]`.** 🛑🛑🛑 **AND `R-820 §0`'s CONVICTION AGAINST ME IS CORRECT AND I OWN IT WITHOUT QUALIFICATION: I REPORTED `D` TO OPERATOR CHAT AND NEVER FILED IT IN THE LEDGER — THIS AR IS ~40 MINUTES LATE AND THE DESK HAD TO CLOSE `D` OFF ITS OWN ARTIFACT VERIFICATION.** ⚖️ **THE ACCOUNTING IS `2 + 1`, NEVER `3` (`STOP [39]`) — AND THE `1` IS MINE TO HAVE FOUND, BY TESTING MY OWN CENSUS'S PREMISE.**
 
 **SEAT `claude.exe 27448`. `HEAD e60b1909`, PUSHED (`ls-remote` MATCH). RULING: `R-818 §7[3]` → `R-819 §8[1]`. TREE `wt-h1-wave4-20260712` (`STOP [36]` — a figure states its tree).**
