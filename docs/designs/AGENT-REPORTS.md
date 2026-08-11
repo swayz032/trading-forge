@@ -4,6 +4,93 @@
 
 ---
 
+## AR-963 · 2026-08-11 · ⏳ **`R3-4` PARTIAL — CENSUS COMPLETE AND COMMITTED; `7 / 32` SITES CONVERTED WITH A DISCRIMINATING CONTROL EACH.** 🛑🛑 **AND THE CENSUS FOUND A LIVE FALSE-GREEN MECHANISM THE FOUR NAMED INPUTS DID NOT PREDICT: A `str(e).lower()` SUBSTRING TEST THAT CONVERTS `signal_vector data malformed` — THE EXACT DEFECT THOSE TESTS EXIST TO CATCH — INTO A SKIP.** ⚠️ **MY OWN CENSUS INSTRUMENT READ `0` AND WAS FALSE; ITS POSITIVE CONTROL CONVICTED IT BEFORE IT REACHED A CLAIM.**
+
+**SEAT `claude.exe 6312`. TREE `HEAD 1a639679`. `R3` = `3 / 5`, `R3-4` IN FLIGHT.**
+
+### §0 — ⚖️ ONE CORRECTION OF MINE, STATED ONCE
+🛑 **`R-812 §5` is right: `AR-962 §2` attributed the third queue quote to `R-808 §9`; it is `R-809 §7`. The argument is untouched — two prior rulings do sequence `R3-4` first — but the citation was wrong and the ledger now carries the right one.** ★★★★ **`ONLY THE CITATION IS WHAT THE NEXT SEAT RE-OPENS.`**
+
+### §1 — 🛑 MY CENSUS INSTRUMENT LIED, AND THE POSITIVE CONTROL CAUGHT IT
+🛑 **`[MEASURED]` MY FIRST CENSUS PASS REPORTED `0 skip sites` ACROSS ALL `107` GOVERNED MEMBERS.** **The manifest stores member paths relative to `src/`; I resolved them from the repo root, so every one of the `107` lookups missed.** ⇒ **A SILENT, TOTAL FALSE ALL-CLEAR ON THE WHOLE ITEM.**
+✅ **IT NEVER REACHED A CLAIM BECAUSE THE POSITIVE CONTROL WAS IN THE SAME RUN: `def test` matched `0 of 107`, which is impossible.** ★★★★★ **`AN EMPTY RESULT AND A BROKEN LOOKUP ARE THE SAME OUTPUT — ONLY A TOKEN THAT MUST EXIST TELLS THEM APART, AND IT MUST RIDE IN THE SAME RUN, NOT A LATER ONE.`** ⚠️ **This is the fifth instrument lie in two days (`[ps-counting-encoding]`) and the code was fine every time.**
+
+### §2 — ✅ THE CENSUS ARTIFACT — COMMITTED `fb7b9bcc`
+📄 **`docs/designs/ACCEPT5-SKIP-CENSUS-1-2026-08-11.md`** — one row per site (file · owner · line · trigger · external input · `§5` class · fired-in-pristine), per `ACCEPT5-SKIP-CENSUS-ARTIFACT-1`.
+```
+governed members ......................... 107   existence control 107/107
+positive control "def test" .............. 105/107  (2 are _harness/_fixtures helpers)
+raw pattern matches ....................... 36
+  comment-only, EXCLUDED ...................  4   <- all SWEEP-F3 notices for skips
+                                                     ALREADY REMOVED
+EXECUTABLE SKIP SITES ..................... 32
+AR-950 prior art .......................... 32   <- RECONCILED, BY SITE not by total
+owner derivation: blank owners .............. 0
+negative control (governed file, no skips) .. 0
+```
+✅ **`unique rows == denominator`: `32 == 32`.** ⚠️ **A grep matching only comments is not a verification — those 4 would have manufactured 4 phantom obligations.**
+
+### §3 — ⭐ FINDING 1: SIX OF THE 32 ARE **BROADCAST** SKIPS
+`[MEASURED, nearest enclosing `def`]` **6 sites live in HELPER functions, not tests** — `_import_validate` · `_load_sample` · `_load_battery` · `_governed_split` · `_corpus_wait_session_rows` · `_load_module_at_ref`. **A `pytest.skip` in a helper fires for every test that calls it.**
+★★★★★ **`A SKIP IN A HELPER IS A BROADCAST SKIP: ONE SITE, AN UNCOUNTED NUMBER OF SILENCED TESTS — AND THE CENSUS ROW LOOKS EXACTLY LIKE A SINGLE-TEST ONE.`** ⚠️ **`[UNENUMERATED — OPEN]` I have NOT counted the fan-out.**
+
+### §4 — 🛑🛑 FINDING 2: FOUR SITES LET THE SUBJECT EXCUSE ITSELF FROM ITS OWN EXAM
+`[MEASURED, `test_walk_forward_wrc_spa_emission.py:175-177`]` the four `wrc_spa` sites skip on **a value the system under test computed about itself** — `if wrc.get("available") is False: pytest.skip(...)` — and **the source comment directly above says that flag covers *"no S3 access **or backtester-level bugs**"*.**
+★★★★★ **`A SKIP CONDITIONED ON THE SUBJECT'S OWN "AM I AVAILABLE" FLAG IS NOT AN ENVIRONMENT GUARD — IT IS THE SUBJECT BEING ALLOWED TO EXCUSE ITSELF FROM ITS OWN EXAM.`** ⚠️ **Invisible to a behaviour census exactly as `SAMPLES_DIR` is (`AR-950 §5`).**
+
+### §5 — 🛑🛑🛑 FINDING 3: A SUBSTRING PREDICATE THAT SWALLOWS THE DEFECT IT GUARDS
+`[MEASURED, predicate copied VERBATIM from `test_signal_vector.py:193/:213/:235`, executed]`:
+```
+if "S3" in str(e) or "No such file" in str(e) or "data" in str(e).lower(): pytest.skip(...)
+
+SWALLOWED AS "environment"          swallowed
+  ValueError: signal_vector data malformed: expected list, got dict   True  <-- !!
+  KeyError: 'metadata'                                                True
+  RuntimeError: database connection lost mid-backtest                 True
+  TypeError: cannot compare data of differing lengths                 True
+  AssertionError: bad data alignment between bars and signals         True
+NEGATIVE CONTROL (must be False, else the predicate is vacuous)
+  ValueError: signal vector contained value 7, outside {-1,0,1}       False
+  ZeroDivisionError: division by zero                                 False
+```
+🛑 **`"data" in str(e).lower()` CONVERTS A BROAD CLASS OF GENUINE DEFECTS INTO A SKIP — INCLUDING THE ONE THOSE THREE TESTS EXIST TO CATCH.** ★★★★★ **`A SUBSTRING TEST STANDING IN FOR A PREDICATE FAILS OPEN ON EVERY MESSAGE THAT MERELY MENTIONS THE WORD.`** ⚠️ **Same species as `R-812 §4`'s `n not in probe.stdout` — **second instance in one round, different file, different author.**
+⚠️ **NOT YET CONVERTED, and I say why rather than quietly doing it: narrowing it changes whether three GOVERNED members FAIL on every box without AWS creds — including a fresh tree. That is `R-799 §5`'s required disposition, but `ACCEPT5-GOVERNED-SKIP-SCOPE-1` orders individual review, so it lands with the fresh-tree causality proof, not ahead of it.**
+
+### §6 — ✅ CONVERSIONS: `7 / 32`, EACH WITH ITS OWN DISCRIMINATING CONTROL
+**`A2` — the four `exits`-import skips (`c6362fc3`).** Premise RE-MEASURED not inherited: the import SUCCEEDS today ⇒ all four were dead code. **`_import_validate` has ZERO source callers — dead code inside dead code.**
+```
+arm 1  PRE-fix  + planted broken import -> 3 skipped   <- THE FALSE GREEN
+arm 2  POST-fix + SAME plant            -> 3 FAILED, naming ImportError
+control POST-fix, no plant              -> 3 passed    <- no new false red
+plugin positive control                 -> ImportError confirmed raised
+```
+**`A1` — the three `backtester`-import guards (`1a639679`).** Premise RE-MEASURED: import succeeds.
+```
+POST-fix + planted broken import -> 3 FAILED   <- guard bites
+POST-fix, no plant               -> 3 skipped  <- STILL SKIPPING
+whole file                       -> 12 passed, 3 skipped
+```
+⚠️ **AND I REPORT THAT AS A PARTIAL WIN, NOT A WIN: the three tests still skip. The import guard is no longer the cause — `§5`'s data predicate now is, and it is the SOLE remaining one.** ⇒ **The "three sealed skips" input is confirmed LIVE by observation rather than inferred.**
+✅ **No tree mutation in any arm — imports blocked by a `sys.meta_path` pytest plugin, so no restore was ever owed** (`[ps-counting-encoding]`: a killed arm once left a mutation live while printing `restore: OK`).
+✅ **Node IDs PRESERVED in both files.**
+
+### §7 — ⚠️ WIDENED DIFF, DECLARED NOT BURIED
+🛑 **The `ruff-lint` pre-commit hook BLOCKED the `A2` commit on FOUR violations that PRE-EXIST my change.** `[MEASURED against `HEAD`'s own copy of the file]` `3× I001` import-sort at `:775/:791/:814` and `1× F841` dead `n = 5` at `:793`. **I fixed them to land the commit; they are cosmetic and touch no assertion.** ⚠️ **`B905` at `:483` is ALSO pre-existing but is NOT in the gate's rule set — LEFT ALONE rather than swept up.**
+✅ **REGRESSION BASELINED IN A DISPOSABLE WORKTREE AT `HEAD`, then removed:** `2 failed / 36 passed` **before** my change and `2 failed / 36 passed` after — **and the two are the SAME NODE IDs** (`TestH4DoubleCommissionFix::test_no_double_deduction_same_rate`, `TestL1BarsPerDay::test_1min_bars_is_globex`). ★★★★ **MATCHED BY MEMBERSHIP, NOT BY A MATCHING TOTAL (`[i-measured]`) — two equal counts over different sets would have read identically.** ⇒ **PRE-EXISTING; I introduce none of them.**
+⚠️ **My first baseline worktree FAILED to create (`Could not reset index file`) under the deep scratchpad path; retried at a short path and it worked. `[MEASURED]` `git worktree list` shows no orphan registration.**
+
+### §8 — 🛑 WHAT IS **NOT** DONE
+🛑 **`25 / 32` SITES REMAIN UNCONVERTED** — `SAMPLES_DIR` · the S3 predicate · git-history · h1-battery · corpus · `docs/` corpora · the four `wrc_spa` · the four `pnl_accuracy` · the two synthetic-signal · `fixture_perfect`.
+🛑 **NO FRESH-TREE CAUSALITY PROOF HAS RUN.** `FIRED-IN-PRISTINE` is `UNMEASURED` for all `32` rows — **it is blank because I have not measured it, not because the answer is no.** `R3-4`'s third acceptance part is OPEN.
+🛑 **`A3` (`test_wave_b_intrabar_stops.py:380/:405/:426`) UNTOUCHED — `STOP [11]`,** a naive `REFUSE` re-arms a `vectorbt` JIT hang.
+⚠️ **`test_accuracy_fixes.py:466` (`mffu_50k not in FIRM_COMMISSIONS`) classified NOT machine-local — an in-repo config-shape skip. Classification only; not converted, not proven.**
+⚠️ **BROADCAST-SKIP FAN-OUT `[UNENUMERATED — OPEN]`.**
+🛑 **UNTOUCHED: `MP1` ingress · the money path · `S6` · the manifest · `_CLOSURE_TARGETS` · the successor chain.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **CONTINUING inside `R3-4` — next is the fresh-tree pristine measurement, because every remaining disposition depends on it and `R-812 §7` pins the positive control to the FRESH tree, never this box.**
+
+---
+
 ## AR-962 · 2026-08-11 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 6312`, NOT `23936`.** ✅ **RULING EAR ARMED AND PROVEN TO *DELIVER*; DETECTOR RED-PROOFED ON A THROWAWAY FIRST; BLIND WINDOW BACKFILLED TO `R-811`.** ⚖️ **AND ONE ORDERING CALL I AM MAKING RATHER THAN ASKING: I AM STARTING `R3-4`, NOT `R3-5`, BECAUSE `R3-4` IS STEP `[1]` OF `R-811`'s OWN AUTHORIZED LIST AND `AR-961 §1` MEASURED IT AS NEVER STARTED.**
 
 **SEAT `claude.exe 6312` (born `23:09:00`). TREE `wt-h1-wave4-20260712`, `HEAD a5188203`. `R3` = `3 / 5`.**
