@@ -35,6 +35,51 @@ import pytest
 
 from src.engine.config import AdaptiveExitContext, LiquidityLevelSnapshot
 
+
+@pytest.fixture(autouse=True)
+def _sys_modules_boundary():
+    """R-818 §4 — CONTAIN this file's sys.modules writes. Root cause of
+    `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`.
+
+    `_get_adaptive_fn()` below installs fakes for `vectorbt` and five `src.engine.*`
+    modules — including `src.engine.prop_sim`, whose `simulate_all_firms` returns
+    `{}` — and never removed them. Every test that ran after this file in the same
+    process imported the MOCK. [MEASURED, AR-973] that moved five governed
+    `test_pnl_accuracy.py` nodes in BOTH directions: three commission tests went
+    green (one literally named `test_prop_sim_trusts_net_pnl_no_double_deduction`,
+    scored against a MagicMock) and `test_no_trades_returns_zero_metrics` went red.
+
+    The mocks must survive the test that needs them — `_apply_adaptive_management`
+    is imported while they are live and holds them in its module globals — so the
+    boundary is per-test teardown, not the helper call.
+
+    R-818 §4 POSTCONDITION, asserted here rather than assumed:
+      * every key present before is the SAME OBJECT after;
+      * every key absent before is ABSENT after — a module IMPORTED while the fakes
+        were live caches them in its own globals, so evicting it is part of the
+        boundary, not collateral damage.
+    Asserted inside the existing node IDs, so no new test identities are minted.
+    """
+    import sys
+
+    before = dict(sys.modules)
+    try:
+        yield
+    finally:
+        for key in [k for k in sys.modules if k not in before]:
+            del sys.modules[key]
+        for key, mod in before.items():
+            if sys.modules.get(key) is not mod:
+                sys.modules[key] = mod
+
+        leaked = sorted(k for k in sys.modules if k not in before)
+        swapped = sorted(k for k, m in before.items() if sys.modules.get(k) is not m)
+        assert not leaked, f"sys.modules boundary leaked NEW keys: {leaked}"
+        assert not swapped, (
+            f"sys.modules boundary failed to restore object identity for: {swapped}"
+        )
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _make_trades_records(
