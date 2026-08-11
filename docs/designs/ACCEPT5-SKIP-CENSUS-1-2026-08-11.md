@@ -668,3 +668,35 @@ AND THE WORKTREE'S CONTINUED EXISTENCE WAS MAKING IT LOOK OTHERWISE.`**
 ⚡ **NOT REPAIRED HERE: the next authoritative run belongs AFTER `RATIFY-1` (`R-821 §2`), and `[C]` already
 requires unique per-child receipt dirs. ⇒ RECORDED so `RATIFY-1` inherits the requirement that its receipt
 dir live INSIDE the repo tree or be hashed into the census at write time, never in a seat-local scratchpad.**
+
+### 13.2 🛑 I CORRECT `§13`'s OWN CLAIM — `git worktree remove` REFUSED AND IT WAS RIGHT
+🛑 **`§13` STATED *"neither worktree contained a single byte that is not reproducible from a commit on
+`origin`."* THAT IS `[RETRACTED]`.** `git worktree remove` refused `wt-accept5-pin-20260811` — *"contains
+modified or untracked files"* — **and the refusal was CORRECT.**
+⚠️ **MY ENUMERATION WAS TOO NARROW: I ran `git status --porcelain` (default), read one modified tracked
+file, and generalised to "no evidence".** `[MEASURED HERE, `--untracked-files=all` + `--ignored`]`:
+```
+modified tracked   1     docs/wave25-exit-engine-ab-report.md
+untracked          0
+IGNORED          344     243 src/engine/__pycache__ · 96 .numba_cache · 5 scripts/__pycache__
+```
+✅ **THE `344` IGNORED ARE ALL BUILD CACHE — `[MEASURED]` searched for `run-*` / `accept` / `junit` /
+`receipt` / `*.xml`: the only hits are `.pyc` files. `§13.1`'s finding STANDS: the canonical run's receipts
+were never in this worktree.**
+🛑 **BUT THE MODIFIED FILE IS NOT BYTE-IDENTICAL TO THE MAIN WORKTREE'S COPY, SO "REPRODUCIBLE FROM A
+COMMIT" WAS FALSE AS WRITTEN:**
+```
+pin worktree  sha256 27aea7cdbbdd130c2ae6a5686d48d251daf9df2350853ecbc93e4d9712a5bc02
+main worktree sha256 0ff352c12fed8d85344edce7dc15c0cbdb2d9fcbbff719bb9fd639b8d087fd4b
+ONLY semantic delta:  **Run date:** 2026-08-11 06:04 UTC   (pin)
+                      **Run date:** 2026-08-11 06:08 UTC   (main)
+remainder: line-ending difference only; every measured value identical
+           (P&L 1500.00 · Sharpe 1.20 · MaxDD 800.00 · trades 20 · Overall Gate PASS)
+```
+⇒ ✅ **PRESERVED BY RECORD, THEN REMOVED.** The pin copy is a generated Wave-25 A/B report belonging to
+neither seat, whose sole unique content is the line quoted above; with that line and the main worktree's
+copy it is fully reconstructible. **`--force` used ONLY after this record existed.**
+★★★★★ **`I WROTE "NOT A SINGLE BYTE" FROM A DEFAULT `git status` THAT HIDES IGNORED FILES, AND THE TOOL I
+WAS ABOUT TO OVERRIDE WITH `--force` WAS THE ONLY THING THAT KNEW BETTER. THE REFUSAL WAS THE MEASUREMENT.`**
+⚠️ **AND THE GENERAL FORM, WHICH IS THE PART WORTH KEEPING: `A CLEAN `git status` IS NOT AN EMPTY DIRECTORY.
+AN ABSENCE CLAIM OVER A WORKING TREE MUST NAME WHICH CLASSES IT ENUMERATED — TRACKED, UNTRACKED, IGNORED.`**
