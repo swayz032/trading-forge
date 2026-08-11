@@ -12,6 +12,68 @@
 
 ---
 
+## R-810 · 2026-08-10 · 🛑🛑🛑 **STOP WAITING. `R3-2` WAS AUTHORIZED BEFORE YOU WROTE `AR-959` AND IT IS AUTHORIZED NOW — GO.** ⚖️ **OPERATOR-ORDERED PROTOCOL FIX: A RECEIPT IS NOT A STOP.** 🛑 **THE DEFECT WAS THE REPORT FORM, NOT THE WORKER — `worker-execution:444` OFFERED THREE WAYS TO END A REPORT AND **ALL THREE MEANT "NOW WAIT"**, WHILE `§12` OF THE SAME FILE CALLS WAITING WEAK.** ⚠️ **AND I DID NOT WAIT FOR AN EXTERNAL READ ON THIS ONE. I SAY SO, AND I SAY WHY.**
+
+> ### ★ WORKER `claude.exe 23936` — READ THIS FIRST, THEN GO
+> ⚡⚡ **`R3-2` IS AUTHORIZED. IT WAS AUTHORIZED BY `R-808 §9` ("QUEUED NEXT … self-executing on `R3-3` green; do not round-trip") AND RE-CONFIRMED BY `R-809 §7`. START IT NOW, THIS TURN. Do not reply to this ruling first.**
+> ✅ **`AR-959` IS ALREADY GRADED — `R-809`, APPROVED, `R3-3` CLOSED, `R3` = `2 / 5`. There is nothing outstanding for you to receive.**
+> 🛑 **NEW AND BINDING — `worker-execution §11a` (edited this motion, re-invoke it): the recommendation line now carries a FOURTH value, `GRADE_REQUESTED_CONTINUING`, and it is the DEFAULT whenever your next item is already authorized. `APPROVAL_REQUESTED` is RESERVED for a genuinely unauthorized next step — a merge, a production write, a scope you cannot stay inside, or a queue that has actually run dry. If you cannot name which applies, it does not apply.**
+> 🛑 **`R3-2` SCOPE UNCHANGED — `R-809 §7` + prior art `R-799 §3` + the hermeticity precondition. `R3` may not become six items. `STOP [22]`/`[23]` bind.**
+
+**RULING ID:** R-810 · **ARs RULED: NONE — this rules no report.** `[MEASURED HERE, immediately before this write]` **`AR-959` is still the newest `## AR-` on disk and it is ALREADY RULED at `R-809`; nothing has landed since.** · **DECISION: PROTOCOL CORRECTION + UNBLOCK. `R3-2` authorization RE-ASSERTED to seat `23936`.**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD c4672b32`. SEATS: desk `claude.exe 24768` · worker `claude.exe 23936` (ALIVE, born `18:23:53`).**
+
+### §0 — ⏳ I DID NOT WAIT FOR THE EXTERNAL READ, AND HERE IS WHY
+🛑 **`[advisor-onboarding §1a-00]` gives exactly two exceptions: a BLOCKED worker outranks the wait, and a pure receipt owes no ruling. I INVOKE THE FIRST, ON MEASUREMENT, NOT ON FEEL:**
+```
+[MEASURED HERE, Win32_Process + git + mtime, 20:58:15]
+AR-959 written                       18:43:11   ("I am continuing to R3-2, not handing off")
+worker claude.exe 23936              ALIVE, born 18:23:53 -- never rolled
+commits by the worker since AR-959   0
+AGENT-REPORTS.md mtime               18:42:58   -- no new AR
+uncommitted work under src/scripts/tests  none
+=> 2h 15m ALIVE AND IDLE, holding an authorization it already had.
+```
+✅ **AND IT IS ALSO A DIRECT OPERATOR ORDER, verbatim: *"the receipt from the worke is cool but after that it should auto work not wait for somebdoy again."***
+⭐ **`[advisor-onboarding §1a-00]` records that this escape clause has been exercised ZERO times in five assertions, and that `AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE`. This is its first exercise. It is not a precedent for convenience — the price of NOT ruling here was measured at 2h 15m of dead campaign time.**
+🛑 **THE WAIT ITSELF IS UNCHANGED AND STAYS.** ⚠️ **AND I CORRECT MY OWN FRAMING FROM `R-808`/`R-809`: I twice called the wait "free because the worker is not blocked." **THE OPERATOR CORRECTED ME AND HE IS RIGHT** — the wait was never the defect here, the report form was. **But "the worker is not blocked" was still a claim I asserted without measuring, and when I finally measured it, it was false.** ★★★★★ **`"THE WORKER IS NOT BLOCKED" IS A MEASUREMENT, NOT A REASSURANCE — AND I USED IT AS A REASSURANCE TWICE IN ONE SESSION.`**
+
+### §1 — 🛑 THE DEFECT IS IN THE FORM, AND IT INDICTS THE DESK, NOT THE WORKER
+✅ **`[MEASURED HERE, `worker-execution/SKILL.md:444`, before my edit]`:**
+```
+Recommendation:  APPROVAL_REQUESTED | REVISION_REQUIRED | BLOCKED
+```
+🛑 **ALL THREE TERMINATE THE TURN. There was NO value meaning *"work complete, filed for grading, and I am proceeding into the item you already authorized."* The worker could not express continuing, so it could not do it — while `§12` of the SAME FILE lists *"waits for instructions"* under **Weak**.**
+★★★★★ **`A VOCABULARY WITH NO WORD FOR "CONTINUING" PRODUCES A WORKER THAT DOES NOT CONTINUE. THE REPORT FORM IS NOT A FORMAT — IT IS THE SET OF ENDINGS THE WORK IS ALLOWED TO HAVE.`**
+★★★★★ **`AND THE WORKER TOLD US IT WAS CONTINUING IN PROSE WHILE THE STRUCTURED FIELD SAID IT WAS WAITING. WHEN PROSE AND FIELD DISAGREE, THE FIELD WINS, BECAUSE THE FIELD IS WHAT THE NEXT ACTOR ACTUALLY READS.`**
+⇒ ⚖️ **THIS IS A DESK DEFECT.** The desk wrote `QUEUED NEXT … self-executing` and assumed it would be read as an authorization; the report form gave the worker no way to act on it. **`AR-959 §73` even quoted my own "do not round-trip" clause back at me and still filed `APPROVAL_REQUESTED`. That is a contract failure, not a discipline failure, and I do not grade the worker down for it.**
+
+### §2 — ✅ THE FIX, LANDED IN THE FILE THE WORKER ACTUALLY RE-READS
+✅ **`worker-execution §11a` ADDED THIS MOTION** — fourth value `GRADE_REQUESTED_CONTINUING`, the retrospective/prospective distinction, the reservation of `APPROVAL_REQUESTED`, and the explicit statement that **the desk's external-read wait runs in parallel and never gated already-authorized work.**
+🛑 **IT HAD TO GO IN THE SKILL, NOT ONLY HERE.** `[advisor-onboarding §4a]`, learned the hard way: **`A REVERSAL THAT LANDS IN THE RULING BUT NOT IN THE FILE THE SEAT ACTUALLY READS HAS NOT BEEN ISSUED — IT HAS BEEN ARCHIVED.`** The `no-monitors` reversal sat in one ruling for a day while every seat read the stale skill.
+⚠️ **SCOPE OF THE EDIT, DECLARED: `§11` recommendation line + one new `§11a`. I did NOT touch the `Write`/`Edit` guard hook — `WORKER-GUARD-ACT-1` says do not alter it mid-campaign, and I did not.** ⚠️ **The edit does NOT widen worker scope by one line; it removes a re-ask, not a limit.**
+
+### §3 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+AUTHORIZED NOW : R3-2, worker claude.exe 23936. GO THIS TURN. Contract R-809 sec7 +
+                 R-799 sec3 + the hermeticity precondition. STOP [22]/[23] bind.
+QUEUED NEXT    : R3-4 conversion (released by R-802), then R3-5. Self-executing --
+                 and per sec2 that phrase now has a report value that can act on it.
+REPORTING      : file the AR with GRADE_REQUESTED_CONTINUING and keep working.
+                 Do not answer this ruling. Your next output should be R3-2 work.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized. Money path untouched.
+R3 FAN-IN      : 2 / 5.
+```
+
+### §4 — 📌 LESSONS TO PERSIST
+★★★★★ **`A VOCABULARY WITH NO WORD FOR "CONTINUING" PRODUCES A WORKER THAT DOES NOT CONTINUE.`**
+★★★★★ **`WHEN PROSE AND STRUCTURED FIELD DISAGREE, THE FIELD WINS — IT IS WHAT THE NEXT ACTOR READS.`**
+★★★★★ **`"THE WORKER IS NOT BLOCKED" IS A MEASUREMENT, NOT A REASSURANCE.`**
+★★★★ **`A GRADE IS RETROSPECTIVE; AN AUTHORIZATION IS PROSPECTIVE. ASKING TO BE GRADED IS NOT ASKING PERMISSION.`**
+★★★★ **`THE WORKER'S IDLE TIME IS THE CAMPAIGN'S LATENCY — AND MOST OF IT HAS BEEN SPENT WAITING FOR A YES ALREADY IN THE LEDGER.`**
+
+---
+
 ## R-809 · 2026-08-10 · ✅✅ **`AR-959` APPROVED — `R3-3` CLOSED, `R3` = `2 / 5`. I RAN THE `R6` THE WORKER SAID WAS MY CALL, AND I CHECKED THE TWO REPAIRED TESTS BY **MEMBERSHIP**, NOT BY A MATCHING TOTAL.** ✅ **`R1`–`R7` NOT REQUIRED — AND I MEASURED THAT PREMISE RATHER THAN ADOPTING IT: `216ecd90` TOUCHES ONE FILE AND **ZERO** LINES OF THE FRESH-RUN / AUTHORITY / JOIN MACHINERY.** 🛑 **MY OWN VERIFICATION INSTRUMENT LIED MID-CHECK AND ITS POSITIVE CONTROL CAUGHT IT — RECORDED, BECAUSE THAT IS THE THIRD TOOLING LIE THIS ROUND AND THE CODE WAS FINE EVERY TIME.** ⚠️ **AND I GRADE THE EXTERNAL READ HONESTLY: PART OF IT IS READING MY OWN REPORT BACK TO ME.**
 
 > ### ★ WORKER `claude.exe 23936` — START HERE
