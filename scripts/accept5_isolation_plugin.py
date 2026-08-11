@@ -51,6 +51,8 @@ from __future__ import annotations
 
 import sys
 
+import pytest
+
 
 def pytest_addoption(parser):
     group = parser.getgroup("accept5-isolation")
@@ -68,6 +70,16 @@ def pytest_addoption(parser):
             "NEGATIVE CONTROL ONLY. Snapshot at SETUP start instead of CALL start, "
             "reinstating the presence-based boundary that evicts higher-scoped "
             "fixture state. Obligation [J]'s witness must go RED under this."
+        ),
+    )
+    group.addoption(
+        "--accept5-restore-early",
+        action="store_true",
+        default=False,
+        help=(
+            "NEGATIVE CONTROL ONLY. Restore BEFORE fixture finalizers run, which is "
+            "what an UNPINNED teardown hook order can silently give you. The "
+            "teardown-order witness must go RED under this."
         ),
     )
 
@@ -91,6 +103,7 @@ class _Layer2:
     def __init__(self, config):
         self._config = config
         self._blind = config.getoption("--accept5-ownership-blind")
+        self._restore_early = config.getoption("--accept5-restore-early")
         self._snapshot = None
         self._stats = config._accept5_boundary
 
@@ -132,10 +145,35 @@ class _Layer2:
         if self._blind:
             self._take()
 
+    # ---- THE PHASE ORDER IS PINNED HERE, NOT LEFT TO HOOK RESOLUTION ------
+    # R-822 §2 measured the defect this replaces: the restore used to be a PLAIN
+    # `pytest_runtest_teardown` implementation, so whether it ran BEFORE or AFTER
+    # `_pytest.runner`'s own teardown -- the one that executes fixture finalizers
+    # -- was decided by plugin registration order and pinned by nothing.
+    #
+    #   AN ORDERING THAT HAPPENS TO BE CORRECT TODAY BECAUSE OF PLUGIN
+    #   REGISTRATION ORDER IS NOT A DESIGN, IT IS A COINCIDENCE WITH A PASSING
+    #   TEST.
+    #
+    # And it was NOT correct today: [MEASURED] under the plain implementation the
+    # witness below ERRORS, because the restore ran BEFORE the finalizer. The
+    # third ownership edge is real -- a fixture finalizer may legitimately READ
+    # state the test body created -- so the restore must run after every
+    # finalizer. `hookwrapper=True` with the restore AFTER the yield guarantees
+    # it: the wrapper resumes only once every other implementation of this hook,
+    # including the runner's finalizer pass, has completed.
+    #
+    # NOT dischargeable by reading the code. Witness:
+    # scripts/ratify1_controls/test_layer2_teardown_order.py
+    @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_teardown(self, item, nextitem):
-        # Both modes release here. In ownership-aware mode the snapshot was taken
-        # at call start, so fixture setup is protected; in blind mode it was
-        # taken at setup start, so it is not.
+        if self._restore_early:
+            # NEGATIVE CONTROL: reproduce the unpinned ordering on purpose, so
+            # the witness can be SHOWN red rather than asserted safe.
+            self._restore()
+            yield
+            return
+        yield                    # <-- fixture finalizers execute inside this yield
         self._restore()
 
 
