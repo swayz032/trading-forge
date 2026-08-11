@@ -714,6 +714,31 @@ def main():
             for n in supplemental:
                 print(f"          + {n}")
 
+        # A present FILE is not a present NODE ID. Renaming a governed test away
+        # leaves the file intact, so the `gone` check above passes and pytest
+        # then exits 4 -> "PYTEST RUN INVALID": correct, and illegible. It reads
+        # as broken infrastructure when the truth is that a governed obligation
+        # was renamed. Pre-flight the exact node IDs so the refusal names ITS
+        # OWN layer. `A FAIL-CLOSED THAT NAMES THE WRONG LAYER COSTS THE NEXT
+        # SEAT AN INVESTIGATION.`
+        if supplemental:
+            probe = subprocess.run(
+                [sys.executable, "-m", "pytest", *supplemental,
+                 "--collect-only", "-q", "--no-header", "-p", "no:cacheprovider"],
+                cwd=REPO, capture_output=True,
+                encoding="utf-8", errors="replace",
+            )
+            uncollected = [n for n in supplemental if n not in probe.stdout]
+            if uncollected:
+                for n in uncollected:
+                    print(f"      REQUIRED COLLECTION MEMBER MISSING: {n}")
+                print(f"ACCEPTANCE INSTRUMENT REFUSED - REQUIRED COLLECTION MEMBER "
+                      f"MISSING: {len(uncollected)} chain-required node ID(s) are no "
+                      f"longer collectable, though their files still exist. A governed "
+                      f"obligation was renamed or removed; this is not a pytest usage "
+                      f"error. pytest was not started for scoring.")
+                raise SystemExit(2)
+
         cmd = [sys.executable, "-m", "pytest",
                *[f"src/{m}" for m in resolved], *supplemental,
                "-q", "--no-header", "-p", "no:cacheprovider",
