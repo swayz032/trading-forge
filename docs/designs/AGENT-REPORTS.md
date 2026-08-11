@@ -4,6 +4,70 @@
 
 ---
 
+## AR-983 · 2026-08-11 · ✅ **REAL `[F]` SATISFIED ON A GOVERNED FILE · `[C]` AND `[D]` CLOSED TO `R-823 §5`'s STRICT CONTRACT.** ⚖️ **I CARRY THE DESK'S MECHANISM CORRECTION AND OWN THE ERROR: `black_swan` NEVER TOUCHES `prop_sim`.** 🛑🛑 **AND I ANSWER `R-822 §6`'s FOUR QUESTIONS HONESTLY — THE ANSWER SET IS **NOT** `YES/NO/YES/YES`, SO THE RULE FIRES AND I HAND OFF **BEFORE** LAUNCHING `[G]`.**
+
+**SEAT `claude.exe 27448`. `HEAD 8bde6b71`. RULING `R-823 §8`. TREE `wt-h1-wave4-20260712`. 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal moved; `CLUSTER-E` HELD.**
+
+### §1 — ⚖️ THE MECHANISM CORRECTION, CARRIED AND OWNED (`R-823 §8[7]`)
+🛑 **`AR-981 §1` wrote that the `7` pass *"BECAUSE a fake replaced the real module"* and repeated the `prop_sim`/`MagicMock` sentence. THAT ATTRIBUTION IS WRONG AND THE DESK MEASURED IT: `test_black_swan_evaluator.py` contains **ZERO** occurrences of `prop_sim`; its only `sys.modules` write is `:36 setdefault("vectorbt", ...)`. The `prop_sim` mock is CULPRIT 1's (`test_apply_trade_management_branching.py:182`).**
+✅ **THE SUPPORTED SENTENCE, WHICH I NOW USE: `BLACK-SWAN COLLECTION-TIME MODULE POLLUTION CHANGES SEVEN PnL OUTCOMES.`**
+⚖️ **HOW I MADE THE ERROR, because the shape matters more than the instance: I had the most quotable line in the campaign — *"the test named after the thing it trusts went green while that thing was a mock"* — and I attached it to the contaminator I happened to be measuring. `[wrong-mechanism]`: a wrong mechanism gets obeyed.** ★★★★★ **`TWO CONTAMINATORS WITH THE SAME VICTIM ARE NOT THE SAME MECHANISM, AND A SENTENCE GOOD ENOUGH TO QUOTE IS THE ONE LEAST LIKELY TO BE RE-DERIVED BEFORE IT IS REUSED.`**
+✅ **The finding itself survives intact and I do not soften it: a prop-sim CORRECTNESS test was made green by UNRELATED PREDECESSOR STATE.**
+
+### §2 — ✅ REAL `[F]`, ON A GOVERNED FILE, BY EXACT NODE ID
+**Disposable plant in a DISPOSABLE WORKTREE at `5956393e` — `[MEASURED]` the shared tree's `test_anchor_locator.py` was never modified (`git status` empty on that path, before and after).**
+```
+WITHOUT Layer 2   exit=1   FAILED ...::test_zz_planted_observer_must_not_see_it
+                           -> a later governed node OBSERVES the earlier node's write
+WITH    Layer 2   exit=0   14 passed   [ACCEPT5-LAYER2] keys_evicted=1
+                           -> it does not, and exactly ONE key was evicted
+original 12 governed nodes unaffected in BOTH arms
+```
+⇒ **`[F]` SATISFIED: one polluter, the COMMON mechanism, not a `28`-file campaign.** ⭐ **The WITHOUT arm is load-bearing — a boundary accepted because everything stayed green is not a boundary anyone measured.**
+
+### §3 — ✅ `[C]` AND `[D]` CLOSED TO THE `R-823 §5` CONTRACT
+✅ **`[C]` (`32da0476`) — STRICT, FAIL-CLOSED, no `.get(field, [])` anywhere:** every outcome list must EXIST and be a `list` · every `n_*` must exist and be an `int` · the lists must be **MUTUALLY DISJOINT by node ID** · the union must reconcile with the record's OWN totals · `n_collected` must match its list. **Schema drift REFUSES THE CHILD.** ⭐ **This is the direct remedy for `AR-980 §2`'s defect: a missing key returned `{}` and accused `39` healthy tests.**
+✅ **Each receipt now binds: `run_id` · **exact commit SHA** · target · return code · `n_collected` · exact outcome membership · **JSON `sha256`** · **JUnit `sha256`** · Layer-2 witness · validity verdict. ONE common child path, not `108` bespoke receipts.**
+✅ **EXIT `5` IS NOW AUTHORITY-DERIVED:** accepted only when the record exists AND `n_collected == 0` AND **the population authority requires ZERO nodes from that file**, derived from `population_successor` — 🛑 **never a hand-maintained `EMPTY_HELPER_FILES` roster, which would be a second population registry in a helper's costume.**
+✅ **`[D]` CLOSED THROUGH THE **REAL PARENT ORCHESTRATION PATH**, not the validator:**
+```
+restored control first   parent exit=0   89 nodes, invalid children 0
+plant (syntax error in one governed child)
+                         parent exit=2   ACCEPTANCE INSTRUMENT REFUSED - CHILD
+                                         EXECUTION INVALID: 1 child(ren)
+                         names the child : src/engine/tests/test_anchor_locator.py
+                         names the reason: pytest exited 2 ... not a valid
+                                           execution status, scored nothing
+                         NO partial scoring -- no "5 succeeded, ignore one"
+```
+⭐ **AND THE VALIDATOR BATTERY CAUGHT MY OWN STALE CONTROL: after the exit-`5` change it read `4/5`. `[MEASURED]` the CODE was right — it now refuses `-k` deselection for a STRONGER, authority-derived reason — and my control's NEEDLE was the stale part.** ★★★★ **`THE SURPRISING RESULT ACCUSED THE INSTRUMENT FIRST AND THE INSTRUMENT WAS INDEED AT FAULT. I FIXED THE NEEDLE, NOT THE GUARD.`** **Now `5/5` DISCRIMINATES.**
+
+### §4 — 🛑🛑 `R-822 §6`'s FOUR QUESTIONS, ANSWERED WITHOUT SOFTENING
+> **(1) Are `[C]`/`[D]`/`[E]`/real-`[F]`/real-`[J]` all committed and receipt-complete?** — 🛑 **NO.**
+> `[C]` ✅ · `[D]` ✅ · `RATIFY-[E]` ✅ (`R-823 §2`) · real `[F]` ✅ — **but real `[J]` is NOT satisfied.** `AR-982` reports its negative arm does NOT discriminate on governed code, and `R-823 §8[2]` is explicit: *"`[green-check]` IS THE GOVERNING LAW… do not report real `[J]` as satisfied on a non-discriminating arm."* **I reported the limit plainly rather than claiming it; the desk rules when the read lands. Either way the answer to this question today is NO.**
+> **(2) Is any architecture change from those controls still unresolved?** — ✅ **NO.** The teardown-order pin is landed and witnessed (`aff86d76`); `R-823 §1` adopted the lifetime contract. Nothing is half-changed.
+> **(3) Can I state the `[G]`/`[H]`/`[I]` oracle without re-reading several rulings?** — ✅ **YES.** `[G]`: canonical vs REVERSE child order over the full `108`, **EXACT NODE OUTCOME MAP identical**, never counts, never tuned toward the old `31` (`STOP [37]`). `[H]`: `≤10` min serial; exceed ⇒ **STOP AND REPORT**, never reach for concurrency. `[I]`: twice at identical pin/env, membership equivalent modulo timestamps and run IDs.
+> **(4) Can I compare thousands of exact node outcomes without truncating or summarizing mismatches away?** — ⚠️ **NOT WITH CONFIDENCE.** The machinery can (`aggregate.json` carries the full map; the comparator is exact-by-node-ID). **The risk `R-822 §6` actually names is the SEAT, not the script — and this seat has been continuously loaded since `R-818`, through two cluster repairs, five ARs and the whole `RATIFY-1` build. Two `2419`-node maps plus `[I]`'s repeats is precisely the volume where a tired reader summarises a mismatch away.**
+
+⇒ 🛑 **THE RULE FIRES: `R-822 §6` says `YES / NO / YES / YES` keeps the seat and ANYTHING ELSE hands off before launching `[G]`. Mine is `NO / NO / YES / NOT-WITH-CONFIDENCE`. I HAND OFF.**
+⚖️ **AND I AM NOT USING THIS TO STOP EARLY: `R-821 §6`/`R-823 §8` gave me `[C]` `[D]` real-`[F]` and I closed ALL of them in this seat. The checklist exists so this call is objective rather than a feeling, and it points the other way now.** ★★★★★ **`NO HERO RUN — A SEAT THAT RUNS OUT MID-RATIFICATION LEAVES THE INSTRUMENT HALF-REPLACED. AND STOP [42] MAKES [G] ATOMIC, SO THE ONLY SAFE MOMENT TO LEAVE IS BEFORE IT STARTS, WHICH IS NOW.`**
+
+### §5 — 📌 HANDOFF: FAN-IN AND EXACTLY WHAT THE NEXT SEAT DOES
+**FAN-IN `7 / 10` obligations.** ✅ `[A]` `[B]` `[C]` `[D]` `[E]` `[F]` + the `§9[6]` teardown edge. ⚠️ `[J]` **aware arm passes, negative arm does not discriminate — DESK-OWNED, unruled.** 🛑 `[G]` `[H]` `[I]` **UNSTARTED — none is blocked; all three are simply not begun.**
+**THE NEXT SEAT, SO NOTHING IS RE-DERIVED:**
+- **`[G]`** — `python scripts/accept5_isolated_runner.py --out-dir <dir>` then the same with `--reverse`. **`108` children each. Compare the two `aggregate.json` `outcomes` maps BY EXACT NODE ID.** 🛑 **`STOP [42]`: the ordered pair is ATOMIC — do not stop between forward and reverse.** 🛑 **`STOP [41]`: `108` children ≠ `2419` nodes; report both.**
+- **`[H]`** — wall clock from the same runs. **`>10` min serial ⇒ STOP AND REPORT. NO concurrency** (it buys filesystem/DB/artifact races).
+- **`[I]`** — repeat once more at the identical pin; membership equivalent modulo timestamps/run IDs.
+- **THEN** the six-field census backfill across all `32` rows · ONE successor disposition seal · the isolated canonical authority run · close `R3-4` · `R3-5`.
+🛑 **`STOP [44]`: the `7` are `UNEARNED GREEN`, NOT adjudicated, KEEP THE REDS. `STOP [45]`: `RATIFY-[E]` ≠ `CLUSTER-E`. `STOP [37]`: never tune toward the old `31`.**
+🛑 **`R-823 §7`: the final `RATIFY-1` commit MUST resolve from `origin` before promotion — NO LOCAL-ONLY AUTHORITY.**
+✅ **NOTHING IS HALF-BUILT. NO SUBAGENT WAS DISPATCHED, so no delivery is owed to this seat. NO DISPOSABLE WORKTREE IS OUTSTANDING** (`[MEASURED]` `wt-ratify1-F-plant` and `wt-ratify1-D-plant` both removed and verified gone; `git worktree list` carries neither).
+🛑 **THE RULING EAR DIES WITH THIS SEAT — the next seat must re-arm it and backfill from `R-823`.**
+
+**RECOMMENDATION: `APPROVAL_REQUESTED`** — and I use it in its reserved sense (`worker-execution §11a[3]`): **the next step is `[G]`, and `R-822 §6`'s own objective checklist says this seat may not launch it.** **A fresh worker session is needed.**
+
+---
+
 ## AR-982 · 2026-08-11 · ✅ **REAL `[J]`: THE OWNERSHIP-AWARE BOUNDARY CHANGES **ZERO** GOVERNED OUTCOMES ACROSS ALL `9` HIGHER-SCOPED FIXTURES.** 🛑🛑 **AND THE NEGATIVE ARM DOES **NOT** DISCRIMINATE ON GOVERNED CODE — I REPORT THAT RATHER THAN GLOSS IT, AND I MEASURED **WHY**: NOT ONE OF THE `9` INSTALLS A `sys.modules` KEY TODAY. ABSENT TRIGGER, NOT BROKEN CONTROL.** ⚠️ **THE HAZARD IS ONE ENVIRONMENT VARIABLE AWAY FROM LIVE.**
 
 **SEAT `claude.exe 27448`. `HEAD b1fed2e1`. RULING `R-822 §9[5]`. TREE `wt-h1-wave4-20260712`.** ⭐ **Control committed before it ran.**
