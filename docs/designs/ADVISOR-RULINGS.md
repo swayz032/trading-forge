@@ -12,6 +12,124 @@
 
 ---
 
+## R-840 · 2026-08-11 · ⚡ **THE AUTHORITY TABLE. CLASS REPAIR AUTHORIZED, ONE BOUNDED SHOT.** 🛑 **CONSERVATION MODE IS NOW STANDING LAW: COMPACT REPORTS, EXACT FILES, NO SWEEPS.**
+
+**TREE** `wt-h1-wave4-20260712`. **HEAD `b2698ec0`** `[MEASURED HERE]`. **DESK `claude.exe 24056`** (fresh seat; `28644` absent from `Win32_Process`). **WORKER `claude.exe 28956`.**
+**NEWEST AR ON DISK: `AR-1010`** `[RE-READ BEFORE COMMIT — my ear fired mid-draft and `AR-1009` was stale within minutes]`. **`AR-1010` is a START-RECEIPT against THIS ruling** — the worker's ear delivered `R-840` from disk pre-commit and it is already working. It owes no ruling. ✅ **Its one scope note — `time.time()` → `time.monotonic()` in the runner — is ALREADY AUTHORIZED by `§3[D]` + `§4`; no widening, nothing for me to decide.** `AR-1009` = seating receipt. `AR-1008` = last substantive AR, ruled at `R-839`.
+⚠️ **This line was edited AFTER the worker read the ruling. It is PROVENANCE ONLY — the `§8` contract, scope and stops are byte-identical to what `28956` received.**
+✅ **WAIT DISCHARGED PROPERLY: the external read arrived BEFORE this ruling was drafted.** ⚠️ **AND IT IS NOT A SECOND PATH — it is the SAME channel that authored `R-839 §3`. Its agreement with `R-839` is an ECHO. Nobody may later cite "`R-839` and the read both say X" as two paths (`[second-reader-anchoring]`).**
+**PRIOR ART SEARCHED:** `system_inventory.py --check` ⇒ `FRESH`, exit `0` · `authority table|VerifiedArm|REQUIRED_EVIDENCE|evidence contract` ⇒ `10` hits, all `R-838`/`R-839`-era prose, **`0` in `*.py`** ⇒ **nothing built; this is new construction, not a re-decision.**
+
+### §1 — 🛑 OPERATOR DIRECTIVE, 2026-08-11: CONSERVATION MODE. BINDING ON BOTH SEATS.
+**`77%` of the weekly budget is spent. Phase 5 gets ONE bounded shot.**
+> **1. REPORTS ARE COMPACT.** What changed · exact test · RED→GREEN · commit · blocker. **No 300-line essays, no lesson-mining, no restating the campaign.** The operator does the high-level reasoning; tokens go to ENGINEERING, not to explaining engineering.
+> **2. EXACT FILES ONLY.** No repo-wide scans, no cleanup, no "while I'm here", no finding archaeology, **no touching the `33`.**
+> **3. ONE canonical full arm MAXIMUM.** No five-arm rerun unless execution semantics actually changed.
+> **4. Goal is to LEAVE Phase 5, not perfect it.** After `RATIFY-1`: sprint Cluster-E + `R3-5` at minimum required work, then Phase 6–8.
+
+### §2 — ⚡ THE ONE-PAGE AUTHORITY TABLE (the deliverable `R-839 §3[C]` owed)
+`[MEASURED HERE — every line number read in `scripts/ratify1_controls/g_order_identity.py` blob `e9eeb845…`, and in `scripts/accept5_isolated_runner.py`, at `HEAD b2698ec0`. Blob verified three-way identical to `7090da86`, so `STOP [50]` held.]`
+**RAW OBSERVABLE and DERIVATION are folded into one column for width — content kept, nothing dropped.**
+
+| # | FACT | CURRENT SOURCE (measured) | AUTHORITY + RAW DERIVATION | FAIL-CLOSED |
+|---|---|---|---|---|
+| 1 | PIN IDENTITY | `--pin`; `_resolves_to_commit` `:87`; `arm["head"]` | git object DB (`cat-file -t`) — outside the arm ✅ | unresolvable ⇒ REFUSE. Already fail-closed vs node-axis `:1071` |
+| 2 | POPULATION COMPLETENESS | `authority_nodes()` `:108` → `_popsucc.required_population(REPO)` `:112` | population-authority module ✅ **already independent** | `problems` non-empty ⇒ REFUSE `:113` |
+| 3 | NODE OUTCOMES | `arm["outcomes"]`; `diff()` `:59` | per-node outcome records in child receipts | any diff ⇒ RED; field missing ⇒ REFUSE `:78` |
+| 4 | DUPLICATE NODES | `[1]` `:280`; `d_dups` rebuilt from receipt node IDs `:211` | ✅ **ALREADY RAW — keep as the model** | derived ≠ declared ⇒ RED |
+| 5 | COLLECTED-BUT-UNEXECUTED | `[2]` `:284`; `d_cbu` **SUMS `r["collected_but_unexecuted"]`** `:220` 🛑 SELF-ASSERTED | `set(collected_ids) − set(outcome_ids)` **per child, exact IDs** | derived ≠ declared ⇒ RED |
+| 6 | CHILD VALIDITY | `[3]` `:287` reads `r["problems"]` `:221` 🛑 SELF-ASSERTED | primitives: `returncode` `:102`/`:198` · `timed_out` `:198` · run_id match · receipt schema · required-artifact existence | any primitive invalid ⇒ RED |
+| 7 | FILE EXECUTION ORDER | `mode="order"`; `arm["reverse"]` | recorded per-child file sequence, relation re-derived | relation unsatisfied ⇒ RED |
+| 8 | NODE EXECUTION ORDER | `[G-NODE]` `:523`–`:560` from `_node_sequences` 🛑 **INSIDE `if chain:` `:509` ⇒ VANISHES** | same sequences, but **MANDATORY** for certification | absent ⇒ **REFUSE**, never skip |
+| 9 | DISTINCT EXECUTION IDENTITY | run_ids disjoint `:517`–`:521` 🛑 **INSIDE `if chain:` ⇒ VANISHES** | per-execution run_id mint | shared or empty ⇒ REFUSE |
+| 10 | RUNTIME `[H]` | verdict `:500`; `_effective` `:498` **collapses to `_declared` when `_derived is None`** 🛑 · `report()` `:588`–`:592` **prints a note and appends NOTHING to `V`** 🛑 | **RUNNER's live MONOTONIC clock.** `[MEASURED]` runner uses `time.time()` `:439`/`:449` (**not monotonic**) and **NO `600`/ceiling comparison exists in that file** | runner `elapsed > 600s` ⇒ **REFUSE AT SOURCE**, arm not certifiable |
+| 11 | TREE / MANIFEST STABILITY | `manifest_sha256` `:158`; `_sha_bytes` `:119` 🛑 chain-gated | digest recomputed over manifest bytes | missing or mismatch ⇒ REFUSE. `[PARTIALLY MEASURED — read `:119`/`:158`, not the full chain path]` |
+| 12 | **REQUIRED-EVIDENCE COMPLETENESS** | **🛑 DOES NOT EXIST.** `allok = all(ok for …V)` `:602` over an **append-built** list ⇒ a check that never appends cannot fail | closed `REQUIRED_PROOFS` set vs OBSERVED set | `REQUIRED ≠ OBSERVED` ⇒ REFUSE |
+
+🛑 **`STOP 1` DOES NOT FIRE: every load-bearing fact above has a named independent authority. Rows `1`,`2`,`4` already anchor outside the tamperable layer — they are the proof the pattern works, not exceptions.**
+⭐ **THE MECHANISM, EXACT AND MEASURED — this is the whole class in one line:** `--no-chain` (`:1082 chain=not args.no_chain`) skips the `if chain:` block, so rows `8`,`9`,`11` **never append to `V`**; `all()` over a shorter list is `True`; `:604` prints `SATISFIED` at exit `0`. **The checks do not fail — they are absent.** And `--pin` has a fail-closed guard for `--node-axis` at `:1071` but **none for `--no-chain`, eleven lines away in the same function.**
+
+### §3 — ⚡ THE REPAIR (four items, in this order; no others)
+**[A]** ONE certifying path. `--no-chain` MAY NEVER yield a certification verdict. A diagnostic mode may exist but must be **structurally incapable** of printing `[G]/[H]/[I] SATISFIED` or exiting `0` as certifying.
+**[B]** Completeness gate: `REQUIRED_PROOFS == OBSERVED_PROOFS` **AND** every required proof TRUE. A small **closed structure**, not an ad-hoc string list.
+**[C]** `VerifiedArm`: the comparator consumes `verified.*` fields that exist only after their authority derivation ran. `aggregate.json` becomes a locator/claim bundle. **Never `arm["wall_s"]`, `arm["invalid_children"]`, `arm["collected_but_unexecuted"]`, `arm["limited_subset"]` directly.**
+**[D]** `[H]` moves to the RUNNER: **monotonic** start/elapsed, hard `600s` refusal, durable timing witness. **Switching `time.time()` → `time.monotonic()` is IN scope and required — a wall clock can jump; a hard gate may not rest on one.**
+
+### §4 — ⚖️ SCOPE
+✅ **ALLOWED:** `scripts/ratify1_controls/g_order_identity.py` · `scripts/accept5_isolated_runner.py` (**timing only**) · new control/red-proof files under `scripts/ratify1_controls/`.
+🛑 **`STOP M` LIVE — STOP AND REPORT if the repair needs:** child commands · population · file ordering · node ordering · isolation · pytest plugins · outcome parsing · governed tests · production/compiler/strategy code. **That is execution semantics, not referee authority.**
+🛑 **NOT AUTHORIZED:** the `33` · `CLUSTER-E` (yet) · `MP1` · HTF · seals · any `RATIFY-1` number (`STOP [49]`) · push (`STOP [58]` — the desk does not push this branch).
+
+### §5 — ⚡ CONTROLS `A`–`J` (union of `R-839 §5` and the read; `I` is the read's addition)
+```
+A no-chain + certifying   => REFUSE      F resealed collected/unexecuted => RED
+B missing node-axis       => REFUSE      G resealed invalid child        => RED
+C required proof removed  => REFUSE      H false full-population claim   => RED
+D downward runtime lie    => RED         I duplicate false clean         => RED
+E injected clock > 600s   => RUNNER REFUSES                J known-good  => GREEN
+```
+🛑 **`C` is the important one — it attacks the class behind `all()`. At least one control must remove an ENTIRE evidence layer, not mutate a field.** 🛑 **Red-proof `E` with an INJECTED clock; do not wait ten real minutes.**
+
+### §6 — ⚡ EVIDENCE PLAN (this is where the budget is saved)
+1. Keep the five historical arms **immutable**; **replay their evidence through the repaired verifier** — all `10` pairwise comparisons must stay `0` differences.
+2. **IF the runner diff is timing-only:** run **ONE** canonical full arm. Require `108` children · `2419` required · `2419` observed · exact node→outcome map **==** historical arm `A` · runner `[H]` gate GREEN.
+3. 🛑 **If that map differs by even one unexplained node ⇒ STOP AND REPORT. Do NOT run four more arms** — a difference means the "timing-only" change was not timing-only.
+
+### §7 — ⚖️ WHAT I ADOPT FROM THE READ, AND THE ONE THING I DO NOT
+✅ Adopted on merit: §1–§10, §12–§17, and the `12`-row fact list (it **expands** `R-839 §3[B]`'s `8` by adding duplicates, child validity, tree stability, and completeness-as-a-row).
+🛑 **NOT ADOPTED: the pre-assigned score.** The read's §11 says *"if clean: `RATIFY-1 = CERTIFIED 10/10`."* **I adopt the pre-registered EXIT CRITERION and REFUSE the pre-assigned number.** A band is the independent grader's to issue after the attack, never the plan's to promise before it (`STOP [49]`, `[grading-integrity]`). **Pre-registering criteria is discipline; pre-registering the verdict is the goalpost with a citation.**
+⚖️ **§13[1] durability: adopted as an obligation, NOT as a bulk push.** `[MEASURED HERE]` local is **`26` commits ahead of `origin` (`4257e3e8`)**; `R-839` and `AR-1009` are **NOT on origin**. **OWNER: this desk specs the reviewed landing set; the WORKER executes the push when asked. Not now.**
+
+### §8 — ⚡ AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 28956` — START HERE. HOLD IS LIFTED. `STOP [50]` IS DISCHARGED.
+> **1.** ⚡ **BUILD `§3[A]`→`[D]` in the `§4` files. Then `§5` controls `A`–`J`. Then `§6` replay + at most ONE canonical arm.**
+> **2.** ⚡ **PROCEED THROUGH ALL OF IT WITHOUT A PERMISSION ROUND-TRIP.** Stop only on: `STOP M` · `§6[3]` map difference · any certification property that can vanish and still return success · `STOP 1` (a fact with no independent owner).
+> **3.** 🛑 **REPORTS ARE COMPACT (`§1`).** ~15 lines: what changed · exact command · RED→GREEN · commit · blocker. **Do not restate this ruling back to me.**
+> **4.** 📌 **START-RECEIPT within ~2 min.** **FIRST OBSERVABLE: the `REQUIRED_PROOFS` closed structure + the `--no-chain` refusal guard committed. ETA ~45–75 min.** Second observable: controls `A`–`J` green/red as specified.
+> **5.** ⚖️ **THE GRADE IS NOT YOURS AND NOT A ROUND-TRIP — it is structural independence.** When `§6` is done, report; **this desk dispatches `accuracy-validator` adversarially** (mandate: DISPROVE, plus **≥1 NOVEL false-green attack**). You do not certify (`[grading-integrity]`).
+> **6.** 🛑 **You may NOT write *"all false-green routes eliminated"* (`STOP [71]`). The honest claim is `THE MEASURED ROUTES ARE CLOSED AND THE CERTIFYING PATH NOW HAS A CLOSED EVIDENCE CONTRACT.`**
+
+```
+RULING ID       : R-840
+ARs RULED       : none substantive. AR-1009 is a seating receipt, named and read.
+DECISION        : AUTHORIZE the class repair. Hold LIFTED. One bounded shot.
+CURRENT EXIT    : RATIFY-1 certified by independent adversarial grade.
+CRITICAL PATH   : row 12 -- REQUIRED-EVIDENCE COMPLETENESS does not exist;
+                  all() at :602 over an append-built list makes an ABSENT check
+                  indistinguishable from a PASSING one. Rows 8/9/11 vanish
+                  through it via --no-chain; rows 5/6/10 are self-asserted.
+PRECEDENCE PROOF: RATIFY-1 is the referee for ACCEPT-5, which gates R3-4 closure,
+                  which gates R3, which gates MP1. No money-path work can be
+                  trusted through an instrument that certifies on absent evidence.
+GRAPH OBJECT    : NOT ADOPTED.
+CLAIMS VERIFIED : [MEASURED HERE] blob e9eeb845 == HEAD == 7090da86, three-way.
+                  [MEASURED HERE] :1071 guards --node-axis vs --pin; :1082 has no
+                  equivalent guard for --no-chain, same function.
+                  [MEASURED HERE] :602 all() over append-built V; :509 if chain:
+                  gates rows 8/9; :498 _effective collapses to _declared.
+                  [MEASURED HERE] runner :439/:449 time.time(), not monotonic;
+                  no 600/CEILING comparison in accept5_isolated_runner.py
+                  (positive control: same grep returned time./elapsed/wall_s
+                  hits from that file, so the negative is a real absence).
+                  [MEASURED HERE] local 26 commits ahead of origin 4257e3e8.
+FAILED/UNPROVEN : Whether SIX is the whole set of false-green routes -- NOT
+                  PROVEN. STOP [71] holds. Row 11 PARTIALLY MEASURED.
+DEFERRED        : the 33 (wake: post-Cluster-E map, NOT assumed still 33) |
+                  Cluster-E (wake: RATIFY-1 certified) | six-field census + one
+                  successor seal (wake: Cluster-E closed) | durability landing
+                  set (wake: grade passes; owner DESK specs, WORKER pushes) |
+                  MP1-CANDIDATE-INGRESS-1 (wake: R3 = 5/5).
+STOP CONDITION  : STOP M | §6[3] map difference | a property that can vanish and
+                  still return success | STOP 1 | grader finds a new false green.
+LESSON          : AN ABSENT CHECK AND A PASSING CHECK ARE THE SAME VALUE TO
+                  all(). A VERDICT LIST THAT IS BUILT BY APPENDING CANNOT
+                  DETECT ITS OWN MISSING MEMBERS -- COMPLETENESS MUST BE A
+                  PROPERTY, NOT AN EMERGENT ONE.
+```
+
+---
+
 ## R-839 · 2026-08-11 · 🛑🛑🛑 **`AR-1008` ACCEPTED. THE FAILED RE-GRADE IS THE CORRECT OUTCOME AND I WILL NOT MINIMISE IT BECAUSE THE FIVE ORIGINAL RUNS WERE GOOD.** ⚡⚡ **THE METHOD CHANGES: STOP PATCHING ROUTES, DEFINE WHICH LAYER IS AUTHORITY. THE CLASS SPEC IS THE NEXT DESK'S FIRST ACT — AND THE READ ROTATES THIS SEAT TO WRITE IT.** 🛑 **WORKER HELD. INSTRUMENT FROZEN. `RATIFY-1` UNCERTIFIED. NO REPAIR UNTIL THE BOUNDED CLASS SPECIFICATION EXISTS.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1008`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its no-drift claim myself.** **SEATS: desk `28644` (ROTATING) · worker `claude.exe 30716` (HELD).**

@@ -9,7 +9,19 @@
 > Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
 > debt still open.**
 
-## SEAT — 2026-08-11 ~19:15Z · desk `claude.exe 28644` **RETIRING** · **LIVE BLOCK, TAKE THIS ONE. EVERYTHING BELOW IS OLDER.**
+## SEAT — 2026-08-11 · desk `claude.exe 24056` · **LIVE BLOCK, TAKE THIS ONE. EVERYTHING BELOW IS OLDER.**
+
+**LEDGER `R-840`. NEWEST AR `AR-1009`** (seating receipt, owes no ruling). **WORKER `claude.exe 28956` — HOLD LIFTED, class repair AUTHORIZED (`R-840 §8`). DESK `28644` retired; `24056` seated.** `[MEASURED, `Win32_Process`.]`
+🛑 **OPERATOR DIRECTIVE 2026-08-11 — CONSERVATION MODE, BINDING: `77%` weekly budget spent. Compact reports (what changed · exact test · RED→GREEN · commit · blocker). Exact files only, no sweeps, no `33`, no archaeology. ONE canonical arm max. Goal is to LEAVE Phase 5, not perfect it.**
+⚡ **THE AUTHORITY TABLE IS DELIVERED — `R-840 §2`, `12` rows, every line number measured in `g_order_identity.py` (blob `e9eeb845…`) and `accept5_isolated_runner.py`. `STOP 1` does not fire: every load-bearing fact has a named independent owner.**
+🛑 **THE CLASS, EXACT: `allok = all(…V)` at `:602` runs over an APPEND-BUILT list, so a check that never appends CANNOT FAIL. `--no-chain` (`:1082`) skips `if chain:` (`:509`), deleting rows `8`/`9`/`11` from `V` entirely ⇒ `SATISFIED` at exit `0`. `--pin` guards `--node-axis` at `:1071` and guards NOTHING against `--no-chain`, eleven lines away.**
+⚡ **REPAIR ORDER: `[A]` one certifying path · `[B]` `REQUIRED_PROOFS == OBSERVED_PROOFS` · `[C]` `VerifiedArm` · `[D]` `[H]` to the runner's MONOTONIC clock (`[MEASURED]` it uses `time.time()` `:439`/`:449` and enforces NO ceiling at all). Then controls `A`–`J`, then replay the five arms, then ONE canonical arm.**
+🛑 **NOT ADOPTED from the read: its pre-assigned `10/10`. The band is the independent grader's after the attack (`STOP [49]`). Criteria pre-register; verdicts do not.**
+⚠️ **DURABILITY: `[MEASURED]` local is `26` commits ahead of `origin 4257e3e8`; `R-839`, `R-840`, `AR-1009` are NOT on origin. Reviewed landing set = DESK's to spec, WORKER executes (`STOP [58]`). Not now.**
+
+---
+
+## SEAT — 2026-08-11 ~19:15Z · desk `claude.exe 28644` **RETIRED — SUPERSEDED BY THE BLOCK ABOVE.**
 
 🛑🛑🛑 **FRESH DESK: READ EXACTLY SIX THINGS AND STOP. `R-839 §7`, external-read-ordered.**
 > **(1)** THIS BLOCK · **(2)** `docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md` — the FAILED re-grade (committed `8c6ef980`) · **(3)** `AR-1008` · **(4)** `R-839` — it carries the external read's whole architecture in its `§3` · **(5)** verifier blob `e9eeb845…` at pin `7090da86` · **(6)** execution pin `fb71a3ef`.
