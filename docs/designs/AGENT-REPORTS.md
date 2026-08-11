@@ -4,6 +4,109 @@
 
 ---
 
+## AR-997 · 2026-08-11 · ✅✅ **THE `12`-ROW TABLE, WITH ALL `12` CAUSES FOUND. THREE MECHANISMS, ALL FAMILY `A`, AND `STOP [56]` IS VINDICATED — ONE DISPOSITION COULD NOT HAVE COVERED THEM.** ⚡⚡ **THE DESK'S LAYER-2 HYPOTHESIS IS NOW **MEASURED, NOT HYPOTHESISED**: pre-repair layer 2 MASKED the `Vix` defect — old plugin `2 passed`, new plugin `1 failed`.** 🛑🛑 **AND I CONVICT MYSELF: `4` OF THE `12` WERE MOVING BECAUSE OF A DEFECT **I** SHIPPED THIS MORNING — except they are NOT, and the control that looked like it proved it was lying. Read `§4`.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD f8347d63`. RULING `R-831 §7`.** 🛑 Five certifying arms NOT run · neither worktree removed · no promotion · no seal · `CLUSTER-E` HELD · nothing from `R-828 §6[8]`.
+
+### §1 — ✅ THE `12`-ROW TABLE (`R-831 §3`'s nine columns; `ARM 3` standalone MEASURED for every row)
+```
+#  NODE (file :: class :: test)                     CANON  REVERSED  ALONE   FAMILY  MECHANISM
+1  wave_b :: TestIntrabars :: eligibility_gate_empty_htf_passthrough
+                                                     pass   skipped   SKIP    A       M1
+2  wave_b :: TestIntrabars :: eligibility_gate_no_htf_passthrough_preserves_signals
+                                                     pass   skipped   SKIP    A       M1
+3  wave_b :: TestIntrabars :: eligibility_gate_unregistered_strategy_passthrough
+                                                     pass   skipped   SKIP    A       M1
+4  wave1_track1a :: TestVixAtrMultiplier :: enabled_vix_above_30_returns_high_tier
+                                                     pass   FAILED    pass    A       M2
+5  wave1_track1a :: TestVixAtrMultiplier :: enabled_vix_below_20_returns_low_tier
+                                                     pass   FAILED    pass    A       M2
+6  wave1_track1a :: TestVixAtrMultiplier :: enabled_vix_crisis_55_returns_high_tier
+                                                     pass   FAILED    pass    A       M2
+7  wave1_track1a :: TestVixAtrMultiplier :: enabled_vix_exactly_30_returns_mid_tier
+                                                     pass   FAILED    pass    A       M2
+8  wave1_track1a :: TestVixAtrMultiplier :: env_flag_true_activates_tiers
+                                                     pass   FAILED    pass    A       M2
+9  gate3_defect4 :: ...RollCostEquity :: no_reconciliation_error_with_large_roll_cost
+                                                     pass   FAILED    pass    A       M3
+10 gate3_defect4 :: ...RollCostEquity :: small_roll_cost_also_reconciles
+                                                     FAILED pass      pass    A       M3
+11 apply_trade_management :: TestAnchoredVwap :: avwap_trail_stop_is_volume_weighted_not_structural
+                                                     FAILED pass      pass    A       M3
+12 apply_trade_management :: TestDispatchRouting :: static_styleC_calls_static_handler
+                                                     pass   FAILED    pass    A       M3
+```
+⭐ **`ARM 3` IS THE COLUMN THAT DECIDES EVERYTHING AND IT WAS THE NEW DATA: `9 / 12` PASS ALONE, and the `wave_b` trio SKIPS ALONE — so for rows `1`–`3` the CANONICAL `pass` is the anomaly, not the reversed `skip`.** 🛑 **A reader who only had canonical-vs-reversed would have repaired the wrong end of those three.**
+🛑 **`ARM 4` was needed only for `M2`/`M3` and was run as the MINIMUM two-node pair, never an exhaustive permutation.**
+
+### §2 — ✅ `M1` (rows `1`–`3`): A SKIP PREDICATE THAT READS THE MODULE CACHE. RE-MEASURED, NOT INHERITED.
+`[MEASURED HERE, `test_wave_b_intrabar_stops.py:379, :404, :425`]`:
+```python
+if "src.engine.backtester" not in sys.modules:
+    pytest.skip("backtester not imported — skipping to avoid vectorbt JIT hang")
+```
+⭐ **AND THE FILE'S OWN COMMENT ADMITS THE CONTRACT: *"no vectorbt JIT trigger when the module is already loaded by prior tests in this session."*** ⇒ **THE TEST IS WRITTEN TO OPPORTUNISTICALLY SKIP ON SIBLING STATE. ITS OUTCOME IS A FUNCTION OF EXECUTION POSITION BY CONSTRUCTION.** ✅ **The desk's `R-830 §3` reading is CONFIRMED by my own re-measurement** (`[red-path-decay]` — I did not inherit it).
+🛑 **`STOP G` CHECK, RUN AND ANSWERED: this is NOT family `D`. There is no PRE-EXISTING COMMITTED contract saying order is semantic — there is a comment describing an optimisation. `R-831 §2` is explicit that a scenario may not be inferred from the reversal behaviour, and a docstring is not a design contract.**
+
+### §3 — ✅✅ `M2` (rows `4`–`8`): IMPORT-TIME ENV BAKING — AND THE LAYER-2 INTERLOCK IS NOW MEASURED
+`[MEASURED HERE, `src/engine/margin_expansion.py:161-165`]` **module-level constants read the environment AT IMPORT TIME:**
+```python
+_VIX_ATR_TIER_LOW  = float(os.environ.get("VIX_ATR_TIER_LOW",  "20.0"))
+_VIX_ATR_TIER_MID  = float(os.environ.get("VIX_ATR_TIER_MID",  "30.0"))
+_VIX_ATR_MULT_HIGH = float(os.environ.get("VIX_ATR_MULT_HIGH", "2.5"))
+```
+**and a SIBLING, `test_env_tier_thresholds_overridable`, `monkeypatch.setenv`s exactly those three.** ⇒ **`monkeypatch` restores the ENVIRONMENT; it cannot UN-BAKE a module that was first imported while the patch was live.**
+✅ **PROVEN BY EXECUTION, minimum pair:** `victim ALONE → pass` · `env-setter THEN victim → victim FAILS` · `victim THEN env-setter → both pass`.
+⭐⭐ **AND THE DESK'S `[HYPOTHESIS]` IS NOW A MEASUREMENT — I ran the PRE-REPAIR plugin from git as the control:**
+```
+PRE-REPAIR  layer 2 (old plugin, verified _is_genuine_import count 0):  2 passed
+POST-REPAIR layer 2 (current):                                          1 failed, 1 passed
+```
+⇒ ★★★★★ **`THE LAYER-2 REPAIR DID NOT CREATE THIS. THE OLD BOUNDARY EVICTED margin_expansion AFTER EVERY TEST, SO EVERY TEST RE-IMPORTED IT FRESH AND THE BAKED-IN CONSTANTS NEVER SURVIVED. THE REPAIR REMOVED A MASK, AND WHAT IT REVEALED WAS ALREADY THERE.`** ⚖️ **`R-831 §1` already forbade blaming the provenance chain; this extends the same finding to the layer-2 repair, with the control the desk could not run.**
+
+### §4 — 🛑🛑 `M3` (rows `9`–`12`): I ACCUSED MY OWN REPAIR, AND THE CONTROL THAT "PROVED" IT WAS LYING
+🛑 **`[MEASURED HERE]` all four fail with `ModuleNotFoundError: No module named '_duckdb._sqltypes'; '_duckdb' is not a package`, and in BOTH pairs WHICHEVER NODE RUNS SECOND IS THE ONE THAT FAILS.**
+⚖️ **MY FIRST CONCLUSION WAS THAT I HAD CAUSED IT, AND I HAD A MEASUREMENT: `[MEASURED HERE]` `_duckdb._func` and `_duckdb._sqltypes` are real `ModuleType` objects with `__spec__ is None` — the C extension registers them itself — so my `__spec__`-only predicate classified them as pollution and evicted them.** **`2 of 9` duckdb entries. I wrote the fix and re-verified `P1`/`P2`/`P4`/`[J]`.**
+🛑🛑 **THEN THE PAIR STILL FAILED. AND THE DECIDING CONTROL WAS THE ONE I ALMOST DID NOT RUN: THE SAME PAIR WITH LAYER 2 **ENTIRELY OFF** — STILL `1 failed`, still `_duckdb`.** ⇒ **LAYER 2 IS NOT INVOLVED IN `M3` AT ALL.**
+✅ **THE REAL CAUSE, ENUMERATED: `[MEASURED HERE]` BOTH pair-files — and `[MEASURED HERE, `grep -rln` over `src/engine/tests/*.py`]` **EXACTLY `2` OF THE GOVERNED FILES, NO MORE** — carry a copy-pasted `autouse` fixture that does the OLD PRESENCE-BASED EVICTION BY HAND:**
+```python
+before = dict(sys.modules)          # test_gate3_defect4_...py:84   (R-818 §4)
+try: yield
+finally:
+    for key in [k for k in sys.modules if k not in before]:
+        del sys.modules[key]        # evicts _duckdb._sqltypes too
+```
+⇒ ★★★★★ **`THE EXACT DEFECT CLASS THIS CAMPAIGN JUST REMOVED FROM THE PLUGIN IS SITTING, COPY-PASTED, INSIDE TWO GOVERNED TEST FILES — WRITTEN BY AN EARLIER WAVE OF THIS SAME CAMPAIGN (R-818 §4). A FIX APPLIED IN ONE PLACE AND HAND-COPIED TO TWO OTHERS IS THREE IMPLEMENTATIONS OF ONE RULE, AND ONLY ONE OF THEM GOT REPAIRED.`**
+⚖️ **I KEEP THE PREDICATE WIDENING ANYWAY, AND I SAY WHY IT IS NOT SCOPE CREEP: it fixes a REAL hazard I shipped this morning (a C-extension tree torn apart by the plugin), it is re-verified against `P1`/`P2`/`P4`/real-`[J]`, and its commit message states plainly that it does NOT fix `M3`.** ★★★★ **`A TRUE FINDING THAT DOES NOT EXPLAIN THE SYMPTOM IS STILL A TRUE FINDING — AND THE ONLY THING THAT STOPPED ME BANKING IT AS THE ANSWER WAS RUNNING THE OFF-ARM.`**
+
+### §5 — ⚡ PROPOSED DISPOSITIONS — THREE SHARED REPAIRS, NOT TWELVE PATCHES
+```
+M1 rows 1-3   A  TEST-CONTRACT     make the 3 nodes' outcome independent of sibling
+                                   imports. NOTE: order-independence here likely
+                                   means STABLE SKIP or STABLE RUN in both orders --
+                                   NOT "make them pass" (R-831 §2).
+M2 rows 4-8   A  TEST LEAK via     the leak is import-time env baking. Smallest
+                 module-level env   shared repair candidates: have the sibling not
+                                   bake, or make the 5 victims independent of
+                                   import-time constants. PRODUCTION CODE IS IN
+                                   SCOPE ONLY IF THE ROOT CAUSE REQUIRES IT --
+                                   escalating before touching margin_expansion.py.
+M3 rows 9-12  A  TEST-LOCAL        replace the hand-rolled presence-based boundary
+                 BOUNDARY DEFECT    in 2 files with the SAME provenance
+                                   discriminator the plugin now uses -- IMPORTED,
+                                   never re-implemented. One rule, one copy.
+```
+🛑 **NONE OF THE SIX FORBIDDEN FALSE CLOSURES IS PROPOSED: no sorting back to canonical, no disabling `--reverse-nodes`, no filtering from the comparator, no `xfail`, no picking the order with more passes, no turning a `FAIL` into a `PASS` without removing the dependency.**
+
+### §6 — 📌 STATUS AND THE HONEST LIMIT
+✅ **`R-831 §7[2]`'s FIRST OBSERVABLE IS DELIVERED: all `12` rows, all with standalone outcomes, all causes identified, grouped into `3` mechanisms.** ✅ **`STOP [56]` VINDICATED — three shapes, and rows `1`–`3` need the OPPOSITE end repaired from rows `4`–`12`.**
+🛑 **NO REPAIR TO ANY OF THE `12` IS APPLIED. `§5` is a PROPOSAL.** **The only code change in this AR is the `M3`-adjacent predicate widening, which is disclosed as NOT the `STOP B` repair.**
+**WHAT I DID NOT MEASURE:** whether `M1`'s three should end stable-SKIP or stable-RUN (that is a contract question I will not answer alone) · whether `M2`'s repair can avoid touching `margin_expansion.py` · whether the `2` files in `M3` are the only ones whose hand-rolled boundary MATTERS (I enumerated the pattern at `2`, but only these `4` nodes were measured moving).
+⚠️ **CONTEXT: this seat has now carried SIX delivery cycles. `AR-995` committed me to handing off the moment I noticed strain rather than defending the decision — I am not there yet on accuracy, but the repair phase is three mechanisms wide and I flag the cost honestly rather than discovering it mid-repair.**
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — the table is delivered and `§7[3]`/`[4]` (classify, then repair the smallest shared mechanism) are already authorized, so I do not wait. ⚡ **BUT ONE THING NEEDS THE DESK BEFORE I TOUCH IT: `M2`'s cleanest repair may reach into `margin_expansion.py`, which is PRODUCTION code and outside every scope I hold. I will start with `M3` and `M1`, which are test-side only, and I will NOT touch production without a ruling.**
+
+---
+
 ## AR-996 · 2026-08-11 · 📌 **START-RECEIPT, `R-831 §7[8]`. `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` OPENED.** ⚡ **FIRST OBSERVABLE: THE `12`-ROW TABLE WITH STANDALONE OUTCOMES.** 🛑 **I RESTATE THE ACCEPTANCE CRITERION IN MY OWN WORDS BEFORE STARTING, BECAUSE `R-831 §2` CALLS IT THE MOST MISREADABLE LINE IN THE RULING — AND IT IS THE ONE I COULD MOST EASILY DRIFT FROM.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD d66d7f8c`. RULING `R-831 §7`.**
