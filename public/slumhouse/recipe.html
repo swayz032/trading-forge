@@ -634,7 +634,9 @@
   <script src="/slumhouse/recipe-instruments.js"></script>
   <script>
     (async () => {
-      const id = new URLSearchParams(location.search).get("id");
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      const menuName = params.get("name");
       if (!id) {
         document.getElementById("r-app").innerHTML =
           '<p style="color:#888;padding:40px 0">No strategy picked yet — go to <a href="/slumhouse/kitchen.html" style="color:var(--lime)">The Kitchen</a> and tap a dish.</p>';
@@ -649,6 +651,7 @@
           '<a href="javascript:location.reload()" style="color:var(--lime)">Try again</a></p>';
         return;
       }
+      if (menuName) r.identity.displayName = menuName;
       render(r);
     })();
 
@@ -718,7 +721,7 @@
     function renderBacktest(r) {
       const { el } = SH;
       const bt = r.backtest || {};
-      const panel = el("div", { class: "r-panel" },
+      const panel = el("div", { class: "r-panel r-instrument-panel" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
         ),
@@ -1269,7 +1272,7 @@
       var sentence = untested ? "This gate hasn't been run yet — it needs a backtest first." : (t ? t.sentence : "");
       var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
       back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
-      var panel = el("div", { class: "r-panel", role: "region", tabindex: "-1", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
+      var panel = el("div", { class: "r-panel r-instrument-panel", role: "region", tabindex: "-1", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
         el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
         el("div", { class: "r-cap" }, m.what),
         el("div", { class: "r-gate-body" },

@@ -45,12 +45,16 @@ describe("Recipe premium instruments", () => {
 
   it("wires the exact banner, accessible controls, renderer assets, and reduced motion", () => {
     const html = fs.readFileSync(path.resolve("public/slumhouse/recipe.html"), "utf8");
+    const kitchen = fs.readFileSync(path.resolve("public/slumhouse/kitchen.html"), "utf8");
     const css = fs.readFileSync(path.resolve("public/slumhouse/recipe-instruments.css"), "utf8");
     expect(html).toContain("/slumhouse/images/slumdawg-recipe-counter.png");
     expect(html).toContain("/slumhouse/recipe-instruments.js");
     expect(html).toContain("/slumhouse/recipe-instruments.css");
     expect(html).toContain('aria-pressed');
     expect(html).toContain("r.identity.displayName || cleanName(r.identity.name)");
+    expect(kitchen).toContain("&name=" + "' + encodeURIComponent(fam.title) + '");
+    expect(html).toContain('params.get("name")');
+    expect(html).toContain('class: "r-panel r-instrument-panel"');
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderGate(r, name))");
     expect(html).not.toContain("left.appendChild(instrument)");
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
