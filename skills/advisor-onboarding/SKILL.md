@@ -50,11 +50,11 @@ ledger from the top.** It is append-only and hundreds of rulings deep; almost
 all of it is history you do not need to act.
 
 1. ★★★★★ **`docs/designs/HANDOVER-ADVISOR-2026-08-04.md` — THIS IS THE ENTRY
-   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED HERE 2026-08-11]` `778` lines /
-   `138,439` bytes — the `687 / 106,558` in this very block is STALE, as were the
-   `588 / 66,361` and the `326 / 25 KB` before it.** ★★★ **A CARRIER THAT MEASURES ANOTHER
-   FILE MUST RE-MEASURE IT, NOT QUOTE ITSELF — this block's own number has now aged THREE
-   TIMES, each time while presenting as `[MEASURED]`.** 🛑 **DO NOT TRUST THE NUMBER ABOVE
+   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED HERE 2026-08-11, `R-818` SEAT]` `842` lines /
+   `161,441` bytes — the `778 / 138,439` in this very block is STALE, as were the
+   `687 / 106,558`, the `588 / 66,361` and the `326 / 25 KB` before it.** ★★★ **A CARRIER THAT
+   MEASURES ANOTHER FILE MUST RE-MEASURE IT, NOT QUOTE ITSELF — this block's own number has now
+   aged FOUR TIMES, each time while presenting as `[MEASURED]`.** 🛑 **DO NOT TRUST THE NUMBER ABOVE
    EITHER: it decays the moment any seat rules, because rulings PREPEND here. Treat it as
    an order of magnitude, never as an address.**
    🛑🛑★★★★★ **AND THE "still one `Read`, well under the `256 KB` cap" CLAUSE WAS FALSE
@@ -65,8 +65,9 @@ all of it is history you do not need to act.
    ⚠️ **The density is NOT uniform, so a fixed `limit` is not portable: `[MEASURED]`
    `limit: 150` ALSO fails (`30,696` tokens) because the prepended wall is blockquote
    blocks with **NO markdown headings at all** (~`200+` tokens/line), while the numbered
-   body below is far sparser. `[RE-MEASURED HERE 2026-08-11]` that wall now runs to line
-   `445`; it was `355`.
+   body below is far sparser. `[RE-MEASURED HERE 2026-08-11, `R-818` SEAT]` that wall now runs to
+   line `508`; it was `445`, and `355` before that. ⚠️ **`limit: 55` WAS STILL CORRECT AT `842`
+   LINES — the recipe below is the durable part; these numbers are not.**
    ✅ **READ RECIPE, TWO CALLS — AND THE SECOND ADDRESS IS COMPUTED, NEVER PINNED:**
    `Read limit: 55` → the LIVE prepended blocks, newest first, each superseding the blocks
    under it. Then **`grep -n "^## 0\." <file>` and `Read offset:` THAT line** → `§0`'s
@@ -74,9 +75,12 @@ all of it is history you do not need to act.
    EVERY NEW RULING`**) that a seat can violate within its first three minutes if it reads
    anything else first.
    🛑🛑★★★★★ **THIS RECIPE PINNED `offset: 359` AND IT ROTTED, EXACTLY AS THE LINE COUNT
-   ABOVE IT DID. `[MEASURED HERE 2026-08-11]` `§0` now starts at line `451`, so `359` lands
-   a cold seat ~92 lines short, INSIDE THE SUPERSEDED `R-727`-ERA BLOCK — which reads as
-   current because it is confident, dated prose. THE `R-812` SEAT LOST A READ TO THIS.**
+   ABOVE IT DID. `[MEASURED HERE 2026-08-11, `R-818` SEAT]` `§0` now starts at line `515` — it
+   was `451` eight rulings ago and `359` before that, so the retired pin now lands a cold seat
+   ~156 lines short, INSIDE THE SUPERSEDED `R-727`-ERA BLOCK — which reads as current because it
+   is confident, dated prose. THE `R-812` SEAT LOST A READ TO THIS.** ⚠️ **`[MEASURED HERE]` the
+   address moved `+64` lines in a single day. NO PINNED OFFSET IN THIS BLOCK IS EVER CURRENT;
+   they are retained ONLY to show the decay RATE. RUN THE `grep`.**
    ★★★★★ **`A PINNED OFFSET INTO A FILE THAT IS APPENDED-TO AT THE TOP IS A VALUE THAT
    DECAYS EVERY TIME ANYONE RULES — AND UNLIKE A STALE BYTE COUNT, IT FAILS SILENTLY BY
    RETURNING THE WRONG CONTENT INSTEAD OF AN ERROR.`** ⇒ **COMPUTE THE ADDRESS; NEVER
