@@ -62,6 +62,32 @@ def _slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", path).strip("_")
 
 
+def _tracked_tree_digest():
+    """A byte-level fingerprint of the TRACKED working tree.
+
+    C13 / R-828 §4a. `arm_start_head == arm_end_head` binds COMMITS, and a
+    working-tree write moves no commit -- so an arm can measure one commit while
+    the measurement edits the tree. `[MEASURED, AR-992]` a governed test
+    regenerates docs/wave25-exit-engine-ab-report.md and stamps it with the run
+    time, in a worktree created clean from the pin.
+
+    `git status --porcelain -uno` names WHICH tracked files differ; `git diff
+    HEAD` carries their CONTENT. Hashing both makes this a byte-level statement
+    rather than a filename-level one. Untracked/ignored build cache is
+    deliberately excluded -- .numba_cache is not a claim about the tree.
+    """
+    import hashlib as _h
+    import subprocess as _sp
+    parts = []
+    for cmd in (["git", "status", "--porcelain", "-uno"], ["git", "diff", "HEAD"]):
+        try:
+            out = _sp.run(cmd, cwd=str(REPO), capture_output=True, timeout=120)
+            parts.append(out.stdout or b"")
+        except Exception:                                      # noqa: BLE001
+            return None
+    return _h.sha256(b"\0".join(parts)).hexdigest()
+
+
 
 _REQUIRED_BY_FILE = None
 
@@ -87,8 +113,41 @@ def _required_nodes_for(target_file):
     return _REQUIRED_BY_FILE.get(target_file, set())
 
 
-def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
-              timeout=900, head_sha=None, ordinal=None, reverse_nodes=False):
+def run_child(*args, **kwargs):
+    """Execute one governed child, then bind EVERY artifact it produced.
+
+    R-828 §4 -- the CLASS repair for STOP C.
+
+    `[MEASURED, R-828 §4]` `_run_child_inner` has EIGHT `return receipt` paths
+    before the point where artifacts used to be hashed (:149 :184 :188 :191 :195
+    :198 :203 :247). Every one produced a receipt with an EMPTY
+    `artifact_sha256`, so those children's artifacts were UNBOUND and a tamper on
+    them was undetectable -- exactly how control C2 came back GREEN.
+
+        THE WORKER FOUND ONE DOOR AND CORRECTLY REFUSED TO FIX ONLY THAT DOOR.
+        THERE ARE EIGHT. AN INSTANCE FIX WOULD HAVE LEFT SEVEN OPEN AND A GREEN
+        C2 TO PROVE THEM SAFE.
+
+    So the hashing is not placed on the paths at all. It is placed OUTSIDE the
+    function that HAS the paths, where no `return` can skip it -- and it binds
+    EVERY FILE PRESENT rather than three hardcoded labels, so an artifact nobody
+    updated this code for is bound the day it appears.
+
+    STOP F: this changes nothing a child REPORTS. It reads bytes and records
+    digests; it does not touch outcomes, collected, problems or returncode.
+    """
+    receipt = _run_child_inner(*args, **kwargs)
+    cd = Path(receipt.get("child_dir", ""))
+    if cd.is_dir():
+        for p in sorted(cd.iterdir()):
+            if p.is_file():
+                receipt["artifact_sha256"][p.name] = hashlib.sha256(
+                    p.read_bytes()).hexdigest()
+    return receipt
+
+
+def _run_child_inner(target_file, targets, run_root, *, layer2=True, blind=False,
+                     timeout=900, head_sha=None, ordinal=None, reverse_nodes=False):
     """Execute ONE governed file in its own interpreter and return its receipt."""
     run_id = uuid.uuid4().hex
     if head_sha is None:
@@ -290,12 +349,8 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
             P.append(f"the node-sequence witness for {target_file} is unreadable "
                      f"or malformed: {exc!r}")
 
-    for label, path in (("acceptance-run.json", out_json),
-                        ("acceptance-run.xml", out_xml),
-                        ("node-sequence.json", out_seq)):
-        if path.is_file():
-            receipt["artifact_sha256"][label] = hashlib.sha256(
-                path.read_bytes()).hexdigest()
+    # (Artifact hashing now happens in run_child(), OUTSIDE this function, so no
+    # return path can skip it and no artifact goes unbound. R-828 §4.)
     receipt["layer2_witness"] = next(
         (ln.strip() for ln in stdout.splitlines() if "[ACCEPT5-LAYER2]" in ln), "")
     if layer2 and not receipt["layer2_witness"]:
@@ -363,6 +418,7 @@ def main(argv=None):
           f" | order {'REVERSE' if args.reverse else 'canonical'}")
     print(f"artifacts {run_root}")
 
+    tree_start = _tracked_tree_digest()          # C13, R-828 §4a
     receipts, t0 = [], time.time()
     for i, f in enumerate(files, 1):
         r = run_child(f, plan["children"][f], run_root,
@@ -405,9 +461,12 @@ def main(argv=None):
     # LAYER 2: the ORDERED manifest. `entries` is a SEQUENCE, never sorted --
     # serialising it sorted would destroy the only witness to execution order.
     arm_end_head = _runner._git_head()
+    tree_end = _tracked_tree_digest()
     manifest = {
         "arm_start_head": head,
         "arm_end_head": arm_end_head,
+        "arm_start_tree": tree_start,
+        "arm_end_tree": tree_end,
         "population_digest": hashlib.sha256(
             json.dumps(sorted(plan["children"])).encode("utf-8")).hexdigest(),
         "reverse": bool(args.reverse),

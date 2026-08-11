@@ -179,7 +179,7 @@ def verify_chain(tag, arm):
 
     # Every receipt recomputes from its own bytes, and every child artifact
     # recomputes from ITS bytes. This is the step that opens a child at all.
-    bad_receipt, bad_artifact, missing = [], [], []
+    bad_receipt, bad_artifact, missing, unbound = [], [], [], []
     heads, rebuilt, seqs, run_ids = set(), {}, {}, set()
     for e in entries:
         rp = root / "receipts" / f"{e['ordinal']:04d}-{_slug_like(e['target'])}.json"
@@ -203,16 +203,41 @@ def verify_chain(tag, arm):
         #   A VERIFIER THAT FOLLOWS A PATH THE ARTIFACT SUPPLIED IS VERIFYING
         #   WHATEVER THAT PATH POINTS AT, NOT THE THING IN FRONT OF IT.
         cd = root / _slug_like(e["target"])
-        for label, digest in (r.get("artifact_sha256") or {}).items():
+        digests = r.get("artifact_sha256") or {}
+        for label, digest in digests.items():
             ap = cd / label
             if not ap.is_file() or _sha_bytes(ap) != digest:
                 bad_artifact.append(f"{e['target']}:{label}")
+        # THE CLASS RULE (R-828 §4b): no file in a child directory may be
+        # UNBOUND. Checking only the digests the receipt happens to list makes
+        # the receipt the authority on its own completeness -- which is how the
+        # empty_by_design children passed with an empty map and a tampered
+        # artifact. The DIRECTORY is the authority; the receipt must cover it.
+        if cd.is_dir():
+            present = {p.name for p in cd.iterdir() if p.is_file()}
+            for orphan in sorted(present - set(digests)):
+                unbound.append(f"{e['target']}:{orphan}")
 
     add("every receipt PRESENT", not missing, f"{len(missing)} missing {missing[:3]}")
     add("every receipt digest RECOMPUTES", not bad_receipt,
         f"{len(bad_receipt)} mismatched {bad_receipt[:3]}")
     add("every child artifact digest RECOMPUTES", not bad_artifact,
         f"{len(bad_artifact)} mismatched {bad_artifact[:3]}")
+    add("NO UNBOUND FILE in any child directory", not unbound,
+        f"{len(unbound)} unbound {unbound[:3]}")
+
+    # ---- C13 (R-828 §4a): the arm must not MUTATE the tree it measures -----
+    # arm_start_head == arm_end_head binds COMMITS. A working-tree write moves
+    # no commit, so the chain can prove an arm measured one COMMIT while the
+    # measurement itself edited the TREE. AR-992 measured exactly that.
+    ts, te = man.get("arm_start_tree"), man.get("arm_end_tree")
+    if ts is None or te is None:
+        add("C13 arm records its tracked-tree state", False,
+            "manifest has no arm_start_tree/arm_end_tree -- pre-C13 schema")
+    else:
+        add("C13 tracked working tree UNCHANGED across the arm", ts == te,
+            f"start={ts[:12]} end={te[:12]}"
+            + ("" if ts == te else "  <- the arm MUTATED the tree it certifies"))
 
     # The aggregate's payload must be REBUILT from the receipts, not copied.
     add("outcomes REBUILD from the receipts", rebuilt == arm["outcomes"],
@@ -648,6 +673,22 @@ def red_proof_chain(workdir, a1, a2, a3):
         shutil.copytree(Path(src).parent, dst)
         return dst / "aggregate.json"
 
+    def reseal(aggpath):
+        """Re-stamp the aggregate's manifest_sha256 after editing the manifest.
+
+        WITHOUT THIS, a manifest tamper reds on "manifest digest RECOMPUTES" --
+        a TRUE verdict, but not the one the control is named for. A control that
+        fires for a different reason than its name is the same disease as a
+        control that would have fired anyway: it reports coverage it does not
+        have. C6/C7/C13 therefore hand the verifier a perfectly-sealed chain and
+        force it to catch the SEMANTIC defect.
+        """
+        agg = Path(aggpath)
+        d = _json.loads(agg.read_text(encoding="utf-8"))
+        d["manifest_sha256"] = _sha_bytes(agg.parent / "manifest.json")
+        agg.write_text(_json.dumps(d, indent=2, sort_keys=True), encoding="utf-8")
+        return aggpath
+
     def edit(p, fn):
         d = _json.loads(Path(p).read_text(encoding="utf-8"))
         fn(d)
@@ -679,6 +720,45 @@ def red_proof_chain(workdir, a1, a2, a3):
     victim.write_bytes(victim.read_bytes() + b"<!-- tampered -->")
     run("C2  child artifact tampered => RED", a1, c2, False, node_axis="same")
 
+    # ---- C2b: the EXACT case that returned GREEN (R-828 §6[2]) ------------
+    # Tamper an `empty_by_design` child specifically. Before the class repair
+    # these children had NO digests at all, so this tamper was invisible; a
+    # generic "tamper some child" arm would have kept passing over it.
+    c2b = clone(a2, "c2b")
+    empties = [p for p in (Path(c2b).parent / "receipts").glob("*.json")
+               if _json.loads(p.read_text(encoding="utf-8")).get("empty_by_design")]
+    if not empties:
+        cases.append(("C2b empty_by_design child available to tamper", False,
+                      "no empty_by_design child found -- control cannot run"))
+    else:
+        tgt = _json.loads(empties[0].read_text(encoding="utf-8"))["file"]
+        cdir = Path(c2b).parent / _slug_like(tgt)
+        victim = sorted(p for p in cdir.iterdir() if p.is_file())[0]
+        victim.write_bytes(victim.read_bytes() + b"\n<!-- tampered -->")
+        run(f"C2b tamper on an empty_by_design child ({victim.name}) => RED",
+            a1, c2b, False, node_axis="same")
+
+    # ---- C2c: an UNBOUND file in a child directory -------------------------
+    # The class rule: the DIRECTORY is the authority on what must be bound, not
+    # the receipt's own list. A stray artifact nobody hashed is a hole.
+    c2c = clone(a2, "c2c")
+    anychild = next(p for p in Path(c2c).parent.iterdir()
+                    if p.is_dir() and p.name != "receipts")
+    (anychild / "unbound-extra.txt").write_text("not covered by any digest",
+                                                encoding="utf-8")
+    run("C2c an UNBOUND file in a child directory => RED", a1, c2c, False,
+        node_axis="same")
+
+    # ---- C13: the arm mutated the tree it certifies ------------------------
+    c13 = clone(a2, "c13")
+    mp13 = Path(c13).parent / "manifest.json"
+    m13 = _json.loads(mp13.read_text(encoding="utf-8"))
+    m13["arm_end_tree"] = "f" * 64        # simulate a tracked-tree mutation
+    mp13.write_text(_json.dumps(m13, indent=2), encoding="utf-8")
+    reseal(c13)
+    run("C13 tracked tree CHANGED across the arm => RED", a1, c13, False,
+        node_axis="same")
+
     # ---- C3: a child that measured a different tree -----------------------
     c3 = clone(a2, "c3")
     edit(next((Path(c3).parent / "receipts").glob("*.json")),
@@ -699,7 +779,8 @@ def red_proof_chain(workdir, a1, a2, a3):
     mp.write_text(_json.dumps(man, indent=2), encoding="utf-8")
     (Path(c6).parent / "receipts" /
      f"{dropped['ordinal']:04d}-{_slug_like(dropped['target'])}.json").unlink()
-    edit(c6, lambda d: d.update(children=len(man["entries"])))
+    edit(c6, lambda d: d.update(children=len(man["entries"]),
+                                manifest_sha256=_sha_bytes(mp)))
     run("C6  receipt removed + children decremented => RED", a1, c6, False,
         node_axis="same")
 
@@ -709,6 +790,7 @@ def red_proof_chain(workdir, a1, a2, a3):
     man = _json.loads(mp.read_text(encoding="utf-8"))
     man["entries"] = list(reversed(man["entries"]))
     mp.write_text(_json.dumps(man, indent=2), encoding="utf-8")
+    reseal(c7)
     run("C7  manifest entries RE-SORTED, all digests valid => RED",
         a1, c7, False, node_axis="same")
 
