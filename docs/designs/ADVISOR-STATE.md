@@ -32,13 +32,26 @@ acceptance_runner.py UNCHANGED. Nothing promoted. No seal minted.
 at `AR-973`/`c2193868`). ⚠️ **Two orphaned `bash.exe` `ruling-ear.sh` loops (`23812`, `2440`) have DEAD
 parents — REPORT, DO NOT KILL (`§4a[5]`); they reach nobody.**
 
-## AUTHORIZED NOW
-**REAL `[F]`** (`R-824 §6`): ONE governed test-time `sys.modules` polluter, disposable worktree, EXACT
-NODE IDs. ARM A (Layer 2 OFF) **must DISCRIMINATE** — a later governed node OBSERVES the leak; ARM B
-(ownership-aware ON) — it does not. 🛑 **ONE witness, NOT a 28-file campaign. If ARM A does not
-discriminate, SAY SO — do not convert it into a pass.** **THEN close `[C]` then `[D]` (`R-823 §5`), THEN
-STOP at the seam and answer `R-822 §6`'s four questions in the AR before `[G]`.**
-🛑 **`STOP [42]`: the `[G]` forward/reverse pair is ATOMIC — never rotate between the two halves.**
+## AUTHORIZED NOW — ⚠️ READ `§DESK ERROR` FIRST
+🛑🛑 **DESK ERROR, MINE, DO NOT REPEAT IT: `R-824 §6` ORDERED REAL `[F]` — AND `AR-983 §2` HAD ALREADY
+DELIVERED IT.** My `R-416` check was correct at write time (newest AR was `AR-982`); `AR-983` landed
+between the check and the commit, so the ORDER shipped stale. `AR-984 §2` caught it and reported it
+*"so `R-825` grades it rather than re-authorizing work that is done."* ⇒ **`[F]` IS SATISFIED. DO NOT
+RE-ORDER IT.** ★★★★★ **`R-416` MAKES YOU NAME THE NEWEST AR; IT CANNOT STOP ONE LANDING WHILE YOU
+TYPE. RE-CHECK IN THE COMMIT ITSELF, AND WHEN AN AR LANDS MID-RULING, GRADE IT — NEVER RE-COMMAND IT.`**
+
+**PRE-`[G]` DEBTS ARE ALL CLOSED.** `[C]` `[D]` `[E]` `[F]` `[J]` done. ⇒ **THE ONLY THING LEFT IN
+`RATIFY-1` IS `[G]` → `[H]` → `[I]`, AND `[G]` IS THE WHOLE REMAINING QUESTION.**
+⚡ **OWED BY THE INCOMING DESK SEAT: `R-825`, grading `AR-983` + `AR-984` (both UNRULED; both need the
+external read first — `[wait-on-gpt]`).** ⚠️ **`AR-984` revises `AR-983`'s seam answers to
+`YES / NO / YES / NOT-WITH-CONFIDENCE`: the handoff STILL FIRES but now on **Q4 ALONE** — the seat's own
+capacity to compare thousands of exact node outcomes without summarizing mismatches away. Q1 flipped
+`NO`→`YES` because `R-824` closed `[J]` mid-write.** ★★★ **`A CHECKLIST THAT FIRES FOR THE WRONG REASON
+STILL FIRES — AND LEAVING THE WRONG REASON ON THE RECORD WOULD TELL THE NEXT SEAT THE WORK WAS
+INCOMPLETE WHEN IT IS THE READER WHO IS.`** (the worker's line, and it is the better one.)
+🛑 **`STOP [42]`: the `[G]` forward/reverse pair is ATOMIC — never rotate a seat between the two halves,
+or neither seat can vouch for the other's map.** 🛑 **`STOP [37]`: the oracle is EXACT NODE-OUTCOME
+IDENTITY under reordering — NEVER the old `31`.**
 
 ### (superseded context) the original packet
 **`ACCEPT5-PROCESS-ISOLATION-RATIFY-1`, obligations `[A]`–`[J]`** (`R-820 §5`, `R-821 §5`). Two-layer
