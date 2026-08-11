@@ -4,6 +4,52 @@
 
 ---
 
+## AR-971 · 2026-08-11 · 📌 **START-RECEIPT — SUCCESSOR SEAT `claude.exe 6536` CLAIMS `R-816 §7` BY `R-784 §3` TRANSFER. EAR ARMED AND RED-PROOFED.** ✅ **`§5` ARM `A` REPRODUCED EXACTLY: `4 failed / 47 passed`, INSTRUMENT AUDITED.** 🛑 **AND ARM `A` CONTRADICTS ONE NAMED CLAIM IN `AR-969 §3` / `R-816 §5`: `test_no_trades_returns_zero_metrics` **PASSES** ALONE — SO IT IS NOT "FAILING IN BOTH", AND THE FLIP SET MAY BE `5`, NOT `3`.**
+
+**SEAT `claude.exe 6536`, born `08-11 01:15:52` `[MEASURED HERE, Win32_Process + parent walk from this shell `28216`]`. PREDECESSOR `23692` GONE — `[seat-rolls-are-swaps]`, a planned swap, NOT investigated.**
+
+### §1 — 🔑 AUTHORIZATION, SEAT, AND EAR
+✅ **`R-816 §7` is addressed to `23692` "or its successor by `R-784 §3` transfer". This receipt IS that transfer.** No round-trip, no new ruling requested. Read in order: `R-816` (my dispatch) · `R-815` · `AR-970`/`AR-969`/`AR-968` · `ADVISOR-STATE.md` `THE PLAN`.
+✅ **EAR ARMED AND DELIVERING** — `Monitor`, persistent, on `ADVISOR-RULINGS.md`; the `EAR ARMED` line **arrived as a chat notification**, which is the delivery proof, not the liveness proof.
+✅ **DETECTOR RED-PROOFED ON A THROWAWAY FIRST, BOTH DIRECTIONS:** negative arm (no write, 6s) → `0` CHANGED lines · positive arm (append) → `1` CHANGED line. **`VERDICT: PASS`.** Script copied verbatim from `23692`'s scratchpad — reused, not re-authored.
+⭐ **BACKFILL PAID, AND IT FIRED IMMEDIATELY: my hand-read at seating found `R-815` at top; the ear armed minutes later reporting `R-816`. `R-816` had landed DURING my census.** ★★★★★ **`THE BLIND WINDOW IS NOT A FORMALITY — MINE CONTAINED MY ENTIRE DISPATCH, AND A SEAT THAT SKIPPED THE BACKFILL WOULD HAVE EXECUTED `R-815`'s SUPERSEDED LANE ORDER.`**
+🛑 **ORPHANED RIG REPORTED, NOT KILLED (`[no-monitors-msg-advisor]` rule 3):** `bash.exe 25208` (+ children `17540`/`24304`/`17136`) still polls `ADVISOR-RULINGS.md` from dead seat `23692`'s scratchpad (`dd6e055b`). **Its owning `claude.exe` no longer exists ⇒ it can deliver to nobody — a log file with a heartbeat.** **I did not arm it and hold no expired authorization to disarm it, so I left it running and hand it up.** ⚠️ The desk's own ear (`bash.exe 7356`/`24420` under `24040`, watching `AGENT-REPORTS.md`) is ALIVE and **untouched**.
+
+### §2 — ✅ `R-816 §5` STEP `[0]` ARM `A`, REPRODUCED FROM THE PIN
+```
+python -m pytest src/engine/tests/test_pnl_accuracy.py -q --no-header
+  -> 4 failed, 47 passed, 23 warnings in 5.93s      (51 collected)
+FAILED ...::TestCommissionImpact::test_commission_per_trade_matches_formula
+FAILED ...::TestWave1CommissionGoldenFixture::test_topstep_mes_commission_per_trade_contract
+FAILED ...::TestWave1CommissionGoldenFixture::test_mffu_mes_commission_per_trade_contract
+FAILED ...::TestWave1CommissionGoldenFixture::test_prop_sim_trusts_net_pnl_no_double_deduction
+```
+✅ **INSTRUMENT AUDITED BEFORE THE RESULT WAS TRUSTED.** My first arm added `-p no:randomly`, a flag the predecessor did not use. **I re-ran WITHOUT it: byte-identical outcome, same `4` node IDs, `4 failed / 47 passed`** ⇒ the flag was a no-op (plugin absent) and introduced no variable. ★★★ **`A FLAG I ADDED FOR TIDINESS IS A VARIABLE I INTRODUCED, AND THE ARM THAT PROVES IT HARMLESS COSTS SIX SECONDS.`**
+✅ **PIN RECONCILED, NOT ASSUMED.** `[MEASURED HERE]` `HEAD` is `723c773d`, **not** `R-816`'s stated `1b6257e4`. `git merge-base --is-ancestor` → `1b6257e4` IS an ancestor; `git diff --stat 1b6257e4 HEAD` → **`ADVISOR-RULINGS.md` + `HANDOVER-ADVISOR-2026-08-04.md` ONLY, `0` files under `src/`.** ⇒ **the desk's own `R-816` ruling commit; the test pin is unchanged. NOT a sibling worker seat** (`[two-operator-windows]` checked, not assumed).
+
+### §3 — 🛑 A NAMED CLAIM IN THE RECORD THAT MY ARM `A` CONTRADICTS
+🛑 **`AR-969 §3` wrote — and `R-816 §5` adopted — that the single in-company failure is `test_no_trades_returns_zero_metrics`, "a KNOWN baseline red, **failing in BOTH**".** ⚠️ **`[MEASURED HERE, ARM A, twice]` it does NOT fail alone. It is not in the `4`. It PASSES.**
+⇒ **IF ARM `B` reproduces `1 failed / 50 passed` with that node as the failure, then the flip set is `5` NODES IN TWO DIRECTIONS**, not three in one:
+```
+alone FAIL -> company PASS :  the 4 commission nodes above
+alone PASS -> company FAIL :  test_no_trades_returns_zero_metrics
+```
+⚠️ **`[HYPOTHESIS — NOT CLAIMED]` pending ARM `B`.** I am **not** revising `R-816 §5`'s scope on one arm; the join needs both. **But the "failing in BOTH" sentence is already `[REFUTED]` by ARM `A` on its own, independently of what ARM `B` returns.** ★★★★★ **`A BIDIRECTIONAL FLIP SET IS A STRICTLY WORSE DEFECT THAN A ONE-WAY ONE: ONE DIRECTION MANUFACTURES GREENS, THE OTHER MANUFACTURES REDS, AND A SINGLE-DIRECTION SEARCH WOULD HAVE FOUND ONLY HALF OF IT.`**
+⚠️ **SCOPE HELD: `R-816 §5` bounds me to the PnL flips and forbids a `107`-file sweep. Finding a fifth flipping node INSIDE `test_pnl_accuracy.py` is inside that bound — it is the same file, same defect, wider membership. I am not widening beyond it.**
+
+### §4 — ⏭️ IN FLIGHT AND NEXT
+⏳ **ARM `B` RUNNING NOW** — `python scripts/acceptance_runner.py --run` (the COMMITTED instrument, `ACCEPT5-INSTRUMENT-1`; `[ARTIFACT-SOURCED, AR-927 §3]` hand-built runners fabricated a `49`-member false regression, so I did not author one). **`ACCEPTANCE: REFUSED` from `F-ACCEPT5-8` is EXPECTED per `R-816 §7`.**
+~~**THEN, in `R-816 §7`'s order:** `[0]` report the baseline pair BEFORE any binary search → `[1]`/`[2]` ordered delta-debug the canonical file-order prefix, fresh process per arm → Cluster `A` microrepairs → `C` → `D` → `F` → `E`.~~
+🛑 **SUPERSEDED BY `R-817 §2`, WHICH LANDED WHILE THIS RECEIPT WAS BEING WRITTEN — PRESERVE-AND-STRIKE, NOT DELETED.** `R-817` reverses the first two items on a MECHANICAL argument I accept at the line: the successor admission derives its `+1` from a **COLLECTION**, and collection membership is **order-independent**, so the run-composition leak — which moves OUTCOMES — cannot contaminate it. ⇒ **ORDER OF RECORD IS `R-817 §3`: (1) Cluster `A` microrepair — truthful rename + `record_successor()` admission at pre-registered canonical `2419` — (2) the run-composition trace, (3) `C` → `D` → `F` → `E`.**
+⚠️ **`R-817` states *"the new seat has not yet filed a receipt"*; that is a RACE, not a contradiction — this receipt and that ruling crossed. The transfer it ratifies and the transfer I claim are the same one.** ⭐ **ARM `A` and the in-flight ARM `B` are NOT wasted by the re-order: `R-817 §3 [2]` still requires both arms baselined from the pin, and they are order-independent measurements I already hold.**
+🛑 **NOT DOING: tuning the PnL fixture · restoring any skip · a `107`-file order-dependence sweep · Cluster `H` (`STOP [11]`) · HTF/eligibility-gate/MP1/money-path production behaviour (`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` is BANKED, not authorized).**
+✅ **PRE-REGISTERED, BEFORE THE SEARCH (`[pre-register-criteria]`): I commit in advance to reporting `CASE 2` — "the fixture genuinely produces no required trades and the canonical suite was manufacturing false greens all along" — with the same emphasis as `CASE 1`.** `R-816 §5` forbids pre-deciding, and this is me writing the unflattering branch down first.
+🛑 **FAN-IN `3 / 7` INHERITED. `C`,`D`,`E`,`F` are UNSTARTED, NOT BLOCKED — this seat finishes them** (`worker-execution §10`).
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — receipt only, nothing to grade yet; continuing under `R-816 §7` without a round-trip.
+
+---
+
 ## AR-970 · 2026-08-11 · ✅ **CLUSTER `G` LANDED AND RED-PROOFED. FAN-IN `3 / 7` (`A`,`B`,`G`).** 🛑 **AND THIS IS A HANDOFF — DECLARED ON CONTEXT, AT A CLEAN SEAM, WITH NOTHING HALF-BUILT AND EVERY REMAINING LANE SPECIFIED SO THE NEXT SEAT RE-DERIVES NOTHING.** ⚠️ **I AM NOT CLAIMING `R3-4` COMPLETE — `C`, `D`, `E`, `F` ARE UNSTARTED AND I SAY SO IN THE HEADLINE.**
 
 **SEAT `claude.exe 23692`. TREE `HEAD` at commit below. `R3` = `3 / 5`, `R3-4` OPEN. CLUSTER FAN-IN `3 / 7`.**
